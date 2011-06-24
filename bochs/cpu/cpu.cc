@@ -598,8 +598,6 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     DEV_dma_raise_hlda();
   }
 
-  BX_CPU_THIS_PTR clear_RF();
-
   if (BX_CPU_THIS_PTR get_TF())
   {
     // TF is set before execution of next instruction.  Schedule
@@ -640,12 +638,8 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
      || BX_CPU_THIS_PTR vmx_interrupt_window || BX_CPU_THIS_PTR inhibit_mask
 #endif
 #if BX_X86_DEBUGGER
-       // any debug code breakpoint is set
-     || (BX_CPU_THIS_PTR dr7.get_bp_enabled() &&
-           (BX_CPU_THIS_PTR dr7.get_R_W0() == 0 ||
-            BX_CPU_THIS_PTR dr7.get_R_W1() == 0 ||
-            BX_CPU_THIS_PTR dr7.get_R_W2() == 0 ||
-            BX_CPU_THIS_PTR dr7.get_R_W3() == 0))
+     // a debug code breakpoint is set in current page
+     || BX_CPU_THIS_PTR codebp
 #endif
         ))
     BX_CPU_THIS_PTR async_event = 0;
@@ -703,6 +697,24 @@ void BX_CPU_C::prefetch(void)
       BX_CPU_THIS_PTR eipPageWindowSize = (Bit32u)(limit + BX_CPU_THIS_PTR eipPageBias + 1);
     }
   }
+
+#if BX_X86_DEBUGGER
+  if (hwbreakpoint_check(laddr, BX_HWDebugInstruction, BX_HWDebugInstruction)) {
+    BX_CPU_THIS_PTR async_event = 1;
+    BX_CPU_THIS_PTR codebp = 1;
+    if (! (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG_SHADOW)) {
+       // The next instruction could already hit a code breakpoint but
+       // async_event won't take effect immediatelly.
+       // Check if the next executing instruction hits code breakpoint
+       if (code_breakpoint_match(laddr)) exception(BX_DB_EXCEPTION, 0);
+    }
+  }
+  else {
+    BX_CPU_THIS_PTR codebp = 0;
+  }
+#endif
+
+  BX_CPU_THIS_PTR clear_RF();
 
   bx_address lpf = LPFOf(laddr);
   unsigned TLB_index = BX_TLB_INDEX_OF(lpf, 0);

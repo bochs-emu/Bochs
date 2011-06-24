@@ -1537,7 +1537,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   //
 
   BX_CPU_THIS_PTR async_event = 0;
-  if (guest.rflags & (EFlagsTFMask|EFlagsRFMask))
+  if (guest.rflags & EFlagsTFMask)
     BX_CPU_THIS_PTR async_event = 1;
 
   if (vm->vmentry_ctrls & VMX_VMENTRY_CTRL1_SMM_ENTER)
@@ -1566,8 +1566,13 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   if (BX_CPU_THIS_PTR inhibit_mask)
     BX_CPU_THIS_PTR async_event = 1;
 
-  if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED)
+  if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED) {
     BX_CPU_THIS_PTR disable_NMI = 1;
+  }
+  else {
+    if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_NMI_WINDOW_VMEXIT)
+      BX_CPU_THIS_PTR async_event = 1;
+  }
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_INTERRUPT_WINDOW_VMEXIT) {
     BX_CPU_THIS_PTR async_event = 1;

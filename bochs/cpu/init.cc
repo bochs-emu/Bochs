@@ -565,6 +565,8 @@ void BX_CPU_C::register_state(void)
 
 #if BX_X86_DEBUGGER
   BXRS_PARAM_BOOL(cpu, in_repeat, in_repeat);
+  // for debug only (no need for save/restore), calculated in prefetch()
+  BXRS_PARAM_BOOL(cpu, codebp, codebp);
 #endif
 
   BXRS_PARAM_BOOL(cpu, in_smm, in_smm);
@@ -876,6 +878,7 @@ void BX_CPU_C::reset(unsigned source)
 
 #if BX_X86_DEBUGGER
   BX_CPU_THIS_PTR in_repeat = 0;
+  BX_CPU_THIS_PTR codebp = 0;
 #endif
   BX_CPU_THIS_PTR in_smm = 0;
   BX_CPU_THIS_PTR disable_SMI = 0;

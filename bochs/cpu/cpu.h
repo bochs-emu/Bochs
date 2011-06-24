@@ -500,8 +500,8 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
     }                                                           \
   }
 
-// assert async_event when RF, IF or TF is set
-#define IMPLEMENT_EFLAG_SET_ACCESSOR_IF_RF_TF(name,bitnum)      \
+// assert async_event when IF or TF is set
+#define IMPLEMENT_EFLAG_SET_ACCESSOR_IF_TF(name,bitnum)         \
   BX_CPP_INLINE void BX_CPU_C::assert_##name() {                \
     BX_CPU_THIS_PTR async_event = 1;                            \
     BX_CPU_THIS_PTR eflags |= (1<<bitnum);                      \
@@ -511,6 +511,21 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
   }                                                             \
   BX_CPP_INLINE void BX_CPU_C::set_##name(bx_bool val) {        \
     if (val) BX_CPU_THIS_PTR async_event = 1;                   \
+    BX_CPU_THIS_PTR eflags =                                    \
+      (BX_CPU_THIS_PTR eflags&~(1<<bitnum))|((val)<<bitnum);    \
+  }
+
+// invalidate prefetch queue and call prefetch() when RF is set
+#define IMPLEMENT_EFLAG_SET_ACCESSOR_RF(name,bitnum)            \
+  BX_CPP_INLINE void BX_CPU_C::assert_##name() {                \
+    invalidate_prefetch_q();                                    \
+    BX_CPU_THIS_PTR eflags |= (1<<bitnum);                      \
+  }                                                             \
+  BX_CPP_INLINE void BX_CPU_C::clear_##name() {                 \
+    BX_CPU_THIS_PTR eflags &= ~(1<<bitnum);                     \
+  }                                                             \
+  BX_CPP_INLINE void BX_CPU_C::set_##name(bx_bool val) {        \
+    if (val) invalidate_prefetch_q();                           \
     BX_CPU_THIS_PTR eflags =                                    \
       (BX_CPU_THIS_PTR eflags&~(1<<bitnum))|((val)<<bitnum);    \
   }
@@ -991,6 +1006,7 @@ public: // for now...
 
 #if BX_X86_DEBUGGER
   bx_bool  in_repeat;
+  bx_bool  codebp;
 #endif
   bx_bool  in_smm;
   unsigned cpu_mode;
@@ -4045,20 +4061,20 @@ IMPLEMENT_EFLAG_ACCESSOR   (DF,  10)
 IMPLEMENT_EFLAG_ACCESSOR   (IF,   9)
 IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 
-IMPLEMENT_EFLAG_SET_ACCESSOR         (ID,  21)
-IMPLEMENT_EFLAG_SET_ACCESSOR         (VIP, 20)
-IMPLEMENT_EFLAG_SET_ACCESSOR         (VIF, 19)
+IMPLEMENT_EFLAG_SET_ACCESSOR      (ID,  21)
+IMPLEMENT_EFLAG_SET_ACCESSOR      (VIP, 20)
+IMPLEMENT_EFLAG_SET_ACCESSOR      (VIF, 19)
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-IMPLEMENT_EFLAG_SET_ACCESSOR_AC      (     18)
+IMPLEMENT_EFLAG_SET_ACCESSOR_AC   (     18)
 #else
-IMPLEMENT_EFLAG_SET_ACCESSOR         (AC,  18)
+IMPLEMENT_EFLAG_SET_ACCESSOR      (AC,  18)
 #endif
-IMPLEMENT_EFLAG_SET_ACCESSOR_VM      (     17)
-IMPLEMENT_EFLAG_SET_ACCESSOR_IF_RF_TF(RF,  16)
-IMPLEMENT_EFLAG_SET_ACCESSOR         (NT,  14)
-IMPLEMENT_EFLAG_SET_ACCESSOR         (DF,  10)
-IMPLEMENT_EFLAG_SET_ACCESSOR_IF_RF_TF(IF,   9)
-IMPLEMENT_EFLAG_SET_ACCESSOR_IF_RF_TF(TF,   8)
+IMPLEMENT_EFLAG_SET_ACCESSOR_VM   (     17)
+IMPLEMENT_EFLAG_SET_ACCESSOR_RF   (RF,  16)
+IMPLEMENT_EFLAG_SET_ACCESSOR      (NT,  14)
+IMPLEMENT_EFLAG_SET_ACCESSOR      (DF,  10)
+IMPLEMENT_EFLAG_SET_ACCESSOR_IF_TF(IF,   9)
+IMPLEMENT_EFLAG_SET_ACCESSOR_IF_TF(TF,   8)
                                
 #define BX_TASK_FROM_CALL       0
 #define BX_TASK_FROM_IRET       1
