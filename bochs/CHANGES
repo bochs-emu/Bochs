@@ -65,6 +65,7 @@ Bochs repository moved to the SVN version control !
     from the "clock" setting)
 
 - SF patches applied
+  [3327510] Fix wrong address translation in debugger by Jianan Hao
   [3323758] Ctrl-Break support for the Win32 gui by Nikolay Nikolov
   [3316785] Ctrl-Break support for the X11 gui by Nikolay Nikolov
   [3298173] Breakpoint on VMEXIT event by Jianan Hao
