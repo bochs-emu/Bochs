@@ -100,7 +100,7 @@ void bx_pcipnic_c::init(void)
       BX_PANIC(("could not locate null module"));
   }
 
-  BX_PNIC_THIS s.base_ioaddr = 0;
+  BX_PNIC_THIS pci_base_address[4] = 0;
 
   BX_INFO(("PCI Pseudo NIC initialized - I/O base and IRQ assigned by PCI BIOS"));
 }
@@ -177,10 +177,10 @@ void bx_pcipnic_c::register_state(void)
 void bx_pcipnic_c::after_restore_state(void)
 {
   if (DEV_pci_set_base_io(BX_PNIC_THIS_PTR, read_handler, write_handler,
-                          &BX_PNIC_THIS s.base_ioaddr,
+                          &BX_PNIC_THIS pci_base_address[4],
                           &BX_PNIC_THIS pci_conf[0x10],
                           16, &pnic_iomask[0], "PNIC")) {
-    BX_INFO(("new base address: 0x%04x", BX_PNIC_THIS s.base_ioaddr));
+    BX_INFO(("new base address: 0x%04x", BX_PNIC_THIS pci_base_address[4]));
   }
 }
 
@@ -209,7 +209,7 @@ Bit32u bx_pcipnic_c::read(Bit32u address, unsigned io_len)
 
   BX_DEBUG(("register read from address 0x%04x - ", (unsigned) address));
 
-  offset = address - BX_PNIC_THIS s.base_ioaddr;
+  offset = address - BX_PNIC_THIS pci_base_address[4];
 
   switch (offset) {
   case PNIC_REG_STAT:
@@ -258,7 +258,7 @@ void bx_pcipnic_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
   BX_DEBUG(("register write to address 0x%04x - ", (unsigned) address));
 
-  offset = address - BX_PNIC_THIS s.base_ioaddr;
+  offset = address - BX_PNIC_THIS pci_base_address[4];
 
   switch (offset) {
   case PNIC_REG_CMD:
@@ -356,10 +356,10 @@ void bx_pcipnic_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
   }
   if (baseaddr_change) {
     if (DEV_pci_set_base_io(BX_PNIC_THIS_PTR, read_handler, write_handler,
-                            &BX_PNIC_THIS s.base_ioaddr,
+                            &BX_PNIC_THIS pci_base_address[4],
                             &BX_PNIC_THIS pci_conf[0x20],
                             16, &pnic_iomask[0], "PNIC")) {
-      BX_INFO(("new base address: 0x%04x", BX_PNIC_THIS s.base_ioaddr));
+      BX_INFO(("new base address: 0x%04x", BX_PNIC_THIS pci_base_address[4]));
     }
   }
 

@@ -32,7 +32,6 @@
 // defined in bochs.h: UHCI supports 2 ports per root hub
 
 typedef struct {
-  Bit32u base_ioaddr;
   int    timer_index;
 
   // Registers

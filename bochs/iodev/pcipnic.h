@@ -39,7 +39,6 @@
 
 typedef struct {
 
-  Bit32u	base_ioaddr;
   Bit8u		macaddr[6];
   Bit8u		irqEnabled;
 

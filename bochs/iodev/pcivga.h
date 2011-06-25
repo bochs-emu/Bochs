@@ -40,7 +40,6 @@ public:
   virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
 private:
-  Bit32u base_address;
   bx_bool vbe_present;
 };
 

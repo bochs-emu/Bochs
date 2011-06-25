@@ -104,7 +104,7 @@ void bx_pci_ide_c::init(void)
   BX_PIDE_THIS pci_conf[0x0b] = 0x01;
   BX_PIDE_THIS pci_conf[0x0e] = 0x00;
   BX_PIDE_THIS pci_conf[0x20] = 0x01;
-  BX_PIDE_THIS s.bmdma_addr = 0;
+  BX_PIDE_THIS pci_base_address[4] = 0;
 }
 
 void bx_pci_ide_c::reset(unsigned type)
@@ -162,10 +162,10 @@ void bx_pci_ide_c::register_state(void)
 void bx_pci_ide_c::after_restore_state(void)
 {
   if (DEV_pci_set_base_io(BX_PIDE_THIS_PTR, read_handler, write_handler,
-                          &BX_PIDE_THIS s.bmdma_addr, &BX_PIDE_THIS pci_conf[0x20],
+                          &BX_PIDE_THIS pci_base_address[4], &BX_PIDE_THIS pci_conf[0x20],
                           16, &bmdma_iomask[0], "PIIX3 PCI IDE controller"))
   {
-    BX_INFO(("new BM-DMA address: 0x%04x", BX_PIDE_THIS s.bmdma_addr));
+    BX_INFO(("new BM-DMA address: 0x%04x", BX_PIDE_THIS pci_base_address[4]));
   }
 }
 
@@ -214,7 +214,7 @@ void bx_pci_ide_c::param_restore(bx_param_c *param, Bit64s val)
 
 bx_bool bx_pci_ide_c::bmdma_present(void)
 {
-  return (BX_PIDE_THIS s.bmdma_addr > 0);
+  return (BX_PIDE_THIS pci_base_address[4] > 0);
 }
 
 void bx_pci_ide_c::bmdma_set_irq(Bit8u channel)
@@ -339,7 +339,7 @@ Bit32u bx_pci_ide_c::read(Bit32u address, unsigned io_len)
   Bit8u offset, channel;
   Bit32u value = 0xffffffff;
 
-  offset = address - BX_PIDE_THIS s.bmdma_addr;
+  offset = address - BX_PIDE_THIS pci_base_address[4];
   channel = (offset >> 3);
   offset &= 0x07;
   switch (offset) {
@@ -380,7 +380,7 @@ void bx_pci_ide_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #endif // !BX_USE_PIDE_SMF
   Bit8u offset, channel;
 
-  offset = address - BX_PIDE_THIS s.bmdma_addr;
+  offset = address - BX_PIDE_THIS pci_base_address[4];
   channel = (offset >> 3);
   offset &= 0x07;
   switch (offset) {
@@ -458,9 +458,9 @@ void bx_pci_ide_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
   }
   if (bmdma_change) {
     if (DEV_pci_set_base_io(BX_PIDE_THIS_PTR, read_handler, write_handler,
-                            &BX_PIDE_THIS s.bmdma_addr, &BX_PIDE_THIS pci_conf[0x20],
+                            &BX_PIDE_THIS pci_base_address[4], &BX_PIDE_THIS pci_conf[0x20],
                             16, &bmdma_iomask[0], "PIIX3 PCI IDE controller")) {
-      BX_INFO(("new BM-DMA address: 0x%04x", BX_PIDE_THIS s.bmdma_addr));
+      BX_INFO(("new BM-DMA address: 0x%04x", BX_PIDE_THIS pci_base_address[4]));
     }
   }
 }

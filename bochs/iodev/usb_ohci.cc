@@ -127,7 +127,7 @@ void bx_usb_ohci_c::init(void)
   for (i=0; i<256; i++)
     BX_OHCI_THIS pci_conf[i] = 0x0;
 
-  BX_OHCI_THIS hub.base_addr = 0x0;
+  BX_OHCI_THIS pci_base_address[0] = 0x0;
   BX_OHCI_THIS hub.ohci_done_count = 7;
   BX_OHCI_THIS hub.use_control_head = 0;
   BX_OHCI_THIS hub.use_bulk_head = 0;
@@ -441,10 +441,10 @@ void bx_usb_ohci_c::register_state(void)
 void bx_usb_ohci_c::after_restore_state(void)
 {
   if (DEV_pci_set_base_mem(BX_OHCI_THIS_PTR, read_handler, write_handler,
-                         &BX_OHCI_THIS hub.base_addr,
+                         &BX_OHCI_THIS pci_base_address[0],
                          &BX_OHCI_THIS pci_conf[0x10],
                          4096))  {
-     BX_INFO(("new base address: 0x%04x", BX_OHCI_THIS hub.base_addr));
+     BX_INFO(("new base address: 0x%04x", BX_OHCI_THIS pci_base_address[0]));
   }
   for (int j=0; j<BX_N_USB_OHCI_PORTS; j++) {
     if (BX_OHCI_THIS hub.usb_port[j].device != NULL) {
@@ -520,7 +520,7 @@ bx_bool bx_usb_ohci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
     return 1;
   }
 
-  Bit32u  offset = (Bit32u)(addr - BX_OHCI_THIS hub.base_addr);
+  Bit32u  offset = (Bit32u)(addr - BX_OHCI_THIS pci_base_address[0]);
   switch (offset) {
     case 0x00: // HcRevision
       val = BX_OHCI_THIS hub.op_regs.HcRevision;
@@ -690,7 +690,7 @@ bx_bool bx_usb_ohci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
 bx_bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
   Bit32u value = *((Bit32u *) data);
-  Bit32u  offset = (Bit32u)addr - BX_OHCI_THIS hub.base_addr;
+  Bit32u  offset = (Bit32u)addr - BX_OHCI_THIS pci_base_address[0];
   int p, org_state;
 
   int name = offset >> 2;
@@ -1439,10 +1439,10 @@ void bx_usb_ohci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_l
   }
   if (baseaddr_change) {
     if (DEV_pci_set_base_mem(BX_OHCI_THIS_PTR, read_handler, write_handler,
-                             &BX_OHCI_THIS hub.base_addr,
+                             &BX_OHCI_THIS pci_base_address[0],
                              &BX_OHCI_THIS pci_conf[0x10],
                              4096)) {
-      BX_INFO(("new base address: 0x%04x", BX_OHCI_THIS hub.base_addr));
+      BX_INFO(("new base address: 0x%04x", BX_OHCI_THIS pci_base_address[0]));
     }
   }
 

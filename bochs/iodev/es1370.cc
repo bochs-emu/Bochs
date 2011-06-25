@@ -128,7 +128,7 @@ void bx_es1370_c::init(void)
   for (unsigned i=0; i<256; i++) {
     BX_ES1370_THIS pci_conf[i] = 0x0;
   }
-  BX_ES1370_THIS s.base_ioaddr = 0;
+  BX_ES1370_THIS pci_base_address[0] = 0;
 
   DEV_sound_init_module("default", &BX_ES1370_THIS soundmod, BX_ES1370_THIS_PTR);
   BX_ES1370_THIS s.dac_outputinit = 0;
@@ -224,10 +224,10 @@ void bx_es1370_c::register_state(void)
 void bx_es1370_c::after_restore_state(void)
 {
   if (DEV_pci_set_base_io(BX_ES1370_THIS_PTR, read_handler, write_handler,
-                          &BX_ES1370_THIS s.base_ioaddr,
+                          &BX_ES1370_THIS pci_base_address[0],
                           &BX_ES1370_THIS pci_conf[0x10],
                           64, &es1370_iomask[0], "ES1370")) {
-    BX_INFO(("new base address: 0x%04x", BX_ES1370_THIS s.base_ioaddr));
+    BX_INFO(("new base address: 0x%04x", BX_ES1370_THIS pci_base_address[0]));
   }
   BX_ES1370_THIS check_lower_irq(BX_ES1370_THIS s.sctl);
   BX_ES1370_THIS s.dac_outputinit = 0;
@@ -257,7 +257,7 @@ Bit32u bx_es1370_c::read(Bit32u address, unsigned io_len)
 
   BX_DEBUG(("register read from address 0x%04x - ", address));
 
-  offset = address - BX_ES1370_THIS s.base_ioaddr;
+  offset = address - BX_ES1370_THIS pci_base_address[0];
   if (offset >= 0x30) {
     offset |= (BX_ES1370_THIS s.mempage << 8);
   }
@@ -349,7 +349,7 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
   BX_DEBUG(("register write to address 0x%04x - value = 0x%08x", address, value));
 
-  offset = address - BX_ES1370_THIS s.base_ioaddr;
+  offset = address - BX_ES1370_THIS pci_base_address[0];
   if (offset >= 0x30) {
     offset |= (BX_ES1370_THIS s.mempage << 8);
   }
@@ -715,10 +715,10 @@ void bx_es1370_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
   }
   if (baseaddr_change) {
     if (DEV_pci_set_base_io(BX_ES1370_THIS_PTR, read_handler, write_handler,
-                            &BX_ES1370_THIS s.base_ioaddr,
+                            &BX_ES1370_THIS pci_base_address[0],
                             &BX_ES1370_THIS pci_conf[0x10],
                             64, &es1370_iomask[0], "ES1370")) {
-      BX_INFO(("new base address: 0x%04x", BX_ES1370_THIS s.base_ioaddr));
+      BX_INFO(("new base address: 0x%04x", BX_ES1370_THIS pci_base_address[0]));
     }
   }
 

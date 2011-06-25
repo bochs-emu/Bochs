@@ -105,7 +105,7 @@ void bx_usb_uhci_c::init(void)
     BX_UHCI_THIS pci_conf[i] = 0x0;
   }
 
-  BX_UHCI_THIS hub.base_ioaddr = 0x0;
+  BX_UHCI_THIS pci_base_address[4] = 0x0;
 
   //FIXME: for now, we want a status bar // hub zero, port zero
   BX_UHCI_THIS hub.statusbar_id = bx_gui->register_statusitem("UHCI");
@@ -283,11 +283,11 @@ void bx_usb_uhci_c::register_state(void)
 void bx_usb_uhci_c::after_restore_state(void)
 {
   if (DEV_pci_set_base_io(BX_UHCI_THIS_PTR, read_handler, write_handler,
-                         &BX_UHCI_THIS hub.base_ioaddr,
+                         &BX_UHCI_THIS pci_base_address[4],
                          &BX_UHCI_THIS pci_conf[0x20],
                          32, &uhci_iomask[0], "USB UHCI Hub"))
   {
-     BX_INFO(("new base address: 0x%04x", BX_UHCI_THIS hub.base_ioaddr));
+     BX_INFO(("new base address: 0x%04x", BX_UHCI_THIS pci_base_address[4]));
   }
   for (int j=0; j<BX_N_USB_UHCI_PORTS; j++) {
     if (BX_UHCI_THIS hub.usb_port[j].device != NULL) {
@@ -354,7 +354,7 @@ Bit32u bx_usb_uhci_c::read(Bit32u address, unsigned io_len)
   Bit32u val = 0x0;
   Bit8u  offset,port;
 
-  offset = address - BX_UHCI_THIS hub.base_ioaddr;
+  offset = address - BX_UHCI_THIS pci_base_address[4];
 
   switch (offset) {
     case 0x00: // command register (16-bit)
@@ -452,7 +452,7 @@ void bx_usb_uhci_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
   BX_DEBUG(("register write to  address 0x%04X:  0x%08X (%2i bits)", (unsigned) address, (unsigned) value, io_len * 8));
 
-  offset = address - BX_UHCI_THIS hub.base_ioaddr;
+  offset = address - BX_UHCI_THIS pci_base_address[4];
 
   switch (offset) {
     case 0x00: // command register (16-bit) (R/W)
@@ -1038,10 +1038,10 @@ void bx_usb_uhci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_l
   }
   if (baseaddr_change) {
     if (DEV_pci_set_base_io(BX_UHCI_THIS_PTR, read_handler, write_handler,
-                            &BX_UHCI_THIS hub.base_ioaddr,
+                            &BX_UHCI_THIS pci_base_address[4],
                             &BX_UHCI_THIS pci_conf[0x20],
                             32, &uhci_iomask[0], "USB UHCI Hub")) {
-      BX_INFO(("new base address: 0x%04x", BX_UHCI_THIS hub.base_ioaddr));
+      BX_INFO(("new base address: 0x%04x", BX_UHCI_THIS pci_base_address[4]));
     }
   }
 

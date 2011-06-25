@@ -54,7 +54,6 @@ typedef struct {
   int dac_nr_active;
   Bit16u dac_packet_size[2];
 
-  Bit32u base_ioaddr;
   Bit8u devfunc;
 } bx_es1370_t;
 
