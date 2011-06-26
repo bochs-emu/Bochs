@@ -1183,3 +1183,58 @@ void bx_pci_device_stub_c::register_pci_state(bx_list_c *list)
     new bx_shadow_num_c(pci, name, &pci_conf[i], BASE_HEX);
   }
 }
+
+void bx_pci_device_stub_c::load_pci_rom(const char *path)
+{
+  struct stat stat_buf;
+  int fd, ret;
+  unsigned long size, max_size;
+
+  if (*path == '\0') {
+    BX_PANIC(("PCI ROM image undefined"));
+    return;
+  }
+  // read in PCI ROM image file
+  fd = open(path, O_RDONLY
+#ifdef O_BINARY
+            | O_BINARY
+#endif
+           );
+  if (fd < 0) {
+    BX_PANIC(("couldn't open PCI ROM image file '%s'.", path));
+    return;
+  }
+  ret = fstat(fd, &stat_buf);
+  if (ret) {
+    BX_PANIC(("couldn't stat PCI ROM image file '%s'.", path));
+    return;
+  }
+
+  max_size = 0x10000;
+  size = (unsigned long)stat_buf.st_size;
+  if (size > max_size) {
+    close(fd);
+    BX_PANIC(("PCI ROM image too large"));
+    return;
+  }
+  if ((size % 512) != 0) {
+    close(fd);
+    BX_PANIC(("PCI ROM image size must be multiple of 512 (size = %ld)", size));
+    return;
+  }
+  while ((size - 1) < max_size) {
+    max_size >>= 1;
+  }
+  pci_rom_size = (max_size << 1);
+
+  while (size > 0) {
+    ret = read(fd, (bx_ptr_t) pci_rom, size);
+    if (ret <= 0) {
+      BX_PANIC(("read failed on PCI ROM image: '%s'", path));
+    }
+    size -= ret;
+  }
+  close(fd);
+
+  BX_INFO(("loaded PCI ROM '%s' (size=%u)", path, (unsigned) stat_buf.st_size));
+}

@@ -23,8 +23,10 @@
 
 #if BX_USE_PCIVGA_SMF
 #  define BX_PCIVGA_THIS thePciVgaAdapter->
+#  define BX_PCIVGA_SMF static
 #else
 #  define BX_PCIVGA_THIS this->
+#  define BX_PCIVGA_SMF
 #endif
 
 class bx_pcivga_c : public bx_devmodel_c, public bx_pci_device_stub_c {
@@ -35,6 +37,9 @@ public:
   virtual void reset(unsigned type);
   virtual void register_state(void);
   virtual void after_restore_state(void);
+
+  BX_PCIVGA_SMF bx_bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  BX_PCIVGA_SMF bx_bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 
   virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
   virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);

@@ -96,9 +96,14 @@ public:
 
   void register_pci_state(bx_list_c *list);
 
+  void load_pci_rom(const char *path);
+
 protected:
   Bit8u pci_conf[256];
   Bit32u pci_base_address[6];
+  Bit8u  pci_rom[65536];
+  Bit32u pci_rom_address;
+  Bit32u pci_rom_size;
 };
 
 //////////////////////////////////////////////////////////////////////

@@ -102,6 +102,8 @@ void bx_pcivga_c::init(void)
     WriteHostDWordToLittleEndian(&BX_PCIVGA_THIS pci_conf[0x10], 0x08);
     BX_PCIVGA_THIS pci_base_address[0] = 0;
   }
+  BX_PCIVGA_THIS pci_rom_address = 0;
+  BX_PCIVGA_THIS load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr());
 }
 
 void bx_pcivga_c::reset(unsigned type)
@@ -132,6 +134,45 @@ void bx_pcivga_c::after_restore_state(void)
       BX_INFO(("new base address: 0x%08x", BX_PCIVGA_THIS pci_base_address[0]));
     }
   }
+  if (DEV_pci_set_base_mem(this, mem_read_handler, mem_write_handler,
+                           &BX_PCIVGA_THIS pci_rom_address,
+                           &BX_PCIVGA_THIS pci_conf[0x30],
+                           BX_PCIVGA_THIS pci_rom_size)) {
+    BX_INFO(("new ROM address: 0x%08x", BX_PCIVGA_THIS pci_rom_address));
+  }
+}
+
+bx_bool bx_pcivga_c::mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
+{
+  Bit8u *data_ptr;
+
+#ifdef BX_LITTLE_ENDIAN
+  data_ptr = (Bit8u *) data;
+#else
+  data_ptr = (Bit8u *) data + (len - 1);
+#endif
+
+  for (unsigned i = 0; i < len; i++) {
+    if (BX_PCIVGA_THIS pci_conf[0x30] & 0x01) {
+      *data_ptr = BX_PCIVGA_THIS pci_rom[addr - BX_PCIVGA_THIS pci_rom_address];
+    } else {
+      *data_ptr = 0xff;
+    }
+    addr++;
+#ifdef BX_LITTLE_ENDIAN
+    data_ptr++;
+#else
+    data_ptr--;
+#endif
+  }
+
+  return 1;
+}
+
+bx_bool bx_pcivga_c::mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
+{
+  BX_INFO(("write to ROM ignored (addr=0x%08x len=%d)", (Bit32u)addr, len));
+  return 1;
 }
 
 // pci configuration space read callback handler
@@ -157,7 +198,7 @@ Bit32u bx_pcivga_c::pci_read_handler(Bit8u address, unsigned io_len)
 // static pci configuration space write callback handler
 void bx_pcivga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
-  bx_bool baseaddr_change = 0;
+  bx_bool baseaddr_change = 0, romaddr_change = 0;
 
   if (io_len == 1)
     BX_DEBUG(("write PCI register 0x%02x value 0x%02x", address, value));
@@ -166,8 +207,13 @@ void bx_pcivga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
   else if (io_len == 4)
     BX_DEBUG(("write PCI register 0x%02x value 0x%08x", address, value));
 
-  if ((address >= 0x14) && (address < 0x34))
+  if ((address >= 0x14) && (address < 0x30))
     return;
+
+  if (address == 0x30) {
+    value = value & 0xfffffc01;
+    romaddr_change = 1;
+  }
 
   for (unsigned i = 0; i < io_len; i++) {
     unsigned write_addr = address + i;
@@ -195,6 +241,14 @@ void bx_pcivga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
     if (DEV_vbe_set_base_addr(&BX_PCIVGA_THIS pci_base_address[0],
                               &BX_PCIVGA_THIS pci_conf[0x10])) {
       BX_INFO(("new base address: 0x%08x", BX_PCIVGA_THIS pci_base_address[0]));
+    }
+  }
+  if (romaddr_change) {
+    if (DEV_pci_set_base_mem(this, mem_read_handler, mem_write_handler,
+                             &BX_PCIVGA_THIS pci_rom_address,
+                             &BX_PCIVGA_THIS pci_conf[0x30],
+                             BX_PCIVGA_THIS pci_rom_size)) {
+      BX_INFO(("new ROM address: 0x%08x", BX_PCIVGA_THIS pci_rom_address));
     }
   }
 }
