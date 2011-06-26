@@ -2253,6 +2253,7 @@ public: // for now...
   BX_SMF void ADDSUBPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* SSE3 */
 
+#if BX_CPU_LEVEL >= 6
   /* SSSE3 */
   BX_SMF void PSHUFB_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PHADDW_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2367,6 +2368,7 @@ public: // for now...
   BX_SMF void MOVBE_EqGq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
   /* MOVBE Intel Atom(R) instruction */
+#endif
 
   /* XSAVE/XRSTOR extensions */
   BX_SMF void XSAVE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2375,6 +2377,7 @@ public: // for now...
   BX_SMF void XSETBV(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* XSAVE/XRSTOR extensions */
 
+#if BX_CPU_LEVEL >= 6
   /* AES instructions */
   BX_SMF void AESIMC_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void AESENC_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2384,6 +2387,7 @@ public: // for now...
   BX_SMF void AESKEYGENASSIST_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PCLMULQDQ_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* AES instructions */
+#endif
 
   /* VMX instructions */
   BX_SMF void VMXON(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2397,12 +2401,14 @@ public: // for now...
   BX_SMF void VMWRITE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* VMX instructions */
 
+#if BX_CPU_LEVEL >= 6
   /* VMXx2 */
   BX_SMF void INVEPT(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void INVVPID(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* VMXx2 */
+#endif
 
-#if BX_SUPPORT_AVX
+#if BX_SUPPORT_AVX && BX_CPU_LEVEL >= 6
   BX_SMF void VZEROUPPER(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void VMOVSS_VssWssR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);

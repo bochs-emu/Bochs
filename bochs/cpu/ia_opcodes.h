@@ -1000,6 +1000,7 @@ bx_define_opcode(BX_IA_ADDSUBPS_VpsWps, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::ADDSUBPS
 bx_define_opcode(BX_IA_LDDQU_VdqMdq, &BX_CPU_C::MOVUPS_VpsWpsM, &BX_CPU_C::BxError, BX_CPU_SSE3, BX_PREPARE_SSE)
 // SSE3
 
+#if BX_CPU_LEVEL >= 6
 // SSSE3
 bx_define_opcode(BX_IA_PSHUFB_PqQq, &BX_CPU_C::PSHUFB_PqQq, &BX_CPU_C::PSHUFB_PqQq, BX_CPU_SSSE3, 0)
 bx_define_opcode(BX_IA_PHADDW_PqQq, &BX_CPU_C::PHADDW_PqQq, &BX_CPU_C::PHADDW_PqQq, BX_CPU_SSSE3, 0)
@@ -1113,6 +1114,8 @@ bx_define_opcode(BX_IA_MOVBE_EqGq, &BX_CPU_C::MOVBE_EqGq, &BX_CPU_C::MOVBE_EqGq,
 #endif
 // MOVBE instruction
 
+#endif // BX_CPU_LEVEL >= 6
+
 // POPCNT instruction
 bx_define_opcode(BX_IA_POPCNT_GdEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::POPCNT_GdEdR, BX_CPU_SSE4_2, 0)
 bx_define_opcode(BX_IA_POPCNT_GwEw, &BX_CPU_C::LOAD_Ew, &BX_CPU_C::POPCNT_GwEwR, BX_CPU_SSE4_2, 0)
@@ -1128,6 +1131,8 @@ bx_define_opcode(BX_IA_XSETBV, &BX_CPU_C::BxError, &BX_CPU_C::XSETBV, BX_CPU_XSA
 bx_define_opcode(BX_IA_XGETBV, &BX_CPU_C::BxError, &BX_CPU_C::XGETBV, BX_CPU_XSAVE, 0)
 bx_define_opcode(BX_IA_XSAVEOPT, &BX_CPU_C::XSAVE, &BX_CPU_C::BxError, BX_CPU_XSAVEOPT, 0)
 
+#if BX_CPU_LEVEL >= 6
+
 // AES instructions
 bx_define_opcode(BX_IA_AESIMC_VdqWdq, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::AESIMC_VdqWdqR, BX_CPU_AES_PCLMULQDQ, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_AESENC_VdqWdq, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::AESENC_VdqWdqR, BX_CPU_AES_PCLMULQDQ, BX_PREPARE_SSE)
@@ -1136,6 +1141,8 @@ bx_define_opcode(BX_IA_AESDEC_VdqWdq, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::AESDEC_Vdq
 bx_define_opcode(BX_IA_AESDECLAST_VdqWdq, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::AESDECLAST_VdqWdqR, BX_CPU_AES_PCLMULQDQ, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_AESKEYGENASSIST_VdqWdqIb, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::AESKEYGENASSIST_VdqWdqIbR, BX_CPU_AES_PCLMULQDQ, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_PCLMULQDQ_VdqWdqIb, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PCLMULQDQ_VdqWdqIbR, BX_CPU_AES_PCLMULQDQ, BX_PREPARE_SSE)
+
+#endif
 
 #if BX_SUPPORT_X86_64
 bx_define_opcode(BX_IA_ADD_GqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::ADD_GqEqR, BX_CPU_X86_64, 0)
@@ -1348,12 +1355,14 @@ bx_define_opcode(BX_IA_VMWRITE_GdEd, &BX_CPU_C::VMWRITE, &BX_CPU_C::VMWRITE, BX_
 bx_define_opcode(BX_IA_VMREAD_EqGq, &BX_CPU_C::VMREAD, &BX_CPU_C::VMREAD, BX_CPU_X86_64 | BX_CPU_VMX, 0)
 bx_define_opcode(BX_IA_VMWRITE_GqEq, &BX_CPU_C::VMWRITE, &BX_CPU_C::VMWRITE, BX_CPU_X86_64 | BX_CPU_VMX, 0)
 #endif
+#if BX_CPU_LEVEL >= 6
 bx_define_opcode(BX_IA_INVEPT, &BX_CPU_C::INVEPT, &BX_CPU_C::BxError, BX_CPU_X86_64 | BX_CPU_VMX, 0)
 bx_define_opcode(BX_IA_INVVPID, &BX_CPU_C::INVVPID, &BX_CPU_C::BxError, BX_CPU_X86_64 | BX_CPU_VMX, 0)
+#endif
 // VMX
 
 // AVX
-#if BX_SUPPORT_AVX
+#if BX_SUPPORT_AVX && BX_CPU_LEVEL >= 6
 bx_define_opcode(BX_IA_VMOVUPD_VpdWpd, &BX_CPU_C::VMOVUPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_CPU_AVX, BX_PREPARE_AVX | BX_VEX_NO_VVV | BX_VEX_L128 | BX_VEX_L256)
 bx_define_opcode(BX_IA_VMOVUPD_WpdVpd, &BX_CPU_C::VMOVUPS_WpsVpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_CPU_AVX, BX_PREPARE_AVX | BX_VEX_NO_VVV | BX_VEX_L128 | BX_VEX_L256) /* dstRM */
 bx_define_opcode(BX_IA_VMOVSD_VsdWsd, &BX_CPU_C::MOVQ_VqWqM, &BX_CPU_C::VMOVSD_VsdWsdR, BX_CPU_AVX, BX_PREPARE_AVX | BX_VEX_L128)

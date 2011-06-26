@@ -2802,6 +2802,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
 #endif  
 }
 
+#if BX_CPU_LEVEL >= 6
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX >= 2
@@ -2937,6 +2939,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
   exception(BX_UD_EXCEPTION, 0);
 #endif
 }
+
+#endif
 
 #if BX_SUPPORT_VMX
 void BX_CPU_C::register_vmx_state(bx_param_c *parent)

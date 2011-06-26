@@ -506,9 +506,17 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F 35 /w */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /w */ { 0, BX_IA_ERROR },
   /* 0F 37 /w */ { 0, BX_IA_ERROR },
+#if BX_CPU_LEVEL >= 6
   /* 0F 38 /w */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
+#else
+  /* 0F 38 /w */ { 0, BX_IA_ERROR },
+#endif
   /* 0F 39 /w */ { 0, BX_IA_ERROR },
+#if BX_CPU_LEVEL >= 6
   /* 0F 3A /w */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
+#else
+  /* 0F 3A /w */ { 0, BX_IA_ERROR },
+#endif
   /* 0F 3B /w */ { 0, BX_IA_ERROR },
   /* 0F 3C /w */ { 0, BX_IA_ERROR },
   /* 0F 3D /w */ { 0, BX_IA_ERROR },
@@ -1051,9 +1059,17 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F 35 /d */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /d */ { 0, BX_IA_ERROR },
   /* 0F 37 /d */ { 0, BX_IA_ERROR },
+#if BX_CPU_LEVEL >= 6
   /* 0F 38 /d */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
+#else
+  /* 0F 38 /d */ { 0, BX_IA_ERROR },
+#endif
   /* 0F 39 /d */ { 0, BX_IA_ERROR },
+#if BX_CPU_LEVEL >= 6
   /* 0F 3A /d */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
+#else
+  /* 0F 3A /d */ { 0, BX_IA_ERROR },
+#endif
   /* 0F 3B /d */ { 0, BX_IA_ERROR },
   /* 0F 3C /d */ { 0, BX_IA_ERROR },
   /* 0F 3D /d */ { 0, BX_IA_ERROR },

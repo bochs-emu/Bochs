@@ -26,6 +26,8 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_CPU_LEVEL >= 6
+
 // 3-byte opcodes
 
 #define CRC32_POLYNOMIAL BX_CONST64(0x11edc6f41)
@@ -138,3 +140,5 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEqR(bxInstruction_c *i)
 }
 
 #endif // BX_SUPPORT_X86_64
+
+#endif // BX_CPU_LEVEL >= 6

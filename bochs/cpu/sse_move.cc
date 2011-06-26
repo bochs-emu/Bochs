@@ -799,10 +799,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTI_MqGq(bxInstruction_c *i)
 /* 3-BYTE-OPCODE INSTRUCTIONS */
 /* ************************** */
 
+#if BX_CPU_LEVEL >= 6
+
 /* 66 0F 38 20 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBW_VdqWqR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister result;
   BxPackedMmxRegister op;
 
@@ -819,13 +820,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBW_VdqWqR(bxInstruction_c *i)
   result.xmm16u(7) = MMXSB7(op);
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
-#endif
 }
 
 /* 66 0F 38 21 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBD_VdqWdR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister result;
   Bit32u val32 = BX_READ_XMM_REG_LO_DWORD(i->rm());
 
@@ -835,13 +834,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBD_VdqWdR(bxInstruction_c *i)
   result.xmm32u(3) = (Bit8s) (val32  >> 24);
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
-#endif
 }
 
 /* 66 0F 38 22 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBQ_VdqWwR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister result;
   Bit16u val16 = BX_READ_XMM_REG_LO_WORD(i->rm());
 
@@ -849,29 +846,28 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBQ_VdqWwR(bxInstruction_c *i)
   result.xmm64u(1) = (Bit8s) (val16 >> 8);
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
-#endif
 }
 
 /* 66 0F 38 23 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXWD_VdqWqR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister result;
-  Bit64u val64 = BX_READ_XMM_REG_LO_QWORD(i->rm());
+  BxPackedMmxRegister op;
 
-  result.xmm32u(0) = (Bit16s) (val64 & 0xFFFF);
-  result.xmm32u(1) = (Bit16s) ((val64 >> 16) & 0xFFFF);
-  result.xmm32u(2) = (Bit16s) ((val64 >> 32) & 0xFFFF);
-  result.xmm32u(3) = (Bit16s) (val64  >> 48);
+  // use MMX register as 64-bit value with convinient accessors
+  MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->rm());
+
+  result.xmm32u(0) = (Bit16s) MMXSW0(op);
+  result.xmm32u(1) = (Bit16s) MMXSW1(op);
+  result.xmm32u(2) = (Bit16s) MMXSW2(op);
+  result.xmm32u(3) = (Bit16s) MMXSW3(op);
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
-#endif
 }
 
 /* 66 0F 38 24 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXWQ_VdqWdR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister result;
   Bit32u val32 = BX_READ_XMM_REG_LO_DWORD(i->rm());
 
@@ -879,13 +875,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXWQ_VdqWdR(bxInstruction_c *i)
   result.xmm64u(1) = (Bit16s) (val32 >> 16);
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
-#endif
 }
 
 /* 66 0F 38 25 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXDQ_VdqWqR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister result;
   Bit64u val64 = BX_READ_XMM_REG_LO_QWORD(i->rm());
 
@@ -893,13 +887,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXDQ_VdqWqR(bxInstruction_c *i)
   result.xmm64u(1) = (Bit32s) (val64 >> 32);
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
-#endif
 }
 
 /* 66 0F 38 30 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBW_VdqWqR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister result;
   BxPackedMmxRegister op;
 
@@ -916,13 +908,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBW_VdqWqR(bxInstruction_c *i)
   result.xmm16u(7) = MMXUB7(op);
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
-#endif
 }
 
 /* 66 0F 38 31 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBD_VdqWdR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister result;
   Bit32u val32 = BX_READ_XMM_REG_LO_DWORD(i->rm());
 
@@ -932,13 +922,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBD_VdqWdR(bxInstruction_c *i)
   result.xmm32u(3) = val32  >> 24;
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
-#endif
 }
 
 /* 66 0F 38 32 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBQ_VdqWwR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister result;
   Bit16u val16 = BX_READ_XMM_REG_LO_WORD(i->rm());
 
@@ -946,29 +934,28 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBQ_VdqWwR(bxInstruction_c *i)
   result.xmm64u(1) = val16 >> 8;
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
-#endif
 }
 
 /* 66 0F 38 33 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXWD_VdqWqR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister result;
-  Bit64u val64 = BX_READ_XMM_REG_LO_QWORD(i->rm());
+  BxPackedMmxRegister op;
 
-  result.xmm32u(0) = val64 & 0xFFFF;
-  result.xmm32u(1) = (val64 >> 16) & 0xFFFF;
-  result.xmm32u(2) = (val64 >> 32) & 0xFFFF;
-  result.xmm32u(3) = val64  >> 48;
+  // use MMX register as 64-bit value with convinient accessors
+  MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->rm());
+
+  result.xmm32u(0) = MMXUW0(op);
+  result.xmm32u(1) = MMXUW1(op);
+  result.xmm32u(2) = MMXUW2(op);
+  result.xmm32u(3) = MMXUW3(op);
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
-#endif
 }
 
 /* 66 0F 38 34 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXWQ_VdqWdR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister result;
   Bit32u val32 = BX_READ_XMM_REG_LO_DWORD(i->rm());
 
@@ -976,13 +963,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXWQ_VdqWdR(bxInstruction_c *i)
   result.xmm64u(1) = val32 >> 16;
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
-#endif
 }
 
 /* 66 0F 38 35 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXDQ_VdqWqR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister result;
   Bit64u val64 = BX_READ_XMM_REG_LO_QWORD(i->rm());
 
@@ -990,13 +975,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXDQ_VdqWqR(bxInstruction_c *i)
   result.xmm64u(1) = val64 >> 32;
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
-#endif
 }
 
 /* 66 0F 3A 0F */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PALIGNR_VdqWdqIbR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
 
@@ -1038,5 +1021,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PALIGNR_VdqWdqIbR(bxInstruction_c *i)
   }
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
-#endif
 }
+
+#endif

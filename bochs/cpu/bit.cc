@@ -258,6 +258,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSWAP_RRX(bxInstruction_c *i)
 }
 #endif
 
+#if BX_CPU_LEVEL >= 6
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GwEwR(bxInstruction_c *i)
 {
   Bit16u val16 = BX_READ_16BIT_REG(i->rm());
@@ -327,5 +329,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_EqGq(bxInstruction_c *i)
 }
 
 #endif // BX_SUPPORT_X86_64
+
+#endif // BX_CPU_LEVEL >= 6
 
 #endif // BX_CPU_LEVEL >= 3

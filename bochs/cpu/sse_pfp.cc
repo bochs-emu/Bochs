@@ -2055,10 +2055,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSUBPS_VpsWpsR(bxInstruction_c *i)
 #endif
 }
 
+#if BX_CPU_LEVEL >= 6
+
 /* 66 0F 3A 08 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPS_VpsWpsIbR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
 
   float_status_t status_word;
@@ -2087,13 +2088,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPS_VpsWpsIbR(bxInstruction_c *i)
 
   check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op);
-#endif
 }
 
 /* 66 0F 3A 09 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPD_VpdWpdIbR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
 
   float_status_t status_word;
@@ -2118,13 +2117,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPD_VpdWpdIbR(bxInstruction_c *i)
 
   check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op);
-#endif
 }
 
 /* 66 0F 3A 0A */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSS_VssWssIbR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   float32 op = BX_READ_XMM_REG_LO_DWORD(i->rm());
 
   float_status_t status_word;
@@ -2145,13 +2142,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSS_VssWssIbR(bxInstruction_c *i)
 
   check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), op);
-#endif
 }
 
 /* 66 0F 3A 0B */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSD_VsdWsdIbR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   float64 op = BX_READ_XMM_REG_LO_QWORD(i->rm());
 
   float_status_t status_word;
@@ -2172,7 +2167,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSD_VsdWsdIbR(bxInstruction_c *i)
 
   check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), op);
-#endif
 }
 
 
@@ -2183,7 +2177,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSD_VsdWsdIbR(bxInstruction_c *i)
  */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPS_VpsWpsIbR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
   BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), tmp;
   Bit8u mask = i->Ib();
@@ -2227,7 +2220,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPS_VpsWpsIbR(bxInstruction_c *i)
 
   check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#endif
 }
 
 /* Opcode: 66 0F 3A 41
@@ -2237,7 +2229,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPS_VpsWpsIbR(bxInstruction_c *i)
  */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPD_VpdWpdIbR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), tmp;
   Bit8u mask = i->Ib();
@@ -2269,5 +2260,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPD_VpdWpdIbR(bxInstruction_c *i)
 
   check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REGZ(i->nnn(), op1, i->getVL());
-#endif
 }
+
+#endif // BX_CPU_LEVEL >= 6

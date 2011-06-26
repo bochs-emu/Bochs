@@ -24,7 +24,7 @@
 #ifndef BX_AVX_FETCHDECODE_TABLES_H
 #define BX_AVX_FETCHDECODE_TABLES_H
 
-#if BX_SUPPORT_AVX
+#if BX_SUPPORT_AVX && BX_CPU_LEVEL >= 6
 
 /* ************************************************************************ */
 
@@ -1175,6 +1175,6 @@ static const BxOpcodeInfo_t BxOpcodeTableAVX[256*3] = {
   /* FF */ { 0, BX_IA_ERROR }
 };
 
-#endif
+#endif // BX_SUPPORT_AVX && BX_CPU_LEVEL >= 6
 
 #endif // BX_AVX_FETCHDECODE_TABLES_H
