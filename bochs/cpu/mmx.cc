@@ -1086,8 +1086,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_EqPqR(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareMMX();
   BX_CPU_THIS_PTR prepareFPU2MMX();
 
-  BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn());
-  BX_WRITE_64BIT_REG(i->rm(), MMXUQ(op));
+  BX_WRITE_64BIT_REG(i->rm(), BX_MMX_REG(i->nnn()));
 }
 
 #endif
@@ -1103,16 +1102,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_QqPqR(bxInstruction_c *i)
 #endif
 }
 
+/* 0F 7F - MOVQ_QqPqM  */
+/* 0F E7 - MOVNTQ_MqPq */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_QqPqM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn());
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   /* pointer, segment address pair */
-  write_virtual_qword(i->seg(), eaddr, MMXUQ(op));
+  write_virtual_qword(i->seg(), eaddr, BX_MMX_REG(i->nnn()));
 
   // do not cause FPU2MMX transition if memory write faults
   BX_CPU_THIS_PTR prepareFPU2MMX();
@@ -1794,21 +1793,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHW_PqQq(bxInstruction_c *i)
   MMXUW3(op1) = Bit16u(product4 >> 16);
 
   BX_WRITE_MMX_REG(i->nnn(), op1);
-#endif
-}
-
-/* 0F E7 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTQ_MqPq(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
-
-  BxPackedMmxRegister reg = BX_READ_MMX_REG(i->nnn());
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  write_virtual_qword(i->seg(), eaddr, MMXUQ(reg));
-
-  // do not cause FPU2MMX transition if memory write faults
-  BX_CPU_THIS_PTR prepareFPU2MMX();
 #endif
 }
 

@@ -2114,7 +2114,6 @@ public: // for now...
   BX_SMF void PAVGB_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PAVGW_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PMULHUW_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVNTQ_MqPq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PMINSW_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PMAXSW_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PSADBW_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

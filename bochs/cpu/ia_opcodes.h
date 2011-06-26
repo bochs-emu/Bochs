@@ -831,7 +831,7 @@ bx_define_opcode(BX_IA_PMAXUB_PqQq, &BX_CPU_C::PMAXUB_PqQq, &BX_CPU_C::PMAXUB_Pq
 bx_define_opcode(BX_IA_PAVGB_PqQq, &BX_CPU_C::PAVGB_PqQq, &BX_CPU_C::PAVGB_PqQq, BX_CPU_SSE, 0)
 bx_define_opcode(BX_IA_PAVGW_PqQq, &BX_CPU_C::PAVGW_PqQq, &BX_CPU_C::PAVGW_PqQq, BX_CPU_SSE, 0)
 bx_define_opcode(BX_IA_PMULHUW_PqQq, &BX_CPU_C::PMULHUW_PqQq, &BX_CPU_C::PMULHUW_PqQq, BX_CPU_SSE | BX_CPU_3DNOW, 0)
-bx_define_opcode(BX_IA_MOVNTQ_MqPq, &BX_CPU_C::MOVNTQ_MqPq, &BX_CPU_C::BxError, BX_CPU_SSE | BX_CPU_3DNOW, 0)
+bx_define_opcode(BX_IA_MOVNTQ_MqPq, &BX_CPU_C::MOVQ_QqPqM, &BX_CPU_C::BxError, BX_CPU_SSE | BX_CPU_3DNOW, 0)
 bx_define_opcode(BX_IA_PMINSW_PqQq, &BX_CPU_C::PMINSW_PqQq, &BX_CPU_C::PMINSW_PqQq, BX_CPU_SSE | BX_CPU_3DNOW, 0)
 bx_define_opcode(BX_IA_PMAXSW_PqQq, &BX_CPU_C::PMAXSW_PqQq, &BX_CPU_C::PMAXSW_PqQq, BX_CPU_SSE, 0)
 bx_define_opcode(BX_IA_PSADBW_PqQq, &BX_CPU_C::PSADBW_PqQq, &BX_CPU_C::PSADBW_PqQq, BX_CPU_SSE | BX_CPU_3DNOW, 0)
