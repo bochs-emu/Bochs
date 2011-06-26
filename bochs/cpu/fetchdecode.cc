@@ -1424,6 +1424,7 @@ fetch_b1:
 
   if (has_modrm) {
 
+#if BX_CPU_LEVEL >= 6
     unsigned b3 = 0;
     // handle 3-byte escape
     if ((attr & BxGroupX) == Bx3ByteOp) {
@@ -1434,6 +1435,7 @@ fetch_b1:
       else
         return(-1);
     }
+#endif
 
     // opcode requires modrm byte
     if (remain != 0) {
@@ -1646,9 +1648,11 @@ modrm_done:
             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[0]);
           break;
 #endif
+#if BX_CPU_LEVEL >= 6
         case Bx3ByteOp:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3]);
           break;
+#endif
         case BxOSizeGrp:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[os_32]);
           break;
