@@ -724,8 +724,8 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
 #if BX_CPU_LEVEL >= 4
   SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4) = BX_CPU_THIS_PTR cr4.get32();
 #endif
-  SMRAM_FIELD(saved_state, SMRAM_FIELD_DR6) = BX_CPU_THIS_PTR dr6.get32();;
-  SMRAM_FIELD(saved_state, SMRAM_FIELD_DR7) = BX_CPU_THIS_PTR dr7.get32();;
+  SMRAM_FIELD(saved_state, SMRAM_FIELD_DR6) = BX_CPU_THIS_PTR dr6.get32();
+  SMRAM_FIELD(saved_state, SMRAM_FIELD_DR7) = BX_CPU_THIS_PTR dr7.get32();
 
   // --- Task Register --- //
   SMRAM_FIELD(saved_state, SMRAM_FIELD_TR_SELECTOR) = BX_CPU_THIS_PTR tr.selector.value;

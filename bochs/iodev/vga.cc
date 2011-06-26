@@ -409,7 +409,7 @@ void bx_vga_c::register_state(void)
   parent = SIM->get_bochs_root();
 #if BX_SUPPORT_CLGD54XX
   if (!strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "cirrus")) {
-    parent = (bx_list_c*)SIM->get_param("svga_cirrus", parent);;
+    parent = (bx_list_c*)SIM->get_param("svga_cirrus", parent);
   }
 #endif
   bx_list_c *list = new bx_list_c(parent, "vga", "VGA Adapter State", 17);

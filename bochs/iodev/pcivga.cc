@@ -97,7 +97,7 @@ void bx_pcivga_c::init(void)
   for (i = 0; i < sizeof(init_vals) / sizeof(*init_vals); ++i) {
     BX_PCIVGA_THIS pci_conf[init_vals[i].addr] = init_vals[i].val;
   }
-  BX_PCIVGA_THIS vbe_present = !strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "vbe");;
+  BX_PCIVGA_THIS vbe_present = !strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "vbe");
   if (BX_PCIVGA_THIS vbe_present) {
     WriteHostDWordToLittleEndian(&BX_PCIVGA_THIS pci_conf[0x10], 0x08);
     BX_PCIVGA_THIS pci_base_address[0] = 0;

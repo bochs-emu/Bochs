@@ -77,6 +77,6 @@ public:
 protected:
   logfunctions *device;
   int record_timer_index;
-  int record_packet_size;;
+  int record_packet_size;
   sound_record_handler_t record_handler;
 };
