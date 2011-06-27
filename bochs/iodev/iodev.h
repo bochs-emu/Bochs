@@ -86,7 +86,10 @@ class device_image_t;
 // but it make serious problems for cirrus_svga device
 class BOCHSAPI bx_pci_device_stub_c {
 public:
-  virtual ~bx_pci_device_stub_c() {}
+  bx_pci_device_stub_c(): pci_rom(NULL), pci_rom_size(0) {}
+  virtual ~bx_pci_device_stub_c() {
+    if (pci_rom != NULL) delete [] pci_rom;
+  }
 
   virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len) {
     return 0;
@@ -101,7 +104,7 @@ public:
 protected:
   Bit8u pci_conf[256];
   Bit32u pci_base_address[6];
-  Bit8u  pci_rom[65536];
+  Bit8u  *pci_rom;
   Bit32u pci_rom_address;
   Bit32u pci_rom_size;
 };

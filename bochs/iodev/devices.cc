@@ -1210,7 +1210,7 @@ void bx_pci_device_stub_c::load_pci_rom(const char *path)
     return;
   }
 
-  max_size = 0x10000;
+  max_size = 0x20000;
   size = (unsigned long)stat_buf.st_size;
   if (size > max_size) {
     close(fd);
@@ -1226,6 +1226,7 @@ void bx_pci_device_stub_c::load_pci_rom(const char *path)
     max_size >>= 1;
   }
   pci_rom_size = (max_size << 1);
+  pci_rom = new Bit8u[pci_rom_size];
 
   while (size > 0) {
     ret = read(fd, (bx_ptr_t) pci_rom, size);
