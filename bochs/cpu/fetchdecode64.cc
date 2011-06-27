@@ -1937,97 +1937,56 @@ fetch_b1:
     // initialize displ32 with zero to include cases with no diplacement
     i->modRMForm.displ32u = 0;
 
-    if (i->as64L()) {
-      // 64-bit addressing modes; note that mod==11b handled above
+    // note that mod==11b handled above
+    if (i->as64L())
       i->ResolveModrm = &BX_CPU_C::BxResolve64Base;
-      if ((rm & 0x7) != 4) { // no s-i-b byte
-        if (mod == 0x00) { // mod == 00b
-          if ((rm & 0x7) == 5) {
-            i->setSibBase(BX_64BIT_REG_RIP);
-            goto get_32bit_displ;
-          }
-          // mod==00b, rm!=4, rm!=5
-          goto modrm_done;
-        }
-        // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
-        seg = sreg_mod1or2_base32[rm];
-      }
-      else { // mod!=11b, rm==4, s-i-b byte follows
-        unsigned sib, base, index, scale;
-        if (remain != 0) {
-          sib = *iptr++;
-          remain--;
-        }
-        else {
-          return(-1);
-        }
-        base  = (sib & 0x7) | rex_b; sib >>= 3;
-        index = (sib & 0x7) | rex_x; sib >>= 3;
-        scale =  sib;
-        i->setSibScale(scale);
-        i->setSibBase(base);
-        if (index != 4) {
-          i->ResolveModrm = &BX_CPU_C::BxResolve64BaseIndex;
-          i->setSibIndex(index);
-        }
-        if (mod == 0x00) { // mod==00b, rm==4
-          seg = sreg_mod0_base32[base];
-          if ((base & 0x7) == 5) {
-            i->setSibBase(BX_NIL_REGISTER);
-            goto get_32bit_displ;
-          }
-          // mod==00b, rm==4, base!=5
-          goto modrm_done;
-        }
-        // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
-        seg = sreg_mod1or2_base32[base];
-      }
-    }
-    else {
-      // 32-bit addressing modes; note that mod==11b handled above
+    else
       i->ResolveModrm = &BX_CPU_C::BxResolve32Base;
-      if ((rm & 0x7) != 4) { // no s-i-b byte
-        if (mod == 0x00) { // mod == 00b
-          if ((rm & 0x7) == 5) {
-            i->setSibBase(BX_32BIT_REG_EIP);
-            goto get_32bit_displ;
-          }
-          // mod==00b, rm!=4, rm!=5
-          goto modrm_done;
+
+    if ((rm & 0x7) != 4) { // no s-i-b byte
+      if (mod == 0x00) { // mod == 00b
+        if ((rm & 0x7) == 5) {
+          i->setSibBase(BX_64BIT_REG_RIP);
+          goto get_32bit_displ;
         }
-        // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
-        seg = sreg_mod1or2_base32[rm];
+        // mod==00b, rm!=4, rm!=5
+        goto modrm_done;
       }
-      else { // mod!=11b, rm==4, s-i-b byte follows
-        unsigned sib, base, index, scale;
-        if (remain != 0) {
-          sib = *iptr++;
-          remain--;
-        }
-        else {
-          return(-1);
-        }
-        base  = (sib & 0x7) | rex_b; sib >>= 3;
-        index = (sib & 0x7) | rex_x; sib >>= 3;
-        scale =  sib;
-        i->setSibBase(base);
-        i->setSibScale(scale);
-        if (index != 4) {
+      // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
+      seg = sreg_mod1or2_base32[rm];
+    }
+    else { // mod!=11b, rm==4, s-i-b byte follows
+      unsigned sib, base, index, scale;
+      if (remain != 0) {
+        sib = *iptr++;
+        remain--;
+      }
+      else {
+        return(-1);
+      }
+      base  = (sib & 0x7) | rex_b; sib >>= 3;
+      index = (sib & 0x7) | rex_x; sib >>= 3;
+      scale =  sib;
+      i->setSibScale(scale);
+      i->setSibBase(base);
+      if (index != 4) {
+        if (i->as64L())
+          i->ResolveModrm = &BX_CPU_C::BxResolve64BaseIndex;
+        else
           i->ResolveModrm = &BX_CPU_C::BxResolve32BaseIndex;
-          i->setSibIndex(index);
-        }
-        if (mod == 0x00) { // mod==00b, rm==4
-          seg = sreg_mod0_base32[base];
-          if ((base & 0x7) == 5) {
-            i->setSibBase(BX_NIL_REGISTER);
-            goto get_32bit_displ;
-          }
-          // mod==00b, rm==4, base!=5
-          goto modrm_done;
-        }
-        // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
-        seg = sreg_mod1or2_base32[base];
+        i->setSibIndex(index);
       }
+      if (mod == 0x00) { // mod==00b, rm==4
+        seg = sreg_mod0_base32[base];
+        if ((base & 0x7) == 5) {
+          i->setSibBase(BX_NIL_REGISTER);
+          goto get_32bit_displ;
+        }
+        // mod==00b, rm==4, base!=5
+        goto modrm_done;
+      }
+      // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
+      seg = sreg_mod1or2_base32[base];
     }
 
     // (mod == 0x40), mod==01b
