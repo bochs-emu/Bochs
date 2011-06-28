@@ -31,7 +31,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GdEdR(bxInstruction_c *i)
   Bit32u op2_32 = BX_READ_32BIT_REG(i->rm());
 
   if (op2_32 == 0) {
-    SET_FLAGS_OSZAPC_LOGIC_32(0); /* op1_32 undefined */
+    assert_ZF(); /* op1_32 undefined */
   }
   else {
     Bit32u op1_32 = 0;
@@ -40,8 +40,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GdEdR(bxInstruction_c *i)
       op2_32 >>= 1;
     }
 
-    // will clear ZF because op1_32 can't be zero
     SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
+    clear_ZF();
 
     /* now write result back to destination */
     BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
@@ -53,7 +53,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GdEdR(bxInstruction_c *i)
   Bit32u op2_32 = BX_READ_32BIT_REG(i->rm());
 
   if (op2_32 == 0) {
-    SET_FLAGS_OSZAPC_LOGIC_32(0); /* op1_32 undefined */
+    assert_ZF(); /* op1_32 undefined */
   }
   else {
     Bit32u op1_32 = 31;

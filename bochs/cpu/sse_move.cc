@@ -523,9 +523,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDDUP_VpdWqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSLDUP_VpsWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op;
-
-  op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
 
   op.xmm32u(1) = op.xmm32u(0);
   op.xmm32u(3) = op.xmm32u(2);
@@ -538,9 +536,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSLDUP_VpsWpsR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSHDUP_VpsWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op;
-
-  op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
 
   op.xmm32u(0) = op.xmm32u(1);
   op.xmm32u(2) = op.xmm32u(3);
@@ -734,9 +730,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ2DQ_VdqQq(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareFPU2MMX();
 
   BxPackedXmmRegister op;
-  BxPackedMmxRegister mm = BX_READ_MMX_REG(i->rm());
 
-  op.xmm64u(0) = MMXUQ(mm);
+  op.xmm64u(0) = BX_MMX_REG(i->rm());
   op.xmm64u(1) = 0;
 
   BX_WRITE_XMM_REG(i->nnn(), op);
@@ -783,17 +778,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
   write_virtual_dword(i->seg(), eaddr, BX_READ_32BIT_REG(i->nnn()));
 #endif
 }
-
-#if BX_SUPPORT_X86_64
-
-/* 0F C3 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTI_MqGq(bxInstruction_c *i)
-{
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  write_virtual_qword_64(i->seg(), eaddr, BX_READ_64BIT_REG(i->nnn()));
-}
-
-#endif
 
 /* ************************** */
 /* 3-BYTE-OPCODE INSTRUCTIONS */

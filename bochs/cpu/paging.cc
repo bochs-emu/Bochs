@@ -477,11 +477,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
 #endif
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonical(laddr)) return;
+  if (! IsCanonical(laddr))
 #endif
-
-  BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVLPG, laddr);
-  TLB_invlpg(laddr);
+  {
+    BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVLPG, laddr);
+    TLB_invlpg(laddr);
+  }
 }
 
 // error checking order - page not present, reserved bits, protection

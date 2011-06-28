@@ -486,9 +486,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F 21 /w */ { 0, BX_IA_MOV_RdDd },
   /* 0F 22 /w */ { BxGroupN, BX_IA_ERROR, BxOpcodeInfoMOV_CdRd },
   /* 0F 23 /w */ { BxTraceEnd, BX_IA_MOV_DdRd },
-  /* 0F 24 /w */ { BxTraceEnd, BX_IA_MOV_RdTd }, // not implemented
+  /* 0F 24 /w */ { 0, BX_IA_ERROR }, // BX_IA_MOV_RdTd not implemented
   /* 0F 25 /w */ { 0, BX_IA_ERROR },
-  /* 0F 26 /w */ { BxTraceEnd, BX_IA_MOV_TdRd }, // not implemented
+  /* 0F 26 /w */ { 0, BX_IA_ERROR }, // BX_IA_MOV_TdRd not implemented
   /* 0F 27 /w */ { 0, BX_IA_ERROR },
   /* 0F 28 /w */ { BxPrefixSSE,                BX_IA_MOVAPS_VpsWps, BxOpcodeGroupSSE_0f28 },
   /* 0F 29 /w */ { BxPrefixSSE | BxArithDstRM, BX_IA_MOVAPS_WpsVps, BxOpcodeGroupSSE_0f29 },
@@ -1039,9 +1039,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F 21 /d */ { 0, BX_IA_MOV_RdDd },
   /* 0F 22 /d */ { BxGroupN, BX_IA_ERROR, BxOpcodeInfoMOV_CdRd },
   /* 0F 23 /d */ { BxTraceEnd, BX_IA_MOV_DdRd },
-  /* 0F 24 /d */ { BxTraceEnd, BX_IA_MOV_RdTd }, // not implemented
+  /* 0F 24 /d */ { 0, BX_IA_ERROR }, // BX_IA_MOV_RdTd not implemented
   /* 0F 25 /d */ { 0, BX_IA_ERROR },
-  /* 0F 26 /d */ { BxTraceEnd, BX_IA_MOV_TdRd }, // not implemented
+  /* 0F 26 /d */ { 0, BX_IA_ERROR }, // BX_IA_MOV_TdRd not implemented
   /* 0F 27 /d */ { 0, BX_IA_ERROR },
   /* 0F 28 /d */ { BxPrefixSSE,                BX_IA_MOVAPS_VpsWps, BxOpcodeGroupSSE_0f28 },
   /* 0F 29 /d */ { BxPrefixSSE | BxArithDstRM, BX_IA_MOVAPS_WpsVps, BxOpcodeGroupSSE_0f29 },

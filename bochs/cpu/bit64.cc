@@ -31,7 +31,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GqEqR(bxInstruction_c *i)
   Bit64u op2_64 = BX_READ_64BIT_REG(i->rm());
 
   if (op2_64 == 0) {
-    SET_FLAGS_OSZAPC_LOGIC_64(0); /* op1_64 undefined */
+    assert_ZF(); /* op1_64 undefined */
   }
   else {
     Bit64u op1_64 = 0;
@@ -40,8 +40,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GqEqR(bxInstruction_c *i)
       op2_64 >>= 1;
     }
 
-    // will clear ZF because op1_16 can't be zero
     SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
+    clear_ZF();
 
     /* now write result back to destination */
     BX_WRITE_64BIT_REG(i->nnn(), op1_64);
@@ -53,7 +53,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GqEqR(bxInstruction_c *i)
   Bit64u op2_64 = BX_READ_64BIT_REG(i->rm());
 
   if (op2_64 == 0) {
-    SET_FLAGS_OSZAPC_LOGIC_64(0); /* op1_64 undefined */
+    assert_ZF(); /* op1_64 undefined */
   }
   else {
     Bit64u op1_64 = 63;

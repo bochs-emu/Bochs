@@ -2186,10 +2186,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
 #endif
 
     VMsucceed();
-    return;
   }
-
-  if (BX_CPU_THIS_PTR in_vmx_guest) { // in VMX non-root operation
+  else if (BX_CPU_THIS_PTR in_vmx_guest) { // in VMX non-root operation
     BX_ERROR(("VMEXIT: VMXON in VMX non-root operation"));
     VMexit_Instruction(i, VMX_VMEXIT_VMXON);
   }
@@ -2202,9 +2200,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
 
     VMfail(VMXERR_VMXON_IN_VMX_ROOT_OPERATION);
   }
-#else
-  BX_INFO(("VMXON: required VMX support, use --enable-vmx option"));
-  exception(BX_UD_EXCEPTION, 0);
 #endif  
 }
 
@@ -2239,9 +2234,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXOFF(bxInstruction_c *i)
 #endif
     VMsucceed();
   }
-#else
-  BX_INFO(("VMXOFF: required VMX support, use --enable-vmx option"));
-  exception(BX_UD_EXCEPTION, 0);
 #endif  
 }
 
@@ -2318,9 +2310,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCALL(bxInstruction_c *i)
                 FI;
         FI;
 */
-#else
-  BX_INFO(("VMCALL: required VMX support, use --enable-vmx option"));
-  exception(BX_UD_EXCEPTION, 0);
 #endif  
 }
 
@@ -2477,9 +2466,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
   ///////////////////////////////////////////////////////
 
   VMenterInjectEvents();
-#else
-  BX_INFO(("VMLAUNCH/VMRESUME: required VMX support, use --enable-vmx option"));
-  exception(BX_UD_EXCEPTION, 0);
 #endif  
 }
 
@@ -2522,9 +2508,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRLD(bxInstruction_c *i)
        VMsucceed();
     }
   }
-#else
-  BX_INFO(("VMPTRLD: required VMX support, use --enable-vmx option"));
-  exception(BX_UD_EXCEPTION, 0);
 #endif  
 }
 
@@ -2547,9 +2530,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRST(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   write_virtual_qword(i->seg(), eaddr, BX_CPU_THIS_PTR vmcsptr);
   VMsucceed();
-#else         
-  BX_INFO(("VMPTRST: required VMX support, use --enable-vmx option"));
-  exception(BX_UD_EXCEPTION, 0);
 #endif  
 }
 
@@ -2647,9 +2627,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
   }
  
   VMsucceed();
-#else         
-  BX_INFO(("VMREAD: required VMX support, use --enable-vmx option"));
-  exception(BX_UD_EXCEPTION, 0);
 #endif  
 }
 
@@ -2796,9 +2773,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
 
     VMsucceed();
   }
-#else         
-  BX_INFO(("VMCLEAR: required VMX support, use --enable-vmx option"));
-  exception(BX_UD_EXCEPTION, 0);
 #endif  
 }
 

@@ -1420,8 +1420,6 @@ public: // for now...
   BX_SMF void MOV_RdCR4(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_DdRd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_RdDd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOV_TdRd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOV_RdTd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void JO_Jw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void JNO_Jw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2937,8 +2935,6 @@ public: // for now...
   BX_SMF void CVTTSS2SI_GqWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTSD2SI_GqWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTSS2SI_GqWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
-  BX_SMF void MOVNTI_MqGq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif  // #if BX_SUPPORT_X86_64
 
   BX_SMF void RDTSCP(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

@@ -790,28 +790,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwM(bxInstruction_c *i)
   write_virtual_word(i->seg(), eaddr, msw);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_TdRd(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL <= 4
-  BX_PANIC(("MOV_TdRd: Still not implemented"));
-#else
-  // Pentium+ does not have TRx.  They were redesigned using the MSRs.
-  BX_INFO(("MOV_TdRd: causes #UD"));
-  exception(BX_UD_EXCEPTION, 0);
-#endif
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdTd(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL <= 4
-  BX_PANIC(("MOV_RdTd: Still not implemented"));
-#else
-  // Pentium+ does not have TRx.  They were redesigned using the MSRs.
-  BX_INFO(("MOV_RdTd: causes #UD"));
-  exception(BX_UD_EXCEPTION, 0);
-#endif
-}
-
 bx_address BX_CPU_C::read_CR0(void)
 {
   bx_address cr0_val = BX_CPU_THIS_PTR cr0.get32();
