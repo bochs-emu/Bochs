@@ -62,8 +62,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GdEdR(bxInstruction_c *i)
       op2_32 <<= 1;
     }
 
-    // will clear ZF because op1_32 can't be zero
     SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
+    clear_ZF();
 
     /* now write result back to destination */
     BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);

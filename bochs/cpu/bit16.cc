@@ -62,8 +62,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GwEwR(bxInstruction_c *i)
       op2_16 <<= 1;
     }
 
-    // will clear ZF because op1_16 can't be zero
     SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+    clear_ZF();
 
     /* now write result back to destination */
     BX_WRITE_16BIT_REG(i->nnn(), op1_16);
