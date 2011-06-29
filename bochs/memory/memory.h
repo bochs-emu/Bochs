@@ -45,6 +45,7 @@ class BX_CPU_C;
 #define BIOS_MAP_LAST128K(addr) (((addr) | 0xfff00000) & BIOS_MASK)
 
 typedef bx_bool (*memory_handler_t)(bx_phy_address addr, unsigned len, void *data, void *param);
+// return a pointer to 4K region containing <addr> or NULL if direct fetch is not allowed
 typedef Bit8u* (*memory_fetch_handler_t)(bx_phy_address addr, void *param);
 
 struct memory_handler_struct {
