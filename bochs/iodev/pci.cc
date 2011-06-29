@@ -545,9 +545,9 @@ bx_bool bx_pci_bridge_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, m
   pci_conf[0x03] &= (mask >> 24) & 0xff;
   ReadHostDWordFromLittleEndian(pci_conf, newbase);
   pci_conf[0x00] |= pci_flags;
-  if ((newbase != mask) && (newbase != oldbase)) { // skip PCI probe
+  if (newbase != mask && newbase != oldbase) { // skip PCI probe
     if (oldbase > 0) {
-      DEV_unregister_memory_handlers(f1, f2, oldbase, oldbase + size - 1);
+      DEV_unregister_memory_handlers(this_ptr, oldbase, oldbase + size - 1);
     }
     if (newbase > 0) {
       DEV_register_memory_handlers(this_ptr, f1, f2, newbase, newbase + size - 1);

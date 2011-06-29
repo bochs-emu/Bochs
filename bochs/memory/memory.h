@@ -45,6 +45,7 @@ class BX_CPU_C;
 #define BIOS_MAP_LAST128K(addr) (((addr) | 0xfff00000) & BIOS_MASK)
 
 typedef bx_bool (*memory_handler_t)(bx_phy_address addr, unsigned len, void *data, void *param);
+typedef Bit8u* (*memory_fetch_handler_t)(bx_phy_address addr, void *param);
 
 struct memory_handler_struct {
   struct memory_handler_struct *next;
@@ -53,6 +54,7 @@ struct memory_handler_struct {
   bx_phy_address end;
   memory_handler_t read_handler;
   memory_handler_t write_handler;
+  memory_fetch_handler_t fetch_handler;
 };
 
 #define SMRAM_CODE  1
@@ -100,9 +102,15 @@ public:
 #endif
   BX_MEM_SMF Bit8u* getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw);
   BX_MEM_SMF bx_bool registerMemoryHandlers(void *param, memory_handler_t read_handler,
-		  memory_handler_t write_handler, bx_phy_address begin_addr, bx_phy_address end_addr);
-  BX_MEM_SMF bx_bool unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler_t write_handler,
-		  bx_phy_address begin_addr, bx_phy_address end_addr);
+		  memory_handler_t write_handler, memory_fetch_handler_t fetch_handler,
+                  bx_phy_address begin_addr, bx_phy_address end_addr);
+  BX_MEM_SMF BX_CPP_INLINE bx_bool registerMemoryHandlers(void *param, memory_handler_t read_handler,
+		  memory_handler_t write_handler,
+                  bx_phy_address begin_addr, bx_phy_address end_addr)
+  {
+     return registerMemoryHandlers(param, read_handler, write_handler, NULL, begin_addr, end_addr);
+  }
+  BX_MEM_SMF bx_bool unregisterMemoryHandlers(void *param, bx_phy_address begin_addr, bx_phy_address end_addr);
   BX_MEM_SMF Bit64u  get_memory_len(void);
   BX_MEM_SMF void allocate_block(Bit32u index);
   BX_MEM_SMF Bit8u* alloc_vector_aligned(Bit32u bytes, Bit32u alignment);

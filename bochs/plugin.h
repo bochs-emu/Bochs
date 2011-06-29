@@ -241,8 +241,8 @@ extern "C" {
 ///////// Memory macros
 #define DEV_register_memory_handlers(param,rh,wh,b,e) \
     bx_devices.mem->registerMemoryHandlers(param,rh,wh,b,e)
-#define DEV_unregister_memory_handlers(rh,wh,b,e) \
-    bx_devices.mem->unregisterMemoryHandlers(rh,wh,b,e)
+#define DEV_unregister_memory_handlers(param,b,e) \
+    bx_devices.mem->unregisterMemoryHandlers(param,b,e)
 
 ///////// USB device macros
 #define DEV_usb_init_device(a,b,c,d) (usbdev_type)bx_devices.pluginUsbDevCtl->init_device(a,b,(void**)c,d)
