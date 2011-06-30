@@ -597,8 +597,8 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
   while (memory_handler) {
     if (memory_handler->begin <= a20addr &&
         memory_handler->end >= a20addr) {
-      if (rw == BX_EXECUTE && memory_handler->fetch_handler)
-        return memory_handler->fetch_handler(a20addr, memory_handler->param);
+      if (memory_handler->da_handler)
+        return memory_handler->da_handler(a20addr, rw, memory_handler->param);
       else
         return(NULL); // Vetoed! memory handler for i/o apic, vram, mmio and PCI PnP
     }
@@ -692,7 +692,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
  */
   bx_bool
 BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
-		memory_handler_t write_handler, memory_fetch_handler_t fetch_handler,
+		memory_handler_t write_handler, memory_direct_access_handler_t da_handler,
                 bx_phy_address begin_addr, bx_phy_address end_addr)
 {
   if (end_addr < begin_addr)
@@ -706,7 +706,7 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
     BX_MEM_THIS memory_handlers[page_idx] = memory_handler;
     memory_handler->read_handler = read_handler;
     memory_handler->write_handler = write_handler;
-    memory_handler->fetch_handler = fetch_handler;
+    memory_handler->da_handler = da_handler;
     memory_handler->param = param;
     memory_handler->begin = begin_addr;
     memory_handler->end = end_addr;

@@ -45,8 +45,9 @@ class BX_CPU_C;
 #define BIOS_MAP_LAST128K(addr) (((addr) | 0xfff00000) & BIOS_MASK)
 
 typedef bx_bool (*memory_handler_t)(bx_phy_address addr, unsigned len, void *data, void *param);
-// return a pointer to 4K region containing <addr> or NULL if direct fetch is not allowed
-typedef Bit8u* (*memory_fetch_handler_t)(bx_phy_address addr, void *param);
+// return a pointer to 4K region containing <addr> or NULL if direct access is not allowed
+// same format as getHostMemAddr method
+typedef Bit8u* (*memory_direct_access_handler_t)(bx_phy_address addr, unsigned rw, void *param);
 
 struct memory_handler_struct {
   struct memory_handler_struct *next;
@@ -55,7 +56,7 @@ struct memory_handler_struct {
   bx_phy_address end;
   memory_handler_t read_handler;
   memory_handler_t write_handler;
-  memory_fetch_handler_t fetch_handler;
+  memory_direct_access_handler_t da_handler;
 };
 
 #define SMRAM_CODE  1
@@ -103,7 +104,7 @@ public:
 #endif
   BX_MEM_SMF Bit8u* getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw);
   BX_MEM_SMF bx_bool registerMemoryHandlers(void *param, memory_handler_t read_handler,
-		  memory_handler_t write_handler, memory_fetch_handler_t fetch_handler,
+		  memory_handler_t write_handler, memory_direct_access_handler_t da_handler,
                   bx_phy_address begin_addr, bx_phy_address end_addr);
   BX_MEM_SMF BX_CPP_INLINE bx_bool registerMemoryHandlers(void *param, memory_handler_t read_handler,
 		  memory_handler_t write_handler,
