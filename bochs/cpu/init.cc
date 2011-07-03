@@ -1035,6 +1035,9 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR in_smm_vmx = BX_CPU_THIS_PTR in_smm_vmx_guest = 0;
   BX_CPU_THIS_PTR in_event = 0;
   BX_CPU_THIS_PTR vmx_interrupt_window = 0;
+#if BX_SUPPORT_VMX >= 2  
+  BX_CPU_THIS_PTR pending_vmx_timer_expired = 0;
+#endif
   BX_CPU_THIS_PTR vmcsptr = BX_CPU_THIS_PTR vmxonptr = BX_INVALID_VMCSPTR;
   BX_CPU_THIS_PTR vmcshostptr = 0;
   /* enable VMX, should be done in BIOS instead */

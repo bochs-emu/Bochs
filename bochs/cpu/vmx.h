@@ -123,7 +123,7 @@ enum VMX_vmexit_reason {
    VMX_VMEXIT_EPT_MISCONFIGURATION = 49,
    VMX_VMEXIT_INVEPT = 50,
    VMX_VMEXIT_RDTSCP = 51,
-   VMX_VMEXIT_VMX_PREEMTION_TIMER_FIRED = 52,
+   VMX_VMEXIT_VMX_PREEMPTION_TIMER_EXPIRED = 52,
    VMX_VMEXIT_INVVPID = 53,
    VMX_VMEXIT_WBINVD = 54,
    VMX_VMEXIT_XSETBV = 55,
@@ -305,6 +305,7 @@ enum VMX_vmabort_code {
 #define VMCS_32BIT_GUEST_ACTIVITY_STATE                    0x00004826
 #define VMCS_32BIT_GUEST_SMBASE                            0x00004828
 #define VMCS_32BIT_GUEST_IA32_SYSENTER_CS_MSR              0x0000482A
+#define VMCS_32BIT_GUEST_PREEMPTION_TIMER_VALUE            0x0000482E
 
 /* VMCS 32-bit host-state fields */
 /* binary 0100_11xx_xxxx_xxx0 */
@@ -368,7 +369,7 @@ enum VMX_vmabort_code {
 #define VMCS_HOST_RSP                                      0x00006C14
 #define VMCS_HOST_RIP                                      0x00006C16
 
-#define VMX_HIGHEST_VMCS_ENCODING   (0x2C)
+#define VMX_HIGHEST_VMCS_ENCODING   (0x2F)
 
 // ===============================
 //  VMCS fields encoding/decoding
@@ -504,10 +505,10 @@ typedef struct bx_VMCS
   // VM-Execution Control Fields
   //
 
-#define VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT (1 << 0)
-#define VMX_VM_EXEC_CTRL1_NMI_VMEXIT                (1 << 3)
-#define VMX_VM_EXEC_CTRL1_VIRTUAL_NMI               (1 << 5)
-#define VMX_VM_EXEC_CTRL1_VMX_PREEMPTION_TIMER      (1 << 6)
+#define VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT   (1 << 0)
+#define VMX_VM_EXEC_CTRL1_NMI_VMEXIT                  (1 << 3)
+#define VMX_VM_EXEC_CTRL1_VIRTUAL_NMI                 (1 << 5)
+#define VMX_VM_EXEC_CTRL1_VMX_PREEMPTION_TIMER_VMEXIT (1 << 6)
 
 #ifdef BX_VMX_ENABLE_ALL
 
@@ -517,7 +518,8 @@ typedef struct bx_VMCS
 
 #define VMX_VM_EXEC_CTRL1_SUPPORTED_BITS \
   (VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT | \
-   VMX_VM_EXEC_CTRL1_NMI_VMEXIT)
+   VMX_VM_EXEC_CTRL1_NMI_VMEXIT | \
+   ((BX_SUPPORT_VMX >= 2) ? VMX_VM_EXEC_CTRL1_VMX_PREEMPTION_TIMER_VMEXIT : 0))
 
 #endif
 
@@ -662,7 +664,8 @@ typedef struct bx_VMCS
    ((BX_SUPPORT_VMX >= 2) ? VMX_VMEXIT_CTRL1_STORE_PAT_MSR : 0) | \
    ((BX_SUPPORT_VMX >= 2) ? VMX_VMEXIT_CTRL1_LOAD_PAT_MSR : 0) | \
    ((BX_SUPPORT_VMX >= 2) ? VMX_VMEXIT_CTRL1_STORE_EFER_MSR : 0) | \
-   ((BX_SUPPORT_VMX >= 2) ? VMX_VMEXIT_CTRL1_LOAD_EFER_MSR : 0))
+   ((BX_SUPPORT_VMX >= 2) ? VMX_VMEXIT_CTRL1_LOAD_EFER_MSR : 0) | \
+   ((BX_SUPPORT_VMX >= 2) ? VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER : 0))
 
 #endif
 
@@ -930,8 +933,12 @@ enum VMX_Activity_State {
   #define VMX_MISC_STORE_LMA_TO_X86_64_GUEST_VMENTRY_CONTROL (0)
 #endif
 
+//Rate to increase VMX preemtion timer
+#define VMX_MISC_PREEMPTION_TIMER_RATE (0)
+
 #define VMX_MSR_MISC ((VMX_CR3_TARGET_MAX_CNT << 16) | \
-            VMX_MISC_STORE_LMA_TO_X86_64_GUEST_VMENTRY_CONTROL)
+            VMX_MISC_STORE_LMA_TO_X86_64_GUEST_VMENTRY_CONTROL | \
+            VMX_MISC_PREEMPTION_TIMER_RATE)
 
 //
 // IA32_VMX_CR0_FIXED0 MSR (0x486)   IA32_VMX_CR0_FIXED1 MSR (0x487)

@@ -222,6 +222,12 @@ void BX_CPU_C::VMabort(VMX_vmabort_code error_code)
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcsptr + VMCS_VMX_ABORT_FIELD_ADDR;
   access_write_physical(pAddr, 4, &abort);
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_VMCS_ACCESS | BX_WRITE, (Bit8u*)(&abort));
+
+#if BX_SUPPORT_VMX >= 2
+  // Deactivate VMX preemtion timer
+  BX_CPU_THIS_PTR lapic.deactivate_vmx_preemption_timer();
+#endif
+
   shutdown();
 }
 
@@ -469,6 +475,13 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmexit controls allowed 1-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
+
+#if BX_SUPPORT_VMX >= 2
+  if ((~vm->vmexec_ctrls1 & VMX_VM_EXEC_CTRL1_VMX_PREEMPTION_TIMER_VMEXIT) && (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER)) {
+     BX_ERROR(("VMFAIL: save_VMX_preemption_timer VMEXIT control is set but VMX_preemption_timer VMEXEC control is clear"));
+     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+  }
+#endif
 
   if (vm->vmexit_msr_store_cnt > 0) {
      vm->vmexit_msr_store_addr = VMread64(VMCS_64BIT_CONTROL_VMEXIT_MSR_STORE_ADDR);
@@ -1852,6 +1865,13 @@ void BX_CPU_C::VMexitSaveGuestState(void)
       
     VMwrite32(VMCS_32BIT_CONTROL_VMENTRY_CONTROLS, vm->vmentry_ctrls);
   }
+
+  // Deactivate VMX preemtion timer
+  BX_CPU_THIS_PTR lapic.deactivate_vmx_preemption_timer();
+  BX_CPU_THIS_PTR pending_vmx_timer_expired = 0;
+  // Store back to VMCS
+  if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER)
+    VMwrite32(VMCS_32BIT_GUEST_PREEMPTION_TIMER_VALUE, BX_CPU_THIS_PTR lapic.read_vmx_preemption_timer());
 #endif
 }
 
@@ -2461,6 +2481,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
   BX_CPU_THIS_PTR in_vmx_guest = 1;
   BX_CPU_THIS_PTR disable_INIT = 0;
 
+#if BX_SUPPORT_VMX >= 2
+  if (PIN_VMEXIT(VMX_VM_EXEC_CTRL1_VMX_PREEMPTION_TIMER_VMEXIT)) {
+    Bit32u timer_value = VMread32(VMCS_32BIT_GUEST_PREEMPTION_TIMER_VALUE);
+    if (timer_value == 0) {
+      BX_CPU_THIS_PTR pending_vmx_timer_expired = 1;
+      BX_CPU_THIS_PTR async_event = 1;
+    }
+    else {
+      // activate VMX preemption timer
+      BX_INFO(("VMX preemption timer active"));
+      BX_CPU_THIS_PTR pending_vmx_timer_expired = 0;
+      BX_CPU_THIS_PTR lapic.set_vmx_preemption_timer(timer_value);
+    }
+  }
+#endif
+
   ///////////////////////////////////////////////////////
   // STEP 7: Inject events to the guest
   ///////////////////////////////////////////////////////
@@ -2920,7 +2956,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
 void BX_CPU_C::register_vmx_state(bx_param_c *parent)
 {
   // register VMX state for save/restore param tree
-  bx_list_c *vmx = new bx_list_c(parent, "VMX", 8);
+  bx_list_c *vmx = new bx_list_c(parent, "VMX", 9);
 
   BXRS_HEX_PARAM_FIELD(vmx, vmcsptr, BX_CPU_THIS_PTR vmcsptr);
   BXRS_HEX_PARAM_FIELD(vmx, vmxonptr, BX_CPU_THIS_PTR vmxonptr);
@@ -2929,6 +2965,9 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_PARAM_BOOL(vmx, in_smm_vmx, BX_CPU_THIS_PTR in_smm_vmx);
   BXRS_PARAM_BOOL(vmx, in_smm_vmx_guest, BX_CPU_THIS_PTR in_smm_vmx_guest);
   BXRS_PARAM_BOOL(vmx, vmx_interrupt_window, BX_CPU_THIS_PTR vmx_interrupt_window);
+#if BX_SUPPORT_VMX >= 2
+  BXRS_PARAM_BOOL(vmx, pending_vmx_timer_expired, BX_CPU_THIS_PTR pending_vmx_timer_expired);
+#endif
 
   bx_list_c *vmcache = new bx_list_c(vmx, "VMCS_CACHE", 5);
 

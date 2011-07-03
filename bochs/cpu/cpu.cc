@@ -421,8 +421,10 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     // an interrupt wakes up the CPU.
     while (1)
     {
-      if ((BX_CPU_INTR && (BX_CPU_THIS_PTR get_IF() || 
-          (BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF))) ||
+      if ((BX_CPU_INTR && (BX_CPU_THIS_PTR get_IF() || BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF)) ||
+#if BX_SUPPORT_VMX >= 2
+           BX_CPU_THIS_PTR pending_vmx_timer_expired ||
+#endif
            BX_CPU_THIS_PTR pending_NMI || BX_CPU_THIS_PTR pending_SMI || BX_CPU_THIS_PTR pending_INIT)
       {
         // interrupt ends the HALT condition
@@ -521,6 +523,16 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     if (BX_CPU_THIS_PTR debug_trap)
       exception(BX_DB_EXCEPTION, 0); // no error, not interrupt
   }
+  
+  // Priority 4.5: VMX Preemption Timer Expired. FIXME: is it a kind of external interrupt?
+#if BX_SUPPORT_VMX >= 2
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (BX_CPU_THIS_PTR pending_vmx_timer_expired) {
+      BX_CPU_THIS_PTR pending_vmx_timer_expired = 0;
+      VMexit_PreemptionTimerExpired();
+    }
+  }
+#endif
 
   // Priority 5: External Interrupts
   //   NMI Interrupts
@@ -636,6 +648,9 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
         BX_HRQ
 #if BX_SUPPORT_VMX
      || BX_CPU_THIS_PTR vmx_interrupt_window || BX_CPU_THIS_PTR inhibit_mask
+#endif
+#if BX_SUPPORT_VMX >= 2
+     || BX_CPU_THIS_PTR pending_vmx_timer_expired
 #endif
 #if BX_X86_DEBUGGER
      // a debug code breakpoint is set in current page

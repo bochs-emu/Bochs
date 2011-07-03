@@ -980,6 +980,9 @@ public: // for now...
   bx_bool in_smm_vmx; // save in_vmx and in_vmx_guest flags when in SMM mode
   bx_bool in_smm_vmx_guest;
   bx_bool vmx_interrupt_window;
+#if BX_SUPPORT_VMX >= 2
+  bx_bool pending_vmx_timer_expired;
+#endif
   Bit64u  vmcsptr;
   bx_hostpageaddr_t vmcshostptr;
   Bit64u  vmxonptr;
@@ -3673,6 +3676,7 @@ public: // for now...
   BX_SMF void VMexit_RDPMC(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_VMX >= 2
   BX_SMF void VMexit_WBINVD(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMexit_PreemptionTimerExpired(void);  
 #endif
   BX_SMF bx_bool VMexit_CLTS(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMexit_MSR(bxInstruction_c *i, unsigned op, Bit32u msr) BX_CPP_AttrRegparmN(3);

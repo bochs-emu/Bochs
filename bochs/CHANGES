@@ -12,6 +12,7 @@ Bochs repository moved to the SVN version control !
     When compiled in, AVX still has to be enabled using .bochsrc CPUID option.
   - Added emulation of AVX float16 convert instructions, the feature can be
     enabled using .bochsrc CPUID option.
+  - Implemented VMX preemption timer VMEXIT control (patch by Jianan Hao)
   - Redefined/Updated/Fixed instrumentation callbacks.
   - Bugfixes for CPU emulation correctness and stability.
 
@@ -65,6 +66,7 @@ Bochs repository moved to the SVN version control !
     from the "clock" setting)
 
 - SF patches applied
+  [3302668] VMX preemption timer by Jianan Hao
   [3327510] Fix wrong address translation in debugger by Jianan Hao
   [3323758] Ctrl-Break support for the Win32 gui by Nikolay Nikolov
   [3316785] Ctrl-Break support for the X11 gui by Nikolay Nikolov

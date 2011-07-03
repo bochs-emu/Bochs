@@ -113,6 +113,15 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
 #define APIC_DM_SIPI	6
 #define APIC_DM_EXTINT	7
 
+#if BX_SUPPORT_VMX >= 2
+  int vmx_timer_handle;
+  Bit32u vmx_preemption_timer_value;
+  Bit64u vmx_preemption_timer_initial;    //The value of system tick when set the timer (absolute value)
+  Bit64u vmx_preemption_timer_fire;       //The value of system tick when fire the exception (absolute value)
+  Bit32u vmx_preemption_timer_rate;       //rate stated in MSR_VMX_MISC
+  bx_bool vmx_timer_active;
+#endif 
+
   BX_CPU_C *cpu;
 
 public:
@@ -158,6 +167,12 @@ public:
   void set_initial_timer_count(Bit32u value);
   void startup_msg(Bit8u vector);
   void register_state(bx_param_c *parent);
+#if BX_SUPPORT_VMX >= 2
+  Bit32u read_vmx_preemption_timer(void);
+  void set_vmx_preemption_timer(Bit32u value);
+  void deactivate_vmx_preemption_timer(void);
+  static void vmx_preemption_timer_expired(void *);
+#endif  
 };
 
 int apic_bus_deliver_lowest_priority(Bit8u vector, apic_dest_t dest, bx_bool trig_mode, bx_bool broadcast);

@@ -184,8 +184,17 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu, unsigned id)
 
   // Register a non-active timer for use when the timer is started.
   timer_handle = bx_pc_system.register_timer_ticks(this,
-            BX_CPU(0)->lapic.periodic_smf, 0, 0, 0, "lapic");
+            bx_local_apic_c::periodic_smf, 0, 0, 0, "lapic");
   timer_active = 0;
+  
+#if BX_SUPPORT_VMX >= 2
+  // Register a non-active timer for VMX preemption timer.
+  vmx_timer_handle = bx_pc_system.register_timer_ticks(this,
+            bx_local_apic_c::vmx_preemption_timer_expired, 0, 0, 0, "vmx_preemtion");
+  BX_DEBUG(("vmx_timer is = %d", vmx_timer_handle));
+  vmx_preemption_timer_rate = VMX_MISC_PREEMPTION_TIMER_RATE;
+  vmx_timer_active = 0;
+#endif
 
   xapic = simulate_xapic; // xAPIC or legacy APIC
 
@@ -218,6 +227,13 @@ void bx_local_apic_c::reset(unsigned type)
     bx_pc_system.deactivate_timer(timer_handle);
     timer_active = 0;
   }
+
+#if BX_SUPPORT_VMX >= 2
+  if(vmx_timer_active) {
+    bx_pc_system.deactivate_timer(vmx_timer_handle);
+    vmx_timer_active = 0;
+  }
+#endif
 
   for(i=0; i<APIC_LVT_ENTRIES; i++) {
     lvt[i] = 0x10000;	// all LVT are masked
@@ -952,7 +968,7 @@ void bx_local_apic_c::set_divide_configuration(Bit32u value)
 
 void bx_local_apic_c::set_initial_timer_count(Bit32u value)
 {
-  // If active before, deactive the current timer before changing it.
+  // If active before, deactivate the current timer before changing it.
   if(timer_active) {
     bx_pc_system.deactivate_timer(timer_handle);
     timer_active = 0;
@@ -976,6 +992,43 @@ void bx_local_apic_c::set_initial_timer_count(Bit32u value)
   }
 }
 
+#if BX_SUPPORT_VMX >= 2
+Bit32u bx_local_apic_c::read_vmx_preemption_timer(void)
+{
+  Bit32u diff = (bx_pc_system.time_ticks() >> vmx_preemption_timer_rate) - (vmx_preemption_timer_initial >> vmx_preemption_timer_rate);
+  if (vmx_preemption_timer_value < diff)
+    return 0;
+  else
+    return vmx_preemption_timer_value - diff;
+}
+
+void bx_local_apic_c::set_vmx_preemption_timer(Bit32u value)
+{
+  vmx_preemption_timer_value = value;
+  vmx_preemption_timer_initial = bx_pc_system.time_ticks();
+  vmx_preemption_timer_fire = ((vmx_preemption_timer_initial >> vmx_preemption_timer_rate) + value) << vmx_preemption_timer_rate;
+  BX_DEBUG(("VMX Preemption timer. value = %u, rate = %u, init = %u, fire = %u", value, vmx_preemption_timer_rate, vmx_preemption_timer_initial, vmx_preemption_timer_fire));
+  bx_pc_system.activate_timer_ticks(vmx_timer_handle, vmx_preemption_timer_fire - vmx_preemption_timer_initial, 0);
+  vmx_timer_active = 1;
+}
+
+void bx_local_apic_c::deactivate_vmx_preemption_timer(void)
+{
+  if (! vmx_timer_active) return;
+  bx_pc_system.deactivate_timer(vmx_timer_handle);
+  vmx_timer_active = 0;
+}
+
+// Invoked when VMX preemption timer expired
+void bx_local_apic_c::vmx_preemption_timer_expired(void *this_ptr)
+{
+  bx_local_apic_c *class_ptr = (bx_local_apic_c *) this_ptr;
+  class_ptr->cpu->pending_vmx_timer_expired = 1;
+  class_ptr->cpu->async_event = 1;
+  class_ptr->deactivate_vmx_preemption_timer();
+}
+#endif
+  
 #if BX_CPU_LEVEL >= 6
 // return false when x2apic is not supported/not readable
 bx_bool bx_local_apic_c::read_x2apic(unsigned index, Bit64u *val_64)
@@ -1142,7 +1195,7 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
   unsigned i;
   char name[6];
 
-  bx_list_c *lapic = new bx_list_c(parent, "local_apic", 25);
+  bx_list_c *lapic = new bx_list_c(parent, "local_apic", 31);
 
   BXRS_HEX_PARAM_SIMPLE(lapic, base_addr);
   BXRS_HEX_PARAM_SIMPLE(lapic, apic_id);
@@ -1183,6 +1236,15 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
   BXRS_PARAM_BOOL(lapic, timer_active, timer_active);
   BXRS_HEX_PARAM_SIMPLE(lapic, ticksInitial);
   BXRS_PARAM_BOOL(lapic, INTR, INTR);
+
+#if BX_SUPPORT_VMX >= 2
+  BXRS_DEC_PARAM_SIMPLE(lapic, vmx_timer_handle);
+  BXRS_HEX_PARAM_SIMPLE(lapic, vmx_preemption_timer_initial);
+  BXRS_HEX_PARAM_SIMPLE(lapic, vmx_preemption_timer_fire);
+  BXRS_HEX_PARAM_SIMPLE(lapic, vmx_preemption_timer_value);
+  BXRS_HEX_PARAM_SIMPLE(lapic, vmx_preemption_timer_rate);
+  BXRS_PARAM_BOOL(lapic, vmx_timer_active, vmx_timer_active);
+#endif
 }
 
 #endif /* if BX_SUPPORT_APIC */

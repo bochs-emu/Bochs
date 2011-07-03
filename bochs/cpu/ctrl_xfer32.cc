@@ -30,6 +30,38 @@
 #define RIP EIP
 #endif
 
+#undef BX_INSTRUMENTATION
+#define BX_INSTRUMENTATION 1
+
+void update_branch_stats(Bit32s offset, bx_bool taken)
+{
+  static Bit32u counts = 0;
+  static Bit32u taken_pos = 0, taken_neg = 0;
+  static Bit32u not_taken_pos = 0, not_taken_neg = 0;
+
+  counts++;
+
+  if (offset < 0) {
+     if (taken) taken_neg++;
+     else not_taken_neg++;
+  }
+  else {
+     if (taken) taken_pos++;
+     else not_taken_pos++;
+  }
+
+  if (counts > 10000000) {
+     printf("======================\n");
+     printf("negative: taken %f, not taken %f\n", taken_neg / 100000.0, not_taken_neg / 100000.0);
+     printf("positive: taken %f, not taken %f\n", taken_pos / 100000.0, not_taken_pos / 100000.0);
+     counts = 0;
+     taken_neg = 0;
+     not_taken_neg = 0;
+     taken_pos = 0;
+     not_taken_pos = 0;
+  }
+}
+
 #if BX_CPU_LEVEL >= 3
 
 BX_CPP_INLINE void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near32(Bit32u new_EIP)
@@ -284,10 +316,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JO_Jd(bxInstruction_c *i)
   if (get_OF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
     branch_near32(new_EIP);
+    update_branch_stats((Bit32s) i->Id(), 1);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
 #if BX_INSTRUMENTATION
   else {
+    update_branch_stats((Bit32s) i->Id(), 0);
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
   }
 #endif
@@ -298,10 +332,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNO_Jd(bxInstruction_c *i)
   if (! get_OF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
     branch_near32(new_EIP);
+    update_branch_stats((Bit32s) i->Id(), 1);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
 #if BX_INSTRUMENTATION
   else {
+    update_branch_stats((Bit32s) i->Id(), 0);
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
   }
 #endif
@@ -312,10 +348,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JB_Jd(bxInstruction_c *i)
   if (get_CF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
     branch_near32(new_EIP);
+    update_branch_stats((Bit32s) i->Id(), 1);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
 #if BX_INSTRUMENTATION
   else {
+    update_branch_stats((Bit32s) i->Id(), 0);
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
   }
 #endif
@@ -326,10 +364,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNB_Jd(bxInstruction_c *i)
   if (! get_CF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
     branch_near32(new_EIP);
+    update_branch_stats((Bit32s) i->Id(), 1);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
 #if BX_INSTRUMENTATION
   else {
+    update_branch_stats((Bit32s) i->Id(), 0);
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
   }
 #endif
@@ -340,10 +380,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JZ_Jd(bxInstruction_c *i)
   if (get_ZF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
     branch_near32(new_EIP);
+    update_branch_stats((Bit32s) i->Id(), 1);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
 #if BX_INSTRUMENTATION
   else {
+    update_branch_stats((Bit32s) i->Id(), 0);
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
   }
 #endif
@@ -354,10 +396,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNZ_Jd(bxInstruction_c *i)
   if (! get_ZF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
     branch_near32(new_EIP);
+    update_branch_stats((Bit32s) i->Id(), 1);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
 #if BX_INSTRUMENTATION
   else {
+    update_branch_stats((Bit32s) i->Id(), 0);
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
   }
 #endif
@@ -368,10 +412,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JBE_Jd(bxInstruction_c *i)
   if (get_CF() || get_ZF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
     branch_near32(new_EIP);
+    update_branch_stats((Bit32s) i->Id(), 1);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
 #if BX_INSTRUMENTATION
   else {
+    update_branch_stats((Bit32s) i->Id(), 0);
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
   }
 #endif
@@ -382,10 +428,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNBE_Jd(bxInstruction_c *i)
   if (! (get_CF() || get_ZF())) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
     branch_near32(new_EIP);
+    update_branch_stats((Bit32s) i->Id(), 1);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
 #if BX_INSTRUMENTATION
   else {
+    update_branch_stats((Bit32s) i->Id(), 0);
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
   }
 #endif
@@ -396,10 +444,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JS_Jd(bxInstruction_c *i)
   if (get_SF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
     branch_near32(new_EIP);
+    update_branch_stats((Bit32s) i->Id(), 1);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
 #if BX_INSTRUMENTATION
   else {
+    update_branch_stats((Bit32s) i->Id(), 0);
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
   }
 #endif
@@ -410,10 +460,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNS_Jd(bxInstruction_c *i)
   if (! get_SF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
     branch_near32(new_EIP);
+    update_branch_stats((Bit32s) i->Id(), 1);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
 #if BX_INSTRUMENTATION
   else {
+    update_branch_stats((Bit32s) i->Id(), 0);
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
   }
 #endif
@@ -424,10 +476,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JP_Jd(bxInstruction_c *i)
   if (get_PF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
     branch_near32(new_EIP);
+    update_branch_stats((Bit32s) i->Id(), 1);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
 #if BX_INSTRUMENTATION
   else {
+    update_branch_stats((Bit32s) i->Id(), 0);
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
   }
 #endif
@@ -438,10 +492,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNP_Jd(bxInstruction_c *i)
   if (! get_PF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
     branch_near32(new_EIP);
+    update_branch_stats((Bit32s) i->Id(), 1);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
 #if BX_INSTRUMENTATION
   else {
+    update_branch_stats((Bit32s) i->Id(), 0);
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
   }
 #endif
@@ -452,10 +508,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JL_Jd(bxInstruction_c *i)
   if (getB_SF() != getB_OF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
     branch_near32(new_EIP);
+    update_branch_stats((Bit32s) i->Id(), 1);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
 #if BX_INSTRUMENTATION
   else {
+    update_branch_stats((Bit32s) i->Id(), 0);
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
   }
 #endif
@@ -466,10 +524,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNL_Jd(bxInstruction_c *i)
   if (getB_SF() == getB_OF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
     branch_near32(new_EIP);
+    update_branch_stats((Bit32s) i->Id(), 1);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
 #if BX_INSTRUMENTATION
   else {
+    update_branch_stats((Bit32s) i->Id(), 0);
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
   }
 #endif
@@ -480,10 +540,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JLE_Jd(bxInstruction_c *i)
   if (get_ZF() || (getB_SF() != getB_OF())) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
     branch_near32(new_EIP);
+    update_branch_stats((Bit32s) i->Id(), 1);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
 #if BX_INSTRUMENTATION
   else {
+    update_branch_stats((Bit32s) i->Id(), 0);
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
   }
 #endif
@@ -494,10 +556,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNLE_Jd(bxInstruction_c *i)
   if (! get_ZF() && (getB_SF() == getB_OF())) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
     branch_near32(new_EIP);
+    update_branch_stats((Bit32s) i->Id(), 1);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
 #if BX_INSTRUMENTATION
   else {
+    update_branch_stats((Bit32s) i->Id(), 0);
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
   }
 #endif
@@ -646,10 +710,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JECXZ_Jb(bxInstruction_c *i)
   if (temp_ECX == 0) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
     branch_near32(new_EIP);
+    update_branch_stats((Bit32s) i->Id(), 1);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
 #if BX_INSTRUMENTATION
   else {
+    update_branch_stats((Bit32s) i->Id(), 0);
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
   }
 #endif
@@ -677,10 +743,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOPNE32_Jb(bxInstruction_c *i)
     if (count != 0 && (get_ZF()==0)) {
       Bit32u new_EIP = EIP + (Bit32s) i->Id();
       branch_near32(new_EIP);
+      update_branch_stats((Bit32s) i->Id(), 1);
       BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
     }
 #if BX_INSTRUMENTATION
     else {
+      update_branch_stats((Bit32s) i->Id(), 0);
       BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
     }
 #endif
@@ -694,10 +762,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOPNE32_Jb(bxInstruction_c *i)
     if (count != 0 && (get_ZF()==0)) {
       Bit32u new_EIP = EIP + (Bit32s) i->Id();
       branch_near32(new_EIP);
+      update_branch_stats((Bit32s) i->Id(), 1);
       BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
     }
 #if BX_INSTRUMENTATION
     else {
+      update_branch_stats((Bit32s) i->Id(), 0);
       BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
     }
 #endif
@@ -718,10 +788,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOPE32_Jb(bxInstruction_c *i)
     if (count != 0 && get_ZF()) {
       Bit32u new_EIP = EIP + (Bit32s) i->Id();
       branch_near32(new_EIP);
+      update_branch_stats((Bit32s) i->Id(), 1);
       BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
     }
 #if BX_INSTRUMENTATION
     else {
+      update_branch_stats((Bit32s) i->Id(), 0);
       BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
     }
 #endif
@@ -735,10 +807,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOPE32_Jb(bxInstruction_c *i)
     if (count != 0 && get_ZF()) {
       Bit32u new_EIP = EIP + (Bit32s) i->Id();
       branch_near32(new_EIP);
+      update_branch_stats((Bit32s) i->Id(), 1);
       BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
     }
 #if BX_INSTRUMENTATION
     else {
+      update_branch_stats((Bit32s) i->Id(), 0);
       BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
     }
 #endif
@@ -759,10 +833,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOP32_Jb(bxInstruction_c *i)
     if (count != 0) {
       Bit32u new_EIP = EIP + (Bit32s) i->Id();
       branch_near32(new_EIP);
+      update_branch_stats((Bit32s) i->Id(), 1);
       BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
     }
 #if BX_INSTRUMENTATION
     else {
+      update_branch_stats((Bit32s) i->Id(), 0);
       BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
     }
 #endif
@@ -776,10 +852,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOP32_Jb(bxInstruction_c *i)
     if (count != 0) {
       Bit32u new_EIP = EIP + (Bit32s) i->Id();
       branch_near32(new_EIP);
+      update_branch_stats((Bit32s) i->Id(), 1);
       BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
     }
 #if BX_INSTRUMENTATION
     else {
+      update_branch_stats((Bit32s) i->Id(), 0);
       BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
     }
 #endif
