@@ -37,6 +37,9 @@ Bochs repository moved to the SVN version control !
     The ACPI still could be disabled using .bochsrc 'plugin_ctrl' option.
   - Removed --enable-trace-cache configure option. The option will be always ON
     for any Bochs configuration.
+  - added support for MSVC DLL plugins with a separate workspace package.
+    VS2008Ex can now create a BOCHS.EXE with a set of plugin DLLs.
+    TODO: nmake still cannot create plugin DLLs.
 
 - I/O Devices
   - Networking
@@ -51,14 +54,24 @@ Bochs repository moved to the SVN version control !
       the option --enable-es1370
     - sound input implemented in the sound lowlevel modules for Windows and
       Linux (ALSA / OSS)
+  - PCI
+    - added framework for PCI ROM support
+  - VGA
+    - added PCI ROM support to cirrus and pcivga and moved ROM loading for the ISA
+      case to the vga code (SeaBIOS now usable by Bochs)
+    - log prefix now depends on the selected extension (new prefix BXVGA for
+      Bochs VBE support)
 
   - LGPL'd VGABIOS updated to current CVS
     - fixed DAC palette in 8 bpp VBE and Cirrus modes (using the same palette
       as VGA mode 0x13)
     - VBE: added HDTV resolutions (patch by Tristan Schmelcher)
+    - VBE: added PCI ROM signature and data structure
 
   - ROM BIOS
     - Report memory above 4GB to BIOS (patch by Sebastian Herbszt)
+    - added PCI ROM init code for BIOS-bochs-latest (legacy BIOS no longer works
+      with a PCI display adapter
 
 - GUI and display libraries
   - vga update interval now uses host timing if the realtime sychronization is
