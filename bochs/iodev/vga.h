@@ -120,7 +120,7 @@ public:
   bx_vga_c();
   virtual ~bx_vga_c();
   virtual void   init(void);
-  virtual void   reset(unsigned type);
+  virtual void   reset(unsigned type) {}
   BX_VGA_SMF bx_bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   BX_VGA_SMF bx_bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   virtual Bit8u  mem_read(bx_phy_address addr);
@@ -138,6 +138,7 @@ public:
   virtual void   get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
                                    unsigned *txWidth);
   virtual Bit8u  get_actl_palette_idx(Bit8u index);
+  virtual void   init_vga_extension(void);
 
   static void     timer_handler(void *);
 #if BX_USE_VGA_SMF == 0
@@ -146,6 +147,7 @@ public:
   static Bit64s   vga_param_handler(bx_param_c *param, int set, Bit64s val);
 
 protected:
+  void init_standard_vga(void);
   void init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t f_write);
   void init_systemtimer(bx_timer_handler_t f_timer, param_event_handler f_param);
 
@@ -277,7 +279,7 @@ protected:
 
   int timer_id;
   bx_bool extension_init;
-  bx_bool extension_checked;
+  bx_bool pci_enabled;
 
   // Bochs VBE section
   virtual bx_bool vbe_set_base_addr(Bit32u *addr, Bit8u *pci_conf);
@@ -293,6 +295,7 @@ protected:
   void  vbe_write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
 #endif
 
+private:
   struct {
     Bit16u  cur_dispi;
     Bit32u  base_address;

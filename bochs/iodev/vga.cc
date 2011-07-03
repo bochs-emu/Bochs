@@ -119,10 +119,26 @@ bx_vga_c::~bx_vga_c()
 
 void bx_vga_c::init(void)
 {
+  BX_VGA_THIS extension_init = 0;
+  BX_VGA_THIS pci_enabled = 0;
+
+  BX_VGA_THIS init_standard_vga();
+  BX_VGA_THIS init_vga_extension();
+
+  char *strptr = SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr();
+  if (!BX_VGA_THIS extension_init &&
+      (strlen(strptr) > 0) && strcmp(strptr, "none")) {
+    BX_PANIC(("unknown display extension: %s", strptr));
+  }
+  if (!BX_VGA_THIS pci_enabled) {
+    BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr(), 0xc0000, 1);
+  }
+}
+
+void bx_vga_c::init_standard_vga(void)
+{
   unsigned i,string_i;
   unsigned x,y;
-  unsigned addr;
-  Bit16u max_xres, max_yres, max_bpp;
   int argc;
   char *argv[16];
   char *ptr;
@@ -218,9 +234,6 @@ void bx_vga_c::init(void)
     for (x=0; x<640/X_TILESIZE; x++)
       SET_TILE_UPDATED (x, y, 0);
 
-  BX_VGA_THIS extension_init = 0;
-  BX_VGA_THIS extension_checked = 0;
-
   // initialize memory, handlers and timer (depending on extension)
   extname = SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr();
   if ((strlen(extname) == 0) || (!strcmp(extname, "none"))) {
@@ -229,10 +242,6 @@ void bx_vga_c::init(void)
       BX_VGA_THIS s.memory = new Bit8u[BX_VGA_THIS s.memsize];
     memset(BX_VGA_THIS s.memory, 0, BX_VGA_THIS s.memsize);
   }
-#if !BX_SUPPORT_CLGD54XX
-  BX_VGA_THIS init_iohandlers(read_handler,write_handler);
-  BX_VGA_THIS init_systemtimer(timer_handler, vga_param_handler);
-#endif
   DEV_register_memory_handlers(theVga, mem_read_handler, mem_write_handler,
                                0xa0000, 0xbffff);
 
@@ -277,26 +286,32 @@ void bx_vga_c::init(void)
     }
   }
 
+}
+
+void bx_vga_c::init_vga_extension(void)
+{
+  unsigned addr;
+  Bit16u max_xres, max_yres, max_bpp;
+
+  BX_VGA_THIS init_iohandlers(read_handler, write_handler);
+  BX_VGA_THIS init_systemtimer(timer_handler, vga_param_handler);
+  BX_VGA_THIS pci_enabled = DEV_is_pci_device(BX_PLUGIN_PCIVGA);
+
   // The following is for the VBE display extension
   BX_VGA_THIS vbe.enabled=0;
   BX_VGA_THIS vbe.dac_8bit=0;
   BX_VGA_THIS vbe.base_address = 0x0000;
-  if (!strcmp(extname, "vbe")) {
+  if (!strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "vbe")) {
     BX_VGA_THIS put("BXVGA");
     for (addr=VBE_DISPI_IOPORT_INDEX; addr<=VBE_DISPI_IOPORT_DATA; addr++) {
       DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
       DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
     }
-#if BX_SUPPORT_PCI
-    if ((!SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) ||
-        (!DEV_is_pci_device(BX_PLUGIN_PCIVGA)))
-#endif
-    {
+    if (!BX_VGA_THIS pci_enabled) {
       BX_VGA_THIS vbe.base_address = VBE_DISPI_LFB_PHYSICAL_ADDRESS;
       DEV_register_memory_handlers(theVga, mem_read_handler, mem_write_handler,
                                    BX_VGA_THIS vbe.base_address,
                                    BX_VGA_THIS vbe.base_address + VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES - 1);
-
     }
     if (BX_VGA_THIS s.memory == NULL)
       BX_VGA_THIS s.memory = new Bit8u[VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES];
@@ -384,19 +399,6 @@ void bx_vga_c::init_systemtimer(bx_timer_handler_t f_timer, param_event_handler 
     BX_VGA_THIS s.blink_counter = 300000 / (unsigned)interval;
   } else {
     BX_VGA_THIS s.blink_counter = 1;
-  }
-}
-
-void bx_vga_c::reset(unsigned type)
-{
-  if (!BX_VGA_THIS extension_checked) {
-    char *strptr = SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr();
-    if (!BX_VGA_THIS extension_init &&
-        (strlen(strptr) > 0) &&
-        strcmp(strptr, "none")) {
-      BX_PANIC(("unknown display extension: %s", strptr));
-    }
-    BX_VGA_THIS extension_checked = 1;
   }
 }
 

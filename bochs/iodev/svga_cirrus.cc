@@ -245,18 +245,14 @@ bx_svga_cirrus_c::~bx_svga_cirrus_c()
   BX_DEBUG(("Exit"));
 }
 
-void bx_svga_cirrus_c::init(void)
+void bx_svga_cirrus_c::init_vga_extension(void)
 {
-  // initialize VGA stuffs.
-  BX_CIRRUS_THIS bx_vga_c::init();
   if (!strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "cirrus")) {
     BX_CIRRUS_THIS put("CLVGA");
     // initialize SVGA stuffs.
     BX_CIRRUS_THIS bx_vga_c::init_iohandlers(svga_read_handler, svga_write_handler);
     BX_CIRRUS_THIS bx_vga_c::init_systemtimer(svga_timer_handler, svga_param_handler);
-#if BX_SUPPORT_PCI
     BX_CIRRUS_THIS pci_enabled = DEV_is_pci_device("cirrus");
-#endif
     BX_CIRRUS_THIS svga_init_members();
 #if BX_SUPPORT_PCI
     if (BX_CIRRUS_THIS pci_enabled)
@@ -272,11 +268,8 @@ void bx_svga_cirrus_c::init(void)
     BX_CIRRUS_THIS extension_init = 1;
   } else {
     BX_CIRRUS_THIS sequencer.reg[0x07] = 0x00; // Cirrus extension disabled
-    // initialize VGA read/write handlers and timer
-    BX_CIRRUS_THIS bx_vga_c::init_iohandlers(
-        bx_vga_c::read_handler, bx_vga_c::write_handler);
-    BX_CIRRUS_THIS bx_vga_c::init_systemtimer(
-        bx_vga_c::timer_handler, bx_vga_c::vga_param_handler);
+    // initialize VGA extension, read/write handlers and timer
+    BX_CIRRUS_THIS bx_vga_c::init_vga_extension();
   }
 }
 

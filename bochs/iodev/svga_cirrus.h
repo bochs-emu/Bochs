@@ -70,7 +70,7 @@ public:
   bx_svga_cirrus_c();
   virtual ~bx_svga_cirrus_c();
 
-  virtual void init(void);
+  virtual void init_vga_extension(void);
   virtual void reset(unsigned type);
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height);
@@ -212,9 +212,6 @@ private:
   Bit32u bank_base[2];
   Bit32u bank_limit[2];
   Bit8u *disp_ptr;
-#if BX_SUPPORT_PCI
-  bx_bool pci_enabled;
-#endif
 
   struct {
     bx_cirrus_bitblt_rop_t rop_handler;

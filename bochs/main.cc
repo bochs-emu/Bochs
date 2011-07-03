@@ -1119,10 +1119,9 @@ void bx_init_hardware()
 
   BX_MEM(0)->init_memory(memSize, hostMemSize);
 
-  // First load the BIOS and VGABIOS
+  // First load the system BIOS (VGABIOS loading moved to the vga code)
   BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_ROM_PATH)->getptr(),
                       SIM->get_param_num(BXPN_ROM_ADDRESS)->get(), 0);
-  BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr(), 0xc0000, 1);
 
   // Then load the optional ROM images
   if (strcmp(SIM->get_param_string(BXPN_OPTROM1_PATH)->getptr(), "") !=0)
