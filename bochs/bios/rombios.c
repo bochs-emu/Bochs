@@ -10700,12 +10700,6 @@ normal_post:
   ;; PIC
   call post_init_pic
 
-  mov  cx, #0xc000  ;; init vga bios
-  mov  ax, #0xc780
-  call rom_scan
-
-  call _print_bios_banner
-
 #if BX_ROMBIOS32
   call rombios32_init
 #else
@@ -10714,6 +10708,12 @@ normal_post:
   call pcibios_init_irqs
 #endif //BX_PCIBIOS
 #endif
+
+  mov  cx, #0xc000  ;; init vga bios
+  mov  ax, #0xc780
+  call rom_scan
+
+  call _print_bios_banner
 
   ;;
   ;; Floppy setup

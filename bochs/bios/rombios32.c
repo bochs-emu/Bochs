@@ -646,6 +646,7 @@ static void pci_set_io_region_addr(PCIDevice *d, int region_num, uint32_t addr)
 
     if ( region_num == PCI_ROM_SLOT ) {
         ofs = 0x30;
+        addr |= 0x01;
     }else{
         ofs = 0x10 + region_num * 4;
     }
@@ -653,7 +654,7 @@ static void pci_set_io_region_addr(PCIDevice *d, int region_num, uint32_t addr)
     old_addr = pci_config_readl(d, ofs);
 
     pci_config_writel(d, ofs, addr);
-    BX_INFO("region %d: 0x%08x\n", region_num, addr);
+    BX_INFO("region %d: 0x%08x\n", region_num, addr & ~0x01);
 
     /* enable memory mappings */
     cmd = pci_config_readw(d, PCI_COMMAND);
@@ -818,10 +819,13 @@ static void piix4_pm_enable(PCIDevice *d)
 
 static void pci_bios_init_device(PCIDevice *d)
 {
-    int class;
+    PCIDevice d1, *i440fx = &d1;
+    int class, v;
     uint32_t *paddr;
     int i, pin, pic_irq, vendor_id, device_id;
 
+    i440fx->bus = 0;
+    i440fx->devfn = 0;
     class = pci_config_readw(d, PCI_CLASS_DEVICE);
     vendor_id = pci_config_readw(d, PCI_VENDOR_ID);
     device_id = pci_config_readw(d, PCI_DEVICE_ID);
@@ -883,6 +887,22 @@ static void pci_bios_init_device(PCIDevice *d)
                     paddr = &pci_bios_mem_addr;
                 *paddr = (*paddr + size - 1) & ~(size - 1);
                 pci_set_io_region_addr(d, i, *paddr);
+                if ((i == PCI_ROM_SLOT) && (class == 0x0300)) {
+                    v = pci_config_readb(i440fx, 0x5a);
+                    v = (v & 0xcc) | 0x22;
+                    pci_config_writeb(i440fx, 0x5a, v);
+                    memcpy((void *)0xc0000, (void *)*paddr, 0x8000);
+                    v = (v & 0xcc) | 0x11;
+                    pci_config_writeb(i440fx, 0x5a, v);
+                    if (size > 0x8000) {
+                        v = pci_config_readb(i440fx, 0x5b);
+                        v = (v & 0xcc) | 0x22;
+                        pci_config_writeb(i440fx, 0x5b, v);
+                        memcpy((void *)0xc8000, (void *)(*paddr + 0x8000), size - 0x8000);
+                        v = (v & 0xcc) | 0x11;
+                        pci_config_writeb(i440fx, 0x5b, v);
+                    }
+                }
                 *paddr += size;
             }
         }
