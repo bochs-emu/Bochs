@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009  The Bochs Project
+//  Copyright (C) 2002-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -66,6 +66,7 @@ extern "C" {
 #define BX_PLUGIN_USB_COMMON "usb_common"
 #define BX_PLUGIN_USB_UHCI  "usb_uhci"
 #define BX_PLUGIN_USB_OHCI  "usb_ohci"
+#define BX_PLUGIN_USB_XHCI  "usb_xhci"
 #define BX_PLUGIN_PCIPNIC   "pcipnic"
 #define BX_PLUGIN_GAMEPORT  "gameport"
 #define BX_PLUGIN_SPEAKER   "speaker"
@@ -404,6 +405,7 @@ DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pcidev)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_common)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_uhci)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_ohci)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_xhci)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pcipnic)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(soundmod)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(sb16)

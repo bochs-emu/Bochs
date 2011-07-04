@@ -173,6 +173,7 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
   d.type = USB_DEV_TYPE_HUB;
   d.maxspeed = USB_SPEED_FULL;
   d.speed = d.maxspeed;
+  // TODO: d.max_packet_size = ???
   strcpy(d.devname, "Bochs USB HUB");
   d.connected = 1;
   memset((void*)&hub, 0, sizeof(hub));

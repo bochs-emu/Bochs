@@ -145,6 +145,8 @@
 #define BXPN_UHCI_ENABLED                "ports.usb.uhci.enabled"
 #define BXPN_USB_OHCI                    "ports.usb.ohci"
 #define BXPN_OHCI_ENABLED                "ports.usb.ohci.enabled"
+#define BXPN_USB_XHCI                    "ports.usb.xhci"
+#define BXPN_XHCI_ENABLED                "ports.usb.xhci.enabled"
 #define BXPN_NE2K                        "network.ne2k"
 #define BXPN_NE2K_ENABLED                "network.ne2k.enabled"
 #define BXPN_PNIC                        "network.pnic"

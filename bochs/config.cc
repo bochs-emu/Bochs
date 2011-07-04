@@ -1376,6 +1376,35 @@ void bx_init_options()
   }
   enabled->set_dependent_list(deplist);
 
+  // xHCI options
+  strcpy(group, "USB xHCI");
+  menu = new bx_list_c(usb, "xhci", "xHCI Configuration");
+  menu->set_options(menu->SHOW_PARENT);
+  menu->set_enabled(BX_SUPPORT_USB_XHCI);
+  enabled = new bx_param_bool_c(menu,
+    "enabled",
+    "Enable xHCI emulation",
+    "Enables the xHCI emulation",
+    0);
+  enabled->set_enabled(BX_SUPPORT_USB_XHCI);
+  deplist = new bx_list_c(NULL, BX_N_USB_XHCI_PORTS * 3);
+  for (i=0; i<BX_N_USB_XHCI_PORTS; i++) {
+    sprintf(name, "port%d", i+1);
+    sprintf(label, "Port #%d Configuration", i+1);
+    sprintf(descr, "Device connected to xHCI port #%d and it's options", i+1);
+    port = new bx_list_c(menu, name, label);
+    port->set_options(port->SERIES_ASK | port->USE_BOX_TITLE);
+    sprintf(descr, "Device connected to xHCI port #%d", i+1);
+    device = new bx_param_string_c(port, "device", "Device", descr, "", BX_PATHNAME_LEN);
+    sprintf(descr, "Options for device connected to xHCI port #%d", i+1);
+    options = new bx_param_string_c(port, "options", "Options", descr, "", BX_PATHNAME_LEN);
+    port->set_group(group);
+    deplist->add(port);
+    deplist->add(device);
+    deplist->add(options);
+  }
+  enabled->set_dependent_list(deplist);
+
   // network subtree
   bx_list_c *network = new bx_list_c(root_param, "network", "Network Configuration");
   network->set_options(network->USE_TAB_WINDOW | network->SHOW_PARENT);
@@ -3015,6 +3044,24 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         PARSE_WARN(("%s: unknown parameter '%s' for usb_ohci ignored.", context, params[i]));
       }
     }
+  } else if (!strcmp(params[0], "usb_xhci")) {
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+        SIM->get_param_bool(BXPN_XHCI_ENABLED)->set(atol(&params[i][8]));
+      } else if (!strncmp(params[i], "port", 4)) {
+        base = (bx_list_c*) SIM->get_param("ports.usb.xhci");
+        if (parse_usb_port_params(context, 0, params[i], BX_N_USB_XHCI_PORTS, base) < 0) {
+          return -1;
+        }
+      } else if (!strncmp(params[i], "options", 7)) {
+        base = (bx_list_c*) SIM->get_param("ports.usb.xhci");
+        if (parse_usb_port_params(context, 1, params[i], BX_N_USB_XHCI_PORTS, base) < 0) {
+          return -1;
+        }
+      } else {
+        PARSE_WARN(("%s: unknown parameter '%s' for usb_xhci ignored.", context, params[i]));
+      }
+    }
   } else if (!strcmp(params[0], "i440fxsupport")) {
     char tmpdev[80];
     for (i=1; i<num_params; i++) {
@@ -3851,6 +3898,8 @@ int bx_write_configuration(const char *rc, int overwrite)
   bx_write_usb_options(fp, BX_N_USB_UHCI_PORTS, base);
   base = (bx_list_c*) SIM->get_param("ports.usb.ohci");
   bx_write_usb_options(fp, BX_N_USB_OHCI_PORTS, base);
+  base = (bx_list_c*) SIM->get_param("ports.usb.xhci");
+  bx_write_usb_options(fp, BX_N_USB_XHCI_PORTS, base);
   // pci
   fprintf(fp, "i440fxsupport: enabled=%d",
           SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get());

@@ -162,6 +162,7 @@ public:
   int get_speed() {return d.speed;}
   void set_speed(int speed) {d.speed = speed;}
   Bit8u get_address() {return d.addr;}
+  int get_max_packet_size() {return d.max_packet_size;}
 
   void usb_send_msg(int msg);
 
@@ -182,6 +183,7 @@ protected:
     int setup_state;
     int setup_len;
     int setup_index;
+    int max_packet_size;
     bx_bool stall;
   } d;
 

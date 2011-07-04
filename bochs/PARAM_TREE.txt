@@ -209,6 +209,8 @@ ports
         options
     ohci
       (same options as ports.usb.uhci)
+    xhci
+      (same options as ports.usb.uhci)
 
 network
   ne2k

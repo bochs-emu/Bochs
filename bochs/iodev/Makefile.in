@@ -546,6 +546,12 @@ usb_uhci.o: usb_uhci.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../param_names.h pci.h usb_common.h \
   usb_uhci.h
+usb_xhci.o: usb_xhci.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
+  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
+  ../instrument/stubs/instrument.h ../param_names.h pci.h usb_common.h \
+  usb_xhci.h
 vga.o: vga.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
@@ -894,6 +900,12 @@ usb_uhci.lo: usb_uhci.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../param_names.h pci.h usb_common.h \
   usb_uhci.h
+usb_xhci.lo: usb_xhci.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
+  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
+  ../instrument/stubs/instrument.h ../param_names.h pci.h usb_common.h \
+  usb_xhci.h
 vga.lo: vga.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
