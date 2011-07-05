@@ -276,7 +276,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 #endif
 #if BX_SUPPORT_USB_XHCI
     if (is_usb_xhci_enabled()) {
-//      PLUG_load_plugin(usb_xhci, PLUGTYPE_OPTIONAL);
+      PLUG_load_plugin(usb_xhci, PLUGTYPE_OPTIONAL);
     }
 #endif
 #if BX_SUPPORT_PCIDEV

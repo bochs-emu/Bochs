@@ -782,6 +782,24 @@ AC_ARG_ENABLE(usb-ohci,
     ]
   )
 
+AC_MSG_CHECKING(for experimental USB xHCI support)
+AC_ARG_ENABLE(usb-xhci,
+  [  --enable-usb-xhci                 enable experimental USB xHCI support],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_USB_XHCI, 1)
+    PCI_OBJ="$PCI_OBJ usb_xhci.o"
+    use_usb=1
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_USB_XHCI, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_USB_XHCI, 0)
+    ]
+  )
+
 if test "$use_usb" = 1; then
   USBCORE_OBJ="usb_common.o"
   USBDEV_OBJS="usb_hid.o usb_hub.o usb_msd.o usb_printer.o"
