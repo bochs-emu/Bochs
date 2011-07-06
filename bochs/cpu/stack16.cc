@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -24,47 +24,56 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-// Make code more tidy with a few macros.
-#if BX_SUPPORT_X86_64==0
-#define RSP ESP
-#endif
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_RX(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_RX(bxInstruction_c *i)
 {
   push_16(BX_READ_16BIT_REG(i->rm()));
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_CS(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_CS(bxInstruction_c *i)
 {
   push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_DS(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_DS(bxInstruction_c *i)
 {
   push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_ES(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_ES(bxInstruction_c *i)
 {
   push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_FS(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_FS(bxInstruction_c *i)
 {
   push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_GS(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_GS(bxInstruction_c *i)
 {
   push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_SS(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_SS(bxInstruction_c *i)
 {
   push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_DS(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_DS(bxInstruction_c *i)
 {
   RSP_SPECULATIVE;
 
@@ -72,9 +81,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_DS(bxInstruction_c *i)
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], ds);
 
   RSP_COMMIT;
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_ES(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_ES(bxInstruction_c *i)
 {
   RSP_SPECULATIVE;
 
@@ -82,9 +93,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_ES(bxInstruction_c *i)
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], es);
 
   RSP_COMMIT;
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_FS(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_FS(bxInstruction_c *i)
 {
   RSP_SPECULATIVE;
 
@@ -92,9 +105,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_FS(bxInstruction_c *i)
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
 
   RSP_COMMIT;
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_GS(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_GS(bxInstruction_c *i)
 {
   RSP_SPECULATIVE;
 
@@ -102,9 +117,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_GS(bxInstruction_c *i)
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
 
   RSP_COMMIT;
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_SS(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_SS(bxInstruction_c *i)
 {
   RSP_SPECULATIVE;
 
@@ -119,14 +136,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_SS(bxInstruction_c *i)
   // Same code as MOV_SwEw()
   BX_CPU_THIS_PTR inhibit_mask |= BX_INHIBIT_INTERRUPTS_BY_MOVSS;
   BX_CPU_THIS_PTR async_event = 1;
+
+  BX_NEXT_TRACE(i); // async event is set
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_RX(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_RX(bxInstruction_c *i)
 {
   BX_WRITE_16BIT_REG(i->rm(), pop_16());
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_EwM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_EwM(bxInstruction_c *i)
 {
   RSP_SPECULATIVE;
 
@@ -140,23 +161,29 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_EwM(bxInstruction_c *i)
   write_virtual_word(i->seg(), eaddr, val16);
 
   RSP_COMMIT;
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_Iw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_Iw(bxInstruction_c *i)
 {
   push_16(i->Iw());
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_EwM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_EwM(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   Bit16u op1_16 = read_virtual_word(i->seg(), eaddr);
 
   push_16(op1_16);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHAD16(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHAD16(bxInstruction_c *i)
 {
   Bit32u temp_ESP = ESP;
   Bit16u temp_SP  = SP;
@@ -185,9 +212,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHAD16(bxInstruction_c *i)
     write_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP - 16), DI);
     SP -= 16;
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPAD16(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POPAD16(bxInstruction_c *i)
 {
   Bit16u di, si, bp, bx, dx, cx, ax;
 
@@ -225,9 +254,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPAD16(bxInstruction_c *i)
   DX = dx;
   CX = cx;
   AX = ax;
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER16_IwIb(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER16_IwIb(bxInstruction_c *i)
 {
   Bit16u imm16 = i->Iw();
   Bit8u level = i->Ib2();
@@ -288,9 +319,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER16_IwIb(bxInstruction_c *i)
   BP = frame_ptr16;
 
   RSP_COMMIT;
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LEAVE16(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LEAVE16(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -306,4 +339,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LEAVE16(bxInstruction_c *i)
   }
 
   BP = value16;
+
+  BX_NEXT_INSTR(i);
 }

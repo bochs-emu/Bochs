@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -24,36 +24,39 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-// Make code more tidy with a few macros.
-#if BX_SUPPORT_X86_64==0
-#define RSP ESP
-#endif
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAHF(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SAHF(bxInstruction_c *i)
 {
   set_SF((AH & 0x80) >> 7);
   set_ZF((AH & 0x40) >> 6);
   set_AF((AH & 0x10) >> 4);
   set_CF (AH & 0x01);
   set_PF((AH & 0x04) >> 2);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAHF(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LAHF(bxInstruction_c *i)
 {
   AH = read_eflags() & 0xFF;
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLC(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLC(bxInstruction_c *i)
 {
   clear_CF();
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::STC(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::STC(bxInstruction_c *i)
 {
   assert_CF();
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLI(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLI(bxInstruction_c *i)
 {
   Bit32u IOPL = BX_CPU_THIS_PTR get_IOPL();
 
@@ -64,7 +67,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLI(bxInstruction_c *i)
     {
       if (IOPL < 3) {
         BX_CPU_THIS_PTR clear_VIF();
-        return;
+        BX_NEXT_INSTR(i);
       }
     }
     else
@@ -82,7 +85,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLI(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 5
       if (BX_CPU_THIS_PTR cr4.get_VME()) {
         BX_CPU_THIS_PTR clear_VIF();
-        return;
+        BX_NEXT_INSTR(i);
       }
 #endif
       BX_DEBUG(("CLI: IOPL != 3 in v8086 mode"));
@@ -91,9 +94,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLI(bxInstruction_c *i)
   }
 
   BX_CPU_THIS_PTR clear_IF();
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::STI(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::STI(bxInstruction_c *i)
 {
   Bit32u IOPL = BX_CPU_THIS_PTR get_IOPL();
 
@@ -106,7 +111,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STI(bxInstruction_c *i)
         if (! BX_CPU_THIS_PTR get_VIP())
         {
           BX_CPU_THIS_PTR assert_VIF();
-          return;
+          BX_NEXT_INSTR(i);
         }
 
         BX_DEBUG(("STI: #GP(0) in VME mode"));
@@ -126,7 +131,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STI(bxInstruction_c *i)
       if (BX_CPU_THIS_PTR cr4.get_VME() && BX_CPU_THIS_PTR get_VIP() == 0)
       {
         BX_CPU_THIS_PTR assert_VIF();
-        return;
+        BX_NEXT_INSTR(i);
       }
 #endif
       BX_DEBUG(("STI: IOPL != 3 in v8086 mode"));
@@ -139,24 +144,32 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STI(bxInstruction_c *i)
     BX_CPU_THIS_PTR inhibit_mask |= BX_INHIBIT_INTERRUPTS;
     BX_CPU_THIS_PTR async_event = 1;
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLD(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLD(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR clear_DF();
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::STD(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::STD(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR assert_DF();
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMC(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CMC(bxInstruction_c *i)
 {
   set_CF(! get_CF());
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHF_Fw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHF_Fw(bxInstruction_c *i)
 {
   Bit16u flags = (Bit16u) read_eflags();
 
@@ -180,9 +193,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHF_Fw(bxInstruction_c *i)
   }
 
   push_16(flags);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fw(bxInstruction_c *i)
 {
   // Build a mask of the following bits:
   // x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
@@ -216,7 +231,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fw(bxInstruction_c *i)
         if (flags32 & EFlagsIFMask) flags32 |= EFlagsVIFMask;
         writeEFlags(flags32, changeMask);
         RSP_COMMIT;
-        return;
+
+        BX_NEXT_INSTR(i);
       }
 #endif
       BX_DEBUG(("POPFW: #GP(0) in v8086 (no VME) mode"));
@@ -233,11 +249,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fw(bxInstruction_c *i)
   writeEFlags((Bit32u) flags16, changeMask);
 
   RSP_COMMIT;
+
+  BX_NEXT_INSTR(i);
 }
 
 #if BX_CPU_LEVEL >= 3
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHF_Fd(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHF_Fd(bxInstruction_c *i)
 {
   if (v8086_mode() && (BX_CPU_THIS_PTR get_IOPL()<3)) {
     BX_DEBUG(("PUSHFD: #GP(0) in v8086 mode"));
@@ -246,9 +264,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHF_Fd(bxInstruction_c *i)
 
   // VM & RF flags cleared in image stored on the stack
   push_32(read_eflags() & 0x00fcffff);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fd(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fd(bxInstruction_c *i)
 {
   // Build a mask of the following bits:
   // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
@@ -287,16 +307,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fd(bxInstruction_c *i)
   writeEFlags(flags32, changeMask);
 
   RSP_COMMIT;
+
+  BX_NEXT_INSTR(i);
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHF_Fq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHF_Fq(bxInstruction_c *i)
 {
   // VM & RF flags cleared in image stored on the stack
   push_64(read_eflags() & 0x00fcffff);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fq(bxInstruction_c *i)
 {
   // Build a mask of the following bits:
   // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
@@ -315,12 +339,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fq(bxInstruction_c *i)
 
   // VIF, VIP, VM are unaffected
   writeEFlags(eflags32, changeMask);
+
+  BX_NEXT_INSTR(i);
 }
 #endif
 
 #endif  // BX_CPU_LEVEL >= 3
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SALC(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SALC(bxInstruction_c *i)
 {
   if (get_CF()) {
     AL = 0xff;
@@ -328,4 +354,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SALC(bxInstruction_c *i)
   else {
     AL = 0x00;
   }
+
+  BX_NEXT_INSTR(i);
 }

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -26,11 +26,6 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #include "param_names.h"
-
-#if BX_SUPPORT_X86_64==0
-// Make life easier merging cpu64 & cpu code.
-#define RIP EIP
-#endif
 
 BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
 #if BX_SUPPORT_APIC

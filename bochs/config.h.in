@@ -146,7 +146,7 @@
 #define BX_MIN_IPS 200000
 
 // Minimum and maximum values for SMP quantum variable. Defines
-// how many instructions each CPU could execute execute in one
+// how many instructions each CPU could execute in one
 // shot (one cpu_loop call)
 #define BX_SMP_QUANTUM_MIN  1
 #define BX_SMP_QUANTUM_MAX 16

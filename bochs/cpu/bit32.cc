@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -26,7 +26,7 @@
 
 #if BX_CPU_LEVEL >= 3
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GdEdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GdEdR(bxInstruction_c *i)
 {
   Bit32u op2_32 = BX_READ_32BIT_REG(i->rm());
 
@@ -46,9 +46,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GdEdR(bxInstruction_c *i)
     /* now write result back to destination */
     BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GdEdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GdEdR(bxInstruction_c *i)
 {
   Bit32u op2_32 = BX_READ_32BIT_REG(i->rm());
 
@@ -68,9 +70,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GdEdR(bxInstruction_c *i)
     /* now write result back to destination */
     BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BT_EdGdM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BT_EdGdM(bxInstruction_c *i)
 {
   bx_address op1_addr;
   Bit32u op1_32, op2_32, index;
@@ -87,9 +91,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BT_EdGdM(bxInstruction_c *i)
   op1_32 = read_virtual_dword(i->seg(), op1_addr & i->asize_mask());
 
   set_CF((op1_32 >> index) & 0x01);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BT_EdGdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BT_EdGdR(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32;
 
@@ -98,9 +104,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BT_EdGdR(bxInstruction_c *i)
   op2_32 &= 0x1f;
 
   set_CF((op1_32 >> op2_32) & 0x01);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EdGdM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EdGdM(bxInstruction_c *i)
 {
   bx_address op1_addr;
   Bit32u op1_32, op2_32, index;
@@ -123,9 +131,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EdGdM(bxInstruction_c *i)
   write_RMW_virtual_dword(op1_32);
 
   set_CF(bit_i);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EdGdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EdGdR(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32;
 
@@ -137,9 +147,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EdGdR(bxInstruction_c *i)
 
   /* now write result back to the destination */
   BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EdGdM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EdGdM(bxInstruction_c *i)
 {
   bx_address op1_addr;
   Bit32u op1_32, op2_32, index;
@@ -162,9 +174,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EdGdM(bxInstruction_c *i)
   write_RMW_virtual_dword(op1_32);
 
   set_CF(temp_cf);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EdGdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EdGdR(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32;
 
@@ -176,9 +190,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EdGdR(bxInstruction_c *i)
 
   /* now write result back to the destination */
   BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EdGdM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EdGdM(bxInstruction_c *i)
 {
   bx_address op1_addr;
   Bit32u op1_32, op2_32, index_32;
@@ -198,9 +214,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EdGdM(bxInstruction_c *i)
   set_CF(temp_CF);
 
   write_RMW_virtual_dword(op1_32);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EdGdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EdGdR(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32;
 
@@ -213,9 +231,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EdGdR(bxInstruction_c *i)
   set_CF(temp_CF);
 
   BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BT_EdIbM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BT_EdIbM(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
@@ -223,17 +243,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BT_EdIbM(bxInstruction_c *i)
   Bit8u  op2_8  = i->Ib() & 0x1f;
 
   set_CF((op1_32 >> op2_8) & 0x01);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BT_EdIbR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BT_EdIbR(bxInstruction_c *i)
 {
   Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
   Bit8u  op2_8  = i->Ib() & 0x1f;
 
   set_CF((op1_32 >> op2_8) & 0x01);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EdIbM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EdIbM(bxInstruction_c *i)
 {
   Bit8u op2_8 = i->Ib() & 0x1f;
 
@@ -245,9 +269,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EdIbM(bxInstruction_c *i)
   write_RMW_virtual_dword(op1_32);
 
   set_CF(temp_CF);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EdIbR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EdIbR(bxInstruction_c *i)
 {
   Bit8u op2_8 = i->Ib() & 0x1f;
 
@@ -257,9 +283,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EdIbR(bxInstruction_c *i)
   BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
 
   set_CF(temp_CF);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EdIbM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EdIbM(bxInstruction_c *i)
 {
   Bit8u op2_8 = i->Ib() & 0x1f;
 
@@ -271,9 +299,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EdIbM(bxInstruction_c *i)
   write_RMW_virtual_dword(op1_32);
 
   set_CF(temp_CF);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EdIbR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EdIbR(bxInstruction_c *i)
 {
   Bit8u op2_8 = i->Ib() & 0x1f;
 
@@ -283,9 +313,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EdIbR(bxInstruction_c *i)
   BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
 
   set_CF(temp_CF);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EdIbM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EdIbM(bxInstruction_c *i)
 {
   Bit8u op2_8 = i->Ib() & 0x1f;
 
@@ -297,9 +329,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EdIbM(bxInstruction_c *i)
   write_RMW_virtual_dword(op1_32);
 
   set_CF(temp_CF);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EdIbR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EdIbR(bxInstruction_c *i)
 {
   Bit8u op2_8 = i->Ib() & 0x1f;
 
@@ -309,10 +343,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EdIbR(bxInstruction_c *i)
   BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
 
   set_CF(temp_CF);
+
+  BX_NEXT_INSTR(i);
 }
 
 /* F3 0F B8 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GdEdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GdEdR(bxInstruction_c *i)
 {
   Bit32u op2_32 = BX_READ_32BIT_REG(i->rm());
 
@@ -325,8 +361,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GdEdR(bxInstruction_c *i)
   Bit32u flags = op1_32 ? 0 : EFlagsZFMask;
   setEFlagsOSZAPC(flags);
 
-  /* now write result back to destination */
   BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
+
+  BX_NEXT_INSTR(i);
 }
 
 #endif // (BX_CPU_LEVEL >= 3)

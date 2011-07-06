@@ -26,11 +26,6 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_SUPPORT_X86_64==0
-// Make life easier merging cpu64 & cpu code.
-#define RIP EIP
-#endif
-
   void BX_CPP_AttrRegparmN(1)
 BX_CPU_C::iret_protected(bxInstruction_c *i)
 {

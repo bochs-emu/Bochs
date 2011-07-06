@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EwGwM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EwGwM(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16;
 
@@ -36,9 +36,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EwGwM(bxInstruction_c *i)
   write_RMW_virtual_word(op1_16);
 
   SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_GwEwR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_GwEwR(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16;
 
@@ -48,17 +50,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_GwEwR(bxInstruction_c *i)
   BX_WRITE_16BIT_REG(i->nnn(), op1_16);
 
   SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_AXIw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_AXIw(bxInstruction_c *i)
 {
   Bit16u op_16 = AX ^ i->Iw();
   AX = op_16;
 
   SET_FLAGS_OSZAPC_LOGIC_16(op_16);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EwIwM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EwIwM(bxInstruction_c *i)
 {
   Bit16u op1_16;
 
@@ -69,18 +75,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EwIwM(bxInstruction_c *i)
   write_RMW_virtual_word(op1_16);
 
   SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EwIwR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EwIwR(bxInstruction_c *i)
 {
   Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
   op1_16 ^= i->Iw();
   BX_WRITE_16BIT_REG(i->rm(), op1_16);
 
   SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EwIwM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EwIwM(bxInstruction_c *i)
 {
   Bit16u op1_16;
 
@@ -91,34 +101,42 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EwIwM(bxInstruction_c *i)
   write_RMW_virtual_word(op1_16);
 
   SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EwIwR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EwIwR(bxInstruction_c *i)
 {
   Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
   op1_16 |= i->Iw();
   BX_WRITE_16BIT_REG(i->rm(), op1_16);
 
   SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::NOT_EwM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::NOT_EwM(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
   op1_16 = ~op1_16;
   write_RMW_virtual_word(op1_16);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::NOT_EwR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::NOT_EwR(bxInstruction_c *i)
 {
   Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
   op1_16 = ~op1_16;
   BX_WRITE_16BIT_REG(i->rm(), op1_16);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EwGwM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EwGwM(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16;
 
@@ -130,9 +148,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EwGwM(bxInstruction_c *i)
   write_RMW_virtual_word(op1_16);
 
   SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_GwEwR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_GwEwR(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16;
 
@@ -142,17 +162,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_GwEwR(bxInstruction_c *i)
   BX_WRITE_16BIT_REG(i->nnn(), op1_16);
 
   SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_AXIw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_AXIw(bxInstruction_c *i)
 {
   Bit16u op_16 = AX | i->Iw();
   AX = op_16;
 
   SET_FLAGS_OSZAPC_LOGIC_16(op_16);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EwGwM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EwGwM(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16;
 
@@ -164,9 +188,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EwGwM(bxInstruction_c *i)
   write_RMW_virtual_word(op1_16);
 
   SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_GwEwR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_GwEwR(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16;
 
@@ -176,17 +202,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_GwEwR(bxInstruction_c *i)
   BX_WRITE_16BIT_REG(i->nnn(), op1_16);
 
   SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_AXIw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_AXIw(bxInstruction_c *i)
 {
   Bit16u op_16 = AX & i->Iw();
   AX = op_16;
 
   SET_FLAGS_OSZAPC_LOGIC_16(op_16);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EwIwM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EwIwM(bxInstruction_c *i)
 {
   Bit16u op1_16;
 
@@ -197,18 +227,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EwIwM(bxInstruction_c *i)
   write_RMW_virtual_word(op1_16);
 
   SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EwIwR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EwIwR(bxInstruction_c *i)
 {
   Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
   op1_16 &= i->Iw();
   BX_WRITE_16BIT_REG(i->rm(), op1_16);
 
   SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EwGwR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EwGwR(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16;
 
@@ -216,18 +250,24 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EwGwR(bxInstruction_c *i)
   op2_16 = BX_READ_16BIT_REG(i->nnn());
   op1_16 &= op2_16;
   SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_AXIw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_AXIw(bxInstruction_c *i)
 {
   Bit16u op_16 = AX & i->Iw();
 
   SET_FLAGS_OSZAPC_LOGIC_16(op_16);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EwIwR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EwIwR(bxInstruction_c *i)
 {
   Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
   op1_16 &= i->Iw();
   SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+
+  BX_NEXT_INSTR(i);
 }

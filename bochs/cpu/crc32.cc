@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2009 Stanislav Shwartsman
+//   Copyright (c) 2008-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -72,7 +72,7 @@ static Bit32u mod2_64bit(Bit64u divisor, Bit64u dividend)
   return (Bit32u) remainder;
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEbR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEbR(bxInstruction_c *i)
 {
   Bit8u op1 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
 
@@ -86,9 +86,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEbR(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEwR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEwR(bxInstruction_c *i)
 {
   Bit32u op2 = BX_READ_32BIT_REG(i->nnn());
   op2 = BitReflect32(op2);
@@ -101,9 +103,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEwR(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEdR(bxInstruction_c *i)
 {
   Bit32u op2 = BX_READ_32BIT_REG(i->nnn());
   op2 = BitReflect32(op2);
@@ -116,11 +120,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEdR(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
+
+  BX_NEXT_INSTR(i);
 }
 
 #if BX_SUPPORT_X86_64
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEqR(bxInstruction_c *i)
 {
   Bit32u op2 = BX_READ_32BIT_REG(i->nnn());
   op2 = BitReflect32(op2);
@@ -137,6 +143,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEqR(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
+
+  BX_NEXT_INSTR(i);
 }
 
 #endif // BX_SUPPORT_X86_64

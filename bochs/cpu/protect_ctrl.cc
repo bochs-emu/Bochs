@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2010  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
 {
   Bit16u op2_16, op1_16;
 
@@ -59,9 +59,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
   else {
     clear_ZF();
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
 {
   /* for 16 bit operand size mode */
   Bit16u raw_selector;
@@ -89,7 +91,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
   /* if selector null, clear ZF and done */
   if ((raw_selector & 0xfffc) == 0) {
     clear_ZF();
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   parse_selector(raw_selector, &selector);
@@ -97,7 +99,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
   if (!fetch_raw_descriptor2(&selector, &dword1, &dword2)) {
     BX_DEBUG(("LAR: failed to fetch descriptor"));
     clear_ZF();
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   parse_descriptor(dword1, dword2, &descriptor);
@@ -105,7 +107,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
   if (descriptor.valid==0) {
     BX_DEBUG(("LAR: descriptor not valid"));
     clear_ZF();
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   /* if source selector is visible at CPL & RPL,
@@ -120,7 +122,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
     else {
       if (descriptor.dpl < CPL || descriptor.dpl < selector.rpl) {
         clear_ZF();
-        return;
+        BX_NEXT_INSTR(i);
       }
     }
   }
@@ -133,7 +135,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
         if (long_mode()) {
           BX_DEBUG(("LAR: descriptor type in not accepted in long mode"));
           clear_ZF();
-          return;
+          BX_NEXT_INSTR(i);
         }
         /* fall through */
       case BX_SYS_SEGMENT_LDT:
@@ -145,7 +147,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
           if (!fetch_raw_descriptor2_64(&selector, &dword1, &dword2, &dword3)) {
             BX_ERROR(("LAR: failed to fetch 64-bit descriptor"));
             clear_ZF();
-            return;
+            BX_NEXT_INSTR(i);
           }
         }
 #endif
@@ -153,12 +155,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
       default: /* rest not accepted types to LAR */
         BX_DEBUG(("LAR: not accepted descriptor type"));
         clear_ZF();
-        return;
+        BX_NEXT_INSTR(i);
     }
 
     if (descriptor.dpl < CPL || descriptor.dpl < selector.rpl) {
       clear_ZF();
-      return;
+      BX_NEXT_INSTR(i);
     }
   }
 
@@ -170,9 +172,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
   else {
     BX_WRITE_16BIT_REG(i->nnn(), dword2 & 0xff00);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
 {
   /* for 16 bit operand size mode */
   Bit16u raw_selector;
@@ -200,7 +204,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
   /* if selector null, clear ZF and done */
   if ((raw_selector & 0xfffc) == 0) {
     clear_ZF();
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   parse_selector(raw_selector, &selector);
@@ -208,7 +212,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
   if (!fetch_raw_descriptor2(&selector, &dword1, &dword2)) {
     BX_DEBUG(("LSL: failed to fetch descriptor"));
     clear_ZF();
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   Bit32u descriptor_dpl = (dword2 >> 13) & 0x03;
@@ -220,7 +224,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
       case BX_SYS_SEGMENT_BUSY_286_TSS:
         if (long_mode()) {
           clear_ZF();
-          return;
+          BX_NEXT_INSTR(i);
         }
         /* fall through */
       case BX_SYS_SEGMENT_LDT:
@@ -231,13 +235,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
           if (!fetch_raw_descriptor2_64(&selector, &dword1, &dword2, &dword3)) {
             BX_ERROR(("LSL: failed to fetch 64-bit descriptor"));
             clear_ZF();
-            return;
+            BX_NEXT_INSTR(i);
           }
         }
 #endif
         if (descriptor_dpl < CPL || descriptor_dpl < selector.rpl) {
           clear_ZF();
-          return;
+          BX_NEXT_INSTR(i);
         }
         limit32 = (dword1 & 0x0000ffff) | (dword2 & 0x000f0000);
         if (dword2 & 0x00800000)
@@ -245,7 +249,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
         break;
       default: /* rest not accepted types to LSL */
         clear_ZF();
-        return;
+        BX_NEXT_INSTR(i);
     }
   }
   else { // data & code segment
@@ -256,7 +260,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
       // non-conforming code segment
       if (descriptor_dpl < CPL || descriptor_dpl < selector.rpl) {
         clear_ZF();
-        return;
+        BX_NEXT_INSTR(i);
       }
     }
   }
@@ -271,9 +275,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
     // chop off upper 16 bits
     BX_WRITE_16BIT_REG(i->nnn(), (Bit16u) limit32);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
 {
   if (! protected_mode()) {
     BX_ERROR(("SLDT: not recognized in real or virtual-8086 mode"));
@@ -300,9 +306,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
     /* pointer, segment address pair */
     write_virtual_word(i->seg(), eaddr, val16);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::STR_Ew(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::STR_Ew(bxInstruction_c *i)
 {
   if (! protected_mode()) {
     BX_ERROR(("STR: not recognized in real or virtual-8086 mode"));
@@ -329,9 +337,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STR_Ew(bxInstruction_c *i)
     /* pointer, segment address pair */
     write_virtual_word(i->seg(), eaddr, val16);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
 {
   /* protected mode */
   bx_descriptor_t  descriptor;
@@ -371,7 +381,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
   if ((raw_selector & 0xfffc) == 0) {
     BX_CPU_THIS_PTR ldtr.selector.value = raw_selector;
     BX_CPU_THIS_PTR ldtr.cache.valid = 0;
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   /* parse fields in selector */
@@ -425,9 +435,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
   BX_CPU_THIS_PTR ldtr.selector = selector;
   BX_CPU_THIS_PTR ldtr.cache = descriptor;
   BX_CPU_THIS_PTR ldtr.cache.valid = 1;
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
 {
   bx_descriptor_t descriptor;
   bx_selector_t selector;
@@ -536,9 +548,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
     dword2 |= 0x0200; /* set busy bit */
     access_write_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 4, 4, 0, &dword2);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERR_Ew(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VERR_Ew(bxInstruction_c *i)
 {
   /* for 16 bit operand size mode */
   Bit16u raw_selector;
@@ -564,7 +578,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERR_Ew(bxInstruction_c *i)
   if ((raw_selector & 0xfffc) == 0) {
     BX_DEBUG(("VERR: null selector"));
     clear_ZF();
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   /* if source selector is visible at CPL & RPL,
@@ -576,7 +590,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERR_Ew(bxInstruction_c *i)
     /* not within descriptor table */
     BX_DEBUG(("VERR: not within descriptor table"));
     clear_ZF();
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   parse_descriptor(dword1, dword2, &descriptor);
@@ -584,13 +598,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERR_Ew(bxInstruction_c *i)
   if (descriptor.segment==0) { /* system or gate descriptor */
     BX_DEBUG(("VERR: system descriptor"));
     clear_ZF();  /* inaccessible */
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   if (descriptor.valid==0) {
     BX_DEBUG(("VERR: valid bit cleared"));
     clear_ZF();  /* inaccessible */
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   /* normal data/code segment */
@@ -601,12 +615,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERR_Ew(bxInstruction_c *i)
     {
       BX_DEBUG(("VERR: conforming code, OK"));
       assert_ZF(); /* accessible */
-      return;
+      BX_NEXT_INSTR(i);
     }
     if (!IS_CODE_SEGMENT_READABLE(descriptor.type)) {
       BX_DEBUG(("VERR: code not readable"));
       clear_ZF();  /* inaccessible */
-      return;
+      BX_NEXT_INSTR(i);
     }
     /* readable, non-conforming code segment */
     if ((descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl)) {
@@ -626,9 +640,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERR_Ew(bxInstruction_c *i)
       assert_ZF(); /* accessible */
     }
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERW_Ew(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VERW_Ew(bxInstruction_c *i)
 {
   /* for 16 bit operand size mode */
   Bit16u raw_selector;
@@ -654,7 +670,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERW_Ew(bxInstruction_c *i)
   if ((raw_selector & 0xfffc) == 0) {
     BX_DEBUG(("VERW: null selector"));
     clear_ZF();
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   /* if source selector is visible at CPL & RPL,
@@ -666,7 +682,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERW_Ew(bxInstruction_c *i)
     /* not within descriptor table */
     BX_DEBUG(("VERW: not within descriptor table"));
     clear_ZF();
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   parse_descriptor(dword1, dword2, &descriptor);
@@ -675,13 +691,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERW_Ew(bxInstruction_c *i)
   if (descriptor.segment==0 || IS_CODE_SEGMENT(descriptor.type)) {
     BX_DEBUG(("VERW: system seg or code"));
     clear_ZF();
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   if (descriptor.valid==0) {
     BX_DEBUG(("VERW: valid bit cleared"));
     clear_ZF();
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   /* data segment */
@@ -698,9 +714,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERW_Ew(bxInstruction_c *i)
     BX_DEBUG(("VERW: data seg not writable"));
     clear_ZF(); /* not accessible */
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -717,9 +735,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 
   write_virtual_word_32(i->seg(), eaddr, limit_16);
   write_virtual_dword_32(i->seg(), (eaddr+2) & i->asize_mask(), base_32);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -736,9 +756,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
 
   write_virtual_word_32(i->seg(), eaddr, limit_16);
   write_virtual_dword_32(i->seg(), (eaddr+2) & i->asize_mask(), base_32);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -762,9 +784,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR gdtr.limit = limit_16;
   BX_CPU_THIS_PTR gdtr.base = base_32;
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -788,11 +812,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR idtr.limit = limit_16;
   BX_CPU_THIS_PTR idtr.base = base_32;
+
+  BX_NEXT_INSTR(i);
 }
 
 #if BX_SUPPORT_X86_64
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
 
@@ -809,9 +835,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
 
   write_virtual_word_64(i->seg(), eaddr, limit_16);
   write_virtual_qword_64(i->seg(), (eaddr+2) & i->asize_mask(), base_64);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
 
@@ -828,9 +856,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
 
   write_virtual_word_64(i->seg(), eaddr, limit_16);
   write_virtual_qword_64(i->seg(), (eaddr+2) & i->asize_mask(), base_64);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
 
@@ -856,9 +886,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR gdtr.limit = limit_16;
   BX_CPU_THIS_PTR gdtr.base = base_64;
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
 
@@ -884,6 +916,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR idtr.limit = limit_16;
   BX_CPU_THIS_PTR idtr.base = base_64;
+
+  BX_NEXT_INSTR(i);
 }
 
 #endif

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009-2010 Stanislav Shwartsman
+//   Copyright (c) 2009-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -27,11 +27,6 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #include "iodev/iodev.h"
-
-#if BX_SUPPORT_X86_64==0
-#define RIP EIP
-#define RSP ESP
-#endif
 
 #if BX_SUPPORT_VMX
 
@@ -2163,7 +2158,7 @@ void BX_CPU_C::VMexit(bxInstruction_c *i, Bit32u reason, Bit64u qualification)
 // VMX instructions
 ////////////////////////////////////////////////////////////
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (! BX_CPU_THIS_PTR cr4.get_VMXE() || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
@@ -2184,14 +2179,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
     if ((pAddr & 0xfff) != 0 || ! IsValidPhyAddr(pAddr)) {
       BX_ERROR(("VMXON: invalid or not page aligned physical address !"));
       VMfailInvalid();
-      return;
+      BX_NEXT_INSTR(i);
     }
 
     Bit32u revision = VMXReadRevisionID((bx_phy_address) pAddr);
     if (revision != VMX_VMCS_REVISION_ID) {
       BX_ERROR(("VMXON: not expected (%d != %d) VMCS revision id !", revision, VMX_VMCS_REVISION_ID));
       VMfailInvalid();
-      return;
+      BX_NEXT_INSTR(i);
     }
       
     BX_CPU_THIS_PTR vmcsptr = BX_INVALID_VMCSPTR;
@@ -2221,9 +2216,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
     VMfail(VMXERR_VMXON_IN_VMX_ROOT_OPERATION);
   }
 #endif  
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXOFF(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXOFF(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
@@ -2255,9 +2252,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXOFF(bxInstruction_c *i)
     VMsucceed();
   }
 #endif  
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCALL(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCALL(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (! BX_CPU_THIS_PTR in_vmx)
@@ -2281,7 +2280,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCALL(bxInstruction_c *i)
         (the valid bit in the IA32_SMM_MONITOR_CTL MSR is clear)*/)
   {
     VMfail(VMXERR_VMCALL_IN_VMX_ROOT_OPERATION);
-    return;
+    BX_NEXT_TRACE(i);
   }
 /*
         if dual-monitor treatment of SMIs and BX_CPU_THIS_PTR in_smm
@@ -2291,7 +2290,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCALL(bxInstruction_c *i)
   if (! VMCSPTR_VALID()) {
     BX_ERROR(("VMFAIL: VMCALL with invalid VMCS ptr"));
     VMfailInvalid();
-    return;
+    BX_NEXT_TRACE(i);
   }
 
   Bit32u launch_state;
@@ -2302,7 +2301,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCALL(bxInstruction_c *i)
   if (launch_state != VMCS_STATE_CLEAR) {
     BX_ERROR(("VMFAIL: VMCALL with launched VMCS"));
     VMfail(VMXERR_VMCALL_NON_CLEAR_VMCS);
-    return;
+    BX_NEXT_TRACE(i);
   }
 
   BX_PANIC(("VMCALL: not implemented yet"));
@@ -2331,9 +2330,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCALL(bxInstruction_c *i)
         FI;
 */
 #endif  
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
@@ -2358,13 +2359,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
   if (! VMCSPTR_VALID()) {
     BX_ERROR(("VMFAIL: VMLAUNCH with invalid VMCS ptr !"));
     VMfailInvalid();
-    return;
+    BX_NEXT_TRACE(i);
   }
 
   if ((BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_INTERRUPTS_BY_MOVSS_SHADOW) == BX_INHIBIT_INTERRUPTS_BY_MOVSS_SHADOW) {
     BX_ERROR(("VMFAIL: VMLAUNCH with interrupts blocked by MOV_SS !"));
     VMfail(VMXERR_VMENTRY_MOV_SS_BLOCKING);
-    return;
+    BX_NEXT_TRACE(i);
   }
 
   Bit32u launch_state;
@@ -2376,14 +2377,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
     if (launch_state != VMCS_STATE_CLEAR) {
        BX_ERROR(("VMFAIL: VMLAUNCH with non-clear VMCS!"));
        VMfail(VMXERR_VMLAUNCH_NON_CLEAR_VMCS);
-       return;
+       BX_NEXT_TRACE(i);
     }
   }
   else {
     if (launch_state != VMCS_STATE_LAUNCHED) {
        BX_ERROR(("VMFAIL: VMRESUME with non-launched VMCS!"));
        VMfail(VMXERR_VMRESUME_NON_LAUNCHED_VMCS);
-       return;
+       BX_NEXT_TRACE(i);
     }
   }
 
@@ -2396,7 +2397,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
   VMX_error_code error = VMenterLoadCheckVmControls();
   if (error != VMXERR_NO_ERROR) {
     VMfail(error);
-    return;
+    BX_NEXT_TRACE(i);
   }
 
   ///////////////////////////////////////////////////////
@@ -2406,7 +2407,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
   error = VMenterLoadCheckHostState();
   if (error != VMXERR_NO_ERROR) {
     VMfail(error);
-    return;
+    BX_NEXT_TRACE(i);
   }
 
   ///////////////////////////////////////////////////////
@@ -2503,9 +2504,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
 
   VMenterInjectEvents();
 #endif  
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRLD(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRLD(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
@@ -2526,7 +2529,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRLD(bxInstruction_c *i)
   if ((pAddr & 0xfff) != 0 || ! IsValidPhyAddr(pAddr)) {
     BX_ERROR(("VMFAIL: invalid or not page aligned physical address !"));
     VMfail(VMXERR_VMPTRLD_INVALID_PHYSICAL_ADDRESS);
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   if (pAddr == BX_CPU_THIS_PTR vmxonptr) {
@@ -2545,9 +2548,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRLD(bxInstruction_c *i)
     }
   }
 #endif  
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRST(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRST(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
@@ -2567,6 +2572,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRST(bxInstruction_c *i)
   write_virtual_qword(i->seg(), eaddr, BX_CPU_THIS_PTR vmcsptr);
   VMsucceed();
 #endif  
+
+  BX_NEXT_INSTR(i);
 }
 
 BX_CPP_INLINE Bit32u rotate_r(Bit32u val_32)
@@ -2579,7 +2586,7 @@ BX_CPP_INLINE Bit32u rotate_l(Bit32u val_32)
   return (val_32 << 8) | (val_32 >> 24);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
@@ -2598,7 +2605,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
   if (! VMCSPTR_VALID()) {
     BX_ERROR(("VMFAIL: VMREAD with invalid VMCS ptr !"));
     VMfailInvalid();
-    return;
+    BX_NEXT_INSTR(i);
   }
 
 #if BX_SUPPORT_X86_64
@@ -2606,7 +2613,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
     if (BX_READ_64BIT_REG_HIGH(i->nnn())) {
       BX_ERROR(("VMREAD: not supported field (upper 32-bit not zero)"));
       VMfail(VMXERR_UNSUPPORTED_VMCS_COMPONENT_ACCESS);
-      return;
+      BX_NEXT_INSTR(i);
     }
   }
 #endif
@@ -2615,7 +2622,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
   if (vmcs_field_offset(encoding) == 0xffffffff) {
     BX_ERROR(("VMREAD: not supported field 0x%08x", encoding));
     VMfail(VMXERR_UNSUPPORTED_VMCS_COMPONENT_ACCESS);
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   unsigned width = VMCS_FIELD_WIDTH(encoding);
@@ -2664,9 +2671,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
  
   VMsucceed();
 #endif  
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
@@ -2685,7 +2694,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
   if (! VMCSPTR_VALID()) {
     BX_ERROR(("VMFAIL: VMWRITE with invalid VMCS ptr !"));
     VMfailInvalid();
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   Bit64u val_64;
@@ -2704,7 +2713,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     if (BX_READ_64BIT_REG_HIGH(i->nnn())) {
        BX_ERROR(("VMWRITE: not supported field (upper 32-bit not zero)"));
        VMfail(VMXERR_UNSUPPORTED_VMCS_COMPONENT_ACCESS);
-       return;
+       BX_NEXT_INSTR(i);
     }
 
     val_32 = GET32L(val_64);
@@ -2728,14 +2737,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
   if (vmcs_field_offset(encoding) == 0xffffffff) {
     BX_ERROR(("VMWRITE: not supported field 0x%08x", encoding));
     VMfail(VMXERR_UNSUPPORTED_VMCS_COMPONENT_ACCESS);
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   if (VMCS_FIELD_TYPE(encoding) == VMCS_FIELD_TYPE_READ_ONLY)
   {
-     BX_ERROR(("VMWRITE: write to read only field 0x%08x", encoding));
-     VMfail(VMXERR_VMWRITE_READ_ONLY_VMCS_COMPONENT);
-     return;
+    BX_ERROR(("VMWRITE: write to read only field 0x%08x", encoding));
+    VMfail(VMXERR_VMWRITE_READ_ONLY_VMCS_COMPONENT);
+    BX_NEXT_INSTR(i);
   }
 
   unsigned width = VMCS_FIELD_WIDTH(encoding);
@@ -2758,13 +2767,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
   }
 
   VMsucceed();
-#else         
-  BX_INFO(("VMWRITE: required VMX support, use --enable-vmx option"));
-  exception(BX_UD_EXCEPTION, 0);
 #endif  
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
@@ -2785,7 +2793,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
   if ((pAddr & 0xfff) != 0 || ! IsValidPhyAddr(pAddr)) {
     BX_ERROR(("VMFAIL: VMCLEAR with invalid physical address!"));
     VMfail(VMXERR_VMCLEAR_WITH_INVALID_ADDR);
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   if (pAddr == BX_CPU_THIS_PTR vmxonptr) {
@@ -2810,11 +2818,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
     VMsucceed();
   }
 #endif  
+
+  BX_NEXT_INSTR(i);
 }
 
 #if BX_CPU_LEVEL >= 6
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX >= 2
   if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
@@ -2847,7 +2857,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
      if (! is_eptptr_valid(inv_eptp.xmm64u(0))) {
        BX_ERROR(("INVEPT: invalid EPTPTR value !"));
        VMfail(VMXERR_INVALID_INVEPT_INVVPID);
-       return;
+       BX_NEXT_TRACE(i);
      }
      TLB_flush();
      break;
@@ -2859,7 +2869,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
   default:
      BX_ERROR(("INVEPT: not supported type !"));
      VMfail(VMXERR_INVALID_INVEPT_INVVPID);
-     return;
+     BX_NEXT_TRACE(i);
   }
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVEPT, 0);
@@ -2869,9 +2879,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
   BX_INFO(("INVEPT: required VMXx2 support, use --enable-vmx=2 option"));
   exception(BX_UD_EXCEPTION, 0);
 #endif
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX >= 2
   if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
@@ -2902,14 +2914,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
   if (invvpid_desc.xmm64u(0) > 0xffff) {
     BX_ERROR(("INVVPID: INVVPID_DESC reserved bits are set"));
     VMfail(VMXERR_INVALID_INVEPT_INVVPID);
-    return;
+    BX_NEXT_TRACE(i);
   }
 
   Bit16u vpid = invvpid_desc.xmm16u(0);
   if (vpid == 0 && type != BX_INVEPT_INVVPID_ALL_CONTEXT_INVALIDATION) {
     BX_ERROR(("INVVPID with VPID=0"));
     VMfail(VMXERR_INVALID_INVEPT_INVVPID);
-    return;
+    BX_NEXT_TRACE(i);
   }
 
   switch(type) {
@@ -2917,7 +2929,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
     if (! IsCanonical(invvpid_desc.xmm64u(1))) {
       BX_ERROR(("INVVPID: non canonical LADDR single context invalidation"));
       VMfail(VMXERR_INVALID_INVEPT_INVVPID);
-      return;
+      BX_NEXT_TRACE(i);
     }
 
     TLB_flush(); // invalidate all mappings for address LADDR tagged with VPID
@@ -2938,7 +2950,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
   default:
      BX_ERROR(("INVVPID: not supported type !"));
      VMfail(VMXERR_INVALID_INVEPT_INVVPID);
-     return;
+     BX_NEXT_TRACE(i);
   }
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVVPID, 0);
@@ -2948,6 +2960,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
   BX_INFO(("INVVPID: required VMXx2 support, use --enable-vmx=2 option"));
   exception(BX_UD_EXCEPTION, 0);
 #endif
+
+  BX_NEXT_TRACE(i);
 }
 
 #endif

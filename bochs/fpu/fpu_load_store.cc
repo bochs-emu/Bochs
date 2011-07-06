@@ -34,7 +34,7 @@ extern float_status_t FPU_pre_exception_handling(Bit16u control_word);
 
 #include "softfloatx80.h"
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_STi(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_STi(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
   FPU_update_last_instruction(i);
@@ -44,7 +44,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_STi(bxInstruction_c *i)
   if (! IS_TAG_EMPTY(-1))
   {
     FPU_stack_overflow();
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   floatx80 sti_reg = floatx80_default_nan;
@@ -54,7 +54,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_STi(bxInstruction_c *i)
     FPU_exception(FPU_EX_Stack_Underflow);
 
     if (! BX_CPU_THIS_PTR the_i387.is_IA_masked()) 
-      return;
+      BX_NEXT_INSTR(i);
   }
   else {
     sti_reg = BX_READ_FPU_REG(i->rm());
@@ -62,9 +62,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_STi(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR the_i387.FPU_push();
   BX_WRITE_FPU_REG(sti_reg, 0);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_SINGLE_REAL(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_SINGLE_REAL(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
 
@@ -77,7 +79,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_SINGLE_REAL(bxInstruction_c *i)
 
   if (! IS_TAG_EMPTY(-1)) {
     FPU_stack_overflow();
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   float_status_t status =
@@ -91,9 +93,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_SINGLE_REAL(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(result, 0);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_DOUBLE_REAL(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_DOUBLE_REAL(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
 
@@ -106,7 +110,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_DOUBLE_REAL(bxInstruction_c *i)
 
   if (! IS_TAG_EMPTY(-1)) {
     FPU_stack_overflow();
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   float_status_t status =
@@ -120,9 +124,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_DOUBLE_REAL(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(result, 0);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_EXTENDED_REAL(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_EXTENDED_REAL(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
 
@@ -143,10 +149,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_EXTENDED_REAL(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(result, 0);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
 /* DF /0 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_WORD_INTEGER(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_WORD_INTEGER(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
 
@@ -165,10 +173,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_WORD_INTEGER(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(result, 0);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
 /* DB /0 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_DWORD_INTEGER(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_DWORD_INTEGER(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
 
@@ -187,10 +197,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_DWORD_INTEGER(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(result, 0);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
 /* DF /5 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_QWORD_INTEGER(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_QWORD_INTEGER(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
 
@@ -209,10 +221,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_QWORD_INTEGER(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(result, 0);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
 /* DF /4 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBLD_PACKED_BCD(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FBLD_PACKED_BCD(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
 
@@ -227,7 +241,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBLD_PACKED_BCD(bxInstruction_c *i)
   if (! IS_TAG_EMPTY(-1))
   {
     FPU_stack_overflow();
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   // convert packed BCD to 64-bit integer
@@ -250,9 +264,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBLD_PACKED_BCD(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR the_i387.FPU_push();
   BX_WRITE_FPU_REG(result, 0);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_STi(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_STi(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
   FPU_update_last_instruction(i);
@@ -274,9 +290,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_STi(bxInstruction_c *i)
     if (pop_stack)
       BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_SINGLE_REAL(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_SINGLE_REAL(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
 
@@ -297,7 +315,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_SINGLE_REAL(bxInstruction_c *i)
      FPU_exception(FPU_EX_Stack_Underflow);
 
      if (! BX_CPU_THIS_PTR the_i387.is_IA_masked())
-        return;
+        BX_NEXT_INSTR(i);
   }
   else
   {
@@ -307,7 +325,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_SINGLE_REAL(bxInstruction_c *i)
      save_reg = floatx80_to_float32(BX_READ_FPU_REG(0), status);
 
      if (FPU_exception(status.float_exception_flags, 1))
-        return;
+        BX_NEXT_INSTR(i);
   }
 
   // store to the memory might generate an exception, in this case origial FPU_SW must be kept
@@ -318,9 +336,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_SINGLE_REAL(bxInstruction_c *i)
   FPU_PARTIAL_STATUS = x87_sw;
   if (pop_stack)
      BX_CPU_THIS_PTR the_i387.FPU_pop();
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_DOUBLE_REAL(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_DOUBLE_REAL(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
 
@@ -341,7 +361,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_DOUBLE_REAL(bxInstruction_c *i)
      FPU_exception(FPU_EX_Stack_Underflow);
 
      if (! BX_CPU_THIS_PTR the_i387.is_IA_masked())
-        return;
+        BX_NEXT_INSTR(i);
   }
   else
   {
@@ -351,7 +371,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_DOUBLE_REAL(bxInstruction_c *i)
      save_reg = floatx80_to_float64(BX_READ_FPU_REG(0), status);
 
      if (FPU_exception(status.float_exception_flags, 1))
-        return;
+        BX_NEXT_INSTR(i);
   }
 
   // store to the memory might generate an exception, in this case origial FPU_SW must be kept
@@ -362,10 +382,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_DOUBLE_REAL(bxInstruction_c *i)
   FPU_PARTIAL_STATUS = x87_sw;
   if (pop_stack)
      BX_CPU_THIS_PTR the_i387.FPU_pop();
+
+  BX_NEXT_INSTR(i);
 }
 
 /* DB /7 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSTP_EXTENDED_REAL(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FSTP_EXTENDED_REAL(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
 
@@ -382,7 +404,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSTP_EXTENDED_REAL(bxInstruction_c *i)
      FPU_exception(FPU_EX_Stack_Underflow);
 
      if (! BX_CPU_THIS_PTR the_i387.is_IA_masked())
-        return;
+        BX_NEXT_INSTR(i);
   }
   else
   {
@@ -393,9 +415,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSTP_EXTENDED_REAL(bxInstruction_c *i)
   write_virtual_word(i->seg(), (RMAddr(i) + 8) & i->asize_mask(), save_reg.exp);
 
   BX_CPU_THIS_PTR the_i387.FPU_pop();
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
 
@@ -416,7 +440,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
      FPU_exception(FPU_EX_Stack_Underflow);
 
      if (! BX_CPU_THIS_PTR the_i387.is_IA_masked())
-        return;
+        BX_NEXT_INSTR(i);
   }
   else
   {
@@ -426,7 +450,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
      save_reg = floatx80_to_int16(BX_READ_FPU_REG(0), status);
 
      if (FPU_exception(status.float_exception_flags, 1))
-        return;
+        BX_NEXT_INSTR(i);
   }
 
   // store to the memory might generate an exception, in this case origial FPU_SW must be kept
@@ -437,9 +461,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
   FPU_PARTIAL_STATUS = x87_sw;
   if (pop_stack)
      BX_CPU_THIS_PTR the_i387.FPU_pop();
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_DWORD_INTEGER(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_DWORD_INTEGER(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
 
@@ -460,7 +486,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_DWORD_INTEGER(bxInstruction_c *i)
      FPU_exception(FPU_EX_Stack_Underflow);
 
      if (! BX_CPU_THIS_PTR the_i387.is_IA_masked())
-        return;
+        BX_NEXT_INSTR(i);
   }
   else
   {
@@ -470,7 +496,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_DWORD_INTEGER(bxInstruction_c *i)
      save_reg = floatx80_to_int32(BX_READ_FPU_REG(0), status);
 
      if (FPU_exception(status.float_exception_flags, 1))
-         return;
+         BX_NEXT_INSTR(i);
   }
 
   // store to the memory might generate an exception, in this case origial FPU_SW must be kept
@@ -481,9 +507,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_DWORD_INTEGER(bxInstruction_c *i)
   FPU_PARTIAL_STATUS = x87_sw;
   if (pop_stack)
      BX_CPU_THIS_PTR the_i387.FPU_pop();
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTP_QWORD_INTEGER(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTP_QWORD_INTEGER(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
 
@@ -502,7 +530,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTP_QWORD_INTEGER(bxInstruction_c *i)
      FPU_exception(FPU_EX_Stack_Underflow);
 
      if (! BX_CPU_THIS_PTR the_i387.is_IA_masked())
-        return;
+        BX_NEXT_INSTR(i);
   }
   else
   {
@@ -512,7 +540,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTP_QWORD_INTEGER(bxInstruction_c *i)
      save_reg = floatx80_to_int64(BX_READ_FPU_REG(0), status);
 
      if (FPU_exception(status.float_exception_flags, 1))
-         return;
+         BX_NEXT_INSTR(i);
   }
 
   // store to the memory might generate an exception, in this case origial FPU_SW must be kept
@@ -523,9 +551,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTP_QWORD_INTEGER(bxInstruction_c *i)
   FPU_PARTIAL_STATUS = x87_sw;
 
   BX_CPU_THIS_PTR the_i387.FPU_pop();
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
 
@@ -550,7 +580,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
      FPU_exception(FPU_EX_Stack_Underflow);
 
      if (! BX_CPU_THIS_PTR the_i387.is_IA_masked())
-        return;
+        BX_NEXT_INSTR(i);
   }
   else
   {
@@ -586,7 +616,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
 
     /* check for fpu arithmetic exceptions */
     if (FPU_exception(status.float_exception_flags, 1))
-        return;
+        BX_NEXT_INSTR(i);
   }
 
   // store to the memory might generate an exception, in this case origial FPU_SW must be kept
@@ -599,10 +629,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
   FPU_PARTIAL_STATUS = x87_sw;
 
   BX_CPU_THIS_PTR the_i387.FPU_pop();
+
+  BX_NEXT_INSTR(i);
 }
 
 /* DF /1 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP16(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP16(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
 
@@ -621,7 +653,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP16(bxInstruction_c *i)
      FPU_exception(FPU_EX_Stack_Underflow);
 
      if (! BX_CPU_THIS_PTR the_i387.is_IA_masked())
-        return;
+        BX_NEXT_INSTR(i);
   }
   else
   {
@@ -631,7 +663,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP16(bxInstruction_c *i)
      save_reg = floatx80_to_int16_round_to_zero(BX_READ_FPU_REG(0), status);
 
      if (FPU_exception(status.float_exception_flags, 1))
-        return;
+        BX_NEXT_INSTR(i);
   }
 
   // store to the memory might generate an exception, in this case origial FPU_SW must be kept
@@ -642,10 +674,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP16(bxInstruction_c *i)
   FPU_PARTIAL_STATUS = x87_sw;
 
   BX_CPU_THIS_PTR the_i387.FPU_pop();
+
+  BX_NEXT_INSTR(i);
 }
 
 /* DB /1 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP32(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP32(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
 
@@ -664,7 +698,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP32(bxInstruction_c *i)
      FPU_exception(FPU_EX_Stack_Underflow);
 
      if (! BX_CPU_THIS_PTR the_i387.is_IA_masked())
-        return;
+        BX_NEXT_INSTR(i);
   }
   else
   {
@@ -674,7 +708,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP32(bxInstruction_c *i)
      save_reg = floatx80_to_int32_round_to_zero(BX_READ_FPU_REG(0), status);
 
      if (FPU_exception(status.float_exception_flags, 1))
-        return;
+        BX_NEXT_INSTR(i);
   }
 
   // store to the memory might generate an exception, in this case origial FPU_SW must be kept
@@ -685,10 +719,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP32(bxInstruction_c *i)
   FPU_PARTIAL_STATUS = x87_sw;
 
   BX_CPU_THIS_PTR the_i387.FPU_pop();
+
+  BX_NEXT_INSTR(i);
 }
 
 /* DD /1 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP64(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP64(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
 
@@ -707,7 +743,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP64(bxInstruction_c *i)
      FPU_exception(FPU_EX_Stack_Underflow);
 
      if (! BX_CPU_THIS_PTR the_i387.is_IA_masked())
-        return;
+        BX_NEXT_INSTR(i);
   }
   else
   {
@@ -717,7 +753,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP64(bxInstruction_c *i)
      save_reg = floatx80_to_int64_round_to_zero(BX_READ_FPU_REG(0), status);
 
      if (FPU_exception(status.float_exception_flags, 1))
-        return;
+        BX_NEXT_INSTR(i);
   }
 
   // store to the memory might generate an exception, in this case origial FPU_SW must be kept
@@ -728,6 +764,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP64(bxInstruction_c *i)
   FPU_PARTIAL_STATUS = x87_sw;
 
   BX_CPU_THIS_PTR the_i387.FPU_pop();
+
+  BX_NEXT_INSTR(i);
 }
 
 #endif

@@ -24,7 +24,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AAA(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AAA(bxInstruction_c *i)
 {
   int tmpCF = 0, tmpAF = 0;
 
@@ -66,9 +66,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AAA(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_8(AL);
   set_CF(tmpCF);
   set_AF(tmpAF);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AAS(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AAS(bxInstruction_c *i)
 {
   int tmpCF = 0, tmpAF = 0;
 
@@ -90,9 +92,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AAS(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_8(AL);
   set_CF(tmpCF);
   set_AF(tmpAF);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AAM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AAM(bxInstruction_c *i)
 {
   Bit8u al, imm8 = i->Ib();
 
@@ -107,9 +111,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AAM(bxInstruction_c *i)
   /* The following behaviour seems to match the P6 and
      its derived processors. */
   SET_FLAGS_OSZAPC_LOGIC_8(AL);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AAD(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AAD(bxInstruction_c *i)
 {
   Bit16u tmp = AH;
   tmp *= i->Ib();
@@ -121,9 +127,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AAD(bxInstruction_c *i)
   /* The following behaviour seems to match the P6 and
      its derived processors. */
   SET_FLAGS_OSZAPC_LOGIC_8(AL);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::DAA(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DAA(bxInstruction_c *i)
 {
   Bit8u tmpAL = AL;
   int   tmpCF = 0, tmpAF = 0;
@@ -148,9 +156,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DAA(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_8(AL);
   set_CF(tmpCF);
   set_AF(tmpAF);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::DAS(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DAS(bxInstruction_c *i)
 {
   /* The algorithm for DAS is fashioned after the pseudo code in the
    * Pentium Processor Family Developer's Manual, volume 3.  It seems
@@ -181,4 +191,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DAS(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_8(AL);
   set_CF(tmpCF);
   set_AF(tmpAF);
+
+  BX_NEXT_INSTR(i);
 }

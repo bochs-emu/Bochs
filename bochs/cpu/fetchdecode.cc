@@ -78,6 +78,20 @@ static const Bit8u BxOpcodeHasModrm32[512] = {
 
 #undef X
 
+// Some info on the opcodes at {0F A6} and {0F A7}
+//
+// On 386 steps A0-B0:
+//   {OF A6} = XBTS
+//   {OF A7} = IBTS
+// On 486 steps A0-B0:
+//   {OF A6} = CMPXCHG 8
+//   {OF A7} = CMPXCHG 16|32
+//
+// On 486 >= B steps, and further processors, the
+// CMPXCHG instructions were moved to opcodes:
+//   {OF B0} = CMPXCHG 8
+//   {OF B1} = CMPXCHG 16|32
+
 static unsigned Resolve16BaseReg[8] = {
   BX_16BIT_REG_BX,
   BX_16BIT_REG_BX,
@@ -585,7 +599,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F 7C /w */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7c },
   /* 0F 7D /w */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7d },
   /* 0F 7E /w */ { BxPrefixSSE, BX_IA_MOVD_EdPd, BxOpcodeGroupSSE_0f7e },
-  /* 0F 7F /w */ { BxPrefixSSE, BX_IA_MOVQ_QqPq, BxOpcodeGroupSSE_0f7f },
+  /* 0F 7F /w */ { BxPrefixSSE | BxArithDstRM, BX_IA_MOVQ_QqPq, BxOpcodeGroupSSE_0f7f },
   /* 0F 80 /w */ { BxImmediate_BrOff16 | BxTraceJCC, BX_IA_JO_Jw },
   /* 0F 81 /w */ { BxImmediate_BrOff16 | BxTraceJCC, BX_IA_JNO_Jw },
   /* 0F 82 /w */ { BxImmediate_BrOff16 | BxTraceJCC, BX_IA_JB_Jw },
@@ -624,8 +638,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F A3 /w */ { 0, BX_IA_BT_EwGw },
   /* 0F A4 /w */ { BxImmediate_Ib, BX_IA_SHLD_EwGw },
   /* 0F A5 /w */ { 0,              BX_IA_SHLD_EwGw },
-  /* 0F A6 /w */ { BxTraceEnd, BX_IA_CMPXCHG_XBTS }, // not implemented
-  /* 0F A7 /w */ { BxTraceEnd, BX_IA_CMPXCHG_IBTS }, // not implemented
+  /* 0F A6 /w */ { 0, BX_IA_ERROR }, // CMPXCHG_XBTS not implemented
+  /* 0F A7 /w */ { 0, BX_IA_ERROR }, // CMPXCHG_IBTS not implemented
   /* 0F A8 /w */ { 0, BX_IA_PUSH16_GS },
   /* 0F A9 /w */ { 0, BX_IA_POP16_GS },
   /* 0F AA /w */ { BxTraceEnd, BX_IA_RSM },
@@ -1138,7 +1152,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F 7C /d */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7c },
   /* 0F 7D /d */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7d },
   /* 0F 7E /d */ { BxPrefixSSE, BX_IA_MOVD_EdPd, BxOpcodeGroupSSE_0f7e },
-  /* 0F 7F /d */ { BxPrefixSSE, BX_IA_MOVQ_QqPq, BxOpcodeGroupSSE_0f7f },
+  /* 0F 7F /d */ { BxPrefixSSE | BxArithDstRM, BX_IA_MOVQ_QqPq, BxOpcodeGroupSSE_0f7f },
   /* 0F 80 /d */ { BxImmediate_BrOff32 | BxTraceJCC, BX_IA_JO_Jd },
   /* 0F 81 /d */ { BxImmediate_BrOff32 | BxTraceJCC, BX_IA_JNO_Jd },
   /* 0F 82 /d */ { BxImmediate_BrOff32 | BxTraceJCC, BX_IA_JB_Jd },
@@ -1177,8 +1191,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F A3 /d */ { 0, BX_IA_BT_EdGd },
   /* 0F A4 /d */ { BxImmediate_Ib, BX_IA_SHLD_EdGd },
   /* 0F A5 /d */ { 0,              BX_IA_SHLD_EdGd },
-  /* 0F A6 /d */ { BxTraceEnd, BX_IA_CMPXCHG_XBTS }, // not implemented
-  /* 0F A7 /d */ { BxTraceEnd, BX_IA_CMPXCHG_IBTS }, // not implemented
+  /* 0F A6 /d */ { 0, BX_IA_ERROR }, // CMPXCHG_XBTS not implemented
+  /* 0F A7 /d */ { 0, BX_IA_ERROR }, // CMPXCHG_IBTS not implemented
   /* 0F A8 /d */ { 0, BX_IA_PUSH32_GS },
   /* 0F A9 /d */ { 0, BX_IA_POP32_GS },
   /* 0F AA /d */ { BxTraceEnd, BX_IA_RSM },
@@ -1906,7 +1920,7 @@ modrm_done:
   return(0);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxError(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BxError(bxInstruction_c *i)
 {
   unsigned ia_opcode = i->getIaOpcode();
  
@@ -1925,6 +1939,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxError(bxInstruction_c *i)
   }
 
   exception(BX_UD_EXCEPTION, 0);
+
+  BX_NEXT_TRACE(i); // keep compiler happy
 }
 
 const char *get_bx_opcode_name(Bit16u ia_opcode)

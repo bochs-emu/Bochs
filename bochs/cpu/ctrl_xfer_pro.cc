@@ -24,11 +24,6 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_SUPPORT_X86_64==0
-// Make life easier merging cpu64 & cpu code.
-#define RIP EIP
-#endif
-
 /* pass zero in check_rpl if no needed selector RPL checking for
    non-conforming segments */
 void BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_rpl, Bit8u check_cpl)

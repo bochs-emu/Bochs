@@ -52,7 +52,7 @@ BX_CPP_INLINE floatx80 FPU_round_const(const floatx80 &a, int adj)
   return result;
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDL2T(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDL2T(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
@@ -67,9 +67,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDL2T(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(FPU_round_const(Const_L2T, (FPU_CONTROL_WORD & FPU_CW_RC) == FPU_RC_UP), 0);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDL2E(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDL2E(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
@@ -84,9 +86,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDL2E(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(FPU_round_const(Const_L2E, DOWN_OR_CHOP() ? -1 : 0), 0);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDPI(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDPI(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
@@ -101,9 +105,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDPI(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(FPU_round_const(Const_PI, DOWN_OR_CHOP() ? -1 : 0), 0);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDLG2(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDLG2(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
@@ -118,9 +124,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDLG2(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(FPU_round_const(Const_LG2, DOWN_OR_CHOP() ? -1 : 0), 0);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDLN2(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDLN2(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
@@ -135,9 +143,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDLN2(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(FPU_round_const(Const_LN2, DOWN_OR_CHOP() ? -1 : 0), 0);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD1(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD1(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
@@ -152,9 +162,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD1(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(Const_1, 0);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDZ(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDZ(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
@@ -169,6 +181,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDZ(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(Const_Z, 0);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
 #endif

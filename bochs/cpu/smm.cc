@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2006-2009 Stanislav Shwartsman
+//   Copyright (c) 2006-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -27,10 +27,6 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #if BX_CPU_LEVEL >= 3
-
-#if BX_SUPPORT_X86_64==0
-#define RIP EIP
-#endif
 
 //
 // Some of the CPU field must be saved and restored in order to continue the
@@ -64,7 +60,7 @@
 
 #define SMM_SAVE_STATE_MAP_SIZE 128
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
 {
   /* If we are not in System Management Mode, then #UD should be generated */
   if (! BX_CPU_THIS_PTR smm_mode()) {
@@ -111,6 +107,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
   }
 
   // debug(RIP);
+
+  BX_NEXT_TRACE(i);
 }
 
 void BX_CPU_C::enter_system_management_mode(void)

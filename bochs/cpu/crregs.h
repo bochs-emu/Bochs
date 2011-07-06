@@ -216,8 +216,6 @@ struct bx_efer_t {
 struct xcr0_t {
   Bit32u  val32; // 32bit value of register
 
-#define BX_XCR0_SUPPORTED_BITS 0x7
-
 #define BX_XCR0_FPU_BIT   0
 #define BX_XCR0_FPU_MASK (1<<BX_XCR0_FPU_BIT)
 #define BX_XCR0_SSE_BIT   1

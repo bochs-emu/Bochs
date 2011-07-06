@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2010 Stanislav Shwartsman
+//   Copyright (c) 2008-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -25,12 +25,6 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
-#if BX_SUPPORT_X86_64==0
-// Make life easier for merging code.
-#define RAX EAX
-#define RDX EDX
-#endif
 
 #if BX_CPU_LEVEL >= 5
 bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
@@ -271,7 +265,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 }
 #endif // BX_CPU_LEVEL >= 5
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   if (!real_mode() && CPL != 0) {
@@ -291,7 +285,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_X2APIC_MODE)) {
       RAX = VMX_Read_VTPR() & 0xff;
       RDX = 0;
-      return;
+      BX_NEXT_INSTR(i);
     }
   }
 #endif
@@ -302,6 +296,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
   RAX = GET32L(val64);
   RDX = GET32H(val64);
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 #if BX_CPU_LEVEL >= 6
@@ -722,7 +718,7 @@ bx_bool BX_CPU_C::relocate_apic(Bit64u val_64)
 }
 #endif
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   if (!real_mode() && CPL != 0) {
@@ -741,7 +737,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR in_vmx_guest && index == 0x808) {
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_X2APIC_MODE)) {
       VMX_Write_VTPR(AL);
-      return;
+      BX_NEXT_INSTR(i);
     }
   }
 #endif
@@ -749,6 +745,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
   if (! wrmsr(index, val_64))
     exception(BX_GP_EXCEPTION, 0);
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 #if BX_CONFIGURE_MSRS

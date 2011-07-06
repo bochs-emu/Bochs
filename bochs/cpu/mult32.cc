@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -24,12 +24,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_SUPPORT_X86_64==0
-#define RAX EAX
-#define RDX EDX
-#endif
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_EAXEdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_EAXEdR(bxInstruction_c *i)
 {
   Bit32u op1_32 = EAX;
   Bit32u op2_32 = BX_READ_32BIT_REG(i->rm());
@@ -48,9 +43,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_EAXEdR(bxInstruction_c *i)
   {
     ASSERT_FLAGS_OxxxxC();
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_EAXEdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_EAXEdR(bxInstruction_c *i)
 {
   Bit32s op1_32 = EAX;
   Bit32s op2_32 = BX_READ_32BIT_REG(i->rm());
@@ -72,9 +69,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_EAXEdR(bxInstruction_c *i)
   {
     ASSERT_FLAGS_OxxxxC();
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIV_EAXEdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DIV_EAXEdR(bxInstruction_c *i)
 {
   Bit32u op2_32 = BX_READ_32BIT_REG(i->rm());
   if (op2_32 == 0) {
@@ -99,9 +98,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIV_EAXEdR(bxInstruction_c *i)
   /* now write quotient back to destination */
   RAX = quotient_32l;
   RDX = remainder_32;
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_EAXEdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_EAXEdR(bxInstruction_c *i)
 {
   Bit64s op1_64 = (((Bit64u) EDX) << 32) | ((Bit64u) EAX);
 
@@ -130,9 +131,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_EAXEdR(bxInstruction_c *i)
   /* now write quotient back to destination */
   RAX = (Bit32u) quotient_32l;
   RDX = (Bit32u) remainder_32;
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GdEdIdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GdEdIdR(bxInstruction_c *i)
 {
   Bit32s op2_32 = BX_READ_32BIT_REG(i->rm());
   Bit32s op3_32 = i->Id();
@@ -152,9 +155,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GdEdIdR(bxInstruction_c *i)
   {
     ASSERT_FLAGS_OxxxxC();
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GdEdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GdEdR(bxInstruction_c *i)
 {
   Bit32s op1_32 = BX_READ_32BIT_REG(i->nnn());
   Bit32s op2_32 = BX_READ_32BIT_REG(i->rm());
@@ -174,4 +179,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GdEdR(bxInstruction_c *i)
   {
     ASSERT_FLAGS_OxxxxC();
   }
+
+  BX_NEXT_INSTR(i);
 }

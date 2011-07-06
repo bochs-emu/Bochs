@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -24,12 +24,6 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-// Make code more tidy with a few macros.
-#if BX_SUPPORT_X86_64==0
-#define RSP ESP
-#define RIP EIP
-#endif
-
 BX_CPP_INLINE void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near16(Bit16u new_IP)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
@@ -49,7 +43,7 @@ BX_CPP_INLINE void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near16(Bit16u new_IP)
 #endif
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16_Iw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16_Iw(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -79,9 +73,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16_Iw(bxInstruction_c *i)
   RSP_COMMIT;
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, EIP);
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -104,9 +100,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16(bxInstruction_c *i)
   RSP_COMMIT;
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, EIP);
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar16_Iw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar16_Iw(bxInstruction_c *i)
 {
   Bit16u ip, cs_raw;
 
@@ -148,9 +146,11 @@ done:
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_Jw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_Jw(bxInstruction_c *i)
 {
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
@@ -167,9 +167,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_Jw(bxInstruction_c *i)
   RSP_COMMIT;
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, EIP);
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL16_Ap(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL16_Ap(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -206,9 +208,11 @@ done:
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EwR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EwR(bxInstruction_c *i)
 {
   Bit16u new_IP = BX_READ_16BIT_REG(i->rm());
 
@@ -226,9 +230,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EwR(bxInstruction_c *i)
   RSP_COMMIT;
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, EIP);
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL16_Ep(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL16_Ep(bxInstruction_c *i)
 {
   Bit16u cs_raw;
   Bit16u op1_16;
@@ -268,248 +274,238 @@ done:
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_Jw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_Jw(bxInstruction_c *i)
 {
   Bit16u new_IP = IP + i->Iw();
   branch_near16(new_IP);
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, new_IP);
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JO_Jw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JO_Jw(bxInstruction_c *i)
 {
   if (get_OF()) {
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
+    BX_NEXT_TRACE(i);
   }
-#if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-  }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNO_Jw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNO_Jw(bxInstruction_c *i)
 {
   if (! get_OF()) {
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
+    BX_NEXT_TRACE(i);
   }
-#if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-  }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JB_Jw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JB_Jw(bxInstruction_c *i)
 {
   if (get_CF()) {
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
+    BX_NEXT_TRACE(i);
   }
-#if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-  }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNB_Jw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNB_Jw(bxInstruction_c *i)
 {
   if (! get_CF()) {
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
+    BX_NEXT_TRACE(i);
   }
-#if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-  }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JZ_Jw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JZ_Jw(bxInstruction_c *i)
 {
   if (get_ZF()) {
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
+    BX_NEXT_TRACE(i);
   }
-#if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-  }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNZ_Jw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNZ_Jw(bxInstruction_c *i)
 {
   if (! get_ZF()) {
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
+    BX_NEXT_TRACE(i);
   }
-#if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-  }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JBE_Jw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JBE_Jw(bxInstruction_c *i)
 {
   if (get_CF() || get_ZF()) {
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
+    BX_NEXT_TRACE(i);
   }
-#if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-  }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNBE_Jw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNBE_Jw(bxInstruction_c *i)
 {
   if (! (get_CF() || get_ZF())) {
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
+    BX_NEXT_TRACE(i);
   }
-#if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-  }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JS_Jw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JS_Jw(bxInstruction_c *i)
 {
   if (get_SF()) {
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
+    BX_NEXT_TRACE(i);
   }
-#if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-  }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNS_Jw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNS_Jw(bxInstruction_c *i)
 {
   if (! get_SF()) {
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
+    BX_NEXT_TRACE(i);
   }
-#if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-  }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JP_Jw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JP_Jw(bxInstruction_c *i)
 {
   if (get_PF()) {
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
+    BX_NEXT_TRACE(i);
   }
-#if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-  }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNP_Jw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNP_Jw(bxInstruction_c *i)
 {
   if (! get_PF()) {
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
+    BX_NEXT_TRACE(i);
   }
-#if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-  }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JL_Jw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JL_Jw(bxInstruction_c *i)
 {
   if (getB_SF() != getB_OF()) {
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
+    BX_NEXT_TRACE(i);
   }
-#if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-  }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNL_Jw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNL_Jw(bxInstruction_c *i)
 {
   if (getB_SF() == getB_OF()) {
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
+    BX_NEXT_TRACE(i);
   }
-#if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-  }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JLE_Jw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JLE_Jw(bxInstruction_c *i)
 {
   if (get_ZF() || (getB_SF() != getB_OF())) {
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
+    BX_NEXT_TRACE(i);
   }
-#if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-  }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNLE_Jw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNLE_Jw(bxInstruction_c *i)
 {
   if (! get_ZF() && (getB_SF() == getB_OF())) {
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
+    BX_NEXT_TRACE(i);
   }
-#if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-  }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EwR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EwR(bxInstruction_c *i)
 {
   Bit16u new_IP = BX_READ_16BIT_REG(i->rm());
   branch_near16(new_IP);
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, new_IP);
+
+  BX_NEXT_TRACE(i);
 }
 
 /* Far indirect jump */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP16_Ep(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP16_Ep(bxInstruction_c *i)
 {
   Bit16u cs_raw;
   Bit16u op1_16;
@@ -540,9 +536,11 @@ done:
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET16(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET16(bxInstruction_c *i)
 {
   invalidate_prefetch_q();
 
@@ -588,9 +586,11 @@ done:
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_IRET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
 {
   // it is impossible to get this instruction in long mode
   BX_ASSERT(i->as64L() == 0);
@@ -612,6 +612,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
   }
 #endif
+
+  BX_NEXT_TRACE(i);
 }
 
 //
@@ -624,7 +626,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
 // it is known that no exceptions can happen.
 //
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOPNE16_Jb(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOPNE16_Jb(bxInstruction_c *i)
 {
   // it is impossible to get this instruction in long mode
   BX_ASSERT(i->as64L() == 0);
@@ -663,9 +665,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOPNE16_Jb(bxInstruction_c *i)
 
     CX = count;
   }
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOPE16_Jb(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOPE16_Jb(bxInstruction_c *i)
 {
   // it is impossible to get this instruction in long mode
   BX_ASSERT(i->as64L() == 0);
@@ -704,9 +708,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOPE16_Jb(bxInstruction_c *i)
 
     CX = count;
   }
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOP16_Jb(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOP16_Jb(bxInstruction_c *i)
 {
   // it is impossible to get this instruction in long mode
   BX_ASSERT(i->as64L() == 0);
@@ -745,4 +751,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOP16_Jb(bxInstruction_c *i)
 
     CX = count;
   }
+
+  BX_NEXT_TRACE(i);
 }

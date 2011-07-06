@@ -288,17 +288,19 @@ BX_CPP_INLINE Bit32u AES_RotWord(Bit32u x)
 }
 
 /* 66 0F 38 DB */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESIMC_VdqWdqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESIMC_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
 
   AES_InverseMixColumns(op);
 
   BX_WRITE_XMM_REGZ(i->nnn(), op, i->getVL());
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 38 DC */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENC_VdqWdqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENC_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
 
@@ -310,10 +312,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENC_VdqWdqR(bxInstruction_c *i)
   op1.xmm64u(1) ^= op2.xmm64u(1);
 
   BX_WRITE_XMM_REGZ(i->nnn(), op1, i->getVL());
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 38 DD */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENCLAST_VdqWdqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENCLAST_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
 
@@ -324,10 +328,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENCLAST_VdqWdqR(bxInstruction_c *i)
   op1.xmm64u(1) ^= op2.xmm64u(1);
 
   BX_WRITE_XMM_REGZ(i->nnn(), op1, i->getVL());
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 38 DE */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDEC_VdqWdqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDEC_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
 
@@ -339,10 +345,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDEC_VdqWdqR(bxInstruction_c *i)
   op1.xmm64u(1) ^= op2.xmm64u(1);
 
   BX_WRITE_XMM_REGZ(i->nnn(), op1, i->getVL());
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 38 DF */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDECLAST_VdqWdqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDECLAST_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
 
@@ -353,10 +361,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDECLAST_VdqWdqR(bxInstruction_c *i)
   op1.xmm64u(1) ^= op2.xmm64u(1);
 
   BX_WRITE_XMM_REGZ(i->nnn(), op1, i->getVL());
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 3A DF */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESKEYGENASSIST_VdqWdqIbR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESKEYGENASSIST_VdqWdqIbR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm()), result;
 
@@ -368,10 +378,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESKEYGENASSIST_VdqWdqIbR(bxInstruction_c 
   result.xmm32u(3) = AES_RotWord(result.xmm32u(2)) ^ rcon32;
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 3A 44 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCLMULQDQ_VdqWdqIbR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PCLMULQDQ_VdqWdqIbR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
   BxPackedXmmRegister r, a;
@@ -403,6 +415,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCLMULQDQ_VdqWdqIbR(bxInstruction_c *i)
   }
 
   BX_WRITE_XMM_REGZ(i->nnn(), r, i->getVL());
+
+  BX_NEXT_INSTR(i);
 }
 
 #endif

@@ -323,7 +323,7 @@ bx_address BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
 }
 
 /* D9 /5 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDCW(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDCW(bxInstruction_c *i)
 {
   prepareFPU(i, CHECK_PENDING_EXCEPTIONS);
 
@@ -343,10 +343,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDCW(bxInstruction_c *i)
       /* clear the B and ES bits in the status-word */
       FPU_PARTIAL_STATUS &= ~(FPU_SW_Summary | FPU_SW_Backward);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
 /* D9 /7 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTCW(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTCW(bxInstruction_c *i)
 {
   prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
 
@@ -355,10 +357,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTCW(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   write_virtual_word(i->seg(), eaddr, cwd);
+
+  BX_NEXT_INSTR(i);
 }
 
 /* DD /7 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTSW(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTSW(bxInstruction_c *i)
 {
   prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
 
@@ -367,17 +371,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTSW(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   write_virtual_word(i->seg(), eaddr, swd);
+
+  BX_NEXT_INSTR(i);
 }
 
 /* DF E0 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTSW_AX(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTSW_AX(bxInstruction_c *i)
 {
   prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
   AX = BX_CPU_THIS_PTR the_i387.get_status_word();
+
+  BX_NEXT_INSTR(i);
 }
 
 /* DD /4 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FRSTOR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FRSTOR(bxInstruction_c *i)
 {
   prepareFPU(i, CHECK_PENDING_EXCEPTIONS);
 
@@ -394,10 +402,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FRSTOR(bxInstruction_c *i)
      BX_WRITE_FPU_REGISTER_AND_TAG(tmp,
               IS_TAG_EMPTY(n) ? FPU_Tag_Empty : FPU_tagof(tmp), n);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
 /* DD /6 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSAVE(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSAVE(bxInstruction_c *i)
 {
   prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
 
@@ -412,10 +422,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSAVE(bxInstruction_c *i)
   }
 
   BX_CPU_THIS_PTR the_i387.init();
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 9B E2 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNCLEX(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FNCLEX(bxInstruction_c *i)
 {
   prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
 
@@ -424,17 +436,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNCLEX(bxInstruction_c *i)
                    FPU_SW_Invalid);
 
   // do not update last fpu instruction pointer
+
+  BX_NEXT_INSTR(i);
 }
 
 /* DB E3 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNINIT(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FNINIT(bxInstruction_c *i)
 {
   prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
   BX_CPU_THIS_PTR the_i387.init();
+
+  BX_NEXT_INSTR(i);
 }
 
 /* D9 /4 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDENV(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDENV(bxInstruction_c *i)
 {
   prepareFPU(i, CHECK_PENDING_EXCEPTIONS);
   fpu_load_environment(i);
@@ -447,10 +463,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDENV(bxInstruction_c *i)
          BX_CPU_THIS_PTR the_i387.FPU_settagi(tag, n);
      }
   }
+
+  BX_NEXT_INSTR(i);
 }
 
 /* D9 /6 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTENV(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTENV(bxInstruction_c *i)
 {
   prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
   fpu_save_environment(i);
@@ -458,10 +476,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTENV(bxInstruction_c *i)
   FPU_CONTROL_WORD |= FPU_CW_Exceptions_Mask;
   /* clear the B and ES bits in the status word */
   FPU_PARTIAL_STATUS &= ~(FPU_SW_Backward|FPU_SW_Summary);
+
+  BX_NEXT_INSTR(i);
 }
 
 /* D9 D0 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNOP(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FNOP(bxInstruction_c *i)
 {
   prepareFPU(i, CHECK_PENDING_EXCEPTIONS);
   FPU_update_last_instruction(i);
@@ -469,14 +489,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNOP(bxInstruction_c *i)
   // Perform no FPU operation. This instruction takes up space in the
   // instruction stream but does not affect the FPU or machine
   // context, except the EIP register.
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPLEGACY(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FPLEGACY(bxInstruction_c *i)
 {
   prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
 
   // FPU performs no specific operation and no internal x87 states
   // are affected
+
+  BX_NEXT_INSTR(i);
 }
 
 #endif

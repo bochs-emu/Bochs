@@ -26,12 +26,6 @@
 
 #include "iodev/iodev.h"
 
-// Make code more tidy with a few macros.
-#if BX_SUPPORT_X86_64==0
-#define RIP EIP
-#define RCX ECX
-#endif
-
 #define InstrumentICACHE 0
 
 #if InstrumentICACHE
@@ -194,11 +188,11 @@ bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
   return entry;
 }
 
-void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxExecutePtr_tR execute)
+void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxRepIterationPtr_tR execute)
 {
   // non repeated instruction
   if (! i->repUsedL()) {
-    BX_CPU_CALL_METHOD(execute, (i));
+    BX_CPU_CALL_REP_ITERATION(execute, (i));
     return;
   }
 
@@ -210,7 +204,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxExecutePtr_tR
   if (i->as64L()) {
     while(1) {
       if (RCX != 0) {
-        BX_CPU_CALL_METHOD(execute, (i));
+        BX_CPU_CALL_REP_ITERATION(execute, (i));
         BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
         RCX --;
       }
@@ -229,7 +223,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxExecutePtr_tR
   if (i->as32L()) {
     while(1) {
       if (ECX != 0) {
-        BX_CPU_CALL_METHOD(execute, (i));
+        BX_CPU_CALL_REP_ITERATION(execute, (i));
         BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
         RCX = ECX - 1;
       }
@@ -247,7 +241,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxExecutePtr_tR
   {
     while(1) {
       if (CX != 0) {
-        BX_CPU_CALL_METHOD(execute, (i));
+        BX_CPU_CALL_REP_ITERATION(execute, (i));
         BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
         CX --;
       }
@@ -272,13 +266,13 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxExecutePtr_tR
   BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
 }
 
-void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxExecutePtr_tR execute)
+void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterationPtr_tR execute)
 {
   unsigned rep = i->repUsedValue();
 
   // non repeated instruction
   if (! rep) {
-    BX_CPU_CALL_METHOD(execute, (i));
+    BX_CPU_CALL_REP_ITERATION(execute, (i));
     return;
   }
 
@@ -291,7 +285,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxExecutePtr
     if (i->as64L()) {
       while(1) {
         if (RCX != 0) {
-          BX_CPU_CALL_METHOD(execute, (i));
+          BX_CPU_CALL_REP_ITERATION(execute, (i));
           BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
           RCX --;
         }
@@ -310,7 +304,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxExecutePtr
     if (i->as32L()) {
       while(1) {
         if (ECX != 0) {
-          BX_CPU_CALL_METHOD(execute, (i));
+          BX_CPU_CALL_REP_ITERATION(execute, (i));
           BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
           RCX = ECX - 1;
         }
@@ -328,7 +322,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxExecutePtr
     {
       while(1) {
         if (CX != 0) {
-          BX_CPU_CALL_METHOD(execute, (i));
+          BX_CPU_CALL_REP_ITERATION(execute, (i));
           BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
           CX --;
         }
@@ -348,7 +342,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxExecutePtr
     if (i->as64L()) {
       while(1) {
         if (RCX != 0) {
-          BX_CPU_CALL_METHOD(execute, (i));
+          BX_CPU_CALL_REP_ITERATION(execute, (i));
           BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
           RCX --;
         }
@@ -367,7 +361,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxExecutePtr
     if (i->as32L()) {
       while(1) {
         if (ECX != 0) {
-          BX_CPU_CALL_METHOD(execute, (i));
+          BX_CPU_CALL_REP_ITERATION(execute, (i));
           BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
           RCX = ECX - 1;
         }
@@ -385,7 +379,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxExecutePtr
     {
       while(1) {
         if (CX != 0) {
-          BX_CPU_CALL_METHOD(execute, (i));
+          BX_CPU_CALL_REP_ITERATION(execute, (i));
           BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
           CX --;
         }

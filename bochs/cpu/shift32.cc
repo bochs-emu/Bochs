@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2010  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EdGdM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EdGdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, result_32;
   unsigned count;
@@ -41,22 +41,25 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EdGdM(bxInstruction_c *i)
     count = CL;
 
   count &= 0x1f; // use only 5 LSB's
-  if (!count) return;
 
-  op2_32 = BX_READ_32BIT_REG(i->nnn());
+  if (count) {
+    op2_32 = BX_READ_32BIT_REG(i->nnn());
 
-  result_32 = (op1_32 << count) | (op2_32 >> (32 - count));
+    result_32 = (op1_32 << count) | (op2_32 >> (32 - count));
 
-  write_RMW_virtual_dword(result_32);
+    write_RMW_virtual_dword(result_32);
 
-  SET_FLAGS_OSZAPC_LOGIC_32(result_32);
+    SET_FLAGS_OSZAPC_LOGIC_32(result_32);
 
-  cf = (op1_32 >> (32 - count)) & 0x1;
-  of = cf ^ (result_32 >> 31); // of = cf ^ result31
-  SET_FLAGS_OxxxxC(of, cf);
+    cf = (op1_32 >> (32 - count)) & 0x1;
+    of = cf ^ (result_32 >> 31); // of = cf ^ result31
+    SET_FLAGS_OxxxxC(of, cf);
+  }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EdGdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EdGdR(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, result_32;
   unsigned count;
@@ -68,26 +71,29 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EdGdR(bxInstruction_c *i)
     count = CL;
 
   count &= 0x1f; // use only 5 LSB's
+
   if (!count) {
     BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
-    return;
+  }
+  else {
+    op1_32 = BX_READ_32BIT_REG(i->rm());
+    op2_32 = BX_READ_32BIT_REG(i->nnn());
+
+    result_32 = (op1_32 << count) | (op2_32 >> (32 - count));
+
+    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+
+    SET_FLAGS_OSZAPC_LOGIC_32(result_32);
+
+    cf = (op1_32 >> (32 - count)) & 0x1;
+    of = cf ^ (result_32 >> 31); // of = cf ^ result31
+    SET_FLAGS_OxxxxC(of, cf);
   }
 
-  op1_32 = BX_READ_32BIT_REG(i->rm());
-  op2_32 = BX_READ_32BIT_REG(i->nnn());
-
-  result_32 = (op1_32 << count) | (op2_32 >> (32 - count));
-
-  BX_WRITE_32BIT_REGZ(i->rm(), result_32);
-
-  SET_FLAGS_OSZAPC_LOGIC_32(result_32);
-
-  cf = (op1_32 >> (32 - count)) & 0x1;
-  of = cf ^ (result_32 >> 31); // of = cf ^ result31
-  SET_FLAGS_OxxxxC(of, cf);
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EdGdM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EdGdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, result_32;
   unsigned count;
@@ -104,22 +110,25 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EdGdM(bxInstruction_c *i)
     count = CL;
 
   count &= 0x1f; // use only 5 LSB's
-  if (!count) return;
 
-  op2_32 = BX_READ_32BIT_REG(i->nnn());
+  if (count) {
+    op2_32 = BX_READ_32BIT_REG(i->nnn());
 
-  result_32 = (op2_32 << (32 - count)) | (op1_32 >> count);
+    result_32 = (op2_32 << (32 - count)) | (op1_32 >> count);
 
-  write_RMW_virtual_dword(result_32);
+    write_RMW_virtual_dword(result_32);
 
-  SET_FLAGS_OSZAPC_LOGIC_32(result_32);
+    SET_FLAGS_OSZAPC_LOGIC_32(result_32);
 
-  cf = (op1_32 >> (count - 1)) & 0x1;
-  of = ((result_32 << 1) ^ result_32) >> 31; // of = result30 ^ result31
-  SET_FLAGS_OxxxxC(of, cf);
+    cf = (op1_32 >> (count - 1)) & 0x1;
+    of = ((result_32 << 1) ^ result_32) >> 31; // of = result30 ^ result31
+    SET_FLAGS_OxxxxC(of, cf);
+  }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EdGdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EdGdR(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, result_32;
   unsigned count;
@@ -131,26 +140,29 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EdGdR(bxInstruction_c *i)
     count = CL;
 
   count &= 0x1f; // use only 5 LSB's
+
   if (!count) {
     BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
-    return;
+  }
+  else {
+    op1_32 = BX_READ_32BIT_REG(i->rm());
+    op2_32 = BX_READ_32BIT_REG(i->nnn());
+
+    result_32 = (op2_32 << (32 - count)) | (op1_32 >> count);
+
+    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+
+    SET_FLAGS_OSZAPC_LOGIC_32(result_32);
+
+    cf = (op1_32 >> (count - 1)) & 0x1;
+    of = ((result_32 << 1) ^ result_32) >> 31; // of = result30 ^ result31
+    SET_FLAGS_OxxxxC(of, cf);
   }
 
-  op1_32 = BX_READ_32BIT_REG(i->rm());
-  op2_32 = BX_READ_32BIT_REG(i->nnn());
-
-  result_32 = (op2_32 << (32 - count)) | (op1_32 >> count);
-
-  BX_WRITE_32BIT_REGZ(i->rm(), result_32);
-
-  SET_FLAGS_OSZAPC_LOGIC_32(result_32);
-
-  cf = (op1_32 >> (count - 1)) & 0x1;
-  of = ((result_32 << 1) ^ result_32) >> 31; // of = result30 ^ result31
-  SET_FLAGS_OxxxxC(of, cf);
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EdM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EdM(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
@@ -166,19 +178,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EdM(bxInstruction_c *i)
     count = i->Ib();
 
   count &= 0x1f;
-  if (! count) return;
 
-  result_32 = (op1_32 << count) | (op1_32 >> (32 - count));
+  if (count) {
+    result_32 = (op1_32 << count) | (op1_32 >> (32 - count));
 
-  write_RMW_virtual_dword(result_32);
+    write_RMW_virtual_dword(result_32);
 
-  unsigned bit0  = (result_32 & 0x1);
-  unsigned bit31 = (result_32 >> 31);
-  // of = cf ^ result31
-  SET_FLAGS_OxxxxC(bit0 ^ bit31, bit0);
+    unsigned bit0  = (result_32 & 0x1);
+    unsigned bit31 = (result_32 >> 31);
+    // of = cf ^ result31
+    SET_FLAGS_OxxxxC(bit0 ^ bit31, bit0);
+  }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EdR(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
@@ -190,22 +205,25 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EdR(bxInstruction_c *i)
     count = i->Ib();
 
   count &= 0x1f;
+
   if (!count) {
     BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
-    return;
+  }
+  else {
+    op1_32 = BX_READ_32BIT_REG(i->rm());
+    result_32 = (op1_32 << count) | (op1_32 >> (32 - count));
+    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+
+    bit0  = (result_32 & 0x1);
+    bit31 = (result_32 >> 31);
+    // of = cf ^ result31
+    SET_FLAGS_OxxxxC(bit0 ^ bit31, bit0);
   }
 
-  op1_32 = BX_READ_32BIT_REG(i->rm());
-  result_32 = (op1_32 << count) | (op1_32 >> (32 - count));
-  BX_WRITE_32BIT_REGZ(i->rm(), result_32);
-
-  bit0  = (result_32 & 0x1);
-  bit31 = (result_32 >> 31);
-  // of = cf ^ result31
-  SET_FLAGS_OxxxxC(bit0 ^ bit31, bit0);
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EdM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EdM(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
@@ -222,19 +240,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EdM(bxInstruction_c *i)
     count = i->Ib();
 
   count &= 0x1f;
-  if (! count) return;
 
-  result_32 = (op1_32 >> count) | (op1_32 << (32 - count));
+  if (count) {
+    result_32 = (op1_32 >> count) | (op1_32 << (32 - count));
 
-  write_RMW_virtual_dword(result_32);
+    write_RMW_virtual_dword(result_32);
 
-  bit31 = (result_32 >> 31) & 1;
-  bit30 = (result_32 >> 30) & 1;
-  // of = result30 ^ result31
-  SET_FLAGS_OxxxxC(bit30 ^ bit31, bit31);
+    bit31 = (result_32 >> 31) & 1;
+    bit30 = (result_32 >> 30) & 1;
+    // of = result30 ^ result31
+    SET_FLAGS_OxxxxC(bit30 ^ bit31, bit31);
+  }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EdR(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
@@ -246,22 +267,25 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EdR(bxInstruction_c *i)
     count = i->Ib();
 
   count &= 0x1f;
+
   if (!count) {
     BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
-    return;
+  }
+  else {
+    op1_32 = BX_READ_32BIT_REG(i->rm());
+    result_32 = (op1_32 >> count) | (op1_32 << (32 - count));
+    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+
+    bit31 = (result_32 >> 31) & 1;
+    bit30 = (result_32 >> 30) & 1;
+    // of = result30 ^ result31
+    SET_FLAGS_OxxxxC(bit30 ^ bit31, bit31);
   }
 
-  op1_32 = BX_READ_32BIT_REG(i->rm());
-  result_32 = (op1_32 >> count) | (op1_32 << (32 - count));
-  BX_WRITE_32BIT_REGZ(i->rm(), result_32);
-
-  bit31 = (result_32 >> 31) & 1;
-  bit30 = (result_32 >> 30) & 1;
-  // of = result30 ^ result31
-  SET_FLAGS_OxxxxC(bit30 ^ bit31, bit31);
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EdM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EdM(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
@@ -278,7 +302,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EdM(bxInstruction_c *i)
     count = i->Ib();
 
   count &= 0x1f;
-  if (!count) return;
+  if (!count) {
+    BX_NEXT_INSTR(i);
+  }
 
   if (count==1) {
     result_32 = (op1_32 << 1) | getB_CF();
@@ -293,9 +319,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EdM(bxInstruction_c *i)
   cf = (op1_32 >> (32 - count)) & 0x1;
   of = cf ^ (result_32 >> 31); // of = cf ^ result31
   SET_FLAGS_OxxxxC(of, cf);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EdR(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
@@ -309,7 +337,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EdR(bxInstruction_c *i)
   count &= 0x1f;
   if (!count) {
     BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   op1_32 = BX_READ_32BIT_REG(i->rm());
@@ -327,9 +355,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EdR(bxInstruction_c *i)
   cf = (op1_32 >> (32 - count)) & 0x1;
   of = cf ^ (result_32 >> 31); // of = cf ^ result31
   SET_FLAGS_OxxxxC(of, cf);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EdM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EdM(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
@@ -346,7 +376,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EdM(bxInstruction_c *i)
     count = i->Ib();
 
   count &= 0x1f;
-  if (!count) return;
+
+  if (!count) {
+    BX_NEXT_INSTR(i);
+  }
 
   if (count==1) {
     result_32 = (op1_32 >> 1) | (getB_CF() << 31);
@@ -361,9 +394,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EdM(bxInstruction_c *i)
   cf = (op1_32 >> (count - 1)) & 0x1;
   of = ((result_32 << 1) ^ result_32) >> 31; // of = result30 ^ result31
   SET_FLAGS_OxxxxC(of, cf);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EdR(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
@@ -375,9 +410,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EdR(bxInstruction_c *i)
     count = i->Ib();
 
   count &= 0x1f;
+
   if (!count) {
     BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
-    return;
+    BX_NEXT_INSTR(i);
   }
 
   op1_32 = BX_READ_32BIT_REG(i->rm());
@@ -395,9 +431,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EdR(bxInstruction_c *i)
   cf = (op1_32 >> (count - 1)) & 0x1;
   of = ((result_32 << 1) ^ result_32) >> 31; // of = result30 ^ result31
   SET_FLAGS_OxxxxC(of, cf);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EdM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EdM(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
@@ -414,20 +452,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EdM(bxInstruction_c *i)
     count = i->Ib();
 
   count &= 0x1f;
-  if (!count) return;
 
-  /* count < 32, since only lower 5 bits used */
-  result_32 = (op1_32 << count);
+  if (count) {
+    /* count < 32, since only lower 5 bits used */
+    result_32 = (op1_32 << count);
 
-  write_RMW_virtual_dword(result_32);
+    write_RMW_virtual_dword(result_32);
 
-  cf = (op1_32 >> (32 - count)) & 0x1;
-  of = cf ^ (result_32 >> 31);
-  SET_FLAGS_OSZAPC_LOGIC_32(result_32);
-  SET_FLAGS_OxxxxC(of, cf);
+    cf = (op1_32 >> (32 - count)) & 0x1;
+    of = cf ^ (result_32 >> 31);
+    SET_FLAGS_OSZAPC_LOGIC_32(result_32);
+    SET_FLAGS_OxxxxC(of, cf);
+  }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EdR(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
@@ -439,25 +480,28 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EdR(bxInstruction_c *i)
     count = i->Ib();
 
   count &= 0x1f;
+
   if (!count) {
     BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
-    return;
+  }
+  else {
+    op1_32 = BX_READ_32BIT_REG(i->rm());
+
+    /* count < 32, since only lower 5 bits used */
+    result_32 = (op1_32 << count);
+    cf = (op1_32 >> (32 - count)) & 0x1;
+    of = cf ^ (result_32 >> 31);
+
+    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+
+    SET_FLAGS_OSZAPC_LOGIC_32(result_32);
+    SET_FLAGS_OxxxxC(of, cf);
   }
 
-  op1_32 = BX_READ_32BIT_REG(i->rm());
-
-  /* count < 32, since only lower 5 bits used */
-  result_32 = (op1_32 << count);
-  cf = (op1_32 >> (32 - count)) & 0x1;
-  of = cf ^ (result_32 >> 31);
-
-  BX_WRITE_32BIT_REGZ(i->rm(), result_32);
-
-  SET_FLAGS_OSZAPC_LOGIC_32(result_32);
-  SET_FLAGS_OxxxxC(of, cf);
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EdM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EdM(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
@@ -474,22 +518,25 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EdM(bxInstruction_c *i)
     count = i->Ib();
 
   count &= 0x1f;
-  if (!count) return;
 
-  result_32 = (op1_32 >> count);
+  if (count) {
+    result_32 = (op1_32 >> count);
 
-  write_RMW_virtual_dword(result_32);
+    write_RMW_virtual_dword(result_32);
 
-  cf = (op1_32 >> (count - 1)) & 0x1;
-  // note, that of == result31 if count == 1 and
-  //            of == 0        if count >= 2
-  of = ((result_32 << 1) ^ result_32) >> 31;
+    cf = (op1_32 >> (count - 1)) & 0x1;
+    // note, that of == result31 if count == 1 and
+    //            of == 0        if count >= 2
+    of = ((result_32 << 1) ^ result_32) >> 31;
 
-  SET_FLAGS_OSZAPC_LOGIC_32(result_32);
-  SET_FLAGS_OxxxxC(of, cf);
+    SET_FLAGS_OSZAPC_LOGIC_32(result_32);
+    SET_FLAGS_OxxxxC(of, cf);
+  }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EdR(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
@@ -501,25 +548,28 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EdR(bxInstruction_c *i)
     count = i->Ib();
 
   count &= 0x1f;
+
   if (!count) {
     BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
-    return;
+  }
+  else {
+    op1_32 = BX_READ_32BIT_REG(i->rm());
+    result_32 = (op1_32 >> count);
+    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+
+    cf = (op1_32 >> (count - 1)) & 0x1;
+    // note, that of == result31 if count == 1 and
+    //            of == 0        if count >= 2
+    of = ((result_32 << 1) ^ result_32) >> 31;
+
+    SET_FLAGS_OSZAPC_LOGIC_32(result_32);
+    SET_FLAGS_OxxxxC(of, cf);
   }
 
-  op1_32 = BX_READ_32BIT_REG(i->rm());
-  result_32 = (op1_32 >> count);
-  BX_WRITE_32BIT_REGZ(i->rm(), result_32);
-
-  cf = (op1_32 >> (count - 1)) & 0x1;
-  // note, that of == result31 if count == 1 and
-  //            of == 0        if count >= 2
-  of = ((result_32 << 1) ^ result_32) >> 31;
-
-  SET_FLAGS_OSZAPC_LOGIC_32(result_32);
-  SET_FLAGS_OxxxxC(of, cf);
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EdM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EdM(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
@@ -535,19 +585,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EdM(bxInstruction_c *i)
     count = i->Ib();
 
   count &= 0x1f;
-  if (!count) return;
 
-  /* count < 32, since only lower 5 bits used */
-  result_32 = ((Bit32s) op1_32) >> count;
+  if (count) {
+    /* count < 32, since only lower 5 bits used */
+    result_32 = ((Bit32s) op1_32) >> count;
 
-  write_RMW_virtual_dword(result_32);
+    write_RMW_virtual_dword(result_32);
 
-  SET_FLAGS_OSZAPC_LOGIC_32(result_32);
-  set_CF((op1_32 >> (count - 1)) & 1);
-  clear_OF();  /* signed overflow cannot happen in SAR instruction */
+    SET_FLAGS_OSZAPC_LOGIC_32(result_32);
+    set_CF((op1_32 >> (count - 1)) & 1);
+    clear_OF();  /* signed overflow cannot happen in SAR instruction */
+  }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EdR(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
@@ -558,19 +611,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EdR(bxInstruction_c *i)
     count = i->Ib();
 
   count &= 0x1f;
+
   if (!count) {
     BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
-    return;
+  }
+  else {
+    op1_32 = BX_READ_32BIT_REG(i->rm());
+
+    /* count < 32, since only lower 5 bits used */
+    result_32 = ((Bit32s) op1_32) >> count;
+
+    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+
+    SET_FLAGS_OSZAPC_LOGIC_32(result_32);
+    set_CF((op1_32 >> (count - 1)) & 1);
+    clear_OF();  /* signed overflow cannot happen in SAR instruction */
   }
 
-  op1_32 = BX_READ_32BIT_REG(i->rm());
-
-  /* count < 32, since only lower 5 bits used */
-  result_32 = ((Bit32s) op1_32) >> count;
-
-  BX_WRITE_32BIT_REGZ(i->rm(), result_32);
-
-  SET_FLAGS_OSZAPC_LOGIC_32(result_32);
-  set_CF((op1_32 >> (count - 1)) & 1);
-  clear_OF();  /* signed overflow cannot happen in SAR instruction */
+  BX_NEXT_INSTR(i);
 }

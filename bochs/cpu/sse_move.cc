@@ -26,11 +26,6 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-// Make code more tidy with a few macros.
-#if BX_SUPPORT_X86_64==0
-#define RDI EDI
-#endif
-
 #if BX_CPU_LEVEL >= 6
 
 void BX_CPU_C::print_state_SSE(void)
@@ -126,7 +121,7 @@ Bit16u BX_CPU_C::unpack_FPU_TW(Bit16u tag_byte)
 /* ************************************ */
 
 /* 0F AE Grp15 010 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LDMXCSR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LDMXCSR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -137,10 +132,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LDMXCSR(bxInstruction_c *i)
 
   BX_MXCSR_REGISTER = new_mxcsr;
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 0F AE Grp15 011 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::STMXCSR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::STMXCSR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   Bit32u mxcsr = BX_MXCSR_REGISTER & MXCSR_MASK;
@@ -149,10 +146,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STMXCSR(bxInstruction_c *i)
 
   write_virtual_dword(i->seg(), eaddr, mxcsr);
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 0F AE Grp15 000 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   unsigned index;
@@ -245,8 +244,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR efer.get_FFXSR() && CPL == 0 && long64_mode())
-    return; // skip saving of the XMM state
+  if (BX_CPU_THIS_PTR efer.get_FFXSR() && CPL == 0 && long64_mode()) {
+    BX_NEXT_INSTR(i); // skip saving of the XMM state
+  }
 #endif
 
   if(BX_CPU_THIS_PTR cr4.get_OSFXSR() && bx_cpuid_support_sse())
@@ -264,10 +264,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
 
   /* do not touch reserved fields */
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 0F AE Grp15 001 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister xmm;
@@ -360,8 +362,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR efer.get_FFXSR() && CPL == 0 && long64_mode())
-    return; // skip restore of the XMM state
+  if (BX_CPU_THIS_PTR efer.get_FFXSR() && CPL == 0 && long64_mode()) {
+    BX_NEXT_INSTR(i); // skip restore of the XMM state
+  }
 #endif
 
   /* If the OSFXSR bit in CR4 is not set, the FXRSTOR instruction does
@@ -380,6 +383,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
     }
   }
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* *************************** */
@@ -392,63 +397,75 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 /* MOVUPD: 66 0F 10 */
 /* MOVDQU: F3 0F 6F */
 /* LDDQU:  F2 0F F0 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVUPS_VpsWpsM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVUPS_VpsWpsM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   read_virtual_dqword(i->seg(), eaddr, &BX_XMM_REG(i->nnn()));
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVUPS_WpsVpsM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVUPS_WpsVpsM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   write_virtual_dqword(i->seg(), eaddr, &BX_XMM_REG(i->nnn()));
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* MOVAPS:    0F 28 */
 /* MOVAPD: 66 0F 28 */
 /* MOVDQA: F3 0F 6F */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_VpsWpsR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_VpsWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BX_WRITE_XMM_REG(i->nnn(), BX_READ_XMM_REG(i->rm()));
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_VpsWpsM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_VpsWpsM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   read_virtual_dqword_aligned(i->seg(), eaddr, &BX_XMM_REG(i->nnn()));
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* MOVAPS:     0F 29 */
 /* MOVNTPS:    0F 2B */
 /* MOVNTPD: 66 0F 2B */
 /* MOVNTDQ: 66 0F E7 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_WpsVpsM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_WpsVpsM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   write_virtual_dqword_aligned(i->seg(), eaddr, &BX_XMM_REG(i->nnn()));
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* F3 0F 10 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSS_VssWssR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSS_VssWssR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   /* If the source operand is an XMM register, the high-order
           96 bits of the destination XMM register are not modified. */
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), BX_READ_XMM_REG_LO_DWORD(i->rm()));
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSS_VssWssM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSS_VssWssM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op;
@@ -462,38 +479,46 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSS_VssWssM(bxInstruction_c *i)
 
   BX_WRITE_XMM_REGZ(i->nnn(), op, i->getVL());
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* F3 0F 11 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSS_WssVssM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSS_WssVssM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   write_virtual_dword(i->seg(), eaddr, BX_READ_XMM_REG_LO_DWORD(i->nnn()));
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* F2 0F 10 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD_VsdWsdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD_VsdWsdR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   /* If the source operand is an XMM register, the high-order
           64 bits of the destination XMM register are not modified. */
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), BX_READ_XMM_REG_LO_QWORD(i->rm()));
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* MOVHLPS:   0F 12 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVHLPS_VpsWpsR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVHLPS_VpsWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), BX_READ_XMM_REG_HI_QWORD(i->rm()));
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* MOVLPS:    0F 12 */
 /* MOVLPD: 66 0F 12 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLPS_VpsMq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLPS_VpsMq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -502,10 +527,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLPS_VpsMq(bxInstruction_c *i)
 
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), val64);
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* F2 0F 12 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDDUP_VpdWqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDDUP_VpdWqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op;
@@ -517,10 +544,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDDUP_VpdWqR(bxInstruction_c *i)
 
   BX_WRITE_XMM_REG(i->nnn(), op);
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* F3 0F 12 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSLDUP_VpsWpsR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSLDUP_VpsWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
@@ -530,10 +559,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSLDUP_VpsWpsR(bxInstruction_c *i)
 
   BX_WRITE_XMM_REG(i->nnn(), op);
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* F3 0F 16 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSHDUP_VpsWpsR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSHDUP_VpsWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
@@ -543,29 +574,35 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSHDUP_VpsWpsR(bxInstruction_c *i)
 
   BX_WRITE_XMM_REG(i->nnn(), op);
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* MOVLPS:    0F 13 */
 /* MOVLPD: 66 0F 13 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLPS_MqVps(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLPS_MqVps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   write_virtual_qword(i->seg(), eaddr, BX_XMM_REG_LO_QWORD(i->nnn()));
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* MOVLHPS:   0F 16 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLHPS_VpsWpsR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLHPS_VpsWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BX_WRITE_XMM_REG_HI_QWORD(i->nnn(), BX_READ_XMM_REG_LO_QWORD(i->rm()));
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* MOVHPS:    0F 16 */
 /* MOVHPD: 66 0F 16 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVHPS_VpsMq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVHPS_VpsMq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -574,20 +611,24 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVHPS_VpsMq(bxInstruction_c *i)
 
   BX_WRITE_XMM_REG_HI_QWORD(i->nnn(), val64);
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* MOVHPS:    0F 17 */
 /* MOVHPD: 66 0F 17 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVHPS_MqVps(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVHPS_MqVps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   write_virtual_qword(i->seg(), eaddr, BX_XMM_REG_HI_QWORD(i->nnn()));
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F F7 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   bx_address rdi = RDI & i->asize_mask();
@@ -598,7 +639,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c *i)
   read_virtual_dqword(i->seg(), rdi, (Bit8u *) &temp);
 
   /* no data will be written to memory if mask is all 0s */
-  if ((mask.xmm64u(0) | mask.xmm64u(1)) == 0) return;
+  if ((mask.xmm64u(0) | mask.xmm64u(1)) == 0) {
+    BX_NEXT_INSTR(i);
+  }
 
   for(unsigned j=0; j<16; j++) {
     if(mask.xmmubyte(j) & 0x80) temp.xmmubyte(j) = op.xmmubyte(j);
@@ -607,10 +650,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c *i)
   /* and write result back to the memory */
   write_virtual_dqword(i->seg(), rdi, (Bit8u *) &temp);
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 0F 50 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPS_GdVRps(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPS_GdVRps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
@@ -623,10 +668,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPS_GdVRps(bxInstruction_c *i)
 
   BX_WRITE_32BIT_REGZ(i->nnn(), val32);
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 50 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPD_GdVRpd(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPD_GdVRpd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
@@ -637,10 +684,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPD_GdVRpd(bxInstruction_c *i)
 
   BX_WRITE_32BIT_REGZ(i->nnn(), val32);
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 6E */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_VdqEdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_VdqEdR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op;
@@ -649,42 +698,50 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_VdqEdR(bxInstruction_c *i)
 
   BX_WRITE_XMM_REGZ(i->nnn(), op, i->getVL());
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 #if BX_SUPPORT_X86_64
 
 /* 66 0F 6E */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_VdqEqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_VdqEqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op;
   op.xmm64u(0) = BX_READ_64BIT_REG(i->rm());
   op.xmm64u(1) = 0;
 
   BX_WRITE_XMM_REGZ(i->nnn(), op, i->getVL());
+
+  BX_NEXT_INSTR(i);
 }
 
 #endif
 
 /* 66 0F 7E */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdVdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdVdR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BX_WRITE_32BIT_REGZ(i->rm(), BX_READ_XMM_REG_LO_DWORD(i->nnn()));
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 #if BX_SUPPORT_X86_64
 
 /* 66 0F 7E */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_EqVqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_EqVqR(bxInstruction_c *i)
 {
   BX_WRITE_64BIT_REG(i->rm(), BX_READ_XMM_REG_LO_QWORD(i->nnn()));
+
+  BX_NEXT_INSTR(i);
 }
 
 #endif
 
 /* F3 0F 7E */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_VqWqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_VqWqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op;
@@ -694,9 +751,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_VqWqR(bxInstruction_c *i)
 
   BX_WRITE_XMM_REGZ(i->nnn(), op, i->getVL());
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_VqWqM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_VqWqM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op;
@@ -706,10 +765,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_VqWqM(bxInstruction_c *i)
 
   BX_WRITE_XMM_REGZ(i->nnn(), op, i->getVL());
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* F2 0F D6 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDQ2Q_PqVRq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDQ2Q_PqVRq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR FPU_check_pending_exceptions(); /* check floating point status word for a pending FPU exceptions */
@@ -720,10 +781,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDQ2Q_PqVRq(bxInstruction_c *i)
 
   BX_WRITE_MMX_REG(i->nnn(), mm);
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* F3 0F D6 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ2DQ_VdqQq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ2DQ_VdqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR FPU_check_pending_exceptions(); /* check floating point status word for a pending FPU exceptions */
@@ -736,10 +799,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ2DQ_VdqQq(bxInstruction_c *i)
 
   BX_WRITE_XMM_REG(i->nnn(), op);
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F D7 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVMSKB_GdUdq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVMSKB_GdUdq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
@@ -764,6 +829,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVMSKB_GdUdq(bxInstruction_c *i)
 
   BX_WRITE_32BIT_REGZ(i->nnn(), result);
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* **************************** */
@@ -771,12 +838,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVMSKB_GdUdq(bxInstruction_c *i)
 /* **************************** */
 
 /* 0F C3 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   write_virtual_dword(i->seg(), eaddr, BX_READ_32BIT_REG(i->nnn()));
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* ************************** */
@@ -786,7 +855,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
 
 /* 66 0F 38 20 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBW_VdqWqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBW_VdqWqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister result;
   BxPackedMmxRegister op;
@@ -804,10 +873,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBW_VdqWqR(bxInstruction_c *i)
   result.xmm16u(7) = MMXSB7(op);
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 38 21 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBD_VdqWdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBD_VdqWdR(bxInstruction_c *i)
 {
   BxPackedXmmRegister result;
   Bit32u val32 = BX_READ_XMM_REG_LO_DWORD(i->rm());
@@ -818,10 +889,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBD_VdqWdR(bxInstruction_c *i)
   result.xmm32u(3) = (Bit8s) (val32  >> 24);
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 38 22 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBQ_VdqWwR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBQ_VdqWwR(bxInstruction_c *i)
 {
   BxPackedXmmRegister result;
   Bit16u val16 = BX_READ_XMM_REG_LO_WORD(i->rm());
@@ -830,10 +903,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBQ_VdqWwR(bxInstruction_c *i)
   result.xmm64u(1) = (Bit8s) (val16 >> 8);
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 38 23 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXWD_VdqWqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXWD_VdqWqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister result;
   BxPackedMmxRegister op;
@@ -847,10 +922,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXWD_VdqWqR(bxInstruction_c *i)
   result.xmm32u(3) = (Bit16s) MMXSW3(op);
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 38 24 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXWQ_VdqWdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXWQ_VdqWdR(bxInstruction_c *i)
 {
   BxPackedXmmRegister result;
   Bit32u val32 = BX_READ_XMM_REG_LO_DWORD(i->rm());
@@ -859,10 +936,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXWQ_VdqWdR(bxInstruction_c *i)
   result.xmm64u(1) = (Bit16s) (val32 >> 16);
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 38 25 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXDQ_VdqWqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXDQ_VdqWqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister result;
   Bit64u val64 = BX_READ_XMM_REG_LO_QWORD(i->rm());
@@ -871,10 +950,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXDQ_VdqWqR(bxInstruction_c *i)
   result.xmm64u(1) = (Bit32s) (val64 >> 32);
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 38 30 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBW_VdqWqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBW_VdqWqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister result;
   BxPackedMmxRegister op;
@@ -892,10 +973,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBW_VdqWqR(bxInstruction_c *i)
   result.xmm16u(7) = MMXUB7(op);
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 38 31 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBD_VdqWdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBD_VdqWdR(bxInstruction_c *i)
 {
   BxPackedXmmRegister result;
   Bit32u val32 = BX_READ_XMM_REG_LO_DWORD(i->rm());
@@ -906,10 +989,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBD_VdqWdR(bxInstruction_c *i)
   result.xmm32u(3) = val32  >> 24;
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 38 32 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBQ_VdqWwR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBQ_VdqWwR(bxInstruction_c *i)
 {
   BxPackedXmmRegister result;
   Bit16u val16 = BX_READ_XMM_REG_LO_WORD(i->rm());
@@ -918,10 +1003,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBQ_VdqWwR(bxInstruction_c *i)
   result.xmm64u(1) = val16 >> 8;
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 38 33 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXWD_VdqWqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXWD_VdqWqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister result;
   BxPackedMmxRegister op;
@@ -935,10 +1022,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXWD_VdqWqR(bxInstruction_c *i)
   result.xmm32u(3) = MMXUW3(op);
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 38 34 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXWQ_VdqWdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXWQ_VdqWdR(bxInstruction_c *i)
 {
   BxPackedXmmRegister result;
   Bit32u val32 = BX_READ_XMM_REG_LO_DWORD(i->rm());
@@ -947,10 +1036,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXWQ_VdqWdR(bxInstruction_c *i)
   result.xmm64u(1) = val32 >> 16;
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 38 35 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXDQ_VdqWqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXDQ_VdqWqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister result;
   Bit64u val64 = BX_READ_XMM_REG_LO_QWORD(i->rm());
@@ -959,10 +1050,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXDQ_VdqWqR(bxInstruction_c *i)
   result.xmm64u(1) = val64 >> 32;
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 3A 0F */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PALIGNR_VdqWdqIbR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PALIGNR_VdqWdqIbR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
@@ -1005,6 +1098,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PALIGNR_VdqWdqIbR(bxInstruction_c *i)
   }
 
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
+
+  BX_NEXT_INSTR(i);
 }
 
 #endif

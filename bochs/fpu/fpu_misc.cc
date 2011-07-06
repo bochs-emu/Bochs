@@ -31,7 +31,7 @@
 #include "softfloatx80.h"
 
 /* D9 C8 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXCH_STi(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXCH_STi(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
@@ -58,16 +58,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXCH_STi(bxInstruction_c *i)
              sti_reg = floatx80_default_nan;
      }
      else {
-         return;
+         BX_NEXT_INSTR(i);
      }
   }
 
   BX_WRITE_FPU_REG(st0_reg, i->rm());
   BX_WRITE_FPU_REG(sti_reg, 0);
+
+  BX_NEXT_INSTR(i);
 }
 
 /* D9 E0 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCHS(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FCHS(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
@@ -80,10 +82,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCHS(bxInstruction_c *i)
      floatx80 st0_reg = BX_READ_FPU_REG(0);
      BX_WRITE_FPU_REG(floatx80_chs(st0_reg), 0);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
 /* D9 E1 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FABS(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FABS(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
@@ -96,10 +100,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FABS(bxInstruction_c *i)
      floatx80 st0_reg = BX_READ_FPU_REG(0);
      BX_WRITE_FPU_REG(floatx80_abs(st0_reg), 0);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
 /* D9 F6 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDECSTP(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FDECSTP(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
@@ -107,10 +113,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDECSTP(bxInstruction_c *i)
   clear_C1();
 
   BX_CPU_THIS_PTR the_i387.tos = (BX_CPU_THIS_PTR the_i387.tos-1) & 7;
+
+  BX_NEXT_INSTR(i);
 }
 
 /* D9 F7 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FINCSTP(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FINCSTP(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
@@ -118,10 +126,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FINCSTP(bxInstruction_c *i)
   clear_C1();
 
   BX_CPU_THIS_PTR the_i387.tos = (BX_CPU_THIS_PTR the_i387.tos+1) & 7;
+
+  BX_NEXT_INSTR(i);
 }
 
 /* DD C0 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FFREE_STi(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FFREE_STi(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
@@ -129,6 +139,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FFREE_STi(bxInstruction_c *i)
   clear_C1();
 
   BX_CPU_THIS_PTR the_i387.FPU_settagi(FPU_Tag_Empty, i->rm());
+
+  BX_NEXT_INSTR(i);
 }
 
 /*
@@ -137,7 +149,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FFREE_STi(bxInstruction_c *i)
  */
 
 /* DF C0 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FFREEP_STi(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FFREEP_STi(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
@@ -146,6 +158,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FFREEP_STi(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR the_i387.FPU_settagi(FPU_Tag_Empty, i->rm());
   BX_CPU_THIS_PTR the_i387.FPU_pop();
+
+  BX_NEXT_INSTR(i);
 }
 
 #endif

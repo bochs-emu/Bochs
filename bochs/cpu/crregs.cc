@@ -26,7 +26,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   VMexit_DR_Access(i, 0 /* write */);
@@ -136,9 +136,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
       BX_ERROR(("MOV_DdRd: #UD - register index out of range"));
       exception(BX_UD_EXCEPTION, 0);
   }
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
 {
   Bit32u val_32;
 
@@ -202,10 +204,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
   }
 
   BX_WRITE_32BIT_REGZ(i->rm(), val_32);
+
+  BX_NEXT_INSTR(i);
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   VMexit_DR_Access(i, 0 /* write */);
@@ -317,9 +321,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       BX_ERROR(("MOV_DqRq: #UD - register index out of range"));
       exception(BX_UD_EXCEPTION, 0);
   }
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 {
   Bit64u val_64;
 
@@ -387,10 +393,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
   }
 
   BX_WRITE_64BIT_REG(i->rm(), val_64);
+
+  BX_NEXT_INSTR(i);
 }
 #endif // #if BX_SUPPORT_X86_64
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rd(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rd(bxInstruction_c *i)
 {
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_CR0Rd: CPL!=0 not in real mode"));
@@ -408,9 +416,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR0, val_32);
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR2Rd(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR2Rd(bxInstruction_c *i)
 {
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_CR2Rd: CPL!=0 not in real mode"));
@@ -418,9 +428,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR2Rd(bxInstruction_c *i)
   }
 
   BX_CPU_THIS_PTR cr2 = BX_READ_32BIT_REG(i->rm());
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rd(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rd(bxInstruction_c *i)
 {
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_CR3Rd: CPL!=0 not in real mode"));
@@ -448,9 +460,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR3, val_32);
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rd(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 4
   if (!real_mode() && CPL!=0) {
@@ -469,10 +483,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR4, val_32);
+
+  BX_NEXT_TRACE(i);
 #endif
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR0(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR0(bxInstruction_c *i)
 {
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_RdCR0: CPL!=0 not in real mode"));
@@ -482,9 +498,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR0(bxInstruction_c *i)
   Bit32u val_32 = (Bit32u) read_CR0(); /* correctly handle VMX */
 
   BX_WRITE_32BIT_REGZ(i->rm(), val_32);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR2(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR2(bxInstruction_c *i)
 {
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_RdCd: CPL!=0 not in real mode"));
@@ -492,9 +510,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR2(bxInstruction_c *i)
   }
 
   BX_WRITE_32BIT_REGZ(i->rm(), (Bit32u) BX_CPU_THIS_PTR cr2);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR3(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR3(bxInstruction_c *i)
 {
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_RdCd: CPL!=0 not in real mode"));
@@ -508,9 +528,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR3(bxInstruction_c *i)
   Bit32u val_32 = (Bit32u) BX_CPU_THIS_PTR cr3;
 
   BX_WRITE_32BIT_REGZ(i->rm(), val_32);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR4(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR4(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 4
   if (!real_mode() && CPL!=0) {
@@ -521,11 +543,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR4(bxInstruction_c *i)
   Bit32u val_32 = (Bit32u) read_CR4(); /* correctly handle VMX */
 
   BX_WRITE_32BIT_REGZ(i->rm(), val_32);
+
+  BX_NEXT_INSTR(i);
 #endif
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rq(bxInstruction_c *i)
 {
   if (CPL!=0) {
     BX_ERROR(("MOV_CR0Rq: #GP(0) if CPL is not 0"));
@@ -574,9 +598,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rq(bxInstruction_c *i)
     }
 #endif
   }
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR2Rq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR2Rq(bxInstruction_c *i)
 {
   if (i->nnn() != 2) {
     BX_ERROR(("MOV_CR2Rq: #UD - register index out of range"));
@@ -589,9 +615,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR2Rq(bxInstruction_c *i)
   }
 
   BX_CPU_THIS_PTR cr2 = BX_READ_64BIT_REG(i->rm());
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rq(bxInstruction_c *i)
 {
   if (i->nnn() != 3) {
     BX_ERROR(("MOV_CR3Rq: #UD - register index out of range"));
@@ -616,9 +644,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rq(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR3, val_64);
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rq(bxInstruction_c *i)
 {
   if (i->nnn() != 4) {
     BX_ERROR(("MOV_CR4Rq: #UD - register index out of range"));
@@ -642,9 +672,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rq(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR4, (Bit32u) val_64);
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR0(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR0(bxInstruction_c *i)
 {
   // mov control register data to register
   Bit64u val_64 = 0;
@@ -681,9 +713,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR0(bxInstruction_c *i)
   }
 
   BX_WRITE_64BIT_REG(i->rm(), val_64);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR2(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR2(bxInstruction_c *i)
 {
   if (i->nnn() != 2) {
     BX_ERROR(("MOV_RqCR2: #UD - register index out of range"));
@@ -696,9 +730,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR2(bxInstruction_c *i)
   }
 
   BX_WRITE_64BIT_REG(i->rm(), BX_CPU_THIS_PTR cr2);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR3(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR3(bxInstruction_c *i)
 {
   if (i->nnn() != 3) {
     BX_ERROR(("MOV_RqCR3: #UD - register index out of range"));
@@ -715,9 +751,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR3(bxInstruction_c *i)
 #endif
 
   BX_WRITE_64BIT_REG(i->rm(), BX_CPU_THIS_PTR cr3);
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR4(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR4(bxInstruction_c *i)
 {
   if (i->nnn() != 4) {
     BX_ERROR(("MOV_RqCR4: #UD - register index out of range"));
@@ -732,10 +770,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR4(bxInstruction_c *i)
   Bit64u val_64 = read_CR4(); /* correctly handle VMX */
 
   BX_WRITE_64BIT_REG(i->rm(), val_64);
+
+  BX_NEXT_INSTR(i);
 }
 #endif // #if BX_SUPPORT_X86_64
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
 {
   Bit16u msw;
 
@@ -769,9 +809,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
   Bit32u cr0 = (BX_CPU_THIS_PTR cr0.get32() & 0xfffffff0) | msw;
   if (! SetCR0(cr0))
     exception(BX_GP_EXCEPTION, 0);
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwR(bxInstruction_c *i)
 {
   Bit32u msw = (Bit32u) read_CR0();  // handle CR0 shadow in VMX
 
@@ -781,13 +823,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwR(bxInstruction_c *i)
   else {
     BX_WRITE_16BIT_REG(i->rm(), msw & 0xffff);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwM(bxInstruction_c *i)
 {
   Bit16u msw = read_CR0() & 0xffff;   // handle CR0 shadow in VMX
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   write_virtual_word(i->seg(), eaddr, msw);
+
+  BX_NEXT_INSTR(i);
 }
 
 bx_address BX_CPU_C::read_CR0(void)
@@ -1163,7 +1209,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR3(bx_address val)
   return 1;
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
 {
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("CLTS: priveledge check failed, generate #GP(0)"));
@@ -1171,7 +1217,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_VMX
-  if(VMexit_CLTS(i)) return;
+  if(VMexit_CLTS(i)) {
+    BX_NEXT_TRACE(i);
+  }
 #endif
 
   BX_CPU_THIS_PTR cr0.set_TS(0);
@@ -1182,6 +1230,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
   handleAvxModeChange();
 #endif
 #endif
+
+  BX_NEXT_TRACE(i);
 }
 
 #if BX_X86_DEBUGGER

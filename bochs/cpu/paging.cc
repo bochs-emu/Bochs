@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2010  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -462,7 +462,7 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
 #endif
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
 {
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("INVLPG: priveledge check failed, generate #GP(0)"));
@@ -483,6 +483,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
     BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVLPG, laddr);
     TLB_invlpg(laddr);
   }
+
+  BX_NEXT_TRACE(i);
 }
 
 // error checking order - page not present, reserved bits, protection

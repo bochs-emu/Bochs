@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2010  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -26,38 +26,38 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_SUPPORT_X86_64==0
-// Make life easier for merging code.
-#define RAX EAX
-#define RCX ECX
-#define RDX EDX
-#define RIP EIP
-#endif
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::UndefinedOpcode(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::UndefinedOpcode(bxInstruction_c *i)
 {
   BX_DEBUG(("UndefinedOpcode: generate #UD exception"));
   exception(BX_UD_EXCEPTION, 0);
+
+  BX_NEXT_TRACE(i); // keep compiler happy
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::NOP(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::NOP(bxInstruction_c *i)
 {
   // No operation.
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PAUSE(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PAUSE(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   VMexit_PAUSE(i);
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PREFETCH(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PREFETCH(bxInstruction_c *i)
 {
 #if BX_INSTRUMENTATION
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   BX_INSTR_PREFETCH_HINT(BX_CPU_ID, i->nnn(), i->seg(), eaddr);
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 //
@@ -93,7 +93,7 @@ void BX_CPU_C::shutdown(void)
   longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
 {
   if (!real_mode() && CPL!=0) {
     BX_DEBUG(("HLT: %s priveledge check failed, CPL=%d, generate #GP(0)",
@@ -131,10 +131,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
 #if BX_USE_IDLE_HACK
   bx_gui->sim_is_idle();
 #endif
+
+  BX_NEXT_TRACE(i);
 }
 
 /* 0F 08 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVD(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVD(bxInstruction_c *i)
 {
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("INVD: priveledge check failed, generate #GP(0)"));
@@ -154,10 +156,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVD(bxInstruction_c *i)
   BX_INSTR_CACHE_CNTRL(BX_CPU_ID, BX_INSTR_INVD);
 
   flushICaches();
+
+  BX_NEXT_TRACE(i);
 }
 
 /* 0F 09 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
 {
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("INVD/WBINVD: priveledge check failed, generate #GP(0)"));
@@ -174,9 +178,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
   BX_INSTR_CACHE_CNTRL(BX_CPU_ID, BX_INSTR_WBINVD);
 
   flushICaches();
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 {
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[i->seg()];
 
@@ -216,6 +222,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 #if BX_X86_DEBUGGER
   hwbreakpoint_match(laddr, 1, BX_READ);
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 void BX_CPU_C::handleCpuModeChange(void)
@@ -312,7 +320,7 @@ void BX_CPU_C::handleSseModeChange(void)
   updateFetchModeMask(); /* SSE_OK changed */
 }  
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoSSE(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoSSE(bxInstruction_c *i)
 {
   if(BX_CPU_THIS_PTR cr0.get_EM() || !BX_CPU_THIS_PTR cr4.get_OSFXSR())
     exception(BX_UD_EXCEPTION, 0);
@@ -321,6 +329,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoSSE(bxInstruction_c *i)
     exception(BX_NM_EXCEPTION, 0);
 
   BX_ASSERT(0);
+
+  BX_NEXT_TRACE(i); // keep compiler happy
 }
 
 #if BX_SUPPORT_AVX
@@ -339,7 +349,7 @@ void BX_CPU_C::handleAvxModeChange(void)
   updateFetchModeMask(); /* AVX_OK changed */
 }  
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoAVX(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoAVX(bxInstruction_c *i)
 {
   if (! protected_mode() || ! BX_CPU_THIS_PTR cr4.get_OSXSAVE())
     exception(BX_UD_EXCEPTION, 0);
@@ -351,12 +361,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoAVX(bxInstruction_c *i)
     exception(BX_NM_EXCEPTION, 0);
 
   BX_ASSERT(0);
+
+  BX_NEXT_TRACE(i); // keep compiler happy
 }
 #endif
 
 #endif
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   if (BX_CPU_THIS_PTR cr4.get_PCE() || CPL==0 || real_mode()) {
@@ -396,6 +408,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 #if BX_CPU_LEVEL >= 5
@@ -419,7 +433,7 @@ void BX_CPU_C::set_TSC(Bit64u newval)
 }
 #endif
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   if (! BX_CPU_THIS_PTR cr4.get_TSD() || CPL==0) {
@@ -439,9 +453,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
 
@@ -458,6 +474,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
   RDTSC(i);
   RCX = MSR_TSC_AUX;
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -484,7 +502,7 @@ void BX_CPU_C::check_monitor(bx_phy_address begin_addr, unsigned len)
 }
 #endif
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MONITOR_MWAIT
   if (!real_mode() && CPL != 0) {
@@ -544,9 +562,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
   BX_CPU_THIS_PTR monitor.arm(paddr);
   BX_DEBUG(("MONITOR for phys_addr=0x" FMT_PHY_ADDRX, BX_CPU_THIS_PTR monitor.monitor_begin));
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MONITOR_MWAIT
   if (!real_mode() && CPL != 0) {
@@ -570,13 +590,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   // If monitor has already triggered, we just return.
   if (! BX_CPU_THIS_PTR monitor.armed) {
     BX_DEBUG(("MWAIT: the MONITOR was not armed or already triggered"));
-    return;
+    BX_NEXT_TRACE(i);
   }
 
   static bool mwait_is_nop = SIM->get_param_bool(BXPN_CPUID_MWAIT_IS_NOP)->get();
   if (mwait_is_nop) {
-    BX_DEBUG(("MWAIT: stay awake"));
-    return;
+    BX_NEXT_TRACE(i);
   }
 
   // stops instruction execution and places the processor in a optimized
@@ -592,7 +611,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
     // won't cause the processor to enter BX_ACTIVITY_STATE_MWAIT_IF sleep
     // state with EFLAGS.IF = 0
     if (BX_CPU_THIS_PTR vmx_interrupt_window && ! BX_CPU_THIS_PTR get_IF())
-      return;
+    {
+      BX_NEXT_TRACE(i);
+    }
 #endif
     BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_MWAIT_IF;
   }
@@ -615,9 +636,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   bx_dbg_halt(BX_CPU_ID);
 #endif
 #endif
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   if (real_mode()) {
@@ -707,9 +730,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSENTER,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 #endif
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   if (real_mode() || CPL != 0) {
@@ -806,10 +831,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSEXIT,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 #endif
+
+  BX_NEXT_TRACE(i);
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 {
   bx_address temp_RIP;
 
@@ -927,9 +954,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSCALL,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 {
   bx_address temp_RIP;
 
@@ -1053,9 +1082,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSRET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SWAPGS(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SWAPGS(bxInstruction_c *i)
 {
   if(CPL != 0)
     exception(BX_GP_EXCEPTION, 0);
@@ -1063,10 +1094,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SWAPGS(bxInstruction_c *i)
   Bit64u temp_GS_base = MSR_GSBASE;
   MSR_GSBASE = MSR_KERNELGSBASE;
   MSR_KERNELGSBASE = temp_GS_base;
+
+  BX_NEXT_INSTR(i);
 }
 
 /* F3 0F AE /0 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDFSBASE(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDFSBASE(bxInstruction_c *i)
 {
   if (! BX_CPU_THIS_PTR cr4.get_FSGSBASE())
     exception(BX_UD_EXCEPTION, 0);
@@ -1077,10 +1110,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDFSBASE(bxInstruction_c *i)
   else {
     BX_WRITE_32BIT_REGZ(i->rm(), (Bit32u) MSR_FSBASE);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
 /* F3 0F AE /1 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDGSBASE(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDGSBASE(bxInstruction_c *i)
 {
   if (! BX_CPU_THIS_PTR cr4.get_FSGSBASE())
     exception(BX_UD_EXCEPTION, 0);
@@ -1091,10 +1126,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDGSBASE(bxInstruction_c *i)
   else {
     BX_WRITE_32BIT_REGZ(i->rm(), (Bit32u) MSR_GSBASE);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
 /* F3 0F AE /2 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRFSBASE(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WRFSBASE(bxInstruction_c *i)
 {
   if (! BX_CPU_THIS_PTR cr4.get_FSGSBASE())
     exception(BX_UD_EXCEPTION, 0);
@@ -1111,10 +1148,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRFSBASE(bxInstruction_c *i)
     // 32-bit value is always canonical
     MSR_FSBASE = BX_READ_32BIT_REG(i->rm());
   }
+
+  BX_NEXT_INSTR(i);
 }
 
 /* F3 0F AE /3 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRGSBASE(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WRGSBASE(bxInstruction_c *i)
 {
   if (! BX_CPU_THIS_PTR cr4.get_FSGSBASE())
     exception(BX_UD_EXCEPTION, 0);
@@ -1131,5 +1170,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRGSBASE(bxInstruction_c *i)
     // 32-bit value is always canonical
     MSR_GSBASE = BX_READ_32BIT_REG(i->rm());
   }
+
+  BX_NEXT_INSTR(i);
 }
 #endif

@@ -26,11 +26,6 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-// Make code more tidy with a few macros.
-#if BX_SUPPORT_X86_64==0
-#define RIP EIP
-#endif
-
 bxPageWriteStampTable pageWriteStampTable;
 
 void flushICaches(void)

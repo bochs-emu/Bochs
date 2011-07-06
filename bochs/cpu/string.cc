@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -23,13 +23,6 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
-#if BX_SUPPORT_X86_64==0
-#define RSI ESI
-#define RDI EDI
-#define RAX EAX
-#define RCX ECX
-#endif
 
 //
 // Repeat Speedups methods
@@ -423,7 +416,7 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
 // REP MOVS methods
 //
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSB_XbYb(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSB_XbYb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -438,9 +431,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSB_XbYb(bxInstruction_c *i)
   else {
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSB16_XbYb);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSW_XwYw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSW_XwYw(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -455,9 +450,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSW_XwYw(bxInstruction_c *i)
   else {
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSW16_XwYw);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSD_XdYd(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSD_XdYd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -472,10 +469,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSD_XdYd(bxInstruction_c *i)
   else {
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSD16_XdYd);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSQ_XqYq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSQ_XqYq(bxInstruction_c *i)
 {
   if (i->as64L()) {
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSQ64_XqYq);
@@ -485,6 +484,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSQ_XqYq(bxInstruction_c *i)
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RSI); // always clear upper part of RSI/RDI
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI);
   }
+
+  BX_NEXT_INSTR(i);
 }
 #endif
 
@@ -822,7 +823,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSQ64_XqYq(bxInstruction_c *i)
 // REP CMPS methods
 //
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_CMPSB_XbYb(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_CMPSB_XbYb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -838,9 +839,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_CMPSB_XbYb(bxInstruction_c *i)
   else {
     BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::CMPSB16_XbYb);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_CMPSW_XwYw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_CMPSW_XwYw(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -856,9 +859,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_CMPSW_XwYw(bxInstruction_c *i)
   else {
     BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::CMPSW16_XwYw);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_CMPSD_XdYd(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_CMPSD_XdYd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -874,10 +879,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_CMPSD_XdYd(bxInstruction_c *i)
   else {
     BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::CMPSD16_XdYd);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_CMPSQ_XqYq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_CMPSQ_XqYq(bxInstruction_c *i)
 {
   if (i->as64L()) {
     BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::CMPSQ64_XqYq);
@@ -887,6 +894,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_CMPSQ_XqYq(bxInstruction_c *i)
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RSI); // always clear upper part of RSI/RDI
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI);
   }
+
+  BX_NEXT_INSTR(i);
 }
 #endif
 
@@ -1218,7 +1227,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSQ64_XqYq(bxInstruction_c *i)
 // REP SCAS methods
 //
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASB_ALXb(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASB_ALXb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -1233,9 +1242,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASB_ALXb(bxInstruction_c *i)
   else {
     BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASB16_ALXb);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASW_AXXw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASW_AXXw(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -1250,9 +1261,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASW_AXXw(bxInstruction_c *i)
   else {
     BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASW16_AXXw);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASD_EAXXd(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASD_EAXXd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -1267,10 +1280,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASD_EAXXd(bxInstruction_c *i)
   else {
     BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASD16_EAXXd);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASQ_RAXXq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASQ_RAXXq(bxInstruction_c *i)
 {
   if (i->as64L()) {
     BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASQ64_RAXXq);
@@ -1279,6 +1294,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASQ_RAXXq(bxInstruction_c *i)
     BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASQ32_RAXXq);
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI); // always clear upper part of RDI
   }
+
+  BX_NEXT_INSTR(i);
 }
 #endif
 
@@ -1550,7 +1567,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASQ64_RAXXq(bxInstruction_c *i)
 // REP STOS methods
 //
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_STOSB_YbAL(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_STOSB_YbAL(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -1564,9 +1581,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_STOSB_YbAL(bxInstruction_c *i)
   else {
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::STOSB16_YbAL);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_STOSW_YwAX(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_STOSW_YwAX(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -1580,9 +1599,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_STOSW_YwAX(bxInstruction_c *i)
   else {
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::STOSW16_YwAX);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_STOSD_YdEAX(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_STOSD_YdEAX(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -1596,10 +1617,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_STOSD_YdEAX(bxInstruction_c *i)
   else {
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::STOSD16_YdEAX);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_STOSQ_YqRAX(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_STOSQ_YqRAX(bxInstruction_c *i)
 {
   if (i->as64L()) {
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::STOSQ64_YqRAX);
@@ -1608,6 +1631,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_STOSQ_YqRAX(bxInstruction_c *i)
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::STOSQ32_YqRAX);
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI); // always clear upper part of RDI
   }
+
+  BX_NEXT_INSTR(i);
 }
 #endif
 
@@ -1847,7 +1872,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSQ64_YqRAX(bxInstruction_c *i)
 // REP LODS methods
 //
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_LODSB_ALXb(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_LODSB_ALXb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -1861,9 +1886,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_LODSB_ALXb(bxInstruction_c *i)
   else {
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSB16_ALXb);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_LODSW_AXXw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_LODSW_AXXw(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -1877,9 +1904,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_LODSW_AXXw(bxInstruction_c *i)
   else {
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSW16_AXXw);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_LODSD_EAXXd(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_LODSD_EAXXd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -1893,10 +1922,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_LODSD_EAXXd(bxInstruction_c *i)
   else {
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSD16_EAXXd);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_LODSQ_RAXXq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_LODSQ_RAXXq(bxInstruction_c *i)
 {
   if (i->as64L()) {
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSQ64_RAXXq);
@@ -1905,6 +1936,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_LODSQ_RAXXq(bxInstruction_c *i)
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSQ32_RAXXq);
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RSI); // always clear upper part of RSI
   }
+
+  BX_NEXT_INSTR(i);
 }
 #endif
 

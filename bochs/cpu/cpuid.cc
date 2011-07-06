@@ -28,14 +28,6 @@
 
 #include "param_names.h"
 
-#if BX_SUPPORT_X86_64==0
-// Make life easier for merging code.
-#define RAX EAX
-#define RBX EBX
-#define RCX ECX
-#define RDX EDX
-#endif
-
 /*
  * Get CPU version information:
  *
@@ -391,10 +383,10 @@ Bit32u BX_CPU_C::get_ext2_cpuid_features(void)
   return features;
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 4
-  Bit32u function    = EAX;
+  Bit32u function = EAX;
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
@@ -411,24 +403,25 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
       Bit32u subfunction = ECX;
 
-      if (function == 0xb && bx_cpuid_support_x2apic()) {
+      if (function == 0xb) {
         bx_cpuid_extended_topology_leaf(subfunction);
-        return;
       }
-      if (function == 0x7) {
+      else if (function == 0x7) {
         bx_cpuid_extended_cpuid_leaf(subfunction);
-        return;
       }
-      if (function == 0xd) {
+      else if (function == 0xd) {
         bx_cpuid_xsave_leaf(subfunction);
-        return;
       }
+      else
 #endif
-      RAX = BX_CPU_THIS_PTR cpuid_std_function[function].eax;
-      RBX = BX_CPU_THIS_PTR cpuid_std_function[function].ebx;
-      RCX = BX_CPU_THIS_PTR cpuid_std_function[function].ecx;
-      RDX = BX_CPU_THIS_PTR cpuid_std_function[function].edx;
-      return;
+      {
+        RAX = BX_CPU_THIS_PTR cpuid_std_function[function].eax;
+        RBX = BX_CPU_THIS_PTR cpuid_std_function[function].ebx;
+        RCX = BX_CPU_THIS_PTR cpuid_std_function[function].ecx;
+        RDX = BX_CPU_THIS_PTR cpuid_std_function[function].edx;
+      }
+
+      BX_NEXT_INSTR(i);
     }
   }
   else {
@@ -438,7 +431,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
       RBX = BX_CPU_THIS_PTR cpuid_ext_function[function].ebx;
       RCX = BX_CPU_THIS_PTR cpuid_ext_function[function].ecx;
       RDX = BX_CPU_THIS_PTR cpuid_ext_function[function].edx;
-      return;
+
+      BX_NEXT_INSTR(i);
     }
   }
 
@@ -448,6 +442,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
   RCX = BX_CPU_THIS_PTR cpuid_std_function[max_std_function].ecx;
   RDX = BX_CPU_THIS_PTR cpuid_std_function[max_std_function].edx;
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 #if BX_CPU_LEVEL >= 4
@@ -863,31 +859,40 @@ BX_CPP_INLINE static Bit32u ilog2(Bit32u x)
 
 void BX_CPU_C::bx_cpuid_extended_topology_leaf(Bit32u subfunction)
 {
+  if (! bx_cpuid_support_x2apic()) {
+    RAX = 0;
+    RBX = 0;
+    RCX = 0;
+    RDX = 0;
+    return;
+  }
+
   static int nthreads = SIM->get_param_num(BXPN_CPU_NTHREADS)->get();
   static int ncores = SIM->get_param_num(BXPN_CPU_NCORES)->get();
   static int nprocessors = SIM->get_param_num(BXPN_CPU_NPROCESSORS)->get();
+
+  RCX = subfunction;
+  RDX = BX_CPU_THIS_PTR lapic.get_id(); // x2apic ID
 
   switch(subfunction) {
   case 0:
      if (nthreads > 1) {
         RAX = ilog2(nthreads-1)+1;
         RBX = nthreads;
-        RCX = subfunction | (1<<8);
+        RCX |= (1<<8);
      }
      else if (ncores > 1) {
         RAX = ilog2(ncores-1)+1;
         RBX = ncores;
-        RCX = subfunction | (2<<8);
+        RCX |= (2<<8);
      }
      else if (nprocessors > 1) {
         RAX = ilog2(nprocessors-1)+1;
         RBX = nprocessors;
-        RCX = subfunction;
      }
      else {
         RAX = 0;
         RBX = 0;
-        RCX = subfunction;
      }
      break;
 
@@ -896,34 +901,29 @@ void BX_CPU_C::bx_cpuid_extended_topology_leaf(Bit32u subfunction)
         if (ncores > 1) {
            RAX = ilog2(ncores-1)+1;
            RBX = ncores;
-           RCX = subfunction | (2<<8);
+           RCX |= (2<<8);
         }
         else if (nprocessors > 1) {
            RAX = ilog2(nprocessors-1)+1;
            RBX = nprocessors;
-           RCX = subfunction;
         }
         else {
            RAX = 0;
            RBX = 0;
-           RCX = subfunction;
         }
      }
      else if (ncores > 1) {
         if (nprocessors > 1) {
            RAX = ilog2(nprocessors-1)+1;
            RBX = nprocessors;
-           RCX = subfunction;
         }
         else {
            RAX = 0;
            RBX = 0;
-           RCX = subfunction;
         }
      } else {
         RAX = 0;
         RBX = 0;
-        RCX = subfunction;
      }
      break;
 
@@ -942,17 +942,13 @@ void BX_CPU_C::bx_cpuid_extended_topology_leaf(Bit32u subfunction)
         RAX = 0;
         RBX = 0;
      }
-     RCX = subfunction;
      break;
 
    default:
      RAX = 0;
      RBX = 0;
-     RCX = subfunction;
      break;
    }
-
-   RDX = BX_CPU_THIS_PTR lapic.get_id(); // x2apic ID
 }
 
 void BX_CPU_C::bx_cpuid_extended_cpuid_leaf(Bit32u subfunction)

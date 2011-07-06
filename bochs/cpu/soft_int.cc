@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -24,12 +24,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-// Make code more tidy with a few macros.
-#if BX_SUPPORT_X86_64==0
-#define RSP ESP
-#endif
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GwMa(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GwMa(bxInstruction_c *i)
 {
   Bit16s op1_16 = BX_READ_16BIT_REG(i->nnn());
 
@@ -42,9 +37,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GwMa(bxInstruction_c *i)
     BX_INFO(("BOUND_GdMa: fails bounds test"));
     exception(BX_BR_EXCEPTION, 0);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GdMa(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GdMa(bxInstruction_c *i)
 {
   Bit32s op1_32 = BX_READ_32BIT_REG(i->nnn());
 
@@ -57,11 +54,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GdMa(bxInstruction_c *i)
     BX_INFO(("BOUND_GdMa: fails bounds test"));
     exception(BX_BR_EXCEPTION, 0);
   }
+
+  BX_NEXT_INSTR(i);
 }
 
 // This is an undocumented instrucion (opcode 0xf1) which
 // is useful for an ICE system
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT1(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT1(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   VMexit_Event(i, BX_PRIVILEGED_SOFTWARE_INTERRUPT, 1, 0, 0);
@@ -81,9 +80,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT1(bxInstruction_c *i)
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
                       EIP);
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT3(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT3(bxInstruction_c *i)
 {
   // INT 3 is not IOPL sensitive
 
@@ -101,10 +102,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT3(bxInstruction_c *i)
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
                       EIP);
+
+  BX_NEXT_TRACE(i);
 }
 
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
 {
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_softint;
@@ -138,9 +141,11 @@ done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
                       EIP);
+
+  BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::INTO(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INTO(bxInstruction_c *i)
 {
   if (get_OF()) {
 
@@ -159,4 +164,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INTO(bxInstruction_c *i)
                         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
                         EIP);
   }
+
+  BX_NEXT_TRACE(i);
 }

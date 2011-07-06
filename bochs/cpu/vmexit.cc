@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009-2010 Stanislav Shwartsman
+//   Copyright (c) 2009-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -25,13 +25,6 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
-#if BX_SUPPORT_X86_64==0
-// Make life easier for merging cpu64 and cpu32 code.
-#define RIP EIP
-#define RDI EDI
-#define RSI ESI
-#endif
 
 #if BX_SUPPORT_VMX
 

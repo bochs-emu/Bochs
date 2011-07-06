@@ -26,14 +26,8 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-// Make code more tidy with a few macros.
-#if BX_SUPPORT_X86_64==0
-#define RAX EAX
-#define RDX EDX
-#endif
-
 /* 0F AE /4 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   unsigned index;
@@ -170,10 +164,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   // always update header to 'dirty' state
   write_virtual_qword(i->seg(), (eaddr + 512) & asize_mask, header1);
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 0F AE /5 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   unsigned index;
@@ -355,10 +351,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   }
 #endif
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 0F 01 D0 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::XGETBV(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XGETBV(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   if(! BX_CPU_THIS_PTR cr4.get_OSXSAVE()) {
@@ -376,10 +374,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XGETBV(bxInstruction_c *i)
   RDX = 0;
   RAX = BX_CPU_THIS_PTR xcr0.get32();
 #endif
+
+  BX_NEXT_INSTR(i);
 }
 
 /* 0F 01 D1 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   if(! BX_CPU_THIS_PTR cr4.get_OSXSAVE()) {
@@ -416,5 +416,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
 #if BX_SUPPORT_AVX
   handleAvxModeChange();
 #endif
-#endif
+
+#endif // BX_CPU_LEVEL >= 6
+
+  BX_NEXT_TRACE(i);
 }
