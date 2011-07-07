@@ -104,7 +104,6 @@ public:
   bx_bool is_active() const { return active; }
 
   void bx_instr_reset(unsigned type);
-  void bx_instr_new_instruction();
 
   void bx_instr_cnear_branch_taken(bx_address new_eip);
   void bx_instr_cnear_branch_not_taken();
@@ -112,6 +111,8 @@ public:
   void bx_instr_far_branch(unsigned what, Bit16u new_cs, bx_address new_eip);
 
   void bx_instr_opcode(const Bit8u *opcode, unsigned len, bx_bool is32, bx_bool is64);
+
+  void bx_instr_before_execution(bxInstruction_c *i);
 
   void bx_instr_interrupt(unsigned vector);
   void bx_instr_exception(unsigned vector, unsigned error_code);
@@ -137,8 +138,6 @@ extern bxInstrumentation *icpu;
 #define BX_INSTR_RESET(cpu_id, type)     icpu[cpu_id].bx_instr_reset(type)
 #define BX_INSTR_HLT(cpu_id)
 #define BX_INSTR_MWAIT(cpu_id, addr, len, flags)
-
-#define BX_INSTR_NEW_INSTRUCTION(cpu_id) icpu[cpu_id].bx_instr_new_instruction()
 
 /* called from command line debugger */
 #define BX_INSTR_DEBUG_PROMPT()
@@ -168,7 +167,7 @@ extern bxInstrumentation *icpu;
 #define BX_INSTR_PREFETCH_HINT(cpu_id, what, seg, offset)
 
 /* execution */
-#define BX_INSTR_BEFORE_EXECUTION(cpu_id, i)
+#define BX_INSTR_BEFORE_EXECUTION(cpu_id, i) icpu[cpu_id].bx_instr_before_execution(i)
 #define BX_INSTR_AFTER_EXECUTION(cpu_id, i)
 #define BX_INSTR_REPEAT_ITERATION(cpu_id, i)
 
@@ -202,7 +201,6 @@ extern bxInstrumentation *icpu;
 #define BX_INSTR_RESET(cpu_id, type)
 #define BX_INSTR_HLT(cpu_id)
 #define BX_INSTR_MWAIT(cpu_id, addr, len, flags)
-#define BX_INSTR_NEW_INSTRUCTION(cpu_id)
 
 /* called from command line debugger */
 #define BX_INSTR_DEBUG_PROMPT()

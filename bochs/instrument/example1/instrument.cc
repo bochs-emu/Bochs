@@ -52,7 +52,7 @@ void bxInstrumentation::bx_instr_reset(unsigned type)
   active = 1;
 }
 
-void bxInstrumentation::bx_instr_new_instruction()
+void bxInstrumentation::bx_instr_before_execution(bxInstruction_c *unused)
 {
   if (!active) return;
 

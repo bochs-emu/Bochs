@@ -79,7 +79,7 @@ void bx_instr_reset(unsigned cpu, unsigned type)
   instruction[cpu].is_branch = 0;
 }
 
-void bx_instr_new_instruction(unsigned cpu)
+void bx_instr_before_execution(unsigned cpu, bxInstruction_c *unused)
 {
   if (!active) return;
 

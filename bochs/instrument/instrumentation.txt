@@ -66,12 +66,6 @@ state.  The  callback  receives  monitored  memory  range and MWAIT flags as a
 parameters.
 
 
-	void bx_instr_new_instruction(unsigned cpu);
-
-The  callback  is  called  each  time,  when Bochs completes (commits) already
-finished instruction and starts a new one.
-
-
 	void bx_instr_cnear_branch_taken(unsigned cpu, bx_address new_eip);
 
 The  callback  is  called  each time, when currently executed instruction is a

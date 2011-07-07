@@ -66,7 +66,6 @@ void bx_instr_exit(unsigned cpu);
 void bx_instr_reset(unsigned cpu, unsigned type);
 void bx_instr_hlt(unsigned cpu);
 void bx_instr_mwait(unsigned cpu, bx_phy_address addr, unsigned len, Bit32u flags);
-void bx_instr_new_instruction(unsigned cpu);
 
 void bx_instr_debug_promt();
 void bx_instr_debug_cmd(const char *cmd);
@@ -115,8 +114,6 @@ void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 
 #define BX_INSTR_MWAIT(cpu_id, addr, len, flags) \
                        bx_instr_mwait(cpu_id, addr, len, flags)
-
-#define BX_INSTR_NEW_INSTRUCTION(cpu_id) bx_instr_new_instruction(cpu_id)
 
 /* called from command line debugger */
 #define BX_INSTR_DEBUG_PROMPT()          bx_instr_debug_promt()
@@ -181,7 +178,6 @@ void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 #define BX_INSTR_RESET(cpu_id, type)
 #define BX_INSTR_HLT(cpu_id)
 #define BX_INSTR_MWAIT(cpu_id, addr, len, flags)
-#define BX_INSTR_NEW_INSTRUCTION(cpu_id)
 
 /* called from command line debugger */
 #define BX_INSTR_DEBUG_PROMPT()
