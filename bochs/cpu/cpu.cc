@@ -76,7 +76,6 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 
   if (setjmp(BX_CPU_THIS_PTR jmp_buf_env)) {
     // only from exception function we can get here ...
-    BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
     BX_TICK1_IF_SINGLE_PROCESSOR();
 #if BX_DEBUGGER || BX_GDBSTUB
     if (dbg_instruction_epilog()) return;
@@ -136,9 +135,6 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
       BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
       BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
       BX_TICK1_IF_SINGLE_PROCESSOR();
-
-      // inform instrumentation about new instruction
-      BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
 
       // note instructions generating exceptions never reach this point
 #if BX_DEBUGGER || BX_GDBSTUB
