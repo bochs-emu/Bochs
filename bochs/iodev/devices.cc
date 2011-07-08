@@ -66,10 +66,10 @@ bx_devices_c::~bx_devices_c()
 
 void bx_devices_c::init_stubs()
 {
-#if BX_SUPPORT_PCI
   pluginPciBridge = &stubPci;
   pluginPci2IsaBridge = &stubPci2Isa;
   pluginPciIdeController = &stubPciIde;
+#if BX_SUPPORT_PCI
   pluginACPIController = &stubACPIController;
 #endif
   pluginKeyboard = &stubKeyboard;
