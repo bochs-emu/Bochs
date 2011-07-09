@@ -471,8 +471,23 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
   }
 #endif
 
-  RDTSC(i);
-  RCX = MSR_TSC_AUX;
+  if (! BX_CPU_THIS_PTR cr4.get_TSD() || CPL==0) {
+
+#if BX_SUPPORT_VMX
+    VMexit_RDTSC(i);
+#endif
+
+    // return ticks
+    Bit64u ticks = BX_CPU_THIS_PTR get_TSC();
+
+    RAX = GET32L(ticks);
+    RDX = GET32H(ticks);
+    RCX = MSR_TSC_AUX;
+
+  } else {
+    BX_ERROR(("RDTSCP: not allowed to use instruction !"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
 #endif
 
   BX_NEXT_INSTR(i);
