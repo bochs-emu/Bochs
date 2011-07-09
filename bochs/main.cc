@@ -935,6 +935,7 @@ int bx_begin_simulation (int argc, char *argv[])
       // for one processor, the only reason for cpu_loop to return is
       // that kill_bochs_request was set by the GUI interface.
     }
+#if BX_SUPPORT_SMP
     else {
       // SMP simulation: do a few instructions on each processor, then switch
       // to another.  Increasing quantum speeds up overall performance, but
@@ -951,6 +952,7 @@ int bx_begin_simulation (int argc, char *argv[])
           BX_TICKN(quantum);
       }
     }
+#endif /* BX_SUPPORT_SMP */
   }
 #endif /* BX_DEBUGGER == 0 */
   BX_INFO(("cpu loop quit, shutting down simulator"));

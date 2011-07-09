@@ -197,15 +197,10 @@ void print_tree(bx_param_c *node, int level = 0);
 #  define A20ADDR(x)                ((bx_phy_address)(x))
 #endif
 
-#if BX_SUPPORT_SMP
-#  define BX_TICK1_IF_SINGLE_PROCESSOR() \
-              if (BX_SMP_PROCESSORS == 1) BX_TICK1()
-#  define BX_TICKN_IF_SINGLE_PROCESSOR(n) \
-              if (BX_SMP_PROCESSORS == 1) BX_TICKN(n)
-#else
-#  define BX_TICK1_IF_SINGLE_PROCESSOR()  BX_TICK1()
-#  define BX_TICKN_IF_SINGLE_PROCESSOR(n) BX_TICKN(n)
-#endif
+#define BX_TICK1_IF_SINGLE_PROCESSOR() \
+   if (BX_SMP_PROCESSORS == 1) BX_TICK1()
+#define BX_TICKN_IF_SINGLE_PROCESSOR(n) \
+   if (BX_SMP_PROCESSORS == 1) BX_TICKN(n)
 
 // you can't use static member functions on the CPU, if there are going
 // to be 2 cpus.  Check this early on.

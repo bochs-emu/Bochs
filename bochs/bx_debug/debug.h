@@ -380,8 +380,6 @@ void bx_dbg_exit(int code);
                                 BX_DBG_GUARD_IADDR_LIN | \
                                 BX_DBG_GUARD_IADDR_PHY)
 
-#define BX_DBG_GUARD_CTRL_C        0x0100
-
 typedef struct {
   unsigned guard_for;
 
@@ -462,8 +460,6 @@ typedef struct bx_guard_found_t {
   bx_address laddr;
   // 00 - 16 bit, 01 - 32 bit, 10 - 64-bit, 11 - illegal
   unsigned code_32_64; // CS seg size at guard point
-  bx_bool ctrl_c; // simulator stopped due to Ctrl-C request
-  Bit64u  time_tick; // time tick when guard reached
 } bx_guard_found_t;
 
 struct bx_watchpoint {

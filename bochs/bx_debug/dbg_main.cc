@@ -1778,7 +1778,6 @@ one_more:
   for (cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
     BX_CPU(cpu)->guard_found.guard_found = 0;
     BX_CPU(cpu)->guard_found.icount = 0;
-    BX_CPU(cpu)->guard_found.time_tick = bx_pc_system.time_ticks();
   }
 
   // update gui (disable continue command, enable stop command, etc.)
@@ -1869,7 +1868,6 @@ void bx_dbg_stepN_command(int cpu, Bit32u count)
   // reset guard counters for all CPUs
   for (unsigned n=0; n < BX_SMP_PROCESSORS; n++) {
     BX_CPU(n)->guard_found.icount = 0;
-    BX_CPU(n)->guard_found.time_tick = bx_pc_system.time_ticks();
   }
 
   if (cpu >= 0 || BX_SUPPORT_SMP==0) {

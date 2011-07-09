@@ -862,7 +862,6 @@ bx_bool BX_CPU_C::dbg_instruction_epilog(void)
         {
           BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_VIR;
           BX_CPU_THIS_PTR guard_found.iaddr_index = n;
-          BX_CPU_THIS_PTR guard_found.time_tick = tt;
           return(1); // on a breakpoint
         }
       }
@@ -876,7 +875,6 @@ bx_bool BX_CPU_C::dbg_instruction_epilog(void)
         {
           BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_LIN;
           BX_CPU_THIS_PTR guard_found.iaddr_index = n;
-          BX_CPU_THIS_PTR guard_found.time_tick = tt;
           return(1); // on a breakpoint
         }
       }
@@ -892,7 +890,6 @@ bx_bool BX_CPU_C::dbg_instruction_epilog(void)
           {
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_PHY;
             BX_CPU_THIS_PTR guard_found.iaddr_index = n;
-            BX_CPU_THIS_PTR guard_found.time_tick = tt;
             return(1); // on a breakpoint
           }
         }
