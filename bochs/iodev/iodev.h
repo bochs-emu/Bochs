@@ -36,10 +36,6 @@
 /* size of internal buffer for mouse devices */
 #define BX_MOUSE_BUFF_SIZE 48
 
-#if 0
-class bx_g2h_c;
-#endif
-
 typedef Bit32u (*bx_read_handler_t)(void *, Bit32u, unsigned);
 typedef void   (*bx_write_handler_t)(void *, Bit32u, Bit32u, unsigned);
 
@@ -473,9 +469,6 @@ public:
 #endif
 #if BX_SUPPORT_SOUNDLOW
   bx_soundmod_ctl_stub_c  *pluginSoundModCtl;
-#endif
-#if 0
-  bx_g2h_c          *g2h;
 #endif
 
   // stub classes that the pointers (above) can point to until a plugin is

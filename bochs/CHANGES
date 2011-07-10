@@ -94,6 +94,7 @@ Bochs repository moved to the SVN version control !
   [3190995] add eth backend based on Slirp by Heikki Lindholm
 
 - these S.F. bugs were closed/fixed
+  [1819639] Two incompatible crc32 modules
   [3324111] configure for VCPP.NET issues
   [3190970] Installing linux causes a crash in pci_ide
   [3077616] Fedora 13 installation fails on Bochs 2.4.5

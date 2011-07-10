@@ -96,9 +96,6 @@ void bx_devices_c::init_stubs()
 #if BX_SUPPORT_SOUNDLOW
   pluginSoundModCtl = &stubSoundModCtl;
 #endif
-#if 0
-  g2h = NULL;
-#endif
 }
 
 void bx_devices_c::init(BX_MEM_C *newmem)
@@ -339,13 +336,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 
   /*--- 82C54 PIT ---*/
   pluginPitDevice->init();
-
-#if 0
-  // Guest to Host interface.  Used with special guest drivers
-  // which move data to/from the host environment.
-  g2h = &bx_g2h;
-  g2h->init();
-#endif
 
   // system hardware
   register_io_read_handler(this, &read_handler, 0x0092,

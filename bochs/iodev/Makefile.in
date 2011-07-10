@@ -336,11 +336,6 @@ gameport.o: gameport.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../param_names.h gameport.h
-guest2host.o: guest2host.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
-  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
-  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h guest2host.h
 harddrv.o: harddrv.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
@@ -679,11 +674,6 @@ gameport.lo: gameport.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../param_names.h gameport.h
-guest2host.lo: guest2host.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
-  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
-  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h guest2host.h
 harddrv.lo: harddrv.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
