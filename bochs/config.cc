@@ -1427,9 +1427,6 @@ void bx_init_options()
 #if BX_NETMOD_FBSD
     "fbsd",
 #endif
-#if BX_NETMOD_ARPBACK
-    "arpback",
-#endif
 #if BX_NETMOD_VDE
     "vde",
 #endif

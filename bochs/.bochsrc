@@ -782,7 +782,6 @@ private_colormap: enabled=0
 # If you don't want to make connections to any physical networks,
 # you can use the following 'ethmod's to simulate a virtual network.
 #   null: All packets are discarded, but logged to a few files.
-#   arpback: ARP is simulated. Disabled by default.
 #   vde:  Virtual Distributed Ethernet
 #   vnet: ARP, ICMP-echo(ping), DHCP and read/write TFTP are simulated.
 #         The virtual host uses 192.168.10.1.

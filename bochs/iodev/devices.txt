@@ -63,7 +63,6 @@ Attached devices
   |                      | +-- Host specific Modules            eth_fbsd.cc, eth_linux.cc, eth_win32.cc
   |                      |
   |                      +---- Dummy module                     eth_null.cc
-  |                      +---- ARP simulator                    eth_arpback.cc, eth_packetmaker.cc, crc32.cc
   |                      +---- TAP Interface                    eth_tap.cc
   |                      +---- TUN/TAP Interface                eth_tuntap.cc
   |                      +---- VDE Interface                    eth_vde.cc
