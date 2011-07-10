@@ -3062,11 +3062,25 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         PARSE_WARN(("%s: unknown parameter '%s' for usb_xhci ignored.", context, params[i]));
       }
     }
-  } else if (!strcmp(params[0], "i440fxsupport")) {
+  } else if ((!strcmp(params[0], "pci")) ||
+             (!strcmp(params[0], "i440fxsupport"))) {
+    // new option for future extensions
     char tmpdev[80];
+    int enabled = -1;
+    int chipset = -1;
+    if (!strcmp(params[0], "i440fxsupport")) {
+      chipset = 1;
+      PARSE_WARN(("%s: 'i440fxsupport' will be replaced by new 'pci' option.", context));
+    }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
-        SIM->get_param_bool(BXPN_I440FX_SUPPORT)->set(atol(&params[i][8]));
+        enabled = atol(&params[i][8]);
+      } else if (!strncmp(params[i], "chipset=", 8)) {
+        if (!strcmp(&params[i][8], "i440fx")) {
+          chipset = 1;
+        } else {
+          PARSE_ERR(("%s: pci: unknown chipset '%s'", context, &params[i][8]));
+        }
       } else if ((!strncmp(params[i], "slot", 4)) && (params[i][5] == '=')) {
         slot = atol(&params[i][4]);
         if ((slot > 0) && (slot < 6)) {
@@ -3076,7 +3090,16 @@ static int parse_line_formatted(const char *context, int num_params, char *param
           BX_ERROR(("%s: unknown pci slot number ignored.", context));
         }
       } else {
-        PARSE_ERR(("%s: i440fxsupport: unknown parameter '%s'.", context, params[i]));
+        PARSE_ERR(("%s: pci: unknown parameter '%s'.", context, params[i]));
+      }
+    }
+    if (enabled == 0) {
+      SIM->get_param_bool(BXPN_I440FX_SUPPORT)->set(0);
+    } else if (enabled == 1) {
+      if (chipset == 1) {
+        SIM->get_param_bool(BXPN_I440FX_SUPPORT)->set(1);
+      } else {
+        PARSE_ERR(("%s: pci: chipset not specified", context));
       }
     }
   } else if (!strcmp(params[0], "pcidev")) {

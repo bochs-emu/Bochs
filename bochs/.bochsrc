@@ -853,16 +853,16 @@ keyboard_mapping: enabled=0, map=
 #user_shortcut: keys=ctrl-alt-del
 
 #=======================================================================
-# I440FXSUPPORT:
-# This option controls the presence of the i440FX PCI chipset. You can
-# also specify the devices connected to PCI slots. Up to 5 slots are
-# available now. These devices are currently supported: cirrus, es1370, ne2k,
-# pcivga, pcidev, pcipnic and usb_ohci.
+# PCI:
+# This option controls the presence of a PCI chipset in Bochs. Currently it only
+# supports the i440FX chipset. You can also specify the devices connected to
+# PCI slots. Up to 5 slots are available. These devices are currently supported:
+# cirrus, es1370, ne2k, pcivga, pcidev, pcipnic, usb_ohci and usb_xhci.
 #
 # Example:
-#   i440fxsupport: enabled=1, slot1=pcivga, slot2=ne2k
+#   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k
 #=======================================================================
-i440fxsupport: enabled=1
+pci: enabled=1, chipset=i440fx
 
 #=======================================================================
 # USB_UHCI:
@@ -914,6 +914,15 @@ i440fxsupport: enabled=1
 #=======================================================================
 #usb_ohci: enabled=1
 #usb_ohci: enabled=1, port1=printer:usbprinter.bin
+
+#=======================================================================
+# USB_XHCI:
+# This option controls the presence of the experimental USB xHCI host controller
+# with a 4-port hub. The portX option accepts the same device types with the
+# same syntax as the UHCI controller (see above). The xHCI HC must be assigned
+# to a PCI slot.
+#=======================================================================
+#usb_xhci: enabled=1
 
 #=======================================================================
 # CMOSIMAGE:
