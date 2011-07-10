@@ -407,13 +407,12 @@ bx_bool bx_usb_xhci_c::save_hc_state(void)
   /// Currently does nothing...
 
   Bit8u buffer[256];
-  bx_phy_address p;
+  Bit64u p;
 
   DEV_MEM_READ_PHYSICAL_BLOCK((bx_phy_address) BX_XHCI_THIS hub.op_regs.HcDCBAAP.dcbaap, 16, buffer);
-  p = (bx_phy_address) (*(Bit64u *) &buffer[0]);
-  DEV_MEM_READ_PHYSICAL_BLOCK(p, 16, buffer);
-  p = (bx_phy_address) (*(Bit64u *) &buffer[0]);
-
+  ReadHostQWordFromLittleEndian(&buffer[0], p);
+  DEV_MEM_READ_PHYSICAL_BLOCK((bx_phy_address)p, 16, buffer);
+  ReadHostQWordFromLittleEndian(&buffer[0], p);
 
 
   memset(buffer, 0x22, 256);
@@ -447,8 +446,8 @@ bx_bool bx_usb_xhci_c::restore_hc_state(void)
 void bx_usb_xhci_c::register_state(void)
 {
   unsigned i;
-  char portnum[8];
-  bx_list_c *hub, *port, *reg, *reg_grp;
+  char tmpname[16];
+  bx_list_c *hub, *port, *reg, *reg_grp, *reg_grp1;
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "usb_xhci", "USB xHCI State");
   hub = new bx_list_c(list, "hub", 8);
@@ -460,37 +459,30 @@ void bx_usb_xhci_c::register_state(void)
   new bx_shadow_num_c(reg_grp, "HcCParams", &BX_XHCI_THIS hub.cap_regs.HcCParams, BASE_HEX);
   new bx_shadow_num_c(reg_grp, "DBOFF", &BX_XHCI_THIS hub.cap_regs.DBOFF, BASE_HEX);
   new bx_shadow_num_c(reg_grp, "RTSOFF", &BX_XHCI_THIS hub.cap_regs.RTSOFF, BASE_HEX);
+
   reg_grp = new bx_list_c(hub, "op_regs", 7);
-  reg = new bx_list_c(reg_grp, "HcCommand", 11);
-  new bx_shadow_num_c(reg, "RsvdP1", &BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP1, BASE_HEX);
+  reg = new bx_list_c(reg_grp, "HcCommand", 9);
   new bx_shadow_bool_c(reg, "eu3s", &BX_XHCI_THIS hub.op_regs.HcCommand.eu3s);
   new bx_shadow_bool_c(reg, "ewe", &BX_XHCI_THIS hub.op_regs.HcCommand.ewe);
   new bx_shadow_bool_c(reg, "crs", &BX_XHCI_THIS hub.op_regs.HcCommand.crs);
   new bx_shadow_bool_c(reg, "css", &BX_XHCI_THIS hub.op_regs.HcCommand.css);
   new bx_shadow_bool_c(reg, "lhcrst", &BX_XHCI_THIS hub.op_regs.HcCommand.lhcrst);
-  new bx_shadow_num_c(reg, "RsvdP0", &BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP0, BASE_HEX);
   new bx_shadow_bool_c(reg, "hsee", &BX_XHCI_THIS hub.op_regs.HcCommand.hsee);
   new bx_shadow_bool_c(reg, "inte", &BX_XHCI_THIS hub.op_regs.HcCommand.inte);
   new bx_shadow_bool_c(reg, "hcrst", &BX_XHCI_THIS hub.op_regs.HcCommand.hcrst);
   new bx_shadow_bool_c(reg, "rs", &BX_XHCI_THIS hub.op_regs.HcCommand.rs);
-  reg = new bx_list_c(reg_grp, "HcStatus", 12);
-  new bx_shadow_num_c(reg, "RsvdZ1", &BX_XHCI_THIS hub.op_regs.HcStatus.RsvdZ1, BASE_HEX);
+  reg = new bx_list_c(reg_grp, "HcStatus", 9);
   new bx_shadow_bool_c(reg, "hce", &BX_XHCI_THIS hub.op_regs.HcStatus.hce);
   new bx_shadow_bool_c(reg, "cnr", &BX_XHCI_THIS hub.op_regs.HcStatus.cnr);
   new bx_shadow_bool_c(reg, "sre", &BX_XHCI_THIS hub.op_regs.HcStatus.sre);
   new bx_shadow_bool_c(reg, "rss", &BX_XHCI_THIS hub.op_regs.HcStatus.rss);
   new bx_shadow_bool_c(reg, "sss", &BX_XHCI_THIS hub.op_regs.HcStatus.sss);
-  new bx_shadow_num_c(reg, "RsvdZ0", &BX_XHCI_THIS hub.op_regs.HcStatus.RsvdZ0, BASE_HEX);
   new bx_shadow_bool_c(reg, "pcd", &BX_XHCI_THIS hub.op_regs.HcStatus.pcd);
   new bx_shadow_bool_c(reg, "eint", &BX_XHCI_THIS hub.op_regs.HcStatus.eint);
   new bx_shadow_bool_c(reg, "hse", &BX_XHCI_THIS hub.op_regs.HcStatus.hse);
-  new bx_shadow_bool_c(reg, "RsvdZ2", &BX_XHCI_THIS hub.op_regs.HcStatus.RsvdZ2);
   new bx_shadow_bool_c(reg, "hch", &BX_XHCI_THIS hub.op_regs.HcStatus.hch);
-  reg = new bx_list_c(reg_grp, "HcPageSize", 2);
-  new bx_shadow_num_c(reg, "Rsvd", &BX_XHCI_THIS hub.op_regs.HcPageSize.Rsvd, BASE_HEX);
-  new bx_shadow_num_c(reg, "pagesize", &BX_XHCI_THIS hub.op_regs.HcPageSize.pagesize, BASE_HEX);
+  new bx_shadow_num_c(reg_grp, "HcPageSize", &BX_XHCI_THIS hub.op_regs.HcPageSize.pagesize, BASE_HEX);
   reg = new bx_list_c(reg_grp, "HcNotification", 17);
-  new bx_shadow_num_c(reg, "RsvdP", &BX_XHCI_THIS hub.op_regs.HcNotification.RsvdP, BASE_HEX);
   new bx_shadow_bool_c(reg, "n15", &BX_XHCI_THIS hub.op_regs.HcNotification.n15);
   new bx_shadow_bool_c(reg, "n14", &BX_XHCI_THIS hub.op_regs.HcNotification.n14);
   new bx_shadow_bool_c(reg, "n13", &BX_XHCI_THIS hub.op_regs.HcNotification.n13);
@@ -509,34 +501,68 @@ void bx_usb_xhci_c::register_state(void)
   new bx_shadow_bool_c(reg, "n0", &BX_XHCI_THIS hub.op_regs.HcNotification.n0);
   reg = new bx_list_c(reg_grp, "HcCrcr", 6);
   new bx_shadow_num_c(reg, "crc", &BX_XHCI_THIS hub.op_regs.HcCrcr.crc, BASE_HEX);
-  new bx_shadow_num_c(reg, "RsvdP", &BX_XHCI_THIS hub.op_regs.HcCrcr.RsvdP, BASE_HEX);
   new bx_shadow_bool_c(reg, "crr", &BX_XHCI_THIS hub.op_regs.HcCrcr.crr);
   new bx_shadow_bool_c(reg, "ca", &BX_XHCI_THIS hub.op_regs.HcCrcr.ca);
   new bx_shadow_bool_c(reg, "cs", &BX_XHCI_THIS hub.op_regs.HcCrcr.cs);
   new bx_shadow_bool_c(reg, "rcs", &BX_XHCI_THIS hub.op_regs.HcCrcr.rcs);
-  reg = new bx_list_c(reg_grp, "HcDCBAAP", 2);
-  new bx_shadow_num_c(reg, "dcbaap", &BX_XHCI_THIS hub.op_regs.HcDCBAAP.dcbaap, BASE_HEX);
-  new bx_shadow_num_c(reg, "RsvdZ", &BX_XHCI_THIS hub.op_regs.HcDCBAAP.RsvdZ, BASE_HEX);
-  reg = new bx_list_c(reg_grp, "HcConfig", 2);
-  new bx_shadow_num_c(reg, "RsvdP", &BX_XHCI_THIS hub.op_regs.HcConfig.RsvdP, BASE_HEX);
-  new bx_shadow_num_c(reg, "MaxSlotsEn", &BX_XHCI_THIS hub.op_regs.HcConfig.MaxSlotsEn, BASE_HEX);
-  reg_grp = new bx_list_c(hub, "runtime_regs", 6);
-  reg = new bx_list_c(reg_grp, "mfindex", 2);
-  new bx_shadow_num_c(reg, "RsvdP", &BX_XHCI_THIS hub.runtime_regs.mfindex.RsvdP, BASE_HEX);
-  new bx_shadow_num_c(reg, "index", &BX_XHCI_THIS hub.runtime_regs.mfindex.index, BASE_HEX);
-  reg = new bx_list_c(reg_grp, "interrupter", INTERRUPTERS);
-  // TODO
-  for (i=0; i<USB_XHCI_PORTS; i++) {
-    sprintf(portnum, "port%d", i+1);
-    port = new bx_list_c(hub, portnum, 5);
+  new bx_shadow_num_c(reg_grp, "HcDCBAAP", &BX_XHCI_THIS hub.op_regs.HcDCBAAP.dcbaap, BASE_HEX);
+  new bx_shadow_num_c(reg_grp, "HcConfig_MaxSlotsEn", &BX_XHCI_THIS hub.op_regs.HcConfig.MaxSlotsEn, BASE_HEX);
+
+  reg_grp = new bx_list_c(hub, "runtime_regs", INTERRUPTERS + 1);
+  new bx_shadow_num_c(reg_grp, "mfindex", &BX_XHCI_THIS hub.runtime_regs.mfindex.index, BASE_HEX);
+  for (i = 0; i < INTERRUPTERS; i++) {
+    sprintf(tmpname, "interrupter%d", i+1);
+    reg_grp1 = new bx_list_c(reg_grp, tmpname, 5);
+    reg = new bx_list_c(reg_grp1, "iman", 2);
+    new bx_shadow_bool_c(reg, "ie", &BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ie);
+    new bx_shadow_bool_c(reg, "ip", &BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ip);
+    reg = new bx_list_c(reg_grp1, "imod", 2);
+    new bx_shadow_num_c(reg, "imodc", &BX_XHCI_THIS hub.runtime_regs.interrupter[i].imod.imodc, BASE_HEX);
+    new bx_shadow_num_c(reg, "imodi", &BX_XHCI_THIS hub.runtime_regs.interrupter[i].imod.imodi, BASE_HEX);
+    new bx_shadow_num_c(reg_grp1, "erstabsize", &BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstsz.erstabsize, BASE_HEX);
+    new bx_shadow_num_c(reg_grp1, "erstabadd", &BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstba.erstabadd, BASE_HEX);
+    reg = new bx_list_c(reg_grp1, "erdp", 3);
+    new bx_shadow_num_c(reg, "eventadd", &BX_XHCI_THIS hub.runtime_regs.interrupter[i].erdp.eventadd, BASE_HEX);
+    new bx_shadow_bool_c(reg, "ehb", &BX_XHCI_THIS hub.runtime_regs.interrupter[i].erdp.ehb);
+    new bx_shadow_num_c(reg, "desi", &BX_XHCI_THIS hub.runtime_regs.interrupter[i].erdp.desi, BASE_HEX);
+  }
+
+  for (i = 0; i < USB_XHCI_PORTS; i++) {
+    sprintf(tmpname, "port%d", i+1);
+    port = new bx_list_c(hub, tmpname, 6);
     new bx_shadow_bool_c(port, "is_usb3", &BX_XHCI_THIS hub.usb_port[i].is_usb3);
-    reg = new bx_list_c(port, "portsc", 24);
+    reg = new bx_list_c(port, "portsc", 22);
     new bx_shadow_bool_c(reg, "wpr", &BX_XHCI_THIS hub.usb_port[i].portsc.wpr);
-    // TODO
-    reg = new bx_list_c(port, "usb2", 8);
-    // TODO
-    reg = new bx_list_c(port, "porthlpmc", 4);
-    // TODO
+    new bx_shadow_bool_c(reg, "dr", &BX_XHCI_THIS hub.usb_port[i].portsc.dr);
+    new bx_shadow_bool_c(reg, "woe", &BX_XHCI_THIS hub.usb_port[i].portsc.woe);
+    new bx_shadow_bool_c(reg, "wde", &BX_XHCI_THIS hub.usb_port[i].portsc.wde);
+    new bx_shadow_bool_c(reg, "wce", &BX_XHCI_THIS hub.usb_port[i].portsc.wce);
+    new bx_shadow_bool_c(reg, "cas", &BX_XHCI_THIS hub.usb_port[i].portsc.cas);
+    new bx_shadow_bool_c(reg, "cec", &BX_XHCI_THIS hub.usb_port[i].portsc.cec);
+    new bx_shadow_bool_c(reg, "plc", &BX_XHCI_THIS hub.usb_port[i].portsc.plc);
+    new bx_shadow_bool_c(reg, "prc", &BX_XHCI_THIS hub.usb_port[i].portsc.prc);
+    new bx_shadow_bool_c(reg, "occ", &BX_XHCI_THIS hub.usb_port[i].portsc.occ);
+    new bx_shadow_bool_c(reg, "wrc", &BX_XHCI_THIS hub.usb_port[i].portsc.wrc);
+    new bx_shadow_bool_c(reg, "pec", &BX_XHCI_THIS hub.usb_port[i].portsc.pec);
+    new bx_shadow_bool_c(reg, "csc", &BX_XHCI_THIS hub.usb_port[i].portsc.csc);
+    new bx_shadow_bool_c(reg, "lws", &BX_XHCI_THIS hub.usb_port[i].portsc.lws);
+    new bx_shadow_num_c(reg, "pic", &BX_XHCI_THIS hub.usb_port[i].portsc.pic, BASE_HEX);
+    new bx_shadow_bool_c(reg, "speed", &BX_XHCI_THIS hub.usb_port[i].portsc.speed);
+    new bx_shadow_bool_c(reg, "pp", &BX_XHCI_THIS hub.usb_port[i].portsc.pp);
+    new bx_shadow_num_c(reg, "pls", &BX_XHCI_THIS hub.usb_port[i].portsc.pls, BASE_HEX);
+    new bx_shadow_bool_c(reg, "pr", &BX_XHCI_THIS hub.usb_port[i].portsc.pr);
+    new bx_shadow_bool_c(reg, "oca", &BX_XHCI_THIS hub.usb_port[i].portsc.oca);
+    new bx_shadow_bool_c(reg, "ped", &BX_XHCI_THIS hub.usb_port[i].portsc.ped);
+    new bx_shadow_bool_c(reg, "ccs", &BX_XHCI_THIS hub.usb_port[i].portsc.ccs);
+
+    // TODO: handle USB2/USB3 cases
+    reg = new bx_list_c(port, "portpmsc", 6);
+
+    new bx_shadow_num_c(port, "portli_lec", &BX_XHCI_THIS hub.usb_port[i].usb3.portli.lec, BASE_HEX);
+    reg = new bx_list_c(port, "porthlpmc", 3);
+    new bx_shadow_num_c(reg, "hirdm", &BX_XHCI_THIS hub.usb_port[i].porthlpmc.hirdm, BASE_HEX);
+    new bx_shadow_num_c(reg, "l1timeout", &BX_XHCI_THIS hub.usb_port[i].porthlpmc.l1timeout, BASE_HEX);
+    new bx_shadow_num_c(reg, "hirdd", &BX_XHCI_THIS hub.usb_port[i].porthlpmc.hirdd, BASE_HEX);
     // empty list for USB device state
     new bx_list_c(port, "device", 20);
   }
@@ -608,6 +634,7 @@ void bx_usb_xhci_c::update_irq(unsigned interrupter)
 bx_bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
   Bit32u val = 0, val_hi = 0;
+  Bit64u val64;
   int i;
 
   const Bit32u offset = (Bit32u) (addr - BX_XHCI_THIS pci_base_address[0]);
@@ -812,17 +839,18 @@ bx_bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
     unsigned caps_offset = (offset - EXT_CAPS_OFFSET);
     switch (len) {
       case 1:
-        val = *(Bit8u *) &BX_XHCI_THIS hub.extended_caps[caps_offset];
+        val = BX_XHCI_THIS hub.extended_caps[caps_offset];
         break;
       case 2:
-        val = *(Bit16u *) &BX_XHCI_THIS hub.extended_caps[caps_offset];
+        ReadHostWordFromLittleEndian(&BX_XHCI_THIS hub.extended_caps[caps_offset], val);
         break;
       case 4:
-        val = *(Bit32u *) &BX_XHCI_THIS hub.extended_caps[caps_offset];
+        ReadHostDWordFromLittleEndian(&BX_XHCI_THIS hub.extended_caps[caps_offset], val);
         break;
       case 8:
-        val = *(Bit32u *) &BX_XHCI_THIS hub.extended_caps[caps_offset];
-        val_hi = *(Bit32u *) &BX_XHCI_THIS hub.extended_caps[caps_offset+4];
+        ReadHostQWordFromLittleEndian(&BX_XHCI_THIS hub.extended_caps[caps_offset], val64);
+        val = (Bit32u)val64;
+        val_hi = (Bit32u)(val64 >> 32);
         break;
     }
   } else
@@ -1687,7 +1715,7 @@ void bx_usb_xhci_c::process_command_ring(void)
 {
   struct TRB trb;
   int i, slot, slot_type, ep, comp_code = 0, new_addr = 0, bsr = 0;
-  Bit32u a_flags = 0, d_flags;
+  Bit32u a_flags = 0, d_flags, tmpval1, tmpval2;
   Bit64u org_addr;
   Bit8u buffer[CONTEXT_SIZE + 2048];
   struct SLOT_CONTEXT slot_context;
@@ -1768,7 +1796,9 @@ void bx_usb_xhci_c::process_command_ring(void)
         if (BX_XHCI_THIS hub.slots[slot].enabled == 1) {
           DEV_MEM_READ_PHYSICAL_BLOCK((bx_phy_address) trb.parameter, (CONTEXT_SIZE + (CONTEXT_SIZE * 2)), buffer);
           bsr = ((trb.command & (1<<9)) == (1<<9));
-          if ((*(Bit32u *) &buffer[0] == 0x00) && (*(Bit32u *) &buffer[4] == 0x03)) {
+          ReadHostDWordFromLittleEndian(&buffer[0], tmpval1);
+          ReadHostDWordFromLittleEndian(&buffer[4], tmpval2);
+          if ((tmpval1 == 0x00) && (tmpval2 == 0x03)) {
             // Use temporary slot and ep context incase there is an error we don't modify the main contexts
             copy_slot_from_buffer(&slot_context, &buffer[CONTEXT_SIZE]);
             copy_ep_from_buffer(&ep_context, &buffer[CONTEXT_SIZE + CONTEXT_SIZE]);
@@ -1785,7 +1815,8 @@ void bx_usb_xhci_c::process_command_ring(void)
                   comp_code = CONTEXT_STATE_ERROR;
               } else { // BSR flag is clear
                 if (BX_XHCI_THIS hub.slots[slot].slot_context.slot_state <= SLOT_STATE_DEFAULT) {
-                  int port_num = (((*(Bit32u *) &buffer[CONTEXT_SIZE + 4]) & (0xFF<<16)) >> 16) - 1;  // slot:port_num is 1 based
+                  ReadHostDWordFromLittleEndian(&buffer[CONTEXT_SIZE + 4], tmpval1);
+                  int port_num = ((tmpval1 & (0xFF<<16)) >> 16) - 1;  // slot:port_num is 1 based
                   new_addr = create_unique_address(slot);
                   if (send_set_address(new_addr, port_num) == 0) {
                     slot_context.slot_state = SLOT_STATE_ADRESSED;
@@ -1828,7 +1859,7 @@ void bx_usb_xhci_c::process_command_ring(void)
           slot = TRB_GET_SLOT(trb.command);  // slots are 1 based
           if (BX_XHCI_THIS hub.slots[slot].enabled == 1) {
             DEV_MEM_READ_PHYSICAL_BLOCK((bx_phy_address) trb.parameter, (CONTEXT_SIZE + (CONTEXT_SIZE * 32)), buffer);
-            a_flags = *(Bit32u *) &buffer[4];
+            ReadHostDWordFromLittleEndian(&buffer[4], a_flags);
             // only the Slot context and EP1 (control EP) contexts are evaluated. Section 6.2.3.3
             // If the slot is not addresses or configured, then return error
             // FIXME: XHCI specs 1.0, page 102 says DEFAULT or higher, while page 321 states higher than DEFAULT!!!
@@ -1916,8 +1947,8 @@ void bx_usb_xhci_c::process_command_ring(void)
         bx_bool dc = TRB_DC(trb.command);
         if (BX_XHCI_THIS hub.slots[slot].enabled) {
           DEV_MEM_READ_PHYSICAL_BLOCK((bx_phy_address) trb.parameter, (CONTEXT_SIZE + (CONTEXT_SIZE * 32)), buffer);
-          d_flags = *(Bit32u *) &buffer[0];
-          a_flags = *(Bit32u *) &buffer[4];
+          ReadHostDWordFromLittleEndian(&buffer[0], d_flags);
+          ReadHostDWordFromLittleEndian(&buffer[4], a_flags);
           copy_slot_from_buffer(&slot_context, &buffer[CONTEXT_SIZE]);  // so we get entry_count
 
           if (BX_XHCI_THIS hub.slots[slot].slot_context.slot_state == SLOT_STATE_CONFIGURED) {
@@ -2092,6 +2123,8 @@ void bx_usb_xhci_c::init_event_ring(const unsigned interrupter)
   bx_phy_address addr = (bx_phy_address) BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstba.erstabadd;
   int i;
   Bit8u entry[16];
+  Bit32u val32;
+  Bit64u val64;
 
   BX_XHCI_THIS hub.ring_members.event_rings[interrupter].rcs = 1;
   BX_XHCI_THIS hub.ring_members.event_rings[interrupter].count = 0;
@@ -2108,7 +2141,9 @@ void bx_usb_xhci_c::init_event_ring(const unsigned interrupter)
   addr = (bx_phy_address) BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstba.erstabadd;
   for (i=0; i<BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstsz.erstabsize; i++) {
     DEV_MEM_READ_PHYSICAL_BLOCK(addr + (i * 16), 16, entry);
-    BX_DEBUG((" %02i:  address = 0x" FMT_ADDRX64 "  Count = %i", i, *(Bit64u *) &entry[0], *(Bit32u *) &entry[8]));
+    ReadHostQWordFromLittleEndian(&entry[0], val64);
+    ReadHostDWordFromLittleEndian(&entry[8], val32);
+    BX_DEBUG((" %02i:  address = 0x" FMT_ADDRX64 "  Count = %i", i, val64, val32));
   }
 }
 
@@ -2150,18 +2185,18 @@ void bx_usb_xhci_c::read_TRB(bx_phy_address addr, struct TRB *trb)
   Bit8u buffer[16];
 
   DEV_MEM_READ_PHYSICAL_BLOCK(addr, 16, buffer);
-  trb->parameter = *(Bit64u *) &buffer[0];
-  trb->status    = *(Bit32u *) &buffer[8];
-  trb->command   = *(Bit32u *) &buffer[12];
+  ReadHostQWordFromLittleEndian(&buffer[0], trb->parameter);
+  ReadHostDWordFromLittleEndian(&buffer[8], trb->status);
+  ReadHostDWordFromLittleEndian(&buffer[12], trb->command);
 }
 
 void bx_usb_xhci_c::write_TRB(bx_phy_address addr, const Bit64u parameter, const Bit32u status, const Bit32u command)
 {
   Bit8u buffer[16];
 
-  *(Bit64u *) &buffer[0] = parameter;
-  *(Bit32u *) &buffer[8] = status;
-  *(Bit32u *) &buffer[12] = command;
+  WriteHostQWordToLittleEndian(&buffer[0], parameter);
+  WriteHostDWordToLittleEndian(&buffer[8], status);
+  WriteHostDWordToLittleEndian(&buffer[12], command);
   DEV_MEM_WRITE_PHYSICAL_BLOCK(addr, 16, buffer);
 }
 
@@ -2376,7 +2411,8 @@ int bx_usb_xhci_c::send_set_address(const int addr, const int port_num)
   int ret;
   USBPacket packet;
   static Bit8u setup_address[8] = { 0, 0x05, 0, 0, 0, 0, 0 };
-  *(Bit16u *) &setup_address[2] = addr;
+
+  WriteHostWordToLittleEndian(&setup_address[2], addr);
 
   packet.pid = USB_TOKEN_SETUP;
   packet.devep = 0;

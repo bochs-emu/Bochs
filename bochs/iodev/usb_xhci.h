@@ -413,7 +413,7 @@ typedef struct {
           Bit8u   tmode;         //  4 bit Test Mode                   = 0x0            RO
           Bit16u  RsvdP;         // 11 bit reserved and preseved       = 0x000          RW
           bx_bool hle;           //  1 bit hardware LPM enable         = 0b             RW
-          Bit8u   l1dslot;       //  7 bit L1 Device Slot              = 0x00           RW
+          Bit8u   l1dslot;       //  8 bit L1 Device Slot              = 0x00           RW
           Bit8u   hird;          //  4 bit Host Initiated Resume Durat = 0x0            RW
           bx_bool rwe;           //  1 bit Remote Wakeup Enable        = 0b             RW
           Bit8u   l1s;           //  3 bit L1 Status                   = 000b           RO
