@@ -497,7 +497,19 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     }
 #endif
     // reset will clear pending INIT
-    BX_CPU_THIS_PTR reset(BX_RESET_SOFTWARE);
+    reset(BX_RESET_SOFTWARE);
+
+#if BX_SUPPORT_SMP
+    if (BX_SMP_PROCESSORS > 1) {
+      // if HALT condition remains, return so other CPUs have a chance
+      if (BX_CPU_THIS_PTR activity_state) {
+#if BX_DEBUGGER
+        BX_CPU_THIS_PTR stop_reason = STOP_CPU_HALTED;
+#endif
+        return 1; // Return to caller of cpu_loop.
+      }
+    }
+#endif
   }
 
   // Priority 4: Traps on Previous Instruction
