@@ -65,10 +65,6 @@ case "$target" in
   *-macos*)
     DEFAULT_GUI=macos                 # macos defaults to macos
     ;;
-  *-beos*)
-    ADD_FLAGS="-Wno-multichar"
-    DEFAULT_GUI=beos                  # beos defaults to beos
-    ;;
   *-amigaos* | *-morphos*)
     DEFAULT_GUI=amigaos               # amigaos or morphos defaults to amigaos gui
     ;;
@@ -94,7 +90,6 @@ dnl // make sure X Windows is default if no other chosen
 if (test "$with_sdl" != yes) && \
    (test "$with_svga" != yes) && \
    (test "$with_x11" != yes) && \
-   (test "$with_beos" != yes) && \
    (test "$with_win32" != yes) && \
    (test "$with_nogui" != yes) && \
    (test "$with_term" != yes) && \
@@ -295,15 +290,6 @@ dnl Implement a check for each gui library to see if has a chance of compiling.
 if test "$with_all_libs" = yes; then
   if test "$cross_configure" = 1; then
     AC_MSG_WARN([[Using --with-all-libs while cross configuring is very unlikely to be what you want.  You should specify the --with-* args yourself.]])
-  fi
-  if test "$with_beos" != yes; then
-    can_compile_beos=1
-    AC_CHECK_HEADER([app/Application.h], [], [ can_compile_beos=0 ])
-    AC_CHECK_HEADER([interface/Window.h], [], [ can_compile_beos=0 ])
-    AC_CHECK_HEADER([interface/View.h], [], [ can_compile_beos=0 ])
-    if test $can_compile_beos = 1; then
-      with_beos=yes
-    fi
   fi
 
   if test "$with_amigaos" != yes; then
@@ -1521,11 +1507,6 @@ if test "$bx_cdrom" = 1; then
       CDROM_OBJS="cdrom.o"
       EXTRA_LINK_OPTS="${EXTRA_LINK_OPTS} -framework IOKit -framework CoreFoundation "'$(GUI_LINK_OPTS)'
     fi
-    case $target in
-      *-beos*)
-	# use the beos cdrom file instead
-	CDROM_OBJS="$CDROM_OBJS cdrom_beos.o"
-    esac
     AC_DEFINE(BX_SUPPORT_CDROM, 1)
 else
     AC_MSG_RESULT(no)
@@ -1766,10 +1747,6 @@ AC_ARG_WITH(x11,
   [  --with-x11                        use X11 GUI],
   )
 
-AC_ARG_WITH(beos,
-  [  --with-beos                       use BeOS GUI],
-  )
-
 AC_ARG_WITH(win32,
   [  --with-win32                      use Win32 GUI],
   )
@@ -1950,13 +1927,6 @@ if test "$with_x11" = yes; then
   fi
 fi
 AC_SUBST(XPM_LIB)
-
-if test "$with_beos" = yes; then
-  display_libs="$display_libs beos"
-  AC_DEFINE(BX_WITH_BEOS, 1)
-  SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_BEOS)"
-  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_BEOS)"
-fi
 
 if test "$with_sdl" = yes; then
   display_libs="$display_libs sdl"
@@ -2264,9 +2234,6 @@ case "$target" in
       PRIMARY_TARGET="$PRIMARY_TARGET niclist"
     fi
     AC_DEFINE(BX_HAVE_SELECT, 1)
-    ;;
-  *-beos*)
-    PRIMARY_TARGET=.bochs_beos_target
     ;;
 esac
 

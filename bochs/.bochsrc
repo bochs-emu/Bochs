@@ -36,7 +36,6 @@
 #   x              use X windows interface, cross platform
 #   win32          use native win32 libraries
 #   carbon         use Carbon library (for MacOS X)
-#   beos           use native BeOS libraries
 #   macintosh      use MacOS pre-10
 #   amigaos        use native AmigaOS libraries
 #   sdl            use SDL library, cross platform
@@ -54,7 +53,6 @@
 # behaviour. See the examples below for currently supported options.
 #=======================================================================
 #display_library: amigaos
-#display_library: beos
 #display_library: carbon
 #display_library: macintosh
 #display_library: nogui

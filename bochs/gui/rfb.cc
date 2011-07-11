@@ -201,10 +201,10 @@ static const rfbPixelFormat BGR233Format = {
 // ::SPECIFIC_INIT()
 //
 // Called from gui.cc, once upon program startup, to allow for the
-// specific GUI code (X11, BeOS, ...) to be initialized.
+// specific GUI code (X11, Win32, ...) to be initialized.
 //
 // argc, argv: not used right now, but the intention is to pass native GUI
-//     specific options from the command line.  (X11 options, BeOS options,...)
+//     specific options from the command line.  (X11 options, Win32 options,...)
 //
 // tilewidth, tileheight: for optimization, graphics_tile_update() passes
 //     only updated regions of the screen to the gui code to be redrawn.

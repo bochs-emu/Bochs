@@ -84,7 +84,7 @@ public:
   bx_gui_c (void);
   virtual ~bx_gui_c ();
   // Define the following functions in the module for your particular GUI
-  // (x.cc, beos.cc, ...)
+  // (x.cc, win32.cc, ...)
   virtual void specific_init(int argc, char **argv,
                  unsigned x_tilesize, unsigned y_tilesize, unsigned header_bar_y) = 0;
   virtual void text_update(Bit8u *old_text, Bit8u *new_text,

@@ -94,9 +94,9 @@ interactions between Bochs and the host operating system can be complicated,
 and in some cases they are host platform specific.  Sending a network packet in
 FreeBSD requires different code than sending the packet in Windows XP, for
 example.  For this reason, certain features are supported on some host
-platforms and not others.  On GNU/Linux, Bochs can simulate a network card that
-communicates with the world, but on BeOS the simulated network card may not
-work because the communication code between the device model and the BeOS
+platforms and not others. On GNU/Linux, Bochs can simulate a network card that
+communicates with the world, but on MacOSX the simulated network card may not
+work because the communication code between the device model and the MacOSX
 operating system has not been written.
 </para>
 
@@ -237,7 +237,7 @@ disk to assist you in the process of installing a guest operating system.
 Bochs only provides you with the "virtual hardware", and it is up to you to do the rest.
 </para>
 
-<para>Bochs will run on Windows, GNU/Linux, FreeBSD, OpenBSD, or BeOS.
+<para>Bochs will run on Windows, GNU/Linux, FreeBSD, OpenBSD, or MacOSX.
 If you are running on x86 hardware, you have a range of choices.
 Check the installation section for your host platform to see what options
 Bochs supports on your platform.  If the most important factor is speed,
@@ -247,8 +247,8 @@ you may want to try a virtualization product instead of Bochs (VMware, VirtualBo
 <para>
 If you are using a non-x86 machine, then Bochs is one of the few choices for
 running x86 software.  Bochs has been known to work on Solaris (Sparc),
-GNU/Linux (PowerPC/Alpha), MacOS (PowerPC), IRIX (MIPS), BeOS (PowerPC), Digital
-Unix (Alpha), and AIX (PowerPC).
+GNU/Linux (PowerPC/Alpha), MacOS (PowerPC), IRIX (MIPS), Digital Unix (Alpha),
+and AIX (PowerPC).
 </para>
 
 <para>
@@ -443,7 +443,7 @@ currently work with.
     <entry>Yes</entry>
     <entry>Emulates ATAPI-4/IDE CD-ROM.  The CD-ROMs can read from an ISO disk image
     on any platform. On Windows (9x/ME/NT/2000/XP), Linux, SunOS, FreeBSD,
-    NetBSD, OpenBSD, Amiga/MorphOS, MacOSX and BeOS, Bochs can read from the
+    NetBSD, OpenBSD, Amiga/MorphOS and MacOSX, Bochs can read from the
     physical CD-ROM drive. Starting with version 1.4, Bochs is even able to boot from
     a bootable CD or bootable ISO image.
     </entry>
@@ -621,20 +621,6 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
     </row>
 
     <row>
-      <entry>BeOS</entry>
-      <entry>
-        Kevin Lawton wrote this port, originally to R3/PPC using
-        CodeWarrior. It now works on R4/x86 with egcs. Simon Huet picked up
-        maintaining/reworking the BeOS GUI port. In September 2001, Bernd Korz
-        of Yellow Tab, Inc.
-        (<ulink url="http://www.yellowtab.com">www.yellowtab.com</ulink>), took
-        over the BeOS/Zeta port, and is working on raw CD-ROM and raw floppy
-        support. For compiling, see <xref linkend="compile-beos">.
-      </entry>
-      <entry>beos, sdl</entry>
-    </row>
-
-    <row>
       <entry>MacOS X</entry>
       <entry>
         Emmanuel Mailliard ported the Macintosh code to MacOS X with Carbon API.
@@ -806,7 +792,7 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
      Does Bochs support a CD-ROM?
      </para></question>
      <answer><para>
-     Yes, a CD-ROM is supported in Linux, Windows, BeOS, and most BSDs. The
+     Yes, a CD-ROM is supported in Linux, Windows, and most BSDs. The
      CD-ROM drivers for Bochs allow the guest operating system to access the
      host operating system's CD-ROM data directly.
      </para></answer>
@@ -992,7 +978,7 @@ available at <ulink url="http://www.cygwin.com">www.cygwin.com</ulink>.
   user$ <command>cvs -z3 -d:pserver:anonymous@bochs.cvs.sourceforge.net:/cvsroot/bochs checkout bochs</command>
   cvs server: Updating bochs
   U bochs/.bochsrc
-  U bochs/.conf.beos-x86-R4
+  U bochs/.conf.linux
   U bochs/.conf.macos
      .
      .   <lineannotation>(This might take a few minutes, depending on your network connection.)</lineannotation>
@@ -1661,7 +1647,7 @@ contains the files <filename>bochs.h</filename> and
 The standard compile process has three basic steps:
 <command>configure</command>, <command>make</command>, and <command>make
 install</command>.  Each step is described in a separate section below.  The
-standard compile process is used on all Unix machines, MacOS X, BeOS, and
+standard compile process is used on all Unix machines, MacOS X, and
 Cygwin (win32).  There are separate instructions for <link
 linkend="compiling-win32">compiling for Win32 with Microsoft VC++</link>.
 </para>
@@ -1744,7 +1730,6 @@ been tested in recent Bochs versions:
   .conf.macosx
   .conf.win32-vcpp
   .conf.win32-cygwin
-  .conf.beos
 </screen>
 </para>
 
@@ -1902,12 +1887,6 @@ In Bochs 1.3 and before, the X11 GUI was always the default.
     </entry>
   </row>
   <row>
-    <entry>BeOS</entry>
-    <entry>--with-beos</entry>
-    <entry>none
-    </entry>
-  </row>
-  <row>
     <entry>AmigaOS</entry>
     <entry>--with-amigaos</entry>
     <entry>none
@@ -1966,11 +1945,6 @@ In Bochs 1.3 and before, the X11 GUI was always the default.
     <row>
       <entry>--with-sdl</entry>
       <entry>Enable support for the SDL GUI interface; see <xref linkend="compile-sdl">.</entry>
-    </row>
-    <row>
-      <entry>--with-beos</entry>
-      <entry>Use BeOS GUI.  The configure script will run natively
-       on BeOS; use this option when doing so.</entry>
     </row>
     <row>
       <entry>--with-term</entry>
@@ -2600,21 +2574,6 @@ Bochs GUIs. Use <option>--with-x11</option> for X windows,
 </para>
 </section><!-- end: Compiling on MacOS X -->
 
-<section id="compile-beos"><title>Compiling on BeOS</title>
-<para>
-  Kevin Lawton ported Bochs to BeOS. Bernd Korz has taken over the port.
-  Since Bochs 1.4, you can use the same compile and install process as on
-  Unix, that is, configure will detect the BeOS platform and assume you
-  want the BeOS GUI.
-<screen>
-  configure
-  make
-</screen>
-  Optionally, you can use the configure shortcut script for BeOS,
-  <filename>.conf.beos</filename>, which uses the SDL GUI by default.
-</para>
-</section><!-- end: Compiling on BeOS -->
-
 <section id="compile-morphos"><title>Compiling on Amiga/MorphOS</title>
 <para>
   Nicholai Benalal created this port to MorphOS running on Amiga. It should
@@ -2663,7 +2622,7 @@ Bochs GUIs. Use <option>--with-x11</option> for X windows,
   Dave Poirier has written an SDL interface for Bochs. Simple DirectMedia
   Layer, or SDL, is a cross-platform multimedia library distributed from
   <ulink url="http://libsdl.org/">libsdl.org</ulink>. SDL is available
-  for many platforms including Win32, Linux, BSD, IRIX, MacOS, MacOS X, BeOS,
+  for many platforms including Win32, Linux, BSD, IRIX, MacOS, MacOS X,
   and AmigaOS.
 </para>
 <para>
@@ -3569,10 +3528,6 @@ behaviour. See the examples below for currently supported options.
 <row>
   <entry>carbon</entry>
   <entry>use Carbon library (for MacOS X)</entry>
-</row>
-<row>
-  <entry>beos</entry>
-  <entry>use native BeOS libraries</entry>
 </row>
 <row>
   <entry>macintosh</entry>

@@ -48,7 +48,7 @@ IMPLEMENT_GUI_PLUGIN_CODE(nogui)
 // which there is no support for your native GUI, or if you want to compile
 // bochs without any native GUI support (no output window or
 // keyboard input will be possible).
-// Look in 'x.cc', 'beos.cc', and 'win32.cc' for specific
+// Look in 'x.cc', 'carbon.cc', and 'win32.cc' for specific
 // implementations of this interface.  -Kevin
 
 
@@ -56,10 +56,10 @@ IMPLEMENT_GUI_PLUGIN_CODE(nogui)
 // ::SPECIFIC_INIT()
 //
 // Called from gui.cc, once upon program startup, to allow for the
-// specific GUI code (X11, BeOS, ...) to be initialized.
+// specific GUI code (X11, Win32, ...) to be initialized.
 //
 // argc, argv: these arguments can be used to initialize the GUI with
-//     specific options (X11 options, BeOS options,...)
+//     specific options (X11 options, Win32 options,...)
 //
 // tilewidth, tileheight: for optimization, graphics_tile_update() passes
 //     only updated regions of the screen to the gui code to be redrawn.

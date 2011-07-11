@@ -651,9 +651,6 @@ void bx_init_options()
 #if BX_WITH_CARBON
     "carbon",
 #endif
-#if BX_WITH_BEOS
-    "beos",
-#endif
 #if BX_WITH_MACOS
     "macos",
 #endif

@@ -54,7 +54,6 @@ BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMEN
 GUI_OBJS_X11  = x.o
 GUI_OBJS_SDL = sdl.o
 GUI_OBJS_SVGA = svga.o
-GUI_OBJS_BEOS = beos.o
 GUI_OBJS_WIN32 = win32.o
 GUI_OBJS_MACOS = macintosh.o
 GUI_OBJS_CARBON = carbon.o
@@ -73,7 +72,6 @@ XPM_LIB = @XPM_LIB@
 GUI_LINK_OPTS_X = $(X_LIBS) $(X_PRE_LIBS) -lX11 $(XPM_LIB) -lXrandr
 GUI_LINK_OPTS_SDL = `sdl-config --cflags --libs`
 GUI_LINK_OPTS_SVGA =  -lvga -lvgagl
-GUI_LINK_OPTS_BEOS = -lbe
 GUI_LINK_OPTS_RFB = @RFB_LIBS@
 GUI_LINK_OPTS_AMIGAOS =
 GUI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lcomdlg32 -lcomctl32
@@ -122,9 +120,6 @@ libbx_sdl.la: sdl.lo
 libbx_svga.la: svga.lo
 	$(LIBTOOL) --mode=link $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_SVGA)
 
-libbx_beos.la: beos.lo
-	$(LIBTOOL) --mode=link $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_BEOS)
-
 libbx_rfb.la: rfb.lo
 	$(LIBTOOL) --mode=link $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_RFB)
 
@@ -163,7 +158,6 @@ bx_sdl.dll: $(GUI_OBJS_SDL)
 bx_rfb.dll: $(GUI_OBJS_RFB)
 	$(CXX) $(CXXFLAGS) -shared -o bx_rfb.dll $(GUI_OBJS_RFB) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_RFB)
 
-# no need to build DLLs for beos.o
 # no need to build DLLs for x.o
 
 ##### end DLL section
@@ -190,11 +184,6 @@ amigaos.o: amigaos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../param_names.h ../iodev/iodev.h
-beos.o: beos.@CPP_SUFFIX@ ../param_names.h ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
-  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
-  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../iodev/iodev.h
 carbon.o: carbon.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -293,11 +282,6 @@ amigaos.lo: amigaos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../param_names.h ../iodev/iodev.h
-beos.lo: beos.@CPP_SUFFIX@ ../param_names.h ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
-  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
-  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../iodev/iodev.h
 carbon.lo: carbon.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../plugin.h \

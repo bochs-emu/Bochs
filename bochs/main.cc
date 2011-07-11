@@ -797,10 +797,6 @@ bx_bool load_and_init_display_lib(void)
   if (!strcmp(gui_name, "amigaos"))
     PLUG_load_plugin (amigaos, PLUGTYPE_OPTIONAL);
 #endif
-#if BX_WITH_BEOS
-  if (!strcmp(gui_name, "beos"))
-    PLUG_load_plugin (beos, PLUGTYPE_OPTIONAL);
-#endif
 #if BX_WITH_CARBON
   if (!strcmp(gui_name, "carbon"))
     PLUG_load_plugin (carbon, PLUGTYPE_OPTIONAL);

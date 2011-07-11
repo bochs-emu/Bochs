@@ -50,7 +50,7 @@ Attached devices
   |        |
   |        +---- CD/DVD-ROM image / device access (*)           cdrom.cc
   |                      |
-  |                      +---- Host specific Modules            cdrom_amigaos.cc, cdrom_beos.cc
+  |                      +---- Host specific Module             cdrom_amigaos.cc
   +---- Network Support
   |        |
   |        +---- Network Devices

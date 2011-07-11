@@ -79,10 +79,6 @@ extern "C" {
 #define CD_FRAMESIZE 2048
 }
 
-#elif defined(__BEOS__)
-#include "cdrom_beos.h"
-#define BX_CD_FRAMESIZE 2048
-
 #elif (defined(__NetBSD__) || defined(__NetBSD_kernel__) || defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
 // OpenBSD pre version 2.7 may require extern "C" { } structure around
 // all the includes, because the i386 sys/disklabel.h contains code which
@@ -1164,9 +1160,7 @@ Bit32u cdrom_interface::capacity()
   }
 #endif
 
-#ifdef __BEOS__
-  return GetNumDeviceBlocks(fd, BX_CD_FRAMESIZE);
-#elif defined(__sun)
+#if defined(__sun)
   {
     struct stat buf = {0};
 

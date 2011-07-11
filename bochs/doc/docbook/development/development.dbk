@@ -247,7 +247,7 @@ Other important pieces of the puzzle are: the options object (reads/writes
 configuration files, can be written to and queried while Bochs is running) and
 the GUI object. There are many different but compatible implementations of the
 GUI object, depending on whether you compile for X (Unix/Linux), Win32,
-Macintosh (two versions: one for Mac OS X and one for older OS's), BeOS, Amiga,
+Macintosh (two versions: one for Mac OS X and one for older OS's), Amiga,
 etc.
 </para>
 <para>

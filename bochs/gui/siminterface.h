@@ -32,7 +32,7 @@
 // a series of buttons (floppy, cdrom, snapshot, power).  Over the years, we
 // have collected many implementations of the VGAW for different environments
 // and platforms; each implementation is in a separate file under gui/*:
-// x.cc, win32.cc, beos.cc, macintosh.cc, etc.  The files gui.h and gui.cc
+// x.cc, win32.cc, macintosh.cc, etc.  The files gui.h and gui.cc
 // define the platform independent part of the VGAW, leaving about 15 methods
 // of the bx_gui_c class undefined.  The platform dependent file must
 // implement the remaining 15 methods.
