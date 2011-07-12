@@ -3918,9 +3918,10 @@ int bx_write_configuration(const char *rc, int overwrite)
   base = (bx_list_c*) SIM->get_param("ports.usb.xhci");
   bx_write_usb_options(fp, BX_N_USB_XHCI_PORTS, base);
   // pci
-  fprintf(fp, "i440fxsupport: enabled=%d",
+  fprintf(fp, "pci: enabled=%d",
           SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get());
   if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
+    fprintf(fp, ", chipset=i440fx");
     for (i=0; i<BX_N_PCI_SLOTS; i++) {
       sprintf(tmpdev, "pci.slot.%d", i+1);
       strptr = SIM->get_param_string(tmpdev)->getptr();
