@@ -1281,6 +1281,7 @@ void CDECL bx_signal_handler(int signum)
       if (bx_dbg.print_timestamps) {
         printf("IPS: %u\taverage = %u\t\t(%us)\n",
            (unsigned) ips_count, (unsigned) (ticks_count/counts), (unsigned) counts);
+        fflush(stdout);
       }
     }
 #if !defined(WIN32)
