@@ -1142,7 +1142,13 @@ void xkeypress(KeySym keysym, int press_release)
       case XK_Control_R:   key_event = BX_KEY_CTRL_R; break;
 #endif
       case XK_Shift_L:     key_event = BX_KEY_SHIFT_L; break;
+#ifdef XK_ISO_Prev_Group
+      case XK_ISO_Prev_Group: key_event = BX_KEY_SHIFT_L; break;
+#endif
       case XK_Shift_R:     key_event = BX_KEY_SHIFT_R; break;
+#ifdef XK_ISO_Next_Group
+      case XK_ISO_Next_Group: key_event = BX_KEY_SHIFT_R; break;
+#endif
       case XK_Alt_L:       key_event = BX_KEY_ALT_L; break;
 #ifdef XK_Alt_R
       case XK_Alt_R:       key_event = BX_KEY_ALT_R; break;
