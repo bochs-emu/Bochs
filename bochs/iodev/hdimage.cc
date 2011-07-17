@@ -25,6 +25,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "cdrom.h"
 #include "hdimage.h"
 #include "vmware3.h"
 #include "vmware4.h"
@@ -132,6 +133,13 @@ device_image_t* bx_hdimage_ctl_c::init_image(Bit8u image_mode, Bit64u disk_size,
   }
   return hdimage;
 }
+
+#ifdef LOWLEVEL_CDROM
+LOWLEVEL_CDROM* bx_hdimage_ctl_c::init_cdrom(const char *dev)
+{
+  return new LOWLEVEL_CDROM(dev);
+}
+#endif
 
 /*** base class device_image_t ***/
 

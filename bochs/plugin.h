@@ -173,6 +173,7 @@ extern "C" {
 #define DEV_hd_bmdma_write_sector(a,b) bx_devices.pluginHardDrive->bmdma_write_sector(a,b)
 #define DEV_hd_bmdma_complete(a) bx_devices.pluginHardDrive->bmdma_complete(a)
 #define DEV_hdimage_init_image(a,b,c) bx_devices.pluginHDImageCtl->init_image(a,b,c)
+#define DEV_hdimage_init_cdrom(a) bx_devices.pluginHDImageCtl->init_cdrom(a)
 
 #define DEV_bulk_io_quantum_requested() (bx_devices.bulkIOQuantumsRequested)
 #define DEV_bulk_io_quantum_transferred() (bx_devices.bulkIOQuantumsTransferred)

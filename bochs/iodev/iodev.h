@@ -77,6 +77,7 @@ class BOCHSAPI bx_devmodel_c : public logfunctions {
 
 class bx_list_c;
 class device_image_t;
+class LOWLEVEL_CDROM;
 
 // the best should be deriving of bx_pci_device_stub_c from bx_devmodel_c
 // but it make serious problems for cirrus_svga device
@@ -370,6 +371,11 @@ public:
   virtual device_image_t* init_image(Bit8u image_mode, Bit64u disk_size, const char *journal) {
     STUBFUNC(hdimage_ctl, init_image); return NULL;
   }
+#ifdef LOWLEVEL_CDROM
+  virtual LOWLEVEL_CDROM* init_cdrom(const char *dev) {
+    STUBFUNC(hdimage_ctl, init_cdrom); return NULL;
+  }
+#endif
 };
 
 #if BX_SUPPORT_SOUNDLOW

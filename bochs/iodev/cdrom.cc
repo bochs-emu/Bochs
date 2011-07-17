@@ -514,12 +514,6 @@ cdrom_interface::cdrom_interface(const char *dev)
 #endif
 }
 
-void cdrom_interface::init(void)
-{
-  BX_DEBUG(("Init $Id$"));
-  BX_INFO(("file = '%s'",path));
-}
-
 cdrom_interface::~cdrom_interface(void)
 {
 #ifndef WIN32

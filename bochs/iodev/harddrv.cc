@@ -397,7 +397,7 @@ void bx_hard_drive_c::init(void)
 
         // allocate low level driver
 #ifdef LOWLEVEL_CDROM
-        BX_HD_THIS channels[channel].drives[device].cdrom.cd = new LOWLEVEL_CDROM(SIM->get_param_string("path", base)->getptr());
+        BX_HD_THIS channels[channel].drives[device].cdrom.cd = DEV_hdimage_init_cdrom(SIM->get_param_string("path", base)->getptr());
         BX_INFO(("CD on ata%d-%d: '%s'",channel, device, SIM->get_param_string("path", base)->getptr()));
 
         if (SIM->get_param_bool("status", base)->get()) {

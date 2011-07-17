@@ -228,7 +228,7 @@ bx_bool usb_msd_device_c::init()
     sprintf(s.info_txt, "USB HD: path='%s', mode='%s'", s.fname, hdimage_mode_names[s.image_mode]);
   } else if (d.type == USB_DEV_TYPE_CDROM) {
 #ifdef LOWLEVEL_CDROM
-    s.cdrom = new LOWLEVEL_CDROM(s.fname);
+    s.cdrom = DEV_hdimage_init_cdrom(s.fname);
     if (!s.cdrom->insert_cdrom()) {
       BX_ERROR(("could not open cdrom image file '%s'", s.fname));
       return 0;
