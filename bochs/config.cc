@@ -3992,7 +3992,7 @@ int bx_write_configuration(const char *rc, int overwrite)
 #endif
   fprintf(fp, "\n");
 
-  fprintf(fp, "cpuid: family=%x, model=%02x, stepping=%d", 
+  fprintf(fp, "cpuid: family=%d, model=0x%02x, stepping=%d", 
     SIM->get_param_num(BXPN_CPUID_FAMILY)->get(),
     SIM->get_param_num(BXPN_CPUID_MODEL)->get(),
     SIM->get_param_num(BXPN_CPUID_STEPPING)->get());
