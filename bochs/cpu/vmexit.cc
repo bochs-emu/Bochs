@@ -484,11 +484,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
      }
 
      if (qualification & VMX_VMEXIT_IO_INSTR_STRING) {
-       bx_address asize_mask = BX_CONST64(0xffffffffffffffff), laddr;
-       if (! i->as64L()) {
-          if (i->as32L()) asize_mask = 0xffffffff;
-          else asize_mask = 0xffff;
-       }
+       bx_address asize_mask = (bx_address) i->asize_mask(), laddr;
 
        if (qualification & VMX_VMEXIT_IO_PORTIN)
           laddr = BX_CPU_THIS_PTR get_laddr(BX_SEG_REG_ES, RDI & asize_mask);
