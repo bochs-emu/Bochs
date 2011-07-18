@@ -1163,7 +1163,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned user, unsig
 #endif
 
   // Calculate physical memory address and fill in TLB cache entry
-  paddress = ppf | poffset;
+  paddress = A20ADDR(ppf | poffset);
 
   // direct memory access is NOT allowed by default
   tlbEntry->lpf = lpf | TLB_HostPtr;
@@ -1584,7 +1584,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx
   }
 #endif
 
-  *phy = paddress;
+  *phy = A20ADDR(paddress);
   return 1;
 
 page_fault:
