@@ -839,16 +839,14 @@ typedef struct {
 #if BX_SUPPORT_MONITOR_MWAIT
 struct monitor_addr_t {
 
-    bx_phy_address monitor_begin;
-    bx_phy_address monitor_end;
+    bx_phy_address monitor_addr;
     bx_bool armed;
 
-    monitor_addr_t():
-      monitor_begin(0xffffffff), monitor_end(0xffffffff), armed(0) {}
+    monitor_addr_t(): monitor_addr(0xffffffff), armed(0) {}
 
     BX_CPP_INLINE void arm(bx_phy_address addr) {
-      monitor_begin = addr;
-      monitor_end = addr + CACHE_LINE_SIZE - 1;
+      // align to cache line
+      monitor_addr = addr & ~((bx_phy_address)(CACHE_LINE_SIZE - 1));
       armed = 1;
     }
 

@@ -498,8 +498,11 @@ bx_bool BX_CPU_C::is_monitor(bx_phy_address begin_addr, unsigned len)
 {
   if (! BX_CPU_THIS_PTR monitor.armed) return 0;
 
+  bx_phy_address monitor_begin = BX_CPU_THIS_PTR monitor.monitor_addr;
+  bx_phy_address monitor_end = monitor_start + CACHE_LINE_SIZE - 1;
+
   bx_phy_address end_addr = begin_addr + len;
-  if (begin_addr >= BX_CPU_THIS_PTR monitor.monitor_end || end_addr <= BX_CPU_THIS_PTR monitor.monitor_begin)
+  if (begin_addr >= monitor_end || end_addr <= monitor_begin)
     return 0;
   else
     return 1;
@@ -568,14 +571,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 
   bx_phy_address paddr = translate_linear(laddr, USER_PL, BX_READ);
 
-  // Set the monitor immediately.  If monitor is still armed when we MWAIT,
+  // Set the monitor immediately. If monitor is still armed when we MWAIT,
   // the processor will stall.
-  bx_pc_system.invlpg(BX_CPU_THIS_PTR monitor.monitor_begin);
-  if ((BX_CPU_THIS_PTR monitor.monitor_end & ~0xfff) != (BX_CPU_THIS_PTR monitor.monitor_begin & ~0xfff))
-    bx_pc_system.invlpg(BX_CPU_THIS_PTR monitor.monitor_end);
+
+  bx_pc_system.invlpg(paddr);
 
   BX_CPU_THIS_PTR monitor.arm(paddr);
-  BX_DEBUG(("MONITOR for phys_addr=0x" FMT_PHY_ADDRX, BX_CPU_THIS_PTR monitor.monitor_begin));
+
+  BX_DEBUG(("MONITOR for phys_addr=0x" FMT_PHY_ADDRX, BX_CPU_THIS_PTR monitor.monitor_addr));
 #endif
 
   BX_NEXT_INSTR(i);
@@ -641,7 +644,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   // will remain in a optimized state until one of the above
   // conditions is met.
 
-  BX_INSTR_MWAIT(BX_CPU_ID, BX_CPU_THIS_PTR monitor.monitor_begin, CACHE_LINE_SIZE, ECX);
+  BX_INSTR_MWAIT(BX_CPU_ID, BX_CPU_THIS_PTR monitor.monitor_addr, CACHE_LINE_SIZE, ECX);
 
 #if BX_USE_IDLE_HACK
   bx_gui->sim_is_idle();

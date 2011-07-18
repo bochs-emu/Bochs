@@ -541,9 +541,8 @@ void BX_CPU_C::register_state(void)
 #endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  bx_list_c *monitor_list = new bx_list_c(cpu, "MONITOR", 3);
-  BXRS_HEX_PARAM_FIELD(monitor_list, begin_addr, monitor.monitor_begin);
-  BXRS_HEX_PARAM_FIELD(monitor_list, end_addr,   monitor.monitor_end);
+  bx_list_c *monitor_list = new bx_list_c(cpu, "MONITOR", 2);
+  BXRS_HEX_PARAM_FIELD(monitor_list, monitor_addr, monitor.monitor_addr);
   BXRS_PARAM_BOOL(monitor_list, armed, monitor.armed);
 #endif
 
@@ -1238,9 +1237,4 @@ void BX_CPU_C::assert_checks(void)
         BX_PANIC(("assert_checks: TR is not TSS type !"));
     }
   }
-
-#if BX_SUPPORT_MONITOR_MWAIT
-  if (BX_CPU_THIS_PTR monitor.monitor_end < BX_CPU_THIS_PTR monitor.monitor_begin)
-    BX_PANIC(("assert_checks: MONITOR range is not set correctly !"));
-#endif
 }
