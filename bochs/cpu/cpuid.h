@@ -31,6 +31,52 @@ struct cpuid_function_t {
   Bit32u edx;
 };
 
+// cpuid ISA (duplicated in disasm.h)
+#define BX_CPU_X87              (1 << 0)        /* FPU (X87) instruction */
+#define BX_CPU_486              (1 << 1)        /* 486 new instruction */
+#define BX_CPU_PENTIUM          (1 << 2)        /* Pentium new instruction */
+#define BX_CPU_P6               (1 << 3)        /* P6 new instruction */
+#define BX_CPU_MMX              (1 << 4)        /* MMX instruction */
+#define BX_CPU_3DNOW            (1 << 5)        /* 3DNow! instruction */
+#define BX_CPU_FXSAVE_FXRSTOR   (1 << 6)        /* FXSAVE/FXRSTOR instruction */
+#define BX_CPU_SYSENTER_SYSEXIT (1 << 7)        /* SYSENTER/SYSEXIT instruction */
+#define BX_CPU_CLFLUSH          (1 << 8)        /* CLFLUSH instruction */
+#define BX_CPU_SSE              (1 << 9)        /* SSE  instruction */
+#define BX_CPU_SSE2             (1 << 10)       /* SSE2 instruction */
+#define BX_CPU_SSE3             (1 << 11)       /* SSE3 instruction */
+#define BX_CPU_SSSE3            (1 << 12)       /* SSSE3 instruction */
+#define BX_CPU_SSE4_1           (1 << 13)       /* SSE4_1 instruction */
+#define BX_CPU_SSE4_2           (1 << 14)       /* SSE4_2 instruction */
+#define BX_CPU_MONITOR_MWAIT    (1 << 15)       /* MONITOR/MWAIT instruction */
+#define BX_CPU_VMX              (1 << 16)       /* VMX instruction */
+#define BX_CPU_SMX              (1 << 17)       /* SMX instruction */
+#define BX_CPU_SVM              (1 << 18)       /* SVM instruction */
+#define BX_CPU_XSAVE            (1 << 19)       /* XSAVE/XRSTOR extensions instruction */
+#define BX_CPU_XSAVEOPT         (1 << 20)       /* XSAVEOPT instruction */
+#define BX_CPU_AES_PCLMULQDQ    (1 << 21)       /* AES+PCLMULQDQ instruction */
+#define BX_CPU_MOVBE            (1 << 22)       /* MOVBE Intel Atom(R) instruction */
+#define BX_CPU_FSGSBASE         (1 << 23)       /* FS/GS BASE access instruction */
+#define BX_CPU_INVPCID          (1 << 24)       /* INVPCID instruction */
+#define BX_CPU_AVX              (1 << 25)       /* AVX instruction */
+#define BX_CPU_AVX_F16C         (1 << 26)       /* AVX F16 convert instruction */
+#define BX_CPU_AVX_FMA          (1 << 27)       /* AVX FMA instruction */
+#define BX_CPU_X86_64           (1 << 28)       /* x86-64 instruction */
+#define BX_CPU_BMI              (1 << 29)       /* BMI instruction */
+
+// cpuid non-ISA features
+#define BX_CPU_DEBUG_EXTENSIONS (1 << 0)        /* Debug Extensions support */
+#define BX_CPU_VME              (1 << 1)        /* VME support */
+#define BX_CPU_PSE              (1 << 2)        /* PSE support */
+#define BX_CPU_PAE              (1 << 3)        /* PAE support */
+#define BX_CPU_PGE              (1 << 4)        /* Global Pages support */
+#define BX_CPU_PSE36            (1 << 5)        /* PSE-36 support */
+#define BX_CPU_PAT_MTRR         (1 << 6)        /* PAT and MTRR support */
+#define BX_CPU_XAPIC            (1 << 7)        /* XAPIC support */
+#define BX_CPU_X2APIC           (1 << 8)        /* X2APIC support */
+#define BX_CPU_1G_PAGES         (1 << 9)        /* 1Gb pages support */
+#define BX_CPU_PCID             (1 << 10)       /* PCID pages support */
+#define BX_CPU_SMEP             (1 << 11)       /* SMEP support */
+
 // CPUID defines - STD features CPUID[0x00000001].EDX
 // ----------------------------
 
