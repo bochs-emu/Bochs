@@ -52,7 +52,7 @@ void BX_CPU_C::set_VMCSPTR(Bit64u vmxptr)
     BX_CPU_THIS_PTR vmcshostptr = 0;
 }
 
-Bit16u BX_CPU_C::VMread16(unsigned encoding)
+Bit16u BX_CPP_AttrRegparmN(1) BX_CPU_C::VMread16(unsigned encoding)
 {
   Bit16u field;
 
@@ -77,7 +77,7 @@ Bit16u BX_CPU_C::VMread16(unsigned encoding)
 }
 
 // write 16-bit value into VMCS 16-bit field
-void BX_CPU_C::VMwrite16(unsigned encoding, Bit16u val_16)
+void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMwrite16(unsigned encoding, Bit16u val_16)
 {
   unsigned offset = vmcs_field_offset(encoding);
   if(offset >= VMX_VMCS_AREA_SIZE)
@@ -98,7 +98,7 @@ void BX_CPU_C::VMwrite16(unsigned encoding, Bit16u val_16)
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 2, BX_VMCS_ACCESS | BX_WRITE, (Bit8u*)(&val_16));
 }
 
-Bit32u BX_CPU_C::VMread32(unsigned encoding)
+Bit32u BX_CPP_AttrRegparmN(1) BX_CPU_C::VMread32(unsigned encoding)
 {
   Bit32u field;
 
@@ -121,7 +121,7 @@ Bit32u BX_CPU_C::VMread32(unsigned encoding)
 }
 
 // write 32-bit value into VMCS field
-void BX_CPU_C::VMwrite32(unsigned encoding, Bit32u val_32)
+void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMwrite32(unsigned encoding, Bit32u val_32)
 {
   unsigned offset = vmcs_field_offset(encoding);
   if(offset >= VMX_VMCS_AREA_SIZE)
@@ -140,7 +140,7 @@ void BX_CPU_C::VMwrite32(unsigned encoding, Bit32u val_32)
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_VMCS_ACCESS | BX_WRITE, (Bit8u*)(&val_32));
 }
 
-Bit64u BX_CPU_C::VMread64(unsigned encoding)
+Bit64u BX_CPP_AttrRegparmN(1) BX_CPU_C::VMread64(unsigned encoding)
 {
   BX_ASSERT(!IS_VMCS_FIELD_HI(encoding));
 
@@ -165,7 +165,7 @@ Bit64u BX_CPU_C::VMread64(unsigned encoding)
 }
 
 // write 64-bit value into VMCS field
-void BX_CPU_C::VMwrite64(unsigned encoding, Bit64u val_64)
+void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMwrite64(unsigned encoding, Bit64u val_64)
 {
   BX_ASSERT(!IS_VMCS_FIELD_HI(encoding));
 
@@ -185,6 +185,28 @@ void BX_CPU_C::VMwrite64(unsigned encoding, Bit64u val_64)
 
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 8, BX_VMCS_ACCESS | BX_WRITE, (Bit8u*)(&val_64));
 }
+
+#if BX_SUPPIRT_X86_64
+BX_CPP_INLINE bx_address BX_CPP_AttrRegparmN(1) BX_CPU_C::VMread_natural(unsigned encoding)
+{
+  return VMread64(encoding);
+}
+
+void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMwrite_natural(unsigned encoding, bx_address val)
+{
+  VMwrite64(encoding, val);
+}
+#else
+BX_CPP_INLINE bx_address BX_CPP_AttrRegparmN(1) BX_CPU_C::VMread_natural(unsigned encoding)
+{
+  return VMread32(encoding);
+}
+
+void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMwrite_natural(unsigned encoding, bx_address val)
+{
+  VMwrite32(encoding, val);
+}
+#endif
 
 ////////////////////////////////////////////////////////////
 // VMfail/VMsucceed
@@ -305,14 +327,14 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   vm->vm_pf_mask = VMread32(VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MASK);
   vm->vm_pf_match = VMread32(VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MATCH);
   vm->tsc_offset = VMread64(VMCS_64BIT_CONTROL_TSC_OFFSET);
-  vm->vm_cr0_mask = VMread64(VMCS_CONTROL_CR0_GUEST_HOST_MASK);
-  vm->vm_cr4_mask = VMread64(VMCS_CONTROL_CR4_GUEST_HOST_MASK);
-  vm->vm_cr0_read_shadow = VMread64(VMCS_CONTROL_CR0_READ_SHADOW);
-  vm->vm_cr4_read_shadow = VMread64(VMCS_CONTROL_CR4_READ_SHADOW);
+  vm->vm_cr0_mask = VMread_natural(VMCS_CONTROL_CR0_GUEST_HOST_MASK);
+  vm->vm_cr4_mask = VMread_natural(VMCS_CONTROL_CR4_GUEST_HOST_MASK);
+  vm->vm_cr0_read_shadow = VMread_natural(VMCS_CONTROL_CR0_READ_SHADOW);
+  vm->vm_cr4_read_shadow = VMread_natural(VMCS_CONTROL_CR4_READ_SHADOW);
 
   vm->vm_cr3_target_cnt = VMread32(VMCS_32BIT_CONTROL_CR3_TARGET_COUNT);
   for (int n=0; n<VMX_CR3_TARGET_MAX_CNT; n++)
-    vm->vm_cr3_target_value[n] = VMread64(VMCS_CR3_TARGET0 + 2*n);
+    vm->vm_cr3_target_value[n] = VMread_natural(VMCS_CR3_TARGET0 + 2*n);
 
   vm->executive_vmcsptr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_EXECUTIVE_VMCS_PTR);
 
@@ -659,7 +681,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
   // Load and Check VM Host State to VMCS Cache
   //
 
-  host_state->cr0 = (bx_address) VMread64(VMCS_HOST_CR0);
+  host_state->cr0 = (bx_address) VMread_natural(VMCS_HOST_CR0);
   if (~host_state->cr0 & VMX_MSR_CR0_FIXED0) {
      BX_ERROR(("VMFAIL: VMCS host state invalid CR0 0x%08x", (Bit32u) host_state->cr0));
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
@@ -670,7 +692,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
   }
 
-  host_state->cr3 = (bx_address) VMread64(VMCS_HOST_CR3);
+  host_state->cr3 = (bx_address) VMread_natural(VMCS_HOST_CR3);
 #if BX_SUPPORT_X86_64
   if (! IsValidPhyAddr(host_state->cr3)) {
      BX_ERROR(("VMFAIL: VMCS host state invalid CR3"));
@@ -678,7 +700,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
   }
 #endif
 
-  host_state->cr4 = (bx_address) VMread64(VMCS_HOST_CR4);
+  host_state->cr4 = (bx_address) VMread_natural(VMCS_HOST_CR4);
   if (~host_state->cr4 & VMX_MSR_CR4_FIXED0) {
      BX_ERROR(("VMFAIL: VMCS host state invalid CR4 0x" FMT_ADDRX, host_state->cr4));
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
@@ -712,7 +734,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
   }
 
-  host_state->tr_base = (bx_address) VMread64(VMCS_HOST_TR_BASE);
+  host_state->tr_base = (bx_address) VMread_natural(VMCS_HOST_TR_BASE);
 #if BX_SUPPORT_X86_64
   if (! IsCanonical(host_state->tr_base)) {
      BX_ERROR(("VMFAIL: VMCS host TR BASE non canonical"));
@@ -720,8 +742,8 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
   }
 #endif
 
-  host_state->fs_base = (bx_address) VMread64(VMCS_HOST_FS_BASE);
-  host_state->gs_base = (bx_address) VMread64(VMCS_HOST_GS_BASE);
+  host_state->fs_base = (bx_address) VMread_natural(VMCS_HOST_FS_BASE);
+  host_state->gs_base = (bx_address) VMread_natural(VMCS_HOST_GS_BASE);
 #if BX_SUPPORT_X86_64
   if (! IsCanonical(host_state->fs_base)) {
      BX_ERROR(("VMFAIL: VMCS host FS BASE non canonical"));
@@ -733,8 +755,8 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
   }
 #endif
 
-  host_state->gdtr_base = (bx_address) VMread64(VMCS_HOST_GDTR_BASE);
-  host_state->idtr_base = (bx_address) VMread64(VMCS_HOST_IDTR_BASE);
+  host_state->gdtr_base = (bx_address) VMread_natural(VMCS_HOST_GDTR_BASE);
+  host_state->idtr_base = (bx_address) VMread_natural(VMCS_HOST_IDTR_BASE);
 #if BX_SUPPORT_X86_64
   if (! IsCanonical(host_state->gdtr_base)) {
      BX_ERROR(("VMFAIL: VMCS host GDTR BASE non canonical"));
@@ -746,8 +768,8 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
   }
 #endif
 
-  host_state->sysenter_esp_msr = (bx_address) VMread64(VMCS_HOST_IA32_SYSENTER_ESP_MSR);
-  host_state->sysenter_eip_msr = (bx_address) VMread64(VMCS_HOST_IA32_SYSENTER_EIP_MSR);
+  host_state->sysenter_esp_msr = (bx_address) VMread_natural(VMCS_HOST_IA32_SYSENTER_ESP_MSR);
+  host_state->sysenter_eip_msr = (bx_address) VMread_natural(VMCS_HOST_IA32_SYSENTER_EIP_MSR);
   host_state->sysenter_cs_msr = (Bit16u) VMread32(VMCS_32BIT_HOST_IA32_SYSENTER_CS_MSR);
 
 #if BX_SUPPORT_X86_64
@@ -772,8 +794,8 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
   }
 #endif
 
-  host_state->rsp = (bx_address) VMread64(VMCS_HOST_RSP);
-  host_state->rip = (bx_address) VMread64(VMCS_HOST_RIP);
+  host_state->rsp = (bx_address) VMread_natural(VMCS_HOST_RSP);
+  host_state->rip = (bx_address) VMread_natural(VMCS_HOST_RIP);
 
 #if BX_SUPPORT_X86_64
 
@@ -853,7 +875,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   // Load and Check Guest State from VMCS
   //
 
-  guest.rflags = VMread64(VMCS_GUEST_RFLAGS);
+  guest.rflags = VMread_natural(VMCS_GUEST_RFLAGS);
   // RFLAGS reserved bits [63:22], bit 15, bit 5, bit 3 must be zero
   if (guest.rflags & BX_CONST64(0xFFFFFFFFFFC08028)) {
      BX_ERROR(("VMENTER FAIL: RFLAGS reserved bits are set"));
@@ -883,7 +905,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
   }
 
-  guest.cr0 = VMread64(VMCS_GUEST_CR0);
+  guest.cr0 = VMread_natural(VMCS_GUEST_CR0);
 
 #if BX_SUPPORT_VMX >= 2
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST) {
@@ -919,7 +941,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
      real_mode_guest = 1;
 #endif
 
-  guest.cr3 = VMread64(VMCS_GUEST_CR3);
+  guest.cr3 = VMread_natural(VMCS_GUEST_CR3);
 #if BX_SUPPORT_X86_64
   if (! IsValidPhyAddr(guest.cr3)) {
      BX_ERROR(("VMENTER FAIL: VMCS guest invalid CR3"));
@@ -927,7 +949,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   }
 #endif
 
-  guest.cr4 = VMread64(VMCS_GUEST_CR4);
+  guest.cr4 = VMread_natural(VMCS_GUEST_CR4);
   if (~guest.cr4 & VMX_MSR_CR4_FIXED0) {
      BX_ERROR(("VMENTER FAIL: VMCS guest invalid CR4"));
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
@@ -955,7 +977,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
 #if BX_SUPPORT_X86_64
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS) {
-     guest.dr7 = VMread64(VMCS_GUEST_DR7);
+     guest.dr7 = VMread_natural(VMCS_GUEST_DR7);
      if (GET32H(guest.dr7)) {
         BX_ERROR(("VMENTER FAIL: VMCS guest invalid DR7"));
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
@@ -969,7 +991,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
   for (n=0; n<6; n++) {
      Bit16u selector = VMread16(VMCS_16BIT_GUEST_ES_SELECTOR + 2*n);
-     bx_address base = (bx_address) VMread64(VMCS_GUEST_ES_BASE + 2*n);
+     bx_address base = (bx_address) VMread_natural(VMCS_GUEST_ES_BASE + 2*n);
      Bit32u limit = VMread32(VMCS_32BIT_GUEST_ES_LIMIT + 2*n);
      Bit32u ar = VMread32(VMCS_32BIT_GUEST_ES_ACCESS_RIGHTS + 2*n) >> 8;
      bx_bool invalid = (ar >> 16) & 1;
@@ -1146,9 +1168,9 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   // Load and Check Guest State from VMCS - GDTR/IDTR
   //
 
-  Bit64u gdtr_base = VMread64(VMCS_GUEST_GDTR_BASE);
+  Bit64u gdtr_base = VMread_natural(VMCS_GUEST_GDTR_BASE);
   Bit32u gdtr_limit = VMread32(VMCS_32BIT_GUEST_GDTR_LIMIT);
-  Bit64u idtr_base = VMread64(VMCS_GUEST_IDTR_BASE);
+  Bit64u idtr_base = VMread_natural(VMCS_GUEST_IDTR_BASE);
   Bit32u idtr_limit = VMread32(VMCS_32BIT_GUEST_IDTR_LIMIT);
 
 #if BX_SUPPORT_X86_64
@@ -1167,7 +1189,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   //
 
   Bit16u ldtr_selector = VMread16(VMCS_16BIT_GUEST_LDTR_SELECTOR);
-  Bit64u ldtr_base = VMread64(VMCS_GUEST_LDTR_BASE);
+  Bit64u ldtr_base = VMread_natural(VMCS_GUEST_LDTR_BASE);
   Bit32u ldtr_limit = VMread32(VMCS_32BIT_GUEST_LDTR_LIMIT);
   Bit32u ldtr_ar = VMread32(VMCS_32BIT_GUEST_LDTR_ACCESS_RIGHTS) >> 8;
   bx_bool ldtr_invalid = (ldtr_ar >> 16) & 1;
@@ -1208,7 +1230,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   //
 
   Bit16u tr_selector = VMread16(VMCS_16BIT_GUEST_TR_SELECTOR);
-  Bit64u tr_base = VMread64(VMCS_GUEST_TR_BASE);
+  Bit64u tr_base = VMread_natural(VMCS_GUEST_TR_BASE);
   Bit32u tr_limit = VMread32(VMCS_32BIT_GUEST_TR_LIMIT);
   Bit32u tr_ar = VMread32(VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS) >> 8;
   bx_bool tr_invalid = (tr_ar >> 16) & 1;
@@ -1262,8 +1284,8 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   guest.ia32_debugctl_msr = VMread64(VMCS_64BIT_GUEST_IA32_DEBUGCTL);
   guest.smbase = VMread32(VMCS_32BIT_GUEST_SMBASE);
 
-  guest.sysenter_esp_msr = VMread64(VMCS_GUEST_IA32_SYSENTER_ESP_MSR);
-  guest.sysenter_eip_msr = VMread64(VMCS_GUEST_IA32_SYSENTER_EIP_MSR);
+  guest.sysenter_esp_msr = VMread_natural(VMCS_GUEST_IA32_SYSENTER_ESP_MSR);
+  guest.sysenter_eip_msr = VMread_natural(VMCS_GUEST_IA32_SYSENTER_EIP_MSR);
   guest.sysenter_cs_msr = VMread32(VMCS_32BIT_GUEST_IA32_SYSENTER_CS_MSR);
 
 #if BX_SUPPORT_X86_64
@@ -1287,8 +1309,8 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   }
 #endif
 
-  guest.rip = VMread64(VMCS_GUEST_RIP);
-  guest.rsp = VMread64(VMCS_GUEST_RSP);
+  guest.rip = VMread_natural(VMCS_GUEST_RIP);
+  guest.rsp = VMread_natural(VMCS_GUEST_RSP);
 
 #if BX_SUPPORT_VMX >= 2 && BX_SUPPORT_X86_64
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_EFER_MSR) {
@@ -1348,7 +1370,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     }
   }
 
-  guest.tmpDR6 = VMread64(VMCS_GUEST_PENDING_DBG_EXCEPTIONS);
+  guest.tmpDR6 = VMread_natural(VMCS_GUEST_PENDING_DBG_EXCEPTIONS);
   if (guest.tmpDR6 & BX_CONST64(0xFFFFFFFFFFFFAFF0)) {
     BX_ERROR(("VMENTER FAIL: VMCS guest tmpDR6 reserved bits"));
     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
@@ -1752,9 +1774,9 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
   int n;
 
-  VMwrite64(VMCS_GUEST_CR0, BX_CPU_THIS_PTR cr0.get32());
-  VMwrite64(VMCS_GUEST_CR3, BX_CPU_THIS_PTR cr3);
-  VMwrite64(VMCS_GUEST_CR4, BX_CPU_THIS_PTR cr4.get32());
+  VMwrite_natural(VMCS_GUEST_CR0, BX_CPU_THIS_PTR cr0.get32());
+  VMwrite_natural(VMCS_GUEST_CR3, BX_CPU_THIS_PTR cr3);
+  VMwrite_natural(VMCS_GUEST_CR4, BX_CPU_THIS_PTR cr4.get32());
 
 #if BX_SUPPORT_VMX >= 2
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_EPT_ENABLE) {
@@ -1771,11 +1793,11 @@ void BX_CPU_C::VMexitSaveGuestState(void)
 #endif
 
   if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_SAVE_DBG_CTRLS)
-     VMwrite64(VMCS_GUEST_DR7, BX_CPU_THIS_PTR dr7.get32());
+     VMwrite_natural(VMCS_GUEST_DR7, BX_CPU_THIS_PTR dr7.get32());
 
-  VMwrite64(VMCS_GUEST_RIP, RIP);
-  VMwrite64(VMCS_GUEST_RSP, RSP);
-  VMwrite64(VMCS_GUEST_RFLAGS, BX_CPU_THIS_PTR read_eflags());
+  VMwrite_natural(VMCS_GUEST_RIP, RIP);
+  VMwrite_natural(VMCS_GUEST_RSP, RSP);
+  VMwrite_natural(VMCS_GUEST_RFLAGS, BX_CPU_THIS_PTR read_eflags());
 
   for (n=0; n<6; n++) {
      Bit32u selector = BX_CPU_THIS_PTR sregs[n].selector.value;
@@ -1785,7 +1807,7 @@ void BX_CPU_C::VMexitSaveGuestState(void)
      Bit32u ar = get_descriptor_h(&BX_CPU_THIS_PTR sregs[n].cache) & 0x00f0ff00;
 
      VMwrite16(VMCS_16BIT_GUEST_ES_SELECTOR + 2*n, selector);
-     VMwrite64(VMCS_GUEST_ES_BASE + 2*n, base);
+     VMwrite_natural(VMCS_GUEST_ES_BASE + 2*n, base);
      VMwrite32(VMCS_32BIT_GUEST_ES_LIMIT + 2*n, limit);
      VMwrite32(VMCS_32BIT_GUEST_ES_ACCESS_RIGHTS + 2*n, ar | (invalid << 24));
   }
@@ -1798,7 +1820,7 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   Bit32u ldtr_ar = get_descriptor_h(&BX_CPU_THIS_PTR ldtr.cache) & 0x00f0ff00;
 
   VMwrite16(VMCS_16BIT_GUEST_LDTR_SELECTOR, ldtr_selector);
-  VMwrite64(VMCS_GUEST_LDTR_BASE, ldtr_base);
+  VMwrite_natural(VMCS_GUEST_LDTR_BASE, ldtr_base);
   VMwrite32(VMCS_32BIT_GUEST_LDTR_LIMIT, ldtr_limit);
   VMwrite32(VMCS_32BIT_GUEST_LDTR_ACCESS_RIGHTS, ldtr_ar | (ldtr_invalid << 24));
 
@@ -1810,17 +1832,17 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   Bit32u tr_ar = get_descriptor_h(&BX_CPU_THIS_PTR tr.cache) & 0x00f0ff00;
 
   VMwrite16(VMCS_16BIT_GUEST_TR_SELECTOR, tr_selector);
-  VMwrite64(VMCS_GUEST_TR_BASE, tr_base);
+  VMwrite_natural(VMCS_GUEST_TR_BASE, tr_base);
   VMwrite32(VMCS_32BIT_GUEST_TR_LIMIT, tr_limit);
   VMwrite32(VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS, tr_ar | (tr_invalid << 24));
 
-  VMwrite64(VMCS_GUEST_GDTR_BASE, BX_CPU_THIS_PTR gdtr.base);
+  VMwrite_natural(VMCS_GUEST_GDTR_BASE, BX_CPU_THIS_PTR gdtr.base);
   VMwrite32(VMCS_32BIT_GUEST_GDTR_LIMIT, BX_CPU_THIS_PTR gdtr.limit);
-  VMwrite64(VMCS_GUEST_IDTR_BASE, BX_CPU_THIS_PTR idtr.base);
+  VMwrite_natural(VMCS_GUEST_IDTR_BASE, BX_CPU_THIS_PTR idtr.base);
   VMwrite32(VMCS_32BIT_GUEST_IDTR_LIMIT, BX_CPU_THIS_PTR idtr.limit);
 
-  VMwrite64(VMCS_GUEST_IA32_SYSENTER_ESP_MSR, BX_CPU_THIS_PTR msr.sysenter_esp_msr);
-  VMwrite64(VMCS_GUEST_IA32_SYSENTER_EIP_MSR, BX_CPU_THIS_PTR msr.sysenter_eip_msr);
+  VMwrite_natural(VMCS_GUEST_IA32_SYSENTER_ESP_MSR, BX_CPU_THIS_PTR msr.sysenter_esp_msr);
+  VMwrite_natural(VMCS_GUEST_IA32_SYSENTER_EIP_MSR, BX_CPU_THIS_PTR msr.sysenter_eip_msr);
   VMwrite32(VMCS_32BIT_GUEST_IA32_SYSENTER_CS_MSR, BX_CPU_THIS_PTR msr.sysenter_cs_msr);
 
 #if BX_SUPPORT_VMX >= 2
@@ -1834,7 +1856,7 @@ void BX_CPU_C::VMexitSaveGuestState(void)
 
   Bit32u tmpDR6 = BX_CPU_THIS_PTR debug_trap;
   if (tmpDR6 & 0xf) tmpDR6 |= (1 << 12);
-  VMwrite64(VMCS_GUEST_PENDING_DBG_EXCEPTIONS, tmpDR6 & 0x0000500f);
+  VMwrite_natural(VMCS_GUEST_PENDING_DBG_EXCEPTIONS, tmpDR6 & 0x0000500f);
   
   Bit32u interruptibility_state = 0;
   if (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_INTERRUPTS_SHADOW) {
@@ -2080,7 +2102,7 @@ void BX_CPU_C::VMexit(bxInstruction_c *i, Bit32u reason, Bit64u qualification)
   //
 
   VMwrite32(VMCS_32BIT_VMEXIT_REASON, reason);
-  VMwrite64(VMCS_VMEXIT_QUALIFICATION, qualification);
+  VMwrite_natural(VMCS_VMEXIT_QUALIFICATION, qualification);
 
   if (i != 0)
      VMwrite32(VMCS_32BIT_VMEXIT_INSTRUCTION_LENGTH, i->ilen());
@@ -2638,11 +2660,19 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
     else
       field_64 = VMread32(encoding);
   }
-  else {
+  else if(width == VMCS_FIELD_WIDTH_64BIT) {
     if (IS_VMCS_FIELD_HI(encoding))
       field_64 = VMread32(encoding);
     else
       field_64 = VMread64(encoding);
+  }
+  else {
+#if BX_SUPPORT_X86_64
+    if (IS_VMCS_FIELD_HI(encoding))
+      field_64 = VMread32(encoding);
+    else
+#endif
+      field_64 = VMread_natural(encoding);
   }
 
 #if BX_SUPPORT_X86_64
@@ -2759,11 +2789,19 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     else
       VMwrite32(encoding, val_32);
   }
-  else {
+  else if(width == VMCS_FIELD_WIDTH_64BIT) {
     if (IS_VMCS_FIELD_HI(encoding))
       VMwrite32(encoding, val_32);
     else
       VMwrite64(encoding, val_64);
+  }
+  else {
+#if BX_SUPPORT_X86_64
+    if (IS_VMCS_FIELD_HI(encoding))
+      VMwrite32(encoding, val_32);
+    else
+#endif
+      VMwrite_natural(encoding, val_64);
   }
 
   VMsucceed();

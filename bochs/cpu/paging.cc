@@ -1348,7 +1348,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
       (vmexit_reason == VMX_VMEXIT_EPT_VIOLATION) ? "violation" : "misconfig", guest_paddr, guest_laddr));
     VMwrite64(VMCS_64BIT_GUEST_PHYSICAL_ADDR, guest_paddr);
     if (guest_laddr_valid) {
-      VMwrite64(VMCS_GUEST_LINEAR_ADDR, guest_laddr);
+      VMwrite_natural(VMCS_GUEST_LINEAR_ADDR, guest_laddr);
       vmexit_qualification |= 0x80;
       if (is_page_walk) vmexit_qualification |= 0x100;
     }
