@@ -186,7 +186,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMwrite64(unsigned encoding, Bit64u val_64
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 8, BX_VMCS_ACCESS | BX_WRITE, (Bit8u*)(&val_64));
 }
 
-#if BX_SUPPIRT_X86_64
+#if BX_SUPPORT_X86_64
 BX_CPP_INLINE bx_address BX_CPP_AttrRegparmN(1) BX_CPU_C::VMread_natural(unsigned encoding)
 {
   return VMread64(encoding);
@@ -2801,7 +2801,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
       VMwrite32(encoding, val_32);
     else
 #endif
-      VMwrite_natural(encoding, val_64);
+      VMwrite_natural(encoding, (bx_address) val_64);
   }
 
   VMsucceed();
