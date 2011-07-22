@@ -269,6 +269,8 @@ enum VMX_vmabort_code {
 #define VMCS_32BIT_CONTROL_VMENTRY_INSTRUCTION_LENGTH      0x0000401A
 #define VMCS_32BIT_CONTROL_TPR_THRESHOLD                   0x0000401C
 #define VMCS_32BIT_CONTROL_SECONDARY_VMEXEC_CONTROLS       0x0000401E
+#define VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_GAP          0x00004020
+#define VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_WINDOW       0x00004022
 
 /* VMCS 32-bit read only data fields */
 /* binary 0100_01xx_xxxx_xxx0 */
@@ -369,7 +371,7 @@ enum VMX_vmabort_code {
 #define VMCS_HOST_RSP                                      0x00006C14
 #define VMCS_HOST_RIP                                      0x00006C16
 
-#define VMX_HIGHEST_VMCS_ENCODING   (0x2F)
+#define VMX_HIGHEST_VMCS_ENCODING   (0x30)
 
 // ===============================
 //  VMCS fields encoding/decoding
@@ -604,7 +606,8 @@ typedef struct bx_VMCS
     VMX_VM_EXEC_CTRL3_VIRTUALIZE_X2APIC_MODE | \
     VMX_VM_EXEC_CTRL3_VPID_ENABLE | \
     VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT | \
-    VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST)
+    VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST | \
+    VMX_VM_EXEC_CTRL3_PAUSE_LOOP_VMEXIT)
 
 #endif
 
@@ -675,6 +678,13 @@ typedef struct bx_VMCS
    bx_phy_address vmexit_msr_store_addr;
    Bit32u vmexit_msr_load_cnt;
    bx_phy_address vmexit_msr_load_addr;
+
+#if BX_SUPPORT_VMX >= 2
+   Bit32u pause_loop_exiting_gap;
+   Bit32u pause_loop_exiting_window;
+   Bit64u last_pause_time; // used for pause loop exiting
+   Bit32u first_pause_time;
+#endif
    
    //
    // VM-Entry Control Fields

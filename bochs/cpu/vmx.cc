@@ -528,6 +528,13 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      }
   }
 
+#if BX_SUPPORT_VMX >= 2
+  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_PAUSE_LOOP_VMEXIT) {
+   vm->pause_loop_exiting_gap = VMread32(VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_GAP);
+   vm->pause_loop_exiting_window = VMread32(VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_WINDOW);
+  }
+#endif
+
   //
   // Load VM-entry control fields to VMCS Cache
   //
@@ -1560,6 +1567,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_PAT_MSR) {
     BX_CPU_THIS_PTR msr.pat = guest.pat_msr;
   }
+  vm->first_pause_time = vm->last_pause_time = 0;
 #endif
 
   //

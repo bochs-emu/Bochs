@@ -154,6 +154,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_PAUSE(bxInstruction_c *i)
     BX_ERROR(("VMEXIT: PAUSE"));
     VMexit(i, VMX_VMEXIT_PAUSE, 0);
   }
+
+  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_PAUSE_LOOP_VMEXIT) && CPL == 0) {
+    VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+    Bit64u currtime = bx_pc_system.time_ticks();
+    if ((currtime - vm->last_pause_time) > vm->pause_loop_exiting_gap) {
+      vm->first_pause_time = currtime;
+    }
+    else {
+      if ((currtime - vm->first_pause_time) > vm->pause_loop_exiting_window)
+        VMexit(i, VMX_VMEXIT_PAUSE, 0);
+    }
+    vm->last_pause_time = currtime;
+  }
 }
 
 void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_INVLPG(bxInstruction_c *i, bx_address laddr)
