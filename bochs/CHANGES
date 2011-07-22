@@ -13,6 +13,7 @@ Bochs repository moved to the SVN version control !
   - Added emulation of AVX float16 convert instructions, the feature can be
     enabled using .bochsrc CPUID option.
   - Implemented VMX preemption timer VMEXIT control (patch by Jianan Hao)
+  - Implemented Pause-Loop Exiting Secondary VMEXIT control
   - Redefined/Updated/Fixed instrumentation callbacks.
   - Bugfixes for CPU emulation correctness and stability.
 

@@ -640,6 +640,13 @@ typedef struct bx_VMCS
 
    Bit64u executive_vmcsptr;
 
+#if BX_SUPPORT_VMX >= 2
+   Bit32u pause_loop_exiting_gap;
+   Bit32u pause_loop_exiting_window;
+   Bit64u last_pause_time; // used for pause loop exiting
+   Bit32u first_pause_time;
+#endif
+
    //
    // VM-Exit Control Fields
    //
@@ -679,13 +686,6 @@ typedef struct bx_VMCS
    Bit32u vmexit_msr_load_cnt;
    bx_phy_address vmexit_msr_load_addr;
 
-#if BX_SUPPORT_VMX >= 2
-   Bit32u pause_loop_exiting_gap;
-   Bit32u pause_loop_exiting_window;
-   Bit64u last_pause_time; // used for pause loop exiting
-   Bit32u first_pause_time;
-#endif
-   
    //
    // VM-Entry Control Fields
    //

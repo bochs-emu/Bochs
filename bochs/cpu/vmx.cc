@@ -470,6 +470,11 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
   }
+
+  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_PAUSE_LOOP_VMEXIT) {
+     vm->pause_loop_exiting_gap = VMread32(VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_GAP);
+     vm->pause_loop_exiting_window = VMread32(VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_WINDOW);
+  }
 #endif
 
   //
@@ -527,13 +532,6 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
   }
-
-#if BX_SUPPORT_VMX >= 2
-  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_PAUSE_LOOP_VMEXIT) {
-   vm->pause_loop_exiting_gap = VMread32(VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_GAP);
-   vm->pause_loop_exiting_window = VMread32(VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_WINDOW);
-  }
-#endif
 
   //
   // Load VM-entry control fields to VMCS Cache
@@ -3035,7 +3033,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   // VM-Execution Control Fields
   //
 
-  bx_list_c *vmexec_ctrls = new bx_list_c(vmcache, "VMEXEC_CTRLS", 25);
+  bx_list_c *vmexec_ctrls = new bx_list_c(vmcache, "VMEXEC_CTRLS", 29);
 
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls1, BX_CPU_THIS_PTR vmcs.vmexec_ctrls1);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls2, BX_CPU_THIS_PTR vmcs.vmexec_ctrls2);
@@ -3064,6 +3062,12 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vpid, BX_CPU_THIS_PTR vmcs.vpid);
 #endif
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, executive_vmcsptr, BX_CPU_THIS_PTR vmcs.executive_vmcsptr);
+#if BX_SUPPORT_VMX >= 2
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, pause_loop_exiting_gap, BX_CPU_THIS_PTR vmcs.pause_loop_exiting_gap);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, pause_loop_exiting_window, BX_CPU_THIS_PTR vmcs.pause_loop_exiting_window);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, first_pause_time, BX_CPU_THIS_PTR vmcs.first_pause_time);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, last_pause_time, BX_CPU_THIS_PTR vmcs.last_pause_time);
+#endif
 
   //
   // VM-Exit Control Fields
@@ -3076,7 +3080,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmexit_ctrls, vmexit_msr_store_addr, BX_CPU_THIS_PTR vmcs.vmexit_msr_store_addr);
   BXRS_DEC_PARAM_FIELD(vmexit_ctrls, vmexit_msr_load_cnt, BX_CPU_THIS_PTR vmcs.vmexit_msr_load_cnt);
   BXRS_HEX_PARAM_FIELD(vmexit_ctrls, vmexit_msr_load_addr, BX_CPU_THIS_PTR vmcs.vmexit_msr_load_addr);
-   
+
   //
   // VM-Entry Control Fields
   //
