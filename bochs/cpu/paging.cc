@@ -1791,3 +1791,15 @@ bx_hostpageaddr_t BX_CPU_C::getHostMemAddr(bx_phy_address ppf, unsigned rw)
 
   return (bx_hostpageaddr_t) BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, ppf, rw);
 }
+
+#if BX_LARGE_RAMFILE
+bx_bool BX_CPU_C::check_addr_in_tlb_buffers(const Bit8u *addr, const Bit8u *end)
+{
+  for (unsigned tlb_entry_num=0; tlb_entry_num < BX_TLB_SIZE; tlb_entry_num++) {
+    if (((BX_CPU_THIS_PTR TLB.entry[tlb_entry_num].hostPageAddr)>=(const bx_hostpageaddr_t)addr) &&
+        ((BX_CPU_THIS_PTR TLB.entry[tlb_entry_num].hostPageAddr)<(const bx_hostpageaddr_t)end))
+      return true;
+  }
+  return false;
+}
+#endif

@@ -816,6 +816,41 @@ bx_shadow_data_c::bx_shadow_data_c(bx_param_c *parent,
     this->parent->add(this);
   }
 }
+  
+bx_shadow_filedata_c::bx_shadow_filedata_c(bx_param_c *parent,
+    const char *name, FILE **scratch_file_ptr_ptr)
+  : bx_param_c(SIM->gen_param_id(), name, "")
+{
+  set_type(BXT_PARAM_FILEDATA);
+  this->scratch_fpp = scratch_file_ptr_ptr;
+  this->save_handler = NULL;
+  this->restore_handler = NULL;
+  if (parent) {
+    BX_ASSERT(parent->get_type() == BXT_LIST);
+    this->parent = (bx_list_c *)parent;
+    this->parent->add(this);
+  }
+}
+
+// Save handler: called before file save, Restore handler: called after file restore
+void bx_shadow_filedata_c::set_sr_handlers(void *devptr, filedata_save_handler save, filedata_restore_handler restore)
+{
+  this->sr_devptr = devptr;
+  this->save_handler = save;
+  this->restore_handler = restore;
+}
+
+void bx_shadow_filedata_c::save(FILE *save_fp)
+{
+  if (save_handler)
+    (*save_handler)(sr_devptr, save_fp);
+}
+
+void bx_shadow_filedata_c::restore(FILE *save_fp)
+{
+  if (restore_handler)
+    (*restore_handler)(sr_devptr, save_fp);
+}
 
 bx_list_c::bx_list_c(bx_param_c *parent, int maxsize)
   : bx_param_c(SIM->gen_param_id(), "list", "")

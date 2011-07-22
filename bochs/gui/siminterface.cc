@@ -1177,6 +1177,26 @@ bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path,
                     fclose(fp2);
                   }
                   break;
+                case BXT_PARAM_FILEDATA:
+                  sprintf(devdata, "%s/%s", sr_path, ptr);
+                  fp2 = fopen(devdata, "rb");
+                  if (fp2 != NULL) {
+                    FILE **fpp = ((bx_shadow_filedata_c*)param)->get_fpp();
+                    // If the temporary backing store file wasn't created, do it now.
+                    if (*fpp == NULL)
+                      *fpp = tmpfile();
+                    if (*fpp != NULL) {
+                      while (!feof(fp2)) {
+                        char buffer[64];
+                        size_t chars = fread(buffer, 1, sizeof(buffer), fp2);
+                        fwrite(buffer, 1, chars, *fpp);
+                      }
+                      fflush(*fpp);
+                    }
+                    ((bx_shadow_filedata_c*)param)->restore(fp2);
+                    fclose(fp2);
+                  }
+                  break;
                 case BXT_LIST:
                   base = (bx_list_c*)param;
                   break;
@@ -1282,6 +1302,28 @@ bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_
       fp2 = fopen(tmpstr, "wb");
       if (fp2 != NULL) {
         fwrite(((bx_shadow_data_c*)node)->getptr(), 1, ((bx_shadow_data_c*)node)->get_size(), fp2);
+        fclose(fp2);
+      }
+      break;
+    case BXT_PARAM_FILEDATA:
+      fprintf(fp, "%s.%s\n", node->get_parent()->get_name(), node->get_name());
+      if (sr_path)
+        sprintf(tmpstr, "%s/%s.%s", sr_path, node->get_parent()->get_name(), node->get_name());
+      else
+        sprintf(tmpstr, "%s.%s", node->get_parent()->get_name(), node->get_name());
+      fp2 = fopen(tmpstr, "wb");
+      if (fp2 != NULL) {
+        FILE **fpp = ((bx_shadow_filedata_c*)node)->get_fpp();
+        // If the backing store hasn't been created, just save an empty 0 byte placeholder file.
+        if (*fpp != NULL) {
+          while (!feof(*fpp)) {
+            char buffer[64];
+            size_t chars = fread (buffer, 1, sizeof(buffer), *fpp);
+            fwrite(buffer, 1, chars, fp2);
+          }
+          fflush(*fpp);
+        }
+        ((bx_shadow_filedata_c*)node)->save(fp2);
         fclose(fp2);
       }
       break;

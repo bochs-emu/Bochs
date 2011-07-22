@@ -2960,7 +2960,10 @@ public: // for now...
   BX_SMF bx_bool dbg_translate_guest_physical(bx_phy_address guest_paddr, bx_phy_address *phy, bx_bool verbose = 0);
 #endif
 #endif
-  BX_SMF void     atexit(void);
+#if BX_LARGE_RAMFILE
+  BX_SMF bx_bool check_addr_in_tlb_buffers(const Bit8u *addr, const Bit8u *end);
+#endif
+  BX_SMF void atexit(void);
 
   // now for some ancillary functions...
   BX_SMF void cpu_loop(Bit32u max_instr_count);

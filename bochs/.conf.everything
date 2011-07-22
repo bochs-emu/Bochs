@@ -26,11 +26,13 @@
   --enable-clgd54xx \
   --enable-usb \
   --enable-usb-ohci \
+  --enable-usb-xhci \
   --enable-cdrom \
   --enable-sb16 \
   --enable-es1370 \
   --enable-gameport \
   --enable-iodebug \
+  --enable-large-ramfile \
   --enable-gdb-stub \
   --enable-show-ips \
   --with-all-libs

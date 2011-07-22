@@ -52,6 +52,19 @@
 //
 // The parameter concept is similar to the use of parameters in JavaBeans.
 
+// list of possible types for bx_param_c and descendant objects
+typedef enum {
+  BXT_OBJECT = 201,
+  BXT_PARAM,
+  BXT_PARAM_NUM,
+  BXT_PARAM_BOOL,
+  BXT_PARAM_ENUM,
+  BXT_PARAM_STRING,
+  BXT_PARAM_DATA,
+  BXT_PARAM_FILEDATA,
+  BXT_LIST
+} bx_objtype;
+
 class bx_object_c;
 class bx_param_c;
 class bx_param_num_c;
@@ -395,6 +408,25 @@ public:
       Bit32u data_size);
   Bit8u *getptr() {return data_ptr;}
   Bit32u get_size() const {return data_size;}
+};
+
+typedef void (*filedata_save_handler)(void *devptr, FILE *save_fp);
+typedef void (*filedata_restore_handler)(void *devptr, FILE *save_fp);
+
+class BOCHSAPI bx_shadow_filedata_c : public bx_param_c {
+protected:
+  FILE **scratch_fpp;       // Point to scratch file used for backing store
+  void *sr_devptr;
+  filedata_save_handler    save_handler;
+  filedata_restore_handler restore_handler;
+
+public:
+  bx_shadow_filedata_c(bx_param_c *parent,
+      const char *name, FILE **scratch_file_ptr_ptr);
+  void set_sr_handlers(void *devptr, filedata_save_handler save, filedata_restore_handler restore);
+  FILE **get_fpp() {return scratch_fpp;}
+  void save(FILE *save_file);
+  void restore(FILE *save_file);
 };
 
 #define BX_DEFAULT_LIST_SIZE 6

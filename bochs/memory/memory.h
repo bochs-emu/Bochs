@@ -76,8 +76,16 @@ private:
   Bit8u  **blocks;
   Bit8u   *rom;      // 512k BIOS rom space + 128k expansion rom space
   Bit8u   *bogus;    // 4k for unexisting memory
-  unsigned used_blocks;
   bx_bool rom_present[65];
+
+  Bit32u used_blocks;
+#if BX_LARGE_RAMFILE
+  static Bit8u * const swapped_out; // NULL; // (NULL - sizeof(Bit8u));
+  Bit32u  next_swapout_idx;
+  FILE    *overflow_file;
+
+  BX_MEM_SMF void   read_block(Bit32u block);
+#endif
 
 public:
   BX_MEM_C();
@@ -104,10 +112,10 @@ public:
 #endif
   BX_MEM_SMF Bit8u* getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw);
   BX_MEM_SMF bx_bool registerMemoryHandlers(void *param, memory_handler_t read_handler,
-		  memory_handler_t write_handler, memory_direct_access_handler_t da_handler,
+                  memory_handler_t write_handler, memory_direct_access_handler_t da_handler,
                   bx_phy_address begin_addr, bx_phy_address end_addr);
   BX_MEM_SMF BX_CPP_INLINE bx_bool registerMemoryHandlers(void *param, memory_handler_t read_handler,
-		  memory_handler_t write_handler,
+                  memory_handler_t write_handler,
                   bx_phy_address begin_addr, bx_phy_address end_addr)
   {
      return registerMemoryHandlers(param, read_handler, write_handler, NULL, begin_addr, end_addr);
@@ -124,6 +132,7 @@ public:
 
   void register_state(void);
 
+  friend void ramfile_save_handler(void *devptr, FILE *fp);
   friend Bit64s memory_param_save_handler(void *devptr, bx_param_c *param);
   friend void memory_param_restore_handler(void *devptr, bx_param_c *param, Bit64s val);
 };
@@ -143,7 +152,13 @@ BX_CPP_INLINE Bit8u* BX_MEM_C::get_vector(bx_phy_address addr)
 BX_CPP_INLINE Bit8u* BX_MEM_C::get_vector(bx_phy_address addr)
 {
   Bit32u block = (Bit32u)(addr / BX_MEM_BLOCK_LEN);
-  if (! BX_MEM_THIS blocks[block]) allocate_block(block);
+#if (BX_LARGE_RAMFILE)
+  if (!BX_MEM_THIS blocks[block] || (BX_MEM_THIS blocks[block] == BX_MEM_THIS swapped_out))
+#else
+  if (!BX_MEM_THIS blocks[block])
+#endif
+    allocate_block(block);
+
   return BX_MEM_THIS blocks[block] + (Bit32u)(addr & (BX_MEM_BLOCK_LEN-1));
 }
 

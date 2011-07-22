@@ -17,6 +17,12 @@ Bochs repository moved to the SVN version control !
   - Redefined/Updated/Fixed instrumentation callbacks.
   - Bugfixes for CPU emulation correctness and stability.
 
+- Memory
+  - Added new configure option which enables RAM file backing for large guest
+    memory with a smaller amount host memory, without causing a panic when
+    host memory is exhausted (patch by Gary Cameron). To enable configure with
+        --enable-large-ramfile option.
+
 - Configure and compile
   - Fixed Bochs manifest for Win64 compilation using Microsoft Visual Studio
     command line compiler.
@@ -71,8 +77,8 @@ Bochs repository moved to the SVN version control !
 
   - ROM BIOS
     - Report memory above 4GB to BIOS (patch by Sebastian Herbszt)
-    - added PCI ROM init code for BIOS-bochs-latest (legacy BIOS no longer works
-      with a PCI display adapter
+    - added PCI ROM init code for BIOS-bochs-latest
+      (WARNING: legacy BIOS no longer works with a PCI display adapter)
 
 - GUI and display libraries
   - vga update interval now uses host timing if the realtime sychronization is

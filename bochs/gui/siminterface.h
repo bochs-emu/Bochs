@@ -123,18 +123,6 @@
 
 //////////////////////////////////////////////////////
 
-// list of possible types for bx_param_c and descendant objects
-typedef enum {
-  BXT_OBJECT = 201,
-  BXT_PARAM,
-  BXT_PARAM_NUM,
-  BXT_PARAM_BOOL,
-  BXT_PARAM_ENUM,
-  BXT_PARAM_STRING,
-  BXT_PARAM_DATA,
-  BXT_LIST
-} bx_objtype;
-
 // base value for generated new parameter id
 #define BXP_NEW_PARAM_ID 1001
 

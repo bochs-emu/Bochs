@@ -32,6 +32,10 @@
 #define BX_MEM_VECTOR_ALIGN 4096
 #define BX_MEM_HANDLERS   ((BX_CONST64(1) << BX_PHY_ADDRESS_WIDTH) >> 20) /* one per megabyte */
 
+#if BX_LARGE_RAMFILE
+Bit8u* const BX_MEM_C::swapped_out = ((Bit8u*)NULL - sizeof(Bit8u));
+#endif
+
 BX_MEM_C::BX_MEM_C()
 {
   put("MEM0");
@@ -45,6 +49,11 @@ BX_MEM_C::BX_MEM_C()
     rom_present[i] = 0;
 
   memory_handlers = NULL;
+
+#if BX_LARGE_RAMFILE
+  next_swapout_idx = 0;
+  overflow_file = NULL;
+#endif
 }
 
 Bit8u* BX_MEM_C::alloc_vector_aligned(Bit32u bytes, Bit32u alignment)
@@ -68,6 +77,11 @@ Bit8u* BX_MEM_C::alloc_vector_aligned(Bit32u bytes, Bit32u alignment)
 
 BX_MEM_C::~BX_MEM_C()
 {
+#if BX_LARGE_RAMFILE
+  if (overflow_file)
+    fclose(BX_MEM_THIS overflow_file);
+#endif
+
   cleanup_memory();
 }
 
@@ -90,7 +104,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
   }
   BX_MEM_THIS vector = alloc_vector_aligned(host + BIOSROMSZ + EXROMSIZE + 4096, BX_MEM_VECTOR_ALIGN);
   BX_INFO(("allocated memory at %p. after alignment, vector=%p",
-	BX_MEM_THIS actual_vector, BX_MEM_THIS vector));
+        BX_MEM_THIS actual_vector, BX_MEM_THIS vector));
 
   BX_MEM_THIS len = guest;
   BX_MEM_THIS allocated = host;
@@ -132,9 +146,79 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
   BX_MEM_THIS register_state();
 }
 
+#if BX_LARGE_RAMFILE
+void BX_MEM_C::read_block(Bit32u block)
+{
+  const Bit64u block_address = ((Bit64u)block)*BX_MEM_BLOCK_LEN;
+
+  if (fseeko64(BX_MEM_THIS overflow_file, block_address, SEEK_SET))
+    BX_PANIC(("FATAL ERROR: Could not seek to 0x%lx in memory overflow file!", block_address));
+
+  // We could legitimately get an EOF condition if we are reading the last bit of memory.ram
+  if ((fread(BX_MEM_THIS blocks[block], BX_MEM_BLOCK_LEN, 1, BX_MEM_THIS overflow_file) != 1) && 
+      (!feof(BX_MEM_THIS overflow_file))) 
+    BX_PANIC(("FATAL ERROR: Could not read from 0x%lx in memory overflow file!", block_address)); 
+}
+#endif
+
 void BX_MEM_C::allocate_block(Bit32u block)
 {
-  Bit32u max_blocks = BX_MEM_THIS allocated / BX_MEM_BLOCK_LEN;
+  const Bit32u max_blocks = BX_MEM_THIS allocated / BX_MEM_BLOCK_LEN;
+
+#if BX_LARGE_RAMFILE
+  /* 
+   * Match block to vector address
+   * First, see if there is any spare host memory blocks we can still freely allocate
+   */
+  if (BX_MEM_THIS used_blocks >= max_blocks) {
+    Bit32u original_replacement_block = BX_MEM_THIS next_swapout_idx;
+    // Find a block to replace
+    bx_bool used_for_tlb;
+    Bit8u *buffer;
+    do {
+      do {
+        // Wrap if necessary
+        if (++(BX_MEM_THIS next_swapout_idx)==((BX_MEM_THIS len)/BX_MEM_BLOCK_LEN))
+          BX_MEM_THIS next_swapout_idx = 0;
+        if (BX_MEM_THIS next_swapout_idx == original_replacement_block)
+          BX_PANIC(("FATAL ERROR: Insufficient working RAM, all blocks are currently used for TLB entries!"));
+        buffer = BX_MEM_THIS blocks[BX_MEM_THIS next_swapout_idx];
+      } while ((!buffer) || (buffer == BX_MEM_C::swapped_out));
+
+      used_for_tlb = false;
+      // tlb buffer check loop
+      const Bit8u* buffer_end = buffer+BX_MEM_BLOCK_LEN;
+      // Don't replace it if any CPU is using it as a TLB entry
+      for (int i=0; i<BX_SMP_PROCESSORS && !used_for_tlb;i++)
+        used_for_tlb = BX_CPU(i)->check_addr_in_tlb_buffers(buffer, buffer_end);
+    } while (used_for_tlb);
+    // Flush the block to be replaced
+    bx_phy_address address = ((bx_phy_address)BX_MEM_THIS next_swapout_idx)*BX_MEM_BLOCK_LEN;
+    // Create overflow file if it does not currently exist.
+    if (!BX_MEM_THIS overflow_file) {
+      BX_MEM_THIS overflow_file = tmpfile();
+      if (!BX_MEM_THIS overflow_file)
+        BX_PANIC(("Unable to allocate memory overflow file"));
+    }
+    // Write swapped out block
+    if (fseeko64(BX_MEM_THIS overflow_file, address, SEEK_SET))
+      BX_PANIC(("FATAL ERROR: Could not seek to 0x%llx in overflow file!", address)); 
+    if (1 != fwrite (BX_MEM_THIS blocks[BX_MEM_THIS next_swapout_idx], BX_MEM_BLOCK_LEN, 1, BX_MEM_THIS overflow_file))
+      BX_PANIC(("FATAL ERROR: Could not write at 0x%llx in overflow file!", address));
+    // Mark swapped out block
+    BX_MEM_THIS blocks[BX_MEM_THIS next_swapout_idx] = BX_MEM_C::swapped_out;
+    BX_MEM_THIS blocks[block] = buffer;
+    read_block(block);
+          BX_INFO(("allocate_block: block=0x%x, replaced 0x%x",   
+                block, BX_MEM_THIS next_swapout_idx));
+  }
+  else {
+          BX_MEM_THIS blocks[block] = BX_MEM_THIS vector + (BX_MEM_THIS used_blocks++ * BX_MEM_BLOCK_LEN);
+        BX_INFO(("allocate_block: block=0x%x used 0x%x of 0x%x",
+          block, BX_MEM_THIS used_blocks, max_blocks));
+  }
+#else
+  // Legacy default allocator
   if (BX_MEM_THIS used_blocks >= max_blocks) {
     BX_PANIC(("FATAL ERROR: all available memory is already allocated !"));
   }
@@ -142,24 +226,45 @@ void BX_MEM_C::allocate_block(Bit32u block)
     BX_MEM_THIS blocks[block] = BX_MEM_THIS vector + (BX_MEM_THIS used_blocks * BX_MEM_BLOCK_LEN);
     BX_MEM_THIS used_blocks++;
   }
-  BX_DEBUG(("allocate_block: used_blocks=%d of %d", BX_MEM_THIS used_blocks, max_blocks));
+  BX_INFO(("allocate_block: used_blocks=0x%x of 0x%x", BX_MEM_THIS used_blocks, max_blocks));
+#endif
 }
 
+#if BX_LARGE_RAMFILE
+// The blocks in RAM must also be flushed to the save file.
+void ramfile_save_handler(void *devptr, FILE *fp)
+{
+  for (Bit32u idx = 0; idx < (BX_MEM(0)->len / BX_MEM_BLOCK_LEN); idx++) {
+    if ((BX_MEM(0)->blocks[idx]) && (BX_MEM(0)->blocks[idx] != BX_MEM(0)->swapped_out))
+    {
+      bx_phy_address address = ((bx_phy_address)idx)*BX_MEM_BLOCK_LEN;
+      if (fseeko64(fp, address, SEEK_SET))
+        BX_PANIC(("FATAL ERROR: Could not seek to 0x%llx in overflow file!", address)); 
+      if (1 != fwrite (BX_MEM(0)->blocks[idx], BX_MEM_BLOCK_LEN, 1, fp))
+        BX_PANIC(("FATAL ERROR: Could not write at 0x%llx in overflow file!", address));
+    }
+  }
+}
+#endif
+
+// Note: This must be called before the memory file save handler is called.
 Bit64s memory_param_save_handler(void *devptr, bx_param_c *param)
 {
   const char *pname = param->get_name();
   if (! strncmp(pname, "blk", 3)) {
-     Bit32u blk_index = atoi(pname + 3);
-     if (! BX_MEM(0)->blocks[blk_index]) {
-        return -1;
-     }
-     else {
-        Bit32u val = (Bit32u) (BX_MEM(0)->blocks[blk_index] - BX_MEM(0)->vector);
-        if ((val & (BX_MEM_BLOCK_LEN-1)) == 0)
-           return val / BX_MEM_BLOCK_LEN;
-     }
+    Bit32u blk_index = atoi(pname + 3);
+    if (! BX_MEM(0)->blocks[blk_index])
+      return -1;
+#if BX_LARGE_RAMFILE
+    // If swapped out, will be saved by common handler.
+    if (BX_MEM(0)->blocks[blk_index] == BX_MEM(0)->swapped_out)
+      return -2;
+#endif
+    // Return the block offset into the array
+    Bit32u val = (Bit32u) (BX_MEM(0)->blocks[blk_index] - BX_MEM(0)->vector);
+    if ((val & (BX_MEM_BLOCK_LEN-1)) == 0)
+       return val / BX_MEM_BLOCK_LEN;
   }
-
   return -1;
 }
 
@@ -167,23 +272,38 @@ void memory_param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
 {
   const char *pname = param->get_name();
   if (! strncmp(pname, "blk", 3)) {
-     Bit32u blk_index = atoi(pname + 3);
-     if((Bit32s) val < 0)
+    Bit32u blk_index = atoi(pname + 3);
+#if BX_LARGE_RAMFILE
+    if ((Bit32s) val == -2) {
+      BX_MEM(0)->blocks[blk_index] = BX_MEM(0)->swapped_out;
+      return;
+    }
+#endif
+     if((Bit32s) val < 0) {
         BX_MEM(0)->blocks[blk_index] = NULL;
-     else
-        BX_MEM(0)->blocks[blk_index] = BX_MEM(0)->vector + val * BX_MEM_BLOCK_LEN;
+        return;
+      }
+      BX_MEM(0)->blocks[blk_index] = BX_MEM(0)->vector + val * BX_MEM_BLOCK_LEN;
+#if BX_LARGE_RAMFILE
+      BX_MEM(0)->read_block(blk_index);
+#endif
   }
 }
 
 void BX_MEM_C::register_state()
 {
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "memory", "Memory State", 6);
+  Bit32u num_blocks = BX_MEM_THIS len / BX_MEM_BLOCK_LEN;
+#if BX_LARGE_RAMFILE
+  bx_shadow_filedata_c *ramfile = new bx_shadow_filedata_c(list, "ram", &(BX_MEM_THIS overflow_file));
+  ramfile->set_sr_handlers(this, ramfile_save_handler, (filedata_restore_handler)NULL);
+#else
   new bx_shadow_data_c(list, "ram", BX_MEM_THIS vector, BX_MEM_THIS allocated);
+#endif
   BXRS_DEC_PARAM_FIELD(list, len, BX_MEM_THIS len);
   BXRS_DEC_PARAM_FIELD(list, allocated, BX_MEM_THIS allocated);
   BXRS_DEC_PARAM_FIELD(list, used_blocks, BX_MEM_THIS used_blocks);
 
-  Bit32u num_blocks = BX_MEM_THIS len / BX_MEM_BLOCK_LEN;
   bx_list_c *mapping = new bx_list_c(list, "mapping", num_blocks);
   for (Bit32u blk=0; blk < num_blocks; blk++) {
     char param_name[15];
@@ -251,7 +371,7 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
   // read in ROM BIOS image file
   fd = open(path, O_RDONLY
 #ifdef O_BINARY
-            | O_BINARY
+                | O_BINARY
 #endif
            );
   if (fd < 0) {
@@ -362,9 +482,9 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
     }
   }
   BX_INFO(("rom at 0x%05x/%u ('%s')",
-			(unsigned) romaddress,
-			(unsigned) stat_buf.st_size,
- 			path));
+                        (unsigned) romaddress,
+                        (unsigned) stat_buf.st_size,
+                         path));
 }
 
 void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress, Bit8u type)
@@ -406,9 +526,9 @@ void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress, Bit8u type)
   }
   close(fd);
   BX_INFO(("ram at 0x%05x/%u ('%s')",
-			(unsigned) ramaddress,
-			(unsigned) stat_buf.st_size,
- 			path));
+                        (unsigned) ramaddress,
+                        (unsigned) stat_buf.st_size,
+                         path));
 }
 
 #if (BX_DEBUGGER || BX_DISASM || BX_GDBSTUB)
@@ -692,7 +812,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
  */
   bx_bool
 BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
-		memory_handler_t write_handler, memory_direct_access_handler_t da_handler,
+                memory_handler_t write_handler, memory_direct_access_handler_t da_handler,
                 bx_phy_address begin_addr, bx_phy_address end_addr)
 {
   if (end_addr < begin_addr)
