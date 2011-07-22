@@ -99,13 +99,11 @@ static bool keep_alive;
 static bool client_connected;
 static bool desktop_resizable;
 
-#define BX_RFB_PORT_MIN 5900
-#define BX_RFB_PORT_MAX 5949
 static unsigned short rfbPort;
 
 // Headerbar stuff
 unsigned rfbBitmapCount = 0;
-static struct {
+static struct _rfbBitmaps {
     char     *bmap;
     unsigned xdim;
     unsigned ydim;
@@ -124,7 +122,7 @@ struct _rfbHeaderbarBitmaps {
 #define KEYBOARD true
 #define MOUSE    false
 #define MAX_KEY_EVENTS 512
-static struct {
+static struct _rfbKeyboardEvent {
     bool type;
     int  key;
     int  down;
@@ -135,7 +133,7 @@ static unsigned long rfbKeyboardEvents = 0;
 static bool          bKeyboardInUse = false;
 
 // Misc Stuff
-static struct {
+static struct _rfbUpdateRegion {
     unsigned int x;
     unsigned int y;
     unsigned int width;
@@ -195,7 +193,7 @@ static const rfbPixelFormat BGR233Format = {
 };
 
 // VNCViewer code to be replaced
-#define PF_EQ(x,y) ((x.bitsPerPixel == y.bitsPerPixel) && (x.depth == y.depth) && (x.trueColourFlag == y.trueColourFlag) &&    ((x.bigEndianFlag == y.bigEndianFlag) || (x.bitsPerPixel == 8)) && (!x.trueColourFlag || ((x.redMax == y.redMax) &&    (x.greenMax == y.greenMax) && (x.blueMax == y.blueMax) && (x.redShift == y.redShift) && (x.greenShift == y.greenShift) && (x.blueShift == y.blueShift))))
+#define PF_EQ(x,y) ((x.bitsPerPixel == y.bitsPerPixel) && (x.depth == y.depth) && (x.trueColourFlag == y.trueColourFlag) && ((x.bigEndianFlag == y.bigEndianFlag) || (x.bitsPerPixel == 8)) && (!x.trueColourFlag || ((x.redMax == y.redMax) &&    (x.greenMax == y.greenMax) && (x.blueMax == y.blueMax) && (x.redShift == y.redShift) && (x.greenShift == y.greenShift) && (x.blueShift == y.blueShift))))
 
 
 // ::SPECIFIC_INIT()
@@ -940,7 +938,7 @@ void bx_rfb_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
 void bx_rfb_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
   if (bpp > 8) {
-    BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
+    BX_ERROR(("%d bpp graphics mode not supported yet", bpp));
   }
   if (fheight > 0) {
     font_height = fheight;
@@ -950,7 +948,7 @@ void bx_rfb_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, un
   }
   if ((x > BX_RFB_MAX_XDIM) || (y > BX_RFB_MAX_YDIM)) {
     BX_PANIC(("dimension_update(): RFB doesn't support graphics mode %dx%d", x, y));
-  } else if ((x != rfbDimensionX) || (x != rfbDimensionY)) {
+  } else if ((x != rfbDimensionX) || (y != rfbDimensionY)) {
     if (desktop_resizable) {
       rfbDimensionX = x;
       rfbDimensionY = y;

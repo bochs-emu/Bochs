@@ -21,6 +21,9 @@
 
 // This file includes the rfb spec header and the port numbers
 
+#ifndef BX_RFB_GUI
+#define BX_RFB_GUI
+
 // Define the RFB types
 typedef Bit32u         U32;
 typedef Bit16u         U16;
@@ -390,3 +393,4 @@ typedef union {
 	rfbServerCutTextMessage     sct;
 } rfbServerToClientMessage;
 
+#endif
