@@ -53,8 +53,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PAUSE(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PREFETCH(bxInstruction_c *i)
 {
 #if BX_INSTRUMENTATION
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  BX_INSTR_PREFETCH_HINT(BX_CPU_ID, i->nnn(), i->seg(), eaddr);
+  BX_INSTR_PREFETCH_HINT(BX_CPU_ID, i->nnn(), i->seg(),
+     BX_CPU_CALL_METHODR(i->ResolveModrm, (i)));
 #endif
 
   BX_NEXT_INSTR(i);

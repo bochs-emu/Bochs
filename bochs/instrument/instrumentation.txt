@@ -90,14 +90,14 @@ The  callback  is  called each time, when currently executed instruction is an
 unconditional far branch (always taken).
 
 
-	void bx_instr_opcode(unsigned cpu, const Bit8u *opcode, unsigned len, bx_bool is32, bx_bool is64);
+	void bx_instr_opcode(unsigned cpu, bxInstruction_c *i, const Bit8u *opcode, unsigned len, bx_bool is32, bx_bool is64);
 
 The  callback  is  called  each  time, when Bochs completes  to  decode  a new
 instruction.  Through  this callback function Bochs could provide an opcode of
 the instruction, opcode length and an execution mode (16/32/64).
 
-Please note, that Bochs uses translation  caches so each simulated instruction
-might be executed multiple times but decoded only once.
+Note, that Bochs uses translation  caches so each simulated  instruction might
+be executed multiple times but decoded only once.
 
 
 	void bx_instr_interrupt(unsigned cpu, unsigned vector);

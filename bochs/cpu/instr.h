@@ -114,6 +114,18 @@ public:
 #endif
   };
 
+#ifdef BX_INSTR_STORE_OPCODE_BYTES
+  Bit8u opcode_bytes[16];
+
+  BX_CPP_INLINE const Bit8u* get_opcode_bytes(void) const {
+    return opcode_bytes;
+  }
+
+  BX_CPP_INLINE void set_opcode_bytes(const Bit8u *opcode) {
+    memcpy(opcode_bytes, opcode, ilen());
+  }
+#endif
+
   BX_CPP_INLINE unsigned seg(void) const {
     return metaData[BX_INSTR_METADATA_SEG];
   }

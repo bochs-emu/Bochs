@@ -56,6 +56,9 @@
 
 class bxInstruction_c;
 
+// define if you want to store instruction opcode bytes in bxInstruction_c
+#define BX_INSTR_STORE_OPCODE_BYTES
+
 void bx_instr_init_env(void);
 void bx_instr_exit_env(void);
 
@@ -69,9 +72,8 @@ void bx_instr_cnear_branch_not_taken(unsigned cpu);
 void bx_instr_ucnear_branch(unsigned cpu, unsigned what, bx_address new_eip);
 void bx_instr_far_branch(unsigned cpu, unsigned what, Bit16u new_cs, bx_address new_eip);
 
-void bx_instr_opcode(unsigned cpu, const Bit8u *opcode, unsigned len, bx_bool is32, bx_bool is64);
-
 void bx_instr_before_execution(unsigned cpu, bxInstruction_c *i);
+void bx_instr_after_execution(unsigned cpu, bxInstruction_c *i);
 
 void bx_instr_interrupt(unsigned cpu, unsigned vector);
 void bx_instr_exception(unsigned cpu, unsigned vector, unsigned error_code);
@@ -101,8 +103,7 @@ void bx_instr_mem_data_access(unsigned cpu, unsigned seg, bx_address offset, uns
 #define BX_INSTR_FAR_BRANCH(cpu_id, what, new_cs, new_eip) bx_instr_far_branch(cpu_id, what, new_cs, new_eip)
 
 /* decoding completed */
-#define BX_INSTR_OPCODE(cpu_id, opcode, len, is32, is64) \
-                       bx_instr_opcode(cpu_id, opcode, len, is32, is64)
+#define BX_INSTR_OPCODE(cpu_id, i, opcode, len, is32, is64)
 
 /* exceptional case and interrupt */
 #define BX_INSTR_EXCEPTION(cpu_id, vector, error_code) \
@@ -119,7 +120,7 @@ void bx_instr_mem_data_access(unsigned cpu, unsigned seg, bx_address offset, uns
 
 /* execution */
 #define BX_INSTR_BEFORE_EXECUTION(cpu_id, i) bx_instr_before_execution(cpu_id, i)
-#define BX_INSTR_AFTER_EXECUTION(cpu_id, i)
+#define BX_INSTR_AFTER_EXECUTION(cpu_id, i) bx_instr_after_execution(cpu_id, i)
 #define BX_INSTR_REPEAT_ITERATION(cpu_id, i)
 
 /* memory access */
@@ -165,7 +166,7 @@ void bx_instr_mem_data_access(unsigned cpu, unsigned seg, bx_address offset, uns
 #define BX_INSTR_FAR_BRANCH(cpu_id, what, new_cs, new_eip)
 
 /* decoding completed */
-#define BX_INSTR_OPCODE(cpu_id, opcode, len, is32, is64)
+#define BX_INSTR_OPCODE(cpu_id, i, opcode, len, is32, is64)
 
 /* exceptional case and interrupt */
 #define BX_INSTR_EXCEPTION(cpu_id, vector, error_code)

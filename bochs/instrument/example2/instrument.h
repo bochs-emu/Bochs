@@ -55,6 +55,9 @@
 
 class bxInstruction_c;
 
+// define if you want to store instruction opcode bytes in bxInstruction_c
+//#define BX_INSTR_STORE_OPCODE_BYTES
+
 // called from the CPU core
 
 void bx_instr_initialize(unsigned cpu);
@@ -89,7 +92,7 @@ void bx_instr_before_execution(unsigned cpu, bxInstruction_c *i);
 #define BX_INSTR_FAR_BRANCH(cpu_id, what, new_cs, new_eip)
 
 /* decoding completed */
-#define BX_INSTR_OPCODE(cpu_id, opcode, len, is32, is64)
+#define BX_INSTR_OPCODE(cpu_id, i, opcode, len, is32, is64)
 
 /* exceptional case and interrupt */
 #define BX_INSTR_EXCEPTION(cpu_id, vector, error_code) \
@@ -153,7 +156,7 @@ void bx_instr_before_execution(unsigned cpu, bxInstruction_c *i);
 #define BX_INSTR_FAR_BRANCH(cpu_id, what, new_cs, new_eip)
 
 /* decoding completed */
-#define BX_INSTR_OPCODE(cpu_id, opcode, len, is32, is64)
+#define BX_INSTR_OPCODE(cpu_id, i, opcode, len, is32, is64)
 
 /* exceptional case and interrupt */
 #define BX_INSTR_EXCEPTION(cpu_id, vector, error_code)

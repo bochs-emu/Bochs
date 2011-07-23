@@ -107,7 +107,11 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBia
     unsigned iLen = i->ilen();
     entry->tlen++;
 
-    BX_INSTR_OPCODE(BX_CPU_ID, fetchPtr, iLen,
+#ifdef BX_INSTR_STORE_OPCODE_BYTES
+    i->set_opcode_bytes(fetchPtr);
+#endif
+
+    BX_INSTR_OPCODE(BX_CPU_ID, i, fetchPtr, iLen,
        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, long64_mode());
 
     traceMask |= 1 <<  (pageOffset >> 7);
@@ -219,6 +223,10 @@ void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bx
   // think about repeated instructions, etc.
   // invalidate_prefetch_q();
 
-  BX_INSTR_OPCODE(BX_CPU_ID, fetchBuffer, i->ilen(),
+#ifdef BX_INSTR_STORE_OPCODE_BYTES
+  i->set_opcode_bytes(fetchBuffer);
+#endif
+
+  BX_INSTR_OPCODE(BX_CPU_ID, i, fetchBuffer, i->ilen(),
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, long64_mode());
 }

@@ -27,7 +27,7 @@
 #include "disasm/disasm.h"
 
 // maximum size of an instruction
-#define MAX_OPCODE_SIZE 16
+#define MAX_OPCODE_LENGTH 16
 
 // maximum physical addresses an instruction can generate
 #define MAX_DATA_ACCESSES 1024
@@ -40,16 +40,16 @@ static bx_bool active = 1;
 static disassembler bx_disassembler;
 
 static struct instruction_t {
-  bx_bool  valid;        // is current instruction valid
-  unsigned opcode_size;
-  Bit8u    opcode[MAX_OPCODE_SIZE];
+  bx_bool  ready;         // is current instruction ready to be printed
+  unsigned opcode_length;
+  Bit8u    opcode[MAX_OPCODE_LENGTH];
   bx_bool  is32, is64;
   unsigned num_data_accesses;
   struct {
     bx_address laddr;     // linear address
     bx_phy_address paddr; // physical address
     unsigned op;          // BX_READ, BX_WRITE or BX_RW
-    unsigned size;        // 1 .. 8
+    unsigned size;        // 1 .. 32
   } data_access[MAX_DATA_ACCESSES];
   bx_bool is_branch;
   bx_bool is_taken;
@@ -74,60 +74,78 @@ void bx_instr_initialize(unsigned cpu)
 
 void bx_instr_reset(unsigned cpu, unsigned type)
 {
-  instruction[cpu].valid = 0;
+  instruction[cpu].ready = 0;
   instruction[cpu].num_data_accesses = 0;
   instruction[cpu].is_branch = 0;
 }
 
-void bx_instr_before_execution(unsigned cpu, bxInstruction_c *unused)
+void bx_print_instruction(unsigned cpu, const instruction_t *i)
+{
+  char disasm_tbuf[512];	// buffer for instruction disassembly
+  unsigned length = i->opcode_length, n;
+  bx_disassembler.disasm(i->is32, i->is64, 0, 0, i->opcode, disasm_tbuf);
+
+  if(length != 0)
+  {
+    fprintf(stderr, "----------------------------------------------------------\n");
+    fprintf(stderr, "CPU: %d: %s\n", cpu, disasm_tbuf);
+    fprintf(stderr, "LEN: %d\tBYTES: ", length);
+    for(n=0;n < length;n++) fprintf(stderr, "%02x", i->opcode[n]);
+    if(i->is_branch)
+    {
+      fprintf(stderr, "\tBRANCH ");
+
+      if(i->is_taken)
+        fprintf(stderr, "TARGET " FMT_ADDRX " (TAKEN)", i->target_linear);
+      else
+        fprintf(stderr, "(NOT TAKEN)");
+    }
+    fprintf(stderr, "\n");
+    for(n=0;n < i->num_data_accesses;n++)
+    {
+      fprintf(stderr, "MEM ACCESS[%u]: 0x" FMT_ADDRX " (linear) 0x" FMT_PHY_ADDRX " (physical) %s SIZE: %d\n", n,
+                    i->data_access[n].laddr,
+                    i->data_access[n].paddr,
+                    i->data_access[n].op == BX_READ ? "RD":"WR",
+                    i->data_access[n].size);
+    }
+    fprintf(stderr, "\n");
+  }
+}
+
+void bx_instr_before_execution(unsigned cpu, bxInstruction_c *bx_instr)
 {
   if (!active) return;
 
   instruction_t *i = &instruction[cpu];
 
-  if (i->valid)
-  {
-    char disasm_tbuf[512];	// buffer for instruction disassembly
-    unsigned length = i->opcode_size, n;
+  if (i->ready) bx_print_instruction(cpu, i);
 
-    bx_disassembler.disasm(i->is32, i->is64, 0, 0, i->opcode, disasm_tbuf);
+  // prepare instruction_t structure for new instruction
+  i->ready = 1;
+  i->num_data_accesses = 0;
+  i->is_branch = 0;
 
-    if(length != 0)
-    {
-      fprintf(stderr, "----------------------------------------------------------\n");
-      fprintf(stderr, "CPU: %d: %s\n", cpu, disasm_tbuf);
-      fprintf(stderr, "LEN: %d\tBYTES: ", length);
-      for(n=0;n<length;n++) fprintf(stderr, "%02x", i->opcode[n]);
-      if(i->is_branch)
-      {
-        fprintf(stderr, "\tBRANCH ");
+  i->is32 = BX_CPU(cpu)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
+  i->is64 = BX_CPU(cpu)->long64_mode();
+  i->opcode_length = bx_instr->ilen();
+  memcpy(i->opcode, bx_instr->get_opcode_bytes(), i->opcode_length);
+}
 
-        if(i->is_taken)
-          fprintf(stderr, "TARGET " FMT_ADDRX " (TAKEN)", i->target_linear);
-        else
-          fprintf(stderr, "(NOT TAKEN)");
-      }
-      fprintf(stderr, "\n");
-      for(n=0;n<i->num_data_accesses;n++)
-      {
-        fprintf(stderr, "MEM ACCESS[%u]: " FMT_ADDRX " (linear) 0x%08x (physical) %s SIZE: %d\n", n,
-                      i->data_access[n].laddr,
-                      i->data_access[n].paddr,
-                      i->data_access[n].op == BX_READ ? "RD":"WR",
-                      i->data_access[n].size);
-      }
-      fprintf(stderr, "\n");
-    }
+void bx_instr_after_execution(unsigned cpu, bxInstruction_c *bx_instr)
+{
+  if (!active) return;
+
+  instruction_t *i = &instruction[cpu];
+  if (i->ready) {
+    bx_print_instruction(cpu, i);
+    i->ready = 0;
   }
-
-  instruction[cpu].valid = 0;
-  instruction[cpu].num_data_accesses = 0;
-  instruction[cpu].is_branch = 0;
 }
 
 static void branch_taken(unsigned cpu, bx_address new_eip)
 {
-  if (!active || !instruction[cpu].valid) return;
+  if (!active || !instruction[cpu].ready) return;
 
   // find linear address
   bx_address laddr = BX_CPU(cpu)->get_laddr(BX_SEG_REG_CS, new_eip);
@@ -144,7 +162,7 @@ void bx_instr_cnear_branch_taken(unsigned cpu, bx_address new_eip)
 
 void bx_instr_cnear_branch_not_taken(unsigned cpu)
 {
-  if (!active || !instruction[cpu].valid) return;
+  if (!active || !instruction[cpu].ready) return;
 
   instruction[cpu].is_branch = 1;
   instruction[cpu].is_taken = 0;
@@ -158,21 +176,6 @@ void bx_instr_ucnear_branch(unsigned cpu, unsigned what, bx_address new_eip)
 void bx_instr_far_branch(unsigned cpu, unsigned what, Bit16u new_cs, bx_address new_eip)
 {
   branch_taken(cpu, new_eip);
-}
-
-void bx_instr_opcode(unsigned cpu, const Bit8u *opcode, unsigned len, bx_bool is32, bx_bool is64)
-{
-  if (!active) return;
-
-  for(unsigned i=0;i<len;i++)
-  {
-    instruction[cpu].opcode[i] = opcode[i];
-  }
-
-  instruction[cpu].is32 = is32;
-  instruction[cpu].is64 = is64;
-  instruction[cpu].opcode_size = len;
-  instruction[cpu].valid = 1;
 }
 
 void bx_instr_interrupt(unsigned cpu, unsigned vector)
@@ -199,12 +202,12 @@ void bx_instr_hwinterrupt(unsigned cpu, unsigned vector, Bit16u cs, bx_address e
   }
 }
 
-void bx_instr_mem_data(unsigned cpu, unsigned seg, bx_address offset, unsigned len, unsigned rw)
+void bx_instr_mem_data_access(unsigned cpu, unsigned seg, bx_address offset, unsigned len, unsigned rw)
 {
   unsigned index;
   bx_phy_address phy;
 
-  if(!active || !instruction[cpu].valid) return;
+  if(!active || !instruction[cpu].ready) return;
 
   if (instruction[cpu].num_data_accesses >= MAX_DATA_ACCESSES)
   {
@@ -213,19 +216,15 @@ void bx_instr_mem_data(unsigned cpu, unsigned seg, bx_address offset, unsigned l
 
   bx_address lin = BX_CPU(cpu)->get_laddr(seg, offset);
   bx_bool page_valid = BX_CPU(cpu)->dbg_xlate_linear2phy(lin, &phy);
-  phy = A20ADDR(phy);
 
   // If linear translation doesn't exist, a paging exception will occur.
   // Invalidate physical address data for now.
-  if (!page_valid)
-  {
-    phy = 0;
-  }
+  if (!page_valid) phy = (bx_phy_address) (-1);
 
   index = instruction[cpu].num_data_accesses;
   instruction[cpu].data_access[index].laddr = lin;
   instruction[cpu].data_access[index].paddr = phy;
   instruction[cpu].data_access[index].op    = rw;
-  instruction[cpu].data_access[index].size  = size;
+  instruction[cpu].data_access[index].size  = len;
   instruction[cpu].num_data_accesses++;
 }

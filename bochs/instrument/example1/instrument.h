@@ -56,12 +56,15 @@
 
 class bxInstruction_c;
 
+// define if you want to store instruction opcode bytes in bxInstruction_c
+#define BX_INSTR_STORE_OPCODE_BYTES
+
 void bx_instr_init_env(void);
 void bx_instr_exit_env(void);
 void bx_instr_initialize(unsigned cpu);
 
 // maximum size of an instruction
-#define MAX_OPCODE_SIZE 16
+#define MAX_OPCODE_LENGTH 16
 
 // maximum physical addresses an instruction can generate
 #define MAX_DATA_ACCESSES 1024
@@ -69,14 +72,14 @@ void bx_instr_initialize(unsigned cpu);
 class bxInstrumentation {
 public:
 
-  bx_bool  valid;        // is current instruction valid
-  bx_bool active;        // is active
+  bx_bool ready;          // is current instruction ready to be printed
+  bx_bool active;
 
   unsigned cpu_id;
 
   /* decoding */
-  unsigned opcode_size;
-  Bit8u    opcode[MAX_OPCODE_SIZE];
+  unsigned opcode_length;
+  Bit8u    opcode[MAX_OPCODE_LENGTH];
   bx_bool  is32, is64;
 
   /* memory accesses */
@@ -85,7 +88,7 @@ public:
     bx_address laddr;     // linear address
     bx_phy_address paddr; // physical address
     unsigned op;          // BX_READ, BX_WRITE or BX_RW
-    unsigned size;        // 1 .. 8
+    unsigned size;        // 1 .. 32
   } data_access[MAX_DATA_ACCESSES];
 
   /* branch resolution and target */
@@ -94,7 +97,7 @@ public:
   bx_address target_linear;
 
 public:
-  bxInstrumentation(): valid(0), active(0) {}
+  bxInstrumentation(): ready(0), active(0) {}
 
   void set_cpu_id(unsigned cpu) { cpu_id = cpu; }
 
@@ -110,9 +113,8 @@ public:
   void bx_instr_ucnear_branch(unsigned what, bx_address new_eip);
   void bx_instr_far_branch(unsigned what, Bit16u new_cs, bx_address new_eip);
 
-  void bx_instr_opcode(const Bit8u *opcode, unsigned len, bx_bool is32, bx_bool is64);
-
   void bx_instr_before_execution(bxInstruction_c *i);
+  void bx_instr_after_execution(bxInstruction_c *i);
 
   void bx_instr_interrupt(unsigned vector);
   void bx_instr_exception(unsigned vector, unsigned error_code);
@@ -122,6 +124,8 @@ public:
 
 private:
   void branch_taken(bx_address new_eip);
+
+  void bx_print_instruction(void);
 };
 
 void bx_instr_init(unsigned cpu);
@@ -133,7 +137,7 @@ extern bxInstrumentation *icpu;
 #define BX_INSTR_EXIT_ENV() bx_instr_exit_env()
 
 /* simulation init, shutdown, reset */
-#define BX_INSTR_INITIALIZE(cpu_id)	   bx_instr_initialize(cpu_id);
+#define BX_INSTR_INITIALIZE(cpu_id)	 bx_instr_initialize(cpu_id)
 #define BX_INSTR_EXIT(cpu_id)
 #define BX_INSTR_RESET(cpu_id, type)     icpu[cpu_id].bx_instr_reset(type)
 #define BX_INSTR_HLT(cpu_id)
@@ -150,8 +154,7 @@ extern bxInstrumentation *icpu;
 #define BX_INSTR_FAR_BRANCH(cpu_id, what, new_cs, new_eip) icpu[cpu_id].bx_instr_far_branch(what, new_cs, new_eip)
 
 /* decoding completed */
-#define BX_INSTR_OPCODE(cpu_id, opcode, len, is32, is64) \
-                       icpu[cpu_id].bx_instr_opcode(opcode, len, is32, is64)
+#define BX_INSTR_OPCODE(cpu_id, i, opcode, len, is32, is64)
 
 /* exceptional case and interrupt */
 #define BX_INSTR_EXCEPTION(cpu_id, vector, error_code) \
@@ -168,7 +171,7 @@ extern bxInstrumentation *icpu;
 
 /* execution */
 #define BX_INSTR_BEFORE_EXECUTION(cpu_id, i) icpu[cpu_id].bx_instr_before_execution(i)
-#define BX_INSTR_AFTER_EXECUTION(cpu_id, i)
+#define BX_INSTR_AFTER_EXECUTION(cpu_id, i) icpu[cpu_id].bx_instr_after_execution(i)
 #define BX_INSTR_REPEAT_ITERATION(cpu_id, i)
 
 /* memory access */
@@ -213,7 +216,7 @@ extern bxInstrumentation *icpu;
 #define BX_INSTR_FAR_BRANCH(cpu_id, what, new_cs, new_eip)
 
 /* decoding completed */
-#define BX_INSTR_OPCODE(cpu_id, opcode, len, is32, is64)
+#define BX_INSTR_OPCODE(cpu_id, i, opcode, len, is32, is64)
 
 /* exceptional case and interrupt */
 #define BX_INSTR_EXCEPTION(cpu_id, vector, error_code)

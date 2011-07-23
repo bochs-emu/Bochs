@@ -2692,67 +2692,6 @@ AC_ARG_ENABLE(1g-pages,
    AC_MSG_RESULT(no)
   ])
 
-AC_MSG_CHECKING(for PAE support (deprecated))
-AC_ARG_ENABLE(pae,
-  [  --enable-pae                      enables PAE support (deprecated)],
-  [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([DEPRECATED - enabled automatically for CPU_LEVEL >= 6])
-  ],
-  [
-   AC_MSG_RESULT(no)
-  ])
-
-AC_MSG_CHECKING(for MTRR/PAT support (deprecated))
-AC_ARG_ENABLE(mtrr,
-  [  --enable-mtrr                     enables MTRR/PAT support (deprecated)],
-  [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([DEPRECATED - enabled automatically for CPU_LEVEL >= 6])
-  ],
-  [
-   AC_MSG_RESULT(no)
-  ])
-
-
-AC_MSG_CHECKING(for LARGE PAGES (PSE) support (deprecated))
-AC_ARG_ENABLE(large-pages,
-  [  --enable-large-pages              enables PSE support (deprecated)],
-  [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([DEPRECATED - enabled automatically for CPU_LEVEL >= 5])
-  ],
-  [
-   AC_MSG_RESULT(no)
-  ])
-
-AC_MSG_CHECKING(for GLOBAL PAGES (PGE) support (deprecated))
-AC_ARG_ENABLE(global-pages,
-  [  --enable-global-pages             enables Global Pages support (deprecated)],
-  [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([DEPRECATED - enabled automatically for CPU_LEVEL >= 6])
-  ],
-  [
-   AC_MSG_RESULT(no)
-  ])
-
-AC_MSG_CHECKING(for DAZ support (deprecated))
-AC_ARG_ENABLE(daz,
-  [  --enable-daz                      enables denormals-are-zeroes support (deprecated)],
-  [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([DEPRECATED - enabled automatically for SSE level >= 2])
-  ],
-  [
-   AC_MSG_RESULT(no)
-  ])
-
-AC_MSG_CHECKING(for VME support (deprecated))
-AC_ARG_ENABLE(vme,
-  [  --enable-vme                      virtual 8086 mode extensions (deprecated)],
-  [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([DEPRECATED - enabled automatically for CPU_LEVEL >= 5])
-  ],
-  [
-   AC_MSG_RESULT(no)
-  ])
-
 AC_MSG_CHECKING(for VESA BIOS extensions (deprecated))
 AC_ARG_ENABLE(vbe,
   [  --enable-vbe                      use VESA BIOS extensions (deprecated)],
