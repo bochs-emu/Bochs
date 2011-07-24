@@ -101,6 +101,8 @@ Bochs repository moved to the SVN version control !
   [3190995] add eth backend based on Slirp by Heikki Lindholm
 
 - these S.F. bugs were closed/fixed
+  [1788739] Abort on large memory setting
+  [3012207] Int 13h FN 48h incorrect return values
   [3363289] holding shift key causes capslock hang
   [1819639] Two incompatible crc32 modules
   [3324111] configure for VCPP.NET issues
@@ -116,6 +118,9 @@ Bochs repository moved to the SVN version control !
   [3175168] Cirrus CL-GD5446 emulation incorrect
   [3260134] Failed to compile when trace cache disabled
   [3197425] Error compile with vmx in vs2008/2010 and for correct x64
+
+- these S.F. feature requests were closed/implemented
+  [2800839] VMX-preemption timer
 
 -------------------------------------------------------------------------
 Changes in 2.4.6 (February 22, 2011):
