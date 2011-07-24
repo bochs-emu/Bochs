@@ -1931,10 +1931,8 @@ Bit64s bx_floppy_ctrl_c::floppy_param_handler(bx_param_c *param, int set, Bit64s
     param->get_param_path(pname, BX_PATHNAME_LEN);
     if (!strcmp(pname, BXPN_FLOPPYA_STATUS)) {
       BX_FD_THIS set_media_status(0, (bx_bool)val);
-      bx_gui->update_drive_status_buttons();
     } else if (!strcmp(pname, BXPN_FLOPPYB_STATUS)) {
       BX_FD_THIS set_media_status(1, (bx_bool)val);
-      bx_gui->update_drive_status_buttons();
     } else if (!strcmp(pname, BXPN_FLOPPYA_READONLY)) {
       BX_FD_THIS s.media[0].write_protected = (bx_bool)val;
     } else if (!strcmp(pname, BXPN_FLOPPYB_READONLY)) {
@@ -1963,7 +1961,6 @@ const char* bx_floppy_ctrl_c::floppy_param_string_handler(bx_param_string_c *par
       device = atoi(base->get_name());
       if (empty) {
         BX_FD_THIS set_media_status(device, 0);
-        bx_gui->update_drive_status_buttons();
       } else {
         if (SIM->get_param_enum("devtype", base)->get() == BX_FDD_NONE) {
           BX_ERROR(("Cannot add a floppy drive at runtime"));

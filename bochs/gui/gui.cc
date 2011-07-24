@@ -299,7 +299,7 @@ void bx_gui_c::floppyA_handler(void)
     // image you want to switch to.
     int ret = SIM->ask_param(BXPN_FLOPPYA_PATH);
     if (ret > 0) {
-      BX_GUI_THIS update_drive_status_buttons();
+      SIM->update_runtime_options();
     }
     return;
   }
@@ -317,7 +317,7 @@ void bx_gui_c::floppyB_handler(void)
     // image you want to switch to.
     int ret = SIM->ask_param(BXPN_FLOPPYB_PATH);
     if (ret > 0) {
-      BX_GUI_THIS update_drive_status_buttons();
+      SIM->update_runtime_options();
     }
     return;
   }
@@ -339,7 +339,7 @@ void bx_gui_c::cdrom1_handler(void)
       return;  // no cdrom found
     int ret = SIM->ask_param(cdrom);
     if (ret > 0) {
-      BX_GUI_THIS update_drive_status_buttons();
+      SIM->update_runtime_options();
     }
     return;
   }

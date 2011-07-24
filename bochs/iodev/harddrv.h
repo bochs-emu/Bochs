@@ -153,9 +153,11 @@ struct atapi_t
 #if BX_USE_HD_SMF
 #  define BX_HD_SMF  static
 #  define BX_HD_THIS theHardDrive->
+#  define BX_HD_THIS_PTR theHardDrive
 #else
 #  define BX_HD_SMF
 #  define BX_HD_THIS this->
+#  define BX_HD_THIS_PTR this
 #endif
 
 typedef enum {
@@ -197,6 +199,9 @@ public:
 
   static void iolight_timer_handler(void *);
   BX_HD_SMF void iolight_timer(void);
+
+  static void runtime_config_handler(void *);
+  void runtime_config(void);
 
 private:
 
@@ -245,6 +250,7 @@ private:
       int statusbar_id;
       int iolight_counter;
       Bit8u device_num; // for ATAPI identify & inquiry
+      bx_bool status_changed;
     } drives[2];
     unsigned drive_select;
 

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009  The Bochs Project
+//  Copyright (C) 2002-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -835,6 +835,7 @@ void bx_real_sim_c::update_runtime_options()
     temp->handler(temp->device);
     temp = temp->next;
   }
+  bx_gui->update_drive_status_buttons();
 }
 
 bx_bool bx_real_sim_c::is_sim_thread()
