@@ -712,13 +712,13 @@ void bx_init_options()
   screenmode->set_enabled(0);
 #endif
 
-  bx_param_num_c *vga_update_interval = new bx_param_num_c(display,
-      "vga_update_interval",
-      "VGA Update Interval",
-      "Number of microseconds between VGA updates",
-      40000, BX_MAX_BIT32U,
-      50000);
-  vga_update_interval->set_ask_format ("Type a new value for VGA update interval: [%d] ");
+  bx_param_num_c *vga_update_freq = new bx_param_num_c(display,
+      "vga_update_frequency",
+      "VGA Update Frequency",
+      "Number of VGA updates per emulated second",
+      1, 60,
+      5);
+  vga_update_freq->set_ask_format ("Type a new value for VGA update frequency: [%d] ");
 
   bx_param_string_c *vga_extension = new bx_param_string_c(display,
                 "vga_extension",
@@ -1752,7 +1752,7 @@ void bx_init_options()
   usb->set_options(usb->SHOW_PARENT | usb->USE_TAB_WINDOW);
   // misc runtime options
   bx_param_c *rt_misc_init_list[] = {
-      SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL),
+      SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY),
       SIM->get_param_bool(BXPN_MOUSE_ENABLED),
       SIM->get_param_num(BXPN_KBD_PASTE_DELAY),
       SIM->get_param_string(BXPN_USER_SHORTCUT),
@@ -2824,16 +2824,27 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       }
     }
   } else if (!strcmp(params[0], "vga_update_interval")) {
+    Bit64u value;
     if (num_params != 2) {
       PARSE_ERR(("%s: vga_update_interval directive: wrong # args.", context));
     }
-    SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->set(atol(params[1]));
-  } else if (!strcmp(params[0], "vga")) {
-    if (num_params != 2) {
-      PARSE_ERR(("%s: vga directive: wrong # args.", context));
+    value = atol(params[1]);
+    if (value > 0) {
+      SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY)->set(1000000 / value);
+      PARSE_WARN(("%s: 'vga_update_interval' will be replaced by new 'vga: update_freq' option.", context));
+    } else {
+      PARSE_ERR(("%s: invalid value for vga_update_interval", context));
     }
-    if (!strncmp(params[1], "extension=", 10)) {
-      SIM->get_param_string(BXPN_VGA_EXTENSION)->set(&params[1][10]);
+  } else if (!strcmp(params[0], "vga")) {
+    if (num_params < 2) {
+      PARSE_ERR(("%s: vga directive malformed.", context));
+    }
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "extension=", 10)) {
+        SIM->get_param_string(BXPN_VGA_EXTENSION)->set(&params[i][10]);
+      } else if (!strncmp(params[i], "update_freq=", 12)) {
+        SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY)->set(atol(&params[i][12]));
+      }
     }
   } else if (!strcmp(params[0], "keyboard_serial_delay")) {
     if (num_params != 2) {
@@ -3058,7 +3069,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
   } else if ((!strcmp(params[0], "pci")) ||
              (!strcmp(params[0], "i440fxsupport"))) {
-    // new option for future extensions
+    // new option 'pci' for future extensions
     char tmpdev[80];
     int enabled = -1;
     int chipset = -1;
@@ -3936,8 +3947,9 @@ int bx_write_configuration(const char *rc, int overwrite)
       SIM->get_param_num(BXPN_PCIDEV_VENDOR)->get(),
       SIM->get_param_num(BXPN_PCIDEV_DEVICE)->get());
   }
-  fprintf(fp, "vga_update_interval: %u\n", SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->get());
-  fprintf(fp, "vga: extension=%s\n", SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr());
+  fprintf(fp, "vga: extension=%s, update_freq=%u\n",
+    SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(),
+    SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY)->get());
 #if BX_SUPPORT_SMP
   fprintf(fp, "cpu: count=%u:%u:%u, ips=%u, quantum=%d, ",
     SIM->get_param_num(BXPN_CPU_NPROCESSORS)->get(), SIM->get_param_num(BXPN_CPU_NCORES)->get(),

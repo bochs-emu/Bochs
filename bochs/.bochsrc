@@ -281,12 +281,25 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 
 #=======================================================================
 # VGA:
-# Here you can specify the display extension to be used. With the value
-# 'none' you can use standard VGA with no extension. Other supported
-# values are 'vbe' for Bochs VBE and 'cirrus' for Cirrus SVGA support.
+# This defines some parameter related to the VGA display
+#
+#   EXTENSION
+#     Here you can specify the display extension to be used. With the value
+#     'none' you can use standard VGA with no extension. Other supported
+#     values are 'vbe' for Bochs VBE and 'cirrus' for Cirrus SVGA support.
+#
+#   UPDATE_FREQ
+#     The VGA update frequency is based on the emulated clock and the default
+#     value is 5. Keep in mind that you must tweak the 'cpu: ips=N' directive
+#     to be as close to the number of emulated instructions-per-second your
+#     workstation can do, for this to be accurate. If the realtime sync is
+#     enabled with the 'clock' option, the value is based on the real time.
+#     This parameter can be changed at runtime.
+#
+# Examples:
+#   vga: extension=cirrus, update_freq: 10
 #=======================================================================
-#vga: extension=cirrus
-vga: extension=vbe
+#vga: extension=vbe, update_freq=5
 
 #=======================================================================
 # FLOPPYA:
@@ -649,20 +662,6 @@ parport1: enabled=1, file="parport.out"
 #   es1370: enabled=1, wavedev=alsa     # Linux with ALSA
 #=======================================================================
 #es1370: enabled=1, wavedev=alsa
-
-#=======================================================================
-# VGA_UPDATE_INTERVAL:
-# Video memory is scanned for updates and screen is updated every so many
-# virtual microseconds. The default value is 50000, about 20Hz based on the
-# emulated clock. Keep in mind that you must tweak the 'cpu: ips=N' directive
-# to be as close to the number of emulated instructions-per-second your
-# workstation can do, for this to be accurate. This parameter can be changed
-# at runtime.
-#
-# Examples:
-#   vga_update_interval: 250000
-#=======================================================================
-vga_update_interval: 300000
 
 #=======================================================================
 # KEYBOARD_SERIAL_DELAY:

@@ -39,6 +39,7 @@
 #include "iodev.h"
 #include "vga.h"
 #include "svga_cirrus.h"
+#include "virt_timer.h"
 
 #if BX_SUPPORT_CLGD54XX
 
@@ -826,10 +827,18 @@ void bx_svga_cirrus_c::trigger_timer(void *this_ptr)
 
 Bit64s bx_svga_cirrus_c::svga_param_handler(bx_param_c *param, int set, Bit64s val)
 {
+  Bit32u interval;
+
   if (set) {
-    BX_INFO (("Changing timer interval to %d", (Bit32u)val));
-    BX_CIRRUS_THIS svga_timer_handler (theSvga);
-    bx_pc_system.activate_timer (BX_CIRRUS_THIS timer_id, (Bit32u)val, 1);
+    interval = (Bit32u)(1000000 / val);
+    BX_INFO(("Changing timer interval to %d", interval));
+    BX_CIRRUS_THIS svga_timer_handler(theSvga);
+    bx_virt_timer.activate_timer(BX_CIRRUS_THIS timer_id, interval, 1);
+    if (interval < 300000) {
+      BX_CIRRUS_THIS s.blink_counter = 300000 / (unsigned)interval;
+    } else {
+      BX_CIRRUS_THIS s.blink_counter = 1;
+    }
   }
   return val;
 }

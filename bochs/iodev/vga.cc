@@ -113,7 +113,7 @@ bx_vga_c::~bx_vga_c()
     delete [] s.memory;
     s.memory = NULL;
   }
-  SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->set_handler(NULL);
+  SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY)->set_handler(NULL);
   BX_DEBUG(("Exit"));
 }
 
@@ -386,14 +386,14 @@ void bx_vga_c::init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t f_wr
 
 void bx_vga_c::init_systemtimer(bx_timer_handler_t f_timer, param_event_handler f_param)
 {
-  bx_param_num_c *vga_update_interval = SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL);
-  Bit64u interval = vga_update_interval->get();
+  bx_param_num_c *vga_update_freq = SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY);
+  Bit64u interval = 1000000 / vga_update_freq->get();
   BX_INFO(("interval=" FMT_LL "u", interval));
   if (BX_VGA_THIS timer_id == BX_NULL_TIMER_HANDLE) {
     BX_VGA_THIS timer_id = bx_virt_timer.register_timer(this, f_timer,
        (Bit32u)interval, 1, 1, "vga");
-    vga_update_interval->set_handler(f_param);
-    vga_update_interval->set_runtime_param(1);
+    vga_update_freq->set_handler(f_param);
+    vga_update_freq->set_runtime_param(1);
   }
   if (interval < 300000) {
     BX_VGA_THIS s.blink_counter = 300000 / (unsigned)interval;
@@ -1484,11 +1484,19 @@ void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_l
 
 Bit64s bx_vga_c::vga_param_handler(bx_param_c *param, int set, Bit64s val)
 {
-  // handler for runtime parameter 'vga_update_interval'
+  Bit32u interval;
+
+  // handler for runtime parameter 'vga: update_freq'
   if (set) {
-    BX_INFO(("Changing timer interval to %d", (Bit32u)val));
+    interval = (Bit32u)(1000000 / val);
+    BX_INFO(("Changing timer interval to %d", interval));
     BX_VGA_THIS timer_handler(theVga);
-    bx_pc_system.activate_timer(BX_VGA_THIS timer_id, (Bit32u)val, 1);
+    bx_virt_timer.activate_timer(BX_VGA_THIS timer_id, interval, 1);
+    if (interval < 300000) {
+      BX_VGA_THIS s.blink_counter = 300000 / (unsigned)interval;
+    } else {
+      BX_VGA_THIS s.blink_counter = 1;
+    }
   }
   return val;
 }
