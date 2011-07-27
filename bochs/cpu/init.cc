@@ -309,12 +309,10 @@ void BX_CPU_C::register_state(void)
 
   sprintf(name, "cpu%d", BX_CPU_ID);
 
-  bx_list_c *cpu = new bx_list_c(SIM->get_bochs_root(), name, name, 60 + BX_GENERAL_REGISTERS);
+  bx_list_c *cpu = new bx_list_c(SIM->get_bochs_root(), name, name, 50 + BX_GENERAL_REGISTERS);
 
-  BXRS_PARAM_SPECIAL32(cpu, cpu_version, param_save_handler, param_restore_handler);
-  BXRS_PARAM_SPECIAL32(cpu, cpuid_std,   param_save_handler, param_restore_handler);
-  BXRS_PARAM_SPECIAL32(cpu, cpuid_ext,   param_save_handler, param_restore_handler);
   BXRS_HEX_PARAM_SIMPLE(cpu, isa_extensions_bitmask);
+  BXRS_HEX_PARAM_SIMPLE(cpu, cpu_extensions_bitmask);
   BXRS_DEC_PARAM_SIMPLE(cpu, cpu_mode);
   BXRS_HEX_PARAM_SIMPLE(cpu, activity_state);
   BXRS_HEX_PARAM_SIMPLE(cpu, inhibit_mask);
@@ -590,13 +588,7 @@ Bit64s BX_CPU_C::param_save(bx_param_c *param)
   Bit64s val = 0;
 
   pname = param->get_name();
-  if (!strcmp(pname, "cpu_version")) {
-    val = get_cpu_version_information();
-  } else if (!strcmp(pname, "cpuid_std")) {
-    val = get_std_cpuid_features();
-  } else if (!strcmp(pname, "cpuid_ext")) {
-    val = get_extended_cpuid_features();
-  } else if (!strcmp(pname, "EFLAGS")) {
+  if (!strcmp(pname, "EFLAGS")) {
     val = BX_CPU_THIS_PTR read_eflags();
   } else if (!strcmp(pname, "selector")) {
     segname = param->get_parent()->get_name();
@@ -643,19 +635,7 @@ void BX_CPU_C::param_restore(bx_param_c *param, Bit64s val)
   bx_segment_reg_t *segment = NULL;
 
   pname = param->get_name();
-  if (!strcmp(pname, "cpu_version")) {
-    if (val != get_cpu_version_information()) {
-      BX_PANIC(("save/restore: CPU version mismatch"));
-    }
-  } else if (!strcmp(pname, "cpuid_std")) {
-    if (val != get_std_cpuid_features()) {
-      BX_PANIC(("save/restore: CPUID mismatch"));
-    }
-  } else if (!strcmp(pname, "cpuid_ext")) {
-    if (val != get_extended_cpuid_features()) {
-      BX_PANIC(("save/restore: CPUID mismatch"));
-    }
-  } else if (!strcmp(pname, "EFLAGS")) {
+  if (!strcmp(pname, "EFLAGS")) {
     BX_CPU_THIS_PTR setEFlags((Bit32u)val);
   } else if (!strcmp(pname, "selector")) {
     segname = param->get_parent()->get_name();
