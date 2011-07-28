@@ -27,7 +27,7 @@
 
 #include "param_names.h"
 
-BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
+BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id), cpuid(NULL)
 #if BX_SUPPORT_APIC
    ,lapic (this, id)
 #endif
@@ -38,6 +38,9 @@ BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
   char buffer[16];
   sprintf(buffer, "CPU%x", bx_cpuid);
   put(buffer);
+
+  isa_extensions_bitmask = BX_SUPPORT_FPU ? BX_CPU_X87 : 0;
+  cpu_extensions_bitmask = 0;
 }
 
 #if BX_WITH_WX
@@ -142,13 +145,17 @@ static Bit64s cpu_param_handler(bx_param_c *param, int set, Bit64s val)
 
 #endif
 
+#include "generic_cpuid.h"
+
 // BX_CPU_C constructor
 void BX_CPU_C::initialize(void)
 {
   BX_CPU_THIS_PTR set_INTR(0);
 
-  init_cpu_features_bitmask();
-  init_isa_features_bitmask();
+  BX_CPU_THIS_PTR cpuid = create_bx_generic_cpuid(this);
+
+  BX_CPU_THIS_PTR isa_extensions_bitmask = cpuid->get_isa_extensions_bitmask();
+  BX_CPU_THIS_PTR cpu_extensions_bitmask = cpuid->get_cpu_extensions_bitmask();
 
   init_FetchDecodeTables(); // must be called after init_isa_features_bitmask()
 
@@ -698,6 +705,10 @@ void BX_CPU_C::after_restore_state(void)
 
 BX_CPU_C::~BX_CPU_C()
 {
+#if BX_CPU_LEVEL >= 4
+  delete cpuid;
+#endif
+
   BX_INSTR_EXIT(BX_CPU_ID);
   BX_DEBUG(("Exit."));
 }
@@ -716,7 +727,7 @@ void BX_CPU_C::reset(unsigned source)
   for (n=0;n<BX_GENERAL_REGISTERS;n++)
     BX_WRITE_32BIT_REGZ(n, 0);
 
-  BX_WRITE_32BIT_REGZ(BX_32BIT_REG_EDX, get_cpu_version_information());
+//BX_WRITE_32BIT_REGZ(BX_32BIT_REG_EDX, get_cpu_version_information());
 
   // initialize NIL register
   BX_WRITE_32BIT_REGZ(BX_NIL_REGISTER, 0);
@@ -1037,12 +1048,11 @@ void BX_CPU_C::reset(unsigned source)
   }
 #endif
 
-  // initialize CPUID values - make sure apicbase already initialized
-#if BX_CPU_LEVEL >= 4
-  set_cpuid_defaults();
-#endif
-
   updateFetchModeMask();
+
+#if BX_CPU_LEVEL >= 4
+  BX_CPU_THIS_PTR cpuid->dump_cpuid();
+#endif
 
   BX_INSTR_RESET(BX_CPU_ID, source);
 }

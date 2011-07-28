@@ -60,6 +60,29 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PREFETCH(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
+{
+#if BX_CPU_LEVEL >= 4
+
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    BX_ERROR(("VMEXIT: CPUID in VMX non-root operation"));
+    VMexit(i, VMX_VMEXIT_CPUID, 0);
+  }
+#endif
+
+  struct cpuid_function_t leaf;
+  BX_CPU_THIS_PTR cpuid->get_cpuid_leaf(EAX, ECX, &leaf);
+
+  RAX = leaf.eax;
+  RBX = leaf.ebx;
+  RCX = leaf.ecx;
+  RDX = leaf.edx;
+#endif
+
+  BX_NEXT_INSTR(i);
+}
+
 //
 // The shutdown state is very similar to the state following the exection
 // if HLT instruction. In this mode the processor stops executing

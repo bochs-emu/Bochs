@@ -89,7 +89,7 @@ OBJS = \
 	data_xfer16.o \
 	data_xfer32.o \
 	exception.o \
-	cpuid.o \
+	generic_cpuid.o \
 	proc_ctrl.o \
 	crregs.o \
 	msr.o \
@@ -284,7 +284,7 @@ cpu.o: cpu.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h \
  ../iodev/iodev.h ../param_names.h
-cpuid.o: cpuid.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
+generic_cpuid.o: generic_cpuid.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
  ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../plugin.h \
  ../extplugin.h ../gui/gui.h ../instrument/stubs/instrument.h cpu.h \

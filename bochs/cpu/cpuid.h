@@ -31,6 +31,25 @@ struct cpuid_function_t {
   Bit32u edx;
 };
 
+class bx_cpuid_t {
+public:
+  bx_cpuid_t(BX_CPU_C *_cpu): cpu(_cpu) {}
+  virtual ~bx_cpuid_t() {}
+
+  // return CPU name
+  virtual const char *get_name(void) const { return NULL; }
+
+  virtual Bit32u get_isa_extensions_bitmask(void) const = 0;
+  virtual Bit32u get_cpu_extensions_bitmask(void) const = 0;
+
+  virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) {}
+
+  virtual void dump_cpuid(void) = 0;
+
+protected:
+  BX_CPU_C *cpu;
+};
+
 // cpuid ISA (duplicated in disasm.h)
 #define BX_CPU_X87              (1 << 0)        /* FPU (X87) instruction */
 #define BX_CPU_486              (1 << 1)        /* 486 new instruction */
