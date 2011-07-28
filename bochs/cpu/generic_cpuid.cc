@@ -200,6 +200,8 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf)
   leaf->edx = get_std_cpuid_features();
 }
 
+#if BX_CPU_LEVEL >= 6
+
 // leaf 0x00000002 //
 void bx_generic_cpuid_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf)
 {
@@ -570,6 +572,8 @@ void bx_generic_cpuid_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_
 #endif
 }
 
+#if BX_SUPPORT_X86_64
+
 // leaf 0x80000005 //
 void bx_generic_cpuid_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf)
 {
@@ -609,6 +613,10 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf)
   leaf->ecx = 0; // Reserved, undefined
   leaf->edx = 0;
 }
+
+#endif
+
+#endif
 
 void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
 {
@@ -968,32 +976,6 @@ Bit32u bx_generic_cpuid_t::get_extended_cpuid_features(void)
   return features;
 }
 
-#if BX_CPU_LEVEL >= 6
-Bit32u bx_generic_cpuid_t::get_ext3_cpuid_features(void)
-{
-  Bit32u features = 0;
-
-  //   [0:0]    FS/GS BASE access instructions
-  //   [2:1]    reserved
-  //   [3:3]    BMI1: Advanced Bit Manipulation Extensions
-  //   [4:4]    reserved
-  //   [5:5]    AVX2
-  //   [6:6]    reserved
-  //   [7:7]    SMEP: Supervisor Mode Execution Protection
-  //   [8:8]    BMI2: Advanced Bit Manipulation Extensions
-  //   [9:9]    Support for Enhanced REP MOVSB/STOSB
-  //   [10:10]  Support for INVPCID instruction
-  //   [31:10]  reserved
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_FSGSBASE))
-    features |= BX_CPUID_EXT3_FSGSBASE;
-
-  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_SMEP))
-    features |= BX_CPUID_EXT3_SMEP;
-
-  return features;
-}
-#endif
-
 /* Get CPU feature flags. Returned by CPUID functions 1 and 80000001.  */
 Bit32u bx_generic_cpuid_t::get_std_cpuid_features(void)
 {
@@ -1113,6 +1095,8 @@ Bit32u bx_generic_cpuid_t::get_std_cpuid_features(void)
   return features;
 }
 
+#if BX_CPU_LEVEL >= 6
+
 /* Get CPU feature flags. Returned by CPUID function 80000001 in EDX register */
 Bit32u bx_generic_cpuid_t::get_std2_cpuid_features(void)
 {
@@ -1196,6 +1180,32 @@ Bit32u bx_generic_cpuid_t::get_ext2_cpuid_features(void)
 
   return features;
 }
+
+Bit32u bx_generic_cpuid_t::get_ext3_cpuid_features(void)
+{
+  Bit32u features = 0;
+
+  //   [0:0]    FS/GS BASE access instructions
+  //   [2:1]    reserved
+  //   [3:3]    BMI1: Advanced Bit Manipulation Extensions
+  //   [4:4]    reserved
+  //   [5:5]    AVX2
+  //   [6:6]    reserved
+  //   [7:7]    SMEP: Supervisor Mode Execution Protection
+  //   [8:8]    BMI2: Advanced Bit Manipulation Extensions
+  //   [9:9]    Support for Enhanced REP MOVSB/STOSB
+  //   [10:10]  Support for INVPCID instruction
+  //   [31:10]  reserved
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_FSGSBASE))
+    features |= BX_CPUID_EXT3_FSGSBASE;
+
+  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_SMEP))
+    features |= BX_CPUID_EXT3_SMEP;
+
+  return features;
+}
+
+#endif
 
 void bx_generic_cpuid_t::dump_cpuid(void)
 {
