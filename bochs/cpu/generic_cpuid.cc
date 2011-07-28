@@ -127,7 +127,7 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf)
 {
   static Bit8u *vendor_string = (Bit8u *)SIM->get_param_string(BXPN_VENDOR_STRING)->getptr();
 
-  // EAX: highest input value understood by CPUID
+  // EAX: highest std function understood by CPUID
   // EBX: vendor ID string
   // EDX: vendor ID string
   // ECX: vendor ID string
@@ -536,6 +536,7 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf)
 // leaf 0x80000004 //
 void bx_generic_cpuid_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf)
 {
+  // CPUID function 0x800000002-0x800000004 - Processor Name String Identifier
   static Bit8u *brand_string = (Bit8u *)SIM->get_param_string(BXPN_BRAND_STRING)->getptr();
 
   switch(function) {
@@ -572,7 +573,7 @@ void bx_generic_cpuid_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_
 // leaf 0x80000005 //
 void bx_generic_cpuid_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf)
 {
-  /* cache info (L1 cache) */
+  // CPUID function 0x800000005 - L1 Cache and TLB Identifiers
   leaf->eax = 0x01ff01ff;
   leaf->ebx = 0x01ff01ff;
   leaf->ecx = 0x40020140;
@@ -582,7 +583,7 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf)
 // leaf 0x80000006 //
 void bx_generic_cpuid_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf)
 {
-  /* cache info (L2 cache) */
+  // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
   leaf->eax = 0;
   leaf->ebx = 0x42004200;
   leaf->ecx = 0x02008140;
@@ -592,6 +593,7 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf)
 // leaf 0x80000007 //
 void bx_generic_cpuid_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf)
 {
+  // CPUID function 0x800000007 - Advanced Power Management
   leaf->eax = 0;
   leaf->ebx = 0;
   leaf->ecx = 0;
@@ -949,8 +951,11 @@ Bit32u bx_generic_cpuid_t::get_extended_cpuid_features(void)
     features |= BX_CPUID_EXT_AES;
 
   // support XSAVE extensions
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_XSAVE))
-    features |= BX_CPUID_EXT_XSAVE | BX_CPUID_EXT_OSXSAVE;
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_XSAVE)) {
+    features |= BX_CPUID_EXT_XSAVE;
+    if (cpu->cr4.get_OSXSAVE())
+      features |= BX_CPUID_EXT_OSXSAVE;
+  }
 
 #if BX_SUPPORT_AVX
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_AVX))
