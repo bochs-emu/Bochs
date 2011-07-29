@@ -35,8 +35,6 @@ X_LIBS = @X_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
 RANLIB = @RANLIB@
 
-
-
 BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 
 # Objects which are synced between the cpu and cpu64 code and
@@ -128,6 +126,10 @@ OBJS64 = \
 	bit64.o \
 	stack64.o
 
+CPUDB_OBJS = cpudb/corei7_sandy_bridge_2600K.o \
+             cpudb/core2_extreme_x9770.o \
+             cpudb/p4_prescott_celeron_336.o
+
 BX_INCLUDES = ../bochs.h ../config.h
 
 
@@ -137,18 +139,22 @@ all: libcpu.a
 	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS) @CXXFP@$< @OFP@$@
 
 
-libcpu.a: $(OBJS) @OBJS64@
+libcpu.a: $(OBJS) $(CPUDB_OBJS) @OBJS64@ 
 	@RMCOMMAND@ libcpu.a
-	@MAKELIB@ $(OBJS) @OBJS64@
+	@MAKELIB@ $(OBJS) $(CPUDB_OBJS) @OBJS64@
 	$(RANLIB) libcpu.a
 
 $(OBJS): $(BX_INCLUDES)
 
 $(OBJS64): $(BX_INCLUDES)
 
+$(CPUDB_OBJS): $(BX_INCLUDES)
+
 clean:
 	@RMCOMMAND@ *.o
 	@RMCOMMAND@ *.a
+	cd cpudb && @RMCOMMAND@ *.o *.a
+	@CD_UP_ONE@
 
 dist-clean: clean
 	@RMCOMMAND@ Makefile
@@ -788,3 +794,24 @@ xsave.o: xsave.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.
  cpuid.h crregs.h descriptor.h instr.h ia_opcodes.h lazy_flags.h icache.h \
  apic.h ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
+cpudb/corei7_sandy_bridge_2600K.o: cpudb/corei7_sandy_bridge_2600K.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h \
+ ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../plugin.h \
+ ../extplugin.h ../gui/gui.h ../instrument/stubs/instrument.h cpu.h \
+ cpuid.h crregs.h descriptor.h instr.h ia_opcodes.h lazy_flags.h icache.h \
+ apic.h ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
+ ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h cpudb/corei7_sandy_bridge_2600K.h
+cpudb/core2_extreme_x9770.o: cpudb/core2_extreme_x9770.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h \
+ ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../plugin.h \
+ ../extplugin.h ../gui/gui.h ../instrument/stubs/instrument.h cpu.h \
+ cpuid.h crregs.h descriptor.h instr.h ia_opcodes.h lazy_flags.h icache.h \
+ apic.h ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
+ ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h cpudb/core2_extreme_x9770.h
+cpudb/p4_prescott_celeron_336.o: cpudb/p4_prescott_celeron_336.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h \
+ ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../plugin.h \
+ ../extplugin.h ../gui/gui.h ../instrument/stubs/instrument.h cpu.h \
+ cpuid.h crregs.h descriptor.h instr.h ia_opcodes.h lazy_flags.h icache.h \
+ apic.h ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
+ ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h cpudb/p4_prescott_celeron_336.h

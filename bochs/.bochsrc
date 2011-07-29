@@ -85,43 +85,53 @@ romimage: file=$BXSHARE/BIOS-bochs-latest
 # CPU:
 # This defines cpu-related parameters inside Bochs:
 #
+#  MODEL:
+#    Selects CPU configuration to emulate from pre-defined list of all
+#    supported configurations. When this option is used, the CPUID option
+#    has no effect anymore.
+#
+#  CPU configurations that can be selected:
+# ------------------------------------------------------
+#  core2_pnr   Intel(R) Core(TM)2 Extreme CPU X9770
+#  core2_snb   Intel(R) Core(TM) i7-2600K CPU
+#
 #  COUNT:
-#  Set the number of processors:cores per processor:threads per core 
-#  when Bochs is compiled for SMP emulation.
-#  Bochs currently supports up to 8 threads running simultaniosly. 
-#  If Bochs is compiled without SMP support, it won't accept values 
-#  different from 1.
+#    Set the number of processors:cores per processor:threads per core 
+#    when Bochs is compiled for SMP emulation.
+#    Bochs currently supports up to 8 threads running simultaniosly. 
+#    If Bochs is compiled without SMP support, it won't accept values 
+#    different from 1.
 #
 #  QUANTUM:
-#  Maximum amount of instructions allowed to execute by processor before
-#  returning control to another cpu. This option exists only in Bochs 
-#  binary compiled with SMP support.
+#    Maximum amount of instructions allowed to execute by processor before
+#    returning control to another cpu. This option exists only in Bochs 
+#    binary compiled with SMP support.
 #
 #  RESET_ON_TRIPLE_FAULT:
-#  Reset the CPU when triple fault occur (highly recommended) rather than
-#  PANIC. Remember that if you trying to continue after triple fault the 
-#  simulation will be completely bogus !
+#    Reset the CPU when triple fault occur (highly recommended) rather than
+#    PANIC. Remember that if you trying to continue after triple fault the 
+#    simulation will be completely bogus !
 #
 #  MSRS:
-#  Define path to user CPU Model Specific Registers (MSRs) specification.
-#  See example in msrs.def.
+#    Define path to user CPU Model Specific Registers (MSRs) specification.
+#    See example in msrs.def.
 #
 #  IGNORE_BAD_MSRS:
-#  Ignore MSR references that Bochs does not understand; print a warning
-#  message instead of generating #GP exception. This option is enabled
-#  by default but will not be avaiable if configurable MSRs are enabled.
+#    Ignore MSR references that Bochs does not understand; print a warning
+#    message instead of generating #GP exception. This option is enabled
+#    by default but will not be avaiable if configurable MSRs are enabled.
 #
 #  IPS:
-#  Emulated Instructions Per Second. This is the number of IPS that bochs
-#  is capable of running on your machine. You can recompile Bochs with
-#  --enable-show-ips option enabled, to find your host's capability.
-#  Measured IPS value will then be logged into your log file or shown
-#  in the status bar (if supported by the gui).
+#    Emulated Instructions Per Second. This is the number of IPS that bochs
+#    is capable of running on your machine. You can recompile Bochs with
+#    --enable-show-ips option enabled, to find your host's capability.
+#    Measured IPS value will then be logged into your log file or shown
+#    in the status bar (if supported by the gui).
 #
-#  IPS is used to calibrate many time-dependent events within the bochs 
-#  simulation.  For example, changing IPS affects the frequency of VGA
-#  updates, the duration of time before a key starts to autorepeat, and
-#  the measurement of BogoMips and other benchmarks.
+#    IPS is used to calibrate many time-dependent events within the bochs 
+#    simulation.  For example, changing IPS affects the frequency of VGA
+#    updates, the duration of time before a key starts to autorepeat, and
+#    the measurement of BogoMips and other benchmarks.
 #
 #  Examples:
 #
@@ -138,94 +148,95 @@ cpu: count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="ms
 #=======================================================================
 # CPUID:
 #
-# This defines features and functionality supported by Bochs emulated CPU:
+# This defines features and functionality supported by Bochs emulated CPU.
+# The option has no offect if CPU model was selected in CPU option.
 #
 #  MMX:
-#  Select MMX instruction set support.
-#  This option exists only if Bochs compiled with BX_CPU_LEVEL >= 5.
+#    Select MMX instruction set support.
+#    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 5.
 #
 #  APIC:
-#  Select APIC configuration (LEGACY/XAPIC/X2APIC).
-#  This option exists only if Bochs compiled with BX_CPU_LEVEL >= 5.
+#    Select APIC configuration (LEGACY/XAPIC/X2APIC).
+#    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 5.
 #
 #  SEP:
-#  Select SYSENTER/SYSEXIT instruction set support.
-#  This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+#    Select SYSENTER/SYSEXIT instruction set support.
+#    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 #
 #  SSE:
-#  Select SSE instruction set support.
-#  Any of NONE/SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 could be selected.
-#  This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+#    Select SSE instruction set support.
+#    Any of NONE/SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 could be selected.
+#    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 #
 #  AES:
-#  Select AES instruction set support.
-#  This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+#    Select AES instruction set support.
+#    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 #
 #  MOVBE:
-#  Select MOVBE Intel(R) Atom instruction support.
-#  This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+#    Select MOVBE Intel(R) Atom instruction support.
+#    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 #
 #  XSAVE:
-#  Select XSAVE extensions support.
-#  This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+#    Select XSAVE extensions support.
+#    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 #
 #  XSAVEOPT:
-#  Select XSAVEOPT instruction support.
-#  This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+#    Select XSAVEOPT instruction support.
+#    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 #
 #  AVX:
-#  Select AVX instruction set support.
-#  This option exists only if Bochs compiled with --enable-avx option.
+#    Select AVX instruction set support.
+#    This option exists only if Bochs compiled with --enable-avx option.
 #
 #  AVX_F16C:
-#  Select AVX float16 convert instructions support.
-#  This option exists only if Bochs compiled with --enable-avx option.
+#    Select AVX float16 convert instructions support.
+#    This option exists only if Bochs compiled with --enable-avx option.
 #
 #  1G_PAGES:
-#  Enable 1G page size support in long mode.
-#  This option exists only if Bochs compiled with x86-64 support.
+#    Enable 1G page size support in long mode.
+#    This option exists only if Bochs compiled with x86-64 support.
 #
 #  PCID:
-#  Enable Process-Context Identifiers (PCID) support in long mode.
-#  This option exists only if Bochs compiled with x86-64 support.
+#    Enable Process-Context Identifiers (PCID) support in long mode.
+#    This option exists only if Bochs compiled with x86-64 support.
 #
 #  FSGSBASE:
-#  Enable GS/GS BASE access instructions support in long mode.
-#  This option exists only if Bochs compiled with x86-64 support.
+#    Enable GS/GS BASE access instructions support in long mode.
+#    This option exists only if Bochs compiled with x86-64 support.
 #
 #  SMEP:
-#  Enable Supervisor Mode Execution Protection (SMEP) support.
-#  This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+#    Enable Supervisor Mode Execution Protection (SMEP) support.
+#    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 #
 #  MWAIT:
-#  Select MONITOR/MWAIT instructions support.
-#  This option exists only if Bochs compiled with --enable-monitor-mwait.
+#    Select MONITOR/MWAIT instructions support.
+#    This option exists only if Bochs compiled with --enable-monitor-mwait.
 #
 #  MWAIT_IS_NOP:
-#  When this option is enabled MWAIT will not put the CPU into a sleep state.
-#  This option exists only if Bochs compiled with --enable-monitor-mwait.
+#    When this option is enabled MWAIT will not put the CPU into a sleep state.
+#    This option exists only if Bochs compiled with --enable-monitor-mwait.
 #
 #  VENDOR_STRING:
-#  Set the CPUID vendor string returned by CPUID(0x0). This should be a
-#  twelve-character ASCII string.  
+#    Set the CPUID vendor string returned by CPUID(0x0). This should be a
+#    twelve-character ASCII string.  
 #
 #  BRAND_STRING:
-#  Set the CPUID vendor string returned by CPUID(0x80000002 .. 0x80000004).  
-#  This should be at most a forty-eight-character ASCII string.  
+#    Set the CPUID vendor string returned by CPUID(0x80000002 .. 0x80000004).  
+#    This should be at most a forty-eight-character ASCII string.  
 #
 #  FAMILY:
-#  Set model information returned by CPUID. Default family value determined
-#  by configure option --enable-cpu-level.
+#    Set model information returned by CPUID. Default family value determined
+#    by configure option --enable-cpu-level.
 #
 #  MODEL:
-#  Set model information returned by CPUID. Default model value is 3.
+#    Set model information returned by CPUID. Default model value is 3.
 #
 #  STEPPING:
-#  Set stepping information returned by CPUID. Default stepping value is 3.
+#    Set stepping information returned by CPUID. Default stepping value is 3.
 #
 #  CPUID_LIMIT_WINNT:
-#  Determine whether to limit maximum CPUID function to 3. This mode is
-#  required to workaround WinNT installation and boot issues.
+#    Determine whether to limit maximum CPUID function to 3. This mode is
+#    required to workaround WinNT installation and boot issues.
 #=======================================================================
 cpuid: mmx=1, sep=1, sse=sse4_2, apic=xapic, aes=1, movbe=1, xsave=1
 cpuid: family=6, model=0x1a, stepping=5

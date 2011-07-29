@@ -20,13 +20,14 @@ cpu
   n_processors
   n_cores
   n_threads
+  model
   ips
   quantum
   reset_on_triple_fault
   msrs
+  cpuid_limit_winnt
 
 cpuid
-  cpuid_limit_winnt
   family
   model
   stepping

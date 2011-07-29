@@ -147,12 +147,43 @@ static Bit64s cpu_param_handler(bx_param_c *param, int set, Bit64s val)
 
 #include "generic_cpuid.h"
 
+#if BX_SUPPORT_X86_64
+extern bx_cpuid_t *create_p4_prescott_celeron_336_cpuid(BX_CPU_C *cpu);
+extern bx_cpuid_t *create_core2_extreme_x9770_cpuid(BX_CPU_C *cpu);
+#if BX_SUPPORT_AVX
+extern bx_cpuid_t *create_corei7_sandy_bridge_2600k_cpuid(BX_CPU_C *cpu);
+#endif
+#endif
+
+static bx_cpuid_t *cpuid_factory(BX_CPU_C *cpu)
+{
+  unsigned cpu_model = SIM->get_param_enum(BXPN_CPU_MODEL)->get();
+  switch(cpu_model) {
+  case BX_CPU_MODEL_BOCHS:
+    return create_bx_generic_cpuid(cpu);
+#if BX_SUPPORT_X86_64
+  case BX_CPU_MODEL_P4_PRESCOTT_CELERON_336:
+    return create_p4_prescott_celeron_336_cpuid(cpu);
+  case BX_CPU_MODEL_CORE2_EXTREME_X9770:
+    return create_core2_extreme_x9770_cpuid(cpu);
+#if BX_SUPPORT_AVX
+  case BX_CPU_MODEL_COREi7_SNB_2600K:
+    return create_corei7_sandy_bridge_2600k_cpuid(cpu);
+#endif
+#endif
+  default:
+    return 0;
+  }
+}
+
 // BX_CPU_C constructor
 void BX_CPU_C::initialize(void)
 {
   BX_CPU_THIS_PTR set_INTR(0);
 
-  BX_CPU_THIS_PTR cpuid = create_bx_generic_cpuid(this);
+  BX_CPU_THIS_PTR cpuid = cpuid_factory(this);
+  if (! BX_CPU_THIS_PTR cpuid)
+    BX_PANIC(("Failed to create CPUID module !"));
 
   BX_CPU_THIS_PTR isa_extensions_bitmask = cpuid->get_isa_extensions_bitmask();
   BX_CPU_THIS_PTR cpu_extensions_bitmask = cpuid->get_cpu_extensions_bitmask();

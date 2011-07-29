@@ -217,23 +217,42 @@ void bx_init_options()
 #endif
 
   // cpu subtree
-  bx_list_c *cpu_param = new bx_list_c(root_param, "cpu", "CPU Options", 8 + BX_SUPPORT_SMP);
+  bx_list_c *cpu_param = new bx_list_c(root_param, "cpu", "CPU Options", 10 + BX_SUPPORT_SMP);
+
+  static const char *cpu_names[] = { 
+    "bochs",
+#if BX_SUPPORT_X86_64
+    "p4_prescott_celeron_336",
+    "core2_extreme_x9770",
+#if BX_SUPPORT_AVX
+    "corei7_sandy_bridge_2600k",
+#endif
+#endif
+    NULL
+  };
+
+  new bx_param_enum_c(cpu_param,
+      "model", "CPU configuration",
+      "Choose pre-defined CPU configuration",
+      cpu_names,
+      BX_CPU_MODEL_BOCHS,
+      BX_CPU_MODEL_BOCHS);
 
   // cpu options
   bx_param_num_c *nprocessors = new bx_param_num_c(cpu_param,
-      "n_processors", "Number of CPUs in SMP mode",
-      "Sets the number of CPUs for multiprocessor emulation",
+      "n_processors", "Number of processors in SMP mode",
+      "Sets the number of processors for multiprocessor emulation",
       1, BX_CPU_PROCESSORS_LIMIT,
       1);
   nprocessors->set_enabled(BX_CPU_PROCESSORS_LIMIT > 1);
   bx_param_num_c *ncores = new bx_param_num_c(cpu_param,
-      "n_cores", "Number of processor cores in each CPU in SMP mode",
-      "Sets the number of processor cores per CPU for multiprocessor emulation",
+      "n_cores", "Number of cores in each processor in SMP mode",
+      "Sets the number of cores per processor for multiprocessor emulation",
       1, BX_CPU_CORES_LIMIT,
       1);
   ncores->set_enabled(BX_CPU_CORES_LIMIT > 1);
   bx_param_num_c *nthreads = new bx_param_num_c(cpu_param,
-      "n_threads", "Number of HT threads per each process core in SMP mode",
+      "n_threads", "Number of HT threads per each core in SMP mode",
       "Sets the number of HT (Intel(R) HyperThreading Technology) threads per core for multiprocessor emulation",
       1, BX_CPU_HT_THREADS_LIMIT,
       1);
@@ -256,10 +275,14 @@ void bx_init_options()
       1);
 #if BX_CPU_LEVEL >= 5
   new bx_param_bool_c(cpu_param,
-      "ignore_bad_msrs", "Ignore RDMSR/WRMSR to unknown MSR register",
+      "ignore_bad_msrs", "Ignore RDMSR / WRMSR to unknown MSR register",
       "Ignore RDMSR/WRMSR to unknown MSR register",
       1);
 #endif
+  new bx_param_bool_c(cpu_param,
+      "cpuid_limit_winnt", "Limit max CPUID function to 3",
+      "Limit max CPUID function reported to 3 to workaround WinNT issue",
+      0);
 #if BX_CONFIGURE_MSRS
   new bx_param_filename_c(cpu_param,
       "msrs",
@@ -272,12 +295,7 @@ void bx_init_options()
 
   // cpuid subtree
 #if BX_CPU_LEVEL >= 4
-  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 22);
-
-  new bx_param_bool_c(cpuid_param,
-      "cpuid_limit_winnt", "Limit max CPUID function to 3",
-      "Limit max CPUID function reported to 3 to workaround WinNT issue",
-      0);
+  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 21);
 
   new bx_param_string_c(cpuid_param,
       "vendor_string",
@@ -2601,6 +2619,9 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_num(BXPN_CPU_NPROCESSORS)->set(processors);
         SIM->get_param_num(BXPN_CPU_NCORES)->set(cores);
         SIM->get_param_num(BXPN_CPU_NTHREADS)->set(threads);
+      } else if (!strncmp(params[i], "model=", 6)) {
+        if (! SIM->get_param_enum(BXPN_CPU_MODEL)->set_by_name(&params[i][6]))
+          PARSE_ERR(("%s: unsupported CPU model option.", context));
       } else if (!strncmp(params[i], "ips=", 4)) {
         SIM->get_param_num(BXPN_IPS)->set(atol(&params[i][4]));
 #if BX_SUPPORT_SMP
@@ -2619,6 +2640,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 #endif
       } else if (!strncmp(params[i], "msrs=", 5)) {
         SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->set(&params[i][5]);
+      } else if (!strncmp(params[i], "cpuid_limit_winnt=", 18)) {
+        if (parse_param_bool(params[i], 18, BXPN_CPUID_LIMIT_WINNT) < 0) {
+          PARSE_ERR(("%s: cpuid directive malformed.", context));
+        }
       } else {
         PARSE_ERR(("%s: cpu directive malformed.", context));
       }
@@ -2645,10 +2670,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_num(BXPN_CPUID_MODEL)->set(strtoul(&params[i][6], NULL, 0));
       } else if (!strncmp(params[i], "family=", 7)) {
         SIM->get_param_num(BXPN_CPUID_FAMILY)->set(strtoul(&params[i][7], NULL, 0));
-      } else if (!strncmp(params[i], "cpuid_limit_winnt=", 18)) {
-        if (parse_param_bool(params[i], 18, BXPN_CPUID_LIMIT_WINNT) < 0) {
-          PARSE_ERR(("%s: cpuid directive malformed.", context));
-        }
 #if BX_CPU_LEVEL >= 5
       } else if (!strncmp(params[i], "mmx=", 4)) {
         if (parse_param_bool(params[i], 4, BXPN_CPUID_MMX) < 0) {
@@ -3958,8 +3979,9 @@ int bx_write_configuration(const char *rc, int overwrite)
 #else
   fprintf(fp, "cpu: count=1, ips=%u, ", SIM->get_param_num(BXPN_IPS)->get());
 #endif
-  fprintf(fp, "reset_on_triple_fault=%d",
-    SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get());
+  fprintf(fp, "reset_on_triple_fault=%d, cpuid_limit_winnt=%d",
+    SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get(),
+    SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get());
 #if BX_CPU_LEVEL >= 5
   fprintf(fp, ", ignore_bad_msrs=%d", SIM->get_param_bool(BXPN_IGNORE_BAD_MSRS)->get());
 #endif
@@ -3971,7 +3993,10 @@ int bx_write_configuration(const char *rc, int overwrite)
   fprintf(fp, "\n");
 
 #if BX_CPU_LEVEL >= 4
-  fprintf(fp, "cpuid: cpuid_limit_winnt=%d", SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get());
+  fprintf(fp, "cpuid: family=%d, model=0x%02x, stepping=%d", 
+    SIM->get_param_num(BXPN_CPUID_FAMILY)->get(),
+    SIM->get_param_num(BXPN_CPUID_MODEL)->get(),
+    SIM->get_param_num(BXPN_CPUID_STEPPING)->get());
 #if BX_CPU_LEVEL >= 5
   fprintf(fp, ", mmx=%d, apic=%s", SIM->get_param_bool(BXPN_CPUID_MMX)->get(),
     SIM->get_param_enum(BXPN_CPUID_APIC)->get_selected());
@@ -4004,16 +4029,12 @@ int bx_write_configuration(const char *rc, int overwrite)
 #endif
   fprintf(fp, "\n");
 
-  fprintf(fp, "cpuid: family=%d, model=0x%02x, stepping=%d", 
-    SIM->get_param_num(BXPN_CPUID_FAMILY)->get(),
-    SIM->get_param_num(BXPN_CPUID_MODEL)->get(),
-    SIM->get_param_num(BXPN_CPUID_STEPPING)->get());
   const char *vendor_string = SIM->get_param_string(BXPN_VENDOR_STRING)->getptr();
   if (vendor_string)
-    fprintf(fp, ", vendor_string=\"%s\"", vendor_string);
+    fprintf(fp, "cpuid: vendor_string=\"%s\"\n", vendor_string);
   const char *brand_string = SIM->get_param_string(BXPN_BRAND_STRING)->getptr();
   if (brand_string)
-    fprintf(fp, ", brand_string=\"%s\"", brand_string);
+    fprintf(fp, "cpuid: brand_string=\"%s\"\n", brand_string);
   fprintf(fp, "\n");
 #endif
 

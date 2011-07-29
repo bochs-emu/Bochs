@@ -50,6 +50,8 @@ protected:
   BX_CPU_C *cpu;
 };
 
+typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
+
 // cpuid ISA (duplicated in disasm.h)
 #define BX_CPU_X87              (1 << 0)        /* FPU (X87) instruction */
 #define BX_CPU_486              (1 << 1)        /* 486 new instruction */
