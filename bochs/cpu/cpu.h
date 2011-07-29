@@ -634,9 +634,6 @@ typedef struct
 } bx_regs_msr_t;
 #endif
 
-#define MAX_STD_CPUID_FUNCTION 14
-#define MAX_EXT_CPUID_FUNCTION 9
-
 #include "cpuid.h"
 #include "crregs.h"
 #include "descriptor.h"

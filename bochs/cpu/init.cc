@@ -27,7 +27,10 @@
 
 #include "param_names.h"
 
-BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id), cpuid(NULL)
+BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
+#if BX_CPU_LEVEL >= 4
+   , cpuid(NULL)
+#endif
 #if BX_SUPPORT_APIC
    ,lapic (this, id)
 #endif
@@ -145,6 +148,8 @@ static Bit64s cpu_param_handler(bx_param_c *param, int set, Bit64s val)
 
 #endif
 
+#if BX_CPU_LEVEL >= 4
+
 #include "generic_cpuid.h"
 
 #if BX_SUPPORT_X86_64
@@ -176,17 +181,21 @@ static bx_cpuid_t *cpuid_factory(BX_CPU_C *cpu)
   }
 }
 
+#endif
+
 // BX_CPU_C constructor
 void BX_CPU_C::initialize(void)
 {
   BX_CPU_THIS_PTR set_INTR(0);
 
+#if BX_CPU_LEVEL >= 4
   BX_CPU_THIS_PTR cpuid = cpuid_factory(this);
   if (! BX_CPU_THIS_PTR cpuid)
     BX_PANIC(("Failed to create CPUID module !"));
 
   BX_CPU_THIS_PTR isa_extensions_bitmask = cpuid->get_isa_extensions_bitmask();
   BX_CPU_THIS_PTR cpu_extensions_bitmask = cpuid->get_cpu_extensions_bitmask();
+#endif
 
   init_FetchDecodeTables(); // must be called after init_isa_features_bitmask()
 
