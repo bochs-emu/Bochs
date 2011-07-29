@@ -3,6 +3,12 @@ Changes after 2.4.6 release:
 Bochs repository moved to the SVN version control !
 
 - CPU
+  - Now you can configure CPU to emulate using a single .bochsrc option !
+    The option selects CPU configuration to emulate from pre-defined list
+    of supported configurations. When this option is used, Bochs CPU emulation
+    engine is automatically configured to emulate a specific real hardware CPU,
+    including exact CPUID matching reference hardware. Check .bochrc example
+    or read docs for list of supported configurations or more details.
   - Implemented Supervisor Mode Execution Protection (SMEP), the feature can
     be enabled using .bochsrc CPUID option.
   - Added support for XSAVEOPT instruction, the instruction can be enabled
@@ -122,6 +128,9 @@ Bochs repository moved to the SVN version control !
 
 - these S.F. feature requests were closed/implemented
   [2800839] VMX-preemption timer
+  [1507519] configurable CPUID
+   [579002] Allow user to specify architecture
+  [1228567] CPU option
 
 -------------------------------------------------------------------------
 Changes in 2.4.6 (February 22, 2011):
