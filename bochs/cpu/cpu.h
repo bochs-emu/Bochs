@@ -2367,6 +2367,10 @@ public: // for now...
   BX_SMF BX_INSF_TYPE VMWRITE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* VMX instructions */
 
+  /* SMX instructions */
+  BX_SMF BX_INSF_TYPE GETSEC(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  /* SMX instructions */
+
 #if BX_CPU_LEVEL >= 6
   /* VMXx2 */
   BX_SMF BX_INSF_TYPE INVEPT(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3340,6 +3344,9 @@ public: // for now...
 #if BX_SUPPORT_VMX >= 2
   BX_SMF bx_bool CheckPDPTR(Bit64u *pdptr) BX_CPP_AttrRegparmN(1);
 #endif
+#if BX_SUPPORT_X86_64
+  BX_SMF bx_bool SetEFER(bx_address val) BX_CPP_AttrRegparmN(1);
+#endif
 
   BX_SMF void reset(unsigned source);
   BX_SMF void shutdown(void);
@@ -3471,6 +3478,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_fsgsbase(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_smep(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_x2apic(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_smx(void);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
   BX_SMF BX_CPP_INLINE const bx_gen_reg_t *get_gen_regfile() { return BX_CPU_THIS_PTR gen_reg; }
@@ -3896,6 +3904,11 @@ BX_CPP_INLINE bx_bool BX_CPU_C::alignment_check(void)
   return BX_CPU_THIS_PTR alignment_check_mask;
 }
 #endif
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_smx(void)
+{
+  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_SMX);
+}
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_xsave(void)
 {

@@ -71,7 +71,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPU_MONITOR_MWAIT    (1 << 15)       /* MONITOR/MWAIT instruction */
 #define BX_CPU_VMX              (1 << 16)       /* VMX instruction */
 #define BX_CPU_SMX              (1 << 17)       /* SMX instruction */
-#define BX_CPU_SVM              (1 << 18)       /* SVM instruction */
+#define BX_CPU_RDTSCP           (1 << 18)       /* RDTSCP instruction */
 #define BX_CPU_XSAVE            (1 << 19)       /* XSAVE/XRSTOR extensions instruction */
 #define BX_CPU_XSAVEOPT         (1 << 20)       /* XSAVEOPT instruction */
 #define BX_CPU_AES_PCLMULQDQ    (1 << 21)       /* AES+PCLMULQDQ instruction */

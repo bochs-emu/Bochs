@@ -1357,6 +1357,10 @@ bx_define_opcode(BX_IA_INVVPID, &BX_CPU_C::INVVPID, &BX_CPU_C::BxError, BX_CPU_X
 #endif
 // VMX
 
+// SMX
+bx_define_opcode(BX_IA_GETSEC, &BX_CPU_C::GETSEC, &BX_CPU_C::GETSEC, BX_CPU_SMX, 0)
+// SMX
+
 // AVX
 #if BX_SUPPORT_AVX && BX_CPU_LEVEL >= 6
 bx_define_opcode(BX_IA_VMOVUPD_VpdWpd, &BX_CPU_C::VMOVUPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_CPU_AVX, BX_PREPARE_AVX | BX_VEX_NO_VVV | BX_VEX_L128 | BX_VEX_L256)

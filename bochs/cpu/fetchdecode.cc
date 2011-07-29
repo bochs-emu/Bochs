@@ -519,7 +519,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F 34 /w */ { BxTraceEnd, BX_IA_SYSENTER },
   /* 0F 35 /w */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /w */ { 0, BX_IA_ERROR },
-  /* 0F 37 /w */ { 0, BX_IA_ERROR },
+  /* 0F 37 /w */ { 0, BX_IA_GETSEC },
 #if BX_CPU_LEVEL >= 6
   /* 0F 38 /w */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
 #else
@@ -1072,7 +1072,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F 34 /d */ { BxTraceEnd, BX_IA_SYSENTER },
   /* 0F 35 /d */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /d */ { 0, BX_IA_ERROR },
-  /* 0F 37 /d */ { 0, BX_IA_ERROR },
+  /* 0F 37 /d */ { 0, BX_IA_GETSEC },
 #if BX_CPU_LEVEL >= 6
   /* 0F 38 /d */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
 #else

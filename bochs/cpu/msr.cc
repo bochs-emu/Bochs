@@ -565,21 +565,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
 #if BX_SUPPORT_X86_64
     case BX_MSR_EFER:
-      if (val_64 & ~BX_EFER_SUPPORTED_BITS) {
-        BX_ERROR(("WRMSR: attempt to set reserved bits of EFER MSR !"));
-        return 0;
-      }
-
-      /* #GP(0) if changing EFER.LME when cr0.pg = 1 */
-      if ((BX_CPU_THIS_PTR efer.get_LME() != ((val32_lo >> 8) & 1)) &&
-           BX_CPU_THIS_PTR  cr0.get_PG())
-      {
-        BX_ERROR(("WRMSR: attempt to change LME when CR0.PG=1"));
-        return 0;
-      }
-
-      BX_CPU_THIS_PTR efer.set32((val32_lo & BX_EFER_SUPPORTED_BITS & ~BX_EFER_LMA_MASK)
-              | (BX_CPU_THIS_PTR efer.get32() & BX_EFER_LMA_MASK)); // keep LMA untouched
+      if (! SetEFER(val_64)) return 0;
       break;
 
     case BX_MSR_STAR:

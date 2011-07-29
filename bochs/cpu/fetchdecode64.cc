@@ -451,7 +451,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 34 /w */ { BxTraceEnd, BX_IA_SYSENTER },
   /* 0F 35 /w */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /w */ { 0, BX_IA_ERROR },
-  /* 0F 37 /w */ { 0, BX_IA_ERROR },
+  /* 0F 37 /w */ { 0, BX_IA_GETSEC },
   /* 0F 38 /w */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
   /* 0F 39 /w */ { 0, BX_IA_ERROR },
   /* 0F 3A /w */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
@@ -966,7 +966,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 34 /d */ { BxTraceEnd, BX_IA_SYSENTER },
   /* 0F 35 /d */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /d */ { 0, BX_IA_ERROR },
-  /* 0F 37 /d */ { 0, BX_IA_ERROR },
+  /* 0F 37 /d */ { 0, BX_IA_GETSEC },
   /* 0F 38 /d */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
   /* 0F 39 /d */ { 0, BX_IA_ERROR },
   /* 0F 3A /d */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
@@ -1481,7 +1481,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 34 /q */ { BxTraceEnd, BX_IA_SYSENTER },
   /* 0F 35 /q */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /q */ { 0, BX_IA_ERROR },
-  /* 0F 37 /q */ { 0, BX_IA_ERROR },
+  /* 0F 37 /q */ { 0, BX_IA_GETSEC },
   /* 0F 38 /q */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
   /* 0F 39 /q */ { 0, BX_IA_ERROR },
   /* 0F 3A /q */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape

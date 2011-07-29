@@ -387,6 +387,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    BX_ERROR(("VMEXIT: XSETBV in VMX non-root operation"));
+    VMexit_Instruction(i, VMX_VMEXIT_XSETBV);
+  }
+#endif
+
   if (v8086_mode() || CPL != 0) {
     BX_ERROR(("XSETBV: The current priveledge level is not 0"));
     exception(BX_GP_EXCEPTION, 0);

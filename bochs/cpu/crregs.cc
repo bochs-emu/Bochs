@@ -1073,8 +1073,9 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   allowMask |= BX_CR4_VMXE_MASK;
 #endif
 
-#if BX_SUPPORT_SMX
-  allowMask |= BX_CR4_SMXE_MASK;
+#if BX_CPU_LEVEL >= 6
+  if (bx_cpuid_support_smx())
+    allowMask |= BX_CR4_SMXE_MASK;
 #endif
 
 #if BX_SUPPORT_X86_64
@@ -1208,6 +1209,31 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR3(bx_address val)
 
   return 1;
 }
+
+#if BX_SUPPORT_X86_64
+bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetEFER(bx_address val_64)
+{
+  if (val_64 & ~BX_EFER_SUPPORTED_BITS) {
+    BX_ERROR(("SetEFER: attempt to set reserved bits of EFER MSR !"));
+    return 0;
+  }
+
+  Bit32u val32 = (Bit32u) val_64;
+
+  /* #GP(0) if changing EFER.LME when cr0.pg = 1 */
+  if ((BX_CPU_THIS_PTR efer.get_LME() != ((val32 >> 8) & 1)) &&
+       BX_CPU_THIS_PTR  cr0.get_PG())
+  {
+    BX_ERROR(("SetEFER: attempt to change LME when CR0.PG=1"));
+    return 0;
+  }
+
+  BX_CPU_THIS_PTR efer.set32((val32 & BX_EFER_SUPPORTED_BITS & ~BX_EFER_LMA_MASK)
+        | (BX_CPU_THIS_PTR efer.get32() & BX_EFER_LMA_MASK)); // keep LMA untouched
+
+  return 1;
+}
+#endif
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
 {

@@ -57,7 +57,7 @@
 #define IA_MONITOR_MWAIT    (1 << 15)       /* MONITOR/MWAIT instruction */
 #define IA_VMX              (1 << 16)       /* VMX instruction */
 #define IA_SMX              (1 << 17)       /* SMX instruction */
-#define IA_SVM              (1 << 18)       /* SVM instruction */
+#define IA_RDTSCP           (1 << 18)       /* RDTSCP instruction */
 #define IA_XSAVE            (1 << 19)       /* XSAVE/XRSTOR extensions instruction */
 #define IA_XSAVEOPT         (1 << 20)       /* XSAVEOPT instruction */
 #define IA_AES_PCLMULQDQ    (1 << 21)       /* AES+PCLMULQDQ instruction */

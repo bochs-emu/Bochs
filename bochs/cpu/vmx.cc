@@ -3010,6 +3010,25 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
 
 #endif
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::GETSEC(bxInstruction_c *i)
+{
+#if BX_CPU_LEVEL >= 6
+  if (! BX_CPU_THIS_PTR cr4.get_SMXE())
+    exception(BX_UD_EXCEPTION, 0);
+
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    BX_ERROR(("VMEXIT: GETSEC in VMX non-root operation"));
+    VMexit_Instruction(i, VMX_VMEXIT_GETSEC);
+  }
+#endif
+
+  BX_PANIC(("GETSEC: SMX is not implemented yet !"));
+#endif
+
+  BX_NEXT_TRACE(i);
+}
+
 #if BX_SUPPORT_VMX
 void BX_CPU_C::register_vmx_state(bx_param_c *parent)
 {
