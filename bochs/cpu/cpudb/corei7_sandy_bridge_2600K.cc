@@ -207,12 +207,13 @@ void corei7_sandy_bridge_2600k_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf)
   //   [23:16] Number of logical processors in one physical processor
   //   [31:24] Local Apic ID
 
-  leaf->ebx = (CACHE_LINE_SIZE / 8) << 8;
 #if BX_SUPPORT_SMP
   unsigned n_logical_processors = ncores*nthreads;
-  if (n_logical_processors > 1)
-    leaf->ebx |= (n_logical_processors << 16);
+#else
+  unsigned n_logical_processors = 1;
 #endif
+  leaf->ebx = ((CACHE_LINE_SIZE / 8) << 8) |
+              (n_logical_processors << 16);
 #if BX_SUPPORT_APIC
   leaf->ebx |= ((cpu->get_apic_id() & 0xff) << 24);
 #endif

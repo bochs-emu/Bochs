@@ -186,9 +186,10 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf)
   }
 #if BX_SUPPORT_SMP
   unsigned n_logical_processors = ncores*nthreads;
-  if (n_logical_processors > 1)
-    leaf->ebx |= (n_logical_processors << 16);
+#else
+  unsigned n_logical_processors = 1;
 #endif
+  leaf->ebx |= (n_logical_processors << 16);
 #if BX_SUPPORT_APIC
   leaf->ebx |= ((cpu->get_apic_id() & 0xff) << 24);
 #endif

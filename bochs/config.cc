@@ -3979,7 +3979,8 @@ int bx_write_configuration(const char *rc, int overwrite)
 #else
   fprintf(fp, "cpu: count=1, ips=%u, ", SIM->get_param_num(BXPN_IPS)->get());
 #endif
-  fprintf(fp, "reset_on_triple_fault=%d, cpuid_limit_winnt=%d",
+  fprintf(fp, "model=%s, reset_on_triple_fault=%d, cpuid_limit_winnt=%d",
+    SIM->get_param_enum(BXPN_CPU_MODEL)->get_selected(),
     SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get(),
     SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get());
 #if BX_CPU_LEVEL >= 5

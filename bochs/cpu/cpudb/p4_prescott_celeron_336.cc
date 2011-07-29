@@ -156,12 +156,13 @@ void p4_prescott_celeron_336_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf)
   //   [23:16] Number of logical processors in one physical processor
   //   [31:24] Local Apic ID
 
-  leaf->ebx = (CACHE_LINE_SIZE / 8) << 8;
 #if BX_SUPPORT_SMP
   unsigned n_logical_processors = ncores*nthreads;
-  if (n_logical_processors > 1)
-    leaf->ebx |= (n_logical_processors << 16);
+#else
+  unsigned n_logical_processors = 1;
 #endif
+  leaf->ebx = ((CACHE_LINE_SIZE / 8) << 8) |
+              (n_logical_processors << 16);
 #if BX_SUPPORT_APIC
   leaf->ebx |= ((cpu->get_apic_id() & 0xff) << 24);
 #endif
@@ -321,7 +322,7 @@ void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf)
   leaf->ebx = 0;
 
   // ECX:
-  // * [0:0]   LAHF/SAHF instructions support in 64-bit mode
+  //   [0:0]   LAHF/SAHF instructions support in 64-bit mode
   //   [1:1]   CMP_Legacy: Core multi-processing legacy mode (AMD)
   //   [2:2]   SVM: Secure Virtual Machine (AMD)
   //   [3:3]   Extended APIC Space
@@ -336,7 +337,7 @@ void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf)
   //   [13:13] WDT: Watchdog timer support
   //   [31:14] reserved
 
-  leaf->ecx = BX_CPUID_EXT2_LAHF_SAHF;
+  leaf->ecx = 0;
 
   // EDX:
   // Many of the bits in EDX are the same as EAX [*] for AMD

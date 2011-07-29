@@ -91,9 +91,10 @@ romimage: file=$BXSHARE/BIOS-bochs-latest
 #    has no effect anymore.
 #
 #  CPU configurations that can be selected:
-# ------------------------------------------------------
-#  core2_pnr   Intel(R) Core(TM)2 Extreme CPU X9770
-#  core2_snb   Intel(R) Core(TM) i7-2600K CPU
+# -----------------------------------------------------------------
+#  p4_prescott_celeron_336    Intel(R) Celeron(R) 336
+#  core2_extreme_x9770        Intel(R) Core(TM)2 Extreme X9770
+#  corei7_sandy_bridge_2600k  Intel(R) Core(TM) i7-2600K
 #
 #  COUNT:
 #    Set the number of processors:cores per processor:threads per core 
