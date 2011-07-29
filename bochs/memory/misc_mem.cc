@@ -226,7 +226,7 @@ void BX_MEM_C::allocate_block(Bit32u block)
     BX_MEM_THIS blocks[block] = BX_MEM_THIS vector + (BX_MEM_THIS used_blocks * BX_MEM_BLOCK_LEN);
     BX_MEM_THIS used_blocks++;
   }
-  BX_INFO(("allocate_block: used_blocks=0x%x of 0x%x", BX_MEM_THIS used_blocks, max_blocks));
+  BX_DEBUG(("allocate_block: used_blocks=0x%x of 0x%x", BX_MEM_THIS used_blocks, max_blocks));
 #endif
 }
 
