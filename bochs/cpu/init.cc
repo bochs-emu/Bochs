@@ -157,6 +157,7 @@ static Bit64s cpu_param_handler(bx_param_c *param, int set, Bit64s val)
 extern bx_cpuid_t *create_p3_katmai_cpuid(BX_CPU_C *cpu);
 #endif
 #if BX_SUPPORT_X86_64
+extern bx_cpuid_t *create_athlon64_clawhammer_cpuid(BX_CPU_C *cpu);
 extern bx_cpuid_t *create_p4_prescott_celeron_336_cpuid(BX_CPU_C *cpu);
 extern bx_cpuid_t *create_core2_extreme_x9770_cpuid(BX_CPU_C *cpu);
 #if BX_SUPPORT_AVX
@@ -177,6 +178,8 @@ static bx_cpuid_t *cpuid_factory(BX_CPU_C *cpu)
     return create_p3_katmai_cpuid(cpu);
 #endif
 #if BX_SUPPORT_X86_64
+  case BX_CPU_ATHLON64_CLAWHAMMER:
+    return create_athlon64_clawhammer_cpuid(cpu);
   case BX_CPU_MODEL_P4_PRESCOTT_CELERON_336:
     return create_p4_prescott_celeron_336_cpuid(cpu);
   case BX_CPU_MODEL_CORE2_EXTREME_X9770:

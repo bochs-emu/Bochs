@@ -21,8 +21,8 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_GENERIC_CPUID_DEFINITIONS_H
-#define BX_GENERIC_CPUID_DEFINITIONS_H
+#ifndef BX_CORE2_X9770_CPUID_DEFINITIONS_H
+#define BX_CORE2_X9770_CPUID_DEFINITIONS_H
 
 #include "cpu/cpuid.h"
 

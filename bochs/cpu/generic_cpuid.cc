@@ -499,7 +499,7 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf)
   leaf->ecx = get_ext2_cpuid_features();
 
   // EDX:
-  // Many of the bits in EDX are the same as EAX [*] for AMD
+  // Many of the bits in EDX are the same as FN 0x00000001 [*] for AMD
   // [*] [0:0]   FPU on chip
   // [*] [1:1]   VME: Virtual-8086 Mode enhancements
   // [*] [2:2]   DE: Debug Extensions (I/O breakpoints)

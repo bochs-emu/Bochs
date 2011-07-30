@@ -21,18 +21,18 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_COREI7_SANDY_BRIDGE_2600K_CPUID_DEFINITIONS_H
-#define BX_COREI7_SANDY_BRIDGE_2600K_CPUID_DEFINITIONS_H
+#ifndef BX_ATHLON64_CLAWHAMMER_CPUID_DEFINITIONS_H
+#define BX_ATHLON64_CLAWHAMMER_CPUID_DEFINITIONS_H
 
 #include "cpu/cpuid.h"
 
-class corei7_sandy_bridge_2600k_t : public bx_cpuid_t {
+class athlon64_clawhammer_t : public bx_cpuid_t {
 public:
-  corei7_sandy_bridge_2600k_t(BX_CPU_C *cpu);
-  virtual ~corei7_sandy_bridge_2600k_t() {}
+  athlon64_clawhammer_t(BX_CPU_C *cpu);
+  virtual ~athlon64_clawhammer_t() {}
 
   // return CPU name
-  virtual const char *get_name(void) const { return "corei7_sandy_bridge_2600k"; }
+  virtual const char *get_name(void) const { return "athlon64_clawhammer"; }
 
   virtual Bit32u get_isa_extensions_bitmask(void) const;
   virtual Bit32u get_cpu_extensions_bitmask(void) const;
@@ -42,26 +42,8 @@ public:
   virtual void dump_cpuid(void);
 
 private:
-#if BX_SUPPORT_SMP
-  unsigned nprocessors;
-  unsigned ncores;
-  unsigned nthreads;
-#endif
-
   void get_std_cpuid_leaf_0(cpuid_function_t *leaf);
   void get_std_cpuid_leaf_1(cpuid_function_t *leaf);
-  void get_std_cpuid_leaf_2(cpuid_function_t *leaf);
-  void get_std_cpuid_leaf_3(cpuid_function_t *leaf);
-  void get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf);
-  void get_std_cpuid_leaf_5(cpuid_function_t *leaf);
-  void get_std_cpuid_leaf_6(cpuid_function_t *leaf);
-  void get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf);
-  void get_std_cpuid_leaf_8(cpuid_function_t *leaf);
-  void get_std_cpuid_leaf_9(cpuid_function_t *leaf);
-  void get_std_cpuid_leaf_A(cpuid_function_t *leaf);
-  void get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf);
-  void get_std_cpuid_leaf_C(cpuid_function_t *leaf);
-  void get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf);
 
   void get_ext_cpuid_leaf_0(cpuid_function_t *leaf);
   void get_ext_cpuid_leaf_1(cpuid_function_t *leaf);
@@ -70,8 +52,12 @@ private:
   void get_ext_cpuid_leaf_6(cpuid_function_t *leaf);
   void get_ext_cpuid_leaf_7(cpuid_function_t *leaf);
   void get_ext_cpuid_leaf_8(cpuid_function_t *leaf);
+
+  void get_reserved_leaf(cpuid_function_t *leaf);
+
+  void get_cpuid_hidden_level(cpuid_function_t *leaf);
 };
 
-extern bx_cpuid_t *create_corei7_sandy_bridge_2600k_cpuid(BX_CPU_C *cpu);
+extern bx_cpuid_t *create_athlon64_clawhammer_cpuid(BX_CPU_C *cpu);
 
 #endif

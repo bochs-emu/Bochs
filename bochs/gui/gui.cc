@@ -388,7 +388,7 @@ Bit32s bx_gui_c::make_text_snapshot(char **snapshot, Bit32u *length)
     }
     while ((txt_addr > 0) && (clean_snap[txt_addr-1] == ' ')) txt_addr--;
 #ifdef WIN32
-    if(!(SIM->get_param_bool(BXPN_TEXT_SNAPSHOT_CHECK)->get())) {
+    if(! SIM->get_param_bool(BXPN_TEXT_SNAPSHOT_CHECK)->get()) {
       clean_snap[txt_addr++] = 13;
     }
 #endif
