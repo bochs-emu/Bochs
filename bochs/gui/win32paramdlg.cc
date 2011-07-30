@@ -255,7 +255,7 @@ LRESULT CALLBACK EditHexWndProc(HWND Window, UINT msg, WPARAM wParam, LPARAM lPa
   return CallWindowProc(DefEditWndProc, Window, msg, wParam, lParam);
 }
 
-HWND CreateLabel(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, const char *text)
+HWND CreateLabel(HWND hDlg, UINT cid, UINT xpos, UINT ypos, UINT width, BOOL hide, const char *text)
 {
   HWND Label;
   RECT r;
@@ -264,7 +264,7 @@ HWND CreateLabel(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, const cha
   code = ID_LABEL + cid;
   r.left = xpos;
   r.top = ypos + 2;
-  r.right = r.left + 78;
+  r.right = r.left + width;
   r.bottom = r.top + 15;
   MapDialogRect(hDlg, &r);
   Label = CreateWindow("STATIC", text, WS_CHILD, r.left, r.top, r.right-r.left+1, r.bottom-r.top+1, hDlg, (HMENU)code, NULL, NULL);
@@ -334,7 +334,7 @@ HWND CreateBrowseButton(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide)
   int code;
 
   code = ID_BROWSE + cid;
-  r.left = xpos + 190;
+  r.left = xpos;
   r.top = ypos;
   r.right = r.left + 50;
   r.bottom = r.top + 14;
@@ -352,7 +352,7 @@ HWND CreateCheckbox(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_par
   int code, val;
 
   code = ID_PARAM + cid;
-  r.left = xpos + 80;
+  r.left = xpos;
   r.top = ypos;
   r.right = r.left + 20;
   r.bottom = r.top + 14;
@@ -410,7 +410,7 @@ HWND CreateInput(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_param_
       spinctrl = TRUE;
     }
   }
-  r.left = xpos + 80;
+  r.left = xpos;
   r.top = ypos;
   r.right = r.left + 100;
   r.bottom = r.top + 14;
@@ -441,7 +441,7 @@ HWND CreateCombobox(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_par
   const char *choice;
 
   code = ID_PARAM + cid;
-  r.left = xpos + 80;
+  r.left = xpos;
   r.top = ypos;
   r.right = r.left + 100;
   r.bottom = r.top + 14;
@@ -481,22 +481,41 @@ void EnableParam(HWND hDlg, UINT cid, bx_param_c *param, BOOL val)
   }
 }
 
+UINT GetLabelText(bx_param_c *param, bx_list_c *list, char *buffer)
+{
+  const char *label;
+  char tmpbuf[512];
+
+  label = param->get_label();
+  if (label == NULL) {
+    label = param->get_name();
+  }
+  if ((list->get_options() & list->SHOW_GROUP_NAME) && (param->get_group() != NULL)) {
+    wsprintf(tmpbuf, "%s %s", param->get_group(), label);
+  } else {
+    lstrcpyn(tmpbuf, label, 512);
+  }
+  if (buffer != NULL) {
+    lstrcpy(buffer, tmpbuf);
+  }
+  return (lstrlen(tmpbuf) * 4);
+}
+
 SIZE CreateParamList(HWND hDlg, UINT lid, UINT xpos, UINT ypos, BOOL hide, bx_list_c *list)
 {
   HWND ltext, control = NULL, browse;
   SIZE size, lsize;
   bx_param_c *param;
   bx_param_string_c *sparam;
-  const char *label;
   char buffer[512];
   int options;
-  UINT cid, i, items, x, y;
+  UINT cid, i, items, lw, w1, x0, x1, x2, y;
   BOOL ihide;
 
   items = list->get_size();
   options = list->get_options();
   cid = registerDlgList(lid, list);
-  x = xpos + 5;
+  x0 = xpos + 5;
   size.cx = 195;
   if (options & list->USE_TAB_WINDOW) {
     y = ypos + 15;
@@ -505,6 +524,26 @@ SIZE CreateParamList(HWND hDlg, UINT lid, UINT xpos, UINT ypos, BOOL hide, bx_li
     y = ypos + 10;
     size.cy = 13;
   }
+  // find out longest label text
+  w1 = 78;
+  for (i = 0; i < items; i++) {
+    param = list->get(i);
+    if (!SIM->get_init_done() || (param->get_enabled() && param->get_runtime_param())) {
+      if (param->get_type() != BXT_LIST) {
+        lw = GetLabelText(param, list, NULL);
+        if (lw > w1) {
+          w1 = lw;
+        }
+      }
+    }
+  }
+  // set columns and width
+  x1 = x0 + w1 + 2;
+  x2 = x1 + 110;
+  if (size.cx < (int)(x2 + 5)) {
+    size.cx = x2 + 5;
+  }
+  // create controls
   for (i = 0; i < items; i++) {
     param = list->get(i);
     if (!SIM->get_init_done() || (param->get_enabled() && param->get_runtime_param())) {
@@ -512,7 +551,7 @@ SIZE CreateParamList(HWND hDlg, UINT lid, UINT xpos, UINT ypos, BOOL hide, bx_li
       browse = NULL;
       ihide = hide || ((i != 0) && (options & list->USE_TAB_WINDOW));
       if (param->get_type() == BXT_LIST) {
-        lsize = CreateParamList(hDlg, cid, x + 4, y + 1, ihide, (bx_list_c*)param);
+        lsize = CreateParamList(hDlg, cid, x0 + 4, y + 1, ihide, (bx_list_c*)param);
         if ((lsize.cx + 18) > size.cx) {
           size.cx = lsize.cx + 18;
         }
@@ -525,28 +564,22 @@ SIZE CreateParamList(HWND hDlg, UINT lid, UINT xpos, UINT ypos, BOOL hide, bx_li
           }
         }
       } else {
-        label = param->get_label();
-        if (label == NULL) {
-          label = param->get_name();
-        }
-        if ((options & list->SHOW_GROUP_NAME) && (param->get_group() != NULL)) {
-          wsprintf(buffer, "%s %s", param->get_group(), label);
-        } else {
-          lstrcpyn(buffer, label, 512);
-        }
-        ltext = CreateLabel(hDlg, cid, x, y, hide, buffer);
+        lw = GetLabelText(param, list, buffer);
+        ltext = CreateLabel(hDlg, cid, x0, y, w1, hide, buffer);
         if (param->get_type() == BXT_PARAM_BOOL) {
-          control = CreateCheckbox(hDlg, cid, x, y, hide, (bx_param_bool_c*)param);
+          control = CreateCheckbox(hDlg, cid, x1, y, hide, (bx_param_bool_c*)param);
         } else if (param->get_type() == BXT_PARAM_ENUM) {
-          control = CreateCombobox(hDlg, cid, x, y, hide, (bx_param_enum_c*)param);
+          control = CreateCombobox(hDlg, cid, x1, y, hide, (bx_param_enum_c*)param);
         } else if (param->get_type() == BXT_PARAM_NUM) {
-          control = CreateInput(hDlg, cid, x, y, hide, param);
+          control = CreateInput(hDlg, cid, x1, y, hide, param);
         } else if (param->get_type() == BXT_PARAM_STRING) {
-          control = CreateInput(hDlg, cid, x, y, hide, param);
+          control = CreateInput(hDlg, cid, x1, y, hide, param);
           sparam = (bx_param_string_c*)param;
           if (sparam->get_options() & sparam->IS_FILENAME) {
-            browse = CreateBrowseButton(hDlg, cid, x, y, hide);
-            if (size.cx < 255) size.cx = 255;
+            browse = CreateBrowseButton(hDlg, cid, x2, y, hide);
+            if (size.cx < (int)(x2 + 60)) {
+              size.cx = x2 + 60;
+            }
           }
         }
         if (!param->get_enabled()) {
