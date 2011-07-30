@@ -1334,7 +1334,7 @@ bx_define_opcode(BX_IA_WRFSBASE, &BX_CPU_C::BxError, &BX_CPU_C::WRFSBASE, BX_CPU
 bx_define_opcode(BX_IA_WRGSBASE, &BX_CPU_C::BxError, &BX_CPU_C::WRGSBASE, BX_CPU_X86_64 | BX_CPU_FSGSBASE, 0)
 #endif
 
-bx_define_opcode(BX_IA_RDTSCP, &BX_CPU_C::BxError, &BX_CPU_C::RDTSCP, BX_CPU_X86_64, 0)
+bx_define_opcode(BX_IA_RDTSCP, &BX_CPU_C::BxError, &BX_CPU_C::RDTSCP, BX_CPU_RDTSCP, 0)
 
 // VMX
 bx_define_opcode(BX_IA_VMXON_Mq, &BX_CPU_C::VMXON, &BX_CPU_C::BxError, BX_CPU_VMX, 0)

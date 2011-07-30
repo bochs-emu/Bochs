@@ -768,7 +768,7 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
 #endif
 
 #if BX_SUPPORT_X86_64
-  features_bitmask |= BX_CPU_X86_64;
+  features_bitmask |= BX_CPU_X86_64 | BX_CPU_RDTSCP;
 
   if (sse_enabled < BX_CPUID_SUPPORT_SSE2) {
     BX_PANIC(("PANIC: x86-64 emulation requires SSE2 support !"));
