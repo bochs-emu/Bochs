@@ -3019,7 +3019,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::GETSEC(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     BX_ERROR(("VMEXIT: GETSEC in VMX non-root operation"));
-    VMexit_Instruction(i, VMX_VMEXIT_GETSEC);
+    VMexit(i, VMX_VMEXIT_GETSEC, 0);
   }
 #endif
 
