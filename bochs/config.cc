@@ -221,6 +221,9 @@ void bx_init_options()
 
   static const char *cpu_names[] = { 
     "bochs",
+#if BX_SUPPORT_X86_64 == 0
+    "p3_katmai",
+#endif
 #if BX_SUPPORT_X86_64
     "p4_prescott_celeron_336",
     "core2_extreme_x9770",

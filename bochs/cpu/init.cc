@@ -152,11 +152,16 @@ static Bit64s cpu_param_handler(bx_param_c *param, int set, Bit64s val)
 
 #include "generic_cpuid.h"
 
+#if BX_CPU_LEVEL >= 6
+#if BX_SUPPORT_X86_64 == 0
+extern bx_cpuid_t *create_p3_katmai_cpuid(BX_CPU_C *cpu);
+#endif
 #if BX_SUPPORT_X86_64
 extern bx_cpuid_t *create_p4_prescott_celeron_336_cpuid(BX_CPU_C *cpu);
 extern bx_cpuid_t *create_core2_extreme_x9770_cpuid(BX_CPU_C *cpu);
 #if BX_SUPPORT_AVX
 extern bx_cpuid_t *create_corei7_sandy_bridge_2600k_cpuid(BX_CPU_C *cpu);
+#endif
 #endif
 #endif
 
@@ -166,6 +171,11 @@ static bx_cpuid_t *cpuid_factory(BX_CPU_C *cpu)
   switch(cpu_model) {
   case BX_CPU_MODEL_BOCHS:
     return create_bx_generic_cpuid(cpu);
+#if BX_CPU_LEVEL >= 6
+#if BX_SUPPORT_X86_64 == 0
+  case BX_CPU_MODEL_PIII_KATMAI:
+    return create_p3_katmai_cpuid(cpu);
+#endif
 #if BX_SUPPORT_X86_64
   case BX_CPU_MODEL_P4_PRESCOTT_CELERON_336:
     return create_p4_prescott_celeron_336_cpuid(cpu);
@@ -174,6 +184,7 @@ static bx_cpuid_t *cpuid_factory(BX_CPU_C *cpu)
 #if BX_SUPPORT_AVX
   case BX_CPU_MODEL_COREi7_SNB_2600K:
     return create_corei7_sandy_bridge_2600k_cpuid(cpu);
+#endif
 #endif
 #endif
   default:

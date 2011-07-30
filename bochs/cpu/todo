@@ -48,3 +48,5 @@ TODO (know issues in CPU model):
    - VMENTER to not-active state not supported yet
 
 [!] SMX, SVM, XOP, AVX2
+
+[!] TODO: Convert CPUDB to plugins and search for them in runtime
