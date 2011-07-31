@@ -21,37 +21,17 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_P3_KATMAI_CPUID_DEFINITIONS_H
-#define BX_P3_KATMAI_CPUID_DEFINITIONS_H
-
-#if BX_CPU_LEVEL >= 6 && BX_SUPPORT_X86_64 == 0
-
-#include "cpu/cpuid.h"
-
-class p3_katmai_t : public bx_cpuid_t {
-public:
-  p3_katmai_t(BX_CPU_C *cpu);
-  virtual ~p3_katmai_t() {}
-
-  // return CPU name
-  virtual const char *get_name(void) const { return "p3_katmai"; }
-
-  virtual Bit32u get_isa_extensions_bitmask(void) const;
-  virtual Bit32u get_cpu_extensions_bitmask(void) const;
-
-  virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf);
-
-  virtual void dump_cpuid(void);
-
-private:
-  void get_std_cpuid_leaf_0(cpuid_function_t *leaf);
-  void get_std_cpuid_leaf_1(cpuid_function_t *leaf);
-  void get_std_cpuid_leaf_2(cpuid_function_t *leaf);
-  void get_std_cpuid_leaf_3(cpuid_function_t *leaf);
-};
-
-extern bx_cpuid_t *create_p3_katmai_cpuid(BX_CPU_C *cpu);
-
-#endif // BX_CPU_LEVEL >= 6 && BX_SUPPORT_X86_64 == 0
-
+bx_define_cpudb(bx_generic)
+#if BX_CPU_LEVEL >= 6
+#if BX_SUPPORT_X86_64 == 0
+bx_define_cpudb(p3_katmai)
+bx_define_cpudb(p4_willamette)
+#else
+bx_define_cpudb(p4_prescott_celeron_336)
+bx_define_cpudb(athlon64_clawhammer)
+bx_define_cpudb(core2_extreme_x9770)
+#if BX_SUPPORT_AVX
+bx_define_cpudb(corei7_sandy_bridge_2600k)
+#endif
+#endif
 #endif

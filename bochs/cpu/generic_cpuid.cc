@@ -1214,25 +1214,25 @@ void bx_generic_cpuid_t::dump_cpuid(void)
 {
   struct cpuid_function_t leaf;
 
-  BX_CPU_THIS_PTR cpuid->get_cpuid_leaf(0x00000000, 0x00000000, &leaf);
+  get_cpuid_leaf(0x00000000, 0x00000000, &leaf);
   BX_INFO(("CPUID[0x00000000]: %08x %08x %08x %08x", leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
   Bit32u max_std_function = leaf.eax, n;
 
   if (max_std_function > 0) {
     for (n=1; n<=max_std_function;n++) {
-      BX_CPU_THIS_PTR cpuid->get_cpuid_leaf(n, 0x00000000, &leaf);
+      get_cpuid_leaf(n, 0x00000000, &leaf);
       BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
     }
   }
 
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR cpuid->get_cpuid_leaf(0x80000000, 0x00000000, &leaf);
+  get_cpuid_leaf(0x80000000, 0x00000000, &leaf);
   BX_INFO(("CPUID[0x80000000]: %08x %08x %08x %08x", leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
   Bit32u max_ext_function = leaf.eax;
 
   if (max_ext_function > 0) {
     for (n=0x80000001; n<=max_ext_function;n++) {
-      BX_CPU_THIS_PTR cpuid->get_cpuid_leaf(n, 0x00000000, &leaf);
+      get_cpuid_leaf(n, 0x00000000, &leaf);
       BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
     }
   }

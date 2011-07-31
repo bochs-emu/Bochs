@@ -325,11 +325,7 @@ int bxmain (void) {
 #ifndef MAX_ARGLEN
 #define MAX_ARGLEN 80
 #endif
-int split_string_into_argv (
-  char *string,
-  int *argc_out,
-  char **argv,
-  int max_argv)
+int split_string_into_argv(char *string, int *argc_out, char **argv, int max_argv)
 {
   char *buf0 = new char[strlen(string)+1];
   strcpy (buf0, string);

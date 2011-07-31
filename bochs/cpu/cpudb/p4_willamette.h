@@ -21,20 +21,20 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_P3_KATMAI_CPUID_DEFINITIONS_H
-#define BX_P3_KATMAI_CPUID_DEFINITIONS_H
+#ifndef BX_P4_WMT_CPUID_DEFINITIONS_H
+#define BX_P4_WMT_CPUID_DEFINITIONS_H
 
 #if BX_CPU_LEVEL >= 6 && BX_SUPPORT_X86_64 == 0
 
 #include "cpu/cpuid.h"
 
-class p3_katmai_t : public bx_cpuid_t {
+class p4_willamette_t : public bx_cpuid_t {
 public:
-  p3_katmai_t(BX_CPU_C *cpu);
-  virtual ~p3_katmai_t() {}
+  p4_willamette_t(BX_CPU_C *cpu);
+  virtual ~p4_willamette_t() {}
 
   // return CPU name
-  virtual const char *get_name(void) const { return "p3_katmai"; }
+  virtual const char *get_name(void) const { return "p4_willamette"; }
 
   virtual Bit32u get_isa_extensions_bitmask(void) const;
   virtual Bit32u get_cpu_extensions_bitmask(void) const;
@@ -44,14 +44,24 @@ public:
   virtual void dump_cpuid(void);
 
 private:
+#if BX_SUPPORT_SMP
+  unsigned nprocessors;
+  unsigned ncores;
+  unsigned nthreads;
+#endif
+
   void get_std_cpuid_leaf_0(cpuid_function_t *leaf);
   void get_std_cpuid_leaf_1(cpuid_function_t *leaf);
   void get_std_cpuid_leaf_2(cpuid_function_t *leaf);
-  void get_std_cpuid_leaf_3(cpuid_function_t *leaf);
+
+  void get_ext_cpuid_leaf_0(cpuid_function_t *leaf);
+  void get_ext_cpuid_leaf_1(cpuid_function_t *leaf);
+  void get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf);
 };
 
-extern bx_cpuid_t *create_p3_katmai_cpuid(BX_CPU_C *cpu);
+extern bx_cpuid_t *create_p4_willamette_cpuid(BX_CPU_C *cpu);
 
 #endif // BX_CPU_LEVEL >= 6 && BX_SUPPORT_X86_64 == 0
 
 #endif
+

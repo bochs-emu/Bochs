@@ -659,7 +659,7 @@ config.o: config.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config.h
   osdep.h bxversion.h gui/siminterface.h gui/paramtree.h memory/memory.h \
   pc_system.h plugin.h extplugin.h ltdl.h gui/gui.h \
   instrument/stubs/instrument.h iodev/iodev.h bochs.h param_names.h \
-  param_names.h
+  param_names.h cpudb.h
 crc.o: crc.@CPP_SUFFIX@ config.h
 gdbstub.o: gdbstub.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config.h \
   osdep.h bxversion.h gui/siminterface.h gui/paramtree.h memory/memory.h \

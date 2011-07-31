@@ -219,30 +219,17 @@ void bx_init_options()
   // cpu subtree
   bx_list_c *cpu_param = new bx_list_c(root_param, "cpu", "CPU Options", 10 + BX_SUPPORT_SMP);
 
-  static const char *cpu_names[] = { 
-    "bochs",
-#if BX_CPU_LEVEL >= 6
-#if BX_SUPPORT_X86_64 == 0
-    "p3_katmai",
-#endif
-#if BX_SUPPORT_X86_64
-    "athlon64_clawhammer",
-    "p4_prescott_celeron_336",
-    "core2_extreme_x9770",
-#if BX_SUPPORT_AVX
-    "corei7_sandy_bridge_2600k",
-#endif
-#endif
-#endif
+  static const char *cpu_names[] = {
+#define bx_define_cpudb(model) #model,
+#include "cpudb.h"
     NULL
   };
+#undef bx_define_cpudb
 
   new bx_param_enum_c(cpu_param,
       "model", "CPU configuration",
       "Choose pre-defined CPU configuration",
-      cpu_names,
-      BX_CPU_MODEL_BOCHS,
-      BX_CPU_MODEL_BOCHS);
+      cpu_names, 0, 0);
 
   // cpu options
   bx_param_num_c *nprocessors = new bx_param_num_c(cpu_param,

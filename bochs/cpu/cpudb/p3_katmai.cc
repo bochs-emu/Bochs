@@ -202,7 +202,7 @@ void p3_katmai_t::dump_cpuid(void)
   struct cpuid_function_t leaf;
 
   for (unsigned n=0; n<=0x3; n++) {
-    BX_CPU_THIS_PTR cpuid->get_cpuid_leaf(n, 0x00000000, &leaf);
+    get_cpuid_leaf(n, 0x00000000, &leaf);
     BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
   }
 }

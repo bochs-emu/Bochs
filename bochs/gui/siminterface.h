@@ -126,6 +126,13 @@
 // base value for generated new parameter id
 #define BXP_NEW_PARAM_ID 1001
 
+enum {
+#define bx_define_cpudb(model) bx_cpudb_##model,
+#include "cpudb.h"
+  bx_cpudb_model_last
+};
+#undef bx_define_cpudb
+
 #if BX_SUPPORT_SMP
   #define BX_SMP_PROCESSORS (bx_cpu_count)
 #else
@@ -158,11 +165,13 @@ typedef enum {
 } bx_log_levels;
 
 // boot devices (using the same values as the rombios)
-#define BX_BOOT_NONE    0
-#define BX_BOOT_FLOPPYA 1
-#define BX_BOOT_DISKC   2
-#define BX_BOOT_CDROM   3
-#define BX_BOOT_NETWORK 4
+enum {
+  BX_BOOT_NONE,
+  BX_BOOT_FLOPPYA,
+  BX_BOOT_DISKC,
+  BX_BOOT_CDROM, 
+  BX_BOOT_NETWORK
+};
 
 // loader hack
 #define Load32bitOSNone        0
@@ -490,12 +499,14 @@ enum {
 #define BX_ATA_BIOSDETECT_AUTO   1
 #define BX_ATA_BIOSDETECT_CMOS   2
 
-#define BX_ATA_TRANSLATION_NONE  0
-#define BX_ATA_TRANSLATION_LBA   1
-#define BX_ATA_TRANSLATION_LARGE 2
-#define BX_ATA_TRANSLATION_RECHS 3
-#define BX_ATA_TRANSLATION_AUTO  4
-#define BX_ATA_TRANSLATION_LAST  4
+enum {
+  BX_ATA_TRANSLATION_NONE,
+  BX_ATA_TRANSLATION_LBA,
+  BX_ATA_TRANSLATION_LARGE,
+  BX_ATA_TRANSLATION_RECHS,
+  BX_ATA_TRANSLATION_AUTO
+};
+#define BX_ATA_TRANSLATION_LAST  BX_ATA_TRANSLATION_AUTO
 
 enum {
   BX_HDIMAGE_MODE_FLAT,
@@ -536,24 +547,6 @@ enum {
   BX_CPUID_SUPPORT_LEGACY_APIC,
   BX_CPUID_SUPPORT_XAPIC,
   BX_CPUID_SUPPORT_X2APIC
-};
-
-enum {
-  BX_CPU_MODEL_BOCHS,
-#if BX_CPU_LEVEL >= 6
-#if BX_SUPPORT_X86_64 == 0
-  BX_CPU_MODEL_P3_KATMAI,
-#endif
-#if BX_SUPPORT_X86_64
-  BX_CPU_ATHLON64_CLAWHAMMER,
-  BX_CPU_MODEL_P4_PRESCOTT_CELERON_336,
-  BX_CPU_MODEL_CORE2_EXTREME_X9770,
-#if BX_SUPPORT_AVX
-  BX_CPU_MODEL_COREi7_SNB_2600K,
-#endif
-#endif
-#endif
-  BX_CPU_MODEL_LAST
 };
 
 #define BX_CLOCK_TIME0_LOCAL     1

@@ -428,12 +428,12 @@ void athlon64_clawhammer_t::dump_cpuid(void)
   unsigned n;
 
   for (n=0; n<=1; n++) {
-    BX_CPU_THIS_PTR cpuid->get_cpuid_leaf(n, 0x00000000, &leaf);
+    get_cpuid_leaf(n, 0x00000000, &leaf);
     BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
   }
 
   for (n=0x80000000; n<=0x80000018; n++) {
-    BX_CPU_THIS_PTR cpuid->get_cpuid_leaf(n, 0x00000000, &leaf);
+    get_cpuid_leaf(n, 0x00000000, &leaf);
     BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
   }
 }

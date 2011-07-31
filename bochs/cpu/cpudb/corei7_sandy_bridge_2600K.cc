@@ -569,49 +569,47 @@ void corei7_sandy_bridge_2600k_t::get_std_cpuid_leaf_C(cpuid_function_t *leaf)
 // leaf 0x0000000D //
 void corei7_sandy_bridge_2600k_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf)
 {
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_XSAVE))
-  {
-    switch(subfunction) {
-    case 0:
-      // EAX - valid bits of XCR0 (lower part)
-      // EBX - Maximum size (in bytes) required by enabled features
-      // ECX - Maximum size (in bytes) required by CPU supported features
-      // EDX - valid bits of XCR0 (upper part)
-      leaf->eax = cpu->xcr0_suppmask;
-      leaf->ebx = 512+64;
-      if (cpu->xcr0_suppmask & BX_XCR0_AVX_MASK)
-        leaf->ebx += 256;
-      leaf->ecx = 512+64;
-      if (cpu->xcr0_suppmask & BX_XCR0_AVX_MASK)
-        leaf->ecx += 256;
-      leaf->edx = 0;
-      return;
+  switch(subfunction) {
+  case 0:
+    // EAX - valid bits of XCR0 (lower part)
+    // EBX - Maximum size (in bytes) required by enabled features
+    // ECX - Maximum size (in bytes) required by CPU supported features
+    // EDX - valid bits of XCR0 (upper part)
+    leaf->eax = cpu->xcr0_suppmask;
+    leaf->ebx = 512+64;
+    if (cpu->xcr0_suppmask & BX_XCR0_AVX_MASK)
+      leaf->ebx += 256;
+    leaf->ecx = 512+64;
+    if (cpu->xcr0_suppmask & BX_XCR0_AVX_MASK)
+      leaf->ecx += 256;
+    leaf->edx = 0;
+    return;
 
-    case 1:
-      leaf->eax = BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_XSAVEOPT);
-      leaf->ebx = 0;
+  case 1:
+    leaf->eax = 1; /* XSAVEOPT supported */
+    leaf->ebx = 0;
+    leaf->ecx = 0;
+    leaf->edx = 0;
+    return;
+
+  case 2: // AVX leaf
+    if (cpu->xcr0_suppmask & BX_XCR0_AVX_MASK) {
+      leaf->eax = 256;
+      leaf->ebx = 576;
       leaf->ecx = 0;
       leaf->edx = 0;
       return;
-
-    case 2: // AVX leaf
-      if (cpu->xcr0_suppmask & BX_XCR0_AVX_MASK) {
-        leaf->eax = 256;
-        leaf->ebx = 576;
-        leaf->ecx = 0;
-        leaf->edx = 0;
-        break;
-      }
-      // else fall through
-
-    default:
-      leaf->eax = 0; // reserved
-      leaf->ebx = 0; // reserved
-      leaf->ecx = 0; // reserved
-      leaf->edx = 0; // reserved
-      break;
     }
+    // else fall through
+
+  default:
+    break;
   }
+
+  leaf->eax = 0; // reserved
+  leaf->ebx = 0; // reserved
+  leaf->ecx = 0; // reserved
+  leaf->edx = 0; // reserved
 }
 
 // leaf 0x80000000 //
@@ -759,12 +757,12 @@ void corei7_sandy_bridge_2600k_t::dump_cpuid(void)
   unsigned n;
 
   for (n=0; n<=0xd; n++) {
-    BX_CPU_THIS_PTR cpuid->get_cpuid_leaf(n, 0x00000000, &leaf);
+    get_cpuid_leaf(n, 0x00000000, &leaf);
     BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
   }
 
   for (n=0x80000000; n<=0x80000008; n++) {
-    BX_CPU_THIS_PTR cpuid->get_cpuid_leaf(n, 0x00000000, &leaf);
+    get_cpuid_leaf(n, 0x00000000, &leaf);
     BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
   }
 }
