@@ -45,8 +45,8 @@ core2_extreme_x9770_t::core2_extreme_x9770_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 void core2_extreme_x9770_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf)
 {
   static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-  if (function > 3 && cpuid_limit_winnt)
-    function = 3;
+  if (cpuid_limit_winnt)
+    if (function > 2 && function < 0x80000000) function = 2;
 
   switch(function) {
   case 0x80000000:
