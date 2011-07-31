@@ -97,4 +97,3 @@ extern bx_cpuid_t *create_bx_generic_cpuid(BX_CPU_C *cpu);
 #endif // BX_CPU_LEVEL >= 4
 
 #endif
-                     

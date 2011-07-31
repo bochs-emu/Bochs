@@ -156,7 +156,8 @@ $(CPUDB_OBJS): $(BX_INCLUDES)
 clean:
 	@RMCOMMAND@ *.o
 	@RMCOMMAND@ *.a
-	cd cpudb && @RMCOMMAND@ *.o *.a
+	cd cpudb @COMMAND_SEPARATOR@
+        @RMCOMMAND@ *.o *.a
 	@CD_UP_ONE@
 
 dist-clean: clean
