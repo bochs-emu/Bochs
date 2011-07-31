@@ -82,7 +82,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPU_AVX_F16C         (1 << 26)       /* AVX F16 convert instruction */
 #define BX_CPU_AVX_FMA          (1 << 27)       /* AVX FMA instruction */
 #define BX_CPU_X86_64           (1 << 28)       /* x86-64 instruction */
-#define BX_CPU_BMI              (1 << 29)       /* BMI instruction */
+#define BX_CPU_LM_LAHF_SAHF     (1 << 29)       /* Long Mode LAHF/SAHF instruction */
+#define BX_CPU_BMI              (1 << 30)       /* BMI instruction */
 
 // cpuid non-ISA features
 #define BX_CPU_DEBUG_EXTENSIONS (1 << 0)        /* Debug Extensions support */

@@ -131,6 +131,7 @@ Bit32u core2_extreme_x9770_t::get_isa_extensions_bitmask(void) const
          BX_CPU_VMX |
 #endif
       /* BX_CPU_SMX | */
+         BX_CPU_LM_LAHF_SAHF;
          BX_CPU_X86_64;
 }
 
@@ -486,7 +487,7 @@ void core2_extreme_x9770_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf)
   // EDX:
   // Many of the bits in EDX are the same as FN 0x00000001 [*] for AMD
   //    [10:0] Reserved for Intel
-  // * [11:11] SYSCALL/SYSRET support
+  // ? [11:11] SYSCALL/SYSRET support
   //   [19:12] Reserved for Intel
   // * [20:20] No-Execute page protection
   //   [25:21] Reserved

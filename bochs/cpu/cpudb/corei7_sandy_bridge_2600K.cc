@@ -151,6 +151,7 @@ Bit32u corei7_sandy_bridge_2600k_t::get_isa_extensions_bitmask(void) const
          BX_CPU_XSAVEOPT |
          BX_CPU_AES_PCLMULQDQ |
          BX_CPU_AVX |
+         BX_CPU_LM_LAHF_SAHF |
          BX_CPU_X86_64;
 }
 

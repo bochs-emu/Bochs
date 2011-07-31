@@ -91,6 +91,7 @@ Bit32u athlon64_clawhammer_t::get_isa_extensions_bitmask(void) const
          BX_CPU_CLFLUSH |
          BX_CPU_SSE |
          BX_CPU_SSE2 |
+         BX_CPU_LM_LAHF_SAHF |
          BX_CPU_X86_64;
 }
 
