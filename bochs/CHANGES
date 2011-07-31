@@ -43,8 +43,8 @@ Bochs repository moved to the SVN version control !
     deprecated and should not be used anymore.
   - Configure option --enable-vbe is deprecated and should not be used anymore.
     The VBE support is always automatically compiled in, in order to enable
-    VBE support the bochsrc option "vga: extension=" has to be set to "vbe". If
-    PCI is present, the "pcivga" device can be assigned to PCI slot.
+    VBE support the .bochsrc option "vga: extension=" has to be set to "vbe".
+    If PCI is present, the "pcivga" device can be assigned to PCI slot.
   - Configure option --enable-acpi is deprecated and should not be used anymore.
     The ACPI support is always automatically compiled in if PCI is compiled in.
     The ACPI still could be disabled using .bochsrc 'plugin_ctrl' option.
@@ -87,9 +87,9 @@ Bochs repository moved to the SVN version control !
       (WARNING: legacy BIOS no longer works with a PCI display adapter)
 
 - GUI and display libraries
-  - vga update interval now uses host timing if the realtime sychronization is
-    enabled with the "clock" option (FIXME: it should always be used - independant
-    from the "clock" setting)
+  - vga update interval now uses host timing if the realtime synchronization
+    is enabled with the "clock" option (FIXME: it should always be used -
+    independent from the "clock" setting)
 
 - SF patches applied
   [3302668] VMX preemption timer by Jianan Hao
@@ -142,7 +142,7 @@ Brief summary :
 - BIOS: Support for up to 2M ROM BIOS images.
 - GUI: select mouse capture toggle method in .bochsrc.
 - Ported most of Qemu's 'virtual VFAT' block driver
-  (except runtime write support, but plus FAT32 suppport)
+  (except runtime write support, but plus FAT32 support)
 - Added write protect option for floppy drives.
 - Bugfixes / improved internal debugger + instrumentation.
 
