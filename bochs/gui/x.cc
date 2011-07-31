@@ -124,6 +124,8 @@ static void warp_cursor(int dx, int dy);
 static void disable_cursor();
 static void enable_cursor();
 
+// keyboard
+static bx_bool x11_nokeyrepeat = 0;
 static Bit32u convertStringToXKeysym (const char *string);
 
 static bx_bool x_init_done = 0;
@@ -648,21 +650,21 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsign
   // parse x11 specific options
   if (argc > 1) {
     for (i = 1; i < argc; i++) {
+      if (!strcmp(argv[i], "nokeyrepeat")) {
+        BX_INFO(("disabled host keyboard repeat"));
+        x11_nokeyrepeat = 1;
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
-      if (!strcmp(argv[i], "gui_debug")) {
+      } else if (!strcmp(argv[i], "gui_debug")) {
         void InitDebugDialog();
         SIM->set_debug_gui(1);
         InitDebugDialog();
-      }
-      else
 #endif
 #if BX_SHOW_IPS
-      if (!strcmp(argv[i], "hideIPS")) {
+      } else if (!strcmp(argv[i], "hideIPS")) {
+        BX_INFO(("hide IPS display in status bar"));
         x11_hide_ips = 1;
-      }
-      else
 #endif
-      {
+      } else {
         BX_PANIC(("Unknown x11 option '%s'", argv[i]));
       }
     }
@@ -759,6 +761,27 @@ void create_internal_vga_font(void)
   }
 }
 
+/* Check to see if this is a repeated key. (grabbed from SDL 1.2)
+   (idea shamelessly lifted from GII -- thanks guys! :)
+ */
+static int X11_KeyRepeat(Display *display, XEvent *event)
+{
+  XEvent peekevent;
+  int repeated;
+
+  repeated = 0;
+  if (XPending(display)) {
+    XPeekEvent(display, &peekevent);
+    if ((peekevent.type == KeyPress) &&
+        (peekevent.xkey.keycode == event->xkey.keycode) &&
+        ((peekevent.xkey.time-event->xkey.time) < 2)) {
+      repeated = 1;
+      XNextEvent(display, &peekevent);
+    }
+  }
+  return repeated;
+}
+
 void bx_x_gui_c::handle_events(void)
 {
   XEvent report;
@@ -784,6 +807,11 @@ void bx_x_gui_c::handle_events(void)
   while (XPending(bx_x_display) > 0)  {
     XNextEvent(bx_x_display, &report);
     current_z = 0;
+
+    if (x11_nokeyrepeat && (report.type == KeyRelease) && X11_KeyRepeat(bx_x_display, &report)) {
+      return;
+    }
+
     switch  (report.type) {
 
     case Expose:
