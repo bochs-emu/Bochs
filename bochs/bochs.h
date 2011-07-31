@@ -267,7 +267,6 @@ public:
   void info(const char *fmt, ...)   BX_CPP_AttrPrintf(2, 3);
   void error(const char *fmt, ...)  BX_CPP_AttrPrintf(2, 3);
   void panic(const char *fmt, ...)  BX_CPP_AttrPrintf(2, 3);
-  void pass(const char *fmt, ...)   BX_CPP_AttrPrintf(2, 3);
   void ldebug(const char *fmt, ...) BX_CPP_AttrPrintf(2, 3);
   void fatal (const char *prefix, const char *fmt, va_list ap, int exit_status);
   void ask (int level, const char *prefix, const char *fmt, va_list ap);
@@ -346,7 +345,6 @@ typedef class BOCHSAPI iofunctions iofunc_t;
 #define BX_DEBUG(x)
 #define BX_ERROR(x)
 #define BX_PANIC(x) (LOG_THIS panic) x
-#define BX_PASS(x) (LOG_THIS pass) x
 
 #define BX_ASSERT(x)
 
@@ -356,7 +354,6 @@ typedef class BOCHSAPI iofunctions iofunc_t;
 #define BX_DEBUG(x) (LOG_THIS ldebug) x
 #define BX_ERROR(x) (LOG_THIS error) x
 #define BX_PANIC(x) (LOG_THIS panic) x
-#define BX_PASS(x) (LOG_THIS pass) x
 
 #if BX_ASSERT_ENABLE
   #define BX_ASSERT(x) do {if (!(x)) BX_PANIC(("failed assertion \"%s\" at %s:%d\n", #x, __FILE__, __LINE__));} while (0)

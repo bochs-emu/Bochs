@@ -3963,12 +3963,12 @@ turns on this feature and 0 turns it off.
 </para>
 </section>
 
-<section><title>i440fxsupport</title>
+<section><title>pci</title>
 <para>
 Examples:
 <screen>
-  i440fxsupport: enabled=1 # default if compiled with PCI support
-  i440fxsupport: enabled=1, slot1=pcivga, slot2=ne2k
+  pci: enabled=1, chipset=i440fx # default if compiled with PCI support
+  pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k
 </screen>
 This option controls the presence of the i440FX PCI chipset. You can also
 specify the devices connected to PCI slots. Up to 5 slots are available.
@@ -7264,7 +7264,7 @@ Bochs VBE Display Drivers for Windows NT/2000
   # Enable CL-GD5446 PCI
   vga: extension=cirrus
   vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest-cirrus
-  i440fxsupport: enabled=1, slot1=cirrus
+  pci: enabled=1, chipset=i440fx, slot1=cirrus
   </screen>
 
   <note><para>
@@ -8637,15 +8637,14 @@ com1: enabled=0
 # no sb16
 boot: cdrom
 floppy_bootsig_check: disabled=0
-vga_update_interval: 300000
+vga: update_freq=5
 keyboard_serial_delay: 250
 keyboard_paste_delay: 100000
 cpu: ips=3000000
 clock: sync=realtime, time0=0
-text_snapshot_check: 0
 mouse: enabled=0
 private_colormap: enabled=0
-i440fxsupport: enabled=0
+pci: enabled=0
 # no ne2k
 # no loader
 log: osr5.log
@@ -8655,7 +8654,6 @@ panic: action=ask
 error: action=report
 info: action=report
 debug: action=ignore
-pass: action=fatal
 keyboard_mapping: enabled=0, map=
 keyboard_type: mf
 user_shortcut: keys=none

@@ -556,7 +556,6 @@ panic: action=ask
 error: action=report
 info: action=report
 debug: action=ignore
-#pass: action=fatal
 
 #=======================================================================
 # DEBUGGER_LOG:
@@ -988,7 +987,6 @@ pci: enabled=1, chipset=i440fx
 #=======================================================================
 #load32bitOSImage: os=nullkernel, path=../kernel.img, iolog=../vga_io.log
 #load32bitOSImage: os=linux, path=../linux.img, iolog=../vga_io.log, initrd=../initrd.img
-#text_snapshot_check: enabled=1
 #print_timestamps: enabled=1
 
 #-------------------------

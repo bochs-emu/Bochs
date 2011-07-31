@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "11 Jul 2011" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "31 Jul 2011" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -823,14 +823,14 @@ Example:
   private_colormap: enabled=1
 
 .TP
-.I "i440fxsupport:"
+.I "pci:"
 This option controls the presence of the i440FX PCI chipset. You can
 also specify the devices connected to PCI slots. Up to 5 slots are
 available now. These devices are currently supported: cirrus, es1370, ne2k,
 pcivga, pcidev, pcipnic and usb_ohci.
 
 Example:
-  i440fxsupport: enabled=1, slot1=pcivga, slot2=ne2k
+  pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k
 
 .TP
 .I "pcidev:"

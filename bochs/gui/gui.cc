@@ -238,10 +238,6 @@ void bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheig
                           BX_GRAVITY_RIGHT, userbutton_handler);
   BX_GUI_THIS set_tooltip(BX_GUI_THIS user_hbar_id, "Send keyboard shortcut");
 
-  if (SIM->get_param_bool(BXPN_TEXT_SNAPSHOT_CHECK)->get()) {
-    bx_pc_system.register_timer(this, bx_gui_c::snapshot_checker, (unsigned) 1000000, 1, 1, "snap_chk");
-  }
-
   BX_GUI_THIS charmap_updated = 0;
 
   if (!BX_GUI_THIS new_gfx_api && (BX_GUI_THIS framebuffer == NULL)) {
@@ -388,9 +384,7 @@ Bit32s bx_gui_c::make_text_snapshot(char **snapshot, Bit32u *length)
     }
     while ((txt_addr > 0) && (clean_snap[txt_addr-1] == ' ')) txt_addr--;
 #ifdef WIN32
-    if(! SIM->get_param_bool(BXPN_TEXT_SNAPSHOT_CHECK)->get()) {
-      clean_snap[txt_addr++] = 13;
-    }
+    clean_snap[txt_addr++] = 13;
 #endif
     clean_snap[txt_addr++] = 10;
   }
@@ -417,53 +411,6 @@ void bx_gui_c::copy_handler(void)
     fclose(fp);
   }
   free(text_snapshot);
-}
-
-// Check the current text snapshot against file snapchk.txt.
-void bx_gui_c::snapshot_checker(void *this_ptr)
-{
-  char filename[BX_PATHNAME_LEN];
-  strcpy(filename,"snapchk.txt");
-  FILE *fp = fopen(filename, "rb");
-  if(fp) {
-    char *text_snapshot;
-    Bit32u len;
-    if (make_text_snapshot (&text_snapshot, &len) < 0) {
-      return;
-    }
-    char *compare_snapshot = (char *) malloc((len+1) * sizeof(char));
-    fread(compare_snapshot, 1, len, fp);
-    fclose(fp);
-    strcpy(filename,"snapmask.txt");
-    fp=fopen(filename, "rb");
-    if(fp) {
-      char *mask_snapshot = (char *) malloc((len+1) * sizeof(char));
-      unsigned i;
-      bx_bool flag = 1;
-      fread(mask_snapshot, 1, len, fp);
-      fclose(fp);
-      for(i=0;i<len;i++) {
-	if((text_snapshot[i] != compare_snapshot[i]) &&
-	   (compare_snapshot[i] == mask_snapshot[i])) {
-	  flag = 0;
-	  break;
-	}
-      }
-      if(flag) {
-	if(!memcmp(text_snapshot,compare_snapshot,len)) {
-	  BX_PASS(("Test Passed."));
-	} else {
-	  BX_PASS(("Test Passed with Mask."));
-	}
-      }
-    } else {
-      if(!memcmp(text_snapshot,compare_snapshot,len)) {
-	BX_PASS(("Test Passed."));
-      }
-    }
-    free(compare_snapshot);
-    free(text_snapshot);
-  }
 }
 
 // create a text snapshot and dump it to a file

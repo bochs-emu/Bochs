@@ -1658,13 +1658,6 @@ void bx_init_options()
       "Debug messages written to i/o port 0xE9 will be displayed on console",
       0);
 
-  // text snapshot check panic
-  new bx_param_bool_c(misc,
-      "text_snapshot_check",
-      "Enable text snapshot check panic",
-      "Enable panic when text on screen matches snapchk.txt.\nUseful for regression testing.\nIn win32, turns off CR/LF in snapshots and cuts.",
-      0);
-
   // GDB stub
   menu = new bx_list_c(misc, "gdbstub", "GDB Stub Options");
   menu->set_options(menu->SHOW_PARENT | menu->USE_BOX_TITLE);
@@ -2151,8 +2144,6 @@ static Bit32s parse_log_options(const char *context, char *loglev, char *param1)
 
   if (!strcmp(loglev, "panic")) {
     level = LOGLEV_PANIC;
-  } else if (!strcmp(loglev, "pass")) {
-    level = LOGLEV_PASS;
   } else if (!strcmp(loglev, "error")) {
     level = LOGLEV_ERROR;
   } else if (!strcmp(loglev, "info")) {
@@ -2582,13 +2573,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     if (parse_log_options(context, params[0], params[1]) < 0) {
       return -1;
     }
-  } else if (!strcmp(params[0], "pass")) {
-    if (num_params != 2) {
-      PARSE_ERR(("%s: pass directive malformed.", context));
-    }
-    if (parse_log_options(context, params[0], params[1]) < 0) {
-      return -1;
-    }
   } else if (!strcmp(params[0], "error")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: error directive malformed.", context));
@@ -2890,16 +2874,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR (("%s: keyboard_paste_delay not big enough!", context));
     }
   } else if (!strcmp(params[0], "text_snapshot_check")) {
-    if (num_params != 2) {
-      PARSE_ERR(("%s: text_snapshot_check directive: wrong # args.", context));
-    }
-    if (!strncmp(params[1], "enabled=", 8)) {
-      if (parse_param_bool(params[1], 8, BXPN_TEXT_SNAPSHOT_CHECK) < 0) {
-        PARSE_ERR(("%s: text_snapshot_check directive malformed.", context));
-      }
-    } else {
-      PARSE_ERR(("%s: text_snapshot_check directive malformed.", context));
-    }
+    PARSE_ERR(("%s: the 'text_snapshot_check' feature has been removed.", context));
   } else if (!strcmp(params[0], "mouse")) {
     if (num_params < 2) {
       PARSE_ERR(("%s: mouse directive malformed.", context));
@@ -3798,8 +3773,6 @@ int bx_write_log_options(FILE *fp, bx_list_c *base)
       io->getaction(logfunctions::get_default_action(LOGLEV_INFO)));
   fprintf(fp, "debug: action=%s\n",
       io->getaction(logfunctions::get_default_action(LOGLEV_DEBUG)));
-  fprintf(fp, "pass: action=%s\n",
-      io->getaction(logfunctions::get_default_action(LOGLEV_PASS)));
   return 0;
 }
 
@@ -4048,7 +4021,6 @@ int bx_write_configuration(const char *rc, int overwrite)
   fprintf(fp, "print_timestamps: enabled=%d\n", bx_dbg.print_timestamps);
   bx_write_debugger_options(fp);
   fprintf(fp, "port_e9_hack: enabled=%d\n", SIM->get_param_bool(BXPN_PORT_E9_HACK)->get());
-  fprintf(fp, "text_snapshot_check: enabled=%d\n", SIM->get_param_bool(BXPN_TEXT_SNAPSHOT_CHECK)->get());
   fprintf(fp, "private_colormap: enabled=%d\n", SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get());
 #if BX_WITH_AMIGAOS
   fprintf(fp, "fullscreen: enabled=%d\n", SIM->get_param_bool(BXPN_FULLSCREEN)->get());

@@ -162,7 +162,6 @@
 #define BXPN_ES1370_ENABLED              "sound.es1370.enabled"
 #define BXPN_ES1370_WAVEDEV              "sound.es1370.wavedev"
 #define BXPN_PORT_E9_HACK                "misc.port_e9_hack"
-#define BXPN_TEXT_SNAPSHOT_CHECK         "misc.text_snapshot_check"
 #define BXPN_GDBSTUB                     "misc.gdbstub"
 #define BXPN_PLUGIN_CTRL                 "misc.plugin_ctrl"
 #define BXPN_LOG_FILENAME                "log.filename"

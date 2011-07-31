@@ -154,7 +154,6 @@ typedef enum {
   LOGLEV_INFO,
   LOGLEV_ERROR,
   LOGLEV_PANIC,
-  LOGLEV_PASS,
   N_LOGLEV
 } bx_log_levels;
 

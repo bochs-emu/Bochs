@@ -1062,9 +1062,6 @@ bx_bool bx_real_sim_c::restore_logopts()
               type = LOGLEV_ERROR;
             } else if (!strncmp(string, "PANIC=", 6)) {
               type = LOGLEV_PANIC;
-            } else if (!strncmp(string, "PASS=", 5)) {
-              type = LOGLEV_PASS;
-              j = 5;
             }
             if (!strcmp(string+j, "ignore")) {
               action = ACT_IGNORE;

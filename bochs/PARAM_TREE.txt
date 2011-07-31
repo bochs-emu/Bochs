@@ -241,7 +241,7 @@ sound
     dmatimer
 
 misc
-  text_snapshot_check
+  port_e9_hack
   gdbstub
     port
     text_base
@@ -273,4 +273,4 @@ wxdebug
 user
   (subtree for user-defined options)
 
-(updated Jan 16, 2011 by vruppert)
+(updated July 31, 2011 by vruppert)

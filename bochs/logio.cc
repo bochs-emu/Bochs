@@ -39,8 +39,7 @@ const char* iofunctions::getlevel(int i)
     "DEBUG",
     "INFO",
     "ERROR",
-    "PANIC",
-    "PASS"
+    "PANIC"
   };
 
   if (i>=0 && i<N_LOGLEV) return loglevel[i];
@@ -186,7 +185,6 @@ void iofunctions::out(int level, const char *prefix, const char *fmt, va_list ap
   switch (level) {
     case LOGLEV_INFO: c='i'; break;
     case LOGLEV_PANIC: c='p'; break;
-    case LOGLEV_PASS: c='s'; break;
     case LOGLEV_ERROR: c='e'; break;
     case LOGLEV_DEBUG: c='d'; break;
     default: break;
@@ -230,8 +228,6 @@ void iofunctions::out(int level, const char *prefix, const char *fmt, va_list ap
 
   if(level==LOGLEV_PANIC)
     fprintf(logfd, ">>PANIC<< ");
-  if(level==LOGLEV_PASS)
-    fprintf(logfd, ">>PASS<< ");
 
   vfprintf(logfd, fmt, ap);
   fprintf(logfd, "\n");
@@ -276,11 +272,10 @@ int logfunctions::default_onoff[N_LOGLEV] =
   ACT_REPORT,  // report info
   ACT_REPORT,  // report error
 #if BX_WITH_WX || BX_WITH_WIN32 || BX_WITH_X11
-  ACT_ASK,      // on panic, ask user what to do
+  ACT_ASK      // on panic, ask user what to do
 #else
-  ACT_FATAL,    // on panic, quit
+  ACT_FATAL    // on panic, quit
 #endif
-  ACT_FATAL
 };
 
 logfunctions::logfunctions(void)
@@ -403,30 +398,6 @@ void logfunctions::panic(const char *fmt, ...)
     ask(LOGLEV_PANIC, prefix, fmt, ap);
   if (onoff[LOGLEV_PANIC] == ACT_FATAL)
     fatal(prefix, fmt, ap, 1);
-  va_end(ap);
-}
-
-void logfunctions::pass(const char *fmt, ...)
-{
-  va_list ap;
-
-  assert(logio != NULL);
-
-  // Special case for panics since they are so important.  Always print
-  // the panic to the log, no matter what the log action says.
-  //if(!onoff[LOGLEV_PASS]) return;
-
-  va_start(ap, fmt);
-  logio->out(LOGLEV_PASS, prefix, fmt, ap);
-
-  // This fixes a funny bug on linuxppc where va_list is no pointer but a struct
-  va_end(ap);
-  va_start(ap, fmt);
-
-  if (onoff[LOGLEV_PASS] == ACT_ASK)
-    ask(LOGLEV_PASS, prefix, fmt, ap);
-  if (onoff[LOGLEV_PASS] == ACT_FATAL)
-    fatal(prefix, fmt, ap, 101);
   va_end(ap);
 }
 
