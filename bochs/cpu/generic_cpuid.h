@@ -24,6 +24,8 @@
 #ifndef BX_GENERIC_CPUID_DEFINITIONS_H
 #define BX_GENERIC_CPUID_DEFINITIONS_H
 
+#if BX_CPU_LEVEL >= 4
+
 #include "cpu/cpuid.h"
 
 class bx_generic_cpuid_t : public bx_cpuid_t {
@@ -92,4 +94,7 @@ private:
 
 extern bx_cpuid_t *create_bx_generic_cpuid(BX_CPU_C *cpu);
 
+#endif // BX_CPU_LEVEL >= 4
+
 #endif
+                     

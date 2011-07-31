@@ -24,6 +24,8 @@
 #ifndef BX_CORE2_X9770_CPUID_DEFINITIONS_H
 #define BX_CORE2_X9770_CPUID_DEFINITIONS_H
 
+#if BX_SUPPORT_X86_64
+
 #include "cpu/cpuid.h"
 
 class core2_extreme_x9770_t : public bx_cpuid_t {
@@ -70,5 +72,7 @@ private:
 };
 
 extern bx_cpuid_t *create_core2_extreme_x9770_cpuid(BX_CPU_C *cpu);
+
+#endif // BX_SUPPORT_X86_64
 
 #endif

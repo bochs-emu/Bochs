@@ -174,7 +174,7 @@ static bx_cpuid_t *cpuid_factory(BX_CPU_C *cpu)
     return create_bx_generic_cpuid(cpu);
 #if BX_CPU_LEVEL >= 6
 #if BX_SUPPORT_X86_64 == 0
-  case BX_CPU_MODEL_PIII_KATMAI:
+  case BX_CPU_MODEL_P3_KATMAI:
     return create_p3_katmai_cpuid(cpu);
 #endif
 #if BX_SUPPORT_X86_64

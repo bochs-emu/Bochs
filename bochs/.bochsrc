@@ -93,6 +93,7 @@ romimage: file=$BXSHARE/BIOS-bochs-latest
 #  CPU configurations that can be selected:
 # -----------------------------------------------------------------
 #  p3_katmai                  Intel Pentium III (Katmai)
+#  athlon64_clawhammer        AMD Athlon(tm) 64 Processor 2800+
 #  p4_prescott_celeron_336    Intel(R) Celeron(R) 336
 #  core2_extreme_x9770        Intel(R) Core(TM)2 Extreme X9770
 #  corei7_sandy_bridge_2600k  Intel(R) Core(TM) i7-2600K

@@ -28,6 +28,8 @@
 
 #define LOG_THIS cpu->
 
+#if BX_CPU_LEVEL >= 4
+
 bx_generic_cpuid_t::bx_generic_cpuid_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
 #if BX_SUPPORT_SMP
@@ -1238,3 +1240,5 @@ void bx_generic_cpuid_t::dump_cpuid(void)
 }
 
 bx_cpuid_t *create_bx_generic_cpuid(BX_CPU_C *cpu) { return new bx_generic_cpuid_t(cpu); }
+
+#endif
