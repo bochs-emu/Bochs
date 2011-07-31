@@ -131,7 +131,7 @@ Bit32u core2_extreme_x9770_t::get_isa_extensions_bitmask(void) const
          BX_CPU_VMX |
 #endif
       /* BX_CPU_SMX | */
-         BX_CPU_LM_LAHF_SAHF;
+         BX_CPU_LM_LAHF_SAHF |
          BX_CPU_X86_64;
 }
 
