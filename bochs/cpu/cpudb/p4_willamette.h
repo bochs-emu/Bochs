@@ -39,9 +39,9 @@ public:
   virtual Bit32u get_isa_extensions_bitmask(void) const;
   virtual Bit32u get_cpu_extensions_bitmask(void) const;
 
-  virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf);
+  virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 
-  virtual void dump_cpuid(void);
+  virtual void dump_cpuid(void) const;
 
 private:
 #if BX_SUPPORT_SMP
@@ -50,13 +50,13 @@ private:
   unsigned nthreads;
 #endif
 
-  void get_std_cpuid_leaf_0(cpuid_function_t *leaf);
-  void get_std_cpuid_leaf_1(cpuid_function_t *leaf);
-  void get_std_cpuid_leaf_2(cpuid_function_t *leaf);
+  void get_std_cpuid_leaf_0(cpuid_function_t *leaf) const;
+  void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
+  void get_std_cpuid_leaf_2(cpuid_function_t *leaf) const;
 
-  void get_ext_cpuid_leaf_0(cpuid_function_t *leaf);
-  void get_ext_cpuid_leaf_1(cpuid_function_t *leaf);
-  void get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf);
+  void get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const;
+  void get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const;
+  void get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const;
 };
 
 extern bx_cpuid_t *create_p4_willamette_cpuid(BX_CPU_C *cpu);

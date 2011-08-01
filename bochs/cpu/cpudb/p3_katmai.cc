@@ -38,7 +38,7 @@ p3_katmai_t::p3_katmai_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
     BX_PANIC(("x86-64 should be disabled for PIII (Katmai) configuration"));
 }
 
-void p3_katmai_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf)
+void p3_katmai_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   switch(function) {
   case 0x00000000:
@@ -81,7 +81,7 @@ Bit32u p3_katmai_t::get_cpu_extensions_bitmask(void) const
 }
 
 // leaf 0x00000000 //
-void p3_katmai_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf)
+void p3_katmai_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   static const char* vendor_string = "GenuineIntel";
 
@@ -103,7 +103,7 @@ void p3_katmai_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000001 //
-void p3_katmai_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf)
+void p3_katmai_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information
   //   [3:0]   Stepping ID
@@ -178,7 +178,7 @@ void p3_katmai_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000002 //
-void p3_katmai_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf)
+void p3_katmai_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000002 - Cache and TLB Descriptors
   leaf->eax = 0x03020101;
@@ -188,7 +188,7 @@ void p3_katmai_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000003 //
-void p3_katmai_t::get_std_cpuid_leaf_3(cpuid_function_t *leaf)
+void p3_katmai_t::get_std_cpuid_leaf_3(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000003 - Processor Serial Number
   leaf->eax = 0;
@@ -197,7 +197,7 @@ void p3_katmai_t::get_std_cpuid_leaf_3(cpuid_function_t *leaf)
   leaf->edx = 0;
 }
 
-void p3_katmai_t::dump_cpuid(void)
+void p3_katmai_t::dump_cpuid(void) const
 {
   struct cpuid_function_t leaf;
 

@@ -42,9 +42,9 @@ public:
   virtual Bit32u get_isa_extensions_bitmask(void) const = 0;
   virtual Bit32u get_cpu_extensions_bitmask(void) const = 0;
 
-  virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) {}
+  virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const {}
 
-  virtual void dump_cpuid(void) = 0;
+  virtual void dump_cpuid(void) const = 0;
 
 protected:
   BX_CPU_C *cpu;

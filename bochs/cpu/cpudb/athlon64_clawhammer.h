@@ -39,25 +39,25 @@ public:
   virtual Bit32u get_isa_extensions_bitmask(void) const;
   virtual Bit32u get_cpu_extensions_bitmask(void) const;
 
-  virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf);
+  virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 
-  virtual void dump_cpuid(void);
+  virtual void dump_cpuid(void) const;
 
 private:
-  void get_std_cpuid_leaf_0(cpuid_function_t *leaf);
-  void get_std_cpuid_leaf_1(cpuid_function_t *leaf);
+  void get_std_cpuid_leaf_0(cpuid_function_t *leaf) const;
+  void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
 
-  void get_ext_cpuid_leaf_0(cpuid_function_t *leaf);
-  void get_ext_cpuid_leaf_1(cpuid_function_t *leaf);
-  void get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf);
-  void get_ext_cpuid_leaf_5(cpuid_function_t *leaf);
-  void get_ext_cpuid_leaf_6(cpuid_function_t *leaf);
-  void get_ext_cpuid_leaf_7(cpuid_function_t *leaf);
-  void get_ext_cpuid_leaf_8(cpuid_function_t *leaf);
+  void get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const;
+  void get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const;
+  void get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const;
+  void get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const;
+  void get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const;
+  void get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const;
+  void get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const;
 
-  void get_reserved_leaf(cpuid_function_t *leaf);
+  void get_reserved_leaf(cpuid_function_t *leaf) const;
 
-  void get_cpuid_hidden_level(cpuid_function_t *leaf);
+  void get_cpuid_hidden_level(cpuid_function_t *leaf) const;
 };
 
 extern bx_cpuid_t *create_athlon64_clawhammer_cpuid(BX_CPU_C *cpu);

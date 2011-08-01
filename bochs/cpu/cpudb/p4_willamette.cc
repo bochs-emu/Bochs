@@ -42,7 +42,7 @@ p4_willamette_t::p4_willamette_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
     BX_PANIC(("x86-64 should be disabled for P4 (Willamette) configuration"));
 }
 
-void p4_willamette_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf)
+void p4_willamette_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   switch(function) {
   case 0x80000000:
@@ -96,7 +96,7 @@ Bit32u p4_willamette_t::get_cpu_extensions_bitmask(void) const
 }
 
 // leaf 0x00000000 //
-void p4_willamette_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf)
+void p4_willamette_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   static const char* vendor_string = "GenuineIntel";
 
@@ -118,7 +118,7 @@ void p4_willamette_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000001 //
-void p4_willamette_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf)
+void p4_willamette_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information
   //   [3:0]   Stepping ID
@@ -216,7 +216,7 @@ void p4_willamette_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000002 //
-void p4_willamette_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf)
+void p4_willamette_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000002 - Cache and TLB Descriptors
   leaf->eax = 0x665B5001;
@@ -226,7 +226,7 @@ void p4_willamette_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf)
 }
 
 // leaf 0x80000000 //
-void p4_willamette_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf)
+void p4_willamette_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   // EAX: highest extended function understood by CPUID
   // EBX: reserved
@@ -239,7 +239,7 @@ void p4_willamette_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf)
 }
 
 // leaf 0x80000001 //
-void p4_willamette_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf)
+void p4_willamette_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information (reserved for Intel)
   leaf->eax = 0;
@@ -283,7 +283,7 @@ void p4_willamette_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf)
 // leaf 0x80000002 //
 // leaf 0x80000003 //
 // leaf 0x80000004 //
-void p4_willamette_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf)
+void p4_willamette_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000002-0x800000004 - Processor Name String Identifier
   static const char* brand_string = "              Intel(R) Pentium(R) 4 CPU 1.80GHz";
@@ -319,7 +319,7 @@ void p4_willamette_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_fun
 #endif
 }
 
-void p4_willamette_t::dump_cpuid(void)
+void p4_willamette_t::dump_cpuid(void) const
 {
   struct cpuid_function_t leaf;
   unsigned n;

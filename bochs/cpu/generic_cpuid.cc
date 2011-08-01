@@ -42,7 +42,7 @@ bx_generic_cpuid_t::bx_generic_cpuid_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   init_cpu_extensions_bitmask();
 }
 
-void bx_generic_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
   if (cpuid_limit_winnt)
@@ -125,7 +125,7 @@ void bx_generic_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
 }
 
 // leaf 0x00000000 //
-void bx_generic_cpuid_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   static Bit8u *vendor_string = (Bit8u *)SIM->get_param_string(BXPN_VENDOR_STRING)->getptr();
 
@@ -166,7 +166,7 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000001 //
-void bx_generic_cpuid_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information
   //   [3:0]   Stepping ID
@@ -206,7 +206,7 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf)
 #if BX_CPU_LEVEL >= 6
 
 // leaf 0x00000002 //
-void bx_generic_cpuid_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000002 - Cache and TLB Descriptors
 #if BX_CPU_VENDOR_INTEL
@@ -223,7 +223,7 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000003 //
-void bx_generic_cpuid_t::get_std_cpuid_leaf_3(cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_std_cpuid_leaf_3(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000003 - Processor Serial Number
   leaf->eax = 0;
@@ -233,7 +233,7 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_3(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000004 //
-void bx_generic_cpuid_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000004 - Deterministic Cache Parameters
   leaf->eax = 0;
@@ -243,7 +243,7 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function
 }
 
 // leaf 0x00000005 //
-void bx_generic_cpuid_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000005 - MONITOR/MWAIT Leaf
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -272,7 +272,7 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000006 //
-void bx_generic_cpuid_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000006 - Thermal and Power Management Leaf
   leaf->eax = 0;
@@ -282,7 +282,7 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000007 //
-void bx_generic_cpuid_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   leaf->ebx = get_ext3_cpuid_features();
   leaf->ecx = 0;
@@ -294,7 +294,7 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function
 }
 
 // leaf 0x00000008 //
-void bx_generic_cpuid_t::get_std_cpuid_leaf_8(cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_std_cpuid_leaf_8(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000008 - reserved
   leaf->eax = 0;
@@ -304,7 +304,7 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_8(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000009 //
-void bx_generic_cpuid_t::get_std_cpuid_leaf_9(cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_std_cpuid_leaf_9(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000009 - Direct Cache Access Information Leaf
   leaf->eax = 0;
@@ -314,7 +314,7 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_9(cpuid_function_t *leaf)
 }
 
 // leaf 0x0000000A //
-void bx_generic_cpuid_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 {
   // CPUID function 0x0000000A - Architectural Performance Monitoring Leaf
   leaf->eax = 0;
@@ -331,7 +331,7 @@ BX_CPP_INLINE static Bit32u ilog2(Bit32u x)
 }
 
 // leaf 0x0000000B //
-void bx_generic_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   // CPUID function 0x0000000B - Extended Topology Leaf
   leaf->eax = 0;
@@ -398,7 +398,7 @@ void bx_generic_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction
 }
 
 // leaf 0x0000000C //
-void bx_generic_cpuid_t::get_std_cpuid_leaf_C(cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_std_cpuid_leaf_C(cpuid_function_t *leaf) const
 {
   // CPUID function 0x0000000C - reserved
   leaf->eax = 0;
@@ -408,7 +408,7 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_C(cpuid_function_t *leaf)
 }
 
 // leaf 0x0000000D //
-void bx_generic_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_XSAVE))
   {
@@ -462,7 +462,7 @@ void bx_generic_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_func
 }
 
 // leaf 0x80000000 //
-void bx_generic_cpuid_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   // EAX: highest extended function understood by CPUID
   // EBX: vendor ID string
@@ -489,7 +489,7 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf)
 }
 
 // leaf 0x80000001 //
-void bx_generic_cpuid_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information
   leaf->eax = BX_CPU_VENDOR_INTEL ? 0 : get_cpu_version_information();
@@ -539,7 +539,7 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf)
 // leaf 0x80000002 //
 // leaf 0x80000003 //
 // leaf 0x80000004 //
-void bx_generic_cpuid_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000002-0x800000004 - Processor Name String Identifier
   static Bit8u *brand_string = (Bit8u *)SIM->get_param_string(BXPN_BRAND_STRING)->getptr();
@@ -578,7 +578,7 @@ void bx_generic_cpuid_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_
 #if BX_SUPPORT_X86_64
 
 // leaf 0x80000005 //
-void bx_generic_cpuid_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000005 - L1 Cache and TLB Identifiers
   leaf->eax = 0x01ff01ff;
@@ -588,7 +588,7 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf)
 }
 
 // leaf 0x80000006 //
-void bx_generic_cpuid_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
   leaf->eax = 0;
@@ -598,7 +598,7 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf)
 }
 
 // leaf 0x80000007 //
-void bx_generic_cpuid_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000007 - Advanced Power Management
   leaf->eax = 0;
@@ -608,7 +608,7 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf)
 }
 
 // leaf 0x80000008 //
-void bx_generic_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf)
+void bx_generic_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
 {
   // virtual & phys address size in low 2 bytes.
   leaf->eax = BX_PHY_ADDRESS_WIDTH | (BX_LIN_ADDRESS_WIDTH << 8);
@@ -865,7 +865,7 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
  * [27:29] Extended Family
  */
 
-Bit32u bx_generic_cpuid_t::get_cpu_version_information(void)
+Bit32u bx_generic_cpuid_t::get_cpu_version_information(void) const
 {
   static Bit32u stepping = SIM->get_param_num(BXPN_CPUID_STEPPING)->get();
   static Bit32u model = SIM->get_param_num(BXPN_CPUID_MODEL)->get();
@@ -881,7 +881,7 @@ Bit32u bx_generic_cpuid_t::get_cpu_version_information(void)
 }
 
 /* Get CPU extended feature flags. */
-Bit32u bx_generic_cpuid_t::get_extended_cpuid_features(void)
+Bit32u bx_generic_cpuid_t::get_extended_cpuid_features(void) const
 {
   // [0:0]   SSE3: SSE3 Instructions
   // [1:1]   PCLMULQDQ Instruction support
@@ -980,7 +980,7 @@ Bit32u bx_generic_cpuid_t::get_extended_cpuid_features(void)
 }
 
 /* Get CPU feature flags. Returned by CPUID functions 1 and 80000001.  */
-Bit32u bx_generic_cpuid_t::get_std_cpuid_features(void)
+Bit32u bx_generic_cpuid_t::get_std_cpuid_features(void) const
 {
   //   [0:0]   FPU on chip
   //   [1:1]   VME: Virtual-8086 Mode enhancements
@@ -1101,7 +1101,7 @@ Bit32u bx_generic_cpuid_t::get_std_cpuid_features(void)
 #if BX_CPU_LEVEL >= 6
 
 /* Get CPU feature flags. Returned by CPUID function 80000001 in EDX register */
-Bit32u bx_generic_cpuid_t::get_std2_cpuid_features(void)
+Bit32u bx_generic_cpuid_t::get_std2_cpuid_features(void) const
 {
   // Many of the bits in EDX are the same as EAX [*] for AMD
   // [*] [0:0]   FPU on chip
@@ -1155,7 +1155,7 @@ Bit32u bx_generic_cpuid_t::get_std2_cpuid_features(void)
 }
 
 /* Get CPU feature flags. Returned by CPUID function 80000001 in ECX register */
-Bit32u bx_generic_cpuid_t::get_ext2_cpuid_features(void)
+Bit32u bx_generic_cpuid_t::get_ext2_cpuid_features(void) const
 {
   // ECX:
   //     [0:0]   LAHF/SAHF instructions support in 64-bit mode
@@ -1184,7 +1184,7 @@ Bit32u bx_generic_cpuid_t::get_ext2_cpuid_features(void)
   return features;
 }
 
-Bit32u bx_generic_cpuid_t::get_ext3_cpuid_features(void)
+Bit32u bx_generic_cpuid_t::get_ext3_cpuid_features(void) const
 {
   Bit32u features = 0;
 
@@ -1210,7 +1210,7 @@ Bit32u bx_generic_cpuid_t::get_ext3_cpuid_features(void)
 
 #endif
 
-void bx_generic_cpuid_t::dump_cpuid(void)
+void bx_generic_cpuid_t::dump_cpuid(void) const
 {
   struct cpuid_function_t leaf;
 

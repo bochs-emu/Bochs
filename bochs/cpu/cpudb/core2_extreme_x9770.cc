@@ -42,7 +42,7 @@ core2_extreme_x9770_t::core2_extreme_x9770_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
     BX_PANIC(("You must enable x86-64 for Intel Core2 X9770 configuration"));
 }
 
-void core2_extreme_x9770_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf)
+void core2_extreme_x9770_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
   if (cpuid_limit_winnt)
@@ -148,7 +148,7 @@ Bit32u core2_extreme_x9770_t::get_cpu_extensions_bitmask(void) const
 }
 
 // leaf 0x00000000 //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf)
+void core2_extreme_x9770_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   static const char* vendor_string = "GenuineIntel";
 
@@ -170,7 +170,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000001 //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf)
+void core2_extreme_x9770_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information
   //   [3:0]   Stepping ID
@@ -318,7 +318,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000002 //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf)
+void core2_extreme_x9770_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000002 - Cache and TLB Descriptors
   leaf->eax = 0x05B0B101;
@@ -328,7 +328,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000003 //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_3(cpuid_function_t *leaf)
+void core2_extreme_x9770_t::get_std_cpuid_leaf_3(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000003 - Processor Serial Number
   leaf->eax = 0;
@@ -338,7 +338,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_3(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000004 //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf)
+void core2_extreme_x9770_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000004 - Deterministic Cache Parameters
   switch(subfunction) {
@@ -369,7 +369,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_funct
 }
 
 // leaf 0x00000005 //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf)
+void core2_extreme_x9770_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000005 - MONITOR/MWAIT Leaf
 
@@ -394,7 +394,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000006 //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf)
+void core2_extreme_x9770_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000006 - Thermal and Power Management Leaf
   leaf->eax = 0x00000001;
@@ -404,7 +404,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000007 //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf)
+void core2_extreme_x9770_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   leaf->eax = 0; /* leaf 7 not supported */
   leaf->ebx = 0;
@@ -413,7 +413,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_funct
 }
 
 // leaf 0x00000008 //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_8(cpuid_function_t *leaf)
+void core2_extreme_x9770_t::get_std_cpuid_leaf_8(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000008 - reserved
   leaf->eax = 0;
@@ -423,7 +423,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_8(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000009 //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_9(cpuid_function_t *leaf)
+void core2_extreme_x9770_t::get_std_cpuid_leaf_9(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000009 - Direct Cache Access Information
   leaf->eax = 0;
@@ -433,7 +433,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_9(cpuid_function_t *leaf)
 }
 
 // leaf 0x0000000A //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf)
+void core2_extreme_x9770_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 {
   // CPUID function 0x0000000A - Architectural Performance Monitoring Leaf
   leaf->eax = 0x07280202;
@@ -445,7 +445,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf)
 }
 
 // leaf 0x80000000 //
-void core2_extreme_x9770_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf)
+void core2_extreme_x9770_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   // EAX: highest extended function understood by CPUID
   // EBX: reserved
@@ -458,7 +458,7 @@ void core2_extreme_x9770_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf)
 }
 
 // leaf 0x80000001 //
-void core2_extreme_x9770_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf)
+void core2_extreme_x9770_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information (reserved for Intel)
   leaf->eax = 0;
@@ -506,7 +506,7 @@ void core2_extreme_x9770_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf)
 // leaf 0x80000002 //
 // leaf 0x80000003 //
 // leaf 0x80000004 //
-void core2_extreme_x9770_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf)
+void core2_extreme_x9770_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000002-0x800000004 - Processor Name String Identifier
   static const char* brand_string = "Intel(R) Core(TM)2 Extreme CPU X9770  @ 3.20GHz";
@@ -543,7 +543,7 @@ void core2_extreme_x9770_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpu
 }
 
 // leaf 0x80000005 //
-void core2_extreme_x9770_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf)
+void core2_extreme_x9770_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000005 - L1 Cache and TLB Identifiers
   leaf->eax = 0;
@@ -553,7 +553,7 @@ void core2_extreme_x9770_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf)
 }
 
 // leaf 0x80000006 //
-void core2_extreme_x9770_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf)
+void core2_extreme_x9770_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
   leaf->eax = 0x00000000;
@@ -563,7 +563,7 @@ void core2_extreme_x9770_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf)
 }
 
 // leaf 0x80000007 //
-void core2_extreme_x9770_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf)
+void core2_extreme_x9770_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000007 - Advanced Power Management
   leaf->eax = 0;
@@ -573,7 +573,7 @@ void core2_extreme_x9770_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf)
 }
 
 // leaf 0x80000008 //
-void core2_extreme_x9770_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf)
+void core2_extreme_x9770_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
 {
   // virtual & phys address size in low 2 bytes.
   leaf->eax = BX_PHY_ADDRESS_WIDTH | (BX_LIN_ADDRESS_WIDTH << 8);
@@ -582,7 +582,7 @@ void core2_extreme_x9770_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf)
   leaf->edx = 0;
 }
 
-void core2_extreme_x9770_t::dump_cpuid(void)
+void core2_extreme_x9770_t::dump_cpuid(void) const
 {
   struct cpuid_function_t leaf;
   unsigned n;

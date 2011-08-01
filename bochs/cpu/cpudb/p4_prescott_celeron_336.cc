@@ -42,7 +42,7 @@ p4_prescott_celeron_336_t::p4_prescott_celeron_336_t(BX_CPU_C *cpu): bx_cpuid_t(
     BX_PANIC(("You must enable x86-64 for P4 (Prescott) configuration"));
 }
 
-void p4_prescott_celeron_336_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf)
+void p4_prescott_celeron_336_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   switch(function) {
   case 0x80000000:
@@ -117,7 +117,7 @@ Bit32u p4_prescott_celeron_336_t::get_cpu_extensions_bitmask(void) const
 }
 
 // leaf 0x00000000 //
-void p4_prescott_celeron_336_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf)
+void p4_prescott_celeron_336_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   static const char* vendor_string = "GenuineIntel";
 
@@ -139,7 +139,7 @@ void p4_prescott_celeron_336_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000001 //
-void p4_prescott_celeron_336_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf)
+void p4_prescott_celeron_336_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information
   //   [3:0]   Stepping ID
@@ -280,7 +280,7 @@ void p4_prescott_celeron_336_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000002 //
-void p4_prescott_celeron_336_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf)
+void p4_prescott_celeron_336_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000002 - Cache and TLB Descriptors
   leaf->eax = 0x605B5101;
@@ -290,7 +290,7 @@ void p4_prescott_celeron_336_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000003 //
-void p4_prescott_celeron_336_t::get_std_cpuid_leaf_3(cpuid_function_t *leaf)
+void p4_prescott_celeron_336_t::get_std_cpuid_leaf_3(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000003 - Processor Serial Number
   leaf->eax = 0;
@@ -300,7 +300,7 @@ void p4_prescott_celeron_336_t::get_std_cpuid_leaf_3(cpuid_function_t *leaf)
 }
 
 // leaf 0x80000000 //
-void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf)
+void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   // EAX: highest extended function understood by CPUID
   // EBX: reserved
@@ -313,7 +313,7 @@ void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf)
 }
 
 // leaf 0x80000001 //
-void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf)
+void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information (reserved for Intel)
   leaf->eax = 0;
@@ -361,7 +361,7 @@ void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf)
 // leaf 0x80000002 //
 // leaf 0x80000003 //
 // leaf 0x80000004 //
-void p4_prescott_celeron_336_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf)
+void p4_prescott_celeron_336_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000002-0x800000004 - Processor Name String Identifier
   static const char* brand_string = "                Intel(R) Celeron(R) CPU 2.80GHz";
@@ -398,7 +398,7 @@ void p4_prescott_celeron_336_t::get_ext_cpuid_brand_string_leaf(Bit32u function,
 }
 
 // leaf 0x80000005 //
-void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf)
+void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000005 - L1 Cache and TLB Identifiers
   leaf->eax = 0;
@@ -408,7 +408,7 @@ void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf)
 }
 
 // leaf 0x80000006 //
-void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf)
+void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
   leaf->eax = 0x00000000;
@@ -418,7 +418,7 @@ void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf)
 }
 
 // leaf 0x80000007 //
-void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf)
+void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000007 - Advanced Power Management
   leaf->eax = 0;
@@ -428,7 +428,7 @@ void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf)
 }
 
 // leaf 0x80000008 //
-void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf)
+void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
 {
   // virtual & phys address size in low 2 bytes.
   leaf->eax = BX_PHY_ADDRESS_WIDTH | (BX_LIN_ADDRESS_WIDTH << 8);
@@ -437,7 +437,7 @@ void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf)
   leaf->edx = 0;
 }
 
-void p4_prescott_celeron_336_t::dump_cpuid(void)
+void p4_prescott_celeron_336_t::dump_cpuid(void) const
 {
   struct cpuid_function_t leaf;
   unsigned n;

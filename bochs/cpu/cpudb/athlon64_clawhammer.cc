@@ -38,7 +38,7 @@ athlon64_clawhammer_t::athlon64_clawhammer_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   BX_INFO(("WARNING: 3DNow! is not implemented yet !"));
 }
 
-void athlon64_clawhammer_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf)
+void athlon64_clawhammer_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   switch(function) {
   case 0x8FFFFFFF:
@@ -108,7 +108,7 @@ Bit32u athlon64_clawhammer_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_XAPIC;
 }
 
-void athlon64_clawhammer_t::get_reserved_leaf(cpuid_function_t *leaf)
+void athlon64_clawhammer_t::get_reserved_leaf(cpuid_function_t *leaf) const
 {
   leaf->eax = 0;
   leaf->ebx = 0;
@@ -117,7 +117,7 @@ void athlon64_clawhammer_t::get_reserved_leaf(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000000 //
-void athlon64_clawhammer_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf)
+void athlon64_clawhammer_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   static const char* vendor_string = "AuthenticAMD";
 
@@ -139,7 +139,7 @@ void athlon64_clawhammer_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf)
 }
 
 // leaf 0x00000001 //
-void athlon64_clawhammer_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf)
+void athlon64_clawhammer_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information
   //   [3:0]   Stepping ID
@@ -227,7 +227,7 @@ void athlon64_clawhammer_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf)
 }
 
 // leaf 0x80000000 //
-void athlon64_clawhammer_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf)
+void athlon64_clawhammer_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   static const char* vendor_string = "AuthenticAMD";
 
@@ -247,7 +247,7 @@ void athlon64_clawhammer_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf)
 }
 
 // leaf 0x80000001 //
-void athlon64_clawhammer_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf)
+void athlon64_clawhammer_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information (same as 0x00000001.EAX)
   leaf->eax = 0x00000F48;
@@ -326,7 +326,7 @@ void athlon64_clawhammer_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf)
 // leaf 0x80000002 //
 // leaf 0x80000003 //
 // leaf 0x80000004 //
-void athlon64_clawhammer_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf)
+void athlon64_clawhammer_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000002-0x800000004 - Processor Name String Identifier
   static const char* brand_string = "AMD Athlon(tm) 64 Processor 2800+\0\0\0";
@@ -363,7 +363,7 @@ void athlon64_clawhammer_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpu
 }
 
 // leaf 0x80000005 //
-void athlon64_clawhammer_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf)
+void athlon64_clawhammer_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000005 - L1 Cache and TLB Identifiers
   leaf->eax = 0xFF08FF08;
@@ -373,7 +373,7 @@ void athlon64_clawhammer_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf)
 }
 
 // leaf 0x80000006 //
-void athlon64_clawhammer_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf)
+void athlon64_clawhammer_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
   leaf->eax = 0x00000000;
@@ -383,7 +383,7 @@ void athlon64_clawhammer_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf)
 }
 
 // leaf 0x80000007 //
-void athlon64_clawhammer_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf)
+void athlon64_clawhammer_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000007 - Advanced Power Management
   leaf->eax = 0;
@@ -393,7 +393,7 @@ void athlon64_clawhammer_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf)
 }
 
 // leaf 0x80000008 //
-void athlon64_clawhammer_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf)
+void athlon64_clawhammer_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
 {
   // virtual & phys address size in low 2 bytes.
   leaf->eax = BX_PHY_ADDRESS_WIDTH | (BX_LIN_ADDRESS_WIDTH << 8);
@@ -407,7 +407,7 @@ void athlon64_clawhammer_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf)
 // leaf 0x8000000B - 0x80000018: Reserved //
 
 // leaf 0x8FFFFFFF //
-void athlon64_clawhammer_t::get_cpuid_hidden_level(cpuid_function_t *leaf)
+void athlon64_clawhammer_t::get_cpuid_hidden_level(cpuid_function_t *leaf) const
 {
   static const char* magic_string = "IT'S HAMMER TIME";
   
@@ -424,7 +424,7 @@ void athlon64_clawhammer_t::get_cpuid_hidden_level(cpuid_function_t *leaf)
 #endif
 }
 
-void athlon64_clawhammer_t::dump_cpuid(void)
+void athlon64_clawhammer_t::dump_cpuid(void) const
 {
   struct cpuid_function_t leaf;
   unsigned n;
