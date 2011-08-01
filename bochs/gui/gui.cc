@@ -365,14 +365,13 @@ void bx_gui_c::power_handler(void)
   BX_EXIT (1);
 }
 
-Bit32s bx_gui_c::make_text_snapshot(char **snapshot, Bit32u *length)
+void bx_gui_c::make_text_snapshot(char **snapshot, Bit32u *length)
 {
   Bit8u* raw_snap = NULL;
   char *clean_snap;
   unsigned line_addr, txt_addr, txHeight, txWidth;
 
   DEV_vga_get_text_snapshot(&raw_snap, &txHeight, &txWidth);
-  if (txHeight <= 0) return -1;
   clean_snap = (char*) malloc(txHeight*(txWidth+2)+1);
   txt_addr = 0;
   for (unsigned i=0; i<txHeight; i++) {
@@ -391,7 +390,6 @@ Bit32s bx_gui_c::make_text_snapshot(char **snapshot, Bit32u *length)
   clean_snap[txt_addr] = 0;
   *snapshot = clean_snap;
   *length = txt_addr;
-  return 0;
 }
 
 // create a text snapshot and copy to the system clipboard.  On guis that
@@ -400,45 +398,56 @@ void bx_gui_c::copy_handler(void)
 {
   Bit32u len;
   char *text_snapshot;
-  if (make_text_snapshot (&text_snapshot, &len) < 0) {
-    BX_INFO(("copy button failed, mode not implemented"));
-    return;
+
+  if (DEV_vga_get_snapshot_mode() == BX_GUI_SNAPSHOT_TXT) {
+    make_text_snapshot (&text_snapshot, &len);
+    if (!BX_GUI_THIS set_clipboard_text(text_snapshot, len)) {
+      // platform specific code failed, use portable code instead
+      FILE *fp = fopen("copy.txt", "w");
+      fwrite(text_snapshot, 1, len, fp);
+      fclose(fp);
+    }
+    free(text_snapshot);
+  } else {
+    BX_ERROR(("copy button failed, mode not implemented"));
   }
-  if (!BX_GUI_THIS set_clipboard_text(text_snapshot, len)) {
-    // platform specific code failed, use portable code instead
-    FILE *fp = fopen("copy.txt", "w");
-    fwrite(text_snapshot, 1, len, fp);
-    fclose(fp);
-  }
-  free(text_snapshot);
 }
 
 // create a text snapshot and dump it to a file
 void bx_gui_c::snapshot_handler(void)
 {
-  char *text_snapshot;
+  int mode;
+  Bit8u *snapshot_ptr = NULL;
   Bit32u len;
-  if (make_text_snapshot (&text_snapshot, &len) < 0) {
-    BX_ERROR(("snapshot button failed, mode not implemented"));
-    return;
-  }
-  //FIXME
   char filename[BX_PATHNAME_LEN];
-  if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_SNAPSHOT) {
-    int ret = SIM->ask_filename (filename, sizeof(filename),
-                                 "Save snapshot as...", "snapshot.txt",
-                                 bx_param_string_c::SAVE_FILE_DIALOG);
-    if (ret < 0) { // cancelled
-      free(text_snapshot);
-      return;
+  unsigned iHeight, iWidth, iDepth;
+
+  mode = DEV_vga_get_snapshot_mode();
+  if (mode == BX_GUI_SNAPSHOT_TXT) {
+    make_text_snapshot ((char**)&snapshot_ptr, &len);
+    if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_SNAPSHOT) {
+      int ret = SIM->ask_filename (filename, sizeof(filename),
+                                   "Save snapshot as...", "snapshot.txt",
+                                   bx_param_string_c::SAVE_FILE_DIALOG);
+      if (ret < 0) { // cancelled
+        free(snapshot_ptr);
+        return;
+      }
+    } else {
+      strcpy (filename, "snapshot.txt");
     }
+    FILE *fp = fopen(filename, "wb");
+    fwrite(snapshot_ptr, 1, len, fp);
+    fclose(fp);
+    free(snapshot_ptr);
+  } else if (mode == BX_GUI_SNAPSHOT_GFX) {
+    len = DEV_vga_get_gfx_snapshot(&snapshot_ptr, &iHeight, &iWidth, &iDepth);
+    // TODO
+    free(snapshot_ptr);
+    BX_ERROR(("snapshot button failed, GFX mode not implemented"));
   } else {
-    strcpy (filename, "snapshot.txt");
+    BX_ERROR(("snapshot button failed, VGA mode not implemented"));
   }
-  FILE *fp = fopen(filename, "wb");
-  fwrite(text_snapshot, 1, len, fp);
-  fclose(fp);
-  free(text_snapshot);
 }
 
 // Read ASCII chars from the system clipboard and paste them into bochs.

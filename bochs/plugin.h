@@ -208,8 +208,11 @@ extern "C" {
 #define DEV_vga_mem_write(addr, val) (bx_devices.pluginVgaDevice->mem_write(addr, val))
 #define DEV_vga_redraw_area(left, top, right, bottom) \
   (bx_devices.pluginVgaDevice->redraw_area(left, top, right, bottom))
+#define DEV_vga_get_snapshot_mode() bx_devices.pluginVgaDevice->get_snapshot_mode()
 #define DEV_vga_get_text_snapshot(rawsnap, height, width) \
   (bx_devices.pluginVgaDevice->get_text_snapshot(rawsnap, height, width))
+#define DEV_vga_get_gfx_snapshot(rawsnap, height, width, depth) \
+  (bx_devices.pluginVgaDevice->get_gfx_snapshot(rawsnap, height, width, depth))
 #define DEV_vga_refresh() \
   (bx_devices.pluginVgaDevice->trigger_timer(bx_devices.pluginVgaDevice))
 #define DEV_vga_get_actl_pal_idx(index) (bx_devices.pluginVgaDevice->get_actl_palette_idx(index))

@@ -42,11 +42,16 @@
 #define BX_MT_LBUTTON           0x20
 #define BX_MT_RBUTTON           0x40
 
-#define BX_GUI_MT_CTRL_MB       0x11
-#define BX_GUI_MT_CTRL_LRB      0x61
-#define BX_GUI_MT_CTRL_F10      0x05
-#define BX_GUI_MT_F12           0x08
-#define BX_GUI_MT_CTRL_ALT      0x03
+#define BX_GUI_MT_CTRL_MB       (BX_MT_KEY_CTRL | BX_MT_MBUTTON)
+#define BX_GUI_MT_CTRL_LRB      (BX_MT_KEY_CTRL | BX_MT_LBUTTON | BX_MT_RBUTTON)
+#define BX_GUI_MT_CTRL_F10      (BX_MT_KEY_CTRL | BX_MT_KEY_F10)
+#define BX_GUI_MT_F12           (BX_MT_KEY_F12)
+#define BX_GUI_MT_CTRL_ALT      (BX_MT_KEY_CTRL | BX_MT_KEY_ALT)
+
+// snapshot feature
+#define BX_GUI_SNAPSHOT_TXT     0
+#define BX_GUI_SNAPSHOT_VGA     1
+#define BX_GUI_SNAPSHOT_GFX     2
 
 typedef struct {
   Bit16u  start_address;
@@ -152,7 +157,7 @@ public:
 
 protected:
   // And these are defined and used privately in gui.cc
-  static Bit32s make_text_snapshot (char **snapshot, Bit32u *length);
+  static void make_text_snapshot (char **snapshot, Bit32u *length);
   static void floppyA_handler(void);
   static void floppyB_handler(void);
   static void cdrom1_handler(void);

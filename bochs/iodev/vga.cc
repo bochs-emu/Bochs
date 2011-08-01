@@ -2714,6 +2714,17 @@ void bx_vga_c::mem_write(bx_phy_address addr, Bit8u value)
   }
 }
 
+int bx_vga_c::get_snapshot_mode()
+{
+  if (BX_VGA_THIS vbe.enabled) {
+    return BX_GUI_SNAPSHOT_GFX;
+  } else if (!BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
+    return BX_GUI_SNAPSHOT_TXT;
+  } else {
+    return BX_GUI_SNAPSHOT_VGA;
+  }
+}
+
 void bx_vga_c::get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
                                                    unsigned *txWidth)
 {
@@ -2728,6 +2739,36 @@ void bx_vga_c::get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
   } else {
     *txHeight = 0;
     *txWidth = 0;
+  }
+}
+
+Bit32u bx_vga_c::get_gfx_snapshot(Bit8u **snapshot_ptr, unsigned *iHeight,
+                                  unsigned *iWidth, unsigned *iDepth)
+{
+  Bit32u len, len1;
+  unsigned i;
+  Bit8u *dst_ptr, *src_ptr;
+
+  if (BX_VGA_THIS vbe.enabled) {
+    *iHeight = BX_VGA_THIS vbe.yres;
+    *iWidth = BX_VGA_THIS vbe.xres;
+    *iDepth = BX_VGA_THIS vbe.bpp;
+    len1 = BX_VGA_THIS vbe.xres * BX_VGA_THIS vbe.bpp_multiplier;
+    len = len1 * BX_VGA_THIS vbe.yres;
+    *snapshot_ptr = (Bit8u*)malloc(len);
+    src_ptr = BX_VGA_THIS s.memory + BX_VGA_THIS vbe.virtual_start;
+    dst_ptr = *snapshot_ptr;
+    for (i = 0; i < BX_VGA_THIS vbe.yres; i++) {
+      memcpy(dst_ptr, src_ptr, len1);
+      src_ptr += BX_VGA_THIS s.line_offset;
+      dst_ptr += len1;
+    }
+    return len;
+  } else {
+    *iHeight = 0;
+    *iWidth = 0;
+    *iDepth = 0;
+    return 0;
   }
 }
 
