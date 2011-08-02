@@ -50,6 +50,7 @@ Bochs repository moved to the SVN version control !
     The ACPI still could be disabled using .bochsrc 'plugin_ctrl' option.
   - Removed --enable-trace-cache configure option. The option will be always ON
     for any Bochs configuration.
+  - Compile in MONITOR/MWAIT support by default for all cpu-level=6 configurations.
   - added support for MSVC DLL plugins with a separate workspace package.
     VS2008Ex can now create a BOCHS.EXE with a set of plugin DLLs.
     TODO: nmake still cannot create plugin DLLs.

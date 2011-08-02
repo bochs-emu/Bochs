@@ -91,6 +91,7 @@ Attached devices
            +---- Host Controllers
            |             |
            |             +---- USB OHCI adapter                 usb_ohci.cc
+           |             +---- USB XHCI adapter                 usb_xhci.cc
            |             +---- USB UHCI adapter (PIIX3)         usb_uhci.cc
            |
            +---- Attached USB devices

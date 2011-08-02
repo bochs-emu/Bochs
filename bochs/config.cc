@@ -2619,7 +2619,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->set(&params[i][5]);
       } else if (!strncmp(params[i], "cpuid_limit_winnt=", 18)) {
         if (parse_param_bool(params[i], 18, BXPN_CPUID_LIMIT_WINNT) < 0) {
-          PARSE_ERR(("%s: cpuid directive malformed.", context));
+          PARSE_ERR(("%s: cpu directive malformed.", context));
         }
       } else {
         PARSE_ERR(("%s: cpu directive malformed.", context));
