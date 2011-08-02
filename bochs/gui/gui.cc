@@ -416,9 +416,10 @@ void bx_gui_c::copy_handler(void)
 // create a text snapshot and dump it to a file
 void bx_gui_c::snapshot_handler(void)
 {
-  int mode;
-  Bit8u *snapshot_ptr = NULL;
-  Bit32u len;
+  int fd, i, mode, pitch;
+  Bit8u *snapshot_ptr = NULL, *row_buffer, *tmp_ptr;
+  Bit8u bmp_header[54], iBits;
+  Bit32u ilen, len, rlen;
   char filename[BX_PATHNAME_LEN];
   unsigned iHeight, iWidth, iDepth;
 
@@ -441,12 +442,67 @@ void bx_gui_c::snapshot_handler(void)
     fclose(fp);
     free(snapshot_ptr);
   } else if (mode == BX_GUI_SNAPSHOT_GFX) {
-    len = DEV_vga_get_gfx_snapshot(&snapshot_ptr, &iHeight, &iWidth, &iDepth);
-    // TODO
+    ilen = DEV_vga_get_gfx_snapshot(&snapshot_ptr, &iHeight, &iWidth, &iDepth);
+    BX_INFO(("GFX snapshot: %u x %u x %u bpp (%u bytes)", iWidth, iHeight, iDepth, ilen));
+    if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_SNAPSHOT) {
+      int ret = SIM->ask_filename (filename, sizeof(filename),
+                                   "Save snapshot as...", "snapshot.bmp",
+                                   bx_param_string_c::SAVE_FILE_DIALOG);
+      if (ret < 0) { // cancelled
+        free(snapshot_ptr);
+        return;
+      }
+    } else {
+      strcpy (filename, "snapshot.bmp");
+    }
+    fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC
+#ifdef O_BINARY
+              | O_BINARY
+#endif
+              , S_IRUSR | S_IWUSR
+              );
+    if (fd < 0) {
+      BX_ERROR(("snapshot button failed: cannot create BMP file"));
+      free(snapshot_ptr);
+      return;
+    }
+    if (iDepth == 24) {
+      iBits = (iDepth == 8) ? 8 : 24;
+      rlen = (iWidth * (iBits >> 3) + 3) & ~3;
+      len = rlen * iHeight + 54;
+      memset(bmp_header, 0, 54);
+      bmp_header[0] = 0x42;
+      bmp_header[1] = 0x4d;
+      bmp_header[2] = len & 0xff;
+      bmp_header[3] = (len >> 8) & 0xff;
+      bmp_header[4] = (len >> 16) & 0xff;
+      bmp_header[5] = (len >> 24) & 0xff;
+      bmp_header[10] = 54;
+      bmp_header[14] = 40;
+      bmp_header[18] = iWidth & 0xff;
+      bmp_header[19] = (iWidth >> 8) & 0xff;
+      bmp_header[22] = iHeight & 0xff;
+      bmp_header[23] = (iHeight >> 8) & 0xff;
+      bmp_header[26] = 1;
+      bmp_header[28] = iBits;
+      write(fd, bmp_header, 54);
+      pitch = iWidth * ((iDepth + 1) >> 3);
+      row_buffer = (Bit8u*)malloc(rlen);
+      tmp_ptr = snapshot_ptr + ((iHeight - 1) * pitch);
+      for (i = iHeight; i > 0; i--) {
+        memset(row_buffer, 0, rlen);
+        memcpy(row_buffer, tmp_ptr, pitch);
+        write(fd, row_buffer, rlen);
+        tmp_ptr -= pitch;
+      }
+      free(row_buffer);
+    } else {
+      BX_ERROR(("snapshot button failed: GFX mode with %u bpp not implemented", iDepth));
+    }
+    close(fd);
     free(snapshot_ptr);
-    BX_ERROR(("snapshot button failed, GFX mode not implemented"));
   } else {
-    BX_ERROR(("snapshot button failed, VGA mode not implemented"));
+    BX_ERROR(("snapshot button failed: VGA mode not implemented"));
   }
 }
 
