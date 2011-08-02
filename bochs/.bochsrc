@@ -148,6 +148,7 @@ romimage: file=$BXSHARE/BIOS-bochs-latest
 #  2.2.6 2.1Ghz Athlon XP with Linux 2.6/g++ 3.4          12 to 15 Mips
 #=======================================================================
 cpu: count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="msrs.def"
+cpu: cpuid_limit_winnt=0
 
 #=======================================================================
 # CPUID:
@@ -244,7 +245,6 @@ cpu: count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="ms
 #=======================================================================
 cpuid: mmx=1, sep=1, sse=sse4_2, apic=xapic, aes=1, movbe=1, xsave=1
 cpuid: family=6, model=0x1a, stepping=5
-cpuid: cpuid_limit_winnt=0
 
 #=======================================================================
 # MEMORY
