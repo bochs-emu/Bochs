@@ -2721,6 +2721,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         }
 #endif
 #endif
+      } else if (!strncmp(params[i], "cpuid_limit_winnt=", 18)) {
+        PARSE_ERR(("%s: cpuid_limit_winnt moved to CPU .bochsrc option.", context));
       } else {
         PARSE_ERR(("%s: cpuid directive malformed.", context));
       }
