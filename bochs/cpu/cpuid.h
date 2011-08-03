@@ -48,6 +48,14 @@ public:
 
 protected:
   BX_CPU_C *cpu;
+
+  void get_reserved_leaf(cpuid_function_t *leaf) const
+  {
+     leaf->eax = 0;
+     leaf->ebx = 0;
+     leaf->ecx = 0;
+     leaf->edx = 0;
+  }
 };
 
 typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);

@@ -55,8 +55,6 @@ private:
   void get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const;
 
-  void get_reserved_leaf(cpuid_function_t *leaf) const;
-
   void get_cpuid_hidden_level(cpuid_function_t *leaf) const;
 };
 

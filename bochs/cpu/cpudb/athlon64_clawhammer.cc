@@ -108,14 +108,6 @@ Bit32u athlon64_clawhammer_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_XAPIC;
 }
 
-void athlon64_clawhammer_t::get_reserved_leaf(cpuid_function_t *leaf) const
-{
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
-
 // leaf 0x00000000 //
 void athlon64_clawhammer_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 {

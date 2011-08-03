@@ -94,10 +94,8 @@ void core2_extreme_x9770_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, 
     get_std_cpuid_leaf_6(leaf);
     return;
   case 0x00000007:
-    get_std_cpuid_leaf_7(subfunction, leaf);
-    return;
   case 0x00000008:
-    get_std_cpuid_leaf_8(leaf);
+    get_reserved_leaf(leaf);
     return;
   case 0x00000009:
     get_std_cpuid_leaf_9(leaf);
@@ -403,24 +401,8 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf) const
   leaf->edx = 0x00000000;
 }
 
-// leaf 0x00000007 //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const
-{
-  leaf->eax = 0; /* leaf 7 not supported */
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
-
-// leaf 0x00000008 //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_8(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000008 - reserved
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
+// leaf 0x00000007 not supported //
+// leaf 0x00000008 reserved      //
 
 // leaf 0x00000009 //
 void core2_extreme_x9770_t::get_std_cpuid_leaf_9(cpuid_function_t *leaf) const
