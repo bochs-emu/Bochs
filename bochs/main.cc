@@ -994,26 +994,6 @@ void bx_init_hardware()
 
   io->set_log_prefix(SIM->get_param_string(BXPN_LOG_PREFIX)->getptr());
 
-#if BX_CPU_LEVEL >= 5
-  bx_bool mmx_enabled = SIM->get_param_bool(BXPN_CPUID_MMX)->get();
-#endif
-#if BX_CPU_LEVEL >= 6
-  bx_bool aes_enabled = SIM->get_param_bool(BXPN_CPUID_AES)->get();
-  bx_bool movbe_enabled = SIM->get_param_bool(BXPN_CPUID_MOVBE)->get();
-  bx_bool sep_enabled = SIM->get_param_bool(BXPN_CPUID_SEP)->get();
-  bx_bool xsave_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVE)->get();
-  bx_bool xsaveopt_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVEOPT)->get();
-#if BX_SUPPORT_AVX
-  bx_bool avx_enabled = SIM->get_param_bool(BXPN_CPUID_AVX)->get();
-#endif
-#if BX_SUPPORT_X86_64
-  bx_bool xlarge_pages_enabled = SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get();
-#endif
-#if BX_SUPPORT_MONITOR_MWAIT
-  bx_bool mwait_enabled = SIM->get_param_bool(BXPN_CPUID_MWAIT)->get();
-#endif
-#endif
-
   // Output to the log file the cpu and device settings
   // This will by handy for bug reports
   BX_INFO(("Bochs x86 Emulator %s", VER_STRING));
@@ -1028,7 +1008,7 @@ void bx_init_hardware()
   BX_INFO(("System configuration"));
   BX_INFO(("  processors: %d (cores=%u, HT threads=%u)", BX_SMP_PROCESSORS,
     SIM->get_param_num(BXPN_CPU_NCORES)->get(), SIM->get_param_num(BXPN_CPU_NTHREADS)->get()));
-  BX_INFO(("  A20 line support: %s",BX_SUPPORT_A20?"yes":"no"));
+  BX_INFO(("  A20 line support: %s", BX_SUPPORT_A20?"yes":"no"));
 #if BX_CONFIGURE_MSRS
   const char *msrs_file = SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->getptr();
   if(strlen(msrs_file) > 0)
@@ -1036,54 +1016,83 @@ void bx_init_hardware()
 #endif
   BX_INFO(("IPS is set to %d", (Bit32u) SIM->get_param_num(BXPN_IPS)->get()));
   BX_INFO(("CPU configuration"));
-  BX_INFO(("  level: %d",BX_CPU_LEVEL));
+  BX_INFO(("  level: %d", BX_CPU_LEVEL));
 #if BX_SUPPORT_SMP
   BX_INFO(("  SMP support: yes, quantum=%d", SIM->get_param_num(BXPN_SMP_QUANTUM)->get()));
 #else
   BX_INFO(("  SMP support: no"));
 #endif
+
+  unsigned cpu_model = SIM->get_param_enum(BXPN_CPU_MODEL)->get();
+  if (! cpu_model) {
 #if BX_CPU_LEVEL >= 5
-  BX_INFO(("  APIC support: %s", SIM->get_param_enum(BXPN_CPUID_APIC)->get_selected()));
-#else
-  BX_INFO(("  APIC support: no"));
-#endif
-  BX_INFO(("  FPU support: %s",BX_SUPPORT_FPU?"yes":"no"));
-#if BX_CPU_LEVEL >= 5
-  BX_INFO(("  MMX support: %s",mmx_enabled?"yes":"no"));
-  BX_INFO(("  3dnow! support: %s",BX_SUPPORT_3DNOW?"yes":"no"));
+    bx_bool mmx_enabled = SIM->get_param_bool(BXPN_CPUID_MMX)->get();
 #endif
 #if BX_CPU_LEVEL >= 6
-  BX_INFO(("  SEP support: %s",sep_enabled?"yes":"no"));
-  BX_INFO(("  SSE support: %s", SIM->get_param_enum(BXPN_CPUID_SSE)->get_selected()));
-  BX_INFO(("  XSAVE support: %s %s",
-    xsave_enabled?"xsave":"no", xsaveopt_enabled?"xsaveopt":""));
-  BX_INFO(("  AES support: %s",aes_enabled?"yes":"no"));
-  BX_INFO(("  MOVBE support: %s",movbe_enabled?"yes":"no"));
-  BX_INFO(("  x86-64 support: %s",BX_SUPPORT_X86_64?"yes":"no"));
+    bx_bool aes_enabled = SIM->get_param_bool(BXPN_CPUID_AES)->get();
+    bx_bool movbe_enabled = SIM->get_param_bool(BXPN_CPUID_MOVBE)->get();
+    bx_bool sep_enabled = SIM->get_param_bool(BXPN_CPUID_SEP)->get();
+    bx_bool xsave_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVE)->get();
+    bx_bool xsaveopt_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVEOPT)->get();
+#if BX_SUPPORT_AVX
+    bx_bool avx_enabled = SIM->get_param_bool(BXPN_CPUID_AVX)->get();
+#endif
 #if BX_SUPPORT_X86_64
-  BX_INFO(("  1G paging support: %s",xlarge_pages_enabled?"yes":"no"));
+    bx_bool xlarge_pages_enabled = SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get();
 #endif
 #if BX_SUPPORT_MONITOR_MWAIT
-  BX_INFO(("  MWAIT support: %s",mwait_enabled?"yes":"no"));
+    bx_bool mwait_enabled = SIM->get_param_bool(BXPN_CPUID_MWAIT)->get();
+#endif
+#endif
+
+#if BX_CPU_LEVEL >= 5
+    BX_INFO(("  APIC support: %s", SIM->get_param_enum(BXPN_CPUID_APIC)->get_selected()));
+#else
+    BX_INFO(("  APIC support: no"));
+#endif
+    BX_INFO(("  FPU support: %s", BX_SUPPORT_FPU?"yes":"no"));
+#if BX_CPU_LEVEL >= 5
+    BX_INFO(("  MMX support: %s", mmx_enabled?"yes":"no"));
+    BX_INFO(("  3dnow! support: %s", BX_SUPPORT_3DNOW?"yes":"no"));
+#endif
+#if BX_CPU_LEVEL >= 6
+    BX_INFO(("  SEP support: %s", sep_enabled?"yes":"no"));
+    BX_INFO(("  SSE support: %s", SIM->get_param_enum(BXPN_CPUID_SSE)->get_selected()));
+    BX_INFO(("  XSAVE support: %s %s",
+      xsave_enabled?"xsave":"no", xsaveopt_enabled?"xsaveopt":""));
+    BX_INFO(("  AES support: %s", aes_enabled?"yes":"no"));
+    BX_INFO(("  MOVBE support: %s", movbe_enabled?"yes":"no"));
+    BX_INFO(("  x86-64 support: %s", BX_SUPPORT_X86_64?"yes":"no"));
+#if BX_SUPPORT_X86_64
+    BX_INFO(("  1G paging support: %s", xlarge_pages_enabled?"yes":"no"));
+#endif
+#if BX_SUPPORT_MONITOR_MWAIT
+    BX_INFO(("  MWAIT support: %s", mwait_enabled?"yes":"no"));
 #endif
 #if BX_SUPPORT_AVX
-  BX_INFO(("  AVX support: %s",avx_enabled?"yes":"no"));
+    BX_INFO(("  AVX support: %s", avx_enabled?"yes":"no"));
 #endif
 #if BX_SUPPORT_VMX
-  BX_INFO(("  VMX support: %d",BX_SUPPORT_VMX));
+    BX_INFO(("  VMX support: %d", BX_SUPPORT_VMX));
 #else
-  BX_INFO(("  VMX support: no"));
+    BX_INFO(("  VMX support: no"));
 #endif
 #endif
+  }
+  else {
+    BX_INFO(("  Using pre-defined CPU configuration: %s",
+      SIM->get_param_enum(BXPN_CPU_MODEL)->get_selected()));
+  }
+
   BX_INFO(("Optimization configuration"));
-  BX_INFO(("  RepeatSpeedups support: %s",BX_SupportRepeatSpeedups?"yes":"no"));
-  BX_INFO(("  Fast function calls: %s",BX_FAST_FUNC_CALL?"yes":"no"));
+  BX_INFO(("  RepeatSpeedups support: %s", BX_SupportRepeatSpeedups?"yes":"no"));
+  BX_INFO(("  Fast function calls: %s", BX_FAST_FUNC_CALL?"yes":"no"));
   BX_INFO(("Devices configuration"));
-  BX_INFO(("  NE2000 support: %s",BX_SUPPORT_NE2K?"yes":"no"));
-  BX_INFO(("  PCI support: %s, enabled=%s",BX_SUPPORT_PCI?"yes":"no",
+  BX_INFO(("  NE2000 support: %s", BX_SUPPORT_NE2K?"yes":"no"));
+  BX_INFO(("  PCI support: %s, enabled=%s", BX_SUPPORT_PCI?"yes":"no",
     SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get() ? "yes" : "no"));
-  BX_INFO(("  SB16 support: %s",BX_SUPPORT_SB16?"yes":"no"));
-  BX_INFO(("  USB support: %s",BX_SUPPORT_PCIUSB?"yes":"no"));
+  BX_INFO(("  SB16 support: %s", BX_SUPPORT_SB16?"yes":"no"));
+  BX_INFO(("  USB support: %s", BX_SUPPORT_PCIUSB?"yes":"no"));
   BX_INFO(("  VGA extension support: vbe %s", BX_SUPPORT_CLGD54XX?"cirrus":""));
 
   // Check if there is a romimage

@@ -94,6 +94,7 @@ romimage: file=$BXSHARE/BIOS-bochs-latest
 # -----------------------------------------------------------------
 #  p3_katmai                  Intel Pentium III (Katmai)
 #  p4_willamette              Intel(R) Pentium(R) 4 (Willamette)
+#  atom_n270                  Intel(R) Atom(TM) CPU N270
 #  athlon64_clawhammer        AMD Athlon(tm) 64 Processor 2800+
 #  p4_prescott_celeron_336    Intel(R) Celeron(R) 336
 #  core2_extreme_x9770        Intel(R) Core(TM)2 Extreme X9770
@@ -115,6 +116,10 @@ romimage: file=$BXSHARE/BIOS-bochs-latest
 #    Reset the CPU when triple fault occur (highly recommended) rather than
 #    PANIC. Remember that if you trying to continue after triple fault the 
 #    simulation will be completely bogus !
+#
+#  CPUID_LIMIT_WINNT:
+#    Determine whether to limit maximum CPUID function to 2. This mode is
+#    required to workaround WinNT installation and boot issues.
 #
 #  MSRS:
 #    Define path to user CPU Model Specific Registers (MSRs) specification.
@@ -238,10 +243,6 @@ cpu: cpuid_limit_winnt=0
 #
 #  STEPPING:
 #    Set stepping information returned by CPUID. Default stepping value is 3.
-#
-#  CPUID_LIMIT_WINNT:
-#    Determine whether to limit maximum CPUID function to 3. This mode is
-#    required to workaround WinNT installation and boot issues.
 #=======================================================================
 cpuid: mmx=1, sep=1, sse=sse4_2, apic=xapic, aes=1, movbe=1, xsave=1
 cpuid: family=6, model=0x1a, stepping=5

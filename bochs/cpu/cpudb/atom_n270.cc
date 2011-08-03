@@ -371,11 +371,17 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
   //   [31:2] - reserved
   //    [1:1] - exit MWAIT even with EFLAGS.IF = 0
   //    [0:0] - MONITOR/MWAIT extensions are supported
-  // EDX - Reserved
+  // EDX -
+  //  [03-00] - number of C0 sub C-states supported using MWAIT
+  //  [07-04] - number of C1 sub C-states supported using MWAIT
+  //  [11-08] - number of C2 sub C-states supported using MWAIT
+  //  [15-12] - number of C3 sub C-states supported using MWAIT
+  //  [19-16] - number of C4 sub C-states supported using MWAIT
+  //  [31-20] - reserved (MBZ)
   leaf->eax = CACHE_LINE_SIZE;
   leaf->ebx = CACHE_LINE_SIZE;
   leaf->ecx = 3;
-  leaf->edx = 0;
+  leaf->edx = 0x00020220;
 #else
   leaf->eax = 0;
   leaf->ebx = 0;
