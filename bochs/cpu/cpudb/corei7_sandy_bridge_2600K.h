@@ -57,8 +57,6 @@ private:
   void get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_5(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_6(cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_8(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_9(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_A(cpuid_function_t *leaf) const;
   void get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
