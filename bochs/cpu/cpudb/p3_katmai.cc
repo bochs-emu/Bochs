@@ -76,7 +76,9 @@ Bit32u p3_katmai_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_PSE |
          BX_CPU_PAE |
          BX_CPU_PGE |
+#if BX_PHY_ADDRESS_LONG
          BX_CPU_PSE36 |
+#endif
          BX_CPU_PAT_MTRR;
 }
 
@@ -165,7 +167,9 @@ void p3_katmai_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
               BX_CPUID_STD_MCA |
               BX_CPUID_STD_CMOV |
               BX_CPUID_STD_PAT |
+#if BX_PHY_ADDRESS_LONG
               BX_CPUID_STD_PSE36 |
+#endif
               BX_CPUID_STD_MMX |
               BX_CPUID_STD_FXSAVE_FXRSTOR |
               BX_CPUID_STD_SSE;

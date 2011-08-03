@@ -131,7 +131,8 @@ CPUDB_OBJS = cpudb/corei7_sandy_bridge_2600K.o \
              cpudb/p4_prescott_celeron_336.o \
              cpudb/athlon64_clawhammer.o \
              cpudb/p3_katmai.o \
-             cpudb/p4_willamette.o
+             cpudb/p4_willamette.o \
+             cpudb/atom_n270.o
 
 BX_INCLUDES = ../bochs.h ../config.h
 
@@ -840,3 +841,10 @@ cpudb/p4_willamette.o: cpudb/p4_willamette.@CPP_SUFFIX@ ../bochs.h ../config.h .
  cpuid.h crregs.h descriptor.h instr.h ia_opcodes.h lazy_flags.h icache.h \
  apic.h ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h cpudb/p4_willamette.h
+cpudb/atom_n270.o: cpudb/atom_n270.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h \
+ ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../plugin.h \
+ ../extplugin.h ../gui/gui.h ../instrument/stubs/instrument.h cpu.h \
+ cpuid.h crregs.h descriptor.h instr.h ia_opcodes.h lazy_flags.h icache.h \
+ apic.h ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
+ ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h cpudb/atom_n270.h

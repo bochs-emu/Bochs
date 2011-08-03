@@ -26,6 +26,7 @@ bx_define_cpudb(bx_generic)
 #if BX_SUPPORT_X86_64 == 0
 bx_define_cpudb(p3_katmai)
 bx_define_cpudb(p4_willamette)
+bx_define_cpudb(atom_n270)
 #else
 bx_define_cpudb(p4_prescott_celeron_336)
 bx_define_cpudb(athlon64_clawhammer)
