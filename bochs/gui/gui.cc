@@ -416,9 +416,9 @@ void bx_gui_c::copy_handler(void)
 // create a text snapshot and dump it to a file
 void bx_gui_c::snapshot_handler(void)
 {
-  int fd, i, mode, pitch;
-  Bit8u *snapshot_ptr = NULL, *row_buffer, *tmp_ptr;
-  Bit8u bmp_header[54], iBits;
+  int fd, i, j, mode, pitch;
+  Bit8u *snapshot_ptr = NULL, *row_buffer, *pixel_ptr, *row_ptr;
+  Bit8u bmp_header[54], iBits, b1, b2;
   Bit32u ilen, len, rlen;
   char filename[BX_PATHNAME_LEN];
   unsigned iHeight, iWidth, iDepth;
@@ -466,7 +466,7 @@ void bx_gui_c::snapshot_handler(void)
       free(snapshot_ptr);
       return;
     }
-    if (iDepth == 24) {
+    if (iDepth != 8) {
       iBits = (iDepth == 8) ? 8 : 24;
       rlen = (iWidth * (iBits >> 3) + 3) & ~3;
       len = rlen * iHeight + 54;
@@ -486,14 +486,39 @@ void bx_gui_c::snapshot_handler(void)
       bmp_header[26] = 1;
       bmp_header[28] = iBits;
       write(fd, bmp_header, 54);
+      // TODO: palette for 8 bpp
       pitch = iWidth * ((iDepth + 1) >> 3);
       row_buffer = (Bit8u*)malloc(rlen);
-      tmp_ptr = snapshot_ptr + ((iHeight - 1) * pitch);
+      row_ptr = snapshot_ptr + ((iHeight - 1) * pitch);
       for (i = iHeight; i > 0; i--) {
         memset(row_buffer, 0, rlen);
-        memcpy(row_buffer, tmp_ptr, pitch);
+        if (iDepth == 24) {
+          memcpy(row_buffer, row_ptr, pitch);
+        } else if ((iDepth == 15) || (iDepth == 16)) {
+          pixel_ptr = row_ptr;
+          for (j = 0; j < (iWidth * 3); j+=3) {
+            b1 = *(pixel_ptr++);
+            b2 = *(pixel_ptr++);
+            *(row_buffer+j)   = (b1 << 3);
+            if (iDepth == 15) {
+              *(row_buffer+j+1) = ((b1 & 0xe0) >> 2) | (b2 << 6);
+              *(row_buffer+j+2) = (b2 & 0x7c) << 1;
+            } else {
+              *(row_buffer+j+1) = ((b1 & 0xe0) >> 3) | (b2 << 5);
+              *(row_buffer+j+2) = (b2 & 0xf8);
+            }
+          }
+        } else if (iDepth == 32) {
+          pixel_ptr = row_ptr;
+          for (j = 0; j < (iWidth * 3); j+=3) {
+            *(row_buffer+j)   = *(pixel_ptr++);
+            *(row_buffer+j+1) = *(pixel_ptr++);
+            *(row_buffer+j+2) = *(pixel_ptr++);
+            pixel_ptr++;
+          }
+        }
         write(fd, row_buffer, rlen);
-        tmp_ptr -= pitch;
+        row_ptr -= pitch;
       }
       free(row_buffer);
     } else {
