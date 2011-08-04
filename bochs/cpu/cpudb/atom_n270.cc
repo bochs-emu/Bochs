@@ -332,30 +332,55 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_3(cpuid_function_t *leaf) const
 void core2_extreme_x9770_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000004 - Deterministic Cache Parameters
+
+  // EAX:
+  //   [04-00] - Cache Type Field
+  //             0 = No more caches
+  //             1 = Data Cache
+  //             2 = Instruction Cache
+  //             3 = Unified Cache
+  //   [07-05] - Cache Level (starts at 1)]
+  //      [08] - Self Initializing cache level (doesn't need software initialization)
+  //      [09] - Fully Associative cache
+  //   [13-10] - Reserved
+  //   [25-14] - Maximum number of addressable IDs for logical processors sharing this cache
+  //   [31-26] - Maximum number of addressable IDs for processor cores in the physical package - 1
+  // EBX:
+  //   [11-00] - L = System Coherency Line Size
+  //   [21-12] - P = Physical Line partitions
+  //   [31-22] - W = Ways of associativity
+  // ECX: Number of Sets
+  // EDX:
+  //      [00] - Writeback invalidate
+  //      [01] - Cache Inclusiveness
+  //      [02] - Complex Cache Indexing
+  //   [31-03] - Reserved
+
   switch(subfunction) {
   case 0:
     leaf->eax = 0x00004121;
     leaf->ebx = 0x0140003F;
     leaf->ecx = 0x0000003F;
     leaf->edx = 0x00000001;
-    return;
+    break;
   case 1:
     leaf->eax = 0x00004122;
     leaf->ebx = 0x01C0003F;
     leaf->ecx = 0x0000003F;
     leaf->edx = 0x00000001;
-    return;
+    break;
   case 2:
     leaf->eax = 0x00004143;
     leaf->ebx = 0x01C0003F;
     leaf->ecx = 0x000003FF;
     leaf->edx = 0x00000001;
-    return;
+    break;
   default:
     leaf->eax = 0;
     leaf->ebx = 0;
     leaf->ecx = 0;
     leaf->edx = 0;
+    return;
   }
 }
 
@@ -487,7 +512,7 @@ void core2_extreme_x9770_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000004 //
 void core2_extreme_x9770_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const
 {
-  // CPUID function 0x800000002-0x800000004 - Processor Name String Identifier
+  // CPUID function 0x80000002-0x80000004 - Processor Name String Identifier
   static const char* brand_string = "         Intel(R) Atom(TM) CPU N270   @ 1.60GHz";
 
   switch(function) {

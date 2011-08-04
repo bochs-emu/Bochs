@@ -320,7 +320,7 @@ void athlon64_clawhammer_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000004 //
 void athlon64_clawhammer_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const
 {
-  // CPUID function 0x800000002-0x800000004 - Processor Name String Identifier
+  // CPUID function 0x80000002-0x80000004 - Processor Name String Identifier
   static const char* brand_string = "AMD Athlon(tm) 64 Processor 2800+\0\0\0";
 
   switch(function) {

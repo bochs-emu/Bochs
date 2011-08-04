@@ -363,7 +363,7 @@ void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) con
 // leaf 0x80000004 //
 void p4_prescott_celeron_336_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const
 {
-  // CPUID function 0x800000002-0x800000004 - Processor Name String Identifier
+  // CPUID function 0x80000002-0x80000004 - Processor Name String Identifier
   static const char* brand_string = "                Intel(R) Celeron(R) CPU 2.80GHz";
 
   switch(function) {
