@@ -900,6 +900,7 @@ public: // for now...
 
 #if BX_SUPPORT_X86_64
   bx_efer_t efer;
+  Bit32u efer_suppmask;
 #endif
 
 #if BX_CPU_LEVEL >= 6

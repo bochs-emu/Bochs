@@ -840,6 +840,8 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
     features_bitmask |= BX_CPU_SMEP;
 
 #if BX_SUPPORT_X86_64
+  features_bitmask |= BX_CPU_FFXSR;
+
   static bx_bool pcid_enabled = SIM->get_param_bool(BXPN_CPUID_PCID)->get();
   if (pcid_enabled)
     features_bitmask |= BX_CPU_PCID;
@@ -1156,24 +1158,34 @@ Bit32u bx_generic_cpuid_t::get_std2_cpuid_features(void) const
 Bit32u bx_generic_cpuid_t::get_ext2_cpuid_features(void) const
 {
   // ECX:
-  //     [0:0]   LAHF/SAHF instructions support in 64-bit mode
-  //     [1:1]   CMP_Legacy: Core multi-processing legacy mode (AMD)
-  //     [2:2]   SVM: Secure Virtual Machine (AMD)
-  //     [3:3]   Extended APIC Space
-  //     [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
-  //     [5:5]   LZCNT: LZCNT instruction support
-  //     [6:6]   SSE4A: SSE4A Instructions support (deprecated?)
-  //     [7:7]   Misaligned SSE support
-  //     [8:8]   PREFETCHW: PREFETCHW instruction support
-  //     [9:9]   OSVW: OS visible workarounds (AMD)
-  //     [11:10] reserved
-  //     [12:12] SKINIT support
-  //     [13:13] WDT: Watchdog timer support
-  //     [31:14] reserved
+  //   [0:0]   LAHF/SAHF instructions support in 64-bit mode
+  //   [1:1]   CMP_Legacy: Core multi-processing legacy mode (AMD)
+  //   [2:2]   SVM: Secure Virtual Machine (AMD)
+  //   [3:3]   Extended APIC Space
+  //   [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
+  //   [5:5]   LZCNT: LZCNT instruction support
+  //   [6:6]   SSE4A: SSE4A Instructions support (deprecated?)
+  //   [7:7]   Misaligned SSE support
+  //   [8:8]   PREFETCHW: PREFETCHW instruction support
+  //   [9:9]   OSVW: OS visible workarounds (AMD)
+  //   [10:10] IBS: Instruction based sampling
+  //   [11:11] XOP: Extended Operations Support and XOP Prefix
+  //   [12:12] SKINIT support
+  //   [13:13] WDT: Watchdog timer support
+  //   [14:14] reserved
+  //   [15:15] LWP: Light weight profiling
+  //   [16:16] FMA4: Four-operand FMA instructions support
+  //   [18:17] reserved
+  //   [19:19] NodeId: Indicates support for NodeId MSR (0xc001100c)
+  //   [20:20] reserved
+  //   [21:21] TBM: trailing bit manipulation instruction support
+  //   [22:22] Topology extensions support
+  //   [31:23] reserved
+
   Bit32u features = 0;
 
 #if BX_SUPPORT_X86_64
-  features |= BX_CPUID_EXT2_LAHF_SAHF;
+  features |= BX_CPUID_EXT2_LAHF_SAHF | BX_CPUID_EXT2_PREFETCHW;
 #endif
 #if BX_SUPPORT_MISALIGNED_SSE
   features |= BX_CPUID_EXT2_MISALIGNED_SSE;

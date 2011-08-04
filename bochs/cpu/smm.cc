@@ -569,12 +569,12 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
     return 0;
   }
 
-  if (temp_efer & ~BX_EFER_SUPPORTED_BITS) {
-    BX_PANIC(("SMM restore: Attemp to set EFER reserved bits: 0x%08x !", temp_efer));
+  if (temp_efer & ~((Bit64u) BX_CPU_THIS_PTR efer_suppmask)) {
+    BX_PANIC(("SMM restore: Attempt to set EFER reserved bits: 0x%08x !", temp_efer));
     return 0;
   }
 
-  BX_CPU_THIS_PTR efer.set32(temp_efer & BX_EFER_SUPPORTED_BITS);
+  BX_CPU_THIS_PTR efer.set32(temp_efer & BX_CPU_THIS_PTR efer_suppmask);
 
   if (BX_CPU_THIS_PTR efer.get_LMA()) {
     if (temp_eflags & EFlagsVMMask) {

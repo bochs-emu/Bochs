@@ -189,6 +189,8 @@ struct bx_dr7_t {
 #define BX_EFER_LME_MASK       (1 <<  8)
 #define BX_EFER_LMA_MASK       (1 << 10)
 #define BX_EFER_NXE_MASK       (1 << 11)
+#define BX_EFER_SVME_MASK      (1 << 12)
+#define BX_EFER_LMSLE_MASK     (1 << 13)
 #define BX_EFER_FFXSR_MASK     (1 << 14)
 
 struct bx_efer_t {
@@ -205,10 +207,6 @@ struct bx_efer_t {
   BX_CPP_INLINE Bit32u get32() const { return val32; }
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
 };
-
-#define BX_EFER_SUPPORTED_BITS \
-   ((Bit64u) (BX_EFER_SCE_MASK | BX_EFER_LME_MASK | \
-              BX_EFER_LMA_MASK | BX_EFER_NXE_MASK | BX_EFER_FFXSR_MASK))
 
 #endif
 

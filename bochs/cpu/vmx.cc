@@ -807,7 +807,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
 #if BX_SUPPORT_VMX >= 2
   if (vmexit_ctrls & VMX_VMEXIT_CTRL1_LOAD_EFER_MSR) {
     host_state->efer_msr = VMread64(VMCS_64BIT_HOST_IA32_EFER);
-    if (host_state->efer_msr & ~BX_EFER_SUPPORTED_BITS) {
+    if (host_state->efer_msr & ~((Bit64u) BX_CPU_THIS_PTR efer_suppmask)) {
       BX_ERROR(("VMFAIL: VMCS host EFER reserved bits set !"));
       return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }
@@ -1320,7 +1320,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 #if BX_SUPPORT_VMX >= 2 && BX_SUPPORT_X86_64
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_EFER_MSR) {
     guest.efer_msr = VMread64(VMCS_64BIT_GUEST_IA32_EFER);
-    if (guest.efer_msr & ~BX_EFER_SUPPORTED_BITS) {
+    if (guest.efer_msr & ~((Bit64u) BX_CPU_THIS_PTR efer_suppmask)) {
       BX_ERROR(("VMENTER FAIL: VMCS guest EFER reserved bits set !"));
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }

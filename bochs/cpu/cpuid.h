@@ -106,6 +106,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPU_1G_PAGES         (1 << 9)        /* 1Gb pages support */
 #define BX_CPU_PCID             (1 << 10)       /* PCID pages support */
 #define BX_CPU_SMEP             (1 << 11)       /* SMEP support */
+#define BX_CPU_FFXSR            (1 << 12)       /* EFER.FFXSR support */
 
 // CPUID defines - STD features CPUID[0x00000001].EDX
 // ----------------------------
