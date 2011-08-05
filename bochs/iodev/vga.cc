@@ -2742,11 +2742,11 @@ void bx_vga_c::get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
   }
 }
 
-Bit32u bx_vga_c::get_gfx_snapshot(Bit8u **snapshot_ptr, unsigned *iHeight,
-                                  unsigned *iWidth, unsigned *iDepth)
+Bit32u bx_vga_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
+                                  unsigned *iHeight, unsigned *iWidth, unsigned *iDepth)
 {
   Bit32u len, len1;
-  unsigned i;
+  unsigned i, shift;
   Bit8u *dst_ptr, *src_ptr;
 
   if (BX_VGA_THIS vbe.enabled) {
@@ -2762,6 +2762,20 @@ Bit32u bx_vga_c::get_gfx_snapshot(Bit8u **snapshot_ptr, unsigned *iHeight,
       memcpy(dst_ptr, src_ptr, len1);
       src_ptr += BX_VGA_THIS s.line_offset;
       dst_ptr += len1;
+    }
+    if (*iDepth == 8) {
+      *palette_ptr = (Bit8u*)malloc(256 * 3);
+      dst_ptr = *palette_ptr;
+      if (BX_VGA_THIS vbe.dac_8bit) {
+        shift = 0;
+      } else {
+        shift = 2;
+      }
+      for (i = 0; i < 256; i++) {
+        *(dst_ptr++) = (BX_VGA_THIS s.pel.data[i].blue << shift);
+        *(dst_ptr++) = (BX_VGA_THIS s.pel.data[i].green << shift);
+        *(dst_ptr++) = (BX_VGA_THIS s.pel.data[i].red << shift);
+      }
     }
     return len;
   } else {

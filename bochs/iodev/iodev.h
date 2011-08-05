@@ -255,7 +255,7 @@ public:
                                  unsigned *txHeight, unsigned *txWidth) {
     STUBFUNC(vga, get_text_snapshot);
   }
-  virtual Bit32u get_gfx_snapshot(Bit8u **snapshot_ptr,
+  virtual Bit32u get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
                                   unsigned *iHeight, unsigned *iWidth, unsigned *iDepth) {
     STUBFUNC(vga, get_gfx_snapshot);
     return 0;

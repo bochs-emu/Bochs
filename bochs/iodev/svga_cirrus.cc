@@ -829,8 +829,8 @@ void bx_svga_cirrus_c::get_text_snapshot(Bit8u **text_snapshot,
   BX_CIRRUS_THIS bx_vga_c::get_text_snapshot(text_snapshot,txHeight,txWidth);
 }
 
-Bit32u bx_svga_cirrus_c::get_gfx_snapshot(Bit8u **snapshot_ptr, unsigned *iHeight,
-                                          unsigned *iWidth, unsigned *iDepth)
+Bit32u bx_svga_cirrus_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
+                                          unsigned *iHeight, unsigned *iWidth, unsigned *iDepth)
 {
   Bit32u len, len1;
   unsigned i;
@@ -850,9 +850,18 @@ Bit32u bx_svga_cirrus_c::get_gfx_snapshot(Bit8u **snapshot_ptr, unsigned *iHeigh
       src_ptr += BX_CIRRUS_THIS svga_pitch;
       dst_ptr += len1;
     }
+    if (*iDepth == 8) {
+      *palette_ptr = (Bit8u*)malloc(256 * 3);
+      dst_ptr = *palette_ptr;
+      for (i = 0; i < 256; i++) {
+        *(dst_ptr++) = (BX_CIRRUS_THIS s.pel.data[i].blue << 2);
+        *(dst_ptr++) = (BX_CIRRUS_THIS s.pel.data[i].green << 2);
+        *(dst_ptr++) = (BX_CIRRUS_THIS s.pel.data[i].red << 2);
+      }
+    }
     return len;
   } else {
-    return BX_CIRRUS_THIS bx_vga_c::get_gfx_snapshot(snapshot_ptr, iHeight, iWidth, iDepth);
+    return BX_CIRRUS_THIS bx_vga_c::get_gfx_snapshot(snapshot_ptr, palette_ptr, iHeight, iWidth, iDepth);
   }
 }
 
