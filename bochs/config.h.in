@@ -666,6 +666,10 @@ typedef
   #error "VMXx2 require x86-64 support"
 #endif
 
+#if BX_SUPPORT_AVX && BX_SUPPORT_X86_64 == 0
+  #error "AVX require x86-64 support"
+#endif
+
 #define BX_SupportRepeatSpeedups 0
 
 #if BX_SUPPORT_3DNOW
