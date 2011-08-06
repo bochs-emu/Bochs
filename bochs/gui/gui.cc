@@ -419,7 +419,7 @@ void bx_gui_c::snapshot_handler(void)
   int fd, i, j, mode, pitch;
   Bit8u *snapshot_ptr = NULL, *palette_ptr = NULL;
   Bit8u *row_buffer, *pixel_ptr, *row_ptr;
-  Bit8u bmp_header[54], pal_entry[4], iBits, b1, b2;
+  Bit8u bmp_header[54], iBits, b1, b2;
   Bit32u ilen, len, rlen;
   char filename[BX_PATHNAME_LEN];
   unsigned iHeight, iWidth, iDepth;
@@ -450,6 +450,7 @@ void bx_gui_c::snapshot_handler(void)
                                    "Save snapshot as...", "snapshot.bmp",
                                    bx_param_string_c::SAVE_FILE_DIALOG);
       if (ret < 0) { // cancelled
+        if (palette_ptr != NULL) free(palette_ptr);
         free(snapshot_ptr);
         return;
       }
@@ -464,6 +465,7 @@ void bx_gui_c::snapshot_handler(void)
               );
     if (fd < 0) {
       BX_ERROR(("snapshot button failed: cannot create BMP file"));
+      if (palette_ptr != NULL) free(palette_ptr);
       free(snapshot_ptr);
       return;
     }
@@ -487,14 +489,7 @@ void bx_gui_c::snapshot_handler(void)
     bmp_header[28] = iBits;
     write(fd, bmp_header, 54);
     if ((iDepth == 8) && (palette_ptr != NULL)) {
-      pal_entry[3] = 0;
-      pixel_ptr = palette_ptr;
-      for (i = 0; i < 256; i++) {
-        pal_entry[0] = *(pixel_ptr++);
-        pal_entry[1] = *(pixel_ptr++);
-        pal_entry[2] = *(pixel_ptr++);
-        write(fd, pal_entry, 4);
-      }
+      write(fd, palette_ptr, 256 * 4);
     }
     pitch = iWidth * ((iDepth + 1) >> 3);
     row_buffer = (Bit8u*)malloc(rlen);
@@ -534,7 +529,7 @@ void bx_gui_c::snapshot_handler(void)
     if (palette_ptr != NULL) free(palette_ptr);
     free(snapshot_ptr);
   } else {
-    BX_ERROR(("snapshot button failed: VGA mode not implemented"));
+    BX_ERROR(("snapshot button failed: unsupported VGA mode"));
   }
 }
 

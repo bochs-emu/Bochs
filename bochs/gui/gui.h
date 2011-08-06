@@ -49,8 +49,8 @@
 #define BX_GUI_MT_CTRL_ALT      (BX_MT_KEY_CTRL | BX_MT_KEY_ALT)
 
 // snapshot feature
-#define BX_GUI_SNAPSHOT_TXT     0
-#define BX_GUI_SNAPSHOT_VGA     1
+#define BX_GUI_SNAPSHOT_UNSUP   0
+#define BX_GUI_SNAPSHOT_TXT     1
 #define BX_GUI_SNAPSHOT_GFX     2
 
 typedef struct {

@@ -2716,12 +2716,16 @@ void bx_vga_c::mem_write(bx_phy_address addr, Bit8u value)
 
 int bx_vga_c::get_snapshot_mode()
 {
-  if (BX_VGA_THIS vbe.enabled) {
+  if ((BX_VGA_THIS vbe.enabled) && (BX_VGA_THIS vbe.bpp >= 8)) {
     return BX_GUI_SNAPSHOT_GFX;
   } else if (!BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
     return BX_GUI_SNAPSHOT_TXT;
+  } else if ((BX_VGA_THIS s.graphics_ctrl.shift_reg == 0) &&
+             (BX_VGA_THIS s.graphics_ctrl.memory_mapping != 3)) {
+    // TODO: standard EGA/VGA memory layout
+    return BX_GUI_SNAPSHOT_UNSUP;
   } else {
-    return BX_GUI_SNAPSHOT_VGA;
+    return BX_GUI_SNAPSHOT_UNSUP;
   }
 }
 
@@ -2749,7 +2753,7 @@ Bit32u bx_vga_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
   unsigned i, shift;
   Bit8u *dst_ptr, *src_ptr;
 
-  if (BX_VGA_THIS vbe.enabled) {
+  if ((BX_VGA_THIS vbe.enabled) && (BX_VGA_THIS vbe.bpp >= 8)) {
     *iHeight = BX_VGA_THIS vbe.yres;
     *iWidth = BX_VGA_THIS vbe.xres;
     *iDepth = BX_VGA_THIS vbe.bpp;
@@ -2764,7 +2768,7 @@ Bit32u bx_vga_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
       dst_ptr += len1;
     }
     if (*iDepth == 8) {
-      *palette_ptr = (Bit8u*)malloc(256 * 3);
+      *palette_ptr = (Bit8u*)malloc(256 * 4);
       dst_ptr = *palette_ptr;
       if (BX_VGA_THIS vbe.dac_8bit) {
         shift = 0;
@@ -2775,7 +2779,25 @@ Bit32u bx_vga_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
         *(dst_ptr++) = (BX_VGA_THIS s.pel.data[i].blue << shift);
         *(dst_ptr++) = (BX_VGA_THIS s.pel.data[i].green << shift);
         *(dst_ptr++) = (BX_VGA_THIS s.pel.data[i].red << shift);
+        *(dst_ptr++) = 0;
       }
+    }
+    return len;
+  } else if ((BX_VGA_THIS s.graphics_ctrl.shift_reg == 0) &&
+             (BX_VGA_THIS s.graphics_ctrl.memory_mapping != 3)) {
+    *iHeight = old_iHeight;
+    *iWidth = old_iWidth;
+    *iDepth = 8;
+    len = (old_iWidth * old_iHeight);
+    *snapshot_ptr = (Bit8u*)malloc(len);
+    // TODO: standard EGA/VGA memory layout
+    *palette_ptr = (Bit8u*)malloc(256 * 4);
+    dst_ptr = *palette_ptr;
+    for (i = 0; i < 256; i++) {
+      *(dst_ptr++) = (BX_VGA_THIS s.pel.data[i].blue << 2);
+      *(dst_ptr++) = (BX_VGA_THIS s.pel.data[i].green << 2);
+      *(dst_ptr++) = (BX_VGA_THIS s.pel.data[i].red << 2);
+      *(dst_ptr++) = 0;
     }
     return len;
   } else {

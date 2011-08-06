@@ -851,12 +851,13 @@ Bit32u bx_svga_cirrus_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_
       dst_ptr += len1;
     }
     if (*iDepth == 8) {
-      *palette_ptr = (Bit8u*)malloc(256 * 3);
+      *palette_ptr = (Bit8u*)malloc(256 * 4);
       dst_ptr = *palette_ptr;
       for (i = 0; i < 256; i++) {
         *(dst_ptr++) = (BX_CIRRUS_THIS s.pel.data[i].blue << 2);
         *(dst_ptr++) = (BX_CIRRUS_THIS s.pel.data[i].green << 2);
         *(dst_ptr++) = (BX_CIRRUS_THIS s.pel.data[i].red << 2);
+        *(dst_ptr++) = 0;
       }
     }
     return len;
