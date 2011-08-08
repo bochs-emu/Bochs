@@ -165,6 +165,7 @@ protected:
 #endif
   void  write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
 
+  BX_VGA_SMF Bit8u get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, Bit8u **plane);
   BX_VGA_SMF void update(void);
   BX_VGA_SMF void determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth);
 
@@ -277,6 +278,8 @@ protected:
     Bit16u charmap_address;
     bx_bool x_dotclockdiv2;
     bx_bool y_doublescan;
+    Bit16u last_xres;
+    Bit16u last_yres;
     Bit8u last_bpp;
   } s;  // state information
 

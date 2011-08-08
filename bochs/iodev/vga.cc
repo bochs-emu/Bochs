@@ -75,7 +75,7 @@ static const Bit8u ccdat[16][4] = {
 
 bx_vga_c *theVga = NULL;
 
-unsigned old_iHeight = 0, old_iWidth = 0, old_MSL = 0;
+unsigned old_MSL = 0;
 
 #if BX_SUPPORT_CLGD54XX
 void bx_vga_set_smf_pointer(bx_vga_c *theVga_ptr)
@@ -227,6 +227,8 @@ void bx_vga_c::init_standard_vga(void)
   BX_VGA_THIS s.charmap_address = 0;
   BX_VGA_THIS s.x_dotclockdiv2 = 0;
   BX_VGA_THIS s.y_doublescan = 0;
+  BX_VGA_THIS s.last_xres = 0;
+  BX_VGA_THIS s.last_yres = 0;
   BX_VGA_THIS s.last_bpp = 8;
 
   BX_VGA_THIS s.vga_mem_updated = 0;
@@ -536,8 +538,8 @@ void bx_vga_c::after_restore_state(void)
     }
   }
   bx_gui->set_text_charmap(&BX_VGA_THIS s.memory[0x20000 + BX_VGA_THIS s.charmap_address]);
-  old_iWidth = BX_MAX_XRES;
-  old_iHeight = BX_MAX_YRES;
+  BX_VGA_THIS s.last_xres = BX_MAX_XRES;
+  BX_VGA_THIS s.last_yres = BX_MAX_YRES;
   BX_VGA_THIS redraw_area(0, 0, BX_MAX_XRES, BX_MAX_YRES);
   if (BX_VGA_THIS vbe.enabled) {
     bx_gui->dimension_update(BX_VGA_THIS vbe.xres, BX_VGA_THIS vbe.yres, 0, 0,
@@ -1353,7 +1355,7 @@ void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_l
             needs_update = 1;
           if (prev_graphics_alpha != BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
             needs_update = 1;
-            old_iHeight = 0;
+            BX_VGA_THIS s.last_yres = 0;
           }
           break;
         case 7: /* Color Don't Care */
@@ -1478,7 +1480,7 @@ void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_l
   }
   if (needs_update) {
     // Mark all video as updated so the changes will go through
-    BX_VGA_THIS redraw_area(0, 0, old_iWidth, old_iHeight);
+    BX_VGA_THIS redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
   }
 }
 
@@ -1521,6 +1523,48 @@ void bx_vga_c::timer(void)
 
   update();
   bx_gui->flush();
+}
+
+Bit8u bx_vga_c::get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, Bit8u **plane)
+{
+  Bit8u attribute, bit_no, palette_reg_val, DAC_regno;
+  Bit32u byte_offset;
+
+  if (BX_VGA_THIS s.x_dotclockdiv2) x >>= 1;
+  bit_no = 7 - (x % 8);
+  if (y > lc) {
+    byte_offset = x / 8 +
+      ((y - lc - 1) * BX_VGA_THIS s.line_offset);
+  } else {
+    byte_offset = saddr + x / 8 +
+      (y * BX_VGA_THIS s.line_offset);
+  }
+  attribute =
+    (((plane[0][byte_offset] >> bit_no) & 0x01) << 0) |
+    (((plane[1][byte_offset] >> bit_no) & 0x01) << 1) |
+    (((plane[2][byte_offset] >> bit_no) & 0x01) << 2) |
+    (((plane[3][byte_offset] >> bit_no) & 0x01) << 3);
+
+  attribute &= BX_VGA_THIS s.attribute_ctrl.color_plane_enable;
+  // undocumented feature ???: colors 0..7 high intensity, colors 8..15 blinking
+  // using low/high intensity. Blinking is not implemented yet.
+  if (BX_VGA_THIS s.attribute_ctrl.mode_ctrl.blink_intensity) attribute ^= 0x08;
+  palette_reg_val = BX_VGA_THIS s.attribute_ctrl.palette_reg[attribute];
+  if (BX_VGA_THIS s.attribute_ctrl.mode_ctrl.internal_palette_size) {
+    // use 4 lower bits from palette register
+    // use 4 higher bits from color select register
+    // 16 banks of 16-color registers
+    DAC_regno = (palette_reg_val & 0x0f) |
+                (BX_VGA_THIS s.attribute_ctrl.color_select << 4);
+  } else {
+    // use 6 lower bits from palette register
+    // use 2 higher bits from color select register
+    // 4 banks of 64-color registers
+    DAC_regno = (palette_reg_val & 0x3f) |
+                ((BX_VGA_THIS s.attribute_ctrl.color_select & 0x0c) << 4);
+  }
+  // DAC_regno &= video DAC mask register ???
+  return DAC_regno;
 }
 
 void bx_vga_c::update(void)
@@ -1794,8 +1838,8 @@ void bx_vga_c::update(void)
             break;
         }
       }
-      old_iWidth = iWidth;
-      old_iHeight = iHeight;
+      BX_VGA_THIS s.last_xres = iWidth;
+      BX_VGA_THIS s.last_yres = iHeight;
       BX_VGA_THIS s.vga_mem_updated = 0;
     }
     else {
@@ -1832,12 +1876,12 @@ void bx_vga_c::update(void)
 //  (unsigned) BX_VGA_THIS s.graphics_ctrl.memory_mapping);
 
     determine_screen_dimensions(&iHeight, &iWidth);
-    if((iWidth != old_iWidth) || (iHeight != old_iHeight) ||
+    if((iWidth != BX_VGA_THIS s.last_xres) || (iHeight != BX_VGA_THIS s.last_yres) ||
         (BX_VGA_THIS s.last_bpp > 8))
     {
       bx_gui->dimension_update(iWidth, iHeight);
-      old_iWidth = iWidth;
-      old_iHeight = iHeight;
+      BX_VGA_THIS s.last_xres = iWidth;
+      BX_VGA_THIS s.last_yres = iHeight;
       BX_VGA_THIS s.last_bpp = 8;
     }
 
@@ -1845,7 +1889,7 @@ void bx_vga_c::update(void)
       case 0:
         Bit8u attribute, palette_reg_val, DAC_regno;
         unsigned long line_compare;
-        Bit8u *plane0, *plane1, *plane2, *plane3;
+        Bit8u *plane[4];
 
         if (BX_VGA_THIS s.graphics_ctrl.memory_mapping == 3) { // CGA 640x200x2
 
@@ -1880,17 +1924,17 @@ void bx_vga_c::update(void)
                  // output on its associated serial output.  Standard EGA/VGA format
 
           if (BX_VGA_THIS vbe.enabled) {
-            plane0 = &BX_VGA_THIS s.memory[0<<VBE_DISPI_4BPP_PLANE_SHIFT];
-            plane1 = &BX_VGA_THIS s.memory[1<<VBE_DISPI_4BPP_PLANE_SHIFT];
-            plane2 = &BX_VGA_THIS s.memory[2<<VBE_DISPI_4BPP_PLANE_SHIFT];
-            plane3 = &BX_VGA_THIS s.memory[3<<VBE_DISPI_4BPP_PLANE_SHIFT];
+            plane[0] = &BX_VGA_THIS s.memory[0<<VBE_DISPI_4BPP_PLANE_SHIFT];
+            plane[1] = &BX_VGA_THIS s.memory[1<<VBE_DISPI_4BPP_PLANE_SHIFT];
+            plane[2] = &BX_VGA_THIS s.memory[2<<VBE_DISPI_4BPP_PLANE_SHIFT];
+            plane[3] = &BX_VGA_THIS s.memory[3<<VBE_DISPI_4BPP_PLANE_SHIFT];
             start_addr = BX_VGA_THIS vbe.virtual_start;
             line_compare = 0xffff;
           } else {
-            plane0 = &BX_VGA_THIS s.memory[0<<16];
-            plane1 = &BX_VGA_THIS s.memory[1<<16];
-            plane2 = &BX_VGA_THIS s.memory[2<<16];
-            plane3 = &BX_VGA_THIS s.memory[3<<16];
+            plane[0] = &BX_VGA_THIS s.memory[0<<16];
+            plane[1] = &BX_VGA_THIS s.memory[1<<16];
+            plane[2] = &BX_VGA_THIS s.memory[2<<16];
+            plane[3] = &BX_VGA_THIS s.memory[3<<16];
             line_compare = BX_VGA_THIS s.line_compare;
             if (BX_VGA_THIS s.y_doublescan) line_compare >>= 1;
           }
@@ -1903,51 +1947,16 @@ void bx_vga_c::update(void)
                   if (BX_VGA_THIS s.y_doublescan) y >>= 1;
                   for (c=0; c<X_TILESIZE; c++) {
                     x = xc + c;
-                    if (BX_VGA_THIS s.x_dotclockdiv2) x >>= 1;
-                    bit_no = 7 - (x % 8);
-                    if (y > line_compare) {
-                      byte_offset = x / 8 +
-                        ((y - line_compare - 1) * BX_VGA_THIS s.line_offset);
-                    } else {
-                      byte_offset = start_addr + x / 8 +
-                        (y * BX_VGA_THIS s.line_offset);
-                    }
-                    attribute =
-                      (((plane0[byte_offset] >> bit_no) & 0x01) << 0) |
-                      (((plane1[byte_offset] >> bit_no) & 0x01) << 1) |
-                      (((plane2[byte_offset] >> bit_no) & 0x01) << 2) |
-                      (((plane3[byte_offset] >> bit_no) & 0x01) << 3);
-
-                    attribute &= BX_VGA_THIS s.attribute_ctrl.color_plane_enable;
-                    // undocumented feature ???: colors 0..7 high intensity, colors 8..15 blinking
-                    // using low/high intensity. Blinking is not implemented yet.
-                    if (BX_VGA_THIS s.attribute_ctrl.mode_ctrl.blink_intensity) attribute ^= 0x08;
-                    palette_reg_val = BX_VGA_THIS s.attribute_ctrl.palette_reg[attribute];
-                    if (BX_VGA_THIS s.attribute_ctrl.mode_ctrl.internal_palette_size) {
-                      // use 4 lower bits from palette register
-                      // use 4 higher bits from color select register
-                      // 16 banks of 16-color registers
-                      DAC_regno = (palette_reg_val & 0x0f) |
-                                  (BX_VGA_THIS s.attribute_ctrl.color_select << 4);
-                      }
-                    else {
-                      // use 6 lower bits from palette register
-                      // use 2 higher bits from color select register
-                      // 4 banks of 64-color registers
-                      DAC_regno = (palette_reg_val & 0x3f) |
-                                  ((BX_VGA_THIS s.attribute_ctrl.color_select & 0x0c) << 4);
-                      }
-                    // DAC_regno &= video DAC mask register ???
-
-                    BX_VGA_THIS s.tile[r*X_TILESIZE + c] = DAC_regno;
-                    }
+                    BX_VGA_THIS s.tile[r*X_TILESIZE + c] =
+                      BX_VGA_THIS get_vga_pixel(x, y, start_addr, line_compare, plane);
                   }
+                }
                 SET_TILE_UPDATED (xti, yti, 0);
                 bx_gui->graphics_tile_update(BX_VGA_THIS s.tile, xc, yc);
-                }
               }
             }
           }
+        }
         break; // case 0
 
       case 1: // output the data in a CGA-compatible 320x200 4 color graphics
@@ -2125,12 +2134,12 @@ void bx_vga_c::update(void)
     cWidth = ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 1) ? 8 : 9;
     iWidth = cWidth * cols;
     iHeight = VDE+1;
-    if ((iWidth != old_iWidth) || (iHeight != old_iHeight) || (MSL != old_MSL) ||
+    if ((iWidth != BX_VGA_THIS s.last_xres) || (iHeight != BX_VGA_THIS s.last_yres) || (MSL != old_MSL) ||
         (BX_VGA_THIS s.last_bpp > 8))
     {
       bx_gui->dimension_update(iWidth, iHeight, MSL+1, cWidth);
-      old_iWidth = iWidth;
-      old_iHeight = iHeight;
+      BX_VGA_THIS s.last_xres = iWidth;
+      BX_VGA_THIS s.last_yres = iHeight;
       old_MSL = MSL;
       BX_VGA_THIS s.last_bpp = 8;
     }
@@ -2722,8 +2731,7 @@ int bx_vga_c::get_snapshot_mode()
     return BX_GUI_SNAPSHOT_TXT;
   } else if ((BX_VGA_THIS s.graphics_ctrl.shift_reg == 0) &&
              (BX_VGA_THIS s.graphics_ctrl.memory_mapping != 3)) {
-    // TODO: standard EGA/VGA memory layout
-    return BX_GUI_SNAPSHOT_UNSUP;
+    return BX_GUI_SNAPSHOT_GFX;
   } else {
     return BX_GUI_SNAPSHOT_UNSUP;
   }
@@ -2750,8 +2758,8 @@ Bit32u bx_vga_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
                                   unsigned *iHeight, unsigned *iWidth, unsigned *iDepth)
 {
   Bit32u len, len1;
-  unsigned i, shift;
-  Bit8u *dst_ptr, *src_ptr;
+  unsigned i, line_compare, shift, start_addr, x, y;
+  Bit8u *dst_ptr, *src_ptr, *plane[4];
 
   if ((BX_VGA_THIS vbe.enabled) && (BX_VGA_THIS vbe.bpp >= 8)) {
     *iHeight = BX_VGA_THIS vbe.yres;
@@ -2785,12 +2793,33 @@ Bit32u bx_vga_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
     return len;
   } else if ((BX_VGA_THIS s.graphics_ctrl.shift_reg == 0) &&
              (BX_VGA_THIS s.graphics_ctrl.memory_mapping != 3)) {
-    *iHeight = old_iHeight;
-    *iWidth = old_iWidth;
+    *iHeight = BX_VGA_THIS s.last_yres;
+    *iWidth = BX_VGA_THIS s.last_xres;
     *iDepth = 8;
-    len = (old_iWidth * old_iHeight);
+    len = (BX_VGA_THIS s.last_xres * BX_VGA_THIS s.last_yres);
     *snapshot_ptr = (Bit8u*)malloc(len);
-    // TODO: standard EGA/VGA memory layout
+    dst_ptr = *snapshot_ptr;
+    if (BX_VGA_THIS vbe.enabled) {
+      plane[0] = &BX_VGA_THIS s.memory[0<<VBE_DISPI_4BPP_PLANE_SHIFT];
+      plane[1] = &BX_VGA_THIS s.memory[1<<VBE_DISPI_4BPP_PLANE_SHIFT];
+      plane[2] = &BX_VGA_THIS s.memory[2<<VBE_DISPI_4BPP_PLANE_SHIFT];
+      plane[3] = &BX_VGA_THIS s.memory[3<<VBE_DISPI_4BPP_PLANE_SHIFT];
+      start_addr = BX_VGA_THIS vbe.virtual_start;
+      line_compare = 0xffff;
+    } else {
+      plane[0] = &BX_VGA_THIS s.memory[0<<16];
+      plane[1] = &BX_VGA_THIS s.memory[1<<16];
+      plane[2] = &BX_VGA_THIS s.memory[2<<16];
+      plane[3] = &BX_VGA_THIS s.memory[3<<16];
+      start_addr = (BX_VGA_THIS s.CRTC.reg[0x0c] << 8) | BX_VGA_THIS s.CRTC.reg[0x0d];
+      line_compare = BX_VGA_THIS s.line_compare;
+      if (BX_VGA_THIS s.y_doublescan) line_compare >>= 1;
+    }
+    for (y = 0; y < BX_VGA_THIS s.last_yres; y++) {
+      for (x = 0; x < BX_VGA_THIS s.last_xres; x++) {
+        *(dst_ptr++) = BX_VGA_THIS get_vga_pixel(x, y, start_addr, line_compare, plane);
+      }
+    }
     *palette_ptr = (Bit8u*)malloc(256 * 4);
     dst_ptr = *palette_ptr;
     for (i = 0; i < 256; i++) {
@@ -2890,8 +2919,8 @@ void bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
 
   if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha || BX_VGA_THIS vbe.enabled) {
     // graphics mode
-    xmax = old_iWidth;
-    ymax = old_iHeight;
+    xmax = BX_VGA_THIS s.last_xres;
+    ymax = BX_VGA_THIS s.last_yres;
     if (BX_VGA_THIS vbe.enabled) {
       xmax = BX_VGA_THIS vbe.xres;
       ymax = BX_VGA_THIS vbe.yres;
