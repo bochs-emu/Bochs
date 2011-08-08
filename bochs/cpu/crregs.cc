@@ -69,8 +69,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
     case 1: // DR1
     case 2: // DR2
     case 3: // DR3
-      TLB_invlpg(val_32);
       BX_CPU_THIS_PTR dr[i->nnn()] = val_32;
+      TLB_invlpg(val_32);
       break;
 
     case 4: // DR4
@@ -113,19 +113,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
       {
         // Instruction breakpoint with LENx not 00b (1-byte length)
         BX_ERROR(("MOV_DdRd: write of %08x, R/W=00b LEN!=00b", val_32));
-      }
-
-      // if we have code breakpoints enabled then we must check
-      // breakpoints condition in cpu loop
-      if (BX_CPU_THIS_PTR dr7.get_bp_enabled()) {
-        if (BX_CPU_THIS_PTR dr7.get_R_W0() == 0 ||
-            BX_CPU_THIS_PTR dr7.get_R_W1() == 0 ||
-            BX_CPU_THIS_PTR dr7.get_R_W2() == 0 ||
-            BX_CPU_THIS_PTR dr7.get_R_W3() == 0) 
-        {
-          BX_INFO(("MOV_DdRd(): code breakpoint is set"));
-          BX_CPU_THIS_PTR async_event = 1;
-        }
       }
 #endif
 
@@ -256,8 +243,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
     case 1: // DR1
     case 2: // DR2
     case 3: // DR3
-      TLB_invlpg(val_64);
       BX_CPU_THIS_PTR dr[i->nnn()] = val_64;
+      TLB_invlpg(val_64);
       break;
 
     case 4: // DR4
@@ -298,19 +285,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       {
         // Instruction breakpoint with LENx not 00b (1-byte length)
         BX_ERROR(("MOV_DqRq: write of %08x, R/W=00b LEN!=00b", BX_CPU_THIS_PTR dr7.get32()));
-      }
-
-      // if we have code breakpoints enabled then we must check
-      // breakpoints condition in cpu loop
-      if (BX_CPU_THIS_PTR dr7.get_bp_enabled()) {
-        if (BX_CPU_THIS_PTR dr7.get_R_W0() == 0 ||
-            BX_CPU_THIS_PTR dr7.get_R_W1() == 0 ||
-            BX_CPU_THIS_PTR dr7.get_R_W2() == 0 ||
-            BX_CPU_THIS_PTR dr7.get_R_W3() == 0) 
-        {
-          BX_INFO(("MOV_DdRd(): code breakpoint is set"));
-          BX_CPU_THIS_PTR async_event = 1;
-        }
       }
 #endif
 
