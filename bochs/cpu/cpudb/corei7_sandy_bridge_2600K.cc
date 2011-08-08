@@ -112,7 +112,7 @@ void corei7_sandy_bridge_2600k_t::get_cpuid_leaf(Bit32u function, Bit32u subfunc
     get_std_cpuid_extended_topology_leaf(subfunction, leaf);
     return;
   case 0x0000000C:
-    get_std_cpuid_leaf_C(leaf);
+    get_reserved_leaf(leaf);
     return;
   case 0x0000000D:
   default:
@@ -176,7 +176,11 @@ void corei7_sandy_bridge_2600k_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) c
   // EBX: vendor ID string
   // EDX: vendor ID string
   // ECX: vendor ID string
-  leaf->eax = 0xd;
+  static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
+  if (cpuid_limit_winnt)
+    leaf->eax = 0x2;
+  else
+    leaf->eax = 0xD;
 
   // CPUID vendor string (e.g. GenuineIntel, AuthenticAMD, CentaurHauls, ...)
   memcpy(&(leaf->ebx), vendor_string,     4);
@@ -570,15 +574,7 @@ void corei7_sandy_bridge_2600k_t::get_std_cpuid_extended_topology_leaf(Bit32u su
 #endif
 }
 
-// leaf 0x0000000C //
-void corei7_sandy_bridge_2600k_t::get_std_cpuid_leaf_C(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x0000000C - reserved
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
+// leaf 0x0000000C reserved //
 
 // leaf 0x0000000D //
 void corei7_sandy_bridge_2600k_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
@@ -589,13 +585,11 @@ void corei7_sandy_bridge_2600k_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, c
     // EBX - Maximum size (in bytes) required by enabled features
     // ECX - Maximum size (in bytes) required by CPU supported features
     // EDX - valid bits of XCR0 (upper part)
-    leaf->eax = cpu->xcr0.get32();
+    leaf->eax = cpu->xcr0_suppmask;
     leaf->ebx = 512+64;
     if (cpu->xcr0.get_AVX())
       leaf->ebx += 256;
-    leaf->ecx = 512+64;
-    if (cpu->xcr0_suppmask & BX_XCR0_AVX_MASK)
-      leaf->ecx += 256;
+    leaf->ecx = 512+64+256 /* AVX */;
     leaf->edx = 0;
     return;
 
@@ -607,14 +601,11 @@ void corei7_sandy_bridge_2600k_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, c
     return;
 
   case 2: // AVX leaf
-    if (cpu->xcr0_suppmask & BX_XCR0_AVX_MASK) {
-      leaf->eax = 256;
-      leaf->ebx = 576;
-      leaf->ecx = 0;
-      leaf->edx = 0;
-      return;
-    }
-    // else fall through
+    leaf->eax = 256;
+    leaf->ebx = 576;
+    leaf->ecx = 0;
+    leaf->edx = 0;
+    return;
 
   default:
     break;

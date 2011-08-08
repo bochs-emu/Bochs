@@ -127,6 +127,7 @@ OBJS64 = \
 	stack64.o
 
 CPUDB_OBJS = cpudb/corei7_sandy_bridge_2600K.o \
+             cpudb/core2_penryn_t9600.o \
              cpudb/core2_extreme_x9770.o \
              cpudb/p4_prescott_celeron_336.o \
              cpudb/athlon64_clawhammer.o \
@@ -813,6 +814,13 @@ cpudb/core2_extreme_x9770.o: cpudb/core2_extreme_x9770.@CPP_SUFFIX@ ../bochs.h .
  cpuid.h crregs.h descriptor.h instr.h ia_opcodes.h lazy_flags.h icache.h \
  apic.h ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h cpudb/core2_extreme_x9770.h
+cpudb/core2_penryn_t9600.o: cpudb/core2_penryn_t9600.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h \
+ ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../plugin.h \
+ ../extplugin.h ../gui/gui.h ../instrument/stubs/instrument.h cpu.h \
+ cpuid.h crregs.h descriptor.h instr.h ia_opcodes.h lazy_flags.h icache.h \
+ apic.h ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
+ ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h cpudb/core2_penryn_t9600.h
 cpudb/p4_prescott_celeron_336.o: cpudb/p4_prescott_celeron_336.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h \
  ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../plugin.h \

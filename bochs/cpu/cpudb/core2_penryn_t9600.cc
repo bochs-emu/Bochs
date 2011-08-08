@@ -24,13 +24,13 @@
 #include "bochs.h"
 #include "cpu/cpu.h"
 #include "param_names.h"
-#include "core2_extreme_x9770.h"
+#include "core2_penryn_t9600.h"
 
 #define LOG_THIS cpu->
 
 #if BX_SUPPORT_X86_64
 
-core2_extreme_x9770_t::core2_extreme_x9770_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
+core2_penryn_t9600_t::core2_penryn_t9600_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
 #if BX_SUPPORT_SMP
   nthreads = SIM->get_param_num(BXPN_CPU_NTHREADS)->get();
@@ -39,10 +39,10 @@ core2_extreme_x9770_t::core2_extreme_x9770_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 #endif
 
   if (! BX_SUPPORT_X86_64)
-    BX_PANIC(("You must enable x86-64 for Intel Core2 X9770 configuration"));
+    BX_PANIC(("You must enable x86-64 for Intel Mobile Core2 Duo T9600 (Penryn) configuration"));
 }
 
-void core2_extreme_x9770_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void core2_penryn_t9600_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
   if (cpuid_limit_winnt)
@@ -101,13 +101,20 @@ void core2_extreme_x9770_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, 
     get_std_cpuid_leaf_9(leaf);
     return;
   case 0x0000000A:
-  default:
     get_std_cpuid_leaf_A(leaf);
+    return;
+  case 0x0000000B:
+  case 0x0000000C:
+    get_reserved_leaf(leaf);
+    return;
+  case 0x0000000D:
+  default:
+    get_std_cpuid_xsave_leaf(subfunction, leaf);
     return;
   }
 }
 
-Bit32u core2_extreme_x9770_t::get_isa_extensions_bitmask(void) const
+Bit32u core2_penryn_t9600_t::get_isa_extensions_bitmask(void) const
 {
   return BX_CPU_X87 |
          BX_CPU_486 |
@@ -128,12 +135,13 @@ Bit32u core2_extreme_x9770_t::get_isa_extensions_bitmask(void) const
 #if BX_SUPPORT_VMX
          BX_CPU_VMX |
 #endif
-      /* BX_CPU_SMX | */
+         BX_CPU_SMX |
+         BX_CPU_XSAVE |
          BX_CPU_LM_LAHF_SAHF |
          BX_CPU_X86_64;
 }
 
-Bit32u core2_extreme_x9770_t::get_cpu_extensions_bitmask(void) const
+Bit32u core2_penryn_t9600_t::get_cpu_extensions_bitmask(void) const
 {
   return BX_CPU_DEBUG_EXTENSIONS |
          BX_CPU_VME |
@@ -146,7 +154,7 @@ Bit32u core2_extreme_x9770_t::get_cpu_extensions_bitmask(void) const
 }
 
 // leaf 0x00000000 //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
+void core2_penryn_t9600_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   static const char* vendor_string = "GenuineIntel";
 
@@ -158,7 +166,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
   if (cpuid_limit_winnt)
     leaf->eax = 0x2;
   else
-    leaf->eax = 0xA;
+    leaf->eax = 0xD;
 
   // CPUID vendor string (e.g. GenuineIntel, AuthenticAMD, CentaurHauls, ...)
   memcpy(&(leaf->ebx), vendor_string,     4);
@@ -172,7 +180,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 }
 
 // leaf 0x00000001 //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
+void core2_penryn_t9600_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information
   //   [3:0]   Stepping ID
@@ -181,7 +189,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
   //   [19:16] Extended Model
   //   [27:20] Extended Family
-  leaf->eax = 0x00010676;
+  leaf->eax = 0x0001067a;
 
   // EBX:
   //   [7:0]   Brand ID
@@ -207,7 +215,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [3:3]   MONITOR/MWAIT support
   // * [4:4]   DS-CPL: CPL qualified debug store
   // * [5:5]   VMX: Virtual Machine Technology
-  //   [6:6]   SMX: Secure Virtual Machine Technology
+  // * [6:6]   SMX: Secure Virtual Machine Technology
   // * [7:7]   EST: Enhanced Intel SpeedStep Technology
   // * [8:8]   TM2: Thermal Monitor 2
   // * [9:9]   SSSE3: SSSE3 Instructions
@@ -227,8 +235,8 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [23:23] POPCNT instruction
   //   [24:24] TSC Deadline
   //   [25:25] AES Instructions
-  //   [26:26] XSAVE extensions support
-  //   [27:27] OSXSAVE support
+  // * [26:26] XSAVE extensions support
+  // * [27:27] OSXSAVE support
   //   [28:28] AVX extensions support
   //   [29:29] AVX F16C - Float16 conversion support
   //   [30:30] RDRAND instruction
@@ -242,14 +250,17 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 #if BX_SUPPORT_VMX
               BX_CPUID_EXT_VMX |
 #endif
-           /* BX_CPUID_EXT_SMX | */
+              BX_CPUID_EXT_SMX |
               BX_CPUID_EXT_EST |
               BX_CPUID_EXT_THERMAL_MONITOR2 |
               BX_CPUID_EXT_SSSE3 |
               BX_CPUID_EXT_CMPXCHG16B |
               BX_CPUID_EXT_xTPR |
               BX_CPUID_EXT_PDCM |
-              BX_CPUID_EXT_SSE4_1;
+              BX_CPUID_EXT_SSE4_1 |
+              BX_CPUID_EXT_XSAVE;
+  if (cpu->cr4.get_OSXSAVE())
+    leaf->ecx |= BX_CPUID_EXT_OSXSAVE;
 
   // EDX: Standard Feature Flags
   // * [0:0]   FPU on chip
@@ -320,7 +331,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 }
 
 // leaf 0x00000002 //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
+void core2_penryn_t9600_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000002 - Cache and TLB Descriptors
   leaf->eax = 0x05B0B101;
@@ -330,7 +341,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
 }
 
 // leaf 0x00000003 //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_3(cpuid_function_t *leaf) const
+void core2_penryn_t9600_t::get_std_cpuid_leaf_3(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000003 - Processor Serial Number
   leaf->eax = 0;
@@ -340,7 +351,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_3(cpuid_function_t *leaf) const
 }
 
 // leaf 0x00000004 //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const
+void core2_penryn_t9600_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000004 - Deterministic Cache Parameters
 
@@ -369,19 +380,19 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_funct
 
   switch(subfunction) {
   case 0:
-    leaf->eax = 0x0C000121;
+    leaf->eax = 0x04000121;
     leaf->ebx = 0x01C0003F;
     leaf->ecx = 0x0000003F;
     leaf->edx = 0x00000001;
     break;
   case 1:
-    leaf->eax = 0x0C000122;
+    leaf->eax = 0x04000122;
     leaf->ebx = 0x01C0003F;
     leaf->ecx = 0x0000003F;
     leaf->edx = 0x00000001;
     break;
   case 2:
-    leaf->eax = 0x0C004143;
+    leaf->eax = 0x04004143;
     leaf->ebx = 0x05C0003F;
     leaf->ecx = 0x00000FFF;
     leaf->edx = 0x00000001;
@@ -396,7 +407,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_funct
 }
 
 // leaf 0x00000005 //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
+void core2_penryn_t9600_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000005 - MONITOR/MWAIT Leaf
 
@@ -417,7 +428,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
   leaf->eax = CACHE_LINE_SIZE;
   leaf->ebx = CACHE_LINE_SIZE;
   leaf->ecx = 3;
-  leaf->edx = 0x00000020;
+  leaf->edx = 0x03122220;
 #else
   leaf->eax = 0;
   leaf->ebx = 0;
@@ -427,12 +438,12 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
 }
 
 // leaf 0x00000006 //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf) const
+void core2_penryn_t9600_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000006 - Thermal and Power Management Leaf
-  leaf->eax = 0x00000001;
+  leaf->eax = 0x00000003;
   leaf->ebx = 0x00000002;
-  leaf->ecx = 0x00000001;
+  leaf->ecx = 0x00000003;
   leaf->edx = 0x00000000;
 }
 
@@ -440,7 +451,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf) const
 // leaf 0x00000008 reserved      //
 
 // leaf 0x00000009 //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_9(cpuid_function_t *leaf) const
+void core2_penryn_t9600_t::get_std_cpuid_leaf_9(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000009 - Direct Cache Access Information
   leaf->eax = 0;
@@ -450,7 +461,7 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_9(cpuid_function_t *leaf) const
 }
 
 // leaf 0x0000000A //
-void core2_extreme_x9770_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
+void core2_penryn_t9600_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 {
   // CPUID function 0x0000000A - Architectural Performance Monitoring Leaf
   leaf->eax = 0x07280202;
@@ -461,8 +472,36 @@ void core2_extreme_x9770_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
   BX_INFO(("WARNING: Architectural Performance Monitoring is not implemented"));
 }
 
+// leaf 0x0000000B not supported //
+// leaf 0x0000000C reserved      //
+
+// leaf 0x0000000D //
+void core2_penryn_t9600_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
+{
+  switch(subfunction) {
+  case 0:
+    // EAX - valid bits of XCR0 (lower part)
+    // EBX - Maximum size (in bytes) required by enabled features
+    // ECX - Maximum size (in bytes) required by CPU supported features
+    // EDX - valid bits of XCR0 (upper part)
+    leaf->eax = 3;
+    leaf->ebx = 512+64;
+    leaf->ecx = 512+64;
+    leaf->edx = 0;
+    return;
+
+  default:
+    break;
+  }
+
+  leaf->eax = 0; // reserved
+  leaf->ebx = 0; // reserved
+  leaf->ecx = 0; // reserved
+  leaf->edx = 0; // reserved
+}
+
 // leaf 0x80000000 //
-void core2_extreme_x9770_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
+void core2_penryn_t9600_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   // EAX: highest extended function understood by CPUID
   // EBX: reserved
@@ -475,7 +514,7 @@ void core2_extreme_x9770_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
 }
 
 // leaf 0x80000001 //
-void core2_extreme_x9770_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
+void core2_penryn_t9600_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information (reserved for Intel)
   leaf->eax = 0;
@@ -504,7 +543,7 @@ void core2_extreme_x9770_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   // EDX:
   // Many of the bits in EDX are the same as FN 0x00000001 [*] for AMD
   //    [10:0] Reserved for Intel
-  // ? [11:11] SYSCALL/SYSRET support
+  // * [11:11] SYSCALL/SYSRET support
   //   [19:12] Reserved for Intel
   // * [20:20] No-Execute page protection
   //   [25:21] Reserved
@@ -523,10 +562,10 @@ void core2_extreme_x9770_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000002 //
 // leaf 0x80000003 //
 // leaf 0x80000004 //
-void core2_extreme_x9770_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const
+void core2_penryn_t9600_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const
 {
   // CPUID function 0x80000002-0x80000004 - Processor Name String Identifier
-  static const char* brand_string = "Intel(R) Core(TM)2 Extreme CPU X9770  @ 3.20GHz";
+  static const char* brand_string = "Intel(R) Core(TM)2 Duo CPU     T9600  @ 2.80GHz";
 
   switch(function) {
   case 0x80000002:
@@ -560,7 +599,7 @@ void core2_extreme_x9770_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpu
 }
 
 // leaf 0x80000005 //
-void core2_extreme_x9770_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
+void core2_penryn_t9600_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000005 - L1 Cache and TLB Identifiers
   leaf->eax = 0;
@@ -570,7 +609,7 @@ void core2_extreme_x9770_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 }
 
 // leaf 0x80000006 //
-void core2_extreme_x9770_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
+void core2_penryn_t9600_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
   leaf->eax = 0x00000000;
@@ -580,7 +619,7 @@ void core2_extreme_x9770_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 }
 
 // leaf 0x80000007 //
-void core2_extreme_x9770_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
+void core2_penryn_t9600_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000007 - Advanced Power Management
   leaf->eax = 0;
@@ -590,7 +629,7 @@ void core2_extreme_x9770_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 }
 
 // leaf 0x80000008 //
-void core2_extreme_x9770_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
+void core2_penryn_t9600_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
 {
   // virtual & phys address size in low 2 bytes.
   leaf->eax = BX_PHY_ADDRESS_WIDTH | (BX_LIN_ADDRESS_WIDTH << 8);
@@ -599,12 +638,12 @@ void core2_extreme_x9770_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
   leaf->edx = 0;
 }
 
-void core2_extreme_x9770_t::dump_cpuid(void) const
+void core2_penryn_t9600_t::dump_cpuid(void) const
 {
   struct cpuid_function_t leaf;
   unsigned n;
 
-  for (n=0; n<=0xa; n++) {
+  for (n=0; n<=0xd; n++) {
     get_cpuid_leaf(n, 0x00000000, &leaf);
     BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
   }
@@ -615,6 +654,6 @@ void core2_extreme_x9770_t::dump_cpuid(void) const
   }
 }
 
-bx_cpuid_t *create_core2_extreme_x9770_cpuid(BX_CPU_C *cpu) { return new core2_extreme_x9770_t(cpu); }
+bx_cpuid_t *create_core2_penryn_t9600_cpuid(BX_CPU_C *cpu) { return new core2_penryn_t9600_t(cpu); }
 
 #endif

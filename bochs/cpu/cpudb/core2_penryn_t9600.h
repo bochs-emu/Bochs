@@ -21,20 +21,20 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_COREI7_SANDY_BRIDGE_2600K_CPUID_DEFINITIONS_H
-#define BX_COREI7_SANDY_BRIDGE_2600K_CPUID_DEFINITIONS_H
+#ifndef BX_CORE2_PNR_T9600_CPUID_DEFINITIONS_H
+#define BX_CORE2_PNR_T9600_CPUID_DEFINITIONS_H
 
-#if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
+#if BX_SUPPORT_X86_64
 
 #include "cpu/cpuid.h"
 
-class corei7_sandy_bridge_2600k_t : public bx_cpuid_t {
+class core2_penryn_t9600_t : public bx_cpuid_t {
 public:
-  corei7_sandy_bridge_2600k_t(BX_CPU_C *cpu);
-  virtual ~corei7_sandy_bridge_2600k_t() {}
+  core2_penryn_t9600_t(BX_CPU_C *cpu);
+  virtual ~core2_penryn_t9600_t() {}
 
   // return CPU name
-  virtual const char *get_name(void) const { return "corei7_sandy_bridge_2600k"; }
+  virtual const char *get_name(void) const { return "core2_penryn_t9600"; }
 
   virtual Bit32u get_isa_extensions_bitmask(void) const;
   virtual Bit32u get_cpu_extensions_bitmask(void) const;
@@ -59,7 +59,6 @@ private:
   void get_std_cpuid_leaf_6(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_9(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_A(cpuid_function_t *leaf) const;
-  void get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
   void get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 
   void get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const;
@@ -71,8 +70,8 @@ private:
   void get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const;
 };
 
-extern bx_cpuid_t *create_corei7_sandy_bridge_2600k_cpuid(BX_CPU_C *cpu);
+extern bx_cpuid_t *create_core2_penryn_t9600_cpuid(BX_CPU_C *cpu);
 
-#endif // BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
+#endif // BX_SUPPORT_X86_64
 
 #endif

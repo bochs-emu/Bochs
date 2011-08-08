@@ -114,7 +114,7 @@ void bx_generic_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
     get_std_cpuid_extended_topology_leaf(subfunction, leaf);
     return;
   case 0x0000000C:
-    get_std_cpuid_leaf_C(leaf);
+    get_reserved_leaf(leaf);
     return;
   case 0x0000000D:
   default:
@@ -139,7 +139,7 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
   leaf->eax = 1;
 #else
   // for Pentium Pro, Pentium II, Pentium 4 processors
-  leaf->eax = 3;
+  leaf->eax = 2;
 
   // do not report CPUID functions above 0x3 if cpuid_limit_winnt is set
   // to workaround WinNT issue.
@@ -395,15 +395,7 @@ void bx_generic_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction
 #endif
 }
 
-// leaf 0x0000000C //
-void bx_generic_cpuid_t::get_std_cpuid_leaf_C(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x0000000C - reserved
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
+// leaf 0x0000000C - reserved //
 
 // leaf 0x0000000D //
 void bx_generic_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
@@ -416,7 +408,7 @@ void bx_generic_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_func
       // EBX - Maximum size (in bytes) required by enabled features
       // ECX - Maximum size (in bytes) required by CPU supported features
       // EDX - valid bits of XCR0 (upper part)
-      leaf->eax = cpu->xcr0.get32();
+      leaf->eax = cpu->xcr0_suppmask;
       leaf->ebx = 512+64;
 #if BX_SUPPORT_AVX
       if (cpu->xcr0.get_AVX())
