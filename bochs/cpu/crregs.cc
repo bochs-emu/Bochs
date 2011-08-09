@@ -29,7 +29,8 @@
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
-  VMexit_DR_Access(i, 0 /* write */);
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_DR_Access(i, 0 /* write */);
 #endif
 
 #if BX_CPU_LEVEL >= 4
@@ -132,7 +133,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
   Bit32u val_32;
 
 #if BX_SUPPORT_VMX
-  VMexit_DR_Access(i, 1 /* read */);
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_DR_Access(i, 1 /* read */);
 #endif
 
 #if BX_CPU_LEVEL >= 4
@@ -199,7 +201,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
-  VMexit_DR_Access(i, 0 /* write */);
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_DR_Access(i, 0 /* write */);
 #endif
 
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
@@ -304,7 +307,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
   Bit64u val_64;
 
 #if BX_SUPPORT_VMX
-  VMexit_DR_Access(i, 1 /* read */);
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_DR_Access(i, 1 /* read */);
 #endif
 
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
@@ -382,9 +386,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rd(bxInstruction_c *i)
   invalidate_prefetch_q();
 
   Bit32u val_32 = BX_READ_32BIT_REG(i->rm());
-
 #if BX_SUPPORT_VMX
-  val_32 = VMexit_CR0_Write(i, val_32);
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    val_32 = (Bit32u) VMexit_CR0_Write(i, val_32);
 #endif
   if (! SetCR0(val_32))
     exception(BX_GP_EXCEPTION, 0);
@@ -418,7 +422,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rd(bxInstruction_c *i)
   Bit32u val_32 = BX_READ_32BIT_REG(i->rm());
 
 #if BX_SUPPORT_VMX
-  VMexit_CR3_Write(i, val_32);
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_CR3_Write(i, val_32);
 #endif
 
 #if BX_CPU_LEVEL >= 6
@@ -449,9 +454,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rd(bxInstruction_c *i)
   invalidate_prefetch_q();
 
   Bit32u val_32 = BX_READ_32BIT_REG(i->rm());
-
 #if BX_SUPPORT_VMX
-  val_32 = VMexit_CR4_Write(i, val_32);
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    val_32 = (Bit32u) VMexit_CR4_Write(i, val_32);
 #endif
   if (! SetCR4(val_32))
     exception(BX_GP_EXCEPTION, 0);
@@ -496,7 +501,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR3(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_VMX
-  VMexit_CR3_Read(i);
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_CR3_Read(i);
 #endif
 
   Bit32u val_32 = (Bit32u) BX_CPU_THIS_PTR cr3;
@@ -537,7 +543,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rq(bxInstruction_c *i)
   if (i->nnn() == 0) {
     // CR0
 #if BX_SUPPORT_VMX
-    val_64 = VMexit_CR0_Write(i, val_64);
+    if (BX_CPU_THIS_PTR in_vmx_guest)
+      val_64 = VMexit_CR0_Write(i, val_64);
 #endif
     if (! SetCR0(val_64))
       exception(BX_GP_EXCEPTION, 0);
@@ -547,7 +554,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rq(bxInstruction_c *i)
   else {
     // CR8
 #if BX_SUPPORT_VMX
-    VMexit_CR8_Write(i);
+    if (BX_CPU_THIS_PTR in_vmx_guest)
+      VMexit_CR8_Write(i);
 #endif
 
     // CR8 is aliased to APIC->TASK PRIORITY register
@@ -565,8 +573,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rq(bxInstruction_c *i)
     if (BX_CPU_THIS_PTR in_vmx_guest && VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW)) {
       VMX_Write_VTPR((val_64 & 0xF) << 4);
     }
-#endif
     else
+#endif
     {
       BX_CPU_THIS_PTR lapic.set_tpr((val_64 & 0xF) << 4);
     }
@@ -610,7 +618,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rq(bxInstruction_c *i)
   Bit64u val_64 = BX_READ_64BIT_REG(i->rm());
 
 #if BX_SUPPORT_VMX
-  VMexit_CR3_Write(i, val_64);
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_CR3_Write(i, val_64);
 #endif
 
   // no PDPTR checks in long mode
@@ -637,9 +646,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rq(bxInstruction_c *i)
   invalidate_prefetch_q();
 
   Bit64u val_64 = BX_READ_64BIT_REG(i->rm());
-
 #if BX_SUPPORT_VMX
-  val_64 = VMexit_CR4_Write(i, val_64);
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    val_64 = VMexit_CR4_Write(i, val_64);
 #endif
   BX_DEBUG(("MOV_CqRq: write to CR4 of %08x:%08x", GET32H(val_64), GET32L(val_64)));
   if (! SetCR4(val_64))
@@ -668,7 +677,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR0(bxInstruction_c *i)
     // CR8
 
 #if BX_SUPPORT_VMX
-    VMexit_CR8_Read(i);
+    if (BX_CPU_THIS_PTR in_vmx_guest)
+      VMexit_CR8_Read(i);
+
     if (BX_CPU_THIS_PTR in_vmx_guest && VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW)) {
        val_64 = (VMX_Read_VTPR() >> 4) & 0xf;
     }
@@ -721,7 +732,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR3(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_VMX
-  VMexit_CR3_Read(i);
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_CR3_Read(i);
 #endif
 
   BX_WRITE_64BIT_REG(i->rm(), BX_CPU_THIS_PTR cr3);
@@ -771,7 +783,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
   // LMSW does not affect PG,CD,NW,AM,WP,NE,ET bits, and cannot clear PE
 
 #if BX_SUPPORT_VMX
-  msw = VMexit_LMSW(i, msw);
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    msw = VMexit_LMSW(i, msw);
 #endif
 
   // LMSW cannot clear PE
@@ -1217,8 +1230,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_VMX
-  if(VMexit_CLTS(i)) {
-    BX_NEXT_TRACE(i);
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if(VMexit_CLTS(i)) {
+      BX_NEXT_TRACE(i);
+    }
   }
 #endif
 

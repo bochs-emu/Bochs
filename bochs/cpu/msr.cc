@@ -277,7 +277,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
   Bit64u val64 = 0;
 
 #if BX_SUPPORT_VMX
-  VMexit_MSR(i, VMX_VMEXIT_RDMSR, index);
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_MSR(i, VMX_VMEXIT_RDMSR, index);
 #endif
 
 #if BX_SUPPORT_VMX >= 2
@@ -710,7 +711,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
   Bit32u index = ECX;
 
 #if BX_SUPPORT_VMX
-  VMexit_MSR(i, VMX_VMEXIT_WRMSR, index);
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_MSR(i, VMX_VMEXIT_WRMSR, index);
 #endif
 
 #if BX_SUPPORT_VMX >= 2

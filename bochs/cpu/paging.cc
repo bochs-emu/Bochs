@@ -473,7 +473,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
   bx_address laddr = get_laddr(i->seg(), eaddr);
 
 #if BX_SUPPORT_VMX
-  VMexit_INVLPG(i, laddr);
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_INVLPG(i, laddr);
 #endif
 
 #if BX_SUPPORT_X86_64

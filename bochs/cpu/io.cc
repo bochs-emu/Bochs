@@ -853,7 +853,7 @@ bx_bool BX_CPP_AttrRegparmN(3) BX_CPU_C::allow_io(bxInstruction_c *i, Bit16u por
    * Otherwise, must check the IO permission map on >286.
    * On the 286, there is no IO permissions map */
 
-  if (BX_CPU_THIS_PTR cr0.get_PE() && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL())))
+  if (BX_CPU_THIS_PTR cr0.get_PE() && (BX_CPU_THIS_PTR get_VM() || (CPL > BX_CPU_THIS_PTR get_IOPL())))
   {
     if (BX_CPU_THIS_PTR tr.cache.valid==0 ||
        (BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_AVAIL_386_TSS &&
@@ -885,7 +885,8 @@ bx_bool BX_CPP_AttrRegparmN(3) BX_CPU_C::allow_io(bxInstruction_c *i, Bit16u por
   }
 
 #if BX_SUPPORT_VMX
-  VMexit_IO(i, port, len);
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_IO(i, port, len);
 #endif
 
 #if BX_X86_DEBUGGER

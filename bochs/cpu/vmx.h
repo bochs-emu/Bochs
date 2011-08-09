@@ -793,7 +793,9 @@ enum VMX_Activity_State {
 //       instruction-information field on VM exits due to
 //       execution of INS/OUTS
 // 55:55 set if any VMX controls that default to `1 may be
-//       cleared to `0
+//       cleared to `0, also indicates that IA32_VMX_TRUE_PINBASED_CTLS,
+//       IA32_VMX_TRUE_PROCBASED_CTLS, IA32_VMX_TRUE_EXIT_CTLS and
+//       IA32_VMX_TRUE_ENTRY_CTLS MSRs are supported.
 // 56:63 reserved, must be zero
 //
 

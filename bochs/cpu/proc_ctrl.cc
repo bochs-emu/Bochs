@@ -44,7 +44,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::NOP(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PAUSE(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
-  VMexit_PAUSE(i);
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_PAUSE(i);
 #endif
 
   BX_NEXT_INSTR(i);
@@ -129,7 +130,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_VMX
-  VMexit_HLT(i);
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_HLT(i);
 #endif
 
   // stops instruction execution and places the processor in a
@@ -192,7 +194,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_VMX >= 2
-  VMexit_WBINVD(i);
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_WBINVD(i);
 #endif
 
   invalidate_prefetch_q();
@@ -397,7 +400,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR cr4.get_PCE() || CPL==0 || real_mode()) {
 
 #if BX_SUPPORT_VMX
-    VMexit_RDPMC(i);
+    if (BX_CPU_THIS_PTR in_vmx_guest)
+      VMexit_RDPMC(i);
 #endif
 
     /* According to manual, Pentium 4 has 18 counters,
@@ -440,7 +444,8 @@ Bit64u BX_CPU_C::get_TSC(void)
 {
   Bit64u tsc = bx_pc_system.time_ticks() - BX_CPU_THIS_PTR msr.tsc_last_reset;
 #if BX_SUPPORT_VMX
-  tsc += VMX_TSC_Offset();
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    tsc += VMX_TSC_Offset();
 #endif
   return tsc;
 }
@@ -462,7 +467,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
   if (! BX_CPU_THIS_PTR cr4.get_TSD() || CPL==0) {
 
 #if BX_SUPPORT_VMX
-    VMexit_RDTSC(i);
+    if (BX_CPU_THIS_PTR in_vmx_guest)
+      VMexit_RDTSC(i);
 #endif
 
     // return ticks
@@ -497,7 +503,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
   if (! BX_CPU_THIS_PTR cr4.get_TSD() || CPL==0) {
 
 #if BX_SUPPORT_VMX
-    VMexit_RDTSC(i);
+    if (BX_CPU_THIS_PTR in_vmx_guest)
+      VMexit_RDTSC(i);
 #endif
 
     // return ticks
@@ -554,7 +561,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
   BX_DEBUG(("MONITOR instruction executed EAX = 0x%08x", EAX));
 
 #if BX_SUPPORT_VMX
-  VMexit_MONITOR(i);
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_MONITOR(i);
 #endif
 
   if (RCX != 0) {
@@ -618,7 +626,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   BX_DEBUG(("MWAIT instruction executed ECX = 0x%08x", ECX));
 
 #if BX_SUPPORT_VMX
-  VMexit_MWAIT(i);
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_MWAIT(i);
 #endif
 
   // only one extension is supported
