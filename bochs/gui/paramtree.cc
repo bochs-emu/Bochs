@@ -697,7 +697,12 @@ bx_param_filename_c::bx_param_filename_c(bx_param_c *parent,
   : bx_param_string_c(parent, name, label, description, initial_val, maxsize)
 {
   set_options(IS_FILENAME);
-  ext = NULL;
+  int len = strlen(initial_val);
+  if ((len > 4) && (initial_val[len - 4] == '.')) {
+    ext = &initial_val[len - 3];
+  } else {
+    ext = NULL;
+  }
 }
 
 bx_param_string_c::~bx_param_string_c()

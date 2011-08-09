@@ -573,9 +573,8 @@ int bx_real_sim_c::ask_param(const char *pname)
 int bx_real_sim_c::ask_filename(const char *filename, int maxlen, const char *prompt, const char *the_default, int flags)
 {
   BxEvent event;
-  bx_param_string_c param(NULL, "filename", prompt, "", the_default, maxlen);
-  flags |= param.IS_FILENAME;
-  param.set_options(flags);
+  bx_param_filename_c param(NULL, "filename", prompt, "", the_default, maxlen);
+  param.set_options(param.get_options() | flags);
   event.type = BX_SYNC_EVT_ASK_PARAM;
   event.u.param.param = &param;
   sim_to_ci_event(&event);

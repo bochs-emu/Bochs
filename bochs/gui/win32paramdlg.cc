@@ -184,6 +184,8 @@ int AskFilename(HWND hwnd, bx_param_filename_c *param, char *buffer)
     ofn.lpstrFilter = "Keymap files (*.map)\0*.map\0All files (*.*)\0*.*\0";
   } else if (!lstrcmp(ext, "txt")) {
     ofn.lpstrFilter = "Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0";
+  } else if (!lstrcmp(ext, "bmp")) {
+    ofn.lpstrFilter = "Windows bitmap files (*.bmp)\0*.bmp\0All files (*.*)\0*.*\0";
   } else {
     ofn.lpstrFilter = "All files (*.*)\0*.*\0";
   }
