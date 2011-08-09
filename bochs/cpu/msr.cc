@@ -244,18 +244,27 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 #endif  // #if BX_SUPPORT_X86_64
 
-    default:
-#if BX_CONFIGURE_MSRS
-      if (index < BX_MSR_MAX_INDEX && BX_CPU_THIS_PTR msrs[index]) {
-        val64 = BX_CPU_THIS_PTR msrs[index]->get64();
-        break;
-      }
-#endif
-      // failed to find the MSR, could #GP or ignore it silently
-      BX_ERROR(("RDMSR: Unknown register %#x", index));
+    default: {
+      // Try to check cpuid_t first (can implement some MSRs)
+      int result = BX_CPU_THIS_PTR cpuid->rdmsr(index, &val64);
+      if (result == 0)
+        return 0; // #GP fault due to not supported MSR
 
-      if (! BX_CPU_THIS_PTR ignore_bad_msrs)
-        return 0; // will result in #GP fault due to unknown MSR
+      if (result < 0) {
+        // cpuid_t have no idea about this MSR
+#if BX_CONFIGURE_MSRS
+        if (index < BX_MSR_MAX_INDEX && BX_CPU_THIS_PTR msrs[index]) {
+          val64 = BX_CPU_THIS_PTR msrs[index]->get64();
+          break;
+        }
+#endif
+        // failed to find the MSR, could #GP or ignore it silently
+        BX_ERROR(("RDMSR: Unknown register %#x", index));
+
+        if (! BX_CPU_THIS_PTR ignore_bad_msrs)
+          return 0; // will result in #GP fault due to unknown MSR
+      }
+    }
   }
 
   BX_DEBUG(("RDMSR: read %08x:%08x from MSR %x", GET32H(val64), GET32L(val64), index));
@@ -622,20 +631,29 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 #endif  // #if BX_SUPPORT_X86_64
 
-    default:
+    default: {
+      // Try to check cpuid_t first (can implement some MSRs)
+      int result = BX_CPU_THIS_PTR cpuid->wrmsr(index, val_64);
+      if (result == 0)
+        return 0; // #GP fault due to not supported MSR
+
+      if (result < 0) {
+        // cpuid_t have no idea about this MSR
 #if BX_CONFIGURE_MSRS
-      if (index < BX_MSR_MAX_INDEX && BX_CPU_THIS_PTR msrs[index]) {
-        if (! BX_CPU_THIS_PTR msrs[index]->set64(val_64)) {
-          BX_ERROR(("WRMSR: Write failed to MSR %#x - #GP fault", index));
-          return 0;
+        if (index < BX_MSR_MAX_INDEX && BX_CPU_THIS_PTR msrs[index]) {
+          if (! BX_CPU_THIS_PTR msrs[index]->set64(val_64)) {
+            BX_ERROR(("WRMSR: Write failed to MSR %#x - #GP fault", index));
+            return 0;
+          }
+          break;
         }
-        break;
-      }
 #endif
-      // failed to find the MSR, could #GP or ignore it silently
-      BX_ERROR(("WRMSR: Unknown register %#x", index));
-      if (! BX_CPU_THIS_PTR ignore_bad_msrs)
-        return 0; // will result in #GP fault due to unknown MSR
+        // failed to find the MSR, could #GP or ignore it silently
+        BX_ERROR(("WRMSR: Unknown register %#x", index));
+        if (! BX_CPU_THIS_PTR ignore_bad_msrs)
+          return 0; // will result in #GP fault due to unknown MSR
+      }
+    }
   }
 
   return 1;

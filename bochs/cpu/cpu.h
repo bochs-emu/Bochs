@@ -173,7 +173,7 @@
 #define MSR_KERNELGSBASE   (BX_CPU_THIS_PTR msr.kernelgsbase)
 #define MSR_TSC_AUX (BX_CPU_THIS_PTR msr.tsc_aux)
 
-#else // simplity merge between 32-bit and 64-bit mode
+#else // simplify merge between 32-bit and 64-bit mode
 
 #define RAX EAX
 #define RCX ECX
@@ -3479,6 +3479,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_smep(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_x2apic(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_smx(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_vmx(void);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
   BX_SMF BX_CPP_INLINE const bx_gen_reg_t *get_gen_regfile() { return BX_CPU_THIS_PTR gen_reg; }
@@ -3908,6 +3909,11 @@ BX_CPP_INLINE bx_bool BX_CPU_C::alignment_check(void)
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_smx(void)
 {
   return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_SMX);
+}
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_vmx(void)
+{
+  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_VMX);
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_xsave(void)
