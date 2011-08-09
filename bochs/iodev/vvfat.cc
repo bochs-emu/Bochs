@@ -680,7 +680,8 @@ int vvfat_image_t::read_directory(int mapping_index)
   while ((entry=readdir(dir))) {
     if ((first_cluster == 0) && (directory.next >= (Bit16u)(root_entries - 1))) {
       BX_ERROR(("Too many entries in root directory, using only %d", count));
-      break;
+      closedir(dir);
+      return -2;
     }
     unsigned int length = strlen(dirname) + 2 + strlen(entry->d_name);
     char* buffer;
@@ -731,10 +732,10 @@ int vvfat_image_t::read_directory(int mapping_index)
     else
       direntry->begin = 0; // do that later
     if (st.st_size > 0x7fffffff) {
-      BX_ERROR(("File %s is larger than 2GB", buffer));
+      BX_ERROR(("File '%s' is larger than 2GB", buffer));
       free(buffer);
       closedir(dir);
-      return -2;
+      return -3;
     }
     direntry->size = htod32(S_ISDIR(st.st_mode) ? 0:st.st_size);
 
@@ -790,7 +791,8 @@ int vvfat_image_t::read_directory(int mapping_index)
   do {
     if ((first_cluster == 0) && (directory.next >= (Bit16u)(root_entries - 1))) {
       BX_ERROR(("Too many entries in root directory, using only %d", count));
-      break;
+      FindClose(hFind);
+      return -2;
     }
     unsigned int length = lstrlen(dirname) + 2 + lstrlen(finddata.cFileName);
     char* buffer;
@@ -832,10 +834,10 @@ int vvfat_image_t::read_directory(int mapping_index)
     else
       direntry->begin = 0; // do that later
     if (finddata.nFileSizeLow > 0x7fffffff) {
-      BX_ERROR(("File %s is larger than 2GB", buffer));
+      BX_ERROR(("File '%s' is larger than 2GB", buffer));
       free(buffer);
       FindClose(hFind);
-      return -2;
+      return -3;
     }
     direntry->size = htod32((finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? 0:finddata.nFileSizeLow);
 
@@ -980,7 +982,7 @@ int vvfat_image_t::init_directories(const char* dirname)
     if (mapping->mode & MODE_DIRECTORY) {
       mapping->begin = cluster;
       if (read_directory(i)) {
-        BX_ERROR(("Could not read directory %s", mapping->path));
+        BX_PANIC(("Could not read directory '%s'", mapping->path));
         return -1;
       }
       mapping = (mapping_t*)array_get(&this->mapping, i);
@@ -1005,10 +1007,10 @@ int vvfat_image_t::init_directories(const char* dirname)
     cluster = mapping->end;
 
     if (cluster >= (cluster_count + 2)) {
-      sprintf(size_txt, "%dMB", (sector_count >> 11));
-      BX_ERROR(("Directory does not fit in FAT%d (capacity %s)",
+      sprintf(size_txt, "%d", (sector_count >> 11));
+      BX_PANIC(("Directory does not fit in FAT%d (capacity %s MB)",
                 fat_type,
-                (fat_type == 12) ? (sector_count == 2880) ? "1.44 MB":"2.88 MB"
+                (fat_type == 12) ? (sector_count == 2880) ? "1.44":"2.88"
                 : size_txt));
       return -EINVAL;
     }
