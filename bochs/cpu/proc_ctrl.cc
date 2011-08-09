@@ -551,7 +551,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  BX_DEBUG(("MONITOR instruction executed EAX = 0x08x", (unsigned) EAX));
+  BX_DEBUG(("MONITOR instruction executed EAX = 0x%08x", EAX));
 
 #if BX_SUPPORT_VMX
   VMexit_MONITOR(i);

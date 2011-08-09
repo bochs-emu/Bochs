@@ -1286,7 +1286,8 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
 
     extern bx_bool isMemTypeValidMTRR(unsigned memtype);
     if (! isMemTypeValidMTRR((curr_entry >> 3) & 7)) {
-      BX_DEBUG(("EPT %s: EPT misconfiguration memtype=%d", bx_paging_level[leaf], (curr_entry >> 3) & 7));
+      BX_DEBUG(("EPT %s: EPT misconfiguration memtype=%d",
+        bx_paging_level[leaf], (unsigned)((curr_entry >> 3) & 7)));
       vmexit_reason = VMX_VMEXIT_EPT_MISCONFIGURATION;
       break;
     }
