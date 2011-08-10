@@ -444,7 +444,12 @@ void bx_gui_c::snapshot_handler(void)
     free(snapshot_ptr);
   } else if (mode == BX_GUI_SNAPSHOT_GFX) {
     ilen = DEV_vga_get_gfx_snapshot(&snapshot_ptr, &palette_ptr, &iHeight, &iWidth, &iDepth);
-    BX_INFO(("GFX snapshot: %u x %u x %u bpp (%u bytes)", iWidth, iHeight, iDepth, ilen));
+    if (ilen > 0) {
+      BX_INFO(("GFX snapshot: %u x %u x %u bpp (%u bytes)", iWidth, iHeight, iDepth, ilen));
+    } else {
+      BX_ERROR(("snapshot button failed: cannot allocate memory"));
+      return;
+    }
     if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_SNAPSHOT) {
       int ret = SIM->ask_filename (filename, sizeof(filename),
                                    "Save snapshot as...", "snapshot.bmp",

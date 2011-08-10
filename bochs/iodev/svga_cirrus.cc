@@ -843,6 +843,8 @@ Bit32u bx_svga_cirrus_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_
     len1 = BX_CIRRUS_THIS svga_xres * (BX_CIRRUS_THIS svga_bpp >> 3);
     len = len1 * BX_CIRRUS_THIS svga_yres;
     *snapshot_ptr = (Bit8u*)malloc(len);
+    if (snapshot_ptr == NULL)
+      return 0;
     src_ptr = BX_CIRRUS_THIS disp_ptr;
     dst_ptr = *snapshot_ptr;
     for (i = 0; i < BX_CIRRUS_THIS svga_yres; i++) {

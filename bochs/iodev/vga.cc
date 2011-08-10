@@ -2768,6 +2768,8 @@ Bit32u bx_vga_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
     len1 = BX_VGA_THIS vbe.xres * BX_VGA_THIS vbe.bpp_multiplier;
     len = len1 * BX_VGA_THIS vbe.yres;
     *snapshot_ptr = (Bit8u*)malloc(len);
+    if (snapshot_ptr == NULL)
+      return 0;
     src_ptr = BX_VGA_THIS s.memory + BX_VGA_THIS vbe.virtual_start;
     dst_ptr = *snapshot_ptr;
     for (i = 0; i < BX_VGA_THIS vbe.yres; i++) {
@@ -2798,6 +2800,8 @@ Bit32u bx_vga_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
     *iDepth = 8;
     len = (BX_VGA_THIS s.last_xres * BX_VGA_THIS s.last_yres);
     *snapshot_ptr = (Bit8u*)malloc(len);
+    if (snapshot_ptr == NULL)
+      return 0;
     dst_ptr = *snapshot_ptr;
     if (BX_VGA_THIS vbe.enabled) {
       plane[0] = &BX_VGA_THIS s.memory[0<<VBE_DISPI_4BPP_PLANE_SHIFT];
