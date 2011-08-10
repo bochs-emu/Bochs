@@ -896,6 +896,7 @@ public: // for now...
   bx_address cr3;
 #if BX_CPU_LEVEL >= 4
   bx_cr4_t   cr4;
+  Bit32u cr4_suppmask;
 #endif
 
 #if BX_SUPPORT_X86_64

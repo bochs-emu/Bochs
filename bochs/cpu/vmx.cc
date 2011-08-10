@@ -2673,12 +2673,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
       field_64 = VMread64(encoding);
   }
   else {
-#if BX_SUPPORT_X86_64
-    if (IS_VMCS_FIELD_HI(encoding))
-      field_64 = VMread32(encoding);
-    else
-#endif
-      field_64 = VMread_natural(encoding);
+    field_64 = VMread_natural(encoding);
   }
 
 #if BX_SUPPORT_X86_64
@@ -2802,12 +2797,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
       VMwrite64(encoding, val_64);
   }
   else {
-#if BX_SUPPORT_X86_64
-    if (IS_VMCS_FIELD_HI(encoding))
-      VMwrite32(encoding, val_32);
-    else
-#endif
-      VMwrite_natural(encoding, (bx_address) val_64);
+    VMwrite_natural(encoding, (bx_address) val_64);
   }
 
   VMsucceed();

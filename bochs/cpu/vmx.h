@@ -984,8 +984,8 @@ enum VMX_Activity_State {
    ((((Bit64u) VMX_MSR_CR4_FIXED0_HI) << 32) | VMX_MSR_CR4_FIXED0_LO)
 
 // allowed 1-setting in CR0 in VMX mode
-#define VMX_MSR_CR4_FIXED1_LO GET32L(get_cr4_allow_mask())
-#define VMX_MSR_CR4_FIXED1_HI GET32H(get_cr4_allow_mask())
+#define VMX_MSR_CR4_FIXED1_LO (BX_CPU_THIS_PTR cr4_suppmask)
+#define VMX_MSR_CR4_FIXED1_HI (0)
 
 #define VMX_MSR_CR4_FIXED1 \
    ((((Bit64u) VMX_MSR_CR4_FIXED1_HI) << 32) | VMX_MSR_CR4_FIXED1_LO)

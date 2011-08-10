@@ -928,6 +928,7 @@ void BX_CPU_C::reset(unsigned source)
 
 #if BX_CPU_LEVEL >= 4
   BX_CPU_THIS_PTR cr4.set32(0);
+  BX_CPU_THIS_PTR cr4_suppmask = get_cr4_allow_mask();
 #endif
 
 #if BX_CPU_LEVEL >= 6

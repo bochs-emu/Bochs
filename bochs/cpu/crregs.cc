@@ -1087,9 +1087,14 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
 
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR4(bx_address cr4_val)
 {
+  // check if trying to set undefined bits
+  if (cr4_val & ~((bx_address) BX_CPU_THIS_PTR cr4_suppmask)) {
+    BX_ERROR(("check_CR4(): write of 0x%08x not supported (allowMask=0x%x)", (Bit32u) cr4_val, BX_CPU_THIS_PTR cr4_suppmask));
+    return 0;
+  }
+
   bx_cr4_t temp_cr4;
-  bx_address cr4_allow_mask = get_cr4_allow_mask();
-  temp_cr4.val32 = (Bit32u) cr4_val;
+  temp_cr4.set32((Bit32u) cr4_val);
 
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
@@ -1121,12 +1126,6 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR4(bx_address cr4_val)
     }
   }
 #endif
-
-  // check if trying to set undefined bits
-  if (cr4_val & ~cr4_allow_mask) {
-    BX_ERROR(("check_CR4(): write of 0x%08x not supported (allowMask=0x%x)", (Bit32u) cr4_val, (Bit32u) cr4_allow_mask));
-    return 0;
-  }
 
   return 1;
 }

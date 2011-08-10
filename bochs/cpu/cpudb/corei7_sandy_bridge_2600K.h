@@ -43,11 +43,6 @@ public:
 
   virtual void dump_cpuid(void) const;
 
-#if BX_CPU_LEVEL >= 5
-  virtual int rdmsr(Bit32u index, Bit64u *msr) { return -1; }
-  virtual int wrmsr(Bit32u index, Bit64u  msr) { return -1; }
-#endif
-
 private:
 #if BX_SUPPORT_SMP
   unsigned nprocessors;
