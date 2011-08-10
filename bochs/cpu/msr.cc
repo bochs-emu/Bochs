@@ -206,11 +206,13 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 #endif
 
-#if BX_SUPPORT_X86_64
+#if BX_CPU_LEVEL >= 6
     case BX_MSR_EFER:
       val64 = BX_CPU_THIS_PTR efer.get32();
       break;
+#endif
 
+#if BX_SUPPORT_X86_64
     case BX_MSR_STAR:
       val64 = MSR_STAR;
       break;
@@ -242,7 +244,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_TSC_AUX:
       val64 = MSR_TSC_AUX;   // 32 bit MSR
       break;
-#endif  // #if BX_SUPPORT_X86_64
+#endif
 
     default: {
       // Try to check cpuid_t first (can implement some MSRs)
@@ -573,11 +575,13 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       return 0;
 #endif
 
-#if BX_SUPPORT_X86_64
+#if BX_CPU_LEVEL >= 6
     case BX_MSR_EFER:
       if (! SetEFER(val_64)) return 0;
       break;
+#endif
 
+#if BX_SUPPORT_X86_64
     case BX_MSR_STAR:
       MSR_STAR = val_64;
       break;

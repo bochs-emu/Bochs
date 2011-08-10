@@ -1482,9 +1482,9 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   {
     // set EFER.LMA and EFER.LME before write to CR4
     if (x86_64_guest)
-       BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() |  ((1 << 8) | (1 << 10)));
+       BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() |  (BX_EFER_LME_MASK | BX_EFER_LMA_MASK));
     else
-       BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() & ~((1 << 8) | (1 << 10)));
+       BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() & ~(BX_EFER_LME_MASK | BX_EFER_LMA_MASK));
   }
 #endif
 
@@ -1919,9 +1919,9 @@ void BX_CPU_C::VMexitLoadHostState(void)
   {
     // set EFER.LMA and EFER.LME before write to CR4
     if (x86_64_host)
-       BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() |  ((1 << 8) | (1 << 10)));
+       BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() |  (BX_EFER_LME_MASK | BX_EFER_LMA_MASK));
     else
-       BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() & ~((1 << 8) | (1 << 10)));
+       BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() & ~(BX_EFER_LME_MASK | BX_EFER_LMA_MASK));
   }
 #endif
 

@@ -832,7 +832,7 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
     features_bitmask |= BX_CPU_SMEP;
 
 #if BX_SUPPORT_X86_64
-  features_bitmask |= BX_CPU_FFXSR;
+  features_bitmask |= BX_CPU_FFXSR | BX_CPU_NX;
 
   static bx_bool pcid_enabled = SIM->get_param_bool(BXPN_CPUID_PCID)->get();
   if (pcid_enabled)

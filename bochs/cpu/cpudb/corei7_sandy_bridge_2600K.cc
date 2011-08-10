@@ -164,6 +164,7 @@ Bit32u corei7_sandy_bridge_2600k_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_PAT_MTRR |
          BX_CPU_XAPIC |
       /* BX_CPU_X2APIC | */
+         BX_CPU_NX |
          BX_CPU_PCID;
 }
 

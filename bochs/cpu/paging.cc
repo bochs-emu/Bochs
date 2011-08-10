@@ -505,10 +505,8 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsig
   if (rw == BX_EXECUTE) {
     if (BX_CPU_THIS_PTR cr4.get_SMEP())
       error_code |= ERROR_CODE_ACCESS; // I/D = 1
-#if BX_SUPPORT_X86_64
     if (BX_CPU_THIS_PTR cr4.get_PAE() && BX_CPU_THIS_PTR efer.get_NXE())
       error_code |= ERROR_CODE_ACCESS;
-#endif
   }
 #endif
 
@@ -558,6 +556,7 @@ int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsi
       return ERROR_RESERVED | ERROR_PROTECTION;
     }
   }
+#endif
 
   if (entry & PAGE_DIRECTORY_NX_BIT) {
     if (! BX_CPU_THIS_PTR efer.get_NXE()) {
@@ -569,7 +568,6 @@ int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsi
       *nx_fault = 1;
     }
   }
-#endif
 
   return -1;
 }
@@ -1189,9 +1187,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned user, unsig
 #if BX_CPU_LEVEL >= 6
   if (combined_access & 0x100) // Global bit
     tlbEntry->accessBits |= TLB_GlobalPage;
-#endif
 
-#if BX_SUPPORT_X86_64
   // EFER.NXE change won't flush TLB
   if (BX_CPU_THIS_PTR cr4.get_PAE() && rw != BX_EXECUTE)
     tlbEntry->accessBits |= TLB_NoExecute;

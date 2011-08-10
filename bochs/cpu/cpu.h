@@ -378,8 +378,9 @@ enum {
   #define BX_MSR_IA32_SMM_MONITOR_CTL     0x09B
 #endif
 
-#if BX_SUPPORT_X86_64
 #define BX_MSR_EFER             0xc0000080
+
+#if BX_SUPPORT_X86_64
 #define BX_MSR_STAR             0xc0000081
 #define BX_MSR_LSTAR            0xc0000082
 #define BX_MSR_CSTAR            0xc0000083
@@ -899,12 +900,10 @@ public: // for now...
   Bit32u cr4_suppmask;
 #endif
 
-#if BX_SUPPORT_X86_64
+#if BX_CPU_LEVEL >= 6
   bx_efer_t efer;
   Bit32u efer_suppmask;
-#endif
 
-#if BX_CPU_LEVEL >= 6
   xcr0_t xcr0;
   Bit32u xcr0_suppmask;
 #endif
@@ -3346,7 +3345,7 @@ public: // for now...
 #if BX_SUPPORT_VMX >= 2
   BX_SMF bx_bool CheckPDPTR(Bit64u *pdptr) BX_CPP_AttrRegparmN(1);
 #endif
-#if BX_SUPPORT_X86_64
+#if BX_CPU_LEVEL >= 6
   BX_SMF bx_bool SetEFER(bx_address val) BX_CPP_AttrRegparmN(1);
 #endif
 

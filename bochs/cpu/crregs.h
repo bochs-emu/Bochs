@@ -183,7 +183,7 @@ struct bx_dr7_t {
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
 };
 
-#if BX_SUPPORT_X86_64
+#if BX_CPU_LEVEL >= 6
 
 #define BX_EFER_SCE_MASK       (1 <<  0)
 #define BX_EFER_LME_MASK       (1 <<  8)
@@ -196,21 +196,22 @@ struct bx_dr7_t {
 struct bx_efer_t {
   Bit32u val32; // 32bit value of register
 
+#if BX_SUPPORT_X86_64
   IMPLEMENT_CRREG_ACCESSORS(SCE,    0);
   IMPLEMENT_CRREG_ACCESSORS(LME,    8);
   IMPLEMENT_CRREG_ACCESSORS(LMA,   10);
+#endif
   IMPLEMENT_CRREG_ACCESSORS(NXE,   11);
   IMPLEMENT_CRREG_ACCESSORS(SVME,  12); /* AMD Secure Virtual Machine */
   IMPLEMENT_CRREG_ACCESSORS(LMSLE, 13); /* AMD Long Mode Segment Limit */
+#if BX_SUPPORT_X86_64
   IMPLEMENT_CRREG_ACCESSORS(FFXSR, 14);
+#endif
 
   BX_CPP_INLINE Bit32u get32() const { return val32; }
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
 };
 
-#endif
-
-#if BX_CPU_LEVEL >= 6
 struct xcr0_t {
   Bit32u  val32; // 32bit value of register
 

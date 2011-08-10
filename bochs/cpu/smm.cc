@@ -183,7 +183,7 @@ void BX_CPU_C::enter_system_management_mode(void)
   // paging mode was changed - flush TLB
   TLB_flush(); //  Flush Global entries also
 
-#if BX_SUPPORT_X86_64
+#if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR efer.set32(0);
 #endif
 
@@ -382,6 +382,7 @@ void BX_CPU_C::init_SMRAM(void)
   smram_map[SMRAM_FIELD_CR0] = SMRAM_TRANSLATE(0x7ffc);
   smram_map[SMRAM_FIELD_CR3] = SMRAM_TRANSLATE(0x7ff8);
   smram_map[SMRAM_FIELD_CR4] = SMRAM_TRANSLATE(0x7f14);
+  smram_map[SMRAM_FIELD_EFER] = SMRAM_TRANSLATE(0x7f10);
   smram_map[SMRAM_FIELD_IO_INSTRUCTION_RESTART] = SMRAM_TRANSLATE(0x7f00);
   smram_map[SMRAM_FIELD_AUTOHALT_RESTART] = SMRAM_TRANSLATE(0x7f00);
   smram_map[SMRAM_FIELD_NMI_MASK] = SMRAM_TRANSLATE(0x7f00);
@@ -722,6 +723,9 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
 #if BX_CPU_LEVEL >= 4
   SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4) = BX_CPU_THIS_PTR cr4.get32();
 #endif
+#if BX_CPU_LEVEL >= 6
+  SMRAM_FIELD(saved_state, SMRAM_FIELD_EFER) = BX_CPU_THIS_PTR efer.get32();
+#endif
   SMRAM_FIELD(saved_state, SMRAM_FIELD_DR6) = BX_CPU_THIS_PTR dr6.get32();
   SMRAM_FIELD(saved_state, SMRAM_FIELD_DR7) = BX_CPU_THIS_PTR dr7.get32();
 
@@ -798,6 +802,13 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
       return 0;
     }
   }
+
+  Bit32u temp_efer = SMRAM_FIELD(saved_state, SMRAM_FIELD_EFER);
+  if (temp_efer & ~BX_CPU_THIS_PTR efer_suppmask) {
+    BX_ERROR(("SMM restore: Attempt to set EFER reserved bits: 0x%08x !", temp_efer));
+    return 0;
+  }
+  BX_CPU_THIS_PTR efer.set32(temp_efer & BX_CPU_THIS_PTR efer_suppmask);
 #endif
 
   Bit32u temp_eflags = SMRAM_FIELD(saved_state, SMRAM_FIELD_EFLAGS);

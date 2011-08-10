@@ -480,8 +480,10 @@ void BX_CPU_C::register_state(void)
 #if BX_SUPPORT_APIC
   BXRS_HEX_PARAM_FIELD(MSR, apicbase, msr.apicbase);
 #endif
-#if BX_SUPPORT_X86_64
+#if BX_CPU_LEVEL >= 6
   BXRS_HEX_PARAM_FIELD(MSR, EFER, efer.val32);
+#endif
+#if BX_SUPPORT_X86_64
   BXRS_HEX_PARAM_FIELD(MSR,  star, msr.star);
   BXRS_HEX_PARAM_FIELD(MSR, lstar, msr.lstar);
   BXRS_HEX_PARAM_FIELD(MSR, cstar, msr.cstar);
@@ -949,13 +951,21 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR msr.apicbase |= 0x900;
   BX_CPU_THIS_PTR lapic.set_base(BX_CPU_THIS_PTR msr.apicbase);
 #endif
-#if BX_SUPPORT_X86_64
+
+#if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR efer.set32(0);
-  BX_CPU_THIS_PTR efer_suppmask = (BX_EFER_SCE_MASK | BX_EFER_LME_MASK |
-                BX_EFER_LMA_MASK | BX_EFER_NXE_MASK);
+  BX_CPU_THIS_PTR efer_suppmask = 0;
+  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_NX))
+    BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_NXE_MASK;
+#if BX_SUPPORT_X86_64
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_X86_64))
+    BX_CPU_THIS_PTR efer_suppmask |= (BX_EFER_SCE_MASK | BX_EFER_LME_MASK | BX_EFER_LMA_MASK);
   if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_FFXSR))
     BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_FFXSR_MASK;
+#endif
+#endif
 
+#if BX_SUPPORT_X86_64
   BX_CPU_THIS_PTR msr.star  = 0;
   BX_CPU_THIS_PTR msr.lstar = 0;
   BX_CPU_THIS_PTR msr.cstar = 0;
@@ -1266,4 +1276,12 @@ void BX_CPU_C::assert_checks(void)
         BX_PANIC(("assert_checks: TR is not TSS type !"));
     }
   }
+
+#if BX_SUPPORT_X86_64 == 0
+  if (BX_CPU_THIS_PTR efer_suppmask & (BX_EFER_SCE_MASK |
+                    BX_EFER_LME_MASK | BX_EFER_LMA_MASK | BX_EFER_FFXSR_MASK))
+  {
+    BX_PANIC(("assert_checks: EFER supports x86-64 specific bits !"));
+  }
+#endif
 }

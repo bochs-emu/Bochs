@@ -1196,7 +1196,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR3(bx_address val)
   return 1;
 }
 
-#if BX_SUPPORT_X86_64
+#if BX_CPU_LEVEL >= 6
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetEFER(bx_address val_64)
 {
   if (val_64 & ~((Bit64u) BX_CPU_THIS_PTR efer_suppmask)) {
@@ -1206,6 +1206,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetEFER(bx_address val_64)
 
   Bit32u val32 = (Bit32u) val_64;
 
+#if BX_SUPPORT_X86_64
   /* #GP(0) if changing EFER.LME when cr0.pg = 1 */
   if ((BX_CPU_THIS_PTR efer.get_LME() != ((val32 >> 8) & 1)) &&
        BX_CPU_THIS_PTR  cr0.get_PG())
@@ -1213,6 +1214,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetEFER(bx_address val_64)
     BX_ERROR(("SetEFER: attempt to change LME when CR0.PG=1"));
     return 0;
   }
+#endif
 
   BX_CPU_THIS_PTR efer.set32((val32 & BX_CPU_THIS_PTR efer_suppmask & ~BX_EFER_LMA_MASK)
         | (BX_CPU_THIS_PTR efer.get32() & BX_EFER_LMA_MASK)); // keep LMA untouched

@@ -142,7 +142,8 @@ Bit32u core2_extreme_x9770_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_PGE |
          BX_CPU_PSE36 |
          BX_CPU_PAT_MTRR |
-         BX_CPU_XAPIC;
+         BX_CPU_XAPIC |
+         BX_CPU_NX;
 }
 
 // leaf 0x00000000 //
