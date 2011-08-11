@@ -414,7 +414,7 @@ typedef struct {
 #endif
   } iaddr;
 
-  // user typed Ctrl-C, requesting simulator stop at next convient spot
+  // user typed Ctrl-C, requesting simulator stop at next convinient spot
   volatile bx_bool interrupt_requested;
 
   // booleans to control whether simulator should report events
