@@ -112,7 +112,7 @@ Bit32u p4_prescott_celeron_336_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_PGE |
          BX_CPU_PSE36 |
          BX_CPU_MTRR |
-         BX_CPU_PAT;
+         BX_CPU_PAT |
          BX_CPU_XAPIC |
          BX_CPU_NX;
 }

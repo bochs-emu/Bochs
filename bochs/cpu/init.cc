@@ -1277,7 +1277,7 @@ void BX_CPU_C::assert_checks(void)
     }
   }
 
-#if BX_SUPPORT_X86_64 == 0
+#if BX_SUPPORT_X86_64 == 0 && BX_CPU_LEVEL >= 6
   if (BX_CPU_THIS_PTR efer_suppmask & (BX_EFER_SCE_MASK |
                     BX_EFER_LME_MASK | BX_EFER_LMA_MASK | BX_EFER_FFXSR_MASK))
   {
