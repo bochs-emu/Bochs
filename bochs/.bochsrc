@@ -92,6 +92,7 @@ romimage: file=$BXSHARE/BIOS-bochs-latest
 #
 #  CPU configurations that can be selected:
 # -----------------------------------------------------------------
+#  p2_klamath                 Intel Pentium II (Klamath)
 #  p3_katmai                  Intel Pentium III (Katmai)
 #  p4_willamette              Intel(R) Pentium(R) 4 (Willamette)
 #  atom_n270                  Intel(R) Atom(TM) CPU N270

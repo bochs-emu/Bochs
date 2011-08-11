@@ -3991,7 +3991,7 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_sep(void)
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_fxsave_fxrstor(void)
 {
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_FXSAVE_FXRSTOR);
+  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_SSE);
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_1g_paging(void)

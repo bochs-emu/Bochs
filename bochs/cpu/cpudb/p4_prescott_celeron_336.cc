@@ -91,7 +91,6 @@ Bit32u p4_prescott_celeron_336_t::get_isa_extensions_bitmask(void) const
          BX_CPU_PENTIUM |
          BX_CPU_P6 |
          BX_CPU_MMX |
-         BX_CPU_FXSAVE_FXRSTOR |
          BX_CPU_SYSENTER_SYSEXIT |
          BX_CPU_CLFLUSH |
          BX_CPU_SSE |
@@ -112,7 +111,8 @@ Bit32u p4_prescott_celeron_336_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_PAE |
          BX_CPU_PGE |
          BX_CPU_PSE36 |
-         BX_CPU_PAT_MTRR |
+         BX_CPU_MTRR |
+         BX_CPU_PAT;
          BX_CPU_XAPIC |
          BX_CPU_NX;
 }

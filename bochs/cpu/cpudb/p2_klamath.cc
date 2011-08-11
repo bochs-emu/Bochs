@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id$
+// $Id: p2_klamath.cc 10535 2011-08-03 17:49:49Z sshwarts $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2011 Stanislav Shwartsman
@@ -24,7 +24,7 @@
 #include "bochs.h"
 #include "cpu/cpu.h"
 #include "param_names.h"
-#include "p3_katmai.h"
+#include "p2_klamath.h"
 
 #define LOG_THIS cpu->
 
@@ -32,13 +32,13 @@
 
 #if BX_SUPPORT_X86_64 == 0
 
-p3_katmai_t::p3_katmai_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
+p2_klamath_t::p2_klamath_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
   if (BX_SUPPORT_X86_64)
-    BX_PANIC(("x86-64 should be disabled for PIII (Katmai) configuration"));
+    BX_PANIC(("x86-64 should be disabled for PII (Klamath) configuration"));
 }
 
-void p3_katmai_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void p2_klamath_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   switch(function) {
   case 0x00000000:
@@ -48,27 +48,23 @@ void p3_katmai_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
     get_std_cpuid_leaf_1(leaf);
     return;
   case 0x00000002:
-    get_std_cpuid_leaf_2(leaf);
-    return;
-  case 0x00000003:
   default:
-    get_std_cpuid_leaf_3(leaf);
+    get_std_cpuid_leaf_2(leaf);
     return;
   }
 }
 
-Bit32u p3_katmai_t::get_isa_extensions_bitmask(void) const
+Bit32u p2_klamath_t::get_isa_extensions_bitmask(void) const
 {
   return BX_CPU_X87 |
          BX_CPU_486 |
          BX_CPU_PENTIUM |
          BX_CPU_P6 |
          BX_CPU_MMX |
-         BX_CPU_SYSENTER_SYSEXIT |
-         BX_CPU_SSE;
+         BX_CPU_SYSENTER_SYSEXIT;
 }
 
-Bit32u p3_katmai_t::get_cpu_extensions_bitmask(void) const
+Bit32u p2_klamath_t::get_cpu_extensions_bitmask(void) const
 {
   return BX_CPU_DEBUG_EXTENSIONS |
          BX_CPU_VME |
@@ -78,12 +74,11 @@ Bit32u p3_katmai_t::get_cpu_extensions_bitmask(void) const
 #if BX_PHY_ADDRESS_LONG
          BX_CPU_PSE36 |
 #endif
-         BX_CPU_MTRR |
-         BX_CPU_PAT;
+         BX_CPU_MTRR;
 }
 
 // leaf 0x00000000 //
-void p3_katmai_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
+void p2_klamath_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   static const char* vendor_string = "GenuineIntel";
 
@@ -91,7 +86,7 @@ void p3_katmai_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
   // EBX: vendor ID string
   // EDX: vendor ID string
   // ECX: vendor ID string
-  leaf->eax = 0x3;
+  leaf->eax = 0x2;
 
   // CPUID vendor string (e.g. GenuineIntel, AuthenticAMD, CentaurHauls, ...)
   memcpy(&(leaf->ebx), vendor_string,     4);
@@ -105,7 +100,7 @@ void p3_katmai_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 }
 
 // leaf 0x00000001 //
-void p3_katmai_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
+void p2_klamath_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information
   //   [3:0]   Stepping ID
@@ -114,7 +109,7 @@ void p3_katmai_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
   //   [19:16] Extended Model
   //   [27:20] Extended Family
-  leaf->eax = 0x00000673;
+  leaf->eax = 0x00000634;
 
   leaf->ebx = 0;
   leaf->ecx = 0;
@@ -129,23 +124,23 @@ void p3_katmai_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [6:6]   PAE: Physical Address Extensions
   // * [7:7]   MCE: Machine Check Exception
   // * [8:8]   CXS: CMPXCHG8B instruction
-  //   [9:9]   APIC: APIC on Chip
+  // * [9:9]   APIC: APIC on Chip
   //   [10:10] Reserved
   // * [11:11] SYSENTER/SYSEXIT support
   // * [12:12] MTRR: Memory Type Range Reg
   // * [13:13] PGE/PTE Global Bit
   // * [14:14] MCA: Machine Check Architecture
   // * [15:15] CMOV: Cond Mov/Cmp Instructions
-  // * [16:16] PAT: Page Attribute Table
-  // * [17:17] PSE-36: Physical Address Extensions
-  // * [18:18] PSN: Processor Serial Number
+  //   [16:16] PAT: Page Attribute Table
+  //   [17:17] PSE-36: Physical Address Extensions
+  //   [18:18] PSN: Processor Serial Number
   //   [19:19] CLFLUSH: CLFLUSH Instruction support
   //   [20:20] Reserved
   //   [21:21] DS: Debug Store
   //   [22:22] ACPI: Thermal Monitor and Software Controlled Clock Facilities
   // * [23:23] MMX Technology
-  // * [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
-  // * [25:25] SSE: SSE Extensions
+  //   [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
+  //   [25:25] SSE: SSE Extensions
   //   [26:26] SSE2: SSE2 Extensions
   //   [27:27] Self Snoop
   //   [28:28] Hyper Threading Technology
@@ -166,13 +161,10 @@ void p3_katmai_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
               BX_CPUID_STD_GLOBAL_PAGES |
               BX_CPUID_STD_MCA |
               BX_CPUID_STD_CMOV |
-              BX_CPUID_STD_PAT |
 #if BX_PHY_ADDRESS_LONG
               BX_CPUID_STD_PSE36 |
 #endif
-              BX_CPUID_STD_MMX |
-              BX_CPUID_STD_FXSAVE_FXRSTOR |
-              BX_CPUID_STD_SSE;
+              BX_CPUID_STD_MMX;
 #if BX_SUPPORT_APIC
   // if MSR_APICBASE APIC Global Enable bit has been cleared,
   // the CPUID feature flag for the APIC is set to 0.
@@ -182,36 +174,26 @@ void p3_katmai_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 }
 
 // leaf 0x00000002 //
-void p3_katmai_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
+void p2_klamath_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000002 - Cache and TLB Descriptors
   leaf->eax = 0x03020101;
   leaf->ebx = 0x00000000;
   leaf->ecx = 0x00000000;
-  leaf->edx = 0x0C040843;
+  leaf->edx = 0x0c040843;
 }
 
-// leaf 0x00000003 //
-void p3_katmai_t::get_std_cpuid_leaf_3(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000003 - Processor Serial Number
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
-
-void p3_katmai_t::dump_cpuid(void) const
+void p2_klamath_t::dump_cpuid(void) const
 {
   struct cpuid_function_t leaf;
 
-  for (unsigned n=0; n<=0x3; n++) {
+  for (unsigned n=0; n<=0x2; n++) {
     get_cpuid_leaf(n, 0x00000000, &leaf);
     BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
   }
 }
 
-bx_cpuid_t *create_p3_katmai_cpuid(BX_CPU_C *cpu) { return new p3_katmai_t(cpu); }
+bx_cpuid_t *create_p2_klamath_cpuid(BX_CPU_C *cpu) { return new p2_klamath_t(cpu); }
 
 #endif
 

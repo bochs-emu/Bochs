@@ -45,26 +45,26 @@
 #define IA_P6               (1 << 3)        /* P6 new instruction */
 #define IA_MMX              (1 << 4)        /* MMX instruction */
 #define IA_3DNOW            (1 << 5)        /* 3DNow! instruction */
-#define IA_FXSAVE_FXRSTOR   (1 << 6)        /* FXSAVE/FXRSTOR instruction */
-#define IA_SYSENTER_SYSEXIT (1 << 7)        /* SYSENTER/SYSEXIT instruction */
-#define IA_CLFLUSH          (1 << 8)        /* CLFLUSH instruction */
-#define IA_SSE              (1 << 9)        /* SSE  instruction */
-#define IA_SSE2             (1 << 10)       /* SSE2 instruction */
-#define IA_SSE3             (1 << 11)       /* SSE3 instruction */
-#define IA_SSSE3            (1 << 12)       /* SSSE3 instruction */
-#define IA_SSE4_1           (1 << 13)       /* SSE4_1 instruction */
-#define IA_SSE4_2           (1 << 14)       /* SSE4_2 instruction */
-#define IA_MONITOR_MWAIT    (1 << 15)       /* MONITOR/MWAIT instruction */
-#define IA_VMX              (1 << 16)       /* VMX instruction */
-#define IA_SMX              (1 << 17)       /* SMX instruction */
-#define IA_RDTSCP           (1 << 18)       /* RDTSCP instruction */
-#define IA_XSAVE            (1 << 19)       /* XSAVE/XRSTOR extensions instruction */
-#define IA_XSAVEOPT         (1 << 20)       /* XSAVEOPT instruction */
-#define IA_AES_PCLMULQDQ    (1 << 21)       /* AES+PCLMULQDQ instruction */
-#define IA_MOVBE            (1 << 22)       /* MOVBE Intel Atom(R) instruction */
-#define IA_FSGSBASE         (1 << 23)       /* FS/GS BASE access instruction */
-#define IA_INVPCID          (1 << 24)       /* INVPCID instruction */
-#define IA_AVX              (1 << 25)       /* AVX instruction */
+#define IA_SYSENTER_SYSEXIT (1 << 6)        /* SYSENTER/SYSEXIT instruction */
+#define IA_CLFLUSH          (1 << 7)        /* CLFLUSH instruction */
+#define IA_SSE              (1 << 8)        /* SSE  instruction */
+#define IA_SSE2             (1 << 9)        /* SSE2 instruction */
+#define IA_SSE3             (1 << 10)       /* SSE3 instruction */
+#define IA_SSSE3            (1 << 11)       /* SSSE3 instruction */
+#define IA_SSE4_1           (1 << 12)       /* SSE4_1 instruction */
+#define IA_SSE4_2           (1 << 13)       /* SSE4_2 instruction */
+#define IA_MONITOR_MWAIT    (1 << 14)       /* MONITOR/MWAIT instruction */
+#define IA_VMX              (1 << 15)       /* VMX instruction */
+#define IA_SMX              (1 << 16)       /* SMX instruction */
+#define IA_RDTSCP           (1 << 17)       /* RDTSCP instruction */
+#define IA_XSAVE            (1 << 18)       /* XSAVE/XRSTOR extensions instruction */
+#define IA_XSAVEOPT         (1 << 19)       /* XSAVEOPT instruction */
+#define IA_AES_PCLMULQDQ    (1 << 20)       /* AES+PCLMULQDQ instruction */
+#define IA_MOVBE            (1 << 21)       /* MOVBE Intel Atom(R) instruction */
+#define IA_FSGSBASE         (1 << 22)       /* FS/GS BASE access instruction */
+#define IA_INVPCID          (1 << 23)       /* INVPCID instruction */
+#define IA_AVX              (1 << 24)       /* AVX instruction */
+#define IA_AVX2             (1 << 25)       /* AVX2 instruction */
 #define IA_AVX_F16C         (1 << 26)       /* AVX F16 convert instruction */
 #define IA_AVX_FMA          (1 << 27)       /* AVX FMA instruction */
 #define IA_X86_64           (1 << 28)       /* x86-64 instruction */

@@ -762,8 +762,9 @@ bx_define_opcode(BX_IA_UD2B, &BX_CPU_C::UndefinedOpcode, &BX_CPU_C::UndefinedOpc
 // P6 new instructions
 
 // FXSAVE
-bx_define_opcode(BX_IA_FXSAVE, &BX_CPU_C::FXSAVE, &BX_CPU_C::BxError, BX_CPU_FXSAVE_FXRSTOR, 0)
-bx_define_opcode(BX_IA_FXRSTOR, &BX_CPU_C::FXRSTOR, &BX_CPU_C::BxError, BX_CPU_FXSAVE_FXRSTOR, 0)
+bx_define_opcode(BX_IA_FXSAVE, &BX_CPU_C::FXSAVE, &BX_CPU_C::BxError, BX_CPU_SSE, 0)
+bx_define_opcode(BX_IA_FXRSTOR, &BX_CPU_C::FXRSTOR, &BX_CPU_C::BxError, BX_CPU_SSE, 0)
+// FXSAVE
 
 // SSE
 bx_define_opcode(BX_IA_LDMXCSR, &BX_CPU_C::LDMXCSR, &BX_CPU_C::BxError, BX_CPU_SSE, BX_PREPARE_SSE)

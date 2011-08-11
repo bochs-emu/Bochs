@@ -647,10 +647,6 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
     features_bitmask |= BX_CPU_MONITOR_MWAIT;
 #endif
 
-  // FXSAVE/FXRSTOR support come with Pentium II
-  if (mmx_enabled)
-    features_bitmask |= BX_CPU_FXSAVE_FXRSTOR;
-
   static unsigned sse_enabled = SIM->get_param_enum(BXPN_CPUID_SSE)->get();
   // determine SSE in runtime
   switch (sse_enabled) {
@@ -824,8 +820,11 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
 #if BX_CPU_LEVEL >= 6
   features_bitmask |= BX_CPU_PAE;
   features_bitmask |= BX_CPU_PGE;
+#if BX_PHY_ADDRESS_LONG
   features_bitmask |= BX_CPU_PSE36;
-  features_bitmask |= BX_CPU_PAT_MTRR;
+#endif
+  features_bitmask |= BX_CPU_MTRR;
+  features_bitmask |= BX_CPU_PAT;
 
   static bx_bool smep_enabled = SIM->get_param_bool(BXPN_CPUID_SMEP)->get();
   if (smep_enabled)
@@ -1056,8 +1055,11 @@ Bit32u bx_generic_cpuid_t::get_std_cpuid_features(void) const
     features |= BX_CPUID_STD_ACPI;
   }
 
-  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_PAT_MTRR))
-    features |= BX_CPUID_STD_PAT | BX_CPUID_STD_MTRR;
+  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_MTRR))
+    features |= BX_CPUID_STD_MTRR;
+
+  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_PAT))
+    features |= BX_CPUID_STD_PAT;
 
   if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_PAE))
     features |= BX_CPUID_STD_PAE;
@@ -1068,11 +1070,8 @@ Bit32u bx_generic_cpuid_t::get_std_cpuid_features(void) const
   if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_PSE36))
     features |= BX_CPUID_STD_PSE36;
 
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_FXSAVE_FXRSTOR))
-    features |= BX_CPUID_STD_FXSAVE_FXRSTOR;
-
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_SSE))
-    features |= BX_CPUID_STD_SSE;
+    features |= BX_CPUID_STD_FXSAVE_FXRSTOR | BX_CPUID_STD_SSE;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_SSE2))
     features |= BX_CPUID_STD_SSE2;

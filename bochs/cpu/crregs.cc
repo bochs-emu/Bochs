@@ -1054,16 +1054,14 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   /* OSXMMEXCPT */
   if (bx_cpuid_support_sse())
     allowMask |= BX_CR4_OSXMMEXCPT_MASK;
-#endif
 
 #if BX_SUPPORT_VMX
-  allowMask |= BX_CR4_VMXE_MASK;
+  if (bx_cpuid_support_vmx())
+    allowMask |= BX_CR4_VMXE_MASK;
 #endif
 
-#if BX_CPU_LEVEL >= 6
   if (bx_cpuid_support_smx())
     allowMask |= BX_CR4_SMXE_MASK;
-#endif
 
 #if BX_SUPPORT_X86_64
   if (bx_cpuid_support_pcid())
@@ -1073,7 +1071,6 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
     allowMask |= BX_CR4_FSGSBASE_MASK;
 #endif
 
-#if BX_CPU_LEVEL >= 6
   /* OSXSAVE */
   if (bx_cpuid_support_xsave())
     allowMask |= BX_CR4_OSXSAVE_MASK;
