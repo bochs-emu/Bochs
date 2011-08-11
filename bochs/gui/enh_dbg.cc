@@ -1313,7 +1313,7 @@ void InitRegObjects()
             RegObject[cpu][XMMF_Rnum] = SIM->get_param_num("SSE.xmm15_0", cpu_list);
             RegObject[cpu][XMM8_hi] = SIM->get_param_num("SSE.xmm08_1", cpu_list);
             RegObject[cpu][XMM9_hi] = SIM->get_param_num("SSE.xmm09_1", cpu_list);
-            RegObject[cpu][XMMA_hi] = SIM->get_param_num("SSE.xmm00_1", cpu_list);
+            RegObject[cpu][XMMA_hi] = SIM->get_param_num("SSE.xmm10_1", cpu_list);
             RegObject[cpu][XMMB_hi] = SIM->get_param_num("SSE.xmm11_1", cpu_list);
             RegObject[cpu][XMMC_hi] = SIM->get_param_num("SSE.xmm12_1", cpu_list);
             RegObject[cpu][XMMD_hi] = SIM->get_param_num("SSE.xmm13_1", cpu_list);
