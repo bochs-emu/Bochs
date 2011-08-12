@@ -2052,81 +2052,81 @@ void bx_x_gui_c::show_ips(Bit32u ips_count)
 }
 #endif
 
-// X11 dialog box functions
+// X11 control class
 
-typedef struct {
-  Window dialog;
-  GC gc, gc_inv;
-} x11_dialog_t;
-
-void x11_create_dialog(x11_dialog_t *xdlg, char *name, int width, int height)
-{
-  Window dialog;
-  GC gc, gc_inv;
-  XSizeHints hint;
-  unsigned long black_pixel, white_pixel;
-
-  hint.flags = PPosition | PSize | PMinSize | PMaxSize;
-  hint.x = 100;
-  hint.y = 100;
-  hint.width = hint.min_width = hint.max_width = width;
-  hint.height = hint.min_height = hint.max_height = height;
-  black_pixel = BlackPixel(bx_x_display, bx_x_screen_num);
-  white_pixel = WhitePixel(bx_x_display, bx_x_screen_num);
-  dialog = XCreateSimpleWindow(bx_x_display, RootWindow(bx_x_display,bx_x_screen_num),
-    hint.x, hint.y, hint.width, hint.height, 4, black_pixel, white_pixel);
-  XSetStandardProperties(bx_x_display, dialog, name, name, None, NULL, 0, &hint);
-  Atom wm_delete = XInternAtom(bx_x_display, "WM_DELETE_WINDOW", 1);
-  XSetWMProtocols(bx_x_display, dialog, &wm_delete, 1);
-
-  gc = XCreateGC(bx_x_display, dialog, 0, 0);
-  gc_inv = XCreateGC(bx_x_display, dialog, 0, 0);
-  XSetState(bx_x_display, gc_inv, white_pixel, black_pixel, GXcopy, AllPlanes);
-  XSetBackground(bx_x_display,gc,WhitePixel(bx_x_display, bx_x_screen_num));
-  XSetForeground(bx_x_display,gc,BlackPixel(bx_x_display, bx_x_screen_num));
-
-  XSelectInput(bx_x_display, dialog, ButtonPressMask
-               | ButtonReleaseMask
-               | KeyPressMask
-               | KeyReleaseMask
-               | ExposureMask
-               | PointerMotionMask
-               | EnterWindowMask
-               | LeaveWindowMask);
-  XMapWindow(bx_x_display, dialog);
-  XFlush(bx_x_display);
-  xdlg->dialog = dialog;
-  xdlg->gc = gc;
-  xdlg->gc_inv = gc_inv;
-}
+enum {
+  XDC_BUTTON = 0,
+  XDC_EDIT,
+  XDC_CHECKBOX
+};
 
 class x11_control_c {
 public:
-  x11_control_c(void);
-  void create(Display *display, x11_dialog_t *xdlg, int x, int y,
-              unsigned int width, unsigned int height, const char *text);
+  x11_control_c(int type, int x, int y, unsigned int w,
+                unsigned int h, const char *text);
+  virtual ~x11_control_c();
+
+  void draw(Display *display, Window win, GC gc);
   int  test(XButtonEvent *bev);
+  int  get_type() {return type;}
+  void get_rect(int *x, int *y, int *w, int *h);
+  const char* get_text() {return text;}
+  // checkbox
+  int  get_status() {return status;}
+  void set_status(bx_bool new_stat) {status = new_stat;}
+  // edit
+  void set_maxlen(unsigned int max);
+  int process_input(KeySym key, const char *str);
+  const char* get_value() {return value;}
 private:
-  int xmin, xmax, ymin, ymax;
+  unsigned int width, height;
+  int type, xmin, xmax, ymin, ymax;
+  const char *text;
+  // checkbox
+  bx_bool status;
+  // edit
+  char *value;
+  char editstr[27];
+  unsigned int len, pos, max;
 };
 
-x11_control_c::x11_control_c()
+x11_control_c::x11_control_c(int _type, int x, int y, unsigned int w,
+                             unsigned int h, const char *_text)
 {
-  xmin = 0;
-  ymin = 0;
-  xmax = 0;
-  ymax = 0;
-}
-
-void x11_control_c::create(Display *display, x11_dialog_t *xdlg, int x, int y,
-                           unsigned int width, unsigned int height, const char *text)
-{
+  type = _type;
   xmin = x;
   ymin = y;
+  width = w;
+  height = h;
   xmax = x + width;
   ymax = y + height;
-  XDrawRectangle(display, xdlg->dialog, xdlg->gc, x, y, width, height);
-  XDrawImageString(display, xdlg->dialog, xdlg->gc, x+4, y+14, (char *)text, strlen(text));
+  if (type == XDC_EDIT) {
+    len = strlen(_text);
+    max = len;
+    value = (char*)malloc(max+1);
+    strcpy(value, _text);
+    pos = (len < 25) ? 0 : (len - 24);
+    strncpy(editstr, value+pos, 24);
+    editstr[len-pos] = 0;
+    text = editstr;
+  } else {
+    text = _text;
+    value = NULL;
+    if (type == XDC_CHECKBOX) {
+      status = !strcmp(text, "X");
+    }
+  }
+}
+
+x11_control_c::~x11_control_c()
+{
+  if (value != NULL) free(value);
+}
+
+void x11_control_c::draw(Display *display, Window win, GC gc)
+{
+  XDrawRectangle(display, win, gc, xmin, ymin, width, height);
+  XDrawImageString(display, win, gc, xmin+4, ymin+14, (char *)text, strlen(text));
 }
 
 int x11_control_c::test(XButtonEvent *bev)
@@ -2139,86 +2139,233 @@ int x11_control_c::test(XButtonEvent *bev)
   return 0;
 }
 
-int x11_ask_dialog(BxEvent *event)
+void x11_control_c::get_rect(int *x, int *y, int *w, int *h)
 {
-#if BX_DEBUGGER || BX_GDBSTUB
-  const int button_x[4] = { 36, 121, 206, 291 };
-  const int ask_code[4] = { BX_LOG_ASK_CHOICE_CONTINUE,
-                            BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS,
-                            BX_LOG_ASK_CHOICE_ENTER_DEBUG,
-                            BX_LOG_ASK_CHOICE_DIE };
-  const int num_ctrls = 4;
-  x11_control_c xbtn_cont, xbtn_acont, xbtn_debug, xbtn_quit;
-#else
-  const int button_x[3] = { 81, 166, 251 };
-  const int ask_code[3] = { BX_LOG_ASK_CHOICE_CONTINUE,
-                            BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS,
-                            BX_LOG_ASK_CHOICE_DIE };
-  const int num_ctrls = 3;
-  x11_control_c xbtn_cont, xbtn_acont, xbtn_quit;
-#endif
-  x11_dialog_t xdlg;
+  *x = xmin;
+  *y = ymin;
+  if (w != NULL) *w = width;
+  if (h != NULL) *h = height;
+}
+
+void x11_control_c::set_maxlen(unsigned int _max)
+{
+  max = _max;
+  value = (char*)realloc(value, max+1);
+}
+
+int x11_control_c::process_input(KeySym key, const char *str)
+{
+  int ret = 0;
+
+  if (key == XK_BackSpace) {
+    if (len > 0) {
+      value[--len] = 0;
+      if (pos > 0) pos--;
+      ret = 1;
+    }
+  } else if ((key == 0) && (len < max)) {
+    strcat(value, str);
+    len = strlen(value);
+    if (len > 24) pos++;
+    ret = 1;
+  }
+  strncpy(editstr, value+pos, 24);
+  editstr[len-pos] = 0;
+  return ret;
+}
+
+// X11 static text structure
+
+typedef struct _x11_static_t {
+  char *text;
+  int x, y;
+  struct _x11_static_t *next;
+} x11_static_t;
+
+// X11 dialog class
+
+class x11_dialog_c {
+public:
+  x11_dialog_c(char *name, int width, int height, int num_ctrls);
+  virtual ~x11_dialog_c();
+
+  x11_control_c* add_control(int type, int x, int y, unsigned int width,
+                             unsigned int height, const char *text);
+  void add_static_text(int x, int y, const char *text, int length);
+  void draw_controls(Display *display);
+  void draw_text(Display *display, int x, int y, const char *text, int length);
+  void draw_rect(Display *display, int ctrl_num, bx_bool mode);
+  int run(int start_ctrl, int ok, int cancel);
+private:
+  Window dlgwin;
+  GC gc, gc_inv;
+  int ctrl_cnt, cur_ctrl, old_ctrl;
+  x11_control_c **controls;
+  x11_static_t *static_items;
+};
+
+x11_dialog_c::x11_dialog_c(char *name, int width, int height, int num_ctrls)
+{
+  Window dialogw;
+  XSizeHints hint;
+  unsigned long black_pixel, white_pixel;
+
+  hint.flags = PPosition | PSize | PMinSize | PMaxSize;
+  hint.x = 100;
+  hint.y = 100;
+  hint.width = hint.min_width = hint.max_width = width;
+  hint.height = hint.min_height = hint.max_height = height;
+  black_pixel = BlackPixel(bx_x_display, bx_x_screen_num);
+  white_pixel = WhitePixel(bx_x_display, bx_x_screen_num);
+  dialogw = XCreateSimpleWindow(bx_x_display, RootWindow(bx_x_display,bx_x_screen_num),
+    hint.x, hint.y, hint.width, hint.height, 4, black_pixel, white_pixel);
+  XSetStandardProperties(bx_x_display, dialogw, name, name, None, NULL, 0, &hint);
+  Atom wm_delete = XInternAtom(bx_x_display, "WM_DELETE_WINDOW", 1);
+  XSetWMProtocols(bx_x_display, dialogw, &wm_delete, 1);
+
+  gc = XCreateGC(bx_x_display, dialogw, 0, 0);
+  gc_inv = XCreateGC(bx_x_display, dialogw, 0, 0);
+  XSetState(bx_x_display, gc_inv, white_pixel, black_pixel, GXcopy, AllPlanes);
+  XSetBackground(bx_x_display, gc, WhitePixel(bx_x_display, bx_x_screen_num));
+  XSetForeground(bx_x_display, gc, BlackPixel(bx_x_display, bx_x_screen_num));
+
+  XSelectInput(bx_x_display, dialogw, ButtonPressMask
+               | ButtonReleaseMask
+               | KeyPressMask
+               | KeyReleaseMask
+               | ExposureMask
+               | PointerMotionMask
+               | EnterWindowMask
+               | LeaveWindowMask);
+  XMapWindow(bx_x_display, dialogw);
+  XFlush(bx_x_display);
+  dlgwin = dialogw;
+  ctrl_cnt = num_ctrls;
+  controls = new x11_control_c* [num_ctrls];
+  static_items = NULL;
+  cur_ctrl = 0;
+  old_ctrl = -1;
+}
+
+x11_dialog_c::~x11_dialog_c()
+{
+  x11_static_t *temp;
+
+  for (int i = 0; i < ctrl_cnt; i++) {
+    delete controls[i];
+  }
+  delete [] controls;
+  while (static_items != NULL) {
+    temp = static_items;
+    static_items = temp->next;
+    delete [] temp->text;
+    delete temp;
+  }
+  XFreeGC(bx_x_display, gc);
+  XFreeGC(bx_x_display, gc_inv);
+  XDestroyWindow(bx_x_display, dlgwin);
+}
+
+x11_control_c* x11_dialog_c::add_control(int type, int x, int y, unsigned int width,
+                                         unsigned int height, const char *text)
+{
+  x11_control_c *xctrl = new x11_control_c(type, x, y, width, height, text);
+  if (cur_ctrl < ctrl_cnt) {
+    controls[cur_ctrl++] = xctrl;
+  }
+  return xctrl;
+}
+
+void x11_dialog_c::add_static_text(int x, int y, const char *text, int length)
+{
+  x11_static_t *static_item, *temp;
+
+  static_item = (x11_static_t*)malloc(sizeof(x11_static_t));
+  static_item->x = x;
+  static_item->y = y;
+  static_item->text = new char[length+1];
+  strncpy(static_item->text, text, length);
+  static_item->text[length] = 0;
+  static_item->next = NULL;
+  if (static_items == NULL) {
+    static_items = static_item;
+  } else {
+    temp = static_items;
+    while (temp->next) {
+      temp = temp->next;
+    }
+    temp->next = static_item;
+  }
+}
+
+void x11_dialog_c::draw_controls(Display *display)
+{
+  for (int i = 0; i < ctrl_cnt; i++) {
+    controls[i]->draw(display, dlgwin, gc);
+  }
+}
+
+void x11_dialog_c::draw_text(Display *display, int x, int y, const char *text, int length)
+{
+  XDrawImageString(display, dlgwin, gc, x, y, text, length);
+}
+
+void x11_dialog_c::draw_rect(Display *display, int ctrl_num, bx_bool mode)
+{
+  int x, y, w, h;
+
+  controls[ctrl_num]->get_rect(&x, &y, &w, &h);
+  XDrawRectangle(display, dlgwin, mode ? gc : gc_inv, x - 2, y - 2, w + 4, h + 4);
+}
+
+int x11_dialog_c::run(int start_ctrl, int ok, int cancel)
+{
   XEvent xevent;
   KeySym key;
-  int done, i, level, cpos;
-  int retcode = -1;
-  int valid = 0, control = num_ctrls - 1, oldctrl = -1;
-  char name[16], text[10], device[16], message[512];
+  bx_bool init = 0, done = 0, valid = 0, status;
+  int i, x, y;
+  char text[10], editstr[27];
+  x11_static_t *temp;
 
-  level = event->u.logmsg.level;
-  strcpy(name, SIM->get_log_level_name(level));
-  sprintf(device, "Device: %s", event->u.logmsg.prefix);
-  sprintf(message, "Message: %s", event->u.logmsg.msg);
-  x11_create_dialog(&xdlg, name, 400, 115);
-  done = 0;
+  if (start_ctrl < 0) {
+    cur_ctrl = ctrl_cnt - 1;
+  } else {
+    cur_ctrl = start_ctrl;
+  }
   while (!done) {
     XNextEvent(bx_x_display, &xevent);
     switch (xevent.type) {
       case Expose:
         if (xevent.xexpose.count == 0) {
-          XDrawImageString(xevent.xexpose.display, xdlg.dialog,
-                           xdlg.gc, 20, 25, device, strlen(device));
-          if (strlen(message) > 62) {
-            cpos = 62;
-            while ((cpos > 0) && (!isspace(message[cpos]))) cpos--;
-            XDrawImageString(xevent.xexpose.display, xdlg.dialog,
-                             xdlg.gc, 20, 45, message, cpos);
-            XDrawImageString(xevent.xexpose.display, xdlg.dialog,
-                             xdlg.gc, 74, 63, message+cpos+1, strlen(message)-cpos-1);
-          } else {
-            XDrawImageString(xevent.xexpose.display, xdlg.dialog,
-                             xdlg.gc, 20, 45, message, strlen(message));
+          temp = static_items;
+          while (temp != NULL) {
+            draw_text(xevent.xexpose.display, temp->x, temp->y, temp->text, strlen(temp->text));
+            temp = temp->next;
           }
-          xbtn_cont.create(xevent.xexpose.display, &xdlg,
-                           button_x[0] + 2, 80, 65, 20, "Continue");
-          xbtn_acont.create(xevent.xexpose.display, &xdlg,
-                            button_x[1] + 2, 80, 65, 20, "Alwayscont");
-#if BX_DEBUGGER || BX_GDBSTUB
-          xbtn_debug.create(xevent.xexpose.display, &xdlg,
-                            button_x[2] + 2, 80, 65, 20, "Debugger");
-#endif
-          xbtn_quit.create(xevent.xexpose.display, &xdlg,
-                           button_x[num_ctrls-1] + 2, 80, 65, 20, "Quit");
-          oldctrl = control - 1;
-          if (oldctrl < 0) oldctrl = 1;
+          for (i = 0; i < ctrl_cnt; i++) {
+            controls[i]->draw(xevent.xexpose.display, dlgwin, gc);
+          }
+          old_ctrl = cur_ctrl - 1;
+          if (old_ctrl < 0) old_ctrl = 1;
+          init = 1;
         }
         break;
       case ButtonPress:
         if (xevent.xbutton.button == Button1) {
-          if (xbtn_cont.test(&xevent.xbutton)) {
-            control = 0;
-            valid = 1;
-          } else if (xbtn_acont.test(&xevent.xbutton)) {
-            control = 1;
-            valid = 1;
-          } else if (xbtn_quit.test(&xevent.xbutton)) {
-            control = num_ctrls - 1;
-            valid = 1;
-#if BX_DEBUGGER || BX_GDBSTUB
-          } else if (xbtn_debug.test(&xevent.xbutton)) {
-            control = 2;
-            valid = 1;
-#endif
+          for (i = 0; i < ctrl_cnt; i++) {
+            if (controls[i]->test(&xevent.xbutton)) {
+              cur_ctrl = i;
+              if (controls[cur_ctrl]->get_type() == XDC_BUTTON) {
+                valid = 1;
+              } else if (controls[cur_ctrl]->get_type() == XDC_CHECKBOX) {
+                status = !controls[cur_ctrl]->get_status();
+                strcpy(text, status ? "X":" ");
+                controls[cur_ctrl]->get_rect(&x, &y, NULL, NULL);
+                draw_text(bx_x_display, x + 4, y + 14, text, 1);
+                controls[cur_ctrl]->set_status(status);
+              }
+              break;
+            }
           }
         }
         break;
@@ -2230,18 +2377,42 @@ int x11_ask_dialog(BxEvent *event)
       case KeyPress:
         i = XLookupString((XKeyEvent *)&xevent, text, 10, &key, 0);
         if (key == XK_Tab) {
-          control++;
-          if (control >= num_ctrls) control = 0;
+          cur_ctrl++;
+          if (cur_ctrl >= ctrl_cnt) cur_ctrl = 0;
         } else if (key == XK_Escape) {
-          control = num_ctrls - 1;
+          cur_ctrl = cancel;
           done = 1;
+        } else if (controls[cur_ctrl]->get_type() == XDC_EDIT) {
+          if (key == XK_Return) {
+            cur_ctrl = ok;
+            done = 1;
+          } else if (key == XK_BackSpace) {
+            if (controls[cur_ctrl]->process_input(key, "")) {
+              old_ctrl = cur_ctrl ^ 1;
+            }
+          } else if (i == 1) {
+            if (controls[cur_ctrl]->process_input(0, text)) {
+              old_ctrl = cur_ctrl ^ 1;
+            }
+          }
+        } else if (controls[cur_ctrl]->get_type() == XDC_CHECKBOX) {
+          if (key == XK_space) {
+            status = !controls[cur_ctrl]->get_status();
+            strcpy(text, status ? "X":" ");
+            controls[cur_ctrl]->get_rect(&x, &y, NULL, NULL);
+            draw_text(bx_x_display, x + 4, y + 14, text, 1);
+            controls[cur_ctrl]->set_status(status);
+          } else if (key == XK_Return) {
+            cur_ctrl = ok;
+            done = 1;
+          }
         } else if ((key == XK_space) || (key == XK_Return)) {
           done = 1;
         }
         break;
       case ClientMessage:
         if (!strcmp(XGetAtomName(bx_x_display, xevent.xclient.message_type), "WM_PROTOCOLS")) {
-          control = num_ctrls - 1;
+          cur_ctrl = cancel;
           done = 1;
         }
         break;
@@ -2249,29 +2420,85 @@ int x11_ask_dialog(BxEvent *event)
         valid = 0;
         break;
     }
-    if (control != oldctrl) {
-      XDrawRectangle(bx_x_display, xdlg.dialog, xdlg.gc_inv, button_x[oldctrl], 78, 69, 24);
-      XDrawRectangle(bx_x_display, xdlg.dialog, xdlg.gc, button_x[control], 78, 69, 24);
-      oldctrl = control;
+    if (init && (cur_ctrl != old_ctrl)) {
+      if (controls[old_ctrl]->get_type() == XDC_EDIT) {
+        sprintf(editstr, "%s ", controls[old_ctrl]->get_text());
+        controls[old_ctrl]->get_rect(&x, &y, NULL, NULL);
+        draw_text(bx_x_display, x + 4, y + 14, editstr, strlen(editstr));
+      } else {
+        draw_rect(bx_x_display, old_ctrl, 0);
+      }
+      if (controls[cur_ctrl]->get_type() == XDC_EDIT) {
+        sprintf(editstr, "%s_ ", controls[cur_ctrl]->get_text());
+        controls[cur_ctrl]->get_rect(&x, &y, NULL, NULL);
+        draw_text(bx_x_display, x + 4, y + 14, editstr, strlen(editstr));
+      } else {
+        draw_rect(bx_x_display, cur_ctrl, 1);
+      }
+      old_ctrl = cur_ctrl;
     }
   }
+  return cur_ctrl;
+}
+
+// X11 dialog box functions
+
+int x11_ask_dialog(BxEvent *event)
+{
+  x11_control_c *xbtn_cont, *xbtn_acont, *xbtn_quit;
+#if BX_DEBUGGER || BX_GDBSTUB
+  x11_control_c *xbtn_debug;
+  const int button_x[4] = { 36, 121, 206, 291 };
+  const int ask_code[4] = { BX_LOG_ASK_CHOICE_CONTINUE,
+                            BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS,
+                            BX_LOG_ASK_CHOICE_ENTER_DEBUG,
+                            BX_LOG_ASK_CHOICE_DIE };
+  const int num_ctrls = 4;
+#else
+  const int button_x[3] = { 81, 166, 251 };
+  const int ask_code[3] = { BX_LOG_ASK_CHOICE_CONTINUE,
+                            BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS,
+                            BX_LOG_ASK_CHOICE_DIE };
+  const int num_ctrls = 3;
+#endif
+  int level, cpos;
+  int retcode = -1;
+  int control = num_ctrls - 1;
+  char name[16], device[16], message[512];
+
+  level = event->u.logmsg.level;
+  strcpy(name, SIM->get_log_level_name(level));
+  sprintf(device, "Device: %s", event->u.logmsg.prefix);
+  sprintf(message, "Message: %s", event->u.logmsg.msg);
+  x11_dialog_c *xdlg = new x11_dialog_c(name, 400, 115, num_ctrls);
+  xdlg->add_static_text(20, 25, device, strlen(device));
+  if (strlen(message) > 62) {
+    cpos = 62;
+    while ((cpos > 0) && (!isspace(message[cpos]))) cpos--;
+    xdlg->add_static_text(20, 45, message, cpos);
+    xdlg->add_static_text(74, 63, message+cpos+1, strlen(message)-cpos-1);
+  } else {
+    xdlg->add_static_text(20, 45, message, strlen(message));
+  }
+  xbtn_cont = xdlg->add_control(XDC_BUTTON, button_x[0] + 2, 80, 65, 20, "Continue");
+  xbtn_acont = xdlg->add_control(XDC_BUTTON, button_x[1] + 2, 80, 65, 20, "Alwayscont");
+#if BX_DEBUGGER || BX_GDBSTUB
+  xbtn_debug = xdlg->add_control(XDC_BUTTON, button_x[2] + 2, 80, 65, 20, "Debugger");
+#endif
+  xbtn_quit = xdlg->add_control(XDC_BUTTON, button_x[num_ctrls-1] + 2, 80, 65, 20, "Quit");
+  control = xdlg->run(num_ctrls-1, 0, num_ctrls-1);
   retcode = ask_code[control];
-  XFreeGC(bx_x_display, xdlg.gc);
-  XFreeGC(bx_x_display, xdlg.gc_inv);
-  XDestroyWindow(bx_x_display, xdlg.dialog);
+  delete xdlg;
   return retcode;
 }
 
 int x11_string_dialog(bx_param_string_c *param, bx_param_bool_c *param2)
 {
-  x11_dialog_t xdlg;
-  x11_control_c xctl_edit, xbtn_ok, xbtn_cancel, xbtn_status;
-  XEvent xevent;
-  KeySym key;
-  int valid = 0, control = 0, oldctrl = -1, num_ctrls;
-  int done, h, i, ok_button, status = 0;
-  unsigned int len, max, pos = 0;
-  char editstr[26], name[80], text[10], value[BX_PATHNAME_LEN];
+  x11_control_c *xctl_edit, *xbtn_ok, *xbtn_cancel, *xbtn_status = NULL;
+  int control = 0, h, num_ctrls, ok_button;
+  bx_bool status = 0;
+  char name[80], text[10];
+  const char *value;
 
   if (param2 != NULL) {
     strcpy(name, "First CD-ROM image/device");
@@ -2289,164 +2516,23 @@ int x11_string_dialog(bx_param_string_c *param, bx_param_bool_c *param2)
     ok_button = 1;
     num_ctrls = 3;
   }
-  strcpy(value, param->getptr());
-  len = strlen(value);
-  max = param->get_maxsize();
-  x11_create_dialog(&xdlg, name, 250, h);
-  done = 0;
-  while (!done) {
-    XNextEvent(bx_x_display, &xevent);
-    switch (xevent.type) {
-      case Expose:
-        if (xevent.xexpose.count == 0) {
-          if (len < 25) {
-            sprintf(editstr, "%s%s", value, "_ ");
-          } else {
-            pos = len - 24;
-            strncpy(editstr, value+pos, 24);
-            editstr[24] = 0;
-            strcat(editstr, "_");
-          }
-          xctl_edit.create(xevent.xexpose.display, &xdlg, 45, 20, 160, 20,
-                           editstr);
-          xbtn_ok.create(xevent.xexpose.display, &xdlg, 55, h - 30, 65, 20,
-                         "OK");
-          xbtn_cancel.create(xevent.xexpose.display, &xdlg, 130, h - 30, 65, 20,
-                             "Cancel");
-          if (param2 != NULL) {
-            if (status == 1) {
-              strcpy(text, "X");
-            } else {
-              strcpy(text, " ");
-            }
-            xbtn_status.create(xevent.xexpose.display, &xdlg, 45, 50, 15, 16,
-                               text);
-            XDrawImageString(bx_x_display, xdlg.dialog, xdlg.gc, 70, 62, "Inserted", 8);
-          }
-          oldctrl = control - 1;
-          if (oldctrl < 0) oldctrl = 1;
-        }
-        break;
-      case ButtonPress:
-        if (xevent.xbutton.button == Button1) {
-          if (xctl_edit.test(&xevent.xbutton)) {
-            control = 0;
-            valid = 1;
-          } else if (xbtn_status.test(&xevent.xbutton)) {
-            control = 1;
-            valid = 1;
-            status ^= 1;
-            if (status == 1) {
-              strcpy(text, "X");
-            } else {
-              strcpy(text, " ");
-            }
-            XDrawImageString(bx_x_display, xdlg.dialog, xdlg.gc, 49, 64, text, 1);
-          } else if (xbtn_ok.test(&xevent.xbutton)) {
-            control = ok_button;
-            valid = 1;
-          } else if (xbtn_cancel.test(&xevent.xbutton)) {
-            control = num_ctrls - 1;
-            valid = 1;
-          }
-        }
-        break;
-      case ButtonRelease:
-        if ((xevent.xbutton.button == Button1) && (valid == 1)) {
-          if (control >= ok_button) {
-            done = 1;
-          }
-        }
-        break;
-      case KeyPress:
-        i = XLookupString((XKeyEvent *)&xevent, text, 10, &key, 0);
-        if (key == XK_Tab) {
-          control++;
-          if (control >= num_ctrls) control = 0;
-        } else if (key == XK_Escape) {
-          control = num_ctrls - 1;
-          done = 1;
-        } else if (control == 0) {
-          if (key == XK_Return) {
-            control = ok_button;
-            done = 1;
-          } else if (key == XK_BackSpace) {
-            if (len > 0) {
-              value[--len] = 0;
-              if (pos > 0) pos--;
-              oldctrl = -1;
-            }
-          } else if ((i == 1) && (len < max)) {
-            strcat(value, text);
-            len = strlen(value);
-            if (len > 24) pos++;
-            oldctrl = -1;
-          }
-        } else if (control >= ok_button) {
-          if ((key == XK_space) || (key == XK_Return)) {
-            done = 1;
-          }
-        } else {
-          if (key == XK_space) {
-            status ^= 1;
-            if (status == 1) {
-              strcpy(text, "X");
-            } else {
-              strcpy(text, " ");
-            }
-            XDrawImageString(bx_x_display, xdlg.dialog, xdlg.gc, 49, 64, text, 1);
-          } else if (key == XK_Return) {
-            control = ok_button;
-            done = 1;
-          }
-        }
-        break;
-      case ClientMessage:
-        if (!strcmp(XGetAtomName(bx_x_display, xevent.xclient.message_type), "WM_PROTOCOLS")) {
-          control = 2;
-          done = 1;
-        }
-        break;
-      case LeaveNotify:
-        valid = 0;
-        break;
-    }
-    if (control != oldctrl) {
-      if (oldctrl >= ok_button) {
-        XDrawRectangle(bx_x_display, xdlg.dialog, xdlg.gc_inv, oldctrl==ok_button?53:128, h - 32, 69, 24);
-      } else if (oldctrl == 1) {
-        XDrawRectangle(bx_x_display, xdlg.dialog, xdlg.gc_inv, 43, 48, 19, 20);
-      } else if (oldctrl == 0) {
-        if (len < 25) {
-          sprintf(editstr, "%s%s", value, " ");
-        } else {
-          strncpy(editstr, value+pos, 24);
-          editstr[24] = 0;
-          strcat(editstr, " ");
-        }
-        XDrawImageString(bx_x_display, xdlg.dialog, xdlg.gc, 49, 34, editstr, strlen(editstr));
-      }
-      if (control >= ok_button) {
-        XDrawRectangle(bx_x_display, xdlg.dialog, xdlg.gc, control==ok_button?53:128, h - 32, 69, 24);
-      } else if (control == 1) {
-        XDrawRectangle(bx_x_display, xdlg.dialog, xdlg.gc, 43, 48, 19, 20);
-      } else if (control == 0) {
-        if (len < 25) {
-          sprintf(editstr, "%s%s", value, "_ ");
-        } else {
-          strncpy(editstr, value+pos, 24);
-          editstr[24] = 0;
-          strcat(editstr, "_");
-        }
-        XDrawImageString(bx_x_display, xdlg.dialog, xdlg.gc, 49, 34, editstr, strlen(editstr));
-      }
-      oldctrl = control;
-    }
+  x11_dialog_c *xdlg = new x11_dialog_c(name, 250, h, num_ctrls);
+  xctl_edit = xdlg->add_control(XDC_EDIT, 45, 20, 160, 20, param->getptr());
+  xctl_edit->set_maxlen(param->get_maxsize());
+  if (param2 != NULL) {
+    strcpy(text, status ? "X":" ");
+    xbtn_status = xdlg->add_control(XDC_CHECKBOX, 45, 50, 15, 16, text);
+    xdlg->add_static_text(70, 62, "Inserted", 8);
   }
+  xbtn_ok = xdlg->add_control(XDC_BUTTON, 55, h - 30, 65, 20, "OK");
+  xbtn_cancel = xdlg->add_control(XDC_BUTTON, 130, h - 30, 65, 20, "Cancel");
+  control = xdlg->run(0, ok_button, num_ctrls-1);
   if (control == ok_button) {
+    value = xctl_edit->get_value();
     if (param2 != NULL) {
+      status = xbtn_status->get_status();
       if (status == 1) {
-        if (len > 0) {
+        if (strlen(value) > 0) {
           param->set(value);
           param2->set(1);
         } else {
@@ -2459,9 +2545,7 @@ int x11_string_dialog(bx_param_string_c *param, bx_param_bool_c *param2)
       param->set(value);
     }
   }
-  XFreeGC(bx_x_display, xdlg.gc);
-  XFreeGC(bx_x_display, xdlg.gc_inv);
-  XDestroyWindow(bx_x_display, xdlg.dialog);
+  delete xdlg;
   if (control == ok_button) {
     return 1;
   } else {
@@ -2471,15 +2555,11 @@ int x11_string_dialog(bx_param_string_c *param, bx_param_bool_c *param2)
 
 int x11_yesno_dialog(bx_param_bool_c *param)
 {
-  x11_dialog_t xdlg;
-  x11_control_c xbtn_yes, xbtn_no;
-  XEvent xevent;
-  KeySym key;
+  x11_control_c *xbtn_yes, *xbtn_no;
   int button_x[2], size_x, size_y;
-  int valid = 0, oldctrl = -1;
-  int control, done, i, ypos;
+  int control, ypos;
   unsigned int cpos1, cpos2, len, maxlen, lines;
-  char name[80], text[10], message[512];
+  char name[80], message[512];
 
   if (param->get_label() != NULL) {
     strcpy(name, param->get_label());
@@ -2489,7 +2569,6 @@ int x11_yesno_dialog(bx_param_bool_c *param)
   strcpy(message, param->get_description());
   cpos1 = 0;
   cpos2 = 0;
-  ypos = 34;
   lines = 0;
   maxlen = 0;
   while (cpos2 < strlen(message)) {
@@ -2497,8 +2576,8 @@ int x11_yesno_dialog(bx_param_bool_c *param)
     while ((cpos2 < strlen(message)) && (message[cpos2] != 0x0a)) cpos2++;
     len = cpos2 - cpos1;
     if (len > maxlen) maxlen = len;
-    cpos1 = cpos2 + 1;
     cpos2++;
+    cpos1 = cpos2;
   }
   if (maxlen < 36) {
     size_x = 250;
@@ -2515,81 +2594,23 @@ int x11_yesno_dialog(bx_param_bool_c *param)
     size_y = 60 + lines * 15;
   }
   control = 1 - param->get();
-  x11_create_dialog(&xdlg, name, size_x, size_y);
-  done = 0;
-  while (!done) {
-    XNextEvent(bx_x_display, &xevent);
-    switch (xevent.type) {
-      case Expose:
-        if (xevent.xexpose.count == 0) {
-          cpos1 = 0;
-          cpos2 = 0;
-          ypos = 34;
-          while (cpos2 < strlen(message)) {
-            while ((cpos2 < strlen(message)) && (message[cpos2] != 0x0a)) cpos2++;
-            len = cpos2 - cpos1;
-            XDrawImageString(bx_x_display, xdlg.dialog,
-                             xdlg.gc, 20, ypos, message+cpos1, len);
-            cpos1 = cpos2 + 1;
-            cpos2++;
-            ypos += 15;
-          }
-          xbtn_yes.create(xevent.xexpose.display, &xdlg, button_x[0], size_y - 30, 65, 20,
-                          "Yes");
-          xbtn_no.create(xevent.xexpose.display, &xdlg, button_x[1], size_y - 30, 65, 20,
-                         "No");
-          oldctrl = control - 1;
-          if (oldctrl < 0) oldctrl = 1;
-        }
-        break;
-      case ButtonPress:
-        if (xevent.xbutton.button == Button1) {
-          if (xbtn_yes.test(&xevent.xbutton)) {
-            control = 0;
-            valid = 1;
-          } else if (xbtn_no.test(&xevent.xbutton)) {
-            control = 1;
-            valid = 1;
-          }
-        }
-        break;
-      case ButtonRelease:
-        if ((xevent.xbutton.button == Button1) && (valid == 1)) {
-          done = 1;
-        }
-        break;
-      case KeyPress:
-        i = XLookupString((XKeyEvent *)&xevent, text, 10, &key, 0);
-        if (key == XK_Tab) {
-          control++;
-          if (control > 1) control = 0;
-        } else if (key == XK_Escape) {
-          control = 1;
-          done = 1;
-        } else if ((key == XK_space) || (key == XK_Return)) {
-          done = 1;
-        }
-        break;
-      case ClientMessage:
-        if (!strcmp(XGetAtomName(bx_x_display, xevent.xclient.message_type), "WM_PROTOCOLS")) {
-          control = 1;
-          done = 1;
-        }
-        break;
-      case LeaveNotify:
-        valid = 0;
-        break;
-    }
-    if (control != oldctrl) {
-      XDrawRectangle(bx_x_display, xdlg.dialog, xdlg.gc_inv, button_x[oldctrl] - 2, size_y - 32, 69, 24);
-      XDrawRectangle(bx_x_display, xdlg.dialog, xdlg.gc, button_x[control] - 2, size_y - 32, 69, 24);
-      oldctrl = control;
-    }
+  x11_dialog_c *xdlg = new x11_dialog_c(name, size_x, size_y, 2);
+  cpos1 = 0;
+  cpos2 = 0;
+  ypos = 34;
+  while (cpos2 < strlen(message)) {
+    while ((cpos2 < strlen(message)) && (message[cpos2] != 0x0a)) cpos2++;
+    len = cpos2 - cpos1;
+    xdlg->add_static_text(20, ypos, message+cpos1, len);
+    cpos2++;
+    cpos1 = cpos2;
+    ypos += 15;
   }
+  xbtn_yes = xdlg->add_control(XDC_BUTTON, button_x[0], size_y - 30, 65, 20, "Yes");
+  xbtn_no = xdlg->add_control(XDC_BUTTON, button_x[1], size_y - 30, 65, 20, "No");
+  control = xdlg->run(control, 0, 1);
   param->set(1 - control);
-  XFreeGC(bx_x_display, xdlg.gc);
-  XFreeGC(bx_x_display, xdlg.gc_inv);
-  XDestroyWindow(bx_x_display, xdlg.dialog);
+  delete xdlg;
   return control;
 }
 
