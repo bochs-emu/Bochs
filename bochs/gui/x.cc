@@ -2067,9 +2067,10 @@ public:
   virtual ~x11_control_c();
 
   void draw(Display *display, Window win, GC gc);
+  void draw_rect(Display *display, Window win, GC gc);
+  void draw_text(Display *display, Window win, GC gc, const char *text);
   int  test(XButtonEvent *bev);
   int  get_type() {return type;}
-  void get_rect(int *x, int *y, int *w, int *h);
   const char* get_text() {return text;}
   // checkbox
   int  get_status() {return status;}
@@ -2125,8 +2126,24 @@ x11_control_c::~x11_control_c()
 
 void x11_control_c::draw(Display *display, Window win, GC gc)
 {
+  int ty;
+
   XDrawRectangle(display, win, gc, xmin, ymin, width, height);
-  XDrawImageString(display, win, gc, xmin+4, ymin+14, (char *)text, strlen(text));
+  ty = ymin + height - (height - 12) / 2;
+  XDrawImageString(display, win, gc, xmin+4, ty, (char *)text, strlen(text));
+}
+
+void x11_control_c::draw_rect(Display *display, Window win, GC gc)
+{
+  XDrawRectangle(display, win, gc, xmin - 2, ymin - 2, width + 4, height + 4);
+}
+
+void x11_control_c::draw_text(Display *display, Window win, GC gc, const char *_text)
+{
+  int ty;
+
+  ty = ymin + height - (height - 12) / 2;
+  XDrawImageString(display, win, gc, xmin+4, ty, (char *)_text, strlen(_text));
 }
 
 int x11_control_c::test(XButtonEvent *bev)
@@ -2137,14 +2154,6 @@ int x11_control_c::test(XButtonEvent *bev)
     }
   }
   return 0;
-}
-
-void x11_control_c::get_rect(int *x, int *y, int *w, int *h)
-{
-  *x = xmin;
-  *y = ymin;
-  if (w != NULL) *w = width;
-  if (h != NULL) *h = height;
 }
 
 void x11_control_c::set_maxlen(unsigned int _max)
@@ -2191,10 +2200,9 @@ public:
 
   x11_control_c* add_control(int type, int x, int y, unsigned int width,
                              unsigned int height, const char *text);
-  void add_static_text(int x, int y, const char *text, int length);
   void draw_controls(Display *display);
+  void add_static_text(int x, int y, const char *text, int length);
   void draw_text(Display *display, int x, int y, const char *text, int length);
-  void draw_rect(Display *display, int ctrl_num, bx_bool mode);
   int run(int start_ctrl, int ok, int cancel);
 private:
   Window dlgwin;
@@ -2276,6 +2284,13 @@ x11_control_c* x11_dialog_c::add_control(int type, int x, int y, unsigned int wi
   return xctrl;
 }
 
+void x11_dialog_c::draw_controls(Display *display)
+{
+  for (int i = 0; i < ctrl_cnt; i++) {
+    controls[i]->draw(display, dlgwin, gc);
+  }
+}
+
 void x11_dialog_c::add_static_text(int x, int y, const char *text, int length)
 {
   x11_static_t *static_item, *temp;
@@ -2298,24 +2313,9 @@ void x11_dialog_c::add_static_text(int x, int y, const char *text, int length)
   }
 }
 
-void x11_dialog_c::draw_controls(Display *display)
-{
-  for (int i = 0; i < ctrl_cnt; i++) {
-    controls[i]->draw(display, dlgwin, gc);
-  }
-}
-
 void x11_dialog_c::draw_text(Display *display, int x, int y, const char *text, int length)
 {
   XDrawImageString(display, dlgwin, gc, x, y, text, length);
-}
-
-void x11_dialog_c::draw_rect(Display *display, int ctrl_num, bx_bool mode)
-{
-  int x, y, w, h;
-
-  controls[ctrl_num]->get_rect(&x, &y, &w, &h);
-  XDrawRectangle(display, dlgwin, mode ? gc : gc_inv, x - 2, y - 2, w + 4, h + 4);
 }
 
 int x11_dialog_c::run(int start_ctrl, int ok, int cancel)
@@ -2323,7 +2323,7 @@ int x11_dialog_c::run(int start_ctrl, int ok, int cancel)
   XEvent xevent;
   KeySym key;
   bx_bool init = 0, done = 0, valid = 0, status;
-  int i, x, y;
+  int i;
   char text[10], editstr[27];
   x11_static_t *temp;
 
@@ -2359,10 +2359,8 @@ int x11_dialog_c::run(int start_ctrl, int ok, int cancel)
                 valid = 1;
               } else if (controls[cur_ctrl]->get_type() == XDC_CHECKBOX) {
                 status = !controls[cur_ctrl]->get_status();
-                strcpy(text, status ? "X":" ");
-                controls[cur_ctrl]->get_rect(&x, &y, NULL, NULL);
-                draw_text(bx_x_display, x + 4, y + 14, text, 1);
                 controls[cur_ctrl]->set_status(status);
+                controls[cur_ctrl]->draw_text(bx_x_display, dlgwin, gc, status ? "X":" ");
               }
               break;
             }
@@ -2398,10 +2396,8 @@ int x11_dialog_c::run(int start_ctrl, int ok, int cancel)
         } else if (controls[cur_ctrl]->get_type() == XDC_CHECKBOX) {
           if (key == XK_space) {
             status = !controls[cur_ctrl]->get_status();
-            strcpy(text, status ? "X":" ");
-            controls[cur_ctrl]->get_rect(&x, &y, NULL, NULL);
-            draw_text(bx_x_display, x + 4, y + 14, text, 1);
             controls[cur_ctrl]->set_status(status);
+            controls[cur_ctrl]->draw_text(bx_x_display, dlgwin, gc, status ? "X":" ");
           } else if (key == XK_Return) {
             cur_ctrl = ok;
             done = 1;
@@ -2423,17 +2419,15 @@ int x11_dialog_c::run(int start_ctrl, int ok, int cancel)
     if (init && (cur_ctrl != old_ctrl)) {
       if (controls[old_ctrl]->get_type() == XDC_EDIT) {
         sprintf(editstr, "%s ", controls[old_ctrl]->get_text());
-        controls[old_ctrl]->get_rect(&x, &y, NULL, NULL);
-        draw_text(bx_x_display, x + 4, y + 14, editstr, strlen(editstr));
+        controls[old_ctrl]->draw_text(bx_x_display, dlgwin, gc, editstr);
       } else {
-        draw_rect(bx_x_display, old_ctrl, 0);
+        controls[old_ctrl]->draw_rect(bx_x_display, dlgwin, gc_inv);
       }
       if (controls[cur_ctrl]->get_type() == XDC_EDIT) {
         sprintf(editstr, "%s_ ", controls[cur_ctrl]->get_text());
-        controls[cur_ctrl]->get_rect(&x, &y, NULL, NULL);
-        draw_text(bx_x_display, x + 4, y + 14, editstr, strlen(editstr));
+        controls[cur_ctrl]->draw_text(bx_x_display, dlgwin, gc, editstr);
       } else {
-        draw_rect(bx_x_display, cur_ctrl, 1);
+        controls[cur_ctrl]->draw_rect(bx_x_display, dlgwin, gc);
       }
       old_ctrl = cur_ctrl;
     }
