@@ -148,8 +148,7 @@ Bit32u corei7_sandy_bridge_2600k_t::get_isa_extensions_bitmask(void) const
          BX_CPU_XSAVEOPT |
          BX_CPU_AES_PCLMULQDQ |
          BX_CPU_AVX |
-         BX_CPU_LM_LAHF_SAHF |
-         BX_CPU_X86_64;
+         BX_CPU_LM_LAHF_SAHF;
 }
 
 Bit32u corei7_sandy_bridge_2600k_t::get_cpu_extensions_bitmask(void) const
@@ -164,6 +163,7 @@ Bit32u corei7_sandy_bridge_2600k_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_PAT |
          BX_CPU_XAPIC |
       /* BX_CPU_X2APIC | */
+         BX_CPU_LONG_MODE |
          BX_CPU_NX |
          BX_CPU_PCID;
 }

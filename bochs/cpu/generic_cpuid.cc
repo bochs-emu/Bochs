@@ -756,7 +756,7 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
 #endif
 
 #if BX_SUPPORT_X86_64
-  features_bitmask |= BX_CPU_X86_64 | BX_CPU_RDTSCP | BX_CPU_LM_LAHF_SAHF;
+  features_bitmask |= BX_CPU_RDTSCP | BX_CPU_LM_LAHF_SAHF;
 
   if (sse_enabled < BX_CPUID_SUPPORT_SSE2) {
     BX_PANIC(("PANIC: x86-64 emulation requires SSE2 support !"));
@@ -831,7 +831,7 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
     features_bitmask |= BX_CPU_SMEP;
 
 #if BX_SUPPORT_X86_64
-  features_bitmask |= BX_CPU_FFXSR | BX_CPU_NX;
+  features_bitmask |= BX_CPU_LONG_MODE | BX_CPU_FFXSR | BX_CPU_NX;
 
   static bx_bool pcid_enabled = SIM->get_param_bool(BXPN_CPUID_PCID)->get();
   if (pcid_enabled)
@@ -925,7 +925,7 @@ Bit32u bx_generic_cpuid_t::get_extended_cpuid_features(void) const
     features |= BX_CPUID_EXT_SSSE3;
 
 #if BX_SUPPORT_X86_64
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_X86_64))
+  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_LONG_MODE))
     features |= BX_CPUID_EXT_CMPXCHG16B;
 
   if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_PCID))

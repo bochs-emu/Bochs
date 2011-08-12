@@ -96,11 +96,10 @@ Bit32u p4_prescott_celeron_336_t::get_isa_extensions_bitmask(void) const
          BX_CPU_SSE |
          BX_CPU_SSE2 |
          BX_CPU_SSE3 |
-         BX_CPU_SSSE3 |
 #if BX_SUPPORT_MONITOR_MWAIT
          BX_CPU_MONITOR_MWAIT |
 #endif
-         BX_CPU_X86_64;
+         BX_CPU_SSSE3;
 }
 
 Bit32u p4_prescott_celeron_336_t::get_cpu_extensions_bitmask(void) const
@@ -114,6 +113,7 @@ Bit32u p4_prescott_celeron_336_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_MTRR |
          BX_CPU_PAT |
          BX_CPU_XAPIC |
+         BX_CPU_LONG_MODE |
          BX_CPU_NX;
 }
 

@@ -94,9 +94,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPU_AVX2             (1 << 25)       /* AVX2 instruction */
 #define BX_CPU_AVX_F16C         (1 << 26)       /* AVX F16 convert instruction */
 #define BX_CPU_AVX_FMA          (1 << 27)       /* AVX FMA instruction */
-#define BX_CPU_X86_64           (1 << 28)       /* x86-64 instruction */
-#define BX_CPU_LM_LAHF_SAHF     (1 << 29)       /* Long Mode LAHF/SAHF instruction */
-#define BX_CPU_BMI              (1 << 30)       /* BMI instruction */
+#define BX_CPU_LM_LAHF_SAHF     (1 << 28)       /* Long Mode LAHF/SAHF instruction */
+#define BX_CPU_BMI              (1 << 29)       /* BMI instruction */
 
 // cpuid non-ISA features
 #define BX_CPU_DEBUG_EXTENSIONS (1 << 0)        /* Debug Extensions support */
@@ -110,10 +109,11 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPU_XAPIC            (1 << 8)        /* XAPIC support */
 #define BX_CPU_X2APIC           (1 << 9)        /* X2APIC support */
 #define BX_CPU_NX               (1 << 10)       /* Non-Execute support */
-#define BX_CPU_1G_PAGES         (1 << 11)       /* 1Gb pages support */
-#define BX_CPU_PCID             (1 << 12)       /* PCID pages support */
-#define BX_CPU_SMEP             (1 << 13)       /* SMEP support */
-#define BX_CPU_FFXSR            (1 << 14)       /* EFER.FFXSR support */
+#define BX_CPU_LONG_MODE        (1 << 11)       /* Long Mode (x86-64) support */
+#define BX_CPU_1G_PAGES         (1 << 12)       /* 1Gb pages support */
+#define BX_CPU_PCID             (1 << 13)       /* PCID pages support */
+#define BX_CPU_SMEP             (1 << 14)       /* SMEP support */
+#define BX_CPU_FFXSR            (1 << 15)       /* EFER.FFXSR support */
 
 // CPUID defines - STD features CPUID[0x00000001].EDX
 // ----------------------------

@@ -91,8 +91,7 @@ Bit32u athlon64_clawhammer_t::get_isa_extensions_bitmask(void) const
          BX_CPU_CLFLUSH |
          BX_CPU_SSE |
          BX_CPU_SSE2 |
-         BX_CPU_LM_LAHF_SAHF |
-         BX_CPU_X86_64;
+         BX_CPU_LM_LAHF_SAHF;
 }
 
 Bit32u athlon64_clawhammer_t::get_cpu_extensions_bitmask(void) const
@@ -106,6 +105,7 @@ Bit32u athlon64_clawhammer_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_MTRR |
          BX_CPU_PAT |
          BX_CPU_XAPIC |
+         BX_CPU_LONG_MODE |
          BX_CPU_NX;
 }
 

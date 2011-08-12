@@ -913,7 +913,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes16[256*2] = {
   /* 0F 0A */ { 0, &Ia_Invalid    },
   /* 0F 0B */ { 0, &Ia_ud2a       },
   /* 0F 0C */ { 0, &Ia_Invalid    },
-  /* 0F 0D */ { 0, &Ia_prefetch   },   // 3DNow!
+  /* 0F 0D */ { 0, &Ia_prefetchw  },   // 3DNow!
   /* 0F 0E */ { 0, &Ia_femms      },   // 3DNow!
   /* 0F 0F */ { GRP3DNOW          },
   /* 0F 10 */ { GRPSSE(0f10)      },
@@ -1434,7 +1434,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes32[256*2] = {
   /* 0F 0A */ { 0, &Ia_Invalid    },
   /* 0F 0B */ { 0, &Ia_ud2a       },
   /* 0F 0C */ { 0, &Ia_Invalid    },
-  /* 0F 0D */ { 0, &Ia_prefetch   },   // 3DNow!
+  /* 0F 0D */ { 0, &Ia_prefetchw  },   // 3DNow!
   /* 0F 0E */ { 0, &Ia_femms      },   // 3DNow!
   /* 0F 0F */ { GRP3DNOW          },
   /* 0F 10 */ { GRPSSE(0f10)      },
@@ -1955,7 +1955,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes64w[256*2] = {
   /* 0F 0A */ { 0, &Ia_Invalid    },
   /* 0F 0B */ { 0, &Ia_ud2a       },
   /* 0F 0C */ { 0, &Ia_Invalid    },
-  /* 0F 0D */ { 0, &Ia_prefetch   },   // 3DNow!
+  /* 0F 0D */ { 0, &Ia_prefetchw  },   // 3DNow!
   /* 0F 0E */ { 0, &Ia_femms      },   // 3DNow!
   /* 0F 0F */ { GRP3DNOW          },
   /* 0F 10 */ { GRPSSE(0f10)      },
@@ -2473,7 +2473,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes64d[256*2] = {
   /* 0F 0A */ { 0, &Ia_Invalid    },
   /* 0F 0B */ { 0, &Ia_ud2a       },
   /* 0F 0C */ { 0, &Ia_Invalid    },
-  /* 0F 0D */ { 0, &Ia_prefetch   },   // 3DNow!
+  /* 0F 0D */ { 0, &Ia_prefetchw  },   // 3DNow!
   /* 0F 0E */ { 0, &Ia_femms      },   // 3DNow!
   /* 0F 0F */ { GRP3DNOW          },
   /* 0F 10 */ { GRPSSE(0f10)      },
@@ -2991,7 +2991,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes64q[256*2] = {
   /* 0F 0A */ { 0, &Ia_Invalid    },
   /* 0F 0B */ { 0, &Ia_ud2a       },
   /* 0F 0C */ { 0, &Ia_Invalid    },
-  /* 0F 0D */ { 0, &Ia_prefetch   },   // 3DNow!
+  /* 0F 0D */ { 0, &Ia_prefetchw  },   // 3DNow!
   /* 0F 0E */ { 0, &Ia_femms      },   // 3DNow!
   /* 0F 0F */ { GRP3DNOW          },
   /* 0F 10 */ { GRPSSE(0f10)      },

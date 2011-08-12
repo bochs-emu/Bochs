@@ -67,9 +67,8 @@
 #define IA_AVX2             (1 << 25)       /* AVX2 instruction */
 #define IA_AVX_F16C         (1 << 26)       /* AVX F16 convert instruction */
 #define IA_AVX_FMA          (1 << 27)       /* AVX FMA instruction */
-#define IA_X86_64           (1 << 28)       /* x86-64 instruction */
-#define IA_LM_LAHF_SAHF     (1 << 29)       /* Long Mode LAHF/SAHF instruction */
-#define IA_BMI              (1 << 30)       /* BMI instruction */
+#define IA_LM_LAHF_SAHF     (1 << 28)       /* Long Mode LAHF/SAHF instruction */
+#define IA_BMI              (1 << 29)       /* BMI instruction */
 
 /* general purpose bit register */
 enum {

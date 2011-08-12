@@ -136,8 +136,7 @@ Bit32u core2_penryn_t9600_t::get_isa_extensions_bitmask(void) const
 #endif
          BX_CPU_SMX |
          BX_CPU_XSAVE |
-         BX_CPU_LM_LAHF_SAHF |
-         BX_CPU_X86_64;
+         BX_CPU_LM_LAHF_SAHF;
 }
 
 Bit32u core2_penryn_t9600_t::get_cpu_extensions_bitmask(void) const
@@ -151,6 +150,7 @@ Bit32u core2_penryn_t9600_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_MTRR |
          BX_CPU_PAT |
          BX_CPU_XAPIC |
+         BX_CPU_LONG_MODE |
          BX_CPU_NX;
 }
 
