@@ -93,7 +93,7 @@ Bit32u p4_willamette_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_PSE36 |
 #endif
          BX_CPU_MTRR |
-         BX_CPU_PAT;
+         BX_CPU_PAT |
          BX_CPU_XAPIC;
 }
 
