@@ -732,14 +732,10 @@ void ParseBkpt()
 int FillSSE(int LineCount)
 {
 #if BX_CPU_LEVEL >= 6
-    if (! CpuSupportSSE)
-        return (LineCount);
-
     Bit64u val = 0;
     bx_param_num_c *p;
     char *cols[3];
     char ssetxt[80];
-    int i;
 
     if ((rV[CR0_Rnum] & 0xc) != 0)  // TS or EM flags in CR0 temporarily disable SSE
     {
@@ -759,7 +755,7 @@ int FillSSE(int LineCount)
     ssetxt[10] = '0';       // I'm putting a hex value in the decimal column -- more room there!
     ssetxt[11] = 'x';
     strcpy (ssetxt + 28, " : ");
-    for (i = 0; i < BX_XMM_REGISTERS; i++)
+    for (int i = 0; i < BX_XMM_REGISTERS; i++)
     {
         if (i >= 10)
         {

@@ -974,8 +974,8 @@ AC_ARG_ENABLE(show-ips,
     AC_DEFINE(BX_SHOW_IPS, 0)
    fi],
   [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SHOW_IPS, 0)
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SHOW_IPS, 1)
     ]
   )
 
