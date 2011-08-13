@@ -42,7 +42,7 @@ public:
   virtual Bit32u get_isa_extensions_bitmask(void) const = 0;
   virtual Bit32u get_cpu_extensions_bitmask(void) const = 0;
 
-  virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const {}
+  virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const = 0;
 
   virtual void dump_cpuid(void) const = 0;
 
@@ -83,18 +83,18 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPU_MONITOR_MWAIT    (1 << 14)       /* MONITOR/MWAIT instruction */
 #define BX_CPU_VMX              (1 << 15)       /* VMX instruction */
 #define BX_CPU_SMX              (1 << 16)       /* SMX instruction */
-#define BX_CPU_RDTSCP           (1 << 17)       /* RDTSCP instruction */
-#define BX_CPU_XSAVE            (1 << 18)       /* XSAVE/XRSTOR extensions instruction */
-#define BX_CPU_XSAVEOPT         (1 << 19)       /* XSAVEOPT instruction */
-#define BX_CPU_AES_PCLMULQDQ    (1 << 20)       /* AES+PCLMULQDQ instruction */
-#define BX_CPU_MOVBE            (1 << 21)       /* MOVBE Intel Atom(R) instruction */
-#define BX_CPU_FSGSBASE         (1 << 22)       /* FS/GS BASE access instruction */
-#define BX_CPU_INVPCID          (1 << 23)       /* INVPCID instruction */
-#define BX_CPU_AVX              (1 << 24)       /* AVX instruction */
-#define BX_CPU_AVX2             (1 << 25)       /* AVX2 instruction */
-#define BX_CPU_AVX_F16C         (1 << 26)       /* AVX F16 convert instruction */
-#define BX_CPU_AVX_FMA          (1 << 27)       /* AVX FMA instruction */
-#define BX_CPU_LM_LAHF_SAHF     (1 << 28)       /* Long Mode LAHF/SAHF instruction */
+#define BX_CPU_LM_LAHF_SAHF     (1 << 17)       /* Long Mode LAHF/SAHF instruction */
+#define BX_CPU_RDTSCP           (1 << 18)       /* RDTSCP instruction */
+#define BX_CPU_XSAVE            (1 << 19)       /* XSAVE/XRSTOR extensions instruction */
+#define BX_CPU_XSAVEOPT         (1 << 20)       /* XSAVEOPT instruction */
+#define BX_CPU_AES_PCLMULQDQ    (1 << 21)       /* AES+PCLMULQDQ instruction */
+#define BX_CPU_MOVBE            (1 << 22)       /* MOVBE Intel Atom(R) instruction */
+#define BX_CPU_FSGSBASE         (1 << 23)       /* FS/GS BASE access instruction */
+#define BX_CPU_INVPCID          (1 << 24)       /* INVPCID instruction */
+#define BX_CPU_AVX              (1 << 25)       /* AVX instruction */
+#define BX_CPU_AVX2             (1 << 26)       /* AVX2 instruction */
+#define BX_CPU_AVX_F16C         (1 << 27)       /* AVX F16 convert instruction */
+#define BX_CPU_AVX_FMA          (1 << 28)       /* AVX FMA instruction */
 #define BX_CPU_BMI              (1 << 29)       /* BMI instruction */
 
 // cpuid non-ISA features
