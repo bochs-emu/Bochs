@@ -267,7 +267,7 @@ HWND CreateLabel(HWND hDlg, UINT cid, UINT xpos, UINT ypos, UINT width, BOOL hid
   r.left = xpos;
   r.top = ypos + 2;
   r.right = r.left + width;
-  r.bottom = r.top + 15;
+  r.bottom = r.top + 16;
   MapDialogRect(hDlg, &r);
   Label = CreateWindow("STATIC", text, WS_CHILD, r.left, r.top, r.right-r.left+1, r.bottom-r.top+1, hDlg, (HMENU)code, NULL, NULL);
   SendMessage(Label, WM_SETFONT, (WPARAM)DlgFont, TRUE);
@@ -485,8 +485,9 @@ void EnableParam(HWND hDlg, UINT cid, bx_param_c *param, BOOL val)
 
 UINT GetLabelText(bx_param_c *param, bx_list_c *list, char *buffer)
 {
-  const char *label;
+  const char *label, *tmpstr;
   char tmpbuf[512];
+  int len;
 
   label = param->get_label();
   if (label == NULL) {
@@ -500,7 +501,16 @@ UINT GetLabelText(bx_param_c *param, bx_list_c *list, char *buffer)
   if (buffer != NULL) {
     lstrcpy(buffer, tmpbuf);
   }
-  return (lstrlen(tmpbuf) * 4);
+  len = lstrlen(tmpbuf);
+  tmpstr = strchr(tmpbuf, 10);
+  if (tmpstr != NULL) {
+    if (lstrlen(tmpstr) > (len / 2)) {
+      len = lstrlen(tmpstr) - 1;
+    } else {
+      len -= lstrlen(tmpstr);
+    }
+  }
+  return (len * 4);
 }
 
 SIZE CreateParamList(HWND hDlg, UINT lid, UINT xpos, UINT ypos, BOOL hide, bx_list_c *list)
