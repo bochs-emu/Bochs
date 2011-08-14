@@ -208,6 +208,9 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_EFER:
+      if (! BX_CPU_THIS_PTR efer_suppmask)
+        return 0;
+
       val64 = BX_CPU_THIS_PTR efer.get32();
       break;
 #endif
