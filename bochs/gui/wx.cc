@@ -1676,7 +1676,7 @@ void bx_wx_gui_c::show_ips(Bit32u ips_count)
   bx_bool is_main_thread = wxThread::IsMain();
   bx_bool needmutex = !is_main_thread && SIM->is_sim_thread();
   if (needmutex) wxMutexGuiEnter();
-  sprintf(ips_text, "IPS: %9u", ips_count);
+  sprintf(ips_text, "IPS: %3.3fM", ips_count / 1000000.0);
   theFrame->SetStatusText(wxString(ips_text, wxConvUTF8), 0);
   if (needmutex) wxMutexGuiLeave();
 }

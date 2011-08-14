@@ -143,7 +143,7 @@
 // Minimum Emulated IPS.
 // This is used in the realtime PIT as well as for checking the
 // IPS value set in the config file.
-#define BX_MIN_IPS 200000
+#define BX_MIN_IPS 1000000
 
 // Minimum and maximum values for SMP quantum variable. Defines
 // how many instructions each CPU could execute in one

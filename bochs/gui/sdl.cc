@@ -1610,7 +1610,7 @@ void bx_sdl_gui_c::set_display_mode(disp_mode_t newmode)
 void bx_sdl_gui_c::show_ips(Bit32u ips_count)
 {
   if (!sdl_ips_update) {
-    sprintf(sdl_ips_text, "IPS: %9u", ips_count);
+    sprintf(sdl_ips_text, "IPS: %3.3fM", ips_count / 1000000.0);
     sdl_ips_update = 1;
   }
 }

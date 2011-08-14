@@ -2285,7 +2285,7 @@ VOID CALLBACK MyTimer(HWND hwnd,UINT uMsg, UINT idEvent, DWORD dwTime)
 void bx_win32_gui_c::show_ips(Bit32u ips_count)
 {
   if (!ipsUpdate) {
-    sprintf(ipsText, "IPS: %9u", ips_count);
+    sprintf(ipsText, "IPS: %3.3fM", ips_count / 1000000.0);
     ipsUpdate = TRUE;
   }
 }

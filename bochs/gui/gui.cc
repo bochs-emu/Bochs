@@ -871,7 +871,7 @@ void bx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
 void bx_gui_c::show_ips(Bit32u ips_count)
 {
 #if BX_SHOW_IPS
-  BX_INFO(("ips = %u", ips_count));
+  BX_INFO(("ips = %3.3fM", ips_count / 1000000.0));
 #endif
 }
 
