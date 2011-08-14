@@ -166,6 +166,7 @@ protected:
   void  write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
 
   BX_VGA_SMF Bit8u get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, Bit8u **plane);
+  BX_VGA_SMF bx_bool get_dac_palette(Bit8u **palette_ptr, Bit8u shift);
   BX_VGA_SMF void update(void);
   BX_VGA_SMF void determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth);
 

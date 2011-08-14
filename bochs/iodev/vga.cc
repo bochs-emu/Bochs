@@ -559,46 +559,29 @@ void bx_vga_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth
   h = (ai[1] + 1) * 8;
   v = (ai[18] | ((ai[7] & 0x02) << 7) | ((ai[7] & 0x40) << 3)) + 1;
 
-  if (BX_VGA_THIS s.graphics_ctrl.shift_reg == 0)
-  {
+  if (BX_VGA_THIS s.graphics_ctrl.shift_reg == 0) {
     *piWidth = 640;
     *piHeight = 480;
 
-    if (BX_VGA_THIS s.CRTC.reg[6] == 0xBF)
-    {
+    if (BX_VGA_THIS s.CRTC.reg[6] == 0xBF) {
       if (BX_VGA_THIS s.CRTC.reg[23] == 0xA3 &&
          BX_VGA_THIS s.CRTC.reg[20] == 0x40 &&
-         BX_VGA_THIS s.CRTC.reg[9] == 0x41)
-      {
+         BX_VGA_THIS s.CRTC.reg[9] == 0x41) {
         *piWidth = 320;
         *piHeight = 240;
-      }
-      else {
+      } else {
         if (BX_VGA_THIS s.x_dotclockdiv2) h <<= 1;
         *piWidth = h;
         *piHeight = v;
       }
-    }
-    else if ((h >= 640) && (v >= 400)) {
+    } else if ((h >= 640) && (v >= 400)) {
       *piWidth = h;
       *piHeight = v;
     }
-  }
-  else if (BX_VGA_THIS s.graphics_ctrl.shift_reg == 2)
-  {
-    if (BX_VGA_THIS s.sequencer.chain_four)
-    {
-      *piWidth = h;
-      *piHeight = v;
-    }
-    else
-    {
-      *piWidth = h;
-      *piHeight = v;
-    }
-  }
-  else
-  {
+  } else if (BX_VGA_THIS s.graphics_ctrl.shift_reg == 2) {
+    *piWidth = h;
+    *piHeight = v;
+  } else {
     if (BX_VGA_THIS s.x_dotclockdiv2) h <<= 1;
     *piWidth = h;
     *piHeight = v;
@@ -2732,6 +2715,9 @@ int bx_vga_c::get_snapshot_mode()
   } else if ((BX_VGA_THIS s.graphics_ctrl.shift_reg == 0) &&
              (BX_VGA_THIS s.graphics_ctrl.memory_mapping != 3)) {
     return BX_GUI_SNAPSHOT_GFX;
+  } else if ((BX_VGA_THIS s.graphics_ctrl.shift_reg == 2) &&
+             (BX_VGA_THIS s.sequencer.chain_four)) {
+    return BX_GUI_SNAPSHOT_GFX;
   } else {
     return BX_GUI_SNAPSHOT_UNSUP;
   }
@@ -2754,11 +2740,29 @@ void bx_vga_c::get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
   }
 }
 
+bx_bool bx_vga_c::get_dac_palette(Bit8u **palette_ptr, Bit8u shift)
+{
+  unsigned i;
+  Bit8u *dst_ptr;
+
+  *palette_ptr = (Bit8u*)malloc(256 * 4);
+  if (palette_ptr == NULL) return 0;
+  dst_ptr = *palette_ptr;
+  for (i = 0; i < 256; i++) {
+    *(dst_ptr++) = (BX_VGA_THIS s.pel.data[i].blue << shift);
+    *(dst_ptr++) = (BX_VGA_THIS s.pel.data[i].green << shift);
+    *(dst_ptr++) = (BX_VGA_THIS s.pel.data[i].red << shift);
+    *(dst_ptr++) = 0;
+  }
+  return 1;
+}
+
 Bit32u bx_vga_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
                                   unsigned *iHeight, unsigned *iWidth, unsigned *iDepth)
 {
   Bit32u len, len1;
   unsigned i, line_compare, shift, start_addr, x, y;
+  unsigned byte_offset, px, py;
   Bit8u *dst_ptr, *src_ptr, *plane[4];
 
   if ((BX_VGA_THIS vbe.enabled) && (BX_VGA_THIS vbe.bpp >= 8)) {
@@ -2778,23 +2782,15 @@ Bit32u bx_vga_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
       dst_ptr += len1;
     }
     if (*iDepth == 8) {
-      *palette_ptr = (Bit8u*)malloc(256 * 4);
-      dst_ptr = *palette_ptr;
       if (BX_VGA_THIS vbe.dac_8bit) {
         shift = 0;
       } else {
         shift = 2;
       }
-      for (i = 0; i < 256; i++) {
-        *(dst_ptr++) = (BX_VGA_THIS s.pel.data[i].blue << shift);
-        *(dst_ptr++) = (BX_VGA_THIS s.pel.data[i].green << shift);
-        *(dst_ptr++) = (BX_VGA_THIS s.pel.data[i].red << shift);
-        *(dst_ptr++) = 0;
-      }
+      BX_VGA_THIS get_dac_palette(palette_ptr, shift);
     }
     return len;
-  } else if ((BX_VGA_THIS s.graphics_ctrl.shift_reg == 0) &&
-             (BX_VGA_THIS s.graphics_ctrl.memory_mapping != 3)) {
+  } else {
     *iHeight = BX_VGA_THIS s.last_yres;
     *iWidth = BX_VGA_THIS s.last_xres;
     *iDepth = 8;
@@ -2819,25 +2815,33 @@ Bit32u bx_vga_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
       line_compare = BX_VGA_THIS s.line_compare;
       if (BX_VGA_THIS s.y_doublescan) line_compare >>= 1;
     }
-    for (y = 0; y < BX_VGA_THIS s.last_yres; y++) {
-      for (x = 0; x < BX_VGA_THIS s.last_xres; x++) {
-        *(dst_ptr++) = BX_VGA_THIS get_vga_pixel(x, y, start_addr, line_compare, plane);
+    if ((BX_VGA_THIS s.graphics_ctrl.shift_reg == 0) &&
+        (BX_VGA_THIS s.graphics_ctrl.memory_mapping != 3)) {
+      for (y = 0; y < BX_VGA_THIS s.last_yres; y++) {
+        for (x = 0; x < BX_VGA_THIS s.last_xres; x++) {
+          *(dst_ptr++) = BX_VGA_THIS get_vga_pixel(x, y, start_addr, line_compare, plane);
+        }
       }
+      BX_VGA_THIS get_dac_palette(palette_ptr, 2);
+      return len;
+    } else if ((BX_VGA_THIS s.graphics_ctrl.shift_reg == 2) &&
+               (BX_VGA_THIS s.sequencer.chain_four)) {
+      for (y = 0; y < BX_VGA_THIS s.last_yres; y++) {
+        for (x = 0; x < BX_VGA_THIS s.last_xres; x++) {
+          px = x >> 1;
+          py = y >> BX_VGA_THIS s.y_doublescan;
+          byte_offset = start_addr + py * BX_VGA_THIS s.line_offset + (px & ~0x03);
+          *(dst_ptr++) = plane[px % 4][byte_offset];
+        }
+      }
+      BX_VGA_THIS get_dac_palette(palette_ptr, 2);
+      return len;
+    } else {
+      *iHeight = 0;
+      *iWidth = 0;
+      *iDepth = 0;
+      return 0;
     }
-    *palette_ptr = (Bit8u*)malloc(256 * 4);
-    dst_ptr = *palette_ptr;
-    for (i = 0; i < 256; i++) {
-      *(dst_ptr++) = (BX_VGA_THIS s.pel.data[i].blue << 2);
-      *(dst_ptr++) = (BX_VGA_THIS s.pel.data[i].green << 2);
-      *(dst_ptr++) = (BX_VGA_THIS s.pel.data[i].red << 2);
-      *(dst_ptr++) = 0;
-    }
-    return len;
-  } else {
-    *iHeight = 0;
-    *iWidth = 0;
-    *iDepth = 0;
-    return 0;
   }
 }
 

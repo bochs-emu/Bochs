@@ -91,9 +91,8 @@ Bochs repository moved to the SVN version control !
   - vga update interval now uses host timing if the realtime synchronization
     is enabled with the "clock" option (FIXME: it should always be used -
     independent from the "clock" setting)
-  - Implemented graphics mode snapshot for VBE, Cirrus and standard VGA 4-bit
-    mode. Some unusual modes like CGA, VGA mode 0x13 and mode X are not
-    supported yet.
+  - Implemented graphics mode snapshot for VBE, Cirrus and standard VGA modes.
+    Some unusual modes like CGA, and mode X are not supported yet.
 
 - SF patches applied
   [3302668] VMX preemption timer by Jianan Hao
