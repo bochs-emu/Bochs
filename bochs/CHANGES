@@ -54,6 +54,9 @@ Bochs repository moved to the SVN version control !
   - added support for MSVC DLL plugins with a separate workspace package.
     VS2008Ex can now create a BOCHS.EXE with a set of plugin DLLs.
     TODO: nmake still cannot create plugin DLLs.
+  - removed some outdated / unmaintained parts from the Bochs code: BeOS host
+    support, plex86 support, networking module 'arpback', text snapshot check
+    feature.
 
 - I/O Devices
   - Networking
@@ -70,6 +73,8 @@ Bochs repository moved to the SVN version control !
       Linux (ALSA / OSS)
   - PCI
     - added framework for PCI ROM support
+    - new bochsrc option 'pci' replaces the 'i440fxsupport' option. The 'chipset'
+      parameter for now only accepts the value 'i440fx'.
   - VGA
     - added PCI ROM support to cirrus and pcivga and moved ROM loading for the ISA
       case to the vga code (SeaBIOS now usable by Bochs)
@@ -88,11 +93,16 @@ Bochs repository moved to the SVN version control !
       (WARNING: legacy BIOS no longer works with a PCI display adapter)
 
 - GUI and display libraries
-  - vga update interval now uses host timing if the realtime synchronization
+  - new parameter 'update_freq' for the 'vga' bochsrc option replaces the
+    'vga_update_interval' option
+  - vga update frequency now uses host timing if the realtime synchronization
     is enabled with the "clock" option (FIXME: it should always be used -
     independent from the "clock" setting)
   - Implemented graphics mode snapshot for VBE, Cirrus and standard VGA modes.
-    Some unusual modes like CGA, and mode X are not supported yet.
+    CGA modes are not supported yet.
+
+- Config interface
+  - win32paramdlg: dialog size now adjusted to support larger label text
 
 - SF patches applied
   [3302668] VMX preemption timer by Jianan Hao

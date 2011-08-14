@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1874,7 +1874,7 @@ void bx_vga_c::update(void)
         unsigned long line_compare;
         Bit8u *plane[4];
 
-        if (BX_VGA_THIS s.graphics_ctrl.memory_mapping == 3) { // CGA 640x200x2
+        if ((BX_VGA_THIS s.CRTC.reg[0x17] & 1) == 0) { // CGA 640x200x2
 
           for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
             for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
@@ -2713,10 +2713,9 @@ int bx_vga_c::get_snapshot_mode()
   } else if (!BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
     return BX_GUI_SNAPSHOT_TXT;
   } else if ((BX_VGA_THIS s.graphics_ctrl.shift_reg == 0) &&
-             (BX_VGA_THIS s.graphics_ctrl.memory_mapping != 3)) {
+             ((BX_VGA_THIS s.CRTC.reg[0x17] & 1) != 0)) {
     return BX_GUI_SNAPSHOT_GFX;
-  } else if ((BX_VGA_THIS s.graphics_ctrl.shift_reg == 2) &&
-             (BX_VGA_THIS s.sequencer.chain_four)) {
+  } else if (BX_VGA_THIS s.graphics_ctrl.shift_reg == 2) {
     return BX_GUI_SNAPSHOT_GFX;
   } else {
     return BX_GUI_SNAPSHOT_UNSUP;
@@ -2824,13 +2823,17 @@ Bit32u bx_vga_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
       }
       BX_VGA_THIS get_dac_palette(palette_ptr, 2);
       return len;
-    } else if ((BX_VGA_THIS s.graphics_ctrl.shift_reg == 2) &&
-               (BX_VGA_THIS s.sequencer.chain_four)) {
+    } else if (BX_VGA_THIS s.graphics_ctrl.shift_reg == 2) {
       for (y = 0; y < BX_VGA_THIS s.last_yres; y++) {
         for (x = 0; x < BX_VGA_THIS s.last_xres; x++) {
           px = x >> 1;
           py = y >> BX_VGA_THIS s.y_doublescan;
-          byte_offset = start_addr + py * BX_VGA_THIS s.line_offset + (px & ~0x03);
+          byte_offset = start_addr + py * BX_VGA_THIS s.line_offset;
+          if (BX_VGA_THIS s.sequencer.chain_four) {
+            byte_offset += (px & ~0x03);
+          } else {
+            byte_offset += (px >> 2);
+          }
           *(dst_ptr++) = plane[px % 4][byte_offset];
         }
       }
