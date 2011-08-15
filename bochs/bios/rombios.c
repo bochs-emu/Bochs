@@ -4257,7 +4257,7 @@ BX_DEBUG_INT15("case 1 or 5:\n");
               return;
             }
             mouse_flags_2 = read_byte(ebda_seg, &EbdaData->mouse_flag2);
-            mouse_flags_2 = (mouse_flags_2 & 0x00) | regs.u.r8.bh;
+            mouse_flags_2 = (mouse_flags_2 & 0xF8) | regs.u.r8.bh;
             mouse_flags_1 = 0x00;
             write_byte(ebda_seg, &EbdaData->mouse_flag1, mouse_flags_1);
             write_byte(ebda_seg, &EbdaData->mouse_flag2, mouse_flags_2);
@@ -5110,16 +5110,37 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
       }
       break;
 
-    case 0x46: /* Scroll Lock press */
-      mf2_flags |= 0x10;
-      write_byte(0x0040, 0x18, mf2_flags);
-      shift_flags ^= 0x10;
-      write_byte(0x0040, 0x17, shift_flags);
+    case 0x46: /* Scroll Lock or Ctrl-Break press */
+      if ((mf2_state & 0x02) || (!(mf2_state & 0x10) && (shift_flags & 0x04))) {
+        /* Ctrl-Break press */
+        mf2_state &= ~0x02;
+        write_byte(0x0040, 0x96, mf2_state);
+        write_byte(0x0040, 0x71, 0x80);
+        write_word(0x0040, 0x001C, read_word(0x0040, 0x001A));
+
+        ASM_START
+        int #0x1B
+        ASM_END
+
+        enqueue_key(0, 0);
+      } else {
+        /* Scroll Lock press */
+        mf2_flags |= 0x10;
+        write_byte(0x0040, 0x18, mf2_flags);
+        shift_flags ^= 0x10;
+        write_byte(0x0040, 0x17, shift_flags);
+      }
       break;
 
-    case 0xc6: /* Scroll Lock release */
-      mf2_flags &= ~0x10;
-      write_byte(0x0040, 0x18, mf2_flags);
+    case 0xc6: /* Scroll Lock or Ctrl-Break release */
+      if ((mf2_state & 0x02) || (!(mf2_state & 0x10) && (shift_flags & 0x04))) {
+        /* Ctrl-Break release */
+        /* nothing to do */
+      } else {
+        /* Scroll Lock release */
+        mf2_flags &= ~0x10;
+        write_byte(0x0040, 0x18, mf2_flags);
+      }
       break;
 
     default:

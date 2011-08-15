@@ -105,6 +105,7 @@ Bochs repository moved to the SVN version control !
   - win32paramdlg: dialog size now adjusted to support larger label text
 
 - SF patches applied
+  [3370604] Ctrl-Break support for the bochs BIOS by Nikolay Nikolov
   [3302668] VMX preemption timer by Jianan Hao
   [3327510] Fix wrong address translation in debugger by Jianan Hao
   [3323758] Ctrl-Break support for the Win32 gui by Nikolay Nikolov
@@ -120,6 +121,7 @@ Bochs repository moved to the SVN version control !
   [3190995] add eth backend based on Slirp by Heikki Lindholm
 
 - these S.F. bugs were closed/fixed
+  [3062054] Problems with BIOS pointing device services (int 15h)
   [3277639] incompatible colours in palette
   [1788739] Abort on large memory setting
   [3012207] Int 13h FN 48h incorrect return values
