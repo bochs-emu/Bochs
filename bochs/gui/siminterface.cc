@@ -26,6 +26,7 @@
 
 #include "param_names.h"
 #include "iodev.h"
+#include "virt_timer.h"
 
 bx_simulator_interface_c *SIM = NULL;
 logfunctions *siminterface_log = NULL;
@@ -835,6 +836,7 @@ void bx_real_sim_c::update_runtime_options()
     temp = temp->next;
   }
   bx_gui->update_drive_status_buttons();
+  bx_virt_timer.set_realtime_delay();
 }
 
 bx_bool bx_real_sim_c::is_sim_thread()

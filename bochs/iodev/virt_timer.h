@@ -62,6 +62,7 @@ private:
   Bit64u last_real_time;
   Bit64u total_real_usec;
   Bit64u last_realtime_delta;
+  Bit64u real_time_delay;
   //System time variables:
   Bit64u last_usec;
   Bit64u usec_per_second;
@@ -147,6 +148,10 @@ public:
   void init(void);
 
   void register_state(void);
+
+  //Determine the real time elapsed during runtime config or between save and
+  //restore.
+  void set_realtime_delay(void);
 };
 
 BOCHSAPI extern bx_virt_timer_c bx_virt_timer;

@@ -93,13 +93,8 @@
 //Debug with printf options.
 #define DEBUG_REALTIME_WITH_PRINTF 0
 
-//Use to test execution at multiples of real time.
-#define TIME_DIVIDER (1)
-#define TIME_MULTIPLIER (1)
-#define TIME_HEADSTART (0)
 
-
-#define GET_VIRT_REALTIME64_USEC() (((bx_get_realtime64_usec()*(Bit64u)TIME_MULTIPLIER/(Bit64u)TIME_DIVIDER)))
+#define GET_VIRT_REALTIME64_USEC() (bx_get_realtime64_usec())
 //Set up Logging.
 #define LOG_THIS bx_virt_timer.
 
@@ -398,10 +393,11 @@ void bx_virt_timer_c::init(void)
 
   //Real time variables:
 #if BX_HAVE_REALTIME_USEC
-  last_real_time = GET_VIRT_REALTIME64_USEC()+(Bit64u)TIME_HEADSTART*(Bit64u)USEC_PER_SECOND;
+  last_real_time = GET_VIRT_REALTIME64_USEC();
 #endif
   total_real_usec = 0;
   last_realtime_delta = 0;
+  real_time_delay = 0;
   //System time variables:
   last_usec = 0;
   usec_per_second = USEC_PER_SECOND;
@@ -474,7 +470,7 @@ void bx_virt_timer_c::timer_handler(void)
   if (usec_delta) {
 #if BX_HAVE_REALTIME_USEC
     Bit64u ticks_delta = 0;
-    Bit64u real_time_delta = GET_VIRT_REALTIME64_USEC() - last_real_time;
+    Bit64u real_time_delta = GET_VIRT_REALTIME64_USEC() - last_real_time - real_time_delay;
     Bit64u real_time_total = real_time_delta + total_real_usec;
     Bit64u system_time_delta = (Bit64u)usec_delta + (Bit64u)stored_delta;
     if(real_time_delta) {
@@ -562,4 +558,11 @@ void bx_virt_timer_c::timer_handler(void)
 void bx_virt_timer_c::pc_system_timer_handler(void* this_ptr)
 {
   ((bx_virt_timer_c *)this_ptr)->timer_handler();
+}
+
+void bx_virt_timer_c::set_realtime_delay()
+{
+  if (virtual_timers_realtime) {
+    real_time_delay = GET_VIRT_REALTIME64_USEC() - last_real_time;
+  }
 }

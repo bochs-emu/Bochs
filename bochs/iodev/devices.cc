@@ -427,6 +427,7 @@ void bx_devices_c::register_state()
 void bx_devices_c::after_restore_state()
 {
   bx_slowdown_timer.after_restore_state();
+  bx_virt_timer.set_realtime_delay();
 #if BX_SUPPORT_PCI
   if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
     pluginPciBridge->after_restore_state();
