@@ -75,7 +75,7 @@ dist-clean: clean
 f2xm1.o: f2xm1.@CPP_SUFFIX@ softfloatx80.h softfloat.h ../config.h \
   softfloat-specialize.h softfloat-macros.h softfloat-round-pack.h
 ferr.o: ferr.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
-  ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
+  ../config.h ../osdep.h ../gui/siminterface.h \
   ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../instrument/stubs/instrument.h \
   ../cpu/cpu.h ../cpu/cpuid.h ../cpu/crregs.h \
@@ -89,7 +89,7 @@ fpatan.o: fpatan.@CPP_SUFFIX@ softfloatx80.h softfloat.h ../config.h \
 fprem.o: fprem.@CPP_SUFFIX@ softfloatx80.h softfloat.h ../config.h \
   softfloat-specialize.h softfloat-round-pack.h softfloat-macros.h
 fpu_arith.o: fpu_arith.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../cpu/cpu.h ../cpu/cpuid.h \
@@ -99,7 +99,7 @@ fpu_arith.o: fpu_arith.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../cpu/xmm.h ../cpu/stack.h softfloatx80.h softfloat.h \
   softfloat-specialize.h
 fpu.o: fpu.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
-  ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
+  ../config.h ../osdep.h ../gui/siminterface.h \
   ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../instrument/stubs/instrument.h \
   ../cpu/cpu.h ../cpu/cpuid.h ../cpu/crregs.h \
@@ -109,7 +109,7 @@ fpu.o: fpu.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../cpu/xmm.h ../cpu/stack.h ../iodev/iodev.h ../param_names.h \
   softfloatx80.h softfloat.h softfloat-specialize.h
 fpu_compare.o: fpu_compare.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../cpu/cpu.h ../cpu/cpuid.h \
@@ -119,7 +119,7 @@ fpu_compare.o: fpu_compare.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../cpu/xmm.h ../cpu/stack.h softfloatx80.h softfloat.h \
   softfloat-specialize.h
 fpu_const.o: fpu_const.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../cpu/cpu.h ../cpu/cpuid.h \
@@ -129,7 +129,7 @@ fpu_const.o: fpu_const.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../cpu/xmm.h ../cpu/stack.h softfloatx80.h softfloat.h \
   softfloat-specialize.h
 fpu_load_store.o: fpu_load_store.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../cpu/cpu.h ../cpu/cpuid.h \
@@ -139,7 +139,7 @@ fpu_load_store.o: fpu_load_store.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h 
   ../cpu/xmm.h ../cpu/stack.h softfloatx80.h softfloat.h \
   softfloat-specialize.h
 fpu_misc.o: fpu_misc.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../cpu/cpu.h ../cpu/cpuid.h \
@@ -152,7 +152,7 @@ fpu_tags.o: fpu_tags.@CPP_SUFFIX@ ../config.h softfloat.h softfloat-specialize.h
   ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
   ../fpu/control_w.h
 fpu_trans.o: fpu_trans.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../cpu/cpu.h ../cpu/cpuid.h \

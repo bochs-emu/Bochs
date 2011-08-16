@@ -113,7 +113,7 @@ lexer.c: lexer.l
 lexer.o: lexer.c debug.h ../config.h ../osdep.h
 parser.o: parser.c debug.h ../config.h ../osdep.h
 dbg_main.o: dbg_main.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h  \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../param_names.h ../cpu/cpu.h \
@@ -122,7 +122,7 @@ dbg_main.o: dbg_main.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../cpu/apic.h ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
   ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h ../iodev/iodev.h
 linux.o: linux.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
-  ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
+  ../config.h ../osdep.h  ../gui/siminterface.h \
   ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../instrument/stubs/instrument.h \
   ../cpu/cpu.h ../cpu/cpuid.h ../cpu/crregs.h \
@@ -131,7 +131,7 @@ linux.o: linux.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.
   ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
   ../cpu/xmm.h
 symbols.o: symbols.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h  \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../cpu/cpu.h ../cpu/cpuid.h \

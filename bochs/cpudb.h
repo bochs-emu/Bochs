@@ -29,6 +29,7 @@ bx_define_cpudb(pentium_mmx)
 bx_define_cpudb(p2_klamath)
 bx_define_cpudb(p3_katmai)
 bx_define_cpudb(p4_willamette)
+bx_define_cpudb(core_duo_t2400_yonah)
 bx_define_cpudb(atom_n270)
 #else
 bx_define_cpudb(p4_prescott_celeron_336)

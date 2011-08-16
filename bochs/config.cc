@@ -19,6 +19,7 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 #include "bochs.h"
+#include "bxversion.h"
 #include "iodev/iodev.h"
 #include "param_names.h"
 #include <assert.h>
