@@ -101,15 +101,8 @@ void core_duo_t2400_yonah_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction,
     get_std_cpuid_leaf_9(leaf);
     return;
   case 0x0000000A:
-    get_std_cpuid_leaf_A(leaf);
-    return;
-  case 0x0000000B:
-  case 0x0000000C:
-    get_reserved_leaf(leaf);
-    return;
-  case 0x0000000D:
   default:
-    get_std_cpuid_xsave_leaf(subfunction, leaf);
+    get_std_cpuid_leaf_A(leaf);
     return;
   }
 }

@@ -135,7 +135,8 @@ CPUDB_OBJS = cpudb/corei7_sandy_bridge_2600K.o \
              cpudb/p2_klamath.o \
              cpudb/p3_katmai.o \
              cpudb/p4_willamette.o \
-             cpudb/atom_n270.o
+             cpudb/atom_n270.o \
+             cpudb/core_duo_t2400_yonah.o
 
 BX_INCLUDES = ../bochs.h ../config.h
 
