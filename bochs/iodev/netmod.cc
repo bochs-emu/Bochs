@@ -19,9 +19,9 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 //
 
-// eth.cc  - helper code to find and create pktmover classes
+// Common networking and helper code to find and create pktmover classes
 
-// Peter Grehan (grehan@iprg.nokia.com) coded all of this
+// Peter Grehan (grehan@iprg.nokia.com) coded the initial version of the
 // NE2000/ether stuff.
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -33,9 +33,49 @@
 
 #if BX_NETWORKING
 
-#include "eth.h"
+#include "netmod.h"
 
 #define LOG_THIS netdev->
+
+bx_netmod_ctl_c* theNetModCtl = NULL;
+
+int libnetmod_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+{
+  theNetModCtl = new bx_netmod_ctl_c;
+  bx_devices.pluginNetModCtl = theNetModCtl;
+  return(0); // Success
+}
+
+void libnetmod_LTX_plugin_fini(void)
+{
+  delete theNetModCtl;
+}
+
+void* bx_netmod_ctl_c::init_module(bx_list_c *base, void *rxh, bx_devmodel_c *netdev)
+{
+  eth_pktmover_c *ethmod;
+
+  // Attach to the selected ethernet module
+  const char *modname = SIM->get_param_enum("ethmod", base)->get_selected();
+  ethmod = eth_locator_c::create(modname,
+                                 SIM->get_param_string("ethdev", base)->getptr(),
+                                 (const char *) SIM->get_param_string("macaddr", base)->getptr(),
+                                 (eth_rx_handler_t)rxh, netdev,
+                                 SIM->get_param_string("script", base)->getptr());
+
+  if (ethmod == NULL) {
+    BX_PANIC(("could not find eth module %s", modname));
+    // if they continue, use null.
+    BX_INFO(("could not find eth module %s - using null instead", modname));
+
+    ethmod = eth_locator_c::create("null", NULL,
+                                   (const char *) SIM->get_param_string("macaddr", base)->getptr(),
+                                   (eth_rx_handler_t)rxh, netdev, "");
+    if (ethmod == NULL)
+      BX_PANIC(("could not locate null module"));
+  }
+  return ethmod;
+}
 
 eth_locator_c *eth_locator_c::all;
 

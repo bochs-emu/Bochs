@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -19,13 +19,21 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 //
 
-// Peter Grehan (grehan@iprg.nokia.com) coded all of this
+// Peter Grehan (grehan@iprg.nokia.com) coded the initial version of the
 // NE2000/ether stuff.
 
-//  eth.h  - see eth_null.cc for implementation details
+//  netmod.h  - see eth_null.cc for implementation details
 
-#ifndef BX_ETH_H
-#define BX_ETH_H
+#ifndef BX_NETMOD_H
+#define BX_NETMOD_H
+
+// Pseudo device that loads the lowlevel networking module
+class bx_netmod_ctl_c : public bx_netmod_ctl_stub_c {
+public:
+  bx_netmod_ctl_c() {}
+  virtual ~bx_netmod_ctl_c() {}
+  virtual void* init_module(bx_list_c *base, void* rxh, bx_devmodel_c *dev);
+};
 
 #define BX_PACKET_BUFSIZE 2048 // Enough for an ether frame
 
