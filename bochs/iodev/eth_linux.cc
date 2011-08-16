@@ -41,10 +41,9 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "netmod.h"
 
 #if BX_NETWORKING && BX_NETMOD_LINUX
-
-#include "eth.h"
 
 #define LOG_THIS netdev->
 

@@ -30,7 +30,7 @@
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIPNIC
 
 #include "pci.h"
-#include "eth.h"
+#include "netmod.h"
 #include "pcipnic.h"
 
 #define LOG_THIS thePNICDevice->
@@ -77,28 +77,8 @@ void bx_pcipnic_c::init(void)
     BX_PNIC_THIS pci_conf[i] = 0x0;
   }
 
-  // This code ripped wholesale from ne2k.cc:
-  // Attach to the simulated ethernet dev
-  const char *ethmod = SIM->get_param_enum("ethmod", base)->get_selected();
-  BX_PNIC_THIS ethdev = eth_locator_c::create(ethmod,
-                                              SIM->get_param_string("ethdev", base)->getptr(),
-                                              (const char *) SIM->get_param_string("macaddr", base)->getptr(),
-                                              rx_handler,
-                                              this,
-                                              SIM->get_param_string("script", base)->getptr());
-
-  if (BX_PNIC_THIS ethdev == NULL) {
-    BX_PANIC(("could not find eth module %s", ethmod));
-    // if they continue, use null.
-    BX_INFO(("could not find eth module %s - using null instead", ethmod));
-
-    BX_PNIC_THIS ethdev = eth_locator_c::create("null", NULL,
-                                                (const char *) SIM->get_param_string("macaddr", base)->getptr(),
-                                                rx_handler,
-                                                this, "");
-    if (BX_PNIC_THIS ethdev == NULL)
-      BX_PANIC(("could not locate null module"));
-  }
+  // Attach to the selected ethernet module
+  BX_PNIC_THIS ethdev = DEV_net_init_module(base, rx_handler, this);
 
   BX_PNIC_THIS pci_base_address[4] = 0;
 

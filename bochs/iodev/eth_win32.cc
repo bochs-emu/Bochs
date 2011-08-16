@@ -38,10 +38,9 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "netmod.h"
 
 #if BX_NETWORKING && BX_NETMOD_WIN32
-
-#include "eth.h"
 
 // windows.h included by bochs.h
 #define LOG_THIS netdev->

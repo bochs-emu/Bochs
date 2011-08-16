@@ -35,7 +35,7 @@
 #include "pci.h"
 #endif
 #include "ne2k.h"
-#include "eth.h"
+#include "netmod.h"
 
 //Never completely fill the ne2k ring so that we never
 // hit the unclear completely full buffer condition.
@@ -1509,27 +1509,8 @@ void bx_ne2k_c::init(void)
   for (int i = 12; i < 32; i++)
     BX_NE2K_THIS s.macaddr[i] = 0x57;
 
-  // Attach to the simulated ethernet dev
-  const char *ethmod = SIM->get_param_enum("ethmod", base)->get_selected();
-  BX_NE2K_THIS ethdev = eth_locator_c::create(ethmod,
-                                              SIM->get_param_string("ethdev", base)->getptr(),
-                                              (const char *) SIM->get_param_string("macaddr", base)->getptr(),
-                                              rx_handler,
-                                              this,
-                                              SIM->get_param_string("script", base)->getptr());
-
-  if (BX_NE2K_THIS ethdev == NULL) {
-    BX_PANIC(("could not find eth module %s", ethmod));
-    // if they continue, use null.
-    BX_INFO(("could not find eth module %s - using null instead", ethmod));
-
-    BX_NE2K_THIS ethdev = eth_locator_c::create("null", NULL,
-                                                (const char *) SIM->get_param_string("macaddr", base)->getptr(),
-                                                rx_handler,
-                                                this, "");
-    if (BX_NE2K_THIS ethdev == NULL)
-      BX_PANIC(("could not locate null module"));
-  }
+  // Attach to the selected ethernet module
+  BX_NE2K_THIS ethdev = DEV_net_init_module(base, rx_handler, this);
 }
 
 void bx_ne2k_c::set_irq_level(bx_bool level)

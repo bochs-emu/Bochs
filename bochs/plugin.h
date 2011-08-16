@@ -59,6 +59,7 @@ extern "C" {
 #define BX_PLUGIN_SOUNDMOD  "soundmod"
 #define BX_PLUGIN_SB16      "sb16"
 #define BX_PLUGIN_ES1370    "es1370"
+#define BX_PLUGIN_NETMOD    "netmod"
 #define BX_PLUGIN_NE2K      "ne2k"
 #define BX_PLUGIN_EXTFPUIRQ "extfpuirq"
 #define BX_PLUGIN_PCIVGA    "pcivga"
@@ -253,8 +254,12 @@ extern "C" {
 #define DEV_usb_init_device(a,b,c,d) (usbdev_type)bx_devices.pluginUsbDevCtl->init_device(a,b,(void**)c,d)
 #define DEV_usb_send_msg(a,b) bx_devices.pluginUsbDevCtl->usb_send_msg((void*)a,b)
 
-///////// Sound macro
+///////// Sound module macro
 #define DEV_sound_init_module(a,b,c) bx_devices.pluginSoundModCtl->init_module(a,(void**)b,c)
+
+///////// Networking module macro
+#define DEV_net_init_module(a,b,c) \
+  ((eth_pktmover_c*)bx_devices.pluginNetModCtl->init_module(a,(void*)b,c))
 
 ///////// Gameport macro
 #define DEV_gameport_set_enabled(a) bx_devices.pluginGameport->set_enabled(a)
@@ -410,11 +415,12 @@ DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_common)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_uhci)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_ohci)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_xhci)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pcipnic)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(soundmod)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(sb16)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(es1370)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(netmod)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(ne2k)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pcipnic)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(extfpuirq)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(gameport)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(speaker)

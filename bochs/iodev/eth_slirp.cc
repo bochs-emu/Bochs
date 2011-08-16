@@ -24,6 +24,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "netmod.h"
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
 
@@ -35,8 +36,6 @@
 #include <sys/wait.h>
 #include <stdint.h>
 #include <arpa/inet.h> /* ntohs, htons */
-
-#include "eth.h"
 
 #define LOG_THIS netdev->
 

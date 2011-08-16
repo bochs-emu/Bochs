@@ -58,7 +58,7 @@ Attached devices
   |        |             +---- NE2000 (ISA/PCI)                 ne2k.cc, pcipnic.cc
   |        |             +---- PCI Pseudo NIC                   pcipnic.cc
   |        |
-  |        +---- Networking Modules                             eth.cc
+  |        +---- Networking Modules                             netmod.cc
   |                      | |
   |                      | +-- Host specific Modules            eth_fbsd.cc, eth_linux.cc, eth_win32.cc
   |                      |

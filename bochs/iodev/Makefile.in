@@ -89,6 +89,7 @@ OBJS_THAT_CAN_BE_PLUGINS = \
   soundmod.o \
   @SOUNDCARD_OBJS@ \
   @GAME_OBJS@ \
+  netmod.o \
   @NE2K_OBJS@ \
   @IODEBUG_OBJS@
 
@@ -149,8 +150,8 @@ libbx_pit_wrap.la: pit82c54.lo pit_wrap.lo
 libbx_soundmod.la: soundmod.lo $(SOUNDLOW_OBJS:.o=.lo)
 	$(LIBTOOL) --mode=link $(CXX) -module soundmod.lo $(SOUNDLOW_OBJS:.o=.lo) -o libbx_soundmod.la -rpath $(PLUGIN_PATH) $(SOUND_LINK_OPTS)
 
-libbx_ne2k.la: ne2k.lo $(NETLOW_OBJS:.o=.lo)
-	$(LIBTOOL) --mode=link $(CXX) -module ne2k.lo $(NETLOW_OBJS:.o=.lo) -o libbx_ne2k.la -rpath $(PLUGIN_PATH)
+libbx_netmod.la: netmod.lo $(NETLOW_OBJS:.o=.lo)
+	$(LIBTOOL) --mode=link $(CXX) -module netmod.lo $(NETLOW_OBJS:.o=.lo) -o libbx_netmod.la -rpath $(PLUGIN_PATH)
 
 libbx_pcipnic.la: pcipnic.lo $(NETLOW_OBJS:.o=.lo)
 	$(LIBTOOL) --mode=link $(CXX) -module pcipnic.lo $(NETLOW_OBJS:.o=.lo) -o libbx_pcipnic.la -rpath $(PLUGIN_PATH)
@@ -181,8 +182,8 @@ bx_pit_wrap.dll: pit82c54.o pit_wrap.o
 bx_soundmod.dll: soundmod.o $(SOUNDLOW_OBJS)
 	$(CXX) $(CXXFLAGS) -shared -o bx_soundmod.dll soundmod.o $(SOUNDLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) -lwinmm
 
-bx_ne2k.dll: ne2k.o $(NETLOW_OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o bx_ne2k.dll ne2k.o $(NETLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
+bx_netmod.dll: netmod.o $(NETLOW_OBJS)
+	$(CXX) $(CXXFLAGS) -shared -o bx_netmod.dll netmod.o $(NETLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_pcipnic.dll: pcipnic.o $(NETLOW_OBJS)
 	$(CXX) $(CXXFLAGS) -shared -o bx_pcipnic.dll pcipnic.o $(NETLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
@@ -264,56 +265,51 @@ es1370.o: es1370.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../param_names.h pci.h es1370.h \
   soundmod.h soundlnx.h soundwin.h soundosx.h
-eth.o: eth.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
-  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
-  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h eth.h
 eth_fbsd.o: eth_fbsd.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h
+  ../instrument/stubs/instrument.h ../param_names.h netmod.h
 eth_linux.o: eth_linux.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h eth.h
+  ../instrument/stubs/instrument.h ../param_names.h netmod.h
 eth_null.o: eth_null.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h eth.h
+  ../instrument/stubs/instrument.h ../param_names.h netmod.h
 eth_slirp.o: eth_slirp.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h eth.h
+  ../instrument/stubs/instrument.h ../param_names.h netmod.h
 eth_tap.o: eth_tap.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h eth.h
+  ../instrument/stubs/instrument.h ../param_names.h netmod.h
 eth_tuntap.o: eth_tuntap.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h eth.h
+  ../instrument/stubs/instrument.h ../param_names.h netmod.h
 eth_vde.o: eth_vde.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h eth.h
+  ../instrument/stubs/instrument.h ../param_names.h netmod.h
 eth_vnet.o: eth_vnet.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h eth.h
+  ../instrument/stubs/instrument.h ../param_names.h netmod.h
 eth_win32.o: eth_win32.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h
+  ../instrument/stubs/instrument.h ../param_names.h netmod.h
 extfpuirq.o: extfpuirq.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
@@ -339,8 +335,8 @@ hdimage.o: hdimage.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h hdimage.h vmware3.h \
-  vmware4.h vvfat.h
+  ../instrument/stubs/instrument.h ../param_names.h cdrom.h hdimage.h \
+  vmware3.h vmware4.h vvfat.h
 ioapic.o: ioapic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
@@ -361,7 +357,12 @@ ne2k.o: ne2k.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h pci.h ne2k.h eth.h
+  ../instrument/stubs/instrument.h ../param_names.h pci.h ne2k.h netmod.h
+netmod.o: netmod.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
+  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
+  ../instrument/stubs/instrument.h ../param_names.h netmod.h
 parallel.o: parallel.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
@@ -475,7 +476,8 @@ svga_cirrus.o: svga_cirrus.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h vga.h svga_cirrus.h
+  ../instrument/stubs/instrument.h ../param_names.h vga.h svga_cirrus.h \
+  virt_timer.h
 unmapped.o: unmapped.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
@@ -533,7 +535,7 @@ vga.o: vga.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h vga.h
+  ../instrument/stubs/instrument.h ../param_names.h vga.h virt_timer.h
 virt_timer.o: virt_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
@@ -601,56 +603,51 @@ es1370.lo: es1370.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../param_names.h pci.h es1370.h \
   soundmod.h soundlnx.h soundwin.h soundosx.h
-eth.lo: eth.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
-  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
-  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h eth.h
 eth_fbsd.lo: eth_fbsd.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h
+  ../instrument/stubs/instrument.h ../param_names.h netmod.h
 eth_linux.lo: eth_linux.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h eth.h
+  ../instrument/stubs/instrument.h ../param_names.h netmod.h
 eth_null.lo: eth_null.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h eth.h
+  ../instrument/stubs/instrument.h ../param_names.h netmod.h
 eth_slirp.lo: eth_slirp.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h eth.h
+  ../instrument/stubs/instrument.h ../param_names.h netmod.h
 eth_tap.lo: eth_tap.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h eth.h
+  ../instrument/stubs/instrument.h ../param_names.h netmod.h
 eth_tuntap.lo: eth_tuntap.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h eth.h
+  ../instrument/stubs/instrument.h ../param_names.h netmod.h
 eth_vde.lo: eth_vde.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h eth.h
+  ../instrument/stubs/instrument.h ../param_names.h netmod.h
 eth_vnet.lo: eth_vnet.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h eth.h
+  ../instrument/stubs/instrument.h ../param_names.h netmod.h
 eth_win32.lo: eth_win32.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h
+  ../instrument/stubs/instrument.h ../param_names.h netmod.h
 extfpuirq.lo: extfpuirq.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
@@ -676,8 +673,8 @@ hdimage.lo: hdimage.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h hdimage.h vmware3.h \
-  vmware4.h vvfat.h
+  ../instrument/stubs/instrument.h ../param_names.h cdrom.h hdimage.h \
+  vmware3.h vmware4.h vvfat.h
 ioapic.lo: ioapic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
@@ -698,7 +695,12 @@ ne2k.lo: ne2k.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h pci.h ne2k.h eth.h
+  ../instrument/stubs/instrument.h ../param_names.h pci.h ne2k.h netmod.h
+netmod.lo: netmod.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
+  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
+  ../instrument/stubs/instrument.h ../param_names.h netmod.h
 parallel.lo: parallel.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
@@ -812,7 +814,8 @@ svga_cirrus.lo: svga_cirrus.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h vga.h svga_cirrus.h
+  ../instrument/stubs/instrument.h ../param_names.h vga.h svga_cirrus.h \
+  virt_timer.h
 unmapped.lo: unmapped.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
@@ -870,7 +873,7 @@ vga.lo: vga.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h vga.h
+  ../instrument/stubs/instrument.h ../param_names.h vga.h virt_timer.h
 virt_timer.lo: virt_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
