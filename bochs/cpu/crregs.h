@@ -74,7 +74,7 @@ struct bx_cr0_t {
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val | 0x10; }
 };
 
-#if BX_CPU_LEVEL >= 4
+#if BX_CPU_LEVEL >= 5
 
 #define BX_CR4_VME_MASK        (1 << 0)
 #define BX_CR4_PVI_MASK        (1 << 1)
@@ -126,7 +126,7 @@ struct bx_cr4_t {
 #define BX_CR4_FLUSH_TLB_MASK \
    (BX_CR4_PSE_MASK | BX_CR4_PAE_MASK | BX_CR4_PGE_MASK | BX_CR4_PCIDE_MASK | BX_CR4_SMEP_MASK)
 
-#endif  // #if BX_CPU_LEVEL >= 4
+#endif  // #if BX_CPU_LEVEL >= 5
 
 struct bx_dr6_t {
   Bit32u val32; // 32bit value of register
@@ -234,6 +234,8 @@ struct xcr0_t {
 #undef IMPLEMENT_CRREG_ACCESSORS
 #undef IMPLEMENT_DRREG_ACCESSORS
 
+#if BX_CPU_LEVEL >= 5
+
 typedef struct msr {
   unsigned index;          // MSR index
   unsigned type;           // MSR type: 1 - lin address, 2 - phy address
@@ -274,5 +276,7 @@ typedef struct msr {
      return 1;
   }
 } MSR;
+
+#endif // BX_CPU_LEVEL >= 5
 
 #endif

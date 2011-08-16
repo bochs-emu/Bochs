@@ -33,7 +33,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
     VMexit_DR_Access(i, 0 /* write */);
 #endif
 
-#if BX_CPU_LEVEL >= 4
+#if BX_CPU_LEVEL >= 5
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
     if ((i->nnn() & 0xE) == 4) {
       BX_ERROR(("MOV_DdRd: access to DR4/DR5 causes #UD"));
@@ -137,7 +137,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
     VMexit_DR_Access(i, 1 /* read */);
 #endif
 
-#if BX_CPU_LEVEL >= 4
+#if BX_CPU_LEVEL >= 5
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
     if ((i->nnn() & 0xE) == 4) {
       BX_ERROR(("MOV_RdDd: access to DR4/DR5 causes #UD"));
@@ -445,7 +445,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rd(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rd(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 4
+#if BX_CPU_LEVEL >= 5
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_CR4Rd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0);
@@ -462,9 +462,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR4, val_32);
+#endif
 
   BX_NEXT_TRACE(i);
-#endif
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR0(bxInstruction_c *i)
@@ -514,7 +514,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR3(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR4(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 4
+#if BX_CPU_LEVEL >= 5
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_RdCd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0);
@@ -523,9 +523,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR4(bxInstruction_c *i)
   Bit32u val_32 = (Bit32u) read_CR4(); /* correctly handle VMX */
 
   BX_WRITE_32BIT_REGZ(i->rm(), val_32);
+#endif
 
   BX_NEXT_INSTR(i);
-#endif
 }
 
 #if BX_SUPPORT_X86_64
@@ -837,7 +837,7 @@ bx_address BX_CPU_C::read_CR0(void)
   return cr0_val;
 }
 
-#if BX_CPU_LEVEL > 3
+#if BX_CPU_LEVEL >= 5
 bx_address BX_CPU_C::read_CR4(void)
 {
   bx_address cr4_val = BX_CPU_THIS_PTR cr4.get32();
@@ -989,7 +989,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(bx_address val)
   return 1;
 }
 
-#if BX_CPU_LEVEL >= 4
+#if BX_CPU_LEVEL >= 5
 Bit32u BX_CPU_C::get_cr4_allow_mask(void)
 {
   Bit32u allowMask = 0;
@@ -1017,7 +1017,6 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   //   [1]     PVI: Protected-Mode Virtual Interrupts R/W
   //   [0]     VME: Virtual-8086 Mode Extensions R/W
 
-#if BX_CPU_LEVEL >= 5
   /* VME */
   if (bx_cpuid_support_vme())
     allowMask |= BX_CR4_VME_MASK | BX_CR4_PVI_MASK;
@@ -1029,17 +1028,14 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
 
   if (bx_cpuid_support_pse())
     allowMask |= BX_CR4_PSE_MASK;
-#endif
 
 #if BX_CPU_LEVEL >= 6
   if (bx_cpuid_support_pae())
     allowMask |= BX_CR4_PAE_MASK;
 #endif
 
-#if BX_CPU_LEVEL >= 5
   // NOTE: exception 18 (#MC) never appears in Bochs
   allowMask |= BX_CR4_MCE_MASK;
-#endif
 
 #if BX_CPU_LEVEL >= 6
   if (bx_cpuid_support_pge())
@@ -1167,7 +1163,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
 
   return 1;
 }
-#endif // BX_CPU_LEVEL >= 4
+#endif // BX_CPU_LEVEL >= 5
 
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR3(bx_address val)
 {

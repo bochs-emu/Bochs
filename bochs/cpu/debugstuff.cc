@@ -244,12 +244,12 @@ void BX_CPU_C::debug(bx_address offset)
   BX_INFO(("| EIP=%08x (%08x)", (unsigned) EIP,
     (unsigned) BX_CPU_THIS_PTR prev_rip));
 
-#if BX_CPU_LEVEL >= 2 && BX_CPU_LEVEL < 4
+#if BX_CPU_LEVEL >= 2 && BX_CPU_LEVEL < 5
   BX_INFO(("| CR0=0x%08x CR2=0x%08x CR3=0x%08x",
     BX_CPU_THIS_PTR cr0.get32(),
     BX_CPU_THIS_PTR cr2,
     BX_CPU_THIS_PTR cr3));
-#elif BX_CPU_LEVEL >= 4
+#elif BX_CPU_LEVEL >= 5
   BX_INFO(("| CR0=0x%08x CR2=0x%08x",
     BX_CPU_THIS_PTR cr0.get32(),
     BX_CPU_THIS_PTR cr2));

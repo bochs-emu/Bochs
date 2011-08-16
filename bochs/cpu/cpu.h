@@ -895,7 +895,7 @@ public: // for now...
   bx_cr0_t   cr0;
   bx_address cr2;
   bx_address cr3;
-#if BX_CPU_LEVEL >= 4
+#if BX_CPU_LEVEL >= 5
   bx_cr4_t   cr4;
   Bit32u cr4_suppmask;
 #endif
@@ -3334,7 +3334,7 @@ public: // for now...
   BX_SMF bx_bool SetCR0(bx_address val) BX_CPP_AttrRegparmN(1);
   BX_SMF bx_bool check_CR0(bx_address val) BX_CPP_AttrRegparmN(1);
   BX_SMF bx_bool SetCR3(bx_address val) BX_CPP_AttrRegparmN(1);
-#if BX_CPU_LEVEL >= 4
+#if BX_CPU_LEVEL >= 5
   BX_SMF bx_bool SetCR4(bx_address val) BX_CPP_AttrRegparmN(1);
   BX_SMF bx_bool check_CR4(bx_address val) BX_CPP_AttrRegparmN(1);
   BX_SMF Bit32u get_cr4_allow_mask(void);
@@ -3585,7 +3585,7 @@ public: // for now...
 #endif
 
   BX_SMF bx_address read_CR0(void);
-#if BX_CPU_LEVEL > 3
+#if BX_CPU_LEVEL >= 5
   BX_SMF bx_address read_CR4(void);
 #endif
 #if BX_SUPPORT_VMX

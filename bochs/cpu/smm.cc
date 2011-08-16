@@ -176,7 +176,7 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR cr0.set_TS(0); // no task switch (bit 3)
   BX_CPU_THIS_PTR cr0.set_PG(0); // paging disabled (bit 31)
 
-#if BX_CPU_LEVEL >= 4
+#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR cr4.set32(0);
 #endif
 
@@ -658,11 +658,9 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 
   handleCpuModeChange();
 
-#if BX_CPU_LEVEL >= 6
   handleSseModeChange();
 #if BX_SUPPORT_AVX
   handleAvxModeChange();
-#endif
 #endif
 
   Bit16u ar_data = SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_SELECTOR_AR) >> 16;
@@ -720,7 +718,7 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
 
   SMRAM_FIELD(saved_state, SMRAM_FIELD_CR0) = BX_CPU_THIS_PTR cr0.get32();
   SMRAM_FIELD(saved_state, SMRAM_FIELD_CR3) = BX_CPU_THIS_PTR cr3;
-#if BX_CPU_LEVEL >= 4
+#if BX_CPU_LEVEL >= 5
   SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4) = BX_CPU_THIS_PTR cr4.get32();
 #endif
 #if BX_CPU_LEVEL >= 6
@@ -770,7 +768,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
     return 0;
   }
 
-#if BX_CPU_LEVEL >= 4
+#if BX_CPU_LEVEL >= 5
   Bit32u temp_cr4 = SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4);
   if (! check_CR4(temp_cr4)) {
     BX_PANIC(("SMM restore: CR4 consistency check failed !"));
@@ -782,7 +780,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
     BX_PANIC(("SMM restore: failed to restore CR0 !"));
     return 0;
   }
-#if BX_CPU_LEVEL >= 4
+#if BX_CPU_LEVEL >= 5
   if (!SetCR4(temp_cr4)) {
     BX_PANIC(("SMM restore: incorrect CR4 state !"));
     return 0;

@@ -197,7 +197,11 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 #endif
 
   // ECX: Extended Feature Flags
+#if BX_CPU_LEVEL >= 6
   leaf->ecx = get_extended_cpuid_features();
+#else
+  leaf->ecx = 0;
+#endif
 
   // EDX: Standard Feature Flags
   leaf->edx = get_std_cpuid_features();
@@ -871,6 +875,8 @@ Bit32u bx_generic_cpuid_t::get_cpu_version_information(void) const
          ((model & 0x0f) << 4) | stepping;
 }
 
+#if BX_CPU_LEVEL >= 6
+
 /* Get CPU extended feature flags. */
 Bit32u bx_generic_cpuid_t::get_extended_cpuid_features(void) const
 {
@@ -969,6 +975,8 @@ Bit32u bx_generic_cpuid_t::get_extended_cpuid_features(void) const
 
   return features;
 }
+
+#endif
 
 /* Get CPU feature flags. Returned by CPUID functions 1 and 80000001.  */
 Bit32u bx_generic_cpuid_t::get_std_cpuid_features(void) const
