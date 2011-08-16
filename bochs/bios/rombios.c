@@ -5151,6 +5151,14 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
         BX_INFO("KBD: int09h_handler(): unknown scancode read: 0x%02x!\n", scancode);
         return;
       }
+      if (scancode == 0x53) { /* DEL */
+        if ((shift_flags & 0x0f) == 0x0c) { /* CTRL+ALT */
+          write_word(0x0040, 0x0072, 0x1234);
+ASM_START
+          jmp 0xf000:post;
+ASM_END
+        }
+      }
       if (shift_flags & 0x08) { /* ALT */
         asciicode = scan_to_scanascii[scancode].alt;
         scancode = scan_to_scanascii[scancode].alt >> 8;
