@@ -9,6 +9,8 @@ Bochs repository moved to the SVN version control !
     engine is automatically configured to emulate a specific real hardware CPU,
     including exact CPUID matching reference hardware. Check .bochsrc example
     or read docs for list of supported configurations or more details.
+  * It is also possible to choose the CPU to emulate from Bochs command line
+    using new command line parameter -cpu <cpu_name>.
   - Implemented Supervisor Mode Execution Protection (SMEP), the feature can
     be enabled using .bochsrc CPUID option.
   - Added support for XSAVEOPT instruction, the instruction can be enabled

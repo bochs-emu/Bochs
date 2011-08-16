@@ -4858,6 +4858,10 @@ For other arguments, see section <link linkend="bochsrc">bochsrc</link>.
   <entry>specify configuration file</entry>
 </row>
 <row>
+  <entry>-cpu <replaceable>cpu_name</replaceable></entry>
+  <entry>specify cpu model to emulate</entry>
+</row>
+<row>
   <entry>-log <replaceable>filename</replaceable></entry>
   <entry>specify Bochs log file</entry>
 </row>
