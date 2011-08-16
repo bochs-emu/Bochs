@@ -911,7 +911,7 @@ void bx_dbg_info_control_regs_command(void)
   dbg_printf("CR3=0x" FMT_PHY_ADDRX "\n", cr3);
   dbg_printf("    PCD=page-level cache disable=%d\n", (cr3>>4) & 1);
   dbg_printf("    PWT=page-level write-through=%d\n", (cr3>>3) & 1);
-#if BX_CPU_LEVEL >= 4
+#if BX_CPU_LEVEL >= 5
   Bit32u cr4 = SIM->get_param_num("CR4", dbg_cpu_list)->get();
   dbg_printf("CR4=0x%08x: %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n", cr4,
     (cr4 & (1<<20)) ? "SMEP" : "smep",

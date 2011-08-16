@@ -21,8 +21,8 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_p2_klamath_CPUID_DEFINITIONS_H
-#define BX_p2_klamath_CPUID_DEFINITIONS_H
+#ifndef BX_P2_KLAMATH_CPUID_DEFINITIONS_H
+#define BX_P2_KLAMATH_CPUID_DEFINITIONS_H
 
 #if BX_CPU_LEVEL >= 6 && BX_SUPPORT_X86_64 == 0
 
