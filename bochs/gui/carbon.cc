@@ -36,7 +36,6 @@
 
 // BOCHS INCLUDES
 #include "bochs.h"
-#include "bxversion.h"
 #include "keymap.h"
 #include "iodev.h"
 
