@@ -714,7 +714,7 @@ AC_ARG_ENABLE(pcidev,
 			KERNEL_MODULE_SUFFIX="ko"
 		;;
 		*)
-			AC_MSG_ERROR([Linux kernel 2.4 or 2.6 is required])
+                        AC_MSG_ERROR([Linux kernel 2.4 or 2.6 is required for PCI host device mapping])
 		;;
 	  esac
 	  KERNELDIR="/lib/modules/$linux_version/build"

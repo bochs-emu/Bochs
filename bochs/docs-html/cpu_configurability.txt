@@ -322,8 +322,10 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
 35. CPU Feature: DCA (Direct Cache Access)
 
- ???
  Enables CPUID[0x00000001].ECX[18] flag.
+ Enables IA32_PLATFORM_DCA_CAP MSR register.
+ Enables CPUID[0x00000009] Direct Cache Access Information Leaf.
+ Indicates the processor supports the ability to prefetch data from a memory mapped device.
  Not implemented in Bochs.
 
 36. ISA Feature: SSE4.1
