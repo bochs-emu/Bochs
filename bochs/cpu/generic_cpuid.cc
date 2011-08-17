@@ -294,13 +294,10 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf) const
 // leaf 0x00000007 //
 void bx_generic_cpuid_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const
 {
+  leaf->eax = 0; /* report max sub-leaf that supported in leaf 7 */
   leaf->ebx = get_ext3_cpuid_features();
   leaf->ecx = 0;
   leaf->edx = 0;
-  if (leaf->ebx)
-    leaf->eax = 1; /* report max sub-leaves that are supported in leaf 7 */
-  else
-    leaf->eax = 0; /* leaf 7 not supported */
 }
 
 // leaf 0x00000008 - reserved //
