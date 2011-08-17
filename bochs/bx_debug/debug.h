@@ -380,6 +380,8 @@ void bx_dbg_exit(int code);
                                 BX_DBG_GUARD_IADDR_LIN | \
                                 BX_DBG_GUARD_IADDR_PHY)
 
+#define BX_DBG_GUARD_ICOUNT        0x0010
+
 typedef struct {
   unsigned guard_for;
 
@@ -453,9 +455,9 @@ typedef struct {
 // is reached (found)
 typedef struct bx_guard_found_t {
   unsigned guard_found;
+  Bit64u icount_max; // stop after completing this many instructions
   unsigned iaddr_index;
-  Bit64u icount; // number of completed instructions from last breakpoint hit
-  Bit32u cs;     // cs:eip and linear addr of instruction at guard point
+  Bit32u cs; // cs:eip and linear addr of instruction at guard point
   bx_address eip;
   bx_address laddr;
   // 00 - 16 bit, 01 - 32 bit, 10 - 64-bit, 11 - illegal

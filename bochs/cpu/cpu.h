@@ -861,6 +861,10 @@ public: // for now...
   bx_address prev_rsp;
   bx_bool    speculative_rsp;
 
+#if BX_DEBUGGER
+  Bit64u icount;
+#endif
+
 #define BX_INHIBIT_INTERRUPTS        0x01
 #define BX_INHIBIT_DEBUG             0x02
 #define BX_INHIBIT_INTERRUPTS_SHADOW 0x04
@@ -3482,6 +3486,9 @@ public: // for now...
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_vmx(void);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
+#if BX_DEBUGGER
+  BX_SMF BX_CPP_INLINE Bit64u get_icount(void) { return BX_CPU_THIS_PTR icount; }
+#endif
   BX_SMF BX_CPP_INLINE const bx_gen_reg_t *get_gen_regfile() { return BX_CPU_THIS_PTR gen_reg; }
 
   BX_SMF BX_CPP_INLINE bx_address get_instruction_pointer(void);

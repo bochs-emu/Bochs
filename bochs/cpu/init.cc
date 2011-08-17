@@ -358,6 +358,9 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_SIMPLE(cpu, activity_state);
   BXRS_HEX_PARAM_SIMPLE(cpu, inhibit_mask);
   BXRS_HEX_PARAM_SIMPLE(cpu, debug_trap);
+#if BX_DEBUGGER
+  BXRS_DEC_PARAM_SIMPLE(cpu, icount);
+#endif
 #if BX_SUPPORT_X86_64
   BXRS_HEX_PARAM_SIMPLE(cpu, RAX);
   BXRS_HEX_PARAM_SIMPLE(cpu, RBX);
@@ -770,6 +773,10 @@ void BX_CPU_C::reset(unsigned source)
 
   // status and control flags register set
   setEFlags(0x2); // Bit1 is always set
+
+#if BX_DEBUGGER
+  BX_CPU_THIS_PTR icount = 0;
+#endif
 
   BX_CPU_THIS_PTR inhibit_mask = 0;
   BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;

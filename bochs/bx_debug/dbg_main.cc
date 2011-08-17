@@ -92,8 +92,9 @@ static void bx_unnest_infile(void);
 static void bx_get_command(void);
 static void bx_dbg_print_guard_results();
 static void bx_dbg_breakpoint_changed(void);
+static void bx_dbg_set_icount_guard(int which_cpu, Bit32u n);
 
-bx_guard_t        bx_guard;
+bx_guard_t bx_guard;
 
 // DMA stuff
 void bx_dbg_post_dma_reports(void);
@@ -1773,12 +1774,6 @@ void bx_dbg_continue_command(void)
 
 one_more:
 
-  // I must guard for ICOUNT or one CPU could run forever without giving
-  // the others a chance.
-  for (cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
-    BX_CPU(cpu)->guard_found.icount = 0;
-  }
-
   // update gui (disable continue command, enable stop command, etc.)
   sim_running->set(1);
   SIM->refresh_ci();
@@ -1802,7 +1797,7 @@ one_more:
 #define BX_DBG_DEFAULT_ICOUNT_QUANTUM 5
 
     if (BX_SMP_PROCESSORS == 1) {
-      BX_CPU(0)->guard_found.guard_found = 0;
+      bx_dbg_set_icount_guard(0, 0); // run to next breakpoint
       BX_CPU(0)->cpu_loop(0);
       // set stop flag if a guard found other than icount or halted
       unsigned found = BX_CPU(0)->guard_found.guard_found;
@@ -1816,10 +1811,10 @@ one_more:
     else {
       Bit32u max_executed = 0;
       for (cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
-        Bit64u cpu_icount = BX_CPU(cpu)->guard_found.icount;
-        BX_CPU(cpu)->guard_found.guard_found = 0;
-        BX_CPU(cpu)->cpu_loop(BX_DBG_DEFAULT_ICOUNT_QUANTUM);
-        Bit32u executed = BX_CPU(cpu)->guard_found.icount - cpu_icount;
+        Bit64u cpu_icount = BX_CPU(cpu)->get_icount();
+        bx_dbg_set_icount_guard(cpu, BX_DBG_DEFAULT_ICOUNT_QUANTUM);
+        BX_CPU(cpu)->cpu_loop(0);
+        Bit32u executed = BX_CPU(cpu)->get_icount() - cpu_icount;
         if (executed > max_executed) max_executed = executed;
         // set stop flag if a guard found other than icount or halted
         unsigned found = BX_CPU(cpu)->guard_found.guard_found;
@@ -1875,15 +1870,10 @@ void bx_dbg_stepN_command(int cpu, Bit32u count)
   // is printed, we will return to config mode.
   SIM->set_display_mode(DISP_MODE_SIM);
 
-  // reset guard counters for all CPUs
-  for (unsigned n=0; n < BX_SMP_PROCESSORS; n++) {
-    BX_CPU(n)->guard_found.icount = 0;
-  }
-
   if (cpu >= 0 || BX_SMP_PROCESSORS == 1) {
     bx_guard.interrupt_requested = 0;
-    BX_CPU(cpu)->guard_found.guard_found = 0;
-    BX_CPU(cpu)->cpu_loop(count);
+    bx_dbg_set_icount_guard(cpu, count);
+    BX_CPU(cpu)->cpu_loop(0);
   }
 #if BX_SUPPORT_SMP
   else {
@@ -1892,8 +1882,8 @@ void bx_dbg_stepN_command(int cpu, Bit32u count)
     for (unsigned cycle=0; !stop && cycle < count; cycle++) {
       for (unsigned ncpu=0; ncpu < BX_SMP_PROCESSORS; ncpu++) {
         bx_guard.interrupt_requested = 0;
-        BX_CPU(ncpu)->guard_found.guard_found = 0;
-        BX_CPU(ncpu)->cpu_loop(1);
+        bx_dbg_set_icount_guard(cpu, 1);
+        BX_CPU(ncpu)->cpu_loop(0);
         // set stop flag if a guard found other than icount or halted
         unsigned found = BX_CPU(ncpu)->guard_found.guard_found;
         stop_reason_t reason = (stop_reason_t) BX_CPU(ncpu)->stop_reason;
@@ -2042,12 +2032,19 @@ void bx_dbg_print_guard_results(void)
       bx_dbg_disassemble_current(cpu, 0);  // one cpu, don't print time
     }
   }
-#if 0
-  // print the TSC value for every CPU
-  for (cpu=0; cpu<BX_SMP_PROCESSORS; cpu++) {
-    dbg_printf("TSC[%d] = " FMT_LL "d\n", cpu, BX_CPU(cpu)->tsc);
+}
+
+void bx_dbg_set_icount_guard(int which_cpu, Bit32u n)
+{
+  if (n == 0) {
+    bx_guard.guard_for &= ~BX_DBG_GUARD_ICOUNT;
   }
-#endif
+  else {
+    bx_guard.guard_for |= BX_DBG_GUARD_ICOUNT;
+    BX_CPU(which_cpu)->guard_found.icount_max = BX_CPU(which_cpu)->get_icount() + n;
+  }
+
+  BX_CPU(which_cpu)->guard_found.guard_found = 0;
 }
 
 void bx_dbg_breakpoint_changed(void)

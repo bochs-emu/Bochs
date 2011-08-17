@@ -814,7 +814,8 @@ bx_bool BX_CPU_C::dbg_instruction_epilog(void)
   bx_address debug_eip = RIP;
   Bit16u cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
 
-  BX_CPU_THIS_PTR guard_found.icount++;
+  BX_CPU_THIS_PTR icount++;
+
   BX_CPU_THIS_PTR guard_found.cs  = cs;
   BX_CPU_THIS_PTR guard_found.eip = debug_eip;
   BX_CPU_THIS_PTR guard_found.laddr = BX_CPU_THIS_PTR get_laddr(BX_SEG_REG_CS, debug_eip);
@@ -848,6 +849,13 @@ bx_bool BX_CPU_C::dbg_instruction_epilog(void)
     BX_INFO(("[" FMT_LL "d] Stopped on MAGIC BREAKPOINT", bx_pc_system.time_ticks()));
     BX_CPU_THIS_PTR stop_reason = STOP_MAGIC_BREAK_POINT;
     return(1); // on a breakpoint
+  }
+
+  // see if debugger requesting icount guard 
+  if (bx_guard.guard_for & BX_DBG_GUARD_ICOUNT) {
+    if (BX_CPU_THIS_PTR icount >= BX_CPU_THIS_PTR guard_found.icount_max) {
+      return(1);
+    }
   }
 
   // convenient point to see if user requested debug break or typed Ctrl-C
