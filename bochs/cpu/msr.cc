@@ -132,8 +132,6 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #endif
 
     case BX_MSR_TSC:
-      if (! bx_cpuid_support_tsc()) return 0;
-      
       val64 = BX_CPU_THIS_PTR get_TSC();
       break;
 
@@ -534,7 +532,6 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #endif
 
     case BX_MSR_TSC:
-      if (! bx_cpuid_support_tsc()) return 0;
       BX_INFO(("WRMSR: write 0x%08x%08x to MSR_TSC", val32_hi, val32_lo));
       BX_CPU_THIS_PTR set_TSC(val_64);
       break;

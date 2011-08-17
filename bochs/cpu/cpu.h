@@ -3964,7 +3964,7 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_vme(void)
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_tsc(void)
 {
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_RDTSC);
+  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_PENTIUM);
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_debug_extensions(void)
