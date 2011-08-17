@@ -59,6 +59,7 @@ Bit32u p2_klamath_t::get_isa_extensions_bitmask(void) const
   return BX_CPU_X87 |
          BX_CPU_486 |
          BX_CPU_PENTIUM |
+         BX_CPU_RDTSC |
          BX_CPU_P6 |
          BX_CPU_MMX |
          BX_CPU_SYSENTER_SYSEXIT;

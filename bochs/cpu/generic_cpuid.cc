@@ -627,7 +627,7 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
   features_bitmask |= BX_CPU_486;
 
 #if BX_CPU_LEVEL >= 5
-  features_bitmask |= BX_CPU_PENTIUM;
+  features_bitmask |= BX_CPU_PENTIUM | BX_CPU_RDTSC;
 
   static bx_bool mmx_enabled = SIM->get_param_bool(BXPN_CPUID_MMX)->get();
   if (mmx_enabled)
@@ -1022,12 +1022,14 @@ Bit32u bx_generic_cpuid_t::get_std_cpuid_features(void) const
 #if BX_CPU_LEVEL >= 5
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_PENTIUM)) {
     // Pentium only features
-    features |= BX_CPUID_STD_TSC;
     features |= BX_CPUID_STD_MSR;
     // support Machine Check
     features |= BX_CPUID_STD_MCE | BX_CPUID_STD_MCA;
     features |= BX_CPUID_STD_CMPXCHG8B;
   }
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_RDTSC))
+    features |= BX_CPUID_STD_TSC;
 
   if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_VME))
     features |= BX_CPUID_STD_VME;

@@ -628,7 +628,7 @@ bx_define_opcode(BX_IA_INVLPG, &BX_CPU_C::INVLPG, &BX_CPU_C::BxError, 0, 0)
 bx_define_opcode(BX_IA_CMPXCHG8B, &BX_CPU_C::CMPXCHG8B, &BX_CPU_C::BxError, BX_CPU_PENTIUM, 0)
 bx_define_opcode(BX_IA_WRMSR, NULL, &BX_CPU_C::WRMSR, BX_CPU_PENTIUM, 0)
 bx_define_opcode(BX_IA_RDMSR, NULL, &BX_CPU_C::RDMSR, BX_CPU_PENTIUM, 0)
-bx_define_opcode(BX_IA_RDTSC, NULL, &BX_CPU_C::RDTSC, BX_CPU_PENTIUM, 0)
+bx_define_opcode(BX_IA_RDTSC, NULL, &BX_CPU_C::RDTSC, BX_CPU_RDTSC, 0)
 // Pentium new instructions
 
 // MMX

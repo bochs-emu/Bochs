@@ -70,32 +70,33 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPU_486              (1 << 1)        /* 486 new instruction */
 #define BX_CPU_PENTIUM          (1 << 2)        /* Pentium new instruction */
 #define BX_CPU_P6               (1 << 3)        /* P6 new instruction */
-#define BX_CPU_MMX              (1 << 4)        /* MMX instruction */
-#define BX_CPU_3DNOW            (1 << 5)        /* 3DNow! instruction */
-#define BX_CPU_SYSENTER_SYSEXIT (1 << 6)        /* SYSENTER/SYSEXIT instruction */
-#define BX_CPU_CLFLUSH          (1 << 7)        /* CLFLUSH instruction */
-#define BX_CPU_SSE              (1 << 8)        /* SSE  instruction */
-#define BX_CPU_SSE2             (1 << 9)        /* SSE2 instruction */
-#define BX_CPU_SSE3             (1 << 10)       /* SSE3 instruction */
-#define BX_CPU_SSSE3            (1 << 11)       /* SSSE3 instruction */
-#define BX_CPU_SSE4_1           (1 << 12)       /* SSE4_1 instruction */
-#define BX_CPU_SSE4_2           (1 << 13)       /* SSE4_2 instruction */
-#define BX_CPU_MONITOR_MWAIT    (1 << 14)       /* MONITOR/MWAIT instruction */
-#define BX_CPU_VMX              (1 << 15)       /* VMX instruction */
-#define BX_CPU_SMX              (1 << 16)       /* SMX instruction */
-#define BX_CPU_LM_LAHF_SAHF     (1 << 17)       /* Long Mode LAHF/SAHF instruction */
-#define BX_CPU_RDTSCP           (1 << 18)       /* RDTSCP instruction */
-#define BX_CPU_XSAVE            (1 << 19)       /* XSAVE/XRSTOR extensions instruction */
-#define BX_CPU_XSAVEOPT         (1 << 20)       /* XSAVEOPT instruction */
-#define BX_CPU_AES_PCLMULQDQ    (1 << 21)       /* AES+PCLMULQDQ instruction */
-#define BX_CPU_MOVBE            (1 << 22)       /* MOVBE Intel Atom(R) instruction */
-#define BX_CPU_FSGSBASE         (1 << 23)       /* FS/GS BASE access instruction */
-#define BX_CPU_INVPCID          (1 << 24)       /* INVPCID instruction */
-#define BX_CPU_AVX              (1 << 25)       /* AVX instruction */
-#define BX_CPU_AVX2             (1 << 26)       /* AVX2 instruction */
-#define BX_CPU_AVX_F16C         (1 << 27)       /* AVX F16 convert instruction */
-#define BX_CPU_AVX_FMA          (1 << 28)       /* AVX FMA instruction */
-#define BX_CPU_BMI              (1 << 29)       /* BMI instruction */
+#define BX_CPU_RDTSC            (1 << 4)        /* RDTSC instruction */
+#define BX_CPU_MMX              (1 << 5)        /* MMX instruction */
+#define BX_CPU_3DNOW            (1 << 6)        /* 3DNow! instruction */
+#define BX_CPU_SYSENTER_SYSEXIT (1 << 7)        /* SYSENTER/SYSEXIT instruction */
+#define BX_CPU_CLFLUSH          (1 << 8)        /* CLFLUSH instruction */
+#define BX_CPU_SSE              (1 << 9)        /* SSE  instruction */
+#define BX_CPU_SSE2             (1 << 10)       /* SSE2 instruction */
+#define BX_CPU_SSE3             (1 << 11)       /* SSE3 instruction */
+#define BX_CPU_SSSE3            (1 << 12)       /* SSSE3 instruction */
+#define BX_CPU_SSE4_1           (1 << 13)       /* SSE4_1 instruction */
+#define BX_CPU_SSE4_2           (1 << 14)       /* SSE4_2 instruction */
+#define BX_CPU_MONITOR_MWAIT    (1 << 15)       /* MONITOR/MWAIT instruction */
+#define BX_CPU_VMX              (1 << 16)       /* VMX instruction */
+#define BX_CPU_SMX              (1 << 17)       /* SMX instruction */
+#define BX_CPU_LM_LAHF_SAHF     (1 << 18)       /* Long Mode LAHF/SAHF instruction */
+#define BX_CPU_RDTSCP           (1 << 19)       /* RDTSCP instruction */
+#define BX_CPU_XSAVE            (1 << 20)       /* XSAVE/XRSTOR extensions instruction */
+#define BX_CPU_XSAVEOPT         (1 << 21)       /* XSAVEOPT instruction */
+#define BX_CPU_AES_PCLMULQDQ    (1 << 22)       /* AES+PCLMULQDQ instruction */
+#define BX_CPU_MOVBE            (1 << 23)       /* MOVBE Intel Atom(R) instruction */
+#define BX_CPU_FSGSBASE         (1 << 24)       /* FS/GS BASE access instruction */
+#define BX_CPU_INVPCID          (1 << 25)       /* INVPCID instruction */
+#define BX_CPU_AVX              (1 << 26)       /* AVX instruction */
+#define BX_CPU_AVX2             (1 << 27)       /* AVX2 instruction */
+#define BX_CPU_AVX_F16C         (1 << 28)       /* AVX F16 convert instruction */
+#define BX_CPU_AVX_FMA          (1 << 29)       /* AVX FMA instruction */
+#define BX_CPU_BMI              (1 << 30)       /* BMI instruction */
 
 // cpuid non-ISA features
 #define BX_CPU_DEBUG_EXTENSIONS (1 << 0)        /* Debug Extensions support */

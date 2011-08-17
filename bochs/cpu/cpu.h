@@ -3470,6 +3470,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_debug_extensions(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_1g_paging(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_vme(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_tsc(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_pae(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_pge(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_pse(void);
@@ -3959,6 +3960,11 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_smep(void)
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_vme(void)
 {
   return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_VME);
+}
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_tsc(void)
+{
+  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_RDTSC);
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_debug_extensions(void)
