@@ -350,7 +350,7 @@ void BX_CPU_C::register_state(void)
 
   sprintf(name, "cpu%d", BX_CPU_ID);
 
-  bx_list_c *cpu = new bx_list_c(SIM->get_bochs_root(), name, name, 50 + BX_GENERAL_REGISTERS);
+  bx_list_c *cpu = new bx_list_c(SIM->get_bochs_root(), name, name, 55 + BX_GENERAL_REGISTERS);
 
   BXRS_HEX_PARAM_SIMPLE(cpu, isa_extensions_bitmask);
   BXRS_HEX_PARAM_SIMPLE(cpu, cpu_extensions_bitmask);

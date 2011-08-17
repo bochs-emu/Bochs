@@ -56,7 +56,7 @@ static unsigned iCacheMisses=0;
 //
 // If maximum instructions have been executed, return. The zero-count
 // means run forever.
-#if BX_SUPPORT_SMP || BX_DEBUGGER
+#if BX_SUPPORT_SMP
   #define CHECK_MAX_INSTRUCTIONS(count) \
     if ((count) > 0) {                  \
       (count)--;                        \
