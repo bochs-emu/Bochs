@@ -26,6 +26,7 @@
 #define IODEV_H
 
 #include "bochs.h"
+#include "plugin.h"
 #include "param_names.h"
 
 /* number of IRQ lines supported.  In an ISA PC there are two

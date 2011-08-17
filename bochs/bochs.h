@@ -463,7 +463,6 @@ BOCHSAPI extern Bit32u apic_id_mask;
 
 #include "memory/memory.h"
 #include "pc_system.h"
-#include "plugin.h"
 #include "gui/gui.h"
 
 /* --- EXTERNS --- */
