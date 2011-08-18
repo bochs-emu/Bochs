@@ -486,6 +486,9 @@ all-clean: clean
 	cd cpu @COMMAND_SEPARATOR@
 	$(MAKE) clean
 	@CD_UP_ONE@
+	cd cpu/cpudb @COMMAND_SEPARATOR@
+	$(MAKE) clean
+	@CD_UP_TWO@
 	cd memory @COMMAND_SEPARATOR@
 	$(MAKE) clean
 	@CD_UP_ONE@
