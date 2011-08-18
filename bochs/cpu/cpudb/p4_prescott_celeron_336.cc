@@ -22,7 +22,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
-#include "cpu/cpu.h"
+#include "cpu.h"
 #include "param_names.h"
 #include "p4_prescott_celeron_336.h"
 

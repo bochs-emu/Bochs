@@ -22,7 +22,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
-#include "cpu/cpu.h"
+#include "cpu.h"
 #include "param_names.h"
 #include "corei7_sandy_bridge_2600K.h"
 

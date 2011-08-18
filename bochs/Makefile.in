@@ -1,4 +1,4 @@
-# Copyright (C) 2001  The Bochs Project
+# Copyright (C) 2001-2011  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -174,11 +174,12 @@ all: @PRIMARY_TARGET@ @PLUGIN_TARGET@ bximage@EXE@ bxcommit@EXE@ @BUILD_DOCBOOK_
 @EXTERNAL_DEPENDENCY@
 
 bochs@EXE@: @IODEV_LIB_VAR@ @DEBUGGER_VAR@ \
-           cpu/libcpu.a memory/libmemory.a gui/libgui.a \
+           cpu/libcpu.a cpu/cpudb/libcpudb.a memory/libmemory.a gui/libgui.a \
            @DISASM_VAR@ @INSTRUMENT_VAR@ $(BX_OBJS) \
            $(SIMX86_OBJS) @FPU_VAR@ @GDBSTUB_VAR@ @PLUGIN_VAR@
 	@LINK@ @EXPORT_DYNAMIC@ $(BX_OBJS) $(SIMX86_OBJS) \
-		@IODEV_LIB_VAR@ @DEBUGGER_VAR@ cpu/libcpu.a memory/libmemory.a gui/libgui.a \
+		@IODEV_LIB_VAR@ @DEBUGGER_VAR@ cpu/libcpu.a cpu/cpudb/libcpudb.a \
+		 memory/libmemory.a gui/libgui.a \
 		@DISASM_VAR@ @INSTRUMENT_VAR@ @PLUGIN_VAR@ \
 		@GDBSTUB_VAR@ @FPU_VAR@ \
 		@NONPLUGIN_GUI_LINK_OPTS@ \
@@ -192,19 +193,21 @@ bochs@EXE@: @IODEV_LIB_VAR@ @DEBUGGER_VAR@ \
 # libtool.  This creates a .DEF file, and exports file, an import library,
 # and then links bochs.exe with the exports file.
 .win32_dll_plugin_target: @IODEV_LIB_VAR@ @DEBUGGER_VAR@ \
-           cpu/libcpu.a memory/libmemory.a gui/libgui.a \
+           cpu/libcpu.a cpu/cpudb/libcpudb.a memory/libmemory.a gui/libgui.a \
            @DISASM_VAR@ @INSTRUMENT_VAR@ $(BX_OBJS) \
            $(SIMX86_OBJS) @FPU_VAR@ @GDBSTUB_VAR@ @PLUGIN_VAR@
 	$(DLLTOOL) --export-all-symbols --output-def bochs.def \
 		$(BX_OBJS) $(SIMX86_OBJS) \
-		@IODEV_LIB_VAR@ cpu/libcpu.a memory/libmemory.a gui/libgui.a \
+		@IODEV_LIB_VAR@ cpu/libcpu.a cpu/cpudb/libcpudb.a \
+		memory/libmemory.a gui/libgui.a \
 		@DEBUGGER_VAR@ @DISASM_VAR@ @INSTRUMENT_VAR@ @PLUGIN_VAR@ \
 		@GDBSTUB_VAR@ @FPU_VAR@
 	$(DLLTOOL) --dllname bochs.exe --def bochs.def --output-lib dllexports.a
 	$(DLLTOOL) --dllname bochs.exe --output-exp bochs.exp --def bochs.def
 	$(CXX) -o bochs.exe $(CXXFLAGS) $(LDFLAGS) -export-dynamic \
 	    $(BX_OBJS) bochs.exp $(SIMX86_OBJS) \
-		@IODEV_LIB_VAR@ cpu/libcpu.a memory/libmemory.a gui/libgui.a \
+		@IODEV_LIB_VAR@ cpu/libcpu.a cpu/cpudb/libcpudb.a \
+		memory/libmemory.a gui/libgui.a \
 		@DEBUGGER_VAR@ @DISASM_VAR@ @INSTRUMENT_VAR@ @PLUGIN_VAR@ \
 		@GDBSTUB_VAR@ @FPU_VAR@ \
 		$(GUI_LINK_OPTS) \
@@ -259,6 +262,11 @@ cpu/libcpu.a::
 	cd cpu @COMMAND_SEPARATOR@
 	$(MAKE) $(MDEFINES) libcpu.a
 	@CD_UP_ONE@
+
+cpu/cpudb/libcpudb.a::
+	cd cpu/cpudb @COMMAND_SEPARATOR@
+	$(MAKE) $(MDEFINES) libcpudb.a
+	@CD_UP_TWO@
 
 memory/libmemory.a::
 	cd memory @COMMAND_SEPARATOR@

@@ -22,8 +22,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
-#include "cpu/cpu.h"
-#include "param_names.h"
+#include "cpu.h"
 #include "p2_klamath.h"
 
 #define LOG_THIS cpu->

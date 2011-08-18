@@ -22,7 +22,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
-#include "cpu/cpu.h"
+#include "cpu.h"
 #include "param_names.h"
 #include "core2_extreme_x9770.h"
 

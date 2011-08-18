@@ -22,8 +22,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
-#include "cpu/cpu.h"
-#include "param_names.h"
+#include "cpu.h"
 #include "pentium_mmx.h"
 
 #define LOG_THIS cpu->

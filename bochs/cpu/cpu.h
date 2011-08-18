@@ -780,8 +780,8 @@ typedef struct {
 #endif
 
 #if BX_SUPPORT_FPU
-#include "cpu/i387.h"
-#include "cpu/xmm.h"
+#include "i387.h"
+#include "xmm.h"
 #endif
 
 #if BX_SUPPORT_VMX

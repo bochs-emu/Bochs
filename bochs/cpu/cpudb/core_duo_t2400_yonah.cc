@@ -22,7 +22,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
-#include "cpu/cpu.h"
+#include "cpu.h"
 #include "param_names.h"
 #include "core_duo_t2400_yonah.h"
 
