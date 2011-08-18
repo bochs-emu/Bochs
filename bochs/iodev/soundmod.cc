@@ -50,19 +50,19 @@ void libsoundmod_LTX_plugin_fini(void)
   delete theSoundModCtl;
 }
 
-int bx_soundmod_ctl_c::init_module(const char *type, void **module, logfunctions *device)
+void* bx_soundmod_ctl_c::init_module(const char *type, logfunctions *device)
 {
-  bx_sound_lowlevel_c **soundmod = (bx_sound_lowlevel_c**)module;
+  bx_sound_lowlevel_c *soundmod;
 
   if (!strcmp(type, "default")) {
-    *soundmod = new BX_SOUND_LOWLEVEL_C(device);
+    soundmod = new BX_SOUND_LOWLEVEL_C(device);
   } else if (!strcmp(type, "dummy")) {
-    *soundmod = new bx_sound_lowlevel_c(device);
+    soundmod = new bx_sound_lowlevel_c(device);
   } else {
     BX_PANIC(("unknown sound module type '%s'", type));
-    *soundmod = NULL;
+    soundmod = NULL;
   }
-  return 0;
+  return soundmod;
 }
 
 // The dummy sound lowlevel functions. They don't do anything.

@@ -27,11 +27,10 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
-
-#if defined(WIN32) && BX_SUPPORT_SOUNDLOW
-
 #include "soundmod.h"
 #include "soundwin.h"
+
+#if defined(WIN32) && BX_SUPPORT_SOUNDLOW
 
 #define LOG_THIS device->
 

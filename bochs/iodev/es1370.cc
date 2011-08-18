@@ -130,7 +130,7 @@ void bx_es1370_c::init(void)
   }
   BX_ES1370_THIS pci_base_address[0] = 0;
 
-  DEV_sound_init_module("default", &BX_ES1370_THIS soundmod, BX_ES1370_THIS_PTR);
+  BX_ES1370_THIS soundmod = DEV_sound_init_module("default", BX_ES1370_THIS_PTR);
   BX_ES1370_THIS s.dac_outputinit = 0;
   BX_ES1370_THIS s.adc_inputinit = 0;
   BX_ES1370_THIS s.dac_nr_active = -1;

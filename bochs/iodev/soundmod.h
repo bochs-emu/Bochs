@@ -36,7 +36,7 @@ class bx_soundmod_ctl_c : public bx_soundmod_ctl_stub_c {
 public:
   bx_soundmod_ctl_c() {}
   virtual ~bx_soundmod_ctl_c() {}
-  virtual int init_module(const char *type, void **module, logfunctions *device);
+  virtual void* init_module(const char *type, logfunctions *device);
 };
 
 // The class with the input/output functions

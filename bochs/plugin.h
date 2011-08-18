@@ -255,7 +255,8 @@ extern "C" {
 #define DEV_usb_send_msg(a,b) bx_devices.pluginUsbDevCtl->usb_send_msg((void*)a,b)
 
 ///////// Sound module macro
-#define DEV_sound_init_module(a,b,c) bx_devices.pluginSoundModCtl->init_module(a,(void**)b,c)
+#define DEV_sound_init_module(a,b) \
+  ((bx_sound_lowlevel_c*)bx_devices.pluginSoundModCtl->init_module(a,b))
 
 ///////// Networking module macro
 #define DEV_net_init_module(a,b,c) \

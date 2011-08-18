@@ -24,13 +24,12 @@
 // ALSA PCM input/output on Linux.
 
 #include "iodev.h"
+#include "soundmod.h"
+#include "soundlnx.h"
 
 #if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)) && BX_SUPPORT_SOUNDLOW
 
 #define LOG_THIS device->
-
-#include "soundmod.h"
-#include "soundlnx.h"
 
 #include <errno.h>
 #include <sys/ioctl.h>

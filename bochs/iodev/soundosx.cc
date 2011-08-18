@@ -25,13 +25,12 @@
 #endif
 
 #include "iodev.h"
+#include "soundmod.h"
+#include "soundosx.h"
 
 #if defined(macintosh) && BX_SUPPORT_SOUNDLOW
 
 #define LOG_THIS device->
-
-#include "soundmod.h"
-#include "soundosx.h"
 
 #if BX_WITH_MACOS
 #include <QuickTimeMusic.h>

@@ -154,7 +154,7 @@ void bx_sb16_c::init(void)
   BX_SB16_THIS loglevel = SIM->get_param_num("loglevel", base)->get();
 
   // let the output functions initialize
-  DEV_sound_init_module("default", &BX_SB16_OUTPUT, BX_SB16_THISP);
+  BX_SB16_OUTPUT = DEV_sound_init_module("default", BX_SB16_THISP);
 
   if (BX_SB16_OUTPUT == NULL)
   {
