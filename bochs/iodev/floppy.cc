@@ -161,6 +161,7 @@ void bx_floppy_ctrl_c::init(void)
     BX_FD_THIS s.media[i].sectors           = 0;
     BX_FD_THIS s.media[i].fd                = -1;
     BX_FD_THIS s.media[i].vvfat_floppy      = 0;
+    BX_FD_THIS s.media[i].status_changed    = 0;
     BX_FD_THIS s.media_present[i]           = 0;
     BX_FD_THIS s.device_type[i]             = FDRIVE_NONE;
   }
@@ -262,6 +263,8 @@ void bx_floppy_ctrl_c::init(void)
     SIM->get_param_bool("status", floppy)->set_handler(floppy_param_handler);
     SIM->get_param_bool("status", floppy)->set_runtime_param(1);
   }
+  // register handler for correct floppy parameter handling after runtime config
+  SIM->register_runtime_config_handler(this, runtime_config_handler);
 }
 
 void bx_floppy_ctrl_c::reset(unsigned type)
@@ -369,6 +372,33 @@ void bx_floppy_ctrl_c::register_state(void)
     new bx_shadow_num_c(drive, "eot", &BX_FD_THIS s.eot[i]);
     new bx_shadow_bool_c(drive, "media_present", &BX_FD_THIS s.media_present[i]);
     new bx_shadow_num_c(drive, "DIR", &BX_FD_THIS s.DIR[i], BASE_HEX);
+  }
+}
+
+void bx_floppy_ctrl_c::runtime_config_handler(void *this_ptr)
+{
+  bx_floppy_ctrl_c *class_ptr = (bx_floppy_ctrl_c *) this_ptr;
+  class_ptr->runtime_config();
+}
+
+void bx_floppy_ctrl_c::runtime_config(void)
+{
+  unsigned drive;
+  bx_bool status;
+  char pname[16];
+
+  for (drive=0; drive<2; drive++) {
+    if (BX_FD_THIS s.media[drive].status_changed) {
+      sprintf(pname, "floppy.%d.status", drive);
+      status = SIM->get_param_bool(pname)->get();
+      if (BX_FD_THIS s.media_present[drive]) {
+        BX_FD_THIS set_media_status(drive, 0);
+      }
+      if (status) {
+        BX_FD_THIS set_media_status(drive, 1);
+      }
+      BX_FD_THIS s.media[drive].status_changed = 0;
+    }
   }
 }
 
@@ -1926,17 +1956,16 @@ bx_bool bx_floppy_ctrl_c::get_tc(void)
 
 Bit64s bx_floppy_ctrl_c::floppy_param_handler(bx_param_c *param, int set, Bit64s val)
 {
+  bx_list_c *base = (bx_list_c*) param->get_parent();
+  Bit8u drive;
+
   if (set) {
-    char pname[BX_PATHNAME_LEN];
-    param->get_param_path(pname, BX_PATHNAME_LEN);
-    if (!strcmp(pname, BXPN_FLOPPYA_STATUS)) {
-      BX_FD_THIS set_media_status(0, (bx_bool)val);
-    } else if (!strcmp(pname, BXPN_FLOPPYB_STATUS)) {
-      BX_FD_THIS set_media_status(1, (bx_bool)val);
-    } else if (!strcmp(pname, BXPN_FLOPPYA_READONLY)) {
-      BX_FD_THIS s.media[0].write_protected = (bx_bool)val;
-    } else if (!strcmp(pname, BXPN_FLOPPYB_READONLY)) {
-      BX_FD_THIS s.media[1].write_protected = (bx_bool)val;
+    drive = atoi(base->get_name());
+    if (!strcmp(param->get_name(), "status")) {
+      BX_FD_THIS s.media[drive].status_changed = 1;
+    } else if (!strcmp(param->get_name(), "readonly")) {
+      BX_FD_THIS s.media[drive].write_protected = (bx_bool)val;
+      BX_FD_THIS s.media[drive].status_changed = 1;
     }
   }
   return val;
@@ -1946,31 +1975,24 @@ const char* bx_floppy_ctrl_c::floppy_param_string_handler(bx_param_string_c *par
                                 int set, const char *oldval, const char *val, int maxlen)
 {
   char pname[BX_PATHNAME_LEN];
-  Bit8u device;
+  Bit8u drive;
 
   bx_list_c *base = (bx_list_c*) param->get_parent();
-  int empty = 0;
   if ((strlen(val) < 1) || !strcmp ("none", val)) {
-    empty = 1;
     val = "none";
   }
   param->get_param_path(pname, BX_PATHNAME_LEN);
   if ((!strcmp(pname, BXPN_FLOPPYA_PATH)) ||
       (!strcmp(pname, BXPN_FLOPPYB_PATH))) {
     if (set==1) {
-      device = atoi(base->get_name());
-      if (empty) {
-        BX_FD_THIS set_media_status(device, 0);
-      } else {
-        if (SIM->get_param_enum("devtype", base)->get() == BX_FDD_NONE) {
-          BX_ERROR(("Cannot add a floppy drive at runtime"));
-          SIM->get_param_string("path", base)->set("none");
-        }
+      drive = atoi(base->get_name());
+      if (SIM->get_param_enum("devtype", base)->get() == BX_FDD_NONE) {
+        BX_ERROR(("Cannot add a floppy drive at runtime"));
+        SIM->get_param_string("path", base)->set("none");
       }
       if (SIM->get_param_bool("status", base)->get() == 1) {
         // tell the device model that we removed, then inserted the disk
-        BX_FD_THIS set_media_status(device, 0);
-        BX_FD_THIS set_media_status(device, 1);
+        BX_FD_THIS s.media[drive].status_changed = 1;
       }
     }
   } else {

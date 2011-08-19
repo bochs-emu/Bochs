@@ -41,13 +41,14 @@ typedef struct {
   unsigned heads;      /* number of heads */
   unsigned type;
   unsigned write_protected;
+  unsigned status_changed;
   unsigned char raw_floppy_win95;
 #ifdef WIN32
   unsigned char raw_floppy_win95_drv;
 #endif
   bx_bool  vvfat_floppy;
   device_image_t *vvfat;
-  } floppy_t;
+} floppy_t;
 
 class bx_floppy_ctrl_c : public bx_floppy_stub_c {
 public:
@@ -153,6 +154,8 @@ private:
   // runtime options
   static Bit64s    floppy_param_handler(bx_param_c *param, int set, Bit64s val);
   static const char* floppy_param_string_handler(bx_param_string_c *param, int set, const char *oldval, const char *val, int maxlen);
+  static void runtime_config_handler(void *);
+  void runtime_config(void);
 };
 
 
