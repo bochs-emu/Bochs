@@ -147,9 +147,6 @@ $(OBJS64): $(BX_INCLUDES)
 clean:
 	@RMCOMMAND@ *.o
 	@RMCOMMAND@ *.a
-	cd cpudb @COMMAND_SEPARATOR@
-        $(MAKE) clean
-	@CD_UP_ONE@
 
 dist-clean: clean
 	@RMCOMMAND@ Makefile
