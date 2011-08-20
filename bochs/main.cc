@@ -490,7 +490,6 @@ void print_usage(void)
     "Usage: bochs [flags] [bochsrc options]\n\n"
     "  -n               no configuration file\n"
     "  -f configfile    specify configuration file\n"
-    "  -cpu cpu_name    specify cpu model to emulate\n"
     "  -q               quick start (skip configuration interface)\n"
     "  -benchmark n     run bochs in benchmark mode for millions of emulated ticks\n"
     "  -r path          restore the Bochs state from path\n"
@@ -566,13 +565,6 @@ int bx_init_main(int argc, char *argv[])
       SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
       if (++arg >= argc) BX_PANIC(("-qf must be followed by a filename"));
       else bochsrc_filename = argv[arg];
-    }
-    else if (!strcmp("-cpu", argv[arg])) {
-      if (++arg >= argc) BX_PANIC(("-cpu must be followed by a CPU name"));
-      else {
-        if (! SIM->get_param_enum(BXPN_CPU_MODEL)->set_by_name(argv[arg]))
-          BX_PANIC(("unsupported CPU model option %s", argv[arg]));
-      }
     }
     else if (!strcmp("-benchmark", argv[arg])) {
       SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
