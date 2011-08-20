@@ -110,13 +110,13 @@ static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f13M[6] = {
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f14[6] = {
-  /* 66 */ { 0, BX_IA_VUNPCKLPD_VpdWpd },
+  /* 66 */ { 0, BX_IA_VUNPCKLPD_VpdHpdWpd },
   /* F3 */ { 0, BX_IA_ERROR },
   /* F2 */ { 0, BX_IA_ERROR }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f15[6] = {
-  /* 66 */ { 0, BX_IA_VUNPCKHPD_VpdWpd },
+  /* 66 */ { 0, BX_IA_VUNPCKHPD_VpdHpdWpd },
   /* F3 */ { 0, BX_IA_ERROR },
   /* F2 */ { 0, BX_IA_ERROR }
 };
@@ -189,56 +189,56 @@ static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f50R[6] = {
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f51[6] = {
   /* 66 */ { 0, BX_IA_VSQRTPD_VpdWpd },
-  /* F3 */ { 0, BX_IA_VSQRTSS_VssWss },
-  /* F2 */ { 0, BX_IA_VSQRTSD_VsdWsd }
+  /* F3 */ { 0, BX_IA_VSQRTSS_VssHpsWss },
+  /* F2 */ { 0, BX_IA_VSQRTSD_VsdHpdWsd }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f52[6] = {
   /* 66 */ { 0, BX_IA_ERROR },
-  /* F3 */ { 0, BX_IA_VRSQRTSS_VssWss },
+  /* F3 */ { 0, BX_IA_VRSQRTSS_VssHpsWss },
   /* F2 */ { 0, BX_IA_ERROR }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f53[6] = {
   /* 66 */ { 0, BX_IA_ERROR },
-  /* F3 */ { 0, BX_IA_VRCPSS_VssWss },
+  /* F3 */ { 0, BX_IA_VRCPSS_VssHpsWss },
   /* F2 */ { 0, BX_IA_ERROR }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f54[6] = {
-  /* 66 */ { 0, BX_IA_VANDPD_VpdWpd },
+  /* 66 */ { 0, BX_IA_VANDPD_VpdHpdWpd },
   /* F3 */ { 0, BX_IA_ERROR },
   /* F2 */ { 0, BX_IA_ERROR }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f55[6] = {
-  /* 66 */ { 0, BX_IA_VANDNPD_VpdWpd },
+  /* 66 */ { 0, BX_IA_VANDNPD_VpdHpdWpd },
   /* F3 */ { 0, BX_IA_ERROR },
   /* F2 */ { 0, BX_IA_ERROR }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f56[6] = {
-  /* 66 */ { 0, BX_IA_VORPD_VpdWpd },
+  /* 66 */ { 0, BX_IA_VORPD_VpdHpdWpd },
   /* F3 */ { 0, BX_IA_ERROR },
   /* F2 */ { 0, BX_IA_ERROR }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f57[6] = {
-  /* 66 */ { 0, BX_IA_VXORPD_VpdWpd },
+  /* 66 */ { 0, BX_IA_VXORPD_VpdHpdWpd },
   /* F3 */ { 0, BX_IA_ERROR },
   /* F2 */ { 0, BX_IA_ERROR }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f58[6] = {
-  /* 66 */ { 0, BX_IA_VADDPD_VpdWpd },
-  /* F3 */ { 0, BX_IA_VADDSS_VssWss },
-  /* F2 */ { 0, BX_IA_VADDSD_VsdWsd }
+  /* 66 */ { 0, BX_IA_VADDPD_VpdHpdWpd },
+  /* F3 */ { 0, BX_IA_VADDSS_VssHpsWss },
+  /* F2 */ { 0, BX_IA_VADDSD_VsdHpdWsd }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f59[6] = {
-  /* 66 */ { 0, BX_IA_VMULPD_VpdWpd },
-  /* F3 */ { 0, BX_IA_VMULSS_VssWss },
-  /* F2 */ { 0, BX_IA_VMULSD_VsdWsd }
+  /* 66 */ { 0, BX_IA_VMULPD_VpdHpdWpd },
+  /* F3 */ { 0, BX_IA_VMULSS_VssHpsWss },
+  /* F2 */ { 0, BX_IA_VMULSD_VsdHpdWsd }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f5a[6] = {
@@ -254,27 +254,27 @@ static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f5b[6] = {
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f5c[6] = {
-  /* 66 */ { 0, BX_IA_VSUBPD_VpdWpd },
-  /* F3 */ { 0, BX_IA_VSUBSS_VssWss },
-  /* F2 */ { 0, BX_IA_VSUBSD_VsdWsd }
+  /* 66 */ { 0, BX_IA_VSUBPD_VpdHpdWpd },
+  /* F3 */ { 0, BX_IA_VSUBSS_VssHpsWss },
+  /* F2 */ { 0, BX_IA_VSUBSD_VsdHpdWsd }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f5d[6] = {
-  /* 66 */ { 0, BX_IA_VMINPD_VpdWpd },
-  /* F3 */ { 0, BX_IA_VMINSS_VssWss },
-  /* F2 */ { 0, BX_IA_VMINSD_VsdWsd }
+  /* 66 */ { 0, BX_IA_VMINPD_VpdHpdWpd },
+  /* F3 */ { 0, BX_IA_VMINSS_VssHpsWss },
+  /* F2 */ { 0, BX_IA_VMINSD_VsdHpdWsd }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f5e[6] = {
-  /* 66 */ { 0, BX_IA_VDIVPD_VpdWpd },
-  /* F3 */ { 0, BX_IA_VDIVSS_VssWss },
-  /* F2 */ { 0, BX_IA_VDIVSD_VsdWsd }
+  /* 66 */ { 0, BX_IA_VDIVPD_VpdHpdWpd },
+  /* F3 */ { 0, BX_IA_VDIVSS_VssHpsWss },
+  /* F2 */ { 0, BX_IA_VDIVSD_VsdHpdWsd }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f5f[6] = {
-  /* 66 */ { 0, BX_IA_VMAXPD_VpdWpd },
-  /* F3 */ { 0, BX_IA_VMAXSS_VssWss },
-  /* F2 */ { 0, BX_IA_VMAXSD_VsdWsd }
+  /* 66 */ { 0, BX_IA_VMAXPD_VpdHpdWpd },
+  /* F3 */ { 0, BX_IA_VMAXSS_VssHpsWss },
+  /* F2 */ { 0, BX_IA_VMAXSD_VsdHpdWsd }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f6f[6] = {
@@ -290,15 +290,15 @@ static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f70[6] = {
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f7c[6] = {
-  /* 66 */ { 0, BX_IA_VHADDPD_VpdWpd },
+  /* 66 */ { 0, BX_IA_VHADDPD_VpdHpdWpd },
   /* F3 */ { 0, BX_IA_ERROR },
-  /* F2 */ { 0, BX_IA_VHADDPS_VpsWps }
+  /* F2 */ { 0, BX_IA_VHADDPS_VpsHpsWps }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f7d[6] = {
-  /* 66 */ { 0, BX_IA_VHSUBPD_VpdWpd },
+  /* 66 */ { 0, BX_IA_VHSUBPD_VpdHpdWpd },
   /* F3 */ { 0, BX_IA_ERROR },
-  /* F2 */ { 0, BX_IA_VHSUBPS_VpsWps }
+  /* F2 */ { 0, BX_IA_VHSUBPS_VpsHpsWps }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f7e[6] = {
@@ -314,21 +314,21 @@ static const BxOpcodeInfo_t BxOpcodeGroupAVX_0f7f[6] = {
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0fc2[6] = {
-  /* 66 */ { 0, BX_IA_VCMPPD_VpdWpdIb },
-  /* F3 */ { 0, BX_IA_VCMPSS_VssWssIb },
-  /* F2 */ { 0, BX_IA_VCMPSD_VsdWsdIb }
+  /* 66 */ { 0, BX_IA_VCMPPD_VpdHpdWpdIb },
+  /* F3 */ { 0, BX_IA_VCMPSS_VssHpsWssIb },
+  /* F2 */ { 0, BX_IA_VCMPSD_VsdHpdWsdIb }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0fc6[6] = {
-  /* 66 */ { 0, BX_IA_VSHUFPD_VpdWpdIb },
+  /* 66 */ { 0, BX_IA_VSHUFPD_VpdHpdWpdIb },
   /* F3 */ { 0, BX_IA_ERROR },
   /* F2 */ { 0, BX_IA_ERROR }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0fd0[6] = {
-  /* 66 */ { 0, BX_IA_VADDSUBPD_VpdWpd },
+  /* 66 */ { 0, BX_IA_VADDSUBPD_VpdHpdWpd },
   /* F3 */ { 0, BX_IA_ERROR },
-  /* F2 */ { 0, BX_IA_VADDSUBPS_VpsWps }
+  /* F2 */ { 0, BX_IA_VADDSUBPS_VpsHpsWps }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0fe6[6] = {
@@ -421,8 +421,8 @@ static const BxOpcodeInfo_t BxOpcodeTableAVX[256*3] = {
   /* 11 */ { BxPrefixSSE | BxArithDstRM, BX_IA_VMOVUPS_WpsVps, BxOpcodeGroupAVX_0f11 },
   /* 12 */ { BxPrefixSSE, BX_IA_VMOVLPS_VpsMq, BxOpcodeGroupAVX_0f12 },
   /* 13 */ { BxPrefixSSE, BX_IA_VMOVLPS_MqVps, BxOpcodeGroupAVX_0f13M },
-  /* 14 */ { BxPrefixSSE, BX_IA_VUNPCKLPS_VpsWps, BxOpcodeGroupAVX_0f14 },
-  /* 15 */ { BxPrefixSSE, BX_IA_VUNPCKHPS_VpsWps, BxOpcodeGroupAVX_0f15 },
+  /* 14 */ { BxPrefixSSE, BX_IA_VUNPCKLPS_VpsHpsWps, BxOpcodeGroupAVX_0f14 },
+  /* 15 */ { BxPrefixSSE, BX_IA_VUNPCKHPS_VpsHpsWps, BxOpcodeGroupAVX_0f15 },
   /* 16 */ { BxPrefixSSE, BX_IA_VMOVHPS_VpsMq, BxOpcodeGroupAVX_0f16 },
   /* 17 */ { BxPrefixSSE, BX_IA_VMOVHPS_MqVps, BxOpcodeGroupAVX_0f17M },
   /* 18 */ { 0, BX_IA_ERROR },
@@ -485,18 +485,18 @@ static const BxOpcodeInfo_t BxOpcodeTableAVX[256*3] = {
   /* 51 */ { BxPrefixSSE, BX_IA_VSQRTPS_VpsWps, BxOpcodeGroupAVX_0f51 },
   /* 52 */ { BxPrefixSSE, BX_IA_VRSQRTPS_VpsWps, BxOpcodeGroupAVX_0f52 },
   /* 53 */ { BxPrefixSSE, BX_IA_VRCPPS_VpsWps, BxOpcodeGroupAVX_0f53 },
-  /* 54 */ { BxPrefixSSE, BX_IA_VANDPS_VpsWps, BxOpcodeGroupAVX_0f54 },
-  /* 55 */ { BxPrefixSSE, BX_IA_VANDNPS_VpsWps, BxOpcodeGroupAVX_0f55 },
-  /* 56 */ { BxPrefixSSE, BX_IA_VORPS_VpsWps, BxOpcodeGroupAVX_0f56 },
-  /* 57 */ { BxPrefixSSE, BX_IA_VXORPS_VpsWps, BxOpcodeGroupAVX_0f57 },
-  /* 58 */ { BxPrefixSSE, BX_IA_VADDPS_VpsWps, BxOpcodeGroupAVX_0f58 },
-  /* 59 */ { BxPrefixSSE, BX_IA_VMULPS_VpsWps, BxOpcodeGroupAVX_0f59 },
+  /* 54 */ { BxPrefixSSE, BX_IA_VANDPS_VpsHpsWps, BxOpcodeGroupAVX_0f54 },
+  /* 55 */ { BxPrefixSSE, BX_IA_VANDNPS_VpsHpsWps, BxOpcodeGroupAVX_0f55 },
+  /* 56 */ { BxPrefixSSE, BX_IA_VORPS_VpsHpsWps, BxOpcodeGroupAVX_0f56 },
+  /* 57 */ { BxPrefixSSE, BX_IA_VXORPS_VpsHpsWps, BxOpcodeGroupAVX_0f57 },
+  /* 58 */ { BxPrefixSSE, BX_IA_VADDPS_VpsHpsWps, BxOpcodeGroupAVX_0f58 },
+  /* 59 */ { BxPrefixSSE, BX_IA_VMULPS_VpsHpsWps, BxOpcodeGroupAVX_0f59 },
   /* 5A */ { BxPrefixSSE, BX_IA_VCVTPS2PD_VpdWps, BxOpcodeGroupAVX_0f5a },
   /* 5B */ { BxPrefixSSE, BX_IA_VCVTDQ2PS_VpsWdq, BxOpcodeGroupAVX_0f5b },
-  /* 5C */ { BxPrefixSSE, BX_IA_VSUBPS_VpsWps, BxOpcodeGroupAVX_0f5c },
-  /* 5D */ { BxPrefixSSE, BX_IA_VMINPS_VpsWps, BxOpcodeGroupAVX_0f5d },
-  /* 5E */ { BxPrefixSSE, BX_IA_VDIVPS_VpsWps, BxOpcodeGroupAVX_0f5e },
-  /* 5F */ { BxPrefixSSE, BX_IA_VMAXPS_VpsWps, BxOpcodeGroupAVX_0f5f },
+  /* 5C */ { BxPrefixSSE, BX_IA_VSUBPS_VpsHpsWps, BxOpcodeGroupAVX_0f5c },
+  /* 5D */ { BxPrefixSSE, BX_IA_VMINPS_VpsHpsWps, BxOpcodeGroupAVX_0f5d },
+  /* 5E */ { BxPrefixSSE, BX_IA_VDIVPS_VpsHpsWps, BxOpcodeGroupAVX_0f5e },
+  /* 5F */ { BxPrefixSSE, BX_IA_VMAXPS_VpsHpsWps, BxOpcodeGroupAVX_0f5f },
   /* 60 */ { BxPrefixSSE66, BX_IA_VPUNPCKLBW_VdqWdq },
   /* 61 */ { BxPrefixSSE66, BX_IA_VPUNPCKLWD_VdqWdq },
   /* 62 */ { BxPrefixSSE66, BX_IA_VPUNPCKLDQ_VdqWdq },
@@ -595,11 +595,11 @@ static const BxOpcodeInfo_t BxOpcodeTableAVX[256*3] = {
   /* BF */ { 0, BX_IA_ERROR },
   /* C0 */ { 0, BX_IA_ERROR },
   /* C1 */ { 0, BX_IA_ERROR },
-  /* C2 */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_VCMPPS_VpsWpsIb, BxOpcodeGroupAVX_0fc2 },
+  /* C2 */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_VCMPPS_VpsHpsWpsIb, BxOpcodeGroupAVX_0fc2 },
   /* C3 */ { 0, BX_IA_ERROR },
   /* C4 */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_VPINSRW_VdqEwIb },
   /* C5 */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_VPEXTRW_GdUdqIb },
-  /* C6 */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_VSHUFPS_VpsWpsIb, BxOpcodeGroupAVX_0fc6 },
+  /* C6 */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_VSHUFPS_VpsHpsWpsIb, BxOpcodeGroupAVX_0fc6 },
   /* C7 */ { 0, BX_IA_ERROR },
   /* C8 */ { 0, BX_IA_ERROR },
   /* C9 */ { 0, BX_IA_ERROR },
@@ -671,8 +671,8 @@ static const BxOpcodeInfo_t BxOpcodeTableAVX[256*3] = {
   /* 09 */ { BxPrefixSSE66, BX_IA_VPSIGNW_VdqWdq },
   /* 0A */ { BxPrefixSSE66, BX_IA_VPSIGND_VdqWdq },
   /* 0B */ { BxPrefixSSE66, BX_IA_VPMULHRSW_VdqWdq },
-  /* 0C */ { BxPrefixSSE66 | BxVexW0, BX_IA_VPERMILPS_VpsWps },
-  /* 0D */ { BxPrefixSSE66 | BxVexW0, BX_IA_VPERMILPD_VpdWpd },
+  /* 0C */ { BxPrefixSSE66 | BxVexW0, BX_IA_VPERMILPS_VpsHpsWps },
+  /* 0D */ { BxPrefixSSE66 | BxVexW0, BX_IA_VPERMILPD_VpdHpdWpd },
   /* 0E */ { BxPrefixSSE66 | BxVexW0, BX_IA_VTESTPS_VpsWps },
   /* 0F */ { BxPrefixSSE66 | BxVexW0, BX_IA_VTESTPD_VpdWpd },
   /* 10 */ { 0, BX_IA_ERROR },
@@ -703,10 +703,10 @@ static const BxOpcodeInfo_t BxOpcodeTableAVX[256*3] = {
   /* 29 */ { BxPrefixSSE66, BX_IA_VPCMPEQQ_VdqWdq },
   /* 2A */ { BxPrefixSSE66, BX_IA_VMOVNTDQA_VdqMdq },
   /* 2B */ { BxPrefixSSE66, BX_IA_VPACKUSDW_VdqWdq },
-  /* 2C */ { BxPrefixSSE66 | BxVexW0, BX_IA_VMASKMOVPS_VpsMps },
-  /* 2D */ { BxPrefixSSE66 | BxVexW0, BX_IA_VMASKMOVPD_VpdMpd },
-  /* 2E */ { BxPrefixSSE66 | BxVexW0, BX_IA_VMASKMOVPS_MpsVps },
-  /* 2F */ { BxPrefixSSE66 | BxVexW0, BX_IA_VMASKMOVPD_MpdVpd },
+  /* 2C */ { BxPrefixSSE66 | BxVexW0, BX_IA_VMASKMOVPS_VpsHpsMps },
+  /* 2D */ { BxPrefixSSE66 | BxVexW0, BX_IA_VMASKMOVPD_VpdHpdMpd },
+  /* 2E */ { BxPrefixSSE66 | BxVexW0, BX_IA_VMASKMOVPS_MpsHpsVps },
+  /* 2F */ { BxPrefixSSE66 | BxVexW0, BX_IA_VMASKMOVPD_MpdHpdVpd },
   /* 30 */ { BxPrefixSSE66, BX_IA_VPMOVZXBW_VdqWq },
   /* 31 */ { BxPrefixSSE66, BX_IA_VPMOVZXBD_VdqWd },
   /* 32 */ { BxPrefixSSE66, BX_IA_VPMOVZXBQ_VdqWw },
@@ -927,10 +927,10 @@ static const BxOpcodeInfo_t BxOpcodeTableAVX[256*3] = {
   /* 07 */ { 0, BX_IA_ERROR },
   /* 08 */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_VROUNDPS_VpsWpsIb },
   /* 09 */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_VROUNDPD_VpdWpdIb },
-  /* 0A */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_VROUNDSS_VssWssIb },
-  /* 0B */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_VROUNDSD_VsdWsdIb },
-  /* 0C */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_VBLENDPS_VpsWpsIb },
-  /* 0D */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_VBLENDPD_VpdWpdIb },
+  /* 0A */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_VROUNDSS_VssHpsWssIb },
+  /* 0B */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_VROUNDSD_VsdHpdWsdIb },
+  /* 0C */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_VBLENDPS_VpsHpsWpsIb },
+  /* 0D */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_VBLENDPD_VpdHpdWpdIb },
   /* 0E */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_VPBLENDW_VdqWdqIb },
   /* 0F */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_VPALIGNR_VdqWdqIb },
   /* 10 */ { 0, BX_IA_ERROR },
@@ -981,8 +981,8 @@ static const BxOpcodeInfo_t BxOpcodeTableAVX[256*3] = {
   /* 3D */ { 0, BX_IA_ERROR },
   /* 3E */ { 0, BX_IA_ERROR },
   /* 3F */ { 0, BX_IA_ERROR },
-  /* 40 */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_VDPPS_VpsWpsIb },
-  /* 41 */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_VDPPD_VpdWpdIb },
+  /* 40 */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_VDPPS_VpsHpsWpsIb },
+  /* 41 */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_VDPPD_VpdHpdWpdIb },
   /* 42 */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_VMPSADBW_VdqWdqIb },
   /* 43 */ { 0, BX_IA_ERROR },
   /* 44 */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_VPCLMULQDQ_VdqWdqIb },
@@ -991,9 +991,9 @@ static const BxOpcodeInfo_t BxOpcodeTableAVX[256*3] = {
   /* 47 */ { 0, BX_IA_ERROR },
   /* 48 */ { 0, BX_IA_ERROR },
   /* 49 */ { 0, BX_IA_ERROR },
-  /* 4A */ { BxPrefixSSE66 | BxVexW0 | BxImmediate_Ib4, BX_IA_VBLENDVPS_VpsWpsIb },
-  /* 4B */ { BxPrefixSSE66 | BxVexW0 | BxImmediate_Ib4, BX_IA_VBLENDVPD_VpdWpdIb },
-  /* 4C */ { BxPrefixSSE66 | BxVexW0 | BxImmediate_Ib4, BX_IA_VPBLENDVB_VdqWdqIb },
+  /* 4A */ { BxPrefixSSE66 | BxVexW0 | BxImmediate_Ib4, BX_IA_VBLENDVPS_VpsHpsWpsIb },
+  /* 4B */ { BxPrefixSSE66 | BxVexW0 | BxImmediate_Ib4, BX_IA_VBLENDVPD_VpdHpdWpdIb },
+  /* 4C */ { BxPrefixSSE66 | BxVexW0 | BxImmediate_Ib4, BX_IA_VPBLENDVB_VdqHdqWdqIb },
   /* 4D */ { 0, BX_IA_ERROR },
   /* 4E */ { 0, BX_IA_ERROR },
   /* 4F */ { 0, BX_IA_ERROR },
