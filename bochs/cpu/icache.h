@@ -104,7 +104,7 @@ extern bxPageWriteStampTable pageWriteStampTable;
 #define BxICacheEntries (64 * 1024)  // Must be a power of 2.
 #define BxICacheMemPool (384 * 1024)
 
-#define BX_MAX_TRACE_LENGTH 32
+#define BX_MAX_TRACE_LENGTH 16
 
 struct bxICacheEntry_c
 {
@@ -148,7 +148,8 @@ public:
 
   BX_CPP_INLINE void alloc_trace(bxICacheEntry_c *e)
   {
-    if (mpindex + BX_MAX_TRACE_LENGTH > BxICacheMemPool) {
+    // took +1 garbend for instruction chaining speedup (end-of-trace opcode)
+    if ((mpindex + BX_MAX_TRACE_LENGTH + 1) > BxICacheMemPool) {
       flushICacheEntries();
     }
     e->i = &mpool[mpindex];
@@ -159,7 +160,7 @@ public:
 
   BX_CPP_INLINE void commit_page_split_trace(bx_phy_address paddr, bxICacheEntry_c *entry)
   {
-    mpindex++;  // commit_trace(1)
+    mpindex += entry->tlen;
 
     // register page split entry
     if (pageSplitIndex[nextPageSplitIndex].ppf != BX_ICACHE_INVALID_PHY_ADDRESS)

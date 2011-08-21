@@ -1086,8 +1086,9 @@ void bx_init_hardware()
   }
 
   BX_INFO(("Optimization configuration"));
-  BX_INFO(("  RepeatSpeedups support: %s", BX_SupportRepeatSpeedups?"yes":"no"));
+  BX_INFO(("  RepeatSpeedups support: %s", BX_SUPPORT_REPEAT_SPEEDUPS?"yes":"no"));
   BX_INFO(("  Fast function calls: %s", BX_FAST_FUNC_CALL?"yes":"no"));
+  BX_INFO(("  Handlers Chaining speedups: %s", BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS?"yes":"no"));
   BX_INFO(("Devices configuration"));
   BX_INFO(("  NE2000 support: %s", BX_SUPPORT_NE2K?"yes":"no"));
   BX_INFO(("  PCI support: %s, enabled=%s", BX_SUPPORT_PCI?"yes":"no",

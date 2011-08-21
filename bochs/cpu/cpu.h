@@ -2930,6 +2930,9 @@ public: // for now...
 
   BX_SMF BX_INSF_TYPE UndefinedOpcode(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE BxError(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+  BX_SMF BX_INSF_TYPE BxEndTrace(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
 #if BX_CPU_LEVEL >= 6
   BX_SMF BX_INSF_TYPE BxNoSSE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE BxNoAVX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3264,7 +3267,7 @@ public: // for now...
   BX_SMF void branch_far64(bx_selector_t *selector,
        bx_descriptor_t *descriptor, bx_address rip, Bit8u cpl);
 
-#if BX_SupportRepeatSpeedups
+#if BX_SUPPORT_REPEAT_SPEEDUPS
   BX_SMF Bit32u FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff,
        unsigned dstSeg, bx_address dstOff, Bit32u  byteCount);
   BX_SMF Bit32u FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff,

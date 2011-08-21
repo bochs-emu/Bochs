@@ -11,6 +11,12 @@ Bochs repository moved to the SVN version control !
     or read docs for list of supported configurations or more details.
   * It is also possible to choose the CPU to emulate from Bochs command line
     using new command line parameter -cpu <cpu_name>.
+
+  - 10% emulation speedup with handlers chaining optimization implemented. The
+    feature is enabled by default when configure with --enable-all-optimizations
+    option, to disable handlers chaining speedups configure with
+        --disable-handlers-chaining
+
   - Implemented Supervisor Mode Execution Protection (SMEP), the feature can
     be enabled using .bochsrc CPUID option.
   - Added support for XSAVEOPT instruction, the instruction can be enabled

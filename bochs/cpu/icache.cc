@@ -46,6 +46,22 @@ void handleSMC(bx_phy_address pAddr, Bit32u mask)
   }
 }
 
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+
+BX_INSF_TYPE BX_CPU_C::BxEndTrace(bxInstruction_c *i)
+{
+  // do nothing, return to main cpu_loop
+}
+
+void genDummyICacheEntry(bxInstruction_c *i, BxExecutePtr_tR execute)
+{
+  i->setILen(0);
+  i->setIaOpcode(BX_INSERTED_OPCODE);
+  i->execute = execute;
+}
+
+#endif
+
 bxICacheEntry_c* BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_address pAddr)
 {
   bxICacheEntry_c *vc_hit = BX_CPU_THIS_PTR iCache.lookup_victim_cache(pAddr, BX_CPU_THIS_PTR fetchModeMask);
@@ -99,6 +115,12 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBia
       entry->traceMask = 0x80000000; /* last line in page */
       pageWriteStampTable.markICacheMask(entry->pAddr, entry->traceMask);
       pageWriteStampTable.markICacheMask(BX_CPU_THIS_PTR pAddrPage, 0x1);
+
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+      entry->tlen++; /* Add the inserted end of trace opcode */
+      genDummyICacheEntry(++i, &BX_CPU_C::BxEndTrace);
+#endif
+
       BX_CPU_THIS_PTR iCache.commit_page_split_trace(BX_CPU_THIS_PTR pAddrPage, entry);
       return entry;
     }
@@ -110,9 +132,10 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBia
 #ifdef BX_INSTR_STORE_OPCODE_BYTES
     i->set_opcode_bytes(fetchPtr);
 #endif
-
     BX_INSTR_OPCODE(BX_CPU_ID, i, fetchPtr, iLen,
        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, long64_mode());
+
+    i++;
 
     traceMask |= 1 <<  (pageOffset >> 7);
     traceMask |= 1 << ((pageOffset + iLen - 1) >> 7);
@@ -123,11 +146,16 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBia
     pAddr += iLen;
     pageOffset += iLen;
     fetchPtr += iLen;
-    i++;
 
     // try to find a trace starting from current pAddr and merge
-    if (remainingInPage >= 15) // avoid merging with page split trace
-      if (mergeTraces(entry, i, pAddr)) break;
+    if (remainingInPage >= 15) { // avoid merging with page split trace
+      if (mergeTraces(entry, i, pAddr)) {
+          entry->traceMask |= traceMask;
+          pageWriteStampTable.markICacheMask(pAddr, entry->traceMask);
+          BX_CPU_THIS_PTR iCache.commit_trace(entry->tlen);
+          return entry;
+      }
+    }
   }
 
 //BX_INFO(("commit trace %08x len=%d mask %08x", (Bit32u) entry->pAddr, entry->tlen, pageWriteStampTable.getFineGranularityMapping(entry->pAddr)));
@@ -135,6 +163,11 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBia
   entry->traceMask |= traceMask;
 
   pageWriteStampTable.markICacheMask(pAddr, entry->traceMask);
+
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+  entry->tlen++; /* Add the inserted end of trace opcode */
+  genDummyICacheEntry(i, &BX_CPU_C::BxEndTrace);
+#endif
 
   BX_CPU_THIS_PTR iCache.commit_trace(entry->tlen);
 
@@ -149,9 +182,15 @@ bx_bool BX_CPU_C::mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy
   {
     // determine max amount of instruction to take from another entry
     unsigned max_length = e->tlen;
+
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+    if (max_length + entry->tlen > BX_MAX_TRACE_LENGTH)
+        return 0;
+#else
     if (max_length + entry->tlen > BX_MAX_TRACE_LENGTH)
         max_length = BX_MAX_TRACE_LENGTH - entry->tlen;
     if(max_length == 0) return 0;
+#endif
 
     memcpy(i, e->i, sizeof(bxInstruction_c)*max_length);
     entry->tlen += max_length;

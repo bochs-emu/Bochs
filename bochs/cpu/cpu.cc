@@ -113,25 +113,22 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
     }
 
     bxICacheEntry_c *entry = getICacheEntry();
-
     bxInstruction_c *i = entry->i;
 
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS == 0
     bxInstruction_c *last = i + (entry->tlen);
+#endif
 
     for(;;) {
 
-#if BX_DISASM
-      if (BX_CPU_THIS_PTR trace) {
-        // print the instruction that is about to be executed
-        debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip);
-      }
-#endif
+      BX_DEBUG_DISASM_INSTRUCTION();
 
-      // instruction decoding completed -> continue with execution
       // want to allow changing of the instruction inside instrumentation callback
       BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
       RIP += i->ilen();
+      // when handlers chaining is enabled this single call will execute entire trace
       BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
+
       BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
       BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
       BX_TICK1_IF_SINGLE_PROCESSOR();
@@ -149,11 +146,16 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
         break;
       }
 
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+      entry = getICacheEntry();
+      i = entry->i;
+#else
       if (++i == last) {
         entry = getICacheEntry();
         i = entry->i;
         last = i + (entry->tlen);
       }
+#endif
     }
   }  // while (1)
 }

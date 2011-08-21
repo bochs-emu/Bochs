@@ -32,6 +32,9 @@
 // directly calls the /r form.
 
 bx_define_opcode(BX_IA_ERROR, &BX_CPU_C::BxError, &BX_CPU_C::BxError, 0, 0)
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+bx_define_opcode(BX_INSERTED_OPCODE, &BX_CPU_C::BxError, &BX_CPU_C::BxError, 0, 0)
+#endif
 
 bx_define_opcode(BX_IA_AAA, NULL, &BX_CPU_C::AAA, 0, 0)
 bx_define_opcode(BX_IA_AAD, NULL, &BX_CPU_C::AAD, 0, 0)

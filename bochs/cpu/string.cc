@@ -28,7 +28,7 @@
 // Repeat Speedups methods
 //
 
-#if BX_SupportRepeatSpeedups
+#if BX_SUPPORT_REPEAT_SPEEDUPS
 Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff, unsigned dstSeg, bx_address dstOff, Bit32u count)
 {
   Bit32u bytesFitSrc, bytesFitDst;
@@ -518,7 +518,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB32_XbYb(bxInstruction_c *i)
 
   Bit32u incr = 1;
 
-#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
+#if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time */
   if (i->repUsedL() && !BX_CPU_THIS_PTR async_event)
@@ -696,7 +696,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD32_XdYd(bxInstruction_c *i)
   Bit32u esi = ESI;
   Bit32u edi = EDI;
 
-#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
+#if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time.
    */
@@ -1663,7 +1663,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSB32_YbAL(bxInstruction_c *i)
   Bit32u incr = 1;
   Bit32u edi = EDI;
 
-#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
+#if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time.
    */

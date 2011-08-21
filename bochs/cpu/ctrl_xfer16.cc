@@ -37,7 +37,7 @@ BX_CPP_INLINE void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near16(Bit16u new_IP)
 
   EIP = new_IP;
 
-#if !defined(BX_TRACE_CACHE_NO_SPECULATIVE_TRACING)
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS == 0
   // assert magic async_event to stop trace execution
   BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
 #endif

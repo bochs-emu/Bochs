@@ -28,7 +28,26 @@ class bxInstruction_c;
 
 typedef void BX_INSF_TYPE;
 
-#define BX_NEXT_INSTR(i) { return; }
+#if BX_DISASM
+  // print the instruction that is about to be executed
+  #define BX_DEBUG_DISASM_INSTRUCTION() \
+      if (BX_CPU_THIS_PTR trace) { debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip); }
+#else
+  #define BX_DEBUG_DISASM_INSTRUCTION() /* do nothing */
+#endif
+
+#define BX_NEXT_INSTR(i) {                             \
+  BX_CPU_THIS_PTR prev_rip = RIP; /* commit new RIP */ \
+  BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);              \
+  BX_TICK1_IF_SINGLE_PROCESSOR();                      \
+  if (BX_CPU_THIS_PTR async_event) return;             \
+  ++i;                                                 \
+  BX_DEBUG_DISASM_INSTRUCTION();                       \
+  BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);             \
+  RIP += i->ilen();                                    \
+  return BX_CPU_CALL_METHOD(i->execute, (i));          \
+}
+
 #define BX_NEXT_TRACE(i) { return; }
 
 // <TAG-TYPE-EXECUTEPTR-START>
