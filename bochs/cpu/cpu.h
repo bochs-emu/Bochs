@@ -1022,6 +1022,7 @@ public: // for now...
   Bit8u break_point;
   Bit8u magic_break;
   Bit8u stop_reason;
+  bx_bool trace;
   bx_bool trace_reg;
   bx_bool trace_mem;
   bx_bool mode_break;
@@ -1031,7 +1032,6 @@ public: // for now...
   unsigned show_flag;
   bx_guard_found_t guard_found;
 #endif
-  Bit8u trace;
 
   // for paging
   struct {

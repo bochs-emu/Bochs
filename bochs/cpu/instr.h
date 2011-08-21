@@ -28,7 +28,7 @@ class bxInstruction_c;
 
 typedef void BX_INSF_TYPE;
 
-#if BX_DISASM
+#if BX_DEBUGGER && BX_DISASM
   // print the instruction that is about to be executed
   #define BX_DEBUG_DISASM_INSTRUCTION() \
       if (BX_CPU_THIS_PTR trace) { debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip); }
@@ -46,7 +46,6 @@ typedef void BX_INSF_TYPE;
   BX_TICK1_IF_SINGLE_PROCESSOR();                      \
   if (BX_CPU_THIS_PTR async_event) return;             \
   ++i;                                                 \
-  BX_DEBUG_DISASM_INSTRUCTION();                       \
   BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);             \
   RIP += i->ilen();                                    \
   return BX_CPU_CALL_METHOD(i->execute, (i));          \
