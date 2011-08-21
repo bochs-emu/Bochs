@@ -36,6 +36,10 @@ typedef void BX_INSF_TYPE;
   #define BX_DEBUG_DISASM_INSTRUCTION() /* do nothing */
 #endif
 
+#define BX_NEXT_TRACE(i) { return; }
+
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+
 #define BX_NEXT_INSTR(i) {                             \
   BX_CPU_THIS_PTR prev_rip = RIP; /* commit new RIP */ \
   BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);              \
@@ -48,7 +52,11 @@ typedef void BX_INSF_TYPE;
   return BX_CPU_CALL_METHOD(i->execute, (i));          \
 }
 
-#define BX_NEXT_TRACE(i) { return; }
+#else
+
+#define BX_NEXT_INSTR(i) { return; }
+
+#endif
 
 // <TAG-TYPE-EXECUTEPTR-START>
 #if BX_USE_CPU_SMF
