@@ -3488,6 +3488,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_x2apic(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_smx(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_vmx(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_rdtscp(void);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
 #if BX_DEBUGGER
@@ -4014,6 +4015,15 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_1g_paging(void)
 {
 #if BX_SUPPORT_X86_64
   return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_1G_PAGES);
+#else
+  return 0;
+#endif
+}
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_rdtscp(void)
+{
+#if BX_SUPPORT_X86_64
+  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_RDTSCP);
 #else
   return 0;
 #endif

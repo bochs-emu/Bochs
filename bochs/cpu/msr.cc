@@ -245,6 +245,12 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
     case BX_MSR_TSC_AUX:
+      if (! bx_cpuid_support_rdtscp()) {
+        // failed to find the MSR, could #GP or ignore it silently
+        BX_ERROR(("RDMSR MSR_TSC_AUX: RTDSCP feature not enabled !"));
+        if (! BX_CPU_THIS_PTR ignore_bad_msrs)
+          return 0; // will result in #GP fault due to unknown MSR
+      }
       val64 = MSR_TSC_AUX;   // 32 bit MSR
       break;
 #endif
@@ -634,6 +640,12 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_TSC_AUX:
+      if (! bx_cpuid_support_rdtscp()) {
+        // failed to find the MSR, could #GP or ignore it silently
+        BX_ERROR(("WRMSR MSR_TSC_AUX: RTDSCP feature not enabled !"));
+        if (! BX_CPU_THIS_PTR ignore_bad_msrs)
+          return 0; // will result in #GP fault due to unknown MSR
+      }
       MSR_TSC_AUX = val32_lo;
       break;
 #endif  // #if BX_SUPPORT_X86_64
