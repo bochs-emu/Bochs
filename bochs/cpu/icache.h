@@ -104,7 +104,7 @@ extern bxPageWriteStampTable pageWriteStampTable;
 #define BxICacheEntries (64 * 1024)  // Must be a power of 2.
 #define BxICacheMemPool (384 * 1024)
 
-#define BX_MAX_TRACE_LENGTH 16
+#define BX_MAX_TRACE_LENGTH 32
 
 struct bxICacheEntry_c
 {
