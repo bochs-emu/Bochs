@@ -28,10 +28,6 @@
 // Intel STYLE
 //////////////////
 
-#define BX_DISASM_SUPPORT_X86_64
-
-#ifdef BX_DISASM_SUPPORT_X86_64
-
 static const char *intel_general_16bit_regname[16] = {
     "ax",  "cx",  "dx",   "bx",   "sp",   "bp",   "si",   "di",
     "r8w", "r9w", "r10w", "r11w", "r12w", "r13w", "r14w", "r15w"
@@ -51,18 +47,6 @@ static const char *intel_general_8bit_regname_rex[16] = {
     "al",  "cl",  "dl",   "bl",   "spl",  "bpl",  "sil",  "dil",
     "r8b", "r9b", "r10b", "r11b", "r12b", "r13b", "r14b", "r15b"
 };
-
-#else
-
-static const char *intel_general_16bit_regname[8] = {
-    "ax",  "cx",  "dx",  "bx",  "sp",  "bp",  "si",  "di"
-};
-
-static const char *intel_general_32bit_regname[8] = {
-    "eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi"
-};
-
-#endif
 
 static const char *intel_general_8bit_regname[8] = {
     "al",  "cl",  "dl",  "bl",  "ah",  "ch",  "dh",  "bh"
@@ -91,8 +75,6 @@ static const char *intel_vector_reg_name[2] = {
 // AT&T STYLE
 //////////////////
 
-#ifdef BX_DISASM_SUPPORT_X86_64
-
 static const char *att_general_16bit_regname[16] = {
     "%ax",  "%cx",  "%dx",   "%bx",   "%sp",   "%bp",   "%si",   "%di",
     "%r8w", "%r9w", "%r10w", "%r11w", "%r12w", "%r13w", "%r14w", "%r15w"
@@ -112,18 +94,6 @@ static const char *att_general_8bit_regname_rex[16] = {
     "%al",  "%cl",  "%dl",   "%bl",   "%spl",  "%bpl",  "%sil",  "%dil",
     "%r8b", "%r9b", "%r10b", "%r11b", "%r12b", "%r13b", "%r14b", "%r15b"
 };
-
-#else
-
-static const char *att_general_16bit_regname[8] = {
-    "%ax",  "%cx",  "%dx",  "%bx",  "%sp",  "%bp",  "%si",  "%di"
-};
-
-static const char *att_general_32bit_regname[8] = {
-    "%eax", "%ecx", "%edx", "%ebx", "%esp", "%ebp", "%esi", "%edi"
-};
-
-#endif
 
 static const char *att_general_8bit_regname[8] = {
     "%al",  "%cl",  "%dl",  "%bl",  "%ah",  "%ch",  "%dh",  "%bh"
