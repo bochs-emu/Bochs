@@ -498,8 +498,11 @@ void print_usage(void)
     "  -rc filename     execute debugger commands stored in file\n"
     "  -dbglog filename specify Bochs internal debugger log file name\n"
 #endif
-    "  --help           display this help and exit\n\n"
-    "For information on Bochs configuration file arguments, see the\n"
+    "  --help           display this help and exit\n"
+#if BX_CPU_LEVEL > 4
+    "  --help cpu       display supported CPU models and exit\n"
+#endif
+    "\nFor information on Bochs configuration file arguments, see the\n"
 #if (!defined(WIN32)) && !BX_WITH_MACOS
     "bochsrc section in the user documentation or the man page of bochsrc.\n");
 #else
@@ -530,7 +533,7 @@ int bx_init_main(int argc, char *argv[])
   SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_RUN_START);
 
   // interpret the args that start with -, like -q, -f, etc.
-  int arg = 1, load_rcfile=1;
+  int arg = 1, load_rcfile=1, i = 0;
   while (arg < argc) {
     // parse next arg
     if (!strcmp("--help", argv[arg]) || !strncmp("-h", argv[arg], 2)
@@ -538,7 +541,21 @@ int bx_init_main(int argc, char *argv[])
         || !strncmp("/?", argv[arg], 2)
 #endif
        ) {
-      print_usage();
+#if BX_CPU_LEVEL > 4
+      if ((arg+1) < argc) {
+        if (!strcmp("cpu", argv[arg+1])) {
+          fprintf(stderr, "Supported CPU models:\n\n");
+          do {
+            fprintf(stderr, "%s\n", SIM->get_param_enum(BXPN_CPU_MODEL)->get_choice(i));
+          } while (i++ < SIM->get_param_enum(BXPN_CPU_MODEL)->get_max());
+          arg++;
+        }
+      }
+      else
+#endif
+      {
+        print_usage();
+      }
       SIM->quit_sim(0);
     }
     else if (!strcmp("-n", argv[arg])) {
