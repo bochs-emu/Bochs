@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -72,9 +72,6 @@ IMPLEMENT_GUI_PLUGIN_CODE(win32)
 #define TBSTYLE_FLAT 0x0800
 #endif
 
-/*  FIXME: Should we add a bochsrc option to control the font usage? */
-#define BX_USE_WINDOWS_FONTS 0
-
 // Keyboard/mouse stuff
 #define SCANCODE_BUFSIZE    20
 #define MOUSE_PRESSED       0x20000000
@@ -125,13 +122,8 @@ static HBITMAP vgafont[256];
 static int xChar = 8, yChar = 16;
 static unsigned int text_rows=25, text_cols=80;
 static Bit8u text_pal_idx[16];
-#if !BX_USE_WINDOWS_FONTS
 static Bit8u h_panning = 0, v_panning = 0;
 static Bit16u line_compare = 1023;
-#else
-static HFONT hFont[3];
-static int FontId = 2;
-#endif
 
 // Headerbar stuff
 HWND hwndTB, hwndSB;
@@ -212,10 +204,6 @@ void DrawBitmap (HDC, HBITMAP, int, int, int, int, int, int, DWORD, unsigned cha
 void DrawChar (HDC, unsigned char, int, int, unsigned char cColor, int, int);
 void updateUpdated(int,int,int,int);
 static void headerbar_click(int x);
-#if BX_USE_WINDOWS_FONTS
-void InitFont(void);
-void DestroyFont(void);
-#endif
 
 
 Bit32u win32_to_bx_key[2][0x100] =
@@ -591,8 +579,8 @@ void terminateEmul(int reason)
 // Called from gui.cc, once upon program startup, to allow for the
 // specific GUI code (X11, Win32, ...) to be initialized.
 //
-// argc, argv: not used right now, but the intention is to pass native GUI
-//     specific options from the command line.  (X11 options, Win32 options,...)
+// argc, argv: used to pass display library specific options to the init code
+//     (X11 options, Win32 options,...)
 //
 // tilewidth, tileheight: for optimization, graphics_tile_update() passes
 //     only updated regions of the screen to the gui code to be redrawn.
@@ -1100,9 +1088,6 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
   switch (iMsg) {
 
   case WM_CREATE:
-#if BX_USE_WINDOWS_FONTS
-    InitFont();
-#endif
     SetTimer (hwnd, 1, 330, NULL);
     return 0;
 
@@ -1232,9 +1217,6 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
   case WM_DESTROY:
     KillTimer (hwnd, 1);
     stInfo.UIinited = FALSE;
-#if BX_USE_WINDOWS_FONTS
-    DestroyFont();
-#endif
     return 0;
 
   case WM_KEYDOWN:
@@ -1542,8 +1524,8 @@ void bx_win32_gui_c::clear_screen(void)
 //           features in text mode (cursor shape, line offset,...)
 
 void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
-			   unsigned long cursor_x, unsigned long cursor_y,
-                           bx_vga_tminfo_t tm_info)
+                                 unsigned long cursor_x, unsigned long cursor_y,
+                                 bx_vga_tminfo_t tm_info)
 {
   HDC hdc;
   unsigned char data[64];
@@ -1551,13 +1533,11 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   Bit8u cAttr, cChar;
   unsigned int curs, hchars, i, offset, rows, x, y, xc, yc;
   BOOL forceUpdate = FALSE, blink_state, blink_mode;
-#if !BX_USE_WINDOWS_FONTS
   Bit8u *text_base;
   Bit8u cfwidth, cfheight, cfheight2, font_col, font_row, font_row2;
   Bit8u split_textrow, split_fontrows;
   unsigned int yc2, cs_y;
   BOOL split_screen;
-#endif
 
   if (!stInfo.UIinited) return;
 
@@ -1593,7 +1573,6 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 
   hdc = GetDC(stInfo.simWnd);
 
-#if !BX_USE_WINDOWS_FONTS
   if((tm_info.h_panning != h_panning) || (tm_info.v_panning != v_panning)) {
     forceUpdate = 1;
     h_panning = tm_info.h_panning;
@@ -1603,7 +1582,6 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     forceUpdate = 1;
     line_compare = tm_info.line_compare;
   }
-#endif
 
   // first invalidate character at previous and new cursor location
   if((prev_cursor_y < text_rows) && (prev_cursor_x < text_cols)) {
@@ -1618,7 +1596,6 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     curs = 0xffff;
   }
 
-#if !BX_USE_WINDOWS_FONTS
   rows = text_rows;
   if (v_panning) rows++;
   y = 0;
@@ -1744,43 +1721,6 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   } while (--rows);
 
   h_panning = tm_info.h_panning;
-#else
-  rows = text_rows;
-  y = 0;
-  do {
-    hchars = text_cols;
-    yc = y * yChar;
-    new_line = new_text;
-    old_line = old_text;
-    x = 0;
-    offset = y * tm_info.line_offset;
-    do {
-      xc = x * xChar;
-      if (forceUpdate || (old_text[0] != new_text[0])
-          || (old_text[1] != new_text[1])) {
-        cChar = new_text[0];
-        if (blink_mode) {
-          cAttr = new_text[1] & 0x7F;
-          if (!blink_state && (new_text[1] & 0x80))
-            cAttr = (cAttr & 0x70) | (cAttr >> 4);
-        } else {
-          cAttr = new_text[1];
-        }
-        DrawChar(hdc, cChar, xc, yc, cAttr, 1, 0);
-        if (offset == curs) {
-          DrawChar(hdc, cChar, xc, yc, cAttr, tm_info.cs_start, tm_info.cs_end);
-        }
-      }
-      x++;
-      new_text+=2;
-      old_text+=2;
-      offset+=2;
-    } while (--hchars);
-    y++;
-    new_text = new_line + tm_info.line_offset;
-    old_text = old_line + tm_info.line_offset;
-  } while (--rows);
-#endif
 
   prev_cursor_x = cursor_x;
   prev_cursor_y = cursor_y;
@@ -1907,30 +1847,8 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
   if (BxTextMode) {
     text_cols = x / fwidth;
     text_rows = y / fheight;
-#if BX_USE_WINDOWS_FONTS
-    if (fheight >= 14) {
-      FontId = 2;
-      xChar = 8;
-      yChar = 16;
-    } else if (fheight >= 12) {
-      FontId = 1;
-      xChar = 8;
-      yChar = 14;
-    } else {
-      FontId = 0;
-      xChar = 8;
-      yChar = 12;
-    }
-    if (fwidth != xChar) {
-      x = x * 8 / fwidth;
-    }
-    if (fheight != yChar) {
-      y = y * yChar / fheight;
-    }
-#else
     xChar = fwidth;
     yChar = fheight;
-#endif
   }
 
   if (x==dimension_x && y==dimension_y && bpp==current_bpp)
@@ -2290,99 +2208,5 @@ void bx_win32_gui_c::show_ips(Bit32u ips_count)
   }
 }
 #endif
-
-#if BX_USE_WINDOWS_FONTS
-
-void DrawChar (HDC hdc, unsigned char c, int xStart, int yStart,
-               unsigned char cColor, int cs_start, int cs_end)
-{
-  HDC hdcMem;
-  POINT ptSize, ptOrg;
-  HGDIOBJ oldObj;
-  char str[2];
-  HFONT hFontOld;
-
-  hdcMem = CreateCompatibleDC (hdc);
-  SetMapMode (hdcMem, GetMapMode (hdc));
-  ptSize.x = xChar;
-  ptSize.y = yChar;
-
-  DPtoLP (hdc, &ptSize, 1);
-
-  ptOrg.x = 0;
-  ptOrg.y = 0;
-
-  DPtoLP (hdcMem, &ptOrg, 1);
-
-  oldObj = SelectObject(MemoryDC, MemoryBitmap);
-  hFontOld=(HFONT)SelectObject(MemoryDC, hFont[FontId]);
-
-  COLORREF crFore = SetTextColor(MemoryDC, GetColorRef(cColor&0xf));
-  COLORREF crBack = SetBkColor(MemoryDC, GetColorRef((cColor>>4)&0xf));
-  str[0]=c;
-  str[1]=0;
-
-  int y = FontId == 2 ? 16 : 8;
-
-  TextOut(MemoryDC, xStart, yStart, str, 1);
-  if (cs_start <= cs_end && cs_start < y)
-  {
-    RECT rc;
-    SetBkColor(MemoryDC, GetColorRef(cColor&0xf));
-    SetTextColor(MemoryDC, GetColorRef((cColor>>4)&0xf));
-    rc.left = xStart+0;
-    rc.right = xStart+xChar;
-    if (cs_end >= y)
-      cs_end = y-1;
-    rc.top = yStart+cs_start*yChar/y;
-    rc.bottom = yStart+(cs_end+1)*yChar/y;
-    ExtTextOut(MemoryDC, xStart, yStart, ETO_CLIPPED|ETO_OPAQUE, &rc, str, 1, NULL);
-  }
-
-  SetBkColor(MemoryDC, crBack);
-  SetTextColor(MemoryDC, crFore);
-
-  SelectObject(MemoryDC, hFontOld);
-  SelectObject(MemoryDC, oldObj);
-
-  updateUpdated(xStart, yStart, ptSize.x + xStart - 1, ptSize.y + yStart - 1);
-
-  DeleteDC (hdcMem);
-}
-
-void InitFont(void)
-{
-  LOGFONT lf;
-
-  lf.lfWidth = 8;
-  lf.lfEscapement = 0;
-  lf.lfOrientation = 0;
-  lf.lfWeight = FW_MEDIUM;
-  lf.lfItalic = FALSE;
-  lf.lfUnderline=FALSE;
-  lf.lfStrikeOut=FALSE;
-  lf.lfCharSet=OEM_CHARSET;
-  lf.lfOutPrecision=OUT_DEFAULT_PRECIS;
-  lf.lfClipPrecision=CLIP_DEFAULT_PRECIS;
-  lf.lfQuality=DEFAULT_QUALITY;
-  lf.lfPitchAndFamily=FIXED_PITCH | FF_DONTCARE;
-  wsprintf(lf.lfFaceName, "Lucida Console");
-
-  for (int i=0; i < 3; i++)
-  {
-    lf.lfHeight = 12 + i * 2;
-    hFont[i]=CreateFontIndirect(&lf);
-  }
-}
-
-void DestroyFont(void)
-{
-  for(int i = 0; i < 3; i++)
-  {
-    DeleteObject(hFont[i]);
-  }
-}
-
-#endif /* if BX_USE_WINDOWS_FONTS */
 
 #endif /* if BX_WITH_WIN32 */
