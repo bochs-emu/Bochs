@@ -42,10 +42,6 @@ typedef struct {
   unsigned type;
   unsigned write_protected;
   unsigned status_changed;
-  unsigned char raw_floppy_win95;
-#ifdef WIN32
-  unsigned char raw_floppy_win95_drv;
-#endif
   bx_bool  vvfat_floppy;
   device_image_t *vvfat;
 } floppy_t;
