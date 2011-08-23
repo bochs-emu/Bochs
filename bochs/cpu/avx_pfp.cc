@@ -124,12 +124,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSI2SS_VssEdR(bxInstruction_c *
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
-  op1.xmm32u(0) = int32_to_float32(BX_READ_32BIT_REG(i->rm()), status_word);
+  op1.xmm32u(0) = int32_to_float32(BX_READ_32BIT_REG(i->rm()), status);
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
@@ -142,12 +142,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSI2SS_VssEqR(bxInstruction_c *
 #if BX_SUPPORT_X86_64
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
-  op1.xmm32u(0) = int64_to_float32(BX_READ_64BIT_REG(i->rm()), status_word);
+  op1.xmm32u(0) = int64_to_float32(BX_READ_64BIT_REG(i->rm()), status);
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 #endif
@@ -171,12 +171,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSI2SD_VsdEqR(bxInstruction_c *
 #if BX_SUPPORT_X86_64
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
-  op1.xmm64u(0) = int64_to_float64(BX_READ_64BIT_REG(i->rm()), status_word);
+  op1.xmm64u(0) = int64_to_float64(BX_READ_64BIT_REG(i->rm()), status);
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 #endif
@@ -190,16 +190,16 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTPS_VpsWpsR(bxInstruction_c *i
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (4*len); n++) {
     if (MXCSR.get_DAZ()) 
         op.avx32u(n) = float32_denormal_to_zero(op.avx32u(n));
-    op.avx32u(n) = float32_sqrt(op.avx32u(n), status_word);
+    op.avx32u(n) = float32_sqrt(op.avx32u(n), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_AVX_REGZ(i->nnn(), op, len);
 
   BX_NEXT_INSTR(i);
@@ -211,16 +211,16 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTPD_VpdWpdR(bxInstruction_c *i
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
   
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (2*len); n++) {
     if (MXCSR.get_DAZ()) 
         op.avx64u(n) = float64_denormal_to_zero(op.avx64u(n));
-    op.avx64u(n) = float64_sqrt(op.avx64u(n), status_word);
+    op.avx64u(n) = float64_sqrt(op.avx64u(n), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op, len);
 
@@ -233,12 +233,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTSS_VssHpsWssR(bxInstruction_c
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   if (MXCSR.get_DAZ()) op2 = float32_denormal_to_zero(op2);
-  op1.xmm32u(0) = float32_sqrt(op2, status_word);
-  check_exceptionsSSE(status_word.float_exception_flags);
+  op1.xmm32u(0) = float32_sqrt(op2, status);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
@@ -251,12 +251,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTSD_VsdHpdWsdR(bxInstruction_c
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   if (MXCSR.get_DAZ()) op2 = float64_denormal_to_zero(op2);
-  op1.xmm64u(0) = float64_sqrt(op2, status_word);
-  check_exceptionsSSE(status_word.float_exception_flags);
+  op1.xmm64u(0) = float64_sqrt(op2, status);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
@@ -323,8 +323,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDPS_VpsHpsWpsR(bxInstruction_c 
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2 = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (4*len); n++) {
 
@@ -333,10 +333,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDPS_VpsHpsWpsR(bxInstruction_c 
       op2.avx32u(n) = float32_denormal_to_zero(op2.avx32u(n));
     }
 
-    op1.avx32u(n) = float32_add(op1.avx32u(n), op2.avx32u(n), status_word);
+    op1.avx32u(n) = float32_add(op1.avx32u(n), op2.avx32u(n), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op1, len);
 
@@ -349,8 +349,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDPD_VpdHpdWpdR(bxInstruction_c 
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2 = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
   
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (2*len); n++) {
 
@@ -359,10 +359,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDPD_VpdHpdWpdR(bxInstruction_c 
       op2.avx64u(n) = float64_denormal_to_zero(op2.avx64u(n));
     }
 
-    op1.avx64u(n) = float64_add(op1.avx64u(n), op2.avx64u(n), status_word);
+    op1.avx64u(n) = float64_add(op1.avx64u(n), op2.avx64u(n), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op1, len);
 
@@ -375,8 +375,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSS_VssHpsWssR(bxInstruction_c 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   if (MXCSR.get_DAZ())
   {
@@ -384,8 +384,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSS_VssHpsWssR(bxInstruction_c 
     op2           = float32_denormal_to_zero(op2);
   }
 
-  op1.xmm32u(0) = float32_add(op1.xmm32u(0), op2, status_word);
-  check_exceptionsSSE(status_word.float_exception_flags);
+  op1.xmm32u(0) = float32_add(op1.xmm32u(0), op2, status);
+  check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
   BX_NEXT_INSTR(i);
@@ -397,8 +397,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSD_VsdHpdWsdR(bxInstruction_c 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   if (MXCSR.get_DAZ())
   {
@@ -406,8 +406,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSD_VsdHpdWsdR(bxInstruction_c 
     op2           = float64_denormal_to_zero(op2);
   }
 
-  op1.xmm64u(0) = float64_add(op1.xmm64u(0), op2, status_word);
-  check_exceptionsSSE(status_word.float_exception_flags);
+  op1.xmm64u(0) = float64_add(op1.xmm64u(0), op2, status);
+  check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
   BX_NEXT_INSTR(i);
@@ -419,8 +419,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULPS_VpsHpsWpsR(bxInstruction_c 
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2 = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (4*len); n++) {
 
@@ -429,10 +429,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULPS_VpsHpsWpsR(bxInstruction_c 
       op2.avx32u(n) = float32_denormal_to_zero(op2.avx32u(n));
     }
 
-    op1.avx32u(n) = float32_mul(op1.avx32u(n), op2.avx32u(n), status_word);
+    op1.avx32u(n) = float32_mul(op1.avx32u(n), op2.avx32u(n), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op1, len);
 
@@ -445,8 +445,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULPD_VpdHpdWpdR(bxInstruction_c 
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2 = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
   
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (2*len); n++) {
 
@@ -455,10 +455,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULPD_VpdHpdWpdR(bxInstruction_c 
       op2.avx64u(n) = float64_denormal_to_zero(op2.avx64u(n));
     }
 
-    op1.avx64u(n) = float64_mul(op1.avx64u(n), op2.avx64u(n), status_word);
+    op1.avx64u(n) = float64_mul(op1.avx64u(n), op2.avx64u(n), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op1, len);
 
@@ -471,8 +471,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULSS_VssHpsWssR(bxInstruction_c 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   if (MXCSR.get_DAZ())
   {
@@ -480,8 +480,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULSS_VssHpsWssR(bxInstruction_c 
     op2           = float32_denormal_to_zero(op2);
   }
 
-  op1.xmm32u(0) = float32_mul(op1.xmm32u(0), op2, status_word);
-  check_exceptionsSSE(status_word.float_exception_flags);
+  op1.xmm32u(0) = float32_mul(op1.xmm32u(0), op2, status);
+  check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
   BX_NEXT_INSTR(i);
@@ -493,8 +493,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULSD_VsdHpdWsdR(bxInstruction_c 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   if (MXCSR.get_DAZ())
   {
@@ -502,8 +502,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULSD_VsdHpdWsdR(bxInstruction_c 
     op2           = float64_denormal_to_zero(op2);
   }
 
-  op1.xmm64u(0) = float64_mul(op1.xmm64u(0), op2, status_word);
-  check_exceptionsSSE(status_word.float_exception_flags);
+  op1.xmm64u(0) = float64_mul(op1.xmm64u(0), op2, status);
+  check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
   BX_NEXT_INSTR(i);
@@ -516,18 +516,18 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PD_VpdWpsR(bxInstruction_c 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   unsigned len = i->getVL();
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (2*len); n++) {
 
     if (MXCSR.get_DAZ())
       op.xmm32u(n) = float32_denormal_to_zero(op.xmm32u(n));
 
-     result.avx64u(n) = float32_to_float64(op.xmm32u(n), status_word);
+     result.avx64u(n) = float32_to_float64(op.xmm32u(n), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), result, len);
 
@@ -542,8 +542,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2PS_VpsWpdR(bxInstruction_c 
 
   result.xmm64u(1) = 0; /* clear upper part of the result for case of VL128 */
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < (2*len); n++) {
@@ -551,10 +551,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2PS_VpsWpdR(bxInstruction_c 
     if (MXCSR.get_DAZ())
       op.avx64u(n) = float64_denormal_to_zero(op.avx64u(n));
 
-    result.xmm32u(n) = float64_to_float32(op.avx64u(n), status_word);
+    result.xmm32u(n) = float64_to_float32(op.avx64u(n), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), result);
 
   BX_NEXT_INSTR(i);
@@ -566,12 +566,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSS2SD_VsdWssR(bxInstruction_c 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   if (MXCSR.get_DAZ()) op2 = float32_denormal_to_zero(op2);
-  op1.xmm64u(0) = float32_to_float64(op2, status_word);
-  check_exceptionsSSE(status_word.float_exception_flags);
+  op1.xmm64u(0) = float32_to_float64(op2, status);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
@@ -584,12 +584,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSD2SS_VssWsdR(bxInstruction_c 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   if (MXCSR.get_DAZ()) op2 = float64_denormal_to_zero(op2);
-  op1.xmm32u(0) = float64_to_float32(op2, status_word);
-  check_exceptionsSSE(status_word.float_exception_flags);
+  op1.xmm32u(0) = float64_to_float32(op2, status);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
@@ -602,14 +602,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTDQ2PS_VpsWdqR(bxInstruction_c 
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (4*len); n++) {
-    op.avx32u(n) = int32_to_float32(op.avx32u(n), status_word);
+    op.avx32u(n) = int32_to_float32(op.avx32u(n), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op, len);
 
@@ -622,18 +622,18 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2DQ_VdqWpsR(bxInstruction_c 
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (4*len); n++) {
 
     if (MXCSR.get_DAZ())
       op.avx32u(n) = float32_denormal_to_zero(op.avx32u(n));
 
-    op.avx32u(n) = float32_to_int32(op.avx32u(n), status_word);
+    op.avx32u(n) = float32_to_int32(op.avx32u(n), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op, len);
 
@@ -646,18 +646,18 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTPS2DQ_VdqWpsR(bxInstruction_c
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (4*len); n++) {
 
     if (MXCSR.get_DAZ())
       op.avx32u(n) = float32_denormal_to_zero(op.avx32u(n));
 
-    op.avx32u(n) = float32_to_int32_round_to_zero(op.avx32u(n), status_word);
+    op.avx32u(n) = float32_to_int32_round_to_zero(op.avx32u(n), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op, len);
 
@@ -670,8 +670,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBPS_VpsHpsWpsR(bxInstruction_c 
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2 = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
   
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (4*len); n++) {
 
@@ -680,10 +680,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBPS_VpsHpsWpsR(bxInstruction_c 
       op2.avx32u(n) = float32_denormal_to_zero(op2.avx32u(n));
     }
 
-    op1.avx32u(n) = float32_sub(op1.avx32u(n), op2.avx32u(n), status_word);
+    op1.avx32u(n) = float32_sub(op1.avx32u(n), op2.avx32u(n), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op1, len);
 
@@ -696,8 +696,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBPD_VpdHpdWpdR(bxInstruction_c 
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2 = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (2*len); n++) {
 
@@ -706,10 +706,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBPD_VpdHpdWpdR(bxInstruction_c 
       op2.avx64u(n) = float64_denormal_to_zero(op2.avx64u(n));
     }
 
-    op1.avx64u(n) = float64_sub(op1.avx64u(n), op2.avx64u(n), status_word);
+    op1.avx64u(n) = float64_sub(op1.avx64u(n), op2.avx64u(n), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op1, len);
 
@@ -722,8 +722,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBSS_VssHpsWssR(bxInstruction_c 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   if (MXCSR.get_DAZ())
   {
@@ -731,8 +731,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBSS_VssHpsWssR(bxInstruction_c 
     op2           = float32_denormal_to_zero(op2);
   }
 
-  op1.xmm32u(0) = float32_sub(op1.xmm32u(0), op2, status_word);
-  check_exceptionsSSE(status_word.float_exception_flags);
+  op1.xmm32u(0) = float32_sub(op1.xmm32u(0), op2, status);
+  check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
   BX_NEXT_INSTR(i);
@@ -744,8 +744,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBSD_VsdHpdWsdR(bxInstruction_c 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   if (MXCSR.get_DAZ())
   {
@@ -753,8 +753,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBSD_VsdHpdWsdR(bxInstruction_c 
     op2           = float64_denormal_to_zero(op2);
   }
 
-  op1.xmm64u(0) = float64_sub(op1.xmm64u(0), op2, status_word);
-  check_exceptionsSSE(status_word.float_exception_flags);
+  op1.xmm64u(0) = float64_sub(op1.xmm64u(0), op2, status);
+  check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
   BX_NEXT_INSTR(i);
@@ -766,8 +766,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINPS_VpsHpsWpsR(bxInstruction_c 
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2 = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (4*len); n++) {
 
@@ -776,11 +776,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINPS_VpsHpsWpsR(bxInstruction_c 
       op2.avx32u(n) = float32_denormal_to_zero(op2.avx32u(n));
     }
 
-    int rc = float32_compare(op1.avx32u(n), op2.avx32u(n), status_word);
+    int rc = float32_compare(op1.avx32u(n), op2.avx32u(n), status);
     op1.avx32u(n) = (rc == float_relation_less) ? op1.avx32u(n) : op2.avx32u(n);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op1, len);
 
@@ -793,8 +793,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINPD_VpdHpdWpdR(bxInstruction_c 
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2 = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
   
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (2*len); n++) {
 
@@ -803,11 +803,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINPD_VpdHpdWpdR(bxInstruction_c 
       op2.avx64u(n) = float64_denormal_to_zero(op2.avx64u(n));
     }
     
-    int rc = float64_compare(op1.avx64u(n), op2.avx64u(n), status_word);
+    int rc = float64_compare(op1.avx64u(n), op2.avx64u(n), status);
     op1.avx64u(n) = (rc == float_relation_less) ? op1.avx64u(n) : op2.avx64u(n);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op1, len);
 
@@ -820,8 +820,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINSS_VssHpsWssR(bxInstruction_c 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   if (MXCSR.get_DAZ())
   {
@@ -829,9 +829,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINSS_VssHpsWssR(bxInstruction_c 
     op2           = float32_denormal_to_zero(op2);
   }
 
-  int rc = float32_compare(op1.xmm32u(0), op2, status_word);
+  int rc = float32_compare(op1.xmm32u(0), op2, status);
   op1.xmm32u(0) = (rc == float_relation_less) ? op1.xmm32u(0) : op2;
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
@@ -844,8 +844,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINSD_VsdHpdWsdR(bxInstruction_c 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   if (MXCSR.get_DAZ())
   {
@@ -853,9 +853,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINSD_VsdHpdWsdR(bxInstruction_c 
     op2           = float64_denormal_to_zero(op2);
   }
 
-  int rc = float64_compare(op1.xmm64u(0), op2, status_word);
+  int rc = float64_compare(op1.xmm64u(0), op2, status);
   op1.xmm64u(0) = (rc == float_relation_less) ? op1.xmm64u(0) : op2;
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
@@ -868,8 +868,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVPS_VpsHpsWpsR(bxInstruction_c 
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2 = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (4*len); n++) {
 
@@ -878,10 +878,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVPS_VpsHpsWpsR(bxInstruction_c 
       op2.avx32u(n) = float32_denormal_to_zero(op2.avx32u(n));
     }
 
-    op1.avx32u(n) = float32_div(op1.avx32u(n), op2.avx32u(n), status_word);
+    op1.avx32u(n) = float32_div(op1.avx32u(n), op2.avx32u(n), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op1, len);
 
@@ -894,8 +894,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVPD_VpdHpdWpdR(bxInstruction_c 
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2 = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
   
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (2*len); n++) {
 
@@ -904,10 +904,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVPD_VpdHpdWpdR(bxInstruction_c 
       op2.avx64u(n) = float64_denormal_to_zero(op2.avx64u(n));
     }
 
-    op1.avx64u(n) = float64_div(op1.avx64u(n), op2.avx64u(n), status_word);
+    op1.avx64u(n) = float64_div(op1.avx64u(n), op2.avx64u(n), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op1, len);
 
@@ -920,8 +920,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVSS_VssHpsWssR(bxInstruction_c 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   if (MXCSR.get_DAZ())
   {
@@ -929,8 +929,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVSS_VssHpsWssR(bxInstruction_c 
     op2           = float32_denormal_to_zero(op2);
   }
 
-  op1.xmm32u(0) = float32_div(op1.xmm32u(0), op2, status_word);
-  check_exceptionsSSE(status_word.float_exception_flags);
+  op1.xmm32u(0) = float32_div(op1.xmm32u(0), op2, status);
+  check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
   BX_NEXT_INSTR(i);
@@ -942,8 +942,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVSD_VsdHpdWsdR(bxInstruction_c 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   if (MXCSR.get_DAZ())
   {
@@ -951,8 +951,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVSD_VsdHpdWsdR(bxInstruction_c 
     op2           = float64_denormal_to_zero(op2);
   }
 
-  op1.xmm64u(0) = float64_div(op1.xmm64u(0), op2, status_word);
-  check_exceptionsSSE(status_word.float_exception_flags);
+  op1.xmm64u(0) = float64_div(op1.xmm64u(0), op2, status);
+  check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
   BX_NEXT_INSTR(i);
@@ -964,8 +964,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXPS_VpsHpsWpsR(bxInstruction_c 
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2 = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
   
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (4*len); n++) {
 
@@ -974,11 +974,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXPS_VpsHpsWpsR(bxInstruction_c 
       op2.avx32u(n) = float32_denormal_to_zero(op2.avx32u(n));
     }
 
-    int rc = float32_compare(op1.avx32u(n), op2.avx32u(n), status_word);
+    int rc = float32_compare(op1.avx32u(n), op2.avx32u(n), status);
     op1.avx32u(n) = (rc == float_relation_greater) ? op1.avx32u(n) : op2.avx32u(n);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op1, len);
 
@@ -991,8 +991,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXPD_VpdHpdWpdR(bxInstruction_c 
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2 = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (2*len); n++) {
 
@@ -1001,11 +1001,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXPD_VpdHpdWpdR(bxInstruction_c 
       op2.avx64u(n) = float64_denormal_to_zero(op2.avx64u(n));
     }
     
-    int rc = float64_compare(op1.avx64u(n), op2.avx64u(n), status_word);
+    int rc = float64_compare(op1.avx64u(n), op2.avx64u(n), status);
     op1.avx64u(n) = (rc == float_relation_greater) ? op1.avx64u(n) : op2.avx64u(n);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op1, len);
 
@@ -1018,8 +1018,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXSS_VssHpsWssR(bxInstruction_c 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   if (MXCSR.get_DAZ())
   {
@@ -1027,9 +1027,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXSS_VssHpsWssR(bxInstruction_c 
     op2           = float32_denormal_to_zero(op2);
   }
 
-  int rc = float32_compare(op1.xmm32u(0), op2, status_word);
+  int rc = float32_compare(op1.xmm32u(0), op2, status);
   op1.xmm32u(0) = (rc == float_relation_greater) ? op1.xmm32u(0) : op2;
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
@@ -1042,8 +1042,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXSD_VsdHpdWsdR(bxInstruction_c 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   if (MXCSR.get_DAZ())
   {
@@ -1051,9 +1051,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXSD_VsdHpdWsdR(bxInstruction_c 
     op2           = float64_denormal_to_zero(op2);
   }
 
-  int rc = float64_compare(op1.xmm64u(0), op2, status_word);
+  int rc = float64_compare(op1.xmm64u(0), op2, status);
   op1.xmm64u(0) = (rc == float_relation_greater) ? op1.xmm64u(0) : op2;
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
@@ -1066,8 +1066,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHADDPD_VpdHpdWpdR(bxInstruction_c
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2 = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (2*len); n+=2) {
 
@@ -1078,11 +1078,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHADDPD_VpdHpdWpdR(bxInstruction_c
       op2.avx64u(n+1) = float64_denormal_to_zero(op2.avx64u(n+1));
     }
 
-    op1.avx64u(n)   = float64_add(op1.avx64u(n), op1.avx64u(n+1), status_word);
-    op1.avx64u(n+1) = float64_add(op2.avx64u(n), op2.avx64u(n+1), status_word);
+    op1.avx64u(n)   = float64_add(op1.avx64u(n), op1.avx64u(n+1), status);
+    op1.avx64u(n+1) = float64_add(op2.avx64u(n), op2.avx64u(n+1), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op1, len);
 
@@ -1095,8 +1095,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHADDPS_VpsHpsWpsR(bxInstruction_c
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2 = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (4*len); n+=4) {
 
@@ -1112,13 +1112,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHADDPS_VpsHpsWpsR(bxInstruction_c
       op2.avx32u(n+3) = float32_denormal_to_zero(op2.avx32u(n+3));
     }
 
-    op1.avx32u(n)   = float32_add(op1.avx32u(n),   op1.avx32u(n+1), status_word);
-    op1.avx32u(n+1) = float32_add(op1.avx32u(n+2), op1.avx32u(n+3), status_word);
-    op1.avx32u(n+2) = float32_add(op2.avx32u(n),   op2.avx32u(n+1), status_word);
-    op1.avx32u(n+3) = float32_add(op2.avx32u(n+2), op2.avx32u(n+3), status_word);
+    op1.avx32u(n)   = float32_add(op1.avx32u(n),   op1.avx32u(n+1), status);
+    op1.avx32u(n+1) = float32_add(op1.avx32u(n+2), op1.avx32u(n+3), status);
+    op1.avx32u(n+2) = float32_add(op2.avx32u(n),   op2.avx32u(n+1), status);
+    op1.avx32u(n+3) = float32_add(op2.avx32u(n+2), op2.avx32u(n+3), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op1, len);
 
@@ -1131,8 +1131,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHSUBPD_VpdHpdWpdR(bxInstruction_c
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2 = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (2*len); n+=2) {
 
@@ -1143,11 +1143,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHSUBPD_VpdHpdWpdR(bxInstruction_c
       op2.avx64u(n+1) = float64_denormal_to_zero(op2.avx64u(n+1));
     }
 
-    op1.avx64u(n)   = float64_sub(op1.avx64u(n), op1.avx64u(n+1), status_word);
-    op1.avx64u(n+1) = float64_sub(op2.avx64u(n), op2.avx64u(n+1), status_word);
+    op1.avx64u(n)   = float64_sub(op1.avx64u(n), op1.avx64u(n+1), status);
+    op1.avx64u(n+1) = float64_sub(op2.avx64u(n), op2.avx64u(n+1), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op1, len);
 
@@ -1160,8 +1160,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHSUBPS_VpsHpsWpsR(bxInstruction_c
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2 = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (4*len); n+=4) {
 
@@ -1177,13 +1177,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHSUBPS_VpsHpsWpsR(bxInstruction_c
       op2.avx32u(n+3) = float32_denormal_to_zero(op2.avx32u(n+3));
     }
 
-    op1.avx32u(n)   = float32_sub(op1.avx32u(n),   op1.avx32u(n+1), status_word);
-    op1.avx32u(n+1) = float32_sub(op1.avx32u(n+2), op1.avx32u(n+3), status_word);
-    op1.avx32u(n+2) = float32_sub(op2.avx32u(n),   op2.avx32u(n+1), status_word);
-    op1.avx32u(n+3) = float32_sub(op2.avx32u(n+2), op2.avx32u(n+3), status_word);
+    op1.avx32u(n)   = float32_sub(op1.avx32u(n),   op1.avx32u(n+1), status);
+    op1.avx32u(n+1) = float32_sub(op1.avx32u(n+2), op1.avx32u(n+3), status);
+    op1.avx32u(n+2) = float32_sub(op2.avx32u(n),   op2.avx32u(n+1), status);
+    op1.avx32u(n+3) = float32_sub(op2.avx32u(n+2), op2.avx32u(n+3), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op1, len);
 
@@ -1249,8 +1249,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSD_VsdHpdWsdIbR(bxInstruction_
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
   int ib = i->Ib() & 0x1F;
 
   if (MXCSR.get_DAZ())
@@ -1259,13 +1259,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSD_VsdHpdWsdIbR(bxInstruction_
     op2           = float64_denormal_to_zero(op2);
   }
 
-  if(compare64[ib](op1.xmm64u(0), op2, status_word)) {
+  if(compare64[ib](op1.xmm64u(0), op2, status)) {
     op1.xmm64u(0) = BX_CONST64(0xFFFFFFFFFFFFFFFF);
   } else {
     op1.xmm64u(0) = 0;
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
   BX_NEXT_INSTR(i);
@@ -1277,8 +1277,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSS_VssHpsWssIbR(bxInstruction_
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
   int ib = i->Ib() & 0x1F;
 
   if (MXCSR.get_DAZ())
@@ -1287,13 +1287,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSS_VssHpsWssIbR(bxInstruction_
     op2           = float32_denormal_to_zero(op2);
   }
 
-  if(compare32[ib](op1.xmm32u(0), op2, status_word)) {
+  if(compare32[ib](op1.xmm32u(0), op2, status)) {
     op1.xmm32u(0) = 0xFFFFFFFF;
   } else {
     op1.xmm32u(0) = 0;
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
   BX_NEXT_INSTR(i);
@@ -1305,8 +1305,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSUBPD_VpdHpdWpdR(bxInstruction
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2 = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (2*len); n+=2) {
 
@@ -1317,11 +1317,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSUBPD_VpdHpdWpdR(bxInstruction
       op2.avx64u(n+1) = float64_denormal_to_zero(op2.avx64u(n+1));
     }
 
-    op1.avx64u(n)   = float64_sub(op1.avx64u(n),   op2.avx64u(n),   status_word);
-    op1.avx64u(n+1) = float64_add(op1.avx64u(n+1), op2.avx64u(n+1), status_word);
+    op1.avx64u(n)   = float64_sub(op1.avx64u(n),   op2.avx64u(n),   status);
+    op1.avx64u(n+1) = float64_add(op1.avx64u(n+1), op2.avx64u(n+1), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op1, len);
 
@@ -1334,8 +1334,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSUBPS_VpsHpsWpsR(bxInstruction
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2 = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (4*len); n+=2) {
 
@@ -1346,11 +1346,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSUBPS_VpsHpsWpsR(bxInstruction
       op2.avx32u(n+1) = float32_denormal_to_zero(op2.avx32u(n+1));
     }
 
-    op1.avx32u(n)   = float32_sub(op1.avx32u(n),   op2.avx32u(n),   status_word);
-    op1.avx32u(n+1) = float32_add(op1.avx32u(n+1), op2.avx32u(n+1), status_word);
+    op1.avx32u(n)   = float32_sub(op1.avx32u(n),   op2.avx32u(n),   status);
+    op1.avx32u(n+1) = float32_add(op1.avx32u(n+1), op2.avx32u(n+1), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op1, len);
 
@@ -1365,8 +1365,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTPD2DQ_VqWpdR(bxInstruction_c 
 
   result.xmm64u(1) = 0; /* clear upper part of the result for case of VL128 */
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < (2*len); n++) {
@@ -1374,10 +1374,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTPD2DQ_VqWpdR(bxInstruction_c 
     if (MXCSR.get_DAZ())
       op.avx64u(n) = float64_denormal_to_zero(op.avx64u(n));
 
-    result.xmm32u(n) = float64_to_int32_round_to_zero(op.avx64u(n), status_word);
+    result.xmm32u(n) = float64_to_int32_round_to_zero(op.avx64u(n), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), result);
 
   BX_NEXT_INSTR(i);
@@ -1391,8 +1391,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2DQ_VqWpdR(bxInstruction_c *
 
   result.xmm64u(1) = 0; /* clear upper part of the result for case of VL128 */
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < (2*len); n++) {
@@ -1400,10 +1400,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2DQ_VqWpdR(bxInstruction_c *
     if (MXCSR.get_DAZ())
       op.avx64u(n) = float64_denormal_to_zero(op.avx64u(n));
 
-    result.xmm32u(n) = float64_to_int32(op.avx64u(n), status_word);
+    result.xmm32u(n) = float64_to_int32(op.avx64u(n), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), result);
 
   BX_NEXT_INSTR(i);
@@ -1473,27 +1473,27 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDPS_VpsWpsIbR(bxInstruction_c
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
   Bit8u control = i->Ib();
 
   // override MXCSR rounding mode with control coming from imm8
   if ((control & 0x4) == 0)
-    status_word.float_rounding_mode = control & 0x3;
+    status.float_rounding_mode = control & 0x3;
 
   for(unsigned n=0; n < (4*len); n++) {
 
     if (MXCSR.get_DAZ())
       op.avx32u(n) = float32_denormal_to_zero(op.avx32u(n));
 
-    op.avx32u(n) = float32_round_to_int(op.avx32u(n), status_word);
+    op.avx32u(n) = float32_round_to_int(op.avx32u(n), status);
   }
 
   // ignore precision exception result
   if (control & 0x8)
-    status_word.float_exception_flags &= ~float_flag_inexact;
+    status.float_exception_flags &= ~float_flag_inexact;
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op, len);
 
@@ -1506,27 +1506,27 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDPD_VpdWpdIbR(bxInstruction_c
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->rm());
   unsigned len = i->getVL();
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
   Bit8u control = i->Ib();
 
   // override MXCSR rounding mode with control coming from imm8
   if ((control & 0x4) == 0)
-    status_word.float_rounding_mode = control & 0x3;
+    status.float_rounding_mode = control & 0x3;
 
   for(unsigned n=0; n < (2*len); n++) {
 
     if (MXCSR.get_DAZ())
       op.avx64u(n) = float64_denormal_to_zero(op.avx64u(n));
 
-    op.avx64u(n) = float64_round_to_int(op.avx64u(n), status_word);
+    op.avx64u(n) = float64_round_to_int(op.avx64u(n), status);
   }
 
   // ignore precision exception result
   if (control & 0x8)
-    status_word.float_exception_flags &= ~float_flag_inexact;
+    status.float_exception_flags &= ~float_flag_inexact;
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op, len);
 
@@ -1539,22 +1539,22 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDSS_VssHpsWssIbR(bxInstructio
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
   Bit8u control = i->Ib();
 
   // override MXCSR rounding mode with control coming from imm8
   if ((control & 0x4) == 0)
-    status_word.float_rounding_mode = control & 0x3;
+    status.float_rounding_mode = control & 0x3;
 
   if (MXCSR.get_DAZ()) op2 = float32_denormal_to_zero(op2);
-  op1.xmm32u(0) = float32_round_to_int(op2, status_word);
+  op1.xmm32u(0) = float32_round_to_int(op2, status);
 
   // ignore precision exception result
   if (control & 0x8)
-    status_word.float_exception_flags &= ~float_flag_inexact;
+    status.float_exception_flags &= ~float_flag_inexact;
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
@@ -1567,22 +1567,22 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDSD_VsdHpdWsdIbR(bxInstructio
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
   Bit8u control = i->Ib();
 
   // override MXCSR rounding mode with control coming from imm8
   if ((control & 0x4) == 0)
-    status_word.float_rounding_mode = control & 0x3;
+    status.float_rounding_mode = control & 0x3;
 
   if (MXCSR.get_DAZ()) op2 = float64_denormal_to_zero(op2);
-  op1.xmm64u(0) = float64_round_to_int(op2, status_word);
+  op1.xmm64u(0) = float64_round_to_int(op2, status);
 
   // ignore precision exception result
   if (control & 0x8)
-    status_word.float_exception_flags &= ~float_flag_inexact;
+    status.float_exception_flags &= ~float_flag_inexact;
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
@@ -1596,8 +1596,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDPPS_VpsHpsWpsIbR(bxInstruction_c
   unsigned len = i->getVL();
   Bit8u mask = i->Ib();
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (4*len); n+=4) {
 
@@ -1618,17 +1618,17 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDPPS_VpsHpsWpsIbR(bxInstruction_c
     tmp.xmm64u(0) = tmp.xmm64u(1) = 0;
 
     if (mask & 0x10)
-       tmp.xmm32u(0) = float32_mul(op1.avx32u(n+0), op2.avx32u(n+0), status_word);
+       tmp.xmm32u(0) = float32_mul(op1.avx32u(n+0), op2.avx32u(n+0), status);
     if (mask & 0x20)
-       tmp.xmm32u(1) = float32_mul(op1.avx32u(n+1), op2.avx32u(n+1), status_word);
+       tmp.xmm32u(1) = float32_mul(op1.avx32u(n+1), op2.avx32u(n+1), status);
     if (mask & 0x40)
-       tmp.xmm32u(2) = float32_mul(op1.avx32u(n+2), op2.avx32u(n+2), status_word);
+       tmp.xmm32u(2) = float32_mul(op1.avx32u(n+2), op2.avx32u(n+2), status);
     if (mask & 0x80)
-       tmp.xmm32u(3) = float32_mul(op1.avx32u(n+3), op2.avx32u(n+3), status_word);
+       tmp.xmm32u(3) = float32_mul(op1.avx32u(n+3), op2.avx32u(n+3), status);
 
-    float32 r1 = float32_add(tmp.xmm32u(0), tmp.xmm32u(1), status_word);
-    float32 r2 = float32_add(tmp.xmm32u(2), tmp.xmm32u(3), status_word);
-    float32 r  = float32_add(r1, r2, status_word);
+    float32 r1 = float32_add(tmp.xmm32u(0), tmp.xmm32u(1), status);
+    float32 r2 = float32_add(tmp.xmm32u(2), tmp.xmm32u(3), status);
+    float32 r  = float32_add(r1, r2, status);
 
     op1.avx32u(n+0) = (mask & 0x01) ? r : 0;
     op1.avx32u(n+1) = (mask & 0x02) ? r : 0;
@@ -1636,7 +1636,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDPPS_VpsHpsWpsIbR(bxInstruction_c
     op1.avx32u(n+3) = (mask & 0x08) ? r : 0;
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op1, len);
 
@@ -1650,18 +1650,18 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPH2PS_VpsWpsR(bxInstruction_c 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   unsigned len = i->getVL();
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (4*len); n++) {
 
     if (MXCSR.get_DAZ())
       op.xmm16u(n) = float16_denormal_to_zero(op.xmm16u(n));
 
-     result.avx32u(n) = float16_to_float32(op.xmm16u(n), status_word);
+     result.avx32u(n) = float16_to_float32(op.xmm16u(n), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_AVX_REGZ(i->nnn(), result, len);
 
@@ -1676,25 +1676,25 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PH_WpsVpsIb(bxInstruction_c
 
   result.xmm64u(1) = 0; /* clear upper part of the result for case of VL128 */
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
   unsigned len = i->getVL();
 
   Bit8u control = i->Ib();
 
   // override MXCSR rounding mode with control coming from imm8
   if ((control & 0x4) == 0)
-    status_word.float_rounding_mode = control & 0x3;
+    status.float_rounding_mode = control & 0x3;
 
   for (unsigned n=0; n < (4*len); n++) {
 
     if (MXCSR.get_DAZ())
       op.avx32u(n) = float32_denormal_to_zero(op.avx32u(n));
 
-    result.xmm16u(n) = float32_to_float16(op.avx32u(n), status_word);
+    result.xmm16u(n) = float32_to_float16(op.avx32u(n), status);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
+  check_exceptionsSSE(status.float_exception_flags);
 
   if (i->modC0()) {
     BX_WRITE_XMM_REG_CLEAR_HIGH(i->rm(), result);
