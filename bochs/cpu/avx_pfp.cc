@@ -41,7 +41,7 @@ void BX_CPU_C::print_state_AVX(void)
   BX_DEBUG(("MXCSR: 0x%08x\n", BX_MXCSR_REGISTER));
   for(int n=0;n<BX_XMM_REGISTERS;n++) {
     BxPackedAvxRegister vmm = BX_READ_AVX_REG(n);
-    BX_DEBUG(("XMM%02u: %08x%08x:%08x%08x:%08x%08x:%08x%08x\n", n,
+    BX_DEBUG(("VMM%02u: %08x%08x:%08x%08x:%08x%08x:%08x%08x\n", n,
        vmm.avx32u(7), vmm.avx32u(6), vmm.avx32u(5), vmm.avx32u(4),
        vmm.avx32u(3), vmm.avx32u(2), vmm.avx32u(1), vmm.avx32u(0)));
   }
