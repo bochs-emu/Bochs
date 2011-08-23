@@ -119,7 +119,8 @@ void BX_CPU_C::shutdown(void)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
 {
-  if (!real_mode() && CPL!=0) {
+  // CPL is always 0 in real mode
+  if (/* !real_mode() && */ CPL!=0) {
     BX_DEBUG(("HLT: %s priveledge check failed, CPL=%d, generate #GP(0)",
         cpu_mode_string(BX_CPU_THIS_PTR cpu_mode), CPL));
     exception(BX_GP_EXCEPTION, 0);
@@ -163,7 +164,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
 /* 0F 08 */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVD(bxInstruction_c *i)
 {
-  if (!real_mode() && CPL!=0) {
+  // CPL is always 0 in real mode
+  if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("INVD: priveledge check failed, generate #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -188,7 +190,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVD(bxInstruction_c *i)
 /* 0F 09 */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
 {
-  if (!real_mode() && CPL!=0) {
+  // CPL is always 0 in real mode
+  if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("INVD/WBINVD: priveledge check failed, generate #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -553,7 +556,8 @@ void BX_CPU_C::check_monitor(bx_phy_address begin_addr, unsigned len)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MONITOR_MWAIT
-  if (!real_mode() && CPL != 0) {
+  // CPL is always 0 in real mode
+  if (/* !real_mode() && */ CPL != 0) {
     BX_DEBUG(("MWAIT instruction not recognized when CPL != 0"));
     exception(BX_UD_EXCEPTION, 0);
   }
@@ -618,7 +622,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MONITOR_MWAIT
-  if (!real_mode() && CPL != 0) {
+  // CPL is always 0 in real mode
+  if (/* !real_mode() && */ CPL != 0) {
     BX_DEBUG(("MWAIT instruction not recognized when CPL != 0"));
     exception(BX_UD_EXCEPTION, 0);
   }

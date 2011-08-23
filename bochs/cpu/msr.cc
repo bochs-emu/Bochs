@@ -288,7 +288,8 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  if (!real_mode() && CPL != 0) {
+  // CPL is always 0 in real mode
+  if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("RDMSR: CPL != 0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -739,7 +740,8 @@ bx_bool BX_CPU_C::relocate_apic(Bit64u val_64)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  if (!real_mode() && CPL != 0) {
+  // CPL is always 0 in real mode
+  if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("WRMSR: CPL != 0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0);
   }

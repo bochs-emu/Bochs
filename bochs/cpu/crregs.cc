@@ -50,7 +50,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
     exception(BX_DB_EXCEPTION, 0);
   }
 
-  if (!real_mode() && CPL!=0) {
+  // CPL is always 0 in real mode
+  if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("MOV_DdRd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -154,7 +155,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
     exception(BX_DB_EXCEPTION, 0);
   }
 
-  if (!real_mode() && CPL!=0) {
+  // CPL is always 0 in real mode
+  if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("MOV_RdDd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -378,7 +380,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rd(bxInstruction_c *i)
 {
-  if (!real_mode() && CPL!=0) {
+  // CPL is always 0 in real mode
+  if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("MOV_CR0Rd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -400,7 +403,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rd(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR2Rd(bxInstruction_c *i)
 {
-  if (!real_mode() && CPL!=0) {
+  // CPL is always 0 in real mode
+  if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("MOV_CR2Rd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -412,7 +416,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR2Rd(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rd(bxInstruction_c *i)
 {
-  if (!real_mode() && CPL!=0) {
+  // CPL is always 0 in real mode
+  if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("MOV_CR3Rd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -446,7 +451,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rd(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  if (!real_mode() && CPL!=0) {
+  // CPL is always 0 in real mode
+  if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("MOV_CR4Rd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -469,7 +475,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rd(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR0(bxInstruction_c *i)
 {
-  if (!real_mode() && CPL!=0) {
+  // CPL is always 0 in real mode
+  if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("MOV_RdCR0: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -483,7 +490,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR0(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR2(bxInstruction_c *i)
 {
-  if (!real_mode() && CPL!=0) {
+  // CPL is always 0 in real mode
+  if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("MOV_RdCd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -495,7 +503,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR2(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR3(bxInstruction_c *i)
 {
-  if (!real_mode() && CPL!=0) {
+  // CPL is always 0 in real mode
+  if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("MOV_RdCd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -515,7 +524,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR3(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR4(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  if (!real_mode() && CPL!=0) {
+  // CPL is always 0 in real mode
+  if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("MOV_RdCd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -765,7 +775,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
 {
   Bit16u msw;
 
-  if (!real_mode() && CPL!=0) {
+  // CPL is always 0 in real mode
+  if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("LMSW: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -1219,7 +1230,8 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetEFER(bx_address val_64)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
 {
-  if (!real_mode() && CPL!=0) {
+  // CPL is always 0 in real mode
+  if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("CLTS: priveledge check failed, generate #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
   }

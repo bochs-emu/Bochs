@@ -464,7 +464,8 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
 {
-  if (!real_mode() && CPL!=0) {
+  // CPL is always 0 in real mode
+  if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("INVLPG: priveledge check failed, generate #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
   }

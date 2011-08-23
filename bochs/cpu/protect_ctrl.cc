@@ -764,7 +764,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
-  if (!real_mode() && CPL!=0) {
+  // CPL is always 0 is real mode
+  if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("LGDT: CPL != 0 causes #GP"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -792,7 +793,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
-  if (!real_mode() && CPL!=0) {
+  // CPL is always 0 is real mode
+  if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("LIDT: CPL != 0 causes #GP"));
     exception(BX_GP_EXCEPTION, 0);
   }
