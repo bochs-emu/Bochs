@@ -510,7 +510,8 @@ cdrom_interface::cdrom_interface(const char *dev)
   bUseASPI = FALSE;
   osinfo.dwOSVersionInfoSize = sizeof(osinfo);
   GetVersionEx(&osinfo);
-  isWindowsXP = (osinfo.dwMajorVersion >= 5) && (osinfo.dwMinorVersion >= 1);
+  isWindowsXP = (osinfo.dwMajorVersion > 5) ||
+                ((osinfo.dwMajorVersion == 5) && (osinfo.dwMinorVersion >= 1));
 #endif
 }
 
