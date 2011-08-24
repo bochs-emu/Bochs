@@ -34,6 +34,7 @@
 #define _GRPRM         9
 #define _GRP3BOP       10
 #define _GRP64B        11
+#define _GRPVEXW       12
 
 /* ************************************************************************ */
 #define GRPSSE(n)       _GRPSSE,   BxDisasmGroupSSE_##n
@@ -45,6 +46,7 @@
 #define GRP3DNOW        _GRP3DNOW, BxDisasm3DNowGroup
 #define GR3BTAB(n)      _GRP3BOP,  BxDisasm3ByteOpTable##n
 #define GR64BIT(n)      _GRP64B,   BxDisasmGrpOs64B_##n
+#define GRPVEXW(n)      _GRPVEXW,  BxDisasmGrpVexW_##n
 /* ************************************************************************ */
 
 /* ************************************************************************ */
@@ -139,6 +141,7 @@
 #define Upd &disassembler::Upd
 #define Udq &disassembler::Udq
 
+#define  Wb &disassembler::Wb
 #define  Ww &disassembler::Ww
 #define  Wd &disassembler::Wd
 #define  Wq &disassembler::Wq

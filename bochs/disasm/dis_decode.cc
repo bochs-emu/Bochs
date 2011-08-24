@@ -289,6 +289,10 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
          entry = &(OPCODE_TABLE(entry)[insn.os_64 ? 2 : insn.os_32]);
          break;
 
+       case _GRPVEXW:
+         entry = &(OPCODE_TABLE(entry)[insn.vex_w]);
+         break;
+
        default:
          printf("Internal disassembler error - unknown attribute !\n");
          return x86_insn(is_32, is_64);
@@ -391,11 +395,12 @@ unsigned disassembler::decode_vex(x86_insn *insn)
     if (b2 & 0x80) {
       insn->os_64 = 1;
       insn->os_32 = 1;
+      insn->vex_w = 1;
     }
   }
 
-  insn->vex_override = 15 - ((b2 >> 3) & 0xf);
-  insn->vex_vl = (b2 >> 2) & 0x1;
+  insn->vex_vvv = 15 - ((b2 >> 3) & 0xf);
+  insn->vex_l = (b2 >> 2) & 0x1;
   insn->b1 = fetch_byte() + 256 * vex_opcode_extension;
   return b2 & 0x3;
 }

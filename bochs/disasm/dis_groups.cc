@@ -405,7 +405,7 @@ void disassembler::Qq(const x86_insn *insn)
 // xmm/ymm register
 void disassembler::Udq(const x86_insn *insn)
 {
-  dis_sprintf("%s%d", vector_reg_name[insn->vex_vl], insn->rm);
+  dis_sprintf("%s%d", vector_reg_name[insn->vex_l], insn->rm);
 }
 
 void disassembler::Ups(const x86_insn *insn) { Udq(insn); }
@@ -413,7 +413,7 @@ void disassembler::Upd(const x86_insn *insn) { Udq(insn); }
 
 void disassembler::Vq(const x86_insn *insn)
 {
-  dis_sprintf("%s%d", vector_reg_name[insn->vex_vl], insn->nnn);
+  dis_sprintf("%s%d", vector_reg_name[insn->vex_l], insn->nnn);
 }
 
 void disassembler::Vdq(const x86_insn *insn) { Vq(insn); }
@@ -426,16 +426,23 @@ void disassembler::VIb(const x86_insn *insn)
 {
   unsigned vreg = fetch_byte() >> 4;
   if (! insn->is_64) vreg &= 7;
-  dis_sprintf("%s%d", vector_reg_name[insn->vex_vl], vreg);
+  dis_sprintf("%s%d", vector_reg_name[insn->vex_l], vreg);
 }
 
 void disassembler::Hdq(const x86_insn *insn)
 {
-  dis_sprintf("%s%d", vector_reg_name[insn->vex_vl], insn->vex_override);
+  dis_sprintf("%s%d", vector_reg_name[insn->vex_l], insn->vex_vvv);
 }
 
 void disassembler::Hps(const x86_insn *insn) { Hdq(insn); }
 void disassembler::Hpd(const x86_insn *insn) { Hdq(insn); }
+
+void disassembler::Wb(const x86_insn *insn)
+{
+  if (insn->mod == 3) Udq(insn);
+  else
+    (this->*resolve_modrm)(insn, B_SIZE);
+}
 
 void disassembler::Ww(const x86_insn *insn)
 {
@@ -462,7 +469,7 @@ void disassembler::Wdq(const x86_insn *insn)
 {
   if (insn->mod == 3) Udq(insn);
   else
-    (this->*resolve_modrm)(insn, XMM_SIZE + insn->vex_vl);
+    (this->*resolve_modrm)(insn, XMM_SIZE + insn->vex_l);
 }
 
 void disassembler::Wsd(const x86_insn *insn) { Wq(insn); }
@@ -521,9 +528,9 @@ void disassembler::Md(const x86_insn *insn) { OP_M(insn, D_SIZE); }
 void disassembler::Mq(const x86_insn *insn) { OP_M(insn, Q_SIZE); }
 void disassembler::Mt(const x86_insn *insn) { OP_M(insn, T_SIZE); }
 
-void disassembler::Mdq(const x86_insn *insn) { OP_M(insn, XMM_SIZE + insn->vex_vl); }
-void disassembler::Mps(const x86_insn *insn) { OP_M(insn, XMM_SIZE + insn->vex_vl); }
-void disassembler::Mpd(const x86_insn *insn) { OP_M(insn, XMM_SIZE + insn->vex_vl); }
+void disassembler::Mdq(const x86_insn *insn) { OP_M(insn, XMM_SIZE + insn->vex_l); }
+void disassembler::Mps(const x86_insn *insn) { OP_M(insn, XMM_SIZE + insn->vex_l); }
+void disassembler::Mpd(const x86_insn *insn) { OP_M(insn, XMM_SIZE + insn->vex_l); }
 void disassembler::Mss(const x86_insn *insn) { OP_M(insn, D_SIZE); }
 void disassembler::Msd(const x86_insn *insn) { OP_M(insn, Q_SIZE); }
 
@@ -615,7 +622,7 @@ void disassembler::OP_sY(const x86_insn *insn, unsigned size)
 }
 
 void disassembler::sYq(const x86_insn *insn) { OP_sY(insn, Q_SIZE); }
-void disassembler::sYdq(const x86_insn *insn) { OP_sY(insn, XMM_SIZE + insn->vex_vl); }
+void disassembler::sYdq(const x86_insn *insn) { OP_sY(insn, XMM_SIZE + insn->vex_l); }
 
 #define BX_JUMP_TARGET_NOT_REQ ((bx_address)(-1))
 

@@ -156,7 +156,7 @@ public:
 
 #define BX_AVX_VL128 0
 #define BX_AVX_VL256 1
-  Bit8u vex_override, vex_vl;
+  Bit8u vex_vvv, vex_l, vex_w;
   int is_vex; // 0 - no VEX used, 1 - VEX is used, 2 - invalid VEX
   Bit8u modrm, mod, nnn, rm;
   Bit8u sib, scale, index, base;
@@ -191,8 +191,9 @@ BX_CPP_INLINE x86_insn::x86_insn(bx_bool is32, bx_bool is64)
   b1 = 0;
 
   is_vex = 0;
-  vex_override = 0;
-  vex_vl = BX_AVX_VL128;
+  vex_vvv = 0;
+  vex_l = BX_AVX_VL128;
+  vex_w = 0;
   modrm = mod = nnn = rm = 0;
   sib = scale = index = base = 0;
   displacement.displ32 = 0;
@@ -518,6 +519,7 @@ public:
   void VIb(const x86_insn *insn);
 
   // xmm/ymm register or memory operand
+  void Wb(const x86_insn *insn);
   void Ww(const x86_insn *insn);
   void Wd(const x86_insn *insn);
   void Wq(const x86_insn *insn);
