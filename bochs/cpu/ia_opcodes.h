@@ -1102,15 +1102,15 @@ bx_define_opcode(BX_IA_PCMPISTRI_VdqWdqIb, &BX_CPU_C::LOADU_Wdq, &BX_CPU_C::PCMP
 // SSE4.2
 
 // MOVBE instruction
-bx_define_opcode(BX_IA_MOVBE_GwEw, &BX_CPU_C::LOAD_Ew, &BX_CPU_C::MOVBE_GwEwR, BX_CPU_MOVBE, 0)
-bx_define_opcode(BX_IA_MOVBE_GdEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::MOVBE_GdEdR, BX_CPU_MOVBE, 0)
+bx_define_opcode(BX_IA_MOVBE_GwMw, &BX_CPU_C::MOVBE_GwMw, &BX_CPU_C::BxError, BX_CPU_MOVBE, 0)
+bx_define_opcode(BX_IA_MOVBE_GdMd, &BX_CPU_C::MOVBE_GdMd, &BX_CPU_C::BxError, BX_CPU_MOVBE, 0)
 #if BX_SUPPORT_X86_64
-bx_define_opcode(BX_IA_MOVBE_GqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::MOVBE_GqEqR, BX_CPU_MOVBE, 0)
+bx_define_opcode(BX_IA_MOVBE_GqMq, &BX_CPU_C::MOVBE_GqMq, &BX_CPU_C::BxError, BX_CPU_MOVBE, 0)
 #endif
-bx_define_opcode(BX_IA_MOVBE_EwGw, &BX_CPU_C::MOVBE_EwGw, &BX_CPU_C::MOVBE_EwGw, BX_CPU_MOVBE, 0)
-bx_define_opcode(BX_IA_MOVBE_EdGd, &BX_CPU_C::MOVBE_EdGd, &BX_CPU_C::MOVBE_EdGd, BX_CPU_MOVBE, 0)
+bx_define_opcode(BX_IA_MOVBE_MwGw, &BX_CPU_C::MOVBE_MwGw, &BX_CPU_C::BxError, BX_CPU_MOVBE, 0)
+bx_define_opcode(BX_IA_MOVBE_MdGd, &BX_CPU_C::MOVBE_MdGd, &BX_CPU_C::BxError, BX_CPU_MOVBE, 0)
 #if BX_SUPPORT_X86_64
-bx_define_opcode(BX_IA_MOVBE_EqGq, &BX_CPU_C::MOVBE_EqGq, &BX_CPU_C::MOVBE_EqGq, BX_CPU_MOVBE, 0)
+bx_define_opcode(BX_IA_MOVBE_MqGq, &BX_CPU_C::MOVBE_MqGq, &BX_CPU_C::BxError, BX_CPU_MOVBE, 0)
 #endif
 // MOVBE instruction
 

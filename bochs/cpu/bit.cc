@@ -330,82 +330,64 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BSWAP_RRX(bxInstruction_c *i)
 
 #if BX_CPU_LEVEL >= 6
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GwEwR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GwMw(bxInstruction_c *i)
 {
-  Bit16u val16 = BX_READ_16BIT_REG(i->rm());
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit16u val16 = read_virtual_word(i->seg(), eaddr);
   
   BX_WRITE_16BIT_REG(i->nnn(), bx_bswap16(val16));
 
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_EwGw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_MwGw(bxInstruction_c *i)
 {
   Bit16u val16 = BX_READ_16BIT_REG(i->nnn());
 
-  val16 = bx_bswap16(val16);
-
-  if (i->modC0()) {
-    BX_WRITE_16BIT_REG(i->rm(), val16);
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    write_virtual_word(i->seg(), eaddr, val16);
-  }
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  write_virtual_word(i->seg(), eaddr, bx_bswap16(val16));
 
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GdEdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GdMd(bxInstruction_c *i)
 {
-  Bit32u val32 = BX_READ_32BIT_REG(i->rm());
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit32u val32 = read_virtual_dword(i->seg(), eaddr);
   
   BX_WRITE_32BIT_REGZ(i->nnn(), bx_bswap32(val32));
 
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_EdGd(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_MdGd(bxInstruction_c *i)
 {
   Bit32u val32 = BX_READ_32BIT_REG(i->nnn());
 
-  val32 = bx_bswap32(val32);
-
-  if (i->modC0()) {
-    BX_WRITE_32BIT_REGZ(i->rm(), val32);
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    write_virtual_dword(i->seg(), eaddr, val32);
-  }
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  write_virtual_dword(i->seg(), eaddr, bx_bswap32(val32));
 
   BX_NEXT_INSTR(i);
 }
 
 #if BX_SUPPORT_X86_64
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GqEqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GqMq(bxInstruction_c *i)
 {
-  Bit64u val64 = BX_READ_64BIT_REG(i->rm());
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit64u val64 = read_virtual_qword(i->seg(), eaddr);
   
   BX_WRITE_64BIT_REG(i->nnn(), bx_bswap64(val64));
 
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_EqGq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_MqGq(bxInstruction_c *i)
 {
   Bit64u val64 = BX_READ_64BIT_REG(i->nnn());
 
-  val64 = bx_bswap64(val64);
-
-  if (i->modC0()) {
-    BX_WRITE_64BIT_REG(i->rm(), val64);
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    write_virtual_qword_64(i->seg(), eaddr, val64);
-  }
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  write_virtual_qword_64(i->seg(), eaddr, bx_bswap64(val64));
 
   BX_NEXT_INSTR(i);
 }
