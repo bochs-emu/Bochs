@@ -1063,8 +1063,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PALIGNR_VdqWdqIbR(bxInstruction_c 
   unsigned shift = i->Ib() * 8;
 
   if(shift == 0) {
-    result.xmm64u(0) = op2.xmm64u(0);
-    result.xmm64u(1) = op2.xmm64u(1);
+    result = op2;
   }
   else if(shift < 64) {
     result.xmm64u(0) = (op2.xmm64u(0) >> shift) | (op2.xmm64u(1) << (64-shift));
@@ -1080,8 +1079,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PALIGNR_VdqWdqIbR(bxInstruction_c 
     result.xmm64u(1) = (op1.xmm64u(0) >> shift) | (op1.xmm64u(1) << (64-shift));
   }
   else if(shift == 128) {
-    result.xmm64u(0) = op1.xmm64u(0);
-    result.xmm64u(1) = op1.xmm64u(1);
+    result = op1;
   }
   else if(shift < 192) {
     shift -= 128;
