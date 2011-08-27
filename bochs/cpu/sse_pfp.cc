@@ -31,6 +31,8 @@
 #include "fpu/softfloat-compare.h"
 #include "fpu/softfloat-specialize.h"
 
+#include "simd_pfp.h"
+
 void BX_CPU_C::check_exceptionsSSE(int exceptions_flags)
 {
   exceptions_flags &= MXCSR_EXCEPTIONS;
@@ -1121,25 +1123,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDPS_VpsWpsR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ()) {
-    op1.xmm32u(0) = float32_denormal_to_zero(op1.xmm32u(0));
-    op1.xmm32u(1) = float32_denormal_to_zero(op1.xmm32u(1));
-    op1.xmm32u(2) = float32_denormal_to_zero(op1.xmm32u(2));
-    op1.xmm32u(3) = float32_denormal_to_zero(op1.xmm32u(3));
-
-    op2.xmm32u(0) = float32_denormal_to_zero(op2.xmm32u(0));
-    op2.xmm32u(1) = float32_denormal_to_zero(op2.xmm32u(1));
-    op2.xmm32u(2) = float32_denormal_to_zero(op2.xmm32u(2));
-    op2.xmm32u(3) = float32_denormal_to_zero(op2.xmm32u(3));
-  }
-
-  op1.xmm32u(0) = float32_add(op1.xmm32u(0), op2.xmm32u(0), status);
-  op1.xmm32u(1) = float32_add(op1.xmm32u(1), op2.xmm32u(1), status);
-  op1.xmm32u(2) = float32_add(op1.xmm32u(2), op2.xmm32u(2), status);
-  op1.xmm32u(3) = float32_add(op1.xmm32u(3), op2.xmm32u(3), status);
-
+  sse_addps(&op1, &op2, status, MXCSR.get_DAZ());
   check_exceptionsSSE(status.float_exception_flags);
+
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 
@@ -1158,19 +1144,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDPD_VpdWpdR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1.xmm64u(0) = float64_denormal_to_zero(op1.xmm64u(0));
-    op1.xmm64u(1) = float64_denormal_to_zero(op1.xmm64u(1));
-    op2.xmm64u(0) = float64_denormal_to_zero(op2.xmm64u(0));
-    op2.xmm64u(1) = float64_denormal_to_zero(op2.xmm64u(1));
-  }
-
-  op1.xmm64u(0) = float64_add(op1.xmm64u(0), op2.xmm64u(0), status);
-  op1.xmm64u(1) = float64_add(op1.xmm64u(1), op2.xmm64u(1), status);
-
+  sse_addpd(&op1, &op2, status, MXCSR.get_DAZ());
   check_exceptionsSSE(status.float_exception_flags);
+
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 
@@ -1243,25 +1219,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MULPS_VpsWpsR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ()) {
-    op1.xmm32u(0) = float32_denormal_to_zero(op1.xmm32u(0));
-    op1.xmm32u(1) = float32_denormal_to_zero(op1.xmm32u(1));
-    op1.xmm32u(2) = float32_denormal_to_zero(op1.xmm32u(2));
-    op1.xmm32u(3) = float32_denormal_to_zero(op1.xmm32u(3));
-
-    op2.xmm32u(0) = float32_denormal_to_zero(op2.xmm32u(0));
-    op2.xmm32u(1) = float32_denormal_to_zero(op2.xmm32u(1));
-    op2.xmm32u(2) = float32_denormal_to_zero(op2.xmm32u(2));
-    op2.xmm32u(3) = float32_denormal_to_zero(op2.xmm32u(3));
-  }
-
-  op1.xmm32u(0) = float32_mul(op1.xmm32u(0), op2.xmm32u(0), status);
-  op1.xmm32u(1) = float32_mul(op1.xmm32u(1), op2.xmm32u(1), status);
-  op1.xmm32u(2) = float32_mul(op1.xmm32u(2), op2.xmm32u(2), status);
-  op1.xmm32u(3) = float32_mul(op1.xmm32u(3), op2.xmm32u(3), status);
-
+  sse_mulps(&op1, &op2, status, MXCSR.get_DAZ());
   check_exceptionsSSE(status.float_exception_flags);
+
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 
@@ -1280,19 +1240,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MULPD_VpdWpdR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1.xmm64u(0) = float64_denormal_to_zero(op1.xmm64u(0));
-    op1.xmm64u(1) = float64_denormal_to_zero(op1.xmm64u(1));
-    op2.xmm64u(0) = float64_denormal_to_zero(op2.xmm64u(0));
-    op2.xmm64u(1) = float64_denormal_to_zero(op2.xmm64u(1));
-  }
-
-  op1.xmm64u(0) = float64_mul(op1.xmm64u(0), op2.xmm64u(0), status);
-  op1.xmm64u(1) = float64_mul(op1.xmm64u(1), op2.xmm64u(1), status);
-
+  sse_mulpd(&op1, &op2, status, MXCSR.get_DAZ());
   check_exceptionsSSE(status.float_exception_flags);
+
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 
@@ -1365,25 +1315,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SUBPS_VpsWpsR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ()) {
-    op1.xmm32u(0) = float32_denormal_to_zero(op1.xmm32u(0));
-    op1.xmm32u(1) = float32_denormal_to_zero(op1.xmm32u(1));
-    op1.xmm32u(2) = float32_denormal_to_zero(op1.xmm32u(2));
-    op1.xmm32u(3) = float32_denormal_to_zero(op1.xmm32u(3));
-
-    op2.xmm32u(0) = float32_denormal_to_zero(op2.xmm32u(0));
-    op2.xmm32u(1) = float32_denormal_to_zero(op2.xmm32u(1));
-    op2.xmm32u(2) = float32_denormal_to_zero(op2.xmm32u(2));
-    op2.xmm32u(3) = float32_denormal_to_zero(op2.xmm32u(3));
-  }
-
-  op1.xmm32u(0) = float32_sub(op1.xmm32u(0), op2.xmm32u(0), status);
-  op1.xmm32u(1) = float32_sub(op1.xmm32u(1), op2.xmm32u(1), status);
-  op1.xmm32u(2) = float32_sub(op1.xmm32u(2), op2.xmm32u(2), status);
-  op1.xmm32u(3) = float32_sub(op1.xmm32u(3), op2.xmm32u(3), status);
-
+  sse_subps(&op1, &op2, status, MXCSR.get_DAZ());
   check_exceptionsSSE(status.float_exception_flags);
+
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 
@@ -1402,19 +1336,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SUBPD_VpdWpdR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1.xmm64u(0) = float64_denormal_to_zero(op1.xmm64u(0));
-    op1.xmm64u(1) = float64_denormal_to_zero(op1.xmm64u(1));
-    op2.xmm64u(0) = float64_denormal_to_zero(op2.xmm64u(0));
-    op2.xmm64u(1) = float64_denormal_to_zero(op2.xmm64u(1));
-  }
-
-  op1.xmm64u(0) = float64_sub(op1.xmm64u(0), op2.xmm64u(0), status);
-  op1.xmm64u(1) = float64_sub(op1.xmm64u(1), op2.xmm64u(1), status);
-
+  sse_subpd(&op1, &op2, status, MXCSR.get_DAZ());
   check_exceptionsSSE(status.float_exception_flags);
+
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 
@@ -1487,30 +1411,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MINPS_VpsWpsR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  int rc;
-
-  if (MXCSR.get_DAZ()) {
-    op1.xmm32u(0) = float32_denormal_to_zero(op1.xmm32u(0));
-    op1.xmm32u(1) = float32_denormal_to_zero(op1.xmm32u(1));
-    op1.xmm32u(2) = float32_denormal_to_zero(op1.xmm32u(2));
-    op1.xmm32u(3) = float32_denormal_to_zero(op1.xmm32u(3));
-
-    op2.xmm32u(0) = float32_denormal_to_zero(op2.xmm32u(0));
-    op2.xmm32u(1) = float32_denormal_to_zero(op2.xmm32u(1));
-    op2.xmm32u(2) = float32_denormal_to_zero(op2.xmm32u(2));
-    op2.xmm32u(3) = float32_denormal_to_zero(op2.xmm32u(3));
-  }
-
-  rc = float32_compare(op1.xmm32u(0), op2.xmm32u(0), status);
-  op1.xmm32u(0) = (rc == float_relation_less) ? op1.xmm32u(0) : op2.xmm32u(0);
-  rc = float32_compare(op1.xmm32u(1), op2.xmm32u(1), status);
-  op1.xmm32u(1) = (rc == float_relation_less) ? op1.xmm32u(1) : op2.xmm32u(1);
-  rc = float32_compare(op1.xmm32u(2), op2.xmm32u(2), status);
-  op1.xmm32u(2) = (rc == float_relation_less) ? op1.xmm32u(2) : op2.xmm32u(2);
-  rc = float32_compare(op1.xmm32u(3), op2.xmm32u(3), status);
-  op1.xmm32u(3) = (rc == float_relation_less) ? op1.xmm32u(3) : op2.xmm32u(3);
-
+  sse_minps(&op1, &op2, status, MXCSR.get_DAZ());
   check_exceptionsSSE(status.float_exception_flags);
+
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 
@@ -1529,22 +1432,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MINPD_VpdWpdR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  int rc;
-
-  if (MXCSR.get_DAZ())
-  {
-    op1.xmm64u(0) = float64_denormal_to_zero(op1.xmm64u(0));
-    op1.xmm64u(1) = float64_denormal_to_zero(op1.xmm64u(1));
-    op2.xmm64u(0) = float64_denormal_to_zero(op2.xmm64u(0));
-    op2.xmm64u(1) = float64_denormal_to_zero(op2.xmm64u(1));
-  }
-
-  rc = float64_compare(op1.xmm64u(0), op2.xmm64u(0), status);
-  op1.xmm64u(0) = (rc == float_relation_less) ? op1.xmm64u(0) : op2.xmm64u(0);
-  rc = float64_compare(op1.xmm64u(1), op2.xmm64u(1), status);
-  op1.xmm64u(1) = (rc == float_relation_less) ? op1.xmm64u(1) : op2.xmm64u(1);
-
+  sse_minpd(&op1, &op2, status, MXCSR.get_DAZ());
   check_exceptionsSSE(status.float_exception_flags);
+
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 
@@ -1619,25 +1509,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DIVPS_VpsWpsR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ()) {
-    op1.xmm32u(0) = float32_denormal_to_zero(op1.xmm32u(0));
-    op1.xmm32u(1) = float32_denormal_to_zero(op1.xmm32u(1));
-    op1.xmm32u(2) = float32_denormal_to_zero(op1.xmm32u(2));
-    op1.xmm32u(3) = float32_denormal_to_zero(op1.xmm32u(3));
-
-    op2.xmm32u(0) = float32_denormal_to_zero(op2.xmm32u(0));
-    op2.xmm32u(1) = float32_denormal_to_zero(op2.xmm32u(1));
-    op2.xmm32u(2) = float32_denormal_to_zero(op2.xmm32u(2));
-    op2.xmm32u(3) = float32_denormal_to_zero(op2.xmm32u(3));
-  }
-
-  op1.xmm32u(0) = float32_div(op1.xmm32u(0), op2.xmm32u(0), status);
-  op1.xmm32u(1) = float32_div(op1.xmm32u(1), op2.xmm32u(1), status);
-  op1.xmm32u(2) = float32_div(op1.xmm32u(2), op2.xmm32u(2), status);
-  op1.xmm32u(3) = float32_div(op1.xmm32u(3), op2.xmm32u(3), status);
-
+  sse_divps(&op1, &op2, status, MXCSR.get_DAZ());
   check_exceptionsSSE(status.float_exception_flags);
+
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 
@@ -1656,19 +1530,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DIVPD_VpdWpdR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1.xmm64u(0) = float64_denormal_to_zero(op1.xmm64u(0));
-    op1.xmm64u(1) = float64_denormal_to_zero(op1.xmm64u(1));
-    op2.xmm64u(0) = float64_denormal_to_zero(op2.xmm64u(0));
-    op2.xmm64u(1) = float64_denormal_to_zero(op2.xmm64u(1));
-  }
-
-  op1.xmm64u(0) = float64_div(op1.xmm64u(0), op2.xmm64u(0), status);
-  op1.xmm64u(1) = float64_div(op1.xmm64u(1), op2.xmm64u(1), status);
-
+  sse_divpd(&op1, &op2, status, MXCSR.get_DAZ());
   check_exceptionsSSE(status.float_exception_flags);
+
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 
@@ -1741,30 +1605,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXPS_VpsWpsR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  int rc;
-
-  if (MXCSR.get_DAZ()) {
-    op1.xmm32u(0) = float32_denormal_to_zero(op1.xmm32u(0));
-    op1.xmm32u(1) = float32_denormal_to_zero(op1.xmm32u(1));
-    op1.xmm32u(2) = float32_denormal_to_zero(op1.xmm32u(2));
-    op1.xmm32u(3) = float32_denormal_to_zero(op1.xmm32u(3));
-
-    op2.xmm32u(0) = float32_denormal_to_zero(op2.xmm32u(0));
-    op2.xmm32u(1) = float32_denormal_to_zero(op2.xmm32u(1));
-    op2.xmm32u(2) = float32_denormal_to_zero(op2.xmm32u(2));
-    op2.xmm32u(3) = float32_denormal_to_zero(op2.xmm32u(3));
-  }
-
-  rc = float32_compare(op1.xmm32u(0), op2.xmm32u(0), status);
-  op1.xmm32u(0) = (rc == float_relation_greater) ? op1.xmm32u(0) : op2.xmm32u(0);
-  rc = float32_compare(op1.xmm32u(1), op2.xmm32u(1), status);
-  op1.xmm32u(1) = (rc == float_relation_greater) ? op1.xmm32u(1) : op2.xmm32u(1);
-  rc = float32_compare(op1.xmm32u(2), op2.xmm32u(2), status);
-  op1.xmm32u(2) = (rc == float_relation_greater) ? op1.xmm32u(2) : op2.xmm32u(2);
-  rc = float32_compare(op1.xmm32u(3), op2.xmm32u(3), status);
-  op1.xmm32u(3) = (rc == float_relation_greater) ? op1.xmm32u(3) : op2.xmm32u(3);
-
+  sse_maxps(&op1, &op2, status, MXCSR.get_DAZ());
   check_exceptionsSSE(status.float_exception_flags);
+
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 
@@ -1783,22 +1626,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXPD_VpdWpdR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  int rc;
-
-  if (MXCSR.get_DAZ())
-  {
-    op1.xmm64u(0) = float64_denormal_to_zero(op1.xmm64u(0));
-    op1.xmm64u(1) = float64_denormal_to_zero(op1.xmm64u(1));
-    op2.xmm64u(0) = float64_denormal_to_zero(op2.xmm64u(0));
-    op2.xmm64u(1) = float64_denormal_to_zero(op2.xmm64u(1));
-  }
-
-  rc = float64_compare(op1.xmm64u(0), op2.xmm64u(0), status);
-  op1.xmm64u(0) = (rc == float_relation_greater) ? op1.xmm64u(0) : op2.xmm64u(0);
-  rc = float64_compare(op1.xmm64u(1), op2.xmm64u(1), status);
-  op1.xmm64u(1) = (rc == float_relation_greater) ? op1.xmm64u(1) : op2.xmm64u(1);
-
+  sse_maxpd(&op1, &op2, status, MXCSR.get_DAZ());
   check_exceptionsSSE(status.float_exception_flags);
+
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 
@@ -1873,19 +1703,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::HADDPD_VpdWpdR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1.xmm64u(0) = float64_denormal_to_zero(op1.xmm64u(0));
-    op1.xmm64u(1) = float64_denormal_to_zero(op1.xmm64u(1));
-    op2.xmm64u(0) = float64_denormal_to_zero(op2.xmm64u(0));
-    op2.xmm64u(1) = float64_denormal_to_zero(op2.xmm64u(1));
-  }
-
-  op1.xmm64u(0) = float64_add(op1.xmm64u(0), op1.xmm64u(1), status);
-  op1.xmm64u(1) = float64_add(op2.xmm64u(0), op2.xmm64u(1), status);
-
+  sse_haddpd(&op1, &op2, status, MXCSR.get_DAZ());
   check_exceptionsSSE(status.float_exception_flags);
+
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 
@@ -1904,25 +1724,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::HADDPS_VpsWpsR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ()) {
-    op1.xmm32u(0) = float32_denormal_to_zero(op1.xmm32u(0));
-    op1.xmm32u(1) = float32_denormal_to_zero(op1.xmm32u(1));
-    op1.xmm32u(2) = float32_denormal_to_zero(op1.xmm32u(2));
-    op1.xmm32u(3) = float32_denormal_to_zero(op1.xmm32u(3));
-
-    op2.xmm32u(0) = float32_denormal_to_zero(op2.xmm32u(0));
-    op2.xmm32u(1) = float32_denormal_to_zero(op2.xmm32u(1));
-    op2.xmm32u(2) = float32_denormal_to_zero(op2.xmm32u(2));
-    op2.xmm32u(3) = float32_denormal_to_zero(op2.xmm32u(3));
-  }
-
-  op1.xmm32u(0) = float32_add(op1.xmm32u(0), op1.xmm32u(1), status);
-  op1.xmm32u(1) = float32_add(op1.xmm32u(2), op1.xmm32u(3), status);
-  op1.xmm32u(2) = float32_add(op2.xmm32u(0), op2.xmm32u(1), status);
-  op1.xmm32u(3) = float32_add(op2.xmm32u(2), op2.xmm32u(3), status);
-
+  sse_haddps(&op1, &op2, status, MXCSR.get_DAZ());
   check_exceptionsSSE(status.float_exception_flags);
+
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 
@@ -1941,19 +1745,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::HSUBPD_VpdWpdR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1.xmm64u(0) = float64_denormal_to_zero(op1.xmm64u(0));
-    op1.xmm64u(1) = float64_denormal_to_zero(op1.xmm64u(1));
-    op2.xmm64u(0) = float64_denormal_to_zero(op2.xmm64u(0));
-    op2.xmm64u(1) = float64_denormal_to_zero(op2.xmm64u(1));
-  }
-
-  op1.xmm64u(0) = float64_sub(op1.xmm64u(0), op1.xmm64u(1), status);
-  op1.xmm64u(1) = float64_sub(op2.xmm64u(0), op2.xmm64u(1), status);
-
+  sse_hsubpd(&op1, &op2, status, MXCSR.get_DAZ());
   check_exceptionsSSE(status.float_exception_flags);
+
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 
@@ -1972,25 +1766,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::HSUBPS_VpsWpsR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ()) {
-    op1.xmm32u(0) = float32_denormal_to_zero(op1.xmm32u(0));
-    op1.xmm32u(1) = float32_denormal_to_zero(op1.xmm32u(1));
-    op1.xmm32u(2) = float32_denormal_to_zero(op1.xmm32u(2));
-    op1.xmm32u(3) = float32_denormal_to_zero(op1.xmm32u(3));
-
-    op2.xmm32u(0) = float32_denormal_to_zero(op2.xmm32u(0));
-    op2.xmm32u(1) = float32_denormal_to_zero(op2.xmm32u(1));
-    op2.xmm32u(2) = float32_denormal_to_zero(op2.xmm32u(2));
-    op2.xmm32u(3) = float32_denormal_to_zero(op2.xmm32u(3));
-  }
-
-  op1.xmm32u(0) = float32_sub(op1.xmm32u(0), op1.xmm32u(1), status);
-  op1.xmm32u(1) = float32_sub(op1.xmm32u(2), op1.xmm32u(3), status);
-  op1.xmm32u(2) = float32_sub(op2.xmm32u(0), op2.xmm32u(1), status);
-  op1.xmm32u(3) = float32_sub(op2.xmm32u(2), op2.xmm32u(3), status);
-
+  sse_hsubps(&op1, &op2, status, MXCSR.get_DAZ());
   check_exceptionsSSE(status.float_exception_flags);
+
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 
@@ -2143,19 +1921,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSUBPD_VpdWpdR(bxInstruction_c *
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1.xmm64u(0) = float64_denormal_to_zero(op1.xmm64u(0));
-    op1.xmm64u(1) = float64_denormal_to_zero(op1.xmm64u(1));
-    op2.xmm64u(0) = float64_denormal_to_zero(op2.xmm64u(0));
-    op2.xmm64u(1) = float64_denormal_to_zero(op2.xmm64u(1));
-  }
-
-  op1.xmm64u(0) = float64_sub(op1.xmm64u(0), op2.xmm64u(0), status);
-  op1.xmm64u(1) = float64_add(op1.xmm64u(1), op2.xmm64u(1), status);
-
+  sse_addsubpd(&op1, &op2, status, MXCSR.get_DAZ());
   check_exceptionsSSE(status.float_exception_flags);
+
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 
@@ -2174,25 +1942,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSUBPS_VpsWpsR(bxInstruction_c *
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ()) {
-    op1.xmm32u(0) = float32_denormal_to_zero(op1.xmm32u(0));
-    op1.xmm32u(1) = float32_denormal_to_zero(op1.xmm32u(1));
-    op1.xmm32u(2) = float32_denormal_to_zero(op1.xmm32u(2));
-    op1.xmm32u(3) = float32_denormal_to_zero(op1.xmm32u(3));
-
-    op2.xmm32u(0) = float32_denormal_to_zero(op2.xmm32u(0));
-    op2.xmm32u(1) = float32_denormal_to_zero(op2.xmm32u(1));
-    op2.xmm32u(2) = float32_denormal_to_zero(op2.xmm32u(2));
-    op2.xmm32u(3) = float32_denormal_to_zero(op2.xmm32u(3));
-  }
-
-  op1.xmm32u(0) = float32_sub(op1.xmm32u(0), op2.xmm32u(0), status);
-  op1.xmm32u(1) = float32_add(op1.xmm32u(1), op2.xmm32u(1), status);
-  op1.xmm32u(2) = float32_sub(op1.xmm32u(2), op2.xmm32u(2), status);
-  op1.xmm32u(3) = float32_add(op1.xmm32u(3), op2.xmm32u(3), status);
-
+  sse_addsubps(&op1, &op2, status, MXCSR.get_DAZ());
   check_exceptionsSSE(status.float_exception_flags);
+
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 

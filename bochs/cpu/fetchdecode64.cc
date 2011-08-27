@@ -1706,7 +1706,7 @@ BX_CPU_C::fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
   int vvv = -1;
 #if BX_SUPPORT_AVX
   int had_vex = 0;
-  bx_bool vex_w = 0;
+  bx_bool vex_w = 0, vex_l = 0;
 #endif
 
   i->ResolveModrm = 0;
@@ -1858,7 +1858,8 @@ fetch_b1:
     }
 
     vvv = 15 - ((vex >> 3) & 0xf);
-    i->setVL(BX_VL128 + ((vex >> 2) & 0x1));
+    vex_l = (vex >> 2) & 0x1;
+    i->setVL(BX_VL128 + vex_l);
     sse_prefix = vex & 0x3;
 
     if (remain != 0) {
@@ -2025,7 +2026,7 @@ modrm_done:
       if (had_vex < 0)
          OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
       else
-         OpcodeInfoPtr = &BxOpcodeTableAVX[b1-256];
+         OpcodeInfoPtr = &BxOpcodeTableAVX[(b1-256) + 768*vex_l];
     }
 #endif
 
@@ -2058,6 +2059,7 @@ modrm_done:
           break;
 #if BX_SUPPORT_AVX
         case BxSplitVexW:
+        case BxSplitVexW64:
           BX_ASSERT(had_vex != 0);
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[vex_w]);
           break;
@@ -2106,7 +2108,7 @@ modrm_done:
       if (had_vex < 0)
          OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
       else
-         OpcodeInfoPtr = &BxOpcodeTableAVX[b1-256];
+         OpcodeInfoPtr = &BxOpcodeTableAVX[(b1-256) + 768*vex_l];
     }
 #endif
 
@@ -2273,13 +2275,10 @@ modrm_done:
     if ((attr & BxVexW0) != 0 && vex_w) {
       ia_opcode = BX_IA_ERROR;
     }
+    if ((attr & BxVexW1) != 0 && !vex_w) {
+      ia_opcode = BX_IA_ERROR;
+    }
     if ((op_flags & BX_VEX_NO_VVV) && i->vvv() != 0) {
-      ia_opcode = BX_IA_ERROR;
-    }
-    if (i->getVL() == BX_VEX_L128 && !(op_flags & BX_VEX_L128)) {
-      ia_opcode = BX_IA_ERROR;
-    }
-    if (i->getVL() == BX_VEX_L256 && !(op_flags & BX_VEX_L256)) {
       ia_opcode = BX_IA_ERROR;
     }
   }

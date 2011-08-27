@@ -726,7 +726,7 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
   }
 
 #if BX_SUPPORT_AVX
-  static bx_bool avx_enabled = SIM->get_param_bool(BXPN_CPUID_AVX)->get();
+  static unsigned avx_enabled = SIM->get_param_num(BXPN_CPUID_AVX)->get();
   if (avx_enabled) {
     features_bitmask |= BX_CPU_AVX;
 
@@ -734,6 +734,13 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
       BX_PANIC(("PANIC: AVX emulation requires XSAVE support !"));
       return;
     }
+    if (! BX_SUPPORT_X86_64) {
+      BX_PANIC(("PANIC: AVX emulation requires x86-64 support !"));
+      return;
+    }
+
+    if (avx_enabled >= 2)
+      features_bitmask |= BX_CPU_AVX2;
   }
 
   static bx_bool avx_f16c_enabled = SIM->get_param_bool(BXPN_CPUID_AVX_F16CVT)->get();
@@ -744,6 +751,19 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
     }
 
     features_bitmask |= BX_CPU_AVX_F16C;
+  }
+
+  static unsigned bmi_enabled = SIM->get_param_num(BXPN_CPUID_BMI)->get();
+  if (bmi_enabled) {
+    features_bitmask |= BX_CPU_BMI1;
+
+    if (! avx_enabled) {
+      BX_PANIC(("PANIC: Bit Manipulation Instructions (BMI) emulation requires AVX support !"));
+      return;
+    }
+
+    if (bmi_enabled >= 2)
+      features_bitmask |= BX_CPU_BMI2;
   }
 #endif
 
@@ -1208,8 +1228,20 @@ Bit32u bx_generic_cpuid_t::get_ext3_cpuid_features(void) const
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_FSGSBASE))
     features |= BX_CPUID_EXT3_FSGSBASE;
 
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_BMI1))
+    features |= BX_CPUID_EXT3_BMI1;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_AVX2))
+    features |= BX_CPUID_EXT3_AVX2;
+
   if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_SMEP))
     features |= BX_CPUID_EXT3_SMEP;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_BMI2))
+    features |= BX_CPUID_EXT3_BMI2;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_INVPCID))
+    features |= BX_CPUID_EXT3_INVPCID;
 
   return features;
 }

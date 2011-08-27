@@ -227,6 +227,15 @@ void disassembler::Gy(const x86_insn *insn)
   else Gd(insn);
 }
 
+// vex encoded general purpose register
+void disassembler::By(const x86_insn *insn)
+{
+  if (insn->os_64) 
+    dis_sprintf("%s", general_64bit_regname[insn->vex_vvv]);
+  else
+    dis_sprintf("%s", general_32bit_regname[insn->vex_vvv]);
+}
+
 // immediate
 void disassembler::I1(const x86_insn *insn)
 {

@@ -143,6 +143,10 @@ typedef union bx_avx_reg_t {
 #define BX_READ_XMM_REG_LO_WORD(index) \
     ((BX_READ_XMM_REG(index)).xmm16u(0))
 
+/* read only low 8 bit of the register */
+#define BX_READ_XMM_REG_LO_BYTE(index) \
+    ((BX_READ_XMM_REG(index)).xmmubyte(0))
+
 /* short names for above macroses */
 #define BX_XMM_REG_HI_QWORD BX_READ_XMM_REG_HI_QWORD
 #define BX_XMM_REG_LO_QWORD BX_READ_XMM_REG_LO_QWORD
@@ -166,6 +170,10 @@ typedef union bx_avx_reg_t {
 #define BX_WRITE_XMM_REG_LO_WORD(index, reg16) \
     { (BX_XMM_REG(index)).xmm16u(0) = (reg16); }
 
+/* store only low 8 bit of the register, rest of the register unchanged */
+#define BX_WRITE_XMM_REG_LO_BYTE(index, reg8) \
+    { (BX_XMM_REG(index)).xmmubyte(0) = (reg8); }
+
 /* store XMM register */
 #define BX_WRITE_XMM_REG(index, reg) \
     { (BX_XMM_REG(index)) = (reg); }
@@ -174,6 +182,8 @@ typedef union bx_avx_reg_t {
 
 /* read AVX register */
 #define BX_READ_AVX_REG(index) (BX_CPU_THIS_PTR vmm[index])
+
+#define BX_AVX_REG BX_READ_AVX_REG
 
 /* read AVX register */
 #define BX_READ_AVX_REG_LINE(index, line) \

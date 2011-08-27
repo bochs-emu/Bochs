@@ -42,6 +42,7 @@ cpuid
   xsaveopt
   avx
   avx_f16c
+  bmi
   apic
   1g_pages
   pcid

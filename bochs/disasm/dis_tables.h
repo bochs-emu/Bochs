@@ -102,6 +102,8 @@
 #define Gq &disassembler::Gq
 #define Gy &disassembler::Gy
 
+#define By &disassembler::By
+
 #define I1 &disassembler::I1
 #define Ib &disassembler::Ib
 #define Iw &disassembler::Iw

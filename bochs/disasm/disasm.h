@@ -68,7 +68,8 @@
 #define IA_AVX2             (1 << 26)       /* AVX2 instruction */
 #define IA_AVX_F16C         (1 << 27)       /* AVX F16 convert instruction */
 #define IA_AVX_FMA          (1 << 28)       /* AVX FMA instruction */
-#define IA_BMI              (1 << 29)       /* BMI instruction */
+#define IA_BMI1             (1 << 29)       /* BMI1 instruction */
+#define IA_BMI2             (1 << 30)       /* BMI2 instruction */
 
 /* general purpose bit register */
 enum {
@@ -469,6 +470,9 @@ public:
   void Gq(const x86_insn *insn);
   void Gy(const x86_insn *insn);
 
+  // vex encoded general purpose register
+  void By(const x86_insn *insn);
+
   // immediate
   void I1(const x86_insn *insn);
   void Ib(const x86_insn *insn);
@@ -530,7 +534,7 @@ public:
   void Wps(const x86_insn *insn);
   void Wpd(const x86_insn *insn);
 
-  // vex override xmm/ymm register
+  // vex encoded xmm/ymm register
   void Hdq(const x86_insn *insn);
   void Hps(const x86_insn *insn);
   void Hpd(const x86_insn *insn);

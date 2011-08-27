@@ -28,6 +28,8 @@
 
 #if BX_CPU_LEVEL >= 6
 
+#include "simd_int.h"
+
 void BX_CPU_C::print_state_SSE(void)
 {
   BX_DEBUG(("MXCSR: 0x%08x\n", BX_MXCSR_REGISTER));
@@ -535,14 +537,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLPS_VpsMq(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDDUP_VpdWqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op;
-
-  Bit64u val64 = BX_READ_XMM_REG_LO_QWORD(i->rm());
-
-  op.xmm64u(0) = val64;
-  op.xmm64u(1) = val64;
-
-  BX_WRITE_XMM_REG(i->nnn(), op);
+  sse_pbroadcastq(&BX_XMM_REG(i->nnn()), BX_READ_XMM_REG_LO_QWORD(i->rm()));
 #endif
 
   BX_NEXT_INSTR(i);
@@ -658,15 +653,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPS_GdVRps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
-  Bit32u val32 = 0;
-
-  if(op.xmm32u(0) & 0x80000000) val32 |= 0x1;
-  if(op.xmm32u(1) & 0x80000000) val32 |= 0x2;
-  if(op.xmm32u(2) & 0x80000000) val32 |= 0x4;
-  if(op.xmm32u(3) & 0x80000000) val32 |= 0x8;
-
-  BX_WRITE_32BIT_REGZ(i->nnn(), val32);
+  Bit32u mask = sse_pmovmskd(&BX_XMM_REG(i->rm()));
+  BX_WRITE_32BIT_REGZ(i->nnn(), mask);
 #endif
 
   BX_NEXT_INSTR(i);
@@ -676,13 +664,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPS_GdVRps(bxInstruction_c *i
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPD_GdVRpd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
-  Bit32u val32 = 0;
-
-  if(op.xmm32u(1) & 0x80000000) val32 |= 0x1;
-  if(op.xmm32u(3) & 0x80000000) val32 |= 0x2;
-
-  BX_WRITE_32BIT_REGZ(i->nnn(), val32);
+  Bit32u mask = sse_pmovmskq(&BX_XMM_REG(i->rm()));
+  BX_WRITE_32BIT_REGZ(i->nnn(), mask);
 #endif
 
   BX_NEXT_INSTR(i);
@@ -807,27 +790,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ2DQ_VdqQq(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVMSKB_GdUdq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
-  Bit32u result = 0;
-
-  if(op.xmmubyte(0x0) & 0x80) result |= 0x0001;
-  if(op.xmmubyte(0x1) & 0x80) result |= 0x0002;
-  if(op.xmmubyte(0x2) & 0x80) result |= 0x0004;
-  if(op.xmmubyte(0x3) & 0x80) result |= 0x0008;
-  if(op.xmmubyte(0x4) & 0x80) result |= 0x0010;
-  if(op.xmmubyte(0x5) & 0x80) result |= 0x0020;
-  if(op.xmmubyte(0x6) & 0x80) result |= 0x0040;
-  if(op.xmmubyte(0x7) & 0x80) result |= 0x0080;
-  if(op.xmmubyte(0x8) & 0x80) result |= 0x0100;
-  if(op.xmmubyte(0x9) & 0x80) result |= 0x0200;
-  if(op.xmmubyte(0xA) & 0x80) result |= 0x0400;
-  if(op.xmmubyte(0xB) & 0x80) result |= 0x0800;
-  if(op.xmmubyte(0xC) & 0x80) result |= 0x1000;
-  if(op.xmmubyte(0xD) & 0x80) result |= 0x2000;
-  if(op.xmmubyte(0xE) & 0x80) result |= 0x4000;
-  if(op.xmmubyte(0xF) & 0x80) result |= 0x8000;
-
-  BX_WRITE_32BIT_REGZ(i->nnn(), result);
+  Bit32u mask = sse_pmovmskb(&BX_XMM_REG(i->rm()));
+  BX_WRITE_32BIT_REGZ(i->nnn(), mask);
 #endif
 
   BX_NEXT_INSTR(i);
@@ -1057,45 +1021,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXDQ_VdqWqR(bxInstruction_c *i
 /* 66 0F 3A 0F */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PALIGNR_VdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
-  unsigned shift = i->Ib() * 8;
+  sse_palignr(&op2, &op1, i->Ib());
 
-  if(shift == 0) {
-    result = op2;
-  }
-  else if(shift < 64) {
-    result.xmm64u(0) = (op2.xmm64u(0) >> shift) | (op2.xmm64u(1) << (64-shift));
-    result.xmm64u(1) = (op2.xmm64u(1) >> shift) | (op1.xmm64u(0) << (64-shift));
-  }
-  else if(shift == 64) {
-    result.xmm64u(0) = op2.xmm64u(1);
-    result.xmm64u(1) = op1.xmm64u(0);
-  }
-  else if(shift < 128) {
-    shift -= 64;
-    result.xmm64u(0) = (op2.xmm64u(1) >> shift) | (op1.xmm64u(0) << (64-shift));
-    result.xmm64u(1) = (op1.xmm64u(0) >> shift) | (op1.xmm64u(1) << (64-shift));
-  }
-  else if(shift == 128) {
-    result = op1;
-  }
-  else if(shift < 192) {
-    shift -= 128;
-    result.xmm64u(0) = (op1.xmm64u(0) >> shift) | (op1.xmm64u(1) << (64-shift));
-    result.xmm64u(1) = (op1.xmm64u(1) >> shift);
-  }
-  else if(shift < 256) {
-    result.xmm64u(0) = op1.xmm64u(1) >> (shift - 192);
-    result.xmm64u(1) = 0;
-  }
-  else {
-    result.xmm64u(0) = 0;
-    result.xmm64u(1) = 0;
-  }
-
-  BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
+  BX_WRITE_XMM_REG(i->nnn(), op2);
 
   BX_NEXT_INSTR(i);
 }

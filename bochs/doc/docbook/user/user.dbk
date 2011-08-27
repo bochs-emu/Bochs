@@ -3058,12 +3058,17 @@ This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 </para>
 <para><command>avx</command></para>
 <para>
-Select AVX instruction set support.
+Select AVX/AVX2 instruction set support.
 This option exists only if Bochs compiled with --enable-avx option.
 </para>
 <para><command>avx_f16c</command></para>
 <para>
 Select AVX float16 convert instructions support.
+This option exists only if Bochs compiled with --enable-avx option.
+</para>
+<para><command>bmi</command></para>
+<para>
+Select BMI1/BMI2 instructions support.
 This option exists only if Bochs compiled with --enable-avx option.
 </para>
 <para><command>1g_pages</command></para>

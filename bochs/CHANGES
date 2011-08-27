@@ -21,11 +21,13 @@ Bochs repository moved to the SVN version control !
     be enabled using .bochsrc CPUID option.
   - Added support for XSAVEOPT instruction, the instruction can be enabled
     using .bochsrc CPUID option.
-  - Added support for AVX instruction set emulation, to enable configure with
-        --enable-avx option.
-    When compiled in, AVX still has to be enabled using .bochsrc CPUID option.
+  - Added support for AVX and AVX2 instructions emulation, to enable configure
+    with --enable-avx option. When compiled in, AVX still has to be enabled
+    using .bochsrc CPUID option. AVX2 FMA instructions still not implemented.
   - Added emulation of AVX float16 convert instructions, the feature can be
     enabled using .bochsrc CPUID option.
+  - Added support for Bit Manipulation Instructions (BMI) emulation. The BMI
+    instructions support can be enabled using .bochsrc CPUID option.
   - Implemented VMX preemption timer VMEXIT control (patch by Jianan Hao)
   - Implemented Pause-Loop Exiting Secondary VMEXIT control
   - Redefined/Updated/Fixed instrumentation callbacks.

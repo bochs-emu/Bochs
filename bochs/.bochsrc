@@ -78,7 +78,7 @@
 # Bochs. The start address optional, since it can be calculated from image size.
 #=======================================================================
 romimage: file=$BXSHARE/BIOS-bochs-latest 
-#romimage: file=bios/seabios-0.5.1.bin
+#romimage: file=bios/seabios-0.6.1.bin
 #romimage: file=mybios.bin, address=0xfff80000 # 512k at memory top
 
 #=======================================================================
@@ -199,11 +199,15 @@ cpu: cpuid_limit_winnt=0
 #    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 #
 #  AVX:
-#    Select AVX instruction set support.
+#    Select AVX/AVX2 instruction set support.
 #    This option exists only if Bochs compiled with --enable-avx option.
 #
 #  AVX_F16C:
 #    Select AVX float16 convert instructions support.
+#    This option exists only if Bochs compiled with --enable-avx option.
+#
+#  BMI:
+#    Select BMI1/BMI2 instructions support.
 #    This option exists only if Bochs compiled with --enable-avx option.
 #
 #  1G_PAGES:
@@ -248,8 +252,8 @@ cpu: cpuid_limit_winnt=0
 #  STEPPING:
 #    Set stepping information returned by CPUID. Default stepping value is 3.
 #=======================================================================
-cpuid: mmx=1, sep=1, sse=sse4_2, apic=xapic, aes=1, movbe=1, xsave=1
-cpuid: family=6, model=0x1a, stepping=5
+#cpuid: mmx=1, sep=1, sse=sse4_2, apic=xapic, aes=1, movbe=1, xsave=1
+#cpuid: family=6, model=0x1a, stepping=5
 
 #=======================================================================
 # MEMORY
