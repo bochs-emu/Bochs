@@ -85,8 +85,9 @@ public:
   BxResolvePtr_tR ResolveModrm;
 
   struct {
-    //  15.12 AVX vl  (0=no VL, 1=128 bit, 2=256 bit)
-    //  11..0 opcode
+    // 15..13 AVX vl  (0=no VL, 1=128 bit, 2=256 bit)
+    // 12..12 lock
+    // 11...0 opcode
     Bit16u ia_opcode;
 
     //  7...4 (unused)
@@ -307,13 +308,13 @@ public:
 
   BX_CPP_INLINE unsigned getVL(void) const {
 #if BX_SUPPORT_AVX
-    return metaInfo.ia_opcode >> 12;
+    return metaInfo.ia_opcode >> 13;
 #else
     return 0;
 #endif
   }
   BX_CPP_INLINE void setVL(unsigned value) {
-    metaInfo.ia_opcode = (metaInfo.ia_opcode & 0xfff) | (value << 12);
+    metaInfo.ia_opcode = (metaInfo.ia_opcode & 0x1fff) | (value << 13);
   }
 
   BX_CPP_INLINE void setVvv(unsigned vvv) {
@@ -330,9 +331,18 @@ public:
     // it is quite common to be tested for.
     return metaInfo.metaInfo1 & (1<<4);
   }
-  BX_CPP_INLINE unsigned assertModC0()
+  BX_CPP_INLINE void assertModC0()
   {
-    return metaInfo.metaInfo1 |= (1<<4);
+    metaInfo.metaInfo1 |= (1<<4);
+  }
+
+  BX_CPP_INLINE unsigned lock() const
+  {
+    return metaInfo.ia_opcode & (1<<12);
+  }
+  BX_CPP_INLINE void assertLock()
+  {
+    metaInfo.ia_opcode |= (1<<12);
   }
 };
 // <TAG-CLASS-INSTRUCTION-END>

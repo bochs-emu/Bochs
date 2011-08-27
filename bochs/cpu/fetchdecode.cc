@@ -1365,6 +1365,7 @@ fetch_b1:
       return(-1);
     case 0xf0: // LOCK:
       lock = 1;
+      i->assertLock();
       if (remain != 0) {
         goto fetch_b1;
       }
