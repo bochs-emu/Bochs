@@ -1513,8 +1513,8 @@ AC_ARG_ENABLE(avx,
   ]
   )
 
-if test "$support_avx" -gt 0 -a "$bx_cpu_level" -lt 6; then
-  AC_MSG_ERROR([for AVX support the CPU level must be set to 6])
+if test "$support_avx" -gt 0 -a "$use_x86_64" = 0; then
+  AC_MSG_ERROR([for AVX support x86-64 emulation must be compiled in!])
 fi
 
 AC_MSG_CHECKING(for x86 debugger support)
