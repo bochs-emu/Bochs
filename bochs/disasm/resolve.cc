@@ -155,7 +155,7 @@ void disassembler::decode_modrm(x86_insn *insn)
   }
 }
 
-void disassembler::resolve16_mod0(const x86_insn *insn, unsigned mode)
+void disassembler::resolve16_mod0(const x86_insn *insn, unsigned datasize)
 {
   const char *seg;
 
@@ -165,12 +165,12 @@ void disassembler::resolve16_mod0(const x86_insn *insn, unsigned mode)
     seg = sreg_mod00_rm16[insn->rm];
 
   if(insn->rm == 6)
-    print_memory_access16(mode, seg, NULL, insn->displacement.displ16);
+    print_memory_access16(datasize, seg, NULL, insn->displacement.displ16);
   else
-    print_memory_access16(mode, seg, index16[insn->rm], 0);
+    print_memory_access16(datasize, seg, index16[insn->rm], 0);
 }
 
-void disassembler::resolve16_mod1or2(const x86_insn *insn, unsigned mode)
+void disassembler::resolve16_mod1or2(const x86_insn *insn, unsigned datasize)
 {
   const char *seg;
 
@@ -179,10 +179,10 @@ void disassembler::resolve16_mod1or2(const x86_insn *insn, unsigned mode)
   else
     seg = sreg_mod01or10_rm16[insn->rm];
 
-  print_memory_access16(mode, seg, index16[insn->rm], insn->displacement.displ16);
+  print_memory_access16(datasize, seg, index16[insn->rm], insn->displacement.displ16);
 }
 
-void disassembler::resolve32_mod0(const x86_insn *insn, unsigned mode)
+void disassembler::resolve32_mod0(const x86_insn *insn, unsigned datasize)
 {
   const char *seg, *eip_regname = NULL;
 
@@ -197,12 +197,12 @@ void disassembler::resolve32_mod0(const x86_insn *insn, unsigned mode)
   }
 
   if ((insn->rm & 7) == 5) /* no reg, 32-bit displacement */
-    print_memory_access32(mode, seg, eip_regname, NULL, 0, insn->displacement.displ32);
+    print_memory_access32(datasize, seg, eip_regname, NULL, 0, insn->displacement.displ32);
   else
-    print_memory_access32(mode, seg, general_32bit_regname[insn->rm], NULL, 0, 0);
+    print_memory_access32(datasize, seg, general_32bit_regname[insn->rm], NULL, 0, 0);
 }
 
-void disassembler::resolve32_mod1or2(const x86_insn *insn, unsigned mode)
+void disassembler::resolve32_mod1or2(const x86_insn *insn, unsigned datasize)
 {
   const char *seg;
 
@@ -211,12 +211,13 @@ void disassembler::resolve32_mod1or2(const x86_insn *insn, unsigned mode)
   else
     seg = sreg_mod01or10_base32[insn->rm];
 
-  print_memory_access32(mode, seg,
+  print_memory_access32(datasize, seg,
       general_32bit_regname[insn->rm], NULL, 0, insn->displacement.displ32);
 }
 
-void disassembler::resolve32_mod0_rm4(const x86_insn *insn, unsigned mode)
+void disassembler::resolve32_mod0_rm4(const x86_insn *insn, unsigned datasize)
 {
+  char vsib_index[8];
   const char *seg, *base = NULL, *index = NULL;
   Bit32u disp32 = 0;
 
@@ -230,14 +231,21 @@ void disassembler::resolve32_mod0_rm4(const x86_insn *insn, unsigned mode)
   else
     disp32 = insn->displacement.displ32;
 
-  if (insn->index != 4)
-    index = general_32bit_regname[insn->index];
+  if (datasize & VSIB_Index) {
+    sprintf(vsib_index, "%s%d", vector_reg_name[insn->vex_l], insn->index);
+    index = vsib_index;
+  }
+  else {
+    if (insn->index != 4)
+      index = general_32bit_regname[insn->index];
+  }
 
-  print_memory_access32(mode, seg, base, index, insn->scale, disp32);
+  print_memory_access32(datasize, seg, base, index, insn->scale, disp32);
 }
 
-void disassembler::resolve32_mod1or2_rm4(const x86_insn *insn, unsigned mode)
+void disassembler::resolve32_mod1or2_rm4(const x86_insn *insn, unsigned datasize)
 {
+  char vsib_index[8];
   const char *seg, *index = NULL;
 
   if (insn->is_seg_override())
@@ -245,14 +253,20 @@ void disassembler::resolve32_mod1or2_rm4(const x86_insn *insn, unsigned mode)
   else
     seg = sreg_mod01or10_base32[insn->base];
 
-  if (insn->index != 4)
-    index = general_32bit_regname[insn->index];
+  if (datasize & VSIB_Index) {
+    sprintf(vsib_index, "%s%d", vector_reg_name[insn->vex_l], insn->index);
+    index = vsib_index;
+  }
+  else {
+    if (insn->index != 4)
+      index = general_32bit_regname[insn->index];
+  }
 
-  print_memory_access32(mode, seg,
+  print_memory_access32(datasize, seg,
       general_32bit_regname[insn->base], index, insn->scale, insn->displacement.displ32);
 }
 
-void disassembler::resolve64_mod0(const x86_insn *insn, unsigned mode)
+void disassembler::resolve64_mod0(const x86_insn *insn, unsigned datasize)
 {
   const char *seg, *rip_regname;
 
@@ -265,12 +279,12 @@ void disassembler::resolve64_mod0(const x86_insn *insn, unsigned mode)
   else rip_regname = "%rip";
 
   if ((insn->rm & 7) == 5) /* no reg, 32-bit displacement */
-    print_memory_access64(mode, seg, rip_regname, NULL, 0, (Bit32s) insn->displacement.displ32);
+    print_memory_access64(datasize, seg, rip_regname, NULL, 0, (Bit32s) insn->displacement.displ32);
   else
-    print_memory_access64(mode, seg, general_64bit_regname[insn->rm], NULL, 0, 0);
+    print_memory_access64(datasize, seg, general_64bit_regname[insn->rm], NULL, 0, 0);
 }
 
-void disassembler::resolve64_mod1or2(const x86_insn *insn, unsigned mode)
+void disassembler::resolve64_mod1or2(const x86_insn *insn, unsigned datasize)
 {
   const char *seg;
 
@@ -279,12 +293,13 @@ void disassembler::resolve64_mod1or2(const x86_insn *insn, unsigned mode)
   else
     seg = sreg_mod01or10_base32[insn->rm];
 
-  print_memory_access64(mode, seg,
+  print_memory_access64(datasize, seg,
       general_64bit_regname[insn->rm], NULL, 0, (Bit32s) insn->displacement.displ32);
 }
 
-void disassembler::resolve64_mod0_rm4(const x86_insn *insn, unsigned mode)
+void disassembler::resolve64_mod0_rm4(const x86_insn *insn, unsigned datasize)
 {
+  char vsib_index[8];
   const char *seg, *base = NULL, *index = NULL;
   Bit32s disp32 = 0;
 
@@ -298,14 +313,21 @@ void disassembler::resolve64_mod0_rm4(const x86_insn *insn, unsigned mode)
   else
     disp32 = (Bit32s) insn->displacement.displ32;
 
-  if (insn->index != 4)
-    index = general_64bit_regname[insn->index];
+  if (datasize & VSIB_Index) {
+    sprintf(vsib_index, "%s%d", vector_reg_name[insn->vex_l], insn->index);
+    index = vsib_index;
+  }
+  else {
+    if (insn->index != 4)
+      index = general_64bit_regname[insn->index];
+  }
 
-  print_memory_access64(mode, seg, base, index, insn->scale, disp32);
+  print_memory_access64(datasize, seg, base, index, insn->scale, disp32);
 }
 
-void disassembler::resolve64_mod1or2_rm4(const x86_insn *insn, unsigned mode)
+void disassembler::resolve64_mod1or2_rm4(const x86_insn *insn, unsigned datasize)
 {
+  char vsib_index[8];
   const char *seg, *index = NULL;
 
   if (insn->is_seg_override())
@@ -313,10 +335,16 @@ void disassembler::resolve64_mod1or2_rm4(const x86_insn *insn, unsigned mode)
   else
     seg = sreg_mod01or10_base32[insn->base];
 
-  if (insn->index != 4)
-    index = general_64bit_regname[insn->index];
+  if (datasize & VSIB_Index) {
+    sprintf(vsib_index, "%s%d", vector_reg_name[insn->vex_l], insn->index);
+    index = vsib_index;
+  }
+  else {
+    if (insn->index != 4)
+      index = general_64bit_regname[insn->index];
+  }
 
-  print_memory_access64(mode, seg,
+  print_memory_access64(datasize, seg,
       general_64bit_regname[insn->base], index, insn->scale, (Bit32s) insn->displacement.displ32);
 }
 
@@ -324,7 +352,7 @@ void disassembler::print_datasize(unsigned size)
 {
   if (!intel_mode) return;
 
-  switch(size)
+  switch(size & 0xff)
   {
     case B_SIZE:
       dis_sprintf("byte ptr ");

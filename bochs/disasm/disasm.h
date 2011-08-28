@@ -132,6 +132,8 @@ struct BxDisasmOpcodeTable_t
 #define XMM_SIZE      0x07 /* double quad word (XMM) */
 #define YMM_SIZE      0x08 /* quadruple quad word (YMM) */
 
+#define VSIB_Index    0x80
+
 // branch hint attribute
 #define BRANCH_HINT 0x1000
 
@@ -562,6 +564,9 @@ public:
   void Mpd(const x86_insn *insn);
   void Mss(const x86_insn *insn);
   void Msd(const x86_insn *insn);
+
+  // gather VSib
+  void VSib(const x86_insn *insn);
 
   // string instructions
   void OP_X(const x86_insn *insn, unsigned size);

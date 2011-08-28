@@ -177,6 +177,8 @@
 #define Mss &disassembler::Mss
 #define Msd &disassembler::Msd
 
+#define VSib &disassembler::VSib
+
 #define Xb &disassembler::Xb
 #define Xw &disassembler::Xw
 #define Xd &disassembler::Xd

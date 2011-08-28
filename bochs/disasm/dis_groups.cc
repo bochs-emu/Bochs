@@ -543,6 +543,15 @@ void disassembler::Mpd(const x86_insn *insn) { OP_M(insn, XMM_SIZE + insn->vex_l
 void disassembler::Mss(const x86_insn *insn) { OP_M(insn, D_SIZE); }
 void disassembler::Msd(const x86_insn *insn) { OP_M(insn, Q_SIZE); }
 
+// gather VSib
+void disassembler::VSib(const x86_insn *insn)
+{
+  if(insn->mod == 3)
+    dis_sprintf("(bad)");
+  else
+    (this->*resolve_modrm)(insn, (XMM_SIZE + insn->vex_l) | VSIB_Index);
+}
+
 // string instructions
 void disassembler::OP_X(const x86_insn *insn, unsigned size)
 {
