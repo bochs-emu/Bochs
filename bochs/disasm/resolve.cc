@@ -352,7 +352,7 @@ void disassembler::print_datasize(unsigned size)
 {
   if (!intel_mode) return;
 
-  switch(size & 0xff)
+  switch(size & 0xf)
   {
     case B_SIZE:
       dis_sprintf("byte ptr ");
