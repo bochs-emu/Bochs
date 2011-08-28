@@ -1971,12 +1971,15 @@ fetch_b1:
       scale =  sib;
       i->setSibScale(scale);
       i->setSibBase(base);
+      // this part is a little tricky - assign index value always,
+      // it will be really used if the instruction is Gather. Others
+      // assume that BxResolve32Base will do the right thing.
+      i->setSibIndex(index);
       if (index != 4) {
         if (i->as64L())
           i->ResolveModrm = &BX_CPU_C::BxResolve64BaseIndex;
         else
           i->ResolveModrm = &BX_CPU_C::BxResolve32BaseIndex;
-        i->setSibIndex(index);
       }
       if (mod == 0x00) { // mod==00b, rm==4
         seg = sreg_mod0_base32[base];

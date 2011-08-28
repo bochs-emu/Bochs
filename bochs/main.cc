@@ -548,6 +548,7 @@ int bx_init_main(int argc, char *argv[])
           do {
             fprintf(stderr, "%s\n", SIM->get_param_enum(BXPN_CPU_MODEL)->get_choice(i));
           } while (i++ < SIM->get_param_enum(BXPN_CPU_MODEL)->get_max());
+          fprintf(stderr, "\n");
           arg++;
         }
       }

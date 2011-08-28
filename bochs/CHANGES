@@ -10,7 +10,8 @@ Bochs repository moved to the SVN version control !
     including exact CPUID matching reference hardware. Check .bochsrc example
     or read docs for list of supported configurations or more details.
   * It is also possible to choose the CPU to emulate from Bochs command line
-    using new command line parameter -cpu <cpu_name>.
+    using command line interface to .bochsrc: "cpu::model <cpu_name>"
+  * Query for supported CPU models using command line option: -help cpu.
 
   - 10% emulation speedup with handlers chaining optimization implemented. The
     feature is enabled by default when configure with --enable-all-optimizations
