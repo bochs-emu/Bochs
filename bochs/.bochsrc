@@ -305,7 +305,7 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 
 #=======================================================================
 # VGA:
-# This defines some parameter related to the VGA display
+# This defines parameters related to the VGA display
 #
 #   EXTENSION
 #     Here you can specify the display extension to be used. With the value

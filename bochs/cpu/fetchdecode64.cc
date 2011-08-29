@@ -2067,6 +2067,9 @@ modrm_done:
           BX_ASSERT(had_vex != 0);
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[vex_w]);
           break;
+        case BxSplitMod11B:
+          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[mod_mem]);
+          break;
 #endif
         case Bx3ByteOp:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3]);

@@ -345,40 +345,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPTEST_VdqWdqR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-/* Opcode: VEX.66.0F.38.18 /r (VEX.W=0, VEX.VVV #UD) */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTSS_VpsMss(bxInstruction_c *i)
-{
-  unsigned len = i->getVL();
-  BxPackedAvxRegister op;
-  
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  Bit32u val32 = read_virtual_dword(i->seg(), eaddr);
-
-  for (unsigned n=0; n < len; n++)
-    sse_pbroadcastd(&op.avx128(n), val32);
-
-  BX_WRITE_AVX_REGZ(i->nnn(), op, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.256.66.0F.38.19 (VEX.W=0, VEX.VVV #UD) */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTSD_VpdMsd(bxInstruction_c *i)
-{
-  unsigned len = i->getVL();
-  BxPackedAvxRegister op;
-  
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  Bit64u val64 = read_virtual_qword(i->seg(), eaddr);
-
-  for (unsigned n=0; n < len; n++)
-    sse_pbroadcastq(&op.avx128(n), val64);
-
-  BX_WRITE_AVX_REGZ(i->nnn(), op, len);
-
-  BX_NEXT_INSTR(i);
-}
-
 /* Opcode: VEX.256.66.0F.38.1A (VEX.W=0, VEX.VVV #UD) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF128_VdqMdq(bxInstruction_c *i)
 {

@@ -1670,6 +1670,9 @@ modrm_done:
           else
             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[0]);
           break;
+        case BxSplitMod11B:
+          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[mod_mem]);
+          break;
 #endif
 #if BX_CPU_LEVEL >= 6
         case Bx3ByteOp:
@@ -1693,8 +1696,6 @@ modrm_done:
           else
             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[(b2 & 0x3f) + 8]);
           break;
-        case BxPrefixVEX:
-          continue;
         default:
           BX_PANIC(("fetchdecode: Unknown opcode group %d", group));
       }

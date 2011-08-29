@@ -2483,8 +2483,6 @@ public: // for now...
   BX_SMF BX_INSF_TYPE VANDNPS_VpsHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VORPS_VpsHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VXORPS_VpsHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VBROADCASTSS_VpsMss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VBROADCASTSD_VpdMsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VBROADCASTF128_VdqMdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VBLENDVPS_VpsHpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VBLENDVPD_VpdHpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4295,6 +4293,7 @@ enum {
 #define BxPrefixVEX         0x00A0 // Group encoding: 1010
 #define BxSplitVexW         0x00B0 // Group encoding: 1011
 #define BxSplitVexW64       0x00C0 // Group encoding: 1100 - VexW ignored in 32-bit mode
+#define BxSplitMod11B       0x00D0 // Group encoding: 1101
 
 // The BxImmediate2 mask specifies kind of second immediate data
 // required by instruction.
