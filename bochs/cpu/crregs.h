@@ -196,8 +196,8 @@ struct bx_dr7_t {
 struct bx_efer_t {
   Bit32u val32; // 32bit value of register
 
-#if BX_SUPPORT_X86_64
   IMPLEMENT_CRREG_ACCESSORS(SCE,    0);
+#if BX_SUPPORT_X86_64
   IMPLEMENT_CRREG_ACCESSORS(LME,    8);
   IMPLEMENT_CRREG_ACCESSORS(LMA,   10);
 #endif

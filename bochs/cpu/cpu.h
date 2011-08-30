@@ -166,7 +166,6 @@
 // access to 64 bit MSR registers
 #define MSR_FSBASE  (BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.base)
 #define MSR_GSBASE  (BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.base)
-#define MSR_STAR    (BX_CPU_THIS_PTR msr.star)
 #define MSR_LSTAR   (BX_CPU_THIS_PTR msr.lstar)
 #define MSR_CSTAR   (BX_CPU_THIS_PTR msr.cstar)
 #define MSR_FMASK   (BX_CPU_THIS_PTR msr.fmask)
@@ -379,8 +378,6 @@ enum {
 #endif
 
 #define BX_MSR_EFER             0xc0000080
-
-#if BX_SUPPORT_X86_64
 #define BX_MSR_STAR             0xc0000081
 #define BX_MSR_LSTAR            0xc0000082
 #define BX_MSR_CSTAR            0xc0000083
@@ -389,7 +386,6 @@ enum {
 #define BX_MSR_GSBASE           0xc0000101
 #define BX_MSR_KERNELGSBASE     0xc0000102
 #define BX_MSR_TSC_AUX          0xc0000103
-#endif
 
 #define BX_MODE_IA32_REAL       0x0   // CR0.PE=0                |
 #define BX_MODE_IA32_V8086      0x1   // CR0.PE=1, EFLAGS.VM=1   | EFER.LMA=0
@@ -595,8 +591,13 @@ typedef struct
   bx_phy_address apicbase;
 #endif
 
-#if BX_SUPPORT_X86_64
+#define MSR_STAR   (BX_CPU_THIS_PTR msr.star)
+
+  // SYSCALL/SYSRET instruction msr's
+#if BX_CPU_LEVEL >= 5
   Bit64u star;
+#endif
+#if BX_SUPPORT_X86_64
   Bit64u lstar;
   Bit64u cstar;
   Bit32u fmask;
@@ -907,7 +908,9 @@ public: // for now...
 #if BX_CPU_LEVEL >= 5
   bx_efer_t efer;
   Bit32u efer_suppmask;
+#endif
 
+#if BX_CPU_LEVEL >= 6
   xcr0_t xcr0;
   Bit32u xcr0_suppmask;
 #endif

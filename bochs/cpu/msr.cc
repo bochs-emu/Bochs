@@ -213,13 +213,13 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
       val64 = BX_CPU_THIS_PTR efer.get32();
       break;
-#endif
 
-#if BX_SUPPORT_X86_64
     case BX_MSR_STAR:
       val64 = MSR_STAR;
       break;
+#endif
 
+#if BX_SUPPORT_X86_64
     case BX_MSR_LSTAR:
       val64 = MSR_LSTAR;
       break;
@@ -589,13 +589,13 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_EFER:
       if (! SetEFER(val_64)) return 0;
       break;
-#endif
 
-#if BX_SUPPORT_X86_64
     case BX_MSR_STAR:
       MSR_STAR = val_64;
       break;
+#endif
 
+#if BX_SUPPORT_X86_64
     case BX_MSR_LSTAR:
       if (! IsCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_LSTAR !"));

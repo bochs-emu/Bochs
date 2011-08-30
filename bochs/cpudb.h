@@ -24,6 +24,7 @@
 bx_define_cpudb(bx_generic)
 #if BX_CPU_LEVEL == 5
 bx_define_cpudb(pentium_mmx)
+bx_define_cpudb(amd_k6_2_chomper)
 #elif BX_CPU_LEVEL >= 6
 #if BX_SUPPORT_X86_64 == 0
 bx_define_cpudb(p2_klamath)
