@@ -1696,6 +1696,8 @@ modrm_done:
           else
             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[(b2 & 0x3f) + 8]);
           break;
+        case BxPrefixVEX:
+          continue;
         default:
           BX_PANIC(("fetchdecode: Unknown opcode group %d", group));
       }
