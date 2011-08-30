@@ -594,9 +594,7 @@ typedef struct
 #define MSR_STAR   (BX_CPU_THIS_PTR msr.star)
 
   // SYSCALL/SYSRET instruction msr's
-#if BX_CPU_LEVEL >= 5
   Bit64u star;
-#endif
 #if BX_SUPPORT_X86_64
   Bit64u lstar;
   Bit64u cstar;
@@ -612,14 +610,12 @@ typedef struct
   // Don't read this directly; use get_TSC and set_TSC to access the TSC.
   Bit64u tsc_last_reset;
 
-  // SYSENTER/SYSEXIT instruction msr's
 #if BX_CPU_LEVEL >= 6
+  // SYSENTER/SYSEXIT instruction msr's
   Bit32u sysenter_cs_msr;
   bx_address sysenter_esp_msr;
   bx_address sysenter_eip_msr;
-#endif
 
-#if BX_CPU_LEVEL >= 6
   Bit64u mtrrphys[16];
   Bit64u mtrrfix64k_00000;
   Bit64u mtrrfix16k[2];
