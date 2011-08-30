@@ -483,7 +483,7 @@ void BX_CPU_C::register_state(void)
 #if BX_SUPPORT_APIC
   BXRS_HEX_PARAM_FIELD(MSR, apicbase, msr.apicbase);
 #endif
-#if BX_CPU_LEVEL >= 6
+#if BX_CPU_LEVEL >= 5
   BXRS_HEX_PARAM_FIELD(MSR, EFER, efer.val32);
 #endif
 #if BX_SUPPORT_X86_64
@@ -958,11 +958,13 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR lapic.set_base(BX_CPU_THIS_PTR msr.apicbase);
 #endif
 
-#if BX_CPU_LEVEL >= 6
+#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR efer.set32(0);
   BX_CPU_THIS_PTR efer_suppmask = 0;
   if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_NX))
     BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_NXE_MASK;
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_SYSCALL_SYSRET))
+    BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_SCE_MASK;
 #if BX_SUPPORT_X86_64
   if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_LONG_MODE))
     BX_CPU_THIS_PTR efer_suppmask |= (BX_EFER_SCE_MASK | BX_EFER_LME_MASK | BX_EFER_LMA_MASK);
@@ -1282,7 +1284,7 @@ void BX_CPU_C::assert_checks(void)
     }
   }
 
-#if BX_SUPPORT_X86_64 == 0 && BX_CPU_LEVEL >= 6
+#if BX_SUPPORT_X86_64 == 0 && BX_CPU_LEVEL >= 5
   if (BX_CPU_THIS_PTR efer_suppmask & (BX_EFER_SCE_MASK |
                     BX_EFER_LME_MASK | BX_EFER_LMA_MASK | BX_EFER_FFXSR_MASK))
   {

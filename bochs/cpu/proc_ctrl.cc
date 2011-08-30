@@ -890,9 +890,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
   BX_NEXT_TRACE(i);
 }
 
-#if BX_SUPPORT_X86_64
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 5
   bx_address temp_RIP;
 
   BX_DEBUG(("Execute SYSCALL instruction"));
@@ -903,6 +903,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
+#if BX_SUPPORT_X86_64
   if (long_mode())
   {
     RCX = RIP;
@@ -957,7 +958,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
     BX_CPU_THIS_PTR clear_RF();
     RIP = temp_RIP;
   }
-  else {
+  else
+#endif
+  {
     // legacy mode
 
     ECX = EIP;
@@ -1009,12 +1012,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSCALL,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
+#endif
 
   BX_NEXT_TRACE(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 5
   bx_address temp_RIP;
 
   BX_DEBUG(("Execute SYSRET instruction"));
@@ -1030,6 +1035,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
+#if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
   {
     if (i->os64L()) {
@@ -1094,7 +1100,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 
     writeEFlags((Bit32u) R11, EFlagsValidMask);
   }
-  else { // (!64BIT_MODE)
+  else // (!64BIT_MODE)
+#endif
+  {
     // Return to 32-bit legacy mode, set up CS segment, flat, 32-bit DPL=3
     parse_selector((MSR_STAR >> 48) | 3,
                      &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
@@ -1137,10 +1145,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSRET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
+#endif
 
   BX_NEXT_TRACE(i);
 }
 
+#if BX_SUPPORT_X86_64
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SWAPGS(bxInstruction_c *i)
 {
   if(CPL != 0)

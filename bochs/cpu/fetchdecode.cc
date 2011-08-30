@@ -450,17 +450,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F 02 /w */ { 0, BX_IA_LAR_GvEw },
   /* 0F 03 /w */ { 0, BX_IA_LSL_GvEw },
   /* 0F 04 /w */ { 0, BX_IA_ERROR },
-#if BX_SUPPORT_X86_64
-  /* 0F 05 /w */ { BxTraceEnd, BX_IA_SYSCALL },
-#else
-  /* 0F 05 /w */ { 0, BX_IA_ERROR },
-#endif
+  /* 0F 05 /w */ { BxTraceEnd, BX_IA_SYSCALL_LEGACY },
   /* 0F 06 /w */ { BxTraceEnd, BX_IA_CLTS },
-#if BX_SUPPORT_X86_64
-  /* 0F 07 /w */ { BxTraceEnd, BX_IA_SYSRET },
-#else
-  /* 0F 07 /w */ { 0, BX_IA_ERROR },
-#endif
+  /* 0F 07 /w */ { BxTraceEnd, BX_IA_SYSRET_LEGACY },
   /* 0F 08 /w */ { BxTraceEnd, BX_IA_INVD },
   /* 0F 09 /w */ { BxTraceEnd, BX_IA_WBINVD },
   /* 0F 0A /w */ { 0, BX_IA_ERROR },
@@ -1003,17 +995,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F 02 /d */ { 0, BX_IA_LAR_GvEw },
   /* 0F 03 /d */ { 0, BX_IA_LSL_GvEw },
   /* 0F 04 /d */ { 0, BX_IA_ERROR },
-#if BX_SUPPORT_X86_64
-  /* 0F 05 /d */ { BxTraceEnd, BX_IA_SYSCALL },
-#else
-  /* 0F 05 /d */ { 0, BX_IA_ERROR },
-#endif
+  /* 0F 05 /d */ { BxTraceEnd, BX_IA_SYSCALL_LEGACY },
   /* 0F 06 /d */ { BxTraceEnd, BX_IA_CLTS },
-#if BX_SUPPORT_X86_64
-  /* 0F 07 /d */ { BxTraceEnd, BX_IA_SYSRET },
-#else
-  /* 0F 07 /d */ { 0, BX_IA_ERROR },
-#endif
+  /* 0F 07 /d */ { BxTraceEnd, BX_IA_SYSRET_LEGACY },
   /* 0F 08 /d */ { BxTraceEnd, BX_IA_INVD },
   /* 0F 09 /d */ { BxTraceEnd, BX_IA_WBINVD },
   /* 0F 0A /d */ { 0, BX_IA_ERROR },

@@ -555,9 +555,10 @@ void core2_penryn_t9600_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [30:30] AMD 3DNow! Extensions
   //   [31:31] AMD 3DNow! Instructions
 
-  leaf->edx = BX_CPUID_STD2_SYSCALL_SYSRET |
-              BX_CPUID_STD2_NX |
+  leaf->edx = BX_CPUID_STD2_NX |
               BX_CPUID_STD2_LONG_MODE;
+  if (cpu->long64_mode())
+    leaf->edx |= BX_CPUID_STD2_SYSCALL_SYSRET;
 }
 
 // leaf 0x80000002 //

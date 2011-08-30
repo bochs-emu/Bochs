@@ -725,6 +725,9 @@ bx_define_opcode(BX_IA_PSWAPD_PqQq, &BX_CPU_C::PSWAPD_PqQq, &BX_CPU_C::PSWAPD_Pq
 #endif
 bx_define_opcode(BX_IA_PREFETCHW, &BX_CPU_C::NOP, &BX_CPU_C::NOP, 0, 0) // NOP even when no 3DNow!
 
+bx_define_opcode(BX_IA_SYSCALL_LEGACY, NULL, &BX_CPU_C::SYSCALL, BX_CPU_SYSCALL_SYSRET, 0)
+bx_define_opcode(BX_IA_SYSRET_LEGACY, NULL, &BX_CPU_C::SYSRET, BX_CPU_SYSCALL_SYSRET, 0)
+
 // P6 new instructions
 bx_define_opcode(BX_IA_CMOVB_GdEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::CMOVB_GdEdR, BX_CPU_P6, 0)
 bx_define_opcode(BX_IA_CMOVB_GwEw, &BX_CPU_C::LOAD_Ew, &BX_CPU_C::CMOVB_GwEwR, BX_CPU_P6, 0)
@@ -1148,6 +1151,9 @@ bx_define_opcode(BX_IA_PCLMULQDQ_VdqWdqIb, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PCLMU
 bx_define_opcode(BX_IA_LM_LAHF, NULL, &BX_CPU_C::LAHF, BX_CPU_LM_LAHF_SAHF, 0)
 bx_define_opcode(BX_IA_LM_SAHF, NULL, &BX_CPU_C::SAHF, BX_CPU_LM_LAHF_SAHF, 0)
 
+bx_define_opcode(BX_IA_SYSCALL, NULL, &BX_CPU_C::SYSCALL, 0, 0)
+bx_define_opcode(BX_IA_SYSRET, NULL, &BX_CPU_C::SYSRET, 0, 0)
+
 bx_define_opcode(BX_IA_ADD_GqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::ADD_GqEqR, 0, 0)
 bx_define_opcode(BX_IA_OR_GqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::OR_GqEqR, 0, 0)
 bx_define_opcode(BX_IA_ADC_GqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::ADC_GqEqR, 0, 0)
@@ -1322,8 +1328,6 @@ bx_define_opcode(BX_IA_CVTTSD2SI_GqWsd, &BX_CPU_C::LOAD_Wsd, &BX_CPU_C::CVTTSD2S
 bx_define_opcode(BX_IA_CVTSS2SI_GqWss, &BX_CPU_C::LOAD_Wss, &BX_CPU_C::CVTSS2SI_GqWssR, 0, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_CVTSD2SI_GqWsd, &BX_CPU_C::LOAD_Wsd, &BX_CPU_C::CVTSD2SI_GqWsdR, 0, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_MOVNTI_MqGq, &BX_CPU_C::MOV_EqGqM, &BX_CPU_C::BxError, 0, 0)
-bx_define_opcode(BX_IA_SYSCALL, NULL, &BX_CPU_C::SYSCALL, 0, 0)
-bx_define_opcode(BX_IA_SYSRET, NULL, &BX_CPU_C::SYSRET, 0, 0)
 bx_define_opcode(BX_IA_MOV_CR0Rq, NULL, &BX_CPU_C::MOV_CR0Rq, 0, 0)
 bx_define_opcode(BX_IA_MOV_CR2Rq, NULL, &BX_CPU_C::MOV_CR2Rq, 0, 0)
 bx_define_opcode(BX_IA_MOV_CR3Rq, NULL, &BX_CPU_C::MOV_CR3Rq, 0, 0)

@@ -86,6 +86,7 @@ Bit32u athlon64_clawhammer_t::get_isa_extensions_bitmask(void) const
          BX_CPU_P6 |
          BX_CPU_MMX |
          BX_CPU_3DNOW |
+         BX_CPU_SYSCALL_SYSRET |
          BX_CPU_SYSENTER_SYSEXIT |
          BX_CPU_CLFLUSH |
          BX_CPU_SSE |

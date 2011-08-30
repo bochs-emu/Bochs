@@ -904,7 +904,7 @@ public: // for now...
   Bit32u cr4_suppmask;
 #endif
 
-#if BX_CPU_LEVEL >= 6
+#if BX_CPU_LEVEL >= 5
   bx_efer_t efer;
   Bit32u efer_suppmask;
 
@@ -2019,6 +2019,9 @@ public: // for now...
   BX_SMF BX_INSF_TYPE PSWAPD_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
+  BX_SMF BX_INSF_TYPE SYSCALL(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE SYSRET(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   /* SSE */
   BX_SMF BX_INSF_TYPE FXSAVE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE FXRSTOR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3043,8 +3046,6 @@ public: // for now...
   BX_SMF BX_INSF_TYPE LGDT64_Ms(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE LIDT64_Ms(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF BX_INSF_TYPE SYSCALL(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE SYSRET(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE CMPXCHG16B(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF BX_INSF_TYPE SWAPGS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3514,7 +3515,7 @@ public: // for now...
 #if BX_SUPPORT_VMX >= 2
   BX_SMF bx_bool CheckPDPTR(Bit64u *pdptr) BX_CPP_AttrRegparmN(1);
 #endif
-#if BX_CPU_LEVEL >= 6
+#if BX_CPU_LEVEL >= 5
   BX_SMF bx_bool SetEFER(bx_address val) BX_CPP_AttrRegparmN(1);
 #endif
 

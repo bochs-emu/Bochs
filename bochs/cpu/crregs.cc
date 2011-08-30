@@ -1201,7 +1201,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR3(bx_address val)
   return 1;
 }
 
-#if BX_CPU_LEVEL >= 6
+#if BX_CPU_LEVEL >= 5
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetEFER(bx_address val_64)
 {
   if (val_64 & ~((Bit64u) BX_CPU_THIS_PTR efer_suppmask)) {

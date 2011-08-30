@@ -183,7 +183,7 @@ struct bx_dr7_t {
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
 };
 
-#if BX_CPU_LEVEL >= 6
+#if BX_CPU_LEVEL >= 5
 
 #define BX_EFER_SCE_MASK       (1 <<  0)
 #define BX_EFER_LME_MASK       (1 <<  8)
@@ -211,6 +211,10 @@ struct bx_efer_t {
   BX_CPP_INLINE Bit32u get32() const { return val32; }
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
 };
+
+#endif
+
+#if BX_CPU_LEVEL >= 6
 
 struct xcr0_t {
   Bit32u  val32; // 32bit value of register

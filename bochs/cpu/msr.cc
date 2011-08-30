@@ -206,7 +206,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 #endif
 
-#if BX_CPU_LEVEL >= 6
+#if BX_CPU_LEVEL >= 5
     case BX_MSR_EFER:
       if (! BX_CPU_THIS_PTR efer_suppmask)
         return 0;
@@ -585,7 +585,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       return 0;
 #endif
 
-#if BX_CPU_LEVEL >= 6
+#if BX_CPU_LEVEL >= 5
     case BX_MSR_EFER:
       if (! SetEFER(val_64)) return 0;
       break;
