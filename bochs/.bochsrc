@@ -93,6 +93,7 @@ romimage: file=$BXSHARE/BIOS-bochs-latest
 #  CPU configurations that can be selected:
 # -----------------------------------------------------------------
 #  pentium_mmx                Intel Pentium MMX
+#  amd_k6_2_chomper           AMD-K6(tm) 3D processor (Chomper)
 #  p2_klamath                 Intel Pentium II (Klamath)
 #  p3_katmai                  Intel Pentium III (Katmai)
 #  p4_willamette              Intel(R) Pentium(R) 4 (Willamette)
