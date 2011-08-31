@@ -174,9 +174,7 @@ void print_tree(bx_param_c *node, int level = 0);
 #define BX_TICKN(n)                 bx_pc_system.tickn(n)
 #define BX_INTR                     bx_pc_system.INTR
 #define BX_SET_INTR(b)              bx_pc_system.set_INTR(b)
-#define BX_CPU_C                    bx_cpu_c
-#define BX_MEM_C                    bx_mem_c
-#define BX_HRQ                      (bx_pc_system.HRQ)
+#define BX_HRQ                      bx_pc_system.HRQ
 
 #if BX_SUPPORT_SMP
 #define BX_CPU(x)                   (bx_cpu_array[x])

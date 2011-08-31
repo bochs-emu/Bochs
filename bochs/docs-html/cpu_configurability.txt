@@ -373,7 +373,7 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Enables CPUID[0x00000001].ECX[26] flag.
  Enables CPUID[0x00000001].ECX[27] flag (copy from CR4.OSXSAVE bit).
  Controls ability to set CR4[18] (OSXSAVE) bit.
- Enables CPUID[0x0000000D] leaf (MONITOR/MWAIT).
+ Enables CPUID[0x0000000D] leaf (XSAVE).
  Enables XCR0 register.
  Enables XSETBW/XGETBV/XSAVE/XRSTOR instructions (will #UD otherwise).
 
@@ -419,14 +419,14 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
 48. ISA Feature: SYSCALL/SYSRET
 
+ First introduced in AMD K6-2 processor.
  Enables CPUID[0x80000001].EDX[11] flag.
  Controls ability to set EFER.SCE bit.
- Enables MSR_STAR, MSR_LSTAR, MSR_CSTAR registers.
+ Enables MSR_STAR, MSR_LSTAR, MSR_CSTAR, MSR_FMASK registers (MSR_STAR is required for legacy mode, rest for long64 mode only)
  Enables SYSCALL/SYSRET instructions (will #UD otherwise).
  On Intel SYSCALL/SYSRET supported in long mode only, AMD allow protected mode as well.
- Bochs follow AMD implementation.
 
- Dependency: Long Mode, MSR
+ Dependency: MSR
 
 49. CPU Feature: NX
 
@@ -471,7 +471,6 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Controls setting of EFER.LMA (Long Mode Active) and EFER.LME (Long Mode Enabled) bits.
  Enables Long Mode with new registers, new instructions and new decoding scheme.
  Enables long mode MSR registers.
- Enables 48-bt linear addressing and CPUID[0x80000008].EAX (maximum linear and physical address width)
 
 55. ISA Feature: 3DNow! Ext
 
@@ -497,6 +496,7 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Enables CPUID[0x80000001].ECX[7] flag.
  Controls setting of MXCSR.MM bit.
  Enables misaligned SSE memory accesses without #GP fault.
+ Enables #AC exception checking on all SSE instruction that previously required alignment and caused #GO for misaligned access.
 
  Dependency: SSE
 
@@ -504,3 +504,4 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
  Enables CPUID[0x80000001].ECX[8] flag.
  Set if PREFETCHW implemented as real HW prefetch.
+ Uarch only. Has no effect for Bochs. 
