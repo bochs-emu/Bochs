@@ -370,4 +370,56 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GqEqR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+/* F3 0F BC */
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::TZCNT_GqEqR(bxInstruction_c *i)
+{
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u mask = 0x1, result_64 = 0;
+
+  while ((op1_64 & mask) == 0 && mask) {
+    mask <<= 1;
+    result_64++;
+  }
+
+  if (op1_64 == 0)
+    assert_CF();
+  else
+    clear_CF();
+
+  if (result_64 == 0)
+    assert_ZF();
+  else
+    clear_ZF();
+  
+  BX_WRITE_64BIT_REG(i->nnn(), result_64);
+
+  BX_NEXT_INSTR(i);
+}
+
+/* F3 0F BD */
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LZCNT_GqEqR(bxInstruction_c *i)
+{
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm()), result_64 = 0;
+  Bit64u mask = BX_CONST64(0x8000000000000000);
+
+  while ((op1_64 & mask) == 0 && mask) {
+    mask >>= 1;
+    result_64++;
+  }
+
+  if (op1_64 == 0)
+    assert_CF();
+  else
+    clear_CF();
+    
+  if (result_64 == 0)
+    assert_ZF();
+  else
+    clear_ZF();
+  
+  BX_WRITE_64BIT_REG(i->nnn(), result_64);
+
+  BX_NEXT_INSTR(i);
+}
+
 #endif // BX_SUPPORT_X86_64

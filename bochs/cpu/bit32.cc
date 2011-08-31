@@ -366,4 +366,56 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GdEdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+/* F3 0F BC */
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::TZCNT_GdEdR(bxInstruction_c *i)
+{
+  Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u mask = 0x1, result_32 = 0;
+
+  while ((op1_32 & mask) == 0 && mask) {
+    mask <<= 1;
+    result_32++;
+  }
+
+  if (op1_32 == 0)
+    assert_CF();
+  else
+    clear_CF();
+
+  if (result_32 == 0)
+    assert_ZF();
+  else
+    clear_ZF();
+  
+  BX_WRITE_32BIT_REGZ(i->nnn(), result_32);
+
+  BX_NEXT_INSTR(i);
+}
+
+/* F3 0F BD */
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LZCNT_GdEdR(bxInstruction_c *i)
+{
+  Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u mask = 0x80000000, result_32 = 0;
+
+  while ((op1_32 & mask) == 0 && mask) {
+    mask >>= 1;
+    result_32++;
+  }
+
+  if (op1_32 == 0)
+    assert_CF();
+  else
+    clear_CF();
+    
+  if (result_32 == 0)
+    assert_ZF();
+  else
+    clear_ZF();
+  
+  BX_WRITE_32BIT_REGZ(i->nnn(), result_32);
+
+  BX_NEXT_INSTR(i);
+}
+
 #endif // (BX_CPU_LEVEL >= 3)

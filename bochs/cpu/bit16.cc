@@ -361,4 +361,56 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GwEwR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+/* F3 0F BC */
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::TZCNT_GwEwR(bxInstruction_c *i)
+{
+  Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
+  Bit16u mask = 0x1, result_16 = 0;
+
+  while ((op1_16 & mask) == 0 && mask) {
+    mask <<= 1;
+    result_16++;
+  }
+
+  if (op1_16 == 0)
+    assert_CF();
+  else
+    clear_CF();
+    
+  if (result_16 == 0)
+    assert_ZF();
+  else
+    clear_ZF();
+  
+  BX_WRITE_16BIT_REG(i->nnn(), result_16);
+
+  BX_NEXT_INSTR(i);
+}
+
+/* F3 0F BD */
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LZCNT_GwEwR(bxInstruction_c *i)
+{
+  Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
+  Bit16u mask = 0x8000, result_16 = 0;
+
+  while ((op1_16 & mask) == 0 && mask) {
+    mask >>= 1;
+    result_16++;
+  }
+
+  if (op1_16 == 0)
+    assert_CF();
+  else
+    clear_CF();
+    
+  if (result_16 == 0)
+    assert_ZF();
+  else
+    clear_ZF();
+  
+  BX_WRITE_16BIT_REG(i->nnn(), result_16);
+
+  BX_NEXT_INSTR(i);
+}
+
 #endif // (BX_CPU_LEVEL >= 3)

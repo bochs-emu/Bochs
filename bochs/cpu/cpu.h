@@ -2662,6 +2662,20 @@ public: // for now...
   /* BMI */
 #endif
 
+  BX_SMF BX_INSF_TYPE LZCNT_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE LZCNT_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#if BX_SUPPORT_X86_64
+  BX_SMF BX_INSF_TYPE LZCNT_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
+
+  /* BMI - TZCNT */
+  BX_SMF BX_INSF_TYPE TZCNT_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE TZCNT_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#if BX_SUPPORT_X86_64
+  BX_SMF BX_INSF_TYPE TZCNT_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
+  /* BMI - TZCNT */
+
   BX_SMF BX_INSF_TYPE CMPXCHG8B(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE RETnear32_Iw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE RETnear32(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

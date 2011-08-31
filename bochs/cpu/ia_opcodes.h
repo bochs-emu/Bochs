@@ -1847,6 +1847,18 @@ bx_define_opcode(BX_IA_BLSR_BqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::BLSR_BqEqR, BX_
 bx_define_opcode(BX_IA_BEXTR_GqEqBq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::BEXTR_GqEqBqR, BX_CPU_BMI1, 0)
 // BMI1
 
+bx_define_opcode(BX_IA_TZCNT_GwEw, &BX_CPU_C::LOAD_Ew, &BX_CPU_C::TZCNT_GwEwR, BX_CPU_BMI1, 0)
+bx_define_opcode(BX_IA_TZCNT_GdEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::TZCNT_GdEdR, BX_CPU_BMI1, 0)
+#if BX_SUPPORT_X86_64
+bx_define_opcode(BX_IA_TZCNT_GqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::TZCNT_GqEqR, BX_CPU_BMI1, 0)
+#endif
+
+bx_define_opcode(BX_IA_LZCNT_GwEw, &BX_CPU_C::LOAD_Ew, &BX_CPU_C::LZCNT_GwEwR, BX_CPU_BMI1, 0)
+bx_define_opcode(BX_IA_LZCNT_GdEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::LZCNT_GdEdR, BX_CPU_BMI1, 0)
+#if BX_SUPPORT_X86_64
+bx_define_opcode(BX_IA_LZCNT_GqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::LZCNT_GqEqR, BX_CPU_BMI1, 0)
+#endif
+
 // BMI2
 bx_define_opcode(BX_IA_MULX_GdBdEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::MULX_GdBdEdR, BX_CPU_BMI2, 0)
 bx_define_opcode(BX_IA_RORX_GdEdIb, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::RORX_GdEdIbR, BX_CPU_BMI2, 0)
