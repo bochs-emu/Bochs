@@ -377,7 +377,7 @@ void bx_init_options()
       "Support for XSAVEOPT instruction",
       0);
 #if BX_SUPPORT_AVX
-  new bx_param_num_c(cpu_param,
+  new bx_param_num_c(cpuid_param,
       "avx", "Support for AVX instruction set",
       "Support for AVX instruction set",
       0, 2,

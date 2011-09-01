@@ -943,7 +943,7 @@ AC_ARG_ENABLE(fast-function-calls,
   )
 
 AC_MSG_CHECKING(for handlers chaining speedups)
-AC_ARG_ENABLE(handlers-chaining-speedups,
+AC_ARG_ENABLE(handlers-chaining,
   [  --enable-handlers-chaining        support handlers-chaining emulation speedups],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
