@@ -3776,6 +3776,10 @@ public: // for now...
 #if BX_CPU_LEVEL >= 5
   BX_SMF bx_address read_CR4(void);
 #endif
+#if BX_CPU_LEVEL >= 6
+  BX_SMF Bit32u ReadCR8(bxInstruction_c *i);
+  BX_SMF void WriteCR8(bxInstruction_c *i, bx_address val);
+#endif
 #if BX_SUPPORT_VMX
   BX_SMF Bit16u VMread16(unsigned encoding) BX_CPP_AttrRegparmN(1);
   BX_SMF Bit32u VMread32(unsigned encoding) BX_CPP_AttrRegparmN(1);

@@ -2134,11 +2134,16 @@ modrm_done:
 
   if (lock) { // lock prefix invalid opcode
     // lock prefix not allowed or destination operand is not memory
-    // mod == 0xc0 can't be BxLockable in fetchdecode tables
     if (!mod_mem || !(attr & BxLockable)) {
-      BX_INFO(("LOCK prefix unallowed (op1=0x%x, modrm=0x%02x)", b1, b2));
-      // replace execution function with undefined-opcode
-      ia_opcode = BX_IA_ERROR;
+      if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_ALT_MOV_CR8) && 
+         (ia_opcode == BX_IA_MOV_CR0Rq || ia_opcode == BX_IA_MOV_RqCR0)) {
+        i->setNnn(8); // extend CR0 -> CR8
+      }
+      else {
+        BX_INFO(("LOCK prefix unallowed (op1=0x%x, modrm=0x%02x)", b1, b2));
+        // replace execution function with undefined-opcode
+        ia_opcode = BX_IA_ERROR;
+      }
     }
   }
 

@@ -617,10 +617,10 @@ static const BxOpcodeInfo_t BxOpcodeTableAVX[256*3*2] = {
   /* 1D /0 */ { 0, BX_IA_ERROR },
   /* 1E /0 */ { 0, BX_IA_ERROR },
   /* 1F /0 */ { 0, BX_IA_ERROR },
-  /* 20 /0 */ { 0, BX_IA_ERROR },
-  /* 21 /0 */ { 0, BX_IA_ERROR },
-  /* 22 /0 */ { 0, BX_IA_ERROR },
-  /* 23 /0 */ { 0, BX_IA_ERROR },
+  /* 20 /0 */ { 0, BX_IA_ERROR }, // WARNING: ModC0 always '1
+  /* 21 /0 */ { 0, BX_IA_ERROR }, // WARNING: ModC0 always '1
+  /* 22 /0 */ { 0, BX_IA_ERROR }, // WARNING: ModC0 always '1
+  /* 23 /0 */ { 0, BX_IA_ERROR }, // WARNING: ModC0 always '1
   /* 24 /0 */ { 0, BX_IA_ERROR },
   /* 25 /0 */ { 0, BX_IA_ERROR },
   /* 26 /0 */ { 0, BX_IA_ERROR },
@@ -1391,10 +1391,10 @@ static const BxOpcodeInfo_t BxOpcodeTableAVX[256*3*2] = {
   /* 1D /1 */ { 0, BX_IA_ERROR },
   /* 1E /1 */ { 0, BX_IA_ERROR },
   /* 1F /1 */ { 0, BX_IA_ERROR },
-  /* 20 /1 */ { 0, BX_IA_ERROR },
-  /* 21 /1 */ { 0, BX_IA_ERROR },
-  /* 22 /1 */ { 0, BX_IA_ERROR },
-  /* 23 /1 */ { 0, BX_IA_ERROR },
+  /* 20 /1 */ { 0, BX_IA_ERROR }, // WARNING: ModC0 always '1
+  /* 21 /1 */ { 0, BX_IA_ERROR }, // WARNING: ModC0 always '1
+  /* 22 /1 */ { 0, BX_IA_ERROR }, // WARNING: ModC0 always '1
+  /* 23 /1 */ { 0, BX_IA_ERROR }, // WARNING: ModC0 always '1
   /* 24 /1 */ { 0, BX_IA_ERROR },
   /* 25 /1 */ { 0, BX_IA_ERROR },
   /* 26 /1 */ { 0, BX_IA_ERROR },

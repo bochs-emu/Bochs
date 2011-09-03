@@ -389,14 +389,24 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rd(bxInstruction_c *i)
   invalidate_prefetch_q();
 
   Bit32u val_32 = BX_READ_32BIT_REG(i->rm());
-#if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest)
-    val_32 = (Bit32u) VMexit_CR0_Write(i, val_32);
-#endif
-  if (! SetCR0(val_32))
-    exception(BX_GP_EXCEPTION, 0);
 
-  BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR0, val_32);
+  if (i->nnn() == 0) {
+    // CR0
+#if BX_SUPPORT_VMX
+    if (BX_CPU_THIS_PTR in_vmx_guest)
+      val_32 = (Bit32u) VMexit_CR0_Write(i, val_32);
+#endif
+    if (! SetCR0(val_32))
+      exception(BX_GP_EXCEPTION, 0);
+
+    BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR0, val_32);
+  }
+#if BX_CPU_LEVEL >= 6
+  else {
+    // AMD feature: LOCK CR0 allows CR8 access even in 32-bit mode
+    WriteCR8(i, val_32);
+  }
+#endif
 
   BX_NEXT_TRACE(i);
 }
@@ -481,7 +491,18 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR0(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit32u val_32 = (Bit32u) read_CR0(); /* correctly handle VMX */
+  Bit32u val_32 = 0;
+
+  if (i->nnn() == 0) {
+    // CR0
+    val_32 = (Bit32u) read_CR0(); /* correctly handle VMX */
+  }
+#if BX_CPU_LEVEL >= 6
+  else {
+    // AMD feature: LOCK CR0 allows CR8 access even in 32-bit mode
+    val_32 = ReadCR8(i);
+  }
+#endif
 
   BX_WRITE_32BIT_REGZ(i->rm(), val_32);
 
@@ -562,33 +583,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rq(bxInstruction_c *i)
     BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR0, (Bit32u) val_64);
   }
   else {
-    // CR8
-#if BX_SUPPORT_VMX
-    if (BX_CPU_THIS_PTR in_vmx_guest)
-      VMexit_CR8_Write(i);
-#endif
-
-    // CR8 is aliased to APIC->TASK PRIORITY register
-    //   APIC.TPR[7:4] = CR8[3:0]
-    //   APIC.TPR[3:0] = 0
-    // Reads of CR8 return zero extended APIC.TPR[7:4]
-    // Write to CR8 update APIC.TPR[7:4]
-#if BX_SUPPORT_APIC
-    if (val_64 & BX_CONST64(0xfffffffffffffff0)) {
-      BX_ERROR(("MOV_CqRq: Attempt to set reserved bits of CR8"));
-      exception(BX_GP_EXCEPTION, 0);
-    }
-
-#if BX_SUPPORT_VMX
-    if (BX_CPU_THIS_PTR in_vmx_guest && VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW)) {
-      VMX_Write_VTPR((val_64 & 0xF) << 4);
-    }
-    else
-#endif
-    {
-      BX_CPU_THIS_PTR lapic.set_tpr((val_64 & 0xF) << 4);
-    }
-#endif
+    WriteCR8(i, val_64);
   }
 
   BX_NEXT_TRACE(i);
@@ -671,13 +666,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rq(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR0(bxInstruction_c *i)
 {
-  // mov control register data to register
-  Bit64u val_64 = 0;
-
   if (CPL!=0) {
     BX_ERROR(("MOV_RqCq: #GP(0) if CPL is not 0"));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+  Bit64u val_64;
 
   if (i->nnn() == 0) {
     // CR0
@@ -685,26 +679,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR0(bxInstruction_c *i)
   }
   else {
     // CR8
-
-#if BX_SUPPORT_VMX
-    if (BX_CPU_THIS_PTR in_vmx_guest)
-      VMexit_CR8_Read(i);
-
-    if (BX_CPU_THIS_PTR in_vmx_guest && VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW)) {
-       val_64 = (VMX_Read_VTPR() >> 4) & 0xf;
-    }
-    else
-#endif
-    {
-      // CR8 is aliased to APIC->TASK PRIORITY register
-      //   APIC.TPR[7:4] = CR8[3:0]
-      //   APIC.TPR[3:0] = 0
-      // Reads of CR8 return zero extended APIC.TPR[7:4]
-      // Write to CR8 update APIC.TPR[7:4]
-#if BX_SUPPORT_APIC
-      val_64 = (BX_CPU_THIS_PTR lapic.get_tpr() >> 4) & 0xF;
-#endif
-    }
+    val_64 = ReadCR8(i);
   }
 
   BX_WRITE_64BIT_REG(i->rm(), val_64);
@@ -1226,6 +1201,65 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetEFER(bx_address val_64)
 
   return 1;
 }
+#endif
+
+#if BX_CPU_LEVEL >= 6
+void BX_CPU_C::WriteCR8(bxInstruction_c *i, bx_address val)
+{
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_CR8_Write(i);
+#endif
+
+  // CR8 is aliased to APIC->TASK PRIORITY register
+  //   APIC.TPR[7:4] = CR8[3:0]
+  //   APIC.TPR[3:0] = 0
+  // Reads of CR8 return zero extended APIC.TPR[7:4]
+  // Write to CR8 update APIC.TPR[7:4]
+#if BX_SUPPORT_APIC
+  if (val & BX_CONST64(0xfffffffffffffff0)) {
+    BX_ERROR(("WriteCR8: Attempt to set reserved bits of CR8"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest && VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW)) {
+    VMX_Write_VTPR((val & 0xf) << 4);
+  }
+  else
+#endif
+  {
+    BX_CPU_THIS_PTR lapic.set_tpr((val & 0xf) << 4);
+  }
+#endif // BX_SUPPORT_APIC
+}
+
+Bit32u BX_CPU_C::ReadCR8(bxInstruction_c *i)
+{
+  Bit32u tpr = 0;
+
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_CR8_Read(i);
+
+  if (BX_CPU_THIS_PTR in_vmx_guest && VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW)) {
+     tpr = (VMX_Read_VTPR() >> 4) & 0xf;
+  }
+  else
+#endif
+  {
+    // CR8 is aliased to APIC->TASK PRIORITY register
+    //   APIC.TPR[7:4] = CR8[3:0]
+    //   APIC.TPR[3:0] = 0
+    // Reads of CR8 return zero extended APIC.TPR[7:4]
+    // Write to CR8 update APIC.TPR[7:4]
+#if BX_SUPPORT_APIC
+    tpr = (BX_CPU_THIS_PTR lapic.get_tpr() >> 4) & 0xf;
+#endif
+  }
+
+  return tpr;
+}
+
 #endif
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
