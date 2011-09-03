@@ -2238,7 +2238,7 @@ modrm_done:
 #if BX_SUPPORT_AVX
       case BxImmediate_Ib4:
         if (remain != 0) {
-          i->modRMForm.Ib = (*iptr++) >> 4;
+          i->modRMForm.Ib = *iptr >> 4;
           remain--;
         }
         else {

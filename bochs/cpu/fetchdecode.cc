@@ -1285,8 +1285,8 @@ BX_CPU_C::fetchDecode32(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
   unsigned sse_prefix = SSE_PREFIX_NONE;
 
   int vvv = -1;
-  int had_vex = 0;
 #if BX_SUPPORT_AVX
+  int had_vex = 0;
   bx_bool vex_w = 0, vex_l = 0;
 #endif
 
@@ -1811,7 +1811,7 @@ modrm_done:
 #if BX_SUPPORT_AVX
       case BxImmediate_Ib4:
         if (remain != 0) {
-          i->modRMForm.Ib = ((*iptr++) >> 4) & 7;
+          i->modRMForm.Ib = (*iptr >> 4) & 7;
           remain--;
         }
         else {
