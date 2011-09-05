@@ -28,31 +28,38 @@ class bxInstruction_c;
 
 typedef void BX_INSF_TYPE;
 
-#if BX_DEBUGGER && BX_DISASM
-  // print the instruction that is about to be executed
-  #define BX_DEBUG_DISASM_INSTRUCTION() \
-      if (BX_CPU_THIS_PTR trace) { debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip); }
-#else
-  #define BX_DEBUG_DISASM_INSTRUCTION() /* do nothing */
-#endif
-
-#define BX_NEXT_TRACE(i) { return; }
+#define BX_TICK1_IF_SINGLE_PROCESSOR() \
+  if (BX_SMP_PROCESSORS == 1) BX_TICK1()
 
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
 
-#define BX_NEXT_INSTR(i) {                             \
+#define BX_COMMIT_INSTRUCTION(i) {                     \
   BX_CPU_THIS_PTR prev_rip = RIP; /* commit new RIP */ \
-  BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);              \
+  BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, (i));            \
   BX_TICK1_IF_SINGLE_PROCESSOR();                      \
+}
+
+#define BX_EXECUTE_INSTRUCTION(i) {                    \
+  BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, (i));           \
+  RIP += (i)->ilen();                                  \
+  return BX_CPU_CALL_METHOD(i->execute, (i));          \
+}
+
+#define BX_NEXT_TRACE(i) {                             \
+  BX_COMMIT_INSTRUCTION(i);                            \
+  return;                                              \
+}
+
+#define BX_NEXT_INSTR(i) {                             \
+  BX_COMMIT_INSTRUCTION(i);                            \
   if (BX_CPU_THIS_PTR async_event) return;             \
   ++i;                                                 \
-  BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);             \
-  RIP += i->ilen();                                    \
-  return BX_CPU_CALL_METHOD(i->execute, (i));          \
+  BX_EXECUTE_INSTRUCTION(i);                           \
 }
 
 #else
 
+#define BX_NEXT_TRACE(i) { return; }
 #define BX_NEXT_INSTR(i) { return; }
 
 #endif

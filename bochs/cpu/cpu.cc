@@ -75,7 +75,7 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 #endif
 
   if (setjmp(BX_CPU_THIS_PTR jmp_buf_env)) {
-    // only from exception function we can get here ...
+    // can get here only from exception function or VMEXIT
     BX_TICK1_IF_SINGLE_PROCESSOR();
 #if BX_DEBUGGER || BX_GDBSTUB
     if (dbg_instruction_epilog()) return;
@@ -115,13 +115,8 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
     bxICacheEntry_c *entry = getICacheEntry();
     bxInstruction_c *i = entry->i;
 
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS == 0
-    bxInstruction_c *last = i + (entry->tlen);
-#endif
-
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS 
     for(;;) {
-
-      BX_DEBUG_DISASM_INSTRUCTION();
 
       // want to allow changing of the instruction inside instrumentation callback
       BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
@@ -129,6 +124,27 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
       // when handlers chaining is enabled this single call will execute entire trace
       BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
 
+      if (BX_CPU_THIS_PTR async_event) {
+        // clear stop trace magic indication that probably was set by repeat or branch32/64
+        BX_CPU_THIS_PTR async_event &= ~BX_ASYNC_EVENT_STOP_TRACE;
+        break;
+      }
+
+      i = getICacheEntry()->i;
+    }
+#else // BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS == 0
+
+    bxInstruction_c *last = i + (entry->tlen);
+
+    for(;;) {
+
+      if (BX_CPU_THIS_PTR trace)
+        debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip);
+
+      // want to allow changing of the instruction inside instrumentation callback
+      BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
+      RIP += i->ilen();
+      BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
       BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
       BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
       BX_TICK1_IF_SINGLE_PROCESSOR();
@@ -146,17 +162,13 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
         break;
       }
 
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
-      entry = getICacheEntry();
-      i = entry->i;
-#else
       if (++i == last) {
         entry = getICacheEntry();
         i = entry->i;
         last = i + (entry->tlen);
       }
-#endif
     }
+#endif
   }  // while (1)
 }
 
@@ -725,7 +737,9 @@ void BX_CPU_C::prefetch(void)
        // The next instruction could already hit a code breakpoint but
        // async_event won't take effect immediatelly.
        // Check if the next executing instruction hits code breakpoint
-       if (code_breakpoint_match(laddr)) exception(BX_DB_EXCEPTION, 0);
+       if (RIP == BX_CPU_THIS_PTR prev_rip) { // if not fetching page cross instruction
+         if (code_breakpoint_match(laddr)) exception(BX_DB_EXCEPTION, 0);
+       }
     }
   }
   else {

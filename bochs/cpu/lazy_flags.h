@@ -249,6 +249,4 @@ typedef struct {
   SET_FLAGS_OSZAP_RESULT_SIZE(64, (result), BX_LF_INSTR_DEC64)
 #endif
 
-BOCHSAPI extern const Bit8u bx_parity_lookup[256];
-
 #endif // BX_LAZY_FLAGS_DEF

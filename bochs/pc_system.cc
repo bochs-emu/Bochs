@@ -287,8 +287,7 @@ int bx_pc_system_c::register_timer_ticks(void* this_ptr, bx_timer_handler_t func
 
   timer[i].inUse      = 1;
   timer[i].period     = ticks;
-  timer[i].timeToFire = (ticksTotal + Bit64u(currCountdownPeriod-currCountdown)) +
-                        ticks;
+  timer[i].timeToFire = (ticksTotal + Bit64u(currCountdownPeriod-currCountdown)) + ticks;
   timer[i].active     = active;
   timer[i].continuous = continuous;
   timer[i].funct      = funct;
@@ -474,8 +473,7 @@ void bx_pc_system_c::activate_timer_ticks(unsigned i, Bit64u ticks, bx_bool cont
   }
 
   timer[i].period = ticks;
-  timer[i].timeToFire = (ticksTotal + Bit64u(currCountdownPeriod-currCountdown)) +
-                        ticks;
+  timer[i].timeToFire = (ticksTotal + Bit64u(currCountdownPeriod-currCountdown)) + ticks;
   timer[i].active     = 1;
   timer[i].continuous = continuous;
 
