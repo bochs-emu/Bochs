@@ -1846,6 +1846,7 @@ void bx_vga_c::update(void)
   // if (BX_VGA_THIS s.vga_mem_updated==0 || BX_VGA_THIS s.attribute_ctrl.video_enabled == 0)
 
   if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
+    // Graphics mode
     Bit8u color;
     unsigned bit_no, r, c, x, y;
     unsigned long byte_offset, start_addr;
@@ -1869,7 +1870,7 @@ void bx_vga_c::update(void)
     }
 
     switch (BX_VGA_THIS s.graphics_ctrl.shift_reg) {
-      case 0:
+      case 0: // interleaved shift
         Bit8u attribute, palette_reg_val, DAC_regno;
         unsigned long line_compare;
         Bit8u *plane[4];
@@ -1943,7 +1944,7 @@ void bx_vga_c::update(void)
         break; // case 0
 
       case 1: // output the data in a CGA-compatible 320x200 4 color graphics
-              // mode.  (modes 4 & 5)
+              // mode.  (planar shift, modes 4 & 5)
 
         /* CGA 320x200x4 start */
 
@@ -1984,7 +1985,7 @@ void bx_vga_c::update(void)
               // (format for VGA mode 13 hex)
       case 3: // FIXME: is this really the same ???
 
-        if (BX_VGA_THIS s.sequencer.chain_four) {
+        if (BX_VGA_THIS s.CRTC.reg[0x14] & 0x40) { // DW set: doubleword mode
           unsigned long pixely, pixelx, plane;
 
           if (BX_VGA_THIS s.misc_output.select_high_bank != 1)
@@ -2010,9 +2011,7 @@ void bx_vga_c::update(void)
               }
             }
           }
-        }
-
-        else { // chain_four == 0, modeX
+        } else if (BX_VGA_THIS s.CRTC.reg[0x17] & 0x40) { // B/W set: byte mode, modeX
           unsigned long pixely, pixelx, plane;
 
           for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
@@ -2027,6 +2026,30 @@ void bx_vga_c::update(void)
                     byte_offset = (plane * 65536) +
                                   (pixely * BX_VGA_THIS s.line_offset)
                                   + (pixelx >> 2);
+                    color = BX_VGA_THIS s.memory[start_addr + byte_offset];
+                    BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
+                  }
+                }
+                SET_TILE_UPDATED (xti, yti, 0);
+                bx_gui->graphics_tile_update(BX_VGA_THIS s.tile, xc, yc);
+              }
+            }
+          }
+        } else { // word mode
+          unsigned long pixely, pixelx, plane;
+
+          for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+            for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
+              if (GET_TILE_UPDATED (xti, yti)) {
+                for (r=0; r<Y_TILESIZE; r++) {
+                  pixely = yc + r;
+                  if (BX_VGA_THIS s.y_doublescan) pixely >>= 1;
+                  for (c=0; c<X_TILESIZE; c++) {
+                    pixelx = (xc + c) >> 1;
+                    plane  = (pixelx % 4);
+                    byte_offset = (plane * 65536) +
+                                  (pixely * BX_VGA_THIS s.line_offset)
+                                  + ((pixelx >> 1) & ~0x01);
                     color = BX_VGA_THIS s.memory[start_addr + byte_offset];
                     BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
                   }
@@ -2829,10 +2852,12 @@ Bit32u bx_vga_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
           px = x >> 1;
           py = y >> BX_VGA_THIS s.y_doublescan;
           byte_offset = start_addr + py * BX_VGA_THIS s.line_offset;
-          if (BX_VGA_THIS s.sequencer.chain_four) {
+          if (BX_VGA_THIS s.CRTC.reg[0x14] & 0x40) { // DW set: doubleword mode
             byte_offset += (px & ~0x03);
-          } else {
+          } else if (BX_VGA_THIS s.CRTC.reg[0x17] & 0x40) { // B/W set: byte mode, modeX
             byte_offset += (px >> 2);
+          } else {
+            byte_offset += (px >> 1) & ~0x01;
           }
           *(dst_ptr++) = plane[px % 4][byte_offset];
         }
