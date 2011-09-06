@@ -737,7 +737,10 @@ void BX_CPU_C::prefetch(void)
        // The next instruction could already hit a code breakpoint but
        // async_event won't take effect immediatelly.
        // Check if the next executing instruction hits code breakpoint
-       if (RIP == BX_CPU_THIS_PTR prev_rip) { // if not fetching page cross instruction
+
+       // check only if not fetching page cross instruction
+       // this check is 32-bit wrap safe as well
+       if (EIP == (Bit32u) BX_CPU_THIS_PTR prev_rip) {
          if (code_breakpoint_match(laddr)) exception(BX_DB_EXCEPTION, 0);
        }
     }

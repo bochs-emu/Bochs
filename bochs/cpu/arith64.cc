@@ -566,7 +566,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_EqM(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_EqR(bxInstruction_c *i)
 {
   Bit64u rrx = --BX_READ_64BIT_REG(i->rm());
-  SET_FLAGS_OSZAPC_INC_64(rrx);
+  SET_FLAGS_OSZAPC_DEC_64(rrx);
 
   BX_NEXT_INSTR(i);
 }
