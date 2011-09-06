@@ -443,7 +443,7 @@ static const BxOpcodeInfo_t BxOpcodeInfoG7[64+8] = {
   /* 0F 01 F6 */ { BxTraceEnd, BX_IA_LMSW_Ew },
   /* 0F 01 F7 */ { BxTraceEnd, BX_IA_LMSW_Ew },
   /* 0F 01 F8 */ { 0, BX_IA_ERROR },
-  /* 0F 01 F9 */ { 0, BX_IA_RDTSCP },
+  /* 0F 01 F9 */ { BxTraceEnd, BX_IA_RDTSCP }, // end trace to avoid multiple TSC samples in one cycle
   /* 0F 01 FA */ { 0, BX_IA_ERROR },
   /* 0F 01 FB */ { 0, BX_IA_ERROR },
   /* 0F 01 FC */ { 0, BX_IA_ERROR },
@@ -522,7 +522,7 @@ static const BxOpcodeInfo_t BxOpcodeInfoG7q[64+8] = {
   /* 0F 01 F6 */ { BxTraceEnd, BX_IA_LMSW_Ew },
   /* 0F 01 F7 */ { BxTraceEnd, BX_IA_LMSW_Ew },
   /* 0F 01 F8 */ { 0, BX_IA_SWAPGS },
-  /* 0F 01 F9 */ { 0, BX_IA_RDTSCP },
+  /* 0F 01 F9 */ { BxTraceEnd, BX_IA_RDTSCP }, // end trace to avoid multiple TSC samples in one cycle
   /* 0F 01 FA */ { 0, BX_IA_ERROR },
   /* 0F 01 FB */ { 0, BX_IA_ERROR },
   /* 0F 01 FC */ { 0, BX_IA_ERROR },
