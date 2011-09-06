@@ -1985,4 +1985,19 @@ void BX_CPU_C::init_FetchDecodeTables(void)
       }
     }
   }
+
+  // handle special case - BSF/BSR vs TZCNT/LZCNT
+  if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_BMI1)) {
+    BxOpcodesTable[BX_IA_TZCNT_GwEw] = BxOpcodesTable[BX_IA_BSF_GwEw];
+    BxOpcodesTable[BX_IA_TZCNT_GdEd] = BxOpcodesTable[BX_IA_BSF_GdEd];
+#if BX_SUPPORT_X86_64
+    BxOpcodesTable[BX_IA_TZCNT_GqEq] = BxOpcodesTable[BX_IA_BSF_GqEq];
+#endif
+
+    BxOpcodesTable[BX_IA_LZCNT_GwEw] = BxOpcodesTable[BX_IA_BSR_GwEw];
+    BxOpcodesTable[BX_IA_LZCNT_GdEd] = BxOpcodesTable[BX_IA_BSR_GdEd];
+#if BX_SUPPORT_X86_64
+    BxOpcodesTable[BX_IA_LZCNT_GqEq] = BxOpcodesTable[BX_IA_BSR_GqEq];
+#endif
+  }
 }
