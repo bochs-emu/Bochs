@@ -77,6 +77,7 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
   if (setjmp(BX_CPU_THIS_PTR jmp_buf_env)) {
     // can get here only from exception function or VMEXIT
     BX_TICK1_IF_SINGLE_PROCESSOR();
+    BX_SYNC_TIME();
 #if BX_DEBUGGER || BX_GDBSTUB
     if (dbg_instruction_epilog()) return;
 #endif
@@ -123,6 +124,8 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
       RIP += i->ilen();
       // when handlers chaining is enabled this single call will execute entire trace
       BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
+
+      BX_SYNC_TIME();
 
       if (BX_CPU_THIS_PTR async_event) {
         // clear stop trace magic indication that probably was set by repeat or branch32/64
@@ -226,6 +229,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxRepIterationP
         break; // exit always if debugger enabled
 
       BX_TICK1_IF_SINGLE_PROCESSOR();
+      BX_SYNC_TIME();
     }
   }
   else
@@ -245,6 +249,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxRepIterationP
         break; // exit always if debugger enabled
 
       BX_TICK1_IF_SINGLE_PROCESSOR();
+      BX_SYNC_TIME();
     }
   }
   else  // 16bit addrsize
@@ -263,6 +268,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxRepIterationP
         break; // exit always if debugger enabled
 
       BX_TICK1_IF_SINGLE_PROCESSOR();
+      BX_SYNC_TIME();
     }
   }
 
@@ -307,6 +313,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
           break; // exit always if debugger enabled
 
         BX_TICK1_IF_SINGLE_PROCESSOR();
+        BX_SYNC_TIME();
       }
     }
     else
@@ -326,6 +333,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
           break; // exit always if debugger enabled
 
         BX_TICK1_IF_SINGLE_PROCESSOR();
+        BX_SYNC_TIME();
       }
     }
     else  // 16bit addrsize
@@ -344,6 +352,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
           break; // exit always if debugger enabled
 
         BX_TICK1_IF_SINGLE_PROCESSOR();
+        BX_SYNC_TIME();
       }
     }
   }
@@ -364,6 +373,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
           break; // exit always if debugger enabled
 
         BX_TICK1_IF_SINGLE_PROCESSOR();
+        BX_SYNC_TIME();
       }
     }
     else
@@ -383,6 +393,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
           break; // exit always if debugger enabled
 
         BX_TICK1_IF_SINGLE_PROCESSOR();
+        BX_SYNC_TIME();
       }
     }
     else  // 16bit addrsize
@@ -401,6 +412,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
           break; // exit always if debugger enabled
 
         BX_TICK1_IF_SINGLE_PROCESSOR();
+        BX_SYNC_TIME();
       }
     }
   }

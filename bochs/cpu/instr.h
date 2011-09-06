@@ -28,10 +28,18 @@ class bxInstruction_c;
 
 typedef void BX_INSF_TYPE;
 
-#define BX_TICK1_IF_SINGLE_PROCESSOR() \
-  if (BX_SMP_PROCESSORS == 1) BX_TICK1()
-
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+
+#define BX_TICK1_IF_SINGLE_PROCESSOR() \
+  BX_CPU_THIS_PTR icount++;
+
+#define BX_SYNC_TIME() {                                                    \
+  Bit32s delta = BX_CPU_THIS_PTR icount - BX_CPU_THIS_PTR icount_last_sync; \
+  if (delta > 0) {                                                          \
+    BX_CPU_THIS_PTR icount_last_sync = BX_CPU_THIS_PTR icount;              \
+    BX_TICKN(delta);                                                        \
+  }                                                                         \
+}
 
 #define BX_COMMIT_INSTRUCTION(i) {                     \
   BX_CPU_THIS_PTR prev_rip = RIP; /* commit new RIP */ \
@@ -61,6 +69,11 @@ typedef void BX_INSF_TYPE;
 
 #define BX_NEXT_TRACE(i) { return; }
 #define BX_NEXT_INSTR(i) { return; }
+
+#define BX_TICK1_IF_SINGLE_PROCESSOR() \
+  if (BX_SMP_PROCESSORS == 1) BX_TICK1()
+
+#define BX_SYNC_TIME() /* do nothing */
 
 #endif
 

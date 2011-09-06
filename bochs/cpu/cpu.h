@@ -858,8 +858,11 @@ public: // for now...
   bx_address prev_rsp;
   bx_bool    speculative_rsp;
 
-#if BX_DEBUGGER
+#if BX_DEBUGGER || BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
   Bit64u icount;
+#endif
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+  Bit64u icount_last_sync;
 #endif
 
 #define BX_INHIBIT_INTERRUPTS        0x01
@@ -3667,7 +3670,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_rdtscp(void);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
-#if BX_DEBUGGER
+#if BX_DEBUGGER || BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
   BX_SMF BX_CPP_INLINE Bit64u get_icount(void) { return BX_CPU_THIS_PTR icount; }
 #endif
   BX_SMF BX_CPP_INLINE const bx_gen_reg_t *get_gen_regfile() { return BX_CPU_THIS_PTR gen_reg; }

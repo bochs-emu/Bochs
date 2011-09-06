@@ -480,6 +480,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
     RAX = GET32L(ticks);
     RDX = GET32H(ticks);
 
+    BX_DEBUG(("RDTSC: ticks 0x%08x:%08x", EDX, EAX));
+
   } else {
     BX_ERROR(("RDTSC: not allowed to use instruction !"));
     exception(BX_GP_EXCEPTION, 0);
