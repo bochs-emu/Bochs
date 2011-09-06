@@ -39,10 +39,10 @@ corei7_sandy_bridge_2600k_t::corei7_sandy_bridge_2600k_t(BX_CPU_C *cpu): bx_cpui
 #endif
 
   if (! BX_SUPPORT_X86_64)
-    BX_PANIC(("You must enable x86-64 for Intel Core2 Sandy Bridge configuration"));
+    BX_PANIC(("You must enable x86-64 for Intel Core i7 Sandy Bridge configuration"));
 
   if (! BX_SUPPORT_AVX)
-    BX_PANIC(("You must enable AVX for Intel Core2 Sandy Bridge configuration"));
+    BX_PANIC(("You must enable AVX for Intel Core i7 Sandy Bridge configuration"));
 
   BX_INFO(("WARNING: TSC deadline is not implemented yet"));
 }
