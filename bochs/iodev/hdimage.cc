@@ -382,6 +382,7 @@ sparse_image_t::sparse_image_t ()
   mmap_header = NULL;
 #endif
   pagetable = NULL;
+  parent_image = NULL;
 }
 
 /*
