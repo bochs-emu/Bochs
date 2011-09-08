@@ -117,9 +117,9 @@
 #define htod64(val) (val)
 #define dtoh64(val) (val)
 #else
-#define htod32(val) ( (((val)&0xff000000)>>24) | (((val)&0xff0000)>>8) | (((val)&0xff00)<<8) | (((val)&0xff)<<24) )
+#define htod32(val) bx_bswap32(val)
 #define dtoh32(val) htod32(val)
-#define htod64(val) ( (((val)&0xff00000000000000LL)>>56) | (((val)&0xff000000000000LL)>>40) | (((val)&0xff0000000000LL)>>24) | (((val)&0xff00000000LL)>>8) | (((val)&0xff000000LL)<<8) | (((val)&0xff0000LL)<<24) | (((val)&0xff00LL)<<40) | (((val)&0xffLL)<<56) )
+#define htod64(val) bx_bswap64(val)
 #define dtoh64(val) htod64(val)
 #endif
 
