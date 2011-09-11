@@ -7367,15 +7367,6 @@ If unspecified, the default "mode" is flat.
 </table>
 </para>
 
-<!--
-<note>
-<para>
-z-undoable and z-volatile modes are only available if the "- -enable-compressed-hd" parameter
-was set at compile time.
-</para>
-</note>
--->
-
 <section id="harddisk-mode-flat"><title>flat</title>
 <para>
 </para>
@@ -8034,65 +8025,6 @@ The flat disk images must be created with the bximage utility
 </section>
 -->
 
-<!--
-<section><title>z-undoable</title>
-<para>
-</para>
-<section><title>description</title>
-<para>
-</para>
-</section>
-<section><title>image creation</title>
-<para>
-</para>
-</section>
-<section><title>path</title>
-<para>
-</para>
-</section>
-<section><title>external tools</title>
-<para>
-</para>
-</section>
-<section><title>typical use</title>
-<para>
-</para>
-</section>
-<section><title>limitations</title>
-<para>
-</para>
-</section>
-</section>
-
-<section><title>z-volatile</title>
-<para>
-</para>
-<section><title>description</title>
-<para>
-</para>
-</section>
-<section><title>image creation</title>
-<para>
-</para>
-</section>
-<section><title>path</title>
-<para>
-</para>
-</section>
-<section><title>external tools</title>
-<para>
-</para>
-</section>
-<section><title>typical use</title>
-<para>
-</para>
-</section>
-<section><title>limitations</title>
-<para>
-</para>
-</section>
-</section>
--->
 
 </section>
 
@@ -8134,10 +8066,6 @@ This tool can commit redologs into flat images.
 </para>
 <para>
 For now, only "undoable" redologs to flat image commits are supported.
-<!--
-"z-undoable" redologs can also be used, but you have to manually
-decompress the gzipped flat file before using bxcommit.
--->
 Sparse disk image commits may be added in the future.
 </para>
 <para>

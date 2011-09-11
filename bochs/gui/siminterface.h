@@ -519,8 +519,6 @@ enum {
   BX_HDIMAGE_MODE_UNDOABLE,
   BX_HDIMAGE_MODE_GROWING,
   BX_HDIMAGE_MODE_VOLATILE,
-  BX_HDIMAGE_MODE_Z_UNDOABLE,
-  BX_HDIMAGE_MODE_Z_VOLATILE,
   BX_HDIMAGE_MODE_VVFAT
 };
 #define BX_HDIMAGE_MODE_LAST     BX_HDIMAGE_MODE_VVFAT
@@ -569,7 +567,7 @@ enum ci_command_t { CI_START, CI_RUNTIME_CONFIG, CI_SHUTDOWN };
 enum ci_return_t {
   CI_OK,                  // normal return value
   CI_ERR_NO_TEXT_CONSOLE  // err: can't work because there's no text console
-  };
+};
 typedef int (*config_interface_callback_t)(void *userdata, ci_command_t command);
 typedef BxEvent* (*bxevent_handler)(void *theclass, BxEvent *event);
 typedef void (*rt_conf_handler_t)(void *this_ptr);

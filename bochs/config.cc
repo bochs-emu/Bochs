@@ -2426,10 +2426,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         if (type < 0) {
           PARSE_ERR(("%s: ataX-master/slave: unknown type '%s'", context, &params[i][5]));
         }
-      } else if (!strcmp(params[i], "mode=z-undoable")) {
-        PARSE_ERR(("%s: ataX-master/slave mode 'z-undoable' not implemented yet", context));
-      } else if (!strcmp(params[i], "mode=z-volatile")) {
-        PARSE_ERR(("%s: ataX-master/slave mode 'z-volatile' not implemented yet", context));
       } else if (!strncmp(params[i], "mode=", 5)) {
         mode = SIM->get_param_enum("mode", base)->find_by_name(&params[i][5]);
         if (mode < 0) {

@@ -491,17 +491,13 @@ const char *hdimage_mode_names[] = {
   "undoable",
   "growing",
   "volatile",
-  "z-undoable",
-  "z-volatile",
   "vvfat",
   NULL
 };
 
 int bx_real_sim_c::hdimage_get_mode(const char *mode)
 {
-  Bit8u i;
-
-  for (i = 0; i <= BX_HDIMAGE_MODE_LAST; i++) {
+  for (int i = 0; i <= BX_HDIMAGE_MODE_LAST; i++) {
     if (!strcmp(mode, hdimage_mode_names[i])) return i;
   }
   return -1;
