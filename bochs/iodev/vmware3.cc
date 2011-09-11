@@ -106,11 +106,10 @@ int vmware3_image_t::write_header(int fd, COW_Header & hostHeader)
 
 int vmware3_image_t::read_ints(int fd, Bit32u *buffer, size_t count)
 {
-    int res;
     size_t i;
     Bit32u *p;
 
-    res=::read(fd, (void*)buffer, count * 4);
+    int res=::read(fd, (void*)buffer, count * 4);
     for (p = buffer, i=0; i<count; p++, i++)
       *p=dtoh32(*p);
 
@@ -119,14 +118,13 @@ int vmware3_image_t::read_ints(int fd, Bit32u *buffer, size_t count)
 
 int vmware3_image_t::write_ints(int fd, Bit32u *buffer, size_t count)
 {
-    int res;
     size_t i;
     Bit32u *p;
 
     for (p = buffer, i=0; i<count; p++, i++)
       *p=htod32(*p);
 
-    res=::write(fd, (void*)buffer, count * 4);
+    int res=::write(fd, (void*)buffer, count * 4);
 
     for (p = buffer, i=0; i<count; p++, i++)
       *p=dtoh32(*p);
@@ -136,8 +134,7 @@ int vmware3_image_t::write_ints(int fd, Bit32u *buffer, size_t count)
 
 bool vmware3_image_t::is_valid_header(COW_Header & header)
 {
-    if(header.id[0] != 'C' || header.id[1] != 'O' || header.id[2] != 'W' ||
-            header.id[3] != 'D')
+    if(header.id[0] != 'C' || header.id[1] != 'O' || header.id[2] != 'W' || header.id[3] != 'D')
     {
         BX_DEBUG(("not a vmware3 COW disk"));
         return false;
@@ -279,7 +276,7 @@ int vmware3_image_t::open(const char * pathname)
         current->max_offset = offset;
 
         current->offset = INVALID_OFFSET;
-		current->synced = true;
+        current->synced = true;
         delete[] filename;
     }
     current = &images[0];
@@ -301,30 +298,30 @@ int vmware3_image_t::open(const char * pathname)
 
 off_t vmware3_image_t::perform_seek()
 {
-	if(requested_offset < current->min_offset || requested_offset >= current->max_offset)
-	{
-		if(!sync())
-		{
-			BX_DEBUG(("could not sync before switching vmware3 COW files"));
-			return INVALID_OFFSET;
-		}
+    if(requested_offset < current->min_offset || requested_offset >= current->max_offset)
+    {
+        if(!sync())
+        {
+            BX_DEBUG(("could not sync before switching vmware3 COW files"));
+            return INVALID_OFFSET;
+        }
 
-	    while(requested_offset < current->min_offset)
-    	    current = &images[current->header.chain_id - 1];
+        while(requested_offset < current->min_offset)
+            current = &images[current->header.chain_id - 1];
 
-	    while(requested_offset >= current->max_offset)
-    	    current = &images[current->header.chain_id + 1];
-	}
+        while(requested_offset >= current->max_offset)
+            current = &images[current->header.chain_id + 1];
+    }
 
     if(current->offset != INVALID_OFFSET && requested_offset >= current->offset
             && requested_offset < current->offset + tlb_size)
         return (requested_offset - current->offset);
 
-	if(!sync())
-	{
-		BX_DEBUG(("could not sync before seeking vmware3 COW file"));
-		return INVALID_OFFSET;
-	}
+    if(!sync())
+    {
+        BX_DEBUG(("could not sync before seeking vmware3 COW file"));
+        return INVALID_OFFSET;
+    }
 
     unsigned relative_offset = (unsigned)(requested_offset - current->min_offset);
     unsigned i = relative_offset >> FL_SHIFT;
@@ -343,8 +340,7 @@ off_t vmware3_image_t::perform_seek()
             return INVALID_OFFSET;
         }
     }
-    else
-        memset(current->tlb, 0, tlb_size);
+    else memset(current->tlb, 0, tlb_size);
 
     current->offset = (requested_offset / tlb_size) * tlb_size;
     return (requested_offset - current->offset);
@@ -378,8 +374,8 @@ ssize_t vmware3_image_t::read(void * buf, size_t count)
  */
 bool vmware3_image_t::sync()
 {
-	if(current->synced)
-		return true;
+    if(current->synced)
+        return true;
 
     unsigned relative_offset = (unsigned)(current->offset - current->min_offset);
     unsigned i = relative_offset >> FL_SHIFT;
@@ -442,7 +438,7 @@ bool vmware3_image_t::sync()
         BX_DEBUG(("could not write tlb to vmware3 COW image on sync"));
         return false;
     }
-	current->synced = true;
+    current->synced = true;
     return true;
 }
 
@@ -456,7 +452,7 @@ ssize_t vmware3_image_t::write(const void * buf, size_t count)
             return -1;
         unsigned bytes_remaining = (unsigned)(tlb_size - offset);
         unsigned amount = 0;
-		current->synced = false;
+        current->synced = false;
         if(bytes_remaining > count)
         {
             memcpy(current->tlb + offset, buf, count);
