@@ -26,29 +26,28 @@
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_RX(bxInstruction_c *i)
 {
-  Bit16u rx = ++BX_READ_16BIT_REG(i->rm());
-  SET_FLAGS_OSZAPC_INC_16(rx);
+  Bit32u rx = ++BX_READ_16BIT_REG(i->rm());
+  SET_FLAGS_OSZAP_ADD_16(rx - 1, 0, rx);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_RX(bxInstruction_c *i)
 {
-  Bit16u rx = --BX_READ_16BIT_REG(i->rm());
-  SET_FLAGS_OSZAPC_DEC_16(rx);
+  Bit32u rx = --BX_READ_16BIT_REG(i->rm());
+  SET_FLAGS_OSZAP_SUB_16(rx + 1, 0, rx);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EwGwM(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, sum_16;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
-  op2_16 = BX_READ_16BIT_REG(i->nnn());
-  sum_16 = op1_16 + op2_16;
+  Bit32u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  Bit32u op2_16 = BX_READ_16BIT_REG(i->nnn());
+  Bit32u sum_16 = op1_16 + op2_16;
+
   write_RMW_virtual_word(sum_16);
 
   SET_FLAGS_OSZAPC_ADD_16(op1_16, op2_16, sum_16);
@@ -58,11 +57,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EwGwM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_GwEwR(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, sum_16;
-
-  op1_16 = BX_READ_16BIT_REG(i->nnn());
-  op2_16 = BX_READ_16BIT_REG(i->rm());
-  sum_16 = op1_16 + op2_16;
+  Bit32u op1_16 = BX_READ_16BIT_REG(i->nnn());
+  Bit32u op2_16 = BX_READ_16BIT_REG(i->rm());
+  Bit32u sum_16 = op1_16 + op2_16;
 
   BX_WRITE_16BIT_REG(i->nnn(), sum_16);
 
@@ -73,11 +70,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_GwEwR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_AXIw(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, sum_16;
+  Bit32u op1_16 = AX;
+  Bit32u op2_16 = i->Iw();
+  Bit32u sum_16 = op1_16 + op2_16;
 
-  op1_16 = AX;
-  op2_16 = i->Iw();
-  sum_16 = op1_16 + op2_16;
   AX = sum_16;
 
   SET_FLAGS_OSZAPC_ADD_16(op1_16, op2_16, sum_16);
@@ -87,137 +83,122 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_AXIw(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EwGwM(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, sum_16;
-  bx_bool temp_CF = getB_CF();
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
-  op2_16 = BX_READ_16BIT_REG(i->nnn());
-  sum_16 = op1_16 + op2_16 + temp_CF;
+  Bit32u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  Bit32u op2_16 = BX_READ_16BIT_REG(i->nnn());
+  Bit32u sum_16 = op1_16 + op2_16 + getB_CF();
+
   write_RMW_virtual_word(sum_16);
 
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_LF_INSTR_ADD_ADC16(temp_CF));
+  SET_FLAGS_OSZAPC_ADD_16(op1_16, op2_16, sum_16);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_GwEwR(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, sum_16;
-  bx_bool temp_CF = getB_CF();
+  Bit32u op1_16 = BX_READ_16BIT_REG(i->nnn());
+  Bit32u op2_16 = BX_READ_16BIT_REG(i->rm());
+  Bit32u sum_16 = op1_16 + op2_16 + getB_CF();
 
-  op1_16 = BX_READ_16BIT_REG(i->nnn());
-  op2_16 = BX_READ_16BIT_REG(i->rm());
-  sum_16 = op1_16 + op2_16 + temp_CF;
   BX_WRITE_16BIT_REG(i->nnn(), sum_16);
 
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_LF_INSTR_ADD_ADC16(temp_CF));
+  SET_FLAGS_OSZAPC_ADD_16(op1_16, op2_16, sum_16);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_AXIw(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, sum_16;
-  bx_bool temp_CF = getB_CF();
+  Bit32u op1_16 = AX;
+  Bit32u op2_16 = i->Iw();
+  Bit32u sum_16 = op1_16 + op2_16 + getB_CF();
 
-  op1_16 = AX;
-  op2_16 = i->Iw();
-  sum_16 = op1_16 + op2_16 + temp_CF;
   AX = sum_16;
 
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_LF_INSTR_ADD_ADC16(temp_CF));
+  SET_FLAGS_OSZAPC_ADD_16(op1_16, op2_16, sum_16);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EwGwM(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, diff_16;
-  bx_bool temp_CF = getB_CF();
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
-  op2_16 = BX_READ_16BIT_REG(i->nnn());
-  diff_16 = op1_16 - (op2_16 + temp_CF);
+  Bit32u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  Bit32u op2_16 = BX_READ_16BIT_REG(i->nnn());
+  Bit32u diff_16 = op1_16 - (op2_16 + getB_CF());
+
   write_RMW_virtual_word(diff_16);
 
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_LF_INSTR_SUB_SBB16(temp_CF));
+  SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_GwEwR(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, diff_16;
-  bx_bool temp_CF = getB_CF();
+  Bit32u op1_16 = BX_READ_16BIT_REG(i->nnn());
+  Bit32u op2_16 = BX_READ_16BIT_REG(i->rm());
+  Bit32u diff_16 = op1_16 - (op2_16 + getB_CF());
 
-  op1_16 = BX_READ_16BIT_REG(i->nnn());
-  op2_16 = BX_READ_16BIT_REG(i->rm());
-  diff_16 = op1_16 - (op2_16 + temp_CF);
   BX_WRITE_16BIT_REG(i->nnn(), diff_16);
 
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_LF_INSTR_SUB_SBB16(temp_CF));
+  SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_AXIw(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
-  Bit16u op1_16, op2_16, diff_16;
+  Bit32u op1_16 = AX;
+  Bit32u op2_16 = i->Iw();
+  Bit32u diff_16 = op1_16 - (op2_16 + getB_CF());
 
-  op1_16 = AX;
-  op2_16 = i->Iw();
-  diff_16 = op1_16 - (op2_16 + temp_CF);
   AX = diff_16;
 
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_LF_INSTR_SUB_SBB16(temp_CF));
+  SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EwIwM(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
-  Bit16u op1_16, op2_16 = i->Iw(), diff_16;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
-  diff_16 = op1_16 - (op2_16 + temp_CF);
+  Bit32u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  Bit32u op2_16 = i->Iw();
+  Bit32u diff_16 = op1_16 - (op2_16 + getB_CF());
+
   write_RMW_virtual_word(diff_16);
 
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_LF_INSTR_SUB_SBB16(temp_CF));
+  SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EwIwR(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
-  Bit16u op1_16, op2_16 = i->Iw(), diff_16;
+  Bit32u op1_16 = BX_READ_16BIT_REG(i->rm());
+  Bit32u op2_16 = i->Iw();
+  Bit32u diff_16 = op1_16 - (op2_16 + getB_CF());
 
-  op1_16 = BX_READ_16BIT_REG(i->rm());
-  diff_16 = op1_16 - (op2_16 + temp_CF);
   BX_WRITE_16BIT_REG(i->rm(), diff_16);
 
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_LF_INSTR_SUB_SBB16(temp_CF));
+  SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EwGwM(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, diff_16;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
-  op2_16 = BX_READ_16BIT_REG(i->nnn());
-  diff_16 = op1_16 - op2_16;
+  Bit32u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  Bit32u op2_16 = BX_READ_16BIT_REG(i->nnn());
+  Bit32u diff_16 = op1_16 - op2_16;
+
   write_RMW_virtual_word(diff_16);
 
   SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
@@ -227,11 +208,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EwGwM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_GwEwR(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, diff_16;
+  Bit32u op1_16 = BX_READ_16BIT_REG(i->nnn());
+  Bit32u op2_16 = BX_READ_16BIT_REG(i->rm());
+  Bit32u diff_16 = op1_16 - op2_16;
 
-  op1_16 = BX_READ_16BIT_REG(i->nnn());
-  op2_16 = BX_READ_16BIT_REG(i->rm());
-  diff_16 = op1_16 - op2_16;
   BX_WRITE_16BIT_REG(i->nnn(), diff_16);
 
   SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
@@ -241,11 +221,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_GwEwR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_AXIw(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, diff_16;
+  Bit32u op1_16 = AX;
+  Bit32u op2_16 = i->Iw();
+  Bit32u diff_16 = op1_16 - op2_16;
 
-  op1_16 = AX;
-  op2_16 = i->Iw();
-  diff_16 = op1_16 - op2_16;
   AX = diff_16;
 
   SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
@@ -255,13 +234,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_AXIw(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CMP_EwGwM(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, diff_16;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_16 = read_virtual_word(i->seg(), eaddr);
-  op2_16 = BX_READ_16BIT_REG(i->nnn());
-  diff_16 = op1_16 - op2_16;
+  Bit32u op1_16 = read_virtual_word(i->seg(), eaddr);
+  Bit32u op2_16 = BX_READ_16BIT_REG(i->nnn());
+  Bit32u diff_16 = op1_16 - op2_16;
 
   SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
 
@@ -270,11 +247,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CMP_EwGwM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CMP_GwEwR(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, diff_16;
-
-  op1_16 = BX_READ_16BIT_REG(i->nnn());
-  op2_16 = BX_READ_16BIT_REG(i->rm());
-  diff_16 = op1_16 - op2_16;
+  Bit32u op1_16 = BX_READ_16BIT_REG(i->nnn());
+  Bit32u op2_16 = BX_READ_16BIT_REG(i->rm());
+  Bit32u diff_16 = op1_16 - op2_16;
 
   SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
 
@@ -283,11 +258,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CMP_GwEwR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CMP_AXIw(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, diff_16;
-
-  op1_16 = AX;
-  op2_16 = i->Iw();
-  diff_16 = op1_16 - op2_16;
+  Bit32u op1_16 = AX;
+  Bit32u op2_16 = i->Iw();
+  Bit32u diff_16 = op1_16 - op2_16;
 
   SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
 
@@ -317,8 +290,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CWD(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XADD_EwGwM(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, sum_16;
-
   /* XADD dst(r/m), src(r)
    * temp <-- src + dst         | sum = op2 + op1
    * src  <-- dst               | op2 = op1
@@ -327,9 +298,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XADD_EwGwM(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
-  op2_16 = BX_READ_16BIT_REG(i->nnn());
-  sum_16 = op1_16 + op2_16;
+  Bit32u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  Bit32u op2_16 = BX_READ_16BIT_REG(i->nnn());
+  Bit32u sum_16 = op1_16 + op2_16;
+
   write_RMW_virtual_word(sum_16);
 
   /* and write destination into source */
@@ -342,17 +314,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XADD_EwGwM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XADD_EwGwR(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, sum_16;
-
   /* XADD dst(r/m), src(r)
    * temp <-- src + dst         | sum = op2 + op1
    * src  <-- dst               | op2 = op1
    * dst  <-- tmp               | op1 = sum
    */
 
-  op1_16 = BX_READ_16BIT_REG(i->rm());
-  op2_16 = BX_READ_16BIT_REG(i->nnn());
-  sum_16 = op1_16 + op2_16;
+  Bit32u op1_16 = BX_READ_16BIT_REG(i->rm());
+  Bit32u op2_16 = BX_READ_16BIT_REG(i->nnn());
+  Bit32u sum_16 = op1_16 + op2_16;
 
   // and write destination into source
   // Note: if both op1 & op2 are registers, the last one written
@@ -368,12 +338,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XADD_EwGwR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EwIwM(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16 = i->Iw(), sum_16;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
-  sum_16 = op1_16 + op2_16;
+  Bit32u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  Bit32u op2_16 = i->Iw();
+  Bit32u sum_16 = op1_16 + op2_16;
+
   write_RMW_virtual_word(sum_16);
 
   SET_FLAGS_OSZAPC_ADD_16(op1_16, op2_16, sum_16);
@@ -383,10 +353,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EwIwM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EwIwR(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16 = i->Iw(), sum_16;
-
-  op1_16 = BX_READ_16BIT_REG(i->rm());
-  sum_16 = op1_16 + op2_16;
+  Bit32u op1_16 = BX_READ_16BIT_REG(i->rm());
+  Bit32u op2_16 = i->Iw();
+  Bit32u sum_16 = op1_16 + op2_16;
   BX_WRITE_16BIT_REG(i->rm(), sum_16);
 
   SET_FLAGS_OSZAPC_ADD_16(op1_16, op2_16, sum_16);
@@ -396,42 +365,40 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EwIwR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EwIwM(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
-  Bit16u op1_16, op2_16 = i->Iw(), sum_16;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
-  sum_16 = op1_16 + op2_16 + temp_CF;
+  Bit32u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  Bit32u op2_16 = i->Iw();
+  Bit32u sum_16 = op1_16 + op2_16 + getB_CF();
+
   write_RMW_virtual_word(sum_16);
 
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_LF_INSTR_ADD_ADC16(temp_CF));
+  SET_FLAGS_OSZAPC_ADD_16(op1_16, op2_16, sum_16);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EwIwR(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
-  Bit16u op1_16, op2_16 = i->Iw(), sum_16;
+  Bit32u op1_16 = BX_READ_16BIT_REG(i->rm());
+  Bit32u op2_16 = i->Iw();
+  Bit32u sum_16 = op1_16 + op2_16 + getB_CF();
 
-  op1_16 = BX_READ_16BIT_REG(i->rm());
-  sum_16 = op1_16 + op2_16 + temp_CF;
   BX_WRITE_16BIT_REG(i->rm(), sum_16);
 
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_LF_INSTR_ADD_ADC16(temp_CF));
+  SET_FLAGS_OSZAPC_ADD_16(op1_16, op2_16, sum_16);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EwIwM(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16 = i->Iw(), diff_16;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
-  diff_16 = op1_16 - op2_16;
+  Bit32u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  Bit32u op2_16 = i->Iw();
+  Bit32u diff_16 = op1_16 - op2_16;
+
   write_RMW_virtual_word(diff_16);
 
   SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
@@ -441,10 +408,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EwIwM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EwIwR(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16 = i->Iw(), diff_16;
+  Bit32u op1_16 = BX_READ_16BIT_REG(i->rm());
+  Bit32u op2_16 = i->Iw();
+  Bit32u diff_16 = op1_16 - op2_16;
 
-  op1_16 = BX_READ_16BIT_REG(i->rm());
-  diff_16 = op1_16 - op2_16;
   BX_WRITE_16BIT_REG(i->rm(), diff_16);
 
   SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
@@ -454,12 +421,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EwIwR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CMP_EwIwM(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16 = i->Iw(), diff_16;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_16 = read_virtual_word(i->seg(), eaddr);
-  diff_16 = op1_16 - op2_16;
+  Bit32u op1_16 = read_virtual_word(i->seg(), eaddr);
+  Bit32u op2_16 = i->Iw();
+  Bit32u diff_16 = op1_16 - op2_16;
+
   SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
 
   BX_NEXT_INSTR(i);
@@ -467,10 +434,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CMP_EwIwM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CMP_EwIwR(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16 = i->Iw(), diff_16;
+  Bit32u op1_16 = BX_READ_16BIT_REG(i->rm());
+  Bit32u op2_16 = i->Iw();
+  Bit32u diff_16 = op1_16 - op2_16;
 
-  op1_16 = BX_READ_16BIT_REG(i->rm());
-  diff_16 = op1_16 - op2_16;
   SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
 
   BX_NEXT_INSTR(i);
@@ -480,22 +447,22 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EwM(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
-  op1_16 = - (Bit16s)(op1_16);
+  Bit32u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  op1_16 = 0 - (Bit32s)(Bit16s)(op1_16);
   write_RMW_virtual_word(op1_16);
 
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_LF_INSTR_NEG16);
+  SET_FLAGS_OSZAPC_SUB_16(0, 0 - op1_16, op1_16);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EwR(bxInstruction_c *i)
 {
-  Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
-  op1_16 = - (Bit16s)(op1_16);
+  Bit32u op1_16 = BX_READ_16BIT_REG(i->rm());
+  op1_16 = 0 - (Bit32s)(Bit16s)(op1_16);
   BX_WRITE_16BIT_REG(i->rm(), op1_16);
 
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_LF_INSTR_NEG16);
+  SET_FLAGS_OSZAPC_SUB_16(0, 0 - op1_16, op1_16);
 
   BX_NEXT_INSTR(i);
 }
@@ -504,11 +471,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_EwM(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  Bit32u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
   op1_16++;
   write_RMW_virtual_word(op1_16);
 
-  SET_FLAGS_OSZAPC_INC_16(op1_16);
+  SET_FLAGS_OSZAP_ADD_16(op1_16 - 1, 0, op1_16);
 
   BX_NEXT_INSTR(i);
 }
@@ -517,11 +484,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_EwM(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  Bit32u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
   op1_16--;
   write_RMW_virtual_word(op1_16);
 
-  SET_FLAGS_OSZAPC_DEC_16(op1_16);
+  SET_FLAGS_OSZAP_SUB_16(op1_16 + 1, 0, op1_16);
 
   BX_NEXT_INSTR(i);
 }
@@ -532,6 +499,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EwGwM(bxInstruction_c *i)
 
   Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
   Bit16u diff_16 = AX - op1_16;
+
   SET_FLAGS_OSZAPC_SUB_16(AX, op1_16, diff_16);
 
   if (diff_16 == 0) {  // if accumulator == dest
@@ -550,6 +518,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EwGwR(bxInstruction_c *i)
 {
   Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
   Bit16u diff_16 = AX - op1_16;
+
   SET_FLAGS_OSZAPC_SUB_16(AX, op1_16, diff_16);
 
   if (diff_16 == 0) {  // if accumulator == dest

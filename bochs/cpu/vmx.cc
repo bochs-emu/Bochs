@@ -1530,7 +1530,8 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
   // set flags directly, avoid setEFlags side effects
   BX_CPU_THIS_PTR eflags = (Bit32u) guest.rflags;
-  BX_CPU_THIS_PTR lf_flags_status = 0; // OSZAPC flags are known.
+  // Update lazy flags state
+  setEFlagsOSZAPC((Bit32u) guest.rflags);
 
 #ifdef BX_SUPPORT_CS_LIMIT_DEMOTION
   // Handle special case of CS.LIMIT demotion (new descriptor limit is
@@ -2068,9 +2069,7 @@ void BX_CPU_C::VMexitLoadHostState(void)
   BX_CPU_THIS_PTR inhibit_mask = 0;
   BX_CPU_THIS_PTR debug_trap = 0;
 
-  // set flags directly, avoid setEFlags side effects
-  BX_CPU_THIS_PTR eflags = 0x2;        // Bit1 is always set.
-  BX_CPU_THIS_PTR lf_flags_status = 0; // OSZAPC flags are known.
+  setEFlags(0x2); // Bit1 is always set
 
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_CPU_THIS_PTR monitor.reset_monitor();

@@ -847,8 +847,7 @@ public: // for now...
    */
   Bit32u eflags; // Raw 32-bit value in x86 bit position.
 
-  // status and control flags register set
-  Bit32u lf_flags_status;
+  // lazy arithmetic flags state
   bx_lf_flags_entry oszapc;
 
   // so that we can back up when handling faults, exceptions, etc.
@@ -1074,45 +1073,173 @@ public: // for now...
 
   BX_SMF void setEFlags(Bit32u val) BX_CPP_AttrRegparmN(1);
 
-#define ArithmeticalFlag(flag, lfMask, eflagsBitShift) \
-  BX_SMF bx_bool get_##flag##Lazy(void); \
-  BX_SMF bx_bool getB_##flag(void) { \
-    if ((BX_CPU_THIS_PTR lf_flags_status & (lfMask)) == 0) \
-      return (BX_CPU_THIS_PTR eflags >> eflagsBitShift) & 1; \
-    else \
-      return !!get_##flag##Lazy(); \
-  } \
-  BX_SMF bx_bool get_##flag(void) { \
-    if ((BX_CPU_THIS_PTR lf_flags_status & (lfMask)) == 0) \
-      return BX_CPU_THIS_PTR eflags & (lfMask); \
-    else \
-      return get_##flag##Lazy(); \
-  } \
-  BX_SMF void set_##flag(bx_bool val) { \
-    BX_CPU_THIS_PTR lf_flags_status &= ~(lfMask); \
-    BX_CPU_THIS_PTR eflags &= ~(lfMask); \
-    BX_CPU_THIS_PTR eflags |= ((val)<<eflagsBitShift); \
-  } \
-  BX_SMF void clear_##flag(void) { \
-    BX_CPU_THIS_PTR lf_flags_status &= ~(lfMask); \
-    BX_CPU_THIS_PTR eflags &= ~(lfMask); \
-  } \
-  BX_SMF void assert_##flag(void) { \
-    BX_CPU_THIS_PTR lf_flags_status &= ~(lfMask); \
-    BX_CPU_THIS_PTR eflags |= (lfMask); \
-  } \
-  BX_SMF void force_##flag(void) { \
-    if ((BX_CPU_THIS_PTR lf_flags_status & (lfMask)) != 0) { \
-      set_##flag(!!get_##flag##Lazy()); \
-    } \
+  BX_SMF void setEFlagsOSZAPC(Bit32u flags32) {
+    set_OF(1 & ((flags32) >> 11));
+    set_SF(1 & ((flags32) >> 7));
+    set_ZF(1 & ((flags32) >> 6));
+    set_AF(1 & ((flags32) >> 4));
+    set_PF(1 & ((flags32) >> 2));
+    set_CF(1 & ((flags32) >> 0));
+ }
+ 
+  BX_SMF void SET_FLAGS_OxxxxC(Bit32u new_of, Bit32u new_cf) {
+    Bit32u temp_po = new_of ^ new_cf;
+    BX_CPU_THIS_PTR oszapc.auxbits &= ~(LF_MASK_PO | LF_MASK_CF);
+    BX_CPU_THIS_PTR oszapc.auxbits |=
+                  (temp_po << LF_BIT_PO) | (new_cf << LF_BIT_CF);
+ }
+ 
+  BX_SMF void ASSERT_FLAGS_OxxxxC() {
+    SET_FLAGS_OxxxxC(1, 1);
+ }
+ 
+  // ZF
+  BX_SMF BX_CPP_INLINE bx_bool getB_ZF(void) {
+    return (0 == (BX_CPU_THIS_PTR oszapc.result &
+               (((BX_CPU_THIS_PTR oszapc.auxbits >> LF_BIT_ZF) & 1) - 1)));
   }
 
-  ArithmeticalFlag(OF, EFlagsOFMask, 11);
-  ArithmeticalFlag(SF, EFlagsSFMask,  7);
-  ArithmeticalFlag(ZF, EFlagsZFMask,  6);
-  ArithmeticalFlag(AF, EFlagsAFMask,  4);
-  ArithmeticalFlag(PF, EFlagsPFMask,  2);
-  ArithmeticalFlag(CF, EFlagsCFMask,  0);
+  BX_SMF BX_CPP_INLINE bx_bool get_ZF(void) { return getB_ZF(); }
+
+  BX_SMF void set_ZF(bx_bool val) {
+    BX_CPU_THIS_PTR oszapc.result |= (1 << 8);
+    BX_CPU_THIS_PTR oszapc.result ^= (val) << 8;
+    BX_CPU_THIS_PTR oszapc.auxbits &= ~(LF_MASK_ZF);
+    BX_CPU_THIS_PTR oszapc.auxbits |= (val) << LF_BIT_ZF;
+  }
+
+  BX_SMF void clear_ZF(void) {
+    BX_CPU_THIS_PTR oszapc.result |= (1 << 8);
+    BX_CPU_THIS_PTR oszapc.auxbits &= ~(LF_MASK_ZF);
+  }
+
+  BX_SMF void assert_ZF(void) {
+    BX_CPU_THIS_PTR oszapc.result &= ~(1 << 8);
+    BX_CPU_THIS_PTR oszapc.auxbits |= (LF_MASK_ZF);
+  }
+
+  // SF
+  BX_SMF BX_CPP_INLINE bx_bool getB_SF(void) {
+    return (BX_CPU_THIS_PTR oszapc.result >> BX_LF_SIGN_BIT);
+  }
+
+  BX_SMF BX_CPP_INLINE bx_bool get_SF(void) { return getB_SF(); }
+
+  BX_SMF void set_SF(bx_bool val) {
+    set_ZF(getB_ZF());
+    BX_CPU_THIS_PTR oszapc.result &= ~(BX_CONST64(1) << BX_LF_SIGN_BIT);
+    BX_CPU_THIS_PTR oszapc.result |= ((bx_address)(val)) << BX_LF_SIGN_BIT;
+  }
+
+  BX_SMF void clear_SF(void) {
+    set_ZF(getB_ZF());
+    BX_CPU_THIS_PTR oszapc.result &= ~(BX_CONST64(1) << BX_LF_SIGN_BIT);
+  }
+
+  BX_SMF void assert_SF(void) {
+    set_ZF(getB_ZF());
+    BX_CPU_THIS_PTR oszapc.result |= (BX_CONST64(1) << BX_LF_SIGN_BIT);
+  }
+
+  // PF - bit 2 in EFLAGS, represented by lower 8 bits of oszapc.result
+  BX_SMF bx_bool getB_PF(void) {
+    Bit8u temp = (Bit8u)(255 & BX_CPU_THIS_PTR oszapc.result);
+    temp = (temp ^ (temp >> 4)) & 0x0F;
+    return (0x9669U >> temp) & 1;
+  }
+
+  BX_SMF bx_bool get_PF(void) { return getB_PF(); }
+
+  BX_SMF void set_PF(bx_bool val) {
+    set_ZF(getB_ZF());
+    BX_CPU_THIS_PTR oszapc.result &= ~(0xFF);
+    BX_CPU_THIS_PTR oszapc.result |= 1 - (val);
+  }
+
+  BX_SMF void clear_PF(void) {
+    set_ZF(getB_ZF());
+    BX_CPU_THIS_PTR oszapc.result &= ~(0xFF);
+    BX_CPU_THIS_PTR oszapc.result |= 0x01;
+  }
+
+  BX_SMF void assert_PF(void) {
+    set_ZF(getB_ZF());
+    BX_CPU_THIS_PTR oszapc.result &= ~(0xFF);
+  }
+
+  BX_SMF void set_PF_base(Bit8u val) {
+    set_ZF(getB_ZF());
+    BX_CPU_THIS_PTR oszapc.result &= ~(0xFF);
+    BX_CPU_THIS_PTR oszapc.result |= val;
+  }
+
+  // AF - bit 4 in EFLAGS, represented by bit LF_BIT_AF of oszapc.auxbits
+  BX_SMF bx_bool getB_AF(void) {
+    return ((BX_CPU_THIS_PTR oszapc.auxbits >> LF_BIT_AF) & 1);
+  }
+
+  BX_SMF bx_bool get_AF(void) { return getB_AF(); }
+
+  BX_SMF void set_AF(bx_bool val) {
+    BX_CPU_THIS_PTR oszapc.auxbits &= ~(LF_MASK_AF);
+    BX_CPU_THIS_PTR oszapc.auxbits |= (val) << LF_BIT_AF;
+  }
+  
+  BX_SMF void clear_AF(void) {
+    BX_CPU_THIS_PTR oszapc.auxbits &= ~(LF_MASK_AF);
+  }
+
+  BX_SMF void assert_AF(void) {
+    BX_CPU_THIS_PTR oszapc.auxbits |= (LF_MASK_AF);
+  }
+
+  // CF
+  BX_SMF BX_CPP_INLINE bx_bool getB_CF(void) {
+    return ((BX_CPU_THIS_PTR oszapc.auxbits >> LF_BIT_CF) & 1);
+  }
+
+  BX_SMF BX_CPP_INLINE bx_bool get_CF(void) {
+    return BX_CPU_THIS_PTR oszapc.auxbits & (1U << LF_BIT_CF);
+  }
+
+  BX_SMF void set_CF(bx_bool val) {
+    Bit8u temp_of = getB_OF();
+    SET_FLAGS_OxxxxC(temp_of, (val));
+  }
+
+  BX_SMF void clear_CF(void) {
+    Bit8u temp_of = getB_OF();
+    SET_FLAGS_OxxxxC(temp_of, (0));
+  }
+
+  BX_SMF void assert_CF(void) {
+    Bit8u temp_of = getB_OF();
+    SET_FLAGS_OxxxxC(temp_of, (1));
+  }
+
+  // OF
+  BX_SMF BX_CPP_INLINE bx_bool getB_OF(void) {
+    return ((BX_CPU_THIS_PTR oszapc.auxbits + (1U << LF_BIT_PO)) >> LF_BIT_CF) & 1;
+  }
+
+  BX_SMF BX_CPP_INLINE bx_bool get_OF(void) {
+    return (BX_CPU_THIS_PTR oszapc.auxbits + (1U << LF_BIT_PO)) & (1U << LF_BIT_CF);
+  }
+
+  BX_SMF void set_OF(bx_bool val) {
+    Bit8u temp_cf = getB_CF();
+    SET_FLAGS_OxxxxC((val), temp_cf);
+  }
+ 
+  BX_SMF void clear_OF(void) {
+    Bit8u temp_cf = getB_CF();
+    SET_FLAGS_OxxxxC((0), temp_cf);
+  }
+ 
+  BX_SMF void assert_OF(void) {
+    Bit8u temp_cf = getB_CF();
+    SET_FLAGS_OxxxxC((1), temp_cf);
+  }
 
   // constructors & destructors...
   BX_CPU_C(unsigned id = 0);
@@ -4212,26 +4339,6 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_rdtscp(void)
 #endif
 }
 
-//
-// inline simple lazy flags implementation methods
-//
-BX_CPP_INLINE bx_bool BX_CPU_C::get_ZFLazy(void)
-{
-  return (BX_CPU_THIS_PTR oszapc.result == 0);
-}
-
-BX_CPP_INLINE bx_bool BX_CPU_C::get_SFLazy(void)
-{
-  return (BX_CPU_THIS_PTR oszapc.result >> BX_LF_SIGN_BIT);
-}
-
-BX_CPP_INLINE bx_bool BX_CPU_C::get_PFLazy(void)
-{
-  Bit8u temp = (Bit8u) BX_CPU_THIS_PTR oszapc.result;
-  temp = (temp ^ (temp >> 4)) & 0x0F;
-  return (0x9669U >> temp) & 1;
-}
-
 IMPLEMENT_EFLAG_ACCESSOR   (ID,  21)
 IMPLEMENT_EFLAG_ACCESSOR   (VIP, 20)
 IMPLEMENT_EFLAG_ACCESSOR   (VIF, 19)
@@ -4358,22 +4465,5 @@ enum {
 #define BxGroupFP         BxSplitGroupN
 
 // <TAG-DEFINES-DECODE-END>
-
-#define setEFlagsOSZAPC(flags32) {                                      \
-  BX_CPU_THIS_PTR eflags = (BX_CPU_THIS_PTR eflags & ~EFlagsOSZAPCMask) \
-    | ((flags32) & EFlagsOSZAPCMask);                                   \
-  BX_CPU_THIS_PTR lf_flags_status = 0;                                  \
-}
-
-#define ASSERT_FLAGS_OxxxxC() {                                         \
-  BX_CPU_THIS_PTR eflags |= (EFlagsOFMask | EFlagsCFMask);              \
-  BX_CPU_THIS_PTR lf_flags_status &= ~(EFlagsOFMask | EFlagsCFMask);    \
-}
-
-#define SET_FLAGS_OxxxxC(new_of, new_cf) {                              \
-  BX_CPU_THIS_PTR eflags &= ~((EFlagsOFMask | EFlagsCFMask));           \
-  BX_CPU_THIS_PTR eflags |= ((new_of)<<11) | (new_cf);                  \
-  BX_CPU_THIS_PTR lf_flags_status &= ~((EFlagsOFMask | EFlagsCFMask));  \
-}
 
 #endif  // #ifndef BX_CPU_H
