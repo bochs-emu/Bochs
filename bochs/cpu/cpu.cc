@@ -76,8 +76,10 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 
   if (setjmp(BX_CPU_THIS_PTR jmp_buf_env)) {
     // can get here only from exception function or VMEXIT
-    BX_TICK1_IF_SINGLE_PROCESSOR();
-    BX_SYNC_TIME();
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+    BX_CPU_THIS_PTR icount++;
+#endif
+    BX_SYNC_TIME_IF_SINGLE_PROCESSOR(0);
 #if BX_DEBUGGER || BX_GDBSTUB
     if (dbg_instruction_epilog()) return;
 #endif
@@ -125,13 +127,9 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
       // when handlers chaining is enabled this single call will execute entire trace
       BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
 
-      BX_SYNC_TIME();
+      BX_SYNC_TIME_IF_SINGLE_PROCESSOR(0);
 
-      if (BX_CPU_THIS_PTR async_event) {
-        // clear stop trace magic indication that probably was set by repeat or branch32/64
-        BX_CPU_THIS_PTR async_event &= ~BX_ASYNC_EVENT_STOP_TRACE;
-        break;
-      }
+      if (BX_CPU_THIS_PTR async_event) break;
 
       i = getICacheEntry()->i;
     }
@@ -152,7 +150,7 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
       BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
       BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
       BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
-      BX_TICK1_IF_SINGLE_PROCESSOR();
+      BX_SYNC_TIME_IF_SINGLE_PROCESSOR(0);
 
       // note instructions generating exceptions never reach this point
 #if BX_DEBUGGER || BX_GDBSTUB
@@ -161,11 +159,7 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 
       CHECK_MAX_INSTRUCTIONS(max_instr_count);
 
-      if (BX_CPU_THIS_PTR async_event) {
-        // clear stop trace magic indication that probably was set by repeat or branch32/64
-        BX_CPU_THIS_PTR async_event &= ~BX_ASYNC_EVENT_STOP_TRACE;
-        break;
-      }
+      if (BX_CPU_THIS_PTR async_event) break;
 
       if (++i == last) {
         entry = getICacheEntry();
@@ -174,6 +168,10 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
       }
     }
 #endif
+
+    // clear stop trace magic indication that probably was set by repeat or branch32/64
+    BX_CPU_THIS_PTR async_event &= ~BX_ASYNC_EVENT_STOP_TRACE;
+
   }  // while (1)
 }
 
@@ -203,6 +201,8 @@ bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
   return entry;
 }
 
+#define BX_REPEAT_TIME_UPDATE_INTERVAL 15
+
 void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxRepIterationPtr_tR execute)
 {
   // non repeated instruction
@@ -230,8 +230,10 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxRepIterationP
 #endif
         break; // exit always if debugger enabled
 
-      BX_TICK1_IF_SINGLE_PROCESSOR();
-      BX_SYNC_TIME();
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+      BX_CPU_THIS_PTR icount++;
+#endif
+      BX_SYNC_TIME_IF_SINGLE_PROCESSOR(BX_REPEAT_TIME_UPDATE_INTERVAL);
     }
   }
   else
@@ -250,8 +252,10 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxRepIterationP
 #endif
         break; // exit always if debugger enabled
 
-      BX_TICK1_IF_SINGLE_PROCESSOR();
-      BX_SYNC_TIME();
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+      BX_CPU_THIS_PTR icount++;
+#endif
+      BX_SYNC_TIME_IF_SINGLE_PROCESSOR(BX_REPEAT_TIME_UPDATE_INTERVAL);
     }
   }
   else  // 16bit addrsize
@@ -269,8 +273,10 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxRepIterationP
 #endif
         break; // exit always if debugger enabled
 
-      BX_TICK1_IF_SINGLE_PROCESSOR();
-      BX_SYNC_TIME();
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+      BX_CPU_THIS_PTR icount++;
+#endif
+      BX_SYNC_TIME_IF_SINGLE_PROCESSOR(BX_REPEAT_TIME_UPDATE_INTERVAL);
     }
   }
 
@@ -314,8 +320,10 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
 #endif
           break; // exit always if debugger enabled
 
-        BX_TICK1_IF_SINGLE_PROCESSOR();
-        BX_SYNC_TIME();
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+        BX_CPU_THIS_PTR icount++;
+#endif
+        BX_SYNC_TIME_IF_SINGLE_PROCESSOR(BX_REPEAT_TIME_UPDATE_INTERVAL);
       }
     }
     else
@@ -334,8 +342,10 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
 #endif
           break; // exit always if debugger enabled
 
-        BX_TICK1_IF_SINGLE_PROCESSOR();
-        BX_SYNC_TIME();
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+        BX_CPU_THIS_PTR icount++;
+#endif
+        BX_SYNC_TIME_IF_SINGLE_PROCESSOR(BX_REPEAT_TIME_UPDATE_INTERVAL);
       }
     }
     else  // 16bit addrsize
@@ -353,8 +363,10 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
 #endif
           break; // exit always if debugger enabled
 
-        BX_TICK1_IF_SINGLE_PROCESSOR();
-        BX_SYNC_TIME();
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+        BX_CPU_THIS_PTR icount++;
+#endif
+        BX_SYNC_TIME_IF_SINGLE_PROCESSOR(BX_REPEAT_TIME_UPDATE_INTERVAL);
       }
     }
   }
@@ -374,8 +386,10 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
 #endif
           break; // exit always if debugger enabled
 
-        BX_TICK1_IF_SINGLE_PROCESSOR();
-        BX_SYNC_TIME();
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+        BX_CPU_THIS_PTR icount++;
+#endif
+        BX_SYNC_TIME_IF_SINGLE_PROCESSOR(BX_REPEAT_TIME_UPDATE_INTERVAL);
       }
     }
     else
@@ -394,8 +408,10 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
 #endif
           break; // exit always if debugger enabled
 
-        BX_TICK1_IF_SINGLE_PROCESSOR();
-        BX_SYNC_TIME();
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+        BX_CPU_THIS_PTR icount++;
+#endif
+        BX_SYNC_TIME_IF_SINGLE_PROCESSOR(BX_REPEAT_TIME_UPDATE_INTERVAL);
       }
     }
     else  // 16bit addrsize
@@ -413,8 +429,10 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
 #endif
           break; // exit always if debugger enabled
 
-        BX_TICK1_IF_SINGLE_PROCESSOR();
-        BX_SYNC_TIME();
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+        BX_CPU_THIS_PTR icount++;
+#endif
+        BX_SYNC_TIME_IF_SINGLE_PROCESSOR(BX_REPEAT_TIME_UPDATE_INTERVAL);
       }
     }
   }

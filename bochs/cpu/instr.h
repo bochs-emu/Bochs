@@ -30,21 +30,20 @@ typedef void BX_INSF_TYPE;
 
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
 
-#define BX_TICK1_IF_SINGLE_PROCESSOR() \
-  BX_CPU_THIS_PTR icount++;
-
-#define BX_SYNC_TIME() {                                                    \
-  Bit32s delta = BX_CPU_THIS_PTR icount - BX_CPU_THIS_PTR icount_last_sync; \
-  if (delta > 0) {                                                          \
-    BX_CPU_THIS_PTR icount_last_sync = BX_CPU_THIS_PTR icount;              \
-    BX_TICKN(delta);                                                        \
-  }                                                                         \
+#define BX_SYNC_TIME_IF_SINGLE_PROCESSOR(allowed_delta) {                     \
+  if (BX_SMP_PROCESSORS == 1) {                                               \
+    Bit32s delta = BX_CPU_THIS_PTR icount - BX_CPU_THIS_PTR icount_last_sync; \
+    if (delta > allowed_delta) {                                              \
+      BX_CPU_THIS_PTR icount_last_sync = BX_CPU_THIS_PTR icount;              \
+      BX_TICKN(delta);                                                        \
+    }                                                                         \
+  }                                                                           \
 }
 
 #define BX_COMMIT_INSTRUCTION(i) {                     \
   BX_CPU_THIS_PTR prev_rip = RIP; /* commit new RIP */ \
   BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, (i));            \
-  BX_TICK1_IF_SINGLE_PROCESSOR();                      \
+  BX_CPU_THIS_PTR icount++;                            \
 }
 
 #define BX_EXECUTE_INSTRUCTION(i) {                    \
@@ -65,15 +64,13 @@ typedef void BX_INSF_TYPE;
   BX_EXECUTE_INSTRUCTION(i);                           \
 }
 
-#else
+#else // BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
 
 #define BX_NEXT_TRACE(i) { return; }
 #define BX_NEXT_INSTR(i) { return; }
 
-#define BX_TICK1_IF_SINGLE_PROCESSOR() \
+#define BX_SYNC_TIME_IF_SINGLE_PROCESSOR(allowed_delta) \
   if (BX_SMP_PROCESSORS == 1) BX_TICK1()
-
-#define BX_SYNC_TIME() /* do nothing */
 
 #endif
 
