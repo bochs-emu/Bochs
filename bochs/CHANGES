@@ -132,6 +132,8 @@ Bochs repository moved to the SVN version control !
   [3190995] add eth backend based on Slirp by Heikki Lindholm
 
 - these S.F. bugs were closed/fixed
+  [3392760] Bochs does not compile with linux3.0
+  [3403746] segfault crash with sparse disk images
   [3062054] Problems with BIOS pointing device services (int 15h)
   [3277639] incompatible colours in palette
   [1788739] Abort on large memory setting

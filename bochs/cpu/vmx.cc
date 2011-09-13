@@ -2069,7 +2069,10 @@ void BX_CPU_C::VMexitLoadHostState(void)
   BX_CPU_THIS_PTR inhibit_mask = 0;
   BX_CPU_THIS_PTR debug_trap = 0;
 
-  setEFlags(0x2); // Bit1 is always set
+  // set flags directly, avoid setEFlags side effects
+  BX_CPU_THIS_PTR eflags = 0x2; // Bit1 is always set
+  // Update lazy flags state
+  setEFlagsOSZAPC(0);
 
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_CPU_THIS_PTR monitor.reset_monitor();
