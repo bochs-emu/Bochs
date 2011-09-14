@@ -1874,8 +1874,8 @@ bx_define_opcode(BX_IA_TZCNT_GdEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::TZCNT_GdEdR, B
 bx_define_opcode(BX_IA_TZCNT_GqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::TZCNT_GqEqR, BX_CPU_BMI1, 0)
 #endif
 
-bx_define_opcode(BX_IA_LZCNT_GwEw, &BX_CPU_C::LOAD_Ew, &BX_CPU_C::LZCNT_GwEwR, BX_CPU_BMI1, 0)
-bx_define_opcode(BX_IA_LZCNT_GdEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::LZCNT_GdEdR, BX_CPU_BMI1, 0)
+bx_define_opcode(BX_IA_LZCNT_GwEw, &BX_CPU_C::LOAD_Ew, &BX_CPU_C::LZCNT_GwEwR, BX_CPU_LZCNT, 0)
+bx_define_opcode(BX_IA_LZCNT_GdEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::LZCNT_GdEdR, BX_CPU_LZCNT, 0)
 #if BX_SUPPORT_X86_64
-bx_define_opcode(BX_IA_LZCNT_GqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::LZCNT_GqEqR, BX_CPU_BMI1, 0)
+bx_define_opcode(BX_IA_LZCNT_GqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::LZCNT_GqEqR, BX_CPU_LZCNT, 0)
 #endif

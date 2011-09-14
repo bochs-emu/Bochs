@@ -36,7 +36,7 @@ public:
   // return CPU name
   virtual const char *get_name(void) const { return "bochs"; }
 
-  virtual Bit32u get_isa_extensions_bitmask(void) const { return isa_extensions_bitmask; }
+  virtual Bit64u get_isa_extensions_bitmask(void) const { return isa_extensions_bitmask; }
   virtual Bit32u get_cpu_extensions_bitmask(void) const { return cpu_extensions_bitmask; }
 
   virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
@@ -47,7 +47,7 @@ private:
   void init_isa_extensions_bitmask(void);
   void init_cpu_extensions_bitmask(void);
 
-  Bit32u isa_extensions_bitmask;
+  Bit64u isa_extensions_bitmask;
   Bit32u cpu_extensions_bitmask;
 
 #if BX_SUPPORT_SMP

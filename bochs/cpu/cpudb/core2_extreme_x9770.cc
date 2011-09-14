@@ -107,7 +107,7 @@ void core2_extreme_x9770_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, 
   }
 }
 
-Bit32u core2_extreme_x9770_t::get_isa_extensions_bitmask(void) const
+Bit64u core2_extreme_x9770_t::get_isa_extensions_bitmask(void) const
 {
   return BX_CPU_X87 |
          BX_CPU_486 |

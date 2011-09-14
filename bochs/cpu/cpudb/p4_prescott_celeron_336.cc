@@ -84,7 +84,7 @@ void p4_prescott_celeron_336_t::get_cpuid_leaf(Bit32u function, Bit32u subfuncti
   }
 }
 
-Bit32u p4_prescott_celeron_336_t::get_isa_extensions_bitmask(void) const
+Bit64u p4_prescott_celeron_336_t::get_isa_extensions_bitmask(void) const
 {
   return BX_CPU_X87 |
          BX_CPU_486 |

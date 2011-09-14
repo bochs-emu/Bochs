@@ -614,7 +614,7 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
 
 void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
 {
-  Bit32u features_bitmask = 0;
+  Bit64u features_bitmask = 0;
 
 #if BX_SUPPORT_FPU
   features_bitmask |= BX_CPU_X87;

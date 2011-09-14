@@ -1958,14 +1958,14 @@ const char *get_bx_opcode_name(Bit16u ia_opcode)
 
 void BX_CPU_C::init_FetchDecodeTables(void)
 {
-  static Bit32u BxOpcodeFeatures[BX_IA_LAST] =
+  static Bit64u BxOpcodeFeatures[BX_IA_LAST] =
   {
 #define bx_define_opcode(a, b, c, d, e) d,
 #include "ia_opcodes.h"
   };
 #undef  bx_define_opcode
 
-  Bit32u features = BX_CPU_THIS_PTR isa_extensions_bitmask;
+  Bit64u features = BX_CPU_THIS_PTR isa_extensions_bitmask;
 #if BX_CPU_LEVEL > 3
   if (! features)
     BX_PANIC(("init_FetchDecodeTables: CPU features bitmask is empty !"));
@@ -1975,29 +1975,29 @@ void BX_CPU_C::init_FetchDecodeTables(void)
     BX_PANIC(("init_FetchDecodeTables: too many opcodes defined !"));
   
   for (unsigned n=0; n < BX_IA_LAST; n++) {
-    Bit32u ia_opcode_features = BxOpcodeFeatures[n];
-    if (ia_opcode_features) {
-      if ((ia_opcode_features & features) == 0) {
-        BxOpcodesTable[n].execute1 = &BX_CPU_C::BxError;
-        BxOpcodesTable[n].execute2 = &BX_CPU_C::BxError;
-        // won't allow this new #UD opcode to check prepare_SSE and similar
-        BxOpcodesTable[n].flags = 0;
-      }
+    Bit64u ia_opcode_features = BxOpcodeFeatures[n];
+    if (ia_opcode_features && (ia_opcode_features & features) == 0) {
+      BxOpcodesTable[n].execute1 = &BX_CPU_C::BxError;
+      BxOpcodesTable[n].execute2 = &BX_CPU_C::BxError;
+      // won't allow this new #UD opcode to check prepare_SSE and similar
+      BxOpcodesTable[n].flags = 0;
     }
   }
 
   // handle special case - BSF/BSR vs TZCNT/LZCNT
+  if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_LZCNT)) {
+    BxOpcodesTable[BX_IA_LZCNT_GwEw] = BxOpcodesTable[BX_IA_BSR_GwEw];
+    BxOpcodesTable[BX_IA_LZCNT_GdEd] = BxOpcodesTable[BX_IA_BSR_GdEd];
+#if BX_SUPPORT_X86_64
+    BxOpcodesTable[BX_IA_LZCNT_GqEq] = BxOpcodesTable[BX_IA_BSR_GqEq];
+#endif
+  }
+
   if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_BMI1)) {
     BxOpcodesTable[BX_IA_TZCNT_GwEw] = BxOpcodesTable[BX_IA_BSF_GwEw];
     BxOpcodesTable[BX_IA_TZCNT_GdEd] = BxOpcodesTable[BX_IA_BSF_GdEd];
 #if BX_SUPPORT_X86_64
     BxOpcodesTable[BX_IA_TZCNT_GqEq] = BxOpcodesTable[BX_IA_BSF_GqEq];
-#endif
-
-    BxOpcodesTable[BX_IA_LZCNT_GwEw] = BxOpcodesTable[BX_IA_BSR_GwEw];
-    BxOpcodesTable[BX_IA_LZCNT_GdEd] = BxOpcodesTable[BX_IA_BSR_GdEd];
-#if BX_SUPPORT_X86_64
-    BxOpcodesTable[BX_IA_LZCNT_GqEq] = BxOpcodesTable[BX_IA_BSR_GqEq];
 #endif
   }
 }

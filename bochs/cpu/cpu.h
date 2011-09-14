@@ -813,7 +813,7 @@ public: // for now...
   bx_cpuid_t *cpuid;
 #endif
 
-  Bit32u isa_extensions_bitmask;
+  Bit64u isa_extensions_bitmask;
   Bit32u cpu_extensions_bitmask;
 
 #define BX_CPUID_SUPPORT_ISA_EXTENSION(feature) \
