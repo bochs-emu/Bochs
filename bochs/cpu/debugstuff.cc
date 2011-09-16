@@ -110,10 +110,10 @@ void BX_CPU_C::debug(bx_address offset)
 {
   BX_INFO(("CPU is in %s (%s)", cpu_mode_string(BX_CPU_THIS_PTR get_cpu_mode()),
     cpu_state_string(BX_CPU_THIS_PTR activity_state)));
-  BX_INFO(("CS.d_b = %u bit",
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b ? 32 : 16));
-  BX_INFO(("SS.d_b = %u bit",
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b ? 32 : 16));
+  BX_INFO(("CS.mode = %u bit",
+    long64_mode() ? 64 : (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b ? 32 : 16)));
+  BX_INFO(("SS.mode = %u bit",
+    long64_mode() ? 64 : (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b ? 32 : 16)));
 #if BX_SUPPORT_X86_64
   BX_INFO(("EFER   = 0x%08x", BX_CPU_THIS_PTR efer.get32()));
   BX_INFO(("| RAX=%08x%08x  RBX=%08x%08x",
