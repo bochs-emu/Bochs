@@ -1372,6 +1372,10 @@ bx_define_opcode(BX_IA_INVVPID, &BX_CPU_C::INVVPID, &BX_CPU_C::BxError, BX_CPU_V
 bx_define_opcode(BX_IA_GETSEC, &BX_CPU_C::GETSEC, &BX_CPU_C::GETSEC, BX_CPU_SMX, 0)
 // SMX
 
+#if BX_CPU_LEVEL >= 6
+bx_define_opcode(BX_IA_INVPCID, &BX_CPU_C::INVPCID, &BX_CPU_C::BxError, BX_CPU_INVPCID, 0)
+#endif
+
 #if BX_SUPPORT_AVX && BX_CPU_LEVEL >= 6
 // AVX
 bx_define_opcode(BX_IA_VZEROUPPER, NULL, &BX_CPU_C::VZEROUPPER, BX_CPU_AVX, BX_PREPARE_AVX | BX_VEX_NO_VVV)

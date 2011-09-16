@@ -1072,7 +1072,7 @@ static const BxOpcodeInfo_t BxOpcode3ByteTable0f38[256] = {
   /* 7F */ { 0, BX_IA_ERROR },
   /* 80 */ { BxPrefixSSE66 | BxTraceEnd, BX_IA_INVEPT },
   /* 81 */ { BxPrefixSSE66 | BxTraceEnd, BX_IA_INVVPID },
-  /* 82 */ { 0, BX_IA_ERROR },
+  /* 82 */ { BxPrefixSSE66 | BxTraceEnd, BX_IA_INVPCID },
   /* 83 */ { 0, BX_IA_ERROR },
   /* 84 */ { 0, BX_IA_ERROR },
   /* 85 */ { 0, BX_IA_ERROR },

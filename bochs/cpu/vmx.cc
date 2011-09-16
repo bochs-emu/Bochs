@@ -2239,7 +2239,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
   else {
     // in VMX root operation mode
     if (CPL != 0) {
-      BX_ERROR(("VMXON with CPL!=0 will cause #GP(0)"));
+      BX_ERROR(("VMXON with CPL!=0 cause #GP(0)"));
       exception(BX_GP_EXCEPTION, 0);
     }
 
@@ -2262,7 +2262,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXOFF(bxInstruction_c *i)
   }
 
   if (CPL != 0) {
-    BX_ERROR(("VMXOFF with CPL!=0 will cause #GP(0)"));
+    BX_ERROR(("VMXOFF with CPL!=0 cause #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -2301,7 +2301,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCALL(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (CPL != 0) {
-    BX_ERROR(("VMCALL with CPL!=0 will cause #GP(0)"));
+    BX_ERROR(("VMCALL with CPL!=0 cause #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -2382,7 +2382,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
   }
 
   if (CPL != 0) {
-    BX_ERROR(("VMLAUNCH/VMRESUME with CPL!=0 will cause #GP(0)"));
+    BX_ERROR(("VMLAUNCH/VMRESUME with CPL!=0 cause #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -2550,7 +2550,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRLD(bxInstruction_c *i)
   }
 
   if (CPL != 0) {
-    BX_ERROR(("VMPTRLD with CPL!=0 will cause #GP(0)"));
+    BX_ERROR(("VMPTRLD with CPL!=0 willcause #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -2594,7 +2594,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRST(bxInstruction_c *i)
   }
 
   if (CPL != 0) {
-    BX_ERROR(("VMPTRST with CPL!=0 will cause #GP(0)"));
+    BX_ERROR(("VMPTRST with CPL!=0 cause #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -2628,7 +2628,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
   }
 
   if (CPL != 0) {
-    BX_ERROR(("VMREAD with CPL!=0 will cause #GP(0)"));
+    BX_ERROR(("VMREAD with CPL!=0 cause #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -2720,7 +2720,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
   }
 
   if (CPL != 0) {
-    BX_ERROR(("VMWRITE with CPL!=0 will cause #GP(0)"));
+    BX_ERROR(("VMWRITE with CPL!=0 cause #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -2820,7 +2820,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
   }
 
   if (CPL != 0) {
-    BX_ERROR(("VMCLEAR with CPL!=0 will cause #GP(0)"));
+    BX_ERROR(("VMCLEAR with CPL!=0 cause #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -2872,7 +2872,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
   }
 
   if (CPL != 0) {
-    BX_ERROR(("INVEPT with CPL!=0 will cause #GP(0)"));
+    BX_ERROR(("INVEPT with CPL!=0 cause #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -2895,11 +2895,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
        VMfail(VMXERR_INVALID_INVEPT_INVVPID);
        BX_NEXT_TRACE(i);
      }
-     TLB_flush();
+     TLB_flush(); // Invalidate mappings associated with EPTP[51:12]
      break;
 
   case BX_INVEPT_INVVPID_ALL_CONTEXT_INVALIDATION:
-     TLB_flush();
+     TLB_flush(); // Invalidate mappings associated with all EPTPs
      break;
 
   default:
@@ -2908,7 +2908,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
      BX_NEXT_TRACE(i);
   }
 
-  BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVEPT, 0);
+  BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVEPT, type);
 
   VMsucceed();
 #else
@@ -2931,7 +2931,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
   }
 
   if (CPL != 0) {
-    BX_ERROR(("INVVPID with CPL!=0 will cause #GP(0)"));
+    BX_ERROR(("INVVPID with CPL!=0 cause #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -2948,7 +2948,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
   read_virtual_dqword(i->seg(), eaddr, (Bit8u *) &invvpid_desc);
 
   if (invvpid_desc.xmm64u(0) > 0xffff) {
-    BX_ERROR(("INVVPID: INVVPID_DESC reserved bits are set"));
+    BX_ERROR(("INVVPID: INVVPID_DESC reserved bits set"));
     VMfail(VMXERR_INVALID_INVEPT_INVVPID);
     BX_NEXT_TRACE(i);
   }
@@ -2984,18 +2984,88 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
     break;
 
   default:
-     BX_ERROR(("INVVPID: not supported type !"));
-     VMfail(VMXERR_INVALID_INVEPT_INVVPID);
-     BX_NEXT_TRACE(i);
+    BX_ERROR(("INVVPID: not supported type !"));
+    VMfail(VMXERR_INVALID_INVEPT_INVVPID);
+    BX_NEXT_TRACE(i);
   }
 
-  BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVVPID, 0);
+  BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVVPID, type);
 
   VMsucceed();
 #else
   BX_INFO(("INVVPID: required VMXx2 support, use --enable-vmx=2 option"));
   exception(BX_UD_EXCEPTION, 0);
 #endif
+
+  BX_NEXT_TRACE(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
+{
+  if (v8086_mode()) {
+    BX_ERROR(("INVPCID: not recognized in v8086 mode"));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  if (CPL != 0) {
+    BX_ERROR(("INVPCID with CPL!=0 cause #GP(0)"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  bx_address type;
+  if (i->os64L()) {
+    type = BX_READ_64BIT_REG(i->nnn());
+  }
+  else {
+    type = BX_READ_32BIT_REG(i->nnn());
+  }
+
+  BxPackedXmmRegister invpcid_desc;
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  read_virtual_dqword(i->seg(), eaddr, (Bit8u *) &invpcid_desc);
+
+  if (invpcid_desc.xmm64u(0) > 0xfff) {
+    BX_ERROR(("INVPCID: INVPCID_DESC reserved bits set"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  Bit16u pcid = invpcid_desc.xmm16u(0) & 0xfff;
+
+  switch(type) {
+  case BX_INVPCID_INDIVIDUAL_ADDRESS_NON_GLOBAL_INVALIDATION:
+    if (! IsCanonical(invpcid_desc.xmm64u(1))) {
+      BX_ERROR(("INVPCID: non canonical LADDR single context invalidation"));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+    if (! BX_CPU_THIS_PTR cr4.get_PCIDE() && pcid != 0) {
+      BX_ERROR(("INVPCID: invalid PCID"));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+    TLB_flush(); // Invalidate all mappings for LADDR tagged with PCID except globals
+    break;
+
+  case BX_INVPCID_SINGLE_CONTEXT_NON_GLOBAL_INVALIDATION:
+    if (! BX_CPU_THIS_PTR cr4.get_PCIDE() && pcid != 0) {
+      BX_ERROR(("INVPCID: invalid PCID"));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+    TLB_flush(); // Invalidate all mappings tagged with PCID except globals
+    break;
+
+  case BX_INVPCID_ALL_CONTEXT_INVALIDATION:
+    TLB_flush(); // Invalidate all mappings tagged with any PCID
+    break;
+
+  case BX_INVPCID_ALL_CONTEXT_NON_GLOBAL_INVALIDATION:
+    TLB_flush(); // Invalidate all mappings tagged with any PCID except globals
+    break;
+
+  default:
+    BX_ERROR(("INVPCID: not supported type !"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVPCID, type);
 
   BX_NEXT_TRACE(i);
 }
