@@ -3013,10 +3013,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
   }
 
   bx_address type;
+#if BX_SUPPORT_X86_64
   if (i->os64L()) {
     type = BX_READ_64BIT_REG(i->nnn());
   }
-  else {
+  else
+#endif
+  {
     type = BX_READ_32BIT_REG(i->nnn());
   }
 
@@ -3033,10 +3036,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
 
   switch(type) {
   case BX_INVPCID_INDIVIDUAL_ADDRESS_NON_GLOBAL_INVALIDATION:
+#if BX_SUPPORT_X86_64
     if (! IsCanonical(invpcid_desc.xmm64u(1))) {
       BX_ERROR(("INVPCID: non canonical LADDR single context invalidation"));
       exception(BX_GP_EXCEPTION, 0);
     }
+#endif
     if (! BX_CPU_THIS_PTR cr4.get_PCIDE() && pcid != 0) {
       BX_ERROR(("INVPCID: invalid PCID"));
       exception(BX_GP_EXCEPTION, 0);
