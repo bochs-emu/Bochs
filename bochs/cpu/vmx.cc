@@ -2980,7 +2980,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
     break;
    
   case BX_INVEPT_INVVPID_SINGLE_CONTEXT_NON_GLOBAL_INVALIDATION:
-    TLB_flush(); // invalidate all mappings tagged with VPID except globals
+    TLB_flushNonGlobal(); // invalidate all mappings tagged with VPID except globals
     break;
 
   default:
@@ -3046,7 +3046,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
       BX_ERROR(("INVPCID: invalid PCID"));
       exception(BX_GP_EXCEPTION, 0);
     }
-    TLB_flush(); // Invalidate all mappings for LADDR tagged with PCID except globals
+    TLB_flushNonGlobal(); // Invalidate all mappings for LADDR tagged with PCID except globals
     break;
 
   case BX_INVPCID_SINGLE_CONTEXT_NON_GLOBAL_INVALIDATION:
@@ -3054,7 +3054,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
       BX_ERROR(("INVPCID: invalid PCID"));
       exception(BX_GP_EXCEPTION, 0);
     }
-    TLB_flush(); // Invalidate all mappings tagged with PCID except globals
+    TLB_flushNonGlobal(); // Invalidate all mappings tagged with PCID except globals
     break;
 
   case BX_INVPCID_ALL_CONTEXT_INVALIDATION:
@@ -3062,7 +3062,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
     break;
 
   case BX_INVPCID_ALL_CONTEXT_NON_GLOBAL_INVALIDATION:
-    TLB_flush(); // Invalidate all mappings tagged with any PCID except globals
+    TLB_flushNonGlobal(); // Invalidate all mappings tagged with any PCID except globals
     break;
 
   default:
