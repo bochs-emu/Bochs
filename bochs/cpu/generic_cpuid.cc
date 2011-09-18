@@ -765,7 +765,7 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
 
   static unsigned bmi_enabled = SIM->get_param_num(BXPN_CPUID_BMI)->get();
   if (bmi_enabled) {
-    features_bitmask |= BX_CPU_BMI1;
+    features_bitmask |= BX_CPU_BMI1 | BX_CPU_LZCNT;
 
     if (! avx_enabled) {
       BX_PANIC(("PANIC: Bit Manipulation Instructions (BMI) emulation requires AVX support !"));
@@ -1204,7 +1204,7 @@ Bit32u bx_generic_cpuid_t::get_ext2_cpuid_features(void) const
   //   [18:17] reserved
   //   [19:19] NodeId: Indicates support for NodeId MSR (0xc001100c)
   //   [20:20] reserved
-  //   [21:21] TBM: trailing bit manipulation instruction support
+  //   [21:21] TBM: trailing bit manipulation instructions support
   //   [22:22] Topology extensions support
   //   [31:23] reserved
 
@@ -1216,6 +1216,12 @@ Bit32u bx_generic_cpuid_t::get_ext2_cpuid_features(void) const
 #if BX_SUPPORT_MISALIGNED_SSE
   features |= BX_CPUID_EXT2_MISALIGNED_SSE;
 #endif
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_LZCNT))
+    features |= BX_CPUID_EXT2_LZCNT;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_SSE4A))
+    features |= BX_CPUID_EXT2_SSE4A;
 
   return features;
 }
