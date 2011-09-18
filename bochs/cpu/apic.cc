@@ -458,7 +458,7 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
     default:
       shadow_error_status |= APIC_ERR_ILLEGAL_ADDR;
       // but for now I want to know about it in case I missed some.
-      BX_PANIC(("APIC register %x not implemented", apic_reg));
+      BX_ERROR(("APIC register %x not implemented", apic_reg));
   }
 }
 
@@ -669,7 +669,7 @@ Bit32u bx_local_apic_c::read_aligned(bx_phy_address addr)
     data = timer_divconf;
     break;
   default:
-    BX_INFO(("APIC register %08x not implemented", apic_reg));
+    BX_ERROR(("APIC register %08x not implemented", apic_reg));
   }
 
   BX_DEBUG(("read from APIC address 0x" FMT_PHY_ADDRX " = %08x", addr, data));
