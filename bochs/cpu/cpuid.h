@@ -71,8 +71,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPU_PENTIUM          (BX_CONST64(1) << 2)   /* Pentium new instruction */
 #define BX_CPU_P6               (BX_CONST64(1) << 3)   /* P6 new instruction */
 #define BX_CPU_MMX              (BX_CONST64(1) << 4)   /* MMX instruction */
-#define BX_CPU_3DNOW            (BX_CONST64(1) << 5)   /* 3DNow! instruction */
-#define BX_CPU_SYSCALL_SYSRET   (BX_CONST64(1) << 6)   /* SYSCALL/SYSRET in legacy mode */
+#define BX_CPU_3DNOW            (BX_CONST64(1) << 5)   /* 3DNow! instruction (AMD) */
+#define BX_CPU_SYSCALL_SYSRET   (BX_CONST64(1) << 6)   /* SYSCALL/SYSRET in legacy mode (AMD) */
 #define BX_CPU_SYSENTER_SYSEXIT (BX_CONST64(1) << 7)   /* SYSENTER/SYSEXIT instruction */
 #define BX_CPU_CLFLUSH          (BX_CONST64(1) << 8)   /* CLFLUSH instruction */
 #define BX_CPU_SSE              (BX_CONST64(1) << 9)   /* SSE  instruction */
@@ -96,9 +96,10 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPU_AVX2             (BX_CONST64(1) << 27)  /* AVX2 instruction */
 #define BX_CPU_AVX_F16C         (BX_CONST64(1) << 28)  /* AVX F16 convert instruction */
 #define BX_CPU_AVX_FMA          (BX_CONST64(1) << 29)  /* AVX FMA instruction */
-#define BX_CPU_LZCNT            (BX_CONST64(1) << 30)  /* LZCNT instruction */
-#define BX_CPU_BMI1             (BX_CONST64(1) << 31)  /* BMI1 instruction */
-#define BX_CPU_BMI2             (BX_CONST64(1) << 32)  /* BMI2 instruction */
+#define BX_CPU_SSE4A            (BX_CONST64(1) << 30)  /* SSE4A instruction (AMD) */
+#define BX_CPU_LZCNT            (BX_CONST64(1) << 31)  /* LZCNT instruction */
+#define BX_CPU_BMI1             (BX_CONST64(1) << 32)  /* BMI1 instruction */
+#define BX_CPU_BMI2             (BX_CONST64(1) << 33)  /* BMI2 instruction */
 
 // cpuid non-ISA features
 #define BX_CPU_DEBUG_EXTENSIONS (1 << 0)               /* Debug Extensions support */

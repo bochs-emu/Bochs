@@ -679,6 +679,16 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
   if (sse_enabled >= BX_CPUID_SUPPORT_SSE2)
     features_bitmask |= BX_CPU_CLFLUSH;
 
+  static bx_bool sse4a_enabled = SIM->get_param_bool(BXPN_CPUID_SSE4A)->get();
+  if (sse4a_enabled) {
+    features_bitmask |= BX_CPU_SSE4A;
+
+     if (! sse_enabled) {
+       BX_PANIC(("PANIC: SSE4A require SSE to be enabled !"));
+       return;
+     }
+  }
+
   static bx_bool sep_enabled = SIM->get_param_bool(BXPN_CPUID_SEP)->get();
   if (sep_enabled)
     features_bitmask |= BX_CPU_SYSENTER_SYSEXIT;

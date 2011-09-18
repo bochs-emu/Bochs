@@ -289,7 +289,7 @@ void bx_init_options()
 
   // cpuid subtree
 #if BX_CPU_LEVEL >= 4
-  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 22);
+  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 23);
 
   new bx_param_string_c(cpuid_param,
       "vendor_string",
@@ -355,6 +355,11 @@ void bx_init_options()
       sse_names,
       BX_CPUID_SUPPORT_SSE2,
       BX_CPUID_SUPPORT_NOSSE);
+
+  new bx_param_bool_c(cpuid_param,
+      "sse4a", "Support for AMD SSE4A instructions",
+      "Support for AMD SSE4A instructionã",
+      0);
 
   new bx_param_bool_c(cpuid_param,
       "sep", "Support for SYSENTER/SYSEXIT instructions",
@@ -2665,6 +2670,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       } else if (!strncmp(params[i], "sse=", 4)) {
         if (! SIM->get_param_enum(BXPN_CPUID_SSE)->set_by_name(&params[i][4]))
           PARSE_ERR(("%s: unsupported sse option.", context));
+      } else if (!strncmp(params[i], "sse4a=", 6)) {
+        if (parse_param_bool(params[i], 6, BXPN_CPUID_SSE4A) < 0) {
+          PARSE_ERR(("%s: cpuid directive malformed.", context));
+        }
       } else if (!strncmp(params[i], "aes=", 4)) {
         if (parse_param_bool(params[i], 4, BXPN_CPUID_AES) < 0) {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
@@ -3974,8 +3983,9 @@ int bx_write_configuration(const char *rc, int overwrite)
     SIM->get_param_enum(BXPN_CPUID_APIC)->get_selected());
 #endif
 #if BX_CPU_LEVEL >= 6
-  fprintf(fp, ", sse=%s, sep=%d, aes=%d, xsave=%d, xsaveopt=%d, movbe=%d, smep=%d",
+  fprintf(fp, ", sse=%s, sse4a=%d, sep=%d, aes=%d, xsave=%d, xsaveopt=%d, movbe=%d, smep=%d",
     SIM->get_param_enum(BXPN_CPUID_SSE)->get_selected(),
+    SIM->get_param_bool(BXPN_CPUID_SSE4A)->get(),
     SIM->get_param_bool(BXPN_CPUID_SEP)->get(),
     SIM->get_param_bool(BXPN_CPUID_AES)->get(),
     SIM->get_param_bool(BXPN_CPUID_XSAVE)->get(),

@@ -183,6 +183,10 @@ cpu: cpuid_limit_winnt=0
 #    Any of NONE/SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 could be selected.
 #    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 #
+#  SSE4A:
+#    Select AMD SSE4A instructions support.
+#    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+#
 #  AES:
 #    Select AES instruction set support.
 #    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.

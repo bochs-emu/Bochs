@@ -142,6 +142,7 @@
 #define Ups &disassembler::Ups
 #define Upd &disassembler::Upd
 #define Udq &disassembler::Udq
+#define Uq  &disassembler::Uq
 
 #define  Wb &disassembler::Wb
 #define  Ww &disassembler::Ww

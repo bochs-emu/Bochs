@@ -44,8 +44,8 @@
 #define IA_PENTIUM          (BX_CONST64(1) << 2)   /* Pentium new instruction */
 #define IA_P6               (BX_CONST64(1) << 3)   /* P6 new instruction */
 #define IA_MMX              (BX_CONST64(1) << 4)   /* MMX instruction */
-#define IA_3DNOW            (BX_CONST64(1) << 5)   /* 3DNow! instruction */
-#define IA_SYSCALL_SYSRET   (BX_CONST64(1) << 6)   /* SYSCALL/SYSRET in legacy mode */
+#define IA_3DNOW            (BX_CONST64(1) << 5)   /* 3DNow! instruction (AMD) */
+#define IA_SYSCALL_SYSRET   (BX_CONST64(1) << 6)   /* SYSCALL/SYSRET in legacy mode (AMD) */
 #define IA_SYSENTER_SYSEXIT (BX_CONST64(1) << 7)   /* SYSENTER/SYSEXIT instruction */
 #define IA_CLFLUSH          (BX_CONST64(1) << 8)   /* CLFLUSH instruction */
 #define IA_SSE              (BX_CONST64(1) << 9)   /* SSE  instruction */
@@ -69,9 +69,10 @@
 #define IA_AVX2             (BX_CONST64(1) << 27)  /* AVX2 instruction */
 #define IA_AVX_F16C         (BX_CONST64(1) << 28)  /* AVX F16 convert instruction */
 #define IA_AVX_FMA          (BX_CONST64(1) << 29)  /* AVX FMA instruction */
-#define IA_LZCNT            (BX_CONST64(1) << 30)  /* LZCNT instruction */
-#define IA_BMI1             (BX_CONST64(1) << 31)  /* BMI1 instruction */
-#define IA_BMI2             (BX_CONST64(1) << 32)  /* BMI2 instruction */
+#define IA_SSE4A            (BX_CONST64(1) << 30)  /* SSE4A instruction (AMD) */
+#define IA_LZCNT            (BX_CONST64(1) << 31)  /* LZCNT instruction */
+#define IA_BMI1             (BX_CONST64(1) << 32)  /* BMI1 instruction */
+#define IA_BMI2             (BX_CONST64(1) << 33)  /* BMI2 instruction */
 
 /* general purpose bit register */
 enum {
@@ -517,6 +518,7 @@ public:
   void Ups(const x86_insn *insn);
   void Upd(const x86_insn *insn);
   void Udq(const x86_insn *insn);
+  void Uq(const x86_insn *insn);
 
   void Vdq(const x86_insn *insn);
   void Vss(const x86_insn *insn);

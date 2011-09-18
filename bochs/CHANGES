@@ -29,6 +29,8 @@ Bochs repository moved to the SVN version control !
     enabled using .bochsrc CPUID option.
   - Added support for Bit Manipulation Instructions (BMI) emulation. The BMI
     instructions support can be enabled using .bochsrc CPUID option.
+  - Added support for AMD SSE4A emulation, the instructions can be enabled
+    using .bochsrc CPUID option.
   - Implemented VMX preemption timer VMEXIT control (patch by Jianan Hao)
   - Implemented Pause-Loop Exiting Secondary VMEXIT control.
   - Added INVPCID instruction emulation support.

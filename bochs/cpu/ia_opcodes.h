@@ -1883,3 +1883,12 @@ bx_define_opcode(BX_IA_LZCNT_GdEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::LZCNT_GdEdR, B
 #if BX_SUPPORT_X86_64
 bx_define_opcode(BX_IA_LZCNT_GqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::LZCNT_GqEqR, BX_CPU_LZCNT, 0)
 #endif
+
+// SSE4A
+bx_define_opcode(BX_IA_MOVNTSS_MssVss, &BX_CPU_C::MOVSS_WssVssM, &BX_CPU_C::BxError, BX_CPU_SSE4A, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_MOVNTSD_MsdVsd, &BX_CPU_C::MOVLPS_MqVps, &BX_CPU_C::BxError, BX_CPU_SSE4A, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_EXTRQ_UdqIbIb, &BX_CPU_C::BxError, &BX_CPU_C::EXTRQ_UdqIbIb, BX_CPU_SSE4A, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_EXTRQ_VdqUq, &BX_CPU_C::BxError, &BX_CPU_C::EXTRQ_VdqUq, BX_CPU_SSE4A, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_INSERTQ_VdqUqIbIb, &BX_CPU_C::BxError, &BX_CPU_C::INSERTQ_VdqUqIbIb, BX_CPU_SSE4A, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_INSERTQ_VdqUdq, &BX_CPU_C::BxError, &BX_CPU_C::INSERTQ_VdqUdq, BX_CPU_SSE4A, BX_PREPARE_SSE)
+// SSE4A

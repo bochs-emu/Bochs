@@ -2808,6 +2808,13 @@ public: // for now...
 #endif
   /* BMI - TZCNT */
 
+  /* SSE4A */
+  BX_SMF BX_INSF_TYPE EXTRQ_UdqIbIb(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE EXTRQ_VdqUq(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE INSERTQ_VdqUqIbIb(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE INSERTQ_VdqUdq(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  /* SSE4A */
+
   BX_SMF BX_INSF_TYPE CMPXCHG8B(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE RETnear32_Iw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE RETnear32(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4472,6 +4479,7 @@ enum {
 #define BxGroup15         BxSplitGroupN
 #define BxGroup16         BxGroupN
 #define BxGroup17         BxGroupN
+#define BxGroup17A        BxGroupN
 
 #define BxGroupFP         BxSplitGroupN
 

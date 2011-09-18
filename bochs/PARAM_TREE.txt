@@ -36,6 +36,7 @@ cpuid
   mmx
   sep
   sse
+  sse4a
   aes
   movbe
   xsave

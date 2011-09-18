@@ -631,3 +631,83 @@ SSE_PSHIFT_IMM_CPU_LEVEL6(PSLLQ_UdqIb, sse_psllq);
 
 SSE_PSHIFT_IMM_CPU_LEVEL6(PSRLDQ_UdqIb, sse_psrldq);
 SSE_PSHIFT_IMM_CPU_LEVEL6(PSLLDQ_UdqIb, sse_pslldq);
+
+/* ************************ */
+/* SSE4A (AMD) INSTRUCTIONS */
+/* ************************ */
+
+#if BX_CPU_LEVEL >= 6
+BX_CPP_INLINE Bit64u sse_extrq(Bit64u src, unsigned shift, unsigned len)
+{
+  len   &= 0x3f;
+  shift &= 0x3f;
+
+  src >>= shift;
+  if (len) {
+    Bit64u mask = (BX_CONST64(1) << len) - 1;
+    return src & mask;
+  }
+
+  return src;
+}
+
+BX_CPP_INLINE Bit64u sse_insertq(Bit64u dest, Bit64u src, unsigned shift, unsigned len)
+{
+  Bit64u mask;
+
+  len   &= 0x3f;
+  shift &= 0x3f;
+
+  if (len == 0) {
+    mask = BX_CONST64(0xffffffffffffffff);
+  } else {
+    mask = (BX_CONST64(1) << len) - 1;
+  }
+
+  return (dest & ~(mask << shift)) | ((src & mask) << shift);
+}
+#endif
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::EXTRQ_UdqIbIb(bxInstruction_c *i)
+{
+#if BX_CPU_LEVEL >= 6
+  BX_WRITE_XMM_REG_LO_QWORD(i->rm(), sse_extrq(BX_READ_XMM_REG_LO_QWORD(i->rm()), i->Ib2(), i->Ib()));
+#endif
+  
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::EXTRQ_VdqUq(bxInstruction_c *i)
+{
+#if BX_CPU_LEVEL >= 6
+  Bit16u ctrl = BX_READ_XMM_REG_LO_WORD(i->rm());
+
+  BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), sse_extrq(BX_READ_XMM_REG_LO_QWORD(i->nnn()), ctrl >> 8, ctrl));
+#endif
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INSERTQ_VdqUqIbIb(bxInstruction_c *i)
+{
+#if BX_CPU_LEVEL >= 6
+  Bit64u dest = BX_READ_XMM_REG_LO_QWORD(i->nnn()), src = BX_READ_XMM_REG_LO_QWORD(i->rm());
+
+  BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), sse_insertq(dest, src, i->Ib2(), i->Ib()));
+#endif
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INSERTQ_VdqUdq(bxInstruction_c *i)
+{
+#if BX_CPU_LEVEL >= 6
+  BxPackedXmmRegister src = BX_READ_XMM_REG(i->rm());
+
+  Bit64u dest = BX_READ_XMM_REG_LO_QWORD(i->nnn());
+
+  BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), sse_insertq(dest, src.xmm64u(0), src.xmmubyte(9), src.xmmubyte(8)));
+#endif
+
+  BX_NEXT_INSTR(i);
+}

@@ -1048,6 +1048,7 @@ void bx_init_hardware()
     bx_bool mmx_enabled = SIM->get_param_bool(BXPN_CPUID_MMX)->get();
 #endif
 #if BX_CPU_LEVEL >= 6
+    bx_bool sse4a_enabled = SIM->get_param_bool(BXPN_CPUID_SSE4A)->get();
     bx_bool aes_enabled = SIM->get_param_bool(BXPN_CPUID_AES)->get();
     bx_bool movbe_enabled = SIM->get_param_bool(BXPN_CPUID_MOVBE)->get();
     bx_bool sep_enabled = SIM->get_param_bool(BXPN_CPUID_SEP)->get();
@@ -1076,7 +1077,8 @@ void bx_init_hardware()
 #endif
 #if BX_CPU_LEVEL >= 6
     BX_INFO(("  SEP support: %s", sep_enabled?"yes":"no"));
-    BX_INFO(("  SSE support: %s", SIM->get_param_enum(BXPN_CPUID_SSE)->get_selected()));
+    BX_INFO(("  SSE support: %s%s", SIM->get_param_enum(BXPN_CPUID_SSE)->get_selected(),
+      sse4a_enabled ? "+sse4a" : ""));
     BX_INFO(("  XSAVE support: %s %s",
       xsave_enabled?"xsave":"no", xsaveopt_enabled?"xsaveopt":""));
     BX_INFO(("  AES support: %s", aes_enabled?"yes":"no"));
