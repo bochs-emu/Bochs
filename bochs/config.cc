@@ -418,10 +418,10 @@ void bx_init_options()
 #if BX_SUPPORT_MONITOR_MWAIT
   new bx_param_bool_c(cpuid_param,
       "mwait", "MONITOR/MWAIT instructions support",
-      "Don't put CPU to sleep state by MWAIT",
+      "MONITOR/MWAIT instructions support",
       BX_SUPPORT_MONITOR_MWAIT);
   new bx_param_bool_c(cpuid_param,
-      "mwait_is_nop", "MWAIT enter CPU to sleep state",
+      "mwait_is_nop", "Don't put CPU to sleep state by MWAIT",
       "Don't put CPU to sleep state by MWAIT",
       0);
 #endif
