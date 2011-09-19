@@ -1460,10 +1460,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MINSD_VsdWsdR(bxInstruction_c *i)
     op2 = float64_denormal_to_zero(op2);
   }
 
-  int rc = float64_compare(op1, op2, status);
+  op1 = float64_min(op1, op2, status);
   check_exceptionsSSE(status.float_exception_flags);
-  BX_WRITE_XMM_REG_LO_QWORD(i->nnn(),
-         (rc == float_relation_less) ? op1 : op2);
+  BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), op1);
 #endif
 
   BX_NEXT_INSTR(i);
@@ -1488,10 +1487,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MINSS_VssWssR(bxInstruction_c *i)
     op2 = float32_denormal_to_zero(op2);
   }
 
-  int rc = float32_compare(op1, op2, status);
+  op1 = float32_min(op1, op2, status);
   check_exceptionsSSE(status.float_exception_flags);
-  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(),
-         (rc == float_relation_less) ? op1 : op2);
+  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), op1);
 #endif
 
   BX_NEXT_INSTR(i);
@@ -1654,10 +1652,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXSD_VsdWsdR(bxInstruction_c *i)
     op2 = float64_denormal_to_zero(op2);
   }
 
-  int rc = float64_compare(op1, op2, status);
+  op1 = float64_max(op1, op2, status);
   check_exceptionsSSE(status.float_exception_flags);
-  BX_WRITE_XMM_REG_LO_QWORD(i->nnn(),
-         (rc == float_relation_greater) ? op1 : op2);
+  BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), op1);
 #endif
 
   BX_NEXT_INSTR(i);
@@ -1682,10 +1679,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXSS_VssWssR(bxInstruction_c *i)
     op2 = float32_denormal_to_zero(op2);
   }
 
-  int rc = float32_compare(op1, op2, status);
+  op1 = float32_max(op1, op2, status);
   check_exceptionsSSE(status.float_exception_flags);
-  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(),
-         (rc == float_relation_greater) ? op1 : op2);
+  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), op1);
 #endif
 
   BX_NEXT_INSTR(i);

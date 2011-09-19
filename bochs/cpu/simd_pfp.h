@@ -275,14 +275,10 @@ BX_CPP_INLINE void sse_minps(BxPackedXmmRegister *op1, BxPackedXmmRegister *op2,
     op2->xmm32u(3) = float32_denormal_to_zero(op2->xmm32u(3));
   }
 
-  int rc = float32_compare(op1->xmm32u(0), op2->xmm32u(0), status);
-  op1->xmm32u(0) = (rc == float_relation_less) ? op1->xmm32u(0) : op2->xmm32u(0);
-  rc = float32_compare(op1->xmm32u(1), op2->xmm32u(1), status);
-  op1->xmm32u(1) = (rc == float_relation_less) ? op1->xmm32u(1) : op2->xmm32u(1);
-  rc = float32_compare(op1->xmm32u(2), op2->xmm32u(2), status);
-  op1->xmm32u(2) = (rc == float_relation_less) ? op1->xmm32u(2) : op2->xmm32u(2);
-  rc = float32_compare(op1->xmm32u(3), op2->xmm32u(3), status);
-  op1->xmm32u(3) = (rc == float_relation_less) ? op1->xmm32u(3) : op2->xmm32u(3);
+  op1->xmm32u(0) = float32_min(op1->xmm32u(0), op2->xmm32u(0), status);
+  op1->xmm32u(1) = float32_min(op1->xmm32u(1), op2->xmm32u(1), status);
+  op1->xmm32u(2) = float32_min(op1->xmm32u(2), op2->xmm32u(2), status);
+  op1->xmm32u(3) = float32_min(op1->xmm32u(3), op2->xmm32u(3), status);
 }
 
 BX_CPP_INLINE void sse_minpd(BxPackedXmmRegister *op1, BxPackedXmmRegister *op2, float_status_t &status, bx_bool mxcsr_daz)
@@ -294,10 +290,8 @@ BX_CPP_INLINE void sse_minpd(BxPackedXmmRegister *op1, BxPackedXmmRegister *op2,
     op2->xmm64u(1) = float64_denormal_to_zero(op2->xmm64u(1));
   }
 
-  int rc = float64_compare(op1->xmm64u(0), op2->xmm64u(0), status);
-  op1->xmm64u(0) = (rc == float_relation_less) ? op1->xmm64u(0) : op2->xmm64u(0);
-  rc = float64_compare(op1->xmm64u(1), op2->xmm64u(1), status);
-  op1->xmm64u(1) = (rc == float_relation_less) ? op1->xmm64u(1) : op2->xmm64u(1);
+  op1->xmm64u(0) = float64_min(op1->xmm64u(0), op2->xmm64u(0), status);
+  op1->xmm64u(1) = float64_min(op1->xmm64u(1), op2->xmm64u(1), status);
 }
 
 BX_CPP_INLINE void sse_maxps(BxPackedXmmRegister *op1, BxPackedXmmRegister *op2, float_status_t &status, bx_bool mxcsr_daz)
@@ -314,14 +308,10 @@ BX_CPP_INLINE void sse_maxps(BxPackedXmmRegister *op1, BxPackedXmmRegister *op2,
     op2->xmm32u(3) = float32_denormal_to_zero(op2->xmm32u(3));
   }
 
-  int rc = float32_compare(op1->xmm32u(0), op2->xmm32u(0), status);
-  op1->xmm32u(0) = (rc == float_relation_greater) ? op1->xmm32u(0) : op2->xmm32u(0);
-  rc = float32_compare(op1->xmm32u(1), op2->xmm32u(1), status);
-  op1->xmm32u(1) = (rc == float_relation_greater) ? op1->xmm32u(1) : op2->xmm32u(1);
-  rc = float32_compare(op1->xmm32u(2), op2->xmm32u(2), status);
-  op1->xmm32u(2) = (rc == float_relation_greater) ? op1->xmm32u(2) : op2->xmm32u(2);
-  rc = float32_compare(op1->xmm32u(3), op2->xmm32u(3), status);
-  op1->xmm32u(3) = (rc == float_relation_greater) ? op1->xmm32u(3) : op2->xmm32u(3);
+  op1->xmm32u(0) = float32_max(op1->xmm32u(0), op2->xmm32u(0), status);
+  op1->xmm32u(1) = float32_max(op1->xmm32u(1), op2->xmm32u(1), status);
+  op1->xmm32u(2) = float32_max(op1->xmm32u(2), op2->xmm32u(2), status);
+  op1->xmm32u(3) = float32_max(op1->xmm32u(3), op2->xmm32u(3), status);
 }
 
 BX_CPP_INLINE void sse_maxpd(BxPackedXmmRegister *op1, BxPackedXmmRegister *op2, float_status_t &status, bx_bool mxcsr_daz)
@@ -333,10 +323,8 @@ BX_CPP_INLINE void sse_maxpd(BxPackedXmmRegister *op1, BxPackedXmmRegister *op2,
     op2->xmm64u(1) = float64_denormal_to_zero(op2->xmm64u(1));
   }
 
-  int rc = float64_compare(op1->xmm64u(0), op2->xmm64u(0), status);
-  op1->xmm64u(0) = (rc == float_relation_greater) ? op1->xmm64u(0) : op2->xmm64u(0);
-  rc = float64_compare(op1->xmm64u(1), op2->xmm64u(1), status);
-  op1->xmm64u(1) = (rc == float_relation_greater) ? op1->xmm64u(1) : op2->xmm64u(1);
+  op1->xmm64u(0) = float64_max(op1->xmm64u(0), op2->xmm64u(0), status);
+  op1->xmm64u(1) = float64_max(op1->xmm64u(1), op2->xmm64u(1), status);
 }
 
 #endif

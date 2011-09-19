@@ -226,6 +226,16 @@ int float32_is_signaling_nan(float32);
 int float32_is_nan(float32);
 int float32_is_denormal(float32);
 
+BX_CPP_INLINE float32 float32_min(float32 a, float32 b, float_status_t &status)
+{
+  return (float32_compare(a, b, status) == float_relation_less) ? a : b;
+}
+
+BX_CPP_INLINE float32 float32_max(float32 a, float32 b, float_status_t &status)
+{
+  return (float32_compare(a, b, status) == float_relation_greater) ? a : b;
+}
+
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE double-precision conversion routines.
 *----------------------------------------------------------------------------*/
@@ -252,6 +262,16 @@ float_class_t float64_class(float64);
 int float64_is_signaling_nan(float64);
 int float64_is_nan(float64);
 int float64_is_denormal(float64);
+
+BX_CPP_INLINE float64 float64_min(float64 a, float64 b, float_status_t &status)
+{
+  return (float64_compare(a, b, status) == float_relation_less) ? a : b;
+}
+
+BX_CPP_INLINE float64 float64_max(float64 a, float64 b, float_status_t &status)
+{
+  return (float64_compare(a, b, status) == float_relation_greater) ? a : b;
+}
 
 #ifdef FLOAT16
 float32 float16_to_float32(float16, float_status_t &status);

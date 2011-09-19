@@ -787,8 +787,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINSS_VssHpsWssR(bxInstruction_c 
     op2           = float32_denormal_to_zero(op2);
   }
 
-  int rc = float32_compare(op1.xmm32u(0), op2, status);
-  op1.xmm32u(0) = (rc == float_relation_less) ? op1.xmm32u(0) : op2;
+  op1.xmm32u(0) = float32_min(op1.xmm32u(0), op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
@@ -811,8 +810,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINSD_VsdHpdWsdR(bxInstruction_c 
     op2           = float64_denormal_to_zero(op2);
   }
 
-  int rc = float64_compare(op1.xmm64u(0), op2, status);
-  op1.xmm64u(0) = (rc == float_relation_less) ? op1.xmm64u(0) : op2;
+  op1.xmm64u(0) = float64_min(op1.xmm64u(0), op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
@@ -959,8 +957,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXSS_VssHpsWssR(bxInstruction_c 
     op2           = float32_denormal_to_zero(op2);
   }
 
-  int rc = float32_compare(op1.xmm32u(0), op2, status);
-  op1.xmm32u(0) = (rc == float_relation_greater) ? op1.xmm32u(0) : op2;
+  op1.xmm32u(0) = float32_max(op1.xmm32u(0), op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
@@ -983,8 +980,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXSD_VsdHpdWsdR(bxInstruction_c 
     op2           = float64_denormal_to_zero(op2);
   }
 
-  int rc = float64_compare(op1.xmm64u(0), op2, status);
-  op1.xmm64u(0) = (rc == float_relation_greater) ? op1.xmm64u(0) : op2;
+  op1.xmm64u(0) = float64_max(op1.xmm64u(0), op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
