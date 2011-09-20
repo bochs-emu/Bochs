@@ -419,7 +419,7 @@ void disassembler::Udq(const x86_insn *insn)
 
 void disassembler::Ups(const x86_insn *insn) { Udq(insn); }
 void disassembler::Upd(const x86_insn *insn) { Udq(insn); }
-void disassembler::Uq(const x86_insn *insn) { Uq(insn); }
+void disassembler::Uq(const x86_insn *insn) { Udq(insn); }
 
 void disassembler::Vq(const x86_insn *insn)
 {
