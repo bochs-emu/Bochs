@@ -1362,6 +1362,7 @@ fetch_b1:
 #if BX_SUPPORT_FPU
   i->setVL(BX_NO_VL);
 #endif
+  i->modRMForm.Id = 0;
 
   unsigned index = b1 + (os_32 << 9); // *512
 
@@ -1457,12 +1458,11 @@ fetch_b1:
        vvv = nnn;
     i->setVvv(vvv);
 
+    i->setModRM(b2); /* for x87 */
+
     // MOVs with CRx and DRx always use register ops and ignore the mod field.
     if ((b1 & ~3) == 0x120)
       mod = 0xc0;
-
-    if ((b1 & 0xff8) == 0xd8)
-      i->setModRM(b2);
 
     if (mod == 0xc0) { // mod == 11b
       i->assertModC0();
@@ -1737,7 +1737,6 @@ modrm_done:
     }
   }
 
-  i->modRMForm.Id = 0;
   unsigned imm_mode = attr & BxImmediate;
   if (imm_mode) {
     // make sure iptr was advanced after Ib(), Iw() and Id()

@@ -1817,6 +1817,7 @@ fetch_b1:
 
   i->setB1(b1);
   i->setVL(BX_NO_VL);
+  i->modRMForm.Id = 0;
 
   unsigned index = b1+offset;
 
@@ -1918,12 +1919,11 @@ fetch_b1:
       vvv = nnn;
     i->setVvv(vvv);
 
+    i->setModRM(b2); /* for x87 */
+
     // MOVs with CRx and DRx always use register ops and ignore the mod field.
     if ((b1 & ~3) == 0x120)
       mod = 0xc0;
-
-    if ((b1 & 0xff8) == 0xd8)
-      i->setModRM(b2);
 
     if (mod == 0xc0) { // mod == 11b
       i->setRm(rm);
@@ -2147,7 +2147,6 @@ modrm_done:
     }
   }
 
-  i->modRMForm.Id = 0;
   unsigned imm_mode = attr & BxImmediate;
   if (imm_mode) {
     // make sure iptr was advanced after Ib(), Iw() and Id()

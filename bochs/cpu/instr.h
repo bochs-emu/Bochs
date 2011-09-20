@@ -128,7 +128,6 @@ public:
 #define BX_INSTR_METADATA_BASE  4
 #define BX_INSTR_METADATA_INDEX 5
 #define BX_INSTR_METADATA_SCALE 6
-#define BX_INSTR_METADATA_MODRM 7 /* modrm for FPU only */
 #define BX_INSTR_METADATA_VVV   7
 
   // using 5-bit field for registers (16 regs in 64-bit, RIP, NIL)
@@ -184,10 +183,11 @@ public:
     metaData[BX_INSTR_METADATA_B1] = b1 & 0xff;
   }
   BX_CPP_INLINE void setModRM(unsigned modrm) {
-    metaData[BX_INSTR_METADATA_MODRM] = modrm;
+    // none of x87 instructions has immediate
+    modRMForm.Ib = modrm;
   }
   BX_CPP_INLINE unsigned modrm() const {
-    return metaData[BX_INSTR_METADATA_MODRM];
+    return modRMForm.Ib;
   }
   BX_CPP_INLINE void setNnn(unsigned nnn) {
     metaData[BX_INSTR_METADATA_NNN] = nnn;
