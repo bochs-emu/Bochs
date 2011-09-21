@@ -26,6 +26,8 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#include "param_names.h"
+
 bxPageWriteStampTable pageWriteStampTable;
 
 void flushICaches(void)
@@ -87,7 +89,14 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBia
   Bit32u pageOffset = PAGE_OFFSET((Bit32u) pAddr);
   Bit32u traceMask = 0;
 
-  for (unsigned n=0;n<BX_MAX_TRACE_LENGTH;n++)
+  // Don't allow traces longer than cpu_loop can execute
+  static unsigned quantum =
+#if BX_SUPPORT_SMP
+    (BX_SMP_PROCESSORS > 1) ? SIM->get_param_num(BXPN_SMP_QUANTUM)->get() :
+#endif
+    BX_MAX_TRACE_LENGTH;
+ 
+  for (unsigned n=0;n < quantum;n++)
   {
 #if BX_SUPPORT_X86_64
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
