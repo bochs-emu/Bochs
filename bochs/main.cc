@@ -939,7 +939,7 @@ int bx_begin_simulation (int argc, char *argv[])
       // only one processor, run as fast as possible by not messing with
       // quantums and loops.
       while (1) {
-        BX_CPU(0)->cpu_loop(0);
+        BX_CPU(0)->cpu_loop();
         if (bx_pc_system.kill_bochs_request)
           break;
       }
@@ -951,16 +951,31 @@ int bx_begin_simulation (int argc, char *argv[])
       // SMP simulation: do a few instructions on each processor, then switch
       // to another.  Increasing quantum speeds up overall performance, but
       // reduces granularity of synchronization between processors.
-      int processor = 0;
-      int quantum = SIM->get_param_num(BXPN_SMP_QUANTUM)->get();
+      // Current implementation uses dynamic quantum, each processor will
+      // execute exactly one trace then quit the cpu_loop and switch to
+      // the next processor.
+
+      static int quantum = SIM->get_param_num(BXPN_SMP_QUANTUM)->get();
+      Bit32u executed = 0, processor = 0;
+
       while (1) {
-        // do some instructions in each processor
-        BX_CPU(processor)->cpu_loop(quantum);
-        processor = (processor+1) % BX_SMP_PROCESSORS;
-        if (bx_pc_system.kill_bochs_request)
-          break;
-        if (processor == 0)
-          BX_TICKN(quantum);
+         // do some instructions in each processor
+         Bit64u icount = BX_CPU(processor)->icount_last_sync = BX_CPU(processor)->get_icount();
+         BX_CPU(processor)->cpu_run_trace();
+
+         // see how many instruction it was able to run
+         Bit32u n = (Bit32u)(BX_CPU(processor)->get_icount() - icount);
+         if (n == 0) n = quantum; // the CPU was halted
+         executed += n;
+
+         processor = (processor+1) % BX_SMP_PROCESSORS;
+         if (processor == 0) {
+           BX_TICKN(executed / BX_SMP_PROCESSORS);
+           executed %= BX_SMP_PROCESSORS;
+         }
+
+         if (bx_pc_system.kill_bochs_request)
+           break;
       }
     }
 #endif /* BX_SUPPORT_SMP */

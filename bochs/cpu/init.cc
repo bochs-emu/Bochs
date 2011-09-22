@@ -360,6 +360,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_SIMPLE(cpu, debug_trap);
 #if BX_DEBUGGER || BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
   BXRS_DEC_PARAM_SIMPLE(cpu, icount);
+  BXRS_DEC_PARAM_SIMPLE(cpu, icount_last_sync);
 #endif
 #if BX_SUPPORT_X86_64
   BXRS_HEX_PARAM_SIMPLE(cpu, RAX);
@@ -773,11 +774,9 @@ void BX_CPU_C::reset(unsigned source)
   // status and control flags register set
   setEFlags(0x2); // Bit1 is always set
 
-#if BX_DEBUGGER || BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+#if BX_DEBUGGER || BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS || BX_SUPPORT_SMP
   if (source == BX_RESET_HARDWARE)
     BX_CPU_THIS_PTR icount = 0;
-#endif
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
   BX_CPU_THIS_PTR icount_last_sync = BX_CPU_THIS_PTR icount;
 #endif
 

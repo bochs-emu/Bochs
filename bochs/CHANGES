@@ -17,6 +17,12 @@ Bochs repository moved to the SVN version control !
     feature is enabled by default when configure with --enable-all-optimizations
     option, to disable handlers chaining speedups configure with
         --disable-handlers-chaining
+  - New way of CPUs scheduling in SMP mode brings up to 50% speedup to the
+    SMP emulation. New implementation uses dynamic CPU quantum value and takes
+    full advantage of the trace cache. Each emulated processor will execute
+    the whole trace before switching to the next processor.
+  * It is also safe to use large (up to 16 instructions) quantum values for
+    the SMP emulation now and improve performance even further.
 
   - Implemented Supervisor Mode Execution Protection (SMEP), the feature can
     be enabled using .bochsrc CPUID option.
@@ -135,6 +141,7 @@ Bochs repository moved to the SVN version control !
   [3190995] add eth backend based on Slirp by Heikki Lindholm
 
 - these S.F. bugs were closed/fixed
+  [3312237] stepN command might be not working properly
   [3392760] Bochs does not compile with linux3.0
   [3403746] segfault crash with sparse disk images
   [3062054] Problems with BIOS pointing device services (int 15h)

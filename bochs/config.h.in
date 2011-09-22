@@ -665,8 +665,8 @@ typedef
 #define BX_SUPPORT_REPEAT_SPEEDUPS 0
 #define BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS 0
 
-#if (BX_SUPPORT_SMP || BX_DEBUGGER || BX_GDBSTUB) && BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS 
- #error "Handler-chaining-speedups are not supported together with internal debugger or SMP !"
+#if (BX_DEBUGGER || BX_GDBSTUB) && BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+ #error "Handler-chaining-speedups are not supported together with internal debugger or gdb-stub!"
 #endif
 
 #if BX_SUPPORT_3DNOW

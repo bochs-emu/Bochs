@@ -49,24 +49,7 @@ static unsigned iCacheMisses=0;
 #define InstrICache_Increment(v)
 #endif
 
-// The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
-// instructions and then return so that the other processors have a chance to
-// run.  This is used by bochs internal debugger or when simulating
-// multiple processors.
-//
-// If maximum instructions have been executed, return. The zero-count
-// means run forever.
-#if BX_SUPPORT_SMP
-  #define CHECK_MAX_INSTRUCTIONS(count) \
-    if ((count) > 0) {                  \
-      (count)--;                        \
-      if ((count) == 0) return;         \
-    }
-#else
-  #define CHECK_MAX_INSTRUCTIONS(count)
-#endif
-
-void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
+void BX_CPU_C::cpu_loop(void)
 {
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR break_point = 0;
@@ -83,7 +66,6 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 #if BX_DEBUGGER || BX_GDBSTUB
     if (dbg_instruction_epilog()) return;
 #endif
-    CHECK_MAX_INSTRUCTIONS(max_instr_count);
 #if BX_GDBSTUB
     if (bx_dbg.gdbstub_enabled) return;
 #endif
@@ -118,7 +100,7 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
     bxICacheEntry_c *entry = getICacheEntry();
     bxInstruction_c *i = entry->i;
 
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS 
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
     for(;;) {
 
       // want to allow changing of the instruction inside instrumentation callback
@@ -157,8 +139,6 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
       if (dbg_instruction_epilog()) return;
 #endif
 
-      CHECK_MAX_INSTRUCTIONS(max_instr_count);
-
       if (BX_CPU_THIS_PTR async_event) break;
 
       if (++i == last) {
@@ -174,6 +154,64 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 
   }  // while (1)
 }
+
+#if BX_SUPPORT_SMP
+
+void BX_CPU_C::cpu_run_trace(void)
+{
+  if (setjmp(BX_CPU_THIS_PTR jmp_buf_env)) {
+    // can get here only from exception function or VMEXIT
+    BX_CPU_THIS_PTR icount++;
+    return;
+  }
+
+  // check on events which occurred for previous instructions (traps)
+  // and ones which are asynchronous to the CPU (hardware interrupts)
+  if (BX_CPU_THIS_PTR async_event) {
+    if (handleAsyncEvent()) {
+      // If request to return to caller ASAP.
+      return;
+    }
+  }
+
+  bxICacheEntry_c *entry = getICacheEntry();
+  bxInstruction_c *i = entry->i;
+
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+  // want to allow changing of the instruction inside instrumentation callback
+  BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
+  RIP += i->ilen();
+  // when handlers chaining is enabled this single call will execute entire trace
+  BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
+
+  if (BX_CPU_THIS_PTR async_event) {
+    // clear stop trace magic indication that probably was set by repeat or branch32/64
+    BX_CPU_THIS_PTR async_event &= ~BX_ASYNC_EVENT_STOP_TRACE;
+  }
+#else
+  bxInstruction_c *last = i + (entry->tlen);
+
+  for(;;) {
+    // want to allow changing of the instruction inside instrumentation callback
+    BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
+    RIP += i->ilen();
+    BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
+    BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
+    BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
+    BX_CPU_THIS_PTR icount++;
+
+    if (BX_CPU_THIS_PTR async_event) {
+      // clear stop trace magic indication that probably was set by repeat or branch32/64
+      BX_CPU_THIS_PTR async_event &= ~BX_ASYNC_EVENT_STOP_TRACE;
+      break;
+    }
+
+    if (++i == last) break;
+  }
+#endif // BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+}
+
+#endif
 
 bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
 {
@@ -230,7 +268,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxRepIterationP
 #endif
         break; // exit always if debugger enabled
 
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS || BX_SUPPORT_SMP
       BX_CPU_THIS_PTR icount++;
 #endif
       BX_SYNC_TIME_IF_SINGLE_PROCESSOR(BX_REPEAT_TIME_UPDATE_INTERVAL);
@@ -252,7 +290,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxRepIterationP
 #endif
         break; // exit always if debugger enabled
 
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS || BX_SUPPORT_SMP
       BX_CPU_THIS_PTR icount++;
 #endif
       BX_SYNC_TIME_IF_SINGLE_PROCESSOR(BX_REPEAT_TIME_UPDATE_INTERVAL);
@@ -273,7 +311,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxRepIterationP
 #endif
         break; // exit always if debugger enabled
 
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS || BX_SUPPORT_SMP
       BX_CPU_THIS_PTR icount++;
 #endif
       BX_SYNC_TIME_IF_SINGLE_PROCESSOR(BX_REPEAT_TIME_UPDATE_INTERVAL);
@@ -320,7 +358,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
 #endif
           break; // exit always if debugger enabled
 
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS || BX_SUPPORT_SMP
         BX_CPU_THIS_PTR icount++;
 #endif
         BX_SYNC_TIME_IF_SINGLE_PROCESSOR(BX_REPEAT_TIME_UPDATE_INTERVAL);
@@ -342,7 +380,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
 #endif
           break; // exit always if debugger enabled
 
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS || BX_SUPPORT_SMP
         BX_CPU_THIS_PTR icount++;
 #endif
         BX_SYNC_TIME_IF_SINGLE_PROCESSOR(BX_REPEAT_TIME_UPDATE_INTERVAL);
@@ -363,7 +401,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
 #endif
           break; // exit always if debugger enabled
 
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS || BX_SUPPORT_SMP
         BX_CPU_THIS_PTR icount++;
 #endif
         BX_SYNC_TIME_IF_SINGLE_PROCESSOR(BX_REPEAT_TIME_UPDATE_INTERVAL);
@@ -386,7 +424,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
 #endif
           break; // exit always if debugger enabled
 
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS || BX_SUPPORT_SMP
         BX_CPU_THIS_PTR icount++;
 #endif
         BX_SYNC_TIME_IF_SINGLE_PROCESSOR(BX_REPEAT_TIME_UPDATE_INTERVAL);
@@ -408,7 +446,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
 #endif
           break; // exit always if debugger enabled
 
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS || BX_SUPPORT_SMP
         BX_CPU_THIS_PTR icount++;
 #endif
         BX_SYNC_TIME_IF_SINGLE_PROCESSOR(BX_REPEAT_TIME_UPDATE_INTERVAL);
@@ -429,7 +467,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
 #endif
           break; // exit always if debugger enabled
 
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS || BX_SUPPORT_SMP
         BX_CPU_THIS_PTR icount++;
 #endif
         BX_SYNC_TIME_IF_SINGLE_PROCESSOR(BX_REPEAT_TIME_UPDATE_INTERVAL);

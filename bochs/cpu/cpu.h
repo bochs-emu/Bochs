@@ -857,10 +857,8 @@ public: // for now...
   bx_address prev_rsp;
   bx_bool    speculative_rsp;
 
-#if BX_DEBUGGER || BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+#if BX_DEBUGGER || BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS || BX_SUPPORT_SMP
   Bit64u icount;
-#endif
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
   Bit64u icount_last_sync;
 #endif
 
@@ -3290,7 +3288,10 @@ public: // for now...
   BX_SMF void atexit(void);
 
   // now for some ancillary functions...
-  BX_SMF void cpu_loop(Bit32u max_instr_count);
+  BX_SMF void cpu_loop(void);
+#if BX_SUPPORT_SMP
+  BX_SMF void cpu_run_trace(void);
+#endif
   BX_SMF unsigned handleAsyncEvent(void);
 
   BX_SMF int fetchDecode32(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage) BX_CPP_AttrRegparmN(3);
@@ -3806,8 +3807,9 @@ public: // for now...
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_rdtscp(void);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
-#if BX_DEBUGGER || BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+#if BX_DEBUGGER || BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS || BX_SUPPORT_SMP
   BX_SMF BX_CPP_INLINE Bit64u get_icount(void) { return BX_CPU_THIS_PTR icount; }
+  BX_SMF BX_CPP_INLINE Bit64u get_icount_last_sync(void) { return BX_CPU_THIS_PTR icount_last_sync; }
 #endif
   BX_SMF BX_CPP_INLINE const bx_gen_reg_t *get_gen_regfile() { return BX_CPU_THIS_PTR gen_reg; }
 
