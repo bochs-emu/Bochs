@@ -968,8 +968,8 @@ int bx_begin_simulation (int argc, char *argv[])
          if (n == 0) n = quantum; // the CPU was halted
          executed += n;
 
-         processor = (processor+1) % BX_SMP_PROCESSORS;
-         if (processor == 0) {
+         if (++processor == BX_SMP_PROCESSORS) {
+           processor = 0;
            BX_TICKN(executed / BX_SMP_PROCESSORS);
            executed %= BX_SMP_PROCESSORS;
          }
