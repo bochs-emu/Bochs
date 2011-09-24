@@ -567,8 +567,8 @@ AC_ARG_ENABLE(cpu-level,
        ;;
    esac
    bx_cpu_level=$enableval
-   if test "$use_smp" = 1 -a "$enableval" -lt 6; then
-     echo "ERROR: with >1 processor, use --enable-cpu-level=6"
+   if test "$use_smp" = 1 -a "$enableval" -lt 5; then
+     echo "ERROR: with >1 processor, use --enable-cpu-level=5 or more"
      exit 1
    fi
    if test "$use_x86_64" = 1 -a "$enableval" -lt 6; then
@@ -1127,9 +1127,14 @@ else
   AC_DEFINE(BX_FAST_FUNC_CALL, 0)
 fi
 
+if test "$use_smp" = 1 -a "$speedup_handlers_chaining" = 1; then
+  speedup_handlers_chaining=0
+  echo "ERROR: with >1 processor handlers-chaining speedups are not supported yet"
+fi
+
 if test "$bx_debugger" = 1 -a "$speedup_handlers_chaining" = 1; then
   speedup_handlers_chaining=0
-  echo "ERROR: handlers-chaining speedups are not supported with internal debugger or gdbstub yet"
+  echo "ERROR: handlers-chaining speedups are not supported with internal debugger yet"
 fi
 
 if test "$speedup_handlers_chaining" = 1; then
