@@ -1,6 +1,25 @@
-Changes after 2.4.6 release:
+Changes in 2.5 release (coming soon):
 
-Bochs repository moved to the SVN version control !
+         Bochs repository moved to the SVN version control !
+
+Brief summary :
+
+! Fully configure CPU to emulate with a single .bochsrc option !
+- 10% (ST) to 50% (SMP) CPU emulation speedup !
+- Implemented support for x86 ISA extensions, Bochs is aligned with latest
+  published Intel Archicture Manual (rev 039, AVX rev 011):
+     - XSAVEOPT, AVX/AVX2/F16C, BMI1/BMI2, SMEP, SSE4A (AMD), INVPCID
+     - VMX: VMX Preemption Timer and Pause Loop Exiting VMEXIT controls
+     - TODO: FMA, XOP (AMD), SVM (AMD)
+- Networking: introduced new networking module 'slirp'
+- Harddrive: fixed buffer overflow causing Bochs crash in LBA48 mode
+- VGA: Added PCI ROM support to cirrus and pcivga and moved ROM loading
+       for the ISA case to the vga code (SeaBIOS now usable by Bochs)
+- Sound: ported ES1370 soundcard emulation from Qemu
+- Continuing configure rework, check for more removed configure and .bochsrc
+  options and their replacements !
+
+Detailed change log :
 
 - CPU
   - Now you can configure CPU to emulate using a single .bochsrc option !
@@ -40,8 +59,8 @@ Bochs repository moved to the SVN version control !
   - Implemented VMX preemption timer VMEXIT control (patch by Jianan Hao)
   - Implemented Pause-Loop Exiting Secondary VMEXIT control.
   - Added INVPCID instruction emulation support.
-  - Now you could disable x86-64 from .bochsrc so now it is possible to emulate
-    32-bit CPU using Bochs binary compiled with x86-64 support.
+  - Now you could disable x86-64 from .bochsrc so it becomes possible to
+    emulate 32-bit CPUs using Bochs binary compiled with x86-64 support.
   - Updated/fixed instrumentation callbacks.
   - Bugfixes for CPU emulation correctness and stability.
 
