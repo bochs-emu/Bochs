@@ -168,7 +168,7 @@ enum VMX_vmabort_code {
 
 /* VMCS 16-bit control fields */
 /* binary 0000_00xx_xxxx_xxx0 */
-#define VMCS_16BIT_CONTROL_VPID                            0x00000000
+#define VMCS_16BIT_CONTROL_VPID                            0x00000000 /* VPID */
 
 /* VMCS 16-bit guest-state fields */
 /* binary 0000_10xx_xxxx_xxx0 */
@@ -209,16 +209,16 @@ enum VMX_vmabort_code {
 #define VMCS_64BIT_CONTROL_EXECUTIVE_VMCS_PTR_HI           0x0000200D
 #define VMCS_64BIT_CONTROL_TSC_OFFSET                      0x00002010
 #define VMCS_64BIT_CONTROL_TSC_OFFSET_HI                   0x00002011
-#define VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR          0x00002012
+#define VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR          0x00002012 /* TPR shadow */
 #define VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR_HI       0x00002013
-#define VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR                0x00002014
+#define VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR                0x00002014 /* APIC virtualization */
 #define VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR_HI             0x00002015
-#define VMCS_64BIT_CONTROL_EPTPTR                          0x0000201A
+#define VMCS_64BIT_CONTROL_EPTPTR                          0x0000201A /* EPT */
 #define VMCS_64BIT_CONTROL_EPTPTR_HI                       0x0000201B
 
 /* VMCS 64-bit read only data fields */
 /* binary 0010_01xx_xxxx_xxx0 */
-#define VMCS_64BIT_GUEST_PHYSICAL_ADDR                     0x00002400
+#define VMCS_64BIT_GUEST_PHYSICAL_ADDR                     0x00002400 /* EPT */
 #define VMCS_64BIT_GUEST_PHYSICAL_ADDR_HI                  0x00002401
 
 /* VMCS 64-bit guest state fields */
@@ -227,13 +227,13 @@ enum VMX_vmabort_code {
 #define VMCS_64BIT_GUEST_LINK_POINTER_HI                   0x00002801
 #define VMCS_64BIT_GUEST_IA32_DEBUGCTL                     0x00002802
 #define VMCS_64BIT_GUEST_IA32_DEBUGCTL_HI                  0x00002803
-#define VMCS_64BIT_GUEST_IA32_PAT                          0x00002804
+#define VMCS_64BIT_GUEST_IA32_PAT                          0x00002804 /* PAT */
 #define VMCS_64BIT_GUEST_IA32_PAT_HI                       0x00002805
-#define VMCS_64BIT_GUEST_IA32_EFER                         0x00002806
+#define VMCS_64BIT_GUEST_IA32_EFER                         0x00002806 /* EFER */
 #define VMCS_64BIT_GUEST_IA32_EFER_HI                      0x00002807
-#define VMCS_64BIT_GUEST_IA32_PERF_GLOBAL_CTRL             0x00002808
+#define VMCS_64BIT_GUEST_IA32_PERF_GLOBAL_CTRL             0x00002808 /* Perf Global Ctrl */
 #define VMCS_64BIT_GUEST_IA32_PERF_GLOBAL_CTRL_HI          0x00002809
-#define VMCS_64BIT_GUEST_IA32_PDPTE0                       0x0000280A
+#define VMCS_64BIT_GUEST_IA32_PDPTE0                       0x0000280A /* EPT */
 #define VMCS_64BIT_GUEST_IA32_PDPTE0_HI                    0x0000280B
 #define VMCS_64BIT_GUEST_IA32_PDPTE1                       0x0000280C
 #define VMCS_64BIT_GUEST_IA32_PDPTE1_HI                    0x0000280D
@@ -244,11 +244,11 @@ enum VMX_vmabort_code {
 
 /* VMCS 64-bit host state fields */
 /* binary 0010_11xx_xxxx_xxx0 */
-#define VMCS_64BIT_HOST_IA32_PAT                           0x00002C00
+#define VMCS_64BIT_HOST_IA32_PAT                           0x00002C00 /* PAT */
 #define VMCS_64BIT_HOST_IA32_PAT_HI                        0x00002C01
-#define VMCS_64BIT_HOST_IA32_EFER                          0x00002C02
+#define VMCS_64BIT_HOST_IA32_EFER                          0x00002C02 /* EFER */
 #define VMCS_64BIT_HOST_IA32_EFER_HI                       0x00002C03
-#define VMCS_64BIT_HOST_IA32_PERF_GLOBAL_CTRL              0x00002C04
+#define VMCS_64BIT_HOST_IA32_PERF_GLOBAL_CTRL              0x00002C04 /* Perf Global Ctrl */
 #define VMCS_64BIT_HOST_IA32_PERF_GLOBAL_CTRL_HI           0x00002C05
 
 /* VMCS 32_bit control fields */
@@ -267,10 +267,10 @@ enum VMX_vmabort_code {
 #define VMCS_32BIT_CONTROL_VMENTRY_INTERRUPTION_INFO       0x00004016
 #define VMCS_32BIT_CONTROL_VMENTRY_EXCEPTION_ERR_CODE      0x00004018
 #define VMCS_32BIT_CONTROL_VMENTRY_INSTRUCTION_LENGTH      0x0000401A
-#define VMCS_32BIT_CONTROL_TPR_THRESHOLD                   0x0000401C
+#define VMCS_32BIT_CONTROL_TPR_THRESHOLD                   0x0000401C /* TPR shadow */
 #define VMCS_32BIT_CONTROL_SECONDARY_VMEXEC_CONTROLS       0x0000401E
-#define VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_GAP          0x00004020
-#define VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_WINDOW       0x00004022
+#define VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_GAP          0x00004020 /* PAUSE loop exiting */
+#define VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_WINDOW       0x00004022 /* PAUSE loop exiting */
 
 /* VMCS 32-bit read only data fields */
 /* binary 0100_01xx_xxxx_xxx0 */
@@ -307,7 +307,7 @@ enum VMX_vmabort_code {
 #define VMCS_32BIT_GUEST_ACTIVITY_STATE                    0x00004826
 #define VMCS_32BIT_GUEST_SMBASE                            0x00004828
 #define VMCS_32BIT_GUEST_IA32_SYSENTER_CS_MSR              0x0000482A
-#define VMCS_32BIT_GUEST_PREEMPTION_TIMER_VALUE            0x0000482E
+#define VMCS_32BIT_GUEST_PREEMPTION_TIMER_VALUE            0x0000482E /* VMX preemption timer */
 
 /* VMCS 32-bit host-state fields */
 /* binary 0100_11xx_xxxx_xxx0 */
@@ -509,8 +509,8 @@ typedef struct bx_VMCS
 
 #define VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT   (1 << 0)
 #define VMX_VM_EXEC_CTRL1_NMI_VMEXIT                  (1 << 3)
-#define VMX_VM_EXEC_CTRL1_VIRTUAL_NMI                 (1 << 5)
-#define VMX_VM_EXEC_CTRL1_VMX_PREEMPTION_TIMER_VMEXIT (1 << 6)
+#define VMX_VM_EXEC_CTRL1_VIRTUAL_NMI                 (1 << 5) /* Virtual NMI */
+#define VMX_VM_EXEC_CTRL1_VMX_PREEMPTION_TIMER_VMEXIT (1 << 6) /* VMX preemption timer */
 
 #ifdef BX_VMX_ENABLE_ALL
 
@@ -536,14 +536,14 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL2_RDTSC_VMEXIT              (1 << 12)
 #define VMX_VM_EXEC_CTRL2_CR3_WRITE_VMEXIT          (1 << 15) /* legacy must be '1 */
 #define VMX_VM_EXEC_CTRL2_CR3_READ_VMEXIT           (1 << 16) /* legacy must be '1 */
-#define VMX_VM_EXEC_CTRL2_CR8_WRITE_VMEXIT          (1 << 19)
-#define VMX_VM_EXEC_CTRL2_CR8_READ_VMEXIT           (1 << 20)
-#define VMX_VM_EXEC_CTRL2_TPR_SHADOW                (1 << 21)
-#define VMX_VM_EXEC_CTRL2_NMI_WINDOW_VMEXIT         (1 << 22)
+#define VMX_VM_EXEC_CTRL2_CR8_WRITE_VMEXIT          (1 << 19) /* TPR shadow */
+#define VMX_VM_EXEC_CTRL2_CR8_READ_VMEXIT           (1 << 20) /* TPR shadow */
+#define VMX_VM_EXEC_CTRL2_TPR_SHADOW                (1 << 21) /* TPR shadow */
+#define VMX_VM_EXEC_CTRL2_NMI_WINDOW_VMEXIT         (1 << 22) /* Virtual NMI */
 #define VMX_VM_EXEC_CTRL2_DRx_ACCESS_VMEXIT         (1 << 23)
 #define VMX_VM_EXEC_CTRL2_IO_VMEXIT                 (1 << 24)
 #define VMX_VM_EXEC_CTRL2_IO_BITMAPS                (1 << 25)
-#define VMX_VM_EXEC_CTRL2_MONITOR_TRAP_FLAG         (1 << 27)
+#define VMX_VM_EXEC_CTRL2_MONITOR_TRAP_FLAG         (1 << 27) /* Monitor Trap Flag */
 #define VMX_VM_EXEC_CTRL2_MSR_BITMAPS               (1 << 28)
 #define VMX_VM_EXEC_CTRL2_MONITOR_VMEXIT            (1 << 29)
 #define VMX_VM_EXEC_CTRL2_PAUSE_VMEXIT              (1 << 30)
@@ -581,15 +581,15 @@ typedef struct bx_VMCS
 
    Bit32u vmexec_ctrls2;
 
-#define VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES  (1 << 0)
-#define VMX_VM_EXEC_CTRL3_EPT_ENABLE                (1 << 1)
-#define VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT   (1 << 2)
-#define VMX_VM_EXEC_CTRL3_RDTSCP                    (1 << 3)
-#define VMX_VM_EXEC_CTRL3_VIRTUALIZE_X2APIC_MODE    (1 << 4)
-#define VMX_VM_EXEC_CTRL3_VPID_ENABLE               (1 << 5)
-#define VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT             (1 << 6)
-#define VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST        (1 << 7)
-#define VMX_VM_EXEC_CTRL3_PAUSE_LOOP_VMEXIT         (1 << 10)
+#define VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES  (1 <<  0) /* APIC virtualization */
+#define VMX_VM_EXEC_CTRL3_EPT_ENABLE                (1 <<  1) /* EPT */
+#define VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT   (1 <<  2) /* Descriptor Table VMEXIT */
+#define VMX_VM_EXEC_CTRL3_RDTSCP                    (1 <<  3)
+#define VMX_VM_EXEC_CTRL3_VIRTUALIZE_X2APIC_MODE    (1 <<  4) /* Virtualize X2APIC */
+#define VMX_VM_EXEC_CTRL3_VPID_ENABLE               (1 <<  5) /* VPID */
+#define VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT             (1 <<  6) /* WBINVD VMEXIT */
+#define VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST        (1 <<  7) /* Unrestricted Guest */
+#define VMX_VM_EXEC_CTRL3_PAUSE_LOOP_VMEXIT         (1 << 10) /* PAUSE loop exiting */
 #define VMX_VM_EXEC_CTRL3_RDRAND_VMEXIT             (1 << 11)
 
 #ifdef BX_VMX_ENABLE_ALL
@@ -653,13 +653,13 @@ typedef struct bx_VMCS
 
 #define VMX_VMEXIT_CTRL1_SAVE_DBG_CTRLS             (1 <<  2) /* legacy must be '1 */
 #define VMX_VMEXIT_CTRL1_HOST_ADDR_SPACE_SIZE       (1 <<  9)
-#define VMX_VMEXIT_CTRL1_LOAD_PERF_GLOBAL_CTRL_MSR  (1 << 12)
+#define VMX_VMEXIT_CTRL1_LOAD_PERF_GLOBAL_CTRL_MSR  (1 << 12) /* Perf Global Control */
 #define VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT             (1 << 15)
-#define VMX_VMEXIT_CTRL1_STORE_PAT_MSR              (1 << 18)
-#define VMX_VMEXIT_CTRL1_LOAD_PAT_MSR               (1 << 19)
-#define VMX_VMEXIT_CTRL1_STORE_EFER_MSR             (1 << 20)
-#define VMX_VMEXIT_CTRL1_LOAD_EFER_MSR              (1 << 21)
-#define VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER (1 << 22)
+#define VMX_VMEXIT_CTRL1_STORE_PAT_MSR              (1 << 18) /* PAT */
+#define VMX_VMEXIT_CTRL1_LOAD_PAT_MSR               (1 << 19) /* PAT */
+#define VMX_VMEXIT_CTRL1_STORE_EFER_MSR             (1 << 20) /* EFER */
+#define VMX_VMEXIT_CTRL1_LOAD_EFER_MSR              (1 << 21) /* EFER */
+#define VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER (1 << 22) /* VMX preemption timer */
 
 #ifdef BX_VMX_ENABLE_ALL
 
@@ -694,9 +694,9 @@ typedef struct bx_VMCS
 #define VMX_VMENTRY_CTRL1_X86_64_GUEST                      (1 <<  9)
 #define VMX_VMENTRY_CTRL1_SMM_ENTER                         (1 << 10)
 #define VMX_VMENTRY_CTRL1_DEACTIVATE_DUAL_MONITOR_TREATMENT (1 << 11)
-#define VMX_VMENTRY_CTRL1_LOAD_PERF_GLOBAL_CTRL_MSR         (1 << 13)
-#define VMX_VMENTRY_CTRL1_LOAD_PAT_MSR                      (1 << 14)
-#define VMX_VMENTRY_CTRL1_LOAD_EFER_MSR                     (1 << 15)
+#define VMX_VMENTRY_CTRL1_LOAD_PERF_GLOBAL_CTRL_MSR         (1 << 13) /* Perf Global Ctrl */
+#define VMX_VMENTRY_CTRL1_LOAD_PAT_MSR                      (1 << 14) /* PAT */
+#define VMX_VMENTRY_CTRL1_LOAD_EFER_MSR                     (1 << 15) /* EFER */
 
 #ifdef BX_VMX_ENABLE_ALL
 
