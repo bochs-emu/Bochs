@@ -66,40 +66,40 @@ protected:
 typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 
 // cpuid ISA (duplicated in disasm.h)
-#define BX_CPU_X87              (BX_CONST64(1) << 0)   /* FPU (X87) instruction */
-#define BX_CPU_486              (BX_CONST64(1) << 1)   /* 486 new instruction */
-#define BX_CPU_PENTIUM          (BX_CONST64(1) << 2)   /* Pentium new instruction */
-#define BX_CPU_P6               (BX_CONST64(1) << 3)   /* P6 new instruction */
-#define BX_CPU_MMX              (BX_CONST64(1) << 4)   /* MMX instruction */
-#define BX_CPU_3DNOW            (BX_CONST64(1) << 5)   /* 3DNow! instruction (AMD) */
-#define BX_CPU_SYSCALL_SYSRET   (BX_CONST64(1) << 6)   /* SYSCALL/SYSRET in legacy mode (AMD) */
-#define BX_CPU_SYSENTER_SYSEXIT (BX_CONST64(1) << 7)   /* SYSENTER/SYSEXIT instruction */
-#define BX_CPU_CLFLUSH          (BX_CONST64(1) << 8)   /* CLFLUSH instruction */
-#define BX_CPU_SSE              (BX_CONST64(1) << 9)   /* SSE  instruction */
-#define BX_CPU_SSE2             (BX_CONST64(1) << 10)  /* SSE2 instruction */
-#define BX_CPU_SSE3             (BX_CONST64(1) << 11)  /* SSE3 instruction */
-#define BX_CPU_SSSE3            (BX_CONST64(1) << 12)  /* SSSE3 instruction */
-#define BX_CPU_SSE4_1           (BX_CONST64(1) << 13)  /* SSE4_1 instruction */
-#define BX_CPU_SSE4_2           (BX_CONST64(1) << 14)  /* SSE4_2 instruction */
-#define BX_CPU_MONITOR_MWAIT    (BX_CONST64(1) << 15)  /* MONITOR/MWAIT instruction */
-#define BX_CPU_VMX              (BX_CONST64(1) << 16)  /* VMX instruction */
-#define BX_CPU_SMX              (BX_CONST64(1) << 17)  /* SMX instruction */
-#define BX_CPU_LM_LAHF_SAHF     (BX_CONST64(1) << 18)  /* Long Mode LAHF/SAHF instruction */
-#define BX_CPU_RDTSCP           (BX_CONST64(1) << 19)  /* RDTSCP instruction */
-#define BX_CPU_XSAVE            (BX_CONST64(1) << 20)  /* XSAVE/XRSTOR extensions instruction */
-#define BX_CPU_XSAVEOPT         (BX_CONST64(1) << 21)  /* XSAVEOPT instruction */
-#define BX_CPU_AES_PCLMULQDQ    (BX_CONST64(1) << 22)  /* AES+PCLMULQDQ instruction */
-#define BX_CPU_MOVBE            (BX_CONST64(1) << 23)  /* MOVBE Intel Atom(R) instruction */
-#define BX_CPU_FSGSBASE         (BX_CONST64(1) << 24)  /* FS/GS BASE access instruction */
-#define BX_CPU_INVPCID          (BX_CONST64(1) << 25)  /* INVPCID instruction */
-#define BX_CPU_AVX              (BX_CONST64(1) << 26)  /* AVX instruction */
-#define BX_CPU_AVX2             (BX_CONST64(1) << 27)  /* AVX2 instruction */
-#define BX_CPU_AVX_F16C         (BX_CONST64(1) << 28)  /* AVX F16 convert instruction */
-#define BX_CPU_AVX_FMA          (BX_CONST64(1) << 29)  /* AVX FMA instruction */
-#define BX_CPU_SSE4A            (BX_CONST64(1) << 30)  /* SSE4A instruction (AMD) */
-#define BX_CPU_LZCNT            (BX_CONST64(1) << 31)  /* LZCNT instruction */
-#define BX_CPU_BMI1             (BX_CONST64(1) << 32)  /* BMI1 instruction */
-#define BX_CPU_BMI2             (BX_CONST64(1) << 33)  /* BMI2 instruction */
+#define BX_ISA_X87              (BX_CONST64(1) << 0)   /* FPU (X87) instruction */
+#define BX_ISA_486              (BX_CONST64(1) << 1)   /* 486 new instruction */
+#define BX_ISA_PENTIUM          (BX_CONST64(1) << 2)   /* Pentium new instruction */
+#define BX_ISA_P6               (BX_CONST64(1) << 3)   /* P6 new instruction */
+#define BX_ISA_MMX              (BX_CONST64(1) << 4)   /* MMX instruction */
+#define BX_ISA_3DNOW            (BX_CONST64(1) << 5)   /* 3DNow! instruction (AMD) */
+#define BX_ISA_SYSCALL_SYSRET   (BX_CONST64(1) << 6)   /* SYSCALL/SYSRET in legacy mode (AMD) */
+#define BX_ISA_SYSENTER_SYSEXIT (BX_CONST64(1) << 7)   /* SYSENTER/SYSEXIT instruction */
+#define BX_ISA_CLFLUSH          (BX_CONST64(1) << 8)   /* CLFLUSH instruction */
+#define BX_ISA_SSE              (BX_CONST64(1) << 9)   /* SSE  instruction */
+#define BX_ISA_SSE2             (BX_CONST64(1) << 10)  /* SSE2 instruction */
+#define BX_ISA_SSE3             (BX_CONST64(1) << 11)  /* SSE3 instruction */
+#define BX_ISA_SSSE3            (BX_CONST64(1) << 12)  /* SSSE3 instruction */
+#define BX_ISA_SSE4_1           (BX_CONST64(1) << 13)  /* SSE4_1 instruction */
+#define BX_ISA_SSE4_2           (BX_CONST64(1) << 14)  /* SSE4_2 instruction */
+#define BX_ISA_MONITOR_MWAIT    (BX_CONST64(1) << 15)  /* MONITOR/MWAIT instruction */
+#define BX_ISA_VMX              (BX_CONST64(1) << 16)  /* VMX instruction */
+#define BX_ISA_SMX              (BX_CONST64(1) << 17)  /* SMX instruction */
+#define BX_ISA_LM_LAHF_SAHF     (BX_CONST64(1) << 18)  /* Long Mode LAHF/SAHF instruction */
+#define BX_ISA_RDTSCP           (BX_CONST64(1) << 19)  /* RDTSCP instruction */
+#define BX_ISA_XSAVE            (BX_CONST64(1) << 20)  /* XSAVE/XRSTOR extensions instruction */
+#define BX_ISA_XSAVEOPT         (BX_CONST64(1) << 21)  /* XSAVEOPT instruction */
+#define BX_ISA_AES_PCLMULQDQ    (BX_CONST64(1) << 22)  /* AES+PCLMULQDQ instruction */
+#define BX_ISA_MOVBE            (BX_CONST64(1) << 23)  /* MOVBE Intel Atom(R) instruction */
+#define BX_ISA_FSGSBASE         (BX_CONST64(1) << 24)  /* FS/GS BASE access instruction */
+#define BX_ISA_INVPCID          (BX_CONST64(1) << 25)  /* INVPCID instruction */
+#define BX_ISA_AVX              (BX_CONST64(1) << 26)  /* AVX instruction */
+#define BX_ISA_AVX2             (BX_CONST64(1) << 27)  /* AVX2 instruction */
+#define BX_ISA_AVX_F16C         (BX_CONST64(1) << 28)  /* AVX F16 convert instruction */
+#define BX_ISA_AVX_FMA          (BX_CONST64(1) << 29)  /* AVX FMA instruction */
+#define BX_ISA_SSE4A            (BX_CONST64(1) << 30)  /* SSE4A instruction (AMD) */
+#define BX_ISA_LZCNT            (BX_CONST64(1) << 31)  /* LZCNT instruction */
+#define BX_ISA_BMI1             (BX_CONST64(1) << 32)  /* BMI1 instruction */
+#define BX_ISA_BMI2             (BX_CONST64(1) << 33)  /* BMI2 instruction */
 
 // cpuid non-ISA features
 #define BX_CPU_DEBUG_EXTENSIONS (1 << 0)               /* Debug Extensions support */

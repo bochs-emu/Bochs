@@ -25,17 +25,9 @@
 #include "cpu.h"
 #include "p3_katmai.h"
 
-#define LOG_THIS cpu->
-
 #if BX_CPU_LEVEL >= 6
 
-#if BX_SUPPORT_X86_64 == 0
-
-p3_katmai_t::p3_katmai_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
-{
-  if (BX_SUPPORT_X86_64)
-    BX_PANIC(("x86-64 should be disabled for PIII (Katmai) configuration"));
-}
+#define LOG_THIS cpu->
 
 void p3_katmai_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
@@ -58,13 +50,13 @@ void p3_katmai_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
 
 Bit64u p3_katmai_t::get_isa_extensions_bitmask(void) const
 {
-  return BX_CPU_X87 |
-         BX_CPU_486 |
-         BX_CPU_PENTIUM |
-         BX_CPU_P6 |
-         BX_CPU_MMX |
-         BX_CPU_SYSENTER_SYSEXIT |
-         BX_CPU_SSE;
+  return BX_ISA_X87 |
+         BX_ISA_486 |
+         BX_ISA_PENTIUM |
+         BX_ISA_P6 |
+         BX_ISA_MMX |
+         BX_ISA_SYSENTER_SYSEXIT |
+         BX_ISA_SSE;
 }
 
 Bit32u p3_katmai_t::get_cpu_extensions_bitmask(void) const
@@ -211,7 +203,5 @@ void p3_katmai_t::dump_cpuid(void) const
 }
 
 bx_cpuid_t *create_p3_katmai_cpuid(BX_CPU_C *cpu) { return new p3_katmai_t(cpu); }
-
-#endif
 
 #endif

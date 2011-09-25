@@ -123,32 +123,32 @@ void corei7_sandy_bridge_2600k_t::get_cpuid_leaf(Bit32u function, Bit32u subfunc
 
 Bit64u corei7_sandy_bridge_2600k_t::get_isa_extensions_bitmask(void) const
 {
-  return BX_CPU_X87 |
-         BX_CPU_486 |
-         BX_CPU_PENTIUM |
-         BX_CPU_P6 |
-         BX_CPU_MMX |
-         BX_CPU_SYSENTER_SYSEXIT |
-         BX_CPU_CLFLUSH |
-         BX_CPU_SSE |
-         BX_CPU_SSE2 |
-         BX_CPU_SSE3 |
-         BX_CPU_SSSE3 |
-         BX_CPU_SSE4_1 |
-         BX_CPU_SSE4_2 |
+  return BX_ISA_X87 |
+         BX_ISA_486 |
+         BX_ISA_PENTIUM |
+         BX_ISA_P6 |
+         BX_ISA_MMX |
+         BX_ISA_SYSENTER_SYSEXIT |
+         BX_ISA_CLFLUSH |
+         BX_ISA_SSE |
+         BX_ISA_SSE2 |
+         BX_ISA_SSE3 |
+         BX_ISA_SSSE3 |
+         BX_ISA_SSE4_1 |
+         BX_ISA_SSE4_2 |
 #if BX_SUPPORT_MONITOR_MWAIT
-         BX_CPU_MONITOR_MWAIT |
+         BX_ISA_MONITOR_MWAIT |
 #endif
 #if BX_SUPPORT_VMX
-         BX_CPU_VMX |
+         BX_ISA_VMX |
 #endif
-      /* BX_CPU_SMX | */
-         BX_CPU_RDTSCP |
-         BX_CPU_XSAVE |
-         BX_CPU_XSAVEOPT |
-         BX_CPU_AES_PCLMULQDQ |
-         BX_CPU_AVX |
-         BX_CPU_LM_LAHF_SAHF;
+      /* BX_ISA_SMX | */
+         BX_ISA_RDTSCP |
+         BX_ISA_XSAVE |
+         BX_ISA_XSAVEOPT |
+         BX_ISA_AES_PCLMULQDQ |
+         BX_ISA_AVX |
+         BX_ISA_LM_LAHF_SAHF;
 }
 
 Bit32u corei7_sandy_bridge_2600k_t::get_cpu_extensions_bitmask(void) const

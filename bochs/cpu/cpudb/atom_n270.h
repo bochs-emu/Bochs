@@ -24,7 +24,7 @@
 #ifndef BX_ATOM_N270_CPUID_DEFINITIONS_H
 #define BX_ATOM_N270_CPUID_DEFINITIONS_H
 
-#if BX_CPU_LEVEL >= 6 && BX_SUPPORT_X86_64 == 0
+#if BX_CPU_LEVEL >= 6
 
 #include "cpu/cpuid.h"
 
@@ -71,7 +71,7 @@ private:
 
 extern bx_cpuid_t *create_atom_n270_cpuid(BX_CPU_C *cpu);
 
-#endif // BX_CPU_LEVEL >= 6 && BX_SUPPORT_X86_64 == 0
+#endif // BX_CPU_LEVEL >= 6
 
 #endif
 

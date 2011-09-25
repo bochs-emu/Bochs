@@ -1984,7 +1984,7 @@ void BX_CPU_C::init_FetchDecodeTables(void)
   }
 
   // handle special case - BSF/BSR vs TZCNT/LZCNT
-  if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_LZCNT)) {
+  if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LZCNT)) {
     BxOpcodesTable[BX_IA_LZCNT_GwEw] = BxOpcodesTable[BX_IA_BSR_GwEw];
     BxOpcodesTable[BX_IA_LZCNT_GdEd] = BxOpcodesTable[BX_IA_BSR_GdEd];
 #if BX_SUPPORT_X86_64
@@ -1992,7 +1992,7 @@ void BX_CPU_C::init_FetchDecodeTables(void)
 #endif
   }
 
-  if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_BMI1)) {
+  if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_BMI1)) {
     BxOpcodesTable[BX_IA_TZCNT_GwEw] = BxOpcodesTable[BX_IA_BSF_GwEw];
     BxOpcodesTable[BX_IA_TZCNT_GdEd] = BxOpcodesTable[BX_IA_BSF_GdEd];
 #if BX_SUPPORT_X86_64

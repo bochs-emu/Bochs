@@ -746,7 +746,7 @@ void bx_dbg_print_sse_state(void)
 #if BX_CPU_LEVEL >= 6
   Bit32u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get();
 
-  if ((isa_extensions_bitmask & BX_CPU_SSE) != 0) {
+  if ((isa_extensions_bitmask & BX_ISA_SSE) != 0) {
     bx_dbg_print_mxcsr_state();
 
     char param_name[20];
@@ -771,7 +771,7 @@ void bx_dbg_print_avx_state(unsigned vlen)
 #if BX_SUPPORT_AVX
   Bit32u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get();
 
-  if ((isa_extensions_bitmask & BX_CPU_AVX) != 0) {
+  if ((isa_extensions_bitmask & BX_ISA_AVX) != 0) {
     bx_dbg_print_mxcsr_state();
 
     char param_name[20];
@@ -801,7 +801,7 @@ void bx_dbg_print_mmx_state(void)
 #if BX_CPU_LEVEL >= 5
   Bit32u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get();
 
-  if ((isa_extensions_bitmask & BX_CPU_MMX) != 0) {
+  if ((isa_extensions_bitmask & BX_ISA_MMX) != 0) {
     char param_name[20];
     for(unsigned i=0;i<8;i++) {
       sprintf(param_name, "FPU.st%d.fraction", i);
@@ -932,8 +932,6 @@ void bx_dbg_info_control_regs_command(void)
     (cr4 & (1<<2))  ? "TSD" : "tsd",
     (cr4 & (1<<1))  ? "PVI" : "pvi",
     (cr4 & (1<<0))  ? "VME" : "vme");
-#endif
-#if BX_SUPPORT_X86_64
   Bit32u efer = SIM->get_param_num("MSR.EFER", dbg_cpu_list)->get();
   dbg_printf("EFER=0x%08x: %s %s %s %s %s\n", efer,
     (efer & (1<<14)) ? "FFXSR" : "ffxsr",
@@ -3611,7 +3609,7 @@ void bx_dbg_calc_command(Bit64u value)
 
 Bit8u bx_dbg_get_reg8l_value(unsigned reg)
 {
-  if (reg < BX_GENERAL_REGISTERS)
+  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < BX_GENERAL_REGISTERS))
     return BX_CPU(dbg_cpu)->get_reg8l(reg);
 
   dbg_printf("Unknown 8BL register [%d] !!!\n", reg);
@@ -3620,7 +3618,7 @@ Bit8u bx_dbg_get_reg8l_value(unsigned reg)
 
 Bit8u bx_dbg_get_reg8h_value(unsigned reg)
 {
-  if (reg < BX_GENERAL_REGISTERS)
+  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < BX_GENERAL_REGISTERS))
     return BX_CPU(dbg_cpu)->get_reg8h(reg);
 
   dbg_printf("Unknown 8BH register [%d] !!!\n", reg);
@@ -3629,7 +3627,7 @@ Bit8u bx_dbg_get_reg8h_value(unsigned reg)
 
 Bit16u bx_dbg_get_reg16_value(unsigned reg)
 {
-  if (reg < BX_GENERAL_REGISTERS)
+  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < BX_GENERAL_REGISTERS))
     return BX_CPU(dbg_cpu)->get_reg16(reg);
 
   dbg_printf("Unknown 16B register [%d] !!!\n", reg);
@@ -3638,7 +3636,7 @@ Bit16u bx_dbg_get_reg16_value(unsigned reg)
 
 Bit32u bx_dbg_get_reg32_value(unsigned reg)
 {
-  if (reg < BX_GENERAL_REGISTERS)
+  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < BX_GENERAL_REGISTERS))
     return BX_CPU(dbg_cpu)->get_reg32(reg);
 
   dbg_printf("Unknown 32B register [%d] !!!\n", reg);
@@ -3648,7 +3646,7 @@ Bit32u bx_dbg_get_reg32_value(unsigned reg)
 Bit64u bx_dbg_get_reg64_value(unsigned reg)
 {
 #if BX_SUPPORT_X86_64
-  if (reg < BX_GENERAL_REGISTERS)
+  if (BX_CPU(dbg_cpu)->long64_mode() && reg < BX_GENERAL_REGISTERS)
     return BX_CPU(dbg_cpu)->get_reg64(reg);
 #endif
 
@@ -3658,7 +3656,7 @@ Bit64u bx_dbg_get_reg64_value(unsigned reg)
 
 void bx_dbg_set_reg8l_value(unsigned reg, Bit8u value)
 {
-  if (reg < BX_GENERAL_REGISTERS)
+  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < BX_GENERAL_REGISTERS))
     BX_CPU(dbg_cpu)->set_reg8l(reg, value);
   else
     dbg_printf("Unknown 8BL register [%d] !!!\n", reg);
@@ -3666,7 +3664,7 @@ void bx_dbg_set_reg8l_value(unsigned reg, Bit8u value)
 
 void bx_dbg_set_reg8h_value(unsigned reg, Bit8u value)
 {
-  if (reg < BX_GENERAL_REGISTERS)
+  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < BX_GENERAL_REGISTERS))
     BX_CPU(dbg_cpu)->set_reg8h(reg, value);
   else
     dbg_printf("Unknown 8BH register [%d] !!!\n", reg);
@@ -3674,7 +3672,7 @@ void bx_dbg_set_reg8h_value(unsigned reg, Bit8u value)
 
 void bx_dbg_set_reg16_value(unsigned reg, Bit16u value)
 {
-  if (reg < BX_GENERAL_REGISTERS)
+  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < BX_GENERAL_REGISTERS))
     BX_CPU(dbg_cpu)->set_reg16(reg, value);
   else
     dbg_printf("Unknown 16B register [%d] !!!\n", reg);
@@ -3682,7 +3680,7 @@ void bx_dbg_set_reg16_value(unsigned reg, Bit16u value)
 
 void bx_dbg_set_reg32_value(unsigned reg, Bit32u value)
 {
-  if (reg < BX_GENERAL_REGISTERS)
+  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < BX_GENERAL_REGISTERS))
     BX_CPU(dbg_cpu)->set_reg32(reg, value);
   else
     dbg_printf("Unknown 32B register [%d] !!!\n", reg);
@@ -3691,7 +3689,7 @@ void bx_dbg_set_reg32_value(unsigned reg, Bit32u value)
 void bx_dbg_set_reg64_value(unsigned reg, Bit64u value)
 {
 #if BX_SUPPORT_X86_64
-  if (reg < BX_GENERAL_REGISTERS)
+  if (BX_CPU(dbg_cpu)->long64_mode() && reg < BX_GENERAL_REGISTERS)
     BX_CPU(dbg_cpu)->set_reg64(reg, value);
   else
 #endif

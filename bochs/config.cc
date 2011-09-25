@@ -289,7 +289,7 @@ void bx_init_options()
 
   // cpuid subtree
 #if BX_CPU_LEVEL >= 4
-  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 23);
+  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 24);
 
   new bx_param_string_c(cpuid_param,
       "vendor_string",
@@ -398,6 +398,10 @@ void bx_init_options()
       0);
 #endif
 #if BX_SUPPORT_X86_64
+  new bx_param_bool_c(cpuid_param,
+      "x86_64", "x86-64 and long mode",
+      "Support for x86-64 and long mode",
+      1);
   new bx_param_bool_c(cpuid_param,
       "1g_pages", "1G pages support in long mode",
       "Support for 1G pages in long mode",
@@ -2705,6 +2709,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_num(BXPN_CPUID_BMI)->set(atol(&params[i][4]));
 #endif
 #if BX_SUPPORT_X86_64
+      } else if (!strncmp(params[i], "x86_64=", 7)) {
+        if (parse_param_bool(params[i], 9, BXPN_CPUID_X86_64) < 0) {
+          PARSE_ERR(("%s: cpuid directive malformed.", context));
+        }
       } else if (!strncmp(params[i], "1g_pages=", 9)) {
         if (parse_param_bool(params[i], 9, BXPN_CPUID_1G_PAGES) < 0) {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
@@ -3999,7 +4007,8 @@ int bx_write_configuration(const char *rc, int overwrite)
     SIM->get_param_num(BXPN_CPUID_BMI)->get());
 #endif
 #if BX_SUPPORT_X86_64
-  fprintf(fp, ", 1g_pages=%d, pcid=%d, fsgsbase=%d",
+  fprintf(fp, ", x86_64=%d, 1g_pages=%d, pcid=%d, fsgsbase=%d",
+    SIM->get_param_bool(BXPN_CPUID_X86_64)->get(),
     SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get(),
     SIM->get_param_bool(BXPN_CPUID_PCID)->get(),
     SIM->get_param_bool(BXPN_CPUID_FSGSBASE)->get());

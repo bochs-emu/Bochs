@@ -80,18 +80,18 @@ void athlon64_clawhammer_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, 
 
 Bit64u athlon64_clawhammer_t::get_isa_extensions_bitmask(void) const
 {
-  return BX_CPU_X87 |
-         BX_CPU_486 |
-         BX_CPU_PENTIUM |
-         BX_CPU_P6 |
-         BX_CPU_MMX |
-         BX_CPU_3DNOW |
-         BX_CPU_SYSCALL_SYSRET |
-         BX_CPU_SYSENTER_SYSEXIT |
-         BX_CPU_CLFLUSH |
-         BX_CPU_SSE |
-         BX_CPU_SSE2 |
-         BX_CPU_LM_LAHF_SAHF;
+  return BX_ISA_X87 |
+         BX_ISA_486 |
+         BX_ISA_PENTIUM |
+         BX_ISA_P6 |
+         BX_ISA_MMX |
+         BX_ISA_3DNOW |
+         BX_ISA_SYSCALL_SYSRET |
+         BX_ISA_SYSENTER_SYSEXIT |
+         BX_ISA_CLFLUSH |
+         BX_ISA_SSE |
+         BX_ISA_SSE2 |
+         BX_ISA_LM_LAHF_SAHF;
 }
 
 Bit32u athlon64_clawhammer_t::get_cpu_extensions_bitmask(void) const

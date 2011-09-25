@@ -24,13 +24,13 @@
 #ifndef BX_P3_KATMAI_CPUID_DEFINITIONS_H
 #define BX_P3_KATMAI_CPUID_DEFINITIONS_H
 
-#if BX_CPU_LEVEL >= 6 && BX_SUPPORT_X86_64 == 0
+#if BX_CPU_LEVEL >= 6
 
 #include "cpu/cpuid.h"
 
 class p3_katmai_t : public bx_cpuid_t {
 public:
-  p3_katmai_t(BX_CPU_C *cpu);
+  p3_katmai_t(BX_CPU_C *cpu): bx_cpuid_t(cpu) {}
   virtual ~p3_katmai_t() {}
 
   // return CPU name
@@ -52,6 +52,6 @@ private:
 
 extern bx_cpuid_t *create_p3_katmai_cpuid(BX_CPU_C *cpu);
 
-#endif // BX_CPU_LEVEL >= 6 && BX_SUPPORT_X86_64 == 0
+#endif // BX_CPU_LEVEL >= 6
 
 #endif

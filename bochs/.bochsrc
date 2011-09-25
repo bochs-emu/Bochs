@@ -215,6 +215,10 @@ cpu: cpuid_limit_winnt=0
 #    Select BMI1/BMI2 instructions support.
 #    This option exists only if Bochs compiled with --enable-avx option.
 #
+#  X86-64:
+#    Enable x86-64 and long mode support.
+#    This option exists only if Bochs compiled with x86-64 support.
+#
 #  1G_PAGES:
 #    Enable 1G page size support in long mode.
 #    This option exists only if Bochs compiled with x86-64 support.
@@ -257,7 +261,7 @@ cpu: cpuid_limit_winnt=0
 #  STEPPING:
 #    Set stepping information returned by CPUID. Default stepping value is 3.
 #=======================================================================
-#cpuid: mmx=1, sep=1, sse=sse4_2, apic=xapic, aes=1, movbe=1, xsave=1
+#cpuid: x86_64=1, mmx=1, sep=1, sse=sse4_2, apic=xapic, aes=1, movbe=1, xsave=1
 #cpuid: family=6, model=0x1a, stepping=5
 
 #=======================================================================

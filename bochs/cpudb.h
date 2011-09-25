@@ -26,13 +26,12 @@ bx_define_cpudb(bx_generic)
 bx_define_cpudb(pentium_mmx)
 bx_define_cpudb(amd_k6_2_chomper)
 #elif BX_CPU_LEVEL >= 6
-#if BX_SUPPORT_X86_64 == 0
 bx_define_cpudb(p2_klamath)
 bx_define_cpudb(p3_katmai)
 bx_define_cpudb(p4_willamette)
 bx_define_cpudb(core_duo_t2400_yonah)
 bx_define_cpudb(atom_n270)
-#else
+#if BX_SUPPORT_X86_64
 bx_define_cpudb(p4_prescott_celeron_336)
 bx_define_cpudb(athlon64_clawhammer)
 bx_define_cpudb(core2_extreme_x9770)

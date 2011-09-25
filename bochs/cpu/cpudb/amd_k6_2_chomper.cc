@@ -27,7 +27,7 @@
 
 #define LOG_THIS cpu->
 
-#if BX_CPU_LEVEL == 5
+#if BX_CPU_LEVEL >= 5 && BX_SUPPORT_X86_64 == 0
 
 amd_k6_2_chomper_t::amd_k6_2_chomper_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
@@ -74,12 +74,12 @@ void amd_k6_2_chomper_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
 
 Bit64u amd_k6_2_chomper_t::get_isa_extensions_bitmask(void) const
 {
-  return BX_CPU_X87 |
-         BX_CPU_486 |
-         BX_CPU_PENTIUM |
-         BX_CPU_MMX |
-         BX_CPU_SYSCALL_SYSRET |
-         BX_CPU_3DNOW;
+  return BX_ISA_X87 |
+         BX_ISA_486 |
+         BX_ISA_PENTIUM |
+         BX_ISA_MMX |
+         BX_ISA_SYSCALL_SYSRET |
+         BX_ISA_3DNOW;
 }
 
 Bit32u amd_k6_2_chomper_t::get_cpu_extensions_bitmask(void) const

@@ -28,7 +28,7 @@
 
 #define LOG_THIS cpu->
 
-#if BX_CPU_LEVEL >= 6 && BX_SUPPORT_X86_64 == 0
+#if BX_CPU_LEVEL >= 6
 
 atom_n270_t::atom_n270_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
@@ -37,9 +37,6 @@ atom_n270_t::atom_n270_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   ncores = SIM->get_param_num(BXPN_CPU_NCORES)->get();
   nprocessors = SIM->get_param_num(BXPN_CPU_NPROCESSORS)->get();
 #endif
-
-  if (BX_SUPPORT_X86_64)
-    BX_PANIC(("x86-64 should be disabled for Intel Atom N270 (Diamondville) configuration"));
 }
 
 void atom_n270_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -109,21 +106,21 @@ void atom_n270_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
 
 Bit64u atom_n270_t::get_isa_extensions_bitmask(void) const
 {
-  return BX_CPU_X87 |
-         BX_CPU_486 |
-         BX_CPU_PENTIUM |
-         BX_CPU_P6 |
-         BX_CPU_MMX |
-         BX_CPU_SYSENTER_SYSEXIT |
-         BX_CPU_CLFLUSH |
-         BX_CPU_SSE |
-         BX_CPU_SSE2 |
-         BX_CPU_SSE3 |
-         BX_CPU_SSSE3 |
+  return BX_ISA_X87 |
+         BX_ISA_486 |
+         BX_ISA_PENTIUM |
+         BX_ISA_P6 |
+         BX_ISA_MMX |
+         BX_ISA_SYSENTER_SYSEXIT |
+         BX_ISA_CLFLUSH |
+         BX_ISA_SSE |
+         BX_ISA_SSE2 |
+         BX_ISA_SSE3 |
+         BX_ISA_SSSE3 |
 #if BX_SUPPORT_MONITOR_MWAIT
-         BX_CPU_MONITOR_MWAIT |
+         BX_ISA_MONITOR_MWAIT |
 #endif
-         BX_CPU_MOVBE;
+         BX_ISA_MOVBE;
 }
 
 Bit32u atom_n270_t::get_cpu_extensions_bitmask(void) const

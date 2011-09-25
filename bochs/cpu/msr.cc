@@ -50,30 +50,24 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_SYSENTER_CS:
       if (! bx_cpuid_support_sep()) {
-        // failed to find the MSR, could #GP or ignore it silently
         BX_ERROR(("RDMSR MSR_SYSENTER_CS: SYSENTER/SYSEXIT feature not enabled !"));
-        if (! BX_CPU_THIS_PTR ignore_bad_msrs)
-          return 0; // will result in #GP fault due to unknown MSR
+        return handle_unknown_rdmsr(index, msr);
       }
       val64 = BX_CPU_THIS_PTR msr.sysenter_cs_msr;
       break;
 
     case BX_MSR_SYSENTER_ESP:
       if (! bx_cpuid_support_sep()) {
-        // failed to find the MSR, could #GP or ignore it silently
         BX_ERROR(("RDMSR MSR_SYSENTER_ESP: SYSENTER/SYSEXIT feature not enabled !"));
-        if (! BX_CPU_THIS_PTR ignore_bad_msrs)
-          return 0; // will result in #GP fault due to unknown MSR
+        return handle_unknown_rdmsr(index, msr);
       }
       val64 = BX_CPU_THIS_PTR msr.sysenter_esp_msr;
       break;
 
     case BX_MSR_SYSENTER_EIP:
       if (! bx_cpuid_support_sep()) {
-        // failed to find the MSR, could #GP or ignore it silently
         BX_ERROR(("RDMSR MSR_SYSENTER_EIP: SYSENTER/SYSEXIT feature not enabled !"));
-        if (! BX_CPU_THIS_PTR ignore_bad_msrs)
-          return 0; // will result in #GP fault due to unknown MSR
+        return handle_unknown_rdmsr(index, msr);
       }
       val64 = BX_CPU_THIS_PTR msr.sysenter_eip_msr;
       break;
@@ -206,7 +200,6 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 #endif
 
-#if BX_CPU_LEVEL >= 5
     case BX_MSR_EFER:
       if (! BX_CPU_THIS_PTR efer_suppmask)
         return 0;
@@ -215,67 +208,73 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
     case BX_MSR_STAR:
+      if ((BX_CPU_THIS_PTR efer_suppmask & BX_EFER_SCE_MASK) == 0) {
+        BX_ERROR(("RDMSR MSR_STAR: SYSCALL/SYSRET support not enabled !"));
+        return handle_unknown_rdmsr(index, msr);
+      }
       val64 = MSR_STAR;
       break;
-#endif
 
 #if BX_SUPPORT_X86_64
     case BX_MSR_LSTAR:
+      if (! bx_cpuid_support_x86_64()) {
+        BX_ERROR(("RDMSR MSR_LSTAR: long mode support not enabled !"));
+        return handle_unknown_rdmsr(index, msr);
+      }
       val64 = MSR_LSTAR;
       break;
 
     case BX_MSR_CSTAR:
+      if (! bx_cpuid_support_x86_64()) {
+        BX_ERROR(("RDMSR MSR_CSTAR: long mode support not enabled !"));
+        return handle_unknown_rdmsr(index, msr);
+      }
       val64 = MSR_CSTAR;
       break;
 
     case BX_MSR_FMASK:
+      if (! bx_cpuid_support_x86_64()) {
+        BX_ERROR(("RDMSR MSR_FMASK: long mode support not enabled !"));
+        return handle_unknown_rdmsr(index, msr);
+      }
       val64 = MSR_FMASK;
       break;
 
     case BX_MSR_FSBASE:
+      if (! bx_cpuid_support_x86_64()) {
+        BX_ERROR(("RDMSR MSR_FSBASE: long mode support not enabled !"));
+        return handle_unknown_rdmsr(index, msr);
+      }
       val64 = MSR_FSBASE;
       break;
 
     case BX_MSR_GSBASE:
+      if (! bx_cpuid_support_x86_64()) {
+        BX_ERROR(("RDMSR MSR_GSBASE: long mode support not enabled !"));
+        return handle_unknown_rdmsr(index, msr);
+      }
       val64 = MSR_GSBASE;
       break;
 
     case BX_MSR_KERNELGSBASE:
+      if (! bx_cpuid_support_x86_64()) {
+        BX_ERROR(("RDMSR MSR_KERNELGSBASE: long mode support not enabled !"));
+        return handle_unknown_rdmsr(index, msr);
+      }
       val64 = MSR_KERNELGSBASE;
       break;
 
     case BX_MSR_TSC_AUX:
       if (! bx_cpuid_support_rdtscp()) {
-        // failed to find the MSR, could #GP or ignore it silently
         BX_ERROR(("RDMSR MSR_TSC_AUX: RTDSCP feature not enabled !"));
-        if (! BX_CPU_THIS_PTR ignore_bad_msrs)
-          return 0; // will result in #GP fault due to unknown MSR
+        return handle_unknown_rdmsr(index, msr);
       }
       val64 = MSR_TSC_AUX;   // 32 bit MSR
       break;
 #endif
 
-    default: {
-      // Try to check cpuid_t first (can implement some MSRs)
-      int result = BX_CPU_THIS_PTR cpuid->rdmsr(index, &val64);
-      if (result == 0)
-        return 0; // #GP fault due to not supported MSR
-
-      if (result < 0) {
-        // cpuid_t have no idea about this MSR
-#if BX_CONFIGURE_MSRS
-        if (index < BX_MSR_MAX_INDEX && BX_CPU_THIS_PTR msrs[index]) {
-          val64 = BX_CPU_THIS_PTR msrs[index]->get64();
-          break;
-        }
-#endif
-        // failed to find the MSR, could #GP or ignore it silently
-        BX_ERROR(("RDMSR: Unknown register %#x", index));
-
-        if (! BX_CPU_THIS_PTR ignore_bad_msrs)
-          return 0; // will result in #GP fault due to unknown MSR
-      }
-    }
+    default:
+      return handle_unknown_rdmsr(index, msr);
   }
 
   BX_DEBUG(("RDMSR: read %08x:%08x from MSR %x", GET32H(val64), GET32L(val64), index));
@@ -283,6 +282,37 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
   *msr = val64;
   return 1;
 }
+
+bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::handle_unknown_rdmsr(Bit32u index, Bit64u *msr)
+{
+  Bit64u val_64 = 0;
+
+  // Try to check cpuid_t first (can implement some MSRs)
+  int result = BX_CPU_THIS_PTR cpuid->rdmsr(index, &val_64);
+  if (result == 0)
+    return 0; // #GP fault due to not supported MSR
+
+  if (result < 0) {
+    // cpuid_t have no idea about this MSR
+#if BX_CONFIGURE_MSRS
+    if (index < BX_MSR_MAX_INDEX && BX_CPU_THIS_PTR msrs[index]) {
+      val_64 = BX_CPU_THIS_PTR msrs[index]->get64();
+    }
+    else
+#endif
+    {
+      // failed to find the MSR, could #GP or ignore it silently
+      BX_ERROR(("RDMSR: Unknown register %#x", index));
+
+      if (! BX_CPU_THIS_PTR ignore_bad_msrs)
+        return 0; // will result in #GP fault due to unknown MSR
+    }
+  }
+
+  *msr = val_64;
+  return 1;
+}
+
 #endif // BX_CPU_LEVEL >= 5
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
@@ -400,20 +430,16 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_SYSENTER_CS:
       if (! bx_cpuid_support_sep()) {
-        // failed to find the MSR, could #GP or ignore it silently
         BX_ERROR(("WRMSR MSR_SYSENTER_CS: SYSENTER/SYSEXIT feature not enabled !"));
-        if (! BX_CPU_THIS_PTR ignore_bad_msrs)
-          return 0; // will result in #GP fault due to unknown MSR
+        return handle_unknown_wrmsr(index, val_64);
       }
       BX_CPU_THIS_PTR msr.sysenter_cs_msr = val32_lo;
       break;
 
     case BX_MSR_SYSENTER_ESP:
       if (! bx_cpuid_support_sep()) {
-        // failed to find the MSR, could #GP or ignore it silently
         BX_ERROR(("WRMSR MSR_SYSENTER_ESP: SYSENTER/SYSEXIT feature not enabled !"));
-        if (! BX_CPU_THIS_PTR ignore_bad_msrs)
-          return 0; // will result in #GP fault due to unknown MSR
+        return handle_unknown_wrmsr(index, val_64);
       }
 #if BX_SUPPORT_X86_64
       if (! IsCanonical(val_64)) {
@@ -426,10 +452,8 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
     case BX_MSR_SYSENTER_EIP:
       if (! bx_cpuid_support_sep()) {
-        // failed to find the MSR, could #GP or ignore it silently
         BX_ERROR(("WRMSR MSR_SYSENTER_EIP: SYSENTER/SYSEXIT feature not enabled !"));
-        if (! BX_CPU_THIS_PTR ignore_bad_msrs)
-          return 0; // will result in #GP fault due to unknown MSR
+        return handle_unknown_wrmsr(index, val_64);
       }
 #if BX_SUPPORT_X86_64
       if (! IsCanonical(val_64)) {
@@ -585,18 +609,24 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       return 0;
 #endif
 
-#if BX_CPU_LEVEL >= 5
     case BX_MSR_EFER:
       if (! SetEFER(val_64)) return 0;
       break;
 
     case BX_MSR_STAR:
+      if ((BX_CPU_THIS_PTR efer_suppmask & BX_EFER_SCE_MASK) == 0) {
+        BX_ERROR(("RDMSR MSR_STAR: SYSCALL/SYSRET support not enabled !"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
       MSR_STAR = val_64;
       break;
-#endif
 
 #if BX_SUPPORT_X86_64
     case BX_MSR_LSTAR:
+      if (! bx_cpuid_support_x86_64()) {
+        BX_ERROR(("WRMSR MSR_LSTAR: long mode support not enabled !"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
       if (! IsCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_LSTAR !"));
         return 0;
@@ -605,6 +635,10 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_CSTAR:
+      if (! bx_cpuid_support_x86_64()) {
+        BX_ERROR(("WRMSR MSR_CSTAR: long mode support not enabled !"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
       if (! IsCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_CSTAR !"));
         return 0;
@@ -613,10 +647,18 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_FMASK:
+      if (! bx_cpuid_support_x86_64()) {
+        BX_ERROR(("WRMSR MSR_FMASK: long mode support not enabled !"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
       MSR_FMASK = (Bit32u) val_64;
       break;
 
     case BX_MSR_FSBASE:
+      if (! bx_cpuid_support_x86_64()) {
+        BX_ERROR(("WRMSR MSR_FSBASE: long mode support not enabled !"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
       if (! IsCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_FSBASE !"));
         return 0;
@@ -625,6 +667,10 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_GSBASE:
+      if (! bx_cpuid_support_x86_64()) {
+        BX_ERROR(("WRMSR MSR_GSBASE: long mode support not enabled !"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
       if (! IsCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_GSBASE !"));
         return 0;
@@ -633,6 +679,10 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_KERNELGSBASE:
+      if (! bx_cpuid_support_x86_64()) {
+        BX_ERROR(("WRMSR MSR_KERNELGSBASE: long mode support not enabled !"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
       if (! IsCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_KERNELGSBASE !"));
         return 0;
@@ -642,42 +692,47 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
     case BX_MSR_TSC_AUX:
       if (! bx_cpuid_support_rdtscp()) {
-        // failed to find the MSR, could #GP or ignore it silently
         BX_ERROR(("WRMSR MSR_TSC_AUX: RTDSCP feature not enabled !"));
-        if (! BX_CPU_THIS_PTR ignore_bad_msrs)
-          return 0; // will result in #GP fault due to unknown MSR
+        return handle_unknown_wrmsr(index, val_64);
       }
       MSR_TSC_AUX = val32_lo;
       break;
 #endif  // #if BX_SUPPORT_X86_64
 
-    default: {
-      // Try to check cpuid_t first (can implement some MSRs)
-      int result = BX_CPU_THIS_PTR cpuid->wrmsr(index, val_64);
-      if (result == 0)
-        return 0; // #GP fault due to not supported MSR
-
-      if (result < 0) {
-        // cpuid_t have no idea about this MSR
-#if BX_CONFIGURE_MSRS
-        if (index < BX_MSR_MAX_INDEX && BX_CPU_THIS_PTR msrs[index]) {
-          if (! BX_CPU_THIS_PTR msrs[index]->set64(val_64)) {
-            BX_ERROR(("WRMSR: Write failed to MSR %#x - #GP fault", index));
-            return 0;
-          }
-          break;
-        }
-#endif
-        // failed to find the MSR, could #GP or ignore it silently
-        BX_ERROR(("WRMSR: Unknown register %#x", index));
-        if (! BX_CPU_THIS_PTR ignore_bad_msrs)
-          return 0; // will result in #GP fault due to unknown MSR
-      }
-    }
+    default:
+      return handle_unknown_wrmsr(index, val_64);
   }
 
   return 1;
 }
+
+bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::handle_unknown_wrmsr(Bit32u index, Bit64u val_64)
+{
+  // Try to check cpuid_t first (can implement some MSRs)
+  int result = BX_CPU_THIS_PTR cpuid->wrmsr(index, val_64);
+  if (result == 0)
+    return 0; // #GP fault due to not supported MSR
+
+  if (result < 0) {
+    // cpuid_t have no idea about this MSR
+#if BX_CONFIGURE_MSRS
+    if (index < BX_MSR_MAX_INDEX && BX_CPU_THIS_PTR msrs[index]) {
+      if (! BX_CPU_THIS_PTR msrs[index]->set64(val_64)) {
+        BX_ERROR(("WRMSR: Write failed to MSR %#x - #GP fault", index));
+        return 0;
+      }
+      return 1;
+    }
+#endif
+    // failed to find the MSR, could #GP or ignore it silently
+    BX_ERROR(("WRMSR: Unknown register %#x", index));
+    if (! BX_CPU_THIS_PTR ignore_bad_msrs)
+      return 0; // will result in #GP fault due to unknown MSR
+  }
+
+  return 1;
+}
+
 #endif // BX_CPU_LEVEL >= 5
 
 #if BX_SUPPORT_APIC
@@ -698,12 +753,10 @@ bx_bool BX_CPU_C::relocate_apic(Bit64u val_64)
   if (BX_CPU_THIS_PTR msr.apicbase & 0x800) {
     Bit32u val32_hi = GET32H(val_64), val32_lo = GET32L(val_64);
     BX_INFO(("WRMSR: wrote %08x:%08x to MSR_APICBASE", val32_hi, val32_lo));
-#if BX_SUPPORT_X86_64
     if (! IsValidPhyAddr(val_64)) {
       BX_ERROR(("relocate_apic: invalid physical address"));
       return 0;
     }
-#endif
     if (val32_lo & BX_MSR_APICBASE_RESERVED_BITS) {
       BX_ERROR(("relocate_apic: attempt to set reserved bits"));
       return 0;

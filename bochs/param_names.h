@@ -61,6 +61,7 @@
 #define BXPN_CPUID_APIC                  "cpuid.apic"
 #define BXPN_CPUID_MWAIT                 "cpuid.mwait"
 #define BXPN_CPUID_MWAIT_IS_NOP          "cpuid.mwait_is_nop"
+#define BXPN_CPUID_X86_64                "cpuid.x86_64"
 #define BXPN_CPUID_1G_PAGES              "cpuid.1g_pages"
 #define BXPN_CPUID_PCID                  "cpuid.pcid"
 #define BXPN_CPUID_FSGSBASE              "cpuid.fsgsbase"

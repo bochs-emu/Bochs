@@ -25,9 +25,9 @@
 #include "cpu.h"
 #include "pentium_mmx.h"
 
-#define LOG_THIS cpu->
+#if BX_CPU_LEVEL >= 5 && BX_SUPPORT_X86_64 == 0
 
-#if BX_CPU_LEVEL == 5
+#define LOG_THIS cpu->
 
 pentium_mmx_t::pentium_mmx_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
@@ -53,10 +53,10 @@ void pentium_mmx_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fu
 
 Bit64u pentium_mmx_t::get_isa_extensions_bitmask(void) const
 {
-  return BX_CPU_X87 |
-         BX_CPU_486 |
-         BX_CPU_PENTIUM |
-         BX_CPU_MMX;
+  return BX_ISA_X87 |
+         BX_ISA_486 |
+         BX_ISA_PENTIUM |
+         BX_ISA_MMX;
 }
 
 Bit32u pentium_mmx_t::get_cpu_extensions_bitmask(void) const

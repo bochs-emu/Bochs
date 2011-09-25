@@ -42,7 +42,7 @@ BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
   sprintf(buffer, "CPU%x", bx_cpuid);
   put(buffer);
 
-  isa_extensions_bitmask = BX_SUPPORT_FPU ? BX_CPU_X87 : 0;
+  isa_extensions_bitmask = BX_SUPPORT_FPU ? BX_ISA_X87 : 0;
   cpu_extensions_bitmask = 0;
 }
 
@@ -408,7 +408,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(cpu, CR4, cr4.val32);
 #endif
 #if BX_CPU_LEVEL >= 6
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_XSAVE)) {
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVE)) {
     BXRS_HEX_PARAM_FIELD(cpu, XCR0, xcr0.val32);
   }
 #endif
@@ -484,16 +484,16 @@ void BX_CPU_C::register_state(void)
 #if BX_SUPPORT_APIC
   BXRS_HEX_PARAM_FIELD(MSR, apicbase, msr.apicbase);
 #endif
-#if BX_CPU_LEVEL >= 5
   BXRS_HEX_PARAM_FIELD(MSR, EFER, efer.val32);
-#endif
-#if BX_SUPPORT_X86_64
   BXRS_HEX_PARAM_FIELD(MSR,  star, msr.star);
-  BXRS_HEX_PARAM_FIELD(MSR, lstar, msr.lstar);
-  BXRS_HEX_PARAM_FIELD(MSR, cstar, msr.cstar);
-  BXRS_HEX_PARAM_FIELD(MSR, fmask, msr.fmask);
-  BXRS_HEX_PARAM_FIELD(MSR, kernelgsbase, msr.kernelgsbase);
-  BXRS_HEX_PARAM_FIELD(MSR, tsc_aux, msr.tsc_aux);
+#if BX_SUPPORT_X86_64
+  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_LONG_MODE)) {
+    BXRS_HEX_PARAM_FIELD(MSR, lstar, msr.lstar);
+    BXRS_HEX_PARAM_FIELD(MSR, cstar, msr.cstar);
+    BXRS_HEX_PARAM_FIELD(MSR, fmask, msr.fmask);
+    BXRS_HEX_PARAM_FIELD(MSR, kernelgsbase, msr.kernelgsbase);
+    BXRS_HEX_PARAM_FIELD(MSR, tsc_aux, msr.tsc_aux);
+  }
 #endif
   BXRS_HEX_PARAM_FIELD(MSR, tsc_last_reset, msr.tsc_last_reset);
 #if BX_CPU_LEVEL >= 6
@@ -569,7 +569,7 @@ void BX_CPU_C::register_state(void)
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_SSE)) {
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE)) {
     bx_list_c *sse = new bx_list_c(cpu, "SSE", BX_VLMAX*2*BX_XMM_REGISTERS+1);
     BXRS_HEX_PARAM_FIELD(sse, mxcsr, mxcsr.mxcsr);
     for (n=0; n<BX_XMM_REGISTERS; n++) {
@@ -946,7 +946,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR xcr0.set32(0x1);
   BX_CPU_THIS_PTR xcr0_suppmask = 0x3;
 #if BX_SUPPORT_AVX
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_AVX))
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX))
     BX_CPU_THIS_PTR xcr0_suppmask |= BX_XCR0_AVX_MASK;
 #endif
 #endif
@@ -961,33 +961,35 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR lapic.set_base(BX_CPU_THIS_PTR msr.apicbase);
 #endif
 
-#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR efer.set32(0);
   BX_CPU_THIS_PTR efer_suppmask = 0;
   if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_NX))
     BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_NXE_MASK;
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_SYSCALL_SYSRET))
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SYSCALL_SYSRET))
     BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_SCE_MASK;
 #if BX_SUPPORT_X86_64
-  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_LONG_MODE))
+  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_LONG_MODE)) {
     BX_CPU_THIS_PTR efer_suppmask |= (BX_EFER_SCE_MASK | BX_EFER_LME_MASK | BX_EFER_LMA_MASK);
-  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_FFXSR))
-    BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_FFXSR_MASK;
-#endif
+    if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_FFXSR))
+      BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_FFXSR_MASK;
+  }
 #endif
 
+  BX_CPU_THIS_PTR msr.star = 0;
 #if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR msr.star  = 0;
-  BX_CPU_THIS_PTR msr.lstar = 0;
-  BX_CPU_THIS_PTR msr.cstar = 0;
-  BX_CPU_THIS_PTR msr.fmask = 0x00020200;
-  BX_CPU_THIS_PTR msr.kernelgsbase = 0;
-  BX_CPU_THIS_PTR msr.tsc_aux = 0;
+  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_LONG_MODE)) {
+    BX_CPU_THIS_PTR msr.lstar = 0;
+    BX_CPU_THIS_PTR msr.cstar = 0;
+    BX_CPU_THIS_PTR msr.fmask = 0x00020200;
+    BX_CPU_THIS_PTR msr.kernelgsbase = 0;
+    BX_CPU_THIS_PTR msr.tsc_aux = 0;
+  }
 #endif
+
   if (source == BX_RESET_HARDWARE) {
     BX_CPU_THIS_PTR set_TSC(0); // do not change TSC on INIT
   }
-#endif
+#endif // BX_CPU_LEVEL >= 5
 
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR msr.sysenter_cs_msr  = 0;
@@ -1067,7 +1069,7 @@ void BX_CPU_C::reset(unsigned source)
 
     BX_CPU_THIS_PTR mxcsr.mxcsr = MXCSR_RESET;
     BX_CPU_THIS_PTR mxcsr_mask = 0x0000ffbf;
-    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_SSE2))
+    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE2))
       BX_CPU_THIS_PTR mxcsr_mask |= MXCSR_DAZ;
     if (BX_SUPPORT_MISALIGNED_SSE)
       BX_CPU_THIS_PTR mxcsr_mask |= MXCSR_MISALIGNED_EXCEPTION_MASK;

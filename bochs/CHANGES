@@ -40,6 +40,8 @@ Bochs repository moved to the SVN version control !
   - Implemented VMX preemption timer VMEXIT control (patch by Jianan Hao)
   - Implemented Pause-Loop Exiting Secondary VMEXIT control.
   - Added INVPCID instruction emulation support.
+  - Now you could disable x86-64 from .bochsrc so now it is possible to emulate
+    32-bit CPU using Bochs binary compiled with x86-64 support.
   - Updated/fixed instrumentation callbacks.
   - Bugfixes for CPU emulation correctness and stability.
 

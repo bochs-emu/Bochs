@@ -115,37 +115,41 @@ void BX_CPU_C::debug(bx_address offset)
   BX_INFO(("SS.mode = %u bit",
     long64_mode() ? 64 : (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b ? 32 : 16)));
 #if BX_SUPPORT_X86_64
-  BX_INFO(("EFER   = 0x%08x", BX_CPU_THIS_PTR efer.get32()));
-  BX_INFO(("| RAX=%08x%08x  RBX=%08x%08x",
+  if (long_mode()) {
+    BX_INFO(("EFER   = 0x%08x", BX_CPU_THIS_PTR efer.get32()));
+    BX_INFO(("| RAX=%08x%08x  RBX=%08x%08x",
           (unsigned) (RAX >> 32), (unsigned) EAX,
           (unsigned) (RBX >> 32), (unsigned) EBX));
-  BX_INFO(("| RCX=%08x%08x  RDX=%08x%08x",
+    BX_INFO(("| RCX=%08x%08x  RDX=%08x%08x",
           (unsigned) (RCX >> 32), (unsigned) ECX,
           (unsigned) (RDX >> 32), (unsigned) EDX));
-  BX_INFO(("| RSP=%08x%08x  RBP=%08x%08x",
+    BX_INFO(("| RSP=%08x%08x  RBP=%08x%08x",
           (unsigned) (RSP >> 32), (unsigned) ESP,
           (unsigned) (RBP >> 32), (unsigned) EBP));
-  BX_INFO(("| RSI=%08x%08x  RDI=%08x%08x",
+    BX_INFO(("| RSI=%08x%08x  RDI=%08x%08x",
           (unsigned) (RSI >> 32), (unsigned) ESI,
           (unsigned) (RDI >> 32), (unsigned) EDI));
-  BX_INFO(("|  R8=%08x%08x   R9=%08x%08x",
+    BX_INFO(("|  R8=%08x%08x   R9=%08x%08x",
           (unsigned) (R8  >> 32), (unsigned) (R8  & 0xFFFFFFFF),
           (unsigned) (R9  >> 32), (unsigned) (R9  & 0xFFFFFFFF)));
-  BX_INFO(("| R10=%08x%08x  R11=%08x%08x",
+    BX_INFO(("| R10=%08x%08x  R11=%08x%08x",
           (unsigned) (R10 >> 32), (unsigned) (R10 & 0xFFFFFFFF),
           (unsigned) (R11 >> 32), (unsigned) (R11 & 0xFFFFFFFF)));
-  BX_INFO(("| R12=%08x%08x  R13=%08x%08x",
+    BX_INFO(("| R12=%08x%08x  R13=%08x%08x",
           (unsigned) (R12 >> 32), (unsigned) (R12 & 0xFFFFFFFF),
           (unsigned) (R13 >> 32), (unsigned) (R13 & 0xFFFFFFFF)));
-  BX_INFO(("| R14=%08x%08x  R15=%08x%08x",
+    BX_INFO(("| R14=%08x%08x  R15=%08x%08x",
           (unsigned) (R14 >> 32), (unsigned) (R14 & 0xFFFFFFFF),
           (unsigned) (R15 >> 32), (unsigned) (R15 & 0xFFFFFFFF)));
-#else
-  BX_INFO(("| EAX=%08x  EBX=%08x  ECX=%08x  EDX=%08x",
-          (unsigned) EAX, (unsigned) EBX, (unsigned) ECX, (unsigned) EDX));
-  BX_INFO(("| ESP=%08x  EBP=%08x  ESI=%08x  EDI=%08x",
-          (unsigned) ESP, (unsigned) EBP, (unsigned) ESI, (unsigned) EDI));
+  }
+  else
 #endif
+  {
+    BX_INFO(("| EAX=%08x  EBX=%08x  ECX=%08x  EDX=%08x",
+          (unsigned) EAX, (unsigned) EBX, (unsigned) ECX, (unsigned) EDX));
+    BX_INFO(("| ESP=%08x  EBP=%08x  ESI=%08x  EDI=%08x",
+          (unsigned) ESP, (unsigned) EBP, (unsigned) ESI, (unsigned) EDI));
+  }
   BX_INFO(("| IOPL=%1u %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s",
     BX_CPU_THIS_PTR get_IOPL(),
     BX_CPU_THIS_PTR get_ID() ? "ID" : "id",
@@ -222,43 +226,42 @@ void BX_CPU_C::debug(bx_address offset)
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.g,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.d_b));
 #if BX_SUPPORT_X86_64
-  BX_INFO(("|  MSR_FS_BASE:%08x%08x",
-    (unsigned) (MSR_FSBASE >> 32), (unsigned) (MSR_FSBASE & 0xFFFFFFFF)));
-  BX_INFO(("|  MSR_GS_BASE:%08x%08x",
-    (unsigned) (MSR_GSBASE >> 32), (unsigned) (MSR_GSBASE & 0xFFFFFFFF)));
-#endif
+  if (long_mode()) {
+    BX_INFO(("|  MSR_FS_BASE:%08x%08x",
+      (unsigned) (MSR_FSBASE >> 32), (unsigned) (MSR_FSBASE & 0xFFFFFFFF)));
+    BX_INFO(("|  MSR_GS_BASE:%08x%08x",
+      (unsigned) (MSR_GSBASE >> 32), (unsigned) (MSR_GSBASE & 0xFFFFFFFF)));
 
-#if BX_SUPPORT_X86_64
-  BX_INFO(("| RIP=%08x%08x (%08x%08x)",
-    (unsigned) (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].dword.hrx),
-    (unsigned) (EIP),
-    (unsigned) (BX_CPU_THIS_PTR prev_rip >> 32),
-    (unsigned) (BX_CPU_THIS_PTR prev_rip & 0xffffffff)));
-  BX_INFO(("| CR0=0x%08x CR2=0x%08x%08x",
-    (unsigned) (BX_CPU_THIS_PTR cr0.get32()),
-    (unsigned) (BX_CPU_THIS_PTR cr2 >> 32),
-    (unsigned) (BX_CPU_THIS_PTR cr2 & 0xffffffff)));
-  BX_INFO(("| CR3=0x%08x CR4=0x%08x",
-    (unsigned) BX_CPU_THIS_PTR cr3, BX_CPU_THIS_PTR cr4.get32()));
-#else
-  BX_INFO(("| EIP=%08x (%08x)", (unsigned) EIP,
-    (unsigned) BX_CPU_THIS_PTR prev_rip));
-
-#if BX_CPU_LEVEL >= 2 && BX_CPU_LEVEL < 5
-  BX_INFO(("| CR0=0x%08x CR2=0x%08x CR3=0x%08x",
-    BX_CPU_THIS_PTR cr0.get32(),
-    BX_CPU_THIS_PTR cr2,
-    BX_CPU_THIS_PTR cr3));
-#elif BX_CPU_LEVEL >= 5
-  BX_INFO(("| CR0=0x%08x CR2=0x%08x",
-    BX_CPU_THIS_PTR cr0.get32(),
-    BX_CPU_THIS_PTR cr2));
-  BX_INFO(("| CR3=0x%08x CR4=0x%08x",
-    BX_CPU_THIS_PTR cr3,
-    BX_CPU_THIS_PTR cr4.get32()));
-#endif
-
+    BX_INFO(("| RIP=%08x%08x (%08x%08x)",
+      (unsigned) (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].dword.hrx),
+      (unsigned)  EIP,
+      (unsigned) (BX_CPU_THIS_PTR prev_rip >> 32),
+      (unsigned) (BX_CPU_THIS_PTR prev_rip & 0xffffffff)));
+    BX_INFO(("| CR0=0x%08x CR2=0x%08x%08x",
+      (unsigned) (BX_CPU_THIS_PTR cr0.get32()),
+      (unsigned) (BX_CPU_THIS_PTR cr2 >> 32),
+      (unsigned) (BX_CPU_THIS_PTR cr2 & 0xffffffff)));
+    BX_INFO(("| CR3=0x%08x CR4=0x%08x",
+      (unsigned) BX_CPU_THIS_PTR cr3, (unsigned) BX_CPU_THIS_PTR cr4.get32()));
+  }
+  else
 #endif // BX_SUPPORT_X86_64
+  {
+    BX_INFO(("| EIP=%08x (%08x)", (unsigned) EIP,
+      (unsigned) BX_CPU_THIS_PTR prev_rip));
+
+#if BX_CPU_LEVEL < 5
+    BX_INFO(("| CR0=0x%08x CR2=0x%08x CR3=0x%08x",
+      (unsigned) BX_CPU_THIS_PTR cr0.get32(),
+      (unsigned) BX_CPU_THIS_PTR cr2, (unsigned) BX_CPU_THIS_PTR cr3));
+#else
+    BX_INFO(("| CR0=0x%08x CR2=0x%08x",
+      BX_CPU_THIS_PTR cr0.get32(), BX_CPU_THIS_PTR cr2));
+    BX_INFO(("| CR3=0x%08x CR4=0x%08x",
+      (unsigned) BX_CPU_THIS_PTR cr3, 
+      (unsigned) BX_CPU_THIS_PTR cr4.get32()));
+#endif
+  }
 
 #if BX_DISASM
   debug_disasm_instruction(offset);

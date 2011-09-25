@@ -3685,7 +3685,9 @@ public: // for now...
 
 #if BX_CPU_LEVEL >= 5
   BX_SMF bx_bool rdmsr(Bit32u index, Bit64u *val_64) BX_CPP_AttrRegparmN(2);
+  BX_SMF bx_bool handle_unknown_rdmsr(Bit32u index, Bit64u *val_64) BX_CPP_AttrRegparmN(2);
   BX_SMF bx_bool wrmsr(Bit32u index, Bit64u  val_64) BX_CPP_AttrRegparmN(2);
+  BX_SMF bx_bool handle_unknown_wrmsr(Bit32u index, Bit64u  val_64) BX_CPP_AttrRegparmN(2);
 #endif
 
 #if BX_SUPPORT_APIC
@@ -3786,6 +3788,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE Bit8u get_apic_id(void) { return BX_CPU_THIS_PTR bx_cpuid; }
 #endif
 
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_x86_64(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_debug_extensions(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_1g_paging(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_vme(void);
@@ -4241,17 +4244,17 @@ BX_CPP_INLINE bx_bool BX_CPU_C::alignment_check(void)
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_smx(void)
 {
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_SMX);
+  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_SMX);
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_vmx(void)
 {
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_VMX);
+  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_VMX);
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_xsave(void)
 {
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_XSAVE);
+  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_XSAVE);
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_x2apic(void)
@@ -4271,7 +4274,7 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pcid(void)
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_fsgsbase(void)
 {
 #if BX_SUPPORT_X86_64
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_FSGSBASE);
+  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_FSGSBASE);
 #else
   return 0;
 #endif
@@ -4289,7 +4292,7 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_vme(void)
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_tsc(void)
 {
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_PENTIUM);
+  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_PENTIUM);
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_debug_extensions(void)
@@ -4314,22 +4317,31 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pge(void)
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_mmx(void)
 {
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_MMX);
+  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_MMX);
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_sse(void)
 {
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_SSE);
+  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_SSE);
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_sep(void)
 {
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_SYSENTER_SYSEXIT);
+  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_SYSENTER_SYSEXIT);
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_fxsave_fxrstor(void)
 {
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_SSE);
+  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_SSE);
+}
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_x86_64(void)
+{
+#if BX_SUPPORT_X86_64
+  return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_LONG_MODE);
+#else
+  return 0;
+#endif
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_1g_paging(void)
@@ -4344,7 +4356,7 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_1g_paging(void)
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_rdtscp(void)
 {
 #if BX_SUPPORT_X86_64
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_RDTSCP);
+  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_RDTSCP);
 #else
   return 0;
 #endif

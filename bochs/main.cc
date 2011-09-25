@@ -1073,6 +1073,7 @@ void bx_init_hardware()
     unsigned avx_enabled = SIM->get_param_num(BXPN_CPUID_AVX)->get();
 #endif
 #if BX_SUPPORT_X86_64
+    bx_bool x86_64_enabled = SIM->get_param_bool(BXPN_CPUID_X86_64)->get();
     bx_bool xlarge_pages_enabled = SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get();
 #endif
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -1098,9 +1099,11 @@ void bx_init_hardware()
       xsave_enabled?"xsave":"no", xsaveopt_enabled?"xsaveopt":""));
     BX_INFO(("  AES support: %s", aes_enabled?"yes":"no"));
     BX_INFO(("  MOVBE support: %s", movbe_enabled?"yes":"no"));
-    BX_INFO(("  x86-64 support: %s", BX_SUPPORT_X86_64?"yes":"no"));
 #if BX_SUPPORT_X86_64
+    BX_INFO(("  x86-64 support: %s", x86_64_enabled?"yes":"no"));
     BX_INFO(("  1G paging support: %s", xlarge_pages_enabled?"yes":"no"));
+#else
+    BX_INFO(("  x86-64 support: no"));
 #endif
 #if BX_SUPPORT_MONITOR_MWAIT
     BX_INFO(("  MWAIT support: %s", mwait_enabled?"yes":"no"));
