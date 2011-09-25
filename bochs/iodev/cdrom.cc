@@ -160,7 +160,7 @@ static char CDDevicePath[MAXPATHLEN];
 #define BX_CD_FRAMESIZE 2048
 #define CD_FRAMESIZE    2048
 
-#else // all others (Irix, Tru64)
+#elif !defined(WIN32) // all others (Irix, Tru64)
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
