@@ -38,7 +38,7 @@ public:
 
   virtual Bit64u get_isa_extensions_bitmask(void) const;
   virtual Bit32u get_cpu_extensions_bitmask(void) const;
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX >= 2
   virtual Bit32u get_vmx_extensions_bitmask(void) const;
 #endif
 
