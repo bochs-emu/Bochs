@@ -594,8 +594,10 @@ typedef struct bx_VMCS
    bx_phy_address virtual_apic_page_addr;
    Bit32u vm_tpr_threshold;
 #endif
-#if BX_SUPPORT_VMX >= 2
+
    bx_phy_address apic_access_page;
+
+#if BX_SUPPORT_VMX >= 2
    Bit64u eptptr;
    Bit16u vpid;
 #endif

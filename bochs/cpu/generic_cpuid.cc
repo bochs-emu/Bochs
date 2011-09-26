@@ -903,9 +903,11 @@ void bx_generic_cpuid_t::init_vmx_extensions_bitmask(void)
   if (x86_64_enabled) {
     features_bitmask |= BX_VMX_TPR_SHADOW;
 
+  features_bitmask |= BX_VMX_APIC_VIRTUALIZATION |
+                      BX_VMX_WBINVD_VMEXIT;
+
 #if BX_SUPPORT_VMX >= 2
-    features_bitmask |= BX_VMX_APIC_VIRTUALIZATION |
-                        BX_VMX_PREEMPTION_TIMER |
+    features_bitmask |= BX_VMX_PREEMPTION_TIMER |
                         BX_VMX_PAT |
                         BX_VMX_EFER |
                         BX_VMX_EPT |
@@ -913,11 +915,10 @@ void bx_generic_cpuid_t::init_vmx_extensions_bitmask(void)
                         BX_VMX_UNRESTRICTED_GUEST |
                         BX_VMX_DESCRIPTOR_TABLE_EXIT |
                         BX_VMX_X2APIC_VIRTUALIZATION |
-                        BX_VMX_WBINVD_VMEXIT |
                         BX_VMX_PAUSE_LOOP_EXITING;
 
     features_bitmask |= BX_VMX_CR3_VMEXIT_DISABLE |
-                        BX_VMX_MONITOR_TRAP_FLAG |
+                     /* BX_VMX_MONITOR_TRAP_FLAG | */
                         BX_VMX_SAVE_DEBUGCTL_DISABLE |
                         BX_VMX_PERF_GLOBAL_CTRL;
 #endif

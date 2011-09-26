@@ -732,7 +732,7 @@ void BX_CPU_C::VMX_Write_VTPR(Bit8u vtpr)
 }
 #endif
 
-#if BX_SUPPORT_VMX >= 2
+// apic virtualization
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::is_virtual_apic_page(bx_phy_address paddr)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
@@ -744,6 +744,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::is_virtual_apic_page(bx_phy_address pad
   return 0;
 }
 
+// apic virtualization
 void BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data)
 {
   BX_ASSERT(SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES));
@@ -770,6 +771,7 @@ void BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *d
   VMexit(0, VMX_VMEXIT_APIC_ACCESS, qualification);
 }
 
+// apic virtualization
 void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *data)
 {
   BX_ASSERT(SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES));
@@ -797,6 +799,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_WBINVD(bxInstruction_c *i)
   }
 }
 
+#if BX_SUPPORT_VMX >= 2
 Bit16u BX_CPU_C::VMX_Get_Current_VPID(void)
 {
   if (! BX_CPU_THIS_PTR in_vmx_guest || !SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VPID_ENABLE))

@@ -3996,10 +3996,10 @@ public: // for now...
   BX_SMF void init_VMCS(void);
   BX_SMF bx_bool vmcs_field_supported(Bit32u encoding);
   BX_SMF void register_vmx_state(bx_param_c *parent);
-#if BX_SUPPORT_VMX >= 2
   BX_SMF bx_bool is_virtual_apic_page(bx_phy_address paddr) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF void VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *data);
+#if BX_SUPPORT_VMX >= 2
   BX_SMF Bit16u VMX_Get_Current_VPID(void);
 #endif
 #if BX_SUPPORT_X86_64

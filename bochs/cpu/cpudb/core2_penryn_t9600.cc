@@ -40,9 +40,6 @@ core2_penryn_t9600_t::core2_penryn_t9600_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 
   if (! BX_SUPPORT_X86_64)
     BX_PANIC(("You must enable x86-64 for Intel Mobile Core2 Duo T9600 (Penryn) configuration"));
-
-  if (BX_SUPPORT_VMX == 1)
-    BX_INFO(("You must compile with --enable-vmx=2 for Intel Core2 Duo T9600 (Penryn) VMX configuration"));
 }
 
 void core2_penryn_t9600_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -134,7 +131,7 @@ Bit64u core2_penryn_t9600_t::get_isa_extensions_bitmask(void) const
 #if BX_SUPPORT_MONITOR_MWAIT
          BX_ISA_MONITOR_MWAIT |
 #endif
-#if BX_SUPPORT_VMX >= 2
+#if BX_SUPPORT_VMX
          BX_ISA_VMX |
 #endif
          BX_ISA_SMX |
@@ -157,7 +154,7 @@ Bit32u core2_penryn_t9600_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_NX;
 }
 
-#if BX_SUPPORT_VMX >= 2
+#if BX_SUPPORT_VMX
 
 // 
 // MSR 00000480 : 005A0800 0000000D	BX_MSR_VMX_BASIC
@@ -178,9 +175,9 @@ Bit32u core2_penryn_t9600_t::get_vmx_extensions_bitmask(void) const
 {
   return BX_VMX_TPR_SHADOW |
          BX_VMX_VIRTUAL_NMI |
+         BX_VMX_PERF_GLOBAL_CTRL | /* not implemented */
          BX_VMX_APIC_VIRTUALIZATION |
-         BX_VMX_WBINVD_VMEXIT |
-         BX_VMX_PERF_GLOBAL_CTRL;
+         BX_VMX_WBINVD_VMEXIT;
 }
 
 #endif
@@ -279,7 +276,7 @@ void core2_penryn_t9600_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
               BX_CPUID_EXT_MONITOR_MWAIT |
 #endif
               BX_CPUID_EXT_DS_CPL |
-#if BX_SUPPORT_VMX >= 2
+#if BX_SUPPORT_VMX
               BX_CPUID_EXT_VMX |
 #endif
               BX_CPUID_EXT_SMX |
