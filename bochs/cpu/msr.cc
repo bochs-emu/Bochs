@@ -160,10 +160,13 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_VMX_VMENTRY_CTRLS:
       val64 = VMX_MSR_VMX_VMENTRY_CTRLS;
       break;
-#if BX_SUPPORT_VMX >= 2
     case BX_MSR_VMX_PROCBASED_CTRLS2:
-      val64 = VMX_MSR_VMX_PROCBASED_CTRLS2;
-      break;
+      if (BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl2_supported_bits) {
+        val64 = VMX_MSR_VMX_PROCBASED_CTRLS2;
+        break;
+      }
+      return 0;
+#if BX_SUPPORT_VMX >= 2
     case BX_MSR_VMX_TRUE_PINBASED_CTRLS:
       val64 = VMX_MSR_VMX_TRUE_PINBASED_CTRLS;
       break;
@@ -176,9 +179,12 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_VMX_TRUE_VMENTRY_CTRLS:
       val64 = VMX_MSR_VMX_TRUE_VMENTRY_CTRLS;
       break;
-    case BX_MSR_VMX_MSR_VMX_EPT_VPID_CAP:
-      val64 = VMX_MSR_VMX_EPT_VPID_CAP;
-      break;
+    case BX_MSR_VMX_EPT_VPID_CAP:
+      if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT) || BX_SUPPORT_VMX_EXTENSION(BX_VMX_VPID)) {
+        val64 = VMX_MSR_VMX_EPT_VPID_CAP;
+        break;
+      }
+      return 0;
 #endif
     case BX_MSR_VMX_MISC:
       val64 = VMX_MSR_MISC;
@@ -600,7 +606,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_VMX_CR4_FIXED0:
     case BX_MSR_VMX_CR4_FIXED1:
     case BX_MSR_VMX_VMCS_ENUM:
-    case BX_MSR_VMX_MSR_VMX_EPT_VPID_CAP:
+    case BX_MSR_VMX_EPT_VPID_CAP:
     case BX_MSR_VMX_TRUE_PINBASED_CTRLS:
     case BX_MSR_VMX_TRUE_PROCBASED_CTRLS:
     case BX_MSR_VMX_TRUE_VMEXIT_CTRLS:
