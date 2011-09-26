@@ -227,11 +227,11 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
         return BX_SUPPORT_VMX_EXTENSION(BX_VMX_TPR_SHADOW);
       else
         return 0;
-#endif
 
     case VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR:
     case VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR_HI:
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_APIC_VIRTUALIZATION);
+#endif
 
 #if BX_SUPPORT_VMX >= 2
     case VMCS_64BIT_CONTROL_EPTPTR:
@@ -457,14 +457,14 @@ void BX_CPU_C::init_vmx_capabilities(void)
 
   // secondary proc based vm exec controls
   // -----------------------------------------------------------
-  //   [00] Apic Virtualization
-  //   [01] EPT Enable
+  //   [00] Apic Virtualization (require x86-64 for TPR shadow)
+  //   [01] EPT Enable (require x86-64 for 4-level page walk)
   //   [02] Descriptor Table Exiting
   //   [03] RDTSCP Exiting (require RDTSCP instruction support)
   //   [04] Virtualize X2APIC Mode (doesn't require actual X2APIC to be enabled)
   //   [05] VPID Enable
   //   [06] WBINVD Exiting
-  //   [07] Unrestricted Guest
+  //   [07] Unrestricted Guest (require EPT)
   //   [08] Reserved
   //   [09] Reserved
   //   [10] PAUSE Loop Exiting
@@ -472,8 +472,10 @@ void BX_CPU_C::init_vmx_capabilities(void)
 
   cap->vmx_vmexec_ctrl2_supported_bits = 0;
 
+#if BX_SUPPORT_X86_64
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_APIC_VIRTUALIZATION))
     cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES;
+#endif
 #if BX_SUPPORT_VMX >= 2
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT))
     cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_EPT_ENABLE;

@@ -730,7 +730,6 @@ void BX_CPU_C::VMX_Write_VTPR(Bit8u vtpr)
     VMexit(0, VMX_VMEXIT_TPR_THRESHOLD, 0);
   }
 }
-#endif
 
 // apic virtualization
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::is_virtual_apic_page(bx_phy_address paddr)
@@ -788,6 +787,8 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
       (BX_CPU_THIS_PTR in_event) ? VMX_APIC_ACCESS_DURING_EVENT_DELIVERY : VMX_APIC_WRITE_INSTRUCTION_EXECUTION;
   VMexit(0, VMX_VMEXIT_APIC_ACCESS, qualification);
 }
+
+#endif
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_WBINVD(bxInstruction_c *i)
 {

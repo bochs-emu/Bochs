@@ -593,9 +593,8 @@ typedef struct bx_VMCS
 #if BX_SUPPORT_X86_64
    bx_phy_address virtual_apic_page_addr;
    Bit32u vm_tpr_threshold;
-#endif
-
    bx_phy_address apic_access_page;
+#endif
 
 #if BX_SUPPORT_VMX >= 2
    Bit64u eptptr;
@@ -943,8 +942,6 @@ enum VMX_Activity_State {
    ((((Bit64u) VMX_MSR_VMCS_ENUM_HI) << 32) | VMX_MSR_VMCS_ENUM_LO)
 
 
-#if BX_SUPPORT_VMX >= 2
-
 // IA32_VMX_MSR_PROCBASED_CTRLS2 MSR (0x48b)
 // -----------------------------
 
@@ -957,6 +954,7 @@ enum VMX_Activity_State {
 #define VMX_MSR_VMX_PROCBASED_CTRLS2 \
    ((((Bit64u) VMX_MSR_VMX_PROCBASED_CTRLS2_HI) << 32) | VMX_MSR_VMX_PROCBASED_CTRLS2_LO)
 
+#if BX_SUPPORT_VMX >= 2
 
 // IA32_VMX_EPT_VPID_CAP MSR (0x48c)
 // ---------------------

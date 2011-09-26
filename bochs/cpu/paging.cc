@@ -1740,7 +1740,7 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
 
 void BX_CPU_C::access_write_physical(bx_phy_address paddr, unsigned len, void *data)
 {
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX && BX_SUPPORT_X86_64
   if (is_virtual_apic_page(paddr)) {
     VMX_Virtual_Apic_Write(paddr, len, data);
     return;
@@ -1759,7 +1759,7 @@ void BX_CPU_C::access_write_physical(bx_phy_address paddr, unsigned len, void *d
 
 void BX_CPU_C::access_read_physical(bx_phy_address paddr, unsigned len, void *data)
 {
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX && BX_SUPPORT_X86_64
   if (is_virtual_apic_page(paddr)) {
     VMX_Virtual_Apic_Read(paddr, len, data);
     return;
@@ -1778,7 +1778,7 @@ void BX_CPU_C::access_read_physical(bx_phy_address paddr, unsigned len, void *da
 
 bx_hostpageaddr_t BX_CPU_C::getHostMemAddr(bx_phy_address ppf, unsigned rw)
 {
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX && BX_SUPPORT_X86_64
   if (is_virtual_apic_page(ppf))
     return 0; // Do not allow direct access to virtual apic page
 #endif

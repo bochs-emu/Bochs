@@ -427,7 +427,6 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
        }
      }
   }
-#endif
 
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES) {
      vm->apic_access_page = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR);
@@ -436,6 +435,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
   }
+#endif
 
 #if BX_SUPPORT_VMX >= 2
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUALIZE_X2APIC_MODE) {
@@ -3141,8 +3141,8 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
 #if BX_SUPPORT_X86_64
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, virtual_apic_page_addr, BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_tpr_threshold, BX_CPU_THIS_PTR vmcs.vm_tpr_threshold);
-#endif
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, apic_access_page, BX_CPU_THIS_PTR vmcs.apic_access_page);
+#endif
 #if BX_SUPPORT_VMX >= 2
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, eptptr, BX_CPU_THIS_PTR vmcs.eptptr);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vpid, BX_CPU_THIS_PTR vmcs.vpid);
