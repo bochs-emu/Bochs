@@ -760,6 +760,12 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
       return;
     }
   }
+  else {
+    if (BX_SUPPORT_VMX >= 2) {
+      BX_PANIC(("PANIC: VMXx2 emulation requires x86-64 support !"));
+      return;
+    }
+  }
 
 #if BX_SUPPORT_AVX
   static unsigned avx_enabled = SIM->get_param_num(BXPN_CPUID_AVX)->get();
