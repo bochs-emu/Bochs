@@ -525,16 +525,8 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL1_VIRTUAL_NMI                 (1 << 5) /* Virtual NMI */
 #define VMX_VM_EXEC_CTRL1_VMX_PREEMPTION_TIMER_VMEXIT (1 << 6) /* VMX preemption timer */
 
-#ifdef BX_VMX_ENABLE_ALL
-
-#define VMX_VM_EXEC_CTRL1_SUPPORTED_BITS (0x00000069)
-
-#else // only really supported features
-
 #define VMX_VM_EXEC_CTRL1_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_pin_vmexec_ctrl_supported_bits)
-
-#endif
 
    Bit32u vmexec_ctrls1;
 
@@ -560,16 +552,8 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL2_PAUSE_VMEXIT              (1 << 30)
 #define VMX_VM_EXEC_CTRL2_SECONDARY_CONTROLS        (1 << 31)
 
-#ifdef BX_VMX_ENABLE_ALL
-
-#define VMX_VM_EXEC_CTRL2_SUPPORTED_BITS (0xFBF99E8C)
-
-#else // only really supported features
-
 #define VMX_VM_EXEC_CTRL2_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_proc_vmexec_ctrl_supported_bits)
-
-#endif
 
    Bit32u vmexec_ctrls2;
 
@@ -584,16 +568,8 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL3_PAUSE_LOOP_VMEXIT         (1 << 10) /* PAUSE loop exiting */
 #define VMX_VM_EXEC_CTRL3_RDRAND_VMEXIT             (1 << 11)
 
-#ifdef BX_VMX_ENABLE_ALL
-
-#define VMX_VM_EXEC_CTRL3_SUPPORTED_BITS (0x000004ff)
-
-#else // only really supported features
-
 #define VMX_VM_EXEC_CTRL3_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl2_supported_bits)
-
-#endif
 
    Bit32u vmexec_ctrls3;
 
@@ -614,8 +590,10 @@ typedef struct bx_VMCS
    Bit32u vm_cr3_target_cnt;
    bx_address vm_cr3_target_value[VMX_CR3_TARGET_MAX_CNT];
 
+#if BX_SUPPORT_X86_64
    bx_phy_address virtual_apic_page_addr;
    Bit32u vm_tpr_threshold;
+#endif
 #if BX_SUPPORT_VMX >= 2
    bx_phy_address apic_access_page;
    Bit64u eptptr;
@@ -645,16 +623,8 @@ typedef struct bx_VMCS
 #define VMX_VMEXIT_CTRL1_LOAD_EFER_MSR              (1 << 21) /* EFER */
 #define VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER (1 << 22) /* VMX preemption timer */
 
-#ifdef BX_VMX_ENABLE_ALL
-
-#define VMX_VMEXIT_CTRL1_SUPPORTED_BITS (0x007C9204)
-
-#else // only really supported features
-
 #define VMX_VMEXIT_CTRL1_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_vmexit_ctrl_supported_bits)
-
-#endif
 
    Bit32u vmexit_ctrls;
 
@@ -675,16 +645,8 @@ typedef struct bx_VMCS
 #define VMX_VMENTRY_CTRL1_LOAD_PAT_MSR                      (1 << 14) /* PAT */
 #define VMX_VMENTRY_CTRL1_LOAD_EFER_MSR                     (1 << 15) /* EFER */
 
-#ifdef BX_VMX_ENABLE_ALL
-
-#define VMX_VMENTRY_CTRL1_SUPPORTED_BITS (0x0000EE04)
-
-#else // only really supported features
-
 #define VMX_VMENTRY_CTRL1_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_vmentry_ctrl_supported_bits)
-
-#endif
    
    Bit32u vmentry_ctrls;
 

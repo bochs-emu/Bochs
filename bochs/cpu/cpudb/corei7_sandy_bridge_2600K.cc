@@ -45,6 +45,9 @@ corei7_sandy_bridge_2600k_t::corei7_sandy_bridge_2600k_t(BX_CPU_C *cpu): bx_cpui
     BX_PANIC(("You must enable AVX for Intel Core i7 Sandy Bridge configuration"));
 
   BX_INFO(("WARNING: TSC deadline is not implemented yet"));
+
+  if (BX_SUPPORT_VMX == 1)
+    BX_INFO(("You must compile with --enable-vmx=2 for Intel Core i7 Sandy Bridge VMX configuration"));
 }
 
 void corei7_sandy_bridge_2600k_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -139,7 +142,7 @@ Bit64u corei7_sandy_bridge_2600k_t::get_isa_extensions_bitmask(void) const
 #if BX_SUPPORT_MONITOR_MWAIT
          BX_ISA_MONITOR_MWAIT |
 #endif
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX >= 2
          BX_ISA_VMX |
 #endif
       /* BX_ISA_SMX | */
@@ -168,26 +171,25 @@ Bit32u corei7_sandy_bridge_2600k_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_PCID;
 }
 
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX >= 2
 Bit32u corei7_sandy_bridge_2600k_t::get_vmx_extensions_bitmask(void) const
 {
   return BX_VMX_TPR_SHADOW |
-         BX_VMX_APIC_VIRTUALIZATION |
          BX_VMX_VIRTUAL_NMI |
-         BX_VMX_CR3_VMEXIT_DISABLE |
+         BX_VMX_APIC_VIRTUALIZATION |
+         BX_VMX_WBINVD_VMEXIT |
       /* BX_VMX_MONITOR_TRAP_FLAG | */ // not implemented yet
          BX_VMX_VPID |
          BX_VMX_EPT |
+         BX_VMX_CR3_VMEXIT_DISABLE |
          BX_VMX_UNRESTRICTED_GUEST |
-         BX_VMX_PAUSE_LOOP_EXITING |
-         BX_VMX_PREEMPTION_TIMER |
          BX_VMX_SAVE_DEBUGCTL_DISABLE |
          BX_VMX_PERF_GLOBAL_CTRL |
          BX_VMX_PAT |
          BX_VMX_EFER |
          BX_VMX_DESCRIPTOR_TABLE_EXIT |
          BX_VMX_X2APIC_VIRTUALIZATION |
-         BX_VMX_WBINVD_VMEXIT;
+         BX_VMX_PREEMPTION_TIMER;
 }
 #endif
 
@@ -286,7 +288,7 @@ void corei7_sandy_bridge_2600k_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) c
               BX_CPUID_EXT_MONITOR_MWAIT |
 #endif
               BX_CPUID_EXT_DS_CPL |
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX >= 2
               BX_CPUID_EXT_VMX |
 #endif
            /* BX_CPUID_EXT_SMX | */

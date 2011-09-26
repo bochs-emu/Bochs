@@ -1221,7 +1221,7 @@ void BX_CPU_C::WriteCR8(bxInstruction_c *i, bx_address val)
     BX_ERROR(("WriteCR8: Attempt to set reserved bits of CR8"));
     exception(BX_GP_EXCEPTION, 0);
   }
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX && BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR in_vmx_guest && VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW)) {
     VMX_Write_VTPR((val & 0xf) << 4);
   }
@@ -1237,7 +1237,7 @@ Bit32u BX_CPU_C::ReadCR8(bxInstruction_c *i)
 {
   Bit32u tpr = 0;
 
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX && BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR in_vmx_guest)
     VMexit_CR8_Read(i);
 

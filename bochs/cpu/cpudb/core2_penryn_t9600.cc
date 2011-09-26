@@ -40,6 +40,9 @@ core2_penryn_t9600_t::core2_penryn_t9600_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 
   if (! BX_SUPPORT_X86_64)
     BX_PANIC(("You must enable x86-64 for Intel Mobile Core2 Duo T9600 (Penryn) configuration"));
+
+  if (BX_SUPPORT_VMX == 1)
+    BX_INFO(("You must compile with --enable-vmx=2 for Intel Core2 Duo T9600 (Penryn) VMX configuration"));
 }
 
 void core2_penryn_t9600_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -131,7 +134,7 @@ Bit64u core2_penryn_t9600_t::get_isa_extensions_bitmask(void) const
 #if BX_SUPPORT_MONITOR_MWAIT
          BX_ISA_MONITOR_MWAIT |
 #endif
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX >= 2
          BX_ISA_VMX |
 #endif
          BX_ISA_SMX |
@@ -154,7 +157,23 @@ Bit32u core2_penryn_t9600_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_NX;
 }
 
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX >= 2
+
+// 
+// MSR 00000480 : 005A0800 0000000D	BX_MSR_VMX_BASIC
+// MSR 00000481 : 0000003F 00000016	BX_MSR_VMX_PINBASED_CTRLS
+// MSR 00000482 : F7F9FFFE 0401E172	BX_MSR_VMX_PROCBASED_CTRLS
+// MSR 00000483 : 0003FFFF 00036DFF	BX_MSR_VMX_VMEXIT_CTRLS
+// MSR 00000484 : 00003FFF 000011FF	BX_MSR_VMX_VMENTRY_CTRLS
+// MSR 00000485 : 00000000 000403C0	BX_MSR_VMX_MISC
+// MSR 00000486 : 00000000 80000021	BX_MSR_VMX_CR0_FIXED0
+// MSR 00000487 : 00000000 FFFFFFFF	BX_MSR_VMX_CR0_FIXED1
+// MSR 00000488 : 00000000 00002000	BX_MSR_VMX_CR4_FIXED0
+// MSR 00000489 : 00000000 000467FF	BX_MSR_VMX_CR4_FIXED1
+// MSR 0000048A : 00000000 0000002C	BX_MSR_VMX_VMCS_ENUM
+// MSR 0000048B : 00000041 00000000	BX_MSR_VMX_PROCBASED_CTRLS2
+// 
+
 Bit32u core2_penryn_t9600_t::get_vmx_extensions_bitmask(void) const
 {
   return BX_VMX_TPR_SHADOW |
@@ -163,6 +182,7 @@ Bit32u core2_penryn_t9600_t::get_vmx_extensions_bitmask(void) const
          BX_VMX_WBINVD_VMEXIT |
          BX_VMX_PERF_GLOBAL_CTRL;
 }
+
 #endif
 
 // leaf 0x00000000 //
@@ -259,7 +279,7 @@ void core2_penryn_t9600_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
               BX_CPUID_EXT_MONITOR_MWAIT |
 #endif
               BX_CPUID_EXT_DS_CPL |
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX >= 2
               BX_CPUID_EXT_VMX |
 #endif
               BX_CPUID_EXT_SMX |

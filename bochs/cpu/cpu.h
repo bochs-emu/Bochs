@@ -4002,8 +4002,10 @@ public: // for now...
   BX_SMF void VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF Bit16u VMX_Get_Current_VPID(void);
 #endif
+#if BX_SUPPORT_X86_64
   BX_SMF Bit32u VMX_Read_VTPR(void);
   BX_SMF void VMX_Write_VTPR(Bit8u vtpr);
+#endif
   BX_SMF Bit64s VMX_TSC_Offset(void);
   // vmexit reasons
   BX_SMF void VMexit_Instruction(bxInstruction_c *i, Bit32u reason) BX_CPP_AttrRegparmN(2);

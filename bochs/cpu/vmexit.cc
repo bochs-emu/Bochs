@@ -704,6 +704,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_DR_Access(bxInstruction_c *i, unsig
   }
 }
 
+#if BX_SUPPORT_X86_64
 Bit32u BX_CPU_C::VMX_Read_VTPR(void)
 {
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr + 0x80;
@@ -729,6 +730,7 @@ void BX_CPU_C::VMX_Write_VTPR(Bit8u vtpr)
     VMexit(0, VMX_VMEXIT_TPR_THRESHOLD, 0);
   }
 }
+#endif
 
 #if BX_SUPPORT_VMX >= 2
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::is_virtual_apic_page(bx_phy_address paddr)

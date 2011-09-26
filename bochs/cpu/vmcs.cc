@@ -141,16 +141,18 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
 #if BX_SUPPORT_X86_64
     case VMCS_32BIT_CONTROL_TPR_THRESHOLD:
       if (bx_cpuid_support_x86_64())
-        return 1;
+        return BX_SUPPORT_VMX_EXTENSION(BX_VMX_TPR_SHADOW);
       else
         return 0;
 #endif
 
 #if BX_SUPPORT_VMX >= 2
     case VMCS_32BIT_CONTROL_SECONDARY_VMEXEC_CONTROLS:
+      return BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl2_supported_bits;
+
     case VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_GAP:
     case VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_WINDOW:
-      return 1;
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_PAUSE_LOOP_EXITING);
 #endif
 
     /* VMCS 32-bit read only data fields */
@@ -193,10 +195,7 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
 
 #if BX_SUPPORT_VMX >= 2    
     case VMCS_32BIT_GUEST_PREEMPTION_TIMER_VALUE:
-      if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_PREEMPTION_TIMER))
-        return 1;
-      else
-        return 0;
+       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_PREEMPTION_TIMER);
 #endif
 
     /* VMCS 32-bit host-state fields */
@@ -228,7 +227,7 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR:
     case VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR_HI:
       if (bx_cpuid_support_x86_64())
-        return 1;
+        return BX_SUPPORT_VMX_EXTENSION(BX_VMX_TPR_SHADOW);
       else
         return 0;
 #endif
@@ -236,13 +235,11 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
 #if BX_SUPPORT_VMX >= 2
     case VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR:
     case VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR_HI:
-        return 1;
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_APIC_VIRTUALIZATION);
+
     case VMCS_64BIT_CONTROL_EPTPTR:
     case VMCS_64BIT_CONTROL_EPTPTR_HI:
-      if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT))
-        return 1;
-      else
-        return 0;
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT);
 #endif
 
 #if BX_SUPPORT_VMX >= 2
@@ -250,10 +247,7 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     /* binary 0010_01xx_xxxx_xxx0 */
     case VMCS_64BIT_GUEST_PHYSICAL_ADDR:
     case VMCS_64BIT_GUEST_PHYSICAL_ADDR_HI:
-      if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT))
-        return 1;
-      else
-        return 0;
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT);
 #endif
 
     /* VMCS 64-bit guest state fields */
@@ -267,17 +261,15 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
 #if BX_SUPPORT_VMX >= 2
     case VMCS_64BIT_GUEST_IA32_PAT:
     case VMCS_64BIT_GUEST_IA32_PAT_HI:
-      if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_PAT))
-        return 1;
-      else
-        return 0;
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_PAT);
 
     case VMCS_64BIT_GUEST_IA32_EFER:
     case VMCS_64BIT_GUEST_IA32_EFER_HI:
-      if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EFER))
-        return 1;
-      else
-        return 0;
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_EFER);
+
+    case VMCS_64BIT_GUEST_IA32_PERF_GLOBAL_CTRL:
+    case VMCS_64BIT_GUEST_IA32_PERF_GLOBAL_CTRL_HI:
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_PERF_GLOBAL_CTRL);
 
     case VMCS_64BIT_GUEST_IA32_PDPTE0:
     case VMCS_64BIT_GUEST_IA32_PDPTE0_HI:
@@ -287,10 +279,7 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_GUEST_IA32_PDPTE2_HI:
     case VMCS_64BIT_GUEST_IA32_PDPTE3:
     case VMCS_64BIT_GUEST_IA32_PDPTE3_HI:
-      if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT))
-        return 1;
-      else
-        return 0;
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT);
 #endif
 
 #if BX_SUPPORT_VMX >= 2
@@ -298,17 +287,15 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     /* binary 0010_11xx_xxxx_xxx0 */
     case VMCS_64BIT_HOST_IA32_PAT:
     case VMCS_64BIT_HOST_IA32_PAT_HI:
-      if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_PAT))
-        return 1;
-      else
-        return 0;
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_PAT);
 
     case VMCS_64BIT_HOST_IA32_EFER:
     case VMCS_64BIT_HOST_IA32_EFER_HI:
-      if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EFER))
-        return 1;
-      else
-        return 0;
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_EFER);
+
+    case VMCS_64BIT_HOST_IA32_PERF_GLOBAL_CTRL:
+    case VMCS_64BIT_HOST_IA32_PERF_GLOBAL_CTRL_HI:
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_PERF_GLOBAL_CTRL);
 #endif
 
     /* VMCS natural width control fields */
