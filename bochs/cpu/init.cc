@@ -44,6 +44,9 @@ BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
 
   isa_extensions_bitmask = BX_SUPPORT_FPU ? BX_ISA_X87 : 0;
   cpu_extensions_bitmask = 0;
+#if BX_SUPPORT_VMX
+  vmx_extensions_bitmask = 0;
+#endif
 }
 
 #if BX_WITH_WX
@@ -189,6 +192,9 @@ void BX_CPU_C::initialize(void)
 
   BX_CPU_THIS_PTR isa_extensions_bitmask = cpuid->get_isa_extensions_bitmask();
   BX_CPU_THIS_PTR cpu_extensions_bitmask = cpuid->get_cpu_extensions_bitmask();
+#if BX_SUPPORT_VMX
+  BX_CPU_THIS_PTR vmx_extensions_bitmask = cpuid->get_vmx_extensions_bitmask();
+#endif
 #endif
 
   init_FetchDecodeTables(); // must be called after init_isa_features_bitmask()
@@ -354,6 +360,9 @@ void BX_CPU_C::register_state(void)
 
   BXRS_HEX_PARAM_SIMPLE(cpu, isa_extensions_bitmask);
   BXRS_HEX_PARAM_SIMPLE(cpu, cpu_extensions_bitmask);
+#if BX_SUPPORT_VMX
+  BXRS_HEX_PARAM_SIMPLE(cpu, vmx_extensions_bitmask);
+#endif
   BXRS_DEC_PARAM_SIMPLE(cpu, cpu_mode);
   BXRS_HEX_PARAM_SIMPLE(cpu, activity_state);
   BXRS_HEX_PARAM_SIMPLE(cpu, inhibit_mask);
@@ -965,7 +974,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR efer_suppmask = 0;
   if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_NX))
     BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_NXE_MASK;
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SYSCALL_SYSRET))
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SYSCALL_SYSRET_LEGACY))
     BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_SCE_MASK;
 #if BX_SUPPORT_X86_64
   if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_LONG_MODE)) {

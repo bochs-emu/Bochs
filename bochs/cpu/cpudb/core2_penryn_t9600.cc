@@ -154,6 +154,17 @@ Bit32u core2_penryn_t9600_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_NX;
 }
 
+#if BX_SUPPORT_VMX
+Bit32u core2_penryn_t9600_t::get_vmx_extensions_bitmask(void) const
+{
+  return BX_VMX_TPR_SHADOW |
+         BX_VMX_VIRTUAL_NMI |
+         BX_VMX_APIC_VIRTUALIZATION |
+         BX_VMX_WBINVD_VMEXIT |
+         BX_VMX_PERF_GLOBAL_CTRL;
+}
+#endif
+
 // leaf 0x00000000 //
 void core2_penryn_t9600_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 {

@@ -4,10 +4,10 @@ Changes in 2.5 release (coming soon):
 
 Brief summary :
 
-! Fully configure CPU to emulate with a single .bochsrc option !
+! Fully configurable CPU to emulate with a single .bochsrc option !
 - 10% (ST) to 50% (SMP) CPU emulation speedup !
-- Implemented support for x86 ISA extensions, Bochs is aligned with latest
-  published Intel Archicture Manual (rev 039, AVX rev 011):
+- Implemented support for new x86 ISA extensions, Bochs is aligned with
+  latest published Intel Archicture Manual (rev 039, AVX rev 011):
      - XSAVEOPT, AVX/AVX2/F16C, BMI1/BMI2, SMEP, SSE4A (AMD), INVPCID
      - VMX: VMX Preemption Timer and Pause Loop Exiting VMEXIT controls
      - TODO: FMA, XOP (AMD), SVM (AMD)
@@ -59,7 +59,7 @@ Detailed change log :
   - Implemented VMX preemption timer VMEXIT control (patch by Jianan Hao)
   - Implemented Pause-Loop Exiting Secondary VMEXIT control.
   - Added INVPCID instruction emulation support.
-  - Now you could disable x86-64 from .bochsrc so it becomes possible to
+  - Now you could disable x86-64 from .bochsrc so it become possible to
     emulate 32-bit CPUs using Bochs binary compiled with x86-64 support.
   - Updated/fixed instrumentation callbacks.
   - Bugfixes for CPU emulation correctness and stability.

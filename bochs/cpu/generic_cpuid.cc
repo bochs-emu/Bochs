@@ -888,6 +888,39 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
   this->cpu_extensions_bitmask = features_bitmask;
 }
 
+#if BX_SUPPORT_VMX
+void bx_generic_cpuid_t::init_vmx_extensions_bitmask(void)
+{
+  Bit32u features_bitmask = BX_VMX_VIRTUAL_NMI;
+
+  static bx_bool x86_64_enabled = SIM->get_param_bool(BXPN_CPUID_X86_64)->get();
+  if (x86_64_enabled) {
+    features_bitmask |= BX_VMX_TPR_SHADOW;
+
+#if BX_SUPPORT_VMX >= 2
+    features_bitmask |= BX_VMX_APIC_VIRTUALIZATION |
+                        BX_VMX_PREEMPTION_TIMER |
+                        BX_VMX_PAT |
+                        BX_VMX_EFER |
+                        BX_VMX_EPT |
+                        BX_VMX_VPID |
+                        BX_VMX_UNRESTRICTED_GUEST |
+                        BX_VMX_DESCRIPTOR_TABLE_EXIT |
+                        BX_VMX_X2APIC_VIRTUALIZATION |
+                        BX_VMX_WBINVD_VMEXIT |
+                        BX_VMX_PAUSE_LOOP_EXITING;
+
+    features_bitmask |= BX_VMX_CR3_VMEXIT_DISABLE |
+                        BX_VMX_MONITOR_TRAP_FLAG |
+                        BX_VMX_SAVE_DEBUGCTL_DISABLE |
+                        BX_VMX_PERF_GLOBAL_CTRL;
+#endif
+  }
+  
+  this->vmx_extensions_bitmask = features_bitmask;
+}
+#endif
+
 /*
  * Get CPU version information:
  *

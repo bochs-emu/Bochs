@@ -168,6 +168,29 @@ Bit32u corei7_sandy_bridge_2600k_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_PCID;
 }
 
+#if BX_SUPPORT_VMX
+Bit32u corei7_sandy_bridge_2600k_t::get_vmx_extensions_bitmask(void) const
+{
+  return BX_VMX_TPR_SHADOW |
+         BX_VMX_APIC_VIRTUALIZATION |
+         BX_VMX_VIRTUAL_NMI |
+         BX_VMX_CR3_VMEXIT_DISABLE |
+      /* BX_VMX_MONITOR_TRAP_FLAG | */ // not implemented yet
+         BX_VMX_VPID |
+         BX_VMX_EPT |
+         BX_VMX_UNRESTRICTED_GUEST |
+         BX_VMX_PAUSE_LOOP_EXITING |
+         BX_VMX_PREEMPTION_TIMER |
+         BX_VMX_SAVE_DEBUGCTL_DISABLE |
+         BX_VMX_PERF_GLOBAL_CTRL |
+         BX_VMX_PAT |
+         BX_VMX_EFER |
+         BX_VMX_DESCRIPTOR_TABLE_EXIT |
+         BX_VMX_X2APIC_VIRTUALIZATION |
+         BX_VMX_WBINVD_VMEXIT;
+}
+#endif
+
 // leaf 0x00000000 //
 void corei7_sandy_bridge_2600k_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 {

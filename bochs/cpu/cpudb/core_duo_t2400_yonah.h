@@ -38,6 +38,9 @@ public:
 
   virtual Bit64u get_isa_extensions_bitmask(void) const;
   virtual Bit32u get_cpu_extensions_bitmask(void) const;
+#if BX_SUPPORT_VMX
+  virtual Bit32u get_vmx_extensions_bitmask(void) const { return 0; } // only basic support
+#endif
 
   virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 

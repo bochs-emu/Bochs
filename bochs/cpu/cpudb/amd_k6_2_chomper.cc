@@ -78,7 +78,7 @@ Bit64u amd_k6_2_chomper_t::get_isa_extensions_bitmask(void) const
          BX_ISA_486 |
          BX_ISA_PENTIUM |
          BX_ISA_MMX |
-         BX_ISA_SYSCALL_SYSRET |
+         BX_ISA_SYSCALL_SYSRET_LEGACY |
          BX_ISA_3DNOW;
 }
 

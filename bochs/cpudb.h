@@ -34,7 +34,6 @@ bx_define_cpudb(atom_n270)
 #if BX_SUPPORT_X86_64
 bx_define_cpudb(p4_prescott_celeron_336)
 bx_define_cpudb(athlon64_clawhammer)
-bx_define_cpudb(core2_extreme_x9770)
 bx_define_cpudb(core2_penryn_t9600)
 #if BX_SUPPORT_AVX
 bx_define_cpudb(corei7_sandy_bridge_2600k)

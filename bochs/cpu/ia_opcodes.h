@@ -725,8 +725,8 @@ bx_define_opcode(BX_IA_PSWAPD_PqQq, &BX_CPU_C::PSWAPD_PqQq, &BX_CPU_C::PSWAPD_Pq
 #endif
 bx_define_opcode(BX_IA_PREFETCHW, &BX_CPU_C::NOP, &BX_CPU_C::NOP, 0, 0) // NOP even when no 3DNow!
 
-bx_define_opcode(BX_IA_SYSCALL_LEGACY, NULL, &BX_CPU_C::SYSCALL, BX_ISA_SYSCALL_SYSRET, 0)
-bx_define_opcode(BX_IA_SYSRET_LEGACY, NULL, &BX_CPU_C::SYSRET, BX_ISA_SYSCALL_SYSRET, 0)
+bx_define_opcode(BX_IA_SYSCALL_LEGACY, NULL, &BX_CPU_C::SYSCALL, BX_ISA_SYSCALL_SYSRET_LEGACY, 0)
+bx_define_opcode(BX_IA_SYSRET_LEGACY, NULL, &BX_CPU_C::SYSRET, BX_ISA_SYSCALL_SYSRET_LEGACY, 0)
 
 // P6 new instructions
 bx_define_opcode(BX_IA_CMOVB_GdEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::CMOVB_GdEdR, BX_ISA_P6, 0)

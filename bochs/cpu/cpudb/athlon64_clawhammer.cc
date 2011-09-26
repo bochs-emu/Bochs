@@ -86,7 +86,7 @@ Bit64u athlon64_clawhammer_t::get_isa_extensions_bitmask(void) const
          BX_ISA_P6 |
          BX_ISA_MMX |
          BX_ISA_3DNOW |
-         BX_ISA_SYSCALL_SYSRET |
+         BX_ISA_SYSCALL_SYSRET_LEGACY |
          BX_ISA_SYSENTER_SYSEXIT |
          BX_ISA_CLFLUSH |
          BX_ISA_SSE |

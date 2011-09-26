@@ -851,12 +851,18 @@ public: // for now...
 
   Bit64u isa_extensions_bitmask;
   Bit32u cpu_extensions_bitmask;
+#if BX_SUPPORT_VMX
+  Bit32u vmx_extensions_bitmask;
+#endif
 
 #define BX_CPUID_SUPPORT_ISA_EXTENSION(feature) \
    (BX_CPU_THIS_PTR isa_extensions_bitmask & (feature))
 
 #define BX_CPUID_SUPPORT_CPU_EXTENSION(feature) \
    (BX_CPU_THIS_PTR cpu_extensions_bitmask & (feature))
+
+#define BX_SUPPORT_VMX_EXTENSION(feature) \
+   (BX_CPU_THIS_PTR vmx_extensions_bitmask & (feature))
 
   // General register set
   // rax: accumulator
@@ -995,6 +1001,7 @@ public: // for now...
   Bit64u  vmxonptr;
   
   VMCS_CACHE vmcs;
+  VMX_CAP vmx_cap;
 #endif
 
   bx_bool EXT; /* 1 if processing external interrupt or exception
@@ -3985,6 +3992,7 @@ public: // for now...
   BX_SMF void VMexitSaveGuestMSRs(void);
   BX_SMF void VMexitLoadHostState(void);
   BX_SMF void set_VMCSPTR(Bit64u vmxptr);
+  BX_SMF void init_vmx_capabilities();
   BX_SMF void init_VMCS(void);
   BX_SMF bx_bool vmcs_field_supported(Bit32u encoding);
   BX_SMF void register_vmx_state(bx_param_c *parent);
