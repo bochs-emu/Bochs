@@ -446,6 +446,8 @@ void disassembler::Hdq(const x86_insn *insn)
 
 void disassembler::Hps(const x86_insn *insn) { Hdq(insn); }
 void disassembler::Hpd(const x86_insn *insn) { Hdq(insn); }
+void disassembler::Hss(const x86_insn *insn) { Hdq(insn); }
+void disassembler::Hsd(const x86_insn *insn) { Hdq(insn); }
 
 void disassembler::Wb(const x86_insn *insn)
 {

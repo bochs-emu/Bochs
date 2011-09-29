@@ -544,6 +544,8 @@ public:
   void Hdq(const x86_insn *insn);
   void Hps(const x86_insn *insn);
   void Hpd(const x86_insn *insn);
+  void Hss(const x86_insn *insn);
+  void Hsd(const x86_insn *insn);
 
   // direct memory access
   void OP_O(const x86_insn *insn, unsigned size);

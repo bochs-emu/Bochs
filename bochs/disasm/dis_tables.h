@@ -157,6 +157,8 @@
 #define Hdq &disassembler::Hdq
 #define Hps &disassembler::Hps
 #define Hpd &disassembler::Hpd
+#define Hss &disassembler::Hss
+#define Hsd &disassembler::Hsd
 
 #define Ob &disassembler::Ob
 #define Ow &disassembler::Ow
