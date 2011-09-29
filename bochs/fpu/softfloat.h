@@ -106,6 +106,18 @@ enum {
 };
 
 /*----------------------------------------------------------------------------
+| Options to indicate which negations to perform in float*_muladd()
+| Using these differs from negating an input or output before calling
+| the muladd function in that this means that a NaN doesn't have its
+| sign bit inverted before it is propagated.
+*----------------------------------------------------------------------------*/
+enum {
+    float_muladd_negate_c       = 1,
+    float_muladd_negate_product = 2,
+    float_muladd_negate_result  = 4
+};
+
+/*----------------------------------------------------------------------------
 | Software IEC/IEEE floating-point status structure.
 *----------------------------------------------------------------------------*/
 struct float_status_t
@@ -217,6 +229,7 @@ float32 float32_sub(float32, float32, float_status_t &status);
 float32 float32_mul(float32, float32, float_status_t &status);
 float32 float32_div(float32, float32, float_status_t &status);
 float32 float32_sqrt(float32, float_status_t &status);
+float32 float32_muladd(float32, float32, float32, int flags, float_status_t &status);
 
 int float32_compare(float32, float32, float_status_t &status);
 int float32_compare_quiet(float32, float32, float_status_t &status);
@@ -254,6 +267,7 @@ float64 float64_sub(float64, float64, float_status_t &status);
 float64 float64_mul(float64, float64, float_status_t &status);
 float64 float64_div(float64, float64, float_status_t &status);
 float64 float64_sqrt(float64, float_status_t &status);
+float64 float64_muladd(float64, float64, float64, int flags, float_status_t &status);
 
 int float64_compare(float64, float64, float_status_t &status);
 int float64_compare_quiet(float64, float64, float_status_t &status);

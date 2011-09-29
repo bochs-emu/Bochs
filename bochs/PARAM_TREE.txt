@@ -43,6 +43,7 @@ cpuid
   xsaveopt
   avx
   avx_f16c
+  avx_fma
   bmi
   apic
   x86_64

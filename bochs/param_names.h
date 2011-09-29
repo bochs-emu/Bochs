@@ -57,6 +57,7 @@
 #define BXPN_CPUID_XSAVEOPT              "cpuid.xsaveopt"
 #define BXPN_CPUID_AVX                   "cpuid.avx"
 #define BXPN_CPUID_AVX_F16CVT            "cpuid.avx_f16c"
+#define BXPN_CPUID_AVX_FMA               "cpuid.avx_fma"
 #define BXPN_CPUID_BMI                   "cpuid.bmi"
 #define BXPN_CPUID_APIC                  "cpuid.apic"
 #define BXPN_CPUID_MWAIT                 "cpuid.mwait"

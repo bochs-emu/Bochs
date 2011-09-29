@@ -1071,6 +1071,7 @@ void bx_init_hardware()
     bx_bool xsaveopt_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVEOPT)->get();
 #if BX_SUPPORT_AVX
     unsigned avx_enabled = SIM->get_param_num(BXPN_CPUID_AVX)->get();
+    bx_bool avx_fma_enabled = SIM->get_param_bool(BXPN_CPUID_AVX_FMA)->get();
 #endif
 #if BX_SUPPORT_X86_64
     bx_bool x86_64_enabled = SIM->get_param_bool(BXPN_CPUID_X86_64)->get();
@@ -1109,10 +1110,12 @@ void bx_init_hardware()
     BX_INFO(("  MWAIT support: %s", mwait_enabled?"yes":"no"));
 #endif
 #if BX_SUPPORT_AVX
-    if (avx_enabled)
-      BX_INFO(("  AVX support: %d", avx_enabled));
-    else
+    if (avx_enabled) {
+      BX_INFO(("  AVX support: %d%s", avx_enabled, avx_fma_enabled ? " (with FMA)" : ""));
+    }
+    else {
       BX_INFO(("  AVX support: no"));
+    }
 #endif
 #if BX_SUPPORT_VMX
     BX_INFO(("  VMX support: %d", BX_SUPPORT_VMX));

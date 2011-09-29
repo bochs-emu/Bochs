@@ -82,11 +82,10 @@ float32 propagateFloat32NaN(float32 a, float32 b, float_status_t &status)
 
 float64 propagateFloat64NaN(float64 a, float64 b, float_status_t &status)
 {
-    int aIsNaN, aIsSignalingNaN, bIsNaN, bIsSignalingNaN;
-    aIsNaN = float64_is_nan(a);
-    aIsSignalingNaN = float64_is_signaling_nan(a);
-    bIsNaN = float64_is_nan(b);
-    bIsSignalingNaN = float64_is_signaling_nan(b);
+    int aIsNaN = float64_is_nan(a);
+    int aIsSignalingNaN = float64_is_signaling_nan(a);
+    int bIsNaN = float64_is_nan(b);
+    int bIsSignalingNaN = float64_is_signaling_nan(b);
     a |= BX_CONST64(0x0008000000000000);
     b |= BX_CONST64(0x0008000000000000);
     if (aIsSignalingNaN | bIsSignalingNaN) float_raise(status, float_flag_invalid);
@@ -120,11 +119,10 @@ float64 propagateFloat64NaN(float64 a, float64 b, float_status_t &status)
 
 floatx80 propagateFloatx80NaN(floatx80 a, floatx80 b, float_status_t &status)
 {
-    int aIsNaN, aIsSignalingNaN, bIsNaN, bIsSignalingNaN;
-    aIsNaN = floatx80_is_nan(a);
-    aIsSignalingNaN = floatx80_is_signaling_nan(a);
-    bIsNaN = floatx80_is_nan(b);
-    bIsSignalingNaN = floatx80_is_signaling_nan(b);
+    int aIsNaN = floatx80_is_nan(a);
+    int aIsSignalingNaN = floatx80_is_signaling_nan(a);
+    int bIsNaN = floatx80_is_nan(b);
+    int bIsSignalingNaN = floatx80_is_signaling_nan(b);
     a.fraction |= BX_CONST64(0xC000000000000000);
     b.fraction |= BX_CONST64(0xC000000000000000);
     if (aIsSignalingNaN | bIsSignalingNaN) float_raise(status, float_flag_invalid);

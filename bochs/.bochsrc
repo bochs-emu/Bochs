@@ -210,6 +210,10 @@ cpu: cpuid_limit_winnt=0
 #    Select AVX float16 convert instructions support.
 #    This option exists only if Bochs compiled with --enable-avx option.
 #
+#  AVX_FMA:
+#    Select AVX fused multiply add (FMA) instructions support.
+#    This option exists only if Bochs compiled with --enable-avx option.
+#
 #  BMI:
 #    Select BMI1/BMI2 instructions support.
 #    This option exists only if Bochs compiled with --enable-avx option.

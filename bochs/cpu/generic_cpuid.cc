@@ -796,6 +796,16 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
     features_bitmask |= BX_ISA_AVX_F16C;
   }
 
+  static bx_bool avx_fma_enabled = SIM->get_param_bool(BXPN_CPUID_AVX_FMA)->get();
+  if (avx_fma_enabled) {
+    if (avx_enabled < 2) {
+      BX_PANIC(("PANIC: FMA emulation requires AVX2 support !"));
+      return;
+    }
+
+    features_bitmask |= BX_ISA_AVX_FMA;
+  }
+
   static unsigned bmi_enabled = SIM->get_param_num(BXPN_CPUID_BMI)->get();
   if (bmi_enabled) {
     features_bitmask |= BX_ISA_BMI1 | BX_ISA_LZCNT;
@@ -1050,6 +1060,9 @@ Bit32u bx_generic_cpuid_t::get_extended_cpuid_features(void) const
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX_F16C))
     features |= BX_CPUID_EXT_AVX_F16C;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX_FMA))
+    features |= BX_CPUID_EXT_FMA;
 #endif
 
   return features;

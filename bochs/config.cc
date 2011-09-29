@@ -289,7 +289,7 @@ void bx_init_options()
 
   // cpuid subtree
 #if BX_CPU_LEVEL >= 4
-  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 24);
+  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 25);
 
   new bx_param_string_c(cpuid_param,
       "vendor_string",
@@ -390,6 +390,10 @@ void bx_init_options()
   new bx_param_bool_c(cpuid_param,
       "avx_f16c", "Support for AVX F16 convert instructions",
       "Support for AVX F16 convert instructions",
+      0);
+  new bx_param_bool_c(cpuid_param,
+      "avx_fma", "Support for AVX FMA instructions",
+      "Support for AVX FMA instructions",
       0);
   new bx_param_num_c(cpuid_param,
       "bmi", "Support for BMI instructions",
@@ -2705,6 +2709,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         if (parse_param_bool(params[i], 9, BXPN_CPUID_AVX_F16CVT) < 0) {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
         }
+      } else if (!strncmp(params[i], "avx_fma=", 8)) {
+        if (parse_param_bool(params[i], 8, BXPN_CPUID_AVX_FMA) < 0) {
+          PARSE_ERR(("%s: cpuid directive malformed.", context));
+        }
       } else if (!strncmp(params[i], "bmi=", 4)) {
         SIM->get_param_num(BXPN_CPUID_BMI)->set(atol(&params[i][4]));
 #endif
@@ -4001,9 +4009,10 @@ int bx_write_configuration(const char *rc, int overwrite)
     SIM->get_param_bool(BXPN_CPUID_MOVBE)->get(),
     SIM->get_param_bool(BXPN_CPUID_SMEP)->get());
 #if BX_SUPPORT_AVX
-  fprintf(fp, ", avx=%d, avx_f16c=%d, bmi=%d", 
+  fprintf(fp, ", avx=%d, avx_f16c=%d, avx_fma=%d, bmi=%d", 
     SIM->get_param_num(BXPN_CPUID_AVX)->get(),
     SIM->get_param_bool(BXPN_CPUID_AVX_F16CVT)->get(),
+    SIM->get_param_bool(BXPN_CPUID_AVX_FMA)->get(),
     SIM->get_param_num(BXPN_CPUID_BMI)->get());
 #endif
 #if BX_SUPPORT_X86_64

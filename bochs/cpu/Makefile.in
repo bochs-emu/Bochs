@@ -59,11 +59,6 @@ OBJS = \
 	sse_pfp.o \
 	sse_rcp.o \
 	sse_string.o \
-	avx.o \
-	avx_pfp.o \
-	avx2.o \
-	gather.o \
-	bmi32.o \
 	xsave.o \
 	aes.o \
 	vmx.o \
@@ -127,6 +122,12 @@ OBJS64 = \
 	shift64.o \
 	bit64.o \
 	stack64.o \
+	avx.o \
+	avx_pfp.o \
+	avx_fma.o \
+	avx2.o \
+	gather.o \
+	bmi32.o \
 	bmi64.o
 
 BX_INCLUDES = ../bochs.h ../config.h
@@ -251,6 +252,14 @@ gather.o: gather.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
  xmm.h vmx.h stack.h
 avx_pfp.o: avx_pfp.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h cpu.h cpuid.h crregs.h \
+ descriptor.h instr.h ia_opcodes.h lazy_flags.h icache.h apic.h i387.h \
+ ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
+ xmm.h vmx.h stack.h ../fpu/softfloat-compare.h ../fpu/softfloat.h \
+ ../fpu/softfloat-specialize.h simd_pfp.h
+avx_fma.o: avx_fma.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h cpu.h cpuid.h crregs.h \
