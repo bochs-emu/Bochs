@@ -124,6 +124,8 @@ Detailed change log :
       case to the vga code (SeaBIOS now usable by Bochs)
     - log prefix now depends on the selected extension (new prefix BXVGA for
       Bochs VBE support)
+  - USB
+    - experimental USB xHCI support (written by Ben Lunt)
 
   - LGPL'd VGABIOS updated to current CVS
     - fixed DAC palette in 8 bpp VBE and Cirrus modes (using the same palette
