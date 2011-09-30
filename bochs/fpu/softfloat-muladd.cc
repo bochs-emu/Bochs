@@ -221,7 +221,7 @@ float32 float32_muladd(float32 a, float32 b, float32 c, int flags, float_status_
             /* Exact zero plus a denormal */
             float_raise(status, float_flag_denormal);
             if (get_flush_underflow_to_zero(status)) {
-                float_raise(status, float_flag_inexact);
+                float_raise(status, float_flag_underflow | float_flag_inexact);
                 return packFloat32(cSign ^ signflip, 0, 0);
             }
         }
@@ -435,7 +435,7 @@ float64 float64_muladd(float64 a, float64 b, float64 c, int flags, float_status_
             /* Exact zero plus a denormal */
             float_raise(status, float_flag_denormal);
             if (get_flush_underflow_to_zero(status)) {
-                float_raise(status, float_flag_inexact);
+                float_raise(status, float_flag_underflow | float_flag_inexact);
                 return packFloat64(cSign ^ signflip, 0, 0);
             }
         }
