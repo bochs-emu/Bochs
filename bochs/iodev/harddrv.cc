@@ -181,10 +181,10 @@ void bx_hard_drive_c::init(void)
           (BX_HD_THIS channels[channel].irq == 0))
       {
         BX_PANIC(("incoherency for ata channel %d: io1=0x%x, io2=%x, irq=%d",
-	  channel,
-	  BX_HD_THIS channels[channel].ioaddr1,
-	  BX_HD_THIS channels[channel].ioaddr2,
-	  BX_HD_THIS channels[channel].irq));
+          channel,
+          BX_HD_THIS channels[channel].ioaddr1,
+          BX_HD_THIS channels[channel].ioaddr2,
+          BX_HD_THIS channels[channel].irq));
       }
     }
     else {
@@ -739,8 +739,8 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
   switch (port) {
     case 0x00: // hard disk data (16bit) 0x1f0
       if (BX_SELECTED_CONTROLLER(channel).status.drq == 0) {
-	    BX_ERROR(("IO read(0x%04x) with drq == 0: last command was %02xh",
-		     address, (unsigned) BX_SELECTED_CONTROLLER(channel).current_command));
+            BX_ERROR(("IO read(0x%04x) with drq == 0: last command was %02xh",
+                     address, (unsigned) BX_SELECTED_CONTROLLER(channel).current_command));
             return(0);
       }
       BX_DEBUG(("IO read(0x%04x): current command is %02xh",
@@ -824,7 +824,7 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
           break;
 
         case 0xec:    // IDENTIFY DEVICE
-	case 0xa1:
+        case 0xa1:
           unsigned index;
 
           BX_SELECTED_CONTROLLER(channel).status.busy = 0;
@@ -1043,17 +1043,17 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 
 return_value32:
   BX_DEBUG(("32-bit read from %04x = %08x {%s}",
-	    (unsigned) address, value32, BX_SELECTED_TYPE_STRING(channel)));
+     (unsigned) address, value32, BX_SELECTED_TYPE_STRING(channel)));
   return value32;
 
 return_value16:
   BX_DEBUG(("16-bit read from %04x = %04x {%s}",
-	    (unsigned) address, value16, BX_SELECTED_TYPE_STRING(channel)));
+     (unsigned) address, value16, BX_SELECTED_TYPE_STRING(channel)));
   return value16;
 
 return_value8:
   BX_DEBUG(("8-bit read from %04x = %02x {%s}",
-	    (unsigned) address, value8, BX_SELECTED_TYPE_STRING(channel)));
+     (unsigned) address, value8, BX_SELECTED_TYPE_STRING(channel)));
   return value8;
 }
 
@@ -2090,8 +2090,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
         case 0xec: // IDENTIFY DEVICE
           {
-            Bit16u temp16;
-
             BX_DEBUG(("Drive ID Command issued : 0xec "));
 
             if (!BX_SELECTED_IS_PRESENT(channel)) {
@@ -2122,7 +2120,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
               // now convert the id_drive array (native 256 word format) to
               // the controller buffer (512 bytes)
               for (i=0; i<=255; i++) {
-                temp16 = BX_SELECTED_DRIVE(channel).id_drive[i];
+                Bit16u temp16 = BX_SELECTED_DRIVE(channel).id_drive[i];
                 BX_SELECTED_CONTROLLER(channel).buffer[i*2] = temp16 & 0x00ff;
                 BX_SELECTED_CONTROLLER(channel).buffer[i*2+1] = temp16 >> 8;
               }
@@ -2233,8 +2231,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
         // ATAPI commands
         case 0xa1: // IDENTIFY PACKET DEVICE
           {
-            Bit16u temp16;
-
             if (BX_SELECTED_IS_CD(channel)) {
               BX_SELECTED_CONTROLLER(channel).current_command = value;
               BX_SELECTED_CONTROLLER(channel).error_register = 0;
@@ -2254,7 +2250,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
               // now convert the id_drive array (native 256 word format) to
               // the controller buffer (512 bytes)
               for (i = 0; i <= 255; i++) {
-                temp16 = BX_SELECTED_DRIVE(channel).id_drive[i];
+                Bit16u temp16 = BX_SELECTED_DRIVE(channel).id_drive[i];
                 BX_SELECTED_CONTROLLER(channel).buffer[i*2] = temp16 & 0x00ff;
                 BX_SELECTED_CONTROLLER(channel).buffer[i*2+1] = temp16 >> 8;
               }
@@ -2419,60 +2415,60 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           }
           break;
 
-	// List all the write operations that are defined in the ATA/ATAPI spec
-	// that we don't support.  Commands that are listed here will cause a
-	// BX_ERROR, which is non-fatal, and the command will be aborted.
-	case 0x22: BX_ERROR(("write cmd 0x22 (READ LONG) not supported")); command_aborted(channel, 0x22); break;
-	case 0x23: BX_ERROR(("write cmd 0x23 (READ LONG NO RETRY) not supported")); command_aborted(channel, 0x23); break;
-	case 0x26: BX_ERROR(("write cmd 0x26 (READ DMA QUEUED EXT) not supported"));command_aborted(channel, 0x26); break;
-	case 0x2A: BX_ERROR(("write cmd 0x2A (READ STREAM DMA) not supported"));command_aborted(channel, 0x2A); break;
-	case 0x2B: BX_ERROR(("write cmd 0x2B (READ STREAM PIO) not supported"));command_aborted(channel, 0x2B); break;
-	case 0x2F: BX_ERROR(("write cmd 0x2F (READ LOG EXT) not supported"));command_aborted(channel, 0x2F); break;
-	case 0x31: BX_ERROR(("write cmd 0x31 (WRITE SECTORS NO RETRY) not supported")); command_aborted(channel, 0x31); break;
-	case 0x32: BX_ERROR(("write cmd 0x32 (WRITE LONG) not supported")); command_aborted(channel, 0x32); break;
-	case 0x33: BX_ERROR(("write cmd 0x33 (WRITE LONG NO RETRY) not supported")); command_aborted(channel, 0x33); break;
-	case 0x36: BX_ERROR(("write cmd 0x36 (WRITE DMA QUEUED EXT) not supported"));command_aborted(channel, 0x36); break;
-	case 0x37: BX_ERROR(("write cmd 0x37 (SET MAX ADDRESS EXT) not supported"));command_aborted(channel, 0x37); break;
-	case 0x38: BX_ERROR(("write cmd 0x38 (CFA WRITE SECTORS W/OUT ERASE) not supported"));command_aborted(channel, 0x38); break;
-	case 0x3A: BX_ERROR(("write cmd 0x3A (WRITE STREAM DMA) not supported"));command_aborted(channel, 0x3A); break;
-	case 0x3B: BX_ERROR(("write cmd 0x3B (WRITE STREAM PIO) not supported"));command_aborted(channel, 0x3B); break;
-	case 0x3F: BX_ERROR(("write cmd 0x3F (WRITE LOG EXT) not supported"));command_aborted(channel, 0x3F); break;
-	case 0x50: BX_ERROR(("write cmd 0x50 (FORMAT TRACK) not supported")); command_aborted(channel, 0x50); break;
-	case 0x51: BX_ERROR(("write cmd 0x51 (CONFIGURE STREAM) not supported"));command_aborted(channel, 0x51); break;
-	case 0x87: BX_ERROR(("write cmd 0x87 (CFA TRANSLATE SECTOR) not supported"));command_aborted(channel, 0x87); break;
-	case 0x92: BX_ERROR(("write cmd 0x92 (DOWNLOAD MICROCODE) not supported"));command_aborted(channel, 0x92); break;
-	case 0x94: BX_ERROR(("write cmd 0x94 (STANDBY IMMEDIATE) not supported")); command_aborted(channel, 0x94); break;
-	case 0x95: BX_ERROR(("write cmd 0x95 (IDLE IMMEDIATE) not supported")); command_aborted(channel, 0x95); break;
-	case 0x96: BX_ERROR(("write cmd 0x96 (STANDBY) not supported")); command_aborted(channel, 0x96); break;
-	case 0x97: BX_ERROR(("write cmd 0x97 (IDLE) not supported")); command_aborted(channel, 0x97); break;
-	case 0x98: BX_ERROR(("write cmd 0x98 (CHECK POWER MODE) not supported")); command_aborted(channel, 0x98); break;
-	case 0x99: BX_ERROR(("write cmd 0x99 (SLEEP) not supported")); command_aborted(channel, 0x99); break;
-	case 0xB0: BX_ERROR(("write cmd 0xB0 (SMART commands) not supported"));command_aborted(channel, 0xB0); break;
-	case 0xB1: BX_ERROR(("write cmd 0xB1 (DEVICE CONFIGURATION commands) not supported"));command_aborted(channel, 0xB1); break;
-	case 0xC0: BX_ERROR(("write cmd 0xC0 (CFA ERASE SECTORS) not supported"));command_aborted(channel, 0xC0); break;
-	case 0xC7: BX_ERROR(("write cmd 0xC7 (READ DMA QUEUED) not supported"));command_aborted(channel, 0xC7); break;
-	case 0xC9: BX_ERROR(("write cmd 0xC9 (READ DMA NO RETRY) not supported")); command_aborted(channel, 0xC9); break;
-	case 0xCC: BX_ERROR(("write cmd 0xCC (WRITE DMA QUEUED) not supported"));command_aborted(channel, 0xCC); break;
-	case 0xCD: BX_ERROR(("write cmd 0xCD (CFA WRITE MULTIPLE W/OUT ERASE) not supported"));command_aborted(channel, 0xCD); break;
-	case 0xD1: BX_ERROR(("write cmd 0xD1 (CHECK MEDIA CARD TYPE) not supported"));command_aborted(channel, 0xD1); break;
-	case 0xDA: BX_ERROR(("write cmd 0xDA (GET MEDIA STATUS) not supported"));command_aborted(channel, 0xDA); break;
-	case 0xDE: BX_ERROR(("write cmd 0xDE (MEDIA LOCK) not supported"));command_aborted(channel, 0xDE); break;
-	case 0xDF: BX_ERROR(("write cmd 0xDF (MEDIA UNLOCK) not supported"));command_aborted(channel, 0xDF); break;
-	case 0xE2: BX_ERROR(("write cmd 0xE2 (STANDBY) not supported"));command_aborted(channel, 0xE2); break;
-	case 0xE3: BX_ERROR(("write cmd 0xE3 (IDLE) not supported"));command_aborted(channel, 0xE3); break;
-	case 0xE4: BX_ERROR(("write cmd 0xE4 (READ BUFFER) not supported"));command_aborted(channel, 0xE4); break;
-	case 0xE6: BX_ERROR(("write cmd 0xE6 (SLEEP) not supported"));command_aborted(channel, 0xE6); break;
-	case 0xE8: BX_ERROR(("write cmd 0xE8 (WRITE BUFFER) not supported"));command_aborted(channel, 0xE8); break;
-	case 0xED: BX_ERROR(("write cmd 0xED (MEDIA EJECT) not supported"));command_aborted(channel, 0xED); break;
-	case 0xF1: BX_ERROR(("write cmd 0xF1 (SECURITY SET PASSWORD) not supported"));command_aborted(channel, 0xF1); break;
-	case 0xF2: BX_ERROR(("write cmd 0xF2 (SECURITY UNLOCK) not supported"));command_aborted(channel, 0xF2); break;
-	case 0xF3: BX_ERROR(("write cmd 0xF3 (SECURITY ERASE PREPARE) not supported"));command_aborted(channel, 0xF3); break;
-	case 0xF4: BX_ERROR(("write cmd 0xF4 (SECURITY ERASE UNIT) not supported"));command_aborted(channel, 0xF4); break;
-	case 0xF5: BX_ERROR(("write cmd 0xF5 (SECURITY FREEZE LOCK) not supported"));command_aborted(channel, 0xF5); break;
-	case 0xF6: BX_ERROR(("write cmd 0xF6 (SECURITY DISABLE PASSWORD) not supported"));command_aborted(channel, 0xF6); break;
-	case 0xF9: BX_ERROR(("write cmd 0xF9 (SET MAX ADDRESS) not supported"));command_aborted(channel, 0xF9); break;
+        // List all the write operations that are defined in the ATA/ATAPI spec
+        // that we don't support.  Commands that are listed here will cause a
+        // BX_ERROR, which is non-fatal, and the command will be aborted.
+        case 0x22: BX_ERROR(("write cmd 0x22 (READ LONG) not supported")); command_aborted(channel, 0x22); break;
+        case 0x23: BX_ERROR(("write cmd 0x23 (READ LONG NO RETRY) not supported")); command_aborted(channel, 0x23); break;
+        case 0x26: BX_ERROR(("write cmd 0x26 (READ DMA QUEUED EXT) not supported"));command_aborted(channel, 0x26); break;
+        case 0x2A: BX_ERROR(("write cmd 0x2A (READ STREAM DMA) not supported"));command_aborted(channel, 0x2A); break;
+        case 0x2B: BX_ERROR(("write cmd 0x2B (READ STREAM PIO) not supported"));command_aborted(channel, 0x2B); break;
+        case 0x2F: BX_ERROR(("write cmd 0x2F (READ LOG EXT) not supported"));command_aborted(channel, 0x2F); break;
+        case 0x31: BX_ERROR(("write cmd 0x31 (WRITE SECTORS NO RETRY) not supported")); command_aborted(channel, 0x31); break;
+        case 0x32: BX_ERROR(("write cmd 0x32 (WRITE LONG) not supported")); command_aborted(channel, 0x32); break;
+        case 0x33: BX_ERROR(("write cmd 0x33 (WRITE LONG NO RETRY) not supported")); command_aborted(channel, 0x33); break;
+        case 0x36: BX_ERROR(("write cmd 0x36 (WRITE DMA QUEUED EXT) not supported"));command_aborted(channel, 0x36); break;
+        case 0x37: BX_ERROR(("write cmd 0x37 (SET MAX ADDRESS EXT) not supported"));command_aborted(channel, 0x37); break;
+        case 0x38: BX_ERROR(("write cmd 0x38 (CFA WRITE SECTORS W/OUT ERASE) not supported"));command_aborted(channel, 0x38); break;
+        case 0x3A: BX_ERROR(("write cmd 0x3A (WRITE STREAM DMA) not supported"));command_aborted(channel, 0x3A); break;
+        case 0x3B: BX_ERROR(("write cmd 0x3B (WRITE STREAM PIO) not supported"));command_aborted(channel, 0x3B); break;
+        case 0x3F: BX_ERROR(("write cmd 0x3F (WRITE LOG EXT) not supported"));command_aborted(channel, 0x3F); break;
+        case 0x50: BX_ERROR(("write cmd 0x50 (FORMAT TRACK) not supported")); command_aborted(channel, 0x50); break;
+        case 0x51: BX_ERROR(("write cmd 0x51 (CONFIGURE STREAM) not supported"));command_aborted(channel, 0x51); break;
+        case 0x87: BX_ERROR(("write cmd 0x87 (CFA TRANSLATE SECTOR) not supported"));command_aborted(channel, 0x87); break;
+        case 0x92: BX_ERROR(("write cmd 0x92 (DOWNLOAD MICROCODE) not supported"));command_aborted(channel, 0x92); break;
+        case 0x94: BX_ERROR(("write cmd 0x94 (STANDBY IMMEDIATE) not supported")); command_aborted(channel, 0x94); break;
+        case 0x95: BX_ERROR(("write cmd 0x95 (IDLE IMMEDIATE) not supported")); command_aborted(channel, 0x95); break;
+        case 0x96: BX_ERROR(("write cmd 0x96 (STANDBY) not supported")); command_aborted(channel, 0x96); break;
+        case 0x97: BX_ERROR(("write cmd 0x97 (IDLE) not supported")); command_aborted(channel, 0x97); break;
+        case 0x98: BX_ERROR(("write cmd 0x98 (CHECK POWER MODE) not supported")); command_aborted(channel, 0x98); break;
+        case 0x99: BX_ERROR(("write cmd 0x99 (SLEEP) not supported")); command_aborted(channel, 0x99); break;
+        case 0xB0: BX_ERROR(("write cmd 0xB0 (SMART commands) not supported"));command_aborted(channel, 0xB0); break;
+        case 0xB1: BX_ERROR(("write cmd 0xB1 (DEVICE CONFIGURATION commands) not supported"));command_aborted(channel, 0xB1); break;
+        case 0xC0: BX_ERROR(("write cmd 0xC0 (CFA ERASE SECTORS) not supported"));command_aborted(channel, 0xC0); break;
+        case 0xC7: BX_ERROR(("write cmd 0xC7 (READ DMA QUEUED) not supported"));command_aborted(channel, 0xC7); break;
+        case 0xC9: BX_ERROR(("write cmd 0xC9 (READ DMA NO RETRY) not supported")); command_aborted(channel, 0xC9); break;
+        case 0xCC: BX_ERROR(("write cmd 0xCC (WRITE DMA QUEUED) not supported"));command_aborted(channel, 0xCC); break;
+        case 0xCD: BX_ERROR(("write cmd 0xCD (CFA WRITE MULTIPLE W/OUT ERASE) not supported"));command_aborted(channel, 0xCD); break;
+        case 0xD1: BX_ERROR(("write cmd 0xD1 (CHECK MEDIA CARD TYPE) not supported"));command_aborted(channel, 0xD1); break;
+        case 0xDA: BX_ERROR(("write cmd 0xDA (GET MEDIA STATUS) not supported"));command_aborted(channel, 0xDA); break;
+        case 0xDE: BX_ERROR(("write cmd 0xDE (MEDIA LOCK) not supported"));command_aborted(channel, 0xDE); break;
+        case 0xDF: BX_ERROR(("write cmd 0xDF (MEDIA UNLOCK) not supported"));command_aborted(channel, 0xDF); break;
+        case 0xE2: BX_ERROR(("write cmd 0xE2 (STANDBY) not supported"));command_aborted(channel, 0xE2); break;
+        case 0xE3: BX_ERROR(("write cmd 0xE3 (IDLE) not supported"));command_aborted(channel, 0xE3); break;
+        case 0xE4: BX_ERROR(("write cmd 0xE4 (READ BUFFER) not supported"));command_aborted(channel, 0xE4); break;
+        case 0xE6: BX_ERROR(("write cmd 0xE6 (SLEEP) not supported"));command_aborted(channel, 0xE6); break;
+        case 0xE8: BX_ERROR(("write cmd 0xE8 (WRITE BUFFER) not supported"));command_aborted(channel, 0xE8); break;
+        case 0xED: BX_ERROR(("write cmd 0xED (MEDIA EJECT) not supported"));command_aborted(channel, 0xED); break;
+        case 0xF1: BX_ERROR(("write cmd 0xF1 (SECURITY SET PASSWORD) not supported"));command_aborted(channel, 0xF1); break;
+        case 0xF2: BX_ERROR(("write cmd 0xF2 (SECURITY UNLOCK) not supported"));command_aborted(channel, 0xF2); break;
+        case 0xF3: BX_ERROR(("write cmd 0xF3 (SECURITY ERASE PREPARE) not supported"));command_aborted(channel, 0xF3); break;
+        case 0xF4: BX_ERROR(("write cmd 0xF4 (SECURITY ERASE UNIT) not supported"));command_aborted(channel, 0xF4); break;
+        case 0xF5: BX_ERROR(("write cmd 0xF5 (SECURITY FREEZE LOCK) not supported"));command_aborted(channel, 0xF5); break;
+        case 0xF6: BX_ERROR(("write cmd 0xF6 (SECURITY DISABLE PASSWORD) not supported"));command_aborted(channel, 0xF6); break;
+        case 0xF9: BX_ERROR(("write cmd 0xF9 (SET MAX ADDRESS) not supported"));command_aborted(channel, 0xF9); break;
 
-	default:
+        default:
           BX_ERROR(("IO write to 0x%04x: unknown command 0x%02x", address, value));
           command_aborted(channel, value);
       }
@@ -2620,7 +2616,7 @@ void bx_hard_drive_c::identify_ATAPI_drive(Bit8u channel)
   BX_SELECTED_DRIVE(channel).id_drive[0] = (2 << 14) | (5 << 8) | (1 << 7) | (2 << 5) | (0 << 0); // Removable CDROM, 50us response, 12 byte packets
 
   for (i = 1; i <= 9; i++)
-	BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
+    BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
 
   strcpy(serial_number, "BXCD00000           ");
   serial_number[8] = BX_SELECTED_DRIVE(channel).device_num;
@@ -2630,18 +2626,18 @@ void bx_hard_drive_c::identify_ATAPI_drive(Bit8u channel)
   }
 
   for (i = 20; i <= 22; i++)
-	BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
+    BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
 
   const char* firmware = "ALPHA1  ";
   for (i = 0; i < strlen(firmware)/2; i++) {
-	BX_SELECTED_DRIVE(channel).id_drive[23+i] = (firmware[i*2] << 8) |
-	      firmware[i*2 + 1];
+    BX_SELECTED_DRIVE(channel).id_drive[23+i] = (firmware[i*2] << 8) |
+       firmware[i*2 + 1];
   }
   BX_ASSERT((23+i) == 27);
 
   for (i = 0; i < strlen((char *) BX_SELECTED_MODEL(channel))/2; i++) {
-	BX_SELECTED_DRIVE(channel).id_drive[27+i] = (BX_SELECTED_MODEL(channel)[i*2] << 8) |
-	      BX_SELECTED_MODEL(channel)[i*2 + 1];
+    BX_SELECTED_DRIVE(channel).id_drive[27+i] = (BX_SELECTED_MODEL(channel)[i*2] << 8) |
+       BX_SELECTED_MODEL(channel)[i*2 + 1];
   }
   BX_ASSERT((27+i) == 47);
 
@@ -3438,12 +3434,11 @@ error_recovery_t::error_recovery_t()
 int get_device_handle_from_param(bx_param_c *param)
 {
   char pname[BX_PATHNAME_LEN];
-  int handle;
 
   bx_list_c *base = (bx_list_c*) param->get_parent();
   base->get_param_path(pname, BX_PATHNAME_LEN);
   if (!strncmp(pname, "ata.", 4)) {
-    handle = (pname[4] - '0') << 1;
+    int handle = (pname[4] - '0') << 1;
     if (!strcmp(base->get_name(), "slave")) {
       handle |= 1;
     }
@@ -3455,10 +3450,8 @@ int get_device_handle_from_param(bx_param_c *param)
 
 Bit64s bx_hard_drive_c::cdrom_status_handler(bx_param_c *param, int set, Bit64s val)
 {
-  int handle;
-
   if (set) {
-    handle = get_device_handle_from_param(param);
+    int handle = get_device_handle_from_param(param);
     if (handle >= 0) {
       if (!strcmp(param->get_name(), "status")) {
         BX_HD_THIS channels[handle/2].drives[handle%2].status_changed = 1;
@@ -3473,13 +3466,11 @@ Bit64s bx_hard_drive_c::cdrom_status_handler(bx_param_c *param, int set, Bit64s 
 const char *bx_hard_drive_c::cdrom_path_handler(bx_param_string_c *param, int set,
                                                 const char *oldval, const char *val, int maxlen)
 {
-  int handle;
-
   if (set) {
     if (strlen(val) < 1) {
       val = "none";
     }
-    handle = get_device_handle_from_param(param);
+    int handle = get_device_handle_from_param(param);
     if (handle >= 0) {
       if (!strcmp(param->get_name(), "path")) {
         BX_HD_THIS channels[handle/2].drives[handle%2].status_changed = 1;
