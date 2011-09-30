@@ -180,7 +180,6 @@ static BOOL CALLBACK StringParamProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
       SetWindowText(GetDlgItem(hDlg, IDSTRING), param->getptr());
       SendMessage(GetDlgItem(hDlg, IDSTRING), EM_SETLIMITTEXT, param->get_maxsize(), 0);
       return TRUE;
-      break;
     case WM_CLOSE:
       EndDialog(hDlg, -1);
       break;
@@ -250,11 +249,9 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
         SetWindowText(GetDlgItem(hDlg, IDPATH), path);
       }
       return TRUE;
-      break;
     case WM_CLOSE:
       EndDialog(hDlg, -1);
       return TRUE;
-      break;
     case WM_COMMAND:
       switch (LOWORD(wParam)) {
         case IDBROWSE:
@@ -266,7 +263,6 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
             EnableWindow(GetDlgItem(hDlg, IDCREATE), FALSE);
           }
           return TRUE;
-          break;
         case IDOK:
           status->set(0);
           if (SendMessage(GetDlgItem(hDlg, IDSTATUS), BM_GETCHECK, 0, 0) == BST_CHECKED) {
@@ -287,11 +283,9 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
           }
           EndDialog(hDlg, 1);
           return TRUE;
-          break;
         case IDCANCEL:
           EndDialog(hDlg, -1);
           return TRUE;
-          break;
         case IDMEDIATYPE:
           if (HIWORD(wParam) == CBN_SELCHANGE) {
             i = SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_GETCURSEL, 0, 0);
@@ -307,7 +301,6 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
             MessageBox(hDlg, mesg, "Image created", MB_OK);
           }
           return TRUE;
-          break;
       }
   }
   return FALSE;

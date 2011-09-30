@@ -460,7 +460,7 @@ void BX_CPU_C::init_vmx_capabilities(void)
   //   [00] Apic Virtualization (require x86-64 for TPR shadow)
   //   [01] EPT Enable (require x86-64 for 4-level page walk)
   //   [02] Descriptor Table Exiting
-  //   [03] RDTSCP Exiting (require RDTSCP instruction support)
+  //   [03] Enable RDTSCP instruction (RDTSCP will #UD if not set)
   //   [04] Virtualize X2APIC Mode (doesn't require actual X2APIC to be enabled)
   //   [05] VPID Enable
   //   [06] WBINVD Exiting

@@ -720,7 +720,8 @@ void bx_floppy_ctrl_c::floppy_command(void)
   unsigned i;
   Bit8u motor_on;
   Bit8u head, drive, cylinder, sector, eot;
-  Bit8u sector_size, data_length;
+  Bit8u sector_size;
+//Bit8u data_length;
   Bit32u logical_sector, sector_time, step_delay;
 
   // Print command
@@ -935,7 +936,7 @@ void bx_floppy_ctrl_c::floppy_command(void)
       sector = BX_FD_THIS s.command[4];   /* 1..36 depending */
       eot = BX_FD_THIS s.command[6];      /* 1..36 depending */
       sector_size = BX_FD_THIS s.command[5];
-      data_length = BX_FD_THIS s.command[8];
+//    data_length = BX_FD_THIS s.command[8];
       BX_DEBUG(("read/write normal data"));
       BX_DEBUG(("BEFORE"));
       BX_DEBUG(("  drive    = %u", (unsigned) drive));

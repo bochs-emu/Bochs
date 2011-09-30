@@ -54,12 +54,13 @@ static int get_floppy_type_from_image(const char *filename);
 static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
 {
   char pname[BX_PATHNAME_LEN];
-  Bit8u channel, device;
+  Bit8u device;
+//Bit8u channel;
 
   bx_list_c *base = (bx_list_c*) param->get_parent();
   base->get_param_path(pname, BX_PATHNAME_LEN);
   if (!strncmp(pname, "ata.", 4)) {
-    channel = pname[4] - '0';
+//  channel = pname[4] - '0';
     if (!strcmp(base->get_name(), "master")) {
       device = 0;
     } else {
@@ -1026,8 +1027,7 @@ void bx_init_options()
   bx_list_c *ata_menu[BX_MAX_ATA_CHANNEL];
   bx_list_c *ata_res[BX_MAX_ATA_CHANNEL];
 
-  Bit8u channel;
-  for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
+  for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
 
     sprintf(name, "%d", channel);
     ata_menu[channel] = new bx_list_c(ata, name, s_atachannel[channel]);

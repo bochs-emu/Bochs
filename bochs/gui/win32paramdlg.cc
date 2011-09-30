@@ -515,7 +515,6 @@ UINT GetLabelText(bx_param_c *param, bx_list_c *list, char *buffer)
 
 SIZE CreateParamList(HWND hDlg, UINT lid, UINT xpos, UINT ypos, BOOL hide, bx_list_c *list)
 {
-  HWND ltext, control = NULL, browse;
   SIZE size, lsize;
   bx_param_c *param;
   bx_param_string_c *sparam;
@@ -559,8 +558,6 @@ SIZE CreateParamList(HWND hDlg, UINT lid, UINT xpos, UINT ypos, BOOL hide, bx_li
   for (i = 0; i < items; i++) {
     param = list->get(i);
     if (!SIM->get_init_done() || (param->get_enabled() && param->get_runtime_param())) {
-      ltext = NULL;
-      browse = NULL;
       ihide = hide || ((i != 0) && (options & list->USE_TAB_WINDOW));
       if (param->get_type() == BXT_LIST) {
         lsize = CreateParamList(hDlg, cid, x0 + 4, y + 1, ihide, (bx_list_c*)param);
@@ -577,18 +574,18 @@ SIZE CreateParamList(HWND hDlg, UINT lid, UINT xpos, UINT ypos, BOOL hide, bx_li
         }
       } else {
         lw = GetLabelText(param, list, buffer);
-        ltext = CreateLabel(hDlg, cid, x0, y, w1, hide, buffer);
+        /* HWND ltext = */ CreateLabel(hDlg, cid, x0, y, w1, hide, buffer);
         if (param->get_type() == BXT_PARAM_BOOL) {
-          control = CreateCheckbox(hDlg, cid, x1, y, hide, (bx_param_bool_c*)param);
+          /* HWND control = */ CreateCheckbox(hDlg, cid, x1, y, hide, (bx_param_bool_c*)param);
         } else if (param->get_type() == BXT_PARAM_ENUM) {
-          control = CreateCombobox(hDlg, cid, x1, y, hide, (bx_param_enum_c*)param);
+          /* HWND control = */ CreateCombobox(hDlg, cid, x1, y, hide, (bx_param_enum_c*)param);
         } else if (param->get_type() == BXT_PARAM_NUM) {
-          control = CreateInput(hDlg, cid, x1, y, hide, param);
+          /* HWND control = */ CreateInput(hDlg, cid, x1, y, hide, param);
         } else if (param->get_type() == BXT_PARAM_STRING) {
-          control = CreateInput(hDlg, cid, x1, y, hide, param);
+          /* HWND control = */ CreateInput(hDlg, cid, x1, y, hide, param);
           sparam = (bx_param_string_c*)param;
           if (sparam->get_options() & sparam->IS_FILENAME) {
-            browse = CreateBrowseButton(hDlg, cid, x2, y, hide);
+            /* HWND browse = */ CreateBrowseButton(hDlg, cid, x2, y, hide);
             if (size.cx < (int)(x2 + 60)) {
               size.cx = x2 + 60;
             }
@@ -770,7 +767,6 @@ void ProcessDependentList(HWND hDlg, bx_param_c *param, BOOL enabled)
 static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPARAM lParam)
 {
   static bx_list_c *list = NULL;
-  static int items = 0;
   bx_param_c *param;
   bx_param_string_c *sparam;
   bx_list_c *tmplist;
@@ -789,7 +785,6 @@ static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, 
       break;
     case WM_INITDIALOG:
       list = (bx_list_c*)SIM->get_param((const char*)lParam);
-      items = list->get_size();
       SetWindowText(Window, list->get_title());
       nextDlgID = 1;
       size = CreateParamList(Window, 0, 6, 6, FALSE, list);

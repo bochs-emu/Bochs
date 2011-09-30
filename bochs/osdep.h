@@ -104,7 +104,10 @@ extern "C" {
 #define FMT_ADDRX64 "%016I64x"
 
 #define off_t __int64
+// mingw gcc 4.6.1 already has lseek defined
+#ifndef lseek
 #define lseek _lseeki64
+#endif
 #endif  /* __MINGW32__ defined */
 
 #else    /* not WIN32 definitions */
