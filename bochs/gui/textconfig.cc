@@ -551,9 +551,9 @@ static void bx_print_log_action_table()
 {
   // just try to print all the prefixes first.
   fprintf(stderr, "Current log settings:\n");
-  fprintf(stderr, "                 Debug      Info       Error       Panic       Pass\n");
-  fprintf(stderr, "ID    Device     Action     Action     Action      Action      Action\n");
-  fprintf(stderr, "----  ---------  ---------  ---------  ----------  ----------  ----------\n");
+  fprintf(stderr, "                 Debug      Info       Error       Panic\n");
+  fprintf(stderr, "ID    Device     Action     Action     Action      Action\n");
+  fprintf(stderr, "----  ---------  ---------  ---------  ----------  ----------\n");
   int i, j, imax=SIM->get_n_log_modules();
   for (i=0; i<imax; i++) {
     if (strcmp(SIM->get_prefix(i), "[     ]")) {
@@ -579,17 +579,17 @@ void bx_log_options(int individual)
       Bit32s id, level, action;
       Bit32s maxid = SIM->get_n_log_modules();
       if (ask_int(log_options_prompt1, "", -1, maxid-1, -1, &id) < 0)
-	return;
+        return;
       if (id < 0) return;
       fprintf(stderr, "Editing log options for the device %s\n", SIM->get_prefix(id));
       for (level=0; level<SIM->get_max_log_level(); level++) {
-	char prompt[1024];
-	int default_action = SIM->get_log_action(id, level);
-	sprintf(prompt, "Enter action for %s event: [%s] ", SIM->get_log_level_name(level), SIM->get_action_name(default_action));
-	// don't show the no change choice (choices=3)
-	if (ask_menu(prompt, "", log_level_n_choices_normal, log_level_choices, default_action, &action)<0)
-	  return;
-	SIM->set_log_action(id, level, action);
+        char prompt[1024];
+        int default_action = SIM->get_log_action(id, level);
+        sprintf(prompt, "Enter action for %s event: [%s] ", SIM->get_log_level_name(level), SIM->get_action_name(default_action));
+        // don't show the no change choice (choices=3)
+        if (ask_menu(prompt, "", log_level_n_choices_normal, log_level_choices, default_action, &action)<0)
+          return;
+        SIM->set_log_action(id, level, action);
       }
     }
   } else {
@@ -599,12 +599,12 @@ void bx_log_options(int individual)
       char prompt[1024];
       int action, default_action = 3;  // default to no change
       sprintf(prompt, "Enter action for %s event on all devices: [no change] ", SIM->get_log_level_name(level));
-	// do show the no change choice (choices=4)
+      // do show the no change choice (choices=4)
       if (ask_menu(prompt, "", log_level_n_choices_normal+1, log_level_choices, default_action, &action)<0)
-	return;
+        return;
       if (action < 3) {
-	SIM->set_default_log_action(level, action);
-	SIM->set_log_action(-1, level, action);
+        SIM->set_default_log_action(level, action);
+        SIM->set_log_action(-1, level, action);
       }
     }
   }
