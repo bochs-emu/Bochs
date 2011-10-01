@@ -175,8 +175,6 @@ float32 float32_muladd(float32 a, float32 b, float32 c, int flags, float_status_
         cSign ^= 1;
     }
 
-    int signflip = (flags & float_muladd_negate_result) ? 1 : 0;
-
     /* Work out the sign and type of the product */
     pSign = aSign ^ bSign;
     if (flags & float_muladd_negate_product) {
@@ -195,14 +193,14 @@ float32 float32_muladd(float32 a, float32 b, float32 c, int flags, float_status_
         if ((aSig && aExp == 0) || (bSig && bExp == 0)) {
             float_raise(status, float_flag_denormal);
         }
-        return packFloat32(cSign ^ signflip, 0xff, 0);
+        return packFloat32(cSign, 0xff, 0);
     }
 
     if (pInf) {
         if ((aSig && aExp == 0) || (bSig && bExp == 0) || (cSig && cExp == 0)) {
             float_raise(status, float_flag_denormal);
         }
-        return packFloat32(pSign ^ signflip, 0xff, 0);
+        return packFloat32(pSign, 0xff, 0);
     }
 
     if (pZero) {
@@ -216,17 +214,17 @@ float32 float32_muladd(float32 a, float32 b, float32 c, int flags, float_status_
                 } else {
                     zSign = 0;
                 }
-                return packFloat32(zSign ^ signflip, 0, 0);
+                return packFloat32(zSign, 0, 0);
             }
             /* Exact zero plus a denormal */
             float_raise(status, float_flag_denormal);
             if (get_flush_underflow_to_zero(status)) {
                 float_raise(status, float_flag_underflow | float_flag_inexact);
-                return packFloat32(cSign ^ signflip, 0, 0);
+                return packFloat32(cSign, 0, 0);
             }
         }
         /* Zero plus something non-zero : just return the something */
-        return c ^ (signflip << 31);
+        return c;
     }
 
     if (aExp == 0) {
@@ -254,7 +252,7 @@ float32 float32_muladd(float32 a, float32 b, float32 c, int flags, float_status_
         pExp--;
     }
 
-    zSign = pSign ^ signflip;
+    zSign = pSign;
 
     /* Now pSig64 is the significand of the multiply, with the explicit bit in
      * position 62.
@@ -262,8 +260,7 @@ float32 float32_muladd(float32 a, float32 b, float32 c, int flags, float_status_
     if (cExp == 0) {
         if (!cSig) {
             /* Throw out the special case of c being an exact zero now */
-            pSig64 = shift64RightJamming(pSig64, 32);
-            pSig = pSig64;
+            pSig = shift64RightJamming(pSig64, 32);
             return roundAndPackFloat32(zSign, pExp - 1, pSig, status);
         }
         float_raise(status, float_flag_denormal);
@@ -317,11 +314,7 @@ float32 float32_muladd(float32 a, float32 b, float32 c, int flags, float_status_
                 zSign ^= 1;
             } else {
                 /* Exact zero */
-                zSign = signflip;
-                if (get_float_rounding_mode(status) == float_round_down) {
-                    zSign ^= 1;
-                }
-                return packFloat32(zSign, 0, 0);
+                return packFloat32(get_float_rounding_mode(status) == float_round_down, 0, 0);
             }
         }
         --zExp;
@@ -389,8 +382,6 @@ float64 float64_muladd(float64 a, float64 b, float64 c, int flags, float_status_
         cSign ^= 1;
     }
 
-    int signflip = (flags & float_muladd_negate_result) ? 1 : 0;
-
     /* Work out the sign and type of the product */
     pSign = aSign ^ bSign;
     if (flags & float_muladd_negate_product) {
@@ -409,14 +400,14 @@ float64 float64_muladd(float64 a, float64 b, float64 c, int flags, float_status_
         if ((aSig && aExp == 0) || (bSig && bExp == 0)) {
             float_raise(status, float_flag_denormal);
         }
-        return packFloat64(cSign ^ signflip, 0x7ff, 0);
+        return packFloat64(cSign, 0x7ff, 0);
     }
 
     if (pInf) {
         if ((aSig && aExp == 0) || (bSig && bExp == 0) || (cSig && cExp == 0)) {
             float_raise(status, float_flag_denormal);
         }
-        return packFloat64(pSign ^ signflip, 0x7ff, 0);
+        return packFloat64(pSign, 0x7ff, 0);
     }
 
     if (pZero) {
@@ -430,17 +421,17 @@ float64 float64_muladd(float64 a, float64 b, float64 c, int flags, float_status_
                 } else {
                     zSign = 0;
                 }
-                return packFloat64(zSign ^ signflip, 0, 0);
+                return packFloat64(zSign, 0, 0);
             }
             /* Exact zero plus a denormal */
             float_raise(status, float_flag_denormal);
             if (get_flush_underflow_to_zero(status)) {
                 float_raise(status, float_flag_underflow | float_flag_inexact);
-                return packFloat64(cSign ^ signflip, 0, 0);
+                return packFloat64(cSign, 0, 0);
             }
         }
         /* Zero plus something non-zero : just return the something */
-        return c ^ ((Bit64u)signflip << 63);
+        return c;
     }
 
     if (aExp == 0) {
@@ -468,7 +459,7 @@ float64 float64_muladd(float64 a, float64 b, float64 c, int flags, float_status_
         pExp--;
     }
 
-    zSign = pSign ^ signflip;
+    zSign = pSign;
 
     /* Now [pSig0:pSig1] is the significand of the multiply, with the explicit
      * bit in position 126.
@@ -531,11 +522,7 @@ float64 float64_muladd(float64 a, float64 b, float64 c, int flags, float_status_
                 zSign ^= 1;
             } else {
                 /* Exact zero */
-                zSign = signflip;
-                if (get_float_rounding_mode(status) == float_round_down) {
-                    zSign ^= 1;
-                }
-                return packFloat64(zSign, 0, 0);
+                return packFloat64(get_float_rounding_mode(status) == float_round_down, 0, 0);
             }
         }
         --zExp;
