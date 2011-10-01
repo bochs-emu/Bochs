@@ -30,259 +30,7 @@
 
 extern void mxcsr_to_softfloat_status_word(float_status_t &status, bx_mxcsr_t mxcsr);
 
-#include "fpu/softfloat-specialize.h"
-
-BX_CPP_INLINE void fmaddps(BxPackedXmmRegister *op1, BxPackedXmmRegister *op2, BxPackedXmmRegister *op3, float_status_t &status, bx_bool mxcsr_daz)
-{
-  if (mxcsr_daz) {
-    op1->xmm32u(0) = float32_denormal_to_zero(op1->xmm32u(0));
-    op1->xmm32u(1) = float32_denormal_to_zero(op1->xmm32u(1));
-    op1->xmm32u(2) = float32_denormal_to_zero(op1->xmm32u(2));
-    op1->xmm32u(3) = float32_denormal_to_zero(op1->xmm32u(3));
-
-    op2->xmm32u(0) = float32_denormal_to_zero(op2->xmm32u(0));
-    op2->xmm32u(1) = float32_denormal_to_zero(op2->xmm32u(1));
-    op2->xmm32u(2) = float32_denormal_to_zero(op2->xmm32u(2));
-    op2->xmm32u(3) = float32_denormal_to_zero(op2->xmm32u(3));
-
-    op3->xmm32u(0) = float32_denormal_to_zero(op3->xmm32u(0));
-    op3->xmm32u(1) = float32_denormal_to_zero(op3->xmm32u(1));
-    op3->xmm32u(2) = float32_denormal_to_zero(op3->xmm32u(2));
-    op3->xmm32u(3) = float32_denormal_to_zero(op3->xmm32u(3));
-  }
-
-  op1->xmm32u(0) = float32_muladd(op1->xmm32u(0), op2->xmm32u(0), op3->xmm32u(0), 0, status);
-  op1->xmm32u(1) = float32_muladd(op1->xmm32u(1), op2->xmm32u(1), op3->xmm32u(1), 0, status);
-  op1->xmm32u(2) = float32_muladd(op1->xmm32u(2), op2->xmm32u(2), op3->xmm32u(2), 0, status);
-  op1->xmm32u(3) = float32_muladd(op1->xmm32u(3), op2->xmm32u(3), op3->xmm32u(3), 0, status);
-}
-
-BX_CPP_INLINE void fmaddpd(BxPackedXmmRegister *op1, BxPackedXmmRegister *op2, BxPackedXmmRegister *op3, float_status_t &status, bx_bool mxcsr_daz)
-{
-  if (mxcsr_daz) {
-    op1->xmm64u(0) = float64_denormal_to_zero(op1->xmm64u(0));
-    op1->xmm64u(1) = float64_denormal_to_zero(op1->xmm64u(1));
-
-    op2->xmm64u(0) = float64_denormal_to_zero(op2->xmm64u(0));
-    op2->xmm64u(1) = float64_denormal_to_zero(op2->xmm64u(1));
-
-    op3->xmm64u(0) = float64_denormal_to_zero(op3->xmm64u(0));
-    op3->xmm64u(1) = float64_denormal_to_zero(op3->xmm64u(1));
-  }
-
-  op1->xmm64u(0) = float64_muladd(op1->xmm64u(0), op2->xmm64u(0), op3->xmm64u(0), 0, status);
-  op1->xmm64u(1) = float64_muladd(op1->xmm64u(1), op2->xmm64u(1), op3->xmm64u(1), 0, status);
-}
-
-BX_CPP_INLINE void fmsubps(BxPackedXmmRegister *op1, BxPackedXmmRegister *op2, BxPackedXmmRegister *op3, float_status_t &status, bx_bool mxcsr_daz)
-{
-  if (mxcsr_daz) {
-    op1->xmm32u(0) = float32_denormal_to_zero(op1->xmm32u(0));
-    op1->xmm32u(1) = float32_denormal_to_zero(op1->xmm32u(1));
-    op1->xmm32u(2) = float32_denormal_to_zero(op1->xmm32u(2));
-    op1->xmm32u(3) = float32_denormal_to_zero(op1->xmm32u(3));
-
-    op2->xmm32u(0) = float32_denormal_to_zero(op2->xmm32u(0));
-    op2->xmm32u(1) = float32_denormal_to_zero(op2->xmm32u(1));
-    op2->xmm32u(2) = float32_denormal_to_zero(op2->xmm32u(2));
-    op2->xmm32u(3) = float32_denormal_to_zero(op2->xmm32u(3));
-
-    op3->xmm32u(0) = float32_denormal_to_zero(op3->xmm32u(0));
-    op3->xmm32u(1) = float32_denormal_to_zero(op3->xmm32u(1));
-    op3->xmm32u(2) = float32_denormal_to_zero(op3->xmm32u(2));
-    op3->xmm32u(3) = float32_denormal_to_zero(op3->xmm32u(3));
-  }
-
-  op1->xmm32u(0) = float32_muladd(op1->xmm32u(0), op2->xmm32u(0), op3->xmm32u(0), float_muladd_negate_c, status);
-  op1->xmm32u(1) = float32_muladd(op1->xmm32u(1), op2->xmm32u(1), op3->xmm32u(1), float_muladd_negate_c, status);
-  op1->xmm32u(2) = float32_muladd(op1->xmm32u(2), op2->xmm32u(2), op3->xmm32u(2), float_muladd_negate_c, status);
-  op1->xmm32u(3) = float32_muladd(op1->xmm32u(3), op2->xmm32u(3), op3->xmm32u(3), float_muladd_negate_c, status);
-}
-
-BX_CPP_INLINE void fmsubpd(BxPackedXmmRegister *op1, BxPackedXmmRegister *op2, BxPackedXmmRegister *op3, float_status_t &status, bx_bool mxcsr_daz)
-{
-  if (mxcsr_daz) {
-    op1->xmm64u(0) = float64_denormal_to_zero(op1->xmm64u(0));
-    op1->xmm64u(1) = float64_denormal_to_zero(op1->xmm64u(1));
-
-    op2->xmm64u(0) = float64_denormal_to_zero(op2->xmm64u(0));
-    op2->xmm64u(1) = float64_denormal_to_zero(op2->xmm64u(1));
-
-    op3->xmm64u(0) = float64_denormal_to_zero(op3->xmm64u(0));
-    op3->xmm64u(1) = float64_denormal_to_zero(op3->xmm64u(1));
-  }
-
-  op1->xmm64u(0) = float64_muladd(op1->xmm64u(0), op2->xmm64u(0), op3->xmm64u(0), float_muladd_negate_c, status);
-  op1->xmm64u(1) = float64_muladd(op1->xmm64u(1), op2->xmm64u(1), op3->xmm64u(1), float_muladd_negate_c, status);
-}
-
-BX_CPP_INLINE void fmaddsubps(BxPackedXmmRegister *op1, BxPackedXmmRegister *op2, BxPackedXmmRegister *op3, float_status_t &status, bx_bool mxcsr_daz)
-{
-  if (mxcsr_daz) {
-    op1->xmm32u(0) = float32_denormal_to_zero(op1->xmm32u(0));
-    op1->xmm32u(1) = float32_denormal_to_zero(op1->xmm32u(1));
-    op1->xmm32u(2) = float32_denormal_to_zero(op1->xmm32u(2));
-    op1->xmm32u(3) = float32_denormal_to_zero(op1->xmm32u(3));
-
-    op2->xmm32u(0) = float32_denormal_to_zero(op2->xmm32u(0));
-    op2->xmm32u(1) = float32_denormal_to_zero(op2->xmm32u(1));
-    op2->xmm32u(2) = float32_denormal_to_zero(op2->xmm32u(2));
-    op2->xmm32u(3) = float32_denormal_to_zero(op2->xmm32u(3));
-
-    op3->xmm32u(0) = float32_denormal_to_zero(op3->xmm32u(0));
-    op3->xmm32u(1) = float32_denormal_to_zero(op3->xmm32u(1));
-    op3->xmm32u(2) = float32_denormal_to_zero(op3->xmm32u(2));
-    op3->xmm32u(3) = float32_denormal_to_zero(op3->xmm32u(3));
-  }
-
-  op1->xmm32u(0) = float32_muladd(op1->xmm32u(0), op2->xmm32u(0), op3->xmm32u(0), float_muladd_negate_c, status);
-  op1->xmm32u(1) = float32_muladd(op1->xmm32u(1), op2->xmm32u(1), op3->xmm32u(1), 0, status);
-  op1->xmm32u(2) = float32_muladd(op1->xmm32u(2), op2->xmm32u(2), op3->xmm32u(2), float_muladd_negate_c, status);
-  op1->xmm32u(3) = float32_muladd(op1->xmm32u(3), op2->xmm32u(3), op3->xmm32u(3), 0, status);
-}
-
-BX_CPP_INLINE void fmaddsubpd(BxPackedXmmRegister *op1, BxPackedXmmRegister *op2, BxPackedXmmRegister *op3, float_status_t &status, bx_bool mxcsr_daz)
-{
-  if (mxcsr_daz) {
-    op1->xmm64u(0) = float64_denormal_to_zero(op1->xmm64u(0));
-    op1->xmm64u(1) = float64_denormal_to_zero(op1->xmm64u(1));
-
-    op2->xmm64u(0) = float64_denormal_to_zero(op2->xmm64u(0));
-    op2->xmm64u(1) = float64_denormal_to_zero(op2->xmm64u(1));
-
-    op3->xmm64u(0) = float64_denormal_to_zero(op3->xmm64u(0));
-    op3->xmm64u(1) = float64_denormal_to_zero(op3->xmm64u(1));
-  }
-
-  op1->xmm64u(0) = float64_muladd(op1->xmm64u(0), op2->xmm64u(0), op3->xmm64u(0), float_muladd_negate_c, status);
-  op1->xmm64u(1) = float64_muladd(op1->xmm64u(1), op2->xmm64u(1), op3->xmm64u(1), 0, status);
-}
-
-BX_CPP_INLINE void fmasubaddps(BxPackedXmmRegister *op1, BxPackedXmmRegister *op2, BxPackedXmmRegister *op3, float_status_t &status, bx_bool mxcsr_daz)
-{
-  if (mxcsr_daz) {
-    op1->xmm32u(0) = float32_denormal_to_zero(op1->xmm32u(0));
-    op1->xmm32u(1) = float32_denormal_to_zero(op1->xmm32u(1));
-    op1->xmm32u(2) = float32_denormal_to_zero(op1->xmm32u(2));
-    op1->xmm32u(3) = float32_denormal_to_zero(op1->xmm32u(3));
-
-    op2->xmm32u(0) = float32_denormal_to_zero(op2->xmm32u(0));
-    op2->xmm32u(1) = float32_denormal_to_zero(op2->xmm32u(1));
-    op2->xmm32u(2) = float32_denormal_to_zero(op2->xmm32u(2));
-    op2->xmm32u(3) = float32_denormal_to_zero(op2->xmm32u(3));
-
-    op3->xmm32u(0) = float32_denormal_to_zero(op3->xmm32u(0));
-    op3->xmm32u(1) = float32_denormal_to_zero(op3->xmm32u(1));
-    op3->xmm32u(2) = float32_denormal_to_zero(op3->xmm32u(2));
-    op3->xmm32u(3) = float32_denormal_to_zero(op3->xmm32u(3));
-  }
-
-  op1->xmm32u(0) = float32_muladd(op1->xmm32u(0), op2->xmm32u(0), op3->xmm32u(0), 0, status);
-  op1->xmm32u(1) = float32_muladd(op1->xmm32u(1), op2->xmm32u(1), op3->xmm32u(1), float_muladd_negate_c, status);
-  op1->xmm32u(2) = float32_muladd(op1->xmm32u(2), op2->xmm32u(2), op3->xmm32u(2), 0, status);
-  op1->xmm32u(3) = float32_muladd(op1->xmm32u(3), op2->xmm32u(3), op3->xmm32u(3), float_muladd_negate_c, status);
-}
-
-BX_CPP_INLINE void fmasubaddpd(BxPackedXmmRegister *op1, BxPackedXmmRegister *op2, BxPackedXmmRegister *op3, float_status_t &status, bx_bool mxcsr_daz)
-{
-  if (mxcsr_daz) {
-    op1->xmm64u(0) = float64_denormal_to_zero(op1->xmm64u(0));
-    op1->xmm64u(1) = float64_denormal_to_zero(op1->xmm64u(1));
-
-    op2->xmm64u(0) = float64_denormal_to_zero(op2->xmm64u(0));
-    op2->xmm64u(1) = float64_denormal_to_zero(op2->xmm64u(1));
-
-    op3->xmm64u(0) = float64_denormal_to_zero(op3->xmm64u(0));
-    op3->xmm64u(1) = float64_denormal_to_zero(op3->xmm64u(1));
-  }
-
-  op1->xmm64u(0) = float64_muladd(op1->xmm64u(0), op2->xmm64u(0), op3->xmm64u(0), 0, status);
-  op1->xmm64u(1) = float64_muladd(op1->xmm64u(1), op2->xmm64u(1), op3->xmm64u(1), float_muladd_negate_c, status);
-}
-
-BX_CPP_INLINE void fnmaddps(BxPackedXmmRegister *op1, BxPackedXmmRegister *op2, BxPackedXmmRegister *op3, float_status_t &status, bx_bool mxcsr_daz)
-{
-  if (mxcsr_daz) {
-    op1->xmm32u(0) = float32_denormal_to_zero(op1->xmm32u(0));
-    op1->xmm32u(1) = float32_denormal_to_zero(op1->xmm32u(1));
-    op1->xmm32u(2) = float32_denormal_to_zero(op1->xmm32u(2));
-    op1->xmm32u(3) = float32_denormal_to_zero(op1->xmm32u(3));
-
-    op2->xmm32u(0) = float32_denormal_to_zero(op2->xmm32u(0));
-    op2->xmm32u(1) = float32_denormal_to_zero(op2->xmm32u(1));
-    op2->xmm32u(2) = float32_denormal_to_zero(op2->xmm32u(2));
-    op2->xmm32u(3) = float32_denormal_to_zero(op2->xmm32u(3));
-
-    op3->xmm32u(0) = float32_denormal_to_zero(op3->xmm32u(0));
-    op3->xmm32u(1) = float32_denormal_to_zero(op3->xmm32u(1));
-    op3->xmm32u(2) = float32_denormal_to_zero(op3->xmm32u(2));
-    op3->xmm32u(3) = float32_denormal_to_zero(op3->xmm32u(3));
-  }
-
-  op1->xmm32u(0) = float32_muladd(op1->xmm32u(0), op2->xmm32u(0), op3->xmm32u(0), float_muladd_negate_product, status);
-  op1->xmm32u(1) = float32_muladd(op1->xmm32u(1), op2->xmm32u(1), op3->xmm32u(1), float_muladd_negate_product, status);
-  op1->xmm32u(2) = float32_muladd(op1->xmm32u(2), op2->xmm32u(2), op3->xmm32u(2), float_muladd_negate_product, status);
-  op1->xmm32u(3) = float32_muladd(op1->xmm32u(3), op2->xmm32u(3), op3->xmm32u(3), float_muladd_negate_product, status);
-}
-
-BX_CPP_INLINE void fnmaddpd(BxPackedXmmRegister *op1, BxPackedXmmRegister *op2, BxPackedXmmRegister *op3, float_status_t &status, bx_bool mxcsr_daz)
-{
-  if (mxcsr_daz) {
-    op1->xmm64u(0) = float64_denormal_to_zero(op1->xmm64u(0));
-    op1->xmm64u(1) = float64_denormal_to_zero(op1->xmm64u(1));
-
-    op2->xmm64u(0) = float64_denormal_to_zero(op2->xmm64u(0));
-    op2->xmm64u(1) = float64_denormal_to_zero(op2->xmm64u(1));
-
-    op3->xmm64u(0) = float64_denormal_to_zero(op3->xmm64u(0));
-    op3->xmm64u(1) = float64_denormal_to_zero(op3->xmm64u(1));
-  }
-
-  op1->xmm64u(0) = float64_muladd(op1->xmm64u(0), op2->xmm64u(0), op3->xmm64u(0), float_muladd_negate_product, status);
-  op1->xmm64u(1) = float64_muladd(op1->xmm64u(1), op2->xmm64u(1), op3->xmm64u(1), float_muladd_negate_product, status);
-}
-
-BX_CPP_INLINE void fnmsubps(BxPackedXmmRegister *op1, BxPackedXmmRegister *op2, BxPackedXmmRegister *op3, float_status_t &status, bx_bool mxcsr_daz)
-{
-  if (mxcsr_daz) {
-    op1->xmm32u(0) = float32_denormal_to_zero(op1->xmm32u(0));
-    op1->xmm32u(1) = float32_denormal_to_zero(op1->xmm32u(1));
-    op1->xmm32u(2) = float32_denormal_to_zero(op1->xmm32u(2));
-    op1->xmm32u(3) = float32_denormal_to_zero(op1->xmm32u(3));
-
-    op2->xmm32u(0) = float32_denormal_to_zero(op2->xmm32u(0));
-    op2->xmm32u(1) = float32_denormal_to_zero(op2->xmm32u(1));
-    op2->xmm32u(2) = float32_denormal_to_zero(op2->xmm32u(2));
-    op2->xmm32u(3) = float32_denormal_to_zero(op2->xmm32u(3));
-
-    op3->xmm32u(0) = float32_denormal_to_zero(op3->xmm32u(0));
-    op3->xmm32u(1) = float32_denormal_to_zero(op3->xmm32u(1));
-    op3->xmm32u(2) = float32_denormal_to_zero(op3->xmm32u(2));
-    op3->xmm32u(3) = float32_denormal_to_zero(op3->xmm32u(3));
-  }
-
-  op1->xmm32u(0) = float32_muladd(op1->xmm32u(0), op2->xmm32u(0), op3->xmm32u(0), float_muladd_negate_result, status);
-  op1->xmm32u(1) = float32_muladd(op1->xmm32u(1), op2->xmm32u(1), op3->xmm32u(1), float_muladd_negate_result, status);
-  op1->xmm32u(2) = float32_muladd(op1->xmm32u(2), op2->xmm32u(2), op3->xmm32u(2), float_muladd_negate_result, status);
-  op1->xmm32u(3) = float32_muladd(op1->xmm32u(3), op2->xmm32u(3), op3->xmm32u(3), float_muladd_negate_result, status);
-}
-
-BX_CPP_INLINE void fnmsubpd(BxPackedXmmRegister *op1, BxPackedXmmRegister *op2, BxPackedXmmRegister *op3, float_status_t &status, bx_bool mxcsr_daz)
-{
-  if (mxcsr_daz) {
-    op1->xmm64u(0) = float64_denormal_to_zero(op1->xmm64u(0));
-    op1->xmm64u(1) = float64_denormal_to_zero(op1->xmm64u(1));
-
-    op2->xmm64u(0) = float64_denormal_to_zero(op2->xmm64u(0));
-    op2->xmm64u(1) = float64_denormal_to_zero(op2->xmm64u(1));
-
-    op3->xmm64u(0) = float64_denormal_to_zero(op3->xmm64u(0));
-    op3->xmm64u(1) = float64_denormal_to_zero(op3->xmm64u(1));
-  }
-
-  op1->xmm64u(0) = float64_muladd(op1->xmm64u(0), op2->xmm64u(0), op3->xmm64u(0), float_muladd_negate_result, status);
-  op1->xmm64u(1) = float64_muladd(op1->xmm64u(1), op2->xmm64u(1), op3->xmm64u(1), float_muladd_negate_result, status);
-}
+#include "simd_pfp.h"
 
 // FMADDPD
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADD132PD_VpdHpdWpdR(bxInstruction_c *i)
@@ -296,7 +44,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADD132PD_VpdHpdWpdR(bxInstructi
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmaddpd(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status, MXCSR.get_DAZ());
+    fmaddpd(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -316,7 +64,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADD213PD_VpdHpdWpdR(bxInstructi
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmaddpd(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status, MXCSR.get_DAZ());
+    fmaddpd(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -336,7 +84,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADD231PD_VpdHpdWpdR(bxInstructi
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmaddpd(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status, MXCSR.get_DAZ());
+    fmaddpd(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -357,7 +105,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADD132PS_VpsHpsWpsR(bxInstructi
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmaddps(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status, MXCSR.get_DAZ());
+    fmaddps(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -377,7 +125,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADD213PS_VpsHpsWpsR(bxInstructi
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmaddps(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status, MXCSR.get_DAZ());
+    fmaddps(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -397,7 +145,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADD231PS_VpsHpsWpsR(bxInstructi
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmaddps(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status, MXCSR.get_DAZ());
+    fmaddps(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -415,14 +163,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADD132SD_VpdHsdWsdR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float64_denormal_to_zero(op1);
-    op2 = float64_denormal_to_zero(op2);
-    op3 = float64_denormal_to_zero(op3);
-  }
-
   op1 = float64_muladd(op1, op3, op2, 0, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -440,14 +180,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADD213SD_VpdHsdWsdR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float64_denormal_to_zero(op1);
-    op2 = float64_denormal_to_zero(op2);
-    op3 = float64_denormal_to_zero(op3);
-  }
-
   op1 = float64_muladd(op2, op1, op3, 0, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -465,14 +197,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADD231SD_VpdHsdWsdR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float64_denormal_to_zero(op1);
-    op2 = float64_denormal_to_zero(op2);
-    op3 = float64_denormal_to_zero(op3);
-  }
-
   op1 = float64_muladd(op2, op3, op1, 0, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -491,14 +215,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADD132SS_VpsHssWssR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float32_denormal_to_zero(op1);
-    op2 = float32_denormal_to_zero(op2);
-    op3 = float32_denormal_to_zero(op3);
-  }
-
   op1 = float32_muladd(op1, op3, op2, 0, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -516,14 +232,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADD213SS_VpsHssWssR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float32_denormal_to_zero(op1);
-    op2 = float32_denormal_to_zero(op2);
-    op3 = float32_denormal_to_zero(op3);
-  }
-
   op1 = float32_muladd(op2, op1, op3, 0, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -541,14 +249,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADD231SS_VpsHssWssR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float32_denormal_to_zero(op1);
-    op2 = float32_denormal_to_zero(op2);
-    op3 = float32_denormal_to_zero(op3);
-  }
-
   op1 = float32_muladd(op2, op3, op1, 0, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -570,7 +270,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDSUB132PD_VpdHpdWpdR(bxInstru
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmaddsubpd(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status, MXCSR.get_DAZ());
+    fmaddsubpd(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -590,7 +290,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDSUB213PD_VpdHpdWpdR(bxInstru
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmaddsubpd(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status, MXCSR.get_DAZ());
+    fmaddsubpd(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -610,7 +310,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDSUB231PD_VpdHpdWpdR(bxInstru
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmaddsubpd(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status, MXCSR.get_DAZ());
+    fmaddsubpd(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -631,7 +331,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDSUB132PS_VpsHpsWpsR(bxInstru
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmaddsubps(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status, MXCSR.get_DAZ());
+    fmaddsubps(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -651,7 +351,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDSUB213PS_VpsHpsWpsR(bxInstru
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmaddsubps(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status, MXCSR.get_DAZ());
+    fmaddsubps(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -671,7 +371,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDSUB231PS_VpsHpsWpsR(bxInstru
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmaddsubps(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status, MXCSR.get_DAZ());
+    fmaddsubps(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -692,7 +392,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBADD132PD_VpdHpdWpdR(bxInstru
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmasubaddpd(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status, MXCSR.get_DAZ());
+    fmasubaddpd(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -712,7 +412,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBADD213PD_VpdHpdWpdR(bxInstru
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmasubaddpd(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status, MXCSR.get_DAZ());
+    fmasubaddpd(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -732,7 +432,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBADD231PD_VpdHpdWpdR(bxInstru
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmasubaddpd(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status, MXCSR.get_DAZ());
+    fmasubaddpd(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -753,7 +453,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBADD132PS_VpsHpsWpsR(bxInstru
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmasubaddps(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status, MXCSR.get_DAZ());
+    fmasubaddps(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -773,7 +473,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBADD213PS_VpsHpsWpsR(bxInstru
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmasubaddps(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status, MXCSR.get_DAZ());
+    fmasubaddps(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -793,7 +493,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBADD231PS_VpsHpsWpsR(bxInstru
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmasubaddps(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status, MXCSR.get_DAZ());
+    fmasubaddps(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -814,7 +514,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUB132PD_VpdHpdWpdR(bxInstructi
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmsubpd(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status, MXCSR.get_DAZ());
+    fmsubpd(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -834,7 +534,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUB213PD_VpdHpdWpdR(bxInstructi
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmsubpd(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status, MXCSR.get_DAZ());
+    fmsubpd(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -854,7 +554,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUB231PD_VpdHpdWpdR(bxInstructi
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmsubpd(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status, MXCSR.get_DAZ());
+    fmsubpd(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -875,7 +575,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUB132PS_VpsHpsWpsR(bxInstructi
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmsubps(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status, MXCSR.get_DAZ());
+    fmsubps(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -895,7 +595,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUB213PS_VpsHpsWpsR(bxInstructi
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmsubps(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status, MXCSR.get_DAZ());
+    fmsubps(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -915,7 +615,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUB231PS_VpsHpsWpsR(bxInstructi
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmsubps(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status, MXCSR.get_DAZ());
+    fmsubps(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -933,14 +633,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUB132SD_VpdHsdWsdR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float64_denormal_to_zero(op1);
-    op2 = float64_denormal_to_zero(op2);
-    op3 = float64_denormal_to_zero(op3);
-  }
-
   op1 = float64_muladd(op1, op3, op2, float_muladd_negate_c, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -958,14 +650,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUB213SD_VpdHsdWsdR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float64_denormal_to_zero(op1);
-    op2 = float64_denormal_to_zero(op2);
-    op3 = float64_denormal_to_zero(op3);
-  }
-
   op1 = float64_muladd(op2, op1, op3, float_muladd_negate_c, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -983,14 +667,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUB231SD_VpdHsdWsdR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float64_denormal_to_zero(op1);
-    op2 = float64_denormal_to_zero(op2);
-    op3 = float64_denormal_to_zero(op3);
-  }
-
   op1 = float64_muladd(op2, op3, op1, float_muladd_negate_c, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1009,14 +685,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUB132SS_VpsHssWssR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float32_denormal_to_zero(op1);
-    op2 = float32_denormal_to_zero(op2);
-    op3 = float32_denormal_to_zero(op3);
-  }
-
   op1 = float32_muladd(op1, op3, op2, float_muladd_negate_c, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1034,14 +702,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUB213SS_VpsHssWssR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float32_denormal_to_zero(op1);
-    op2 = float32_denormal_to_zero(op2);
-    op3 = float32_denormal_to_zero(op3);
-  }
-
   op1 = float32_muladd(op2, op1, op3, float_muladd_negate_c, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1059,14 +719,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUB231SS_VpsHssWssR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float32_denormal_to_zero(op1);
-    op2 = float32_denormal_to_zero(op2);
-    op3 = float32_denormal_to_zero(op3);
-  }
-
   op1 = float32_muladd(op2, op3, op1, float_muladd_negate_c, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1088,7 +740,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADD132PD_VpdHpdWpdR(bxInstruct
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fnmaddpd(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status, MXCSR.get_DAZ());
+    fnmaddpd(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1108,7 +760,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADD213PD_VpdHpdWpdR(bxInstruct
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fnmaddpd(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status, MXCSR.get_DAZ());
+    fnmaddpd(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1128,7 +780,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADD231PD_VpdHpdWpdR(bxInstruct
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fnmaddpd(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status, MXCSR.get_DAZ());
+    fnmaddpd(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1149,7 +801,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADD132PS_VpsHpsWpsR(bxInstruct
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fnmaddps(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status, MXCSR.get_DAZ());
+    fnmaddps(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1169,7 +821,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADD213PS_VpsHpsWpsR(bxInstruct
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fnmaddps(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status, MXCSR.get_DAZ());
+    fnmaddps(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1189,7 +841,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADD231PS_VpsHpsWpsR(bxInstruct
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fnmaddps(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status, MXCSR.get_DAZ());
+    fnmaddps(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1207,14 +859,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADD132SD_VpdHsdWsdR(bxInstruct
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float64_denormal_to_zero(op1);
-    op2 = float64_denormal_to_zero(op2);
-    op3 = float64_denormal_to_zero(op3);
-  }
-
   op1 = float64_muladd(op1, op3, op2, float_muladd_negate_product, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1232,14 +876,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADD213SD_VpdHsdWsdR(bxInstruct
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float64_denormal_to_zero(op1);
-    op2 = float64_denormal_to_zero(op2);
-    op3 = float64_denormal_to_zero(op3);
-  }
-
   op1 = float64_muladd(op2, op1, op3, float_muladd_negate_product, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1257,14 +893,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADD231SD_VpdHsdWsdR(bxInstruct
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float64_denormal_to_zero(op1);
-    op2 = float64_denormal_to_zero(op2);
-    op3 = float64_denormal_to_zero(op3);
-  }
-
   op1 = float64_muladd(op2, op3, op1, float_muladd_negate_product, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1283,14 +911,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADD132SS_VpsHssWssR(bxInstruct
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float32_denormal_to_zero(op1);
-    op2 = float32_denormal_to_zero(op2);
-    op3 = float32_denormal_to_zero(op3);
-  }
-
   op1 = float32_muladd(op1, op3, op2, float_muladd_negate_product, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1308,14 +928,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADD213SS_VpsHssWssR(bxInstruct
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float32_denormal_to_zero(op1);
-    op2 = float32_denormal_to_zero(op2);
-    op3 = float32_denormal_to_zero(op3);
-  }
-
   op1 = float32_muladd(op2, op1, op3, float_muladd_negate_product, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1333,14 +945,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADD231SS_VpsHssWssR(bxInstruct
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float32_denormal_to_zero(op1);
-    op2 = float32_denormal_to_zero(op2);
-    op3 = float32_denormal_to_zero(op3);
-  }
-
   op1 = float32_muladd(op2, op3, op1, float_muladd_negate_product, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1362,7 +966,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUB132PD_VpdHpdWpdR(bxInstruct
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fnmsubpd(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status, MXCSR.get_DAZ());
+    fnmsubpd(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1382,7 +986,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUB213PD_VpdHpdWpdR(bxInstruct
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fnmsubpd(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status, MXCSR.get_DAZ());
+    fnmsubpd(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1402,7 +1006,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUB231PD_VpdHpdWpdR(bxInstruct
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fnmsubpd(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status, MXCSR.get_DAZ());
+    fnmsubpd(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1423,7 +1027,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUB132PS_VpsHpsWpsR(bxInstruct
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fnmsubps(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status, MXCSR.get_DAZ());
+    fnmsubps(&op1.avx128(n), &op3.avx128(n), &op2.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1443,7 +1047,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUB213PS_VpsHpsWpsR(bxInstruct
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fnmsubps(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status, MXCSR.get_DAZ());
+    fnmsubps(&op2.avx128(n), &op1.avx128(n), &op3.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1463,7 +1067,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUB231PS_VpsHpsWpsR(bxInstruct
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fnmsubps(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status, MXCSR.get_DAZ());
+    fnmsubps(&op2.avx128(n), &op3.avx128(n), &op1.avx128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1481,14 +1085,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUB132SD_VpdHsdWsdR(bxInstruct
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float64_denormal_to_zero(op1);
-    op2 = float64_denormal_to_zero(op2);
-    op3 = float64_denormal_to_zero(op3);
-  }
-
   op1 = float64_muladd(op1, op3, op2, float_muladd_negate_result, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1506,14 +1102,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUB213SD_VpdHsdWsdR(bxInstruct
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float64_denormal_to_zero(op1);
-    op2 = float64_denormal_to_zero(op2);
-    op3 = float64_denormal_to_zero(op3);
-  }
-
   op1 = float64_muladd(op2, op1, op3, float_muladd_negate_result, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1531,14 +1119,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUB231SD_VpdHsdWsdR(bxInstruct
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float64_denormal_to_zero(op1);
-    op2 = float64_denormal_to_zero(op2);
-    op3 = float64_denormal_to_zero(op3);
-  }
-
   op1 = float64_muladd(op2, op3, op1, float_muladd_negate_result, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1557,14 +1137,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUB132SS_VpsHssWssR(bxInstruct
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float32_denormal_to_zero(op1);
-    op2 = float32_denormal_to_zero(op2);
-    op3 = float32_denormal_to_zero(op3);
-  }
-
   op1 = float32_muladd(op1, op3, op2, float_muladd_negate_result, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1582,14 +1154,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUB213SS_VpsHssWssR(bxInstruct
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float32_denormal_to_zero(op1);
-    op2 = float32_denormal_to_zero(op2);
-    op3 = float32_denormal_to_zero(op3);
-  }
-
   op1 = float32_muladd(op2, op1, op3, float_muladd_negate_result, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -1607,14 +1171,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUB231SS_VpsHssWssR(bxInstruct
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  if (MXCSR.get_DAZ())
-  {
-    op1 = float32_denormal_to_zero(op1);
-    op2 = float32_denormal_to_zero(op2);
-    op3 = float32_denormal_to_zero(op3);
-  }
-
   op1 = float32_muladd(op2, op3, op1, float_muladd_negate_result, status);
   check_exceptionsSSE(status.float_exception_flags);
 

@@ -1649,10 +1649,7 @@ modrm_done:
           break;
         case BxSplitVexW:   // VexW is a real opcode extension
           BX_ASSERT(had_vex != 0);
-          if (vex_w)
-            OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
-          else
-            OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[0]);
+          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[vex_w]);
           break;
         case BxSplitMod11B:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[mod_mem]);

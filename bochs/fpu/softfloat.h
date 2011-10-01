@@ -130,6 +130,7 @@ struct float_status_t
     int float_exception_masks;
     int float_nan_handling_mode;	/* flag register */
     int flush_underflow_to_zero;	/* flag register */
+    int denormals_are_zeros;            /* flag register */
 };
 
 /*----------------------------------------------------------------------------
@@ -147,7 +148,7 @@ BX_CPP_INLINE void float_raise(float_status_t &status, int flags)
 | exceptions are masked.
 *----------------------------------------------------------------------------*/
 
-BX_CPP_INLINE int float_exception_masked(float_status_t &status, int flag)
+BX_CPP_INLINE int float_exception_masked(const float_status_t &status, int flag)
 {
     return status.float_exception_masks & flag;
 }
@@ -156,7 +157,7 @@ BX_CPP_INLINE int float_exception_masked(float_status_t &status, int flag)
 | Returns current floating point rounding mode specified by status word.
 *----------------------------------------------------------------------------*/
 
-BX_CPP_INLINE int get_float_rounding_mode(float_status_t &status)
+BX_CPP_INLINE int get_float_rounding_mode(const float_status_t &status)
 {
     return status.float_rounding_mode;
 }
@@ -166,7 +167,7 @@ BX_CPP_INLINE int get_float_rounding_mode(float_status_t &status)
 *----------------------------------------------------------------------------*/
 
 #ifdef FLOATX80
-BX_CPP_INLINE int get_float_rounding_precision(float_status_t &status)
+BX_CPP_INLINE int get_float_rounding_precision(const float_status_t &status)
 {
     return status.float_rounding_precision;
 }
@@ -177,7 +178,7 @@ BX_CPP_INLINE int get_float_rounding_precision(float_status_t &status)
 | by status word.
 *----------------------------------------------------------------------------*/
 
-BX_CPP_INLINE int get_float_nan_handling_mode(float_status_t &status)
+BX_CPP_INLINE int get_float_nan_handling_mode(const float_status_t &status)
 {
     return status.float_nan_handling_mode;
 }
@@ -194,11 +195,21 @@ BX_CPP_INLINE void set_float_rounding_up(float_status_t &status)
 #endif
 
 /*----------------------------------------------------------------------------
+| Returns 1 if the <denormals-are-zeros> feature is supported;
+| otherwise returns 0.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE int get_denormals_are_zeros(const float_status_t &status)
+{
+    return status.denormals_are_zeros;
+}
+
+/*----------------------------------------------------------------------------
 | Returns 1 if the <flush-underflow-to-zero> feature is supported;
 | otherwise returns 0.
 *----------------------------------------------------------------------------*/
 
-BX_CPP_INLINE int get_flush_underflow_to_zero(float_status_t &status)
+BX_CPP_INLINE int get_flush_underflow_to_zero(const float_status_t &status)
 {
     return status.flush_underflow_to_zero;
 }
@@ -239,15 +250,8 @@ int float32_is_signaling_nan(float32);
 int float32_is_nan(float32);
 int float32_is_denormal(float32);
 
-BX_CPP_INLINE float32 float32_min(float32 a, float32 b, float_status_t &status)
-{
-  return (float32_compare(a, b, status) == float_relation_less) ? a : b;
-}
-
-BX_CPP_INLINE float32 float32_max(float32 a, float32 b, float_status_t &status)
-{
-  return (float32_compare(a, b, status) == float_relation_greater) ? a : b;
-}
+float32 float32_min(float32 a, float32 b, float_status_t &status);
+float32 float32_max(float32 a, float32 b, float_status_t &status);
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE double-precision conversion routines.
@@ -277,15 +281,8 @@ int float64_is_signaling_nan(float64);
 int float64_is_nan(float64);
 int float64_is_denormal(float64);
 
-BX_CPP_INLINE float64 float64_min(float64 a, float64 b, float_status_t &status)
-{
-  return (float64_compare(a, b, status) == float_relation_less) ? a : b;
-}
-
-BX_CPP_INLINE float64 float64_max(float64 a, float64 b, float_status_t &status)
-{
-  return (float64_compare(a, b, status) == float_relation_greater) ? a : b;
-}
+float64 float64_min(float64 a, float64 b, float_status_t &status);
+float64 float64_max(float64 a, float64 b, float_status_t &status);
 
 #ifdef FLOAT16
 float32 float16_to_float32(float16, float_status_t &status);

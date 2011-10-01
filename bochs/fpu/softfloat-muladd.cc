@@ -163,6 +163,12 @@ float32 float32_muladd(float32 a, float32 b, float32 c, int flags, float_status_
         return propagateFloat32MulAddNaN(a, b, c, status);
     }
 
+    if (get_denormals_are_zeros(status)) {
+        if (aExp == 0) aSig = 0;
+        if (bExp == 0) bSig = 0;
+        if (cExp == 0) cSig = 0;
+    }
+
     int infzero = ((aExp == 0 && aSig == 0 && bExp == 0xff && bSig == 0) ||
                    (aExp == 0xff && aSig == 0 && bExp == 0 && bSig == 0));
 
@@ -368,6 +374,12 @@ float64 float64_muladd(float64 a, float64 b, float64 c, int flags, float_status_
         ((bExp == 0x7ff) && bSig) ||
         ((cExp == 0x7ff) && cSig)) {
         return propagateFloat64MulAddNaN(a, b, c, status);
+    }
+
+    if (get_denormals_are_zeros(status)) {
+        if (aExp == 0) aSig = 0;
+        if (bExp == 0) bSig = 0;
+        if (cExp == 0) cSig = 0;
     }
 
     int infzero = ((aExp == 0 && aSig == 0 && bExp == 0x7ff && bSig == 0) ||

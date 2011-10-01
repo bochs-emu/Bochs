@@ -83,6 +83,7 @@ float32 float16_to_float32(float16 a, float_status_t &status)
         return packFloat32(aSign, 0xFF, 0);
     }
     if (aExp == 0) {
+        if (get_denormals_are_zeros(status)) aSig = 0;
         if (aSig == 0) return packFloat32(aSign, 0, 0);
         float_raise(status, float_flag_denormal);
         normalizeFloat16Subnormal(aSig, &aExp, &aSig);
@@ -110,6 +111,7 @@ float16 float32_to_float16(float32 a, float_status_t &status)
         return packFloat16(aSign, 0x1F, 0);
     }
     if (aExp == 0) {
+        if (get_denormals_are_zeros(status)) aSig = 0;
         if (aSig == 0) return packFloat16(aSign, 0, 0);
         float_raise(status, float_flag_denormal);
     }
