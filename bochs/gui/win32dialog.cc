@@ -311,7 +311,7 @@ void SetStandardLogOptions(HWND hDlg)
   int level, idx;
   int defchoice[5];
 
-  for (level=0; level<5; level++) {
+  for (level=0; level<N_LOGLEV; level++) {
     int mod = 0;
     int first = SIM->get_log_action (mod, level);
     BOOL consensus = true;
@@ -328,11 +328,11 @@ void SetStandardLogOptions(HWND hDlg)
     else
       defchoice[level] = 4;
   }
-  for (level=0; level<5; level++) {
+  for (level=0; level<N_LOGLEV; level++) {
     idx = 0;
     SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_RESETCONTENT, 0, 0);
     for (int action=0; action<5; action++) {
-      if (((level > 1) && (action > 0)) || ((level < 2) && ((action < 2) || (action > 3)))) {
+      if ((level > 1 && action > 0) || (level < 2 && (action < 2 || action > 3))) {
         SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_ADDSTRING, 0, (LPARAM)log_choices[action]);
         SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_SETITEMDATA, idx, action);
         if (action == defchoice[level]) {
@@ -351,11 +351,11 @@ void SetAdvancedLogOptions(HWND hDlg)
 
   idx = SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_GETCURSEL, 0, 0);
   mod = SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_GETITEMDATA, idx, 0);
-  for (level=0; level<5; level++) {
+  for (level=0; level<N_LOGLEV; level++) {
     idx = 0;
     SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_RESETCONTENT, 0, 0);
     for (int action=0; action<4; action++) {
-      if (((level > 1) && (action > 0)) || ((level < 2) && (action < 2))) {
+      if ((level > 1 && action > 0) || (level < 2 && action < 2)) {
         SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_ADDSTRING, 0, (LPARAM)log_choices[action]);
         SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_SETITEMDATA, idx, action);
         if (action == SIM->get_log_action (mod, level)) {
@@ -391,21 +391,21 @@ void ApplyLogOptions(HWND hDlg, BOOL advanced)
   if (advanced) {
     idx = SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_GETCURSEL, 0, 0);
     mod = SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_GETITEMDATA, idx, 0);
-    for (level=0; level<5; level++) {
+    for (level=0; level<N_LOGLEV; level++) {
       idx = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETCURSEL, 0, 0);
       value = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETITEMDATA, idx, 0);
       SIM->set_log_action (mod, level, value);
     }
     EnableWindow(GetDlgItem(hDlg, IDDEVLIST), TRUE);
   } else {
-    for (level=0; level<5; level++) {
+    for (level=0; level<N_LOGLEV; level++) {
       idx = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETCURSEL, 0, 0);
       value = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETITEMDATA, idx, 0);
       if (value < 4) {
         // set new default
-        SIM->set_default_log_action (level, value);
+        SIM->set_default_log_action(level, value);
         // apply that action to all modules (devices)
-        SIM->set_log_action (-1, level, value);
+        SIM->set_log_action(-1, level, value);
       }
     }
   }
