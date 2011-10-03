@@ -262,10 +262,3 @@ int DoSCSI(UBYTE *data, int datasize, Bit8u *cmd,int cmdsize, UBYTE direction)
 
   return CDIO->iotd_Req.io_Error;
 }
-
-void cdrom_interface::seek(int lba)
-{
-  unsigned char buffer[BX_CD_FRAMESIZE];
-
-  read_block(buffer, lba, BX_CD_FRAMESIZE);
-}

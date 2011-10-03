@@ -355,7 +355,6 @@ void cdrom_interface::eject_cdrom()
 
 bx_bool cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track, int format)
 {
-  unsigned i;
   // Read CD TOC. Returns 0 if start track is out of bounds.
 
   if (fd < 0) {
@@ -365,129 +364,9 @@ bx_bool cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int star
 
   // This is a hack and works okay if there's one rom track only
   if (!isWindowsXP || using_file) {
-    Bit32u blocks;
-    int len = 4;
-
-    switch (format) {
-      case 0:
-        // From atapi specs : start track can be 0-63, AA
-        if ((start_track > 1) && (start_track != 0xaa))
-          return 0;
-
-        buf[2] = 1;
-        buf[3] = 1;
-
-        if (start_track <= 1) {
-          buf[len++] = 0; // Reserved
-          buf[len++] = 0x14; // ADR, control
-          buf[len++] = 1; // Track number
-          buf[len++] = 0; // Reserved
-
-          // Start address
-          if (msf) {
-            buf[len++] = 0; // reserved
-            buf[len++] = 0; // minute
-            buf[len++] = 2; // second
-            buf[len++] = 0; // frame
-          } else {
-            buf[len++] = 0;
-            buf[len++] = 0;
-            buf[len++] = 0;
-            buf[len++] = 0; // logical sector 0
-          }
-        }
-
-        // Lead out track
-        buf[len++] = 0; // Reserved
-        buf[len++] = 0x16; // ADR, control
-        buf[len++] = 0xaa; // Track number
-        buf[len++] = 0; // Reserved
-
-        blocks = capacity();
-
-        // Start address
-        if (msf) {
-          buf[len++] = 0; // reserved
-          buf[len++] = (Bit8u)(((blocks + 150) / 75) / 60); // minute
-          buf[len++] = (Bit8u)(((blocks + 150) / 75) % 60); // second
-          buf[len++] = (Bit8u)((blocks + 150) % 75); // frame;
-        } else {
-          buf[len++] = (blocks >> 24) & 0xff;
-          buf[len++] = (blocks >> 16) & 0xff;
-          buf[len++] = (blocks >> 8) & 0xff;
-          buf[len++] = (blocks >> 0) & 0xff;
-        }
-        buf[0] = ((len-2) >> 8) & 0xff;
-        buf[1] = (len-2) & 0xff;
-        break;
-
-      case 1:
-        // multi session stuff - emulate a single session only
-        buf[0] = 0;
-        buf[1] = 0x0a;
-        buf[2] = 1;
-        buf[3] = 1;
-        for (i = 0; i < 8; i++)
-          buf[4+i] = 0;
-        len = 12;
-        break;
-
-      case 2:
-        // raw toc - emulate a single session only (ported from qemu)
-        buf[2] = 1;
-        buf[3] = 1;
-
-        for (i = 0; i < 4; i++) {
-          buf[len++] = 1;
-          buf[len++] = 0x14;
-          buf[len++] = 0;
-          if (i < 3) {
-            buf[len++] = 0xa0 + i;
-          } else {
-            buf[len++] = 1;
-          }
-          buf[len++] = 0;
-          buf[len++] = 0;
-          buf[len++] = 0;
-          if (i < 2) {
-            buf[len++] = 0;
-            buf[len++] = 1;
-            buf[len++] = 0;
-            buf[len++] = 0;
-          } else if (i == 2) {
-            blocks = capacity();
-            if (msf) {
-              buf[len++] = 0; // reserved
-              buf[len++] = (Bit8u)(((blocks + 150) / 75) / 60); // minute
-              buf[len++] = (Bit8u)(((blocks + 150) / 75) % 60); // second
-              buf[len++] = (Bit8u)((blocks + 150) % 75); // frame;
-            } else {
-              buf[len++] = (blocks >> 24) & 0xff;
-              buf[len++] = (blocks >> 16) & 0xff;
-              buf[len++] = (blocks >> 8) & 0xff;
-              buf[len++] = (blocks >> 0) & 0xff;
-            }
-          } else {
-            buf[len++] = 0;
-            buf[len++] = 0;
-            buf[len++] = 0;
-            buf[len++] = 0;
-          }
-        }
-        buf[0] = ((len-2) >> 8) & 0xff;
-        buf[1] = (len-2) & 0xff;
-        break;
-
-      default:
-        BX_PANIC(("cdrom: read_toc: unknown format"));
-        return 0;
-    }
-
-    *length = len;
-
-    return 1;
+    return create_toc(buf, length, msf, start_track, format);
   }
-  // all these implementations below are the platform-dependent code required
+  // the implementation below is the platform-dependent code required
   // to read the TOC from a physical cdrom.
   if (isWindowsXP)
   {
@@ -577,13 +456,6 @@ bx_bool BX_CPP_AttrRegparmN(3) cdrom_interface::read_block(Bit8u* buf, Bit32u lb
   } while ((n != BX_CD_FRAMESIZE) && (--try_count > 0));
 
   return (n == BX_CD_FRAMESIZE);
-}
-
-void cdrom_interface::seek(Bit32u lba)
-{
-  unsigned char buffer[BX_CD_FRAMESIZE];
-
-  read_block(buffer, lba, BX_CD_FRAMESIZE);
 }
 
 #endif /* WIN32 */

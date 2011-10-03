@@ -45,7 +45,10 @@ public:
   virtual bx_bool start_cdrom() = 0;
 
   // Seek for new block address.
-  virtual void seek(Bit32u lba) = 0;
+  virtual bx_bool seek(Bit32u lba) = 0;
+
+  // Create CD TOC from image. Called from read_toc().
+  virtual bx_bool create_toc(Bit8u* buf, int* length, bx_bool msf, int start_track, int format) = 0;
 };
 
 class cdrom_interface : public cdrom_base_c {
@@ -59,7 +62,8 @@ public:
   Bit32u capacity();
   bx_bool read_block(Bit8u* buf, Bit32u lba, int blocksize) BX_CPP_AttrRegparmN(3);
   bx_bool start_cdrom();
-  void seek(Bit32u lba);
+  bx_bool seek(Bit32u lba);
+  bx_bool create_toc(Bit8u* buf, int* length, bx_bool msf, int start_track, int format);
 
 private:
   int fd;
