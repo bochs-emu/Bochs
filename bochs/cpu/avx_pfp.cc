@@ -1339,6 +1339,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPH2PS_VpsWpsR(bxInstruction_c 
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  status.flush_underflow_to_zero = 0; // ignore MXCSR.FUZ
 
   for (unsigned n=0; n < (4*len); n++) {
      result.avx32u(n) = float16_to_float32(op.xmm16u(n), status);
@@ -1365,6 +1366,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PH_WpsVpsIb(bxInstruction_c
 
   Bit8u control = i->Ib();
 
+  status.flush_underflow_to_zero = 0; // ignore MXCSR.FUZ
   // override MXCSR rounding mode with control coming from imm8
   if ((control & 0x4) == 0)
     status.float_rounding_mode = control & 0x3;
