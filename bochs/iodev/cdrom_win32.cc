@@ -25,9 +25,6 @@
 // ioctl() calls and such.  Should be fairly easy to add support
 // for your OS if it is not supported yet.
 
-#ifndef BX_IODEV_CDROM_H
-#define BX_IODEV_CDROM_H
-
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
@@ -461,5 +458,3 @@ bx_bool BX_CPP_AttrRegparmN(3) cdrom_interface::read_block(Bit8u* buf, Bit32u lb
 #endif /* WIN32 */
 
 #endif /* if BX_SUPPORT_CDROM */
-
-#endif
