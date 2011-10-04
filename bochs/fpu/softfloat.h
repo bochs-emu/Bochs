@@ -190,7 +190,7 @@ BX_CPP_INLINE int get_float_nan_handling_mode(const float_status_t &status)
 #ifdef FLOATX80
 BX_CPP_INLINE void set_float_rounding_up(float_status_t &status)
 {
-    status.float_exception_flags |= (float_flag_inexact | RAISE_SW_C1);
+    status.float_exception_flags |= RAISE_SW_C1;
 }
 #endif
 

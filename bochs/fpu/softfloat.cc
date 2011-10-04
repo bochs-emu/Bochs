@@ -437,8 +437,7 @@ static float32 addFloat32Sigs(float32 a, float32 b, int zSign, float_status_t &s
             return packFloat32(zSign, 0, (aSig + bSig)>>6);
         }
         zSig = 0x40000000 + aSig + bSig;
-        zExp = aExp;
-        goto roundAndPack;
+        return roundAndPackFloat32(zSign, aExp, zSig, status);
     }
     aSig |= 0x20000000;
     zSig = (aSig + bSig)<<1;
@@ -447,7 +446,6 @@ static float32 addFloat32Sigs(float32 a, float32 b, int zSign, float_status_t &s
         zSig = aSig + bSig;
         ++zExp;
     }
- roundAndPack:
     return roundAndPackFloat32(zSign, zExp, zSig, status);
 }
 
@@ -1250,8 +1248,7 @@ static float64 addFloat64Sigs(float64 a, float64 b, int zSign, float_status_t &s
             return packFloat64(zSign, 0, (aSig + bSig)>>9);
         }
         zSig = BX_CONST64(0x4000000000000000) + aSig + bSig;
-        zExp = aExp;
-        goto roundAndPack;
+        return roundAndPackFloat64(zSign, aExp, zSig, status);
     }
     aSig |= BX_CONST64(0x2000000000000000);
     zSig = (aSig + bSig)<<1;
@@ -1260,7 +1257,6 @@ static float64 addFloat64Sigs(float64 a, float64 b, int zSign, float_status_t &s
         zSig = aSig + bSig;
         ++zExp;
     }
- roundAndPack:
     return roundAndPackFloat64(zSign, zExp, zSig, status);
 }
 
@@ -2067,7 +2063,7 @@ floatx80 floatx80_round_to_int(floatx80 a, float_status_t &status)
 {
     int aSign;
     Bit64u lastBitMask, roundBitsMask;
-    Bit8u roundingMode;
+    int roundingMode = get_float_rounding_mode(status);
     floatx80 z;
 
     // handle unsupported extended double-precision floating encodings
@@ -2092,7 +2088,7 @@ floatx80 floatx80_round_to_int(floatx80 a, float_status_t &status)
         }
         float_raise(status, float_flag_inexact);
         aSign = extractFloatx80Sign(a);
-        switch (get_float_rounding_mode(status)) {
+        switch (roundingMode) {
          case float_round_nearest_even:
             if ((aExp == 0x3FFE) && (Bit64u) (aSig<<1)) {
                 set_float_rounding_up(status);
@@ -2122,7 +2118,6 @@ floatx80 floatx80_round_to_int(floatx80 a, float_status_t &status)
     lastBitMask <<= 0x403E - aExp;
     roundBitsMask = lastBitMask - 1;
     z = a;
-    roundingMode = get_float_rounding_mode(status);
     if (roundingMode == float_round_nearest_even) {
         z.fraction += lastBitMask>>1;
         if ((z.fraction & roundBitsMask) == 0) z.fraction &= ~lastBitMask;

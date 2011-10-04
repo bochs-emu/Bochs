@@ -210,8 +210,7 @@ float16 roundAndPackFloat16(int zSign, Bit16s zExp, Bit16u zSig, float_status_t 
     roundBits = zSig & roundMask;
     if (0x1D <= (Bit16u) zExp) {
         if ((0x1D < zExp)
-             || ((zExp == 0x1D)
-                  && ((Bit16s) (zSig + roundIncrement) < 0)))
+             || ((zExp == 0x1D) && ((Bit16s) (zSig + roundIncrement) < 0)))
         {
             float_raise(status, float_flag_overflow);
             if (roundBits || float_exception_masked(status, float_flag_overflow)) {
@@ -229,6 +228,7 @@ float16 roundAndPackFloat16(int zSign, Bit16s zExp, Bit16u zSig, float_status_t 
                     float_raise(status, float_flag_underflow | float_flag_inexact);
                     return packFloat16(zSign, 0, 0);
                 }
+                // signal the #P according to roundBits calculated AFTER denormalization
                 if (roundBits || !float_exception_masked(status, float_flag_underflow)) {
                     float_raise(status, float_flag_underflow);
                 }
@@ -282,12 +282,12 @@ void normalizeFloat32Subnormal(Bit32u aSig, Bit16s *zExpPtr, Bit32u *zSigPtr)
 
 float32 roundAndPackFloat32(int zSign, Bit16s zExp, Bit32u zSig, float_status_t &status)
 {
-    Bit32s roundIncrement, roundBits, roundMask;
+    Bit32s roundIncrement, roundBits;
+    const Bit32s roundMask = 0x7F;
 
     int roundingMode = get_float_rounding_mode(status);
     int roundNearestEven = (roundingMode == float_round_nearest_even);
     roundIncrement = 0x40;
-    roundMask = 0x7F;
 
     if (! roundNearestEven) {
         if (roundingMode == float_round_to_zero) roundIncrement = 0;
@@ -304,8 +304,7 @@ float32 roundAndPackFloat32(int zSign, Bit16s zExp, Bit32u zSig, float_status_t 
     roundBits = zSig & roundMask;
     if (0xFD <= (Bit16u) zExp) {
         if ((0xFD < zExp)
-             || ((zExp == 0xFD)
-                  && ((Bit32s) (zSig + roundIncrement) < 0)))
+             || ((zExp == 0xFD) && ((Bit32s) (zSig + roundIncrement) < 0)))
         {
             float_raise(status, float_flag_overflow);
             if (roundBits || float_exception_masked(status, float_flag_overflow)) {
@@ -316,25 +315,34 @@ float32 roundAndPackFloat32(int zSign, Bit16s zExp, Bit32u zSig, float_status_t 
         }
         if (zExp < 0) {
             int isTiny = (zExp < -1) || (zSig + roundIncrement < 0x80000000);
-            zSig = shift32RightJamming(zSig, -zExp);
-            zExp = 0;
-            roundBits = zSig & roundMask;
             if (isTiny) {
-                if(get_flush_underflow_to_zero(status)) {
-                    float_raise(status, float_flag_underflow | float_flag_inexact);
-                    return packFloat32(zSign, 0, 0);
-                }
-                if (roundBits || !float_exception_masked(status, float_flag_underflow)) {
+                if (!float_exception_masked(status, float_flag_underflow)) {
                     float_raise(status, float_flag_underflow);
+                    zExp += 192; // bias unmasked underflow
+                }
+            }
+            if (zExp < 0) {
+                zSig = shift32RightJamming(zSig, -zExp);
+                zExp = 0;
+                roundBits = zSig & roundMask;
+                if (isTiny) {
+                    // masked underflow
+                    if(get_flush_underflow_to_zero(status)) {
+                        float_raise(status, float_flag_underflow | float_flag_inexact);
+                        return packFloat32(zSign, 0, 0);
+                    }
+                    if (roundBits) float_raise(status, float_flag_underflow);
                 }
             }
         }
     }
-    if (roundBits) float_raise(status, float_flag_inexact);
     Bit32u zSigRound = ((zSig + roundIncrement) & ~roundMask) >> 7;
     zSigRound &= ~(((roundBits ^ 0x40) == 0) & roundNearestEven);
-    if ((zSigRound << 7) > zSig) set_float_rounding_up(status);
     if (zSigRound == 0) zExp = 0;
+    if (roundBits) {
+        float_raise(status, float_flag_inexact);
+        if ((zSigRound << 7) > zSig) set_float_rounding_up(status);
+    }
     return packFloat32(zSign, zExp, zSigRound);
 }
 
@@ -392,13 +400,14 @@ void normalizeFloat64Subnormal(Bit64u aSig, Bit16s *zExpPtr, Bit64u *zSigPtr)
 float64 roundAndPackFloat64(int zSign, Bit16s zExp, Bit64u zSig, float_status_t &status)
 {
     Bit16s roundIncrement, roundBits;
+    const Bit16s roundMask = 0x3FF;
     int roundingMode = get_float_rounding_mode(status);
     int roundNearestEven = (roundingMode == float_round_nearest_even);
     roundIncrement = 0x200;
     if (! roundNearestEven) {
         if (roundingMode == float_round_to_zero) roundIncrement = 0;
         else {
-            roundIncrement = 0x3FF;
+            roundIncrement = roundMask;
             if (zSign) {
                 if (roundingMode == float_round_up) roundIncrement = 0;
             }
@@ -407,7 +416,7 @@ float64 roundAndPackFloat64(int zSign, Bit16s zExp, Bit64u zSig, float_status_t 
             }
         }
     }
-    roundBits = (Bit16s)(zSig & 0x3FF);
+    roundBits = (Bit16s)(zSig & roundMask);
     if (0x7FD <= (Bit16u) zExp) {
         if ((0x7FD < zExp)
              || ((zExp == 0x7FD)
@@ -422,25 +431,34 @@ float64 roundAndPackFloat64(int zSign, Bit16s zExp, Bit64u zSig, float_status_t 
         }
         if (zExp < 0) {
             int isTiny = (zExp < -1) || (zSig + roundIncrement < BX_CONST64(0x8000000000000000));
-            zSig = shift64RightJamming(zSig, -zExp);
-            zExp = 0;
-            roundBits = (Bit16s)(zSig & 0x3FF);
             if (isTiny) {
-                if(get_flush_underflow_to_zero(status)) {
-                    float_raise(status, float_flag_underflow | float_flag_inexact);
-                    return packFloat64(zSign, 0, 0);
-                }
-                if (roundBits || !float_exception_masked(status, float_flag_underflow)) {
+                if (!float_exception_masked(status, float_flag_underflow)) {
                     float_raise(status, float_flag_underflow);
+                    zExp += 1536; // bias unmasked underflow
+                }
+            }
+            if (zExp < 0) {
+                zSig = shift64RightJamming(zSig, -zExp);
+                zExp = 0;
+                roundBits = (Bit16s)(zSig & roundMask);
+                if (isTiny) {
+                    // masked underflow
+                    if(get_flush_underflow_to_zero(status)) {
+                        float_raise(status, float_flag_underflow | float_flag_inexact);
+                        return packFloat64(zSign, 0, 0);
+                    }
+                    if (roundBits) float_raise(status, float_flag_underflow);
                 }
             }
         }
     }
-    if (roundBits) float_raise(status, float_flag_inexact);
     Bit64u zSigRound = (zSig + roundIncrement)>>10;
     zSigRound &= ~(((roundBits ^ 0x200) == 0) & roundNearestEven);
-    if ((zSigRound << 10) > zSig) set_float_rounding_up(status);
     if (zSigRound == 0) zExp = 0;
+    if (roundBits) {
+        float_raise(status, float_flag_inexact);
+        if ((zSigRound << 10) > zSig) set_float_rounding_up(status);
+    }
     return packFloat64(zSign, zExp, zSigRound);
 }
 
@@ -548,14 +566,16 @@ floatx80 SoftFloatRoundAndPackFloatx80(int roundingPrecision,
                 if (roundBits || (zSig0 && !float_exception_masked(status, float_flag_underflow)))
                     float_raise(status, float_flag_underflow);
             }
-            if (roundBits) float_raise(status, float_flag_inexact);
             zSig0 += roundIncrement;
             if ((Bit64s) zSig0 < 0) zExp = 1;
             roundIncrement = roundMask + 1;
             if (roundNearestEven && (roundBits<<1 == roundIncrement))
                 roundMask |= roundIncrement;
             zSig0 &= ~roundMask;
-            if (zSig0 > zSigExact) set_float_rounding_up(status);
+            if (roundBits) {
+                float_raise(status, float_flag_inexact);
+                if (zSig0 > zSigExact) set_float_rounding_up(status);
+            }
             return packFloatx80(zSign, zExp, zSig0);
         }
     }
