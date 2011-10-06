@@ -721,10 +721,15 @@ void bx_dbg_print_mxcsr_state(void)
 {
 #if BX_CPU_LEVEL >= 6
   Bit32u mxcsr = SIM->get_param_num("SSE.mxcsr", dbg_cpu_list)->get();
-  dbg_printf("MXCSR: 0x%05x: %s %s RC:%d %s %s %s %s %s %s %s %s %s %s %s %s %s\n", mxcsr,
+
+  static const char* round_control[] = {
+    "Nearest", "Down", "Up", "Chop"
+  };
+
+  dbg_printf("MXCSR: 0x%05x: %s %s RC:%s %s %s %s %s %s %s %s %s %s %s %s %s %s\n", mxcsr,
      (mxcsr & (1<<17)) ? "ULE" : "ule",
      (mxcsr & (1<<15)) ? "FUZ" : "fuz",
-     (mxcsr >> 13) & 3,
+     round_control[(mxcsr >> 13) & 3],
      (mxcsr & (1<<12)) ? "PM" : "pm",
      (mxcsr & (1<<11)) ? "UM" : "um",
      (mxcsr & (1<<10)) ? "OM" : "om",

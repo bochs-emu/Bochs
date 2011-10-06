@@ -103,6 +103,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_ISA_LZCNT                 (BX_CONST64(1) << 31)  /* LZCNT instruction */
 #define BX_ISA_BMI1                  (BX_CONST64(1) << 32)  /* BMI1 instruction */
 #define BX_ISA_BMI2                  (BX_CONST64(1) << 33)  /* BMI2 instruction */
+#define BX_ISA_FMA4                  (BX_CONST64(1) << 34)  /* FMA4 instruction (AMD) */
+#define BX_ISA_XOP                   (BX_CONST64(1) << 35)  /* XOP instruction (AMD) */
 
 // cpuid non-ISA features
 #define BX_CPU_DEBUG_EXTENSIONS      (1 <<  0)              /* Debug Extensions support */
