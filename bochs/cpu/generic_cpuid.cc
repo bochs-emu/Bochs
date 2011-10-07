@@ -818,6 +818,16 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
     if (bmi_enabled >= 2)
       features_bitmask |= BX_ISA_BMI2;
   }
+
+  static bx_bool fma4_enabled = SIM->get_param_bool(BXPN_CPUID_FMA4)->get();
+  if (fma4_enabled) {
+    if (! avx_enabled) {
+      BX_PANIC(("PANIC: FMA4 emulation requires AVX support !"));
+      return;
+    }
+
+    features_bitmask |= BX_ISA_FMA4;
+  }
 #endif // BX_SUPPORT_AVX
 
 #endif // BX_SUPPORT_X86_64
@@ -1296,6 +1306,9 @@ Bit32u bx_generic_cpuid_t::get_ext2_cpuid_features(void) const
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE4A))
     features |= BX_CPUID_EXT2_SSE4A;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FMA4))
+    features |= BX_CPUID_EXT2_FMA4;
 
   return features;
 }

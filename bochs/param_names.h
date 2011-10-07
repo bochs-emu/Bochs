@@ -59,6 +59,7 @@
 #define BXPN_CPUID_AVX_F16CVT            "cpuid.avx_f16c"
 #define BXPN_CPUID_AVX_FMA               "cpuid.avx_fma"
 #define BXPN_CPUID_BMI                   "cpuid.bmi"
+#define BXPN_CPUID_FMA4                  "cpuid.fma4"
 #define BXPN_CPUID_APIC                  "cpuid.apic"
 #define BXPN_CPUID_MWAIT                 "cpuid.mwait"
 #define BXPN_CPUID_MWAIT_IS_NOP          "cpuid.mwait_is_nop"

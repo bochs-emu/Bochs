@@ -200,7 +200,7 @@ BX_CPP_INLINE void fmaddsubpd(BxPackedXmmRegister *op1, const BxPackedXmmRegiste
   op1->xmm64u(1) = float64_muladd(op1->xmm64u(1), op2->xmm64u(1), op3->xmm64u(1), 0, status);
 }
 
-BX_CPP_INLINE void fmasubaddps(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, const BxPackedXmmRegister *op3, float_status_t &status)
+BX_CPP_INLINE void fmsubaddps(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, const BxPackedXmmRegister *op3, float_status_t &status)
 {
   op1->xmm32u(0) = float32_muladd(op1->xmm32u(0), op2->xmm32u(0), op3->xmm32u(0), 0, status);
   op1->xmm32u(1) = float32_muladd(op1->xmm32u(1), op2->xmm32u(1), op3->xmm32u(1), float_muladd_negate_c, status);
@@ -208,7 +208,7 @@ BX_CPP_INLINE void fmasubaddps(BxPackedXmmRegister *op1, const BxPackedXmmRegist
   op1->xmm32u(3) = float32_muladd(op1->xmm32u(3), op2->xmm32u(3), op3->xmm32u(3), float_muladd_negate_c, status);
 }
 
-BX_CPP_INLINE void fmasubaddpd(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, const BxPackedXmmRegister *op3, float_status_t &status)
+BX_CPP_INLINE void fmsubaddpd(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, const BxPackedXmmRegister *op3, float_status_t &status)
 {
   op1->xmm64u(0) = float64_muladd(op1->xmm64u(0), op2->xmm64u(0), op3->xmm64u(0), 0, status);
   op1->xmm64u(1) = float64_muladd(op1->xmm64u(1), op2->xmm64u(1), op3->xmm64u(1), float_muladd_negate_c, status);

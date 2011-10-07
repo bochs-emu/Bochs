@@ -3081,6 +3081,11 @@ This option exists only if Bochs compiled with --enable-avx option.
 Select BMI1/BMI2 instructions support.
 This option exists only if Bochs compiled with --enable-avx option.
 </para>
+<para><command>fma4</command></para>
+<para>
+Select AMD four operand FMA instructions support.
+This option exists only if Bochs compiled with --enable-avx option.
+</para>
 <para><command>x86_64</command></para>
 <para>
 Enable x86-64 and long mode support.

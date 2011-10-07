@@ -2896,6 +2896,49 @@ public: // for now...
   BX_SMF BX_INSF_TYPE PEXT_GqEqBqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE PDEP_GqEqBqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* BMI */
+
+  /* FMA4 (AMD) */
+  BX_SMF BX_INSF_TYPE VFMADDSUBPS_VpsHpsWpsVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMADDSUBPS_VpsHpsVIbWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMADDSUBPD_VpdHpdWpdVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMADDSUBPD_VpdHpdVIbWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMSUBADDPS_VpsHpsWpsVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMSUBADDPS_VpsHpsVIbWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMSUBADDPD_VpdHpdWpdVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMSUBADDPD_VpdHpdVIbWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMADDPS_VpsHpsWpsVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMADDPS_VpsHpsVIbWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMADDPD_VpdHpdWpdVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMADDPD_VpdHpdVIbWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMADDSS_VssHssWssVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMADDSS_VssHssVIbWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMADDSD_VsdHsdWsdVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMADDSD_VsdHsdVIbWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMSUBPS_VpsHpsWpsVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMSUBPS_VpsHpsVIbWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF  BX_INSF_TYPE VFMSUBPD_VpdHpdWpdVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMSUBPD_VpdHpdVIbWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMSUBSS_VssHssWssVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMSUBSS_VssHssVIbWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMSUBSD_VsdHsdWsdVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFMSUBSD_VsdHsdVIbWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFNMADDPS_VpsHpsWpsVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFNMADDPS_VpsHpsVIbWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFNMADDPD_VpdHpdWpdVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFNMADDPD_VpdHpdVIbWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFNMADDSS_VssHssWssVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFNMADDSS_VssHssVIbWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFNMADDSD_VsdHsdWsdVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFNMADDSD_VsdHsdVIbWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFNMSUBPS_VpsHpsWpsVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFNMSUBPS_VpsHpsVIbWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFNMSUBPD_VpdHpdWpdVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFNMSUBPD_VpdHpdVIbWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFNMSUBSS_VssHssWssVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFNMSUBSS_VssHssVIbWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFNMSUBSD_VsdHsdWsdVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFNMSUBSD_VsdHsdVIbWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  /* FMA4 (AMD) */
 #endif
 
   BX_SMF BX_INSF_TYPE LZCNT_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

@@ -27,7 +27,7 @@ Detailed change log :
     of supported configurations. When this option is used, Bochs CPU emulation
     engine is automatically configured to emulate a specific real hardware CPU,
     including exact CPUID matching reference hardware. Check .bochsrc example
-    or read docs for list of supported configurations or more details.
+    or check user manual for list of supported configurations and more details.
   * It is also possible to choose the CPU to emulate from Bochs command line
     using command line interface to .bochsrc: "cpu::model <cpu_name>"
   * Query for supported CPU models using command line option: -help cpu.
@@ -58,6 +58,8 @@ Detailed change log :
   - Added support for Bit Manipulation Instructions (BMI) emulation. The BMI
     instructions support can be enabled using .bochsrc CPUID option.
   - Added support for AMD SSE4A emulation, the instructions can be enabled
+    using .bochsrc CPUID option.
+  - Added support for AMD FMA4 emulation, the instructions can be enabled
     using .bochsrc CPUID option.
   - Implemented VMX preemption timer VMEXIT control (patch by Jianan Hao)
   - Implemented Pause-Loop Exiting Secondary VMEXIT control.

@@ -242,6 +242,26 @@ float32 float32_div(float32, float32, float_status_t &status);
 float32 float32_sqrt(float32, float_status_t &status);
 float32 float32_muladd(float32, float32, float32, int flags, float_status_t &status);
 
+BX_CPP_INLINE float32 float32_fmadd(float32 a, float32 b, float32 c, float_status_t &status)
+{
+  return float32_muladd(a, b, c, 0, status);
+}
+
+BX_CPP_INLINE float32 float32_fmsub(float32 a, float32 b, float32 c, float_status_t &status)
+{
+  return float32_muladd(a, b, c, float_muladd_negate_c, status);
+}
+
+BX_CPP_INLINE float32 float32_fnmadd(float32 a, float32 b, float32 c, float_status_t &status)
+{
+  return float32_muladd(a, b, c, float_muladd_negate_product, status);
+}
+
+BX_CPP_INLINE float32 float32_fnmsub(float32 a, float32 b, float32 c, float_status_t &status)
+{
+  return float32_muladd(a, b, c, float_muladd_negate_result, status);
+}
+
 int float32_compare(float32, float32, float_status_t &status);
 int float32_compare_quiet(float32, float32, float_status_t &status);
 
@@ -272,6 +292,26 @@ float64 float64_mul(float64, float64, float_status_t &status);
 float64 float64_div(float64, float64, float_status_t &status);
 float64 float64_sqrt(float64, float_status_t &status);
 float64 float64_muladd(float64, float64, float64, int flags, float_status_t &status);
+
+BX_CPP_INLINE float64 float64_fmadd(float64 a, float64 b, float64 c, float_status_t &status)
+{
+  return float64_muladd(a, b, c, 0, status);
+}
+
+BX_CPP_INLINE float64 float64_fmsub(float64 a, float64 b, float64 c, float_status_t &status)
+{
+  return float64_muladd(a, b, c, float_muladd_negate_c, status);
+}
+
+BX_CPP_INLINE float64 float64_fnmadd(float64 a, float64 b, float64 c, float_status_t &status)
+{
+  return float64_muladd(a, b, c, float_muladd_negate_product, status);
+}
+
+BX_CPP_INLINE float64 float64_fnmsub(float64 a, float64 b, float64 c, float_status_t &status)
+{
+  return float64_muladd(a, b, c, float_muladd_negate_result, status);
+}
 
 int float64_compare(float64, float64, float_status_t &status);
 int float64_compare_quiet(float64, float64, float_status_t &status);

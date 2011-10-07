@@ -45,6 +45,7 @@ cpuid
   avx_f16c
   avx_fma
   bmi
+  fma4
   apic
   x86_64
   1g_pages
