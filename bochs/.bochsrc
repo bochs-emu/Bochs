@@ -97,12 +97,13 @@ romimage: file=$BXSHARE/BIOS-bochs-latest
 #  p2_klamath                 Intel Pentium II (Klamath)
 #  p3_katmai                  Intel Pentium III (Katmai)
 #  p4_willamette              Intel(R) Pentium(R) 4 (Willamette)
-#  core_duo_t2400_yonah       Intel(R) Core(TM) Duo CPU T2400
+#  core_duo_t2400_yonah       Intel(R) Core(TM) Duo CPU T2400 (Yonah)
 #  atom_n270                  Intel(R) Atom(TM) CPU N270
-#  athlon64_clawhammer        AMD Athlon(tm) 64 Processor 2800+
-#  p4_prescott_celeron_336    Intel(R) Celeron(R) 336
-#  core2_penryn_t9600         Intel Mobile Core 2 Duo T9600
-#  corei7_sandy_bridge_2600k  Intel(R) Core(TM) i7-2600K
+#  athlon64_clawhammer        AMD Athlon(tm) 64 Processor 2800+ (Clawhammer)
+#  p4_prescott_celeron_336    Intel(R) Celeron(R) 336 (Prescott)
+#  core2_penryn_t9600         Intel Mobile Core 2 Duo T9600 (Penryn)
+#  corei5_arrandale_m520      Intel(R) Core(TM) i5 M 520 (Arrandale)
+#  corei7_sandy_bridge_2600k  Intel(R) Core(TM) i7-2600K (Sandy Bridge)
 #
 #  COUNT:
 #    Set the number of processors:cores per processor:threads per core 

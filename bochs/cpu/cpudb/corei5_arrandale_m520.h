@@ -21,23 +21,26 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_ATOM_N270_CPUID_DEFINITIONS_H
-#define BX_ATOM_N270_CPUID_DEFINITIONS_H
+#ifndef BX_COREI5_ARRANDALE_M520_CPUID_DEFINITIONS_H
+#define BX_COREI7_SANDY_BRIDGE_2600K_CPUID_DEFINITIONS_H
 
-#if BX_CPU_LEVEL >= 6
+#if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
 
 #include "cpu/cpuid.h"
 
-class atom_n270_t : public bx_cpuid_t {
+class corei5_arrandale_m520_t : public bx_cpuid_t {
 public:
-  atom_n270_t(BX_CPU_C *cpu);
-  virtual ~atom_n270_t() {}
+  corei5_arrandale_m520_t(BX_CPU_C *cpu);
+  virtual ~corei5_arrandale_m520_t() {}
 
   // return CPU name
-  virtual const char *get_name(void) const { return "atom_n270"; }
+  virtual const char *get_name(void) const { return "corei5_arrandale_m520"; }
 
   virtual Bit64u get_isa_extensions_bitmask(void) const;
   virtual Bit32u get_cpu_extensions_bitmask(void) const;
+#if BX_SUPPORT_VMX >= 2
+  virtual Bit32u get_vmx_extensions_bitmask(void) const;
+#endif
 
   virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 
@@ -58,6 +61,7 @@ private:
   void get_std_cpuid_leaf_5(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_6(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_A(cpuid_function_t *leaf) const;
+  void get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 
   void get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const;
@@ -68,9 +72,8 @@ private:
   void get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const;
 };
 
-extern bx_cpuid_t *create_atom_n270_cpuid(BX_CPU_C *cpu);
+extern bx_cpuid_t *create_corei5_arrandale_m520_cpuid(BX_CPU_C *cpu);
 
-#endif // BX_CPU_LEVEL >= 6
+#endif // BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
 
 #endif
-

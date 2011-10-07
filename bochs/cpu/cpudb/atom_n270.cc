@@ -92,10 +92,8 @@ void atom_n270_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
     return;
   case 0x00000007:
   case 0x00000008:
-    get_reserved_leaf(leaf);
-    return;
   case 0x00000009:
-    get_std_cpuid_leaf_9(leaf);
+    get_reserved_leaf(leaf);
     return;
   case 0x0000000A:
   default:
@@ -426,18 +424,9 @@ void atom_n270_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf) const
   leaf->edx = 0x00000000;
 }
 
-// leaf 0x00000007 not supported //
-// leaf 0x00000008 reserved      //
-
-// leaf 0x00000009 //
-void atom_n270_t::get_std_cpuid_leaf_9(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000009 - Direct Cache Access Information
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
+// leaf 0x00000007 not supported                     //
+// leaf 0x00000008 reserved                          //
+// leaf 0x00000009 direct cache access not supported //
 
 // leaf 0x0000000A //
 void atom_n270_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const

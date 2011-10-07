@@ -25,7 +25,7 @@
 #define _BX_VMX_INTEL_H_
 
 #define VMX_VMCS_AREA_SIZE   4096
-#define VMX_VMCS_REVISION_ID 0x10
+#define VMX_VMCS_REVISION_ID 0x10 /* better to be uniq bochs VMCS revision id */
 
 // VMCS pointer is always 64-bit variable
 #define BX_INVALID_VMCSPTR BX_CONST64(0xFFFFFFFFFFFFFFFF)
@@ -872,6 +872,8 @@ enum VMX_Activity_State {
 //     [8] - support VMENTER to WAIT_FOR_SIPI state
 // [24:16] - number of CR3 target values supported
 // [27:25] - (N+1)*512 - recommended maximum MSRs in MSR store list
+//    [28] - MSR_IA32_SMM_MONITOR_CTL[2] enable
+// [31-29] - Reserved
 // [63:32] - MSEG revision ID used by processor
 
 #if BX_SUPPORT_VMX >= 2
