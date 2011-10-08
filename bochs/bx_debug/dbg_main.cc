@@ -945,6 +945,13 @@ void bx_dbg_info_control_regs_command(void)
     (efer & (1<<8))  ? "LME" : "lme",
     (efer & (1<<0))  ? "SCE" : "sce");
 #endif
+#if BX_CPU_LEVEL >= 6
+  Bit32u xcr0 = SIM->get_param_num("XCR0", dbg_cpu_list)->get();
+  dbg_printf("XCR0=0x%08x: %s %s %s\n", xcr0,
+    (xcr0 & (1<<2)) ? "AVX" : "avx",
+    (xcr0 & (1<<1)) ? "SSE" : "sse",
+    (xcr0 & (1<<0)) ? "FPU" : "fpu");
+#endif
 }
 
 void bx_dbg_info_segment_regs_command(void)
