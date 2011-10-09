@@ -22,9 +22,9 @@
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef BX_COREI5_ARRANDALE_M520_CPUID_DEFINITIONS_H
-#define BX_COREI7_SANDY_BRIDGE_2600K_CPUID_DEFINITIONS_H
+#define BX_COREI5_ARRANDALE_M520_CPUID_DEFINITIONS_H
 
-#if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
+#if BX_SUPPORT_X86_64
 
 #include "cpu/cpuid.h"
 
@@ -74,6 +74,6 @@ private:
 
 extern bx_cpuid_t *create_corei5_arrandale_m520_cpuid(BX_CPU_C *cpu);
 
-#endif // BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
+#endif // BX_SUPPORT_X86_64
 
 #endif
