@@ -53,8 +53,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 
   Bit64u header1 = read_virtual_qword(i->seg(), (eaddr + 512) & asize_mask);
 
+  Bit32u features_save_enable_mask = BX_CPU_THIS_PTR xcr0.get32() & EAX;
+
   /////////////////////////////////////////////////////////////////////////////
-  if (BX_CPU_THIS_PTR xcr0.get_FPU() && (EAX & BX_XCR0_FPU_MASK) != 0)
+  if ((features_save_enable_mask & BX_XCR0_FPU_MASK) != 0)
   {
     xmm.xmm16u(0) = BX_CPU_THIS_PTR the_i387.get_control_word();
     xmm.xmm16u(1) = BX_CPU_THIS_PTR the_i387.get_status_word();
@@ -125,11 +127,16 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  if (BX_CPU_THIS_PTR xcr0.get_SSE() && (EAX & BX_XCR0_SSE_MASK) != 0)
+  if ((features_save_enable_mask & (BX_XCR0_SSE_MASK | BX_XCR0_AVX_MASK)) != 0)
   {
+    // store MXCSR
     write_virtual_dword(i->seg(), (eaddr + 24) & asize_mask, BX_MXCSR_REGISTER);
     write_virtual_dword(i->seg(), (eaddr + 28) & asize_mask, MXCSR_MASK);
+  }
 
+  /////////////////////////////////////////////////////////////////////////////
+  if ((features_save_enable_mask & BX_XCR0_SSE_MASK) != 0)
+  {
     /* store XMM register file */
     for(index=0; index < BX_XMM_REGISTERS; index++)
     {
@@ -145,7 +152,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 
 #if BX_SUPPORT_AVX
   /////////////////////////////////////////////////////////////////////////////
-  if (BX_CPU_THIS_PTR xcr0.get_AVX() && (EAX & BX_XCR0_AVX_MASK) != 0)
+  if ((features_save_enable_mask & BX_XCR0_AVX_MASK) != 0)
   {
     /* store AVX state */
     for(index=0; index < BX_XMM_REGISTERS; index++)
@@ -153,7 +160,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
       // save YMM8-YMM15 only in 64-bit mode
       if (index < 8 || long64_mode()) {
         write_virtual_dqword(i->seg(),
-               (eaddr+index*16+576) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG_LINE(index, 1)));
+           (eaddr+index*16+576) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG_LINE(index, 1)));
       }
     }
 
@@ -207,8 +214,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   // We will go feature-by-feature and not run over all XCR0 bits
   //
 
+  Bit32u features_load_enable_mask = BX_CPU_THIS_PTR xcr0.get32() & EAX;
+
   /////////////////////////////////////////////////////////////////////////////
-  if (BX_CPU_THIS_PTR xcr0.get_FPU() && (EAX & BX_XCR0_FPU_MASK) != 0)
+  if ((features_load_enable_mask & BX_XCR0_FPU_MASK) != 0)
   {
     if (header1 & BX_XCR0_FPU_MASK) {
       // load FPU state from XSAVE area
@@ -292,16 +301,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     }
   }
 
-  static BxPackedXmmRegister xmmnil; /* compiler will clear the variable */
-
   /////////////////////////////////////////////////////////////////////////////
-  if (BX_CPU_THIS_PTR xcr0.get_SSE() && (EAX & BX_XCR0_SSE_MASK) != 0)
+  if ((features_load_enable_mask & (BX_XCR0_SSE_MASK | BX_XCR0_AVX_MASK)) != 0)
   {
     Bit32u new_mxcsr = read_virtual_dword(i->seg(), (eaddr + 24) & asize_mask);
     if(new_mxcsr & ~MXCSR_MASK)
        exception(BX_GP_EXCEPTION, 0);
     BX_MXCSR_REGISTER = new_mxcsr;
+  }
 
+  static BxPackedXmmRegister xmmnil; /* compiler will clear the variable */
+
+  /////////////////////////////////////////////////////////////////////////////
+  if ((features_load_enable_mask & BX_XCR0_SSE_MASK) != 0)
+  {
     if (header1 & BX_XCR0_SSE_MASK) {
       // load SSE state from XSAVE area
       for(index=0; index < BX_XMM_REGISTERS; index++)
@@ -325,7 +338,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 
 #if BX_SUPPORT_AVX
   /////////////////////////////////////////////////////////////////////////////
-  if (BX_CPU_THIS_PTR xcr0.get_AVX() && (EAX & BX_XCR0_AVX_MASK) != 0)
+  if ((features_load_enable_mask & BX_XCR0_AVX_MASK) != 0)
   {
     if (header1 & BX_XCR0_AVX_MASK) {
       // load AVX state from XSAVE area
