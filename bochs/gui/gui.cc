@@ -737,12 +737,12 @@ void bx_gui_c::set_text_charbyte(Bit16u address, Bit8u data)
 
 void bx_gui_c::beep_on(float frequency)
 {
-  BX_INFO(("GUI Beep ON (frequency=%.2f)", frequency));
+  BX_DEBUG(("GUI Beep ON (frequency=%.2f)", frequency));
 }
 
 void bx_gui_c::beep_off()
 {
-  BX_INFO(("GUI Beep OFF"));
+  BX_DEBUG(("GUI Beep OFF"));
 }
 
 int bx_gui_c::register_statusitem(const char *text)
