@@ -95,8 +95,6 @@
 %token <sval> BX_TOKEN_PTIME
 %token <sval> BX_TOKEN_TIMEBP_ABSOLUTE
 %token <sval> BX_TOKEN_TIMEBP
-%token <sval> BX_TOKEN_RECORD
-%token <sval> BX_TOKEN_PLAYBACK
 %token <sval> BX_TOKEN_MODEBP
 %token <sval> BX_TOKEN_VMEXITBP
 %token <sval> BX_TOKEN_PRINT_STACK
@@ -177,8 +175,6 @@ command:
     | trace_mem_command
     | ptime_command
     | timebp_command
-    | record_command
-    | playback_command
     | modebp_command
     | vmexitbp_command
     | print_stack_command
@@ -231,22 +227,6 @@ timebp_command:
       }
     ;
 
-record_command:
-      BX_TOKEN_RECORD BX_TOKEN_STRING '\n'
-      {
-          bx_dbg_record_command($2);
-          free($1); free($2);
-      }
-    ;
-
-playback_command:
-      BX_TOKEN_PLAYBACK BX_TOKEN_STRING '\n'
-      {
-          bx_dbg_playback_command($2);
-          free($1); free($2);
-      }
-    ;
-
 modebp_command:
       BX_TOKEN_MODEBP '\n'
       {
@@ -268,6 +248,11 @@ show_command:
       {
           bx_dbg_show_command($2);
           free($1); free($2);
+      }
+    | BX_TOKEN_SHOW BX_TOKEN_OFF '\n'
+      {
+          bx_dbg_show_command("off");
+          free($1);
       }
     | BX_TOKEN_SHOW BX_TOKEN_STRING '\n'
       {
@@ -1022,16 +1007,6 @@ help_command:
      | BX_TOKEN_HELP BX_TOKEN_PRINT_STACK '\n'
        {
          dbg_printf("print-stack [num_words] - print the num_words top 16 bit words on the stack\n");
-         free($1);free($2);
-       }
-     | BX_TOKEN_HELP BX_TOKEN_RECORD '\n'
-       {
-         dbg_printf("record <filename> - record console input to file filename\n");
-         free($1);free($2);
-       }
-     | BX_TOKEN_HELP BX_TOKEN_PLAYBACK '\n'
-       {
-         dbg_printf("playback <filename> - playback console input from file filename\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_LOAD_SYMBOLS '\n'

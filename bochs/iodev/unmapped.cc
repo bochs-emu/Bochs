@@ -256,12 +256,12 @@ void bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_PANIC(("Shutdown port: shutdown requested"));
       }
       break;
-
+/*
     case 0xfedc:
-      bx_dbg.debugger = (value > 0);
-      BX_DEBUG(("DEBUGGER = %u", (unsigned) bx_dbg.debugger));
+      bx_dbg.io_debugger = (value > 0);
+      BX_DEBUG(("DEBUGGER = %u", (unsigned) bx_dbg.io_debugger));
       break;
-
+*/
     default:
       break;
   }

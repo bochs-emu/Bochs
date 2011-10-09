@@ -226,8 +226,6 @@ void bx_dbg_timebp_command(bx_bool absolute, Bit64u time);
 extern int timebp_timer;
 extern Bit64u timebp_queue[MAX_CONCURRENT_BPS];
 extern int timebp_queue_size;
-void bx_dbg_record_command(char*);
-void bx_dbg_playback_command(char*);
 void bx_dbg_modebp_command(void);
 void bx_dbg_vmexitbp_command(void);
 void bx_dbg_where_command(void);

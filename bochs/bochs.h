@@ -397,7 +397,6 @@ int bx_gdbstub_check(unsigned int eip);
 typedef struct {
   bx_bool interrupts;
   bx_bool exceptions;
-  bx_bool debugger;
   bx_bool print_timestamps;
 #if BX_DEBUGGER
   bx_bool magic_break_enabled;
@@ -411,7 +410,6 @@ typedef struct {
 #if BX_DEBUG_LINUX
   bx_bool linux_syscall;
 #endif
-  void* record_io;
 } bx_debug_t;
 
 BOCHSAPI_MSVCONLY void CDECL bx_signal_handler(int signum);

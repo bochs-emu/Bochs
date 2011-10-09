@@ -1186,105 +1186,6 @@ Bit16u conv_2xBit8u_to_Bit16u(const Bit8u* buf)
   return ret;
 }
 
-void bx_dbg_record_command(char* path_quoted)
-{
-  // skip beginning double quote
-  if (path_quoted[0] == '"')
-    path_quoted++;
-
-  // null out ending quote
-  int len = strlen(path_quoted);
-  if (path_quoted[len - 1] == '"')
-    path_quoted[len - 1] = '\0';
-
-  bx_dbg.record_io = fopen(path_quoted, "w");
-  if (bx_dbg.record_io)
-    dbg_printf("IO record file '%s' opened\n", path_quoted);
-  else
-    dbg_printf("Error opening '%s' for writing\n", path_quoted);
-}
-
-static FILE* playback_file = 0;
-
-struct playback_entry_t
-{
-  char command[100];
-  Bit32u argument;
-
-  void trigger();
-};
-
-static playback_entry_t playback_entry;
-static Bit64u last_playback_time = 0;
-static int playback_timer_index = -1;
-
-void playback_function(void* this_ptr)
-{
-  ((playback_entry_t*)this_ptr)->trigger();
-}
-
-static void enter_playback_entry()
-{
-  static const int playback_buf_size = 100;
-  char playback_buf[playback_buf_size];
-  if (!fgets(playback_buf, playback_buf_size, playback_file))
-    return;
-
-  Bit64u time;
-  if (sscanf(playback_buf, "%s " FMT_LL "d %x", playback_entry.command, &time, &playback_entry.argument) != 3) {
-    dbg_printf("Parse error in playback string '%s'\n", playback_buf);
-    return;
-  }
-
-  Bit64u diff = time - last_playback_time;
-  last_playback_time = time;
-
-  if (time < last_playback_time) {
-    BX_PANIC(("Negative diff in playback"));
-  } else if (diff == 0) {
-    playback_entry.trigger();
-  } else {
-    if (playback_timer_index >= 0)
-      bx_pc_system.activate_timer_ticks(playback_timer_index, diff, 0);
-    else
-      playback_timer_index = bx_pc_system.register_timer_ticks(&playback_entry, playback_function, diff, 0, 1, "debug.playback");
-  }
-}
-
-void playback_entry_t::trigger()
-{
-  if (!strcmp("gen_scancode", command)) {
-    DEV_kbd_gen_scancode(argument);
-  } else {
-    dbg_printf("Unknown playback command '%s'\n", command);
-    return;
-  }
-  enter_playback_entry();
-}
-
-void bx_dbg_playback_command(char* path_quoted)
-{
-  // skip beginning double quote
-  if (path_quoted[0] == '"')
-    path_quoted++;
-
-  // null out ending quote
-  int len = strlen(path_quoted);
-  if (path_quoted[len - 1] == '"')
-    path_quoted[len - 1] = '\0';
-
-  playback_file = fopen(path_quoted, "r");
-  if (playback_file) {
-    dbg_printf("Playback from '%s'\n", path_quoted);
-    last_playback_time = 0;
-    dbg_printf("playback times relative from " FMT_LL "d\n",
-        bx_pc_system.time_ticks());
-    enter_playback_entry();
-  } else {
-    dbg_printf("Error opening '%s' for reading\n", path_quoted);
-  }
-}
-
 // toggles mode switch breakpoint
 void bx_dbg_modebp_command()
 {
@@ -1504,15 +1405,11 @@ void bx_dbg_show_command(const char* arg)
     } else if(!strcmp(arg,"dbg-all")) {
       bx_dbg.interrupts = 1;
       bx_dbg.exceptions = 1;
-      bx_dbg.debugger = 1;
-      /* bx_dbg.record_io = 1; this is a pointer .. somewhere */
       dbg_printf("Turned ON all bx_dbg flags\n");
       return;
     } else if(!strcmp(arg,"dbg-none")) {
       bx_dbg.interrupts = 0;
       bx_dbg.exceptions = 0;
-      bx_dbg.debugger = 0;
-      /* bx_dbg.record_io = 0; this is a pointer .. somewhere */
       dbg_printf("Turned OFF all bx_dbg flags\n");
       return;
     } else if(!strcmp(arg,"vga")){
@@ -3600,7 +3497,7 @@ void bx_dbg_print_help(void)
   dbg_printf("h|help command - show short command description\n");
   dbg_printf("-*- Debugger control -*-\n");
   dbg_printf("    help, q|quit|exit, set, instrument, show, trace, trace-reg,\n");
-  dbg_printf("    trace-mem, u|disasm, record, playback, ldsym, slist\n");
+  dbg_printf("    trace-mem, u|disasm, ldsym, slist\n");
   dbg_printf("-*- Execution control -*-\n");
   dbg_printf("    c|cont|continue, s|step, p|n|next, modebp, vmexitbp\n");
   dbg_printf("-*- Breakpoint management -*-\n");
