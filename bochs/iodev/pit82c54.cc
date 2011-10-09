@@ -825,7 +825,7 @@ void pit_82C54::set_GATE(Bit8u cnum, bx_bool data)
   } else {
     counter_type &thisctr = counter[cnum];
     if (!((thisctr.GATE&&data) || (!(thisctr.GATE||data)))) {
-      BX_INFO(("Changing GATE %d to: %d",cnum,data));
+      BX_DEBUG(("Changing GATE %d to: %d",cnum,data));
       thisctr.GATE=data;
       if (thisctr.GATE) {
         thisctr.triggerGATE=1;
