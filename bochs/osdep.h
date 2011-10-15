@@ -241,4 +241,21 @@ extern Bit64u bx_get_realtime64_usec (void);
 }
 #endif   /* __cplusplus */
 
+#if BX_LARGE_RAMFILE
+
+// these macros required for large ramfile option functionality
+#if BX_HAVE_TMPFILE64 == 0
+  #define tmpfile64 tmpfile /* use regular tmpfile() function */
+#endif
+
+#if BX_HAVE_FSEEKO64 == 0
+#if BX_HAVE_FSEEK64
+  #define fseeko64 fseek64 /* use fseek64() function */
+#else
+  #define fseeko64 fseeko  /* use regular fseeko() function */
+#endif
+#endif
+
+#endif // BX_LARGE_RAMFILE
+
 #endif /* ifdef BX_OSDEP_H */

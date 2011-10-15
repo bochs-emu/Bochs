@@ -196,7 +196,7 @@ void BX_MEM_C::allocate_block(Bit32u block)
     bx_phy_address address = ((bx_phy_address)BX_MEM_THIS next_swapout_idx)*BX_MEM_BLOCK_LEN;
     // Create overflow file if it does not currently exist.
     if (!BX_MEM_THIS overflow_file) {
-      BX_MEM_THIS overflow_file = tmpfile();
+      BX_MEM_THIS overflow_file = tmpfile64();
       if (!BX_MEM_THIS overflow_file)
         BX_PANIC(("Unable to allocate memory overflow file"));
     }
