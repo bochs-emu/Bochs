@@ -47,6 +47,6 @@ TODO (know issues in CPU model):
    - Dual-monitor treatment of SMIs and SMM not implemented yet
    - VMENTER to not-active state not supported yet
 
-[!] SMX, SVM (AMD), XOP (AMD), TBM (AMD)
+[!] SMX, SVM (AMD)
 
 [!] TODO: Convert CPUDB to plugins and search for them in runtime

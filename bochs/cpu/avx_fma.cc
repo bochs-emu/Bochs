@@ -26,7 +26,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_SUPPORT_AVX && BX_CPU_LEVEL >= 6
+#if BX_SUPPORT_AVX
 
 extern void mxcsr_to_softfloat_status_word(float_status_t &status, bx_mxcsr_t mxcsr);
 
@@ -1188,12 +1188,18 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUB231SS_VpsHssWssR(bxInstruct
 // FMA4 (AMD) Instructions //
 /////////////////////////////
 
-#define FMA4_OP_VECTOR(HANDLER, func, src2, src3)                             \
+#define FMA4_OP_VECTOR(HANDLER, func)                                         \
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
   {                                                                           \
-    BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv());                      \
-    BxPackedAvxRegister op2 = BX_READ_AVX_REG(src2);                          \
-    BxPackedAvxRegister op3 = BX_READ_AVX_REG(src3);                          \
+    BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2, op3;            \
+    if (i->getVexW()) {                                                       \
+      op2 = BX_READ_AVX_REG(i->rm());                                         \
+      op3 = BX_READ_AVX_REG(i->Ib());                                         \
+    }                                                                         \
+    else {                                                                    \
+      op2 = BX_READ_AVX_REG(i->Ib());                                         \
+      op3 = BX_READ_AVX_REG(i->rm());                                         \
+    }                                                                         \
     unsigned len = i->getVL();                                                \
                                                                               \
     float_status_t status;                                                    \
@@ -1209,42 +1215,36 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUB231SS_VpsHssWssR(bxInstruct
     BX_NEXT_INSTR(i);                                                         \
   }
 
-FMA4_OP_VECTOR(VFMADDSUBPS_VpsHpsWpsVIbR, fmaddsubps, i->rm(), i->Ib())
-FMA4_OP_VECTOR(VFMADDSUBPS_VpsHpsVIbWpsR, fmaddsubps, i->Ib(), i->rm())
-FMA4_OP_VECTOR(VFMADDSUBPD_VpdHpdWpdVIbR, fmaddsubpd, i->rm(), i->Ib())
-FMA4_OP_VECTOR(VFMADDSUBPD_VpdHpdVIbWpdR, fmaddsubpd, i->Ib(), i->rm())
+FMA4_OP_VECTOR(VFMADDSUBPS_VpsHpsWpsVIbR, fmaddsubps)
+FMA4_OP_VECTOR(VFMADDSUBPD_VpdHpdWpdVIbR, fmaddsubpd)
 
-FMA4_OP_VECTOR(VFMSUBADDPS_VpsHpsWpsVIbR, fmsubaddps, i->rm(), i->Ib())
-FMA4_OP_VECTOR(VFMSUBADDPS_VpsHpsVIbWpsR, fmsubaddps, i->Ib(), i->rm())
-FMA4_OP_VECTOR(VFMSUBADDPD_VpdHpdWpdVIbR, fmsubaddpd, i->rm(), i->Ib())
-FMA4_OP_VECTOR(VFMSUBADDPD_VpdHpdVIbWpdR, fmsubaddpd, i->Ib(), i->rm())
+FMA4_OP_VECTOR(VFMSUBADDPS_VpsHpsWpsVIbR, fmsubaddps)
+FMA4_OP_VECTOR(VFMSUBADDPD_VpdHpdWpdVIbR, fmsubaddpd)
 
-FMA4_OP_VECTOR(VFMADDPS_VpsHpsWpsVIbR, fmaddps, i->rm(), i->Ib())
-FMA4_OP_VECTOR(VFMADDPS_VpsHpsVIbWpsR, fmaddps, i->Ib(), i->rm())
-FMA4_OP_VECTOR(VFMADDPD_VpdHpdWpdVIbR, fmaddpd, i->rm(), i->Ib())
-FMA4_OP_VECTOR(VFMADDPD_VpdHpdVIbWpdR, fmaddpd, i->Ib(), i->rm())
+FMA4_OP_VECTOR(VFMADDPS_VpsHpsWpsVIbR, fmaddps)
+FMA4_OP_VECTOR(VFMADDPD_VpdHpdWpdVIbR, fmaddpd)
 
-FMA4_OP_VECTOR(VFMSUBPS_VpsHpsWpsVIbR, fmsubps, i->rm(), i->Ib())
-FMA4_OP_VECTOR(VFMSUBPS_VpsHpsVIbWpsR, fmsubps, i->Ib(), i->rm())
-FMA4_OP_VECTOR(VFMSUBPD_VpdHpdWpdVIbR, fmsubpd, i->rm(), i->Ib())
-FMA4_OP_VECTOR(VFMSUBPD_VpdHpdVIbWpdR, fmsubpd, i->Ib(), i->rm())
+FMA4_OP_VECTOR(VFMSUBPS_VpsHpsWpsVIbR, fmsubps)
+FMA4_OP_VECTOR(VFMSUBPD_VpdHpdWpdVIbR, fmsubpd)
 
-FMA4_OP_VECTOR(VFNMADDPS_VpsHpsWpsVIbR, fnmaddps, i->rm(), i->Ib())
-FMA4_OP_VECTOR(VFNMADDPS_VpsHpsVIbWpsR, fnmaddps, i->Ib(), i->rm())
-FMA4_OP_VECTOR(VFNMADDPD_VpdHpdWpdVIbR, fnmaddpd, i->rm(), i->Ib())
-FMA4_OP_VECTOR(VFNMADDPD_VpdHpdVIbWpdR, fnmaddpd, i->Ib(), i->rm())
+FMA4_OP_VECTOR(VFNMADDPS_VpsHpsWpsVIbR, fnmaddps)
+FMA4_OP_VECTOR(VFNMADDPD_VpdHpdWpdVIbR, fnmaddpd)
 
-FMA4_OP_VECTOR(VFNMSUBPS_VpsHpsWpsVIbR, fnmsubps, i->rm(), i->Ib())
-FMA4_OP_VECTOR(VFNMSUBPS_VpsHpsVIbWpsR, fnmsubps, i->Ib(), i->rm())
-FMA4_OP_VECTOR(VFNMSUBPD_VpdHpdWpdVIbR, fnmsubpd, i->rm(), i->Ib())
-FMA4_OP_VECTOR(VFNMSUBPD_VpdHpdVIbWpdR, fnmsubpd, i->Ib(), i->rm())
+FMA4_OP_VECTOR(VFNMSUBPS_VpsHpsWpsVIbR, fnmsubps)
+FMA4_OP_VECTOR(VFNMSUBPD_VpdHpdWpdVIbR, fnmsubpd)
 
-#define FMA4_SINGLE_SCALAR(HANDLER, func, src2, src3)                         \
+#define FMA4_SINGLE_SCALAR(HANDLER, func)                                     \
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
   {                                                                           \
-    float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->vvv());                         \
-    float32 op2 = BX_READ_XMM_REG_LO_DWORD(src2);                             \
-    float32 op3 = BX_READ_XMM_REG_LO_DWORD(src3);                             \
+    float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->vvv()), op2, op3;               \
+    if (i->getVexW()) {                                                       \
+      op2 = BX_READ_XMM_REG_LO_DWORD(i->rm());                                \
+      op3 = BX_READ_XMM_REG_LO_DWORD(i->Ib());                                \
+    }                                                                         \
+    else {                                                                    \
+      op2 = BX_READ_XMM_REG_LO_DWORD(i->Ib());                                \
+      op3 = BX_READ_XMM_REG_LO_DWORD(i->rm());                                \
+    }                                                                         \
                                                                               \
     BxPackedXmmRegister dest;                                                 \
     dest.xmm64u(0) = dest.xmm64u(1) = 0;                                      \
@@ -1259,22 +1259,24 @@ FMA4_OP_VECTOR(VFNMSUBPD_VpdHpdVIbWpdR, fnmsubpd, i->Ib(), i->rm())
     BX_NEXT_INSTR(i);                                                         \
   }
 
-FMA4_SINGLE_SCALAR(VFMADDSS_VssHssWssVIbR, float32_fmadd, i->rm(), i->Ib())
-FMA4_SINGLE_SCALAR(VFMADDSS_VssHssVIbWssR, float32_fmadd, i->Ib(), i->rm())
-FMA4_SINGLE_SCALAR(VFMSUBSS_VssHssWssVIbR, float32_fmsub, i->rm(), i->Ib())
-FMA4_SINGLE_SCALAR(VFMSUBSS_VssHssVIbWssR, float32_fmsub, i->Ib(), i->rm())
+FMA4_SINGLE_SCALAR(VFMADDSS_VssHssWssVIbR, float32_fmadd)
+FMA4_SINGLE_SCALAR(VFMSUBSS_VssHssWssVIbR, float32_fmsub)
 
-FMA4_SINGLE_SCALAR(VFNMADDSS_VssHssWssVIbR, float32_fnmadd, i->rm(), i->Ib())
-FMA4_SINGLE_SCALAR(VFNMADDSS_VssHssVIbWssR, float32_fnmadd, i->Ib(), i->rm())
-FMA4_SINGLE_SCALAR(VFNMSUBSS_VssHssWssVIbR, float32_fnmsub, i->rm(), i->Ib())
-FMA4_SINGLE_SCALAR(VFNMSUBSS_VssHssVIbWssR, float32_fnmsub, i->Ib(), i->rm())
+FMA4_SINGLE_SCALAR(VFNMADDSS_VssHssWssVIbR, float32_fnmadd)
+FMA4_SINGLE_SCALAR(VFNMSUBSS_VssHssWssVIbR, float32_fnmsub)
 
-#define FMA4_DOUBLE_SCALAR(HANDLER, func, src2, src3)                         \
+#define FMA4_DOUBLE_SCALAR(HANDLER, func)                                     \
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
   {                                                                           \
-    float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->vvv());                         \
-    float64 op2 = BX_READ_XMM_REG_LO_QWORD(src2);                             \
-    float64 op3 = BX_READ_XMM_REG_LO_QWORD(src3);                             \
+    float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->vvv()), op2, op3;               \
+    if (i->getVexW()) {                                                       \
+      op2 = BX_READ_XMM_REG_LO_QWORD(i->rm());                                \
+      op3 = BX_READ_XMM_REG_LO_QWORD(i->Ib());                                \
+    }                                                                         \
+    else {                                                                    \
+      op2 = BX_READ_XMM_REG_LO_QWORD(i->Ib());                                \
+      op3 = BX_READ_XMM_REG_LO_QWORD(i->rm());                                \
+    }                                                                         \
     BxPackedXmmRegister dest;                                                 \
                                                                               \
     float_status_t status;                                                    \
@@ -1290,14 +1292,10 @@ FMA4_SINGLE_SCALAR(VFNMSUBSS_VssHssVIbWssR, float32_fnmsub, i->Ib(), i->rm())
     BX_NEXT_INSTR(i);                                                         \
   }
 
-FMA4_DOUBLE_SCALAR(VFMADDSD_VsdHsdWsdVIbR, float64_fmadd, i->rm(), i->Ib())
-FMA4_DOUBLE_SCALAR(VFMADDSD_VsdHsdVIbWsdR, float64_fmadd, i->Ib(), i->rm())
-FMA4_DOUBLE_SCALAR(VFMSUBSD_VsdHsdWsdVIbR, float64_fmsub, i->rm(), i->Ib())
-FMA4_DOUBLE_SCALAR(VFMSUBSD_VsdHsdVIbWsdR, float64_fmsub, i->Ib(), i->rm())
+FMA4_DOUBLE_SCALAR(VFMADDSD_VsdHsdWsdVIbR, float64_fmadd)
+FMA4_DOUBLE_SCALAR(VFMSUBSD_VsdHsdWsdVIbR, float64_fmsub)
 
-FMA4_DOUBLE_SCALAR(VFNMADDSD_VsdHsdWsdVIbR, float64_fnmadd, i->rm(), i->Ib())
-FMA4_DOUBLE_SCALAR(VFNMADDSD_VsdHsdVIbWsdR, float64_fnmadd, i->Ib(), i->rm())
-FMA4_DOUBLE_SCALAR(VFNMSUBSD_VsdHsdWsdVIbR, float64_fnmsub, i->rm(), i->Ib())
-FMA4_DOUBLE_SCALAR(VFNMSUBSD_VsdHsdVIbWsdR, float64_fnmsub, i->Ib(), i->rm())
+FMA4_DOUBLE_SCALAR(VFNMADDSD_VsdHsdWsdVIbR, float64_fnmadd)
+FMA4_DOUBLE_SCALAR(VFNMSUBSD_VsdHsdWsdVIbR, float64_fnmsub)
 
 #endif

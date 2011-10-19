@@ -76,6 +76,7 @@ struct bxIAOpcodeTable {
 #include "fetchdecode_x87.h"
 #include "fetchdecode_sse.h"
 #include "fetchdecode_avx.h"
+#include "fetchdecode_xop.h"
 
 /* ************************************************************************ */
 /* Opcode Groups */

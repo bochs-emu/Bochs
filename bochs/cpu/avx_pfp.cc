@@ -26,7 +26,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_SUPPORT_AVX && BX_CPU_LEVEL >= 6
+#if BX_SUPPORT_AVX
 
 extern void mxcsr_to_softfloat_status_word(float_status_t &status, bx_mxcsr_t mxcsr);
 
@@ -1392,4 +1392,4 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PH_WpsVpsIb(bxInstruction_c
   BX_NEXT_INSTR(i);
 }
 
-#endif // BX_SUPPORT_AVX && BX_CPU_LEVEL >= 6
+#endif // BX_SUPPORT_AVX

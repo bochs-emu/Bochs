@@ -33,6 +33,7 @@
 #if BX_CPU_LEVEL >= 6
 
 #include "simd_int.h"
+#include "simd_compare.h"
 
 #define SSE_2OP(HANDLER, func)                                                             \
   /* SSE instruction with two src operands */                                              \

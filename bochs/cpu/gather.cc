@@ -26,7 +26,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_SUPPORT_AVX && BX_CPU_LEVEL >= 6
+#if BX_SUPPORT_AVX
 
 bx_address BX_CPP_AttrRegparmN(2) BX_CPU_C::BxResolveGatherD(bxInstruction_c *i, unsigned element)
 {

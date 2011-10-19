@@ -45,6 +45,8 @@ cpuid
   avx_f16c
   avx_fma
   bmi
+  xop
+  tbm
   fma4
   apic
   x86_64

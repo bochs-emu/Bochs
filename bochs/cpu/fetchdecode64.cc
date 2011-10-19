@@ -1705,7 +1705,7 @@ BX_CPU_C::fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
 
   int vvv = -1;
 #if BX_SUPPORT_AVX
-  int had_vex = 0;
+  int had_vex = 0, had_xop = 0;
   bx_bool vex_w = 0, vex_l = 0;
 #endif
 
@@ -1816,7 +1816,6 @@ fetch_b1:
   }
 
   i->setB1(b1);
-  i->setVL(BX_NO_VL);
   i->modRMForm.Id = 0;
 
   unsigned index = b1+offset;
@@ -1827,8 +1826,10 @@ fetch_b1:
 
 #if BX_SUPPORT_AVX
   if ((attr & BxGroupX) == BxPrefixVEX) {
+    // VEX
     had_vex = 1;
-    if (sse_prefix || rex_prefix) had_vex = -1;
+    if (sse_prefix | rex_prefix) had_vex = -1;
+    if (! protected_mode()) had_vex = -1;
     unsigned vex, vex_opcext = 1;
 
     if (remain != 0) {
@@ -1854,6 +1855,7 @@ fetch_b1:
 
       if (vex & 0x80) {
         vex_w = 1;
+        i->assertVexW();
         i->assertOs64();
         i->assertOs32();
       }
@@ -1879,6 +1881,58 @@ fetch_b1:
       else
         has_modrm = BxOpcodeHasModrm64[b1];
     }
+  }
+  else if (b1 == 0x8f && (*iptr & 0x08) == 0x08) {
+    // 3 byte XOP prefix
+    had_xop = 1;
+    if (sse_prefix | rex_prefix) had_xop = -1;
+    if (! protected_mode()) had_vex = -1;
+    unsigned vex;
+
+    if (remain != 0) {
+      remain--;
+      vex = *iptr++; // fetch XOP2
+    }
+    else
+      return(-1);
+
+    rex_r = ((vex >> 4) & 0x8) ^ 0x8;
+    rex_x = ((vex >> 3) & 0x8) ^ 0x8;
+    rex_b = ((vex >> 2) & 0x8) ^ 0x8;
+
+    unsigned xop_opcext = (vex & 0x1f) - 8;
+    if (xop_opcext >= 3)
+      had_xop = -1;
+
+    if (remain != 0) {
+      remain--;
+      vex = *iptr++; // fetch XOP3
+    }
+    else
+      return(-1);
+
+    if (vex & 0x80) {
+      vex_w = 1;
+      i->assertVexW();
+      i->assertOs64();
+      i->assertOs32();
+    }
+
+    vvv = 15 - ((vex >> 3) & 0xf);
+    vex_l = (vex >> 2) & 0x1;
+    i->setVL(BX_VL128 + vex_l);
+    sse_prefix = vex & 0x3;
+    if (sse_prefix) had_xop = -1;
+
+    if (remain != 0) {
+      remain--;
+      b1 = *iptr++; // fetch new b1
+    }
+    else
+      return(-1);
+
+    has_modrm = 1;
+    b1 += 256 * xop_opcext;
   }
   else
 #endif
@@ -2032,6 +2086,12 @@ modrm_done:
       else
          OpcodeInfoPtr = &BxOpcodeTableAVX[(b1-256) + 768*vex_l];
     }
+    else if (had_xop != 0) {
+      if (had_xop < 0)
+         OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
+      else
+         OpcodeInfoPtr = &BxOpcodeTableXOP[b1 + 768*vex_l];
+    }
 #endif
 
     attr = OpcodeInfoPtr->Attr;
@@ -2064,7 +2124,7 @@ modrm_done:
 #if BX_SUPPORT_AVX
         case BxSplitVexW:
         case BxSplitVexW64:
-          BX_ASSERT(had_vex != 0);
+          BX_ASSERT(had_vex != 0 || had_xop != 0);
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[vex_w]);
           break;
         case BxSplitMod11B:
@@ -2117,9 +2177,16 @@ modrm_done:
       else
          OpcodeInfoPtr = &BxOpcodeTableAVX[(b1-256) + 768*vex_l];
     }
+    else if (had_xop != 0) {
+      i->setVvv(vvv);
+      if (had_xop < 0)
+         OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
+      else
+         OpcodeInfoPtr = &BxOpcodeTableXOP[b1 + 768*vex_l];
+    }
 #endif
 
-    if (b1 == 0x90 && sse_prefix == SSE_PREFIX_F3) {
+    if (b1 == 0x90 && sse_prefix == SSE_PREFIX_F3 && (had_vex | had_xop) == 0) {
       ia_opcode = BX_IA_PAUSE;
     }
     else {
@@ -2237,7 +2304,8 @@ modrm_done:
 #if BX_SUPPORT_AVX
       case BxImmediate_Ib4:
         if (remain != 0) {
-          i->modRMForm.Ib = *iptr >> 4;
+          i->modRMForm.Ib  = *iptr >> 4;
+          i->modRMForm.Ib2 = *iptr; // for VPERMIL2PS/VPERMIL2PD (XOP)
           remain--;
         }
         else {
@@ -2282,7 +2350,7 @@ modrm_done:
 
   Bit32u op_flags = BxOpcodesTable[ia_opcode].flags;
 #if BX_SUPPORT_AVX
-  if (had_vex > 0) {
+  if (had_vex > 0 || had_xop > 0) {
     if ((attr & BxVexW0) != 0 && vex_w) {
       ia_opcode = BX_IA_ERROR;
     }

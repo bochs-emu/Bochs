@@ -3086,6 +3086,16 @@ This option exists only if Bochs compiled with --enable-avx option.
 Select AMD four operand FMA instructions support.
 This option exists only if Bochs compiled with --enable-avx option.
 </para>
+<para><command>xop</command></para>
+<para>
+Select AMD XOP instructions support.
+This option exists only if Bochs compiled with --enable-avx option.
+</para>
+<para><command>tbm</command></para>
+<para>
+Select AMD TBM instructions support.
+This option exists only if Bochs compiled with --enable-avx option.
+</para>
 <para><command>x86_64</command></para>
 <para>
 Enable x86-64 and long mode support.

@@ -26,7 +26,7 @@
 
 #if BX_SUPPORT_X86_64
 
-static unsigned partial_add(Bit32u *sum,Bit32u b)
+static unsigned partial_add(Bit32u *sum, Bit32u b)
 {
   Bit32u t = *sum;
   *sum += b;

@@ -102,7 +102,8 @@ public:
   BxResolvePtr_tR ResolveModrm;
 
   struct {
-    // 15..13 AVX vl  (0=no VL, 1=128 bit, 2=256 bit)
+    // 15..14 VEX Vector Length  (0=no VL, 1=128 bit, 2=256 bit)
+    // 13..13 VEX.W
     // 12..12 lock
     // 11...0 opcode
     Bit16u ia_opcode;
@@ -238,6 +239,7 @@ public:
   BX_CPP_INLINE void init(unsigned os32, unsigned as32, unsigned os64, unsigned as64)
   {
     metaInfo.metaInfo1 = (os32<<2) | (os64<<3) | (as32<<0) | (as64<<1);
+    metaInfo.ia_opcode = 0; // clear VEX.W and VEX.VL
   }
 
   BX_CPP_INLINE unsigned os32L(void) const {
@@ -325,14 +327,26 @@ public:
 
   BX_CPP_INLINE unsigned getVL(void) const {
 #if BX_SUPPORT_AVX
-    return metaInfo.ia_opcode >> 13;
+    return metaInfo.ia_opcode >> 14;
 #else
     return 0;
 #endif
   }
   BX_CPP_INLINE void setVL(unsigned value) {
-    metaInfo.ia_opcode = (metaInfo.ia_opcode & 0x1fff) | (value << 13);
+    metaInfo.ia_opcode = (metaInfo.ia_opcode & 0x3fff) | (value << 14);
   }
+
+#if BX_SUPPORT_AVX
+  BX_CPP_INLINE unsigned getVexW(void) const {
+    return metaInfo.metaInfo1 & (1<<13);
+  }
+  BX_CPP_INLINE void setVexW(unsigned bit) {
+    metaInfo.ia_opcode = (metaInfo.ia_opcode & 0xdfff) | (bit << 13);
+  }
+  BX_CPP_INLINE void assertVexW(void) {
+    metaInfo.ia_opcode |= (1 << 13);
+  }
+#endif
 
   BX_CPP_INLINE void setVvv(unsigned vvv) {
     metaData[BX_INSTR_METADATA_VVV] = vvv;

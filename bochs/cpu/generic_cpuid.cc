@@ -828,6 +828,26 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
 
     features_bitmask |= BX_ISA_FMA4;
   }
+
+  static bx_bool xop_enabled = SIM->get_param_bool(BXPN_CPUID_XOP)->get();
+  if (xop_enabled) {
+    if (! avx_enabled) {
+      BX_PANIC(("PANIC: XOP emulation requires AVX support !"));
+      return;
+    }
+
+    features_bitmask |= BX_ISA_XOP;
+  }
+
+  static bx_bool tbm_enabled = SIM->get_param_bool(BXPN_CPUID_TBM)->get();
+  if (tbm_enabled) {
+    if (! avx_enabled || ! xop_enabled) {
+      BX_PANIC(("PANIC: TBM emulation requires AVX and XOP support !"));
+      return;
+    }
+
+    features_bitmask |= BX_ISA_TBM;
+  }
 #endif // BX_SUPPORT_AVX
 
 #endif // BX_SUPPORT_X86_64
@@ -1297,6 +1317,7 @@ Bit32u bx_generic_cpuid_t::get_ext2_cpuid_features(void) const
   if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_LONG_MODE))
     features |= BX_CPUID_EXT2_LAHF_SAHF | BX_CPUID_EXT2_PREFETCHW;
 #endif
+
 #if BX_SUPPORT_MISALIGNED_SSE
   features |= BX_CPUID_EXT2_MISALIGNED_SSE;
 #endif
@@ -1307,8 +1328,14 @@ Bit32u bx_generic_cpuid_t::get_ext2_cpuid_features(void) const
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE4A))
     features |= BX_CPUID_EXT2_SSE4A;
 
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XOP))
+    features |= BX_CPUID_EXT2_XOP;
+
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FMA4))
     features |= BX_CPUID_EXT2_FMA4;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_TBM))
+    features |= BX_CPUID_EXT2_TBM;
 
   return features;
 }

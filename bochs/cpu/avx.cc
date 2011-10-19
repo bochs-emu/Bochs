@@ -26,7 +26,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_SUPPORT_AVX && BX_CPU_LEVEL >= 6
+#if BX_SUPPORT_AVX
 
 #include "simd_int.h"
 
@@ -696,4 +696,4 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPD_MpdHpdVpd(bxInstruction
   BX_NEXT_INSTR(i);
 }
 
-#endif // BX_SUPPORT_AVX && BX_CPU_LEVEL >= 6
+#endif // BX_SUPPORT_AVX

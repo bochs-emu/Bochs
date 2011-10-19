@@ -26,9 +26,10 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_SUPPORT_AVX && BX_CPU_LEVEL >= 6
+#if BX_SUPPORT_AVX
 
 #include "simd_int.h"
+#include "simd_compare.h"
 
 #define AVX_2OP(HANDLER, func)                                                             \
   /* AVX instruction with two src operands */                                              \

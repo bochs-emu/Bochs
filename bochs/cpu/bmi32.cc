@@ -28,11 +28,6 @@
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ANDN_GdBdEdR(bxInstruction_c *i)
 {
-  if (!protected_mode()) {
-    BX_DEBUG(("ANDN_GdBdEd: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
   Bit32u op2_32 = BX_READ_32BIT_REG(i->vvv());
 
@@ -47,11 +42,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ANDN_GdBdEdR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MULX_GdBdEdR(bxInstruction_c *i)
 {
-  if (!protected_mode()) {
-    BX_DEBUG(("MULX_GdBdEdR: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   Bit32u op1_32 = EDX;
   Bit32u op2_32 = BX_READ_32BIT_REG(i->rm());
   Bit64u product_64  = ((Bit64u) op1_32) * ((Bit64u) op2_32);
@@ -64,11 +54,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MULX_GdBdEdR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSI_BdEdR(bxInstruction_c *i)
 {
-  if (!protected_mode()) {
-    BX_DEBUG(("BLSI_BdEd: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
   bx_bool tmpCF = (op1_32 == 0);
 
@@ -84,11 +69,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSI_BdEdR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSMSK_BdEdR(bxInstruction_c *i)
 {
-  if (!protected_mode()) {
-    BX_DEBUG(("BLSMSK_BdEd: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
   bx_bool tmpCF = (op1_32 == 0);
 
@@ -102,14 +82,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSMSK_BdEdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSR_BdEdR(bxInstruction_c *i)
 {
-  if (!protected_mode()) {
-    BX_DEBUG(("BLSR_BdEd: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
   bx_bool tmpCF = (op1_32 == 0);
 
@@ -125,11 +99,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSR_BdEdR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RORX_GdEdIbR(bxInstruction_c *i)
 {
-  if (!protected_mode()) {
-    BX_DEBUG(("RORX_GdEdIb: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
 
   unsigned count = i->Ib() & 0x1f;
@@ -144,11 +113,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RORX_GdEdIbR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRX_GdEdBdR(bxInstruction_c *i)
 {
-  if (!protected_mode()) {
-    BX_DEBUG(("SHRX_GdEdBdR: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
 
   unsigned count = BX_READ_32BIT_REG(i->vvv()) & 0x1f;
@@ -162,11 +126,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRX_GdEdBdR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SARX_GdEdBdR(bxInstruction_c *i)
 {
-  if (!protected_mode()) {
-    BX_DEBUG(("SARX_GdEdBdR: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
 
   unsigned count = BX_READ_32BIT_REG(i->vvv()) & 0x1f;
@@ -182,11 +141,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SARX_GdEdBdR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLX_GdEdBdR(bxInstruction_c *i)
 {
-  if (!protected_mode()) {
-    BX_DEBUG(("SHLX_GdEdBdR: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
 
   unsigned count = BX_READ_32BIT_REG(i->vvv()) & 0x1f;
@@ -200,11 +154,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLX_GdEdBdR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BEXTR_GdEdBdR(bxInstruction_c *i)
 {
-  if (!protected_mode()) {
-    BX_DEBUG(("BEXTR_GdEdBdR: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   Bit16u control = BX_READ_16BIT_REG(i->vvv());
   unsigned start = control & 0xff;
   unsigned len   = control >> 8;
@@ -229,11 +178,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BEXTR_GdEdBdR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BZHI_GdEdBdR(bxInstruction_c *i)
 {
-  if (!protected_mode()) {
-    BX_DEBUG(("BZHI_GdEdBdR: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   unsigned control = BX_READ_16BIT_REG(i->vvv()) & 0xff;
   bx_bool tmpCF = 0;
   Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
@@ -257,11 +201,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BZHI_GdEdBdR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXT_GdEdBdR(bxInstruction_c *i)
 {
-  if (!protected_mode()) {
-    BX_DEBUG(("PEXT_GdEdBdR: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   Bit32u op1_32 = BX_READ_32BIT_REG(i->vvv());
   Bit32u op2_32 = BX_READ_32BIT_REG(i->rm()), result_32 = 0;
 
@@ -283,11 +222,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXT_GdEdBdR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PDEP_GdEdBdR(bxInstruction_c *i)
 {
-  if (!protected_mode()) {
-    BX_DEBUG(("PDEP_GdEdBdR: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   Bit32u op1_32 = BX_READ_32BIT_REG(i->vvv());
   Bit32u op2_32 = BX_READ_32BIT_REG(i->rm()), result_32 = 0;
 

@@ -75,6 +75,7 @@
 #define IA_BMI2             (BX_CONST64(1) << 33)  /* BMI2 instruction */
 #define IA_FMA4             (BX_CONST64(1) << 34)  /* FMA4 instruction (AMD) */
 #define IA_XOP              (BX_CONST64(1) << 35)  /* XOP instruction (AMD) */
+#define IA_TBM              (BX_CONST64(1) << 36)  /* TBM instruction (AMD) */
 
 /* general purpose bit register */
 enum {

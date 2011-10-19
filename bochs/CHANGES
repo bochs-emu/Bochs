@@ -8,9 +8,9 @@ Brief summary :
 - 10% (ST) to 50% (SMP) CPU emulation speedup !
 - Implemented support for new x86 ISA extensions, Bochs is aligned with
   latest published Intel Archicture Manual (rev 039, AVX rev 011):
-     - XSAVEOPT, AVX/AVX2/FMA/F16C, BMI1/BMI2, SMEP, SSE4A (AMD), INVPCID
+     - XSAVEOPT, AVX/AVX2/FMA/F16C, BMI1/BMI2, SMEP, INVPCID
      - VMX: VMX Preemption Timer and Pause Loop Exiting VMEXIT controls
-     - TODO: XOP (AMD), SVM (AMD)
+- Implemented support for AMD SSE4A/XOP/FMA4/TBM instruction sets
 - Networking: introduced new networking module 'slirp'
 - Harddrive: fixed buffer overflow causing Bochs crash in LBA48 mode
 - VGA: Added PCI ROM support to cirrus and pcivga and moved ROM loading
@@ -55,12 +55,10 @@ Detailed change log :
   - Added support for AVX2 FMA instructions emulation. The implementation
     was ported (with few bugfixes) from QEMU patch by Peter Maydell.
     The FMA instructions support can be enabled using .bochsrc CPUID option.
-  - Added support for Bit Manipulation Instructions (BMI) emulation. The BMI
-    instructions support can be enabled using .bochsrc CPUID option.
-  - Added support for AMD SSE4A emulation, the instructions can be enabled
-    using .bochsrc CPUID option.
-  - Added support for AMD FMA4 emulation, the instructions can be enabled
-    using .bochsrc CPUID option.
+  - Added support for Bit Manipulation Instructions (BMI1/BMI2) emulation.
+    The BMI instructions support can be enabled using .bochsrc CPUID option.
+  - Added support for AMD SSE4A/XOP/FMA4/TBM extensions emulation, the
+    instructions can be enabled using .bochsrc CPUID option.
   - Implemented VMX preemption timer VMEXIT control (patch by Jianan Hao)
   - Implemented Pause-Loop Exiting Secondary VMEXIT control.
   - Added INVPCID instruction emulation support.
