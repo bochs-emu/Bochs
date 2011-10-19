@@ -1863,7 +1863,6 @@ modrm_done:
       case BxImmediate_Ib4:
         if (remain != 0) {
           i->modRMForm.Ib = (*iptr >> 4) & 7;
-          i->modRMForm.Ib2 = *iptr; // for VPERMIL2PS/VPERMIL2PD (XOP)
           remain--;
         }
         else {
