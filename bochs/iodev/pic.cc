@@ -319,12 +319,6 @@ void bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0x80: // Rotate in auto eoi mode set
           BX_PIC_THIS s.master_pic.rotate_on_autoeoi = (value != 0);
           break;
-        case 0x0A: /* select read interrupt request register */
-         BX_PIC_THIS s.master_pic.read_reg_select = 0;
-         break;
-        case 0x0B: /* select read interrupt in-service register */
-         BX_PIC_THIS s.master_pic.read_reg_select = 1;
-         break;
 
         case 0xA0: // Rotate on non-specific end of interrupt
         case 0x20: /* end of interrupt command */
@@ -497,13 +491,6 @@ void bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0x80: // Rotate in auto eoi mode set
           BX_PIC_THIS s.slave_pic.rotate_on_autoeoi = (value != 0);
           break;
-
-       case 0x0A: /* select read interrupt request register */
-         BX_PIC_THIS s.slave_pic.read_reg_select = 0;
-         break;
-       case 0x0B: /* select read interrupt in-service register */
-         BX_PIC_THIS s.slave_pic.read_reg_select = 1;
-         break;
 
         case 0xA0: // Rotate on non-specific end of interrupt
         case 0x20: /* end of interrupt command */
