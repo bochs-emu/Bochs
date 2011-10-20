@@ -423,14 +423,42 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMACSDQH_VdqHdqWdqVIbR(bxInstruct
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMADCSSWD_VdqHdqWdqVIbR(bxInstruction_c *i)
 {
-  BX_PANIC(("VPMADCSSWD_VdqHdqWdqVIbR: not implemented yet"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->Ib());
+
+  Bit32s product[8];
+
+  for(unsigned n=0;n < 8;n++)
+    product[n] = (Bit32s) op1.xmm16s(n) * (Bit32s) op2.xmm16s(n);
+
+  op1.xmm32s(0) = SaturateQwordSToDwordS((Bit64s) product[0] + (Bit64s) product[1] + (Bit64s) op3.xmm32s(0));
+  op1.xmm32s(1) = SaturateQwordSToDwordS((Bit64s) product[2] + (Bit64s) product[3] + (Bit64s) op3.xmm32s(1));
+  op1.xmm32s(2) = SaturateQwordSToDwordS((Bit64s) product[4] + (Bit64s) product[5] + (Bit64s) op3.xmm32s(2));
+  op1.xmm32s(3) = SaturateQwordSToDwordS((Bit64s) product[6] + (Bit64s) product[7] + (Bit64s) op3.xmm32s(3));
+
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMADCSWD_VdqHdqWdqVIbR(bxInstruction_c *i)
 {
-  BX_PANIC(("VPMADCSWD_VdqHdqWdqVIbR: not implemented yet"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->Ib());
+
+  Bit32s product[8];
+
+  for(unsigned n=0;n < 8;n++)
+    product[n] = (Bit32s) op1.xmm16s(n) * (Bit32s) op2.xmm16s(n);
+
+  op1.xmm32s(0) = product[0] + product[1] + op3.xmm32s(0);
+  op1.xmm32s(1) = product[2] + product[3] + op3.xmm32s(1);
+  op1.xmm32s(2) = product[4] + product[5] + op3.xmm32s(2);
+  op1.xmm32s(3) = product[6] + product[7] + op3.xmm32s(3);
+
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
 
   BX_NEXT_INSTR(i);
 }
