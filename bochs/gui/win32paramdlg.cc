@@ -187,7 +187,7 @@ BOOL EnumChildProc(HWND hwndCtrl, LPARAM lParam)
     ti.uFlags = TTF_IDISHWND;
 
     ti.hwnd = tt_hwndDlg;
-    ti.uId = (UINT) hwndCtrl;
+    ti.uId = (UINT_PTR) hwndCtrl;
     ti.hinst = 0;
     ti.lpszText = LPSTR_TEXTCALLBACK;
     SendMessage(hwndTT, TTM_ADDTOOL, 0, (LPARAM) (LPTOOLINFO) &ti);
