@@ -30,6 +30,8 @@
 #define ID_BROWSE 2000
 #define ID_UPDOWN 3000
 
+// dialog item list code
+
 typedef struct _dlg_list_t {
   bx_list_c *list;
   UINT dlg_list_id;
@@ -141,6 +143,110 @@ void cleanupDlgLists()
     dlg_lists = NULL;
   }
 }
+
+// tooltips code
+
+HWND hwndTT, tt_hwndDlg;
+HHOOK tt_hhk;
+const char *tt_text;
+
+BOOL EnumChildProc(HWND hwndCtrl, LPARAM lParam);
+LRESULT CALLBACK GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam);
+
+BOOL CreateParamDlgTooltip(HWND hwndDlg)
+{
+  InitCommonControls();
+  tt_hwndDlg = hwndDlg;
+  hwndTT = CreateWindowEx(0, TOOLTIPS_CLASS, (LPSTR) NULL,
+    TTS_ALWAYSTIP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+    CW_USEDEFAULT, tt_hwndDlg, (HMENU) NULL, NULL, NULL);
+
+  if (hwndTT == NULL)
+    return FALSE;
+
+  if (!EnumChildWindows(tt_hwndDlg, (WNDENUMPROC) EnumChildProc, 0))
+    return FALSE;
+
+  tt_hhk = SetWindowsHookEx(WH_GETMESSAGE, GetMsgProc,
+    (HINSTANCE) NULL, GetCurrentThreadId());
+
+  if (tt_hhk == (HHOOK) NULL)
+    return FALSE;
+
+  return TRUE;
+}
+
+BOOL EnumChildProc(HWND hwndCtrl, LPARAM lParam)
+{
+  TOOLINFO ti;
+  char szClass[64];
+
+  GetClassName(hwndCtrl, szClass, sizeof(szClass));
+  if (lstrcmp(szClass, "STATIC")) {
+    ti.cbSize = sizeof(TOOLINFO);
+    ti.uFlags = TTF_IDISHWND;
+
+    ti.hwnd = tt_hwndDlg;
+    ti.uId = (UINT) hwndCtrl;
+    ti.hinst = 0;
+    ti.lpszText = LPSTR_TEXTCALLBACK;
+    SendMessage(hwndTT, TTM_ADDTOOL, 0, (LPARAM) (LPTOOLINFO) &ti);
+  }
+  return TRUE;
+}
+
+LRESULT CALLBACK GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+  MSG *lpmsg;
+
+  lpmsg = (MSG *) lParam;
+  if (nCode < 0 || !(IsChild(tt_hwndDlg, lpmsg->hwnd)))
+    return (CallNextHookEx(tt_hhk, nCode, wParam, lParam));
+
+  switch (lpmsg->message) {
+    case WM_MOUSEMOVE:
+    case WM_LBUTTONDOWN:
+    case WM_LBUTTONUP:
+    case WM_RBUTTONDOWN:
+    case WM_RBUTTONUP:
+      if (hwndTT != NULL) {
+        MSG msg;
+
+        msg.lParam = lpmsg->lParam;
+        msg.wParam = lpmsg->wParam;
+        msg.message = lpmsg->message;
+        msg.hwnd = lpmsg->hwnd;
+        SendMessage(hwndTT, TTM_RELAYEVENT, 0, (LPARAM) (LPMSG) &msg);
+      }
+      break;
+    default:
+      break;
+  }
+  return (CallNextHookEx(tt_hhk, nCode, wParam, lParam));
+}
+
+VOID OnWMNotify(LPARAM lParam)
+{
+  LPTOOLTIPTEXT lpttt;
+  int idCtrl;
+
+  if ((((LPNMHDR) lParam)->code) == TTN_NEEDTEXT) {
+    idCtrl = GetDlgCtrlID((HWND) ((LPNMHDR) lParam)->idFrom);
+    lpttt = (LPTOOLTIPTEXT) lParam;
+
+    if ((idCtrl >= ID_PARAM) && (idCtrl < ID_BROWSE)) {
+      bx_param_c *param = findParamFromDlgID(idCtrl - ID_PARAM);
+      if (param != NULL) {
+        tt_text = param->get_description();
+        if (lstrlen(tt_text) > 0) {
+          lpttt->lpszText = (LPSTR)tt_text;
+        }
+      }
+    }
+  }
+}
+
+// gui functions
 
 int AskFilename(HWND hwnd, bx_param_filename_c *param, char *buffer)
 {
@@ -313,12 +419,12 @@ HWND CreateTabControl(HWND hDlg, UINT cid, UINT xpos, UINT ypos, SIZE size, BOOL
   r.bottom = r.top + size.cy;
   MapDialogRect(hDlg, &r);
   TabControl = CreateWindow(WC_TABCONTROL, "", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE,
-                            r.left, r.top, r.right-r.left+1, r.bottom-r.top+1, hDlg, (HMENU)code, NULL, NULL); 
+                            r.left, r.top, r.right-r.left+1, r.bottom-r.top+1, hDlg, (HMENU)code, NULL, NULL);
   for (i = 0; i < list->get_size(); i++) {
     item = list->get(i);
     if (item->get_type() == BXT_LIST) {
-      tie.mask = TCIF_TEXT; 
-      tie.pszText = ((bx_list_c*)item)->get_title(); 
+      tie.mask = TCIF_TEXT;
+      tie.pszText = ((bx_list_c*)item)->get_title();
       TabCtrl_InsertItem(TabControl, i, &tie);
     }
   }
@@ -781,6 +887,7 @@ static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, 
   switch (AMessage) {
     case WM_CLOSE:
       cleanupDlgLists();
+      DestroyWindow(hwndTT);
       EndDialog(Window, -1);
       break;
     case WM_INITDIALOG:
@@ -807,17 +914,20 @@ static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, 
       r.bottom = size.cy + 52;
       MapDialogRect(Window, &r);
       MoveWindow(Window, r2.left, r2.top, r.right, r.bottom, TRUE);
+      CreateParamDlgTooltip(Window);
       return TRUE;
     case WM_COMMAND:
       code = LOWORD(wParam);
       switch (code) {
         case IDCANCEL:
           cleanupDlgLists();
+          DestroyWindow(hwndTT);
           EndDialog(Window, -1);
           break;
         case IDOK:
           SetParamList(Window, list);
           cleanupDlgLists();
+          DestroyWindow(hwndTT);
           EndDialog(Window, 1);
           break;
         default:
@@ -859,6 +969,8 @@ static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, 
         if (id >= ID_UPDOWN) {
           PostMessage(GetDlgItem(Window, ID_PARAM + (id - ID_UPDOWN)), EM_SETMODIFY, TRUE, 0);
         }
+      } else {
+        OnWMNotify(lParam);
       }
       break;
     case WM_CTLCOLOREDIT:
