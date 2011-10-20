@@ -2978,6 +2978,8 @@ public: // for now...
   BX_SMF BX_INSF_TYPE VPHSUBBW_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPHSUBWD_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPHSUBDQ_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPERMIL2PS_VdqHdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPERMIL2PD_VdqHdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* XOP (AMD) */
 
   /* TBM (AMD) */

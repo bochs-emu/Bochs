@@ -887,4 +887,56 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHSUBDQ_VdqWdqR(bxInstruction_c *
   BX_NEXT_INSTR(i);
 }
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMIL2PS_VdqHdqWdqIbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2, op3, result;
+
+  int imm_reg = i->Ib() >> 4;
+  if (! long64_mode()) imm_reg &= 0x7;
+
+  if (i->getVexW()) {
+    op2 = BX_READ_AVX_REG(imm_reg);
+    op3 = BX_READ_AVX_REG(i->rm());
+  }
+  else {
+    op2 = BX_READ_AVX_REG(i->rm());
+    op3 = BX_READ_AVX_REG(imm_reg);
+  }
+  unsigned len = i->getVL();
+
+  for (unsigned n=0; n < len; n++) {
+    sse_permil2ps(&result.avx128(n), &op1.avx128(n), &op2.avx128(n), &op3.avx128(n), i->Ib() & 3);
+  }
+
+  BX_WRITE_AVX_REGZ(i->nnn(), result, len);
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMIL2PD_VdqHdqWdqIbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2, op3, result;
+
+  int imm_reg = i->Ib() >> 4;
+  if (! long64_mode()) imm_reg &= 0x7;
+
+  if (i->getVexW()) {
+    op2 = BX_READ_AVX_REG(imm_reg);
+    op3 = BX_READ_AVX_REG(i->rm());
+  }
+  else {
+    op2 = BX_READ_AVX_REG(i->rm());
+    op3 = BX_READ_AVX_REG(imm_reg);
+  }
+  unsigned len = i->getVL();
+
+  for (unsigned n=0; n < len; n++) {
+    sse_permil2pd(&result.avx128(n), &op1.avx128(n), &op2.avx128(n), &op3.avx128(n), i->Ib() & 3);
+  }
+
+  BX_WRITE_AVX_REGZ(i->nnn(), result, len);
+
+  BX_NEXT_INSTR(i);
+}
+
 #endif

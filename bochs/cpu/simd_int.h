@@ -357,6 +357,28 @@ BX_CPP_INLINE void sse_permilpd(BxPackedXmmRegister *r, const BxPackedXmmRegiste
   r->xmm64u(1) = op1->xmm64u((op2->xmm32u(2) >> 1) & 0x1);
 }
 
+BX_CPP_INLINE void sse_permil2ps(BxPackedXmmRegister *r, const BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, const BxPackedXmmRegister *op3, unsigned m2z)
+{
+  for(unsigned n=0; n < 4; n++) {
+    Bit32u ctrl = op3->xmm32u(n);
+    if ((m2z ^ ((ctrl >> 3) & 0x1)) == 0x3)
+      r->xmm32u(n) = 0;
+    else
+      r->xmm32u(n) = (ctrl & 0x4) ? op1->xmm32u(ctrl & 0x3) : op2->xmm32u(ctrl & 0x3);
+  }
+}
+
+BX_CPP_INLINE void sse_permil2pd(BxPackedXmmRegister *r, const BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, const BxPackedXmmRegister *op3, unsigned m2z)
+{
+  for(unsigned n=0; n < 2; n++) {
+    Bit32u ctrl = op3->xmm32u(n*2);
+    if ((m2z ^ ((ctrl >> 3) & 0x1)) == 0x3)
+      r->xmm64u(n) = 0;
+    else
+      r->xmm64u(n) = (ctrl & 0x4) ? op1->xmm64u((ctrl >> 1) & 0x1) : op2->xmm64u((ctrl >> 1) & 0x1);
+  }
+}
+
 // sign
 
 BX_CPP_INLINE void sse_psignb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
