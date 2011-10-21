@@ -305,12 +305,10 @@ float64 float32_to_float64(float32 a, float_status_t &status)
 
 float32 float32_round_to_int(float32 a, float_status_t &status)
 {
-    Bit16s aExp;
     Bit32u lastBitMask, roundBitsMask;
     int roundingMode = get_float_rounding_mode(status);
-    float32 z;
 
-    aExp = extractFloat32Exp(a);
+    Bit16s aExp = extractFloat32Exp(a);
     if (0x96 <= aExp) {
         if ((aExp == 0xFF) && extractFloat32Frac(a)) {
             return propagateFloat32NaN(a, status);
@@ -342,7 +340,7 @@ float32 float32_round_to_int(float32 a, float_status_t &status)
     lastBitMask = 1;
     lastBitMask <<= 0x96 - aExp;
     roundBitsMask = lastBitMask - 1;
-    z = a;
+    float32 z = a;
     if (roundingMode == float_round_nearest_even) {
         z += lastBitMask>>1;
         if ((z & roundBitsMask) == 0) z &= ~lastBitMask;

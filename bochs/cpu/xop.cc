@@ -28,6 +28,8 @@
 
 #if BX_SUPPORT_AVX
 
+extern void mxcsr_to_softfloat_status_word(float_status_t &status, bx_mxcsr_t mxcsr);
+
 #include "simd_int.h"
 #include "simd_compare.h"
 

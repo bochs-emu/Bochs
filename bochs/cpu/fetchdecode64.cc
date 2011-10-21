@@ -2177,16 +2177,12 @@ modrm_done:
       else
          OpcodeInfoPtr = &BxOpcodeTableAVX[(b1-256) + 768*vex_l];
     }
-    else if (had_xop != 0) {
-      i->setVvv(vvv);
-      if (had_xop < 0)
-         OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
-      else
-         OpcodeInfoPtr = &BxOpcodeTableXOP[b1 + 768*vex_l];
-    }
+    // XOP always has modrm byte
+    BX_ASSERT(had_xop == 0);
 #endif
 
-    if (b1 == 0x90 && sse_prefix == SSE_PREFIX_F3 && (had_vex | had_xop) == 0) {
+    if (b1 == 0x90 && sse_prefix == SSE_PREFIX_F3) {
+      // attention: need to handle VEX separately, XOP never reach here
       ia_opcode = BX_IA_PAUSE;
     }
     else {
