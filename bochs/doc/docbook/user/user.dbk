@@ -141,7 +141,7 @@ regular basis, but a few statistics give an indication.  The <link
 linkend="bochs-developers">bochs-developers mailing list</link>, which is the
 primary source of news on bugs and releases, has over 400 subscribers.  The
 latest version has been downloaded over 150,000 times from SourceForge, not
-counting any mirror website or CVS users.
+counting any mirror website or SVN users.
 </para>
 
 <para>
@@ -875,7 +875,7 @@ to see the latest version of the CHANGES file.
 </para>
 <para>
 The link above is provided by Source Forge and might change one day.  If it
-stops working, you can download the current source code with CVS and read
+stops working, you can download the current source code with SVN and read
 the CHANGES file there.
 </para>
 
@@ -1461,8 +1461,9 @@ bochs-dlx, bximage and bxcommit.  First, let's try out the DLX Linux demo by typ
   Entering /usr/users/bryce/.bochsdlx
   Running bochs
   ========================================================================
-			Bochs x86 Emulator 2.0.pre3
-		Build from CVS snapshot on December 4, 2002
+			Bochs x86 Emulator 2.4.6.svn
+		Build from SVN snapshot, after release 2.4.6
+                     Compiled on Oct 20 2011 at 19:40:05
   ========================================================================
 </screen>
 
@@ -1635,7 +1636,7 @@ descriptions or tool-tips).
 Bochs is written in C++, so you need a C++ compiler on your system.  Most
 platforms have been tested with GNU gcc/g++, but other compilers are known
 to work too.  By now, you should have unpacked your source TAR file or checked
-out Bochs from CVS.  If not, you can return to <link
+out Bochs from SVN.  If not, you can return to <link
 linkend="downloading">Downloading Bochs</link> for details.  The top level
 directory of the source code will be referred to as &bochsdir;.  (&bochsdir;
 contains the files <filename>bochs.h</filename> and
@@ -2182,12 +2183,17 @@ turn it off.
     <row>
       <entry>--enable-repeat-speedups</entry>
       <entry>no</entry>
-      <entry>support repeated I/O and memory copy speedups</entry>
+      <entry>enable support repeated I/O and memory copy speedups</entry>
     </row>
     <row>
       <entry>--enable-fast-function-calls</entry>
       <entry>no</entry>
-      <entry>support for fast function calls (gcc on x86 only)</entry>
+      <entry>enable support for fast function calls (gcc on x86 only)</entry>
+    </row>
+    <row>
+      <entry>--enable-handlers-chaining</entry>
+      <entry>no</entry>
+      <entry>enable support for handlers chaining optimization</entry>
     </row>
     <row>
       <entry>--enable-all-optimizations</entry>
@@ -2196,7 +2202,8 @@ turn it off.
         Turn on the enables for all speed optimizations that the
         developers believe are safe to use:
          --enable-repeat-speedups,
-         --enable-fast-function-calls.
+         --enable-fast-function-calls,
+         --enable-handlers-chaining.
       </entry>
     </row>
     <row>
@@ -2261,14 +2268,6 @@ turn it off.
       </entry>
     </row>
     <row>
-      <entry>--enable-compressed-hd</entry>
-      <entry>no</entry>
-      <entry>
-      Add support for compressed disk (not implemented yet).
-      zlib must be installed on your system, as it will be dynamically linked to Bochs.
-      </entry>
-    </row>
-    <row>
       <entry>--enable-pci</entry>
       <entry>no</entry>
       <entry>Enable limited i440FX PCI support. This is still incomplete, but usable.
@@ -2306,8 +2305,7 @@ turn it off.
       instrumentation data from bochs as it executes code.  You have to create
       your own instrumentation library and define the instrumentation macros
       (hooks in bochs) to either call your library functions or not, depending
-      upon whether you want to collect each piece of data.  [Kevin wrote: I
-      broke some of the hooks when I recoded the fetch/decode loop.]
+      upon whether you want to collect each piece of data.
       </entry>
     </row>
     <row>
@@ -2740,7 +2738,7 @@ what if make fails?
 fpu/fpu.cc, you could try --disable-fpu.
 - search for the error on the Bochs website (bug reports, patches)
 - if familiar with C++, many minor problems can be corrected
-- move to more stable code.  if it's CVS, see if a release version will
+- move to more stable code.  if it's SVN, see if a release version will
   compile.  Report problem to bochs-developers.
 - report the problem with a source forge bug report.
 </screen>
@@ -5364,8 +5362,8 @@ will get 2 copies of every announcement.
 
 <section id="bochs-cvs"><title>bochs-cvs mailing list</title>
 <para>
-This is the cvs commit mailinglist (a unified diff email will be sent
-whenever someone does a checkin in the bochs cvs repository).
+This is the svn commit mailinglist (a unified diff email will be sent
+whenever someone does a checkin in the bochs SVN repository).
 </para>
 
 <para>
@@ -6616,20 +6614,6 @@ Insert a time break point "delta" instructions into the future ("delta" is a 64-
 <screen>sba <varname>time</varname></screen>
 
 Insert a time break point at "time" ("time" is a 64-bit integer followed by "L", for example 1000L).
-
-<screen>record <varname>filename</varname></screen>
-
-Record console input to file <varname>filename</varname>. The file consists of
-zero or more lines of the form "%s %d %x", where the first word is the
-event type, the second is a time stamp and the third is event specific
-data.
-
-<screen>playback <varname>filename</varname></screen>
-
-Playback console input from file <varname>filename</varname>. Additional input can
-be given directly in the console window. Events in the file will be
-played back at times relative to the time when the playback command
-was executed.
 
 <screen>print-stack [<varname>num words</varname>]</screen>
 
@@ -8537,10 +8521,9 @@ linux-$ tar -xzvf bochs-2.0.2.tar.gz
 Next, I configured and compiled Bochs...
 <screen>
 linux-$ cd bochs-2.0.2
-linux-$ ./configure --enable-cdrom --enable-ne2000 --enable-host-specific-asms
+linux-$ ./configure --enable-cdrom --enable-ne2000
 linux-$ make
 </screen>
-The --enable-host-specific-asms should only be used if the host OS is an Intel x86 based OS.
 </para>
 
 <para>
