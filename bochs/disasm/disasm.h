@@ -166,7 +166,8 @@ public:
 #define BX_AVX_VL128 0
 #define BX_AVX_VL256 1
   Bit8u vex_vvv, vex_l, vex_w;
-  int is_vex; // 0 - no VEX used, 1 - VEX is used, 2 - invalid VEX
+  int is_vex; // 0 - no VEX used, 1 - VEX is used, -1 - invalid VEX
+  int is_xop; // 0 - no XOP used, 1 - XOP is used, -1 - invalid XOP
   Bit8u modrm, mod, nnn, rm;
   Bit8u sib, scale, index, base;
   union {
@@ -307,6 +308,7 @@ private:
   void dis_sprintf(const char *fmt, ...);
   void decode_modrm(x86_insn *insn);
   unsigned decode_vex(x86_insn *insn);
+  unsigned decode_xop(x86_insn *insn);
 
   void resolve16_mod0   (const x86_insn *insn, unsigned mode);
   void resolve16_mod1or2(const x86_insn *insn, unsigned mode);

@@ -254,7 +254,7 @@ static const BxOpcodeInfo_t BxOpcodeTableXOP[256*3*2] = {
   /* A0 /0 */ { 0, BX_IA_ERROR },
   /* A1 /0 */ { 0, BX_IA_ERROR },
   /* A2 /0 */ { BxImmediate_Ib4, BX_IA_VPCMOV_VdqHdqWdqVIb },
-  /* A3 /0 */ { BxImmediate_Ib,  BX_IA_VPPERM_VdqHdqWdqVIb },
+  /* A3 /0 */ { BxImmediate_Ib4, BX_IA_VPPERM_VdqHdqWdqVIb },
   /* A4 /0 */ { 0, BX_IA_ERROR },
   /* A5 /0 */ { 0, BX_IA_ERROR },
   /* A6 /0 */ { BxVexW0 | BxImmediate_Ib4, BX_IA_VPMADCSSWD_VdqHdqWdqVIb },

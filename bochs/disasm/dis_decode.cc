@@ -213,8 +213,22 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
     else
       entry = BxDisasmOpcodesAVX + (insn.b1 - 256);
   }
+  else if (insn.b1 == 0x8f && (is_64 || (peek_byte() & 0xc0) == 0xc0) && (peek_byte() & 0x8) == 0x8)
+  {
+    if (sse_prefix)
+      dis_sprintf("(bad xop+rex prefix) ");
+    if (rex_prefix)
+      dis_sprintf("(bad xop+sse prefix) ");
+    
+    // decode 0x8F XOP prefix
+    sse_prefix = decode_xop(&insn);
+    if (insn.b1 >= 768 || sse_prefix != 0)
+      entry = &BxDisasmGroupSSE_ERR[0];
+    else
+      entry = BxDisasmOpcodesXOP + insn.b1;
+  }
 
-  if (insn.b1 >= 512 || instruction_has_modrm[insn.b1])
+  if (insn.b1 >= 512 || instruction_has_modrm[insn.b1] || insn.is_xop > 0)
   {
     // take 3rd byte for 3-byte opcode
     if (entry->Attr == _GRP3BOP) {
@@ -402,6 +416,35 @@ unsigned disassembler::decode_vex(x86_insn *insn)
   insn->vex_vvv = 15 - ((b2 >> 3) & 0xf);
   insn->vex_l = (b2 >> 2) & 0x1;
   insn->b1 = fetch_byte() + 256 * vex_opcode_extension;
+  return b2 & 0x3;
+}
+
+unsigned disassembler::decode_xop(x86_insn *insn)
+{
+  insn->is_xop = 1;
+
+  unsigned b2 = fetch_byte(), xop_opcode_extension = 1;
+
+  insn->rex_r = (b2 & 0x80) ? 0 : 0x8;
+  insn->rex_x = (b2 & 0x40) ? 0 : 0x8;
+  if (insn->is_64)
+    insn->rex_b = (b2 & 0x20) ? 0 : 0x8;
+
+  xop_opcode_extension = (b2 & 0x1f) - 8;
+  if (xop_opcode_extension >= 3)
+    insn->is_xop = -1;
+
+  b2 = fetch_byte(); // fetch VEX3 byte
+  if (b2 & 0x80) {
+    insn->os_64 = 1;
+    insn->os_32 = 1;
+    insn->vex_w = 1;
+  }
+
+  insn->vex_vvv = 15 - ((b2 >> 3) & 0xf);
+  insn->vex_l = (b2 >> 2) & 0x1;
+  insn->b1 = fetch_byte() + 256 * xop_opcode_extension;
+
   return b2 & 0x3;
 }
 

@@ -206,6 +206,7 @@ const struct BxDisasmOpcodeInfo_t
 #include "dis_tables_x87.inc"
 #include "dis_tables_sse.inc"
 #include "dis_tables_avx.inc"
+#include "dis_tables_xop.inc"
 #include "dis_tables.inc"
 
 #undef XX
