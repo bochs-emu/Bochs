@@ -18,6 +18,7 @@ Brief summary :
 - Sound: ported ES1370 soundcard emulation from Qemu
 - Continuing configure rework, check for more removed configure and .bochsrc
   options and their replacements !
+- LGPL'd VGABIOS updated to version 0.7a
 
 Detailed change log :
 
@@ -127,7 +128,8 @@ Detailed change log :
   - USB
     - experimental USB xHCI support (written by Ben Lunt)
 
-  - LGPL'd VGABIOS updated to current CVS
+  - LGPL'd VGABIOS updated to version 0.7a
+    - implemented vgabios functions with AX=0x112x (patch by Hugo Mercier)
     - fixed DAC palette in 8 bpp VBE and Cirrus modes (using the same palette
       as VGA mode 0x13)
     - VBE: added HDTV resolutions (patch by Tristan Schmelcher)
@@ -149,6 +151,7 @@ Detailed change log :
 
 - Config interface
   - win32paramdlg: dialog size now adjusted to support larger label text
+  - win32paramdlg: added tooltip support using the parameter description
 
 - SF patches applied
   [3426460] [PATCH] PIC: remove never-executed code by Christian Inci
