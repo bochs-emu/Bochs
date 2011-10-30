@@ -90,6 +90,15 @@ For any information on qemu, visit the website http://fabrice.bellard.free.fr/qe
 
 History
 -------
+vgabios-0.7a : Oct 30 2011
+  - Volker
+    . added HDTV resolutions (patch by Tristan Schmelcher)
+    . added PCI ROM support to the VBE-specific images
+    . implemented vgabios functions with AX=0x112x (patch by Hugo Mercier)
+    . fixed DAC palette in 8 bpp VBE and Cirrus modes (using the same palette
+      as VGA mode 0x13)
+    . Makefile cleanup (patch by Gerd Hoffmann)
+
 vgabios-0.6c : Apr 08 2009
   - Volker
     . added DPMS support to cirrus vgabios (patch from Gleb Natapov)
