@@ -870,7 +870,7 @@ to mention, running DOOM, though at then-pathetic speeds.
 
 <para>
 The change log is stored in the Bochs source code in a file called
-CHANGES.  Click <ulink url="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&amp;content-type=text/vnd.viewcvs-markup&amp;rev=HEAD">here</ulink>
+CHANGES.  Click <ulink url="http://bochs.svn.sourceforge.net/viewvc/bochs/trunk/bochs/CHANGES">here</ulink>
 to see the latest version of the CHANGES file.
 </para>
 <para>
@@ -938,12 +938,15 @@ Bochs are in the section, <link linkend="compiling">Compiling Bochs</link>.
 </para>
 
 <para>
-Alternatively, you can also obtain the sources for any Bochs version using CVS.
-See the <link linkend="get-src-cvs">CVS instructions</link> for details.
+Alternatively, you can also obtain the sources for any Bochs version using SVN.
+See the <link linkend="get-src-svn">SVN instructions</link> for details.
 </para>
 </section>  <!-- End of Installation:Downloading Bochs section -->
 
-<section id="get-src-cvs"><title>Tracking the source code with CVS</title>
+<section id="get-src-svn"><title>Tracking the source code with SVN</title>
+<para>
+&FIXME; Rewrite for SVN
+</para>
 <para>
 CVS, or Concurrent Version System, is a software development tool that helps
 to keep track of the different revisions of each file.  It is used by many
@@ -958,6 +961,9 @@ You can download CVS software and documentation from
 </para>
 
 <section><title>Checking out Bochs</title>
+<para>
+&FIXME; Rewrite for SVN
+</para>
 <para>
 When you have CVS installed, the first step is to do a login and checkout.  The
 initial checkout command is long and ugly, but usually you only have to do it
@@ -1041,6 +1047,9 @@ out, what version you have, and where to go for future updates.
 
 <section><title>Getting the Latest Version</title>
 <para>
+&FIXME; Rewrite for SVN
+</para>
+<para>
 Most developers use CVS to always give them the latest source code.  The minute
 that any developer checks in a change, they are available to everyone else
 through  CVS.  You just have to type <command>cvs update -d -A</command> in the
@@ -1050,7 +1059,7 @@ takes a short time because it downloads only the files that changed.  The
 <command>-d</command> option tells cvs to download new directories that
 have been checked in, not just files.  The <command>-A</command> option means
 to get the most recent version of each file, as opposed to a release version.
-See <link linkend="cvs-release-version">Getting a release version</link>
+See <link linkend="svn-release-version">Getting a release version</link>
 Both <command>-d</command> and <command>-A</command> can be omitted in many
 cases, once you are familiar with the process.  </para>
 
@@ -1135,7 +1144,10 @@ clears the sticky tags.  </para>
 
 </section>
 
-<section id="cvs-release-version"><title>Getting a Release Version</title>
+<section id="svn-release-version"><title>Getting a Release Version</title>
+<para>
+&FIXME; Rewrite for SVN
+</para>
 <para>
 Once you have a CVS checkout, you can also use the update command to
 get the Bochs source code for any release since March 2000.  The command
@@ -1280,6 +1292,9 @@ to clear the sticky date and track the current sources.
 
 <section><title>More about CVS</title>
 <para>
+&FIXME; Rewrite for SVN
+</para>
+<para>
 Entire books have been written on CVS, so there's no sense in duplicating
 it all here in the Bochs documentation.  Some sources of additional
 information are listed below.
@@ -1296,7 +1311,7 @@ Another <ulink url="http://www.cs.utah.edu/dept/old/texinfo/cvs/FAQ.txt">CVS FAQ
 </section>
 
 
-</section> <!-- End of Installation:Getting the source code with CVS -->
+</section> <!-- End of Installation:Getting the source code with SVN -->
 
 
 <section id="install-binary"><title>Installing a Binary</title>
@@ -3219,15 +3234,26 @@ are provided in the source and binary distributions.</para>
 <para>
 Examples:
 <screen>
-  vga: extension=cirrus
+  vga: extension=cirrus, update_freq=10
   vga: extension=vbe
 </screen>
-Here you can specify the display extension to be used. With the value
-'none' you can use standard VGA with no extension. Other supported
+This defines parameters related to the VGA display
+</para>
+<para>
+The 'extension' option can be used to specify the VGA display extension.
+With the value 'none' you can use standard VGA with no extension. Other supported
 values are 'vbe' for Bochs VBE (needs <filename>VGABIOS-lgpl-latest</filename> as
 VGA BIOS, see <link linkend="bochsopt-vgaromimage">vgaromimage option</link>)
 and 'cirrus' for Cirrus SVGA support (needs
 <filename>VGABIOS-lgpl-latest-cirrus</filename> as VGA BIOS).
+</para>
+<para>
+The VGA update frequency is based on the emulated clock and the default
+value is 5. Keep in mind that you must tweak the 'cpu: ips=N' directive
+to be as close to the number of emulated instructions-per-second your
+workstation can do, for this to be accurate. If the realtime sync is
+enabled with the <link linkend="bochsopt-clock">clock option</link>, the value
+is based on the real time. This parameter can be changed at runtime.
 </para>
 </section>
 
@@ -3855,22 +3881,8 @@ Examples:
 This defines the ES1370 sound emulation. The parameter 'enabled' controls the
 presence of the device. In addition to this, it must be assigned to a PCI
 slot. The 'wavedev' parameter is similar to the 'wave' parameter of the SB16
-soundcard. Currently only the output of the DAC2 is sent to the wave device.
-</para>
-</section>
-
-<section><title>vga_update_interval</title>
-<para>
-Examples:
-<screen>
-  vga_update_interval: 50000 # default
-  vga_update_interval: 250000
-</screen>
-Video memory is scanned for updates and screen updated every so many virtual
-microseconds. Keep in mind that you must tweak the <command>ips</command>
-parameter of the <link linkend="bochsopt-cpu">cpu option</link> to be as close
-to the number of emulated instructions-per-second your workstation can do,
-for this to be accurate.
+soundcard. The emulation supports recording and playback (except DAC1+DAC2
+output at the same time).
 </para>
 </section>
 
@@ -4003,10 +4015,10 @@ Examples:
   pci: enabled=1, chipset=i440fx # default if compiled with PCI support
   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k
 </screen>
-This option controls the presence of the i440FX PCI chipset. You can also
-specify the devices connected to PCI slots. Up to 5 slots are available.
-These devices are currently supported: cirrus, es1370, ne2k, pcivga, pcidev,
-pcipnic and usb_ohci.
+This option controls the presence of a PCI chipset in Bochs. Currently it only
+supports the i440FX chipset. You can also specify the devices connected to
+PCI slots. Up to 5 slots are available. These devices are currently supported:
+cirrus, es1370, ne2k, pcivga, pcidev, pcipnic, usb_ohci and usb_xhci.
 </para>
 </section>
 

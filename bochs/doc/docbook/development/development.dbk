@@ -34,7 +34,10 @@ lists, etc.
 </para>
 
 
-<section id="cvs-write-access-setup"><title>Setting up CVS write access</title>
+<section id="svn-write-access-setup"><title>Setting up SVN write access</title>
+<para>
+&FIXME; Rewrite for SVN
+</para>
 <para>
 If you are an official SourceForge developer, then you can use CVS with write
 access.  The CVS contains the most recent copy of the source code, and with
@@ -125,13 +128,13 @@ have a Bochs directory which is checked out with write access!
 
 </section> <!-- end setting up cvs write access -->
 
-<section id="using-cvs-write-access"><title>Using CVS write access</title>
+<section id="using-svn-write-access"><title>Using SVN write access</title>
 
 <section><title>Checking in files</title>
 <para>
 Once you have a Bochs directory with cvs write access, you can compile the
 files, edit them, test them, etc.  See the documentation section, "Tracking
-the source code with CVS" for more info on CVS, in the User Manual.
+the source code with SVN" for more info on CVS, in the User Manual.
 (FIXME: add cross reference) But what's new and different is that you can now
 do cvs commits.  When a file is all fixed and ready to share with the rest of
 the world, you run a commit command to upload your version to the server.
@@ -186,11 +189,11 @@ And here is an aborted one:
 </para>
 </section> <!--end of "Checking in Files" -->
 
-</section> <!--end of "Using CVS write access" -->
+</section> <!--end of "Using SVN write access" -->
 
       <section id="trackers"><title>SourceForge bug, feature, and patch trackers</title>
          <para>
-	 &FIXME;
+          &FIXME;
          </para>
       </section>
 
@@ -198,9 +201,9 @@ And here is an aborted one:
 <para>
 <screen>
 Ideas:
-- how to browse code with cvsweb
+- how to browse code with viewvc
 - how to find an identifier, variable, or specific text in the code
-- how to make patches with CVS
+- how to make patches with SVN
 </screen>
 </para>
 </section>
@@ -2253,8 +2256,11 @@ with non-interesting ones.</para></listitem>
       how to make, where to submit, what happens then?
       </para>
       </section>
-<section id="cvs-release"><title>Building a Bochs release</title>
-<section><title>Preparing source files and CVS</title>
+<section id="svn-release"><title>Building a Bochs release</title>
+<section><title>Preparing source files and SVN</title>
+<para>
+&FIXME; Rewrite for SVN
+</para>
 <para>
 Update version number and strings in configure.in.
 <screen>
@@ -2366,6 +2372,9 @@ That gives an installer called <filename>Bochs-2.4.exe</filename>. Test and uplo
 </section>
 <section><title>Building the release on Linux</title>
 <para>
+&FIXME; Rewrite for SVN
+</para>
+<para>
 Do a clean checkout using anonymous cvs, so that the source tarball
 will be all set up for anonymous cvs.  First I'll create a clean
 directory called "clean-anon".
@@ -2418,8 +2427,8 @@ new release is ready for download.
 The Bochs project webspace is stored under the SF directory <filename>/home/project-web/bochs</filename>.
 It can be accessed from the SF shell using SSH or with the commands <command>sftp</command>,
 <command>scp</command> and <command>rsync</command>. Some parts of the directory
-structure must be updated from the local CVS repository, others from Bochs CVS
-(modules <filename>bochs</filename> and <filename>sfsite</filename>).
+structure must be updated from the local CVS repository, others from Bochs SVN
+(directories <filename>bochs</filename> and <filename>sfsite</filename>).
 The online documentation, disk images and screenshots must be uploaded manually.
 <table>
 <title>Directory structure</title>
@@ -2434,17 +2443,17 @@ The online documentation, disk images and screenshots must be uploaded manually.
 <tbody>
 <row><entry>cgi-bin</entry><entry>CGI scripts for the website</entry></row>
 <row><entry>htdocs</entry><entry>root directory of the website</entry></row>
-<row><entry>htdocs/cvs-snapshot</entry><entry>link to current snapshot</entry></row>
 <row><entry>htdocs/doc/docbook</entry><entry>Bochs online documentation</entry></row>
 <row><entry>htdocs/docs-html</entry><entry>old Bochs documentation</entry></row>
 <row><entry>htdocs/guestos</entry><entry>disk images directly stored on the Bochs website</entry></row>
 <row><entry>htdocs/screenshot</entry><entry>screenshots of Bochs running several guest operating systems</entry></row>
+<row><entry>htdocs/svn-snapshot</entry><entry>link to current snapshot</entry></row>
 <row><entry>htdocs/techspec</entry><entry>technical specifications of several hardware components</entry></row>
 <row><entry>lxr</entry><entry>Bochs source browser</entry></row>
 <row><entry>sfsite-cvsroot</entry><entry>local CVS repository</entry></row>
 <row><entry>sitebin</entry><entry>shell scripts (e.g. for snapshot generation)</entry></row>
 <row><entry>siteman</entry><entry>website manual pages</entry></row>
-<row><entry>snapshot</entry><entry>CVS snapshot storage area</entry></row>
+<row><entry>snapshot</entry><entry>SVN snapshot storage area</entry></row>
 <row><entry>tmp</entry><entry>temp directory for shell scripts</entry></row>
 </tbody>
 </tgroup>
@@ -2455,12 +2464,12 @@ The online documentation, disk images and screenshots must be uploaded manually.
 <section id="update-website"><title>Updating the Bochs website content</title>
 <para>
 The main HTML content of the Bochs website (except online documentation) is stored
-in the <filename>sfsite</filename> module of the Bochs CVS repository. Unlike
+in the <filename>sfsite</filename> directory of the Bochs SVN repository. Unlike
 other SF projects you don't need to upload these files to the Bochs project webspace.
-Running a simple CVS update on the SF shell is enough after the files have been
-updated in the repository. Please see <link linkend="cvs-write-access-setup">Setting
-up CVS write access</link> for general instructions. The only difference is the
-module name <filename>sfsite</filename> instead of <filename>bochs</filename>.
+Running a simple SVN update on the SF shell is enough after the files have been
+updated in the repository. Please see <link linkend="svn-write-access-setup">Setting
+up SVN write access</link> for general instructions. The only difference is the
+directory name <filename>sfsite</filename> instead of <filename>bochs</filename>.
 The example below shows how to start the SF shell with SSH and to update the
 HTML files.
 <screen>
@@ -2476,19 +2485,14 @@ Use the "shutdown" command to destroy the shell before the time limit.
 For path information and login help, type "sf-help".
 
 [vruppert@shell-24002 ~]$ cd /home/project-web/bochs/htdocs/
-[vruppert@shell-24002 htdocs]$ cvs update
-cvs update: Updating .
-U index.html
-cvs update: Updating images
-cvs update: Updating includes
-cvs update: Updating networking
-cvs update: Updating testing-forms
-cvs update: Updating docs-html
+[vruppert@shell-24002 htdocs]$ svn update
+U    index.html
+Updated to revision 10752
 [vruppert@shell-24002 htdocs]$ shutdown
 Requesting that your shell be shut down.
 This request will be processed soon.
 [vruppert@shell-24002 htdocs]$
-Broadcast message from root (Sat Nov 15 08:36:01 2008):
+Broadcast message from root (Mon Oct 31 09:45:04 2011):
 
 The system is going down for system halt NOW!
 Connection to shell-24002 closed by remote host.
@@ -2498,20 +2502,20 @@ Connection to shell.sourceforge.net closed.
 </para>
 </section>
 
-<section id="update-cvs-snapshot"><title>Updating the CVS snapshot</title>
+<section id="update-svn-snapshot"><title>Updating the SVN snapshot</title>
 <para>
-The CVS snapshot
+The SVN snapshot
 <footnote>
-<para>The CVS snapshot link can be found on the bottom of the page
+<para>The SVN snapshot link can be found on the bottom of the page
 <filename>getcurrent.html</filename>.</para>
 </footnote>
 can be updated with SF shell access using SSH. There is a script
-called <command>update-snapshots.sh</command> that can do all the required steps
-(checking out CVS, packing the source tree into one archive, updating the website
+called <command>update-svn-snapshot.sh</command> that can do all the required steps
+(checking out SVN, packing the source tree into one archive, updating the website
 link). See previous section how to create a shell.
 <screen>
-cd /home/project-web/bochs/sitebin/
-./update-snapshots.sh
+cd bochs-web/sitebin/
+./update-svn-snapshot.sh
 </screen>
 </para>
 </section>
