@@ -945,82 +945,84 @@ See the <link linkend="get-src-svn">SVN instructions</link> for details.
 
 <section id="get-src-svn"><title>Tracking the source code with SVN</title>
 <para>
-&FIXME; Rewrite for SVN
-</para>
+SVN (Subversion) is a tool used by many software developers to manage changes
+within their source code tree. SVN provides the means to store not only the
+current version of a piece of source code, but a record of all changes (and who
+made those changes) that have occurred to that source code. Use of SVN is
+particularly common on projects with multiple developers, since SVN ensures
+changes made by one developer are not accidentally removed when another
+developer posts their changes to the source tree. The Bochs source code and
+documentation are available using SVN<footnote>
 <para>
-CVS, or Concurrent Version System, is a software development tool that helps
-to keep track of the different revisions of each file.  It is used by many
-open source (and commercial) projects to allow multiple developers to share
-their changes to the source code.  The Bochs source code and documentation
-are available using CVS<footnote>
-<para>
-You can download CVS software and documentation from
-<ulink url="http://www.cvshome.org">www.cvshome.org</ulink>.
+You can download SVN software and documentation from
+<ulink url="http://subversion.apache.org">subversion.apache.org</ulink>.
 </para>
 </footnote>.
 </para>
 
 <section><title>Checking out Bochs</title>
 <para>
-&FIXME; Rewrite for SVN
-</para>
-<para>
-When you have CVS installed, the first step is to do a login and checkout.  The
-initial checkout command is long and ugly, but usually you only have to do it
-once.  The example below shows the CVS checkout process in Unix.  On the
-Windows platform, you can download a CVS client from cvshome.com, or
-use CVS within Cygwin<footnote>
+When you have SVN installed, the first step is to do a checkout.  The initial
+checkout command is long and ugly, but usually you only have to do it
+once. The example below shows the SVN checkout process in Unix.  On the
+Windows platform, you can download a SVN client from
+<ulink url="http://subversion.apache.org/packages.html#windows">subversion.apache.org</ulink>,
+or use SVN within Cygwin<footnote>
 <para>
 Cygwin is an open source Unix-like environment for Windows platforms,
 available at <ulink url="http://www.cygwin.com">www.cygwin.com</ulink>.
 </para>
 </footnote>.
 
-<figure><title>Checking out Bochs in CVS</title>
+<figure><title>Checking out Bochs in SVN</title>
 <screen>
-  user$ <command>cvs -d:pserver:anonymous@bochs.cvs.sourceforge.net:/cvsroot/bochs login</command>
-  (Logging in to anonymous@bochs.cvs.sourceforge.net)
-  CVS password:    <replaceable>(there is no password, just press Enter)</replaceable>
-  user$ <command>cvs -z3 -d:pserver:anonymous@bochs.cvs.sourceforge.net:/cvsroot/bochs checkout bochs</command>
-  cvs server: Updating bochs
-  U bochs/.bochsrc
-  U bochs/.conf.linux
-  U bochs/.conf.macos
-     .
-     .   <lineannotation>(This might take a few minutes, depending on your network connection.)</lineannotation>
-     .
-  U bochs/patches/patch.seg-limit-real
+  user$ <command>svn co https://bochs.svn.sourceforge.net/svnroot/bochs/trunk/bochs bochs</command>
+  A    bochs/ltdl.c
+  A    bochs/Makefile.in
+  A    bochs/bochs.h
+  .
+  .   <lineannotation>(This might take a few minutes, depending on your network connection.)</lineannotation>
+  .
+  A    bochs/install.sh
+   U   bochs
+  Checkout, Revision 10754.
   user$ <command>cd bochs</command>
   user$ <command>ls</command>
-  Bochs.proj.hqx  bxversion.h   fpu/                osdep.cc
-  CHANGES         config.h.in   gui/                osdep.h
-  COPYING         configure*    install-x11-fonts*  patches/
-  CVS/            configure.in  instrument/         pc_system.cc
-  Makefile.in     cpu/          iodev/              pc_system.h
-  README          bx_debug/     load32bitOShack.cc  state_file.cc
-  TESTFORM.txt    disasm/       logio.cc            state_file.h
-  bios/           doc/          macintosh.txt       win32.txt
-  bochs.h         docs-html/    main.cc
-  bochs.rsrc.hqx  dynamic/      memory/
-  build/          font/         misc/
+  aclocal.m4       cpu                 logio.cc        pc_system.cc
+  bios             cpudb.h             ltdl.c          pc_system.h
+  bochs.h          crc.cc              ltdlconf.h.in   plugin.cc
+  build            disasm              ltdl.h          plugin.h
+  bx_debug         doc                 ltmain.sh       README
+  bxversion.h.in   docs-html           main.cc         README-plugins
+  bxversion.rc.in  extplugin.h         Makefile.in     README.rfb
+  CHANGES          fpu                 memory          README-wxWindows
+  config.cc        gdbstub.cc          misc            TESTFORM.txt
+  config.guess     gui                 msrs.def        TODO
+  config.h.in      host                osdep.cc        win32_enh_dbg.rc
+  config.sub       install-sh          osdep.h         win32res.rc
+  configure        instrument          param_names.h   wxbochs.rc
+  configure.in     iodev               PARAM_TREE.txt
+  COPYING          load32bitOShack.cc  patches
   user$ _
 </screen>
 </figure>
 </para>
 
 <note><para>
-  This is just an example output of a checkout of an older version of Bochs.
-  You most likely will see more/other files.
+  This is just an example output of a checkout of specific version of the Bochs
+  trunk and folder. Depending on the checkout command and revision, you most
+  likely will see more/other files.
 </para></note>
 
 <tip>
 <para>
-If you have write access to the Bochs CVS tree, the checkout
-command is different for you.  See the Developers Guide<footnote>
+If you have write access to the Bochs SVN tree, the checkout
+command is the same for you.  See the Developers Guide<footnote>
 <para>
 See the <ulink url="../development/resources.html">Developers Guide</ulink>
-and/or look at <ulink url="http://sourceforge.net/cvs/?group_id=12580">CVS repository information</ulink>,
-section "Developer CVS Access via SSH", for instructions.
+and/or look at
+<ulink url="http://sourceforge.net/apps/trac/sourceforge/wiki/Subversion#Access">SourceForge's Subversion documentation</ulink>,
+for instructions.
 </para>
 </footnote> for details.
 </para>
@@ -1028,51 +1030,44 @@ section "Developer CVS Access via SSH", for instructions.
 
 <tip>
 <para>
-If you use remote CVS for other projects, you might have already set
+If you use remote SVN for other projects, you might have already set
 the environment variable <varname>CVS_RSH</varname> in your configuration
-files.  For the CVS checkout to work as shown above, the
+files.  For the SVN checkout to work as shown above, the
 <varname>CVS_RSH</varname> variable should either be empty or set to
 <constant>rsh</constant>.
 </para>
 </tip>
 
 <para>
-The CVS checkout process (above) gives you a directory called bochs that
+The SVN checkout process (above) gives you a directory called bochs that
 contains the very latest source code.  I will refer to this directory
 as &bochsdir;.  In each subdirectory directory there's also a
-directory called "CVS" which tells the cvs software where the code was checked
+directory called ".svn" which tells the SVN software where the code was checked
 out, what version you have, and where to go for future updates.
 </para>
 </section>
 
 <section><title>Getting the Latest Version</title>
 <para>
-&FIXME; Rewrite for SVN
-</para>
-<para>
-Most developers use CVS to always give them the latest source code.  The minute
+Most developers use SVN to always give them the latest source code.  The minute
 that any developer checks in a change, they are available to everyone else
-through  CVS.  You just have to type <command>cvs update -d -A</command> in the
-&bochsdir; directory, and CVS will retrieve any files and directories that have
+through SVN. You just have to type <command>svn update</command> in the
+&bochsdir; directory, and SVN will retrieve any files and directories that have
 been changed since you did a checkout.  If you update regularly, each update
-takes a short time because it downloads only the files that changed.  The
-<command>-d</command> option tells cvs to download new directories that
-have been checked in, not just files.  The <command>-A</command> option means
-to get the most recent version of each file, as opposed to a release version.
-See <link linkend="svn-release-version">Getting a release version</link>
-Both <command>-d</command> and <command>-A</command> can be omitted in many
-cases, once you are familiar with the process.  </para>
+takes a short time because it downloads only the files that changed.
+See also <link linkend="svn-release-version">Getting a release version</link>.
+</para>
 
 <para>
-The <command>cvs update -A -d</command> command tells you if any new files have
+The <command>svn update</command> command tells you if any new files have
 been downloaded from the server, and it also tells you if you have modified any
-of the CVS-controlled files.  As it checks through the source directories, it
+of the SVN-controlled files.  As it checks through the source directories, it
 will list files that have changed, with a single letter before the name that
 tells the status of that file.  The most common status letters are listed
 below.
 
 <table frame="all">
-<title>Status letters in a CVS update</title>
+<title>Status letters in a SVN update</title>
   <tgroup cols="3">
     <thead>
       <row>
@@ -1083,38 +1078,26 @@ below.
     </thead>
     <tbody>
       <row>
-        <entry>?</entry>
-        <entry>unknown</entry>
-        <entry>
-        This file is in your bochs directory, but CVS does not know anything
-        about it.  For example, when you compile Bochs, any files created
-        during the build process appear as ?.
-        </entry>
-      </row>
-      <row>
         <entry>U</entry>
         <entry>update</entry>
         <entry>
-        cvs downloaded a new version of this file because it changed on the
+        SVN downloaded a new version of this file because it changed on the
         server, usually because someone else did a checkin.
         </entry>
       </row>
       <row>
-        <entry>P</entry>
-        <entry>patch</entry>
+        <entry>A</entry>
+        <entry>added</entry>
         <entry>
-        This does the same as U, but instead of sending the whole file
-        (update), only a diff/patch is sent, thus, less bandwidth is used.
+        SVN downloaded a newly added file from the server.
         </entry>
       </row>
       <row>
-        <entry>M</entry>
-        <entry>modified</entry>
+        <entry>D</entry>
+        <entry>deleted</entry>
         <entry>
-        You have changed this file on your disk, so it no longer matches the
-        version on the server.  This is not a problem; it's just for your
-        information.  If you want, you can discard your changes and
-        get a fresh copy by deleting the file and running cvs update again.
+        This file has been deleted on the server and SVN removed it from your
+        local copy.
         </entry>
       </row>
       <row>
@@ -1126,7 +1109,7 @@ below.
         the same line of code in different ways.  You need to edit the
         conflicting file(s) and clean it up by hand.  Or, sometimes it's
         easiest to discard your own edits and download a fresh copy, by
-        deleting the conflicting file and running cvs update again.
+        deleting the conflicting file and running svn update again.
         </entry>
       </row>
     </tbody>
@@ -1134,36 +1117,39 @@ below.
 </table>
 </para>
 
-<para>
-If you have been using <command>cvs update</command> with "sticky tags" to
-retrieve other versions, as described later, cvs will remember which version
-you were looking at.  In this case, a <command>cvs update</command> will keep
-your sources consistent with that version.  If you want to get back to looking
-at the latest code again, be sure to use the <command>-A</command> option to
-clears the sticky tags.  </para>
-
 </section>
 
 <section id="svn-release-version"><title>Getting a Release Version</title>
 <para>
-&FIXME; Rewrite for SVN
-</para>
-<para>
-Once you have a CVS checkout, you can also use the update command to
-get the Bochs source code for any release since March 2000.  The command
-is <command>cvs update -d -r <replaceable>tagname</replaceable></command>.
+You can also use the SVN checkout command to get the Bochs source code for
+any release since March 2000.  The command is
+<screen>
+  user$ <command>svn co https://bochs.svn.sourceforge.net/svnroot/bochs/tags/<replaceable>tagname</replaceable> bochs</command>
+</screen>
 The tag tells which release you want, and it can be one of the following:
 
 <table frame="all">
-<title>CVS Release Tags</title>
+<title>Bochs Release Tags</title>
   <tgroup cols="2">
     <thead>
       <row>
         <entry>Bochs version</entry>
-        <entry>Release tag for CVS</entry>
+        <entry>Release tag for SVN</entry>
       </row>
     </thead>
     <tbody>
+      <row>
+        <entry>2.4.6</entry>
+        <entry>REL_2_4_6_FINAL</entry>
+      </row>
+      <row>
+        <entry>2.4.5</entry>
+        <entry>REL_2_4_5_FINAL</entry>
+      </row>
+      <row>
+        <entry>2.4.2</entry>
+        <entry>REL_2_4_2_FINAL</entry>
+      </row>
       <row>
         <entry>2.4.1</entry>
         <entry>REL_2_4_1_FINAL</entry>
@@ -1260,51 +1246,22 @@ The tag tells which release you want, and it can be one of the following:
    </tgroup>
 </table>
 
-<tip>
-<para>
-To get a complete list of allowed tags, type <command>cvs stat -v README</command>.  Many of the tags are not generally useful.
-</para>
-</tip>
-
-Once you have done an update with <command>-r <replaceable>tagname</replaceable></command>, you have made a "sticky tag."  The stickiness refers to the fact
-that CVS remembers which tag you have used most recently.  The tag is stored
-in the CVS subdirectory, so it stays around even if you log off and
-return later.  After creating a sticky tag, any future cvs updates will
-try to keep your directory in sync with the version you chose.  In other
-words, when developers check in changes you will not
-see them because your directory is "stuck" looking at an old version.
-To clear the sticky tag, use <command>cvs update -A</command>.
 </para>
 
-<para>
-A variation on the sticky tag concept is a sticky date<footnote>
-<para>
-According to some sources, this is when you eat dinner with someone, and
-accidentally spill a drink on him/her.
-</para>
-</footnote>.  If some feature was working at some time in the past, but
-is no longer working, you can ask CVS to give you the sources from any
-date.  <command>cvs update -D 2001-06-14</command> will download the
-Bochs source as they were on June 14, 2001.  Again, use <command>-A</command>
-to clear the sticky date and track the current sources.
-</para>
 </section>
 
-<section><title>More about CVS</title>
+<section><title>More about SVN</title>
 <para>
-&FIXME; Rewrite for SVN
-</para>
-<para>
-Entire books have been written on CVS, so there's no sense in duplicating
+Entire books have been written on SVN, so there's no sense in duplicating
 it all here in the Bochs documentation.  Some sources of additional
 information are listed below.
 </para>
 <itemizedlist>
-<listitem><para>The <ulink url="http://www.cvshome.org">cvshome.com
-site</ulink> has tons of CVS FAQs and documentation, including the official CVS
-manual by Per Cederqvist.</para></listitem>
+<listitem><para>The <ulink url="http://subversion.apache.org">subversion.apache.org
+site</ulink> has tons of SVN FAQs and documentation.</para></listitem>
 <listitem><para>
-Another <ulink url="http://www.cs.utah.edu/dept/old/texinfo/cvs/FAQ.txt">CVS FAQ</ulink> is available at University of Utah.
+A German <ulink url="http://pvs.uni-muenster.de/pvs/lehre/WS06/projekt/svn-faq.html">SVN FAQ</ulink>
+is available at University of Muenster.
 </para></listitem>
 </itemizedlist>
 
