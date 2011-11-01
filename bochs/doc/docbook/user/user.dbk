@@ -962,10 +962,10 @@ You can download SVN software and documentation from
 
 <section><title>Checking out Bochs</title>
 <para>
-When you have SVN installed, the first step is to do a checkout.  The initial
+When you have SVN installed, the first step is to do a checkout. The initial
 checkout command is long and ugly, but usually you only have to do it
-once. The example below shows the SVN checkout process in Unix.  On the
-Windows platform, you can download a SVN client from
+once. The example below shows the SVN checkout process of the Bochs trunk in Unix.
+On the Windows platform, you can download a SVN client from
 <ulink url="http://subversion.apache.org/packages.html#windows">subversion.apache.org</ulink>,
 or use SVN within Cygwin<footnote>
 <para>
@@ -1016,8 +1016,8 @@ available at <ulink url="http://www.cygwin.com">www.cygwin.com</ulink>.
 
 <tip>
 <para>
-If you have write access to the Bochs SVN tree, the checkout
-command is the same for you.  See the Developers Guide<footnote>
+If you have write access to the Bochs SVN tree, see the Developers Guide
+<footnote>
 <para>
 See the <ulink url="../development/resources.html">Developers Guide</ulink>
 and/or look at
@@ -1025,16 +1025,6 @@ and/or look at
 for instructions.
 </para>
 </footnote> for details.
-</para>
-</tip>
-
-<tip>
-<para>
-If you use remote SVN for other projects, you might have already set
-the environment variable <varname>CVS_RSH</varname> in your configuration
-files.  For the SVN checkout to work as shown above, the
-<varname>CVS_RSH</varname> variable should either be empty or set to
-<constant>rsh</constant>.
 </para>
 </tip>
 
@@ -1077,6 +1067,15 @@ below.
       </row>
     </thead>
     <tbody>
+      <row>
+        <entry>?</entry>
+        <entry>unknown</entry>
+        <entry>
+        This file is in your bochs directory, but SVN does not know anything
+        about it.  For example, when you compile Bochs, any files created
+        during the build process appear as ?.
+        </entry>
+      </row>
       <row>
         <entry>U</entry>
         <entry>update</entry>

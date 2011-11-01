@@ -33,44 +33,23 @@ including compile instructions, bochsrc options, how to find the mailing
 lists, etc.
 </para>
 
-
 <section id="svn-write-access-setup"><title>Setting up SVN write access</title>
-<para>
-&FIXME; Rewrite for SVN
-</para>
 <para>
 If you are an official SourceForge developer, then you can use SVN with write
 access.  The SVN contains the most recent copy of the source code, and with
 write access you can upload any changes you make to the SVN server for others
-to use.  A few extra steps are required the first time you use SVN write
-access.
-</para>
-
-<section><title>Install ssh and svn</title>
-<para>
-First you need to install both SVN (Subversion) and ssh (Secure Shell). These
-are already installed on many UNIX systems and also Cygwin (win32 platform).
-If not, you can install binaries or compile svn and ssh yourself. The links
-below should help you get going.
-</para>
-<itemizedlist>
-<listitem> <para> SVN software and instructions are available at <ulink url="http://subversion.tigris.org">http://subversion.tigris.org</ulink>. </para> </listitem>
-<listitem> <para> A free version of secure shell called OpenSSH is at <ulink url="http://www.openssh.org">www.openssh.org</ulink>. </para> </listitem>
-<listitem> <para> OpenSSH requires a library called OpenSSL from <ulink url="http://www.openssl.org">www.openssl.org</ulink>.  Be sure to install OpenSSL before trying to compile OpenSSH. </para> </listitem>
-</itemizedlist>
-</section>
-
-<section><title>svn checkout</title>
-<para>
-Now you should be able to do the checkout.  If you already have a Bochs
-subdirectory directory, move it out of the way because the checkout will
-overwrite it.
+to use. The SVN checkout command is identical to the one for normal users, but
+you might want to get the whole tree to work with branches and tags.
 </para>
 
 <screen>
-  svn co https://bochs.svn.sourceforge.net/svnroot/bochs/trunk/bochs bochs
-  <replaceable>sfusername</replaceable>@bochs.svn.sourceforge.net's password:        <replaceable><--type your password</replaceable>
+  <command>svn co https://bochs.svn.sourceforge.net/svnroot/bochs bochs-svn</command>
 </screen>
+
+<para>
+Depending on your network connection this may take a long time, since it downloads all
+files from all branches and tags that ever have been created.
+</para>
 
 </section> <!-- end setting up svn write access -->
 
@@ -78,26 +57,30 @@ overwrite it.
 
 <section><title>Checking in files</title>
 <para>
-Once you have a Bochs directory with svn write access, you can compile the
-files, edit them, test them, etc.  See the documentation section, "Tracking
-the source code with SVN" for more info on SVN, in the User Manual.
-(FIXME: add cross reference) But what's new and different is that you can now
-do svn commits.  When a file is all fixed and ready to share with the rest of
+Once you have a Bochs directory, you can compile the files, edit them, test them, etc.
+See the documentation section, <ulink url="../user/get-src-svn.html">Tracking the source code with SVN</ulink>
+for more info on SVN, in the User Manual. But what's new and different is that
+you can now do SVN commits. When a file is all fixed and ready to share with the rest of
 the world, you run a commit command to upload your version to the server.
-First, it's good to do a svn update to make sure nobody else has changed it
-since you downloaded it last.
+First, it's good to do a SVN update to make sure nobody else has changed it
+since you downloaded it last. At the first commit you'll always have to specify your
+SF username and type your password.
 </para>
 
 <screen>
-  $ svn update
-  <replaceable>sfusername</replaceable>@bochs.cvs.sf.net's password:        <replaceable><--type your password</replaceable>
-  $ svn commit file.cc
-  <replaceable>sfusername</replaceable>@bochs.cvs.sf.net's password:        <replaceable><--type your password</replaceable>
+  $ svn update file.cc
+  $ svn commit --username <replaceable>sfusername</replaceable> file.cc
   [editor opens. type log message, save, and exit.]
+  Login area: &lt;https://bochs.svn.sourceforge.net:443&gt; SourceForge Subversion area
+  Username: <replaceable>sfusername</replaceable>
+  Password for '<replaceable>sfusername</replaceable>': <replaceable><--type your password</replaceable>
+  Sending        file.cc
+  Transmitting file data .
+  Committed revision 10.
 </screen>
 
 <para>
-When SVN starts an editor, The default is usually vi.  If you want a different
+When SVN starts an editor, The default is usually vi. If you want a different
 editor, set the EDITOR environment variable to the name of your preferred
 editor.  When you're done, just save the file and quit the editor.  Unless
 there's some problem, you will see a message that says what the new revision
@@ -112,24 +95,20 @@ Here is an example of a successful checkin:
 
 <screen>
   $ svn commit misc.txt
-  <replaceable>sfusername</replaceable>@bochs.cvs.sf.net's password:        <replaceable><--type your password</replaceable>
   [edit log msg]
-  Checking in misc.txt;
-  /cvsroot/bochs/bochs/doc/docbook/misc.txt,v  <--  misc.txt
-  new revision: 1.6; previous revision: 1.5
-  done
+  Sending        misc.txt
+  Transmitting file data .
+  Committed revision 6.
 </screen>
 
 And here is an aborted one:
 
 <screen>
-  $ cvs commit misc.txt
-  <replaceable>sfusername</replaceable>@bochs.cvs.sf.net's password:        <replaceable><--type your password</replaceable>
+  $ svn commit misc.txt
   [quit editor without saving]
   Log message unchanged or not specified
-  a)bort, c)ontinue, e)dit, !)reuse this message unchanged for remaining dirs
-  Action: a
-  cvs [commit aborted]: aborted by user
+  a)bort, c)ontinue, e)dit:
+  a
 </screen>
 
 </para>
@@ -227,8 +206,8 @@ disassembler, tracer, instrumentation.
 <row><entry>docs-html</entry><entry>old Bochs documentation in HTML (will be replaced by DocBook)</entry></row>
 <row><entry>fpu</entry><entry>the fpu emulation sources</entry></row>
 <row><entry>gui</entry><entry>display libraries (guis), the simulator interface and text mode config interface</entry></row>
-<row><entry>gui/font</entry><entry>the default VGA font used by most of the display libraries</entry></row>
 <row><entry>gui/bitmaps</entry><entry>bitmaps for the headerbar</entry></row>
+<row><entry>gui/font</entry><entry>the default VGA font used by most of the display libraries</entry></row>
 <row><entry>gui/keymaps</entry><entry>keymaps for the keyboard mapping feature</entry></row>
 <row><entry>host</entry><entry>host specific drivers (currently only used by the pcidev kernel module for Linux)</entry></row>
 <row><entry>instrument</entry><entry>directory tree for the instrumentation feature</entry></row>
@@ -2208,48 +2187,51 @@ with non-interesting ones.</para></listitem>
 <section id="svn-release"><title>Building a Bochs release</title>
 <section><title>Preparing source files and SVN</title>
 <para>
-&FIXME; Rewrite for SVN, can use http://svnbook.red-bean.com/en/1.1/ch04s06.html as reference
-</para>
-<para>
 Update version number and strings in configure.in.
 <screen>
-VERSION="2.4.6"
-VER_STRING="2.4.6"
-REL_STRING="Build from SVN snapshot on November 1, 2011"
+VERSION="2.4"
+VER_STRING="2.4"
+REL_STRING="Build from SVN snapshot on June 7, 2009"
 </screen>
 In the README file you have to update version number and date. Add some
 information about new features if necessary.
 <screen>
-The cross platform IA-32 emulator
-Updated: Sat Nov 1 07:34:00 CEST 2011
-Version: 2.4.6
+Bochs x86 Pentium+ Emulator
+Updated: Sat May 3 07:34:00 CEST 2009
+Version: 2.4
 </screen>
 Check date, update/sumup info in CHANGES. Run autoconf to regenerate configure and check them in.
-Create a SVN tag to mark which revision of each file was used in the release.
-For prereleases I make a normal SVN tag like this:
+Create an SVN tag that contains all files of the revision that was used in the release.
+For prereleases I create a normal SVN tag like this:
 <screen>
-  cvs tag REL_2_4_pre1
+  svn mkdir tags/REL_2_4_pre1
+  svn copy trunk/bochs tags/REL_2_4_pre1/bochs
+  svn commit
 </screen>
-But for a real release, I make a CVS branch tag AND a normal tag.
+But for a real release, I make an SVN branch tag AND a normal tag.
 <screen>
-  cvs tag REL_2_4_BASE
-  cvs tag -b REL_2_4
+  svn mkdir tags/REL_2_4_BASE
+  svn copy trunk/bochs tags/REL_2_4_BASE/bochs
+  svn mkdir branches/REL_2_4
+  svn copy trunk/bochs branches/REL_2_4/bochs
+  svn commit
 </screen>
 The base tag marks where the branch split off of the main trunk.
 This is very useful in maintaining the branch since you can do diffs
 against it.
 <screen>
-   cvs diff -r REL_2_4_BASE -r HEAD
-   cvs diff -r REL_2_4_BASE -r REL_2_4
-   cvs upd -j REL_2_4_BASE -j HEAD file
+   svn diff tags/REL_2_4_BASE/bochs trunk/bochs
+   svn diff tags/REL_2_4_BASE branches/REL_2_4
    etc.
 </screen>
 The release and all bugfix releases after it are on the REL_2_4 branch.
 When the release is actually finalized, you can do this:
 <screen>
-  cvs tag REL_2_4_FINAL
+  svn mkdir tags/REL_2_4_FINAL
+  svn copy trunk/bochs tags/REL_2_4_FINAL/bochs
+  svn commit
 </screen>
-Now you can start building packages based on the created release tag.
+Now you can start building packages with the sources from the created release tag.
 </para>
 </section>
 
@@ -2321,25 +2303,12 @@ That gives an installer called <filename>Bochs-2.4.exe</filename>. Test and uplo
 </section>
 <section><title>Building the release on Linux</title>
 <para>
-&FIXME; Rewrite for SVN
-</para>
-<para>
-Do a clean checkout using anonymous cvs, so that the source tarball
-will be all set up for anonymous cvs.  First I'll create a clean
-directory called "clean-anon".
+Do a clean SVN checkout from the release tag and specify a not yet existing
+directory name with the version number as the destination. Then create the
+source package from this new directory.
 <screen>
-cvs -d:pserver:anonymous@bochs.cvs.sourceforge.net:/cvsroot/bochs login
-cvs -z3 -d:pserver:anonymous@bochs.cvs.sourceforge.net:/cvsroot/bochs \
-  checkout -d clean-anon bochs
-</screen>
-Start with clean-anon which tracks the CVS head.  Change its sticky tag
-so that it sticks to the release tag.
-<screen>
-cp -a clean-anon bochs-2.4
-cd bochs-2.4
-cvs upd -P -r REL_2_4_FINAL
-cd ..
-tar czvf bochs-2.4.tar.gz --exclude CVS --exclude .cvsignore bochs-2.4
+  svn co https://bochs.svn.sourceforge.net/svnroot/bochs/tags/REL_2_4_FINAL/bochs bochs-2.4
+  tar czvf bochs-2.4.tar.gz --exclude .svn bochs-2.4
 </screen>
 The source TAR file bochs-2.4.tar.gz is ready to upload.
 </para>
@@ -2376,7 +2345,7 @@ new release is ready for download.
 The Bochs project webspace is stored under the SF directory <filename>/home/project-web/bochs</filename>.
 It can be accessed from the SF shell using SSH or with the commands <command>sftp</command>,
 <command>scp</command> and <command>rsync</command>. Some parts of the directory
-structure must be updated from the local SVN repository, others from Bochs SVN
+structure must be updated from the local CVS repository, others from Bochs SVN
 (directories <filename>bochs</filename> and <filename>sfsite</filename>).
 The online documentation, disk images and screenshots must be uploaded manually.
 <table>
@@ -2386,7 +2355,6 @@ The online documentation, disk images and screenshots must be uploaded manually.
 <row>
 <entry>Location</entry>
 <entry>Meaning</entry>
-<entry>Update</entry>
 </row>
 </thead>
 <tbody>
