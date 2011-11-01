@@ -39,119 +39,65 @@ lists, etc.
 &FIXME; Rewrite for SVN
 </para>
 <para>
-If you are an official SourceForge developer, then you can use CVS with write
-access.  The CVS contains the most recent copy of the source code, and with
-write access you can upload any changes you make to the CVS server for others
-to use.  A few extra steps are required the first time you use CVS write
+If you are an official SourceForge developer, then you can use SVN with write
+access.  The SVN contains the most recent copy of the source code, and with
+write access you can upload any changes you make to the SVN server for others
+to use.  A few extra steps are required the first time you use SVN write
 access.
 </para>
 
-<section><title>Install ssh and cvs</title>
+<section><title>Install ssh and svn</title>
 <para>
-First you need to install both cvs (Concurrent Version System) and ssh (Secure
-Shell).  These are already installed on many UNIX systems and also Cygwin
-(win32 platform).  If not, you can install binaries or compile cvs and ssh
-yourself.  The links below should help you get going.
+First you need to install both SVN (Subversion) and ssh (Secure Shell). These
+are already installed on many UNIX systems and also Cygwin (win32 platform).
+If not, you can install binaries or compile svn and ssh yourself. The links
+below should help you get going.
 </para>
 <itemizedlist>
-<listitem> <para> CVS software and instructions are available at <ulink url="http://www.cvshome.org">www.cvshome.org</ulink>. </para> </listitem>
+<listitem> <para> SVN software and instructions are available at <ulink url="http://subversion.tigris.org">http://subversion.tigris.org</ulink>. </para> </listitem>
 <listitem> <para> A free version of secure shell called OpenSSH is at <ulink url="http://www.openssh.org">www.openssh.org</ulink>. </para> </listitem>
 <listitem> <para> OpenSSH requires a library called OpenSSL from <ulink url="http://www.openssl.org">www.openssl.org</ulink>.  Be sure to install OpenSSL before trying to compile OpenSSH. </para> </listitem>
 </itemizedlist>
 </section>
 
-<section><title>ssh to cvs.sf.net</title>
+<section><title>svn checkout</title>
 <para>
-Next, you need to use secure shell to connect to cvs.sf.net.  This step is a
-little strange, because you can't actually log in and get a shell prompt.  All
-that will happen, when you get the username and password right, is that it
-will create a home directory on that machine for you.  That's it!  If you try
-it again, it will say "This is a restricted Shell Account.  You cannot execute
-anything here."   At this point, you've succeeded and you never have to do
-this step again, ever.
-
-<screen>
-  ssh <replaceable>sfusername</replaceable>@bochs.cvs.sf.net
-</screen>
-</para>
-
-<para>
-Replace <replaceable>sfusername</replaceable> with your Source Forge username,
-of course.  The first time, you will probably get a message like
-<screen>
-The authenticity of host 'cvs.sf.net' can't be established.
-Are you sure you want to continue?</screen>
-
-Just type yes.  When it asks for a password, be sure to type your source
-forge password.  If you have trouble logging in, be sure to use your SOURCE
-FORGE username and password in the ssh line, which isn't necessarily the same
-as your local username and password.  Add the "-v" option to ssh to see more
-information about what is failing.  If you have ssh version 2, it is possible
-that you might need to add "-1" to the ssh command to force it to use the
-version 1 protocol.  </para> </section>
-
-<section><title>Set CVS_RSH environment variable to ssh</title>
-<para>
-Every time you connect to the Source Forge CVS server (including cvs update,
-stat, commit, etc.), you must set the CVS_RSH environment variable to ssh.  So
-just take the time now to add one of these lines to your .bashrc/.cshrc, so
-that the CVS_RSH setting will be there every time you log in.
-</para>
-
-<screen>
-  export CVS_RSH=ssh           (bash syntax)
-  setenv CVS_RSH ssh           (csh syntax)
-</screen>
-</section> <!--end of "Set environment variable"-->
-
-<section><title>cvs checkout</title>
-<para>
-Finally, you should be able to do the checkout!  If you already have a Bochs
+Now you should be able to do the checkout.  If you already have a Bochs
 subdirectory directory, move it out of the way because the checkout will
 overwrite it.
 </para>
 
 <screen>
-  export CVSROOT=":ext:<replaceable>sfusername</replaceable>@bochs.cvs.sourceforge.net:/cvsroot/bochs"
-  cvs -z3 checkout bochs
-  <replaceable>sfusername</replaceable>@bochs.cvs.sourceforge.net's password:        <replaceable><--type your password</replaceable>
+  svn co https://bochs.svn.sourceforge.net/svnroot/bochs/trunk/bochs bochs
+  <replaceable>sfusername</replaceable>@bochs.svn.sourceforge.net's password:        <replaceable><--type your password</replaceable>
 </screen>
 
-<para>
-In the CVSROOT variable, replace <replaceable>sfusername</replaceable> with your SF username.  There's
-no need to add CVSROOT to your rc files because CVS will remember it
-after the checkout.  The -z3 (optional) just adds some compression to make
-the checkout go faster.  Once all the files have been downloaded, you will
-have a Bochs directory which is checked out with write access!
-</para>
-</section> <!-- end cvs checkout -->
-
-</section> <!-- end setting up cvs write access -->
+</section> <!-- end setting up svn write access -->
 
 <section id="using-svn-write-access"><title>Using SVN write access</title>
 
 <section><title>Checking in files</title>
 <para>
-Once you have a Bochs directory with cvs write access, you can compile the
+Once you have a Bochs directory with svn write access, you can compile the
 files, edit them, test them, etc.  See the documentation section, "Tracking
-the source code with SVN" for more info on CVS, in the User Manual.
+the source code with SVN" for more info on SVN, in the User Manual.
 (FIXME: add cross reference) But what's new and different is that you can now
-do cvs commits.  When a file is all fixed and ready to share with the rest of
+do svn commits.  When a file is all fixed and ready to share with the rest of
 the world, you run a commit command to upload your version to the server.
-First, it's good to do a cvs update to make sure nobody else has changed it
+First, it's good to do a svn update to make sure nobody else has changed it
 since you downloaded it last.
 </para>
 
 <screen>
-  $ cvs update file.cc
+  $ svn update
   <replaceable>sfusername</replaceable>@bochs.cvs.sf.net's password:        <replaceable><--type your password</replaceable>
-  $ cvs commit file.cc
+  $ svn commit file.cc
   <replaceable>sfusername</replaceable>@bochs.cvs.sf.net's password:        <replaceable><--type your password</replaceable>
   [editor opens. type log message, save, and exit.]
 </screen>
 
 <para>
-When CVS starts an editor, The default is usually vi.  If you want a different
+When SVN starts an editor, The default is usually vi.  If you want a different
 editor, set the EDITOR environment variable to the name of your preferred
 editor.  When you're done, just save the file and quit the editor.  Unless
 there's some problem, you will see a message that says what the new revision
@@ -165,7 +111,7 @@ to abort.
 Here is an example of a successful checkin:
 
 <screen>
-  $ cvs commit misc.txt
+  $ svn commit misc.txt
   <replaceable>sfusername</replaceable>@bochs.cvs.sf.net's password:        <replaceable><--type your password</replaceable>
   [edit log msg]
   Checking in misc.txt;
@@ -279,10 +225,9 @@ disassembler, tracer, instrumentation.
 <row><entry>doc/docbook</entry><entry>the Bochs documentation in DocBook format</entry></row>
 <row><entry>doc/man</entry><entry>Bochs manual pages</entry></row>
 <row><entry>docs-html</entry><entry>old Bochs documentation in HTML (will be replaced by DocBook)</entry></row>
-<row><entry>dynamic</entry><entry>empty directory (reserved for dynamic translation code)</entry></row>
-<row><entry>font</entry><entry>the default VGA font used by most of the display libraries</entry></row>
 <row><entry>fpu</entry><entry>the fpu emulation sources</entry></row>
 <row><entry>gui</entry><entry>display libraries (guis), the simulator interface and text mode config interface</entry></row>
+<row><entry>gui/font</entry><entry>the default VGA font used by most of the display libraries</entry></row>
 <row><entry>gui/bitmaps</entry><entry>bitmaps for the headerbar</entry></row>
 <row><entry>gui/keymaps</entry><entry>keymaps for the keyboard mapping feature</entry></row>
 <row><entry>host</entry><entry>host specific drivers (currently only used by the pcidev kernel module for Linux)</entry></row>
@@ -292,7 +237,6 @@ disassembler, tracer, instrumentation.
 <row><entry>misc</entry><entry>useful utilities (e.g. bximage, bxcommit, niclist)</entry></row>
 <row><entry>misc/sb16</entry><entry>tool to control the SB16 emulation from the guest side</entry></row>
 <row><entry>patches</entry><entry>pending patches</entry></row>
-<row><entry>plex86</entry><entry>plex86 directory structure (possibly outdated)</entry></row>
 </tbody>
 </tgroup>
 </table>
@@ -2243,7 +2187,6 @@ really going on.
 <listitem><para>Don't use templates</para></listitem>
 <listitem><para>Don't use virtual functions if not strictly required</para></listitem>
 <listitem><para>Don't use C++ exceptions</para></listitem>
-<listitem><para>Don't use overloading of any kind</para></listitem>
 </itemizedlist></para></listitem>
 <listitem><para><command>Use soft tabs.</command></para>
 <para>At least when you submit code, convert all hard tabs to spaces.
@@ -2265,25 +2208,25 @@ with non-interesting ones.</para></listitem>
 <section id="svn-release"><title>Building a Bochs release</title>
 <section><title>Preparing source files and SVN</title>
 <para>
-&FIXME; Rewrite for SVN
+&FIXME; Rewrite for SVN, can use http://svnbook.red-bean.com/en/1.1/ch04s06.html as reference
 </para>
 <para>
 Update version number and strings in configure.in.
 <screen>
-VERSION="2.4"
-VER_STRING="2.4"
-REL_STRING="Build from CVS snapshot on June 7, 2009"
+VERSION="2.4.6"
+VER_STRING="2.4.6"
+REL_STRING="Build from SVN snapshot on November 1, 2011"
 </screen>
 In the README file you have to update version number and date. Add some
 information about new features if necessary.
 <screen>
-Bochs x86 Pentium+ Emulator
-Updated: Sat May 3 07:34:00 CEST 2009
-Version: 2.4
+The cross platform IA-32 emulator
+Updated: Sat Nov 1 07:34:00 CEST 2011
+Version: 2.4.6
 </screen>
 Check date, update/sumup info in CHANGES. Run autoconf to regenerate configure and check them in.
-Create a CVS tag to mark which revision of each file was used in the release.
-For prereleases I make a normal CVS tag like this:
+Create a SVN tag to mark which revision of each file was used in the release.
+For prereleases I make a normal SVN tag like this:
 <screen>
   cvs tag REL_2_4_pre1
 </screen>
@@ -2433,7 +2376,7 @@ new release is ready for download.
 The Bochs project webspace is stored under the SF directory <filename>/home/project-web/bochs</filename>.
 It can be accessed from the SF shell using SSH or with the commands <command>sftp</command>,
 <command>scp</command> and <command>rsync</command>. Some parts of the directory
-structure must be updated from the local CVS repository, others from Bochs SVN
+structure must be updated from the local SVN repository, others from Bochs SVN
 (directories <filename>bochs</filename> and <filename>sfsite</filename>).
 The online documentation, disk images and screenshots must be uploaded manually.
 <table>
