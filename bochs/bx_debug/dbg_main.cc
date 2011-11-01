@@ -749,7 +749,7 @@ void bx_dbg_print_mxcsr_state(void)
 void bx_dbg_print_sse_state(void)
 {
 #if BX_CPU_LEVEL >= 6
-  Bit32u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get();
+  Bit64u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get();
 
   if ((isa_extensions_bitmask & BX_ISA_SSE) != 0) {
     bx_dbg_print_mxcsr_state();
@@ -774,7 +774,7 @@ void bx_dbg_print_sse_state(void)
 void bx_dbg_print_avx_state(unsigned vlen)
 {
 #if BX_SUPPORT_AVX
-  Bit32u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get();
+  Bit64u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get();
 
   if ((isa_extensions_bitmask & BX_ISA_AVX) != 0) {
     bx_dbg_print_mxcsr_state();
@@ -804,7 +804,7 @@ void bx_dbg_print_avx_state(unsigned vlen)
 void bx_dbg_print_mmx_state(void)
 {
 #if BX_CPU_LEVEL >= 5
-  Bit32u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get();
+  Bit64u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get();
 
   if ((isa_extensions_bitmask & BX_ISA_MMX) != 0) {
     char param_name[20];
@@ -947,10 +947,13 @@ void bx_dbg_info_control_regs_command(void)
 #endif
 #if BX_CPU_LEVEL >= 6
   Bit32u xcr0 = SIM->get_param_num("XCR0", dbg_cpu_list)->get();
-  dbg_printf("XCR0=0x%08x: %s %s %s\n", xcr0,
-    (xcr0 & (1<<2)) ? "AVX" : "avx",
-    (xcr0 & (1<<1)) ? "SSE" : "sse",
-    (xcr0 & (1<<0)) ? "FPU" : "fpu");
+  Bit64u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get();
+  if ((isa_extensions_bitmask & BX_ISA_XSAVE) != 0) {
+    dbg_printf("XCR0=0x%08x: %s %s %s\n", xcr0,
+      (xcr0 & (1<<2)) ? "AVX" : "avx",
+      (xcr0 & (1<<1)) ? "SSE" : "sse",
+      (xcr0 & (1<<0)) ? "FPU" : "fpu");
+  }
 #endif
 }
 
