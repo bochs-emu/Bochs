@@ -2345,7 +2345,7 @@ new release is ready for download.
 The Bochs project webspace is stored under the SF directory <filename>/home/project-web/bochs</filename>.
 It can be accessed from the SF shell using SSH or with the commands <command>sftp</command>,
 <command>scp</command> and <command>rsync</command>. Some parts of the directory
-structure must be updated from the local SVN repository, others from Bochs SVN
+structure must be updated from the local CVS repository, others from Bochs SVN
 (directories <filename>bochs</filename> and <filename>sfsite</filename>).
 The online documentation, disk images and screenshots must be uploaded manually.
 <table>
@@ -2431,7 +2431,7 @@ called <command>update-svn-snapshot.sh</command> that can do all the required st
 (checking out SVN, packing the source tree into one archive, updating the website
 link). See previous section how to create a shell.
 <screen>
-cd bochs-web/sitebin/
+cd /home/project-web/bochs/sitebin/
 ./update-svn-snapshot.sh
 </screen>
 </para>
