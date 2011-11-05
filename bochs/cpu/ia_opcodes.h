@@ -1366,6 +1366,7 @@ bx_define_opcode(BX_IA_VMWRITE_GqEq, &BX_CPU_C::VMWRITE, &BX_CPU_C::VMWRITE, BX_
 bx_define_opcode(BX_IA_INVEPT, &BX_CPU_C::INVEPT, &BX_CPU_C::BxError, BX_ISA_VMX, 0)
 bx_define_opcode(BX_IA_INVVPID, &BX_CPU_C::INVVPID, &BX_CPU_C::BxError, BX_ISA_VMX, 0)
 #endif
+bx_define_opcode(BX_IA_VMFUNC, &BX_CPU_C::VMFUNC, &BX_CPU_C::VMFUNC, BX_ISA_VMX, 0)
 // VMX
 
 // SMX

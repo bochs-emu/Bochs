@@ -134,16 +134,16 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_VMX_PERF_GLOBAL_CTRL      (1 <<  4)              /* Save/Restore MSR_PERF_GLOBAL_CTRL */
 #define BX_VMX_MONITOR_TRAP_FLAG     (1 <<  5)              /* Monitor trap Flag (MTF) */
 #define BX_VMX_X2APIC_VIRTUALIZATION (1 <<  6)              /* Virtualize X2APIC */
-#define BX_VMX_CR3_VMEXIT_DISABLE    (1 <<  7)              /* Disable CR3 Read/Write VMEXIT, introduced with EPT */
-#define BX_VMX_EPT                   (1 <<  8)              /* Extended Page Tables (EPT) */
-#define BX_VMX_VPID                  (1 <<  9)              /* VPID */
-#define BX_VMX_UNRESTRICTED_GUEST    (1 << 10)              /* Unrestricted Guest */
-#define BX_VMX_PREEMPTION_TIMER      (1 << 11)              /* VMX preemption timer */
-#define BX_VMX_SAVE_DEBUGCTL_DISABLE (1 << 12)              /* Disable Save/Restore of MSR_DEBUGCTL */
-#define BX_VMX_PAT                   (1 << 13)              /* Save/Restore MSR_PAT */
-#define BX_VMX_EFER                  (1 << 14)              /* Save/Restore MSR_EFER */
-#define BX_VMX_DESCRIPTOR_TABLE_EXIT (1 << 15)              /* Descriptor Table VMEXIT */
-#define BX_VMX_PAUSE_LOOP_EXITING    (1 << 16)              /* Pause Loop Exiting */
+#define BX_VMX_EPT                   (1 <<  7)              /* Extended Page Tables (EPT) */
+#define BX_VMX_VPID                  (1 <<  8)              /* VPID */
+#define BX_VMX_UNRESTRICTED_GUEST    (1 <<  9)              /* Unrestricted Guest */
+#define BX_VMX_PREEMPTION_TIMER      (1 << 10)              /* VMX preemption timer */
+#define BX_VMX_SAVE_DEBUGCTL_DISABLE (1 << 11)              /* Disable Save/Restore of MSR_DEBUGCTL */
+#define BX_VMX_PAT                   (1 << 12)              /* Save/Restore MSR_PAT */
+#define BX_VMX_EFER                  (1 << 13)              /* Save/Restore MSR_EFER */
+#define BX_VMX_DESCRIPTOR_TABLE_EXIT (1 << 14)              /* Descriptor Table VMEXIT */
+#define BX_VMX_PAUSE_LOOP_EXITING    (1 << 15)              /* Pause Loop Exiting */
+#define BX_VMX_EPTP_SWITCHING        (1 << 16)              /* EPTP switching (VM Function 0) */
 
 // CPUID defines - STD features CPUID[0x00000001].EDX
 // ----------------------------

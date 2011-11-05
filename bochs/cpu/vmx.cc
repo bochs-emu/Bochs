@@ -259,7 +259,7 @@ unsigned BX_CPU_C::VMXReadRevisionID(bx_phy_address pAddr)
 }
 
 #if BX_SUPPORT_VMX >= 2
-BX_CPP_INLINE bx_bool is_eptptr_valid(Bit64u eptptr)
+bx_bool is_eptptr_valid(Bit64u eptptr)
 {
   // [2:0] EPT paging-structure memory type
   //       0 = Uncacheable (UC)
@@ -472,6 +472,30 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_PAUSE_LOOP_VMEXIT) {
      vm->pause_loop_exiting_gap = VMread32(VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_GAP);
      vm->pause_loop_exiting_window = VMread32(VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_WINDOW);
+  }
+
+  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VMFUNC_ENABLE)
+    vm->vmfunc_ctrls = VMread64(VMCS_64BIT_CONTROL_VMFUNC_CTRLS);
+  else
+    vm->vmfunc_ctrls = 0;
+
+  if (vm->vmfunc_ctrls & ~VMX_VMFUNC_CTRL1_SUPPORTED_BITS) {
+     BX_ERROR(("VMFAIL: VMCS VM Functions control reserved bits set"));
+     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+  }
+
+  if (vm->vmfunc_ctrls & VMX_VMFUNC_EPTP_SWITCHING_MASK) {
+
+     if ((vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_EPT_ENABLE) == 0) {
+       BX_ERROR(("VMFAIL: VMFUNC EPTP-SWITCHING: EPT disabled"));
+       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+     }
+
+     vm->eptp_list_address = VMread64(VMCS_64BIT_CONTROL_EPTP_LIST_ADDRESS);
+     if ((vm->eptp_list_address & 0xfff) != 0 || ! IsValidPhyAddr(vm->eptp_list_address)) {
+       BX_ERROR(("VMFAIL: VMFUNC EPTP-SWITCHING: eptp list phy addr malformed"));
+       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+     }
   }
 #endif
 
@@ -3004,6 +3028,24 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
     BX_ERROR(("INVPCID: not recognized in v8086 mode"));
     exception(BX_UD_EXCEPTION, 0);
   }
+
+#if BX_SUPPORT_VMX
+  // INVPCID will always #UD in legacy VMX mode
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_INVPCID)) {
+       BX_ERROR(("INVPCID in VMX guest: not allowed to use instruction !"));
+       exception(BX_UD_EXCEPTION, 0);
+    }
+
+#if BX_SUPPORT_VMX >= 2
+    if (VMEXIT(VMX_VM_EXEC_CTRL2_INVLPG_VMEXIT)) {
+      BX_ERROR(("VMEXIT: INVPCID in VMX non-root operation"));
+      VMexit_Instruction(i, VMX_VMEXIT_INVPCID);
+    }
+#endif
+
+  }
+#endif
 
   if (CPL != 0) {
     BX_ERROR(("INVPCID with CPL!=0 cause #GP(0)"));

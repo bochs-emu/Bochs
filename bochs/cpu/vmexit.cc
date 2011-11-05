@@ -40,6 +40,7 @@ Bit32u gen_instruction_info(bxInstruction_c *i, Bit32u reason)
     case VMX_VMEXIT_LDTR_TR_ACCESS:
     case VMX_VMEXIT_INVEPT:
     case VMX_VMEXIT_INVVPID:
+    case VMX_VMEXIT_INVPCID:
 #endif
       instr_info |= i->nnn() << 28;
       break;
@@ -101,6 +102,9 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_Instruction(bxInstruction_c *i, Bit
     case VMX_VMEXIT_VMLAUNCH:
     case VMX_VMEXIT_VMRESUME:
     case VMX_VMEXIT_VMXOFF:
+#if BX_SUPPORT_VMX >= 2
+    case VMX_VMEXIT_VMFUNC:
+#endif
       // do not have VMEXIT instruction info
       break;
     case VMX_VMEXIT_VMREAD:

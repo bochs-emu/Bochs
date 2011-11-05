@@ -128,7 +128,9 @@ enum VMX_vmexit_reason {
    VMX_VMEXIT_WBINVD = 54,
    VMX_VMEXIT_XSETBV = 55,
    VMX_VMEXIT_RESERVED56 = 56,
-   VMX_VMEXIT_RDRAND = 57
+   VMX_VMEXIT_RDRAND = 57,
+   VMX_VMEXIT_INVPCID = 58,
+   VMX_VMEXIT_VMFUNC = 59
 };
 
 // VMexit on CR register access
@@ -161,6 +163,13 @@ enum VMX_vmabort_code {
 #define VMX_APIC_WRITE_INSTRUCTION_EXECUTION  0x1000
 #define VMX_APIC_INSTRUCTION_FETCH            0x2000 /* won't happen because cpu::prefetch will crash */
 #define VMX_APIC_ACCESS_DURING_EVENT_DELIVERY 0x3000
+
+// VM Functions List
+enum VMFunctions {
+   VMX_VMFUNC_EPTP_SWITCHING = 0
+};
+
+#define VMX_VMFUNC_EPTP_SWITCHING_MASK (BX_CONST64(1) << VMX_VMFUNC_EPTP_SWITCHING)
 
 // =============
 //  VMCS fields
@@ -213,8 +222,12 @@ enum VMX_vmabort_code {
 #define VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR_HI       0x00002013
 #define VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR                0x00002014 /* APIC virtualization */
 #define VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR_HI             0x00002015
+#define VMCS_64BIT_CONTROL_VMFUNC_CTRLS                    0x00002018 /* VM Functions */
+#define VMCS_64BIT_CONTROL_VMFUNC_CTRLS_HI                 0x00002019
 #define VMCS_64BIT_CONTROL_EPTPTR                          0x0000201A /* EPT */
 #define VMCS_64BIT_CONTROL_EPTPTR_HI                       0x0000201B
+#define VMCS_64BIT_CONTROL_EPTP_LIST_ADDRESS               0x00002024 /* VM Functions - EPTP switching */
+#define VMCS_64BIT_CONTROL_EPTP_LIST_ADDRESS_HI            0x00002025
 
 /* VMCS 64-bit read only data fields */
 /* binary 0010_01xx_xxxx_xxx0 */
@@ -512,6 +525,9 @@ typedef struct bx_VMX_Cap
   Bit32u vmx_vmexec_ctrl2_supported_bits;
   Bit32u vmx_vmexit_ctrl_supported_bits;
   Bit32u vmx_vmentry_ctrl_supported_bits;
+#if BX_SUPPORT_VMX >= 2
+  Bit64u vmx_vmfunc_supported_bits;
+#endif
 } VMX_CAP;
 
 typedef struct bx_VMCS
@@ -567,6 +583,8 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST        (1 <<  7) /* Unrestricted Guest */
 #define VMX_VM_EXEC_CTRL3_PAUSE_LOOP_VMEXIT         (1 << 10) /* PAUSE loop exiting */
 #define VMX_VM_EXEC_CTRL3_RDRAND_VMEXIT             (1 << 11)
+#define VMX_VM_EXEC_CTRL3_INVPCID                   (1 << 12)
+#define VMX_VM_EXEC_CTRL3_VMFUNC_ENABLE             (1 << 13) /* VM Functions */
 
 #define VMX_VM_EXEC_CTRL3_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl2_supported_bits)
@@ -657,6 +675,21 @@ typedef struct bx_VMCS
    Bit32u vmentry_interr_info;
    Bit32u vmentry_excep_err_code;
    Bit32u vmentry_instr_length;
+
+   //
+   // VM Functions
+   //
+
+#if BX_SUPPORT_VMX >= 2
+
+#define VMX_VMFUNC_CTRL1_SUPPORTED_BITS \
+    (BX_CPU_THIS_PTR vmx_cap.vmx_vmfunc_supported_bits)
+
+   Bit64u vmfunc_ctrls;
+
+   Bit64u eptp_list_address;
+
+#endif
 
    //
    // VMCS Hidden and Read-Only Fields

@@ -200,7 +200,6 @@ Bit32u corei7_sandy_bridge_2600k_t::get_vmx_extensions_bitmask(void) const
       /* BX_VMX_MONITOR_TRAP_FLAG | */ // not implemented yet
          BX_VMX_VPID |
          BX_VMX_EPT |
-         BX_VMX_CR3_VMEXIT_DISABLE |
          BX_VMX_UNRESTRICTED_GUEST |
          BX_VMX_SAVE_DEBUGCTL_DISABLE |
          BX_VMX_PERF_GLOBAL_CTRL |     // MSR not implemented yet

@@ -409,6 +409,7 @@ enum {
   #define BX_MSR_VMX_TRUE_PROCBASED_CTRLS 0x48e
   #define BX_MSR_VMX_TRUE_VMEXIT_CTRLS    0x48f
   #define BX_MSR_VMX_TRUE_VMENTRY_CTRLS   0x490
+  #define BX_MSR_VMX_VMFUNC               0x491
   #define BX_MSR_IA32_FEATURE_CONTROL     0x03A
   #define BX_MSR_IA32_SMM_MONITOR_CTL     0x09B
 #endif
@@ -2544,6 +2545,7 @@ public: // for now...
   BX_SMF BX_INSF_TYPE VMPTRST(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VMREAD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VMWRITE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VMFUNC(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* VMX instructions */
 
   /* SMX instructions */
@@ -4210,6 +4212,9 @@ public: // for now...
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_SMF void VMexit_MONITOR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMexit_MWAIT(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+#endif
+#if BX_SUPPORT_VMX >= 2
+  BX_SMF void vmfunc_eptp_switching(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 #endif
 #endif
 

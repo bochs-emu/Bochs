@@ -237,6 +237,14 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_CONTROL_EPTPTR:
     case VMCS_64BIT_CONTROL_EPTPTR_HI:
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT);
+
+    case VMCS_64BIT_CONTROL_VMFUNC_CTRLS:
+    case VMCS_64BIT_CONTROL_VMFUNC_CTRLS_HI:
+      return BX_CPU_THIS_PTR vmx_cap.vmx_vmfunc_supported_bits;
+
+    case VMCS_64BIT_CONTROL_EPTP_LIST_ADDRESS:
+    case VMCS_64BIT_CONTROL_EPTP_LIST_ADDRESS_HI:
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPTP_SWITCHING);
 #endif
 
 #if BX_SUPPORT_VMX >= 2
@@ -428,8 +436,6 @@ void BX_CPU_C::init_vmx_capabilities(void)
        VMX_VM_EXEC_CTRL2_INVLPG_VMEXIT |
        VMX_VM_EXEC_CTRL2_RDPMC_VMEXIT |
        VMX_VM_EXEC_CTRL2_RDTSC_VMEXIT |
-       VMX_VM_EXEC_CTRL2_CR3_WRITE_VMEXIT |
-       VMX_VM_EXEC_CTRL2_CR3_READ_VMEXIT |
        VMX_VM_EXEC_CTRL2_DRx_ACCESS_VMEXIT |
        VMX_VM_EXEC_CTRL2_IO_VMEXIT |
        VMX_VM_EXEC_CTRL2_IO_BITMAPS |
@@ -454,6 +460,12 @@ void BX_CPU_C::init_vmx_capabilities(void)
     cap->vmx_proc_vmexec_ctrl_supported_bits |= VMX_VM_EXEC_CTRL2_NMI_WINDOW_VMEXIT;
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_MONITOR_TRAP_FLAG))
     cap->vmx_proc_vmexec_ctrl_supported_bits |= VMX_VM_EXEC_CTRL2_MONITOR_TRAP_FLAG;
+#if BX_SUPPORT_VMX >= 2
+  if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT)) {
+    cap->vmx_proc_vmexec_ctrl_supported_bits |=
+        VMX_VM_EXEC_CTRL2_CR3_WRITE_VMEXIT | VMX_VM_EXEC_CTRL2_CR3_READ_VMEXIT;
+  }
+#endif
 
   // secondary proc based vm exec controls
   // -----------------------------------------------------------
@@ -469,6 +481,8 @@ void BX_CPU_C::init_vmx_capabilities(void)
   //   [09] Reserved
   //   [10] PAUSE Loop Exiting
   //   [11] RDRAND Exiting (require RDRAND instruction support)
+  //   [12] Enable INVPCID instruction (require INVPCID instruction support)
+  //   [13] Enable VM Functions
 
   cap->vmx_vmexec_ctrl2_supported_bits = 0;
 
@@ -497,6 +511,8 @@ void BX_CPU_C::init_vmx_capabilities(void)
     cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST;
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_PAUSE_LOOP_EXITING))
     cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_PAUSE_LOOP_VMEXIT;
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_INVPCID))
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_INVPCID;
 #endif
 
   // enable secondary vm exec controls if needed
@@ -570,6 +586,22 @@ void BX_CPU_C::init_vmx_capabilities(void)
     cap->vmx_vmentry_ctrl_supported_bits |= VMX_VMENTRY_CTRL1_LOAD_PAT_MSR;
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EFER))
     cap->vmx_vmentry_ctrl_supported_bits |= VMX_VMENTRY_CTRL1_LOAD_EFER_MSR;
+#endif
+
+  // vm functions
+  // -----------------------------------------------------------
+  //    [00] EPTP switching
+  // [63-01] reserved
+
+#if BX_SUPPORT_VMX >= 2
+  cap->vmx_vmfunc_supported_bits = 0;
+
+  if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPTP_SWITCHING))
+    cap->vmx_vmfunc_supported_bits |= VMX_VMFUNC_EPTP_SWITCHING_MASK;
+
+  // enable vm functions secondary vmexec control if needed
+  if (cap->vmx_vmfunc_supported_bits != 0)
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_VMFUNC_ENABLE;
 #endif
 }
 

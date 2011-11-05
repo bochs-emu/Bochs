@@ -185,6 +185,12 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
         break;
       }
       return 0;
+    case BX_MSR_VMX_VMFUNC:
+      if (BX_CPU_THIS_PTR vmx_cap.vmx_vmfunc_supported_bits) {
+        val64 = BX_CPU_THIS_PTR vmx_cap.vmx_vmfunc_supported_bits;
+        break;
+      }
+      return 0;
 #endif
     case BX_MSR_VMX_MISC:
       val64 = VMX_MSR_MISC;
@@ -611,6 +617,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_VMX_TRUE_PROCBASED_CTRLS:
     case BX_MSR_VMX_TRUE_VMEXIT_CTRLS:
     case BX_MSR_VMX_TRUE_VMENTRY_CTRLS:
+    case BX_MSR_VMX_VMFUNC:
       BX_ERROR(("WRMSR: VMX read only MSR"));
       return 0;
 #endif

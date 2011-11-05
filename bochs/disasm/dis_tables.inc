@@ -419,7 +419,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupRmXSETGET[8] = {
   /* 1 */ { 0, &Ia_xsetbv },
   /* 2 */ { 0, &Ia_Invalid },
   /* 3 */ { 0, &Ia_Invalid },
-  /* 4 */ { 0, &Ia_Invalid },
+  /* 4 */ { 0, &Ia_vmfunc },  // VMX
   /* 5 */ { 0, &Ia_Invalid },
   /* 6 */ { 0, &Ia_Invalid },
   /* 7 */ { 0, &Ia_Invalid }
