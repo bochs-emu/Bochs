@@ -16,7 +16,7 @@ Should we accept donations ? What could we do with the money ?
 - bounties for somebody write optimized win9x/NT/XFree/linux/*BSD
   drivers for our vga/net/ide cards
 - other ?
-Status in Bochs 2.3:
+Status in Bochs 2.5:
 No decisions about this yet.
 
 1. Speed
@@ -26,7 +26,7 @@ Paths we can explore to get more speed :
 1.1 virtualization : plex86
 1.2 dynamic translation : qemu
 Status:
-Some work has been done for Bochs 2.3.7 but still long way is ahead.
+Some work has been done for Bochs 2.5 but still long way is ahead.
 
 2 multithreading. Conn Clark wrote :
 Threading might be nice too, for those of us who have SMP/SMT machines.
@@ -98,15 +98,14 @@ Status:
 Not done yet.
 
 7. Random thoughts on disk emulation improvements :
-7.1 lba48 support
-7.2 autodetection of disk size / geometry
-7.3 uml cow disk image support
-7.4 compressed disk image support
-7.5 extend redolog-disk specification to add coherency check of the flat
+7.1 autodetection of disk size / geometry
+7.2 uml cow disk image support
+7.3 compressed disk image support
+7.4 extend redolog-disk specification to add coherency check of the flat
 image file, by storing its fstat-mtime field in the redolog.
 Status:
 Autodetection now works for all image types created with bximage and vmware3
-images. LBA48 and vmware4 disk images support was added in Bochs 2.3.5 release.
+images. Vmware4 disk images support was added in Bochs 2.3.5 release.
 The other items are not done yet.
 
 8. net
@@ -129,7 +128,7 @@ Not done yet.
 9.2 use Coreboot or SeaBios as possible alternatives/extensions to
 Bochs Bios ROM we have.
 Status:
-Not done yet.
+In Bochs 2.5 SeaBIOS is usable.
 
 10. LGPL VGABios
 11.1 Video parameters table
@@ -137,7 +136,7 @@ There is a very nice parameter table in 3dfx banshee document
 http://www2.lm-sensors.nu/~lm78/pdfs/Banshee_2d_spec.PDF
 see also http://www.xyzzy.claranet.de/dos/vgacrt.c
 Status:
-The new version 0.6a of the LGPL'd VGABIOS has minimal support for the video
+Version 0.7a of the LGPL'd VGABIOS has minimal support for the video
 parameter table.
 
 11. Optimized Guest drivers still needed : VGA, IDE, NET
@@ -151,7 +150,8 @@ Ben Lunt has been working on USB support. The USB mouse and keypad code
 is present in Bochs and almost stable. USB flash disk support has been
 started and the runtime device change support should be completed.
 Status:
-Under construction.
+OHCI and UHCI host controller and 7 devices are known to work in Bochs.
+USB xHCI support is under construction.
 
 13. Config file and dynamic menu
 13.1 Benjamen R. Meyer wrote :
@@ -171,10 +171,11 @@ e.g. the main menu is static while it could be generated at run-time...
 the main menu text lives somewhere in a file... while it should be generated
 at run-time by iterating the main menu objects
 Status:
-The config options handling has been rewritten to a parameter tree.
+The config options handling has been rewritten to a parameter tree. Dynamic
+menus are now implemented on win32.
 
 14. lowlevel serial support for Windows.
-Volker is currently working on this.
+Volker has been working on this.
 Status:
 Not yet complete (transmit works, receive is losing data).
 
