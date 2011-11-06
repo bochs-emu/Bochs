@@ -1,0 +1,64 @@
+CPU-Z TXT Report
+-------------------------------------------------------------------------
+
+Binaries
+-------------------------------------------------------------------------
+
+CPU-Z version			1.53.1
+
+Processors
+-------------------------------------------------------------------------
+
+Number of processors		1
+Number of threads		1
+
+APICs
+-------------------------------------------------------------------------
+
+Processor 0	
+	-- Core 0	
+		-- Thread 0	0
+
+Processors Information
+-------------------------------------------------------------------------
+
+Processor 1			ID = 0
+	Number of cores		1 (max 1)
+	Number of threads	1 (max 1)
+	Name			AMD K6-2
+	Codename		Chomper
+	Specification		AMD-K6(tm) 3D processor
+	Package 		Socket 7 (321)
+	CPUID			5.8.0
+	Extended CPUID		6.8
+	Core Stepping		
+	Technology		0.25 um
+	Core Speed		267.3 MHz
+	Instructions sets	MMX, 3DNow!
+	L1 Data cache		32 KBytes, 2-way set associative, 32-byte line size
+	L1 Instruction cache	32 KBytes, 2-way set associative, 32-byte line size
+	FID/VID Control		no
+
+
+
+Thread dumps
+-------------------------------------------------------------------------
+
+CPU Thread 0	
+	APIC ID			0
+	Topology		Processor ID 0, Core ID 0, Thread ID 0
+	Type			02000802h
+	Max CPUID level		00000001h
+	Max CPUID ext. level	80000005h
+	Cache descriptor	Level 1, I, 32 KB, 1 thread(s)
+	Cache descriptor	Level 1, D, 32 KB, 1 thread(s)
+
+	CPUID		 
+	0x00000000		0x00000001	0x68747541	0x444D4163	0x69746E65
+	0x00000001		0x00000580	0x00000000	0x00000000	0x008001BF
+	0x80000000		0x80000005	0x00000000	0x00000000	0x00000000
+	0x80000001		0x00000680	0x00000000	0x00000000	0x808009BF
+	0x80000002		0x2D444D41	0x7428364B	0x3320296D	0x72702044
+	0x80000003		0x7365636F	0x00726F73	0x00000000	0x00000000
+	0x80000004		0x00000000	0x00000000	0x00000000	0x00000000
+	0x80000005		0x00000000	0x02800140	0x20020220	0x20020220

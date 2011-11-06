@@ -1,0 +1,572 @@
+----------------------------------------------------------------------
+Patch name: patch.fast-dma-cbothamy
+Author: Christophe Bothamy
+Date: Wed Feb 18 14:00:40 CET 2004
+Status: Proposed changes
+
+Detailed description:
+This patch improves DMA transfers by moving more than one byte
+on each cpu tick. This works only on address-incrementing DMA
+transfers.  The number of transferred bytes is currently
+limited to 512 on each cpu tick, but can be easily increased. 
+Only floppy DMA transfers are impacted right now, and DOS 6.2
+and Win95 seems to work fine with the patch applied.
+The performance increase is (measured on a 1GHz PIII, with
+all optimizations enabled) :
+
+command               without patch  with patch
+format a:                   4s          3s
+surface scan of scandisk   17s         10s
+xcopy a: b:                14s          4s
+
+These tests prefigures what kind of performance increase we
+can get by implementing the IDE BusMaster feature.
+
+More test on more guest os are needed to find probable
+incompatibilities.
+
+Todo:
+- implement similar changes for sb16
+- fix BX_DBG_DMA_REPORT to report data from buffer
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: bochs.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/bochs.h,v
+retrieving revision 1.136
+diff -u -r1.136 bochs.h
+--- bochs.h	6 Feb 2004 22:27:59 -0000	1.136
++++ bochs.h	18 Feb 2004 13:41:55 -0000
+@@ -491,6 +491,8 @@
+ #define BX_RW      2
+ 
+ 
++#define BX_MEM_GET_HOST_MEM_ADDR_READ(addr) BX_MEM(0)->getHostMemAddr(NULL, addr, BX_READ)
++#define BX_MEM_GET_HOST_MEM_ADDR_WRITE(addr) BX_MEM(0)->getHostMemAddr(NULL, addr, BX_WRITE)
+ 
+ 
+ 
+Index: iodev/dma.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/dma.cc,v
+retrieving revision 1.30
+diff -u -r1.30 dma.cc
+--- iodev/dma.cc	31 Jul 2003 15:29:34 -0000	1.30
++++ iodev/dma.cc	18 Feb 2004 13:41:59 -0000
+@@ -70,8 +70,8 @@
+   unsigned
+ bx_dma_c::registerDMA8Channel(
+     unsigned channel,
+-    void (* dmaRead)(Bit8u *data_byte),
+-    void (* dmaWrite)(Bit8u *data_byte),
++    void (* dmaRead)(Bit8u *data_byte, Bit16u len),
++    void (* dmaWrite)(Bit8u *data_byte, Bit16u len),
+     const char *name
+     )
+ {
+@@ -93,8 +93,8 @@
+   unsigned
+ bx_dma_c::registerDMA16Channel(
+     unsigned channel,
+-    void (* dmaRead)(Bit16u *data_word),
+-    void (* dmaWrite)(Bit16u *data_word),
++    void (* dmaRead)(Bit16u *data_word, Bit16u len),
++    void (* dmaWrite)(Bit16u *data_word, Bit16u len),
+     const char *name
+     )
+ {
+@@ -709,12 +709,26 @@
+              (BX_DMA_THIS s[ma_sl].chan[channel].current_address << ma_sl);
+ 
+   BX_DMA_THIS s[ma_sl].DACK[channel] = 1;
+-  // check for expiration of count, so we can signal TC and DACK(n)
+-  // at the same time.
+-  if (BX_DMA_THIS s[ma_sl].chan[channel].mode.address_decrement==0)
++
++  Bit16u length;
++  if (BX_DMA_THIS s[ma_sl].chan[channel].mode.address_decrement==0) {
++    // Maxout length, it could be per device selectable
++    length=BX_DMA_THIS s[ma_sl].chan[channel].current_count;
++    if (length > 511) length=511;
++
++    BX_DMA_THIS s[ma_sl].chan[channel].current_address+=length;
+     BX_DMA_THIS s[ma_sl].chan[channel].current_address++;
+-  else
++  }
++  else {
++    // When decrementing it is easier to do it 1 byte at a time
++    length=0;
++    //BX_DMA_THIS s[ma_sl].chan[channel].current_address-=length;
+     BX_DMA_THIS s[ma_sl].chan[channel].current_address--;
++  }
++
++  // check for expiration of count, so we can signal TC and DACK(n)
++  // at the same time.
++  BX_DMA_THIS s[ma_sl].chan[channel].current_count-=length;
+   BX_DMA_THIS s[ma_sl].chan[channel].current_count--;
+   if (BX_DMA_THIS s[ma_sl].chan[channel].current_count == 0xffff) {
+     // count expired, done with transfer
+@@ -736,65 +750,86 @@
+       }
+     }
+ 
+-  Bit8u data_byte;
+-  Bit16u data_word;
++  Bit8u *data8;
++  Bit16u *data16;
+ 
+   if (BX_DMA_THIS s[ma_sl].chan[channel].mode.transfer_type == 1) { // write
+     // DMA controlled xfer of byte from I/O to Memory
+ 
+     if (!ma_sl) {
+-      if (BX_DMA_THIS h[channel].dmaWrite8)
+-        BX_DMA_THIS h[channel].dmaWrite8(&data_byte);
+-      else
+-        BX_PANIC(("no dmaWrite handler for channel %u.", channel));
+ 
+-      BX_MEM_WRITE_PHYSICAL(phy_addr, 1, &data_byte);
++      data8 = BX_MEM_GET_HOST_MEM_ADDR_WRITE(phy_addr);
++      if (data8 == NULL)
++        BX_PANIC(("dma8 tries to write outside memory"));
++      else 
++        if (BX_DMA_THIS h[channel].dmaWrite8)
++          BX_DMA_THIS h[channel].dmaWrite8(data8, length);
++        else
++          BX_PANIC(("no dmaWrite handler for channel %u.", channel));
+ 
+-      BX_DBG_DMA_REPORT(phy_addr, 1, BX_WRITE, data_byte);
++      //BX_MEM_WRITE_PHYSICAL(phy_addr, 1+(Bit32u)length, &data_byte);
++
++      //BX_DBG_DMA_REPORT(phy_addr, 1, BX_WRITE, &data_byte);
+       }
+     else {
+-      if (BX_DMA_THIS h[channel].dmaWrite16)
+-        BX_DMA_THIS h[channel].dmaWrite16(&data_word);
++
++      data16 = (Bit16u*)BX_MEM_GET_HOST_MEM_ADDR_WRITE(phy_addr);
++      if (data16 == NULL)
++        BX_PANIC(("dma16 tries to write outside memory"));
+       else
+-        BX_PANIC(("no dmaWrite handler for channel %u.", channel));
++        if (BX_DMA_THIS h[channel].dmaWrite16)
++          BX_DMA_THIS h[channel].dmaWrite16(data16, length);
++        else
++          BX_PANIC(("no dmaWrite handler for channel %u.", channel));
+ 
+-      BX_MEM_WRITE_PHYSICAL(phy_addr, 2, &data_word);
++      //BX_MEM_WRITE_PHYSICAL(phy_addr, 2*(1+(Bit32u)length), data_word);
+ 
+-      BX_DBG_DMA_REPORT(phy_addr, 2, BX_WRITE, data_word);
++      //BX_DBG_DMA_REPORT(phy_addr, 2, BX_WRITE, data_word);
+       }
+     }
+   else if (BX_DMA_THIS s[ma_sl].chan[channel].mode.transfer_type == 2) { // read
+     // DMA controlled xfer of byte from Memory to I/O
+ 
+     if (!ma_sl) {
+-      BX_MEM_READ_PHYSICAL(phy_addr, 1, &data_byte);
++      //BX_MEM_READ_PHYSICAL(phy_addr, 1+(Bit32u)length, &data_byte);
+ 
+-      if (BX_DMA_THIS h[channel].dmaRead8)
+-        BX_DMA_THIS h[channel].dmaRead8(&data_byte);
++      data8 = BX_MEM_GET_HOST_MEM_ADDR_READ(phy_addr);
++      if (data8 == NULL)
++        BX_PANIC(("dma8 tries to read outside memory"));
++      else
++        if (BX_DMA_THIS h[channel].dmaRead8)
++          BX_DMA_THIS h[channel].dmaRead8(data8, length);
+ 
+-      BX_DBG_DMA_REPORT(phy_addr, 1, BX_READ, data_byte);
++      //BX_DBG_DMA_REPORT(phy_addr, 1, BX_READ, &data_byte);
+       }
+     else {
+-      BX_MEM_READ_PHYSICAL(phy_addr, 2, &data_word);
++      // BX_MEM_READ_PHYSICAL(phy_addr, 2*(1+(Bit32u)length), data_word);
+ 
+-      if (BX_DMA_THIS h[channel].dmaRead16)
+-        BX_DMA_THIS h[channel].dmaRead16(&data_word);
++      data16 = (Bit16u*)BX_MEM_GET_HOST_MEM_ADDR_WRITE(phy_addr);
++      if (data16 == NULL)
++        BX_PANIC(("dma16 tries to read outside memory"));
++      else
++        if (BX_DMA_THIS h[channel].dmaRead16)
++          BX_DMA_THIS h[channel].dmaRead16(data16,length);
+ 
+-      BX_DBG_DMA_REPORT(phy_addr, 2, BX_READ, data_word);
++      //BX_DBG_DMA_REPORT(phy_addr, 2, BX_READ, data_word);
+       }
+     }
+   else if (BX_DMA_THIS s[ma_sl].chan[channel].mode.transfer_type == 0) {
+     // verify
+ 
++    // Buffer for verify, max 64k words
++    Bit16u buffer[64*1024];
++
+     if (!ma_sl) {
+       if (BX_DMA_THIS h[channel].dmaWrite8)
+-        BX_DMA_THIS h[channel].dmaWrite8(&data_byte);
++        BX_DMA_THIS h[channel].dmaWrite8((Bit8u*)buffer, length);
+       else
+         BX_PANIC(("no dmaWrite handler for channel %u.", channel));
+       }
+     else {
+       if (BX_DMA_THIS h[channel].dmaWrite16)
+-        BX_DMA_THIS h[channel].dmaWrite16(&data_word);
++        BX_DMA_THIS h[channel].dmaWrite16(buffer, length);
+       else
+         BX_PANIC(("no dmaWrite handler for channel %u.", channel));
+       }
+Index: iodev/dma.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/dma.h,v
+retrieving revision 1.15
+diff -u -r1.15 dma.h
+--- iodev/dma.h	3 May 2003 07:41:27 -0000	1.15
++++ iodev/dma.h	18 Feb 2004 13:41:59 -0000
+@@ -52,12 +52,12 @@
+   virtual unsigned get_TC(void);
+ 
+   virtual unsigned registerDMA8Channel(unsigned channel,
+-    void (* dmaRead)(Bit8u *data_byte),
+-    void (* dmaWrite)(Bit8u *data_byte),
++    void (* dmaRead)(Bit8u *data_byte, Bit16u len),
++    void (* dmaWrite)(Bit8u *data_byte, Bit16u len),
+     const char *name);
+   virtual unsigned registerDMA16Channel(unsigned channel,
+-    void (* dmaRead)(Bit16u *data_word),
+-    void (* dmaWrite)(Bit16u *data_word),
++    void (* dmaRead)(Bit16u *data_word, Bit16u len),
++    void (* dmaWrite)(Bit16u *data_word, Bit16u len),
+     const char *name);
+   virtual unsigned unregisterDMAChannel(unsigned channel);
+ 
+@@ -102,10 +102,10 @@
+   bx_bool TC;      // Terminal Count
+ 
+   struct {
+-    void (* dmaRead8)(Bit8u *data_byte);
+-    void (* dmaWrite8)(Bit8u *data_byte);
+-    void (* dmaRead16)(Bit16u *data_word);
+-    void (* dmaWrite16)(Bit16u *data_word);
++    void (* dmaRead8)(Bit8u *data_byte, Bit16u len);
++    void (* dmaWrite8)(Bit8u *data_byte, Bit16u len);
++    void (* dmaRead16)(Bit16u *data_word, Bit16u len);
++    void (* dmaWrite16)(Bit16u *data_word, Bit16u len);
+     } h[4]; // DMA read and write handlers
+ 
+   };
+Index: iodev/floppy.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/floppy.cc,v
+retrieving revision 1.72
+diff -u -r1.72 floppy.cc
+--- iodev/floppy.cc	8 Feb 2004 18:38:26 -0000	1.72
++++ iodev/floppy.cc	18 Feb 2004 13:42:04 -0000
+@@ -1110,66 +1110,91 @@
+ }
+ 
+   void
+-bx_floppy_ctrl_c::dma_write(Bit8u *data_byte)
++bx_floppy_ctrl_c::dma_write(Bit8u *data_byte, Bit16u len)
+ {
+   // A DMA write is from I/O to Memory
+   // We need to return then next data byte from the floppy buffer
+   // to be transfered via the DMA to memory. (read block from floppy)
++  //
++  // len is the length of the DMA transfert minus 1 byte
+ 
++  Bit32u xfer_len;
++  Bit8u drive = BX_FD_THIS s.DOR & 0x03;
+ 
+-  *data_byte = BX_FD_THIS s.floppy_buffer[BX_FD_THIS s.floppy_buffer_index++];
++  if ( BX_FD_THIS s.floppy_buffer_index >= 512)
++    BX_PANIC(("Index should not be >= 512"));
+ 
+-  if (BX_FD_THIS s.floppy_buffer_index >= 512) {
+-    Bit8u drive;
++  do {
++    xfer_len = 512 - BX_FD_THIS s.floppy_buffer_index;
++    if (xfer_len > ((Bit32u)len + 1)) xfer_len = (Bit32u)len + 1;
++    if (xfer_len == 1)
++      *data_byte = BX_FD_THIS s.floppy_buffer[BX_FD_THIS s.floppy_buffer_index++];
++    else {
++      memcpy(data_byte, &BX_FD_THIS s.floppy_buffer[BX_FD_THIS s.floppy_buffer_index],xfer_len);
++      BX_FD_THIS s.floppy_buffer_index += xfer_len;
++    }
+ 
+-    drive = BX_FD_THIS s.DOR & 0x03;
+-    increment_sector(); // increment to next sector before retrieving next one
+-    BX_FD_THIS s.floppy_buffer_index = 0;
+-    if (DEV_dma_get_tc()) { // Terminal Count line, done
+-      BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive] << 2) | drive;
+-      BX_FD_THIS s.status_reg1 = 0;
+-      BX_FD_THIS s.status_reg2 = 0;
++    data_byte += xfer_len;
++    len -= (Bit16u)xfer_len;
+ 
+-      if (bx_dbg.floppy) {
+-        BX_INFO(("<<READ DONE>>"));
+-        BX_INFO(("AFTER"));
+-        BX_INFO(("  drive    = %u", (unsigned) drive));
+-        BX_INFO(("  head     = %u", (unsigned) BX_FD_THIS s.head[drive]));
+-        BX_INFO(("  cylinder = %u", (unsigned) BX_FD_THIS s.cylinder[drive]));
+-        BX_INFO(("  sector   = %u", (unsigned) BX_FD_THIS s.sector[drive]));
+-        }
++    if (BX_FD_THIS s.floppy_buffer_index >= 512) {
++      increment_sector(); // increment to next sector before retrieving next one
++      BX_FD_THIS s.floppy_buffer_index = 0;
++ 
++      // Only needed if more data to transfer
++      if (!DEV_dma_get_tc()) { 
++        Bit32u logical_sector;
++
++        // original assumed all floppies had two sides...now it does not  *delete this comment line*
++        logical_sector = (BX_FD_THIS s.cylinder[drive] * BX_FD_THIS s.media[drive].heads *
++                          BX_FD_THIS s.media[drive].sectors_per_track) +
++                         (BX_FD_THIS s.head[drive] *
++                          BX_FD_THIS s.media[drive].sectors_per_track) +
++                         (BX_FD_THIS s.sector[drive] - 1);
+ 
+-      DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
+-      enter_result_phase();
++        floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
++                    512, FROM_FLOPPY);
++        }
+       }
+-    else { // more data to transfer
+-      Bit32u logical_sector;
+-
+-      // original assumed all floppies had two sides...now it does not  *delete this comment line*
+-      logical_sector = (BX_FD_THIS s.cylinder[drive] * BX_FD_THIS s.media[drive].heads *
+-                        BX_FD_THIS s.media[drive].sectors_per_track) +
+-                       (BX_FD_THIS s.head[drive] *
+-                        BX_FD_THIS s.media[drive].sectors_per_track) +
+-                       (BX_FD_THIS s.sector[drive] - 1);
++  } while (len!=0xffff);
++      
++      // If DMA transfer is over
++      if (DEV_dma_get_tc()) { // Terminal Count line, done
++        BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive] << 2) | drive;
++        BX_FD_THIS s.status_reg1 = 0;
++        BX_FD_THIS s.status_reg2 = 0;
++
++        if (bx_dbg.floppy) {
++          BX_INFO(("<<READ DONE>>"));
++          BX_INFO(("AFTER"));
++          BX_INFO(("  drive    = %u", (unsigned) drive));
++          BX_INFO(("  head     = %u", (unsigned) BX_FD_THIS s.head[drive]));
++          BX_INFO(("  cylinder = %u", (unsigned) BX_FD_THIS s.cylinder[drive]));
++          BX_INFO(("  sector   = %u", (unsigned) BX_FD_THIS s.sector[drive]));
++        }
+ 
+-      floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
+-                  512, FROM_FLOPPY);
++        DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
++        enter_result_phase();
+       }
+-    }
++    return;
+ }
+ 
+   void
+-bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
++bx_floppy_ctrl_c::dma_read(Bit8u *data_byte, Bit16u len)
+ {
+   // A DMA read is from Memory to I/O
+   // We need to write the data_byte which was already transfered from memory
+   // via DMA to I/O (write block to floppy)
++  //
++  // len is the length of the DMA transfert minus 1 byte
+ 
+   Bit8u drive;
+   Bit32u logical_sector;
+ 
+   drive = BX_FD_THIS s.DOR & 0x03;
++
+   if (BX_FD_THIS s.pending_command == 0x4d) { // format track in progress
++    do {
+     --BX_FD_THIS s.format_count;
+     switch (3 - (BX_FD_THIS s.format_count & 0x03)) {
+       case 0:
+@@ -1187,50 +1212,76 @@
+         BX_DEBUG(("formatting cylinder %u head %u sector %u",
+                   BX_FD_THIS s.cylinder[drive], BX_FD_THIS s.head[drive],
+                   BX_FD_THIS s.sector[drive]));
+-        for (unsigned i = 0; i < 512; i++) {
+-          BX_FD_THIS s.floppy_buffer[i] = BX_FD_THIS s.format_fillbyte;
+-          }
++	memset(BX_FD_THIS s.floppy_buffer, BX_FD_THIS s.format_fillbyte, 512);
+         // original assumed all floppies had two sides...now it does not *delete this comment line*
+-        logical_sector = (BX_FD_THIS s.cylinder[drive] * BX_FD_THIS s.media[drive].heads * BX_FD_THIS s.media[drive].sectors_per_track) +
++        logical_sector = (BX_FD_THIS s.cylinder[drive] * BX_FD_THIS s.media[drive].heads * 
++			   BX_FD_THIS s.media[drive].sectors_per_track) +
+                          (BX_FD_THIS s.head[drive] * BX_FD_THIS s.media[drive].sectors_per_track) +
+                          (BX_FD_THIS s.sector[drive] - 1);
+         floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
+                     512, TO_FLOPPY);
+         break;
+       }
++
++    len --;
++    data_byte++;
++    } while (len != 0xffff);
++
+     if ((BX_FD_THIS s.format_count == 0) || (DEV_dma_get_tc())) {
+       BX_FD_THIS s.format_count = 0;
+       BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive] << 2) | drive;
+       DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
+       enter_result_phase();
+       }
++
+     return;
+     }
++  else { // format track not in progress
++    if ( BX_FD_THIS s.media[drive].write_protected ) {
++      // write protected error
++      BX_INFO(("tried to write disk %u, which is write-protected", drive));
++      // ST0: IC1,0=01  (abnormal termination: started execution but failed)
++      BX_FD_THIS s.status_reg0 = 0x40 | (BX_FD_THIS s.head[drive]<<2) | drive;
++      // ST1: DataError=1, NDAT=1, NotWritable=1, NID=1
++      BX_FD_THIS s.status_reg1 = 0x27; // 0010 0111
++      // ST2: CRCE=1, SERR=1, BCYL=1, NDAM=1.
++      BX_FD_THIS s.status_reg2 = 0x31; // 0011 0001
++      enter_result_phase();
++      return;
++      }
+ 
+-  BX_FD_THIS s.floppy_buffer[BX_FD_THIS s.floppy_buffer_index++] = *data_byte;
++    Bit32u xfer_len;
+ 
+-  if (BX_FD_THIS s.floppy_buffer_index >= 512) {
+-    // original assumed all floppies had two sides...now it does not *delete this comment line*
+-    logical_sector = (BX_FD_THIS s.cylinder[drive] * BX_FD_THIS s.media[drive].heads * BX_FD_THIS s.media[drive].sectors_per_track) +
+-                     (BX_FD_THIS s.head[drive] * BX_FD_THIS s.media[drive].sectors_per_track) +
+-                     (BX_FD_THIS s.sector[drive] - 1);
+-  if ( BX_FD_THIS s.media[drive].write_protected ) {
+-    // write protected error
+-    BX_INFO(("tried to write disk %u, which is write-protected", drive));
+-    // ST0: IC1,0=01  (abnormal termination: started execution but failed)
+-    BX_FD_THIS s.status_reg0 = 0x40 | (BX_FD_THIS s.head[drive]<<2) | drive;
+-    // ST1: DataError=1, NDAT=1, NotWritable=1, NID=1
+-    BX_FD_THIS s.status_reg1 = 0x27; // 0010 0111
+-    // ST2: CRCE=1, SERR=1, BCYL=1, NDAM=1.
+-    BX_FD_THIS s.status_reg2 = 0x31; // 0011 0001
+-    enter_result_phase();
+-    return;
++    if ( BX_FD_THIS s.floppy_buffer_index >= 512)
++      BX_PANIC(("Index should not be >= 512"));
++
++    do {
++
++    xfer_len = 512 - BX_FD_THIS s.floppy_buffer_index;
++    if (xfer_len > ((Bit32u)len + 1)) xfer_len = (Bit32u)len + 1;
++    if (xfer_len == 1)
++      BX_FD_THIS s.floppy_buffer[BX_FD_THIS s.floppy_buffer_index++] = *data_byte;
++    else {
++      memcpy(&BX_FD_THIS s.floppy_buffer[BX_FD_THIS s.floppy_buffer_index],data_byte,xfer_len);
++      BX_FD_THIS s.floppy_buffer_index += xfer_len;
+     }
+-    floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
++
++    data_byte += xfer_len;
++    len -= (Bit16u)xfer_len;
++
++    if (BX_FD_THIS s.floppy_buffer_index >= 512) {
++      // original assumed all floppies had two sides...now it does not *delete this comment line*
++      logical_sector = (BX_FD_THIS s.cylinder[drive] * BX_FD_THIS s.media[drive].heads * BX_FD_THIS s.media[drive].sectors_per_track) +
++                       (BX_FD_THIS s.head[drive] * BX_FD_THIS s.media[drive].sectors_per_track) +
++                       (BX_FD_THIS s.sector[drive] - 1);
++      floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
+                 512, TO_FLOPPY);
+-    increment_sector(); // increment to next sector after writing current one
+-    BX_FD_THIS s.floppy_buffer_index = 0;
+-    if (DEV_dma_get_tc()) { // Terminal Count line, done
++      increment_sector(); // increment to next sector after writing current one
++      BX_FD_THIS s.floppy_buffer_index = 0;
++      } // if BX_FD_THIS s.floppy_buffer_index >= 512
++  } while (len != 0xffff);
++
++  if (DEV_dma_get_tc()) { // Terminal Count line, done
+       BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive] << 2) | drive;
+       BX_FD_THIS s.status_reg1 = 0;
+       BX_FD_THIS s.status_reg2 = 0;
+@@ -1243,13 +1294,11 @@
+         BX_INFO(("  cylinder = %u", (unsigned) BX_FD_THIS s.cylinder[drive]));
+         BX_INFO(("  sector   = %u", (unsigned) BX_FD_THIS s.sector[drive]));
+         }
+-
++  
+       DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
+       enter_result_phase();
+-      }
+-    else { // more data to transfer
+-      } // else
+-    } // if BX_FD_THIS s.floppy_buffer_index >= 512
++    }
++  }
+ }
+ 
+   void
+@@ -1286,8 +1335,8 @@
+     if (BX_FD_THIS s.cylinder[drive] >= BX_FD_THIS s.media[drive].tracks) {
+       // Set to 1 past last possible cylinder value.
+       // I notice if I set it to tracks-1, prama linux won't boot.
++      BX_INFO(("increment_sector: clamping cylinder %x to max",BX_FD_THIS s.cylinder[drive]));
+       BX_FD_THIS s.cylinder[drive] = BX_FD_THIS s.media[drive].tracks;
+-      BX_INFO(("increment_sector: clamping cylinder to max"));
+       }
+     }
+ }
+Index: iodev/floppy.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/floppy.h,v
+retrieving revision 1.17
+diff -u -r1.17 floppy.h
+--- iodev/floppy.h	7 Feb 2004 14:34:34 -0000	1.17
++++ iodev/floppy.h	18 Feb 2004 13:42:04 -0000
+@@ -123,8 +123,8 @@
+   Bit32u read(Bit32u address, unsigned io_len);
+   void   write(Bit32u address, Bit32u value, unsigned io_len);
+ #endif
+-  BX_FD_SMF void   dma_write(Bit8u *data_byte);
+-  BX_FD_SMF void   dma_read(Bit8u *data_byte);
++  BX_FD_SMF void   dma_write(Bit8u *data_byte, Bit16u len);
++  BX_FD_SMF void   dma_read(Bit8u *data_byte, Bit16u len);
+   BX_FD_SMF void   floppy_command(void);
+   BX_FD_SMF void   floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer, Bit32u bytes, Bit8u direction);
+   BX_FD_SMF void   raise_interrupt(void);
+Index: iodev/iodev.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/iodev.h,v
+retrieving revision 1.41
+diff -u -r1.41 iodev.h
+--- iodev/iodev.h	2 Feb 2004 21:47:26 -0000	1.41
++++ iodev/iodev.h	18 Feb 2004 13:42:05 -0000
+@@ -176,16 +176,16 @@
+   public:
+   virtual unsigned registerDMA8Channel(
+     unsigned channel,
+-    void (* dmaRead)(Bit8u *data_byte),
+-    void (* dmaWrite)(Bit8u *data_byte),
++    void (* dmaRead)(Bit8u *data_byte, Bit16u len),
++    void (* dmaWrite)(Bit8u *data_byte, Bit16u len),
+     const char *name
+     ) {
+     STUBFUNC(dma, registerDMA8Channel); return 0;
+   }
+   virtual unsigned registerDMA16Channel(
+     unsigned channel,
+-    void (* dmaRead)(Bit16u *data_word),
+-    void (* dmaWrite)(Bit16u *data_word),   
++    void (* dmaRead)(Bit16u *data_word, Bit16u len),
++    void (* dmaWrite)(Bit16u *data_word, Bit16u len),   
+     const char *name
+     ) {
+     STUBFUNC(dma, registerDMA16Channel); return 0;

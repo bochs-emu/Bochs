@@ -1,0 +1,6 @@
+#!/bin/sh
+
+list=`find . -name '*.cc' | sed 's/\.cc$//'`
+for i in $list; do 
+  mv ${i}.cc ${i}.cpp
+done
