@@ -7,7 +7,7 @@ Brief summary :
 ! Fully configurable CPU to emulate with a single .bochsrc option !
 - 10% (ST) to 50% (SMP) CPU emulation speedup !
 - Implemented support for new x86 ISA extensions, Bochs is aligned with
-  latest published Intel Archicture Manual (rev 040, AVX rev 011):
+  latest published Intel Architecture Manual (rev 040, AVX rev 011):
      - XSAVEOPT, AVX/AVX2/FMA/F16C, BMI1/BMI2, SMEP, INVPCID
      - VMX: VMX Preemption Timer, Pause Loop Exiting and VM Functions
 - Implemented support for AMD SSE4A/XOP/FMA4/TBM instruction sets
