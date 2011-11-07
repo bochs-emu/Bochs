@@ -29,10 +29,10 @@ GETTING CURRENT SOURCE CODE
 
 Source code for Bochs is available from the Bochs home page at
 http://bochs.sourceforge.net.  You can download the most recent
-release, use CVS to get the latest sources, or grab a CVS
+release, use SVN to get the latest sources, or grab a SVN
 snapshot which is updated nightly.  The releases contain the most
 stable code, but if you want the very newest features try the
-CVS version instead.
+SVN version instead.
 
 WHERE ARE THE DOCS?
 
@@ -68,11 +68,11 @@ of recent messages to see what's going on.
 If you are a technical person (can follow hardware specs, can write
 C/C++) take a look at the list of open bug reports and feature
 requests to see if you are interested in working on any of the
-problems that are mentioned in them.  If you check out the CVS
+problems that are mentioned in them.  If you check out the SVN
 sources, make some changes, and create a patch, one of the
 developers will be very happy to apply it for you.  Developers who
 frequently submit patches, or who embark on major changes in the
-source can get write access to CVS.  Be sure to communicate with the
+source can get write access to SVN.  Be sure to communicate with the
 bochs-developers list to avoid several people working on the same
 thing without realizing it.
 

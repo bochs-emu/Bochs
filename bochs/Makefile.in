@@ -583,7 +583,7 @@ SETFILE=/Developer/Tools/SetFile
 # the SF compile farm through an ssh connection because osacompile
 # needs to be run locally for some reason.  Solution: If the script
 # sources are changed, rebuild the executable on a MacOSX machine,
-# split it into its data and resource forks and check them into CVS
+# split it into its data and resource forks and check them into SVN
 # as separate files.  Then at release time, all that's left to do is
 # put the data and resource forks back together to make a working script.
 # (This can be done through ssh.)
@@ -608,7 +608,7 @@ test_hfsplus:
 
 # Step 1 (must be done locally on MacOSX, only when sources change)
 # Compile and pull out just the resource fork.  The resource fork is
-# checked into CVS as script_compiled.rsrc.  Note that we don't need
+# checked into SVN as script_compiled.rsrc.  Note that we don't need
 # to check in the data fork of tmpscript because it is identical to the
 # script.data input file.
 $(SCRIPT_COMPILED_RSRC): $(SCRIPT_R) $(SCRIPT_APPLESCRIPT)

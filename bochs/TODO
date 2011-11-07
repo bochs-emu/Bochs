@@ -76,7 +76,7 @@ documented cards, or one could even use a real spare vga card.
 Frank Cornellis has done a great job on this subject, and we began
 integrating his changes.
 Status:
-The pcidev device is present in CVS and it has been updated for the new PCI
+The pcidev device is present in SVN and it has been updated for the new PCI
 infrastructure, but the new code is untested yet.
 
 5. Subdirectories in iodev
@@ -118,7 +118,7 @@ In the Etherboot project's CVS, in the contrib/bochs directory, you can
 find a working bochsrc file and an up-to-date README with step-by-step
 instructions on getting this working.
 Status:
-The pnic device is present in CVS, but the status is unknown.
+The pnic device is present in SVN, but the status is unknown.
 
 9. Bios
 9.1 add "jump table placeholder" and log missing function calls in the bios.
@@ -209,7 +209,7 @@ There is some progress, but still a lot of work to do.
 If you want to help without coding, here are available positions :
 19.1 Webmaster : update website (Jan Bruun Andersen offered to help)
 19.2 patch coordonator : look at incoming patches (sourceforge and
-mailing list) and upload / update in the cvs patches directory.
+mailing list) and upload / update in the SVN patches directory.
 19.3 platform maintainers for macos / win32
 19.4 disk image maintainer : create and maintain our collection
 of disk images. Usually, only the configuration file needs to be
