@@ -172,6 +172,7 @@ Detailed change log :
   [3190995] add eth backend based on Slirp by Heikki Lindholm
 
 - these S.F. bugs were closed/fixed
+  [2802677] Unable to install Cirrus SVGA driver in guest Windows ME
   [3422638] large ramfile support broken on anything but Linux
   [3312237] stepN command might be not working properly
   [3392760] Bochs does not compile with linux3.0
