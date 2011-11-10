@@ -1088,6 +1088,58 @@ AC_ARG_ENABLE(debugger-gui,
     ]
   )
 
+bx_gdb_stub=0
+AC_MSG_CHECKING(for gdb stub enable)
+AC_ARG_ENABLE(gdb-stub,
+  [  --enable-gdb-stub                 enable gdb stub support],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_GDBSTUB, 1)
+    GDBSTUB_VAR='$(GDBSTUB_OBJS)'
+    bx_gdb_stub=1
+    if test "$bx_debugger" = 1; then
+      AC_MSG_ERROR([[--enable-debugger and --enable-gdb-stub are mutually exclusive]])
+    fi
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_GDBSTUB, 0)
+    GDBSTUB_VAR=''
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_GDBSTUB, 0)
+    GDBSTUB_VAR=''
+    ]
+  )
+AC_SUBST(GDBSTUB_VAR)
+
+
+AC_MSG_CHECKING(for I/O Interface to the debugger)
+IODEBUG_OBJS=''
+AC_ARG_ENABLE(iodebug,
+  [  --enable-iodebug                  enable I/O interface to debugger],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_IODEBUG, 1)
+    IODEBUG_OBJS='iodebug.o'
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_IODEBUG, 0)
+   fi
+   ],
+  [
+    if test "$bx_debugger" = 1; then
+      # enable by default if debugger is on
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(BX_SUPPORT_IODEBUG, 1)
+      IODEBUG_OBJS='iodebug.o'
+    else
+      AC_MSG_RESULT(no)
+    fi
+    ]
+  )
+AC_SUBST(IODEBUG_OBJS)
+
 
 AC_MSG_CHECKING(for ALL optimizations enabled)
 AC_ARG_ENABLE(all-optimizations,
@@ -1131,6 +1183,11 @@ else
 fi
 
 if test "$bx_debugger" = 1 -a "$speedup_handlers_chaining" = 1; then
+  speedup_handlers_chaining=0
+  echo "ERROR: handlers-chaining speedups are not supported with internal debugger or gdbstub yet"
+fi
+
+if test "$bx_gdb_stub" = 1 -a "$speedup_handlers_chaining" = 1; then
   speedup_handlers_chaining=0
   echo "ERROR: handlers-chaining speedups are not supported with internal debugger or gdbstub yet"
 fi
@@ -1688,57 +1745,6 @@ AC_ARG_ENABLE(gameport,
     fi]
   )
 AC_SUBST(GAME_OBJS)
-
-
-AC_MSG_CHECKING(for gdb stub enable)
-AC_ARG_ENABLE(gdb-stub,
-  [  --enable-gdb-stub                 enable gdb stub support],
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_GDBSTUB, 1)
-    GDBSTUB_VAR='$(GDBSTUB_OBJS)'
-    if test "$bx_debugger" = 1; then
-      AC_MSG_ERROR([[--enable-debugger and --enable-gdb-stub are mutually exclusive]])
-    fi
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_GDBSTUB, 0)
-    GDBSTUB_VAR=''
-   fi],
-  [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_GDBSTUB, 0)
-    GDBSTUB_VAR=''
-    ]
-  )
-AC_SUBST(GDBSTUB_VAR)
-
-
-AC_MSG_CHECKING(for I/O Interface to the debugger)
-IODEBUG_OBJS=''
-AC_ARG_ENABLE(iodebug,
-  [  --enable-iodebug                  enable I/O interface to debugger],
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_IODEBUG, 1)
-    IODEBUG_OBJS='iodebug.o'
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_IODEBUG, 0)
-   fi
-   ],
-  [
-    if test "$bx_debugger" = 1; then
-      # enable by default if debugger is on
-      AC_MSG_RESULT(yes)
-      AC_DEFINE(BX_SUPPORT_IODEBUG, 1)
-      IODEBUG_OBJS='iodebug.o'
-    else
-      AC_MSG_RESULT(no)
-    fi
-    ]
-  )
-AC_SUBST(IODEBUG_OBJS)
 
 
 AC_PATH_PROG(DOCBOOK2HTML, docbook2html, not_found)
