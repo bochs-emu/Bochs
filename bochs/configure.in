@@ -2743,7 +2743,7 @@ AC_ARG_ENABLE(acpi,
    AC_MSG_RESULT(no)
   ])
 
-AC_MSG_CHECKING(for instruction trace cache support)
+AC_MSG_CHECKING(for instruction trace cache support (deprecated))
 AC_ARG_ENABLE(trace-cache,
   [  --enable-trace-cache              support instruction trace cache (deprecated)],
   [AC_MSG_RESULT($enableval)
