@@ -946,9 +946,9 @@ void bx_dbg_info_control_regs_command(void)
     (efer & (1<<0))  ? "SCE" : "sce");
 #endif
 #if BX_CPU_LEVEL >= 6
-  Bit32u xcr0 = SIM->get_param_num("XCR0", dbg_cpu_list)->get();
   Bit64u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get();
   if ((isa_extensions_bitmask & BX_ISA_XSAVE) != 0) {
+    Bit32u xcr0 = SIM->get_param_num("XCR0", dbg_cpu_list)->get();
     dbg_printf("XCR0=0x%08x: %s %s %s\n", xcr0,
       (xcr0 & (1<<2)) ? "AVX" : "avx",
       (xcr0 & (1<<1)) ? "SSE" : "sse",
