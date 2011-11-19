@@ -155,6 +155,7 @@ Detailed change log :
   - win32paramdlg: added tooltip support using the parameter description
 
 - SF patches applied
+  [3435049] rombios: fix package size in pointing device flags 2 by Sebastian Herbszt
   [3426460] [PATCH] PIC: remove never-executed code by Christian Inci
   [3370604] Ctrl-Break support for the bochs BIOS by Nikolay Nikolov
   [3302668] VMX preemption timer by Jianan Hao
@@ -198,6 +199,7 @@ Detailed change log :
   [3197425] Error compile with vmx in vs2008/2010 and for correct x64
 
 - these S.F. feature requests were closed/implemented
+  [3424738] Legacy BIOS int13 AL=17/18h diskette issue
   [1197067] Screenshot for graphical
   [2800839] VMX-preemption timer
   [1507519] configurable CPUID
