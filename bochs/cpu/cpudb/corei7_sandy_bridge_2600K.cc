@@ -322,7 +322,7 @@ void corei7_sandy_bridge_2600k_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) c
               BX_CPUID_EXT_SSE4_2 |
            /* BX_CPUID_EXT_X2APIC | */
               BX_CPUID_EXT_POPCNT |
-              BX_CPUID_EXT_TSC_DEADLINE |
+//            BX_CPUID_EXT_TSC_DEADLINE | // not implemented yet
               BX_CPUID_EXT_AES |
               BX_CPUID_EXT_XSAVE |
               BX_CPUID_EXT_AVX;
