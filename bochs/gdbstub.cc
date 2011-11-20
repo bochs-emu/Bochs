@@ -436,6 +436,7 @@ static void debug_loop(void)
 
   while (ne == 0)
   {
+    SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set(0);
     get_command(buffer);
     BX_DEBUG(("get_buffer '%s'", buffer));
 
@@ -470,7 +471,7 @@ static void debug_loop(void)
         }
 
         stub_trace_flag = 0;
-        bx_cpu.cpu_loop(0);
+        bx_cpu.cpu_loop();
 
         DEV_vga_refresh();
 
@@ -504,7 +505,7 @@ static void debug_loop(void)
 
         BX_INFO(("stepping"));
         stub_trace_flag = 1;
-        bx_cpu.cpu_loop(0);
+        bx_cpu.cpu_loop();
         DEV_vga_refresh();
         stub_trace_flag = 0;
         BX_INFO(("stopped with %x", last_stop_reason));
@@ -574,7 +575,7 @@ static void debug_loop(void)
 
         addr = strtoull(&buffer[1], &ebuf, 16);
         len = strtoul(ebuf + 1, NULL, 16);
-        BX_INFO(("addr %Lx len %x", addr, len));
+        BX_INFO(("addr "FMT_ADDRX64" len %x", addr, len));
 
         access_linear(addr, len, BX_READ, mem);
         mem2hex(mem, obuf, len);
@@ -595,7 +596,7 @@ static void debug_loop(void)
         ++ebuf;
         value = read_little_endian_hex(ebuf);
 
-        BX_INFO(("reg %d set to %Lx", reg, value));
+        BX_INFO(("reg %d set to "FMT_ADDRX64, reg, value));
 #if BX_SUPPORT_X86_64 == 0
         switch (reg)
         {
@@ -765,7 +766,7 @@ static void debug_loop(void)
       case 'q':
         if (buffer[1] == 'C')
         {
-          sprintf(obuf,"%Lx", (Bit64u)1);
+          sprintf(obuf, FMT_ADDRX64, (Bit64u)1);
           put_reply(obuf);
         }
         else if (strncmp(&buffer[1], "Offsets", strlen("Offsets")) == 0)
@@ -916,5 +917,5 @@ void bx_gdbstub_init(void)
   debug_loop();
 
   /* CPU loop */
-  bx_cpu.cpu_loop(0);
+  bx_cpu.cpu_loop();
 }

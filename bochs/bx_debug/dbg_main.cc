@@ -250,6 +250,7 @@ void bx_dbg_user_input_loop(void)
   while(1) {
     SIM->refresh_ci();
     SIM->set_display_mode(DISP_MODE_CONFIG);
+    SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set(0);
     bx_get_command();
 reparse:
     if ((*tmp_buf_ptr == '\n') || (*tmp_buf_ptr == 0))
