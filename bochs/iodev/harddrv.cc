@@ -311,46 +311,36 @@ void bx_hard_drive_c::init(void)
           BX_PANIC(("ata%d-%d: could not open hard drive image file '%s'", channel, device, SIM->get_param_string("path", base)->getptr()));
           return;
         }
-        bx_bool geometry_detect = 0;
         Bit32u image_caps = BX_HD_THIS channels[channel].drives[device].hdimage->get_capabilities();
 
-        if ((image_caps & (HDIMAGE_AUTO_GEOMETRY | HDIMAGE_HAS_GEOMETRY)) != 0) {
-          geometry_detect = ((cyl == 0) || (image_caps & HDIMAGE_HAS_GEOMETRY));
-          if ((heads == 0) || (spt == 0)) {
-            BX_PANIC(("ata%d-%d cannot have zero heads, or sectors/track", channel, device));
-          }
+        if ((image_caps & HDIMAGE_HAS_GEOMETRY) != 0) {
+          // If the image provides a geometry, always use it.
+          cyl = BX_HD_THIS channels[channel].drives[device].hdimage->cylinders;
+          heads = BX_HD_THIS channels[channel].drives[device].hdimage->heads;
+          spt = BX_HD_THIS channels[channel].drives[device].hdimage->sectors;
+          BX_INFO(("ata%d-%d: image geometry: CHS=%d/%d/%d", channel, device, cyl, heads, spt));
         } else {
-          if (cyl == 0 || heads == 0 || spt == 0) {
-            BX_PANIC(("ata%d-%d cannot have zero cylinders, heads, or sectors/track", channel, device));
-          }
-        }
-
-        if (BX_HD_THIS channels[channel].drives[device].hdimage->hd_size != 0) {
-          if (geometry_detect) {
+          if ((cyl == 0) && (image_caps & HDIMAGE_AUTO_GEOMETRY)) {
             // Autodetect number of cylinders
-            disk_size = BX_HD_THIS channels[channel].drives[device].hdimage->hd_size;
-            if ((image_caps & HDIMAGE_HAS_GEOMETRY) == 0) {
-              cyl = (int)(disk_size / (heads * spt * 512));
-              if (disk_size != ((Bit64u)cyl * heads * spt * 512)) {
-                BX_PANIC(("ata%d-%d: geometry autodetection failed", channel, device));
-              }
-              BX_HD_THIS channels[channel].drives[device].hdimage->cylinders = cyl;
-              BX_INFO(("ata%d-%d: autodetect geometry: CHS=%d/%d/%d", channel, device, cyl, heads, spt));
-            } else {
-              cyl = BX_HD_THIS channels[channel].drives[device].hdimage->cylinders;
-              heads = BX_HD_THIS channels[channel].drives[device].hdimage->heads;
-              spt = BX_HD_THIS channels[channel].drives[device].hdimage->sectors;
-              BX_INFO(("ata%d-%d: image geometry: CHS=%d/%d/%d", channel, device, cyl, heads, spt));
+            if ((heads == 0) || (spt == 0)) {
+              BX_PANIC(("ata%d-%d cannot have zero heads, or sectors/track", channel, device));
             }
+            cyl = (int)(BX_HD_THIS channels[channel].drives[device].hdimage->hd_size / (heads * spt * 512));
+            disk_size = ((Bit64u)cyl * heads * spt * 512);
+            BX_HD_THIS channels[channel].drives[device].hdimage->cylinders = cyl;
+            BX_INFO(("ata%d-%d: autodetect geometry: CHS=%d/%d/%d", channel, device, cyl, heads, spt));
           } else {
-            if (disk_size != BX_HD_THIS channels[channel].drives[device].hdimage->hd_size) {
-              BX_PANIC(("ata%d-%d disk size doesn't match specified geometry", channel, device));
-              // workaround large files problem with diskimages
-              BX_HD_THIS channels[channel].drives[device].hdimage->hd_size = disk_size;
+            // Default method: use CHS from configuration.
+            if (cyl == 0 || heads == 0 || spt == 0) {
+              BX_PANIC(("ata%d-%d cannot have zero cylinders, heads, or sectors/track", channel, device));
             }
+            BX_INFO(("ata%d-%d: using specified geometry: CHS=%d/%d/%d", channel, device, cyl, heads, spt));
           }
-        } else if (geometry_detect) {
-          BX_PANIC(("ata%d-%d image doesn't support geometry detection", channel, device));
+          if (disk_size > BX_HD_THIS channels[channel].drives[device].hdimage->hd_size) {
+            BX_PANIC(("ata%d-%d: specified geometry doesn't fit on disk image", channel, device));
+          } else if (disk_size < BX_HD_THIS channels[channel].drives[device].hdimage->hd_size) {
+            BX_INFO(("ata%d-%d: ignoring extra data past the end of the disk image", channel, device));
+          }
         }
       } else if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_CDROM) {
         bx_list_c *cdrom_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_CDROM);
