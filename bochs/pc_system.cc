@@ -425,7 +425,7 @@ void bx_pc_system_c::timebp_handler(void* this_ptr)
    }
    timebp_queue_size--;
    for (int i = 0; i < timebp_queue_size; i++)
-   timebp_queue[i] = timebp_queue[i+1];
+     timebp_queue[i] = timebp_queue[i+1];
 }
 #endif // BX_DEBUGGER
 
