@@ -222,6 +222,7 @@ void bx_local_apic_c::reset(unsigned type)
   timer_divide_factor = 1;
   timer_initial = 0;
   timer_current = 0;
+  ticksInitial = 0;
 
   if(timer_active) {
     bx_pc_system.deactivate_timer(timer_handle);
@@ -408,20 +409,8 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
     case BX_LAPIC_LVT_LINT0:   // LVT LINT0 Reg
     case BX_LAPIC_LVT_LINT1:   // LVT LINT1 Reg
     case BX_LAPIC_LVT_ERROR:   // LVT Error Reg
-      {
-         static Bit32u lvt_mask[] = {
-           0x000310ff, /* TIMER */
-           0x000117ff, /* THERMAL */
-           0x000117ff, /* PERFMON */
-           0x0001f7ff, /* LINT0 */
-           0x0001f7ff, /* LINT1 */
-           0x000110ff  /* ERROR */
-         };
-         unsigned lvt_entry = (apic_reg - BX_LAPIC_LVT_TIMER) >> 4;
-         lvt[lvt_entry] = value & lvt_mask[lvt_entry];
-         if(! software_enabled) lvt[lvt_entry] |= 0x10000;
+      set_lvt_entry(apic_reg, value);
          break;
-      }
     case BX_LAPIC_TIMER_INITIAL_COUNT:
       set_initial_timer_count(value);
       break;
@@ -459,6 +448,41 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
       shadow_error_status |= APIC_ERR_ILLEGAL_ADDR;
       // but for now I want to know about it in case I missed some.
       BX_ERROR(("APIC register %x not implemented", apic_reg));
+  }
+}
+
+void bx_local_apic_c::set_lvt_entry(unsigned apic_reg, Bit32u value)
+{
+  static Bit32u lvt_mask[] = {
+    0x000710ff, /* TIMER */
+    0x000117ff, /* THERMAL */
+    0x000117ff, /* PERFMON */
+    0x0001f7ff, /* LINT0 */
+    0x0001f7ff, /* LINT1 */
+    0x000110ff  /* ERROR */
+  };
+
+  unsigned lvt_entry = (apic_reg - BX_LAPIC_LVT_TIMER) >> 4;
+#if BX_CPU_LEVEL >= 6
+  if (apic_reg == BX_LAPIC_LVT_TIMER) {
+    if (! cpu->bx_cpuid_support_tsc_deadline()) {
+      value &= ~0x40000; // cannot enable TSC-Deadline when not supported
+    }
+    else {
+      if ((value ^ lvt[lvt_entry]) & 0x40000) {
+         // Transition between TSC-Deadline and other timer modes disarm the timer
+         if(timer_active) {
+            bx_pc_system.deactivate_timer(timer_handle);
+            timer_active = 0;
+         }
+      }
+    }
+  }
+#endif
+
+  lvt[lvt_entry] = value & lvt_mask[lvt_entry];
+  if(! software_enabled) {
+    lvt[lvt_entry] |= 0x10000;
   }
 }
 
@@ -654,16 +678,7 @@ Bit32u bx_local_apic_c::read_aligned(bx_phy_address addr)
     data = timer_initial;
     break;
   case BX_LAPIC_TIMER_CURRENT_COUNT: // current count for timer
-    if(timer_active==0) {
-      data = timer_current;
-    } else {
-      Bit64u delta64 = (bx_pc_system.time_ticks() - ticksInitial) / timer_divide_factor;
-      Bit32u delta32 = (Bit32u) delta64;
-      if(delta32 > timer_initial)
-        BX_PANIC(("APIC: R(curr timer count): delta < initial"));
-      timer_current = timer_initial - delta32;
-      data = timer_current;
-    }
+    data = get_current_timer_count();
     break;
   case BX_LAPIC_TIMER_DIVIDE_CFG:   // timer divide configuration
     data = timer_divconf;
@@ -924,10 +939,8 @@ void bx_local_apic_c::periodic(void)
     return;
   }
 
-  // timer reached zero since the last call to periodic.
   Bit32u timervec = lvt[APIC_LVT_TIMER];
-  if(timervec & 0x20000) {
-    // Periodic mode.
+
     // If timer is not masked, trigger interrupt.
     if((timervec & 0x10000)==0) {
       trigger_irq(timervec & 0xff, APIC_EDGE_TRIGGERED);
@@ -935,21 +948,17 @@ void bx_local_apic_c::periodic(void)
     else {
       BX_DEBUG(("local apic timer LVT masked"));
     }
-    // Reload timer values.
+
+  // timer reached zero since the last call to periodic.
+  if(timervec & 0x20000) {
+    // Periodic mode - reload timer values
     timer_current = timer_initial;
-    ticksInitial = bx_pc_system.time_ticks(); // Take a reading.
+    ticksInitial = bx_pc_system.time_ticks(); // timer value when it started to count
     BX_DEBUG(("local apic timer(periodic) triggered int, reset counter to 0x%08x", timer_current));
   }
   else {
     // one-shot mode
     timer_current = 0;
-    // If timer is not masked, trigger interrupt.
-    if((timervec & 0x10000)==0) {
-      trigger_irq(timervec & 0xff, APIC_EDGE_TRIGGERED);
-    }
-    else {
-      BX_DEBUG(("local apic timer LVT masked"));
-    }
     timer_active = 0;
     BX_DEBUG(("local apic timer(one-shot) triggered int"));
     bx_pc_system.deactivate_timer(timer_handle);
@@ -968,6 +977,13 @@ void bx_local_apic_c::set_divide_configuration(Bit32u value)
 
 void bx_local_apic_c::set_initial_timer_count(Bit32u value)
 {
+  Bit32u timervec = lvt[APIC_LVT_TIMER];
+
+#if BX_CPU_LEVEL >= 6
+  // in TSC-deadline mode writes to initial time count are ignored
+  if (timervec & 0x40000) return;
+#endif
+
   // If active before, deactivate the current timer before changing it.
   if(timer_active) {
     bx_pc_system.deactivate_timer(timer_handle);
@@ -984,13 +1000,69 @@ void bx_local_apic_c::set_initial_timer_count(Bit32u value)
     BX_DEBUG(("APIC: Initial Timer Count Register = %u", value));
     timer_current = timer_initial;
     timer_active = 1;
-    Bit32u timervec = lvt[APIC_LVT_TIMER];
     bx_bool continuous = (timervec & 0x20000) > 0;
-    ticksInitial = bx_pc_system.time_ticks(); // Take a reading.
+    ticksInitial = bx_pc_system.time_ticks(); // timer value when it started to count
     bx_pc_system.activate_timer_ticks(timer_handle,
             Bit64u(timer_initial) * Bit64u(timer_divide_factor), continuous);
   }
 }
+
+Bit32u bx_local_apic_c::get_current_timer_count(void)
+{
+#if BX_CPU_LEVEL >= 6
+  Bit32u timervec = lvt[APIC_LVT_TIMER];
+
+  // in TSC-deadline mode current timer count always reads 0
+  if (timervec & 0x40000) return 0;
+#endif
+
+  if(timer_active==0) {
+    return timer_current;
+  } else {
+    Bit64u delta64 = (bx_pc_system.time_ticks() - ticksInitial) / timer_divide_factor;
+    Bit32u delta32 = (Bit32u) delta64;
+    if(delta32 > timer_initial)
+      BX_PANIC(("APIC: R(curr timer count): delta < initial"));
+    timer_current = timer_initial - delta32;
+    return timer_current;
+  }
+}
+
+#if BX_CPU_LEVEL >= 6
+void bx_local_apic_c::set_tsc_deadline(Bit64u deadline)
+{
+  Bit32u timervec = lvt[APIC_LVT_TIMER];
+
+  if ((timervec & 0x40000) == 0) {
+    BX_ERROR(("APIC: TSC-Deadline timer is disabled"));
+    return;
+  }
+
+  // If active before, deactivate the current timer before changing it.
+  if(timer_active) {
+    bx_pc_system.deactivate_timer(timer_handle);
+    timer_active = 0;
+  }
+
+  ticksInitial = deadline;
+  if (deadline != 0) {
+    BX_INFO(("APIC: TSC-Deadline is set to " FMT_LL "d", deadline));
+    Bit64u currtime = bx_pc_system.time_ticks();
+    timer_active = 1;
+    bx_pc_system.activate_timer_ticks(timer_handle, (deadline > currtime) ? (deadline - currtime) : 1 , 0);
+  }
+}
+
+Bit64u bx_local_apic_c::get_tsc_deadline(void)
+{
+  Bit32u timervec = lvt[APIC_LVT_TIMER];
+
+  // read as zero if TSC-deadline timer is disabled
+  if ((timervec & 0x40000) == 0) return 0;
+
+  return ticksInitial; /* also holds TSC-deadline value */
+}
+#endif
 
 #if BX_SUPPORT_VMX >= 2
 Bit32u bx_local_apic_c::read_vmx_preemption_timer(void)

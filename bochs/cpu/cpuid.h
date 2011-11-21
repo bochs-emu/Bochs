@@ -125,6 +125,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPU_SMEP                  (1 << 14)              /* SMEP support */
 #define BX_CPU_FFXSR                 (1 << 15)              /* EFER.FFXSR support */
 #define BX_CPU_ALT_MOV_CR8           (1 << 16)              /* LOCK CR0 access CR8 */
+#define BX_CPU_TSC_DEADLINE          (1 << 17)              /* TSC-Deadline */
 
 // cpuid VMX features
 #define BX_VMX_TPR_SHADOW            (1 <<  0)              /* TPR shadow */

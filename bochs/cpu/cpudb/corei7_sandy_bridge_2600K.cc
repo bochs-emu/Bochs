@@ -44,8 +44,6 @@ corei7_sandy_bridge_2600k_t::corei7_sandy_bridge_2600k_t(BX_CPU_C *cpu): bx_cpui
   if (! BX_SUPPORT_AVX)
     BX_PANIC(("You must enable AVX for Intel Core i7 Sandy Bridge configuration"));
 
-  BX_INFO(("WARNING: TSC deadline is not implemented yet"));
-
   if (BX_SUPPORT_VMX == 1)
     BX_INFO(("You must compile with --enable-vmx=2 for Intel Core i7 Sandy Bridge VMX configuration"));
 }
@@ -166,7 +164,8 @@ Bit32u corei7_sandy_bridge_2600k_t::get_cpu_extensions_bitmask(void) const
       /* BX_CPU_X2APIC | */
          BX_CPU_LONG_MODE |
          BX_CPU_NX |
-         BX_CPU_PCID;
+         BX_CPU_PCID |
+         BX_CPU_TSC_DEADLINE;
 }
 
 #if BX_SUPPORT_VMX >= 2
@@ -322,7 +321,7 @@ void corei7_sandy_bridge_2600k_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) c
               BX_CPUID_EXT_SSE4_2 |
            /* BX_CPUID_EXT_X2APIC | */
               BX_CPUID_EXT_POPCNT |
-//            BX_CPUID_EXT_TSC_DEADLINE | // not implemented yet
+              BX_CPUID_EXT_TSC_DEADLINE |
               BX_CPUID_EXT_AES |
               BX_CPUID_EXT_XSAVE |
               BX_CPUID_EXT_AVX;

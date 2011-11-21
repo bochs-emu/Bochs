@@ -92,8 +92,9 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
 #define APIC_LVT_LINT1   4
 #define APIC_LVT_ERROR   5
 
-  Bit32u timer_initial;         // Initial timer count
-  Bit32u timer_current;         // current timer count
+  Bit32u timer_initial;         // Initial timer count (in order to reload periodic timer)
+  Bit32u timer_current;         // Current timer count
+  Bit64u ticksInitial;          // Timer value when it started to count, also holds TSC-Deadline value
 
   Bit32u timer_divconf;         // Timer divide configuration register
   Bit32u timer_divide_factor;
@@ -101,7 +102,6 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
   // Internal timer state, not accessible from bus
   bx_bool timer_active;
   int timer_handle;
-  Bit64u ticksInitial;
 
 /* APIC delivery modes */
 #define APIC_DM_FIXED	0
@@ -161,10 +161,19 @@ public:
   Bit8u get_ppr(void);
   Bit8u get_apr(void);
   bx_bool is_focus(Bit8u vector);
+  void set_lvt_entry(unsigned apic_reg, Bit32u val);
+
   static void periodic_smf(void *);
   void periodic(void);
   void set_divide_configuration(Bit32u value);
   void set_initial_timer_count(Bit32u value);
+  Bit32u get_current_timer_count(void);
+
+#if BX_CPU_LEVEL >= 6
+  Bit64u get_tsc_deadline(void);
+  void set_tsc_deadline(Bit64u value);
+#endif
+
   void startup_msg(Bit8u vector);
   void register_state(bx_param_c *parent);
 #if BX_SUPPORT_VMX >= 2

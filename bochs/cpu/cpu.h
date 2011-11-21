@@ -379,6 +379,8 @@ struct BxExceptionInfo {
   #define BX_MSR_MTRR_DEFTYPE      0x2ff
 #endif
 
+#define BX_MSR_TSC_DEADLINE        0x6E0
+
 #define BX_MSR_MAX_INDEX          0x1000
 
 enum {
@@ -4025,6 +4027,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_smx(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_vmx(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_rdtscp(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_tsc_deadline(void);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
 #if BX_DEBUGGER || BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS || BX_SUPPORT_SMP
@@ -4583,6 +4586,11 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_rdtscp(void)
 #else
   return 0;
 #endif
+}
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_tsc_deadline(void)
+{
+  return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_TSC_DEADLINE);
 }
 
 IMPLEMENT_EFLAG_ACCESSOR   (ID,  21)

@@ -136,6 +136,16 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 #endif
 
+#if BX_CPU_LEVEL >= 6
+    case BX_MSR_TSC_DEADLINE:
+      if (! bx_cpuid_support_tsc_deadline()) {
+        BX_ERROR(("RDMSR BX_MSR_TSC_DEADLINE: TSC-Deadline not enabled !"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = BX_CPU_THIS_PTR lapic.get_tsc_deadline();
+      break;
+#endif
+
 #if BX_SUPPORT_VMX
 /*
     case BX_MSR_IA32_SMM_MONITOR_CTL:
@@ -582,6 +592,16 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #if BX_SUPPORT_APIC
     case BX_MSR_APICBASE:
       return relocate_apic(val_64);
+#endif
+
+#if BX_CPU_LEVEL >= 6
+    case BX_MSR_TSC_DEADLINE:
+      if (! bx_cpuid_support_tsc_deadline()) {
+        BX_ERROR(("WRMSR BX_MSR_TSC_DEADLINE: TSC-Deadline not enabled !"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      BX_CPU_THIS_PTR lapic.set_tsc_deadline(val_64);
+      break;
 #endif
 
 #if BX_SUPPORT_VMX
