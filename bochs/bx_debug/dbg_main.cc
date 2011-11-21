@@ -1125,7 +1125,7 @@ void bx_dbg_timebp_command(bx_bool absolute, Bit64u time)
 {
   Bit64u abs_time = (absolute) ? time : time + bx_pc_system.time_ticks();
 
-  if (abs_time < bx_pc_system.time_ticks()) {
+  if (abs_time <= bx_pc_system.time_ticks()) {
     dbg_printf("Request for time break point in the past. I can't let you do that.\n");
     return;
   }
