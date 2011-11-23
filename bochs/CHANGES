@@ -70,6 +70,18 @@ Detailed change log :
   - Updated/fixed instrumentation callbacks.
   - Bugfixes for CPU emulation correctness and stability.
 
+- Bochs Internal Debugger and Debugger GUI
+  - Bochs disassembler fixes / new instructions support.
+  - Fixed timer breakpoint handling in Bochs internal debugger.
+  - Fixed bug in Bochs internal debugger 'show off' command.
+  - Added Bochs internal debugger command 'vmexitbp' to set breakpoint on
+    VMX guest VMEXIT (patch by Jianan Hao). Type 'vmexitbp' in debugger
+    command window to switch it on/off (similar to modebp).
+  - Fixed bug in GUI debugger SSE registers display.
+  - Correctly display current CPU mode in GUI debugger status bar.
+  - Turn off the mouse capture when the internal debugger or gdbstub enter
+    the input loop.
+
 - Memory
   - Added new configure option which enables RAM file backing for large guest
     memory with a smaller amount host memory, without causing a panic when
