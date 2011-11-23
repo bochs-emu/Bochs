@@ -326,42 +326,43 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
   {
     Bit8u prefix_byte = *(instr+i);
 
-    if (prefix_byte == 0xF0) {
-      const BxDisasmOpcodeTable_t *prefix = &(opcode_table[prefix_byte]);
-      dis_sprintf("%s ", OPCODE(prefix)->IntelOpcode);
-    }
+    if (prefix_byte == 0xF0) dis_sprintf("lock ");
 
-    if (insn.b1 == 0x90 && !insn.rex_b && prefix_byte == 0xF3)
-      continue;
+    if (! insn.is_xop && ! insn.is_vex) {
+      if (insn.b1 == 0x90 && !insn.rex_b && prefix_byte == 0xF3)
+        continue;
 
-    if (prefix_byte == 0xF3 || prefix_byte == 0xF2) {
-      if (! sse_opcode) {
-        const BxDisasmOpcodeTable_t *prefix = &(opcode_table[prefix_byte]);
-        dis_sprintf("%s ", OPCODE(prefix)->IntelOpcode);
+      if (prefix_byte == 0xF3 || prefix_byte == 0xF2) {
+        if (! sse_opcode) {
+          const BxDisasmOpcodeTable_t *prefix = &(opcode_table[prefix_byte]);
+          dis_sprintf("%s ", OPCODE(prefix)->IntelOpcode);
+        }
       }
-    }
 
-    // branch hint for jcc instructions
-    if ((insn.b1 >= 0x070 && insn.b1 <= 0x07F) ||
-        (insn.b1 >= 0x180 && insn.b1 <= 0x18F))
-    {
-      if (prefix_byte == BRANCH_NOT_TAKEN || prefix_byte == BRANCH_TAKEN)
-        branch_hint = prefix_byte;
+      // branch hint for jcc instructions
+      if ((insn.b1 >= 0x070 && insn.b1 <= 0x07F) ||
+          (insn.b1 >= 0x180 && insn.b1 <= 0x18F))
+      {
+        if (prefix_byte == BRANCH_NOT_TAKEN || prefix_byte == BRANCH_TAKEN)
+          branch_hint = prefix_byte;
+      }
     }
   }
 
   const BxDisasmOpcodeInfo_t *opcode = OPCODE(entry);
 
-  // patch jecx opcode
-  if (insn.b1 == 0xE3 && insn.as_32 && !insn.as_64)
-    opcode = &Ia_jecxz_Jb;
+  if (! insn.is_xop && ! insn.is_vex) {
+    // patch jecx opcode
+    if (insn.b1 == 0xE3 && insn.as_32 && !insn.as_64)
+      opcode = &Ia_jecxz_Jb;
 
-  // fix nop opcode
-  if (insn.b1 == 0x90) {
-    if (sse_prefix == SSE_PREFIX_F3)
-      opcode = &Ia_pause;
-    else if (!insn.rex_b)
-      opcode = &Ia_nop;
+    // fix nop opcode
+    if (insn.b1 == 0x90) {
+      if (sse_prefix == SSE_PREFIX_F3)
+        opcode = &Ia_pause;
+      else if (!insn.rex_b)
+        opcode = &Ia_nop;
+    }
   }
 
   // print instruction disassembly
