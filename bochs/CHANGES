@@ -188,6 +188,7 @@ Detailed change log :
   [3190995] add eth backend based on Slirp by Heikki Lindholm
 
 - these S.F. bugs were closed/fixed
+  [3441564] interrupts vectors 0x67 should also be NULL ! cf: 2902118
   [2829847] Mouse locked during magic-break
   [3418621] release mouse when debugger breakpoint was hit
   [1947077] sb command bug
