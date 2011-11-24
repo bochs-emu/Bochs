@@ -356,6 +356,63 @@ float32 float32_round_to_int(float32 a, float_status_t &status)
 }
 
 /*----------------------------------------------------------------------------
+| Extracts the fractional portion of single-precision floating-point value `a',
+| and returns the result  as a  single-precision  floating-point value. The
+| fractional results are precise. The operation is performed according to the
+| IEC/IEEE Standard for Binary Floating-Point Arithmetic.
+*----------------------------------------------------------------------------*/
+
+float32 float32_frc(float32 a, float_status_t &status)
+{
+    int roundingMode = get_float_rounding_mode(status);
+
+    Bit16s aExp = extractFloat32Exp(a);
+    Bit32u aSig = extractFloat32Frac(a);
+    int aSign = extractFloat32Sign(a);
+
+    if (aExp == 0xFF) {
+        if (aSig) return propagateFloat32NaN(a, status);
+        float_raise(status, float_flag_invalid);
+        return float32_default_nan;
+    }
+
+    if (aExp >= 0x96) {
+        return packFloat32(roundingMode == float_round_down, 0, 0);
+    }
+
+    if (aExp < 0x7F) {
+        if (aExp == 0) {
+            if (get_denormals_are_zeros(status)) aSig = 0;
+            if (aSig == 0) {
+                return packFloat32(roundingMode == float_round_down, 0, 0);
+            }
+
+            float_raise(status, float_flag_denormal);
+            if (! float_exception_masked(status, float_flag_underflow))
+                float_raise(status, float_flag_underflow);
+
+            if(get_flush_underflow_to_zero(status)) {
+                float_raise(status, float_flag_underflow | float_flag_inexact);
+                return packFloat32(aSign, 0, 0);
+            }
+        }
+        return a;
+    }
+
+    Bit32u lastBitMask = 1 << (0x96 - aExp);
+    Bit32u roundBitsMask = lastBitMask - 1;
+
+    aSig &= roundBitsMask;
+    aSig <<= 7;
+    aExp--;
+
+    if (aSig == 0)
+       return packFloat32(roundingMode == float_round_down, 0, 0);
+
+    return normalizeRoundAndPackFloat32(aSign, aExp, aSig, status);
+}
+
+/*----------------------------------------------------------------------------
 | Returns the result of adding the absolute values of the single-precision
 | floating-point values `a' and `b'.  If `zSign' is 1, the sum is negated
 | before being returned.  `zSign' is ignored if the result is a NaN.
@@ -1165,6 +1222,63 @@ float64 float64_round_to_int(float64 a, float_status_t &status)
     z &= ~roundBitsMask;
     if (z != a) float_raise(status, float_flag_inexact);
     return z;
+}
+
+/*----------------------------------------------------------------------------
+| Extracts the fractional portion of double-precision floating-point value `a',
+| and returns the result  as a  double-precision  floating-point value. The
+| fractional results are precise. The operation is performed according to the
+| IEC/IEEE Standard for Binary Floating-Point Arithmetic.
+*----------------------------------------------------------------------------*/
+
+float64 float64_frc(float64 a, float_status_t &status)
+{
+    int roundingMode = get_float_rounding_mode(status);
+
+    Bit64u aSig = extractFloat64Frac(a);
+    Bit16s aExp = extractFloat64Exp(a);
+    int aSign = extractFloat64Sign(a);
+
+    if (aExp == 0x7FF) {
+        if (aSig) return propagateFloat64NaN(a, status);
+        float_raise(status, float_flag_invalid);
+        return float64_default_nan;
+    }
+
+    if (aExp >= 0x433) {
+        return packFloat64(roundingMode == float_round_down, 0, 0);
+    }
+
+    if (aExp < 0x3FF) {
+        if (aExp == 0) {
+            if (get_denormals_are_zeros(status)) aSig = 0;
+            if (aSig == 0) {
+                return packFloat64(roundingMode == float_round_down, 0, 0);
+            }
+
+            float_raise(status, float_flag_denormal);
+            if (! float_exception_masked(status, float_flag_underflow))
+                float_raise(status, float_flag_underflow);
+
+            if(get_flush_underflow_to_zero(status)) {
+                float_raise(status, float_flag_underflow | float_flag_inexact);
+                return packFloat64(aSign, 0, 0);
+            }
+        }
+        return a;
+    }
+
+    Bit64u lastBitMask = BX_CONST64(1) << (0x433 - aExp);
+    Bit64u roundBitsMask = lastBitMask - 1;
+
+    aSig &= roundBitsMask;
+    aSig <<= 10;
+    aExp--;
+
+    if (aSig == 0)
+       return packFloat64(roundingMode == float_round_down, 0, 0);
+
+    return normalizeRoundAndPackFloat64(aSign, aExp, aSig, status);
 }
 
 /*----------------------------------------------------------------------------

@@ -240,6 +240,7 @@ float32 float32_sub(float32, float32, float_status_t &status);
 float32 float32_mul(float32, float32, float_status_t &status);
 float32 float32_div(float32, float32, float_status_t &status);
 float32 float32_sqrt(float32, float_status_t &status);
+float32 float32_frc(float32, float_status_t &status);
 float32 float32_muladd(float32, float32, float32, int flags, float_status_t &status);
 
 BX_CPP_INLINE float32 float32_fmadd(float32 a, float32 b, float32 c, float_status_t &status)
@@ -291,6 +292,7 @@ float64 float64_sub(float64, float64, float_status_t &status);
 float64 float64_mul(float64, float64, float_status_t &status);
 float64 float64_div(float64, float64, float_status_t &status);
 float64 float64_sqrt(float64, float_status_t &status);
+float64 float64_frc(float64, float_status_t &status);
 float64 float64_muladd(float64, float64, float64, int flags, float_status_t &status);
 
 BX_CPP_INLINE float64 float64_fmadd(float64 a, float64 b, float64 c, float_status_t &status)

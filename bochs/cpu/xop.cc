@@ -631,28 +631,72 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMUQ_VdqHdqWdqIbR(bxInstruction
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZPS_VpsWpsR(bxInstruction_c *i)
 {
-  BX_PANIC(("VFRCZPS_VpsWpsR: not implemented yet"));
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->rm());
+  unsigned len = i->getVL();
+
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+
+  for (unsigned n=0; n < (4*len); n++) {
+    op.avx32u(n) = float32_frc(op.avx32u(n), status);
+  }
+
+  check_exceptionsSSE(status.float_exception_flags);
+  BX_WRITE_AVX_REGZ(i->nnn(), op, len);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZPD_VpdWpdR(bxInstruction_c *i)
 {
-  BX_PANIC(("VFRCZPD_VpdWpdR: not implemented yet"));
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->rm());
+  unsigned len = i->getVL();
+  
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+
+  for (unsigned n=0; n < (2*len); n++) {
+    op.avx64u(n) = float64_frc(op.avx64u(n), status);
+  }
+
+  check_exceptionsSSE(status.float_exception_flags);
+
+  BX_WRITE_AVX_REGZ(i->nnn(), op, len);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZSS_VssWssR(bxInstruction_c *i)
 {
-  BX_PANIC(("VFRCZSS_VssWssR: not implemented yet"));
+  float32 op = BX_READ_XMM_REG_LO_DWORD(i->rm());
+  BxPackedXmmRegister r;
+
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+
+  r.xmm32u(0) = float32_frc(op, status);
+  r.xmm32u(1) = 0;
+  r.xmm64u(1) = 0;
+
+  check_exceptionsSSE(status.float_exception_flags);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), r);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZSD_VsdWsdR(bxInstruction_c *i)
 {
-  BX_PANIC(("VFRCZSD_VsdWsdR: not implemented yet"));
+  float64 op = BX_READ_XMM_REG_LO_QWORD(i->rm());
+  BxPackedXmmRegister r;
+
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+
+  r.xmm64u(0) = float64_frc(op, status);
+  r.xmm64u(1) = 0;
+
+  check_exceptionsSSE(status.float_exception_flags);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), r);
 
   BX_NEXT_INSTR(i);
 }

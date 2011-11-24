@@ -77,6 +77,8 @@ Detailed change log :
   - Added Bochs internal debugger command 'vmexitbp' to set breakpoint on
     VMX guest VMEXIT (patch by Jianan Hao). Type 'vmexitbp' in debugger
     command window to switch it on/off (similar to modebp).
+  - Fixed linear to physical address translation by Bochs internal debugger
+    for EPT unrestricted guest (VMX guest with paging disabled under EPT)
   - Fixed bug in GUI debugger SSE registers display.
   - Correctly display current CPU mode in GUI debugger status bar.
   - Turn off the mouse capture when the internal debugger or gdbstub enter
@@ -186,6 +188,8 @@ Detailed change log :
   [3190995] add eth backend based on Slirp by Heikki Lindholm
 
 - these S.F. bugs were closed/fixed
+  [2829847] Mouse locked during magic-break
+  [3418621] release mouse when debugger breakpoint was hit
   [1947077] sb command bug
   [2802677] Unable to install Cirrus SVGA driver in guest Windows ME
   [3422638] large ramfile support broken on anything but Linux
