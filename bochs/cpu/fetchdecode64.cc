@@ -446,7 +446,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 2F /w */ { BxPrefixSSE, BX_IA_COMISS_VpsWps, BxOpcodeGroupSSE_0f2f },
   /* 0F 30 /w */ { 0, BX_IA_WRMSR },
   /* 0F 31 /w */ { BxTraceEnd, BX_IA_RDTSC }, // end trace to avoid multiple TSC samples in one cycle
-  /* 0F 32 /w */ { 0, BX_IA_RDMSR },
+  /* 0F 32 /w */ { BxTraceEnd, BX_IA_RDMSR }, // end trace to avoid multiple TSC samples in one cycle
   /* 0F 33 /w */ { 0, BX_IA_RDPMC },
   /* 0F 34 /w */ { BxTraceEnd, BX_IA_SYSENTER },
   /* 0F 35 /w */ { BxTraceEnd, BX_IA_SYSEXIT },
@@ -961,7 +961,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 2F /d */ { BxPrefixSSE, BX_IA_COMISS_VpsWps, BxOpcodeGroupSSE_0f2f },
   /* 0F 30 /d */ { 0, BX_IA_WRMSR },
   /* 0F 31 /d */ { BxTraceEnd, BX_IA_RDTSC }, // end trace to avoid multiple TSC samples in one cycle
-  /* 0F 32 /d */ { 0, BX_IA_RDMSR },
+  /* 0F 32 /d */ { BxTraceEnd, BX_IA_RDMSR }, // end trace to avoid multiple TSC samples in one cycle
   /* 0F 33 /d */ { 0, BX_IA_RDPMC },
   /* 0F 34 /d */ { BxTraceEnd, BX_IA_SYSENTER },
   /* 0F 35 /d */ { BxTraceEnd, BX_IA_SYSEXIT },
@@ -1476,7 +1476,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 2F /q */ { BxPrefixSSE, BX_IA_COMISS_VpsWps, BxOpcodeGroupSSE_0f2f },
   /* 0F 30 /q */ { 0, BX_IA_WRMSR },
   /* 0F 31 /q */ { BxTraceEnd, BX_IA_RDTSC }, // end trace to avoid multiple TSC samples in one cycle
-  /* 0F 32 /q */ { 0, BX_IA_RDMSR },
+  /* 0F 32 /q */ { BxTraceEnd, BX_IA_RDMSR }, // end trace to avoid multiple TSC samples in one cycle
   /* 0F 33 /q */ { 0, BX_IA_RDPMC },
   /* 0F 34 /q */ { BxTraceEnd, BX_IA_SYSENTER },
   /* 0F 35 /q */ { BxTraceEnd, BX_IA_SYSEXIT },

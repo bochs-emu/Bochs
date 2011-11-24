@@ -10734,9 +10734,9 @@ post_default_ints:
   ;; System Services
   SET_INT_VECTOR(0x15, #0xF000, #int15_handler)
 
-  ;; set vectors 0x60 - 0x66h to zero (0:180..0:19b)
+  ;; set vectors 0x60 - 0x67h to zero (0:180..0:19f)
   xor  ax, ax
-  mov  cx, #0x000E ;; 14 words
+  mov  cx, #0x0010 ;; 16 words
   mov  di, #0x0180
   cld
   rep
