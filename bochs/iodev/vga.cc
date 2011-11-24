@@ -2384,12 +2384,13 @@ void bx_vga_c::mem_write(bx_phy_address addr, Bit8u value)
       return;
       /* CGA 320x200x4 / 640x200x2 end */
     }
+/*
     else if (BX_VGA_THIS s.graphics_ctrl.memory_mapping != 1) {
       BX_PANIC(("mem_write: graphics: mapping = %u",
                (unsigned) BX_VGA_THIS s.graphics_ctrl.memory_mapping));
       return;
     }
-
+*/
     if (BX_VGA_THIS s.sequencer.chain_four) {
       unsigned x_tileno, y_tileno;
 
