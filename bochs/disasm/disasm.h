@@ -201,6 +201,7 @@ BX_CPP_INLINE x86_insn::x86_insn(bx_bool is32, bx_bool is64)
   b1 = 0;
 
   is_vex = 0;
+  is_xop = 0;
   vex_vvv = 0;
   vex_l = BX_AVX_VL128;
   vex_w = 0;
