@@ -1211,12 +1211,6 @@ public: // for now...
     BX_CPU_THIS_PTR oszapc.result &= ~(0xFF);
   }
 
-  BX_SMF void set_PF_base(Bit8u val) {
-    set_ZF(getB_ZF());
-    BX_CPU_THIS_PTR oszapc.result &= ~(0xFF);
-    BX_CPU_THIS_PTR oszapc.result |= val;
-  }
-
   // AF - bit 4 in EFLAGS, represented by bit LF_BIT_AF of oszapc.auxbits
   BX_SMF bx_bool getB_AF(void) {
     return ((BX_CPU_THIS_PTR oszapc.auxbits >> LF_BIT_AF) & 1);

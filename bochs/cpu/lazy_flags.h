@@ -90,7 +90,7 @@ typedef struct {
    SET_FLAGS_OSZAPC_32(0, (result_32))
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_LOGIC_64(result_64) \
-   SET_FLAGS_OSZAPC_64(0ULL, (result_64))
+   SET_FLAGS_OSZAPC_64(BX_CONST64(0), (result_64))
 #endif
 
 /* op1, op2, result */
