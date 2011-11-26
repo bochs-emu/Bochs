@@ -82,13 +82,13 @@ int vmware4_image_t::open(const char * pathname)
     hd_size = header.total_sectors * SECTOR_SIZE;
     cylinders = (unsigned)hd_size / (16 * 63);
     heads = 16;
-    sectors = 63;
+    spt = 63;
 
     BX_DEBUG(("VMware 4 disk geometry:"));
     BX_DEBUG(("   .size      = " FMT_LL "d", hd_size));
     BX_DEBUG(("   .cylinders = %d", cylinders));
     BX_DEBUG(("   .heads     = %d", heads));
-    BX_DEBUG(("   .sectors   = %d", sectors));
+    BX_DEBUG(("   .sectors   = %d", spt));
 
     return 1;
 }

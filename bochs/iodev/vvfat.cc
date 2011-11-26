@@ -367,8 +367,8 @@ bx_bool vvfat_image_t::sector2CHS(Bit32u spos, mbr_chs_t *chs)
 {
   Bit32u head, sector;
 
-  sector = spos % sectors;
-  spos   /= sectors;
+  sector = spos % spt;
+  spos   /= spt;
   head   = spos % heads;
   spos   /= heads;
   if (spos > 1023) {
@@ -1054,7 +1054,7 @@ int vvfat_image_t::init_directories(const char* dirname)
     if (fat_type != 32) {
       bootsector->sectors_per_fat = htod16(sectors_per_fat);
     }
-    bootsector->sectors_per_track = htod16(sectors);
+    bootsector->sectors_per_track = htod16(spt);
     bootsector->number_of_heads = htod16(heads);
     bootsector->hidden_sectors = htod32(offset_to_bootsector);
     bootsector->total_sectors = htod32((volume_sector_count > 0xffff) ? volume_sector_count:0);
@@ -1204,14 +1204,14 @@ int vvfat_image_t::open(const char* dirname)
       }
       if (fat_type != 0) {
         sector_count = partition->start_sector_long + partition->length_sector_long;
-        sectors = partition->start_sector_long;
+        spt = partition->start_sector_long;
         if (partition->end_CHS.head > 15) {
           heads = 16;
         } else {
           heads = partition->end_CHS.head + 1;
         }
-        cylinders = sector_count / (heads * sectors);
-        offset_to_bootsector = sectors;
+        cylinders = sector_count / (heads * spt);
+        offset_to_bootsector = spt;
         memcpy(&first_sectors[0], sector_buffer, 0x200);
         use_mbr_file = 1;
         BX_INFO(("VVFAT: using MBR from file"));
@@ -1248,13 +1248,13 @@ int vvfat_image_t::open(const char* dirname)
       }
       if ((fat_type != 0) && (bs->number_of_fats == 2)) {
         sector_count = bs->total_sectors16 + bs->total_sectors + bs->hidden_sectors;
-        sectors = bs->sectors_per_track;
+        spt = bs->sectors_per_track;
         if (bs->number_of_heads > 15) {
           heads = 16;
         } else {
           heads = bs->number_of_heads;
         }
-        cylinders = sector_count / (heads * sectors);
+        cylinders = sector_count / (heads * spt);
         offset_to_bootsector = bs->hidden_sectors;
         use_boot_file = 1;
       }
@@ -1274,7 +1274,7 @@ int vvfat_image_t::open(const char* dirname)
       // floppy support
       cylinders = 80;
       heads = 2;
-      sectors = 18;
+      spt = 18;
       offset_to_bootsector = 0;
       fat_type = 12;
       sectors_per_cluster = 1;
@@ -1285,11 +1285,11 @@ int vvfat_image_t::open(const char* dirname)
       if (cylinders == 0) {
         cylinders = 1024;
         heads = 16;
-        sectors = 63;
+        spt = 63;
       }
-      offset_to_bootsector = sectors;
+      offset_to_bootsector = spt;
     }
-    sector_count = cylinders * heads * sectors;
+    sector_count = cylinders * heads * spt;
   }
 
   hd_size = sector_count * 512;

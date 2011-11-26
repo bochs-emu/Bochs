@@ -284,12 +284,12 @@ int vmware3_image_t::open(const char * pathname)
     if (header.total_sectors_in_disk!=0) {
         cylinders = header.cylinders_in_disk;
         heads = header.heads_in_disk;
-        sectors = header.sectors_in_disk;
+        spt = header.sectors_in_disk;
         hd_size = header.total_sectors_in_disk * 512;
     } else {
         cylinders = header.cylinders;
         heads = header.heads;
-        sectors = header.sectors;
+        spt = header.sectors;
         hd_size = header.total_sectors * 512;
     }
 

@@ -1524,7 +1524,7 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
         media->type              = BX_FLOPPY_1_44;
         media->tracks            = media->vvfat->cylinders;
         media->heads             = media->vvfat->heads;
-        media->sectors_per_track = media->vvfat->sectors;
+        media->sectors_per_track = media->vvfat->spt;
         media->sectors           = 2880;
         media->vvfat_floppy = 1;
         media->fd = 0;

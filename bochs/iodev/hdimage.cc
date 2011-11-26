@@ -34,6 +34,10 @@
 #if BX_HAVE_SYS_MMAN_H
 #include <sys/mman.h>
 #endif
+#ifdef linux
+#include <linux/fs.h>
+#include <sys/ioctl.h>
+#endif
 
 #define LOG_THIS theHDImageCtl->
 
@@ -175,16 +179,22 @@ int default_image_t::open(const char* pathname, int flags)
 #ifndef WIN32
   /* look at size of image file to calculate disk geometry */
   struct stat stat_buf;
-  int ret = fstat(fd, &stat_buf);
-  if (ret) {
+  if (fstat(fd, &stat_buf)) {
     BX_PANIC(("fstat() returns error!"));
   }
-  hd_size = (Bit64u)stat_buf.st_size;
-#endif
-  if ((hd_size % 512) != 0) {
-    BX_PANIC(("size of disk image must be multiple of 512 bytes"));
+#ifdef linux
+  if (stat_buf.st_rdev) { // Is this a special device file (e.g. /dev/sde) ?
+    ioctl(fd, BLKGETSIZE64, &hd_size); // yes it's!
   }
-
+  else
+#endif
+  {
+    hd_size = (Bit64u)stat_buf.st_size; // standard unix procedure to get size of regular files
+  }
+#endif
+  BX_INFO(("hd_size: "FMT_LL"u", hd_size));
+  if (hd_size <= 0) BX_PANIC(("size of disk image not detected / invalid"));
+  if ((hd_size % 512) != 0) BX_PANIC(("size of disk image must be multiple of 512 bytes"));
   return fd;
 }
 

@@ -153,7 +153,7 @@ class device_image_t
 
       unsigned cylinders;
       unsigned heads;
-      unsigned sectors;
+      unsigned spt;
       Bit64u   hd_size;
 };
 
