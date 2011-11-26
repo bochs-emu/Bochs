@@ -170,6 +170,7 @@ Detailed change log :
   - win32paramdlg: added tooltip support using the parameter description
 
 - SF patches applied
+  [3412431] Enabling raw devices as hdimage by affiss
   [3435049] rombios: fix package size in pointing device flags 2 by Sebastian Herbszt
   [3426460] [PATCH] PIC: remove never-executed code by Christian Inci
   [3370604] Ctrl-Break support for the bochs BIOS by Nikolay Nikolov
@@ -188,6 +189,7 @@ Detailed change log :
   [3190995] add eth backend based on Slirp by Heikki Lindholm
 
 - these S.F. bugs were closed/fixed
+  [3365456] block device dimensions problem
   [3441564] interrupts vectors 0x67 should also be NULL ! cf: 2902118
   [2829847] Mouse locked during magic-break
   [3418621] release mouse when debugger breakpoint was hit
