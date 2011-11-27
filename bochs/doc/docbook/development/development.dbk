@@ -2189,48 +2189,42 @@ with non-interesting ones.</para></listitem>
 <para>
 Update version number and strings in configure.in.
 <screen>
-VERSION="2.4"
-VER_STRING="2.4"
-REL_STRING="Build from SVN snapshot on June 7, 2009"
+VERSION="2.5"
+VER_STRING="2.5"
+REL_STRING="Build from SVN snapshot on November 27, 2011"
 </screen>
 In the README file you have to update version number and date. Add some
 information about new features if necessary.
 <screen>
 Bochs x86 Pentium+ Emulator
-Updated: Sat May 3 07:34:00 CEST 2009
-Version: 2.4
+Updated: Sun Nov 27 16:55:00 CET 2011
+Version: 2.5
 </screen>
 Check date, update/sumup info in CHANGES. Run autoconf to regenerate configure and check them in.
 Create an SVN tag that contains all files of the revision that was used in the release.
 For prereleases I create a normal SVN tag like this:
 <screen>
-  svn mkdir tags/REL_2_4_pre1
-  svn copy trunk/bochs tags/REL_2_4_pre1/bochs
+  svn mkdir tags/REL_2_5_pre1
+  svn copy trunk/bochs tags/REL_2_5_pre1/bochs
   svn commit
 </screen>
 But for a real release, I make an SVN branch tag AND a normal tag.
 <screen>
-  svn mkdir tags/REL_2_4_BASE
-  svn copy trunk/bochs tags/REL_2_4_BASE/bochs
-  svn mkdir branches/REL_2_4
-  svn copy trunk/bochs branches/REL_2_4/bochs
+  svn mkdir tags/REL_2_5_FINAL
+  svn copy trunk/bochs tags/REL_2_5_FINAL/bochs
+  svn mkdir branches/REL_2_5
+  svn copy trunk/bochs branches/REL_2_5/bochs
   svn commit
 </screen>
-The base tag marks where the branch split off of the main trunk.
+The tag marks where the branch split off of the main trunk.
 This is very useful in maintaining the branch since you can do diffs
 against it.
 <screen>
-   svn diff tags/REL_2_4_BASE/bochs trunk/bochs
-   svn diff tags/REL_2_4_BASE branches/REL_2_4
+   svn diff tags/REL_2_5_FINAL/bochs trunk/bochs
+   svn diff tags/REL_2_5_FINAL/bochs branches/REL_2_5
    etc.
 </screen>
-The release and all bugfix releases after it are on the REL_2_4 branch.
-When the release is actually finalized, you can do this:
-<screen>
-  svn mkdir tags/REL_2_4_FINAL
-  svn copy trunk/bochs tags/REL_2_4_FINAL/bochs
-  svn commit
-</screen>
+All bugfix-only releases after the final release should be created from the REL_2_5 branch.
 Now you can start building packages with the sources from the created release tag.
 </para>
 </section>
