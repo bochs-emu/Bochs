@@ -164,6 +164,7 @@ Detailed change log :
     independent from the "clock" setting)
   - Implemented graphics mode snapshot for VBE, Cirrus and standard VGA modes.
     CGA modes are not supported yet.
+  - added 'x' display library option 'nokeyrepeat' to turn off keyboard repeat
 
 - Config interface
   - win32paramdlg: dialog size now adjusted to support larger label text

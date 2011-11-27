@@ -63,6 +63,7 @@
 #display_library: wx
 #display_library: x, options="hideIPS" # disable IPS output in status bar
 #display_library: x, options="gui_debug" # use GTK debugger gui
+#display_library: x, options="nokeyrepeat" # turn off host keyboard repeat
 
 #=======================================================================
 # ROMIMAGE:

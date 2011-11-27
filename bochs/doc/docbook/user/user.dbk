@@ -3519,6 +3519,7 @@ behaviour. See the examples below for currently supported options.
   display_library: win32, options="gui_debug" # use win32 debugger gui frontend
   display_library: x, options="hideIPS"       # disable IPS output in status bar
   display_library: x, options="gui_debug"     # use GTK debugger gui frontend
+  display_library: x, options="nokeyrepeat"   # turn off host keyboard repeat
 </screen>
 </para>
 
