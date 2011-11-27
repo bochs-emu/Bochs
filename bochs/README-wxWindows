@@ -1,0 +1,337 @@
+Readme for wxWindows Interface
+updated Sat Dec 21 11:09:34 EST 2002
+
+Contributors to wxWindows port:
+  Don Becker (Psyon)
+  Bryce Denney
+  Dave Poirier
+  Volker Ruppert
+
+wxWindows Configuration Interface
+
+The wxWindows port began in June 2001 around the time of Bochs 1.2.1.  Dave
+Poirier and Bryce Denney started adding a wxWindows configuration interface.
+We made some progress, but stopped after a while.  Then in March/April 2002
+Bryce and Psyon revived the wxWindows branch and turned it into a usable
+interface.  Psyon did most of the work to get text and graphics working, and
+Bryce worked on event passing between threads, and keyboard mapping.
+Starting in August 2002, Bryce added lots of dialog boxes to allow you
+to set all the bochsrc parameters.  At the time of release 2.0, there
+are still some bugs but it is pretty stable and usable.
+
+Bochs should be build with wxWindows 2.3.3 or later.  It will probably
+not compile with 2.2.x without some work.  wxWindows 2.3.3 includes
+a patch by Bryce Denney to allow us to get raw keycode data for several
+OSes.
+
+On any UNIX platform with wxWindows installed, configure with
+--with-wx to enable the wxWindows display library.
+
+To build in MS VC++:
+- edit .conf.win32-vcpp and add "--with-wx" to the configure line.
+  If you want different configure options from what you see, change them
+  too.
+- in cygwin, do "sh .conf.win32-vcpp" to run configure
+- unzip build/win32/wxworkspace.zip into the main directory.
+  For cygwin: unzip build/win32/wxworkspace.zip
+  or use winzip or whatever else.
+- open up bochs.dsw, the workspace file
+- edit project settings so that VC++ can find the wxWindows include
+  files and libraries on your system.  Bryce installed them in
+  d:/wx/wx233/include and d:/wx/wx233/lib.  Specifically, edit
+  - Project>Settings>C/C++>Category=Preprocessor: include directories.
+  - Project>Settings>Link>Category=Input: additional library path.
+- build
+
+Note that the project is set up for wxWindows 2.3.3.  To use on other
+wxwindows versions, you will have to change some of the names of the libraries
+to include.  Use the samples that came with that version of wxwindows for
+reference.
+
+To do:
+- now that ParamDialog works, I may rewrite some of the other dialogs
+  as subclasses of ParamDialog.  This would lead to more compact code,
+  and fewer bugs.
+- configure time dialog
+  - need to think about dialog layout
+  - setting of IPS (controls how much time the PIT associates with each
+    instruction for purposes of sending timer interrupts).  How can we
+    name this?  instructions per simulated second.
+  - enable realtime pit, realtime pit settings (?)
+  - enable/disable X windows idle hack
+  - report instructions per wall clock second in real time
+- decide which settings can be adjusted at runtime, and figure out how
+  to disable the others.  Do we need a set_enable() on the parameters
+  themselves?
+- the power button has always "turned off" the power.  Make it also
+  turn ON the power.  I think a few little green LEDs are in order.
+- floppy config screen: on win32, both not present and ejected are selected
+  at first.
+- log events
+  - Later: allow viewing of current log messages.  Maybe this is a dialog that
+    we append to, or maybe it should periodically display the last 1K of the
+    log file (might be faster in high volume situations).
+  - Later: should we allow multiple log files with different settings? for
+    example dump cpu events to cpulog.txt and keyboard events to
+    keyboardlog.txt?
+- debugger
+  - bug: it's possible to make the GUI stop responding to mouse and keyboard
+    input if you click the continue button in the debugger twice in very
+    close succession.  I don't know why yet.
+  - probably the layout will be similar to BFE at first
+  - need to show disassembly of the next instruction to be executed
+- clean up the biggest memory leaks and init/cleanup code.  The gui allows you
+  to kill the simulator and restart, but it doesn't do well after the first
+  time.  Valgrind should help with memory leak debugging, though until
+  recently it couldn't run multithreaded programes.
+- disk change dialogs for floppy and cdrom need work.
+  http://sourceforge.net/tracker/index.php?func=detail&aid=545414&group_id=12580&atid=112580
+-------------
+
+------------------------------------------------------
+
+Random notes follow
+
+Added some sketches.  I'm thinking that the control
+panel will be able to basically show one of these screens at a time.  When
+you first start you would see ChooseConfigScreen which chooses between the
+configurations that you have loaded recently (which it would remember
+by the pathname of their bochsrc).  Whether you choose an existing
+configuration to be loaded or a new one, when you click Ok you go to
+the first configuration screen, ConfigDiskScreen.
+
+Each of the configuration screens takes up the whole control panel window.
+We could use tabs on the top and/or "<-Prev" and "Next->" buttons to make
+it quick to navigate the configuration screens.  Each screen should
+probably have a Prev, Next, Revert to Saved, and Accept button.
+The menu choices like Disk..., VGA..., etc. just switch directly to
+that tab.
+
+
+------------------------------------------------------
+Notes:
+
+events from gui to sim:
+- [async] key pressed or released
+- [async] mouse motion with button state
+- [sync] query parameter
+- [sync] change parameter
+- [async] start, pause, stop, reset simulation.  Can be implemented
+  as changing a parameter.
+- [async] request notification when some param changes
+
+events from sim to gui:
+- [async] log message to be displayed (or not)
+- [async] ask user how to proceed (like panic: action=ask)
+- [async] param value changed
+- make my thread sleep for X microseconds  (call wxThread::sleep then return)
+
+In a synchronous event, the event object will contain space for the entire
+response.  The sender allocates memory for the event and builds it.  The
+receiver fills in blanks in the event structure (or could overwrite parts)
+and returns the same event pointer as a response.  For async events, probably
+the sender will allocate and the receiver will have to delete it.
+
+implement the floppyA and floppyB change buttons using new event
+structure.  How should it work?
+
+vga gui detects a click on floppyA bitmap
+construct a BxEvent type BX_EVT_ASK_PARAM
+post the event to the wxwindows gui thread (somehow) and block for response
+when it arrives in the gui thread, show a modal dialog box
+get the answer back to the simulator thread
+
+
+right now, this is working ok within the simulator thread using
+wxMutexGuiEnter/Leave.  Still I'm going to change it so that the
+siminterface.cc code builds an event structure and the gui code
+fills in the blank in the structure, instead of the stupid
+notify_get_int_arg stuff.
+
+
+Starting and Killing Threads
+
+When a detachable (default) thread finishes (returns from its Entry()
+function), wxwindows frees the memory associated with that thread.
+Unless the thread is never going to end, it is potentially dangerous to have a
+pointer to it at all.  Even if you try to "check if it's alive" first, you may
+be dereferencing the pointer after it has already been deleted, leading to it
+claiming to be alive when it's not, or a segfault.  To solve this, the approach
+used in the wxwindows threads example is to have code in the thread's OnExit()
+method remove the thread's pointer from the list of usable threads.  In
+addition, any references or changes to the list of threads is controlled by a
+critical section to ensure that it stays correct.  This post finally
+explained what I was seeing.
+
++-----------------------
+| From: Pieter van der Meulen (pgmvdm@yahoo.com)
+|  Subject: Re: Thread Sample program - bug
+|  Newsgroups: comp.soft-sys.wxwindows
+|  Date: 2001-06-28 17:51:35 PST
+|
+|
+| At 06:24 PM 6/28/2001, you wrote:
+| >Hi,
+| >I have wxWindows 2.2.7 (wxMSW) installed.
+| >
+| >I just found in the thread.cpp sample code this section:
+| >
+| ><code>
+| >void MyFrame::OnQuit(wxCommandEvent& WXUNUSED(event) )
+| >{
+| >     size_t count = wxGetApp().m_threads.Count();
+| >     for ( size_t i = 0; i < count; i++ )
+| >     {
+| >===>        wxGetApp().m_threads[0]->Delete();    <=====
+| >     }
+| >
+| >     Close(TRUE);
+| >}
+| ></code>
+| >The indecated line should probably rather have a
+| >m_threads[i]     rather than     m_threads[0] .
+|
+| No, it should not, although it is not immediately obvious. When Delete() is
+| called, the thread will eventually delete itself, but not before it calls
+| MyThread::Exit(), which will remove itself from m_threads[] using
+| wxArray::Remove(this). wxArray::Remove (RemoveAt) will compact the array to
+| remove the element, it is now size-1. After this wxThread::Delete() returns.
+|
+|
+| >I have have a further question to this:
+| >Does this mean that a detached thread created with new
+| >HAS to be deleted  manually ?  Or is this only in case it might still
+| >be running?
+|
+| Firstly, you must create every detached thread using new since it will
+| delete itself, literally calling delete this.
+| Calling wxThread::Delete() is a correct way to terminate a thread, but
+| manually deleting (using delete) a detached wxThread object is not.
+| wxThread::Delete() will ask the thread to exit, the thread should check for
+| this in wxThread::Entry() regularly using wxThread::TestDestroy() and exit
+| when asked to do so.
+|
+| >(In general I have a unsatisfied felling about when delete is
+| >neccessary and when not -- "I only know, it's not , if the class is
+| >derived from wxWindows")
+|
+| For wxThreads: joinable threads must be deleted (when allocated on the
+| heap), detached threads may never be deleted. For other classes, consult
+| the documentation ;)
+|
+|
+| >Thanks for some feedback,
+| >Sebastian
+|
+| Regards,
+|
+| Pieter.
++-----------------------
+
+tracking some kind of deadlock bug in Linux.
+
+seems to be in ReadMailcap, src/unix/mimetypes.cpp in wxwindows sources
+src/unix/mimetype.cpp:2312
+
+SOLUTION: compile with -pthread on every compile and link line.
+
+
+
+----------------------------------------------
+Suggested solution for putting sizers inside a scrolled window
+
+From: Thaddaeus Frogley (codemonkey_uk@users.sourceforge.net)
+Subject: RE: Using sizers inside of a scrolled window
+Newsgroups: comp.soft-sys.wxwindows
+Date: 2001-10-02 02:41:04 PST
+
+I have solved that same problem (scrolled windows / sizers) like so:
+
+In the constructor for your wxFrame derived class,
+
+//create a scrolling window
+myScrolledWindow = new wxScrolledWindow(this, -1);
+
+//in the scolling window, create a panel
+myMainPanel = new wxPanel(myScrolledWindow, -1);
+
+//place controls in the panel, laying them out with sizers
+
+//...
+
+myMainPanel->SetAutoLayout( TRUE );
+myMainPanel->SetSizer( sizer );
+sizer->Fit( myMainPanel );
+sizer->SetSizeHints( myMainPanel );
+
+//set the scroll bars lengths based on the size of the inner panel
+wxSize size = myMainPanel->GetBestSize();
+myScrolledWindow->SetScrollbars( 1, 1, size.GetWidth(), size.GetHeight() );
+
+//calculate the size of the window, and set it appropriately
+size.Set(size.GetWidth()+16,size.GetHeight()+16);
+
+//Get the physical size of the display in pixels.
+int displaySizeX,displaySizeY;
+wxDisplaySize(&displaySizeX,&displaySizeY);
+
+//clamp window size to % of screen
+if (size.GetWidth()>displaySizeX*0.75){
+        size.SetWidth(displaySizeX*0.75);
+}
+if (size.GetHeight()>displaySizeY*0.75){
+        size.SetHeight(displaySizeY*0.75);
+}
+
+SetClientSize(size);
+
+
+
+-----------------
+How to make wxChoice as wide as the longest string in the choice box?
+
+From: Vadim Zeitlin (Vadim.zeitlin@dptmaths.ens-cachan.fr)
+Subject: Re: wxChoice
+Newsgroups: comp.soft-sys.wxwindows
+Date: 2001-09-18 04:41:07 PST
+
+
+On Sat, 15 Sep 2001 15:39:45 +0200 Merlijn Blaauw <merlijn@student-kmt.hku.nl> wrote:
+
+MB> Also, I
+MB> would like the widget's parent window to change size (width) to fit the
+MB> widget's new content aswell.
+
+ You'll have to do it manually by calculating the length of the string you
+add to the control (use wxClientDC(combobox) and set correct font before
+calling GetTextExtent()!) and resizing the control to be slightly larger
+(yes, I know it's not nice at all but I don't see any other way to do it).
+
+ Regards,
+VZ
+
+---------
+Hold on, this is even better!
+
+From: Yann Rouillard (Y.Rouillard@exeter.ac.uk)
+Subject: wxChoice and wxADJUST_MINSIZE
+Newsgroups: comp.soft-sys.wxwindows
+Date: 2002-07-18 08:28:31 PST
+
+I am trying to use a wxChoice widget in a little panel. The text length of
+the choices in the wxChoice can change so I used the wxADJUST_MINSIZE to
+have its width correctly set.
+
+> the manual for wxSizer::Add() says:
+Finally, you can also specify wxADJUST_MINSIZE flag to make the minimal size of
+the control dynamically adjust to the value returned by its GetBestSize()
+method - this allows, for example, for correct relayouting of a static text
+control even if its text is changed during run-time.
+
+relayouting?  sounds like s/size/layout/g gone wrong.
+
+Call Add() with wxADJUST_MINSIZE flag!
+--------------
+mno-cygwin guide on mingw webpage
+http://www.xraylith.wisc.edu/~khan/software/gnu-win32/mno-cygwin-howto.txt
+www.mingw.org

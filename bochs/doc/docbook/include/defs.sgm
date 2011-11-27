@@ -1,0 +1,31 @@
+<!--
+================================================================
+doc/docbook/include/defs.sgm
+$Id: defs.sgm,v 1.8 2008-02-05 22:33:34 sshwarts Exp $
+
+This file is included by all Bochs docbook files, so that the
+definitions can be used anywhere in the documentation.
+================================================================
+-->
+
+<!--
+Editing marks.  FIXME is just a reminder for somebody to come back and
+work on the section.  NEEDHELP means that the author doesn't have enough
+information to finish, and would like someone else to assist.
+Presently, each one just shows an under construction icon.  We might
+want some editing marks that don't show anything, or only show up in
+draft mode.
+-->
+<!ENTITY FIXME '<inlinegraphic format="PNG" fileref="../images/undercon.png">'>
+<!ENTITY NEEDHELP '<inlinegraphic format="PNG" fileref="../images/undercon.png">'>
+
+<!ENTITY bochswebsite '<ulink url="http://bochs.sourceforge.net">Bochs web site</ulink>'>
+<!ENTITY bochs-sf-net '<ulink url="http://bochs.sourceforge.net">bochs.sourceforge.net</ulink>'>
+<!ENTITY devlist '<link linkend="bochs-developers">bochs-developers mailing list</link>'>
+<!ENTITY bochsdir '<varname>$BOCHS</varname>'>
+<!ENTITY Makefile '<filename>Makefile</filename>'>
+
+<!-- these are probably only useful for the documentation guide -->
+<!ENTITY docbookTDG '<ulink url="http://www.docbook.org/tdg/en/html/docbook.html">DocBook: The Definitive Guide</ulink>'>
+<!ENTITY OASIS '<ulink url="http://www.oasis-open.org/">OASIS</ulink>'>
+

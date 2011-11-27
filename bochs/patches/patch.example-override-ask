@@ -1,0 +1,112 @@
+----------------------------------------------------------------------
+Patch name: patch.example-override-ask
+Author: Bryce Denney
+Date: Mon Sep 23 13:00:53 EDT 2002
+Status: Demo
+
+Detailed description:
+This patch shows how to create your own siminterface callback function.
+It is not intended to be checked in anytime, only to serve as an example
+of how to use the siminterface.
+
+Patch updated for current CVS. (Volker Ruppert, Oct 16, 2005)
+
+Patch was created with:
+  diff -u
+Apply patch to what version:
+  cvs checked out on DATE
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p1 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+--- bochs/config.h.in	2005-10-13 20:40:50.131262080 +0200
++++ bochs-overrideask/config.h.in	2005-10-13 20:44:40.841188840 +0200
+@@ -949,6 +949,9 @@
+ // External Debugger
+ #define BX_EXTERNAL_DEBUGGER 0
+ 
++// Override ask dialog (demo)
++#define BX_OVERRIDE_ASK_EXAMPLE 1
++
+ // Magic breakpoints
+ #define BX_MAGIC_BREAKPOINT 1
+ 
+--- bochs/gui/textconfig.cc	2005-06-06 22:14:50.000000000 +0200
++++ bochs-overrideask/gui/textconfig.cc	2005-10-13 20:12:16.090835832 +0200
+@@ -996,6 +996,10 @@
+     case CI_START:
+       //fprintf (stderr, "textconfig.cc: start\n");
+       bx_config_interface_init ();
++#if BX_OVERRIDE_ASK_EXAMPLE
++      extern void override_ask_init();
++      override_ask_init ();
++#endif
+       if (SIM->get_param_enum(BXP_BOCHS_START)->get () == BX_QUICK_START)
+ 	bx_config_interface (BX_CI_START_SIMULATION);
+       else {
+diff -urN bochs/Makefile.in bochs-overrideask/Makefile.in
+--- bochs/Makefile.in	2005-07-30 17:02:40.000000000 +0200
++++ bochs-overrideask/Makefile.in	2005-10-13 20:04:06.137320088 +0200
+@@ -146,6 +146,7 @@
+ 	pc_system.o \
+ 	osdep.o \
+ 	plugin.o \
++	overrideask.o \
+ 	@EXTRA_BX_OBJS@
+ 
+ EXTERN_ENVIRONMENT_OBJS = \
+--- bochs/overrideask.cc	1970-01-01 01:00:00.000000000 +0100
++++ bochs-overrideask/overrideask.cc	2005-10-13 20:15:25.713008880 +0200
+@@ -0,0 +1,52 @@
++#include <stdio.h>
++#include <assert.h>
++#include "config.h"
++#include "osdep.h"
++#include "gui/siminterface.h"
++
++bxevent_handler old_callback = NULL;
++void *old_callback_arg = NULL;
++
++BxEvent *
++override_ask_callback (void *unused, BxEvent *event)
++{
++  int n;
++  int level;
++  fprintf (stderr, "override_ask_callback\n");
++  event->retcode = -1;
++  switch (event->type)
++  {
++    case BX_SYNC_EVT_LOG_ASK:
++      level = event->u.logmsg.level;
++      fprintf (stderr, "============ override_ask_callback was called ==========================\n");
++      fprintf (stderr, "Event type: %s\n", SIM->get_log_level_name (level));
++      fprintf (stderr, "Device: %s\n", event->u.logmsg.prefix);
++      fprintf (stderr, "Message: %s\n\n", event->u.logmsg.msg);
++      // note: 4 only available if BX_DEBUGGER=1. ideally, don't show it
++      fprintf (stderr, "What should I do? (0=continue, 1=alwayscont, 2=die, 3=abort, 4=debug) ");
++      while (scanf ("%d", &n) != 1 || (n<0 && n>4)) {
++	fprintf (stderr, "Enter 0-4 only.\n");
++      }
++      event->retcode = n;
++      fprintf (stderr, "============ override_ask_callback is done =============================\n");
++      return event;
++    case BX_SYNC_EVT_TICK: // called periodically by siminterface.
++    case BX_SYNC_EVT_ASK_PARAM: // called if simulator needs to know value of a param.
++    case BX_ASYNC_EVT_REFRESH: // called when some bx_param_c parameters have changed.
++      // fall into default case
++  default:
++    return (*old_callback)(old_callback_arg, event);
++  }
++}
++
++// called from textconfig.cc
++void override_ask_init ()
++{
++  fprintf (stderr, "override_ask_init");
++  // this should be called after the configuration interface has had a
++  // chance to install its own callback.  Otherwise, overrideask will not
++  // override anything.
++  SIM->get_notify_callback (&old_callback, &old_callback_arg);
++  assert (old_callback != NULL);
++  SIM->set_notify_callback (override_ask_callback, NULL);
++}

@@ -1,0 +1,15 @@
+1 VERSIONINFO
+FILEVERSION @WIN_VER_STRING@
+{
+ BLOCK "StringFileInfo"
+ {
+  BLOCK "040904E4"
+  {
+   VALUE "FileDescription", "The cross platform IA-32 emulator"
+   VALUE "FileVersion", "@VER_STRING@"
+   VALUE "LegalCopyright", "GNU Lesser General Public License"
+   VALUE "ProductName", "Bochs"
+   VALUE "ProductVersion", "@REL_STRING@"
+  }
+ }
+}
