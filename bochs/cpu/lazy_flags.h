@@ -170,4 +170,23 @@ typedef struct {
   SET_FLAGS_OSZAP_64(SUB_COUT_VEC((op1_64), (op2_64), (diff_64)), (diff_64))
 #endif
 
+// *******************
+// OSZAxC
+// *******************
+
+/* size, carries, result */
+#define SET_FLAGS_OSZAxC_LOGIC_SIZE(size, lf_result) { \
+  set_ZF(!lf_result); \
+  BX_CPU_THIS_PTR oszapc.result = ((bx_address)(Bit##size##s)(lf_result) & ~((bx_address)(0xff))) \
+     | (BX_CPU_THIS_PTR oszapc.result & 0xff); \
+}
+
+/* result */
+#define SET_FLAGS_OSZAxC_LOGIC_32(result_32) \
+   SET_FLAGS_OSZAxC_LOGIC_SIZE(32, (result_32))
+#if BX_SUPPORT_X86_64
+#define SET_FLAGS_OSZAxC_LOGIC_64(result_64) \
+   SET_FLAGS_OSZAxC_LOGIC_SIZE(64, (result_64))
+#endif
+
 #endif // BX_LAZY_FLAGS_DEF

@@ -381,15 +381,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::TZCNT_GqEqR(bxInstruction_c *i)
     result_64++;
   }
 
-  if (op1_64 == 0)
-    assert_CF();
-  else
-    clear_CF();
-
-  if (result_64 == 0)
-    assert_ZF();
-  else
-    clear_ZF();
+  set_CF(! op1_64);
+  set_ZF(! result_64);
   
   BX_WRITE_64BIT_REG(i->nnn(), result_64);
 
@@ -407,15 +400,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LZCNT_GqEqR(bxInstruction_c *i)
     result_64++;
   }
 
-  if (op1_64 == 0)
-    assert_CF();
-  else
-    clear_CF();
-    
-  if (result_64 == 0)
-    assert_ZF();
-  else
-    clear_ZF();
+  set_CF(! op1_64);
+  set_ZF(! result_64);
   
   BX_WRITE_64BIT_REG(i->nnn(), result_64);
 

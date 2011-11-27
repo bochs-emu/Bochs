@@ -34,7 +34,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ANDN_GqBqEqR(bxInstruction_c *i)
 
   op1_64 = op1_64 & ~op2_64;
 
-  SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
+  SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
 
   BX_WRITE_64BIT_REG(i->nnn(), op1_64);
 
@@ -65,11 +65,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MULX_GqBqEqR(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSI_BqEqR(bxInstruction_c *i)
 {
   Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
-  bx_bool tmpCF = (op1_64 == 0);
+  bx_bool tmpCF = (op1_64 != 0);
 
   op1_64 = (-op1_64) & op1_64;
 
-  SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
+  SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
   set_CF(tmpCF);
 
   BX_WRITE_64BIT_REG(i->vvv(), op1_64);
@@ -84,7 +84,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSMSK_BqEqR(bxInstruction_c *i)
 
   op1_64 = (op1_64-1) ^ op1_64;
 
-  SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
+  SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
   set_CF(tmpCF);
 
   BX_WRITE_64BIT_REG(i->vvv(), op1_64);
@@ -99,7 +99,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSR_BqEqR(bxInstruction_c *i)
 
   op1_64 = (op1_64-1) & op1_64;
 
-  SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
+  SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
   set_CF(tmpCF);
 
   BX_WRITE_64BIT_REG(i->vvv(), op1_64);
@@ -179,7 +179,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BEXTR_GqEqBqR(bxInstruction_c *i)
     }
   }
 
-  SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
+  SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
 
   BX_WRITE_64BIT_REG(i->nnn(), op1_64);
 
@@ -200,7 +200,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BZHI_GqEqBqR(bxInstruction_c *i)
     tmpCF = 1;
   }
 
-  SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
+  SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
   set_CF(tmpCF);
 
   BX_WRITE_64BIT_REG(i->nnn(), op1_64);

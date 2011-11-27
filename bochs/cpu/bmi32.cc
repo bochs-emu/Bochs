@@ -34,7 +34,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ANDN_GdBdEdR(bxInstruction_c *i)
 
   op1_32 = op1_32 & ~op2_32;
 
-  SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
+  SET_FLAGS_OSZAxC_LOGIC_32(op1_32); // keep PF unchanged
 
   BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
 
@@ -56,11 +56,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MULX_GdBdEdR(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSI_BdEdR(bxInstruction_c *i)
 {
   Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
-  bx_bool tmpCF = (op1_32 == 0);
+  bx_bool tmpCF = (op1_32 != 0);
 
   op1_32 = (-op1_32) & op1_32;
 
-  SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
+  SET_FLAGS_OSZAxC_LOGIC_32(op1_32); // keep PF unchanged
   set_CF(tmpCF);
 
   BX_WRITE_32BIT_REGZ(i->vvv(), op1_32);
@@ -75,7 +75,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSMSK_BdEdR(bxInstruction_c *i)
 
   op1_32 = (op1_32-1) ^ op1_32;
 
-  SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
+  SET_FLAGS_OSZAxC_LOGIC_32(op1_32); // keep PF unchanged
   set_CF(tmpCF);
 
   BX_WRITE_32BIT_REGZ(i->vvv(), op1_32);
@@ -90,7 +90,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSR_BdEdR(bxInstruction_c *i)
 
   op1_32 = (op1_32-1) & op1_32;
 
-  SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
+  SET_FLAGS_OSZAxC_LOGIC_32(op1_32); // keep PF unchanged
   set_CF(tmpCF);
 
   BX_WRITE_32BIT_REGZ(i->vvv(), op1_32);
@@ -170,7 +170,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BEXTR_GdEdBdR(bxInstruction_c *i)
     }
   }
 
-  SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
+  SET_FLAGS_OSZAxC_LOGIC_32(op1_32); // keep PF unchanged
 
   BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
 
@@ -191,7 +191,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BZHI_GdEdBdR(bxInstruction_c *i)
     tmpCF = 1;
   }
 
-  SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
+  SET_FLAGS_OSZAxC_LOGIC_32(op1_32); // keep PF unchanged
   set_CF(tmpCF);
 
   BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);

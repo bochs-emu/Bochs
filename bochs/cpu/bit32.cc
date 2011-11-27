@@ -377,15 +377,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::TZCNT_GdEdR(bxInstruction_c *i)
     result_32++;
   }
 
-  if (op1_32 == 0)
-    assert_CF();
-  else
-    clear_CF();
-
-  if (result_32 == 0)
-    assert_ZF();
-  else
-    clear_ZF();
+  set_CF(! op1_32);
+  set_ZF(! result_32);
   
   BX_WRITE_32BIT_REGZ(i->nnn(), result_32);
 
@@ -403,15 +396,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LZCNT_GdEdR(bxInstruction_c *i)
     result_32++;
   }
 
-  if (op1_32 == 0)
-    assert_CF();
-  else
-    clear_CF();
-    
-  if (result_32 == 0)
-    assert_ZF();
-  else
-    clear_ZF();
+  set_CF(! op1_32);
+  set_ZF(! result_32);
   
   BX_WRITE_32BIT_REGZ(i->nnn(), result_32);
 

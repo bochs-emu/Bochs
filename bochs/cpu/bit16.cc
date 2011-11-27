@@ -372,15 +372,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::TZCNT_GwEwR(bxInstruction_c *i)
     result_16++;
   }
 
-  if (op1_16 == 0)
-    assert_CF();
-  else
-    clear_CF();
-    
-  if (result_16 == 0)
-    assert_ZF();
-  else
-    clear_ZF();
+  set_CF(! op1_16);
+  set_ZF(! result_16);
   
   BX_WRITE_16BIT_REG(i->nnn(), result_16);
 
@@ -398,15 +391,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LZCNT_GwEwR(bxInstruction_c *i)
     result_16++;
   }
 
-  if (op1_16 == 0)
-    assert_CF();
-  else
-    clear_CF();
-    
-  if (result_16 == 0)
-    assert_ZF();
-  else
-    clear_ZF();
+  set_CF(! op1_16);
+  set_ZF(! result_16);
   
   BX_WRITE_16BIT_REG(i->nnn(), result_16);
 
