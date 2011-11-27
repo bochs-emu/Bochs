@@ -7,22 +7,27 @@
  <!--content starts here-->
  <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.4.6</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.5</font><BR><BR>
 
-Version 2.4.6 is a bugfix+ release. Here is the summary of changes :
+Nine months after the last intermediate one  and the <b>switch to SVN version control</b>
+we have a new stable release. Here is the summary of changes :
 
 <ul>
-<li> Support more host OS to run on:
-<ul>
-  <li> Include win64 native binary in the release.
-  <li> Fixed failures on big endian hosts.
-</ul>
-<li> BIOS: Support for up to 2M ROM BIOS images.
-<li> GUI: select mouse capture toggle method in .bochsrc.
-<li> Ported most of Qemu's 'virtual VFAT' block driver<br>
-     (except runtime write support, but plus FAT32 suppport)
-<li> Added write protect option for floppy drives.
-<li> Bugfixes / improved internal debugger + instrumentation.
+<li> <b>Fully configurable CPU to emulate with a single .bochsrc option !</b>
+<li> 10% (ST) to 50% (SMP) CPU emulation speedup !
+<li> Implemented support for new x86 ISA extensions, Bochs is aligned with
+  latest published Intel Architecture Manual (rev 040, AVX rev 011):
+<li> XSAVEOPT, AVX/AVX2/FMA/F16C, BMI1/BMI2, SMEP, INVPCID, TSC-Deadline
+<li> VMX: VMX Preemption Timer, Pause Loop Exiting and VM Functions
+<li> Implemented support for AMD SSE4A/XOP/FMA4/TBM instruction sets
+<li> Networking: introduced new networking module 'slirp'
+<li> Harddrive: fixed buffer overflow causing Bochs crash in LBA48 mode
+<li> VGA: Added PCI ROM support to cirrus and pcivga and moved ROM loading
+  for the ISA case to the vga code (SeaBIOS now usable by Bochs)
+<li> Sound: ported ES1370 soundcard emulation from Qemu
+<li> Continuing configure rework, check for more removed configure and .bochsrc
+  options and their replacements !
+<li> LGPL'd VGABIOS updated to version 0.7a
 </ul>
 
 The binary packages for Linux and Windows are built with these featues :
@@ -43,34 +48,32 @@ The binary packages for Linux and Windows are built with these featues :
  </ul>
 </ul>
 
-<a href="http://bochs.svn.sourceforge.net/viewvc/bochs/trunk/bochs/CHANGES?view=markup&revision=10201">
-Details on what has changed since version 2.4.5
+<a href="http://bochs.svn.sourceforge.net/viewvc/bochs/tags/REL_2_5_FINAL/bochs/CHANGES">
+Details on what has changed since version 2.4.6
 </a>
 
 <BR/><BR/>
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.4.5</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.4.6</font><BR><BR>
 
 <ul>
-<li> Major configure/cpu rework allowing to enable/disable CPU options at runtime
-  through .bochsrc (Stanislav)
-<li> Bugfixes for CPU emulation correctness and stability
-<li> Implemented X2APIC extensions (Stanislav)
-<li> Implemented Intel VMXx2 extensions (Stanislav)
+<li> Support more host OS to run on:
 <ul>
-  <li> Extended VMX capability MSRs, APIC Virtualization,
-    X2APIC Virtualization, Extended Page Tables (EPT),
-    VPID, Unrestricted Guests, new VMX controls.
-  </ul>
-<li> Implemented PCLMULQDQ AES instruction
-<li> Extended Bochs internal debugger functionality
-<li> USB HP DeskJet 920C printer device emulation (Ben Lunt)
+  <li> Include win64 native binary in the release.
+  <li> Fixed failures on big endian hosts.
+</ul>
+<li> BIOS: Support for up to 2M ROM BIOS images.
+<li> GUI: select mouse capture toggle method in .bochsrc.
+<li> Ported most of Qemu's 'virtual VFAT' block driver<br>
+     (except runtime write support, but plus FAT32 suppport)
+<li> Added write protect option for floppy drives.
+<li> Bugfixes / improved internal debugger + instrumentation.
 </ul>
 
 <BR>
 
-<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_4_5_FINAL">
-Details on what has changed since version 2.4.2
+<a href="http://bochs.svn.sourceforge.net/viewvc/bochs/tags/REL_2_4_6_FINAL/bochs/CHANGES">
+Details on what has changed since version 2.4.5
 </a>
 
  <BR><BR>
