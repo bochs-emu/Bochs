@@ -3989,7 +3989,9 @@ public: // for now...
 #if BX_X86_DEBUGGER
   // x86 hardware debug support
   BX_SMF bx_bool hwbreakpoint_check(bx_address laddr, unsigned opa, unsigned opb);
+#if BX_CPU_LEVEL >= 5
   BX_SMF void    iobreakpoint_match(unsigned port, unsigned len);
+#endif
   BX_SMF Bit32u  code_breakpoint_match(bx_address laddr);
   BX_SMF void    hwbreakpoint_match(bx_address laddr, unsigned len, unsigned rw);
   BX_SMF Bit32u  hwdebug_compare(bx_address laddr, unsigned len, unsigned opa, unsigned opb);

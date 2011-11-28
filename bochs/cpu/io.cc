@@ -889,7 +889,7 @@ bx_bool BX_CPP_AttrRegparmN(3) BX_CPU_C::allow_io(bxInstruction_c *i, Bit16u por
     VMexit_IO(i, port, len);
 #endif
 
-#if BX_X86_DEBUGGER
+#if BX_X86_DEBUGGER && BX_CPU_LEVEL >= 5
   iobreakpoint_match(port, len);
 #endif
 
