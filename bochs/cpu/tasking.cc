@@ -479,7 +479,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 #endif
       if (! SetCR3(newCR3)) // Tell paging unit about new cr3 value
         exception(BX_GP_EXCEPTION, 0);
-      BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_TASKSWITCH, newCR3);
+      BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_TASK_SWITCH, newCR3);
     }
   }
 
