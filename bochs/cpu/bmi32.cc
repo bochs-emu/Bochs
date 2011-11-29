@@ -170,7 +170,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BEXTR_GdEdBdR(bxInstruction_c *i)
     }
   }
 
-  SET_FLAGS_OSZAxC_LOGIC_32(op1_32); // keep PF unchanged
+  SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
 
   BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
 

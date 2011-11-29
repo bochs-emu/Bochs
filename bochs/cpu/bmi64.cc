@@ -179,7 +179,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BEXTR_GqEqBqR(bxInstruction_c *i)
     }
   }
 
-  SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
+  SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
 
   BX_WRITE_64BIT_REG(i->nnn(), op1_64);
 

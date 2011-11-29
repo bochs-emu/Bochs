@@ -176,9 +176,9 @@ typedef struct {
 
 /* size, carries, result */
 #define SET_FLAGS_OSZAxC_LOGIC_SIZE(size, lf_result) { \
-  set_ZF(!lf_result); \
-  BX_CPU_THIS_PTR oszapc.result = ((bx_address)(Bit##size##s)(lf_result) & ~((bx_address)(0xff))) \
-     | (BX_CPU_THIS_PTR oszapc.result & 0xff); \
+  bx_bool saved_PF = getB_PF(); \
+  SET_FLAGS_OSZAPC_SIZE(size, 0, lf_result); \
+  set_PF(saved_PF); \
 }
 
 /* result */
