@@ -101,6 +101,7 @@ public:
                                       unsigned len, void *data);
   BX_MEM_SMF void    writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr,
                                        unsigned len, void *data);
+  BX_MEM_SMF void    writePhysicalBlock(bx_phy_address addr, unsigned len, void *data);
   BX_MEM_SMF void    load_ROM(const char *path, bx_phy_address romaddress, Bit8u type);
   BX_MEM_SMF void    load_RAM(const char *path, bx_phy_address romaddress, Bit8u type);
 #if (BX_DEBUGGER || BX_DISASM || BX_GDBSTUB)

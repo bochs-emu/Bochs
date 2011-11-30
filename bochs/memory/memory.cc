@@ -365,3 +365,12 @@ inc_one:
     }
   }
 }
+
+void BX_MEM_C::writePhysicalBlock(bx_phy_address addr, unsigned len, void *data)
+{
+  Bit8u *memptr = getHostMemAddr(NULL, addr, BX_WRITE);
+  if (memptr != NULL) {
+    pageWriteStampTable.decWriteStamp(addr);
+    memcpy(memptr, data, len);
+  }
+}

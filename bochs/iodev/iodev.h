@@ -651,17 +651,7 @@ BX_CPP_INLINE void DEV_MEM_WRITE_PHYSICAL_BLOCK(bx_phy_address phy_addr, unsigne
   while(len > 0) { 
     unsigned remainingInPage = 0x1000 - (phy_addr & 0xfff);
     if (len < remainingInPage) remainingInPage = len;
-    // FIXME: writePhysicalPage() should not copy a block > 8 bytes in
-    // reverse order on big endian hosts. With memcpy() it fails in some cases,
-    // but the reason is unknown.
-#if BX_BIG_ENDIAN
-    Bit8u *memptr = BX_MEM(0)->getHostMemAddr(NULL, phy_addr, BX_WRITE);
-    if (memptr != NULL) {
-      memcpy(memptr, ptr, remainingInPage);
-    }
-#else
-    BX_MEM(0)->writePhysicalPage(NULL, phy_addr, remainingInPage, ptr);
-#endif
+    BX_MEM(0)->writePhysicalBlock(phy_addr, remainingInPage, ptr);
     ptr += remainingInPage;
     phy_addr += remainingInPage;
     len -= remainingInPage;
