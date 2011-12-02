@@ -177,7 +177,7 @@ typedef struct {
 /* size, carries, result */
 #define SET_FLAGS_OSZAxC_LOGIC_SIZE(size, lf_result) { \
   bx_bool saved_PF = getB_PF(); \
-  SET_FLAGS_OSZAPC_SIZE(size, 0, lf_result); \
+  SET_FLAGS_OSZAPC_SIZE(size, (Bit##size##u)(0), lf_result); \
   set_PF(saved_PF); \
 }
 
