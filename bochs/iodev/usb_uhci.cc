@@ -869,7 +869,7 @@ bx_bool bx_usb_uhci_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *t
     case USB_TOKEN_OUT:
     case USB_TOKEN_SETUP:
       if (maxlen > 0) {
-        DEV_MEM_READ_PHYSICAL_BLOCK(td->dword3, maxlen, device_buffer);
+        DEV_MEM_READ_PHYSICAL_DMA(td->dword3, maxlen, device_buffer);
       }
       ret = BX_UHCI_THIS broadcast_packet(&BX_UHCI_THIS usb_packet);
       len = maxlen;
@@ -883,7 +883,7 @@ bx_bool bx_usb_uhci_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *t
           ret = USB_RET_BABBLE;
         }
         if (len > 0) {
-          DEV_MEM_WRITE_PHYSICAL_BLOCK(td->dword3, len, device_buffer);
+          DEV_MEM_WRITE_PHYSICAL_DMA(td->dword3, len, device_buffer);
         }
       } else {
         len = 0;

@@ -1218,7 +1218,7 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
   switch (pid) {
     case USB_TOKEN_SETUP:
       if (len > 0)
-        DEV_MEM_READ_PHYSICAL_BLOCK(TD_GET_CBP(td), len, device_buffer);
+        DEV_MEM_READ_PHYSICAL_DMA(TD_GET_CBP(td), len, device_buffer);
       // TODO: This is a hack.  dev->handle_packet() should return the amount of bytes
       //  it received, not the amount it anticipates on receiving/sending in the next packet.
       if ((ret = BX_OHCI_THIS broadcast_packet(&BX_OHCI_THIS usb_packet)) >= 0)
@@ -1226,7 +1226,7 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
       break;
     case USB_TOKEN_OUT:
       if (len > 0)
-        DEV_MEM_READ_PHYSICAL_BLOCK(TD_GET_CBP(td), len, device_buffer);
+        DEV_MEM_READ_PHYSICAL_DMA(TD_GET_CBP(td), len, device_buffer);
       ret = BX_OHCI_THIS broadcast_packet(&BX_OHCI_THIS usb_packet);
       break;
     case USB_TOKEN_IN:
@@ -1235,10 +1235,10 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
         if (((TD_GET_CBP(td) & 0xfff) + ret) > 0x1000) {
           len1 = 0x1000 - (TD_GET_CBP(td) & 0xfff);
           len2 = ret - len1;
-          DEV_MEM_WRITE_PHYSICAL_BLOCK(TD_GET_CBP(td), len1, device_buffer);
-          DEV_MEM_WRITE_PHYSICAL_BLOCK((TD_GET_BE(td) & ~0xfff), len2, device_buffer+len1);
+          DEV_MEM_WRITE_PHYSICAL_DMA(TD_GET_CBP(td), len1, device_buffer);
+          DEV_MEM_WRITE_PHYSICAL_DMA((TD_GET_BE(td) & ~0xfff), len2, device_buffer+len1);
         } else {
-          DEV_MEM_WRITE_PHYSICAL_BLOCK(TD_GET_CBP(td), ret, device_buffer);
+          DEV_MEM_WRITE_PHYSICAL_DMA(TD_GET_CBP(td), ret, device_buffer);
         }
       } else
         ret = 0;

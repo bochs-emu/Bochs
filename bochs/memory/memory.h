@@ -94,16 +94,25 @@ public:
   BX_MEM_SMF Bit8u*  get_vector(bx_phy_address addr);
   BX_MEM_SMF void    init_memory(Bit64u guest, Bit64u host);
   BX_MEM_SMF void    cleanup_memory(void);
+
   BX_MEM_SMF void    enable_smram(bx_bool enable, bx_bool restricted);
   BX_MEM_SMF void    disable_smram(void);
   BX_MEM_SMF bx_bool is_smram_accessible(void);
+
+  BX_MEM_SMF Bit8u*  getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw);
+
+  // Note: accesses should always be contained within a single page
   BX_MEM_SMF void    readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr,
                                       unsigned len, void *data);
   BX_MEM_SMF void    writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr,
                                        unsigned len, void *data);
-  BX_MEM_SMF void    writePhysicalBlock(bx_phy_address addr, unsigned len, void *data);
+
+  BX_MEM_SMF void    dmaReadPhysicalPage(bx_phy_address addr, unsigned len, void *data);
+  BX_MEM_SMF void    dmaWritePhysicalPage(bx_phy_address addr, unsigned len, void *data);
+
   BX_MEM_SMF void    load_ROM(const char *path, bx_phy_address romaddress, Bit8u type);
   BX_MEM_SMF void    load_RAM(const char *path, bx_phy_address romaddress, Bit8u type);
+
 #if (BX_DEBUGGER || BX_DISASM || BX_GDBSTUB)
   BX_MEM_SMF bx_bool dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf);
 #endif
@@ -111,7 +120,7 @@ public:
   BX_MEM_SMF bx_bool dbg_set_mem(bx_phy_address addr, unsigned len, Bit8u *buf);
   BX_MEM_SMF bx_bool dbg_crc32(bx_phy_address addr1, bx_phy_address addr2, Bit32u *crc);
 #endif
-  BX_MEM_SMF Bit8u* getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw);
+
   BX_MEM_SMF bx_bool registerMemoryHandlers(void *param, memory_handler_t read_handler,
                   memory_handler_t write_handler, memory_direct_access_handler_t da_handler,
                   bx_phy_address begin_addr, bx_phy_address end_addr);
@@ -122,6 +131,7 @@ public:
      return registerMemoryHandlers(param, read_handler, write_handler, NULL, begin_addr, end_addr);
   }
   BX_MEM_SMF bx_bool unregisterMemoryHandlers(void *param, bx_phy_address begin_addr, bx_phy_address end_addr);
+
   BX_MEM_SMF Bit64u  get_memory_len(void);
   BX_MEM_SMF void allocate_block(Bit32u index);
   BX_MEM_SMF Bit8u* alloc_vector_aligned(Bit32u bytes, Bit32u alignment);

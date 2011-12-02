@@ -42,7 +42,7 @@ void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned le
   bx_phy_address a20addr = A20ADDR(addr);
   struct memory_handler_struct *memory_handler = NULL;
 
-  // Note: accesses should always be contained within a single page now
+  // Note: accesses should always be contained within a single page
   if ((addr>>12) != ((addr+len-1)>>12)) {
     BX_PANIC(("writePhysicalPage: cross page access at address 0x" FMT_PHY_ADDRX ", len=%d", addr, len));
   }
@@ -195,7 +195,7 @@ void BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
   bx_phy_address a20addr = A20ADDR(addr);
   struct memory_handler_struct *memory_handler = NULL;
 
-  // Note: accesses should always be contained within a single page now
+  // Note: accesses should always be contained within a single page
   if ((addr>>12) != ((addr+len-1)>>12)) {
     BX_PANIC(("readPhysicalPage: cross page access at address 0x" FMT_PHY_ADDRX ", len=%d", addr, len));
   }
@@ -366,11 +366,39 @@ inc_one:
   }
 }
 
-void BX_MEM_C::writePhysicalBlock(bx_phy_address addr, unsigned len, void *data)
+void BX_MEM_C::dmaReadPhysicalPage(bx_phy_address addr, unsigned len, void *data)
 {
+  // Note: accesses should always be contained within a single page
+  if ((addr>>12) != ((addr+len-1)>>12)) {
+    BX_PANIC(("dmaReadPhysicalPage: cross page access at address 0x" FMT_PHY_ADDRX ", len=%d", addr, len));
+  }
+
+  Bit8u *memptr = getHostMemAddr(NULL, phy_addr, BX_READ);
+  if (memptr != NULL) {
+    memcpy(data, memptr, len);
+  }
+  else {
+    for (unsigned i=0;i < len; i++) {
+      readPhysicalPage(NULL, addr+i, 1, &data[i]);
+    }
+  }
+}
+
+void BX_MEM_C::dmaWritePhysicalPage(bx_phy_address addr, unsigned len, void *data)
+{
+  // Note: accesses should always be contained within a single page
+  if ((addr>>12) != ((addr+len-1)>>12)) {
+    BX_PANIC(("dmaWritePhysicalPage: cross page access at address 0x" FMT_PHY_ADDRX ", len=%d", addr, len));
+  }
+
   Bit8u *memptr = getHostMemAddr(NULL, addr, BX_WRITE);
   if (memptr != NULL) {
     pageWriteStampTable.decWriteStamp(addr);
     memcpy(memptr, data, len);
+  }
+  else {
+    for (unsigned i=0;i < len; i++) {
+      writePhysicalPage(NULL, addr+i, 1, &data[i]);
+    }
   }
 }

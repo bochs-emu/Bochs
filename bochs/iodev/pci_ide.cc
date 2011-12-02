@@ -273,12 +273,12 @@ void bx_pci_ide_c::timer()
       BX_PIDE_THIS s.bmdma[channel].status |= 0x06;
       return;
     } else {
-      DEV_MEM_WRITE_PHYSICAL_BLOCK(prd.addr, size, BX_PIDE_THIS s.bmdma[channel].buffer_idx);
+      DEV_MEM_WRITE_PHYSICAL_DMA(prd.addr, size, BX_PIDE_THIS s.bmdma[channel].buffer_idx);
       BX_PIDE_THIS s.bmdma[channel].buffer_idx += size;
     }
   } else {
     BX_DEBUG(("WRITE DMA from addr=0x%08x, size=0x%08x", prd.addr, size));
-    DEV_MEM_READ_PHYSICAL_BLOCK(prd.addr, size, BX_PIDE_THIS s.bmdma[channel].buffer_top);
+    DEV_MEM_READ_PHYSICAL_DMA(prd.addr, size, BX_PIDE_THIS s.bmdma[channel].buffer_top);
     BX_PIDE_THIS s.bmdma[channel].buffer_top += size;
     count = BX_PIDE_THIS s.bmdma[channel].buffer_top - BX_PIDE_THIS s.bmdma[channel].buffer_idx;
     while (count > 511) {
