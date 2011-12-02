@@ -366,14 +366,14 @@ inc_one:
   }
 }
 
-void BX_MEM_C::dmaReadPhysicalPage(bx_phy_address addr, unsigned len, void *data)
+void BX_MEM_C::dmaReadPhysicalPage(bx_phy_address addr, unsigned len, Bit8u *data)
 {
   // Note: accesses should always be contained within a single page
   if ((addr>>12) != ((addr+len-1)>>12)) {
     BX_PANIC(("dmaReadPhysicalPage: cross page access at address 0x" FMT_PHY_ADDRX ", len=%d", addr, len));
   }
 
-  Bit8u *memptr = getHostMemAddr(NULL, phy_addr, BX_READ);
+  Bit8u *memptr = getHostMemAddr(NULL, addr, BX_READ);
   if (memptr != NULL) {
     memcpy(data, memptr, len);
   }
@@ -384,7 +384,7 @@ void BX_MEM_C::dmaReadPhysicalPage(bx_phy_address addr, unsigned len, void *data
   }
 }
 
-void BX_MEM_C::dmaWritePhysicalPage(bx_phy_address addr, unsigned len, void *data)
+void BX_MEM_C::dmaWritePhysicalPage(bx_phy_address addr, unsigned len, Bit8u *data)
 {
   // Note: accesses should always be contained within a single page
   if ((addr>>12) != ((addr+len-1)>>12)) {

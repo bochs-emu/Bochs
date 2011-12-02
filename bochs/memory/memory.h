@@ -107,8 +107,8 @@ public:
   BX_MEM_SMF void    writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr,
                                        unsigned len, void *data);
 
-  BX_MEM_SMF void    dmaReadPhysicalPage(bx_phy_address addr, unsigned len, void *data);
-  BX_MEM_SMF void    dmaWritePhysicalPage(bx_phy_address addr, unsigned len, void *data);
+  BX_MEM_SMF void    dmaReadPhysicalPage(bx_phy_address addr, unsigned len, Bit8u *data);
+  BX_MEM_SMF void    dmaWritePhysicalPage(bx_phy_address addr, unsigned len, Bit8u *data);
 
   BX_MEM_SMF void    load_ROM(const char *path, bx_phy_address romaddress, Bit8u type);
   BX_MEM_SMF void    load_RAM(const char *path, bx_phy_address romaddress, Bit8u type);
