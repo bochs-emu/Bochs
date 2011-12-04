@@ -11,11 +11,27 @@
 ; updated for NSIS 2.44 by Volker Ruppert
 ;
 ;---------------------
-;Include Modern UI
+;Include Modern UI 2
 
-  !include "MUI.nsh"
+  !include "MUI2.nsh"
 
 ;--------------------------------
+
+;Include MultiUser
+
+!define MULTIUSER_EXECUTIONLEVEL Highest
+!define MULTIUSER_MUI
+!include MultiUser.nsh
+
+Function .onInit
+  !insertmacro MULTIUSER_INIT
+FunctionEnd
+
+Function un.onInit
+  !insertmacro MULTIUSER_UNINIT
+FunctionEnd
+
+ ;--------------------------------
 
 !define VERSION @VERSION@
 !define NAME "Bochs ${VERSION}"
@@ -46,9 +62,6 @@
   InstallDir $PROGRAMFILES\Bochs-${VERSION}
   InstallDirRegKey HKLM "Software\${NAME}" ""
 
-  ;Request application privileges for Windows Vista
-  RequestExecutionLevel admin
-
 ;--------------------------------
 ;Interface Settings
 
@@ -61,6 +74,7 @@
 ;Pages
 
   !insertmacro MUI_PAGE_LICENSE ${SRCDIR}\COPYING.txt
+  !insertmacro MULTIUSER_PAGE_INSTALLMODE
   !insertmacro MUI_PAGE_COMPONENTS
   !insertmacro MUI_PAGE_DIRECTORY
   !insertmacro MUI_PAGE_INSTFILES
