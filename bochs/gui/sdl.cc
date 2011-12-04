@@ -319,7 +319,7 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv,
   sdl_fullscreen_toggle = 0;
   dimension_update(640,480);
 
-  SDL_EnableKeyRepeat(250,50);
+  SDL_EnableKeyRepeat(250, 50);
   SDL_WM_SetCaption(BOCHS_WINDOW_NAME, "Bochs");
   SDL_WarpMouse(half_res_x, half_res_y);
 
@@ -334,6 +334,9 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv,
       if (!strcmp(argv[i], "fullscreen")) {
         sdl_fullscreen_toggle = 1;
         switch_to_fullscreen();
+      } else if (!strcmp(argv[i], "nokeyrepeat")) {
+        BX_INFO(("disabled host keyboard repeat"));
+        SDL_EnableKeyRepeat(0, 0);
 #if !defined(WIN32) && BX_DEBUGGER && BX_DEBUGGER_GUI
       } else if (!strcmp(argv[i], "gui_debug")) {
         extern void InitDebugDialog();
