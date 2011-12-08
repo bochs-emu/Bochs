@@ -557,11 +557,12 @@ HWND CreateCombobox(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_par
   Combo = CreateWindow("COMBOBOX", "", WS_CHILD | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
                        r.left, r.top, r.right-r.left+1, r.bottom-r.top+1, hDlg, (HMENU)code, NULL, NULL);
   j = 0;
-  do {
+  while(1) {
     choice = eparam->get_choice(j);
+    if (choice == NULL) break;
     SendMessage(Combo, CB_ADDSTRING, 0, (LPARAM)choice);
     j++;
-  } while (choice != NULL);
+  }
   SendMessage(Combo, CB_SETCURSEL, (WPARAM)(eparam->get()-eparam->get_min()), 0);
   SendMessage(Combo, WM_SETFONT, (WPARAM)DlgFont, TRUE);
   ShowWindow(Combo, hide ? SW_HIDE : SW_SHOW);
