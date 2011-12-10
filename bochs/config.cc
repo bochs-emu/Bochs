@@ -2742,7 +2742,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 #endif
 #if BX_SUPPORT_X86_64
       } else if (!strncmp(params[i], "x86_64=", 7)) {
-        if (parse_param_bool(params[i], 9, BXPN_CPUID_X86_64) < 0) {
+        if (parse_param_bool(params[i], 7, BXPN_CPUID_X86_64) < 0) {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
         }
       } else if (!strncmp(params[i], "1g_pages=", 9)) {
