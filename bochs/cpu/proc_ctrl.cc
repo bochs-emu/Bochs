@@ -595,7 +595,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
   {
     // check if we could access the memory segment
     if (!(seg->cache.valid & SegAccessROK)) {
-      if (! execute_virtual_checks(seg, offset, 1))
+      if (! execute_virtual_checks(seg, (Bit32u) offset, 1))
         exception(int_number(i->seg()), 0);
     }
     else {
@@ -650,7 +650,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
     BX_NEXT_TRACE(i);
   }
 
-  static bool mwait_is_nop = SIM->get_param_bool(BXPN_CPUID_MWAIT_IS_NOP)->get();
+  static bx_bool mwait_is_nop = SIM->get_param_bool(BXPN_CPUID_MWAIT_IS_NOP)->get();
   if (mwait_is_nop) {
     BX_NEXT_TRACE(i);
   }

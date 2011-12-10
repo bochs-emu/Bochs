@@ -1397,7 +1397,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     }
   }
 
-  guest.tmpDR6 = VMread_natural(VMCS_GUEST_PENDING_DBG_EXCEPTIONS);
+  guest.tmpDR6 = (Bit32u) VMread_natural(VMCS_GUEST_PENDING_DBG_EXCEPTIONS);
   if (guest.tmpDR6 & BX_CONST64(0xFFFFFFFFFFFFAFF0)) {
     BX_ERROR(("VMENTER FAIL: VMCS guest tmpDR6 reserved bits"));
     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
@@ -1497,7 +1497,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 #if BX_SUPPORT_X86_64
 #if BX_SUPPORT_VMX >= 2
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_EFER_MSR) {
-     BX_CPU_THIS_PTR efer.set32(guest.efer_msr);
+     BX_CPU_THIS_PTR efer.set32((Bit32u) guest.efer_msr);
   }
   else
 #endif
@@ -1523,8 +1523,8 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     BX_PANIC(("VMENTER CR4 is broken !"));
   }
 
-  BX_CPU_THIS_PTR cr0.set32(guest.cr0);
-  BX_CPU_THIS_PTR cr4.set32(guest.cr4);
+  BX_CPU_THIS_PTR cr0.set32((Bit32u) guest.cr0);
+  BX_CPU_THIS_PTR cr4.set32((Bit32u) guest.cr4);
   BX_CPU_THIS_PTR cr3 = guest.cr3;
 
   // flush TLB is always needed to invalidate possible
@@ -1588,7 +1588,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_PAT_MSR) {
     BX_CPU_THIS_PTR msr.pat = guest.pat_msr;
   }
-  vm->first_pause_time = vm->last_pause_time = 0;
+  vm->last_pause_time = vm->first_pause_time = 0;
 #endif
 
   //
@@ -1935,7 +1935,7 @@ void BX_CPU_C::VMexitLoadHostState(void)
 
 #if BX_SUPPORT_VMX >= 2
   if (vmexit_ctrls & VMX_VMEXIT_CTRL1_LOAD_EFER_MSR) {
-     BX_CPU_THIS_PTR efer.set32(host_state->efer_msr);
+     BX_CPU_THIS_PTR efer.set32((Bit32u) host_state->efer_msr);
   }
   else
 #endif
@@ -1960,8 +1960,8 @@ void BX_CPU_C::VMexitLoadHostState(void)
     BX_PANIC(("VMEXIT CR4 is broken !"));
   }
 
-  BX_CPU_THIS_PTR cr0.set32(host_state->cr0);
-  BX_CPU_THIS_PTR cr4.set32(host_state->cr4);
+  BX_CPU_THIS_PTR cr0.set32((Bit32u) host_state->cr0);
+  BX_CPU_THIS_PTR cr4.set32((Bit32u) host_state->cr4);
   BX_CPU_THIS_PTR cr3 = host_state->cr3;
 
   TLB_flush(); // CR0/CR4 updated
@@ -2719,7 +2719,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
        BX_WRITE_32BIT_REGZ(i->rm(), field_32);
     }
     else {
-       Bit32u eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+       Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
        write_virtual_dword_32(i->seg(), eaddr, field_32);
     }
   }
@@ -2780,7 +2780,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
        val_32 = BX_READ_32BIT_REG(i->rm());
     }
     else {
-       Bit32u eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+       Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
        val_32 = read_virtual_dword_32(i->seg(), eaddr);
     }
 
