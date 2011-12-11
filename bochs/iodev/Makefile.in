@@ -245,6 +245,10 @@ cdrom_misc.o: cdrom_misc.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h cdrom.h
+cdrom_osx.o: cdrom_osx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h cdrom.h
 cdrom_win32.o: cdrom_win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
@@ -572,6 +576,10 @@ cdrom.lo: cdrom.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug
  ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h cdrom.h
 cdrom_misc.lo: cdrom_misc.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h cdrom.h
+cdrom_osx.lo: cdrom_osx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h cdrom.h
