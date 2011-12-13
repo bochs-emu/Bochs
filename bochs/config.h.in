@@ -196,6 +196,7 @@
 #define BX_USE_USB_OHCI_SMF 1  // USB OHCI hub
 #define BX_USE_USB_XHCI_SMF 1  // USB xHCI hub
 #define BX_USE_PCIPNIC_SMF  1  // PCI pseudo NIC
+#define BX_USE_E1000_SMF    1  // Intel(R) Gigabit Ethernet
 #define BX_USE_NE2K_SMF     1  // NE2K
 #define BX_USE_EFI_SMF      1  // External FPU IRQ
 #define BX_USE_GAMEPORT_SMF 1  // Gameport
@@ -217,7 +218,7 @@
    || !BX_USE_USB_UHCI_SMF || !BX_USE_USB_OHCI_SMF || !BX_USE_USB_XHCI_SMF \
    || !BX_USE_PCIPNIC_SMF || !BX_USE_PIDE_SMF || !BX_USE_ACPI_SMF \
    || !BX_USE_NE2K_SMF || !BX_USE_EFI_SMF || !BX_USE_GAMEPORT_SMF \
-   || !BX_USE_PCIDEV_SMF || !BX_USE_CIRRUS_SMF)
+   || !BX_USE_E1000_SMF || !BX_USE_PCIDEV_SMF || !BX_USE_CIRRUS_SMF)
 #error You must use SMF to have plugins
 #endif
 
@@ -805,6 +806,13 @@ typedef
 
 #if (BX_SUPPORT_PCIPNIC && !BX_SUPPORT_PCI)
   #error To enable the PCI pseudo NIC, you must also enable PCI
+#endif
+
+// Intel(R) Gigabit Ethernet
+#define BX_SUPPORT_E1000 0
+
+#if (BX_SUPPORT_E1000 && !BX_SUPPORT_PCI)
+  #error To enable the E1000 NIC, you must also enable PCI
 #endif
 
 // this enables the lowlevel stuff below if one of the NICs is present

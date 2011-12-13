@@ -159,6 +159,8 @@
 #define BXPN_NE2K_ENABLED                "network.ne2k.enabled"
 #define BXPN_PNIC                        "network.pnic"
 #define BXPN_PNIC_ENABLED                "network.pnic.enabled"
+#define BXPN_E1000                       "network.e1000"
+#define BXPN_E1000_ENABLED               "network.e1000.enabled"
 #define BXPN_SOUND_SB16                  "sound.sb16"
 #define BXPN_SB16_ENABLED                "sound.sb16.enabled"
 #define BXPN_SB16_MIDIFILE               "sound.sb16.midifile"

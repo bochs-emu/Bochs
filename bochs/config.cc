@@ -1449,7 +1449,7 @@ void bx_init_options()
   bx_list_c *network = new bx_list_c(root_param, "network", "Network Configuration");
   network->set_options(network->USE_TAB_WINDOW | network->SHOW_PARENT);
 
-  // ne2k & pnic options
+  // networking module choices
   static const char *eth_module_list[] = {
     "null",
 #if BX_NETMOD_LINUX
@@ -1556,6 +1556,45 @@ void bx_init_options()
     0);
   ethmod->set_by_name("null");
   ethmod->set_ask_format("Choose ethernet module for the Pseudo NIC [%s]");
+  new bx_param_string_c(menu,
+    "ethdev",
+    "Ethernet device",
+    "Device used for the connection to the real net. This is only valid if an ethernet module other than 'null' is used.",
+    "xl0", BX_PATHNAME_LEN);
+  path = new bx_param_filename_c(menu,
+    "script",
+    "Device configuration script",
+    "Name of the script that is executed after Bochs initializes the network interface (optional).",
+    "none", BX_PATHNAME_LEN);
+  path->set_ask_format("Enter new script name, or 'none': [%s] ");
+  enabled->set_dependent_list(menu->clone());
+  // e1000 options
+  menu = new bx_list_c(network, "e1000", "Intel(R) Gigabit Ethernet");
+  menu->set_options(menu->SHOW_PARENT);
+  menu->set_enabled(BX_SUPPORT_E1000);
+  enabled = new bx_param_bool_c(menu,
+    "enabled",
+    "Enable Intel(R) Gigabit Ethernet emulation",
+    "Enables the Intel(R) Gigabit Ethernet emulation",
+    0);
+  enabled->set_enabled(BX_SUPPORT_E1000);
+  macaddr = new bx_param_string_c(menu,
+    "macaddr",
+    "MAC Address",
+    "MAC address of the Intel(R) Gigabit Ethernet. Don't use an address of a machine on your net.",
+    "", 6);
+  macaddr->set_options(macaddr->RAW_BYTES);
+  macaddr->set_initial_val("\xfe\xfd\xde\xad\xbe\xef");
+  macaddr->set_separator(':');
+  ethmod = new bx_param_enum_c(menu,
+    "ethmod",
+    "Ethernet module",
+    "Module used for the connection to the real net.",
+    eth_module_list,
+    0,
+    0);
+  ethmod->set_by_name("null");
+  ethmod->set_ask_format("Choose ethernet module for the Intel(R) Gigabit Ethernet [%s]");
   new bx_param_string_c(menu,
     "ethdev",
     "Ethernet device",
@@ -1837,7 +1876,7 @@ void bx_reset_options()
   // serial/parallel/usb
   SIM->get_param("ports")->reset();
 
-  // ne2k & pnic
+  // ne2k, pnic & e1000
   SIM->get_param("network")->reset();
 
   // SB16 & ES1370
@@ -3417,6 +3456,50 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_bool("enabled", base)->set(0);
       }
     }
+  } else if (!strcmp(params[0], "e1000")) {
+    int tmp[6];
+    char tmpchar[6];
+    int valid = 0;
+    int n;
+    base = (bx_list_c*) SIM->get_param(BXPN_E1000);
+    if (!SIM->get_param_bool("enabled", base)->get()) {
+      SIM->get_param_enum("ethmod", base)->set_by_name("null");
+    }
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+        if (atol(&params[i][8]) == 0) valid |= 0x80;
+      } else if (!strncmp(params[i], "mac=", 4)) {
+        n = sscanf(&params[i][4], "%x:%x:%x:%x:%x:%x",
+                   &tmp[0],&tmp[1],&tmp[2],&tmp[3],&tmp[4],&tmp[5]);
+        if (n != 6) {
+          PARSE_ERR(("%s: e1000 mac address malformed.", context));
+        }
+        for (n=0;n<6;n++)
+          tmpchar[n] = (unsigned char)tmp[n];
+        SIM->get_param_string("macaddr", base)->set(tmpchar);
+        valid |= 0x07;
+      } else if (!strncmp(params[i], "ethmod=", 7)) {
+        if (!SIM->get_param_enum("ethmod", base)->set_by_name(&params[i][7]))
+          PARSE_ERR(("%s: ethernet module '%s' not available", context, &params[i][7]));
+      } else if (!strncmp(params[i], "ethdev=", 7)) {
+        SIM->get_param_string("ethdev", base)->set(&params[i][7]);
+      } else if (!strncmp(params[i], "script=", 7)) {
+        SIM->get_param_string("script", base)->set(&params[i][7]);
+      } else {
+        PARSE_WARN(("%s: unknown parameter '%s' for e1000 ignored.", context, params[i]));
+      }
+    }
+    if (!SIM->get_param_bool("enabled", base)->get()) {
+      if (valid == 0x07) {
+        SIM->get_param_bool("enabled", base)->set(1);
+      } else if (valid < 0x80) {
+        PARSE_ERR(("%s: e1000 directive incomplete (mac is required)", context));
+      }
+    } else {
+      if (valid & 0x80) {
+        SIM->get_param_bool("enabled", base)->set(0);
+      }
+    }
   } else if (!strcmp(params[0], "load32bitOSImage")) {
     if ((num_params!=4) && (num_params!=5)) {
       PARSE_ERR(("%s: load32bitOSImage directive: wrong # args.", context));
@@ -3679,9 +3762,9 @@ int bx_write_usb_options(FILE *fp, int maxports, bx_list_c *base)
   return 0;
 }
 
-int bx_write_pnic_options(FILE *fp, bx_list_c *base)
+int bx_write_pci_nic_options(FILE *fp, bx_list_c *base)
 {
-  fprintf (fp, "pnic: enabled=%d", SIM->get_param_bool("enabled", base)->get());
+  fprintf (fp, "%s: enabled=%d", base->get_name(), SIM->get_param_bool("enabled", base)->get());
   if (SIM->get_param_bool("enabled", base)->get()) {
     char *ptr = SIM->get_param_string("macaddr", base)->getptr();
     fprintf (fp, ", mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s",
@@ -4076,7 +4159,8 @@ int bx_write_configuration(const char *rc, int overwrite)
 #endif
   bx_write_clock_cmos_options(fp);
   bx_write_ne2k_options(fp, (bx_list_c*) SIM->get_param(BXPN_NE2K));
-  bx_write_pnic_options(fp, (bx_list_c*) SIM->get_param(BXPN_PNIC));
+  bx_write_pci_nic_options(fp, (bx_list_c*) SIM->get_param(BXPN_PNIC));
+  bx_write_pci_nic_options(fp, (bx_list_c*) SIM->get_param(BXPN_E1000));
   bx_write_sound_options(fp, (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16));
   bx_write_sound_options(fp, (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370));
   bx_write_loader_options(fp);

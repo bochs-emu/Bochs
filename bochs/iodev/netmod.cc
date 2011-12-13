@@ -246,34 +246,6 @@ void write_pktlog_txt(FILE *pktlog_txt, const Bit8u *buf, unsigned len, bx_bool 
   fflush(pktlog_txt);
 }
 
-Bit16u get_net2(const Bit8u *buf)
-{
-  return (((Bit16u)*buf) << 8) |
-         ((Bit16u)*(buf+1));
-}
-
-void put_net2(Bit8u *buf,Bit16u data)
-{
-  *buf = (Bit8u)(data >> 8);
-  *(buf+1) = (Bit8u)(data & 0xff);
-}
-
-Bit32u get_net4(const Bit8u *buf)
-{
-  return (((Bit32u)*buf) << 24) |
-         (((Bit32u)*(buf+1)) << 16) |
-         (((Bit32u)*(buf+2)) << 8) |
-         ((Bit32u)*(buf+3));
-}
-
-void put_net4(Bit8u *buf,Bit32u data)
-{
-  *buf = (Bit8u)((data >> 24) & 0xff);
-  *(buf+1) = (Bit8u)((data >> 16) & 0xff);
-  *(buf+2) = (Bit8u)((data >> 8) & 0xff);
-  *(buf+3) = (Bit8u)(data & 0xff);
-}
-
 Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
 {
   Bit32u sum = 0;

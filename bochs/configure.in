@@ -812,6 +812,24 @@ AC_ARG_ENABLE(pnic,
     ]
   )
 
+AC_MSG_CHECKING(for Intel(R) Gigabit Ethernet support)
+AC_ARG_ENABLE(e1000,
+  [  --enable-e1000                    enable Intel(R) Gigabit Ethernet support],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_E1000, 1)
+    PCI_OBJ="$PCI_OBJ e1000.o"
+    networking=yes
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_E1000, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_E1000, 0)
+    ]
+  )
+
 NETLOW_OBJS=''
 if test "$networking" = yes; then
   NETLOW_OBJS='eth_null.o eth_vnet.o'
