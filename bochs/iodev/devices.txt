@@ -22,7 +22,7 @@ MOTHER BOARD (i440FX Support)                                   devices.cc
   |        +---- 8254/82C54 Programmable Interval Timer         pit_wrap.cc, pit82c54.cc
   |        |             |
   |        |             +---- PC Speaker (lowlevel)            speaker.cc
-  |
+  |        |
   |        +---- 8237 DMA controller                            dma.cc
   |        +---- 82077A Floppy Drive Controller (*)             floppy.cc
   |        +---- CMOS device                                    cmos.cc
@@ -34,7 +34,7 @@ MOTHER BOARD (i440FX Support)                                   devices.cc
   |        |
   |        +---- Standard PC gameport                           gameport.cc
   |
-  +-------------- Debugging/Instrumentation                     biosdev.cc, iodebug.cc, unmapped.cc
+  +------------- Debugging/Instrumentation                      biosdev.cc, iodebug.cc, unmapped.cc
 
 Attached devices
   |
@@ -48,15 +48,16 @@ Attached devices
   |        |             |
   |        |             +---- Additional Modules               vmware3.cc, vmware4.cc, vvfat.cc
   |        |
-  |        +---- CD/DVD-ROM image / device access (*)           cdrom.cc
+  |        +---- CD/DVD-ROM image / device access (*)           cdrom.cc, cdrom_misc.cc
   |                      |
-  |                      +---- Host specific Module             cdrom_amigaos.cc
+  |                      +---- Host specific Modules            cdrom_amigaos.cc, cdrom_win32.cc, cdrom_osx.cc
   +---- Network Support
   |        |
   |        +---- Network Devices
   |        |             |
   |        |             +---- NE2000 (ISA/PCI)                 ne2k.cc, pcipnic.cc
   |        |             +---- PCI Pseudo NIC                   pcipnic.cc
+  |        |             +---- Intel 82540EM Gigabit Ethernet   e1000.c
   |        |
   |        +---- Networking Modules                             netmod.cc
   |                      | |
