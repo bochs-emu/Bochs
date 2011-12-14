@@ -861,8 +861,20 @@ private_colormap: enabled=0
 #pnic: enabled=1, mac=b0:c4:20:00:00:00, ethmod=vnet
 
 #=======================================================================
+# e1000: Intel(R) 82540EM Gigabit Ethernet adapter
+#
+# Example:
+# e1000: enabled=1, mac=MACADDR, ethmod=MODULE, ethdev=DEVICE, script=SCRIPT
+#
+# The E1000 accepts the same syntax (for mac, ethmod, ethdev, script) and
+# supports the same networking modules as the NE2000 adapter. In addition to
+# this, it must be assigned to a PCI slot.
+#=======================================================================
+#e1000: enabled=1, mac=b0:c4:20:00:00:00, ethmod=vnet
+
+#=======================================================================
 # KEYBOARD_MAPPING:
-# This enables a remap of a physical localized keyboard to a 
+# This enables a remap of a physical localized keyboard to a
 # virtualized us keyboard, as the PC architecture expects.
 # If enabled, the keymap file must be specified.
 # 

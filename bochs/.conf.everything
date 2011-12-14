@@ -22,6 +22,7 @@
   --enable-a20-pin \
   --enable-instrumentation=instrument/example1 \
   --enable-ne2000 \
+  --enable-e1000 \
   --enable-pci \
   --enable-clgd54xx \
   --enable-usb \
