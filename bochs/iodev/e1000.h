@@ -52,48 +52,47 @@ struct e1000_tx_desc {
 };
 
 typedef struct {
-  Bit8u header[256];
-  Bit8u vlan_header[4];
-  Bit8u *vlan;
-  Bit8u *data;
-  Bit16u size;
-  Bit8u sum_needed;
-  Bit8u vlan_needed;
-  Bit8u  ipcss;
-  Bit8u  ipcso;
-  Bit16u ipcse;
-  Bit8u  tucss;
-  Bit8u  tucso;
-  Bit16u tucse;
-  Bit8u  hdr_len;
-  Bit16u mss;
-  Bit32u paylen;
-  Bit16u tso_frames;
-  Bit8s  tse;
-  Bit8s  ip;
-  Bit8s  tcp;
-  Bit8s  cptse; // current packet tse bit
-  Bit32u int_cause;
+  Bit8u   header[256];
+  Bit8u   vlan_header[4];
+  Bit8u   *vlan;
+  Bit8u   *data;
+  Bit16u  size;
+  Bit8u   sum_needed;
+  bx_bool vlan_needed;
+  Bit8u   ipcss;
+  Bit8u   ipcso;
+  Bit16u  ipcse;
+  Bit8u   tucss;
+  Bit8u   tucso;
+  Bit16u  tucse;
+  Bit8u   hdr_len;
+  Bit16u  mss;
+  Bit32u  paylen;
+  Bit16u  tso_frames;
+  bx_bool tse;
+  bx_bool ip;
+  bx_bool tcp;
+  bx_bool cptse; // current packet tse bit
+  Bit32u  int_cause;
 } e1000_tx;
 
 typedef struct {
-  Bit8u macaddr[6];
   Bit32u *mac_reg;
   Bit16u phy_reg[0x20];
   Bit16u eeprom_data[64];
 
-  Bit32u rxbuf_size;
-  Bit32u rxbuf_min_shift;
+  Bit32u  rxbuf_size;
+  Bit32u  rxbuf_min_shift;
   bx_bool check_rxov;
 
   e1000_tx tx;
 
   struct {
-    Bit32u val_in; // shifted in from guest driver
-    Bit16u bitnum_in;
-    Bit16u bitnum_out;
-    Bit16u reading;
-    Bit32u old_eecd;
+    Bit32u  val_in; // shifted in from guest driver
+    Bit16u  bitnum_in;
+    Bit16u  bitnum_out;
+    bx_bool reading;
+    Bit32u  old_eecd;
   } eecd_state;
 
   int tx_timer_index;

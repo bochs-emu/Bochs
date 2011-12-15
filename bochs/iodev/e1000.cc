@@ -290,33 +290,30 @@ void libe1000_LTX_plugin_fini(void)
 }
 
 // temporary helper functions 
-// we should use read/write host word/dword/qword from/to little endian
+// we should use host from/to little endian conversion directly
 
 Bit16u cpu_to_le16(Bit16u value)
 {
-#ifdef BX_LITTLE_ENDIAN
-  return value;
-#else
-  return bx_bswap16(value);
-#endif
+  Bit16u hvalue;
+
+  WriteHostWordToLittleEndian(&hvalue, value);
+  return hvalue;
 }
 
 Bit32u cpu_to_le32(Bit32u value)
 {
-#ifdef BX_LITTLE_ENDIAN
-  return value;
-#else
-  return bx_bswap32(value);
-#endif
+  Bit32u hvalue;
+
+  WriteHostDWordToLittleEndian(&hvalue, value);
+  return hvalue;
 }
 
 Bit64u cpu_to_le64(Bit64u value)
 {
-#ifdef BX_LITTLE_ENDIAN
-  return value;
-#else
-  return bx_bswap64(value);
-#endif
+  Bit64u hvalue;
+
+  WriteHostQWordToLittleEndian(&hvalue, value);
+  return hvalue;
 }
 
 #define le16_to_cpu  cpu_to_le16
@@ -370,17 +367,18 @@ bx_e1000_c::~bx_e1000_c()
 void bx_e1000_c::init(void)
 {
   bx_list_c *base;
+  Bit8u macaddr[6];
   int i;
   Bit16u checksum = 0;
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_E1000);
-  memcpy(BX_E1000_THIS s.macaddr, SIM->get_param_string("macaddr", base)->getptr(), 6);
+  memcpy(macaddr, SIM->get_param_string("macaddr", base)->getptr(), 6);
 
   memcpy(BX_E1000_THIS s.eeprom_data, e1000_eeprom_template,
          sizeof(e1000_eeprom_template));
   for (i = 0; i < 3; i++)
-    BX_E1000_THIS s.eeprom_data[i] = (BX_E1000_THIS s.macaddr[2*i+1]<<8) | BX_E1000_THIS s.macaddr[2*i];
+    BX_E1000_THIS s.eeprom_data[i] = (macaddr[2*i+1]<<8) | macaddr[2*i];
   for (i = 0; i < EEPROM_CHECKSUM_REG; i++)
     checksum += BX_E1000_THIS s.eeprom_data[i];
   checksum = (Bit16u) EEPROM_SUM - checksum;
@@ -483,7 +481,7 @@ void bx_e1000_c::register_state(void)
   unsigned i;
   char pname[4];
 
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "e1000", "E1000 State", 9);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "e1000", "E1000 State", 10);
   new bx_shadow_data_c(list, "mac_reg", (Bit8u*)BX_E1000_THIS s.mac_reg, 0x20000);
   bx_list_c *phy = new bx_list_c(list, "phy_reg", "", 32);
   for (i = 0; i < 32; i++) {
@@ -498,7 +496,7 @@ void bx_e1000_c::register_state(void)
   BXRS_DEC_PARAM_FIELD(list, rxbuf_size, BX_E1000_THIS s.rxbuf_size);
   BXRS_DEC_PARAM_FIELD(list, rxbuf_min_shift, BX_E1000_THIS s.rxbuf_min_shift);
   BXRS_PARAM_BOOL(list, check_rxov, BX_E1000_THIS s.check_rxov);
-  bx_list_c *tx = new bx_list_c(list, "tx", "", 22);
+  bx_list_c *tx = new bx_list_c(list, "tx", "", 21);
   bx_list_c *header = new bx_list_c(tx, "header", "", 256);
   for (i = 0; i < 256; i++) {
     sprintf(pname, "0x%02x", i);
@@ -509,10 +507,10 @@ void bx_e1000_c::register_state(void)
     sprintf(pname, "0x%02x", i);
     new bx_shadow_num_c(vlh, pname, &BX_E1000_THIS s.tx.vlan_header[i], BASE_HEX);
   }
-  new bx_shadow_data_c(tx, "vlan_data", BX_E1000_THIS s.tx.vlan, 0x10004);
+  new bx_shadow_data_c(list, "tx_vlan_data", BX_E1000_THIS s.tx.vlan, 0x10004);
   BXRS_DEC_PARAM_FIELD(tx, size, BX_E1000_THIS s.tx.size);
   BXRS_DEC_PARAM_FIELD(tx, sum_needed, BX_E1000_THIS s.tx.sum_needed);
-  BXRS_DEC_PARAM_FIELD(tx, vlan_needed, BX_E1000_THIS s.tx.vlan_needed);
+  BXRS_PARAM_BOOL(tx, vlan_needed, BX_E1000_THIS s.tx.vlan_needed);
   BXRS_DEC_PARAM_FIELD(tx, ipcss, BX_E1000_THIS s.tx.ipcss);
   BXRS_DEC_PARAM_FIELD(tx, ipcso, BX_E1000_THIS s.tx.ipcso);
   BXRS_DEC_PARAM_FIELD(tx, ipcse, BX_E1000_THIS s.tx.ipcse);
@@ -523,16 +521,16 @@ void bx_e1000_c::register_state(void)
   BXRS_DEC_PARAM_FIELD(tx, mss, BX_E1000_THIS s.tx.mss);
   BXRS_DEC_PARAM_FIELD(tx, paylen, BX_E1000_THIS s.tx.paylen);
   BXRS_DEC_PARAM_FIELD(tx, tso_frames, BX_E1000_THIS s.tx.tso_frames);
-  BXRS_DEC_PARAM_FIELD(tx, tse, BX_E1000_THIS s.tx.tse);
-  BXRS_DEC_PARAM_FIELD(tx, ip, BX_E1000_THIS s.tx.ip);
-  BXRS_DEC_PARAM_FIELD(tx, tcp, BX_E1000_THIS s.tx.tcp);
-  BXRS_DEC_PARAM_FIELD(tx, cptse, BX_E1000_THIS s.tx.cptse);
+  BXRS_PARAM_BOOL(tx, tse, BX_E1000_THIS s.tx.tse);
+  BXRS_PARAM_BOOL(tx, ip, BX_E1000_THIS s.tx.ip);
+  BXRS_PARAM_BOOL(tx, tcp, BX_E1000_THIS s.tx.tcp);
+  BXRS_PARAM_BOOL(tx, cptse, BX_E1000_THIS s.tx.cptse);
   BXRS_HEX_PARAM_FIELD(tx, int_cause, BX_E1000_THIS s.tx.int_cause);
   bx_list_c *eecds = new bx_list_c(list, "eecd_state", "", 5);
   BXRS_DEC_PARAM_FIELD(eecds, val_in, BX_E1000_THIS s.eecd_state.val_in);
   BXRS_DEC_PARAM_FIELD(eecds, bitnum_in, BX_E1000_THIS s.eecd_state.bitnum_in);
   BXRS_DEC_PARAM_FIELD(eecds, bitnum_out, BX_E1000_THIS s.eecd_state.bitnum_out);
-  BXRS_DEC_PARAM_FIELD(eecds, reading, BX_E1000_THIS s.eecd_state.reading);
+  BXRS_PARAM_BOOL(eecds, reading, BX_E1000_THIS s.eecd_state.reading);
   BXRS_HEX_PARAM_FIELD(eecds, old_eecd, BX_E1000_THIS s.eecd_state.old_eecd);
 
   register_pci_state(list);
