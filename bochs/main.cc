@@ -22,7 +22,7 @@
 #include "bxversion.h"
 #include "param_names.h"
 #include "gui/textconfig.h"
-#if BX_USE_TEXTCONFIG && defined(WIN32)
+#if BX_USE_TEXTCONFIG && defined(WIN32) && (BX_WITH_WIN32 || BX_WITH_SDL)
 #include "gui/win32dialog.h"
 #endif
 #include "cpu/cpu.h"
@@ -277,7 +277,7 @@ int bxmain (void) {
 #endif
     }
     else if (!strcmp(ci_name, "win32config")) {
-#if BX_USE_TEXTCONFIG && defined(WIN32)
+#if BX_USE_TEXTCONFIG && defined(WIN32) && (BX_WITH_WIN32 || BX_WITH_SDL)
       init_win32_config_interface();
 #else
       BX_PANIC(("configuration interface 'win32config' not present"));
