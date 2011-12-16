@@ -39,32 +39,16 @@ these four paragraphs for those parts of this code that are retained.
 //   f(x) ~ [ p(x) + x * q(x) ]
 //
 
-float128 EvalPoly(float128 x, float128 *arr, unsigned n, float_status_t &status)
+float128 EvalPoly(float128 x, float128 *arr, int n, float_status_t &status)
 {
-    float128 x2 = float128_mul(x, x, status);
-    unsigned i;
+    float128 r = arr[--n];
 
-    assert(n > 1);
+    do {
+        r = float128_mul(r, x, status);
+        r = float128_add(r, arr[--n], status);
+    } while (n > 0);
 
-    float128 r1 = arr[--n];
-    i = n;
-    while(i >= 2) {
-        r1 = float128_mul(r1, x2, status);
-        i -= 2;
-        r1 = float128_add(r1, arr[i], status);
-    }
-    if (i) r1 = float128_mul(r1, x, status);
-
-    float128 r2 = arr[--n];
-    i = n;
-    while(i >= 2) {
-        r2 = float128_mul(r2, x2, status);
-        i -= 2;
-        r2 = float128_add(r2, arr[i], status);
-    }
-    if (i) r2 = float128_mul(r2, x, status);
-
-    return float128_add(r1, r2, status);
+    return r;
 }
 
 //                  2         4         6         8               2n
@@ -79,7 +63,7 @@ float128 EvalPoly(float128 x, float128 *arr, unsigned n, float_status_t &status)
 //   f(x) ~ [ p(x) + x * q(x) ]
 //
 
-float128 EvenPoly(float128 x, float128 *arr, unsigned n, float_status_t &status)
+float128 EvenPoly(float128 x, float128 *arr, int n, float_status_t &status)
 {
      return EvalPoly(float128_mul(x, x, status), arr, n, status);
 }
@@ -99,7 +83,7 @@ float128 EvenPoly(float128 x, float128 *arr, unsigned n, float_status_t &status)
 //   f(x) ~ x * [ p(x) + x * q(x) ]
 //
 
-float128 OddPoly(float128 x, float128 *arr, unsigned n, float_status_t &status)
+float128 OddPoly(float128 x, float128 *arr, int n, float_status_t &status)
 {
      return float128_mul(x, EvenPoly(x, arr, n, status), status);
 }

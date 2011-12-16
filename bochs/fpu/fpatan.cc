@@ -60,7 +60,7 @@ static float128 atan_arr[FPATAN_ARR_SIZE] =
     PACK_FLOAT_128(0x3ffa861861861861, 0x8618618618618618)  /* 21 */
 };
 
-extern float128 OddPoly(float128 x, float128 *arr, unsigned n, float_status_t &status);
+extern float128 OddPoly(float128 x, float128 *arr, int n, float_status_t &status);
 
 /* |x| < 1/4 */
 static float128 poly_atan(float128 x1, float_status_t &status)

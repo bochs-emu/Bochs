@@ -118,7 +118,7 @@ static float128 cos_arr[COS_ARR_SIZE] =
     PACK_FLOAT_128(0x3fc1e542ba402022, 0x507a9cad2bf8f0bb)  /* 20 */
 };
 
-extern float128 OddPoly (float128 x, float128 *arr, unsigned n, float_status_t &status);
+extern float128 OddPoly (float128 x, float128 *arr, int n, float_status_t &status);
 
 /* 0 <= x <= pi/4 */
 BX_CPP_INLINE float128 poly_sin(float128 x, float_status_t &status)
@@ -146,7 +146,7 @@ BX_CPP_INLINE float128 poly_sin(float128 x, float_status_t &status)
     return OddPoly(x, sin_arr, SIN_ARR_SIZE, status);
 }
 
-extern float128 EvenPoly(float128 x, float128 *arr, unsigned n, float_status_t &status);
+extern float128 EvenPoly(float128 x, float128 *arr, int n, float_status_t &status);
 
 /* 0 <= x <= pi/4 */
 BX_CPP_INLINE float128 poly_cos(float128 x, float_status_t &status)

@@ -42,7 +42,7 @@ static const float128 float128_ln2inv2 =
 
 #define SQRT2_HALF_SIG 	BX_CONST64(0xb504f333f9de6484)
 
-extern float128 OddPoly(float128 x, float128 *arr, unsigned n, float_status_t &status);
+extern float128 OddPoly(float128 x, float128 *arr, int n, float_status_t &status);
 
 #define L2_ARR_SIZE 9
 

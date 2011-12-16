@@ -66,7 +66,7 @@ static float128 exp_arr[EXP_ARR_SIZE] =
     PACK_FLOAT_128(0x3fd6ae7f3e733b81, 0xf11d8656b0ee8cb0)  /* 15 */
 };
 
-extern float128 EvalPoly(float128 x, float128 *arr, unsigned n, float_status_t &status);
+extern float128 EvalPoly(float128 x, float128 *arr, int n, float_status_t &status);
 
 /* required -1 < x < 1 */
 static float128 poly_exp(float128 x, float_status_t &status)
