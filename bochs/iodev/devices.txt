@@ -48,16 +48,21 @@ Attached devices
   |        |             |
   |        |             +---- Additional Modules               vmware3.cc, vmware4.cc, vvfat.cc
   |        |
-  |        +---- CD/DVD-ROM image / device access (*)           cdrom.cc, cdrom_misc.cc
+  |        +---- CD/DVD-ROM image / device access (*)           cdrom.cc
   |                      |
-  |                      +---- Host specific Modules            cdrom_amigaos.cc, cdrom_win32.cc, cdrom_osx.cc
+  |                      +---- Host specific Modules
+  |                                   |
+  |                                   +---- Amiga/MorphOS       cdrom_amigaos.cc
+  |                                   +---- Windows             cdrom_win32.cc
+  |                                   +---- Mac OSX             cdrom_osx.cc
+  |                                   +---- Linux and others    cdrom_misc.cc
   +---- Network Support
   |        |
   |        +---- Network Devices
   |        |             |
-  |        |             +---- NE2000 (ISA/PCI)                 ne2k.cc, pcipnic.cc
+  |        |             +---- NE2000 (ISA/PCI)                 ne2k.cc
   |        |             +---- PCI Pseudo NIC                   pcipnic.cc
-  |        |             +---- Intel 82540EM Gigabit Ethernet   e1000.c
+  |        |             +---- Intel 82540EM Gigabit Ethernet   e1000.cc
   |        |
   |        +---- Networking Modules                             netmod.cc
   |                      | |
