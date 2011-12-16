@@ -82,7 +82,7 @@ void bx_pcipnic_c::init(void)
 
   BX_PNIC_THIS pci_base_address[4] = 0;
 
-  BX_INFO(("PCI Pseudo NIC initialized - I/O base and IRQ assigned by PCI BIOS"));
+  BX_INFO(("PCI Pseudo NIC initialized"));
 }
 
 void bx_pcipnic_c::reset(unsigned type)
@@ -158,7 +158,7 @@ void bx_pcipnic_c::after_restore_state(void)
 {
   if (DEV_pci_set_base_io(BX_PNIC_THIS_PTR, read_handler, write_handler,
                           &BX_PNIC_THIS pci_base_address[4],
-                          &BX_PNIC_THIS pci_conf[0x10],
+                          &BX_PNIC_THIS pci_conf[0x20],
                           16, &pnic_iomask[0], "PNIC")) {
     BX_INFO(("new base address: 0x%04x", BX_PNIC_THIS pci_base_address[4]));
   }
