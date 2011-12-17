@@ -1793,7 +1793,7 @@ void bx_dbg_stepN_command(int cpu, Bit32u count)
     for (unsigned cycle=0; !stop && cycle < count; cycle++) {
       for (unsigned ncpu=0; ncpu < BX_SMP_PROCESSORS; ncpu++) {
         bx_guard.interrupt_requested = 0;
-        bx_dbg_set_icount_guard(cpu, 1);
+        bx_dbg_set_icount_guard(ncpu, 1);
         BX_CPU(ncpu)->cpu_loop();
         // set stop flag if a guard found other than icount or halted
         unsigned found = BX_CPU(ncpu)->guard_found.guard_found;
