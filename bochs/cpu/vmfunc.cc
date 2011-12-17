@@ -35,9 +35,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMFUNC(bxInstruction_c *i)
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
   Bit32u function = EAX;
 
-  if (function >= 64 || 0 == (vm->vmfunc_ctrls & (BX_CONST64(1)<<function))) {
+  if (function >= 64) {
     BX_ERROR(("VMFUNC: invalid function 0x%08x", function));
     exception(BX_UD_EXCEPTION, 0);
+  }
+
+  if (0 == (vm->vmfunc_ctrls & (BX_CONST64(1)<<function))) {
+    BX_ERROR(("VMFUNC: function %d not enabled", function));
+    VMexit_Instruction(i, VMX_VMEXIT_VMFUNC);
   }
 
   switch(function) {
