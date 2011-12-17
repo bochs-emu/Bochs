@@ -243,6 +243,8 @@ private:
   static void tx_timer_handler(void *);
   BX_NE2K_SMF void tx_timer(void);
 
+  static Bit32u rx_status_handler(void *arg);
+  BX_NE2K_SMF Bit32u rx_status(void);
   static void rx_handler(void *arg, const void *buf, unsigned len);
   BX_NE2K_SMF unsigned mcast_index(const void *dst);
   BX_NE2K_SMF void rx_frame(const void *buf, unsigned io_len);

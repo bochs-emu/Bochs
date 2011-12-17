@@ -400,7 +400,7 @@ public:
 #if BX_NETWORKING
 class BOCHSAPI bx_netmod_ctl_stub_c : public bx_devmodel_c {
 public:
-  virtual void* init_module(bx_list_c *base, void* rxh, bx_devmodel_c *dev) {
+  virtual void* init_module(bx_list_c *base, void* rxh, void* rxstat, bx_devmodel_c *dev) {
     STUBFUNC(netmod_ctl, init_module); return NULL;
   }
 };

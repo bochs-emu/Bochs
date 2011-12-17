@@ -78,7 +78,7 @@ void bx_pcipnic_c::init(void)
   }
 
   // Attach to the selected ethernet module
-  BX_PNIC_THIS ethdev = DEV_net_init_module(base, rx_handler, this);
+  BX_PNIC_THIS ethdev = DEV_net_init_module(base, rx_handler, rx_status_handler, this);
 
   BX_PNIC_THIS pci_base_address[4] = 0;
 
@@ -453,6 +453,24 @@ void bx_pcipnic_c::exec_command(void)
   BX_PNIC_THIS s.rStatus = status;
   BX_PNIC_THIS s.rLength = olength;
   BX_PNIC_THIS s.rDataCursor = 0;
+}
+
+/*
+ * Callback from the eth system driver to check if the device can receive
+ */
+Bit32u bx_pcipnic_c::rx_status_handler(void *arg)
+{
+  bx_pcipnic_c *class_ptr = (bx_pcipnic_c *) arg;
+  return class_ptr->rx_status();
+}
+
+Bit32u bx_pcipnic_c::rx_status()
+{
+  Bit32u status = BX_NETDEV_100MBIT;
+  if (BX_PNIC_THIS s.recvQueueLength < PNIC_RECV_RINGS) {
+    status |= BX_NETDEV_RXREADY;
+  }
+  return status;
 }
 
 /*

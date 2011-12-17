@@ -146,6 +146,8 @@ private:
   BX_E1000_SMF bx_bool e1000_has_rxbufs(size_t total_size);
   BX_E1000_SMF Bit64u  rx_desc_base(void);
 
+  static Bit32u rx_status_handler(void *arg);
+  BX_E1000_SMF Bit32u rx_status(void);
   static void rx_handler(void *arg, const void *buf, unsigned len);
   BX_E1000_SMF void rx_frame(const void *buf, unsigned io_len);
 

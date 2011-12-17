@@ -1264,6 +1264,27 @@ unsigned bx_ne2k_c::mcast_index(const void *dst)
 }
 
 /*
+ * Callback from the eth system driver to check if the device can receive
+ */
+Bit32u bx_ne2k_c::rx_status_handler(void *arg)
+{
+  bx_ne2k_c *class_ptr = (bx_ne2k_c *) arg;
+  return class_ptr->rx_status();
+}
+
+Bit32u bx_ne2k_c::rx_status()
+{
+  Bit32u status = BX_NETDEV_10MBIT;
+  if ((BX_NE2K_THIS s.CR.stop == 0) &&
+      (BX_NE2K_THIS s.page_start != 0) &&
+      ((BX_NE2K_THIS s.DCR.loop != 0) ||
+       (BX_NE2K_THIS s.TCR.loop_cntl == 0))) {
+    status |= BX_NETDEV_RXREADY;
+  }
+  return status;
+}
+
+/*
  * Callback from the eth system driver when a frame has arrived
  */
 void bx_ne2k_c::rx_handler(void *arg, const void *buf, unsigned len)
@@ -1510,7 +1531,7 @@ void bx_ne2k_c::init(void)
     BX_NE2K_THIS s.macaddr[i] = 0x57;
 
   // Attach to the selected ethernet module
-  BX_NE2K_THIS ethdev = DEV_net_init_module(base, rx_handler, this);
+  BX_NE2K_THIS ethdev = DEV_net_init_module(base, rx_handler, rx_status_handler, this);
 }
 
 void bx_ne2k_c::set_irq_level(bx_bool level)

@@ -32,12 +32,19 @@ class bx_netmod_ctl_c : public bx_netmod_ctl_stub_c {
 public:
   bx_netmod_ctl_c() {}
   virtual ~bx_netmod_ctl_c() {}
-  virtual void* init_module(bx_list_c *base, void* rxh, bx_devmodel_c *dev);
+  virtual void* init_module(bx_list_c *base, void* rxh, void* rxstat, bx_devmodel_c *dev);
 };
 
 #define BX_PACKET_BUFSIZE 2048 // Enough for an ether frame
 
+// device receive status definitions
+#define BX_NETDEV_RXREADY  0x0001
+#define BX_NETDEV_10MBIT   0x0002
+#define BX_NETDEV_100MBIT  0x0004
+#define BX_NETDEV_1GBIT    0x0006
+
 typedef void (*eth_rx_handler_t)(void *arg, const void *buf, unsigned len);
+typedef Bit32u (*eth_rx_status_t)(void *arg);
 
 typedef struct {
   Bit8u host_macaddr[6];
@@ -99,6 +106,7 @@ public:
 protected:
   bx_devmodel_c *netdev;
   eth_rx_handler_t  rxh;   // receive callback
+  eth_rx_status_t  rxstat; // receive status callback
 };
 
 
@@ -112,6 +120,7 @@ public:
   static eth_pktmover_c *create(const char *type, const char *netif,
                                 const char *macaddr,
                                 eth_rx_handler_t rxh,
+                                eth_rx_status_t rxstat,
                                 bx_devmodel_c *dev,
                                 const char *script);
 protected:
@@ -120,6 +129,7 @@ protected:
   virtual eth_pktmover_c *allocate(const char *netif,
                                    const char *macaddr,
                                    eth_rx_handler_t rxh,
+                                   eth_rx_status_t rxstat,
                                    bx_devmodel_c *dev,
                                    const char *script) = 0;
 private:

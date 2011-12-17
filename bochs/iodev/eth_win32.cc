@@ -202,7 +202,8 @@ static const struct bpf_insn macfilter[] = {
 class bx_win32_pktmover_c : public eth_pktmover_c {
 public:
   bx_win32_pktmover_c(const char *netif, const char *macaddr,
-                      eth_rx_handler_t rxh, bx_devmodel_c *dev,
+                      eth_rx_handler_t rxh, eth_rx_status_t rxstat,
+                      bx_devmodel_c *dev,
                       const char *script);
   void sendpkt(void *buf, unsigned io_len);
 private:
@@ -224,9 +225,9 @@ public:
   bx_win32_locator_c(void) : eth_locator_c("win32") {}
 protected:
   eth_pktmover_c *allocate(const char *netif, const char *macaddr,
-                           eth_rx_handler_t rxh,
+                           eth_rx_handler_t rxh, eth_rx_status_t rxstat,
                            bx_devmodel_c *dev, const char *script) {
-    return (new bx_win32_pktmover_c(netif, macaddr, rxh, dev, script));
+    return (new bx_win32_pktmover_c(netif, macaddr, rxh, rxstat, dev, script));
   }
 } bx_win32_match;
 
@@ -237,7 +238,8 @@ protected:
 // the constructor
 bx_win32_pktmover_c::bx_win32_pktmover_c(
   const char *netif, const char *macaddr,
-  eth_rx_handler_t rxh, bx_devmodel_c *dev, const char *script)
+  eth_rx_handler_t rxh, eth_rx_status_t rxstat,
+  bx_devmodel_c *dev, const char *script)
 {
   this->netdev = dev;
   BX_INFO(("win32 network driver"));
@@ -245,7 +247,8 @@ bx_win32_pktmover_c::bx_win32_pktmover_c(
   DWORD dwVersion;
   DWORD dwWindowsMajorVersion;
 
-  this->rxh = rxh;
+  this->rxh    = rxh;
+  this->rxstat = rxstat;
 
   hPacket = LoadLibrary("PACKET.DLL");
   memcpy(cMacAddr, macaddr, 6);

@@ -404,7 +404,7 @@ void bx_e1000_c::init(void)
   }
 
   // Attach to the selected ethernet module
-  BX_E1000_THIS ethdev = DEV_net_init_module(base, rx_handler, this);
+  BX_E1000_THIS ethdev = DEV_net_init_module(base, rx_handler, rx_status_handler, this);
 
   BX_INFO(("E1000 initialized"));
 }
@@ -1232,6 +1232,24 @@ Bit64u bx_e1000_c::rx_desc_base()
   Bit64u bal = BX_E1000_THIS s.mac_reg[RDBAL] & ~0xf;
 
   return (bah << 32) + bal;
+}
+
+/*
+ * Callback from the eth system driver to check if the device can receive
+ */
+Bit32u bx_e1000_c::rx_status_handler(void *arg)
+{
+  bx_e1000_c *class_ptr = (bx_e1000_c *) arg;
+  return class_ptr->rx_status();
+}
+
+Bit32u bx_e1000_c::rx_status()
+{
+  Bit32u status = BX_NETDEV_1GBIT;
+  if ((BX_E1000_THIS s.mac_reg[RCTL] & E1000_RCTL_EN) && e1000_has_rxbufs(1)) {
+    status |= BX_NETDEV_RXREADY;
+  }
+  return status;
 }
 
 /*

@@ -92,6 +92,7 @@ public:
   bx_linux_pktmover_c(const char *netif,
                       const char *macaddr,
                       eth_rx_handler_t rxh,
+                      eth_rx_status_t rxstat,
                       bx_devmodel_c *dev,
                       const char *script);
   void sendpkt(void *buf, unsigned io_len);
@@ -118,8 +119,9 @@ protected:
   eth_pktmover_c *allocate(const char *netif,
                            const char *macaddr,
                            eth_rx_handler_t rxh,
+                           eth_rx_status_t rxstat,
                            bx_devmodel_c *dev, const char *script) {
-    return (new bx_linux_pktmover_c(netif, macaddr, rxh, dev, script));
+    return (new bx_linux_pktmover_c(netif, macaddr, rxh, rxstat, dev, script));
   }
 } bx_linux_match;
 
@@ -133,6 +135,7 @@ protected:
 bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif,
                                          const char *macaddr,
                                          eth_rx_handler_t rxh,
+                                         eth_rx_status_t rxstat,
                                          bx_devmodel_c *dev,
                                          const char *script)
 {
@@ -224,7 +227,8 @@ bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif,
     bx_pc_system.register_timer(this, this->rx_timer_handler, BX_PACKET_POLL,
                                 1, 1, "eth_linux"); // continuous, active
 
-  this->rxh   = rxh;
+  this->rxh    = rxh;
+  this->rxstat = rxstat;
   BX_INFO(("linux network driver initialized: using interface %s", netif));
 }
 

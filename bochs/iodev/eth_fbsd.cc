@@ -99,6 +99,7 @@ public:
   bx_fbsd_pktmover_c(const char *netif,
                      const char *macaddr,
                      eth_rx_handler_t rxh,
+                     eth_rx_status_t rxstat,
                      bx_devmodel_c *dev, const char *script);
   void sendpkt(void *buf, unsigned io_len);
 
@@ -124,8 +125,9 @@ protected:
   eth_pktmover_c *allocate(const char *netif,
                            const char *macaddr,
                            eth_rx_handler_t rxh,
+                           eth_rx_status_t rxstat,
                            bx_devmodel_c *dev, const char *script) {
-    return (new bx_fbsd_pktmover_c(netif, macaddr, rxh, dev, script));
+    return (new bx_fbsd_pktmover_c(netif, macaddr, rxh, rxstat, dev, script));
   }
 } bx_fbsd_match;
 
@@ -142,6 +144,7 @@ protected:
 bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
                                        const char *macaddr,
                                        eth_rx_handler_t rxh,
+                                       eth_rx_stat_t rxstat,
                                        bx_devmodel_c *dev,
                                        const char *script)
 {
@@ -270,7 +273,8 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
     bx_pc_system.register_timer(this, this->rx_timer_handler, BX_BPF_POLL,
                                 1, 1, "eth_fbsd"); // continuous, active
 
-  this->rxh   = rxh;
+  this->rxh    = rxh;
+  this->rxstat = rxstat;
 
 #if BX_ETH_FBSD_LOGGING
   // eventually Bryce wants ne2klog to dump in pcap format so that

@@ -87,6 +87,9 @@ private:
 
   eth_pktmover_c *ethdev;
   static void exec_command(void);
+
+  static Bit32u rx_status_handler(void *arg);
+  BX_PNIC_SMF Bit32u rx_status(void);
   static void rx_handler(void *arg, const void *buf, unsigned len);
   BX_PNIC_SMF void rx_frame(const void *buf, unsigned io_len);
 };

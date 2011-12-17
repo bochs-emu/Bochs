@@ -105,7 +105,8 @@ public:
   bx_vnet_pktmover_c();
   void pktmover_init(
     const char *netif, const char *macaddr,
-    eth_rx_handler_t rxh, bx_devmodel_c *dev, const char *script);
+    eth_rx_handler_t rxh, eth_rx_status_t rxstat,
+    bx_devmodel_c *dev, const char *script);
   void sendpkt(void *buf, unsigned io_len);
 private:
   void guest_to_host(const Bit8u *buf, unsigned io_len);
@@ -209,11 +210,11 @@ public:
 protected:
   eth_pktmover_c *allocate(
       const char *netif, const char *macaddr,
-      eth_rx_handler_t rxh,
+      eth_rx_handler_t rxh, eth_rx_status_t rxstat,
       bx_devmodel_c *dev, const char *script) {
     bx_vnet_pktmover_c *pktmover;
     pktmover = new bx_vnet_pktmover_c();
-    pktmover->pktmover_init(netif, macaddr, rxh, dev, script);
+    pktmover->pktmover_init(netif, macaddr, rxh, rxstat, dev, script);
     return pktmover;
   }
 } bx_vnet_match;
@@ -247,11 +248,13 @@ bx_vnet_pktmover_c::bx_vnet_pktmover_c()
 
 void bx_vnet_pktmover_c::pktmover_init(
   const char *netif, const char *macaddr,
-  eth_rx_handler_t rxh, bx_devmodel_c *dev, const char *script)
+  eth_rx_handler_t rxh, eth_rx_status_t rxstat,
+  bx_devmodel_c *dev, const char *script)
 {
   this->netdev = dev;
   BX_INFO(("vnet network driver"));
-  this->rxh   = rxh;
+  this->rxh    = rxh;
+  this->rxstat = rxstat;
   strcpy(this->tftp_rootdir, netif);
   this->tftp_tid = 0;
   this->tftp_write = 0;

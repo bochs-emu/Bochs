@@ -125,7 +125,7 @@
 class bx_tap_pktmover_c : public eth_pktmover_c {
 public:
   bx_tap_pktmover_c(const char *netif, const char *macaddr,
-                    eth_rx_handler_t rxh,
+                    eth_rx_handler_t rxh, eth_rx_status_t rxstat,
                     bx_devmodel_c *dev, const char *script);
   void sendpkt(void *buf, unsigned io_len);
 private:
@@ -149,9 +149,9 @@ public:
   bx_tap_locator_c(void) : eth_locator_c("tap") {}
 protected:
   eth_pktmover_c *allocate(const char *netif, const char *macaddr,
-                           eth_rx_handler_t rxh,
+                           eth_rx_handler_t rxh, eth_rx_status_t rxstat,
                            bx_devmodel_c *dev, const char *script) {
-    return (new bx_tap_pktmover_c(netif, macaddr, rxh, dev, script));
+    return (new bx_tap_pktmover_c(netif, macaddr, rxh, rxstat, dev, script));
   }
 } bx_tap_match;
 
@@ -164,6 +164,7 @@ protected:
 bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif,
                                      const char *macaddr,
                                      eth_rx_handler_t rxh,
+                                     eth_rx_status_t rxstat,
                                      bx_devmodel_c *dev,
                                      const char *script)
 {
@@ -265,7 +266,8 @@ bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif,
   this->rx_timer_index =
     bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
                                 1, 1, "eth_tap"); // continuous, active
-  this->rxh   = rxh;
+  this->rxh    = rxh;
+  this->rxstat = rxstat;
   memcpy(&guest_macaddr[0], macaddr, 6);
 #if BX_ETH_TAP_LOGGING
   // eventually Bryce wants txlog to dump in pcap format so that

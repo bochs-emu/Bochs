@@ -51,7 +51,7 @@ void libnetmod_LTX_plugin_fini(void)
   delete theNetModCtl;
 }
 
-void* bx_netmod_ctl_c::init_module(bx_list_c *base, void *rxh, bx_devmodel_c *netdev)
+void* bx_netmod_ctl_c::init_module(bx_list_c *base, void *rxh, void *rxstat, bx_devmodel_c *netdev)
 {
   eth_pktmover_c *ethmod;
 
@@ -60,7 +60,7 @@ void* bx_netmod_ctl_c::init_module(bx_list_c *base, void *rxh, bx_devmodel_c *ne
   ethmod = eth_locator_c::create(modname,
                                  SIM->get_param_string("ethdev", base)->getptr(),
                                  (const char *) SIM->get_param_string("macaddr", base)->getptr(),
-                                 (eth_rx_handler_t)rxh, netdev,
+                                 (eth_rx_handler_t)rxh, (eth_rx_status_t)rxstat, netdev,
                                  SIM->get_param_string("script", base)->getptr());
 
   if (ethmod == NULL) {
@@ -70,7 +70,7 @@ void* bx_netmod_ctl_c::init_module(bx_list_c *base, void *rxh, bx_devmodel_c *ne
 
     ethmod = eth_locator_c::create("null", NULL,
                                    (const char *) SIM->get_param_string("macaddr", base)->getptr(),
-                                   (eth_rx_handler_t)rxh, netdev, "");
+                                   (eth_rx_handler_t)rxh, (eth_rx_status_t)rxstat, netdev, "");
     if (ethmod == NULL)
       BX_PANIC(("could not locate null module"));
   }
@@ -121,13 +121,13 @@ extern class bx_vnet_locator_c bx_vnet_match;
 eth_pktmover_c *
 eth_locator_c::create(const char *type, const char *netif,
                       const char *macaddr,
-                      eth_rx_handler_t rxh, bx_devmodel_c *dev,
-                      const char *script)
+                      eth_rx_handler_t rxh, eth_rx_status_t rxstat,
+                      bx_devmodel_c *dev, const char *script)
 {
 #ifdef eth_static_constructors
   for (eth_locator_c *p = all; p != NULL; p = p->next) {
     if (strcmp(type, p->type) == 0)
-      return (p->allocate(netif, macaddr, rxh, dev, script));
+      return (p->allocate(netif, macaddr, rxh, rxstat, dev, script));
   }
 #else
   eth_locator_c *ptr = 0;
@@ -181,7 +181,7 @@ eth_locator_c::create(const char *type, const char *netif,
     ptr = (eth_locator_c *) &bx_vnet_match;
   }
   if (ptr) {
-    return (ptr->allocate(netif, macaddr, rxh, dev, script));
+    return (ptr->allocate(netif, macaddr, rxh, rxstat, dev, script));
   }
 #endif
 

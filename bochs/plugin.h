@@ -260,8 +260,8 @@ extern "C" {
   ((bx_sound_lowlevel_c*)bx_devices.pluginSoundModCtl->init_module(a,b))
 
 ///////// Networking module macro
-#define DEV_net_init_module(a,b,c) \
-  ((eth_pktmover_c*)bx_devices.pluginNetModCtl->init_module(a,(void*)b,c))
+#define DEV_net_init_module(a,b,c,d) \
+  ((eth_pktmover_c*)bx_devices.pluginNetModCtl->init_module(a,(void*)b,(void*)c,d))
 
 ///////// Gameport macro
 #define DEV_gameport_set_enabled(a) bx_devices.pluginGameport->set_enabled(a)
