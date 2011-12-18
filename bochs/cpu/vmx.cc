@@ -2393,9 +2393,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   unsigned vmlaunch = 0;
-  if ((i->rm() & 0x7) == 0x2) {
+  if ((i->getIaOpcode() == BX_IA_VMLAUNCH)) {
     BX_INFO(("VMLAUNCH VMCS ptr: 0x" FMT_ADDRX64, BX_CPU_THIS_PTR vmcsptr));
     vmlaunch = 1;
+  }
+  else {
+    BX_INFO(("VMRESUME VMCS ptr: 0x" FMT_ADDRX64, BX_CPU_THIS_PTR vmcsptr));
   }
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
