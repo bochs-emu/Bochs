@@ -283,19 +283,21 @@
 #define BX_INSTR_INVPCID        18
 
 // possible types passed to BX_INSTR_CACHE_CNTRL()
-#define BX_INSTR_INVD           20
-#define BX_INSTR_WBINVD         21
+#define BX_INSTR_INVD           10
+#define BX_INSTR_WBINVD         11
 
-// possible types passed to BX_INSTR_FAR_BRANCH()
-#define BX_INSTR_IS_CALL        10
-#define BX_INSTR_IS_RET         11
-#define BX_INSTR_IS_IRET        12
-#define BX_INSTR_IS_JMP         13
-#define BX_INSTR_IS_INT         14
-#define BX_INSTR_IS_SYSCALL     15
-#define BX_INSTR_IS_SYSRET      16
-#define BX_INSTR_IS_SYSENTER    17
-#define BX_INSTR_IS_SYSEXIT     18
+// possible types passed to BX_INSTR_FAR_BRANCH() and BX_INSTR_UCNEAR_BRANCH()
+#define BX_INSTR_IS_JMP            10
+#define BX_INSTR_IS_JMP_INDIRECT   11
+#define BX_INSTR_IS_CALL           12
+#define BX_INSTR_IS_CALL_INDIRECT  13
+#define BX_INSTR_IS_RET            14
+#define BX_INSTR_IS_IRET           15
+#define BX_INSTR_IS_INT            16
+#define BX_INSTR_IS_SYSCALL        17
+#define BX_INSTR_IS_SYSRET         18
+#define BX_INSTR_IS_SYSENTER       19
+#define BX_INSTR_IS_SYSEXIT        20
 
 // possible types passed to BX_INSTR_PREFETCH_HINT()
 #define BX_INSTR_PREFETCH_NTA   0
