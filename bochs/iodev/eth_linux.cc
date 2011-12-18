@@ -281,7 +281,11 @@ bx_linux_pktmover_c::rx_timer(void)
   // let through broadcast, multicast, and our mac address
 //  if ((memcmp(rxbuf, broadcast_macaddr, 6) == 0) || (memcmp(rxbuf, this->linux_macaddr, 6) == 0) || rxbuf[0] & 0x01) {
     BX_DEBUG(("eth_linux: got packet: %d bytes, dst=%x:%x:%x:%x:%x:%x, src=%x:%x:%x:%x:%x:%x\n", nbytes, rxbuf[0], rxbuf[1], rxbuf[2], rxbuf[3], rxbuf[4], rxbuf[5], rxbuf[6], rxbuf[7], rxbuf[8], rxbuf[9], rxbuf[10], rxbuf[11]));
-    (*rxh)(netdev, rxbuf, nbytes);
+    if (this->rxstat(this->netdev) & BX_NETDEV_RXREADY) {
+      this->rxh(this->netdev, rxbuf, nbytes);
+    } else {
+      BX_ERROR(("device not ready to receive data"));
+    }
 //  }
 }
 #endif /* if BX_NETWORKING && BX_NETMOD_LINUX */

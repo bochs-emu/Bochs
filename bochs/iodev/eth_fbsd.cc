@@ -353,7 +353,11 @@ bx_fbsd_pktmover_c::rx_timer(void)
 
     // filter out packets sourced from this node
     if (memcmp(bhdr + bhdr->bh_hdrlen + 6, this->fbsd_macaddr, 6)) {
-      (*rxh)(this->netdev, phdr + bhdr->bh_hdrlen, bhdr->bh_caplen);
+      if (this->rxstat(this->netdev) & BX_NETDEV_RXREADY) {
+        this->rxh(this->netdev, phdr + bhdr->bh_hdrlen, bhdr->bh_caplen);
+      } else {
+        BX_ERROR(("device not ready to receive data"));
+      }
     }
 
 #if BX_ETH_FBSD_LOGGING

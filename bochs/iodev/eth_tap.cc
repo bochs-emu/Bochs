@@ -410,7 +410,11 @@ void bx_tap_pktmover_c::rx_timer()
     BX_INFO(("packet too short (%d), padding to 60", nbytes));
     nbytes = 60;
   }
-  (*rxh)(netdev, rxbuf, nbytes);
+  if (this->rxstat(this->netdev) & BX_NETDEV_RXREADY) {
+    this->rxh(this->netdev, rxbuf, nbytes);
+  } else {
+    BX_ERROR(("device not ready to receive data"));
+  }
 }
 
 #endif /* if BX_NETWORKING && BX_NETMOD_TAP */

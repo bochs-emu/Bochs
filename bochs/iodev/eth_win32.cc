@@ -378,7 +378,11 @@ void bx_win32_pktmover_c::rx_timer(void)
 #if BX_ETH_WIN32_LOGGING
           write_pktlog_txt(pktlog_txt, pPacket, pktlen, 1);
 #endif
-          (*this->rxh)(this->netdev, pPacket, pktlen);
+          if (this->rxstat(this->netdev) & BX_NETDEV_RXREADY) {
+            this->rxh(this->netdev, pPacket, pktlen);
+          } else {
+            BX_ERROR(("device not ready to receive data"));
+          }
         }
       }
       iOffset = Packet_WORDALIGN(iOffset + (hdr->bh_hdrlen + hdr->bh_caplen));

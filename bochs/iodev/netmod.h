@@ -39,9 +39,10 @@ public:
 
 // device receive status definitions
 #define BX_NETDEV_RXREADY  0x0001
+#define BX_NETDEV_SPEED    0x000e
 #define BX_NETDEV_10MBIT   0x0002
 #define BX_NETDEV_100MBIT  0x0004
-#define BX_NETDEV_1GBIT    0x0006
+#define BX_NETDEV_1GBIT    0x0008
 
 typedef void (*eth_rx_handler_t)(void *arg, const void *buf, unsigned len);
 typedef Bit32u (*eth_rx_status_t)(void *arg);
