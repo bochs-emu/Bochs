@@ -1264,5 +1264,5 @@ void bx_pci_device_stub_c::load_pci_rom(const char *path)
   }
   close(fd);
 
-  BX_INFO(("loaded PCI ROM '%s' (size=%u)", path, (unsigned) stat_buf.st_size));
+  BX_INFO(("loaded PCI ROM '%s' (size=%u / PCI=%uk)", path, (unsigned) stat_buf.st_size, pci_rom_size >> 10));
 }

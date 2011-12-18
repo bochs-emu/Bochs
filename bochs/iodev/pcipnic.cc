@@ -64,6 +64,7 @@ bx_pcipnic_c::~bx_pcipnic_c()
 void bx_pcipnic_c::init(void)
 {
   bx_list_c *base;
+  const char *bootrom;
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_PNIC);
@@ -81,6 +82,11 @@ void bx_pcipnic_c::init(void)
   BX_PNIC_THIS ethdev = DEV_net_init_module(base, rx_handler, rx_status_handler, this);
 
   BX_PNIC_THIS pci_base_address[4] = 0;
+  BX_PNIC_THIS pci_rom_address = 0;
+  bootrom = SIM->get_param_string("bootrom", base)->getptr();
+  if (strlen(bootrom) > 0) {
+    BX_PNIC_THIS load_pci_rom(bootrom);
+  }
 
   BX_INFO(("PCI Pseudo NIC initialized"));
 }
@@ -97,8 +103,8 @@ void bx_pcipnic_c::reset(unsigned type)
     { 0x01, PNIC_PCI_VENDOR >> 8 },
     { 0x02, PNIC_PCI_DEVICE & 0xff },
     { 0x03, PNIC_PCI_DEVICE >> 8 },
-    { 0x04, 0x05 }, { 0x05, 0x00 },	// command_io
-    { 0x06, 0x80 }, { 0x07, 0x02 },	// status
+    { 0x04, 0x01 }, { 0x05, 0x00 }, // command_io
+    { 0x06, 0x00 }, { 0x07, 0x00 }, // status
     { 0x08, 0x01 },                 // revision number
     { 0x09, 0x00 },                 // interface
     { 0x0a, 0x00 },                 // class_sub
@@ -162,11 +168,52 @@ void bx_pcipnic_c::after_restore_state(void)
                           16, &pnic_iomask[0], "PNIC")) {
     BX_INFO(("new base address: 0x%04x", BX_PNIC_THIS pci_base_address[4]));
   }
+  if (BX_PNIC_THIS pci_rom_size > 0) {
+    if (DEV_pci_set_base_mem(BX_PNIC_THIS_PTR, mem_read_handler,
+                             mem_write_handler,
+                             &BX_PNIC_THIS pci_rom_address,
+                             &BX_PNIC_THIS pci_conf[0x30],
+                             BX_PNIC_THIS pci_rom_size)) {
+      BX_INFO(("new ROM address: 0x%08x", BX_PNIC_THIS pci_rom_address));
+    }
+  }
 }
 
 void bx_pcipnic_c::set_irq_level(bx_bool level)
 {
   DEV_pci_set_irq(BX_PNIC_THIS s.devfunc, BX_PNIC_THIS pci_conf[0x3d], level);
+}
+
+bx_bool bx_pcipnic_c::mem_read_handler(bx_phy_address addr, unsigned len,
+                                       void *data, void *param)
+{
+  Bit8u  *data_ptr;
+
+#ifdef BX_LITTLE_ENDIAN
+  data_ptr = (Bit8u *) data;
+#else // BX_BIG_ENDIAN
+  data_ptr = (Bit8u *) data + (len - 1);
+#endif
+  for (unsigned i = 0; i < len; i++) {
+    if (BX_PNIC_THIS pci_conf[0x30] & 0x01) {
+      *data_ptr = BX_PNIC_THIS pci_rom[addr & 0x1ffff];
+    } else {
+      *data_ptr = 0xff;
+    }
+    addr++;
+#ifdef BX_LITTLE_ENDIAN
+    data_ptr++;
+#else // BX_BIG_ENDIAN
+    data_ptr--;
+#endif
+  }
+  return 1;
+}
+
+bx_bool bx_pcipnic_c::mem_write_handler(bx_phy_address addr, unsigned len,
+                                        void *data, void *param)
+{
+  return 1;
 }
 
 // static IO port read callback handler
@@ -305,23 +352,22 @@ void bx_pcipnic_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
 {
   Bit8u value8, oldval;
   bx_bool baseaddr_change = 0;
+  bx_bool romaddr_change = 0;
 
   if (((address >= 0x10) && (address < 0x20)) ||
-      ((address > 0x23) && (address < 0x34)))
+      ((address > 0x23) && (address < 0x30)))
     return;
 
   for (unsigned i=0; i<io_len; i++) {
     value8 = (value >> (i*8)) & 0xFF;
     oldval = BX_PNIC_THIS pci_conf[address+i];
     switch (address+i) {
-      case 0x3d: //
-      case 0x05: // disallowing write to command hi-byte
-      case 0x06: // disallowing write to status lo-byte (is that expected?)
+      case 0x04:
+        value8 &= 0x01;
         break;
       case 0x3c:
         if (value8 != oldval) {
           BX_INFO(("new irq line = %d", value8));
-          BX_PNIC_THIS pci_conf[address+i] = value8;
         }
         break;
       case 0x20:
@@ -330,9 +376,24 @@ void bx_pcipnic_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
       case 0x22:
       case 0x23:
         baseaddr_change = (value8 != oldval);
+        break;
+      case 0x30:
+      case 0x31:
+      case 0x32:
+      case 0x33:
+        if (BX_PNIC_THIS pci_rom_size > 0) {
+          if ((address+i) == 0x30) {
+            value8 &= 0x01;
+          } else if ((address+i) == 0x31) {
+            value8 &= 0xfc;
+          }
+          romaddr_change = 1;
+          break;
+        }
       default:
-        BX_PNIC_THIS pci_conf[address+i] = value8;
+        value8 = oldval;
     }
+    BX_PNIC_THIS pci_conf[address+i] = value8;
   }
   if (baseaddr_change) {
     if (DEV_pci_set_base_io(BX_PNIC_THIS_PTR, read_handler, write_handler,
@@ -340,6 +401,15 @@ void bx_pcipnic_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
                             &BX_PNIC_THIS pci_conf[0x20],
                             16, &pnic_iomask[0], "PNIC")) {
       BX_INFO(("new base address: 0x%04x", BX_PNIC_THIS pci_base_address[4]));
+    }
+  }
+  if (romaddr_change) {
+    if (DEV_pci_set_base_mem(BX_PNIC_THIS_PTR, mem_read_handler,
+                             mem_write_handler,
+                             &BX_PNIC_THIS pci_rom_address,
+                             &BX_PNIC_THIS pci_conf[0x30],
+                             BX_PNIC_THIS pci_rom_size)) {
+      BX_INFO(("new ROM address: 0x%08x", BX_PNIC_THIS pci_rom_address));
     }
   }
 

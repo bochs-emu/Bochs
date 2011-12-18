@@ -239,6 +239,15 @@ void bx_ne2k_c::after_restore_state(void)
                             32, &ne2k_iomask[0], "NE2000 PCI NIC")) {
       BX_INFO(("new base address: 0x%04x", BX_NE2K_THIS s.base_address));
     }
+    if (BX_NE2K_THIS pci_rom_size > 0) {
+      if (DEV_pci_set_base_mem(BX_NE2K_THIS_PTR, mem_read_handler,
+                               mem_write_handler,
+                               &BX_NE2K_THIS pci_rom_address,
+                               &BX_NE2K_THIS pci_conf[0x30],
+                               BX_NE2K_THIS pci_rom_size)) {
+        BX_INFO(("new ROM address: 0x%08x", BX_NE2K_THIS pci_rom_address));
+      }
+    }
   }
 }
 #endif
@@ -1127,6 +1136,38 @@ void bx_ne2k_c::tx_timer(void)
 }
 
 
+bx_bool bx_ne2k_c::mem_read_handler(bx_phy_address addr, unsigned len,
+                                    void *data, void *param)
+{
+  Bit8u  *data_ptr;
+
+#ifdef BX_LITTLE_ENDIAN
+  data_ptr = (Bit8u *) data;
+#else // BX_BIG_ENDIAN
+  data_ptr = (Bit8u *) data + (len - 1);
+#endif
+  for (unsigned i = 0; i < len; i++) {
+    if (BX_NE2K_THIS pci_conf[0x30] & 0x01) {
+      *data_ptr = BX_NE2K_THIS pci_rom[addr & 0x1ffff];
+    } else {
+      *data_ptr = 0xff;
+    }
+    addr++;
+#ifdef BX_LITTLE_ENDIAN
+    data_ptr++;
+#else // BX_BIG_ENDIAN
+    data_ptr--;
+#endif
+  }
+  return 1;
+}
+
+bx_bool bx_ne2k_c::mem_write_handler(bx_phy_address addr, unsigned len,
+                                     void *data, void *param)
+{
+  return 1;
+}
+
 //
 // read_handler/read - i/o 'catcher' function called from BOCHS
 // mainline when the CPU attempts a read in the i/o space registered
@@ -1430,6 +1471,7 @@ void bx_ne2k_c::init(void)
   char devname[16];
   Bit8u macaddr[6];
   bx_list_c *base;
+  const char *bootrom;
 
   BX_DEBUG(("Init $Id$"));
 
@@ -1462,6 +1504,11 @@ void bx_ne2k_c::init(void)
     BX_NE2K_THIS pci_conf[0x10] = 0x01;
     BX_NE2K_THIS pci_conf[0x3d] = BX_PCI_INTA;
     BX_NE2K_THIS s.base_address = 0x0;
+    BX_NE2K_THIS pci_rom_address = 0;
+    bootrom = SIM->get_param_string("bootrom", base)->getptr();
+    if (strlen(bootrom) > 0) {
+      BX_NE2K_THIS load_pci_rom(bootrom);
+    }
   }
 #endif
 
@@ -1498,7 +1545,13 @@ void bx_ne2k_c::init(void)
                                  BX_NE2K_THIS s.base_address + 0x1F,
                                  devname, 1);
 
-    BX_INFO(("port 0x%x/32 irq %d mac %02x:%02x:%02x:%02x:%02x:%02x",
+    bootrom = SIM->get_param_string("bootrom", base)->getptr();
+    if (strlen(bootrom) > 0) {
+      BX_PANIC(("%s: boot ROM support not present yet", devname));
+    }
+
+    BX_INFO(("%s initialized port 0x%x/32 irq %d mac %02x:%02x:%02x:%02x:%02x:%02x",
+             devname,
              BX_NE2K_THIS s.base_address,
              BX_NE2K_THIS s.base_irq,
              macaddr[0], macaddr[1],
@@ -1568,24 +1621,21 @@ void bx_ne2k_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
   Bit8u value8, oldval;
   bx_bool baseaddr_change = 0;
+  bx_bool romaddr_change = 0;
 
-  if ((address > 0x13) && (address < 0x34))
+  if ((address > 0x13) && (address < 0x30))
     return;
+
   for (unsigned i=0; i<io_len; i++) {
     oldval = BX_NE2K_THIS pci_conf[address+i];
     value8 = (value >> (i*8)) & 0xFF;
     switch (address+i) {
-      case 0x05:
-      case 0x06:
-      case 0x3d:
-        break;
       case 0x04:
-        BX_NE2K_THIS pci_conf[address+i] = value8 & 0x03;
+        value8 &= 0x01;
         break;
       case 0x3c:
         if (value8 != oldval) {
           BX_INFO(("new irq line = %d", value8));
-          BX_NE2K_THIS pci_conf[address+i] = value8;
         }
         break;
       case 0x10:
@@ -1594,11 +1644,24 @@ void bx_ne2k_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
       case 0x12:
       case 0x13:
         baseaddr_change |= (value8 != oldval);
+        break;
+      case 0x30:
+      case 0x31:
+      case 0x32:
+      case 0x33:
+        if (BX_NE2K_THIS pci_rom_size > 0) {
+          if ((address+i) == 0x30) {
+            value8 &= 0x01;
+          } else if ((address+i) == 0x31) {
+            value8 &= 0xfc;
+          }
+          romaddr_change = 1;
+          break;
+        }
       default:
-        BX_NE2K_THIS pci_conf[address+i] = value8;
-        BX_DEBUG(("NE2000 PCI NIC write register 0x%02x value 0x%02x", address+i,
-                  value8));
+        value8 = oldval;
     }
+    BX_NE2K_THIS pci_conf[address+i] = value8;
   }
   if (baseaddr_change) {
     if (DEV_pci_set_base_io(BX_NE2K_THIS_PTR, read_handler, write_handler,
@@ -1608,6 +1671,22 @@ void bx_ne2k_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
       BX_INFO(("new base address: 0x%04x", BX_NE2K_THIS s.base_address));
     }
   }
+  if (romaddr_change) {
+    if (DEV_pci_set_base_mem(BX_NE2K_THIS_PTR, mem_read_handler,
+                             mem_write_handler,
+                             &BX_NE2K_THIS pci_rom_address,
+                             &BX_NE2K_THIS pci_conf[0x30],
+                             BX_NE2K_THIS pci_rom_size)) {
+      BX_INFO(("new ROM address: 0x%08x", BX_NE2K_THIS pci_rom_address));
+    }
+  }
+
+  if (io_len == 1)
+    BX_DEBUG(("write PCI register 0x%02x value 0x%02x", address, value));
+  else if (io_len == 2)
+    BX_DEBUG(("write PCI register 0x%02x value 0x%04x", address, value));
+  else if (io_len == 4)
+    BX_DEBUG(("write PCI register 0x%02x value 0x%08x", address, value));
 }
 
 #endif /* BX_SUPPORT_PCI */

@@ -370,6 +370,7 @@ void bx_e1000_c::init(void)
   Bit8u macaddr[6];
   int i;
   Bit16u checksum = 0;
+  const char *bootrom;
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_E1000);
@@ -396,6 +397,11 @@ void bx_e1000_c::init(void)
   }
   BX_E1000_THIS pci_base_address[0] = 0;
   BX_E1000_THIS pci_base_address[1] = 0;
+  BX_E1000_THIS pci_rom_address = 0;
+  bootrom = SIM->get_param_string("bootrom", base)->getptr();
+  if (strlen(bootrom) > 0) {
+    BX_E1000_THIS load_pci_rom(bootrom);
+  }
 
   if (BX_E1000_THIS s.tx_timer_index == BX_NULL_TIMER_HANDLE) {
     BX_E1000_THIS s.tx_timer_index =
@@ -550,14 +556,50 @@ void bx_e1000_c::after_restore_state(void)
                           64, &e1000_iomask[0], "e1000")) {
     BX_INFO(("new i/o base address: 0x%04x", BX_E1000_THIS pci_base_address[1]));
   }
+  if (BX_E1000_THIS pci_rom_size > 0) {
+    if (DEV_pci_set_base_mem(BX_E1000_THIS_PTR, mem_read_handler,
+                             mem_write_handler,
+                             &BX_E1000_THIS pci_rom_address,
+                             &BX_E1000_THIS pci_conf[0x30],
+                             BX_E1000_THIS pci_rom_size)) {
+      BX_INFO(("new ROM address: 0x%08x", BX_E1000_THIS pci_rom_address));
+    }
+  }
 }
 
 bx_bool bx_e1000_c::mem_read_handler(bx_phy_address addr, unsigned len,
                                      void *data, void *param)
 {
   Bit32u *data_ptr = (Bit32u*) data;
+  Bit8u  *data8_ptr;
   Bit32u offset, value = 0;
   Bit16u index;
+
+  if (BX_E1000_THIS pci_rom_size > 0) {
+    if ((addr >= BX_E1000_THIS pci_rom_address) &&
+        (addr < (BX_E1000_THIS pci_rom_address + BX_E1000_THIS pci_rom_size))) {
+
+#ifdef BX_LITTLE_ENDIAN
+      data8_ptr = (Bit8u *) data;
+#else // BX_BIG_ENDIAN
+      data8_ptr = (Bit8u *) data + (len - 1);
+#endif
+      for (unsigned i = 0; i < len; i++) {
+        if (BX_E1000_THIS pci_conf[0x30] & 0x01) {
+          *data8_ptr = BX_E1000_THIS pci_rom[addr & 0x1ffff];
+        } else {
+          *data8_ptr = 0xff;
+        }
+        addr++;
+#ifdef BX_LITTLE_ENDIAN
+        data8_ptr++;
+#else // BX_BIG_ENDIAN
+        data8_ptr--;
+#endif
+      }
+      return 1;
+    }
+  }
 
   offset = addr & 0x1ffff;
   index = (offset >> 2);
@@ -640,6 +682,13 @@ bx_bool bx_e1000_c::mem_write_handler(bx_phy_address addr, unsigned len,
   Bit32u value = *(Bit32u*) data;
   Bit32u offset;
   Bit16u index;
+
+  if (BX_E1000_THIS pci_rom_size > 0) {
+    if ((addr >= BX_E1000_THIS pci_rom_address) &&
+        (addr < (BX_E1000_THIS pci_rom_address + BX_E1000_THIS pci_rom_size))) {
+      return 1;
+    }
+  }
 
   offset = addr & 0x1ffff;
   index = (offset >> 2);
@@ -1394,8 +1443,9 @@ void bx_e1000_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
   Bit8u value8, oldval;
   bx_bool baseaddr0_change = 0;
   bx_bool baseaddr1_change = 0;
+  bx_bool romaddr_change = 0;
 
-  if ((address >= 0x18) && (address < 0x34))
+  if ((address >= 0x18) && (address < 0x30))
     return;
 
   for (unsigned i=0; i<io_len; i++) {
@@ -1404,7 +1454,6 @@ void bx_e1000_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
     switch (address+i) {
       case 0x04:
         value8 &= 0x03;
-        BX_E1000_THIS pci_conf[address+i] = value8;
         break;
       case 0x3c:
         if (value8 != oldval) {
@@ -1425,6 +1474,19 @@ void bx_e1000_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
       case 0x17:
         baseaddr1_change |= (value8 != oldval);
         break;
+      case 0x30:
+      case 0x31:
+      case 0x32:
+      case 0x33:
+        if (BX_E1000_THIS pci_rom_size > 0) {
+          if ((address+i) == 0x30) {
+            value8 &= 0x01;
+          } else if ((address+i) == 0x31) {
+            value8 &= 0xfc;
+          }
+          romaddr_change = 1;
+          break;
+        }
       default:
         value8 = oldval;
     }
@@ -1444,6 +1506,15 @@ void bx_e1000_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
                             &BX_E1000_THIS pci_conf[0x14],
                             64, &e1000_iomask[0], "e1000")) {
       BX_INFO(("new i/o base address: 0x%04x", BX_E1000_THIS pci_base_address[1]));
+    }
+  }
+  if (romaddr_change) {
+    if (DEV_pci_set_base_mem(BX_E1000_THIS_PTR, mem_read_handler,
+                             mem_write_handler,
+                             &BX_E1000_THIS pci_rom_address,
+                             &BX_E1000_THIS pci_conf[0x30],
+                             BX_E1000_THIS pci_rom_size)) {
+      BX_INFO(("new ROM address: 0x%08x", BX_E1000_THIS pci_rom_address));
     }
   }
 

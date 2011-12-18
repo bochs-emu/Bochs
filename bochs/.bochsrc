@@ -800,31 +800,36 @@ private_colormap: enabled=0
 #=======================================================================
 # ne2k: NE2000 compatible ethernet adapter
 #
-# Examples:
-# ne2k: ioaddr=IOADDR, irq=IRQ, mac=MACADDR, ethmod=MODULE, ethdev=DEVICE, script=SCRIPT
+# Format:
+# ne2k: enabled=1, ioaddr=IOADDR, irq=IRQ, mac=MACADDR, ethmod=MODULE,
+#       ethdev=DEVICE, script=SCRIPT, bootrom=BOOTROM
 #
-# ioaddr, irq: You probably won't need to change ioaddr and irq, unless there
+# IOADDR, IRQ: You probably won't need to change ioaddr and irq, unless there
 # are IRQ conflicts. These arguments are ignored when assign the ne2k to a
 # PCI slot.
 #
-# mac: The MAC address MUST NOT match the address of any machine on the net.
+# MAC: The MAC address MUST NOT match the address of any machine on the net.
 # Also, the first byte must be an even number (bit 0 set means a multicast
 # address), and you cannot use ff:ff:ff:ff:ff:ff because that's the broadcast
 # address.  For the ethertap module, you must use fe:fd:00:00:00:01.  There may
 # be other restrictions too.  To be safe, just use the b0:c4... address.
 #
-# ethdev: The ethdev value is the name of the network interface on your host
+# ETHDEV: The ethdev value is the name of the network interface on your host
 # platform.  On UNIX machines, you can get the name by running ifconfig.  On
 # Windows machines, you must run niclist to get the name of the ethdev.
 # Niclist source code is in misc/niclist.c and it is included in Windows 
 # binary releases.
 #
-# script: The script value is optional, and is the name of a script that 
+# SCRIPT: The script value is optional, and is the name of a script that 
 # is executed after bochs initialize the network interface. You can use 
 # this script to configure this network interface, or enable masquerading.
 # This is mainly useful for the tun/tap devices that only exist during
 # Bochs execution. The network interface name is supplied to the script
 # as first parameter
+#
+# BOOTROM: The bootrom value is optional, and is the name of the ROM image
+# to load. Note that this feature is only implemented for the PCI version of
+# the NE2000 and it requires SeaBIOS to boot the specified ROM.
 #
 # If you don't want to make connections to any physical networks,
 # you can use the following 'ethmod's to simulate a virtual network.
@@ -846,29 +851,31 @@ private_colormap: enabled=0
 # ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=null, ethdev=eth0
 # ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vde, ethdev="/tmp/vde.ctl"
 # ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="c:/temp"
-# ne2k: mac=b0:c4:20:00:00:01, ethmod=slirp, script=/usr/local/bin/slirp
+# ne2k: mac=b0:c4:20:00:00:01, ethmod=slirp, script=/usr/local/bin/slirp, bootrom=ne2k_pci.rom
 
 #=======================================================================
 # pnic: Bochs/Etherboot pseudo-NIC
 #
-# Example:
-# pnic: enabled=1, mac=MACADDR, ethmod=MODULE, ethdev=DEVICE, script=SCRIPT
+# Format:
+# pnic: enabled=1, mac=MACADDR, ethmod=MODULE, ethdev=DEVICE, script=SCRIPT,
+#       bootrom=BOOTROM
 #
-# The pseudo-NIC accepts the same syntax (for mac, ethmod, ethdev, script) and
-# supports the same networking modules as the NE2000 adapter. In addition to
-# this, it must be assigned to a PCI slot.
+# The pseudo-NIC accepts the same syntax (for mac, ethmod, ethdev, script,
+# bootrom) and supports the same networking modules as the NE2000 adapter.
+# In addition to this, it must be assigned to a PCI slot.
 #=======================================================================
 #pnic: enabled=1, mac=b0:c4:20:00:00:00, ethmod=vnet
 
 #=======================================================================
 # e1000: Intel(R) 82540EM Gigabit Ethernet adapter
 #
-# Example:
+# Format:
 # e1000: enabled=1, mac=MACADDR, ethmod=MODULE, ethdev=DEVICE, script=SCRIPT
+#        bootrom=BOOTROM
 #
-# The E1000 accepts the same syntax (for mac, ethmod, ethdev, script) and
-# supports the same networking modules as the NE2000 adapter. In addition to
-# this, it must be assigned to a PCI slot.
+# The E1000 accepts the same syntax (for mac, ethmod, ethdev, script, bootrom)
+# and supports the same networking modules as the NE2000 adapter. In addition
+# to this, it must be assigned to a PCI slot.
 #=======================================================================
 #e1000: enabled=1, mac=b0:c4:20:00:00:00, ethmod=vnet
 

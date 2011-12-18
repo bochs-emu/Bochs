@@ -146,7 +146,7 @@ void bx_init_options()
   bx_param_bool_c *enabled, *readonly, *status;
   bx_param_enum_c *mode, *type, *ethmod, *toggle;
   bx_param_string_c *macaddr;
-  bx_param_filename_c *path;
+  bx_param_filename_c *path, *bootrom;
   char name[BX_PATHNAME_LEN], descr[512], group[16], label[512];
 
   bx_param_c *root_param = SIM->get_param(".");
@@ -1477,7 +1477,7 @@ void bx_init_options()
     NULL
   };
   // ne2k options
-  menu = new bx_list_c(network, "ne2k", "NE2000", 7);
+  menu = new bx_list_c(network, "ne2k", "NE2000", 8);
   menu->set_options(menu->SHOW_PARENT);
   menu->set_enabled(BX_SUPPORT_NE2K);
   enabled = new bx_param_bool_c(menu,
@@ -1528,6 +1528,12 @@ void bx_init_options()
     "Name of the script that is executed after Bochs initializes the network interface (optional).",
     "none", BX_PATHNAME_LEN);
   path->set_ask_format("Enter new script name, or 'none': [%s] ");
+  bootrom = new bx_param_filename_c(menu,
+    "bootrom",
+    "Boot ROM image",
+    "Pathname of network boot ROM image to load",
+    "", BX_PATHNAME_LEN);
+  bootrom->set_format("Name of boot ROM image: %s");
   enabled->set_dependent_list(menu->clone());
   // pnic options
   menu = new bx_list_c(network, "pnic", "PCI Pseudo NIC");
@@ -1567,6 +1573,12 @@ void bx_init_options()
     "Name of the script that is executed after Bochs initializes the network interface (optional).",
     "none", BX_PATHNAME_LEN);
   path->set_ask_format("Enter new script name, or 'none': [%s] ");
+  bootrom = new bx_param_filename_c(menu,
+    "bootrom",
+    "Boot ROM image",
+    "Pathname of network boot ROM image to load",
+    "", BX_PATHNAME_LEN);
+  bootrom->set_format("Name of boot ROM image: %s");
   enabled->set_dependent_list(menu->clone());
   // e1000 options
   menu = new bx_list_c(network, "e1000", "Intel(R) Gigabit Ethernet");
@@ -1606,6 +1618,12 @@ void bx_init_options()
     "Name of the script that is executed after Bochs initializes the network interface (optional).",
     "none", BX_PATHNAME_LEN);
   path->set_ask_format("Enter new script name, or 'none': [%s] ");
+  bootrom = new bx_param_filename_c(menu,
+    "bootrom",
+    "Boot ROM image",
+    "Pathname of network boot ROM image to load",
+    "", BX_PATHNAME_LEN);
+  bootrom->set_format("Name of boot ROM image: %s");
   enabled->set_dependent_list(menu->clone());
 
   // sound subtree
@@ -3392,6 +3410,9 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       else if (!strncmp(params[i], "script=", 7)) {
         SIM->get_param_string("script", base)->set(&params[i][7]);
       }
+      else if (!strncmp(params[i], "bootrom=", 8)) {
+        SIM->get_param_string("bootrom", base)->set(&params[i][8]);
+      }
       else {
         PARSE_WARN(("%s: unknown parameter '%s' for ne2k ignored.", context, params[i]));
       }
@@ -3441,6 +3462,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_string("ethdev", base)->set(&params[i][7]);
       } else if (!strncmp(params[i], "script=", 7)) {
         SIM->get_param_string("script", base)->set(&params[i][7]);
+      } else if (!strncmp(params[i], "bootrom=", 8)) {
+        SIM->get_param_string("bootrom", base)->set(&params[i][8]);
       } else {
         PARSE_WARN(("%s: unknown parameter '%s' for pnic ignored.", context, params[i]));
       }
@@ -3485,6 +3508,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_string("ethdev", base)->set(&params[i][7]);
       } else if (!strncmp(params[i], "script=", 7)) {
         SIM->get_param_string("script", base)->set(&params[i][7]);
+      } else if (!strncmp(params[i], "bootrom=", 8)) {
+        SIM->get_param_string("bootrom", base)->set(&params[i][8]);
       } else {
         PARSE_WARN(("%s: unknown parameter '%s' for e1000 ignored.", context, params[i]));
       }
@@ -3767,7 +3792,7 @@ int bx_write_pci_nic_options(FILE *fp, bx_list_c *base)
   fprintf (fp, "%s: enabled=%d", base->get_name(), SIM->get_param_bool("enabled", base)->get());
   if (SIM->get_param_bool("enabled", base)->get()) {
     char *ptr = SIM->get_param_string("macaddr", base)->getptr();
-    fprintf (fp, ", mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s",
+    fprintf (fp, ", mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s, bootrom=%s",
       (unsigned int)(0xff & ptr[0]),
       (unsigned int)(0xff & ptr[1]),
       (unsigned int)(0xff & ptr[2]),
@@ -3776,7 +3801,8 @@ int bx_write_pci_nic_options(FILE *fp, bx_list_c *base)
       (unsigned int)(0xff & ptr[5]),
       SIM->get_param_enum("ethmod", base)->get_selected(),
       SIM->get_param_string("ethdev", base)->getptr(),
-      SIM->get_param_string("script", base)->getptr());
+      SIM->get_param_string("script", base)->getptr(),
+      SIM->get_param_string("bootrom", base)->getptr());
   }
   fprintf (fp, "\n");
   return 0;
@@ -3787,7 +3813,7 @@ int bx_write_ne2k_options(FILE *fp, bx_list_c *base)
   fprintf(fp, "ne2k: enabled=%d", SIM->get_param_bool("enabled", base)->get());
   if (SIM->get_param_bool("enabled", base)->get()) {
     char *ptr = SIM->get_param_string("macaddr", base)->getptr();
-    fprintf(fp, ", ioaddr=0x%x, irq=%d, mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s",
+    fprintf(fp, ", ioaddr=0x%x, irq=%d, mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s, bootrom=%s",
       SIM->get_param_num("ioaddr", base)->get(),
       SIM->get_param_num("irq", base)->get(),
       (unsigned int)(0xff & ptr[0]),
@@ -3798,7 +3824,8 @@ int bx_write_ne2k_options(FILE *fp, bx_list_c *base)
       (unsigned int)(0xff & ptr[5]),
       SIM->get_param_enum("ethmod", base)->get_selected(),
       SIM->get_param_string("ethdev", base)->getptr(),
-      SIM->get_param_string("script", base)->getptr());
+      SIM->get_param_string("script", base)->getptr(),
+      SIM->get_param_string("bootrom", base)->getptr());
   }
   fprintf(fp, "\n");
   return 0;

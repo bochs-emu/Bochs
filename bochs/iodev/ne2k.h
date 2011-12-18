@@ -249,6 +249,11 @@ private:
   BX_NE2K_SMF unsigned mcast_index(const void *dst);
   BX_NE2K_SMF void rx_frame(const void *buf, unsigned io_len);
 
+#if BX_SUPPORT_PCI
+  BX_NE2K_SMF bx_bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  BX_NE2K_SMF bx_bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+#endif
+
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 #if !BX_USE_NE2K_SMF
