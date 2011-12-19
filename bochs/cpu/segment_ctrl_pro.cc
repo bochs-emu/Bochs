@@ -298,7 +298,7 @@ BX_CPU_C::get_descriptor_l(const bx_descriptor_t *d)
 
   Bit32u val = ((d->u.segment.base & 0xffff) << 16) | (limit & 0xffff);
 
-  if (d->segment) {
+  if (d->segment || !d->valid) {
     return(val);
   }
   else {
@@ -326,7 +326,7 @@ BX_CPU_C::get_descriptor_h(const bx_descriptor_t *d)
   if (d->u.segment.g)
     limit >>= 12;
 
-  if (d->segment) {
+  if (d->segment || !d->valid) {
     val = (d->u.segment.base & 0xff000000) |
           ((d->u.segment.base >> 16) & 0x000000ff) |
           (d->type << 8) |
@@ -379,7 +379,7 @@ bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg, bx_bool valid,
 
   d->valid    = valid;
 
-  if (d->segment) { /* data/code segment descriptors */
+  if (d->segment || !valid) { /* data/code segment descriptors */
     d->u.segment.g     = (ar_data >> 15) & 0x1;
     d->u.segment.d_b   = (ar_data >> 14) & 0x1;
 #if BX_SUPPORT_X86_64
