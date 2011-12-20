@@ -563,11 +563,12 @@ bx_bool bx_svga_cirrus_c::cirrus_mem_read_handler(bx_phy_address addr, unsigned 
 Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
 {
 #if BX_SUPPORT_PCI
-  if (BX_CIRRUS_THIS pci_enabled) {
-    if ((addr >= BX_CIRRUS_THIS pci_rom_address) &&
-        (addr < (BX_CIRRUS_THIS pci_rom_address + BX_CIRRUS_THIS pci_rom_size))) {
+  if ((BX_CIRRUS_THIS pci_enabled) && (BX_CIRRUS_THIS pci_rom_size > 0)) {
+    Bit32u mask = (BX_CIRRUS_THIS pci_rom_size - 1);
+    if ((addr & ~mask) == BX_CIRRUS_THIS pci_rom_address) {
+      BX_INFO(("read ROM"));
       if (BX_CIRRUS_THIS pci_conf[0x30] & 0x01) {
-        return BX_CIRRUS_THIS pci_rom[addr - BX_CIRRUS_THIS pci_rom_address];
+        return BX_CIRRUS_THIS pci_rom[addr & mask];
       } else {
         return 0xff;
       }

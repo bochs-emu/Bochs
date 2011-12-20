@@ -576,9 +576,8 @@ bx_bool bx_e1000_c::mem_read_handler(bx_phy_address addr, unsigned len,
   Bit16u index;
 
   if (BX_E1000_THIS pci_rom_size > 0) {
-    if ((addr >= BX_E1000_THIS pci_rom_address) &&
-        (addr < (BX_E1000_THIS pci_rom_address + BX_E1000_THIS pci_rom_size))) {
-
+    Bit32u mask = (BX_E1000_THIS pci_rom_size - 1);
+    if ((addr & ~mask) == BX_E1000_THIS pci_rom_address) {
 #ifdef BX_LITTLE_ENDIAN
       data8_ptr = (Bit8u *) data;
 #else // BX_BIG_ENDIAN
@@ -586,7 +585,7 @@ bx_bool bx_e1000_c::mem_read_handler(bx_phy_address addr, unsigned len,
 #endif
       for (unsigned i = 0; i < len; i++) {
         if (BX_E1000_THIS pci_conf[0x30] & 0x01) {
-          *data8_ptr = BX_E1000_THIS pci_rom[addr & 0x1ffff];
+          *data8_ptr = BX_E1000_THIS pci_rom[addr & mask];
         } else {
           *data8_ptr = 0xff;
         }
@@ -684,8 +683,9 @@ bx_bool bx_e1000_c::mem_write_handler(bx_phy_address addr, unsigned len,
   Bit16u index;
 
   if (BX_E1000_THIS pci_rom_size > 0) {
-    if ((addr >= BX_E1000_THIS pci_rom_address) &&
-        (addr < (BX_E1000_THIS pci_rom_address + BX_E1000_THIS pci_rom_size))) {
+    Bit32u mask = (BX_E1000_THIS pci_rom_size - 1);
+    if ((addr & ~mask) == BX_E1000_THIS pci_rom_address) {
+      BX_INFO(("write to ROM ignored (addr=0x%08x len=%d)", (Bit32u)addr, len));
       return 1;
     }
   }

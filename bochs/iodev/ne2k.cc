@@ -1136,11 +1136,13 @@ void bx_ne2k_c::tx_timer(void)
 }
 
 
+#if BX_SUPPORT_PCI
 bx_bool bx_ne2k_c::mem_read_handler(bx_phy_address addr, unsigned len,
                                     void *data, void *param)
 {
   Bit8u  *data_ptr;
 
+  Bit32u mask = (BX_NE2K_THIS pci_rom_size - 1);
 #ifdef BX_LITTLE_ENDIAN
   data_ptr = (Bit8u *) data;
 #else // BX_BIG_ENDIAN
@@ -1148,7 +1150,7 @@ bx_bool bx_ne2k_c::mem_read_handler(bx_phy_address addr, unsigned len,
 #endif
   for (unsigned i = 0; i < len; i++) {
     if (BX_NE2K_THIS pci_conf[0x30] & 0x01) {
-      *data_ptr = BX_NE2K_THIS pci_rom[addr & 0x1ffff];
+      *data_ptr = BX_NE2K_THIS pci_rom[addr & mask];
     } else {
       *data_ptr = 0xff;
     }
@@ -1165,8 +1167,10 @@ bx_bool bx_ne2k_c::mem_read_handler(bx_phy_address addr, unsigned len,
 bx_bool bx_ne2k_c::mem_write_handler(bx_phy_address addr, unsigned len,
                                      void *data, void *param)
 {
+  BX_INFO(("write to ROM ignored (addr=0x%08x len=%d)", (Bit32u)addr, len));
   return 1;
 }
+#endif
 
 //
 // read_handler/read - i/o 'catcher' function called from BOCHS
