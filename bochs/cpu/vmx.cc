@@ -1615,14 +1615,12 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
       BX_CPU_THIS_PTR async_event = 1;
 
     if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_BY_STI)
-      BX_CPU_THIS_PTR inhibit_mask = BX_INHIBIT_INTERRUPTS;
+      inhibit_interrupts(BX_INHIBIT_INTERRUPTS);
     else if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_BY_MOV_SS)
-      BX_CPU_THIS_PTR inhibit_mask = BX_INHIBIT_INTERRUPTS | BX_INHIBIT_DEBUG;
-    else BX_CPU_THIS_PTR inhibit_mask = 0;
+      inhibit_interrupts(BX_INHIBIT_INTERRUPTS_BY_MOVSS);
+    else
+      BX_CPU_THIS_PTR inhibit_mask = 0;
   }
-
-  if (BX_CPU_THIS_PTR inhibit_mask)
-    BX_CPU_THIS_PTR async_event = 1;
 
   if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED) {
     BX_CPU_THIS_PTR disable_NMI = 1;
@@ -1888,8 +1886,8 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   VMwrite_natural(VMCS_GUEST_PENDING_DBG_EXCEPTIONS, tmpDR6 & 0x0000500f);
   
   Bit32u interruptibility_state = 0;
-  if (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_INTERRUPTS_SHADOW) {
-     if (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG_SHADOW)
+  if (interrupts_inhibited(BX_INHIBIT_INTERRUPTS)) {
+     if (interrupts_inhibited(BX_INHIBIT_DEBUG))
         interruptibility_state |= BX_VMX_INTERRUPTS_BLOCKED_BY_MOV_SS;
      else
         interruptibility_state |= BX_VMX_INTERRUPTS_BLOCKED_BY_STI;
@@ -2417,7 +2415,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
     BX_NEXT_TRACE(i);
   }
 
-  if ((BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_INTERRUPTS_BY_MOVSS_SHADOW) == BX_INHIBIT_INTERRUPTS_BY_MOVSS_SHADOW) {
+  if (interrupts_inhibited(BX_INHIBIT_INTERRUPTS_BY_MOVSS)) {
     BX_ERROR(("VMFAIL: VMLAUNCH with interrupts blocked by MOV_SS !"));
     VMfail(VMXERR_VMENTRY_MOV_SS_BLOCKING);
     BX_NEXT_TRACE(i);

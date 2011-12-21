@@ -200,7 +200,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 14 /w */ { BxImmediate_Ib, BX_IA_ADC_ALIb },
   /* 15 /w */ { BxImmediate_Iw, BX_IA_ADC_AXIw },
   /* 16 /w */ { 0, BX_IA_PUSH16_SS },
-  /* 17 /w */ { BxTraceEnd, BX_IA_POP16_SS }, // async_event = 1
+  /* 17 /w */ { 0, BX_IA_POP16_SS },
   /* 18 /w */ { BxLockable | BxArithDstRM, BX_IA_SBB_EbGb },
   /* 19 /w */ { BxLockable | BxArithDstRM, BX_IA_SBB_EwGw },
   /* 1A /w */ { 0, BX_IA_SBB_GbEb },
@@ -745,7 +745,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 14 /d */ { BxImmediate_Ib, BX_IA_ADC_ALIb },
   /* 15 /d */ { BxImmediate_Id, BX_IA_ADC_EAXId },
   /* 16 /d */ { 0, BX_IA_PUSH32_SS },
-  /* 17 /d */ { BxTraceEnd, BX_IA_POP32_SS }, // async_event = 1
+  /* 17 /d */ { 0, BX_IA_POP32_SS },
   /* 18 /d */ { BxLockable | BxArithDstRM, BX_IA_SBB_EbGb },
   /* 19 /d */ { BxLockable | BxArithDstRM, BX_IA_SBB_EdGd },
   /* 1A /d */ { 0, BX_IA_SBB_GbEb },

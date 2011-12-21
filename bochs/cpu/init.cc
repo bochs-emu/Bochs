@@ -366,11 +366,10 @@ void BX_CPU_C::register_state(void)
   BXRS_DEC_PARAM_SIMPLE(cpu, cpu_mode);
   BXRS_HEX_PARAM_SIMPLE(cpu, activity_state);
   BXRS_HEX_PARAM_SIMPLE(cpu, inhibit_mask);
+  BXRS_HEX_PARAM_SIMPLE(cpu, inhibit_icount);
   BXRS_HEX_PARAM_SIMPLE(cpu, debug_trap);
-#if BX_DEBUGGER || BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
   BXRS_DEC_PARAM_SIMPLE(cpu, icount);
   BXRS_DEC_PARAM_SIMPLE(cpu, icount_last_sync);
-#endif
 #if BX_SUPPORT_X86_64
   BXRS_HEX_PARAM_SIMPLE(cpu, RAX);
   BXRS_HEX_PARAM_SIMPLE(cpu, RBX);
@@ -783,13 +782,13 @@ void BX_CPU_C::reset(unsigned source)
   // status and control flags register set
   setEFlags(0x2); // Bit1 is always set
 
-#if BX_DEBUGGER || BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS || BX_SUPPORT_SMP
   if (source == BX_RESET_HARDWARE)
     BX_CPU_THIS_PTR icount = 0;
   BX_CPU_THIS_PTR icount_last_sync = BX_CPU_THIS_PTR icount;
-#endif
 
   BX_CPU_THIS_PTR inhibit_mask = 0;
+  BX_CPU_THIS_PTR inhibit_icount = 0;
+
   BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
   BX_CPU_THIS_PTR debug_trap = 0;
 

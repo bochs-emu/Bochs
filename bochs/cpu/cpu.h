@@ -904,24 +904,19 @@ public: // for now...
   bx_address prev_rsp;
   bx_bool    speculative_rsp;
 
-#if BX_DEBUGGER || BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS || BX_SUPPORT_SMP
   Bit64u icount;
   Bit64u icount_last_sync;
-#endif
 
 #define BX_INHIBIT_INTERRUPTS        0x01
 #define BX_INHIBIT_DEBUG             0x02
-#define BX_INHIBIT_INTERRUPTS_SHADOW 0x04
-#define BX_INHIBIT_DEBUG_SHADOW      0x08
 
 #define BX_INHIBIT_INTERRUPTS_BY_MOVSS        \
     (BX_INHIBIT_INTERRUPTS | BX_INHIBIT_DEBUG)
-#define BX_INHIBIT_INTERRUPTS_BY_MOVSS_SHADOW \
-    (BX_INHIBIT_INTERRUPTS_SHADOW | BX_INHIBIT_DEBUG_SHADOW)
 
   // What events to inhibit at any given time.  Certain instructions
   // inhibit interrupts, some debug exceptions and single-step traps.
   unsigned inhibit_mask;
+  Bit64u inhibit_icount;
 
   /* user segment register set */
   bx_segment_reg_t  sregs[6];
@@ -3853,6 +3848,8 @@ public: // for now...
   BX_SMF void TLB_flush(void);
   BX_SMF void TLB_invlpg(bx_address laddr);
   BX_SMF void set_INTR(bx_bool value);
+  BX_SMF void inhibit_interrupts(unsigned mask);
+  BX_SMF bx_bool interrupts_inhibited(unsigned mask);
   BX_SMF const char *strseg(bx_segment_reg_t *seg);
   BX_SMF void interrupt(Bit8u vector, unsigned type, bx_bool push_error,
                  Bit16u error_code);
@@ -4028,10 +4025,8 @@ public: // for now...
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_tsc_deadline(void);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
-#if BX_DEBUGGER || BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS || BX_SUPPORT_SMP
   BX_SMF BX_CPP_INLINE Bit64u get_icount(void) { return BX_CPU_THIS_PTR icount; }
   BX_SMF BX_CPP_INLINE Bit64u get_icount_last_sync(void) { return BX_CPU_THIS_PTR icount_last_sync; }
-#endif
   BX_SMF BX_CPP_INLINE const bx_gen_reg_t *get_gen_regfile() { return BX_CPU_THIS_PTR gen_reg; }
 
   BX_SMF BX_CPP_INLINE bx_address get_instruction_pointer(void);
