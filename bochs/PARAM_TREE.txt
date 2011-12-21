@@ -41,6 +41,7 @@ cpuid
   movbe
   xsave
   xsaveopt
+  vmx
   avx
   avx_f16c
   avx_fma

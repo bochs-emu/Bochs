@@ -3095,6 +3095,11 @@ This option exists only if Bochs compiled with --enable-monitor-mwait.
 When this option is enabled MWAIT will not put the CPU into a sleep state.
 This option exists only if Bochs compiled with --enable-monitor-mwait.
 </para>
+<para><command>vmx</command></para>
+<para>
+Select VMX extensions emulation support.
+This option exists only if Bochs compiled with --enable-vmx option.
+</para>
 <para><command>family</command></para>
 <para>
 Set family information returned by CPUID. Default family value determined

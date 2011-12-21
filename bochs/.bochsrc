@@ -260,6 +260,10 @@ cpu: cpuid_limit_winnt=0
 #    When this option is enabled MWAIT will not put the CPU into a sleep state.
 #    This option exists only if Bochs compiled with --enable-monitor-mwait.
 #
+#  VMX:
+#    Select VMX extensions emulation support.
+#    This option exists only if Bochs compiled with --enable-vmx option.
+#
 #  VENDOR_STRING:
 #    Set the CPUID vendor string returned by CPUID(0x0). This should be a
 #    twelve-character ASCII string.  

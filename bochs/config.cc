@@ -446,6 +446,13 @@ void bx_init_options()
       "Don't put CPU to sleep state by MWAIT",
       0);
 #endif
+#if BX_SUPPORT_VMX
+  new bx_param_num_c(cpuid_param,
+      "vmx", "Support for Intel VMX extensions emulation",
+      "Support for Intel VMX extensions emulation",
+      0, BX_SUPPORT_VMX,
+      1);
+#endif
 #endif
 
   cpuid_param->set_options(menu->SHOW_PARENT);
@@ -2797,6 +2804,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
           PARSE_ERR(("%s: cpuid directive malformed.", context));
         }
 #endif
+#if BX_SUPPORT_VMX
+      } else if (!strncmp(params[i], "vmx=", 4)) {
+        SIM->get_param_num(BXPN_CPUID_VMX)->set(atol(&params[i][4]));
+#endif
 #if BX_SUPPORT_X86_64
       } else if (!strncmp(params[i], "x86_64=", 7)) {
         if (parse_param_bool(params[i], 7, BXPN_CPUID_X86_64) < 0) {
@@ -4151,6 +4162,9 @@ int bx_write_configuration(const char *rc, int overwrite)
     SIM->get_param_bool(BXPN_CPUID_XOP)->get(),
     SIM->get_param_bool(BXPN_CPUID_TBM)->get(),
     SIM->get_param_bool(BXPN_CPUID_FMA4)->get());
+#endif
+#if BX_SUPPORT_VMX
+  fprintf(fp, ", vmx=%d", SIM->get_param_num(BXPN_CPUID_VMX)->get());
 #endif
 #if BX_SUPPORT_X86_64
   fprintf(fp, ", x86_64=%d, 1g_pages=%d, pcid=%d, fsgsbase=%d",
