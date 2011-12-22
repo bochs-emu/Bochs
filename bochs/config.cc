@@ -290,7 +290,7 @@ void bx_init_options()
 
   // cpuid subtree
 #if BX_CPU_LEVEL >= 4
-  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 28);
+  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 29);
 
   new bx_param_string_c(cpuid_param,
       "vendor_string",
