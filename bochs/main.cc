@@ -1060,56 +1060,45 @@ void bx_init_hardware()
   unsigned cpu_model = SIM->get_param_enum(BXPN_CPU_MODEL)->get();
   if (! cpu_model) {
 #if BX_CPU_LEVEL >= 5
-    bx_bool mmx_enabled = SIM->get_param_bool(BXPN_CPUID_MMX)->get();
-#endif
-#if BX_CPU_LEVEL >= 6
-    bx_bool sse4a_enabled = SIM->get_param_bool(BXPN_CPUID_SSE4A)->get();
-    bx_bool aes_enabled = SIM->get_param_bool(BXPN_CPUID_AES)->get();
-    bx_bool movbe_enabled = SIM->get_param_bool(BXPN_CPUID_MOVBE)->get();
-    bx_bool sep_enabled = SIM->get_param_bool(BXPN_CPUID_SEP)->get();
-    bx_bool xsave_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVE)->get();
-    bx_bool xsaveopt_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVEOPT)->get();
-#if BX_SUPPORT_AVX
-    unsigned avx_enabled = SIM->get_param_num(BXPN_CPUID_AVX)->get();
-    bx_bool avx_fma_enabled = SIM->get_param_bool(BXPN_CPUID_AVX_FMA)->get();
-#endif
-#if BX_SUPPORT_X86_64
-    bx_bool x86_64_enabled = SIM->get_param_bool(BXPN_CPUID_X86_64)->get();
-    bx_bool xlarge_pages_enabled = SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get();
-#endif
-#if BX_SUPPORT_MONITOR_MWAIT
-    bx_bool mwait_enabled = SIM->get_param_bool(BXPN_CPUID_MWAIT)->get();
-#endif
-#endif
-
-#if BX_CPU_LEVEL >= 5
     BX_INFO(("  APIC support: %s", SIM->get_param_enum(BXPN_CPUID_APIC)->get_selected()));
 #else
     BX_INFO(("  APIC support: no"));
 #endif
     BX_INFO(("  FPU support: %s", BX_SUPPORT_FPU?"yes":"no"));
 #if BX_CPU_LEVEL >= 5
+    bx_bool mmx_enabled = SIM->get_param_bool(BXPN_CPUID_MMX)->get();
     BX_INFO(("  MMX support: %s", mmx_enabled?"yes":"no"));
     BX_INFO(("  3dnow! support: %s", BX_SUPPORT_3DNOW?"yes":"no"));
 #endif
 #if BX_CPU_LEVEL >= 6
+    bx_bool sep_enabled = SIM->get_param_bool(BXPN_CPUID_SEP)->get();
     BX_INFO(("  SEP support: %s", sep_enabled?"yes":"no"));
+    bx_bool sse4a_enabled = SIM->get_param_bool(BXPN_CPUID_SSE4A)->get();
     BX_INFO(("  SSE support: %s%s", SIM->get_param_enum(BXPN_CPUID_SSE)->get_selected(),
       sse4a_enabled ? "+sse4a" : ""));
+    bx_bool xsave_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVE)->get();
+    bx_bool xsaveopt_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVEOPT)->get();
     BX_INFO(("  XSAVE support: %s %s",
       xsave_enabled?"xsave":"no", xsaveopt_enabled?"xsaveopt":""));
+    bx_bool aes_enabled = SIM->get_param_bool(BXPN_CPUID_AES)->get();
     BX_INFO(("  AES support: %s", aes_enabled?"yes":"no"));
+    bx_bool movbe_enabled = SIM->get_param_bool(BXPN_CPUID_MOVBE)->get();
     BX_INFO(("  MOVBE support: %s", movbe_enabled?"yes":"no"));
 #if BX_SUPPORT_X86_64
+    bx_bool x86_64_enabled = SIM->get_param_bool(BXPN_CPUID_X86_64)->get();
     BX_INFO(("  x86-64 support: %s", x86_64_enabled?"yes":"no"));
+    bx_bool xlarge_pages_enabled = SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get();
     BX_INFO(("  1G paging support: %s", xlarge_pages_enabled?"yes":"no"));
 #else
     BX_INFO(("  x86-64 support: no"));
 #endif
 #if BX_SUPPORT_MONITOR_MWAIT
+    bx_bool mwait_enabled = SIM->get_param_bool(BXPN_CPUID_MWAIT)->get();
     BX_INFO(("  MWAIT support: %s", mwait_enabled?"yes":"no"));
 #endif
 #if BX_SUPPORT_AVX
+    unsigned avx_enabled = SIM->get_param_num(BXPN_CPUID_AVX)->get();
+    bx_bool avx_fma_enabled = SIM->get_param_bool(BXPN_CPUID_AVX_FMA)->get();
     if (avx_enabled) {
       BX_INFO(("  AVX support: %d%s", avx_enabled, avx_fma_enabled ? " (with FMA)" : ""));
     }
@@ -1118,11 +1107,15 @@ void bx_init_hardware()
     }
 #endif
 #if BX_SUPPORT_VMX
-    BX_INFO(("  VMX support: %d", BX_SUPPORT_VMX));
-#else
-    BX_INFO(("  VMX support: no"));
+    unsigned vmx_enabled = SIM->get_param_num(BXPN_CPUID_VMX)->get();
+    if (vmx_enabled) {
+      BX_INFO(("  VMX support: %d", vmx_enabled));
+    }
+    else {
+      BX_INFO(("  VMX support: no"));
+    }
 #endif
-#endif
+#endif // BX_CPU_LEVEL >= 6
   }
   else {
     BX_INFO(("  Using pre-defined CPU configuration: %s",
