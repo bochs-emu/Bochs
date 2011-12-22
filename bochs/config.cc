@@ -1778,7 +1778,7 @@ void bx_init_options()
   enabled->set_dependent_list(menu->clone());
 
   // optional plugin control
-  menu = new bx_list_c(misc, "plugin_ctrl", "Optional Plugin Control", 9);
+  menu = new bx_list_c(misc, "plugin_ctrl", "Optional Plugin Control", 8);
   menu->set_options(menu->SHOW_PARENT | menu->USE_BOX_TITLE);
   new bx_param_bool_c(menu, "unmapped", "Enable 'unmapped'", "", 1);
   new bx_param_bool_c(menu, "biosdev", "Enable 'biosdev'", "", 1);
@@ -1791,7 +1791,6 @@ void bx_init_options()
   new bx_param_bool_c(menu, "iodebug", "Enable 'iodebug'", "", 1);
 #endif
 #if BX_SUPPORT_PCI
-  new bx_param_bool_c(menu, "pci_ide", "Enable 'pci_ide'", "", 1);
   new bx_param_bool_c(menu, "acpi", "Enable 'acpi'", "", 1);
 #endif
 #if BX_SUPPORT_APIC

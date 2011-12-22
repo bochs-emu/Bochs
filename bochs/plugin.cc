@@ -427,17 +427,13 @@ void plugin_load(char *name, char *args, plugintype_t type)
     sprintf(buf, PLUGIN_INIT_FMT_STRING, "user");
   }
 #if defined(_MSC_VER)
-  plugin->plugin_init =
-      (int (*)(struct _plugin_t *, enum plugintype_t, int, char *[])) /* monster typecast */
-      GetProcAddress(plugin->handle, buf);
+  plugin->plugin_init = (plugin_init_t) GetProcAddress(plugin->handle, buf);
   if (plugin->plugin_init == NULL) {
     pluginlog->panic("could not find plugin_init: error=%d", GetLastError());
     plugin_abort ();
   }
 #else
-  plugin->plugin_init =
-      (int (*)(struct _plugin_t *, enum plugintype_t, int, char *[])) /* monster typecast */
-      lt_dlsym (plugin->handle, buf);
+  plugin->plugin_init = (plugin_init_t) lt_dlsym (plugin->handle, buf);
   if (plugin->plugin_init == NULL) {
     pluginlog->panic("could not find plugin_init: %s", lt_dlerror ());
     plugin_abort ();
@@ -450,13 +446,13 @@ void plugin_load(char *name, char *args, plugintype_t type)
     sprintf(buf, PLUGIN_FINI_FMT_STRING, "user");
   }
 #if defined(_MSC_VER)
-  plugin->plugin_fini = (void (*)(void)) GetProcAddress(plugin->handle, buf);
+  plugin->plugin_fini = (plugin_fini_t) GetProcAddress(plugin->handle, buf);
   if (plugin->plugin_fini == NULL) {
     pluginlog->panic("could not find plugin_fini: error=%d", GetLastError());
     plugin_abort ();
   }
 #else
-  plugin->plugin_fini = (void (*)(void)) lt_dlsym (plugin->handle, buf);
+  plugin->plugin_fini = (plugin_fini_t) lt_dlsym (plugin->handle, buf);
   if (plugin->plugin_fini == NULL) {
     pluginlog->panic("could not find plugin_fini: %s", lt_dlerror ());
     plugin_abort();
@@ -805,5 +801,52 @@ void bx_plugins_after_restore_state()
   }
 #endif
 }
+
+#if !BX_PLUGINS
+
+// special code for loading optional plugins when plugins are turned off
+
+typedef struct {
+  const char *name;
+  plugin_init_t plugin_init;
+} builtin_plugin_t;
+
+#define BUILTIN_PLUGIN_ENTRY(mod) {#mod, lib##mod##_LTX_plugin_init}
+
+const builtin_plugin_t builtin_opt_plugins[] = {
+  BUILTIN_PLUGIN_ENTRY(unmapped),
+  BUILTIN_PLUGIN_ENTRY(biosdev),
+  BUILTIN_PLUGIN_ENTRY(speaker),
+  BUILTIN_PLUGIN_ENTRY(extfpuirq),
+#if BX_SUPPORT_GAMEPORT
+  BUILTIN_PLUGIN_ENTRY(gameport),
+#endif
+#if BX_SUPPORT_IODEBUG
+  BUILTIN_PLUGIN_ENTRY(iodebug),
+#endif
+#if BX_SUPPORT_PCI
+  BUILTIN_PLUGIN_ENTRY(pci_ide),
+  BUILTIN_PLUGIN_ENTRY(acpi),
+#endif
+#if BX_SUPPORT_APIC
+  BUILTIN_PLUGIN_ENTRY(ioapic),
+#endif
+  {"NULL", NULL}
+};
+
+int bx_load_plugin(const char *name, plugintype_t type)
+{
+  int i = 0;
+  while (strcmp(builtin_opt_plugins[i].name, "NULL")) {
+    if (!strcmp(name, builtin_opt_plugins[i].name)) {
+      builtin_opt_plugins[i].plugin_init(NULL, type, 0, NULL);
+      break;
+    }
+    i++;
+  };
+  return 0;
+}
+
+#endif
 
 }

@@ -106,6 +106,7 @@ extern "C" {
 // When plugins are off, PLUG_load_plugin will call the plugin_init function
 // directly.
 #define PLUG_load_plugin(name,type) {lib##name##_LTX_plugin_init(NULL,type,0,NULL);}
+#define PLUG_load_opt_plugin(name) {bx_load_plugin(name,PLUGTYPE_OPTIONAL);}
 #define PLUG_unload_plugin(name) {lib##name##_LTX_plugin_fini();}
 #define DEV_register_ioread_handler(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e,f)
 #define DEV_register_iowrite_handler(b,c,d,e,f) bx_devices.register_io_write_handler(b,c,d,e,f)
