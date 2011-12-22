@@ -841,7 +841,7 @@ static void pci_bios_init_pcirom(PCIDevice *d, uint32_t paddr)
         do {
             tmpsize = 0x4000 - (tmpaddr & 0x3fff);
             if ((size - copied) < tmpsize) {
-                tmpsize = size;
+                tmpsize = size - copied;
             }
             reg = 0x5a + (uint8_t)((tmpaddr >> 15) & 0x07);
             if (tmpaddr & 0x4000) {
@@ -860,6 +860,7 @@ static void pci_bios_init_pcirom(PCIDevice *d, uint32_t paddr)
         } while (copied < size);
         BX_INFO("PCI ROM copied to 0x%05x (size=0x%05x)\n", pci_bios_rom_start, size);
         pci_bios_rom_start += size;
+        pci_config_writeb(d, PCI_ROM_ADDRESS, 0x00);
     }
 }
 
