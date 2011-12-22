@@ -566,7 +566,6 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
   if ((BX_CIRRUS_THIS pci_enabled) && (BX_CIRRUS_THIS pci_rom_size > 0)) {
     Bit32u mask = (BX_CIRRUS_THIS pci_rom_size - 1);
     if ((addr & ~mask) == BX_CIRRUS_THIS pci_rom_address) {
-      BX_INFO(("read ROM"));
       if (BX_CIRRUS_THIS pci_conf[0x30] & 0x01) {
         return BX_CIRRUS_THIS pci_rom[addr & mask];
       } else {
