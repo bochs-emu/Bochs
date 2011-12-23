@@ -137,6 +137,78 @@ const char *bx_param_string_handler(bx_param_string_c *param, int set,
   return val;
 }
 
+void bx_init_std_nic_options(const char *name, bx_list_c *menu)
+{
+  // networking module choices
+  static const char *eth_module_list[] = {
+    "null",
+#if BX_NETMOD_LINUX
+    "linux",
+#endif
+#if BX_NETMOD_TAP
+    "tap",
+#endif
+#if BX_NETMOD_TUNTAP
+    "tuntap",
+#endif
+#if BX_NETMOD_WIN32
+    "win32",
+#endif
+#if BX_NETMOD_FBSD
+    "fbsd",
+#endif
+#if BX_NETMOD_VDE
+    "vde",
+#endif
+#if BX_NETMOD_SLIRP
+    "slirp",
+#endif
+    "vnet",
+    NULL
+  };
+
+  bx_param_enum_c *ethmod;
+  bx_param_string_c *macaddr;
+  bx_param_filename_c *path, *bootrom;
+  char descr[120];
+
+  sprintf(descr, "MAC address of the %s device. Don't use an address of a machine on your net.", name);
+  macaddr = new bx_param_string_c(menu,
+    "macaddr",
+    "MAC Address",
+    descr,
+    "", 6);
+  macaddr->set_options(macaddr->RAW_BYTES);
+  macaddr->set_initial_val("\xfe\xfd\xde\xad\xbe\xef");
+  macaddr->set_separator(':');
+  ethmod = new bx_param_enum_c(menu,
+    "ethmod",
+    "Ethernet module",
+    "Module used for the connection to the real net.",
+    eth_module_list,
+    0,
+    0);
+  ethmod->set_by_name("null");
+  ethmod->set_ask_format("Choose ethernet module for the device [%s] ");
+  new bx_param_string_c(menu,
+    "ethdev",
+    "Ethernet device",
+    "Device used for the connection to the real net. This is only valid if an ethernet module other than 'null' is used.",
+    "xl0", BX_PATHNAME_LEN);
+  path = new bx_param_filename_c(menu,
+    "script",
+    "Device configuration script",
+    "Name of the script that is executed after Bochs initializes the network interface (optional).",
+    "none", BX_PATHNAME_LEN);
+  path->set_ask_format("Enter new script name, or 'none': [%s] ");
+  bootrom = new bx_param_filename_c(menu,
+    "bootrom",
+    "Boot ROM image",
+    "Pathname of network boot ROM image to load",
+    "", BX_PATHNAME_LEN);
+  bootrom->set_format("Name of boot ROM image: %s");
+}
+
 void bx_init_options()
 {
   int i;
@@ -144,9 +216,8 @@ void bx_init_options()
   bx_list_c *deplist;
   bx_param_num_c *ioaddr, *ioaddr2, *irq;
   bx_param_bool_c *enabled, *readonly, *status;
-  bx_param_enum_c *mode, *type, *ethmod, *toggle;
-  bx_param_string_c *macaddr;
-  bx_param_filename_c *path, *bootrom;
+  bx_param_enum_c *mode, *type, *toggle;
+  bx_param_filename_c *path;
   char name[BX_PATHNAME_LEN], descr[512], group[16], label[512];
 
   bx_param_c *root_param = SIM->get_param(".");
@@ -1456,33 +1527,6 @@ void bx_init_options()
   bx_list_c *network = new bx_list_c(root_param, "network", "Network Configuration");
   network->set_options(network->USE_TAB_WINDOW | network->SHOW_PARENT);
 
-  // networking module choices
-  static const char *eth_module_list[] = {
-    "null",
-#if BX_NETMOD_LINUX
-    "linux",
-#endif
-#if BX_NETMOD_TAP
-    "tap",
-#endif
-#if BX_NETMOD_TUNTAP
-    "tuntap",
-#endif
-#if BX_NETMOD_WIN32
-    "win32",
-#endif
-#if BX_NETMOD_FBSD
-    "fbsd",
-#endif
-#if BX_NETMOD_VDE
-    "vde",
-#endif
-#if BX_NETMOD_SLIRP
-    "slirp",
-#endif
-    "vnet",
-    NULL
-  };
   // ne2k options
   menu = new bx_list_c(network, "ne2k", "NE2000", 8);
   menu->set_options(menu->SHOW_PARENT);
@@ -1507,40 +1551,7 @@ void bx_init_options()
     0, 15,
     9);
   irq->set_options(irq->USE_SPIN_CONTROL);
-  macaddr = new bx_param_string_c(menu,
-    "macaddr",
-    "MAC Address",
-    "MAC address of the NE2K device. Don't use an address of a machine on your net.",
-    "", 6);
-  macaddr->set_options(macaddr->RAW_BYTES);
-  macaddr->set_initial_val("\xfe\xfd\xde\xad\xbe\xef");
-  macaddr->set_separator(':');
-  ethmod = new bx_param_enum_c(menu,
-    "ethmod",
-    "Ethernet module",
-    "Module used for the connection to the real net.",
-    eth_module_list,
-    0,
-    0);
-  ethmod->set_by_name("null");
-  ethmod->set_ask_format("Choose ethernet module for the NE2K [%s] ");
-  new bx_param_string_c(menu,
-    "ethdev",
-    "Ethernet device",
-    "Device used for the connection to the real net. This is only valid if an ethernet module other than 'null' is used.",
-    "xl0", BX_PATHNAME_LEN);
-  path = new bx_param_filename_c(menu,
-    "script",
-    "Device configuration script",
-    "Name of the script that is executed after Bochs initializes the network interface (optional).",
-    "none", BX_PATHNAME_LEN);
-  path->set_ask_format("Enter new script name, or 'none': [%s] ");
-  bootrom = new bx_param_filename_c(menu,
-    "bootrom",
-    "Boot ROM image",
-    "Pathname of network boot ROM image to load",
-    "", BX_PATHNAME_LEN);
-  bootrom->set_format("Name of boot ROM image: %s");
+  bx_init_std_nic_options("NE2K", menu);
   enabled->set_dependent_list(menu->clone());
   // pnic options
   menu = new bx_list_c(network, "pnic", "PCI Pseudo NIC");
@@ -1552,40 +1563,7 @@ void bx_init_options()
     "Enables the Pseudo NIC emulation",
     0);
   enabled->set_enabled(BX_SUPPORT_PCIPNIC);
-  macaddr = new bx_param_string_c(menu,
-    "macaddr",
-    "MAC Address",
-    "MAC address of the Pseudo NIC device. Don't use an address of a machine on your net.",
-    "", 6);
-  macaddr->set_options(macaddr->RAW_BYTES);
-  macaddr->set_initial_val("\xfe\xfd\xde\xad\xbe\xef");
-  macaddr->set_separator(':');
-  ethmod = new bx_param_enum_c(menu,
-    "ethmod",
-    "Ethernet module",
-    "Module used for the connection to the real net.",
-    eth_module_list,
-    0,
-    0);
-  ethmod->set_by_name("null");
-  ethmod->set_ask_format("Choose ethernet module for the Pseudo NIC [%s]");
-  new bx_param_string_c(menu,
-    "ethdev",
-    "Ethernet device",
-    "Device used for the connection to the real net. This is only valid if an ethernet module other than 'null' is used.",
-    "xl0", BX_PATHNAME_LEN);
-  path = new bx_param_filename_c(menu,
-    "script",
-    "Device configuration script",
-    "Name of the script that is executed after Bochs initializes the network interface (optional).",
-    "none", BX_PATHNAME_LEN);
-  path->set_ask_format("Enter new script name, or 'none': [%s] ");
-  bootrom = new bx_param_filename_c(menu,
-    "bootrom",
-    "Boot ROM image",
-    "Pathname of network boot ROM image to load",
-    "", BX_PATHNAME_LEN);
-  bootrom->set_format("Name of boot ROM image: %s");
+  bx_init_std_nic_options("Pseudo NIC", menu);
   enabled->set_dependent_list(menu->clone());
   // e1000 options
   menu = new bx_list_c(network, "e1000", "Intel(R) Gigabit Ethernet");
@@ -1597,40 +1575,7 @@ void bx_init_options()
     "Enables the Intel(R) Gigabit Ethernet emulation",
     0);
   enabled->set_enabled(BX_SUPPORT_E1000);
-  macaddr = new bx_param_string_c(menu,
-    "macaddr",
-    "MAC Address",
-    "MAC address of the Intel(R) Gigabit Ethernet. Don't use an address of a machine on your net.",
-    "", 6);
-  macaddr->set_options(macaddr->RAW_BYTES);
-  macaddr->set_initial_val("\xfe\xfd\xde\xad\xbe\xef");
-  macaddr->set_separator(':');
-  ethmod = new bx_param_enum_c(menu,
-    "ethmod",
-    "Ethernet module",
-    "Module used for the connection to the real net.",
-    eth_module_list,
-    0,
-    0);
-  ethmod->set_by_name("null");
-  ethmod->set_ask_format("Choose ethernet module for the Intel(R) Gigabit Ethernet [%s]");
-  new bx_param_string_c(menu,
-    "ethdev",
-    "Ethernet device",
-    "Device used for the connection to the real net. This is only valid if an ethernet module other than 'null' is used.",
-    "xl0", BX_PATHNAME_LEN);
-  path = new bx_param_filename_c(menu,
-    "script",
-    "Device configuration script",
-    "Name of the script that is executed after Bochs initializes the network interface (optional).",
-    "none", BX_PATHNAME_LEN);
-  path->set_ask_format("Enter new script name, or 'none': [%s] ");
-  bootrom = new bx_param_filename_c(menu,
-    "bootrom",
-    "Boot ROM image",
-    "Pathname of network boot ROM image to load",
-    "", BX_PATHNAME_LEN);
-  bootrom->set_format("Name of boot ROM image: %s");
+  bx_init_std_nic_options("Intel(R) Gigabit Ethernet", menu);
   enabled->set_dependent_list(menu->clone());
 
   // sound subtree
@@ -1900,7 +1845,7 @@ void bx_reset_options()
   // serial/parallel/usb
   SIM->get_param("ports")->reset();
 
-  // ne2k, pnic & e1000
+  // network devices
   SIM->get_param("network")->reset();
 
   // SB16 & ES1370
@@ -2316,6 +2261,41 @@ static int parse_usb_port_params(const char *context, bx_bool devopt, const char
   sprintf(tmpname, "port%d.%s", idx, devopt ? "options" : "device");
   SIM->get_param_string(tmpname, base)->set(&param[plen + 2]);
   return 0;
+}
+
+int parse_nic_params(const char *context, const char *param, bx_list_c *base)
+{
+  int tmp[6];
+  char tmpchar[6];
+  int valid = 0;
+  int n;
+
+  if (!strncmp(param, "enabled=", 8)) {
+    if (atol(&param[8]) == 0) valid |= 0x80;
+  } else if (!strncmp(param, "mac=", 4)) {
+    n = sscanf(&param[4], "%x:%x:%x:%x:%x:%x",
+               &tmp[0],&tmp[1],&tmp[2],&tmp[3],&tmp[4],&tmp[5]);
+    if (n != 6) {
+      PARSE_ERR(("%s: '%s' mac address malformed.", context, base->get_name()));
+    }
+    for (n=0;n<6;n++)
+      tmpchar[n] = (unsigned char)tmp[n];
+    SIM->get_param_string("macaddr", base)->set(tmpchar);
+    valid |= 0x04;
+  } else if (!strncmp(param, "ethmod=", 7)) {
+    if (!SIM->get_param_enum("ethmod", base)->set_by_name(&param[7]))
+      PARSE_ERR(("%s: ethernet module '%s' not available", context, &param[7]));
+  } else if (!strncmp(param, "ethdev=", 7)) {
+    SIM->get_param_string("ethdev", base)->set(&param[7]);
+  } else if (!strncmp(param, "script=", 7)) {
+    SIM->get_param_string("script", base)->set(&param[7]);
+  } else if (!strncmp(param, "bootrom=", 8)) {
+    SIM->get_param_string("bootrom", base)->set(&param[8]);
+  } else {
+    PARSE_WARN(("%s: unknown parameter '%s' for '%s' ignored.", context, param, base->get_name()));
+    return -1;
+  }
+  return valid;
 }
 
 static int parse_line_formatted(const char *context, int num_params, char *params[])
@@ -3369,11 +3349,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
   }
   else if (!strcmp(params[0], "ne2k")) {
-    int tmp[6];
-    char tmpchar[6];
     char tmpdev[80];
-    int valid = 0;
-    int n;
+    int ret, valid = 0;
     base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
     if (!SIM->get_param_bool("enabled", base)->get()) {
       SIM->get_param_enum("ethmod", base)->set_by_name("null");
@@ -3388,43 +3365,17 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       }
     }
     for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "enabled=", 8)) {
-        if (atol(&params[i][8]) == 0) valid |= 0x80;
-      }
-      else if (!strncmp(params[i], "ioaddr=", 7)) {
+      if (!strncmp(params[i], "ioaddr=", 7)) {
         SIM->get_param_num("ioaddr", base)->set(strtoul(&params[i][7], NULL, 16));
         valid |= 0x01;
-      }
-      else if (!strncmp(params[i], "irq=", 4)) {
+      } else if (!strncmp(params[i], "irq=", 4)) {
         SIM->get_param_num("irq", base)->set(atol(&params[i][4]));
         valid |= 0x02;
-      }
-      else if (!strncmp(params[i], "mac=", 4)) {
-        n = sscanf(&params[i][4], "%x:%x:%x:%x:%x:%x",
-                   &tmp[0],&tmp[1],&tmp[2],&tmp[3],&tmp[4],&tmp[5]);
-        if (n != 6) {
-          PARSE_ERR(("%s: ne2k mac address malformed.", context));
+      } else {
+        ret = parse_nic_params(context, params[i], base);
+        if (ret > 0) {
+          valid |= ret;
         }
-        for (n=0;n<6;n++)
-          tmpchar[n] = (unsigned char)tmp[n];
-        SIM->get_param_string("macaddr", base)->set(tmpchar);
-        valid |= 0x04;
-      }
-      else if (!strncmp(params[i], "ethmod=", 7)) {
-        if (!SIM->get_param_enum("ethmod", base)->set_by_name(&params[i][7]))
-          PARSE_ERR(("%s: ethernet module '%s' not available", context, &params[i][7]));
-      }
-      else if (!strncmp(params[i], "ethdev=", 7)) {
-        SIM->get_param_string("ethdev", base)->set(&params[i][7]);
-      }
-      else if (!strncmp(params[i], "script=", 7)) {
-        SIM->get_param_string("script", base)->set(&params[i][7]);
-      }
-      else if (!strncmp(params[i], "bootrom=", 8)) {
-        SIM->get_param_string("bootrom", base)->set(&params[i][8]);
-      }
-      else {
-        PARSE_WARN(("%s: unknown parameter '%s' for ne2k ignored.", context, params[i]));
       }
     }
     if (!SIM->get_param_bool("enabled", base)->get()) {
@@ -3432,10 +3383,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_bool("enabled", base)->set(1);
       } else if (valid < 0x80) {
         if ((valid & 0x03) != 0x03) {
-          PARSE_ERR(("%s: ne2k directive incomplete (ioaddr and irq are required)", context));
+          PARSE_ERR(("%s: 'ne2k' directive incomplete (ioaddr and irq are required)", context));
         }
         if ((valid & 0x04) == 0) {
-          PARSE_ERR(("%s: ne2k directive incomplete (mac address is required)", context));
+          PARSE_ERR(("%s: 'ne2k' directive incomplete (mac address is required)", context));
         }
       }
     } else {
@@ -3444,45 +3395,22 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       }
     }
   } else if (!strcmp(params[0], "pnic")) {
-    int tmp[6];
-    char tmpchar[6];
-    int valid = 0;
-    int n;
+    int ret, valid = 0;
     base = (bx_list_c*) SIM->get_param(BXPN_PNIC);
     if (!SIM->get_param_bool("enabled", base)->get()) {
       SIM->get_param_enum("ethmod", base)->set_by_name("null");
     }
     for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "enabled=", 8)) {
-        if (atol(&params[i][8]) == 0) valid |= 0x80;
-      } else if (!strncmp(params[i], "mac=", 4)) {
-        n = sscanf(&params[i][4], "%x:%x:%x:%x:%x:%x",
-                   &tmp[0],&tmp[1],&tmp[2],&tmp[3],&tmp[4],&tmp[5]);
-        if (n != 6) {
-          PARSE_ERR(("%s: pnic mac address malformed.", context));
-        }
-        for (n=0;n<6;n++)
-          tmpchar[n] = (unsigned char)tmp[n];
-        SIM->get_param_string("macaddr", base)->set(tmpchar);
-        valid |= 0x07;
-      } else if (!strncmp(params[i], "ethmod=", 7)) {
-        if (!SIM->get_param_enum("ethmod", base)->set_by_name(&params[i][7]))
-          PARSE_ERR(("%s: ethernet module '%s' not available", context, &params[i][7]));
-      } else if (!strncmp(params[i], "ethdev=", 7)) {
-        SIM->get_param_string("ethdev", base)->set(&params[i][7]);
-      } else if (!strncmp(params[i], "script=", 7)) {
-        SIM->get_param_string("script", base)->set(&params[i][7]);
-      } else if (!strncmp(params[i], "bootrom=", 8)) {
-        SIM->get_param_string("bootrom", base)->set(&params[i][8]);
-      } else {
-        PARSE_WARN(("%s: unknown parameter '%s' for pnic ignored.", context, params[i]));
+      ret = parse_nic_params(context, params[i], base);
+      if (ret > 0) {
+        valid |= ret;
       }
     }
     if (!SIM->get_param_bool("enabled", base)->get()) {
-      if (valid == 0x07) {
+      if (valid == 0x04) {
         SIM->get_param_bool("enabled", base)->set(1);
       } else if (valid < 0x80) {
-        PARSE_ERR(("%s: pnic directive incomplete (mac is required)", context));
+        PARSE_ERR(("%s: 'pnic' directive incomplete (mac is required)", context));
       }
     } else {
       if (valid & 0x80) {
@@ -3490,45 +3418,22 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       }
     }
   } else if (!strcmp(params[0], "e1000")) {
-    int tmp[6];
-    char tmpchar[6];
-    int valid = 0;
-    int n;
+    int ret, valid = 0;
     base = (bx_list_c*) SIM->get_param(BXPN_E1000);
     if (!SIM->get_param_bool("enabled", base)->get()) {
       SIM->get_param_enum("ethmod", base)->set_by_name("null");
     }
     for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "enabled=", 8)) {
-        if (atol(&params[i][8]) == 0) valid |= 0x80;
-      } else if (!strncmp(params[i], "mac=", 4)) {
-        n = sscanf(&params[i][4], "%x:%x:%x:%x:%x:%x",
-                   &tmp[0],&tmp[1],&tmp[2],&tmp[3],&tmp[4],&tmp[5]);
-        if (n != 6) {
-          PARSE_ERR(("%s: e1000 mac address malformed.", context));
-        }
-        for (n=0;n<6;n++)
-          tmpchar[n] = (unsigned char)tmp[n];
-        SIM->get_param_string("macaddr", base)->set(tmpchar);
-        valid |= 0x07;
-      } else if (!strncmp(params[i], "ethmod=", 7)) {
-        if (!SIM->get_param_enum("ethmod", base)->set_by_name(&params[i][7]))
-          PARSE_ERR(("%s: ethernet module '%s' not available", context, &params[i][7]));
-      } else if (!strncmp(params[i], "ethdev=", 7)) {
-        SIM->get_param_string("ethdev", base)->set(&params[i][7]);
-      } else if (!strncmp(params[i], "script=", 7)) {
-        SIM->get_param_string("script", base)->set(&params[i][7]);
-      } else if (!strncmp(params[i], "bootrom=", 8)) {
-        SIM->get_param_string("bootrom", base)->set(&params[i][8]);
-      } else {
-        PARSE_WARN(("%s: unknown parameter '%s' for e1000 ignored.", context, params[i]));
+      ret = parse_nic_params(context, params[i], base);
+      if (ret > 0) {
+        valid |= ret;
       }
     }
     if (!SIM->get_param_bool("enabled", base)->get()) {
-      if (valid == 0x07) {
+      if (valid == 0x04) {
         SIM->get_param_bool("enabled", base)->set(1);
       } else if (valid < 0x80) {
-        PARSE_ERR(("%s: e1000 directive incomplete (mac is required)", context));
+        PARSE_ERR(("%s: 'e1000' directive incomplete (mac is required)", context));
       }
     } else {
       if (valid & 0x80) {
