@@ -3651,9 +3651,9 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
   }
   // user-defined options handled by registered functions
-  else if (SIM->is_user_option(params[0]))
+  else if (SIM->is_addon_option(params[0]))
   {
-    return SIM->parse_user_option(context, num_params, &params[0]);
+    return SIM->parse_addon_option(context, num_params, &params[0]);
   }
   else
   {
@@ -4210,7 +4210,7 @@ int bx_write_configuration(const char *rc, int overwrite)
     SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get(),
     SIM->get_param_enum(BXPN_MOUSE_TYPE)->get_selected(),
     SIM->get_param_enum(BXPN_MOUSE_TOGGLE)->get_selected());
-  SIM->save_user_options(fp);
+  SIM->save_addon_options(fp);
   fclose(fp);
   return 0;
 }

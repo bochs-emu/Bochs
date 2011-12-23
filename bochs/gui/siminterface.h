@@ -571,8 +571,8 @@ enum ci_return_t {
 typedef int (*config_interface_callback_t)(void *userdata, ci_command_t command);
 typedef BxEvent* (*bxevent_handler)(void *theclass, BxEvent *event);
 typedef void (*rt_conf_handler_t)(void *this_ptr);
-typedef Bit32s (*user_option_parser_t)(const char *context, int num_params, char *params[]);
-typedef Bit32s (*user_option_save_t)(FILE *fp);
+typedef Bit32s (*addon_option_parser_t)(const char *context, int num_params, char *params[]);
+typedef Bit32s (*addon_option_save_t)(FILE *fp);
 
 // bx_gui->set_display_mode() changes the mode between the configuration
 // interface and the simulation.  This is primarily intended for display
@@ -705,12 +705,12 @@ public:
   // interfaces to use.
   virtual void set_display_mode(disp_mode_t newmode) {}
   virtual bx_bool test_for_text_console() {return 1;}
-  // user-defined option support
-  virtual bx_bool register_user_option(const char *keyword, user_option_parser_t parser, user_option_save_t save_func) {return 0;}
-  virtual bx_bool unregister_user_option(const char *keyword) {return 0;}
-  virtual bx_bool is_user_option(const char *keyword) {return 0;}
-  virtual Bit32s parse_user_option(const char *context, int num_params, char *params []) {return -1;}
-  virtual Bit32s save_user_options(FILE *fp) {return -1;}
+  // add-on config option support
+  virtual bx_bool register_addon_option(const char *keyword, addon_option_parser_t parser, addon_option_save_t save_func) {return 0;}
+  virtual bx_bool unregister_addon_option(const char *keyword) {return 0;}
+  virtual bx_bool is_addon_option(const char *keyword) {return 0;}
+  virtual Bit32s parse_addon_option(const char *context, int num_params, char *params []) {return -1;}
+  virtual Bit32s save_addon_options(FILE *fp) {return -1;}
   // save/restore support
   virtual void init_save_restore() {}
   virtual bx_bool save_state(const char *checkpoint_path) {return 0;}
