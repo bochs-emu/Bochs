@@ -593,12 +593,12 @@ void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmod
 /* Plugin system: Remove registered plugin device                       */
 /************************************************************************/
 
-void pluginUnregisterDeviceDevmodel(plugin_t *plugin)
+void pluginUnregisterDeviceDevmodel(const char *name)
 {
   device_t *device, *prev = NULL;
 
   for (device = devices; device; device = device->next) {
-    if (device->plugin == plugin) {
+    if (!strcmp(name, device->name)) {
       if (prev == NULL) {
         devices = device->next;
       } else {
@@ -616,16 +616,16 @@ void pluginUnregisterDeviceDevmodel(plugin_t *plugin)
 /* Plugin system: Check if a plugin is loaded                           */
 /************************************************************************/
 
-bx_bool pluginDevicePresent(char *name)
+bx_bool pluginDevicePresent(const char *name)
 {
   device_t *device;
 
   for (device = devices; device; device = device->next)
   {
-    if (strcmp(device->name,name)==0) return true;
+    if (!strcmp(name, device->name)) return 1;
   }
 
-  return false;
+  return 0;
 }
 
 #if BX_PLUGINS
@@ -638,7 +638,7 @@ int bx_load_plugin(const char *name, plugintype_t type)
   char *namecopy = new char[1+strlen(name)];
   strcpy(namecopy, name);
   plugin_load(namecopy, (char*)"", type);
-  return 0;
+  return 1;
 }
 
 void bx_unload_plugin(const char *name, bx_bool devflag)
@@ -648,7 +648,7 @@ void bx_unload_plugin(const char *name, bx_bool devflag)
   for (plugin = plugins; plugin; plugin = plugin->next) {
     if (!strcmp(plugin->name, name)) {
       if (devflag) {
-        pluginUnregisterDeviceDevmodel(plugin);
+        pluginUnregisterDeviceDevmodel(plugin->name);
       }
       plugin = plugin_unload(plugin);
       if (prev == NULL) {
@@ -738,7 +738,11 @@ void bx_unload_plugins()
       bx_unload_plugin(device->name, 0);
 #endif
     } else {
-      delete device->devmodel;
+#if !BX_PLUGINS
+      if (!bx_unload_opt_plugin(device->name)) {
+        delete device->devmodel;
+      }
+#endif
     }
     next = device->next;
     free(device);
@@ -809,11 +813,13 @@ void bx_plugins_after_restore_state()
 typedef struct {
   const char *name;
   plugin_init_t plugin_init;
+  plugin_fini_t plugin_fini;
+  bx_bool       status;
 } builtin_plugin_t;
 
-#define BUILTIN_PLUGIN_ENTRY(mod) {#mod, lib##mod##_LTX_plugin_init}
+#define BUILTIN_PLUGIN_ENTRY(mod) {#mod, lib##mod##_LTX_plugin_init, lib##mod##_LTX_plugin_fini, 0}
 
-const builtin_plugin_t builtin_opt_plugins[] = {
+static builtin_plugin_t builtin_opt_plugins[] = {
   BUILTIN_PLUGIN_ENTRY(unmapped),
   BUILTIN_PLUGIN_ENTRY(biosdev),
   BUILTIN_PLUGIN_ENTRY(speaker),
@@ -831,16 +837,35 @@ const builtin_plugin_t builtin_opt_plugins[] = {
 #if BX_SUPPORT_APIC
   BUILTIN_PLUGIN_ENTRY(ioapic),
 #endif
-  {"NULL", NULL}
+  {"NULL", NULL, NULL, 0}
 };
 
-int bx_load_plugin(const char *name, plugintype_t type)
+int bx_load_opt_plugin(const char *name)
 {
   int i = 0;
   while (strcmp(builtin_opt_plugins[i].name, "NULL")) {
     if (!strcmp(name, builtin_opt_plugins[i].name)) {
-      builtin_opt_plugins[i].plugin_init(NULL, type, 0, NULL);
-      break;
+      if (builtin_opt_plugins[i].status == 0) {
+        builtin_opt_plugins[i].plugin_init(NULL, PLUGTYPE_OPTIONAL, 0, NULL);
+        builtin_opt_plugins[i].status = 1;
+      }
+      return 1;
+    }
+    i++;
+  };
+  return 0;
+}
+
+int bx_unload_opt_plugin(const char *name)
+{
+  int i = 0;
+  while (strcmp(builtin_opt_plugins[i].name, "NULL")) {
+    if (!strcmp(name, builtin_opt_plugins[i].name)) {
+      if (builtin_opt_plugins[i].status == 1) {
+        builtin_opt_plugins[i].plugin_fini();
+        builtin_opt_plugins[i].status = 0;
+      }
+      return 1;
     }
     i++;
   };

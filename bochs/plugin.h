@@ -78,11 +78,12 @@ extern "C" {
 
 
 #define BX_REGISTER_DEVICE_DEVMODEL(a,b,c,d) pluginRegisterDeviceDevmodel(a,b,c,d)
+#define BX_UNREGISTER_DEVICE_DEVMODEL(a) pluginUnregisterDeviceDevmodel(a)
 
 #if BX_PLUGINS
 
 #define PLUG_load_plugin(name,type) {bx_load_plugin(#name,type);}
-#define PLUG_load_opt_plugin(name) {bx_load_plugin(name,PLUGTYPE_OPTIONAL);}
+#define PLUG_load_opt_plugin(name) bx_load_plugin(name,PLUGTYPE_OPTIONAL)
 #define PLUG_load_user_plugin(name) {bx_load_plugin(name,PLUGTYPE_USER);}
 #define PLUG_unload_plugin(name) {bx_unload_plugin(#name,1);}
 #define PLUG_unload_user_plugin(name) {bx_unload_plugin(name,1);}
@@ -106,8 +107,9 @@ extern "C" {
 // When plugins are off, PLUG_load_plugin will call the plugin_init function
 // directly.
 #define PLUG_load_plugin(name,type) {lib##name##_LTX_plugin_init(NULL,type,0,NULL);}
-#define PLUG_load_opt_plugin(name) {bx_load_plugin(name,PLUGTYPE_OPTIONAL);}
 #define PLUG_unload_plugin(name) {lib##name##_LTX_plugin_fini();}
+#define PLUG_load_opt_plugin(name) bx_load_opt_plugin(name)
+#define PLUG_unload_opt_plugin(name) bx_unload_opt_plugin(name);
 #define DEV_register_ioread_handler(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e,f)
 #define DEV_register_iowrite_handler(b,c,d,e,f) bx_devices.register_io_write_handler(b,c,d,e,f)
 #define DEV_unregister_ioread_handler(b,c,d,e)  bx_devices.unregister_io_read_handler(b,c,d,e)
@@ -302,7 +304,8 @@ typedef void (*deviceInitDev_t)(void);
 typedef void (*deviceReset_t)(unsigned);
 
 BOCHSAPI void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmodel_c *dev, const char *name);
-BOCHSAPI bx_bool pluginDevicePresent(char *name);
+BOCHSAPI void pluginUnregisterDeviceDevmodel(const char *name);
+BOCHSAPI bx_bool pluginDevicePresent(const char *name);
 
 /* === IO port stuff === */
 BOCHSAPI extern int (*pluginRegisterIOReadHandler)(void *thisPtr, ioReadHandler_t callback,
@@ -378,6 +381,11 @@ extern void bx_reset_plugins(unsigned);
 extern void bx_unload_plugins(void);
 extern void bx_plugins_register_state(void);
 extern void bx_plugins_after_restore_state(void);
+
+#if !BX_PLUGINS
+int bx_load_opt_plugin(const char *name);
+int bx_unload_opt_plugin(const char *name);
+#endif
 
 // every plugin must define these, within the extern"C" block, so that
 // a non-mangled function symbol is available in the shared library.
