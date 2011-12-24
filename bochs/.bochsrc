@@ -829,11 +829,11 @@ private_colormap: enabled=0
 # this script to configure this network interface, or enable masquerading.
 # This is mainly useful for the tun/tap devices that only exist during
 # Bochs execution. The network interface name is supplied to the script
-# as first parameter
+# as first parameter.
 #
 # BOOTROM: The bootrom value is optional, and is the name of the ROM image
 # to load. Note that this feature is only implemented for the PCI version of
-# the NE2000 and it requires SeaBIOS to boot the specified ROM.
+# the NE2000.
 #
 # If you don't want to make connections to any physical networks,
 # you can use the following 'ethmod's to simulate a virtual network.
@@ -842,7 +842,7 @@ private_colormap: enabled=0
 #   vnet: ARP, ICMP-echo(ping), DHCP and read/write TFTP are simulated.
 #         The virtual host uses 192.168.10.1.
 #         DHCP assigns 192.168.10.2 to the guest.
-#         TFTP uses the ethdev value for the root directory and doesn't
+#         TFTP uses the 'ethdev' value for the root directory and doesn't
 #         overwrite files.
 #
 #=======================================================================
@@ -881,7 +881,7 @@ private_colormap: enabled=0
 # and supports the same networking modules as the NE2000 adapter. In addition
 # to this, it must be assigned to a PCI slot.
 #=======================================================================
-#e1000: enabled=1, mac=b0:c4:20:00:00:00, ethmod=vnet
+#e1000: enabled=1, mac=52:54:00:12:34:56, ethmod=slirp, script=/usr/local/bin/slirp
 
 #=======================================================================
 # KEYBOARD_MAPPING:
@@ -926,7 +926,7 @@ keyboard_mapping: enabled=0, map=
 # This option controls the presence of a PCI chipset in Bochs. Currently it only
 # supports the i440FX chipset. You can also specify the devices connected to
 # PCI slots. Up to 5 slots are available. These devices are currently supported:
-# cirrus, es1370, ne2k, pcivga, pcidev, pcipnic, usb_ohci and usb_xhci.
+# cirrus, e1000, es1370, ne2k, pcivga, pcidev, pcipnic, usb_ohci and usb_xhci.
 #
 # Example:
 #   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k

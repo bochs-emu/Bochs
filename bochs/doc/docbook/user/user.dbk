@@ -2134,6 +2134,11 @@ turn it off.
       <entry>Enable PCI pseudo NIC (network card) support.</entry>
     </row>
     <row>
+      <entry>--enable-e1000</entry>
+      <entry>no</entry>
+      <entry>Enable Intel(R) 82540EM Gigabit Ethernet adapter support.</entry>
+    </row>
+    <row>
       <entry>--enable-clgd54xx</entry>
       <entry>no</entry>
       <entry>Enable Cirrus Logic GD54xx (CL-GD5430 ISA or CL-GD5446 PCI) video
@@ -3980,7 +3985,7 @@ Examples:
 This option controls the presence of a PCI chipset in Bochs. Currently it only
 supports the i440FX chipset. You can also specify the devices connected to
 PCI slots. Up to 5 slots are available. These devices are currently supported:
-cirrus, es1370, ne2k, pcivga, pcidev, pcipnic, usb_ohci and usb_xhci.
+cirrus, e1000, es1370, ne2k, pcivga, pcidev, pcipnic, usb_ohci and usb_xhci.
 </para>
 </section>
 
@@ -4110,35 +4115,39 @@ ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vde, ethdev="/tmp/vde.c
 ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="c:/temp"
 ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
 ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=/dev/net/tun0, script=./tunconfig
-ne2k: mac=fe:fd:00:00:00:01, ethmod=slirp, script=/usr/local/bin/slirp
+ne2k: mac=fe:fd:00:00:00:01, ethmod=slirp, script=/usr/local/bin/slirp, bootrom=ne2k_pci.rom
 
-ioaddr, irq: You probably won't need to change ioaddr and irq, unless there
+IOADDR, IRQ: You probably won't need to change ioaddr and irq, unless there
 are IRQ conflicts. These parameters are ignored if the NE2000 is assigned to
 a PCI slot.
 
-mac: The MAC address MUST NOT match the address of any machine on the net.
+MAC: The MAC address MUST NOT match the address of any machine on the net.
 Also, the first byte must be an even number (bit 0 set means a multicast
 address), and you cannot use ff:ff:ff:ff:ff:ff because that's the broadcast
 address.  For the ethertap module, you must use fe:fd:00:00:00:01.  There may
 be other restrictions too.  To be safe, just use the b0:c4... address.
 
-ethmod: The ethmod value defines which low level OS specific module to be
+ETHMOD: The ethmod value defines which low level OS specific module to be
 used to access physical ethernet interface. You can also specify a network
 simulator or a module with no input/output ("null"). See the table below for
 currently supported values.
 
-ethdev: The ethdev value is the name of the network interface on your host
+ETHDEV: The ethdev value is the name of the network interface on your host
 platform.  On UNIX machines, you can get the name by running ifconfig.  On
 Windows machines, you must run niclist to get the name of the ethdev.
 Niclist source code is in misc/niclist.c and it is included in Windows
 binary releases.
 
-script: The script value is optional, and is the name of a script that
+SCRIPT: The script value is optional, and is the name of a script that
 is executed after bochs initialize the network interface. You can use
 this script to configure this network interface, or enable masquerading.
 This is mainly useful for the tun/tap devices that only exist during
 Bochs execution. The network interface name is supplied to the script
-as first parameter
+as first parameter.
+
+BOOTROM: The bootrom value is optional, and is the name of the ROM image
+to load. Note that this feature is only implemented for the PCI version of
+the NE2000.
 </screen>
 </para>
 
@@ -4214,7 +4223,7 @@ version where this module was added.
     <entry>vnet</entry>
     <entry>ARP, ping (ICMP-echo), DHCP and read/write TFTP simulation. The virtual
     host uses 192.168.10.1. DHCP assigns 192.168.10.2 to the guest. The TFTP server
-    uses the ethdev value for the root directory and doesn't overwrite files.
+    uses the 'ethdev' value for the root directory and doesn't overwrite files.
     </entry>
     <entry>Yes, for TFTP</entry>
     <entry>No</entry>
@@ -4252,7 +4261,20 @@ Example:
 </screen>
 To support the Bochs/Etherboot pseudo-NIC, Bochs must be compiled with the
 --enable-pnic configure option. It accepts the same syntax (for mac, ethmod,
-ethdev, script) and supports the same networking modules as the NE2000 adapter.
+ethdev, script, bootrom) and supports the same networking modules as the NE2000 adapter.
+In addition to this, it must be assigned to a PCI slot.
+</para>
+</section>
+
+<section><title>e1000</title>
+<para>
+Example:
+<screen>
+  e1000: enabled=1, mac=52:54:00:12:34:56, ethmod=slirp, script=/usr/local/bin/slirp
+</screen>
+To support the Intel(R) 82540EM Gigabit Ethernet adapter, Bochs must be compiled
+with the --enable-e1000 configure option. It accepts the same syntax (for mac, ethmod,
+ethdev, script, bootrom) and supports the same networking modules as the NE2000 adapter.
 In addition to this, it must be assigned to a PCI slot.
 </para>
 </section>
