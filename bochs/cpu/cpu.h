@@ -4265,8 +4265,8 @@ public: // for now...
   BX_SMF void SvmInjectEvents(bx_phy_address vmcbaddr);
   BX_SMF void SvmInterceptException(bxInstruction_c *i, unsigned vector,
        Bit16u errcode, bx_bool errcode_valid, Bit64u qualification = 0);
-  BX_SMF void SvmInterceptIO(bxInstruction_c *i, unsigned op, Bit32u msr);
-  BX_SMF void SvmInterceptMSR(bxInstruction_c *i, unsigned port, unsigned len);
+  BX_SMF void SvmInterceptIO(bxInstruction_c *i, unsigned port, unsigned len);
+  BX_SMF void SvmInterceptMSR(bxInstruction_c *i, unsigned op, Bit32u msr);
   BX_SMF void register_svm_state(bx_param_c *parent);
 #endif
 

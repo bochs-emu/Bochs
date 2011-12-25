@@ -1492,11 +1492,6 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   // Load Guest State -> VMENTER
   //
 
-  if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_TSC_OFFSET)
-    BX_CPU_THIS_PTR tsc_offset = VMread64(VMCS_64BIT_CONTROL_TSC_OFFSET);
-  else
-    BX_CPU_THIS_PTR tsc_offset = 0;
-
 #if BX_SUPPORT_X86_64
 #if BX_SUPPORT_VMX >= 2
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_EFER_MSR) {
@@ -2540,6 +2535,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR in_vmx_guest = 1;
   BX_CPU_THIS_PTR disable_INIT = 0;
+
+  if (VMEXIT(VMX_VM_EXEC_CTRL2_TSC_OFFSET))
+    BX_CPU_THIS_PTR tsc_offset = VMread64(VMCS_64BIT_CONTROL_TSC_OFFSET);
+  else
+    BX_CPU_THIS_PTR tsc_offset = 0;
 
 #if BX_SUPPORT_VMX >= 2
   if (PIN_VMEXIT(VMX_VM_EXEC_CTRL1_VMX_PREEMPTION_TIMER_VMEXIT)) {

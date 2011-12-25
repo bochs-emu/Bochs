@@ -1004,6 +1004,9 @@ void BX_CPU_C::reset(unsigned source)
   }
 #endif
 
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
+  BX_CPU_THIS_PTR tsc_offset = 0;
+#endif
   if (source == BX_RESET_HARDWARE) {
     BX_CPU_THIS_PTR set_TSC(0); // do not change TSC on INIT
   }

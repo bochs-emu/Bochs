@@ -44,49 +44,65 @@ BX_CPP_INLINE Bit64u CanonicalizeAddress(Bit64u laddr)
 BX_CPP_INLINE Bit8u BX_CPU_C::vmcb_read8(bx_phy_address vmcbaddr, unsigned offset)
 {
   Bit32u val_8;
-  access_read_physical(vmcbaddr + offset, 1, (Bit8u*)(&val_8));
+  bx_phy_address pAddr = vmcbaddr + offset;
+  access_read_physical(pAddr, 1, (Bit8u*)(&val_8));
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_VMCS_ACCESS | BX_READ, (Bit8u*)(&val_8));
   return val_8;
 }
 
 BX_CPP_INLINE Bit16u BX_CPU_C::vmcb_read16(bx_phy_address vmcbaddr, unsigned offset)
 {
   Bit32u val_16;
-  access_read_physical(vmcbaddr + offset, 2, (Bit8u*)(&val_16));
+  bx_phy_address pAddr = vmcbaddr + offset;
+  access_read_physical(pAddr, 2, (Bit8u*)(&val_16));
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 2, BX_VMCS_ACCESS | BX_READ, (Bit8u*)(&val_16));
   return val_16;
 }
 
 BX_CPP_INLINE Bit32u BX_CPU_C::vmcb_read32(bx_phy_address vmcbaddr, unsigned offset)
 {
   Bit32u val_32;
-  access_read_physical(vmcbaddr + offset, 4, (Bit8u*)(&val_32));
+  bx_phy_address pAddr = vmcbaddr + offset;
+  access_read_physical(pAddr, 4, (Bit8u*)(&val_32));
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_VMCS_ACCESS | BX_READ, (Bit8u*)(&val_32));
   return val_32;
 }
 
 BX_CPP_INLINE Bit64u BX_CPU_C::vmcb_read64(bx_phy_address vmcbaddr, unsigned offset)
 {
   Bit64u val_64;
-  access_read_physical(vmcbaddr + offset, 8, (Bit8u*)(&val_64));
+  bx_phy_address pAddr = vmcbaddr + offset;
+  access_read_physical(pAddr, 8, (Bit8u*)(&val_64));
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 8, BX_VMCS_ACCESS | BX_READ, (Bit8u*)(&val_64));
   return val_64;
 }
 
 BX_CPP_INLINE void BX_CPU_C::vmcb_write8(bx_phy_address vmcbaddr, unsigned offset, Bit8u val_8)
 {
-  access_write_physical(vmcbaddr + offset, 1, (Bit8u*)(&val_8));
+  bx_phy_address pAddr = vmcbaddr + offset;
+  access_write_physical(pAddr, 1, (Bit8u*)(&val_8));
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_VMCS_ACCESS | BX_WRITE, (Bit8u*)(&val_8));
 }
 
 BX_CPP_INLINE void BX_CPU_C::vmcb_write16(bx_phy_address vmcbaddr, unsigned offset, Bit16u val_16)
 {
-  access_write_physical(vmcbaddr + offset, 2, (Bit8u*)(&val_16));
+  bx_phy_address pAddr = vmcbaddr + offset;
+  access_write_physical(pAddr, 2, (Bit8u*)(&val_16));
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 2, BX_VMCS_ACCESS | BX_WRITE, (Bit8u*)(&val_16));
 }
 
 BX_CPP_INLINE void BX_CPU_C::vmcb_write32(bx_phy_address vmcbaddr, unsigned offset, Bit32u val_32)
 {
-  access_write_physical(vmcbaddr + offset, 4, (Bit8u*)(&val_32));
+  bx_phy_address pAddr = vmcbaddr + offset;
+  access_write_physical(pAddr, 4, (Bit8u*)(&val_32));
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_VMCS_ACCESS | BX_WRITE, (Bit8u*)(&val_32));
 }
 
 BX_CPP_INLINE void BX_CPU_C::vmcb_write64(bx_phy_address vmcbaddr, unsigned offset, Bit64u val_64)
 {
-  access_write_physical(vmcbaddr + offset, 8, (Bit8u*)(&val_64));
+  bx_phy_address pAddr = vmcbaddr + offset;
+  access_write_physical(pAddr, 8, (Bit8u*)(&val_64));
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 8, BX_VMCS_ACCESS | BX_WRITE, (Bit8u*)(&val_64));
 }
 
 BX_CPP_INLINE void BX_CPU_C::svm_segment_read(bx_phy_address vmcbaddr, bx_segment_reg_t *seg, unsigned offset)
@@ -537,12 +553,128 @@ void BX_CPU_C::SvmInterceptException(bxInstruction_c *i, unsigned vector, Bit16u
 {
 }
 
-void BX_CPU_C::SvmInterceptIO(bxInstruction_c *i, unsigned op, Bit32u msr)
+#define SVM_VMEXIT_IO_PORTIN        (1 << 0)
+#define SVM_VMEXIT_IO_INSTR_STRING  (1 << 2)
+#define SVM_VMEXIT_IO_INSTR_REP     (1 << 3)
+#define SVM_VMEXIT_IO_INSTR_LEN8    (1 << 4)
+#define SVM_VMEXIT_IO_INSTR_LEN16   (1 << 5)
+#define SVM_VMEXIT_IO_INSTR_LEN32   (1 << 6)
+
+void BX_CPU_C::SvmInterceptIO(bxInstruction_c *i, unsigned port, unsigned len)
 {
+  if (! BX_CPU_THIS_PTR in_svm_guest) return;
+
+  if (! SVM_INTERCEPT(0, SVM_INTERCEPT0_IO)) return;
+
+  Bit8u bitmap[2];
+  bx_phy_address pAddr;
+
+  // access_read_physical cannot read 2 bytes cross 4K boundary :(
+  pAddr = BX_CPU_THIS_PTR vmcb.ctrls.iopm_base + (port / 8);
+  access_read_physical(pAddr, 1, &bitmap[0]);
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_IO_BITMAP_ACCESS | BX_READ, &bitmap[0]);
+
+  pAddr++;
+  access_read_physical(pAddr, 1, &bitmap[1]);
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_IO_BITMAP_ACCESS | BX_READ, &bitmap[1]);
+
+  Bit16u combined_bitmap = bitmap[1];
+  combined_bitmap = (combined_bitmap << 8) | bitmap[0];
+
+  unsigned mask = ((1 << len) - 1) << (port & 7);
+  if (combined_bitmap & mask) {
+    BX_ERROR(("SVM VMEXIT: I/O port 0x%04x", port));
+
+    Bit32u qualification = 0;
+
+    switch(i->getIaOpcode()) {
+      case BX_IA_IN_ALIb:
+      case BX_IA_IN_AXIb:
+      case BX_IA_IN_EAXIb:
+      case BX_IA_IN_ALDX:
+      case BX_IA_IN_AXDX:
+      case BX_IA_IN_EAXDX:
+        qualification = SVM_VMEXIT_IO_PORTIN;
+        break;
+
+      case BX_IA_OUT_IbAL:
+      case BX_IA_OUT_IbAX:
+      case BX_IA_OUT_IbEAX:
+      case BX_IA_OUT_DXAL:
+      case BX_IA_OUT_DXAX:
+      case BX_IA_OUT_DXEAX:
+        qualification = 0; // PORTOUT
+        break;
+
+      case BX_IA_REP_INSB_YbDX:
+      case BX_IA_REP_INSW_YwDX:
+      case BX_IA_REP_INSD_YdDX:
+        qualification = SVM_VMEXIT_IO_PORTIN | SVM_VMEXIT_IO_INSTR_STRING;
+        if (i->repUsedL())
+           qualification |= SVM_VMEXIT_IO_INSTR_REP;
+        break;
+
+      case BX_IA_REP_OUTSB_DXXb:
+      case BX_IA_REP_OUTSW_DXXw:
+      case BX_IA_REP_OUTSD_DXXd:
+        qualification = SVM_VMEXIT_IO_INSTR_STRING; // PORTOUT
+        if (i->repUsedL())
+           qualification |= SVM_VMEXIT_IO_INSTR_REP;
+        break;
+
+      default:
+        BX_PANIC(("VMexit_IO: I/O instruction %s unknown", i->getIaOpcodeName()));
+    }
+
+    qualification |= (port << 16);
+    if (len == 1)
+      qualification |= SVM_VMEXIT_IO_INSTR_LEN8;
+    else if (len == 2)
+      qualification |= SVM_VMEXIT_IO_INSTR_LEN16;
+    else if (len == 4)
+      qualification |= SVM_VMEXIT_IO_INSTR_LEN32;
+
+    vmcb_write64(BX_CPU_THIS_PTR vmcbptr, SVM_CONTROL_EXITINFO1, qualification);
+    Svm_Vmexit(SVM_VMEXIT_IO);
+  }
 }
 
-void BX_CPU_C::SvmInterceptMSR(bxInstruction_c *i, unsigned port, unsigned len)
+void BX_CPU_C::SvmInterceptMSR(bxInstruction_c *i, unsigned op, Bit32u msr)
 {
+  if (! BX_CPU_THIS_PTR in_svm_guest) return;
+
+  if (! SVM_INTERCEPT(0, SVM_INTERCEPT0_MSR)) return;
+
+  BX_ASSERT(op == BX_READ || op == BX_WRITE);
+
+  bx_bool vmexit = 1;
+
+  int msr_map_offset = -1;
+  if (msr <= 0x1fff) {
+    msr_map_offset = 0;
+  }
+  else if (msr <= 0xc0001fff) {
+    msr_map_offset = 2048;
+  }
+  else if (msr <= 0xc0011fff) {
+    msr_map_offset = 4096;
+  }
+
+  if (msr_map_offset >= 0) {
+    bx_phy_address msr_bitmap_addr = BX_CPU_THIS_PTR vmcb.ctrls.msrpm_base + msr_map_offset;
+    Bit32u msr_offset = (msr & 0x1fff) * 2 + op;
+
+    Bit8u msr_bitmap;
+    access_read_physical(msr_bitmap_addr + (msr_offset / 8), 1, (Bit8u*)(&msr_bitmap));
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, msr_bitmap_addr + (msr_offset / 8), 1, BX_MSR_BITMAP_ACCESS | BX_READ, &msr_bitmap);
+
+    vmexit = (msr_bitmap >> (msr_offset & 7)) & 0x1;
+  }
+
+  if (vmexit) {
+    vmcb_write64(BX_CPU_THIS_PTR vmcbptr, SVM_CONTROL_EXITINFO1, op); // 0 - RDMSR, 1 - WRMSR
+    Svm_Vmexit(SVM_VMEXIT_MSR);
+  }
 }
 #endif
 
