@@ -611,7 +611,7 @@ void BX_CPU_C::register_state(void)
   register_vmx_state(cpu);
 #endif
 
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_SVM
   register_svm_state(cpu);
 #endif
 
