@@ -41,6 +41,9 @@ public:
 #if BX_SUPPORT_VMX
   virtual Bit32u get_vmx_extensions_bitmask(void) const { return vmx_extensions_bitmask; }
 #endif
+#if BX_SUPPORT_SVM
+  virtual Bit32u get_svm_extensions_bitmask(void) const { return svm_extensions_bitmask; }
+#endif
 
   virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 
@@ -52,11 +55,17 @@ private:
 #if BX_SUPPORT_VMX
   void init_vmx_extensions_bitmask(void);
 #endif
+#if BX_SUPPORT_SVM
+  void init_svm_extensions_bitmask(void);
+#endif
 
   Bit64u isa_extensions_bitmask;
   Bit32u cpu_extensions_bitmask;
 #if BX_SUPPORT_VMX
   Bit32u vmx_extensions_bitmask;
+#endif
+#if BX_SUPPORT_SVM
+  Bit32u svm_extensions_bitmask;
 #endif
 
 #if BX_SUPPORT_SMP

@@ -68,6 +68,11 @@ void disassembler::RAX_Reg(const x86_insn *insn)
   dis_sprintf("%s", general_64bit_regname[rAX_REG]);
 }
 
+void disassembler::RCX_Reg(const x86_insn *insn)
+{
+  dis_sprintf("%s", general_64bit_regname[rCX_REG]);
+}
+
 // segment registers
 void disassembler::CS(const x86_insn *insn) { dis_sprintf("%s", segment_name[CS_REG]); }
 void disassembler::DS(const x86_insn *insn) { dis_sprintf("%s", segment_name[DS_REG]); }

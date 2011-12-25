@@ -607,6 +607,10 @@ void BX_CPU_C::register_state(void)
   register_vmx_state(cpu);
 #endif
 
+#if BX_SUPPORT_VMX
+  register_svm_state(cpu);
+#endif
+
   BXRS_HEX_PARAM_SIMPLE32(cpu, async_event);
   BXRS_PARAM_BOOL(cpu, INTR, INTR);
 
@@ -980,6 +984,8 @@ void BX_CPU_C::reset(unsigned source)
     BX_CPU_THIS_PTR efer_suppmask |= (BX_EFER_SCE_MASK | BX_EFER_LME_MASK | BX_EFER_LMA_MASK);
     if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_FFXSR))
       BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_FFXSR_MASK;
+    if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_ISA_SVM))
+      BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_SVME_MASK;
   }
 #endif
 
@@ -1097,6 +1103,11 @@ void BX_CPU_C::reset(unsigned source)
   /* enable VMX, should be done in BIOS instead */
   BX_CPU_THIS_PTR msr.ia32_feature_ctrl =
     /*BX_IA32_FEATURE_CONTROL_LOCK_BIT | */BX_IA32_FEATURE_CONTROL_VMX_ENABLE_BIT;
+#endif
+
+#if BX_SUPPORT_SVM
+  BX_CPU_THIS_PTR in_svm = BX_CPU_THIS_PTR in_svm_guest = 0;
+  BX_CPU_THIS_PTR svm_gif = 1;
 #endif
 
 #if BX_SUPPORT_SMP

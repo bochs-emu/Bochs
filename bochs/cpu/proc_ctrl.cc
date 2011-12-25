@@ -48,6 +48,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PAUSE(bxInstruction_c *i)
     VMexit_PAUSE(i);
 #endif
 
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_PAUSE)) Svm_Vmexit(SVM_VMEXIT_PAUSE);
+  }
+#endif
+
   BX_NEXT_INSTR(i);
 }
 
@@ -69,6 +75,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     BX_ERROR(("VMEXIT: CPUID in VMX non-root operation"));
     VMexit(i, VMX_VMEXIT_CPUID, 0);
+  }
+#endif
+
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_CPUID)) Svm_Vmexit(SVM_VMEXIT_CPUID);
   }
 #endif
 
@@ -135,6 +147,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
     VMexit_HLT(i);
 #endif
 
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_HLT)) Svm_Vmexit(SVM_VMEXIT_HLT);
+  }
+#endif
+
   // stops instruction execution and places the processor in a
   // HALT state.  An enabled interrupt, NMI, or reset will resume
   // execution.  If interrupt (including NMI) is used to resume
@@ -174,6 +192,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVD(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     BX_ERROR(("VMEXIT: INVD in VMX non-root operation"));
     VMexit(i, VMX_VMEXIT_INVD, 0);
+  }
+#endif
+
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_INVD)) Svm_Vmexit(SVM_VMEXIT_INVD);
   }
 #endif
 
@@ -403,8 +427,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR cr4.get_PCE() || CPL==0 || real_mode()) {
 
 #if BX_SUPPORT_VMX
-    if (BX_CPU_THIS_PTR in_vmx_guest)
+    if (BX_CPU_THIS_PTR in_vmx_guest) 
       VMexit_RDPMC(i);
+#endif
+
+#if BX_SUPPORT_SVM
+    if (BX_CPU_THIS_PTR in_svm_guest) {
+      if (SVM_INTERCEPT(0, SVM_INTERCEPT0_RDPMC)) Svm_Vmexit(SVM_VMEXIT_RDPMC);
+    }
 #endif
 
     /* According to manual, Pentium 4 has 18 counters,
@@ -450,6 +480,10 @@ Bit64u BX_CPU_C::get_TSC(void)
   if (BX_CPU_THIS_PTR in_vmx_guest)
     tsc += VMX_TSC_Offset();
 #endif
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest)
+    tsc += BX_CPU_THIS_PTR vmcb.ctrls.tsc_offset;
+#endif
   return tsc;
 }
 
@@ -467,25 +501,28 @@ void BX_CPU_C::set_TSC(Bit64u newval)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  if (! BX_CPU_THIS_PTR cr4.get_TSD() || CPL==0) {
-
-#if BX_SUPPORT_VMX
-    if (BX_CPU_THIS_PTR in_vmx_guest)
-      VMexit_RDTSC(i);
-#endif
-
-    // return ticks
-    Bit64u ticks = BX_CPU_THIS_PTR get_TSC();
-
-    RAX = GET32L(ticks);
-    RDX = GET32H(ticks);
-
-    BX_DEBUG(("RDTSC: ticks 0x%08x:%08x", EDX, EAX));
-
-  } else {
+  if (BX_CPU_THIS_PTR cr4.get_TSD() && CPL != 0) {
     BX_ERROR(("RDTSC: not allowed to use instruction !"));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_RDTSC(i);
+#endif
+
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest)
+    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_RDTSC)) Svm_Vmexit(SVM_VMEXIT_RDTSC);
+#endif
+
+  // return ticks
+  Bit64u ticks = BX_CPU_THIS_PTR get_TSC();
+
+  RAX = GET32L(ticks);
+  RDX = GET32H(ticks);
+
+  BX_DEBUG(("RDTSC: ticks 0x%08x:%08x", EDX, EAX));
 #endif
 
   BX_NEXT_INSTR(i);
@@ -505,24 +542,28 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
   }
 #endif
 
-  if (! BX_CPU_THIS_PTR cr4.get_TSD() || CPL==0) {
-
-#if BX_SUPPORT_VMX
-    if (BX_CPU_THIS_PTR in_vmx_guest)
-      VMexit_RDTSC(i);
-#endif
-
-    // return ticks
-    Bit64u ticks = BX_CPU_THIS_PTR get_TSC();
-
-    RAX = GET32L(ticks);
-    RDX = GET32H(ticks);
-    RCX = MSR_TSC_AUX;
-
-  } else {
+  if (BX_CPU_THIS_PTR cr4.get_TSD() && CPL != 0) {
     BX_ERROR(("RDTSCP: not allowed to use instruction !"));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_RDTSC(i);
+#endif
+
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest)
+    if (SVM_INTERCEPT(1, SVM_INTERCEPT1_RDTSCP)) Svm_Vmexit(SVM_VMEXIT_RDTSCP);
+#endif
+
+  // return ticks
+  Bit64u ticks = BX_CPU_THIS_PTR get_TSC();
+
+  RAX = GET32L(ticks);
+  RDX = GET32H(ticks);
+  RCX = MSR_TSC_AUX;
+
 #endif
 
   BX_NEXT_INSTR(i);

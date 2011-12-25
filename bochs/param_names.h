@@ -56,6 +56,7 @@
 #define BXPN_CPUID_SEP                   "cpuid.sep"
 #define BXPN_CPUID_XSAVE                 "cpuid.xsave"
 #define BXPN_CPUID_XSAVEOPT              "cpuid.xsaveopt"
+#define BXPN_CPUID_SVM                   "cpuid.svm"
 #define BXPN_CPUID_VMX                   "cpuid.vmx"
 #define BXPN_CPUID_AVX                   "cpuid.avx"
 #define BXPN_CPUID_AVX_F16CVT            "cpuid.avx_f16c"

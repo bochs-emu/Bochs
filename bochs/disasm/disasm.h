@@ -76,6 +76,7 @@
 #define IA_FMA4             (BX_CONST64(1) << 34)  /* FMA4 instruction (AMD) */
 #define IA_XOP              (BX_CONST64(1) << 35)  /* XOP instruction (AMD) */
 #define IA_TBM              (BX_CONST64(1) << 36)  /* TBM instruction (AMD) */
+#define IA_SVM              (BX_CONST64(1) << 37)  /* SVM instruction (AMD) */
 
 /* general purpose bit register */
 enum {
@@ -429,6 +430,7 @@ public:
 
   // 64-bit general purpose registers
   void RAX_Reg(const x86_insn *insn);
+  void RCX_Reg(const x86_insn *insn);
 
   // segment registers
   void CS(const x86_insn *insn);

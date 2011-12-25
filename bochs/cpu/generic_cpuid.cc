@@ -864,6 +864,25 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
   }
 #endif
 
+#if BX_SUPPORT_SVM
+  static unsigned svm_enabled = SIM->get_param_num(BXPN_CPUID_SVM)->get();
+  if (svm_enabled) {
+    features_bitmask |= BX_ISA_SVM;
+
+    if (! x86_64_enabled) {
+      BX_PANIC(("PANIC: SVM emulation requires x86-64 support !"));
+      return;
+    }
+  }
+#endif
+
+#if BX_SUPPORT_VMX && BX_SUPPORT_SVM
+  if (vmx_enabled && svm_enabled) {
+    BX_PANIC(("PANIC: VMX and SVM emulation cannot be enabled together in same configuration !"));
+    return;
+  }
+#endif
+
 #endif // CPU_LEVEL >= 6
 
 #endif // CPU_LEVEL >= 5
@@ -973,6 +992,22 @@ void bx_generic_cpuid_t::init_vmx_extensions_bitmask(void)
   }
   
   this->vmx_extensions_bitmask = features_bitmask;
+}
+#endif
+
+#if BX_SUPPORT_SVM
+void bx_generic_cpuid_t::init_svm_extensions_bitmask(void)
+{
+  Bit32u features_bitmask = 0;
+
+/*
+  static bx_bool svm_enabled = SIM->get_param_bool(BXPN_CPUID_SVM)->get();
+  if (svm_enabled) {
+    // do smth
+  }
+*/
+  
+  this->svm_extensions_bitmask = features_bitmask;
 }
 #endif
 

@@ -65,6 +65,7 @@
 
 #define EAX_Reg &disassembler::EAX_Reg
 #define RAX_Reg &disassembler::RAX_Reg
+#define RCX_Reg &disassembler::RCX_Reg
 
 #define CS &disassembler::CS
 #define DS &disassembler::DS

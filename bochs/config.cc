@@ -364,7 +364,7 @@ void bx_init_options()
 
   // cpuid subtree
 #if BX_CPU_LEVEL >= 4
-  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 29);
+  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 30);
 
   new bx_param_string_c(cpuid_param,
       "vendor_string",
@@ -527,7 +527,13 @@ void bx_init_options()
       0, BX_SUPPORT_VMX,
       1);
 #endif
+#if BX_SUPPORT_SVM
+  new bx_param_bool_c(cpuid_param,
+      "svm", "Secure Virtual Machine (SVM) emulation support",
+      "Secure Virtual Machine (SVM) emulation support",
+      0);
 #endif
+#endif // CPU_LEVEL >= 6
 
   cpuid_param->set_options(menu->SHOW_PARENT);
 
@@ -2770,6 +2776,12 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       } else if (!strncmp(params[i], "vmx=", 4)) {
         SIM->get_param_num(BXPN_CPUID_VMX)->set(atol(&params[i][4]));
 #endif
+#if BX_SUPPORT_SVM
+      } else if (!strncmp(params[i], "svm=", 4)) {
+        if (parse_param_bool(params[i], 4, BXPN_CPUID_SVM) < 0) {
+          PARSE_ERR(("%s: cpuid directive malformed.", context));
+        }
+#endif
 #if BX_SUPPORT_X86_64
       } else if (!strncmp(params[i], "x86_64=", 7)) {
         if (parse_param_bool(params[i], 7, BXPN_CPUID_X86_64) < 0) {
@@ -4070,6 +4082,9 @@ int bx_write_configuration(const char *rc, int overwrite)
 #endif
 #if BX_SUPPORT_VMX
   fprintf(fp, ", vmx=%d", SIM->get_param_num(BXPN_CPUID_VMX)->get());
+#endif
+#if BX_SUPPORT_SVM
+  fprintf(fp, ", svm=%d", SIM->get_param_num(BXPN_CPUID_SVM)->get());
 #endif
 #if BX_SUPPORT_X86_64
   fprintf(fp, ", x86_64=%d, 1g_pages=%d, pcid=%d, fsgsbase=%d",

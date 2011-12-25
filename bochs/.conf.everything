@@ -16,6 +16,7 @@
   --enable-alignment-check \
   --enable-3dnow \
   --enable-monitor-mwait \
+  --enable-svm \
   --enable-vmx \
   --enable-avx \
   --enable-x86-debugger \

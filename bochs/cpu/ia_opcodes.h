@@ -1366,12 +1366,23 @@ bx_define_opcode(BX_IA_VMWRITE_GqEq, &BX_CPU_C::VMWRITE, &BX_CPU_C::VMWRITE, BX_
 bx_define_opcode(BX_IA_INVEPT, &BX_CPU_C::INVEPT, &BX_CPU_C::BxError, BX_ISA_VMX, 0)
 bx_define_opcode(BX_IA_INVVPID, &BX_CPU_C::INVVPID, &BX_CPU_C::BxError, BX_ISA_VMX, 0)
 #endif
-bx_define_opcode(BX_IA_VMFUNC, &BX_CPU_C::VMFUNC, &BX_CPU_C::VMFUNC, BX_ISA_VMX, 0)
+bx_define_opcode(BX_IA_VMFUNC, &BX_CPU_C::BxError, &BX_CPU_C::VMFUNC, BX_ISA_VMX, 0)
 // VMX
 
 // SMX
 bx_define_opcode(BX_IA_GETSEC, &BX_CPU_C::GETSEC, &BX_CPU_C::GETSEC, BX_ISA_SMX, 0)
 // SMX
+
+// SVM
+bx_define_opcode(BX_IA_VMRUN, &BX_CPU_C::BxError, &BX_CPU_C::VMRUN, BX_ISA_SVM, 0)
+bx_define_opcode(BX_IA_VMMCALL, &BX_CPU_C::BxError, &BX_CPU_C::VMMCALL, BX_ISA_SVM, 0)
+bx_define_opcode(BX_IA_VMLOAD, &BX_CPU_C::BxError, &BX_CPU_C::VMLOAD, BX_ISA_SVM, 0)
+bx_define_opcode(BX_IA_VMSAVE, &BX_CPU_C::BxError, &BX_CPU_C::VMSAVE, BX_ISA_SVM, 0)
+bx_define_opcode(BX_IA_STGI, &BX_CPU_C::BxError, &BX_CPU_C::STGI, BX_ISA_SVM, 0)
+bx_define_opcode(BX_IA_CLGI, &BX_CPU_C::BxError, &BX_CPU_C::CLGI, BX_ISA_SVM, 0)
+bx_define_opcode(BX_IA_SKINIT, &BX_CPU_C::BxError, &BX_CPU_C::SKINIT, BX_ISA_SVM, 0)
+bx_define_opcode(BX_IA_INVLPGA, &BX_CPU_C::BxError, &BX_CPU_C::INVLPGA, BX_ISA_SVM, 0)
+// SVM
 
 #if BX_CPU_LEVEL >= 6
 bx_define_opcode(BX_IA_INVPCID, &BX_CPU_C::INVPCID, &BX_CPU_C::BxError, BX_ISA_INVPCID, 0)

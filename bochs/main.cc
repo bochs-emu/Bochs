@@ -1087,8 +1087,8 @@ void bx_init_hardware()
 #if BX_SUPPORT_X86_64
     bx_bool x86_64_enabled = SIM->get_param_bool(BXPN_CPUID_X86_64)->get();
     BX_INFO(("  x86-64 support: %s", x86_64_enabled?"yes":"no"));
-    bx_bool xlarge_pages_enabled = SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get();
-    BX_INFO(("  1G paging support: %s", xlarge_pages_enabled?"yes":"no"));
+    bx_bool xlarge_enabled = SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get();
+    BX_INFO(("  1G paging support: %s", xlarge_enabled?"yes":"no"));
 #else
     BX_INFO(("  x86-64 support: no"));
 #endif
@@ -1114,6 +1114,10 @@ void bx_init_hardware()
     else {
       BX_INFO(("  VMX support: no"));
     }
+#endif
+#if BX_SUPPORT_SVM
+    bx_bool svm_enabled = SIM->get_param_bool(BXPN_CPUID_SVM)->get();
+    BX_INFO(("  SVM support: %s", svm_enabled?"yes":"no"));
 #endif
 #endif // BX_CPU_LEVEL >= 6
   }

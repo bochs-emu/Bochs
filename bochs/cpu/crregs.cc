@@ -56,6 +56,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_SVM
+  if (SVM_DR_WRITE_INTERCEPTED(i->nnn())) Svm_Vmexit(SVM_VMEXIT_DR0_WRITE + i->nnn());
+#endif
+
   invalidate_prefetch_q();
 
   /* This instruction is always treated as a register-to-register,
@@ -161,6 +165,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_SVM
+  if (SVM_DR_READ_INTERCEPTED(i->nnn())) Svm_Vmexit(SVM_VMEXIT_DR0_READ + i->nnn());
+#endif
+
   /* This instruction is always treated as a register-to-register,
    * regardless of the encoding of the MOD field in the MODRM byte.
    */
@@ -232,6 +240,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
     BX_ERROR(("MOV_DqRq: #GP(0) if CPL is not 0"));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+#if BX_SUPPORT_SVM
+  if (SVM_DR_WRITE_INTERCEPTED(i->nnn())) Svm_Vmexit(SVM_VMEXIT_DR0_WRITE + i->nnn());
+#endif
 
   invalidate_prefetch_q();
 
@@ -338,6 +350,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
     BX_ERROR(("MOV_RqDq: #GP(0) if CPL is not 0"));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+#if BX_SUPPORT_SVM
+  if (SVM_DR_READ_INTERCEPTED(i->nnn())) Svm_Vmexit(SVM_VMEXIT_DR0_READ + i->nnn());
+#endif
 
   /* This instruction is always treated as a register-to-register,
    * regardless of the encoding of the MOD field in the MODRM byte.

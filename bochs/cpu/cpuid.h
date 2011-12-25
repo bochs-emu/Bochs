@@ -44,6 +44,9 @@ public:
 #if BX_SUPPORT_VMX
   virtual Bit32u get_vmx_extensions_bitmask(void) const { return 0; }
 #endif
+#if BX_SUPPORT_SVM
+  virtual Bit32u get_svm_extensions_bitmask(void) const { return 0; }
+#endif
 
   virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const = 0;
 
@@ -106,6 +109,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_ISA_FMA4                  (BX_CONST64(1) << 34)  /* FMA4 instruction (AMD) */
 #define BX_ISA_XOP                   (BX_CONST64(1) << 35)  /* XOP instruction (AMD) */
 #define BX_ISA_TBM                   (BX_CONST64(1) << 36)  /* TBM instruction (AMD) */
+#define BX_ISA_SVM                   (BX_CONST64(1) << 37)  /* SVM instruction (AMD) */
 
 // cpuid non-ISA features
 #define BX_CPU_DEBUG_EXTENSIONS      (1 <<  0)              /* Debug Extensions support */

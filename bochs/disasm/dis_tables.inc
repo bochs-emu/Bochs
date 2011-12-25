@@ -425,11 +425,22 @@ static BxDisasmOpcodeTable_t BxDisasmGroupRmXSETGET[8] = {
   /* 7 */ { 0, &Ia_Invalid }
 };
 
+static BxDisasmOpcodeTable_t BxDisasmGroupRmG7SVM[8] = {
+  /* 0 */ { 0, &Ia_vmrun },
+  /* 1 */ { 0, &Ia_vmmcall },
+  /* 2 */ { 0, &Ia_vmload },
+  /* 3 */ { 0, &Ia_vmsave },
+  /* 4 */ { 0, &Ia_stgi },
+  /* 5 */ { 0, &Ia_clgi },
+  /* 6 */ { 0, &Ia_skinit },
+  /* 7 */ { 0, &Ia_invlpga }
+};
+
 static BxDisasmOpcodeTable_t BxDisasmGroupG7R[8] = {
   /* 0 */ { GRPSSE(G7VMX)  }, // VMX
   /* 1 */ { GRPRM(MONITOR) },
   /* 2 */ { GRPRM(XSETGET) },
-  /* 3 */ { 0, &Ia_Invalid },
+  /* 3 */ { GRPRM(G7SVM)   }, // SVM
   /* 4 */ { 0, &Ia_smsw_Ew },
   /* 5 */ { 0, &Ia_Invalid },
   /* 6 */ { 0, &Ia_lmsw_Ew },

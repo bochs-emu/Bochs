@@ -826,6 +826,10 @@ typedef struct {
 #include "vmx.h"
 #endif
 
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
+
 #if BX_SUPPORT_MONITOR_MWAIT
 struct monitor_addr_t {
 
@@ -859,6 +863,9 @@ public: // for now...
 #if BX_SUPPORT_VMX
   Bit32u vmx_extensions_bitmask;
 #endif
+#if BX_SUPPORT_SVM
+  Bit32u svm_extensions_bitmask;
+#endif
 
 #define BX_CPUID_SUPPORT_ISA_EXTENSION(feature) \
    (BX_CPU_THIS_PTR isa_extensions_bitmask & (feature))
@@ -868,6 +875,9 @@ public: // for now...
 
 #define BX_SUPPORT_VMX_EXTENSION(feature) \
    (BX_CPU_THIS_PTR vmx_extensions_bitmask & (feature))
+
+#define BX_SUPPORT_SVM_EXTENSION(feature) \
+   (BX_CPU_THIS_PTR svm_extensions_bitmask & (feature))
 
   // General register set
   // rax: accumulator
@@ -1002,6 +1012,14 @@ public: // for now...
   
   VMCS_CACHE vmcs;
   VMX_CAP vmx_cap;
+#endif
+
+#if BX_SUPPORT_SVM
+  bx_bool in_svm;
+  bx_bool in_svm_guest;
+  bx_bool svm_gif; /* global interrupt enable flag, when zero all external interrupt disabled */
+  bx_phy_address  vmcbptr;
+  VMCB_CACHE vmcb;
 #endif
 
   bx_bool EXT; /* 1 if processing external interrupt or exception
@@ -2541,6 +2559,17 @@ public: // for now...
   BX_SMF BX_INSF_TYPE VMFUNC(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* VMX instructions */
 
+  /* SVM instructions */
+  BX_SMF BX_INSF_TYPE VMRUN(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VMMCALL(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VMLOAD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VMSAVE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE SKINIT(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE CLGI(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE STGI(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE INVLPGA(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  /* SVM instructions */
+
   /* SMX instructions */
   BX_SMF BX_INSF_TYPE GETSEC(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* SMX instructions */
@@ -4021,6 +4050,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_x2apic(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_smx(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_vmx(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_svm(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_rdtscp(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_tsc_deadline(void);
 
@@ -4212,6 +4242,30 @@ public: // for now...
 #if BX_SUPPORT_VMX >= 2
   BX_SMF void vmfunc_eptp_switching(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 #endif
+#endif
+
+#if BX_SUPPORT_SVM
+  BX_SMF void SvmEnterSaveHostState(SVM_HOST_STATE *host);
+  BX_SMF bx_bool SvmEnterLoadCheckControls(bx_phy_address vmcb_addr, SVM_CONTROLS *ctrls);
+  BX_SMF bx_bool SvmEnterLoadCheckGuestState(bx_phy_address vmcb_addr);
+  BX_SMF void Svm_Vmexit(int reason);
+  BX_SMF void SvmExitLoadHostState(SVM_HOST_STATE *host);
+  BX_SMF Bit8u vmcb_read8(bx_phy_address vmcb_addr, unsigned offset);
+  BX_SMF Bit16u vmcb_read16(bx_phy_address vmcb_addr, unsigned offset);
+  BX_SMF Bit32u vmcb_read32(bx_phy_address vmcb_addr, unsigned offset);
+  BX_SMF Bit64u vmcb_read64(bx_phy_address vmcb_addr, unsigned offset);
+  BX_SMF void vmcb_write8(bx_phy_address vmcb_addr, unsigned offset, Bit8u val_8);
+  BX_SMF void vmcb_write16(bx_phy_address vmcb_addr, unsigned offset, Bit16u val_16);
+  BX_SMF void vmcb_write32(bx_phy_address vmcb_addr, unsigned offset, Bit32u val_32);
+  BX_SMF void vmcb_write64(bx_phy_address vmcb_addr, unsigned offset, Bit64u val_64);
+  BX_SMF void svm_segment_read(bx_phy_address vmcbaddr, bx_segment_reg_t *seg, unsigned offset);
+  BX_SMF void svm_segment_write(bx_phy_address vmcbaddr, bx_segment_reg_t *seg, unsigned offset);
+  BX_SMF void SvmInjectEvents(bx_phy_address vmcbaddr);
+  BX_SMF void SvmInterceptException(bxInstruction_c *i, unsigned vector,
+       Bit16u errcode, bx_bool errcode_valid, Bit64u qualification = 0);
+  BX_SMF void SvmInterceptIO(bxInstruction_c *i, unsigned op, Bit32u msr);
+  BX_SMF void SvmInterceptMSR(bxInstruction_c *i, unsigned port, unsigned len);
+  BX_SMF void register_svm_state(bx_param_c *parent);
 #endif
 
 #if BX_CONFIGURE_MSRS
@@ -4460,6 +4514,11 @@ BX_CPP_INLINE bx_bool BX_CPU_C::alignment_check(void)
   return BX_CPU_THIS_PTR alignment_check_mask;
 }
 #endif
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_svm(void)
+{
+  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_SVM);
+}
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_smx(void)
 {

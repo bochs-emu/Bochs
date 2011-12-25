@@ -478,6 +478,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
     VMexit_INVLPG(i, laddr);
 #endif
 
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_INVLPG)) Svm_Vmexit(SVM_VMEXIT_INVLPG);
+  }
+#endif
+
 #if BX_SUPPORT_X86_64
   if (IsCanonical(laddr))
 #endif
