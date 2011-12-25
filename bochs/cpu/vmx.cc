@@ -324,7 +324,6 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   vm->vm_exceptions_bitmap = VMread32(VMCS_32BIT_CONTROL_EXECUTION_BITMAP);
   vm->vm_pf_mask = VMread32(VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MASK);
   vm->vm_pf_match = VMread32(VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MATCH);
-  vm->tsc_offset = VMread64(VMCS_64BIT_CONTROL_TSC_OFFSET);
   vm->vm_cr0_mask = VMread_natural(VMCS_CONTROL_CR0_GUEST_HOST_MASK);
   vm->vm_cr4_mask = VMread_natural(VMCS_CONTROL_CR4_GUEST_HOST_MASK);
   vm->vm_cr0_read_shadow = VMread_natural(VMCS_CONTROL_CR0_READ_SHADOW);
@@ -1493,6 +1492,11 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   // Load Guest State -> VMENTER
   //
 
+  if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_TSC_OFFSET)
+    BX_CPU_THIS_PTR tsc_offset = VMread64(VMCS_64BIT_CONTROL_TSC_OFFSET);
+  else
+    BX_CPU_THIS_PTR tsc_offset = 0;
+
 #if BX_SUPPORT_X86_64
 #if BX_SUPPORT_VMX >= 2
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_EFER_MSR) {
@@ -1924,6 +1928,8 @@ void BX_CPU_C::VMexitLoadHostState(void)
   VMCS_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcs.host_state;
   bx_bool x86_64_host = 0;
   Bit32u vmexit_ctrls = BX_CPU_THIS_PTR vmcs.vmexit_ctrls;
+
+  BX_CPU_THIS_PTR tsc_offset = 0;
 
 #if BX_SUPPORT_X86_64
   if (vmexit_ctrls & VMX_VMEXIT_CTRL1_HOST_ADDR_SPACE_SIZE) {
@@ -3172,7 +3178,6 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_pf_match, BX_CPU_THIS_PTR vmcs.vm_pf_match);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, io_bitmap_addr1, BX_CPU_THIS_PTR vmcs.io_bitmap_addr[0]);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, io_bitmap_addr2, BX_CPU_THIS_PTR vmcs.io_bitmap_addr[1]);
-  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, tsc_offset, BX_CPU_THIS_PTR vmcs.tsc_offset);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, msr_bitmap_addr, BX_CPU_THIS_PTR vmcs.msr_bitmap_addr);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_cr0_mask, BX_CPU_THIS_PTR vmcs.vm_cr0_mask);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_cr0_read_shadow, BX_CPU_THIS_PTR vmcs.vm_cr0_read_shadow);

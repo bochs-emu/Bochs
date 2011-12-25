@@ -475,14 +475,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 5
 Bit64u BX_CPU_C::get_TSC(void)
 {
-  Bit64u tsc = bx_pc_system.time_ticks() - BX_CPU_THIS_PTR msr.tsc_last_reset;
-#if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest)
-    tsc += VMX_TSC_Offset();
-#endif
-#if BX_SUPPORT_SVM
-  if (BX_CPU_THIS_PTR in_svm_guest)
-    tsc += BX_CPU_THIS_PTR vmcb.ctrls.tsc_offset;
+  Bit64u tsc = bx_pc_system.time_ticks() - BX_CPU_THIS_PTR tsc_last_reset;
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
+  tsc += BX_CPU_THIS_PTR tsc_offset;
 #endif
   return tsc;
 }
@@ -491,7 +486,7 @@ void BX_CPU_C::set_TSC(Bit64u newval)
 {
   // compute the correct setting of tsc_last_reset so that a get_TSC()
   // will return newval
-  BX_CPU_THIS_PTR msr.tsc_last_reset = bx_pc_system.time_ticks() - newval;
+  BX_CPU_THIS_PTR tsc_last_reset = bx_pc_system.time_ticks() - newval;
 
   // verify
   BX_ASSERT(get_TSC() == newval);

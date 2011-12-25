@@ -644,13 +644,6 @@ typedef struct
   Bit32u tsc_aux;
 #endif
 
-  // TSC: Time Stamp Counter
-  // Instead of storing a counter and incrementing it every instruction, we
-  // remember the time in ticks that it was reset to zero.  With a little
-  // algebra, we can also support setting it to something other than zero.
-  // Don't read this directly; use get_TSC and set_TSC to access the TSC.
-  Bit64u tsc_last_reset;
-
 #if BX_CPU_LEVEL >= 6
   // SYSENTER/SYSEXIT instruction msr's
   Bit32u sysenter_cs_msr;
@@ -951,11 +944,21 @@ public: // for now...
 #if BX_CPU_LEVEL >= 5
   bx_cr4_t   cr4;
   Bit32u cr4_suppmask;
+
+  bx_efer_t efer;
+  Bit32u efer_suppmask;
 #endif
 
 #if BX_CPU_LEVEL >= 5
-  bx_efer_t efer;
-  Bit32u efer_suppmask;
+  // TSC: Time Stamp Counter
+  // Instead of storing a counter and incrementing it every instruction, we
+  // remember the time in ticks that it was reset to zero.  With a little
+  // algebra, we can also support setting it to something other than zero.
+  // Don't read this directly; use get_TSC and set_TSC to access the TSC.
+  Bit64u tsc_last_reset;
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
+  Bit64s tsc_offset;
+#endif
 #endif
 
 #if BX_CPU_LEVEL >= 6
@@ -4206,7 +4209,6 @@ public: // for now...
   BX_SMF Bit32u VMX_Read_VTPR(void);
   BX_SMF void VMX_Write_VTPR(Bit8u vtpr);
 #endif
-  BX_SMF Bit64s VMX_TSC_Offset(void);
   // vmexit reasons
   BX_SMF void VMexit_Instruction(bxInstruction_c *i, Bit32u reason) BX_CPP_AttrRegparmN(2);
   BX_SMF void VMexit_Event(bxInstruction_c *i, unsigned type, unsigned vector,

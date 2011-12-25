@@ -420,7 +420,12 @@ void BX_CPU_C::register_state(void)
     BXRS_HEX_PARAM_FIELD(cpu, XCR0, xcr0.val32);
   }
 #endif
-
+#if BX_CPU_LEVEL >= 5
+  BXRS_HEX_PARAM_FIELD(cpu, tsc_last_reset, tsc_last_reset);
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
+  BXRS_HEX_PARAM_FIELD(cpu, tsc_offset, tsc_offset);
+#endif
+#endif
   for(n=0; n<6; n++) {
     bx_segment_reg_t *segment = &BX_CPU_THIS_PTR sregs[n];
     bx_list_c *sreg = new bx_list_c(cpu, strseg(segment), 12);
@@ -503,7 +508,6 @@ void BX_CPU_C::register_state(void)
     BXRS_HEX_PARAM_FIELD(MSR, tsc_aux, msr.tsc_aux);
   }
 #endif
-  BXRS_HEX_PARAM_FIELD(MSR, tsc_last_reset, msr.tsc_last_reset);
 #if BX_CPU_LEVEL >= 6
   BXRS_HEX_PARAM_FIELD(MSR, sysenter_cs_msr,  msr.sysenter_cs_msr);
   BXRS_HEX_PARAM_FIELD(MSR, sysenter_esp_msr, msr.sysenter_esp_msr);

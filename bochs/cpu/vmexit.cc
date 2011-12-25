@@ -185,17 +185,6 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_INVLPG(bxInstruction_c *i, bx_addre
   }
 }
 
-Bit64s BX_CPU_C::VMX_TSC_Offset(void)
-{
-  BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
-
-  if (VMEXIT(VMX_VM_EXEC_CTRL2_TSC_OFFSET))
-    return (Bit64s) BX_CPU_THIS_PTR vmcs.tsc_offset;
-  else
-    return 0;
-}
-
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_RDTSC(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
