@@ -45,9 +45,13 @@ bx_hdimage_ctl_c* theHDImageCtl = NULL;
 
 int libhdimage_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  theHDImageCtl = new bx_hdimage_ctl_c;
-  bx_devices.pluginHDImageCtl = theHDImageCtl;
-  return(0); // Success
+  if (type == PLUGTYPE_CORE) {
+    theHDImageCtl = new bx_hdimage_ctl_c;
+    bx_devices.pluginHDImageCtl = theHDImageCtl;
+    return 0; // Success
+  } else {
+    return -1;
+  }
 }
 
 void libhdimage_LTX_plugin_fini(void)

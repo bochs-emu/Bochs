@@ -39,10 +39,14 @@ bx_dma_c *theDmaDevice = NULL;
 
 int libdma_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  theDmaDevice = new bx_dma_c ();
-  bx_devices.pluginDmaDevice = theDmaDevice;
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theDmaDevice, BX_PLUGIN_DMA);
-  return(0); // Success
+  if (type == PLUGTYPE_CORE) {
+    theDmaDevice = new bx_dma_c ();
+    bx_devices.pluginDmaDevice = theDmaDevice;
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theDmaDevice, BX_PLUGIN_DMA);
+    return 0; // Success
+  } else {
+    return -1;
+  }
 }
 
 void libdma_LTX_plugin_fini(void)

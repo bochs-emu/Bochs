@@ -739,7 +739,7 @@ void bx_unload_plugins()
 #endif
     } else {
 #if !BX_PLUGINS
-      if (!bx_unload_opt_plugin(device->name)) {
+      if (!bx_unload_opt_plugin(device->name, 0)) {
         delete device->devmodel;
       }
 #endif
@@ -856,12 +856,15 @@ int bx_load_opt_plugin(const char *name)
   return 0;
 }
 
-int bx_unload_opt_plugin(const char *name)
+int bx_unload_opt_plugin(const char *name, bx_bool devflag)
 {
   int i = 0;
   while (strcmp(builtin_opt_plugins[i].name, "NULL")) {
     if (!strcmp(name, builtin_opt_plugins[i].name)) {
       if (builtin_opt_plugins[i].status == 1) {
+        if (devflag) {
+          pluginUnregisterDeviceDevmodel(builtin_opt_plugins[i].name);
+        }
         builtin_opt_plugins[i].plugin_fini();
         builtin_opt_plugins[i].status = 0;
       }

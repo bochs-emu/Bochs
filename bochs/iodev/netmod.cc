@@ -41,9 +41,13 @@ bx_netmod_ctl_c* theNetModCtl = NULL;
 
 int libnetmod_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  theNetModCtl = new bx_netmod_ctl_c;
-  bx_devices.pluginNetModCtl = theNetModCtl;
-  return(0); // Success
+  if (type == PLUGTYPE_CORE) {
+    theNetModCtl = new bx_netmod_ctl_c;
+    bx_devices.pluginNetModCtl = theNetModCtl;
+    return 0; // Success
+  } else {
+    return -1;
+  }
 }
 
 void libnetmod_LTX_plugin_fini(void)

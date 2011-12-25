@@ -101,15 +101,20 @@ Bit8u bin_to_bcd(Bit8u value, bx_bool is_binary)
 
 int libcmos_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  theCmosDevice = new bx_cmos_c();
-  bx_devices.pluginCmosDevice = theCmosDevice;
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theCmosDevice, BX_PLUGIN_CMOS);
-  return(0); // Success
+  if (type == PLUGTYPE_CORE) {
+    theCmosDevice = new bx_cmos_c();
+    bx_devices.pluginCmosDevice = theCmosDevice;
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theCmosDevice, BX_PLUGIN_CMOS);
+    return 0; // Success
+  } else {
+    return -1;
+  }
 }
 
 void libcmos_LTX_plugin_fini(void)
-{ if (theCmosDevice != NULL)
-  { delete theCmosDevice;
+{ 
+  if (theCmosDevice != NULL) {
+    delete theCmosDevice;
     theCmosDevice = NULL;
   }
 }

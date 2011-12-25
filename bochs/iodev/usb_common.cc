@@ -60,9 +60,13 @@ bx_usb_devctl_c* theUsbDevCtl = NULL;
 
 int libusb_common_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  theUsbDevCtl = new bx_usb_devctl_c;
-  bx_devices.pluginUsbDevCtl = theUsbDevCtl;
-  return(0); // Success
+  if (type == PLUGTYPE_CORE) {
+    theUsbDevCtl = new bx_usb_devctl_c;
+    bx_devices.pluginUsbDevCtl = theUsbDevCtl;
+    return 0; // Success
+  } else {
+    return -1;
+  }
 }
 
 void libusb_common_LTX_plugin_fini(void)

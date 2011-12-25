@@ -106,8 +106,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   unsigned i;
   const char def_name[] = "Default";
   const char *vga_ext;
-  bx_list_c *plugin_ctrl;
-  bx_param_bool_c *plugin;
 
   BX_DEBUG(("Init $Id$"));
   mem = newmem;
@@ -185,22 +183,9 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 #if BX_SUPPORT_PCIUSB
     PLUG_load_plugin(usb_common, PLUGTYPE_CORE);
 #endif
-  } else {
-    plugin_ctrl = (bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL);
-    SIM->get_param_bool(BX_PLUGIN_ACPI, plugin_ctrl)->set(0);
-  }
 #else
     BX_ERROR(("Bochs is not compiled with PCI support"));
-  }
 #endif
-
-  // optional plugins not controlled by separate option
-  plugin_ctrl = (bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL);
-  for (i = 0; i < (unsigned)plugin_ctrl->get_size(); i++) {
-    plugin = (bx_param_bool_c*)(plugin_ctrl->get(i));
-    if (plugin->get()) {
-      PLUG_load_opt_plugin(plugin->get_name());
-    }
   }
 
   PLUG_load_plugin(keyboard, PLUGTYPE_OPTIONAL);

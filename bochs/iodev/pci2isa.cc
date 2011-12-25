@@ -40,10 +40,14 @@ bx_piix3_c *thePci2IsaBridge = NULL;
 
 int libpci2isa_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  thePci2IsaBridge = new bx_piix3_c();
-  bx_devices.pluginPci2IsaBridge = thePci2IsaBridge;
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePci2IsaBridge, BX_PLUGIN_PCI2ISA);
-  return(0); // Success
+  if (type == PLUGTYPE_CORE) {
+    thePci2IsaBridge = new bx_piix3_c();
+    bx_devices.pluginPci2IsaBridge = thePci2IsaBridge;
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePci2IsaBridge, BX_PLUGIN_PCI2ISA);
+    return 0; // Success
+  } else {
+    return -1;
+  }
 }
 
 void libpci2isa_LTX_plugin_fini(void)

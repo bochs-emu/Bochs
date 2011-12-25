@@ -224,11 +224,15 @@ static bx_svga_cirrus_c *theSvga = NULL;
 
 int libvga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  theSvga = new bx_svga_cirrus_c();
-  bx_vga_set_smf_pointer(theSvga);
-  bx_devices.pluginVgaDevice = theSvga;
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSvga, BX_PLUGIN_VGA);
-  return(0); // Success
+  if (type == PLUGTYPE_CORE) {
+    theSvga = new bx_svga_cirrus_c();
+    bx_vga_set_smf_pointer(theSvga);
+    bx_devices.pluginVgaDevice = theSvga;
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSvga, BX_PLUGIN_VGA);
+    return 0; // Success
+  } else {
+    return -1;
+  }
 }
 
 void libvga_LTX_plugin_fini(void)

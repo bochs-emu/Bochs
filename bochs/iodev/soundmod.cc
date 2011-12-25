@@ -40,9 +40,13 @@ bx_soundmod_ctl_c* theSoundModCtl = NULL;
 
 int libsoundmod_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  theSoundModCtl = new bx_soundmod_ctl_c;
-  bx_devices.pluginSoundModCtl = theSoundModCtl;
-  return(0); // Success
+  if (type == PLUGTYPE_CORE) {
+    theSoundModCtl = new bx_soundmod_ctl_c;
+    bx_devices.pluginSoundModCtl = theSoundModCtl;
+    return 0; // Success
+  } else {
+    return -1;
+  }
 }
 
 void libsoundmod_LTX_plugin_fini(void)

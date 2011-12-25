@@ -39,10 +39,14 @@ bx_pci_bridge_c *thePciBridge = NULL;
 
 int libpci_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  thePciBridge = new bx_pci_bridge_c();
-  bx_devices.pluginPciBridge = thePciBridge;
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePciBridge, BX_PLUGIN_PCI);
-  return(0); // Success
+  if (type == PLUGTYPE_CORE) {
+    thePciBridge = new bx_pci_bridge_c();
+    bx_devices.pluginPciBridge = thePciBridge;
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePciBridge, BX_PLUGIN_PCI);
+    return 0; // Success
+  } else {
+    return -1;
+  }
 }
 
 void libpci_LTX_plugin_fini(void)

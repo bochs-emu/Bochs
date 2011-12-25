@@ -110,10 +110,14 @@ static Bit16u drate_in_k[4] = {
 
 int libfloppy_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  theFloppyController = new bx_floppy_ctrl_c();
-  bx_devices.pluginFloppyDevice = theFloppyController;
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theFloppyController, BX_PLUGIN_FLOPPY);
-  return(0); // Success
+  if (type == PLUGTYPE_CORE) {
+    theFloppyController = new bx_floppy_ctrl_c();
+    bx_devices.pluginFloppyDevice = theFloppyController;
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theFloppyController, BX_PLUGIN_FLOPPY);
+    return 0; // Success
+  } else {
+    return -1;
+  }
 }
 
 void libfloppy_LTX_plugin_fini(void)
