@@ -837,6 +837,12 @@ static builtin_plugin_t builtin_opt_plugins[] = {
 #if BX_SUPPORT_APIC
   BUILTIN_PLUGIN_ENTRY(ioapic),
 #endif
+#if BX_SUPPORT_E1000
+  BUILTIN_PLUGIN_ENTRY(e1000),
+#endif
+#if BX_SUPPORT_ES1370
+  BUILTIN_PLUGIN_ENTRY(es1370),
+#endif
   {"NULL", NULL, NULL, 0}
 };
 

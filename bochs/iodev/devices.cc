@@ -239,11 +239,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
       PLUG_load_plugin(pcipnic, PLUGTYPE_OPTIONAL);
     }
 #endif
-#if BX_SUPPORT_E1000
-    if (SIM->get_param_bool(BXPN_E1000_ENABLED)->get()) {
-      PLUG_load_plugin(e1000, PLUGTYPE_OPTIONAL);
-    }
-#endif
   }
 #endif
 
@@ -262,13 +257,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     PLUG_load_plugin(sb16, PLUGTYPE_OPTIONAL);
 #else
     BX_ERROR(("Bochs is not compiled with SB16 support"));
-#endif
-  }
-  if (SIM->get_param_bool(BXPN_ES1370_ENABLED)->get()) {
-#if BX_SUPPORT_ES1370
-    PLUG_load_plugin(es1370, PLUGTYPE_OPTIONAL);
-#else
-    BX_ERROR(("Bochs is not compiled with ES1370 support"));
 #endif
   }
 

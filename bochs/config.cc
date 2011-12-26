@@ -1574,18 +1574,6 @@ void bx_init_options()
   enabled->set_enabled(BX_SUPPORT_PCIPNIC);
   bx_init_std_nic_options("Pseudo NIC", menu);
   enabled->set_dependent_list(menu->clone());
-  // e1000 options
-  menu = new bx_list_c(network, "e1000", "Intel(R) Gigabit Ethernet");
-  menu->set_options(menu->SHOW_PARENT);
-  menu->set_enabled(BX_SUPPORT_E1000);
-  enabled = new bx_param_bool_c(menu,
-    "enabled",
-    "Enable Intel(R) Gigabit Ethernet emulation",
-    "Enables the Intel(R) Gigabit Ethernet emulation",
-    0);
-  enabled->set_enabled(BX_SUPPORT_E1000);
-  bx_init_std_nic_options("Intel(R) Gigabit Ethernet", menu);
-  enabled->set_dependent_list(menu->clone());
 
   // sound subtree
   bx_list_c *sound = new bx_list_c(root_param, "sound", "Sound Configuration");
@@ -1662,27 +1650,6 @@ void bx_init_options()
   deplist = new bx_list_c(NULL, 1);
   deplist->add(logfile);
   loglevel->set_dependent_list(deplist);
-
-  menu = new bx_list_c(sound, "es1370", "ES1370 Configuration", 8);
-  menu->set_options(menu->SHOW_PARENT);
-  menu->set_enabled(BX_SUPPORT_ES1370);
-
-  // ES1370 options
-  enabled = new bx_param_bool_c(menu,
-    "enabled",
-    "Enable ES1370 emulation",
-    "Enables the ES1370 emulation",
-    0);
-  enabled->set_enabled(BX_SUPPORT_ES1370);
-
-  bx_param_filename_c *wavedev = new bx_param_filename_c(menu,
-    "wavedev",
-    "Wave device",
-    "This is the device where the wave output is sent to",
-    "", BX_PATHNAME_LEN);
-  deplist = new bx_list_c(NULL, 1);
-  deplist->add(wavedev);
-  enabled->set_dependent_list(deplist);
 
   // misc options subtree
   bx_list_c *misc = new bx_list_c(root_param, "misc", "Configure Everything Else");
@@ -1837,7 +1804,7 @@ void bx_reset_options()
   // network devices
   SIM->get_param("network")->reset();
 
-  // SB16 & ES1370
+  // sound devices
   SIM->get_param("sound")->reset();
 
   // misc
@@ -3037,17 +3004,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       SIM->get_param_bool("enabled", base)->set(1);
     else
       SIM->get_param_bool("enabled", base)->set(0);
-  } else if (!strcmp(params[0], "es1370")) {
-    base = (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370);
-    for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "enabled=", 8)) {
-        SIM->get_param_bool("enabled", base)->set(atol(&params[i][8]));
-      } else if (!strncmp(params[i], "wavedev=", 8)) {
-        SIM->get_param_string("wavedev", base)->set(&params[i][8]);
-      } else {
-        BX_ERROR(("%s: unknown parameter for es1370 ignored.", context));
-      }
-    }
   } else if ((!strncmp(params[0], "com", 3)) && (strlen(params[0]) == 4)) {
     char tmpname[80];
     idx = params[0][3];
@@ -3412,29 +3368,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_bool("enabled", base)->set(0);
       }
     }
-  } else if (!strcmp(params[0], "e1000")) {
-    int ret, valid = 0;
-    base = (bx_list_c*) SIM->get_param(BXPN_E1000);
-    if (!SIM->get_param_bool("enabled", base)->get()) {
-      SIM->get_param_enum("ethmod", base)->set_by_name("null");
-    }
-    for (i=1; i<num_params; i++) {
-      ret = bx_parse_nic_params(context, params[i], base);
-      if (ret > 0) {
-        valid |= ret;
-      }
-    }
-    if (!SIM->get_param_bool("enabled", base)->get()) {
-      if (valid == 0x04) {
-        SIM->get_param_bool("enabled", base)->set(1);
-      } else if (valid < 0x80) {
-        PARSE_ERR(("%s: 'e1000' directive incomplete (mac is required)", context));
-      }
-    } else {
-      if (valid & 0x80) {
-        SIM->get_param_bool("enabled", base)->set(0);
-      }
-    }
   } else if (!strcmp(params[0], "load32bitOSImage")) {
     if ((num_params!=4) && (num_params!=5)) {
       PARSE_ERR(("%s: load32bitOSImage directive: wrong # args.", context));
@@ -3771,8 +3704,6 @@ int bx_write_sound_options(FILE *fp, bx_list_c *base)
         SIM->get_param_num("loglevel", base)->get(),
         SIM->get_param_string("logfile", base)->getptr(),
         SIM->get_param_num("dmatimer", base)->get());
-    } else if (!strcmp(base->get_name(), "es1370")) {
-      fprintf(fp, ", wavedev=%s", SIM->get_param_string("wavedev", base)->getptr());
     }
   }
   fprintf(fp, "\n");
@@ -4121,9 +4052,7 @@ int bx_write_configuration(const char *rc, int overwrite)
   bx_write_clock_cmos_options(fp);
   bx_write_ne2k_options(fp, (bx_list_c*) SIM->get_param(BXPN_NE2K));
   bx_write_pci_nic_options(fp, (bx_list_c*) SIM->get_param(BXPN_PNIC));
-  bx_write_pci_nic_options(fp, (bx_list_c*) SIM->get_param(BXPN_E1000));
   bx_write_sound_options(fp, (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16));
-  bx_write_sound_options(fp, (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370));
   bx_write_loader_options(fp);
   bx_write_log_options(fp, (bx_list_c*) SIM->get_param("log"));
   bx_write_keyboard_options(fp);

@@ -86,17 +86,84 @@ const Bit16u ctl_ch_en[3] = {0x0040, 0x0020, 0x0010};
 const Bit16u sctl_ch_pause[3] = {0x0800, 0x1000, 0x0000};
 const Bit16u sctl_loop_sel[3] = {0x2000, 0x4000, 0x8000};
 
+// builtin configuration handling functions
+
+void es1370_init_options(void)
+{
+  bx_param_c *sound = SIM->get_param("sound");
+  bx_list_c *menu = new bx_list_c(sound, "es1370", "ES1370 Configuration", 8);
+  menu->set_options(menu->SHOW_PARENT);
+  menu->set_enabled(BX_SUPPORT_ES1370);
+
+  bx_param_bool_c *enabled = new bx_param_bool_c(menu,
+    "enabled",
+    "Enable ES1370 emulation",
+    "Enables the ES1370 emulation",
+    0);
+  enabled->set_enabled(BX_SUPPORT_ES1370);
+
+  bx_param_filename_c *wavedev = new bx_param_filename_c(menu,
+    "wavedev",
+    "Wave device",
+    "This is the device where the wave output is sent to",
+    "", BX_PATHNAME_LEN);
+  bx_list_c *deplist = new bx_list_c(NULL, 1);
+  deplist->add(wavedev);
+  enabled->set_dependent_list(deplist);
+}
+
+Bit32s es1370_options_parser(const char *context, int num_params, char *params[])
+{
+  if (!strcmp(params[0], "es1370")) {
+    bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370);
+    for (int i = 1; i < num_params; i++) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+        SIM->get_param_bool("enabled", base)->set(atol(&params[i][8]));
+      } else if (!strncmp(params[i], "wavedev=", 8)) {
+        SIM->get_param_string("wavedev", base)->set(&params[i][8]);
+      } else {
+        BX_ERROR(("%s: unknown parameter for es1370 ignored.", context));
+      }
+    }
+  } else {
+    BX_PANIC(("%s: unknown directive '%s'", context, params[0]));
+  }
+  return 0;
+}
+
+Bit32s es1370_options_save(FILE *fp)
+{
+  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370);
+  fprintf(fp, "es1370: enabled=%d", SIM->get_param_bool("enabled", base)->get());
+  if (SIM->get_param_bool("enabled", base)->get()) {
+    fprintf(fp, ", wavedev=%s", SIM->get_param_string("wavedev", base)->getptr());
+  }
+  fprintf(fp, "\n");
+  return 0;
+}
+
+// device plugin entry points
+
 int libes1370_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theES1370Device = new bx_es1370_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theES1370Device, BX_PLUGIN_ES1370);
+  // add new configuration parameter for the config interface
+  es1370_init_options();
+  // register add-on option for bochsrc and command line
+  SIM->register_addon_option("es1370", es1370_options_parser, es1370_options_save);
   return 0; // Success
 }
 
 void libes1370_LTX_plugin_fini(void)
 {
+  SIM->unregister_addon_option("es1370");
+  bx_list_c *menu = (bx_list_c*)SIM->get_param("sound");
+  menu->remove("es1370");
   delete theES1370Device;
 }
+
+// the device object
 
 bx_es1370_c::bx_es1370_c()
 {
@@ -121,6 +188,14 @@ bx_es1370_c::~bx_es1370_c()
 
 void bx_es1370_c::init(void)
 {
+  // Read in values from config interface
+  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370);
+  // Check if the device is disabled or not configured
+  if (!SIM->get_param_bool("enabled", base)->get()) {
+    BX_INFO(("ES1370 disabled"));
+    BX_UNREGISTER_DEVICE_DEVMODEL("es1370");
+    return;
+  }
   BX_ES1370_THIS s.devfunc = 0x00;
   DEV_register_pci_handlers(this, &BX_ES1370_THIS s.devfunc, BX_PLUGIN_ES1370,
                             "Experimental ES1370 soundcard");

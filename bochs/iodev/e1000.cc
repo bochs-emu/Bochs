@@ -277,15 +277,78 @@ static const Bit16u e1000_eeprom_template[64] = {
   0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0x0000,
 };
 
+// builtin configuration handling functions
+
+void e1000_init_options(void)
+{
+  bx_param_c *network = SIM->get_param("network");
+  bx_list_c *menu = new bx_list_c(network, "e1000", "Intel(R) Gigabit Ethernet");
+  menu->set_options(menu->SHOW_PARENT);
+  bx_param_bool_c *enabled = new bx_param_bool_c(menu,
+    "enabled",
+    "Enable Intel(R) Gigabit Ethernet emulation",
+    "Enables the Intel(R) Gigabit Ethernet emulation",
+    0);
+  bx_init_std_nic_options("Intel(R) Gigabit Ethernet", menu);
+  enabled->set_dependent_list(menu->clone());
+}
+
+Bit32s e1000_options_parser(const char *context, int num_params, char *params[])
+{
+  int ret, valid = 0;
+
+  if (!strcmp(params[0], "e1000")) {
+    bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_E1000);
+    if (!SIM->get_param_bool("enabled", base)->get()) {
+      SIM->get_param_enum("ethmod", base)->set_by_name("null");
+    }
+    for (int i = 1; i < num_params; i++) {
+      ret = bx_parse_nic_params(context, params[i], base);
+      if (ret > 0) {
+        valid |= ret;
+      }
+    }
+    if (!SIM->get_param_bool("enabled", base)->get()) {
+      if (valid == 0x04) {
+        SIM->get_param_bool("enabled", base)->set(1);
+      } else if (valid < 0x80) {
+        BX_PANIC(("%s: 'e1000' directive incomplete (mac is required)", context));
+      }
+    } else {
+      if (valid & 0x80) {
+        SIM->get_param_bool("enabled", base)->set(0);
+      }
+    }
+  } else {
+    BX_PANIC(("%s: unknown directive '%s'", context, params[0]));
+  }
+  return 0;
+}
+
+Bit32s e1000_options_save(FILE *fp)
+{
+  bx_write_pci_nic_options(fp, (bx_list_c*) SIM->get_param(BXPN_E1000));
+  return 0;
+}
+
+// device plugin entry points
+
 int libe1000_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theE1000Device = new bx_e1000_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theE1000Device, BX_PLUGIN_E1000);
+  // add new configuration parameter for the config interface
+  e1000_init_options();
+  // register add-on option for bochsrc and command line
+  SIM->register_addon_option("e1000", e1000_options_parser, e1000_options_save);
   return 0; // Success
 }
 
 void libe1000_LTX_plugin_fini(void)
 {
+  SIM->unregister_addon_option("e1000");
+  bx_list_c *menu = (bx_list_c*)SIM->get_param("network");
+  menu->remove("e1000");
   delete theE1000Device;
 }
 
@@ -342,6 +405,8 @@ Bit16u net_checksum_finish(Bit32u sum)
 }
 
 
+// the device object
+
 bx_e1000_c::bx_e1000_c()
 {
   put("E1000");
@@ -366,14 +431,19 @@ bx_e1000_c::~bx_e1000_c()
 
 void bx_e1000_c::init(void)
 {
-  bx_list_c *base;
   Bit8u macaddr[6];
   int i;
   Bit16u checksum = 0;
   const char *bootrom;
 
   // Read in values from config interface
-  base = (bx_list_c*) SIM->get_param(BXPN_E1000);
+  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_E1000);
+  // Check if the device is disabled or not configured
+  if (!SIM->get_param_bool("enabled", base)->get()) {
+    BX_INFO(("E1000 disabled"));
+    BX_UNREGISTER_DEVICE_DEVMODEL("e1000");
+    return;
+  }
   memcpy(macaddr, SIM->get_param_string("macaddr", base)->getptr(), 6);
 
   memcpy(BX_E1000_THIS s.eeprom_data, e1000_eeprom_template,
