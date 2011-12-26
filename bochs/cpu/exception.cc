@@ -750,7 +750,7 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
   BX_CPU_THIS_PTR debug_trap = 0;
   BX_CPU_THIS_PTR inhibit_mask = 0;
 
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
   BX_CPU_THIS_PTR in_event = 1;
 #endif
 
@@ -777,7 +777,7 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
   BX_CPU_THIS_PTR in_repeat = 0;
 #endif
 
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
   BX_CPU_THIS_PTR in_event = 0;
 #endif
 }
@@ -859,6 +859,10 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
 
 #if BX_SUPPORT_VMX
   VMexit_Event(0, BX_HARDWARE_EXCEPTION, vector, error_code, push_error);
+#endif
+
+#if BX_SUPPORT_SVM
+  SvmInterceptException(BX_HARDWARE_EXCEPTION, vector, error_code, push_error);
 #endif
 
   if (BX_CPU_THIS_PTR errorno > 0) {

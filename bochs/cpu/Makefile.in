@@ -61,6 +61,7 @@ OBJS = \
 	sse_string.o \
 	xsave.o \
 	aes.o \
+	svm.o \
 	vmx.o \
 	vmcs.o \
 	vmexit.o \
@@ -132,8 +133,7 @@ OBJS64 = \
 	bmi64.o \
 	tbm32.o \
 	tbm64.o \
-	xop.o \
-	svm.o
+	xop.o
 
 BX_INCLUDES = ../bochs.h ../config.h
 

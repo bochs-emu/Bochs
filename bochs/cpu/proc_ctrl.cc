@@ -424,49 +424,48 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoAVX(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  if (BX_CPU_THIS_PTR cr4.get_PCE() || CPL==0 || real_mode()) {
+  if (! BX_CPU_THIS_PTR cr4.get_PCE() && CPL != 0 ) {
+    BX_ERROR(("RDPMC: not allowed to use instruction !"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
 
 #if BX_SUPPORT_VMX
-    if (BX_CPU_THIS_PTR in_vmx_guest) 
-      VMexit_RDPMC(i);
+  if (BX_CPU_THIS_PTR in_vmx_guest) 
+    VMexit_RDPMC(i);
 #endif
 
 #if BX_SUPPORT_SVM
-    if (BX_CPU_THIS_PTR in_svm_guest) {
-      if (SVM_INTERCEPT(0, SVM_INTERCEPT0_RDPMC)) Svm_Vmexit(SVM_VMEXIT_RDPMC);
-    }
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_RDPMC)) Svm_Vmexit(SVM_VMEXIT_RDPMC);
+  }
 #endif
 
-    /* According to manual, Pentium 4 has 18 counters,
-     * previous versions have two.  And the P4 also can do
-     * short read-out (EDX always 0).  Otherwise it is
-     * limited to 40 bits.
-     */
+  /* According to manual, Pentium 4 has 18 counters,
+   * previous versions have two.  And the P4 also can do
+   * short read-out (EDX always 0).  Otherwise it is
+   * limited to 40 bits.
+   */
 
-    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE2)) { // Pentium 4 processor (see cpuid.cc)
-      if ((ECX & 0x7fffffff) >= 18)
-        exception(BX_GP_EXCEPTION, 0);
-    }
-    else {
-      if ((ECX & 0xffffffff) >= 2)
-        exception(BX_GP_EXCEPTION, 0);
-    }
-
-    // Most counters are for hardware specific details, which
-    // we anyhow do not emulate (like pipeline stalls etc)
-
-    // Could be interesting to count number of memory reads,
-    // writes.  Misaligned etc...  But to monitor bochs, this
-    // is easier done from the host.
-
-    RAX = 0;
-    RDX = 0; // if P4 and ECX & 0x10000000, then always 0 (short read 32 bits)
-
-    BX_ERROR(("RDPMC: Performance Counters Support not reasonably implemented yet"));
-  } else {
-    // not allowed to use RDPMC!
-    exception(BX_GP_EXCEPTION, 0);
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE2)) { // Pentium 4 processor (see cpuid.cc)
+    if ((ECX & 0x7fffffff) >= 18)
+      exception(BX_GP_EXCEPTION, 0);
   }
+  else {
+    if ((ECX & 0xffffffff) >= 2)
+      exception(BX_GP_EXCEPTION, 0);
+  }
+
+  // Most counters are for hardware specific details, which
+  // we anyhow do not emulate (like pipeline stalls etc)
+
+  // Could be interesting to count number of memory reads,
+  // writes.  Misaligned etc...  But to monitor bochs, this
+  // is easier done from the host.
+
+  RAX = 0;
+  RDX = 0; // if P4 and ECX & 0x10000000, then always 0 (short read 32 bits)
+
+  BX_ERROR(("RDPMC: Performance Counters Support not implemented yet"));
 #endif
 
   BX_NEXT_INSTR(i);

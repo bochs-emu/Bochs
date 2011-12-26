@@ -26,7 +26,15 @@
 
 enum SVM_intercept_codes {
    SVM_VMEXIT_CR0_READ  = 0,
+   SVM_VMEXIT_CR2_READ  = 2,
+   SVM_VMEXIT_CR3_READ  = 3,
+   SVM_VMEXIT_CR4_READ  = 4,
+   SVM_VMEXIT_CR8_READ  = 8,
    SVM_VMEXIT_CR0_WRITE = 16,
+   SVM_VMEXIT_CR2_WRITE = 18,
+   SVM_VMEXIT_CR3_WRITE = 19,
+   SVM_VMEXIT_CR4_WRITE = 20,
+   SVM_VMEXIT_CR8_WRITE = 24,
    SVM_VMEXIT_DR0_READ  = 32,
    SVM_VMEXIT_DR0_WRITE = 48,
    SVM_VMEXIT_EXCEPTION = 64,
@@ -105,6 +113,7 @@ enum SVM_intercept_codes {
 #define SVM_CONTROL_EXITINFO1                 (0x078)
 #define SVM_CONTROL_EXITINFO2                 (0x080)
 #define SVM_CONTROL_EXITINTINFO               (0x088)
+#define SVM_CONTROL_EXITINTINFO_ERROR_CODE    (0x08c)
 #define SVM_CONTROL_NESTED_PAGING_ENABLE      (0x090)
 
 #define SVM_CONTROL_EVENT_INJECTION           (0x0a8)
@@ -252,7 +261,9 @@ typedef struct bx_SVM_CONTROLS
   Bit32u exceptions_intercept;
 
   Bit32u intercept_vector[2];
-  Bit64u tsc_offset;
+
+  Bit32u exitintinfo;
+  Bit32u exitintinfo_error_code;
 
   bx_phy_address iopm_base;
   bx_phy_address msrpm_base;

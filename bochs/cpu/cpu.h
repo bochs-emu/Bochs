@@ -1000,7 +1000,6 @@ public: // for now...
 #endif
 
 #if BX_SUPPORT_VMX
-  bx_bool in_event;
   bx_bool in_vmx;
   bx_bool in_vmx_guest;
   bx_bool in_smm_vmx; // save in_vmx and in_vmx_guest flags when in SMM mode
@@ -1023,6 +1022,10 @@ public: // for now...
   bx_bool svm_gif; /* global interrupt enable flag, when zero all external interrupt disabled */
   bx_phy_address  vmcbptr;
   VMCB_CACHE vmcb;
+#endif
+
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
+  bx_bool in_event;
 #endif
 
   bx_bool EXT; /* 1 if processing external interrupt or exception
@@ -4216,7 +4219,6 @@ public: // for now...
   BX_SMF void VMexit_TripleFault(void);
   BX_SMF void VMexit_ExtInterrupt(void);
   BX_SMF void VMexit_TaskSwitch(bxInstruction_c *i, Bit16u tss_selector, unsigned source) BX_CPP_AttrRegparmN(3);
-  BX_SMF void VMexit_SoftwareInterrupt(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMexit_HLT(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMexit_PAUSE(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMexit_INVLPG(bxInstruction_c *i, bx_address laddr) BX_CPP_AttrRegparmN(2);
@@ -4263,10 +4265,10 @@ public: // for now...
   BX_SMF void svm_segment_read(bx_phy_address vmcbaddr, bx_segment_reg_t *seg, unsigned offset);
   BX_SMF void svm_segment_write(bx_phy_address vmcbaddr, bx_segment_reg_t *seg, unsigned offset);
   BX_SMF void SvmInjectEvents(bx_phy_address vmcbaddr);
-  BX_SMF void SvmInterceptException(bxInstruction_c *i, unsigned vector,
+  BX_SMF void SvmInterceptException(unsigned type, unsigned vector,
        Bit16u errcode, bx_bool errcode_valid, Bit64u qualification = 0);
   BX_SMF void SvmInterceptIO(bxInstruction_c *i, unsigned port, unsigned len);
-  BX_SMF void SvmInterceptMSR(bxInstruction_c *i, unsigned op, Bit32u msr);
+  BX_SMF void SvmInterceptMSR(unsigned op, Bit32u msr);
   BX_SMF void register_svm_state(bx_param_c *parent);
 #endif
 

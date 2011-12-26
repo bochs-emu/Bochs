@@ -1511,8 +1511,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 // keep bits ET(4), reserved bits 15:6, 17, 28:19, NW(29), CD(30)
 #define VMX_KEEP_CR0_BITS 0x7FFAFFD0
 
-  Bit32u old_cr0 = BX_CPU_THIS_PTR cr0.get32();
-  guest.cr0 = (old_cr0 & VMX_KEEP_CR0_BITS) | (guest.cr0 & ~VMX_KEEP_CR0_BITS);
+  guest.cr0 = (BX_CPU_THIS_PTR cr0.get32() & VMX_KEEP_CR0_BITS) | (guest.cr0 & ~VMX_KEEP_CR0_BITS);
 
   if (! check_CR0(guest.cr0)) {
     BX_PANIC(("VMENTER CR0 is broken !"));
@@ -1947,10 +1946,8 @@ void BX_CPU_C::VMexitLoadHostState(void)
   }
 #endif
 
-  Bit32u old_cr0 = BX_CPU_THIS_PTR cr0.get32();
-
   // ET, CD, NW, 28:19, 17, 15:6, and VMX fixed bits not modified Section 19.8
-  host_state->cr0 = (old_cr0 & VMX_KEEP_CR0_BITS) | (host_state->cr0 & ~VMX_KEEP_CR0_BITS);
+  host_state->cr0 = (BX_CPU_THIS_PTR cr0.get32() & VMX_KEEP_CR0_BITS) | (host_state->cr0 & ~VMX_KEEP_CR0_BITS);
 
   if (! check_CR0(host_state->cr0)) {
     BX_PANIC(("VMEXIT CR0 is broken !"));

@@ -1100,7 +1100,6 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_VMX
   BX_CPU_THIS_PTR in_vmx = BX_CPU_THIS_PTR in_vmx_guest = 0;
   BX_CPU_THIS_PTR in_smm_vmx = BX_CPU_THIS_PTR in_smm_vmx_guest = 0;
-  BX_CPU_THIS_PTR in_event = 0;
   BX_CPU_THIS_PTR vmx_interrupt_window = 0;
 #if BX_SUPPORT_VMX >= 2  
   BX_CPU_THIS_PTR pending_vmx_timer_expired = 0;
@@ -1115,6 +1114,10 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_SVM
   BX_CPU_THIS_PTR in_svm = BX_CPU_THIS_PTR in_svm_guest = 0;
   BX_CPU_THIS_PTR svm_gif = 1;
+#endif
+
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
+  BX_CPU_THIS_PTR in_event = 0;
 #endif
 
 #if BX_SUPPORT_SMP

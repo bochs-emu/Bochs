@@ -321,6 +321,13 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(bx_phy_address vmcb_addr)
     }
   }
 
+  guest.cpl = vmcb_read8(vmcb_addr, SVM_GUEST_CPL);
+
+  if (guest.sregs[BX_SEG_REG_SS].cache.dpl != guest.cpl) {
+    BX_ERROR(("VMRUN: VMCB SS.DPL != CPL"));
+    return 0;
+  }
+
   guest.gdtr.base = CanonicalizeAddress(vmcb_read64(vmcb_addr, SVM_GUEST_GDTR_BASE));
   guest.gdtr.limit = vmcb_read16(vmcb_addr, SVM_GUEST_GDTR_LIMIT);
 
@@ -331,8 +338,6 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(bx_phy_address vmcb_addr)
   guest.rip = vmcb_read64(vmcb_addr, SVM_GUEST_RIP);
   guest.rsp = vmcb_read64(vmcb_addr, SVM_GUEST_RSP);
   guest.rax = vmcb_read64(vmcb_addr, SVM_GUEST_RAX);
-
-  guest.cpl = vmcb_read8(vmcb_addr, SVM_GUEST_CPL);
 
   guest.inhibit_interrupts = vmcb_read8(vmcb_addr, SVM_CONTROL_INTERRUPT_SHADOW) & 0x1;
 
@@ -349,10 +354,12 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(bx_phy_address vmcb_addr)
   BX_CPU_THIS_PTR efer.set32(guest.efer.get32());
 
   if (! check_CR0(guest.cr0.get32())) {
-    BX_PANIC(("SVM: VMRUN CR0 is broken !"));
+    BX_ERROR(("SVM: VMRUN CR0 is broken !"));
+    return 0;
   }
   if (! check_CR4(guest.cr4.get32())) {
-    BX_PANIC(("SVM: VMRUN CR4 is broken !"));
+    BX_ERROR(("SVM: VMRUN CR4 is broken !"));
+    return 0;
   }
 
   BX_CPU_THIS_PTR cr0.set32(guest.cr0.get32());
@@ -433,6 +440,15 @@ void BX_CPU_C::Svm_Vmexit(int reason)
   //
 
   vmcb_write64(vmcb_addr, SVM_CONTROL_EXITCODE, (Bit64u) ((Bit64s) reason));
+
+  if (BX_CPU_THIS_PTR in_event) {
+    vmcb_write32(vmcb_addr, SVM_CONTROL_EXITINTINFO, BX_CPU_THIS_PTR vmcb.ctrls.exitintinfo | 0x80000000);
+    vmcb_write32(vmcb_addr, SVM_CONTROL_EXITINTINFO_ERROR_CODE, BX_CPU_THIS_PTR vmcb.ctrls.exitintinfo_error_code);
+    BX_CPU_THIS_PTR in_event = 0;
+  }
+  else {
+    vmcb_write32(vmcb_addr, SVM_CONTROL_EXITINTINFO, 0);
+  }
 
   //
   // Step 1: Save guest state in the VMCB
@@ -527,8 +543,8 @@ void BX_CPU_C::SvmInjectEvents(bx_phy_address vmcb_addr)
     BX_CPU_THIS_PTR errorno = 1;
   }
 
-//vm->idt_vector_info = vm->vmentry_interr_info & ~0x80000000;
-//vm->idt_vector_error_code = error_code;
+  BX_CPU_THIS_PTR vmcb.ctrls.exitintinfo = injecting_event & ~0x80000000;
+  BX_CPU_THIS_PTR vmcb.ctrls.exitintinfo_error_code = error_code;
 
   RSP_SPECULATIVE;
 
@@ -549,8 +565,49 @@ done:
   BX_CPU_THIS_PTR EXT = 0;
 }
 
-void BX_CPU_C::SvmInterceptException(bxInstruction_c *i, unsigned vector, Bit16u errcode, bx_bool errcode_valid, Bit64u qualification)
+void BX_CPU_C::SvmInterceptException(unsigned type, unsigned vector, Bit16u errcode, bx_bool errcode_valid, Bit64u qualification)
 {
+  if (! BX_CPU_THIS_PTR in_svm_guest) return;
+
+  BX_ASSERT(vector < 32);
+
+  if (! SVM_EXCEPTION_INTERCEPTED(vector)) {
+
+    // -----------------------------------------
+    //              EXITINTINFO
+    // -----------------------------------------
+    // [.7:.0] | Interrupt/Exception vector
+    // [10:.8] | Interrupt/Exception type
+    // [11:11] | error code pushed to the stack
+    // [30:12] | reserved
+    // [31:31] | interruption info valid
+    //
+
+    // record IDT vectoring information 
+    BX_CPU_THIS_PTR vmcb.ctrls.exitintinfo_error_code = errcode;
+    BX_CPU_THIS_PTR vmcb.ctrls.exitintinfo = vector | (type << 8);
+    if (errcode_valid)
+      BX_CPU_THIS_PTR vmcb.ctrls.exitintinfo |= (1 << 11); // error code delivered
+    return;
+  }
+
+  BX_ERROR(("SVM VMEXIT: event vector 0x%02x type %d error code=0x%04x", vector, type, errcode));
+
+  // VMEXIT is not considered to occur during event delivery if it results
+  // in a double fault exception that causes VMEXIT directly
+  if (vector == BX_DF_EXCEPTION)
+    BX_CPU_THIS_PTR in_event = 0; // clear in_event indication on #DF
+
+  if (errcode_valid) {
+    vmcb_write64(BX_CPU_THIS_PTR vmcbptr, SVM_CONTROL_EXITINFO1, errcode);
+    if (vector == BX_PF_EXCEPTION)
+      vmcb_write64(BX_CPU_THIS_PTR vmcbptr, SVM_CONTROL_EXITINFO2, qualification);
+  }
+
+  BX_CPU_THIS_PTR debug_trap = 0; // clear debug_trap field
+  BX_CPU_THIS_PTR inhibit_mask = 0;
+
+  Svm_Vmexit(SVM_VMEXIT_EXCEPTION + vector);
 }
 
 #define SVM_VMEXIT_IO_PORTIN        (1 << 0)
@@ -635,11 +692,12 @@ void BX_CPU_C::SvmInterceptIO(bxInstruction_c *i, unsigned port, unsigned len)
       qualification |= SVM_VMEXIT_IO_INSTR_LEN32;
 
     vmcb_write64(BX_CPU_THIS_PTR vmcbptr, SVM_CONTROL_EXITINFO1, qualification);
+    vmcb_write64(BX_CPU_THIS_PTR vmcbptr, SVM_CONTROL_EXITINFO2, RIP);
     Svm_Vmexit(SVM_VMEXIT_IO);
   }
 }
 
-void BX_CPU_C::SvmInterceptMSR(bxInstruction_c *i, unsigned op, Bit32u msr)
+void BX_CPU_C::SvmInterceptMSR(unsigned op, Bit32u msr)
 {
   if (! BX_CPU_THIS_PTR in_svm_guest) return;
 
@@ -650,15 +708,9 @@ void BX_CPU_C::SvmInterceptMSR(bxInstruction_c *i, unsigned op, Bit32u msr)
   bx_bool vmexit = 1;
 
   int msr_map_offset = -1;
-  if (msr <= 0x1fff) {
-    msr_map_offset = 0;
-  }
-  else if (msr <= 0xc0001fff) {
-    msr_map_offset = 2048;
-  }
-  else if (msr <= 0xc0011fff) {
-    msr_map_offset = 4096;
-  }
+  if (msr <= 0x1fff) msr_map_offset = 0;
+  else if (msr >= 0xc0000000 && msr <= 0xc0001fff) msr_map_offset = 2048;
+  else if (msr >= 0xc0010000 && msr <= 0xc0011fff) msr_map_offset = 4096;
 
   if (msr_map_offset >= 0) {
     bx_phy_address msr_bitmap_addr = BX_CPU_THIS_PTR vmcb.ctrls.msrpm_base + msr_map_offset;
@@ -906,6 +958,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPGA(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR in_svm_guest) {
     if (SVM_INTERCEPT(0, SVM_INTERCEPT0_INVLPGA)) Svm_Vmexit(SVM_VMEXIT_INVLPGA);
   }
+
+  TLB_flush();
 #endif
 
   BX_NEXT_TRACE(i);
@@ -943,9 +997,10 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, exceptions_intercept, BX_CPU_THIS_PTR vmcb.ctrls.exceptions_intercept);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, intercept_vector0, BX_CPU_THIS_PTR vmcb.ctrls.intercept_vector[0]);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, intercept_vector1, BX_CPU_THIS_PTR vmcb.ctrls.intercept_vector[1]);
-  BXRS_HEX_PARAM_FIELD(vmcb_ctrls, tsc_offset, BX_CPU_THIS_PTR vmcb.ctrls.tsc_offset);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, iopm_base, BX_CPU_THIS_PTR vmcb.ctrls.iopm_base);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, msrpm_base, BX_CPU_THIS_PTR vmcb.ctrls.msrpm_base);
+  BXRS_HEX_PARAM_FIELD(vmcb_ctrls, exitintinfo, BX_CPU_THIS_PTR vmcb.ctrls.exitintinfo);
+  BXRS_HEX_PARAM_FIELD(vmcb_ctrls, exitintinfo_errcode, BX_CPU_THIS_PTR vmcb.ctrls.exitintinfo_error_code);
 
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, v_tpr, BX_CPU_THIS_PTR vmcb.ctrls.v_tpr);
   BXRS_PARAM_BOOL(vmcb_ctrls, v_irq, BX_CPU_THIS_PTR vmcb.ctrls.v_irq);

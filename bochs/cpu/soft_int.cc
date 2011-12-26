@@ -66,6 +66,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT1(bxInstruction_c *i)
   VMexit_Event(i, BX_PRIVILEGED_SOFTWARE_INTERRUPT, 1, 0, 0);
 #endif
 
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(1, SVM_INTERCEPT1_ICEBP)) Svm_Vmexit(SVM_VMEXIT_ICEBP);
+  }
+#endif
+
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
@@ -92,6 +98,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT3(bxInstruction_c *i)
   VMexit_Event(i, BX_SOFTWARE_EXCEPTION, 3, 0, 0);
 #endif
 
+#if BX_SUPPORT_SVM
+  SvmInterceptException(BX_SOFTWARE_EXCEPTION, 3, 0, 0);
+#endif
+
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
@@ -109,20 +119,26 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT3(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
 {
-#if BX_DEBUGGER
-  BX_CPU_THIS_PTR show_flag |= Flag_softint;
-#endif
-
   Bit8u vector = i->Ib();
 
 #if BX_SUPPORT_VMX
   VMexit_Event(i, BX_SOFTWARE_INTERRUPT, vector, 0, 0);
 #endif
 
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_SOFTINT)) Svm_Vmexit(SVM_VMEXIT_SOFTWARE_INTERRUPT);
+  }
+#endif
+
 #ifdef SHOW_EXIT_STATUS
   if ((vector == 0x21) && (AH == 0x4c)) {
     BX_INFO(("INT 21/4C called AL=0x%02x, BX=0x%04x", (unsigned) AL, (unsigned) BX));
   }
+#endif
+
+#if BX_DEBUGGER
+  BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
 
   RSP_SPECULATIVE;
@@ -151,6 +167,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INTO(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
     VMexit_Event(i, BX_SOFTWARE_EXCEPTION, 4, 0, 0);
+#endif
+
+#if BX_SUPPORT_SVM
+    SvmInterceptException(BX_SOFTWARE_EXCEPTION, 4, 0, 0);
 #endif
 
 #if BX_DEBUGGER

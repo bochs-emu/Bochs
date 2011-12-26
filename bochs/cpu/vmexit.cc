@@ -368,11 +368,6 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_TaskSwitch(bxInstruction_c *i, Bit1
   VMexit(i, VMX_VMEXIT_TASK_SWITCH, tss_selector | (source << 30));
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_SoftwareInterrupt(bxInstruction_c *i)
-{
-  if (! BX_CPU_THIS_PTR in_vmx_guest) return;
-}
-
 void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_MSR(bxInstruction_c *i, unsigned op, Bit32u msr)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
