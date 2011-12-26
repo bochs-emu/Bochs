@@ -349,6 +349,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
   Bit32u index = ECX;
   Bit64u val64 = 0;
 
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_MSR)) SvmInterceptMSR(BX_READ, index);
+  }
+#endif
+
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)
     VMexit_MSR(i, VMX_VMEXIT_RDMSR, index);
@@ -834,6 +840,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 
   Bit64u val_64 = ((Bit64u) EDX << 32) | EAX;
   Bit32u index = ECX;
+
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_MSR)) SvmInterceptMSR(BX_WRITE, index);
+  }
+#endif
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)

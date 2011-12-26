@@ -815,7 +815,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
 
   // LMSW cannot clear PE
   if (BX_CPU_THIS_PTR cr0.get_PE())
-    msw |= 0x1; // adjust PE bit to current value of 1
+    msw |= BX_CR0_PE_MASK; // adjust PE bit to current value of 1
 
   msw &= 0xf; // LMSW only affects last 4 flags
 

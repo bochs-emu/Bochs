@@ -1112,7 +1112,7 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
 #if BX_SUPPORT_SVM
-  BX_CPU_THIS_PTR in_svm = BX_CPU_THIS_PTR in_svm_guest = 0;
+  BX_CPU_THIS_PTR in_svm_guest = 0;
   BX_CPU_THIS_PTR svm_gif = 1;
 #endif
 

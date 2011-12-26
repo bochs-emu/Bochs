@@ -1017,7 +1017,6 @@ public: // for now...
 #endif
 
 #if BX_SUPPORT_SVM
-  bx_bool in_svm;
   bx_bool in_svm_guest;
   bx_bool svm_gif; /* global interrupt enable flag, when zero all external interrupt disabled */
   bx_phy_address  vmcbptr;
@@ -4250,21 +4249,21 @@ public: // for now...
 
 #if BX_SUPPORT_SVM
   BX_SMF void SvmEnterSaveHostState(SVM_HOST_STATE *host);
-  BX_SMF bx_bool SvmEnterLoadCheckControls(bx_phy_address vmcb_addr, SVM_CONTROLS *ctrls);
-  BX_SMF bx_bool SvmEnterLoadCheckGuestState(bx_phy_address vmcb_addr);
+  BX_SMF bx_bool SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls);
+  BX_SMF bx_bool SvmEnterLoadCheckGuestState(void);
   BX_SMF void Svm_Vmexit(int reason);
   BX_SMF void SvmExitLoadHostState(SVM_HOST_STATE *host);
-  BX_SMF Bit8u vmcb_read8(bx_phy_address vmcb_addr, unsigned offset);
-  BX_SMF Bit16u vmcb_read16(bx_phy_address vmcb_addr, unsigned offset);
-  BX_SMF Bit32u vmcb_read32(bx_phy_address vmcb_addr, unsigned offset);
-  BX_SMF Bit64u vmcb_read64(bx_phy_address vmcb_addr, unsigned offset);
-  BX_SMF void vmcb_write8(bx_phy_address vmcb_addr, unsigned offset, Bit8u val_8);
-  BX_SMF void vmcb_write16(bx_phy_address vmcb_addr, unsigned offset, Bit16u val_16);
-  BX_SMF void vmcb_write32(bx_phy_address vmcb_addr, unsigned offset, Bit32u val_32);
-  BX_SMF void vmcb_write64(bx_phy_address vmcb_addr, unsigned offset, Bit64u val_64);
-  BX_SMF void svm_segment_read(bx_phy_address vmcbaddr, bx_segment_reg_t *seg, unsigned offset);
-  BX_SMF void svm_segment_write(bx_phy_address vmcbaddr, bx_segment_reg_t *seg, unsigned offset);
-  BX_SMF void SvmInjectEvents(bx_phy_address vmcbaddr);
+  BX_SMF Bit8u vmcb_read8(unsigned offset);
+  BX_SMF Bit16u vmcb_read16(unsigned offset);
+  BX_SMF Bit32u vmcb_read32(unsigned offset);
+  BX_SMF Bit64u vmcb_read64(unsigned offset);
+  BX_SMF void vmcb_write8(unsigned offset, Bit8u val_8);
+  BX_SMF void vmcb_write16(unsigned offset, Bit16u val_16);
+  BX_SMF void vmcb_write32(unsigned offset, Bit32u val_32);
+  BX_SMF void vmcb_write64(unsigned offset, Bit64u val_64);
+  BX_SMF void svm_segment_read(bx_segment_reg_t *seg, unsigned offset);
+  BX_SMF void svm_segment_write(bx_segment_reg_t *seg, unsigned offset);
+  BX_SMF void SvmInjectEvents(void);
   BX_SMF void SvmInterceptException(unsigned type, unsigned vector,
        Bit16u errcode, bx_bool errcode_valid, Bit64u qualification = 0);
   BX_SMF void SvmInterceptIO(bxInstruction_c *i, unsigned port, unsigned len);

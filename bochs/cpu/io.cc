@@ -884,6 +884,13 @@ bx_bool BX_CPP_AttrRegparmN(3) BX_CPU_C::allow_io(bxInstruction_c *i, Bit16u por
       return(0);
   }
 
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_IO))
+      SvmInterceptIO(i, port, len);
+  }
+#endif
+
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)
     VMexit_IO(i, port, len);

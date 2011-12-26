@@ -935,13 +935,13 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
 #if BX_SUPPORT_VMX >= 2
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST) {
-     if (~guest.cr0 & (VMX_MSR_CR0_FIXED0 & ~0x80000001 /* PG and PE bits */)) {
+     if (~guest.cr0 & (VMX_MSR_CR0_FIXED0 & ~(BX_CR0_PE_MASK | BX_CR0_PG_MASK))) {
         BX_ERROR(("VMENTER FAIL: VMCS guest invalid CR0"));
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
      }
 
-     bx_bool pe =  guest.cr0 & 0x1;
-     bx_bool pg = (guest.cr0 >> 31) & 0x1;
+     bx_bool pe = (guest.cr0 & BX_CR0_PE_MASK) != 0;
+     bx_bool pg = (guest.cr0 & BX_CR0_PG_MASK) != 0;
      if (pg && !pe) {
         BX_ERROR(("VMENTER FAIL: VMCS unrestricted guest CR0.PG without CR0.PE"));
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
@@ -963,7 +963,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
 #if BX_SUPPORT_VMX >= 2
   bx_bool real_mode_guest = 0;
-  if (! (guest.cr0 & 0x1))
+  if (! (guest.cr0 & BX_CR0_PE_MASK))
      real_mode_guest = 1;
 #endif
 
@@ -1465,7 +1465,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     }
   }
 
-  if (! x86_64_guest && (guest.cr4 & BX_CR4_PAE_MASK) != 0 && /* CR0.PG is set */ ((guest.cr0 >> 31) & 1) != 0) {
+  if (! x86_64_guest && (guest.cr4 & BX_CR4_PAE_MASK) != 0 && (guest.cr0 & BX_CR0_PG_MASK) != 0) {
 #if BX_SUPPORT_VMX >= 2
     if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_EPT_ENABLE) {
       for (n=0;n<4;n++)
