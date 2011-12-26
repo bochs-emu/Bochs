@@ -225,6 +225,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
     VMexit_WBINVD(i);
 #endif
 
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(1, SVM_INTERCEPT1_WBINVD)) Svm_Vmexit(SVM_VMEXIT_WBINVD);
+  }
+#endif
+
   invalidate_prefetch_q();
 
   BX_DEBUG(("WBINVD: Flush internal caches !"));

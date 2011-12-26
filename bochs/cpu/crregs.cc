@@ -635,6 +635,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR2Rq(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if(SVM_CR_WRITE_INTERCEPTED(2)) Svm_Vmexit(SVM_VMEXIT_CR2_WRITE);
+  }
+#endif
+
   BX_CPU_THIS_PTR cr2 = BX_READ_64BIT_REG(i->rm());
 
   BX_NEXT_INSTR(i);
@@ -733,6 +739,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR2(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if(SVM_CR_READ_INTERCEPTED(2)) Svm_Vmexit(SVM_VMEXIT_CR2_READ);
+  }
+#endif
+
   BX_WRITE_64BIT_REG(i->rm(), BX_CPU_THIS_PTR cr2);
 
   BX_NEXT_INSTR(i);
@@ -749,6 +761,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR3(bxInstruction_c *i)
     BX_ERROR(("MOV_RqCR3: #GP(0) if CPL is not 0"));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if(SVM_CR_READ_INTERCEPTED(3)) Svm_Vmexit(SVM_VMEXIT_CR3_READ);
+  }
+#endif
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)
@@ -1180,6 +1198,12 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
 {
   if (! check_CR4(val)) return 0;
 
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if(SVM_CR_WRITE_INTERCEPTED(4)) Svm_Vmexit(SVM_VMEXIT_CR4_WRITE);
+  }
+#endif
+
 #if BX_CPU_LEVEL >= 6
   // Modification of PGE,PAE,PSE,PCIDE,SMEP flushes TLB cache according to docs.
   if ((val & BX_CR4_FLUSH_TLB_MASK) != (BX_CPU_THIS_PTR cr4.val32 & BX_CR4_FLUSH_TLB_MASK)) {
@@ -1226,6 +1250,12 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR3(bx_address val)
       BX_ERROR(("SetCR3(): Attempt to write to reserved bits of CR3 !"));
       return 0;
     }
+  }
+#endif
+
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if(SVM_CR_WRITE_INTERCEPTED(3)) Svm_Vmexit(SVM_VMEXIT_CR3_WRITE);
   }
 #endif
 
@@ -1341,6 +1371,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
     if(VMexit_CLTS(i)) {
       BX_NEXT_TRACE(i);
     }
+  }
+#endif
+
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if(SVM_CR_WRITE_INTERCEPTED(0)) Svm_Vmexit(SVM_VMEXIT_CR0_WRITE);
   }
 #endif
 

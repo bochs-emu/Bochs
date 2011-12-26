@@ -329,6 +329,11 @@ typedef struct bx_VMCB_CACHE
 #define SVM_INTERCEPT1_SKINIT             (1 <<  6)
 #define SVM_INTERCEPT1_RDTSCP             (1 <<  7)
 #define SVM_INTERCEPT1_ICEBP              (1 <<  8)
+#define SVM_INTERCEPT1_WBINVD             (1 <<  9)
+#define SVM_INTERCEPT1_MONITOR            (1 << 10)
+#define SVM_INTERCEPT1_MWAIT              (1 << 11)
+#define SVM_INTERCEPT1_MWAIT_ARMED        (1 << 12)
+#define SVM_INTERCEPT1_XSETBV             (1 << 13)
 
 #define SVM_INTERCEPT(vector, intercept_bit) \
   (BX_CPU_THIS_PTR vmcb.ctrls.intercept_vector[vector] & (intercept_bit))
