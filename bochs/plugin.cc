@@ -831,7 +831,6 @@ static builtin_plugin_t builtin_opt_plugins[] = {
   BUILTIN_PLUGIN_ENTRY(iodebug),
 #endif
 #if BX_SUPPORT_PCI
-  BUILTIN_PLUGIN_ENTRY(pci_ide),
   BUILTIN_PLUGIN_ENTRY(acpi),
 #endif
 #if BX_SUPPORT_APIC

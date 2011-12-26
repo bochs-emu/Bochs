@@ -8,7 +8,7 @@
 # only available when the plugin device is loaded. The value "1" means to load
 # the plugin and "0" will unload it (if loaded before).
 # These plugins are currently supported: 'acpi', 'biosdev', 'e1000', 'es1370',
-# 'extfpuirq', 'gameport', 'iodebug', 'speaker' and 'unmapped'.
+# 'extfpuirq', 'gameport', 'ioapic', 'iodebug', 'speaker' and 'unmapped'.
 #=======================================================================
 #plugin_ctrl: unmapped=1, biosdev=1, speaker=1, e1000=1
 

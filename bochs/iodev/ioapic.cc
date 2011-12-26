@@ -44,6 +44,7 @@ int libioapic_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, cha
 
 void libioapic_LTX_plugin_fini(void)
 {
+  bx_devices.pluginIOAPIC = &bx_devices.stubIOAPIC;
   delete theIOAPIC;
 }
 

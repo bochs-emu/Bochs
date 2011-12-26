@@ -64,6 +64,7 @@ int libgameport_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, c
 
 void libgameport_LTX_plugin_fini(void)
 {
+  bx_devices.pluginGameport = &bx_devices.stubGameport;
   delete theGameport;
 }
 

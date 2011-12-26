@@ -77,6 +77,7 @@ int libacpi_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char 
 
 void libacpi_LTX_plugin_fini(void)
 {
+  bx_devices.pluginACPIController = &bx_devices.stubACPIController;
   delete theACPIController;
 }
 

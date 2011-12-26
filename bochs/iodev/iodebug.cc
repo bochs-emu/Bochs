@@ -45,6 +45,7 @@ int libiodebug_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, ch
 
 void libiodebug_LTX_plugin_fini(void)
 {
+  bx_devices.pluginIODebug = &bx_devices.stubIODebug;
   delete theIODebugDevice;
 }
 

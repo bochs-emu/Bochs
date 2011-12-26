@@ -48,6 +48,7 @@ int libspeaker_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, ch
 
 void libspeaker_LTX_plugin_fini(void)
 {
+  bx_devices.pluginSpeaker = &bx_devices.stubSpeaker;
   delete theSpeaker;
 }
 
