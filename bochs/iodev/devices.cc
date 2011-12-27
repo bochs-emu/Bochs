@@ -183,11 +183,15 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 #if BX_SUPPORT_PCIUSB
     PLUG_load_plugin(usb_common, PLUGTYPE_CORE);
 #endif
+    PLUG_load_plugin(acpi, PLUGTYPE_OPTIONAL);
 #else
     BX_ERROR(("Bochs is not compiled with PCI support"));
 #endif
   }
 
+#if BX_SUPPORT_APIC
+  PLUG_load_plugin(ioapic, PLUGTYPE_OPTIONAL);
+#endif
   PLUG_load_plugin(keyboard, PLUGTYPE_OPTIONAL);
 #if BX_SUPPORT_BUSMOUSE
   if (mouse_type == BX_MOUSE_TYPE_BUS) {

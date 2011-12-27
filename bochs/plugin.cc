@@ -830,12 +830,6 @@ static builtin_plugin_t builtin_opt_plugins[] = {
 #if BX_SUPPORT_IODEBUG
   BUILTIN_PLUGIN_ENTRY(iodebug),
 #endif
-#if BX_SUPPORT_PCI
-  BUILTIN_PLUGIN_ENTRY(acpi),
-#endif
-#if BX_SUPPORT_APIC
-  BUILTIN_PLUGIN_ENTRY(ioapic),
-#endif
 #if BX_SUPPORT_E1000
   BUILTIN_PLUGIN_ENTRY(e1000),
 #endif
