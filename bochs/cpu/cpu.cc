@@ -621,24 +621,33 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
   //   Machine Check
   // (bochs doesn't support these)
 
+#if BX_SUPPORT_SVM
+  // debug exceptions or trap due to breakpoint register match
+  // ignored and discarded if GIF == 0
+  // debug traps due to EFLAGS.TF remain untouched
+  if (! BX_CPU_THIS_PTR svm_gif)
+    BX_CPU_THIS_PTR debug_trap &= ~BX_DEBUG_SINGLE_STEP_BIT;
+#endif
+
   // Priority 2: Trap on Task Switch
   //   T flag in TSS is set
-  if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_TASK_SWITCH_BIT)
+  if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_TASK_SWITCH_BIT) {
     exception(BX_DB_EXCEPTION, 0); // no error, not interrupt
+  }
 
   // Priority 3: External Hardware Interventions
   //   FLUSH
   //   STOPCLK
   //   SMI
   //   INIT
-  if (BX_CPU_THIS_PTR pending_SMI && ! BX_CPU_THIS_PTR smm_mode())
+  if (BX_CPU_THIS_PTR pending_SMI && ! BX_CPU_THIS_PTR smm_mode() && SVM_GIF)
   {
     // clear SMI pending flag and disable NMI when SMM was accepted
     BX_CPU_THIS_PTR pending_SMI = 0;
     enter_system_management_mode();
   }
 
-  if (BX_CPU_THIS_PTR pending_INIT && ! BX_CPU_THIS_PTR disable_INIT) {
+  if (BX_CPU_THIS_PTR pending_INIT && ! BX_CPU_THIS_PTR disable_INIT && SVM_GIF) {
 #if BX_SUPPORT_VMX
     if (BX_CPU_THIS_PTR in_vmx_guest) {
       BX_ERROR(("VMEXIT: INIT pin asserted"));
@@ -686,7 +695,7 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
   // Priority 5: External Interrupts
   //   NMI Interrupts
   //   Maskable Hardware Interrupts
-  if (interrupts_inhibited(BX_INHIBIT_INTERRUPTS)) {
+  if (interrupts_inhibited(BX_INHIBIT_INTERRUPTS) || ! SVM_GIF) {
     // Processing external interrupts is inhibited on this
     // boundary because of certain instructions like STI.
   }
@@ -771,7 +780,7 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
   //   Alignment check
   // (handled by rest of the code)
 
-  if (!((BX_CPU_INTR && interrupts_enabled()) ||
+  if (!((BX_CPU_INTR && interrupts_enabled() && SVM_GIF) ||
         BX_CPU_THIS_PTR debug_trap ||
 //      BX_CPU_THIS_PTR get_TF() // implies debug_trap is set
         BX_HRQ

@@ -364,6 +364,19 @@ void bx_local_apic_c::write(bx_phy_address addr, void *data, unsigned len)
 #define BX_LAPIC_TIMER_DIVIDE_CFG     0x3E0
 #define BX_LAPIC_SELF_IPI             0x3F0
 
+// extended AMD 
+#define BX_LAPIC_EXT_APIC_FEATURE     0x400
+#define BX_LAPIC_EXT_APIC_CONTROL     0x410
+#define BX_LAPIC_SPECIFIC_EOI         0x420
+#define BX_LAPIC_IER1                 0x480
+#define BX_LAPIC_IER2                 0x490
+#define BX_LAPIC_IER3                 0x4A0
+#define BX_LAPIC_IER4                 0x4B0
+#define BX_LAPIC_IER5                 0x4C0
+#define BX_LAPIC_IER6                 0x4D0
+#define BX_LAPIC_IER7                 0x4E0
+#define BX_LAPIC_IER8                 0x4F0
+
 // APIC write: 4 byte write to 16-byte aligned APIC address
 void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
 {

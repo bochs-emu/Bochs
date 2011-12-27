@@ -448,9 +448,6 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   // Load guest state
   //
 
-  BX_CPU_THIS_PTR in_svm_guest = 1;
-  BX_CPU_THIS_PTR svm_gif = 1;
-
   BX_CPU_THIS_PTR tsc_offset = vmcb_read64(SVM_CONTROL_TSC_OFFSET);
 
   BX_CPU_THIS_PTR efer.set32(guest.efer.get32());
@@ -851,6 +848,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMRUN(bxInstruction_c *i)
   //
   if (!SvmEnterLoadCheckGuestState())
     Svm_Vmexit(SVM_VMEXIT_INVALID);
+
+  BX_CPU_THIS_PTR in_svm_guest = 1;
+  BX_CPU_THIS_PTR svm_gif = 1;
 
   //
   // Step 4: Inject events to the guest

@@ -1022,6 +1022,14 @@ public: // for now...
   bx_phy_address  vmcbptr;
   bx_hostpageaddr_t vmcbhostptr;
   VMCB_CACHE vmcb;
+
+// make SVM integration easier
+#define SVM_GIF (BX_CPU_THIS_PTR svm_gif)
+
+#else
+
+#define SVM_GIF (1)
+
 #endif
 
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
