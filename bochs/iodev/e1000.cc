@@ -737,6 +737,9 @@ bx_bool bx_e1000_c::mem_read_handler(bx_phy_address addr, unsigned len,
           BX_DEBUG(("mem read from offset 0x%08x returns 0", offset));
         }
     }
+  } else if ((len == 1) && (offset == E1000_STATUS)) {
+    BX_DEBUG(("mem read from offset 0x%08x with len 1 -", offset));
+    value = BX_E1000_THIS s.mac_reg[index] & 0xff;
   } else {
     BX_DEBUG(("mem read from offset 0x%08x with len %d not implemented", offset, len));
   }
@@ -1523,7 +1526,7 @@ void bx_e1000_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
     oldval = BX_E1000_THIS pci_conf[address+i];
     switch (address+i) {
       case 0x04:
-        value8 &= 0x03;
+        value8 &= 0x07;
         break;
       case 0x3c:
         if (value8 != oldval) {
