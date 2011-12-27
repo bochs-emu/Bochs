@@ -50,7 +50,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PAUSE(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_PAUSE)) Svm_Vmexit(SVM_VMEXIT_PAUSE);
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_PAUSE)) Svm_Vmexit(SVM_VMEXIT_PAUSE);
   }
 #endif
 
@@ -80,7 +80,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_CPUID)) Svm_Vmexit(SVM_VMEXIT_CPUID);
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_CPUID)) Svm_Vmexit(SVM_VMEXIT_CPUID);
   }
 #endif
 
@@ -105,6 +105,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
 //
 void BX_CPU_C::shutdown(void)
 {
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_SHUTDOWN)) Svm_Vmexit(SVM_VMEXIT_SHUTDOWN);
+  }
+#endif
+
   BX_PANIC(("Entering to shutdown state still not implemented"));
 
   BX_CPU_THIS_PTR clear_IF();
@@ -149,7 +155,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_HLT)) Svm_Vmexit(SVM_VMEXIT_HLT);
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_HLT)) Svm_Vmexit(SVM_VMEXIT_HLT);
   }
 #endif
 
@@ -197,7 +203,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVD(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_INVD)) Svm_Vmexit(SVM_VMEXIT_INVD);
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_INVD)) Svm_Vmexit(SVM_VMEXIT_INVD);
   }
 #endif
 
@@ -227,7 +233,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(1, SVM_INTERCEPT1_WBINVD)) Svm_Vmexit(SVM_VMEXIT_WBINVD);
+    if (SVM_INTERCEPT(SVM_INTERCEPT1_WBINVD)) Svm_Vmexit(SVM_VMEXIT_WBINVD);
   }
 #endif
 
@@ -442,7 +448,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_RDPMC)) Svm_Vmexit(SVM_VMEXIT_RDPMC);
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_RDPMC)) Svm_Vmexit(SVM_VMEXIT_RDPMC);
   }
 #endif
 
@@ -513,7 +519,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest)
-    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_RDTSC)) Svm_Vmexit(SVM_VMEXIT_RDTSC);
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_RDTSC)) Svm_Vmexit(SVM_VMEXIT_RDTSC);
 #endif
 
   // return ticks
@@ -554,7 +560,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest)
-    if (SVM_INTERCEPT(1, SVM_INTERCEPT1_RDTSCP)) Svm_Vmexit(SVM_VMEXIT_RDTSCP);
+    if (SVM_INTERCEPT(SVM_INTERCEPT1_RDTSCP)) Svm_Vmexit(SVM_VMEXIT_RDTSCP);
 #endif
 
   // return ticks
@@ -708,8 +714,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
     // When "interrupt window exiting" VMX control is set MWAIT instruction
     // won't cause the processor to enter BX_ACTIVITY_STATE_MWAIT_IF sleep
     // state with EFLAGS.IF = 0
-    if (BX_CPU_THIS_PTR vmx_interrupt_window && ! BX_CPU_THIS_PTR get_IF())
-    {
+    if (BX_CPU_THIS_PTR vmx_interrupt_window && ! BX_CPU_THIS_PTR get_IF()) {
       BX_NEXT_TRACE(i);
     }
 #endif

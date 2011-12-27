@@ -409,7 +409,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(1, SVM_INTERCEPT1_XSETBV)) Svm_Vmexit(SVM_VMEXIT_XSETBV);
+    if (SVM_INTERCEPT(SVM_INTERCEPT1_XSETBV)) Svm_Vmexit(SVM_VMEXIT_XSETBV);
   }
 #endif
 

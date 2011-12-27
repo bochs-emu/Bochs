@@ -1017,7 +1017,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(bx_address val)
   if (BX_CPU_THIS_PTR in_svm_guest) {
     if(SVM_CR_WRITE_INTERCEPTED(0)) Svm_Vmexit(SVM_VMEXIT_CR0_WRITE);
 
-    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_CR0_WRITE_NO_TS_MP)) {
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_CR0_WRITE_NO_TS_MP)) {
       if ((oldCR0 & 0xfffffff5) != (val_32 & 0xfffffff5)) {
         // any other bit except TS or MP had changed
         Svm_Vmexit(SVM_VMEXIT_CR0_SEL_WRITE);
@@ -1302,6 +1302,12 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetEFER(bx_address val_64)
 #if BX_CPU_LEVEL >= 6
 void BX_CPU_C::WriteCR8(bxInstruction_c *i, bx_address val)
 {
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_CR_WRITE_INTERCEPTED(8)) Svm_Vmexit(SVM_VMEXIT_CR8_READ);
+  }
+#endif
+
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)
     VMexit_CR8_Write(i);
@@ -1312,47 +1318,55 @@ void BX_CPU_C::WriteCR8(bxInstruction_c *i, bx_address val)
   //   APIC.TPR[3:0] = 0
   // Reads of CR8 return zero extended APIC.TPR[7:4]
   // Write to CR8 update APIC.TPR[7:4]
-#if BX_SUPPORT_APIC
   if (val & BX_CONST64(0xfffffffffffffff0)) {
     BX_ERROR(("WriteCR8: Attempt to set reserved bits of CR8"));
     exception(BX_GP_EXCEPTION, 0);
   }
+  unsigned tpr = (val & 0xf) << 4;
+
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    SVM_V_TPR = tpr;
+    if (SVM_V_INTR_MASKING) return;
+  }
+#endif
+
 #if BX_SUPPORT_VMX && BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR in_vmx_guest && VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW)) {
-    VMX_Write_VTPR((val & 0xf) << 4);
+    VMX_Write_VTPR(tpr);
+    return;
   }
-  else
 #endif
-  {
-    BX_CPU_THIS_PTR lapic.set_tpr((val & 0xf) << 4);
-  }
-#endif // BX_SUPPORT_APIC
+
+  BX_CPU_THIS_PTR lapic.set_tpr(tpr);
 }
 
 Bit32u BX_CPU_C::ReadCR8(bxInstruction_c *i)
 {
-  Bit32u tpr = 0;
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_CR_WRITE_INTERCEPTED(8)) Svm_Vmexit(SVM_VMEXIT_CR8_READ);
+
+    if (SVM_V_INTR_MASKING) return SVM_V_TPR;
+  }
+#endif
 
 #if BX_SUPPORT_VMX && BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR in_vmx_guest)
     VMexit_CR8_Read(i);
 
   if (BX_CPU_THIS_PTR in_vmx_guest && VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW)) {
-     tpr = (VMX_Read_VTPR() >> 4) & 0xf;
+     Bit32u tpr = (VMX_Read_VTPR() >> 4) & 0xf;
+     return tpr;
   }
-  else
 #endif
-  {
-    // CR8 is aliased to APIC->TASK PRIORITY register
-    //   APIC.TPR[7:4] = CR8[3:0]
-    //   APIC.TPR[3:0] = 0
-    // Reads of CR8 return zero extended APIC.TPR[7:4]
-    // Write to CR8 update APIC.TPR[7:4]
-#if BX_SUPPORT_APIC
-    tpr = (BX_CPU_THIS_PTR lapic.get_tpr() >> 4) & 0xf;
-#endif
-  }
 
+  // CR8 is aliased to APIC->TASK PRIORITY register
+  //   APIC.TPR[7:4] = CR8[3:0]
+  //   APIC.TPR[3:0] = 0
+  // Reads of CR8 return zero extended APIC.TPR[7:4]
+  // Write to CR8 update APIC.TPR[7:4]
+  Bit32u tpr = (BX_CPU_THIS_PTR lapic.get_tpr() >> 4) & 0xf;
   return tpr;
 }
 

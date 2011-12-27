@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2012 Stanislav Shwartsman
+//   Copyright (c) 2011-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -23,6 +23,8 @@
 
 #ifndef _BX_SVM_AMD_H_
 #define _BX_SVM_AMD_H_
+
+#if BX_SUPPORT_SVM
 
 enum SVM_intercept_codes {
    SVM_VMEXIT_CR0_READ  = 0,
@@ -106,8 +108,11 @@ enum SVM_intercept_codes {
 #define SVM_CONTROL_TSC_OFFSET                (0x050)
 #define SVM_CONTROL_GUEST_ASID                (0x058)
 #define SVM_CONTROL_TLB_CONTROL               (0x05c)
-#define SVM_CONTROL_VINTERRUPT_CONTROL        (0x060) /* VTPR, VIRQ, V_INTR_PRIO, VINTR_MASKING and etc */
-#define SVM_CONTROL_VINTERRUPT_VECTOR         (0x064)
+#define SVM_CONTROL_VTPR                      (0x060)
+#define SVM_CONTROL_VIRQ                      (0x061)
+#define SVM_CONTROL_VINTR_PRIO_IGN_TPR        (0x062)
+#define SVM_CONTROL_VINTR_MASKING             (0x063)
+#define SVM_CONTROL_VINTR_VECTOR              (0x064)
 #define SVM_CONTROL_INTERRUPT_SHADOW          (0x068)
 #define SVM_CONTROL_EXITCODE                  (0x070)
 #define SVM_CONTROL_EXITINFO1                 (0x078)
@@ -277,6 +282,19 @@ typedef struct bx_SVM_CONTROLS
 
 } SVM_CONTROLS;
 
+#if defined(NEED_CPU_REG_SHORTCUTS)
+
+#define SVM_V_TPR          (BX_CPU_THIS_PTR vmcb.ctrls.v_tpr)
+#define SVM_V_IRQ          (BX_CPU_THIS_PTR vmcb.ctrls.v_irq)
+#define SVM_V_INTR_PRIO    (BX_CPU_THIS_PTR vmcb.ctrls.v_intr_prio)
+#define SVM_V_IGNORE_TPR   (BX_CPU_THIS_PTR vmcb.ctrls.v_ignore_tpr)
+#define SVM_V_INTR_MASKING (BX_CPU_THIS_PTR vmcb.ctrls.v_intr_masking)
+#define SVM_V_INTR_VECTOR  (BX_CPU_THIS_PTR vmcb.ctrls.v_intr_vector)
+
+#define SVM_HOST_IF (BX_CPU_THIS_PTR vmcb.host_state.eflags & EFlagsIFMask)
+
+#endif
+
 typedef struct bx_VMCB_CACHE
 {
   SVM_HOST_STATE host_state;
@@ -287,56 +305,56 @@ typedef struct bx_VMCB_CACHE
 //  SVM intercept controls
 // ========================
 
-#define SVM_INTERCEPT0_INTR               (1 <<  0)
-#define SVM_INTERCEPT0_NMI                (1 <<  1)
-#define SVM_INTERCEPT0_SMI                (1 <<  2)
-#define SVM_INTERCEPT0_INIT               (1 <<  3)
-#define SVM_INTERCEPT0_VINTR              (1 <<  4)
-#define SVM_INTERCEPT0_CR0_WRITE_NO_TS_MP (1 <<  5)
-#define SVM_INTERCEPT0_IDTR_READ          (1 <<  6)
-#define SVM_INTERCEPT0_GDTR_READ          (1 <<  7)
-#define SVM_INTERCEPT0_LDTR_READ          (1 <<  8)
-#define SVM_INTERCEPT0_TR_READ            (1 <<  9)
-#define SVM_INTERCEPT0_IDTR_WRITE         (1 << 10)
-#define SVM_INTERCEPT0_GDTR_WRITE         (1 << 11)
-#define SVM_INTERCEPT0_LDTR_WRITE         (1 << 12)
-#define SVM_INTERCEPT0_TR_WRITE           (1 << 13)
-#define SVM_INTERCEPT0_RDTSC              (1 << 14)
-#define SVM_INTERCEPT0_RDPMC              (1 << 15)
-#define SVM_INTERCEPT0_PUSHF              (1 << 16)
-#define SVM_INTERCEPT0_POPF               (1 << 17)
-#define SVM_INTERCEPT0_CPUID              (1 << 18)
-#define SVM_INTERCEPT0_RSM                (1 << 19)
-#define SVM_INTERCEPT0_IRET               (1 << 20)
-#define SVM_INTERCEPT0_SOFTINT            (1 << 21)
-#define SVM_INTERCEPT0_INVD               (1 << 22)
-#define SVM_INTERCEPT0_PAUSE              (1 << 23)
-#define SVM_INTERCEPT0_HLT                (1 << 24)
-#define SVM_INTERCEPT0_INVLPG             (1 << 25)
-#define SVM_INTERCEPT0_INVLPGA            (1 << 26)
-#define SVM_INTERCEPT0_IO                 (1 << 27)
-#define SVM_INTERCEPT0_MSR                (1 << 28)
-#define SVM_INTERCEPT0_TASK_SWITCH        (1 << 29)
-#define SVM_INTERCEPT0_FERR_FREEZE        (1 << 30)
-#define SVM_INTERCEPT0_SHUTDOWN           (1 << 31)
+#define SVM_INTERCEPT0_INTR               (0)
+#define SVM_INTERCEPT0_NMI                (1)
+#define SVM_INTERCEPT0_SMI                (2)
+#define SVM_INTERCEPT0_INIT               (3)
+#define SVM_INTERCEPT0_VINTR              (4)
+#define SVM_INTERCEPT0_CR0_WRITE_NO_TS_MP (5)
+#define SVM_INTERCEPT0_IDTR_READ          (6)
+#define SVM_INTERCEPT0_GDTR_READ          (7)
+#define SVM_INTERCEPT0_LDTR_READ          (8)
+#define SVM_INTERCEPT0_TR_READ            (9)
+#define SVM_INTERCEPT0_IDTR_WRITE         (10)
+#define SVM_INTERCEPT0_GDTR_WRITE         (11)
+#define SVM_INTERCEPT0_LDTR_WRITE         (12)
+#define SVM_INTERCEPT0_TR_WRITE           (13)
+#define SVM_INTERCEPT0_RDTSC              (14)
+#define SVM_INTERCEPT0_RDPMC              (15)
+#define SVM_INTERCEPT0_PUSHF              (16)
+#define SVM_INTERCEPT0_POPF               (17)
+#define SVM_INTERCEPT0_CPUID              (18)
+#define SVM_INTERCEPT0_RSM                (19)
+#define SVM_INTERCEPT0_IRET               (20)
+#define SVM_INTERCEPT0_SOFTINT            (21)
+#define SVM_INTERCEPT0_INVD               (22)
+#define SVM_INTERCEPT0_PAUSE              (23)
+#define SVM_INTERCEPT0_HLT                (24)
+#define SVM_INTERCEPT0_INVLPG             (25)
+#define SVM_INTERCEPT0_INVLPGA            (26)
+#define SVM_INTERCEPT0_IO                 (27)
+#define SVM_INTERCEPT0_MSR                (28)
+#define SVM_INTERCEPT0_TASK_SWITCH        (29)
+#define SVM_INTERCEPT0_FERR_FREEZE        (30)
+#define SVM_INTERCEPT0_SHUTDOWN           (31)
 
-#define SVM_INTERCEPT1_VMRUN              (1 <<  0)
-#define SVM_INTERCEPT1_VMMCALL            (1 <<  1)
-#define SVM_INTERCEPT1_VMLOAD             (1 <<  2)
-#define SVM_INTERCEPT1_VMSAVE             (1 <<  3)
-#define SVM_INTERCEPT1_STGI               (1 <<  4)
-#define SVM_INTERCEPT1_CLGI               (1 <<  5)
-#define SVM_INTERCEPT1_SKINIT             (1 <<  6)
-#define SVM_INTERCEPT1_RDTSCP             (1 <<  7)
-#define SVM_INTERCEPT1_ICEBP              (1 <<  8)
-#define SVM_INTERCEPT1_WBINVD             (1 <<  9)
-#define SVM_INTERCEPT1_MONITOR            (1 << 10)
-#define SVM_INTERCEPT1_MWAIT              (1 << 11)
-#define SVM_INTERCEPT1_MWAIT_ARMED        (1 << 12)
-#define SVM_INTERCEPT1_XSETBV             (1 << 13)
+#define SVM_INTERCEPT1_VMRUN              (32)
+#define SVM_INTERCEPT1_VMMCALL            (33)
+#define SVM_INTERCEPT1_VMLOAD             (34)
+#define SVM_INTERCEPT1_VMSAVE             (35)
+#define SVM_INTERCEPT1_STGI               (36)
+#define SVM_INTERCEPT1_CLGI               (37)
+#define SVM_INTERCEPT1_SKINIT             (38)
+#define SVM_INTERCEPT1_RDTSCP             (39)
+#define SVM_INTERCEPT1_ICEBP              (40)
+#define SVM_INTERCEPT1_WBINVD             (41)
+#define SVM_INTERCEPT1_MONITOR            (42)
+#define SVM_INTERCEPT1_MWAIT              (43)
+#define SVM_INTERCEPT1_MWAIT_ARMED        (44)
+#define SVM_INTERCEPT1_XSETBV             (45)
 
-#define SVM_INTERCEPT(vector, intercept_bit) \
-  (BX_CPU_THIS_PTR vmcb.ctrls.intercept_vector[vector] & (intercept_bit))
+#define SVM_INTERCEPT(intercept_bitnum) \
+  (BX_CPU_THIS_PTR vmcb.ctrls.intercept_vector[intercept_bitnum / 32] & (1 << (intercept_bitnum & 31)))
 
 #define SVM_EXCEPTION_INTERCEPTED(vector) \
   (BX_CPU_THIS_PTR vmcb.ctrls.exceptions_intercept & (1<<(vector)))
@@ -352,5 +370,7 @@ typedef struct bx_VMCB_CACHE
 
 #define SVM_DR_WRITE_INTERCEPTED(reg_num) \
   (BX_CPU_THIS_PTR vmcb.ctrls.dr_wr_ctrl & (1<<(reg_num)))
+
+#endif // BX_SUPPORT_SVM
 
 #endif // _BX_SVM_AMD_H_

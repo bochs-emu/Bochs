@@ -886,8 +886,7 @@ bx_bool BX_CPP_AttrRegparmN(3) BX_CPU_C::allow_io(bxInstruction_c *i, Bit16u por
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_IO))
-      SvmInterceptIO(i, port, len);
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_IO)) SvmInterceptIO(i, port, len);
   }
 #endif
 

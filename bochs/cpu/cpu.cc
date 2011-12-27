@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -476,7 +476,131 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
   BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
 }
 
-unsigned BX_CPU_C::handleAsyncEvent(void)
+bx_bool BX_CPU_C::handleWaitForEvent(void)
+{
+  // For one processor, pass the time as quickly as possible until
+  // an interrupt wakes up the CPU.
+  while (1)
+  {
+    if ((BX_CPU_INTR && (BX_CPU_THIS_PTR get_IF() || BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF)) ||
+#if BX_SUPPORT_VMX >= 2
+         BX_CPU_THIS_PTR pending_vmx_timer_expired ||
+#endif
+         BX_CPU_THIS_PTR pending_NMI || BX_CPU_THIS_PTR pending_SMI || BX_CPU_THIS_PTR pending_INIT)
+    {
+      // interrupt ends the HALT condition
+#if BX_SUPPORT_MONITOR_MWAIT
+      if (BX_CPU_THIS_PTR activity_state >= BX_ACTIVITY_STATE_MWAIT)
+        BX_CPU_THIS_PTR monitor.reset_monitor();
+#endif
+      BX_CPU_THIS_PTR activity_state = 0;
+      BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
+      break;
+    }
+
+    if (BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_ACTIVE) {
+      BX_INFO(("handleWaitForEvent: reset detected in HLT state"));
+      break;
+    }
+
+    if (BX_HRQ && BX_DBG_ASYNC_DMA) {
+      // handle DMA also when CPU is halted
+      DEV_dma_raise_hlda();
+    }
+
+    // for multiprocessor simulation, even if this CPU is halted we still
+    // must give the others a chance to simulate.  If an interrupt has
+    // arrived, then clear the HALT condition; otherwise just return from
+    // the CPU loop with stop_reason STOP_CPU_HALTED.
+#if BX_SUPPORT_SMP
+    if (BX_SMP_PROCESSORS > 1) {
+      // HALT condition remains, return so other CPUs have a chance
+#if BX_DEBUGGER
+      BX_CPU_THIS_PTR stop_reason = STOP_CPU_HALTED;
+#endif
+      return 1; // Return to caller of cpu_loop.
+    }
+#endif
+
+#if BX_DEBUGGER
+    if (bx_guard.interrupt_requested)
+      return 1; // Return to caller of cpu_loop.
+#endif
+
+    if (bx_pc_system.kill_bochs_request) {
+      // setting kill_bochs_request causes the cpu loop to return ASAP.
+      return 1; // Return to caller of cpu_loop.
+    }
+
+    BX_TICKN(10); // when in HLT run time faster for single CPU
+  }
+
+  return 0;
+}
+
+BX_CPP_INLINE bx_bool BX_CPU_C::interrupts_enabled(void)
+{
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest && SVM_V_INTR_MASKING) return SVM_HOST_IF;
+#endif
+  return BX_CPU_THIS_PTR get_IF();
+}
+
+void BX_CPU_C::InterruptAcknowledge(void)
+{
+  Bit8u vector;
+
+#if BX_SUPPORT_SVM
+  if (SVM_INTERCEPT(SVM_INTERCEPT0_INTR)) Svm_Vmexit(SVM_VMEXIT_INTR);
+#endif
+
+#if BX_SUPPORT_VMX
+  VMexit_ExtInterrupt();
+#endif
+
+  // NOTE: similar code in ::take_irq()
+#if BX_SUPPORT_APIC
+  if (BX_CPU_THIS_PTR lapic.INTR)
+    vector = BX_CPU_THIS_PTR lapic.acknowledge_int();
+  else
+#endif
+    // if no local APIC, always acknowledge the PIC.
+    vector = DEV_pic_iac(); // may set INTR with next interrupt
+
+  BX_CPU_THIS_PTR EXT = 1; /* external event */
+#if BX_SUPPORT_VMX
+  VMexit_Event(0, BX_EXTERNAL_INTERRUPT, vector, 0, 0);
+#endif
+
+  BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
+  interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
+
+  BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
+  BX_CPU_THIS_PTR EXT = 0;
+}
+
+#if BX_SUPPORT_SVM
+void BX_CPU_C::VirtualInterruptAcknowledge(void)
+{
+  Bit8u vector = SVM_V_INTR_VECTOR;
+
+  if (SVM_INTERCEPT(SVM_INTERCEPT0_VINTR)) Svm_Vmexit(SVM_VMEXIT_VINTR);
+
+  SVM_V_IRQ = 0;
+
+  BX_CPU_THIS_PTR EXT = 1; /* external event */
+
+  BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector, 
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
+  interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
+
+  BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
+  BX_CPU_THIS_PTR EXT = 0;
+}
+#endif
+
+bx_bool BX_CPU_C::handleAsyncEvent(void)
 {
   //
   // This area is where we process special conditions and events.
@@ -484,55 +608,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   if (BX_CPU_THIS_PTR activity_state != BX_ACTIVITY_STATE_ACTIVE) {
     // For one processor, pass the time as quickly as possible until
     // an interrupt wakes up the CPU.
-    while (1)
-    {
-      if ((BX_CPU_INTR && (BX_CPU_THIS_PTR get_IF() || BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF)) ||
-#if BX_SUPPORT_VMX >= 2
-           BX_CPU_THIS_PTR pending_vmx_timer_expired ||
-#endif
-           BX_CPU_THIS_PTR pending_NMI || BX_CPU_THIS_PTR pending_SMI || BX_CPU_THIS_PTR pending_INIT)
-      {
-        // interrupt ends the HALT condition
-#if BX_SUPPORT_MONITOR_MWAIT
-        if (BX_CPU_THIS_PTR activity_state >= BX_ACTIVITY_STATE_MWAIT)
-          BX_CPU_THIS_PTR monitor.reset_monitor();
-#endif
-        BX_CPU_THIS_PTR activity_state = 0;
-        BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
-        break;
-      }
-
-      if (BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_ACTIVE) {
-        BX_INFO(("handleAsyncEvent: reset detected in HLT state"));
-        break;
-      }
-
-      if (BX_HRQ && BX_DBG_ASYNC_DMA) {
-        // handle DMA also when CPU is halted
-        DEV_dma_raise_hlda();
-      }
-
-      // for multiprocessor simulation, even if this CPU is halted we still
-      // must give the others a chance to simulate.  If an interrupt has
-      // arrived, then clear the HALT condition; otherwise just return from
-      // the CPU loop with stop_reason STOP_CPU_HALTED.
-#if BX_SUPPORT_SMP
-      if (BX_SMP_PROCESSORS > 1) {
-        // HALT condition remains, return so other CPUs have a chance
-#if BX_DEBUGGER
-        BX_CPU_THIS_PTR stop_reason = STOP_CPU_HALTED;
-#endif
-        return 1; // Return to caller of cpu_loop.
-      }
-#endif
-
-#if BX_DEBUGGER
-      if (bx_guard.interrupt_requested)
-        return 1; // Return to caller of cpu_loop.
-#endif
-
-      BX_TICKN(10); // when in HLT run time faster for single CPU
-    }
+    if (handleWaitForEvent()) return 1;
   }
 
   if (bx_pc_system.kill_bochs_request) {
@@ -575,7 +651,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
 #if BX_SUPPORT_SMP
     if (BX_SMP_PROCESSORS > 1) {
       // if HALT condition remains, return so other CPUs have a chance
-      if (BX_CPU_THIS_PTR activity_state) {
+      if (BX_CPU_THIS_PTR activity_state != BX_ACTIVITY_STATE_ACTIVE) {
 #if BX_DEBUGGER
         BX_CPU_THIS_PTR stop_reason = STOP_CPU_HALTED;
 #endif
@@ -641,39 +717,22 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   }
 #endif
   else if (BX_CPU_INTR && BX_DBG_ASYNC_INTR && 
-          (BX_CPU_THIS_PTR get_IF()
+          (interrupts_enabled()
 #if BX_SUPPORT_VMX
        || (BX_CPU_THIS_PTR in_vmx_guest && PIN_VMEXIT(VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT))
 #endif
           ))
   {
-    Bit8u vector;
-#if BX_SUPPORT_VMX
-    VMexit_ExtInterrupt();
-#endif
-    // NOTE: similar code in ::take_irq()
-#if BX_SUPPORT_APIC
-    if (BX_CPU_THIS_PTR lapic.INTR)
-      vector = BX_CPU_THIS_PTR lapic.acknowledge_int();
-    else
-#endif
-      // if no local APIC, always acknowledge the PIC.
-      vector = DEV_pic_iac(); // may set INTR with next interrupt
-    BX_CPU_THIS_PTR EXT = 1; /* external event */
-#if BX_SUPPORT_VMX
-    VMexit_Event(0, BX_EXTERNAL_INTERRUPT, vector, 0, 0);
-#endif
-    BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
-        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
-    interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
-    // Set up environment, as would be when this main cpu loop gets
-    // invoked.  At the end of normal instructions, we always commmit
-    // the new EIP.  But here, we call interrupt() much like
-    // it was a sofware interrupt instruction, and need to effect the
-    // commit here.  This code mirrors similar code above.
-    BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
-    BX_CPU_THIS_PTR EXT = 0;
+    InterruptAcknowledge();
   }
+#if BX_SUPPORT_SVM
+  else if (BX_CPU_THIS_PTR in_svm_guest && SVM_V_IRQ && BX_CPU_THIS_PTR get_IF() &&
+          (SVM_V_INTR_PRIO > SVM_V_TPR || SVM_V_IGNORE_TPR))
+  {
+    // virtual interrupt acknowledge
+    VirtualInterruptAcknowledge();
+  }
+#endif
   else if (BX_HRQ && BX_DBG_ASYNC_DMA) {
     // NOTE: similar code in ::take_dma()
     // assert Hold Acknowledge (HLDA) and go into a bus hold state
@@ -712,17 +771,21 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   //   Alignment check
   // (handled by rest of the code)
 
-  if (!((BX_CPU_INTR && BX_CPU_THIS_PTR get_IF()) ||
+  if (!((BX_CPU_INTR && interrupts_enabled()) ||
         BX_CPU_THIS_PTR debug_trap ||
 //      BX_CPU_THIS_PTR get_TF() // implies debug_trap is set
         BX_HRQ
 #if BX_SUPPORT_VMX
      || BX_CPU_THIS_PTR vmx_interrupt_window
-     || (! BX_CPU_THIS_PTR disable_NMI && BX_CPU_THIS_PTR in_vmx_guest && 
+     || (BX_CPU_THIS_PTR in_vmx_guest && ! BX_CPU_THIS_PTR disable_NMI &&
        VMEXIT(VMX_VM_EXEC_CTRL2_NMI_WINDOW_VMEXIT))
 #endif
 #if BX_SUPPORT_VMX >= 2
      || BX_CPU_THIS_PTR pending_vmx_timer_expired
+#endif
+#if BX_SUPPORT_SVM
+    || (BX_CPU_THIS_PTR in_svm_guest && SVM_V_IRQ && BX_CPU_THIS_PTR get_IF() &&
+           (SVM_V_INTR_PRIO > SVM_V_TPR || SVM_V_IGNORE_TPR))
 #endif
 #if BX_X86_DEBUGGER
      // a debug code breakpoint is set in current page

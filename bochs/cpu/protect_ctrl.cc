@@ -730,7 +730,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_GDTR_READ)) Svm_Vmexit(SVM_VMEXIT_GDTR_READ);
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_GDTR_READ)) Svm_Vmexit(SVM_VMEXIT_GDTR_READ);
   }
 #endif
 
@@ -757,7 +757,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_IDTR_READ)) Svm_Vmexit(SVM_VMEXIT_IDTR_READ);
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_IDTR_READ)) Svm_Vmexit(SVM_VMEXIT_IDTR_READ);
   }
 #endif
 
@@ -790,7 +790,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_GDTR_WRITE)) Svm_Vmexit(SVM_VMEXIT_GDTR_WRITE);
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_GDTR_WRITE)) Svm_Vmexit(SVM_VMEXIT_GDTR_WRITE);
   }
 #endif
 
@@ -825,7 +825,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_IDTR_WRITE)) Svm_Vmexit(SVM_VMEXIT_IDTR_WRITE);
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_IDTR_WRITE)) Svm_Vmexit(SVM_VMEXIT_IDTR_WRITE);
   }
 #endif
 
@@ -856,7 +856,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_GDTR_READ)) Svm_Vmexit(SVM_VMEXIT_GDTR_READ);
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_GDTR_READ)) Svm_Vmexit(SVM_VMEXIT_GDTR_READ);
   }
 #endif
 
@@ -883,7 +883,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_IDTR_READ)) Svm_Vmexit(SVM_VMEXIT_IDTR_READ);
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_IDTR_READ)) Svm_Vmexit(SVM_VMEXIT_IDTR_READ);
   }
 #endif
 
@@ -915,7 +915,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_GDTR_WRITE)) Svm_Vmexit(SVM_VMEXIT_GDTR_WRITE);
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_GDTR_WRITE)) Svm_Vmexit(SVM_VMEXIT_GDTR_WRITE);
   }
 #endif
 
@@ -951,7 +951,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_IDTR_WRITE)) Svm_Vmexit(SVM_VMEXIT_IDTR_WRITE);
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_IDTR_WRITE)) Svm_Vmexit(SVM_VMEXIT_IDTR_WRITE);
   }
 #endif
 

@@ -947,7 +947,15 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
     if (xlarge_pages)
       features_bitmask |= BX_CPU_1G_PAGES;
   }
+
+#if BX_SUPPORT_SVM
+  static unsigned svm_enabled = SIM->get_param_num(BXPN_CPUID_SVM)->get();
+  if (svm_enabled) {
+    features_bitmask |= BX_CPU_ALT_MOV_CR8; // auto-enable together with SVM
+  }
 #endif
+
+#endif // BX_SUPPORT_X86_64
 
 #endif // CPU_LEVEL >= 6
 

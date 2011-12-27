@@ -65,7 +65,7 @@ Bit16u BX_CPP_AttrRegparmN(1) BX_CPU_C::VMread16(unsigned encoding)
 
   if (BX_CPU_THIS_PTR vmcshostptr) {
     Bit16u *hostAddr = (Bit16u*) (BX_CPU_THIS_PTR vmcshostptr | offset);
-    ReadHostDWordFromLittleEndian(hostAddr, field);
+    ReadHostWordFromLittleEndian(hostAddr, field);
   }
   else {
     access_read_physical(pAddr, 2, (Bit8u*)(&field));

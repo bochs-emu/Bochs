@@ -1114,6 +1114,8 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_SVM
   BX_CPU_THIS_PTR in_svm_guest = 0;
   BX_CPU_THIS_PTR svm_gif = 1;
+  BX_CPU_THIS_PTR vmcbptr = 0;
+  BX_CPU_THIS_PTR vmcbhostptr = 0;
 #endif
 
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM

@@ -68,7 +68,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT1(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(1, SVM_INTERCEPT1_ICEBP)) Svm_Vmexit(SVM_VMEXIT_ICEBP);
+    if (SVM_INTERCEPT(SVM_INTERCEPT1_ICEBP)) Svm_Vmexit(SVM_VMEXIT_ICEBP);
   }
 #endif
 
@@ -127,7 +127,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(0, SVM_INTERCEPT0_SOFTINT)) Svm_Vmexit(SVM_VMEXIT_SOFTWARE_INTERRUPT);
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_SOFTINT)) Svm_Vmexit(SVM_VMEXIT_SOFTWARE_INTERRUPT);
   }
 #endif
 

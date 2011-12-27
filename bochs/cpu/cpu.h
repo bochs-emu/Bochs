@@ -1020,6 +1020,7 @@ public: // for now...
   bx_bool in_svm_guest;
   bx_bool svm_gif; /* global interrupt enable flag, when zero all external interrupt disabled */
   bx_phy_address  vmcbptr;
+  bx_hostpageaddr_t vmcbhostptr;
   VMCB_CACHE vmcb;
 #endif
 
@@ -3536,7 +3537,10 @@ public: // for now...
 #if BX_SUPPORT_SMP
   BX_SMF void cpu_run_trace(void);
 #endif
-  BX_SMF unsigned handleAsyncEvent(void);
+  BX_SMF bx_bool handleAsyncEvent(void);
+  BX_SMF bx_bool handleWaitForEvent(void);
+  BX_SMF bx_bool interrupts_enabled(void);
+  BX_SMF void InterruptAcknowledge(void);
 
   BX_SMF int fetchDecode32(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage) BX_CPP_AttrRegparmN(3);
 #if BX_SUPPORT_X86_64
@@ -4252,6 +4256,7 @@ public: // for now...
   BX_SMF bx_bool SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls);
   BX_SMF bx_bool SvmEnterLoadCheckGuestState(void);
   BX_SMF void Svm_Vmexit(int reason);
+  BX_SMF void SvmExitSaveGuestState(void);
   BX_SMF void SvmExitLoadHostState(SVM_HOST_STATE *host);
   BX_SMF Bit8u vmcb_read8(unsigned offset);
   BX_SMF Bit16u vmcb_read16(unsigned offset);
@@ -4268,6 +4273,7 @@ public: // for now...
        Bit16u errcode, bx_bool errcode_valid, Bit64u qualification = 0);
   BX_SMF void SvmInterceptIO(bxInstruction_c *i, unsigned port, unsigned len);
   BX_SMF void SvmInterceptMSR(unsigned op, Bit32u msr);
+  BX_SMF void VirtualInterruptAcknowledge(void);
   BX_SMF void register_svm_state(bx_param_c *parent);
 #endif
 
