@@ -79,7 +79,7 @@ void bx_generic_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
 
 #if BX_CPU_LEVEL >= 6
   if (function >= 0x80000000 && function > max_ext_leaf)
-    function = max_ext_leaf;
+    function = max_std_leaf;
 #endif
   if (function <  0x80000000 && function > max_std_leaf)
     function = max_std_leaf;
