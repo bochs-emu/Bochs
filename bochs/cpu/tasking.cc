@@ -160,6 +160,13 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     exception(BX_TS_EXCEPTION, tss_selector->value & 0xfffc);
   }
 
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (! SVM_INTERCEPT(SVM_INTERCEPT0_TASK_SWITCH))
+      BX_PANIC(("SVM intercept of task switch not implemented yet !"));
+  } 
+#endif
+
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)
     VMexit_TaskSwitch(i, tss_selector->value, source);

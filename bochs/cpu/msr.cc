@@ -223,9 +223,10 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #endif
 
     case BX_MSR_EFER:
-      if (! BX_CPU_THIS_PTR efer_suppmask)
-        return 0;
-
+      if (! BX_CPU_THIS_PTR efer_suppmask) {
+        BX_ERROR(("RDMSR MSR_EFER: EFER MSR is not supported !"));
+        return handle_unknown_rdmsr(index, msr);
+      }
       val64 = BX_CPU_THIS_PTR efer.get32();
       break;
 

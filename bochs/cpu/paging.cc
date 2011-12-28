@@ -517,6 +517,10 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsig
   }
 #endif
 
+#if BX_SUPPORT_SVM
+  SvmInterceptException(BX_HARDWARE_EXCEPTION, BX_PF_EXCEPTION, error_code, 1, laddr); // before the CR2 was modified
+#endif
+
 #if BX_SUPPORT_VMX
   VMexit_Event(0, BX_HARDWARE_EXCEPTION, BX_PF_EXCEPTION, error_code, 1, laddr); // before the CR2 was modified
 #endif

@@ -199,6 +199,11 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
   }
 
   if (BX_CPU_THIS_PTR pending_INIT && ! BX_CPU_THIS_PTR disable_INIT && SVM_GIF) {
+#if BX_SUPPORT_SVM
+    if (BX_CPU_THIS_PTR in_svm_guest) {
+      if (SVM_INTERCEPT(SVM_INTERCEPT0_INIT)) Svm_Vmexit(SVM_VMEXIT_INIT);
+    }
+#endif
 #if BX_SUPPORT_VMX
     if (BX_CPU_THIS_PTR in_vmx_guest) {
       BX_ERROR(("VMEXIT: INIT pin asserted"));
@@ -257,6 +262,11 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
   }
 #endif
   else if (BX_CPU_THIS_PTR pending_NMI && ! BX_CPU_THIS_PTR disable_NMI) {
+#if BX_SUPPORT_SVM
+    if (BX_CPU_THIS_PTR in_svm_guest) {
+      if (SVM_INTERCEPT(SVM_INTERCEPT0_NMI)) Svm_Vmexit(SVM_VMEXIT_NMI);
+    }
+#endif
     BX_CPU_THIS_PTR pending_NMI = 0;
     BX_CPU_THIS_PTR disable_NMI = 1;
     BX_CPU_THIS_PTR EXT = 1; /* external event */

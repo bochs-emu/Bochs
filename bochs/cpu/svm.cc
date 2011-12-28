@@ -235,6 +235,13 @@ void BX_CPU_C::SvmExitLoadHostState(SVM_HOST_STATE *host)
   BX_CPU_THIS_PTR cr3 = host->cr3;
   BX_CPU_THIS_PTR cr4.set32(host->cr4);
 
+  if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
+    if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
+      BX_ERROR(("SvmExitLoadHostState(): PDPTR check failed !"));
+      shutdown();
+    }
+  }
+
   BX_CPU_THIS_PTR dr7.set32(0x00000400);
 
   // set flags directly, avoid setEFlags side effects
@@ -247,6 +254,8 @@ void BX_CPU_C::SvmExitLoadHostState(SVM_HOST_STATE *host)
   RAX = host->rax;
 
   CPL = 0;
+
+  TLB_flush(); // CR0/CR4 updated
 
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_CPU_THIS_PTR monitor.reset_monitor();
@@ -465,12 +474,17 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   BX_CPU_THIS_PTR cr4.set32(guest.cr4.get32());
   BX_CPU_THIS_PTR cr3 = guest.cr3;
 
+  if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
+    if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
+      BX_ERROR(("SVM: VMRUN PDPTR check failed !"));
+      return 0;
+    }
+  }
+
   BX_CPU_THIS_PTR dr6.set32(guest.dr6);
   BX_CPU_THIS_PTR dr7.set32(guest.dr7 | 0x400);
 
-  // flush TLB is always needed to invalidate possible
-  // APIC ACCESS PAGE caching by host
-  TLB_flush();
+  TLB_flush(); // CR0/CR4 updated
 
   for (n=0;n < 4; n++) {
     BX_CPU_THIS_PTR sregs[n] = guest.sregs[n];
@@ -523,6 +537,8 @@ void BX_CPU_C::Svm_Vmexit(int reason)
     if (reason != SVM_VMEXIT_INVALID)
       BX_PANIC(("PANIC: VMEXIT not in SVM guest mode !"));
   }
+
+  BX_ERROR(("SVM VMEXIT reason=%d", reason));
 
   // VMEXITs are FAULT-like: restore RIP/RSP to value before VMEXIT occurred
   RIP = BX_CPU_THIS_PTR prev_rip;
@@ -578,10 +594,10 @@ void BX_CPU_C::Svm_Vmexit(int reason)
 
 extern struct BxExceptionInfo exceptions_info[];
 
-void BX_CPU_C::SvmInjectEvents(void)
+bx_bool BX_CPU_C::SvmInjectEvents(void)
 {
   Bit32u injecting_event = vmcb_read32(SVM_CONTROL_EVENT_INJECTION);
-  if ((injecting_event & 0x80000000) == 0) return;
+  if ((injecting_event & 0x80000000) == 0) return 1;
 
   /* the VMENTRY injecting event to the guest */
   unsigned vector = injecting_event & 0xff;
@@ -592,7 +608,17 @@ void BX_CPU_C::SvmInjectEvents(void)
   switch(type) {
     case BX_EXTERNAL_INTERRUPT:
     case BX_NMI:
+      BX_CPU_THIS_PTR EXT = 1;
+      break;
+
     case BX_HARDWARE_EXCEPTION:
+      if (vector == 2 || vector > 31) {
+        BX_ERROR(("SvmInjectEvents: invalid vector %d for HW exception", vector));
+        return 0;
+      }
+      if (vector == BX_BP_EXCEPTION || vector == BX_OF_EXCEPTION) {
+        type = BX_SOFTWARE_EXCEPTION;
+      }
       BX_CPU_THIS_PTR EXT = 1;
       break;
 
@@ -600,7 +626,8 @@ void BX_CPU_C::SvmInjectEvents(void)
       break;
 
     default:
-      BX_PANIC(("SvmInjectEvents: unsupported event injection type %d !", type));
+      BX_ERROR(("SvmInjectEvents: unsupported event injection type %d !", type));
+      return 0;
   }
 
   BX_ERROR(("SvmInjectEvents: Injecting vector 0x%02x (error_code 0x%04x)", vector, error_code));
@@ -637,6 +664,8 @@ done:
 
   BX_CPU_THIS_PTR errorno = 0; // injection success
   BX_CPU_THIS_PTR EXT = 0;
+
+  return 1;
 }
 
 void BX_CPU_C::SvmInterceptException(unsigned type, unsigned vector, Bit16u errcode, bx_bool errcode_valid, Bit64u qualification)
@@ -646,6 +675,8 @@ void BX_CPU_C::SvmInterceptException(unsigned type, unsigned vector, Bit16u errc
   BX_ASSERT(vector < 32);
 
   SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
+
+  BX_ASSERT(type == BX_HARDWARE_EXCEPTION || type == BX_SOFTWARE_EXCEPTION);
 
   if (! SVM_EXCEPTION_INTERCEPTED(vector)) {
 
@@ -661,7 +692,7 @@ void BX_CPU_C::SvmInterceptException(unsigned type, unsigned vector, Bit16u errc
 
     // record IDT vectoring information 
     ctrls->exitintinfo_error_code = errcode;
-    ctrls->exitintinfo = vector | (type << 8);
+    ctrls->exitintinfo = vector | (BX_HARDWARE_EXCEPTION << 8);
     if (errcode_valid)
       BX_CPU_THIS_PTR vmcb.ctrls.exitintinfo |= (1 << 11); // error code delivered
     return;
@@ -855,7 +886,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMRUN(bxInstruction_c *i)
   //
   // Step 4: Inject events to the guest
   //
-  SvmInjectEvents();
+  if (!SvmInjectEvents())
+    Svm_Vmexit(SVM_VMEXIT_INVALID);
 #endif
 
   BX_NEXT_TRACE(i);
@@ -1047,7 +1079,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPGA(bxInstruction_c *i)
     if (SVM_INTERCEPT(SVM_INTERCEPT0_INVLPGA)) Svm_Vmexit(SVM_VMEXIT_INVLPGA);
   }
 
-  TLB_flush();
+  TLB_flush(); // FIXME: flush all entries for now
 #endif
 
   BX_NEXT_TRACE(i);

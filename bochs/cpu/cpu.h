@@ -4263,6 +4263,7 @@ public: // for now...
   BX_SMF void SvmEnterSaveHostState(SVM_HOST_STATE *host);
   BX_SMF bx_bool SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls);
   BX_SMF bx_bool SvmEnterLoadCheckGuestState(void);
+  BX_SMF bx_bool SvmInjectEvents(void);
   BX_SMF void Svm_Vmexit(int reason);
   BX_SMF void SvmExitSaveGuestState(void);
   BX_SMF void SvmExitLoadHostState(SVM_HOST_STATE *host);
@@ -4276,7 +4277,6 @@ public: // for now...
   BX_SMF void vmcb_write64(unsigned offset, Bit64u val_64);
   BX_SMF void svm_segment_read(bx_segment_reg_t *seg, unsigned offset);
   BX_SMF void svm_segment_write(bx_segment_reg_t *seg, unsigned offset);
-  BX_SMF void SvmInjectEvents(void);
   BX_SMF void SvmInterceptException(unsigned type, unsigned vector,
        Bit16u errcode, bx_bool errcode_valid, Bit64u qualification = 0);
   BX_SMF void SvmInterceptIO(bxInstruction_c *i, unsigned port, unsigned len);
@@ -4701,7 +4701,7 @@ enum {
   BX_HARDWARE_EXCEPTION = 3,  // all exceptions except #BP and #OF
   BX_SOFTWARE_INTERRUPT = 4,
   BX_PRIVILEGED_SOFTWARE_INTERRUPT = 5,
-  BX_SOFTWARE_EXCEPTION = 6   // they are software exceptions
+  BX_SOFTWARE_EXCEPTION = 6
 };
 
 #if BX_CPU_LEVEL >= 6
