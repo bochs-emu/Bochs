@@ -26,6 +26,8 @@
 
 #if BX_SUPPORT_SVM
 
+#define BX_SVM_REVISION 0x01 /* FIXME: check what is real SVM revision */
+
 enum SVM_intercept_codes {
    SVM_VMEXIT_CR0_READ  = 0,
    SVM_VMEXIT_CR2_READ  = 2,

@@ -341,6 +341,12 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
     return 0;
   }
 
+  Bit32u guest_asid = vmcb_read32(SVM_CONTROL_GUEST_ASID);
+  if (guest_asid == 0) {
+    BX_ERROR(("VMRUN: attempt to run guest with host ASID !"));
+    return 0;
+  }
+
   ctrls->v_tpr = vmcb_read8(SVM_CONTROL_VTPR);
   ctrls->v_irq = vmcb_read8(SVM_CONTROL_VIRQ) & 0x1;
   ctrls->v_intr_masking = vmcb_read8(SVM_CONTROL_VINTR_MASKING) & 0x1;

@@ -343,6 +343,9 @@ void amd_k6_2_chomper_t::dump_cpuid(void) const
     get_cpuid_leaf(n, 0x00000000, &leaf);
     BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
   }
+
+  get_cpuid_leaf(0x8fffffff, 0x00000000, &leaf);
+  BX_INFO(("CPUID[0x8fffffff]: %08x %08x %08x %08x", leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
 }
 
 bx_cpuid_t *create_amd_k6_2_chomper_cpuid(BX_CPU_C *cpu) { return new amd_k6_2_chomper_t(cpu); }

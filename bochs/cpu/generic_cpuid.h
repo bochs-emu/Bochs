@@ -74,6 +74,9 @@ private:
   unsigned nthreads;
 #endif
 
+  unsigned max_std_leaf;
+  unsigned max_ext_leaf;
+
   void get_std_cpuid_leaf_0(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
 #if BX_CPU_LEVEL >= 6
@@ -91,11 +94,12 @@ private:
   void get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const;
   void get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const;
-#if BX_SUPPORT_X86_64
   void get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const;
+#if BX_SUPPORT_SVM
+  void get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const;
 #endif
 
   Bit32u get_std2_cpuid_features(void) const;

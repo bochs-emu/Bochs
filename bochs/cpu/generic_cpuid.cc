@@ -40,6 +40,35 @@ bx_generic_cpuid_t::bx_generic_cpuid_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 
   init_isa_extensions_bitmask();
   init_cpu_extensions_bitmask();
+
+#if BX_CPU_LEVEL <= 5
+  // 486 and Pentium processors
+  max_std_leaf = 1;
+#else
+  // for Pentium Pro, Pentium II, Pentium 4 processors
+  max_std_leaf = 2;
+
+  // do not report CPUID functions above 0x3 if cpuid_limit_winnt is set
+  // to workaround WinNT issue.
+  static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
+  if (! cpuid_limit_winnt) {
+    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MONITOR_MWAIT))
+      max_std_leaf = 0x5;
+    if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_X2APIC))
+      max_std_leaf = 0xB;
+    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVE))
+      max_std_leaf = 0xD;
+  }
+#endif
+
+#if BX_CPU_LEVEL <= 5
+  max_ext_leaf = 0;
+#else
+  max_ext_leaf = 0x80000008;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM))
+    max_ext_leaf = 0x8000000A;
+#endif
 }
 
 void bx_generic_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -47,6 +76,13 @@ void bx_generic_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
   static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
   if (cpuid_limit_winnt)
     if (function > 2 && function < 0x80000000) function = 2;
+
+#if BX_CPU_LEVEL >= 6
+  if (function >= 0x80000000 && function > max_ext_leaf)
+    function = max_ext_leaf;
+#endif
+  if (function <  0x80000000 && function > max_std_leaf)
+    function = max_std_leaf;
 
   switch(function) {
 #if BX_CPU_LEVEL >= 6
@@ -61,7 +97,6 @@ void bx_generic_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
   case 0x80000004:
     get_ext_cpuid_brand_string_leaf(function, leaf);
     return;
-#if BX_SUPPORT_X86_64
   case 0x80000005:
     get_ext_cpuid_leaf_5(leaf);
     return;
@@ -73,6 +108,10 @@ void bx_generic_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8(leaf);
+    return;
+#if BX_SUPPORT_SVM
+  case 0x8000000A:
+    get_ext_cpuid_leaf_A(leaf);
     return;
 #endif
 #endif
@@ -133,26 +172,7 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
   // EBX: vendor ID string
   // EDX: vendor ID string
   // ECX: vendor ID string
-
-#if BX_CPU_LEVEL <= 5
-  // 486 and Pentium processors
-  leaf->eax = 1;
-#else
-  // for Pentium Pro, Pentium II, Pentium 4 processors
-  leaf->eax = 2;
-
-  // do not report CPUID functions above 0x3 if cpuid_limit_winnt is set
-  // to workaround WinNT issue.
-  static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-  if (! cpuid_limit_winnt) {
-    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MONITOR_MWAIT))
-      leaf->eax = 0x5;
-    if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_X2APIC))
-      leaf->eax = 0xb;
-    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVE))
-      leaf->eax = 0xd;
-  }
-#endif
+  leaf->eax = max_std_leaf;
 
   // CPUID vendor string (e.g. GenuineIntel, AuthenticAMD, CentaurHauls, ...)
   memcpy(&(leaf->ebx), vendor_string,     4);
@@ -459,7 +479,7 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
   // EBX: vendor ID string
   // EDX: vendor ID string
   // ECX: vendor ID string
-  leaf->eax = BX_SUPPORT_X86_64 ? 0x80000008 : 0x80000004;
+  leaf->eax = max_ext_leaf;
 #if BX_CPU_VENDOR_INTEL
   leaf->ebx = 0;
   leaf->edx = 0;          // Reserved for Intel
@@ -566,8 +586,6 @@ void bx_generic_cpuid_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_
 #endif
 }
 
-#if BX_SUPPORT_X86_64
-
 // leaf 0x80000005 //
 void bx_generic_cpuid_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
@@ -606,6 +624,40 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
   leaf->ebx = 0;
   leaf->ecx = 0; // Reserved, undefined
   leaf->edx = 0;
+}
+
+#if BX_SUPPORT_SVM
+
+// leaf 0x8000000A //
+void bx_generic_cpuid_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
+{
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM))
+  {
+    leaf->eax = BX_SVM_REVISION;
+    leaf->ebx = 0x40; /* number of ASIDs */
+    leaf->ecx = 0;
+
+    //   [0:0]   NP - Nested paging support
+    //   [1:1]   LBR virtualization
+    //   [2:2]   SVM Lock
+    //   [3:3]   NRIPS - Next RIP save on VMEXIT
+    //   [4:4]   TscRate - MSR based TSC ratio control
+    //   [5:5]   VMCB Clean bits support
+    //   [6:6]   Flush by ASID support
+    //   [7:7]   Decode assists support
+    //   [9:8]   Reserved
+    //   [10:10] Pause filter support
+    //   [11:11] Reserved
+    //   [12:12] Pause filter threshold support
+    //   [31:13] Reserved
+    leaf->edx = 0;
+  }
+  else {
+    leaf->eax = 0;
+    leaf->ebx = 0;
+    leaf->ecx = 0; // Reserved, undefined
+    leaf->edx = 0;
+  }
 }
 
 #endif
@@ -1432,25 +1484,16 @@ Bit32u bx_generic_cpuid_t::get_ext3_cpuid_features(void) const
 void bx_generic_cpuid_t::dump_cpuid(void) const
 {
   struct cpuid_function_t leaf;
+  unsigned n;
 
-  get_cpuid_leaf(0x00000000, 0x00000000, &leaf);
-  BX_INFO(("CPUID[0x00000000]: %08x %08x %08x %08x", leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
-  Bit32u max_std_function = leaf.eax, n;
-
-  if (max_std_function > 0) {
-    for (n=1; n<=max_std_function;n++) {
-      get_cpuid_leaf(n, 0x00000000, &leaf);
-      BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
-    }
+  for (n=0; n <= max_std_leaf; n++) {
+    get_cpuid_leaf(n, 0x00000000, &leaf);
+    BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
   }
 
 #if BX_CPU_LEVEL >= 6
-  get_cpuid_leaf(0x80000000, 0x00000000, &leaf);
-  BX_INFO(("CPUID[0x80000000]: %08x %08x %08x %08x", leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
-  Bit32u max_ext_function = leaf.eax;
-
-  if (max_ext_function > 0) {
-    for (n=0x80000001; n<=max_ext_function;n++) {
+  if (max_ext_leaf > 0) {
+    for (n=0x80000000; n <= max_ext_leaf; n++) {
       get_cpuid_leaf(n, 0x00000000, &leaf);
       BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
     }
