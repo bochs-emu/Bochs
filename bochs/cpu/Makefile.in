@@ -42,6 +42,7 @@ BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMEN
 OBJS = \
 	init.o \
 	cpu.o \
+	event.o \
 	icache.o \
 	resolver.o \
 	fetchdecode.o \
@@ -357,6 +358,13 @@ call_far.o: call_far.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
  xmm.h vmx.h svm.h stack.h
 cpu.o: cpu.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
+ ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
+ ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../instrument/stubs/instrument.h cpu.h cpuid.h crregs.h descriptor.h \
+ instr.h ia_opcodes.h lazy_flags.h icache.h apic.h i387.h \
+ ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
+ xmm.h vmx.h svm.h stack.h
+event.o: event.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
  ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h cpu.h cpuid.h crregs.h descriptor.h \
