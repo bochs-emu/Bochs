@@ -60,7 +60,7 @@ bx_usb_uhci_c::bx_usb_uhci_c()
   put("UHCI");
   memset((void*)&hub, 0, sizeof(bx_usb_uhci_t));
   device_buffer = NULL;
-  hub.iolight_timer_index = BX_NULL_TIMER_HANDLE;
+  hub.timer_index = BX_NULL_TIMER_HANDLE;
 }
 
 bx_usb_uhci_c::~bx_usb_uhci_c()
@@ -108,7 +108,7 @@ void bx_usb_uhci_c::init(void)
   BX_UHCI_THIS pci_base_address[4] = 0x0;
 
   //FIXME: for now, we want a status bar // hub zero, port zero
-  BX_UHCI_THIS hub.statusbar_id = bx_gui->register_statusitem("UHCI");
+  BX_UHCI_THIS hub.statusbar_id = bx_gui->register_statusitem("UHCI", 1);
 
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   bx_list_c *uhci = (bx_list_c*)SIM->get_param(BXPN_USB_UHCI);
@@ -129,13 +129,6 @@ void bx_usb_uhci_c::init(void)
 
   //HACK: Turn on debug messages from the start
   //BX_UHCI_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
-
-  // register timer for i/o light
-  if (BX_UHCI_THIS hub.iolight_timer_index == BX_NULL_TIMER_HANDLE) {
-    BX_UHCI_THIS hub.iolight_timer_index =
-      DEV_register_timer(this, iolight_timer_handler, 5000, 0,0, "UHCI i/o light");
-  }
-  BX_UHCI_THIS hub.iolight_counter = 0;
 
   // register handler for correct device connect handling after runtime config
   SIM->register_runtime_config_handler(BX_UHCI_THIS_PTR, runtime_config_handler);
@@ -849,15 +842,11 @@ bx_bool bx_usb_uhci_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *t
   maxlen &= 0x7FF;
 
   /* set status bar conditions for device */
-  if (maxlen > 0) {
-    if (!BX_UHCI_THIS hub.iolight_counter) {
-      if (pid == USB_TOKEN_OUT)
-        bx_gui->statusbar_setitem(BX_UHCI_THIS hub.statusbar_id, 1, 1);  // write
-      else
-        bx_gui->statusbar_setitem(BX_UHCI_THIS hub.statusbar_id, 1);     // read
-    }
-    BX_UHCI_THIS hub.iolight_counter = 5;
-    bx_pc_system.activate_timer(BX_UHCI_THIS hub.iolight_timer_index, 5000, 0);
+  if ((maxlen > 0) && (BX_UHCI_THIS hub.statusbar_id >= 0)) {
+    if (pid == USB_TOKEN_IN)
+      bx_gui->statusbar_setitem(BX_UHCI_THIS hub.statusbar_id, 1);     // read
+    else
+      bx_gui->statusbar_setitem(BX_UHCI_THIS hub.statusbar_id, 1, 1);  // write
   }
 
   BX_UHCI_THIS usb_packet.pid = pid;
@@ -933,22 +922,6 @@ void bx_usb_uhci_c::set_status(struct TD *td, bx_bool stalled, bx_bool data_buff
   if (stalled || data_buffer_error || babble || nak || crc_time_out || bitstuff_error)
     td->dword1 &= ~((1<<28) | (1<<27));  // clear the c_err field in there was an error
 }
-
-void bx_usb_uhci_c::iolight_timer_handler(void *this_ptr)
-{
-  bx_usb_uhci_c *class_ptr = (bx_usb_uhci_c *) this_ptr;
-  class_ptr->iolight_timer();
-}
-
-void bx_usb_uhci_c::iolight_timer()
-{
-  if (BX_UHCI_THIS hub.iolight_counter > 0) {
-    if (--BX_UHCI_THIS hub.iolight_counter)
-      bx_pc_system.activate_timer(BX_UHCI_THIS hub.iolight_timer_index, 5000, 0);
-    else
-      bx_gui->statusbar_setitem(BX_UHCI_THIS hub.statusbar_id, 0);
-  }
- }
 
 void bx_usb_uhci_c::runtime_config_handler(void *this_ptr)
 {

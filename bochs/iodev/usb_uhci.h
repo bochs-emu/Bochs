@@ -157,8 +157,6 @@ typedef struct {
   Bit8u devfunc;
 
   int statusbar_id; // ID of the status LEDs
-  int iolight_counter;
-  int iolight_timer_index;
   Bit8u device_change;
 } bx_usb_uhci_t;
 
@@ -222,9 +220,6 @@ private:
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
-
-  static void iolight_timer_handler(void *);
-  void iolight_timer(void);
 
   static void runtime_config_handler(void *);
   void runtime_config(void);

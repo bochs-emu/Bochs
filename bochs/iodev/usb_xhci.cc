@@ -84,7 +84,7 @@ bx_usb_xhci_c::bx_usb_xhci_c()
   put("XHCI");
   memset((void*)&hub, 0, sizeof(bx_usb_xhci_t));
   device_buffer = NULL;
-  hub.iolight_timer_index = BX_NULL_TIMER_HANDLE;
+  //hub.frame_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
 bx_usb_xhci_c::~bx_usb_xhci_c()
@@ -115,7 +115,7 @@ void bx_usb_xhci_c::init(void)
   // TODO: Use this to decrement the Interrupter:count down value
   // Call our frame timer routine every 1mS (1,000uS)
   // Continuous and active
-//  BX_XHCI_THIS hub.frame_index =
+//  BX_XHCI_THIS hub.frame_timer_index =
 //                   bx_pc_system.register_timer(this, usb_frame_handler, 1000, 1,1, "xhci.frame_timer");
 
   BX_XHCI_THIS hub.devfunc = 0x00;
@@ -128,7 +128,7 @@ void bx_usb_xhci_c::init(void)
   BX_XHCI_THIS pci_base_address[0] = 0x0;
 
   //FIXME: for now, we want a status bar // hub zero, port zero
-  BX_XHCI_THIS hub.statusbar_id = bx_gui->register_statusitem("xHCI");
+  BX_XHCI_THIS hub.statusbar_id = bx_gui->register_statusitem("xHCI", 1);
 
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   bx_list_c *xhci = (bx_list_c*)SIM->get_param(BXPN_USB_XHCI);
@@ -152,13 +152,6 @@ void bx_usb_xhci_c::init(void)
     BX_XHCI_THIS hub.usb_port[i].portsc.ccs = 0;
     BX_XHCI_THIS hub.usb_port[i].portsc.csc = 0;
   }
-
-  // register timer for i/o light
-  if (BX_XHCI_THIS hub.iolight_timer_index == BX_NULL_TIMER_HANDLE) {
-    BX_XHCI_THIS hub.iolight_timer_index =
-      DEV_register_timer(this, iolight_timer_handler, 5000, 0,0, "xHCI i/o light");
-  }
-  BX_XHCI_THIS hub.iolight_counter = 0;
 
   // register handler for correct device connect handling after runtime config
   SIM->register_runtime_config_handler(BX_XHCI_THIS_PTR, runtime_config_handler);
@@ -1613,13 +1606,11 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
       // is there a transfer to be done?
       if (is_transfer_trb) {
         // set status bar conditions for device
-        if (transfer_length > 0) {
-          if ((cur_direction == USB_TOKEN_OUT) || (cur_direction == USB_TOKEN_SETUP))
-            bx_gui->statusbar_setitem(BX_XHCI_THIS hub.statusbar_id, 1, 1);  // write
-          else
+        if ((transfer_length > 0) && (BX_XHCI_THIS hub.statusbar_id >= 0)) {
+          if (cur_direction == USB_TOKEN_IN)
             bx_gui->statusbar_setitem(BX_XHCI_THIS hub.statusbar_id, 1);     // read
-          BX_XHCI_THIS hub.iolight_counter = 5;
-          bx_pc_system.activate_timer(BX_XHCI_THIS hub.iolight_timer_index, 5000, 0);
+          else
+            bx_gui->statusbar_setitem(BX_XHCI_THIS hub.statusbar_id, 1, 1);  // write
         }
 
         comp_code = TRB_SUCCESS;  // assume good trans event
@@ -2448,22 +2439,6 @@ void bx_usb_xhci_c::usb_frame_timer(void)
   // Nothing for now
 }
 */
-
-void bx_usb_xhci_c::iolight_timer_handler(void *this_ptr)
-{
-  bx_usb_xhci_c *class_ptr = (bx_usb_xhci_c *) this_ptr;
-  class_ptr->iolight_timer();
-}
-
-void bx_usb_xhci_c::iolight_timer()
-{
-  if (BX_XHCI_THIS hub.iolight_counter > 0) {
-    if (--BX_XHCI_THIS hub.iolight_counter)
-      bx_pc_system.activate_timer(BX_XHCI_THIS hub.iolight_timer_index, 5000, 0);
-    else
-      bx_gui->statusbar_setitem(BX_XHCI_THIS hub.statusbar_id, 0);
-  }
-}
 
 void bx_usb_xhci_c::runtime_config_handler(void *this_ptr)
 {

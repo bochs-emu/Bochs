@@ -87,7 +87,7 @@ bx_usb_ohci_c::bx_usb_ohci_c()
   put("OHCI");
   memset((void*)&hub, 0, sizeof(bx_usb_ohci_t));
   device_buffer = NULL;
-  hub.iolight_timer_index = BX_NULL_TIMER_HANDLE;
+  hub.frame_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
 bx_usb_ohci_c::~bx_usb_ohci_c()
@@ -117,7 +117,7 @@ void bx_usb_ohci_c::init(void)
 
   // Call our frame timer routine every 1mS (1,000uS)
   // Continuous and active
-  BX_OHCI_THIS hub.frame_index =
+  BX_OHCI_THIS hub.frame_timer_index =
                    bx_pc_system.register_timer(this, usb_frame_handler, 1000, 1,1, "ohci.frame_timer");
 
   BX_OHCI_THIS hub.devfunc = 0x00;
@@ -134,7 +134,7 @@ void bx_usb_ohci_c::init(void)
   BX_OHCI_THIS hub.sof_time = 0;
 
   //FIXME: for now, we want a status bar // hub zero, port zero
-  BX_OHCI_THIS hub.statusbar_id = bx_gui->register_statusitem("OHCI");
+  BX_OHCI_THIS hub.statusbar_id = bx_gui->register_statusitem("OHCI", 1);
 
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   bx_list_c *ohci = (bx_list_c*)SIM->get_param(BXPN_USB_OHCI);
@@ -157,13 +157,6 @@ void bx_usb_ohci_c::init(void)
 
   //HACK: Turn on debug messages from the start
   //BX_OHCI_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
-
-  // register timer for i/o light
-  if (BX_OHCI_THIS hub.iolight_timer_index == BX_NULL_TIMER_HANDLE) {
-    BX_OHCI_THIS hub.iolight_timer_index =
-      DEV_register_timer(this, iolight_timer_handler, 5000, 0,0, "OHCI i/o light");
-  }
-  BX_OHCI_THIS hub.iolight_counter = 0;
 
   // register handler for correct device connect handling after runtime config
   SIM->register_runtime_config_handler(BX_OHCI_THIS_PTR, runtime_config_handler);
@@ -1205,14 +1198,10 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
 
   /* set status bar conditions for device */
   if ((len > 0) && (BX_OHCI_THIS hub.statusbar_id >= 0)) {
-    if (!BX_OHCI_THIS hub.iolight_counter) {
-      if (pid == USB_TOKEN_OUT)
-        bx_gui->statusbar_setitem(BX_OHCI_THIS hub.statusbar_id, 1, 1);  // write
-      else
-        bx_gui->statusbar_setitem(BX_OHCI_THIS hub.statusbar_id, 1);     // read
-    }
-    BX_OHCI_THIS hub.iolight_counter = 5;
-    bx_pc_system.activate_timer(BX_OHCI_THIS hub.iolight_timer_index, 5000, 0);
+    if (pid == USB_TOKEN_IN)
+      bx_gui->statusbar_setitem(BX_OHCI_THIS hub.statusbar_id, 1);     // read
+    else
+      bx_gui->statusbar_setitem(BX_OHCI_THIS hub.statusbar_id, 1, 1);  // write
   }
 
   switch (pid) {
@@ -1333,22 +1322,6 @@ int bx_usb_ohci_c::broadcast_packet(USBPacket *p)
     }
   }
   return ret;
-}
-
-void bx_usb_ohci_c::iolight_timer_handler(void *this_ptr)
-{
-  bx_usb_ohci_c *class_ptr = (bx_usb_ohci_c *) this_ptr;
-  class_ptr->iolight_timer();
-}
-
-void bx_usb_ohci_c::iolight_timer()
-{
-  if (BX_OHCI_THIS hub.iolight_counter > 0) {
-    if (--BX_OHCI_THIS hub.iolight_counter)
-      bx_pc_system.activate_timer(BX_OHCI_THIS hub.iolight_timer_index, 5000, 0);
-    else
-      bx_gui->statusbar_setitem(BX_OHCI_THIS hub.statusbar_id, 0);
-  }
 }
 
 void bx_usb_ohci_c::runtime_config_handler(void *this_ptr)
