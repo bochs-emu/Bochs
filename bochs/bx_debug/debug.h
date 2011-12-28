@@ -18,6 +18,8 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
+#ifndef BX_DEBUG_H
+#define BX_DEBUG_H
 
 // if including from C parser, need basic types etc
 #include "config.h"
@@ -504,3 +506,5 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time);
 #endif // #ifdef __cplusplus
 
 #endif // #if BX_DEBUGGER
+
+#endif

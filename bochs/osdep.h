@@ -38,32 +38,6 @@
 extern "C" {
 #endif   /* __cplusplus */
 
-BX_CPP_INLINE Bit16u bx_bswap16(Bit16u val16)
-{
-  return (val16<<8) | (val16>>8);
-}
-
-#if BX_HAVE___BUILTIN_BSWAP32
-#define bx_bswap32 __builtin_bswap32
-#else
-BX_CPP_INLINE Bit32u bx_bswap32(Bit32u val32)
-{
-  val32 = ((val32<<8) & 0xFF00FF00) | ((val32>>8) & 0x00FF00FF);
-  return (val32<<16) | (val32>>16);
-}
-#endif
-
-#if BX_HAVE___BUILTIN_BSWAP64
-#define bx_bswap64 __builtin_bswap64
-#else
-BX_CPP_INLINE Bit64u bx_bswap64(Bit64u val64)
-{
-  Bit32u lo = bx_bswap32((Bit32u)(val64 >> 32));
-  Bit32u hi = bx_bswap32((Bit32u)(val64 & 0xFFFFFFFF));
-  return ((Bit64u)hi << 32) | (Bit64u)lo;
-}
-#endif
-
 //////////////////////////////////////////////////////////////////////
 // Hacks for win32, but exclude MINGW32 because it doesn't need them.
 //////////////////////////////////////////////////////////////////////
