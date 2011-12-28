@@ -92,7 +92,6 @@ parse-clean:
 	@RMCOMMAND@ -f  parser.h
 
 dbg_main.o: debug.h
-sim2.o: debug.h
 
 parser.c: parser.y
 	@/bin/rm -f y.tab.c parser.c
