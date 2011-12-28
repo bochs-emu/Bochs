@@ -55,6 +55,7 @@ typedef struct {
 
   Bit8u devfunc;
 
+  int statusbar_id;
 } bx_pnic_t;
 
 

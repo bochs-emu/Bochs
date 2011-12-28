@@ -335,10 +335,14 @@ void bx_rfb_gui_c::statusbar_setitem(int element, bx_bool active, bx_bool w)
 {
   if (element < 0) {
     for (unsigned i = 0; i < statusitem_count; i++) {
-      rfbSetStatusText(i+1, statusitem_text[i], active, w);
+      rfbSetStatusText(i+1, statusitem[i].text, active, w);
     }
   } else if ((unsigned)element < statusitem_count) {
-    rfbSetStatusText(element+1, statusitem_text[element], active, w);
+    rfbSetStatusText(element+1, statusitem[element].text, active, w);
+    statusitem[element].mode = w;
+    if (active && statusitem[element].auto_off) {
+      statusitem[element].counter = 10;
+    }
   }
 }
 
@@ -1068,7 +1072,7 @@ void bx_rfb_gui_c::show_headerbar(void)
   DrawBitmap(0, rfbWindowY - rfbStatusbarY, rfbWindowX, rfbStatusbarY, newBits, (char)0xf0, false);
   free(newBits);
   for (i = 1; i <= statusitem_count; i++) {
-    rfbSetStatusText(i, statusitem_text[i-1], rfbStatusitemActive[i]);
+    rfbSetStatusText(i, statusitem[i-1].text, rfbStatusitemActive[i]);
   }
 }
 

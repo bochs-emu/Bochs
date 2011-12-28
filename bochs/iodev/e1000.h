@@ -96,6 +96,7 @@ typedef struct {
   } eecd_state;
 
   int tx_timer_index;
+  int statusbar_id;
 
   Bit8u devfunc;
 } bx_e1000_t;

@@ -478,6 +478,7 @@ void bx_e1000_c::init(void)
       bx_pc_system.register_timer(this, tx_timer_handler, 0,
                                   0, 0, "e1000"); // one-shot, inactive
   }
+  BX_E1000_THIS s.statusbar_id = bx_gui->register_statusitem("E1000", 1);
 
   // Attach to the selected ethernet module
   BX_E1000_THIS ethdev = DEV_net_init_module(base, rx_handler, rx_status_handler, this);
@@ -1266,6 +1267,7 @@ void bx_e1000_c::start_xmit()
   }
   BX_E1000_THIS s.tx.int_cause = cause;
   bx_pc_system.activate_timer(BX_E1000_THIS s.tx_timer_index, 10, 0); // not continuous
+  bx_gui->statusbar_setitem(BX_E1000_THIS s.statusbar_id, 1, 1);
 }
 
 void bx_e1000_c::tx_timer_handler(void *this_ptr)
@@ -1487,6 +1489,8 @@ void bx_e1000_c::rx_frame(const void *buf, unsigned buf_size)
     n |= E1000_ICS_RXDMT0;
 
   set_ics(n);
+
+  bx_gui->statusbar_setitem(BX_E1000_THIS s.statusbar_id, 1);
 }
 
 

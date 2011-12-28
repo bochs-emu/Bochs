@@ -188,6 +188,7 @@ typedef struct {
     int     base_irq;
     int     tx_timer_index;
     bx_bool tx_timer_active;
+    int     statusbar_id;
 
     // pci stuff
     bx_bool pci_enabled;

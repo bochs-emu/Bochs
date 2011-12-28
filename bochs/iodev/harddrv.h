@@ -197,8 +197,8 @@ public:
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 
-  static void iolight_timer_handler(void *);
-  BX_HD_SMF void iolight_timer(void);
+  static void seek_timer_handler(void *);
+  BX_HD_SMF void seek_timer(void);
 
   static void runtime_config_handler(void *);
   void runtime_config(void);
@@ -248,7 +248,6 @@ private:
 
       Bit8u model_no[41];
       int statusbar_id;
-      int iolight_counter;
       Bit8u device_num; // for ATAPI identify & inquiry
       bx_bool status_changed;
     } drives[2];
@@ -260,7 +259,7 @@ private:
 
   } channels[BX_MAX_ATA_CHANNEL];
 
-  int iolight_timer_index;
+  int seek_timer_index;
   Bit8u cdrom_count;
 };
 

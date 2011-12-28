@@ -1086,10 +1086,10 @@ void bx_wx_gui_c::statusbar_setitem(int element, bx_bool active, bx_bool w)
       if (active) {
 #if defined(__WXMSW__)
         status_text[0] = 9;
-        strcpy(status_text+1, statusitem_text[i]);
+        strcpy(status_text+1, statusitem[i].text);
         theFrame->SetStatusText(status_text, i+1);
 #else
-        theFrame->SetStatusText(wxString(statusitem_text[i], wxConvUTF8), i+1);
+        theFrame->SetStatusText(wxString(statusitem[i].text, wxConvUTF8), i+1);
 #endif
       } else {
         theFrame->SetStatusText(wxT(""), i+1);
@@ -1099,12 +1099,16 @@ void bx_wx_gui_c::statusbar_setitem(int element, bx_bool active, bx_bool w)
     if (active) {
 #if defined(__WXMSW__)
         status_text[0] = 9;
-        strcpy(status_text+1, statusitem_text[element]);
+        strcpy(status_text+1, statusitem[element].text);
         theFrame->SetStatusText(status_text, element+1);
 #else
-      theFrame->SetStatusText(wxString(statusitem_text[element], wxConvUTF8),
+      theFrame->SetStatusText(wxString(statusitem[element].text, wxConvUTF8),
         element+1);
 #endif
+      statusitem[element].mode = w;
+      if (active && statusitem[element].auto_off) {
+        statusitem[element].counter = 10;
+      }
     } else {
       theFrame->SetStatusText(wxT(""), element+1);
     }

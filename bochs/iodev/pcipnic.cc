@@ -78,6 +78,8 @@ void bx_pcipnic_c::init(void)
     BX_PNIC_THIS pci_conf[i] = 0x0;
   }
 
+  BX_PNIC_THIS s.statusbar_id = bx_gui->register_statusitem("PNIC", 1);
+
   // Attach to the selected ethernet module
   BX_PNIC_THIS ethdev = DEV_net_init_module(base, rx_handler, rx_status_handler, this);
 
@@ -468,6 +470,7 @@ void bx_pcipnic_c::exec_command(void)
 
   case PNIC_CMD_XMIT:
     BX_PNIC_THIS ethdev->sendpkt(data, ilength);
+    bx_gui->statusbar_setitem(BX_PNIC_THIS s.statusbar_id, 1, 1);
     if (BX_PNIC_THIS s.irqEnabled) {
       set_irq_level(1);
     }
@@ -587,6 +590,7 @@ void bx_pcipnic_c::rx_frame(const void *buf, unsigned io_len)
   if (BX_PNIC_THIS s.irqEnabled) {
     set_irq_level(1);
   }
+  bx_gui->statusbar_setitem(BX_PNIC_THIS s.statusbar_id, 1);
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIPNIC

@@ -431,10 +431,14 @@ void bx_sdl_gui_c::statusbar_setitem(int element, bx_bool active, bx_bool w)
 {
   if (element < 0) {
     for (unsigned i = 0; i < statusitem_count; i++) {
-      sdl_set_status_text(i+1, statusitem_text[i], active, w);
+      sdl_set_status_text(i+1, statusitem[i].text, active, w);
     }
   } else if ((unsigned)element < statusitem_count) {
-    sdl_set_status_text(element+1, statusitem_text[element], active, w);
+    sdl_set_status_text(element+1, statusitem[element].text, active, w);
+    statusitem[element].mode = w;
+    if (active && statusitem[element].auto_off) {
+      statusitem[element].counter = 10;
+    }
   }
 }
 
@@ -1506,7 +1510,7 @@ void bx_sdl_gui_c::show_headerbar(void)
   } while(--rowsleft);
   SDL_UpdateRect( sdl_screen, 0,res_y+headerbar_height,res_x,statusbar_height);
   for (unsigned i=0; i<statusitem_count; i++) {
-    sdl_set_status_text(i+1, statusitem_text[i], statusitem_active[i+1]);
+    sdl_set_status_text(i+1, statusitem[i].text, statusitem_active[i+1]);
   }
 }
 

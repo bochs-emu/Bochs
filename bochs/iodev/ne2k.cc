@@ -343,6 +343,7 @@ void bx_ne2k_c::write_cr(Bit32u value)
 				(64 + 96 + 4*8 + BX_NE2K_THIS s.tx_bytes*8)/10,
 				0); // not continuous
     BX_NE2K_THIS s.tx_timer_active = 1;
+    bx_gui->statusbar_setitem(BX_NE2K_THIS s.statusbar_id, 1, 1);
   }
 
   // Linux probes for an interrupt by setting up a remote-DMA read
@@ -1468,6 +1469,7 @@ void bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
     set_irq_level(1);
   }
 
+  bx_gui->statusbar_setitem(BX_NE2K_THIS s.statusbar_id, 1);
 }
 
 void bx_ne2k_c::init(void)
@@ -1586,6 +1588,8 @@ void bx_ne2k_c::init(void)
   // ne2k signature
   for (int i = 12; i < 32; i++)
     BX_NE2K_THIS s.macaddr[i] = 0x57;
+
+  BX_NE2K_THIS s.statusbar_id = bx_gui->register_statusitem("NE2K", 1);
 
   // Attach to the selected ethernet module
   BX_NE2K_THIS ethdev = DEV_net_init_module(base, rx_handler, rx_status_handler, this);

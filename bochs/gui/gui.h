@@ -149,7 +149,7 @@ public:
   void cleanup(void);
   void update_drive_status_buttons(void);
   static void     mouse_enabled_changed(bx_bool val);
-  int register_statusitem(const char *text);
+  int register_statusitem(const char *text, bx_bool auto_off=0);
   static void init_signal_handlers();
   static void toggle_mouse_enable(void);
   bx_bool mouse_toggle_check(Bit32u key, bx_bool pressed);
@@ -170,6 +170,9 @@ protected:
   static void userbutton_handler(void);
   static void save_restore_handler(void);
 
+  static void led_timer_handler(void *);
+  void led_timer(void);
+
   bx_bool floppyA_status;
   bx_bool floppyB_status;
   bx_bool cdrom1_status;
@@ -189,8 +192,16 @@ protected:
   unsigned char vga_charmap[0x2000];
   bx_bool charmap_updated;
   bx_bool char_changed[256];
+
   unsigned statusitem_count;
-  char statusitem_text[BX_MAX_STATUSITEMS][8];
+  int led_timer_index;
+  struct {
+    char text[8];
+    bx_bool mode; // read/write
+    bx_bool auto_off;
+    Bit8u counter;
+  } statusitem[BX_MAX_STATUSITEMS];
+
   disp_mode_t disp_mode;
   bx_bool new_gfx_api;
   Bit16u host_xres;

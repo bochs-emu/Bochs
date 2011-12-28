@@ -98,6 +98,7 @@ bx_gui_c::bx_gui_c(void)
 {
   put("GUI"); // Init in specific_init
   statusitem_count = 0;
+  led_timer_index = BX_NULL_TIMER_HANDLE;
   framebuffer = NULL;
 }
 
@@ -244,6 +245,12 @@ void bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheig
     BX_GUI_THIS framebuffer = new Bit8u[BX_MAX_XRES * BX_MAX_YRES * 4];
   }
   show_headerbar();
+
+  // register timer for status bar LEDs
+  if (BX_GUI_THIS led_timer_index == BX_NULL_TIMER_HANDLE) {
+    BX_GUI_THIS led_timer_index =
+      DEV_register_timer(this, led_timer_handler, 50000, 1, 1, "status bar LEDs");
+  }
 }
 
 void bx_gui_c::cleanup(void)
@@ -745,14 +752,35 @@ void bx_gui_c::beep_off()
   BX_DEBUG(("GUI Beep OFF"));
 }
 
-int bx_gui_c::register_statusitem(const char *text)
+int bx_gui_c::register_statusitem(const char *text, bx_bool auto_off)
 {
   if (statusitem_count < BX_MAX_STATUSITEMS) {
-    strncpy(statusitem_text[statusitem_count], text, 8);
-    statusitem_text[statusitem_count][7] = 0;
+    strncpy(statusitem[statusitem_count].text, text, 8);
+    statusitem[statusitem_count].text[7] = 0;
+    statusitem[statusitem_count].auto_off = auto_off;
+    statusitem[statusitem_count].counter = 0;
     return statusitem_count++;
   } else {
    return -1;
+  }
+}
+
+void bx_gui_c::led_timer_handler(void *this_ptr)
+{
+  bx_gui_c *class_ptr = (bx_gui_c *) this_ptr;
+  class_ptr->led_timer();
+}
+
+void bx_gui_c::led_timer()
+{
+  for (unsigned i = 0; i < statusitem_count; i++) {
+    if (statusitem[i].auto_off) {
+      if (statusitem[i].counter > 0) {
+        if (!(--statusitem[i].counter)) {
+          statusbar_setitem(i, 0);
+        }
+      }
+    }
   }
 }
 
