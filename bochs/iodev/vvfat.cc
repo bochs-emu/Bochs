@@ -1616,7 +1616,7 @@ void vvfat_image_t::parse_directory(const char *path, Bit32u start_cluster)
       fstart = dtoh16(newentry->begin) | (dtoh16(newentry->begin_hi) << 16);
       mapping = find_mapping_for_cluster(fstart);
       if (mapping == NULL) {
-        if (newentry->attributes == 0x10) {
+        if ((newentry->attributes & 0x10) > 0) {
           bx_mkdir(full_path);
           parse_directory(full_path, fstart);
         } else {
