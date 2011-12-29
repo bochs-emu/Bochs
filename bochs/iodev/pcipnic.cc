@@ -53,7 +53,7 @@ void libpcipnic_LTX_plugin_fini(void)
 
 bx_pcipnic_c::bx_pcipnic_c()
 {
-  put("PNIC");
+  put("pcipnic", "PNIC");
 }
 
 bx_pcipnic_c::~bx_pcipnic_c()

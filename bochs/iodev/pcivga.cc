@@ -58,7 +58,7 @@ void libpcivga_LTX_plugin_fini(void)
 
 bx_pcivga_c::bx_pcivga_c()
 {
-  put("PCIVGA");
+  put("pcivga", "PCIVG");
 }
 
 bx_pcivga_c::~bx_pcivga_c()

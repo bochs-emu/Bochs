@@ -280,10 +280,10 @@ void bx_init_options()
 
   // subtree for setting up log actions by device in bochsrc
   bx_list_c *logfn = new bx_list_c(menu, "logfn", "Logfunctions", 4);
-  new bx_list_c(logfn, "panic", "", BX_MAX_LOGFN_MODULES);
-  new bx_list_c(logfn, "error", "", BX_MAX_LOGFN_MODULES);
-  new bx_list_c(logfn, "info", "", BX_MAX_LOGFN_MODULES);
   new bx_list_c(logfn, "debug", "", BX_MAX_LOGFN_MODULES);
+  new bx_list_c(logfn, "info", "", BX_MAX_LOGFN_MODULES);
+  new bx_list_c(logfn, "error", "", BX_MAX_LOGFN_MODULES);
+  new bx_list_c(logfn, "panic", "", BX_MAX_LOGFN_MODULES);
 
   // optional plugin control (empty list)
   menu = new bx_list_c(menu, "plugin_ctrl", "Optional Plugin Control", 16);

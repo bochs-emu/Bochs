@@ -600,6 +600,7 @@ public:
   virtual bx_param_enum_c *get_param_enum(const char *pname, bx_param_c *base=NULL) {return NULL;}
   virtual unsigned gen_param_id() {return 0;}
   virtual int get_n_log_modules() {return -1;}
+  virtual char *get_logfn_name(int mod) {return 0;}
   virtual char *get_prefix(int mod) {return 0;}
   virtual int get_log_action(int mod, int level) {return -1;}
   virtual void set_log_action(int mod, int level, int action) {}

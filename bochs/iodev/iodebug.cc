@@ -60,7 +60,7 @@ struct bx_iodebug_s_type {
 
 bx_iodebug_c::bx_iodebug_c()
 {
-  put("IODBG");
+  put("iodebug", "IODBG");
 }
 
 void bx_iodebug_c::init(void)

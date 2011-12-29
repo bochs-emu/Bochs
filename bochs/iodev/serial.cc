@@ -68,7 +68,7 @@ void libserial_LTX_plugin_fini(void)
 
 bx_serial_c::bx_serial_c(void)
 {
-  put("SER");
+  put("serial", "SER");
   for (int i=0; i<BX_SERIAL_MAXDEV; i++) {
     s[i].io_mode = BX_SER_MODE_NULL;
     s[i].tty_id = -1;

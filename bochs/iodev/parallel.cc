@@ -49,7 +49,7 @@ void libparallel_LTX_plugin_fini(void)
 
 bx_parallel_c::bx_parallel_c()
 {
-  put("PAR");
+  put("parallel", "PAR");
   for (int i=0; i<BX_PARPORT_MAXDEV; i++) {
     s[i].output = NULL;
   }

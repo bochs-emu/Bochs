@@ -1008,6 +1008,29 @@ void bx_sr_after_restore_state(void)
   DEV_after_restore_state();
 }
 
+void bx_set_log_action_by_device()
+{
+  int m, l;
+  char *module;
+  bx_list_c *levels, *table;
+  bx_param_num_c *action;
+
+  for (m = 0; m < SIM->get_n_log_modules(); m++) {
+    module = SIM->get_logfn_name(m);
+    if (strcmp(module, "?")) {
+      for (l = 0; l < SIM->get_max_log_level(); l++) {
+        levels = (bx_list_c*) SIM->get_param("general.logfn");
+        table = (bx_list_c*) levels->get(l);
+        action = (bx_param_num_c*) table->get_by_name(module);
+        if (action != NULL) {
+          SIM->set_log_action(m, l, action->get());
+        }
+      }
+    }
+  }
+  // TODO: check for invalid module names
+}
+
 void bx_init_hardware()
 {
   // all configuration has been read, now initialize everything.
@@ -1215,9 +1238,7 @@ void bx_init_hardware()
       SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(0);
     }
   } else {
-    //
-    // TODO: add set log actions by device code here
-    //
+    bx_set_log_action_by_device();
   }
 
   // will enable A20 line and reset CPU and devices

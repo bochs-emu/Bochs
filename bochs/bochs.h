@@ -241,6 +241,7 @@ void print_tree(bx_param_c *node, int level = 0);
 
 typedef class BOCHSAPI logfunctions
 {
+  char *name;
   char *prefix;
 // values of onoff: 0=ignore, 1=report, 2=ask, 3=fatal
 #define ACT_IGNORE 0
@@ -264,13 +265,15 @@ public:
   void ldebug(const char *fmt, ...) BX_CPP_AttrPrintf(2, 3);
   void fatal (const char *prefix, const char *fmt, va_list ap, int exit_status);
   void ask (int level, const char *prefix, const char *fmt, va_list ap);
-  void put(const char *);
+  void put(const char *p);
+  void put(const char *n, const char *p);
   void setio(class iofunctions *);
   void setonoff(int loglev, int value) {
     assert (loglev >= 0 && loglev < N_LOGLEV);
     onoff[loglev] = value;
   }
-  char *getprefix () { return prefix; }
+  char *get_name() { return name; }
+  char *getprefix() { return prefix; }
   int getonoff(int level) {
     assert (level>=0 && level<N_LOGLEV);
     return onoff[level];

@@ -125,7 +125,7 @@ bx_hard_drive_c::bx_hard_drive_c()
 #   error code must be fixed to use DLL_HD_SUPPORT and 4 ata channels
 #endif
 
-  put("HD");
+  put("harddrv", "HD");
   for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     for (Bit8u device=0; device<2; device ++) {
       channels[channel].drives[device].hdimage =  NULL;
