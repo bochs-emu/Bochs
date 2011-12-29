@@ -322,6 +322,7 @@ void bx_local_apic_c::write(bx_phy_address addr, void *data, unsigned len)
 #define BX_LAPIC_ARBITRATION_PRIORITY 0x090
 #define BX_LAPIC_PPR                  0x0A0
 #define BX_LAPIC_EOI                  0x0B0
+#define BX_LAPIC_RRD                  0x0C0
 #define BX_LAPIC_LDR                  0x0D0
 #define BX_LAPIC_DESTINATION_FORMAT   0x0E0
 #define BX_LAPIC_SPURIOUS_VECTOR      0x0F0
@@ -381,8 +382,10 @@ void bx_local_apic_c::write(bx_phy_address addr, void *data, unsigned len)
 void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
 {
   BX_ASSERT((addr & 0xf) == 0);
+
   unsigned apic_reg = addr & 0xff0;
   BX_DEBUG(("LAPIC write 0x%08x to register 0x%04x", value, apic_reg));
+
   switch(apic_reg) {
     case BX_LAPIC_TPR: // task priority
       set_tpr(value & 0xff);
@@ -423,7 +426,7 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
     case BX_LAPIC_LVT_LINT1:   // LVT LINT1 Reg
     case BX_LAPIC_LVT_ERROR:   // LVT Error Reg
       set_lvt_entry(apic_reg, value);
-         break;
+      break;
     case BX_LAPIC_TIMER_INITIAL_COUNT:
       set_initial_timer_count(value);
       break;
@@ -432,10 +435,12 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
       timer_divconf = value & 0xb;
       set_divide_configuration(timer_divconf);
       break;
+      break;
     /* all read-only registers go here */
     case BX_LAPIC_ID:      // local APIC id
     case BX_LAPIC_VERSION: // local APIC version
     case BX_LAPIC_ARBITRATION_PRIORITY:
+    case BX_LAPIC_RRD:
     case BX_LAPIC_PPR:     // processor priority
     // ISRs not writable
     case BX_LAPIC_ISR1: case BX_LAPIC_ISR2:
@@ -460,7 +465,7 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
     default:
       shadow_error_status |= APIC_ERR_ILLEGAL_ADDR;
       // but for now I want to know about it in case I missed some.
-      BX_ERROR(("APIC register %x not implemented", apic_reg));
+      BX_ERROR(("APIC write: register %x not implemented", apic_reg));
   }
 }
 
@@ -596,8 +601,10 @@ Bit32u bx_local_apic_c::read_aligned(bx_phy_address addr)
 {
   BX_ASSERT((addr & 0xf) == 0);
   Bit32u data = 0;  // default value for unimplemented registers
+
   unsigned apic_reg = addr & 0xff0;
   BX_DEBUG(("LAPIC read from register 0x%04x", apic_reg));
+
   switch(apic_reg) {
   case BX_LAPIC_ID:      // local APIC id
     data = apic_id << 24; break;
@@ -697,7 +704,9 @@ Bit32u bx_local_apic_c::read_aligned(bx_phy_address addr)
     data = timer_divconf;
     break;
   default:
-    BX_ERROR(("APIC register %08x not implemented", apic_reg));
+      shadow_error_status |= APIC_ERR_ILLEGAL_ADDR;
+      // but for now I want to know about it in case I missed some.
+      BX_ERROR(("APIC read: register %x not implemented", apic_reg));
   }
 
   BX_DEBUG(("read from APIC address 0x" FMT_PHY_ADDRX " = %08x", addr, data));

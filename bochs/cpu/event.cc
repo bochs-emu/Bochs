@@ -237,7 +237,7 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
     if (BX_CPU_THIS_PTR debug_trap)
       exception(BX_DB_EXCEPTION, 0); // no error, not interrupt
   }
-  
+
   // Priority 5: External Interrupts
   //   VMX Preemption Timer Expired.
   //   NMI Interrupts

@@ -790,7 +790,7 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
 #if BX_SUPPORT_X86_64
   static bx_bool x86_64_enabled = SIM->get_param_bool(BXPN_CPUID_X86_64)->get();
   if (x86_64_enabled) {
-    features_bitmask |= BX_ISA_RDTSCP | BX_ISA_LM_LAHF_SAHF;
+    features_bitmask |= BX_ISA_CMPXCHG16B | BX_ISA_RDTSCP | BX_ISA_LM_LAHF_SAHF;
 
     if (sse_enabled < BX_CPUID_SUPPORT_SSE2) {
       BX_PANIC(("PANIC: x86-64 emulation requires SSE2 support !"));

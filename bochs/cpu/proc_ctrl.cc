@@ -146,6 +146,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
 
   if (! BX_CPU_THIS_PTR get_IF()) {
     BX_INFO(("WARNING: HLT instruction with IF=0!"));
+    BX_CPU_THIS_PTR assert_IF();
   }
 
 #if BX_SUPPORT_VMX

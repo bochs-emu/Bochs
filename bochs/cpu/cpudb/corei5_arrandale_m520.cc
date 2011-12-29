@@ -135,6 +135,7 @@ Bit64u corei5_arrandale_m520_t::get_isa_extensions_bitmask(void) const
          BX_ISA_SMX |
          BX_ISA_RDTSCP |
          BX_ISA_AES_PCLMULQDQ |
+         BX_ISA_CMPXCHG16B |
          BX_ISA_LM_LAHF_SAHF;
 }
 
