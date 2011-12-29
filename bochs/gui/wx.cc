@@ -1083,34 +1083,28 @@ void bx_wx_gui_c::statusbar_setitem(int element, bx_bool active, bx_bool w)
   wxMutexGuiEnter();
   if (element < 0) {
     for (unsigned i = 0; i < statusitem_count; i++) {
-      if (active) {
-#if defined(__WXMSW__)
-        status_text[0] = 9;
-        strcpy(status_text+1, statusitem[i].text);
-        theFrame->SetStatusText(status_text, i+1);
-#else
-        theFrame->SetStatusText(wxString(statusitem[i].text, wxConvUTF8), i+1);
-#endif
-      } else {
-        theFrame->SetStatusText(wxT(""), i+1);
-      }
+      theFrame->SetStatusText(wxT(""), i+1);
     }
   } else if ((unsigned)element < statusitem_count) {
-    if (active) {
+    if ((active != statusitem[element].active) ||
+        (w != statusitem[element].mode)) {
+      if (active) {
 #if defined(__WXMSW__)
         status_text[0] = 9;
         strcpy(status_text+1, statusitem[element].text);
         theFrame->SetStatusText(status_text, element+1);
 #else
-      theFrame->SetStatusText(wxString(statusitem[element].text, wxConvUTF8),
-        element+1);
+        theFrame->SetStatusText(wxString(statusitem[element].text, wxConvUTF8),
+                                element+1);
 #endif
-      statusitem[element].mode = w;
-      if (active && statusitem[element].auto_off) {
-        statusitem[element].counter = 10;
+      } else {
+        theFrame->SetStatusText(wxT(""), element+1);
       }
-    } else {
-      theFrame->SetStatusText(wxT(""), element+1);
+      statusitem[element].active = active;
+      statusitem[element].mode = w;
+    }
+    if (active && statusitem[element].auto_off) {
+      statusitem[element].counter = 5;
     }
   }
   wxMutexGuiLeave();

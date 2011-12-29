@@ -712,13 +712,17 @@ void bx_x_gui_c::statusbar_setitem(int element, bx_bool active, bx_bool w)
 {
   if (element < 0) {
     for (unsigned i = 0; i < statusitem_count; i++) {
-      set_status_text(i+1, statusitem[i].text, active, w);
+      set_status_text(i+1, statusitem[i].text, 0, 0);
     }
   } else if ((unsigned)element < statusitem_count) {
-    set_status_text(element+1, statusitem[element].text, active, w);
-    statusitem[element].mode = w;
+    if ((active != statusitem[element].active) ||
+        (w != statusitem[element].mode)) {
+      set_status_text(element+1, statusitem[element].text, active, w);
+      statusitem[element].active = active;
+      statusitem[element].mode = w;
+    }
     if (active && statusitem[element].auto_off) {
-      statusitem[element].counter = 10;
+      statusitem[element].counter = 5;
     }
   }
 }

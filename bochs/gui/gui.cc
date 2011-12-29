@@ -249,7 +249,7 @@ void bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheig
   // register timer for status bar LEDs
   if (BX_GUI_THIS led_timer_index == BX_NULL_TIMER_HANDLE) {
     BX_GUI_THIS led_timer_index =
-      DEV_register_timer(this, led_timer_handler, 50000, 1, 1, "status bar LEDs");
+      DEV_register_timer(this, led_timer_handler, 100000, 1, 1, "status bar LEDs");
   }
 }
 
@@ -759,6 +759,8 @@ int bx_gui_c::register_statusitem(const char *text, bx_bool auto_off)
     statusitem[statusitem_count].text[7] = 0;
     statusitem[statusitem_count].auto_off = auto_off;
     statusitem[statusitem_count].counter = 0;
+    statusitem[statusitem_count].active = 0;
+    statusitem[statusitem_count].mode = 0;
     return statusitem_count++;
   } else {
    return -1;

@@ -197,6 +197,7 @@ protected:
   int led_timer_index;
   struct {
     char text[8];
+    bx_bool active;
     bx_bool mode; // read/write
     bx_bool auto_off;
     Bit8u counter;

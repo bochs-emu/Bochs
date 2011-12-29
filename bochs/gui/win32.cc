@@ -961,13 +961,17 @@ void bx_win32_gui_c::statusbar_setitem(int element, bx_bool active, bx_bool w)
 {
   if (element < 0) {
     for (int i = 0; i < (int)statusitem_count; i++) {
-      SetStatusText(i+BX_SB_TEXT_ELEMENTS, statusitem[i].text, active, w);
+      SetStatusText(i+BX_SB_TEXT_ELEMENTS, statusitem[i].text, 0, 0);
     }
   } else if (element < (int)statusitem_count) {
-    SetStatusText(element+BX_SB_TEXT_ELEMENTS, statusitem[element].text, active, w);
-    statusitem[element].mode = w;
+    if ((active != statusitem[element].active) ||
+        (w != statusitem[element].mode)) {
+      SetStatusText(element+BX_SB_TEXT_ELEMENTS, statusitem[element].text, active, w);
+      statusitem[element].active = active;
+      statusitem[element].mode = w;
+    }
     if (active && statusitem[element].auto_off) {
-      statusitem[element].counter = 10;
+      statusitem[element].counter = 5;
     }
   }
 }
