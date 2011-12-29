@@ -43,6 +43,8 @@ Bit8u bx_user_plugin_count = 0;
 
 #define LOG_THIS genlog->
 
+#define BX_MAX_LOGFN_MODULES 20
+
 extern bx_debug_t bx_dbg;
 
 static const char *get_builtin_variable(const char *varname);
@@ -275,6 +277,13 @@ void bx_init_options()
       "benchmark mode",
       "set benchmark mode",
       0, BX_MAX_BIT32U, 0);
+
+  // subtree for setting up log actions by device in bochsrc
+  bx_list_c *logfn = new bx_list_c(menu, "logfn", "Logfunctions", 4);
+  new bx_list_c(logfn, "panic", "", BX_MAX_LOGFN_MODULES);
+  new bx_list_c(logfn, "error", "", BX_MAX_LOGFN_MODULES);
+  new bx_list_c(logfn, "info", "", BX_MAX_LOGFN_MODULES);
+  new bx_list_c(logfn, "debug", "", BX_MAX_LOGFN_MODULES);
 
   // optional plugin control (empty list)
   menu = new bx_list_c(menu, "plugin_ctrl", "Optional Plugin Control", 16);
@@ -2121,33 +2130,65 @@ int get_floppy_type_from_image(const char *filename)
   }
 }
 
-static Bit32s parse_log_options(const char *context, char *loglev, char *param1)
+static Bit32s parse_log_options(const char *context, int num_params, char *params[])
 {
-  int level;
+  int level, action, i;
+  bx_bool def_action = 0;
+  char *param, *module, *actstr;
+  char pname[20];
+  bx_list_c *base;
+  bx_param_num_c *mparam;
 
-  if (!strcmp(loglev, "panic")) {
+  if (!strcmp(params[0], "panic")) {
     level = LOGLEV_PANIC;
-  } else if (!strcmp(loglev, "error")) {
+  } else if (!strcmp(params[0], "error")) {
     level = LOGLEV_ERROR;
-  } else if (!strcmp(loglev, "info")) {
+  } else if (!strcmp(params[0], "info")) {
     level = LOGLEV_INFO;
   } else { /* debug */
     level = LOGLEV_DEBUG;
   }
-  if (strncmp(param1, "action=", 7)) {
-    PARSE_ERR(("%s: %s directive malformed.", context, loglev));
-  }
-  char *action = param1 + 7;
-  if (!strcmp(action, "fatal"))
-    SIM->set_default_log_action(level, ACT_FATAL);
-  else if (!strcmp (action, "report"))
-    SIM->set_default_log_action(level, ACT_REPORT);
-  else if (!strcmp (action, "ignore"))
-    SIM->set_default_log_action(level, ACT_IGNORE);
-  else if (!strcmp (action, "ask"))
-    SIM->set_default_log_action(level, ACT_ASK);
-  else {
-    PARSE_ERR(("%s: %s directive malformed.", context, loglev));
+  for (i = 1; i < num_params; i++) {
+    param = strdup(params[i]);
+    module = strtok(param, "=");
+    actstr = strtok(NULL, "");
+    if (actstr != NULL) {
+      def_action = !strcmp(module, "action");
+      if (!strcmp(actstr, "fatal"))
+        action = ACT_FATAL;
+      else if (!strcmp (actstr, "report"))
+        action = ACT_REPORT;
+      else if (!strcmp (actstr, "ignore"))
+        action = ACT_IGNORE;
+      else if (!strcmp (actstr, "ask"))
+        action = ACT_ASK;
+      else {
+        PARSE_ERR(("%s: %s directive malformed.", context, params[0]));
+        free(param);
+        return -1;
+      }
+      if (def_action) {
+        SIM->set_default_log_action(level, action);
+      } else {
+        sprintf(pname, "general.logfn.%s", params[0]);
+        base = (bx_list_c*) SIM->get_param(pname);
+        mparam = (bx_param_num_c*) base->get_by_name(module);
+        if (mparam != NULL) {
+          mparam->set(action);
+        } else {
+          if (base->get_size() < BX_MAX_LOGFN_MODULES) {
+            mparam = new bx_param_num_c(base, module, "", "", 0, BX_MAX_BIT32U, action);
+          } else {
+            PARSE_ERR(("%s: %s: too many log modules (max = %d).", context, params[0], BX_MAX_LOGFN_MODULES));
+          }
+        }
+      }
+    } else {
+      PARSE_ERR(("%s: %s directive malformed.", context, params[0]));
+      free(param);
+      return -1;
+    }
+    free(param);
   }
   return 0;
 }
@@ -2581,31 +2622,31 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
     SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set(params[1]);
   } else if (!strcmp(params[0], "panic")) {
-    if (num_params != 2) {
+    if (num_params < 2) {
       PARSE_ERR(("%s: panic directive malformed.", context));
     }
-    if (parse_log_options(context, params[0], params[1]) < 0) {
+    if (parse_log_options(context, num_params, params) < 0) {
       return -1;
     }
   } else if (!strcmp(params[0], "error")) {
-    if (num_params != 2) {
+    if (num_params < 2) {
       PARSE_ERR(("%s: error directive malformed.", context));
     }
-    if (parse_log_options(context, params[0], params[1]) < 0) {
+    if (parse_log_options(context, num_params, params) < 0) {
       return -1;
     }
   } else if (!strcmp(params[0], "info")) {
-    if (num_params != 2) {
+    if (num_params < 2) {
       PARSE_ERR(("%s: info directive malformed.", context));
     }
-    if (parse_log_options(context, params[0], params[1]) < 0) {
+    if (parse_log_options(context, num_params, params) < 0) {
       return -1;
     }
   } else if (!strcmp(params[0], "debug")) {
-    if (num_params != 2) {
+    if (num_params < 2) {
       PARSE_ERR(("%s: debug directive malformed.", context));
     }
-    if (parse_log_options(context, params[0], params[1]) < 0) {
+    if (parse_log_options(context, num_params, params) < 0) {
       return -1;
     }
   } else if (!strcmp(params[0], "cpu")) {

@@ -1214,6 +1214,10 @@ void bx_init_hardware()
       BX_PANIC(("cannot restore log options"));
       SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(0);
     }
+  } else {
+    //
+    // TODO: add set log actions by device code here
+    //
   }
 
   // will enable A20 line and reset CPU and devices
