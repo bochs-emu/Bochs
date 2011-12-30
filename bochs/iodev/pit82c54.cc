@@ -171,7 +171,7 @@ void BX_CPP_AttrRegparmN(1) pit_82C54::decrement (counter_type &thisctr)
 
 void pit_82C54::init(void)
 {
-  put("PIT81");
+  put("pit82c54", "PIT81");
 
   for(int i=0;i<3;i++) {
     BX_DEBUG(("Setting read_state to LSB"));

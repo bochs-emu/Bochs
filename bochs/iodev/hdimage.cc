@@ -61,7 +61,7 @@ void libhdimage_LTX_plugin_fini(void)
 
 bx_hdimage_ctl_c::bx_hdimage_ctl_c()
 {
-  put("IMG");
+  put("hdimage", "IMG");
 }
 
 device_image_t* bx_hdimage_ctl_c::init_image(Bit8u image_mode, Bit64u disk_size, const char *journal)

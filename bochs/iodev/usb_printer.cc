@@ -120,7 +120,7 @@ usb_printer_device_c::usb_printer_device_c(usbdev_type type, const char *filenam
   s.fname = filename;
   s.fp = NULL;
 
-  put("USBPR");
+  put("usb_printer", "USBPR");
 }
 
 usb_printer_device_c::~usb_printer_device_c(void)

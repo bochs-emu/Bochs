@@ -405,7 +405,7 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
   d.connected = 1;
   memset((void*)&s, 0, sizeof(s));
 
-  put("USBHI");
+  put("usb_hid", "USBHI");
 }
 
 usb_hid_device_c::~usb_hid_device_c(void)

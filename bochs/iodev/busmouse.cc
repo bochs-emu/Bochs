@@ -51,7 +51,7 @@ void libbusmouse_LTX_plugin_fini(void)
 
 bx_busm_c::bx_busm_c()
 {
-  put("BUSM");
+  put("busmouse", "BUSM");
 }
 
 bx_busm_c::~bx_busm_c()

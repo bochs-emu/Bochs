@@ -54,7 +54,7 @@ void libspeaker_LTX_plugin_fini(void)
 
 bx_speaker_c::bx_speaker_c()
 {
-  put("SPEAK");
+  put("speaker", "SPEAK");
 
   beep_frequency = 0.0; // Off
 

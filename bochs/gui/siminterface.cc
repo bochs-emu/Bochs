@@ -90,15 +90,16 @@ public:
   virtual Bit32u gen_param_id() { return param_id++; }
   virtual int get_n_log_modules();
   virtual char *get_logfn_name(int mod);
+  virtual int get_logfn_id(const char *name);
   virtual char *get_prefix(int mod);
   virtual int get_log_action(int mod, int level);
   virtual void set_log_action(int mod, int level, int action);
   virtual char *get_action_name(int action);
   virtual int get_default_log_action(int level) {
-	return logfunctions::get_default_action(level);
+    return logfunctions::get_default_action(level);
   }
   virtual void set_default_log_action(int level, int action) {
-	logfunctions::set_default_action(level, action);
+    logfunctions::set_default_action(level, action);
   }
   virtual const char *get_log_level_name(int level);
   virtual int get_max_log_level() { return N_LOGLEV; }
@@ -346,6 +347,21 @@ char *bx_real_sim_c::get_logfn_name(int mod)
 {
   logfunc_t *logfn = io->get_logfn(mod);
   return logfn->get_name();
+}
+
+int bx_real_sim_c::get_logfn_id(const char *name)
+{
+  logfunc_t *logfn;
+  int id = -1;
+
+  for (int i = 0; i < io->get_n_logfns(); i++) {
+    logfn = io->get_logfn(i);
+    if (!stricmp(name, logfn->get_name())) {
+      id = i;
+      break;
+    }
+  }
+  return id;
 }
 
 char *bx_real_sim_c::get_prefix(int mod)

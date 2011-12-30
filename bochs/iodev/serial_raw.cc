@@ -45,7 +45,7 @@ serial_raw::serial_raw(const char *devname)
 #endif
 #endif
 
-  put ("SERR");
+  put("serial_raw", "SERR");
 #ifdef WIN32
   memset(&dcb, 0, sizeof(DCB));
   dcb.DCBlength = sizeof(DCB);

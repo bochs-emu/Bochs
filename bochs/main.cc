@@ -1010,25 +1010,23 @@ void bx_sr_after_restore_state(void)
 
 void bx_set_log_action_by_device()
 {
-  int m, l;
-  char *module;
-  bx_list_c *levels, *table;
+  int id, l, m;
+  bx_list_c *loglev, *level;
   bx_param_num_c *action;
 
-  for (m = 0; m < SIM->get_n_log_modules(); m++) {
-    module = SIM->get_logfn_name(m);
-    if (strcmp(module, "?")) {
-      for (l = 0; l < SIM->get_max_log_level(); l++) {
-        levels = (bx_list_c*) SIM->get_param("general.logfn");
-        table = (bx_list_c*) levels->get(l);
-        action = (bx_param_num_c*) table->get_by_name(module);
-        if (action != NULL) {
-          SIM->set_log_action(m, l, action->get());
-        }
+  loglev = (bx_list_c*) SIM->get_param("general.logfn");
+  for (l = 0; l < loglev->get_size(); l++) {
+    level = (bx_list_c*) loglev->get(l);
+    for (m = 0; m < level->get_size(); m++) {
+      action = (bx_param_num_c*) level->get(m);
+      id = SIM->get_logfn_id(action->get_name());
+      if (id < 0) {
+        BX_PANIC(("unknown log function module '%s'", action->get_name()));
+      } else {
+        SIM->set_log_action(id, l, action->get());
       }
     }
   }
-  // TODO: check for invalid module names
 }
 
 void bx_init_hardware()

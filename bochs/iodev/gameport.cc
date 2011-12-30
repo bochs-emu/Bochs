@@ -70,7 +70,7 @@ void libgameport_LTX_plugin_fini(void)
 
 bx_gameport_c::bx_gameport_c()
 {
-  put("GAME");
+  put("gameport", "GAME");
   joyfd = -1;
 }
 

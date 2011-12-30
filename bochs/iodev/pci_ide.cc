@@ -55,7 +55,7 @@ void libpci_ide_LTX_plugin_fini(void)
 
 bx_pci_ide_c::bx_pci_ide_c()
 {
-  put("PIDE");
+  put("pci_ide", "PIDE");
   s.bmdma[0].timer_index = BX_NULL_TIMER_HANDLE;
   s.bmdma[1].timer_index = BX_NULL_TIMER_HANDLE;
   s.bmdma[0].buffer = NULL;
