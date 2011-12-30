@@ -872,7 +872,7 @@ bx_address BX_CPU_C::read_CR0(void)
   bx_address cr0_val = BX_CPU_THIS_PTR cr0.get32();
 
 #if BX_SUPPORT_SVM
-  if (BX_CPU_THIS_PTR in_vmx_guest) {
+  if (BX_CPU_THIS_PTR in_svm_guest) {
     if(SVM_CR_READ_INTERCEPTED(0)) Svm_Vmexit(SVM_VMEXIT_CR0_READ);
   }
 #endif
@@ -893,7 +893,7 @@ bx_address BX_CPU_C::read_CR4(void)
   bx_address cr4_val = BX_CPU_THIS_PTR cr4.get32();
 
 #if BX_SUPPORT_SVM
-  if (BX_CPU_THIS_PTR in_vmx_guest) {
+  if (BX_CPU_THIS_PTR in_svm_guest) {
     if(SVM_CR_READ_INTERCEPTED(4)) Svm_Vmexit(SVM_VMEXIT_CR4_READ);
   }
 #endif
