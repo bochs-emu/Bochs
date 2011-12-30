@@ -1149,26 +1149,28 @@ void vvfat_image_t::set_file_attributes(void)
           fpath[strlen(fpath) - 1] = '\0';
         }
         mapping_t* mapping = find_mapping_for_path(fpath);
-        direntry_t* entry = (direntry_t*)array_get(&directory, mapping->dir_index);
-        attributes = entry->attributes;
-        ptr = strtok(NULL, "");
-        for (i = 0; i < (int)strlen(ptr); i++) {
-          switch (ptr[i]) {
-            case 'a':
-              attributes &= ~0x20;
-              break;
-            case 'S':
-              attributes |= 0x04;
-              break;
-            case 'H':
-              attributes |= 0x02;
-              break;
-            case 'R':
-              attributes |= 0x01;
-              break;
+        if (mapping != NULL) {
+          direntry_t* entry = (direntry_t*)array_get(&directory, mapping->dir_index);
+          attributes = entry->attributes;
+          ptr = strtok(NULL, "");
+          for (i = 0; i < (int)strlen(ptr); i++) {
+            switch (ptr[i]) {
+              case 'a':
+                attributes &= ~0x20;
+                break;
+              case 'S':
+                attributes |= 0x04;
+                break;
+              case 'H':
+                attributes |= 0x02;
+                break;
+              case 'R':
+                attributes |= 0x01;
+                break;
+            }
           }
+          entry->attributes = attributes;
         }
-        entry->attributes = attributes;
       }
     } while (!feof(fd));
     fclose(fd);
@@ -1566,7 +1568,7 @@ bx_bool vvfat_image_t::write_file(const char *path, direntry_t *entry, bx_bool c
 
 void vvfat_image_t::parse_directory(const char *path, Bit32u start_cluster)
 {
-  Bit32u csize, fstart, cur, next, size;
+  Bit32u csize, fstart, cur, next, size, rsvd_clusters;
   Bit64u offset;
   Bit8u *buffer, *ptr;
   direntry_t *entry, *newentry;
@@ -1576,6 +1578,7 @@ void vvfat_image_t::parse_directory(const char *path, Bit32u start_cluster)
   mapping_t *mapping;
 
   csize = sectors_per_cluster * 0x200;
+  rsvd_clusters = max_fat_value - 15;
   if (start_cluster == 0) {
     size = root_entries * 32;
     offset = offset_to_root_dir;
@@ -1592,11 +1595,11 @@ void vvfat_image_t::parse_directory(const char *path, Bit32u start_cluster)
       lseek(offset * 0x200, SEEK_SET);
       read(buffer+(size-csize), csize);
       next = fat_get_next(cur);
-      if (next != max_fat_value) {
+      if (next < rsvd_clusters) {
         size += csize;
         buffer = (Bit8u*)realloc(buffer, size);
       }
-    } while (next != max_fat_value);
+    } while (next < rsvd_clusters);
   }
   ptr = buffer;
   do {
@@ -1633,7 +1636,7 @@ void vvfat_image_t::parse_directory(const char *path, Bit32u start_cluster)
       } else {
         entry = (direntry_t*)array_get(&directory, mapping->dir_index);
         if (!strcmp(full_path, mapping->path)) {
-          if (newentry->attributes == 0x10) {
+          if ((newentry->attributes & 0x10) > 0) {
             parse_directory(full_path, fstart);
             mapping->mode &= ~MODE_DELETED;
           } else {
@@ -1657,7 +1660,7 @@ void vvfat_image_t::parse_directory(const char *path, Bit32u start_cluster)
               mapping->mode &= ~MODE_DELETED;
             }
           } else {
-            if (newentry->attributes == 0x10) {
+            if ((newentry->attributes & 0x10) > 0) {
               bx_mkdir(full_path);
               parse_directory(full_path, fstart);
             } else {
