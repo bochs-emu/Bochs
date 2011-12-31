@@ -741,7 +741,7 @@ void bx_usb_uhci_c::usb_timer(void)
                 stack[stk].t = 1;
               }
               // copy pointer for next queue item, in to vert queue head
-              if ((stk > 0) && (stack[stk].d == HC_VERT))
+              if ((stk > 0) && (stack[stk].d == HC_VERT) && !shortpacket)
                 DEV_MEM_WRITE_PHYSICAL(lastvertaddr, 4, (Bit8u*) &td.dword0);
             }
           }
