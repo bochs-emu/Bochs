@@ -367,6 +367,12 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   SVM_GUEST_STATE guest;
   Bit32u tmp;
   unsigned n;
+  bx_bool paged_real_mode = 0;
+
+  guest.eflags = vmcb_read32(SVM_GUEST_RFLAGS);
+  guest.rip = vmcb_read64(SVM_GUEST_RIP);
+  guest.rsp = vmcb_read64(SVM_GUEST_RSP);
+  guest.rax = vmcb_read64(SVM_GUEST_RAX);
 
   guest.efer.val32 = vmcb_read32(SVM_GUEST_EFER_MSR);
   tmp = vmcb_read32(SVM_GUEST_EFER_MSR_HI);
@@ -425,20 +431,35 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
     svm_segment_read(&guest.sregs[n], SVM_GUEST_ES_SELECTOR + n * 0x10);
   }
 
-  if (! guest.sregs[BX_SEG_REG_CS].cache.valid || ! guest.sregs[BX_SEG_REG_CS].selector.value) {
-    BX_ERROR(("VMRUN: VMCB null code segment"));
-    return 0;
-  }
-
   if (guest.sregs[BX_SEG_REG_CS].cache.u.segment.d_b && guest.sregs[BX_SEG_REG_CS].cache.u.segment.l) {
     BX_ERROR(("VMRUN: VMCB CS.D_B/L mismatch"));
     return 0;
   }
 
-  if (! guest.sregs[BX_SEG_REG_SS].cache.valid || ! guest.sregs[BX_SEG_REG_SS].selector.value) {
-    if (! guest.efer.get_LMA()) {
-      BX_ERROR(("VMRUN: VMCB null stack segment in 32-bit mode"));
+  if (guest.cr0.get_PE() && (guest.eflags & EFlagsVMMask) == 0) {
+    if (! guest.sregs[BX_SEG_REG_CS].cache.valid || ! guest.sregs[BX_SEG_REG_CS].selector.value) {
+      BX_ERROR(("VMRUN: VMCB null code segment"));
       return 0;
+    }
+
+    if (! guest.sregs[BX_SEG_REG_SS].cache.valid || ! guest.sregs[BX_SEG_REG_SS].selector.value) {
+      if (! guest.efer.get_LMA()) {
+        BX_ERROR(("VMRUN: VMCB null stack segment in 32-bit mode"));
+        return 0;
+      }
+    }
+  }
+  else {
+    if (! guest.cr0.get_PE() && guest.cr0.get_PG()) {
+      // special case : entering paged real mode
+      BX_INFO(("VMRUN: entering paged real mode"));
+      paged_real_mode = 1;
+      guest.cr0.val32 &= ~BX_CR0_PG_MASK;
+    }
+
+    // real or vm8086 mode: make all segments valid
+    for (n=0;n < 4; n++) {
+      guest.sregs[n].cache.valid = 1;
     }
   }
 
@@ -454,11 +475,6 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
 
   guest.idtr.base = CanonicalizeAddress(vmcb_read64(SVM_GUEST_GDTR_BASE));
   guest.idtr.limit = vmcb_read16(SVM_GUEST_GDTR_LIMIT);
-
-  guest.eflags = vmcb_read32(SVM_GUEST_RFLAGS);
-  guest.rip = vmcb_read64(SVM_GUEST_RIP);
-  guest.rsp = vmcb_read64(SVM_GUEST_RSP);
-  guest.rax = vmcb_read64(SVM_GUEST_RAX);
 
   guest.inhibit_interrupts = vmcb_read8(SVM_CONTROL_INTERRUPT_SHADOW) & 0x1;
 
@@ -489,6 +505,9 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
       return 0;
     }
   }
+
+  if (paged_real_mode)
+    BX_CPU_THIS_PTR cr0.val32 |= BX_CR0_PG_MASK;
 
   BX_CPU_THIS_PTR dr6.set32(guest.dr6);
   BX_CPU_THIS_PTR dr7.set32(guest.dr7 | 0x400);
@@ -874,6 +893,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMRUN(bxInstruction_c *i)
   BX_CPU_THIS_PTR vmcbptr = pAddr;
   BX_CPU_THIS_PTR vmcbhostptr = BX_CPU_THIS_PTR getHostMemAddr(pAddr, BX_WRITE);
 
+  BX_INFO(("VMRUN VMCB ptr: 0x" FMT_ADDRX64, BX_CPU_THIS_PTR vmcbptr));
+
   //
   // Step 1: Save host state to physical memory indicated in SVM_HSAVE_PHY_ADDR_MSR
   //
@@ -942,6 +963,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLOAD(bxInstruction_c *i)
   BX_CPU_THIS_PTR vmcbptr = pAddr;
   BX_CPU_THIS_PTR vmcbhostptr = BX_CPU_THIS_PTR getHostMemAddr(pAddr, BX_WRITE);
 
+  BX_INFO(("VMLOAD VMCB ptr: 0x" FMT_ADDRX64, BX_CPU_THIS_PTR vmcbptr));
+
   bx_segment_reg_t fs, gs, guest_tr, guest_ldtr;
 
   svm_segment_read(&fs, SVM_GUEST_FS_SELECTOR);
@@ -990,6 +1013,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMSAVE(bxInstruction_c *i)
   }
   BX_CPU_THIS_PTR vmcbptr = pAddr;
   BX_CPU_THIS_PTR vmcbhostptr = BX_CPU_THIS_PTR getHostMemAddr(pAddr, BX_WRITE);
+
+  BX_INFO(("VMSAVE VMCB ptr: 0x" FMT_ADDRX64, BX_CPU_THIS_PTR vmcbptr));
 
   svm_segment_write(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], SVM_GUEST_FS_SELECTOR);
   svm_segment_write(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], SVM_GUEST_GS_SELECTOR);
