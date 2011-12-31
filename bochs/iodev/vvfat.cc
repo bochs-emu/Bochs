@@ -1909,7 +1909,7 @@ ssize_t vvfat_image_t::read(void* buf, size_t count)
   Bit32u scount = (Bit32u)(count / 0x200);
 
   while (scount-- > 0) {
-    if ((size_t)redolog->read(cbuf, 0x200) != 0x200) {
+    if ((ssize_t)redolog->read(cbuf, 0x200) != 0x200) {
       if (sector_num < offset_to_data) {
         if (sector_num < (offset_to_bootsector + reserved_sectors))
           memcpy(cbuf, &first_sectors[sector_num * 0x200], 0x200);
@@ -1929,6 +1929,7 @@ ssize_t vvfat_image_t::read(void* buf, size_t count)
           memcpy(cbuf, cluster + sector_offset_in_cluster * 0x200, 0x200);
         }
       }
+      redolog->lseek((sector_num + 1) * 0x200, SEEK_SET);
     }
     sector_num++;
     cbuf += 0x200;
@@ -1941,11 +1942,16 @@ ssize_t vvfat_image_t::write(const void* buf, size_t count)
   ssize_t ret = 0;
   char *cbuf = (char*)buf;
   Bit32u scount = (Bit32u)(count / 512);
+  bx_bool update_imagepos;
 
   while (scount-- > 0) {
+    update_imagepos = 1;
     if (sector_num == 0) {
       // allow writing to MBR (except partition table)
       memcpy(&first_sectors[0], cbuf, 0x1b8);
+    } else if (sector_num == offset_to_bootsector) {
+      // allow writing to boot sector
+      memcpy(&first_sectors[sector_num * 0x200], cbuf, 0x200);
     } else if ((fat_type == 32) && (sector_num == (offset_to_bootsector + 1))) {
       // allow writing to FS info sector
       memcpy(&first_sectors[sector_num * 0x200], cbuf, 0x200);
@@ -1954,11 +1960,15 @@ ssize_t vvfat_image_t::write(const void* buf, size_t count)
       ret = -1;
     } else {
       vvfat_modified = 1;
+      update_imagepos = 0;
       ret = redolog->write(cbuf, 0x200);
     }
     if (ret < 0) break;
     sector_num++;
     cbuf += 0x200;
+    if (update_imagepos) {
+      redolog->lseek(sector_num * 0x200, SEEK_SET);
+    }
   }
   return (ret < 0) ? ret : count;
 }
