@@ -393,11 +393,6 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
     return 0;
   }
 
-  if (guest.cr0.get_NW() && !guest.cr0.get_CD()) {
-    BX_ERROR(("VMRUN: Guest CR0.NW is set when CR0.CD is clear"));
-    return 0;
-  }
-
   guest.cr2 = vmcb_read64(SVM_GUEST_CR2);
   guest.cr3 = vmcb_read64(SVM_GUEST_CR3);
 
@@ -431,35 +426,25 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
     svm_segment_read(&guest.sregs[n], SVM_GUEST_ES_SELECTOR + n * 0x10);
   }
 
+  // FIXME: patch segment attributes
+
   if (guest.sregs[BX_SEG_REG_CS].cache.u.segment.d_b && guest.sregs[BX_SEG_REG_CS].cache.u.segment.l) {
     BX_ERROR(("VMRUN: VMCB CS.D_B/L mismatch"));
     return 0;
   }
 
-  if (guest.cr0.get_PE() && (guest.eflags & EFlagsVMMask) == 0) {
-    if (! guest.sregs[BX_SEG_REG_CS].cache.valid || ! guest.sregs[BX_SEG_REG_CS].selector.value) {
-      BX_ERROR(("VMRUN: VMCB null code segment"));
-      return 0;
+  if (! guest.cr0.get_PE() || (guest.eflags & EFlagsVMMask) != 0)
+  {
+    // real or vm8086 mode: make all segments valid
+    for (n=0;n < 4; n++) {
+      guest.sregs[n].cache.valid = 1;
     }
 
-    if (! guest.sregs[BX_SEG_REG_SS].cache.valid || ! guest.sregs[BX_SEG_REG_SS].selector.value) {
-      if (! guest.efer.get_LMA()) {
-        BX_ERROR(("VMRUN: VMCB null stack segment in 32-bit mode"));
-        return 0;
-      }
-    }
-  }
-  else {
     if (! guest.cr0.get_PE() && guest.cr0.get_PG()) {
       // special case : entering paged real mode
       BX_INFO(("VMRUN: entering paged real mode"));
       paged_real_mode = 1;
       guest.cr0.val32 &= ~BX_CR0_PG_MASK;
-    }
-
-    // real or vm8086 mode: make all segments valid
-    for (n=0;n < 4; n++) {
-      guest.sregs[n].cache.valid = 1;
     }
   }
 
@@ -499,15 +484,15 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   BX_CPU_THIS_PTR cr4.set32(guest.cr4.get32());
   BX_CPU_THIS_PTR cr3 = guest.cr3;
 
+  if (paged_real_mode)
+    BX_CPU_THIS_PTR cr0.val32 |= BX_CR0_PG_MASK;
+
   if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
     if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
       BX_ERROR(("SVM: VMRUN PDPTR check failed !"));
       return 0;
     }
   }
-
-  if (paged_real_mode)
-    BX_CPU_THIS_PTR cr0.val32 |= BX_CR0_PG_MASK;
 
   BX_CPU_THIS_PTR dr6.set32(guest.dr6);
   BX_CPU_THIS_PTR dr7.set32(guest.dr7 | 0x400);

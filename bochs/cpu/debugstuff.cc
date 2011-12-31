@@ -169,7 +169,6 @@ void BX_CPU_C::debug(bx_address offset)
     BX_CPU_THIS_PTR get_PF() ? "PF" : "pf",
     BX_CPU_THIS_PTR get_CF() ? "CF" : "cf"));
 
-  BX_INFO(("| SEG selector     base    limit G D"));
   BX_INFO(("| SEG sltr(index|ti|rpl)     base    limit G D"));
   BX_INFO(("|  CS:%04x( %04x| %01u|  %1u) %08x %08x %1u %1u",
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
