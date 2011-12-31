@@ -31,9 +31,6 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 {
   Bit64u val64 = 0;
 
-  if ((index & 0x3FFFFFFF) >= BX_MSR_MAX_INDEX)
-    return 0;
-
 #if BX_CPU_LEVEL >= 6
   if (bx_cpuid_support_x2apic()) {
     if (index >= 0x800 && index <= 0xBFF) {
@@ -439,9 +436,6 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
   BX_INSTR_WRMSR(BX_CPU_ID, index, val_64);
 
   BX_DEBUG(("WRMSR: write %08x:%08x to MSR %x", val32_hi, val32_lo, index));
-
-  if ((index & 0x3FFFFFFF) >= BX_MSR_MAX_INDEX)
-    return 0;
 
 #if BX_CPU_LEVEL >= 6
   if (bx_cpuid_support_x2apic()) {
