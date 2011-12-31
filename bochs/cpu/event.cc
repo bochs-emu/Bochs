@@ -102,7 +102,9 @@ void BX_CPU_C::InterruptAcknowledge(void)
   Bit8u vector;
 
 #if BX_SUPPORT_SVM
-  if (SVM_INTERCEPT(SVM_INTERCEPT0_INTR)) Svm_Vmexit(SVM_VMEXIT_INTR);
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_INTR)) Svm_Vmexit(SVM_VMEXIT_INTR);
+  }
 #endif
 
 #if BX_SUPPORT_VMX
