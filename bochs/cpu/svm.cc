@@ -28,6 +28,9 @@
 
 #if BX_SUPPORT_SVM
 
+// for debugging and save/restore
+static const char *svm_segname[] = { "ES", "CS", "SS", "DS", "FS", "GS", "GDTR", "LDTR", "IDTR", "TR" };
+
 // When loading segment bases from the VMCB or the host save area
 // (on VMRUN or #VMEXIT), segment bases are canonicalized (i.e.
 // sign-extended from the highest implemented address bit to bit 63)
@@ -858,8 +861,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMRUN(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  if (SVM_INTERCEPT(SVM_INTERCEPT1_VMRUN))
-    Svm_Vmexit(SVM_VMEXIT_VMRUN);
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(SVM_INTERCEPT1_VMRUN))
+      Svm_Vmexit(SVM_VMEXIT_VMRUN);
+  }
 
   bx_address pAddr = RAX & i->asize_mask();
   if ((pAddr & 0xfff) != 0 || ! IsValidPhyAddr(pAddr)) {
@@ -1106,7 +1111,7 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   // VMCB Control Fields
   //
 
-  bx_list_c *vmcb_ctrls = new bx_list_c(svm, "VMCB_CTRLS", 16);
+  bx_list_c *vmcb_ctrls = new bx_list_c(svm, "VMCB_CTRLS", 17);
 
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, cr_rd_ctrl, BX_CPU_THIS_PTR vmcb.ctrls.cr_rd_ctrl);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, cr_wr_ctrl, BX_CPU_THIS_PTR vmcb.ctrls.cr_wr_ctrl);
@@ -1135,7 +1140,7 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
 
   for(unsigned n=0; n<4; n++) {
     bx_segment_reg_t *segment = &BX_CPU_THIS_PTR vmcb.host_state.sregs[n];
-    bx_list_c *sreg = new bx_list_c(host, strseg(segment), 12);
+    bx_list_c *sreg = new bx_list_c(host, svm_segname[n], 12);
     BXRS_HEX_PARAM_FIELD(sreg, selector, segment->selector.value);
     BXRS_HEX_PARAM_FIELD(sreg, valid, segment->cache.valid);
     BXRS_PARAM_BOOL(sreg, p, segment->cache.p);
