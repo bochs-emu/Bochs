@@ -1275,12 +1275,12 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR3(bx_address val)
 #if BX_CPU_LEVEL >= 5
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetEFER(bx_address val_64)
 {
+  Bit32u val32 = (Bit32u) val_64;
+
   if (val_64 & ~((Bit64u) BX_CPU_THIS_PTR efer_suppmask)) {
-    BX_ERROR(("SetEFER: attempt to set reserved bits of EFER MSR !"));
+    BX_ERROR(("SetEFER(0x%08x): attempt to set reserved bits of EFER MSR !", val32));
     return 0;
   }
-
-  Bit32u val32 = (Bit32u) val_64;
 
 #if BX_SUPPORT_X86_64
   /* #GP(0) if changing EFER.LME when cr0.pg = 1 */
