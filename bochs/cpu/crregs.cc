@@ -57,7 +57,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_SVM
-  if (SVM_DR_WRITE_INTERCEPTED(i->nnn())) Svm_Vmexit(SVM_VMEXIT_DR0_WRITE + i->nnn());
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_DR_WRITE_INTERCEPTED(i->nnn())) Svm_Vmexit(SVM_VMEXIT_DR0_WRITE + i->nnn());
+  }
 #endif
 
   invalidate_prefetch_q();
@@ -166,7 +168,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_SVM
-  if (SVM_DR_READ_INTERCEPTED(i->nnn())) Svm_Vmexit(SVM_VMEXIT_DR0_READ + i->nnn());
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_DR_READ_INTERCEPTED(i->nnn())) Svm_Vmexit(SVM_VMEXIT_DR0_READ + i->nnn());
+  }
 #endif
 
   /* This instruction is always treated as a register-to-register,
@@ -242,7 +246,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_SVM
-  if (SVM_DR_WRITE_INTERCEPTED(i->nnn())) Svm_Vmexit(SVM_VMEXIT_DR0_WRITE + i->nnn());
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_DR_WRITE_INTERCEPTED(i->nnn())) Svm_Vmexit(SVM_VMEXIT_DR0_WRITE + i->nnn());
+  }
 #endif
 
   invalidate_prefetch_q();
@@ -352,7 +358,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_SVM
-  if (SVM_DR_READ_INTERCEPTED(i->nnn())) Svm_Vmexit(SVM_VMEXIT_DR0_READ + i->nnn());
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_DR_READ_INTERCEPTED(i->nnn())) Svm_Vmexit(SVM_VMEXIT_DR0_READ + i->nnn());
+  }
 #endif
 
   /* This instruction is always treated as a register-to-register,

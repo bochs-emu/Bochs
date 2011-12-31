@@ -433,7 +433,7 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   }
 
   if (! guest.sregs[BX_SEG_REG_SS].cache.valid || ! guest.sregs[BX_SEG_REG_SS].selector.value) {
-    if (! guest.efer.get_LME()) {
+    if (! guest.efer.get_LMA()) {
       BX_ERROR(("VMRUN: VMCB null stack segment in 32-bit mode"));
       return 0;
     }
@@ -539,12 +539,12 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
 
 void BX_CPU_C::Svm_Vmexit(int reason)
 {
+  BX_ERROR(("SVM VMEXIT reason=%d", reason));
+
   if (!BX_CPU_THIS_PTR in_svm_guest) {
     if (reason != SVM_VMEXIT_INVALID)
-      BX_PANIC(("PANIC: VMEXIT not in SVM guest mode !"));
+      BX_PANIC(("PANIC: VMEXIT %d not in SVM guest mode !", reason));
   }
-
-  BX_ERROR(("SVM VMEXIT reason=%d", reason));
 
   // VMEXITs are FAULT-like: restore RIP/RSP to value before VMEXIT occurred
   RIP = BX_CPU_THIS_PTR prev_rip;

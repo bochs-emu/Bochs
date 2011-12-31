@@ -227,6 +227,16 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       val64 = BX_CPU_THIS_PTR efer.get32();
       break;
 
+#if BX_SUPPORT_SVM
+    case BX_SVM_HSAVE_PA_MSR:
+      if (! bx_cpuid_support_svm()) {
+        BX_ERROR(("RDMSR SVM_HSAVE_PA_MSR: SVM support not enabled !"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = BX_CPU_THIS_PTR msr.svm_hsave_pa;
+      break;
+#endif
+
     case BX_MSR_STAR:
       if ((BX_CPU_THIS_PTR efer_suppmask & BX_EFER_SCE_MASK) == 0) {
         BX_ERROR(("RDMSR MSR_STAR: SYSCALL/SYSRET support not enabled !"));
@@ -641,6 +651,19 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_VMX_VMFUNC:
       BX_ERROR(("WRMSR: VMX read only MSR"));
       return 0;
+#endif
+
+#if BX_SUPPORT_SVM
+    case BX_SVM_HSAVE_PA_MSR:
+      if (! bx_cpuid_support_svm()) {
+        BX_ERROR(("WRMSR SVM_HSAVE_PA_MSR: SVM support not enabled !"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      if ((val_64 & 0xfff) != 0 || ! IsValidPhyAddr(val_64)) {
+        BX_ERROR(("WRMSR SVM_HSAVE_PA_MSR: invalid or not page aligned physical address !"));
+      }
+      BX_CPU_THIS_PTR msr.svm_hsave_pa = val_64;
+      break;
 #endif
 
     case BX_MSR_EFER:

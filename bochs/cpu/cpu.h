@@ -428,6 +428,11 @@ enum {
 #define BX_MSR_KERNELGSBASE     0xc0000102
 #define BX_MSR_TSC_AUX          0xc0000103
 
+#define BX_SVM_VM_CR_MSR        0xc0010114
+#define BX_SVM_IGNNE_MSR        0xc0010115
+#define BX_SVM_SMM_CTL_MSR      0xc0010116
+#define BX_SVM_HSAVE_PA_MSR     0xc0010117
+
 #define BX_MODE_IA32_REAL       0x0   // CR0.PE=0                |
 #define BX_MODE_IA32_V8086      0x1   // CR0.PE=1, EFLAGS.VM=1   | EFER.LMA=0
 #define BX_MODE_IA32_PROTECTED  0x2   // CR0.PE=1, EFLAGS.VM=0   |
@@ -660,6 +665,10 @@ typedef struct
 
 #if BX_SUPPORT_VMX
   Bit32u ia32_feature_ctrl;
+#endif
+
+#if BX_SUPPORT_SVM
+  Bit64u svm_hsave_pa;
 #endif
 
   /* TODO finish of the others */
