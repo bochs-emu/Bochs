@@ -185,7 +185,7 @@ BX_CPP_INLINE void BX_CPU_C::svm_segment_read(bx_segment_reg_t *seg, unsigned of
   bx_bool valid = (attr >> 7) & 1;
 
   set_segment_ar_data(seg, valid, selector, base, limit,
-       (attr & 0xff) | ((attr & 0xf00) << 8));
+       (attr & 0xff) | ((attr & 0xf00) << 4));
 }
 
 BX_CPP_INLINE void BX_CPU_C::svm_segment_write(bx_segment_reg_t *seg, unsigned offset)
@@ -197,7 +197,7 @@ BX_CPP_INLINE void BX_CPU_C::svm_segment_write(bx_segment_reg_t *seg, unsigned o
      (get_descriptor_h(&seg->cache) & 0x00f0ff00) : 0;
 
   vmcb_write16(offset, selector);
-  vmcb_write16(offset + 2, ((attr >> 8) & 0xff) | ((attr >> 20) & 0xf));
+  vmcb_write16(offset + 2, ((attr >> 8) & 0xff) | ((attr >> 12) & 0xf00));
   vmcb_write32(offset + 4, limit);
   vmcb_write64(offset + 8, base);
 }
@@ -359,6 +359,10 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
   ctrls->v_intr_prio = vintr_control & 0xf;
   ctrls->v_ignore_tpr = (vintr_control >> 4) & 0x1;
 
+  if (vmcb_read8(SVM_CONTROL_NESTED_PAGING_ENABLE)) {
+    BX_PANIC(("VMRUN: Nested Paging support is not implemented yet !"));
+  }
+
   return 1;
 }
 
@@ -426,7 +430,9 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
     svm_segment_read(&guest.sregs[n], SVM_GUEST_ES_SELECTOR + n * 0x10);
   }
 
+  //
   // FIXME: patch segment attributes
+  //
 
   if (guest.sregs[BX_SEG_REG_CS].cache.u.segment.d_b && guest.sregs[BX_SEG_REG_CS].cache.u.segment.l) {
     BX_ERROR(("VMRUN: VMCB CS.D_B/L mismatch"));
@@ -458,8 +464,8 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   guest.gdtr.base = CanonicalizeAddress(vmcb_read64(SVM_GUEST_GDTR_BASE));
   guest.gdtr.limit = vmcb_read16(SVM_GUEST_GDTR_LIMIT);
 
-  guest.idtr.base = CanonicalizeAddress(vmcb_read64(SVM_GUEST_GDTR_BASE));
-  guest.idtr.limit = vmcb_read16(SVM_GUEST_GDTR_LIMIT);
+  guest.idtr.base = CanonicalizeAddress(vmcb_read64(SVM_GUEST_IDTR_BASE));
+  guest.idtr.limit = vmcb_read16(SVM_GUEST_IDTR_LIMIT);
 
   guest.inhibit_interrupts = vmcb_read8(SVM_CONTROL_INTERRUPT_SHADOW) & 0x1;
 
@@ -948,7 +954,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLOAD(bxInstruction_c *i)
   BX_CPU_THIS_PTR vmcbptr = pAddr;
   BX_CPU_THIS_PTR vmcbhostptr = BX_CPU_THIS_PTR getHostMemAddr(pAddr, BX_WRITE);
 
-  BX_INFO(("VMLOAD VMCB ptr: 0x" FMT_ADDRX64, BX_CPU_THIS_PTR vmcbptr));
+  BX_DEBUG(("VMLOAD VMCB ptr: 0x" FMT_ADDRX64, BX_CPU_THIS_PTR vmcbptr));
 
   bx_segment_reg_t fs, gs, guest_tr, guest_ldtr;
 
@@ -999,7 +1005,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMSAVE(bxInstruction_c *i)
   BX_CPU_THIS_PTR vmcbptr = pAddr;
   BX_CPU_THIS_PTR vmcbhostptr = BX_CPU_THIS_PTR getHostMemAddr(pAddr, BX_WRITE);
 
-  BX_INFO(("VMSAVE VMCB ptr: 0x" FMT_ADDRX64, BX_CPU_THIS_PTR vmcbptr));
+  BX_DEBUG(("VMSAVE VMCB ptr: 0x" FMT_ADDRX64, BX_CPU_THIS_PTR vmcbptr));
 
   svm_segment_write(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], SVM_GUEST_FS_SELECTOR);
   svm_segment_write(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], SVM_GUEST_GS_SELECTOR);

@@ -104,7 +104,10 @@ Bit64u turion64_tyler_t::get_isa_extensions_bitmask(void) const
          BX_ISA_SSE3 |
          BX_ISA_CMPXCHG16B |
          BX_ISA_LM_LAHF_SAHF |
-         BX_ISA_SVM;
+#if BX_SUPPORT_SVM
+         BX_ISA_SVM |
+#endif
+         BX_ISA_RDTSCP;
 }
 
 Bit32u turion64_tyler_t::get_cpu_extensions_bitmask(void) const
@@ -339,7 +342,7 @@ void turion64_tyler_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
               BX_CPUID_EXT2_PREFETCHW;
 
   // EDX:
-  // Many of the bits in EDX are the same as FN 0x00000001 [*] for AMD
+  // Many of the bits in EDX are the same as FN 0x00000001 for AMD
   // * [0:0]   FPU on chip
   // * [1:1]   VME: Virtual-8086 Mode enhancements
   // * [2:2]   DE: Debug Extensions (I/O breakpoints)
@@ -394,6 +397,7 @@ void turion64_tyler_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
               BX_CPUID_STD_MMX |
               BX_CPUID_STD_FXSAVE_FXRSTOR |
               BX_CPUID_STD2_FFXSR |
+              BX_CPUID_STD2_RDTSCP |
               BX_CPUID_STD2_LONG_MODE |
               BX_CPUID_STD2_3DNOW_EXT |
               BX_CPUID_STD2_3DNOW;
