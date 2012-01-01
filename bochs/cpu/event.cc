@@ -296,7 +296,7 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
   }
 #if BX_SUPPORT_SVM
   else if (BX_CPU_THIS_PTR in_svm_guest && SVM_V_IRQ && BX_CPU_THIS_PTR get_IF() &&
-          (SVM_V_INTR_PRIO > SVM_V_TPR || SVM_V_IGNORE_TPR))
+          ((SVM_V_INTR_PRIO > SVM_V_TPR) || SVM_V_IGNORE_TPR))
   {
     // virtual interrupt acknowledge
     VirtualInterruptAcknowledge();
@@ -354,7 +354,7 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
 #endif
 #if BX_SUPPORT_SVM
     || (BX_CPU_THIS_PTR in_svm_guest && SVM_V_IRQ && BX_CPU_THIS_PTR get_IF() &&
-           (SVM_V_INTR_PRIO > SVM_V_TPR || SVM_V_IGNORE_TPR))
+           ((SVM_V_INTR_PRIO > SVM_V_TPR) || SVM_V_IGNORE_TPR))
 #endif
 #if BX_X86_DEBUGGER
      // a debug code breakpoint is set in current page

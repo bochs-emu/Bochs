@@ -531,6 +531,10 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   if (guest.eflags & EFlagsTFMask)
     BX_CPU_THIS_PTR async_event = 1;
 
+  // injecting virtual interrupt
+  if (SVM_V_IRQ)
+    BX_CPU_THIS_PTR async_event = 1;
+
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_CPU_THIS_PTR monitor.reset_monitor();
 #endif
