@@ -1370,14 +1370,9 @@ check that it looks correct.
 <screen>
   user$ <command>su</command>
   Password:
-  root# <command>ls -l bochs-1.2.1.i386.rpm</command>
-  -rw-rw-r--    1 user     user      1877515 Sep 14 09:02 bochs-1.2.1.i386.rpm
-  root# <command>rpm -i bochs-1.2.1.i386.rpm</command>
-  Looking for fonts to install... /usr/local/bochs/latest/
-  Looking for X11 Font Path... /usr/lib/X11/fonts
-  Installing vga.pcf... ok    (it was already there)
-  Running mkfontdir...
-  Done installing Bochs fonts for X11.
+  root# <command>ls -l bochs-2.5.x86_64.rpm</command>
+  -rw-r--r--    1 user     users     2628643 Nov 27 17:20 bochs-2.5.x86_64.rpm
+  root# <command>rpm -i bochs-2.5.x86_64.rpm</command>
   root# exit
   user$ _
 </screen>
@@ -2311,70 +2306,82 @@ turn it off.
 
 <section><title>Transcript of Successful Compilation</title>
 <para>
+This example shows the output of a compilation and installation on Linux.
 <screen>
-  user$ <command>ls -l bochs-1.2.1.tar.gz</command>
-  -rw-rw-r--    1 user     user       887993 Sep 15 23:24 bochs-1.2.1.tar.gz
-  user$ <command>gunzip -c bochs-1.2.1.tar.gz | tar -xvf -</command>
-  bochs-1.2.1/
-  bochs-1.2.1/bios/
-  bochs-1.2.1/bios/BIOS-bochs-2-processors
-  bochs-1.2.1/bios/Makefile.in
+  user$ <command>ls -l bochs-2.5.tar.gz</command>
+  -rw-r--r-- 1 user   users 4117999 27. Nov 17:14 bochs-2.5.tar.gz
+  user$ <command>gunzip -c bochs-2.5.tar.gz | tar -xvf -</command>
+  bochs-2.5/
+  bochs-2.5/.conf.sparc
+  bochs-2.5/build/
+  bochs-2.5/build/macosx/
+  bochs-2.5/build/macosx/pbdevelopment.plist
+  bochs-2.5/build/macosx/make-dmg.sh
     .
     .
     .
-  bochs-1.2.1/patches/NOTES
-  bochs-1.2.1/patches/patch.4meg-pages
-  bochs-1.2.1/patches/patch.goswin-changes
-  user$ <command>cd bochs-1.2.1</command>
-  user$ <command>./configure --enable-cdrom</command>
-  creating cache ./config.cache
+  bochs-2.5/memory/memory.cc
+  bochs-2.5/memory/misc_mem.cc
+  bochs-2.5/memory/Makefile.in
+  user$ <command>cd bochs-2.5</command>
+  user$ <command>./configure --enable-cpu-level=6</command>
+  checking build system type... x86_64-unknown-linux-gnu
+  checking host system type... x86_64-unknown-linux-gnu
+  checking target system type... x86_64-unknown-linux-gnu
+  checking if you are configuring for another platform... no
+  checking for standard CFLAGS on this platform...
   checking for gcc... gcc
-  checking whether the C compiler (gcc  ) works... yes
-  checking whether the C compiler (gcc  ) is a cross-compiler... no
-  checking whether we are using GNU C... yes
-  checking whether gcc accepts -g... yes
     .
     .
     .
-  creating misc/Makefile
-  creating dynamic/Makefile
-  creating fpu/Makefile
-  creating config.h
+  config.status: creating build/win32/nsis/bochs.nsi
+  config.status: creating host/linux/pcidev/Makefile
+  config.status: creating config.h
+  config.status: creating ltdlconf.h
   user$ <command>make</command>
   cd iodev && \
-  make CC="gcc" CXX="c++" CFLAGS="-g -O2  " CXXFLAGS="-g -O2  " LDFLAGS="" LIBS="" X_LIBS="-L/usr/X11R6/lib" X_PRE_LIBS="-lSM -lICE" prefix="/usr/local" exec_prefix="/usr/local" bindir="/usr/local/bin" infodir="" libiodev.a
-  make[1]: Entering directory `/tmp/bochs-1.2.1/iodev'
-  c++ -c -g -O2    -I.. -I../instrument/stubs devices.cc -o devices.o
-  c++ -c -g -O2    -I.. -I../instrument/stubs pic.cc -o pic.o
-  c++ -c -g -O2    -I.. -I../instrument/stubs pit.cc -o pit.o
-  c++ -c -g -O2    -I.. -I../instrument/stubs unmapped.cc -o unmapped.o
-  c++ -c -g -O2    -I.. -I../instrument/stubs cmos.cc -o cmos.o
+          make  libiodev.a
+  make[1]: Entering directory `/home/volker/Archiv/test/bochs-2.5/iodev'
+  g++ -c  -I.. -I./.. -I../instrument/stubs -I./../instrument/stubs -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES    devices.cc -o devices.o
+  g++ -c  -I.. -I./.. -I../instrument/stubs -I./../instrument/stubs -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES    virt_timer.cc -o virt_timer.o
+  g++ -c  -I.. -I./.. -I../instrument/stubs -I./../instrument/stubs -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES    slowdown_timer.cc -o slowdown_timer.o
+  g++ -c  -I.. -I./.. -I../instrument/stubs -I./../instrument/stubs -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES    pic.cc -o pic.o
     .
     .
     .
   echo done
   done
-  c++ -o bochs -g -O2   main.o load32bitOShack.o state_file.o pc_system.o osdep.o \
-     iodev/libiodev.a \
-     cpu/libcpu.a memory/libmemory.a gui/libgui.a \
-     fpu/libfpu.a \
-     -L/usr/X11R6/lib -lSM -lICE -lX11
-  gcc -c -g -O2    -I. -Iinstrument/stubs misc/bximage.c -o misc/bximage.o
-  c++ -o bximage -g -O2   misc/bximage.o
+  /bin/sh ./libtool --mode=link g++ -o bochs -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES      -DBX_SHARE_PATH='"/usr/local/share/bochs"'  -export-dynamic logio.o main.o config.o load32bitOShack.o pc_system.o osdep.o plugin.o crc.o   \
+                  iodev/libiodev.a  cpu/libcpu.a cpu/cpudb/libcpudb.a \
+                  memory/libmemory.a gui/libgui.a \
+                  disasm/libdisasm.a   \
+                  fpu/libfpu.a \
+                  -lSM -lICE -lX11 -lXpm -lXrandr   \
+                  \
+                  \
+                  \
+                  \
+                  -lm
+  mkdir .libs
+  g++ -o bochs -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES -DBX_SHARE_PATH=\"/usr/local/share/bochs\" logio.o main.o config.o load32bitOShack.o pc_system.o osdep.o plugin.o crc.o -Wl,--export-dynamic  iodev/libiodev.a cpu/libcpu.a cpu/cpudb/libcpudb.a memory/libmemory.a gui/libgui.a disasm/libdisasm.a fpu/libfpu.a -lSM -lICE -lX11 -lXpm -lXrandr -lm
+  gcc -c -I. -I./. -Iinstrument/stubs -I./instrument/stubs -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES   ./misc/bximage.c -o misc/bximage.o
+  /bin/sh ./libtool --mode=link g++ -o bximage -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES     misc/bximage.o
+  g++ -o bximage -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES misc/bximage.o 
+  gcc -c -I. -I./. -Iinstrument/stubs -I./instrument/stubs -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES   ./misc/bxcommit.c -o misc/bxcommit.o
+  /bin/sh ./libtool --mode=link g++ -o bxcommit -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES    misc/bxcommit.o
+  g++ -o bxcommit -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES misc/bxcommit.o 
   user$ <command>su</command>
   root# <command>make install</command>
   cd iodev && \
-  make CC="gcc" CXX="c++" CFLAGS="-g -O2  " CXXFLAGS="-g -O2  " LDFLAGS="" LIBS="" X_LIBS="-L/usr/X11R6/lib" X_PRE_LIBS="-lSM -lICE" prefix="/usr/local" exec_prefix="/usr/local" bindir="/usr/local/bin" infodir="" libiodev.a
-  make[1]: Entering directory `/tmp/bochs-1.2.1/iodev'
+          make  libiodev.a
+  make[1]: Entering directory `/home/volker/Archiv/test/bochs-2.5/iodev'
     .
     .
     .
-  /usr/local/bochs/1.2.1/install-x11-fonts
-  Looking for fonts to install... font/
-  Looking for X11 Font Path... /usr/lib/X11/fonts
-  Installing vga.pcf... ok    (it was already there)
-  Running mkfontdir...
-  Done installing Bochs fonts for X11.
+  for i in CHANGES COPYING README TODO; do if test -f $i; then install -m 644 $i /usr/local/share/doc/bochs; else install -m 644 ./$i /usr/local/share/doc/bochs; fi; done
+  rm -f /usr/local/share/doc/bochs/README
+  cat ./build/linux/README.linux-binary ./README > /usr/local/share/doc/bochs/README
+  install -m 644 ./.bochsrc /usr/local/share/doc/bochs/bochsrc-sample.txt
   root# <command>exit</command>
   user$ _
 </screen>
@@ -8050,6 +8057,9 @@ When you run bximage without one of the following options,
 it will  appear  in  interactive  mode and  ask   for  all
 required parameters to create an image.
 <screen>
+bximage [options] [filename]
+
+Supported options:
 -fd        Create a floppy image.
 -hd        Create a hard disk image.
 -mode=...  Image mode (for hard disks only - see the bochsrc sample for
@@ -8075,13 +8085,27 @@ For an example of the usage, refer to <xref linkend="diskimagehowto">.
 This tool can commit redologs into flat images.
 </para>
 <para>
-For now, only "undoable" redologs to flat image commits are supported.
-Sparse disk image commits may be added in the future.
+For now, only "undoable" and "growing" redologs to flat image commits are
+supported. Sparse disk image commits may be added in the future.
 </para>
 <para>
-This tool is completely interactive, and does not need any command line parameter.
-Bxcommit asks for the flat image name, the redolog name, and whether to remove
-to redolog file after it commits it.
+This tool is completely interactive if no command line arguments are used.
+Then bxcommit asks for the operation mode, the flat image name, the redolog name,
+and whether to remove to redolog file after the commit is done. It can be switched
+to a non-interactive mode if all required parameters are given in the command line.
+<screen>
+bxcommit [options] [flat filename] [redolog filename]
+
+Supported options:
+  -mode=undoable   commit undoable redolog to flat file
+  -mode=growing    create flat disk image from growing disk image
+  -d               delete redolog file after commit
+  -q               quiet mode (don't prompt for user input)
+  --help           display this help and exit
+
+The first filename parameter specifies the name of the flat image that will be
+created or modified. The second one specifies the name of the redolog.
+</screen>
 </para>
 <para>
 Session example :

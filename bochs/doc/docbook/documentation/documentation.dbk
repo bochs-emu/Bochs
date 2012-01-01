@@ -372,9 +372,6 @@ Under FreeBSD, just install the following ports:
   textproc/docbook-410
 </programlisting>
 
-&NEEDHELP; The generated HTML output doesn't look exactly the same as the Bochs
-documentation on the web, so it seems as if some kind of configuration is still
-needed.
 </para>
 
 <para>
@@ -461,6 +458,32 @@ stylesheet in the second example can have "-t rtf" for Rich Text Format,
 Bochs has the convention of calling the docbook files
 <replaceable>name</replaceable>.dbk, but any file name would work.  Some
 other people call them <replaceable>NAME</replaceable>.sgm for SGML.
+</para>
+
+</sect2>
+
+<sect2>
+<title>Configuration</title>
+<para>
+If the generated HTML files do not have the same names as the Bochs documentation
+on the web, some kind of configuration is required. You need to edit the DSL file
+to make sure the following settings are used.
+<screen>
+(define %root-filename% "index")        ;; name for the root html file
+(define %html-ext% ".html")             ;; default extension for html output files
+(define %html-prefix% "")               ;; prefix for all filenames generated (except root)
+(define %use-id-as-filename% #t)        ;; if #t uses ID value, if present, as filename
+                                        ;;   otherwise a code is used to indicate level
+                                        ;;   of chunk, and general element number
+                                        ;;   (nth element in the document)
+(define use-output-dir #f)              ;; output in separate directory?
+</screen>
+</para>
+<para>
+If you like to have the screen sections shaded, this setting should help.
+<screen>
+(define %shade-verbatim% #t)
+</screen>
 </para>
 
 </sect2>
