@@ -316,6 +316,7 @@ void BX_CPU_C::handleCpuModeChange(void)
     if (BX_CPU_THIS_PTR cr0.get_PE()) {
       if (BX_CPU_THIS_PTR get_VM()) {
         BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_V8086;
+        CPL = 3;
       }
       else
         BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_PROTECTED;
@@ -328,7 +329,7 @@ void BX_CPU_C::handleCpuModeChange(void)
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment  = 1;  /* data/code segment */
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type = BX_DATA_READ_WRITE_ACCESSED;
 
-      BX_ASSERT(CPL == 0);
+      CPL = 0;
     }
   }
 

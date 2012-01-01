@@ -252,7 +252,7 @@ void BX_CPU_C::SvmExitLoadHostState(SVM_HOST_STATE *host)
   // Update lazy flags state
   setEFlagsOSZAPC(host->eflags);
 
-  RIP = host->rip;
+  RIP = BX_CPU_THIS_PTR prev_rip = host->rip;
   RSP = host->rsp;
   RAX = host->rax;
 
@@ -512,7 +512,7 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   BX_CPU_THIS_PTR gdtr = guest.gdtr;
   BX_CPU_THIS_PTR idtr = guest.idtr;
  
-  RIP = guest.rip;
+  RIP = BX_CPU_THIS_PTR prev_rip = guest.rip;
   RSP = guest.rsp;
   RAX = guest.rax;
 
@@ -649,7 +649,7 @@ bx_bool BX_CPU_C::SvmInjectEvents(void)
       return 0;
   }
 
-  BX_ERROR(("SvmInjectEvents: Injecting vector 0x%02x (error_code 0x%04x)", vector, error_code));
+  BX_INFO(("SvmInjectEvents: Injecting vector 0x%02x (error_code 0x%04x)", vector, error_code));
 
   if (type == BX_HARDWARE_EXCEPTION) {
     // record exception the same way as BX_CPU_C::exception does

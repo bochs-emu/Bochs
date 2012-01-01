@@ -2081,7 +2081,7 @@ void BX_CPU_C::VMexitLoadHostState(void)
   BX_CPU_THIS_PTR idtr.base = host_state->idtr_base;
   BX_CPU_THIS_PTR idtr.limit = 0xFFFF;
 
-  RIP = host_state->rip;
+  RIP = BX_CPU_THIS_PTR prev_rip = host_state->rip;
   RSP = host_state->rsp;
 
   BX_CPU_THIS_PTR inhibit_mask = 0;
