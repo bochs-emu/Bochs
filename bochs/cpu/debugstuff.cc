@@ -114,9 +114,11 @@ void BX_CPU_C::debug(bx_address offset)
     long64_mode() ? 64 : (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b ? 32 : 16)));
   BX_INFO(("SS.mode = %u bit",
     long64_mode() ? 64 : (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b ? 32 : 16)));
+#if BX_CPU_LEVEL >= 5
+  BX_INFO(("EFER   = 0x%08x", BX_CPU_THIS_PTR efer.get32()));
+#endif
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
-    BX_INFO(("EFER   = 0x%08x", BX_CPU_THIS_PTR efer.get32()));
     BX_INFO(("| RAX=%08x%08x  RBX=%08x%08x",
           (unsigned) (RAX >> 32), (unsigned) EAX,
           (unsigned) (RBX >> 32), (unsigned) EBX));
