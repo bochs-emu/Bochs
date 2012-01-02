@@ -37,6 +37,7 @@ bx_define_cpudb(athlon64_clawhammer)
 bx_define_cpudb(athlon64_venice)
 bx_define_cpudb(turion64_tyler)
 bx_define_cpudb(core2_penryn_t9600)
+bx_define_cpudb(corei5_lynnfield_750)
 bx_define_cpudb(corei5_arrandale_m520)
 #if BX_SUPPORT_AVX
 bx_define_cpudb(corei7_sandy_bridge_2600k)

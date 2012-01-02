@@ -116,6 +116,7 @@ romimage: file=$BXSHARE/BIOS-bochs-latest
 #  turion64_tyler             AMD Turion(tm) 64 X2 Mobile TL-60 (Tyler)
 #  p4_prescott_celeron_336    Intel(R) Celeron(R) 336 (Prescott)
 #  core2_penryn_t9600         Intel Mobile Core 2 Duo T9600 (Penryn)
+#  corei5_lynnfield_750       Intel(R) Core(TM) i5   750 (Lynnfield)
 #  corei5_arrandale_m520      Intel(R) Core(TM) i5 M 520 (Arrandale)
 #  corei7_sandy_bridge_2600k  Intel(R) Core(TM) i7-2600K (Sandy Bridge)
 #
