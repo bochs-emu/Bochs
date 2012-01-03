@@ -1473,7 +1473,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
       if (! CheckPDPTR(guest.pdptr)) {
          *qualification = VMENTER_ERR_GUEST_STATE_PDPTR_LOADING;
-         BX_ERROR(("VMENTER: Guest State PDPTRs Checks Failed"));
+         BX_ERROR(("VMENTER: EPT Guest State PDPTRs Checks Failed"));
          return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
       }
     }
@@ -1561,13 +1561,6 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   
   for(unsigned segreg=0; segreg<6; segreg++)
     BX_CPU_THIS_PTR sregs[segreg] = guest.sregs[segreg];
-
-  if (v8086_guest) CPL = 3;
-#if BX_SUPPORT_VMX >= 2
-  else {
-    if (real_mode_guest) CPL = 0;
-  }
-#endif
 
   BX_CPU_THIS_PTR gdtr.base = gdtr_base;
   BX_CPU_THIS_PTR gdtr.limit = gdtr_limit;
