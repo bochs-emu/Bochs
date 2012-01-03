@@ -767,6 +767,25 @@ int bx_gui_c::register_statusitem(const char *text, bx_bool auto_off)
   }
 }
 
+void bx_gui_c::statusbar_setitem(int element, bx_bool active, bx_bool w)
+{
+  if (element < 0) {
+    for (unsigned i = 0; i < statusitem_count; i++) {
+      statusbar_setitem_specific(element, 0, 0);
+    }
+  } else if ((unsigned)element < statusitem_count) {
+    if ((active != statusitem[element].active) ||
+        (w != statusitem[element].mode)) {
+      statusbar_setitem_specific(element, active, w);
+      statusitem[element].active = active;
+      statusitem[element].mode = w;
+    }
+    if (active && statusitem[element].auto_off) {
+      statusitem[element].counter = 5;
+    }
+  }
+}
+
 void bx_gui_c::led_timer_handler(void *this_ptr)
 {
   bx_gui_c *class_ptr = (bx_gui_c *) this_ptr;

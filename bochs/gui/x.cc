@@ -63,7 +63,7 @@ public:
 #endif
   virtual void beep_on(float frequency);
   virtual void beep_off();
-  virtual void statusbar_setitem(int element, bx_bool active, bx_bool w=0);
+  virtual void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
 #if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
@@ -708,23 +708,9 @@ void set_status_text(int element, const char *text, bx_bool active, bx_bool w)
   }
 }
 
-void bx_x_gui_c::statusbar_setitem(int element, bx_bool active, bx_bool w)
+void bx_x_gui_c::statusbar_setitem_specific(int element, bx_bool active, bx_bool w)
 {
-  if (element < 0) {
-    for (unsigned i = 0; i < statusitem_count; i++) {
-      set_status_text(i+1, statusitem[i].text, 0, 0);
-    }
-  } else if ((unsigned)element < statusitem_count) {
-    if ((active != statusitem[element].active) ||
-        (w != statusitem[element].mode)) {
-      set_status_text(element+1, statusitem[element].text, active, w);
-      statusitem[element].active = active;
-      statusitem[element].mode = w;
-    }
-    if (active && statusitem[element].auto_off) {
-      statusitem[element].counter = 5;
-    }
-  }
+  set_status_text(element+1, statusitem[element].text, active, w);
 }
 
 // This is called whenever the mouse_enabled parameter changes.  It

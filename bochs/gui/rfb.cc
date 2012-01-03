@@ -51,7 +51,7 @@ public:
   DECLARE_GUI_VIRTUAL_METHODS()
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
   void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
-  void statusbar_setitem(int element, bx_bool active, bx_bool w=0);
+  void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
 #if BX_SHOW_IPS
   void show_ips(Bit32u ips_count);
 #endif
@@ -331,23 +331,9 @@ void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w)
   rfbUpdateRegion.updated = true;
 }
 
-void bx_rfb_gui_c::statusbar_setitem(int element, bx_bool active, bx_bool w)
+void bx_rfb_gui_c::statusbar_setitem_specific(int element, bx_bool active, bx_bool w)
 {
-  if (element < 0) {
-    for (unsigned i = 0; i < statusitem_count; i++) {
-      rfbSetStatusText(i+1, statusitem[i].text, 0, 0);
-    }
-  } else if ((unsigned)element < statusitem_count) {
-    if ((active != statusitem[element].active) ||
-        (w != statusitem[element].mode)) {
-      rfbSetStatusText(element+1, statusitem[element].text, active, w);
-      statusitem[element].active = active;
-      statusitem[element].mode = w;
-    }
-    if (active && statusitem[element].auto_off) {
-      statusitem[element].counter = 5;
-    }
-  }
+  rfbSetStatusText(element+1, statusitem[element].text, active, w);
 }
 
 #ifdef WIN32

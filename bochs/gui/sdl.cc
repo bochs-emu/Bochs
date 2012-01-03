@@ -49,7 +49,7 @@ public:
   DECLARE_GUI_VIRTUAL_METHODS()
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
   virtual void set_display_mode(disp_mode_t newmode);
-  virtual void statusbar_setitem(int element, bx_bool active, bx_bool w = 0);
+  virtual void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
 #if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
 #endif
@@ -427,23 +427,9 @@ void sdl_set_status_text(int element, const char *text, bx_bool active, bx_bool 
   SDL_UpdateRect(sdl_screen, xleft,res_y+headerbar_height+1,xsize,statusbar_height-2);
 }
 
-void bx_sdl_gui_c::statusbar_setitem(int element, bx_bool active, bx_bool w)
+void bx_sdl_gui_c::statusbar_setitem_specific(int element, bx_bool active, bx_bool w)
 {
-  if (element < 0) {
-    for (unsigned i = 0; i < statusitem_count; i++) {
-      sdl_set_status_text(i+1, statusitem[i].text, 0, 0);
-    }
-  } else if ((unsigned)element < statusitem_count) {
-    if ((active != statusitem[element].active) ||
-        (w != statusitem[element].mode)) {
-      sdl_set_status_text(element+1, statusitem[element].text, active, w);
-      statusitem[element].active = active;
-      statusitem[element].mode = w;
-    }
-    if (active && statusitem[element].auto_off) {
-      statusitem[element].counter = 5;
-    }
-  }
+  sdl_set_status_text(element+1, statusitem[element].text, active, w);
 }
 
 void bx_sdl_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,

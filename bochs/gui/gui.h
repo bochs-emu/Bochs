@@ -111,7 +111,7 @@ public:
   virtual int get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)  = 0;
   virtual int set_clipboard_text(char *snapshot, Bit32u len) = 0;
   virtual void mouse_enabled_changed_specific (bx_bool val) = 0;
-  virtual void statusbar_setitem(int element, bx_bool active, bx_bool w=0) {}
+  virtual void statusbar_setitem_specific(int element, bx_bool active, bx_bool w) {}
   virtual void set_tooltip(unsigned hbar_id, const char *tip) {}
   virtual void exit(void) = 0;
   // set_display_mode() changes the mode between the configuration interface
@@ -150,6 +150,7 @@ public:
   void update_drive_status_buttons(void);
   static void     mouse_enabled_changed(bx_bool val);
   int register_statusitem(const char *text, bx_bool auto_off=0);
+  void statusbar_setitem(int element, bx_bool active, bx_bool w=0);
   static void init_signal_handlers();
   static void toggle_mouse_enable(void);
   bx_bool mouse_toggle_check(Bit32u key, bx_bool pressed);
