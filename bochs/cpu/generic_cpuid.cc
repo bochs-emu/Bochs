@@ -953,9 +953,14 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
   // determine SSE in runtime
   switch (apic_enabled) {
     case BX_CPUID_SUPPORT_X2APIC:
-      features_bitmask |= BX_CPU_X2APIC;
+      features_bitmask |= BX_CPU_X2APIC | BX_CPU_XAPIC;
+      break;
+    case BX_CPUID_SUPPORT_XAPIC_EXT:
+      features_bitmask |= BX_CPU_XAPIC_EXT | BX_CPU_XAPIC;
+      break;
     case BX_CPUID_SUPPORT_XAPIC:
       features_bitmask |= BX_CPU_XAPIC;
+      break;
     case BX_CPUID_SUPPORT_LEGACY_APIC:
     default:
       break;
@@ -964,6 +969,11 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
   // I would like to allow XAPIC configuration with i586 together
   if (apic_enabled >= BX_CPUID_SUPPORT_X2APIC && BX_CPU_LEVEL < 6) {
     BX_PANIC(("PANIC: X2APIC require CPU_LEVEL >= 6 !"));
+    return;
+  }
+
+  if (apic_enabled >= BX_CPUID_SUPPORT_XAPIC_EXT && BX_CPU_LEVEL < 6) {
+    BX_PANIC(("PANIC: XAPIC_EXT require CPU_LEVEL >= 6 !"));
     return;
   }
 #endif
@@ -1003,7 +1013,7 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
 #if BX_SUPPORT_SVM
   static unsigned svm_enabled = SIM->get_param_num(BXPN_CPUID_SVM)->get();
   if (svm_enabled) {
-    features_bitmask |= BX_CPU_ALT_MOV_CR8; // auto-enable together with SVM
+    features_bitmask |= BX_CPU_ALT_MOV_CR8 | BX_CPU_XAPIC_EXT; // auto-enable together with SVM
   }
 #endif
 

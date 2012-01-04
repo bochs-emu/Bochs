@@ -186,7 +186,7 @@ cpu: cpuid_limit_winnt=0
 #    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 5.
 #
 #  APIC:
-#    Select APIC configuration (LEGACY/XAPIC/X2APIC).
+#    Select APIC configuration (LEGACY/XAPIC/XAPIC_EXT/X2APIC).
 #    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 5.
 #
 #  SEP:

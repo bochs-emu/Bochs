@@ -41,8 +41,6 @@ turion64_tyler_t::turion64_tyler_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
     BX_PANIC(("You must enable x86-64 for Turion64 configuration"));
 
   BX_INFO(("WARNING: 3DNow! is not implemented yet !"));
-
-  BX_INFO(("WARNING: Extended LAPIC functionality is not implemented yet !"));
 }
 
 void turion64_tyler_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -124,7 +122,8 @@ Bit32u turion64_tyler_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_LONG_MODE |
          BX_CPU_NX |
          BX_CPU_FFXSR |
-         BX_CPU_ALT_MOV_CR8;
+         BX_CPU_ALT_MOV_CR8 |
+         BX_CPU_XAPIC_EXT;
 }
 
 // leaf 0x00000000 //

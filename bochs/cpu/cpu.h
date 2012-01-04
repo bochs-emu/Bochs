@@ -4079,6 +4079,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_svm(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_rdtscp(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_tsc_deadline(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_xapic_extensions(void);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
   BX_SMF BX_CPP_INLINE Bit64u get_icount(void) { return BX_CPU_THIS_PTR icount; }
@@ -4669,6 +4670,11 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_rdtscp(void)
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_tsc_deadline(void)
 {
   return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_TSC_DEADLINE) != 0;
+}
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_xapic_extensions(void)
+{
+  return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_XAPIC_EXT) != 0;
 }
 
 IMPLEMENT_EFLAG_ACCESSOR   (ID,  21)

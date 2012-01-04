@@ -197,6 +197,7 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu, unsigned id)
 #endif
 
   xapic = simulate_xapic; // xAPIC or legacy APIC
+  xapic_ext = 0;
 
   reset(BX_RESET_HARDWARE);
 }
@@ -216,6 +217,9 @@ void bx_local_apic_c::reset(unsigned type)
 
   for(i=0; i<BX_LAPIC_MAX_INTS; i++) {
     irr[i] = isr[i] = tmr[i] = 0;
+#if BX_CPU_LEVEL >= 6
+    ier[i] = 1; // all interrupts are enabled
+#endif
   }
 
   timer_divconf = 0;
@@ -253,6 +257,13 @@ void bx_local_apic_c::reset(unsigned type)
     apic_version_id = 0x00050014; // P4 has 6 LVT entries
   else 
     apic_version_id = 0x00030010; // P6 has 4 LVT entries
+
+#if BX_CPU_LEVEL >= 6
+  if (cpu->bx_cpuid_support_xapic_extensions()) {
+    apic_version_id |= 0x80000000;
+    xapic_ext = BX_XAPIC_EXT_SUPPORT_IER | BX_XAPIC_EXT_SUPPORT_SEOI;
+  }
+#endif
 }
 
 void bx_local_apic_c::set_base(bx_phy_address newbase)
@@ -378,6 +389,161 @@ void bx_local_apic_c::write(bx_phy_address addr, void *data, unsigned len)
 #define BX_LAPIC_IER7                 0x4E0
 #define BX_LAPIC_IER8                 0x4F0
 
+// APIC read: 4 byte read from 16-byte aligned APIC address
+Bit32u bx_local_apic_c::read_aligned(bx_phy_address addr)
+{
+  BX_ASSERT((addr & 0xf) == 0);
+  Bit32u data = 0;  // default value for unimplemented registers
+
+  unsigned apic_reg = addr & 0xff0;
+  BX_DEBUG(("LAPIC read from register 0x%04x", apic_reg));
+
+#if BX_CPU_LEVEL >= 6
+  if (apic_reg >= 0x400 && !cpu->bx_cpuid_support_xapic_extensions())
+    apic_reg = 0xffffffff; // choose some obviosly invalid register if extended xapic is not supported
+#endif
+
+  switch(apic_reg) {
+  case BX_LAPIC_ID:      // local APIC id
+    data = apic_id << 24; break;
+  case BX_LAPIC_VERSION: // local APIC version
+    data = apic_version_id; break;
+  case BX_LAPIC_TPR:     // task priority
+    data = task_priority & 0xff; break;
+  case BX_LAPIC_ARBITRATION_PRIORITY:
+    data = get_apr(); break;
+  case BX_LAPIC_PPR:     // processor priority
+    data = get_ppr(); break;
+  case BX_LAPIC_EOI:     // EOI
+    /*
+     * Read-modify-write operations should operate without generating
+     * exceptions, and are used by some operating systems to EOI.
+     * The results of reads should be ignored by the OS.
+     */
+    break;
+  case BX_LAPIC_LDR:     // logical destination
+    data = (ldr & apic_id_mask) << 24;
+    break;
+  case BX_LAPIC_DESTINATION_FORMAT:
+    data = ((dest_format & 0xf) << 28) | 0x0fffffff;
+    break;
+  case BX_LAPIC_SPURIOUS_VECTOR:
+    {
+      Bit32u reg = spurious_vector;
+      if(software_enabled) reg |= 0x100;
+      if(focus_disable) reg |= 0x200;
+      data = reg;
+    }
+    break;
+  case BX_LAPIC_ISR1: case BX_LAPIC_ISR2:
+  case BX_LAPIC_ISR3: case BX_LAPIC_ISR4:
+  case BX_LAPIC_ISR5: case BX_LAPIC_ISR6:
+  case BX_LAPIC_ISR7: case BX_LAPIC_ISR8:
+    {
+      unsigned index = (apic_reg - BX_LAPIC_ISR1) << 1;
+      Bit32u value = 0, mask = 1;
+      for(int i=0;i<32;i++) {
+        if(isr[index+i]) value |= mask;
+        mask <<= 1;
+      }
+      data = value;
+    }
+    break;
+  case BX_LAPIC_TMR1: case BX_LAPIC_TMR2:
+  case BX_LAPIC_TMR3: case BX_LAPIC_TMR4:
+  case BX_LAPIC_TMR5: case BX_LAPIC_TMR6:
+  case BX_LAPIC_TMR7: case BX_LAPIC_TMR8:
+    {
+      unsigned index = (apic_reg - BX_LAPIC_TMR1) << 1;
+      Bit32u value = 0, mask = 1;
+      for(int i=0;i<32;i++) {
+        if(tmr[index+i]) value |= mask;
+        mask <<= 1;
+      }
+      data = value;
+    }
+    break;
+  case BX_LAPIC_IRR1: case BX_LAPIC_IRR2:
+  case BX_LAPIC_IRR3: case BX_LAPIC_IRR4:
+  case BX_LAPIC_IRR5: case BX_LAPIC_IRR6:
+  case BX_LAPIC_IRR7: case BX_LAPIC_IRR8:
+    {
+      unsigned index = (apic_reg - BX_LAPIC_IRR1) << 1;
+      Bit32u value = 0, mask = 1;
+      for(int i=0;i<32;i++) {
+        if(irr[index+i]) value |= mask;
+        mask <<= 1;
+      }
+      data = value;
+    }
+    break;
+  case BX_LAPIC_ESR:     // error status reg
+    data = error_status; break;
+  case BX_LAPIC_ICR_LO:  // interrupt command reg  0-31
+    data = icr_lo; break;
+  case BX_LAPIC_ICR_HI:  // interrupt command reg 31-63
+    data = icr_hi; break;
+  case BX_LAPIC_LVT_TIMER:   // LVT Timer Reg
+  case BX_LAPIC_LVT_THERMAL: // LVT Thermal Monitor
+  case BX_LAPIC_LVT_PERFMON: // LVT Performance Counter
+  case BX_LAPIC_LVT_LINT0:   // LVT LINT0 Reg
+  case BX_LAPIC_LVT_LINT1:   // LVT Lint1 Reg
+  case BX_LAPIC_LVT_ERROR:   // LVT Error Reg
+    {
+      int index = (apic_reg - BX_LAPIC_LVT_TIMER) >> 4;
+      data = lvt[index];
+      break;
+    }
+  case BX_LAPIC_TIMER_INITIAL_COUNT: // initial count for timer
+    data = timer_initial;
+    break;
+  case BX_LAPIC_TIMER_CURRENT_COUNT: // current count for timer
+    data = get_current_timer_count();
+    break;
+  case BX_LAPIC_TIMER_DIVIDE_CFG:   // timer divide configuration
+    data = timer_divconf;
+    break;
+#if BX_CPU_LEVEL >= 6
+  case BX_LAPIC_EXT_APIC_FEATURE:
+    /* report extended xAPIC capabilities */
+    data = BX_XAPIC_EXT_SUPPORT_IER | BX_XAPIC_EXT_SUPPORT_SEOI;
+    break;
+  case BX_LAPIC_EXT_APIC_CONTROL:
+    /* report enabled extended xAPIC capabilities */
+    data = xapic_ext;
+    break;
+  case BX_LAPIC_SPECIFIC_EOI:
+    /*
+     * Read-modify-write operations should operate without generating
+     * exceptions, and are used by some operating systems to EOI.
+     * The results of reads should be ignored by the OS.
+     */
+    break;
+  case BX_LAPIC_IER1: case BX_LAPIC_IER2:
+  case BX_LAPIC_IER3: case BX_LAPIC_IER4:
+  case BX_LAPIC_IER5: case BX_LAPIC_IER6:
+  case BX_LAPIC_IER7: case BX_LAPIC_IER8:
+    {
+      unsigned index = (apic_reg - BX_LAPIC_IER1) << 1;
+      Bit32u value = 0, mask = 1;
+      for(int i=0;i<32;i++) {
+        if(ier[index+i]) value |= mask;
+        mask <<= 1;
+      }
+      data = value;
+    }
+    break;
+#endif
+  default:
+      shadow_error_status |= APIC_ERR_ILLEGAL_ADDR;
+      // but for now I want to know about it in case I missed some.
+      BX_ERROR(("APIC read: register %x not implemented", apic_reg));
+  }
+
+  BX_DEBUG(("read from APIC address 0x" FMT_PHY_ADDRX " = %08x", addr, data));
+  return data;
+}
+
 // APIC write: 4 byte write to 16-byte aligned APIC address
 void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
 {
@@ -386,6 +552,11 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
   unsigned apic_reg = addr & 0xff0;
   BX_DEBUG(("LAPIC write 0x%08x to register 0x%04x", value, apic_reg));
 
+#if BX_CPU_LEVEL >= 6
+  if (apic_reg >= 0x400 && !cpu->bx_cpuid_support_xapic_extensions())
+    apic_reg = 0xffffffff; // choose some obviosly invalid register if extended xapic is not supported
+#endif
+  
   switch(apic_reg) {
     case BX_LAPIC_TPR: // task priority
       set_tpr(value & 0xff);
@@ -462,6 +633,37 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
       // all read-only registers should fall into this line
       BX_INFO(("warning: write to read-only APIC register 0x%x", apic_reg));
       break;
+#if BX_CPU_LEVEL >= 6
+    case BX_LAPIC_EXT_APIC_FEATURE:
+      // all read-only registers should fall into this line
+      BX_INFO(("warning: write to read-only APIC register 0x%x", apic_reg));
+      break;
+    case BX_LAPIC_EXT_APIC_CONTROL:
+      /* set extended xAPIC capabilities */
+      xapic_ext = value & (BX_XAPIC_EXT_SUPPORT_IER | BX_XAPIC_EXT_SUPPORT_SEOI);
+      break;
+    case BX_LAPIC_SPECIFIC_EOI:
+      receive_SEOI(value & 0xff);
+      break;
+    case BX_LAPIC_IER1: case BX_LAPIC_IER2:
+    case BX_LAPIC_IER3: case BX_LAPIC_IER4:
+    case BX_LAPIC_IER5: case BX_LAPIC_IER6:
+    case BX_LAPIC_IER7: case BX_LAPIC_IER8:
+      {
+        if ((xapic_ext & BX_XAPIC_EXT_SUPPORT_IER) == 0) {
+          BX_ERROR(("IER writes are currently disabled reg %x", apic_reg));
+          break;
+        }
+
+        unsigned index = (apic_reg - BX_LAPIC_IER1) << 1;
+        Bit32u mask = 1;
+        for(int i=0;i<32;i++) {
+          if(value & mask) ier[index+i] = 1;
+          mask <<= 1;
+        }
+      }
+      break;
+#endif
     default:
       shadow_error_status |= APIC_ERR_ILLEGAL_ADDR;
       // but for now I want to know about it in case I missed some.
@@ -541,7 +743,7 @@ void bx_local_apic_c::send_ipi(apic_dest_t dest, Bit32u lo_cmd)
     accepted = apic_bus_broadcast_interrupt(vector, delivery_mode, trig_mode, get_id());
     break;
   default:
-    BX_PANIC(("Invalid desination shorthand %#x\n", dest_shorthand));
+    BX_PANIC(("Invalid desination shorthand %#x", dest_shorthand));
   }
 
   if(! accepted) {
@@ -574,9 +776,10 @@ void bx_local_apic_c::receive_EOI(Bit32u value)
 {
   BX_DEBUG(("Wrote 0x%x to EOI", value));
   int vec = highest_priority_int(isr);
-  if(vec < 0) {
+  if (vec < 0) {
     BX_DEBUG(("EOI written without any bit in ISR"));
-  } else {
+  }
+  else {
     if ((Bit32u) vec != spurious_vector) {
        BX_DEBUG(("local apic received EOI, hopefully for vector 0x%02x", vec));
        isr[vec] = 0;
@@ -591,132 +794,41 @@ void bx_local_apic_c::receive_EOI(Bit32u value)
   if(bx_dbg.apic) print_status();
 }
 
+#if BX_CPU_LEVEL >= 6
+void bx_local_apic_c::receive_SEOI(Bit8u vec)
+{
+  if ((xapic_ext & BX_XAPIC_EXT_SUPPORT_SEOI) == 0) {
+     BX_ERROR(("SEOI functionality is disabled"));
+     return;
+  }
+
+  if (isr[vec]) {
+     BX_DEBUG(("local apic received SEOI for vector 0x%02x", vec));
+     isr[vec] = 0;
+     if(tmr[vec]) {
+         apic_bus_broadcast_eoi(vec);
+         tmr[vec] = 0;
+     }
+     service_local_apic();
+  }
+
+  if(bx_dbg.apic) print_status();
+}
+#endif
+
 void bx_local_apic_c::startup_msg(Bit8u vector)
 {
   cpu->deliver_SIPI(vector);
 }
 
-// APIC read: 4 byte read from 16-byte aligned APIC address
-Bit32u bx_local_apic_c::read_aligned(bx_phy_address addr)
-{
-  BX_ASSERT((addr & 0xf) == 0);
-  Bit32u data = 0;  // default value for unimplemented registers
-
-  unsigned apic_reg = addr & 0xff0;
-  BX_DEBUG(("LAPIC read from register 0x%04x", apic_reg));
-
-  switch(apic_reg) {
-  case BX_LAPIC_ID:      // local APIC id
-    data = apic_id << 24; break;
-  case BX_LAPIC_VERSION: // local APIC version
-    data = apic_version_id; break;
-  case BX_LAPIC_TPR:     // task priority
-    data = task_priority & 0xff; break;
-  case BX_LAPIC_ARBITRATION_PRIORITY:
-    data = get_apr(); break;
-  case BX_LAPIC_PPR:     // processor priority
-    data = get_ppr(); break;
-  case BX_LAPIC_EOI:     // EOI
-    /*
-     * Read-modify-write operations should operate without generating
-     * exceptions, and are used by some operating systems to EOI.
-     * The results of reads should be ignored by the OS.
-     */
-    break;
-  case BX_LAPIC_LDR:     // logical destination
-    data = (ldr & apic_id_mask) << 24; break;
-  case BX_LAPIC_DESTINATION_FORMAT:
-    data = ((dest_format & 0xf) << 28) | 0x0fffffff; break;
-  case BX_LAPIC_SPURIOUS_VECTOR:
-    {
-      Bit32u reg = spurious_vector;
-      if(software_enabled) reg |= 0x100;
-      if(focus_disable) reg |= 0x200;
-      data = reg;
-    }
-    break;
-  case BX_LAPIC_ISR1: case BX_LAPIC_ISR2:
-  case BX_LAPIC_ISR3: case BX_LAPIC_ISR4:
-  case BX_LAPIC_ISR5: case BX_LAPIC_ISR6:
-  case BX_LAPIC_ISR7: case BX_LAPIC_ISR8:
-    {
-      unsigned index = (apic_reg - BX_LAPIC_ISR1) << 1;
-      Bit32u value = 0, mask = 1;
-      for(int i=0;i<32;i++) {
-        if(isr[index+i]) value |= mask;
-        mask <<= 1;
-      }
-      data = value;
-    }
-    break;
-  case BX_LAPIC_TMR1: case BX_LAPIC_TMR2:
-  case BX_LAPIC_TMR3: case BX_LAPIC_TMR4:
-  case BX_LAPIC_TMR5: case BX_LAPIC_TMR6:
-  case BX_LAPIC_TMR7: case BX_LAPIC_TMR8:
-    {
-      unsigned index = (apic_reg - BX_LAPIC_TMR1) << 1;
-      Bit32u value = 0, mask = 1;
-      for(int i=0;i<32;i++) {
-        if(tmr[index+i]) value |= mask;
-        mask <<= 1;
-      }
-      data = value;
-    }
-    break;
-  case BX_LAPIC_IRR1: case BX_LAPIC_IRR2:
-  case BX_LAPIC_IRR3: case BX_LAPIC_IRR4:
-  case BX_LAPIC_IRR5: case BX_LAPIC_IRR6:
-  case BX_LAPIC_IRR7: case BX_LAPIC_IRR8:
-    {
-      unsigned index = (apic_reg - BX_LAPIC_IRR1) << 1;
-      Bit32u value = 0, mask = 1;
-      for(int i=0;i<32;i++) {
-        if(irr[index+i]) value |= mask;
-        mask <<= 1;
-      }
-      data = value;
-    }
-    break;
-  case BX_LAPIC_ESR:     // error status reg
-    data = error_status; break;
-  case BX_LAPIC_ICR_LO:  // interrupt command reg  0-31
-    data = icr_lo; break;
-  case BX_LAPIC_ICR_HI:  // interrupt command reg 31-63
-    data = icr_hi; break;
-  case BX_LAPIC_LVT_TIMER:   // LVT Timer Reg
-  case BX_LAPIC_LVT_THERMAL: // LVT Thermal Monitor
-  case BX_LAPIC_LVT_PERFMON: // LVT Performance Counter
-  case BX_LAPIC_LVT_LINT0:   // LVT LINT0 Reg
-  case BX_LAPIC_LVT_LINT1:   // LVT Lint1 Reg
-  case BX_LAPIC_LVT_ERROR:   // LVT Error Reg
-    {
-      int index = (apic_reg - BX_LAPIC_LVT_TIMER) >> 4;
-      data = lvt[index];
-      break;
-    }
-  case BX_LAPIC_TIMER_INITIAL_COUNT: // initial count for timer
-    data = timer_initial;
-    break;
-  case BX_LAPIC_TIMER_CURRENT_COUNT: // current count for timer
-    data = get_current_timer_count();
-    break;
-  case BX_LAPIC_TIMER_DIVIDE_CFG:   // timer divide configuration
-    data = timer_divconf;
-    break;
-  default:
-      shadow_error_status |= APIC_ERR_ILLEGAL_ADDR;
-      // but for now I want to know about it in case I missed some.
-      BX_ERROR(("APIC read: register %x not implemented", apic_reg));
-  }
-
-  BX_DEBUG(("read from APIC address 0x" FMT_PHY_ADDRX " = %08x", addr, data));
-  return data;
-}
-
 int bx_local_apic_c::highest_priority_int(Bit8u *array)
 {
-  for(int i=BX_LAPIC_LAST_VECTOR; i>=BX_LAPIC_FIRST_VECTOR; i--)
-    if(array[i]) return i;
+  for(int i=BX_LAPIC_LAST_VECTOR; i>=BX_LAPIC_FIRST_VECTOR; i--) {
+#if BX_CPU_LEVEL >= 6
+    if (! ier[i]) continue;
+#endif
+    if (array[i]) return i;
+  }
 
   return -1;
 }
@@ -937,7 +1049,7 @@ Bit8u bx_local_apic_c::get_apr(void)
     apr <<= 4;
   }
 
-  BX_DEBUG(("apr = %d\n", apr));
+  BX_DEBUG(("apr = %d", apr));
 
   return(Bit8u) apr;
 }
@@ -1289,7 +1401,7 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
   unsigned i;
   char name[6];
 
-  bx_list_c *lapic = new bx_list_c(parent, "local_apic", 31);
+  bx_list_c *lapic = new bx_list_c(parent, "local_apic", 33);
 
   BXRS_HEX_PARAM_SIMPLE(lapic, base_addr);
   BXRS_HEX_PARAM_SIMPLE(lapic, apic_id);
@@ -1310,6 +1422,17 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
     new bx_shadow_num_c(TMR, name, &tmr[i]);
     new bx_shadow_num_c(IRR, name, &irr[i]);
   }
+
+#if BX_CPU_LEVEL >= 6
+  if (cpu->bx_cpuid_support_xapic_extensions()) {
+    BXRS_HEX_PARAM_SIMPLE(lapic, xapic_ext);
+    bx_list_c *IER = new bx_list_c(lapic, "ier", BX_LAPIC_MAX_INTS);
+    for (i=0; i<BX_LAPIC_MAX_INTS; i++) {
+      sprintf(name, "0x%02x", i);
+      new bx_shadow_num_c(IER, name, &ier[i]);
+    }
+  }
+#endif
 
   BXRS_HEX_PARAM_SIMPLE(lapic, error_status);
   BXRS_HEX_PARAM_SIMPLE(lapic, shadow_error_status);

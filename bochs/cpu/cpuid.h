@@ -123,14 +123,15 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPU_PAT                   (1 <<  7)              /* PAT support */
 #define BX_CPU_XAPIC                 (1 <<  8)              /* XAPIC support */
 #define BX_CPU_X2APIC                (1 <<  9)              /* X2APIC support */
-#define BX_CPU_NX                    (1 << 10)              /* No-Execute support */
-#define BX_CPU_LONG_MODE             (1 << 11)              /* Long Mode (x86-64) support */
-#define BX_CPU_1G_PAGES              (1 << 12)              /* 1Gb pages support */
-#define BX_CPU_PCID                  (1 << 13)              /* PCID pages support */
-#define BX_CPU_SMEP                  (1 << 14)              /* SMEP support */
-#define BX_CPU_FFXSR                 (1 << 15)              /* EFER.FFXSR support */
-#define BX_CPU_ALT_MOV_CR8           (1 << 16)              /* LOCK CR0 access CR8 */
-#define BX_CPU_TSC_DEADLINE          (1 << 17)              /* TSC-Deadline */
+#define BX_CPU_XAPIC_EXT             (1 << 10)              /* XAPIC Extensions support */
+#define BX_CPU_NX                    (1 << 11)              /* No-Execute support */
+#define BX_CPU_LONG_MODE             (1 << 12)              /* Long Mode (x86-64) support */
+#define BX_CPU_1G_PAGES              (1 << 13)              /* 1Gb pages support */
+#define BX_CPU_PCID                  (1 << 14)              /* PCID pages support */
+#define BX_CPU_SMEP                  (1 << 15)              /* SMEP support */
+#define BX_CPU_FFXSR                 (1 << 16)              /* EFER.FFXSR support */
+#define BX_CPU_ALT_MOV_CR8           (1 << 17)              /* LOCK CR0 access CR8 */
+#define BX_CPU_TSC_DEADLINE          (1 << 18)              /* TSC-Deadline */
 
 // cpuid VMX features
 #define BX_VMX_TPR_SHADOW            (1 <<  0)              /* TPR shadow */

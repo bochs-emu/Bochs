@@ -37,6 +37,9 @@
 #define BX_APIC_XAPIC_MODE        2
 #define BX_APIC_X2APIC_MODE       3
 
+#define BX_XAPIC_EXT_SUPPORT_IER  (1 << 0)
+#define BX_XAPIC_EXT_SUPPORT_SEOI (1 << 1)
+
 typedef Bit32u apic_dest_t; /* same definition in ioapic.h */
 
 class BOCHSAPI bx_local_apic_c : public logfunctions
@@ -44,6 +47,9 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
   bx_phy_address base_addr;
   unsigned mode;
   bx_bool xapic;
+#if BX_CPU_LEVEL >= 6
+  Bit32u xapic_ext;             // enabled extended XAPIC features
+#endif
   Bit32u apic_id;               //  4 bit in legacy mode, 8 bit in XAPIC mode
                                 // 32 bit in X2APIC mode
   Bit32u apic_version_id;
@@ -56,7 +62,7 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
   Bit32u ldr;                   // Logical destination (LDR)
   Bit32u dest_format;           // Destination format (DFR)
 
-  // ISR=in-service register.  When an IRR bit is cleared, the corresponding
+  // ISR=in-service register. When an IRR bit is cleared, the corresponding
   // bit in ISR is set.
   Bit8u isr[BX_LAPIC_MAX_INTS];
   // TMR=trigger mode register.  Cleared for edge-triggered interrupts
@@ -67,6 +73,11 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
   // the I/O APIC or another processor, it sets a bit in irr. The bit is
   // cleared when the interrupt is acknowledged by the processor.
   Bit8u irr[BX_LAPIC_MAX_INTS];
+#if BX_CPU_LEVEL >= 6
+  // IER=interrupt enable register. Only vectors that are enabled in IER
+  // participare in APIC's computation of highest priority pending interrupt.
+  Bit8u ier[BX_LAPIC_MAX_INTS];
+#endif
 
 #define APIC_ERR_ILLEGAL_ADDR    0x80
 #define APIC_ERR_RX_ILLEGAL_VEC  0x40
@@ -172,6 +183,7 @@ public:
 #if BX_CPU_LEVEL >= 6
   Bit64u get_tsc_deadline(void);
   void set_tsc_deadline(Bit64u value);
+  void receive_SEOI(Bit8u vec);
 #endif
 
   void startup_msg(Bit8u vector);

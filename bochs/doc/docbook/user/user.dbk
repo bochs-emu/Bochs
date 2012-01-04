@@ -3003,7 +3003,7 @@ This option exists only if Bochs compiled with BX_CPU_LEVEL >= 5.
 </para>
 <para><command>apic</command></para>
 <para>
-Select APIC configuration (LEGACY/XAPIC/X2APIC).
+Select APIC configuration (LEGACY/XAPIC/XAPIC_EXT/X2APIC).
 This option exists only if Bochs compiled with BX_CPU_LEVEL >= 5.
 </para>
 <para><command>sep</command></para>

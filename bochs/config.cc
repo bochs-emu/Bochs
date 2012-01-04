@@ -421,10 +421,19 @@ void bx_init_options()
       1);
 
   // configure defaults to XAPIC enabled
-  static const char *apic_names[] = { "legacy", "xapic", "x2apic", NULL };
+  static const char *apic_names[] = {
+    "legacy",
+    "xapic",
+#if BX_CPU_LEVEL >= 6
+    "xapic_ext",
+    "x2apic",
+#endif
+    NULL
+  };
+
   new bx_param_enum_c(cpuid_param,
       "apic", "APIC configuration",
-      "Select APIC configuration (Legacy APIC/XAPIC/X2APIC)",
+      "Select APIC configuration (Legacy APIC/XAPIC/XAPIC_EXT/X2APIC)",
       apic_names,
       BX_CPUID_SUPPORT_XAPIC,
       BX_CPUID_SUPPORT_LEGACY_APIC);
@@ -442,7 +451,7 @@ void bx_init_options()
 
   new bx_param_bool_c(cpuid_param,
       "sse4a", "Support for AMD SSE4A instructions",
-      "Support for AMD SSE4A instructionã",
+      "Support for AMD SSE4A instructions",
       0);
 
   new bx_param_bool_c(cpuid_param,
