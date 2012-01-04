@@ -236,10 +236,10 @@ niclist@EXE@: misc/niclist.o
 	@LINK_CONSOLE@ misc/niclist.o
 
 # compile with console CXXFLAGS, not gui CXXFLAGS
-misc/bximage.o: $(srcdir)/misc/bximage.c $(srcdir)/iodev/hdimage.h
+misc/bximage.o: $(srcdir)/misc/bximage.c $(srcdir)/misc/bswap.h $(srcdir)/iodev/hdimage.h
 	$(CC) @DASH@c $(BX_INCDIRS) $(CFLAGS_CONSOLE) $(srcdir)/misc/bximage.c @OFP@$@
 
-misc/bxcommit.o: $(srcdir)/misc/bxcommit.c $(srcdir)/iodev/hdimage.h
+misc/bxcommit.o: $(srcdir)/misc/bxcommit.c $(srcdir)/misc/bswap.h $(srcdir)/iodev/hdimage.h
 	$(CC) @DASH@c $(BX_INCDIRS) $(CFLAGS_CONSOLE) $(srcdir)/misc/bxcommit.c @OFP@$@
 
 misc/niclist.o: $(srcdir)/misc/niclist.c

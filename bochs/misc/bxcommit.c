@@ -44,6 +44,7 @@ int snprintf(char *s, size_t maxlen, const char *format, ...)
 #endif  /* !BX_HAVE_SNPRINTF */
 
 #include "../osdep.h"
+#include "bswap.h"
 
 #define HDIMAGE_HEADERS_ONLY 1
 #include "../iodev/hdimage.h"
@@ -316,7 +317,7 @@ int commit_redolog()
     if (flatfd < 0) {
       fatal("ERROR: flat file is not writable");
     }
-    lseek(flatfd, header.specific.disk - 512, SEEK_SET);
+    lseek(flatfd, dtoh64(header.specific.disk) - 512, SEEK_SET);
     if (write(flatfd, buffer, 512) != 512)
       fatal("ERROR: while writing block in flat file !");
 

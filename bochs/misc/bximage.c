@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "../osdep.h"
+#include "bswap.h"
 
 #define HDIMAGE_HEADERS_ONLY 1
 #include "../iodev/hdimage.h"
