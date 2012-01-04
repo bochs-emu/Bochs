@@ -522,14 +522,9 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
     inhibit_interrupts(BX_INHIBIT_INTERRUPTS);
   }
 
-  // set flags directly, avoid setEFlags side effects
-  BX_CPU_THIS_PTR eflags = guest.eflags;
-  // Update lazy flags state
-  setEFlagsOSZAPC(guest.eflags);
-
   BX_CPU_THIS_PTR async_event = 0;
-  if (guest.eflags & EFlagsTFMask)
-    BX_CPU_THIS_PTR async_event = 1;
+
+  setEFlags((Bit32u) guest.eflags);
 
   // injecting virtual interrupt
   if (SVM_V_IRQ)

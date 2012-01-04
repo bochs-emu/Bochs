@@ -1547,10 +1547,9 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   RIP = BX_CPU_THIS_PTR prev_rip = guest.rip;
   RSP = guest.rsp;
 
-  // set flags directly, avoid setEFlags side effects
-  BX_CPU_THIS_PTR eflags = (Bit32u) guest.rflags;
-  // Update lazy flags state
-  setEFlagsOSZAPC((Bit32u) guest.rflags);
+  BX_CPU_THIS_PTR async_event = 0;
+
+  setEFlags((Bit32u) guest.rflags);
 
 #ifdef BX_SUPPORT_CS_LIMIT_DEMOTION
   // Handle special case of CS.LIMIT demotion (new descriptor limit is
@@ -1584,10 +1583,6 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   //
   // Load Guest Non-Registers State -> VMENTER
   //
-
-  BX_CPU_THIS_PTR async_event = 0;
-  if (guest.rflags & EFlagsTFMask)
-    BX_CPU_THIS_PTR async_event = 1;
 
   if (vm->vmentry_ctrls & VMX_VMENTRY_CTRL1_SMM_ENTER)
     BX_PANIC(("VMENTER: entry to SMM is not implemented yet !"));
@@ -2483,44 +2478,42 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
   }
 
 /*
-                Check settings of VMX controls and host-state area;
-                if invalid settings
-                THEN VMfailValid(VM entry with invalid VMX-control field(s)) or
-                     VMfailValid(VM entry with invalid host-state field(s)) or
-                     VMfailValid(VM entry with invalid executive-VMCS pointer)) or
-                     VMfailValid(VM entry with non-launched executive VMCS) or
-                     VMfailValid(VM entry with executive-VMCS pointer not VMXON pointer)
-                     VMfailValid(VM entry with invalid VM-execution control fields in executive VMCS)
-                (as appropriate);
-                else
-                        Attempt to load guest state and PDPTRs as appropriate;
-                        clear address-range monitoring;
-                        if failure in checking guest state or PDPTRs
-                                THEN VM entry fails (see Section 22.7, in the
-                                                     IntelR 64 and IA-32 Architectures Software Developer's Manual, Volume 3B);
-                                else
-                                        Attempt to load MSRs from VM-entry MSR-load area;
-                                        if failure
-                                                THEN VM entry fails (see Section 22.7, in the IntelR 64 and IA-32
-                                                                     Architectures Software Developer's Manual, Volume 3B);
-                                        else {
-                                                if VMLAUNCH
-                                                        THEN launch state of VMCS <== "launched";
-                                                if in SMM and "entry to SMM" VM-entry control is 0
-                                                THEN
-                                                                if "deactivate dual-monitor treatment" VM-entry control is 0
-                                                                        THEN SMM-transfer VMCS pointer <== current-VMCS pointer;
-                                                                FI;
-                                                                if executive-VMCS pointer is VMX pointer
-                                                                        THEN current-VMCS pointer <== VMCS-link pointer;
-                                                                        else current-VMCS pointer <== executive-VMCS pointer;
-                                                                FI;
-                                                                leave SMM;
-                                                FI;
-                                                VMsucceed();
-                                        }
+   Check settings of VMX controls and host-state area;
+   if invalid settings
+   THEN VMfailValid(VM entry with invalid VMX-control field(s)) or
+        VMfailValid(VM entry with invalid host-state field(s)) or
+        VMfailValid(VM entry with invalid executive-VMCS pointer)) or
+        VMfailValid(VM entry with non-launched executive VMCS) or
+        VMfailValid(VM entry with executive-VMCS pointer not VMXON pointer)
+        VMfailValid(VM entry with invalid VM-execution control fields in executive VMCS)
+   (as appropriate);
+   else
+        Attempt to load guest state and PDPTRs as appropriate;
+        clear address-range monitoring;
+        if failure in checking guest state or PDPTRs
+        	THEN VM entry fails (see Section 22.7, in the IntelR 64 and IA-32 Architectures Software Developer's Manual, Volume 3B);
+        else
+                Attempt to load MSRs from VM-entry MSR-load area;
+                if failure
+                	THEN VM entry fails (see Section 22.7, in the IntelR 64 and IA-32 Architectures Software Developer's Manual, Volume 3B);
+                else {
+                        if VMLAUNCH
+                        	THEN launch state of VMCS <== "launched";
+                                if in SMM and "entry to SMM" VM-entry control is 0
+                                THEN
+                                	if "deactivate dual-monitor treatment" VM-entry control is 0
+                                        	THEN SMM-transfer VMCS pointer <== current-VMCS pointer;
+                                        FI;
+                                        if executive-VMCS pointer is VMX pointer
+                                        	THEN current-VMCS pointer <== VMCS-link pointer;
+                                        else current-VMCS pointer <== executive-VMCS pointer;
                                 FI;
-                FI;
+                                leave SMM;
+                        FI;
+                        VMsucceed();
+                }
+         FI;
+   FI;
 */
 
   BX_CPU_THIS_PTR in_vmx_guest = 1;
