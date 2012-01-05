@@ -744,8 +744,8 @@ void BX_CPU_C::VMX_Write_VTPR(Bit8u vtpr)
 // apic virtualization
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::is_virtual_apic_page(bx_phy_address paddr)
 {
-  VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
   if (BX_CPU_THIS_PTR in_vmx_guest) {
+    VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES))
       if (PPFOf(paddr) == PPFOf(vm->apic_access_page)) return 1;
   }

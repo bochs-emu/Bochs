@@ -606,7 +606,6 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
       timer_divconf = value & 0xb;
       set_divide_configuration(timer_divconf);
       break;
-      break;
     /* all read-only registers go here */
     case BX_LAPIC_ID:      // local APIC id
     case BX_LAPIC_VERSION: // local APIC version

@@ -448,7 +448,7 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
 
     if (! guest.cr0.get_PE() && guest.cr0.get_PG()) {
       // special case : entering paged real mode
-      BX_INFO(("VMRUN: entering paged real mode"));
+      BX_DEBUG(("VMRUN: entering paged real mode"));
       paged_real_mode = 1;
       guest.cr0.val32 &= ~BX_CR0_PG_MASK;
     }
@@ -551,7 +551,7 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
 
 void BX_CPU_C::Svm_Vmexit(int reason)
 {
-  BX_ERROR(("SVM VMEXIT reason=%d", reason));
+  BX_DEBUG(("SVM VMEXIT reason=%d", reason));
 
   if (!BX_CPU_THIS_PTR in_svm_guest) {
     if (reason != SVM_VMEXIT_INVALID)
@@ -648,7 +648,7 @@ bx_bool BX_CPU_C::SvmInjectEvents(void)
       return 0;
   }
 
-  BX_INFO(("SvmInjectEvents: Injecting vector 0x%02x (error_code 0x%04x)", vector, error_code));
+  BX_DEBUG(("SvmInjectEvents: Injecting vector 0x%02x (error_code 0x%04x)", vector, error_code));
 
   if (type == BX_HARDWARE_EXCEPTION) {
     // record exception the same way as BX_CPU_C::exception does
@@ -883,7 +883,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMRUN(bxInstruction_c *i)
   BX_CPU_THIS_PTR vmcbptr = pAddr;
   BX_CPU_THIS_PTR vmcbhostptr = BX_CPU_THIS_PTR getHostMemAddr(pAddr, BX_WRITE);
 
-  BX_INFO(("VMRUN VMCB ptr: 0x" FMT_ADDRX64, BX_CPU_THIS_PTR vmcbptr));
+  BX_DEBUG(("VMRUN VMCB ptr: 0x" FMT_ADDRX64, BX_CPU_THIS_PTR vmcbptr));
 
   //
   // Step 1: Save host state to physical memory indicated in SVM_HSAVE_PHY_ADDR_MSR

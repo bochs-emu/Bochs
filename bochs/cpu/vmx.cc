@@ -1679,7 +1679,7 @@ void BX_CPU_C::VMenterInjectEvents(void)
   if (is_INT)
     RIP += vm->vmentry_instr_length;
 
-  BX_ERROR(("VMENTER: Injecting vector 0x%02x (error_code 0x%04x)", vector, error_code));
+  BX_DEBUG(("VMENTER: Injecting vector 0x%02x (error_code 0x%04x)", vector, error_code));
 
   if (type == BX_HARDWARE_EXCEPTION) {
     // record exception the same way as BX_CPU_C::exception does
@@ -2378,11 +2378,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
 
   unsigned vmlaunch = 0;
   if ((i->getIaOpcode() == BX_IA_VMLAUNCH)) {
-    BX_INFO(("VMLAUNCH VMCS ptr: 0x" FMT_ADDRX64, BX_CPU_THIS_PTR vmcsptr));
+    BX_DEBUG(("VMLAUNCH VMCS ptr: 0x" FMT_ADDRX64, BX_CPU_THIS_PTR vmcsptr));
     vmlaunch = 1;
   }
   else {
-    BX_INFO(("VMRESUME VMCS ptr: 0x" FMT_ADDRX64, BX_CPU_THIS_PTR vmcsptr));
+    BX_DEBUG(("VMRESUME VMCS ptr: 0x" FMT_ADDRX64, BX_CPU_THIS_PTR vmcsptr));
   }
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
