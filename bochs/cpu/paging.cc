@@ -1353,15 +1353,21 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
   }
 
   if (vmexit_reason) {
-    BX_ERROR(("VMEXIT: EPT %s for guest paddr 0x" FMT_ADDRX " laddr " FMT_ADDRX,
-      (vmexit_reason == VMX_VMEXIT_EPT_VIOLATION) ? "violation" : "misconfig", guest_paddr, guest_laddr));
+    BX_ERROR(("VMEXIT: EPT %s for guest paddr 0x" FMT_ADDRX " laddr 0x" FMT_ADDRX,
+       (vmexit_reason == VMX_VMEXIT_EPT_VIOLATION) ? "violation" : "misconfig", guest_paddr, guest_laddr));
     VMwrite64(VMCS_64BIT_GUEST_PHYSICAL_ADDR, guest_paddr);
-    if (guest_laddr_valid) {
-      VMwrite_natural(VMCS_GUEST_LINEAR_ADDR, guest_laddr);
-      vmexit_qualification |= 0x80;
-      if (is_page_walk) vmexit_qualification |= 0x100;
+
+    if (vmexit_reason == VMX_VMEXIT_EPT_MISCONFIGURATION) {
+      VMexit(0, VMX_VMEXIT_EPT_MISCONFIGURATION, 0);
     }
-    VMexit(0, vmexit_reason, vmexit_qualification | (combined_access << 3));
+    else {
+      if (guest_laddr_valid) {
+        VMwrite_natural(VMCS_GUEST_LINEAR_ADDR, guest_laddr);
+        vmexit_qualification |= 0x80;
+        if (! is_page_walk) vmexit_qualification |= 0x100;
+      }
+      VMexit(0, VMX_VMEXIT_EPT_VIOLATION, vmexit_qualification | (combined_access << 3));
+    }
   }
 
   Bit32u page_offset = PAGE_OFFSET(guest_paddr);

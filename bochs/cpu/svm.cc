@@ -363,6 +363,11 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
     BX_PANIC(("VMRUN: Nested Paging support is not implemented yet !"));
   }
 
+  vmcb_write64(SVM_CONTROL_EXITINFO1, 0);
+
+  /* clear exitinfo2 so we behave like the real hardware */
+  vmcb_write64(SVM_CONTROL_EXITINFO2, 0);
+
   return 1;
 }
 
