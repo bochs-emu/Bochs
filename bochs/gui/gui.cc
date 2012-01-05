@@ -771,7 +771,7 @@ void bx_gui_c::statusbar_setitem(int element, bx_bool active, bx_bool w)
 {
   if (element < 0) {
     for (unsigned i = 0; i < statusitem_count; i++) {
-      statusbar_setitem_specific(element, 0, 0);
+      statusbar_setitem_specific(i, 0, 0);
     }
   } else if ((unsigned)element < statusitem_count) {
     if ((active != statusitem[element].active) ||
