@@ -1,3 +1,41 @@
+Changes in 2.5.1 (January 6, 2012):
+
+- CPU / CPUDB
+  ! Added Athlon64 (Venice) configuration to the CPUDB
+  - BMI: fixed EFLAGS after BMI instructions
+  - MSR: access to AMD extended MSR space was impossible due to a bug in RDMSR/WRMSR
+  - VMX: fixed VMFUNC instruction behavior to align with Intel SDM revision 041
+  - VMX: fixed Bochs PANIC when doing I/O access crossing VMX I/O permission bitmaps
+  - VMX: fixed VirtualBox VMX guest Guru Meditation - FS.BASE got corrupted after
+    saving/restoring unusable FS selector
+  - VMX: fixed VirtualBox failures with VMX+EPT enabled
+  - Better report of supported CPUID features when not using pre-defined CPUID profile
+
+- Debugger / Instrumentation
+  - fixed typo - closing SF bug [3461405] step all command fails in SMP mode
+  - instrumentation: added special indication for indirect call/jump
+
+- Configure and compile
+  - fixed compilation err in instrumentation call (tasking.cc)
+  - fixed compilation err with x86 hw breakpoint enabled and CPU_LEVEL < 6
+  - fixed compilation issue under win32 --with-nogui
+  - added missing dependencies for cdrom_osx.o
+  - removed very old deprecated configure options from configure script
+
+- I/O Devices
+  - fixed possible failures of PCI DMA transfers
+  - VVFAT: several fixes in the optional write support (passes test with XP)
+  - USB UHCI: some fixes to make it work in XP guest
+  - removed devices 'acpi', 'ioapic' and 'pci_ide' from optional plugin control
+    to avoid trouble
+
+- Config interface / GUI and display libraries
+  - added VMX .bochsrc option to control VMX support on runtime
+  - fix for x86-64 .bochsrc option parsing (patch from @SF)
+  - fix for @SF bug: Crash on WIN2K - ID: 3454214
+  - added 'nokeyrepeat' option for the SDL and win32 gui
+
+-------------------------------------------------------------------------
 Changes in 2.5 (November 27, 2011):
 
          Bochs repository moved to the SVN version control !
