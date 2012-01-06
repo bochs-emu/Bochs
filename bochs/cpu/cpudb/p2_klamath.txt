@@ -1,0 +1,42 @@
+----------------------
+  CPU-Z version 1.31
+----------------------
+
+CPUID Output
+------------------------------------------------------------------------------
+
+Number of CPUs			1
+Name				Intel Pentium II
+Code name			Klamath
+Specification			Intel Pentium II 300 MHz
+Family/Model/Stepping		634
+Extended Family/Model		0/0
+Package				Slot 1 SECC
+Core Stepping			C1
+Technology			0.35µ
+Instructions Sets		MMX
+Features			
+Clock Speed			299.1 MHz
+Clock multiplier		x4.5
+Front Side Bus Frequency	66.5 MHz
+Bus Speed			66.5 MHz
+Stock frequency			300 MHz
+L1 Data Cache			16 KBytes, 4-way set associative, 32 Bytes line size
+L1 Instruction Cache		16 KBytes, 4-way set associative, 32 Bytes line size
+L2 Cache			512 KBytes, 4-way set associative, 32 Bytes line size
+L2 Latency			0
+L2 Speed			149.6 MHz (1/2)
+L2 Location			On Cartridge
+L2 ECC Check			enabled
+L2 Data Prefetch Logic		no
+L2 Bus Width			64 bits
+
+				eax		ebx		ecx		edx
+Function 00000000		00000002	756e6547	6c65746e	49656e69
+Function 00000001		00000634	00000000	00000000	0080fbff
+Function 00000002		03020101	00000000	00000000	0c040843
+
+				edx		eax
+MSR 0000002A			00000000	C5800000
+MSR 0000011E			00000000	00044521
+MSR 0000008B			00000037	00000000
