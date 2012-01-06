@@ -1164,16 +1164,17 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned user, unsig
     ppf = (bx_phy_address) lpf;
   }
 
+  // Calculate physical memory address and fill in TLB cache entry
+  paddress = A20ADDR(ppf | poffset);
+
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_ENABLE)) {
-      ppf = translate_guest_physical(ppf, laddr, 1, 0, rw);
+      paddress = translate_guest_physical(paddress, laddr, 1, 0, rw);
+      ppf = PPFOf(paddress);
     }
   }
 #endif
-
-  // Calculate physical memory address and fill in TLB cache entry
-  paddress = A20ADDR(ppf | poffset);
 
   // direct memory access is NOT allowed by default
   tlbEntry->lpf = lpf | TLB_HostPtr;
