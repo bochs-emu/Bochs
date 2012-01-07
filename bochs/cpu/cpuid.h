@@ -33,7 +33,7 @@ struct cpuid_function_t {
 
 class bx_cpuid_t {
 public:
-  bx_cpuid_t(BX_CPU_C *_cpu): cpu(_cpu) {}
+  bx_cpuid_t(BX_CPU_C *_cpu);
   virtual ~bx_cpuid_t() {}
 
   // return CPU name
@@ -59,6 +59,10 @@ public:
 
 protected:
   BX_CPU_C *cpu;
+
+  unsigned nprocessors;
+  unsigned ncores;
+  unsigned nthreads;
 
   void get_reserved_leaf(cpuid_function_t *leaf) const
   {

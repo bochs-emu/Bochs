@@ -44,12 +44,6 @@ public:
   virtual void dump_cpuid(void) const;
 
 private:
-#if BX_SUPPORT_SMP
-  unsigned nprocessors;
-  unsigned ncores;
-  unsigned nthreads;
-#endif
-
   void get_std_cpuid_leaf_0(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_2(cpuid_function_t *leaf) const;

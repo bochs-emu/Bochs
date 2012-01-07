@@ -32,12 +32,6 @@
 
 turion64_tyler_t::turion64_tyler_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
-#if BX_SUPPORT_SMP
-  nthreads = SIM->get_param_num(BXPN_CPU_NTHREADS)->get();
-  ncores = SIM->get_param_num(BXPN_CPU_NCORES)->get();
-  nprocessors = SIM->get_param_num(BXPN_CPU_NPROCESSORS)->get();
-#endif
-
   if (! BX_SUPPORT_X86_64)
     BX_PANIC(("You must enable x86-64 for Turion64 configuration"));
 
@@ -167,11 +161,7 @@ void turion64_tyler_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [23:16] Number of logical processors in one physical processor
   //   [31:24] Local Apic ID
 
-#if BX_SUPPORT_SMP
   unsigned n_logical_processors = ncores*nthreads;
-#else
-  unsigned n_logical_processors = 1;
-#endif
   leaf->ebx = ((CACHE_LINE_SIZE / 8) << 8) |
               (n_logical_processors << 16);
 #if BX_SUPPORT_APIC
@@ -483,11 +473,7 @@ void turion64_tyler_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
   // virtual & phys address size in low 2 bytes.
   leaf->eax = BX_PHY_ADDRESS_WIDTH | (BX_LIN_ADDRESS_WIDTH << 8);
   leaf->ebx = 0;
-#if BX_SUPPORT_SMP
   leaf->ecx = ncores - 1;
-#else
-  leaf->ecx = 0;
-#endif
   leaf->edx = 0;
 }
 

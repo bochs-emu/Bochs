@@ -68,12 +68,6 @@ private:
   Bit32u svm_extensions_bitmask;
 #endif
 
-#if BX_SUPPORT_SMP
-  unsigned nprocessors;
-  unsigned ncores;
-  unsigned nthreads;
-#endif
-
   unsigned max_std_leaf;
   unsigned max_ext_leaf;
 

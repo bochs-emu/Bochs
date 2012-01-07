@@ -28,16 +28,23 @@
 
 #define LOG_THIS cpu->
 
-#if BX_CPU_LEVEL >= 4
-
-bx_generic_cpuid_t::bx_generic_cpuid_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
+bx_cpuid_t::bx_cpuid_t(BX_CPU_C *_cpu): cpu(_cpu)
 {
 #if BX_SUPPORT_SMP
   nthreads = SIM->get_param_num(BXPN_CPU_NTHREADS)->get();
   ncores = SIM->get_param_num(BXPN_CPU_NCORES)->get();
   nprocessors = SIM->get_param_num(BXPN_CPU_NPROCESSORS)->get();
+#else
+  nthreads = 1;
+  ncores = 1;
+  nprocessors = 1;
 #endif
+}
 
+#if BX_CPU_LEVEL >= 4
+
+bx_generic_cpuid_t::bx_generic_cpuid_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
+{
   init_isa_extensions_bitmask();
   init_cpu_extensions_bitmask();
 
@@ -206,11 +213,7 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CLFLUSH)) {
     leaf->ebx |= (CACHE_LINE_SIZE / 8) << 8;
   }
-#if BX_SUPPORT_SMP
   unsigned n_logical_processors = ncores*nthreads;
-#else
-  unsigned n_logical_processors = 1;
-#endif
   leaf->ebx |= (n_logical_processors << 16);
 #if BX_SUPPORT_APIC
   leaf->ebx |= ((cpu->get_apic_id() & 0xff) << 24);
@@ -1323,11 +1326,7 @@ Bit32u bx_generic_cpuid_t::get_std_cpuid_features(void) const
     features |= BX_CPUID_STD_SELF_SNOOP;
 #endif
 
-#if BX_SUPPORT_SMP
-  // Intel(R) HyperThreading Technology
-  if (SIM->get_param_num(BXPN_CPU_NTHREADS)->get() > 1)
-    features |= BX_CPUID_STD_HT;
-#endif
+  features |= BX_CPUID_STD_HT;
 
   return features;
 }

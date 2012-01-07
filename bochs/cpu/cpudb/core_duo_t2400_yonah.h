@@ -30,7 +30,7 @@
 
 class core_duo_t2400_yonah_t : public bx_cpuid_t {
 public:
-  core_duo_t2400_yonah_t(BX_CPU_C *cpu);
+  core_duo_t2400_yonah_t(BX_CPU_C *cpu): bx_cpuid_t(cpu) {}
   virtual ~core_duo_t2400_yonah_t() {}
 
   // return CPU name
@@ -47,12 +47,6 @@ public:
   virtual void dump_cpuid(void) const;
 
 private:
-#if BX_SUPPORT_SMP
-  unsigned nprocessors;
-  unsigned ncores;
-  unsigned nthreads;
-#endif
-
   void get_std_cpuid_leaf_0(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_2(cpuid_function_t *leaf) const;
