@@ -7,7 +7,81 @@
  <!--content starts here-->
  <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.5</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.5.1</font><BR><BR>
+
+Bochs 2.5.1 is a bugfix release. Here is the summary of changes :
+
+<ul>
+<li> CPU / CPUDB
+<ul>
+<li> ! Added Athlon64 (Venice) configuration to the CPUDB
+<li> BMI: fixed EFLAGS after BMI instructions
+<li> MSR: access to AMD extended MSR space was impossible due to a bug in RDMSR/WRMSR
+<li> VMX: fixed VMFUNC instruction behavior to align with Intel SDM revision 041
+<li> VMX: fixed Bochs PANIC when doing I/O access crossing VMX I/O permission bitmaps
+<li> VMX: fixed VirtualBox VMX guest Guru Meditation - FS.BASE got corrupted after
+     saving/restoring unusable FS selector
+<li> VMX: fixed VirtualBox failures with VMX+EPT enabled
+<li> Better report of supported CPUID features when not using pre-defined CPUID profile
+</ul>
+<li> Debugger / Instrumentation
+<ul>
+<li> fixed typo - closing SF bug [3461405] step all command fails in SMP mode
+<li> instrumentation: added special indication for indirect call/jump
+</ul>
+
+<li> Configure and compile
+<ul>
+<li> fixed compilation err in instrumentation call (tasking.cc)
+<li> fixed compilation err with x86 hw breakpoint enabled and CPU_LEVEL &lt; 6
+<li> fixed compilation issue under win32 --with-nogui
+<li> added missing dependencies for cdrom_osx.o
+<li> removed very old deprecated configure options from configure script
+</ul>
+
+- I/O Devices
+<ul>
+<li> fixed possible failures of PCI DMA transfers
+<li> VVFAT: several fixes in the optional write support (passes test with XP)
+<li> USB UHCI: some fixes to make it work in XP guest
+<li> removed devices 'acpi', 'ioapic' and 'pci_ide' from optional plugin control
+     to avoid trouble
+</ul>
+
+- Config interface / GUI and display libraries
+<ul>
+<li> added VMX .bochsrc option to control VMX support on runtime
+<li> fix for x86-64 .bochsrc option parsing (patch from @SF)
+<li> fix for @SF bug: Crash on WIN2K - ID: 3454214
+<li> added 'nokeyrepeat' option for the SDL and win32 gui
+</ul>
+</ul>
+
+The binary packages for Linux and Windows are built with these featues :
+<ul>
+<li> x86-64 emulation with all optimizations enabled
+<li> devices:
+ <ul>
+ <li> chipset: PCI, ACPI
+ <li> video: Bochs VBE and Cirrus SVGA
+ <li> sound: SB16
+ <li> network: NE2000 (ISA/PCI)
+ <li> USB: OHCI, UHCI and 6 device types
+ </ul>
+<li> Display libraries:
+ <ul>
+ <li> Linux: nogui, rfb, sdl, term, wx, x
+ <li> Windows: nogui, rfb, win32
+ </ul>
+</ul>
+
+<a href="http://bochs.svn.sourceforge.net/viewvc/bochs/tags/REL_2_5_1_FINAL/bochs/CHANGES">
+Details on what has changed since version 2.5
+</a>
+
+<BR/><BR/>
+
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.5</font><BR><BR>
 
 Nine months after the last intermediate one  and the <b>switch to SVN version control</b>
 we have a new stable release. Here is the summary of changes :
@@ -30,50 +104,10 @@ we have a new stable release. Here is the summary of changes :
 <li> LGPL'd VGABIOS updated to version 0.7a
 </ul>
 
-The binary packages for Linux and Windows are built with these featues :
-<ul>
-<li> x86-64 emulation with all optimizations enabled
-<li> devices:
- <ul>
- <li> chipset: PCI, ACPI
- <li> video: Bochs VBE and Cirrus SVGA
- <li> sound: SB16
- <li> network: NE2000 (ISA/PCI)
- <li> USB: OHCI, UHCI and 6 device types
- </ul>
-<li> Display libraries:
- <ul>
- <li> Linux: nogui, rfb, sdl, term, wx, x
- <li> Windows: nogui, rfb, win32
- </ul>
-</ul>
+<BR>
 
 <a href="http://bochs.svn.sourceforge.net/viewvc/bochs/tags/REL_2_5_FINAL/bochs/CHANGES">
 Details on what has changed since version 2.4.6
-</a>
-
-<BR/><BR/>
-
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.4.6</font><BR><BR>
-
-<ul>
-<li> Support more host OS to run on:
-<ul>
-  <li> Include win64 native binary in the release.
-  <li> Fixed failures on big endian hosts.
-</ul>
-<li> BIOS: Support for up to 2M ROM BIOS images.
-<li> GUI: select mouse capture toggle method in .bochsrc.
-<li> Ported most of Qemu's 'virtual VFAT' block driver<br>
-     (except runtime write support, but plus FAT32 suppport)
-<li> Added write protect option for floppy drives.
-<li> Bugfixes / improved internal debugger + instrumentation.
-</ul>
-
-<BR>
-
-<a href="http://bochs.svn.sourceforge.net/viewvc/bochs/tags/REL_2_4_6_FINAL/bochs/CHANGES">
-Details on what has changed since version 2.4.5
 </a>
 
  <BR><BR>
