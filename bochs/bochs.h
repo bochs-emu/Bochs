@@ -117,10 +117,14 @@ char *bx_find_bochsrc(void);
 int  bx_parse_cmdline(int arg, int argc, char *argv[]);
 int  bx_read_configuration(const char *rcfile);
 int  bx_write_configuration(const char *rcfile, int overwrite);
-void bx_init_std_nic_options(const char *name, bx_list_c *menu);
-int  bx_write_pci_nic_options(FILE *fp, bx_list_c *base);
-int  bx_parse_nic_params(const char *context, const char *param, bx_list_c *base);
 void bx_reset_options(void);
+// special config parameter and options functions for plugins
+void bx_init_std_nic_options(const char *name, bx_list_c *menu);
+int  bx_parse_nic_params(const char *context, const char *param, bx_list_c *base);
+int  bx_parse_usb_port_params(const char *context, bx_bool devopt,
+                              const char *param, int maxports, bx_list_c *base);
+int  bx_write_pci_nic_options(FILE *fp, bx_list_c *base);
+int  bx_write_usb_options(FILE *fp, int maxports, bx_list_c *base);
 Bit32u crc32(const Bit8u *buf, int len);
 // for param-tree testing only
 void print_tree(bx_param_c *node, int level = 0);

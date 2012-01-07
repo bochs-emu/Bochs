@@ -594,7 +594,6 @@ private:
   bx_bool is_parallel_enabled();
   bx_bool is_usb_ohci_enabled();
   bx_bool is_usb_uhci_enabled();
-  bx_bool is_usb_xhci_enabled();
 };
 
 // memory stub has an assumption that there are no memory accesses splitting 4K page

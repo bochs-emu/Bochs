@@ -836,6 +836,9 @@ static builtin_plugin_t builtin_opt_plugins[] = {
 #if BX_SUPPORT_ES1370
   BUILTIN_PLUGIN_ENTRY(es1370),
 #endif
+#if BX_SUPPORT_USB_XHCI
+  BUILTIN_PLUGIN_ENTRY(usb_xhci),
+#endif
   {"NULL", NULL, NULL, 0}
 };
 

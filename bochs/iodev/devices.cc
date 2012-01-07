@@ -228,11 +228,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
       PLUG_load_plugin(usb_ohci, PLUGTYPE_OPTIONAL);
     }
 #endif
-#if BX_SUPPORT_USB_XHCI
-    if (is_usb_xhci_enabled()) {
-      PLUG_load_plugin(usb_xhci, PLUGTYPE_OPTIONAL);
-    }
-#endif
 #if BX_SUPPORT_PCIDEV
     if (SIM->get_param_num(BXPN_PCIDEV_VENDOR)->get() != 0xffff) {
       PLUG_load_plugin(pcidev, PLUGTYPE_OPTIONAL);
@@ -1038,14 +1033,6 @@ bx_bool bx_devices_c::is_usb_ohci_enabled(void)
 bx_bool bx_devices_c::is_usb_uhci_enabled(void)
 {
   if (SIM->get_param_bool(BXPN_UHCI_ENABLED)->get()) {
-    return 1;
-  }
-  return 0;
-}
-
-bx_bool bx_devices_c::is_usb_xhci_enabled(void)
-{
-  if (SIM->get_param_bool(BXPN_XHCI_ENABLED)->get()) {
     return 1;
   }
   return 0;

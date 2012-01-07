@@ -67,21 +67,102 @@ Bit8u port_band_width[4][1 + USB_XHCI_PORTS] = {
   { 0x00, 0x5A, 0x5A, 0x00, 0x00 }   // 90%
 };
 
+// builtin configuration handling functions
+
+void usb_xhci_init_options(void)
+{
+  char name[BX_PATHNAME_LEN], descr[512], group[16], label[512];
+
+  bx_param_c *usb = SIM->get_param("ports.usb");
+  strcpy(group, "USB xHCI");
+  bx_list_c *menu = new bx_list_c(usb, "xhci", "xHCI Configuration");
+  menu->set_options(menu->SHOW_PARENT);
+  menu->set_enabled(BX_SUPPORT_USB_XHCI);
+  bx_param_bool_c *enabled = new bx_param_bool_c(menu,
+    "enabled",
+    "Enable xHCI emulation",
+    "Enables the xHCI emulation",
+    0);
+  enabled->set_enabled(BX_SUPPORT_USB_XHCI);
+  bx_list_c *deplist = new bx_list_c(NULL, BX_N_USB_XHCI_PORTS * 3);
+  for (int i = 0; i < BX_N_USB_XHCI_PORTS; i++) {
+    sprintf(name, "port%d", i+1);
+    sprintf(label, "Port #%d Configuration", i+1);
+    sprintf(descr, "Device connected to xHCI port #%d and it's options", i+1);
+    bx_list_c *port = new bx_list_c(menu, name, label);
+    port->set_options(port->SERIES_ASK | port->USE_BOX_TITLE);
+    sprintf(descr, "Device connected to xHCI port #%d", i+1);
+    bx_param_string_c *device = new bx_param_string_c(port, "device", "Device",
+                                                      descr, "", BX_PATHNAME_LEN);
+    sprintf(descr, "Options for device connected to xHCI port #%d", i+1);
+    bx_param_string_c *options = new bx_param_string_c(port, "options", "Options",
+                                                       descr, "", BX_PATHNAME_LEN);
+    port->set_group(group);
+    deplist->add(port);
+    deplist->add(device);
+    deplist->add(options);
+  }
+  enabled->set_dependent_list(deplist);
+}
+
+Bit32s usb_xhci_options_parser(const char *context, int num_params, char *params[])
+{
+  if (!strcmp(params[0], "usb_xhci")) {
+    bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_USB_XHCI);
+    for (int i = 1; i < num_params; i++) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+        SIM->get_param_bool(BXPN_XHCI_ENABLED)->set(atol(&params[i][8]));
+      } else if (!strncmp(params[i], "port", 4)) {
+        if (bx_parse_usb_port_params(context, 0, params[i], BX_N_USB_XHCI_PORTS, base) < 0) {
+          return -1;
+        }
+      } else if (!strncmp(params[i], "options", 7)) {
+        if (bx_parse_usb_port_params(context, 1, params[i], BX_N_USB_XHCI_PORTS, base) < 0) {
+          return -1;
+        }
+      } else {
+        BX_ERROR(("%s: unknown parameter '%s' for usb_xhci ignored.", context, params[i]));
+      }
+    }
+  } else {
+    BX_PANIC(("%s: unknown directive '%s'", context, params[0]));
+  }
+  return 0;
+}
+
+Bit32s usb_xhci_options_save(FILE *fp)
+{
+  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_USB_XHCI);
+  bx_write_usb_options(fp, BX_N_USB_XHCI_PORTS, base);
+  return 0;
+}
+
+// device plugin entry points
+
 int libusb_xhci_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theUSB_XHCI = new bx_usb_xhci_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUSB_XHCI, BX_PLUGIN_USB_XHCI);
+  // add new configuration parameter for the config interface
+  usb_xhci_init_options();
+  // register add-on option for bochsrc and command line
+  SIM->register_addon_option("usb_xhci", usb_xhci_options_parser, usb_xhci_options_save);
   return 0; // Success
 }
 
 void libusb_xhci_LTX_plugin_fini(void)
 {
+  SIM->unregister_addon_option("usb_xhci");
+  bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.usb");
+  menu->remove("usb_xhci");
   delete theUSB_XHCI;
 }
 
+// the device object
+
 bx_usb_xhci_c::bx_usb_xhci_c()
 {
-  put("XHCI");
+  put("usb_xhci", "XHCI");
   memset((void*)&hub, 0, sizeof(bx_usb_xhci_t));
   device_buffer = NULL;
   //hub.frame_timer_index = BX_NULL_TIMER_HANDLE;
@@ -107,8 +188,17 @@ void bx_usb_xhci_c::init(void)
 {
   unsigned i;
   char pname[6];
-  bx_list_c *port;
+  bx_list_c *xhci, *port;
   bx_param_string_c *device, *options;
+
+  // Read in values from config interface
+  xhci = (bx_list_c*) SIM->get_param(BXPN_USB_XHCI);
+  // Check if the device is disabled or not configured
+  if (!SIM->get_param_bool("enabled", xhci)->get()) {
+    BX_INFO(("USB xHCI disabled"));
+    BX_UNREGISTER_DEVICE_DEVMODEL("usb_xhci");
+    return;
+  }
 
   BX_XHCI_THIS device_buffer = new Bit8u[65536];
 
@@ -131,7 +221,6 @@ void bx_usb_xhci_c::init(void)
   BX_XHCI_THIS hub.statusbar_id = bx_gui->register_statusitem("xHCI", 1);
 
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
-  bx_list_c *xhci = (bx_list_c*)SIM->get_param(BXPN_USB_XHCI);
   xhci->set_options(xhci->SHOW_PARENT | xhci->USE_BOX_TITLE);
   xhci->set_runtime_param(1);
   usb_rt->add(xhci);

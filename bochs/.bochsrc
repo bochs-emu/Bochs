@@ -8,7 +8,7 @@
 # only available when the plugin device is loaded. The value "1" means to load
 # the plugin and "0" will unload it (if loaded before).
 # These plugins are currently supported: 'biosdev', 'e1000', 'es1370',
-# 'extfpuirq', 'gameport', 'iodebug', 'speaker' and 'unmapped'.
+# 'extfpuirq', 'gameport', 'iodebug', 'speaker', 'unmapped' and 'usb_xhci'.
 #=======================================================================
 #plugin_ctrl: unmapped=1, biosdev=1, speaker=1, e1000=1
 
@@ -597,9 +597,13 @@ log: bochsout.txt
 #   debug: messages useful only when debugging the code.  This may
 #          spit out thousands per second.
 #
-# For events of each level, you can choose to crash, report, or ignore.
-# TODO: allow choice based on the facility: e.g. crash on panics from
-#       everything except the cdrom, and only report those.
+# For events of each level, you can choose to exit Bochs ('fatal'), 'report'
+# or 'ignore'. On some guis you have the additional choice 'ask'. A gui dialog
+# appears asks how to proceed.
+#
+# It is also possible to specify the 'action' to do for each Bochs facility
+# separately (e.g. crash on panics from everything except the cdrom, and only
+# report those). TODO: add 'log function' module list to the user documentation.
 #
 # If you are experiencing many panics, it can be helpful to change
 # the panic action to report instead of fatal.  However, be aware
@@ -610,7 +614,7 @@ log: bochsout.txt
 panic: action=ask
 error: action=report
 info: action=report
-debug: action=ignore
+debug: action=ignore, pci=report # report BX_DEBUG from module 'pci'
 
 #=======================================================================
 # DEBUGGER_LOG:
