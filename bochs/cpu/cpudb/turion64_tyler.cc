@@ -23,6 +23,7 @@
 
 #include "bochs.h"
 #include "cpu.h"
+#include "param_names.h"
 #include "turion64_tyler.h"
 
 #define LOG_THIS cpu->
