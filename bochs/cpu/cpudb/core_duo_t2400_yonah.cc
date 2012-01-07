@@ -138,7 +138,11 @@ void core_duo_t2400_yonah_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
   // EBX: vendor ID string
   // EDX: vendor ID string
   // ECX: vendor ID string
-  leaf->eax = 0xA;
+  static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
+  if (cpuid_limit_winnt)
+    leaf->eax = 0x2;
+  else
+    leaf->eax = 0xA;
 
   // CPUID vendor string (e.g. GenuineIntel, AuthenticAMD, CentaurHauls, ...)
   memcpy(&(leaf->ebx), vendor_string,     4);

@@ -184,7 +184,7 @@ p4_prescott_celeron_336.o: p4_prescott_celeron_336.@CPP_SUFFIX@ ../../bochs.h \
  ../crregs.h ../descriptor.h ../instr.h ../ia_opcodes.h ../lazy_flags.h \
  ../icache.h ../apic.h ../i387.h ../../fpu/softfloat.h ../../fpu/tag_w.h \
  ../../fpu/status_w.h ../../fpu/control_w.h ../xmm.h ../vmx.h ../svm.h \
- ../../param_names.h p4_prescott_celeron_336.h ../../cpu/cpuid.h
+ p4_prescott_celeron_336.h ../../cpu/cpuid.h
 p4_willamette.o: p4_willamette.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
@@ -193,7 +193,7 @@ p4_willamette.o: p4_willamette.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../descriptor.h ../instr.h ../ia_opcodes.h ../lazy_flags.h ../icache.h \
  ../apic.h ../i387.h ../../fpu/softfloat.h ../../fpu/tag_w.h \
  ../../fpu/status_w.h ../../fpu/control_w.h ../xmm.h ../vmx.h ../svm.h \
- ../../param_names.h p4_willamette.h
+ p4_willamette.h
 pentium_mmx.o: pentium_mmx.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \

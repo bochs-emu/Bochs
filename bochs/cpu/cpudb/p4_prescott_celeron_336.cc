@@ -23,7 +23,6 @@
 
 #include "bochs.h"
 #include "cpu.h"
-#include "param_names.h"
 #include "p4_prescott_celeron_336.h"
 
 #define LOG_THIS cpu->
