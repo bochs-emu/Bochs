@@ -120,6 +120,7 @@ int  bx_write_configuration(const char *rcfile, int overwrite);
 void bx_reset_options(void);
 // special config parameter and options functions for plugins
 void bx_init_std_nic_options(const char *name, bx_list_c *menu);
+void bx_init_usb_options(const char *usb_name, const char *pname, int maxports);
 int  bx_parse_nic_params(const char *context, const char *param, bx_list_c *base);
 int  bx_parse_usb_port_params(const char *context, bx_bool devopt,
                               const char *param, int maxports, bx_list_c *base);

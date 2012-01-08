@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "24 Dec 2011" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "8 Jan 2012" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -40,6 +40,18 @@ file (e.g. location of rom images).
 
 Example:
   #include /etc/bochsrc
+
+.TP
+.I "plugin_ctrl:"
+Controls the presence of optional device plugins. These plugins are loaded
+directly with this option and some of them install a config option that is
+only available when the plugin device is loaded. The value "1" means to load
+the plugin and "0" will unload it (if loaded before).
+These plugins are currently supported: biosdev, e1000, es1370, extfpuirq,
+gameport, iodebug, speaker, unmapped, usb_ohci, usb_uhci and usb_xhci.
+
+Example:
+  plugin_ctrl: biosdev=1, speaker=1, unmapped=1, e1000=1
 
 .TP
 .I "config_interface:"
@@ -828,8 +840,8 @@ type
 With the mouse type option you can select the type of mouse to emulate.
 The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
 on PS/2), 'serial', 'serial_wheel' and 'serial_msys' (one com port requires
-setting 'mode=mouse'). To connect a mouse to an USB port, see the 'usb_uhci'
-or 'usb_ohci' option (requires PCI and USB support).
+setting 'mode=mouse'). To connect a mouse to an USB port, see the 'usb_uhci',
+'usb_ohci' or 'usb_xhci' option (requires PCI and USB support).
 
 enabled
 
@@ -1063,19 +1075,20 @@ Example:
 This option controls the presence of the USB OHCI host controller with a
 2-port hub. The portX option accepts the same device types with the same
 syntax as the UHCI controller (see above). The OHCI HC must be assigned to
-a PCI slot.
+a PCI slot and loaded with 'plugin_ctrl'.
 
 Example:
   usb_ohci: enabled=1
 
 .TP
-.I "plugin_ctrl:"
-Controls the presence of optional plugins without a separate option.
-By default all existing plugins are enabled. These plugins are currently
-supported: 'acpi', 'biosdev', 'extfpuirq', 'gameport', 'iodebug', 'pci_ide', 'speaker' and 'unmapped'.
+.I "usb_xhci:"
+This option controls the presence of the experimental USB xHCI host controller
+with a 4-port hub. The portX option accepts the same device types with the same
+syntax as the UHCI controller (see above). The xHCI HC must be assigned to
+a PCI slot and loaded with 'plugin_ctrl'.
 
 Example:
-  plugin_ctrl: biosdev=0, speaker=0
+  usb_xhci: enabled=1
 
 .TP
 .I "user_plugin:"

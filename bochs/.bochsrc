@@ -8,7 +8,8 @@
 # only available when the plugin device is loaded. The value "1" means to load
 # the plugin and "0" will unload it (if loaded before).
 # These plugins are currently supported: 'biosdev', 'e1000', 'es1370',
-# 'extfpuirq', 'gameport', 'iodebug', 'speaker', 'unmapped' and 'usb_xhci'.
+# 'extfpuirq', 'gameport', 'iodebug', 'speaker', 'unmapped', 'usb_ohci',
+# 'usb_uhci' and 'usb_xhci'.
 #=======================================================================
 #plugin_ctrl: unmapped=1, biosdev=1, speaker=1, e1000=1
 
@@ -770,8 +771,8 @@ keyboard_paste_delay: 100000
 #  With the mouse type option you can select the type of mouse to emulate.
 #  The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
 #  on PS/2), 'serial', 'serial_wheel' and 'serial_msys' (one com port requires
-#  setting 'mode=mouse'). To connect a mouse to an USB port, see the 'usb_uhci'
-#  or 'usb_ohci' option (requires PCI and USB support).
+#  setting 'mode=mouse'). To connect a mouse to an USB port, see the 'usb_uhci',
+#  'usb_ohci' or 'usb_xhci' options (requires PCI and USB support).
 #
 #  ENABLED:
 #  The Bochs gui creates mouse "events" unless the 'enabled' option is
@@ -956,7 +957,7 @@ pci: enabled=1, chipset=i440fx
 # This option controls the presence of the USB root hub which is a part
 # of the i440FX PCI chipset. With the portX parameter you can connect devices
 # to the hub (currently supported: 'mouse', 'tablet', 'keypad', 'disk', 'cdrom'
-# 'hub' and 'printer').
+# 'hub' and 'printer'). NOTE: UHCI must be loaded with 'plugin_ctrl'.
 #
 # The optionsX parameter can be used to assign specific options to the device
 # connected to the corresponding USB port. Currently this feature is only used
@@ -997,7 +998,7 @@ pci: enabled=1, chipset=i440fx
 # This option controls the presence of the USB OHCI host controller with a
 # 2-port hub. The portX option accepts the same device types with the same
 # syntax as the UHCI controller (see above). The OHCI HC must be assigned to
-# a PCI slot.
+# a PCI slot and loaded with 'plugin_ctrl'.
 #=======================================================================
 #usb_ohci: enabled=1
 #usb_ohci: enabled=1, port1=printer:usbprinter.bin
@@ -1007,7 +1008,7 @@ pci: enabled=1, chipset=i440fx
 # This option controls the presence of the experimental USB xHCI host controller
 # with a 4-port hub. The portX option accepts the same device types with the
 # same syntax as the UHCI controller (see above). The xHCI HC must be assigned
-# to a PCI slot.
+# to a PCI slot and loaded with 'plugin_ctrl'.
 #=======================================================================
 #usb_xhci: enabled=1
 

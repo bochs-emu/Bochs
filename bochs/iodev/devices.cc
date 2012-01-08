@@ -218,16 +218,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
         ((!strlen(vga_ext)) || (!strcmp(vga_ext, "none")) || (!strcmp(vga_ext, "vbe")))) {
       PLUG_load_plugin(pcivga, PLUGTYPE_OPTIONAL);
     }
-#if BX_SUPPORT_USB_UHCI
-    if (is_usb_uhci_enabled()) {
-      PLUG_load_plugin(usb_uhci, PLUGTYPE_OPTIONAL);
-    }
-#endif
-#if BX_SUPPORT_USB_OHCI
-    if (is_usb_ohci_enabled()) {
-      PLUG_load_plugin(usb_ohci, PLUGTYPE_OPTIONAL);
-    }
-#endif
 #if BX_SUPPORT_PCIDEV
     if (SIM->get_param_num(BXPN_PCIDEV_VENDOR)->get() != 0xffff) {
       PLUG_load_plugin(pcidev, PLUGTYPE_OPTIONAL);
@@ -1018,22 +1008,6 @@ bx_bool bx_devices_c::is_parallel_enabled(void)
     sprintf(pname, "ports.parallel.%d.enabled", i+1);
     if (SIM->get_param_bool(pname)->get())
       return 1;
-  }
-  return 0;
-}
-
-bx_bool bx_devices_c::is_usb_ohci_enabled(void)
-{
-  if (SIM->get_param_bool(BXPN_OHCI_ENABLED)->get()) {
-    return 1;
-  }
-  return 0;
-}
-
-bx_bool bx_devices_c::is_usb_uhci_enabled(void)
-{
-  if (SIM->get_param_bool(BXPN_UHCI_ENABLED)->get()) {
-    return 1;
   }
   return 0;
 }

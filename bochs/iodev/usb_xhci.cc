@@ -69,42 +69,6 @@ Bit8u port_band_width[4][1 + USB_XHCI_PORTS] = {
 
 // builtin configuration handling functions
 
-void usb_xhci_init_options(void)
-{
-  char name[BX_PATHNAME_LEN], descr[512], group[16], label[512];
-
-  bx_param_c *usb = SIM->get_param("ports.usb");
-  strcpy(group, "USB xHCI");
-  bx_list_c *menu = new bx_list_c(usb, "xhci", "xHCI Configuration");
-  menu->set_options(menu->SHOW_PARENT);
-  menu->set_enabled(BX_SUPPORT_USB_XHCI);
-  bx_param_bool_c *enabled = new bx_param_bool_c(menu,
-    "enabled",
-    "Enable xHCI emulation",
-    "Enables the xHCI emulation",
-    0);
-  enabled->set_enabled(BX_SUPPORT_USB_XHCI);
-  bx_list_c *deplist = new bx_list_c(NULL, BX_N_USB_XHCI_PORTS * 3);
-  for (int i = 0; i < BX_N_USB_XHCI_PORTS; i++) {
-    sprintf(name, "port%d", i+1);
-    sprintf(label, "Port #%d Configuration", i+1);
-    sprintf(descr, "Device connected to xHCI port #%d and it's options", i+1);
-    bx_list_c *port = new bx_list_c(menu, name, label);
-    port->set_options(port->SERIES_ASK | port->USE_BOX_TITLE);
-    sprintf(descr, "Device connected to xHCI port #%d", i+1);
-    bx_param_string_c *device = new bx_param_string_c(port, "device", "Device",
-                                                      descr, "", BX_PATHNAME_LEN);
-    sprintf(descr, "Options for device connected to xHCI port #%d", i+1);
-    bx_param_string_c *options = new bx_param_string_c(port, "options", "Options",
-                                                       descr, "", BX_PATHNAME_LEN);
-    port->set_group(group);
-    deplist->add(port);
-    deplist->add(device);
-    deplist->add(options);
-  }
-  enabled->set_dependent_list(deplist);
-}
-
 Bit32s usb_xhci_options_parser(const char *context, int num_params, char *params[])
 {
   if (!strcmp(params[0], "usb_xhci")) {
@@ -144,7 +108,7 @@ int libusb_xhci_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, c
   theUSB_XHCI = new bx_usb_xhci_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUSB_XHCI, BX_PLUGIN_USB_XHCI);
   // add new configuration parameter for the config interface
-  usb_xhci_init_options();
+  bx_init_usb_options("xHCI", "xhci", BX_N_USB_XHCI_PORTS);
   // register add-on option for bochsrc and command line
   SIM->register_addon_option("usb_xhci", usb_xhci_options_parser, usb_xhci_options_save);
   return 0; // Success

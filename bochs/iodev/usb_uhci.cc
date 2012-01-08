@@ -43,21 +43,66 @@ bx_usb_uhci_c* theUSB_UHCI = NULL;
 const Bit8u uhci_iomask[32] = {2, 1, 2, 1, 2, 1, 2, 0, 4, 0, 0, 0, 1, 0, 0, 0,
                               3, 1, 3, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
+// builtin configuration handling functions
+
+Bit32s usb_uhci_options_parser(const char *context, int num_params, char *params[])
+{
+  if (!strcmp(params[0], "usb_uhci")) {
+    bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_USB_UHCI);
+    for (int i = 1; i < num_params; i++) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+        SIM->get_param_bool(BXPN_UHCI_ENABLED)->set(atol(&params[i][8]));
+      } else if (!strncmp(params[i], "port", 4)) {
+        if (bx_parse_usb_port_params(context, 0, params[i], BX_N_USB_UHCI_PORTS, base) < 0) {
+          return -1;
+        }
+      } else if (!strncmp(params[i], "options", 7)) {
+        if (bx_parse_usb_port_params(context, 1, params[i], BX_N_USB_UHCI_PORTS, base) < 0) {
+          return -1;
+        }
+      } else {
+        BX_ERROR(("%s: unknown parameter '%s' for usb_uhci ignored.", context, params[i]));
+      }
+    }
+  } else {
+    BX_PANIC(("%s: unknown directive '%s'", context, params[0]));
+  }
+  return 0;
+}
+
+Bit32s usb_uhci_options_save(FILE *fp)
+{
+  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_USB_UHCI);
+  bx_write_usb_options(fp, BX_N_USB_UHCI_PORTS, base);
+  return 0;
+}
+
+// device plugin entry points
+
 int libusb_uhci_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theUSB_UHCI = new bx_usb_uhci_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUSB_UHCI, BX_PLUGIN_USB_UHCI);
+  // add new configuration parameter for the config interface
+  bx_init_usb_options("UHCI", "uhci", BX_N_USB_UHCI_PORTS);
+  // register add-on option for bochsrc and command line
+  SIM->register_addon_option("usb_uhci", usb_uhci_options_parser, usb_uhci_options_save);
   return 0; // Success
 }
 
 void libusb_uhci_LTX_plugin_fini(void)
 {
+  SIM->unregister_addon_option("usb_uhci");
+  bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.usb");
+  menu->remove("usb_uhci");
   delete theUSB_UHCI;
 }
 
+// the device object
+
 bx_usb_uhci_c::bx_usb_uhci_c()
 {
-  put("UHCI");
+  put("usb_uhci", "UHCI");
   memset((void*)&hub, 0, sizeof(bx_usb_uhci_t));
   device_buffer = NULL;
   hub.timer_index = BX_NULL_TIMER_HANDLE;
@@ -83,8 +128,17 @@ void bx_usb_uhci_c::init(void)
 {
   unsigned i;
   char pname[6];
-  bx_list_c *port;
+  bx_list_c *uhci, *port;
   bx_param_string_c *device, *options;
+
+  // Read in values from config interface
+  uhci = (bx_list_c*) SIM->get_param(BXPN_USB_UHCI);
+  // Check if the device is disabled or not configured
+  if (!SIM->get_param_bool("enabled", uhci)->get()) {
+    BX_INFO(("USB UHCI disabled"));
+    BX_UNREGISTER_DEVICE_DEVMODEL("usb_uhci");
+    return;
+  }
 
   BX_UHCI_THIS device_buffer = new Bit8u[65536];
 
@@ -111,7 +165,6 @@ void bx_usb_uhci_c::init(void)
   BX_UHCI_THIS hub.statusbar_id = bx_gui->register_statusitem("UHCI", 1);
 
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
-  bx_list_c *uhci = (bx_list_c*)SIM->get_param(BXPN_USB_UHCI);
   uhci->set_options(uhci->SHOW_PARENT);
   uhci->set_runtime_param(1);
   usb_rt->add(uhci);
@@ -126,9 +179,6 @@ void bx_usb_uhci_c::init(void)
     options->set_runtime_param(1);
     BX_UHCI_THIS hub.usb_port[i].device = NULL;
   }
-
-  //HACK: Turn on debug messages from the start
-  //BX_UHCI_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
 
   // register handler for correct device connect handling after runtime config
   SIM->register_runtime_config_handler(BX_UHCI_THIS_PTR, runtime_config_handler);
