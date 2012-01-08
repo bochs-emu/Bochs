@@ -197,7 +197,6 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu, unsigned id)
 #endif
 
   xapic = simulate_xapic; // xAPIC or legacy APIC
-  xapic_ext = 0;
 
   reset(BX_RESET_HARDWARE);
 }
@@ -262,6 +261,9 @@ void bx_local_apic_c::reset(unsigned type)
   if (cpu->bx_cpuid_support_xapic_extensions()) {
     apic_version_id |= 0x80000000;
     xapic_ext = BX_XAPIC_EXT_SUPPORT_IER | BX_XAPIC_EXT_SUPPORT_SEOI;
+  }
+  else {
+    xapic_ext = 0;
   }
 #endif
 }
