@@ -656,6 +656,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 
   bx_phy_address paddr = translate_linear(laddr, USER_PL, BX_READ);
 
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(SVM_INTERCEPT1_MONITOR)) Svm_Vmexit(SVM_VMEXIT_MONITOR);
+  }
+#endif
+
   // Set the monitor immediately. If monitor is still armed when we MWAIT,
   // the processor will stall.
 
@@ -691,6 +697,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
     BX_ERROR(("MWAIT: incorrect optional extensions in RCX"));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(SVM_INTERCEPT1_MWAIT_ARMED))
+      if (BX_CPU_THIS_PTR monitor.armed) Svm_Vmexit(SVM_VMEXIT_MWAIT_CONDITIONAL);
+    
+    if (SVM_INTERCEPT(SVM_INTERCEPT1_MWAIT)) Svm_Vmexit(SVM_VMEXIT_MWAIT);
+  }
+#endif
 
   // If monitor has already triggered, we just return.
   if (! BX_CPU_THIS_PTR monitor.armed) {

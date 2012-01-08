@@ -4274,7 +4274,7 @@ public: // for now...
   BX_SMF bx_bool SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls);
   BX_SMF bx_bool SvmEnterLoadCheckGuestState(void);
   BX_SMF bx_bool SvmInjectEvents(void);
-  BX_SMF void Svm_Vmexit(int reason);
+  BX_SMF void Svm_Vmexit(int reason, Bit64u exitinfo1 = 0);
   BX_SMF void SvmExitSaveGuestState(void);
   BX_SMF void SvmExitLoadHostState(SVM_HOST_STATE *host);
   BX_SMF Bit8u vmcb_read8(unsigned offset);
