@@ -295,6 +295,7 @@ void BX_CPU_C::SvmExitSaveGuestState(void)
   vmcb_write64(SVM_GUEST_DR6, BX_CPU_THIS_PTR dr6.get32());
   vmcb_write64(SVM_GUEST_DR7, BX_CPU_THIS_PTR dr7.get32());
 
+  vmcb_write64(SVM_GUEST_RFLAGS, read_eflags());
   vmcb_write64(SVM_GUEST_RAX, RAX);
   vmcb_write64(SVM_GUEST_RSP, RSP);
   vmcb_write64(SVM_GUEST_RIP, RIP);
