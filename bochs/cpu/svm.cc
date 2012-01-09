@@ -559,7 +559,7 @@ void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1)
 {
   BX_DEBUG(("SVM VMEXIT reason=%d exitinfo1=0x%08x%08x", reason, GET32H(exitinfo1), GET32L(exitinfo1)));
 
-  if (!BX_CPU_THIS_PTR in_svm_guest) {
+  if (! BX_CPU_THIS_PTR in_svm_guest) {
     if (reason != SVM_VMEXIT_INVALID)
       BX_PANIC(("PANIC: VMEXIT %d not in SVM guest mode !", reason));
   }
@@ -583,6 +583,9 @@ void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1)
 
   vmcb_write64(SVM_CONTROL64_EXITCODE, (Bit64u) ((Bit64s) reason));
   vmcb_write64(SVM_CONTROL64_EXITINFO1, exitinfo1);
+
+  // clean interrupt injection field
+  vmcb_write32(SVM_CONTROL32_EVENT_INJECTION, ctrls->eventinj & ~0x80000000);
 
   if (BX_CPU_THIS_PTR in_event) {
     vmcb_write32(SVM_CONTROL32_EXITINTINFO, ctrls->exitintinfo | 0x80000000);
@@ -624,13 +627,15 @@ extern struct BxExceptionInfo exceptions_info[];
 
 bx_bool BX_CPU_C::SvmInjectEvents(void)
 {
-  Bit32u injecting_event = vmcb_read32(SVM_CONTROL32_EVENT_INJECTION);
-  if ((injecting_event & 0x80000000) == 0) return 1;
+  SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
+
+  ctrls->eventinj = vmcb_read32(SVM_CONTROL32_EVENT_INJECTION);
+  if ((ctrls->eventinj & 0x80000000) == 0) return 1;
 
   /* the VMENTRY injecting event to the guest */
-  unsigned vector = injecting_event & 0xff;
-  unsigned type = (injecting_event >> 8) & 7;
-  unsigned push_error = injecting_event & (1 << 11);
+  unsigned vector = ctrls->eventinj & 0xff;
+  unsigned type = (ctrls->eventinj >> 8) & 7;
+  unsigned push_error = ctrls->eventinj & (1 << 11);
   unsigned error_code = push_error ? vmcb_read32(SVM_CONTROL32_EVENT_INJECTION_ERRORCODE) : 0;
 
   switch(type) {
@@ -671,9 +676,7 @@ bx_bool BX_CPU_C::SvmInjectEvents(void)
     BX_CPU_THIS_PTR errorno = 1;
   }
 
-  SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
-
-  ctrls->exitintinfo = injecting_event & ~0x80000000;
+  ctrls->exitintinfo = ctrls->eventinj & ~0x80000000;
   ctrls->exitintinfo_error_code = error_code;
 
   RSP_SPECULATIVE;
@@ -1142,7 +1145,7 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   // VMCB Control Fields
   //
 
-  bx_list_c *vmcb_ctrls = new bx_list_c(svm, "VMCB_CTRLS", 17);
+  bx_list_c *vmcb_ctrls = new bx_list_c(svm, "VMCB_CTRLS", 18);
 
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, cr_rd_ctrl, BX_CPU_THIS_PTR vmcb.ctrls.cr_rd_ctrl);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, cr_wr_ctrl, BX_CPU_THIS_PTR vmcb.ctrls.cr_wr_ctrl);
@@ -1155,6 +1158,7 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, msrpm_base, BX_CPU_THIS_PTR vmcb.ctrls.msrpm_base);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, exitintinfo, BX_CPU_THIS_PTR vmcb.ctrls.exitintinfo);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, exitintinfo_errcode, BX_CPU_THIS_PTR vmcb.ctrls.exitintinfo_error_code);
+  BXRS_HEX_PARAM_FIELD(vmcb_ctrls, eventinj, BX_CPU_THIS_PTR vmcb.ctrls.eventinj);
 
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, v_tpr, BX_CPU_THIS_PTR vmcb.ctrls.v_tpr);
   BXRS_PARAM_BOOL(vmcb_ctrls, v_irq, BX_CPU_THIS_PTR vmcb.ctrls.v_irq);

@@ -283,6 +283,8 @@ typedef struct bx_SVM_CONTROLS
   Bit32u exitintinfo;
   Bit32u exitintinfo_error_code;
 
+  Bit32u eventinj;
+
   bx_phy_address iopm_base;
   bx_phy_address msrpm_base;
 
