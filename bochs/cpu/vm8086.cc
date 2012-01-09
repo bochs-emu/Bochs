@@ -176,13 +176,13 @@ int BX_CPU_C::v86_redirect_interrupt(Bit8u vector)
   {
     bx_address tr_base = BX_CPU_THIS_PTR tr.cache.u.segment.base;
     if (BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled < 103) {
-      BX_ERROR(("INT_Ib(): TR.limit < 103 in VME"));
+      BX_ERROR(("v86_redirect_interrupt(): TR.limit < 103 in VME"));
       exception(BX_GP_EXCEPTION, 0);
     }
 
     Bit32u io_base = system_read_word(tr_base + 102), offset = io_base - 32 + (vector >> 3);
     if (offset > BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled) {
-      BX_ERROR(("INT_Ib(): failed to fetch VME redirection bitmap"));
+      BX_ERROR(("v86_redirect_interrupt(): failed to fetch VME redirection bitmap"));
       exception(BX_GP_EXCEPTION, 0);
     }
 
@@ -228,7 +228,7 @@ int BX_CPU_C::v86_redirect_interrupt(Bit8u vector)
   // interrupt is not redirected or VME is OFF
   if (BX_CPU_THIS_PTR get_IOPL() < 3)
   {
-    BX_DEBUG(("INT_Ib(): Interrupt cannot be redirected, generate #GP(0)"));
+    BX_DEBUG(("v86_redirect_interrupt(): interrupt cannot be redirected, generate #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
   }
 

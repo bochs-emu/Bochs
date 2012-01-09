@@ -1810,7 +1810,7 @@ void BX_CPU_C::VMexitSaveGuestState(void)
 
   VMwrite_natural(VMCS_GUEST_RIP, RIP);
   VMwrite_natural(VMCS_GUEST_RSP, RSP);
-  VMwrite_natural(VMCS_GUEST_RFLAGS, BX_CPU_THIS_PTR read_eflags());
+  VMwrite_natural(VMCS_GUEST_RFLAGS, read_eflags());
 
   for (n=0; n<6; n++) {
      Bit32u selector = BX_CPU_THIS_PTR sregs[n].selector.value;

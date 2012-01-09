@@ -651,7 +651,7 @@ Bit64s BX_CPU_C::param_save(bx_param_c *param)
 
   pname = param->get_name();
   if (!strcmp(pname, "EFLAGS")) {
-    val = BX_CPU_THIS_PTR read_eflags();
+    val = read_eflags();
   } else if (!strcmp(pname, "selector")) {
     segname = param->get_parent()->get_name();
     if (!strcmp(segname, "CS")) {

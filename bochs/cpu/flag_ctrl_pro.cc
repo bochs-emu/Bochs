@@ -72,8 +72,7 @@ BX_CPU_C::writeEFlags(Bit32u flags, Bit32u changeMask)
   // Screen out changing of any unsupported bits.
   changeMask &= supportMask;
 
-  Bit32u newEFlags = (BX_CPU_THIS_PTR read_eflags() & ~changeMask) |
-              (flags & changeMask);
+  Bit32u newEFlags = (read_eflags() & ~changeMask) | (flags & changeMask);
   setEFlags(newEFlags);
 }
 

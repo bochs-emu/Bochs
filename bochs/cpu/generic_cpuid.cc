@@ -955,30 +955,22 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
   static unsigned apic_enabled = SIM->get_param_enum(BXPN_CPUID_APIC)->get();
   // determine SSE in runtime
   switch (apic_enabled) {
+#if BX_CPU_LEVEL >= 6
     case BX_CPUID_SUPPORT_X2APIC:
       features_bitmask |= BX_CPU_X2APIC | BX_CPU_XAPIC;
       break;
     case BX_CPUID_SUPPORT_XAPIC_EXT:
       features_bitmask |= BX_CPU_XAPIC_EXT | BX_CPU_XAPIC;
       break;
+#endif
     case BX_CPUID_SUPPORT_XAPIC:
       features_bitmask |= BX_CPU_XAPIC;
       break;
     case BX_CPUID_SUPPORT_LEGACY_APIC:
-    default:
       break;
+    default:
+      BX_PANIC(("unknown APIC option %d", apic_enabled));
   };
-
-  // I would like to allow XAPIC configuration with i586 together
-  if (apic_enabled >= BX_CPUID_SUPPORT_X2APIC && BX_CPU_LEVEL < 6) {
-    BX_PANIC(("PANIC: X2APIC require CPU_LEVEL >= 6 !"));
-    return;
-  }
-
-  if (apic_enabled >= BX_CPUID_SUPPORT_XAPIC_EXT && BX_CPU_LEVEL < 6) {
-    BX_PANIC(("PANIC: XAPIC_EXT require CPU_LEVEL >= 6 !"));
-    return;
-  }
 #endif
 
 #if BX_CPU_LEVEL >= 5
