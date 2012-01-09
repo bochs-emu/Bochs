@@ -755,8 +755,7 @@ void bx_init_options()
   bx_list_c *pci = new bx_list_c(root_param, "pci", "PCI Options");
 
   // pci options
-  bx_param_c *pci_deps_list[3+BX_N_PCI_SLOTS+2*BX_SUPPORT_PCIDEV];
-  bx_param_c **pci_deps_ptr = &pci_deps_list[0];
+  deplist = new bx_list_c(NULL, 2+BX_N_PCI_SLOTS+2*BX_SUPPORT_PCIDEV);
 
   bx_param_bool_c *i440fx_support = new bx_param_bool_c(pci,
       "i440fx_support",
@@ -765,7 +764,7 @@ void bx_init_options()
       BX_SUPPORT_PCI);
   // pci slots
   bx_list_c *slot = new bx_list_c(pci, "slot", "PCI Slots");
-  *pci_deps_ptr++ = slot;
+  deplist->add(slot);
   for (i=0; i<BX_N_PCI_SLOTS; i++) {
     sprintf(name, "%d", i+1);
     sprintf (descr, "Name of the device connected to PCI slot #%d", i+1);
@@ -775,46 +774,11 @@ void bx_init_options()
         label,
         descr,
         "", BX_PATHNAME_LEN);
-    // add to deplist
-    *pci_deps_ptr++ = devname;
+    deplist->add(devname);
   }
-  // pcidev options
-  bx_list_c *pcidev = new bx_list_c(pci, "pcidev", "Host PCI Device Mapping");
-  *pci_deps_ptr++ = pcidev;
-  bx_param_num_c *pcivid = new bx_param_num_c(pcidev,
-      "vendor",
-      "PCI Vendor ID",
-      "The vendor ID of the host PCI device to map",
-      0, 0xffff,
-      0xffff); // vendor id 0xffff = no pci device present
-  pcivid->set_base(16);
-  pcivid->set_format("0x%04x");
-  pcivid->set_long_format("PCI Vendor ID: 0x%04x");
-#if BX_SUPPORT_PCIDEV
-  *pci_deps_ptr++ = pcivid;
-#else
-  pcivid->set_enabled(0);
-#endif
-  bx_param_num_c *pcidid = new bx_param_num_c(pcidev,
-      "device",
-      "PCI Device ID",
-      "The device ID of the host PCI device to map",
-      0, 0xffff,
-      0x0);
-  pcidid->set_base(16);
-  pcidid->set_format("0x%04x");
-  pcidid->set_long_format("PCI Device ID: 0x%04x");
-#if BX_SUPPORT_PCIDEV
-  *pci_deps_ptr++ = pcidid;
-#else
-  pcidid->set_enabled(0);
-#endif
-  // add final NULL at the end, and build the menu
-  *pci_deps_ptr = NULL;
-  i440fx_support->set_dependent_list(new bx_list_c(NULL, "", "", pci_deps_list));
+  i440fx_support->set_dependent_list(deplist);
   pci->set_options(pci->SHOW_PARENT);
   slot->set_options(slot->SHOW_PARENT);
-  pcidev->set_options(pcidev->SHOW_PARENT | pcidev->USE_BOX_TITLE);
 
   // display subtree
   bx_list_c *display = new bx_list_c(root_param, "display", "Bochs Display & Interface Options", 7);
@@ -1524,18 +1488,6 @@ void bx_init_options()
     9);
   irq->set_options(irq->USE_SPIN_CONTROL);
   bx_init_std_nic_options("NE2K", menu);
-  enabled->set_dependent_list(menu->clone());
-  // pnic options
-  menu = new bx_list_c(network, "pnic", "PCI Pseudo NIC");
-  menu->set_options(menu->SHOW_PARENT);
-  menu->set_enabled(BX_SUPPORT_PCIPNIC);
-  enabled = new bx_param_bool_c(menu,
-    "enabled",
-    "Enable Pseudo NIC emulation",
-    "Enables the Pseudo NIC emulation",
-    0);
-  enabled->set_enabled(BX_SUPPORT_PCIPNIC);
-  bx_init_std_nic_options("Pseudo NIC", menu);
   enabled->set_dependent_list(menu->clone());
 
   // sound subtree
@@ -2259,6 +2211,12 @@ bx_bool is_optplugin_option(const char *param)
 #endif
 #if BX_SUPPORT_ES1370
     "es1370",
+#endif
+#if BX_SUPPORT_PCIDEV
+    "pcidev",
+#endif
+#if BX_SUPPORT_PCIPNIC
+    "pnic",
 #endif
 #if BX_SUPPORT_USB_OHCI
     "usb_ohci",
@@ -3120,27 +3078,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         PARSE_ERR(("%s: pci: chipset not specified", context));
       }
     }
-  } else if (!strcmp(params[0], "pcidev")) {
-    if (num_params != 3) {
-      PARSE_ERR(("%s: pcidev directive malformed.", context));
-    }
-    for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "vendor=", 7)) {
-        if ((params[i][7] == '0') && (toupper(params[i][8]) == 'X'))
-          SIM->get_param_num(BXPN_PCIDEV_VENDOR)->set(strtoul(&params[i][7], NULL, 16));
-        else
-          SIM->get_param_num(BXPN_PCIDEV_VENDOR)->set(strtoul(&params[i][7], NULL, 10));
-      }
-      else if (!strncmp(params[i], "device=", 7)) {
-        if ((params[i][7] == '0') && (toupper(params[i][8]) == 'X'))
-          SIM->get_param_num(BXPN_PCIDEV_DEVICE)->set(strtoul(&params[i][7], NULL, 16));
-        else
-          SIM->get_param_num(BXPN_PCIDEV_DEVICE)->set(strtoul(&params[i][7], NULL, 10));
-      }
-      else {
-        BX_ERROR(("%s: unknown parameter for pcidev ignored.", context));
-      }
-    }
   } else if (!strcmp(params[0], "cmosimage")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "file=", 5)) {
@@ -3311,29 +3248,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         if ((valid & 0x04) == 0) {
           PARSE_ERR(("%s: 'ne2k' directive incomplete (mac address is required)", context));
         }
-      }
-    } else {
-      if (valid & 0x80) {
-        SIM->get_param_bool("enabled", base)->set(0);
-      }
-    }
-  } else if (!strcmp(params[0], "pnic")) {
-    int ret, valid = 0;
-    base = (bx_list_c*) SIM->get_param(BXPN_PNIC);
-    if (!SIM->get_param_bool("enabled", base)->get()) {
-      SIM->get_param_enum("ethmod", base)->set_by_name("null");
-    }
-    for (i=1; i<num_params; i++) {
-      ret = bx_parse_nic_params(context, params[i], base);
-      if (ret > 0) {
-        valid |= ret;
-      }
-    }
-    if (!SIM->get_param_bool("enabled", base)->get()) {
-      if (valid == 0x04) {
-        SIM->get_param_bool("enabled", base)->set(1);
-      } else if (valid < 0x80) {
-        PARSE_ERR(("%s: 'pnic' directive incomplete (mac is required)", context));
       }
     } else {
       if (valid & 0x80) {
@@ -3922,11 +3836,6 @@ int bx_write_configuration(const char *rc, int overwrite)
     }
   }
   fprintf(fp, "\n");
-  if (SIM->get_param_num(BXPN_PCIDEV_VENDOR)->get() != 0xffff) {
-    fprintf(fp, "pcidev: vendor=0x%04x, device=0x%04x\n",
-      SIM->get_param_num(BXPN_PCIDEV_VENDOR)->get(),
-      SIM->get_param_num(BXPN_PCIDEV_DEVICE)->get());
-  }
   fprintf(fp, "vga: extension=%s, update_freq=%u\n",
     SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(),
     SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY)->get());
@@ -4021,7 +3930,6 @@ int bx_write_configuration(const char *rc, int overwrite)
 #endif
   bx_write_clock_cmos_options(fp);
   bx_write_ne2k_options(fp, (bx_list_c*) SIM->get_param(BXPN_NE2K));
-  bx_write_pci_nic_options(fp, (bx_list_c*) SIM->get_param(BXPN_PNIC));
   bx_write_sound_options(fp, (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16));
   bx_write_loader_options(fp);
   bx_write_log_options(fp, (bx_list_c*) SIM->get_param("log"));

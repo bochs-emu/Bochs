@@ -39,17 +39,82 @@ bx_pcipnic_c* thePNICDevice = NULL;
 
 const Bit8u pnic_iomask[16] = {2, 0, 2, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
+// builtin configuration handling functions
+
+void pnic_init_options(void)
+{
+  bx_param_c *network = SIM->get_param("network");
+  bx_list_c *menu = new bx_list_c(network, "pnic", "PCI Pseudo NIC");
+  menu->set_options(menu->SHOW_PARENT);
+  bx_param_bool_c *enabled = new bx_param_bool_c(menu,
+    "enabled",
+    "Enable Pseudo NIC emulation",
+    "Enables the Pseudo NIC emulation",
+    0);
+  bx_init_std_nic_options("Pseudo NIC", menu);
+  enabled->set_dependent_list(menu->clone());
+}
+
+Bit32s pnic_options_parser(const char *context, int num_params, char *params[])
+{
+  int ret, valid = 0;
+
+  if (!strcmp(params[0], "pnic")) {
+    bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_PNIC);
+    if (!SIM->get_param_bool("enabled", base)->get()) {
+      SIM->get_param_enum("ethmod", base)->set_by_name("null");
+    }
+    for (int i = 1; i < num_params; i++) {
+      ret = bx_parse_nic_params(context, params[i], base);
+      if (ret > 0) {
+        valid |= ret;
+      }
+    }
+    if (!SIM->get_param_bool("enabled", base)->get()) {
+      if (valid == 0x04) {
+        SIM->get_param_bool("enabled", base)->set(1);
+      } else if (valid < 0x80) {
+        BX_PANIC(("%s: 'pnic' directive incomplete (mac is required)", context));
+      }
+    } else {
+      if (valid & 0x80) {
+        SIM->get_param_bool("enabled", base)->set(0);
+      }
+    }
+  } else {
+    BX_PANIC(("%s: unknown directive '%s'", context, params[0]));
+  }
+  return 0;
+}
+
+Bit32s pnic_options_save(FILE *fp)
+{
+  bx_write_pci_nic_options(fp, (bx_list_c*) SIM->get_param(BXPN_PNIC));
+  return 0;
+}
+
+// device plugin entry points
+
 int libpcipnic_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   thePNICDevice = new bx_pcipnic_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePNICDevice, BX_PLUGIN_PCIPNIC);
+  // add new configuration parameter for the config interface
+  pnic_init_options();
+  // register add-on option for bochsrc and command line
+  SIM->register_addon_option("pnic", pnic_options_parser, pnic_options_save);
   return 0; // Success
 }
 
 void libpcipnic_LTX_plugin_fini(void)
 {
+  SIM->unregister_addon_option("pnic");
+  bx_list_c *menu = (bx_list_c*)SIM->get_param("network");
+  menu->remove("pnic");
   delete thePNICDevice;
 }
+
+// the device object
 
 bx_pcipnic_c::bx_pcipnic_c()
 {
@@ -68,6 +133,13 @@ void bx_pcipnic_c::init(void)
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_PNIC);
+  // Check if the device is disabled or not configured
+  if (!SIM->get_param_bool("enabled", base)->get()) {
+    BX_INFO(("PCI Pseudo NIC disabled"));
+    BX_UNREGISTER_DEVICE_DEVMODEL("pcipnic");
+    return;
+  }
+
   memcpy(BX_PNIC_THIS s.macaddr, SIM->get_param_string("macaddr", base)->getptr(), 6);
 
   BX_PNIC_THIS s.devfunc = 0x00;

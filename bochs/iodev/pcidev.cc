@@ -44,17 +44,96 @@
 
 bx_pcidev_c* thePciDevAdapter = NULL;
 
+// builtin configuration handling functions
+
+void pcidev_init_options(void)
+{
+  bx_param_c *pci = SIM->get_param("pci");
+  bx_list_c *pcidev = new bx_list_c(pci, "pcidev", "Host PCI Device Mapping");
+  bx_param_num_c *pcivid = new bx_param_num_c(pcidev,
+      "vendor",
+      "PCI Vendor ID",
+      "The vendor ID of the host PCI device to map",
+      0, 0xffff,
+      0xffff); // vendor id 0xffff = no pci device present
+  pcivid->set_base(16);
+  pcivid->set_format("0x%04x");
+  pcivid->set_long_format("PCI Vendor ID: 0x%04x");
+  bx_param_num_c *pcidid = new bx_param_num_c(pcidev,
+      "device",
+      "PCI Device ID",
+      "The device ID of the host PCI device to map",
+      0, 0xffff,
+      0x0);
+  pcidid->set_base(16);
+  pcidid->set_format("0x%04x");
+  pcidid->set_long_format("PCI Device ID: 0x%04x");
+  pcidev->set_options(pcidev->SHOW_PARENT | pcidev->USE_BOX_TITLE);
+  bx_list_c *deplist = ((bx_param_bool_c*)SIM->get_param(BXPN_I440FX_SUPPORT))->get_dependent_list();
+  deplist->add(pcidev);
+  deplist->add(pcivid);
+  deplist->add(pcidid);
+}
+
+Bit32s pcidev_options_parser(const char *context, int num_params, char *params[])
+{
+  if (!strcmp(params[0], "pcidev")) {
+    if (num_params != 3) {
+      BX_PANIC(("%s: pcidev directive malformed.", context));
+    }
+    for (int i = 1; i < num_params; i++) {
+      if (!strncmp(params[i], "vendor=", 7)) {
+        if ((params[i][7] == '0') && (toupper(params[i][8]) == 'X'))
+          SIM->get_param_num(BXPN_PCIDEV_VENDOR)->set(strtoul(&params[i][7], NULL, 16));
+        else
+          SIM->get_param_num(BXPN_PCIDEV_VENDOR)->set(strtoul(&params[i][7], NULL, 10));
+      } else if (!strncmp(params[i], "device=", 7)) {
+        if ((params[i][7] == '0') && (toupper(params[i][8]) == 'X'))
+          SIM->get_param_num(BXPN_PCIDEV_DEVICE)->set(strtoul(&params[i][7], NULL, 16));
+        else
+          SIM->get_param_num(BXPN_PCIDEV_DEVICE)->set(strtoul(&params[i][7], NULL, 10));
+      } else {
+        BX_ERROR(("%s: unknown parameter for pcidev ignored.", context));
+      }
+    }
+  } else {
+    BX_PANIC(("%s: unknown directive '%s'", context, params[0]));
+  }
+  return 0;
+}
+
+Bit32s pcidev_options_save(FILE *fp)
+{
+  if (SIM->get_param_num(BXPN_PCIDEV_VENDOR)->get() != 0xffff) {
+    fprintf(fp, "pcidev: vendor=0x%04x, device=0x%04x\n",
+      SIM->get_param_num(BXPN_PCIDEV_VENDOR)->get(),
+      SIM->get_param_num(BXPN_PCIDEV_DEVICE)->get());
+  }
+  return 0;
+}
+
+// device plugin entry points
+
 int libpcidev_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   thePciDevAdapter = new bx_pcidev_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePciDevAdapter, BX_PLUGIN_PCIDEV);
+  // add new configuration parameter for the config interface
+  pcidev_init_options();
+  // register add-on option for bochsrc and command line
+  SIM->register_addon_option("pcidev", pcidev_options_parser, pcidev_options_save);
   return 0; // Success
 }
 
 void libpcidev_LTX_plugin_fini(void)
 {
+  SIM->unregister_addon_option("pcidev");
+  bx_list_c *menu = (bx_list_c*)SIM->get_param("network");
+  menu->remove("pcidev");
   delete thePciDevAdapter;
 }
+
+// the device object
 
 bx_pcidev_c::bx_pcidev_c()
 {
@@ -156,7 +235,13 @@ static const char * const pcidev_name = "Experimental PCI 2 host PCI";
 
 void bx_pcidev_c::init(void)
 {
-  // called once when bochs initializes
+  // Check if the device is disabled or not configured
+  if (SIM->get_param_num(BXPN_PCIDEV_VENDOR)->get() == 0xffff) {
+    BX_INFO(("Host PCI device mapping disabled"));
+    BX_UNREGISTER_DEVICE_DEVMODEL("pcidev");
+    return;
+  }
+
   BX_PCIDEV_THIS pcidev_fd = -1;
   int fd;
   fd = open("/dev/pcidev", O_RDWR);

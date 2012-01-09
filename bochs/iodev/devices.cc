@@ -218,16 +218,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
         ((!strlen(vga_ext)) || (!strcmp(vga_ext, "none")) || (!strcmp(vga_ext, "vbe")))) {
       PLUG_load_plugin(pcivga, PLUGTYPE_OPTIONAL);
     }
-#if BX_SUPPORT_PCIDEV
-    if (SIM->get_param_num(BXPN_PCIDEV_VENDOR)->get() != 0xffff) {
-      PLUG_load_plugin(pcidev, PLUGTYPE_OPTIONAL);
-    }
-#endif
-#if BX_SUPPORT_PCIPNIC
-    if (SIM->get_param_bool(BXPN_PNIC_ENABLED)->get()) {
-      PLUG_load_plugin(pcipnic, PLUGTYPE_OPTIONAL);
-    }
-#endif
   }
 #endif
 

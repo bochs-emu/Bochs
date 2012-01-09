@@ -8,8 +8,8 @@
 # only available when the plugin device is loaded. The value "1" means to load
 # the plugin and "0" will unload it (if loaded before).
 # These plugins are currently supported: 'biosdev', 'e1000', 'es1370',
-# 'extfpuirq', 'gameport', 'iodebug', 'speaker', 'unmapped', 'usb_ohci',
-# 'usb_uhci' and 'usb_xhci'.
+# 'extfpuirq', 'gameport', 'iodebug', 'pcidev', 'pcipnic', 'speaker',
+# 'unmapped', 'usb_ohci', 'usb_uhci' and 'usb_xhci'.
 #=======================================================================
 #plugin_ctrl: unmapped=1, biosdev=1, speaker=1, e1000=1
 
@@ -885,7 +885,8 @@ private_colormap: enabled=0
 #
 # The pseudo-NIC accepts the same syntax (for mac, ethmod, ethdev, script,
 # bootrom) and supports the same networking modules as the NE2000 adapter.
-# In addition to this, it must be assigned to a PCI slot.
+# In addition to this, it must be loaded with 'plugin_ctrl' and assigned
+# to a PCI slot.
 #=======================================================================
 #pnic: enabled=1, mac=b0:c4:20:00:00:00, ethmod=vnet
 
