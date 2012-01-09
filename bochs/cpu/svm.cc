@@ -737,16 +737,13 @@ void BX_CPU_C::SvmInterceptException(unsigned type, unsigned vector, Bit16u errc
   if (vector == BX_DF_EXCEPTION)
     BX_CPU_THIS_PTR in_event = 0; // clear in_event indication on #DF
 
-  if (errcode_valid) {
-    vmcb_write64(SVM_CONTROL64_EXITINFO1, errcode);
-    if (vector == BX_PF_EXCEPTION)
-      vmcb_write64(SVM_CONTROL64_EXITINFO2, qualification);
-  }
+  if (vector == BX_PF_EXCEPTION)
+    vmcb_write64(SVM_CONTROL64_EXITINFO2, qualification);
 
   BX_CPU_THIS_PTR debug_trap = 0; // clear debug_trap field
   BX_CPU_THIS_PTR inhibit_mask = 0;
 
-  Svm_Vmexit(SVM_VMEXIT_EXCEPTION + vector);
+  Svm_Vmexit(SVM_VMEXIT_EXCEPTION + vector, errcode_valid ? errcode : 0);
 }
 
 #define SVM_VMEXIT_IO_PORTIN        (1 << 0)
