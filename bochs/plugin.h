@@ -283,8 +283,9 @@ extern plugin_t *plugins;
 
 typedef struct _device_t
 {
-    const char *name;
-    plugin_t *plugin;
+    const char   *name;
+    plugin_t     *plugin;
+    plugintype_t plugtype;
 
     class bx_devmodel_c *devmodel;  // BBD hack
 

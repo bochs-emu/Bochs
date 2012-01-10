@@ -183,26 +183,26 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 #if BX_SUPPORT_PCIUSB
     PLUG_load_plugin(usb_common, PLUGTYPE_CORE);
 #endif
-    PLUG_load_plugin(acpi, PLUGTYPE_OPTIONAL);
+    PLUG_load_plugin(acpi, PLUGTYPE_STANDARD);
 #else
     BX_ERROR(("Bochs is not compiled with PCI support"));
 #endif
   }
 
 #if BX_SUPPORT_APIC
-  PLUG_load_plugin(ioapic, PLUGTYPE_OPTIONAL);
+  PLUG_load_plugin(ioapic, PLUGTYPE_STANDARD);
 #endif
-  PLUG_load_plugin(keyboard, PLUGTYPE_OPTIONAL);
+  PLUG_load_plugin(keyboard, PLUGTYPE_STANDARD);
 #if BX_SUPPORT_BUSMOUSE
   if (mouse_type == BX_MOUSE_TYPE_BUS) {
     PLUG_load_plugin(busmouse, PLUGTYPE_OPTIONAL);
   }
 #endif
   if (is_harddrv_enabled()) {
-    PLUG_load_plugin(harddrv, PLUGTYPE_OPTIONAL);
+    PLUG_load_plugin(harddrv, PLUGTYPE_STANDARD);
 #if BX_SUPPORT_PCI
     if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
-      PLUG_load_plugin(pci_ide, PLUGTYPE_OPTIONAL);
+      PLUG_load_plugin(pci_ide, PLUGTYPE_STANDARD);
     }
 #endif
   }
@@ -216,7 +216,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     vga_ext = SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr();
     if ((DEV_is_pci_device("pcivga")) &&
         ((!strlen(vga_ext)) || (!strcmp(vga_ext, "none")) || (!strcmp(vga_ext, "vbe")))) {
-      PLUG_load_plugin(pcivga, PLUGTYPE_OPTIONAL);
+      PLUG_load_plugin(pcivga, PLUGTYPE_STANDARD);
     }
   }
 #endif
