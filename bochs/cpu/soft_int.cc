@@ -141,18 +141,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
 
-  RSP_SPECULATIVE;
-
-  if (v8086_mode()) {
-    // redirect interrupt through virtual-mode idt
-    if (v86_redirect_interrupt(vector)) goto done;
-  }
-
   interrupt(vector, BX_SOFTWARE_INTERRUPT, 0, 0);
-
-done:
-
-  RSP_COMMIT;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,

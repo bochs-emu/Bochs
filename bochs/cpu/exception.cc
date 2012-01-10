@@ -763,11 +763,15 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
   {
     RSP_SPECULATIVE;
 
-    if(real_mode()) {
-       real_mode_int(vector, push_error, error_code);
-    }
-    else {
-       protected_mode_int(vector, soft_int, push_error, error_code);
+    // software interrupt can be redirefcted in v8086 mode
+    if (type != BX_SOFTWARE_INTERRUPT || !v8086_mode() || !v86_redirect_interrupt(vector))
+    {
+      if(real_mode()) {
+        real_mode_int(vector, push_error, error_code);
+      }
+      else {
+        protected_mode_int(vector, soft_int, push_error, error_code);
+      }
     }
 
     RSP_COMMIT;
