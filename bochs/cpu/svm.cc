@@ -857,6 +857,40 @@ void BX_CPU_C::SvmInterceptMSR(unsigned op, Bit32u msr)
   }
 }
 
+void BX_CPU_C::SvmInterceptTaskSwitch(Bit16u tss_selector, unsigned source, bx_bool push_error, Bit32u error_code)
+{
+  BX_ASSERT(BX_CPU_THIS_PTR in_svm_guest);
+
+  BX_DEBUG(("SVM VMEXIT: task switch"));
+
+  //
+  // SVM VMexit EXITINFO2:
+  // --------------------
+  // EXITINFO2[31-0] - error code to push into new stack (if applicable)
+  // EXITINFO2[36]   - task switch caused by IRET
+  // EXITINFO2[38]   - task switch caused by JUMP FAR
+  // EXITINFO2[44]   - task switch has error code to push
+  // EXITINFO2[48]   - value of EFLAGS.RF that would be saved in outgoing TSS
+  //
+
+  Bit64u qualification = error_code;
+
+  if (source == BX_TASK_FROM_IRET)
+    qualification |= BX_CONST64(1) << 36;
+  if (source == BX_TASK_FROM_JUMP)
+    qualification |= BX_CONST64(1) << 38;
+  if (push_error)
+    qualification |= BX_CONST64(1) << 44;
+
+  Bit32u flags = read_eflags();
+  if (flags & EFlagsRFMask)
+    qualification |= BX_CONST64(1) << 48;
+
+  vmcb_write64(SVM_CONTROL64_EXITINFO2, qualification);
+
+  Svm_Vmexit(SVM_VMEXIT_TASK_SWITCH, tss_selector);
+}
+
 #endif
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMRUN(bxInstruction_c *i)

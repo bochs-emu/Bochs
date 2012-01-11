@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009-2011 Stanislav Shwartsman
+//   Copyright (c) 2009-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -2326,28 +2326,27 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCALL(bxInstruction_c *i)
 
   BX_PANIC(("VMCALL: not implemented yet"));
 /*
-        if VM-exit control fields are not valid (see Section 24.16.6.1 of the IntelR 64 and IA-32 Architectures
-                                                 Software Developer's Manual, Volume 3B)
-                THEN VMfail(VMXERR_VMCALL_INVALID_VMEXIT_FIELD);
-        else
-                enter SMM;
-                read revision identifier in MSEG;
-                if revision identifier does not match that supported by processor
-                THEN
-                        leave SMM;
-                        VMfailValid(VMXERR_VMCALL_INVALID_MSEG_REVISION_ID);
-                else
-                        read SMM-monitor features field in MSEG (see Section 24.16.6.2,
-                        in the IntelR 64 and IA-32 Architectures Software Developer's Manual, Volume 3B);
-                        if features field is invalid
-                        THEN
-                                leave SMM;
-                                VMfailValid(VMXERR_VMCALL_WITH_INVALID_SMM_MONITOR_FEATURES);
-                        else activate dual-monitor treatment of SMIs and SMM (see Section 24.16.6
-                             in the IntelR 64 and IA-32 Architectures Software Developer's Manual, Volume 3B);
-                        FI;
-                FI;
-        FI;
+  if VM-exit control fields are not valid (see Section 24.16.6.1 of the IntelR 64 and IA-32 Architectures Software Developer's Manual, Volume 3B)
+      THEN VMfail(VMXERR_VMCALL_INVALID_VMEXIT_FIELD);
+   else
+      enter SMM;
+      read revision identifier in MSEG;
+      if revision identifier does not match that supported by processor
+      THEN
+          leave SMM;
+          VMfailValid(VMXERR_VMCALL_INVALID_MSEG_REVISION_ID);
+      else
+          read SMM-monitor features field in MSEG (see Section 24.16.6.2,
+          in the IntelR 64 and IA-32 Architectures Software Developer's Manual, Volume 3B);
+          if features field is invalid
+          THEN
+              leave SMM;
+              VMfailValid(VMXERR_VMCALL_WITH_INVALID_SMM_MONITOR_FEATURES);
+          else activate dual-monitor treatment of SMIs and SMM (see Section 24.16.6
+              in the IntelR 64 and IA-32 Architectures Software Developer's Manual, Volume 3B);
+          FI;
+      FI;
+  FI;
 */
 #endif  
 
@@ -3197,30 +3196,6 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmentry_ctrls, vmentry_excep_err_code, BX_CPU_THIS_PTR vmcs.vmentry_excep_err_code);
   BXRS_HEX_PARAM_FIELD(vmentry_ctrls, vmentry_instr_length, BX_CPU_THIS_PTR vmcs.vmentry_instr_length);
 
-  //
-  // VM-Exit Information Fields
-  //
-/*
-  bx_list_c *vmexit_info = new bx_list_c(vmcache, "VMEXIT_INFO", 15);
-
-  BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_reason, BX_CPU_THIS_PTR vmcs.vmexit_reason);
-  BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_qualification, BX_CPU_THIS_PTR vmcs.vmexit_qualification);
-  BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_excep_info, BX_CPU_THIS_PTR vmcs.vmexit_excep_info);
-  BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_excep_error_code, BX_CPU_THIS_PTR vmcs.vmexit_excep_error_code);
-  BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_idt_vector_info, BX_CPU_THIS_PTR vmcs.vmexit_idt_vector_info);
-  BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_idt_vector_error_code, BX_CPU_THIS_PTR vmcs.vmexit_idt_vector_error_code);
-  BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_instr_info, BX_CPU_THIS_PTR vmcs.vmexit_instr_info);
-  BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_instr_length, BX_CPU_THIS_PTR vmcs.vmexit_instr_length);
-  BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_guest_laddr, BX_CPU_THIS_PTR vmcs.vmexit_guest_laddr);
-#if BX_SUPPORT_VMX >= 2
-  BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_guest_paddr, BX_CPU_THIS_PTR vmcs.vmexit_guest_paddr);
-#endif
-  BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_io_rcx, BX_CPU_THIS_PTR vmcs.vmexit_io_rcx);
-  BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_io_rsi, BX_CPU_THIS_PTR vmcs.vmexit_io_rsi);
-  BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_io_rdi, BX_CPU_THIS_PTR vmcs.vmexit_io_rdi);
-  BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_io_rip, BX_CPU_THIS_PTR vmcs.vmexit_io_rip);
-  BXRS_HEX_PARAM_FIELD(vmexit_info, vm_instr_error, BX_CPU_THIS_PTR vmcs.vm_instr_error);
-*/
   //
   // VMCS Host State
   //

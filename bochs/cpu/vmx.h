@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009-2011 Stanislav Shwartsman
+//   Copyright (c) 2009-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -694,25 +694,6 @@ typedef struct bx_VMCS
    //
    // VMCS Hidden and Read-Only Fields
    //
-/*
-   Bit32u vmexit_reason;
-   bx_address vmexit_qualification;
-   Bit32u vmexit_instr_info;
-   Bit32u vmexit_instr_length;
-   bx_address vmexit_guest_laddr;
-#if BX_SUPPORT_VMX >= 2
-   bx_phy_address vmexit_guest_paddr;
-#endif
-   Bit32u vmexit_excep_info;
-   Bit32u vmexit_excep_error_code;
-
-   bx_address vmexit_io_rcx;
-   bx_address vmexit_io_rsi;
-   bx_address vmexit_io_rdi;
-   bx_address vmexit_io_rip;
-
-   Bit32u vm_instr_error;
-*/
    Bit32u idt_vector_info;
    Bit32u idt_vector_error_code;
 

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2010  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -334,29 +334,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
 
     // switch tasks with nesting to TSS
     task_switch(0, &tss_selector, &tss_descriptor,
-                    BX_TASK_FROM_INT, dword1, dword2);
-
-    RSP_SPECULATIVE;
-
-    // if interrupt was caused by fault with error code
-    //   stack limits must allow push of 2 more bytes, else #SS(0)
-    // push error code onto stack
-
-    if (push_error) {
-      if (tss_descriptor.type >= 9) // TSS386
-        push_32(error_code);
-      else
-        push_16(error_code);
-    }
-
-    // instruction pointer must be in CS limit, else #GP(0)
-    if (EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-      BX_ERROR(("interrupt(): EIP > CS.limit"));
-      exception(BX_GP_EXCEPTION, 0);
-    }
-
-    RSP_COMMIT;
-
+                    BX_TASK_FROM_INT, dword1, dword2, push_error, error_code);
     return;
 
   case BX_286_INTERRUPT_GATE:

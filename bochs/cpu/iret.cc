@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2009 Stanislav Shwartsman
+//   Copyright (c) 2005-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -93,15 +93,6 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     // switch tasks (without nesting) to TSS specified by back link selector
     task_switch(i, &link_selector, &tss_descriptor,
                 BX_TASK_FROM_IRET, dword1, dword2);
-
-    // mark the task just abandoned as not busy
-
-    // EIP must be within code seg limit, else #GP(0)
-    if (EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-      BX_ERROR(("iret: EIP > CS.limit"));
-      exception(BX_GP_EXCEPTION, 0);
-    }
-
     return;
   }
 

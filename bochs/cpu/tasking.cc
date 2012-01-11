@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2010  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -107,7 +107,7 @@
 
 void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
                  bx_descriptor_t *tss_descriptor, unsigned source,
-                 Bit32u dword1, Bit32u dword2)
+                 Bit32u dword1, Bit32u dword2, bx_bool push_error, Bit32u error_code)
 {
   Bit32u obase32; // base address of old TSS
   Bit32u nbase32; // base address of new TSS
@@ -162,8 +162,8 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (! SVM_INTERCEPT(SVM_INTERCEPT0_TASK_SWITCH))
-      BX_PANIC(("SVM intercept of task switch not implemented yet !"));
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_TASK_SWITCH))
+      SvmInterceptTaskSwitch(tss_selector->value, source, push_error, error_code);
   } 
 #endif
 
@@ -661,8 +661,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
       touch_segment(&cs_selector, &cs_descriptor);
 
 #ifdef BX_SUPPORT_CS_LIMIT_DEMOTION
-      // Handle special case of CS.LIMIT demotion (new descriptor limit is
-      // smaller than current one)
+      // Handle special case of CS.LIMIT demotion (new descriptor limit is smaller than current one)
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled > cs_descriptor.u.segment.limit_scaled)
         BX_CPU_THIS_PTR iCache.flushICacheEntries();
 #endif
@@ -700,6 +699,24 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   // Step 12: Begin execution of new task.
   //
   BX_DEBUG(("TASKING: LEAVE"));
+
+  RSP_SPECULATIVE;
+
+  // push error code onto stack
+  if (push_error) {
+    if (tss_descriptor->type >= 9) // TSS386
+      push_32(error_code);
+    else
+      push_16(error_code);
+  }
+
+  // instruction pointer must be in CS limit, else #GP(0)
+  if (EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
+    BX_ERROR(("task_switch: EIP > CS.limit"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  RSP_COMMIT;
 }
 
 void BX_CPU_C::task_switch_load_selector(bx_segment_reg_t *seg,

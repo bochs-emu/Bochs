@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2009 Stanislav Shwartsman
+//   Copyright (c) 2005-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -105,12 +105,6 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
         // SWITCH_TASKS _without_ nesting to TSS
         task_switch(i, &selector, &descriptor, BX_TASK_FROM_JUMP, dword1, dword2);
-
-        // EIP must be in code seg limit, else #GP(0)
-        if (EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-          BX_ERROR(("jump_protected: EIP not within CS limits"));
-          exception(BX_GP_EXCEPTION, 0);
-        }
         return;
 
       case BX_TASK_GATE:
@@ -135,7 +129,6 @@ void BX_CPU_C::task_gate(bxInstruction_c *i, bx_selector_t *selector, bx_descrip
   bx_selector_t   tss_selector;
   bx_descriptor_t tss_descriptor;
   Bit32u dword1, dword2;
-  Bit32u temp_eIP;
 
   // task gate must be present else #NP(gate selector)
   if (! gate_descriptor->p) {
@@ -179,17 +172,6 @@ void BX_CPU_C::task_gate(bxInstruction_c *i, bx_selector_t *selector, bx_descrip
 
   // SWITCH_TASKS _without_ nesting to TSS
   task_switch(i, &tss_selector, &tss_descriptor, source, dword1, dword2);
-
-  // EIP must be within code segment limit, else #GP(0)
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b)
-    temp_eIP = EIP;
-  else
-    temp_eIP =  IP;
-
-  if (temp_eIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-    BX_ERROR(("task_gate: EIP > CS.limit"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
 }
 
   void BX_CPP_AttrRegparmN(2)

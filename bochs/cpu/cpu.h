@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -4033,7 +4033,7 @@ public: // for now...
   BX_SMF void task_switch_load_selector(bx_segment_reg_t *seg,
                  bx_selector_t *selector, Bit16u raw_selector, Bit8u cs_rpl);
   BX_SMF void task_switch(bxInstruction_c *i, bx_selector_t *selector, bx_descriptor_t *descriptor,
-                 unsigned source, Bit32u dword1, Bit32u dword2);
+                 unsigned source, Bit32u dword1, Bit32u dword2, bx_bool push_error = 0, Bit32u error_code = 0);
   BX_SMF void get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp);
 #if BX_SUPPORT_X86_64
   BX_SMF Bit64u get_RSP_from_TSS(unsigned pl);
@@ -4337,6 +4337,7 @@ public: // for now...
        Bit16u errcode, bx_bool errcode_valid, Bit64u qualification = 0);
   BX_SMF void SvmInterceptIO(bxInstruction_c *i, unsigned port, unsigned len);
   BX_SMF void SvmInterceptMSR(unsigned op, Bit32u msr);
+  BX_SMF void SvmInterceptTaskSwitch(Bit16u tss_selector, unsigned source, bx_bool push_error, Bit32u error_code);
   BX_SMF void VirtualInterruptAcknowledge(void);
   BX_SMF void register_svm_state(bx_param_c *parent);
 #endif

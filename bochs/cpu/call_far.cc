@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2009 Stanislav Shwartsman
+//   Copyright (c) 2005-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -193,12 +193,6 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         // SWITCH_TASKS _without_ nesting to TSS
         task_switch(i, &gate_selector, &gate_descriptor,
           BX_TASK_FROM_CALL, dword1, dword2);
-
-        // EIP must be in code seg limit, else #GP(0)
-        if (EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-          BX_ERROR(("call_protected: EIP not within CS limits"));
-          exception(BX_GP_EXCEPTION, 0);
-        }
         return;
 
       case BX_TASK_GATE:
