@@ -89,12 +89,12 @@ public:
   virtual bx_param_enum_c *get_param_enum(const char *pname, bx_param_c *base=NULL);
   virtual Bit32u gen_param_id() { return param_id++; }
   virtual int get_n_log_modules();
-  virtual char *get_logfn_name(int mod);
+  virtual const char *get_logfn_name(int mod);
   virtual int get_logfn_id(const char *name);
-  virtual char *get_prefix(int mod);
+  virtual const char *get_prefix(int mod);
   virtual int get_log_action(int mod, int level);
   virtual void set_log_action(int mod, int level, int action);
-  virtual char *get_action_name(int action);
+  virtual const char *get_action_name(int action);
   virtual int get_default_log_action(int level) {
     return logfunctions::get_default_action(level);
   }
@@ -343,7 +343,7 @@ int bx_real_sim_c::get_n_log_modules()
   return io->get_n_logfns();
 }
 
-char *bx_real_sim_c::get_logfn_name(int mod)
+const char *bx_real_sim_c::get_logfn_name(int mod)
 {
   logfunc_t *logfn = io->get_logfn(mod);
   return logfn->get_name();
@@ -364,7 +364,7 @@ int bx_real_sim_c::get_logfn_id(const char *name)
   return id;
 }
 
-char *bx_real_sim_c::get_prefix(int mod)
+const char *bx_real_sim_c::get_prefix(int mod)
 {
   logfunc_t *logfn = io->get_logfn(mod);
   return logfn->getprefix();
@@ -385,12 +385,12 @@ void bx_real_sim_c::set_log_action(int mod, int level, int action)
     return;
   }
   // if called with mod<0 loop over all
-  int nmod = get_n_log_modules ();
+  int nmod = get_n_log_modules();
   for (mod=0; mod<nmod; mod++)
     set_log_action(mod, level, action);
 }
 
-char *bx_real_sim_c::get_action_name(int action)
+const char *bx_real_sim_c::get_action_name(int action)
 {
   return io->getaction(action);
 }

@@ -277,8 +277,8 @@ public:
     assert (loglev >= 0 && loglev < N_LOGLEV);
     onoff[loglev] = value;
   }
-  char *get_name() { return name; }
-  char *getprefix() { return prefix; }
+  const char *get_name() { return name; }
+  const char *getprefix() { return prefix; }
   int getonoff(int level) {
     assert (level>=0 && level<N_LOGLEV);
     return onoff[level];
@@ -325,7 +325,7 @@ public:
   void remove_logfn(logfunc_t *fn);
   void set_log_action(int loglevel, int action);
   const char *getlevel(int i);
-  char *getaction(int i);
+  const char *getaction(int i);
   
 protected:
   int n_logfn;

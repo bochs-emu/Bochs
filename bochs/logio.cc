@@ -46,7 +46,7 @@ const char* iofunctions::getlevel(int i)
   else return "?";
 }
 
-char* iofunctions::getaction(int i)
+const char* iofunctions::getaction(int i)
 {
   static const char *name[] = { "ignore", "report", "ask", "fatal" };
   assert (i>=ACT_IGNORE && i<N_ACT);
