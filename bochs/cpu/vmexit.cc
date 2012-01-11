@@ -276,7 +276,7 @@ void BX_CPU_C::VMexit_Event(bxInstruction_c *i, unsigned type, unsigned vector, 
     case BX_PRIVILEGED_SOFTWARE_INTERRUPT:
     case BX_SOFTWARE_EXCEPTION:
     case BX_HARDWARE_EXCEPTION:
-      BX_ASSERT((vector < BX_CPU_HANDLED_EXCEPTIONS));
+      BX_ASSERT(vector < BX_CPU_HANDLED_EXCEPTIONS);
       if (vector == BX_PF_EXCEPTION) {
          // page faults are specially treated
          bx_bool err_match = ((errcode & vm->vm_pf_mask) == vm->vm_pf_match);

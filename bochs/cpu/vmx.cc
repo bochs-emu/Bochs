@@ -1683,11 +1683,8 @@ void BX_CPU_C::VMenterInjectEvents(void)
 
   if (type == BX_HARDWARE_EXCEPTION) {
     // record exception the same way as BX_CPU_C::exception does
-    if (vector < BX_CPU_HANDLED_EXCEPTIONS)
-      BX_CPU_THIS_PTR curr_exception = exceptions_info[vector].exception_type;
-    else // else take default value
-      BX_CPU_THIS_PTR curr_exception = exceptions_info[BX_CPU_HANDLED_EXCEPTIONS].exception_type;
-
+    BX_ASSERT(vector < BX_CPU_HANDLED_EXCEPTIONS);
+    BX_CPU_THIS_PTR curr_exception = exceptions_info[vector].exception_type;
     BX_CPU_THIS_PTR errorno = 1;
   }
 

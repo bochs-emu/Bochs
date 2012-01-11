@@ -331,7 +331,7 @@ struct BxExceptionInfo {
 #define BX_MC_EXCEPTION  18
 #define BX_XM_EXCEPTION  19
 
-#define BX_CPU_HANDLED_EXCEPTIONS  20
+#define BX_CPU_HANDLED_EXCEPTIONS  32
 
 /* MSR registers */
 #define BX_MSR_TSC                 0x010
