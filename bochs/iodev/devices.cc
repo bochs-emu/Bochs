@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2011  The Bochs Project
+//  Copyright (C) 2002-2012  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -220,24 +220,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     }
   }
 #endif
-
-  // NE2000 NIC
-  if (SIM->get_param_bool(BXPN_NE2K_ENABLED)->get()) {
-#if BX_SUPPORT_NE2K
-    PLUG_load_plugin(ne2k, PLUGTYPE_OPTIONAL);
-#else
-    BX_ERROR(("Bochs is not compiled with NE2K support"));
-#endif
-  }
-
-  //--- SOUND ---
-  if (SIM->get_param_bool(BXPN_SB16_ENABLED)->get()) {
-#if BX_SUPPORT_SB16
-    PLUG_load_plugin(sb16, PLUGTYPE_OPTIONAL);
-#else
-    BX_ERROR(("Bochs is not compiled with SB16 support"));
-#endif
-  }
 
   // CMOS RAM & RTC
   pluginCmosDevice->init();

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2011  The Bochs Project
+//  Copyright (C) 2002-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1462,109 +1462,12 @@ void bx_init_options()
   // network subtree
   bx_list_c *network = new bx_list_c(root_param, "network", "Network Configuration");
   network->set_options(network->USE_TAB_WINDOW | network->SHOW_PARENT);
-
-  // ne2k options
-  menu = new bx_list_c(network, "ne2k", "NE2000", 8);
-  menu->set_options(menu->SHOW_PARENT);
-  menu->set_enabled(BX_SUPPORT_NE2K);
-  enabled = new bx_param_bool_c(menu,
-    "enabled",
-    "Enable NE2K NIC emulation",
-    "Enables the NE2K NIC emulation",
-    0);
-  enabled->set_enabled(BX_SUPPORT_NE2K);
-  ioaddr = new bx_param_num_c(menu,
-    "ioaddr",
-    "NE2K I/O Address",
-    "I/O base address of the emulated NE2K device",
-    0, 0xffff,
-    0x300);
-  ioaddr->set_base(16);
-  irq = new bx_param_num_c(menu,
-    "irq",
-    "NE2K Interrupt",
-    "IRQ used by the NE2K device",
-    0, 15,
-    9);
-  irq->set_options(irq->USE_SPIN_CONTROL);
-  bx_init_std_nic_options("NE2K", menu);
-  enabled->set_dependent_list(menu->clone());
+  // network device options initialized in the devive plugin code
 
   // sound subtree
   bx_list_c *sound = new bx_list_c(root_param, "sound", "Sound Configuration");
   sound->set_options(sound->USE_TAB_WINDOW | sound->SHOW_PARENT);
-  menu = new bx_list_c(sound, "sb16", "SB16 Configuration", 8);
-  menu->set_options(menu->SHOW_PARENT);
-  menu->set_enabled(BX_SUPPORT_SB16);
-
-  // SB16 options
-  enabled = new bx_param_bool_c(menu,
-    "enabled",
-    "Enable SB16 emulation",
-    "Enables the SB16 emulation",
-    0);
-  enabled->set_enabled(BX_SUPPORT_SB16);
-  bx_param_num_c *midimode = new bx_param_num_c(menu,
-    "midimode",
-    "Midi mode",
-    "Controls the MIDI output format.",
-    0, 3,
-    0);
-  bx_param_filename_c *midifile = new bx_param_filename_c(menu,
-    "midifile",
-    "MIDI file",
-    "The filename is where the MIDI data is sent. This can be device or just a file.",
-    "", BX_PATHNAME_LEN);
-  bx_param_num_c *wavemode = new bx_param_num_c(menu,
-    "wavemode",
-    "Wave mode",
-    "Controls the wave output format.",
-    0, 3,
-    0);
-  bx_param_filename_c *wavefile = new bx_param_filename_c(menu,
-    "wavefile",
-    "Wave file",
-    "This is the device/file where the wave output is stored",
-    "", BX_PATHNAME_LEN);
-  bx_param_num_c *loglevel = new bx_param_num_c(menu,
-    "loglevel",
-    "Log level",
-    "Controls how verbose the SB16 emulation is (0 = no log, 5 = all errors and infos).",
-    0, 5,
-    0);
-  bx_param_filename_c *logfile = new bx_param_filename_c(menu,
-    "logfile",
-    "Log file",
-    "The file to write the SB16 emulator messages to.",
-    "", BX_PATHNAME_LEN);
-  logfile->set_extension("log");
-  bx_param_num_c *dmatimer = new bx_param_num_c(menu,
-    "dmatimer",
-    "DMA timer",
-    "Microseconds per second for a DMA cycle.",
-    0, BX_MAX_BIT32U,
-    0);
-
-  midimode->set_options(midimode->USE_SPIN_CONTROL);
-  wavemode->set_options(wavemode->USE_SPIN_CONTROL);
-  loglevel->set_options(loglevel->USE_SPIN_CONTROL);
-  loglevel->set_group("SB16");
-  dmatimer->set_group("SB16");
-  deplist = new bx_list_c(NULL, 4);
-  deplist->add(midimode);
-  deplist->add(wavemode);
-  deplist->add(loglevel);
-  deplist->add(dmatimer);
-  enabled->set_dependent_list(deplist);
-  deplist = new bx_list_c(NULL, 1);
-  deplist->add(midifile);
-  midimode->set_dependent_list(deplist);
-  deplist = new bx_list_c(NULL, 1);
-  deplist->add(wavefile);
-  wavemode->set_dependent_list(deplist);
-  deplist = new bx_list_c(NULL, 1);
-  deplist->add(logfile);
-  loglevel->set_dependent_list(deplist);
+  // sound device options initialized in the devive plugin code
 
   // misc options subtree
   bx_list_c *misc = new bx_list_c(root_param, "misc", "Configure Everything Else");
@@ -1666,16 +1569,11 @@ void bx_init_options()
   usb = new bx_list_c(menu, "usb", "USB options", 10);
   usb->set_options(usb->SHOW_PARENT | usb->USE_TAB_WINDOW);
   // misc runtime options
-  bx_param_c *rt_misc_init_list[] = {
-      SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY),
-      SIM->get_param_bool(BXPN_MOUSE_ENABLED),
-      SIM->get_param_num(BXPN_KBD_PASTE_DELAY),
-      SIM->get_param_string(BXPN_USER_SHORTCUT),
-      SIM->get_param_num(BXPN_SB16_DMATIMER),
-      SIM->get_param_num(BXPN_SB16_LOGLEVEL),
-      NULL
-  };
-  misc = new bx_list_c(menu, "misc", "Misc options", rt_misc_init_list);
+  misc = new bx_list_c(menu, "misc", "Misc options");
+  misc->add(SIM->get_param(BXPN_VGA_UPDATE_FREQUENCY));
+  misc->add(SIM->get_param(BXPN_MOUSE_ENABLED));
+  misc->add(SIM->get_param(BXPN_KBD_PASTE_DELAY));
+  misc->add(SIM->get_param(BXPN_USER_SHORTCUT));
   misc->set_options(misc->SHOW_PARENT | misc->SHOW_GROUP_NAME);
 }
 
@@ -2212,11 +2110,17 @@ bx_bool is_optplugin_option(const char *param)
 #if BX_SUPPORT_ES1370
     "es1370",
 #endif
+#if BX_SUPPORT_NE2K
+    "ne2k",
+#endif
 #if BX_SUPPORT_PCIDEV
     "pcidev",
 #endif
 #if BX_SUPPORT_PCIPNIC
     "pnic",
+#endif
+#if BX_SUPPORT_SB16
+    "sb16",
 #endif
 #if BX_SUPPORT_USB_OHCI
     "usb_ohci",
@@ -2962,34 +2866,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
     SIM->get_param_string(BXPN_SCREENMODE)->set(&params[1][5]);
 #endif
-  } else if (!strcmp(params[0], "sb16")) {
-    int enable = 1;
-    base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
-    for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "enabled=", 8)) {
-        enable = atol(&params[i][8]);
-      } else if (!strncmp(params[i], "midi=", 5)) {
-        SIM->get_param_string("midifile", base)->set(&params[i][5]);
-      } else if (!strncmp(params[i], "midimode=", 9)) {
-        SIM->get_param_num("midimode", base)->set(atol(&params[i][9]));
-      } else if (!strncmp(params[i], "wave=", 5)) {
-        SIM->get_param_string("wavefile", base)->set(&params[i][5]);
-      } else if (!strncmp(params[i], "wavemode=", 9)) {
-        SIM->get_param_num("wavemode", base)->set(atol(&params[i][9]));
-      } else if (!strncmp(params[i], "log=", 4)) {
-        SIM->get_param_string("logfile", base)->set(&params[i][4]);
-      } else if (!strncmp(params[i], "loglevel=", 9)) {
-        SIM->get_param_num("loglevel", base)->set(atol(&params[i][9]));
-      } else if (!strncmp(params[i], "dmatimer=", 9)) {
-        SIM->get_param_num("dmatimer", base)->set(atol(&params[i][9]));
-      } else {
-        BX_ERROR(("%s: unknown parameter for sb16 ignored.", context));
-      }
-    }
-    if ((enable != 0) && (SIM->get_param_num("dmatimer", base)->get() > 0))
-      SIM->get_param_bool("enabled", base)->set(1);
-    else
-      SIM->get_param_bool("enabled", base)->set(0);
   } else if ((!strncmp(params[0], "com", 3)) && (strlen(params[0]) == 4)) {
     char tmpname[80];
     idx = params[0][3];
@@ -3208,53 +3084,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR(("%s: port_e9_hack directive malformed.", context));
     }
   }
-  else if (!strcmp(params[0], "ne2k")) {
-    char tmpdev[80];
-    int ret, valid = 0;
-    base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
-    if (!SIM->get_param_bool("enabled", base)->get()) {
-      SIM->get_param_enum("ethmod", base)->set_by_name("null");
-    }
-    if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
-      for (slot = 1; slot < 6; slot++) {
-        sprintf(tmpdev, "pci.slot.%d", slot);
-        if (!strcmp(SIM->get_param_string(tmpdev)->getptr(), "ne2k")) {
-          valid |= 0x03;
-          break;
-        }
-      }
-    }
-    for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "ioaddr=", 7)) {
-        SIM->get_param_num("ioaddr", base)->set(strtoul(&params[i][7], NULL, 16));
-        valid |= 0x01;
-      } else if (!strncmp(params[i], "irq=", 4)) {
-        SIM->get_param_num("irq", base)->set(atol(&params[i][4]));
-        valid |= 0x02;
-      } else {
-        ret = bx_parse_nic_params(context, params[i], base);
-        if (ret > 0) {
-          valid |= ret;
-        }
-      }
-    }
-    if (!SIM->get_param_bool("enabled", base)->get()) {
-      if (valid == 0x07) {
-        SIM->get_param_bool("enabled", base)->set(1);
-      } else if (valid < 0x80) {
-        if ((valid & 0x03) != 0x03) {
-          PARSE_ERR(("%s: 'ne2k' directive incomplete (ioaddr and irq are required)", context));
-        }
-        if ((valid & 0x04) == 0) {
-          PARSE_ERR(("%s: 'ne2k' directive incomplete (mac address is required)", context));
-        }
-      }
-    } else {
-      if (valid & 0x80) {
-        SIM->get_param_bool("enabled", base)->set(0);
-      }
-    }
-  } else if (!strcmp(params[0], "load32bitOSImage")) {
+  else if (!strcmp(params[0], "load32bitOSImage")) {
     if ((num_params!=4) && (num_params!=5)) {
       PARSE_ERR(("%s: load32bitOSImage directive: wrong # args.", context));
     }
@@ -3556,48 +3386,6 @@ int bx_write_pci_nic_options(FILE *fp, bx_list_c *base)
       SIM->get_param_string("bootrom", base)->getptr());
   }
   fprintf (fp, "\n");
-  return 0;
-}
-
-int bx_write_ne2k_options(FILE *fp, bx_list_c *base)
-{
-  fprintf(fp, "ne2k: enabled=%d", SIM->get_param_bool("enabled", base)->get());
-  if (SIM->get_param_bool("enabled", base)->get()) {
-    char *ptr = SIM->get_param_string("macaddr", base)->getptr();
-    fprintf(fp, ", ioaddr=0x%x, irq=%d, mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s, bootrom=%s",
-      SIM->get_param_num("ioaddr", base)->get(),
-      SIM->get_param_num("irq", base)->get(),
-      (unsigned int)(0xff & ptr[0]),
-      (unsigned int)(0xff & ptr[1]),
-      (unsigned int)(0xff & ptr[2]),
-      (unsigned int)(0xff & ptr[3]),
-      (unsigned int)(0xff & ptr[4]),
-      (unsigned int)(0xff & ptr[5]),
-      SIM->get_param_enum("ethmod", base)->get_selected(),
-      SIM->get_param_string("ethdev", base)->getptr(),
-      SIM->get_param_string("script", base)->getptr(),
-      SIM->get_param_string("bootrom", base)->getptr());
-  }
-  fprintf(fp, "\n");
-  return 0;
-}
-
-int bx_write_sound_options(FILE *fp, bx_list_c *base)
-{
-  fprintf(fp, "%s: enabled=%d", base->get_name(), SIM->get_param_bool("enabled", base)->get());
-  if (SIM->get_param_bool("enabled", base)->get()) {
-    if (!strcmp(base->get_name(), "sb16")) {
-      fprintf(fp, ", midimode=%d, midi=%s, wavemode=%d, wave=%s, loglevel=%d, log=%s, dmatimer=%d",
-        SIM->get_param_num("midimode", base)->get(),
-        SIM->get_param_string("midifile", base)->getptr(),
-        SIM->get_param_num("wavemode", base)->get(),
-        SIM->get_param_string("wavefile", base)->getptr(),
-        SIM->get_param_num("loglevel", base)->get(),
-        SIM->get_param_string("logfile", base)->getptr(),
-        SIM->get_param_num("dmatimer", base)->get());
-    }
-  }
-  fprintf(fp, "\n");
   return 0;
 }
 
@@ -3929,8 +3717,6 @@ int bx_write_configuration(const char *rc, int overwrite)
   fprintf(fp, "screenmode: name=\"%s\"\n", SIM->get_param_string(BXPN_SCREENMODE)->getptr());
 #endif
   bx_write_clock_cmos_options(fp);
-  bx_write_ne2k_options(fp, (bx_list_c*) SIM->get_param(BXPN_NE2K));
-  bx_write_sound_options(fp, (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16));
   bx_write_loader_options(fp);
   bx_write_log_options(fp, (bx_list_c*) SIM->get_param("log"));
   bx_write_keyboard_options(fp);

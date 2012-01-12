@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -48,18 +48,138 @@ bx_ne2k_c *theNE2kDevice = NULL;
 const Bit8u ne2k_iomask[32] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
                                7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
 
+// builtin configuration handling functions
+
+void ne2k_init_options(void)
+{
+  bx_param_c *network = SIM->get_param("network");
+  bx_list_c *menu = new bx_list_c(network, "ne2k", "NE2000", 8);
+  menu->set_options(menu->SHOW_PARENT);
+  bx_param_bool_c *enabled = new bx_param_bool_c(menu,
+    "enabled",
+    "Enable NE2K NIC emulation",
+    "Enables the NE2K NIC emulation",
+    0);
+  bx_param_num_c *ioaddr = new bx_param_num_c(menu,
+    "ioaddr",
+    "NE2K I/O Address",
+    "I/O base address of the emulated NE2K device",
+    0, 0xffff,
+    0x300);
+  ioaddr->set_base(16);
+  bx_param_num_c *irq = new bx_param_num_c(menu,
+    "irq",
+    "NE2K Interrupt",
+    "IRQ used by the NE2K device",
+    0, 15,
+    9);
+  irq->set_options(irq->USE_SPIN_CONTROL);
+  bx_init_std_nic_options("NE2K", menu);
+  enabled->set_dependent_list(menu->clone());
+
+}
+
+Bit32s ne2k_options_parser(const char *context, int num_params, char *params[])
+{
+  int ret, valid = 0;
+
+  if (!strcmp(params[0], "ne2k")) {
+    bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
+    char tmpdev[80];
+    if (!SIM->get_param_bool("enabled", base)->get()) {
+      SIM->get_param_enum("ethmod", base)->set_by_name("null");
+    }
+    if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
+      for (int slot = 1; slot < 6; slot++) {
+        sprintf(tmpdev, "pci.slot.%d", slot);
+        if (!strcmp(SIM->get_param_string(tmpdev)->getptr(), "ne2k")) {
+          valid |= 0x03;
+          break;
+        }
+      }
+    }
+    for (int i = 1; i < num_params; i++) {
+      if (!strncmp(params[i], "ioaddr=", 7)) {
+        SIM->get_param_num("ioaddr", base)->set(strtoul(&params[i][7], NULL, 16));
+        valid |= 0x01;
+      } else if (!strncmp(params[i], "irq=", 4)) {
+        SIM->get_param_num("irq", base)->set(atol(&params[i][4]));
+        valid |= 0x02;
+      } else {
+        ret = bx_parse_nic_params(context, params[i], base);
+        if (ret > 0) {
+          valid |= ret;
+        }
+      }
+    }
+    if (!SIM->get_param_bool("enabled", base)->get()) {
+      if (valid == 0x07) {
+        SIM->get_param_bool("enabled", base)->set(1);
+      } else if (valid < 0x80) {
+        if ((valid & 0x03) != 0x03) {
+          BX_ERROR(("%s: 'ne2k' directive incomplete (ioaddr and irq are required)", context));
+        }
+        if ((valid & 0x04) == 0) {
+          BX_ERROR(("%s: 'ne2k' directive incomplete (mac address is required)", context));
+        }
+      }
+    } else {
+      if (valid & 0x80) {
+        SIM->get_param_bool("enabled", base)->set(0);
+      }
+    }
+  } else {
+    BX_PANIC(("%s: unknown directive '%s'", context, params[0]));
+  }
+  return 0;
+}
+
+Bit32s ne2k_options_save(FILE *fp)
+{
+  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
+  fprintf(fp, "ne2k: enabled=%d", SIM->get_param_bool("enabled", base)->get());
+  if (SIM->get_param_bool("enabled", base)->get()) {
+    char *ptr = SIM->get_param_string("macaddr", base)->getptr();
+    fprintf(fp, ", ioaddr=0x%x, irq=%d, mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s, bootrom=%s",
+      SIM->get_param_num("ioaddr", base)->get(),
+      SIM->get_param_num("irq", base)->get(),
+      (unsigned int)(0xff & ptr[0]),
+      (unsigned int)(0xff & ptr[1]),
+      (unsigned int)(0xff & ptr[2]),
+      (unsigned int)(0xff & ptr[3]),
+      (unsigned int)(0xff & ptr[4]),
+      (unsigned int)(0xff & ptr[5]),
+      SIM->get_param_enum("ethmod", base)->get_selected(),
+      SIM->get_param_string("ethdev", base)->getptr(),
+      SIM->get_param_string("script", base)->getptr(),
+      SIM->get_param_string("bootrom", base)->getptr());
+  }
+  fprintf(fp, "\n");
+  return 0;
+}
+
+// device plugin entry points
+
 int libne2k_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theNE2kDevice = new bx_ne2k_c();
   bx_devices.pluginNE2kDevice = theNE2kDevice;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theNE2kDevice, BX_PLUGIN_NE2K);
+  // add new configuration parameter for the config interface
+  ne2k_init_options();
+  // register add-on option for bochsrc and command line
+  SIM->register_addon_option("ne2k", ne2k_options_parser, ne2k_options_save);
   return(0); // Success
 }
 
 void libne2k_LTX_plugin_fini(void)
 {
+  SIM->unregister_addon_option("ne2k");
+  ((bx_list_c*)SIM->get_param("network"))->remove("ne2k");
   delete theNE2kDevice;
 }
+
+// the device object
 
 bx_ne2k_c::bx_ne2k_c()
 {
@@ -75,6 +195,134 @@ bx_ne2k_c::~bx_ne2k_c()
     delete ethdev;
   }
   BX_DEBUG(("Exit"));
+}
+
+void bx_ne2k_c::init(void)
+{
+  char devname[16];
+  Bit8u macaddr[6];
+  const char *bootrom;
+
+  BX_DEBUG(("Init $Id$"));
+
+  // Read in values from config interface
+  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
+  // Check if the device is disabled or not configured
+  if (!SIM->get_param_bool("enabled", base)->get()) {
+    BX_INFO(("NE2000 disabled"));
+    BX_UNREGISTER_DEVICE_DEVMODEL("ne2k");
+    return;
+  }
+  memcpy(macaddr, SIM->get_param_string("macaddr", base)->getptr(), 6);
+  BX_NE2K_THIS s.pci_enabled = 0;
+  strcpy(devname, "NE2000 NIC");
+
+#if BX_SUPPORT_PCI
+  if ((SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) &&
+      (DEV_is_pci_device(BX_PLUGIN_NE2K))) {
+    BX_NE2K_THIS s.pci_enabled = 1;
+    strcpy(devname, "NE2000 PCI NIC");
+    BX_NE2K_THIS s.devfunc = 0x00;
+    DEV_register_pci_handlers(this, &BX_NE2K_THIS s.devfunc,
+        BX_PLUGIN_NE2K, devname);
+
+    for (unsigned i=0; i<256; i++)
+      BX_NE2K_THIS pci_conf[i] = 0x0;
+    // readonly registers
+    BX_NE2K_THIS pci_conf[0x00] = 0xec;
+    BX_NE2K_THIS pci_conf[0x01] = 0x10;
+    BX_NE2K_THIS pci_conf[0x02] = 0x29;
+    BX_NE2K_THIS pci_conf[0x03] = 0x80;
+    BX_NE2K_THIS pci_conf[0x04] = 0x01;
+    BX_NE2K_THIS pci_conf[0x0a] = 0x00;
+    BX_NE2K_THIS pci_conf[0x0b] = 0x02;
+    BX_NE2K_THIS pci_conf[0x0e] = 0x00;
+    BX_NE2K_THIS pci_conf[0x10] = 0x01;
+    BX_NE2K_THIS pci_conf[0x3d] = BX_PCI_INTA;
+    BX_NE2K_THIS s.base_address = 0x0;
+    BX_NE2K_THIS pci_rom_address = 0;
+    bootrom = SIM->get_param_string("bootrom", base)->getptr();
+    if (strlen(bootrom) > 0) {
+      BX_NE2K_THIS load_pci_rom(bootrom);
+    }
+  }
+#endif
+
+  if (BX_NE2K_THIS s.tx_timer_index == BX_NULL_TIMER_HANDLE) {
+    BX_NE2K_THIS s.tx_timer_index =
+      bx_pc_system.register_timer(this, tx_timer_handler, 0,
+                                  0,0, "ne2k"); // one-shot, inactive
+  }
+  // Register the IRQ and i/o port addresses
+  if (!BX_NE2K_THIS s.pci_enabled) {
+    BX_NE2K_THIS s.base_address = SIM->get_param_num("ioaddr", base)->get();
+    BX_NE2K_THIS s.base_irq     = SIM->get_param_num("irq", base)->get();
+
+    DEV_register_irq(BX_NE2K_THIS s.base_irq, "NE2000 ethernet NIC");
+
+    DEV_register_ioread_handler_range(BX_NE2K_THIS_PTR, read_handler,
+                                      BX_NE2K_THIS s.base_address,
+                                      BX_NE2K_THIS s.base_address + 0x0F,
+                                      devname, 3);
+    DEV_register_iowrite_handler_range(BX_NE2K_THIS_PTR, write_handler,
+                                       BX_NE2K_THIS s.base_address,
+                                       BX_NE2K_THIS s.base_address + 0x0F,
+                                       devname, 3);
+    DEV_register_ioread_handler(BX_NE2K_THIS_PTR, read_handler,
+                                BX_NE2K_THIS s.base_address + 0x10,
+                                devname, 3);
+    DEV_register_iowrite_handler(BX_NE2K_THIS_PTR, write_handler,
+                                 BX_NE2K_THIS s.base_address + 0x10,
+                                 devname, 3);
+    DEV_register_ioread_handler(BX_NE2K_THIS_PTR, read_handler,
+                                BX_NE2K_THIS s.base_address + 0x1F,
+                                devname, 1);
+    DEV_register_iowrite_handler(BX_NE2K_THIS_PTR, write_handler,
+                                 BX_NE2K_THIS s.base_address + 0x1F,
+                                 devname, 1);
+
+    bootrom = SIM->get_param_string("bootrom", base)->getptr();
+    if (strlen(bootrom) > 0) {
+      BX_PANIC(("%s: boot ROM support not present yet", devname));
+    }
+
+    BX_INFO(("%s initialized port 0x%x/32 irq %d mac %02x:%02x:%02x:%02x:%02x:%02x",
+             devname,
+             BX_NE2K_THIS s.base_address,
+             BX_NE2K_THIS s.base_irq,
+             macaddr[0], macaddr[1],
+             macaddr[2], macaddr[3],
+             macaddr[4], macaddr[5]));
+  } else {
+    BX_INFO(("%s initialized mac %02x:%02x:%02x:%02x:%02x:%02x",
+             devname,
+             macaddr[0], macaddr[1],
+             macaddr[2], macaddr[3],
+             macaddr[4], macaddr[5]));
+  }
+
+  // Initialise the mac address area by doubling the physical address
+  BX_NE2K_THIS s.macaddr[0]  = macaddr[0];
+  BX_NE2K_THIS s.macaddr[1]  = macaddr[0];
+  BX_NE2K_THIS s.macaddr[2]  = macaddr[1];
+  BX_NE2K_THIS s.macaddr[3]  = macaddr[1];
+  BX_NE2K_THIS s.macaddr[4]  = macaddr[2];
+  BX_NE2K_THIS s.macaddr[5]  = macaddr[2];
+  BX_NE2K_THIS s.macaddr[6]  = macaddr[3];
+  BX_NE2K_THIS s.macaddr[7]  = macaddr[3];
+  BX_NE2K_THIS s.macaddr[8]  = macaddr[4];
+  BX_NE2K_THIS s.macaddr[9]  = macaddr[4];
+  BX_NE2K_THIS s.macaddr[10] = macaddr[5];
+  BX_NE2K_THIS s.macaddr[11] = macaddr[5];
+
+  // ne2k signature
+  for (int i = 12; i < 32; i++)
+    BX_NE2K_THIS s.macaddr[i] = 0x57;
+
+  BX_NE2K_THIS s.statusbar_id = bx_gui->register_statusitem("NE2K", 1);
+
+  // Attach to the selected ethernet module
+  BX_NE2K_THIS ethdev = DEV_net_init_module(base, rx_handler, rx_status_handler, this);
 }
 
 //
@@ -1470,129 +1718,6 @@ void bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   }
 
   bx_gui->statusbar_setitem(BX_NE2K_THIS s.statusbar_id, 1);
-}
-
-void bx_ne2k_c::init(void)
-{
-  char devname[16];
-  Bit8u macaddr[6];
-  bx_list_c *base;
-  const char *bootrom;
-
-  BX_DEBUG(("Init $Id$"));
-
-  // Read in values from config interface
-  base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
-  memcpy(macaddr, SIM->get_param_string("macaddr", base)->getptr(), 6);
-  BX_NE2K_THIS s.pci_enabled = 0;
-  strcpy(devname, "NE2000 NIC");
-
-#if BX_SUPPORT_PCI
-  if ((SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) &&
-      (DEV_is_pci_device(BX_PLUGIN_NE2K))) {
-    BX_NE2K_THIS s.pci_enabled = 1;
-    strcpy(devname, "NE2000 PCI NIC");
-    BX_NE2K_THIS s.devfunc = 0x00;
-    DEV_register_pci_handlers(this, &BX_NE2K_THIS s.devfunc,
-        BX_PLUGIN_NE2K, devname);
-
-    for (unsigned i=0; i<256; i++)
-      BX_NE2K_THIS pci_conf[i] = 0x0;
-    // readonly registers
-    BX_NE2K_THIS pci_conf[0x00] = 0xec;
-    BX_NE2K_THIS pci_conf[0x01] = 0x10;
-    BX_NE2K_THIS pci_conf[0x02] = 0x29;
-    BX_NE2K_THIS pci_conf[0x03] = 0x80;
-    BX_NE2K_THIS pci_conf[0x04] = 0x01;
-    BX_NE2K_THIS pci_conf[0x0a] = 0x00;
-    BX_NE2K_THIS pci_conf[0x0b] = 0x02;
-    BX_NE2K_THIS pci_conf[0x0e] = 0x00;
-    BX_NE2K_THIS pci_conf[0x10] = 0x01;
-    BX_NE2K_THIS pci_conf[0x3d] = BX_PCI_INTA;
-    BX_NE2K_THIS s.base_address = 0x0;
-    BX_NE2K_THIS pci_rom_address = 0;
-    bootrom = SIM->get_param_string("bootrom", base)->getptr();
-    if (strlen(bootrom) > 0) {
-      BX_NE2K_THIS load_pci_rom(bootrom);
-    }
-  }
-#endif
-
-  if (BX_NE2K_THIS s.tx_timer_index == BX_NULL_TIMER_HANDLE) {
-    BX_NE2K_THIS s.tx_timer_index =
-      bx_pc_system.register_timer(this, tx_timer_handler, 0,
-                                  0,0, "ne2k"); // one-shot, inactive
-  }
-  // Register the IRQ and i/o port addresses
-  if (!BX_NE2K_THIS s.pci_enabled) {
-    BX_NE2K_THIS s.base_address = SIM->get_param_num("ioaddr", base)->get();
-    BX_NE2K_THIS s.base_irq     = SIM->get_param_num("irq", base)->get();
-
-    DEV_register_irq(BX_NE2K_THIS s.base_irq, "NE2000 ethernet NIC");
-
-    DEV_register_ioread_handler_range(BX_NE2K_THIS_PTR, read_handler,
-                                      BX_NE2K_THIS s.base_address,
-                                      BX_NE2K_THIS s.base_address + 0x0F,
-                                      devname, 3);
-    DEV_register_iowrite_handler_range(BX_NE2K_THIS_PTR, write_handler,
-                                       BX_NE2K_THIS s.base_address,
-                                       BX_NE2K_THIS s.base_address + 0x0F,
-                                       devname, 3);
-    DEV_register_ioread_handler(BX_NE2K_THIS_PTR, read_handler,
-                                BX_NE2K_THIS s.base_address + 0x10,
-                                devname, 3);
-    DEV_register_iowrite_handler(BX_NE2K_THIS_PTR, write_handler,
-                                 BX_NE2K_THIS s.base_address + 0x10,
-                                 devname, 3);
-    DEV_register_ioread_handler(BX_NE2K_THIS_PTR, read_handler,
-                                BX_NE2K_THIS s.base_address + 0x1F,
-                                devname, 1);
-    DEV_register_iowrite_handler(BX_NE2K_THIS_PTR, write_handler,
-                                 BX_NE2K_THIS s.base_address + 0x1F,
-                                 devname, 1);
-
-    bootrom = SIM->get_param_string("bootrom", base)->getptr();
-    if (strlen(bootrom) > 0) {
-      BX_PANIC(("%s: boot ROM support not present yet", devname));
-    }
-
-    BX_INFO(("%s initialized port 0x%x/32 irq %d mac %02x:%02x:%02x:%02x:%02x:%02x",
-             devname,
-             BX_NE2K_THIS s.base_address,
-             BX_NE2K_THIS s.base_irq,
-             macaddr[0], macaddr[1],
-             macaddr[2], macaddr[3],
-             macaddr[4], macaddr[5]));
-  } else {
-    BX_INFO(("%s initialized mac %02x:%02x:%02x:%02x:%02x:%02x",
-             devname,
-             macaddr[0], macaddr[1],
-             macaddr[2], macaddr[3],
-             macaddr[4], macaddr[5]));
-  }
-
-  // Initialise the mac address area by doubling the physical address
-  BX_NE2K_THIS s.macaddr[0]  = macaddr[0];
-  BX_NE2K_THIS s.macaddr[1]  = macaddr[0];
-  BX_NE2K_THIS s.macaddr[2]  = macaddr[1];
-  BX_NE2K_THIS s.macaddr[3]  = macaddr[1];
-  BX_NE2K_THIS s.macaddr[4]  = macaddr[2];
-  BX_NE2K_THIS s.macaddr[5]  = macaddr[2];
-  BX_NE2K_THIS s.macaddr[6]  = macaddr[3];
-  BX_NE2K_THIS s.macaddr[7]  = macaddr[3];
-  BX_NE2K_THIS s.macaddr[8]  = macaddr[4];
-  BX_NE2K_THIS s.macaddr[9]  = macaddr[4];
-  BX_NE2K_THIS s.macaddr[10] = macaddr[5];
-  BX_NE2K_THIS s.macaddr[11] = macaddr[5];
-
-  // ne2k signature
-  for (int i = 12; i < 32; i++)
-    BX_NE2K_THIS s.macaddr[i] = 0x57;
-
-  BX_NE2K_THIS s.statusbar_id = bx_gui->register_statusitem("NE2K", 1);
-
-  // Attach to the selected ethernet module
-  BX_NE2K_THIS ethdev = DEV_net_init_module(base, rx_handler, rx_status_handler, this);
 }
 
 void bx_ne2k_c::set_irq_level(bx_bool level)

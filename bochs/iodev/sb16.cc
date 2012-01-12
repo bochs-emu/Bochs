@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -41,16 +41,153 @@
 
 bx_sb16_c *theSB16Device = NULL;
 
+// builtin configuration handling functions
+
+void sb16_init_options(void)
+{
+  bx_param_c *sound = SIM->get_param("sound");
+  bx_list_c *menu = new bx_list_c(sound, "sb16", "SB16 Configuration", 8);
+  menu->set_options(menu->SHOW_PARENT);
+  bx_param_bool_c *enabled = new bx_param_bool_c(menu,
+    "enabled",
+    "Enable SB16 emulation",
+    "Enables the SB16 emulation",
+    0);
+  bx_param_num_c *midimode = new bx_param_num_c(menu,
+    "midimode",
+    "Midi mode",
+    "Controls the MIDI output format.",
+    0, 3,
+    0);
+  bx_param_filename_c *midifile = new bx_param_filename_c(menu,
+    "midifile",
+    "MIDI file",
+    "The filename is where the MIDI data is sent. This can be device or just a file.",
+    "", BX_PATHNAME_LEN);
+  bx_param_num_c *wavemode = new bx_param_num_c(menu,
+    "wavemode",
+    "Wave mode",
+    "Controls the wave output format.",
+    0, 3,
+    0);
+  bx_param_filename_c *wavefile = new bx_param_filename_c(menu,
+    "wavefile",
+    "Wave file",
+    "This is the device/file where the wave output is stored",
+    "", BX_PATHNAME_LEN);
+  bx_param_num_c *loglevel = new bx_param_num_c(menu,
+    "loglevel",
+    "Log level",
+    "Controls how verbose the SB16 emulation is (0 = no log, 5 = all errors and infos).",
+    0, 5,
+    0);
+  bx_param_filename_c *logfile = new bx_param_filename_c(menu,
+    "logfile",
+    "Log file",
+    "The file to write the SB16 emulator messages to.",
+    "", BX_PATHNAME_LEN);
+  logfile->set_extension("log");
+  bx_param_num_c *dmatimer = new bx_param_num_c(menu,
+    "dmatimer",
+    "DMA timer",
+    "Microseconds per second for a DMA cycle.",
+    0, BX_MAX_BIT32U,
+    0);
+
+  midimode->set_options(midimode->USE_SPIN_CONTROL);
+  wavemode->set_options(wavemode->USE_SPIN_CONTROL);
+  loglevel->set_options(loglevel->USE_SPIN_CONTROL);
+  loglevel->set_group("SB16");
+  dmatimer->set_group("SB16");
+  bx_list_c *deplist = new bx_list_c(NULL, 4);
+  deplist->add(midimode);
+  deplist->add(wavemode);
+  deplist->add(loglevel);
+  deplist->add(dmatimer);
+  enabled->set_dependent_list(deplist);
+  deplist = new bx_list_c(NULL, 1);
+  deplist->add(midifile);
+  midimode->set_dependent_list(deplist);
+  deplist = new bx_list_c(NULL, 1);
+  deplist->add(wavefile);
+  wavemode->set_dependent_list(deplist);
+  deplist = new bx_list_c(NULL, 1);
+  deplist->add(logfile);
+  loglevel->set_dependent_list(deplist);
+}
+
+Bit32s sb16_options_parser(const char *context, int num_params, char *params[])
+{
+  if (!strcmp(params[0], "sb16")) {
+    int enable = 1;
+    bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
+    for (int i = 1; i < num_params; i++) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+        enable = atol(&params[i][8]);
+      } else if (!strncmp(params[i], "midi=", 5)) {
+        SIM->get_param_string("midifile", base)->set(&params[i][5]);
+      } else if (!strncmp(params[i], "midimode=", 9)) {
+        SIM->get_param_num("midimode", base)->set(atol(&params[i][9]));
+      } else if (!strncmp(params[i], "wave=", 5)) {
+        SIM->get_param_string("wavefile", base)->set(&params[i][5]);
+      } else if (!strncmp(params[i], "wavemode=", 9)) {
+        SIM->get_param_num("wavemode", base)->set(atol(&params[i][9]));
+      } else if (!strncmp(params[i], "log=", 4)) {
+        SIM->get_param_string("logfile", base)->set(&params[i][4]);
+      } else if (!strncmp(params[i], "loglevel=", 9)) {
+        SIM->get_param_num("loglevel", base)->set(atol(&params[i][9]));
+      } else if (!strncmp(params[i], "dmatimer=", 9)) {
+        SIM->get_param_num("dmatimer", base)->set(atol(&params[i][9]));
+      } else {
+        BX_ERROR(("%s: unknown parameter for sb16 ignored.", context));
+      }
+    }
+    if ((enable != 0) && (SIM->get_param_num("dmatimer", base)->get() > 0))
+      SIM->get_param_bool("enabled", base)->set(1);
+    else
+      SIM->get_param_bool("enabled", base)->set(0);
+  } else {
+    BX_PANIC(("%s: unknown directive '%s'", context, params[0]));
+  }
+  return 0;
+}
+
+Bit32s sb16_options_save(FILE *fp)
+{
+  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
+  fprintf(fp, "sb16: enabled=%d", SIM->get_param_bool("enabled", base)->get());
+  if (SIM->get_param_bool("enabled", base)->get()) {
+    fprintf(fp, ", midimode=%d, midi=%s, wavemode=%d, wave=%s, loglevel=%d, log=%s, dmatimer=%d",
+      SIM->get_param_num("midimode", base)->get(),
+      SIM->get_param_string("midifile", base)->getptr(),
+      SIM->get_param_num("wavemode", base)->get(),
+      SIM->get_param_string("wavefile", base)->getptr(),
+      SIM->get_param_num("loglevel", base)->get(),
+      SIM->get_param_string("logfile", base)->getptr(),
+      SIM->get_param_num("dmatimer", base)->get());
+  }
+  fprintf(fp, "\n");
+  return 0;
+}
+
+// device plugin entry points
+
 int libsb16_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theSB16Device = new bx_sb16_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSB16Device, BX_PLUGIN_SB16);
+  // add new configuration parameter for the config interface
+  sb16_init_options();
+  // register add-on option for bochsrc and command line
+  SIM->register_addon_option("sb16", sb16_options_parser, sb16_options_save);
   return(0); // Success
 }
 
 void libsb16_LTX_plugin_fini(void)
 {
   delete theSB16Device;
+  SIM->unregister_addon_option("sb16");
+  ((bx_list_c*)SIM->get_param("sound"))->remove("sb16");
 }
 
 // some shortcuts to save typing
@@ -67,6 +204,8 @@ void libsb16_LTX_plugin_fini(void)
 
 // here's a safe way to print out null pointeres
 #define MIGHT_BE_NULL(x)  ((x==NULL)? "(null)" : x)
+
+// the device object
 
 bx_sb16_c::bx_sb16_c(void)
 {
@@ -124,18 +263,21 @@ bx_sb16_c::~bx_sb16_c(void)
   if ((SIM->get_param_num(BXPN_SB16_LOGLEVEL)->get() > 0) && LOGFILE)
     fclose(LOGFILE);
 
-  SIM->get_param_num(BXPN_SB16_DMATIMER)->set_handler(NULL);
-  SIM->get_param_num(BXPN_SB16_LOGLEVEL)->set_handler(NULL);
-
   BX_DEBUG(("Exit"));
 }
 
 void bx_sb16_c::init(void)
 {
   unsigned addr, i;
-  bx_list_c *base;
 
-  base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
+  // Read in values from config interface
+  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
+  // Check if the device is disabled or not configured
+  if (!SIM->get_param_bool("enabled", base)->get()) {
+    BX_INFO(("SB16 disabled"));
+    BX_UNREGISTER_DEVICE_DEVMODEL("sb16");
+    return;
+  }
   if ((strlen(SIM->get_param_string("logfile", base)->getptr()) < 1))
     SIM->get_param_num("loglevel", base)->set(0);
 
@@ -280,6 +422,9 @@ void bx_sb16_c::init(void)
   MPU.current_timer = 0;
 
   // init runtime parameters
+  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
+  misc_rt->add(SIM->get_param(BXPN_SB16_DMATIMER));
+  misc_rt->add(SIM->get_param(BXPN_SB16_LOGLEVEL));
   SIM->get_param_num(BXPN_SB16_DMATIMER)->set_handler(sb16_param_handler);
   SIM->get_param_num(BXPN_SB16_DMATIMER)->set_runtime_param(1);
   SIM->get_param_num(BXPN_SB16_LOGLEVEL)->set_handler(sb16_param_handler);
