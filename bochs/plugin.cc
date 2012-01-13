@@ -88,6 +88,7 @@ static void plugin_init_one(plugin_t *plugin);
 #endif
 
 device_t *devices = NULL;      /* Head of the linked list of registered devices  */
+device_t *core_devices = NULL; /* Head of the linked list of registered core devices  */
 
 plugin_t *current_plugin_context = NULL;
 
@@ -545,7 +546,7 @@ plugin_startup(void)
 
 void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmodel_c *devmodel, const char *name)
 {
-  device_t *device;
+  device_t *device, **devlist;
 
   device = (device_t *)malloc (sizeof (device_t));
   if (!device)
@@ -558,31 +559,26 @@ void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmod
   device->devmodel = devmodel;
   device->plugin = plugin;  // this can be NULL
   device->next = NULL;
+  device->plugtype = type;
 
-  // Don't add every kind of device to the list.
   switch (type) {
     case PLUGTYPE_CORE:
-      // Core devices are present whether or not we are using plugins, so
-      // they are managed by the same code in iodev/devices.cc whether
-      // plugins are on or off.
-      free(device);
-      return; // Do not add core devices to the devices list.
+      devlist = &core_devices;
+      break;
     case PLUGTYPE_STANDARD:
     case PLUGTYPE_OPTIONAL:
     case PLUGTYPE_USER:
     default:
-      // The plugin system will manage standard, optional and user devices only.
-      device->plugtype = type;
+      devlist = &devices;
       break;
   }
 
-  if (!devices) {
+  if (!*devlist) {
     /* Empty list, this become the first entry. */
-    devices = device;
-  }
-  else {
+    *devlist = device;
+  } else {
     /* Non-empty list.  Add to end. */
-    device_t *temp = devices;
+    device_t *temp = *devlist;
 
     while (temp->next)
       temp = temp->next;
@@ -675,6 +671,10 @@ void bx_init_plugins()
 {
   device_t *device;
 
+  for (device = core_devices; device; device = device->next) {
+    pluginlog->info("init_dev of '%s' plugin device by virtual method",device->name);
+    device->devmodel->init();
+  }
   for (device = devices; device; device = device->next) {
     if (device->plugtype == PLUGTYPE_STANDARD) {
       pluginlog->info("init_dev of '%s' plugin device by virtual method",device->name);
@@ -705,6 +705,10 @@ void bx_reset_plugins(unsigned signal)
 {
   device_t *device;
 
+  for (device = core_devices; device; device = device->next) {
+    pluginlog->info("reset of '%s' plugin device by virtual method",device->name);
+    device->devmodel->reset(signal);
+  }
   for (device = devices; device; device = device->next) {
     if (device->plugtype == PLUGTYPE_STANDARD) {
       pluginlog->info("reset of '%s' plugin device by virtual method",device->name);
@@ -763,6 +767,10 @@ void bx_plugins_register_state()
 {
   device_t *device;
 
+  for (device = core_devices; device; device = device->next) {
+    pluginlog->info("register state of '%s' plugin device by virtual method",device->name);
+    device->devmodel->register_state();
+  }
   for (device = devices; device; device = device->next) {
     pluginlog->info("register state of '%s' plugin device by virtual method",device->name);
     device->devmodel->register_state();
@@ -777,6 +785,9 @@ void bx_plugins_after_restore_state()
 {
   device_t *device;
 
+  for (device = core_devices; device; device = device->next) {
+    device->devmodel->after_restore_state();
+  }
   for (device = devices; device; device = device->next) {
     if (device->plugtype == PLUGTYPE_STANDARD) {
       device->devmodel->after_restore_state();

@@ -161,33 +161,35 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   // "by hand" in this file.  Basically, we're using core plugins when we
   // want to control the init order.
   //
-  PLUG_load_plugin(cmos, PLUGTYPE_CORE);
-  PLUG_load_plugin(dma, PLUGTYPE_CORE);
-  PLUG_load_plugin(pic, PLUGTYPE_CORE);
-  PLUG_load_plugin(pit, PLUGTYPE_CORE);
-  PLUG_load_plugin(vga, PLUGTYPE_CORE);
   PLUG_load_plugin(hdimage, PLUGTYPE_CORE);
-  PLUG_load_plugin(floppy, PLUGTYPE_CORE);
-#if BX_SUPPORT_SOUNDLOW
-  PLUG_load_plugin(soundmod, PLUGTYPE_CORE);
-#endif
 #if BX_NETWORKING
-  PLUG_load_plugin(netmod, PLUGTYPE_CORE);
+  if (is_network_enabled())
+    PLUG_load_plugin(netmod, PLUGTYPE_CORE);
 #endif
-
+#if BX_SUPPORT_SOUNDLOW
+  if (is_sound_enabled())
+    PLUG_load_plugin(soundmod, PLUGTYPE_CORE);
+#endif
   // PCI logic (i440FX)
   if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
 #if BX_SUPPORT_PCI
     PLUG_load_plugin(pci, PLUGTYPE_CORE);
     PLUG_load_plugin(pci2isa, PLUGTYPE_CORE);
 #if BX_SUPPORT_PCIUSB
-    PLUG_load_plugin(usb_common, PLUGTYPE_CORE);
+    if (is_usb_enabled())
+      PLUG_load_plugin(usb_common, PLUGTYPE_CORE);
 #endif
     PLUG_load_plugin(acpi, PLUGTYPE_STANDARD);
 #else
     BX_ERROR(("Bochs is not compiled with PCI support"));
 #endif
   }
+  PLUG_load_plugin(cmos, PLUGTYPE_CORE);
+  PLUG_load_plugin(dma, PLUGTYPE_CORE);
+  PLUG_load_plugin(pic, PLUGTYPE_CORE);
+  PLUG_load_plugin(pit, PLUGTYPE_CORE);
+  PLUG_load_plugin(floppy, PLUGTYPE_CORE);
+  PLUG_load_plugin(vga, PLUGTYPE_CORE);
 
 #if BX_SUPPORT_APIC
   PLUG_load_plugin(ioapic, PLUGTYPE_STANDARD);
@@ -220,29 +222,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     }
   }
 #endif
-
-  // CMOS RAM & RTC
-  pluginCmosDevice->init();
-
-  /*--- 8237 DMA ---*/
-  pluginDmaDevice->init();
-
-  //--- FLOPPY ---
-  pluginFloppyDevice->init();
-
-#if BX_SUPPORT_PCI
-  pluginPciBridge->init();
-  pluginPci2IsaBridge->init();
-#endif
-
-  /*--- VGA adapter ---*/
-  pluginVgaDevice->init();
-
-  /*--- 8259A PIC ---*/
-  pluginPicDevice->init();
-
-  /*--- 82C54 PIT ---*/
-  pluginPitDevice->init();
 
   // system hardware
   register_io_read_handler(this, &read_handler, 0x0092,
@@ -296,38 +275,12 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 void bx_devices_c::reset(unsigned type)
 {
   mem->disable_smram();
-#if BX_SUPPORT_PCI
-  if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
-    pluginPciBridge->reset(type);
-    pluginPci2IsaBridge->reset(type);
-  }
-#endif
-  pluginCmosDevice->reset(type);
-  pluginDmaDevice->reset(type);
-  pluginFloppyDevice->reset(type);
-  pluginVgaDevice->reset(type);
-  pluginPicDevice->reset(type);
-  pluginPitDevice->reset(type);
-  // now reset optional plugins
   bx_reset_plugins(type);
 }
 
 void bx_devices_c::register_state()
 {
   bx_virt_timer.register_state();
-#if BX_SUPPORT_PCI
-  if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
-    pluginPciBridge->register_state();
-    pluginPci2IsaBridge->register_state();
-  }
-#endif
-  pluginCmosDevice->register_state();
-  pluginDmaDevice->register_state();
-  pluginFloppyDevice->register_state();
-  pluginVgaDevice->register_state();
-  pluginPicDevice->register_state();
-  pluginPitDevice->register_state();
-  // now register state of optional plugins
   bx_plugins_register_state();
 }
 
@@ -335,14 +288,6 @@ void bx_devices_c::after_restore_state()
 {
   bx_slowdown_timer.after_restore_state();
   bx_virt_timer.set_realtime_delay();
-#if BX_SUPPORT_PCI
-  if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
-    pluginPciBridge->after_restore_state();
-    pluginPci2IsaBridge->after_restore_state();
-  }
-#endif
-  pluginCmosDevice->after_restore_state();
-  pluginVgaDevice->after_restore_state();
   bx_plugins_after_restore_state();
 }
 
@@ -980,6 +925,35 @@ bx_bool bx_devices_c::is_parallel_enabled(void)
     sprintf(pname, "ports.parallel.%d.enabled", i+1);
     if (SIM->get_param_bool(pname)->get())
       return 1;
+  }
+  return 0;
+}
+
+bx_bool bx_devices_c::is_network_enabled(void)
+{
+  if (PLUG_device_present("e1000") ||
+      PLUG_device_present("ne2k") ||
+      PLUG_device_present("pcipnic")) {
+    return 1;
+  }
+  return 0;
+}
+
+bx_bool bx_devices_c::is_sound_enabled(void)
+{
+  if (PLUG_device_present("es1370") ||
+      PLUG_device_present("sb16")) {
+    return 1;
+  }
+  return 0;
+}
+
+bx_bool bx_devices_c::is_usb_enabled(void)
+{
+  if (PLUG_device_present("usb_ohci") ||
+      PLUG_device_present("usb_uhci") ||
+      PLUG_device_present("usb_xhci")) {
+    return 1;
   }
   return 0;
 }
