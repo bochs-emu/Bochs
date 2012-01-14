@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2011  The Bochs Project
+# Copyright (C) 2001-2012  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -173,12 +173,12 @@ all: @PRIMARY_TARGET@ @PLUGIN_TARGET@ bximage@EXE@ bxcommit@EXE@ @BUILD_DOCBOOK_
 
 @EXTERNAL_DEPENDENCY@
 
-bochs@EXE@: @IODEV_LIB_VAR@ @DEBUGGER_VAR@ \
+bochs@EXE@: @IODEV_LIB_VAR@ @USB_LIB_VAR@ @DEBUGGER_VAR@ \
            cpu/libcpu.a cpu/cpudb/libcpudb.a memory/libmemory.a gui/libgui.a \
            @DISASM_VAR@ @INSTRUMENT_VAR@ $(BX_OBJS) \
            $(SIMX86_OBJS) @FPU_VAR@ @GDBSTUB_VAR@ @PLUGIN_VAR@
 	@LINK@ @EXPORT_DYNAMIC@ $(BX_OBJS) $(SIMX86_OBJS) \
-		@IODEV_LIB_VAR@ @DEBUGGER_VAR@ cpu/libcpu.a cpu/cpudb/libcpudb.a \
+		@IODEV_LIB_VAR@ @USB_LIB_VAR@ @DEBUGGER_VAR@ cpu/libcpu.a cpu/cpudb/libcpudb.a \
 		 memory/libmemory.a gui/libgui.a \
 		@DISASM_VAR@ @INSTRUMENT_VAR@ @PLUGIN_VAR@ \
 		@GDBSTUB_VAR@ @FPU_VAR@ \
@@ -192,13 +192,13 @@ bochs@EXE@: @IODEV_LIB_VAR@ @DEBUGGER_VAR@ \
 # Special make target for cygwin/mingw using dlltool instead of
 # libtool.  This creates a .DEF file, and exports file, an import library,
 # and then links bochs.exe with the exports file.
-.win32_dll_plugin_target: @IODEV_LIB_VAR@ @DEBUGGER_VAR@ \
+.win32_dll_plugin_target: @IODEV_LIB_VAR@ @USB_LIB_VAR@ @DEBUGGER_VAR@ \
            cpu/libcpu.a cpu/cpudb/libcpudb.a memory/libmemory.a gui/libgui.a \
            @DISASM_VAR@ @INSTRUMENT_VAR@ $(BX_OBJS) \
            $(SIMX86_OBJS) @FPU_VAR@ @GDBSTUB_VAR@ @PLUGIN_VAR@
 	$(DLLTOOL) --export-all-symbols --output-def bochs.def \
 		$(BX_OBJS) $(SIMX86_OBJS) \
-		@IODEV_LIB_VAR@ cpu/libcpu.a cpu/cpudb/libcpudb.a \
+		@IODEV_LIB_VAR@ @USB_LIB_VAR@ cpu/libcpu.a cpu/cpudb/libcpudb.a \
 		memory/libmemory.a gui/libgui.a \
 		@DEBUGGER_VAR@ @DISASM_VAR@ @INSTRUMENT_VAR@ @PLUGIN_VAR@ \
 		@GDBSTUB_VAR@ @FPU_VAR@
@@ -206,7 +206,7 @@ bochs@EXE@: @IODEV_LIB_VAR@ @DEBUGGER_VAR@ \
 	$(DLLTOOL) --dllname bochs.exe --output-exp bochs.exp --def bochs.def
 	$(CXX) -o bochs.exe $(CXXFLAGS) $(LDFLAGS) -export-dynamic \
 	    $(BX_OBJS) bochs.exp $(SIMX86_OBJS) \
-		@IODEV_LIB_VAR@ cpu/libcpu.a cpu/cpudb/libcpudb.a \
+		@IODEV_LIB_VAR@ @USB_LIB_VAR@ cpu/libcpu.a cpu/cpudb/libcpudb.a \
 		memory/libmemory.a gui/libgui.a \
 		@DEBUGGER_VAR@ @DISASM_VAR@ @INSTRUMENT_VAR@ @PLUGIN_VAR@ \
 		@GDBSTUB_VAR@ @FPU_VAR@ \
@@ -225,6 +225,9 @@ bochs_plugins:
 	cd iodev @COMMAND_SEPARATOR@
 	$(MAKE) plugins
 	@CD_UP_ONE@
+	cd iodev/usb @COMMAND_SEPARATOR@
+	$(MAKE) plugins
+	@CD_UP_TWO@
 
 bximage@EXE@: misc/bximage.o
 	@LINK_CONSOLE@ $(BXIMAGE_LINK_OPTS) misc/bximage.o
@@ -252,6 +255,11 @@ iodev/libiodev.a::
 	cd iodev @COMMAND_SEPARATOR@
 	$(MAKE) $(MDEFINES) libiodev.a
 	@CD_UP_ONE@
+
+iodev/usb/libusb.a::
+	cd iodev/usb @COMMAND_SEPARATOR@
+	$(MAKE) $(MDEFINES) libusb.a
+	@CD_UP_TWO@
 
 bx_debug/libdebug.a::
 	cd bx_debug @COMMAND_SEPARATOR@
@@ -359,12 +367,14 @@ install_libtool_plugins::
 	for i in $(DESTDIR)$(plugdir); do mkdir -p $$i && test -d $$i && test -w $$i; done
 	list=`cd gui && echo *.la`; for i in $$list; do $(LIBTOOL) --mode=install install gui/$$i $(DESTDIR)$(plugdir); done
 	list=`cd iodev && echo *.la`; for i in $$list; do $(LIBTOOL) --mode=install install iodev/$$i $(DESTDIR)$(plugdir); done
+	list=`cd iodev/usb && echo *.la`; for i in $$list; do $(LIBTOOL) --mode=install install iodev/usb/$$i $(DESTDIR)$(plugdir); done
 	$(LIBTOOL) --finish $(DESTDIR)$(plugdir)
 
 install_dll_plugins::
 	for i in $(DESTDIR)$(plugdir); do mkdir -p $$i && test -d $$i && test -w $$i; done
 	list=`cd gui && echo *.dll`; for i in $$list; do cp gui/$$i $(DESTDIR)$(plugdir); done
 	list=`cd iodev && echo *.dll`; for i in $$list; do cp iodev/$$i $(DESTDIR)$(plugdir); done
+	list=`cd iodev/usb && echo *.dll`; for i in $$list; do cp iodev/usb/$$i $(DESTDIR)$(plugdir); done
 
 install_share::
 	for i in $(DESTDIR)$(sharedir);	do mkdir -p $$i && test -d $$i && test -w $$i; done
@@ -480,6 +490,9 @@ all-clean: clean
 	cd iodev @COMMAND_SEPARATOR@
 	$(MAKE) clean
 	@CD_UP_ONE@
+	cd iodev/usb @COMMAND_SEPARATOR@
+	$(MAKE) clean
+	@CD_UP_TWO@
 	cd bx_debug @COMMAND_SEPARATOR@
 	$(MAKE) clean
 	@CD_UP_ONE@

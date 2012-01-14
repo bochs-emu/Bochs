@@ -460,6 +460,8 @@ AC_SUBST(NONPLUGIN_GUI_LINK_OPTS)
 # objs list, according to which display libraries are enabled.
 IODEV_NON_PLUGIN_OBJS=$GUI_NON_PLUGIN_OBJS
 IODEV_PLUGIN_OBJS=$GUI_PLUGIN_OBJS
+USB_NON_PLUGIN_OBJS=$GUI_NON_PLUGIN_OBJS
+USB_PLUGIN_OBJS=$GUI_PLUGIN_OBJS
 
 # on MacOSX if they enabled plugins, make sure that dlopen() was found.
 # It is provided by a library called dlcompat.
@@ -731,13 +733,14 @@ AC_ARG_ENABLE(pcidev,
 )
 
 use_usb=0
+USBHC_OBJ=''
 AC_MSG_CHECKING(for USB UHCI support)
 AC_ARG_ENABLE(usb,
   [  --enable-usb                      enable USB UHCI support],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_USB_UHCI, 1)
-    PCI_OBJ="$PCI_OBJ usb_uhci.o"
+    USBHC_OBJ="usb_uhci.o"
     use_usb=1
    else
     AC_MSG_RESULT(no)
@@ -755,7 +758,7 @@ AC_ARG_ENABLE(usb-ohci,
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_USB_OHCI, 1)
-    PCI_OBJ="$PCI_OBJ usb_ohci.o"
+    USBHC_OBJ="$USBHC_OBJ usb_ohci.o"
     use_usb=1
    else
     AC_MSG_RESULT(no)
@@ -773,7 +776,7 @@ AC_ARG_ENABLE(usb-xhci,
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_USB_XHCI, 1)
-    PCI_OBJ="$PCI_OBJ usb_xhci.o"
+    USBHC_OBJ="$USBHC_OBJ usb_xhci.o"
     use_usb=1
    else
     AC_MSG_RESULT(no)
@@ -789,6 +792,7 @@ if test "$use_usb" = 1; then
   USBCORE_OBJ="usb_common.o"
   USBDEV_OBJS="usb_hid.o usb_hub.o usb_msd.o usb_printer.o"
   SCSI_OBJS="scsi_device.o"
+  AC_SUBST(USBHC_OBJ)
   AC_SUBST(USBCORE_OBJ)
   AC_SUBST(USBDEV_OBJS)
   AC_SUBST(SCSI_OBJS)
@@ -1825,9 +1829,15 @@ PRIMARY_TARGET='bochs'
 PLUGIN_LIBNAME_TRANSFORMATION='%.o=libbx_%.la'
 
 IODEV_LIB_VAR='iodev/libiodev.a'
+if test "$bx_plugins" = 0; then
+  USB_LIB_VAR='iodev/usb/libusb.a'
+else
+  USB_LIB_VAR=''
+fi
 NONINLINE_VAR='$(NONINLINE_OBJS)'
 
 AC_SUBST(IODEV_LIB_VAR)
+AC_SUBST(USB_LIB_VAR)
 AC_SUBST(EXTRA_BX_OBJS)
 AC_SUBST(NONINLINE_VAR)
 AC_SUBST(INLINE_VAR)
@@ -2740,6 +2750,8 @@ AC_SUBST(GUI_NON_PLUGIN_OBJS)
 AC_SUBST(GUI_PLUGIN_OBJS)
 AC_SUBST(IODEV_NON_PLUGIN_OBJS)
 AC_SUBST(IODEV_PLUGIN_OBJS)
+AC_SUBST(USB_NON_PLUGIN_OBJS)
+AC_SUBST(USB_PLUGIN_OBJS)
 AC_SUBST(PLUGIN_VAR)
 AC_SUBST(PLUGIN_TARGET)
 AC_SUBST(INSTALL_PLUGINS_VAR)
@@ -2747,10 +2759,10 @@ AC_SUBST(INSTALL_PLUGINS_VAR)
 AC_PATH_PROG(GZIP, gzip)
 AC_PATH_PROG(TAR, tar)
 
-AC_OUTPUT(Makefile iodev/Makefile bx_debug/Makefile bios/Makefile \
-	 cpu/Makefile cpu/cpudb/Makefile memory/Makefile gui/Makefile \
-	 disasm/Makefile ${INSTRUMENT_DIR}/Makefile misc/Makefile \
-	 fpu/Makefile doc/docbook/Makefile \
+AC_OUTPUT(Makefile iodev/Makefile iodev/usb/Makefile bx_debug/Makefile \
+	 bios/Makefile cpu/Makefile cpu/cpudb/Makefile memory/Makefile \
+	 gui/Makefile disasm/Makefile ${INSTRUMENT_DIR}/Makefile \
+	 misc/Makefile fpu/Makefile doc/docbook/Makefile \
 	 build/linux/bochs-dlx \
 	 bxversion.h bxversion.rc build/macosx/Info.plist \
 	 build/win32/nsis/Makefile build/win32/nsis/bochs.nsi \

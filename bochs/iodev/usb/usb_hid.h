@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009  Benjamin David Lunt
+//  Copyright (C) 2009-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -19,16 +19,16 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_IODEV_USB_PRINTER_H
-#define BX_IODEV_USB_PRINTER_H
+// USB HID emulation support ported from the Qemu project
 
-class usb_printer_device_c : public usb_device_c {
+#ifndef BX_IODEV_USB_HID_H
+#define BX_IODEV_USB_HID_H
+
+
+class usb_hid_device_c : public usb_device_c {
 public:
-  usb_printer_device_c(usbdev_type type, const char *filename);
-  virtual ~usb_printer_device_c(void);
-
-  virtual bx_bool init();
-  virtual const char* get_info();
+  usb_hid_device_c(usbdev_type type);
+  virtual ~usb_hid_device_c(void);
 
   virtual void handle_reset();
   virtual int handle_control(int request, int value, int index, int length, Bit8u *data);
@@ -37,11 +37,24 @@ public:
 
 private:
   struct {
-    Bit8u printer_status;
-    const char *fname;
-    FILE *fp;
-    char info_txt[BX_PATHNAME_LEN];
+    int mouse_delayed_dx;
+    int mouse_delayed_dy;
+    int mouse_delayed_dz;
+    Bit16s mouse_x;
+    Bit16s mouse_y;
+    Bit8s mouse_z;
+    Bit8u b_state;
+    Bit8u saved_key[8];
+    Bit8u key_pad_packet[8];
   } s;
+
+  static bx_bool key_enq_static(void *dev, Bit8u *scan_code);
+  bx_bool key_enq(Bit8u *scan_code);
+  static void mouse_enabled_changed(void *dev, bx_bool enabled);
+  static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state);
+  void mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
+  int mouse_poll(Bit8u *buf, int len);
+  int keypad_poll(Bit8u *buf, int len);
 };
 
 #endif
