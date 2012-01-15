@@ -1830,15 +1830,18 @@ IODEV_LIB_VAR='iodev/libiodev.a'
 if test "$bx_plugins" = 0; then
   USB_LIB_VAR='iodev/usb/libusb.a'
   NETWORK_LIB_VAR='iodev/network/libnetwork.a'
+  SOUND_LIB_VAR='iodev/sound/libsound.a'
 else
   USB_LIB_VAR=''
   NETWORK_LIB_VAR=''
+  SOUND_LIB_VAR=''
 fi
 NONINLINE_VAR='$(NONINLINE_OBJS)'
 
 AC_SUBST(IODEV_LIB_VAR)
 AC_SUBST(USB_LIB_VAR)
 AC_SUBST(NETWORK_LIB_VAR)
+AC_SUBST(SOUND_LIB_VAR)
 AC_SUBST(EXTRA_BX_OBJS)
 AC_SUBST(NONINLINE_VAR)
 AC_SUBST(INLINE_VAR)
@@ -2761,10 +2764,10 @@ AC_PATH_PROG(GZIP, gzip)
 AC_PATH_PROG(TAR, tar)
 
 AC_OUTPUT(Makefile iodev/Makefile iodev/usb/Makefile iodev/network/Makefile \
-	 bx_debug/Makefile bios/Makefile cpu/Makefile cpu/cpudb/Makefile \
-	 memory/Makefile gui/Makefile disasm/Makefile ${INSTRUMENT_DIR}/Makefile \
-	 misc/Makefile fpu/Makefile doc/docbook/Makefile \
-	 build/linux/bochs-dlx \
+	 iodev/sound/Makefile bx_debug/Makefile bios/Makefile cpu/Makefile \
+	 cpu/cpudb/Makefile memory/Makefile gui/Makefile disasm/Makefile \
+	 ${INSTRUMENT_DIR}/Makefile misc/Makefile fpu/Makefile \
+	 doc/docbook/Makefile build/linux/bochs-dlx \
 	 bxversion.h bxversion.rc build/macosx/Info.plist \
 	 build/win32/nsis/Makefile build/win32/nsis/bochs.nsi \
 	 host/linux/pcidev/Makefile)

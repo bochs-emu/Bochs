@@ -50,7 +50,6 @@ LIBTOOL=@LIBTOOL@
 WIN32_DLL_IMPORT_LIBRARY=../dllexports.a
 
 CDROM_OBJS = @CDROM_OBJS@
-SOUNDLOW_OBJS = @SOUNDLOW_OBJS@
 
 BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS = $(MCH_CFLAGS)
@@ -82,8 +81,6 @@ OBJS_THAT_CAN_BE_PLUGINS = \
   busmouse.o \
   ioapic.o \
   @PCI_OBJ@ \
-  soundmod.o \
-  @SOUNDCARD_OBJS@ \
   @GAME_OBJS@ \
   @IODEBUG_OBJS@
 
@@ -95,12 +92,10 @@ OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
   vmware3.o \
   vmware4.o \
   vvfat.o \
-  $(CDROM_OBJS) \
-  $(SOUNDLOW_OBJS)
+  $(CDROM_OBJS)
 
 NONPLUGIN_OBJS = @IODEV_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @IODEV_PLUGIN_OBJS@
-SOUND_LINK_OPTS = @SOUND_LINK_OPTS@
 
 all: libiodev.a
 
@@ -138,9 +133,6 @@ libbx_keyboard.la: keyboard.lo scancodes.lo
 libbx_pit_wrap.la: pit82c54.lo pit_wrap.lo
 	$(LIBTOOL) --mode=link $(CXX) -module pit82c54.lo pit_wrap.lo -o libbx_pit.la -rpath $(PLUGIN_PATH)
 
-libbx_soundmod.la: soundmod.lo $(SOUNDLOW_OBJS:.o=.lo)
-	$(LIBTOOL) --mode=link $(CXX) -module soundmod.lo $(SOUNDLOW_OBJS:.o=.lo) -o libbx_soundmod.la -rpath $(PLUGIN_PATH) $(SOUND_LINK_OPTS)
-
 libbx_serial.la: serial.lo serial_raw.lo
 	$(LIBTOOL) --mode=link $(CXX) -module serial.lo serial_raw.lo -o libbx_serial.la -rpath $(PLUGIN_PATH)
 
@@ -160,9 +152,6 @@ bx_keyboard.dll: keyboard.o scancodes.o
 
 bx_pit_wrap.dll: pit82c54.o pit_wrap.o
 	$(CXX) $(CXXFLAGS) -shared -o bx_pit.dll pit82c54.o pit_wrap.o $(WIN32_DLL_IMPORT_LIBRARY)
-
-bx_soundmod.dll: soundmod.o $(SOUNDLOW_OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o bx_soundmod.dll soundmod.o $(SOUNDLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) -lwinmm
 
 bx_gameport.dll: gameport.o
 	$(CXX) $(CXXFLAGS) -shared -o bx_gameport.dll gameport.o $(WIN32_DLL_IMPORT_LIBRARY) -lwinmm
@@ -242,12 +231,6 @@ dma.o: dma.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
  ../ltdl.h ../param_names.h dma.h
-es1370.o: es1370.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
- ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
- ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../ltdl.h ../param_names.h pci.h es1370.h soundmod.h soundlnx.h \
- soundwin.h soundosx.h
 extfpuirq.o: extfpuirq.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
@@ -333,12 +316,6 @@ pit_wrap.o: pit_wrap.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
  ../ltdl.h ../param_names.h pit_wrap.h pit82c54.h virt_timer.h speaker.h
-sb16.o: sb16.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
- ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
- ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../ltdl.h ../param_names.h sb16.h soundmod.h soundlnx.h soundwin.h \
- soundosx.h
 scancodes.o: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
@@ -358,26 +335,6 @@ slowdown_timer.o: slowdown_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h 
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../param_names.h \
  slowdown_timer.h
-soundlnx.o: soundlnx.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
- ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
- ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../ltdl.h ../param_names.h soundmod.h soundlnx.h
-soundmod.o: soundmod.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
- ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
- ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../ltdl.h ../param_names.h soundmod.h soundlnx.h soundosx.h soundwin.h
-soundosx.o: soundosx.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
- ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
- ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../ltdl.h ../param_names.h soundmod.h soundosx.h
-soundwin.o: soundwin.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
- ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
- ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../ltdl.h ../param_names.h soundmod.h soundwin.h
 speaker.o: speaker.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
@@ -469,12 +426,6 @@ dma.lo: dma.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
  ../ltdl.h ../param_names.h dma.h
-es1370.lo: es1370.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
- ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
- ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../ltdl.h ../param_names.h pci.h es1370.h soundmod.h soundlnx.h \
- soundwin.h soundosx.h
 extfpuirq.lo: extfpuirq.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
@@ -560,12 +511,6 @@ pit_wrap.lo: pit_wrap.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
  ../ltdl.h ../param_names.h pit_wrap.h pit82c54.h virt_timer.h speaker.h
-sb16.lo: sb16.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
- ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
- ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../ltdl.h ../param_names.h sb16.h soundmod.h soundlnx.h soundwin.h \
- soundosx.h
 scancodes.lo: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
@@ -585,26 +530,6 @@ slowdown_timer.lo: slowdown_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../param_names.h \
  slowdown_timer.h
-soundlnx.lo: soundlnx.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
- ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
- ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../ltdl.h ../param_names.h soundmod.h soundlnx.h
-soundmod.lo: soundmod.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
- ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
- ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../ltdl.h ../param_names.h soundmod.h soundlnx.h soundosx.h soundwin.h
-soundosx.lo: soundosx.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
- ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
- ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../ltdl.h ../param_names.h soundmod.h soundosx.h
-soundwin.lo: soundwin.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
- ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
- ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../ltdl.h ../param_names.h soundmod.h soundwin.h
 speaker.lo: speaker.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
