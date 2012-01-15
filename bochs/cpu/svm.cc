@@ -310,6 +310,8 @@ void BX_CPU_C::SvmExitSaveGuestState(void)
   vmcb_write8(SVM_CONTROL_VIRQ, ctrls->v_irq);
 }
 
+extern bx_bool isValidMSR_PAT(Bit64u pat_msr);
+
 bx_bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
 {
   ctrls->cr_rd_ctrl = vmcb_read16(SVM_CONTROL16_INTERCEPT_CR_READ);
@@ -357,7 +359,34 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
   ctrls->v_intr_prio = vintr_control & 0xf;
   ctrls->v_ignore_tpr = (vintr_control >> 4) & 0x1;
 
-  if (vmcb_read8(SVM_CONTROL_NESTED_PAGING_ENABLE)) {
+  ctrls->nested_paging = vmcb_read8(SVM_CONTROL_NESTED_PAGING_ENABLE);
+  if (! BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_NESTED_PAGING)) {
+     if (ctrls->nested_paging) {
+        BX_ERROR(("VMRUN: Nesting paging is not supported in this SVM configuration !"));
+        ctrls->nested_paging = 0;
+     }
+  }
+
+  if (ctrls->nested_paging) {
+    if (! BX_CPU_THIS_PTR cr0.get_PG()) {
+      BX_ERROR(("VMRUN: attempt to enter nested paging mode when host paging is disabled !"));
+      return 0;
+    }
+
+    Bit64u guest_pat = vmcb_read32(SVM_GUEST_PAT);
+    if (! isValidMSR_PAT(guest_pat)) {
+      BX_ERROR(("VMRUN: invalid memory type in guest PAT_MSR !"));
+      return 0;
+    }
+
+    ctrls->ncr3 = vmcb_read64(SVM_CONTROL64_NESTED_PAGING_HOST_CR3);
+    if (long_mode()) {
+      if (! IsValidPhyAddr(ctrls->ncr3)) {
+        BX_ERROR(("VMRUN(): NCR3 reserved bits set !"));
+        return 0;
+      }
+    }
+
     BX_PANIC(("VMRUN: Nested Paging support is not implemented yet !"));
   }
 
@@ -549,6 +578,8 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
 #if BX_SUPPORT_AVX
   handleAvxModeChange();
 #endif
+
+  if (SVM_NESTED_PAGING_ENABLED) BX_CPU_THIS_PTR PDPTR_CACHE.valid = 0;
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
 
@@ -1160,7 +1191,7 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   // VMCB Control Fields
   //
 
-  bx_list_c *vmcb_ctrls = new bx_list_c(svm, "VMCB_CTRLS", 18);
+  bx_list_c *vmcb_ctrls = new bx_list_c(svm, "VMCB_CTRLS", 20);
 
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, cr_rd_ctrl, BX_CPU_THIS_PTR vmcb.ctrls.cr_rd_ctrl);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, cr_wr_ctrl, BX_CPU_THIS_PTR vmcb.ctrls.cr_wr_ctrl);
@@ -1181,6 +1212,8 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   BXRS_PARAM_BOOL(vmcb_ctrls, v_ignore_tpr, BX_CPU_THIS_PTR vmcb.ctrls.v_ignore_tpr);
   BXRS_PARAM_BOOL(vmcb_ctrls, v_intr_masking, BX_CPU_THIS_PTR vmcb.ctrls.v_intr_masking);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, v_intr_vector, BX_CPU_THIS_PTR vmcb.ctrls.v_intr_vector);
+  BXRS_PARAM_BOOL(vmcb_ctrls, nested_paging, BX_CPU_THIS_PTR vmcb.ctrls.nested_paging);
+  BXRS_HEX_PARAM_FIELD(vmcb_ctrls, ncr3, BX_CPU_THIS_PTR vmcb.ctrls.ncr3);
 
   //
   // VMCB Host State

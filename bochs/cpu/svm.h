@@ -295,6 +295,9 @@ typedef struct bx_SVM_CONTROLS
   bx_bool v_intr_masking;
   Bit8u v_intr_vector;
 
+  bx_bool nested_paging;
+  Bit64u ncr3;
+
 } SVM_CONTROLS;
 
 #if defined(NEED_CPU_REG_SHORTCUTS)
@@ -385,6 +388,8 @@ typedef struct bx_VMCB_CACHE
 
 #define SVM_DR_WRITE_INTERCEPTED(reg_num) \
   (BX_CPU_THIS_PTR vmcb.ctrls.dr_wr_ctrl & (1<<(reg_num)))
+
+#define SVM_NESTED_PAGING_ENABLED (BX_CPU_THIS_PTR vmcb.ctrls.nested_paging)
 
 #endif // BX_SUPPORT_SVM
 
