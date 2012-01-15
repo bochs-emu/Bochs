@@ -18,8 +18,8 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-#ifndef _BX_PIT_WRAP_H
-#define _BX_PIT_WRAP_H
+#ifndef _BX_PIT_H
+#define _BX_PIT_H
 
 #include "bochs.h"
 #include "pit82c54.h"
@@ -68,4 +68,4 @@ private:
   BX_PIT_SMF Bit16u get_timer(int Timer);
 };
 
-#endif  // #ifndef _BX_PIT_WRAP_H
+#endif  // #ifndef _BX_PIT_H

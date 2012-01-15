@@ -64,7 +64,7 @@ OBJS_THAT_CANNOT_BE_PLUGINS = \
 
 OBJS_THAT_CAN_BE_PLUGINS = \
   pic.o \
-  pit_wrap.o \
+  pit.o \
   serial.o \
   parallel.o \
   floppy.o \
@@ -130,8 +130,8 @@ libbx_hdimage.la: hdimage.lo vmware3.lo vmware4.lo vvfat.lo $(CDROM_OBJS:.o=.lo)
 libbx_keyboard.la: keyboard.lo scancodes.lo
 	$(LIBTOOL) --mode=link $(CXX) -module keyboard.lo scancodes.lo -o libbx_keyboard.la -rpath $(PLUGIN_PATH)
 
-libbx_pit_wrap.la: pit82c54.lo pit_wrap.lo
-	$(LIBTOOL) --mode=link $(CXX) -module pit82c54.lo pit_wrap.lo -o libbx_pit.la -rpath $(PLUGIN_PATH)
+libbx_pit.la: pit82c54.lo pit.lo
+	$(LIBTOOL) --mode=link $(CXX) -module pit82c54.lo pit.lo -o libbx_pit.la -rpath $(PLUGIN_PATH)
 
 libbx_serial.la: serial.lo serial_raw.lo
 	$(LIBTOOL) --mode=link $(CXX) -module serial.lo serial_raw.lo -o libbx_serial.la -rpath $(PLUGIN_PATH)
@@ -150,8 +150,8 @@ bx_hdimage.dll: hdimage.o vmware3.o vmware4.o vvfat.o $(CDROM_OBJS)
 bx_keyboard.dll: keyboard.o scancodes.o
 	$(CXX) $(CXXFLAGS) -shared -o bx_keyboard.dll keyboard.o scancodes.o $(WIN32_DLL_IMPORT_LIBRARY)
 
-bx_pit_wrap.dll: pit82c54.o pit_wrap.o
-	$(CXX) $(CXXFLAGS) -shared -o bx_pit.dll pit82c54.o pit_wrap.o $(WIN32_DLL_IMPORT_LIBRARY)
+bx_pit.dll: pit82c54.o pit.o
+	$(CXX) $(CXXFLAGS) -shared -o bx_pit.dll pit82c54.o pit.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_gameport.dll: gameport.o
 	$(CXX) $(CXXFLAGS) -shared -o bx_gameport.dll gameport.o $(WIN32_DLL_IMPORT_LIBRARY) -lwinmm
@@ -311,11 +311,11 @@ pit82c54.o: pit82c54.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
  ../ltdl.h ../param_names.h pit82c54.h
-pit_wrap.o: pit_wrap.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+pit.o: pit.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../ltdl.h ../param_names.h pit_wrap.h pit82c54.h virt_timer.h speaker.h
+ ../ltdl.h ../param_names.h pit.h pit82c54.h virt_timer.h speaker.h
 scancodes.o: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
@@ -506,11 +506,11 @@ pit82c54.lo: pit82c54.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
  ../ltdl.h ../param_names.h pit82c54.h
-pit_wrap.lo: pit_wrap.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+pit.lo: pit.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../ltdl.h ../param_names.h pit_wrap.h pit82c54.h virt_timer.h speaker.h
+ ../ltdl.h ../param_names.h pit.h pit82c54.h virt_timer.h speaker.h
 scancodes.lo: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \

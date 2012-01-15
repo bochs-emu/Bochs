@@ -24,7 +24,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
-#include "pit_wrap.h"
+#include "pit.h"
 #include "virt_timer.h"
 #include "speaker.h"
 
@@ -115,7 +115,7 @@ void bx_pit_c::init(void)
   Bit64u my_time_usec = bx_virt_timer.time_usec();
 
   if (BX_PIT_THIS s.timer_handle[0] == BX_NULL_TIMER_HANDLE) {
-    BX_PIT_THIS s.timer_handle[0] = bx_virt_timer.register_timer(this, timer_handler, (unsigned) 100 , 1, 1, "pit_wrap");
+    BX_PIT_THIS s.timer_handle[0] = bx_virt_timer.register_timer(this, timer_handler, (unsigned) 100 , 1, 1, "pit");
   }
   BX_DEBUG(("RESETting timer."));
   bx_virt_timer.deactivate_timer(BX_PIT_THIS s.timer_handle[0]);

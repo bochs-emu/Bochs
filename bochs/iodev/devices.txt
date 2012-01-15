@@ -19,7 +19,7 @@ MOTHER BOARD (i440FX Support)                                   devices.cc
   |        |
   |        +---- 8259A PIC                                      pic.cc
   |        +---- 82093AA I/O APIC                               ioapic.cc
-  |        +---- 8254/82C54 Programmable Interval Timer         pit_wrap.cc, pit82c54.cc
+  |        +---- 8254/82C54 Programmable Interval Timer         pit.cc, pit82c54.cc
   |        |             |
   |        |             +---- PC Speaker (lowlevel)            speaker.cc
   |        |
@@ -56,7 +56,13 @@ Attached devices
   |                                   +---- Windows             cdrom_win32.cc
   |                                   +---- Mac OSX             cdrom_osx.cc
   |                                   +---- Linux and others    cdrom_misc.cc
-  +---- Network Support
+  |
+  +---- Graphics
+  |        |
+  |        +---- VGA, PCI VGA adapter                           vga.cc, pci_vga.cc
+  |        +---- Cirrus Logic PCI/ISA CLGD5446 SVGA adapter     svga_cirrus.cc
+  |
+  +---- Network support                                         network/
   |        |
   |        +---- Network Devices
   |        |             |
@@ -75,12 +81,7 @@ Attached devices
   |                      +---- virtual Ethernet locator         eth_vnet.cc
   |                      +---- backend for Slirp                eth_slirp.cc
   |
-  +---- Graphics
-  |        |
-  |        +---- VGA, PCI VGA adapter                           vga.cc, pci_vga.cc
-  |        +---- Cirrus Logic PCI/ISA CLGD5446 SVGA adapter     svga_cirrus.cc
-  |
-  +---- Sound support
+  +---- Sound support                                           sound/
   |        |
   |        +---- Sound devices
   |        |             |
@@ -92,7 +93,7 @@ Attached devices
   |                      +---- Dummy / Control Module           soundmod.cc
   |                      +---- Host specific Modules            soundlnx.cc, soundosx.cc, soundwin.cc
   |
-  +---- PCI USB adapter                                         usb_common.cc
+  +---- USB support                                             usb/
            |
            +---- Host Controllers
            |             |
@@ -109,7 +110,7 @@ Attached devices
                          +---- USB mass storage device (*)      usb_msd.cc, scsi_device.cc
                          +---- USB HP DeskJet 920C printer      usb_printer.cc
 
-(*) USB MSD uses hdimage code and cdrom.cc for image / device access
+(*) USB MSD uses hdimage / cdrom code for image / device access
     Floppy uses hdimage code for VVFAT support
 
 BOCHS timer sycronisation modules
