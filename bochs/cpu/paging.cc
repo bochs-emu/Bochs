@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -377,6 +377,7 @@ void BX_CPU_C::TLB_flush(void)
 
   for (unsigned n=0; n<BX_TLB_SIZE; n++) {
     BX_CPU_THIS_PTR TLB.entry[n].lpf = BX_INVALID_TLB_ENTRY;
+    BX_CPU_THIS_PTR TLB.entry[n].accessBits = 0;
   }
 
 #if BX_CPU_LEVEL >= 5
@@ -406,6 +407,7 @@ void BX_CPU_C::TLB_flushNonGlobal(void)
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[n];
     if (!(tlbEntry->accessBits & TLB_GlobalPage)) {
       tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
+      tlbEntry->accessBits = 0;
     }
     else {
       lpf_mask |= tlbEntry->lpf_mask;
@@ -430,16 +432,18 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
   BX_DEBUG(("TLB_invlpg(0x"FMT_ADDRX"): invalidate TLB entry", laddr));
 
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR TLB.split_large = 0;
-  Bit32u lpf_mask = 0;
+  if (BX_CPU_THIS_PTR TLB.split_large)
+  {
+    Bit32u lpf_mask = 0;
+    BX_CPU_THIS_PTR TLB.split_large = 0;
 
-  if (BX_CPU_THIS_PTR TLB.split_large) {
     // make sure INVLPG handles correctly large pages
     for (unsigned n=0; n<BX_TLB_SIZE; n++) {
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[n];
       bx_address entry_lpf_mask = tlbEntry->lpf_mask;
       if ((laddr & ~entry_lpf_mask) == (tlbEntry->lpf & ~entry_lpf_mask)) {
         tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
+        tlbEntry->accessBits = 0;
       }
       else {
         lpf_mask |= entry_lpf_mask;
@@ -457,6 +461,7 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
     if (TLB_LPFOf(tlbEntry->lpf) == lpf) {
       tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
+      tlbEntry->accessBits = 0;
     }
   }
 
@@ -553,41 +558,6 @@ static const char *bx_paging_level[4] = { "PTE", "PDE", "PDPE", "PML4" }; // kee
 
 #if BX_CPU_LEVEL >= 6
 
-int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsigned rw, bx_bool *nx_fault)
-{
-  if (!(entry & 0x1)) {
-    BX_DEBUG(("%s: entry not present", s));
-    return ERROR_NOT_PRESENT;
-  }
-
-  if (entry & reserved) {
-    BX_DEBUG(("%s: reserved bit is set %08x:%08x", s, GET32H(entry), GET32L(entry)));
-    return ERROR_RESERVED | ERROR_PROTECTION;
-  }
-
-#if BX_SUPPORT_X86_64
-  if (! long_mode()) {
-    if (entry & BX_CONST64(0x7ff0000000000000)) {
-      BX_DEBUG(("%s: reserved bit is set %08x:%08x", s, GET32H(entry), GET32L(entry)));
-      return ERROR_RESERVED | ERROR_PROTECTION;
-    }
-  }
-#endif
-
-  if (entry & PAGE_DIRECTORY_NX_BIT) {
-    if (! BX_CPU_THIS_PTR efer.get_NXE()) {
-      BX_DEBUG(("%s: NX bit set when EFER.NXE is disabled", s));
-      return ERROR_RESERVED | ERROR_PROTECTION;
-    }
-    if (rw == BX_EXECUTE) {
-      BX_DEBUG(("%s: non-executable page fault occured", s));
-      *nx_fault = 1;
-    }
-  }
-
-  return -1;
-}
-
 //                Format of a Long Mode Non-Leaf Entry
 // -----------------------------------------------------------
 // 00    | Present (P)
@@ -671,6 +641,41 @@ int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsi
 // 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
 // -----------------------------------------------------------
 
+int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, unsigned rw, bx_bool *nx_fault)
+{
+  if (!(entry & 0x1)) {
+    BX_DEBUG(("%s: entry not present", s));
+    return ERROR_NOT_PRESENT;
+  }
+
+  if (entry & PAGING_PAE_RESERVED_BITS) {
+    BX_DEBUG(("%s: reserved bit is set %08x:%08x", s, GET32H(entry), GET32L(entry)));
+    return ERROR_RESERVED | ERROR_PROTECTION;
+  }
+
+#if BX_SUPPORT_X86_64
+  if (! long_mode()) {
+    if (entry & BX_CONST64(0x7ff0000000000000)) {
+      BX_DEBUG(("%s: reserved bit is set %08x:%08x", s, GET32H(entry), GET32L(entry)));
+      return ERROR_RESERVED | ERROR_PROTECTION;
+    }
+  }
+#endif
+
+  if (entry & PAGE_DIRECTORY_NX_BIT) {
+    if (! BX_CPU_THIS_PTR efer.get_NXE()) {
+      BX_DEBUG(("%s: NX bit set when EFER.NXE is disabled", s));
+      return ERROR_RESERVED | ERROR_PROTECTION;
+    }
+    if (rw == BX_EXECUTE) {
+      BX_DEBUG(("%s: non-executable page fault occured", s));
+      *nx_fault = 1;
+    }
+  }
+
+  return -1;
+}
+
 #if BX_SUPPORT_X86_64
 
 // Translate a linear address to a physical address in long mode
@@ -695,11 +700,11 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
     BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, (BX_PTE_ACCESS + (leaf<<4)) | BX_READ, (Bit8u*)(&entry[leaf]));
 
     Bit64u curr_entry = entry[leaf];
-    int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, PAGING_PAE_RESERVED_BITS, rw, &nx_fault);
+    int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, rw, &nx_fault);
     if (fault >= 0)
       page_fault(fault, laddr, user, rw);
 
-    combined_access &= curr_entry & 0x06; // U/S and R/W
+    combined_access &= curr_entry; // U/S and R/W
     ppf = curr_entry & BX_CONST64(0x000ffffffffff000);
 
     if (leaf == BX_LEVEL_PTE) break;
@@ -802,7 +807,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
 #endif
 
   Bit64u pdptr[4];
-  int n;
+  unsigned n;
 
   for (n=0; n<4; n++) {
     // read and check PDPTE entries
@@ -828,7 +833,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
 #if BX_SUPPORT_VMX >= 2
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(Bit64u *pdptr)
 {
-  for (int n=0; n<4; n++) {
+  for (unsigned n=0; n<4; n++) {
      if (pdptr[n] & 0x1) {
         if (pdptr[n] & PAGING_PAE_PDPTE_RESERVED_BITS) return 0;
      }
@@ -863,12 +868,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
       exception(BX_GP_EXCEPTION, 0);
     }
   }
-
   entry[BX_LEVEL_PDPTE] = BX_CPU_THIS_PTR PDPTR_CACHE.entry[(laddr >> 30) & 3];
-
-  int fault = check_entry_PAE("PDPE", entry[BX_LEVEL_PDPTE], PAGING_PAE_PDPTE_RESERVED_BITS, rw, &nx_fault);
-  if (fault >= 0)
-    page_fault(fault, laddr, user, rw);
 
   entry_addr[BX_LEVEL_PDE] = (bx_phy_address)((entry[BX_LEVEL_PDPTE] & BX_CONST64(0x000ffffffffff000))
                          | ((laddr & 0x3fe00000) >> 18));
@@ -881,11 +881,11 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
   access_read_physical(entry_addr[BX_LEVEL_PDE], 8, &entry[BX_LEVEL_PDE]);
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[BX_LEVEL_PDE], 8, BX_PDE_ACCESS | BX_READ, (Bit8u*)(&entry[BX_LEVEL_PDE]));
 
-  fault = check_entry_PAE("PDE", entry[BX_LEVEL_PDE], PAGING_PAE_RESERVED_BITS, rw, &nx_fault);
+  int fault = check_entry_PAE("PDE", entry[BX_LEVEL_PDE], rw, &nx_fault);
   if (fault >= 0)
     page_fault(fault, laddr, user, rw);
 
-  combined_access &= entry[BX_LEVEL_PDE] & 0x06; // U/S and R/W
+  combined_access &= entry[BX_LEVEL_PDE]; // U/S and R/W
 
   // Ignore CR4.PSE in PAE mode
   if (entry[BX_LEVEL_PDE] & 0x80) {
@@ -911,11 +911,11 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
     access_read_physical(entry_addr[BX_LEVEL_PTE], 8, &entry[BX_LEVEL_PTE]);
     BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[BX_LEVEL_PTE], 8, BX_PTE_ACCESS | BX_READ, (Bit8u*)(&entry[BX_LEVEL_PTE]));
 
-    fault = check_entry_PAE("PTE", entry[BX_LEVEL_PTE], PAGING_PAE_RESERVED_BITS, rw, &nx_fault);
+    fault = check_entry_PAE("PTE", entry[BX_LEVEL_PTE], rw, &nx_fault);
     if (fault >= 0)
       page_fault(fault, laddr, user, rw);
 
-    combined_access &= entry[BX_LEVEL_PTE] & 0x06; // U/S and R/W
+    combined_access &= entry[BX_LEVEL_PTE]; // U/S and R/W
 
     // Make up the physical page frame address.
     ppf = (bx_phy_address)(entry[BX_LEVEL_PTE] & BX_CONST64(0x000ffffffffff000));
