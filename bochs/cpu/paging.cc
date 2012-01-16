@@ -869,6 +869,10 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
     }
   }
   entry[BX_LEVEL_PDPTE] = BX_CPU_THIS_PTR PDPTR_CACHE.entry[(laddr >> 30) & 3];
+  if (! (entry[BX_LEVEL_PDPTE] & 0x1)) {
+    BX_DEBUG(("PAE PDPTE entry not present !"));
+    page_fault(ERROR_NOT_PRESENT, laddr, user, rw);
+  }
 
   entry_addr[BX_LEVEL_PDE] = (bx_phy_address)((entry[BX_LEVEL_PDPTE] & BX_CONST64(0x000ffffffffff000))
                          | ((laddr & 0x3fe00000) >> 18));
@@ -988,7 +992,7 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
 {
   bx_phy_address entry_addr[2], ppf;
   Bit32u entry[2], cr3_masked = (Bit32u) BX_CPU_THIS_PTR cr3 & BX_CR3_PAGING_MASK;
-  unsigned priv_index, leaf = BX_LEVEL_PTE;
+  unsigned leaf = BX_LEVEL_PTE;
   bx_bool isWrite = (rw & 1); // write or r-m-w
 
   entry_addr[BX_LEVEL_PDE] = (bx_phy_address) (cr3_masked | ((laddr & 0xffc00000) >> 20));
@@ -1058,7 +1062,7 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
     ppf = entry[BX_LEVEL_PTE] & 0xfffff000;
   }
 
-  priv_index =
+  unsigned priv_index =
 #if BX_CPU_LEVEL >= 4
       (BX_CPU_THIS_PTR cr0.get_WP() << 4) |   // bit 4
 #endif
