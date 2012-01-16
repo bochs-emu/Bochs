@@ -491,6 +491,8 @@ void HandleRfbClient(SOCKET sClient)
       if(n == 0) {
         BX_ERROR(("client closed connection."));
       } else {
+        if (errno == EINTR)
+          continue;
         BX_ERROR(("error receiving data."));
       }
       return;
