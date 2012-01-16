@@ -917,7 +917,7 @@ int vvfat_image_t::init_directories(const char* dirname)
   unsigned int i;
   unsigned int cluster;
   char size_txt[8];
-  Bit32u volume_sector_count = 0, tmpsc;
+  Bit64u volume_sector_count = 0, tmpsc;
 
   cluster_size   = sectors_per_cluster * 0x200;
   cluster_buffer = new Bit8u[cluster_size];
@@ -1294,7 +1294,7 @@ int vvfat_image_t::open(const char* dirname)
     sector_count = cylinders * heads * spt;
   }
 
-  hd_size = sector_count * 512;
+  hd_size = 512L * ((Bit64u)sector_count);
   if (sectors_per_cluster == 0) {
     size_in_mb = (Bit32u)(hd_size >> 20);
     if ((size_in_mb >= 2047) || (fat_type == 32)) {
