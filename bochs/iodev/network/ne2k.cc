@@ -74,7 +74,7 @@ void ne2k_init_options(void)
     0, 15,
     9);
   irq->set_options(irq->USE_SPIN_CONTROL);
-  bx_init_std_nic_options("NE2K", menu);
+  SIM->init_std_nic_options("NE2K", menu);
   enabled->set_dependent_list(menu->clone());
 
 }
@@ -106,7 +106,7 @@ Bit32s ne2k_options_parser(const char *context, int num_params, char *params[])
         SIM->get_param_num("irq", base)->set(atol(&params[i][4]));
         valid |= 0x02;
       } else {
-        ret = bx_parse_nic_params(context, params[i], base);
+        ret = SIM->parse_nic_params(context, params[i], base);
         if (ret > 0) {
           valid |= ret;
         }

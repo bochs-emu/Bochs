@@ -289,7 +289,7 @@ void e1000_init_options(void)
     "Enable Intel(R) Gigabit Ethernet emulation",
     "Enables the Intel(R) Gigabit Ethernet emulation",
     0);
-  bx_init_std_nic_options("Intel(R) Gigabit Ethernet", menu);
+  SIM->init_std_nic_options("Intel(R) Gigabit Ethernet", menu);
   enabled->set_dependent_list(menu->clone());
 }
 
@@ -303,7 +303,7 @@ Bit32s e1000_options_parser(const char *context, int num_params, char *params[])
       SIM->get_param_enum("ethmod", base)->set_by_name("null");
     }
     for (int i = 1; i < num_params; i++) {
-      ret = bx_parse_nic_params(context, params[i], base);
+      ret = SIM->parse_nic_params(context, params[i], base);
       if (ret > 0) {
         valid |= ret;
       }
@@ -327,7 +327,7 @@ Bit32s e1000_options_parser(const char *context, int num_params, char *params[])
 
 Bit32s e1000_options_save(FILE *fp)
 {
-  bx_write_pci_nic_options(fp, (bx_list_c*) SIM->get_param(BXPN_E1000));
+  SIM->write_pci_nic_options(fp, (bx_list_c*) SIM->get_param(BXPN_E1000));
   return 0;
 }
 

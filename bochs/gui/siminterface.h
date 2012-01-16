@@ -724,6 +724,14 @@ public:
   virtual bx_bool restore_hardware() {return 0;}
   virtual bx_list_c *get_bochs_root() {return NULL;}
   virtual bx_bool restore_bochs_param(bx_list_c *root, const char *sr_path, const char *restore_name) { return 0; }
+  // special config parameter and options functions for plugins
+  virtual void init_std_nic_options(const char *name, bx_list_c *menu) {}
+  virtual void init_usb_options(const char *usb_name, const char *pname, int maxports) {}
+  virtual int  parse_nic_params(const char *context, const char *param, bx_list_c *base) {return 0;}
+  virtual int  parse_usb_port_params(const char *context, bx_bool devopt,
+                                     const char *param, int maxports, bx_list_c *base) {return 0;}
+  virtual int  write_pci_nic_options(FILE *fp, bx_list_c *base) {return 0;}
+  virtual int  write_usb_options(FILE *fp, int maxports, bx_list_c *base) {return 0;}
 };
 
 BOCHSAPI extern bx_simulator_interface_c *SIM;

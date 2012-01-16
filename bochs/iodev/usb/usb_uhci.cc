@@ -54,11 +54,11 @@ Bit32s usb_uhci_options_parser(const char *context, int num_params, char *params
       if (!strncmp(params[i], "enabled=", 8)) {
         SIM->get_param_bool(BXPN_UHCI_ENABLED)->set(atol(&params[i][8]));
       } else if (!strncmp(params[i], "port", 4)) {
-        if (bx_parse_usb_port_params(context, 0, params[i], BX_N_USB_UHCI_PORTS, base) < 0) {
+        if (SIM->parse_usb_port_params(context, 0, params[i], BX_N_USB_UHCI_PORTS, base) < 0) {
           return -1;
         }
       } else if (!strncmp(params[i], "options", 7)) {
-        if (bx_parse_usb_port_params(context, 1, params[i], BX_N_USB_UHCI_PORTS, base) < 0) {
+        if (SIM->parse_usb_port_params(context, 1, params[i], BX_N_USB_UHCI_PORTS, base) < 0) {
           return -1;
         }
       } else {
@@ -74,7 +74,7 @@ Bit32s usb_uhci_options_parser(const char *context, int num_params, char *params
 Bit32s usb_uhci_options_save(FILE *fp)
 {
   bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_USB_UHCI);
-  bx_write_usb_options(fp, BX_N_USB_UHCI_PORTS, base);
+  SIM->write_usb_options(fp, BX_N_USB_UHCI_PORTS, base);
   return 0;
 }
 
@@ -85,7 +85,7 @@ int libusb_uhci_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, c
   theUSB_UHCI = new bx_usb_uhci_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUSB_UHCI, BX_PLUGIN_USB_UHCI);
   // add new configuration parameter for the config interface
-  bx_init_usb_options("UHCI", "uhci", BX_N_USB_UHCI_PORTS);
+  SIM->init_usb_options("UHCI", "uhci", BX_N_USB_UHCI_PORTS);
   // register add-on option for bochsrc and command line
   SIM->register_addon_option("usb_uhci", usb_uhci_options_parser, usb_uhci_options_save);
   return 0; // Success

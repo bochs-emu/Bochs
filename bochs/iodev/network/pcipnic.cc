@@ -51,7 +51,7 @@ void pnic_init_options(void)
     "Enable Pseudo NIC emulation",
     "Enables the Pseudo NIC emulation",
     0);
-  bx_init_std_nic_options("Pseudo NIC", menu);
+  SIM->init_std_nic_options("Pseudo NIC", menu);
   enabled->set_dependent_list(menu->clone());
 }
 
@@ -65,7 +65,7 @@ Bit32s pnic_options_parser(const char *context, int num_params, char *params[])
       SIM->get_param_enum("ethmod", base)->set_by_name("null");
     }
     for (int i = 1; i < num_params; i++) {
-      ret = bx_parse_nic_params(context, params[i], base);
+      ret = SIM->parse_nic_params(context, params[i], base);
       if (ret > 0) {
         valid |= ret;
       }
@@ -89,7 +89,7 @@ Bit32s pnic_options_parser(const char *context, int num_params, char *params[])
 
 Bit32s pnic_options_save(FILE *fp)
 {
-  bx_write_pci_nic_options(fp, (bx_list_c*) SIM->get_param(BXPN_PNIC));
+  SIM->write_pci_nic_options(fp, (bx_list_c*) SIM->get_param(BXPN_PNIC));
   return 0;
 }
 

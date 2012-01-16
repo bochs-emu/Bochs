@@ -188,6 +188,14 @@ public:
     return (bx_list_c*)get_param("bochs", NULL);
   }
   virtual bx_bool restore_bochs_param(bx_list_c *root, const char *sr_path, const char *restore_name);
+  // special config parameter and options functions for plugins
+  virtual void init_std_nic_options(const char *name, bx_list_c *menu);
+  virtual void init_usb_options(const char *usb_name, const char *pname, int maxports);
+  virtual int  parse_nic_params(const char *context, const char *param, bx_list_c *base);
+  virtual int  parse_usb_port_params(const char *context, bx_bool devopt,
+                                     const char *param, int maxports, bx_list_c *base);
+  virtual int  write_pci_nic_options(FILE *fp, bx_list_c *base);
+  virtual int  write_usb_options(FILE *fp, int maxports, bx_list_c *base);
 
 private:
   bx_bool save_sr_param(FILE *fp, bx_param_c *node, const char *sr_path, int level);
@@ -1363,4 +1371,35 @@ bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_
   }
 
   return 1;
+}
+
+void bx_real_sim_c::init_std_nic_options(const char *name, bx_list_c *menu)
+{
+  bx_init_std_nic_options(name, menu);
+}
+
+void bx_real_sim_c::init_usb_options(const char *usb_name, const char *pname, int maxports)
+{
+  bx_init_usb_options(usb_name, pname, maxports);
+}
+
+int bx_real_sim_c::parse_nic_params(const char *context, const char *param, bx_list_c *base)
+{
+  return bx_parse_nic_params(context, param, base);
+}
+
+int bx_real_sim_c::parse_usb_port_params(const char *context, bx_bool devopt,
+                                     const char *param, int maxports, bx_list_c *base)
+{
+  return bx_parse_usb_port_params(context, devopt, param, maxports, base);
+}
+
+int bx_real_sim_c::write_pci_nic_options(FILE *fp, bx_list_c *base)
+{
+  return bx_write_pci_nic_options(fp, base);
+}
+
+int bx_real_sim_c::write_usb_options(FILE *fp, int maxports, bx_list_c *base)
+{
+  return bx_write_usb_options(fp, maxports, base);
 }
