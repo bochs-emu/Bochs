@@ -71,7 +71,7 @@ Bit16u BX_CPP_AttrRegparmN(1) BX_CPU_C::VMread16(unsigned encoding)
     access_read_physical(pAddr, 2, (Bit8u*)(&field));
   }
 
-  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 2, BX_VMCS_ACCESS | BX_READ, (Bit8u*)(&field));
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 2, BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&field));
 
   return field;
 }
@@ -95,7 +95,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMwrite16(unsigned encoding, Bit16u val_16
     access_write_physical(pAddr, 2, (Bit8u*)(&val_16));
   }
 
-  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 2, BX_VMCS_ACCESS | BX_WRITE, (Bit8u*)(&val_16));
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 2, BX_WRITE, BX_VMCS_ACCESS, (Bit8u*)(&val_16));
 }
 
 Bit32u BX_CPP_AttrRegparmN(1) BX_CPU_C::VMread32(unsigned encoding)
@@ -115,7 +115,7 @@ Bit32u BX_CPP_AttrRegparmN(1) BX_CPU_C::VMread32(unsigned encoding)
     access_read_physical(pAddr, 4, (Bit8u*)(&field));
   }
 
-  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_VMCS_ACCESS | BX_READ, (Bit8u*)(&field));
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&field));
 
   return field;
 }
@@ -137,7 +137,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMwrite32(unsigned encoding, Bit32u val_32
     access_write_physical(pAddr, 4, (Bit8u*)(&val_32));
   }
 
-  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_VMCS_ACCESS | BX_WRITE, (Bit8u*)(&val_32));
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_WRITE, BX_VMCS_ACCESS, (Bit8u*)(&val_32));
 }
 
 Bit64u BX_CPP_AttrRegparmN(1) BX_CPU_C::VMread64(unsigned encoding)
@@ -159,7 +159,7 @@ Bit64u BX_CPP_AttrRegparmN(1) BX_CPU_C::VMread64(unsigned encoding)
     access_read_physical(pAddr, 8, (Bit8u*)(&field));
   }
 
-  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 8, BX_VMCS_ACCESS | BX_READ, (Bit8u*)(&field));
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 8, BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&field));
 
   return field;
 }
@@ -183,7 +183,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMwrite64(unsigned encoding, Bit64u val_64
     access_write_physical(pAddr, 8, (Bit8u*)(&val_64));
   }
 
-  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 8, BX_VMCS_ACCESS | BX_WRITE, (Bit8u*)(&val_64));
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 8, BX_WRITE, BX_VMCS_ACCESS, (Bit8u*)(&val_64));
 }
 
 #if BX_SUPPORT_X86_64
@@ -238,7 +238,7 @@ void BX_CPU_C::VMabort(VMX_vmabort_code error_code)
   Bit32u abort = error_code;
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcsptr + VMCS_VMX_ABORT_FIELD_ADDR;
   access_write_physical(pAddr, 4, &abort);
-  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_VMCS_ACCESS | BX_WRITE, (Bit8u*)(&abort));
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_WRITE, BX_VMCS_ACCESS, (Bit8u*)(&abort));
 
 #if BX_SUPPORT_VMX >= 2
   // Deactivate VMX preemtion timer
@@ -253,7 +253,7 @@ unsigned BX_CPU_C::VMXReadRevisionID(bx_phy_address pAddr)
   Bit32u revision;
   access_read_physical(pAddr + VMCS_REVISION_ID_FIELD_ADDR, 4, &revision);
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr + VMCS_REVISION_ID_FIELD_ADDR, 4,
-          BX_VMCS_ACCESS | BX_READ, (Bit8u*)(&revision));
+          BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&revision));
 
   return revision;
 }
@@ -1703,9 +1703,9 @@ Bit32u BX_CPU_C::LoadMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
 
   for (Bit32u msr = 1; msr <= msr_cnt; msr++) {
     access_read_physical(pAddr,     8, &msr_lo);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 8, BX_VMX_LOAD_MSR_ACCESS | BX_READ, (Bit8u*)(&msr_lo));
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 8, BX_READ, BX_VMX_LOAD_MSR_ACCESS, (Bit8u*)(&msr_lo));
     access_read_physical(pAddr + 8, 8, &msr_hi);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr + 8, 8, BX_VMX_LOAD_MSR_ACCESS | BX_READ, (Bit8u*)(&msr_hi));
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr + 8, 8, BX_READ, BX_VMX_LOAD_MSR_ACCESS, (Bit8u*)(&msr_hi));
 
     if (GET32H(msr_lo))
       return msr;
@@ -1737,7 +1737,7 @@ Bit32u BX_CPU_C::StoreMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
 
   for (Bit32u msr = 1; msr <= msr_cnt; msr++) {
     access_read_physical(pAddr, 8, &msr_lo);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 8, BX_VMX_STORE_MSR_ACCESS | BX_READ, (Bit8u*)(&msr_lo));
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 8, BX_READ, BX_VMX_STORE_MSR_ACCESS, (Bit8u*)(&msr_lo));
 
     if (GET32H(msr_lo))
       return msr;
@@ -1753,7 +1753,7 @@ Bit32u BX_CPU_C::StoreMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
       return msr;
 
     access_write_physical(pAddr + 8, 8, &msr_hi);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr + 8, 8, BX_VMX_STORE_MSR_ACCESS | BX_WRITE, (Bit8u*)(&msr_hi));
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr + 8, 8, BX_WRITE, BX_VMX_STORE_MSR_ACCESS, (Bit8u*)(&msr_hi));
 
     pAddr += 16; // to next MSR
   }
@@ -2316,7 +2316,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCALL(bxInstruction_c *i)
   Bit32u launch_state;
   access_read_physical(BX_CPU_THIS_PTR vmcsptr + VMCS_LAUNCH_STATE_FIELD_ADDR, 4, &launch_state);
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, BX_CPU_THIS_PTR vmcsptr + VMCS_LAUNCH_STATE_FIELD_ADDR, 4,
-        BX_VMCS_ACCESS | BX_READ, (Bit8u*)(&launch_state));
+        BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&launch_state));
 
   if (launch_state != VMCS_STATE_CLEAR) {
     BX_ERROR(("VMFAIL: VMCALL with launched VMCS"));
@@ -2393,7 +2393,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
   Bit32u launch_state;
   access_read_physical(BX_CPU_THIS_PTR vmcsptr + VMCS_LAUNCH_STATE_FIELD_ADDR, 4, &launch_state);
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, BX_CPU_THIS_PTR vmcsptr + VMCS_LAUNCH_STATE_FIELD_ADDR, 4,
-        BX_VMCS_ACCESS | BX_READ, (Bit8u*)(&launch_state));
+        BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&launch_state));
 
   if (vmlaunch) {
     if (launch_state != VMCS_STATE_CLEAR) {
@@ -2457,7 +2457,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
     launch_state = VMCS_STATE_LAUNCHED;
     bx_phy_address pAddr = BX_CPU_THIS_PTR vmcsptr + VMCS_LAUNCH_STATE_FIELD_ADDR;
     access_write_physical(pAddr, 4, &launch_state);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_VMCS_ACCESS | BX_WRITE, (Bit8u*)(&launch_state));
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_WRITE, BX_VMCS_ACCESS, (Bit8u*)(&launch_state));
   }
 
 /*
@@ -2839,7 +2839,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
     Bit32u launch_state = VMCS_STATE_CLEAR;
     access_write_physical(pAddr + VMCS_LAUNCH_STATE_FIELD_ADDR, 4, &launch_state);
     BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr + VMCS_LAUNCH_STATE_FIELD_ADDR, 4,
-            BX_VMCS_ACCESS | BX_WRITE, (Bit8u*)(&launch_state));
+            BX_WRITE, BX_VMCS_ACCESS, (Bit8u*)(&launch_state));
 
     if (pAddr == BX_CPU_THIS_PTR vmcsptr) {
         BX_CPU_THIS_PTR vmcsptr = BX_INVALID_VMCSPTR;

@@ -149,8 +149,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest)
-    VMexit_HLT(i);
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (VMEXIT(VMX_VM_EXEC_CTRL2_HLT_VMEXIT)) {
+      BX_ERROR(("VMEXIT: HLT"));
+      VMexit(i, VMX_VMEXIT_HLT, 0);
+    }
+  }
 #endif
 
 #if BX_SUPPORT_SVM
@@ -227,8 +231,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest)
-    VMexit_WBINVD(i);
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT)) {
+      BX_ERROR(("VMEXIT: WBINVD in VMX non-root operation"));
+      VMexit(i, VMX_VMEXIT_WBINVD, 0);
+    }
+  }
 #endif
 
 #if BX_SUPPORT_SVM
@@ -443,8 +451,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest) 
-    VMexit_RDPMC(i);
+  if (BX_CPU_THIS_PTR in_vmx_guest)  {
+    if (VMEXIT(VMX_VM_EXEC_CTRL2_RDPMC_VMEXIT)) {
+      BX_ERROR(("VMEXIT: RDPMC"));
+      VMexit(i, VMX_VMEXIT_RDPMC, 0);
+    }
+  }
 #endif
 
 #if BX_SUPPORT_SVM
@@ -514,8 +526,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest)
-    VMexit_RDTSC(i);
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (VMEXIT(VMX_VM_EXEC_CTRL2_RDTSC_VMEXIT)) {
+      BX_ERROR(("VMEXIT: RDTSC"));
+      VMexit(i, VMX_VMEXIT_RDTSC, 0);
+    }
+  }
 #endif
 
 #if BX_SUPPORT_SVM
@@ -555,8 +571,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest)
-    VMexit_RDTSC(i);
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (VMEXIT(VMX_VM_EXEC_CTRL2_RDTSC_VMEXIT)) {
+      BX_ERROR(("VMEXIT: RDTSCP"));
+      VMexit(i, VMX_VMEXIT_RDTSCP, 0);
+    }
+  }
 #endif
 
 #if BX_SUPPORT_SVM
@@ -615,8 +635,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
   BX_DEBUG(("MONITOR instruction executed EAX = 0x%08x", EAX));
 
 #if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest)
-    VMexit_MONITOR(i);
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (VMEXIT(VMX_VM_EXEC_CTRL2_MONITOR_VMEXIT)) {
+      BX_ERROR(("VMEXIT: MONITOR"));
+      VMexit(i, VMX_VMEXIT_MONITOR, 0);
+    }
+  }
 #endif
 
   if (RCX != 0) {
@@ -687,8 +711,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   BX_DEBUG(("MWAIT instruction executed ECX = 0x%08x", ECX));
 
 #if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest)
-    VMexit_MWAIT(i);
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (VMEXIT(VMX_VM_EXEC_CTRL2_MWAIT_VMEXIT)) {
+      BX_ERROR(("VMEXIT: MWAIT"));
+      VMexit(i, VMX_VMEXIT_MWAIT, BX_CPU_THIS_PTR monitor.armed);
+    }
+  }
 #endif
 
   // only one extension is supported

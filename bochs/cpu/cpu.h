@@ -307,6 +307,29 @@
 
 // <TAG-INSTRUMENTATION_COMMON-END>
 
+// passed to internal debugger together with BX_READ/BX_WRITE/BX_EXECUTE/BX_RW
+enum {
+  BX_PDPTR0_ACCESS = 1,
+  BX_PDPTR1_ACCESS,
+  BX_PDPTR2_ACCESS,
+  BX_PDPTR3_ACCESS,
+  BX_PTE_ACCESS,
+  BX_PDE_ACCESS,
+  BX_PDTE_ACCESS,
+  BX_PML4E_ACCESS,
+  BX_EPT_PTE_ACCESS,
+  BX_EPT_PDE_ACCESS,
+  BX_EPT_PDTE_ACCESS,
+  BX_EPT_PML4E_ACCESS,
+  BX_VMCS_ACCESS,
+  BX_MSR_BITMAP_ACCESS,
+  BX_IO_BITMAP_ACCESS,
+  BX_VMX_LOAD_MSR_ACCESS,
+  BX_VMX_STORE_MSR_ACCESS,
+  BX_VMX_VTPR_ACCESS,
+  BX_SMRAM_ACCESS
+};
+
 struct BxExceptionInfo {
   unsigned exception_type;
   unsigned exception_class;
@@ -4287,12 +4310,7 @@ public: // for now...
   BX_SMF void VMexit_TripleFault(void);
   BX_SMF void VMexit_ExtInterrupt(void);
   BX_SMF void VMexit_TaskSwitch(bxInstruction_c *i, Bit16u tss_selector, unsigned source) BX_CPP_AttrRegparmN(3);
-  BX_SMF void VMexit_HLT(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMexit_PAUSE(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VMexit_INVLPG(bxInstruction_c *i, bx_address laddr) BX_CPP_AttrRegparmN(2);
-  BX_SMF void VMexit_RDTSC(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VMexit_RDPMC(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VMexit_WBINVD(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_VMX >= 2
   BX_SMF void VMexit_PreemptionTimerExpired(void);  
 #endif
@@ -4307,10 +4325,6 @@ public: // for now...
   BX_SMF void VMexit_CR8_Read(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMexit_CR8_Write(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMexit_DR_Access(bxInstruction_c *i, unsigned read) BX_CPP_AttrRegparmN(2);
-#if BX_SUPPORT_MONITOR_MWAIT
-  BX_SMF void VMexit_MONITOR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VMexit_MWAIT(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
-#endif
 #if BX_SUPPORT_VMX >= 2
   BX_SMF void vmfunc_eptp_switching(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 #endif

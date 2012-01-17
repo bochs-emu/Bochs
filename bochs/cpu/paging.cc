@@ -482,8 +482,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
   bx_address laddr = get_laddr(i->seg(), eaddr);
 
 #if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest)
-    VMexit_INVLPG(i, laddr);
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (VMEXIT(VMX_VM_EXEC_CTRL2_INVLPG_VMEXIT)) {
+      BX_ERROR(("VMEXIT: INVLPG 0x" FMT_ADDRX, laddr));
+      VMexit(i, VMX_VMEXIT_INVLPG, laddr);
+    }
+  }
 #endif
 
 #if BX_SUPPORT_SVM
@@ -693,7 +697,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
     }
 #endif
     access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, (BX_PTE_ACCESS + (leaf<<4)) | BX_READ, (Bit8u*)(&entry[leaf]));
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     Bit64u curr_entry = entry[leaf];
     int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, rw, &nx_fault);
@@ -759,8 +763,8 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
     if (!(entry[level] & 0x20)) {
       entry[level] |= 0x20;
       access_write_physical(entry_addr[level], 8, &entry[level]);
-      BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[level], 8,
-            (BX_PTE_ACCESS + (level<<4)) | BX_WRITE, (Bit8u*)(&entry[level]));
+      BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[level], 8, BX_WRITE,
+            (BX_PTE_ACCESS + level), (Bit8u*)(&entry[level]));
     }
   }
 
@@ -768,8 +772,8 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
   if (!(entry[leaf] & 0x20) || (isWrite && !(entry[leaf] & 0x40))) {
     entry[leaf] |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
     access_write_physical(entry_addr[leaf], 8, &entry[leaf]);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, 
-            (BX_PTE_ACCESS + (leaf<<4)) | BX_WRITE, (Bit8u*)(&entry[leaf]));
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, BX_WRITE,
+            (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
   }
 
   return ppf;
@@ -809,8 +813,8 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
     // read and check PDPTE entries
     bx_phy_address pdpe_entry_addr = (bx_phy_address) (cr3_val | (n << 3));
     access_read_physical(pdpe_entry_addr, 8, &(pdptr[n]));
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pdpe_entry_addr, 8,
-              (BX_PDPTR0_ACCESS + (n<<4)) | BX_READ, (Bit8u*) &(pdptr[n]));
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pdpe_entry_addr, 8, BX_READ,
+              (BX_PDPTR0_ACCESS + n), (Bit8u*) &(pdptr[n]));
 
     if (pdptr[n] & 0x1) {
        if (pdptr[n] & PAGING_PAE_PDPTE_RESERVED_BITS) return 0;
@@ -875,7 +879,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
     }
 #endif
     access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, (BX_PTE_ACCESS + (leaf<<4)) | BX_READ, (Bit8u*)(&entry[leaf]));
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     Bit64u curr_entry = entry[leaf];
     int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, rw, &nx_fault);
@@ -923,8 +927,8 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
     if (!(entry[BX_LEVEL_PDE] & 0x20)) {
       entry[BX_LEVEL_PDE] |= 0x20;
       access_write_physical(entry_addr[BX_LEVEL_PDE], 8, &entry[BX_LEVEL_PDE]);
-      BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[BX_LEVEL_PDE], 8,
-             (BX_PDE_ACCESS | BX_WRITE), (Bit8u*)(&entry[BX_LEVEL_PDE]));
+      BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[BX_LEVEL_PDE], 8, BX_WRITE,
+             BX_PDE_ACCESS, (Bit8u*)(&entry[BX_LEVEL_PDE]));
     }
   }
 
@@ -932,8 +936,8 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
   if (!(entry[leaf] & 0x20) || (isWrite && !(entry[leaf] & 0x40))) {
     entry[leaf] |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
     access_write_physical(entry_addr[leaf], 8, &entry[leaf]);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8,
-             (BX_PTE_ACCESS + (leaf<<4)) | BX_WRITE, (Bit8u*)(&entry[leaf]));
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, BX_WRITE,
+             (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
   }
 
   return ppf;
@@ -979,7 +983,7 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
     }
 #endif
     access_read_physical(entry_addr[leaf], 4, &entry[leaf]);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 4, (BX_PTE_ACCESS + (leaf<<4)) | BX_READ, (Bit8u*)(&entry[leaf]));
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 4, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     Bit32u curr_entry = entry[leaf];
     if (!(curr_entry & 0x1)) {
@@ -1036,7 +1040,7 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
     if (!(entry[BX_LEVEL_PDE] & 0x20)) {
       entry[BX_LEVEL_PDE] |= 0x20;
       access_write_physical(entry_addr[BX_LEVEL_PDE], 4, &entry[BX_LEVEL_PDE]);
-      BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[BX_LEVEL_PDE], 4, BX_PDE_ACCESS | BX_WRITE, (Bit8u*)(&entry[BX_LEVEL_PDE]));
+      BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[BX_LEVEL_PDE], 4, BX_WRITE, BX_PDE_ACCESS, (Bit8u*)(&entry[BX_LEVEL_PDE]));
     }
   }
 
@@ -1044,8 +1048,8 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
   if (!(entry[leaf] & 0x20) || (isWrite && !(entry[leaf] & 0x40))) {
     entry[leaf] |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
     access_write_physical(entry_addr[leaf], 4, &entry[leaf]);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 4,
-             (BX_PTE_ACCESS + (leaf<<4)) | BX_WRITE, (Bit8u*)(&entry[leaf]));
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 4, BX_WRITE,
+             (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
   }
 
   return ppf;
@@ -1223,8 +1227,8 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
   for (leaf = BX_LEVEL_PML4;; --leaf) {
     entry_addr[leaf] = pbase + ((guest_paddr >> (9 + 9*leaf)) & 0xff8);
     access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8,
-          (BX_EPT_PTE_ACCESS + (leaf<<4)) | BX_READ, (Bit8u*)(&entry[leaf]));
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, BX_READ,
+          (BX_EPT_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     Bit64u curr_entry = entry[leaf];
     Bit32u curr_access_mask = curr_entry & 0x7;

@@ -140,16 +140,6 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_Instruction(bxInstruction_c *i, Bit
   VMexit(i, reason, qualification);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_HLT(bxInstruction_c *i)
-{
-  BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
-
-  if (VMEXIT(VMX_VM_EXEC_CTRL2_HLT_VMEXIT)) {
-    BX_ERROR(("VMEXIT: HLT"));
-    VMexit(i, VMX_VMEXIT_HLT, 0);
-  }
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_PAUSE(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
@@ -174,58 +164,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_PAUSE(bxInstruction_c *i)
   }
 #endif
 }
-
-void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_INVLPG(bxInstruction_c *i, bx_address laddr)
-{
-  BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
-
-  if (VMEXIT(VMX_VM_EXEC_CTRL2_INVLPG_VMEXIT)) {
-    BX_ERROR(("VMEXIT: INVLPG 0x" FMT_ADDRX, laddr));
-    VMexit(i, VMX_VMEXIT_INVLPG, laddr);
-  }
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_RDTSC(bxInstruction_c *i)
-{
-  BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
-
-  if (VMEXIT(VMX_VM_EXEC_CTRL2_RDTSC_VMEXIT)) {
-    BX_ERROR(("VMEXIT: RDTSC"));
-    VMexit(i, (i->getIaOpcode() == BX_IA_RDTSC) ? VMX_VMEXIT_RDTSC : VMX_VMEXIT_RDTSCP, 0);
-  }
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_RDPMC(bxInstruction_c *i)
-{
-  BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
-
-  if (VMEXIT(VMX_VM_EXEC_CTRL2_RDPMC_VMEXIT)) {
-    BX_ERROR(("VMEXIT: RDPMC"));
-    VMexit(i, VMX_VMEXIT_RDPMC, 0);
-  }
-}
-
-#if BX_SUPPORT_MONITOR_MWAIT
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_MONITOR(bxInstruction_c *i)
-{
-  BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
-
-  if (VMEXIT(VMX_VM_EXEC_CTRL2_MONITOR_VMEXIT)) {
-    BX_ERROR(("VMEXIT: MONITOR"));
-    VMexit(i, VMX_VMEXIT_MONITOR, 0);
-  }
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_MWAIT(bxInstruction_c *i)
-{
-  BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
-
-  if (VMEXIT(VMX_VM_EXEC_CTRL2_MWAIT_VMEXIT)) {
-    BX_ERROR(("VMEXIT: MWAIT"));
-    VMexit(i, VMX_VMEXIT_MWAIT, BX_CPU_THIS_PTR monitor.armed);
-  }
-}
-#endif
 
 void BX_CPU_C::VMexit_ExtInterrupt(void)
 {
@@ -384,7 +322,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_MSR(bxInstruction_c *i, unsigned op
          // check MSR-HI bitmaps
          bx_phy_address pAddr = vm->msr_bitmap_addr + (msr >> 3) + 1024 + ((op == VMX_VMEXIT_RDMSR) ? 0 : 2048);
          access_read_physical(pAddr, 1, &field);
-         BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_MSR_BITMAP_ACCESS | BX_READ, &field);
+         BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_READ, BX_MSR_BITMAP_ACCESS, &field);
          if (field & (1 << (msr & 7)))
             vmexit = 1;
        }
@@ -395,7 +333,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_MSR(bxInstruction_c *i, unsigned op
          // check MSR-LO bitmaps
          bx_phy_address pAddr = vm->msr_bitmap_addr + (msr >> 3) + ((op == VMX_VMEXIT_RDMSR) ? 0 : 2048);
          access_read_physical(pAddr, 1, &field);
-         BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_MSR_BITMAP_ACCESS | BX_READ, &field);
+         BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_READ, BX_MSR_BITMAP_ACCESS, &field);
          if (field & (1 << (msr & 7)))
             vmexit = 1;
        }
@@ -431,21 +369,21 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
           // special case - the IO access split cross both I/O bitmaps
           pAddr = BX_CPU_THIS_PTR vmcs.io_bitmap_addr[0] + 0xfff;
           access_read_physical(pAddr, 1, &bitmap[0]);
-          BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_IO_BITMAP_ACCESS | BX_READ, &bitmap[0]);
+          BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[0]);
 
           pAddr = BX_CPU_THIS_PTR vmcs.io_bitmap_addr[1];
           access_read_physical(pAddr, 1, &bitmap[1]);
-          BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_IO_BITMAP_ACCESS | BX_READ, &bitmap[1]);
+          BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[1]);
         }
         else {
           // access_read_physical cannot read 2 bytes cross 4K boundary :(
           pAddr = BX_CPU_THIS_PTR vmcs.io_bitmap_addr[(port >> 15) & 1] + ((port & 0x7fff) / 8);
           access_read_physical(pAddr, 1, &bitmap[0]);
-          BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_IO_BITMAP_ACCESS | BX_READ, &bitmap[0]);
+          BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[0]);
 
           pAddr++;
           access_read_physical(pAddr, 1, &bitmap[1]);
-          BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_IO_BITMAP_ACCESS | BX_READ, &bitmap[1]);
+          BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[1]);
         }
 
         Bit16u combined_bitmap = bitmap[1];
@@ -720,7 +658,7 @@ Bit32u BX_CPU_C::VMX_Read_VTPR(void)
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr + 0x80;
   Bit32u vtpr;
   access_read_physical(pAddr, 4, (Bit8u*)(&vtpr));
-  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_VMX_VTPR_ACCESS | BX_READ, (Bit8u*)(&vtpr));
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_READ, BX_VMX_VTPR_ACCESS, (Bit8u*)(&vtpr));
   return vtpr;
 }
 
@@ -731,7 +669,7 @@ void BX_CPU_C::VMX_Write_VTPR(Bit8u vtpr)
   Bit32u field32 = vtpr;
 
   access_write_physical(pAddr, 4, (Bit8u*)(&field32));
-  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_VMX_VTPR_ACCESS | BX_WRITE, (Bit8u*)(&field32));
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_WRITE, BX_VMX_VTPR_ACCESS, (Bit8u*)(&field32));
 
   Bit8u tpr_shadow = vtpr >> 4;
   if (tpr_shadow < vm->vm_tpr_threshold) {
@@ -799,16 +737,6 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
 }
 
 #endif
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_WBINVD(bxInstruction_c *i)
-{
-  BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
-
-  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT)) {
-    BX_ERROR(("VMEXIT: WBINVD in VMX non-root operation"));
-    VMexit(i, VMX_VMEXIT_WBINVD, 0);
-  }
-}
 
 #if BX_SUPPORT_VMX >= 2
 Bit16u BX_CPU_C::VMX_Get_Current_VPID(void)
