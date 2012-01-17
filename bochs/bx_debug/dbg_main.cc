@@ -620,14 +620,12 @@ void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, 
   dbg_printf("\n");
 }
 
-void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, unsigned rw, Bit8u *data)
+void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, unsigned rw, unsigned access, Bit8u *data)
 {
   bx_dbg_check_memory_watchpoints(cpu, phy, len, rw);
 
   if (! BX_CPU(cpu)->trace_mem)
     return;
-
-  unsigned access = rw >> 4;
 
   static const char *access_string[] = {
     "",
