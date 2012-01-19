@@ -44,6 +44,22 @@ class BX_CPU_C;
 
 #define BIOS_MAP_LAST128K(addr) (((addr) | 0xfff00000) & BIOS_MASK)
 
+enum memory_area_t {
+  BX_MEM_AREA_C0000 = 0,
+  BX_MEM_AREA_C4000,
+  BX_MEM_AREA_C8000,
+  BX_MEM_AREA_CC000,
+  BX_MEM_AREA_D0000,
+  BX_MEM_AREA_D4000,
+  BX_MEM_AREA_D8000,
+  BX_MEM_AREA_DC000,
+  BX_MEM_AREA_E0000,
+  BX_MEM_AREA_E4000,
+  BX_MEM_AREA_E8000,
+  BX_MEM_AREA_EC000,
+  BX_MEM_AREA_F0000
+};
+
 typedef bx_bool (*memory_handler_t)(bx_phy_address addr, unsigned len, void *data, void *param);
 // return a pointer to 4K region containing <addr> or NULL if direct access is not allowed
 // same format as getHostMemAddr method
@@ -77,6 +93,7 @@ private:
   Bit8u   *rom;      // 512k BIOS rom space + 128k expansion rom space
   Bit8u   *bogus;    // 4k for unexisting memory
   bx_bool rom_present[65];
+  bx_bool memory_type[13][2];
 
   Bit32u used_blocks;
 #if BX_LARGE_RAMFILE
@@ -98,6 +115,8 @@ public:
   BX_MEM_SMF void    enable_smram(bx_bool enable, bx_bool restricted);
   BX_MEM_SMF void    disable_smram(void);
   BX_MEM_SMF bx_bool is_smram_accessible(void);
+
+  BX_MEM_SMF void    set_memory_type(memory_area_t area, bx_bool rw, bx_bool dram);
 
   BX_MEM_SMF Bit8u*  getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw);
 

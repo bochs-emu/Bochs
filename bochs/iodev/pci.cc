@@ -91,8 +91,6 @@ void bx_pci_bridge_c::init(void)
 
   for (i=0x0CFC; i<=0x0CFF; i++) {
     DEV_register_ioread_handler(this, read_handler, i, "i440FX", 7);
-  }
-  for (i=0x0CFC; i<=0x0CFF; i++) {
     DEV_register_iowrite_handler(this, write_handler, i, "i440FX", 7);
   }
 
@@ -276,12 +274,14 @@ Bit32u bx_pci_bridge_c::pci_read_handler(Bit8u address, unsigned io_len)
 // pci configuration space write callback handler
 void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
-  Bit8u value8;
+  Bit8u value8, oldval;
+  unsigned area;
 
   if ((address >= 0x10) && (address < 0x34))
     return;
   for (unsigned i=0; i<io_len; i++) {
     value8 = (value >> (i*8)) & 0xFF;
+    oldval = BX_PCI_THIS pci_conf[address+i];
     switch (address+i) {
       case 0x04:
         BX_PCI_THIS pci_conf[address+i] = (value8 & 0x40) | 0x06;
@@ -296,9 +296,23 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
       case 0x5D:
       case 0x5E:
       case 0x5F:
-        BX_INFO(("440FX PMC write to PAM register %x (TLB Flush)", address+i));
-        BX_PCI_THIS pci_conf[address+i] = value8;
-        bx_pc_system.MemoryMappingChanged();
+        if (value != oldval) {
+          BX_PCI_THIS pci_conf[address+i] = value8;
+          if ((address+i) == 0x59) {
+            area = BX_MEM_AREA_F0000;
+            DEV_mem_set_memory_type(area, 0, (value >> 4) & 0x1);
+            DEV_mem_set_memory_type(area, 1, (value >> 5) & 0x1);
+          } else {
+            area = ((address+i) - 0x5a) << 1;
+            DEV_mem_set_memory_type(area, 0, (value >> 0) & 0x1);
+            DEV_mem_set_memory_type(area, 1, (value >> 1) & 0x1);
+            area++;
+            DEV_mem_set_memory_type(area, 0, (value >> 4) & 0x1);
+            DEV_mem_set_memory_type(area, 1, (value >> 5) & 0x1);
+          }
+          BX_INFO(("440FX PMC write to PAM register %x (TLB Flush)", address+i));
+          bx_pc_system.MemoryMappingChanged();
+        }
         break;
       case 0x72:
         smram_control(value);  // SMRAM conrol register
@@ -364,94 +378,6 @@ void bx_pci_bridge_c::smram_control(Bit8u value8)
 
   BX_INFO(("setting SMRAM control register to 0x%02x", value8));
   BX_PCI_THIS pci_conf[0x72] = value8;
-}
-
-Bit8u bx_pci_bridge_c::rd_memType(Bit32u addr)
-{
-   switch ((addr & 0xFC000) >> 12) {
-      case 0xC0:
-           return (BX_PCI_THIS pci_conf[0x5A] & 0x1);
-      case 0xC4:
-           return ((BX_PCI_THIS pci_conf[0x5A] >> 4) & 0x1);
-      case 0xC8:
-           return (BX_PCI_THIS pci_conf[0x5B] & 0x1);
-      case 0xCC:
-           return ((BX_PCI_THIS pci_conf[0x5B] >> 4) & 0x1);
-
-      case 0xD0:
-           return (BX_PCI_THIS pci_conf[0x5C] & 0x1);
-      case 0xD4:
-           return ((BX_PCI_THIS pci_conf[0x5C] >> 4) & 0x1);
-      case 0xD8:
-           return (BX_PCI_THIS pci_conf[0x5D] & 0x1);
-      case 0xDC:
-           return ((BX_PCI_THIS pci_conf[0x5D] >> 4) & 0x1);
-
-      case 0xE0:
-           return (BX_PCI_THIS pci_conf[0x5E] & 0x1);
-      case 0xE4:
-           return ((BX_PCI_THIS pci_conf[0x5E] >> 4) & 0x1);
-      case 0xE8:
-           return (BX_PCI_THIS pci_conf[0x5F] & 0x1);
-      case 0xEC:
-           return ((BX_PCI_THIS pci_conf[0x5F] >> 4) & 0x1);
-
-      case 0xF0:
-      case 0xF4:
-      case 0xF8:
-      case 0xFC:
-           return ((BX_PCI_THIS pci_conf[0x59] >> 4) & 0x1);
-
-      default:
-           BX_PANIC(("rd_memType () Error: Memory Type not known !"));
-           break;
-   }
-
-   return(0); // keep compiler happy
-}
-
-Bit8u bx_pci_bridge_c::wr_memType(Bit32u addr)
-{
-   switch ((addr & 0xFC000) >> 12) {
-      case 0xC0:
-           return ((BX_PCI_THIS pci_conf[0x5A] >> 1) & 0x1);
-      case 0xC4:
-           return ((BX_PCI_THIS pci_conf[0x5A] >> 5) & 0x1);
-      case 0xC8:
-           return ((BX_PCI_THIS pci_conf[0x5B] >> 1) & 0x1);
-      case 0xCC:
-           return ((BX_PCI_THIS pci_conf[0x5B] >> 5) & 0x1);
-
-      case 0xD0:
-           return ((BX_PCI_THIS pci_conf[0x5C] >> 1) & 0x1);
-      case 0xD4:
-           return ((BX_PCI_THIS pci_conf[0x5C] >> 5) & 0x1);
-      case 0xD8:
-           return ((BX_PCI_THIS pci_conf[0x5D] >> 1) & 0x1);
-      case 0xDC:
-           return ((BX_PCI_THIS pci_conf[0x5D] >> 5) & 0x1);
-
-      case 0xE0:
-           return ((BX_PCI_THIS pci_conf[0x5E] >> 1) & 0x1);
-      case 0xE4:
-           return ((BX_PCI_THIS pci_conf[0x5E] >> 5) & 0x1);
-      case 0xE8:
-           return ((BX_PCI_THIS pci_conf[0x5F] >> 1) & 0x1);
-      case 0xEC:
-           return ((BX_PCI_THIS pci_conf[0x5F] >> 5) & 0x1);
-
-      case 0xF0:
-      case 0xF4:
-      case 0xF8:
-      case 0xFC:
-           return ((BX_PCI_THIS pci_conf[0x59] >> 5) & 0x1);
-
-      default:
-           BX_PANIC(("wr_memType () Error: Memory Type not known !"));
-           break;
-   }
-
-   return(0); // keep compiler happy
 }
 
 void bx_pci_bridge_c::debug_dump()

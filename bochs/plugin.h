@@ -235,8 +235,6 @@ extern "C" {
   (bx_devices.pluginPciBridge->pci_set_base_mem(a,b,c,d,e,f))
 #define DEV_pci_set_base_io(a,b,c,d,e,f,g,h) \
   (bx_devices.pluginPciBridge->pci_set_base_io(a,b,c,d,e,f,g,h))
-#define DEV_pci_rd_memtype(addr) bx_devices.pluginPciBridge->rd_memType(addr)
-#define DEV_pci_wr_memtype(addr) bx_devices.pluginPciBridge->wr_memType(addr)
 #define DEV_pci_debug_dump() bx_devices.pluginPciBridge->debug_dump()
 #define DEV_ide_bmdma_present() bx_devices.pluginPciIdeController->bmdma_present()
 #define DEV_ide_bmdma_set_irq(a) bx_devices.pluginPciIdeController->bmdma_set_irq(a)
@@ -255,6 +253,8 @@ extern "C" {
     bx_devices.mem->registerMemoryHandlers(param,rh,wh,b,e)
 #define DEV_unregister_memory_handlers(param,b,e) \
     bx_devices.mem->unregisterMemoryHandlers(param,b,e)
+#define DEV_mem_set_memory_type(a,b,c) \
+    bx_devices.mem->set_memory_type((memory_area_t)a,b,c)
 
 ///////// USB device macros
 #define DEV_usb_init_device(a,b,c,d) (usbdev_type)bx_devices.pluginUsbDevCtl->init_device(a,b,(void**)c,d)

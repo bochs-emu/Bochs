@@ -295,9 +295,6 @@ public:
     STUBFUNC(pci, pci_set_base_io);
     return 0;
   }
-
-  virtual Bit8u rd_memType(Bit32u addr) { return 0; }
-  virtual Bit8u wr_memType(Bit32u addr) { return 0; }
 };
 
 class BOCHSAPI bx_pci2isa_stub_c : public bx_devmodel_c, public bx_pci_device_stub_c {

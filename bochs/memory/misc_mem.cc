@@ -38,15 +38,21 @@ Bit8u* const BX_MEM_C::swapped_out = ((Bit8u*)NULL - sizeof(Bit8u));
 
 BX_MEM_C::BX_MEM_C()
 {
-  put("MEM0");
+  int i;
+
+  put("memory", "MEM0");
 
   vector = NULL;
   actual_vector = NULL;
   blocks = NULL;
   len    = 0;
   used_blocks = 0;
-  for (int i = 0; i < 65; i++)
+  for (i = 0; i < 65; i++)
     rom_present[i] = 0;
+  for (i = 0; i <= BX_MEM_AREA_F0000; i++) {
+    memory_type[i][0] = 0;
+    memory_type[i][1] = 0;
+  }
 
   memory_handlers = NULL;
 
@@ -292,6 +298,8 @@ void memory_param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
 
 void BX_MEM_C::register_state()
 {
+  char param_name[15];
+
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "memory", "Memory State", 6);
   Bit32u num_blocks = BX_MEM_THIS len / BX_MEM_BLOCK_LEN;
 #if BX_LARGE_RAMFILE
@@ -306,11 +314,17 @@ void BX_MEM_C::register_state()
 
   bx_list_c *mapping = new bx_list_c(list, "mapping", num_blocks);
   for (Bit32u blk=0; blk < num_blocks; blk++) {
-    char param_name[15];
     sprintf(param_name, "blk%d", blk);
     bx_param_num_c *param = new bx_param_num_c(mapping, param_name, "", "", 0, BX_MAX_BIT32U, 0);
     param->set_base(BASE_DEC);
     param->set_sr_handlers(this, memory_param_save_handler, memory_param_restore_handler);
+  }
+  bx_list_c *memtype = new bx_list_c(list, "memtype", 26);
+  for (int i = 0; i <= BX_MEM_AREA_F0000; i++) {
+    sprintf(param_name, "%d_r", i);
+    new bx_shadow_bool_c(memtype, param_name, &BX_MEM_THIS memory_type[i][0]);
+    sprintf(param_name, "%d_w", i);
+    new bx_shadow_bool_c(memtype, param_name, &BX_MEM_THIS memory_type[i][1]);
   }
 }
 
@@ -545,23 +559,20 @@ bx_bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
         *buf = DEV_vga_mem_read(addr);
     }
 #if BX_SUPPORT_PCI
-    else if (BX_MEM_THIS pci_enabled && (addr >= 0x000c0000 && addr < 0x00100000))
-    {
-      switch (DEV_pci_rd_memtype ((Bit32u) addr)) {
-        case 0x0:  // Read from ROM
-          if ((addr & 0xfffe0000) == 0x000e0000) {
-            // last 128K of BIOS ROM mapped to 0xE0000-0xFFFFF
-            *buf = BX_MEM_THIS rom[BIOS_MAP_LAST128K(addr)];
-          }
-          else {
-            *buf = BX_MEM_THIS rom[(addr & EXROM_MASK) + BIOSROMSZ];
-          }
-          break;
-        case 0x1:  // Read from ShadowRAM
-          *buf = *(BX_MEM_THIS get_vector(addr));
-          break;
-        default:
-          BX_PANIC(("dbg_fetch_mem: default case"));
+    else if (BX_MEM_THIS pci_enabled && (addr >= 0x000c0000 && addr < 0x00100000)) {
+      unsigned area = (unsigned)(addr >> 14) & 0x0f;
+      if (area > BX_MEM_AREA_F0000) area = BX_MEM_AREA_F0000;
+      if (BX_MEM_THIS memory_type[area][0] == 0) {
+        // Read from ROM
+        if ((addr & 0xfffe0000) == 0x000e0000) {
+          // last 128K of BIOS ROM mapped to 0xE0000-0xFFFFF
+          *buf = BX_MEM_THIS rom[BIOS_MAP_LAST128K(addr)];
+        } else {
+          *buf = BX_MEM_THIS rom[(addr & EXROM_MASK) + BIOSROMSZ];
+        }
+      } else {
+        // Read from ShadowRAM
+        *buf = *(BX_MEM_THIS get_vector(addr));
       }
     }
 #endif  // #if BX_SUPPORT_PCI
@@ -616,16 +627,14 @@ bx_bool BX_MEM_C::dbg_set_mem(bx_phy_address addr, unsigned len, Bit8u *buf)
         DEV_vga_mem_write(addr, *buf);
     }
 #if BX_SUPPORT_PCI
-    else if (BX_MEM_THIS pci_enabled && (addr >= 0x000c0000 && addr < 0x00100000))
-    {
-      switch (DEV_pci_wr_memtype (addr)) {
-        case 0x0:  // Ignore write to ROM
-          break;
-        case 0x1:  // Write to ShadowRAM
-          *(BX_MEM_THIS get_vector(addr)) = *buf;
-          break;
-        default:
-          BX_PANIC(("dbg_fetch_mem: default case"));
+    else if (BX_MEM_THIS pci_enabled && (addr >= 0x000c0000 && addr < 0x00100000)) {
+      unsigned area = (unsigned)(addr >> 14) & 0x0f;
+      if (area > BX_MEM_AREA_F0000) area = BX_MEM_AREA_F0000;
+      if (BX_MEM_THIS memory_type[area][1] == 1) {
+        // Write to ShadowRAM
+        *(BX_MEM_THIS get_vector(addr)) = *buf;
+      } else {
+        // Ignore write to ROM
       }
     }
 #endif  // #if BX_SUPPORT_PCI
@@ -729,23 +738,20 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
     if ((a20addr >= 0x000a0000 && a20addr < 0x000c0000))
       return(NULL); // Vetoed!  Mem mapped IO (VGA)
 #if BX_SUPPORT_PCI
-    else if (BX_MEM_THIS pci_enabled && (a20addr >= 0x000c0000 && a20addr < 0x00100000))
-    {
-      switch (DEV_pci_rd_memtype ((Bit32u) a20addr)) {
-        case 0x0:   // Read from ROM
-          if ((a20addr & 0xfffe0000) == 0x000e0000) {
-            // last 128K of BIOS ROM mapped to 0xE0000-0xFFFFF
-            return (Bit8u *) &BX_MEM_THIS rom[BIOS_MAP_LAST128K(a20addr)];
-          }
-          else {
-            return (Bit8u *) &BX_MEM_THIS rom[(a20addr & EXROM_MASK) + BIOSROMSZ];
-          }
-          break;
-        case 0x1:   // Read from ShadowRAM
-          return BX_MEM_THIS get_vector(a20addr);
-        default:
-          BX_PANIC(("getHostMemAddr(): default case"));
-          return(NULL);
+    else if (BX_MEM_THIS pci_enabled && (a20addr >= 0x000c0000 && a20addr < 0x00100000)) {
+      unsigned area = (unsigned)(a20addr >> 14) & 0x0f;
+      if (area > BX_MEM_AREA_F0000) area = BX_MEM_AREA_F0000;
+      if (BX_MEM_THIS memory_type[area][0] == 0) {
+        // Read from ROM
+        if ((a20addr & 0xfffe0000) == 0x000e0000) {
+          // last 128K of BIOS ROM mapped to 0xE0000-0xFFFFF
+          return (Bit8u *) &BX_MEM_THIS rom[BIOS_MAP_LAST128K(a20addr)];
+        } else {
+          return (Bit8u *) &BX_MEM_THIS rom[(a20addr & EXROM_MASK) + BIOSROMSZ];
+        }
+      } else {
+        // Read from ShadowRAM
+        return BX_MEM_THIS get_vector(a20addr);
       }
     }
 #endif
@@ -882,6 +888,13 @@ bx_bool BX_MEM_C::is_smram_accessible(void)
 {
   return(BX_MEM_THIS smram_available) &&
         (BX_MEM_THIS smram_enable || !BX_MEM_THIS smram_restricted);
+}
+
+void BX_MEM_C::set_memory_type(memory_area_t area, bx_bool rw, bx_bool dram)
+{
+  if (area <= BX_MEM_AREA_F0000) {
+    BX_MEM_THIS memory_type[area][rw] = dram;
+  }
 }
 
 #if BX_SUPPORT_MONITOR_MWAIT
