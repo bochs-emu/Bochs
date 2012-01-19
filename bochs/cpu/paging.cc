@@ -686,6 +686,8 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
   Bit64u entry[4];
   bx_bool nx_fault = 0;
   int leaf;
+
+  lpf_mask = 0xfff;
   combined_access = 0x06;
 
   for (leaf = BX_LEVEL_PML4;; --leaf) {
@@ -850,6 +852,8 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
   Bit64u entry[2];
   bx_bool nx_fault = 0;
   int leaf;
+
+  lpf_mask = 0xfff;
   combined_access = 0x06;
 
   if (! BX_CPU_THIS_PTR PDPTR_CACHE.valid) {
@@ -971,8 +975,10 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
 {
   Bit32u entry[2], entry_addr[2];
   bx_phy_address ppf = (Bit32u) BX_CPU_THIS_PTR cr3 & BX_CR3_PAGING_MASK;
-  bx_bool isWrite = (rw & 1); // write or r-m-w
   int leaf;
+
+  lpf_mask = 0xfff;
+  combined_access = 0x06;
 
   for (leaf = BX_LEVEL_PDE;; --leaf) {
     entry_addr[leaf] = ppf + ((laddr >> (10 + 10*leaf)) & 0xffc);
@@ -1014,6 +1020,8 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
     }
 #endif
   }
+
+  bx_bool isWrite = (rw & 1); // write or r-m-w
 
   unsigned priv_index =
 #if BX_CPU_LEVEL >= 4
@@ -1062,11 +1070,9 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned user, unsig
   Bit32u lpf_mask = 0xfff; // 4K pages
 
 #if BX_SUPPORT_X86_64
-  if (! long_mode()) laddr &= 0xffffffff;
+  if (! long64_mode()) laddr &= 0xffffffff;
 #endif
 
-  // note - we assume physical memory < 4gig so for brevity & speed, we'll use
-  // 32 bit entries although cr3 is expanded to 64 bits.
   bx_phy_address paddress, ppf, poffset = PAGE_OFFSET(laddr);
   unsigned isWrite = rw & 1; // write or r-m-w
   unsigned isExecute = (rw == BX_EXECUTE);
@@ -1434,6 +1440,10 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx
 {
   bx_phy_address paddress;
 
+#if BX_SUPPORT_X86_64
+  if (! long64_mode()) laddr &= 0xffffffff;
+#endif
+
   if (! BX_CPU_THIS_PTR cr0.get_PG()) {
     paddress = (bx_phy_address) laddr;
   }
@@ -1494,15 +1504,14 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx
         if (level == BX_LEVEL_PTE) break;
         if (pte & 0x80) {
           // 2M page
+          pt_address &= BX_CONST64(0x000fffffffffe000);
           if (level == BX_LEVEL_PDE) {
-            pt_address &= BX_CONST64(0x000fffffffffe000);
             if (pt_address & offset_mask)
               goto page_fault;
             break;
           }
           // 1G page
           if (bx_cpuid_support_1g_paging() && level == BX_LEVEL_PDPTE && long_mode()) {
-            pt_address &= BX_CONST64(0x000fffffffffe000);
             if (pt_address & offset_mask)
               goto page_fault;
             break;
