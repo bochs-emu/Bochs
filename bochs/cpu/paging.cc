@@ -1070,7 +1070,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned user, unsig
   Bit32u lpf_mask = 0xfff; // 4K pages
 
 #if BX_SUPPORT_X86_64
-  if (! long64_mode()) laddr &= 0xffffffff;
+  if (! long_mode()) laddr &= 0xffffffff;
 #endif
 
   bx_phy_address paddress, ppf, poffset = PAGE_OFFSET(laddr);
@@ -1441,7 +1441,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx
   bx_phy_address paddress;
 
 #if BX_SUPPORT_X86_64
-  if (! long64_mode()) laddr &= 0xffffffff;
+  if (! long_mode()) laddr &= 0xffffffff;
 #endif
 
   if (! BX_CPU_THIS_PTR cr0.get_PG()) {
