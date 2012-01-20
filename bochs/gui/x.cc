@@ -86,6 +86,7 @@ Display *bx_x_display;
 int bx_x_screen_num;
 static Visual *default_visual;
 static Colormap default_cmap;
+static bx_bool x11_private_colormap;
 static unsigned long white_pixel=0, black_pixel=0;
 
 static char *progname; /* name this program was invoked by */
@@ -126,6 +127,7 @@ static void enable_cursor();
 
 // keyboard
 static bx_bool x11_nokeyrepeat = 0;
+static bx_bool x11_use_kbd_mapping = 0;
 static Bit32u convertStringToXKeysym (const char *string);
 
 static bx_bool x_init_done = 0;
@@ -422,7 +424,8 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsign
   default_depth  = DefaultDepth(bx_x_display, bx_x_screen_num);
   default_visual = DefaultVisual(bx_x_display, bx_x_screen_num);
 
-  if (!SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
+  x11_private_colormap = SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get();
+  if (!x11_private_colormap) {
     default_cmap = DefaultColormap(bx_x_display, bx_x_screen_num);
     // try to use default colormap.  If not enough colors are available,
     // then switch to private colormap despite the user setting.  There
@@ -430,7 +433,7 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsign
     // draws everything in black on black.
     if (!test_alloc_colors (default_cmap, 16)) {
       BX_ERROR (("I can't even allocate 16 colors!  Switching to a private colormap"));
-      SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->set(1);
+      x11_private_colormap = 1;
     }
     col_vals[0]  = BlackPixel(bx_x_display, bx_x_screen_num);
     col_vals[15] = WhitePixel(bx_x_display, bx_x_screen_num);
@@ -440,7 +443,7 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsign
     }
   }
 
-  if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
+  if (x11_private_colormap) {
     default_cmap = XCreateColormap(bx_x_display, DefaultRootWindow(bx_x_display),
                                    default_visual, AllocNone);
     if (XAllocColorCells(bx_x_display, default_cmap, False,
@@ -643,7 +646,8 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsign
   SIM->set_notify_callback (x11_notify_callback, NULL);
 
   // loads keymap for x11
-  if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
+  x11_use_kbd_mapping = SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get();
+  if (x11_use_kbd_mapping) {
     bx_keymap.loadKeymap(convertStringToXKeysym);
   }
 
@@ -1047,7 +1051,7 @@ void xkeypress(KeySym keysym, int press_release)
   }
 
   /* Old (no mapping) behavior */
-  if (!SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
+  if (!x11_use_kbd_mapping) {
 
     // this depends on the fact that the X11 keysyms which
     // correspond to the ascii characters space .. tilde
@@ -1668,7 +1672,7 @@ bx_bool bx_x_gui_c::palette_change(unsigned index, unsigned red, unsigned green,
   color.green = green << 8;
   color.blue  = blue << 8;
 
-  if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
+  if (x11_private_colormap) {
     color.pixel = index;
     XStoreColor(bx_x_display, default_cmap, &color);
     return(0); // no screen update needed

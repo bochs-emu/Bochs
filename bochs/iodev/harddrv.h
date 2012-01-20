@@ -261,6 +261,7 @@ private:
 
   int seek_timer_index;
   Bit8u cdrom_count;
+  bx_bool pci_enabled;
 };
 
 #endif
