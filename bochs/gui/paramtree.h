@@ -441,7 +441,7 @@ protected:
   // for a menu, the value of choice before the call to "ask" is default.
   // After ask, choice holds the value that the user chose. Choice defaults
   // to 1 in the constructor.
-  int choice;
+  Bit32u choice; // type Bit32u is compatible with ask_uint
   // title of the menu or series
   char *title;
   void init(const char *list_title);

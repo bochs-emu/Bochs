@@ -999,10 +999,9 @@ int bx_list_c::text_ask(FILE *fpin, FILE *fpout)
       }
     }
     fprintf(fpout, "\n");
-    Bit32u n = (Bit32u) choice;
     int min = (options & SHOW_PARENT) ? 0 : 1;
     int max = size;
-    int status = ask_uint("Please choose one: [%d] ", "", min, max, n, &n, 10);
+    int status = ask_uint("Please choose one: [%d] ", "", min, max, choice, &choice, 10);
     if (status < 0) return status;
   }
   return 0;
