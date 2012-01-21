@@ -439,9 +439,9 @@ protected:
   bx_param_c **list;
   int size, maxsize;
   // for a menu, the value of choice before the call to "ask" is default.
-  // After ask, choice holds the value that the user chose.  Choice defaults
+  // After ask, choice holds the value that the user chose. Choice defaults
   // to 1 in the constructor.
-  bx_param_num_c *choice;
+  int choice;
   // title of the menu or series
   char *title;
   void init(const char *list_title);
@@ -478,7 +478,8 @@ public:
   bx_param_c *get(int index);
   bx_param_c *get_by_name(const char *name);
   int get_size() const { return size; }
-  bx_param_num_c *get_choice() { return choice; }
+  int get_choice() const { return choice; }
+  void set_choice(int new_choice) { choice = new_choice; }
   char *get_title() { return title; }
   void set_parent(bx_param_c *newparent);
   bx_param_c *get_parent() { return parent; }

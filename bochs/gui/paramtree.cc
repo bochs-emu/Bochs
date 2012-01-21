@@ -934,7 +934,6 @@ bx_list_c::~bx_list_c()
     delete [] list;
   }
   if (title != NULL) delete [] title;
-  if (choice != NULL) delete choice;
 }
 
 void bx_list_c::init(const char *list_title)
@@ -947,8 +946,7 @@ void bx_list_c::init(const char *list_title)
     this->title[0] = 0;
   }
   this->options = 0;
-  this->choice = new bx_param_num_c(NULL,
-      "list_choice", "", "", 0, BX_MAX_BIT64S, 1);
+  this->choice = 1;
 }
 
 void bx_list_c::set_parent(bx_param_c *newparent)

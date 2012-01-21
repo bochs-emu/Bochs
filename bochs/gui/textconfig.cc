@@ -95,6 +95,7 @@ int ask_uint(const char *prompt, const char *help, Bit32u min, Bit32u max, Bit32
   assert(base==10 || base==16);
   while (1) {
     printf(prompt, the_default);
+    fflush(stdout);
     if (!fgets(buffer, sizeof(buffer), stdin))
       return -1;
     clean = clean_string(buffer);
@@ -139,6 +140,7 @@ int ask_int(const char *prompt, const char *help, Bit32s min, Bit32s max, Bit32s
   int illegal;
   while (1) {
     printf(prompt, the_default);
+    fflush(stdout);
     if (!fgets(buffer, sizeof(buffer), stdin))
       return -1;
     clean = clean_string(buffer);
@@ -172,6 +174,7 @@ int ask_menu(const char *prompt, const char *help, int n_choices, const char *ch
   *out = -1;
   while (1) {
     printf(prompt, choice[the_default]);
+    fflush(stdout);
     if (!fgets(buffer, sizeof(buffer), stdin))
       return -1;
     clean = clean_string(buffer);
@@ -208,6 +211,7 @@ int ask_yn(const char *prompt, const char *help, Bit32u the_default, Bit32u *out
   while (1) {
     // if there's a %s field, substitute in the default yes/no.
     printf(prompt, the_default ? "yes" : "no");
+    fflush(stdout);
     if (!fgets(buffer, sizeof(buffer), stdin))
       return -1;
     clean = clean_string(buffer);
@@ -240,6 +244,7 @@ int ask_string(const char *prompt, const char *the_default, char *out)
   assert(the_default != out);
   out[0] = 0;
   printf(prompt, the_default);
+  fflush(stdout);
   if (fgets(buffer, sizeof(buffer), stdin) == NULL)
     return -1;
   clean = clean_string(buffer);
@@ -372,14 +377,13 @@ int do_menu(const char *pname)
 {
   bx_list_c *menu = (bx_list_c *)SIM->get_param(pname, NULL);
   while (1) {
-    menu->get_choice()->set(0);
+    menu->set_choice(0);
     int status = menu->text_ask(stdin, stderr);
     if (status < 0) return status;
-    bx_param_num_c *choice = menu->get_choice();
-    if (choice->get() < 1)
-      return choice->get();
+    if (menu->get_choice() < 1)
+      return menu->get_choice();
     else {
-      int index = choice->get() - 1;  // choosing 1 means list[0]
+      int index = menu->get_choice() - 1;  // choosing 1 means list[0]
       bx_param_c *chosen = menu->get(index);
       assert(chosen != NULL);
       if (chosen->get_enabled()) {
@@ -995,12 +999,11 @@ int bx_list_c::text_ask(FILE *fpin, FILE *fpout)
       }
     }
     fprintf(fpout, "\n");
-    Bit32u n = choice->get();
+    Bit32u n = (Bit32u) choice;
     int min = (options & SHOW_PARENT) ? 0 : 1;
     int max = size;
     int status = ask_uint("Please choose one: [%d] ", "", min, max, n, &n, 10);
     if (status < 0) return status;
-    choice->set(n);
   }
   return 0;
 }
