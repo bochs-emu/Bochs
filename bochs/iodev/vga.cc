@@ -282,16 +282,14 @@ void bx_vga_c::init_standard_vga(void)
     }
     delete [] options;
   }
-  bx_gui->init(argc, argv, BX_VGA_THIS s.x_tilesize, BX_VGA_THIS s.y_tilesize);
-  for (i = 1; i < (unsigned)argc; i++)
-  {
-    if (argv[i] != NULL)
-    {
+  bx_gui->init(argc, argv, BX_MAX_XRES, BX_MAX_YRES, BX_VGA_THIS s.x_tilesize,
+               BX_VGA_THIS s.y_tilesize);
+  for (i = 1; i < (unsigned)argc; i++) {
+    if (argv[i] != NULL) {
         free(argv[i]);
         argv[i] = NULL;
     }
   }
-
 }
 
 void bx_vga_c::init_vga_extension(void)

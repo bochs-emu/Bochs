@@ -21,7 +21,6 @@
 
 #include <signal.h>
 #include "iodev.h"
-#include "vga.h"
 #include "keymap.h"
 #include "gui/bitmaps/floppya.h"
 #include "gui/bitmaps/floppyb.h"
@@ -109,12 +108,15 @@ bx_gui_c::~bx_gui_c()
   }
 }
 
-void bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
+void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
+                    unsigned tilewidth, unsigned tileheight)
 {
   BX_GUI_THIS new_gfx_api = 0;
   BX_GUI_THIS host_xres = 640;
   BX_GUI_THIS host_yres = 480;
   BX_GUI_THIS host_bpp = 8;
+  BX_GUI_THIS x_tilesize = tilewidth;
+  BX_GUI_THIS y_tilesize = tileheight;
   BX_GUI_THIS dialog_caps = BX_GUI_DLG_RUNTIME | BX_GUI_DLG_SAVE_RESTORE;
 
   BX_GUI_THIS toggle_method = SIM->get_param_enum(BXPN_MOUSE_TOGGLE)->get();
@@ -242,7 +244,7 @@ void bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheig
   BX_GUI_THIS charmap_updated = 0;
 
   if (!BX_GUI_THIS new_gfx_api && (BX_GUI_THIS framebuffer == NULL)) {
-    BX_GUI_THIS framebuffer = new Bit8u[BX_MAX_XRES * BX_MAX_YRES * 4];
+    BX_GUI_THIS framebuffer = new Bit8u[max_xres * max_yres * 4];
   }
   show_headerbar();
 
@@ -865,18 +867,16 @@ bx_svga_tileinfo_t *bx_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
 Bit8u *bx_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
                             unsigned *w, unsigned *h)
 {
-  if (x0+X_TILESIZE > BX_GUI_THIS host_xres) {
+  if (x0+BX_GUI_THIS x_tilesize > BX_GUI_THIS host_xres) {
     *w = BX_GUI_THIS host_xres - x0;
-  }
-  else {
-    *w = X_TILESIZE;
+  } else {
+    *w = BX_GUI_THIS x_tilesize;
   }
 
-  if (y0+Y_TILESIZE > BX_GUI_THIS host_yres) {
+  if (y0+BX_GUI_THIS y_tilesize > BX_GUI_THIS host_yres) {
     *h = BX_GUI_THIS host_yres - y0;
-  }
-  else {
-    *h = Y_TILESIZE;
+  } else {
+    *h = BX_GUI_THIS y_tilesize;
   }
 
   return (Bit8u *)framebuffer + y0 * BX_GUI_THIS host_pitch +
@@ -886,13 +886,14 @@ Bit8u *bx_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
 void bx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
                                         unsigned w, unsigned h)
 {
-  Bit8u tile[X_TILESIZE * Y_TILESIZE * 4];
+  Bit8u *tile;
   Bit8u *tile_ptr, *fb_ptr;
   Bit16u xc, yc, fb_pitch, tile_pitch;
   Bit8u r, diffx, diffy;
 
-  diffx = (x0 % X_TILESIZE);
-  diffy = (y0 % Y_TILESIZE);
+  tile = new Bit8u[BX_GUI_THIS x_tilesize * BX_GUI_THIS y_tilesize * 4];
+  diffx = (x0 % BX_GUI_THIS x_tilesize);
+  diffy = (y0 % BX_GUI_THIS y_tilesize);
   if (diffx > 0) {
     x0 -= diffx;
     w += diffx;
@@ -902,9 +903,9 @@ void bx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
     h += diffy;
   }
   fb_pitch = BX_GUI_THIS host_pitch;
-  tile_pitch = X_TILESIZE * ((BX_GUI_THIS host_bpp + 1) >> 3);
-  for (yc=y0; yc<(y0+h); yc+=Y_TILESIZE) {
-    for (xc=x0; xc<(x0+w); xc+=X_TILESIZE) {
+  tile_pitch = BX_GUI_THIS x_tilesize * ((BX_GUI_THIS host_bpp + 1) >> 3);
+  for (yc=y0; yc<(y0+h); yc+=BX_GUI_THIS y_tilesize) {
+    for (xc=x0; xc<(x0+w); xc+=BX_GUI_THIS x_tilesize) {
       fb_ptr = BX_GUI_THIS framebuffer + (yc * fb_pitch + xc * ((BX_GUI_THIS host_bpp + 1) >> 3));
       tile_ptr = &tile[0];
       for (r=0; r<h; r++) {
@@ -915,6 +916,7 @@ void bx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
       BX_GUI_THIS graphics_tile_update(tile, xc, yc);
     }
   }
+  delete [] tile;
 }
 
 void bx_gui_c::show_ips(Bit32u ips_count)

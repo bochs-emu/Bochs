@@ -195,7 +195,7 @@ gui.o: gui.@CPP_SUFFIX@ ../iodev/iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h ../iodev/vga.h \
+  ../instrument/stubs/instrument.h ../param_names.h \
   keymap.h ../gui/bitmaps/floppya.h ../gui/bitmaps/floppyb.h \
   ../gui/bitmaps/mouse.h ../gui/bitmaps/reset.h ../gui/bitmaps/power.h \
   ../gui/bitmaps/snapshot.h ../gui/bitmaps/copy.h ../gui/bitmaps/paste.h \
@@ -293,7 +293,7 @@ gui.lo: gui.@CPP_SUFFIX@ ../iodev/iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h ../iodev/vga.h \
+  ../instrument/stubs/instrument.h ../param_names.h \
   keymap.h ../gui/bitmaps/floppya.h ../gui/bitmaps/floppyb.h \
   ../gui/bitmaps/mouse.h ../gui/bitmaps/reset.h ../gui/bitmaps/power.h \
   ../gui/bitmaps/snapshot.h ../gui/bitmaps/copy.h ../gui/bitmaps/paste.h \

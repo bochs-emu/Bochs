@@ -144,8 +144,8 @@ public:
   static void set_text_charbyte(Bit16u address, Bit8u data);
   static Bit8u get_mouse_headerbar_id();
 
-  void init(int argc, char **argv,
-                 unsigned x_tilesize, unsigned y_tilesize);
+  void init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
+            unsigned x_tilesize, unsigned y_tilesize);
   void cleanup(void);
   void update_drive_status_buttons(void);
   static void     mouse_enabled_changed(bx_bool val);
@@ -210,6 +210,8 @@ protected:
   Bit16u host_yres;
   Bit16u host_pitch;
   Bit8u host_bpp;
+  unsigned x_tilesize;
+  unsigned y_tilesize;
   Bit8u *framebuffer;
   Bit32u dialog_caps;
   Bit8u toggle_method;
