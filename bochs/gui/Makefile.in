@@ -1,4 +1,4 @@
-# Copyright (C) 2001  The Bochs Project
+# Copyright (C) 2001-2012  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -253,7 +253,7 @@ win32.o: win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../instrument/stubs/instrument.h \
-  ../param_names.h keymap.h ../iodev/iodev.h ../iodev/vga.h
+  ../param_names.h keymap.h ../iodev/iodev.h
 win32dialog.o: win32dialog.@CPP_SUFFIX@ win32dialog.h ../config.h
 win32_enh_dbg_osdep.o: win32_enh_dbg_osdep.@CPP_SUFFIX@ ../config.h
 win32paramdlg.o: win32paramdlg.@CPP_SUFFIX@ win32dialog.h ../config.h
@@ -351,7 +351,7 @@ win32.lo: win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../instrument/stubs/instrument.h \
-  ../param_names.h keymap.h ../iodev/iodev.h ../iodev/vga.h
+  ../param_names.h keymap.h ../iodev/iodev.h
 win32dialog.lo: win32dialog.@CPP_SUFFIX@ win32dialog.h ../config.h
 win32_enh_dbg_osdep.lo: win32_enh_dbg_osdep.@CPP_SUFFIX@ ../config.h
 win32paramdlg.lo: win32paramdlg.@CPP_SUFFIX@ win32dialog.h ../config.h

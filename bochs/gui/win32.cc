@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2011  The Bochs Project
+//  Copyright (C) 2002-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -32,7 +32,6 @@
 #include "param_names.h"
 #include "keymap.h"
 #include "iodev/iodev.h"
-#include "iodev/vga.h"
 #if BX_WITH_WIN32
 
 #include "zmouse.h"
@@ -104,6 +103,7 @@ static bx_bool win32_nokeyrepeat = 0;
 
 // Graphics screen stuff
 static unsigned x_tilesize = 0, y_tilesize = 0;
+static unsigned win32_max_xres = 0, win32_max_yres = 0;
 static BITMAPINFO* bitmap_info=(BITMAPINFO*)0;
 static RGBQUAD* cmap_index;  // indeces into system colormap
 static HBITMAP MemoryBitmap = NULL;
@@ -618,6 +618,8 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
 
   x_tilesize = tilewidth;
   y_tilesize = tileheight;
+  win32_max_xres = this->max_xres;
+  win32_max_yres = this->max_yres;
 
   bx_bitmap_entries = 0;
   bx_headerbar_entries = 0;
@@ -906,7 +908,7 @@ VOID CDECL UIThread(PVOID pvoid)
     cursorWarped();
 
     hdc = GetDC(stInfo.simWnd);
-    MemoryBitmap = CreateCompatibleBitmap(hdc, BX_MAX_XRES, BX_MAX_YRES);
+    MemoryBitmap = CreateCompatibleBitmap(hdc, win32_max_xres, win32_max_yres);
     MemoryDC = CreateCompatibleDC(hdc);
     ReleaseDC(stInfo.simWnd, hdc);
 

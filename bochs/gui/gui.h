@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2011  The Bochs Project
+//  Copyright (C) 2002-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -210,6 +210,8 @@ protected:
   Bit16u host_yres;
   Bit16u host_pitch;
   Bit8u host_bpp;
+  unsigned max_xres;
+  unsigned max_yres;
   unsigned x_tilesize;
   unsigned y_tilesize;
   Bit8u *framebuffer;
