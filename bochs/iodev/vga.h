@@ -95,15 +95,10 @@
 #define VBE_DISPI_TOTAL_VIDEO_MEMORY_KB  (VBE_DISPI_TOTAL_VIDEO_MEMORY_MB * 1024)
 #define VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES (VBE_DISPI_TOTAL_VIDEO_MEMORY_KB * 1024)
 
-#define BX_MAX_XRES VBE_DISPI_MAX_XRES
-#define BX_MAX_YRES VBE_DISPI_MAX_YRES
-
 // End Bochs VBE definitions
 
 #define X_TILESIZE 16
 #define Y_TILESIZE 24
-#define BX_NUM_X_TILES (BX_MAX_XRES /X_TILESIZE)
-#define BX_NUM_Y_TILES (BX_MAX_YRES /Y_TILESIZE)
 
 #if BX_USE_VGA_SMF
 #  define BX_VGA_SMF  static
@@ -264,13 +259,11 @@ protected:
 
     bx_bool  vga_enabled;
     bx_bool  vga_mem_updated;
-    unsigned x_tilesize;
-    unsigned y_tilesize;
     unsigned line_offset;
     unsigned line_compare;
     unsigned vertical_display_end;
     unsigned blink_counter;
-    bx_bool  vga_tile_updated[BX_NUM_X_TILES][BX_NUM_Y_TILES];
+    bx_bool  *vga_tile_updated;
     Bit8u *memory;
     Bit32u memsize;
     Bit8u text_snapshot[128 * 1024]; // current text snapshot
@@ -281,6 +274,10 @@ protected:
     Bit16u last_xres;
     Bit16u last_yres;
     Bit8u last_bpp;
+    Bit16u max_xres;
+    Bit16u max_yres;
+    Bit16u num_x_tiles;
+    Bit16u num_y_tiles;
   } s;  // state information
 
   int timer_id;

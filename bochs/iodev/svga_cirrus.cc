@@ -45,17 +45,18 @@
 
 // Only reference the array if the tile numbers are within the bounds
 // of the array.  If out of bounds, do nothing.
-#define SET_TILE_UPDATED(xtile,ytile,value)                              \
+#define SET_TILE_UPDATED(xtile, ytile, value)                            \
   do {                                                                   \
-    if (((xtile) < BX_NUM_X_TILES) && ((ytile) < BX_NUM_Y_TILES))        \
-      BX_CIRRUS_THIS s.vga_tile_updated[(xtile)][(ytile)] = value;          \
+    if (((xtile) < BX_CIRRUS_THIS s.num_x_tiles) && ((ytile) < BX_CIRRUS_THIS s.num_y_tiles)) \
+      BX_CIRRUS_THIS s.vga_tile_updated[(xtile)+(ytile)*BX_CIRRUS_THIS s.num_x_tiles] = value; \
   } while (0)
+
 // Only reference the array if the tile numbers are within the bounds
-// of the array.  If out of bounds, return 1.
+// of the array.  If out of bounds, return 0.
 #define GET_TILE_UPDATED(xtile,ytile)                                    \
-  ((((xtile) < BX_NUM_X_TILES) && ((ytile) < BX_NUM_Y_TILES))?           \
-     BX_CIRRUS_THIS s.vga_tile_updated[(xtile)][(ytile)]                    \
-     : 1)
+  ((((xtile) < BX_CIRRUS_THIS s.num_x_tiles) && ((ytile) < BX_CIRRUS_THIS s.num_y_tiles))? \
+     BX_CIRRUS_THIS s.vga_tile_updated[(xtile)+(ytile)*BX_CIRRUS_THIS s.num_x_tiles] \
+     : 0)
 
 #define LOG_THIS BX_CIRRUS_THIS
 
@@ -270,6 +271,8 @@ void bx_svga_cirrus_c::init_vga_extension(void)
     {
       BX_INFO(("CL-GD5430 ISA initialized"));
     }
+    BX_CIRRUS_THIS s.max_xres = 1600;
+    BX_CIRRUS_THIS s.max_yres = 1200;
     BX_CIRRUS_THIS extension_init = 1;
   } else {
     BX_CIRRUS_THIS sequencer.reg[0x07] = 0x00; // Cirrus extension disabled

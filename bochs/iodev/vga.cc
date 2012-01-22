@@ -38,15 +38,15 @@
 // of the array.  If out of bounds, do nothing.
 #define SET_TILE_UPDATED(xtile, ytile, value)                            \
   do {                                                                   \
-    if (((xtile) < BX_NUM_X_TILES) && ((ytile) < BX_NUM_Y_TILES))        \
-      BX_VGA_THIS s.vga_tile_updated[(xtile)][(ytile)] = value;          \
+    if (((xtile) < BX_VGA_THIS s.num_x_tiles) && ((ytile) < BX_VGA_THIS s.num_y_tiles)) \
+      BX_VGA_THIS s.vga_tile_updated[(xtile)+(ytile)*BX_VGA_THIS s.num_x_tiles] = value; \
   } while (0)
 
 // Only reference the array if the tile numbers are within the bounds
 // of the array.  If out of bounds, return 0.
 #define GET_TILE_UPDATED(xtile,ytile)                                    \
-  ((((xtile) < BX_NUM_X_TILES) && ((ytile) < BX_NUM_Y_TILES))?           \
-     BX_VGA_THIS s.vga_tile_updated[(xtile)][(ytile)]                    \
+  ((((xtile) < BX_VGA_THIS s.num_x_tiles) && ((ytile) < BX_VGA_THIS s.num_y_tiles))? \
+     BX_VGA_THIS s.vga_tile_updated[(xtile)+(ytile)*BX_VGA_THIS s.num_x_tiles] \
      : 0)
 
 static const Bit16u charmap_offset[8] = {
@@ -105,8 +105,7 @@ bx_vga_c::bx_vga_c()
 {
   put("VGA");
   s.vga_mem_updated = 0;
-  s.x_tilesize = X_TILESIZE;
-  s.y_tilesize = Y_TILESIZE;
+  s.vga_tile_updated = NULL;
   timer_id = BX_NULL_TIMER_HANDLE;
   s.memory = NULL;
 }
@@ -117,17 +116,32 @@ bx_vga_c::~bx_vga_c()
     delete [] s.memory;
     s.memory = NULL;
   }
+  if (s.vga_tile_updated != NULL) {
+    delete [] s.vga_tile_updated;
+    s.vga_tile_updated = NULL;
+  }
   SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY)->set_handler(NULL);
   BX_DEBUG(("Exit"));
 }
 
 void bx_vga_c::init(void)
 {
+  unsigned x,y;
+
   BX_VGA_THIS extension_init = 0;
   BX_VGA_THIS pci_enabled = 0;
 
   BX_VGA_THIS init_standard_vga();
   BX_VGA_THIS init_vga_extension();
+
+  BX_VGA_THIS s.num_x_tiles = BX_VGA_THIS s.max_xres / X_TILESIZE +
+                              ((BX_VGA_THIS s.max_xres % X_TILESIZE) > 0);
+  BX_VGA_THIS s.num_y_tiles = BX_VGA_THIS s.max_yres / Y_TILESIZE +
+                              ((BX_VGA_THIS s.max_yres % Y_TILESIZE) > 0);
+  BX_VGA_THIS s.vga_tile_updated = new bx_bool[BX_VGA_THIS s.num_x_tiles * BX_VGA_THIS s.num_y_tiles];
+  for (y = 0; y < BX_VGA_THIS s.num_y_tiles; y++)
+    for (x = 0; x < BX_VGA_THIS s.num_x_tiles; x++)
+      SET_TILE_UPDATED(x, y, 0);
 
   char *strptr = SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr();
   if (!BX_VGA_THIS extension_init &&
@@ -142,7 +156,6 @@ void bx_vga_c::init(void)
 void bx_vga_c::init_standard_vga(void)
 {
   unsigned i,string_i;
-  unsigned x,y;
   int argc;
   char *argv[16];
   char *ptr;
@@ -235,10 +248,10 @@ void bx_vga_c::init_standard_vga(void)
   BX_VGA_THIS s.last_yres = 0;
   BX_VGA_THIS s.last_bpp = 8;
 
+  BX_VGA_THIS s.max_xres = 800;
+  BX_VGA_THIS s.max_yres = 600;
+
   BX_VGA_THIS s.vga_mem_updated = 0;
-  for (y=0; y<480/Y_TILESIZE; y++)
-    for (x=0; x<640/X_TILESIZE; x++)
-      SET_TILE_UPDATED (x, y, 0);
 
   // initialize memory, handlers and timer (depending on extension)
   extname = SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr();
@@ -282,8 +295,8 @@ void bx_vga_c::init_standard_vga(void)
     }
     delete [] options;
   }
-  bx_gui->init(argc, argv, BX_MAX_XRES, BX_MAX_YRES, BX_VGA_THIS s.x_tilesize,
-               BX_VGA_THIS s.y_tilesize);
+  bx_gui->init(argc, argv, BX_VGA_THIS s.max_xres, BX_VGA_THIS s.max_yres,
+               X_TILESIZE, Y_TILESIZE);
   for (i = 1; i < (unsigned)argc; i++) {
     if (argv[i] != NULL) {
         free(argv[i]);
@@ -351,6 +364,8 @@ void bx_vga_c::init_vga_extension(void)
     } else {
       BX_VGA_THIS vbe.max_bpp=max_bpp;
     }
+    BX_VGA_THIS s.max_xres = BX_VGA_THIS vbe.max_xres;
+    BX_VGA_THIS s.max_yres = BX_VGA_THIS vbe.max_yres;
     BX_VGA_THIS extension_init = 1;
 
     BX_INFO(("VBE Bochs Display Extension Enabled"));
@@ -540,9 +555,9 @@ void bx_vga_c::after_restore_state(void)
     }
   }
   bx_gui->set_text_charmap(&BX_VGA_THIS s.memory[0x20000 + BX_VGA_THIS s.charmap_address]);
-  BX_VGA_THIS s.last_xres = BX_MAX_XRES;
-  BX_VGA_THIS s.last_yres = BX_MAX_YRES;
-  BX_VGA_THIS redraw_area(0, 0, BX_MAX_XRES, BX_MAX_YRES);
+  BX_VGA_THIS s.last_xres = BX_VGA_THIS s.max_xres;
+  BX_VGA_THIS s.last_yres = BX_VGA_THIS s.max_yres;
+  BX_VGA_THIS redraw_area(0, 0, BX_VGA_THIS s.max_xres, BX_VGA_THIS s.max_yres);
   if (BX_VGA_THIS vbe.enabled) {
     bx_gui->dimension_update(BX_VGA_THIS vbe.xres, BX_VGA_THIS vbe.yres, 0, 0,
                              BX_VGA_THIS vbe.bpp);
@@ -3073,7 +3088,7 @@ bx_vga_c::vbe_mem_write(bx_phy_address addr, Bit8u value)
     y_tileno = ((offset / BX_VGA_THIS vbe.bpp_multiplier) / BX_VGA_THIS vbe.virtual_xres) / Y_TILESIZE;
     x_tileno = ((offset / BX_VGA_THIS vbe.bpp_multiplier) % BX_VGA_THIS vbe.virtual_xres) / X_TILESIZE;
 
-    if ((y_tileno < BX_NUM_Y_TILES) && (x_tileno < BX_NUM_X_TILES))
+    if ((y_tileno < BX_VGA_THIS s.num_y_tiles) && (x_tileno < BX_VGA_THIS s.num_x_tiles))
     {
       BX_VGA_THIS s.vga_mem_updated = 1;
       SET_TILE_UPDATED (x_tileno, y_tileno, 1);
@@ -3520,8 +3535,8 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
       }
       if (needs_update) {
         BX_VGA_THIS s.vga_mem_updated = 1;
-        for (unsigned xti = 0; xti < BX_NUM_X_TILES; xti++) {
-          for (unsigned yti = 0; yti < BX_NUM_Y_TILES; yti++) {
+        for (unsigned xti = 0; xti < BX_VGA_THIS s.num_x_tiles; xti++) {
+          for (unsigned yti = 0; yti < BX_VGA_THIS s.num_y_tiles; yti++) {
             SET_TILE_UPDATED (xti, yti, 1);
           }
         }
