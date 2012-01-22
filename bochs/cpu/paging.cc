@@ -973,8 +973,8 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
 // Translate a linear address to a physical address in legacy paging mode
 bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned user, unsigned rw)
 {
-  Bit32u entry[2], entry_addr[2];
-  bx_phy_address ppf = (Bit32u) BX_CPU_THIS_PTR cr3 & BX_CR3_PAGING_MASK;
+  bx_phy_address entry_addr[2], ppf = (Bit32u) BX_CPU_THIS_PTR cr3 & BX_CR3_PAGING_MASK;
+  Bit32u entry[2];
   int leaf;
 
   lpf_mask = 0xfff;
@@ -1248,8 +1248,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
     }
 
     if (curr_access_mask == BX_EPT_ENTRY_WRITE_ONLY || curr_access_mask == BX_EPT_ENTRY_WRITE_EXECUTE) {
-      BX_DEBUG(("EPT %s: EPT misconfiguration mask=%d",
-        bx_paging_level[leaf], curr_access_mask));
+      BX_DEBUG(("EPT %s: EPT misconfiguration mask=%d", bx_paging_level[leaf], curr_access_mask));
       vmexit_reason = VMX_VMEXIT_EPT_MISCONFIGURATION;
       break;
     }
@@ -1310,7 +1309,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
     }
   }
 
-  if ((access_mask & combined_access) != access_mask) {
+  if (!vmexit_reason && (access_mask & combined_access) != access_mask) {
     vmexit_reason = VMX_VMEXIT_EPT_VIOLATION;
   }
 
