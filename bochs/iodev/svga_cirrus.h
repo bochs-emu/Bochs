@@ -82,7 +82,6 @@ public:
   virtual Bit32u get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
                                   unsigned *iHeight, unsigned *iWidth, unsigned *iDepth);
   virtual void trigger_timer(void *this_ptr);
-  virtual Bit8u get_actl_palette_idx(Bit8u index);
   virtual void register_state(void);
   virtual void after_restore_state(void);
 

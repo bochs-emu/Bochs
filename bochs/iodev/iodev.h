@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2011  The Bochs Project
+//  Copyright (C) 2002-2012  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -263,9 +263,6 @@ public:
   }
   virtual void trigger_timer(void *this_ptr) {
     STUBFUNC(vga, trigger_timer);
-  }
-  virtual Bit8u get_actl_palette_idx(Bit8u index) {
-    return 0;
   }
   virtual bx_bool vbe_set_base_addr(Bit32u *addr, Bit8u *pci_conf) {
     return 0;

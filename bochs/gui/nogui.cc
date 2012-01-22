@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -130,7 +130,7 @@ void bx_nogui_gui_c::clear_screen(void)
 // new_text: array of character/attributes making up the current
 //           contents, which should now be displayed.  See below
 //
-// format of old_text & new_text: each is tm_info.line_offset*text_rows
+// format of old_text & new_text: each is tm_info->line_offset*text_rows
 //     bytes long. Each character consists of 2 bytes.  The first by is
 //     the character value, the second is the attribute byte.
 //
@@ -141,7 +141,7 @@ void bx_nogui_gui_c::clear_screen(void)
 
 void bx_nogui_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
-                      bx_vga_tminfo_t tm_info)
+                      bx_vga_tminfo_t *tm_info)
 {
   UNUSED(old_text);
   UNUSED(new_text);

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -435,7 +435,7 @@ void bx_sdl_gui_c::statusbar_setitem_specific(int element, bx_bool active, bx_bo
 void bx_sdl_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     unsigned long cursor_x,
     unsigned long cursor_y,
-    bx_vga_tminfo_t tm_info)
+    bx_vga_tminfo_t *tm_info)
 {
   Bit8u *pfont_row, *old_line, *new_line, *text_base;
   unsigned int cs_y, i, x, y;
@@ -452,10 +452,10 @@ void bx_sdl_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   Uint32 text_palette[16];
 
   forceUpdate = 0;
-  blink_mode = (tm_info.blink_flags & BX_TEXT_BLINK_MODE) > 0;
-  blink_state = (tm_info.blink_flags & BX_TEXT_BLINK_STATE) > 0;
+  blink_mode = (tm_info->blink_flags & BX_TEXT_BLINK_MODE) > 0;
+  blink_state = (tm_info->blink_flags & BX_TEXT_BLINK_STATE) > 0;
   if (blink_mode) {
-    if (tm_info.blink_flags & BX_TEXT_BLINK_TOGGLE)
+    if (tm_info->blink_flags & BX_TEXT_BLINK_TOGGLE)
       forceUpdate = 1;
   }
   if (charmap_updated) {
@@ -463,16 +463,16 @@ void bx_sdl_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     charmap_updated = 0;
   }
   for (i=0; i<16; i++) {
-    text_palette[i] = palette[DEV_vga_get_actl_pal_idx(i)];
+    text_palette[i] = palette[tm_info->actl_palette[i]];
   }
-  if ((tm_info.h_panning != h_panning) || (tm_info.v_panning != v_panning)) {
+  if ((tm_info->h_panning != h_panning) || (tm_info->v_panning != v_panning)) {
     forceUpdate = 1;
-    h_panning = tm_info.h_panning;
-    v_panning = tm_info.v_panning;
+    h_panning = tm_info->h_panning;
+    v_panning = tm_info->v_panning;
   }
-  if (tm_info.line_compare != line_compare) {
+  if (tm_info->line_compare != line_compare) {
     forceUpdate = 1;
-    line_compare = tm_info.line_compare;
+    line_compare = tm_info->line_compare;
   }
   if (sdl_screen) {
     disp = sdl_screen->pitch/4;
@@ -483,12 +483,12 @@ void bx_sdl_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   }
   // first invalidate character at previous and new cursor location
   if ((prev_cursor_y < text_rows) && (prev_cursor_x < text_cols)) {
-    curs = prev_cursor_y * tm_info.line_offset + prev_cursor_x * 2;
+    curs = prev_cursor_y * tm_info->line_offset + prev_cursor_x * 2;
     old_text[curs] = ~new_text[curs];
   }
-  cursor_visible = ((tm_info.cs_start <= tm_info.cs_end) && (tm_info.cs_start < fontheight));
+  cursor_visible = ((tm_info->cs_start <= tm_info->cs_end) && (tm_info->cs_start < fontheight));
   if((cursor_visible) && (cursor_y < text_rows) && (cursor_x < text_cols)) {
-    curs = cursor_y * tm_info.line_offset + cursor_x * 2;
+    curs = cursor_y * tm_info->line_offset + cursor_x * 2;
     old_text[curs] = ~new_text[curs];
   } else {
     curs = 0xffff;
@@ -498,7 +498,7 @@ void bx_sdl_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   if (v_panning) rows++;
   y = 0;
   cs_y = 0;
-  text_base = new_text - tm_info.start_address;
+  text_base = new_text - tm_info->start_address;
   if (line_compare < res_y) {
     split_textrow = (line_compare + v_panning) / fontheight;
     split_fontrows = ((line_compare + v_panning) % fontheight) + 1;
@@ -544,7 +544,7 @@ void bx_sdl_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     new_line = new_text;
     old_line = old_text;
     x = 0;
-    offset = cs_y * tm_info.line_offset;
+    offset = cs_y * tm_info->line_offset;
     do
     {
       cfwidth = fontwidth;
@@ -574,7 +574,7 @@ void bx_sdl_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
           bgcolor = text_palette[(new_text[1] >> 4) & 0x0F];
         }
 	invert = ((offset == curs) && (cursor_visible));
-	gfxcharw9 = ((tm_info.line_graphics) && ((new_text[0] & 0xE0) == 0xC0));
+	gfxcharw9 = ((tm_info->line_graphics) && ((new_text[0] & 0xE0) == 0xC0));
 
 	// Display this one char
 	fontrows = cfheight;
@@ -604,7 +604,7 @@ void bx_sdl_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	    font_row <<= h_panning;
 	  }
 	  fontpixels = cfwidth;
-	  if ((invert) && (fontline >= tm_info.cs_start) && (fontline <= tm_info.cs_end))
+	  if ((invert) && (fontline >= tm_info->cs_start) && (fontline <= tm_info->cs_end))
 	    mask = 0x100;
 	  else
 	    mask = 0x00;
@@ -644,19 +644,19 @@ void bx_sdl_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       new_text = text_base;
       forceUpdate = 1;
       cs_y = 0;
-      if (tm_info.split_hpanning) h_panning = 0;
+      if (tm_info->split_hpanning) h_panning = 0;
       rows = ((res_y - line_compare + fontheight - 2) / fontheight) + 1;
       split_screen = 1;
     }
     else
     {
-      new_text = new_line + tm_info.line_offset;
-      old_text = old_line + tm_info.line_offset;
+      new_text = new_line + tm_info->line_offset;
+      old_text = old_line + tm_info->line_offset;
       cs_y++;
       y++;
     }
   } while(--rows);
-  h_panning = tm_info.h_panning;
+  h_panning = tm_info->h_panning;
   prev_cursor_x = cursor_x;
   prev_cursor_y = cursor_y;
 }

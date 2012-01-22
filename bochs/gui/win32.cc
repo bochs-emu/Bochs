@@ -1516,7 +1516,7 @@ void bx_win32_gui_c::clear_screen(void)
 // new_text: array of character/attributes making up the current
 //           contents, which should now be displayed.  See below
 //
-// format of old_text & new_text: each is tm_info.line_offset*text_rows
+// format of old_text & new_text: each is tm_info->line_offset*text_rows
 //     bytes long. Each character consists of 2 bytes.  The first by is
 //     the character value, the second is the attribute byte.
 //
@@ -1527,7 +1527,7 @@ void bx_win32_gui_c::clear_screen(void)
 
 void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                                  unsigned long cursor_x, unsigned long cursor_y,
-                                 bx_vga_tminfo_t tm_info)
+                                 bx_vga_tminfo_t *tm_info)
 {
   HDC hdc;
   unsigned char data[64];
@@ -1545,17 +1545,17 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 
   EnterCriticalSection(&stInfo.drawCS);
 
-  blink_mode = (tm_info.blink_flags & BX_TEXT_BLINK_MODE) > 0;
-  blink_state = (tm_info.blink_flags & BX_TEXT_BLINK_STATE) > 0;
+  blink_mode = (tm_info->blink_flags & BX_TEXT_BLINK_MODE) > 0;
+  blink_state = (tm_info->blink_flags & BX_TEXT_BLINK_STATE) > 0;
   if (blink_mode) {
-    if (tm_info.blink_flags & BX_TEXT_BLINK_TOGGLE)
+    if (tm_info->blink_flags & BX_TEXT_BLINK_TOGGLE)
       forceUpdate = 1;
   }
   if (charmap_updated) {
     for (unsigned c = 0; c<256; c++) {
       if (char_changed[c]) {
         memset(data, 0, sizeof(data));
-        BOOL gfxchar = tm_info.line_graphics && ((c & 0xE0) == 0xC0);
+        BOOL gfxchar = tm_info->line_graphics && ((c & 0xE0) == 0xC0);
         for (i=0; i<(unsigned)yChar; i++) {
           data[i*2] = vga_charmap[c*32+i];
           if (gfxchar) {
@@ -1570,29 +1570,29 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     charmap_updated = 0;
   }
   for (i=0; i<16; i++) {
-    text_pal_idx[i] = DEV_vga_get_actl_pal_idx(i);
+    text_pal_idx[i] = tm_info->actl_palette[i];
   }
 
   hdc = GetDC(stInfo.simWnd);
 
-  if((tm_info.h_panning != h_panning) || (tm_info.v_panning != v_panning)) {
+  if((tm_info->h_panning != h_panning) || (tm_info->v_panning != v_panning)) {
     forceUpdate = 1;
-    h_panning = tm_info.h_panning;
-    v_panning = tm_info.v_panning;
+    h_panning = tm_info->h_panning;
+    v_panning = tm_info->v_panning;
   }
-  if(tm_info.line_compare != line_compare) {
+  if(tm_info->line_compare != line_compare) {
     forceUpdate = 1;
-    line_compare = tm_info.line_compare;
+    line_compare = tm_info->line_compare;
   }
 
   // first invalidate character at previous and new cursor location
   if((prev_cursor_y < text_rows) && (prev_cursor_x < text_cols)) {
-    curs = prev_cursor_y * tm_info.line_offset + prev_cursor_x * 2;
+    curs = prev_cursor_y * tm_info->line_offset + prev_cursor_x * 2;
     old_text[curs] = ~new_text[curs];
   }
-  if((tm_info.cs_start <= tm_info.cs_end) && (tm_info.cs_start < yChar) &&
+  if((tm_info->cs_start <= tm_info->cs_end) && (tm_info->cs_start < yChar) &&
      (cursor_y < text_rows) && (cursor_x < text_cols)) {
-    curs = cursor_y * tm_info.line_offset + cursor_x * 2;
+    curs = cursor_y * tm_info->line_offset + cursor_x * 2;
     old_text[curs] = ~new_text[curs];
   } else {
     curs = 0xffff;
@@ -1602,7 +1602,7 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   if (v_panning) rows++;
   y = 0;
   cs_y = 0;
-  text_base = new_text - tm_info.start_address;
+  text_base = new_text - tm_info->start_address;
   if (line_compare < dimension_y) {
     split_textrow = (line_compare + v_panning) / yChar;
     split_fontrows = ((line_compare + v_panning) % yChar) + 1;
@@ -1648,7 +1648,7 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     new_line = new_text;
     old_line = old_text;
     x = 0;
-    offset = cs_y * tm_info.line_offset;
+    offset = cs_y * tm_info->line_offset;
     do {
       if (h_panning) {
         if (hchars > text_cols) {
@@ -1683,18 +1683,18 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                    font_row, SRCCOPY, cAttr);
         if (offset == curs) {
           if (font_row == 0) {
-            yc2 = yc + tm_info.cs_start;
-            font_row2 = tm_info.cs_start;
-            cfheight2 = tm_info.cs_end - tm_info.cs_start + 1;
+            yc2 = yc + tm_info->cs_start;
+            font_row2 = tm_info->cs_start;
+            cfheight2 = tm_info->cs_end - tm_info->cs_start + 1;
           } else {
-            if (v_panning > tm_info.cs_start) {
+            if (v_panning > tm_info->cs_start) {
               yc2 = yc;
               font_row2 = font_row;
-              cfheight2 = tm_info.cs_end - v_panning + 1;
+              cfheight2 = tm_info->cs_end - v_panning + 1;
             } else {
-              yc2 = yc + tm_info.cs_start - v_panning;
-              font_row2 = tm_info.cs_start;
-              cfheight2 = tm_info.cs_end - tm_info.cs_start + 1;
+              yc2 = yc + tm_info->cs_start - v_panning;
+              font_row2 = tm_info->cs_start;
+              cfheight2 = tm_info->cs_end - tm_info->cs_start + 1;
             }
           }
           cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
@@ -1711,18 +1711,18 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       new_text = text_base;
       forceUpdate = 1;
       cs_y = 0;
-      if (tm_info.split_hpanning) h_panning = 0;
+      if (tm_info->split_hpanning) h_panning = 0;
       rows = ((dimension_y - line_compare + yChar - 2) / yChar) + 1;
       split_screen = 1;
     } else {
       y++;
       cs_y++;
-      new_text = new_line + tm_info.line_offset;
-      old_text = old_line + tm_info.line_offset;
+      new_text = new_line + tm_info->line_offset;
+      old_text = old_line + tm_info->line_offset;
     }
   } while (--rows);
 
-  h_panning = tm_info.h_panning;
+  h_panning = tm_info->h_panning;
 
   prev_cursor_x = cursor_x;
   prev_cursor_y = cursor_y;

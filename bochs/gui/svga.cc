@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009  The Bochs Project
+//  Copyright (C) 2009-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -144,7 +144,7 @@ void bx_svga_gui_c::text_update(
     Bit8u *new_text,
     unsigned long cursor_x,
     unsigned long cursor_y,
-    bx_vga_tminfo_t tm_info)
+    bx_vga_tminfo_t *tm_info)
 {
   Bit8u *old_line, *new_line;
   unsigned int curs, hchars, i, j, offset, rows, x, y;
@@ -154,10 +154,10 @@ void bx_svga_gui_c::text_update(
   int text_palette[16];
 
   // first check if the screen needs to be redrawn completely
-  blink_mode = (tm_info.blink_flags & BX_TEXT_BLINK_MODE) > 0;
-  blink_state = (tm_info.blink_flags & BX_TEXT_BLINK_STATE) > 0;
+  blink_mode = (tm_info->blink_flags & BX_TEXT_BLINK_MODE) > 0;
+  blink_state = (tm_info->blink_flags & BX_TEXT_BLINK_STATE) > 0;
   if (blink_mode) {
-    if (tm_info.blink_flags & BX_TEXT_BLINK_TOGGLE)
+    if (tm_info->blink_flags & BX_TEXT_BLINK_TOGGLE)
       force_update = 1;
   }
   if (charmap_updated) {
@@ -176,17 +176,17 @@ void bx_svga_gui_c::text_update(
     charmap_updated = 0;
   }
   for (i=0; i<16; i++) {
-    text_palette[i] = DEV_vga_get_actl_pal_idx(i);
+    text_palette[i] = tm_info->actl_palette[i];
   }
 
   // invalidate character at previous and new cursor location
   if((prev_cursor_y < text_rows) && (prev_cursor_x < text_cols)) {
-    curs = prev_cursor_y * tm_info.line_offset + prev_cursor_x * 2;
+    curs = prev_cursor_y * tm_info->line_offset + prev_cursor_x * 2;
     old_text[curs] = ~new_text[curs];
   }
-  if((tm_info.cs_start <= tm_info.cs_end) && (tm_info.cs_start < fontheight) &&
+  if((tm_info->cs_start <= tm_info->cs_end) && (tm_info->cs_start < fontheight) &&
      (cursor_y < text_rows) && (cursor_x < text_cols)) {
-    curs = cursor_y * tm_info.line_offset + cursor_x * 2;
+    curs = cursor_y * tm_info->line_offset + cursor_x * 2;
     old_text[curs] = ~new_text[curs];
   } else {
     curs = 0xffff;
@@ -199,7 +199,7 @@ void bx_svga_gui_c::text_update(
     new_line = new_text;
     old_line = old_text;
     x = 0;
-    offset = y * tm_info.line_offset;
+    offset = y * tm_info->line_offset;
     do {
       if (force_update || (old_text[0] != new_text[0])
           || (old_text[1] != new_text[1])) {
@@ -225,8 +225,8 @@ void bx_svga_gui_c::text_update(
       offset+=2;
     } while (--hchars);
     y++;
-    new_text = new_line + tm_info.line_offset;
-    old_text = old_line + tm_info.line_offset;
+    new_text = new_line + tm_info->line_offset;
+    old_text = old_line + tm_info->line_offset;
   } while (--rows);
 
   prev_cursor_x = cursor_x;

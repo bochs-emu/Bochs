@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -311,8 +311,6 @@ static void xkeypress(KeySym keysym, int press_release);
 unsigned long col_vals[MAX_VGA_COLORS]; // 256 VGA colors
 unsigned curr_foreground, curr_background;
 
-static unsigned x_tilesize, y_tilesize;
-
 BxEvent *x11_notify_callback (void *unused, BxEvent *event);
 static bxevent_handler old_callback = NULL;
 static void *old_callback_arg = NULL;
@@ -379,8 +377,8 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsign
 
   put("XGUI");
 
-  x_tilesize = tilewidth;
-  y_tilesize = tileheight;
+  UNUSED(tilewidth);
+  UNUSED(tileheight);
   bx_headerbar_y = headerbar_y;
 
   progname = argv[0];
@@ -1228,7 +1226,7 @@ void bx_x_gui_c::clear_screen(void)
 
 void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
-                      bx_vga_tminfo_t tm_info)
+                      bx_vga_tminfo_t *tm_info)
 {
   Bit8u *old_line, *new_line, *text_base;
   Bit8u cChar;
@@ -1241,10 +1239,10 @@ void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   unsigned char cell[64];
   unsigned long text_palette[16];
 
-  blink_mode = (tm_info.blink_flags & BX_TEXT_BLINK_MODE) > 0;
-  blink_state = (tm_info.blink_flags & BX_TEXT_BLINK_STATE) > 0;
+  blink_mode = (tm_info->blink_flags & BX_TEXT_BLINK_MODE) > 0;
+  blink_state = (tm_info->blink_flags & BX_TEXT_BLINK_STATE) > 0;
   if (blink_mode) {
-    if (tm_info.blink_flags & BX_TEXT_BLINK_TOGGLE)
+    if (tm_info->blink_flags & BX_TEXT_BLINK_TOGGLE)
       forceUpdate = 1;
   }
   if (charmap_updated) {
@@ -1252,7 +1250,7 @@ void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     for (unsigned c = 0; c<256; c++) {
       if (char_changed[c]) {
         XFreePixmap(bx_x_display, vgafont[c]);
-        bx_bool gfxchar = tm_info.line_graphics && ((c & 0xE0) == 0xC0);
+        bx_bool gfxchar = tm_info->line_graphics && ((c & 0xE0) == 0xC0);
         j = 0;
         memset(cell, 0, sizeof(cell));
         for(i=0; i<font_height*2; i+=2) {
@@ -1281,27 +1279,27 @@ void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     charmap_updated = 0;
   }
   for (i=0; i<16; i++) {
-    text_palette[i] = col_vals[DEV_vga_get_actl_pal_idx(i)];
+    text_palette[i] = col_vals[tm_info->actl_palette[i]];
   }
 
-  if((tm_info.h_panning != h_panning) || (tm_info.v_panning != v_panning)) {
+  if((tm_info->h_panning != h_panning) || (tm_info->v_panning != v_panning)) {
     forceUpdate = 1;
-    h_panning = tm_info.h_panning;
-    v_panning = tm_info.v_panning;
+    h_panning = tm_info->h_panning;
+    v_panning = tm_info->v_panning;
   }
-  if(tm_info.line_compare != line_compare) {
+  if(tm_info->line_compare != line_compare) {
     forceUpdate = 1;
-    line_compare = tm_info.line_compare;
+    line_compare = tm_info->line_compare;
   }
 
   // first invalidate character at previous and new cursor location
   if ((prev_cursor_y < text_rows) && (prev_cursor_x < text_cols)) {
-    curs = prev_cursor_y * tm_info.line_offset + prev_cursor_x * 2;
+    curs = prev_cursor_y * tm_info->line_offset + prev_cursor_x * 2;
     old_text[curs] = ~new_text[curs];
   }
-  if((tm_info.cs_start <= tm_info.cs_end) && (tm_info.cs_start < font_height) &&
+  if((tm_info->cs_start <= tm_info->cs_end) && (tm_info->cs_start < font_height) &&
      (cursor_y < text_rows) && (cursor_x < text_cols)) {
-    curs = cursor_y * tm_info.line_offset + cursor_x * 2;
+    curs = cursor_y * tm_info->line_offset + cursor_x * 2;
     old_text[curs] = ~new_text[curs];
   } else {
     curs = 0xffff;
@@ -1311,7 +1309,7 @@ void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   if (v_panning) rows++;
   y = 0;
   cs_y = 0;
-  text_base = new_text - tm_info.start_address;
+  text_base = new_text - tm_info->start_address;
   if (line_compare < dimension_y) {
     split_textrow = (line_compare + v_panning) / font_height;
     split_fontrows = ((line_compare + v_panning) % font_height) + 1;
@@ -1357,7 +1355,7 @@ void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     new_line = new_text;
     old_line = old_text;
     x = 0;
-    offset = cs_y * tm_info.line_offset;
+    offset = cs_y * tm_info->line_offset;
     do {
       if (h_panning) {
         if (hchars > text_cols) {
@@ -1399,21 +1397,21 @@ void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
           XSetForeground(bx_x_display, gc, text_palette[new_background]);
           XSetBackground(bx_x_display, gc, text_palette[new_foreground]);
           if (font_row == 0) {
-            yc2 = yc + tm_info.cs_start;
-            font_row2 = tm_info.cs_start;
-            cfheight2 = tm_info.cs_end - tm_info.cs_start + 1;
+            yc2 = yc + tm_info->cs_start;
+            font_row2 = tm_info->cs_start;
+            cfheight2 = tm_info->cs_end - tm_info->cs_start + 1;
             if ((yc2 + cfheight2) > (dimension_y + bx_headerbar_y)) {
               cfheight2 = dimension_y + bx_headerbar_y - yc2;
             }
           } else {
-            if (v_panning > tm_info.cs_start) {
+            if (v_panning > tm_info->cs_start) {
               yc2 = yc;
               font_row2 = font_row;
-              cfheight2 = tm_info.cs_end - v_panning + 1;
+              cfheight2 = tm_info->cs_end - v_panning + 1;
             } else {
-              yc2 = yc + tm_info.cs_start - v_panning;
-              font_row2 = tm_info.cs_start;
-              cfheight2 = tm_info.cs_end - tm_info.cs_start + 1;
+              yc2 = yc + tm_info->cs_start - v_panning;
+              font_row2 = tm_info->cs_start;
+              cfheight2 = tm_info->cs_end - tm_info->cs_start + 1;
             }
           }
           if (yc2 < (dimension_y + bx_headerbar_y)) {
@@ -1431,18 +1429,18 @@ void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       new_text = text_base;
       forceUpdate = 1;
       cs_y = 0;
-      if (tm_info.split_hpanning) h_panning = 0;
+      if (tm_info->split_hpanning) h_panning = 0;
       rows = ((dimension_y - line_compare + font_height - 2) / font_height) + 1;
       split_screen = 1;
     } else {
       y++;
       cs_y++;
-      new_text = new_line + tm_info.line_offset;
-      old_text = old_line + tm_info.line_offset;
+      new_text = new_line + tm_info->line_offset;
+      old_text = old_line + tm_info->line_offset;
     }
   } while (--rows);
 
-  h_panning = tm_info.h_panning;
+  h_panning = tm_info->h_panning;
   prev_cursor_x = cursor_x;
   prev_cursor_y = cursor_y;
 

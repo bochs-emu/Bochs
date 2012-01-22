@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009  The Bochs Project
+//  Copyright (C) 2002-2012  The Bochs Project
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
 // wxPanel called a MyPanel, which has methods to display
@@ -1149,13 +1149,11 @@ static void UpdateScreen(unsigned char *newBits, int x, int y, int width, int he
   }
 }
 
-static void DrawBochsBitmap(int x, int y, int width, int height, char *bmap, char color, int fontx, int fonty, bx_bool gfxchar)
+static void DrawBochsBitmap(int x, int y, int width, int height, char *bmap, char fgcolor, char bgcolor, int fontx, int fonty, bx_bool gfxchar)
 {
   static unsigned char newBits[9 * 32];
   unsigned char mask;
   int bytes = width * height;
-  char bgcolor = DEV_vga_get_actl_pal_idx((color >> 4) & 0xF);
-  char fgcolor = DEV_vga_get_actl_pal_idx(color & 0xF);
 
   if (y > wxScreenY) return;
 
@@ -1189,7 +1187,7 @@ static void DrawBochsBitmap(int x, int y, int width, int height, char *bmap, cha
 // new_text: array of character/attributes making up the current
 //           contents, which should now be displayed.  See below
 //
-// format of old_text & new_text: each is tm_info.line_offset*text_rows
+// format of old_text & new_text: each is tm_info->line_offset*text_rows
 //     bytes long. Each character consists of 2 bytes.  The first by is
 //     the character value, the second is the attribute byte.
 //
@@ -1199,47 +1197,52 @@ static void DrawBochsBitmap(int x, int y, int width, int height, char *bmap, cha
 //           features in text mode (cursor shape, line offset,...)
 
 void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
-                      unsigned long cursor_x, unsigned long cursor_y,
-          bx_vga_tminfo_t tm_info)
+                              unsigned long cursor_x, unsigned long cursor_y,
+                              bx_vga_tminfo_t *tm_info)
 {
   IFDBG_VGA(wxLogDebug (wxT ("text_update")));
 
   Bit8u *old_line, *new_line, *text_base;
   Bit8u cAttr, cChar;
-  unsigned int curs, hchars, offset, rows, x, y, xc, yc, yc2, cs_y;
+  unsigned int curs, hchars, offset, rows, x, y, xc, yc, yc2, cs_y, i;
   Bit8u cfwidth, cfheight, cfheight2, font_col, font_row, font_row2;
   Bit8u split_textrow, split_fontrows;
   bx_bool forceUpdate = 0, gfxchar, split_screen, blink_state, blink_mode;
+  Bit8u text_pal_idx[16];
+  char bgcolor, fgcolor;
 
   // first check if the screen needs to be redrawn completely
-  blink_mode = (tm_info.blink_flags & BX_TEXT_BLINK_MODE) > 0;
-  blink_state = (tm_info.blink_flags & BX_TEXT_BLINK_STATE) > 0;
+  blink_mode = (tm_info->blink_flags & BX_TEXT_BLINK_MODE) > 0;
+  blink_state = (tm_info->blink_flags & BX_TEXT_BLINK_STATE) > 0;
   if (blink_mode) {
-    if (tm_info.blink_flags & BX_TEXT_BLINK_TOGGLE)
+    if (tm_info->blink_flags & BX_TEXT_BLINK_TOGGLE)
       forceUpdate = 1;
   }
   if(charmap_updated) {
     forceUpdate = 1;
     charmap_updated = 0;
   }
-  if((tm_info.h_panning != h_panning) || (tm_info.v_panning != v_panning)) {
-    forceUpdate = 1;
-    h_panning = tm_info.h_panning;
-    v_panning = tm_info.v_panning;
+  for (i = 0; i < 16; i++) {
+    text_pal_idx[i] = tm_info->actl_palette[i];
   }
-  if(tm_info.line_compare != line_compare) {
+  if((tm_info->h_panning != h_panning) || (tm_info->v_panning != v_panning)) {
     forceUpdate = 1;
-    line_compare = tm_info.line_compare;
+    h_panning = tm_info->h_panning;
+    v_panning = tm_info->v_panning;
+  }
+  if(tm_info->line_compare != line_compare) {
+    forceUpdate = 1;
+    line_compare = tm_info->line_compare;
   }
 
   // invalidate character at previous and new cursor location
   if((wxCursorY < text_rows) && (wxCursorX < text_cols)) {
-    curs = wxCursorY * tm_info.line_offset + wxCursorX * 2;
+    curs = wxCursorY * tm_info->line_offset + wxCursorX * 2;
     old_text[curs] = ~new_text[curs];
   }
-  if((tm_info.cs_start <= tm_info.cs_end) && (tm_info.cs_start < wxFontY) &&
+  if((tm_info->cs_start <= tm_info->cs_end) && (tm_info->cs_start < wxFontY) &&
      (cursor_y < text_rows) && (cursor_x < text_cols)) {
-    curs = cursor_y * tm_info.line_offset + cursor_x * 2;
+    curs = cursor_y * tm_info->line_offset + cursor_x * 2;
     old_text[curs] = ~new_text[curs];
   } else {
     curs = 0xffff;
@@ -1249,7 +1252,7 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   if (v_panning) rows++;
   y = 0;
   cs_y = 0;
-  text_base = new_text - tm_info.start_address;
+  text_base = new_text - tm_info->start_address;
   if (line_compare < wxScreenY) {
     split_textrow = (line_compare + v_panning) / wxFontY;
     split_fontrows = ((line_compare + v_panning) % wxFontY) + 1;
@@ -1295,7 +1298,7 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     new_line = new_text;
     old_line = old_text;
     x = 0;
-    offset = cs_y * tm_info.line_offset;
+    offset = cs_y * tm_info->line_offset;
     do {
       if (h_panning) {
         if (hchars > text_cols) {
@@ -1326,28 +1329,29 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
         } else {
           cAttr = new_text[1];
         }
-        gfxchar = tm_info.line_graphics && ((cChar & 0xE0) == 0xC0);
+        gfxchar = tm_info->line_graphics && ((cChar & 0xE0) == 0xC0);
+        bgcolor = text_pal_idx[(cAttr >> 4) & 0xF];
+        fgcolor = text_pal_idx[cAttr & 0xF];
         DrawBochsBitmap(xc, yc, cfwidth, cfheight, (char *)&vga_charmap[cChar<<5],
-                        cAttr, font_col, font_row, gfxchar);
+                        fgcolor, bgcolor, font_col, font_row, gfxchar);
         if (offset == curs) {
           if (font_row == 0) {
-            yc2 = yc + tm_info.cs_start;
-            font_row2 = tm_info.cs_start;
-            cfheight2 = tm_info.cs_end - tm_info.cs_start + 1;
+            yc2 = yc + tm_info->cs_start;
+            font_row2 = tm_info->cs_start;
+            cfheight2 = tm_info->cs_end - tm_info->cs_start + 1;
           } else {
-            if (v_panning > tm_info.cs_start) {
+            if (v_panning > tm_info->cs_start) {
               yc2 = yc;
               font_row2 = font_row;
-              cfheight2 = tm_info.cs_end - v_panning + 1;
+              cfheight2 = tm_info->cs_end - v_panning + 1;
             } else {
-              yc2 = yc + tm_info.cs_start - v_panning;
-              font_row2 = tm_info.cs_start;
-              cfheight2 = tm_info.cs_end - tm_info.cs_start + 1;
+              yc2 = yc + tm_info->cs_start - v_panning;
+              font_row2 = tm_info->cs_start;
+              cfheight2 = tm_info->cs_end - tm_info->cs_start + 1;
             }
           }
-          cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
           DrawBochsBitmap(xc, yc2, cfwidth, cfheight2, (char *)&vga_charmap[cChar<<5],
-                          cAttr, font_col, font_row2, gfxchar);
+                          bgcolor, fgcolor, font_col, font_row2, gfxchar);
         }
       }
       x++;
@@ -1359,18 +1363,18 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       new_text = text_base;
       forceUpdate = 1;
       cs_y = 0;
-      if (tm_info.split_hpanning) h_panning = 0;
+      if (tm_info->split_hpanning) h_panning = 0;
       rows = ((wxScreenY - line_compare + wxFontY - 2) / wxFontY) + 1;
       split_screen = 1;
     } else {
       y++;
       cs_y++;
-      new_text = new_line + tm_info.line_offset;
-      old_text = old_line + tm_info.line_offset;
+      new_text = new_line + tm_info->line_offset;
+      old_text = old_line + tm_info->line_offset;
     }
   } while (--rows);
 
-  h_panning = tm_info.h_panning;
+  h_panning = tm_info->h_panning;
   wxCursorX = cursor_x;
   wxCursorY = cursor_y;
 

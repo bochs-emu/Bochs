@@ -888,11 +888,6 @@ Bit64s bx_svga_cirrus_c::svga_param_handler(bx_param_c *param, int set, Bit64s v
   return val;
 }
 
-Bit8u bx_svga_cirrus_c::get_actl_palette_idx(Bit8u index)
-{
-  return BX_CIRRUS_THIS bx_vga_c::get_actl_palette_idx(index);
-}
-
 Bit32u bx_svga_cirrus_c::svga_read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
 #if !BX_USE_CIRRUS_SMF

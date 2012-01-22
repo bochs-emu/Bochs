@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2011  The Bochs Project
+//  Copyright (C) 2002-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -222,7 +222,6 @@ extern "C" {
   (bx_devices.pluginVgaDevice->get_gfx_snapshot(rawsnap, palette, height, width, depth))
 #define DEV_vga_refresh() \
   (bx_devices.pluginVgaDevice->trigger_timer(bx_devices.pluginVgaDevice))
-#define DEV_vga_get_actl_pal_idx(index) (bx_devices.pluginVgaDevice->get_actl_palette_idx(index))
 #define DEV_vga_debug_dump() (bx_devices.pluginVgaDevice->debug_dump())
 #define DEV_vbe_set_base_addr(a,b) (bx_devices.pluginVgaDevice->vbe_set_base_addr(a,b))
 

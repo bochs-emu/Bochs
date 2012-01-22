@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2011  The Bochs Project
+//  Copyright (C) 2002-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -2119,6 +2119,9 @@ void bx_vga_c::update(void)
     } else {
       tm_info.h_panning &= 0x07;
     }
+    for (int index = 0; index < 16; index++) {
+      tm_info.actl_palette[index] = BX_VGA_THIS s.attribute_ctrl.palette_reg[index];
+    }
 
     // Verticle Display End: find out how many lines are displayed
     VDE = BX_VGA_THIS s.vertical_display_end;
@@ -2164,7 +2167,7 @@ void bx_vga_c::update(void)
     }
     bx_gui->text_update(BX_VGA_THIS s.text_snapshot,
                         &BX_VGA_THIS s.memory[start_address],
-                        cursor_x, cursor_y, tm_info);
+                        cursor_x, cursor_y, &tm_info);
     if (BX_VGA_THIS s.vga_mem_updated) {
       // screen updated, copy new VGA memory contents into text snapshot
       memcpy(BX_VGA_THIS s.text_snapshot,
@@ -2874,11 +2877,6 @@ Bit32u bx_vga_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
       return 0;
     }
   }
-}
-
-Bit8u bx_vga_c::get_actl_palette_idx(Bit8u index)
-{
-  return BX_VGA_THIS s.attribute_ctrl.palette_reg[index];
 }
 
 #if BX_DEBUGGER

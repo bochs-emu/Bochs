@@ -64,6 +64,7 @@ typedef struct {
   bx_bool line_graphics;
   bx_bool split_hpanning;
   Bit8u   blink_flags;
+  Bit8u   actl_palette[16];
 } bx_vga_tminfo_t;
 
 typedef struct {
@@ -94,7 +95,7 @@ public:
                  unsigned x_tilesize, unsigned y_tilesize, unsigned header_bar_y) = 0;
   virtual void text_update(Bit8u *old_text, Bit8u *new_text,
                           unsigned long cursor_x, unsigned long cursor_y,
-                          bx_vga_tminfo_t tm_info) = 0;
+                          bx_vga_tminfo_t *tm_info) = 0;
   virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y) = 0;
   virtual bx_svga_tileinfo_t *graphics_tile_info(bx_svga_tileinfo_t *info);
   virtual Bit8u *graphics_tile_get(unsigned x, unsigned y, unsigned *w, unsigned *h);
@@ -237,7 +238,7 @@ virtual void specific_init(int argc, char **argv,                           \
          unsigned header_bar_y);                                            \
 virtual void text_update(Bit8u *old_text, Bit8u *new_text,                  \
                   unsigned long cursor_x, unsigned long cursor_y,           \
-                  bx_vga_tminfo_t tm_info);                                 \
+                  bx_vga_tminfo_t *tm_info);                                 \
 virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y); \
 virtual void handle_events(void);                                           \
 virtual void flush(void);                                                   \

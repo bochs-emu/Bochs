@@ -720,7 +720,7 @@ void bx_rfb_gui_c::clear_screen(void)
 // new_text: array of character/attributes making up the current
 //           contents, which should now be displayed.  See below
 //
-// format of old_text & new_text: each is tm_info.line_offset*text_rows
+// format of old_text & new_text: each is tm_info->line_offset*text_rows
 //     bytes long. Each character consists of 2 bytes.  The first by is
 //     the character value, the second is the attribute byte.
 //
@@ -729,17 +729,17 @@ void bx_rfb_gui_c::clear_screen(void)
 // tm_info:  this structure contains information for additional
 //           features in text mode (cursor shape, line offset,...)
 
-void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long cursor_x, unsigned long cursor_y, bx_vga_tminfo_t tm_info)
+void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long cursor_x, unsigned long cursor_y, bx_vga_tminfo_t *tm_info)
 {
   Bit8u *old_line, *new_line;
   Bit8u cAttr, cChar;
   unsigned int  curs, hchars, offset, rows, x, y, xc, yc;
   bx_bool force_update=0, gfxchar, blink_state, blink_mode;
 
-  blink_mode = (tm_info.blink_flags & BX_TEXT_BLINK_MODE) > 0;
-  blink_state = (tm_info.blink_flags & BX_TEXT_BLINK_STATE) > 0;
+  blink_mode = (tm_info->blink_flags & BX_TEXT_BLINK_MODE) > 0;
+  blink_state = (tm_info->blink_flags & BX_TEXT_BLINK_STATE) > 0;
   if (blink_mode) {
-    if (tm_info.blink_flags & BX_TEXT_BLINK_TOGGLE)
+    if (tm_info->blink_flags & BX_TEXT_BLINK_TOGGLE)
       force_update = 1;
   }
   if(charmap_updated) {
@@ -749,12 +749,12 @@ void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long c
 
   // first invalidate character at previous and new cursor location
   if ((rfbCursorY < text_rows) && (rfbCursorX < text_cols)) {
-    curs = rfbCursorY * tm_info.line_offset + rfbCursorX * 2;
+    curs = rfbCursorY * tm_info->line_offset + rfbCursorX * 2;
     old_text[curs] = ~new_text[curs];
   }
-  if((tm_info.cs_start <= tm_info.cs_end) && (tm_info.cs_start < font_height) &&
+  if((tm_info->cs_start <= tm_info->cs_end) && (tm_info->cs_start < font_height) &&
      (cursor_y < text_rows) && (cursor_x < text_cols)) {
-    curs = cursor_y * tm_info.line_offset + cursor_x * 2;
+    curs = cursor_y * tm_info->line_offset + cursor_x * 2;
     old_text[curs] = ~new_text[curs];
   } else {
     curs = 0xffff;
@@ -766,7 +766,7 @@ void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long c
     hchars = text_cols;
     new_line = new_text;
     old_line = old_text;
-    offset = y * tm_info.line_offset;
+    offset = y * tm_info->line_offset;
     yc = y * font_height + rfbHeaderbarY;
     x = 0;
     do {
@@ -780,7 +780,7 @@ void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long c
         } else {
           cAttr = new_text[1];
         }
-        gfxchar = tm_info.line_graphics && ((cChar & 0xE0) == 0xC0);
+        gfxchar = tm_info->line_graphics && ((cChar & 0xE0) == 0xC0);
         xc = x * font_width;
         DrawChar(xc, yc, font_width, font_height, 0, (char *)&vga_charmap[cChar<<5], cAttr, gfxchar);
         if(yc < rfbUpdateRegion.y) rfbUpdateRegion.y = yc;
@@ -790,8 +790,8 @@ void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long c
         rfbUpdateRegion.updated = true;
         if (offset == curs) {
           cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
-          DrawChar(xc, yc + tm_info.cs_start, font_width, tm_info.cs_end - tm_info.cs_start + 1,
-                   tm_info.cs_start, (char *)&vga_charmap[cChar<<5], cAttr, gfxchar);
+          DrawChar(xc, yc + tm_info->cs_start, font_width, tm_info->cs_end - tm_info->cs_start + 1,
+                   tm_info->cs_start, (char *)&vga_charmap[cChar<<5], cAttr, gfxchar);
         }
       }
       x++;
@@ -800,8 +800,8 @@ void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long c
       offset+=2;
     } while (--hchars);
     y++;
-    new_text = new_line + tm_info.line_offset;
-    old_text = old_line + tm_info.line_offset;
+    new_text = new_line + tm_info->line_offset;
+    old_text = old_line + tm_info->line_offset;
   } while (--rows);
 
   rfbCursorX = cursor_x;

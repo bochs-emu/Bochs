@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2000-2009  The Bochs Project
+//  Copyright (C) 2000-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -419,7 +419,7 @@ void bx_amigaos_gui_c::clear_screen(void)
 
 void bx_amigaos_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                                           unsigned long cursor_x, unsigned long cursor_y,
-                                          bx_vga_tminfo_t tm_info)
+                                          bx_vga_tminfo_t *tm_info)
 {
   int i;
   int cursori;

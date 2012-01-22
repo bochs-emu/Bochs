@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2011  The Bochs Project
+//  Copyright (C) 2002-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -140,7 +140,6 @@ public:
                                    unsigned *txWidth);
   virtual Bit32u get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
                                   unsigned *iHeight, unsigned *iWidth, unsigned *iDepth);
-  virtual Bit8u  get_actl_palette_idx(Bit8u index);
   virtual void   init_vga_extension(void);
 
   static void     timer_handler(void *);

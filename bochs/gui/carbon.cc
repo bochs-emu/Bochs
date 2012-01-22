@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1137,7 +1137,7 @@ void bx_carbon_gui_c::clear_screen(void)
 // new_text: array of character/attributes making up the current
 //           contents, which should now be displayed.  See below
 //
-// format of old_text & new_text: each is tm_info.line_offset*text_rows
+// format of old_text & new_text: each is tm_info->line_offset*text_rows
 //     bytes long. Each character consists of 2 bytes.  The first by is
 //     the character value, the second is the attribute byte.
 //
@@ -1148,7 +1148,7 @@ void bx_carbon_gui_c::clear_screen(void)
 
 void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   unsigned long cursor_x, unsigned long cursor_y,
-  bx_vga_tminfo_t tm_info)
+  bx_vga_tminfo_t *tm_info)
 {
   unsigned char cAttr, cChar;
   Rect          destRect;
@@ -1158,18 +1158,19 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   GrafPtr       winGrafPtr = GetWindowPort(win);
   OSErr         theError;
   Bit8u         *old_line, *new_line;
-  unsigned int  curs, hchars, offset, rows, x, xc, y, yc;
+  unsigned int  curs, hchars, offset, rows, x, xc, y, yc, i;
   bx_bool       forceUpdate = 0, blink_mode, blink_state;
   static unsigned prev_cursor_x=0;
   static unsigned prev_cursor_y=0;
+  char          text_palette[16];
 
   screen_state = TEXT_MODE;
 
   // first check if the screen needs to be redrawn completely
-  blink_mode = (tm_info.blink_flags & BX_TEXT_BLINK_MODE) > 0;
-  blink_state = (tm_info.blink_flags & BX_TEXT_BLINK_STATE) > 0;
+  blink_mode = (tm_info->blink_flags & BX_TEXT_BLINK_MODE) > 0;
+  blink_state = (tm_info->blink_flags & BX_TEXT_BLINK_STATE) > 0;
   if (blink_mode) {
-    if (tm_info.blink_flags & BX_TEXT_BLINK_TOGGLE)
+    if (tm_info->blink_flags & BX_TEXT_BLINK_TOGGLE)
       forceUpdate = 1;
   }
   if (charmap_updated == 1) {
@@ -1178,14 +1179,18 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     forceUpdate = 1;
   }
 
+  for (i = 0; i < 16; i++) {
+    text_palette[i] = tm_info->actl_palette[i];
+  }
+
   // invalidate character at previous and new cursor location
   if((prev_cursor_y < text_rows) && (prev_cursor_x < text_cols)) {
-    curs = prev_cursor_y * tm_info.line_offset + prev_cursor_x * 2;
+    curs = prev_cursor_y * tm_info->line_offset + prev_cursor_x * 2;
     old_text[curs] = ~new_text[curs];
   }
-  if((tm_info.cs_start <= tm_info.cs_end) && (tm_info.cs_start < font_height) &&
+  if((tm_info->cs_start <= tm_info->cs_end) && (tm_info->cs_start < font_height) &&
      (cursor_y < text_rows) && (cursor_x < text_cols)) {
-    curs = cursor_y * tm_info.line_offset + cursor_x * 2;
+    curs = cursor_y * tm_info->line_offset + cursor_x * 2;
     old_text[curs] = ~new_text[curs];
   } else {
     curs = 0xffff;
@@ -1202,7 +1207,7 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     new_line = new_text;
     old_line = old_text;
     x = 0;
-    offset = y * tm_info.line_offset;
+    offset = y * tm_info->line_offset;
     do {
       if (forceUpdate || (old_text[0] != new_text[0])
           || (old_text[1] != new_text[1])) {
@@ -1216,20 +1221,20 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
         }
         if (offset == curs) {
           cAttr = (cAttr >> 4) | (cAttr << 4);
-	}
+        }
 
         if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
-          PmForeColor(new_text[1] & 0x0F);
+          PmForeColor(text_palette[cAttr & 0x0F]);
           if (blink_mode) {
-            PmBackColor((new_text[1] & 0x70) >> 4);
-            if (!blink_state && (new_text[1] & 0x80))
-              PmForeColor((new_text[1] & 0x70) >> 4);
+            PmBackColor(text_palette[(cAttr & 0x70) >> 4]);
+            if (!blink_state && (cAttr & 0x80))
+              PmForeColor(text_palette[(cAttr & 0x70) >> 4]);
           } else {
-            PmBackColor((new_text[1] & 0xF0) >> 4);
+            PmBackColor(text_palette[(cAttr & 0xF0) >> 4]);
           }
         } else {
-          fgColor = (**gCTable).ctTable[new_text[1] & 0x0F].rgb;
-          bgColor = (**gCTable).ctTable[(new_text[1] & 0xF0) >> 4].rgb;
+          fgColor = (**gCTable).ctTable[text_palette[cAttr & 0x0F]].rgb;
+          bgColor = (**gCTable).ctTable[text_palette[(cAttr & 0xF0) >> 4]].rgb;
 
           RGBForeColor(&fgColor);
           RGBBackColor(&bgColor);
@@ -1253,8 +1258,8 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       offset+=2;
     } while (--hchars);
     y++;
-    new_text = new_line + tm_info.line_offset;
-    old_text = old_line + tm_info.line_offset;
+    new_text = new_line + tm_info->line_offset;
+    old_text = old_line + tm_info->line_offset;
   } while (--rows);
 
   //previous cursor position
