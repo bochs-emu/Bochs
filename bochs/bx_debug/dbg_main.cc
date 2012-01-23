@@ -1677,8 +1677,6 @@ void bx_dbg_unwatch(bx_phy_address address)
 
 void bx_dbg_continue_command(void)
 {
-  int cpu;
-
   // continue executing, until a guard found
 
 one_more:
@@ -1713,13 +1711,13 @@ one_more:
       stop_reason_t reason = (stop_reason_t) BX_CPU(0)->stop_reason;
       if (found || (reason != STOP_NO_REASON && reason != STOP_CPU_HALTED)) {
         stop = 1;
-        which = cpu;
+        which = 0;
       }
     }
 #if BX_SUPPORT_SMP
     else {
       Bit32u max_executed = 0;
-      for (cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
+      for (int cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
         Bit64u cpu_icount = BX_CPU(cpu)->get_icount();
         bx_dbg_set_icount_guard(cpu, BX_DBG_DEFAULT_ICOUNT_QUANTUM);
         BX_CPU(cpu)->cpu_loop();
