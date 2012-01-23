@@ -75,8 +75,6 @@ static const Bit8u ccdat[16][4] = {
 
 bx_vga_c *theVga = NULL;
 
-unsigned old_MSL = 0;
-
 #if BX_SUPPORT_CLGD54XX
 void bx_vga_set_smf_pointer(bx_vga_c *theVga_ptr)
 {
@@ -133,6 +131,7 @@ void bx_vga_c::init(void)
 
   BX_VGA_THIS init_standard_vga();
   BX_VGA_THIS init_vga_extension();
+  BX_VGA_THIS init_gui();
 
   BX_VGA_THIS s.num_x_tiles = BX_VGA_THIS s.max_xres / X_TILESIZE +
                               ((BX_VGA_THIS s.max_xres % X_TILESIZE) > 0);
@@ -155,13 +154,8 @@ void bx_vga_c::init(void)
 
 void bx_vga_c::init_standard_vga(void)
 {
-  unsigned i,string_i;
-  int argc;
-  char *argv[16];
-  char *ptr;
-  char string[512];
+  unsigned i;
   char *extname;
-  size_t len;
 
   // initialize VGA controllers and other internal stuff
   BX_VGA_THIS s.vga_enabled = 1;
@@ -247,6 +241,7 @@ void bx_vga_c::init_standard_vga(void)
   BX_VGA_THIS s.last_xres = 0;
   BX_VGA_THIS s.last_yres = 0;
   BX_VGA_THIS s.last_bpp = 8;
+  BX_VGA_THIS s.last_msl = 0;
 
   BX_VGA_THIS s.max_xres = 800;
   BX_VGA_THIS s.max_yres = 600;
@@ -266,6 +261,16 @@ void bx_vga_c::init_standard_vga(void)
 
   // video card with BIOS ROM
   DEV_cmos_set_reg(0x14, (DEV_cmos_get_reg(0x14) & 0xcf) | 0x00);
+}
+
+void bx_vga_c::init_gui(void)
+{
+  unsigned i,string_i;
+  int argc;
+  char *argv[16];
+  char *ptr;
+  char string[512];
+  size_t len;
 
   // set up display library options and start gui
   memset(argv, 0, sizeof(argv));
@@ -2091,7 +2096,8 @@ void bx_vga_c::update(void)
     unsigned long start_address;
     unsigned long cursor_address, cursor_x, cursor_y;
     bx_vga_tminfo_t tm_info;
-    unsigned VDE, MSL, cols, rows, cWidth;
+    unsigned VDE, cols, rows, cWidth;
+    Bit8u MSL;
     static unsigned cs_counter = 1;
     static bx_bool cs_visible = 0;
     bx_bool cs_toggle = 0;
@@ -2160,13 +2166,13 @@ void bx_vga_c::update(void)
     cWidth = ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 1) ? 8 : 9;
     iWidth = cWidth * cols;
     iHeight = VDE+1;
-    if ((iWidth != BX_VGA_THIS s.last_xres) || (iHeight != BX_VGA_THIS s.last_yres) || (MSL != old_MSL) ||
+    if ((iWidth != BX_VGA_THIS s.last_xres) || (iHeight != BX_VGA_THIS s.last_yres) || (MSL != BX_VGA_THIS s.last_msl) ||
         (BX_VGA_THIS s.last_bpp > 8))
     {
       bx_gui->dimension_update(iWidth, iHeight, MSL+1, cWidth);
       BX_VGA_THIS s.last_xres = iWidth;
       BX_VGA_THIS s.last_yres = iHeight;
-      old_MSL = MSL;
+      BX_VGA_THIS s.last_msl = MSL;
       BX_VGA_THIS s.last_bpp = 8;
     }
     // pass old text snapshot & new VGA memory contents

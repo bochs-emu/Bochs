@@ -145,6 +145,7 @@ public:
 
 protected:
   void init_standard_vga(void);
+  void init_gui(void);
   void init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t f_write);
   void init_systemtimer(bx_timer_handler_t f_timer, param_event_handler f_param);
 
@@ -274,6 +275,7 @@ protected:
     Bit16u last_xres;
     Bit16u last_yres;
     Bit8u last_bpp;
+    Bit8u last_msl;
     Bit16u max_xres;
     Bit16u max_yres;
     Bit16u num_x_tiles;
