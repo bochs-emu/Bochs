@@ -189,7 +189,16 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   PLUG_load_plugin(pic, PLUGTYPE_CORE);
   PLUG_load_plugin(pit, PLUGTYPE_CORE);
   PLUG_load_plugin(floppy, PLUGTYPE_CORE);
-  PLUG_load_plugin(vga, PLUGTYPE_CORE);
+  vga_ext = SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr();
+  if (!strcmp(vga_ext, "cirrus")) {
+#if BX_SUPPORT_CLGD54XX
+    PLUG_load_plugin(svga_cirrus, PLUGTYPE_CORE);
+#else
+    BX_ERROR(("Bochs is not compiled with Cirrus support"));
+#endif
+  } else {
+    PLUG_load_plugin(vga, PLUGTYPE_CORE);
+  }
 
 #if BX_SUPPORT_APIC
   PLUG_load_plugin(ioapic, PLUGTYPE_STANDARD);
@@ -215,7 +224,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 
 #if BX_SUPPORT_PCI
   if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
-    vga_ext = SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr();
     if ((DEV_is_pci_device("pcivga")) &&
         ((!strlen(vga_ext)) || (!strcmp(vga_ext, "none")) || (!strcmp(vga_ext, "vbe")))) {
       PLUG_load_plugin(pcivga, PLUGTYPE_STANDARD);
@@ -324,7 +332,14 @@ void bx_devices_c::exit()
   PLUG_unload_plugin(cmos);
   PLUG_unload_plugin(dma);
   PLUG_unload_plugin(pic);
-  PLUG_unload_plugin(vga);
+  const char *vga_ext = SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr();
+  if (!strcmp(vga_ext, "cirrus")) {
+#if BX_SUPPORT_CLGD54XX
+    PLUG_unload_plugin(svga_cirrus);
+#endif
+  } else {
+    PLUG_unload_plugin(vga);
+  }
   PLUG_unload_plugin(floppy);
 #if BX_SUPPORT_SOUNDLOW
   PLUG_unload_plugin(soundmod);

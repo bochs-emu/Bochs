@@ -70,6 +70,7 @@ OBJS_THAT_CAN_BE_PLUGINS = \
   floppy.o \
   keyboard.o \
   vga.o \
+  svga_cirrus.o \
   biosdev.o \
   cmos.o \
   harddrv.o \
@@ -88,7 +89,7 @@ OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
   pit82c54.o \
   scancodes.o \
   serial_raw.o \
-  svga_cirrus.o \
+  vgacore.o \
   vmware3.o \
   vmware4.o \
   vvfat.o \
@@ -136,8 +137,11 @@ libbx_pit.la: pit82c54.lo pit.lo
 libbx_serial.la: serial.lo serial_raw.lo
 	$(LIBTOOL) --mode=link $(CXX) -module serial.lo serial_raw.lo -o libbx_serial.la -rpath $(PLUGIN_PATH)
 
-libbx_vga.la: vga.lo svga_cirrus.lo
-	$(LIBTOOL) --mode=link $(CXX) -module vga.lo svga_cirrus.lo -o libbx_vga.la -rpath $(PLUGIN_PATH)
+libbx_vga.la: vga.lo vgacore.lo
+	$(LIBTOOL) --mode=link $(CXX) -module vga.lo vgacore.lo -o libbx_vga.la -rpath $(PLUGIN_PATH)
+
+libbx_svga_cirrus.la: svga_cirrus.lo vgacore.lo
+	$(LIBTOOL) --mode=link $(CXX) -module svga_cirrus.lo vgacore.lo -o libbx_svga_cirrus.la -rpath $(PLUGIN_PATH)
 
 #### building DLLs for win32  (tested on cygwin only)
 bx_%.dll: %.o
@@ -159,8 +163,11 @@ bx_gameport.dll: gameport.o
 bx_serial.dll: serial.o serial_raw.o
 	$(CXX) $(CXXFLAGS) -shared -o bx_serial.dll serial.o serial_raw.o $(WIN32_DLL_IMPORT_LIBRARY) -lwsock32
 
-bx_vga.dll: vga.o svga_cirrus.o
-	$(CXX) $(CXXFLAGS) -shared -o bx_vga.dll vga.o svga_cirrus.o $(WIN32_DLL_IMPORT_LIBRARY)
+bx_vga.dll: vga.o vgacore.o
+	$(CXX) $(CXXFLAGS) -shared -o bx_vga.dll vga.o vgacore.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_svga_cirrus.dll: svga_cirrus.o vgacore.o
+	$(CXX) $(CXXFLAGS) -shared -o bx_svga_cirrus.dll svga_cirrus.o vgacore.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 ##### end DLL section
 
@@ -344,7 +351,7 @@ svga_cirrus.o: svga_cirrus.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../ltdl.h ../param_names.h vga.h svga_cirrus.h virt_timer.h
+ ../ltdl.h ../param_names.h vgacore.h svga_cirrus.h virt_timer.h
 unmapped.o: unmapped.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
@@ -354,7 +361,12 @@ vga.o: vga.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../ltdl.h ../param_names.h vga.h virt_timer.h
+ ../ltdl.h ../param_names.h vgacore.h vga.h virt_timer.h
+vgacore.o: vgacore.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../ltdl.h ../param_names.h vgacore.h virt_timer.h
 virt_timer.o: virt_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
@@ -539,7 +551,7 @@ svga_cirrus.lo: svga_cirrus.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../ltdl.h ../param_names.h vga.h svga_cirrus.h virt_timer.h
+ ../ltdl.h ../param_names.h vgacore.h svga_cirrus.h virt_timer.h
 unmapped.lo: unmapped.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
@@ -549,7 +561,12 @@ vga.lo: vga.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../ltdl.h ../param_names.h vga.h virt_timer.h
+ ../ltdl.h ../param_names.h vgacore.h vga.h virt_timer.h
+vgacore.lo: vgacore.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../ltdl.h ../param_names.h vgacore.h virt_timer.h
 virt_timer.lo: virt_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \

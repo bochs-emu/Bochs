@@ -61,7 +61,7 @@ typedef void (*bx_cirrus_bitblt_rop_t)(
     int dstpitch,int srcpitch,
     int bltwidth,int bltheight);
 
-class bx_svga_cirrus_c : public bx_vga_c
+class bx_svga_cirrus_c : public bx_vgacore_c
 #if BX_SUPPORT_PCI
   , public bx_pci_device_stub_c
 #endif
@@ -81,7 +81,6 @@ public:
                                  unsigned *txHeight, unsigned *txWidth);
   virtual Bit32u get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
                                   unsigned *iHeight, unsigned *iWidth, unsigned *iDepth);
-  virtual void trigger_timer(void *this_ptr);
   virtual void register_state(void);
   virtual void after_restore_state(void);
 

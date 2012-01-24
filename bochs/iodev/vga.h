@@ -110,29 +110,22 @@
 #  define BX_VGA_THIS_PTR this
 #endif
 
-class bx_vga_c : public bx_vga_stub_c {
+class bx_vga_c : public bx_vgacore_c {
 public:
   bx_vga_c();
   virtual ~bx_vga_c();
-  virtual void   init(void);
   virtual void   reset(unsigned type) {}
   BX_VGA_SMF bx_bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   BX_VGA_SMF bx_bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   virtual Bit8u  mem_read(bx_phy_address addr);
   virtual void   mem_write(bx_phy_address addr, Bit8u value);
-  virtual void   trigger_timer(void *this_ptr);
   virtual void   register_state(void);
   virtual void   after_restore_state(void);
-#if BX_DEBUGGER
-  virtual void   debug_dump(void);
-#endif
 
   virtual void   redraw_area(unsigned x0, unsigned y0,
                              unsigned width, unsigned height);
 
   virtual int    get_snapshot_mode(void);
-  virtual void   get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
-                                   unsigned *txWidth);
   virtual Bit32u get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
                                   unsigned *iHeight, unsigned *iWidth, unsigned *iDepth);
   virtual void   init_vga_extension(void);
@@ -144,147 +137,13 @@ public:
   static Bit64s   vga_param_handler(bx_param_c *param, int set, Bit64s val);
 
 protected:
-  void init_standard_vga(void);
-  void init_gui(void);
-  void init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t f_write);
-  void init_systemtimer(bx_timer_handler_t f_timer, param_event_handler f_param);
-
-  static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 #if BX_USE_VGA_SMF
   static void   write_handler_no_log(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 #endif
-
-#if BX_USE_VGA_SMF == 0
-  Bit32u read(Bit32u address, unsigned io_len);
-#endif
   void  write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
 
-  BX_VGA_SMF Bit8u get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, Bit8u **plane);
-  BX_VGA_SMF bx_bool get_dac_palette(Bit8u **palette_ptr, Bit8u shift);
   BX_VGA_SMF void update(void);
-  BX_VGA_SMF void determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth);
-
-  struct {
-    struct {
-      bx_bool color_emulation;  // 1=color emulation, base address = 3Dx
-                                // 0=mono emulation,  base address = 3Bx
-      bx_bool enable_ram;       // enable CPU access to video memory if set
-      Bit8u   clock_select;     // 0=25Mhz 1=28Mhz
-      bx_bool select_high_bank; // when in odd/even modes, select
-                                // high 64k bank if set
-      bx_bool horiz_sync_pol;   // bit6: negative if set
-      bx_bool vert_sync_pol;    // bit7: negative if set
-                                //   bit7,bit6 represent number of lines on display:
-                                //   0 = reserved
-                                //   1 = 400 lines
-                                //   2 = 350 lines
-                                //   3 - 480 lines
-    } misc_output;
-
-    struct {
-      Bit8u   address;
-      Bit8u   reg[0x19];
-      bx_bool write_protect;
-    } CRTC;
-
-    struct {
-      bx_bool  flip_flop; /* 0 = address, 1 = data-write */
-      unsigned address;  /* register number */
-      bx_bool  video_enabled;
-      Bit8u    palette_reg[16];
-      Bit8u    overscan_color;
-      Bit8u    color_plane_enable;
-      Bit8u    horiz_pel_panning;
-      Bit8u    color_select;
-      struct {
-        bx_bool graphics_alpha;
-        bx_bool display_type;
-        bx_bool enable_line_graphics;
-        bx_bool blink_intensity;
-        bx_bool pixel_panning_compat;
-        bx_bool pixel_clock_select;
-        bx_bool internal_palette_size;
-      } mode_ctrl;
-    } attribute_ctrl;
-
-    struct {
-      Bit8u write_data_register;
-      Bit8u write_data_cycle; /* 0, 1, 2 */
-      Bit8u read_data_register;
-      Bit8u read_data_cycle; /* 0, 1, 2 */
-      Bit8u dac_state;
-      struct {
-        Bit8u red;
-        Bit8u green;
-        Bit8u blue;
-      } data[256];
-      Bit8u mask;
-    } pel;
-
-    struct {
-      Bit8u   index;
-      Bit8u   set_reset;
-      Bit8u   enable_set_reset;
-      Bit8u   color_compare;
-      Bit8u   data_rotate;
-      Bit8u   raster_op;
-      Bit8u   read_map_select;
-      Bit8u   write_mode;
-      bx_bool read_mode;
-      bx_bool odd_even;
-      bx_bool chain_odd_even;
-      Bit8u   shift_reg;
-      bx_bool graphics_alpha;
-      Bit8u   memory_mapping; /* 0 = use A0000-BFFFF
-                               * 1 = use A0000-AFFFF EGA/VGA graphics modes
-                               * 2 = use B0000-B7FFF Monochrome modes
-                               * 3 = use B8000-BFFFF CGA modes
-                               */
-      Bit8u   color_dont_care;
-      Bit8u   bitmask;
-      Bit8u   latch[4];
-    } graphics_ctrl;
-
-    struct {
-      Bit8u   index;
-      Bit8u   map_mask;
-      bx_bool reset1;
-      bx_bool reset2;
-      Bit8u   reg1;
-      Bit8u   char_map_select;
-      bx_bool extended_mem;
-      bx_bool odd_even;
-      bx_bool chain_four;
-    } sequencer;
-
-    bx_bool  vga_enabled;
-    bx_bool  vga_mem_updated;
-    unsigned line_offset;
-    unsigned line_compare;
-    unsigned vertical_display_end;
-    unsigned blink_counter;
-    bx_bool  *vga_tile_updated;
-    Bit8u *memory;
-    Bit32u memsize;
-    Bit8u text_snapshot[128 * 1024]; // current text snapshot
-    Bit8u tile[X_TILESIZE * Y_TILESIZE * 4]; /**< Currently allocates the tile as large as needed. */
-    Bit16u charmap_address;
-    bx_bool x_dotclockdiv2;
-    bx_bool y_doublescan;
-    Bit16u last_xres;
-    Bit16u last_yres;
-    Bit8u last_bpp;
-    Bit8u last_msl;
-    Bit16u max_xres;
-    Bit16u max_yres;
-    Bit16u num_x_tiles;
-    Bit16u num_y_tiles;
-  } s;  // state information
-
-  int timer_id;
-  bx_bool extension_init;
-  bx_bool pci_enabled;
 
   // Bochs VBE section
   virtual bx_bool vbe_set_base_addr(Bit32u *addr, Bit8u *pci_conf);
@@ -325,9 +184,5 @@ private:
     bx_bool dac_8bit;
   } vbe;  // VBE state information
 };
-
-#if BX_SUPPORT_CLGD54XX
-void bx_vga_set_smf_pointer(bx_vga_c *theVga_ptr);
-#endif
 
 #endif
