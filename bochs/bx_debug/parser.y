@@ -39,7 +39,6 @@
 %token <sval> BX_TOKEN_CONTINUE
 %token <sval> BX_TOKEN_STEPN
 %token <sval> BX_TOKEN_STEP_OVER
-%token <sval> BX_TOKEN_NEXT_STEP
 %token <sval> BX_TOKEN_SET
 %token <sval> BX_TOKEN_DEBUGGER
 %token <sval> BX_TOKEN_LIST_BREAK
