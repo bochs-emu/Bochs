@@ -62,9 +62,6 @@ typedef void (*bx_cirrus_bitblt_rop_t)(
     int bltwidth,int bltheight);
 
 class bx_svga_cirrus_c : public bx_vgacore_c
-#if BX_SUPPORT_PCI
-  , public bx_pci_device_stub_c
-#endif
 {
 public:
   bx_svga_cirrus_c();

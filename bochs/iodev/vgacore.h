@@ -45,7 +45,11 @@
 #define X_TILESIZE 16
 #define Y_TILESIZE 24
 
-class bx_vgacore_c : public bx_vga_stub_c {
+class bx_vgacore_c : public bx_vga_stub_c
+#if BX_SUPPORT_PCI
+  , public bx_pci_device_stub_c
+#endif
+{
 public:
   bx_vgacore_c();
   virtual ~bx_vgacore_c();

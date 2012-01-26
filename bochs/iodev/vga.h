@@ -3,6 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2012  The Bochs Project
+//  PCI VGA dummy adapter Copyright (C) 2002,2003  Mike Nordell
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -114,7 +115,7 @@ class bx_vga_c : public bx_vgacore_c {
 public:
   bx_vga_c();
   virtual ~bx_vga_c();
-  virtual void   reset(unsigned type) {}
+  virtual void   reset(unsigned type);
   BX_VGA_SMF bx_bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   BX_VGA_SMF bx_bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   virtual Bit8u  mem_read(bx_phy_address addr);
@@ -134,6 +135,12 @@ public:
 #if BX_USE_VGA_SMF == 0
   BX_VGA_SMF void timer(void);
 #endif
+
+#if BX_SUPPORT_PCI
+  virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
+  virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
+#endif
+
   static Bit64s   vga_param_handler(bx_param_c *param, int set, Bit64s val);
 
 protected:
@@ -160,6 +167,7 @@ protected:
 #endif
 
 private:
+  bx_bool vbe_present;
   struct {
     Bit16u  cur_dispi;
     Bit32u  base_address;

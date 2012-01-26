@@ -222,15 +222,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   if (is_parallel_enabled())
     PLUG_load_plugin(parallel, PLUGTYPE_OPTIONAL);
 
-#if BX_SUPPORT_PCI
-  if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
-    if ((DEV_is_pci_device("pcivga")) &&
-        ((!strlen(vga_ext)) || (!strcmp(vga_ext, "none")) || (!strcmp(vga_ext, "vbe")))) {
-      PLUG_load_plugin(pcivga, PLUGTYPE_STANDARD);
-    }
-  }
-#endif
-
   // system hardware
   register_io_read_handler(this, &read_handler, 0x0092,
                            "Port 92h System Control", 1);

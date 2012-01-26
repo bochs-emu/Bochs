@@ -3,6 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2012  The Bochs Project
+//  PCI VGA dummy adapter Copyright (C) 2002,2003  Mike Nordell
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -19,6 +20,14 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 //
 /////////////////////////////////////////////////////////////////////////
+
+// Standard VGA emulation + Bochs VBE support + PCI VGA interface
+
+// NOTE from the original pcivga code:
+// This "driver" was created for the SOLE PURPOSE of getting BeOS
+// to boot. It currently does NOTHING more than presenting a generic VGA
+// device on the PCI bus. ALL gfx in/out-put is still handled by the VGA code.
+// Furthermore, almost all of the PCI registers are currently acting like RAM.
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
@@ -108,12 +117,15 @@ void bx_vga_c::init_vga_extension(void)
 {
   unsigned addr;
   Bit16u max_xres, max_yres, max_bpp;
+  Bit8u devfunc = 0x00;
+  unsigned i;
 
   BX_VGA_THIS init_iohandlers(read_handler, write_handler);
   BX_VGA_THIS init_systemtimer(timer_handler, vga_param_handler);
-  BX_VGA_THIS pci_enabled = DEV_is_pci_device(BX_PLUGIN_PCIVGA);
+  BX_VGA_THIS pci_enabled = DEV_is_pci_device("pcivga");
 
   // The following is for the VBE display extension
+  BX_VGA_THIS vbe_present = 0;
   BX_VGA_THIS vbe.enabled = 0;
   BX_VGA_THIS vbe.dac_8bit = 0;
   BX_VGA_THIS vbe.base_address = 0x0000;
@@ -165,16 +177,72 @@ void bx_vga_c::init_vga_extension(void)
     }
     BX_VGA_THIS s.max_xres = BX_VGA_THIS vbe.max_xres;
     BX_VGA_THIS s.max_yres = BX_VGA_THIS vbe.max_yres;
+    BX_VGA_THIS vbe_present = 1;
     BX_VGA_THIS extension_init = 1;
 
     BX_INFO(("VBE Bochs Display Extension Enabled"));
   }
+#if BX_SUPPORT_PCI
+  if (BX_VGA_THIS pci_enabled) {
+    DEV_register_pci_handlers(this, &devfunc, "pcivga", "Experimental PCI VGA");
+    for (i = 0; i < 256; i++) {
+      BX_VGA_THIS pci_conf[i] = 0x0;
+    }
+
+    // readonly registers
+    static const struct init_vals_t {
+      unsigned      addr;
+      unsigned char val;
+    } init_vals[] = {
+      // Note that the values for vendor and device id are selected at random!
+      // There might actually be "real" values for "experimental" vendor and
+      // device that should be used!
+      { 0x00, 0x34 }, { 0x01, 0x12 }, // 0x1234 - experimental vendor
+      { 0x02, 0x11 }, { 0x03, 0x11 }, // 0x1111 - experimental device
+      { 0x0a, 0x00 },                 // class_sub  VGA controller
+      { 0x0b, 0x03 },                 // class_base display
+      { 0x0e, 0x00 }                  // header_type_generic
+    };
+    for (i = 0; i < sizeof(init_vals) / sizeof(*init_vals); ++i) {
+      BX_VGA_THIS pci_conf[init_vals[i].addr] = init_vals[i].val;
+    }
+    if (BX_VGA_THIS vbe_present) {
+      BX_VGA_THIS pci_conf[0x10] = 0x08;
+      BX_VGA_THIS pci_base_address[0] = 0;
+    }
+    BX_VGA_THIS pci_rom_address = 0;
+    BX_VGA_THIS load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr());
+  }
+#endif
+}
+
+void bx_vga_c::reset(unsigned type)
+{
+#if BX_SUPPORT_PCI
+  if (BX_VGA_THIS pci_enabled) {
+    static const struct reset_vals_t {
+      unsigned      addr;
+      unsigned char val;
+    } reset_vals[] = {
+        { 0x04, 0x03 }, { 0x05, 0x00 }, // command_io + command_mem
+        { 0x06, 0x00 }, { 0x07, 0x02 }  // status_devsel_medium
+    };
+    for (unsigned i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
+      BX_VGA_THIS pci_conf[reset_vals[i].addr] = reset_vals[i].val;
+    }
+  }
+#endif
 }
 
 void bx_vga_c::register_state(void)
 {
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "vga", "VGA Adapter State", 2);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "vga", "VGA Adapter State", 3);
   bx_vgacore_c::register_state(list);
+#if BX_SUPPORT_PCI
+  if (BX_VGA_THIS pci_enabled) {
+    register_pci_state(list);
+  }
+#endif
   // register state for Bochs VBE
   if (!strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "vbe")) {
     bx_list_c *vbe = new bx_list_c(list, "vbe", 18);
@@ -200,6 +268,22 @@ void bx_vga_c::register_state(void)
 
 void bx_vga_c::after_restore_state(void)
 {
+#if BX_SUPPORT_PCI
+  if (BX_VGA_THIS pci_enabled) {
+    if (BX_VGA_THIS vbe_present) {
+      if (BX_VGA_THIS vbe_set_base_addr(&BX_VGA_THIS pci_base_address[0],
+                                        &BX_VGA_THIS pci_conf[0x10])) {
+        BX_INFO(("new base address: 0x%08x", BX_VGA_THIS pci_base_address[0]));
+      }
+    }
+    if (DEV_pci_set_base_mem(this, mem_read_handler, mem_write_handler,
+                             &BX_VGA_THIS pci_rom_address,
+                             &BX_VGA_THIS pci_conf[0x30],
+                             BX_VGA_THIS pci_rom_size)) {
+      BX_INFO(("new ROM address: 0x%08x", BX_VGA_THIS pci_rom_address));
+    }
+  }
+#endif
   if (BX_VGA_THIS vbe.enabled) {
     bx_gui->dimension_update(BX_VGA_THIS vbe.xres, BX_VGA_THIS vbe.yres, 0, 0,
                              BX_VGA_THIS vbe.bpp);
@@ -666,6 +750,18 @@ bx_bool bx_vga_c::mem_read_handler(bx_phy_address addr, unsigned len, void *data
 
 Bit8u bx_vga_c::mem_read(bx_phy_address addr)
 {
+#if BX_SUPPORT_PCI
+  if ((BX_VGA_THIS pci_enabled) && (BX_VGA_THIS pci_rom_size > 0)) {
+    Bit32u mask = (BX_VGA_THIS pci_rom_size - 1);
+    if ((addr & ~mask) == BX_VGA_THIS pci_rom_address) {
+      if (BX_VGA_THIS pci_conf[0x30] & 0x01) {
+        return BX_VGA_THIS pci_rom[addr & mask];
+      } else {
+        return 0xff;
+      }
+    }
+  }
+#endif
   // if in a vbe enabled mode, read from the vbe_memory
   if ((BX_VGA_THIS vbe.enabled) && (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4)) {
     return vbe_mem_read(addr);
@@ -699,8 +795,7 @@ bx_bool bx_vga_c::mem_write_handler(bx_phy_address addr, unsigned len, void *dat
 void bx_vga_c::mem_write(bx_phy_address addr, Bit8u value)
 {
   // if in a vbe enabled mode, write to the vbe_memory
-  if ((BX_VGA_THIS vbe.enabled) && (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4))
-  {
+  if ((BX_VGA_THIS vbe.enabled) && (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4)) {
     vbe_mem_write(addr, value);
     return;
   } else if ((BX_VGA_THIS vbe.base_address != 0) && (addr >= BX_VGA_THIS vbe.base_address)) {
@@ -1333,3 +1428,83 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
 
   } // end switch address
 }
+
+#if BX_SUPPORT_PCI
+// pci configuration space read callback handler
+Bit32u bx_vga_c::pci_read_handler(Bit8u address, unsigned io_len)
+{
+  Bit32u value = 0;
+
+  for (unsigned i=0; i<io_len; i++) {
+    value |= (BX_VGA_THIS pci_conf[address+i] << (i*8));
+  }
+
+  if (io_len == 1)
+    BX_DEBUG(("read  PCI register 0x%02x value 0x%02x", address, value));
+  else if (io_len == 2)
+    BX_DEBUG(("read  PCI register 0x%02x value 0x%04x", address, value));
+  else if (io_len == 4)
+    BX_DEBUG(("read  PCI register 0x%02x value 0x%08x", address, value));
+
+  return value;
+}
+
+
+// static pci configuration space write callback handler
+void bx_vga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
+{
+  bx_bool baseaddr_change = 0, romaddr_change = 0;
+
+  if (io_len == 1)
+    BX_DEBUG(("write PCI register 0x%02x value 0x%02x", address, value));
+  else if (io_len == 2)
+    BX_DEBUG(("write PCI register 0x%02x value 0x%04x", address, value));
+  else if (io_len == 4)
+    BX_DEBUG(("write PCI register 0x%02x value 0x%08x", address, value));
+
+  if ((address >= 0x14) && (address < 0x30))
+    return;
+
+  if (address == 0x30) {
+    value = value & 0xfffffc01;
+    romaddr_change = 1;
+  }
+
+  for (unsigned i = 0; i < io_len; i++) {
+    unsigned write_addr = address + i;
+    Bit8u old_value = BX_VGA_THIS pci_conf[write_addr];
+    Bit8u new_value = (Bit8u)(value & 0xff);
+    switch (write_addr) {
+      case 0x04: // disallowing write to command
+      case 0x06: // disallowing write to status lo-byte (is that expected?)
+        break;
+      case 0x10: // base address #0
+        new_value = (new_value & 0xf0) | (old_value & 0x0f);
+      case 0x11: case 0x12: case 0x13:
+        if (BX_VGA_THIS vbe_present) {
+          baseaddr_change |= (old_value != new_value);
+        } else {
+          break;
+        }
+      default:
+        BX_VGA_THIS pci_conf[write_addr] = new_value;
+    }
+    value >>= 8;
+  }
+
+  if (baseaddr_change) {
+    if (BX_VGA_THIS vbe_set_base_addr(&BX_VGA_THIS pci_base_address[0],
+                                      &BX_VGA_THIS pci_conf[0x10])) {
+      BX_INFO(("new base address: 0x%08x", BX_VGA_THIS pci_base_address[0]));
+    }
+  }
+  if (romaddr_change) {
+    if (DEV_pci_set_base_mem(this, mem_read_handler, mem_write_handler,
+                             &BX_VGA_THIS pci_rom_address,
+                             &BX_VGA_THIS pci_conf[0x30],
+                             BX_VGA_THIS pci_rom_size)) {
+      BX_INFO(("new ROM address: 0x%08x", BX_VGA_THIS pci_rom_address));
+    }
+  }
+}
+#endif

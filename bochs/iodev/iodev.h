@@ -264,9 +264,6 @@ public:
   virtual void trigger_timer(void *this_ptr) {
     STUBFUNC(vga, trigger_timer);
   }
-  virtual bx_bool vbe_set_base_addr(Bit32u *addr, Bit8u *pci_conf) {
-    return 0;
-  }
 };
 
 class BOCHSAPI bx_pci_bridge_stub_c : public bx_devmodel_c, public bx_pci_device_stub_c {

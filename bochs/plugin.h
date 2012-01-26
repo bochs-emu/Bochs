@@ -63,7 +63,6 @@ extern "C" {
 #define BX_PLUGIN_NETMOD    "netmod"
 #define BX_PLUGIN_NE2K      "ne2k"
 #define BX_PLUGIN_EXTFPUIRQ "extfpuirq"
-#define BX_PLUGIN_PCIVGA    "pcivga"
 #define BX_PLUGIN_PCIDEV    "pcidev"
 #define BX_PLUGIN_USB_COMMON "usb_common"
 #define BX_PLUGIN_USB_UHCI  "usb_uhci"
@@ -224,7 +223,6 @@ extern "C" {
 #define DEV_vga_refresh() \
   (bx_devices.pluginVgaDevice->trigger_timer(bx_devices.pluginVgaDevice))
 #define DEV_vga_debug_dump() (bx_devices.pluginVgaDevice->debug_dump())
-#define DEV_vbe_set_base_addr(a,b) (bx_devices.pluginVgaDevice->vbe_set_base_addr(a,b))
 
 ///////// PCI macros
 #define DEV_register_pci_handlers(a,b,c,d) \
@@ -353,7 +351,6 @@ BOCHSAPI extern void  (* pluginVGAGetTextSnapshot)(Bit8u **text_snapshot,
 		          unsigned *txHeight, unsigned *txWidth);
 BOCHSAPI extern void  (* pluginVGARefresh)(void *);
 BOCHSAPI extern void  (* pluginVGASetUpdateInterval)(unsigned);
-BOCHSAPI extern Bit8u (* pluginVGAGetActlPaletteIdx)(Bit8u index);
 
 /* === Timer stuff === */
 BOCHSAPI extern int     (*pluginRegisterTimer)(void *this_ptr, void (*funct)(void *),
@@ -424,7 +421,6 @@ DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(parallel)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pci)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pci2isa)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pci_ide)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pcivga)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pcidev)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_common)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_uhci)
