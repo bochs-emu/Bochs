@@ -60,6 +60,7 @@ public:
   virtual Bit8u  mem_read(bx_phy_address addr);
   virtual void   mem_write(bx_phy_address addr, Bit8u value);
   virtual void   trigger_timer(void *this_ptr);
+  virtual void   set_override(bx_bool enabled);
   virtual void   register_state(bx_list_c *parent);
   virtual void   after_restore_state(void);
 #if BX_DEBUGGER
@@ -91,7 +92,7 @@ protected:
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
 
-  Bit8u get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, Bit8u **plane);
+  Bit8u get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, bx_bool bs, Bit8u **plane);
   bx_bool get_dac_palette(Bit8u **palette_ptr, Bit8u shift);
   void update(void);
   void determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth);

@@ -1330,6 +1330,17 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool 
   }
 }
 
+void bx_vgacore_c::set_override(bx_bool enabled)
+{
+  if (enabled) {
+    bx_virt_timer.deactivate_timer(BX_VGA_THIS timer_id);
+  } else {
+    Bit64u interval = 1000000 / SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY)->get();
+    bx_virt_timer.activate_timer(BX_VGA_THIS timer_id, (Bit32u)interval, 1);
+    BX_VGA_THIS redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
+  }
+}
+
 void bx_vgacore_c::trigger_timer(void *this_ptr)
 {
   timer_handler(this_ptr);
@@ -1347,7 +1358,7 @@ void bx_vgacore_c::timer(void)
   bx_gui->flush();
 }
 
-Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, Bit8u **plane)
+Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, bx_bool bs, Bit8u **plane)
 {
   Bit8u attribute, bit_no, palette_reg_val, DAC_regno;
   Bit32u byte_offset;
@@ -1369,8 +1380,13 @@ Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, B
 
   attribute &= BX_VGA_THIS s.attribute_ctrl.color_plane_enable;
   // undocumented feature ???: colors 0..7 high intensity, colors 8..15 blinking
-  // using low/high intensity. Blinking is not implemented yet.
-  if (BX_VGA_THIS s.attribute_ctrl.mode_ctrl.blink_intensity) attribute ^= 0x08;
+  if (BX_VGA_THIS s.attribute_ctrl.mode_ctrl.blink_intensity) {
+    if (bs) {
+      attribute |= 0x08;
+    } else {
+      attribute ^= 0x08;
+    }
+  }
   palette_reg_val = BX_VGA_THIS s.attribute_ctrl.palette_reg[attribute];
   if (BX_VGA_THIS s.attribute_ctrl.mode_ctrl.internal_palette_size) {
     // use 4 lower bits from palette register
@@ -1392,10 +1408,27 @@ Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, B
 void bx_vgacore_c::update(void)
 {
   unsigned iHeight, iWidth;
+  static unsigned cs_counter = 1;
+  static bx_bool cs_visible = 0;
+  bx_bool cs_toggle = 0;
 
+  cs_counter--;
   /* no screen update necessary */
-  if ((BX_VGA_THIS s.vga_mem_updated==0) && BX_VGA_THIS s.graphics_ctrl.graphics_alpha)
+  if ((BX_VGA_THIS s.vga_mem_updated == 0) && (cs_counter > 0))
     return;
+  if (cs_counter == 0) {
+    cs_counter = BX_VGA_THIS s.blink_counter;
+    if ((!BX_VGA_THIS s.graphics_ctrl.graphics_alpha) ||
+        (BX_VGA_THIS s.attribute_ctrl.mode_ctrl.blink_intensity)) {
+      cs_toggle = 1;
+      cs_visible = !cs_visible;
+    } else {
+      if (BX_VGA_THIS s.vga_mem_updated == 0)
+        return;
+      cs_toggle = 0;
+      cs_visible = 0;
+    }
+  }
 
   /* skip screen update when vga/video is disabled or the sequencer is in reset mode */
   if (!BX_VGA_THIS s.vga_enabled || !BX_VGA_THIS s.attribute_ctrl.video_enabled
@@ -1491,14 +1524,14 @@ void bx_vgacore_c::update(void)
 
           for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
             for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
-              if (GET_TILE_UPDATED (xti, yti)) {
+              if (cs_toggle || GET_TILE_UPDATED (xti, yti)) {
                 for (r=0; r<Y_TILESIZE; r++) {
                   y = yc + r;
                   if (BX_VGA_THIS s.y_doublescan) y >>= 1;
                   for (c=0; c<X_TILESIZE; c++) {
                     x = xc + c;
                     BX_VGA_THIS s.tile[r*X_TILESIZE + c] =
-                      BX_VGA_THIS get_vga_pixel(x, y, start_addr, line_compare, plane);
+                      BX_VGA_THIS get_vga_pixel(x, y, start_addr, line_compare, cs_visible, plane);
                   }
                 }
                 SET_TILE_UPDATED (xti, yti, 0);
@@ -1635,29 +1668,17 @@ void bx_vgacore_c::update(void)
 
     BX_VGA_THIS s.vga_mem_updated = 0;
     return;
-  }
-  else { // text mode
+  } else {
+    // text mode
     unsigned long start_address;
     unsigned long cursor_address, cursor_x, cursor_y;
     bx_vga_tminfo_t tm_info;
     unsigned VDE, cols, rows, cWidth;
     Bit8u MSL;
-    static unsigned cs_counter = 1;
-    static bx_bool cs_visible = 0;
-    bx_bool cs_toggle = 0;
-
-    cs_counter--;
-    if ((BX_VGA_THIS s.vga_mem_updated==0) && (cs_counter > 0))
-      return;
 
     tm_info.start_address = 2*((BX_VGA_THIS s.CRTC.reg[12] << 8) +
                             BX_VGA_THIS s.CRTC.reg[13]);
     tm_info.cs_start = BX_VGA_THIS s.CRTC.reg[0x0a] & 0x3f;
-    if (cs_counter == 0) {
-      cs_toggle = 1;
-      cs_visible = !cs_visible;
-      cs_counter = BX_VGA_THIS s.blink_counter;
-    }
     if (!cs_visible) {
       tm_info.cs_start |= 0x20;
     }
@@ -2347,7 +2368,7 @@ Bit32u bx_vgacore_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
       (BX_VGA_THIS s.graphics_ctrl.memory_mapping != 3)) {
     for (y = 0; y < BX_VGA_THIS s.last_yres; y++) {
       for (x = 0; x < BX_VGA_THIS s.last_xres; x++) {
-        *(dst_ptr++) = BX_VGA_THIS get_vga_pixel(x, y, start_addr, line_compare, plane);
+        *(dst_ptr++) = BX_VGA_THIS get_vga_pixel(x, y, start_addr, line_compare, 0, plane);
       }
     }
     BX_VGA_THIS get_dac_palette(palette_ptr, BX_VGA_THIS s.dac_shift);

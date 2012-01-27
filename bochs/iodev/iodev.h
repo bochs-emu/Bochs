@@ -261,6 +261,9 @@ public:
     STUBFUNC(vga, get_gfx_snapshot);
     return 0;
   }
+  virtual void set_override(bx_bool enabled) {
+    STUBFUNC(vga, set_override);
+  }
   virtual void trigger_timer(void *this_ptr) {
     STUBFUNC(vga, trigger_timer);
   }

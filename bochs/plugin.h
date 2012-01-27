@@ -222,6 +222,7 @@ extern "C" {
   (bx_devices.pluginVgaDevice->get_gfx_snapshot(rawsnap, palette, height, width, depth))
 #define DEV_vga_refresh() \
   (bx_devices.pluginVgaDevice->trigger_timer(bx_devices.pluginVgaDevice))
+#define DEV_vga_set_override(a) (bx_devices.pluginVgaDevice->set_override(a))
 #define DEV_vga_debug_dump() (bx_devices.pluginVgaDevice->debug_dump())
 
 ///////// PCI macros

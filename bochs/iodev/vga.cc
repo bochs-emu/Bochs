@@ -412,314 +412,307 @@ void bx_vga_c::update(void)
 {
   unsigned iHeight, iWidth;
 
-  /* no screen update necessary */
-  if ((BX_VGA_THIS s.vga_mem_updated==0) && BX_VGA_THIS s.graphics_ctrl.graphics_alpha)
-    return;
+  if (BX_VGA_THIS vbe.enabled) {
+    /* no screen update necessary */
+    if ((BX_VGA_THIS s.vga_mem_updated==0) && BX_VGA_THIS s.graphics_ctrl.graphics_alpha)
+      return;
 
-  /* skip screen update when vga/video is disabled or the sequencer is in reset mode */
-  if (!BX_VGA_THIS s.vga_enabled || !BX_VGA_THIS s.attribute_ctrl.video_enabled
-      || !BX_VGA_THIS s.sequencer.reset2 || !BX_VGA_THIS s.sequencer.reset1
-      || (BX_VGA_THIS s.sequencer.reg1 & 0x20))
-    return;
+    /* skip screen update when vga/video is disabled or the sequencer is in reset mode */
+    if (!BX_VGA_THIS s.vga_enabled || !BX_VGA_THIS s.attribute_ctrl.video_enabled
+        || !BX_VGA_THIS s.sequencer.reset2 || !BX_VGA_THIS s.sequencer.reset1
+        || (BX_VGA_THIS s.sequencer.reg1 & 0x20))
+      return;
 
-  /* skip screen update if the vertical retrace is in progress
-     (using 72 Hz vertical frequency) */
-  if ((bx_pc_system.time_usec() % 13888) < 70)
-    return;
+    /* skip screen update if the vertical retrace is in progress
+       (using 72 Hz vertical frequency) */
+    if ((bx_pc_system.time_usec() % 13888) < 70)
+      return;
 
-  if ((BX_VGA_THIS vbe.enabled) && (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4)) {
-    // specific VBE code display update code
-    unsigned pitch;
-    unsigned xc, yc, xti, yti;
-    unsigned r, c, w, h;
-    int i;
-    unsigned long red, green, blue, colour;
-    Bit8u * vid_ptr, * vid_ptr2;
-    Bit8u * tile_ptr, * tile_ptr2;
-    bx_svga_tileinfo_t info;
-    Bit8u dac_size = BX_VGA_THIS vbe.dac_8bit ? 8 : 6;
+    if (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4) {
+      // specific VBE code display update code
+      unsigned pitch;
+      unsigned xc, yc, xti, yti;
+      unsigned r, c, w, h;
+      int i;
+      unsigned long red, green, blue, colour;
+      Bit8u * vid_ptr, * vid_ptr2;
+      Bit8u * tile_ptr, * tile_ptr2;
+      bx_svga_tileinfo_t info;
+      Bit8u dac_size = BX_VGA_THIS vbe.dac_8bit ? 8 : 6;
 
-    iWidth=BX_VGA_THIS vbe.xres;
-    iHeight=BX_VGA_THIS vbe.yres;
-    pitch = BX_VGA_THIS s.line_offset;
-    Bit8u *disp_ptr = &BX_VGA_THIS s.memory[BX_VGA_THIS vbe.virtual_start];
+      iWidth=BX_VGA_THIS vbe.xres;
+      iHeight=BX_VGA_THIS vbe.yres;
+      pitch = BX_VGA_THIS s.line_offset;
+      Bit8u *disp_ptr = &BX_VGA_THIS s.memory[BX_VGA_THIS vbe.virtual_start];
 
-    if (bx_gui->graphics_tile_info(&info)) {
-      if (info.is_indexed) {
-        switch (BX_VGA_THIS vbe.bpp) {
-          case 4:
-          case 15:
-          case 16:
-          case 24:
-          case 32:
-            BX_ERROR(("current guest pixel format is unsupported on indexed colour host displays"));
-            break;
-          case 8:
-            for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
-              for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
-                if (GET_TILE_UPDATED (xti, yti)) {
-                  vid_ptr = disp_ptr + (yc * pitch + xc);
-                  tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
-                  for (r=0; r<h; r++) {
-                    vid_ptr2  = vid_ptr;
-                    tile_ptr2 = tile_ptr;
-                    for (c=0; c<w; c++) {
-                      colour = 0;
-                      for (i=0; i<(int)BX_VGA_THIS vbe.bpp; i+=8) {
-                        colour |= *(vid_ptr2++) << i;
-                      }
-                      if (info.is_little_endian) {
-                        for (i=0; i<info.bpp; i+=8) {
-                          *(tile_ptr2++) = (Bit8u)(colour >> i);
+      if (bx_gui->graphics_tile_info(&info)) {
+        if (info.is_indexed) {
+          switch (BX_VGA_THIS vbe.bpp) {
+            case 4:
+            case 15:
+            case 16:
+            case 24:
+            case 32:
+              BX_ERROR(("current guest pixel format is unsupported on indexed colour host displays"));
+              break;
+            case 8:
+              for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+                for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
+                  if (GET_TILE_UPDATED (xti, yti)) {
+                    vid_ptr = disp_ptr + (yc * pitch + xc);
+                    tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+                    for (r=0; r<h; r++) {
+                      vid_ptr2  = vid_ptr;
+                      tile_ptr2 = tile_ptr;
+                      for (c=0; c<w; c++) {
+                        colour = 0;
+                        for (i=0; i<(int)BX_VGA_THIS vbe.bpp; i+=8) {
+                          colour |= *(vid_ptr2++) << i;
+                        }
+                        if (info.is_little_endian) {
+                          for (i=0; i<info.bpp; i+=8) {
+                            *(tile_ptr2++) = (Bit8u)(colour >> i);
+                          }
+                        } else {
+                          for (i=info.bpp-8; i>-8; i-=8) {
+                            *(tile_ptr2++) = (Bit8u)(colour >> i);
+                          }
                         }
                       }
-                      else {
-                        for (i=info.bpp-8; i>-8; i-=8) {
-                          *(tile_ptr2++) = (Bit8u)(colour >> i);
-                        }
-                      }
+                      vid_ptr  += pitch;
+                      tile_ptr += info.pitch;
                     }
-                    vid_ptr  += pitch;
-                    tile_ptr += info.pitch;
+                    bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+                    SET_TILE_UPDATED (xti, yti, 0);
                   }
-                  bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-                  SET_TILE_UPDATED (xti, yti, 0);
                 }
               }
-            }
-            break;
-        }
-      }
-      else {
-        switch (BX_VGA_THIS vbe.bpp) {
-          case 4:
-            BX_ERROR(("cannot draw 4bpp SVGA"));
-            break;
-          case 8:
-            for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
-              for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
-                if (GET_TILE_UPDATED (xti, yti)) {
-                  vid_ptr = disp_ptr + (yc * pitch + xc);
-                  tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
-                  for (r=0; r<h; r++) {
-                    vid_ptr2  = vid_ptr;
-                    tile_ptr2 = tile_ptr;
-                    for (c=0; c<w; c++) {
-                      colour = *(vid_ptr2++);
-                      colour = MAKE_COLOUR(
-                        BX_VGA_THIS s.pel.data[colour].red, dac_size, info.red_shift, info.red_mask,
-                        BX_VGA_THIS s.pel.data[colour].green, dac_size, info.green_shift, info.green_mask,
-                        BX_VGA_THIS s.pel.data[colour].blue, dac_size, info.blue_shift, info.blue_mask);
-                      if (info.is_little_endian) {
-                        for (i=0; i<info.bpp; i+=8) {
-                          *(tile_ptr2++) = (Bit8u)(colour >> i);
-                        }
-                      }
-                      else {
-                        for (i=info.bpp-8; i>-8; i-=8) {
-                          *(tile_ptr2++) = (Bit8u)(colour >> i);
-                        }
-                      }
-                    }
-                    vid_ptr  += pitch;
-                    tile_ptr += info.pitch;
-                  }
-                  bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-                  SET_TILE_UPDATED (xti, yti, 0);
-                }
-              }
-            }
-            break;
-          case 15:
-            for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
-              for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
-                if (GET_TILE_UPDATED (xti, yti)) {
-                  vid_ptr = disp_ptr + (yc * pitch + (xc<<1));
-                  tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
-                  for (r=0; r<h; r++) {
-                    vid_ptr2  = vid_ptr;
-                    tile_ptr2 = tile_ptr;
-                    for (c=0; c<w; c++) {
-                      colour = *(vid_ptr2++);
-                      colour |= *(vid_ptr2++) << 8;
-                      colour = MAKE_COLOUR(
-                        colour & 0x001f, 5, info.blue_shift, info.blue_mask,
-                        colour & 0x03e0, 10, info.green_shift, info.green_mask,
-                        colour & 0x7c00, 15, info.red_shift, info.red_mask);
-                      if (info.is_little_endian) {
-                        for (i=0; i<info.bpp; i+=8) {
-                          *(tile_ptr2++) = (Bit8u)(colour >> i);
-                        }
-                      }
-                      else {
-                        for (i=info.bpp-8; i>-8; i-=8) {
-                          *(tile_ptr2++) = (Bit8u)(colour >> i);
-                        }
-                      }
-                    }
-                    vid_ptr  += pitch;
-                    tile_ptr += info.pitch;
-                  }
-                  bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-                  SET_TILE_UPDATED (xti, yti, 0);
-                }
-              }
-            }
-            break;
-          case 16:
-            for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
-              for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
-                if (GET_TILE_UPDATED (xti, yti)) {
-                  vid_ptr = disp_ptr + (yc * pitch + (xc<<1));
-                  tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
-                  for (r=0; r<h; r++) {
-                    vid_ptr2  = vid_ptr;
-                    tile_ptr2 = tile_ptr;
-                    for (c=0; c<w; c++) {
-                      colour = *(vid_ptr2++);
-                      colour |= *(vid_ptr2++) << 8;
-                      colour = MAKE_COLOUR(
-                        colour & 0x001f, 5, info.blue_shift, info.blue_mask,
-                        colour & 0x07e0, 11, info.green_shift, info.green_mask,
-                        colour & 0xf800, 16, info.red_shift, info.red_mask);
-                      if (info.is_little_endian) {
-                        for (i=0; i<info.bpp; i+=8) {
-                          *(tile_ptr2++) = (Bit8u)(colour >> i);
-                        }
-                      }
-                      else {
-                        for (i=info.bpp-8; i>-8; i-=8) {
-                          *(tile_ptr2++) = (Bit8u)(colour >> i);
-                        }
-                      }
-                    }
-                    vid_ptr  += pitch;
-                    tile_ptr += info.pitch;
-                  }
-                  bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-                  SET_TILE_UPDATED (xti, yti, 0);
-                }
-              }
-            }
-            break;
-          case 24:
-            for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
-              for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
-                if (GET_TILE_UPDATED (xti, yti)) {
-                  vid_ptr = disp_ptr + (yc * pitch + 3*xc);
-                  tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
-                  for (r=0; r<h; r++) {
-                    vid_ptr2  = vid_ptr;
-                    tile_ptr2 = tile_ptr;
-                    for (c=0; c<w; c++) {
-                      blue = *(vid_ptr2++);
-                      green = *(vid_ptr2++);
-                      red = *(vid_ptr2++);
-                      colour = MAKE_COLOUR(
-                        red, 8, info.red_shift, info.red_mask,
-                        green, 8, info.green_shift, info.green_mask,
-                        blue, 8, info.blue_shift, info.blue_mask);
-                      if (info.is_little_endian) {
-                        for (i=0; i<info.bpp; i+=8) {
-                          *(tile_ptr2++) = (Bit8u)(colour >> i);
-                        }
-                      }
-                      else {
-                        for (i=info.bpp-8; i>-8; i-=8) {
-                          *(tile_ptr2++) = (Bit8u)(colour >> i);
-                        }
-                      }
-                    }
-                    vid_ptr  += pitch;
-                    tile_ptr += info.pitch;
-                  }
-                  bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-                  SET_TILE_UPDATED (xti, yti, 0);
-                }
-              }
-            }
-            break;
-          case 32:
-            for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
-              for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
-                if (GET_TILE_UPDATED (xti, yti)) {
-                  vid_ptr = disp_ptr + (yc * pitch + (xc<<2));
-                  tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
-                  for (r=0; r<h; r++) {
-                    vid_ptr2  = vid_ptr;
-                    tile_ptr2 = tile_ptr;
-                    for (c=0; c<w; c++) {
-                      blue = *(vid_ptr2++);
-                      green = *(vid_ptr2++);
-                      red = *(vid_ptr2++);
-                      vid_ptr2++;
-                      colour = MAKE_COLOUR(
-                        red, 8, info.red_shift, info.red_mask,
-                        green, 8, info.green_shift, info.green_mask,
-                        blue, 8, info.blue_shift, info.blue_mask);
-                      if (info.is_little_endian) {
-                        for (i=0; i<info.bpp; i+=8) {
-                          *(tile_ptr2++) = (Bit8u)(colour >> i);
-                        }
-                      }
-                      else {
-                        for (i=info.bpp-8; i>-8; i-=8) {
-                          *(tile_ptr2++) = (Bit8u)(colour >> i);
-                        }
-                      }
-                    }
-                    vid_ptr  += pitch;
-                    tile_ptr += info.pitch;
-                  }
-                  bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-                  SET_TILE_UPDATED (xti, yti, 0);
-                }
-              }
-            }
-            break;
-        }
-      }
-      BX_VGA_THIS s.last_xres = iWidth;
-      BX_VGA_THIS s.last_yres = iHeight;
-      BX_VGA_THIS s.vga_mem_updated = 0;
-    }
-    else {
-      BX_PANIC(("cannot get svga tile info"));
-    }
-  } else if ((BX_VGA_THIS vbe.enabled) && (BX_VGA_THIS vbe.bpp == VBE_DISPI_BPP_4)) {
-    unsigned r, c, x, y;
-    unsigned xc, yc, xti, yti;
-    Bit8u *plane[4];
-
-    BX_VGA_THIS determine_screen_dimensions(&iHeight, &iWidth);
-    if ((iWidth != BX_VGA_THIS s.last_xres) || (iHeight != BX_VGA_THIS s.last_yres) ||
-         (BX_VGA_THIS s.last_bpp > 8))
-    {
-      bx_gui->dimension_update(iWidth, iHeight);
-      BX_VGA_THIS s.last_xres = iWidth;
-      BX_VGA_THIS s.last_yres = iHeight;
-      BX_VGA_THIS s.last_bpp = 8;
-    }
-
-    plane[0] = &BX_VGA_THIS s.memory[0<<VBE_DISPI_4BPP_PLANE_SHIFT];
-    plane[1] = &BX_VGA_THIS s.memory[1<<VBE_DISPI_4BPP_PLANE_SHIFT];
-    plane[2] = &BX_VGA_THIS s.memory[2<<VBE_DISPI_4BPP_PLANE_SHIFT];
-    plane[3] = &BX_VGA_THIS s.memory[3<<VBE_DISPI_4BPP_PLANE_SHIFT];
-
-    for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
-      for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
-        if (GET_TILE_UPDATED (xti, yti)) {
-          for (r=0; r<Y_TILESIZE; r++) {
-            y = yc + r;
-            if (BX_VGA_THIS s.y_doublescan) y >>= 1;
-            for (c=0; c<X_TILESIZE; c++) {
-              x = xc + c;
-              BX_VGA_THIS s.tile[r*X_TILESIZE + c] =
-                BX_VGA_THIS get_vga_pixel(x, y, BX_VGA_THIS vbe.virtual_start, 0xffff, plane);
-            }
+              break;
           }
-          SET_TILE_UPDATED (xti, yti, 0);
-          bx_gui->graphics_tile_update(BX_VGA_THIS s.tile, xc, yc);
+        } else {
+          switch (BX_VGA_THIS vbe.bpp) {
+            case 4:
+              BX_ERROR(("cannot draw 4bpp SVGA"));
+              break;
+            case 8:
+              for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+                for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
+                  if (GET_TILE_UPDATED (xti, yti)) {
+                    vid_ptr = disp_ptr + (yc * pitch + xc);
+                    tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+                    for (r=0; r<h; r++) {
+                      vid_ptr2  = vid_ptr;
+                      tile_ptr2 = tile_ptr;
+                      for (c=0; c<w; c++) {
+                        colour = *(vid_ptr2++);
+                        colour = MAKE_COLOUR(
+                          BX_VGA_THIS s.pel.data[colour].red, dac_size, info.red_shift, info.red_mask,
+                          BX_VGA_THIS s.pel.data[colour].green, dac_size, info.green_shift, info.green_mask,
+                          BX_VGA_THIS s.pel.data[colour].blue, dac_size, info.blue_shift, info.blue_mask);
+                        if (info.is_little_endian) {
+                          for (i=0; i<info.bpp; i+=8) {
+                            *(tile_ptr2++) = (Bit8u)(colour >> i);
+                          }
+                        } else {
+                          for (i=info.bpp-8; i>-8; i-=8) {
+                            *(tile_ptr2++) = (Bit8u)(colour >> i);
+                          }
+                        }
+                      }
+                      vid_ptr  += pitch;
+                      tile_ptr += info.pitch;
+                    }
+                    bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+                    SET_TILE_UPDATED (xti, yti, 0);
+                  }
+                }
+              }
+              break;
+            case 15:
+              for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+                for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
+                  if (GET_TILE_UPDATED (xti, yti)) {
+                    vid_ptr = disp_ptr + (yc * pitch + (xc<<1));
+                    tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+                    for (r=0; r<h; r++) {
+                      vid_ptr2  = vid_ptr;
+                      tile_ptr2 = tile_ptr;
+                      for (c=0; c<w; c++) {
+                        colour = *(vid_ptr2++);
+                        colour |= *(vid_ptr2++) << 8;
+                        colour = MAKE_COLOUR(
+                          colour & 0x001f, 5, info.blue_shift, info.blue_mask,
+                          colour & 0x03e0, 10, info.green_shift, info.green_mask,
+                          colour & 0x7c00, 15, info.red_shift, info.red_mask);
+                        if (info.is_little_endian) {
+                          for (i=0; i<info.bpp; i+=8) {
+                            *(tile_ptr2++) = (Bit8u)(colour >> i);
+                          }
+                        } else {
+                          for (i=info.bpp-8; i>-8; i-=8) {
+                            *(tile_ptr2++) = (Bit8u)(colour >> i);
+                          }
+                        }
+                      }
+                      vid_ptr  += pitch;
+                      tile_ptr += info.pitch;
+                    }
+                    bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+                    SET_TILE_UPDATED (xti, yti, 0);
+                  }
+                }
+              }
+              break;
+            case 16:
+              for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+                for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
+                  if (GET_TILE_UPDATED (xti, yti)) {
+                    vid_ptr = disp_ptr + (yc * pitch + (xc<<1));
+                    tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+                    for (r=0; r<h; r++) {
+                      vid_ptr2  = vid_ptr;
+                      tile_ptr2 = tile_ptr;
+                      for (c=0; c<w; c++) {
+                        colour = *(vid_ptr2++);
+                        colour |= *(vid_ptr2++) << 8;
+                        colour = MAKE_COLOUR(
+                          colour & 0x001f, 5, info.blue_shift, info.blue_mask,
+                          colour & 0x07e0, 11, info.green_shift, info.green_mask,
+                          colour & 0xf800, 16, info.red_shift, info.red_mask);
+                        if (info.is_little_endian) {
+                          for (i=0; i<info.bpp; i+=8) {
+                            *(tile_ptr2++) = (Bit8u)(colour >> i);
+                          }
+                        } else {
+                          for (i=info.bpp-8; i>-8; i-=8) {
+                            *(tile_ptr2++) = (Bit8u)(colour >> i);
+                          }
+                        }
+                      }
+                      vid_ptr  += pitch;
+                      tile_ptr += info.pitch;
+                    }
+                    bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+                    SET_TILE_UPDATED (xti, yti, 0);
+                  }
+                }
+              }
+              break;
+            case 24:
+              for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+                for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
+                  if (GET_TILE_UPDATED (xti, yti)) {
+                    vid_ptr = disp_ptr + (yc * pitch + 3*xc);
+                    tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+                    for (r=0; r<h; r++) {
+                      vid_ptr2  = vid_ptr;
+                      tile_ptr2 = tile_ptr;
+                      for (c=0; c<w; c++) {
+                        blue = *(vid_ptr2++);
+                        green = *(vid_ptr2++);
+                        red = *(vid_ptr2++);
+                        colour = MAKE_COLOUR(
+                          red, 8, info.red_shift, info.red_mask,
+                          green, 8, info.green_shift, info.green_mask,
+                          blue, 8, info.blue_shift, info.blue_mask);
+                        if (info.is_little_endian) {
+                          for (i=0; i<info.bpp; i+=8) {
+                            *(tile_ptr2++) = (Bit8u)(colour >> i);
+                          }
+                        } else {
+                          for (i=info.bpp-8; i>-8; i-=8) {
+                            *(tile_ptr2++) = (Bit8u)(colour >> i);
+                          }
+                        }
+                      }
+                      vid_ptr  += pitch;
+                      tile_ptr += info.pitch;
+                    }
+                    bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+                    SET_TILE_UPDATED (xti, yti, 0);
+                  }
+                }
+              }
+              break;
+            case 32:
+              for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+                for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
+                  if (GET_TILE_UPDATED (xti, yti)) {
+                    vid_ptr = disp_ptr + (yc * pitch + (xc<<2));
+                    tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+                    for (r=0; r<h; r++) {
+                      vid_ptr2  = vid_ptr;
+                      tile_ptr2 = tile_ptr;
+                      for (c=0; c<w; c++) {
+                        blue = *(vid_ptr2++);
+                        green = *(vid_ptr2++);
+                        red = *(vid_ptr2++);
+                        vid_ptr2++;
+                        colour = MAKE_COLOUR(
+                          red, 8, info.red_shift, info.red_mask,
+                          green, 8, info.green_shift, info.green_mask,
+                          blue, 8, info.blue_shift, info.blue_mask);
+                        if (info.is_little_endian) {
+                          for (i=0; i<info.bpp; i+=8) {
+                            *(tile_ptr2++) = (Bit8u)(colour >> i);
+                          }
+                        } else {
+                          for (i=info.bpp-8; i>-8; i-=8) {
+                            *(tile_ptr2++) = (Bit8u)(colour >> i);
+                          }
+                        }
+                      }
+                      vid_ptr  += pitch;
+                      tile_ptr += info.pitch;
+                    }
+                    bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+                    SET_TILE_UPDATED (xti, yti, 0);
+                  }
+                }
+              }
+              break;
+          }
+        }
+        BX_VGA_THIS s.last_xres = iWidth;
+        BX_VGA_THIS s.last_yres = iHeight;
+        BX_VGA_THIS s.vga_mem_updated = 0;
+      } else {
+        BX_PANIC(("cannot get svga tile info"));
+      }
+    } else {
+      unsigned r, c, x, y;
+      unsigned xc, yc, xti, yti;
+      Bit8u *plane[4];
+
+      BX_VGA_THIS determine_screen_dimensions(&iHeight, &iWidth);
+      if ((iWidth != BX_VGA_THIS s.last_xres) || (iHeight != BX_VGA_THIS s.last_yres) ||
+           (BX_VGA_THIS s.last_bpp > 8)) {
+        bx_gui->dimension_update(iWidth, iHeight);
+        BX_VGA_THIS s.last_xres = iWidth;
+        BX_VGA_THIS s.last_yres = iHeight;
+        BX_VGA_THIS s.last_bpp = 8;
+      }
+
+      plane[0] = &BX_VGA_THIS s.memory[0<<VBE_DISPI_4BPP_PLANE_SHIFT];
+      plane[1] = &BX_VGA_THIS s.memory[1<<VBE_DISPI_4BPP_PLANE_SHIFT];
+      plane[2] = &BX_VGA_THIS s.memory[2<<VBE_DISPI_4BPP_PLANE_SHIFT];
+      plane[3] = &BX_VGA_THIS s.memory[3<<VBE_DISPI_4BPP_PLANE_SHIFT];
+
+      for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+        for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
+          if (GET_TILE_UPDATED (xti, yti)) {
+            for (r=0; r<Y_TILESIZE; r++) {
+              y = yc + r;
+              if (BX_VGA_THIS s.y_doublescan) y >>= 1;
+              for (c=0; c<X_TILESIZE; c++) {
+                x = xc + c;
+                BX_VGA_THIS s.tile[r*X_TILESIZE + c] =
+                  BX_VGA_THIS get_vga_pixel(x, y, BX_VGA_THIS vbe.virtual_start, 0xffff, 0, plane);
+              }
+            }
+            SET_TILE_UPDATED (xti, yti, 0);
+            bx_gui->graphics_tile_update(BX_VGA_THIS s.tile, xc, yc);
+          }
         }
       }
     }
