@@ -41,8 +41,6 @@
 
 #define LOG_THIS theVga->
 
-#define VGA_TRACE_FEATURE
-
 // Only reference the array if the tile numbers are within the bounds
 // of the array.  If out of bounds, do nothing.
 #define SET_TILE_UPDATED(xtile, ytile, value)                            \
@@ -58,33 +56,7 @@
      BX_VGA_THIS s.vga_tile_updated[(xtile)+(ytile)*BX_VGA_THIS s.num_x_tiles] \
      : 0)
 
-static const Bit16u charmap_offset[8] = {
-  0x0000, 0x4000, 0x8000, 0xc000,
-  0x2000, 0x6000, 0xa000, 0xe000
-};
-
-static const Bit8u ccdat[16][4] = {
-  { 0x00, 0x00, 0x00, 0x00 },
-  { 0xff, 0x00, 0x00, 0x00 },
-  { 0x00, 0xff, 0x00, 0x00 },
-  { 0xff, 0xff, 0x00, 0x00 },
-  { 0x00, 0x00, 0xff, 0x00 },
-  { 0xff, 0x00, 0xff, 0x00 },
-  { 0x00, 0xff, 0xff, 0x00 },
-  { 0xff, 0xff, 0xff, 0x00 },
-  { 0x00, 0x00, 0x00, 0xff },
-  { 0xff, 0x00, 0x00, 0xff },
-  { 0x00, 0xff, 0x00, 0xff },
-  { 0xff, 0xff, 0x00, 0xff },
-  { 0x00, 0x00, 0xff, 0xff },
-  { 0xff, 0x00, 0xff, 0xff },
-  { 0x00, 0xff, 0xff, 0xff },
-  { 0xff, 0xff, 0xff, 0xff },
-};
-
 bx_vga_c *theVga = NULL;
-
-unsigned old_MSL = 0;
 
 int libvga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
@@ -315,8 +287,6 @@ void bx_vga_c::write_handler_no_log(void *this_ptr, Bit32u address, Bit32u value
 
 void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
 {
-  bx_bool needs_update = 0;
-
   if (io_len == 2) {
 #if BX_USE_VGA_SMF
     bx_vga_c::write_handler_no_log(0, address, value & 0xff, 1);
@@ -351,12 +321,9 @@ void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_l
             BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address] = value;
             if (!BX_VGA_THIS vbe.enabled || (BX_VGA_THIS vbe.bpp == VBE_DISPI_BPP_4)) {
               // Line offset change
-              BX_VGA_THIS s.line_offset = BX_VGA_THIS s.CRTC.reg[0x13] << 1;
-              if (BX_VGA_THIS s.CRTC.reg[0x14] & 0x40) BX_VGA_THIS s.line_offset <<= 2;
-              else if ((BX_VGA_THIS s.CRTC.reg[0x17] & 0x40) == 0) BX_VGA_THIS s.line_offset <<= 1;
-              needs_update = 1;
-              break;
+              bx_vgacore_c::write(address, value, io_len, no_log);
             }
+            break;
           default:
             bx_vgacore_c::write(address, value, io_len, no_log);
         }
@@ -364,11 +331,6 @@ void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_l
       break;
     default:
       bx_vgacore_c::write(address, value, io_len, no_log);
-  }
-
-  if (needs_update) {
-    // Mark all video as updated so the changes will go through
-    BX_VGA_THIS redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
   }
 }
 
@@ -853,9 +815,8 @@ void bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
     return;
   }
 
-  BX_VGA_THIS s.vga_mem_updated = 1;
-
   if (BX_VGA_THIS vbe.enabled) {
+    BX_VGA_THIS s.vga_mem_updated = 1;
     xmax = BX_VGA_THIS vbe.xres;
     ymax = BX_VGA_THIS vbe.yres;
     xt0 = x0 / X_TILESIZE;
