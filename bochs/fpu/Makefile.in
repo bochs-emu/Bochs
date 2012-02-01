@@ -41,8 +41,8 @@ L_TARGET = libfpu.a
 
 BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ -I. -I$(srcdir)/. -I./stubs -I$(srcdir)/./stubs
 
-OBJS = ferr.o fpu.o fpu_arith.o fpu_compare.o fpu_const.o \
-               fpu_load_store.o fpu_misc.o fpu_trans.o fpu_tags.o \
+OBJS = ferr.o fpu.o fpu_arith.o fpu_compare.o fpu_const.o fpu_cmov.o \
+               fpu_load_store.o fpu_misc.o fpu_trans.o \
                fprem.o fsincos.o f2xm1.o fyl2x.o fpatan.o \
                softfloat.o softfloatx80.o softfloat16.o softfloat-muladd.o \
                softfloat-specialize.o softfloat-round-pack.o poly.o
@@ -116,6 +116,15 @@ fpu_compare.o: fpu_compare.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
  ../fpu/control_w.h ../cpu/xmm.h ../cpu/vmx.h ../cpu/svm.h ../cpu/stack.h \
  softfloatx80.h softfloat.h softfloat-specialize.h
+fpu_cmov.o: fpu_cmov.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../cpu/cpu.h \
+ ../cpu/cpuid.h ../cpu/crregs.h ../cpu/descriptor.h ../cpu/instr.h \
+ ../cpu/ia_opcodes.h ../cpu/lazy_flags.h ../cpu/icache.h ../cpu/apic.h \
+ ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
+ ../fpu/control_w.h ../cpu/xmm.h ../cpu/vmx.h ../cpu/svm.h ../cpu/stack.h \
+ softfloatx80.h softfloat.h softfloat-specialize.h
 fpu_const.o: fpu_const.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
@@ -143,9 +152,6 @@ fpu_misc.o: fpu_misc.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
  ../fpu/control_w.h ../cpu/xmm.h ../cpu/vmx.h ../cpu/svm.h ../cpu/stack.h \
  softfloatx80.h softfloat.h softfloat-specialize.h
-fpu_tags.o: fpu_tags.@CPP_SUFFIX@ ../config.h softfloat.h softfloat-specialize.h \
- ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
- ../fpu/control_w.h
 fpu_trans.o: fpu_trans.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \

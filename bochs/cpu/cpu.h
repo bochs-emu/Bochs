@@ -2158,10 +2158,18 @@ public: // for now...
   BX_SMF BX_INSF_TYPE FCOM_DOUBLE_REAL(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE FICOM_WORD_INTEGER(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE FICOM_DWORD_INTEGER(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE FCMOV_ST0_STj(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF BX_INSF_TYPE FCOMPP(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE FUCOMPP(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF BX_INSF_TYPE FCMOVB_ST0_STj(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE FCMOVE_ST0_STj(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE FCMOVBE_ST0_STj(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE FCMOVU_ST0_STj(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE FCMOVNB_ST0_STj(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE FCMOVNE_ST0_STj(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE FCMOVNBE_ST0_STj(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE FCMOVNU_ST0_STj(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   // misc
   BX_SMF BX_INSF_TYPE FXCH_STi(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
