@@ -1386,29 +1386,10 @@ public: // for now...
   BX_SMF BX_INSF_TYPE XOR_EAXId(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE CMP_EAXId(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF BX_INSF_TYPE PUSH16_CS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE PUSH16_DS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE POP16_DS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE PUSH16_ES(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE POP16_ES(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE PUSH16_FS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE POP16_FS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE PUSH16_GS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE POP16_GS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE PUSH16_SS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE POP16_SS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
-  BX_SMF BX_INSF_TYPE PUSH32_CS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE PUSH32_DS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE POP32_DS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE PUSH32_ES(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE POP32_ES(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE PUSH32_FS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE POP32_FS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE PUSH32_GS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE POP32_GS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE PUSH32_SS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE POP32_SS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE PUSH16_Sw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE POP16_Sw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE PUSH32_Sw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE POP32_Sw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF BX_INSF_TYPE DAA(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE DAS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3521,10 +3502,8 @@ public: // for now...
   BX_SMF BX_INSF_TYPE XCHG_RRXRAX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF BX_INSF_TYPE PUSH64_Id(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE PUSH64_FS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE POP64_FS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE PUSH64_GS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE POP64_GS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE PUSH64_Sw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE POP64_Sw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF BX_INSF_TYPE LSS_GqMp(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE LFS_GqMp(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

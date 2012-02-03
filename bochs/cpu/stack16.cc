@@ -31,112 +31,31 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_RX(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_CS(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_Sw(bxInstruction_c *i)
 {
-  push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
+  push_16(BX_CPU_THIS_PTR sregs[i->nnn()].selector.value);
 
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_DS(bxInstruction_c *i)
-{
-  push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_ES(bxInstruction_c *i)
-{
-  push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_FS(bxInstruction_c *i)
-{
-  push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_GS(bxInstruction_c *i)
-{
-  push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_SS(bxInstruction_c *i)
-{
-  push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_DS(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_Sw(bxInstruction_c *i)
 {
   RSP_SPECULATIVE;
 
-  Bit16u ds = pop_16();
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], ds);
+  Bit16u selector = pop_16();
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[i->nnn()], selector);
 
   RSP_COMMIT;
+
+  if (i->nnn() == BX_SEG_REG_SS) {
+    // POP SS inhibits interrupts, debug exceptions and single-step
+    // trap exceptions until the execution boundary following the
+    // next instruction is reached.
+    // Same code as MOV_SwEw()
+    inhibit_interrupts(BX_INHIBIT_INTERRUPTS_BY_MOVSS);
+  }
 
   BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_ES(bxInstruction_c *i)
-{
-  RSP_SPECULATIVE;
-
-  Bit16u es = pop_16();
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], es);
-
-  RSP_COMMIT;
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_FS(bxInstruction_c *i)
-{
-  RSP_SPECULATIVE;
-
-  Bit16u fs = pop_16();
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
-
-  RSP_COMMIT;
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_GS(bxInstruction_c *i)
-{
-  RSP_SPECULATIVE;
-
-  Bit16u gs = pop_16();
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
-
-  RSP_COMMIT;
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_SS(bxInstruction_c *i)
-{
-  RSP_SPECULATIVE;
-
-  Bit16u ss = pop_16();
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], ss);
-
-  RSP_COMMIT;
-
-  // POP SS inhibits interrupts, debug exceptions and single-step
-  // trap exceptions until the execution boundary following the
-  // next instruction is reached.
-  // Same code as MOV_SwEw()
-  inhibit_interrupts(BX_INHIBIT_INTERRUPTS_BY_MOVSS);
-
-  BX_NEXT_TRACE(i); // async event is set
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_RX(bxInstruction_c *i)

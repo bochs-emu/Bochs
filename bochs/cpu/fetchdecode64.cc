@@ -2192,6 +2192,7 @@ modrm_done:
 
       ia_opcode = OpcodeInfoPtr->IA;
       i->setRm((b1 & 7) | rex_b);
+      i->setNnn((b1 >> 3) & 0x7);
     }
   }
 

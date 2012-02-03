@@ -56,9 +56,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_ERX(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH32_CS(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH32_Sw(bxInstruction_c *i)
 {
-  Bit16u val_16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+  Bit16u val_16 = BX_CPU_THIS_PTR sregs[i->nnn()].selector.value;
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
     write_virtual_word_32(BX_SEG_REG_SS, (Bit32u) (ESP-4), val_16);
@@ -73,185 +73,30 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH32_CS(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH32_DS(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP32_Sw(bxInstruction_c *i)
 {
-  Bit16u val_16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value;
+  Bit16u selector;
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit32u) (ESP-4), val_16);
-    ESP -= 4;
-  }
-  else
-  {
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit16u) (SP-4), val_16);
-    SP -= 4;
-  }
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH32_ES(bxInstruction_c *i)
-{
-  Bit16u val_16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value;
-
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit32u) (ESP-4), val_16);
-    ESP -= 4;
-  }
-  else
-  {
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit16u) (SP-4), val_16);
-    SP -= 4;
-  }
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH32_FS(bxInstruction_c *i)
-{
-  Bit16u val_16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value;
-
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit32u) (ESP-4), val_16);
-    ESP -= 4;
-  }
-  else
-  {
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit16u) (SP-4), val_16);
-    SP -= 4;
-  }
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH32_GS(bxInstruction_c *i)
-{
-  Bit16u val_16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value;
-
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit32u) (ESP-4), val_16);
-    ESP -= 4;
-  }
-  else
-  {
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit16u) (SP-4), val_16);
-    SP -= 4;
-  }
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH32_SS(bxInstruction_c *i)
-{
-  Bit16u val_16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
-
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit32u) (ESP-4), val_16);
-    ESP -= 4;
-  }
-  else
-  {
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit16u) (SP-4), val_16);
-    SP -= 4;
-  }
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP32_DS(bxInstruction_c *i)
-{
-  Bit16u ds;
-
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    ds = read_virtual_word_32(BX_SEG_REG_SS, ESP);
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], ds);
+    selector = read_virtual_word_32(BX_SEG_REG_SS, ESP);
+    load_seg_reg(&BX_CPU_THIS_PTR sregs[i->nnn()], selector);
     ESP += 4;
   }
   else {
-    ds = read_virtual_word_32(BX_SEG_REG_SS, SP);
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], ds);
+    selector = read_virtual_word_32(BX_SEG_REG_SS, SP);
+    load_seg_reg(&BX_CPU_THIS_PTR sregs[i->nnn()], selector);
     SP += 4;
+  }
+
+  if (i->nnn() == BX_SEG_REG_SS) {
+    // POP SS inhibits interrupts, debug exceptions and single-step
+    // trap exceptions until the execution boundary following the
+    // next instruction is reached.
+    // Same code as MOV_SwEw()
+    inhibit_interrupts(BX_INHIBIT_INTERRUPTS_BY_MOVSS);
   }
 
   BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP32_ES(bxInstruction_c *i)
-{
-  Bit16u es;
-
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    es = read_virtual_word_32(BX_SEG_REG_SS, ESP);
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], es);
-    ESP += 4;
-  }
-  else {
-    es = read_virtual_word_32(BX_SEG_REG_SS, SP);
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], es);
-    SP += 4;
-  }
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP32_FS(bxInstruction_c *i)
-{
-  Bit16u fs;
-
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    fs = read_virtual_word_32(BX_SEG_REG_SS, ESP);
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
-    ESP += 4;
-  }
-  else {
-    fs = read_virtual_word_32(BX_SEG_REG_SS, SP);
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
-    SP += 4;
-  }
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP32_GS(bxInstruction_c *i)
-{
-  Bit16u gs;
-
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    gs = read_virtual_word_32(BX_SEG_REG_SS, ESP);
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
-    ESP += 4;
-  }
-  else {
-    gs = read_virtual_word_32(BX_SEG_REG_SS, SP);
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
-    SP += 4;
-  }
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP32_SS(bxInstruction_c *i)
-{
-  Bit16u ss;
-
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    ss = read_virtual_word_32(BX_SEG_REG_SS, ESP);
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], ss);
-    ESP += 4;
-  }
-  else {
-    ss = read_virtual_word_32(BX_SEG_REG_SS, SP);
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], ss);
-    SP += 4;
-  }
-
-  // POP SS inhibits interrupts, debug exceptions and single-step
-  // trap exceptions until the execution boundary following the
-  // next instruction is reached.
-  // Same code as MOV_SwEw()
-  inhibit_interrupts(BX_INHIBIT_INTERRUPTS_BY_MOVSS);
-
-  BX_NEXT_TRACE(i); // async event is set
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_Id(bxInstruction_c *i)
