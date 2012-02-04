@@ -1262,14 +1262,14 @@ void bx_init_options()
         "heads",
         "Heads",
         "Number of heads",
-        0, 255,
+        0, 16,
         0);
       heads->set_ask_format("Enter number of heads: [%d] ");
       bx_param_num_c *spt = new bx_param_num_c(menu,
         "spt",
         "Sectors per track",
         "Number of sectors per track",
-        0, 255,
+        0, 63,
         0);
       spt->set_ask_format("Enter number of sectors per track: [%d] ");
 
