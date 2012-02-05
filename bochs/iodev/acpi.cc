@@ -111,6 +111,7 @@ Bit64u muldiv64(Bit64u a, Bit32u b, Bit32u c)
 bx_acpi_ctrl_c::bx_acpi_ctrl_c()
 {
   put("ACPI");
+  memset(&s, 0, sizeof(s));
   s.timer_index = BX_NULL_TIMER_HANDLE;
 }
 

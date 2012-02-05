@@ -79,10 +79,8 @@ static const Bit8u ccdat[16][4] = {
 
 bx_vgacore_c::bx_vgacore_c()
 {
-  s.vga_mem_updated = 0;
-  s.vga_tile_updated = NULL;
+  memset(&s, 0, sizeof(s));
   timer_id = BX_NULL_TIMER_HANDLE;
-  s.memory = NULL;
 }
 
 bx_vgacore_c::~bx_vgacore_c()
@@ -130,102 +128,37 @@ void bx_vgacore_c::init(void)
 
 void bx_vgacore_c::init_standard_vga(void)
 {
-  unsigned i;
   char *extname;
 
   // initialize VGA controllers and other internal stuff
   BX_VGA_THIS s.vga_enabled = 1;
   BX_VGA_THIS s.misc_output.color_emulation  = 1;
   BX_VGA_THIS s.misc_output.enable_ram  = 1;
-  BX_VGA_THIS s.misc_output.clock_select     = 0;
-  BX_VGA_THIS s.misc_output.select_high_bank = 0;
   BX_VGA_THIS s.misc_output.horiz_sync_pol   = 1;
   BX_VGA_THIS s.misc_output.vert_sync_pol    = 1;
 
-  BX_VGA_THIS s.attribute_ctrl.mode_ctrl.graphics_alpha = 0;
-  BX_VGA_THIS s.attribute_ctrl.mode_ctrl.display_type = 0;
   BX_VGA_THIS s.attribute_ctrl.mode_ctrl.enable_line_graphics = 1;
-  BX_VGA_THIS s.attribute_ctrl.mode_ctrl.blink_intensity = 0;
-  BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_panning_compat = 0;
-  BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_clock_select = 0;
-  BX_VGA_THIS s.attribute_ctrl.mode_ctrl.internal_palette_size = 0;
-
   BX_VGA_THIS s.line_offset=80;
   BX_VGA_THIS s.line_compare=1023;
   BX_VGA_THIS s.vertical_display_end=399;
 
-  for (i=0; i<=0x18; i++)
-    BX_VGA_THIS s.CRTC.reg[i] = 0;
-  BX_VGA_THIS s.CRTC.address = 0;
-  BX_VGA_THIS s.CRTC.write_protect = 0;
-
-  BX_VGA_THIS s.attribute_ctrl.flip_flop = 0;
-  BX_VGA_THIS s.attribute_ctrl.address = 0;
   BX_VGA_THIS s.attribute_ctrl.video_enabled = 1;
-  for (i=0; i<16; i++)
-    BX_VGA_THIS s.attribute_ctrl.palette_reg[i] = 0;
-  BX_VGA_THIS s.attribute_ctrl.overscan_color = 0;
   BX_VGA_THIS s.attribute_ctrl.color_plane_enable = 0x0f;
-  BX_VGA_THIS s.attribute_ctrl.horiz_pel_panning = 0;
-  BX_VGA_THIS s.attribute_ctrl.color_select = 0;
-
-  for (i=0; i<256; i++) {
-    BX_VGA_THIS s.pel.data[i].red = 0;
-    BX_VGA_THIS s.pel.data[i].green = 0;
-    BX_VGA_THIS s.pel.data[i].blue = 0;
-  }
-  BX_VGA_THIS s.pel.write_data_register = 0;
-  BX_VGA_THIS s.pel.write_data_cycle = 0;
-  BX_VGA_THIS s.pel.read_data_register = 0;
-  BX_VGA_THIS s.pel.read_data_cycle = 0;
   BX_VGA_THIS s.pel.dac_state = 0x01;
   BX_VGA_THIS s.pel.mask = 0xff;
-
-  BX_VGA_THIS s.graphics_ctrl.index = 0;
-  BX_VGA_THIS s.graphics_ctrl.set_reset = 0;
-  BX_VGA_THIS s.graphics_ctrl.enable_set_reset = 0;
-  BX_VGA_THIS s.graphics_ctrl.color_compare = 0;
-  BX_VGA_THIS s.graphics_ctrl.data_rotate = 0;
-  BX_VGA_THIS s.graphics_ctrl.raster_op    = 0;
-  BX_VGA_THIS s.graphics_ctrl.read_map_select = 0;
-  BX_VGA_THIS s.graphics_ctrl.write_mode = 0;
-  BX_VGA_THIS s.graphics_ctrl.read_mode  = 0;
-  BX_VGA_THIS s.graphics_ctrl.odd_even = 0;
-  BX_VGA_THIS s.graphics_ctrl.chain_odd_even = 0;
-  BX_VGA_THIS s.graphics_ctrl.shift_reg = 0;
-  BX_VGA_THIS s.graphics_ctrl.graphics_alpha = 0;
   BX_VGA_THIS s.graphics_ctrl.memory_mapping = 2; // monochrome text mode
-  BX_VGA_THIS s.graphics_ctrl.color_dont_care = 0;
-  BX_VGA_THIS s.graphics_ctrl.bitmask = 0;
-  for (i=0; i<4; i++) {
-    BX_VGA_THIS s.graphics_ctrl.latch[i] = 0;
-  }
 
-  BX_VGA_THIS s.sequencer.index = 0;
-  BX_VGA_THIS s.sequencer.map_mask = 0;
   BX_VGA_THIS s.sequencer.reset1 = 1;
   BX_VGA_THIS s.sequencer.reset2 = 1;
-  BX_VGA_THIS s.sequencer.reg1 = 0;
-  BX_VGA_THIS s.sequencer.char_map_select = 0;
   BX_VGA_THIS s.sequencer.extended_mem = 1; // display mem greater than 64K
   BX_VGA_THIS s.sequencer.odd_even = 1; // use sequential addressing mode
-  BX_VGA_THIS s.sequencer.chain_four = 0; // use map mask & read map select
 
-  BX_VGA_THIS s.charmap_address = 0;
-  BX_VGA_THIS s.x_dotclockdiv2 = 0;
-  BX_VGA_THIS s.y_doublescan = 0;
   BX_VGA_THIS s.plane_shift = 16;
-  BX_VGA_THIS s.plane_offset = 0;
   BX_VGA_THIS s.dac_shift = 2;
-  BX_VGA_THIS s.last_xres = 0;
-  BX_VGA_THIS s.last_yres = 0;
   BX_VGA_THIS s.last_bpp = 8;
-  BX_VGA_THIS s.last_msl = 0;
 
   BX_VGA_THIS s.max_xres = 800;
   BX_VGA_THIS s.max_yres = 600;
-
-  BX_VGA_THIS s.vga_mem_updated = 0;
 
   // initialize memory, handlers and timer (depending on extension)
   extname = SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr();

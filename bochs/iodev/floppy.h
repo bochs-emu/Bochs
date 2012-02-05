@@ -153,48 +153,4 @@ private:
   static void runtime_config_handler(void *);
   void runtime_config(void);
 };
-
-
-#ifdef WIN32
-
-// used for direct floppy access in Win95
-#define  VWIN32_DIOC_DOS_IOCTL  1
-#define  VWIN32_DIOC_DOS_INT25  2
-#define  VWIN32_DIOC_DOS_INT26  3
-
-typedef struct _DIOC_REGISTERS {
-    DWORD reg_EBX;
-    DWORD reg_EDX;
-    DWORD reg_ECX;
-    DWORD reg_EAX;
-    DWORD reg_EDI;
-    DWORD reg_ESI;
-    DWORD reg_Flags;
-} DIOC_REGISTERS, *PDIOC_REGISTERS;
-
-#pragma pack(push, 1)
-typedef struct _BLOCK_DEV_PARAMS {
-    BYTE  features;
-    BYTE  dev_type;
-    WORD  attribs;
-    WORD  cylinders;
-    BYTE  media_type;
-    // BPB
-    WORD  bytes_per_sector;
-    BYTE  sect_per_cluster;
-    WORD  reserved_sectors;
-    BYTE  fats;
-    WORD  root_entries;
-    WORD  tot_sectors;
-    BYTE  media_id;
-    WORD  sects_per_fat;
-    WORD  sects_per_track;
-    WORD  num_heads;
-    WORD  hidden_sectors;
-    BYTE  remainder[5];
-} BLOCK_DEV_PARAMS, *PBLOCK_DEV_PARAMS;
-#pragma pack(pop)
-
-#endif /* WIN32 */
-
 #endif

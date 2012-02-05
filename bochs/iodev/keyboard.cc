@@ -78,6 +78,7 @@ void libkeyboard_LTX_plugin_fini(void)
 bx_keyb_c::bx_keyb_c()
 {
   put("keyboard", "KBD");
+  memset(&s, 0, sizeof(s));
   pastebuf = NULL;
 }
 

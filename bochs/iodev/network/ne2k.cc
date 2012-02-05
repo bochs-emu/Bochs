@@ -184,6 +184,7 @@ void libne2k_LTX_plugin_fini(void)
 bx_ne2k_c::bx_ne2k_c()
 {
   put("NE2K");
+  memset(&s, 0, sizeof(bx_ne2k_t));
   s.tx_timer_index = BX_NULL_TIMER_HANDLE;
   ethdev = NULL;
 }

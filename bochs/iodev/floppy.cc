@@ -128,6 +128,7 @@ void libfloppy_LTX_plugin_fini(void)
 bx_floppy_ctrl_c::bx_floppy_ctrl_c()
 {
   put("floppy", "FDD");
+  memset(&s, 0, sizeof(s));
   s.floppy_timer_index = BX_NULL_TIMER_HANDLE;
 }
 

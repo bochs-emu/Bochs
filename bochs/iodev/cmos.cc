@@ -122,9 +122,7 @@ void libcmos_LTX_plugin_fini(void)
 bx_cmos_c::bx_cmos_c(void)
 {
   put("CMOS");
-
-  for (unsigned i=0; i<128; i++) s.reg[i] = 0;
-
+  memset(&s, 0, sizeof(s));
   s.periodic_timer_index = BX_NULL_TIMER_HANDLE;
   s.one_second_timer_index = BX_NULL_TIMER_HANDLE;
   s.uip_timer_index = BX_NULL_TIMER_HANDLE;

@@ -57,6 +57,8 @@ void libdma_LTX_plugin_fini(void)
 bx_dma_c::bx_dma_c()
 {
   put("DMA");
+  memset(&s[0], 0, sizeof(s));
+  memset(&s[1], 0, sizeof(s));
 }
 
 bx_dma_c::~bx_dma_c()

@@ -210,6 +210,9 @@ void libsb16_LTX_plugin_fini(void)
 bx_sb16_c::bx_sb16_c(void)
 {
   put("SB16");
+  memset(&mpu401, 0, sizeof(mpu401));
+  memset(&dsp, 0, sizeof(dsp));
+  memset(&opl, 0, sizeof(opl));
   mpu401.timer_handle = BX_NULL_TIMER_HANDLE;
   dsp.timer_handle = BX_NULL_TIMER_HANDLE;
   opl.timer_handle = BX_NULL_TIMER_HANDLE;
