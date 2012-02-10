@@ -1006,6 +1006,7 @@ int redolog_t::make_header(const char* type, Bit64u size)
   Bit32u flip=0;
 
   // Set standard header values
+  memset(&header, 0, sizeof(redolog_header_t));
   strcpy((char*)header.standard.magic, STANDARD_HEADER_MAGIC);
   strcpy((char*)header.standard.type, REDOLOG_TYPE);
   strcpy((char*)header.standard.subtype, type);

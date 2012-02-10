@@ -213,6 +213,8 @@ bx_sb16_c::bx_sb16_c(void)
   memset(&mpu401, 0, sizeof(mpu401));
   memset(&dsp, 0, sizeof(dsp));
   memset(&opl, 0, sizeof(opl));
+  currentdma8 = 0;
+  currentdma16 = 0;
   mpu401.timer_handle = BX_NULL_TIMER_HANDLE;
   dsp.timer_handle = BX_NULL_TIMER_HANDLE;
   opl.timer_handle = BX_NULL_TIMER_HANDLE;
