@@ -150,7 +150,7 @@ HWND hwndTT, tt_hwndDlg;
 HHOOK tt_hhk;
 const char *tt_text;
 
-BOOL EnumChildProc(HWND hwndCtrl, LPARAM lParam);
+BOOL CALLBACK EnumChildProc(HWND hwndCtrl, LPARAM lParam);
 LRESULT CALLBACK GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam);
 
 BOOL CreateParamDlgTooltip(HWND hwndDlg)
@@ -176,7 +176,7 @@ BOOL CreateParamDlgTooltip(HWND hwndDlg)
   return TRUE;
 }
 
-BOOL EnumChildProc(HWND hwndCtrl, LPARAM lParam)
+BOOL CALLBACK EnumChildProc(HWND hwndCtrl, LPARAM lParam)
 {
   TOOLINFO ti;
   char szClass[64];
