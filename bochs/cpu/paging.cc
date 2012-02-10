@@ -800,6 +800,15 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
 
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
 {
+  BX_CPU_THIS_PTR PDPTR_CACHE.valid = 0;
+
+  // with Nested Paging PDPTRs are not loaded for guest page tables but
+  // accessed on demand as part of the guest page walk
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED)
+    return 1;
+#endif
+
   cr3_val &= 0xffffffe0;
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest) {
@@ -849,24 +858,32 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(Bit64u *pdptr)
 bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned user, unsigned rw)
 {
   bx_phy_address entry_addr[2];
-  Bit64u entry[2];
+  Bit64u entry[2], pdpte = 0;
   bx_bool nx_fault = 0;
   int leaf;
 
   lpf_mask = 0xfff;
   combined_access = 0x06;
 
-  if (! BX_CPU_THIS_PTR PDPTR_CACHE.valid) {
 #if BX_SUPPORT_SVM
-    if (! BX_CPU_THIS_PTR in_svm_guest || ! SVM_NESTED_PAGING_ENABLED)
-#endif
-      BX_PANIC(("PDPTR_CACHE not valid !"));
-    if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
-      BX_ERROR(("translate_linear_PAE(): PDPTR check failed !"));
-      exception(BX_GP_EXCEPTION, 0);
-    }
+  if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED) 
+  {
+    BX_PANIC(("Nested Paging mode is not implemented yet !"));
+//  pdpte = SvmReadDPTR((laddr >> 30) & 3);
   }
-  Bit64u pdpte = BX_CPU_THIS_PTR PDPTR_CACHE.entry[(laddr >> 30) & 3];
+  else
+#endif
+  {
+    if (! BX_CPU_THIS_PTR PDPTR_CACHE.valid) {
+      BX_PANIC(("PDPTR_CACHE not valid !"));
+      if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
+        BX_ERROR(("translate_linear_PAE(): PDPTR check failed !"));
+        exception(BX_GP_EXCEPTION, 0);
+      }
+    }
+    pdpte = BX_CPU_THIS_PTR PDPTR_CACHE.entry[(laddr >> 30) & 3];
+  }
+
   if (! (pdpte & 0x1)) {
     BX_DEBUG(("PAE PDPTE entry not present !"));
     page_fault(ERROR_NOT_PRESENT, laddr, user, rw);
