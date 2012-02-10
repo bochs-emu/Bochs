@@ -33,10 +33,12 @@ This is the top level file for the Bochs Users Manual.
 <chapter id="introduction"><title>Introduction to Bochs</title>
 <section id="whatisbochs"><title>What is Bochs?</title>
 <para>
-Bochs is a program that simulates a complete Intel x86 computer.  It
-can be configured to act like a <!--286,--> 386, 486, Pentium, Pentium II,
-Pentium III, Pentium 4 or even like x86-64 CPU, including optional MMX, SSEx
-and 3DNow! instructions.
+Bochs is a program that simulates a complete Intel x86 computer.  
+It includes emulation of the Intel x86 CPU, common I/O devices,
+and a custom BIOS. Bochs can be compiled to emulate many different
+x86 CPUs, from early 386 to the most recent x86-64 Intel and AMD
+processors which may even not reached the market yet.
+
 Bochs interprets every instruction from power-up to reboot, and has
 device models for all of the standard PC peripherals: keyboard, mouse,
 VGA card/monitor, disks, timer chips, network card, etc.  Because Bochs
@@ -361,7 +363,7 @@ currently work with.
   <row>
     <entry>x86-64 Extensions Emulation</entry>
     <entry>Yes</entry>
-    <entry>Bochs can be configured to emulate x86-64 with many recent Intel or AMD extensions.</entry>
+    <entry>Bochs can be configured to emulate x86-64 with many recent Intel and AMD extensions.</entry>
   </row>
   <row>
     <entry>Command Line Debugger</entry>
