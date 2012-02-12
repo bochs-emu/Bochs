@@ -579,8 +579,6 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   handleAvxModeChange();
 #endif
 
-  if (SVM_NESTED_PAGING_ENABLED) BX_CPU_THIS_PTR PDPTR_CACHE.valid = 0;
-
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
 
   return 1;

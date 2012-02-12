@@ -483,8 +483,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_SIMPLE(cpu, smbase);
 
 #if BX_CPU_LEVEL >= 6
-  bx_list_c *PDPTRS = new bx_list_c(cpu, "PDPTR_CACHE", 5);
-  BXRS_PARAM_BOOL(PDPTRS, valid, PDPTR_CACHE.valid);
+  bx_list_c *PDPTRS = new bx_list_c(cpu, "PDPTR_CACHE", 4);
   BXRS_HEX_PARAM_FIELD(PDPTRS, entry0, PDPTR_CACHE.entry[0]);
   BXRS_HEX_PARAM_FIELD(PDPTRS, entry1, PDPTR_CACHE.entry[1]);
   BXRS_HEX_PARAM_FIELD(PDPTRS, entry2, PDPTR_CACHE.entry[2]);
@@ -1050,9 +1049,6 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR errorno = 0;
 
   TLB_flush();
-#if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR PDPTR_CACHE.valid = 0;
-#endif
 
   // invalidate the prefetch queue
   BX_CPU_THIS_PTR eipPageBias = 0;
