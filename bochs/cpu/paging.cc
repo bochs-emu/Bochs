@@ -799,7 +799,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_ENABLE))
-      cr3_val = translate_guest_physical(cr3_val, 0, 0, 0, BX_READ);
+      cr3_val = translate_guest_physical(cr3_val, 0, 0, 1, BX_READ);
   }
 #endif
 
@@ -1271,14 +1271,14 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
     if (curr_entry & 0x80) {
       if (leaf > (BX_LEVEL_PDE + !!bx_cpuid_support_1g_paging())) {
         BX_DEBUG(("EPT %s: PS bit set !", bx_paging_level[leaf]));
-        vmexit_reason = VMX_VMEXIT_EPT_VIOLATION;
+        vmexit_reason = VMX_VMEXIT_EPT_MISCONFIGURATION;
         break;
       }
 
       ppf &= BX_CONST64(0x000fffffffffe000);
       if (ppf & offset_mask) {
          BX_DEBUG(("EPT %s: reserved bit is set: 0x" FMT_ADDRX64, bx_paging_level[leaf], curr_entry));
-         vmexit_reason = VMX_VMEXIT_EPT_VIOLATION;
+         vmexit_reason = VMX_VMEXIT_EPT_MISCONFIGURATION;
          break;
       }
 
