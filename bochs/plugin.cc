@@ -759,6 +759,26 @@ void bx_unload_plugins()
   devices = NULL;
 }
 
+void bx_unload_core_plugins()
+{
+  device_t *device, *next;
+
+  device = core_devices;
+  while (device != NULL) {
+    if (device->plugin != NULL) {
+#if BX_PLUGINS
+      bx_unload_plugin(device->name, 0);
+#endif
+    } else {
+      delete device->devmodel;
+    }
+    next = device->next;
+    free(device);
+    device = next;
+  }
+  core_devices = NULL;
+}
+
 /**************************************************************************/
 /* Plugin system: Register device state of all registered plugin-devices  */
 /**************************************************************************/

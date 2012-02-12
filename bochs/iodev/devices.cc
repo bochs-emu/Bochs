@@ -318,34 +318,7 @@ void bx_devices_c::exit()
 
   // unload optional and user plugins first
   bx_unload_plugins();
-
-  PLUG_unload_plugin(pit);
-  PLUG_unload_plugin(cmos);
-  PLUG_unload_plugin(dma);
-  PLUG_unload_plugin(pic);
-  const char *vga_ext = SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr();
-  if (!strcmp(vga_ext, "cirrus")) {
-#if BX_SUPPORT_CLGD54XX
-    PLUG_unload_plugin(svga_cirrus);
-#endif
-  } else {
-    PLUG_unload_plugin(vga);
-  }
-  PLUG_unload_plugin(floppy);
-#if BX_SUPPORT_SOUNDLOW
-  PLUG_unload_plugin(soundmod);
-#endif
-#if BX_NETWORKING
-  PLUG_unload_plugin(netmod);
-#endif
-#if BX_SUPPORT_PCI
-  PLUG_unload_plugin(pci);
-  PLUG_unload_plugin(pci2isa);
-#if BX_SUPPORT_PCIUSB
-  PLUG_unload_plugin(usb_common);
-#endif
-#endif
-  PLUG_unload_plugin(hdimage);
+  bx_unload_core_plugins();
   init_stubs();
 }
 
