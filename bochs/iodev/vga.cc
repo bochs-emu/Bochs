@@ -318,10 +318,11 @@ void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_l
           case 0x13:
           case 0x14:
           case 0x17:
-            BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address] = value;
             if (!BX_VGA_THIS vbe.enabled || (BX_VGA_THIS vbe.bpp == VBE_DISPI_BPP_4)) {
               // Line offset change
               bx_vgacore_c::write(address, value, io_len, no_log);
+            } else {
+              BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address] = value;
             }
             break;
           default:
