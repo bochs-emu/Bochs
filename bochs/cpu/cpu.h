@@ -1149,7 +1149,6 @@ public: // for now...
 
 #if BX_CPU_LEVEL >= 6
   struct {
-    bx_bool valid;
     Bit64u entry[4];
   } PDPTR_CACHE;
 #endif

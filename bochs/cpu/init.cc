@@ -1049,9 +1049,6 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR errorno = 0;
 
   TLB_flush();
-#if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR PDPTR_CACHE.valid = 0;
-#endif
 
   // invalidate the prefetch queue
   BX_CPU_THIS_PTR eipPageBias = 0;

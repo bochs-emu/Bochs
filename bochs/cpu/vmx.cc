@@ -1532,7 +1532,6 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_EPT_ENABLE) {
     // load PDPTR only in PAE legacy mode
     if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE() && !x86_64_guest) {
-      BX_CPU_THIS_PTR PDPTR_CACHE.valid = 1;
       for (n = 0; n < 4; n++)
         BX_CPU_THIS_PTR PDPTR_CACHE.entry[n] = guest.pdptr[n];
     }
@@ -1778,10 +1777,6 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_EPT_ENABLE) {
     // save only if guest running in legacy PAE mode
     if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
-      if (! BX_CPU_THIS_PTR PDPTR_CACHE.valid) {
-        if (! CheckPDPTR(BX_CPU_THIS_PTR cr3))
-          BX_PANIC(("VMEXIT: PDPTR cache is not valid !"));
-      }
       for(n=0; n<4; n++) {
         VMwrite64(VMCS_64BIT_GUEST_IA32_PDPTE0 + 2*n, BX_CPU_THIS_PTR PDPTR_CACHE.entry[n]);
       }
