@@ -46,7 +46,7 @@ bx_sb16_c *theSB16Device = NULL;
 void sb16_init_options(void)
 {
   bx_param_c *sound = SIM->get_param("sound");
-  bx_list_c *menu = new bx_list_c(sound, "sb16", "SB16 Configuration", 8);
+  bx_list_c *menu = new bx_list_c(sound, "sb16", "SB16 Configuration");
   menu->set_options(menu->SHOW_PARENT);
   bx_param_bool_c *enabled = new bx_param_bool_c(menu,
     "enabled",
@@ -99,19 +99,19 @@ void sb16_init_options(void)
   loglevel->set_options(loglevel->USE_SPIN_CONTROL);
   loglevel->set_group("SB16");
   dmatimer->set_group("SB16");
-  bx_list_c *deplist = new bx_list_c(NULL, 4);
+  bx_list_c *deplist = new bx_list_c(NULL);
   deplist->add(midimode);
   deplist->add(wavemode);
   deplist->add(loglevel);
   deplist->add(dmatimer);
   enabled->set_dependent_list(deplist);
-  deplist = new bx_list_c(NULL, 1);
+  deplist = new bx_list_c(NULL);
   deplist->add(midifile);
   midimode->set_dependent_list(deplist);
-  deplist = new bx_list_c(NULL, 1);
+  deplist = new bx_list_c(NULL);
   deplist->add(wavefile);
   wavemode->set_dependent_list(deplist);
-  deplist = new bx_list_c(NULL, 1);
+  deplist = new bx_list_c(NULL);
   deplist->add(logfile);
   loglevel->set_dependent_list(deplist);
 }
@@ -446,8 +446,8 @@ void bx_sb16_c::register_state(void)
   char name[8];
   bx_list_c *chip, *ins_map, *item, *patch;
 
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "sb16", "SB16 State", 8);
-  bx_list_c *mpu = new bx_list_c(list, "mpu", 8);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "sb16", "SB16 State");
+  bx_list_c *mpu = new bx_list_c(list, "mpu");
   new bx_shadow_bool_c(mpu, "uartmode", &MPU.uartmode);
   new bx_shadow_bool_c(mpu, "irqpending", &MPU.irqpending);
   new bx_shadow_bool_c(mpu, "forceuartmode", &MPU.forceuartmode);
@@ -455,22 +455,22 @@ void bx_sb16_c::register_state(void)
   new bx_shadow_bool_c(mpu, "outputinit", &MPU.outputinit);
   new bx_shadow_num_c(mpu, "current_timer", &MPU.current_timer);
   new bx_shadow_num_c(mpu, "last_delta_time", &MPU.last_delta_time);
-  bx_list_c *patchtbl = new bx_list_c(mpu, "patchtable", BX_SB16_PATCHTABLESIZE);
+  bx_list_c *patchtbl = new bx_list_c(mpu, "patchtable");
   for (i=0; i<BX_SB16_PATCHTABLESIZE; i++) {
     sprintf(name, "0x%02x", i);
-    patch = new bx_list_c(patchtbl, name, 3);
+    patch = new bx_list_c(patchtbl, name);
     new bx_shadow_num_c(patch, "banklsb", &MPU.banklsb[i]);
     new bx_shadow_num_c(patch, "bankmsb", &MPU.bankmsb[i]);
     new bx_shadow_num_c(patch, "program", &MPU.program[i]);
   }
-  bx_list_c *dsp = new bx_list_c(list, "dsp", 9);
+  bx_list_c *dsp = new bx_list_c(list, "dsp");
   new bx_shadow_num_c(dsp, "resetport", &DSP.resetport, BASE_HEX);
   new bx_shadow_num_c(dsp, "speaker", &DSP.speaker, BASE_HEX);
   new bx_shadow_num_c(dsp, "prostereo", &DSP.prostereo, BASE_HEX);
   new bx_shadow_bool_c(dsp, "irqpending", &DSP.irqpending);
   new bx_shadow_bool_c(dsp, "midiuartmode", &DSP.midiuartmode);
   new bx_shadow_num_c(dsp, "testreg", &DSP.testreg, BASE_HEX);
-  bx_list_c *dma = new bx_list_c(dsp, "dma", 16);
+  bx_list_c *dma = new bx_list_c(dsp, "dma");
   new bx_shadow_num_c(dma, "mode", &DSP.dma.mode);
   new bx_shadow_num_c(dma, "bits", &DSP.dma.bits);
   new bx_shadow_num_c(dma, "bps", &DSP.dma.bps);
@@ -490,19 +490,19 @@ void bx_sb16_c::register_state(void)
   new bx_shadow_bool_c(dsp, "outputinit", &DSP.outputinit);
   new bx_shadow_bool_c(dsp, "inputinit", &DSP.inputinit);
   new bx_shadow_data_c(list, "chunk", DSP.dma.chunk, BX_SOUNDLOW_WAVEPACKETSIZE);
-  bx_list_c *csp = new bx_list_c(list, "csp_reg", 256);
+  bx_list_c *csp = new bx_list_c(list, "csp_reg");
   for (i=0; i<256; i++) {
     sprintf(name, "0x%02x", i);
     new bx_shadow_num_c(csp, name, &BX_SB16_THIS csp_reg[i], BASE_HEX);
   }
-  bx_list_c *opl = new bx_list_c(list, "opl", 8);
+  bx_list_c *opl = new bx_list_c(list, "opl");
   new bx_shadow_num_c(opl, "mode", (Bit8u*)&OPL.mode);
   new bx_shadow_num_c(opl, "timer_running", &OPL.timer_running);
   new bx_shadow_num_c(opl, "midichannels", &OPL.midichannels);
   new bx_shadow_num_c(opl, "drumchannel", &OPL.drumchannel);
   for (i=0; i<2; i++) {
     sprintf(name, "chip%d", i+1);
-    chip = new bx_list_c(opl, name, 11);
+    chip = new bx_list_c(opl, name);
     new bx_shadow_num_c(chip, "index", &OPL.index[i]);
     new bx_shadow_num_c(chip, "wsenable", &OPL.wsenable[i]);
     new bx_shadow_num_c(chip, "timer1", &OPL.timer[i*2]);
@@ -515,19 +515,19 @@ void bx_sb16_c::register_state(void)
     new bx_shadow_num_c(chip, "cyhhnote", &OPL.cyhhnote[i]);
     new bx_shadow_num_c(chip, "cyhhon", &OPL.cyhhon[i]);
   }
-  bx_list_c *oper = new bx_list_c(opl, "oper", BX_SB16_FM_NOP);
+  bx_list_c *oper = new bx_list_c(opl, "oper");
   for (i=0; i<BX_SB16_FM_NOP; i++) {
     sprintf(name, "%d", i);
-    item = new bx_list_c(oper, name, BX_SB16_FM_OPB);
+    item = new bx_list_c(oper, name);
     for (j=0; j<BX_SB16_FM_OPB; j++) {
       sprintf(name, "%d", j);
       new bx_shadow_num_c(item, name, &OPL.oper[i][j]);
     }
   }
-  bx_list_c *chan = new bx_list_c(opl, "chan", BX_SB16_FM_NCH);
+  bx_list_c *chan = new bx_list_c(opl, "chan");
   for (i=0; i<BX_SB16_FM_NCH; i++) {
     sprintf(name, "%d", i);
-    item = new bx_list_c(chan, name, 19);
+    item = new bx_list_c(chan, name);
     new bx_shadow_num_c(item, "nop", &OPL.chan[i].nop);
     new bx_shadow_num_c(item, "ncarr", &OPL.chan[i].ncarr);
     new bx_shadow_num_c(item, "opnum1", &OPL.chan[i].opnum[0]);
@@ -548,17 +548,17 @@ void bx_sb16_c::register_state(void)
     new bx_shadow_num_c(item, "midivol", &OPL.chan[i].midivol);
   }
   new bx_shadow_num_c(list, "mixer_regindex", &MIXER.regindex, BASE_HEX);
-  bx_list_c *mixer = new bx_list_c(list, "mixer_reg", BX_SB16_MIX_REG);
+  bx_list_c *mixer = new bx_list_c(list, "mixer_reg");
   for (i=0; i<BX_SB16_MIX_REG; i++) {
     sprintf(name, "0x%02x", i);
     new bx_shadow_num_c(mixer, name, &MIXER.reg[i], BASE_HEX);
   }
-  bx_list_c *emul = new bx_list_c(list, "emul", 2);
+  bx_list_c *emul = new bx_list_c(list, "emul");
   new bx_shadow_num_c(emul, "remaps", &EMUL.remaps);
-  bx_list_c *remap = new bx_list_c(emul, "remaplist", 256);
+  bx_list_c *remap = new bx_list_c(emul, "remaplist");
   for (i=0; i<EMUL.remaps; i++) {
     sprintf(name, "0x%02x", i);
-    ins_map = new bx_list_c(remap, name, 6);
+    ins_map = new bx_list_c(remap, name);
     new bx_shadow_num_c(ins_map, "oldbankmsb", &EMUL.remaplist[i].oldbankmsb);
     new bx_shadow_num_c(ins_map, "oldbanklsb", &EMUL.remaplist[i].oldbanklsb);
     new bx_shadow_num_c(ins_map, "oldprogch", &EMUL.remaplist[i].oldprogch);

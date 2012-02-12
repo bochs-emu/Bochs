@@ -277,27 +277,27 @@ void bx_vgacore_c::register_state(bx_list_c *parent)
   char name[6];
   bx_list_c *reg;
 
-  bx_list_c *list = new bx_list_c(parent, "vgacore", "VGA Core State", 19);
-  bx_list_c *misc = new bx_list_c(list, "misc_output", 6);
+  bx_list_c *list = new bx_list_c(parent, "vgacore", "VGA Core State");
+  bx_list_c *misc = new bx_list_c(list, "misc_output");
   new bx_shadow_bool_c(misc, "color_emulation", &BX_VGA_THIS s.misc_output.color_emulation);
   new bx_shadow_bool_c(misc, "enable_ram", &BX_VGA_THIS s.misc_output.enable_ram);
   new bx_shadow_num_c(misc, "clock_select", &BX_VGA_THIS s.misc_output.clock_select);
   new bx_shadow_bool_c(misc, "select_high_bank", &BX_VGA_THIS s.misc_output.select_high_bank);
   new bx_shadow_bool_c(misc, "horiz_sync_pol", &BX_VGA_THIS s.misc_output.horiz_sync_pol);
   new bx_shadow_bool_c(misc, "vert_sync_pol", &BX_VGA_THIS s.misc_output.vert_sync_pol);
-  bx_list_c *crtc = new bx_list_c(list, "CRTC", 3);
+  bx_list_c *crtc = new bx_list_c(list, "CRTC");
   new bx_shadow_num_c(crtc, "address", &BX_VGA_THIS s.CRTC.address, BASE_HEX);
-  reg = new bx_list_c(crtc, "reg", 0x19);
+  reg = new bx_list_c(crtc, "reg");
   for (i=0; i<=0x18; i++) {
     sprintf(name, "0x%02x", i);
     new bx_shadow_num_c(reg, name, &BX_VGA_THIS s.CRTC.reg[i], BASE_HEX);
   }
   new bx_shadow_bool_c(crtc, "write_protect", &BX_VGA_THIS s.CRTC.write_protect);
-  bx_list_c *actl = new bx_list_c(list, "attribute_ctrl", 9);
+  bx_list_c *actl = new bx_list_c(list, "attribute_ctrl");
   new bx_shadow_bool_c(actl, "flip_flop", &BX_VGA_THIS s.attribute_ctrl.flip_flop);
   new bx_shadow_num_c(actl, "address", &BX_VGA_THIS s.attribute_ctrl.address, BASE_HEX);
   new bx_shadow_bool_c(actl, "video_enabled", &BX_VGA_THIS s.attribute_ctrl.video_enabled);
-  reg = new bx_list_c(actl, "palette_reg", 16);
+  reg = new bx_list_c(actl, "palette_reg");
   for (i=0; i<16; i++) {
     sprintf(name, "0x%02x", i);
     new bx_shadow_num_c(reg, name, &BX_VGA_THIS s.attribute_ctrl.palette_reg[i], BASE_HEX);
@@ -306,7 +306,7 @@ void bx_vgacore_c::register_state(bx_list_c *parent)
   new bx_shadow_num_c(actl, "color_plane_enable", &BX_VGA_THIS s.attribute_ctrl.color_plane_enable, BASE_HEX);
   new bx_shadow_num_c(actl, "horiz_pel_panning", &BX_VGA_THIS s.attribute_ctrl.horiz_pel_panning, BASE_HEX);
   new bx_shadow_num_c(actl, "color_select", &BX_VGA_THIS s.attribute_ctrl.color_select, BASE_HEX);
-  bx_list_c *mode = new bx_list_c(actl, "mode_ctrl", 7);
+  bx_list_c *mode = new bx_list_c(actl, "mode_ctrl");
   new bx_shadow_bool_c(mode, "graphics_alpha", &BX_VGA_THIS s.attribute_ctrl.mode_ctrl.graphics_alpha);
   new bx_shadow_bool_c(mode, "display_type", &BX_VGA_THIS s.attribute_ctrl.mode_ctrl.display_type);
   new bx_shadow_bool_c(mode, "enable_line_graphics", &BX_VGA_THIS s.attribute_ctrl.mode_ctrl.enable_line_graphics);
@@ -314,7 +314,7 @@ void bx_vgacore_c::register_state(bx_list_c *parent)
   new bx_shadow_bool_c(mode, "pixel_panning_compat", &BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_panning_compat);
   new bx_shadow_bool_c(mode, "pixel_clock_select", &BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_clock_select);
   new bx_shadow_bool_c(mode, "internal_palette_size", &BX_VGA_THIS s.attribute_ctrl.mode_ctrl.internal_palette_size);
-  bx_list_c *pel = new bx_list_c(list, "pel", 6);
+  bx_list_c *pel = new bx_list_c(list, "pel");
   new bx_shadow_num_c(pel, "write_data_register", &BX_VGA_THIS s.pel.write_data_register, BASE_HEX);
   new bx_shadow_num_c(pel, "write_data_cycle", &BX_VGA_THIS s.pel.write_data_cycle);
   new bx_shadow_num_c(pel, "read_data_register", &BX_VGA_THIS s.pel.read_data_register, BASE_HEX);
@@ -322,7 +322,7 @@ void bx_vgacore_c::register_state(bx_list_c *parent)
   new bx_shadow_num_c(pel, "dac_state", &BX_VGA_THIS s.pel.dac_state);
   new bx_shadow_num_c(pel, "mask", &BX_VGA_THIS s.pel.mask, BASE_HEX);
   new bx_shadow_data_c(list, "pel_data", &BX_VGA_THIS s.pel.data[0].red, sizeof(BX_VGA_THIS s.pel.data));
-  bx_list_c *gfxc = new bx_list_c(list, "graphics_ctrl", 20);
+  bx_list_c *gfxc = new bx_list_c(list, "graphics_ctrl");
   new bx_shadow_num_c(gfxc, "index", &BX_VGA_THIS s.graphics_ctrl.index);
   new bx_shadow_num_c(gfxc, "set_reset", &BX_VGA_THIS s.graphics_ctrl.set_reset);
   new bx_shadow_num_c(gfxc, "enable_set_reset", &BX_VGA_THIS s.graphics_ctrl.enable_set_reset);
@@ -343,7 +343,7 @@ void bx_vgacore_c::register_state(bx_list_c *parent)
   new bx_shadow_num_c(gfxc, "latch1", &BX_VGA_THIS s.graphics_ctrl.latch[1], BASE_HEX);
   new bx_shadow_num_c(gfxc, "latch2", &BX_VGA_THIS s.graphics_ctrl.latch[2], BASE_HEX);
   new bx_shadow_num_c(gfxc, "latch3", &BX_VGA_THIS s.graphics_ctrl.latch[3], BASE_HEX);
-  bx_list_c *sequ = new bx_list_c(list, "sequencer", 13);
+  bx_list_c *sequ = new bx_list_c(list, "sequencer");
   new bx_shadow_num_c(sequ, "index", &BX_VGA_THIS s.sequencer.index);
   new bx_shadow_num_c(sequ, "map_mask", &BX_VGA_THIS s.sequencer.map_mask);
   new bx_shadow_bool_c(sequ, "reset1", &BX_VGA_THIS s.sequencer.reset1);

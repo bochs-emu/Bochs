@@ -575,16 +575,16 @@ void bx_hard_drive_c::register_state(void)
   char cname[4], dname[8];
   bx_list_c *chan, *drive, *status;
 
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "hard_drive", "Hard Drive State", BX_MAX_ATA_CHANNEL);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "hard_drive", "Hard Drive State");
   for (i=0; i<BX_MAX_ATA_CHANNEL; i++) {
     sprintf(cname, "%d", i);
-    chan = new bx_list_c(list, cname, 3);
+    chan = new bx_list_c(list, cname);
     for (j=0; j<2; j++) {
       if (BX_DRIVE_IS_PRESENT(i, j)) {
         sprintf(dname, "drive%d", i);
-        drive = new bx_list_c(chan, dname, 27);
+        drive = new bx_list_c(chan, dname);
         new bx_shadow_data_c(drive, "buffer", BX_CONTROLLER(i, j).buffer, MAX_MULTIPLE_SECTORS * 512);
-        status = new bx_list_c(drive, "status", 9);
+        status = new bx_list_c(drive, "status");
         new bx_shadow_bool_c(status, "busy", &BX_CONTROLLER(i, j).status.busy);
         new bx_shadow_bool_c(status, "drive_ready", &BX_CONTROLLER(i, j).status.drive_ready);
         new bx_shadow_bool_c(status, "write_fault", &BX_CONTROLLER(i, j).status.write_fault);

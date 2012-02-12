@@ -429,15 +429,16 @@ public:
   void restore(FILE *save_file);
 };
 
-#define BX_DEFAULT_LIST_SIZE 6
+typedef struct _bx_listitem_t {
+  bx_param_c *param;
+  struct _bx_listitem_t *next;
+} bx_listitem_t;
 
 class BOCHSAPI bx_list_c : public bx_param_c {
 protected:
-  // just a list of bx_param_c objects.  size tells current number of
-  // objects in the list, and maxsize tells how many list items are
-  // allocated in the constructor.
-  bx_param_c **list;
-  int size, maxsize;
+  // chained list of bx_listitem_t
+  bx_listitem_t *list;
+  int size;
   // for a menu, the value of choice before the call to "ask" is default.
   // After ask, choice holds the value that the user chose. Choice defaults
   // to 1 in the constructor.
@@ -468,9 +469,9 @@ public:
     // item (used in the runtime menu).
     SHOW_GROUP_NAME = (1<<4)
   } bx_listopt_bits;
-  bx_list_c(bx_param_c *parent, int maxsize);
-  bx_list_c(bx_param_c *parent, const char *name, int maxsize);
-  bx_list_c(bx_param_c *parent, const char *name, const char *title, int maxsize = BX_DEFAULT_LIST_SIZE);
+  bx_list_c(bx_param_c *parent);
+  bx_list_c(bx_param_c *parent, const char *name);
+  bx_list_c(bx_param_c *parent, const char *name, const char *title);
   bx_list_c(bx_param_c *parent, const char *name, const char *title, bx_param_c **init_list);
   virtual ~bx_list_c();
   bx_list_c *clone();

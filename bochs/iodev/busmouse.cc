@@ -102,7 +102,7 @@ void bx_busm_c::init(void)
 
 void bx_busm_c::register_state(void)
 {
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "busmouse", "Busmouse State", 12);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "busmouse", "Busmouse State");
   BXRS_HEX_PARAM_FIELD(list, mouse_delayed_dx, BX_BUSM_THIS mouse_delayed_dx);
   BXRS_HEX_PARAM_FIELD(list, mouse_delayed_dx, BX_BUSM_THIS mouse_delayed_dy);
   BXRS_HEX_PARAM_FIELD(list, current_x, BX_BUSM_THIS current_x);
@@ -111,7 +111,7 @@ void bx_busm_c::register_state(void)
   BXRS_HEX_PARAM_FIELD(list, sig_port_sequ, BX_BUSM_THIS sig_port_sequ);
   BXRS_HEX_PARAM_FIELD(list, control_val, BX_BUSM_THIS control_val);
 
-  bx_list_c *ctrl = new bx_list_c(list, "control", 7);
+  bx_list_c *ctrl = new bx_list_c(list, "control");
   BXRS_PARAM_BOOL(ctrl, mode_set, BX_BUSM_THIS control.mode_set);
   BXRS_HEX_PARAM_FIELD(ctrl, modeA_select, BX_BUSM_THIS control.modeA_select);
   BXRS_PARAM_BOOL(ctrl, portA_dir, BX_BUSM_THIS control.portA_dir);

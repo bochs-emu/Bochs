@@ -687,7 +687,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
   bx_bool nx_fault = 0;
   int leaf;
 
-  Bit64u offset_mask = BX_CONST64(0x0000ffffffffffff);
+  lpf_mask = 0xfff;
   combined_access = 0x06;
 
   for (leaf = BX_LEVEL_PML4;; --leaf) {
@@ -700,7 +700,6 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
 #endif
     access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
     BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
-    offset_mask >>= 9;
 
     Bit64u curr_entry = entry[leaf];
     int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, rw, &nx_fault);
@@ -718,16 +717,29 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
         page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, user, rw);
       }
 
-      ppf &= BX_CONST64(0x000fffffffffe000);
-      if (ppf & offset_mask) {
-         BX_DEBUG(("PAE %s: reserved bit is set: 0x" FMT_ADDRX64, bx_paging_level[leaf], curr_entry));
-         page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, user, rw);
+      if (leaf == BX_LEVEL_PDPTE) {
+        if (curr_entry & PAGING_PAE_PDPTE1G_RESERVED_BITS) {
+           BX_DEBUG(("PAE PDPE1G: reserved bit is set: PDPE=%08x:%08x", GET32H(curr_entry), GET32L(curr_entry)));
+           page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, user, rw);
+        }
+
+        // Make up the physical page frame address.
+        ppf = (bx_phy_address)((curr_entry & BX_CONST64(0x000fffffc0000000)) | (laddr & 0x3ffff000));
+        lpf_mask = 0x3fffffff;
+        break;
       }
 
-      // Make up the physical page frame address
-      ppf += (bx_phy_address)(laddr & LPFOf(offset_mask));
-      lpf_mask = offset_mask;
-      break;
+      if (leaf == BX_LEVEL_PDE) {
+        if (curr_entry & PAGING_PAE_PDE2M_RESERVED_BITS) {
+          BX_DEBUG(("PAE PDE2M: reserved bit is set PDE=%08x:%08x", GET32H(curr_entry), GET32L(curr_entry)));
+          page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, user, rw);
+        }
+
+        // Make up the physical page frame address.
+        ppf = (bx_phy_address)((curr_entry & BX_CONST64(0x000fffffffe00000)) | (laddr & 0x001ff000));
+        lpf_mask = 0x1fffff;
+        break;
+      }
     }
   }
 
@@ -788,6 +800,8 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
 
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
 {
+  BX_CPU_THIS_PTR PDPTR_CACHE.valid = 0;
+
   // with Nested Paging PDPTRs are not loaded for guest page tables but
   // accessed on demand as part of the guest page walk
 #if BX_SUPPORT_SVM
@@ -821,6 +835,8 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
   // load new PDPTRs
   for (n=0; n<4; n++)
     BX_CPU_THIS_PTR PDPTR_CACHE.entry[n] = pdptr[n];
+
+  BX_CPU_THIS_PTR PDPTR_CACHE.valid = 1;
 
   return 1; /* PDPTRs are fine */
 }
@@ -858,6 +874,13 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
   else
 #endif
   {
+    if (! BX_CPU_THIS_PTR PDPTR_CACHE.valid) {
+      BX_PANIC(("PDPTR_CACHE not valid !"));
+      if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
+        BX_ERROR(("translate_linear_PAE(): PDPTR check failed !"));
+        exception(BX_GP_EXCEPTION, 0);
+      }
+    }
     pdpte = BX_CPU_THIS_PTR PDPTR_CACHE.entry[(laddr >> 30) & 3];
   }
 
@@ -892,11 +915,11 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
     // Ignore CR4.PSE in PAE mode
     if (curr_entry & 0x80) {
       if (curr_entry & PAGING_PAE_PDE2M_RESERVED_BITS) {
-        BX_DEBUG(("PAE PDE2M: reserved bit is set PDE=0x" FMT_ADDRX64, curr_entry));
+        BX_DEBUG(("PAE PDE2M: reserved bit is set PDE=%08x:%08x", GET32H(curr_entry), GET32L(curr_entry)));
         page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, user, rw);
       }
 
-      // Make up the physical page frame address
+      // Make up the physical page frame address.
       ppf = (bx_phy_address)((curr_entry & BX_CONST64(0x000fffffffe00000)) | (laddr & 0x001ff000));
       lpf_mask = 0x1fffff;
       break;
@@ -1211,12 +1234,10 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned user, unsig
 bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bx_bool guest_laddr_valid, bx_bool is_page_walk, unsigned rw)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
-  bx_phy_address entry_addr[4], ppf = LPFOf(vm->eptptr);
+  bx_phy_address entry_addr[4], ppf = 0, pbase = LPFOf(vm->eptptr);
   Bit64u entry[4];
   int leaf;
-
   Bit32u combined_access = 0x7, access_mask = 0;
-  Bit64u offset_mask = BX_CONST64(0x0000ffffffffffff);
 
   BX_DEBUG(("EPT walk for guest paddr 0x" FMT_ADDRX, guest_paddr));
 
@@ -1227,12 +1248,11 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
   Bit32u vmexit_reason = 0, vmexit_qualification = access_mask;
 
   for (leaf = BX_LEVEL_PML4;; --leaf) {
-    entry_addr[leaf] = ppf + ((guest_paddr >> (9 + 9*leaf)) & 0xff8);
+    entry_addr[leaf] = pbase + ((guest_paddr >> (9 + 9*leaf)) & 0xff8);
     access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
     BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, BX_READ,
           (BX_EPT_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
-    offset_mask >>= 9;
     Bit64u curr_entry = entry[leaf];
     Bit32u curr_access_mask = curr_entry & 0x7;
 
@@ -1259,14 +1279,19 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
     }
 
     if (curr_entry & PAGING_EPT_RESERVED_BITS) {
-      BX_DEBUG(("EPT %s: reserved bit is set 0x" FMT_ADDRX64, bx_paging_level[leaf], curr_entry));
+      BX_DEBUG(("EPT %s: reserved bit is set %08x:%08x",
+        bx_paging_level[leaf], GET32H(curr_entry), GET32L(curr_entry)));
       vmexit_reason = VMX_VMEXIT_EPT_MISCONFIGURATION;
       break;
     }
 
-    ppf = curr_entry & BX_CONST64(0x000ffffffffff000);
+    pbase = curr_entry & BX_CONST64(0x000ffffffffff000);
 
-    if (leaf == BX_LEVEL_PTE) break;
+    if (leaf == BX_LEVEL_PTE) {
+      // Make up the physical page frame address.
+      ppf = (bx_phy_address)(curr_entry & BX_CONST64(0x000ffffffffff000));
+      break;
+    }
 
     if (curr_entry & 0x80) {
       if (leaf > (BX_LEVEL_PDE + !!bx_cpuid_support_1g_paging())) {
@@ -1275,16 +1300,29 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
         break;
       }
 
-      ppf &= BX_CONST64(0x000fffffffffe000);
-      if (ppf & offset_mask) {
-         BX_DEBUG(("EPT %s: reserved bit is set: 0x" FMT_ADDRX64, bx_paging_level[leaf], curr_entry));
-         vmexit_reason = VMX_VMEXIT_EPT_VIOLATION;
-         break;
+      if (leaf == BX_LEVEL_PDPTE) {
+        if (curr_entry & PAGING_PAE_PDPTE1G_RESERVED_BITS) {
+           BX_DEBUG(("EPT PDPE1G: reserved bit is set: PDPE=%08x:%08x", GET32H(curr_entry), GET32L(curr_entry)));
+           vmexit_reason = VMX_VMEXIT_EPT_VIOLATION;
+           break;
+        }
+
+        // Make up the physical page frame address.
+        ppf = (bx_phy_address)((curr_entry & BX_CONST64(0x000fffffc0000000)) | (guest_paddr & 0x3ffff000));
+        break;
       }
 
-      // Make up the physical page frame address
-      ppf += (bx_phy_address)(guest_paddr & offset_mask);
-      break;
+      if (leaf == BX_LEVEL_PDE) {
+        if (curr_entry & PAGING_PAE_PDE2M_RESERVED_BITS) {
+          BX_DEBUG(("EPT PDE2M: reserved bit is set PDE=%08x:%08x", GET32H(curr_entry), GET32L(curr_entry)));
+          vmexit_reason = VMX_VMEXIT_EPT_VIOLATION;
+          break;
+        }
+
+        // Make up the physical page frame address.
+        ppf = (bx_phy_address)((curr_entry & BX_CONST64(0x000fffffffe00000)) | (guest_paddr & 0x001ff000));
+        break;
+      }
     }
   }
 
@@ -1447,6 +1485,8 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx
 
       int level = 3;
       if (! long_mode()) {
+        if (! BX_CPU_THIS_PTR PDPTR_CACHE.valid)
+           goto page_fault;
         pt_address = BX_CPU_THIS_PTR PDPTR_CACHE.entry[(laddr >> 30) & 3];
         if (! (pt_address & 0x1))
            goto page_fault;

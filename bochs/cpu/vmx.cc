@@ -1532,6 +1532,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_EPT_ENABLE) {
     // load PDPTR only in PAE legacy mode
     if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE() && !x86_64_guest) {
+      BX_CPU_THIS_PTR PDPTR_CACHE.valid = 1;
       for (n = 0; n < 4; n++)
         BX_CPU_THIS_PTR PDPTR_CACHE.entry[n] = guest.pdptr[n];
     }
@@ -1777,6 +1778,10 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_EPT_ENABLE) {
     // save only if guest running in legacy PAE mode
     if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
+      if (! BX_CPU_THIS_PTR PDPTR_CACHE.valid) {
+        if (! CheckPDPTR(BX_CPU_THIS_PTR cr3))
+          BX_PANIC(("VMEXIT: PDPTR cache is not valid !"));
+      }
       for(n=0; n<4; n++) {
         VMwrite64(VMCS_64BIT_GUEST_IA32_PDPTE0 + 2*n, BX_CPU_THIS_PTR PDPTR_CACHE.entry[n]);
       }
@@ -3110,7 +3115,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   if (! bx_cpuid_support_vmx()) return;
 
   // register VMX state for save/restore param tree
-  bx_list_c *vmx = new bx_list_c(parent, "VMX", 9);
+  bx_list_c *vmx = new bx_list_c(parent, "VMX");
 
   BXRS_HEX_PARAM_FIELD(vmx, vmcsptr, BX_CPU_THIS_PTR vmcsptr);
   BXRS_HEX_PARAM_FIELD(vmx, vmxonptr, BX_CPU_THIS_PTR vmxonptr);
@@ -3123,13 +3128,13 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_PARAM_BOOL(vmx, pending_vmx_timer_expired, BX_CPU_THIS_PTR pending_vmx_timer_expired);
 #endif
 
-  bx_list_c *vmcache = new bx_list_c(vmx, "VMCS_CACHE", 5);
+  bx_list_c *vmcache = new bx_list_c(vmx, "VMCS_CACHE");
 
   //
   // VM-Execution Control Fields
   //
 
-  bx_list_c *vmexec_ctrls = new bx_list_c(vmcache, "VMEXEC_CTRLS", 29);
+  bx_list_c *vmexec_ctrls = new bx_list_c(vmcache, "VMEXEC_CTRLS");
 
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls1, BX_CPU_THIS_PTR vmcs.vmexec_ctrls1);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls2, BX_CPU_THIS_PTR vmcs.vmexec_ctrls2);
@@ -3170,7 +3175,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   // VM-Exit Control Fields
   //
 
-  bx_list_c *vmexit_ctrls = new bx_list_c(vmcache, "VMEXIT_CTRLS", 5);
+  bx_list_c *vmexit_ctrls = new bx_list_c(vmcache, "VMEXIT_CTRLS");
 
   BXRS_HEX_PARAM_FIELD(vmexit_ctrls, vmexit_ctrls, BX_CPU_THIS_PTR vmcs.vmexit_ctrls);
   BXRS_DEC_PARAM_FIELD(vmexit_ctrls, vmexit_msr_store_cnt, BX_CPU_THIS_PTR vmcs.vmexit_msr_store_cnt);
@@ -3182,7 +3187,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   // VM-Entry Control Fields
   //
 
-  bx_list_c *vmentry_ctrls = new bx_list_c(vmcache, "VMENTRY_CTRLS", 6);
+  bx_list_c *vmentry_ctrls = new bx_list_c(vmcache, "VMENTRY_CTRLS");
    
   BXRS_HEX_PARAM_FIELD(vmentry_ctrls, vmentry_ctrls, BX_CPU_THIS_PTR vmcs.vmentry_ctrls);
   BXRS_DEC_PARAM_FIELD(vmentry_ctrls, vmentry_msr_load_cnt, BX_CPU_THIS_PTR vmcs.vmentry_msr_load_cnt);
@@ -3195,7 +3200,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   // VMCS Host State
   //
 
-  bx_list_c *host = new bx_list_c(vmcache, "HOST_STATE", 22);
+  bx_list_c *host = new bx_list_c(vmcache, "HOST_STATE");
 
 #undef NEED_CPU_REG_SHORTCUTS
 

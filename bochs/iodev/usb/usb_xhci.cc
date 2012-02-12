@@ -497,8 +497,8 @@ void bx_usb_xhci_c::register_state(void)
   bx_list_c *hub, *port, *reg, *reg_grp, *reg_grp1;
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "usb_xhci", "USB xHCI State");
-  hub = new bx_list_c(list, "hub", 8);
-  reg_grp = new bx_list_c(hub, "cap_regs", 7);
+  hub = new bx_list_c(list, "hub");
+  reg_grp = new bx_list_c(hub, "cap_regs");
   new bx_shadow_num_c(reg_grp, "HcCapLength", &BX_XHCI_THIS hub.cap_regs.HcCapLength, BASE_HEX);
   new bx_shadow_num_c(reg_grp, "HcSParams1", &BX_XHCI_THIS hub.cap_regs.HcSParams1, BASE_HEX);
   new bx_shadow_num_c(reg_grp, "HcSParams2", &BX_XHCI_THIS hub.cap_regs.HcSParams2, BASE_HEX);
@@ -507,8 +507,8 @@ void bx_usb_xhci_c::register_state(void)
   new bx_shadow_num_c(reg_grp, "DBOFF", &BX_XHCI_THIS hub.cap_regs.DBOFF, BASE_HEX);
   new bx_shadow_num_c(reg_grp, "RTSOFF", &BX_XHCI_THIS hub.cap_regs.RTSOFF, BASE_HEX);
 
-  reg_grp = new bx_list_c(hub, "op_regs", 7);
-  reg = new bx_list_c(reg_grp, "HcCommand", 9);
+  reg_grp = new bx_list_c(hub, "op_regs");
+  reg = new bx_list_c(reg_grp, "HcCommand");
   new bx_shadow_bool_c(reg, "eu3s", &BX_XHCI_THIS hub.op_regs.HcCommand.eu3s);
   new bx_shadow_bool_c(reg, "ewe", &BX_XHCI_THIS hub.op_regs.HcCommand.ewe);
   new bx_shadow_bool_c(reg, "crs", &BX_XHCI_THIS hub.op_regs.HcCommand.crs);
@@ -518,7 +518,7 @@ void bx_usb_xhci_c::register_state(void)
   new bx_shadow_bool_c(reg, "inte", &BX_XHCI_THIS hub.op_regs.HcCommand.inte);
   new bx_shadow_bool_c(reg, "hcrst", &BX_XHCI_THIS hub.op_regs.HcCommand.hcrst);
   new bx_shadow_bool_c(reg, "rs", &BX_XHCI_THIS hub.op_regs.HcCommand.rs);
-  reg = new bx_list_c(reg_grp, "HcStatus", 9);
+  reg = new bx_list_c(reg_grp, "HcStatus");
   new bx_shadow_bool_c(reg, "hce", &BX_XHCI_THIS hub.op_regs.HcStatus.hce);
   new bx_shadow_bool_c(reg, "cnr", &BX_XHCI_THIS hub.op_regs.HcStatus.cnr);
   new bx_shadow_bool_c(reg, "sre", &BX_XHCI_THIS hub.op_regs.HcStatus.sre);
@@ -529,7 +529,7 @@ void bx_usb_xhci_c::register_state(void)
   new bx_shadow_bool_c(reg, "hse", &BX_XHCI_THIS hub.op_regs.HcStatus.hse);
   new bx_shadow_bool_c(reg, "hch", &BX_XHCI_THIS hub.op_regs.HcStatus.hch);
   new bx_shadow_num_c(reg_grp, "HcPageSize", &BX_XHCI_THIS hub.op_regs.HcPageSize.pagesize, BASE_HEX);
-  reg = new bx_list_c(reg_grp, "HcNotification", 17);
+  reg = new bx_list_c(reg_grp, "HcNotification");
   new bx_shadow_bool_c(reg, "n15", &BX_XHCI_THIS hub.op_regs.HcNotification.n15);
   new bx_shadow_bool_c(reg, "n14", &BX_XHCI_THIS hub.op_regs.HcNotification.n14);
   new bx_shadow_bool_c(reg, "n13", &BX_XHCI_THIS hub.op_regs.HcNotification.n13);
@@ -546,7 +546,7 @@ void bx_usb_xhci_c::register_state(void)
   new bx_shadow_bool_c(reg, "n2", &BX_XHCI_THIS hub.op_regs.HcNotification.n2);
   new bx_shadow_bool_c(reg, "n1", &BX_XHCI_THIS hub.op_regs.HcNotification.n1);
   new bx_shadow_bool_c(reg, "n0", &BX_XHCI_THIS hub.op_regs.HcNotification.n0);
-  reg = new bx_list_c(reg_grp, "HcCrcr", 6);
+  reg = new bx_list_c(reg_grp, "HcCrcr");
   new bx_shadow_num_c(reg, "crc", &BX_XHCI_THIS hub.op_regs.HcCrcr.crc, BASE_HEX);
   new bx_shadow_bool_c(reg, "crr", &BX_XHCI_THIS hub.op_regs.HcCrcr.crr);
   new bx_shadow_bool_c(reg, "ca", &BX_XHCI_THIS hub.op_regs.HcCrcr.ca);
@@ -555,20 +555,20 @@ void bx_usb_xhci_c::register_state(void)
   new bx_shadow_num_c(reg_grp, "HcDCBAAP", &BX_XHCI_THIS hub.op_regs.HcDCBAAP.dcbaap, BASE_HEX);
   new bx_shadow_num_c(reg_grp, "HcConfig_MaxSlotsEn", &BX_XHCI_THIS hub.op_regs.HcConfig.MaxSlotsEn, BASE_HEX);
 
-  reg_grp = new bx_list_c(hub, "runtime_regs", INTERRUPTERS + 1);
+  reg_grp = new bx_list_c(hub, "runtime_regs");
   new bx_shadow_num_c(reg_grp, "mfindex", &BX_XHCI_THIS hub.runtime_regs.mfindex.index, BASE_HEX);
   for (i = 0; i < INTERRUPTERS; i++) {
     sprintf(tmpname, "interrupter%d", i+1);
-    reg_grp1 = new bx_list_c(reg_grp, tmpname, 5);
-    reg = new bx_list_c(reg_grp1, "iman", 2);
+    reg_grp1 = new bx_list_c(reg_grp, tmpname);
+    reg = new bx_list_c(reg_grp1, "iman");
     new bx_shadow_bool_c(reg, "ie", &BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ie);
     new bx_shadow_bool_c(reg, "ip", &BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ip);
-    reg = new bx_list_c(reg_grp1, "imod", 2);
+    reg = new bx_list_c(reg_grp1, "imod");
     new bx_shadow_num_c(reg, "imodc", &BX_XHCI_THIS hub.runtime_regs.interrupter[i].imod.imodc, BASE_HEX);
     new bx_shadow_num_c(reg, "imodi", &BX_XHCI_THIS hub.runtime_regs.interrupter[i].imod.imodi, BASE_HEX);
     new bx_shadow_num_c(reg_grp1, "erstabsize", &BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstsz.erstabsize, BASE_HEX);
     new bx_shadow_num_c(reg_grp1, "erstabadd", &BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstba.erstabadd, BASE_HEX);
-    reg = new bx_list_c(reg_grp1, "erdp", 3);
+    reg = new bx_list_c(reg_grp1, "erdp");
     new bx_shadow_num_c(reg, "eventadd", &BX_XHCI_THIS hub.runtime_regs.interrupter[i].erdp.eventadd, BASE_HEX);
     new bx_shadow_bool_c(reg, "ehb", &BX_XHCI_THIS hub.runtime_regs.interrupter[i].erdp.ehb);
     new bx_shadow_num_c(reg, "desi", &BX_XHCI_THIS hub.runtime_regs.interrupter[i].erdp.desi, BASE_HEX);
@@ -576,9 +576,9 @@ void bx_usb_xhci_c::register_state(void)
 
   for (i = 0; i < USB_XHCI_PORTS; i++) {
     sprintf(tmpname, "port%d", i+1);
-    port = new bx_list_c(hub, tmpname, 6);
+    port = new bx_list_c(hub, tmpname);
     new bx_shadow_bool_c(port, "is_usb3", &BX_XHCI_THIS hub.usb_port[i].is_usb3);
-    reg = new bx_list_c(port, "portsc", 22);
+    reg = new bx_list_c(port, "portsc");
     new bx_shadow_bool_c(reg, "wpr", &BX_XHCI_THIS hub.usb_port[i].portsc.wpr);
     new bx_shadow_bool_c(reg, "dr", &BX_XHCI_THIS hub.usb_port[i].portsc.dr);
     new bx_shadow_bool_c(reg, "woe", &BX_XHCI_THIS hub.usb_port[i].portsc.woe);
@@ -603,15 +603,15 @@ void bx_usb_xhci_c::register_state(void)
     new bx_shadow_bool_c(reg, "ccs", &BX_XHCI_THIS hub.usb_port[i].portsc.ccs);
 
     // TODO: handle USB2/USB3 cases
-    reg = new bx_list_c(port, "portpmsc", 6);
+    reg = new bx_list_c(port, "portpmsc");
 
     new bx_shadow_num_c(port, "portli_lec", &BX_XHCI_THIS hub.usb_port[i].usb3.portli.lec, BASE_HEX);
-    reg = new bx_list_c(port, "porthlpmc", 3);
+    reg = new bx_list_c(port, "porthlpmc");
     new bx_shadow_num_c(reg, "hirdm", &BX_XHCI_THIS hub.usb_port[i].porthlpmc.hirdm, BASE_HEX);
     new bx_shadow_num_c(reg, "l1timeout", &BX_XHCI_THIS hub.usb_port[i].porthlpmc.l1timeout, BASE_HEX);
     new bx_shadow_num_c(reg, "hirdd", &BX_XHCI_THIS hub.usb_port[i].porthlpmc.hirdd, BASE_HEX);
     // empty list for USB device state
-    new bx_list_c(port, "device", 20);
+    new bx_list_c(port, "device");
   }
   register_pci_state(hub);
 }

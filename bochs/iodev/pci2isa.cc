@@ -154,7 +154,7 @@ void bx_piix3_c::register_state(void)
   unsigned i;
   char name[6];
 
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pci2isa", "PCI-to-ISA Bridge State", 8);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pci2isa", "PCI-to-ISA Bridge State");
 
   register_pci_state(list);
 
@@ -164,12 +164,12 @@ void bx_piix3_c::register_state(void)
   BXRS_HEX_PARAM_FIELD(list, apms, BX_P2I_THIS s.apms);
   BXRS_HEX_PARAM_FIELD(list, pci_reset, BX_P2I_THIS s.pci_reset);
 
-  bx_list_c *irqr = new bx_list_c(list, "irq_registry", 16);
+  bx_list_c *irqr = new bx_list_c(list, "irq_registry");
   for (i=0; i<16; i++) {
     sprintf(name, "%d", i);
     new bx_shadow_num_c(irqr, name, &BX_P2I_THIS s.irq_registry[i]);
   }
-  bx_list_c *irql = new bx_list_c(list, "irq_level", 16);
+  bx_list_c *irql = new bx_list_c(list, "irq_level");
   for (i=0; i<16; i++) {
     sprintf(name, "%d", i);
     new bx_shadow_num_c(irql, name, &BX_P2I_THIS s.irq_level[i]);

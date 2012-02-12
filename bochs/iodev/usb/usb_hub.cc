@@ -189,7 +189,7 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   sprintf(pname, "exthub%d", ++hub_count);
   sprintf(label, "External Hub #%d Configuration", hub_count);
-  hub.config = new bx_list_c(usb_rt, pname, label, hub.n_ports);
+  hub.config = new bx_list_c(usb_rt, pname, label);
   hub.config->set_options(bx_list_c::SHOW_PARENT);
   hub.config->set_runtime_param(1);
   hub.config->set_device_param(this);
@@ -232,14 +232,14 @@ void usb_hub_device_c::register_state_specific(bx_list_c *parent)
   char portnum[6];
   bx_list_c *port;
 
-  hub.state = new bx_list_c(parent, "hub", "USB HUB Device State", hub.n_ports);
+  hub.state = new bx_list_c(parent, "hub", "USB HUB Device State");
   for (i=0; i<hub.n_ports; i++) {
     sprintf(portnum, "port%d", i+1);
-    port = new bx_list_c(hub.state, portnum, 3);
+    port = new bx_list_c(hub.state, portnum);
     new bx_shadow_num_c(port, "PortStatus", &hub.usb_port[i].PortStatus, BASE_HEX);
     new bx_shadow_num_c(port, "PortChange", &hub.usb_port[i].PortChange, BASE_HEX);
     // empty list for USB device state
-    new bx_list_c(port, "device", 20);
+    new bx_list_c(port, "device");
   }
 }
 

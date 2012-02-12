@@ -216,7 +216,7 @@ void bx_keyb_c::init(void)
     list = (bx_list_c*)SIM->get_param(BXPN_WX_KBD_STATE);
     if (list == NULL) {
       list = new bx_list_c(SIM->get_param("wxdebug"), "keyboard",
-                           "Keyboard State", 20);
+                           "Keyboard State");
     }
     new bx_shadow_bool_c(list, "irq1_req",
           "Keyboard IRQ1 requested",
@@ -279,8 +279,8 @@ void bx_keyb_c::register_state(void)
   char name[4];
   bx_list_c *buffer;
 
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "keyboard", "Keyboard State", 7);
-  bx_list_c *ctrl = new bx_list_c(list, "controller", 23);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "keyboard", "Keyboard State");
+  bx_list_c *ctrl = new bx_list_c(list, "controller");
   BXRS_PARAM_BOOL(ctrl, tim, BX_KEY_THIS s.kbd_controller.tim);
   BXRS_PARAM_BOOL(ctrl, auxb, BX_KEY_THIS s.kbd_controller.auxb);
   BXRS_PARAM_BOOL(ctrl, c_d, BX_KEY_THIS s.kbd_controller.c_d);
@@ -304,7 +304,7 @@ void bx_keyb_c::register_state(void)
   BXRS_PARAM_BOOL(ctrl, expecting_scancodes_set, BX_KEY_THIS s.kbd_controller.expecting_scancodes_set);
   BXRS_DEC_PARAM_FIELD(ctrl, current_scancodes_set, BX_KEY_THIS s.kbd_controller.current_scancodes_set);
   BXRS_PARAM_BOOL(ctrl, bat_in_progress, BX_KEY_THIS s.kbd_controller.bat_in_progress);
-  bx_list_c *mouse = new bx_list_c(list, "mouse", 12);
+  bx_list_c *mouse = new bx_list_c(list, "mouse");
   BXRS_DEC_PARAM_FIELD(mouse, sample_rate, BX_KEY_THIS s.mouse.sample_rate);
   BXRS_DEC_PARAM_FIELD(mouse, resolution_cpmm, BX_KEY_THIS s.mouse.resolution_cpmm);
   BXRS_DEC_PARAM_FIELD(mouse, scaling, BX_KEY_THIS s.mouse.scaling);
@@ -317,9 +317,9 @@ void bx_keyb_c::register_state(void)
   BXRS_DEC_PARAM_FIELD(mouse, delayed_dz, BX_KEY_THIS s.mouse.delayed_dz);
   BXRS_DEC_PARAM_FIELD(mouse, im_request, BX_KEY_THIS s.mouse.im_request);
   BXRS_PARAM_BOOL(mouse, im_mode, BX_KEY_THIS s.mouse.im_mode);
-  bx_list_c *kbdbuf = new bx_list_c(list, "kbd_internal_buffer", 9);
+  bx_list_c *kbdbuf = new bx_list_c(list, "kbd_internal_buffer");
   BXRS_DEC_PARAM_FIELD(kbdbuf, num_elements, BX_KEY_THIS s.kbd_internal_buffer.num_elements);
-  buffer = new bx_list_c(kbdbuf, "buffer", BX_KBD_ELEMENTS);
+  buffer = new bx_list_c(kbdbuf, "buffer");
   for (i=0; i<BX_KBD_ELEMENTS; i++) {
     sprintf(name, "%d", i);
     new bx_shadow_num_c(buffer, name, &BX_KEY_THIS s.kbd_internal_buffer.buffer[i], BASE_HEX);
@@ -331,15 +331,15 @@ void bx_keyb_c::register_state(void)
   BXRS_DEC_PARAM_FIELD(kbdbuf, repeat_rate, BX_KEY_THIS s.kbd_internal_buffer.repeat_rate);
   BXRS_DEC_PARAM_FIELD(kbdbuf, led_status, BX_KEY_THIS s.kbd_internal_buffer.led_status);
   BXRS_PARAM_BOOL(kbdbuf, scanning_enabled, BX_KEY_THIS s.kbd_internal_buffer.scanning_enabled);
-  bx_list_c *mousebuf = new bx_list_c(list, "mouse_internal_buffer", 3);
+  bx_list_c *mousebuf = new bx_list_c(list, "mouse_internal_buffer");
   BXRS_DEC_PARAM_FIELD(mousebuf, num_elements, BX_KEY_THIS s.mouse_internal_buffer.num_elements);
-  buffer = new bx_list_c(mousebuf, "buffer", BX_MOUSE_BUFF_SIZE);
+  buffer = new bx_list_c(mousebuf, "buffer");
   for (i=0; i<BX_MOUSE_BUFF_SIZE; i++) {
     sprintf(name, "%d", i);
     new bx_shadow_num_c(buffer, name, &BX_KEY_THIS s.mouse_internal_buffer.buffer[i], BASE_HEX);
   }
   BXRS_DEC_PARAM_FIELD(mousebuf, head, BX_KEY_THIS s.mouse_internal_buffer.head);
-  buffer = new bx_list_c(list, "controller_Q", BX_KBD_CONTROLLER_QSIZE);
+  buffer = new bx_list_c(list, "controller_Q");
   for (i=0; i<BX_KBD_CONTROLLER_QSIZE; i++) {
     sprintf(name, "%d", i);
     new bx_shadow_num_c(buffer, name, &BX_KEY_THIS s.controller_Q[i], BASE_HEX);

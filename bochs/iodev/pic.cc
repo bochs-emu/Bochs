@@ -126,8 +126,8 @@ void bx_pic_c::register_state(void)
 {
   bx_list_c *ctrl;
 
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pic", "PIC State", 2);
-  ctrl = new bx_list_c(list, "master", 17);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pic", "PIC State");
+  ctrl = new bx_list_c(list, "master");
   new bx_shadow_num_c(ctrl, "interrupt_offset", &BX_PIC_THIS s.master_pic.interrupt_offset, BASE_HEX);
   new bx_shadow_num_c(ctrl, "auto_eoi", &BX_PIC_THIS s.master_pic.auto_eoi, BASE_HEX);
   new bx_shadow_num_c(ctrl, "imr", &BX_PIC_THIS s.master_pic.imr, BASE_HEX);
@@ -145,7 +145,7 @@ void bx_pic_c::register_state(void)
   new bx_shadow_bool_c(ctrl, "polled", &BX_PIC_THIS s.master_pic.polled);
   new bx_shadow_bool_c(ctrl, "rotate_on_autoeoi", &BX_PIC_THIS s.master_pic.rotate_on_autoeoi);
   new bx_shadow_num_c(ctrl, "edge_level", &BX_PIC_THIS s.master_pic.edge_level, BASE_HEX);
-  ctrl = new bx_list_c(list, "slave", 17);
+  ctrl = new bx_list_c(list, "slave");
   new bx_shadow_num_c(ctrl, "interrupt_offset", &BX_PIC_THIS s.slave_pic.interrupt_offset, BASE_HEX);
   new bx_shadow_num_c(ctrl, "auto_eoi", &BX_PIC_THIS s.slave_pic.auto_eoi, BASE_HEX);
   new bx_shadow_num_c(ctrl, "imr", &BX_PIC_THIS s.slave_pic.imr, BASE_HEX);

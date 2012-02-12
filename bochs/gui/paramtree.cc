@@ -857,13 +857,12 @@ void bx_shadow_filedata_c::restore(FILE *save_fp)
     (*restore_handler)(sr_devptr, save_fp);
 }
 
-bx_list_c::bx_list_c(bx_param_c *parent, int maxsize)
+bx_list_c::bx_list_c(bx_param_c *parent)
   : bx_param_c(SIM->gen_param_id(), "list", "")
 {
   set_type(BXT_LIST);
   this->size = 0;
-  this->maxsize = maxsize;
-  this->list = new bx_param_c* [maxsize];
+  this->list = NULL;
   this->parent = NULL;
   if (parent) {
     BX_ASSERT(parent->get_type() == BXT_LIST);
@@ -873,13 +872,12 @@ bx_list_c::bx_list_c(bx_param_c *parent, int maxsize)
   init("");
 }
 
-bx_list_c::bx_list_c(bx_param_c *parent, const char *name, int maxsize)
+bx_list_c::bx_list_c(bx_param_c *parent, const char *name)
   : bx_param_c(SIM->gen_param_id(), name, "")
 {
   set_type (BXT_LIST);
   this->size = 0;
-  this->maxsize = maxsize;
-  this->list = new bx_param_c* [maxsize];
+  this->list = NULL;
   this->parent = NULL;
   if (parent) {
     BX_ASSERT(parent->get_type() == BXT_LIST);
@@ -889,13 +887,12 @@ bx_list_c::bx_list_c(bx_param_c *parent, const char *name, int maxsize)
   init("");
 }
 
-bx_list_c::bx_list_c(bx_param_c *parent, const char *name, const char *title, int maxsize)
+bx_list_c::bx_list_c(bx_param_c *parent, const char *name, const char *title)
   : bx_param_c(SIM->gen_param_id(), name, "")
 {
   set_type (BXT_LIST);
   this->size = 0;
-  this->maxsize = maxsize;
-  this->list = new bx_param_c* [maxsize];
+  this->list = NULL;
   this->parent = NULL;
   if (parent) {
     BX_ASSERT(parent->get_type() == BXT_LIST);
@@ -910,12 +907,9 @@ bx_list_c::bx_list_c(bx_param_c *parent, const char *name, const char *title, bx
 {
   set_type(BXT_LIST);
   this->size = 0;
+  this->list = NULL;
   while (init_list[this->size] != NULL)
-    this->size++;
-  this->maxsize = this->size;
-  this->list = new bx_param_c* [maxsize];
-  for (int i=0; i<this->size; i++)
-    this->list[i] = init_list[i];
+    add(init_list[this->size]);
   this->parent = NULL;
   if (parent) {
     BX_ASSERT(parent->get_type() == BXT_LIST);
@@ -928,10 +922,7 @@ bx_list_c::bx_list_c(bx_param_c *parent, const char *name, const char *title, bx
 bx_list_c::~bx_list_c()
 {
   if (list != NULL) {
-    for (int i=0; i<size; i++) {
-      delete list[i];
-    }
-    delete [] list;
+    clear();
   }
   if (title != NULL) delete [] title;
 }
@@ -967,7 +958,7 @@ void bx_list_c::set_parent(bx_param_c *newparent)
 
 bx_list_c* bx_list_c::clone()
 {
-  bx_list_c *newlist = new bx_list_c(NULL, name, title, maxsize);
+  bx_list_c *newlist = new bx_list_c(NULL, name, title);
   for (int i=0; i<get_size(); i++)
     newlist->add(get(i));
   newlist->set_options(options);
@@ -976,70 +967,94 @@ bx_list_c* bx_list_c::clone()
 
 void bx_list_c::add(bx_param_c *param)
 {
-  if (size >= maxsize) {
-    BX_PANIC(("add param '%s' to bx_list_c '%s': list capacity exceeded",
-              param->get_name(), get_name()));
-    return;
+  bx_listitem_t *item;
+
+  item = (bx_listitem_t*) malloc(sizeof(bx_listitem_t));
+  item->param = param;
+  item->next = NULL;
+  if (list == NULL) {
+    list = item;
+  } else {
+    bx_listitem_t *temp = list;
+    while (temp->next)
+      temp = temp->next;
+    temp->next = item;
   }
-  list[size] = param;
   size++;
 }
 
 bx_param_c* bx_list_c::get(int index)
 {
   BX_ASSERT(index >= 0 && index < size);
-  return list[index];
+  int i = 0;
+  bx_listitem_t *temp = list;
+  while (temp != NULL) {
+    if (i == index) {
+      return temp->param;
+    }
+    temp = temp->next;
+    i++;
+  }
+  return NULL;
 }
 
 bx_param_c* bx_list_c::get_by_name(const char *name)
 {
-  int imax = get_size();
-  for (int i=0; i<imax; i++) {
-    bx_param_c *p = get(i);
+  bx_listitem_t *temp = list;
+  while (temp != NULL) {
+    bx_param_c *p = temp->param;
     if (!stricmp(name, p->get_name())) {
       return p;
     }
+    temp = temp->next;
   }
   return NULL;
 }
 
 void bx_list_c::reset()
 {
-  int imax = get_size();
-  for (int i=0; i<imax; i++) {
-    get(i)->reset();
+  bx_listitem_t *temp = list;
+  while (temp != NULL) {
+    temp->param->reset();
+    temp = temp->next;
   }
 }
 
 void bx_list_c::clear()
 {
-  int imax = get_size();
-  for (int i=0; i<imax; i++) {
-    bx_param_c *param = get(i);
-    if (param->get_parent() == this) {
-      delete param;
-    }
+  bx_listitem_t *temp = list, *next;
+  while (temp != NULL) {
+    delete temp->param;
+    next = temp->next;
+    free(temp);
+    temp = next;
   }
+  list = NULL;
   size = 0;
 }
 
 void bx_list_c::remove(const char *name)
 {
-  int imax = get_size();
-  int found = 0;
-  for (int i=0; i<imax; i++) {
-    bx_param_c *p = get(i);
-    if (!found && !stricmp(name, p->get_name())) {
+  bx_listitem_t *item, *prev = NULL;
+
+  for (item = list; item; item = item->next) {
+    bx_param_c *p = item->param;
+    if (!stricmp(name, p->get_name())) {
       if (p->get_parent() == this) {
         delete p;
+        if (prev == NULL) {
+          list = item->next;
+        } else {
+          prev->next = item->next;
+        }
+        free(item);
+        size--;
+        break;
+      } else {
+        prev = item;
       }
-      found = 1;
+    } else {
+      prev = item;
     }
-    if (found) {
-      list[i] = list[i+1];
-    }
-  }
-  if (found) {
-    size--;
   }
 }

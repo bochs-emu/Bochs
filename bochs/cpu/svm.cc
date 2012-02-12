@@ -579,6 +579,8 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   handleAvxModeChange();
 #endif
 
+  if (SVM_NESTED_PAGING_ENABLED) BX_CPU_THIS_PTR PDPTR_CACHE.valid = 0;
+
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
 
   return 1;
@@ -1180,7 +1182,7 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   if (! bx_cpuid_support_svm()) return;
 
   // register SVM state for save/restore param tree
-  bx_list_c *svm = new bx_list_c(parent, "SVM", 4);
+  bx_list_c *svm = new bx_list_c(parent, "SVM");
 
   BXRS_PARAM_BOOL(svm, in_svm_guest, BX_CPU_THIS_PTR in_svm_guest);
   BXRS_PARAM_BOOL(svm, gif, BX_CPU_THIS_PTR svm_gif);
@@ -1189,7 +1191,7 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   // VMCB Control Fields
   //
 
-  bx_list_c *vmcb_ctrls = new bx_list_c(svm, "VMCB_CTRLS", 20);
+  bx_list_c *vmcb_ctrls = new bx_list_c(svm, "VMCB_CTRLS");
 
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, cr_rd_ctrl, BX_CPU_THIS_PTR vmcb.ctrls.cr_rd_ctrl);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, cr_wr_ctrl, BX_CPU_THIS_PTR vmcb.ctrls.cr_wr_ctrl);
@@ -1217,11 +1219,11 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   // VMCB Host State
   //
 
-  bx_list_c *host = new bx_list_c(svm, "VMCB_HOST_STATE", 14);
+  bx_list_c *host = new bx_list_c(svm, "VMCB_HOST_STATE");
 
   for(unsigned n=0; n<4; n++) {
     bx_segment_reg_t *segment = &BX_CPU_THIS_PTR vmcb.host_state.sregs[n];
-    bx_list_c *sreg = new bx_list_c(host, svm_segname[n], 12);
+    bx_list_c *sreg = new bx_list_c(host, svm_segname[n]);
     BXRS_HEX_PARAM_FIELD(sreg, selector, segment->selector.value);
     BXRS_HEX_PARAM_FIELD(sreg, valid, segment->cache.valid);
     BXRS_PARAM_BOOL(sreg, p, segment->cache.p);
@@ -1238,11 +1240,11 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
     BXRS_PARAM_BOOL(sreg, avl, segment->cache.u.segment.avl);
   }
 
-  bx_list_c *GDTR = new bx_list_c(host, "GDTR", 2);
+  bx_list_c *GDTR = new bx_list_c(host, "GDTR");
   BXRS_HEX_PARAM_FIELD(GDTR, base, BX_CPU_THIS_PTR vmcb.host_state.gdtr.base);
   BXRS_HEX_PARAM_FIELD(GDTR, limit, BX_CPU_THIS_PTR vmcb.host_state.gdtr.limit);
 
-  bx_list_c *IDTR = new bx_list_c(host, "IDTR", 2);
+  bx_list_c *IDTR = new bx_list_c(host, "IDTR");
   BXRS_HEX_PARAM_FIELD(IDTR, base, BX_CPU_THIS_PTR vmcb.host_state.idtr.base);
   BXRS_HEX_PARAM_FIELD(IDTR, limit, BX_CPU_THIS_PTR vmcb.host_state.idtr.limit);
 

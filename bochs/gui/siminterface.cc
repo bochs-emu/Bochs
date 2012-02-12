@@ -318,8 +318,8 @@ void bx_init_siminterface()
   if (root_param == NULL) {
     root_param = new bx_list_c(NULL,
       "bochs",
-      "list of top level bochs parameters",
-      30);
+      "list of top level bochs parameters"
+      );
   }
 }
 
@@ -985,8 +985,8 @@ void bx_real_sim_c::init_save_restore()
   } else {
     list = new bx_list_c(root_param,
       "bochs",
-      "subtree for save/restore",
-      30 + BX_MAX_SMP_THREADS_SUPPORTED);
+      "subtree for save/restore"
+      );
   }
 }
 

@@ -219,7 +219,7 @@ void bx_pc_system_c::exit(void)
 
 void bx_pc_system_c::register_state(void)
 {
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pc_system", "PC System State", 10);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pc_system", "PC System State");
   BXRS_PARAM_BOOL(list, enable_a20, enable_a20);
   BXRS_HEX_PARAM_SIMPLE(list, a20_mask);
   BXRS_DEC_PARAM_SIMPLE(list, currCountdown);
@@ -229,11 +229,11 @@ void bx_pc_system_c::register_state(void)
   BXRS_DEC_PARAM_SIMPLE(list, usecSinceLast);
   BXRS_PARAM_BOOL(list, HRQ, HRQ);
 
-  bx_list_c *timers = new bx_list_c(list, "timer", numTimers);
+  bx_list_c *timers = new bx_list_c(list, "timer");
   for (unsigned i = 0; i < numTimers; i++) {
     char name[4];
     sprintf(name, "%d", i);
-    bx_list_c *bxtimer = new bx_list_c(timers, name, 5);
+    bx_list_c *bxtimer = new bx_list_c(timers, name);
     BXRS_PARAM_BOOL(bxtimer, inUse, timer[i].inUse);
     BXRS_DEC_PARAM_FIELD(bxtimer, period, timer[i].period);
     BXRS_DEC_PARAM_FIELD(bxtimer, timeToFire, timer[i].timeToFire);

@@ -91,7 +91,7 @@ const Bit16u sctl_loop_sel[3] = {0x2000, 0x4000, 0x8000};
 void es1370_init_options(void)
 {
   bx_param_c *sound = SIM->get_param("sound");
-  bx_list_c *menu = new bx_list_c(sound, "es1370", "ES1370 Configuration", 8);
+  bx_list_c *menu = new bx_list_c(sound, "es1370", "ES1370 Configuration");
   menu->set_options(menu->SHOW_PARENT);
   menu->set_enabled(BX_SUPPORT_ES1370);
 
@@ -107,7 +107,7 @@ void es1370_init_options(void)
     "Wave device",
     "This is the device where the wave output is sent to",
     "", BX_PATHNAME_LEN);
-  bx_list_c *deplist = new bx_list_c(NULL, 1);
+  bx_list_c *deplist = new bx_list_c(NULL);
   deplist->add(wavedev);
   enabled->set_dependent_list(deplist);
 }
@@ -277,10 +277,10 @@ void bx_es1370_c::register_state(void)
   unsigned i;
   char chname[6];
 
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "es1370", "ES1370 State", 9);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "es1370", "ES1370 State");
   for (i = 0; i < 3; i++) {
     sprintf(chname, "chan%d", i);
-    bx_list_c *chan = new bx_list_c(list, chname, "", 5);
+    bx_list_c *chan = new bx_list_c(list, chname, "");
     BXRS_HEX_PARAM_FIELD(chan, shift, BX_ES1370_THIS s.chan[i].shift);
     BXRS_HEX_PARAM_FIELD(chan, leftover, BX_ES1370_THIS s.chan[i].leftover);
     BXRS_HEX_PARAM_FIELD(chan, scount, BX_ES1370_THIS s.chan[i].scount);

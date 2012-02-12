@@ -147,14 +147,14 @@ void bx_pit_c::reset(unsigned type)
 
 void bx_pit_c::register_state(void)
 {
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pit", "8254 PIT State", 7);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pit", "8254 PIT State");
   new bx_shadow_bool_c(list, "speaker_data_on", &BX_PIT_THIS s.speaker_data_on);
   new bx_shadow_bool_c(list, "refresh_clock_div2", &BX_PIT_THIS s.refresh_clock_div2);
   new bx_shadow_num_c(list, "last_usec", &BX_PIT_THIS s.last_usec);
   new bx_shadow_num_c(list, "last_next_event_time", &BX_PIT_THIS s.last_next_event_time);
   new bx_shadow_num_c(list, "total_ticks", &BX_PIT_THIS s.total_ticks);
   new bx_shadow_num_c(list, "total_usec", &BX_PIT_THIS s.total_usec);
-  bx_list_c *counter = new bx_list_c(list, "counter", 4);
+  bx_list_c *counter = new bx_list_c(list, "counter");
   BX_PIT_THIS s.timer.register_state(counter);
 }
 

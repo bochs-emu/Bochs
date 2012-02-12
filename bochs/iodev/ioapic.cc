@@ -294,17 +294,17 @@ void bx_ioapic_c::service_ioapic()
 
 void bx_ioapic_c::register_state(void)
 {
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "ioapic", "IOAPIC State", 4);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "ioapic", "IOAPIC State");
 
   BXRS_HEX_PARAM_SIMPLE(list, ioregsel);
   BXRS_HEX_PARAM_SIMPLE(list, intin);
   BXRS_HEX_PARAM_SIMPLE(list, irr);
 
-  bx_list_c *table = new bx_list_c(list, "ioredtbl", BX_IOAPIC_NUM_PINS);
+  bx_list_c *table = new bx_list_c(list, "ioredtbl");
   for (unsigned i=0; i<BX_IOAPIC_NUM_PINS; i++) {
     char name[6];
     sprintf(name, "0x%02x", i);
-    bx_list_c *entry = new bx_list_c(table, name, 2);
+    bx_list_c *entry = new bx_list_c(table, name);
     ioredtbl[i].register_state(entry);
   }
 }

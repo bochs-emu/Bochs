@@ -206,12 +206,12 @@ extern "C" int libwx_LTX_plugin_init(plugin_t *plugin, plugintype_t type,
   MyPanel::OnPluginInit();
   bx_list_c *list = new bx_list_c(SIM->get_param("."),
       "wxdebug",
-      "subtree for the wx debugger",
-      30);
+      "subtree for the wx debugger"
+      );
   bx_list_c *cpu = new bx_list_c(list,
       "cpu",
-      "CPU State",
-      BX_MAX_SMP_THREADS_SUPPORTED);
+      "CPU State"
+      );
   cpu->set_options(bx_list_c::USE_TAB_WINDOW);
   return 0; // success
 }

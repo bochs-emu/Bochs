@@ -558,14 +558,14 @@ void bx_e1000_c::register_state(void)
   unsigned i;
   char pname[4];
 
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "e1000", "E1000 State", 10);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "e1000", "E1000 State");
   new bx_shadow_data_c(list, "mac_reg", (Bit8u*)BX_E1000_THIS s.mac_reg, 0x20000);
-  bx_list_c *phy = new bx_list_c(list, "phy_reg", "", 32);
+  bx_list_c *phy = new bx_list_c(list, "phy_reg", "");
   for (i = 0; i < 32; i++) {
     sprintf(pname, "0x%02x", i);
     new bx_shadow_num_c(phy, pname, &BX_E1000_THIS s.phy_reg[i], BASE_HEX);
   }
-  bx_list_c *eeprom = new bx_list_c(list, "eeprom_data", "", 64);
+  bx_list_c *eeprom = new bx_list_c(list, "eeprom_data", "");
   for (i = 0; i < 64; i++) {
     sprintf(pname, "0x%02x", i);
     new bx_shadow_num_c(eeprom, pname, &BX_E1000_THIS s.eeprom_data[i], BASE_HEX);
@@ -573,13 +573,13 @@ void bx_e1000_c::register_state(void)
   BXRS_DEC_PARAM_FIELD(list, rxbuf_size, BX_E1000_THIS s.rxbuf_size);
   BXRS_DEC_PARAM_FIELD(list, rxbuf_min_shift, BX_E1000_THIS s.rxbuf_min_shift);
   BXRS_PARAM_BOOL(list, check_rxov, BX_E1000_THIS s.check_rxov);
-  bx_list_c *tx = new bx_list_c(list, "tx", "", 21);
-  bx_list_c *header = new bx_list_c(tx, "header", "", 256);
+  bx_list_c *tx = new bx_list_c(list, "tx", "");
+  bx_list_c *header = new bx_list_c(tx, "header", "");
   for (i = 0; i < 256; i++) {
     sprintf(pname, "0x%02x", i);
     new bx_shadow_num_c(header, pname, &BX_E1000_THIS s.tx.header[i], BASE_HEX);
   }
-  bx_list_c *vlh = new bx_list_c(tx, "vlan_header", "", 4);
+  bx_list_c *vlh = new bx_list_c(tx, "vlan_header", "");
   for (i = 0; i < 4; i++) {
     sprintf(pname, "0x%02x", i);
     new bx_shadow_num_c(vlh, pname, &BX_E1000_THIS s.tx.vlan_header[i], BASE_HEX);
@@ -603,7 +603,7 @@ void bx_e1000_c::register_state(void)
   BXRS_PARAM_BOOL(tx, tcp, BX_E1000_THIS s.tx.tcp);
   BXRS_PARAM_BOOL(tx, cptse, BX_E1000_THIS s.tx.cptse);
   BXRS_HEX_PARAM_FIELD(tx, int_cause, BX_E1000_THIS s.tx.int_cause);
-  bx_list_c *eecds = new bx_list_c(list, "eecd_state", "", 5);
+  bx_list_c *eecds = new bx_list_c(list, "eecd_state", "");
   BXRS_DEC_PARAM_FIELD(eecds, val_in, BX_E1000_THIS s.eecd_state.val_in);
   BXRS_DEC_PARAM_FIELD(eecds, bitnum_in, BX_E1000_THIS s.eecd_state.bitnum_in);
   BXRS_DEC_PARAM_FIELD(eecds, bitnum_out, BX_E1000_THIS s.eecd_state.bitnum_out);

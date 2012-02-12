@@ -151,7 +151,7 @@ const char* usb_printer_device_c::get_info()
 
 void usb_printer_device_c::register_state_specific(bx_list_c *parent)
 {
-  bx_list_c *list = new bx_list_c(parent, "s", "USB PRINTER Device State", 1);
+  bx_list_c *list = new bx_list_c(parent, "s", "USB PRINTER Device State");
   new bx_shadow_num_c(list, "printer_status", &s.printer_status);
 }
 

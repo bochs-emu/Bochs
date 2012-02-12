@@ -424,7 +424,7 @@ void usb_hid_device_c::register_state_specific(bx_list_c *parent)
   Bit8u i;
   char name[6];
 
-  bx_list_c *list = new bx_list_c(parent, "s", "USB HID Device State", 9);
+  bx_list_c *list = new bx_list_c(parent, "s", "USB HID Device State");
   new bx_shadow_num_c(list, "mouse_delayed_dx", &s.mouse_delayed_dx);
   new bx_shadow_num_c(list, "mouse_delayed_dy", &s.mouse_delayed_dy);
   new bx_shadow_num_c(list, "mouse_delayed_dz", &s.mouse_delayed_dz);
@@ -432,12 +432,12 @@ void usb_hid_device_c::register_state_specific(bx_list_c *parent)
   new bx_shadow_num_c(list, "mouse_y", &s.mouse_y);
   new bx_shadow_num_c(list, "mouse_z", &s.mouse_z);
   new bx_shadow_num_c(list, "b_state", &s.b_state, BASE_HEX);
-  key = new bx_list_c(list, "saved_key", 8);
+  key = new bx_list_c(list, "saved_key");
   for (i=0; i<8; i++) {
     sprintf(name, "0x%02x", i);
     new bx_shadow_num_c(key, name, &s.saved_key[i], BASE_HEX);
   }
-  key = new bx_list_c(list, "key_pad_packet", 8);
+  key = new bx_list_c(list, "key_pad_packet");
   for (i=0; i<8; i++) {
     sprintf(name, "0x%02x", i);
     new bx_shadow_num_c(key, name, &s.key_pad_packet[i], BASE_HEX);

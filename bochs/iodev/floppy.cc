@@ -328,9 +328,9 @@ void bx_floppy_ctrl_c::register_state(void)
   char name[8];
   bx_list_c *drive;
 
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "floppy", "Floppy State", 35);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "floppy", "Floppy State");
   new bx_shadow_num_c(list, "data_rate", &BX_FD_THIS s.data_rate);
-  bx_list_c *command = new bx_list_c(list, "command", 10);
+  bx_list_c *command = new bx_list_c(list, "command");
   for (i=0; i<10; i++) {
     sprintf(name, "%d", i);
     new bx_shadow_num_c(command, name, &BX_FD_THIS s.command[i], BASE_HEX);
@@ -344,7 +344,7 @@ void bx_floppy_ctrl_c::register_state(void)
   new bx_shadow_num_c(list, "reset_sensei", &BX_FD_THIS s.reset_sensei);
   new bx_shadow_num_c(list, "format_count", &BX_FD_THIS s.format_count);
   new bx_shadow_num_c(list, "format_fillbyte", &BX_FD_THIS s.format_fillbyte, BASE_HEX);
-  bx_list_c *result = new bx_list_c(list, "result", 10);
+  bx_list_c *result = new bx_list_c(list, "result");
   for (i=0; i<10; i++) {
     sprintf(name, "%d", i);
     new bx_shadow_num_c(result, name, &BX_FD_THIS s.result[i], BASE_HEX);
@@ -370,7 +370,7 @@ void bx_floppy_ctrl_c::register_state(void)
   new bx_shadow_data_c(list, "buffer", BX_FD_THIS s.floppy_buffer, 512);
   for (i=0; i<4; i++) {
     sprintf(name, "drive%d", i);
-    drive = new bx_list_c(list, name, 6);
+    drive = new bx_list_c(list, name);
     new bx_shadow_num_c(drive, "cylinder", &BX_FD_THIS s.cylinder[i]);
     new bx_shadow_num_c(drive, "head", &BX_FD_THIS s.head[i]);
     new bx_shadow_num_c(drive, "sector", &BX_FD_THIS s.sector[i]);

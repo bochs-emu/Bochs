@@ -414,12 +414,12 @@ void bx_virt_timer_c::init(void)
 
 void bx_virt_timer_c::register_state(void)
 {
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "virt_timer", "Virtual Timer State", 17);
-  bx_list_c *vtimers = new bx_list_c(list, "timer", numTimers);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "virt_timer", "Virtual Timer State");
+  bx_list_c *vtimers = new bx_list_c(list, "timer");
   for (unsigned i = 0; i < numTimers; i++) {
     char name[4];
     sprintf(name, "%d", i);
-    bx_list_c *bxtimer = new bx_list_c(vtimers, name, 5);
+    bx_list_c *bxtimer = new bx_list_c(vtimers, name);
     BXRS_PARAM_BOOL(bxtimer, inUse, timer[i].inUse);
     BXRS_DEC_PARAM_FIELD(bxtimer, period, timer[i].period);
     BXRS_DEC_PARAM_FIELD(bxtimer, timeToFire, timer[i].timeToFire);

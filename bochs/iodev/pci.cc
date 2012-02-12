@@ -150,7 +150,7 @@ bx_pci_bridge_c::reset(unsigned type)
 
 void bx_pci_bridge_c::register_state(void)
 {
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pci_bridge", "PCI Bridge State", 3);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pci_bridge", "PCI Bridge State");
   BXRS_HEX_PARAM_FIELD(list, confAddr, BX_PCI_THIS confAddr);
   BXRS_HEX_PARAM_FIELD(list, confData, BX_PCI_THIS confData);
   register_pci_state(list);

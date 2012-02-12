@@ -167,7 +167,7 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
     bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
     sprintf(pname, "cdrom%d", ++cdrom_count);
     sprintf(label, "USB CD-ROM #%d Configuration", cdrom_count);
-    s.config = new bx_list_c(usb_rt, pname, label, 2);
+    s.config = new bx_list_c(usb_rt, pname, label);
     s.config->set_options(bx_list_c::SERIES_ASK);
     s.config->set_runtime_param(1);
     s.config->set_device_param(this);
@@ -254,7 +254,7 @@ const char* usb_msd_device_c::get_info()
 
 void usb_msd_device_c::register_state_specific(bx_list_c *parent)
 {
-  s.sr_list = new bx_list_c(parent, "s", "USB MSD Device State", 8);
+  s.sr_list = new bx_list_c(parent, "s", "USB MSD Device State");
   new bx_shadow_num_c(s.sr_list, "mode", &s.mode);
   new bx_shadow_num_c(s.sr_list, "scsi_len", &s.scsi_len);
   new bx_shadow_num_c(s.sr_list, "usb_len", &s.usb_len);

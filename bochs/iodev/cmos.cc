@@ -300,9 +300,9 @@ void bx_cmos_c::save_image(void)
 
 void bx_cmos_c::register_state(void)
 {
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "cmos", "CMOS State", 2);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "cmos", "CMOS State");
   BXRS_HEX_PARAM_FIELD(list, mem_address, BX_CMOS_THIS s.cmos_mem_address);
-  bx_list_c *ram = new bx_list_c(list, "ram", 128);
+  bx_list_c *ram = new bx_list_c(list, "ram");
   for (unsigned i=0; i<128; i++) {
     char name[6];
     sprintf(name, "0x%02x", i);

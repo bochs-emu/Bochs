@@ -208,7 +208,7 @@ void bx_vga_c::reset(unsigned type)
 
 void bx_vga_c::register_state(void)
 {
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "vga", "VGA Adapter State", 3);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "vga", "VGA Adapter State");
   bx_vgacore_c::register_state(list);
 #if BX_SUPPORT_PCI
   if (BX_VGA_THIS pci_enabled) {
@@ -217,7 +217,7 @@ void bx_vga_c::register_state(void)
 #endif
   // register state for Bochs VBE
   if (!strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "vbe")) {
-    bx_list_c *vbe = new bx_list_c(list, "vbe", 18);
+    bx_list_c *vbe = new bx_list_c(list, "vbe");
     new bx_shadow_num_c(vbe, "cur_dispi", &BX_VGA_THIS vbe.cur_dispi, BASE_HEX);
     new bx_shadow_num_c(vbe, "xres", &BX_VGA_THIS vbe.xres);
     new bx_shadow_num_c(vbe, "yres", &BX_VGA_THIS vbe.yres);

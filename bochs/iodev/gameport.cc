@@ -119,7 +119,7 @@ void bx_gameport_c::reset(unsigned type)
 
 void bx_gameport_c::register_state(void)
 {
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "gameport", "Gameport State", 7);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "gameport", "Gameport State");
   BXRS_PARAM_BOOL(list, enabled, BX_GAMEPORT_THIS enabled);
   BXRS_HEX_PARAM_FIELD(list, port, BX_GAMEPORT_THIS port);
   BXRS_DEC_PARAM_FIELD(list, delay_x, BX_GAMEPORT_THIS delay_x);

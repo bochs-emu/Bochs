@@ -223,7 +223,7 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports)
   sprintf(label, "Enable %s emulation", usb_name);
   sprintf(descr, "Enables the %s emulation", usb_name);
   bx_param_bool_c *enabled = new bx_param_bool_c(menu, "enabled", label, descr, 0);
-  bx_list_c *deplist = new bx_list_c(NULL, maxports * 3);
+  bx_list_c *deplist = new bx_list_c(NULL);
   for (int i = 0; i < maxports; i++) {
     sprintf(name, "port%d", i+1);
     sprintf(label, "Port #%d Configuration", i+1);
@@ -258,7 +258,7 @@ void bx_init_options()
   bx_param_c *root_param = SIM->get_param(".");
 
   // general options subtree
-  menu = new bx_list_c(root_param, "general", "", 11);
+  menu = new bx_list_c(root_param, "general", "");
 
  // config interface option, set in bochsrc or command line
   static const char *config_interface_list[] = {
@@ -312,14 +312,14 @@ void bx_init_options()
       0, BX_MAX_BIT32U, 0);
 
   // subtree for setting up log actions by device in bochsrc
-  bx_list_c *logfn = new bx_list_c(menu, "logfn", "Logfunctions", 4);
-  new bx_list_c(logfn, "debug", "", BX_MAX_LOGFN_MODULES);
-  new bx_list_c(logfn, "info", "", BX_MAX_LOGFN_MODULES);
-  new bx_list_c(logfn, "error", "", BX_MAX_LOGFN_MODULES);
-  new bx_list_c(logfn, "panic", "", BX_MAX_LOGFN_MODULES);
+  bx_list_c *logfn = new bx_list_c(menu, "logfn", "Logfunctions");
+  new bx_list_c(logfn, "debug", "");
+  new bx_list_c(logfn, "info", "");
+  new bx_list_c(logfn, "error", "");
+  new bx_list_c(logfn, "panic", "");
 
   // optional plugin control (empty list)
-  menu = new bx_list_c(menu, "plugin_ctrl", "Optional Plugin Control", 16);
+  menu = new bx_list_c(menu, "plugin_ctrl", "Optional Plugin Control");
 
   // subtree for special menus
   bx_list_c *special_menus = new bx_list_c(root_param, "menu", "");
@@ -335,7 +335,7 @@ void bx_init_options()
 #endif
 
   // cpu subtree
-  bx_list_c *cpu_param = new bx_list_c(root_param, "cpu", "CPU Options", 10 + BX_SUPPORT_SMP);
+  bx_list_c *cpu_param = new bx_list_c(root_param, "cpu", "CPU Options");
 
   static const char *cpu_names[] = {
 #define bx_define_cpudb(model) #model,
@@ -406,7 +406,7 @@ void bx_init_options()
 
   // cpuid subtree
 #if BX_CPU_LEVEL >= 4
-  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 30);
+  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options");
 
   new bx_param_string_c(cpuid_param,
       "vendor_string",
@@ -741,7 +741,7 @@ void bx_init_options()
       "rtc_init", "Initialize RTC from image",
       "Controls whether to initialize the RTC with values stored in the image",
       0);
-  deplist = new bx_list_c(NULL, 2);
+  deplist = new bx_list_c(NULL);
   deplist->add(path);
   deplist->add(rtc_init);
   use_cmosimage->set_dependent_list(deplist);
@@ -755,7 +755,7 @@ void bx_init_options()
   bx_list_c *pci = new bx_list_c(root_param, "pci", "PCI Options");
 
   // pci options
-  deplist = new bx_list_c(NULL, 2+BX_N_PCI_SLOTS+2*BX_SUPPORT_PCIDEV);
+  deplist = new bx_list_c(NULL);
 
   bx_param_bool_c *i440fx_support = new bx_param_bool_c(pci,
       "i440fx_support",
@@ -781,7 +781,7 @@ void bx_init_options()
   slot->set_options(slot->SHOW_PARENT);
 
   // display subtree
-  bx_list_c *display = new bx_list_c(root_param, "display", "Bochs Display & Interface Options", 7);
+  bx_list_c *display = new bx_list_c(root_param, "display", "Bochs Display & Interface Options");
 
   // this is a list of gui libraries that are known to be available at
   // compile time.  The one that is listed first will be the default,
@@ -909,7 +909,7 @@ void bx_init_options()
       "Pathname of the keymap file used",
       "", BX_PATHNAME_LEN);
   keymap->set_extension("map");
-  deplist = new bx_list_c(NULL, 1);
+  deplist = new bx_list_c(NULL);
   deplist->add(keymap);
   use_kbd_mapping->set_dependent_list(deplist);
 
@@ -1085,12 +1085,12 @@ void bx_init_options()
       0);
     status->set_ask_format("Is media inserted in drive? [%s] ");
 
-    deplist = new bx_list_c(NULL, 1);
+    deplist = new bx_list_c(NULL);
     deplist->add(path);
     devtype->set_dependent_list(deplist, 1);
     devtype->set_dependent_bitmap(BX_FDD_NONE, 0);
 
-    deplist = new bx_list_c(NULL, 3);
+    deplist = new bx_list_c(NULL);
     deplist->add(type);
     deplist->add(readonly);
     deplist->add(status);
@@ -1146,7 +1146,7 @@ void bx_init_options()
     sprintf(name, "%d", channel);
     ata_menu[channel] = new bx_list_c(ata, name, s_atachannel[channel]);
     ata_menu[channel]->set_options(bx_list_c::USE_TAB_WINDOW);
-    ata_res[channel] = new bx_list_c(ata_menu[channel], "resources", s_atachannel[channel], 8);
+    ata_res[channel] = new bx_list_c(ata_menu[channel], "resources", s_atachannel[channel]);
     ata_res[channel]->set_options(bx_list_c::SERIES_ASK);
 
     enabled = new bx_param_bool_c(ata_res[channel],
@@ -1192,8 +1192,7 @@ void bx_init_options()
     for (Bit8u slave=0; slave<2; slave++) {
       menu = new bx_list_c(ata_menu[channel],
           s_atadevname[slave],
-          s_atadevice[channel][slave],
-          BXP_PARAMS_PER_ATA_DEVICE + 1);
+          s_atadevice[channel][slave]);
       menu->set_options(menu->SERIES_ASK);
 
       bx_param_bool_c *present = new bx_param_bool_c(menu,
@@ -1244,7 +1243,7 @@ void bx_init_options()
         "Pathname of the journal file",
         "", BX_PATHNAME_LEN);
       journal->set_ask_format("Enter path of journal file: [%s]");
-      deplist = new bx_list_c(NULL, 1);
+      deplist = new bx_list_c(NULL);
       deplist->add(journal);
       mode->set_dependent_list(deplist, 0);
       mode->set_dependent_bitmap(BX_HDIMAGE_MODE_UNDOABLE, 1);
@@ -1303,7 +1302,7 @@ void bx_init_options()
       translation->set_ask_format("Enter translation type: [%s]");
 
       // the menu and all items on it depend on the present flag
-      deplist = new bx_list_c(NULL, 4);
+      deplist = new bx_list_c(NULL);
       deplist->add(type);
       deplist->add(path);
       deplist->add(model);
@@ -1407,7 +1406,7 @@ void bx_init_options()
     path = new bx_param_filename_c(menu, "outfile", label, descr,
       "", BX_PATHNAME_LEN);
     path->set_extension("out");
-    deplist = new bx_list_c(NULL, 1);
+    deplist = new bx_list_c(NULL);
     deplist->add(path);
     enabled->set_dependent_list(deplist);
   }
@@ -1448,7 +1447,7 @@ void bx_init_options()
     sprintf(descr, "The path can be a real serial device or a pty (X/Unix only)");
     path = new bx_param_filename_c(menu, "dev", label, descr,
       "", BX_PATHNAME_LEN);
-    deplist = new bx_list_c(NULL, 2);
+    deplist = new bx_list_c(NULL);
     deplist->add(mode);
     deplist->add(path);
     enabled->set_dependent_list(deplist);
@@ -1518,7 +1517,7 @@ void bx_init_options()
 
 #if BX_PLUGINS
   // user plugin options
-  menu = new bx_list_c(misc, "user_plugin", "User Plugin Options", BX_N_USER_PLUGINS);
+  menu = new bx_list_c(misc, "user_plugin", "User Plugin Options");
   menu->set_options(menu->SHOW_PARENT | menu->USE_BOX_TITLE);
   for (i=0; i<BX_N_USER_PLUGINS; i++) {
     sprintf(name, "%d", i+1);
@@ -1529,7 +1528,7 @@ void bx_init_options()
     plugin->set_handler(bx_param_string_handler);
   }
   // user-defined options subtree
-  bx_list_c *user = new bx_list_c(root_param, "user", "User-defined options", 16);
+  bx_list_c *user = new bx_list_c(root_param, "user", "User-defined options");
   user->set_options(user->SHOW_PARENT);
 #endif
 
@@ -1564,9 +1563,9 @@ void bx_init_options()
 
   // runtime options
   menu = new bx_list_c(special_menus, "runtime", "Runtime options");
-  bx_list_c *cdrom = new bx_list_c(menu, "cdrom", "CD-ROM options", 10);
+  bx_list_c *cdrom = new bx_list_c(menu, "cdrom", "CD-ROM options");
   cdrom->set_options(cdrom->SHOW_PARENT);
-  usb = new bx_list_c(menu, "usb", "USB options", 10);
+  usb = new bx_list_c(menu, "usb", "USB options");
   usb->set_options(usb->SHOW_PARENT | usb->USE_TAB_WINDOW);
   // misc runtime options
   misc = new bx_list_c(menu, "misc", "Misc options");

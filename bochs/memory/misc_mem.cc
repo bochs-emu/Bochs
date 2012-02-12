@@ -300,7 +300,7 @@ void BX_MEM_C::register_state()
 {
   char param_name[15];
 
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "memory", "Memory State", 6);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "memory", "Memory State");
   Bit32u num_blocks = BX_MEM_THIS len / BX_MEM_BLOCK_LEN;
 #if BX_LARGE_RAMFILE
   bx_shadow_filedata_c *ramfile = new bx_shadow_filedata_c(list, "ram", &(BX_MEM_THIS overflow_file));
@@ -312,14 +312,14 @@ void BX_MEM_C::register_state()
   BXRS_DEC_PARAM_FIELD(list, allocated, BX_MEM_THIS allocated);
   BXRS_DEC_PARAM_FIELD(list, used_blocks, BX_MEM_THIS used_blocks);
 
-  bx_list_c *mapping = new bx_list_c(list, "mapping", num_blocks);
+  bx_list_c *mapping = new bx_list_c(list, "mapping");
   for (Bit32u blk=0; blk < num_blocks; blk++) {
     sprintf(param_name, "blk%d", blk);
     bx_param_num_c *param = new bx_param_num_c(mapping, param_name, "", "", 0, BX_MAX_BIT32U, 0);
     param->set_base(BASE_DEC);
     param->set_sr_handlers(this, memory_param_save_handler, memory_param_restore_handler);
   }
-  bx_list_c *memtype = new bx_list_c(list, "memtype", 26);
+  bx_list_c *memtype = new bx_list_c(list, "memtype");
   for (int i = 0; i <= BX_MEM_AREA_F0000; i++) {
     sprintf(param_name, "%d_r", i);
     new bx_shadow_bool_c(memtype, param_name, &BX_MEM_THIS memory_type[i][0]);

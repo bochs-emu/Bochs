@@ -211,12 +211,12 @@ void bx_acpi_ctrl_c::reset(unsigned type)
 
 void bx_acpi_ctrl_c::register_state(void)
 {
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "acpi", "ACPI Controller State", 6);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "acpi", "ACPI Controller State");
   BXRS_HEX_PARAM_FIELD(list, pmsts, BX_ACPI_THIS s.pmsts);
   BXRS_HEX_PARAM_FIELD(list, pmen, BX_ACPI_THIS s.pmen);
   BXRS_HEX_PARAM_FIELD(list, pmcntrl, BX_ACPI_THIS s.pmcntrl);
   BXRS_HEX_PARAM_FIELD(list, tmr_overflow_time, BX_ACPI_THIS s.tmr_overflow_time);
-  bx_list_c *smbus = new bx_list_c(list, "smbus", "ACPI SMBus", 8);
+  bx_list_c *smbus = new bx_list_c(list, "smbus", "ACPI SMBus");
   BXRS_HEX_PARAM_FIELD(smbus, stat, BX_ACPI_THIS s.smbus.stat);
   BXRS_HEX_PARAM_FIELD(smbus, ctl, BX_ACPI_THIS s.smbus.ctl);
   BXRS_HEX_PARAM_FIELD(smbus, cmd, BX_ACPI_THIS s.smbus.cmd);
@@ -224,7 +224,7 @@ void bx_acpi_ctrl_c::register_state(void)
   BXRS_HEX_PARAM_FIELD(smbus, data0, BX_ACPI_THIS s.smbus.data0);
   BXRS_HEX_PARAM_FIELD(smbus, data1, BX_ACPI_THIS s.smbus.data1);
   BXRS_HEX_PARAM_FIELD(smbus, index, BX_ACPI_THIS s.smbus.index);
-  bx_list_c *data = new bx_list_c(smbus, "data", "ACPI SMBus data", 32);
+  bx_list_c *data = new bx_list_c(smbus, "data", "ACPI SMBus data");
   for (unsigned i = 0; i < 32; i++) {
     char name[6];
     sprintf(name, "0x%02x", i);

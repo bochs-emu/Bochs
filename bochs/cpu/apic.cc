@@ -1402,7 +1402,7 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
   unsigned i;
   char name[6];
 
-  bx_list_c *lapic = new bx_list_c(parent, "local_apic", 33);
+  bx_list_c *lapic = new bx_list_c(parent, "local_apic");
 
   BXRS_HEX_PARAM_SIMPLE(lapic, base_addr);
   BXRS_HEX_PARAM_SIMPLE(lapic, apic_id);
@@ -1414,9 +1414,9 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
   BXRS_HEX_PARAM_SIMPLE(lapic, ldr);
   BXRS_HEX_PARAM_SIMPLE(lapic, dest_format);
 
-  bx_list_c *ISR = new bx_list_c(lapic, "isr", BX_LAPIC_MAX_INTS);
-  bx_list_c *TMR = new bx_list_c(lapic, "tmr", BX_LAPIC_MAX_INTS);
-  bx_list_c *IRR = new bx_list_c(lapic, "irr", BX_LAPIC_MAX_INTS);
+  bx_list_c *ISR = new bx_list_c(lapic, "isr");
+  bx_list_c *TMR = new bx_list_c(lapic, "tmr");
+  bx_list_c *IRR = new bx_list_c(lapic, "irr");
   for (i=0; i<BX_LAPIC_MAX_INTS; i++) {
     sprintf(name, "0x%02x", i);
     new bx_shadow_num_c(ISR, name, &isr[i]);
@@ -1427,7 +1427,7 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
 #if BX_CPU_LEVEL >= 6
   if (cpu->bx_cpuid_support_xapic_extensions()) {
     BXRS_HEX_PARAM_SIMPLE(lapic, xapic_ext);
-    bx_list_c *IER = new bx_list_c(lapic, "ier", BX_LAPIC_MAX_INTS);
+    bx_list_c *IER = new bx_list_c(lapic, "ier");
     for (i=0; i<BX_LAPIC_MAX_INTS; i++) {
       sprintf(name, "0x%02x", i);
       new bx_shadow_num_c(IER, name, &ier[i]);
@@ -1440,7 +1440,7 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
   BXRS_HEX_PARAM_SIMPLE(lapic, icr_hi);
   BXRS_HEX_PARAM_SIMPLE(lapic, icr_lo);
 
-  bx_list_c *LVT = new bx_list_c(lapic, "lvt", APIC_LVT_ENTRIES);
+  bx_list_c *LVT = new bx_list_c(lapic, "lvt");
   for (i=0; i<APIC_LVT_ENTRIES; i++) {
     sprintf(name, "%d", i);
     new bx_shadow_num_c(LVT, name, &lvt[i], BASE_HEX);

@@ -373,35 +373,35 @@ void bx_svga_cirrus_c::register_state(void)
   bx_list_c *reg;
 
   if (!strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "cirrus")) {
-    bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "svga_cirrus", "Cirrus SVGA State", 18);
+    bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "svga_cirrus", "Cirrus SVGA State");
     bx_vgacore_c::register_state(list);
-    bx_list_c *crtc = new bx_list_c(list, "crtc", 2);
+    bx_list_c *crtc = new bx_list_c(list, "crtc");
     new bx_shadow_num_c(crtc, "index", &BX_CIRRUS_THIS crtc.index, BASE_HEX);
-    reg = new bx_list_c(crtc, "reg", CIRRUS_CRTC_MAX+1);
+    reg = new bx_list_c(crtc, "reg");
     for (i=0; i<=CIRRUS_CRTC_MAX; i++) {
       sprintf(name, "0x%02x", i);
       new bx_shadow_num_c(reg, name, &BX_CIRRUS_THIS crtc.reg[i], BASE_HEX);
     }
-    bx_list_c *sequ = new bx_list_c(list, "sequencer", 2);
+    bx_list_c *sequ = new bx_list_c(list, "sequencer");
     new bx_shadow_num_c(sequ, "index", &BX_CIRRUS_THIS sequencer.index, BASE_HEX);
-    reg = new bx_list_c(sequ, "reg", CIRRUS_SEQENCER_MAX+1);
+    reg = new bx_list_c(sequ, "reg");
     for (i=0; i<=CIRRUS_SEQENCER_MAX; i++) {
       sprintf(name, "0x%02x", i);
       new bx_shadow_num_c(reg, name, &BX_CIRRUS_THIS sequencer.reg[i], BASE_HEX);
     }
-    bx_list_c *ctrl = new bx_list_c(list, "control", 4);
+    bx_list_c *ctrl = new bx_list_c(list, "control");
     new bx_shadow_num_c(ctrl, "index", &BX_CIRRUS_THIS control.index, BASE_HEX);
-    reg = new bx_list_c(ctrl, "reg", CIRRUS_CONTROL_MAX+1);
+    reg = new bx_list_c(ctrl, "reg");
     for (i=0; i<=CIRRUS_CONTROL_MAX; i++) {
       sprintf(name, "0x%02x", i);
       new bx_shadow_num_c(reg, name, &BX_CIRRUS_THIS control.reg[i], BASE_HEX);
     }
     new bx_shadow_num_c(ctrl, "shadow_reg0", &BX_CIRRUS_THIS control.shadow_reg0, BASE_HEX);
     new bx_shadow_num_c(ctrl, "shadow_reg1", &BX_CIRRUS_THIS control.shadow_reg1, BASE_HEX);
-    bx_list_c *hdac = new bx_list_c(list, "hidden_dac", 3);
+    bx_list_c *hdac = new bx_list_c(list, "hidden_dac");
     new bx_shadow_num_c(hdac, "lockindex", &BX_CIRRUS_THIS hidden_dac.lockindex, BASE_HEX);
     new bx_shadow_num_c(hdac, "data", &BX_CIRRUS_THIS hidden_dac.data, BASE_HEX);
-    reg = new bx_list_c(hdac, "palette", 48);
+    reg = new bx_list_c(hdac, "palette");
     for (i=0; i<48; i++) {
       sprintf(name, "0x%02x", i);
       new bx_shadow_num_c(reg, name, &BX_CIRRUS_THIS hidden_dac.palette[i], BASE_HEX);
@@ -416,7 +416,7 @@ void bx_svga_cirrus_c::register_state(void)
     new bx_shadow_num_c(list, "bank_base1", &BX_CIRRUS_THIS bank_base[1], BASE_HEX);
     new bx_shadow_num_c(list, "bank_limit0", &BX_CIRRUS_THIS bank_limit[0], BASE_HEX);
     new bx_shadow_num_c(list, "bank_limit1", &BX_CIRRUS_THIS bank_limit[1], BASE_HEX);
-    bx_list_c *cursor = new bx_list_c(list, "hw_cursor", 3);
+    bx_list_c *cursor = new bx_list_c(list, "hw_cursor");
     new bx_shadow_num_c(cursor, "x", &BX_CIRRUS_THIS hw_cursor.x, BASE_HEX);
     new bx_shadow_num_c(cursor, "y", &BX_CIRRUS_THIS hw_cursor.y, BASE_HEX);
     new bx_shadow_num_c(cursor, "size", &BX_CIRRUS_THIS hw_cursor.size, BASE_HEX);

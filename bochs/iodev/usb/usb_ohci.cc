@@ -405,8 +405,8 @@ void bx_usb_ohci_c::register_state(void)
   bx_list_c *hub, *port, *reg;
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "usb_ohci", "USB OHCI State");
-  hub = new bx_list_c(list, "hub", 25);
-  reg = new bx_list_c(hub, "HcControl", 9);
+  hub = new bx_list_c(list, "hub");
+  reg = new bx_list_c(hub, "HcControl");
   new bx_shadow_bool_c(reg, "rwe", &BX_OHCI_THIS hub.op_regs.HcControl.rwe);
   new bx_shadow_bool_c(reg, "rwc", &BX_OHCI_THIS hub.op_regs.HcControl.rwc);
   new bx_shadow_bool_c(reg, "ir", &BX_OHCI_THIS hub.op_regs.HcControl.ir);
@@ -416,7 +416,7 @@ void bx_usb_ohci_c::register_state(void)
   new bx_shadow_bool_c(reg, "ie", &BX_OHCI_THIS hub.op_regs.HcControl.ie);
   new bx_shadow_bool_c(reg, "ple", &BX_OHCI_THIS hub.op_regs.HcControl.ple);
   new bx_shadow_num_c(reg, "cbsr", &BX_OHCI_THIS hub.op_regs.HcControl.cbsr);
-  reg = new bx_list_c(hub, "HcCommandStatus", 5);
+  reg = new bx_list_c(hub, "HcCommandStatus");
   new bx_shadow_num_c(reg, "soc", &BX_OHCI_THIS hub.op_regs.HcCommandStatus.soc);
   new bx_shadow_bool_c(reg, "ocr", &BX_OHCI_THIS hub.op_regs.HcCommandStatus.ocr);
   new bx_shadow_bool_c(reg, "blf", &BX_OHCI_THIS hub.op_regs.HcCommandStatus.blf);
@@ -431,14 +431,14 @@ void bx_usb_ohci_c::register_state(void)
   new bx_shadow_num_c(hub, "HcBulkHeadED", &BX_OHCI_THIS hub.op_regs.HcBulkHeadED, BASE_HEX);
   new bx_shadow_num_c(hub, "HcBulkCurrentED", &BX_OHCI_THIS hub.op_regs.HcBulkCurrentED, BASE_HEX);
   new bx_shadow_num_c(hub, "HcDoneHead", &BX_OHCI_THIS hub.op_regs.HcDoneHead, BASE_HEX);
-  reg = new bx_list_c(hub, "HcFmInterval", 3);
+  reg = new bx_list_c(hub, "HcFmInterval");
   new bx_shadow_bool_c(reg, "fit", &BX_OHCI_THIS hub.op_regs.HcFmInterval.fit);
   new bx_shadow_num_c(reg, "fsmps", &BX_OHCI_THIS hub.op_regs.HcFmInterval.fsmps);
   new bx_shadow_num_c(reg, "fi", &BX_OHCI_THIS hub.op_regs.HcFmInterval.fi, BASE_HEX);
   new bx_shadow_bool_c(hub, "HcFmRemainingToggle", &BX_OHCI_THIS hub.op_regs.HcFmRemainingToggle);
   new bx_shadow_num_c(hub, "HcFmNumber", &BX_OHCI_THIS hub.op_regs.HcFmNumber, BASE_HEX);
   new bx_shadow_num_c(hub, "HcPeriodicStart", &BX_OHCI_THIS hub.op_regs.HcPeriodicStart, BASE_HEX);
-  reg = new bx_list_c(hub, "HcRhDescriptorA", 7);
+  reg = new bx_list_c(hub, "HcRhDescriptorA");
   new bx_shadow_num_c(reg, "potpgt", &BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.potpgt, BASE_HEX);
   new bx_shadow_bool_c(reg, "nocp", &BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.nocp);
   new bx_shadow_bool_c(reg, "ocpm", &BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.ocpm);
@@ -446,10 +446,10 @@ void bx_usb_ohci_c::register_state(void)
   new bx_shadow_bool_c(reg, "nps", &BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.nps);
   new bx_shadow_bool_c(reg, "psm", &BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.psm);
   new bx_shadow_num_c(reg, "ndp", &BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.ndp);
-  reg = new bx_list_c(hub, "HcRhDescriptorB", 2);
+  reg = new bx_list_c(hub, "HcRhDescriptorB");
   new bx_shadow_num_c(reg, "ppcm", &BX_OHCI_THIS hub.op_regs.HcRhDescriptorB.ppcm, BASE_HEX);
   new bx_shadow_num_c(reg, "dr", &BX_OHCI_THIS hub.op_regs.HcRhDescriptorB.dr, BASE_HEX);
-  reg = new bx_list_c(hub, "HcRhStatus", 6);
+  reg = new bx_list_c(hub, "HcRhStatus");
   new bx_shadow_bool_c(reg, "crwe", &BX_OHCI_THIS hub.op_regs.HcRhStatus.crwe);
   new bx_shadow_bool_c(reg, "ocic", &BX_OHCI_THIS hub.op_regs.HcRhStatus.ocic);
   new bx_shadow_bool_c(reg, "lpsc", &BX_OHCI_THIS hub.op_regs.HcRhStatus.lpsc);
@@ -458,8 +458,8 @@ void bx_usb_ohci_c::register_state(void)
   new bx_shadow_bool_c(reg, "lps", &BX_OHCI_THIS hub.op_regs.HcRhStatus.lps);
   for (i=0; i<BX_N_USB_OHCI_PORTS; i++) {
     sprintf(portnum, "port%d", i+1);
-    port = new bx_list_c(hub, portnum, 2);
-    reg = new bx_list_c(port, "HcRhPortStatus", 12);
+    port = new bx_list_c(hub, portnum);
+    reg = new bx_list_c(port, "HcRhPortStatus");
     new bx_shadow_bool_c(reg, "prsc", &BX_OHCI_THIS hub.usb_port[i].HcRhPortStatus.prsc);
     new bx_shadow_bool_c(reg, "ocic", &BX_OHCI_THIS hub.usb_port[i].HcRhPortStatus.ocic);
     new bx_shadow_bool_c(reg, "pssc", &BX_OHCI_THIS hub.usb_port[i].HcRhPortStatus.pssc);
@@ -473,7 +473,7 @@ void bx_usb_ohci_c::register_state(void)
     new bx_shadow_bool_c(reg, "pes", &BX_OHCI_THIS hub.usb_port[i].HcRhPortStatus.pes);
     new bx_shadow_bool_c(reg, "ccs", &BX_OHCI_THIS hub.usb_port[i].HcRhPortStatus.ccs);
     // empty list for USB device state
-    new bx_list_c(port, "device", 20);
+    new bx_list_c(port, "device");
   }
   new bx_shadow_num_c(hub, "ohci_done_count", &BX_OHCI_THIS hub.ohci_done_count, BASE_DEC);
   new bx_shadow_bool_c(hub, "use_control_head", &BX_OHCI_THIS hub.use_control_head);

@@ -277,8 +277,8 @@ void bx_usb_uhci_c::register_state(void)
   bx_list_c *hub, *usb_cmd, *usb_st, *usb_en, *port;
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "usb_uhci", "USB UHCI State");
-  hub = new bx_list_c(list, "hub", BX_N_USB_UHCI_PORTS + 7);
-  usb_cmd = new bx_list_c(hub, "usb_command", 8);
+  hub = new bx_list_c(list, "hub");
+  usb_cmd = new bx_list_c(hub, "usb_command");
   new bx_shadow_bool_c(usb_cmd, "max_packet_size", &BX_UHCI_THIS hub.usb_command.max_packet_size);
   new bx_shadow_bool_c(usb_cmd, "configured", &BX_UHCI_THIS hub.usb_command.configured);
   new bx_shadow_bool_c(usb_cmd, "debug", &BX_UHCI_THIS hub.usb_command.debug);
@@ -287,14 +287,14 @@ void bx_usb_uhci_c::register_state(void)
   new bx_shadow_bool_c(usb_cmd, "reset", &BX_UHCI_THIS hub.usb_command.reset);
   new bx_shadow_bool_c(usb_cmd, "host_reset", &BX_UHCI_THIS hub.usb_command.host_reset);
   new bx_shadow_bool_c(usb_cmd, "schedule", &BX_UHCI_THIS hub.usb_command.schedule);
-  usb_st = new bx_list_c(hub, "usb_status", 6);
+  usb_st = new bx_list_c(hub, "usb_status");
   new bx_shadow_bool_c(usb_st, "host_halted", &BX_UHCI_THIS hub.usb_status.host_halted);
   new bx_shadow_bool_c(usb_st, "host_error", &BX_UHCI_THIS hub.usb_status.host_error);
   new bx_shadow_bool_c(usb_st, "pci_error", &BX_UHCI_THIS hub.usb_status.pci_error);
   new bx_shadow_bool_c(usb_st, "resume", &BX_UHCI_THIS hub.usb_status.resume);
   new bx_shadow_bool_c(usb_st, "error_interrupt", &BX_UHCI_THIS hub.usb_status.error_interrupt);
   new bx_shadow_bool_c(usb_st, "interrupt", &BX_UHCI_THIS hub.usb_status.interrupt);
-  usb_en = new bx_list_c(hub, "usb_enable", 4);
+  usb_en = new bx_list_c(hub, "usb_enable");
   new bx_shadow_bool_c(usb_en, "short_packet", &BX_UHCI_THIS hub.usb_enable.short_packet);
   new bx_shadow_bool_c(usb_en, "on_complete", &BX_UHCI_THIS hub.usb_enable.on_complete);
   new bx_shadow_bool_c(usb_en, "resume", &BX_UHCI_THIS hub.usb_enable.resume);
@@ -304,7 +304,7 @@ void bx_usb_uhci_c::register_state(void)
   new bx_shadow_num_c(hub, "sof_timing", &BX_UHCI_THIS hub.usb_sof.sof_timing, BASE_HEX);
   for (j=0; j<BX_N_USB_UHCI_PORTS; j++) {
     sprintf(portnum, "port%d", j+1);
-    port = new bx_list_c(hub, portnum, 11);
+    port = new bx_list_c(hub, portnum);
     new bx_shadow_bool_c(port, "suspend", &BX_UHCI_THIS hub.usb_port[j].suspend);
     new bx_shadow_bool_c(port, "reset", &BX_UHCI_THIS hub.usb_port[j].reset);
     new bx_shadow_bool_c(port, "low_speed", &BX_UHCI_THIS hub.usb_port[j].low_speed);
@@ -316,7 +316,7 @@ void bx_usb_uhci_c::register_state(void)
     new bx_shadow_bool_c(port, "connect_changed", &BX_UHCI_THIS hub.usb_port[j].connect_changed);
     new bx_shadow_bool_c(port, "status", &BX_UHCI_THIS hub.usb_port[j].status);
     // empty list for USB device state
-    new bx_list_c(port, "device", 20);
+    new bx_list_c(port, "device");
   }
   register_pci_state(hub);
 

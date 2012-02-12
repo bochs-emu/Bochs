@@ -813,16 +813,19 @@ void bx_param_string_c::text_print(FILE *fp)
 
 void bx_list_c::text_print(FILE *fp)
 {
+  bx_listitem_t *item;
+  int i = 0;
+
   fprintf(fp, "%s: ", get_name());
-  for (int i=0; i<size; i++) {
-    assert(list[i] != NULL);
-    if (list[i]->get_enabled()) {
-      if ((i>0) && (options & SERIES_ASK))
+  for (item = list; item; item = item->next) {
+    if (item->param->get_enabled()) {
+      if ((i > 0) && (options & SERIES_ASK))
         fprintf(fp, ", ");
-      list[i]->text_print(fp);
+      item->param->text_print(fp);
       if (!(options & SERIES_ASK))
         fprintf(fp, "\n");
     }
+    i++;
   }
 }
 
@@ -943,8 +946,8 @@ int bx_param_string_c::text_ask(FILE *fpin, FILE *fpout)
       // copy raw hex into buffer
       status = parse_raw_bytes(buffer, buffer2, maxsize, separator);
       if (status < 0) {
-	fprintf(fpout, "Illegal raw byte format.  I expected something like 3A%c03%c12%c...\n", separator, separator, separator);
-	continue;
+        fprintf(fpout, "Illegal raw byte format.  I expected something like 3A%c03%c12%c...\n", separator, separator, separator);
+        continue;
       }
     }
     if (!equals(buffer))
@@ -955,6 +958,7 @@ int bx_param_string_c::text_ask(FILE *fpin, FILE *fpout)
 
 int bx_list_c::text_ask(FILE *fpin, FILE *fpout)
 {
+  bx_listitem_t *item;
   bx_list_c *child;
 
   const char *my_title = title;
@@ -965,38 +969,39 @@ int bx_list_c::text_ask(FILE *fpin, FILE *fpout)
   for (i=0; i<imax; i++) fprintf(fpout, "-");
   fprintf(fpout, "\n");
   if (options & SERIES_ASK) {
-    for (int i=0; i<size; i++) {
-      if (list[i]->get_enabled()) {
-        if (!SIM->get_init_done() || list[i]->get_runtime_param()) {
-          list[i]->text_ask(fpin, fpout);
+    for (item = list; item; item = item->next) {
+      if (item->param->get_enabled()) {
+        if (!SIM->get_init_done() || item->param->get_runtime_param()) {
+          item->param->text_ask(fpin, fpout);
         }
       }
     }
   } else {
     if (options & SHOW_PARENT)
       fprintf(fpout, "0. Return to previous menu\n");
-    for (int i=0; i<size; i++) {
-      assert(list[i] != NULL);
+    int i = 0;
+    for (item = list; item; item = item->next) {
       fprintf(fpout, "%d. ", i+1);
-      if ((list[i]->get_enabled()) &&
-          (!SIM->get_init_done() || list[i]->get_runtime_param())) {
-        if (list[i]->get_type() == BXT_LIST) {
-          child = (bx_list_c*)list[i];
+      if ((item->param->get_enabled()) &&
+          (!SIM->get_init_done() || item->param->get_runtime_param())) {
+        if (item->param->get_type() == BXT_LIST) {
+          child = (bx_list_c*)item->param;
           fprintf(fpout, "%s\n", child->get_title());
         } else {
-          if ((options & SHOW_GROUP_NAME) && (list[i]->get_group() != NULL))
-            fprintf(fpout, "%s ", list[i]->get_group());
-          list[i]->text_print(fpout);
+          if ((options & SHOW_GROUP_NAME) && (item->param->get_group() != NULL))
+            fprintf(fpout, "%s ", item->param->get_group());
+          item->param->text_print(fpout);
           fprintf(fpout, "\n");
         }
       } else {
-        if (list[i]->get_type() == BXT_LIST) {
-          child = (bx_list_c*)list[i];
+        if (item->param->get_type() == BXT_LIST) {
+          child = (bx_list_c*)item->param;
           fprintf(fpout, "%s (disabled)\n", child->get_title());
         } else {
           fprintf(fpout, "(disabled)\n");
         }
       }
+      i++;
     }
     fprintf(fpout, "\n");
     int min = (options & SHOW_PARENT) ? 0 : 1;
