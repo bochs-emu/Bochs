@@ -581,7 +581,7 @@ void bx_hard_drive_c::register_state(void)
     chan = new bx_list_c(list, cname);
     for (j=0; j<2; j++) {
       if (BX_DRIVE_IS_PRESENT(i, j)) {
-        sprintf(dname, "drive%d", i);
+        sprintf(dname, "drive%d", j);
         drive = new bx_list_c(chan, dname);
         new bx_shadow_data_c(drive, "buffer", BX_CONTROLLER(i, j).buffer, MAX_MULTIPLE_SECTORS * 512);
         status = new bx_list_c(drive, "status");

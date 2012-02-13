@@ -208,6 +208,7 @@ void bx_param_num_c::set_sr_handlers(void *devptr, param_save_handler save, para
 void bx_param_num_c::set_dependent_list(bx_list_c *l)
 {
   dependent_list = l;
+  l->set_deplist(1);
   update_dependents();
 }
 
@@ -603,6 +604,7 @@ bx_bool bx_param_enum_c::set_by_name(const char *string)
 void bx_param_enum_c::set_dependent_list(bx_list_c *l, bx_bool enable_all)
 {
   dependent_list = l;
+  l->set_deplist(1);
   deps_bitmap = (Bit64u*)malloc((size_t)(sizeof(Bit64u) * (max - min + 1)));
   for (int i=0; i<(max-min+1); i++) {
     if (enable_all) {
@@ -751,6 +753,7 @@ void bx_param_string_c::set_enabled(int en)
 void bx_param_string_c::set_dependent_list(bx_list_c *l)
 {
   dependent_list = l;
+  l->set_deplist(1);
   update_dependents();
 }
 
@@ -864,6 +867,7 @@ bx_list_c::bx_list_c(bx_param_c *parent)
   this->size = 0;
   this->list = NULL;
   this->parent = NULL;
+  this->deplist = 0;
   if (parent) {
     BX_ASSERT(parent->get_type() == BXT_LIST);
     this->parent = (bx_list_c *)parent;
@@ -879,6 +883,7 @@ bx_list_c::bx_list_c(bx_param_c *parent, const char *name)
   this->size = 0;
   this->list = NULL;
   this->parent = NULL;
+  this->deplist = 0;
   if (parent) {
     BX_ASSERT(parent->get_type() == BXT_LIST);
     this->parent = (bx_list_c *)parent;
@@ -894,6 +899,7 @@ bx_list_c::bx_list_c(bx_param_c *parent, const char *name, const char *title)
   this->size = 0;
   this->list = NULL;
   this->parent = NULL;
+  this->deplist = 0;
   if (parent) {
     BX_ASSERT(parent->get_type() == BXT_LIST);
     this->parent = (bx_list_c *)parent;
@@ -911,6 +917,7 @@ bx_list_c::bx_list_c(bx_param_c *parent, const char *name, const char *title, bx
   while (init_list[this->size] != NULL)
     add(init_list[this->size]);
   this->parent = NULL;
+  this->deplist = 0;
   if (parent) {
     BX_ASSERT(parent->get_type() == BXT_LIST);
     this->parent = (bx_list_c *)parent;
@@ -969,7 +976,15 @@ void bx_list_c::add(bx_param_c *param)
 {
   bx_listitem_t *item;
 
+  if (!deplist && (get_by_name(param->get_name()) != NULL) && (param->get_parent() == this)) {
+    BX_PANIC(("parameter '%s' already exists in list '%s'", param->get_name(), this->get_name()));
+    return;
+  }
   item = (bx_listitem_t*) malloc(sizeof(bx_listitem_t));
+  if (item == NULL) {
+    BX_PANIC(("bx_list_c::add(): malloc() failed"));
+    return;
+  }
   item->param = param;
   item->next = NULL;
   if (list == NULL) {
