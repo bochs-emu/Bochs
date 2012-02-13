@@ -47,6 +47,9 @@ BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
 #if BX_SUPPORT_VMX
   vmx_extensions_bitmask = 0;
 #endif
+#if BX_SUPPORT_SVM
+  svm_extensions_bitmask = 0;
+#endif
 }
 
 #if BX_WITH_WX
@@ -194,6 +197,9 @@ void BX_CPU_C::initialize(void)
   BX_CPU_THIS_PTR cpu_extensions_bitmask = cpuid->get_cpu_extensions_bitmask();
 #if BX_SUPPORT_VMX
   BX_CPU_THIS_PTR vmx_extensions_bitmask = cpuid->get_vmx_extensions_bitmask();
+#endif
+#if BX_SUPPORT_SVM
+  BX_CPU_THIS_PTR svm_extensions_bitmask = cpuid->get_svm_extensions_bitmask();
 #endif
 #endif
 
@@ -362,6 +368,9 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_SIMPLE(cpu, cpu_extensions_bitmask);
 #if BX_SUPPORT_VMX
   BXRS_HEX_PARAM_SIMPLE(cpu, vmx_extensions_bitmask);
+#endif
+#if BX_SUPPORT_SVM
+  BXRS_HEX_PARAM_SIMPLE(cpu, svm_extensions_bitmask);
 #endif
   BXRS_DEC_PARAM_SIMPLE(cpu, cpu_mode);
   BXRS_HEX_PARAM_SIMPLE(cpu, activity_state);
