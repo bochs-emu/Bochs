@@ -3942,9 +3942,11 @@ public: // for now...
   // linear address for translate_linear expected to be canonical !
   BX_SMF bx_phy_address translate_linear(bx_address laddr, unsigned user, unsigned rw);
   BX_SMF bx_phy_address translate_linear_legacy(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned user, unsigned rw);
+  BX_SMF void update_access_dirty(bx_phy_address *entry_addr, Bit32u *entry, unsigned leaf, bx_bool write);
 #if BX_CPU_LEVEL >= 6
   BX_SMF bx_phy_address translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned user, unsigned rw);
   BX_SMF int check_entry_PAE(const char *s, Bit64u entry, unsigned rw, bx_bool *nx_fault);
+  BX_SMF void update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry, unsigned max_level, unsigned leaf, bx_bool write);
 #endif
 #if BX_SUPPORT_X86_64
   BX_SMF bx_phy_address translate_linear_long_mode(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned user, unsigned rw);

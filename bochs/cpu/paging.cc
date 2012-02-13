@@ -164,6 +164,7 @@
 // ==============================================
 // There is one column for the combined effect on a 386
 // and one column for the combined effect on a 486+ CPU.
+// The 386 CPU behavior is not supported by Bochs.
 //
 // +----------------+-----------------+----------------+----------------+
 // |  Page Directory|     Page Table  |   Combined 386 |  Combined 486+ |
@@ -644,19 +645,19 @@ static const char *bx_paging_level[4] = { "PTE", "PDE", "PDPE", "PML4" }; // kee
 int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, unsigned rw, bx_bool *nx_fault)
 {
   if (!(entry & 0x1)) {
-    BX_DEBUG(("%s: entry not present", s));
+    BX_DEBUG(("PAE %s: entry not present", s));
     return ERROR_NOT_PRESENT;
   }
 
   if (entry & PAGING_PAE_RESERVED_BITS) {
-    BX_DEBUG(("%s: reserved bit is set %08x:%08x", s, GET32H(entry), GET32L(entry)));
+    BX_DEBUG(("PAE %s: reserved bit is set %08x:%08x", s, GET32H(entry), GET32L(entry)));
     return ERROR_RESERVED | ERROR_PROTECTION;
   }
 
 #if BX_SUPPORT_X86_64
   if (! long_mode()) {
     if (entry & BX_CONST64(0x7ff0000000000000)) {
-      BX_DEBUG(("%s: reserved bit is set %08x:%08x", s, GET32H(entry), GET32L(entry)));
+      BX_DEBUG(("PAE %s: reserved bit is set %08x:%08x", s, GET32H(entry), GET32L(entry)));
       return ERROR_RESERVED | ERROR_PROTECTION;
     }
   }
@@ -664,11 +665,11 @@ int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, unsigned rw, bx_bool 
 
   if (entry & PAGE_DIRECTORY_NX_BIT) {
     if (! BX_CPU_THIS_PTR efer.get_NXE()) {
-      BX_DEBUG(("%s: NX bit set when EFER.NXE is disabled", s));
+      BX_DEBUG(("PAE %s: NX bit set when EFER.NXE is disabled", s));
       return ERROR_RESERVED | ERROR_PROTECTION;
     }
     if (rw == BX_EXECUTE) {
-      BX_DEBUG(("%s: non-executable page fault occured", s));
+      BX_DEBUG(("PAE %s: non-executable page fault occured", s));
       *nx_fault = 1;
     }
   }
@@ -688,6 +689,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
   int leaf;
 
   Bit64u offset_mask = BX_CONST64(0x0000ffffffffffff);
+  lpf_mask = 0xfff;
   combined_access = 0x06;
 
   for (leaf = BX_LEVEL_PML4;; --leaf) {
@@ -714,7 +716,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
 
     if (curr_entry & 0x80) {
       if (leaf > (BX_LEVEL_PDE + !!bx_cpuid_support_1g_paging())) {
-        BX_DEBUG(("%s: PS bit set !", bx_paging_level[leaf]));
+        BX_DEBUG(("PAE %s: PS bit set !", bx_paging_level[leaf]));
         page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, user, rw);
       }
 
@@ -748,8 +750,18 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
   if (BX_CPU_THIS_PTR cr4.get_PGE())
     combined_access |= (entry[leaf] & 0x100); // G
 
+  // Update A/D bits if needed
+  update_access_dirty_PAE(entry_addr, entry, BX_LEVEL_PML4, leaf, isWrite);
+
+  return ppf;
+}
+
+#endif
+
+void BX_CPU_C::update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry, unsigned max_level, unsigned leaf, bx_bool write)
+{
   // Update A bit if needed
-  for (int level=BX_LEVEL_PML4; level > leaf; level--) {
+  for (unsigned level=max_level; level > leaf; level--) {
     if (!(entry[level] & 0x20)) {
       entry[level] |= 0x20;
       access_write_physical(entry_addr[level], 8, &entry[level]);
@@ -759,17 +771,13 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
   }
 
   // Update A/D bits if needed
-  if (!(entry[leaf] & 0x20) || (isWrite && !(entry[leaf] & 0x40))) {
-    entry[leaf] |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
+  if (!(entry[leaf] & 0x20) || (write && !(entry[leaf] & 0x40))) {
+    entry[leaf] |= (0x20 | (write<<6)); // Update A and possibly D bits
     access_write_physical(entry_addr[leaf], 8, &entry[leaf]);
     BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, BX_WRITE,
             (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
   }
-
-  return ppf;
 }
-
-#endif
 
 //          Format of Legacy PAE PDPTR entry (PDPTE)
 // -----------------------------------------------------------
@@ -920,23 +928,8 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
   if (BX_CPU_THIS_PTR cr4.get_PGE())
     combined_access |= (entry[leaf] & 0x100);     // G
 
-  if (leaf == BX_LEVEL_PTE) {
-    // Update PDE A bit if needed
-    if (!(entry[BX_LEVEL_PDE] & 0x20)) {
-      entry[BX_LEVEL_PDE] |= 0x20;
-      access_write_physical(entry_addr[BX_LEVEL_PDE], 8, &entry[BX_LEVEL_PDE]);
-      BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[BX_LEVEL_PDE], 8, BX_WRITE,
-             BX_PDE_ACCESS, (Bit8u*)(&entry[BX_LEVEL_PDE]));
-    }
-  }
-
   // Update A/D bits if needed
-  if (!(entry[leaf] & 0x20) || (isWrite && !(entry[leaf] & 0x40))) {
-    entry[leaf] |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
-    access_write_physical(entry_addr[leaf], 8, &entry[leaf]);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, BX_WRITE,
-             (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
-  }
+  update_access_dirty_PAE(entry_addr, entry, BX_LEVEL_PDE, leaf, isWrite);
 
   return ppf;
 }
@@ -1037,6 +1030,13 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
     combined_access |= (entry[leaf] & 0x100); // G
 #endif
 
+  update_access_dirty(entry_addr, entry, leaf, isWrite);
+
+  return ppf;
+}
+
+void BX_CPU_C::update_access_dirty(bx_phy_address *entry_addr, Bit32u *entry, unsigned leaf, bx_bool write)
+{
   if (leaf == BX_LEVEL_PTE) {
     // Update PDE A bit if needed
     if (!(entry[BX_LEVEL_PDE] & 0x20)) {
@@ -1047,14 +1047,12 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
   }
 
   // Update A/D bits if needed
-  if (!(entry[leaf] & 0x20) || (isWrite && !(entry[leaf] & 0x40))) {
-    entry[leaf] |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
+  if (!(entry[leaf] & 0x20) || (write && !(entry[leaf] & 0x40))) {
+    entry[leaf] |= (0x20 | (write<<6)); // Update A and possibly D bits
     access_write_physical(entry_addr[leaf], 4, &entry[leaf]);
     BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 4, BX_WRITE,
              (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
   }
-
-  return ppf;
 }
 
 // Translate a linear address to a physical address
@@ -1479,19 +1477,12 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx
         pt_address = bx_phy_address(pte & BX_CONST64(0x000ffffffffff000));
         if (level == BX_LEVEL_PTE) break;
         if (pte & 0x80) {
-          // 2M page
+          // large page
           pt_address &= BX_CONST64(0x000fffffffffe000);
-          if (level == BX_LEVEL_PDE) {
-            if (pt_address & offset_mask)
-              goto page_fault;
-            break;
-          }
-          // 1G page
-          if (bx_cpuid_support_1g_paging() && level == BX_LEVEL_PDPTE && long_mode()) {
-            if (pt_address & offset_mask)
-              goto page_fault;
-            break;
-          }
+          if (pt_address & offset_mask)
+            goto page_fault;
+          if (bx_cpuid_support_1g_paging() && level == BX_LEVEL_PDPTE && long_mode()) break;
+          if (level == BX_LEVEL_PDE) break;
           goto page_fault;
         }
       }
