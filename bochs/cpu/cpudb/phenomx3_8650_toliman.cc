@@ -23,24 +23,30 @@
 
 #include "bochs.h"
 #include "cpu.h"
-#include "turion64_tyler.h"
+#include "phenomx3_8650_toliman.h"
 
 #define LOG_THIS cpu->
 
 #if BX_SUPPORT_X86_64
 
-turion64_tyler_t::turion64_tyler_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
+phenom_8650_toliman_t::phenom_8650_toliman_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
   if (! BX_SUPPORT_X86_64)
-    BX_PANIC(("You must enable x86-64 for Turion64 configuration"));
+    BX_PANIC(("You must enable x86-64 for Phenom X3 8650 (Toliman) configuration"));
 
   BX_INFO(("WARNING: 3DNow! is not implemented yet !"));
 
+  if (! BX_SUPPORT_MISALIGNED_SSE)
+    BX_INFO(("WARNING: Misaligned SSE support is not compiled in !"));
+
   if (! BX_SUPPORT_SVM)
-    BX_INFO(("WARNING: SVM Support is not compiled in !"));
+    BX_INFO(("WARNING: SVM support is not compiled in !"));
+
+  if (! BX_SUPPORT_MONITOR_MWAIT)
+    BX_INFO(("WARNING: MONITOR/MWAIT support is not compiled in !"));
 }
 
-void turion64_tyler_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void phenom_8650_toliman_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   switch(function) {
   case 0x80000000:
@@ -71,19 +77,30 @@ void turion64_tyler_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid
     get_ext_cpuid_leaf_A(leaf);
     return;
 #endif
+  case 0x80000019:
+    get_ext_cpuid_leaf_19(leaf);
+    return;
+  case 0x8000001A:
+    get_ext_cpuid_leaf_1A(leaf);
+    return;
   case 0x00000000:
     get_std_cpuid_leaf_0(leaf);
     return;
   case 0x00000001:
     get_std_cpuid_leaf_1(leaf);
     return;
+#if BX_SUPPORT_MONITOR_MWAIT
+  case 0x00000005:
+    get_std_cpuid_leaf_5(leaf);
+    return;
+#endif
   default:
     get_reserved_leaf(leaf);
     return;
   }
 }
 
-Bit64u turion64_tyler_t::get_isa_extensions_bitmask(void) const
+Bit64u phenom_8650_toliman_t::get_isa_extensions_bitmask(void) const
 {
   return BX_ISA_X87 |
          BX_ISA_486 |
@@ -97,7 +114,13 @@ Bit64u turion64_tyler_t::get_isa_extensions_bitmask(void) const
          BX_ISA_SSE |
          BX_ISA_SSE2 |
          BX_ISA_SSE3 |
+#if BX_SUPPORT_MONITOR_MWAIT
+         BX_ISA_MONITOR_MWAIT |
+#endif
          BX_ISA_CMPXCHG16B |
+         BX_ISA_POPCNT |
+         BX_ISA_LZCNT |
+         BX_ISA_SSE4A |
          BX_ISA_LM_LAHF_SAHF |
 #if BX_SUPPORT_SVM
          BX_ISA_SVM |
@@ -105,7 +128,7 @@ Bit64u turion64_tyler_t::get_isa_extensions_bitmask(void) const
          BX_ISA_RDTSCP;
 }
 
-Bit32u turion64_tyler_t::get_cpu_extensions_bitmask(void) const
+Bit32u phenom_8650_toliman_t::get_cpu_extensions_bitmask(void) const
 {
   return BX_CPU_DEBUG_EXTENSIONS |
          BX_CPU_VME |
@@ -119,12 +142,15 @@ Bit32u turion64_tyler_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_LONG_MODE |
          BX_CPU_NX |
          BX_CPU_FFXSR |
+#if BX_SUPPORT_MISALIGNED_SSE
+         BX_CPU_MISALIGNED_SSE |
+#endif
          BX_CPU_ALT_MOV_CR8 |
          BX_CPU_XAPIC_EXT;
 }
 
 // leaf 0x00000000 //
-void turion64_tyler_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
+void phenom_8650_toliman_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   static const char* vendor_string = "AuthenticAMD";
 
@@ -132,7 +158,11 @@ void turion64_tyler_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
   // EBX: vendor ID string
   // EDX: vendor ID string
   // ECX: vendor ID string
+#if BX_SUPPORT_MONITOR_MWAIT
+  leaf->eax = 0x5;
+#else
   leaf->eax = 0x1;
+#endif
 
   // CPUID vendor string (e.g. GenuineIntel, AuthenticAMD, CentaurHauls, ...)
   memcpy(&(leaf->ebx), vendor_string,     4);
@@ -146,7 +176,7 @@ void turion64_tyler_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 }
 
 // leaf 0x00000001 //
-void turion64_tyler_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
+void phenom_8650_toliman_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information
   //   [3:0]   Stepping ID
@@ -155,7 +185,7 @@ void turion64_tyler_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
   //   [19:16] Extended Model
   //   [27:20] Extended Family
-  leaf->eax = 0x00060F82;
+  leaf->eax = 0x00100F23;
 
   // EBX:
   //   [7:0]   Brand ID
@@ -174,7 +204,7 @@ void turion64_tyler_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [0:0]   SSE3: SSE3 Instructions
   //   [1:1]   PCLMULQDQ Instruction support
   //   [2:2]   DTES64: 64-bit DS area
-  //   [3:3]   MONITOR/MWAIT support
+  // * [3:3]   MONITOR/MWAIT support
   //   [4:4]   DS-CPL: CPL qualified debug store
   //   [5:5]   VMX: Virtual Machine Technology
   //   [6:6]   SMX: Secure Virtual Machine Technology
@@ -194,7 +224,7 @@ void turion64_tyler_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [20:20] SSE4.2 Instructions
   //   [21:21] X2APIC
   //   [22:22] MOVBE instruction
-  //   [23:23] POPCNT instruction
+  // * [23:23] POPCNT instruction
   //   [24:24] TSC Deadline
   //   [25:25] AES Instructions
   //   [26:26] XSAVE extensions support
@@ -203,7 +233,12 @@ void turion64_tyler_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [29:29] AVX F16C - Float16 conversion support
   //   [30:30] RDRAND instruction
   //   [31:31] reserved
-  leaf->ecx = BX_CPUID_EXT_SSE3 | BX_CPUID_EXT_CMPXCHG16B;
+  leaf->ecx = BX_CPUID_EXT_SSE3 |
+#if BX_SUPPORT_MONITOR_MWAIT
+              BX_CPUID_EXT_MONITOR_MWAIT |
+#endif
+              BX_CPUID_EXT_CMPXCHG16B |
+              BX_CPUID_EXT_POPCNT;
 
   // EDX: Standard Feature Flags
   // * [0:0]   FPU on chip
@@ -268,8 +303,36 @@ void turion64_tyler_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 #endif
 }
 
+#if BX_SUPPORT_MONITOR_MWAIT
+
+// leaf 0x00000005 //
+void phenom_8650_toliman_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
+{
+  // CPUID function 0x00000005 - MONITOR/MWAIT Leaf
+
+  // EAX - Smallest monitor-line size in bytes
+  // EBX - Largest  monitor-line size in bytes
+  // ECX -
+  //   [31:2] - reserved
+  //    [1:1] - exit MWAIT even with EFLAGS.IF = 0
+  //    [0:0] - MONITOR/MWAIT extensions are supported
+  // EDX -
+  //  [03-00] - number of C0 sub C-states supported using MWAIT
+  //  [07-04] - number of C1 sub C-states supported using MWAIT
+  //  [11-08] - number of C2 sub C-states supported using MWAIT
+  //  [15-12] - number of C3 sub C-states supported using MWAIT
+  //  [19-16] - number of C4 sub C-states supported using MWAIT
+  //  [31-20] - reserved (MBZ)
+  leaf->eax = CACHE_LINE_SIZE;
+  leaf->ebx = CACHE_LINE_SIZE;
+  leaf->ecx = 3;
+  leaf->edx = 0;
+}
+
+#endif
+
 // leaf 0x80000000 //
-void turion64_tyler_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
+void phenom_8650_toliman_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   static const char* vendor_string = "AuthenticAMD";
 
@@ -277,7 +340,7 @@ void turion64_tyler_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
   // EBX: reserved
   // EDX: reserved
   // ECX: reserved
-  leaf->eax = 0x80000018;
+  leaf->eax = 0x8000001A;
   memcpy(&(leaf->ebx), vendor_string,     4);
   memcpy(&(leaf->edx), vendor_string + 4, 4);
   memcpy(&(leaf->ecx), vendor_string + 8, 4);
@@ -289,13 +352,13 @@ void turion64_tyler_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
 }
 
 // leaf 0x80000001 //
-void turion64_tyler_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
+void phenom_8650_toliman_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information (same as 0x00000001.EAX)
-  leaf->eax = 0x00060F82;
+  leaf->eax = 0x00100F23;
 
   // EBX:       Brand ID
-  leaf->ebx = 0x0000059F;
+  leaf->ebx = 0x10000563;
 
   // ECX:
   // * [0:0]   LAHF/SAHF instructions support in 64-bit mode
@@ -303,12 +366,12 @@ void turion64_tyler_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [2:2]   SVM: Secure Virtual Machine (AMD)
   // * [3:3]   Extended APIC Space
   // * [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
-  //   [5:5]   LZCNT: LZCNT instruction support
-  //   [6:6]   SSE4A: SSE4A Instructions support
-  //   [7:7]   Misaligned SSE support
+  // * [5:5]   LZCNT: LZCNT instruction support
+  // * [6:6]   SSE4A: SSE4A Instructions support
+  // * [7:7]   Misaligned SSE support
   // * [8:8]   PREFETCHW: PREFETCHW instruction support
-  //   [9:9]   OSVW: OS visible workarounds (AMD)
-  //   [10:10] IBS: Instruction based sampling
+  // * [9:9]   OSVW: OS visible workarounds (AMD)
+  // * [10:10] IBS: Instruction based sampling
   //   [11:11] XOP: Extended Operations Support and XOP Prefix
   //   [12:12] SKINIT support
   //   [13:13] WDT: Watchdog timer support
@@ -331,7 +394,14 @@ void turion64_tyler_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 #endif
               BX_CPUID_EXT2_EXT_APIC_SPACE |
               BX_CPUID_EXT2_ALT_MOV_CR8 |
-              BX_CPUID_EXT2_PREFETCHW;
+              BX_CPUID_EXT2_LZCNT |
+              BX_CPUID_EXT2_SSE4A |
+#if BX_SUPPORT_MISALIGNED_SSE
+              BX_CPUID_EXT2_MISALIGNED_SSE |
+#endif
+              BX_CPUID_EXT2_PREFETCHW |
+              BX_CPUID_EXT2_OSVW |
+              BX_CPUID_EXT2_IBS;
 
   // EDX:
   // Many of the bits in EDX are the same as FN 0x00000001 for AMD
@@ -361,13 +431,12 @@ void turion64_tyler_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [23:23] MMX Technology
   // * [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
   // * [25:25] Fast FXSAVE/FXRSTOR mode support
-  //   [26:26] 1G paging support
+  // * [26:26] 1G paging support
   // * [27:27] Support RDTSCP Instruction
   //   [28:28] Reserved
   // * [29:29] Long Mode
   // * [30:30] AMD 3DNow! Extensions
   // * [31:31] AMD 3DNow! Instructions
-
   leaf->edx = BX_CPUID_STD_X87 |
               BX_CPUID_STD_VME |
               BX_CPUID_STD_DEBUG_EXTENSIONS |
@@ -404,10 +473,10 @@ void turion64_tyler_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000002 //
 // leaf 0x80000003 //
 // leaf 0x80000004 //
-void turion64_tyler_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const
+void phenom_8650_toliman_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const
 {
   // CPUID function 0x80000002-0x80000004 - Processor Name String Identifier
-  static const char* brand_string = "AMD Turion(tm) 64 X2 Mobile Technology TL-60";
+  static const char* brand_string = "AMD Phenom(tm) 8650 Triple-Core Processor\0\0\0";
 
   switch(function) {
   case 0x80000002:
@@ -441,37 +510,37 @@ void turion64_tyler_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_fu
 }
 
 // leaf 0x80000005 //
-void turion64_tyler_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
+void phenom_8650_toliman_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000005 - L1 Cache and TLB Identifiers
-  leaf->eax = 0xFF08FF08;
+  leaf->eax = 0xFF30FF10;
   leaf->ebx = 0xFF20FF20;
   leaf->ecx = 0x40020140;
   leaf->edx = 0x40020140;
 }
 
 // leaf 0x80000006 //
-void turion64_tyler_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
+void phenom_8650_toliman_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
-  leaf->eax = 0x00000000;
+  leaf->eax = 0x20800000;
   leaf->ebx = 0x42004200;
   leaf->ecx = 0x02008140;
-  leaf->edx = 0x00000000;
+  leaf->edx = 0x0010A140;
 }
 
 // leaf 0x80000007 //
-void turion64_tyler_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
+void phenom_8650_toliman_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000007 - Advanced Power Management
   leaf->eax = 0;
   leaf->ebx = 0;
   leaf->ecx = 0;
-  leaf->edx = 0x0000007F;
+  leaf->edx = 0x000001F9;
 }
 
 // leaf 0x80000008 //
-void turion64_tyler_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
+void phenom_8650_toliman_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
 {
   // virtual & phys address size in low 2 bytes.
   leaf->eax = BX_PHY_ADDRESS_WIDTH | (BX_LIN_ADDRESS_WIDTH << 8);
@@ -485,15 +554,15 @@ void turion64_tyler_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
 #if BX_SUPPORT_SVM
 
 // leaf 0x8000000A : SVM //
-void turion64_tyler_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
+void phenom_8650_toliman_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
 {
   leaf->eax = 0x01; /* SVM revision ID */
   leaf->ebx = 0x40; /* number of ASIDs */
   leaf->ecx = 0;
 
-  //   [0:0]   NP - Nested paging support
+  // * [0:0]   NP - Nested paging support
   // * [1:1]   LBR virtualization
-  //   [2:2]   SVM Lock
+  // * [2:2]   SVM Lock
   //   [3:3]   NRIPS - Next RIP save on VMEXIT
   //   [4:4]   TscRate - MSR based TSC ratio control
   //   [5:5]   VMCB Clean bits support
@@ -505,29 +574,49 @@ void turion64_tyler_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
   //   [12:12] Pause filter threshold support
   //   [31:13] Reserved
 
-  leaf->edx = BX_CPUID_SVM_LBR_VIRTUALIZATION;
+  leaf->edx = BX_CPUID_SVM_NESTED_PAGING |
+              BX_CPUID_SVM_LBR_VIRTUALIZATION |
+              BX_CPUID_SVM_SVM_LOCK;
 }
 
 #endif
 
 // leaf 0x8000000B - 0x80000018: Reserved //
 
-void turion64_tyler_t::dump_cpuid(void) const
+void phenom_8650_toliman_t::get_ext_cpuid_leaf_19(cpuid_function_t *leaf) const
+{
+  // CPUID function 0x800000019 - 1G Page TLB Identifiers
+  leaf->eax = 0xF0300000;
+  leaf->ebx = 0;
+  leaf->ecx = 0;
+  leaf->edx = 0;
+}
+
+void phenom_8650_toliman_t::get_ext_cpuid_leaf_1A(cpuid_function_t *leaf) const
+{
+  // CPUID function 0x80000001A - Performance Optimization Identifiers
+  leaf->eax = 0x00000003;
+  leaf->ebx = 0;
+  leaf->ecx = 0;
+  leaf->edx = 0;
+}
+
+void phenom_8650_toliman_t::dump_cpuid(void) const
 {
   struct cpuid_function_t leaf;
   unsigned n;
 
-  for (n=0; n<=1; n++) {
+  for (n=0; n <= BX_SUPPORT_MONITOR_MWAIT ? 0x5 : 0x1; n++) {
     get_cpuid_leaf(n, 0x00000000, &leaf);
     BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
   }
 
-  for (n=0x80000000; n<=0x80000018; n++) {
+  for (n=0x80000000; n<=0x8000001A; n++) {
     get_cpuid_leaf(n, 0x00000000, &leaf);
     BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
   }
 }
 
-bx_cpuid_t *create_turion64_tyler_cpuid(BX_CPU_C *cpu) { return new turion64_tyler_t(cpu); }
+bx_cpuid_t *create_phenom_8650_toliman_cpuid(BX_CPU_C *cpu) { return new phenom_8650_toliman_t(cpu); }
 
 #endif

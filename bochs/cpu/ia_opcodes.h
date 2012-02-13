@@ -1127,10 +1127,10 @@ bx_define_opcode(BX_IA_MOVBE_MqGq, &BX_CPU_C::MOVBE_MqGq, &BX_CPU_C::BxError, BX
 #endif // BX_CPU_LEVEL >= 6
 
 // POPCNT instruction
-bx_define_opcode(BX_IA_POPCNT_GdEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::POPCNT_GdEdR, BX_ISA_SSE4_2, 0)
-bx_define_opcode(BX_IA_POPCNT_GwEw, &BX_CPU_C::LOAD_Ew, &BX_CPU_C::POPCNT_GwEwR, BX_ISA_SSE4_2, 0)
+bx_define_opcode(BX_IA_POPCNT_GdEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::POPCNT_GdEdR, BX_ISA_POPCNT, 0)
+bx_define_opcode(BX_IA_POPCNT_GwEw, &BX_CPU_C::LOAD_Ew, &BX_CPU_C::POPCNT_GwEwR, BX_ISA_POPCNT, 0)
 #if BX_SUPPORT_X86_64
-bx_define_opcode(BX_IA_POPCNT_GqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::POPCNT_GqEqR, BX_ISA_SSE4_2, 0)
+bx_define_opcode(BX_IA_POPCNT_GqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::POPCNT_GqEqR, BX_ISA_POPCNT, 0)
 #endif
 // POPCNT instruction
 

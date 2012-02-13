@@ -49,7 +49,7 @@ TODO (know issues in CPU model):
 
 [!] SVM:
 
-   - Nested paging support not implemented yet
+   - Decoding assists, pause filter, VMCB clean are not implemented yet
    - More?
 
 

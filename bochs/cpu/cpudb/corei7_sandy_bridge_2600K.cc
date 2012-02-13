@@ -40,6 +40,9 @@ corei7_sandy_bridge_2600k_t::corei7_sandy_bridge_2600k_t(BX_CPU_C *cpu): bx_cpui
 
   if (BX_SUPPORT_VMX == 1)
     BX_INFO(("You must compile with --enable-vmx=2 for Intel Core i7 Sandy Bridge VMX configuration"));
+
+  if (! BX_SUPPORT_MONITOR_MWAIT)
+    BX_INFO(("WARNING: MONITOR/MWAIT support is not compiled in !"));
 }
 
 void corei7_sandy_bridge_2600k_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -129,6 +132,7 @@ Bit64u corei7_sandy_bridge_2600k_t::get_isa_extensions_bitmask(void) const
          BX_ISA_SSSE3 |
          BX_ISA_SSE4_1 |
          BX_ISA_SSE4_2 |
+         BX_ISA_POPCNT |
 #if BX_SUPPORT_MONITOR_MWAIT
          BX_ISA_MONITOR_MWAIT |
 #endif

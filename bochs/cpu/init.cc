@@ -1097,7 +1097,7 @@ void BX_CPU_C::reset(unsigned source)
     BX_CPU_THIS_PTR mxcsr_mask = 0x0000ffbf;
     if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE2))
       BX_CPU_THIS_PTR mxcsr_mask |= MXCSR_DAZ;
-    if (BX_SUPPORT_MISALIGNED_SSE)
+    if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_MISALIGNED_SSE))
       BX_CPU_THIS_PTR mxcsr_mask |= MXCSR_MISALIGNED_EXCEPTION_MASK;
   }
 #endif

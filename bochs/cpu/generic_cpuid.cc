@@ -640,10 +640,10 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
     leaf->ebx = 0x40; /* number of ASIDs */
     leaf->ecx = 0;
 
-    //   [0:0]   NP - Nested paging support
+    // * [0:0]   NP - Nested paging support
     //   [1:1]   LBR virtualization
     //   [2:2]   SVM Lock
-    //   [3:3]   NRIPS - Next RIP save on VMEXIT
+    // * [3:3]   NRIPS - Next RIP save on VMEXIT
     //   [4:4]   TscRate - MSR based TSC ratio control
     //   [5:5]   VMCB Clean bits support
     //   [6:6]   Flush by ASID support
@@ -653,7 +653,8 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
     //   [11:11] Reserved
     //   [12:12] Pause filter threshold support
     //   [31:13] Reserved
-    leaf->edx = 0;
+
+    leaf->edx = BX_CPUID_SVM_NESTED_PAGING | BX_CPUID_SVM_NRIP_SAVE;
   }
   else {
     leaf->eax = 0;
@@ -730,9 +731,13 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
     }
   }
 
-  // enabled CLFLUSH only when SSE2 or higher is enabled
+  // enable CLFLUSH only when SSE2 or higher is enabled
   if (sse_enabled >= BX_CPUID_SUPPORT_SSE2)
     features_bitmask |= BX_ISA_CLFLUSH;
+
+  // enable POPCNT if SSE4.2 is enabled
+  if (sse_enabled >= BX_CPUID_SUPPORT_SSE4_2)
+    features_bitmask |= BX_ISA_POPCNT;
 
   static bx_bool sse4a_enabled = SIM->get_param_bool(BXPN_CPUID_SSE4A)->get();
   if (sse4a_enabled) {
@@ -987,6 +992,10 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
   features_bitmask |= BX_CPU_MTRR;
   features_bitmask |= BX_CPU_PAT;
 
+#if BX_SUPPORT_MISALIGNED_SSE
+  features_bitmask |= BX_CPU_MISALIGNED_SSE;
+#endif
+
   static bx_bool smep_enabled = SIM->get_param_bool(BXPN_CPUID_SMEP)->get();
   if (smep_enabled)
     features_bitmask |= BX_CPU_SMEP;
@@ -1177,8 +1186,7 @@ Bit32u bx_generic_cpuid_t::get_extended_cpuid_features(void) const
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MOVBE))
     features |= BX_CPUID_EXT_MOVBE;
 
-  // enable POPCNT if SSE4_2 is enabled
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE4_2))
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_POPCNT))
     features |= BX_CPUID_EXT_POPCNT;
 
   // support for AES

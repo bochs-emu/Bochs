@@ -234,9 +234,9 @@ typedef struct bx_SVM_HOST_STATE
   bx_global_segment_reg_t gdtr;
   bx_global_segment_reg_t idtr;
 
-  Bit32u efer;
-  Bit32u cr0;
-  Bit32u cr4;
+  bx_efer_t efer;
+  bx_cr0_t cr0;
+  bx_cr4_t cr4;
   bx_phy_address cr3;
   Bit32u eflags;
   Bit64u rip;

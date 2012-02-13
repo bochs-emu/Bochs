@@ -642,7 +642,7 @@ static const char *bx_paging_level[4] = { "PTE", "PDE", "PDPE", "PML4" }; // kee
 // 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
 // -----------------------------------------------------------
 
-int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, unsigned rw, bx_bool *nx_fault)
+int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, unsigned rw, bx_bool nxe, bx_bool *nx_fault)
 {
   if (!(entry & 0x1)) {
     BX_DEBUG(("PAE %s: entry not present", s));
@@ -650,21 +650,21 @@ int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, unsigned rw, bx_bool 
   }
 
   if (entry & PAGING_PAE_RESERVED_BITS) {
-    BX_DEBUG(("PAE %s: reserved bit is set %08x:%08x", s, GET32H(entry), GET32L(entry)));
+    BX_DEBUG(("PAE %s: reserved bit is set 0x" FMT_ADDRX64, s, entry));
     return ERROR_RESERVED | ERROR_PROTECTION;
   }
 
 #if BX_SUPPORT_X86_64
   if (! long_mode()) {
     if (entry & BX_CONST64(0x7ff0000000000000)) {
-      BX_DEBUG(("PAE %s: reserved bit is set %08x:%08x", s, GET32H(entry), GET32L(entry)));
+      BX_DEBUG(("PAE %s: reserved bit is set 0x" FMT_ADDRX64, s, entry));
       return ERROR_RESERVED | ERROR_PROTECTION;
     }
   }
 #endif
 
   if (entry & PAGE_DIRECTORY_NX_BIT) {
-    if (! BX_CPU_THIS_PTR efer.get_NXE()) {
+    if (! nxe) {
       BX_DEBUG(("PAE %s: NX bit set when EFER.NXE is disabled", s));
       return ERROR_RESERVED | ERROR_PROTECTION;
     }
@@ -700,12 +700,17 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
         entry_addr[leaf] = translate_guest_physical(entry_addr[leaf], laddr, 1, 1, BX_READ);
     }
 #endif
+#if BX_SUPPORT_SVM
+    if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED) {
+      entry_addr[leaf] = nested_walk(entry_addr[leaf], BX_RW, 1);
+    }
+#endif
     access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
     BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
     offset_mask >>= 9;
 
     Bit64u curr_entry = entry[leaf];
-    int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, rw, &nx_fault);
+    int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, rw, BX_CPU_THIS_PTR efer.get_NXE(), &nx_fault);
     if (fault >= 0)
       page_fault(fault, laddr, user, rw);
 
@@ -846,34 +851,55 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(Bit64u *pdptr)
 }
 #endif
 
+bx_phy_address BX_CPU_C::translate_linear_load_PDPTR(bx_address laddr, unsigned user, unsigned rw)
+{
+  unsigned index = (laddr >> 30) & 0x3;
+  Bit64u pdptr;
+
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED) 
+  {
+    bx_phy_address cr3_val = BX_CPU_THIS_PTR cr3 & 0xffffffe0;
+    cr3_val = nested_walk(cr3_val, BX_RW, 1);
+
+    bx_phy_address pdpe_entry_addr = (bx_phy_address) (cr3_val | (index << 3));
+    access_read_physical(pdpe_entry_addr, 8, &pdptr);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pdpe_entry_addr, 8, BX_READ,
+              (BX_PDPTR0_ACCESS + index), (Bit8u*) &pdptr);
+
+    if (pdptr & 0x1) {
+      if (pdptr & PAGING_PAE_PDPTE_RESERVED_BITS) {
+        BX_DEBUG(("PAE PDPTE%d entry reserved bits set: 0x" FMT_ADDRX64, index, pdptr));
+        page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, user, rw);
+      }
+    }
+  }
+  else
+#endif
+  {
+    pdptr = BX_CPU_THIS_PTR PDPTR_CACHE.entry[index];
+  }
+
+  if (! (pdptr & 0x1)) {
+    BX_DEBUG(("PAE PDPTE entry not present !"));
+    page_fault(ERROR_NOT_PRESENT, laddr, user, rw);
+  }
+
+  return pdptr;
+}
+
 // Translate a linear address to a physical address in PAE paging mode
 bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned user, unsigned rw)
 {
   bx_phy_address entry_addr[2];
-  Bit64u entry[2], pdpte = 0;
+  Bit64u entry[2];
   bx_bool nx_fault = 0;
   int leaf;
 
   lpf_mask = 0xfff;
   combined_access = 0x06;
 
-#if BX_SUPPORT_SVM
-  if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED) 
-  {
-    BX_PANIC(("Nested Paging mode is not implemented yet !"));
-//  pdpte = SvmReadDPTR((laddr >> 30) & 3);
-  }
-  else
-#endif
-  {
-    pdpte = BX_CPU_THIS_PTR PDPTR_CACHE.entry[(laddr >> 30) & 3];
-  }
-
-  if (! (pdpte & 0x1)) {
-    BX_DEBUG(("PAE PDPTE entry not present !"));
-    page_fault(ERROR_NOT_PRESENT, laddr, user, rw);
-  }
-
+  Bit64u pdpte = translate_linear_load_PDPTR(laddr, user, rw);
   bx_phy_address ppf = pdpte & BX_CONST64(0x000ffffffffff000);
 
   for (leaf = BX_LEVEL_PDE;; --leaf) {
@@ -884,11 +910,16 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
         entry_addr[leaf] = translate_guest_physical(entry_addr[leaf], laddr, 1, 1, BX_READ);
     }
 #endif
+#if BX_SUPPORT_SVM
+    if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED) {
+      entry_addr[leaf] = nested_walk(entry_addr[leaf], BX_RW, 1);
+    }
+#endif
     access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
     BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     Bit64u curr_entry = entry[leaf];
-    int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, rw, &nx_fault);
+    int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, rw, BX_CPU_THIS_PTR efer.get_NXE(), &nx_fault);
     if (fault >= 0)
       page_fault(fault, laddr, user, rw);
 
@@ -973,6 +1004,11 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
     if (BX_CPU_THIS_PTR in_vmx_guest) {
       if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_ENABLE))
         entry_addr[leaf] = translate_guest_physical(entry_addr[leaf], laddr, 1, 1, BX_READ);
+    }
+#endif
+#if BX_SUPPORT_SVM
+    if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED) {
+      entry_addr[leaf] = nested_walk(entry_addr[leaf], BX_RW, 1);
     }
 #endif
     access_read_physical(entry_addr[leaf], 4, &entry[leaf]);
@@ -1128,6 +1164,12 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned user, unsig
     }
   }
 #endif
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED) {
+    paddress = nested_walk(paddress, rw, 0);
+    ppf = PPFOf(paddress);
+  }
+#endif
 
   // direct memory access is NOT allowed by default
   tlbEntry->lpf = lpf | TLB_NoHostPtr;
@@ -1172,6 +1214,231 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned user, unsig
 
   return paddress;
 }
+
+#if BX_SUPPORT_SVM
+
+void BX_CPU_C::nested_page_fault(unsigned fault, bx_phy_address guest_paddr, unsigned rw, unsigned is_page_walk)
+{
+  unsigned isWrite = rw & 1;
+
+  Bit64u error_code = fault | (1 << 2) | (isWrite << 1);
+  if (rw == BX_EXECUTE)
+    error_code |= ERROR_CODE_ACCESS; // I/D = 1
+
+  if (is_page_walk)
+    error_code |= BX_CONST64(1) << 32;
+  else
+    error_code |= BX_CONST64(1) << 33;
+
+  vmcb_write64(SVM_CONTROL64_EXITINFO2, guest_paddr);
+
+  Svm_Vmexit(SVM_VMEXIT_NPF, error_code);
+}
+
+bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsigned rw, bx_bool is_page_walk)
+{
+  bx_phy_address entry_addr[4];
+  Bit64u entry[4];
+  bx_bool nx_fault = 0;
+  int leaf;
+
+  SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
+  SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb.host_state;
+  bx_phy_address ppf = ctrls->ncr3 & BX_CR3_PAGING_MASK;
+  Bit64u offset_mask = BX_CONST64(0x0000ffffffffffff);
+  unsigned combined_access = 0x06;
+
+  for (leaf = BX_LEVEL_PML4;; --leaf) {
+    entry_addr[leaf] = ppf + ((guest_paddr >> (9 + 9*leaf)) & 0xff8);
+    access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
+    offset_mask >>= 9;
+
+    Bit64u curr_entry = entry[leaf];
+    int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, rw, host_state->efer.get_NXE(), &nx_fault);
+    if (fault >= 0)
+      nested_page_fault(fault, guest_paddr, rw, is_page_walk);
+
+    combined_access &= curr_entry; // U/S and R/W
+    ppf = curr_entry & BX_CONST64(0x000ffffffffff000);
+
+    if (leaf == BX_LEVEL_PTE) break;
+
+    if (curr_entry & 0x80) {
+      if (leaf > (BX_LEVEL_PDE + !!bx_cpuid_support_1g_paging())) {
+        BX_DEBUG(("Nested PAE Walk %s: PS bit set !", bx_paging_level[leaf]));
+        nested_page_fault(ERROR_RESERVED | ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
+      }
+
+      ppf &= BX_CONST64(0x000fffffffffe000);
+      if (ppf & offset_mask) {
+        BX_DEBUG(("Nested PAE Walk %s: reserved bit is set: 0x" FMT_ADDRX64, bx_paging_level[leaf], curr_entry));
+        nested_page_fault(ERROR_RESERVED | ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
+      }
+
+      // Make up the physical page frame address
+      ppf += (bx_phy_address)(guest_paddr & offset_mask);	
+      break;
+    }
+  }
+
+  bx_bool isWrite = (rw & 1); // write or r-m-w
+
+  unsigned priv_index = (1<<3) /* user */ | (combined_access | isWrite);
+
+  if (!priv_check[priv_index] || nx_fault)
+    nested_page_fault(ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
+
+  // Update A/D bits if needed
+  update_access_dirty_PAE(entry_addr, entry, BX_LEVEL_PML4, leaf, isWrite);
+
+  Bit32u page_offset = PAGE_OFFSET(guest_paddr);
+  return ppf | page_offset;
+}
+
+bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw, bx_bool is_page_walk)
+{
+  bx_phy_address entry_addr[2];
+  Bit64u entry[2];
+  bx_bool nx_fault = 0;
+  int leaf;
+
+  unsigned combined_access = 0x06;
+
+  SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
+  SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb.host_state;
+  bx_phy_address ncr3 = ctrls->ncr3 & 0xffffffe0;
+  unsigned index = (guest_paddr >> 30) & 0x3;
+  Bit64u pdptr;
+
+  bx_phy_address pdpe_entry_addr = (bx_phy_address) (ncr3 | (index << 3));
+  access_read_physical(pdpe_entry_addr, 8, &pdptr);
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pdpe_entry_addr, 8, BX_READ,
+              (BX_PDPTR0_ACCESS + index), (Bit8u*) &pdptr);
+
+  if (! (pdptr & 0x1)) {
+    BX_DEBUG(("Nested PAE Walk PDPTE%d entry not present !", index));
+    nested_page_fault(ERROR_NOT_PRESENT, guest_paddr, rw, is_page_walk);
+  }
+
+  if (pdptr & PAGING_PAE_PDPTE_RESERVED_BITS) {
+    BX_DEBUG(("Nested PAE Walk PDPTE%d entry reserved bits set: 0x" FMT_ADDRX64, index, pdptr));
+    nested_page_fault(ERROR_RESERVED | ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
+  }
+
+  bx_phy_address ppf = pdptr & BX_CONST64(0x000ffffffffff000);
+
+  for (leaf = BX_LEVEL_PDE;; --leaf) {
+    entry_addr[leaf] = ppf + ((guest_paddr >> (9 + 9*leaf)) & 0xff8);
+    access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
+
+    Bit64u curr_entry = entry[leaf];
+    int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, rw, host_state->efer.get_NXE(), &nx_fault);
+    if (fault >= 0)
+      nested_page_fault(fault, guest_paddr, rw, is_page_walk);
+
+    combined_access &= curr_entry; // U/S and R/W
+    ppf = curr_entry & BX_CONST64(0x000ffffffffff000);
+
+    if (leaf == BX_LEVEL_PTE) break;
+
+    // Ignore CR4.PSE in PAE mode
+    if (curr_entry & 0x80) {
+      if (curr_entry & PAGING_PAE_PDE2M_RESERVED_BITS) {
+        BX_DEBUG(("PAE PDE2M: reserved bit is set PDE=0x" FMT_ADDRX64, curr_entry));
+        nested_page_fault(ERROR_RESERVED | ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
+      }
+
+      // Make up the physical page frame address
+      ppf = (bx_phy_address)((curr_entry & BX_CONST64(0x000fffffffe00000)) | (guest_paddr & 0x001ff000));
+      break;
+    }
+  }
+
+  bx_bool isWrite = (rw & 1); // write or r-m-w
+
+  unsigned priv_index = (1<<3) /* user */ | (combined_access | isWrite);
+
+  if (!priv_check[priv_index] || nx_fault)
+    nested_page_fault(ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
+
+  // Update A/D bits if needed
+  update_access_dirty_PAE(entry_addr, entry, BX_LEVEL_PDE, leaf, isWrite);
+
+  Bit32u page_offset = PAGE_OFFSET(guest_paddr);
+  return ppf | page_offset;
+}
+
+bx_phy_address BX_CPU_C::nested_walk_legacy(bx_phy_address guest_paddr, unsigned rw, bx_bool is_page_walk)
+{
+  bx_phy_address entry_addr[2];
+  Bit32u entry[2];
+  int leaf;
+
+  SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
+  SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb.host_state;
+  bx_phy_address ppf = ctrls->ncr3 & BX_CR3_PAGING_MASK;
+  unsigned combined_access = 0x06;
+
+  for (leaf = BX_LEVEL_PDE;; --leaf) {
+    entry_addr[leaf] = ppf + ((guest_paddr >> (10 + 10*leaf)) & 0xffc);
+    access_read_physical(entry_addr[leaf], 4, &entry[leaf]);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 4, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
+
+    Bit32u curr_entry = entry[leaf];
+    if (!(curr_entry & 0x1)) {
+      BX_DEBUG(("Nested %s Walk: entry not present", bx_paging_level[leaf]));
+      nested_page_fault(ERROR_NOT_PRESENT, guest_paddr, rw, is_page_walk);
+    }
+
+    combined_access &= curr_entry; // U/S and R/W
+    ppf = curr_entry & 0xfffff000;
+
+    if (leaf == BX_LEVEL_PTE) break;
+
+    if ((curr_entry & 0x80) != 0 && host_state->cr4.get_PSE()) {
+      // 4M paging, only if CR4.PSE enabled, ignore PDE.PS otherwise
+      if (curr_entry & PAGING_PDE4M_RESERVED_BITS) {
+        BX_DEBUG(("Nested PSE Walk PDE4M: reserved bit is set: PDE=0x%08x", entry[BX_LEVEL_PDE]));
+        nested_page_fault(ERROR_RESERVED | ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
+      }
+
+      // make up the physical frame number
+      ppf = (curr_entry & 0xffc00000) | (guest_paddr & 0x003ff000);
+#if BX_PHY_ADDRESS_WIDTH > 32
+      ppf |= ((bx_phy_address)(curr_entry & 0x003fe000)) << 19;
+#endif
+      break;
+    }
+  }
+
+  bx_bool isWrite = (rw & 1); // write or r-m-w
+
+  unsigned priv_index = (1<<3) /* user */ | (combined_access | isWrite);
+
+  if (!priv_check[priv_index])
+    nested_page_fault(ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
+
+  update_access_dirty(entry_addr, entry, leaf, isWrite);
+
+  Bit32u page_offset = PAGE_OFFSET(guest_paddr);
+  return ppf | page_offset;
+}
+
+bx_phy_address BX_CPU_C::nested_walk(bx_phy_address guest_paddr, unsigned rw, bx_bool is_page_walk)
+{
+  SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb.host_state;
+
+  if (host_state->efer.get_LMA())
+    return nested_walk_long_mode(guest_paddr, rw, is_page_walk);
+  else if (host_state->cr4.get_PAE())
+    return nested_walk_PAE(guest_paddr, rw, is_page_walk);
+  else
+    return nested_walk_legacy(guest_paddr, rw, is_page_walk);
+}
+
+#endif
 
 #if BX_SUPPORT_VMX >= 2
 

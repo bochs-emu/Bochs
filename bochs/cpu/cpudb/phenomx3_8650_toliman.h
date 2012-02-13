@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011 Stanislav Shwartsman
+//   Copyright (c) 2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -21,20 +21,20 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_ATOM_N270_CPUID_DEFINITIONS_H
-#define BX_ATOM_N270_CPUID_DEFINITIONS_H
+#ifndef BX_PHENOM_X3_8650_TOLIMAN_CPUID_DEFINITIONS_H
+#define BX_PHENOM_X3_8650_TOLIMAN_CPUID_DEFINITIONS_H
 
-#if BX_CPU_LEVEL >= 6
+#if BX_SUPPORT_X86_64
 
 #include "cpu/cpuid.h"
 
-class atom_n270_t : public bx_cpuid_t {
+class phenom_8650_toliman_t : public bx_cpuid_t {
 public:
-  atom_n270_t(BX_CPU_C *cpu);
-  virtual ~atom_n270_t() {}
+  phenom_8650_toliman_t(BX_CPU_C *cpu);
+  virtual ~phenom_8650_toliman_t() {}
 
   // return CPU name
-  virtual const char *get_name(void) const { return "atom_n270"; }
+  virtual const char *get_name(void) const { return "phenom_8650_toliman"; }
 
   virtual Bit64u get_isa_extensions_bitmask(void) const;
   virtual Bit32u get_cpu_extensions_bitmask(void) const;
@@ -46,12 +46,9 @@ public:
 private:
   void get_std_cpuid_leaf_0(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_2(cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_3(cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const;
+#if BX_SUPPORT_MONITOR_MWAIT
   void get_std_cpuid_leaf_5(cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_6(cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_A(cpuid_function_t *leaf) const;
+#endif
 
   void get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const;
@@ -60,11 +57,15 @@ private:
   void get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const;
+#if BX_SUPPORT_SVM
+  void get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const;
+#endif
+  void get_ext_cpuid_leaf_19(cpuid_function_t *leaf) const;
+  void get_ext_cpuid_leaf_1A(cpuid_function_t *leaf) const;
 };
 
-extern bx_cpuid_t *create_atom_n270_cpuid(BX_CPU_C *cpu);
+extern bx_cpuid_t *create_phenom_8650_toliman_cpuid(BX_CPU_C *cpu);
 
-#endif // BX_CPU_LEVEL >= 6
+#endif // BX_SUPPORT_X86_64
 
 #endif
-

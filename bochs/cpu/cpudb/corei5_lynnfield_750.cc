@@ -37,6 +37,9 @@ corei5_lynnfield_750_t::corei5_lynnfield_750_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 
   if (BX_SUPPORT_VMX == 1)
     BX_INFO(("You must compile with --enable-vmx=2 for Intel Core i5 750 (Lynnfield) VMX configuration"));
+
+  if (! BX_SUPPORT_MONITOR_MWAIT)
+    BX_INFO(("WARNING: MONITOR/MWAIT support is not compiled in !"));
 }
 
 void corei5_lynnfield_750_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -120,6 +123,7 @@ Bit64u corei5_lynnfield_750_t::get_isa_extensions_bitmask(void) const
          BX_ISA_SSSE3 |
          BX_ISA_SSE4_1 |
          BX_ISA_SSE4_2 |
+         BX_ISA_POPCNT |
 #if BX_SUPPORT_MONITOR_MWAIT
          BX_ISA_MONITOR_MWAIT |
 #endif

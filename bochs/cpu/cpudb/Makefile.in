@@ -44,6 +44,7 @@ CPUDB_OBJS = pentium_mmx.o \
              athlon64_clawhammer.o \
              athlon64_venice.o \
              turion64_tyler.o \
+             phenomx3_8650_toliman.o \
              core_duo_t2400_yonah.o \
              core2_penryn_t9600.o \
              corei5_lynnfield_750.o \
@@ -105,6 +106,15 @@ turion64_tyler.o: turion64_tyler.@CPP_SUFFIX@ ../../bochs.h \
  ../icache.h ../apic.h ../i387.h ../../fpu/softfloat.h ../../fpu/tag_w.h \
  ../../fpu/status_w.h ../../fpu/control_w.h ../xmm.h ../vmx.h ../svm.h \
  turion64_tyler.h ../../cpu/cpuid.h
+phenomx3_8650_toliman.o: phenomx3_8650_toliman.@CPP_SUFFIX@ ../../bochs.h \
+ ../../config.h ../../osdep.h ../../bx_debug/debug.h ../../config.h \
+ ../../osdep.h ../../gui/siminterface.h ../../cpudb.h \
+ ../../gui/paramtree.h ../../memory/memory.h ../../pc_system.h \
+ ../../gui/gui.h ../../instrument/stubs/instrument.h ../cpu.h ../cpuid.h \
+ ../crregs.h ../descriptor.h ../instr.h ../ia_opcodes.h ../lazy_flags.h \
+ ../icache.h ../apic.h ../i387.h ../../fpu/softfloat.h ../../fpu/tag_w.h \
+ ../../fpu/status_w.h ../../fpu/control_w.h ../xmm.h ../vmx.h ../svm.h \
+ phenomx3_8650_toliman.h ../../cpu/cpuid.h
 atom_n270.o: atom_n270.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \

@@ -210,10 +210,10 @@ void BX_CPU_C::SvmEnterSaveHostState(SVM_HOST_STATE *host)
   host->gdtr = BX_CPU_THIS_PTR gdtr;
   host->idtr = BX_CPU_THIS_PTR idtr;
 
-  host->efer = BX_CPU_THIS_PTR efer.get32();
-  host->cr0 = BX_CPU_THIS_PTR cr0.get32();
+  host->efer = BX_CPU_THIS_PTR efer;
+  host->cr0 = BX_CPU_THIS_PTR cr0;
   host->cr3 = BX_CPU_THIS_PTR cr3;
-  host->cr4 = BX_CPU_THIS_PTR cr4.get32();
+  host->cr4 = BX_CPU_THIS_PTR cr4;
   host->eflags = read_eflags();
   host->rip = RIP;
   host->rsp = RSP;
@@ -233,10 +233,10 @@ void BX_CPU_C::SvmExitLoadHostState(SVM_HOST_STATE *host)
   BX_CPU_THIS_PTR gdtr = host->gdtr;
   BX_CPU_THIS_PTR idtr = host->idtr;
 
-  BX_CPU_THIS_PTR efer.set32(host->efer);
-  BX_CPU_THIS_PTR cr0.set32(host->cr0 | BX_CR0_PE_MASK); // always set the CR0.PE
+  BX_CPU_THIS_PTR efer = host->efer;
+  BX_CPU_THIS_PTR cr0.set32(host->cr0.get32() | BX_CR0_PE_MASK); // always set the CR0.PE
   BX_CPU_THIS_PTR cr3 = host->cr3;
-  BX_CPU_THIS_PTR cr4.set32(host->cr4);
+  BX_CPU_THIS_PTR cr4 = host->cr4;
 
   if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
     if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
@@ -387,7 +387,7 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
       }
     }
 
-    BX_PANIC(("VMRUN: Nested Paging support is not implemented yet !"));
+    BX_DEBUG(("VMRUN: Starting Nested Paging Mode !"));
   }
 
   /* clear exitinfo2 so we behave like the real hardware */
@@ -1246,10 +1246,10 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(IDTR, base, BX_CPU_THIS_PTR vmcb.host_state.idtr.base);
   BXRS_HEX_PARAM_FIELD(IDTR, limit, BX_CPU_THIS_PTR vmcb.host_state.idtr.limit);
 
-  BXRS_HEX_PARAM_FIELD(host, efer, BX_CPU_THIS_PTR vmcb.host_state.efer);
-  BXRS_HEX_PARAM_FIELD(host, cr0, BX_CPU_THIS_PTR vmcb.host_state.cr0);
+  BXRS_HEX_PARAM_FIELD(host, efer, BX_CPU_THIS_PTR vmcb.host_state.efer.val32);
+  BXRS_HEX_PARAM_FIELD(host, cr0, BX_CPU_THIS_PTR vmcb.host_state.cr0.val32);
   BXRS_HEX_PARAM_FIELD(host, cr3, BX_CPU_THIS_PTR vmcb.host_state.cr3);
-  BXRS_HEX_PARAM_FIELD(host, cr4, BX_CPU_THIS_PTR vmcb.host_state.cr4);
+  BXRS_HEX_PARAM_FIELD(host, cr4, BX_CPU_THIS_PTR vmcb.host_state.cr4.val32);
   BXRS_HEX_PARAM_FIELD(host, eflags, BX_CPU_THIS_PTR vmcb.host_state.eflags);
   BXRS_HEX_PARAM_FIELD(host, rip, BX_CPU_THIS_PTR vmcb.host_state.rip);
   BXRS_HEX_PARAM_FIELD(host, rsp, BX_CPU_THIS_PTR vmcb.host_state.rsp);

@@ -30,7 +30,7 @@
 
 class core_duo_t2400_yonah_t : public bx_cpuid_t {
 public:
-  core_duo_t2400_yonah_t(BX_CPU_C *cpu): bx_cpuid_t(cpu) {}
+  core_duo_t2400_yonah_t(BX_CPU_C *cpu);
   virtual ~core_duo_t2400_yonah_t() {}
 
   // return CPU name

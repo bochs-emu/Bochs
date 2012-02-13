@@ -30,6 +30,12 @@
 
 #if BX_CPU_LEVEL >= 6
 
+core_duo_t2400_yonah_t::core_duo_t2400_yonah_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
+{
+  if (! BX_SUPPORT_MONITOR_MWAIT)
+    BX_INFO(("WARNING: MONITOR/MWAIT support is not compiled in !"));
+}
+
 void core_duo_t2400_yonah_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();

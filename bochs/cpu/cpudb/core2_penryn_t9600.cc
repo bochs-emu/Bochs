@@ -34,6 +34,9 @@ core2_penryn_t9600_t::core2_penryn_t9600_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
   if (! BX_SUPPORT_X86_64)
     BX_PANIC(("You must enable x86-64 for Intel Mobile Core2 Duo T9600 (Penryn) configuration"));
+
+  if (! BX_SUPPORT_MONITOR_MWAIT)
+    BX_INFO(("WARNING: MONITOR/MWAIT support is not compiled in !"));
 }
 
 void core2_penryn_t9600_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
