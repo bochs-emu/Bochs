@@ -528,10 +528,13 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   if (paged_real_mode)
     BX_CPU_THIS_PTR cr0.val32 |= BX_CR0_PG_MASK;
 
-  if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
-    if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
-      BX_ERROR(("SVM: VMRUN PDPTR check failed !"));
-      return 0;
+  SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
+  if (! ctrls->nested_paging) {
+    if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
+      if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
+        BX_ERROR(("SVM: VMRUN PDPTR check failed !"));
+        return 0;
+      }
     }
   }
 
