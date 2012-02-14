@@ -445,8 +445,6 @@ protected:
   Bit32u choice; // type Bit32u is compatible with ask_uint
   // title of the menu or series
   char *title;
-  // dependent lists can have duplicate param names
-  bx_bool deplist;
   void init(const char *list_title);
 public:
   enum {
@@ -486,7 +484,6 @@ public:
   char *get_title() { return title; }
   void set_parent(bx_param_c *newparent);
   bx_param_c *get_parent() { return parent; }
-  void set_deplist(bx_bool value) { deplist = value; }
   virtual void reset();
   virtual void clear();
   virtual void remove(const char *name);

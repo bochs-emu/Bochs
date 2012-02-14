@@ -1310,6 +1310,7 @@ int bx_atexit(void)
 #endif
 #endif
 
+  SIM->cleanup_save_restore();
   SIM->set_init_done(0);
 
   return 0;

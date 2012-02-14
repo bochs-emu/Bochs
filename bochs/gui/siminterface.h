@@ -718,6 +718,7 @@ public:
   virtual Bit32s save_addon_options(FILE *fp) {return -1;}
   // save/restore support
   virtual void init_save_restore() {}
+  virtual void cleanup_save_restore() {}
   virtual bx_bool save_state(const char *checkpoint_path) {return 0;}
   virtual bx_bool restore_config() {return 0;}
   virtual bx_bool restore_logopts() {return 0;}
