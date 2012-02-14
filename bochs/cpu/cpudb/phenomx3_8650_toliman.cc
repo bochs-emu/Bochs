@@ -142,6 +142,7 @@ Bit32u phenom_8650_toliman_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_LONG_MODE |
          BX_CPU_NX |
          BX_CPU_FFXSR |
+         BX_CPU_1G_PAGES |
 #if BX_SUPPORT_MISALIGNED_SSE
          BX_CPU_MISALIGNED_SSE |
 #endif
@@ -458,6 +459,7 @@ void phenom_8650_toliman_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
               BX_CPUID_STD_MMX |
               BX_CPUID_STD_FXSAVE_FXRSTOR |
               BX_CPUID_STD2_FFXSR |
+              BX_CPUID_STD2_1G_PAGES |
               BX_CPUID_STD2_RDTSCP |
               BX_CPUID_STD2_LONG_MODE |
               BX_CPUID_STD2_3DNOW_EXT |
@@ -606,7 +608,7 @@ void phenom_8650_toliman_t::dump_cpuid(void) const
   struct cpuid_function_t leaf;
   unsigned n;
 
-  for (n=0; n <= BX_SUPPORT_MONITOR_MWAIT ? 0x5 : 0x1; n++) {
+  for (n=0; n <= (BX_SUPPORT_MONITOR_MWAIT ? 0x5 : 0x1); n++) {
     get_cpuid_leaf(n, 0x00000000, &leaf);
     BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
   }
