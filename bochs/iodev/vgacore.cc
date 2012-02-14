@@ -156,6 +156,8 @@ void bx_vgacore_c::init_standard_vga(void)
   BX_VGA_THIS s.plane_shift = 16;
   BX_VGA_THIS s.dac_shift = 2;
   BX_VGA_THIS s.last_bpp = 8;
+  BX_VGA_THIS s.htotal_usec = 31;
+  BX_VGA_THIS s.vtotal_usec = 14285;
 
   BX_VGA_THIS s.max_xres = 800;
   BX_VGA_THIS s.max_yres = 600;
@@ -378,6 +380,7 @@ void bx_vgacore_c::after_restore_state(void)
   BX_VGA_THIS s.last_xres = BX_VGA_THIS s.max_xres;
   BX_VGA_THIS s.last_yres = BX_VGA_THIS s.max_yres;
   BX_VGA_THIS redraw_area(0, 0, BX_VGA_THIS s.max_xres, BX_VGA_THIS s.max_yres);
+  BX_VGA_THIS calculate_retrace_timing();
   BX_VGA_THIS update();
   bx_gui->flush();
 }
@@ -421,6 +424,24 @@ void bx_vgacore_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piW
   }
 }
 
+void bx_vgacore_c::calculate_retrace_timing()
+{
+  Bit32u dot_clock[4] = {25175000, 28322000, 25175000, 25175000};
+  Bit32u htotal, clock, cwidth, vtotal, hfreq, vfreq;
+
+  htotal = BX_VGA_THIS s.CRTC.reg[0] + 5;
+  htotal <<= BX_VGA_THIS s.x_dotclockdiv2;
+  cwidth = ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 1) ? 8 : 9;
+  clock = dot_clock[BX_VGA_THIS s.misc_output.clock_select];
+  hfreq = clock / (htotal * cwidth);
+  BX_VGA_THIS s.htotal_usec = 1000000 / hfreq;
+  vtotal = BX_VGA_THIS s.CRTC.reg[6] + ((BX_VGA_THIS s.CRTC.reg[7] & 0x01) << 8) +
+           ((BX_VGA_THIS s.CRTC.reg[7] & 0x20) << 4) + 2;
+  vfreq = hfreq / vtotal;
+  BX_VGA_THIS s.vtotal_usec = 1000000 / vfreq;
+  BX_DEBUG(("hfreq = %.1f kHz / vfreq = %d Hz", ((double)hfreq / 1000), vfreq));
+}
+
 // static IO port read callback handler
 // redirects to non-static class handler to avoid virtual functions
 
@@ -432,9 +453,8 @@ Bit32u bx_vgacore_c::read_handler(void *this_ptr, Bit32u address, unsigned io_le
 
 Bit32u bx_vgacore_c::read(Bit32u address, unsigned io_len)
 {
-  bx_bool  horiz_retrace = 0, vert_retrace = 0;
-  Bit64u usec;
-  Bit16u ret16, vertres;
+  Bit64u display_usec, line_usec;
+  Bit16u ret16;
   Bit8u retval;
 
 #if defined(VGA_TRACE_FEATURE)
@@ -475,27 +495,16 @@ Bit32u bx_vgacore_c::read(Bit32u address, unsigned io_len)
       //       1 = display is not in the display mode; either the
       //           horizontal or vertical retrace period is active
 
-      // using 72 Hz vertical frequency
-      usec = bx_pc_system.time_usec();
-      switch ((BX_VGA_THIS s.misc_output.vert_sync_pol << 1) | BX_VGA_THIS s.misc_output.horiz_sync_pol)
-      {
-        case 0: vertres = 200; break;
-        case 1: vertres = 400; break;
-        case 2: vertres = 350; break;
-        default: vertres = 480; break;
-      }
-      if ((usec % 13888) < 70) {
-        vert_retrace = 1;
-      }
-      if ((usec % (13888 / vertres)) == 0) {
-        horiz_retrace = 1;
-      }
-
       retval = 0;
-      if (horiz_retrace || vert_retrace)
-        retval = 0x01;
-      if (vert_retrace)
-        retval |= 0x08;
+      display_usec = bx_pc_system.time_usec() % BX_VGA_THIS s.vtotal_usec;
+      if (display_usec < 70)  {
+        retval |= 0x09;
+      } else {
+        line_usec = display_usec % BX_VGA_THIS s.htotal_usec;
+        if (line_usec == 0) {
+          retval |= 0x01;
+        }
+      }
 
       /* reading this port resets the flip-flop to address mode */
       BX_VGA_THIS s.attribute_ctrl.flip_flop = 0;
@@ -930,6 +939,7 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool 
         BX_DEBUG(("  vert_sync_pol = %u",
                   (unsigned) BX_VGA_THIS s.misc_output.vert_sync_pol));
 #endif
+      calculate_retrace_timing();
       break;
 
     case 0x03c3: // VGA enable
@@ -974,6 +984,7 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool 
           }
           BX_VGA_THIS s.sequencer.reg1 = value & 0x3d;
           BX_VGA_THIS s.x_dotclockdiv2 = ((value & 0x08) > 0);
+          calculate_retrace_timing();
           break;
         case 2: /* sequencer: map mask register */
           BX_VGA_THIS s.sequencer.map_mask = (value & 0x0f);
@@ -1182,12 +1193,17 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool 
       if (value != BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address]) {
         BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address] = value;
         switch (BX_VGA_THIS s.CRTC.address) {
+          case 0x00:
+          case 0x06:
+            calculate_retrace_timing();
+            break;
           case 0x07:
             BX_VGA_THIS s.vertical_display_end &= 0xff;
             if (BX_VGA_THIS s.CRTC.reg[0x07] & 0x02) BX_VGA_THIS s.vertical_display_end |= 0x100;
             if (BX_VGA_THIS s.CRTC.reg[0x07] & 0x40) BX_VGA_THIS s.vertical_display_end |= 0x200;
             BX_VGA_THIS s.line_compare &= 0x2ff;
             if (BX_VGA_THIS s.CRTC.reg[0x07] & 0x10) BX_VGA_THIS s.line_compare |= 0x100;
+            calculate_retrace_timing();
             needs_update = 1;
             break;
           case 0x08:
@@ -1223,6 +1239,7 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool 
           case 0x12:
             BX_VGA_THIS s.vertical_display_end &= 0x300;
             BX_VGA_THIS s.vertical_display_end |= BX_VGA_THIS s.CRTC.reg[0x12];
+            calculate_retrace_timing();
             break;
           case 0x13:
           case 0x14:
@@ -1344,6 +1361,7 @@ void bx_vgacore_c::update(void)
   static unsigned cs_counter = 1;
   static bx_bool cs_visible = 0;
   bx_bool cs_toggle = 0;
+  Bit64u display_usec;
 
   cs_counter--;
   /* no screen update necessary */
@@ -1369,10 +1387,11 @@ void bx_vgacore_c::update(void)
       || (BX_VGA_THIS s.sequencer.reg1 & 0x20))
     return;
 
-  /* skip screen update if the vertical retrace is in progress
-     (using 72 Hz vertical frequency) */
-  if ((bx_pc_system.time_usec() % 13888) < 70)
+  /* skip screen update if the vertical retrace is in progress */
+  display_usec = bx_pc_system.time_usec() % BX_VGA_THIS s.vtotal_usec;
+  if (display_usec < 70) {
     return;
+  }
 
   // fields that effect the way video memory is serialized into screen output:
   // GRAPHICS CONTROLLER:

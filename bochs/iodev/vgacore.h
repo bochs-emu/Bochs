@@ -96,6 +96,7 @@ protected:
   bx_bool get_dac_palette(Bit8u **palette_ptr, Bit8u shift);
   void update(void);
   void determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth);
+  void calculate_retrace_timing(void);
 
   struct {
     struct {
@@ -204,13 +205,19 @@ protected:
     Bit16u charmap_address;
     bx_bool x_dotclockdiv2;
     bx_bool y_doublescan;
+    // h/v retrace timing
+    Bit32u htotal_usec;
+    Bit32u vtotal_usec;
+    // shift values for extensions
     Bit8u  plane_shift;
     Bit32u plane_offset;
     Bit8u  dac_shift;
+    // last active resolution and bpp
     Bit16u last_xres;
     Bit16u last_yres;
     Bit8u last_bpp;
     Bit8u last_msl;
+    // maximum resolution and number of tiles
     Bit16u max_xres;
     Bit16u max_yres;
     Bit16u num_x_tiles;
