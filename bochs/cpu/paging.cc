@@ -731,8 +731,6 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
          page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, user, rw);
       }
 
-      // Make up the physical page frame address
-      ppf += (bx_phy_address)(laddr & LPFOf(offset_mask));
       lpf_mask = offset_mask;
       break;
     }
@@ -758,7 +756,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
   // Update A/D bits if needed
   update_access_dirty_PAE(entry_addr, entry, BX_LEVEL_PML4, leaf, isWrite);
 
-  return ppf;
+  return ppf | (laddr & offset_mask);
 }
 
 #endif
@@ -936,7 +934,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
       }
 
       // Make up the physical page frame address
-      ppf = (bx_phy_address)((curr_entry & BX_CONST64(0x000fffffffe00000)) | (laddr & 0x001ff000));
+      ppf = (bx_phy_address)(curr_entry & BX_CONST64(0x000fffffffe00000));
       lpf_mask = 0x1fffff;
       break;
     }
@@ -962,7 +960,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
   // Update A/D bits if needed
   update_access_dirty_PAE(entry_addr, entry, BX_LEVEL_PDE, leaf, isWrite);
 
-  return ppf;
+  return ppf | (laddr & lpf_mask);
 }
 
 #endif
@@ -1034,7 +1032,7 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
       }
 
       // make up the physical frame number
-      ppf = (curr_entry & 0xffc00000) | (laddr & 0x003ff000);
+      ppf = (curr_entry & 0xffc00000);
 #if BX_PHY_ADDRESS_WIDTH > 32
       ppf |= ((bx_phy_address)(curr_entry & 0x003fe000)) << 19;
 #endif
@@ -1068,7 +1066,7 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
 
   update_access_dirty(entry_addr, entry, leaf, isWrite);
 
-  return ppf;
+  return ppf | (laddr & lpf_mask);
 }
 
 void BX_CPU_C::update_access_dirty(bx_phy_address *entry_addr, Bit32u *entry, unsigned leaf, bx_bool write)
@@ -1135,14 +1133,14 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned user, unsig
 #if BX_CPU_LEVEL >= 6
 #if BX_SUPPORT_X86_64
     if (long_mode())
-      ppf = translate_linear_long_mode(laddr, lpf_mask, combined_access, user, rw);
+      paddress = translate_linear_long_mode(laddr, lpf_mask, combined_access, user, rw);
     else
 #endif
       if (BX_CPU_THIS_PTR cr4.get_PAE())
-        ppf = translate_linear_PAE(laddr, lpf_mask, combined_access, user, rw);
+        paddress = translate_linear_PAE(laddr, lpf_mask, combined_access, user, rw);
       else
 #endif 
-        ppf = translate_linear_legacy(laddr, lpf_mask, combined_access, user, rw);
+        paddress = translate_linear_legacy(laddr, lpf_mask, combined_access, user, rw);
 
 #if BX_CPU_LEVEL >= 5
     if (lpf_mask > 0xfff)
@@ -1151,25 +1149,24 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned user, unsig
   }
   else {
     // no paging
-    ppf = (bx_phy_address) lpf;
+    paddress = (bx_phy_address) laddr;
   }
 
   // Calculate physical memory address and fill in TLB cache entry
-  paddress = A20ADDR(ppf | poffset);
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_ENABLE)) {
       paddress = translate_guest_physical(paddress, laddr, 1, 0, rw);
-      ppf = PPFOf(paddress);
     }
   }
 #endif
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED) {
     paddress = nested_walk(paddress, rw, 0);
-    ppf = PPFOf(paddress);
   }
 #endif
+  paddress = A20ADDR(paddress);
+  ppf = PPFOf(paddress);
 
   // direct memory access is NOT allowed by default
   tlbEntry->lpf = lpf | TLB_NoHostPtr;
@@ -1276,8 +1273,6 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
         nested_page_fault(ERROR_RESERVED | ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
       }
 
-      // Make up the physical page frame address
-      ppf += (bx_phy_address)(guest_paddr & offset_mask);	
       break;
     }
   }
@@ -1292,8 +1287,8 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
   // Update A/D bits if needed
   update_access_dirty_PAE(entry_addr, entry, BX_LEVEL_PML4, leaf, isWrite);
 
-  Bit32u page_offset = PAGE_OFFSET(guest_paddr);
-  return ppf | page_offset;
+  // Make up the physical page frame address
+  return ppf | (bx_phy_address)(guest_paddr & offset_mask);	
 }
 
 bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw, bx_bool is_page_walk)
@@ -1748,7 +1743,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx
           pt_address &= BX_CONST64(0x000fffffffffe000);
           if (pt_address & offset_mask)
             goto page_fault;
-          if (bx_cpuid_support_1g_paging() && level == BX_LEVEL_PDPTE && long_mode()) break;
+          if (bx_cpuid_support_1g_paging() && level == BX_LEVEL_PDPTE) break;
           if (level == BX_LEVEL_PDE) break;
           goto page_fault;
         }
