@@ -3185,27 +3185,13 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 #endif
   else if (!strcmp(params[0], "plugin_ctrl")) {
     char *param, *pname, *val;
-    bx_param_bool_c *plugin;
     for (i=1; i<num_params; i++) {
       param = strdup(params[i]);
       pname = strtok(param, "=");
       val = strtok(NULL, "");
       if (val != NULL) {
         if (isdigit(val[0])) {
-          bx_bool load = atoi(val);
-          base = (bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL);
-          if (load != PLUG_device_present(pname)) {
-            if (load) {
-              if (PLUG_load_opt_plugin(pname)) {
-                plugin = new bx_param_bool_c(base, pname, "", "", 1);
-              } else {
-                BX_PANIC(("optional plugin '%s' not found", pname));
-              }
-            } else {
-              PLUG_unload_opt_plugin(pname);
-              base->remove(pname);
-            }
-          }
+          SIM->opt_plugin_ctrl(pname, atoi(val));
         } else {
           PARSE_ERR(("%s: plugin_ctrl directive malformed", context));
         }

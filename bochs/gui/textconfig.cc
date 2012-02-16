@@ -60,6 +60,7 @@ extern "C" {
 void bx_config_interface_init();
 int bx_read_rc(char *rc);
 int bx_write_rc(char *rc);
+void bx_plugin_ctrl();
 void bx_log_options(int individual);
 int bx_atexit();
 #if BX_DEBUGGER
@@ -304,8 +305,9 @@ static const char *startup_options_prompt =
 "13. Network card options\n"
 "14. Sound card options\n"
 "15. Other options\n"
+"16. Optional plugin control\n"
 #if BX_PLUGINS
-"16. User-defined options\n"
+"17. User-defined options\n"
 #endif
 "\n"
 "Please choose one: [0] ";
@@ -330,6 +332,16 @@ static const char *runtime_menu_prompt =
 "14. Quit now\n"
 "\n"
 "Please choose one:  [13] ";
+
+static const char *plugin_ctrl_prompt =
+"\n-----------------------\n"
+"Optional plugin control\n"
+"-----------------------\n"
+"0. Return to previous menu\n"
+"1. Load optional plugin\n"
+"2. Unload optional plugin\n"
+"\n"
+"Please choose one:  [0] ";
 
 #define NOT_IMPLEMENTED(choice) \
   fprintf(stderr, "ERROR: choice %d not implemented\n", choice);
@@ -468,7 +480,7 @@ int bx_config_interface(int menu)
         }
         break;
       case BX_CI_START_OPTS:
-        if (ask_uint(startup_options_prompt, "", 0, 15+BX_PLUGINS, 0, &choice, 10) < 0) return -1;
+        if (ask_uint(startup_options_prompt, "", 0, 16+BX_PLUGINS, 0, &choice, 10) < 0) return -1;
         switch (choice) {
           case 0: return 0;
           case 2: bx_log_options(0); break;
@@ -486,8 +498,9 @@ int bx_config_interface(int menu)
           case 13: do_menu("network"); break;
           case 14: do_menu("sound"); break;
           case 15: do_menu("misc"); break;
+          case 16: bx_plugin_ctrl(); break;
 #if BX_PLUGINS
-          case 16: do_menu("user"); break;
+          case 17: do_menu("user"); break;
 #endif
           default: BAD_OPTION(menu, choice);
         }
@@ -656,10 +669,53 @@ int bx_write_rc(char *rc)
       if (!overwrite) continue;  // if "no", start loop over, asking for a different file
       // they confirmed, so try again with overwrite bit set
       if (SIM->write_rc(newrc, 1) >= 0) {
-	fprintf(stderr, "Overwriting existing configuration '%s'.\n", newrc);
-	return 0;
+        fprintf(stderr, "Overwriting existing configuration '%s'.\n", newrc);
+        return 0;
       } else {
-	fprintf(stderr, "Write failed to '%s'.\n", newrc);
+        fprintf(stderr, "Write failed to '%s'.\n", newrc);
+      }
+    }
+  }
+}
+
+void bx_plugin_ctrl()
+{
+  Bit32u choice;
+  bx_list_c *plugin_ctrl;
+  int count;
+  char plugname[512];
+
+  while (1) {
+    if (ask_uint(plugin_ctrl_prompt, "", 0, 2, 0, &choice, 10) < 0) return;
+    if (choice == 0) {
+      return;
+    } else {
+      plugin_ctrl = (bx_list_c*) SIM->get_param(BXPN_PLUGIN_CTRL);
+      count = plugin_ctrl->get_size();
+      if (count == 0) {
+        fprintf(stderr, "\nNo optional plugins loaded\n");
+      } else {
+        fprintf(stderr, "\nCurrently loaded plugins:");
+        for (int i = 0; i < count; i++) {
+          if (i > 0) fprintf(stderr, ",");
+          fprintf(stderr, " %s", plugin_ctrl->get(i)->get_name());
+        }
+        fprintf(stderr, "\n");
+      }
+      if (choice == 1) {
+        ask_string("\nEnter the name of the plugin to load.\nTo cancel, type 'none'. [%s] ", "none", plugname);
+        if (strcmp(plugname, "none")) {
+          if (!SIM->opt_plugin_ctrl(plugname, 1)) {
+            fprintf(stderr, "\nPlugin already loaded.\n");
+          }
+        }
+      } else {
+        ask_string("\nEnter the name of the plugin to unload.\nTo cancel, type 'none'. [%s] ", "none", plugname);
+        if (strcmp(plugname, "none")) {
+          if (!SIM->opt_plugin_ctrl(plugname, 0)) {
+            fprintf(stderr, "\nNo plugin unloaded.\n");
+          }
+        }
       }
     }
   }
@@ -693,7 +749,7 @@ config_interface_notify_callback(void *unused, BxEvent *event)
       fprintf(stderr, "               This affects only %s events from device %s\n", SIM->get_log_level_name (level), event->u.logmsg.prefix);
       fprintf(stderr, "  die        - stop execution now\n");
       fprintf(stderr, "  abort      - dump core %s\n",
-	  BX_HAVE_ABORT ? "" : "(Disabled)");
+              BX_HAVE_ABORT ? "" : "(Disabled)");
 #if BX_DEBUGGER
       fprintf(stderr, "  debug      - continue and return to bochs debugger\n");
 #endif

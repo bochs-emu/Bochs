@@ -726,6 +726,7 @@ public:
   virtual bx_list_c *get_bochs_root() {return NULL;}
   virtual bx_bool restore_bochs_param(bx_list_c *root, const char *sr_path, const char *restore_name) { return 0; }
   // special config parameter and options functions for plugins
+  virtual bx_bool opt_plugin_ctrl(const char *plugname, bx_bool load) {return 0;}
   virtual void init_std_nic_options(const char *name, bx_list_c *menu) {}
   virtual void init_usb_options(const char *usb_name, const char *pname, int maxports) {}
   virtual int  parse_nic_params(const char *context, const char *param, bx_list_c *base) {return 0;}

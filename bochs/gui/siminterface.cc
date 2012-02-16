@@ -190,6 +190,7 @@ public:
   }
   virtual bx_bool restore_bochs_param(bx_list_c *root, const char *sr_path, const char *restore_name);
   // special config parameter and options functions for plugins
+  virtual bx_bool opt_plugin_ctrl(const char *plugname, bx_bool load);
   virtual void init_std_nic_options(const char *name, bx_list_c *menu);
   virtual void init_usb_options(const char *usb_name, const char *pname, int maxports);
   virtual int  parse_nic_params(const char *context, const char *param, bx_list_c *base);
@@ -1374,6 +1375,27 @@ bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_
   }
 
   return 1;
+}
+
+bx_bool bx_real_sim_c::opt_plugin_ctrl(const char *plugname, bx_bool load)
+{
+  bx_list_c *base = (bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL);
+  if (load != PLUG_device_present(plugname)) {
+    if (load) {
+      if (PLUG_load_opt_plugin(plugname)) {
+        new bx_param_bool_c(base, plugname, "", "", 1);
+        return 1;
+      } else {
+        BX_PANIC(("optional plugin '%s' not found", plugname));
+        return 0;
+      }
+    } else {
+      PLUG_unload_opt_plugin(plugname);
+      base->remove(plugname);
+      return 1;
+    }
+  }
+  return 0;
 }
 
 void bx_real_sim_c::init_std_nic_options(const char *name, bx_list_c *menu)
