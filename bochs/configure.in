@@ -802,6 +802,10 @@ if test "$use_usb" = 1; then
   AC_SUBST(USBCORE_OBJ)
   AC_SUBST(USBDEV_OBJS)
   AC_SUBST(SCSI_OBJS)
+  if test "$bx_plugins" = 0; then
+    USB_LIB_VAR='iodev/usb/libusb.a'
+    AC_SUBST(USB_LIB_VAR)
+  fi
 fi
 
 AC_MSG_CHECKING(for PCI pseudo NIC support)
@@ -914,6 +918,10 @@ if test "$networking" = yes; then
 
     ;;
   esac
+  if test "$bx_plugins" = 0; then
+    NETWORK_LIB_VAR='iodev/network/libnetwork.a'
+    AC_SUBST(NETWORK_LIB_VAR)
+  fi
   AC_DEFINE(BX_NETWORKING, 1)
 else
   AC_DEFINE(BX_NETWORKING, 0)
@@ -1763,6 +1771,10 @@ if test "$soundcard_present" = 1; then
       AC_MSG_RESULT(dummy)
       ;;
   esac
+  if test "$bx_plugins" = 0; then
+    SOUND_LIB_VAR='iodev/sound/libsound.a'
+    AC_SUBST(SOUND_LIB_VAR)
+  fi
 else
   AC_DEFINE(BX_SUPPORT_SOUNDLOW, 0)
 fi
@@ -1836,21 +1848,9 @@ PRIMARY_TARGET='bochs'
 PLUGIN_LIBNAME_TRANSFORMATION='%.o=libbx_%.la'
 
 IODEV_LIB_VAR='iodev/libiodev.a'
-if test "$bx_plugins" = 0; then
-  USB_LIB_VAR='iodev/usb/libusb.a'
-  NETWORK_LIB_VAR='iodev/network/libnetwork.a'
-  SOUND_LIB_VAR='iodev/sound/libsound.a'
-else
-  USB_LIB_VAR=''
-  NETWORK_LIB_VAR=''
-  SOUND_LIB_VAR=''
-fi
 NONINLINE_VAR='$(NONINLINE_OBJS)'
 
 AC_SUBST(IODEV_LIB_VAR)
-AC_SUBST(USB_LIB_VAR)
-AC_SUBST(NETWORK_LIB_VAR)
-AC_SUBST(SOUND_LIB_VAR)
 AC_SUBST(EXTRA_BX_OBJS)
 AC_SUBST(NONINLINE_VAR)
 AC_SUBST(INLINE_VAR)
