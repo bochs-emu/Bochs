@@ -327,11 +327,13 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Simulate_PauseResume, MyFrame::OnPauseResumeSim)
   EVT_MENU(ID_Simulate_Stop, MyFrame::OnKillSim)
   EVT_MENU(ID_Sim2CI_Event, MyFrame::OnSim2CIEvent)
+  EVT_MENU(ID_Edit_Plugins, MyFrame::OnEditPluginCtrl)
   EVT_MENU(ID_Edit_ATA0, MyFrame::OnEditATA)
   EVT_MENU(ID_Edit_ATA1, MyFrame::OnEditATA)
   EVT_MENU(ID_Edit_ATA2, MyFrame::OnEditATA)
   EVT_MENU(ID_Edit_ATA3, MyFrame::OnEditATA)
   EVT_MENU(ID_Edit_CPU, MyFrame::OnEditCPU)
+  EVT_MENU(ID_Edit_CPUID, MyFrame::OnEditCPUID)
   EVT_MENU(ID_Edit_Memory, MyFrame::OnEditMemory)
   EVT_MENU(ID_Edit_Clock_Cmos, MyFrame::OnEditClockCmos)
   EVT_MENU(ID_Edit_PCI, MyFrame::OnEditPCI)
@@ -441,6 +443,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuConfiguration->Append(ID_Quit, wxT("&Quit"));
 
   menuEdit = new wxMenu;
+  menuEdit->Append(ID_Edit_Plugins, wxT("Pl&ugin Control..."));
   menuEdit->Append(ID_Edit_FD_0, wxT("Floppy Disk &0..."));
   menuEdit->Append(ID_Edit_FD_1, wxT("Floppy Disk &1..."));
   menuEdit->Append(ID_Edit_ATA0, wxT("ATA Channel 0..."));
@@ -448,6 +451,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuEdit->Append(ID_Edit_ATA2, wxT("ATA Channel 2..."));
   menuEdit->Append(ID_Edit_ATA3, wxT("ATA Channel 3..."));
   menuEdit->Append(ID_Edit_CPU, wxT("&CPU..."));
+  menuEdit->Append(ID_Edit_CPUID, wxT("CPU&ID..."));
   menuEdit->Append(ID_Edit_Memory, wxT("&Memory..."));
   menuEdit->Append(ID_Edit_Clock_Cmos, wxT("C&lock/Cmos..."));
   menuEdit->Append(ID_Edit_PCI, wxT("&PCI..."));
@@ -606,10 +610,24 @@ void MyFrame::OnStateRestore(wxCommandEvent& WXUNUSED(event))
   }
 }
 
+void MyFrame::OnEditPluginCtrl(wxCommandEvent& WXUNUSED(event))
+{
+  wxMessageBox(wxT("Not implemented yet!"), wxT("Error"), wxOK | wxICON_ERROR);
+}
+
 void MyFrame::OnEditCPU(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("cpu");
+  dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
+  dlg.AddParam(list);
+  dlg.ShowModal();
+}
+
+void MyFrame::OnEditCPUID(wxCommandEvent& WXUNUSED(event))
+{
+  ParamDialog dlg(this, -1);
+  bx_list_c *list = (bx_list_c*) SIM->get_param("cpuid");
   dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.ShowModal();

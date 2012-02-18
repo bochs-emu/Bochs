@@ -33,6 +33,7 @@ enum
   ID_Config_Read,
   ID_Config_Save,
   ID_State_Restore,
+  ID_Edit_Plugins,
   ID_Edit_FD_0,
   ID_Edit_FD_1,
   ID_Edit_ATA0,
@@ -41,6 +42,7 @@ enum
   ID_Edit_ATA3,
   ID_Edit_Cdrom1,  // for toolbar. FIXME: toolbar can't handle >1 cdrom
   ID_Edit_CPU,
+  ID_Edit_CPUID,
   ID_Edit_Memory,
   ID_Edit_Clock_Cmos,
   ID_Edit_PCI,
@@ -165,7 +167,9 @@ public:
   void OnKillSim(wxCommandEvent& event);
   void OnSim2CIEvent(wxCommandEvent& event);
   void OnLogMsg(BxEvent *logMsgEvent);
+  void OnEditPluginCtrl(wxCommandEvent& event);
   void OnEditCPU(wxCommandEvent& event);
+  void OnEditCPUID(wxCommandEvent& event);
   void OnEditMemory(wxCommandEvent& event);
   void OnEditClockCmos(wxCommandEvent& event);
   void OnEditPCI(wxCommandEvent& event);
