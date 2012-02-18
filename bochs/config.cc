@@ -588,6 +588,11 @@ void bx_init_options()
 
   cpuid_param->set_options(menu->SHOW_PARENT);
 
+  // CPUID subtree depends on CPU model
+  SIM->get_param_enum(BXPN_CPU_MODEL)->set_dependent_list(cpuid_param->clone(), 0);
+  // enable CPUID subtree only for CPU model choice #0
+  SIM->get_param_enum(BXPN_CPU_MODEL)->set_dependent_bitmap(0, BX_MAX_BIT64U);
+
 #endif // CPU_LEVEL >= 4
 
   // memory subtree
