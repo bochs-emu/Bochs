@@ -762,6 +762,8 @@ int vvfat_image_t::read_directory(int mapping_index)
       current_mapping->path = buffer;
       current_mapping->read_only =
         (st.st_mode & (S_IWUSR | S_IWGRP | S_IWOTH)) == 0;
+    } else {
+      free(buffer);
     }
   }
   closedir(dir);
@@ -861,8 +863,10 @@ int vvfat_image_t::read_directory(int mapping_index)
         current_mapping->mode = MODE_UNDEFINED;
         current_mapping->info.file.offset = 0;
       }
-      current_mapping->path=buffer;
+      current_mapping->path = buffer;
       current_mapping->read_only = (finddata.dwFileAttributes & FILE_ATTRIBUTE_READONLY);
+    } else {
+      free(buffer);
     }
   } while (FindNextFile(hFind, &finddata));
   FindClose(hFind);
@@ -1725,6 +1729,7 @@ void vvfat_image_t::commit_changes(void)
 void vvfat_image_t::close(void)
 {
   char msg[BX_PATHNAME_LEN + 80];
+  mapping_t *mapping;
 
   if (vvfat_modified) {
     sprintf(msg, "Write back changes to directory '%s'?\n\nWARNING: This feature is still experimental!", vvfat_path);
@@ -1734,7 +1739,11 @@ void vvfat_image_t::close(void)
   }
   array_free(&fat);
   array_free(&directory);
-  array_free(&mapping);
+  for (unsigned i = 0; i < this->mapping.next; i++) {
+    mapping = (mapping_t*)array_get(&this->mapping, i);
+    free(mapping->path);
+  }
+  array_free(&this->mapping);
   if (cluster_buffer != NULL)
     delete [] cluster_buffer;
 
