@@ -33,7 +33,7 @@ LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 RANLIB = @RANLIB@
 
-BX_INCDIRS = -I.. -I../.. -I$(srcdir)/../.. -I../../@INSTRUMENT_DIR@ -I$(srcdir)/../../@INSTRUMENT_DIR@
+BX_INCDIRS = -I.. -I../.. -I$(srcdir)/.. -I$(srcdir)/../.. -I../../@INSTRUMENT_DIR@ -I$(srcdir)/../../@INSTRUMENT_DIR@
 
 CPUDB_OBJS = pentium_mmx.o \
              amd_k6_2_chomper.o  \

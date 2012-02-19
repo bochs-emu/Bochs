@@ -334,7 +334,7 @@ wxbochs_resources.o: wxbochs.rc
 
 # for win32 gui
 win32res.o: win32res.rc bxversion.rc
-	$(RC_CMD)$@ $(srcdir)/win32res.rc
+	$(RC_CMD)$@ $(srcdir)/win32res.rc -I.
 
 #####################################################################
 # Install target for all platforms.
