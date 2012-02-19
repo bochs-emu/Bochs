@@ -115,6 +115,7 @@ romimage: file=$BXSHARE/BIOS-bochs-latest
 #  athlon64_clawhammer        AMD Athlon(tm) 64 Processor 2800+ (Clawhammer)
 #  athlon64_venice            AMD Athlon(tm) 64 Processor 3000+ (Venice)
 #  turion64_tyler             AMD Turion(tm) 64 X2 Mobile TL-60 (Tyler)
+#  phenom_8650_toliman        AMD Phenom X3 8650 (Toliman)
 #  p4_prescott_celeron_336    Intel(R) Celeron(R) 336 (Prescott)
 #  core2_penryn_t9600         Intel Mobile Core 2 Duo T9600 (Penryn)
 #  corei5_lynnfield_750       Intel(R) Core(TM) i5   750 (Lynnfield)

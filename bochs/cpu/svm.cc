@@ -387,7 +387,7 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
       }
     }
 
-    BX_DEBUG(("VMRUN: Starting Nested Paging Mode !"));
+    BX_INFO(("VMRUN: Starting Nested Paging Mode !"));
   }
 
   return 1;
@@ -613,6 +613,7 @@ void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
 
   vmcb_write64(SVM_CONTROL64_EXITCODE, (Bit64u) ((Bit64s) reason));
   vmcb_write64(SVM_CONTROL64_EXITINFO1, exitinfo1);
+  vmcb_write64(SVM_CONTROL64_EXITINFO2, exitinfo2);
 
   // clean interrupt injection field
   vmcb_write32(SVM_CONTROL32_EVENT_INJECTION, ctrls->eventinj & ~0x80000000);

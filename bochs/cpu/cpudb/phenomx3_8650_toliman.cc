@@ -150,6 +150,15 @@ Bit32u phenom_8650_toliman_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_XAPIC_EXT;
 }
 
+#if BX_SUPPORT_SVM
+Bit32u phenom_8650_toliman_t::get_svm_extensions_bitmask(void) const
+{
+  return BX_CPUID_SVM_NESTED_PAGING |
+         BX_CPUID_SVM_LBR_VIRTUALIZATION |
+         BX_CPUID_SVM_SVM_LOCK;
+}
+#endif
+
 // leaf 0x00000000 //
 void phenom_8650_toliman_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 {

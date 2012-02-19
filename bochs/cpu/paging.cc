@@ -516,10 +516,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
 
 void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsigned rw)
 {
-  unsigned error_code = fault;
   unsigned isWrite = rw & 1;
 
-  error_code |= (user << 2) | (isWrite << 1);
+  Bit32u error_code = fault | (user << 2) | (isWrite << 1);
 
 #if BX_CPU_LEVEL >= 6
   if (rw == BX_EXECUTE) {

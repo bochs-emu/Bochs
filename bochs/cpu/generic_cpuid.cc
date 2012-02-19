@@ -1074,13 +1074,12 @@ void bx_generic_cpuid_t::init_svm_extensions_bitmask(void)
 {
   Bit32u features_bitmask = 0;
 
-/*
   static bx_bool svm_enabled = SIM->get_param_bool(BXPN_CPUID_SVM)->get();
   if (svm_enabled) {
-    // do smth
+    features_bitmask = BX_CPUID_SVM_NESTED_PAGING |
+                       BX_CPUID_SVM_NRIP_SAVE;
   }
-*/
-  
+
   this->svm_extensions_bitmask = features_bitmask;
 }
 #endif
