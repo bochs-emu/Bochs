@@ -387,7 +387,7 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
       }
     }
 
-    BX_INFO(("VMRUN: Starting Nested Paging Mode !"));
+    BX_DEBUG(("VMRUN: Starting Nested Paging Mode !"));
   }
 
   return 1;
