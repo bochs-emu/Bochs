@@ -578,6 +578,10 @@ static const char *bx_paging_level[4] = { "PTE", "PDE", "PDPE", "PML4" }; // kee
 
 #define PAGING_PAE_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS)
 
+// in legacy PAE mode bits [62:52] are reserved. bit 63 is NXE
+#define PAGING_LEGACY_PAE_RESERVED_BITS \
+             (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x7ff0000000000000))
+
 //       Format of a PDPTE that References a 1-GByte Page
 // -----------------------------------------------------------
 // 00    | Present (P)
@@ -642,32 +646,19 @@ static const char *bx_paging_level[4] = { "PTE", "PDE", "PDPE", "PML4" }; // kee
 // 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
 // -----------------------------------------------------------
 
-int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, unsigned rw, bx_bool nxe, bx_bool *nx_fault)
+int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsigned rw, bx_bool *nx_fault)
 {
   if (!(entry & 0x1)) {
     BX_DEBUG(("PAE %s: entry not present", s));
     return ERROR_NOT_PRESENT;
   }
 
-  if (entry & PAGING_PAE_RESERVED_BITS) {
+  if (entry & reserved) {
     BX_DEBUG(("PAE %s: reserved bit is set 0x" FMT_ADDRX64, s, entry));
     return ERROR_RESERVED | ERROR_PROTECTION;
   }
 
-#if BX_SUPPORT_X86_64
-  if (! long_mode()) {
-    if (entry & BX_CONST64(0x7ff0000000000000)) {
-      BX_DEBUG(("PAE %s: reserved bit is set 0x" FMT_ADDRX64, s, entry));
-      return ERROR_RESERVED | ERROR_PROTECTION;
-    }
-  }
-#endif
-
   if (entry & PAGE_DIRECTORY_NX_BIT) {
-    if (! nxe) {
-      BX_DEBUG(("PAE %s: NX bit set when EFER.NXE is disabled", s));
-      return ERROR_RESERVED | ERROR_PROTECTION;
-    }
     if (rw == BX_EXECUTE) {
       BX_DEBUG(("PAE %s: non-executable page fault occured", s));
       *nx_fault = 1;
@@ -692,6 +683,10 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
   lpf_mask = 0xfff;
   combined_access = 0x06;
 
+  Bit64u reserved = PAGING_PAE_RESERVED_BITS;
+  if (! BX_CPU_THIS_PTR efer.get_NXE())
+    reserved |= PAGE_DIRECTORY_NX_BIT;
+
   for (leaf = BX_LEVEL_PML4;; --leaf) {
     entry_addr[leaf] = ppf + ((laddr >> (9 + 9*leaf)) & 0xff8);
 #if BX_SUPPORT_VMX >= 2
@@ -710,7 +705,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
     offset_mask >>= 9;
 
     Bit64u curr_entry = entry[leaf];
-    int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, rw, BX_CPU_THIS_PTR efer.get_NXE(), &nx_fault);
+    int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, reserved, rw, &nx_fault);
     if (fault >= 0)
       page_fault(fault, laddr, user, rw);
 
@@ -897,6 +892,10 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
   lpf_mask = 0xfff;
   combined_access = 0x06;
 
+  Bit64u reserved = PAGING_LEGACY_PAE_RESERVED_BITS;
+  if (! BX_CPU_THIS_PTR efer.get_NXE())
+    reserved |= PAGE_DIRECTORY_NX_BIT;
+
   Bit64u pdpte = translate_linear_load_PDPTR(laddr, user, rw);
   bx_phy_address ppf = pdpte & BX_CONST64(0x000ffffffffff000);
 
@@ -917,7 +916,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
     BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     Bit64u curr_entry = entry[leaf];
-    int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, rw, BX_CPU_THIS_PTR efer.get_NXE(), &nx_fault);
+    int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, reserved, rw, &nx_fault);
     if (fault >= 0)
       page_fault(fault, laddr, user, rw);
 
@@ -1227,9 +1226,7 @@ void BX_CPU_C::nested_page_fault(unsigned fault, bx_phy_address guest_paddr, uns
   else
     error_code |= BX_CONST64(1) << 33;
 
-  vmcb_write64(SVM_CONTROL64_EXITINFO2, guest_paddr);
-
-  Svm_Vmexit(SVM_VMEXIT_NPF, error_code);
+  Svm_Vmexit(SVM_VMEXIT_NPF, error_code, guest_paddr);
 }
 
 bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsigned rw, bx_bool is_page_walk)
@@ -1245,6 +1242,10 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
   Bit64u offset_mask = BX_CONST64(0x0000ffffffffffff);
   unsigned combined_access = 0x06;
 
+  Bit64u reserved = PAGING_PAE_RESERVED_BITS;
+  if (! host_state->efer.get_NXE())
+    reserved |= PAGE_DIRECTORY_NX_BIT;
+
   for (leaf = BX_LEVEL_PML4;; --leaf) {
     entry_addr[leaf] = ppf + ((guest_paddr >> (9 + 9*leaf)) & 0xff8);
     access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
@@ -1252,7 +1253,7 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
     offset_mask >>= 9;
 
     Bit64u curr_entry = entry[leaf];
-    int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, rw, host_state->efer.get_NXE(), &nx_fault);
+    int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, reserved, rw, &nx_fault);
     if (fault >= 0)
       nested_page_fault(fault, guest_paddr, rw, is_page_walk);
 
@@ -1321,6 +1322,10 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
     nested_page_fault(ERROR_RESERVED | ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
   }
 
+  Bit64u reserved = PAGING_LEGACY_PAE_RESERVED_BITS;
+  if (! host_state->efer.get_NXE())
+    reserved |= PAGE_DIRECTORY_NX_BIT;
+
   bx_phy_address ppf = pdptr & BX_CONST64(0x000ffffffffff000);
 
   for (leaf = BX_LEVEL_PDE;; --leaf) {
@@ -1329,7 +1334,7 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
     BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     Bit64u curr_entry = entry[leaf];
-    int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, rw, host_state->efer.get_NXE(), &nx_fault);
+    int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, reserved, rw, &nx_fault);
     if (fault >= 0)
       nested_page_fault(fault, guest_paddr, rw, is_page_walk);
 

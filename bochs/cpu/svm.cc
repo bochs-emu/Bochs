@@ -390,9 +390,6 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
     BX_DEBUG(("VMRUN: Starting Nested Paging Mode !"));
   }
 
-  /* clear exitinfo2 so we behave like the real hardware */
-  vmcb_write64(SVM_CONTROL64_EXITINFO2, 0);
-
   return 1;
 }
 
@@ -587,9 +584,10 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   return 1;
 }
 
-void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1)
+void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
 {
-  BX_DEBUG(("SVM VMEXIT reason=%d exitinfo1=0x%08x%08x", reason, GET32H(exitinfo1), GET32L(exitinfo1)));
+  BX_DEBUG(("SVM VMEXIT reason=%d exitinfo1=%08x%08x exitinfo2=%08x%08x", reason,
+    GET32H(exitinfo1), GET32L(exitinfo1), GET32H(exitinfo2), GET32L(exitinfo2)));
 
   if (! BX_CPU_THIS_PTR in_svm_guest) {
     if (reason != SVM_VMEXIT_INVALID)
@@ -753,13 +751,10 @@ void BX_CPU_C::SvmInterceptException(unsigned type, unsigned vector, Bit16u errc
   if (vector == BX_DF_EXCEPTION)
     BX_CPU_THIS_PTR in_event = 0; // clear in_event indication on #DF
 
-  if (vector == BX_PF_EXCEPTION)
-    vmcb_write64(SVM_CONTROL64_EXITINFO2, qualification);
-
   BX_CPU_THIS_PTR debug_trap = 0; // clear debug_trap field
   BX_CPU_THIS_PTR inhibit_mask = 0;
 
-  Svm_Vmexit(SVM_VMEXIT_EXCEPTION + vector, errcode_valid ? errcode : 0);
+  Svm_Vmexit(SVM_VMEXIT_EXCEPTION + vector, (errcode_valid ? errcode : 0), qualification);
 }
 
 #define SVM_VMEXIT_IO_PORTIN        (1 << 0)
@@ -853,8 +848,7 @@ void BX_CPU_C::SvmInterceptIO(bxInstruction_c *i, unsigned port, unsigned len)
     else 
       qualification |= SVM_VMEXIT_IO_INSTR_ASIZE16;
 
-    vmcb_write64(SVM_CONTROL64_EXITINFO2, RIP);
-    Svm_Vmexit(SVM_VMEXIT_IO, qualification);
+    Svm_Vmexit(SVM_VMEXIT_IO, qualification, RIP);
   }
 }
 
@@ -918,9 +912,7 @@ void BX_CPU_C::SvmInterceptTaskSwitch(Bit16u tss_selector, unsigned source, bx_b
   if (flags & EFlagsRFMask)
     qualification |= BX_CONST64(1) << 48;
 
-  vmcb_write64(SVM_CONTROL64_EXITINFO2, qualification);
-
-  Svm_Vmexit(SVM_VMEXIT_TASK_SWITCH, tss_selector);
+  Svm_Vmexit(SVM_VMEXIT_TASK_SWITCH, tss_selector, qualification);
 }
 
 #endif

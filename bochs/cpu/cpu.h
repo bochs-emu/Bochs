@@ -3946,7 +3946,7 @@ public: // for now...
 #if BX_CPU_LEVEL >= 6
   BX_SMF bx_phy_address translate_linear_load_PDPTR(bx_address laddr, unsigned user, unsigned rw);
   BX_SMF bx_phy_address translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned user, unsigned rw);
-  BX_SMF int check_entry_PAE(const char *s, Bit64u entry, unsigned rw, bx_bool nxe, bx_bool *nx_fault);
+  BX_SMF int check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsigned rw, bx_bool *nx_fault);
   BX_SMF void update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry, unsigned max_level, unsigned leaf, bx_bool write);
 #endif
 #if BX_SUPPORT_X86_64
@@ -4331,7 +4331,7 @@ public: // for now...
   BX_SMF bx_bool SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls);
   BX_SMF bx_bool SvmEnterLoadCheckGuestState(void);
   BX_SMF bx_bool SvmInjectEvents(void);
-  BX_SMF void Svm_Vmexit(int reason, Bit64u exitinfo1 = 0);
+  BX_SMF void Svm_Vmexit(int reason, Bit64u exitinfo1 = 0, Bit64u exitinfo2 = 0);
   BX_SMF void SvmExitSaveGuestState(void);
   BX_SMF void SvmExitLoadHostState(SVM_HOST_STATE *host);
   BX_SMF Bit8u vmcb_read8(unsigned offset);
