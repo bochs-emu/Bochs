@@ -2064,7 +2064,7 @@ if test "$with_sdl" = yes; then
          EXTRA_BX_OBJS="$EXTRA_BX_OBJS win32res.o"
          ;;
       *-cygwin* | *-mingw32*)
-         RC_CMD="windres -o "
+         RC_CMD="windres -I. -o "
          EXTRA_BX_OBJS="$EXTRA_BX_OBJS win32res.o"
          ;;
     esac
@@ -2110,7 +2110,7 @@ if test "$with_win32" = yes; then
        ;;
     *-cygwin* | *-mingw32*)
        if test "$with_wx" != yes; then
-         RC_CMD="windres -o "
+         RC_CMD="windres -I. -o "
          EXTRA_BX_OBJS="$EXTRA_BX_OBJS win32res.o"
        fi
        GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_WIN32)"
