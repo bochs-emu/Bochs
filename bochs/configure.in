@@ -53,7 +53,7 @@ case "$target" in
       ADD_FLAGS="-DBROKEN_LINKER=1"
     fi
     ;;
-  *-pc-mingw32*)
+  *-mingw32*)
     NO_LT=1   # do not use libtool at all on cygwin
     if test "$with_term" = yes; then
       # ncurses won't compile with -mno-cygwin or -DWIN32
@@ -117,17 +117,19 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_MAKE_SET
 
-dnl------------ libtool configuration
-dnl Configure libtool, and default to shared libraries.  Libtool will only be
-dnl used for compiling and linking plugins.
-AC_DISABLE_STATIC
-dnl Check for dlopen support
-AC_LIBTOOL_DLOPEN
-dnl Configure libtool
-AC_PROG_LIBTOOL
-dnl Configure the ltdl library.  This must go after AC_PROG_LIBTOOL or
-dnl else it disables shared libraries somehow.
-AC_LIB_LTDL
+if test "$MSVC_TARGET" != 1; then
+  dnl------------ libtool configuration
+  dnl Configure libtool, and default to shared libraries.  Libtool will only be
+  dnl used for compiling and linking plugins.
+  AC_DISABLE_STATIC
+  dnl Check for dlopen support
+  AC_LIBTOOL_DLOPEN
+  dnl Configure libtool
+  AC_PROG_LIBTOOL
+  dnl Configure the ltdl library.  This must go after AC_PROG_LIBTOOL or
+  dnl else it disables shared libraries somehow.
+  AC_LIB_LTDL
+fi
 
 AC_PATH_XTRA
 
@@ -141,51 +143,69 @@ AC_CHECK_SIZEOF(unsigned long long)
 AC_CHECK_SIZEOF(int *)
 AC_CHECK_FUNCS(getenv, AC_DEFINE(BX_HAVE_GETENV))
 AC_CHECK_FUNCS(setenv, AC_DEFINE(BX_HAVE_SETENV))
-AC_CHECK_FUNCS(select, AC_DEFINE(BX_HAVE_SELECT))
 AC_CHECK_FUNCS(snprintf, AC_DEFINE(BX_HAVE_SNPRINTF))
 AC_CHECK_FUNCS(vsnprintf, AC_DEFINE(BX_HAVE_VSNPRINTF))
-AC_CHECK_FUNCS(strtoull, AC_DEFINE(BX_HAVE_STRTOULL))
-AC_CHECK_FUNCS(strtouq, AC_DEFINE(BX_HAVE_STRTOUQ))
-AC_CHECK_FUNCS(strdup, AC_DEFINE(BX_HAVE_STRDUP))
-AC_CHECK_FUNCS(strrev, AC_DEFINE(BX_HAVE_STRREV))
-AC_CHECK_FUNCS(stricmp, AC_DEFINE(BX_HAVE_STRICMP))
-AC_CHECK_FUNCS(strcasecmp, AC_DEFINE(BX_HAVE_STRCASECMP))
+
+if test "$MSVC_TARGET" != 1; then
+  AC_CHECK_FUNCS(select, AC_DEFINE(BX_HAVE_SELECT))
+  AC_CHECK_TYPE(socklen_t, AC_DEFINE(BX_HAVE_SOCKLEN_T), , [#include <sys/types.h>
+  #include <sys/socket.h>])
+  AC_CHECK_FUNCS(strtoull, AC_DEFINE(BX_HAVE_STRTOULL))
+  AC_CHECK_FUNCS(strtouq, AC_DEFINE(BX_HAVE_STRTOUQ))
+  AC_CHECK_FUNCS(strdup, AC_DEFINE(BX_HAVE_STRDUP))
+  AC_CHECK_FUNCS(strrev, AC_DEFINE(BX_HAVE_STRREV))
+  AC_CHECK_FUNCS(stricmp, AC_DEFINE(BX_HAVE_STRICMP))
+  AC_CHECK_FUNCS(strcasecmp, AC_DEFINE(BX_HAVE_STRCASECMP))
+  AC_CHECK_FUNCS(mkstemp, AC_DEFINE(BX_HAVE_MKSTEMP))
+  AC_CHECK_HEADER(sys/mman.h, AC_DEFINE(BX_HAVE_SYS_MMAN_H))
+  AC_CHECK_FUNCS(gettimeofday, AC_DEFINE(BX_HAVE_GETTIMEOFDAY))
+  AC_CHECK_FUNCS(usleep, AC_DEFINE(BX_HAVE_USLEEP))
+
+  AC_MSG_CHECKING(for __builtin_bswap32)
+  AC_TRY_LINK([],[
+    __builtin_bswap32(0x12345678);
+  ],[
+    AC_DEFINE(BX_HAVE___BUILTIN_BSWAP32, 1, [Define to 1 if you have the '__builtin_bswap32' function.])
+    AC_MSG_RESULT(yes)
+  ],[
+    AC_MSG_RESULT(no)
+  ])
+  AC_MSG_CHECKING(for __builtin_bswap64)
+  AC_TRY_LINK([],[
+    __builtin_bswap64(0x12345678);
+  ],[
+    AC_DEFINE(BX_HAVE___BUILTIN_BSWAP64, 1, [Define to 1 if you have the '__builtin_bswap64' function.])
+    AC_MSG_RESULT(yes)
+  ],[
+    AC_MSG_RESULT(no)
+  ])
+else
+  AC_DEFINE(BX_HAVE_SELECT, 1)
+  AC_DEFINE(BX_HAVE_SOCKLEN_T, 0)
+  AC_DEFINE(BX_HAVE_STRTOULL, 1)
+  AC_DEFINE(BX_HAVE_STRTOUQ, 0)
+  AC_DEFINE(BX_HAVE_STRDUP, 1)
+  AC_DEFINE(BX_HAVE_STRREV, 1)
+  AC_DEFINE(BX_HAVE_STRICMP, 1)
+  AC_DEFINE(BX_HAVE_STRCASECMP, 0)
+  AC_DEFINE(BX_HAVE_MKSTEMP, 0)
+  AC_DEFINE(BX_HAVE_SYS_MMAN_H, 0)
+  AC_DEFINE(BX_HAVE_GETTIMEOFDAY, 0)
+  AC_DEFINE(BX_HAVE_USLEEP, 0)
+  AC_DEFINE(BX_HAVE___BUILTIN_BSWAP32, 0)
+  AC_DEFINE(BX_HAVE___BUILTIN_BSWAP64, 0)
+fi
 AC_CHECK_FUNCS(sleep, AC_DEFINE(BX_HAVE_SLEEP))
-AC_CHECK_FUNCS(usleep, AC_DEFINE(BX_HAVE_USLEEP))
 AC_CHECK_FUNCS(nanosleep, AC_DEFINE(BX_HAVE_NANOSLEEP))
 AC_CHECK_FUNCS(abort, AC_DEFINE(BX_HAVE_ABORT))
-AC_CHECK_FUNCS(gettimeofday, AC_DEFINE(BX_HAVE_GETTIMEOFDAY))
-AC_CHECK_TYPE(socklen_t, AC_DEFINE(BX_HAVE_SOCKLEN_T), , [#include <sys/types.h>
-#include <sys/socket.h>])
 AC_CHECK_MEMBER(struct sockaddr_in.sin_len, AC_DEFINE(BX_HAVE_SOCKADDR_IN_SIN_LEN), , [#include <sys/socket.h>
 #include <netinet/in.h> ])
-AC_CHECK_FUNCS(mkstemp, AC_DEFINE(BX_HAVE_MKSTEMP))
-AC_CHECK_HEADER(sys/mman.h, AC_DEFINE(BX_HAVE_SYS_MMAN_H))
 AC_CHECK_FUNCS(timelocal, AC_DEFINE(BX_HAVE_TIMELOCAL))
 AC_CHECK_FUNCS(gmtime, AC_DEFINE(BX_HAVE_GMTIME))
 AC_CHECK_FUNCS(mktime, AC_DEFINE(BX_HAVE_MKTIME))
 AC_CHECK_FUNCS(tmpfile64, AC_DEFINE(BX_HAVE_TMPFILE64))
 AC_CHECK_FUNCS(fseek64, AC_DEFINE(BX_HAVE_FSEEK64))
 AC_CHECK_FUNCS(fseeko64, AC_DEFINE(BX_HAVE_FSEEKO64))
-
-AC_MSG_CHECKING(for __builtin_bswap32)
-AC_TRY_LINK([],[
-  __builtin_bswap32(0x12345678);
-],[
-  AC_DEFINE(BX_HAVE___BUILTIN_BSWAP32, 1, [Define to 1 if you have the '__builtin_bswap32' function.])
-  AC_MSG_RESULT(yes)
-],[
-  AC_MSG_RESULT(no)
-])
-AC_MSG_CHECKING(for __builtin_bswap64)
-AC_TRY_LINK([],[
-  __builtin_bswap64(0x12345678);
-],[
-  AC_DEFINE(BX_HAVE___BUILTIN_BSWAP64, 1, [Define to 1 if you have the '__builtin_bswap64' function.])
-  AC_MSG_RESULT(yes)
-],[
-  AC_MSG_RESULT(no)
-])
 
 dnl As of autoconf 2.53, the standard largefile test fails for Linux/gcc.
 dnl It does not put the largefiles arguments into CFLAGS, even though Linux/gcc
@@ -372,7 +392,7 @@ if test "$with_all_libs" = yes; then
   if test "$with_rfb" != yes; then
     can_compile_rfb=1
     case $target in
-      *-pc-windows* | *-pc-winnt* | *-pc-cygwin* | *-pc-mingw32*)
+      *-pc-windows* | *-pc-winnt* | *-pc-cygwin* | *-mingw32*)
 	AC_CHECK_HEADER([winsock.h], [], [ can_compile_rfb=0 ])
 	AC_CHECK_HEADER([process.h], [], [ can_compile_rfb=0 ])
         ;;
@@ -865,7 +885,7 @@ if test "$networking" = yes; then
     fi
   fi
   case "$target" in
-    *-pc-windows* | *-pc-winnt* | *-pc-cygwin* | *-pc-mingw32*)
+    *-pc-windows* | *-pc-winnt* | *-pc-cygwin* | *-mingw32*)
     NETLOW_OBJS="$NETLOW_OBJS eth_win32.o"
     AC_DEFINE(BX_NETMOD_WIN32, 1)
     ;;
@@ -1648,7 +1668,7 @@ if test "$bx_cdrom" = 1; then
   AC_MSG_RESULT(yes)
   CDROM_OBJS='cdrom.o'
   case $target in
-    *-pc-windows* | *-pc-winnt* | *-pc-cygwin* | *-pc-mingw32*)
+    *-pc-windows* | *-pc-winnt* | *-pc-cygwin* | *-mingw32*)
       CDROM_OBJS="$CDROM_OBJS cdrom_win32.o"
       AC_DEFINE(BX_SUPPORT_CDROM, 1)
       ;;
@@ -2314,25 +2334,11 @@ case "$target" in
     AC_DEFINE(BX_64BIT_CONSTANTS_USE_LL, 0)
     AC_DEFINE(inline, __forceinline)
     AC_DEFINE(BX_NO_ATTRIBUTES, 1)
-    AC_DEFINE(BX_HAVE_STRICMP, 1)
-    AC_DEFINE(BX_HAVE_STRCASECMP, 0)
-    AC_DEFINE(BX_HAVE_STRTOULL, 1)
-    AC_DEFINE(BX_HAVE_STRTOUQ, 0)
-    AC_DEFINE(BX_HAVE_STRREV, 1)
-    AC_DEFINE(BX_HAVE_STRDUP, 1)
     AC_DEFINE(HAVE_LIBREADLINE, 0)
     AC_DEFINE(HAVE_READLINE_HISTORY_H, 0)
     READLINE_LIB="";
-    AC_DEFINE(BX_HAVE_GETTIMEOFDAY, 0)
     AC_DEFINE(BX_HAVE_DLFCN_H, 0)
-    AC_DEFINE(BX_HAVE_MKSTEMP, 0)
-    AC_DEFINE(BX_HAVE_SYS_MMAN_H, 0)
-    AC_DEFINE(BX_HAVE_USLEEP, 0)
     AC_DEFINE(BX_NETMOD_TAP, 0)
-    AC_DEFINE(BX_HAVE_SELECT, 1)
-    AC_DEFINE(BX_HAVE_SOCKLEN_T, 0)
-    AC_DEFINE(BX_HAVE___BUILTIN_BSWAP32, 0)
-    AC_DEFINE(BX_HAVE___BUILTIN_BSWAP64, 0)
     ;;
   *-pc-cygwin*)
     EXE=".exe"
@@ -2427,7 +2433,7 @@ if test "$with_rfb" = yes; then
       RFB_LIBS="$RFB_LIBS wsock32.lib"
       have_socket=yes
       ;;
-    *-pc-winnt* | *-pc-cygwin* | *-pc-mingw32*)
+    *-pc-winnt* | *-pc-cygwin* | *-mingw32*)
       # is this okay without a check ?
       RFB_LIBS="$RFB_LIBS -lwsock32"
       have_socket=yes
@@ -2660,7 +2666,7 @@ if test "$with_rfb" = yes -a "$cross_configure" = 0; then
     CC="$PTHREAD_CC"
   else
     case "$target" in
-	  *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw*)
+	  *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32*)
 	    # pthread not needed for win32 platform
 		;;
 	  *)
