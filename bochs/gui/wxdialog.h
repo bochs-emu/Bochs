@@ -218,6 +218,26 @@ DECLARE_EVENT_TABLE()
 #endif
 
 ////////////////////////////////////////////////////////////////////////////
+// PluginControlDialog
+////////////////////////////////////////////////////////////////////////////
+class PluginControlDialog: public wxDialog
+{
+private:
+  void Init();  // called automatically by ShowModal()
+  void ShowHelp();
+  wxBoxSizer *vertSizer, *horzSizer, *listSizer, *editSizer, *buttonSizer;
+  wxTextCtrl *plugname;
+  wxListBox *pluglist;
+  wxButton *btn_load, *btn_unload;
+public:
+  PluginControlDialog(wxWindow* parent, wxWindowID id);
+  ~PluginControlDialog() {}
+  void OnEvent(wxCommandEvent& event);
+  int ShowModal() { Init(); return wxDialog::ShowModal(); }
+DECLARE_EVENT_TABLE()
+};
+
+////////////////////////////////////////////////////////////////////////////
 // ParamDialog is a general purpose dialog box that displays and edits
 // any combination of parameters.  It's always made up of a
 // wxFlexGridSizer with three columns.  Each parameter takes up one row.
@@ -474,19 +494,14 @@ public:
 /**************************************************************************
 Everything else in here is a comment!
 
-
-
-
 ////////////////////////////////////////////////////////////////////////////
 // proposed dialogs, not implemented
 ////////////////////////////////////////////////////////////////////////////
 
 Here are some quick sketches of what different parts of the interface
 could look like.  None of these is implemented yet, and everything is
-open for debate.  Whoever writes the wxwidgets code for any of these
+open for debate.  Whoever writes the wxWidgets code for any of these
 screens gets several thousand votes!
-
-
 
 Idea for large configuration dialog, based on Netscape's Edit:Preferences
 dialog box.  Here's a sketch of a dialog with all the components that can be
@@ -599,7 +614,6 @@ CD-ROM button on the toolbar at runtime.
 |                       [Help] [Cancel] [Ok]  |
 +---------------------------------------------+
 
-
 ////////////////////////////////////////////////////////////////////////////
 // ChooseConfigDialog
 ////////////////////////////////////////////////////////////////////////////
@@ -630,7 +644,6 @@ could grow.
 |    ??      Create new configuration                    |
 |                                                        |
 +--------------------------------------------------------+
-
 
 ////////////////////////////////////////////////////////////////////////////
 // ChooseBootDialog
@@ -682,117 +695,8 @@ you can view/edit/load/save key mappings, produce any combination of keys
 (esp. ones that your OS or window manager won't allow)
 
 ////////////////////////////////////////////////////////////////////////////
-// ConfigTimeDialog
+// new AdvancedLogOptionsDialog
 ////////////////////////////////////////////////////////////////////////////
-
-choose IPS
-select starting time for CMOS clock
-turn on real time PIT or not (?)
-VGA update interval
-
-This dialog can easily allow people to tune the IPS setting, or
-various other speed-related values, at runtime.  If you're running
-some time-sensitive program you could adjust IPS until it's the right
-speed, or if Bochs is wasting all of your CPU's cycles you could turn
-a dial to some periodic delays to allow other processes a chance to
-complete.
-
-Suggestions from Greg Alexander:
-> I'm using O for radio buttons and [ ] for check boxes.
->
-> ---------Basic Configure Timing Dialog--------
->
-> Instructions per second:  [_________] (maybe have some default options
->     and an "other")
->
-> Select timing behavior desired:
->
-> O Full Speed, Real Time
->   (NOT Reproducible)
-> O Minimize CPU Use, Real Time
-> O Full speed, NOT Real Time
->
-> [Advanced]
->
-> -----------------------------------------------
-> The logic for the above would look like this:
-> All options get the New PIT.
-> Option 1 Gets you the Realtime PIT.
-> Option 2 Gets you the Slowdown Timer.
-> Option 3 Gets you neither.
->
-> -------Advanced Configure Timing Dialog--------
->
-> Instructions per second:  [_________]
->
-> Select PIT Model:
-> O Old Model
-> O New Model
-> O Realtime PIT (not reproducible)
->
-> Select Optional Realtime Hacks:
-> [ ] Slowdown Timer  Maxmult setting [_________]
-> [ ] Idle Hack (X Windows Only)
->
-> ----------------------------------------------
-
-////////////////////////////////////////////////////////////////////////////
-// OtherOptionsDialog
-////////////////////////////////////////////////////////////////////////////
-
-everything in the bochsrc that doesn't fit into some other category,
-or that is used so rarely (e.g. floppy command delay) that it's not worth
-laying out manually in a dialog box.  This will probably be done in
-sort of a grid with parameter name, and value(editable) in different columns
-
-////////////////////////////////////////////////////////////////////////////
-// LogOptionsDialog
-////////////////////////////////////////////////////////////////////////////
-lets you choose which events you want to write to the log, which you
-want to ignore, etc.  You can do this at a high level, like
-
-+---- Configure events -----------------------------------+
-|                                                         |
-| How should Bochs respond to each type of event?         |
-|                                                         |
-|            Debug events: [ignore]                       |
-|             Info events: [ignore]                       |
-|            Error events: [report]                       |
-|            Panic events: [ask   ]                       |
-|                                                         |
-| For additional control over how each device responds    |
-| to events, press the "Advanced" button.                 |
-|                                                         |
-|                [ Advanced ]  [ Help ] [ Cancel ] [ Ok ] |
-+---------------------------------------------------------+
-This sets up the default actions for all devices.  The advanced
-dialog lets you set different actions per device.  I have two
-attempts at the advanced dialog.  The first creates a large
-grid of wxChoice controls which choose between
-ignore/report/ask/die.  There will be enough rows in this
-table that a scrolling subwindow will be needed to fit
-all the devices.
-
-+---- Advanced event configuration -----------------------+
-|                                                         |
-| This table determines how Bochs will respond to each    |
-| kind of event coming from a particular source.  For     |
-| example if you are having problems with the keyboard,   |
-| you could ask for debug and info events from the        |
-| keyboard to be reported.                                |
-|                                                         |
-|                        [Use defaults for all devices]   |
-+-------------------------------------------------------+-+
-|  Device    Debug     Info      Error      Panic       |^|
-|  --------  --------  -------   --------   ---------   |||
-|  Keyboard  [ignore]  [ignore]  [report]   [report]    |||
-|  VGA       [ignore]  [ignore]  [report]   [report]    |||
-|  NE2000    [ignore]  [ignore]  [report]   [report]    |||
-|  Sound     [ignore]  [ignore]  [report]   [report]    |v|
-+---------------------------------------------------------+
-|                              [ Help ] [ Cancel ] [ Ok ] |
-+-------------------------------------------------------+-+
-
 Try #2 for the advanced event configuration dialog.
 It shows the selection of the default actions again
 at the top, with some explanation.  Then at bottom, you
@@ -876,8 +780,6 @@ devices at once.
 |                                [ Help ] [ Cancel ] [ Ok ] |
 +-----------------------------------------------------------+
 
-
-
 ////////////////////////////////////////////////////////////////////////////
 // ViewMemoryDialog
 ////////////////////////////////////////////////////////////////////////////
@@ -886,11 +788,5 @@ shows portions of memory, in hex or hex+ASCII or disassembled.  updates
 whenever simulation stops (after single steps for example), or we could
 update periodically.  Modeless dialog, and there could be many
 of them at once, showing different regions of memory.
-
-////////////////////////////////////////////////////////////////////////////
-// DebugControlDialog
-////////////////////////////////////////////////////////////////////////////
-has buttons for most common debugger commands such as step, breakpoint,
-display registers, or whatever.
 
 *****************************************************************/

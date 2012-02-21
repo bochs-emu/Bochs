@@ -95,6 +95,11 @@ enum
   ID_DebugCommand,
   // advanced log options
   ID_ApplyDefault,
+  // dialog box: PluginControlDialog
+  ID_PluginList,
+  ID_PluginName,
+  ID_Load,
+  ID_Unload,
   // that's all
   ID_LAST_USER_DEFINED
 };

@@ -550,6 +550,125 @@ void DebugLogDialog::OnKeyEvent(wxKeyEvent& event)
 }
 #endif
 
+//////////////////////////////////////////////////////////////////////
+// PluginControlDialog implementation
+//////////////////////////////////////////////////////////////////////
+
+// all events go to OnEvent method
+BEGIN_EVENT_TABLE(PluginControlDialog, wxDialog)
+  EVT_BUTTON(-1, PluginControlDialog::OnEvent)
+  EVT_CHECKBOX(-1, PluginControlDialog::OnEvent)
+  EVT_TEXT(-1, PluginControlDialog::OnEvent)
+  EVT_LISTBOX(-1, PluginControlDialog::OnEvent)
+END_EVENT_TABLE()
+
+PluginControlDialog::PluginControlDialog(
+    wxWindow* parent,
+    wxWindowID id)
+  : wxDialog(parent, id, wxT(""), wxDefaultPosition, wxDefaultSize,
+    wxDEFAULT_DIALOG_STYLE)
+{
+  SetTitle(wxT("Optional Plugin Control"));
+  vertSizer = new wxBoxSizer(wxVERTICAL);
+  horzSizer = new wxBoxSizer(wxHORIZONTAL);
+  listSizer = new wxBoxSizer(wxVERTICAL);
+  editSizer = new wxBoxSizer(wxVERTICAL);
+  buttonSizer = new wxBoxSizer(wxHORIZONTAL);
+  horzSizer->Add(listSizer, 0, wxALIGN_LEFT);
+  horzSizer->Add(editSizer, 0, wxALIGN_RIGHT);
+  vertSizer->Add(horzSizer, 0, wxALIGN_LEFT);
+  vertSizer->Add(buttonSizer, 0, wxALIGN_CENTER);
+  // listSizer contents
+  pluglist = new wxListBox(this, ID_PluginList);
+  listSizer->Add(pluglist, 0, wxALL, 10);
+  // editSizer contents
+  plugname = new wxTextCtrl(this, ID_PluginName, wxT(""), wxDefaultPosition, wxSize(120, -1));
+  editSizer->Add(plugname, 0, wxALL, 10);
+  btn_load = new wxButton(this, ID_Load, wxT("Load"));
+  editSizer->Add(btn_load, 0, wxALL | wxALIGN_RIGHT, 5);
+  btn_unload = new wxButton(this, ID_Unload, wxT("Unload"));
+  editSizer->Add(btn_unload, 0, wxALL | wxALIGN_RIGHT, 5);
+  // buttonSizer contents
+  wxButton *btn = new wxButton(this, wxID_HELP, BTNLABEL_HELP);
+  buttonSizer->Add(btn, 0, wxALL, 5);
+  btn = new wxButton(this, wxID_OK, BTNLABEL_OK);
+  buttonSizer->Add(btn, 0, wxALL, 5);
+  // add loaded plugins to the listbox
+  bx_list_c *plugin_ctrl = (bx_list_c*) SIM->get_param(BXPN_PLUGIN_CTRL);
+  unsigned count = plugin_ctrl->get_size();
+  for (unsigned i = 0; i < count; i++) {
+    pluglist->Insert(wxString(plugin_ctrl->get(i)->get_name(), wxConvUTF8), i);
+  }
+  btn_load->Enable(0);
+  btn_unload->Enable(0);
+}
+
+void PluginControlDialog::Init()
+{
+  SetSizer(vertSizer);
+  vertSizer->Fit(this);
+  wxSize size = vertSizer->GetMinSize();
+  int margin = 5;
+  SetSizeHints(size.GetWidth() + margin, size.GetHeight() + margin);
+  Center();
+}
+
+void PluginControlDialog::OnEvent(wxCommandEvent& event)
+{
+  char buf[1024];
+
+  int id = event.GetId();
+  switch (id) {
+    case ID_PluginList:
+      if (event.GetEventType() == wxEVT_COMMAND_LISTBOX_SELECTED) {
+        btn_unload->Enable(1);
+      }
+      break;
+    case ID_PluginName:
+      if (event.GetEventType() == wxEVT_COMMAND_TEXT_UPDATED) {
+        btn_load->Enable(!plugname->IsEmpty());
+      }
+      break;
+    case ID_Load:
+      {
+        wxString tmpname(plugname->GetValue());
+        strncpy(buf, tmpname.mb_str(wxConvUTF8), sizeof(buf));
+        if (SIM->opt_plugin_ctrl(buf, 1)) {
+          tmpname.Printf(wxT("Plugin '%s' loaded"), buf);
+          wxMessageBox(tmpname, wxT("Plugin Control"), wxOK | wxICON_INFORMATION, this);
+          pluglist->Insert(tmpname, pluglist->GetCount());
+        }
+      }
+      break;
+    case ID_Unload:
+      {
+        int i = pluglist->GetSelection();
+        wxString tmpname = pluglist->GetString(i);
+        strncpy(buf, tmpname.mb_str(wxConvUTF8), sizeof(buf));
+        if (SIM->opt_plugin_ctrl(buf, 0)) {
+          tmpname.Printf(wxT("Plugin '%s' unloaded"), buf);
+          wxMessageBox(tmpname, wxT("Plugin Control"), wxOK | wxICON_INFORMATION, this);
+          pluglist->Delete(i);
+          btn_unload->Enable(0);
+        }
+      }
+      break;
+    case wxID_OK:
+      EndModal(wxID_OK);
+      break;
+    case wxID_HELP:
+      ShowHelp();
+      break;
+    default:
+      event.Skip();
+  }
+}
+
+void PluginControlDialog::ShowHelp()
+{
+  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this);
+}
+
 /////////////////////////////////////////////////////////////////
 // ParamDialog
 /////////////////////////////////////////////////////////////////
@@ -1162,9 +1281,9 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
       break;
     case wxID_CANCEL:
       if (IsModal ())
-	EndModal (wxID_CANCEL);
+        EndModal (wxID_CANCEL);
       else
-	Show (FALSE);
+        Show (FALSE);
       break;
     case wxID_HELP:
       ShowHelp();

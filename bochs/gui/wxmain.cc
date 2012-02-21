@@ -612,7 +612,8 @@ void MyFrame::OnStateRestore(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnEditPluginCtrl(wxCommandEvent& WXUNUSED(event))
 {
-  wxMessageBox(wxT("Not implemented yet!"), wxT("Error"), wxOK | wxICON_ERROR);
+  PluginControlDialog dlg(this, -1);
+  dlg.ShowModal();
 }
 
 void MyFrame::OnEditCPU(wxCommandEvent& WXUNUSED(event))
