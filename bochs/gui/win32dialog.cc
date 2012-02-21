@@ -370,14 +370,12 @@ void SetAdvancedLogOptions(HWND hDlg)
 void InitLogOptionsDialog(HWND hDlg)
 {
   int idx, mod;
-  char prefix[8];
+  char name[32];
 
   for (mod=0; mod<SIM->get_n_log_modules(); mod++) {
-    if (strcmp(SIM->get_prefix(mod), "[     ]")) {
-      lstrcpyn(prefix, SIM->get_prefix(mod), sizeof(prefix));
-      lstrcpy(prefix, prefix+1);
-      prefix[5] = 0;
-      idx = SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_ADDSTRING, 0, (LPARAM)prefix);
+    if (lstrcmp(SIM->get_logfn_name(mod), "?")) {
+      lstrcpyn(name, SIM->get_logfn_name(mod), 32);
+      idx = SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_ADDSTRING, 0, (LPARAM)name);
       SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_SETITEMDATA, idx, mod);
     }
   }

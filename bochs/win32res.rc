@@ -76,17 +76,17 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Log Options"
 FONT 8, "Helv"
 BEGIN
-    LISTBOX         IDDEVLIST, 15, 25, 45, 100, LBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Debug events", IDLOGLBL1, 70, 27, 55, 14
+    LISTBOX         IDDEVLIST, 15, 25, 55, 100, LBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Debug events", IDLOGLBL1, 80, 27, 55, 14
     COMBOBOX        IDLOGEVT1, 155, 25, 65, 56, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Info events", IDLOGLBL2, 70, 47, 55, 14
+    LTEXT           "Info events", IDLOGLBL2, 80, 47, 55, 14
     COMBOBOX        IDLOGEVT2, 155, 45, 65, 56, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Error events", IDLOGLBL3, 70, 67, 55, 14
+    LTEXT           "Error events", IDLOGLBL3, 80, 67, 55, 14
     COMBOBOX        IDLOGEVT3, 155, 65, 65, 56, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Panic events", IDLOGLBL4, 70, 87, 55, 14
+    LTEXT           "Panic events", IDLOGLBL4, 80, 87, 55, 14
     COMBOBOX        IDLOGEVT4, 155, 85, 65, 56, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
                     WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX    "Specify log options per device", IDADVLOGOPT, 50, 135, 112, 14, BS_LEFTTEXT | WS_TABSTOP
