@@ -43,8 +43,6 @@ Bit8u bx_user_plugin_count = 0;
 
 #define LOG_THIS genlog->
 
-#define BX_MAX_LOGFN_MODULES 20
-
 extern bx_debug_t bx_dbg;
 
 static const char *get_builtin_variable(const char *varname);
@@ -1984,10 +1982,9 @@ static Bit32s parse_log_options(const char *context, int num_params, char *param
         if (mparam != NULL) {
           mparam->set(action);
         } else {
-          if (base->get_size() < BX_MAX_LOGFN_MODULES) {
-            mparam = new bx_param_num_c(base, module, "", "", 0, BX_MAX_BIT32U, action);
-          } else {
-            PARSE_ERR(("%s: %s: too many log modules (max = %d).", context, params[0], BX_MAX_LOGFN_MODULES));
+          mparam = new bx_param_num_c(base, module, "", "", 0, BX_MAX_BIT32U, action);
+          if (mparam == NULL) {
+            PARSE_ERR(("%s: %s: failed to add log module.", context, params[0]));
           }
         }
       }
