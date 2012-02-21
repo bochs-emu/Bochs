@@ -158,7 +158,7 @@ int ask_int(const char *prompt, const char *help, Bit32s min, Bit32s max, Bit32s
     illegal = (1 != sscanf(buffer, "%d", &n));
     if (illegal || n<min || n>max) {
       printf("Your choice (%s) was not an integer between %d and %d.\n\n",
-	  clean, min, max);
+             clean, min, max);
     } else {
       // choice is okay
       *out = n;
@@ -186,9 +186,9 @@ int ask_menu(const char *prompt, const char *help, int n_choices, const char *ch
     }
     for (i=0; i<n_choices; i++) {
       if (!strcmp(choice[i], clean)) {
-	// matched, return the choice number
-	*out = i;
-	return 0;
+        // matched, return the choice number
+        *out = i;
+        return 0;
       }
     }
     if (clean[0] != '?') {
@@ -290,22 +290,22 @@ static const char *startup_options_prompt =
 "Bochs Options Menu\n"
 "------------------\n"
 "0. Return to previous menu\n"
-"1. Logfile options\n"
-"2. Log options for all devices\n"
-"3. Log options for individual devices\n"
-"4. CPU options\n"
-"5. CPUID options\n"
-"6. Memory options\n"
-"7. Clock & CMOS options\n"
-"8. PCI options\n"
-"9. Bochs Display & Interface options\n"
-"10. Keyboard & Mouse options\n"
-"11. Disk & Boot options\n"
-"12. Serial / Parallel / USB options\n"
-"13. Network card options\n"
-"14. Sound card options\n"
-"15. Other options\n"
-"16. Optional plugin control\n"
+"1. Optional plugin control\n"
+"2. Logfile options\n"
+"3. Log options for all devices\n"
+"4. Log options for individual devices\n"
+"5. CPU options\n"
+"6. CPUID options\n"
+"7. Memory options\n"
+"8. Clock & CMOS options\n"
+"9. PCI options\n"
+"10. Bochs Display & Interface options\n"
+"11. Keyboard & Mouse options\n"
+"12. Disk & Boot options\n"
+"13. Serial / Parallel / USB options\n"
+"14. Network card options\n"
+"15. Sound card options\n"
+"16. Other options\n"
 #if BX_PLUGINS
 "17. User-defined options\n"
 #endif
@@ -483,22 +483,22 @@ int bx_config_interface(int menu)
         if (ask_uint(startup_options_prompt, "", 0, 16+BX_PLUGINS, 0, &choice, 10) < 0) return -1;
         switch (choice) {
           case 0: return 0;
-          case 2: bx_log_options(0); break;
-          case 3: bx_log_options(1); break;
-          case 1: do_menu("log"); break;
-          case 4: do_menu("cpu"); break;
-          case 5: do_menu("cpuid"); break;
-          case 6: do_menu("memory"); break;
-          case 7: do_menu("clock_cmos"); break;
-          case 8: do_menu("pci"); break;
-          case 9: do_menu("display"); break;
-          case 10: do_menu("keyboard_mouse"); break;
-          case 11: do_menu(BXPN_MENU_DISK); break;
-          case 12: do_menu("ports"); break;
-          case 13: do_menu("network"); break;
-          case 14: do_menu("sound"); break;
-          case 15: do_menu("misc"); break;
-          case 16: bx_plugin_ctrl(); break;
+          case 1: bx_plugin_ctrl(); break;
+          case 3: bx_log_options(0); break;
+          case 4: bx_log_options(1); break;
+          case 2: do_menu("log"); break;
+          case 5: do_menu("cpu"); break;
+          case 6: do_menu("cpuid"); break;
+          case 7: do_menu("memory"); break;
+          case 8: do_menu("clock_cmos"); break;
+          case 9: do_menu("pci"); break;
+          case 10: do_menu("display"); break;
+          case 11: do_menu("keyboard_mouse"); break;
+          case 12: do_menu(BXPN_MENU_DISK); break;
+          case 13: do_menu("ports"); break;
+          case 14: do_menu("network"); break;
+          case 15: do_menu("sound"); break;
+          case 16: do_menu("misc"); break;
 #if BX_PLUGINS
           case 17: do_menu("user"); break;
 #endif
