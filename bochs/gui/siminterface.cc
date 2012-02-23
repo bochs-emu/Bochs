@@ -314,7 +314,7 @@ bx_param_enum_c *bx_real_sim_c::get_param_enum(const char *pname, bx_param_c *ba
 void bx_init_siminterface()
 {
   siminterface_log = new logfunctions();
-  siminterface_log->put("CTRL");
+  siminterface_log->put("siminterface", "CTRL");
   if (SIM == NULL)
     SIM = new bx_real_sim_c();
   if (root_param == NULL) {

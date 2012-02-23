@@ -71,7 +71,7 @@ void iofunctions::init(void)
   n_logfn = 0;
   init_log(stderr);
   log = new logfunc_t(this);
-  log->put("IO");
+  log->put("logio", "IO");
   log->ldebug("Init(log file: '%s').",logfn);
 }
 

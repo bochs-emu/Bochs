@@ -43,7 +43,7 @@ bx_devices_c bx_devices;
 // constructor for bx_devices_c
 bx_devices_c::bx_devices_c()
 {
-  put("DEV");
+  put("devices", "DEV");
 
   read_port_to_handler = NULL;
   write_port_to_handler = NULL;

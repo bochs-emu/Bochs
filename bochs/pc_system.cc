@@ -47,7 +47,7 @@ const Bit64u bx_pc_system_c::NullTimerInterval = 0xffffffff;
   // constructor
 bx_pc_system_c::bx_pc_system_c()
 {
-  this->put("SYS");
+  this->put("pc_system", "SYS");
 
   BX_ASSERT(numTimers == 0);
 

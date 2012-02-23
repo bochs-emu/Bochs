@@ -234,10 +234,10 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
   int devmax = SIM->get_n_log_modules();
   action = new wxChoice** [devmax];   // array of pointers
   for (int dev=0; dev<devmax; dev++) {
-    if (strcmp(SIM->get_prefix(dev), "[     ]")) {
+    if (strcmp(SIM->get_logfn_name(dev), "?")) {
       action[dev] = new wxChoice* [ADVLOG_OPTS_N_TYPES];
       // name of device in first column
-      gridSizer->Add(new wxStaticText(scrollPanel, -1, wxString(SIM->get_prefix(dev), wxConvUTF8)));
+      gridSizer->Add(new wxStaticText(scrollPanel, -1, wxString(SIM->get_logfn_name(dev), wxConvUTF8)));
       // wxChoice in every other column
       for (type=0; type < typemax; type++) {
         action[dev][type] = makeLogOptionChoiceBox(scrollPanel, -1, type);

@@ -65,7 +65,7 @@ bx_biosdev_c::bx_biosdev_c(void)
   bioslog->put("BIOS");
 
   vgabioslog = new logfunctions();
-  vgabioslog->put("VBIOS");
+  vgabioslog->put("vgabios", "VBIOS");
 }
 
 bx_biosdev_c::~bx_biosdev_c(void)
