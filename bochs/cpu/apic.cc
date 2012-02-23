@@ -178,9 +178,10 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu, unsigned id)
     BX_PANIC(("PANIC: invalid APIC_ID assigned %d", apic_id));
 #endif
 
-  char buffer[16];
-  sprintf(buffer, "APIC%x", apic_id);
-  put(buffer);
+  char name[16], logname[16];
+  sprintf(name, "APIC%x", apic_id);
+  sprintf(logname, "apic%x", apic_id);
+  put(logname, name);
 
   // Register a non-active timer for use when the timer is started.
   timer_handle = bx_pc_system.register_timer_ticks(this,

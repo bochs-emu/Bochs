@@ -38,9 +38,10 @@ BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
   // in case of SMF, you cannot reference any member data
   // in the constructor because the only access to it is via
   // global variables which aren't initialized quite yet.
-  char buffer[16];
-  sprintf(buffer, "CPU%x", bx_cpuid);
-  put(buffer);
+  char name[16], logname[16];
+  sprintf(name, "CPU%x", bx_cpuid);
+  sprintf(logname, "cpu%x", bx_cpuid);
+  put(logname, name);
 
   isa_extensions_bitmask = BX_SUPPORT_FPU ? BX_ISA_X87 : 0;
   cpu_extensions_bitmask = 0;
