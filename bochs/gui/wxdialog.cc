@@ -593,11 +593,13 @@ PluginControlDialog::PluginControlDialog(
   buttonSizer->Add(btn, 0, wxALL, 5);
   btn = new wxButton(this, wxID_OK, BTNLABEL_OK);
   buttonSizer->Add(btn, 0, wxALL, 5);
-  // add loaded plugins to the listbox
+  // make sure all plugins are loaded and add them to the listbox
   bx_list_c *plugin_ctrl = (bx_list_c*) SIM->get_param(BXPN_PLUGIN_CTRL);
   unsigned count = plugin_ctrl->get_size();
   for (unsigned i = 0; i < count; i++) {
-    pluglist->Insert(wxString(plugin_ctrl->get(i)->get_name(), wxConvUTF8), i);
+    bx_param_bool_c *plugin = (bx_param_bool_c*)plugin_ctrl->get(i);
+    SIM->opt_plugin_ctrl(plugin->get_name(), 1);
+    pluglist->Insert(wxString(plugin->get_name(), wxConvUTF8), i);
   }
   btn_load->Enable(0);
   btn_unload->Enable(0);
@@ -636,7 +638,7 @@ void PluginControlDialog::OnEvent(wxCommandEvent& event)
         if (SIM->opt_plugin_ctrl(buf, 1)) {
           tmpname.Printf(wxT("Plugin '%s' loaded"), buf);
           wxMessageBox(tmpname, wxT("Plugin Control"), wxOK | wxICON_INFORMATION, this);
-          pluglist->Insert(tmpname, pluglist->GetCount());
+          pluglist->Insert(wxString(buf, wxConvUTF8), pluglist->GetCount());
         }
       }
       break;

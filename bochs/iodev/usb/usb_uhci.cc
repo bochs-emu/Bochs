@@ -95,8 +95,8 @@ void libusb_uhci_LTX_plugin_fini(void)
 {
   SIM->unregister_addon_option("usb_uhci");
   bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.usb");
-  menu->remove("usb_uhci");
   delete theUSB_UHCI;
+  menu->remove("uhci");
 }
 
 // the device object

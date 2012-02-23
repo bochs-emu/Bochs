@@ -1383,7 +1383,9 @@ bx_bool bx_real_sim_c::opt_plugin_ctrl(const char *plugname, bx_bool load)
   if (load != PLUG_device_present(plugname)) {
     if (load) {
       if (PLUG_load_opt_plugin(plugname)) {
-        new bx_param_bool_c(base, plugname, "", "", 1);
+        if (base->get_by_name(plugname) == NULL) {
+          new bx_param_bool_c(base, plugname, "", "", 1);
+        }
         return 1;
       } else {
         BX_PANIC(("optional plugin '%s' not found", plugname));
