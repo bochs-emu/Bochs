@@ -228,7 +228,7 @@ void bx_pcipnic_c::register_state(void)
   new bx_shadow_num_c(list, "rDataCursor", &BX_PNIC_THIS s.rDataCursor);
   new bx_shadow_num_c(list, "recvIndex", &BX_PNIC_THIS s.recvIndex);
   new bx_shadow_num_c(list, "recvQueueLength", &BX_PNIC_THIS s.recvQueueLength);
-  bx_list_c *recvRL = new bx_list_c(list, "recvRingLength", PNIC_RECV_RINGS);
+  bx_list_c *recvRL = new bx_list_c(list, "recvRingLength");
   for (unsigned i=0; i<PNIC_RECV_RINGS; i++) {
     sprintf(name, "%d", i);
     new bx_shadow_num_c(recvRL, name, &BX_PNIC_THIS s.recvRingLength[i]);
