@@ -3956,7 +3956,7 @@ public: // for now...
   BX_SMF bx_phy_address translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bx_bool guest_laddr_valid, bx_bool is_page_walk, unsigned rw);
 #endif
 #if BX_SUPPORT_SVM
-  BX_SMF void nested_page_fault(unsigned fault, bx_address guest_paddr, unsigned rw, unsigned is_page_walk);
+  BX_SMF void nested_page_fault(unsigned fault, bx_phy_address guest_paddr, unsigned rw, unsigned is_page_walk);
   BX_SMF bx_phy_address nested_walk_long_mode(bx_phy_address guest_paddr, unsigned rw, bx_bool is_page_walk);
   BX_SMF bx_phy_address nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw, bx_bool is_page_walk);
   BX_SMF bx_phy_address nested_walk_legacy(bx_phy_address guest_paddr, unsigned rw, bx_bool is_page_walk);
