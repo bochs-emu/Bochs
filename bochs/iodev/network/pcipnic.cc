@@ -218,10 +218,9 @@ void bx_pcipnic_c::reset(unsigned type)
 
 void bx_pcipnic_c::register_state(void)
 {
-  unsigned i;
   char name[6];
 
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pcipnic", "PCI Pseudo NIC State", 11);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pcipnic", "PCI Pseudo NIC State");
   new bx_shadow_num_c(list, "irqEnabled", &BX_PNIC_THIS s.irqEnabled);
   new bx_shadow_num_c(list, "rCmd", &BX_PNIC_THIS s.rCmd);
   new bx_shadow_num_c(list, "rStatus", &BX_PNIC_THIS s.rStatus);
@@ -230,7 +229,7 @@ void bx_pcipnic_c::register_state(void)
   new bx_shadow_num_c(list, "recvIndex", &BX_PNIC_THIS s.recvIndex);
   new bx_shadow_num_c(list, "recvQueueLength", &BX_PNIC_THIS s.recvQueueLength);
   bx_list_c *recvRL = new bx_list_c(list, "recvRingLength", PNIC_RECV_RINGS);
-  for (i=0; i<PNIC_RECV_RINGS; i++) {
+  for (unsigned i=0; i<PNIC_RECV_RINGS; i++) {
     sprintf(name, "%d", i);
     new bx_shadow_num_c(recvRL, name, &BX_PNIC_THIS s.recvRingLength[i]);
   }
