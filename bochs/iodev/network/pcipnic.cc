@@ -119,7 +119,7 @@ void libpcipnic_LTX_plugin_fini(void)
 bx_pcipnic_c::bx_pcipnic_c()
 {
   put("pcipnic", "PNIC");
-  memset(&s, 0, sizeof(bx_e1000_t));
+  memset(&s, 0, sizeof(bx_pnic_t));
   ethdev = NULL;
 }
 
