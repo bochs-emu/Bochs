@@ -973,18 +973,13 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool 
           BX_VGA_THIS s.sequencer.reset2 = (value >> 1) & 0x01;
           break;
         case 1: /* sequencer: clocking mode */
-#if !defined(VGA_TRACE_FEATURE)
-          BX_DEBUG(("io write 0x3c5=0x%02x: clocking mode reg: ignoring",
-                      (unsigned) value));
-#endif
-          if ((value & 0x20) > 0) {
-            bx_gui->clear_screen();
-          } else if ((BX_VGA_THIS s.sequencer.reg1 & 0x20) > 0) {
+          if ((value ^ BX_VGA_THIS s.sequencer.reg1) & 0x29) {
+            BX_VGA_THIS s.x_dotclockdiv2 = ((value & 0x08) > 0);
+            BX_VGA_THIS s.sequencer.clear_screen = ((value & 0x20) > 0);
+            calculate_retrace_timing();
             needs_update = 1;
           }
           BX_VGA_THIS s.sequencer.reg1 = value & 0x3d;
-          BX_VGA_THIS s.x_dotclockdiv2 = ((value & 0x08) > 0);
-          calculate_retrace_timing();
           break;
         case 2: /* sequencer: map mask register */
           BX_VGA_THIS s.sequencer.map_mask = (value & 0x0f);
@@ -1355,13 +1350,36 @@ Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, b
   return DAC_regno;
 }
 
+bx_bool bx_vgacore_c::skip_update(void)
+{
+  Bit64u display_usec;
+
+  /* handle clear screen request from the sequencer */
+  if (BX_VGA_THIS s.sequencer.clear_screen) {
+    bx_gui->clear_screen();
+    BX_VGA_THIS s.sequencer.clear_screen = 0;
+  }
+
+  /* skip screen update when vga/video is disabled or the sequencer is in reset mode */
+  if (!BX_VGA_THIS s.vga_enabled || !BX_VGA_THIS s.attribute_ctrl.video_enabled
+      || !BX_VGA_THIS s.sequencer.reset2 || !BX_VGA_THIS s.sequencer.reset1
+      || (BX_VGA_THIS s.sequencer.reg1 & 0x20))
+    return 1;
+
+  /* skip screen update if the vertical retrace is in progress */
+  display_usec = bx_pc_system.time_usec() % BX_VGA_THIS s.vtotal_usec;
+  if (display_usec < 70) {
+    return 1;
+  }
+  return 0;
+}
+
 void bx_vgacore_c::update(void)
 {
   unsigned iHeight, iWidth;
   static unsigned cs_counter = 1;
   static bx_bool cs_visible = 0;
   bx_bool cs_toggle = 0;
-  Bit64u display_usec;
 
   cs_counter--;
   /* no screen update necessary */
@@ -1379,18 +1397,6 @@ void bx_vgacore_c::update(void)
       cs_toggle = 0;
       cs_visible = 0;
     }
-  }
-
-  /* skip screen update when vga/video is disabled or the sequencer is in reset mode */
-  if (!BX_VGA_THIS s.vga_enabled || !BX_VGA_THIS s.attribute_ctrl.video_enabled
-      || !BX_VGA_THIS s.sequencer.reset2 || !BX_VGA_THIS s.sequencer.reset1
-      || (BX_VGA_THIS s.sequencer.reg1 & 0x20))
-    return;
-
-  /* skip screen update if the vertical retrace is in progress */
-  display_usec = bx_pc_system.time_usec() % BX_VGA_THIS s.vtotal_usec;
-  if (display_usec < 70) {
-    return;
   }
 
   // fields that effect the way video memory is serialized into screen output:
@@ -1414,11 +1420,6 @@ void bx_vgacore_c::update(void)
 
     start_addr = (BX_VGA_THIS s.CRTC.reg[0x0c] << 8) | BX_VGA_THIS s.CRTC.reg[0x0d];
 
-//BX_DEBUG(("update: shiftreg=%u, chain4=%u, mapping=%u",
-//  (unsigned) BX_VGA_THIS s.graphics_ctrl.shift_reg,
-//  (unsigned) BX_VGA_THIS s.sequencer.chain_four,
-//  (unsigned) BX_VGA_THIS s.graphics_ctrl.memory_mapping);
-
     determine_screen_dimensions(&iHeight, &iWidth);
     if((iWidth != BX_VGA_THIS s.last_xres) || (iHeight != BX_VGA_THIS s.last_yres) ||
         (BX_VGA_THIS s.last_bpp > 8))
@@ -1428,6 +1429,8 @@ void bx_vgacore_c::update(void)
       BX_VGA_THIS s.last_yres = iHeight;
       BX_VGA_THIS s.last_bpp = 8;
     }
+
+    if (skip_update()) return;
 
     switch (BX_VGA_THIS s.graphics_ctrl.shift_reg) {
       case 0: // interleaved shift
@@ -1692,6 +1695,8 @@ void bx_vgacore_c::update(void)
       BX_VGA_THIS s.last_msl = MSL;
       BX_VGA_THIS s.last_bpp = 8;
     }
+    if (skip_update()) return;
+
     // pass old text snapshot & new VGA memory contents
     start_address = tm_info.start_address;
     cursor_address = 2*((BX_VGA_THIS s.CRTC.reg[0x0e] << 8) +

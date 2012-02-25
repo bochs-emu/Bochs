@@ -97,6 +97,7 @@ protected:
   void update(void);
   void determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth);
   void calculate_retrace_timing(void);
+  bx_bool skip_update(void);
 
   struct {
     struct {
@@ -189,6 +190,7 @@ protected:
       bx_bool extended_mem;
       bx_bool odd_even;
       bx_bool chain_four;
+      bx_bool clear_screen;
     } sequencer;
 
     bx_bool  vga_enabled;
