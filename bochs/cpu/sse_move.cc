@@ -797,21 +797,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVMSKB_GdUdq(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-/* **************************** */
-/* SSE: STORE DATA NON-TEMPORAL */
-/* **************************** */
-
-/* 0F C3 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  write_virtual_dword(i->seg(), eaddr, BX_READ_32BIT_REG(i->nnn()));
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
 /* ************************** */
 /* 3-BYTE-OPCODE INSTRUCTIONS */
 /* ************************** */
