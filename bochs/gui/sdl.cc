@@ -233,7 +233,6 @@ void switch_to_fullscreen(void)
   sdl_fullscreen = SDL_SetVideoMode(res_x,res_y,32, SDL_HWSURFACE|SDL_FULLSCREEN);
   src.y = 0;
   SDL_BlitSurface(tmp,&src,sdl_fullscreen,&dst);
-  SDL_UpdateRect(tmp,0,0,res_x,res_y);
   SDL_FreeSurface(tmp);
 
   SDL_ShowCursor(0);
@@ -270,9 +269,11 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv,
 {
   int i,j;
   Uint32 flags;
+#ifdef WIN32
   bx_bool gui_ci;
 
   gui_ci = !strcmp(SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE)->get_selected(), "win32config");
+#endif
   put("SDL");
 
   UNUSED(bochs_icon_bits);
@@ -479,7 +480,7 @@ void bx_sdl_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     buf_row = (Uint32 *)sdl_screen->pixels + headerbar_height*disp;
   } else {
     disp = sdl_fullscreen->pitch/4;
-    buf_row = (Uint32 *)sdl_fullscreen->pixels;
+    buf_row = (Uint32 *)sdl_fullscreen->pixels + sdl_fullscreen->offset/4;
   }
   // first invalidate character at previous and new cursor location
   if ((prev_cursor_y < text_rows) && (prev_cursor_x < text_cols)) {
@@ -685,7 +686,7 @@ void bx_sdl_gui_c::graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y)
   else
   {
     disp = sdl_fullscreen->pitch/4;
-    buf = (Uint32 *)sdl_fullscreen->pixels + y*disp + x;
+    buf = (Uint32 *)sdl_fullscreen->pixels + y*disp + x + sdl_fullscreen->offset/4;
   }
 
   i = tileheight;
@@ -775,7 +776,7 @@ Bit8u *bx_sdl_gui_c::graphics_tile_get(unsigned x0, unsigned y0, unsigned *w, un
            sdl_screen->format->BytesPerPixel*x0;
   }
   else {
-    return (Bit8u *)sdl_fullscreen->pixels +
+    return (Bit8u *)sdl_fullscreen->pixels + sdl_fullscreen->offset +
            sdl_fullscreen->pitch*(y0) +
            sdl_fullscreen->format->BytesPerPixel*x0;
   }
@@ -1075,9 +1076,8 @@ void bx_sdl_gui_c::handle_events(void)
           }
         }
 
-        // Windows/Fullscreen toggle-check
+        // Window/Fullscreen toggle-check
         if (sdl_event.key.keysym.sym == SDLK_SCROLLOCK) {
-//        SDL_WM_ToggleFullScreen(sdl_screen);
           sdl_fullscreen_toggle = ~sdl_fullscreen_toggle;
           if(sdl_fullscreen_toggle == 0)
             switch_to_windowed();
@@ -1189,7 +1189,7 @@ void bx_sdl_gui_c::clear_screen(void)
   {
     color = SDL_MapRGB(sdl_fullscreen->format, 0,0, 0);
     disp = sdl_fullscreen->pitch/4;
-    buf = (Uint32 *)sdl_fullscreen->pixels;
+    buf = (Uint32 *)sdl_fullscreen->pixels + sdl_fullscreen->offset/4;
   }
   else return;
 
