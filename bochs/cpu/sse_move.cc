@@ -496,6 +496,18 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSS_WssVssM(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+/* MOVLPS:    0F 13 */
+/* MOVLPD: 66 0F 13 */
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD_WsdVsdM(bxInstruction_c *i)
+{
+#if BX_CPU_LEVEL >= 6
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  write_virtual_qword(i->seg(), eaddr, BX_XMM_REG_LO_QWORD(i->nnn()));
+#endif
+
+  BX_NEXT_INSTR(i);
+}
+
 /* F2 0F 10 */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD_VsdWsdR(bxInstruction_c *i)
 {
@@ -568,18 +580,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSHDUP_VpsWpsR(bxInstruction_c *
   op.xmm32u(2) = op.xmm32u(3);
 
   BX_WRITE_XMM_REG(i->nnn(), op);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/* MOVLPS:    0F 13 */
-/* MOVLPD: 66 0F 13 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLPS_MqVps(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  write_virtual_qword(i->seg(), eaddr, BX_XMM_REG_LO_QWORD(i->nnn()));
 #endif
 
   BX_NEXT_INSTR(i);
