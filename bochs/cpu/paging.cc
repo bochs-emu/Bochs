@@ -303,7 +303,7 @@ static const Bit8u priv_check[BX_PRIV_CHECK_SIZE] =
 //       value, necessitating a TLB flush when CR0.WP changes.
 //
 //       The test is:
-//         OK = (accessBits & ((E<<2) | (W<<1) | U)) <> 0
+//         OK = (accessBits & ((E<<2) | (W<<1) | U)) == 0
 //
 //       where E:1=Execute, 0=Data;
 //             W:1=Write, 0=Read;
@@ -316,11 +316,11 @@ static const Bit8u priv_check[BX_PRIV_CHECK_SIZE] =
 //       and for code fetches:
 //         OK = 0x4 | (          U )
 //
-//       Note, that the TLB should have TLB_NoHostPtr bit set when direct
-//       access through host pointer is NOT allowed for the page. A memory
-//       operation asking for a direct access through host pointer will
-//       set TLB_NoHostPtr bit in its lpf field and thus get TLB miss result 
-//       when the direct access is not allowed.
+//       Note, that the TLB should have TLB_NoHostPtr bit set in the lpf when
+//       direct access through host pointer is NOT allowed for the page.
+//       A memory operation asking for a direct access through host pointer
+//       will not set TLB_NoHostPtr bit in its lpf and thus get TLB miss 
+//       result when the direct access is not allowed.
 //
 
 #define TLB_NoHostPtr   (0x800) /* set this bit when direct access is NOT allowed */
