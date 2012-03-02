@@ -250,7 +250,8 @@ void print_tree(bx_param_c *node, int level)
 }
 #endif
 
-int bxmain (void) {
+int bxmain(void)
+{
 #ifdef HAVE_LOCALE_H
   // Initialize locale (for isprint() and other functions)
   setlocale (LC_ALL, "");
@@ -261,8 +262,8 @@ int bxmain (void) {
   if (setjmp (context) == 0) {
     SIM->set_quit_context (&context);
     BX_INSTR_INIT_ENV();
-    if (bx_init_main(bx_startup_flags.argc, bx_startup_flags.argv) < 0)
-    { BX_INSTR_EXIT_ENV();
+    if (bx_init_main(bx_startup_flags.argc, bx_startup_flags.argv) < 0) {
+      BX_INSTR_EXIT_ENV();
       return 0;
     }
     // read a param to decide which config interface to start.
@@ -414,6 +415,7 @@ int RedirectIOToConsole()
   long lStdHandle;
   FILE *fp;
   // allocate a console for this app
+  FreeConsole();
   if (!AllocConsole()) {
     MessageBox(NULL, "Failed to create text console", "Error", MB_ICONERROR);
     return 0;
@@ -453,13 +455,25 @@ int WINAPI WinMain(
   bx_startup_flags.hPrevInstance = hPrevInstance;
   bx_startup_flags.m_lpCmdLine = m_lpCmdLine;
   bx_startup_flags.nCmdShow = nCmdShow;
-  if (!RedirectIOToConsole()) {
-    return 1;
-  }
-  SetConsoleTitle("Bochs for Windows (wxWidgets port) - Console");
   int max_argv = 20;
   bx_startup_flags.argv = (char**) malloc (max_argv * sizeof (char*));
   split_string_into_argv(m_lpCmdLine, &bx_startup_flags.argc, bx_startup_flags.argv, max_argv);
+  int arg = 1;
+  bx_bool bx_noconsole = 0;
+  while (arg < bx_startup_flags.argc) {
+    if (!strcmp("-noconsole", bx_startup_flags.argv[arg])) {
+      bx_noconsole = 1;
+      break;
+    }
+    arg++;
+  }
+
+  if (!bx_noconsole) {
+    if (!RedirectIOToConsole()) {
+      return 1;
+    }
+    SetConsoleTitle("Bochs for Windows (wxWidgets port) - Console");
+  }
   return bxmain();
 }
 #endif
@@ -471,14 +485,28 @@ int CDECL main(int argc, char *argv[])
 {
   bx_startup_flags.argc = argc;
   bx_startup_flags.argv = argv;
-#if BX_WITH_SDL && defined(WIN32)
-  // if SDL/win32, try to create a console window.
-  if (!RedirectIOToConsole()) {
-    return 1;
+#ifdef WIN32
+  int arg = 1;
+  bx_bool bx_noconsole = 0;
+  while (arg < argc) {
+    if (!strcmp("-noconsole", argv[arg])) {
+      bx_noconsole = 1;
+      break;
+    }
+    arg++;
   }
+
+  if (bx_noconsole) {
+    FreeConsole();
+  } else {
+#if BX_WITH_SDL
+    // if SDL/win32, try to create a console window.
+    if (!RedirectIOToConsole()) {
+      return 1;
+    }
 #endif
-#if defined(WIN32)
-  SetConsoleTitle("Bochs for Windows - Console");
+    SetConsoleTitle("Bochs for Windows - Console");
+  }
 #endif
   return bxmain();
 }
@@ -497,6 +525,9 @@ void print_usage(void)
 #if BX_DEBUGGER
     "  -rc filename     execute debugger commands stored in file\n"
     "  -dbglog filename specify Bochs internal debugger log file name\n"
+#endif
+#ifdef WIN32
+    "  -noconsole       disable console window\n"
 #endif
     "  --help           display this help and exit\n"
 #if BX_CPU_LEVEL > 4
@@ -597,6 +628,11 @@ int bx_init_main(int argc, char *argv[])
         SIM->get_param_string(BXPN_RESTORE_PATH)->set(argv[arg]);
       }
     }
+#ifdef WIN32
+    else if (!strcmp("-noconsole", argv[arg])) {
+      // already handled in main() / WinMain()
+    }
+#endif
 #if BX_WITH_CARBON
     else if (!strncmp("-psn", argv[arg], 4)) {
       // "-psn" is passed if we are launched by double-clicking
