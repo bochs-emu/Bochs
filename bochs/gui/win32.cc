@@ -102,7 +102,8 @@ static int mouse_buttons = 3;
 static bx_bool win32_nokeyrepeat = 0;
 
 // Graphics screen stuff
-static unsigned x_tilesize = 0, y_tilesize = 0;
+static unsigned x_tilesize = 0;
+//static unsigned y_tilesize = 0;
 static unsigned win32_max_xres = 0, win32_max_yres = 0;
 static BITMAPINFO* bitmap_info=(BITMAPINFO*)0;
 static RGBQUAD* cmap_index;  // indeces into system colormap
