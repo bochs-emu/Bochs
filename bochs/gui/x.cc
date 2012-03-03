@@ -352,8 +352,7 @@ test_alloc_colors (Colormap cmap, Bit32u n_tries) {
 
 bx_x_gui_c::bx_x_gui_c () {}
 
-void bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
-                     unsigned headerbar_y)
+void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
   int i;
   int x, y;   /* window position */
@@ -377,8 +376,6 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsign
 
   put("XGUI");
 
-  UNUSED(tilewidth);
-  UNUSED(tileheight);
   bx_headerbar_y = headerbar_y;
 
   progname = argv[0];

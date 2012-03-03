@@ -108,7 +108,6 @@ Bit8u h_panning = 0, v_panning = 0;
 Bit16u line_compare = 1023;
 int fontwidth = 8, fontheight = 16;
 static unsigned vga_bpp=8;
-unsigned tilewidth, tileheight;
 unsigned char menufont[256][8];
 Uint32 palette[256];
 Uint32 headerbar_fg, headerbar_bg;
@@ -262,10 +261,7 @@ void bx_sdl_morphos_exit(void)
 }
 #endif
 
-void bx_sdl_gui_c::specific_init(int argc, char **argv,
-    unsigned x_tilesize,
-    unsigned y_tilesize,
-    unsigned header_bar_y)
+void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned header_bar_y)
 {
   int i,j;
   Uint32 flags;
@@ -278,8 +274,6 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv,
 
   UNUSED(bochs_icon_bits);
 
-  tilewidth = x_tilesize;
-  tileheight = y_tilesize;
   headerbar_height = header_bar_y;
 
   for(i=0;i<256;i++)
@@ -689,7 +683,7 @@ void bx_sdl_gui_c::graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y)
     buf = (Uint32 *)sdl_fullscreen->pixels + y*disp + x + sdl_fullscreen->offset/4;
   }
 
-  i = tileheight;
+  i = y_tilesize;
   if(i + y > res_y) i = res_y - y;
 
   // FIXME
@@ -701,7 +695,7 @@ void bx_sdl_gui_c::graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y)
       do
       {
         buf_row = buf;
-        j = tilewidth;
+        j = x_tilesize;
         do
         {
           *buf++ = palette[*snapshot++];
@@ -756,18 +750,18 @@ bx_svga_tileinfo_t *bx_sdl_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
 
 Bit8u *bx_sdl_gui_c::graphics_tile_get(unsigned x0, unsigned y0, unsigned *w, unsigned *h)
 {
-  if (x0+tilewidth > res_x) {
+  if (x0+x_tilesize > res_x) {
     *w = res_x - x0;
   }
   else {
-    *w = tilewidth;
+    *w = x_tilesize;
   }
 
-  if (y0+tileheight > res_y) {
+  if (y0+y_tilesize > res_y) {
     *h = res_y - y0;
   }
   else {
-    *h = tileheight;
+    *h = y_tilesize;
   }
 
   if (sdl_screen) {

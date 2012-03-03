@@ -91,8 +91,7 @@ public:
   virtual ~bx_gui_c ();
   // Define the following functions in the module for your particular GUI
   // (x.cc, win32.cc, ...)
-  virtual void specific_init(int argc, char **argv,
-                 unsigned x_tilesize, unsigned y_tilesize, unsigned header_bar_y) = 0;
+  virtual void specific_init(int argc, char **argv, unsigned header_bar_y) = 0;
   virtual void text_update(Bit8u *old_text, Bit8u *new_text,
                           unsigned long cursor_x, unsigned long cursor_y,
                           bx_vga_tminfo_t *tm_info) = 0;
@@ -234,23 +233,22 @@ protected:
 // Then, each method must be defined later in the file.
 #define DECLARE_GUI_VIRTUAL_METHODS()                                       \
 virtual void specific_init(int argc, char **argv,                           \
-         unsigned x_tilesize, unsigned y_tilesize,                          \
-         unsigned header_bar_y);                                            \
+                           unsigned header_bar_y);                          \
 virtual void text_update(Bit8u *old_text, Bit8u *new_text,                  \
                   unsigned long cursor_x, unsigned long cursor_y,           \
-                  bx_vga_tminfo_t *tm_info);                                 \
+                  bx_vga_tminfo_t *tm_info);                                \
 virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y); \
 virtual void handle_events(void);                                           \
 virtual void flush(void);                                                   \
 virtual void clear_screen(void);                                            \
 virtual bx_bool palette_change(unsigned index,                              \
-unsigned red, unsigned green, unsigned blue);                           \
+unsigned red, unsigned green, unsigned blue);                               \
 virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0,   \
-                          unsigned fwidth=0, unsigned bpp=8);           \
+                          unsigned fwidth=0, unsigned bpp=8);               \
 virtual unsigned create_bitmap(const unsigned char *bmap,                   \
-unsigned xdim, unsigned ydim);                                          \
+                               unsigned xdim, unsigned ydim);               \
 virtual unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment,     \
-void (*f)(void));                                                       \
+                                  void (*f)(void));                         \
 virtual void replace_bitmap(unsigned hbar_id, unsigned bmap_id);            \
 virtual void show_headerbar(void);                                          \
 virtual int get_clipboard_text(Bit8u **bytes, Bit32s *nbytes);              \
@@ -262,7 +260,7 @@ virtual void exit(void);                                                    \
 #define DECLARE_GUI_NEW_VIRTUAL_METHODS()                                   \
 virtual bx_svga_tileinfo_t *graphics_tile_info(bx_svga_tileinfo_t *info);   \
 virtual Bit8u *graphics_tile_get(unsigned x, unsigned y,                    \
-                             unsigned *w, unsigned *h);                 \
+                             unsigned *w, unsigned *h);                     \
 virtual void graphics_tile_update_in_place(unsigned x, unsigned y,          \
                                        unsigned w, unsigned h);
 /* end of DECLARE_GUI_NEW_VIRTUAL_METHODS */

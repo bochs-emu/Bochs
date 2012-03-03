@@ -65,7 +65,7 @@ struct Gadget *bx_header_gadget[BX_MAX_PIXMAPS], *bx_glistptr = NULL, *bx_gadget
 static unsigned bx_image_entries = 0, bx_headerbar_entries = 0;
 static unsigned bx_bordertop, bx_borderleft, bx_borderright, bx_borderbottom,
 				bx_headerbar_y, mouse_button_state = 0, bx_headernext_left,
-                bx_headernext_right, x_tilesize, y_tilesize, bx_mouseX, bx_mouseY;
+                bx_headernext_right, bx_mouseX, bx_mouseY;
 static LONG apen = -1, black = -1, white = -1;
 BOOL bx_xchanged = FALSE;
 void *vi;

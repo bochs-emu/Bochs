@@ -138,7 +138,7 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
       break;
   }
 
-  specific_init(argc, argv, tilewidth, tileheight, BX_HEADER_BAR_Y);
+  specific_init(argc, argv, BX_HEADER_BAR_Y);
 
   // Define some bitmaps to use in the headerbar
   BX_GUI_THIS floppyA_bmap_id = create_bitmap(bx_floppya_bmap,

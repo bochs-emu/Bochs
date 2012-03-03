@@ -902,8 +902,7 @@ bx_bool MyPanel::fillBxKeyEvent(wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool rele
 // fill in methods of bx_gui
 //////////////////////////////////////////////////////////////
 
-void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
-                     unsigned headerbar_y)
+void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
   int b,i,j;
   unsigned char fc, vc;
@@ -943,8 +942,8 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsig
   }
   memset(wxScreen, 0, wxScreenX * wxScreenY * 3);
 
-  wxTileX = tilewidth;
-  wxTileY = tileheight;
+  wxTileX = x_tilesize;
+  wxTileY = y_tilesize;
 
   // load keymap tables
   if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get())
@@ -1404,8 +1403,8 @@ bx_bool bx_wx_gui_c::palette_change(unsigned index, unsigned red, unsigned green
 // screen, since info in this region has changed.
 //
 // tile: array of 8bit values representing a block of pixels with
-//       dimension equal to the 'tilewidth' & 'tileheight' parameters to
-//       ::specific_init().  Each value specifies an index into the
+//       dimension equal to the 'x_tilesize' & 'y_tilesize' members.
+//       Each value specifies an index into the
 //       array of colors you allocated for ::palette_change()
 // x0: x origin of tile
 // y0: y origin of tile

@@ -169,15 +169,12 @@ void bx_term_gui_c::sighandler(int signo)
 // argc, argv: not used right now, but the intention is to pass native GUI
 //     specific options from the command line.  (X11 options, Win32 options,...)
 //
-// tilewidth, tileheight: for optimization, graphics_tile_update() passes
-//     only updated regions of the screen to the gui code to be redrawn.
-//     These define the dimensions of a region (tile).
 // headerbar_y:  A headerbar (toolbar) is display on the top of the
 //     VGA window, showing floppy status, and other information.  It
 //     always assumes the width of the current VGA mode width, but
 //     it's height is defined by this parameter.
 
-void bx_term_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight, unsigned headerbar_y)
+void bx_term_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
   put("TGUI");
 
@@ -653,8 +650,8 @@ bx_bool bx_term_gui_c::palette_change(unsigned index, unsigned red, unsigned gre
 // screen, since info in this region has changed.
 //
 // tile: array of 8bit values representing a block of pixels with
-//       dimension equal to the 'tilewidth' & 'tileheight' parameters to
-//       ::specific_init().  Each value specifies an index into the
+//       dimension equal to the 'x_tilesize' & 'y_tilesize' members.
+//       Each value specifies an index into the
 //       array of colors you allocated for ::palette_change()
 // x0: x origin of tile
 // y0: y origin of tile

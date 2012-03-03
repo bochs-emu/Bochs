@@ -302,12 +302,8 @@ bx_bool open_screen(void)
   black = ObtainBestPen(window->WScreen->ViewPort.ColorMap, 0x00000000, 0x00000000, 0x00000000, NULL);
 }
 
-void bx_amigaos_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
-                                         unsigned headerbar_y)
+void bx_amigaos_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
-  x_tilesize = tilewidth;
-  y_tilesize = tileheight;
-
   bx_headerbar_y = headerbar_y;
 
   IntuitionBase = (struct IntuitionBase *)OpenLibrary("intuition.library", 39);

@@ -56,7 +56,6 @@ IMPLEMENT_GUI_PLUGIN_CODE(svga)
 
 static unsigned res_x, res_y;
 static unsigned fontwidth, fontheight;
-static unsigned tilewidth, tileheight;
 static unsigned char vgafont[256 * 16];
 static int clut8 = 0;
 GraphicsContext *screen = NULL;
@@ -101,15 +100,9 @@ bx_svga_gui_c::bx_svga_gui_c()
 void bx_svga_gui_c::specific_init(
     int argc,
     char **argv,
-    unsigned x_tilesize,
-    unsigned y_tilesize,
     unsigned header_bar_y)
 {
-  tilewidth = x_tilesize;
-  tileheight = y_tilesize;
-
-  if(vga_init() != 0)
-  {
+  if (vga_init() != 0) {
     LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
     BX_PANIC (("Unable to initialize SVGAlib"));
     return;
@@ -245,10 +238,10 @@ int bx_svga_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 
 void bx_svga_gui_c::graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y)
 {
-  if ((y + tileheight) > res_y) {
-    gl_putbox(x, y, tilewidth, (res_y - y), snapshot);
+  if ((y + y_tilesize) > res_y) {
+    gl_putbox(x, y, x_tilesize, (res_y - y), snapshot);
   } else {
-    gl_putbox(x, y, tilewidth, tileheight, snapshot);
+    gl_putbox(x, y, x_tilesize, y_tilesize, snapshot);
   }
 }
 

@@ -103,7 +103,6 @@ static bx_bool win32_nokeyrepeat = 0;
 
 // Graphics screen stuff
 static unsigned x_tilesize = 0;
-//static unsigned y_tilesize = 0;
 static unsigned win32_max_xres = 0, win32_max_yres = 0;
 static BITMAPINFO* bitmap_info=(BITMAPINFO*)0;
 static RGBQUAD* cmap_index;  // indeces into system colormap
@@ -584,17 +583,12 @@ void terminateEmul(int reason)
 // argc, argv: used to pass display library specific options to the init code
 //     (X11 options, Win32 options,...)
 //
-// tilewidth, tileheight: for optimization, graphics_tile_update() passes
-//     only updated regions of the screen to the gui code to be redrawn.
-//     These define the dimensions of a region (tile).
 // headerbar_y:  A headerbar (toolbar) is display on the top of the
 //     VGA window, showing floppy status, and other information.  It
 //     always assumes the width of the current VGA mode width, but
 //     it's height is defined by this parameter.
 
-void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
-                                   tilewidth, unsigned tileheight,
-                                   unsigned headerbar_y)
+void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
   int i;
   bx_bool gui_ci;
@@ -617,8 +611,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
   InitializeCriticalSection(&stInfo.keyCS);
   InitializeCriticalSection(&stInfo.mouseCS);
 
-  x_tilesize = tilewidth;
-  y_tilesize = tileheight;
+  x_tilesize = this->x_tilesize;
   win32_max_xres = this->max_xres;
   win32_max_yres = this->max_yres;
 
@@ -1800,8 +1793,8 @@ bx_bool bx_win32_gui_c::palette_change(unsigned index, unsigned red,
 // screen, since info in this region has changed.
 //
 // tile: array of 8bit values representing a block of pixels with
-//       dimension equal to the 'tilewidth' & 'tileheight' parameters to
-//       ::specific_init().  Each value specifies an index into the
+//       dimension equal to the 'x_tilesize' & 'y_tilesize' members.
+//       Each value specifies an index into the
 //       array of colors you allocated for ::palette_change()
 // x0: x origin of tile
 // y0: y origin of tile
@@ -2055,8 +2048,6 @@ void bx_win32_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 // exit from the native GUI mechanism.
 void bx_win32_gui_c::exit(void)
 {
-  printf("# In bx_win32_gui_c::exit(void)!\n");
-
   // kill thread first...
   PostMessage(stInfo.mainWnd, WM_CLOSE, 0, 0);
 
