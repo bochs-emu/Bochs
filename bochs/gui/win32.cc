@@ -705,8 +705,8 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
   else
     terminateEmul(EXIT_GMH_FAILURE);
 
-  // Wait for a window before continuing
-  if ((stInfo.kill == 0) && (FindWindow(szAppName, NULL) == NULL))
+  // Wait until UI init is ready before continuing
+  if ((stInfo.kill == 0) && (stInfo.UIinited == FALSE))
     Sleep(500);
 
   // Now set this thread's priority to below normal because this is where
