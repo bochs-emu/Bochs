@@ -1936,7 +1936,7 @@ bx_define_opcode(BX_IA_BEXTR_GqEqBq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::BEXTR_GqEqBq
 
 // BMI2
 bx_define_opcode(BX_IA_MULX_GdBdEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::MULX_GdBdEdR, BX_ISA_BMI2, 0)
-bx_define_opcode(BX_IA_RORX_GdEdIb, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::RORX_GdEdIbR, BX_ISA_BMI2, 0)
+bx_define_opcode(BX_IA_RORX_GdEdIb, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::RORX_GdEdIbR, BX_ISA_BMI2, BX_VEX_NO_VVV)
 bx_define_opcode(BX_IA_SHLX_GdEdBd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::SHLX_GdEdBdR, BX_ISA_BMI2, 0)
 bx_define_opcode(BX_IA_SHRX_GdEdBd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::SHRX_GdEdBdR, BX_ISA_BMI2, 0)
 bx_define_opcode(BX_IA_SARX_GdEdBd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::SARX_GdEdBdR, BX_ISA_BMI2, 0)
@@ -1945,7 +1945,7 @@ bx_define_opcode(BX_IA_PEXT_GdEdBd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::PEXT_GdEdBdR,
 bx_define_opcode(BX_IA_PDEP_GdEdBd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::PDEP_GdEdBdR, BX_ISA_BMI2, 0)
 
 bx_define_opcode(BX_IA_MULX_GqBqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::MULX_GqBqEqR, BX_ISA_BMI2, 0)
-bx_define_opcode(BX_IA_RORX_GqEqIb, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::RORX_GqEqIbR, BX_ISA_BMI2, 0)
+bx_define_opcode(BX_IA_RORX_GqEqIb, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::RORX_GqEqIbR, BX_ISA_BMI2, BX_VEX_NO_VVV)
 bx_define_opcode(BX_IA_SHLX_GqEqBq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::SHLX_GqEqBqR, BX_ISA_BMI2, 0)
 bx_define_opcode(BX_IA_SHRX_GqEqBq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::SHRX_GqEqBqR, BX_ISA_BMI2, 0)
 bx_define_opcode(BX_IA_SARX_GqEqBq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::SARX_GqEqBqR, BX_ISA_BMI2, 0)
