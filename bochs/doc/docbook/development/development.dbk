@@ -2200,6 +2200,11 @@ Bochs x86 Pentium+ Emulator
 Updated: Sun Nov 27 16:55:00 CET 2011
 Version: 2.5
 </screen>
+In the file <filename>bochs.manifest</filename> you have to update the version
+number for the Windows build.
+<screen>
+  version="2.5.0.0"
+</screen>
 Check date, update/sumup info in CHANGES. Run autoconf to regenerate configure and check them in.
 Create an SVN tag that contains all files of the revision that was used in the release.
 For prereleases I create a normal SVN tag like this:
