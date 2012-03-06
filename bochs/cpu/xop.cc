@@ -674,8 +674,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZSS_VssWssR(bxInstruction_c *i
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
-  r.xmm32u(0) = float32_frc(op, status);
-  r.xmm32u(1) = 0;
+  r.xmm64u(0) = (Bit64u) float32_frc(op, status);
   r.xmm64u(1) = 0;
 
   check_exceptionsSSE(status.float_exception_flags);

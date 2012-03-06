@@ -1193,12 +1193,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUB231SS_VpsHssWssR(bxInstruct
   {                                                                           \
     BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2, op3;            \
     if (i->getVexW()) {                                                       \
-      op2 = BX_READ_AVX_REG(i->rm());                                         \
-      op3 = BX_READ_AVX_REG(i->Ib());                                         \
-    }                                                                         \
-    else {                                                                    \
       op2 = BX_READ_AVX_REG(i->Ib());                                         \
       op3 = BX_READ_AVX_REG(i->rm());                                         \
+    }                                                                         \
+    else {                                                                    \
+      op2 = BX_READ_AVX_REG(i->rm());                                         \
+      op3 = BX_READ_AVX_REG(i->Ib());                                         \
     }                                                                         \
     unsigned len = i->getVL();                                                \
                                                                               \
@@ -1238,20 +1238,21 @@ FMA4_OP_VECTOR(VFNMSUBPD_VpdHpdWpdVIbR, fnmsubpd)
   {                                                                           \
     float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->vvv()), op2, op3;               \
     if (i->getVexW()) {                                                       \
-      op2 = BX_READ_XMM_REG_LO_DWORD(i->rm());                                \
-      op3 = BX_READ_XMM_REG_LO_DWORD(i->Ib());                                \
-    }                                                                         \
-    else {                                                                    \
       op2 = BX_READ_XMM_REG_LO_DWORD(i->Ib());                                \
       op3 = BX_READ_XMM_REG_LO_DWORD(i->rm());                                \
     }                                                                         \
-                                                                              \
+    else {                                                                    \
+      op2 = BX_READ_XMM_REG_LO_DWORD(i->rm());                                \
+      op3 = BX_READ_XMM_REG_LO_DWORD(i->Ib());                                \
+    }                                                                         \
     BxPackedXmmRegister dest;                                                 \
-    dest.xmm64u(0) = dest.xmm64u(1) = 0;                                      \
                                                                               \
     float_status_t status;                                                    \
     mxcsr_to_softfloat_status_word(status, MXCSR);                            \
-    dest.xmm32u(0) = (func)(op1, op2, op3, status);                           \
+                                                                              \
+    dest.xmm64u(0) = (func)(op1, op2, op3, status);                           \
+    dest.xmm64u(1) = 0;                                                       \
+                                                                              \
     check_exceptionsSSE(status.float_exception_flags);                        \
                                                                               \
     BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), dest);                              \
@@ -1270,12 +1271,12 @@ FMA4_SINGLE_SCALAR(VFNMSUBSS_VssHssWssVIbR, float32_fnmsub)
   {                                                                           \
     float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->vvv()), op2, op3;               \
     if (i->getVexW()) {                                                       \
-      op2 = BX_READ_XMM_REG_LO_QWORD(i->rm());                                \
-      op3 = BX_READ_XMM_REG_LO_QWORD(i->Ib());                                \
-    }                                                                         \
-    else {                                                                    \
       op2 = BX_READ_XMM_REG_LO_QWORD(i->Ib());                                \
       op3 = BX_READ_XMM_REG_LO_QWORD(i->rm());                                \
+    }                                                                         \
+    else {                                                                    \
+      op2 = BX_READ_XMM_REG_LO_QWORD(i->rm());                                \
+      op3 = BX_READ_XMM_REG_LO_QWORD(i->Ib());                                \
     }                                                                         \
     BxPackedXmmRegister dest;                                                 \
                                                                               \
