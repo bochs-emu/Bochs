@@ -61,7 +61,6 @@ bx_pci_bridge_c::bx_pci_bridge_c()
 
 bx_pci_bridge_c::~bx_pci_bridge_c()
 {
-  debug_dump();
   BX_DEBUG(("Exit"));
 }
 
@@ -382,20 +381,23 @@ void bx_pci_bridge_c::smram_control(Bit8u value8)
 
 void bx_pci_bridge_c::debug_dump()
 {
+#if BX_DEBUGGER
   int i;
 
-  BX_DEBUG(("i440fxConfAddr:0x%08x", BX_PCI_THIS confAddr));
-  BX_DEBUG(("i440fxConfData:0x%08x", BX_PCI_THIS confData));
+  dbg_printf("i440fx ConfAddr = 0x%08x\n", BX_PCI_THIS confAddr);
+  dbg_printf("i440fx ConfData = 0x%08x\n", BX_PCI_THIS confData);
 
 #ifdef DUMP_FULL_I440FX
   for (i=0; i<256; i++) {
-    BX_DEBUG(("i440fxArray%02x:0x%02x", i, BX_PCI_THIS pci_conf[i]));
+    dbg_printf("i440fx reg 0x%02x = 0x%02x\n", i, BX_PCI_THIS pci_conf[i]);
   }
 #else /* DUMP_FULL_I440FX */
   for (i=0x59; i<0x60; i++) {
-    BX_DEBUG(("i440fxArray%02x:0x%02x", i, BX_PCI_THIS pci_conf[i]));
+    dbg_printf("i440fx PAM reg 0x%02x = 0x%02x\n", i, BX_PCI_THIS pci_conf[i]);
   }
+  dbg_printf("i440fx SMRAM control = 0x%02\nx", BX_PCI_THIS pci_conf[0x72]);
 #endif /* DUMP_FULL_I440FX */
+#endif
 }
 
 bx_bool bx_pci_bridge_c::register_pci_handlers(bx_pci_device_stub_c *dev,
