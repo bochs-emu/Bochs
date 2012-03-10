@@ -1,9 +1,8 @@
-/* A Bison parser, made by GNU Bison 2.4.2.  */
+/* A Bison parser, made by GNU Bison 2.5.  */
 
-/* Skeleton interface for Bison's Yacc-like parsers in C
+/* Bison interface for Yacc-like parsers in C
    
-      Copyright (C) 1984, 1989-1990, 2000-2006, 2009-2010 Free Software
-   Foundation, Inc.
+      Copyright (C) 1984, 1989-1990, 2000-2011 Free Software Foundation, Inc.
    
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -126,22 +125,21 @@
      BX_TOKEN_PRINT_STRING = 343,
      BX_TOKEN_NUMERIC = 344,
      BX_TOKEN_NE2000 = 345,
-     BX_TOKEN_PIC = 346,
-     BX_TOKEN_PAGE = 347,
-     BX_TOKEN_HELP = 348,
-     BX_TOKEN_CALC = 349,
-     BX_TOKEN_VGA = 350,
-     BX_TOKEN_PCI = 351,
-     BX_TOKEN_COMMAND = 352,
-     BX_TOKEN_GENERIC = 353,
-     BX_TOKEN_RSHIFT = 354,
-     BX_TOKEN_LSHIFT = 355,
-     BX_TOKEN_REG_IP = 356,
-     BX_TOKEN_REG_EIP = 357,
-     BX_TOKEN_REG_RIP = 358,
-     INDIRECT = 359,
-     NEG = 360,
-     NOT = 361
+     BX_TOKEN_PAGE = 346,
+     BX_TOKEN_HELP = 347,
+     BX_TOKEN_CALC = 348,
+     BX_TOKEN_VGA = 349,
+     BX_TOKEN_DEVICE = 350,
+     BX_TOKEN_COMMAND = 351,
+     BX_TOKEN_GENERIC = 352,
+     BX_TOKEN_RSHIFT = 353,
+     BX_TOKEN_LSHIFT = 354,
+     BX_TOKEN_REG_IP = 355,
+     BX_TOKEN_REG_EIP = 356,
+     BX_TOKEN_REG_RIP = 357,
+     INDIRECT = 358,
+     NEG = 359,
+     NOT = 360
    };
 #endif
 /* Tokens.  */
@@ -233,22 +231,21 @@
 #define BX_TOKEN_PRINT_STRING 343
 #define BX_TOKEN_NUMERIC 344
 #define BX_TOKEN_NE2000 345
-#define BX_TOKEN_PIC 346
-#define BX_TOKEN_PAGE 347
-#define BX_TOKEN_HELP 348
-#define BX_TOKEN_CALC 349
-#define BX_TOKEN_VGA 350
-#define BX_TOKEN_PCI 351
-#define BX_TOKEN_COMMAND 352
-#define BX_TOKEN_GENERIC 353
-#define BX_TOKEN_RSHIFT 354
-#define BX_TOKEN_LSHIFT 355
-#define BX_TOKEN_REG_IP 356
-#define BX_TOKEN_REG_EIP 357
-#define BX_TOKEN_REG_RIP 358
-#define INDIRECT 359
-#define NEG 360
-#define NOT 361
+#define BX_TOKEN_PAGE 346
+#define BX_TOKEN_HELP 347
+#define BX_TOKEN_CALC 348
+#define BX_TOKEN_VGA 349
+#define BX_TOKEN_DEVICE 350
+#define BX_TOKEN_COMMAND 351
+#define BX_TOKEN_GENERIC 352
+#define BX_TOKEN_RSHIFT 353
+#define BX_TOKEN_LSHIFT 354
+#define BX_TOKEN_REG_IP 355
+#define BX_TOKEN_REG_EIP 356
+#define BX_TOKEN_REG_RIP 357
+#define INDIRECT 358
+#define NEG 359
+#define NOT 360
 
 
 
@@ -257,7 +254,7 @@
 typedef union YYSTYPE
 {
 
-/* Line 1685 of yacc.c  */
+/* Line 2068 of yacc.c  */
 #line 13 "parser.y"
 
   char    *sval;
@@ -266,8 +263,8 @@ typedef union YYSTYPE
 
 
 
-/* Line 1685 of yacc.c  */
-#line 271 "y.tab.h"
+/* Line 2068 of yacc.c  */
+#line 268 "y.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
