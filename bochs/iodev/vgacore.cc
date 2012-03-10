@@ -124,6 +124,10 @@ void bx_vgacore_c::init(void)
   if (!BX_VGA_THIS pci_enabled) {
     BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr(), 0xc0000, 1);
   }
+#if BX_DEBUGGER
+  // register device for the 'info device' command (calls debug_dump())
+  bx_dbg_register_debug_info("vga", this);
+#endif
 }
 
 void bx_vgacore_c::init_standard_vga(void)

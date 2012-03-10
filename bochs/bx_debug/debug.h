@@ -199,6 +199,9 @@ void bx_add_lex_input(char *buf);
 extern int bxparse(void);
 extern void bxerror(char *s);
 
+// register function for 'info device' command
+bx_bool bx_dbg_register_debug_info(const char *devname, void *dev);
+
 #define EMPTY_ARG (-1)
 
 bx_bool bx_dbg_read_linear(unsigned which_cpu, bx_address laddr, unsigned len, Bit8u *buf);
@@ -289,9 +292,7 @@ void bx_dbg_doit_command(unsigned);
 void bx_dbg_crc_command(bx_phy_address addr1, bx_phy_address addr2);
 void bx_dbg_linux_syscall(unsigned which_cpu);
 void bx_dbg_info_ne2k(int page, int reg);
-void bx_dbg_info_pic(void);
-void bx_dbg_info_vga(void);
-void bx_dbg_info_pci(void);
+void bx_dbg_info_device(const char *);
 void bx_dbg_print_help(void);
 void bx_dbg_calc_command(Bit64u value);
 void bx_dbg_dump_table(void);

@@ -110,12 +110,11 @@
 %token <sval> BX_TOKEN_PRINT_STRING
 %token <uval> BX_TOKEN_NUMERIC
 %token <sval> BX_TOKEN_NE2000
-%token <sval> BX_TOKEN_PIC
 %token <sval> BX_TOKEN_PAGE
 %token <sval> BX_TOKEN_HELP
 %token <sval> BX_TOKEN_CALC
 %token <sval> BX_TOKEN_VGA
-%token <sval> BX_TOKEN_PCI
+%token <sval> BX_TOKEN_DEVICE
 %token <sval> BX_TOKEN_COMMAND
 %token <sval> BX_TOKEN_GENERIC
 %token BX_TOKEN_RSHIFT
@@ -631,19 +630,14 @@ info_command:
         free($1); free($2); free($3); free($5);
         bx_dbg_info_ne2k($4, $6);
       }
-    | BX_TOKEN_INFO BX_TOKEN_PIC '\n'
+    | BX_TOKEN_INFO BX_TOKEN_DEVICE '\n'
       {
-        bx_dbg_info_pic();
+        bx_dbg_info_device("");
         free($1); free($2);
       }
-    | BX_TOKEN_INFO BX_TOKEN_VGA '\n'
+    | BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_STRING '\n'
       {
-        bx_dbg_info_vga();
-        free($1); free($2);
-      }
-    | BX_TOKEN_INFO BX_TOKEN_PCI '\n'
-      {
-        bx_dbg_info_pci();
+        bx_dbg_info_device($3);
         free($1); free($2);
       }
     ;
@@ -1133,10 +1127,9 @@ help_command:
          dbg_printf("info tab - show page tables\n");
          dbg_printf("info eflags - show decoded EFLAGS register\n");
          dbg_printf("info symbols [string] - list symbols whose prefix is string\n");
-         dbg_printf("info pic - show PICs registers\n");
          dbg_printf("info ne2000 - show NE2000 registers\n");
-         dbg_printf("info vga - show vga registers\n");
-         dbg_printf("info pci - show i440fx PCI state\n");
+         dbg_printf("info device - show list of devices supported by this command\n");
+         dbg_printf("info device [string]- show state of device specified in string\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_SHOW '\n'

@@ -104,6 +104,11 @@ void bx_pci_bridge_c::init(void)
   BX_PCI_THIS pci_conf[0x02] = 0x37;
   BX_PCI_THIS pci_conf[0x03] = 0x12;
   BX_PCI_THIS pci_conf[0x0b] = 0x06;
+
+#if BX_DEBUGGER
+  // register device for the 'info device' command (calls debug_dump())
+  bx_dbg_register_debug_info("pci", this);
+#endif
 }
 
   void
@@ -379,9 +384,9 @@ void bx_pci_bridge_c::smram_control(Bit8u value8)
   BX_PCI_THIS pci_conf[0x72] = value8;
 }
 
+#if BX_DEBUGGER
 void bx_pci_bridge_c::debug_dump()
 {
-#if BX_DEBUGGER
   int i;
 
   dbg_printf("i440fx ConfAddr = 0x%08x\n", BX_PCI_THIS confAddr);
@@ -395,10 +400,10 @@ void bx_pci_bridge_c::debug_dump()
   for (i=0x59; i<0x60; i++) {
     dbg_printf("i440fx PAM reg 0x%02x = 0x%02x\n", i, BX_PCI_THIS pci_conf[i]);
   }
-  dbg_printf("i440fx SMRAM control = 0x%02\nx", BX_PCI_THIS pci_conf[0x72]);
+  dbg_printf("i440fx SMRAM control = 0x%02x\n", BX_PCI_THIS pci_conf[0x72]);
 #endif /* DUMP_FULL_I440FX */
-#endif
 }
+#endif
 
 bx_bool bx_pci_bridge_c::register_pci_handlers(bx_pci_device_stub_c *dev,
                                         Bit8u *devfunc, const char *name,

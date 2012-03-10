@@ -75,6 +75,14 @@ static struct {
   unsigned next_wpoint_id;
 } bx_debugger;
 
+typedef struct _debug_info_t {
+  const char *name;
+  bx_devmodel_c *device;
+  struct _debug_info_t *next;
+} debug_info_t;
+
+static debug_info_t *bx_debug_info_list = NULL;
+
 typedef struct {
   FILE    *fp;
   char     fname[BX_MAX_PATH];
@@ -152,6 +160,61 @@ int bx_dbg_set_rcfile(const char *rcfile)
   bx_infile_stack[0].fname[BX_MAX_PATH-1] = 0;
   BX_INFO(("debugger using rc file '%s'.", rcfile));
   return bx_nest_infile((char*)rcfile);
+}
+
+bx_bool bx_dbg_register_debug_info(const char *devname, void *dev)
+{
+  debug_info_t *debug_info;
+
+  debug_info = (debug_info_t *)malloc(sizeof(debug_info_t));
+  if (debug_info == NULL) {
+    BX_PANIC(("can't allocate debug_info_t"));
+    return 0;
+  }
+
+  debug_info->name = devname;
+  debug_info->device = (bx_devmodel_c*)dev;
+  debug_info->next = NULL;
+
+  if (bx_debug_info_list == NULL) {
+    bx_debug_info_list = debug_info;
+  } else {
+    debug_info_t *temp = bx_debug_info_list;
+
+    while (temp->next) {
+      if (!strcmp(temp->name, devname)) {
+        free(debug_info);
+        return 0;
+      }
+      temp = temp->next;
+    }
+    temp->next = debug_info;
+  }
+  return 1;
+}
+
+void bx_dbg_info_cleanup(void)
+{
+  debug_info_t *temp = bx_debug_info_list, *next;
+  while (temp != NULL) {
+    next = temp->next;
+    free(temp);
+    temp = next;
+  }
+  bx_debug_info_list = NULL;
+}
+
+bx_bool bx_dbg_info_find_device(const char *devname, debug_info_t **found_debug_info)
+{
+  debug_info_t *debug_info;
+
+  for (debug_info = bx_debug_info_list; debug_info; debug_info = debug_info->next) {
+    if (!strcmp(debug_info->name, devname)) {
+      *found_debug_info = debug_info;
+      return 1;
+    }
+  }
+  return 0;
 }
 
 int bx_dbg_main(void)
@@ -3287,39 +3350,37 @@ void bx_dbg_info_ne2k(int page, int reg)
 }
 
 /*
- * this implements the info pic command in the debugger.
- * info pic - shows pic registers
+ * this implements the info device command in the debugger.
+ * info device - list devices supported by this command
+ * info device [string] - shows the state of device specified in string
  */
-void bx_dbg_info_pic()
+void bx_dbg_info_device(const char *dev)
 {
-  DEV_pic_debug_dump();
-}
+  debug_info_t *temp = NULL;
 
-/*
- * this implements the info vga command in the debugger.
- * info vga - shows vga registers
- */
-void bx_dbg_info_vga()
-{
-  DEV_vga_debug_dump();
-}
-
-/*
- * this implements the info pci command in the debugger.
- * info pci - shows i440fx state
- */
-void bx_dbg_info_pci()
-{
-#if BX_SUPPORT_PCI
-  if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
-    DEV_pci_debug_dump();
+  if (strlen(dev) == 0) {
+    if (bx_debug_info_list == NULL) {
+      dbg_printf("info device list: no device registered\n");
+    } else {
+      dbg_printf("devices supported by 'info device':\n\n");
+      temp = bx_debug_info_list;
+      while (temp) {
+        dbg_printf("%s\n", temp->name);
+        temp = temp->next;
+      }
+      dbg_printf("\n");
+    }
+  } else {
+    if (bx_dbg_info_find_device(dev, &temp)) {
+      if (temp->device != NULL) {
+        temp->device->debug_dump();
+      } else {
+        BX_PANIC(("info device: device pointer is NULL"));
+      }
+    } else {
+      dbg_printf("info device: '%s' not found\n", dev);
+    }
   }
-  else {
-    dbg_printf("PCI support is disabled in .bochsrc\n");
-  }
-#else
-  dbg_printf("PCI support is not compiled in\n");
-#endif
 }
 
 //

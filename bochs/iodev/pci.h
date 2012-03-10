@@ -62,8 +62,9 @@ public:
 
   virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
   virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
-
+#if BX_DEBUGGER
   virtual void debug_dump(void);
+#endif
 
 private:
   Bit8u pci_handler_id[0x100];  // 256 devices/functions

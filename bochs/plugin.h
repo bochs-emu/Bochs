@@ -208,7 +208,6 @@ extern "C" {
 #define DEV_pic_raise_irq(b)  (bx_devices.pluginPicDevice->raise_irq(b))
 #define DEV_pic_set_mode(a,b) (bx_devices.pluginPicDevice->set_mode(a,b))
 #define DEV_pic_iac()         (bx_devices.pluginPicDevice->IAC())
-#define DEV_pic_debug_dump()  (bx_devices.pluginPicDevice->debug_dump())
 
 ///////// VGA macros
 #define DEV_vga_mem_read(addr) (bx_devices.pluginVgaDevice->mem_read(addr))
@@ -223,7 +222,6 @@ extern "C" {
 #define DEV_vga_refresh() \
   (bx_devices.pluginVgaDevice->trigger_timer(bx_devices.pluginVgaDevice))
 #define DEV_vga_set_override(a) (bx_devices.pluginVgaDevice->set_override(a))
-#define DEV_vga_debug_dump() (bx_devices.pluginVgaDevice->debug_dump())
 
 ///////// PCI macros
 #define DEV_register_pci_handlers(a,b,c,d) \
@@ -234,7 +232,6 @@ extern "C" {
   (bx_devices.pluginPciBridge->pci_set_base_mem(a,b,c,d,e,f))
 #define DEV_pci_set_base_io(a,b,c,d,e,f,g,h) \
   (bx_devices.pluginPciBridge->pci_set_base_io(a,b,c,d,e,f,g,h))
-#define DEV_pci_debug_dump() bx_devices.pluginPciBridge->debug_dump()
 #define DEV_ide_bmdma_present() bx_devices.pluginPciIdeController->bmdma_present()
 #define DEV_ide_bmdma_set_irq(a) bx_devices.pluginPciIdeController->bmdma_set_irq(a)
 #define DEV_acpi_generate_smi(a) bx_devices.pluginACPIController->generate_smi(a)

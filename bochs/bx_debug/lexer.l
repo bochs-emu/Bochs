@@ -106,7 +106,6 @@ pending         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PENDING); }
 take            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TAKE); }
 dma             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DMA); }
 irq             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_IRQ); }
-pic             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PIC); }
 u               |
 disasm          { BEGIN(DISASM); bxlval.sval = strdup(bxtext); return(BX_TOKEN_DISASM); }
 hex             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_HEX); }
@@ -138,7 +137,7 @@ print-string    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PRINT_STRING); }
 ne2k|ne2000     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NE2000); }
 page            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PAGE); }
 vga             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_VGA); }
-pci             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PCI); }
+device          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DEVICE); }
 all             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ALL); }
 al              { bxlval.uval = BX_DBG_REG8L_AL; return(BX_TOKEN_8BL_REG);}
 bl              { bxlval.uval = BX_DBG_REG8L_BL; return(BX_TOKEN_8BL_REG);}
