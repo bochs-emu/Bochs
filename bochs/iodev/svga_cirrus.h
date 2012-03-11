@@ -85,6 +85,9 @@ public:
   virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
   virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 #endif
+#if BX_DEBUGGER
+  virtual void   debug_dump(void);
+#endif
 
 private:
   static Bit32u svga_read_handler(void *this_ptr, Bit32u address, unsigned io_len);

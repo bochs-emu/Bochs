@@ -186,6 +186,10 @@ void bx_vga_c::init_vga_extension(void)
     BX_VGA_THIS load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr());
   }
 #endif
+#if BX_DEBUGGER
+  // register device for the 'info device' command (calls debug_dump())
+  bx_dbg_register_debug_info("vga", this);
+#endif
 }
 
 void bx_vga_c::reset(unsigned type)
@@ -1460,6 +1464,19 @@ void bx_vga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
                              BX_VGA_THIS pci_rom_size)) {
       BX_INFO(("new ROM address: 0x%08x", BX_VGA_THIS pci_rom_address));
     }
+  }
+}
+#endif
+
+#if BX_DEBUGGER
+void bx_vga_c::debug_dump(void)
+{
+  if (BX_VGA_THIS vbe.enabled) {
+    dbg_printf("Bochs VGA/VBE adapter\n\n");
+    dbg_printf("current mode : %u x %u x %u\n", BX_VGA_THIS vbe.xres,
+               BX_VGA_THIS vbe.yres, BX_VGA_THIS vbe.bpp);
+  } else {
+    bx_vgacore_c::debug_dump();
   }
 }
 #endif

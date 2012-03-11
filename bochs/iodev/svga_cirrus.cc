@@ -278,6 +278,10 @@ void bx_svga_cirrus_c::init_vga_extension(void)
     // initialize VGA extension, read/write handlers and timer
     BX_CIRRUS_THIS bx_vgacore_c::init_vga_extension();
   }
+#if BX_DEBUGGER
+  // register device for the 'info device' command (calls debug_dump())
+  bx_dbg_register_debug_info("cirrus", this);
+#endif
 }
 
 void bx_svga_cirrus_c::svga_init_members()
@@ -3448,5 +3452,27 @@ bx_cirrus_bitblt_rop_t bx_svga_cirrus_c::svga_get_bkwd_rop_handler(Bit8u rop)
 
   return rop_handler;
 }
+
+#if BX_DEBUGGER
+void bx_svga_cirrus_c::debug_dump()
+{
+  if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_SVGA) {
+#if BX_SUPPORT_PCI
+    if (BX_CIRRUS_THIS pci_enabled)
+    {
+      dbg_printf("CL-GD5446 PCI\n\n");
+    }
+    else
+#endif
+    {
+      dbg_printf("CL-GD5430 ISA\n\n");
+    }
+    dbg_printf("current mode: %u x %u x %u\n", BX_CIRRUS_THIS svga_xres,
+               BX_CIRRUS_THIS svga_yres, BX_CIRRUS_THIS svga_dispbpp);
+  } else {
+    bx_vgacore_c::debug_dump();
+  }
+}
+#endif
 
 #endif // BX_SUPPORT_CLGD54XX

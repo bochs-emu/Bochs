@@ -867,15 +867,16 @@ Bit8u bx_pic_c::IAC(void)
 }
 
 #if BX_DEBUGGER
-void bx_pic_c::debug_dump(void)
+void bx_pic_c::debug_dump()
 {
-  dbg_printf("s.master_pic.imr = %02x\n", BX_PIC_THIS s.master_pic.imr);
-  dbg_printf("s.master_pic.isr = %02x\n", BX_PIC_THIS s.master_pic.isr);
-  dbg_printf("s.master_pic.irr = %02x\n", BX_PIC_THIS s.master_pic.irr);
-  dbg_printf("s.master_pic.irq = %02x\n", BX_PIC_THIS s.master_pic.irq);
-  dbg_printf("s.slave_pic.imr = %02x\n", BX_PIC_THIS s.slave_pic.imr);
-  dbg_printf("s.slave_pic.isr = %02x\n", BX_PIC_THIS s.slave_pic.isr);
-  dbg_printf("s.slave_pic.irr = %02x\n", BX_PIC_THIS s.slave_pic.irr);
-  dbg_printf("s.slave_pic.irq = %02x\n", BX_PIC_THIS s.slave_pic.irq);
+  dbg_printf("i8259A PIC\n\n");
+  dbg_printf("master IMR = %02x\n", BX_PIC_THIS s.master_pic.imr);
+  dbg_printf("master ISR = %02x\n", BX_PIC_THIS s.master_pic.isr);
+  dbg_printf("master IRR = %02x\n", BX_PIC_THIS s.master_pic.irr);
+  dbg_printf("master IRQ = %02x\n", BX_PIC_THIS s.master_pic.irq);
+  dbg_printf("slave IMR = %02x\n", BX_PIC_THIS s.slave_pic.imr);
+  dbg_printf("slave ISR = %02x\n", BX_PIC_THIS s.slave_pic.isr);
+  dbg_printf("slave IRR = %02x\n", BX_PIC_THIS s.slave_pic.irr);
+  dbg_printf("slave IRQ = %02x\n", BX_PIC_THIS s.slave_pic.irq);
 }
 #endif

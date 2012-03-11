@@ -389,18 +389,19 @@ void bx_pci_bridge_c::debug_dump()
 {
   int i;
 
-  dbg_printf("i440fx ConfAddr = 0x%08x\n", BX_PCI_THIS confAddr);
-  dbg_printf("i440fx ConfData = 0x%08x\n", BX_PCI_THIS confData);
+  dbg_printf("i440FX PMC/DBX\n\n");
+  dbg_printf("confAddr = 0x%08x\n", BX_PCI_THIS confAddr);
+  dbg_printf("confData = 0x%08x\n", BX_PCI_THIS confData);
 
 #ifdef DUMP_FULL_I440FX
   for (i=0; i<256; i++) {
-    dbg_printf("i440fx reg 0x%02x = 0x%02x\n", i, BX_PCI_THIS pci_conf[i]);
+    dbg_printf("PCI conf 0x%02x = 0x%02x\n", i, BX_PCI_THIS pci_conf[i]);
   }
 #else /* DUMP_FULL_I440FX */
   for (i=0x59; i<0x60; i++) {
-    dbg_printf("i440fx PAM reg 0x%02x = 0x%02x\n", i, BX_PCI_THIS pci_conf[i]);
+    dbg_printf("PAM reg 0x%02x = 0x%02x\n", i, BX_PCI_THIS pci_conf[i]);
   }
-  dbg_printf("i440fx SMRAM control = 0x%02x\n", BX_PCI_THIS pci_conf[0x72]);
+  dbg_printf("SMRAM control = 0x%02x\n", BX_PCI_THIS pci_conf[0x72]);
 #endif /* DUMP_FULL_I440FX */
 }
 #endif

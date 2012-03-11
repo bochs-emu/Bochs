@@ -106,6 +106,10 @@ void bx_piix3_c::init(void)
   BX_P2I_THIS pci_conf[0x61] = 0x80;
   BX_P2I_THIS pci_conf[0x62] = 0x80;
   BX_P2I_THIS pci_conf[0x63] = 0x80;
+#if BX_DEBUGGER
+  // register device for the 'info device' command (calls debug_dump())
+  bx_dbg_register_debug_info("pci2isa", this);
+#endif
 }
 
 void bx_piix3_c::reset(unsigned type)
@@ -377,5 +381,19 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
     }
   }
 }
+
+#if BX_DEBUGGER
+void bx_piix3_c::debug_dump()
+{
+  int i;
+
+  dbg_printf("PIIX3 ISA bridge\n\n");
+  for (i = 0; i < 4; i++) {
+    dbg_printf("PIRQ%c# = 0x%02x\n", i + 65, BX_P2I_THIS pci_conf[0x60 + i]);
+  }
+  dbg_printf("ELCR1 = 0x%02x\n", BX_P2I_THIS s.elcr1);
+  dbg_printf("ELCR2 = 0x%02x\n", BX_P2I_THIS s.elcr2);
+}
+#endif
 
 #endif /* BX_SUPPORT_PCI */

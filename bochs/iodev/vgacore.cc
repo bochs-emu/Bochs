@@ -124,10 +124,6 @@ void bx_vgacore_c::init(void)
   if (!BX_VGA_THIS pci_enabled) {
     BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr(), 0xc0000, 1);
   }
-#if BX_DEBUGGER
-  // register device for the 'info device' command (calls debug_dump())
-  bx_dbg_register_debug_info("vga", this);
-#endif
 }
 
 void bx_vgacore_c::init_standard_vga(void)
@@ -2363,6 +2359,7 @@ Bit32u bx_vgacore_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
 #if BX_DEBUGGER
 void bx_vgacore_c::debug_dump(void)
 {
+  dbg_printf("Standard VGA adapter\n\n");
   dbg_printf("s.misc_output.color_emulation = %u\n",
             (unsigned) BX_VGA_THIS s.misc_output.color_emulation);
   dbg_printf("s.misc_output.enable_ram = %u\n",
