@@ -45,9 +45,9 @@ bx_bool NeedSysRresize = FALSE;   // use Sys Reg to help autosize Reg "hex" colu
 
 bx_bool SeeReg[8] = {
     TRUE,   // in 64bit mode, show 32bit versions of registers also (EAX, ...)
-    FALSE,  // show segment registers (CS, ...)
-    FALSE,  // show GDTR, IDTR, LDTR, Task Reg
-    FALSE,  // show control register (CR0, ...)
+    TRUE,  // show segment registers (CS, ...)
+    TRUE,  // show GDTR, IDTR, LDTR, Task Reg
+    TRUE,  // show control register (CR0, ...)
     FALSE,  // show FPU (STi) / MMX registers
     FALSE,  // show XMM registers
     FALSE,  // show the Debug Registers (DR0, ...)
@@ -64,7 +64,7 @@ int UprCase = 0;                // 1 = convert all Asm, Register names, Register
 int DumpInAsciiMode = 3;        // bit 1 = show ASCII in dumps, bit 2 = show hex, value=0 is illegal
 
 bx_bool isLittleEndian = TRUE;
-int DefaultAsmLines = 250;      // default # of asm lines disassembled and "cached"
+int DefaultAsmLines = 512;      // default # of asm lines disassembled and "cached"
 int bottommargin = 6;           // ASM autoscroller tries to leave this many lines below
 int topmargin = 3;              // autoscroller tries to leave this many lines above
 // Note: topmargin must be less than bottommargin
@@ -3088,10 +3088,12 @@ void ActivateMenuItem (int cmd)
                 StatusChange = TRUE;
                 OnBreak();
             }
+            ActivateMenuItem(CMD_RFRSH);
             break;
 
         case CMD_STEPN: // step N
             doStepN();
+            ActivateMenuItem(CMD_RFRSH);
             break;
 
         case CMD_BREAK: // break/stop the sim
