@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#ifdef __MINGW32__
+#if defined(__MINGW32__) || defined(_MSC_VER)
 #include <winsock2.h>
 #define SIGTRAP 5
 #else
@@ -261,7 +261,7 @@ int bx_gdbstub_check(unsigned int eip)
   unsigned char ch;
   long arg;
   int r;
-#if defined(__CYGWIN__) || defined(__MINGW32__)
+#if defined(__CYGWIN__) || defined(__MINGW32__) || defined(_MSC_VER)
   fd_set fds;
   struct timeval tv = {0, 0};
 #endif
@@ -277,7 +277,7 @@ int bx_gdbstub_check(unsigned int eip)
 
   if ((instr_count % 500) == 0)
   {
-#if !defined(__CYGWIN__) && !defined(__MINGW32__)
+#if !defined(__CYGWIN__) && !defined(__MINGW32__) && !defined(_MSC_VER)
     arg = fcntl(socket_fd, F_GETFL);
     fcntl(socket_fd, F_SETFL, arg | O_NONBLOCK);
     r = recv(socket_fd, &ch, 1, 0);
@@ -833,7 +833,7 @@ static void wait_for_connect(int portn)
 
   /* Allow rapid reuse of this port */
   opt = 1;
-#if __MINGW32__
+#if defined(__MINGW32__) || defined(_MSC_VER)
   r = setsockopt(listen_socket_fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&opt, sizeof(opt));
 #else
   r = setsockopt(listen_socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -882,7 +882,7 @@ static void wait_for_connect(int portn)
 
   /* Disable Nagle - allow small packets to be sent without delay. */
   opt = 1;
-#ifdef __MINGW32__
+#if defined(__MINGW32__) || defined(_MSC_VER)
   r = setsockopt (socket_fd, protoent->p_proto, TCP_NODELAY, (const char *)&opt, sizeof(opt));
 #else
   r = setsockopt (socket_fd, protoent->p_proto, TCP_NODELAY, &opt, sizeof(opt));
@@ -904,7 +904,7 @@ void bx_gdbstub_init(void)
   gdbstub_list = (bx_list_c*) SIM->get_param(BXPN_GDBSTUB);
   int portn = SIM->get_param_num("port", gdbstub_list)->get();
 
-#ifdef __MINGW32__
+#if defined(__MINGW32__) || defined(_MSC_VER)
   WSADATA wsaData;
   WSAStartup(2, &wsaData);
 #endif
