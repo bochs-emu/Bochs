@@ -51,7 +51,7 @@ WIN32_DLL_IMPORT_LIBRARY=../../dllexports.a
 
 NETLOW_OBJS = @NETLOW_OBJS@
 
-BX_INCDIRS = -I.. -I../.. -I$(srcdir)/.. -I../../@INSTRUMENT_DIR@ -I$(srcdir)/../../@INSTRUMENT_DIR@
+BX_INCDIRS = -I.. -I../.. -I$(srcdir)/.. -I$(srcdir)/../.. -I../../@INSTRUMENT_DIR@ -I$(srcdir)/../../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS = $(MCH_CFLAGS)
 
 OBJS_THAT_CAN_BE_PLUGINS = \
