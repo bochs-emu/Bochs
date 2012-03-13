@@ -14,16 +14,41 @@ Changes after 2.5.1 release:
   - Improved debug dump for pci, pic and vga/cirrus devices
   - Added debug dump for pci2isa device
 
+- Configure and compile
+  - moved networking, sound and USB devices to subdirectories in iodev
+
 - I/O Devices
   - Networking
     - Ported Intel(R) 82540EM Gigabit Ethernet adapter emulation from Qemu,
       to enable configure with option --enable-e1000
     - Added PCI network boot ROM support to all network adapters
+  - VGA
+    - major rewrite of the vga / cirrus code:
+      - vgacore (shared standard VGA emulation code)
+      - vga (Bochs VBE and PCI VGA)
+      - cirrus (CL-GD 5430 ISA / CL-GD 5446 PCI)
+    - added VGA graphics blinking support
+
+- ROM BIOS
+  - improved PCI boot ROM support (for VGA and other devices)
+
+- GUI and display libraries
+  - implemented "auto-off" timer for status LEDs indicating a data transfer
 
 - Config interface
+  - The bochsrc option 'plugin_ctrl' is now used to load optional plugins
+    directly when parsing the config file or command line. See the bochsrc
+    sample for supported devices.
+  - moved bochsrc parsing / writing and config parameter handling for networking,
+    sound and USB devices to the plugin device code. The options are only
+    available when the corresponding plugin device is loaded.
   - Added ability to set log action per device from .bochsrc
   - Added new command line option '-noconsole' to disable the console
     window on Windows host
+
+- Tools
+  - bxcommit: added support for converting growing to flat mode images
+  - bxcommit: support command line options and non-interactive (quiet) mode
 
 - SF patches applied
   [3502052] Added refresh of debugger gui when stepping
