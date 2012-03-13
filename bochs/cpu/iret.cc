@@ -341,7 +341,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
    * EIP    eSP+0
    */
 
-  if (StackAddrSize64()) temp_RSP = RSP;
+  if (long64_mode()) temp_RSP = RSP;
   else {
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) temp_RSP = ESP;
     else temp_RSP = SP;
@@ -538,7 +538,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
       load_null_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], raw_ss_selector);
     }
 
-    if (StackAddrSize64()) RSP = new_rsp;
+    if (long64_mode()) RSP = new_rsp;
     else {
       if (ss_descriptor.u.segment.d_b) ESP = (Bit32u) new_rsp;
       else SP = (Bit16u) new_rsp;

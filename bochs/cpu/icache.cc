@@ -123,14 +123,14 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBia
       entry->pAddr = ~entry->pAddr;
       entry->traceMask = 0x80000000; /* last line in page */
       pageWriteStampTable.markICacheMask(entry->pAddr, entry->traceMask);
-      pageWriteStampTable.markICacheMask(BX_CPU_THIS_PTR pAddrPage, 0x1);
+      pageWriteStampTable.markICacheMask(BX_CPU_THIS_PTR pAddrFetchPage, 0x1);
 
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
       entry->tlen++; /* Add the inserted end of trace opcode */
       genDummyICacheEntry(++i, &BX_CPU_C::BxEndTrace);
 #endif
 
-      BX_CPU_THIS_PTR iCache.commit_page_split_trace(BX_CPU_THIS_PTR pAddrPage, entry);
+      BX_CPU_THIS_PTR iCache.commit_page_split_trace(BX_CPU_THIS_PTR pAddrFetchPage, entry);
       return entry;
     }
 

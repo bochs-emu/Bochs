@@ -220,7 +220,7 @@ bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
     eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
   }
 
-  bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrPage + eipBiased;
+  bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrFetchPage + eipBiased;
   bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache.get_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
   InstrICache_Increment(iCacheLookups);
@@ -553,23 +553,23 @@ void BX_CPU_C::prefetch(void)
   Bit8u *fetchPtr = 0;
 
   if ((tlbEntry->lpf == lpf) && !(tlbEntry->accessBits & (0x4 | USER_PL))) {
-    BX_CPU_THIS_PTR pAddrPage = tlbEntry->ppf;
+    BX_CPU_THIS_PTR pAddrFetchPage = tlbEntry->ppf;
     fetchPtr = (Bit8u*) tlbEntry->hostPageAddr;
   }  
   else {
     bx_phy_address pAddr = translate_linear(laddr, USER_PL, BX_EXECUTE);
-    BX_CPU_THIS_PTR pAddrPage = PPFOf(pAddr);
+    BX_CPU_THIS_PTR pAddrFetchPage = PPFOf(pAddr);
   }
 
   if (fetchPtr) {
     BX_CPU_THIS_PTR eipFetchPtr = fetchPtr;
   }
   else {
-    BX_CPU_THIS_PTR eipFetchPtr = (const Bit8u*) getHostMemAddr(BX_CPU_THIS_PTR pAddrPage, BX_EXECUTE);
+    BX_CPU_THIS_PTR eipFetchPtr = (const Bit8u*) getHostMemAddr(BX_CPU_THIS_PTR pAddrFetchPage, BX_EXECUTE);
 
     // Sanity checks
     if (! BX_CPU_THIS_PTR eipFetchPtr) {
-      bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrPage + pageOffset;
+      bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrFetchPage + pageOffset;
       if (pAddr >= BX_MEM(0)->get_memory_len()) {
         BX_PANIC(("prefetch: running in bogus memory, pAddr=0x" FMT_PHY_ADDRX, pAddr));
       }

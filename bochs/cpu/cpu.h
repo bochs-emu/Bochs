@@ -1117,7 +1117,7 @@ public: // for now...
   bx_address eipPageBias;
   Bit32u     eipPageWindowSize;
   const Bit8u *eipFetchPtr;
-  bx_phy_address pAddrPage; // Guest physical address of current instruction page
+  bx_phy_address pAddrFetchPage; // Guest physical address of current instruction page
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   unsigned alignment_check_mask;
@@ -4206,8 +4206,6 @@ public: // for now...
   BX_SMF BX_CPP_INLINE bx_bool long_mode(void);
   BX_SMF BX_CPP_INLINE bx_bool long64_mode(void);
   BX_SMF BX_CPP_INLINE unsigned get_cpu_mode(void);
-
-#define StackAddrSize64() long64_mode()
 
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
   BX_SMF BX_CPP_INLINE bx_bool alignment_check(void);

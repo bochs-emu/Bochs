@@ -1841,8 +1841,16 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_PAT_MSR)
     VMwrite64(VMCS_64BIT_GUEST_IA32_PAT, BX_CPU_THIS_PTR msr.pat);
 #if BX_SUPPORT_X86_64
-  if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_EFER_MSR)
+  if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_EFER_MSR) {
     VMwrite64(VMCS_64BIT_GUEST_IA32_EFER, BX_CPU_THIS_PTR efer.get32());
+
+    // store the value of EFER.LMA back into the VMX_VMENTRY_CTRL1_X86_64_GUEST VM-Entry control
+    if (BX_CPU_THIS_PTR efer.get_LMA())
+      vm->vmentry_ctrls |= VMX_VMENTRY_CTRL1_X86_64_GUEST;
+    else
+      vm->vmentry_ctrls &= ~VMX_VMENTRY_CTRL1_X86_64_GUEST;
+    VMwrite32(VMCS_32BIT_CONTROL_VMENTRY_CONTROLS, vm->vmentry_ctrls);
+  }
 #endif
 #endif
 

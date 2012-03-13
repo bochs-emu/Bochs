@@ -46,7 +46,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
   /* + 0:     IP      | + 0:        EIP | + 0:        RIP */
 
 #if BX_SUPPORT_X86_64
-  if (StackAddrSize64()) temp_RSP = RSP;
+  if (long64_mode()) temp_RSP = RSP;
   else
 #endif
   {
@@ -106,7 +106,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     branch_far64(&cs_selector, &cs_descriptor, return_RIP, CPL);
 
 #if BX_SUPPORT_X86_64
-    if (StackAddrSize64())
+    if (long64_mode())
       RSP += stack_param_offset + pop_bytes;
     else
 #endif
@@ -213,7 +213,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
       load_null_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], raw_ss_selector);
     }
 
-    if (StackAddrSize64())
+    if (long64_mode())
       RSP = return_RSP + pop_bytes;
     else
 #endif
