@@ -1,3 +1,47 @@
+Changes after 2.5.1 release:
+
+- CPU
+  - Support for AMD's SVM hardware emulation in Bochs CPU, to enable
+    configure with --enable-svm option
+  ! Added Corei5 750 (Lynnfield) configuration to the CPUDB
+  ! Added Turion64 (Tyler) configuration to the CPUDB
+  ! Added AMD Phenom X3 8650 (Toliman) configuration to the CPUDB
+  - Bugfixes for CPU emulation correctness and stability
+
+- Bochs Internal Debugger and Debugger GUI
+  - Implemented new debugger command 'info device [string]' that shows the
+    state of the device specified in 'string'
+  - Improved debug dump for pci, pic and vga/cirrus devices
+  - Added debug dump for pci2isa device
+
+- I/O Devices
+  - Networking
+    - Ported Intel(R) 82540EM Gigabit Ethernet adapter emulation from Qemu,
+      to enable configure with option --enable-e1000
+    - Added PCI network boot ROM support to all network adapters
+
+- Config interface
+  - Added ability to set log action per device from .bochsrc
+  - Added new command line option '-noconsole' to disable the console
+    window on Windows host
+
+- SF patches applied
+  [3502052] Added refresh of debugger gui when stepping
+  [2864391] Gui debugger default regs by Thomas Nilsen
+  [3486555] Fix critical stack leak in Win32 GUI by Carlo Bramini
+
+- these S.F. bugs were closed/fixed
+  [3459998] Bochs cannot be compiled outside the source tree
+  [2905969] can't use --enable-gdb-stub on vs2008
+  [3294001] Bochs GUI doesn't appear properly for 2nd Bochs copy
+  [3493315] Changing VGA 9/8 dot mode causes screen corruption
+
+- these S.F. feature requests were closed/implemented
+  [1703452] Other Network Devices?
+  [2919376] Disable show the console window
+   [534271] can't set log action by device (bochsrc)
+
+-------------------------------------------------------------------------
 Changes in 2.5.1 (January 6, 2012):
 
 - CPU / CPUDB
