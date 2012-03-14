@@ -1347,7 +1347,11 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     }
     bx_bool lme = (guest.efer_msr >>  8) & 0x1;
     bx_bool lma = (guest.efer_msr >> 10) & 0x1;
-    if (lma != lme || lma != x86_64_guest) {
+    if (lma != x86_64_guest) {
+      BX_ERROR(("VMENTER FAIL: VMCS guest EFER.LMA doesn't match x86_64_guest !"));
+      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
+    if (lma != lme && (guest.cr0 & BX_CR0_PG_MASK) != 0) {
       BX_ERROR(("VMENTER FAIL: VMCS guest EFER (0x%08x) inconsistent value !", (Bit32u) guest.efer_msr));
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
@@ -1494,17 +1498,24 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
 #if BX_SUPPORT_X86_64
 #if BX_SUPPORT_VMX >= 2
+  // modify EFER.LMA / EFER.LME before setting CR4
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_EFER_MSR) {
      BX_CPU_THIS_PTR efer.set32((Bit32u) guest.efer_msr);
   }
   else
 #endif
   {
-    // set EFER.LMA and EFER.LME before write to CR4
-    if (x86_64_guest)
-       BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() |  (BX_EFER_LME_MASK | BX_EFER_LMA_MASK));
-    else
-       BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() & ~(BX_EFER_LME_MASK | BX_EFER_LMA_MASK));
+    if (x86_64_guest) {
+      BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() | (BX_EFER_LME_MASK | BX_EFER_LMA_MASK));
+    }
+    else {
+      // when loading unrestricted guest with CR0.PG=0 EFER.LME is unmodified
+      // (i.e., the host value will persist in the guest)
+      if (guest.cr0 & BX_CR0_PG_MASK)
+        BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() & ~(BX_EFER_LME_MASK | BX_EFER_LMA_MASK));
+      else
+        BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() &  ~BX_EFER_LMA_MASK);
+    }
   }
 #endif
 
@@ -1841,16 +1852,8 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_PAT_MSR)
     VMwrite64(VMCS_64BIT_GUEST_IA32_PAT, BX_CPU_THIS_PTR msr.pat);
 #if BX_SUPPORT_X86_64
-  if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_EFER_MSR) {
+  if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_EFER_MSR)
     VMwrite64(VMCS_64BIT_GUEST_IA32_EFER, BX_CPU_THIS_PTR efer.get32());
-
-    // store the value of EFER.LMA back into the VMX_VMENTRY_CTRL1_X86_64_GUEST VM-Entry control
-    if (BX_CPU_THIS_PTR efer.get_LMA())
-      vm->vmentry_ctrls |= VMX_VMENTRY_CTRL1_X86_64_GUEST;
-    else
-      vm->vmentry_ctrls &= ~VMX_VMENTRY_CTRL1_X86_64_GUEST;
-    VMwrite32(VMCS_32BIT_CONTROL_VMENTRY_CONTROLS, vm->vmentry_ctrls);
-  }
 #endif
 #endif
 
@@ -1907,13 +1910,13 @@ void BX_CPU_C::VMexitLoadHostState(void)
   }
 
 #if BX_SUPPORT_VMX >= 2
+  // modify EFER.LMA / EFER.LME before setting CR4
   if (vmexit_ctrls & VMX_VMEXIT_CTRL1_LOAD_EFER_MSR) {
      BX_CPU_THIS_PTR efer.set32((Bit32u) host_state->efer_msr);
   }
   else
 #endif
   {
-    // set EFER.LMA and EFER.LME before write to CR4
     if (x86_64_host)
        BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() |  (BX_EFER_LME_MASK | BX_EFER_LMA_MASK));
     else
