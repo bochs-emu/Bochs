@@ -306,6 +306,11 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_TaskSwitch(bxInstruction_c *i, Bit1
   VMexit(i, VMX_VMEXIT_TASK_SWITCH, tss_selector | (source << 30));
 }
 
+#define BX_VMX_LO_MSR_START  0x00000000
+#define BX_VMX_LO_MSR_END    0x00001FFF
+#define BX_VMX_HI_MSR_START  0xC0000000
+#define BX_VMX_HI_MSR_END    0xC0001FFF
+
 void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_MSR(bxInstruction_c *i, unsigned op, Bit32u msr)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
@@ -317,10 +322,10 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_MSR(bxInstruction_c *i, unsigned op
     Bit8u field;
 
     if (msr & 0xC0000000) {
-       if (msr > 0xC0001FFF) vmexit = 1;
+       if (msr > BX_VMX_HI_MSR_END) vmexit = 1;
        else {
          // check MSR-HI bitmaps
-         bx_phy_address pAddr = vm->msr_bitmap_addr + (msr >> 3) + 1024 + ((op == VMX_VMEXIT_RDMSR) ? 0 : 2048);
+         bx_phy_address pAddr = vm->msr_bitmap_addr + ((msr - BX_VMX_HI_MSR_START) >> 3) + 1024 + ((op == VMX_VMEXIT_RDMSR) ? 0 : 2048);
          access_read_physical(pAddr, 1, &field);
          BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_READ, BX_MSR_BITMAP_ACCESS, &field);
          if (field & (1 << (msr & 7)))
@@ -328,7 +333,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_MSR(bxInstruction_c *i, unsigned op
        }
     }
     else {
-       if (msr > 0x00001FFF) vmexit = 1;
+       if (msr > BX_VMX_LO_MSR_END) vmexit = 1;
        else {
          // check MSR-LO bitmaps
          bx_phy_address pAddr = vm->msr_bitmap_addr + (msr >> 3) + ((op == VMX_VMEXIT_RDMSR) ? 0 : 2048);
