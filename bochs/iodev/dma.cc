@@ -170,6 +170,10 @@ void bx_dma_c::init(void)
   memset(&BX_DMA_THIS ext_page_reg[0], 0, 16);
   BX_DMA_THIS s[1].chan[0].used = 1; // cascade channel in use
   BX_INFO(("channel 4 used by cascade"));
+#if BX_DEBUGGER
+  // register device for the 'info device' command (calls debug_dump())
+  bx_dbg_register_debug_info("dma", this);
+#endif
 }
 
 void bx_dma_c::reset(unsigned type)
@@ -591,28 +595,12 @@ void bx_dma_c::set_DRQ(unsigned channel, bx_bool val)
   }
   channel &= 0x03;
   if (!val) {
-    //BX_DEBUG(("bx_dma_c::DRQ(): val == 0"));
     // clear bit in status reg
     BX_DMA_THIS s[ma_sl].status_reg &= ~(1 << (channel+4));
 
     control_HRQ(ma_sl);
     return;
   }
-
-#if 0
-  BX_INFO(("mask[%d]: %02x", channel, (unsigned) BX_DMA_THIS s[0].mask[channel]));
-  BX_INFO(("flip_flop: %u", (unsigned) BX_DMA_THIS s[0].flip_flop));
-  BX_INFO(("status_reg: %02x", (unsigned) BX_DMA_THIS s[0].status_reg));
-  BX_INFO(("mode_type: %02x", (unsigned) BX_DMA_THIS s[0].chan[channel].mode.mode_type));
-  BX_INFO(("address_decrement: %02x", (unsigned) BX_DMA_THIS s[0].chan[channel].mode.address_decrement));
-  BX_INFO(("autoinit_enable: %02x", (unsigned) BX_DMA_THIS s[0].chan[channel].mode.autoinit_enable));
-  BX_INFO(("transfer_type: %02x", (unsigned) BX_DMA_THIS s[0].chan[channel].mode.transfer_type));
-  BX_INFO(("base_address: %04x", (unsigned) BX_DMA_THIS s[0].chan[channel].base_address));
-  BX_INFO(("current_address: %04x", (unsigned) BX_DMA_THIS s[0].chan[channel].current_address));
-  BX_INFO(("base_count: %04x", (unsigned) BX_DMA_THIS s[0].chan[channel].base_count));
-  BX_INFO(("current_count: %04x", (unsigned) BX_DMA_THIS s[0].chan[channel].current_count));
-  BX_INFO(("page_reg: %02x", (unsigned) BX_DMA_THIS s[0].chan[channel].page_reg));
-#endif
 
   BX_DMA_THIS s[ma_sl].status_reg |= (1 << (channel+4));
 
@@ -815,3 +803,39 @@ void bx_dma_c::raise_HLDA(void)
     }
   }
 }
+
+#if BX_DEBUGGER
+void bx_dma_c::debug_dump()
+{
+  int ch, i, j;
+
+  dbg_printf("i8237A DMA controller\n\n");
+  for (i = 0; i < 2; i++) {
+    for (j = 0; j < 4; j++) {
+      if (BX_DMA_THIS s[i].chan[j].used) {
+        ch = i * 4 + j;
+        dbg_printf("DMA channel %d", ch);
+        if (ch == 4) {
+          dbg_printf(" (cascade)\n");
+        } else if (BX_DMA_THIS s[i].DRQ[j]) {
+          dbg_printf(" (active)\n");
+          dbg_printf("  address: base=0x%04x, current=0x%04x\n", BX_DMA_THIS s[i].chan[j].base_address,
+                     BX_DMA_THIS s[i].chan[j].current_address);
+          dbg_printf("  count: base=0x%04x, current=0x%04x\n", BX_DMA_THIS s[i].chan[j].base_count,
+                     BX_DMA_THIS s[i].chan[j].current_count);
+          dbg_printf("  page: 0x%02x\n", BX_DMA_THIS s[i].chan[j].page_reg);
+          dbg_printf("  mask: %u\n", BX_DMA_THIS s[i].mask[j]);
+          dbg_printf("  flip_flop: %u\n", BX_DMA_THIS s[i].flip_flop);
+          dbg_printf("  status_reg: 0x%02x\n", BX_DMA_THIS s[i].status_reg);
+          dbg_printf("  mode_type: %u\n", BX_DMA_THIS s[i].chan[j].mode.mode_type);
+          dbg_printf("  address_decrement: %u\n", BX_DMA_THIS s[i].chan[j].mode.address_decrement);
+          dbg_printf("  autoinit_enable: %u\n", BX_DMA_THIS s[i].chan[j].mode.autoinit_enable);
+          dbg_printf("  transfer_type: %u\n", BX_DMA_THIS s[i].chan[j].mode.transfer_type);
+        } else {
+          dbg_printf(" (not active)\n");
+        }
+      }
+    }
+  }
+}
+#endif

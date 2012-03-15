@@ -41,6 +41,9 @@ public:
   virtual void     set_DRQ(unsigned channel, bx_bool val);
   virtual unsigned get_TC(void);
   virtual void     register_state(void);
+#if BX_DEBUGGER
+  virtual void debug_dump(void);
+#endif
 
   virtual unsigned registerDMA8Channel(unsigned channel,
     void (* dmaRead)(Bit8u *data_byte),

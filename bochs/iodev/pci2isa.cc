@@ -389,7 +389,13 @@ void bx_piix3_c::debug_dump()
 
   dbg_printf("PIIX3 ISA bridge\n\n");
   for (i = 0; i < 4; i++) {
-    dbg_printf("PIRQ%c# = 0x%02x\n", i + 65, BX_P2I_THIS pci_conf[0x60 + i]);
+    dbg_printf("PIRQ%c# = 0x%02x", i + 65, BX_P2I_THIS pci_conf[0x60 + i]);
+    Bit8u irq = BX_P2I_THIS pci_conf[0x60 + i];
+    if (irq < 16) {
+      dbg_printf(" (level=%d)\n", BX_P2I_THIS s.irq_level[irq] > 0);
+    } else {
+      dbg_printf("\n");
+    }
   }
   dbg_printf("ELCR1 = 0x%02x\n", BX_P2I_THIS s.elcr1);
   dbg_printf("ELCR2 = 0x%02x\n", BX_P2I_THIS s.elcr2);
