@@ -12,7 +12,7 @@ Changes after 2.5.1 release:
   - Implemented new debugger command 'info device [string]' that shows the
     state of the device specified in 'string'
   - Improved debug dump for pci, pic and vga/cirrus devices
-  - Added debug dump for pci2isa device
+  - Added debug dump for pci2isa and DMA controller devices
 
 - Configure and compile
   - moved networking, sound and USB devices to subdirectories in iodev
@@ -39,18 +39,19 @@ Changes after 2.5.1 release:
   - The bochsrc option 'plugin_ctrl' is now used to load optional plugins
     directly when parsing the config file or command line. See the bochsrc
     sample for supported devices.
-  - moved bochsrc parsing / writing and config parameter handling for networking,
+  - Moved bochsrc parsing / writing and config parameter handling for networking,
     sound and USB devices to the plugin device code. The options are only
     available when the corresponding plugin device is loaded.
-  - Added ability to set log action per device from .bochsrc
+  - Added ability to set log action per device from .bochsrc.
   - Added new command line option '-noconsole' to disable the console
-    window on Windows host
+    window on Windows host.
 
 - Tools
   - bxcommit: added support for converting growing to flat mode images
   - bxcommit: support command line options and non-interactive (quiet) mode
 
 - SF patches applied
+  [3505209] Fixed combo box size by Konrad Grochowski
   [3502052] Added refresh of debugger gui when stepping
   [2864391] Gui debugger default regs by Thomas Nilsen
   [3486555] Fix critical stack leak in Win32 GUI by Carlo Bramini

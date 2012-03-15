@@ -552,7 +552,7 @@ HWND CreateCombobox(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_par
   r.left = xpos;
   r.top = ypos;
   r.right = r.left + 100;
-  r.bottom = r.top + 14;
+  r.bottom = r.top + 14 * ((int)(eparam->get_max() - eparam->get_min()) + 1);
   MapDialogRect(hDlg, &r);
   Combo = CreateWindow("COMBOBOX", "", WS_CHILD | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
                        r.left, r.top, r.right-r.left+1, r.bottom-r.top+1, hDlg, (HMENU)code, NULL, NULL);
