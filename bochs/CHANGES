@@ -15,7 +15,9 @@ Changes after 2.5.1 release:
   - Added debug dump for pci2isa and DMA controller devices
 
 - Configure and compile
-  - moved networking, sound and USB devices to subdirectories in iodev
+  - Moved networking, sound and USB devices to subdirectories in iodev
+  - Moved MWAIT_IS_NOP .bochsrc option from CPUID to CPU so it can be set
+    even if cpu was configured using pre-defined CPUDB profile
 
 - I/O Devices
   - Networking

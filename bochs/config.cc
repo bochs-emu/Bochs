@@ -3644,61 +3644,64 @@ int bx_write_configuration(const char *rc, int overwrite)
   fprintf(fp, "\n");
 
 #if BX_CPU_LEVEL >= 4
-  fprintf(fp, "cpuid: family=%d, model=0x%02x, stepping=%d", 
-    SIM->get_param_num(BXPN_CPUID_FAMILY)->get(),
-    SIM->get_param_num(BXPN_CPUID_MODEL)->get(),
-    SIM->get_param_num(BXPN_CPUID_STEPPING)->get());
+  if (! SIM->get_param_enum(BXPN_CPU_MODEL)->get()) {
+    // dump only when using BX_GENERIC CPUDB profile
+    fprintf(fp, "cpuid: family=%d, model=0x%02x, stepping=%d", 
+      SIM->get_param_num(BXPN_CPUID_FAMILY)->get(),
+      SIM->get_param_num(BXPN_CPUID_MODEL)->get(),
+      SIM->get_param_num(BXPN_CPUID_STEPPING)->get());
 #if BX_CPU_LEVEL >= 5
-  fprintf(fp, ", mmx=%d, apic=%s", SIM->get_param_bool(BXPN_CPUID_MMX)->get(),
-    SIM->get_param_enum(BXPN_CPUID_APIC)->get_selected());
+    fprintf(fp, ", mmx=%d, apic=%s", SIM->get_param_bool(BXPN_CPUID_MMX)->get(),
+      SIM->get_param_enum(BXPN_CPUID_APIC)->get_selected());
 #endif
 #if BX_CPU_LEVEL >= 6
-  fprintf(fp, ", sse=%s, sse4a=%d, sep=%d, aes=%d, xsave=%d, xsaveopt=%d, movbe=%d, smep=%d",
-    SIM->get_param_enum(BXPN_CPUID_SSE)->get_selected(),
-    SIM->get_param_bool(BXPN_CPUID_SSE4A)->get(),
-    SIM->get_param_bool(BXPN_CPUID_SEP)->get(),
-    SIM->get_param_bool(BXPN_CPUID_AES)->get(),
-    SIM->get_param_bool(BXPN_CPUID_XSAVE)->get(),
-    SIM->get_param_bool(BXPN_CPUID_XSAVEOPT)->get(),
-    SIM->get_param_bool(BXPN_CPUID_MOVBE)->get(),
-    SIM->get_param_bool(BXPN_CPUID_SMEP)->get());
+    fprintf(fp, ", sse=%s, sse4a=%d, sep=%d, aes=%d, xsave=%d, xsaveopt=%d, movbe=%d, smep=%d",
+      SIM->get_param_enum(BXPN_CPUID_SSE)->get_selected(),
+      SIM->get_param_bool(BXPN_CPUID_SSE4A)->get(),
+      SIM->get_param_bool(BXPN_CPUID_SEP)->get(),
+      SIM->get_param_bool(BXPN_CPUID_AES)->get(),
+      SIM->get_param_bool(BXPN_CPUID_XSAVE)->get(),
+      SIM->get_param_bool(BXPN_CPUID_XSAVEOPT)->get(),
+      SIM->get_param_bool(BXPN_CPUID_MOVBE)->get(),
+      SIM->get_param_bool(BXPN_CPUID_SMEP)->get());
 #if BX_SUPPORT_AVX
-  fprintf(fp, ", avx=%d, avx_f16c=%d, avx_fma=%d, bmi=%d, xop=%d, tbm=%d, fma4=%d", 
-    SIM->get_param_num(BXPN_CPUID_AVX)->get(),
-    SIM->get_param_bool(BXPN_CPUID_AVX_F16CVT)->get(),
-    SIM->get_param_bool(BXPN_CPUID_AVX_FMA)->get(),
-    SIM->get_param_num(BXPN_CPUID_BMI)->get(),
-    SIM->get_param_bool(BXPN_CPUID_XOP)->get(),
-    SIM->get_param_bool(BXPN_CPUID_TBM)->get(),
-    SIM->get_param_bool(BXPN_CPUID_FMA4)->get());
+    fprintf(fp, ", avx=%d, avx_f16c=%d, avx_fma=%d, bmi=%d, xop=%d, tbm=%d, fma4=%d", 
+      SIM->get_param_num(BXPN_CPUID_AVX)->get(),
+      SIM->get_param_bool(BXPN_CPUID_AVX_F16CVT)->get(),
+      SIM->get_param_bool(BXPN_CPUID_AVX_FMA)->get(),
+      SIM->get_param_num(BXPN_CPUID_BMI)->get(),
+      SIM->get_param_bool(BXPN_CPUID_XOP)->get(),
+      SIM->get_param_bool(BXPN_CPUID_TBM)->get(),
+      SIM->get_param_bool(BXPN_CPUID_FMA4)->get());
 #endif
 #if BX_SUPPORT_VMX
-  fprintf(fp, ", vmx=%d", SIM->get_param_num(BXPN_CPUID_VMX)->get());
+    fprintf(fp, ", vmx=%d", SIM->get_param_num(BXPN_CPUID_VMX)->get());
 #endif
 #if BX_SUPPORT_SVM
-  fprintf(fp, ", svm=%d", SIM->get_param_num(BXPN_CPUID_SVM)->get());
+    fprintf(fp, ", svm=%d", SIM->get_param_num(BXPN_CPUID_SVM)->get());
 #endif
 #if BX_SUPPORT_X86_64
-  fprintf(fp, ", x86_64=%d, 1g_pages=%d, pcid=%d, fsgsbase=%d",
-    SIM->get_param_bool(BXPN_CPUID_X86_64)->get(),
-    SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get(),
-    SIM->get_param_bool(BXPN_CPUID_PCID)->get(),
-    SIM->get_param_bool(BXPN_CPUID_FSGSBASE)->get());
+    fprintf(fp, ", x86_64=%d, 1g_pages=%d, pcid=%d, fsgsbase=%d",
+      SIM->get_param_bool(BXPN_CPUID_X86_64)->get(),
+      SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get(),
+      SIM->get_param_bool(BXPN_CPUID_PCID)->get(),
+      SIM->get_param_bool(BXPN_CPUID_FSGSBASE)->get());
 #endif
 #if BX_SUPPORT_MONITOR_MWAIT
-  fprintf(fp, ", mwait=%d",
-    SIM->get_param_bool(BXPN_CPUID_MWAIT)->get());
+    fprintf(fp, ", mwait=%d",
+      SIM->get_param_bool(BXPN_CPUID_MWAIT)->get());
 #endif
 #endif
-  fprintf(fp, "\n");
+    fprintf(fp, "\n");
 
-  const char *vendor_string = SIM->get_param_string(BXPN_VENDOR_STRING)->getptr();
-  if (vendor_string)
-    fprintf(fp, "cpuid: vendor_string=\"%s\"\n", vendor_string);
-  const char *brand_string = SIM->get_param_string(BXPN_BRAND_STRING)->getptr();
-  if (brand_string)
-    fprintf(fp, "cpuid: brand_string=\"%s\"\n", brand_string);
-  fprintf(fp, "\n");
+    const char *vendor_string = SIM->get_param_string(BXPN_VENDOR_STRING)->getptr();
+    if (vendor_string)
+      fprintf(fp, "cpuid: vendor_string=\"%s\"\n", vendor_string);
+    const char *brand_string = SIM->get_param_string(BXPN_BRAND_STRING)->getptr();
+    if (brand_string)
+      fprintf(fp, "cpuid: brand_string=\"%s\"\n", brand_string);
+    fprintf(fp, "\n");
+  }
 #endif
 
   fprintf(fp, "print_timestamps: enabled=%d\n", bx_dbg.print_timestamps);
