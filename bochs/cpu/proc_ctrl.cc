@@ -741,7 +741,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
     BX_NEXT_TRACE(i);
   }
 
-  static bx_bool mwait_is_nop = SIM->get_param_bool(BXPN_CPUID_MWAIT_IS_NOP)->get();
+  static bx_bool mwait_is_nop = SIM->get_param_bool(BXPN_MWAIT_IS_NOP)->get();
   if (mwait_is_nop) {
     BX_NEXT_TRACE(i);
   }

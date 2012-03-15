@@ -392,6 +392,12 @@ void bx_init_options()
       "cpuid_limit_winnt", "Limit max CPUID function to 3",
       "Limit max CPUID function reported to 3 to workaround WinNT issue",
       0);
+#if BX_SUPPORT_MONITOR_MWAIT
+  new bx_param_bool_c(cpu_param,
+      "mwait_is_nop", "Don't put CPU to sleep state by MWAIT",
+      "Don't put CPU to sleep state by MWAIT",
+      0);
+#endif
 #if BX_CONFIGURE_MSRS
   new bx_param_filename_c(cpu_param,
       "msrs",
@@ -564,10 +570,6 @@ void bx_init_options()
       "mwait", "MONITOR/MWAIT instructions support",
       "MONITOR/MWAIT instructions support",
       BX_SUPPORT_MONITOR_MWAIT);
-  new bx_param_bool_c(cpuid_param,
-      "mwait_is_nop", "Don't put CPU to sleep state by MWAIT",
-      "Don't put CPU to sleep state by MWAIT",
-      0);
 #endif
 #if BX_SUPPORT_VMX
   new bx_param_num_c(cpuid_param,
@@ -2533,6 +2535,12 @@ static int parse_line_formatted(const char *context, int num_params, char *param
           PARSE_ERR(("%s: cpu directive malformed.", context));
         }
 #endif
+#if BX_SUPPORT_MONITOR_MWAIT
+      } else if (!strncmp(params[i], "mwait_is_nop=", 13)) {
+        if (parse_param_bool(params[i], 13, BXPN_MWAIT_IS_NOP) < 0) {
+          PARSE_ERR(("%s: cpu directive malformed.", context));
+        }
+#endif
       } else if (!strncmp(params[i], "msrs=", 5)) {
         SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->set(&params[i][5]);
       } else if (!strncmp(params[i], "cpuid_limit_winnt=", 18)) {
@@ -2665,10 +2673,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 #if BX_SUPPORT_MONITOR_MWAIT
       } else if (!strncmp(params[i], "mwait=", 6)) {
         if (parse_param_bool(params[i], 6, BXPN_CPUID_MWAIT) < 0) {
-          PARSE_ERR(("%s: cpuid directive malformed.", context));
-        }
-      } else if (!strncmp(params[i], "mwait_is_nop=", 13)) {
-        if (parse_param_bool(params[i], 13, BXPN_CPUID_MWAIT_IS_NOP) < 0) {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
         }
 #endif
@@ -3629,6 +3633,9 @@ int bx_write_configuration(const char *rc, int overwrite)
 #if BX_CPU_LEVEL >= 5
   fprintf(fp, ", ignore_bad_msrs=%d", SIM->get_param_bool(BXPN_IGNORE_BAD_MSRS)->get());
 #endif
+#if BX_SUPPORT_MONITOR_MWAIT
+  fprintf(fp, ", mwait_is_nop=%d", SIM->get_param_bool(BXPN_MWAIT_IS_NOP)->get());
+#endif
 #if BX_CONFIGURE_MSRS
   strptr = SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->getptr();
   if (strlen(strptr) > 0)
@@ -3679,9 +3686,8 @@ int bx_write_configuration(const char *rc, int overwrite)
     SIM->get_param_bool(BXPN_CPUID_FSGSBASE)->get());
 #endif
 #if BX_SUPPORT_MONITOR_MWAIT
-  fprintf(fp, ", mwait=%d, mwait_is_nop=%d",
-    SIM->get_param_bool(BXPN_CPUID_MWAIT)->get(),
-    SIM->get_param_bool(BXPN_CPUID_MWAIT_IS_NOP)->get());
+  fprintf(fp, ", mwait=%d",
+    SIM->get_param_bool(BXPN_CPUID_MWAIT)->get());
 #endif
 #endif
   fprintf(fp, "\n");

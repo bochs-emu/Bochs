@@ -2959,6 +2959,11 @@ will be completely bogus !
 Determine whether to limit maximum CPUID function to 2. This mode is required
 to workaround WinNT installation and boot issues.
 </para>
+<para><command>mwait_is_nop</command></para>
+<para>
+When this option is enabled MWAIT will not put the CPU into a sleep state.
+This option exists only if Bochs compiled with --enable-monitor-mwait.
+</para>
 <para><command>msrs</command></para>
 <para>
 Define path to user CPU Model Specific Registers (MSRs) specification.
@@ -3124,14 +3129,14 @@ This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 Select MONITOR/MWAIT instructions support.
 This option exists only if Bochs compiled with --enable-monitor-mwait.
 </para>
-<para><command>mwait_is_nop</command></para>
-<para>
-When this option is enabled MWAIT will not put the CPU into a sleep state.
-This option exists only if Bochs compiled with --enable-monitor-mwait.
-</para>
 <para><command>vmx</command></para>
 <para>
 Select VMX extensions emulation support.
+This option exists only if Bochs compiled with --enable-vmx option.
+</para>
+<para><command>svm</command></para>
+<para>
+Select AMD SVM (Secure Virtual Machine) extensions emulation support.
 This option exists only if Bochs compiled with --enable-vmx option.
 </para>
 <para><command>family</command></para>

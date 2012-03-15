@@ -26,6 +26,7 @@ cpu
   reset_on_triple_fault
   msrs
   cpuid_limit_winnt
+  mwait_is_nop
 
 cpuid
   family
@@ -57,7 +58,6 @@ cpuid
   fsgsbase
   smep
   mwait
-  mwait_is_nop
 
 memory
   standard
