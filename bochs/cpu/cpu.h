@@ -1199,55 +1199,62 @@ public: // for now...
  
   // ZF
   BX_SMF BX_CPP_INLINE bx_bool getB_ZF(void) {
-    return (0 == (BX_CPU_THIS_PTR oszapc.result &
-               (((BX_CPU_THIS_PTR oszapc.auxbits >> LF_BIT_ZF) & 1) - 1)));
+    return (0 == BX_CPU_THIS_PTR oszapc.result);
   }
 
   BX_SMF BX_CPP_INLINE bx_bool get_ZF(void) { return getB_ZF(); }
 
   BX_SMF BX_CPP_INLINE void set_ZF(bx_bool val) {
-    BX_CPU_THIS_PTR oszapc.result |= (1 << 8);
-    BX_CPU_THIS_PTR oszapc.result ^= (val) << 8;
-    BX_CPU_THIS_PTR oszapc.auxbits &= ~(LF_MASK_ZF);
-    BX_CPU_THIS_PTR oszapc.auxbits |= (val) << LF_BIT_ZF;
+    if (val) assert_ZF();
+    else clear_ZF();
   }
 
   BX_SMF BX_CPP_INLINE void clear_ZF(void) {
     BX_CPU_THIS_PTR oszapc.result |= (1 << 8);
-    BX_CPU_THIS_PTR oszapc.auxbits &= ~(LF_MASK_ZF);
   }
 
   BX_SMF BX_CPP_INLINE void assert_ZF(void) {
-    BX_CPU_THIS_PTR oszapc.result &= ~(1 << 8);
-    BX_CPU_THIS_PTR oszapc.auxbits |= (LF_MASK_ZF);
+    // merge the sign bit into the Sign Delta
+
+    BX_CPU_THIS_PTR oszapc.auxbits ^=
+      (((BX_CPU_THIS_PTR oszapc.result >> BX_LF_SIGN_BIT) & 1) << LF_BIT_SD);
+
+    // merge the parity bits into the Parity Delta Byte
+
+    Bit32u temp_pdb = (255 & BX_CPU_THIS_PTR oszapc.result);
+    BX_CPU_THIS_PTR oszapc.auxbits ^= (temp_pdb << LF_BIT_PDB);
+
+    // now zero the .result value
+
+    BX_CPU_THIS_PTR oszapc.result = 0;
   }
 
   // SF
   BX_SMF BX_CPP_INLINE bx_bool getB_SF(void) {
-    return (BX_CPU_THIS_PTR oszapc.result >> BX_LF_SIGN_BIT);
+    return ((BX_CPU_THIS_PTR oszapc.result >> BX_LF_SIGN_BIT) ^
+            (BX_CPU_THIS_PTR oszapc.auxbits >> LF_BIT_SD)) & 1;
   }
 
   BX_SMF BX_CPP_INLINE bx_bool get_SF(void) { return getB_SF(); }
 
   BX_SMF BX_CPP_INLINE void set_SF(bx_bool val) {
-    set_ZF(getB_ZF());
-    BX_CPU_THIS_PTR oszapc.result &= ~(BX_CONST64(1) << BX_LF_SIGN_BIT);
-    BX_CPU_THIS_PTR oszapc.result |= ((bx_address)(val)) << BX_LF_SIGN_BIT;
+    bx_bool temp_sf = getB_SF();
+
+    BX_CPU_THIS_PTR oszapc.auxbits ^= (temp_sf ^ val) << LF_BIT_SD;
   }
 
   BX_SMF BX_CPP_INLINE void clear_SF(void) {
-    set_ZF(getB_ZF());
-    BX_CPU_THIS_PTR oszapc.result &= ~(BX_CONST64(1) << BX_LF_SIGN_BIT);
+    set_SF(0);
   }
 
   BX_SMF BX_CPP_INLINE void assert_SF(void) {
-    set_ZF(getB_ZF());
-    BX_CPU_THIS_PTR oszapc.result |= (BX_CONST64(1) << BX_LF_SIGN_BIT);
+    set_SF(1);
   }
 
   // PF - bit 2 in EFLAGS, represented by lower 8 bits of oszapc.result
   BX_SMF BX_CPP_INLINE bx_bool getB_PF(void) {
-    Bit8u temp = (Bit8u)(255 & BX_CPU_THIS_PTR oszapc.result);
+    Bit32u temp = (255 & BX_CPU_THIS_PTR oszapc.result);
+    temp = temp ^ (255 & (BX_CPU_THIS_PTR oszapc.auxbits >> LF_BIT_PDB));
     temp = (temp ^ (temp >> 4)) & 0x0F;
     return (0x9669U >> temp) & 1;
   }
@@ -1255,20 +1262,18 @@ public: // for now...
   BX_SMF BX_CPP_INLINE bx_bool get_PF(void) { return getB_PF(); }
 
   BX_SMF BX_CPP_INLINE void set_PF(bx_bool val) {
-    set_ZF(getB_ZF());
-    BX_CPU_THIS_PTR oszapc.result &= ~(0xFF);
-    BX_CPU_THIS_PTR oszapc.result |= 1 - (val);
+    Bit32u temp_pdb = (255 & BX_CPU_THIS_PTR oszapc.result) ^ (!val);
+
+    BX_CPU_THIS_PTR oszapc.auxbits &= ~(LF_MASK_PDB);
+    BX_CPU_THIS_PTR oszapc.auxbits |= (temp_pdb << LF_BIT_PDB);
   }
 
   BX_SMF BX_CPP_INLINE void clear_PF(void) {
-    set_ZF(getB_ZF());
-    BX_CPU_THIS_PTR oszapc.result &= ~(0xFF);
-    BX_CPU_THIS_PTR oszapc.result |= 0x01;
+    set_PF(0);
   }
 
   BX_SMF BX_CPP_INLINE void assert_PF(void) {
-    set_ZF(getB_ZF());
-    BX_CPU_THIS_PTR oszapc.result &= ~(0xFF);
+    set_PF(1);
   }
 
   // AF - bit 4 in EFLAGS, represented by bit LF_BIT_AF of oszapc.auxbits
@@ -1301,17 +1306,17 @@ public: // for now...
   }
 
   BX_SMF BX_CPP_INLINE void set_CF(bx_bool val) {
-    Bit8u temp_of = getB_OF();
+    bx_bool temp_of = getB_OF();
     SET_FLAGS_OxxxxC(temp_of, (val));
   }
 
   BX_SMF BX_CPP_INLINE void clear_CF(void) {
-    Bit8u temp_of = getB_OF();
+    bx_bool temp_of = getB_OF();
     SET_FLAGS_OxxxxC(temp_of, (0));
   }
 
   BX_SMF BX_CPP_INLINE void assert_CF(void) {
-    Bit8u temp_of = getB_OF();
+    bx_bool temp_of = getB_OF();
     SET_FLAGS_OxxxxC(temp_of, (1));
   }
 
@@ -1325,17 +1330,17 @@ public: // for now...
   }
 
   BX_SMF BX_CPP_INLINE void set_OF(bx_bool val) {
-    Bit8u temp_cf = getB_CF();
+    bx_bool temp_cf = getB_CF();
     SET_FLAGS_OxxxxC((val), temp_cf);
   }
  
   BX_SMF BX_CPP_INLINE void clear_OF(void) {
-    Bit8u temp_cf = getB_CF();
+    bx_bool temp_cf = getB_CF();
     SET_FLAGS_OxxxxC((0), temp_cf);
   }
  
   BX_SMF BX_CPP_INLINE void assert_OF(void) {
-    Bit8u temp_cf = getB_CF();
+    bx_bool temp_cf = getB_CF();
     SET_FLAGS_OxxxxC((1), temp_cf);
   }
 

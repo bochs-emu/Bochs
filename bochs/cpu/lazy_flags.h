@@ -37,15 +37,17 @@ typedef struct {
 // These are the lazy flags bits in oszapc.auxbits which hold lazy state
 // of zero flag, adjust flag, carry flag, and overflow flag.
 
+#define LF_BIT_SD      (0)          /* lazy Sign Flag Delta            */
 #define LF_BIT_AF      (3)          /* lazy Adjust flag                */
-#define LF_BIT_ZF      (0)          /* lazy Zero Flag, valid iff set   */
+#define LF_BIT_PDB     (8)          /* lazy Parity Delta Byte (8 bits) */
 #define LF_BIT_CF      (31)         /* lazy Carry Flag                 */
 #define LF_BIT_PO      (30)         /* lazy Partial Overflow = CF ^ OF */
 
-#define LF_MASK_ZF     (1 << LF_BIT_ZF)
-#define LF_MASK_AF     (1 << LF_BIT_AF)
-#define LF_MASK_CF     (1 << LF_BIT_CF)
-#define LF_MASK_PO     (1 << LF_BIT_PO)
+#define LF_MASK_SD     (0x01 << LF_BIT_SD)
+#define LF_MASK_AF     (0x01 << LF_BIT_AF)
+#define LF_MASK_PDB    (0xFF << LF_BIT_PDB)
+#define LF_MASK_CF     (0x01 << LF_BIT_CF)
+#define LF_MASK_PO     (0x01 << LF_BIT_PO)
 
 #define ADD_COUT_VEC(op1, op2, result) \
   (((op1) & (op2)) | (((op1) | (op2)) & (~(result))))
@@ -63,7 +65,7 @@ typedef struct {
   bx_address temp = ((lf_carries) & (LF_MASK_AF)) | \
         (((lf_carries) >> (size - 2)) << LF_BIT_PO); \
   BX_CPU_THIS_PTR oszapc.result = (bx_address)(Bit##size##s)(lf_result); \
-  if ((size) == 32) temp = (lf_carries) & ~(LF_MASK_ZF); \
+  if ((size) == 32) temp = ((lf_carries) & ~(LF_MASK_PDB | LF_MASK_SD)); \
   if ((size) == 16) temp = ((lf_carries) & (LF_MASK_AF)) | ((lf_carries) << 16); \
   if ((size) == 8)  temp = ((lf_carries) & (LF_MASK_AF)) | ((lf_carries) << 24); \
   BX_CPU_THIS_PTR oszapc.auxbits = (bx_address)(Bit32u)temp; \
@@ -125,7 +127,7 @@ typedef struct {
 #define SET_FLAGS_OSZAP_SIZE(size, lf_carries, lf_result) { \
   bx_address temp = ((lf_carries) & (LF_MASK_AF)) | \
         (((lf_carries) >> (size - 2)) << LF_BIT_PO); \
-  if ((size) == 32) temp = (lf_carries) & ~(LF_MASK_ZF); \
+  if ((size) == 32) temp = ((lf_carries) & ~(LF_MASK_PDB | LF_MASK_SD)); \
   if ((size) == 16) temp = ((lf_carries) & (LF_MASK_AF)) | ((lf_carries) << 16); \
   if ((size) == 8)  temp = ((lf_carries) & (LF_MASK_AF)) | ((lf_carries) << 24); \
   BX_CPU_THIS_PTR oszapc.result = (bx_address)(Bit##size##s)(lf_result); \
