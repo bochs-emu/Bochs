@@ -321,7 +321,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_MSR(bxInstruction_c *i, unsigned op
     VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
     Bit8u field;
 
-    if (msr & 0xC0000000) {
+    if (msr >= BX_VMX_HI_MSR_START) {
        if (msr > BX_VMX_HI_MSR_END) vmexit = 1;
        else {
          // check MSR-HI bitmaps
