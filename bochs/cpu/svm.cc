@@ -462,10 +462,6 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
     svm_segment_read(&guest.sregs[n], SVM_GUEST_ES_SELECTOR + n * 0x10);
   }
 
-  //
-  // FIXME: patch segment attributes
-  //
-
   if (guest.sregs[BX_SEG_REG_CS].cache.u.segment.d_b && guest.sregs[BX_SEG_REG_CS].cache.u.segment.l) {
     BX_ERROR(("VMRUN: VMCB CS.D_B/L mismatch"));
     return 0;
@@ -488,10 +484,16 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
 
   guest.cpl = vmcb_read8(SVM_GUEST_CPL);
 
-  if (guest.sregs[BX_SEG_REG_SS].cache.dpl != guest.cpl) {
-    BX_ERROR(("VMRUN: VMCB SS.DPL != CPL"));
-    return 0;
-  }
+  //
+  // FIXME: patch segment attributes
+  //
+
+  // CS: only D, L, and R are observed
+
+  // DS/ES/FS/GS: only D, P, DPL, E, W, and Code/Data are observed
+
+  // SS: only B, P, E, W, and Code/Data are observed
+  guest.sregs[BX_SEG_REG_SS].cache.dpl = guest.cpl;
 
   guest.gdtr.base = CanonicalizeAddress(vmcb_read64(SVM_GUEST_GDTR_BASE));
   guest.gdtr.limit = vmcb_read16(SVM_GUEST_GDTR_LIMIT);

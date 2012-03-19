@@ -3,6 +3,8 @@ Changes after 2.5.1 release:
 - CPU
   - Support for AMD's SVM hardware emulation in Bochs CPU, to enable
     configure with --enable-svm option
+  - Implemented AMD Extended XAPIC support, to enable set .bochsrc CPU
+    APIC option to 'xapic_ext'
   ! Added Corei5 750 (Lynnfield) configuration to the CPUDB
   ! Added Turion64 (Tyler) configuration to the CPUDB
   ! Added AMD Phenom X3 8650 (Toliman) configuration to the CPUDB

@@ -488,7 +488,6 @@ class BX_MEM_C;
 #  define BX_CPU_THIS_PTR  this->
 #  define BX_CPU_THIS      this
 #  define BX_SMF
-#  define BX_CPU_C_PREFIX  BX_CPU_C::
 // with normal member functions, calling a member fn pointer looks like
 // object->*(fnptr)(arg, ...);
 // Since this is different from when SMF=1, encapsulate it in a macro.
@@ -503,7 +502,6 @@ class BX_MEM_C;
 #  define BX_CPU_THIS_PTR  BX_CPU(0)->
 #  define BX_CPU_THIS      BX_CPU(0)
 #  define BX_SMF           static
-#  define BX_CPU_C_PREFIX
 #  define BX_CPU_CALL_METHOD(func, args) \
             ((BxExecutePtr_tR) (func)) args
 #  define BX_CPU_CALL_METHODR(func, args) \
