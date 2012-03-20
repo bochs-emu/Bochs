@@ -78,8 +78,8 @@ private:
     struct {
       struct {
         Bit8u mode_type;
-        Bit8u address_decrement;
-        Bit8u autoinit_enable;
+        bx_bool address_decrement;
+        bx_bool autoinit_enable;
         Bit8u transfer_type;
       } mode;
       Bit16u  base_address;

@@ -213,8 +213,8 @@ void bx_dma_c::register_state(void)
       BXRS_PARAM_BOOL(chan, DACK, BX_DMA_THIS s[i].DACK[c]);
       BXRS_PARAM_BOOL(chan, mask, BX_DMA_THIS s[i].mask[c]);
       BXRS_DEC_PARAM_FIELD(chan, mode_type, BX_DMA_THIS s[i].chan[c].mode.mode_type);
-      BXRS_DEC_PARAM_FIELD(chan, address_decrement, BX_DMA_THIS s[i].chan[c].mode.address_decrement);
-      BXRS_DEC_PARAM_FIELD(chan, autoinit_enable, BX_DMA_THIS s[i].chan[c].mode.autoinit_enable);
+      BXRS_PARAM_BOOL(chan, address_decrement, BX_DMA_THIS s[i].chan[c].mode.address_decrement);
+      BXRS_PARAM_BOOL(chan, autoinit_enable, BX_DMA_THIS s[i].chan[c].mode.autoinit_enable);
       BXRS_DEC_PARAM_FIELD(chan, transfer_type, BX_DMA_THIS s[i].chan[c].mode.transfer_type);
       BXRS_HEX_PARAM_FIELD(chan, base_address, BX_DMA_THIS s[i].chan[c].base_address);
       BXRS_HEX_PARAM_FIELD(chan, current_address, BX_DMA_THIS s[i].chan[c].current_address);
@@ -425,10 +425,8 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       } else { /* 2nd byte */
         BX_DMA_THIS s[ma_sl].chan[channel].base_address |= (value << 8);
         BX_DMA_THIS s[ma_sl].chan[channel].current_address |= (value << 8);
-        BX_DEBUG(("    base = %04x",
-            (unsigned) BX_DMA_THIS s[ma_sl].chan[channel].base_address));
-        BX_DEBUG(("    curr = %04x",
-            (unsigned) BX_DMA_THIS s[ma_sl].chan[channel].current_address));
+        BX_DEBUG(("    base = %04x", BX_DMA_THIS s[ma_sl].chan[channel].base_address));
+        BX_DEBUG(("    curr = %04x", BX_DMA_THIS s[ma_sl].chan[channel].current_address));
       }
       BX_DMA_THIS s[ma_sl].flip_flop = !BX_DMA_THIS s[ma_sl].flip_flop;
       break;
@@ -449,10 +447,8 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       } else { /* 2nd byte */
         BX_DMA_THIS s[ma_sl].chan[channel].base_count |= (value << 8);
         BX_DMA_THIS s[ma_sl].chan[channel].current_count |= (value << 8);
-        BX_DEBUG(("    base = %04x",
-            (unsigned) BX_DMA_THIS s[ma_sl].chan[channel].base_count));
-        BX_DEBUG(("    curr = %04x",
-            (unsigned) BX_DMA_THIS s[ma_sl].chan[channel].current_count));
+        BX_DEBUG(("    base = %04x", BX_DMA_THIS s[ma_sl].chan[channel].base_count));
+        BX_DEBUG(("    curr = %04x", BX_DMA_THIS s[ma_sl].chan[channel].current_count));
       }
       BX_DMA_THIS s[ma_sl].flip_flop = !BX_DMA_THIS s[ma_sl].flip_flop;
       break;
@@ -474,11 +470,11 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       if (value & 0x04) {
         // set request bit
         BX_DMA_THIS s[ma_sl].status_reg |= (1 << (channel+4));
-        BX_DEBUG(("DMA-%d: set request bit for channel %u", ma_sl+1, (unsigned) channel));
+        BX_DEBUG(("DMA-%d: set request bit for channel %u", ma_sl+1, channel));
       } else {
         // clear request bit
         BX_DMA_THIS s[ma_sl].status_reg &= ~(1 << (channel+4));
-        BX_DEBUG(("DMA-%d: cleared request bit for channel %u", ma_sl+1, (unsigned) channel));
+        BX_DEBUG(("DMA-%d: cleared request bit for channel %u", ma_sl+1, channel));
       }
       control_HRQ(ma_sl);
       break;
@@ -489,7 +485,7 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       channel = value & 0x03;
       BX_DMA_THIS s[ma_sl].mask[channel] = (set_mask_bit > 0);
       BX_DEBUG(("DMA-%d: set_mask_bit=%u, channel=%u, mask now=%02xh", ma_sl+1,
-          (unsigned) set_mask_bit, (unsigned) channel, (unsigned) BX_DMA_THIS s[ma_sl].mask[channel]));
+          set_mask_bit, channel, BX_DMA_THIS s[ma_sl].mask[channel]));
       control_HRQ(ma_sl);
       break;
 
@@ -500,8 +496,7 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       BX_DMA_THIS s[ma_sl].chan[channel].mode.address_decrement = (value >> 5) & 0x01;
       BX_DMA_THIS s[ma_sl].chan[channel].mode.autoinit_enable = (value >> 4) & 0x01;
       BX_DMA_THIS s[ma_sl].chan[channel].mode.transfer_type = (value >> 2) & 0x03;
-      BX_DEBUG(("DMA-%d: mode register[%u] = %02x", ma_sl+1,
-          (unsigned) channel, (unsigned) value));
+      BX_DEBUG(("DMA-%d: mode register[%u] = %02x", ma_sl+1, channel, (unsigned) value));
       break;
 
     case 0x0c: /* DMA-1 clear byte flip/flop */
@@ -609,7 +604,7 @@ void bx_dma_c::set_DRQ(unsigned channel, bx_bool val)
       (BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type != DMA_MODE_CASCADE))
   {
     BX_PANIC(("set_DRQ: mode_type(%02x) not handled",
-      (unsigned) BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type));
+      BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type));
   }
 
   dma_base = (BX_DMA_THIS s[ma_sl].chan[channel].page_reg << 16) |
@@ -620,9 +615,9 @@ void bx_dma_c::set_DRQ(unsigned channel, bx_bool val)
     dma_roof = dma_base - (BX_DMA_THIS s[ma_sl].chan[channel].base_count << ma_sl);
   }
   if ((dma_base & (0x7fff0000 << ma_sl)) != (dma_roof & (0x7fff0000 << ma_sl))) {
-    BX_INFO(("dma_base = %08x", (unsigned) dma_base));
-    BX_INFO(("dma_base_count = %08x", (unsigned) BX_DMA_THIS s[ma_sl].chan[channel].base_count));
-    BX_INFO(("dma_roof = %08x", (unsigned) dma_roof));
+    BX_INFO(("dma_base = 0x%08x", dma_base));
+    BX_INFO(("dma_base_count = 0x%08x", BX_DMA_THIS s[ma_sl].chan[channel].base_count));
+    BX_INFO(("dma_roof = 0x%08x", dma_roof));
     BX_PANIC(("request outside %dk boundary", 64 << ma_sl));
   }
 
@@ -693,7 +688,6 @@ void bx_dma_c::raise_HLDA(void)
     return;
   }
 
-  //BX_DEBUG(("hlda: OK in response to DRQ(%u)", (unsigned) channel));
   phy_addr = (BX_DMA_THIS s[ma_sl].chan[channel].page_reg << 16) |
              (BX_DMA_THIS s[ma_sl].chan[channel].current_address << ma_sl);
 
@@ -817,7 +811,7 @@ void bx_dma_c::debug_dump()
         dbg_printf("DMA channel %d", ch);
         if (ch == 4) {
           dbg_printf(" (cascade)\n");
-        } else if (BX_DMA_THIS s[i].DRQ[j]) {
+        } else if (BX_DMA_THIS s[i].DRQ[j] && !BX_DMA_THIS s[i].mask[j]) {
           dbg_printf(" (active)\n");
           dbg_printf("  address: base=0x%04x, current=0x%04x\n", BX_DMA_THIS s[i].chan[j].base_address,
                      BX_DMA_THIS s[i].chan[j].current_address);
@@ -832,7 +826,8 @@ void bx_dma_c::debug_dump()
           dbg_printf("  autoinit_enable: %u\n", BX_DMA_THIS s[i].chan[j].mode.autoinit_enable);
           dbg_printf("  transfer_type: %u\n", BX_DMA_THIS s[i].chan[j].mode.transfer_type);
         } else {
-          dbg_printf(" (not active)\n");
+          dbg_printf(" (not active: DRQ=%u, mask=%u)\n", BX_DMA_THIS s[i].DRQ[j],
+                     BX_DMA_THIS s[i].mask[j]);
         }
       }
     }
