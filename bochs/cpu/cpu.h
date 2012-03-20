@@ -518,6 +518,12 @@ BOCHSAPI extern BX_CPU_C **bx_cpu_array;
 BOCHSAPI extern BX_CPU_C   bx_cpu;
 #endif
 
+// notify internal debugger/instrumentation about memory access
+#define BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, paddr, size, pl, rw, dataptr) {              \
+  BX_INSTR_LIN_ACCESS(BX_CPU_ID, (laddr), (paddr), (size), (rw));                       \
+  BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, (laddr), (paddr), (size), (pl), (rw), (dataptr)); \
+}
+
 // accessors for all eflags in bx_flags_reg_t
 // The macro is used once for each flag bit
 // Do not use for arithmetic flags !
