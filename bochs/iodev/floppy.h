@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -54,6 +54,9 @@ public:
   virtual void reset(unsigned type);
   virtual unsigned set_media_status(unsigned drive, bx_bool status);
   virtual void register_state(void);
+#if BX_DEBUGGER
+  virtual void debug_dump(void);
+#endif
 
 private:
 

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2011  The Bochs Project
+//  Copyright (C) 2002-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -270,6 +270,10 @@ void bx_floppy_ctrl_c::init(void)
   }
   // register handler for correct floppy parameter handling after runtime config
   SIM->register_runtime_config_handler(this, runtime_config_handler);
+#if BX_DEBUGGER
+  // register device for the 'info device' command (calls debug_dump())
+  bx_dbg_register_debug_info("floppy", this);
+#endif
 }
 
 void bx_floppy_ctrl_c::reset(unsigned type)
@@ -1824,6 +1828,7 @@ void bx_floppy_ctrl_c::enter_idle_phase(void)
   BX_FD_THIS s.command_index = 0;
   BX_FD_THIS s.command_size = 0;
   BX_FD_THIS s.pending_command = 0;
+  BX_FD_THIS s.result_size = 0;
 
   BX_FD_THIS s.floppy_buffer_index = 0;
 }
@@ -1922,3 +1927,42 @@ const char* bx_floppy_ctrl_c::floppy_param_string_handler(bx_param_string_c *par
   }
   return val;
 }
+
+#if BX_DEBUGGER
+void bx_floppy_ctrl_c::debug_dump()
+{
+  int i;
+
+  dbg_printf("i82077AA FDC\n\n");
+  for (i = 0; i < 2; i++) {
+    dbg_printf("fd%d: ", i);
+    if (BX_FD_THIS s.device_type[i] == FDRIVE_NONE) {
+      dbg_printf("not installed\n");
+    } else if (BX_FD_THIS s.media[i].type == BX_FLOPPY_NONE) {
+      dbg_printf("media not present\n");
+    } else {
+#define MED (BX_FD_THIS s.media[i])
+      dbg_printf("tracks=%d, heads=%d, spt=%d, readonly=%d\n",
+                 MED.tracks, MED.heads, MED.sectors_per_track, MED.write_protected);
+#undef MED
+    }
+  }
+  dbg_printf("\ncontroller status: ");
+  if (BX_FD_THIS s.pending_command == 0) {
+    if (BX_FD_THIS s.command_complete) {
+      dbg_printf("idle phase\n");
+    } else {
+      dbg_printf("command phase (command=0x%02x)\n", BX_FD_THIS s.command[0]);
+    }
+  } else {
+    if (BX_FD_THIS s.result_size == 0) {
+      dbg_printf("execution phase (command=0x%02x)\n", BX_FD_THIS s.pending_command);
+    } else {
+      dbg_printf("result phase (command=0x%02x)\n", BX_FD_THIS s.pending_command);
+    }
+  }
+  dbg_printf("DOR = 0x%02x\n", BX_FD_THIS s.DOR);
+  dbg_printf("MSR = 0x%02x\n", BX_FD_THIS s.main_status_reg);
+  dbg_printf("DSR = 0x%02x\n", BX_FD_THIS s.data_rate);
+}
+#endif
