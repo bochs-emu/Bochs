@@ -679,7 +679,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 
     updateFetchModeMask(/* CS reloaded */);
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+#if BX_CPU_LEVEL >= 4
     handleAlignmentCheck(); // task switch, CPL was modified
 #endif
   }

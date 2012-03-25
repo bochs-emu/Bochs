@@ -104,7 +104,7 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
 
   updateFetchModeMask(/* CS reloaded */);
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+#if BX_CPU_LEVEL >= 4
   handleAlignmentCheck(/* CPL change */);
 #endif
 

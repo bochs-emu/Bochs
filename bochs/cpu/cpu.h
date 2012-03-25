@@ -554,7 +554,7 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
       (BX_CPU_THIS_PTR eflags&~(1<<bitnum))|((val)<<bitnum);    \
   }
 
-#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+#if BX_CPU_LEVEL >= 4
 
 #define IMPLEMENT_EFLAG_SET_ACCESSOR_AC(bitnum)                 \
   BX_CPP_INLINE void BX_CPU_C::assert_AC () {                   \
@@ -563,7 +563,7 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
   }                                                             \
   BX_CPP_INLINE void BX_CPU_C::clear_AC() {                     \
     BX_CPU_THIS_PTR eflags &= ~(1<<bitnum);                     \
-    BX_CPU_THIS_PTR alignment_check_mask = 0;                   \
+    handleAlignmentCheck();                                     \
   }                                                             \
   BX_CPP_INLINE void BX_CPU_C::set_AC(bx_bool val) {            \
     BX_CPU_THIS_PTR eflags =                                    \
@@ -4046,7 +4046,7 @@ public: // for now...
   BX_SMF void shutdown(void);
   BX_SMF void handleCpuModeChange(void);
   BX_SMF void handleCpuContextChange(void);
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+#if BX_CPU_LEVEL >= 4
   BX_SMF void handleAlignmentCheck(void);
 #endif
 #if BX_CPU_LEVEL >= 6

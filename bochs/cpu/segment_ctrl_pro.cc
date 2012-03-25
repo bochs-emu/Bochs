@@ -199,7 +199,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
   if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]) {
     invalidate_prefetch_q();
     updateFetchModeMask(/* CS reloaded */);
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+#if BX_CPU_LEVEL >= 4
     handleAlignmentCheck(/* CPL change */);
 #endif
   }

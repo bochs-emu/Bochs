@@ -49,7 +49,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::setEFlags(Bit32u val)
   BX_CPU_THIS_PTR eflags = val;
   setEFlagsOSZAPC(val);			// update lazy flags state
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+#if BX_CPU_LEVEL >= 4
   handleAlignmentCheck(/* EFLAGS.AC reloaded */);
 #endif
 

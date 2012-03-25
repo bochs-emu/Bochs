@@ -19,9 +19,12 @@ Changes after 2.5.1 release:
   - Added debug dump for pci2isa, floppy and DMA controller devices
 
 - Configure and compile
-  - Moved networking, sound and USB devices to subdirectories in iodev
+  - Do not compile support for alignment check (#AC exception) by default
+    for CPU emulation performance reasons, the alignment check compilation
+    still can be enabled using configure option --enable-alignment-check.
+  - Moved networking, sound and USB devices to subdirectories in iodev.
   - Moved MWAIT_IS_NOP .bochsrc option from CPUID to CPU so it can be set
-    even if cpu was configured using pre-defined CPUDB profile
+    even if cpu was configured using pre-defined CPUDB profile.
 
 - I/O Devices
   - Networking

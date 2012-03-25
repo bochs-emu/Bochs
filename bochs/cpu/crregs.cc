@@ -1045,7 +1045,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(bx_address val)
 
   BX_CPU_THIS_PTR cr0.set32(val_32);
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+#if BX_CPU_LEVEL >= 4
   handleAlignmentCheck(/* CR0.AC reloaded */);
 #endif
 

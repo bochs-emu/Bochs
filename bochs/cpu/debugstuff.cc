@@ -343,7 +343,7 @@ bx_bool BX_CPU_C::dbg_set_sreg(unsigned sreg_no, bx_segment_reg_t *sreg)
     BX_CPU_THIS_PTR sregs[sreg_no] = *sreg;
     if (sreg_no == BX_SEG_REG_CS) {
       handleCpuModeChange();
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+#if BX_CPU_LEVEL >= 4
       handleAlignmentCheck(/* CPL change */);
 #endif
       invalidate_prefetch_q();

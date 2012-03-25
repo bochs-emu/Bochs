@@ -741,7 +741,7 @@ void BX_CPU_C::after_restore_state(void)
 {
   TLB_flush();
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+#if BX_CPU_LEVEL >= 4
   handleAlignmentCheck();
 #endif
   handleCpuModeChange();

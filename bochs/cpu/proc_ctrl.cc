@@ -360,21 +360,21 @@ void BX_CPU_C::handleCpuModeChange(void)
   }
 }
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+#if BX_CPU_LEVEL >= 4
 void BX_CPU_C::handleAlignmentCheck(void)
 {
   if (CPL == 3 && BX_CPU_THIS_PTR cr0.get_AM() && BX_CPU_THIS_PTR get_AC()) {
-    if (BX_CPU_THIS_PTR alignment_check_mask == 0) {
-      BX_CPU_THIS_PTR alignment_check_mask = 0xF;
-      BX_INFO(("Enable alignment check (#AC exception)"));
-    }
+#if BX_SUPPORT_ALIGNMENT_CHECK == 0
+    BX_PANIC(("Alignment check (#AC exception) was not compiled in !"));
+#else
+    BX_CPU_THIS_PTR alignment_check_mask = 0xF;
+#endif
   }
+#if BX_SUPPORT_ALIGNMENT_CHECK
   else {
-    if (BX_CPU_THIS_PTR alignment_check_mask != 0) {
-      BX_CPU_THIS_PTR alignment_check_mask = 0;
-      BX_INFO(("Disable alignment check (#AC exception)"));
-    }
+    BX_CPU_THIS_PTR alignment_check_mask = 0;
   }
+#endif
 }
 #endif
 
@@ -452,7 +452,7 @@ void BX_CPU_C::handleCpuContextChange(void)
 
   invalidate_prefetch_q();
   invalidate_stack_cache();
-#if BX_SUPPORT_ALIGNMENT_CHECK
+#if BX_CPU_LEVEL >= 4
   handleAlignmentCheck();
 #endif
   handleCpuModeChange();
@@ -974,9 +974,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
   updateFetchModeMask(/* CS reloaded */);
 #endif
 
-#if BX_SUPPORT_ALIGNMENT_CHECK
   handleAlignmentCheck(/* CPL change */);
-#endif
 
   parse_selector(((BX_CPU_THIS_PTR msr.sysenter_cs_msr + (i->os64L() ? 40:24)) & BX_SELECTOR_RPL_MASK) | 3,
             &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
@@ -1200,9 +1198,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 
     handleCpuModeChange(); // mode change could only happen when in long64 mode
 
-#if BX_SUPPORT_ALIGNMENT_CHECK
     handleAlignmentCheck(/* CPL change */);
-#endif
 
     // SS base, limit, attributes unchanged
     parse_selector((Bit16u)(((MSR_STAR >> 48) + 8) | 3),
@@ -1239,9 +1235,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 
     updateFetchModeMask(/* CS reloaded */);
 
-#if BX_SUPPORT_ALIGNMENT_CHECK
     handleAlignmentCheck(/* CPL change */);
-#endif
 
     // SS base, limit, attributes unchanged
     parse_selector((Bit16u)(((MSR_STAR >> 48) + 8) | 3),
