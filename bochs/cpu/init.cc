@@ -640,6 +640,19 @@ void BX_CPU_C::register_state(void)
   BXRS_PARAM_BOOL(cpu, pending_NMI, pending_NMI);
   BXRS_PARAM_BOOL(cpu, disable_INIT, disable_INIT);
   BXRS_PARAM_BOOL(cpu, pending_INIT, pending_INIT);
+
+#if BX_DEBUGGER
+  bx_list_c *tlb = new bx_list_c(cpu, "TLB");
+  BXRS_PARAM_BOOL(tlb, split_large, TLB.split_large);
+  for (n=0; n<BX_TLB_SIZE; n++) {
+    sprintf(name, "tlb_entry%d", n);
+    bx_list_c *tlb_entry = new bx_list_c(tlb, name);
+    BXRS_HEX_PARAM_FIELD(tlb_entry, lpf, TLB.entry[n].lpf);
+    BXRS_HEX_PARAM_FIELD(tlb_entry, lpf_mask, TLB.entry[n].lpf_mask);
+    BXRS_HEX_PARAM_FIELD(tlb_entry, ppf, TLB.entry[n].ppf);
+    BXRS_HEX_PARAM_FIELD(tlb_entry, accessBits, TLB.entry[n].accessBits);
+  }
+#endif
 }
 
 Bit64s BX_CPU_C::param_save_handler(void *devptr, bx_param_c *param)
