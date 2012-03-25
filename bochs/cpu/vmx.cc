@@ -1631,19 +1631,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     BX_CPU_THIS_PTR vmx_interrupt_window = 1; // set up interrupt window exiting
   }
 
-#if BX_SUPPORT_MONITOR_MWAIT
-  BX_CPU_THIS_PTR monitor.reset_monitor();
-#endif
-
-  invalidate_prefetch_q();
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  handleAlignmentCheck();
-#endif
-  handleCpuModeChange();
-  handleSseModeChange();
-#if BX_SUPPORT_AVX
-  handleAvxModeChange();
-#endif
+  handleCpuContextChange();
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
 
@@ -2070,19 +2058,7 @@ void BX_CPU_C::VMexitLoadHostState(void)
   // Update lazy flags state
   setEFlagsOSZAPC(0);
 
-#if BX_SUPPORT_MONITOR_MWAIT
-  BX_CPU_THIS_PTR monitor.reset_monitor();
-#endif
-
-  invalidate_prefetch_q();
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  handleAlignmentCheck();
-#endif
-  handleCpuModeChange();
-  handleSseModeChange();
-#if BX_SUPPORT_AVX
-  handleAvxModeChange();
-#endif
+  handleCpuContextChange();
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
 }

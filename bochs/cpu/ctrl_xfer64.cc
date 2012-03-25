@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -49,7 +49,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
 
-  Bit64u return_RIP = read_virtual_qword_64(BX_SEG_REG_SS, RSP);
+  Bit64u return_RIP = stack_read_qword(RSP);
 
   if (! IsCanonical(return_RIP)) {
     BX_ERROR(("RETnear64_Iw: canonical RIP violation"));
@@ -70,7 +70,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear64(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
 
-  Bit64u return_RIP = read_virtual_qword_64(BX_SEG_REG_SS, RSP);
+  Bit64u return_RIP = stack_read_qword(RSP);
 
   if (! IsCanonical(return_RIP)) {
     BX_ERROR(("RETnear64: canonical RIP violation %08x%08x", GET32H(return_RIP), GET32L(return_RIP)));
@@ -113,7 +113,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_Jq(bxInstruction_c *i)
 #endif
 
   /* push 64 bit EA of next instruction */
-  write_virtual_qword_64(BX_SEG_REG_SS, RSP-8, RIP);
+  stack_write_qword(RSP-8, RIP);
 
   if (! IsCanonical(new_RIP)) {
     BX_ERROR(("CALL_Jq: canonical RIP violation"));
@@ -137,7 +137,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EqR(bxInstruction_c *i)
   Bit64u new_RIP = BX_READ_64BIT_REG(i->rm());
 
   /* push 64 bit EA of next instruction */
-  write_virtual_qword_64(BX_SEG_REG_SS, RSP-8, RIP);
+  stack_write_qword(RSP-8, RIP);
 
   if (! IsCanonical(new_RIP))
   {

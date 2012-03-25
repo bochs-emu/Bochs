@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -67,7 +67,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH64_Sw(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP64_Sw(bxInstruction_c *i)
 {
-  Bit16u selector = read_virtual_word_64(BX_SEG_REG_SS, RSP);
+  Bit16u selector = stack_read_word(RSP);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[i->nnn()], selector);
   RSP += 8;
 
@@ -101,7 +101,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
   Bit64u temp_RSP = RSP, temp_RBP = RBP;
 
   temp_RSP -= 8;
-  write_virtual_qword_64(BX_SEG_REG_SS, temp_RSP, temp_RBP);
+  stack_write_qword(temp_RSP, temp_RBP);
 
   Bit64u frame_ptr64 = temp_RSP;
 
@@ -109,14 +109,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
     /* do level-1 times */
     while (--level) {
       temp_RBP -= 8;
-      Bit64u temp64 = read_virtual_qword_64(BX_SEG_REG_SS, temp_RBP);
+      Bit64u temp64 = stack_read_qword(temp_RBP);
       temp_RSP -= 8;
-      write_virtual_qword_64(BX_SEG_REG_SS, temp_RSP, temp64);
+      stack_write_qword(temp_RSP, temp64);
     } /* while (--level) */
 
     /* push(frame pointer) */
     temp_RSP -= 8;
-    write_virtual_qword_64(BX_SEG_REG_SS, temp_RSP, frame_ptr64);
+    stack_write_qword(temp_RSP, frame_ptr64);
   } /* if (level > 0) ... */
 
   temp_RSP -= i->Iw();
@@ -135,7 +135,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LEAVE64(bxInstruction_c *i)
 {
   // restore frame pointer
-  Bit64u temp64 = read_virtual_qword_64(BX_SEG_REG_SS, RBP);
+  Bit64u temp64 = stack_read_qword(RBP);
   RSP = RBP + 8;
   RBP = temp64;
 

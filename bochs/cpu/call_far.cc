@@ -353,7 +353,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
 
         for (unsigned n=param_count; n>0; n--) {
           temp_ESP -= 4;
-          Bit32u param = read_virtual_dword_32(BX_SEG_REG_SS, return_ESP + (n-1)*4);
+          Bit32u param = stack_read_dword(return_ESP + (n-1)*4);
           write_new_stack_dword_32(&new_stack, temp_ESP, cs_descriptor.dpl, param);
         }
         // push return address onto new stack
@@ -368,7 +368,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
 
         for (unsigned n=param_count; n>0; n--) {
           temp_ESP -= 2;
-          Bit16u param = read_virtual_word_32(BX_SEG_REG_SS, return_ESP + (n-1)*2);
+          Bit16u param = stack_read_word(return_ESP + (n-1)*2);
           write_new_stack_word_32(&new_stack, temp_ESP, cs_descriptor.dpl, param);
         }
         // push return address onto new stack
@@ -390,7 +390,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
 
         for (unsigned n=param_count; n>0; n--) {
           temp_SP -= 4;
-          Bit32u param = read_virtual_dword_32(BX_SEG_REG_SS, return_ESP + (n-1)*4);
+          Bit32u param = stack_read_dword(return_ESP + (n-1)*4);
           write_new_stack_dword_32(&new_stack, temp_SP, cs_descriptor.dpl, param);
         }
         // push return address onto new stack
@@ -405,7 +405,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
 
         for (unsigned n=param_count; n>0; n--) {
           temp_SP -= 2;
-          Bit16u param = read_virtual_word_32(BX_SEG_REG_SS, return_ESP + (n-1)*2);
+          Bit16u param = stack_read_word(return_ESP + (n-1)*2);
           write_new_stack_word_32(&new_stack, temp_SP, cs_descriptor.dpl, param);
         }
         // push return address onto new stack

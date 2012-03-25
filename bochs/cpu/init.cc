@@ -1060,10 +1060,15 @@ void BX_CPU_C::reset(unsigned source)
 
   TLB_flush();
 
-  // invalidate the prefetch queue
+  // invalidate the code prefetch queue
   BX_CPU_THIS_PTR eipPageBias = 0;
   BX_CPU_THIS_PTR eipPageWindowSize = 0;
   BX_CPU_THIS_PTR eipFetchPtr = NULL;
+
+  // invalidate current stack page
+  BX_CPU_THIS_PTR espPageBias = 0;
+  BX_CPU_THIS_PTR espPageWindowSize = 0;
+  BX_CPU_THIS_PTR espHostPtr = NULL;
 
   handleCpuModeChange();
 

@@ -75,6 +75,7 @@ OBJS = \
 	shift32.o \
 	shift8.o \
 	arith8.o \
+	stack.o \
 	stack16.o \
 	protect_ctrl.o \
 	mult8.o \
@@ -735,6 +736,13 @@ sse_rcp.o: sse_rcp.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
  xmm.h vmx.h svm.h stack.h ../fpu/softfloat-specialize.h ../fpu/softfloat.h
 sse_string.o: sse_string.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h cpu.h cpuid.h crregs.h \
+ descriptor.h instr.h ia_opcodes.h lazy_flags.h icache.h apic.h i387.h \
+ ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
+ xmm.h vmx.h svm.h stack.h
+stack.o: stack.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h cpu.h cpuid.h crregs.h \

@@ -1,6 +1,8 @@
 Changes after 2.5.1 release:
 
 - CPU
+  - Another 10% CPU emulation speedup with even more optimal lazy flags
+    handling and stack access optimizations
   - Support for AMD's SVM hardware emulation in Bochs CPU, to enable
     configure with --enable-svm option
   - Implemented AMD Extended XAPIC support, to enable set .bochsrc CPU
@@ -14,7 +16,7 @@ Changes after 2.5.1 release:
   - Implemented new debugger command 'info device [string]' that shows the
     state of the device specified in 'string'
   - Improved debug dump for pci, pic and vga/cirrus devices
-  - Added debug dump for pci2isa and DMA controller devices
+  - Added debug dump for pci2isa, floppy and DMA controller devices
 
 - Configure and compile
   - Moved networking, sound and USB devices to subdirectories in iodev

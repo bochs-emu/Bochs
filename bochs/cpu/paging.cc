@@ -374,6 +374,8 @@ void BX_CPU_C::TLB_flush(void)
 
   invalidate_prefetch_q();
 
+  invalidate_stack_cache();
+
   for (unsigned n=0; n<BX_TLB_SIZE; n++) {
     BX_CPU_THIS_PTR TLB.entry[n].lpf = BX_INVALID_TLB_ENTRY;
     BX_CPU_THIS_PTR TLB.entry[n].accessBits = 0;
@@ -398,6 +400,8 @@ void BX_CPU_C::TLB_flushNonGlobal(void)
 #endif
 
   invalidate_prefetch_q();
+
+  invalidate_stack_cache();
 
   BX_CPU_THIS_PTR TLB.split_large = 0;
   Bit32u lpf_mask = 0;
@@ -427,6 +431,8 @@ void BX_CPU_C::TLB_flushNonGlobal(void)
 void BX_CPU_C::TLB_invlpg(bx_address laddr)
 {
   invalidate_prefetch_q();
+
+  invalidate_stack_cache();
 
   BX_DEBUG(("TLB_invlpg(0x"FMT_ADDRX"): invalidate TLB entry", laddr));
 

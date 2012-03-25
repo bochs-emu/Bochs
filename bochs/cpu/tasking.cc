@@ -591,6 +591,8 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 
       // All checks pass, fill in shadow cache
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache = ss_descriptor;
+
+      invalidate_stack_cache();
     }
     else {
       // SS selector is valid, else #TS(new stack segment)

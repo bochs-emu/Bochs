@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -108,26 +108,26 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHAD16(bxInstruction_c *i)
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
   {
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP -  2), AX);
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP -  4), CX);
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP -  6), DX);
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP -  8), BX);
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP - 10), temp_SP);
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP - 12), BP);
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP - 14), SI);
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP - 16), DI);
+    stack_write_word((Bit32u)(temp_ESP -  2), AX);
+    stack_write_word((Bit32u)(temp_ESP -  4), CX);
+    stack_write_word((Bit32u)(temp_ESP -  6), DX);
+    stack_write_word((Bit32u)(temp_ESP -  8), BX);
+    stack_write_word((Bit32u)(temp_ESP - 10), temp_SP);
+    stack_write_word((Bit32u)(temp_ESP - 12), BP);
+    stack_write_word((Bit32u)(temp_ESP - 14), SI);
+    stack_write_word((Bit32u)(temp_ESP - 16), DI);
     ESP -= 16;
   }
   else
   {
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP -  2), AX);
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP -  4), CX);
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP -  6), DX);
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP -  8), BX);
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP - 10), temp_SP);
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP - 12), BP);
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP - 14), SI);
-    write_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP - 16), DI);
+    stack_write_word((Bit16u)(temp_SP -  2), AX);
+    stack_write_word((Bit16u)(temp_SP -  4), CX);
+    stack_write_word((Bit16u)(temp_SP -  6), DX);
+    stack_write_word((Bit16u)(temp_SP -  8), BX);
+    stack_write_word((Bit16u)(temp_SP - 10), temp_SP);
+    stack_write_word((Bit16u)(temp_SP - 12), BP);
+    stack_write_word((Bit16u)(temp_SP - 14), SI);
+    stack_write_word((Bit16u)(temp_SP - 16), DI);
     SP -= 16;
   }
 
@@ -141,27 +141,27 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POPAD16(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
   {
     Bit32u temp_ESP = ESP;
-    di = read_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP +  0));
-    si = read_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP +  2));
-    bp = read_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP +  4));
-         read_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP +  6));
-    bx = read_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP +  8));
-    dx = read_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP + 10));
-    cx = read_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP + 12));
-    ax = read_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP + 14));
+    di = stack_read_word((Bit32u)(temp_ESP +  0));
+    si = stack_read_word((Bit32u)(temp_ESP +  2));
+    bp = stack_read_word((Bit32u)(temp_ESP +  4));
+         stack_read_word((Bit32u)(temp_ESP +  6));
+    bx = stack_read_word((Bit32u)(temp_ESP +  8));
+    dx = stack_read_word((Bit32u)(temp_ESP + 10));
+    cx = stack_read_word((Bit32u)(temp_ESP + 12));
+    ax = stack_read_word((Bit32u)(temp_ESP + 14));
     ESP += 16;
   }
   else
   {
     Bit16u temp_SP = SP;
-    di = read_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP +  0));
-    si = read_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP +  2));
-    bp = read_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP +  4));
-         read_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP +  6));
-    bx = read_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP +  8));
-    dx = read_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP + 10));
-    cx = read_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP + 12));
-    ax = read_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP + 14));
+    di = stack_read_word((Bit16u)(temp_SP +  0));
+    si = stack_read_word((Bit16u)(temp_SP +  2));
+    bp = stack_read_word((Bit16u)(temp_SP +  4));
+         stack_read_word((Bit16u)(temp_SP +  6));
+    bx = stack_read_word((Bit16u)(temp_SP +  8));
+    dx = stack_read_word((Bit16u)(temp_SP + 10));
+    cx = stack_read_word((Bit16u)(temp_SP + 12));
+    ax = stack_read_word((Bit16u)(temp_SP + 14));
     SP += 16;
   }
 
@@ -194,7 +194,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER16_IwIb(bxInstruction_c *i)
       /* do level-1 times */
       while (--level) {
         ebp -= 2;
-        Bit16u temp16 = read_virtual_word_32(BX_SEG_REG_SS, ebp);
+        Bit16u temp16 = stack_read_word(ebp);
         push_16(temp16);
       }
 
@@ -218,7 +218,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER16_IwIb(bxInstruction_c *i)
       /* do level-1 times */
       while (--level) {
         bp -= 2;
-        Bit16u temp16 = read_virtual_word_32(BX_SEG_REG_SS, bp);
+        Bit16u temp16 = stack_read_word(bp);
         push_16(temp16);
       }
 
@@ -248,11 +248,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LEAVE16(bxInstruction_c *i)
   Bit16u value16;
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    value16 = read_virtual_word_32(BX_SEG_REG_SS, EBP);
+    value16 = stack_read_word(EBP);
     ESP = EBP + 2;
   }
   else {
-    value16 = read_virtual_word_32(BX_SEG_REG_SS, BP);
+    value16 = stack_read_word(BP);
     SP = BP + 2;
   }
 

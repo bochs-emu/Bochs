@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2006-2011 Stanislav Shwartsman
+//   Copyright (c) 2006-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -81,8 +81,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
   }
 #endif
 
-  invalidate_prefetch_q();
-
   BX_INFO(("RSM: Resuming from System Management Mode"));
 
   BX_CPU_THIS_PTR disable_NMI = 0;
@@ -113,8 +111,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
 
 void BX_CPU_C::enter_system_management_mode(void)
 {
-  invalidate_prefetch_q();
-
   BX_INFO(("Enter to System Management Mode"));
 
   // debug(BX_CPU_THIS_PTR prev_rip);
@@ -180,9 +176,6 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR cr4.set32(0);
 #endif
 
-  // paging mode was changed - flush TLB
-  TLB_flush(); //  Flush Global entries also
-
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR efer.set32(0);
 #endif
@@ -203,19 +196,6 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b = 0; /* 16bit default size */
 #if BX_SUPPORT_X86_64
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l   = 0; /* 16bit default size */
-#endif
-
-  handleCpuModeChange();
-
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  handleAlignmentCheck();
-#endif
-
-#if BX_CPU_LEVEL >= 6
-  handleSseModeChange();
-#if BX_SUPPORT_AVX
-  handleAvxModeChange();
-#endif
 #endif
 
   /* DS (Data Segment) and descriptor cache */
@@ -242,6 +222,8 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES] = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS];
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS] = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS];
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS] = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS];
+
+  handleCpuContextChange();
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
 }
@@ -656,13 +638,6 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
     }
   }
 
-  handleCpuModeChange();
-
-  handleSseModeChange();
-#if BX_SUPPORT_AVX
-  handleAvxModeChange();
-#endif
-
   Bit16u ar_data = SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_SELECTOR_AR) >> 16;
   if (set_segment_ar_data(&BX_CPU_THIS_PTR ldtr,
           (ar_data >> 8) & 1,
@@ -695,6 +670,8 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 
   if (SMM_REVISION_ID & SMM_SMBASE_RELOCATION)
      BX_CPU_THIS_PTR smbase = SMRAM_FIELD(saved_state, SMRAM_FIELD_SMBASE_OFFSET);
+
+  handleCpuContextChange();
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
 

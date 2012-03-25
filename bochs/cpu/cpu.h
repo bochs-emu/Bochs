@@ -1117,11 +1117,17 @@ public: // for now...
   jmp_buf jmp_buf_env;
   Bit8u curr_exception;
 
-  // Boundaries of current page, based on EIP
+  // Boundaries of current code page, based on EIP
   bx_address eipPageBias;
   Bit32u     eipPageWindowSize;
   const Bit8u *eipFetchPtr;
   bx_phy_address pAddrFetchPage; // Guest physical address of current instruction page
+
+  // Boundaries of current stack page, based on ESP
+  bx_address espPageBias;        // Linear address of current stack page
+  Bit32u     espPageWindowSize;
+  const Bit8u *espHostPtr;
+  bx_phy_address pAddrStackPage; // Guest physical address of current stack page
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   unsigned alignment_check_mask;
@@ -1463,6 +1469,9 @@ public: // for now...
 
   BX_SMF BX_INSF_TYPE MOV32_GdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE MOV32_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF BX_INSF_TYPE MOV32S_GdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE MOV32S_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF BX_INSF_TYPE MOV_EwSwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE MOV_EwSwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3306,6 +3315,9 @@ public: // for now...
   BX_SMF BX_INSF_TYPE MOV_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE MOV_EqIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+  BX_SMF BX_INSF_TYPE MOV64S_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE MOV64S_GqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   // repeatable instructions
   BX_SMF BX_INSF_TYPE REP_MOVSQ_XqYq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE REP_CMPSQ_XqYq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3637,6 +3649,11 @@ public: // for now...
     BX_CPU_THIS_PTR eipPageWindowSize = 0;
   }
 
+  BX_SMF BX_CPP_INLINE void invalidate_stack_cache(void)
+  {
+    BX_CPU_THIS_PTR espPageWindowSize = 0;
+  }
+
   BX_SMF bx_bool write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len) BX_CPP_AttrRegparmN(3);
   BX_SMF bx_bool read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len) BX_CPP_AttrRegparmN(3);
   BX_SMF bx_bool execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len) BX_CPP_AttrRegparmN(3);
@@ -3889,6 +3906,18 @@ public: // for now...
 
 #endif
 
+  BX_SMF void stack_write_byte(bx_address offset, Bit8u data) BX_CPP_AttrRegparmN(2);
+  BX_SMF void stack_write_word(bx_address offset, Bit16u data) BX_CPP_AttrRegparmN(2);
+  BX_SMF void stack_write_dword(bx_address offset, Bit32u data) BX_CPP_AttrRegparmN(2);
+  BX_SMF void stack_write_qword(bx_address offset, Bit64u data) BX_CPP_AttrRegparmN(2);
+
+  BX_SMF Bit8u stack_read_byte(bx_address offset) BX_CPP_AttrRegparmN(1);
+  BX_SMF Bit16u stack_read_word(bx_address offset) BX_CPP_AttrRegparmN(1);
+  BX_SMF Bit32u stack_read_dword(bx_address offset) BX_CPP_AttrRegparmN(1);
+  BX_SMF Bit64u stack_read_qword(bx_address offset) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void stackPrefetch(bx_address offset, unsigned len) BX_CPP_AttrRegparmN(2);
+
   BX_SMF Bit8u  system_read_byte(bx_address laddr) BX_CPP_AttrRegparmN(1);
   BX_SMF Bit16u system_read_word(bx_address laddr) BX_CPP_AttrRegparmN(1);
   BX_SMF Bit32u system_read_dword(bx_address laddr) BX_CPP_AttrRegparmN(1);
@@ -4016,6 +4045,7 @@ public: // for now...
   BX_SMF void reset(unsigned source);
   BX_SMF void shutdown(void);
   BX_SMF void handleCpuModeChange(void);
+  BX_SMF void handleCpuContextChange(void);
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   BX_SMF void handleAlignmentCheck(void);
 #endif
@@ -4847,6 +4877,7 @@ enum {
 #define BxVexW1             0x2000 // bit 13
 
 #define BxTraceEnd          0x4000 // bit 14
+
 
 #ifdef BX_TRACE_CACHE_NO_SPECULATIVE_TRACING
   #define BxTraceJCC      BxTraceEnd

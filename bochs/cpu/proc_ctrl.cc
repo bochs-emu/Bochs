@@ -442,6 +442,26 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoAVX(bxInstruction_c *i)
 
 #endif
 
+void BX_CPU_C::handleCpuContextChange(void)
+{
+  TLB_flush();
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_CPU_THIS_PTR monitor.reset_monitor();
+#endif
+
+  invalidate_prefetch_q();
+  invalidate_stack_cache();
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  handleAlignmentCheck();
+#endif
+  handleCpuModeChange();
+  handleSseModeChange();
+#if BX_SUPPORT_AVX
+  handleAvxModeChange();
+#endif
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5

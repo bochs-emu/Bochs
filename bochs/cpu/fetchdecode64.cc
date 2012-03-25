@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -2362,6 +2362,15 @@ modrm_done:
   if (mod_mem) {
     i->execute  = BxOpcodesTable[ia_opcode].execute1;
     i->execute2 = BxOpcodesTable[ia_opcode].execute2;
+
+    if (ia_opcode == BX_IA_MOV_GqEq) {
+      if (seg == BX_SEG_REG_SS)
+        i->execute = &BX_CPU_C::MOV64S_GqEqM;
+    }
+    if (ia_opcode == BX_IA_MOV32_EdGd) {
+      if (seg == BX_SEG_REG_SS)
+        i->execute = &BX_CPU_C::MOV64S_EqGqM;
+    }
   }
   else {
     i->execute  = BxOpcodesTable[ia_opcode].execute2;
