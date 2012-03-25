@@ -210,6 +210,9 @@ protected:
     // h/v retrace timing
     Bit32u htotal_usec;
     Bit32u vtotal_usec;
+    Bit32u vblank_usec;
+    Bit32u vrstart_usec;
+    Bit32u vrend_usec;
     // shift values for extensions
     Bit8u  plane_shift;
     Bit32u plane_offset;

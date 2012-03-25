@@ -427,7 +427,7 @@ void bx_vgacore_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piW
 void bx_vgacore_c::calculate_retrace_timing()
 {
   Bit32u dot_clock[4] = {25175000, 28322000, 25175000, 25175000};
-  Bit32u htotal, clock, cwidth, vtotal, hfreq, vfreq;
+  Bit32u htotal, clock, cwidth, vtotal, vrstart, vrend, hfreq, vfreq;
 
   htotal = BX_VGA_THIS s.CRTC.reg[0] + 5;
   htotal <<= BX_VGA_THIS s.x_dotclockdiv2;
@@ -437,8 +437,15 @@ void bx_vgacore_c::calculate_retrace_timing()
   BX_VGA_THIS s.htotal_usec = 1000000 / hfreq;
   vtotal = BX_VGA_THIS s.CRTC.reg[6] + ((BX_VGA_THIS s.CRTC.reg[7] & 0x01) << 8) +
            ((BX_VGA_THIS s.CRTC.reg[7] & 0x20) << 4) + 2;
+  vrstart = BX_VGA_THIS s.CRTC.reg[16] + ((BX_VGA_THIS s.CRTC.reg[7] & 0x04) << 6) +
+            ((BX_VGA_THIS s.CRTC.reg[7] & 0x80) << 2);
+  vrend = ((BX_VGA_THIS s.CRTC.reg[17] & 0x0f) - vrstart) & 0x0f;
+  vrend = vrstart + vrend + 1;
   vfreq = hfreq / vtotal;
   BX_VGA_THIS s.vtotal_usec = 1000000 / vfreq;
+  BX_VGA_THIS s.vblank_usec = BX_VGA_THIS s.htotal_usec * BX_VGA_THIS s.vertical_display_end;
+  BX_VGA_THIS s.vrstart_usec = BX_VGA_THIS s.htotal_usec * vrstart;
+  BX_VGA_THIS s.vrend_usec = BX_VGA_THIS s.htotal_usec * vrend;
   BX_DEBUG(("hfreq = %.1f kHz / vfreq = %d Hz", ((double)hfreq / 1000), vfreq));
 }
 
@@ -497,11 +504,15 @@ Bit32u bx_vgacore_c::read(Bit32u address, unsigned io_len)
 
       retval = 0;
       display_usec = bx_pc_system.time_usec() % BX_VGA_THIS s.vtotal_usec;
-      if (display_usec < 70)  {
-        retval |= 0x09;
+      if ((display_usec >= BX_VGA_THIS s.vrstart_usec) &&
+          (display_usec <= BX_VGA_THIS s.vrend_usec)) {
+        retval |= 0x08;
+      }
+      if (display_usec >= BX_VGA_THIS s.vblank_usec) {
+        retval |= 0x01;
       } else {
         line_usec = display_usec % BX_VGA_THIS s.htotal_usec;
-        if (line_usec == 0) {
+        if (line_usec >= (BX_VGA_THIS s.htotal_usec - 2)) {
           retval |= 0x01;
         }
       }
@@ -1189,7 +1200,9 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool 
         BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address] = value;
         switch (BX_VGA_THIS s.CRTC.address) {
           case 0x00:
+          case 0x02:
           case 0x06:
+          case 0x10:
             calculate_retrace_timing();
             break;
           case 0x07:
@@ -1230,6 +1243,7 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool 
             break;
           case 0x11:
             BX_VGA_THIS s.CRTC.write_protect = ((BX_VGA_THIS s.CRTC.reg[0x11] & 0x80) > 0);
+            calculate_retrace_timing();
             break;
           case 0x12:
             BX_VGA_THIS s.vertical_display_end &= 0x300;
@@ -1368,7 +1382,8 @@ bx_bool bx_vgacore_c::skip_update(void)
 
   /* skip screen update if the vertical retrace is in progress */
   display_usec = bx_pc_system.time_usec() % BX_VGA_THIS s.vtotal_usec;
-  if (display_usec < 70) {
+  if ((display_usec > BX_VGA_THIS s.vrstart_usec) &&
+      (display_usec < BX_VGA_THIS s.vrend_usec)) {
     return 1;
   }
   return 0;
