@@ -61,8 +61,13 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::stackPrefetch(bx_address offset, unsigned 
     Bit32u limit = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled;
     Bit32u pageStart = offset - pageOffset;
 
-    BX_ASSERT(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid);
+    if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid) {
+      BX_ERROR(("stackPrefetch: SS not valid"));
+      exception(BX_SS_EXCEPTION, 0);
+    }
+      
     BX_ASSERT(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p);
+    BX_ASSERT(IS_DATA_SEGMENT_WRITEABLE(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type))
 
     // check that the begining of the page is within stack segment limits
     // problem can happen with EXPAND DOWN segments

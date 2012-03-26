@@ -476,16 +476,24 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     // change CR3 only if it actually modified
     if (newCR3 != BX_CPU_THIS_PTR cr3) {
       BX_DEBUG(("task_switch changing CR3 to 0x%08x", newCR3));
+
+      if (! SetCR3(newCR3)) // Tell paging unit about new cr3 value
+        exception(BX_TS_EXCEPTION, 0);
+
 #if BX_CPU_LEVEL >= 6
       if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE()) {
         if (! CheckPDPTR(newCR3)) {
           BX_ERROR(("task_switch(exception after commit point): PDPTR check failed !"));
-          exception(BX_GP_EXCEPTION, 0);
+
+          // clear PDPTRs before raising task switch exception
+          for (unsigned n=0; n<4; n++)
+            BX_CPU_THIS_PTR PDPTR_CACHE.entry[n] = 0;
+
+          exception(BX_TS_EXCEPTION, 0);
         }
       }
 #endif
-      if (! SetCR3(newCR3)) // Tell paging unit about new cr3 value
-        exception(BX_GP_EXCEPTION, 0);
+
       BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_TASK_SWITCH, newCR3);
     }
   }

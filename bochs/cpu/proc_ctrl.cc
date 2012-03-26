@@ -456,9 +456,11 @@ void BX_CPU_C::handleCpuContextChange(void)
   handleAlignmentCheck();
 #endif
   handleCpuModeChange();
+#if BX_CPU_LEVEL >= 6
   handleSseModeChange();
 #if BX_SUPPORT_AVX
   handleAvxModeChange();
+#endif
 #endif
 }
 
