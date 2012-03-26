@@ -67,7 +67,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::stackPrefetch(bx_address offset, unsigned 
     }
       
     BX_ASSERT(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p);
-    BX_ASSERT(IS_DATA_SEGMENT_WRITEABLE(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type))
+    BX_ASSERT(IS_DATA_SEGMENT_WRITEABLE(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type));
 
     // check that the begining of the page is within stack segment limits
     // problem can happen with EXPAND DOWN segments
