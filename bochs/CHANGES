@@ -17,11 +17,10 @@ Changes after 2.5.1 release:
     state of the device specified in 'string'
   - Improved debug dump for pci, pic and vga/cirrus devices
   - Added debug dump for pci2isa, floppy and DMA controller devices
+  - Added TLB to CPU param tree - now it can be browsed from Bochs internal
+    debugger and Bochs debugger GUI through param tree interfaces
 
 - Configure and compile
-  - Do not compile support for alignment check (#AC exception) by default
-    for CPU emulation performance reasons, the alignment check compilation
-    still can be enabled using configure option --enable-alignment-check.
   - Moved networking, sound and USB devices to subdirectories in iodev.
   - Moved MWAIT_IS_NOP .bochsrc option from CPUID to CPU so it can be set
     even if cpu was configured using pre-defined CPUDB profile.
@@ -32,11 +31,12 @@ Changes after 2.5.1 release:
       to enable configure with option --enable-e1000
     - Added PCI network boot ROM support to all network adapters
   - VGA
-    - major rewrite of the vga / cirrus code:
+    - Major rewrite of the vga / cirrus code:
       - vgacore (shared standard VGA emulation code)
       - vga (Bochs VBE and PCI VGA)
       - cirrus (CL-GD 5430 ISA / CL-GD 5446 PCI)
-    - added VGA graphics blinking support
+    - Added VGA graphics blinking support
+    - More accurate vertical retrace emulation (based on the DOSBox implementation)
 
 - ROM BIOS
   - improved PCI boot ROM support (for VGA and other devices)

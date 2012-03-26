@@ -365,7 +365,7 @@ void BX_CPU_C::handleAlignmentCheck(void)
 {
   if (CPL == 3 && BX_CPU_THIS_PTR cr0.get_AM() && BX_CPU_THIS_PTR get_AC()) {
 #if BX_SUPPORT_ALIGNMENT_CHECK == 0
-    BX_PANIC(("Alignment check (#AC exception) was not compiled in !"));
+    BX_PANIC(("WARNING: Alignment check (#AC exception) was not compiled in !"));
 #else
     BX_CPU_THIS_PTR alignment_check_mask = 0xF;
 #endif
