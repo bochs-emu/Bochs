@@ -29,6 +29,7 @@
 void BX_CPP_AttrRegparmN(2) BX_CPU_C::stackPrefetch(bx_address offset, unsigned len)
 {
   bx_address laddr;
+  unsigned pageOffset;
 
   BX_CPU_THIS_PTR espHostPtr = 0; // initialize with NULL pointer
   BX_CPU_THIS_PTR espPageWindowSize = 0;
@@ -38,25 +39,22 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::stackPrefetch(bx_address offset, unsigned 
 #if BX_SUPPORT_X86_64
   if (long64_mode()) {
     laddr = offset;
-    unsigned pageOffset = PAGE_OFFSET(offset);
+    pageOffset = PAGE_OFFSET(offset);
 
     // canonical violations will miss the TLB below
 
     if (pageOffset + len >= 4096) // don't care for page split accesses
       return;
 
-    BX_CPU_THIS_PTR espPageBias = pageOffset - offset;
     BX_CPU_THIS_PTR espPageWindowSize = 4096;
   }
   else
 #endif
   {
     laddr = (Bit32u) (offset + BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base);
-    unsigned pageOffset = PAGE_OFFSET(laddr);
+    pageOffset = PAGE_OFFSET(laddr);
     if (pageOffset + len >= 4096) // don't care for page split accesses
       return;
-
-    BX_CPU_THIS_PTR espPageBias = (bx_address) pageOffset - offset;
 
     Bit32u limit = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled;
     Bit32u pageStart = offset - pageOffset;
@@ -112,6 +110,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::stackPrefetch(bx_address offset, unsigned 
     // See if the TLB entry privilege level allows us write access from this CPL
     // Assuming that we always can read if write access is OK
     if (! (tlbEntry->accessBits & (0x2 | USER_PL))) {
+      BX_CPU_THIS_PTR espPageBias = (bx_address) pageOffset - offset;
       BX_CPU_THIS_PTR pAddrStackPage = tlbEntry->ppf;
       BX_CPU_THIS_PTR espHostPtr = (Bit8u*) tlbEntry->hostPageAddr;
     }

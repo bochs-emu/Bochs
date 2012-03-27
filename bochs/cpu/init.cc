@@ -645,7 +645,7 @@ void BX_CPU_C::register_state(void)
   bx_list_c *tlb = new bx_list_c(cpu, "TLB");
   BXRS_PARAM_BOOL(tlb, split_large, TLB.split_large);
   for (n=0; n<BX_TLB_SIZE; n++) {
-    sprintf(name, "tlb_entry%d", n);
+    sprintf(name, "entry%d", n);
     bx_list_c *tlb_entry = new bx_list_c(tlb, name);
     BXRS_HEX_PARAM_FIELD(tlb_entry, lpf, TLB.entry[n].lpf);
     BXRS_HEX_PARAM_FIELD(tlb_entry, lpf_mask, TLB.entry[n].lpf_mask);

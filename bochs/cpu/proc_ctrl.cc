@@ -317,6 +317,10 @@ void BX_CPU_C::handleCpuModeChange(void)
       BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RIP);
       BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RSP);
     }
+
+    // switching between compatibility and long64 mode also affect SS.BASE
+    // which is always zero in long64 mode
+    invalidate_stack_cache();
   }
   else
 #endif
