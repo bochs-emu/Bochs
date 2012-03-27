@@ -33,7 +33,7 @@
 
 static int Allocio=0;
 
-const char* iofunctions::getlevel(int i)
+const char* iofunctions::getlevel(int i) const
 {
   static const char *loglevel[N_LOGLEV] = {
     "DEBUG",
@@ -46,11 +46,11 @@ const char* iofunctions::getlevel(int i)
   else return "?";
 }
 
-const char* iofunctions::getaction(int i)
+const char* iofunctions::getaction(int i) const
 {
   static const char *name[] = { "ignore", "report", "ask", "fatal" };
   assert (i>=ACT_IGNORE && i<N_ACT);
-  return (char *) name[i];
+  return name[i];
 }
 
 void iofunctions::flush(void)

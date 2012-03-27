@@ -277,18 +277,18 @@ public:
     assert (loglev >= 0 && loglev < N_LOGLEV);
     onoff[loglev] = value;
   }
-  const char *get_name() { return name; }
-  const char *getprefix() { return prefix; }
-  int getonoff(int level) {
+  const char *get_name() const { return name; }
+  const char *getprefix() const { return prefix; }
+  int getonoff(int level) const {
     assert (level>=0 && level<N_LOGLEV);
     return onoff[level];
   }
-  static void set_default_action (int loglev, int action) {
+  static void set_default_action(int loglev, int action) {
     assert (loglev >= 0 && loglev < N_LOGLEV);
     assert (action >= 0 && action < N_ACT);
     default_onoff[loglev] = action;
   }
-  static int get_default_action (int loglev) {
+  static int get_default_action(int loglev) {
     assert (loglev >= 0 && loglev < N_LOGLEV);
     return default_onoff[loglev];
   }
@@ -319,13 +319,13 @@ public:
   void init_log(FILE *fs);
   void exit_log();
   void set_log_prefix(const char *prefix);
-  int get_n_logfns() { return n_logfn; }
+  int get_n_logfns() const { return n_logfn; }
   logfunc_t *get_logfn(int index) { return logfn_list[index]; }
   void add_logfn(logfunc_t *fn);
   void remove_logfn(logfunc_t *fn);
   void set_log_action(int loglevel, int action);
-  const char *getlevel(int i);
-  const char *getaction(int i);
+  const char *getlevel(int i) const;
+  const char *getaction(int i) const;
   
 protected:
   int n_logfn;
