@@ -47,7 +47,7 @@ Bit32u BX_CPU_C::FastRepINSW(bxInstruction_c *i, bx_address dstOff, Bit16u port,
   if ((dstOff | 0xfff) > dstSegPtr->cache.u.segment.limit_scaled)
     return 0;
 
-  bx_address laddrDst = BX_CPU_THIS_PTR get_laddr(BX_SEG_REG_ES, dstOff);
+  bx_address laddrDst = get_laddr32(BX_SEG_REG_ES, dstOff);
   // check that the address is word aligned
   if (laddrDst & 1) return 0;
 
@@ -120,7 +120,7 @@ Bit32u BX_CPU_C::FastRepOUTSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   if ((srcOff | 0xfff) > srcSegPtr->cache.u.segment.limit_scaled)
     return 0;
 
-  bx_address laddrSrc = BX_CPU_THIS_PTR get_laddr(srcSeg, srcOff);
+  bx_address laddrSrc = get_laddr32(srcSeg, srcOff);
   // check that the address is word aligned
   if (laddrSrc & 1) return 0;
 

@@ -25,9 +25,11 @@
 #include "bochs.h"
 #include "cpu/cpu.h"
 
-struct bx_instr_ia_stats {
+#define BX_IA_STATS_ENTRIES (BX_IA_LAST*2) /* /r and /m form */
+
+static struct bx_instr_ia_stats {
    bx_bool active;
-   Bit32u ia_cnt[BX_IA_LAST];
+   Bit32u ia_cnt[BX_IA_STATS_ENTRIES];
    Bit32u total_cnt;
    Bit32u interrupts;
    Bit32u exceptions;
@@ -53,7 +55,7 @@ void bx_instr_reset(unsigned cpu, unsigned type)
   ia_stats[cpu].active    = 1;
   ia_stats[cpu].total_cnt = 0;
 
-  for(int n=0; n < BX_IA_LAST; n++)
+  for(int n=0; n < BX_IA_STATS_ENTRIES; n++)
     ia_stats[cpu].ia_cnt[n] = 0;
 
   ia_stats[cpu].interrupts = ia_stats[cpu].exceptions = 0;
@@ -79,18 +81,24 @@ void bx_instr_hwinterrupt(unsigned cpu, unsigned vector, Bit16u cs, bx_address e
 void bx_instr_before_execution(unsigned cpu, bxInstruction_c *i)
 {
   if(ia_stats[cpu].active) {
-    ia_stats[cpu].ia_cnt[i->getIaOpcode()]++;
+    ia_stats[cpu].ia_cnt[i->getIaOpcode() * 2 + !!i->modC0()]++;
     ia_stats[cpu].total_cnt++;
 
     if (ia_stats[cpu].total_cnt > IA_CNT_DUMP_THRESHOLD) {
       printf("Dump IA stats for CPU %d\n", cpu);
       printf("----------------------------------------------------------\n");
       printf("Interrupts: %d, Exceptions: %d\n", ia_stats[cpu].interrupts, ia_stats[cpu].exceptions);
-      for (int n=0;n < BX_IA_LAST; n++) {
-        if (ia_stats[cpu].ia_cnt[n] > 0) {
-           printf("%s: %f%%\n", get_bx_opcode_name(n), ia_stats[cpu].ia_cnt[n] * 100.0 / ia_stats[cpu].total_cnt);
-           ia_stats[cpu].ia_cnt[n] = 0;
+      while(1) {
+        Bit32u max = 0, max_index = 0;
+        for (int n=0;n < BX_IA_STATS_ENTRIES; n++) {
+          if (ia_stats[cpu].ia_cnt[n] > max) {
+            max = ia_stats[cpu].ia_cnt[n];
+            max_index = n;
+          }
         }
+        if (max == 0) break;
+        printf("%s /%c: %f%%\n", get_bx_opcode_name(max_index/2), (max_index & 1) ? 'm' : 'r', ia_stats[cpu].ia_cnt[max_index] * 100.0f / ia_stats[cpu].total_cnt);
+        ia_stats[cpu].ia_cnt[max_index] = 0;
       }
       ia_stats[cpu].interrupts = ia_stats[cpu].exceptions = ia_stats[cpu].total_cnt = 0;
     }

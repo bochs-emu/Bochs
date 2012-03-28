@@ -506,7 +506,7 @@ void BX_CPU_C::prefetch(void)
 #endif
   {
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RIP); /* avoid 32-bit EIP wrap */
-    laddr = BX_CPU_THIS_PTR get_laddr32(BX_SEG_REG_CS, EIP);
+    laddr = get_laddr32(BX_SEG_REG_CS, EIP);
     pageOffset = PAGE_OFFSET(laddr);
 
     // Calculate RIP at the beginning of the page.
@@ -590,7 +590,7 @@ bx_bool BX_CPU_C::dbg_instruction_epilog(void)
 
   BX_CPU_THIS_PTR guard_found.cs  = cs;
   BX_CPU_THIS_PTR guard_found.eip = debug_eip;
-  BX_CPU_THIS_PTR guard_found.laddr = BX_CPU_THIS_PTR get_laddr(BX_SEG_REG_CS, debug_eip);
+  BX_CPU_THIS_PTR guard_found.laddr = get_laddr(BX_SEG_REG_CS, debug_eip);
   BX_CPU_THIS_PTR guard_found.code_32_64 = BX_CPU_THIS_PTR fetchModeMask;
 
   //

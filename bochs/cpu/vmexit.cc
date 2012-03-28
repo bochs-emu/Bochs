@@ -454,9 +454,9 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
        bx_address asize_mask = (bx_address) i->asize_mask(), laddr;
 
        if (qualification & VMX_VMEXIT_IO_PORTIN)
-          laddr = BX_CPU_THIS_PTR get_laddr(BX_SEG_REG_ES, RDI & asize_mask);
+          laddr = get_laddr(BX_SEG_REG_ES, RDI & asize_mask);
        else  // PORTOUT
-          laddr = BX_CPU_THIS_PTR get_laddr(i->seg(), RSI & asize_mask);
+          laddr = get_laddr(i->seg(), RSI & asize_mask);
 
        VMwrite_natural(VMCS_GUEST_LINEAR_ADDR, laddr);
 
@@ -530,7 +530,7 @@ Bit32u BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_LMSW(bxInstruction_c *i, Bit32u m
     qualification |= msw << 16;
     if (! i->modC0()) {
        qualification |= (1 << 6); // memory operand
-       VMwrite_natural(VMCS_GUEST_LINEAR_ADDR, BX_CPU_THIS_PTR get_laddr(i->seg(), RMAddr(i)));
+       VMwrite_natural(VMCS_GUEST_LINEAR_ADDR, get_laddr(i->seg(), RMAddr(i)));
     }
 
     VMexit(i, VMX_VMEXIT_CR_ACCESS, qualification);

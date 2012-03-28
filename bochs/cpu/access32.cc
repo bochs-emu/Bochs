@@ -38,7 +38,7 @@ BX_CPU_C::write_virtual_byte_32(unsigned s, Bit32u offset, Bit8u data)
   if (seg->cache.valid & SegAccessWOK) {
     if (offset <= seg->cache.u.segment.limit_scaled) {
 accessOK:
-      laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+      laddr = get_laddr32(s, offset);
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -82,7 +82,7 @@ BX_CPU_C::write_virtual_word_32(unsigned s, Bit32u offset, Bit16u data)
   if (seg->cache.valid & SegAccessWOK) {
     if (offset < seg->cache.u.segment.limit_scaled) {
 accessOK:
-      laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+      laddr = get_laddr32(s, offset);
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
       Bit32u lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -140,7 +140,7 @@ BX_CPU_C::write_virtual_dword_32(unsigned s, Bit32u offset, Bit32u data)
   if (seg->cache.valid & SegAccessWOK) {
     if (offset < (seg->cache.u.segment.limit_scaled-2)) {
 accessOK:
-      laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+      laddr = get_laddr32(s, offset);
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
       Bit32u lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -198,7 +198,7 @@ BX_CPU_C::write_virtual_qword_32(unsigned s, Bit32u offset, Bit64u data)
   if (seg->cache.valid & SegAccessWOK) {
     if (offset <= (seg->cache.u.segment.limit_scaled-7)) {
 accessOK:
-      laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+      laddr = get_laddr32(s, offset);
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
       Bit32u lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -258,7 +258,7 @@ BX_CPU_C::write_virtual_dqword_32(unsigned s, Bit32u offset, const BxPackedXmmRe
   if (seg->cache.valid & SegAccessWOK) {
     if (offset <= (seg->cache.u.segment.limit_scaled-15)) {
 accessOK:
-      laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+      laddr = get_laddr32(s, offset);
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -300,7 +300,7 @@ BX_CPU_C::write_virtual_dqword_aligned_32(unsigned s, Bit32u offset, const BxPac
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
-  Bit32u laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+  Bit32u laddr = get_laddr32(s, offset);
   // must check alignment here because #GP on misaligned access is higher
   // priority than other segment related faults
   if (laddr & 15) {
@@ -359,7 +359,7 @@ void BX_CPU_C::write_virtual_dword_vector_32(unsigned s, Bit32u offset, unsigned
   if (seg->cache.valid & SegAccessWOK) {
     if (offset < (seg->cache.u.segment.limit_scaled-len)) {
 accessOK:
-      laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+      laddr = get_laddr32(s, offset);
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, len-1);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -405,7 +405,7 @@ void BX_CPU_C::write_virtual_dword_vector_aligned_32(unsigned s, Bit32u offset, 
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
-  Bit32u laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+  Bit32u laddr = get_laddr32(s, offset);
   // must check alignment here because #GP on misaligned access is higher
   // priority than other segment related faults
   if (laddr & (len-1)) {
@@ -467,7 +467,7 @@ BX_CPU_C::read_virtual_byte_32(unsigned s, Bit32u offset)
   if (seg->cache.valid & SegAccessROK) {
     if (offset <= seg->cache.u.segment.limit_scaled) {
 accessOK:
-      laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+      laddr = get_laddr32(s, offset);
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -511,7 +511,7 @@ BX_CPU_C::read_virtual_word_32(unsigned s, Bit32u offset)
   if (seg->cache.valid & SegAccessROK) {
     if (offset < seg->cache.u.segment.limit_scaled) {
 accessOK:
-      laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+      laddr = get_laddr32(s, offset);
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
       Bit32u lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -568,7 +568,7 @@ BX_CPU_C::read_virtual_dword_32(unsigned s, Bit32u offset)
   if (seg->cache.valid & SegAccessROK) {
     if (offset < (seg->cache.u.segment.limit_scaled-2)) {
 accessOK:
-      laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+      laddr = get_laddr32(s, offset);
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
       Bit32u lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -625,7 +625,7 @@ BX_CPU_C::read_virtual_qword_32(unsigned s, Bit32u offset)
   if (seg->cache.valid & SegAccessROK) {
     if (offset <= (seg->cache.u.segment.limit_scaled-7)) {
 accessOK:
-      laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+      laddr = get_laddr32(s, offset);
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
       Bit32u lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -683,7 +683,7 @@ BX_CPU_C::read_virtual_dqword_32(unsigned s, Bit32u offset, BxPackedXmmRegister 
   if (seg->cache.valid & SegAccessROK) {
     if (offset <= (seg->cache.u.segment.limit_scaled-15)) {
 accessOK:
-      laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+      laddr = get_laddr32(s, offset);
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -722,7 +722,7 @@ BX_CPU_C::read_virtual_dqword_aligned_32(unsigned s, Bit32u offset, BxPackedXmmR
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
-  Bit32u laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+  Bit32u laddr = get_laddr32(s, offset);
   // must check alignment here because #GP on misaligned access is higher
   // priority than other segment related faults
   if (laddr & 15) {
@@ -779,7 +779,7 @@ void BX_CPU_C::read_virtual_dword_vector_32(unsigned s, Bit32u offset, unsigned 
   if (seg->cache.valid & SegAccessROK) {
     if (offset < (seg->cache.u.segment.limit_scaled-len)) {
 accessOK:
-      laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+      laddr = get_laddr32(s, offset);
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, len-1);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -822,7 +822,7 @@ void BX_CPU_C::read_virtual_dword_vector_aligned_32(unsigned s, Bit32u offset, u
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
-  Bit32u laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+  Bit32u laddr = get_laddr32(s, offset);
   // must check alignment here because #GP on misaligned access is higher
   // priority than other segment related faults
   if (laddr & (len-1)) {
@@ -887,7 +887,7 @@ BX_CPU_C::read_RMW_virtual_byte_32(unsigned s, Bit32u offset)
   if (seg->cache.valid & SegAccessWOK) {
     if (offset <= seg->cache.u.segment.limit_scaled) {
 accessOK:
-      laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+      laddr = get_laddr32(s, offset);
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -934,7 +934,7 @@ BX_CPU_C::read_RMW_virtual_word_32(unsigned s, Bit32u offset)
   if (seg->cache.valid & SegAccessWOK) {
     if (offset < seg->cache.u.segment.limit_scaled) {
 accessOK:
-      laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+      laddr = get_laddr32(s, offset);
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
       Bit32u lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -995,7 +995,7 @@ BX_CPU_C::read_RMW_virtual_dword_32(unsigned s, Bit32u offset)
   if (seg->cache.valid & SegAccessWOK) {
     if (offset < (seg->cache.u.segment.limit_scaled-2)) {
 accessOK:
-      laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+      laddr = get_laddr32(s, offset);
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
       Bit32u lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -1056,7 +1056,7 @@ BX_CPU_C::read_RMW_virtual_qword_32(unsigned s, Bit32u offset)
   if (seg->cache.valid & SegAccessWOK) {
     if (offset <= (seg->cache.u.segment.limit_scaled-7)) {
 accessOK:
-      laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+      laddr = get_laddr32(s, offset);
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
       Bit32u lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));

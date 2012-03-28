@@ -1435,6 +1435,8 @@ bx_phy_address BX_CPU_C::nested_walk(bx_phy_address guest_paddr, unsigned rw, bx
 {
   SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb.host_state;
 
+  BX_DEBUG(("Nested walk for guest paddr 0x" FMT_ADDRX, guest_paddr));
+
   if (host_state->efer.get_LMA())
     return nested_walk_long_mode(guest_paddr, rw, is_page_walk);
   else if (host_state->cr4.get_PAE())

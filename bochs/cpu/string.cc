@@ -50,12 +50,12 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   if ((dstOff | 0xfff) > dstSegPtr->cache.u.segment.limit_scaled)
     return 0;
 
-  laddrSrc = BX_CPU_THIS_PTR get_laddr(srcSeg, srcOff);
+  laddrSrc = get_laddr32(srcSeg, srcOff);
 
   hostAddrSrc = v2h_read_byte(laddrSrc, BX_CPU_THIS_PTR user_pl);
   if (! hostAddrSrc) return 0;
 
-  laddrDst = BX_CPU_THIS_PTR get_laddr(dstSeg, dstOff);
+  laddrDst = get_laddr32(dstSeg, dstOff);
 
   hostAddrDst = v2h_write_byte(laddrDst, BX_CPU_THIS_PTR user_pl);
   // Check that native host access was not vetoed for that page
@@ -120,12 +120,12 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   if ((dstOff | 0xfff) > dstSegPtr->cache.u.segment.limit_scaled)
     return 0;
 
-  laddrSrc = BX_CPU_THIS_PTR get_laddr(srcSeg, srcOff);
+  laddrSrc = get_laddr32(srcSeg, srcOff);
 
   hostAddrSrc = v2h_read_byte(laddrSrc, BX_CPU_THIS_PTR user_pl);
   if (! hostAddrSrc) return 0;
 
-  laddrDst = BX_CPU_THIS_PTR get_laddr(dstSeg, dstOff);
+  laddrDst = get_laddr32(dstSeg, dstOff);
 
   hostAddrDst = v2h_write_byte(laddrDst, BX_CPU_THIS_PTR user_pl);
   // Check that native host access was not vetoed for that page
@@ -193,12 +193,12 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   if ((dstOff | 0xfff) > dstSegPtr->cache.u.segment.limit_scaled)
     return 0;
 
-  laddrSrc = BX_CPU_THIS_PTR get_laddr(srcSeg, srcOff);
+  laddrSrc = get_laddr32(srcSeg, srcOff);
 
   hostAddrSrc = v2h_read_byte(laddrSrc, BX_CPU_THIS_PTR user_pl);
   if (! hostAddrSrc) return 0;
 
-  laddrDst = BX_CPU_THIS_PTR get_laddr(dstSeg, dstOff);
+  laddrDst = get_laddr32(dstSeg, dstOff);
 
   hostAddrDst = v2h_write_byte(laddrDst, BX_CPU_THIS_PTR user_pl);
   // Check that native host access was not vetoed for that page
@@ -260,7 +260,7 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   if ((dstOff | 0xfff) > dstSegPtr->cache.u.segment.limit_scaled)
     return 0;
 
-  laddrDst = BX_CPU_THIS_PTR get_laddr(dstSeg, dstOff);
+  laddrDst = get_laddr32(dstSeg, dstOff);
 
   hostAddrDst = v2h_write_byte(laddrDst, BX_CPU_THIS_PTR user_pl);
   // Check that native host access was not vetoed for that page
@@ -314,7 +314,7 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   if ((dstOff | 0xfff) > dstSegPtr->cache.u.segment.limit_scaled)
     return 0;
 
-  laddrDst = BX_CPU_THIS_PTR get_laddr(dstSeg, dstOff);
+  laddrDst = get_laddr32(dstSeg, dstOff);
 
   hostAddrDst = v2h_write_byte(laddrDst, BX_CPU_THIS_PTR user_pl);
   // Check that native host access was not vetoed for that page
@@ -370,7 +370,7 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   if ((dstOff | 0xfff) > dstSegPtr->cache.u.segment.limit_scaled)
     return 0;
 
-  laddrDst = BX_CPU_THIS_PTR get_laddr(dstSeg, dstOff);
+  laddrDst = get_laddr32(dstSeg, dstOff);
 
   hostAddrDst = v2h_write_byte(laddrDst, BX_CPU_THIS_PTR user_pl);
   // Check that native host access was not vetoed for that page

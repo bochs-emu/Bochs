@@ -260,7 +260,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[i->seg()];
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  bx_address laddr = BX_CPU_THIS_PTR get_laddr(i->seg(), eaddr);
+  bx_address laddr = get_laddr(i->seg(), eaddr);
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
@@ -679,7 +679,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
   bx_address offset = RAX & i->asize_mask();
 
   // set MONITOR
-  bx_address laddr = BX_CPU_THIS_PTR get_laddr(i->seg(), offset);
+  bx_address laddr = get_laddr(i->seg(), offset);
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {

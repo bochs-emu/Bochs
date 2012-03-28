@@ -43,7 +43,7 @@ void BX_CPU_C::debug_disasm_instruction(bx_address offset)
   static disassembler bx_disassemble;
   unsigned remainsInPage = 0x1000 - PAGE_OFFSET(offset);
 
-  bx_bool valid = dbg_xlate_linear2phy(BX_CPU_THIS_PTR get_laddr(BX_SEG_REG_CS, offset), &phy_addr);
+  bx_bool valid = dbg_xlate_linear2phy(get_laddr(BX_SEG_REG_CS, offset), &phy_addr);
   if (valid) {
     BX_MEM(0)->dbg_fetch_mem(BX_CPU_THIS, phy_addr, 16, instr_buf);
     unsigned isize = bx_disassemble.disasm(
