@@ -68,7 +68,7 @@ BEGIN
     GROUPBOX        "Simulation", IDSIMU, 195, 10, 70, 77
     DEFPUSHBUTTON   "Sta&rt", IDOK, 205, 25, 50, 14
     PUSHBUTTON      "Restore St&ate", IDRESTORE, 205, 45, 50, 14
-    PUSHBUTTON      "&Quit", IDCANCEL, 205, 65, 50, 14
+    PUSHBUTTON      "&Quit", IDQUIT, 205, 65, 50, 14
 END
 
 LOGOPT_DLG DIALOG 30, 30, 240, 180

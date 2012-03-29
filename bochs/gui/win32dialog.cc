@@ -631,7 +631,12 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
       SetFocus(GetDlgItem(hDlg, choice));
       return FALSE;
     case WM_CLOSE:
-      EndDialog(hDlg, -1);
+      if (runtime) {
+        EndDialog(hDlg, 1);
+      } else {
+        bx_user_quit = 1;
+        EndDialog(hDlg, -1);
+      }
       break;
     case WM_COMMAND:
       code = HIWORD(wParam);
@@ -708,6 +713,11 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
           EndDialog(hDlg, 1);
           break;
         case IDCANCEL:
+          if (runtime) {
+            EndDialog(hDlg, 1);
+            break;
+          }
+        case IDQUIT:
           bx_user_quit = 1;
           EndDialog(hDlg, -1);
           break;

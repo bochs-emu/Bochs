@@ -10,6 +10,7 @@
 #define IDEDITBOX    1170
 #define IDSIMU       1180
 #define IDRESTORE    1190
+#define IDQUIT       1195
 #define LOGOPT_DLG   1200
 #define IDDEVLIST    1210
 #define IDLOGLBL1    1221
