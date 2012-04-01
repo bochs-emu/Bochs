@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -78,6 +78,9 @@ public:
   virtual void init();
   virtual void reset(unsigned type);
   virtual void register_state(void);
+#if BX_DEBUGGER
+  virtual void debug_dump(void);
+#endif
 
   virtual void receive_eoi(Bit8u vector);
   virtual void set_irq_level(Bit8u int_in, bx_bool level);

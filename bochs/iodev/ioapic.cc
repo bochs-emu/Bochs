@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2011  The Bochs Project
+//  Copyright (C) 2002-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -122,6 +122,10 @@ void bx_ioapic_c::init(void)
   DEV_register_memory_handlers(theIOAPIC,
       ioapic_read, ioapic_write, base_addr, base_addr + 0xfff);
   reset(BX_RESET_HARDWARE);
+#if BX_DEBUGGER
+  // register device for the 'info device' command (calls debug_dump())
+  bx_dbg_register_debug_info("ioapic", this);
+#endif
 }
 
 void bx_ioapic_c::reset(unsigned type)
@@ -308,5 +312,20 @@ void bx_ioapic_c::register_state(void)
     ioredtbl[i].register_state(entry);
   }
 }
+
+#if BX_DEBUGGER
+void bx_ioapic_c::debug_dump()
+{
+  int i;
+  char buf[1024];
+
+  dbg_printf("82093AA I/O APIC\n\n");
+  for (i = 0; i < BX_IOAPIC_NUM_PINS; i++) {
+    bx_io_redirect_entry_t *entry = ioredtbl + i;
+    entry->sprintf_self(buf);
+    dbg_printf("entry[%d]: %s\n", i, buf);
+  }
+}
+#endif
 
 #endif /* if BX_SUPPORT_APIC */
