@@ -799,7 +799,7 @@ VOID CDECL UIThread(PVOID pvoid)
   workerThreadID = GetCurrentThreadId();
 
   GetClassInfo(NULL, WC_DIALOG, &wndclass);
-  wndclass.style = CS_HREDRAW | CS_VREDRAW;
+  wndclass.style = CS_HREDRAW | CS_VREDRAW | CS_NOCLOSE;
   wndclass.lpfnWndProc = mainWndProc;
   wndclass.cbClsExtra = 0;
   wndclass.cbWndExtra = 0;
@@ -808,7 +808,7 @@ VOID CDECL UIThread(PVOID pvoid)
   wndclass.lpszMenuName = NULL;
   wndclass.lpszClassName = szAppName;
 
-  RegisterClass (&wndclass);
+  RegisterClass(&wndclass);
 
   wndclass.style = CS_HREDRAW | CS_VREDRAW;
   wndclass.lpfnWndProc = simWndProc;
@@ -821,7 +821,7 @@ VOID CDECL UIThread(PVOID pvoid)
   wndclass.lpszMenuName = NULL;
   wndclass.lpszClassName = "SIMWINDOW";
 
-  RegisterClass (&wndclass);
+  RegisterClass(&wndclass);
 
   SetRect(&wndRect, 0, 0, stretched_x, stretched_y);
   DWORD sim_style = WS_CHILD;
