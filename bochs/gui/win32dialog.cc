@@ -367,7 +367,7 @@ void SetAdvancedLogOptions(HWND hDlg)
   }
 }
 
-void InitLogOptionsDialog(HWND hDlg)
+void InitLogOptionsDialog(HWND hDlg, BOOL advanced)
 {
   int idx, mod;
   char name[32];
@@ -379,7 +379,13 @@ void InitLogOptionsDialog(HWND hDlg)
       SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_SETITEMDATA, idx, mod);
     }
   }
-  SetStandardLogOptions(hDlg);
+  if (advanced) {
+    SendMessage(GetDlgItem(hDlg, IDADVLOGOPT), BM_SETCHECK, BST_CHECKED, 0);
+    SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_SETCURSEL, 0, 0);
+    SetAdvancedLogOptions(hDlg);
+  } else {
+    SetStandardLogOptions(hDlg);
+  }
 }
 
 void ApplyLogOptions(HWND hDlg, BOOL advanced)
@@ -418,8 +424,8 @@ static BOOL CALLBACK LogOptDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 
   switch (msg) {
     case WM_INITDIALOG:
-      InitLogOptionsDialog(hDlg);
-      advanced = FALSE;
+      advanced = (BOOL)lParam;
+      InitLogOptionsDialog(hDlg, advanced);
       changed = FALSE;
       EnableWindow(GetDlgItem(hDlg, IDAPPLY), FALSE);
       return TRUE;
@@ -485,9 +491,9 @@ static BOOL CALLBACK LogOptDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
   return FALSE;
 }
 
-void LogOptionsDialog(HWND hwnd)
+void LogOptionsDialog(HWND hwnd, bx_bool runtime)
 {
-  DialogBox(NULL, MAKEINTRESOURCE(LOGOPT_DLG), hwnd, (DLGPROC)LogOptDlgProc);
+  DialogBoxParam(NULL, MAKEINTRESOURCE(LOGOPT_DLG), hwnd, (DLGPROC)LogOptDlgProc, (LPARAM)runtime);
 }
 
 static BOOL CALLBACK PluginCtrlDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -684,7 +690,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
             }
           } else {
             if (!lstrcmp(pname, "#logopts")) {
-              LogOptionsDialog(hDlg);
+              LogOptionsDialog(hDlg, runtime);
             } else if (!lstrcmp(pname, "#plugins")) {
               PluginCtrlDialog(hDlg);
             } else {
