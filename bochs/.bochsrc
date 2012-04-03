@@ -590,7 +590,7 @@ log: bochsout.txt
 #=======================================================================
 # LOG CONTROLS
 #
-# Bochs now has four severity levels for event logging.
+# Bochs has four severity levels for event logging.
 #   panic: cannot proceed.  If you choose to continue after a panic, 
 #          don't be surprised if you get strange behavior or crashes.
 #   error: something went wrong, but it is probably safe to continue the
@@ -605,7 +605,7 @@ log: bochsout.txt
 #
 # It is also possible to specify the 'action' to do for each Bochs facility
 # separately (e.g. crash on panics from everything except the cdrom, and only
-# report those). TODO: add 'log function' module list to the user documentation.
+# report those). See the 'log function' module list in the user documentation.
 #
 # If you are experiencing many panics, it can be helpful to change
 # the panic action to report instead of fatal.  However, be aware

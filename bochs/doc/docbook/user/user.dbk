@@ -5244,57 +5244,350 @@ config file.
     </para>
     <para>
       Some of the device names reported in the panic message are abbreviations,
-      since the length of the names is limited to 5 characters. This small list
-      may help you finding out the name of the device that caused the panic.
+      since the length of the 'prefix' is limited to 5 characters. This table
+      may help you finding out the name of the device that caused the panic. It
+      shows the name used for setting up the log actions per device and a short
+      description.
     </para>
     <table><title>Device prefixes</title>
-      <tgroup cols="2" align="left" colsep="1" rowsep="1">
+      <tgroup cols="3" align="left" colsep="1" rowsep="1">
       <thead>
         <row>
           <entry>Prefix</entry>
+          <entry>Name</entry>
           <entry>Description</entry>
         </row>
       </thead>
       <tbody>
         <row>
+          <entry>ACPI</entry>
+          <entry>ACPI</entry>
+          <entry>PIIX4 ACPI controller</entry>
+        </row>
+        <row>
+          <entry>APIC0</entry>
+          <entry>apic0</entry>
+          <entry>APIC of first CPU</entry>
+        </row>
+        <row>
+          <entry>BIOS</entry>
+          <entry>BIOS</entry>
+          <entry>System BIOS</entry>
+        </row>
+        <row>
+          <entry>BUSM</entry>
+          <entry>busmouse</entry>
+          <entry>Busmouse</entry>
+        </row>
+        <row>
+          <entry>BXVGA</entry>
+          <entry>BXVGA</entry>
+          <entry>VGA adapter with VBE support</entry>
+        </row>
+        <row>
+          <entry>CD1</entry>
+          <entry>CD1</entry>
+          <entry>Lowlevel CD-ROM support for the first device (if configured, there can be CD2, CD3, CD4, ...)</entry>
+        </row>
+        <row>
           <entry>CLVGA</entry>
+          <entry>cirrus</entry>
           <entry>Cirrus SVGA</entry>
         </row>
         <row>
+          <entry>CMOS</entry>
+          <entry>CMOS</entry>
+          <entry>CMOS RAM + RTC</entry>
+        </row>
+        <row>
+          <entry>CPU0</entry>
+          <entry>cpu0</entry>
+          <entry>First CPU (SMP emulation can have cpu1, cpu2, cpu3,...)</entry>
+        </row>
+        <row>
+          <entry>CTRL</entry>
+          <entry>siminterface</entry>
+          <entry>Simulator interface</entry>
+        </row>
+        <row>
+          <entry>DEV</entry>
+          <entry>devices</entry>
+          <entry>Devices subsystem</entry>
+        </row>
+        <row>
+          <entry>DMA</entry>
+          <entry>DMA</entry>
+          <entry>DMA controller</entry>
+        </row>
+        <row>
+          <entry>E1000</entry>
+          <entry>E1000</entry>
+          <entry>Intel(R) Gigabit Ethernet</entry>
+        </row>
+        <row>
+          <entry>E1370</entry>
+          <entry>es1370</entry>
+          <entry>ES1370 soundcard</entry>
+        </row>
+        <row>
           <entry>EFIRQ</entry>
+          <entry>extfpuirq</entry>
           <entry>External FPU IRQ</entry>
         </row>
         <row>
+          <entry>FDD</entry>
+          <entry>floppy</entry>
+          <entry>Floppy controller</entry>
+        </row>
+        <row>
+          <entry>GAME</entry>
+          <entry>gameport</entry>
+          <entry>Standard PC gameport</entry>
+        </row>
+        <row>
+          <entry>GDBST</entry>
+          <entry>GDBST</entry>
+          <entry>GDB stub support</entry>
+        </row>
+        <row>
+          <entry>GUI</entry>
+          <entry>GUI</entry>
+          <entry>Generic GUI code</entry>
+        </row>
+        <row>
+          <entry>HD</entry>
+          <entry>harddrv</entry>
+          <entry>IDE HD/CD emulation</entry>
+        </row>
+        <row>
+          <entry>IMG</entry>
+          <entry>hdimage</entry>
+          <entry>Disk image support</entry>
+        </row>
+        <row>
+          <entry>IO</entry>
+          <entry>logio</entry>
+          <entry>Bochs logging subsystem</entry>
+        </row>
+        <row>
           <entry>IOAP</entry>
+          <entry>ioapic</entry>
           <entry>I/O APIC</entry>
         </row>
         <row>
+          <entry>IODBG</entry>
+          <entry>iodebug</entry>
+          <entry>I/O interface to debugger</entry>
+        </row>
+        <row>
+          <entry>KBD</entry>
+          <entry>keyboard</entry>
+          <entry>PS/2 keyboard and mouse</entry>
+        </row>
+        <row>
           <entry>KMAP</entry>
+          <entry>keymap</entry>
           <entry>Keyboard mapping</entry>
         </row>
         <row>
+          <entry>MEM0</entry>
+          <entry>memory</entry>
+          <entry>Memory management</entry>
+        </row>
+        <row>
+          <entry>MGUI</entry>
+          <entry>MGUI</entry>
+          <entry>MacOS9 / MacOSX gui</entry>
+        </row>
+        <row>
+          <entry>NE2K</entry>
+          <entry>NE2K</entry>
+          <entry>NE2000 ethernet adapter</entry>
+        </row>
+        <row>
+          <entry>NGUI</entry>
+          <entry>NGUI</entry>
+          <entry>GUI without input/output interface ("nogui")</entry>
+        </row>
+        <row>
+          <entry>OHCI</entry>
+          <entry>usb_ohci</entry>
+          <entry>USB OHCI controller</entry>
+        </row>
+        <row>
           <entry>P2I</entry>
+          <entry>pci2isa</entry>
           <entry>PCI-to-ISA bridge</entry>
         </row>
         <row>
+          <entry>PAR</entry>
+          <entry>parallel</entry>
+          <entry>Parallel port support</entry>
+        </row>
+        <row>
+          <entry>PCI</entry>
+          <entry>PCI</entry>
+          <entry>i440FX PCI bridge</entry>
+        </row>
+        <row>
+          <entry>PCI2H</entry>
+          <entry>pcidev</entry>
+          <entry>Host PCI device mapping</entry>
+        </row>
+        <row>
+          <entry>PIC</entry>
+          <entry>PIC</entry>
+          <entry>Programmable interrupt controller</entry>
+        </row>
+        <row>
           <entry>PIDE</entry>
+          <entry>pci_ide</entry>
           <entry>PCI IDE controller</entry>
         </row>
         <row>
+          <entry>PIT</entry>
+          <entry>PIT</entry>
+          <entry>I/O interface for 82C54 timer</entry>
+        </row>
+        <row>
+          <entry>PIT81</entry>
+          <entry>pit82c54</entry>
+          <entry>82C54 timer core</entry>
+        </row>
+        <row>
+          <entry>PLGIN</entry>
           <entry>PLGIN</entry>
           <entry>Plugin interface</entry>
         </row>
         <row>
+          <entry>PNIC</entry>
+          <entry>pcipnic</entry>
+          <entry>PCI pseudo NIC</entry>
+        </row>
+        <row>
+          <entry>RFB</entry>
+          <entry>RFB</entry>
+          <entry>RFB gui</entry>
+        </row>
+        <row>
+          <entry>SB16</entry>
+          <entry>SB16</entry>
+          <entry>SB16 soundcard</entry>
+        </row>
+        <row>
+          <entry>SCSIC</entry>
+          <entry>SCSIC</entry>
+          <entry>SCSI CD-ROM emulation for USB</entry>
+        </row>
+        <row>
+          <entry>SCSID</entry>
+          <entry>SCSID</entry>
+          <entry>SCSI hard drive emulation for USB</entry>
+        </row>
+        <row>
+          <entry>SER</entry>
+          <entry>serial</entry>
+          <entry>Serial port emulation</entry>
+        </row>
+        <row>
+          <entry>SDL</entry>
+          <entry>SDL</entry>
+          <entry>SDL gui</entry>
+        </row>
+        <row>
+          <entry>SERR</entry>
+          <entry>serial_raw</entry>
+          <entry>Lowlevel serial port support</entry>
+        </row>
+        <row>
+          <entry>SPEAK</entry>
+          <entry>speaker</entry>
+          <entry>Lowlevel support for the PC speaker</entry>
+        </row>
+        <row>
           <entry>STIME</entry>
+          <entry>slowdown_timer</entry>
           <entry>Slowdown timer</entry>
         </row>
         <row>
+          <entry>SVGA</entry>
+          <entry>SVGA</entry>
+          <entry>SVGA gui</entry>
+        </row>
+        <row>
+          <entry>SYS</entry>
+          <entry>pc_system</entry>
+          <entry>CPU-to-devices interface and timing control</entry>
+        </row>
+        <row>
+          <entry>TGUI</entry>
+          <entry>TGUI</entry>
+          <entry>Term gui</entry>
+        </row>
+        <row>
+          <entry>UHCI</entry>
+          <entry>usb_uhci</entry>
+          <entry>USB UHCI controller</entry>
+        </row>
+        <row>
           <entry>UNMP</entry>
+          <entry>unmappped</entry>
           <entry>Unmapped I/O handler</entry>
         </row>
         <row>
+          <entry>USBHI</entry>
+          <entry>usb_hid</entry>
+          <entry>USB HID device emulation</entry>
+        </row>
+        <row>
+          <entry>USBHB</entry>
+          <entry>usb_hub</entry>
+          <entry>External USB hub emulation</entry>
+        </row>
+        <row>
+          <entry>USBMS</entry>
+          <entry>usb_msd</entry>
+          <entry>USB MSD (disk/cdrom) emulation</entry>
+        </row>
+        <row>
+          <entry>USBPR</entry>
+          <entry>usb_printer</entry>
+          <entry>USB printer emulation</entry>
+        </row>
+        <row>
+          <entry>VBIOS</entry>
+          <entry>vgabios</entry>
+          <entry>VGA BIOS</entry>
+        </row>
+        <row>
+          <entry>VGA</entry>
+          <entry>VGA</entry>
+          <entry>Standard VGA</entry>
+        </row>
+        <row>
           <entry>VTIME</entry>
+          <entry>virt_timer</entry>
           <entry>Virtual timer</entry>
+        </row>
+        <row>
+          <entry>WGUI</entry>
+          <entry>WGUI</entry>
+          <entry>WIN32 gui</entry>
+        </row>
+        <row>
+          <entry>WX</entry>
+          <entry>WX</entry>
+          <entry>wxWidgets gui</entry>
+        </row>
+        <row>
+          <entry>XGUI</entry>
+          <entry>XGUI</entry>
+          <entry>X11 gui</entry>
+        </row>
+        <row>
+          <entry>XHCI</entry>
+          <entry>usb_xhci</entry>
+          <entry>USB xHCI controller</entry>
         </row>
       </tbody>
       </tgroup>
