@@ -416,8 +416,7 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   }
 
   // always assign EFER.LMA := EFER.LME & CR0.PG
-  if (guest.cr0.get_PG() & guest.efer.get_LME())
-    guest.efer.set_LMA(1);
+  guest.efer.set_LMA(guest.cr0.get_PG() && guest.efer.get_LME());
 
   guest.cr2 = vmcb_read64(SVM_GUEST_CR2);
   guest.cr3 = vmcb_read64(SVM_GUEST_CR3);
