@@ -12,13 +12,14 @@ Changes after 2.5.1 release:
   ! Added AMD Phenom X3 8650 (Toliman) configuration to the CPUDB
   - Bugfixes for CPU emulation correctness and stability
 
-- Bochs Internal Debugger and Debugger GUI
+- Bochs Debugger and Instrumentation
   - Implemented new debugger command 'info device [string]' that shows the
     state of the device specified in 'string'
   - Improved debug dump for pci, pic and vga/cirrus devices
-  - Added debug dump for pci2isa, floppy and DMA controller devices
+  - Added debug dump for pci2isa, i/o apic, floppy and DMA controller devices
   - Added TLB to CPU param tree - now it can be browsed from Bochs internal
     debugger and Bochs debugger GUI through param tree interfaces
+  - Updated / Fixed instrumentation examples
 
 - Configure and compile
   - Moved networking, sound and USB devices to subdirectories in iodev.
@@ -66,12 +67,14 @@ Changes after 2.5.1 release:
   [3486555] Fix critical stack leak in Win32 GUI by Carlo Bramini
 
 - these S.F. bugs were closed/fixed
+  [3510403] closing config dialog box closes entire simulator
   [3459998] Bochs cannot be compiled outside the source tree
   [2905969] can't use --enable-gdb-stub on vs2008
   [3294001] Bochs GUI doesn't appear properly for 2nd Bochs copy
   [3493315] Changing VGA 9/8 dot mode causes screen corruption
 
 - these S.F. feature requests were closed/implemented
+  [1429612] Idea how to speedup simulation - stack direct access
   [1703452] Other Network Devices?
   [2919376] Disable show the console window
    [534271] can't set log action by device (bochsrc)
