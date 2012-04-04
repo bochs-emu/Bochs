@@ -543,7 +543,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR2(bxInstruction_c *i)
 {
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
-    BX_ERROR(("MOV_RdCd: CPL!=0 not in real mode"));
+    BX_ERROR(("MOV_RdCR2: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -562,7 +562,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR3(bxInstruction_c *i)
 {
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
-    BX_ERROR(("MOV_RdCd: CPL!=0 not in real mode"));
+    BX_ERROR(("MOV_RdCR3: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -589,7 +589,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR4(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 5
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
-    BX_ERROR(("MOV_RdCd: CPL!=0 not in real mode"));
+    BX_ERROR(("MOV_RdCR4: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -703,7 +703,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rq(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR in_vmx_guest)
     val_64 = VMexit_CR4_Write(i, val_64);
 #endif
-  BX_DEBUG(("MOV_CqRq: write to CR4 of %08x:%08x", GET32H(val_64), GET32L(val_64)));
   if (! SetCR4(val_64))
     exception(BX_GP_EXCEPTION, 0);
 
@@ -715,7 +714,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rq(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR0(bxInstruction_c *i)
 {
   if (CPL!=0) {
-    BX_ERROR(("MOV_RqCq: #GP(0) if CPL is not 0"));
+    BX_ERROR(("MOV_RqCR0: #GP(0) if CPL is not 0"));
     exception(BX_GP_EXCEPTION, 0);
   }
 

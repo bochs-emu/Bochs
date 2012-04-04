@@ -415,6 +415,10 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
     return 0;
   }
 
+  // always assign EFER.LMA := EFER.LME & CR0.PG
+  if (guest.cr0.get_PG() & guest.efer.get_LME())
+    guest.efer.set_LMA(1);
+
   guest.cr2 = vmcb_read64(SVM_GUEST_CR2);
   guest.cr3 = vmcb_read64(SVM_GUEST_CR3);
 
@@ -525,8 +529,6 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
 
   BX_CPU_THIS_PTR dr6.set32(guest.dr6);
   BX_CPU_THIS_PTR dr7.set32(guest.dr7 | 0x400);
-
-  TLB_flush(); // CR0/CR4 updated
 
   for (n=0;n < 4; n++) {
     BX_CPU_THIS_PTR sregs[n] = guest.sregs[n];

@@ -1535,10 +1535,6 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   BX_CPU_THIS_PTR cr4.set32((Bit32u) guest.cr4);
   BX_CPU_THIS_PTR cr3 = guest.cr3;
 
-  // flush TLB is always needed to invalidate possible
-  // APIC ACCESS PAGE caching by host
-  TLB_flush();
-
 #if BX_SUPPORT_VMX >= 2
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_EPT_ENABLE) {
     // load PDPTR only in PAE legacy mode
@@ -1925,8 +1921,6 @@ void BX_CPU_C::VMexitLoadHostState(void)
   BX_CPU_THIS_PTR cr0.set32((Bit32u) host_state->cr0);
   BX_CPU_THIS_PTR cr4.set32((Bit32u) host_state->cr4);
   BX_CPU_THIS_PTR cr3 = host_state->cr3;
-
-  TLB_flush(); // CR0/CR4 updated
 
   if (! x86_64_host && BX_CPU_THIS_PTR cr4.get_PAE()) {
     if (! CheckPDPTR(host_state->cr3)) {
