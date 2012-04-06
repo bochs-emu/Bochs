@@ -237,7 +237,7 @@ bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
   return entry;
 }
 
-#define BX_REPEAT_TIME_UPDATE_INTERVAL 15
+#define BX_REPEAT_TIME_UPDATE_INTERVAL (BX_MAX_TRACE_LENGTH-1)
 
 void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxRepIterationPtr_tR execute)
 {

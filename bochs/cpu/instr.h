@@ -32,8 +32,8 @@ typedef void BX_INSF_TYPE;
 
 #define BX_SYNC_TIME_IF_SINGLE_PROCESSOR(allowed_delta) {                     \
   if (BX_SMP_PROCESSORS == 1) {                                               \
-    Bit32s delta = BX_CPU_THIS_PTR icount - BX_CPU_THIS_PTR icount_last_sync; \
-    if (delta > allowed_delta) {                                              \
+    Bit32u delta = BX_CPU_THIS_PTR icount - BX_CPU_THIS_PTR icount_last_sync; \
+    if (delta >= allowed_delta) {                                             \
       BX_CPU_THIS_PTR icount_last_sync = BX_CPU_THIS_PTR icount;              \
       BX_TICKN(delta);                                                        \
     }                                                                         \
