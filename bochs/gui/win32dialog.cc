@@ -398,7 +398,7 @@ void ApplyLogOptions(HWND hDlg, BOOL advanced)
     for (level=0; level<N_LOGLEV; level++) {
       idx = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETCURSEL, 0, 0);
       value = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETITEMDATA, idx, 0);
-      SIM->set_log_action (mod, level, value);
+      SIM->set_log_action(mod, level, value);
     }
     EnableWindow(GetDlgItem(hDlg, IDDEVLIST), TRUE);
   } else {
@@ -425,6 +425,7 @@ static BOOL CALLBACK LogOptDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
   switch (msg) {
     case WM_INITDIALOG:
       advanced = (BOOL)lParam;
+      SIM->apply_log_actions_by_device(); // settings from bochsrc
       InitLogOptionsDialog(hDlg, advanced);
       changed = FALSE;
       EnableWindow(GetDlgItem(hDlg, IDAPPLY), FALSE);

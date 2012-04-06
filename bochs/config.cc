@@ -1984,7 +1984,7 @@ static Bit32s parse_log_options(const char *context, int num_params, char *param
         if (mparam != NULL) {
           mparam->set(action);
         } else {
-          mparam = new bx_param_num_c(base, module, "", "", 0, BX_MAX_BIT32U, action);
+          mparam = new bx_param_num_c(base, module, "", "", -1, BX_MAX_BIT32U, action);
           if (mparam == NULL) {
             PARSE_ERR(("%s: %s: failed to add log module.", context, params[0]));
           }

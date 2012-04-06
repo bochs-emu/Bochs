@@ -118,6 +118,7 @@ int  bx_parse_cmdline(int arg, int argc, char *argv[]);
 int  bx_read_configuration(const char *rcfile);
 int  bx_write_configuration(const char *rcfile, int overwrite);
 void bx_reset_options(void);
+void bx_set_log_actions_by_device(bx_bool panic_flag);
 // special config parameter and options functions for plugins
 void bx_init_std_nic_options(const char *name, bx_list_c *menu);
 void bx_init_usb_options(const char *usb_name, const char *pname, int maxports);

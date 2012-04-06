@@ -1044,9 +1044,9 @@ void bx_sr_after_restore_state(void)
   DEV_after_restore_state();
 }
 
-void bx_set_log_action_by_device()
+void bx_set_log_actions_by_device(bx_bool panic_flag)
 {
-  int id, l, m;
+  int id, l, m, val;
   bx_list_c *loglev, *level;
   bx_param_num_c *action;
 
@@ -1056,10 +1056,15 @@ void bx_set_log_action_by_device()
     for (m = 0; m < level->get_size(); m++) {
       action = (bx_param_num_c*) level->get(m);
       id = SIM->get_logfn_id(action->get_name());
+      val = action->get();
       if (id < 0) {
-        BX_PANIC(("unknown log function module '%s'", action->get_name()));
-      } else {
-        SIM->set_log_action(id, l, action->get());
+        if (panic_flag) {
+          BX_PANIC(("unknown log function module '%s'", action->get_name()));
+        }
+      } else if (val >= 0) {
+        SIM->set_log_action(id, l, val);
+        // mark as 'done'
+        action->set(-1);
       }
     }
   }
@@ -1272,7 +1277,7 @@ void bx_init_hardware()
       SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(0);
     }
   } else {
-    bx_set_log_action_by_device();
+    bx_set_log_actions_by_device(1);
   }
 
   // will enable A20 line and reset CPU and devices
