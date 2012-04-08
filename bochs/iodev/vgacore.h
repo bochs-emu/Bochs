@@ -209,6 +209,8 @@ protected:
     bx_bool y_doublescan;
     // h/v retrace timing
     Bit32u htotal_usec;
+    Bit32u hbstart_usec;
+    Bit32u hbend_usec;
     Bit32u vtotal_usec;
     Bit32u vblank_usec;
     Bit32u vrstart_usec;

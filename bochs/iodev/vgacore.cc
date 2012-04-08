@@ -427,7 +427,7 @@ void bx_vgacore_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piW
 void bx_vgacore_c::calculate_retrace_timing()
 {
   Bit32u dot_clock[4] = {25175000, 28322000, 25175000, 25175000};
-  Bit32u htotal, clock, cwidth, vtotal, vrstart, vrend, hfreq, vfreq;
+  Bit32u htotal, hbstart, hbend, clock, cwidth, vtotal, vrstart, vrend, hfreq, vfreq;
 
   htotal = BX_VGA_THIS s.CRTC.reg[0] + 5;
   htotal <<= BX_VGA_THIS s.x_dotclockdiv2;
@@ -435,6 +435,11 @@ void bx_vgacore_c::calculate_retrace_timing()
   clock = dot_clock[BX_VGA_THIS s.misc_output.clock_select];
   hfreq = clock / (htotal * cwidth);
   BX_VGA_THIS s.htotal_usec = 1000000 / hfreq;
+  hbstart = BX_VGA_THIS s.CRTC.reg[2];
+  BX_VGA_THIS s.hbstart_usec = (1000000 * hbstart * cwidth) / clock;
+  hbend = (BX_VGA_THIS s.CRTC.reg[3] & 0x1f) + ((BX_VGA_THIS s.CRTC.reg[5] & 0x80) >> 2);
+  hbend = hbstart + ((hbend - hbstart) & 0x3f);
+  BX_VGA_THIS s.hbend_usec = (1000000 * hbend * cwidth) / clock;
   vtotal = BX_VGA_THIS s.CRTC.reg[6] + ((BX_VGA_THIS s.CRTC.reg[7] & 0x01) << 8) +
            ((BX_VGA_THIS s.CRTC.reg[7] & 0x20) << 4) + 2;
   vrstart = BX_VGA_THIS s.CRTC.reg[16] + ((BX_VGA_THIS s.CRTC.reg[7] & 0x04) << 6) +
@@ -512,7 +517,8 @@ Bit32u bx_vgacore_c::read(Bit32u address, unsigned io_len)
         retval |= 0x01;
       } else {
         line_usec = display_usec % BX_VGA_THIS s.htotal_usec;
-        if (line_usec >= (BX_VGA_THIS s.htotal_usec - 2)) {
+        if ((line_usec >= BX_VGA_THIS s.hbstart_usec) &&
+            (line_usec <= BX_VGA_THIS s.hbend_usec)) {
           retval |= 0x01;
         }
       }
@@ -1201,6 +1207,8 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool 
         switch (BX_VGA_THIS s.CRTC.address) {
           case 0x00:
           case 0x02:
+          case 0x03:
+          case 0x05:
           case 0x06:
           case 0x10:
             calculate_retrace_timing();
