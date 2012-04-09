@@ -218,11 +218,13 @@ bx_sb16_c::bx_sb16_c(void)
   mpu401.timer_handle = BX_NULL_TIMER_HANDLE;
   dsp.timer_handle = BX_NULL_TIMER_HANDLE;
   opl.timer_handle = BX_NULL_TIMER_HANDLE;
+  soundmod = NULL;
   midimode = 0;
   midifile = NULL;
   wavemode = 0;
   wavefile = NULL;
   loglevel = 0;
+  logfile = NULL;
 }
 
 bx_sb16_c::~bx_sb16_c(void)

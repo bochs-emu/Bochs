@@ -171,6 +171,7 @@ bx_es1370_c::bx_es1370_c()
   memset(&s, 0, sizeof(bx_es1370_t));
   s.dac1_timer_index = BX_NULL_TIMER_HANDLE;
   s.dac2_timer_index = BX_NULL_TIMER_HANDLE;
+  soundmod = NULL;
 }
 
 bx_es1370_c::~bx_es1370_c()
