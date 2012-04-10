@@ -37,7 +37,8 @@ Changes after 2.5.1 release:
       - vga (Bochs VBE and PCI VGA)
       - cirrus (CL-GD 5430 ISA / CL-GD 5446 PCI)
     - Added VGA graphics blinking support
-    - More accurate vertical retrace emulation (based on the DOSBox implementation)
+    - More accurate vertical and horizontal retrace emulation
+      (based on the DOSBox implementation)
 
 - ROM BIOS
   - improved PCI boot ROM support (for VGA and other devices)
@@ -62,11 +63,11 @@ Changes after 2.5.1 release:
 
 - SF patches applied
   [3505209] Fixed combo box size by Konrad Grochowski
-  [3502052] Added refresh of debugger gui when stepping
   [2864391] Gui debugger default regs by Thomas Nilsen
   [3486555] Fix critical stack leak in Win32 GUI by Carlo Bramini
 
 - these S.F. bugs were closed/fixed
+  [3516029] stepping not working in debugger GUI in case of smp vm
   [3510403] closing config dialog box closes entire simulator
   [3459998] Bochs cannot be compiled outside the source tree
   [2905969] can't use --enable-gdb-stub on vs2008
