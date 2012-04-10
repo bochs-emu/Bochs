@@ -1490,7 +1490,6 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                     SendMessage (hCPUt[newCPU],WM_SETTEXT,(WPARAM) 0 ,(LPARAM) tmpcb);
                     CurrentCPU = newCPU;
                     BottomAsmLA = ~0;       // force an ASM autoload, to repaint
-                    PrevPtime = 0;          // force a full update
                     if (AtBreak != FALSE)   // if at a break, pretend it just happened
                         OnBreak();          // refresh the ASM and Register windows
                 }

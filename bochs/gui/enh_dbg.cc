@@ -81,8 +81,6 @@ Bit64u BottomAsmLA;         // beginning and end addrs on ASM window
 Bit64u TopAsmLA;
 
 Bit32u PrevStepNSize = 50;  // cpu_loop control variables
-Bit64u PrevPtime = 9;       // any number other than 0
-Bit64u NewPtime;            // used to test whether sim has "updated"
 unsigned TotCPUs;           // # of CPUs in a multi-CPU simulation
 unsigned CpuSupportSSE = 0; // cpu supports SSE
 unsigned CurrentCPU;        // cpu that is being displayed
@@ -457,9 +455,9 @@ void UpdateStatus()
             switch (CpuMode) {
                 case BX_MODE_IA32_REAL:
                     if (In32Mode == FALSE)
-                        strcpy (mode, "CPU: Real Mode (16)");
+                        strcpy (mode, "CPU: Real Mode 16");
                     else
-                        strcpy (mode, "CPU: Real Mode (32)");
+                        strcpy (mode, "CPU: Real Mode 32");
                     break;
                 case BX_MODE_IA32_V8086:
                     strcpy (mode, "CPU: V8086 Mode");
@@ -467,15 +465,15 @@ void UpdateStatus()
                 case BX_MODE_IA32_PROTECTED:
                     if (In32Mode == FALSE) {
                         if (InPaging != 0)
-                            strcpy (mode, "CPU: PMode (16) (PG)");
+                            strcpy (mode, "CPU: Protected Mode 16 (PG)");
                         else
-                            strcpy (mode, "CPU: PMode (16)");
+                            strcpy (mode, "CPU: Protected Mode 16");
                     }
                     else {
                         if (InPaging != 0)
-                            strcpy (mode, "CPU: PMode (32) (PG)");
+                            strcpy (mode, "CPU: Protected Mode 32 (PG)");
                         else
-                            strcpy (mode, "CPU: PMode (32)");
+                            strcpy (mode, "CPU: Protected Mode 32");
                     }
                     break;
                 case BX_MODE_LONG_COMPAT:
@@ -2173,17 +2171,11 @@ void OnBreak()
     int i = EFER_Rnum + 1;
     // check if Ptime has changed
     TakeInputFocus();
-    NewPtime = bx_pc_system.time_ticks();
-    if (PrevPtime == NewPtime)      // if not, nothing really changed
-    {
-        UpdateStatus();     // Updates if there really was a status change, at least
-        return;
-    }
+
     // display the new ptime on the status bar
     char time_buf[20];
-    sprintf (time_buf,"t= " FMT_LL "d", NewPtime);
+    sprintf (time_buf,"t= " FMT_LL "d", bx_pc_system.time_ticks());
     SetStatusText (2, time_buf);
-    PrevPtime = NewPtime;
 
     // remember register values from before the last run
     while (--i >= 0)
@@ -3088,12 +3080,10 @@ void ActivateMenuItem (int cmd)
                 StatusChange = TRUE;
                 OnBreak();
             }
-            ActivateMenuItem(CMD_RFRSH);
             break;
 
         case CMD_STEPN: // step N
             doStepN();
-            ActivateMenuItem(CMD_RFRSH);
             break;
 
         case CMD_BREAK: // break/stop the sim
