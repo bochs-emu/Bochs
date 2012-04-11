@@ -556,7 +556,7 @@ void bx_e1000_c::reset(unsigned type)
 void bx_e1000_c::register_state(void)
 {
   unsigned i;
-  char pname[4];
+  char pname[5];
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "e1000", "E1000 State");
   new bx_shadow_data_c(list, "mac_reg", (Bit8u*)BX_E1000_THIS s.mac_reg, 0x20000);
