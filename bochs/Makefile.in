@@ -420,6 +420,11 @@ dl_docbook::
 install_docbook: build_docbook
 	cd doc/docbook; make install
 
+clean_docbook::
+	cd doc/docbook @COMMAND_SEPARATOR@
+	$(MAKE) clean
+	@CD_UP_TWO@
+
 install_man::
 	-mkdir -p $(DESTDIR)$(man1dir)
 	-mkdir -p $(DESTDIR)$(man5dir)
@@ -507,7 +512,7 @@ local-dist-clean: clean
 	@RMCOMMAND@ libtool
 	@RMCOMMAND@ ltdlconf.h
 
-all-clean: clean
+all-clean: clean @CLEAN_DOCBOOK_VAR@
 	cd iodev @COMMAND_SEPARATOR@
 	$(MAKE) clean
 	@CD_UP_ONE@
@@ -547,9 +552,6 @@ all-clean: clean
 	cd fpu @COMMAND_SEPARATOR@
 	$(MAKE) clean
 	@CD_UP_ONE@
-	cd doc/docbook @COMMAND_SEPARATOR@
-	$(MAKE) clean
-	@CD_UP_TWO@
 	cd host/linux/pcidev @COMMAND_SEPARATOR@
 	$(MAKE) clean
 	@CD_UP_THREE@
