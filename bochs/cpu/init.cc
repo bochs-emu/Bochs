@@ -643,7 +643,9 @@ void BX_CPU_C::register_state(void)
 
 #if BX_DEBUGGER
   bx_list_c *tlb = new bx_list_c(cpu, "TLB");
+#if BX_CPU_LEVEL >= 5
   BXRS_PARAM_BOOL(tlb, split_large, TLB.split_large);
+#endif
   for (n=0; n<BX_TLB_SIZE; n++) {
     sprintf(name, "entry%d", n);
     bx_list_c *tlb_entry = new bx_list_c(tlb, name);
