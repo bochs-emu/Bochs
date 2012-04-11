@@ -177,9 +177,6 @@ void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 /* memory access */
 #define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, rw)
 
-/* memory access */
-#define BX_INSTR_MEM_DATA_ACCESS(cpu_id, seg, offset, len, rw)
-
 /* called from memory object */
 #define BX_INSTR_PHY_WRITE(cpu_id, addr, len)
 #define BX_INSTR_PHY_READ(cpu_id, addr, len)
