@@ -31,7 +31,6 @@ BX_CPU_C::write_virtual_byte_32(unsigned s, Bit32u offset, Bit8u data)
 {
   Bit32u laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 1, BX_WRITE);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -75,7 +74,6 @@ BX_CPU_C::write_virtual_word_32(unsigned s, Bit32u offset, Bit16u data)
 {
   Bit32u laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 2, BX_WRITE);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -133,7 +131,6 @@ BX_CPU_C::write_virtual_dword_32(unsigned s, Bit32u offset, Bit32u data)
 {
   Bit32u laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 4, BX_WRITE);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -191,7 +188,6 @@ BX_CPU_C::write_virtual_qword_32(unsigned s, Bit32u offset, Bit64u data)
 {
   Bit32u laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 8, BX_WRITE);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -251,7 +247,6 @@ BX_CPU_C::write_virtual_dqword_32(unsigned s, Bit32u offset, const BxPackedXmmRe
 {
   Bit32u laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 16, BX_WRITE);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -296,7 +291,6 @@ accessOK:
 BX_CPU_C::write_virtual_dqword_aligned_32(unsigned s, Bit32u offset, const BxPackedXmmRegister *data)
 {
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 16, BX_WRITE);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -352,7 +346,6 @@ void BX_CPU_C::write_virtual_dword_vector_32(unsigned s, Bit32u offset, unsigned
   Bit32u laddr;
   unsigned len = elements << 2;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, len, BX_WRITE);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -401,7 +394,6 @@ void BX_CPU_C::write_virtual_dword_vector_aligned_32(unsigned s, Bit32u offset, 
 
   unsigned len = elements << 2;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, len, BX_WRITE);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -460,7 +452,6 @@ BX_CPU_C::read_virtual_byte_32(unsigned s, Bit32u offset)
   Bit32u laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   Bit8u data;
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 1, BX_READ);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -504,7 +495,6 @@ BX_CPU_C::read_virtual_word_32(unsigned s, Bit32u offset)
   Bit32u laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   Bit16u data;
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 2, BX_READ);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -561,7 +551,6 @@ BX_CPU_C::read_virtual_dword_32(unsigned s, Bit32u offset)
   Bit32u laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   Bit32u data;
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 4, BX_READ);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -618,7 +607,6 @@ BX_CPU_C::read_virtual_qword_32(unsigned s, Bit32u offset)
   Bit32u laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   Bit64u data;
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 8, BX_READ);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -676,7 +664,6 @@ BX_CPU_C::read_virtual_dqword_32(unsigned s, Bit32u offset, BxPackedXmmRegister 
 {
   Bit32u laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 16, BX_READ);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -718,7 +705,6 @@ accessOK:
 BX_CPU_C::read_virtual_dqword_aligned_32(unsigned s, Bit32u offset, BxPackedXmmRegister *data)
 {
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 16, BX_READ);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -772,7 +758,6 @@ void BX_CPU_C::read_virtual_dword_vector_32(unsigned s, Bit32u offset, unsigned 
   Bit32u laddr;
   unsigned len = elements << 2;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, len, BX_READ);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -818,7 +803,6 @@ void BX_CPU_C::read_virtual_dword_vector_aligned_32(unsigned s, Bit32u offset, u
 
   unsigned len = elements << 2;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, len, BX_READ);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -880,7 +864,6 @@ BX_CPU_C::read_RMW_virtual_byte_32(unsigned s, Bit32u offset)
   Bit32u laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   Bit8u data;
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 1, BX_RW);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -927,7 +910,6 @@ BX_CPU_C::read_RMW_virtual_word_32(unsigned s, Bit32u offset)
   Bit32u laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   Bit16u data;
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 2, BX_RW);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -988,7 +970,6 @@ BX_CPU_C::read_RMW_virtual_dword_32(unsigned s, Bit32u offset)
   Bit32u laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   Bit32u data;
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 4, BX_RW);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -1049,7 +1030,6 @@ BX_CPU_C::read_RMW_virtual_qword_32(unsigned s, Bit32u offset)
   Bit32u laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   Bit64u data;
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 8, BX_RW);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 

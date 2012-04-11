@@ -54,7 +54,7 @@ public:
   struct {
     bx_address laddr;     // linear address
     bx_phy_address paddr; // physical address
-    unsigned op;          // BX_READ, BX_WRITE or BX_RW
+    unsigned rw;          // BX_READ, BX_WRITE or BX_RW
     unsigned size;        // 1 .. 32
   } data_access[MAX_DATA_ACCESSES];
 
@@ -87,7 +87,7 @@ public:
   void bx_instr_exception(unsigned vector, unsigned error_code);
   void bx_instr_hwinterrupt(unsigned vector, Bit16u cs, bx_address eip);
 
-  void bx_instr_mem_data_access(unsigned seg, bx_address offset, unsigned len, unsigned rw);
+  void bx_instr_lin_access(bx_address lin, bx_phy_adress phy, unsigned len, unsigned rw);
 
 private:
   void branch_taken(bx_address new_eip);
@@ -142,10 +142,8 @@ extern bxInstrumentation *icpu;
 #define BX_INSTR_REPEAT_ITERATION(cpu_id, i)
 
 /* memory access */
-#define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, rw)
-
-#define BX_INSTR_MEM_DATA_ACCESS(cpu_id, seg, offset, len, rw) \
-                    icpu[cpu_id].bx_instr_mem_data_access(seg, offset, len, rw)
+#define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, rw) \
+                    icpu[cpu_id].bx_instr_lin_access(lin, phy, len, rw)
 
 /* called from memory object */
 #define BX_INSTR_PHY_WRITE(cpu_id, addr, len)
@@ -203,9 +201,6 @@ extern bxInstrumentation *icpu;
 
 /* memory access */
 #define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, rw)
-
-/* memory access */
-#define BX_INSTR_MEM_DATA_ACCESS(cpu_id, seg, offset, len, rw)
 
 /* called from memory object */
 #define BX_INSTR_PHY_WRITE(cpu_id, addr, len)

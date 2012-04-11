@@ -25,6 +25,7 @@ Changes after 2.5.1 release:
   - Moved networking, sound and USB devices to subdirectories in iodev.
   - Moved MWAIT_IS_NOP .bochsrc option from CPUID to CPU so it can be set
     even if cpu was configured using pre-defined CPUDB profile.
+  - pcidev: enable support for Linux kernel 3.x (Debian patch by Guillem Jover)
 
 - I/O Devices
   - Networking
@@ -67,6 +68,7 @@ Changes after 2.5.1 release:
   [3486555] Fix critical stack leak in Win32 GUI by Carlo Bramini
 
 - these S.F. bugs were closed/fixed
+  [3516859] bug in svn e1000 module
   [3516029] stepping not working in debugger GUI in case of smp vm
   [3510403] closing config dialog box closes entire simulator
   [3459998] Bochs cannot be compiled outside the source tree

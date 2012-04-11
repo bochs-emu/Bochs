@@ -48,7 +48,7 @@ static struct instruction_t {
   struct {
     bx_address laddr;     // linear address
     bx_phy_address paddr; // physical address
-    unsigned op;          // BX_READ, BX_WRITE or BX_RW
+    unsigned rw;          // BX_READ, BX_WRITE or BX_RW
     unsigned size;        // 1 .. 32
   } data_access[MAX_DATA_ACCESSES];
   bx_bool is_branch;
@@ -106,7 +106,7 @@ void bx_print_instruction(unsigned cpu, const instruction_t *i)
       fprintf(stderr, "MEM ACCESS[%u]: 0x" FMT_ADDRX " (linear) 0x" FMT_PHY_ADDRX " (physical) %s SIZE: %d\n", n,
                     i->data_access[n].laddr,
                     i->data_access[n].paddr,
-                    i->data_access[n].op == BX_READ ? "RD":"WR",
+                    i->data_access[n].rw == BX_READ ? "RD":"WR",
                     i->data_access[n].size);
     }
     fprintf(stderr, "\n");
@@ -202,29 +202,18 @@ void bx_instr_hwinterrupt(unsigned cpu, unsigned vector, Bit16u cs, bx_address e
   }
 }
 
-void bx_instr_mem_data_access(unsigned cpu, unsigned seg, bx_address offset, unsigned len, unsigned rw)
+void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsigned len, unsigned rw)
 {
-  unsigned index;
-  bx_phy_address phy;
-
   if(!active || !instruction[cpu].ready) return;
 
-  if (instruction[cpu].num_data_accesses >= MAX_DATA_ACCESSES)
-  {
-    return;
+  unsigned index = instruction[cpu].num_data_accesses;
+
+  if (index < MAX_DATA_ACCESSES) {
+    instruction[cpu].data_access[index].laddr = lin;
+    instruction[cpu].data_access[index].paddr = phy;
+    instruction[cpu].data_access[index].rw    = rw;
+    instruction[cpu].data_access[index].size  = len;
+    instruction[cpu].num_data_accesses++;
+    index++;
   }
-
-  bx_address lin = BX_CPU(cpu)->get_laddr(seg, offset);
-  bx_bool page_valid = BX_CPU(cpu)->dbg_xlate_linear2phy(lin, &phy);
-
-  // If linear translation doesn't exist, a paging exception will occur.
-  // Invalidate physical address data for now.
-  if (!page_valid) phy = (bx_phy_address) (-1);
-
-  index = instruction[cpu].num_data_accesses;
-  instruction[cpu].data_access[index].laddr = lin;
-  instruction[cpu].data_access[index].paddr = phy;
-  instruction[cpu].data_access[index].op    = rw;
-  instruction[cpu].data_access[index].size  = len;
-  instruction[cpu].num_data_accesses++;
 }

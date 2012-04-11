@@ -64,7 +64,6 @@ void bx_instr_inp(Bit16u addr, unsigned len);
 void bx_instr_inp2(Bit16u addr, unsigned len, unsigned val);
 void bx_instr_outp(Bit16u addr, unsigned len, unsigned val);
 
-void bx_instr_mem_data_access(unsigned cpu, unsigned seg, bx_address offset, unsigned len, unsigned rw);
 void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_address phy, unsigned len, unsigned rw);
 
 void bx_instr_phy_write(unsigned cpu, bx_address addr, unsigned len);
@@ -120,9 +119,6 @@ void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 
 /* memory access */
 #define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, rw)  bx_instr_lin_access(cpu_id, lin, phy, len, rw)
-
-/* memory access */
-#define BX_INSTR_MEM_DATA_ACCESS(cpu_id, seg, offset, len, rw) bx_instr_mem_data_access(cpu_id, seg, offset, len, rw)
 
 /* called from memory object */
 #define BX_INSTR_PHY_WRITE(cpu_id, addr, len) bx_instr_phy_write(cpu_id, addr, len)

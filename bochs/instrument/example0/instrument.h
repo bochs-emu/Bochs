@@ -46,7 +46,7 @@ void bx_instr_interrupt(unsigned cpu, unsigned vector);
 void bx_instr_exception(unsigned cpu, unsigned vector, unsigned error_code);
 void bx_instr_hwinterrupt(unsigned cpu, unsigned vector, Bit16u cs, bx_address eip);
 
-void bx_instr_mem_data_access(unsigned cpu, unsigned seg, bx_address offset, unsigned len, unsigned rw);
+void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsigned len, unsigned rw);
 
 /* initialization/deinitialization of instrumentalization*/
 #define BX_INSTR_INIT_ENV() bx_instr_init_env()
@@ -91,11 +91,8 @@ void bx_instr_mem_data_access(unsigned cpu, unsigned seg, bx_address offset, uns
 #define BX_INSTR_REPEAT_ITERATION(cpu_id, i)
 
 /* memory access */
-#define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, rw)
-
-/* memory access */
-#define BX_INSTR_MEM_DATA_ACCESS(cpu_id, seg, offset, len, rw) \
-                bx_instr_mem_data_access(cpu_id, seg, offset, len, rw)
+#define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, rw) \
+                bx_instr_lin_access(cpu_id, lin, phy, len, rw)
 
 /* called from memory object */
 #define BX_INSTR_PHY_WRITE(cpu_id, addr, len)
@@ -153,9 +150,6 @@ void bx_instr_mem_data_access(unsigned cpu, unsigned seg, bx_address offset, uns
 
 /* memory access */
 #define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, rw)
-
-/* memory access */
-#define BX_INSTR_MEM_DATA_ACCESS(cpu_id, seg, offset, len, rw)
 
 /* called from memory object */
 #define BX_INSTR_PHY_WRITE(cpu_id, addr, len)

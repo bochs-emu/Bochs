@@ -79,7 +79,7 @@ void bxInstrumentation::bx_print_instruction(void)
       fprintf(stderr, "MEM ACCESS[%u]: 0x" FMT_ADDRX " (linear) 0x" FMT_PHY_ADDRX " (physical) %s SIZE: %d\n", n,
                     data_access[n].laddr,
                     data_access[n].paddr,
-                    data_access[n].op == BX_READ ? "RD":"WR",
+                    data_access[n].rw == BX_READ ? "RD":"WR",
                     data_access[n].size);
     }
     fprintf(stderr, "\n");
@@ -172,27 +172,15 @@ void bxInstrumentation::bx_instr_hwinterrupt(unsigned vector, Bit16u cs, bx_addr
   }
 }
 
-void bxInstrumentation::bx_instr_mem_data_access(unsigned seg, bx_address offset, unsigned len, unsigned rw)
+void bxInstrumentation::bx_instr_lin_access(bx_address lin, bx_phy_adress phy, unsigned len, unsigned rw)
 {
-  bx_phy_address phy;
-
   if(!active || !ready) return;
 
-  if (num_data_accesses >= MAX_DATA_ACCESSES)
-  {
-    return;
+  if (num_data_accesses < MAX_DATA_ACCESSES) {
+    data_access[num_data_accesses].laddr = lin;
+    data_access[num_data_accesses].paddr = phy;
+    data_access[num_data_accesses].rw    = rw;
+    data_access[num_data_accesses].size  = len;
+    num_data_accesses++;
   }
-
-  bx_address lin = BX_CPU(cpu)->get_laddr(seg, offset);
-  bx_bool page_valid = BX_CPU(cpu)->dbg_xlate_linear2phy(lin, &phy);
-
-  // If linear translation doesn't exist, a paging exception will occur.
-  // Invalidate physical address data for now.
-  if (!page_valid) phy = (bx_phy_address) (-1);
-
-  data_access[num_data_accesses].laddr = lin;
-  data_access[num_data_accesses].paddr = phy;
-  data_access[num_data_accesses].op    = rw;
-  data_access[num_data_accesses].size  = len;
-  num_data_accesses++;
 }

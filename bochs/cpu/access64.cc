@@ -33,8 +33,6 @@ BX_CPU_C::write_virtual_byte_64(unsigned s, Bit64u offset, Bit8u data)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
 
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 1, BX_WRITE);
-
   Bit64u laddr = get_laddr64(s, offset);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   Bit64u lpf = LPFOf(laddr);
@@ -66,8 +64,6 @@ BX_CPU_C::write_virtual_byte_64(unsigned s, Bit64u offset, Bit8u data)
 BX_CPU_C::write_virtual_word_64(unsigned s, Bit64u offset, Bit16u data)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 2, BX_WRITE);
 
   Bit64u laddr = get_laddr64(s, offset);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
@@ -119,8 +115,6 @@ BX_CPU_C::write_virtual_dword_64(unsigned s, Bit64u offset, Bit32u data)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
 
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 4, BX_WRITE);
-
   Bit64u laddr = get_laddr64(s, offset);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
@@ -170,8 +164,6 @@ BX_CPU_C::write_virtual_dword_64(unsigned s, Bit64u offset, Bit32u data)
 BX_CPU_C::write_virtual_qword_64(unsigned s, Bit64u offset, Bit64u data)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 8, BX_WRITE);
 
   Bit64u laddr = get_laddr64(s, offset);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
@@ -223,8 +215,6 @@ BX_CPU_C::write_virtual_dqword_64(unsigned s, Bit64u offset, const BxPackedXmmRe
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
 
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 16, BX_WRITE);
-
   Bit64u laddr = get_laddr64(s, offset);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
   Bit64u lpf = LPFOf(laddr);
@@ -257,8 +247,6 @@ BX_CPU_C::write_virtual_dqword_64(unsigned s, Bit64u offset, const BxPackedXmmRe
 BX_CPU_C::write_virtual_dqword_aligned_64(unsigned s, Bit64u offset, const BxPackedXmmRegister *data)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 16, BX_WRITE);
 
   Bit64u laddr = get_laddr64(s, offset);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
@@ -302,8 +290,6 @@ void BX_CPU_C::write_virtual_dword_vector_64(unsigned s, Bit64u offset, unsigned
   unsigned len = elements << 2;
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
 
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, len, BX_WRITE);
-
   Bit64u laddr = get_laddr64(s, offset);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, len-1);
   Bit64u lpf = LPFOf(laddr);
@@ -340,8 +326,6 @@ void BX_CPU_C::write_virtual_dword_vector_aligned_64(unsigned s, Bit64u offset, 
 
   unsigned len = elements << 2;
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, len, BX_WRITE);
 
   Bit64u laddr = get_laddr64(s, offset);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
@@ -385,7 +369,6 @@ BX_CPU_C::read_virtual_byte_64(unsigned s, Bit64u offset)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
   Bit8u data;
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 1, BX_READ);
 
   Bit64u laddr = get_laddr64(s, offset);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
@@ -418,7 +401,6 @@ BX_CPU_C::read_virtual_word_64(unsigned s, Bit64u offset)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
   Bit16u data;
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 2, BX_READ);
 
   Bit64u laddr = get_laddr64(s, offset);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
@@ -469,7 +451,6 @@ BX_CPU_C::read_virtual_dword_64(unsigned s, Bit64u offset)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
   Bit32u data;
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 4, BX_READ);
 
   Bit64u laddr = get_laddr64(s, offset);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
@@ -520,7 +501,6 @@ BX_CPU_C::read_virtual_qword_64(unsigned s, Bit64u offset)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
   Bit64u data;
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 8, BX_READ);
 
   Bit64u laddr = get_laddr64(s, offset);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
@@ -570,7 +550,6 @@ BX_CPU_C::read_virtual_qword_64(unsigned s, Bit64u offset)
 BX_CPU_C::read_virtual_dqword_64(unsigned s, Bit64u offset, BxPackedXmmRegister *data)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 16, BX_READ);
 
   Bit64u laddr = get_laddr64(s, offset);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
@@ -602,7 +581,6 @@ BX_CPU_C::read_virtual_dqword_64(unsigned s, Bit64u offset, BxPackedXmmRegister 
 BX_CPU_C::read_virtual_dqword_aligned_64(unsigned s, Bit64u offset, BxPackedXmmRegister *data)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 16, BX_READ);
 
   Bit64u laddr = get_laddr64(s, offset);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
@@ -643,7 +621,6 @@ void BX_CPU_C::read_virtual_dword_vector_64(unsigned s, Bit64u offset, unsigned 
 
   unsigned len = elements << 2;
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, len, BX_READ);
 
   Bit64u laddr = get_laddr64(s, offset);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, len-1);
@@ -679,7 +656,6 @@ void BX_CPU_C::read_virtual_dword_vector_aligned_64(unsigned s, Bit64u offset, u
 
   unsigned len = elements << 2;
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, len, BX_READ);
 
   Bit64u laddr = get_laddr64(s, offset);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
@@ -726,7 +702,6 @@ BX_CPU_C::read_RMW_virtual_byte_64(unsigned s, Bit64u offset)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
   Bit8u data;
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 1, BX_RW);
 
   Bit64u laddr = get_laddr64(s, offset);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
@@ -763,7 +738,6 @@ BX_CPU_C::read_RMW_virtual_word_64(unsigned s, Bit64u offset)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
   Bit16u data;
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 2, BX_RW);
 
   Bit64u laddr = get_laddr64(s, offset);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
@@ -818,7 +792,6 @@ BX_CPU_C::read_RMW_virtual_dword_64(unsigned s, Bit64u offset)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
   Bit32u data;
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 4, BX_RW);
 
   Bit64u laddr = get_laddr64(s, offset);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
@@ -873,7 +846,6 @@ BX_CPU_C::read_RMW_virtual_qword_64(unsigned s, Bit64u offset)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
   Bit64u data;
-  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 8, BX_RW);
 
   Bit64u laddr = get_laddr64(s, offset);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
