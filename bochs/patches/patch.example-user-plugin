@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------
 Patch name: patch.example-user-plugin
 Author:     Volker Ruppert
-Date:       3 Jan 2009
+Updated:    14 Apr 2012
 Status:     Demo
 
 Detailed description:
@@ -21,7 +21,7 @@ Detailed description:
 Patch was created with:
   diff -u
 Apply patch to what version:
-  cvs checked out on 09 Feb 2009
+  svn revision 11138 (April 14, 2012)
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
@@ -30,20 +30,20 @@ Instructions:
   make
   make install
 ----------------------------------------------------------------------
-diff -urN ../bochs/configure.in ./configure.in
---- ../bochs/configure.in	2009-02-02 14:02:47.000000000 +0100
-+++ ./configure.in	2009-02-09 10:49:14.000000000 +0100
-@@ -3126,4 +3126,4 @@
- 	 build/linux/bochs-dlx \
+diff -urN ../bochs/bochs/configure.in ./configure.in
+--- ../bochs/bochs/configure.in	2012-04-11 18:53:04.078087998 +0200
++++ ./configure.in	2012-04-14 16:18:03.046503743 +0200
+@@ -2787,4 +2787,4 @@
+ 	 doc/docbook/Makefile build/linux/bochs-dlx \
  	 bxversion.h bxversion.rc build/macosx/Info.plist \
  	 build/win32/nsis/Makefile build/win32/nsis/bochs.nsi \
 -	 host/linux/pcidev/Makefile)
 +	 host/linux/pcidev/Makefile user-plugin/Makefile)
-diff -urN ../bochs/user-plugin/Makefile.in ./user-plugin/Makefile.in
---- ../bochs/user-plugin/Makefile.in	1970-01-01 01:00:00.000000000 +0100
-+++ ./user-plugin/Makefile.in	2009-02-09 10:49:14.000000000 +0100
+diff -urN ../bochs/bochs/user-plugin/Makefile.in ./user-plugin/Makefile.in
+--- ../bochs/bochs/user-plugin/Makefile.in	1970-01-01 01:00:00.000000000 +0100
++++ ./user-plugin/Makefile.in	2012-04-14 16:18:03.046503743 +0200
 @@ -0,0 +1,108 @@
-+# Copyright (C) 2009  Volker Ruppert
++# Copyright (C) 2009-2012  Volker Ruppert
 +#
 +# This library is free software; you can redistribute it and/or
 +# modify it under the terms of the GNU Lesser General Public
@@ -151,11 +151,11 @@ diff -urN ../bochs/user-plugin/Makefile.in ./user-plugin/Makefile.in
 +  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
 +  ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
 +  ../gui/keymap.h ../instrument/stubs/instrument.h testdev.h
-diff -urN ../bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
---- ../bochs/user-plugin/testdev.cc	1970-01-01 01:00:00.000000000 +0100
-+++ ./user-plugin/testdev.cc	2009-02-09 10:49:14.000000000 +0100
+diff -urN ../bochs/bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
+--- ../bochs/bochs/user-plugin/testdev.cc	1970-01-01 01:00:00.000000000 +0100
++++ ./user-plugin/testdev.cc	2012-04-14 16:30:28.849027414 +0200
 @@ -0,0 +1,118 @@
-+// Copyright (C) 2009  Volker Ruppert
++// Copyright (C) 2009-2012  Volker Ruppert
 +//
 +// This library is free software; you can redistribute it and/or
 +// modify it under the terms of the GNU Lesser General Public
@@ -178,9 +178,6 @@ diff -urN ../bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
 +// is used to know when we are exporting symbols and when we are importing.
 +#define BX_PLUGGABLE
 +
-+// Don't include other devices headers
-+#define NO_DEVICE_INCLUDES
-+
 +#include "iodev.h"
 +#include "testdev.h"
 +
@@ -188,30 +185,7 @@ diff -urN ../bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
 +
 +bx_testdev_c *theTestDevice = NULL;
 +
-+Bit32s testdev_options_parser(const char *context, int num_params, char *params[]);
-+Bit32s testdev_options_save(FILE *fp);
-+
-+int libuser_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
-+{
-+  theTestDevice = new bx_testdev_c();
-+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theTestDevice, "testdev");
-+  // add new configuration parameter for the config interface
-+  bx_param_c *root_param = SIM->get_param("user");
-+  bx_list_c *menu = new bx_list_c(root_param, "testdev", "Test Device");
-+  menu->get_options()->set(bx_list_c::SHOW_PARENT);
-+  new bx_param_num_c(menu, "test", "Test Parameter", "", 0, BX_MAX_BIT32U, 0);
-+  // register user-defined option for bochsrc and command line
-+  SIM->register_user_option("testdev", testdev_options_parser, testdev_options_save);
-+  return(0); // Success
-+}
-+
-+void libuser_LTX_plugin_fini(void)
-+{
-+  SIM->unregister_user_option("testdev");
-+  bx_list_c *menu = (bx_list_c*)SIM->get_param("user");
-+  menu->remove("testdev");
-+  delete theTestDevice;
-+}
++// builtin configuration handling functions
 +
 +Bit32s testdev_options_parser(const char *context, int num_params, char *params[])
 +{
@@ -232,6 +206,32 @@ diff -urN ../bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
 +  fprintf(fp, "testdev: test=%d\n", SIM->get_param_num("user.testdev.test")->get());
 +  return 0;
 +}
++
++// device plugin entry points
++
++int libuser_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
++{
++  theTestDevice = new bx_testdev_c();
++  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theTestDevice, "testdev");
++  // add new configuration parameter for the config interface
++  bx_param_c *root_param = SIM->get_param("user");
++  bx_list_c *menu = new bx_list_c(root_param, "testdev", "Test Device");
++  menu->set_options(bx_list_c::SHOW_PARENT);
++  new bx_param_num_c(menu, "test", "Test Parameter", "", 0, BX_MAX_BIT32U, 0);
++  // register user-defined option for bochsrc and command line
++  SIM->register_addon_option("testdev", testdev_options_parser, testdev_options_save);
++  return(0); // Success
++}
++
++void libuser_LTX_plugin_fini(void)
++{
++  SIM->unregister_addon_option("testdev");
++  bx_list_c *menu = (bx_list_c*)SIM->get_param("user");
++  menu->remove("testdev");
++  delete theTestDevice;
++}
++
++// the device object
 +
 +bx_testdev_c::bx_testdev_c(void)
 +{
@@ -256,7 +256,7 @@ diff -urN ../bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
 +
 +void bx_testdev_c::register_state(void)
 +{
-+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "testdev", "Test Device", 1);
++  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "testdev", "Test Device");
 +  BXRS_HEX_PARAM_FIELD(list, reg0, BX_USER_THIS s.reg0);
 +}
 +
@@ -273,11 +273,11 @@ diff -urN ../bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
 +
 +  BX_USER_THIS s.reg0 = value;
 +}
-diff -urN ../bochs/user-plugin/testdev.h ./user-plugin/testdev.h
---- ../bochs/user-plugin/testdev.h	1970-01-01 01:00:00.000000000 +0100
-+++ ./user-plugin/testdev.h	2009-02-09 10:49:14.000000000 +0100
+diff -urN ../bochs/bochs/user-plugin/testdev.h ./user-plugin/testdev.h
+--- ../bochs/bochs/user-plugin/testdev.h	1970-01-01 01:00:00.000000000 +0100
++++ ./user-plugin/testdev.h	2012-04-14 16:19:30.538406315 +0200
 @@ -0,0 +1,40 @@
-+// Copyright (C) 2009  Volker Ruppert
++// Copyright (C) 2009-2012  Volker Ruppert
 +//
 +// This library is free software; you can redistribute it and/or
 +// modify it under the terms of the GNU Lesser General Public
