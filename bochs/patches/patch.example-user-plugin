@@ -30,8 +30,8 @@ Instructions:
   make
   make install
 ----------------------------------------------------------------------
-diff -urN ../bochs/bochs/configure.in ./configure.in
---- ../bochs/bochs/configure.in	2012-04-11 18:53:04.078087998 +0200
+diff -urN ../bochs/configure.in ./configure.in
+--- ../bochs/configure.in	2012-04-11 18:53:04.078087998 +0200
 +++ ./configure.in	2012-04-14 16:18:03.046503743 +0200
 @@ -2787,4 +2787,4 @@
  	 doc/docbook/Makefile build/linux/bochs-dlx \
@@ -39,8 +39,8 @@ diff -urN ../bochs/bochs/configure.in ./configure.in
  	 build/win32/nsis/Makefile build/win32/nsis/bochs.nsi \
 -	 host/linux/pcidev/Makefile)
 +	 host/linux/pcidev/Makefile user-plugin/Makefile)
-diff -urN ../bochs/bochs/user-plugin/Makefile.in ./user-plugin/Makefile.in
---- ../bochs/bochs/user-plugin/Makefile.in	1970-01-01 01:00:00.000000000 +0100
+diff -urN ../bochs/user-plugin/Makefile.in ./user-plugin/Makefile.in
+--- ../bochs/user-plugin/Makefile.in	1970-01-01 01:00:00.000000000 +0100
 +++ ./user-plugin/Makefile.in	2012-04-14 16:18:03.046503743 +0200
 @@ -0,0 +1,108 @@
 +# Copyright (C) 2009-2012  Volker Ruppert
@@ -151,8 +151,8 @@ diff -urN ../bochs/bochs/user-plugin/Makefile.in ./user-plugin/Makefile.in
 +  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
 +  ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
 +  ../gui/keymap.h ../instrument/stubs/instrument.h testdev.h
-diff -urN ../bochs/bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
---- ../bochs/bochs/user-plugin/testdev.cc	1970-01-01 01:00:00.000000000 +0100
+diff -urN ../bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
+--- ../bochs/user-plugin/testdev.cc	1970-01-01 01:00:00.000000000 +0100
 +++ ./user-plugin/testdev.cc	2012-04-14 16:30:28.849027414 +0200
 @@ -0,0 +1,118 @@
 +// Copyright (C) 2009-2012  Volker Ruppert
@@ -273,8 +273,8 @@ diff -urN ../bochs/bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
 +
 +  BX_USER_THIS s.reg0 = value;
 +}
-diff -urN ../bochs/bochs/user-plugin/testdev.h ./user-plugin/testdev.h
---- ../bochs/bochs/user-plugin/testdev.h	1970-01-01 01:00:00.000000000 +0100
+diff -urN ../bochs/user-plugin/testdev.h ./user-plugin/testdev.h
+--- ../bochs/user-plugin/testdev.h	1970-01-01 01:00:00.000000000 +0100
 +++ ./user-plugin/testdev.h	2012-04-14 16:19:30.538406315 +0200
 @@ -0,0 +1,40 @@
 +// Copyright (C) 2009-2012  Volker Ruppert
