@@ -278,7 +278,7 @@ bx_bool BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
 
   switch (reg) {
     case BX_DBG_REG_EIP:
-      EIP = val;
+      RIP = BX_CPU_THIS_PTR prev_rip = val;
       invalidate_prefetch_q();
       return(1);
     case BX_DBG_REG_EFLAGS:

@@ -2676,17 +2676,15 @@ void ChangeReg()
     int i = RitemToRnum[L];
     if (i > EFER_Rnum)      // TODO: extend this to more reg -- need display names for all
         return;
-    char *d1 = RDispName[i];
 //  if (i > EFER_Rnum)
 //      *tmpcb = 0;
 //  else
         sprintf (tmpcb,"0x" FMT_LL "X", rV[i]);
-    if (AskText("Change Register Value",d1,tmpcb))
+    if (AskText("Change Register Value",RDispName[i],tmpcb))
     {
-        Bit64u val;
-        val = cvt64(tmpcb,TRUE);            // input either hex or decimal
+        Bit64u val = cvt64(tmpcb,TRUE);     // input either hex or decimal
 #if BX_SUPPORT_X86_64
-        if (i >= EAX_Rnum && i <= EBP_Rnum) // must use RAX-RBP when setting 32b registers
+        if (i >= EAX_Rnum && i <= EIP_Rnum) // must use RAX-RIP when setting 32b registers
             i -= EAX_Rnum - RAX_Rnum;
 #endif
         RegObject[CurrentCPU][i]->set(val); // the set function should be a bool, not a void
