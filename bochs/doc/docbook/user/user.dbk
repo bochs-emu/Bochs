@@ -2905,8 +2905,8 @@ the plugin and "0" will unload it (if loaded before).
 </para>
 <para>
 These plugins are currently supported: 'biosdev', 'e1000', 'es1370',
-'extfpuirq', 'gameport', 'iodebug', 'speaker', 'unmapped', 'usb_ohci',
-'usb_uhci' and 'usb_xhci'.
+'extfpuirq', 'gameport', 'iodebug', 'ne2k', 'parallel', 'pcidev', 'pcipnic',
+'serial', 'sb16', 'speaker', 'unmapped', 'usb_ohci', 'usb_uhci' and 'usb_xhci'.
 </para>
 </section>
 

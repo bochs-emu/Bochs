@@ -584,8 +584,6 @@ private:
   int timer_handle;
 
   bx_bool is_harddrv_enabled();
-  bx_bool is_serial_enabled();
-  bx_bool is_parallel_enabled();
   bx_bool is_network_enabled();
   bx_bool is_sound_enabled();
   bx_bool is_usb_enabled();

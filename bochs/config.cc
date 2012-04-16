@@ -1397,66 +1397,12 @@ void bx_init_options()
   // parallel ports
   bx_list_c *parallel = new bx_list_c(ports, "parallel", "Parallel Port Options");
   parallel->set_options(parallel->SHOW_PARENT);
-  for (i=0; i<BX_N_PARALLEL_PORTS; i++) {
-    sprintf(name, "%d", i+1);
-    sprintf(label, "Parallel Port %d", i+1);
-    menu = new bx_list_c(parallel, name, label);
-    menu->set_options(menu->SERIES_ASK);
-    sprintf(label, "Enable parallel port #%d", i+1);
-    sprintf(descr, "Controls whether parallel port #%d is installed or not", i+1);
-    enabled = new bx_param_bool_c(menu, "enabled", label, descr,
-      (i==0)? 1 : 0);  // only enable #1 by default
-    sprintf(label, "Parallel port #%d output file", i+1);
-    sprintf(descr, "Data written to parport#%d by the guest OS is written to this file", i+1);
-    path = new bx_param_filename_c(menu, "outfile", label, descr,
-      "", BX_PATHNAME_LEN);
-    path->set_extension("out");
-    deplist = new bx_list_c(NULL);
-    deplist->add(path);
-    enabled->set_dependent_list(deplist);
-  }
-
-  static const char *serial_mode_list[] = {
-    "null",
-    "file",
-    "pipe",
-    "pipe-client",
-    "pipe-server",
-    "term",
-    "raw",
-    "mouse",
-    "socket",
-    "socket-client",
-    "socket-server",
-    NULL
-  };
+  // parport options initialized in the devive plugin code
 
   // serial ports
   bx_list_c *serial = new bx_list_c(ports, "serial", "Serial Port Options");
   serial->set_options(serial->SHOW_PARENT);
-  for (i=0; i<BX_N_SERIAL_PORTS; i++) {
-    sprintf(name, "%d", i+1);
-    sprintf(label, "Serial Port %d", i+1);
-    menu = new bx_list_c(serial, name, label);
-    menu->set_options(menu->SERIES_ASK);
-    sprintf(label, "Enable serial port #%d (COM%d)", i+1, i+1);
-    sprintf(descr, "Controls whether COM%d is installed or not", i+1);
-    enabled = new bx_param_bool_c(menu, "enabled", label, descr,
-      (i==0)?1 : 0);  // only enable the first by default
-    sprintf(label, "I/O mode of the serial device for COM%d", i+1);
-    sprintf(descr, "The mode can be one these: 'null', 'file', 'pipe', 'term', 'raw', 'mouse', 'socket'");
-    mode = new bx_param_enum_c(menu, "mode", label, descr,
-      serial_mode_list, 0, 0);
-    mode->set_ask_format("Choose I/O mode of the serial device [%s] ");
-    sprintf(label, "Pathname of the serial device for COM%d", i+1);
-    sprintf(descr, "The path can be a real serial device or a pty (X/Unix only)");
-    path = new bx_param_filename_c(menu, "dev", label, descr,
-      "", BX_PATHNAME_LEN);
-    deplist = new bx_list_c(NULL);
-    deplist->add(mode);
-    deplist->add(path);
-    enabled->set_dependent_list(deplist);
-  }
+  // serial port options initialized in the devive plugin code
 
   // usb subtree
   bx_list_c *usb = new bx_list_c(ports, "usb", "USB Configuration");
@@ -2107,6 +2053,12 @@ int bx_parse_nic_params(const char *context, const char *param, bx_list_c *base)
 bx_bool is_optplugin_option(const char *param)
 {
   static const char *optplugin_list[] = {
+    "parport1",
+    "parport2",
+    "com1",
+    "com2",
+    "com3",
+    "com4",
 #if BX_SUPPORT_E1000
     "e1000",
 #endif
@@ -2150,7 +2102,6 @@ bx_bool is_optplugin_option(const char *param)
 static int parse_line_formatted(const char *context, int num_params, char *params[])
 {
   int i, slot, t;
-  Bit8u idx;
   bx_list_c *base;
 
   if (num_params < 1) return 0;
@@ -2871,54 +2822,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
     SIM->get_param_string(BXPN_SCREENMODE)->set(&params[1][5]);
 #endif
-  } else if ((!strncmp(params[0], "com", 3)) && (strlen(params[0]) == 4)) {
-    char tmpname[80];
-    idx = params[0][3];
-    if ((idx < '1') || (idx > '9')) {
-      PARSE_ERR(("%s: comX directive malformed.", context));
-    }
-    idx -= '0';
-    if (idx > BX_N_SERIAL_PORTS) {
-      PARSE_ERR(("%s: comX port number out of range.", context));
-    }
-    sprintf(tmpname, "ports.serial.%d", idx);
-    base = (bx_list_c*) SIM->get_param(tmpname);
-    for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "enabled=", 8)) {
-        SIM->get_param_bool("enabled", base)->set(atol(&params[i][8]));
-      } else if (!strncmp(params[i], "mode=", 5)) {
-        if (!SIM->get_param_enum("mode", base)->set_by_name(&params[i][5]))
-          PARSE_ERR(("%s: com%d serial port mode '%s' not available", context, idx, &params[i][5]));
-        SIM->get_param_bool("enabled", base)->set(1);
-      } else if (!strncmp(params[i], "dev=", 4)) {
-        SIM->get_param_string("dev", base)->set(&params[i][4]);
-        SIM->get_param_bool("enabled", base)->set(1);
-      } else {
-        PARSE_ERR(("%s: unknown parameter for com%d ignored.", context, idx));
-      }
-    }
-  } else if ((!strncmp(params[0], "parport", 7)) && (strlen(params[0]) == 8)) {
-    char tmpname[80];
-    idx = params[0][7];
-    if ((idx < '1') || (idx > '9')) {
-      PARSE_ERR(("%s: parportX directive malformed.", context));
-    }
-    idx -= '0';
-    if (idx > BX_N_PARALLEL_PORTS) {
-      PARSE_ERR(("%s: parportX port number out of range.", context));
-    }
-    sprintf(tmpname, "ports.parallel.%d", idx);
-    base = (bx_list_c*) SIM->get_param(tmpname);
-    for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "enabled=", 8)) {
-        SIM->get_param_bool("enabled", base)->set(atol(&params[i][8]));
-      } else if (!strncmp(params[i], "file=", 5)) {
-        SIM->get_param_string("outfile", base)->set(&params[i][5]);
-        SIM->get_param_bool("enabled", base)->set(1);
-      } else {
-        BX_ERROR(("%s: unknown parameter for parport%d ignored.", context, idx));
-      }
-    }
   } else if ((!strcmp(params[0], "pci")) ||
              (!strcmp(params[0], "i440fxsupport"))) {
     // new option 'pci' for future extensions
@@ -3320,27 +3223,6 @@ int bx_write_atadevice_options(FILE *fp, Bit8u channel, Bit8u drive, bx_list_c *
   return 0;
 }
 
-int bx_write_parport_options(FILE *fp, bx_list_c *base, int n)
-{
-  fprintf(fp, "parport%d: enabled=%d", n, SIM->get_param_bool("enabled", base)->get());
-  if (SIM->get_param_bool("enabled", base)->get()) {
-    fprintf(fp, ", file=\"%s\"", SIM->get_param_string("outfile", base)->getptr());
-  }
-  fprintf(fp, "\n");
-  return 0;
-}
-
-int bx_write_serial_options(FILE *fp, bx_list_c *base, int n)
-{
-  fprintf(fp, "com%d: enabled=%d", n, SIM->get_param_bool("enabled", base)->get());
-  if (SIM->get_param_bool("enabled", base)->get()) {
-    fprintf(fp, ", mode=%s", SIM->get_param_enum("mode", base)->get_selected());
-    fprintf(fp, ", dev=\"%s\"", SIM->get_param_string("dev", base)->getptr());
-  }
-  fprintf(fp, "\n");
-  return 0;
-}
-
 int bx_write_usb_options(FILE *fp, int maxports, bx_list_c *base)
 {
   int i;
@@ -3588,18 +3470,6 @@ int bx_write_configuration(const char *rc, int overwrite)
     if (strlen(strptr) > 0)
       fprintf(fp, "optramimage%d: file=\"%s\", address=0x%05x\n", i+1, strptr,
               (unsigned int)SIM->get_param_num(tmpaddr)->get());
-  }
-  // parallel ports
-  for (i=0; i<BX_N_PARALLEL_PORTS; i++) {
-    sprintf(tmpdev, "ports.parallel.%d", i+1);
-    base = (bx_list_c*) SIM->get_param(tmpdev);
-    bx_write_parport_options(fp, base, i+1);
-  }
-  // serial ports
-  for (i=0; i<BX_N_SERIAL_PORTS; i++) {
-    sprintf(tmpdev, "ports.serial.%d", i+1);
-    base = (bx_list_c*) SIM->get_param(tmpdev);
-    bx_write_serial_options(fp, base, i+1);
   }
   // pci
   fprintf(fp, "pci: enabled=%d",

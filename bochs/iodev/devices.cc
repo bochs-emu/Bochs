@@ -217,10 +217,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     }
 #endif
   }
-  if (is_serial_enabled())
-    PLUG_load_plugin(serial, PLUGTYPE_OPTIONAL);
-  if (is_parallel_enabled())
-    PLUG_load_plugin(parallel, PLUGTYPE_OPTIONAL);
 
   // system hardware
   register_io_read_handler(this, &read_handler, 0x0092,
@@ -878,30 +874,6 @@ bx_bool bx_devices_c::is_harddrv_enabled(void)
 
   for (int i=0; i<BX_MAX_ATA_CHANNEL; i++) {
     sprintf(pname, "ata.%d.resources.enabled", i);
-    if (SIM->get_param_bool(pname)->get())
-      return 1;
-  }
-  return 0;
-}
-
-bx_bool bx_devices_c::is_serial_enabled(void)
-{
-  char pname[24];
-
-  for (int i=0; i<BX_N_SERIAL_PORTS; i++) {
-    sprintf(pname, "ports.serial.%d.enabled", i+1);
-    if (SIM->get_param_bool(pname)->get())
-      return 1;
-  }
-  return 0;
-}
-
-bx_bool bx_devices_c::is_parallel_enabled(void)
-{
-  char pname[26];
-
-  for (int i=0; i<BX_N_PARALLEL_PORTS; i++) {
-    sprintf(pname, "ports.parallel.%d.enabled", i+1);
     if (SIM->get_param_bool(pname)->get())
       return 1;
   }

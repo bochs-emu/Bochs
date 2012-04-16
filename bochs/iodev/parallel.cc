@@ -35,17 +35,108 @@
 
 bx_parallel_c *theParallelDevice = NULL;
 
+// builtin configuration handling functions
+
+void parport_init_options(void)
+{
+  char name[4], label[80], descr[80];
+
+  bx_list_c *parallel = (bx_list_c*)SIM->get_param("ports.parallel");
+  for (int i=0; i<BX_N_PARALLEL_PORTS; i++) {
+    sprintf(name, "%d", i+1);
+    sprintf(label, "Parallel Port %d", i+1);
+    bx_list_c *menu = new bx_list_c(parallel, name, label);
+    menu->set_options(menu->SERIES_ASK);
+    sprintf(label, "Enable parallel port #%d", i+1);
+    sprintf(descr, "Controls whether parallel port #%d is installed or not", i+1);
+    bx_param_bool_c *enabled = new bx_param_bool_c(menu, "enabled", label, descr,
+      (i==0)? 1 : 0);  // only enable #1 by default
+    sprintf(label, "Parallel port #%d output file", i+1);
+    sprintf(descr, "Data written to parport#%d by the guest OS is written to this file", i+1);
+    bx_param_filename_c *path = new bx_param_filename_c(menu, "outfile", label, descr,
+      "", BX_PATHNAME_LEN);
+    path->set_extension("out");
+    bx_list_c *deplist = new bx_list_c(NULL);
+    deplist->add(path);
+    enabled->set_dependent_list(deplist);
+  }
+}
+
+Bit32s parport_options_parser(const char *context, int num_params, char *params[])
+{
+  if ((!strncmp(params[0], "parport", 7)) && (strlen(params[0]) == 8)) {
+    char tmpname[80];
+    int idx = params[0][7];
+    if ((idx < '1') || (idx > '9')) {
+      BX_PANIC(("%s: parportX directive malformed.", context));
+    }
+    idx -= '0';
+    if (idx > BX_N_PARALLEL_PORTS) {
+      BX_PANIC(("%s: parportX port number out of range.", context));
+    }
+    sprintf(tmpname, "ports.parallel.%d", idx);
+    bx_list_c *base = (bx_list_c*) SIM->get_param(tmpname);
+    for (int i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+        SIM->get_param_bool("enabled", base)->set(atol(&params[i][8]));
+      } else if (!strncmp(params[i], "file=", 5)) {
+        SIM->get_param_string("outfile", base)->set(&params[i][5]);
+        SIM->get_param_bool("enabled", base)->set(1);
+      } else {
+        BX_ERROR(("%s: unknown parameter for parport%d ignored.", context, idx));
+      }
+    }
+  } else {
+    BX_PANIC(("%s: unknown directive '%s'", context, params[0]));
+  }
+  return 0;
+}
+
+Bit32s parport_options_save(FILE *fp)
+{
+  char pname[20];
+
+  for (int i=0; i<BX_N_PARALLEL_PORTS; i++) {
+    sprintf(pname, "ports.parallel.%d", i+1);
+    bx_list_c *base = (bx_list_c*) SIM->get_param(pname);
+    fprintf(fp, "parport%d: enabled=%d", i+1, SIM->get_param_bool("enabled", base)->get());
+    if (SIM->get_param_bool("enabled", base)->get()) {
+      fprintf(fp, ", file=\"%s\"", SIM->get_param_string("outfile", base)->getptr());
+    }
+    fprintf(fp, "\n");
+  }
+  return 0;
+}
+
+// device plugin entry points
+
 int libparallel_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theParallelDevice = new bx_parallel_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theParallelDevice, BX_PLUGIN_PARALLEL);
+  // add new configuration parameters for the config interface
+  parport_init_options();
+  // register add-on options for bochsrc and command line
+  SIM->register_addon_option("parport1", parport_options_parser, parport_options_save);
+  SIM->register_addon_option("parport2", parport_options_parser, NULL);
   return(0); // Success
 }
 
 void libparallel_LTX_plugin_fini(void)
 {
+  char pnum[4];
+
+  SIM->unregister_addon_option("parport1");
+  SIM->unregister_addon_option("parport2");
+  bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.parallel");
+  for (int i=0; i<BX_N_PARALLEL_PORTS; i++) {
+    sprintf(pnum, "%d", i+1);
+    menu->remove(pnum);
+  }
   delete theParallelDevice;
 }
+
+// the device object
 
 bx_parallel_c::bx_parallel_c()
 {
@@ -70,6 +161,7 @@ void bx_parallel_c::init(void)
   Bit8u irqs[BX_PARPORT_MAXDEV] = {7, 5};
   char name[16], pname[20];
   bx_list_c *base;
+  int count = 0;
 
   BX_DEBUG(("Init $Id$"));
 
@@ -109,7 +201,14 @@ void bx_parallel_c::init(void)
           BX_PANIC(("Could not open '%s' to write parport%d output",
                     outfile, i+1));
       }
+      count++;
     }
+  }
+  // Check if the device is disabled or not configured
+  if (count == 0) {
+    BX_INFO(("parallel ports disabled"));
+    BX_UNREGISTER_DEVICE_DEVMODEL("parallel");
+    return;
   }
 }
 

@@ -54,17 +54,137 @@ typedef int SOCKET;
 
 bx_serial_c *theSerialDevice = NULL;
 
+// builtin configuration handling functions
+
+void serial_init_options(void)
+{
+  static const char *serial_mode_list[] = {
+    "null",
+    "file",
+    "pipe",
+    "pipe-client",
+    "pipe-server",
+    "term",
+    "raw",
+    "mouse",
+    "socket",
+    "socket-client",
+    "socket-server",
+    NULL
+  };
+
+  char name[4], label[80], descr[80];
+
+  bx_list_c *serial = (bx_list_c*)SIM->get_param("ports.serial");
+  for (int i=0; i<BX_N_SERIAL_PORTS; i++) {
+    sprintf(name, "%d", i+1);
+    sprintf(label, "Serial Port %d", i+1);
+    bx_list_c *menu = new bx_list_c(serial, name, label);
+    menu->set_options(menu->SERIES_ASK);
+    sprintf(label, "Enable serial port #%d (COM%d)", i+1, i+1);
+    sprintf(descr, "Controls whether COM%d is installed or not", i+1);
+    bx_param_bool_c *enabled = new bx_param_bool_c(menu, "enabled", label, descr,
+      (i==0)?1 : 0);  // only enable the first by default
+    sprintf(label, "I/O mode of the serial device for COM%d", i+1);
+    sprintf(descr, "The mode can be one these: 'null', 'file', 'pipe', 'term', 'raw', 'mouse', 'socket'");
+    bx_param_enum_c *mode = new bx_param_enum_c(menu, "mode", label, descr,
+      serial_mode_list, 0, 0);
+    mode->set_ask_format("Choose I/O mode of the serial device [%s] ");
+    sprintf(label, "Pathname of the serial device for COM%d", i+1);
+    sprintf(descr, "The path can be a real serial device or a pty (X/Unix only)");
+    bx_param_filename_c *path = new bx_param_filename_c(menu, "dev", label, descr,
+      "", BX_PATHNAME_LEN);
+    bx_list_c *deplist = new bx_list_c(NULL);
+    deplist->add(mode);
+    deplist->add(path);
+    enabled->set_dependent_list(deplist);
+  }
+}
+
+Bit32s serial_options_parser(const char *context, int num_params, char *params[])
+{
+  if ((!strncmp(params[0], "com", 3)) && (strlen(params[0]) == 4)) {
+    char tmpname[80];
+    int idx = params[0][3];
+    if ((idx < '1') || (idx > '9')) {
+      BX_PANIC(("%s: comX directive malformed.", context));
+    }
+    idx -= '0';
+    if (idx > BX_N_SERIAL_PORTS) {
+      BX_PANIC(("%s: comX port number out of range.", context));
+    }
+    sprintf(tmpname, "ports.serial.%d", idx);
+    bx_list_c *base = (bx_list_c*) SIM->get_param(tmpname);
+    for (int i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+        SIM->get_param_bool("enabled", base)->set(atol(&params[i][8]));
+      } else if (!strncmp(params[i], "mode=", 5)) {
+        if (!SIM->get_param_enum("mode", base)->set_by_name(&params[i][5]))
+          BX_PANIC(("%s: com%d serial port mode '%s' not available", context, idx, &params[i][5]));
+        SIM->get_param_bool("enabled", base)->set(1);
+      } else if (!strncmp(params[i], "dev=", 4)) {
+        SIM->get_param_string("dev", base)->set(&params[i][4]);
+        SIM->get_param_bool("enabled", base)->set(1);
+      } else {
+        BX_ERROR(("%s: unknown parameter for com%d ignored.", context, idx));
+      }
+    }
+  } else {
+    BX_PANIC(("%s: unknown directive '%s'", context, params[0]));
+  }
+  return 0;
+}
+
+Bit32s serial_options_save(FILE *fp)
+{
+  char pname[20];
+
+  for (int i=0; i<BX_N_SERIAL_PORTS; i++) {
+    sprintf(pname, "ports.serial.%d", i+1);
+    bx_list_c *base = (bx_list_c*) SIM->get_param(pname);
+    fprintf(fp, "com%d: enabled=%d", i+1, SIM->get_param_bool("enabled", base)->get());
+    if (SIM->get_param_bool("enabled", base)->get()) {
+      fprintf(fp, ", mode=%s", SIM->get_param_enum("mode", base)->get_selected());
+      fprintf(fp, ", dev=\"%s\"", SIM->get_param_string("dev", base)->getptr());
+    }
+    fprintf(fp, "\n");
+  }
+  return 0;
+}
+
+// device plugin entry points
+
 int libserial_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theSerialDevice = new bx_serial_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSerialDevice, BX_PLUGIN_SERIAL);
+  // add new configuration parameters for the config interface
+  serial_init_options();
+  // register add-on options for bochsrc and command line
+  SIM->register_addon_option("com1", serial_options_parser, serial_options_save);
+  SIM->register_addon_option("com2", serial_options_parser, NULL);
+  SIM->register_addon_option("com3", serial_options_parser, NULL);
+  SIM->register_addon_option("com4", serial_options_parser, NULL);
   return(0); // Success
 }
 
 void libserial_LTX_plugin_fini(void)
 {
+  char pnum[4];
+
+  SIM->unregister_addon_option("com1");
+  SIM->unregister_addon_option("com2");
+  SIM->unregister_addon_option("com3");
+  SIM->unregister_addon_option("com4");
   delete theSerialDevice;
+  bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.serial");
+  for (int i=0; i<BX_N_SERIAL_PORTS; i++) {
+    sprintf(pnum, "%d", i+1);
+    menu->remove(pnum);
+  }
 }
+
+// the device object
 
 bx_serial_c::bx_serial_c(void)
 {
@@ -127,7 +247,7 @@ bx_serial_c::init(void)
   Bit16u ports[BX_SERIAL_MAXDEV] = {0x03f8, 0x02f8, 0x03e8, 0x02e8};
   char name[16], pname[20];
   bx_list_c *base;
-  unsigned i;
+  unsigned i, count = 0;
 
   BX_SER_THIS detect_mouse = 0;
   BX_SER_THIS mouse_port = -1;
@@ -429,8 +549,15 @@ bx_serial_c::init(void)
         BX_SER_THIS s[i].modem_status.cts = 1;
         BX_SER_THIS s[i].modem_status.dsr = 1;
       }
+      count++;
       BX_INFO(("com%d at 0x%04x irq %d", i+1, ports[i], BX_SER_THIS s[i].IRQ));
     }
+  }
+  // Check if the device is disabled or not configured
+  if (count == 0) {
+    BX_INFO(("serial ports disabled"));
+    BX_UNREGISTER_DEVICE_DEVMODEL("serial");
+    return;
   }
   if ((BX_SER_THIS mouse_type == BX_MOUSE_TYPE_SERIAL) ||
       (BX_SER_THIS mouse_type == BX_MOUSE_TYPE_SERIAL_WHEEL) ||

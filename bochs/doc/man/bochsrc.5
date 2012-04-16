@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "8 Jan 2012" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "16 Apr 2012" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -48,7 +48,8 @@ directly with this option and some of them install a config option that is
 only available when the plugin device is loaded. The value "1" means to load
 the plugin and "0" will unload it (if loaded before).
 These plugins are currently supported: biosdev, e1000, es1370, extfpuirq,
-gameport, iodebug, speaker, unmapped, usb_ohci, usb_uhci and usb_xhci.
+gameport, iodebug, ne2k, parallel, pcidev, pcipnic, sb16, serial, speaker,
+unmapped, usb_ohci, usb_uhci and usb_xhci.
 
 Example:
   plugin_ctrl: biosdev=1, speaker=1, unmapped=1, e1000=1

@@ -845,6 +845,8 @@ static builtin_plugin_t builtin_opt_plugins[] = {
   BUILTIN_PLUGIN_ENTRY(biosdev),
   BUILTIN_PLUGIN_ENTRY(speaker),
   BUILTIN_PLUGIN_ENTRY(extfpuirq),
+  BUILTIN_PLUGIN_ENTRY(parallel),
+  BUILTIN_PLUGIN_ENTRY(serial),
 #if BX_SUPPORT_E1000
   BUILTIN_PLUGIN_ENTRY(e1000),
 #endif
