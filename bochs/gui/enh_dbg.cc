@@ -2754,6 +2754,8 @@ void SetMemLine(int L)
                 sscanf (s,"%2X", (unsigned int*)&newval);
                 if (bx_mem.dbg_set_mem( (bx_phy_address) h, 1, &newval) == FALSE)
                     err = 2;
+                else
+                    *u++ = newval;      // update DataDump array so it will refresh on the screen
                 ++h;                    // bump to the next mem address
                 while (*x == ' ')       // scan past whitespace
                     ++x;
