@@ -311,7 +311,7 @@ public:
 
 class BOCHSAPI bx_ne2k_stub_c : public bx_devmodel_c {
 public:
-  virtual void print_info(FILE *file, int page, int reg, int nodups) {}
+  virtual void print_info(int page, int reg, int nodups) {}
 };
 
 class BOCHSAPI bx_speaker_stub_c : public bx_devmodel_c {

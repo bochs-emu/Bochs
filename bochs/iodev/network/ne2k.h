@@ -207,10 +207,13 @@ public:
   virtual ~bx_ne2k_c();
   virtual void init(void);
   virtual void reset(unsigned type);
-  virtual void print_info (FILE *file, int page, int reg, int nodups);
+  virtual void print_info(int page, int reg, int nodups);
   virtual void register_state(void);
 #if BX_SUPPORT_PCI
   virtual void after_restore_state(void);
+#endif
+#if BX_DEBUGGER
+  virtual void debug_dump(void);
 #endif
 
 #if BX_SUPPORT_PCI

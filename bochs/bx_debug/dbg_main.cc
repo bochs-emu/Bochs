@@ -3343,7 +3343,7 @@ void bx_dbg_info_tss_command(void)
 void bx_dbg_info_ne2k(int page, int reg)
 {
 #if BX_SUPPORT_NE2K
-  DEV_ne2k_print_info(stderr, page, reg, 0);
+  DEV_ne2k_print_info(page, reg, 0);
 #else
   dbg_printf("NE2000 support is not compiled in\n");
 #endif

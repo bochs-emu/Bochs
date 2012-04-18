@@ -324,6 +324,11 @@ void bx_ne2k_c::init(void)
 
   // Attach to the selected ethernet module
   BX_NE2K_THIS ethdev = DEV_net_init_module(base, rx_handler, rx_status_handler, this);
+
+#if BX_DEBUGGER
+  // register device for the 'info device' command (calls debug_dump())
+  bx_dbg_register_debug_info("ne2k", this);
+#endif
 }
 
 //
@@ -1827,6 +1832,12 @@ void bx_ne2k_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 
 #if BX_DEBUGGER
 
+void bx_ne2k_c::debug_dump()
+{
+  for (int page=0; page<=2; page++)
+    BX_NE2K_THIS print_info(page, -1, 1);
+}
+
 /*
  * this implements the info ne2k commands in the debugger.
  * info ne2k - shows all registers
@@ -1843,13 +1854,13 @@ void bx_ne2k_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 #define BX_LOW_BYTE(x) (0x00ff & (x))
 #define BX_DUPLICATE(n) if (brief && num!=n) break;
 
-void bx_ne2k_c::print_info(FILE *fp, int page, int reg, int brief)
+void bx_ne2k_c::print_info(int page, int reg, int brief)
 {
   int i;
   int n = 0;
   if (page < 0) {
     for (page=0; page<=2; page++)
-      theNE2kDevice->print_info(fp, page, reg, 1);
+      theNE2kDevice->print_info(page, reg, 1);
     // tell them how to use this command
     dbg_printf("\nHow to use the info ne2k command:\n");
     dbg_printf("info ne2k - show all registers\n");
@@ -1865,7 +1876,7 @@ void bx_ne2k_c::print_info(FILE *fp, int page, int reg, int brief)
     dbg_printf("NE2K registers, page %d\n", page);
     dbg_printf("----------------------\n");
     for (reg=0; reg<=15; reg++)
-      theNE2kDevice->print_info (fp, page, reg, 1);
+      theNE2kDevice->print_info(page, reg, 1);
     dbg_printf("----------------------\n");
     return;
   }
@@ -1912,8 +1923,8 @@ void bx_ne2k_c::print_info(FILE *fp, int page, int reg, int brief)
     case 0x0006:  BX_DUPLICATE(0x0005);
       dbg_printf("NCR = Number of Collisions Register (read-only) = 0x%02x\n", BX_NE2K_THIS s.num_coll);
       dbg_printf("TBCR1,TBCR0 = Transmit Byte Count = %02x %02x\n",
-	  BX_HIGH_BYTE(BX_NE2K_THIS s.tx_bytes),
-	  BX_LOW_BYTE(BX_NE2K_THIS s.tx_bytes));
+          BX_HIGH_BYTE(BX_NE2K_THIS s.tx_bytes),
+          BX_LOW_BYTE(BX_NE2K_THIS s.tx_bytes));
       dbg_printf("FIFO = %02x\n", BX_NE2K_THIS s.fifo);
       break;
     case 0x0007:
@@ -1931,11 +1942,11 @@ void bx_ne2k_c::print_info(FILE *fp, int page, int reg, int brief)
     case 0x0008:
     case 0x0009:  BX_DUPLICATE(0x0008);
       dbg_printf("CRDA1,0 = Current remote DMA address = %02x %02x\n",
-	  BX_HIGH_BYTE(BX_NE2K_THIS s.remote_dma),
-	  BX_LOW_BYTE(BX_NE2K_THIS s.remote_dma));
+          BX_HIGH_BYTE(BX_NE2K_THIS s.remote_dma),
+          BX_LOW_BYTE(BX_NE2K_THIS s.remote_dma));
       dbg_printf("RSAR1,0 = Remote start address = %02x %02x\n",
-	  BX_HIGH_BYTE(s.remote_start),
-	  BX_LOW_BYTE(s.remote_start));
+          BX_HIGH_BYTE(s.remote_start),
+          BX_LOW_BYTE(s.remote_start));
       break;
     case 0x000a:
     case 0x000b:  BX_DUPLICATE(0x000a);
@@ -1966,7 +1977,7 @@ void bx_ne2k_c::print_info(FILE *fp, int page, int reg, int brief)
       break;
     case 0x000d:
       dbg_printf("CNTR0 = Tally Counter 0 (Frame alignment errors) = %02x\n",
-	  BX_NE2K_THIS s.tallycnt_0);
+        BX_NE2K_THIS s.tallycnt_0);
       // fall through into TCR
     case 0x020d:
       dbg_printf("TCR (Transmit Configuration Register):\n  ");
@@ -1979,7 +1990,7 @@ void bx_ne2k_c::print_info(FILE *fp, int page, int reg, int brief)
       break;
     case 0x000e:
       dbg_printf("CNTR1 = Tally Counter 1 (CRC Errors) = %02x\n",
-	  BX_NE2K_THIS s.tallycnt_1);
+        BX_NE2K_THIS s.tallycnt_1);
       // fall through into DCR
     case 0x020e:
       dbg_printf("DCR (Data Configuration Register):\n  ");
@@ -1993,7 +2004,7 @@ void bx_ne2k_c::print_info(FILE *fp, int page, int reg, int brief)
       break;
     case 0x000f:
       dbg_printf("CNTR2 = Tally Counter 2 (Missed Packet Errors) = %02x\n",
-	  BX_NE2K_THIS s.tallycnt_2);
+        BX_NE2K_THIS s.tallycnt_2);
       // fall through into IMR
     case 0x020f:
       dbg_printf("IMR (Interrupt Mask Register)\n  ");
@@ -2016,7 +2027,7 @@ void bx_ne2k_c::print_info(FILE *fp, int page, int reg, int brief)
       dbg_printf("MAC address registers are located at page 1, registers 1-6.\n");
       dbg_printf("The MAC address is ");
       for (i=0; i<=5; i++)
-	dbg_printf("%02x%c", BX_NE2K_THIS s.physaddr[i], i<5?':' : '\n');
+        dbg_printf("%02x%c", BX_NE2K_THIS s.physaddr[i], i<5?':' : '\n');
       break;
     case 0x0107:
       dbg_printf("Current page is 0x%02x\n", BX_NE2K_THIS s.curr_page);
@@ -2040,8 +2051,8 @@ void bx_ne2k_c::print_info(FILE *fp, int page, int reg, int brief)
       dbg_printf("PSTART = Page start register = %02x\n", BX_NE2K_THIS s.page_start);
       dbg_printf("PSTOP = Page stop register = %02x\n", BX_NE2K_THIS s.page_stop);
       dbg_printf("Local DMA address = %02x %02x\n",
-	  BX_HIGH_BYTE(BX_NE2K_THIS s.local_dma),
-	  BX_LOW_BYTE(BX_NE2K_THIS s.local_dma));
+          BX_HIGH_BYTE(BX_NE2K_THIS s.local_dma),
+          BX_LOW_BYTE(BX_NE2K_THIS s.local_dma));
       break;
     case 0x0203:
       dbg_printf("Remote Next Packet Pointer = %02x\n", BX_NE2K_THIS s.rempkt_ptr);
@@ -2052,8 +2063,8 @@ void bx_ne2k_c::print_info(FILE *fp, int page, int reg, int brief)
     case 0x0206:
     case 0x0207:  BX_DUPLICATE(0x0206);
       dbg_printf("Address Counter= %02x %02x\n",
-	 BX_HIGH_BYTE(BX_NE2K_THIS s.address_cnt),
-	 BX_LOW_BYTE(BX_NE2K_THIS s.address_cnt));
+         BX_HIGH_BYTE(BX_NE2K_THIS s.address_cnt),
+         BX_LOW_BYTE(BX_NE2K_THIS s.address_cnt));
       break;
     case 0x0208:
     case 0x0209:  BX_DUPLICATE(0x0208);
@@ -2073,7 +2084,7 @@ void bx_ne2k_c::print_info(FILE *fp, int page, int reg, int brief)
 
 #else
 
-void bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
+void bx_ne2k_c::print_info(int page, int reg, int brief)
 {
 }
 
