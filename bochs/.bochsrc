@@ -11,7 +11,7 @@
 # 'extfpuirq', 'gameport', 'iodebug', 'ne2k', 'parallel', 'pcidev', 'pcipnic',
 # 'sb16', 'serial', 'speaker', 'unmapped', 'usb_ohci', 'usb_uhci' and 'usb_xhci'.
 #=======================================================================
-#plugin_ctrl: unmapped=1, biosdev=1, speaker=1, e1000=1
+plugin_ctrl: unmapped=1, biosdev=1, speaker=1, e1000=1, parallel=1
 
 #=======================================================================
 # CONFIG_INTERFACE
