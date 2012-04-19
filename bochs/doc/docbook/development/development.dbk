@@ -1993,7 +1993,9 @@ Compiling Bochs with iodebug support
 ./configure --enable-iodebug
 make
 </screen>
-Other optional fields may be added to the ./configure line, see Bochs documentation for all the information.
+Other optional fields may be added to the ./configure line, see Bochs
+documentation for all the information. To enable the iodebug plugin at runtime,
+it must be loaded with the 'plugin_ctrl' bochsrc option.
 </para>
 
 <para>

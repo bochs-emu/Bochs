@@ -104,7 +104,7 @@ void bx_iodebug_c::write(Bit32u addr, Bit32u dvalue, unsigned io_len)
   {
     bx_iodebug_s.registers[bx_iodebug_s.register_select] =
         (bx_iodebug_s.registers[bx_iodebug_s.register_select] << 16) +
-	(dvalue & 0xFFFF);
+        (dvalue & 0xFFFF);
   }
 
   if (addr != 0x8A00) return;
@@ -136,7 +136,7 @@ void bx_iodebug_c::write(Bit32u addr, Bit32u dvalue, unsigned io_len)
     case 0x8A80:
       bx_iodebug_s.register_select = 0;
       bx_iodebug_c::add_range(bx_iodebug_s.registers[0],
-	  bx_iodebug_s.registers[1]);
+        bx_iodebug_s.registers[1]);
       bx_iodebug_s.registers[0] = 0;
       bx_iodebug_s.registers[1] = 0;
       break;
@@ -191,11 +191,11 @@ void bx_iodebug_c::mem_write(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, v
 
 #if BX_DEBUGGER
     if (cpu != NULL) {
-      fprintf(stdout, "IODEBUG CPU %d @ eip: " FMT_ADDRX " write at monitored memory location %8X\n", 
+      fprintf(stdout, "IODEBUG CPU %d @ eip: " FMT_ADDRX " write at monitored memory location " FMT_PHY_ADDRX "\n", 
          cpu->bx_cpuid, cpu->get_instruction_pointer(), addr);
     }
     else {
-      fprintf(stdout, "IODEBUG write at monitored memory location %8X\n", addr);
+      fprintf(stdout, "IODEBUG write at monitored memory location " FMT_PHY_ADDRX "\n", addr);
     }
     bx_guard.interrupt_requested=1;
 #else
@@ -206,7 +206,7 @@ void bx_iodebug_c::mem_write(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, v
     else
       fprintf(stderr, "(device origin)\t");
 
-    fprintf(stderr, "range start: \t\t%08X\trange end:\t%08X\n\taddress accessed:\t%08X\tdata written:\t",
+    fprintf(stderr, "range start: \t\t" FMT_PHY_ADDRX "\trange end:\t" FMT_PHY_ADDRX "\n\taddress accessed:\t%08X\tdata written:\t",
             bx_iodebug_s.monitored_mem_areas_start[area],
             bx_iodebug_s.monitored_mem_areas_end[area],
             (unsigned) addr);
@@ -216,24 +216,24 @@ void bx_iodebug_c::mem_write(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, v
       case 1: {
         Bit8u data8 = * ((Bit8u *) data);
         fprintf(stderr,"%02X\n", (unsigned) data8);
-	break;
+        break;
       }
       case 2: {
         Bit16u data16 = * ((Bit16u *) data);
         fprintf(stderr,"%04X\n", (unsigned) data16);
-	break;
+        break;
       }
       case 4: {
         Bit32u data32 = * ((Bit32u *) data);
         fprintf(stderr,"%08X\n", (unsigned) data32);
-	break;
+        break;
       }
       case 8: {
         Bit64u data64 = * ((Bit64u *) data);
         fprintf(stderr,"%08X%08x\n",
             (unsigned) (data64 >> 32),
             (unsigned) (data64 & 0xffffffff));
-	break;
+        break;
       }
       default:
         fprintf(stderr, "unsupported write size\n");
@@ -254,11 +254,11 @@ void bx_iodebug_c::mem_read(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, vo
 
 #if BX_DEBUGGER
     if (cpu != NULL) {
-      fprintf(stdout, "IODEBUG CPU %d @ eip: " FMT_ADDRX " read at monitored memory location %8X\n", 
+      fprintf(stdout, "IODEBUG CPU %d @ eip: " FMT_ADDRX " read at monitored memory location " FMT_PHY_ADDRX "\n", 
         cpu->bx_cpuid, cpu->get_instruction_pointer(), addr);
     }
     else {
-      fprintf(stdout, "IODEBUG read at monitored memory location %8X\n", addr);
+      fprintf(stdout, "IODEBUG read at monitored memory location " FMT_PHY_ADDRX "\n", addr);
     }
     bx_guard.interrupt_requested=1;
 #else
@@ -269,34 +269,34 @@ void bx_iodebug_c::mem_read(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, vo
     else
       fprintf(stderr, "(device origin)\t");
 
-    fprintf(stderr, "range start: \t\t%08X\trange end:\t%08X\n\taddress accessed:\t%08X\tdata written:\t",
-	     bx_iodebug_s.monitored_mem_areas_start[area],
-	     bx_iodebug_s.monitored_mem_areas_end[area],
-	     (unsigned) addr);
+    fprintf(stderr, "range start: \t\t" FMT_PHY_ADDRX "\trange end:\t" FMT_PHY_ADDRX "\n\taddress accessed:\t" FMT_PHY_ADDRX "\tdata written:\t",
+            bx_iodebug_s.monitored_mem_areas_start[area],
+            bx_iodebug_s.monitored_mem_areas_end[area],
+            (unsigned) addr);
 
     switch(len)
     {
       case 1: {
         Bit8u data8 = * ((Bit8u *) data);
-        fprintf(stderr,"%02X\n", (unsigned) data8);
-	break;
+        fprintf(stderr,"%02X\n", data8);
+        break;
       }
       case 2: {
         Bit16u data16 = * ((Bit16u *) data);
-        fprintf(stderr,"%04X\n", (unsigned) data16);
-	break;
+        fprintf(stderr,"%04X\n", data16);
+        break;
       }
       case 4: {
         Bit32u data32 = * ((Bit32u *) data);
-        fprintf(stderr,"%08X\n", (unsigned) data32);
-	break;
+        fprintf(stderr,"%08X\n", data32);
+        break;
       }
       case 8: {
         Bit64u data64 = * ((Bit64u *) data);
         fprintf(stderr,"%08X%08x\n",
-            (unsigned) (data64 >> 32),
-            (unsigned) (data64 & 0xffffffff));
-	break;
+            (Bit32u)(data64 >> 32),
+            (Bit32u)(data64 & 0xffffffff));
+        break;
       }
       default:
         fprintf(stderr, "unsupported read size\n");
@@ -319,7 +319,7 @@ unsigned bx_iodebug_c::range_test(bx_phy_address addr, unsigned len)
       {
         return(++i);
       }
-    }	
+    }
   }
 
   return(0);
@@ -332,10 +332,10 @@ void bx_iodebug_c::add_range(bx_phy_address addr_start, bx_phy_address addr_end)
     if(!bx_iodebug_s.monitored_mem_areas_start[i] &&
        !bx_iodebug_s.monitored_mem_areas_end[i])
     {
-	bx_iodebug_s.monitored_mem_areas_start[i] = addr_start;
-	bx_iodebug_s.monitored_mem_areas_end[i] = addr_end;
-//	fprintf(stderr, "IODEBUG added range successfully in slot: %i\n",i);
-	return;
+        bx_iodebug_s.monitored_mem_areas_start[i] = addr_start;
+        bx_iodebug_s.monitored_mem_areas_end[i] = addr_end;
+//      fprintf(stderr, "IODEBUG added range successfully in slot: %i\n",i);
+        return;
     }
   }
 //fprintf(stderr, "IODEBUG unable to register memory range, all slots taken\n");
