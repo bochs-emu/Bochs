@@ -68,6 +68,7 @@ Changes after 2.5.1 release:
   [3486555] Fix critical stack leak in Win32 GUI by Carlo Bramini
 
 - these S.F. bugs were closed/fixed
+  [3518753] update dump after manual chages to memory contents
   [3516859] bug in svn e1000 module
   [3516029] stepping not working in debugger GUI in case of smp vm
   [3510403] closing config dialog box closes entire simulator

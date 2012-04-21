@@ -73,7 +73,7 @@ void serial_init_options(void)
     NULL
   };
 
-  char name[4], label[80], descr[80];
+  char name[4], label[80], descr[120];
 
   bx_list_c *serial = (bx_list_c*)SIM->get_param("ports.serial");
   for (int i=0; i<BX_N_SERIAL_PORTS; i++) {
@@ -86,13 +86,13 @@ void serial_init_options(void)
     bx_param_bool_c *enabled = new bx_param_bool_c(menu, "enabled", label, descr,
       (i==0)?1 : 0);  // only enable the first by default
     sprintf(label, "I/O mode of the serial device for COM%d", i+1);
-    sprintf(descr, "The mode can be one these: 'null', 'file', 'pipe', 'term', 'raw', 'mouse', 'socket'");
-    bx_param_enum_c *mode = new bx_param_enum_c(menu, "mode", label, descr,
+    bx_param_enum_c *mode = new bx_param_enum_c(menu, "mode", label,
+      "The mode can be one these: 'null', 'file', 'pipe', 'term', 'raw', 'mouse', 'socket'",
       serial_mode_list, 0, 0);
     mode->set_ask_format("Choose I/O mode of the serial device [%s] ");
     sprintf(label, "Pathname of the serial device for COM%d", i+1);
-    sprintf(descr, "The path can be a real serial device or a pty (X/Unix only)");
-    bx_param_filename_c *path = new bx_param_filename_c(menu, "dev", label, descr,
+    bx_param_filename_c *path = new bx_param_filename_c(menu, "dev", label, 
+      "The path can be a real serial device or a pty (X/Unix only)",
       "", BX_PATHNAME_LEN);
     bx_list_c *deplist = new bx_list_c(NULL);
     deplist->add(mode);
