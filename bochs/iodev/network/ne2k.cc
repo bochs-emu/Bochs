@@ -163,7 +163,6 @@ Bit32s ne2k_options_save(FILE *fp)
 int libne2k_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theNE2kDevice = new bx_ne2k_c();
-  bx_devices.pluginNE2kDevice = theNE2kDevice;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theNE2kDevice, BX_PLUGIN_NE2K);
   // add new configuration parameter for the config interface
   ne2k_init_options();
@@ -1831,18 +1830,28 @@ void bx_ne2k_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 #endif /* BX_SUPPORT_PCI */
 
 #if BX_DEBUGGER
-
-void bx_ne2k_c::debug_dump()
+void bx_ne2k_c::debug_dump(int argc, char **argv)
 {
-  for (int page=0; page<=2; page++)
-    BX_NE2K_THIS print_info(page, -1, 1);
+  int page = -1, reg = -1;
+
+  for (int arg = 0; arg < argc; arg++) {
+    if (!strncmp(argv[arg], "page=", 5) && isdigit(argv[arg][5])) {
+      page = atoi(&argv[arg][5]);
+    } else if (!strncmp(argv[arg], "reg=", 4) && isdigit(argv[arg][4])) {
+      reg = atoi(&argv[arg][4]);
+    } else {
+      dbg_printf("\nUnknown option: '%s'\n", argv[arg]);
+      return;
+    }
+  }
+  BX_NE2K_THIS print_info(page, reg, 0);
 }
 
 /*
- * this implements the info ne2k commands in the debugger.
- * info ne2k - shows all registers
- * info ne2k page N - shows all registers in a page
- * info ne2k page N reg M - shows just one register
+ * this implements the info device 'ne2k' command in the debugger.
+ * info device 'ne2k' - shows all registers
+ * info device 'ne2k' 'page=N' - shows all registers in a page
+ * info device 'ne2k' 'page=N,reg=M' - shows just one register
  */
 
 #define SHOW_FIELD(reg,field) do { \
@@ -1862,10 +1871,9 @@ void bx_ne2k_c::print_info(int page, int reg, int brief)
     for (page=0; page<=2; page++)
       theNE2kDevice->print_info(page, reg, 1);
     // tell them how to use this command
-    dbg_printf("\nHow to use the info ne2k command:\n");
-    dbg_printf("info ne2k - show all registers\n");
-    dbg_printf("info ne2k page N - show registers in page N\n");
-    dbg_printf("info ne2k page N reg M - show just one register\n");
+    dbg_printf("\nSupported options:\n");
+    dbg_printf("info device 'ne2k' 'page=N' - show registers in page N\n");
+    dbg_printf("info device 'ne2k' 'page=N,reg=M' - show just one register\n");
     return;
   }
   if (page > 2) {
@@ -2081,13 +2089,6 @@ void bx_ne2k_c::print_info(int page, int reg, int brief)
   if (!brief)
     dbg_printf("\n");
 }
-
-#else
-
-void bx_ne2k_c::print_info(int page, int reg, int brief)
-{
-}
-
 #endif
 
 #endif /* if BX_SUPPORT_NE2K */

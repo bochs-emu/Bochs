@@ -79,7 +79,7 @@ public:
   virtual void reset(unsigned type);
   virtual void register_state(void);
 #if BX_DEBUGGER
-  virtual void debug_dump(void);
+  virtual void debug_dump(int argc, char **argv);
 #endif
 
   virtual void receive_eoi(Bit8u vector);

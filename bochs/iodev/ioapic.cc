@@ -314,7 +314,7 @@ void bx_ioapic_c::register_state(void)
 }
 
 #if BX_DEBUGGER
-void bx_ioapic_c::debug_dump()
+void bx_ioapic_c::debug_dump(int argc, char **argv)
 {
   int i;
   char buf[1024];
@@ -324,6 +324,9 @@ void bx_ioapic_c::debug_dump()
     bx_io_redirect_entry_t *entry = ioredtbl + i;
     entry->sprintf_self(buf);
     dbg_printf("entry[%d]: %s\n", i, buf);
+  }
+  if (argc > 0) {
+    dbg_printf("\nAdditional options not supported\n");
   }
 }
 #endif

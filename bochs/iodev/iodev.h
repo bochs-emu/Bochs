@@ -68,7 +68,7 @@ class BOCHSAPI bx_devmodel_c : public logfunctions {
   virtual void register_state(void) {}
   virtual void after_restore_state(void) {}
 #if BX_DEBUGGER
-  virtual void debug_dump(void) {}
+  virtual void debug_dump(int argc, char **argv) {}
 #endif
 };
 
@@ -309,11 +309,6 @@ public:
   virtual void bmdma_set_irq(Bit8u channel) {}
 };
 
-class BOCHSAPI bx_ne2k_stub_c : public bx_devmodel_c {
-public:
-  virtual void print_info(int page, int reg, int nodups) {}
-};
-
 class BOCHSAPI bx_speaker_stub_c : public bx_devmodel_c {
 public:
   virtual void beep_on(float frequency) {
@@ -468,7 +463,6 @@ public:
   bx_pic_stub_c     *pluginPicDevice;
   bx_hard_drive_stub_c *pluginHardDrive;
   bx_hdimage_ctl_stub_c *pluginHDImageCtl;
-  bx_ne2k_stub_c    *pluginNE2kDevice;
   bx_speaker_stub_c *pluginSpeaker;
 #if BX_SUPPORT_IODEBUG
   bx_iodebug_stub_c *pluginIODebug;
@@ -502,7 +496,6 @@ public:
   bx_pci_bridge_stub_c  stubPci;
   bx_pci2isa_stub_c stubPci2Isa;
   bx_pci_ide_stub_c stubPciIde;
-  bx_ne2k_stub_c    stubNE2k;
   bx_speaker_stub_c stubSpeaker;
 #if BX_SUPPORT_PCI
   bx_acpi_ctrl_stub_c stubACPIController;

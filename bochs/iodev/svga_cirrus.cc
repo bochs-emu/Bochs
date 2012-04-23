@@ -3454,7 +3454,7 @@ bx_cirrus_bitblt_rop_t bx_svga_cirrus_c::svga_get_bkwd_rop_handler(Bit8u rop)
 }
 
 #if BX_DEBUGGER
-void bx_svga_cirrus_c::debug_dump()
+void bx_svga_cirrus_c::debug_dump(int argc, char **argv)
 {
   if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_SVGA) {
 #if BX_SUPPORT_PCI
@@ -3471,6 +3471,9 @@ void bx_svga_cirrus_c::debug_dump()
                BX_CIRRUS_THIS svga_yres, BX_CIRRUS_THIS svga_dispbpp);
   } else {
     bx_vgacore_c::debug_dump();
+  }
+  if (argc > 0) {
+    dbg_printf("\nAdditional options not supported\n");
   }
 }
 #endif

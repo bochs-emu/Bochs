@@ -79,7 +79,6 @@ void bx_devices_c::init_stubs()
   pluginVgaDevice = &stubVga;
   pluginPicDevice = &stubPic;
   pluginHardDrive = &stubHardDrive;
-  pluginNE2kDevice =&stubNE2k;
   pluginSpeaker = &stubSpeaker;
 #if BX_SUPPORT_IODEBUG
   pluginIODebug = &stubIODebug;

@@ -72,7 +72,7 @@ public:
   virtual void set_mode(bx_bool ma_sl, Bit8u mode);
   virtual Bit8u IAC(void);
 #if BX_DEBUGGER
-  virtual void debug_dump(void);
+  virtual void debug_dump(int argc, char **argv);
 #endif
   virtual void register_state(void);
 

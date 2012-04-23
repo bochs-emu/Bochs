@@ -867,7 +867,7 @@ Bit8u bx_pic_c::IAC(void)
 }
 
 #if BX_DEBUGGER
-void bx_pic_c::debug_dump()
+void bx_pic_c::debug_dump(int argc, char **argv)
 {
   dbg_printf("i8259A PIC\n\n");
   dbg_printf("master IMR = %02x\n", BX_PIC_THIS s.master_pic.imr);
@@ -878,5 +878,8 @@ void bx_pic_c::debug_dump()
   dbg_printf("slave ISR = %02x\n", BX_PIC_THIS s.slave_pic.isr);
   dbg_printf("slave IRR = %02x\n", BX_PIC_THIS s.slave_pic.irr);
   dbg_printf("slave IRQ = %02x\n", BX_PIC_THIS s.slave_pic.irq);
+  if (argc > 0) {
+    dbg_printf("\nAdditional options not supported\n");
+  }
 }
 #endif

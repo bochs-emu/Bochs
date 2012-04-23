@@ -1929,7 +1929,7 @@ const char* bx_floppy_ctrl_c::floppy_param_string_handler(bx_param_string_c *par
 }
 
 #if BX_DEBUGGER
-void bx_floppy_ctrl_c::debug_dump()
+void bx_floppy_ctrl_c::debug_dump(int argc, char **argv)
 {
   int i;
 
@@ -1964,5 +1964,8 @@ void bx_floppy_ctrl_c::debug_dump()
   dbg_printf("DOR = 0x%02x\n", BX_FD_THIS s.DOR);
   dbg_printf("MSR = 0x%02x\n", BX_FD_THIS s.main_status_reg);
   dbg_printf("DSR = 0x%02x\n", BX_FD_THIS s.data_rate);
+  if (argc > 0) {
+    dbg_printf("\nAdditional options not supported\n");
+  }
 }
 #endif

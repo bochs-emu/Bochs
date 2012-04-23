@@ -197,7 +197,7 @@ typedef struct {
 #endif
 } bx_ne2k_t;
 
-class bx_ne2k_c : public bx_ne2k_stub_c
+class bx_ne2k_c : public bx_devmodel_c
 #if BX_SUPPORT_PCI
   , public bx_pci_device_stub_c
 #endif
@@ -207,13 +207,12 @@ public:
   virtual ~bx_ne2k_c();
   virtual void init(void);
   virtual void reset(unsigned type);
-  virtual void print_info(int page, int reg, int nodups);
   virtual void register_state(void);
 #if BX_SUPPORT_PCI
   virtual void after_restore_state(void);
 #endif
 #if BX_DEBUGGER
-  virtual void debug_dump(void);
+  virtual void debug_dump(int argc, char **argv);
 #endif
 
 #if BX_SUPPORT_PCI
@@ -263,6 +262,9 @@ private:
 #if !BX_USE_NE2K_SMF
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
+#endif
+#if BX_DEBUGGER
+  void print_info(int page, int reg, int nodups);
 #endif
 };
 

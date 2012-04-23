@@ -383,7 +383,7 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 }
 
 #if BX_DEBUGGER
-void bx_piix3_c::debug_dump()
+void bx_piix3_c::debug_dump(int argc, char **argv)
 {
   int i;
 
@@ -399,6 +399,9 @@ void bx_piix3_c::debug_dump()
   }
   dbg_printf("ELCR1 = 0x%02x\n", BX_P2I_THIS s.elcr1);
   dbg_printf("ELCR2 = 0x%02x\n", BX_P2I_THIS s.elcr2);
+  if (argc > 0) {
+    dbg_printf("\nAdditional options not supported\n");
+  }
 }
 #endif
 

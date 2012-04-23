@@ -134,7 +134,6 @@ slist           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LIST_SYMBOLS); }
 global          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GLOBAL); }
 where           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_WHERE); }
 print-string    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PRINT_STRING); }
-ne2k|ne2000     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NE2000); }
 page            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PAGE); }
 vga             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_VGA); }
 device          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DEVICE); }

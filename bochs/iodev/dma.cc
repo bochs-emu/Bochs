@@ -799,7 +799,7 @@ void bx_dma_c::raise_HLDA(void)
 }
 
 #if BX_DEBUGGER
-void bx_dma_c::debug_dump()
+void bx_dma_c::debug_dump(int argc, char **argv)
 {
   int ch, i, j;
 
@@ -831,6 +831,9 @@ void bx_dma_c::debug_dump()
         }
       }
     }
+  }
+  if (argc > 0) {
+    dbg_printf("\nAdditional options not supported\n");
   }
 }
 #endif

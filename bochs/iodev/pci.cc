@@ -385,24 +385,33 @@ void bx_pci_bridge_c::smram_control(Bit8u value8)
 }
 
 #if BX_DEBUGGER
-void bx_pci_bridge_c::debug_dump()
+void bx_pci_bridge_c::debug_dump(int argc, char **argv)
 {
-  int i;
+  int arg, i;
 
   dbg_printf("i440FX PMC/DBX\n\n");
   dbg_printf("confAddr = 0x%08x\n", BX_PCI_THIS confAddr);
   dbg_printf("confData = 0x%08x\n", BX_PCI_THIS confData);
 
-#ifdef DUMP_FULL_I440FX
-  for (i=0; i<256; i++) {
-    dbg_printf("PCI conf 0x%02x = 0x%02x\n", i, BX_PCI_THIS pci_conf[i]);
+  if (argc == 0) {
+    for (i = 0x59; i < 0x60; i++) {
+      dbg_printf("PAM reg 0x%02x = 0x%02x\n", i, BX_PCI_THIS pci_conf[i]);
+    }
+    dbg_printf("SMRAM control = 0x%02x\n", BX_PCI_THIS pci_conf[0x72]);
+    dbg_printf("\nSupported options:\n");
+    dbg_printf("info device 'pci' 'dump=full' - show PCI config space\n");
+  } else {
+    for (arg = 0; arg < argc; arg++) {
+      if (!strcmp(argv[arg], "dump=full")) {
+        dbg_printf("\nPCI config space (reg = value)\n");
+        for (i=0; i<256; i++) {
+          dbg_printf("0x%02x = 0x%02x\n", i, BX_PCI_THIS pci_conf[i]);
+        }
+      } else {
+        dbg_printf("\nUnknown option: '%s'\n", argv[arg]);
+      }
+    }
   }
-#else /* DUMP_FULL_I440FX */
-  for (i=0x59; i<0x60; i++) {
-    dbg_printf("PAM reg 0x%02x = 0x%02x\n", i, BX_PCI_THIS pci_conf[i]);
-  }
-  dbg_printf("SMRAM control = 0x%02x\n", BX_PCI_THIS pci_conf[0x72]);
-#endif /* DUMP_FULL_I440FX */
 }
 #endif
 

@@ -119,7 +119,7 @@ public:
   virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 #endif
 #if BX_DEBUGGER
-  virtual void   debug_dump(void);
+  virtual void   debug_dump(int argc, char **argv);
 #endif
 
   static Bit64s   vga_param_handler(bx_param_c *param, int set, Bit64s val);

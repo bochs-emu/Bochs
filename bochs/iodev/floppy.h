@@ -55,7 +55,7 @@ public:
   virtual unsigned set_media_status(unsigned drive, bx_bool status);
   virtual void register_state(void);
 #if BX_DEBUGGER
-  virtual void debug_dump(void);
+  virtual void debug_dump(int argc, char **argv);
 #endif
 
 private:

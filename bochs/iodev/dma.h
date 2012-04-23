@@ -42,7 +42,7 @@ public:
   virtual unsigned get_TC(void);
   virtual void     register_state(void);
 #if BX_DEBUGGER
-  virtual void debug_dump(void);
+  virtual void debug_dump(int argc, char **argv);
 #endif
 
   virtual unsigned registerDMA8Channel(unsigned channel,

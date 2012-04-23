@@ -1469,7 +1469,7 @@ void bx_vga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 #endif
 
 #if BX_DEBUGGER
-void bx_vga_c::debug_dump(void)
+void bx_vga_c::debug_dump(int argc, char **argv)
 {
   if (BX_VGA_THIS vbe.enabled) {
     dbg_printf("Bochs VGA/VBE adapter\n\n");
@@ -1477,6 +1477,9 @@ void bx_vga_c::debug_dump(void)
                BX_VGA_THIS vbe.yres, BX_VGA_THIS vbe.bpp);
   } else {
     bx_vgacore_c::debug_dump();
+  }
+  if (argc > 0) {
+    dbg_printf("\nAdditional options not supported\n");
   }
 }
 #endif

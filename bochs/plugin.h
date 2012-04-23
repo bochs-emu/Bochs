@@ -236,10 +236,6 @@ extern "C" {
 #define DEV_ide_bmdma_set_irq(a) bx_devices.pluginPciIdeController->bmdma_set_irq(a)
 #define DEV_acpi_generate_smi(a) bx_devices.pluginACPIController->generate_smi(a)
 
-///////// NE2000 macro
-#define DEV_ne2k_print_info(page,reg,brief) \
-    bx_devices.pluginNE2kDevice->print_info(page,reg,brief)
-
 ///////// Speaker macros
 #define DEV_speaker_beep_on(frequency) bx_devices.pluginSpeaker->beep_on(frequency)
 #define DEV_speaker_beep_off() bx_devices.pluginSpeaker->beep_off()

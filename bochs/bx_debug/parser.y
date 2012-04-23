@@ -615,29 +615,19 @@ info_command:
         bx_dbg_info_symbols_command($3);
         free($1); free($2); free($3);
       }
-    | BX_TOKEN_INFO BX_TOKEN_NE2000 '\n'
-      {
-        bx_dbg_info_ne2k(-1, -1);
-        free($1); free($2);
-      }
-    | BX_TOKEN_INFO BX_TOKEN_NE2000 BX_TOKEN_PAGE BX_TOKEN_NUMERIC '\n'
-      {
-        free($1); free($2); free($3);
-        bx_dbg_info_ne2k($4, -1);
-      }
-    | BX_TOKEN_INFO BX_TOKEN_NE2000 BX_TOKEN_PAGE BX_TOKEN_NUMERIC BX_TOKEN_REGISTERS BX_TOKEN_NUMERIC '\n'
-      {
-        free($1); free($2); free($3); free($5);
-        bx_dbg_info_ne2k($4, $6);
-      }
     | BX_TOKEN_INFO BX_TOKEN_DEVICE '\n'
       {
-        bx_dbg_info_device("");
+        bx_dbg_info_device("", "");
         free($1); free($2);
       }
     | BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_STRING '\n'
       {
-        bx_dbg_info_device($3);
+        bx_dbg_info_device($3, "");
+        free($1); free($2);
+      }
+    | BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_STRING BX_TOKEN_STRING '\n'
+      {
+        bx_dbg_info_device($3, $4);
         free($1); free($2);
       }
     ;

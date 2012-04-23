@@ -3335,28 +3335,20 @@ void bx_dbg_info_tss_command(void)
 }
 
 /*
- * this function implements the info ne2k commands in the debugger
- * info ne2k - shows all registers
- * info ne2k page N - shows all registers in a page
- * info ne2k page N reg M - shows just one register
- */
-void bx_dbg_info_ne2k(int page, int reg)
-{
-#if BX_SUPPORT_NE2K
-  DEV_ne2k_print_info(page, reg, 0);
-#else
-  dbg_printf("NE2000 support is not compiled in\n");
-#endif
-}
-
-/*
  * this implements the info device command in the debugger.
  * info device - list devices supported by this command
  * info device [string] - shows the state of device specified in string
+ * info device [string] [string] - shows the state of device with options
  */
-void bx_dbg_info_device(const char *dev)
+void bx_dbg_info_device(const char *dev, const char *args)
 {
   debug_info_t *temp = NULL;
+  unsigned i, string_i;
+  int argc = 0;
+  char *argv[16];
+  char *ptr;
+  char string[512];
+  size_t len;
 
   if (strlen(dev) == 0) {
     if (bx_debug_info_list == NULL) {
@@ -3373,7 +3365,35 @@ void bx_dbg_info_device(const char *dev)
   } else {
     if (bx_dbg_info_find_device(dev, &temp)) {
       if (temp->device != NULL) {
-        temp->device->debug_dump();
+        len = strlen(args);
+        memset(argv, 0, sizeof(argv));
+        if (len > 0) {
+          char *options = new char[len + 1];
+          strcpy(options, args);
+          ptr = strtok(options, ",");
+          while (ptr) {
+            string_i = 0;
+            for (i=0; i<strlen(ptr); i++) {
+              if (!isspace(ptr[i])) string[string_i++] = ptr[i];
+            }
+            string[string_i] = '\0';
+            if (argc < 16) {
+              argv[argc++] = strdup(string);
+            } else {
+              BX_PANIC (("too many parameters, max is 16\n"));
+              break;
+            }
+            ptr = strtok(NULL, ",");
+          }
+          delete [] options;
+        }
+        temp->device->debug_dump(argc, argv);
+        for (i = 0; i < (unsigned)argc; i++) {
+          if (argv[i] != NULL) {
+            free(argv[i]);
+            argv[i] = NULL;
+          }
+        }
       } else {
         BX_PANIC(("info device: device pointer is NULL"));
       }
