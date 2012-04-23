@@ -476,19 +476,17 @@ int bx_sound_windows_c::closewaveoutput()
 
 void bx_sound_windows_c::checkmidiready()
 {
-  UINT ret;
-
   if ((MidiHeader->dwFlags & MHDR_DONE) != 0)
   {
     BX_DEBUG(("SYSEX message done, midi ready again"));
-    ret = midiOutUnprepareHeader(MidiOut, MidiHeader, sizeof(*MidiHeader));
+    midiOutUnprepareHeader(MidiOut, MidiHeader, sizeof(*MidiHeader));
     ismidiready = 1;
   }
 }
+
 void bx_sound_windows_c::checkwaveready()
 {
   int bufnum;
-  UINT ret;
 
   // clean up all finished buffers and mark them as available
   for (bufnum=tailfull; (bufnum != tailplay) &&
@@ -496,7 +494,7 @@ void bx_sound_windows_c::checkwaveready()
            bufnum++, bufnum &= BX_SOUND_WINDOWS_NMASK)
   {
     BX_DEBUG(("Buffer %d done.", bufnum));
-    ret = waveOutUnprepareHeader(hWaveOut, WaveHeader[bufnum], sizeof(*WaveHeader[bufnum]));
+    waveOutUnprepareHeader(hWaveOut, WaveHeader[bufnum], sizeof(*WaveHeader[bufnum]));
   }
 
   tailfull = bufnum;
