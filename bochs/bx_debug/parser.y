@@ -110,7 +110,6 @@
 %token <sval> BX_TOKEN_WHERE
 %token <sval> BX_TOKEN_PRINT_STRING
 %token <uval> BX_TOKEN_NUMERIC
-%token <sval> BX_TOKEN_NE2000
 %token <sval> BX_TOKEN_PAGE
 %token <sval> BX_TOKEN_HELP
 %token <sval> BX_TOKEN_CALC
@@ -1054,7 +1053,7 @@ help_command:
        }
      | BX_TOKEN_HELP BX_TOKEN_WRITEMEM '\n'
        {
-         dbg_printf("setpmem <filename> <laddr> <len> - dump 'len' bytes of virtual memory starting from the linear address 'laddr' into the file\n");
+         dbg_printf("writemem <filename> <laddr> <len> - dump 'len' bytes of virtual memory starting from the linear address 'laddr' into the file\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_SETPMEM '\n'
@@ -1132,9 +1131,9 @@ help_command:
          dbg_printf("info tab - show page tables\n");
          dbg_printf("info eflags - show decoded EFLAGS register\n");
          dbg_printf("info symbols [string] - list symbols whose prefix is string\n");
-         dbg_printf("info ne2000 - show NE2000 registers\n");
          dbg_printf("info device - show list of devices supported by this command\n");
-         dbg_printf("info device [string]- show state of device specified in string\n");
+         dbg_printf("info device [string] - show state of device specified in string\n");
+         dbg_printf("info device [string] [string] - show state of device with options\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_SHOW '\n'
