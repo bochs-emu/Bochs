@@ -2663,7 +2663,7 @@ Bit32u bx_dbg_lin_indirect(bx_address addr)
   Bit32u result;
 
   if (! bx_dbg_read_linear(dbg_cpu, addr, 4, databuf)) {
-    /* bx_dbg_read_linear already printed an error message if it failed */
+    /* bx_dbg_read_linear already printed an error message if failed */
     return 0;
   }
 
@@ -2677,12 +2677,51 @@ Bit32u bx_dbg_phy_indirect(bx_phy_address paddr)
   Bit32u result;
 
   if (! BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), paddr, 4, databuf)) {
-    /* dbg_fetch_mem already printed an error message if it failed */
+    /* dbg_fetch_mem already printed an error message if failed */
     return 0;
   }
 
   ReadHostDWordFromLittleEndian(databuf, result);
   return result;
+}
+
+void bx_dbg_writemem_command(const char *filename, bx_address laddr, unsigned len)
+{
+  if (len == 0) {
+    dbg_printf("writemem: required length in bytes\n");
+    return;
+  }
+
+  FILE *f = fopen(filename, "wb");
+  if (!f) {
+    dbg_printf("Can not open file '%s' for writemem log!\n", filename);
+    return;
+  }
+
+  Bit8u databuf[4096];
+
+  while(len > 0) {
+    unsigned bytes = len;
+    if (len > 4096) bytes = 4096;
+
+    // I hope laddr is 4KB aligned so read_linear will be done efficiently
+    if (! bx_dbg_read_linear(dbg_cpu, laddr, bytes, databuf)) {
+      /* bx_dbg_read_linear already printed an error message if failed */
+      len = 0;
+      break;
+    }
+
+    if (fwrite(databuf, 1, bytes, f) < bytes) {
+      dbg_printf("Write error to file '%s'\n", filename);
+      len = 0;
+      break;
+    }
+
+    len -= bytes;
+    laddr += bytes;
+  }
+
+  fclose(f);
 }
 
 void bx_dbg_setpmem_command(bx_phy_address paddr, unsigned len, Bit32u val)
@@ -3585,7 +3624,7 @@ void bx_dbg_print_help(void)
   dbg_printf("    vb|vbreak, lb|lbreak, pb|pbreak|b|break, sb, sba, blist,\n");
   dbg_printf("    bpe, bpd, d|del|delete, watch, unwatch\n");
   dbg_printf("-*- CPU and memory contents -*-\n");
-  dbg_printf("    x, xp, setpmem, crc, info,\n");
+  dbg_printf("    x, xp, setpmem, writemem, crc, info,\n");
   dbg_printf("    r|reg|regs|registers, fp|fpu, mmx, sse, sreg, dreg, creg,\n");
   dbg_printf("    page, set, ptime, print-stack, ?|calc\n");
   dbg_printf("-*- Working with bochs param tree -*-\n");

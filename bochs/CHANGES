@@ -15,10 +15,12 @@ Changes after 2.5.1 release:
 - Bochs Debugger and Instrumentation
   - Implemented new debugger command 'info device [string]' that shows the
     state of the device specified in 'string'
-  - Improved debug dump for pci, pic and vga/cirrus devices
-  - Added debug dump for pci2isa, i/o apic, floppy and DMA controller devices
+  - Improved debug dump for ne2k, pci, pic and vga/cirrus devices. Added
+    debug dump for pci2isa, i/o apic, floppy and dma controller devices.
   - Added TLB to CPU param tree - now it can be browsed from Bochs internal
     debugger and Bochs debugger GUI through param tree interfaces
+  - Implemented 'writemem' debugger command to dump virtual memory block
+    starting from selected linear address into a file
   - Updated / Fixed instrumentation examples
 
 - Configure and compile
@@ -78,6 +80,7 @@ Changes after 2.5.1 release:
   [3493315] Changing VGA 9/8 dot mode causes screen corruption
 
 - these S.F. feature requests were closed/implemented
+  [3519794] debugger's ability to save physical/linear memory dumps
   [1429612] Idea how to speedup simulation - stack direct access
   [1703452] Other Network Devices?
   [2919376] Disable show the console window

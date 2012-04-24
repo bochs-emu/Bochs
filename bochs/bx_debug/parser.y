@@ -72,6 +72,7 @@
 %token <sval> BX_TOKEN_XFORMAT
 %token <sval> BX_TOKEN_DISFORMAT
 %token <sval> BX_TOKEN_RESTORE
+%token <sval> BX_TOKEN_WRITEMEM
 %token <sval> BX_TOKEN_SETPMEM
 %token <sval> BX_TOKEN_SYMBOLNAME
 %token <sval> BX_TOKEN_QUERY
@@ -161,6 +162,7 @@ command:
     | quit_command
     | examine_command
     | restore_command
+    | writemem_command
     | setpmem_command
     | query_command
     | take_command
@@ -762,6 +764,14 @@ restore_command:
       }
     ;
 
+writemem_command:
+      BX_TOKEN_WRITEMEM BX_TOKEN_STRING BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'
+      {
+        bx_dbg_writemem_command($2, $3, $4);
+        free($1); free($2);
+      }
+    ;
+
 setpmem_command:
       BX_TOKEN_SETPMEM BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'
       {
@@ -1040,6 +1050,11 @@ help_command:
      | BX_TOKEN_HELP BX_TOKEN_DEBUG_REGS '\n'
        {
          dbg_printf("dreg - show debug registers\n");
+         free($1);free($2);
+       }
+     | BX_TOKEN_HELP BX_TOKEN_WRITEMEM '\n'
+       {
+         dbg_printf("setpmem <filename> <laddr> <len> - dump 'len' bytes of virtual memory starting from the linear address 'laddr' into the file\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_SETPMEM '\n'
