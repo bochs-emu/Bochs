@@ -6821,6 +6821,9 @@ From here, you may use the following commands:
   setpmem addr datasize val    Set physical memory location of size
                                datasize to value val.
 
+  writemem                     dump a number of bytes of virtual memory starting from
+                               the specified linear address into a file
+
   crc  addr1  addr2            Show CRC32 for physical memory range addr1..addr2
 
 </screen>
@@ -6844,6 +6847,7 @@ From here, you may use the following commands:
   info eflags                  Show decoded EFLAGS register
   info break                   Information about current breakpoint status
   info tab                     Show paging address translation
+  info device                  Show state of the specified device
 </screen>
 </para>
 </section>

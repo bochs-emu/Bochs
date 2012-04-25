@@ -385,22 +385,34 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 #if BX_DEBUGGER
 void bx_piix3_c::debug_dump(int argc, char **argv)
 {
-  int i;
+  int arg, i;
 
   dbg_printf("PIIX3 ISA bridge\n\n");
-  for (i = 0; i < 4; i++) {
-    dbg_printf("PIRQ%c# = 0x%02x", i + 65, BX_P2I_THIS pci_conf[0x60 + i]);
-    Bit8u irq = BX_P2I_THIS pci_conf[0x60 + i];
-    if (irq < 16) {
-      dbg_printf(" (level=%d)\n", BX_P2I_THIS s.irq_level[irq] > 0);
-    } else {
-      dbg_printf("\n");
-    }
-  }
   dbg_printf("ELCR1 = 0x%02x\n", BX_P2I_THIS s.elcr1);
   dbg_printf("ELCR2 = 0x%02x\n", BX_P2I_THIS s.elcr2);
-  if (argc > 0) {
-    dbg_printf("\nAdditional options not supported\n");
+  if (argc == 0) {
+    for (i = 0; i < 4; i++) {
+      dbg_printf("PIRQ%c# = 0x%02x", i + 65, BX_P2I_THIS pci_conf[0x60 + i]);
+      Bit8u irq = BX_P2I_THIS pci_conf[0x60 + i];
+      if (irq < 16) {
+        dbg_printf(" (level=%d)\n", BX_P2I_THIS s.irq_level[irq] > 0);
+      } else {
+        dbg_printf("\n");
+      }
+    }
+    dbg_printf("\nSupported options:\n");
+    dbg_printf("info device 'pci2isa' 'dump=full' - show PCI config space\n");
+  } else {
+    for (arg = 0; arg < argc; arg++) {
+      if (!strcmp(argv[arg], "dump=full")) {
+        dbg_printf("\nPCI config space (reg = value)\n");
+        for (i=0; i<256; i++) {
+          dbg_printf("0x%02x = 0x%02x\n", i, BX_P2I_THIS pci_conf[i]);
+        }
+      } else {
+        dbg_printf("\nUnknown option: '%s'\n", argv[arg]);
+      }
+    }
   }
 }
 #endif
