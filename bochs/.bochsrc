@@ -91,7 +91,7 @@ plugin_ctrl: unmapped=1, biosdev=1, speaker=1, e1000=1, parallel=1
 # Bochs. The start address optional, since it can be calculated from image size.
 #=======================================================================
 romimage: file=$BXSHARE/BIOS-bochs-latest 
-#romimage: file=bios/seabios-0.6.1.bin
+#romimage: file=bios/seabios-1.6.3.bin
 #romimage: file=mybios.bin, address=0xfff80000 # 512k at memory top
 
 #=======================================================================
@@ -178,7 +178,7 @@ romimage: file=$BXSHARE/BIOS-bochs-latest
 #  2.2.6 2.6Ghz Intel Core 2 Duo with WinXP/g++ 3.4       21 to 25 Mips
 #  2.2.6 2.1Ghz Athlon XP with Linux 2.6/g++ 3.4          12 to 15 Mips
 #=======================================================================
-cpu: count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="msrs.def"
+cpu: model=core2_penryn_t9600, count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="msrs.def"
 cpu: cpuid_limit_winnt=0
 
 #=======================================================================
