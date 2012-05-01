@@ -35,6 +35,8 @@ case $which_config in
                 --enable-clgd54xx \
                 --enable-usb \
                 --enable-usb-ohci \
+                --enable-es1370 \
+                --enable-e1000 \
                 --enable-show-ips \
                 ${CONFIGURE_ARGS}
     ;;
@@ -53,6 +55,8 @@ case $which_config in
                 --enable-clgd54xx \
                 --enable-usb \
                 --enable-usb-ohci \
+                --enable-es1370 \
+                --enable-e1000 \
                 --enable-plugins \
                 --enable-show-ips \
                 --with-all-libs \

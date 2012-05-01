@@ -26,6 +26,9 @@ export CXXFLAGS
             --enable-pci \
             --enable-clgd54xx \
             --enable-usb \
+            --enable-usb-ohci \
+            --enable-es1370 \
+            --enable-e1000 \
             --enable-plugins \
             --with-macos \
             ${CONFIGURE_ARGS}
