@@ -54,13 +54,13 @@
 
 void pit_82C54::print_counter(counter_type &thisctr)
 {
-  BX_INFO(("Printing Counter"));
-  BX_INFO(("count: %d",thisctr.count));
-  BX_INFO(("count_binary: %x",thisctr.count_binary));
-  BX_INFO(("counter gate: %x",thisctr.GATE));
-  BX_INFO(("counter OUT: %x",thisctr.OUTpin));
-  BX_INFO(("next_change_time: %d",thisctr.next_change_time));
-  BX_INFO(("End Counter Printout"));
+#if BX_DEBUGGER
+  dbg_printf("count: %d\n", thisctr.count);
+  dbg_printf("count_binary: 0x%04x\n", thisctr.count_binary);
+  dbg_printf("counter GATE: %x\n", thisctr.GATE);
+  dbg_printf("counter OUT: %x\n", thisctr.OUTpin);
+  dbg_printf("next_change_time: %d\n", thisctr.next_change_time);
+#endif
 }
 
 void pit_82C54::print_cnum(Bit8u cnum)
@@ -329,9 +329,6 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles)
         }
       }
     }
-#if 0
-    print_counter(thisctr);
-#endif
   }
 }
 

@@ -138,6 +138,11 @@ void bx_pit_c::init(void)
   BX_DEBUG(("s.timer_id=%d",BX_PIT_THIS s.timer_handle[0]));
   BX_DEBUG(("s.timer.get_next_event_time=%d", BX_PIT_THIS s.timer.get_next_event_time()));
   BX_DEBUG(("s.last_next_event_time=%d", BX_PIT_THIS s.last_next_event_time));
+
+#if BX_DEBUGGER
+  // register device for the 'info device' command (calls debug_dump())
+  bx_dbg_register_debug_info("pit", this);
+#endif
 }
 
 void bx_pit_c::reset(unsigned type)
@@ -363,6 +368,46 @@ void bx_pit_c::irq_handler(bx_bool value)
   }
 }
 
-Bit16u bx_pit_c::get_timer(int Timer) {
+Bit16u bx_pit_c::get_timer(int Timer)
+{
   return BX_PIT_THIS s.timer.get_inlatch(Timer);
 }
+
+#if BX_DEBUGGER
+void bx_pit_c::debug_dump(int argc, char **argv)
+{
+  Bit32u value;
+  int counter = -1;
+
+  dbg_printf("82C54 PIT\n\n");
+  dbg_printf("GATE #2 = %d\n", BX_PIT_THIS s.timer.read_GATE(2));
+  dbg_printf("Speaker = %d\n\n", BX_PIT_THIS s.speaker_data_on);
+  if (argc == 0) {
+    for (int i = 0; i < 3; i++) {
+      value = BX_PIT_THIS get_timer(i);
+      if (value == 0) value = 0x10000;
+      dbg_printf("counter #%d: freq=%.3f, OUT=%d\n", i, (float)(1193180.0 / value),
+                 BX_PIT_THIS s.timer.read_OUT(i));
+    }
+    dbg_printf("\nSupported options:\n");
+    dbg_printf("info device 'pit' 'counter=N' - show status of counter N\n");
+  } else {
+    for (int arg = 0; arg < argc; arg++) {
+      if (!strncmp(argv[arg], "counter=", 8) && isdigit(argv[arg][8])) {
+        counter = atoi(&argv[arg][8]);
+      } else {
+        dbg_printf("\nUnknown option: '%s'\n", argv[arg]);
+        return;
+      }
+    }
+    if ((counter >= 0) && (counter < 3)) {
+      value = BX_PIT_THIS get_timer(counter);
+      if (value == 0) value = 0x10000;
+      dbg_printf("counter #%d: freq=%.3f\n", counter, (float)(1193180.0 / value));
+      BX_PIT_THIS s.timer.print_cnum(counter);
+    } else {
+      dbg_printf("\nInvalid PIT counter number: %d\n", counter);
+    }
+  }
+}
+#endif

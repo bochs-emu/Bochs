@@ -39,6 +39,9 @@ public:
   virtual void init(void);
   virtual void reset(unsigned type);
   virtual void register_state(void);
+#if BX_DEBUGGER
+  virtual void debug_dump(int argc, char **argv);
+#endif
 
 private:
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
