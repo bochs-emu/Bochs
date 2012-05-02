@@ -3979,18 +3979,20 @@ public: // for now...
   // linear address for translate_linear expected to be canonical !
   BX_SMF bx_phy_address translate_linear(bx_address laddr, unsigned user, unsigned rw);
   BX_SMF bx_phy_address translate_linear_legacy(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned user, unsigned rw);
-  BX_SMF void update_access_dirty(bx_phy_address *entry_addr, Bit32u *entry, unsigned leaf, bx_bool write);
+  BX_SMF void update_access_dirty(bx_phy_address *entry_addr, Bit32u *entry, unsigned leaf, unsigned write);
 #if BX_CPU_LEVEL >= 6
   BX_SMF bx_phy_address translate_linear_load_PDPTR(bx_address laddr, unsigned user, unsigned rw);
   BX_SMF bx_phy_address translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned user, unsigned rw);
   BX_SMF int check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsigned rw, bx_bool *nx_fault);
-  BX_SMF void update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry, unsigned max_level, unsigned leaf, bx_bool write);
+  BX_SMF void update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry, unsigned max_level, unsigned leaf, unsigned write);
 #endif
 #if BX_SUPPORT_X86_64
   BX_SMF bx_phy_address translate_linear_long_mode(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned user, unsigned rw);
 #endif
 #if BX_SUPPORT_VMX >= 2
   BX_SMF bx_phy_address translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bx_bool guest_laddr_valid, bx_bool is_page_walk, unsigned rw);
+  BX_SMF void update_ept_access_dirty(bx_phy_address *entry_addr, Bit64u *entry, unsigned leaf, unsigned write);
+  BX_SMF bx_bool is_eptptr_valid(Bit64u eptptr);
 #endif
 #if BX_SUPPORT_SVM
   BX_SMF void nested_page_fault(unsigned fault, bx_phy_address guest_paddr, unsigned rw, unsigned is_page_walk);

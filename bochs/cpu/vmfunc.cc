@@ -59,8 +59,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMFUNC(bxInstruction_c *i)
 }
 
 #if BX_SUPPORT_VMX >= 2
-extern bx_bool is_eptptr_valid(Bit64u eptptr);
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::vmfunc_eptp_switching(bxInstruction_c *i)
 {
   Bit32u eptp_list_entry = ECX;

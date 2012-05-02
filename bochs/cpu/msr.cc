@@ -187,7 +187,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       val64 = VMX_MSR_VMX_TRUE_VMENTRY_CTRLS;
       break;
     case BX_MSR_VMX_EPT_VPID_CAP:
-      if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT) || BX_SUPPORT_VMX_EXTENSION(BX_VMX_VPID)) {
+      if (VMX_MSR_VMX_EPT_VPID_CAP != 0) {
         val64 = VMX_MSR_VMX_EPT_VPID_CAP;
         break;
       }

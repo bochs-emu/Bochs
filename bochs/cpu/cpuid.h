@@ -157,6 +157,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_VMX_DESCRIPTOR_TABLE_EXIT (1 << 14)              /* Descriptor Table VMEXIT */
 #define BX_VMX_PAUSE_LOOP_EXITING    (1 << 15)              /* Pause Loop Exiting */
 #define BX_VMX_EPTP_SWITCHING        (1 << 16)              /* EPTP switching (VM Function 0) */
+#define BX_VMX_EPT_ACCESS_DIRTY      (1 << 17)              /* Extended Page Tables (EPT) A/D Bits */
 
 // CPUID defines - STD features CPUID[0x00000001].EDX
 // ----------------------------

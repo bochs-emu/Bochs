@@ -259,7 +259,7 @@ unsigned BX_CPU_C::VMXReadRevisionID(bx_phy_address pAddr)
 }
 
 #if BX_SUPPORT_VMX >= 2
-bx_bool is_eptptr_valid(Bit64u eptptr)
+bx_bool BX_CPU_C::is_eptptr_valid(Bit64u eptptr)
 {
   // [2:0] EPT paging-structure memory type
   //       0 = Uncacheable (UC)
@@ -271,8 +271,18 @@ bx_bool is_eptptr_valid(Bit64u eptptr)
   Bit32u walk_length = (eptptr >> 3) & 7;
   if (walk_length != 3) return 0;
 
-#define BX_EPTPTR_RESERVED_BITS 0xfc0 /* bits 11:6 are reserved */
-  if (eptptr & BX_EPTPTR_RESERVED_BITS) return 0;
+  if (! BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_ACCESS_DIRTY)) {
+    if (eptptr & 0x40) {
+      BX_ERROR(("is_eptptr_valid: EPTPTR A/D enabled when not supported by CPU"));
+      return 0;
+    }
+  }
+
+#define BX_EPTPTR_RESERVED_BITS 0xf80 /* bits 11:5 are reserved */
+  if (eptptr & BX_EPTPTR_RESERVED_BITS) {
+    BX_ERROR(("is_eptptr_valid: EPTPTR reserved bits set"));
+    return 0;
+  }
 
   if (! IsValidPhyAddr(eptptr)) return 0;
   return 1;

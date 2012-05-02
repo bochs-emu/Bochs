@@ -526,6 +526,7 @@ typedef struct bx_VMX_Cap
   Bit32u vmx_vmexit_ctrl_supported_bits;
   Bit32u vmx_vmentry_ctrl_supported_bits;
 #if BX_SUPPORT_VMX >= 2
+  Bit64u vmx_ept_vpid_cap_supported_bits;
   Bit64u vmx_vmfunc_supported_bits;
 #endif
 } VMX_CAP;
@@ -982,28 +983,8 @@ enum VMX_INVEPT_INVVPID_type {
   BX_INVEPT_INVVPID_SINGLE_CONTEXT_NON_GLOBAL_INVALIDATION
 };
 
-//  [0] - BX_EPT_ENTRY_EXECUTE_ONLY support
-//  [6] - 4-levels page walk length
-//  [8] - allow UC EPT paging structure memory type
-// [14] - allow WB EPT paging structure memory type
-// [16] - EPT 2M pages support
-// [17] - EPT 1G pages support
-// [20] - INVEPT instruction supported
-// [25] - INVEPT single-context invalidation supported
-// [26] - INVEPT all-context invalidation supported
-
-#define VMX_MSR_VMX_EPT_VPID_CAP_LO (0x06114141 | (!!(bx_cpuid_support_1g_paging()) << 17))
-
-// [32] - INVVPID instruction supported
-// [40] - individual-address INVVPID is supported
-// [41] - single-context INVVPID is supported
-// [42] - all-context INVVPID is supported
-// [43] - single-context-retaining-globals INVVPID is supported
-
-#define VMX_MSR_VMX_EPT_VPID_CAP_HI (0x00000f01)
-
 #define VMX_MSR_VMX_EPT_VPID_CAP \
-   ((((Bit64u) VMX_MSR_VMX_EPT_VPID_CAP_HI) << 32) | VMX_MSR_VMX_EPT_VPID_CAP_LO)
+   (BX_CPU_THIS_PTR vmx_cap.vmx_ept_vpid_cap_supported_bits)
 
 #endif
 

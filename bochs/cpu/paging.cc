@@ -761,7 +761,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
 
 #endif
 
-void BX_CPU_C::update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry, unsigned max_level, unsigned leaf, bx_bool write)
+void BX_CPU_C::update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry, unsigned max_level, unsigned leaf, unsigned write)
 {
   // Update A bit if needed
   for (unsigned level=max_level; level > leaf; level--) {
@@ -1073,7 +1073,7 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
   return ppf | (laddr & lpf_mask);
 }
 
-void BX_CPU_C::update_access_dirty(bx_phy_address *entry_addr, Bit32u *entry, unsigned leaf, bx_bool write)
+void BX_CPU_C::update_access_dirty(bx_phy_address *entry_addr, Bit32u *entry, unsigned leaf, unsigned write)
 {
   if (leaf == BX_LEVEL_PTE) {
     // Update PDE A bit if needed
@@ -1492,6 +1492,10 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
 
   BX_DEBUG(("EPT walk for guest paddr 0x" FMT_ADDRX, guest_paddr));
 
+  // when EPT A/D enabled treat guest page table accesses as writes
+  if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_ACCESS_DIRTY) && is_page_walk && guest_laddr_valid)
+    rw = BX_WRITE;
+
   if (rw == BX_EXECUTE) access_mask |= BX_EPT_EXECUTE;
   if (rw & 1) access_mask |= BX_EPT_WRITE; // write or r-m-w
   if (rw == BX_READ) access_mask |= BX_EPT_READ;
@@ -1582,8 +1586,34 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
     }
   }
 
+  if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_ACCESS_DIRTY)) {
+    update_ept_access_dirty(entry_addr, entry, leaf, rw & 1);
+  }
+
   Bit32u page_offset = PAGE_OFFSET(guest_paddr);
   return ppf | page_offset;
+}
+
+// Access bit 8, Dirty bit 9
+void BX_CPU_C::update_ept_access_dirty(bx_phy_address *entry_addr, Bit64u *entry, unsigned leaf, unsigned write)
+{
+  // Update A bit if needed
+  for (unsigned level=BX_LEVEL_PML4; level > leaf; level--) {
+    if (!(entry[level] & 0x100)) {
+      entry[level] |= 0x100;
+      access_write_physical(entry_addr[level], 8, &entry[level]);
+      BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[level], 8, BX_WRITE,
+            (BX_EPT_PTE_ACCESS + level), (Bit8u*)(&entry[level]));
+    }
+  }
+
+  // Update A/D bits if needed
+  if (!(entry[leaf] & 0x100) || (write && !(entry[leaf] & 0x200))) {
+    entry[leaf] |= (0x100 | (write<<9)); // Update A and possibly D bits
+    access_write_physical(entry_addr[leaf], 8, &entry[leaf]);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, BX_WRITE,
+            (BX_EPT_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
+  }
 }
 
 #endif
