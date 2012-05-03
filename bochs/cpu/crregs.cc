@@ -1311,7 +1311,7 @@ void BX_CPU_C::WriteCR8(bxInstruction_c *i, bx_address val)
 {
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_CR_WRITE_INTERCEPTED(8)) Svm_Vmexit(SVM_VMEXIT_CR8_READ);
+    if (SVM_CR_WRITE_INTERCEPTED(8)) Svm_Vmexit(SVM_VMEXIT_CR8_WRITE);
   }
 #endif
 
@@ -1352,7 +1352,7 @@ Bit32u BX_CPU_C::ReadCR8(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_CR_WRITE_INTERCEPTED(8)) Svm_Vmexit(SVM_VMEXIT_CR8_READ);
+    if (SVM_CR_READ_INTERCEPTED(8)) Svm_Vmexit(SVM_VMEXIT_CR8_READ);
 
     if (SVM_V_INTR_MASKING) return SVM_V_TPR;
   }
