@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -107,7 +107,7 @@ void bx_pit_c::init(void)
   BX_DEBUG(("starting init"));
 
   BX_PIT_THIS s.speaker_data_on = 0;
-  BX_PIT_THIS s.refresh_clock_div2 = 0;
+  BX_PIT_THIS s.speaker_active = 0;
 
   BX_PIT_THIS s.timer.init();
   BX_PIT_THIS s.timer.set_OUT_handler(0, irq_handler);
@@ -154,7 +154,7 @@ void bx_pit_c::register_state(void)
 {
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pit", "8254 PIT State");
   new bx_shadow_bool_c(list, "speaker_data_on", &BX_PIT_THIS s.speaker_data_on);
-  new bx_shadow_bool_c(list, "refresh_clock_div2", &BX_PIT_THIS s.refresh_clock_div2);
+  new bx_shadow_bool_c(list, "speaker_active", &BX_PIT_THIS s.speaker_active);
   new bx_shadow_num_c(list, "last_usec", &BX_PIT_THIS s.last_usec);
   new bx_shadow_num_c(list, "last_next_event_time", &BX_PIT_THIS s.last_next_event_time);
   new bx_shadow_num_c(list, "total_ticks", &BX_PIT_THIS s.total_ticks);
@@ -214,12 +214,10 @@ Bit32u bx_pit_c::read(Bit32u address, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_PIT_SMF
-
+  bx_bool refresh_clock_div2;
   Bit8u value = 0;
 
   handle_timer();
-
-  Bit64u my_time_usec = bx_virt_timer.time_usec();
 
   switch (address) {
 
@@ -238,9 +236,9 @@ Bit32u bx_pit_c::read(Bit32u address, unsigned io_len)
 
     case 0x61:
       /* AT, port 61h */
-      BX_PIT_THIS s.refresh_clock_div2 = (bx_bool)((my_time_usec / 15) & 1);
+      refresh_clock_div2 = (bx_bool)((bx_virt_timer.time_usec() / 15) & 1);
       value = (BX_PIT_THIS s.timer.read_OUT(2)  << 5) |
-              (BX_PIT_THIS s.refresh_clock_div2 << 4) |
+              (refresh_clock_div2               << 4) |
               (BX_PIT_THIS s.speaker_data_on    << 1) |
               (BX_PIT_THIS s.timer.read_GATE(2) ? 1 : 0);
       break;
@@ -271,7 +269,8 @@ void bx_pit_c::write(Bit32u address, Bit32u dvalue, unsigned io_len)
   Bit8u   value;
   Bit64u my_time_usec = bx_virt_timer.time_usec();
   Bit64u time_passed = my_time_usec-BX_PIT_THIS s.last_usec;
-  Bit32u time_passed32 = (Bit32u)time_passed;
+  Bit32u value32, time_passed32 = (Bit32u)time_passed;
+  bx_bool new_speaker_active;
 
   if(time_passed32) {
     periodic(time_passed32);
@@ -300,14 +299,19 @@ void bx_pit_c::write(Bit32u address, Bit32u dvalue, unsigned io_len)
       break;
 
     case 0x61:
-      BX_PIT_THIS s.speaker_data_on = (value >> 1) & 0x01;
-      if (BX_PIT_THIS s.speaker_data_on) {
-        DEV_speaker_beep_on((float)(1193180.0 / BX_PIT_THIS get_timer(2)));
-      } else {
-        DEV_speaker_beep_off();
-      }
-      /* ??? only on AT+ */
       BX_PIT_THIS s.timer.set_GATE(2, value & 0x01);
+      BX_PIT_THIS s.speaker_data_on = (value >> 1) & 0x01;
+      new_speaker_active = ((value & 3) == 3);
+      if (BX_PIT_THIS s.speaker_active != new_speaker_active) {
+        if (new_speaker_active) {
+          value32 = BX_PIT_THIS get_timer(2);
+          if (value32 == 0) value32 = 0x10000;
+          DEV_speaker_beep_on((float)(1193180.0 / value32));
+        } else {
+          DEV_speaker_beep_off();
+        }
+        BX_PIT_THIS s.speaker_active = new_speaker_active;
+      }
       break;
 
     default:

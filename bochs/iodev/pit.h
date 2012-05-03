@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -54,7 +54,7 @@ private:
   struct s_type {
     pit_82C54 timer;
     bx_bool speaker_data_on;
-    bx_bool refresh_clock_div2;
+    bx_bool speaker_active;
     Bit64u  last_usec;
     Bit32u  last_next_event_time;
     Bit64u  total_ticks;
