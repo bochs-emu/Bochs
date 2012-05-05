@@ -239,15 +239,7 @@ Bit32u bx_dbg_get_symbol_value(const char *Symbol)
 const char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
 {
   static char buf[80];
-#if 0
-  // bbd: I don't see why we shouldn't allow symbol lookups on
-  // segments with a nonzero base.  I need to trace user
-  // processes in Linux, which have a base of 0xc0000000.
-  if (base != 0) {
-    snprintf (buf, 80, "non-zero base");
-    return buf;
-  }
-#endif
+
   // Look up this context
   context_t* cntx = context_t::get_context(context);
   if (!cntx) {
