@@ -2841,7 +2841,7 @@ Bit32u lba_low, lba_high;
 
   // sector will be 0 only on lba access. Convert to lba-chs
   if (sector == 0) {
-    if ((count >= 1 << 8) || lba_high || (lba_low + count >= 1UL << 28)) {
+    if ((count >= 1 << 8) || lba_high || (lba_low >= ((1UL << 28) - count))) {
       outb(iobase1 + ATA_CB_FR, 0x00);
       outb(iobase1 + ATA_CB_SC, (count >> 8) & 0xff);
       outb(iobase1 + ATA_CB_SN, lba_low >> 24);
@@ -2992,7 +2992,7 @@ Bit32u lba_low, lba_high;
 
   // sector will be 0 only on lba access. Convert to lba-chs
   if (sector == 0) {
-    if ((count >= 1 << 8) || lba_high || (lba_low + count >= 1UL << 28)) {
+    if ((count >= 1 << 8) || lba_high || (lba_low >= ((1UL << 28) - count))) {
       outb(iobase1 + ATA_CB_FR, 0x00);
       outb(iobase1 + ATA_CB_SC, (count >> 8) & 0xff);
       outb(iobase1 + ATA_CB_SN, lba_low >> 24);
