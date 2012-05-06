@@ -216,12 +216,12 @@ private:
   BX_HD_SMF void raise_interrupt(Bit8u channel) BX_CPP_AttrRegparmN(1);
   BX_HD_SMF void atapi_cmd_error(Bit8u channel, sense_t sense_key, asc_t asc, bx_bool show);
   BX_HD_SMF void init_mode_sense_single(Bit8u channel, const void* src, int size);
-  BX_HD_SMF void atapi_cmd_nop(Bit8u channel) BX_CPP_AttrRegparmN(1);
+  BX_HD_SMF void atapi_cmd_nop(controller_t *controller) BX_CPP_AttrRegparmN(1);
   BX_HD_SMF bx_bool bmdma_present(void);
   BX_HD_SMF void set_signature(Bit8u channel, Bit8u id);
   BX_HD_SMF bx_bool ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u buffer_size);
   BX_HD_SMF bx_bool ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u buffer_size);
-  BX_HD_SMF void lba48_transform(Bit8u channel, bx_bool lba48);
+  BX_HD_SMF void lba48_transform(controller_t *controller, bx_bool lba48);
 
   static Bit64s cdrom_status_handler(bx_param_c *param, int set, Bit64s val);
   static const char* cdrom_path_handler(bx_param_string_c *param, int set,

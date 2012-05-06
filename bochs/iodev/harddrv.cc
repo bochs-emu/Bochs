@@ -41,9 +41,9 @@
 
 // some packet handling macros
 #define EXTRACT_FIELD(arr,byte,start,num_bits) (((arr)[(byte)] >> (start)) & ((1 << (num_bits)) - 1))
-#define get_packet_field(c,b,s,n) (EXTRACT_FIELD((BX_SELECTED_CONTROLLER((c)).buffer),(b),(s),(n)))
-#define get_packet_byte(c,b) (BX_SELECTED_CONTROLLER((c)).buffer[(b)])
-#define get_packet_word(c,b) (((Bit16u)BX_SELECTED_CONTROLLER((c)).buffer[(b)] << 8) | BX_SELECTED_CONTROLLER((c)).buffer[(b)+1])
+#define get_packet_field(controller,b,s,n) (EXTRACT_FIELD((controller->buffer),(b),(s),(n)))
+#define get_packet_byte(controller,b) (controller->buffer[(b)])
+#define get_packet_word(controller,b) (((Bit16u)controller->buffer[(b)] << 8) | controller->buffer[(b)+1])
 
 
 #define BX_CONTROLLER(c,a) (BX_HD_THIS channels[(c)].drives[(a)]).controller
@@ -723,28 +723,30 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
     }
   }
 
+  controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
+
   switch (port) {
     case 0x00: // hard disk data (16bit) 0x1f0
-      if (BX_SELECTED_CONTROLLER(channel).status.drq == 0) {
+      if (controller->status.drq == 0) {
             BX_ERROR(("IO read(0x%04x) with drq == 0: last command was %02xh",
-                     address, (unsigned) BX_SELECTED_CONTROLLER(channel).current_command));
+                     address, (unsigned) controller->current_command));
             return(0);
       }
       BX_DEBUG(("IO read(0x%04x): current command is %02xh",
-            address, (unsigned) BX_SELECTED_CONTROLLER(channel).current_command));
-      switch (BX_SELECTED_CONTROLLER(channel).current_command) {
+            address, (unsigned) controller->current_command));
+      switch (controller->current_command) {
         case 0x20: // READ SECTORS, with retries
         case 0x21: // READ SECTORS, without retries
         case 0xC4: // READ MULTIPLE SECTORS
         case 0x24: // READ SECTORS EXT
         case 0x29: // READ MULTIPLE EXT
-          if (BX_SELECTED_CONTROLLER(channel).buffer_index >= BX_SELECTED_CONTROLLER(channel).buffer_size)
-            BX_PANIC(("IO read(0x%04x): buffer_index >= %d", address, BX_SELECTED_CONTROLLER(channel).buffer_size));
+          if (controller->buffer_index >= controller->buffer_size)
+            BX_PANIC(("IO read(0x%04x): buffer_index >= %d", address, controller->buffer_size));
 
 #if BX_SupportRepeatSpeedups
           if (DEV_bulk_io_quantum_requested()) {
             unsigned transferLen, quantumsMax;
-            quantumsMax = (BX_SELECTED_CONTROLLER(channel).buffer_size - BX_SELECTED_CONTROLLER(channel).buffer_index) / io_len;
+            quantumsMax = (controller->buffer_size - controller->buffer_index) / io_len;
             if (quantumsMax == 0)
               BX_PANIC(("IO read(0x%04x): not enough space for read", address));
             DEV_bulk_io_quantum_transferred() = DEV_bulk_io_quantum_requested();
@@ -752,9 +754,9 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
               DEV_bulk_io_quantum_transferred() = quantumsMax;
             transferLen = io_len * DEV_bulk_io_quantum_transferred();
             memcpy((Bit8u*) DEV_bulk_io_host_addr(),
-              &BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index], transferLen);
+              &controller->buffer[controller->buffer_index], transferLen);
             DEV_bulk_io_host_addr() += transferLen;
-            BX_SELECTED_CONTROLLER(channel).buffer_index += transferLen;
+            controller->buffer_index += transferLen;
             value32 = 0; // Value returned not important;
           }
           else
@@ -763,46 +765,45 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
             value32 = 0L;
             switch(io_len){
               case 4:
-                value32 |= (BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index+3] << 24);
-                value32 |= (BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index+2] << 16);
+                value32 |= (controller->buffer[controller->buffer_index+3] << 24);
+                value32 |= (controller->buffer[controller->buffer_index+2] << 16);
               case 2:
-                value32 |= (BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index+1] << 8);
-                value32 |=  BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index];
+                value32 |= (controller->buffer[controller->buffer_index+1] << 8);
+                value32 |=  controller->buffer[controller->buffer_index];
             }
-            BX_SELECTED_CONTROLLER(channel).buffer_index += io_len;
+            controller->buffer_index += io_len;
           }
 
           // if buffer completely read
-          if (BX_SELECTED_CONTROLLER(channel).buffer_index >= BX_SELECTED_CONTROLLER(channel).buffer_size) {
+          if (controller->buffer_index >= controller->buffer_size) {
             // update sector count, sector number, cylinder,
             // drive, head, status
             // if there are more sectors, read next one in...
             //
-            if ((BX_SELECTED_CONTROLLER(channel).current_command == 0xC4) ||
-                (BX_SELECTED_CONTROLLER(channel).current_command == 0x29)) {
-              if (BX_SELECTED_CONTROLLER(channel).num_sectors > BX_SELECTED_CONTROLLER(channel).multiple_sectors) {
-                BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).multiple_sectors * 512;
+            if ((controller->current_command == 0xC4) ||
+                (controller->current_command == 0x29)) {
+              if (controller->num_sectors > controller->multiple_sectors) {
+                controller->buffer_size = controller->multiple_sectors * 512;
               } else {
-                BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).num_sectors * 512;
+                controller->buffer_size = controller->num_sectors * 512;
               }
             }
 
-            BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-            BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-            BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
-            BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
-            BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
-            BX_SELECTED_CONTROLLER(channel).status.err = 0;
+            controller->status.busy = 0;
+            controller->status.drive_ready = 1;
+            controller->status.write_fault = 0;
+            controller->status.seek_complete = 1;
+            controller->status.corrected_data = 0;
+            controller->status.err = 0;
 
-            if (BX_SELECTED_CONTROLLER(channel).num_sectors==0) {
-              BX_SELECTED_CONTROLLER(channel).status.drq = 0;
+            if (controller->num_sectors==0) {
+              controller->status.drq = 0;
             } else { /* read next one into controller buffer */
-              BX_SELECTED_CONTROLLER(channel).status.drq = 1;
-              BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
+              controller->status.drq = 1;
+              controller->status.seek_complete = 1;
 
-              if (ide_read_sector(channel, BX_SELECTED_CONTROLLER(channel).buffer,
-                                  BX_SELECTED_CONTROLLER(channel).buffer_size)) {
-                BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
+              if (ide_read_sector(channel, controller->buffer, controller->buffer_size)) {
+                controller->buffer_index = 0;
                 raise_interrupt(channel);
               }
             }
@@ -814,29 +815,29 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
         case 0xa1:
           unsigned index;
 
-          BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-          BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-          BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
-          BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
-          BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
-          BX_SELECTED_CONTROLLER(channel).status.err = 0;
+          controller->status.busy = 0;
+          controller->status.drive_ready = 1;
+          controller->status.write_fault = 0;
+          controller->status.seek_complete = 1;
+          controller->status.corrected_data = 0;
+          controller->status.err = 0;
 
-          index = BX_SELECTED_CONTROLLER(channel).buffer_index;
-          value32 = BX_SELECTED_CONTROLLER(channel).buffer[index];
+          index = controller->buffer_index;
+          value32 = controller->buffer[index];
           index++;
           if (io_len >= 2) {
-            value32 |= (BX_SELECTED_CONTROLLER(channel).buffer[index] << 8);
+            value32 |= (controller->buffer[index] << 8);
             index++;
           }
           if (io_len == 4) {
-            value32 |= (BX_SELECTED_CONTROLLER(channel).buffer[index] << 16);
-            value32 |= (BX_SELECTED_CONTROLLER(channel).buffer[index+1] << 24);
+            value32 |= (controller->buffer[index] << 16);
+            value32 |= (controller->buffer[index+1] << 24);
             index += 2;
           }
-          BX_SELECTED_CONTROLLER(channel).buffer_index = index;
+          controller->buffer_index = index;
 
-          if (BX_SELECTED_CONTROLLER(channel).buffer_index >= 512) {
-            BX_SELECTED_CONTROLLER(channel).status.drq = 0;
+          if (controller->buffer_index >= 512) {
+            controller->status.drq = 0;
             BX_DEBUG(("Read all drive ID Bytes ..."));
           }
           GOTO_RETURN_VALUE;
@@ -844,13 +845,13 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 
         case 0xa0:
           {
-            unsigned index = BX_SELECTED_CONTROLLER(channel).buffer_index;
+            unsigned index = controller->buffer_index;
             unsigned increment = 0;
 
             // Load block if necessary
-            if (index >= BX_SELECTED_CONTROLLER(channel).buffer_size) {
-              if (index > BX_SELECTED_CONTROLLER(channel).buffer_size)
-                BX_PANIC(("index > %d : %d", BX_SELECTED_CONTROLLER(channel).buffer_size, index));
+            if (index >= controller->buffer_size) {
+              if (index > controller->buffer_size)
+                BX_PANIC(("index > %d : %d", controller->buffer_size, index));
               switch (BX_SELECTED_DRIVE(channel).atapi.command) {
                 case 0x28: // read (10)
                 case 0xa8: // read (12)
@@ -861,9 +862,9 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
                   }
                   /* set status bar conditions for device */
                   bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1);
-                  if (!BX_SELECTED_DRIVE(channel).cdrom.cd->read_block(BX_SELECTED_CONTROLLER(channel).buffer,
+                  if (!BX_SELECTED_DRIVE(channel).cdrom.cd->read_block(controller->buffer,
                                                                        BX_SELECTED_DRIVE(channel).cdrom.next_lba,
-                                                                       BX_SELECTED_CONTROLLER(channel).buffer_size))
+                                                                       controller->buffer_size))
                   {
                     BX_PANIC(("CDROM: read block %d failed", BX_SELECTED_DRIVE(channel).cdrom.next_lba));
                   }
@@ -888,51 +889,51 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
               }
             }
 
-            value32 = BX_SELECTED_CONTROLLER(channel).buffer[index+increment];
+            value32 = controller->buffer[index+increment];
             increment++;
             if (io_len >= 2) {
-              value32 |= (BX_SELECTED_CONTROLLER(channel).buffer[index+increment] << 8);
+              value32 |= (controller->buffer[index+increment] << 8);
               increment++;
             }
             if (io_len == 4) {
-              value32 |= (BX_SELECTED_CONTROLLER(channel).buffer[index+increment] << 16);
-              value32 |= (BX_SELECTED_CONTROLLER(channel).buffer[index+increment+1] << 24);
+              value32 |= (controller->buffer[index+increment] << 16);
+              value32 |= (controller->buffer[index+increment+1] << 24);
               increment += 2;
             }
-            BX_SELECTED_CONTROLLER(channel).buffer_index = index + increment;
-            BX_SELECTED_CONTROLLER(channel).drq_index += increment;
+            controller->buffer_index = index + increment;
+            controller->drq_index += increment;
 
-            if (BX_SELECTED_CONTROLLER(channel).drq_index >= (unsigned)BX_SELECTED_DRIVE(channel).atapi.drq_bytes) {
-              BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-              BX_SELECTED_CONTROLLER(channel).drq_index = 0;
+            if (controller->drq_index >= (unsigned)BX_SELECTED_DRIVE(channel).atapi.drq_bytes) {
+              controller->status.drq = 0;
+              controller->drq_index = 0;
 
               BX_SELECTED_DRIVE(channel).atapi.total_bytes_remaining -= BX_SELECTED_DRIVE(channel).atapi.drq_bytes;
 
               if (BX_SELECTED_DRIVE(channel).atapi.total_bytes_remaining > 0) {
                 // one or more blocks remaining (works only for single block commands)
                 BX_DEBUG(("PACKET drq bytes read"));
-                BX_SELECTED_CONTROLLER(channel).interrupt_reason.i_o = 1;
-                BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-                BX_SELECTED_CONTROLLER(channel).status.drq = 1;
-                BX_SELECTED_CONTROLLER(channel).interrupt_reason.c_d = 0;
+                controller->interrupt_reason.i_o = 1;
+                controller->status.busy = 0;
+                controller->status.drq = 1;
+                controller->interrupt_reason.c_d = 0;
 
                 // set new byte count if last block
-                if (BX_SELECTED_DRIVE(channel).atapi.total_bytes_remaining < BX_SELECTED_CONTROLLER(channel).byte_count) {
-                  BX_SELECTED_CONTROLLER(channel).byte_count = BX_SELECTED_DRIVE(channel).atapi.total_bytes_remaining;
+                if (BX_SELECTED_DRIVE(channel).atapi.total_bytes_remaining < controller->byte_count) {
+                  controller->byte_count = BX_SELECTED_DRIVE(channel).atapi.total_bytes_remaining;
                 }
-                BX_SELECTED_DRIVE(channel).atapi.drq_bytes = BX_SELECTED_CONTROLLER(channel).byte_count;
+                BX_SELECTED_DRIVE(channel).atapi.drq_bytes = controller->byte_count;
 
                 raise_interrupt(channel);
               } else {
                 // all bytes read
                 BX_DEBUG(("PACKET all bytes read"));
-                BX_SELECTED_CONTROLLER(channel).interrupt_reason.i_o = 1;
-                BX_SELECTED_CONTROLLER(channel).interrupt_reason.c_d = 1;
-                BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-                BX_SELECTED_CONTROLLER(channel).interrupt_reason.rel = 0;
-                BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-                BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-                BX_SELECTED_CONTROLLER(channel).status.err = 0;
+                controller->interrupt_reason.i_o = 1;
+                controller->interrupt_reason.c_d = 1;
+                controller->status.drive_ready = 1;
+                controller->interrupt_reason.rel = 0;
+                controller->status.busy = 0;
+                controller->status.drq = 0;
+                controller->status.err = 0;
 
                 raise_interrupt(channel);
               }
@@ -943,7 +944,7 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 
         default:
           BX_ERROR(("read from 0x%04x: current command is 0x%02x", address,
-                    BX_SELECTED_CONTROLLER(channel).current_command));
+                    controller->current_command));
       }
       break;
 
@@ -951,19 +952,19 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
       // -- WARNING : On real hardware the controller registers are shared between drives.
       // So we must respond even if the select device is not present. Some OS uses this fact
       // to detect the disks.... minix2 for example
-      value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : BX_SELECTED_CONTROLLER(channel).error_register;
+      value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : controller->error_register;
       goto return_value8;
     case 0x02: // hard disk sector count / interrupt reason 0x1f2
-      value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : BX_SELECTED_CONTROLLER(channel).sector_count;
+      value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : controller->sector_count;
       goto return_value8;
     case 0x03: // sector number 0x1f3
-      value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : BX_SELECTED_CONTROLLER(channel).sector_no;
+      value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : controller->sector_no;
       goto return_value8;
     case 0x04: // cylinder low 0x1f4
-      value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : (BX_SELECTED_CONTROLLER(channel).cylinder_no & 0x00ff);
+      value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : (controller->cylinder_no & 0x00ff);
       goto return_value8;
     case 0x05: // cylinder high 0x1f5
-      value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : BX_SELECTED_CONTROLLER(channel).cylinder_no >> 8;
+      value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : controller->cylinder_no >> 8;
       goto return_value8;
 
     case 0x06: // hard disk drive and head register 0x1f6
@@ -975,10 +976,10 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
       // b4: DRV
       // b3..0 HD3..HD0
       value8 = (1 << 7) |
-               (BX_SELECTED_CONTROLLER(channel).lba_mode << 6) |
+               (controller->lba_mode << 6) |
                (1 << 5) | // 01b = 512 sector size
                (BX_HD_THIS channels[channel].drive_select << 4) |
-               (BX_SELECTED_CONTROLLER(channel).head_no << 0);
+               (controller->head_no << 0);
       goto return_value8;
 
     case 0x07: // Hard Disk Status 0x1f7
@@ -988,19 +989,19 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
         value8 = 0;
       } else {
         value8 = (
-          (BX_SELECTED_CONTROLLER(channel).status.busy << 7) |
-          (BX_SELECTED_CONTROLLER(channel).status.drive_ready << 6) |
-          (BX_SELECTED_CONTROLLER(channel).status.write_fault << 5) |
-          (BX_SELECTED_CONTROLLER(channel).status.seek_complete << 4) |
-          (BX_SELECTED_CONTROLLER(channel).status.drq << 3) |
-          (BX_SELECTED_CONTROLLER(channel).status.corrected_data << 2) |
-          (BX_SELECTED_CONTROLLER(channel).status.index_pulse << 1) |
-          (BX_SELECTED_CONTROLLER(channel).status.err));
-        BX_SELECTED_CONTROLLER(channel).status.index_pulse_count++;
-        BX_SELECTED_CONTROLLER(channel).status.index_pulse = 0;
-        if (BX_SELECTED_CONTROLLER(channel).status.index_pulse_count >= INDEX_PULSE_CYCLE) {
-          BX_SELECTED_CONTROLLER(channel).status.index_pulse = 1;
-          BX_SELECTED_CONTROLLER(channel).status.index_pulse_count = 0;
+          (controller->status.busy << 7) |
+          (controller->status.drive_ready << 6) |
+          (controller->status.write_fault << 5) |
+          (controller->status.seek_complete << 4) |
+          (controller->status.drq << 3) |
+          (controller->status.corrected_data << 2) |
+          (controller->status.index_pulse << 1) |
+          (controller->status.err));
+        controller->status.index_pulse_count++;
+        controller->status.index_pulse = 0;
+        if (controller->status.index_pulse_count >= INDEX_PULSE_CYCLE) {
+          controller->status.index_pulse = 1;
+          controller->status.index_pulse_count = 0;
         }
       }
       if (port == 0x07) {
@@ -1106,58 +1107,60 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
   }
 
+  controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
+
   switch (port) {
     case 0x00: // 0x1f0
-      switch (BX_SELECTED_CONTROLLER(channel).current_command) {
+      switch (controller->current_command) {
         case 0x30: // WRITE SECTORS
         case 0xC5: // WRITE MULTIPLE SECTORS
         case 0x34: // WRITE SECTORS EXT
         case 0x39: // WRITE MULTIPLE EXT
-          if (BX_SELECTED_CONTROLLER(channel).buffer_index >= BX_SELECTED_CONTROLLER(channel).buffer_size)
-            BX_PANIC(("IO write(0x%04x): buffer_index >= %d", address, BX_SELECTED_CONTROLLER(channel).buffer_size));
+          if (controller->buffer_index >= controller->buffer_size)
+            BX_PANIC(("IO write(0x%04x): buffer_index >= %d", address, controller->buffer_size));
 
 #if BX_SupportRepeatSpeedups
           if (DEV_bulk_io_quantum_requested()) {
             unsigned transferLen, quantumsMax;
-            quantumsMax = (BX_SELECTED_CONTROLLER(channel).buffer_size - BX_SELECTED_CONTROLLER(channel).buffer_index) / io_len;
+            quantumsMax = (controller->buffer_size - controller->buffer_index) / io_len;
             if (quantumsMax == 0)
               BX_PANIC(("IO write(0x%04x): not enough space for write", address));
             DEV_bulk_io_quantum_transferred() = DEV_bulk_io_quantum_requested();
             if (quantumsMax < DEV_bulk_io_quantum_transferred())
               DEV_bulk_io_quantum_transferred() = quantumsMax;
             transferLen = io_len * DEV_bulk_io_quantum_transferred();
-            memcpy(&BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index],
+            memcpy(&controller->buffer[controller->buffer_index],
               (Bit8u*) DEV_bulk_io_host_addr(), transferLen);
             DEV_bulk_io_host_addr() += transferLen;
-            BX_SELECTED_CONTROLLER(channel).buffer_index += transferLen;
+            controller->buffer_index += transferLen;
           }
           else
 #endif
           {
             switch(io_len) {
               case 4:
-                BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index+3] = (Bit8u)(value >> 24);
-                BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index+2] = (Bit8u)(value >> 16);
+                controller->buffer[controller->buffer_index+3] = (Bit8u)(value >> 24);
+                controller->buffer[controller->buffer_index+2] = (Bit8u)(value >> 16);
               case 2:
-                BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index+1] = (Bit8u)(value >> 8);
-                BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index]   = (Bit8u) value;
+                controller->buffer[controller->buffer_index+1] = (Bit8u)(value >> 8);
+                controller->buffer[controller->buffer_index]   = (Bit8u) value;
             }
-            BX_SELECTED_CONTROLLER(channel).buffer_index += io_len;
+            controller->buffer_index += io_len;
           }
 
           /* if buffer completely writtten */
-          if (BX_SELECTED_CONTROLLER(channel).buffer_index >= BX_SELECTED_CONTROLLER(channel).buffer_size) {
-            if (ide_write_sector(channel, BX_SELECTED_CONTROLLER(channel).buffer,
-                                 BX_SELECTED_CONTROLLER(channel).buffer_size)) {
-              if ((BX_SELECTED_CONTROLLER(channel).current_command == 0xC5) ||
-                  (BX_SELECTED_CONTROLLER(channel).current_command == 0x39)) {
-                if (BX_SELECTED_CONTROLLER(channel).num_sectors > BX_SELECTED_CONTROLLER(channel).multiple_sectors) {
-                  BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).multiple_sectors * 512;
+          if (controller->buffer_index >= controller->buffer_size) {
+            if (ide_write_sector(channel, controller->buffer,
+                                 controller->buffer_size)) {
+              if ((controller->current_command == 0xC5) ||
+                  (controller->current_command == 0x39)) {
+                if (controller->num_sectors > controller->multiple_sectors) {
+                  controller->buffer_size = controller->multiple_sectors * 512;
                 } else {
-                  BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).num_sectors * 512;
+                  controller->buffer_size = controller->num_sectors * 512;
                 }
               }
-              BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
+              controller->buffer_index = 0;
 
               /* When the write is complete, controller clears the DRQ bit and
                * sets the BSY bit.
@@ -1165,18 +1168,18 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                * clears BSY bit, and issues IRQ
                */
 
-              if (BX_SELECTED_CONTROLLER(channel).num_sectors != 0) {
-                BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-                BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-                BX_SELECTED_CONTROLLER(channel).status.drq = 1;
-                BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
-                BX_SELECTED_CONTROLLER(channel).status.err = 0;
+              if (controller->num_sectors != 0) {
+                controller->status.busy = 0;
+                controller->status.drive_ready = 1;
+                controller->status.drq = 1;
+                controller->status.corrected_data = 0;
+                controller->status.err = 0;
               } else { /* no more sectors to write */
-                BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-                BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-                BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-                BX_SELECTED_CONTROLLER(channel).status.err = 0;
-                BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
+                controller->status.busy = 0;
+                controller->status.drive_ready = 1;
+                controller->status.drq = 0;
+                controller->status.err = 0;
+                controller->status.corrected_data = 0;
               }
               raise_interrupt(channel);
             }
@@ -1184,24 +1187,24 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 
         case 0xa0: // PACKET
-          if (BX_SELECTED_CONTROLLER(channel).buffer_index >= PACKET_SIZE)
+          if (controller->buffer_index >= PACKET_SIZE)
             BX_PANIC(("IO write(0x%04x): buffer_index >= PACKET_SIZE", address));
 
           switch (io_len) {
             case 4:
-              BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index+3] = (Bit8u)(value >> 24);
-              BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index+2] = (Bit8u)(value >> 16);
+              controller->buffer[controller->buffer_index+3] = (Bit8u)(value >> 24);
+              controller->buffer[controller->buffer_index+2] = (Bit8u)(value >> 16);
             case 2:
-              BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index+1] = (Bit8u)(value >> 8);
-              BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index]   = (Bit8u) value;
+              controller->buffer[controller->buffer_index+1] = (Bit8u)(value >> 8);
+              controller->buffer[controller->buffer_index]   = (Bit8u) value;
           }
-          BX_SELECTED_CONTROLLER(channel).buffer_index += io_len;
+          controller->buffer_index += io_len;
 
           /* if packet completely writtten */
-          if (BX_SELECTED_CONTROLLER(channel).buffer_index >= PACKET_SIZE) {
+          if (controller->buffer_index >= PACKET_SIZE) {
             // complete command received
-            Bit8u atapi_command = BX_SELECTED_CONTROLLER(channel).buffer[0];
-            BX_SELECTED_CONTROLLER(channel).buffer_size = 2048;
+            Bit8u atapi_command = controller->buffer[0];
+            controller->buffer_size = 2048;
 
             BX_DEBUG(("ata%d-%d: ATAPI command 0x%02x started", channel,
                       BX_SLAVE_SELECTED(channel), atapi_command));
@@ -1209,7 +1212,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             switch (atapi_command) {
               case 0x00: // test unit ready
                 if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
-                  atapi_cmd_nop(channel);
+                  atapi_cmd_nop(controller);
                 } else {
                   atapi_cmd_error(channel, SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT, 0);
                 }
@@ -1218,28 +1221,28 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
               case 0x03: // request sense
                 {
-                  int alloc_length = BX_SELECTED_CONTROLLER(channel).buffer[4];
+                  int alloc_length = controller->buffer[4];
                   init_send_atapi_command(channel, atapi_command, 18, alloc_length);
 
                   // sense data
-                  BX_SELECTED_CONTROLLER(channel).buffer[0] = 0x70 | (1 << 7);
-                  BX_SELECTED_CONTROLLER(channel).buffer[1] = 0;
-                  BX_SELECTED_CONTROLLER(channel).buffer[2] = BX_SELECTED_DRIVE(channel).sense.sense_key;
-                  BX_SELECTED_CONTROLLER(channel).buffer[3] = BX_SELECTED_DRIVE(channel).sense.information.arr[0];
-                  BX_SELECTED_CONTROLLER(channel).buffer[4] = BX_SELECTED_DRIVE(channel).sense.information.arr[1];
-                  BX_SELECTED_CONTROLLER(channel).buffer[5] = BX_SELECTED_DRIVE(channel).sense.information.arr[2];
-                  BX_SELECTED_CONTROLLER(channel).buffer[6] = BX_SELECTED_DRIVE(channel).sense.information.arr[3];
-                  BX_SELECTED_CONTROLLER(channel).buffer[7] = 17-7;
-                  BX_SELECTED_CONTROLLER(channel).buffer[8] = BX_SELECTED_DRIVE(channel).sense.specific_inf.arr[0];
-                  BX_SELECTED_CONTROLLER(channel).buffer[9] = BX_SELECTED_DRIVE(channel).sense.specific_inf.arr[1];
-                  BX_SELECTED_CONTROLLER(channel).buffer[10] = BX_SELECTED_DRIVE(channel).sense.specific_inf.arr[2];
-                  BX_SELECTED_CONTROLLER(channel).buffer[11] = BX_SELECTED_DRIVE(channel).sense.specific_inf.arr[3];
-                  BX_SELECTED_CONTROLLER(channel).buffer[12] = BX_SELECTED_DRIVE(channel).sense.asc;
-                  BX_SELECTED_CONTROLLER(channel).buffer[13] = BX_SELECTED_DRIVE(channel).sense.ascq;
-                  BX_SELECTED_CONTROLLER(channel).buffer[14] = BX_SELECTED_DRIVE(channel).sense.fruc;
-                  BX_SELECTED_CONTROLLER(channel).buffer[15] = BX_SELECTED_DRIVE(channel).sense.key_spec.arr[0];
-                  BX_SELECTED_CONTROLLER(channel).buffer[16] = BX_SELECTED_DRIVE(channel).sense.key_spec.arr[1];
-                  BX_SELECTED_CONTROLLER(channel).buffer[17] = BX_SELECTED_DRIVE(channel).sense.key_spec.arr[2];
+                  controller->buffer[0] = 0x70 | (1 << 7);
+                  controller->buffer[1] = 0;
+                  controller->buffer[2] = BX_SELECTED_DRIVE(channel).sense.sense_key;
+                  controller->buffer[3] = BX_SELECTED_DRIVE(channel).sense.information.arr[0];
+                  controller->buffer[4] = BX_SELECTED_DRIVE(channel).sense.information.arr[1];
+                  controller->buffer[5] = BX_SELECTED_DRIVE(channel).sense.information.arr[2];
+                  controller->buffer[6] = BX_SELECTED_DRIVE(channel).sense.information.arr[3];
+                  controller->buffer[7] = 17-7;
+                  controller->buffer[8] = BX_SELECTED_DRIVE(channel).sense.specific_inf.arr[0];
+                  controller->buffer[9] = BX_SELECTED_DRIVE(channel).sense.specific_inf.arr[1];
+                  controller->buffer[10] = BX_SELECTED_DRIVE(channel).sense.specific_inf.arr[2];
+                  controller->buffer[11] = BX_SELECTED_DRIVE(channel).sense.specific_inf.arr[3];
+                  controller->buffer[12] = BX_SELECTED_DRIVE(channel).sense.asc;
+                  controller->buffer[13] = BX_SELECTED_DRIVE(channel).sense.ascq;
+                  controller->buffer[14] = BX_SELECTED_DRIVE(channel).sense.fruc;
+                  controller->buffer[15] = BX_SELECTED_DRIVE(channel).sense.key_spec.arr[0];
+                  controller->buffer[16] = BX_SELECTED_DRIVE(channel).sense.key_spec.arr[1];
+                  controller->buffer[17] = BX_SELECTED_DRIVE(channel).sense.key_spec.arr[2];
 
                   if (BX_SELECTED_DRIVE(channel).sense.sense_key == SENSE_UNIT_ATTENTION) {
                     BX_SELECTED_DRIVE(channel).sense.sense_key = SENSE_NONE;
@@ -1251,23 +1254,23 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
               case 0x1b: // start stop unit
                 {
                   char ata_name[20];
-                  //bx_bool Immed = (BX_SELECTED_CONTROLLER(channel).buffer[1] >> 0) & 1;
-                  bx_bool LoEj = (BX_SELECTED_CONTROLLER(channel).buffer[4] >> 1) & 1;
-                  bx_bool Start = (BX_SELECTED_CONTROLLER(channel).buffer[4] >> 0) & 1;
+                  //bx_bool Immed = (controller->buffer[1] >> 0) & 1;
+                  bx_bool LoEj = (controller->buffer[4] >> 1) & 1;
+                  bx_bool Start = (controller->buffer[4] >> 0) & 1;
 
                   if (!LoEj && !Start) { // stop the disc
                     BX_ERROR(("FIXME: Stop disc not implemented"));
-                    atapi_cmd_nop(channel);
+                    atapi_cmd_nop(controller);
                     raise_interrupt(channel);
                   } else if (!LoEj && Start) { // start (spin up) the disc
 #ifdef LOWLEVEL_CDROM
                     BX_SELECTED_DRIVE(channel).cdrom.cd->start_cdrom();
 #endif
                     BX_ERROR(("FIXME: ATAPI start disc not reading TOC"));
-                    atapi_cmd_nop(channel);
+                    atapi_cmd_nop(controller);
                     raise_interrupt(channel);
                   } else if (LoEj && !Start) { // Eject the disc
-                    atapi_cmd_nop(channel);
+                    atapi_cmd_nop(controller);
 
                     if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
 #ifdef LOWLEVEL_CDROM
@@ -1282,7 +1285,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     raise_interrupt(channel);
                   } else { // Load the disc
                     // My guess is that this command only closes the tray, that's a no-op for us
-                    atapi_cmd_nop(channel);
+                    atapi_cmd_nop(controller);
                     raise_interrupt(channel);
                   }
                 }
@@ -1290,24 +1293,24 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
               case 0xbd: // mechanism status
                 {
-                  Bit16u alloc_length = read_16bit(BX_SELECTED_CONTROLLER(channel).buffer + 8);
+                  Bit16u alloc_length = read_16bit(controller->buffer + 8);
 
                   if (alloc_length == 0)
                     BX_PANIC(("Zero allocation length to MECHANISM STATUS not impl."));
 
                   init_send_atapi_command(channel, atapi_command, 8, alloc_length);
 
-                  BX_SELECTED_CONTROLLER(channel).buffer[0] = 0; // reserved for non changers
-                  BX_SELECTED_CONTROLLER(channel).buffer[1] = 0; // reserved for non changers
+                  controller->buffer[0] = 0; // reserved for non changers
+                  controller->buffer[1] = 0; // reserved for non changers
 
-                  BX_SELECTED_CONTROLLER(channel).buffer[2] = 0; // Current LBA (TODO!)
-                  BX_SELECTED_CONTROLLER(channel).buffer[3] = 0; // Current LBA (TODO!)
-                  BX_SELECTED_CONTROLLER(channel).buffer[4] = 0; // Current LBA (TODO!)
+                  controller->buffer[2] = 0; // Current LBA (TODO!)
+                  controller->buffer[3] = 0; // Current LBA (TODO!)
+                  controller->buffer[4] = 0; // Current LBA (TODO!)
 
-                  BX_SELECTED_CONTROLLER(channel).buffer[5] = 1; // one slot
+                  controller->buffer[5] = 1; // one slot
 
-                  BX_SELECTED_CONTROLLER(channel).buffer[6] = 0; // slot table length
-                  BX_SELECTED_CONTROLLER(channel).buffer[7] = 0; // slot table length
+                  controller->buffer[6] = 0; // slot table length
+                  controller->buffer[7] = 0; // slot table length
 
                   ready_to_send_atapi(channel);
                 }
@@ -1319,12 +1322,12 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                   Bit16u alloc_length;
 
                   if (atapi_command == 0x5a) {
-                    alloc_length = read_16bit(BX_SELECTED_CONTROLLER(channel).buffer + 7);
+                    alloc_length = read_16bit(controller->buffer + 7);
                   } else {
-                    alloc_length = BX_SELECTED_CONTROLLER(channel).buffer[4];
+                    alloc_length = controller->buffer[4];
                   }
-                  Bit8u PC = BX_SELECTED_CONTROLLER(channel).buffer[2] >> 6;
-                  Bit8u PageCode = BX_SELECTED_CONTROLLER(channel).buffer[2] & 0x3f;
+                  Bit8u PC = controller->buffer[2] >> 6;
+                  Bit8u PageCode = controller->buffer[2] & 0x3f;
 
                   switch (PC) {
                     case 0x0: // current values
@@ -1339,31 +1342,31 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
                         case 0x2a: // CD-ROM capabilities & mech. status
                           init_send_atapi_command(channel, atapi_command, 28, alloc_length);
-                          init_mode_sense_single(channel, &BX_SELECTED_CONTROLLER(channel).buffer[8], 28);
-                          BX_SELECTED_CONTROLLER(channel).buffer[8] = 0x2a;
-                          BX_SELECTED_CONTROLLER(channel).buffer[9] = 0x12;
-                          BX_SELECTED_CONTROLLER(channel).buffer[10] = 0x00;
-                          BX_SELECTED_CONTROLLER(channel).buffer[11] = 0x00;
+                          init_mode_sense_single(channel, &controller->buffer[8], 28);
+                          controller->buffer[8] = 0x2a;
+                          controller->buffer[9] = 0x12;
+                          controller->buffer[10] = 0x00;
+                          controller->buffer[11] = 0x00;
                           // Multisession, Mode 2 Form 2, Mode 2 Form 1
-                          BX_SELECTED_CONTROLLER(channel).buffer[12] = 0x70;
-                          BX_SELECTED_CONTROLLER(channel).buffer[13] = (3 << 5);
-                          BX_SELECTED_CONTROLLER(channel).buffer[14] = (unsigned char) (1 |
+                          controller->buffer[12] = 0x70;
+                          controller->buffer[13] = (3 << 5);
+                          controller->buffer[14] = (unsigned char) (1 |
                             (BX_SELECTED_DRIVE(channel).cdrom.locked ? (1 << 1) : 0) |
                             (1 << 3) |
                             (1 << 5));
-                          BX_SELECTED_CONTROLLER(channel).buffer[15] = 0x00;
-                          BX_SELECTED_CONTROLLER(channel).buffer[16] = (706 >> 8) & 0xff;
-                          BX_SELECTED_CONTROLLER(channel).buffer[17] = 706 & 0xff;
-                          BX_SELECTED_CONTROLLER(channel).buffer[18] = 0;
-                          BX_SELECTED_CONTROLLER(channel).buffer[19] = 2;
-                          BX_SELECTED_CONTROLLER(channel).buffer[20] = (512 >> 8) & 0xff;
-                          BX_SELECTED_CONTROLLER(channel).buffer[21] = 512 & 0xff;
-                          BX_SELECTED_CONTROLLER(channel).buffer[22] = (706 >> 8) & 0xff;
-                          BX_SELECTED_CONTROLLER(channel).buffer[23] = 706 & 0xff;
-                          BX_SELECTED_CONTROLLER(channel).buffer[24] = 0;
-                          BX_SELECTED_CONTROLLER(channel).buffer[25] = 0;
-                          BX_SELECTED_CONTROLLER(channel).buffer[26] = 0;
-                          BX_SELECTED_CONTROLLER(channel).buffer[27] = 0;
+                          controller->buffer[15] = 0x00;
+                          controller->buffer[16] = (706 >> 8) & 0xff;
+                          controller->buffer[17] = 706 & 0xff;
+                          controller->buffer[18] = 0;
+                          controller->buffer[19] = 2;
+                          controller->buffer[20] = (512 >> 8) & 0xff;
+                          controller->buffer[21] = 512 & 0xff;
+                          controller->buffer[22] = (706 >> 8) & 0xff;
+                          controller->buffer[23] = 706 & 0xff;
+                          controller->buffer[24] = 0;
+                          controller->buffer[25] = 0;
+                          controller->buffer[26] = 0;
+                          controller->buffer[27] = 0;
                           ready_to_send_atapi(channel);
                           break;
 
@@ -1395,8 +1398,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                         case 0x0e: // CD-ROM audio control
                         case 0x2a: // CD-ROM capabilities & mech. status
                         case 0x3f: // all
-                          BX_ERROR(("cdrom: MODE SENSE (chg), code=%x not implemented yet",
-                                    PageCode));
+                          BX_ERROR(("cdrom: MODE SENSE (chg), code=%x not implemented yet", PageCode));
                           atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST,
                                           ASC_INV_FIELD_IN_CMD_PACKET, 1);
                           raise_interrupt(channel);
@@ -1417,31 +1419,31 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                       switch (PageCode) {
                         case 0x2a: // CD-ROM capabilities & mech. status, copied from current values
                           init_send_atapi_command(channel, atapi_command, 28, alloc_length);
-                          init_mode_sense_single(channel, &BX_SELECTED_CONTROLLER(channel).buffer[8], 28);
-                          BX_SELECTED_CONTROLLER(channel).buffer[8] = 0x2a;
-                          BX_SELECTED_CONTROLLER(channel).buffer[9] = 0x12;
-                          BX_SELECTED_CONTROLLER(channel).buffer[10] = 0x00;
-                          BX_SELECTED_CONTROLLER(channel).buffer[11] = 0x00;
+                          init_mode_sense_single(channel, &controller->buffer[8], 28);
+                          controller->buffer[8] = 0x2a;
+                          controller->buffer[9] = 0x12;
+                          controller->buffer[10] = 0x00;
+                          controller->buffer[11] = 0x00;
                           // Multisession, Mode 2 Form 2, Mode 2 Form 1
-                          BX_SELECTED_CONTROLLER(channel).buffer[12] = 0x70;
-                          BX_SELECTED_CONTROLLER(channel).buffer[13] = (3 << 5);
-                          BX_SELECTED_CONTROLLER(channel).buffer[14] = (unsigned char) (1 |
+                          controller->buffer[12] = 0x70;
+                          controller->buffer[13] = (3 << 5);
+                          controller->buffer[14] = (unsigned char) (1 |
                             (BX_SELECTED_DRIVE(channel).cdrom.locked ? (1 << 1) : 0) |
                             (1 << 3) |
                             (1 << 5));
-                          BX_SELECTED_CONTROLLER(channel).buffer[15] = 0x00;
-                          BX_SELECTED_CONTROLLER(channel).buffer[16] = (706 >> 8) & 0xff;
-                          BX_SELECTED_CONTROLLER(channel).buffer[17] = 706 & 0xff;
-                          BX_SELECTED_CONTROLLER(channel).buffer[18] = 0;
-                          BX_SELECTED_CONTROLLER(channel).buffer[19] = 2;
-                          BX_SELECTED_CONTROLLER(channel).buffer[20] = (512 >> 8) & 0xff;
-                          BX_SELECTED_CONTROLLER(channel).buffer[21] = 512 & 0xff;
-                          BX_SELECTED_CONTROLLER(channel).buffer[22] = (706 >> 8) & 0xff;
-                          BX_SELECTED_CONTROLLER(channel).buffer[23] = 706 & 0xff;
-                          BX_SELECTED_CONTROLLER(channel).buffer[24] = 0;
-                          BX_SELECTED_CONTROLLER(channel).buffer[25] = 0;
-                          BX_SELECTED_CONTROLLER(channel).buffer[26] = 0;
-                          BX_SELECTED_CONTROLLER(channel).buffer[27] = 0;
+                          controller->buffer[15] = 0x00;
+                          controller->buffer[16] = (706 >> 8) & 0xff;
+                          controller->buffer[17] = 706 & 0xff;
+                          controller->buffer[18] = 0;
+                          controller->buffer[19] = 2;
+                          controller->buffer[20] = (512 >> 8) & 0xff;
+                          controller->buffer[21] = 512 & 0xff;
+                          controller->buffer[22] = (706 >> 8) & 0xff;
+                          controller->buffer[23] = 706 & 0xff;
+                          controller->buffer[24] = 0;
+                          controller->buffer[25] = 0;
+                          controller->buffer[26] = 0;
+                          controller->buffer[27] = 0;
                           ready_to_send_atapi(channel);
                           break;
 
@@ -1480,36 +1482,36 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
               case 0x12: // inquiry
                 {
-                  Bit8u alloc_length = BX_SELECTED_CONTROLLER(channel).buffer[4];
+                  Bit8u alloc_length = controller->buffer[4];
 
                   init_send_atapi_command(channel, atapi_command, 36, alloc_length);
 
-                  BX_SELECTED_CONTROLLER(channel).buffer[0] = 0x05; // CD-ROM
-                  BX_SELECTED_CONTROLLER(channel).buffer[1] = 0x80; // Removable
-                  BX_SELECTED_CONTROLLER(channel).buffer[2] = 0x00; // ISO, ECMA, ANSI version
-                  BX_SELECTED_CONTROLLER(channel).buffer[3] = 0x21; // ATAPI-2, as specified
-                  BX_SELECTED_CONTROLLER(channel).buffer[4] = 31; // additional length (total 36)
-                  BX_SELECTED_CONTROLLER(channel).buffer[5] = 0x00; // reserved
-                  BX_SELECTED_CONTROLLER(channel).buffer[6] = 0x00; // reserved
-                  BX_SELECTED_CONTROLLER(channel).buffer[7] = 0x00; // reserved
+                  controller->buffer[0] = 0x05; // CD-ROM
+                  controller->buffer[1] = 0x80; // Removable
+                  controller->buffer[2] = 0x00; // ISO, ECMA, ANSI version
+                  controller->buffer[3] = 0x21; // ATAPI-2, as specified
+                  controller->buffer[4] = 31; // additional length (total 36)
+                  controller->buffer[5] = 0x00; // reserved
+                  controller->buffer[6] = 0x00; // reserved
+                  controller->buffer[7] = 0x00; // reserved
 
                   // Vendor ID
                   const char* vendor_id = "BOCHS   ";
                   for (i = 0; i < 8; i++)
-                    BX_SELECTED_CONTROLLER(channel).buffer[8+i] = vendor_id[i];
+                    controller->buffer[8+i] = vendor_id[i];
 
                   // Product ID
                   const char* product_id = "Generic CD-ROM  ";
                   for (i = 0; i < 16; i++)
-                    BX_SELECTED_CONTROLLER(channel).buffer[16+i] = product_id[i];
+                    controller->buffer[16+i] = product_id[i];
                   if (BX_HD_THIS cdrom_count > 1) {
-                    BX_SELECTED_CONTROLLER(channel).buffer[31] = BX_SELECTED_DRIVE(channel).device_num;
+                    controller->buffer[31] = BX_SELECTED_DRIVE(channel).device_num;
                   }
 
                   // Product Revision level
                   const char* rev_level = "1.0 ";
                   for (i = 0; i < 4; i++)
-                    BX_SELECTED_CONTROLLER(channel).buffer[32+i] = rev_level[i];
+                    controller->buffer[32+i] = rev_level[i];
 
                   ready_to_send_atapi(channel);
                 }
@@ -1522,14 +1524,14 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
                   if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
                     Bit32u capacity = BX_SELECTED_DRIVE(channel).cdrom.capacity - 1;
-                    BX_SELECTED_CONTROLLER(channel).buffer[0] = (capacity >> 24) & 0xff;
-                    BX_SELECTED_CONTROLLER(channel).buffer[1] = (capacity >> 16) & 0xff;
-                    BX_SELECTED_CONTROLLER(channel).buffer[2] = (capacity >> 8) & 0xff;
-                    BX_SELECTED_CONTROLLER(channel).buffer[3] = (capacity >> 0) & 0xff;
-                    BX_SELECTED_CONTROLLER(channel).buffer[4] = (2048 >> 24) & 0xff;
-                    BX_SELECTED_CONTROLLER(channel).buffer[5] = (2048 >> 16) & 0xff;
-                    BX_SELECTED_CONTROLLER(channel).buffer[6] = (2048 >> 8) & 0xff;
-                    BX_SELECTED_CONTROLLER(channel).buffer[7] = (2048 >> 0) & 0xff;
+                    controller->buffer[0] = (capacity >> 24) & 0xff;
+                    controller->buffer[1] = (capacity >> 16) & 0xff;
+                    controller->buffer[2] = (capacity >> 8) & 0xff;
+                    controller->buffer[3] = (capacity >> 0) & 0xff;
+                    controller->buffer[4] = (2048 >> 24) & 0xff;
+                    controller->buffer[5] = (2048 >> 16) & 0xff;
+                    controller->buffer[6] = (2048 >> 8) & 0xff;
+                    controller->buffer[7] = (2048 >> 0) & 0xff;
                     ready_to_send_atapi(channel);
                   } else {
                     atapi_cmd_error(channel, SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT, 1);
@@ -1541,27 +1543,27 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
               case 0xbe: // read cd
                 {
                   if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
-                    Bit32u lba = read_32bit(BX_SELECTED_CONTROLLER(channel).buffer + 2);
-                    Bit32u transfer_length = BX_SELECTED_CONTROLLER(channel).buffer[8] |
-                                             (BX_SELECTED_CONTROLLER(channel).buffer[7] << 8) |
-                                             (BX_SELECTED_CONTROLLER(channel).buffer[6] << 16);
-                    Bit8u transfer_req = BX_SELECTED_CONTROLLER(channel).buffer[9];
+                    Bit32u lba = read_32bit(controller->buffer + 2);
+                    Bit32u transfer_length = controller->buffer[8] |
+                                             (controller->buffer[7] << 8) |
+                                             (controller->buffer[6] << 16);
+                    Bit8u transfer_req = controller->buffer[9];
                     if (transfer_length == 0) {
-                      atapi_cmd_nop(channel);
+                      atapi_cmd_nop(controller);
                       raise_interrupt(channel);
                       break;
                     }
                     switch (transfer_req & 0xf8) {
                       case 0x00:
-                        atapi_cmd_nop(channel);
+                        atapi_cmd_nop(controller);
                         raise_interrupt(channel);
                         break;
                       case 0xf8:
-                        BX_SELECTED_CONTROLLER(channel).buffer_size = 2352;
+                        controller->buffer_size = 2352;
                       case 0x10:
                         init_send_atapi_command(channel, atapi_command,
-                                                transfer_length * BX_SELECTED_CONTROLLER(channel).buffer_size,
-                                                transfer_length * BX_SELECTED_CONTROLLER(channel).buffer_size, 1);
+                                                transfer_length * controller->buffer_size,
+                                                transfer_length * controller->buffer_size, 1);
                         BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks = transfer_length;
                         BX_SELECTED_DRIVE(channel).cdrom.next_lba = lba;
                         ready_to_send_atapi(channel);
@@ -1581,12 +1583,12 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
               case 0x43: // read toc
                 if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
 #ifdef LOWLEVEL_CDROM
-                  bx_bool msf = (BX_SELECTED_CONTROLLER(channel).buffer[1] >> 1) & 1;
-                  Bit8u starting_track = BX_SELECTED_CONTROLLER(channel).buffer[6];
+                  bx_bool msf = (controller->buffer[1] >> 1) & 1;
+                  Bit8u starting_track = controller->buffer[6];
                   int toc_length;
 #endif
-                  Bit16u alloc_length = read_16bit(BX_SELECTED_CONTROLLER(channel).buffer + 7);
-                  Bit8u format = (BX_SELECTED_CONTROLLER(channel).buffer[9] >> 6);
+                  Bit16u alloc_length = read_16bit(controller->buffer + 7);
+                  Bit8u format = (controller->buffer[9] >> 6);
 // Win32:  I just read the TOC using Win32's IOCTRL functions (Ben)
 #if defined(WIN32)
 #ifdef LOWLEVEL_CDROM
@@ -1599,7 +1601,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     case 0:
                     case 1:
                     case 5:
-                      if (!(BX_SELECTED_DRIVE(channel).cdrom.cd->read_toc(BX_SELECTED_CONTROLLER(channel).buffer,
+                      if (!(BX_SELECTED_DRIVE(channel).cdrom.cd->read_toc(controller->buffer,
                                                                           &toc_length, msf, starting_track, format))) {
                         atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
                         raise_interrupt(channel);
@@ -1622,7 +1624,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     case 1:
                     case 2:
 #ifdef LOWLEVEL_CDROM
-                      if (!(BX_SELECTED_DRIVE(channel).cdrom.cd->read_toc(BX_SELECTED_CONTROLLER(channel).buffer,
+                      if (!(BX_SELECTED_DRIVE(channel).cdrom.cd->read_toc(controller->buffer,
                                                                           &toc_length, msf, starting_track, format))) {
                         atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
                         raise_interrupt(channel);
@@ -1654,11 +1656,11 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                   Bit32s transfer_length;
 
                   if (atapi_command == 0x28)
-                    transfer_length = read_16bit(BX_SELECTED_CONTROLLER(channel).buffer + 7);
+                    transfer_length = read_16bit(controller->buffer + 7);
                   else
-                    transfer_length = read_32bit(BX_SELECTED_CONTROLLER(channel).buffer + 6);
+                    transfer_length = read_32bit(controller->buffer + 6);
 
-                  Bit32u lba = read_32bit(BX_SELECTED_CONTROLLER(channel).buffer + 2);
+                  Bit32u lba = read_32bit(controller->buffer + 2);
 
                   if (!BX_SELECTED_DRIVE(channel).cdrom.ready) {
                     atapi_cmd_error(channel, SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT, 1);
@@ -1676,7 +1678,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     transfer_length = (BX_SELECTED_DRIVE(channel).cdrom.capacity - lba);
                   }
                   if (transfer_length <= 0) {
-                    atapi_cmd_nop(channel);
+                    atapi_cmd_nop(controller);
                     raise_interrupt(channel);
                     BX_INFO(("READ(%d) with transfer length <= 0, ok (%i)", atapi_command==0x28?10:12, transfer_length));
                     break;
@@ -1707,7 +1709,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
               case 0x2b: // seek
                 {
-                  Bit32u lba = read_32bit(BX_SELECTED_CONTROLLER(channel).buffer + 2);
+                  Bit32u lba = read_32bit(controller->buffer + 2);
                   if (!BX_SELECTED_DRIVE(channel).cdrom.ready) {
                     atapi_cmd_error(channel, SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT, 1);
                     raise_interrupt(channel);
@@ -1724,15 +1726,15 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #else
                   BX_PANIC(("Seek with no LOWLEVEL_CDROM"));
 #endif
-                  atapi_cmd_nop(channel);
+                  atapi_cmd_nop(controller);
                   raise_interrupt(channel);
                 }
                 break;
 
               case 0x1e: // prevent/allow medium removal
                 if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
-                  BX_SELECTED_DRIVE(channel).cdrom.locked = BX_SELECTED_CONTROLLER(channel).buffer[4] & 1;
-                  atapi_cmd_nop(channel);
+                  BX_SELECTED_DRIVE(channel).cdrom.locked = controller->buffer[4] & 1;
+                  atapi_cmd_nop(controller);
                 } else {
                   atapi_cmd_error(channel, SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT, 1);
                 }
@@ -1741,11 +1743,11 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
               case 0x42: // read sub-channel
                 {
-                  bx_bool msf = get_packet_field(channel,1, 1, 1);
-                  bx_bool sub_q = get_packet_field(channel,2, 6, 1);
-                  Bit8u data_format = get_packet_byte(channel,3);
-                  Bit8u track_number = get_packet_byte(channel,6);
-                  Bit16u alloc_length = get_packet_word(channel,7);
+                  bx_bool msf = get_packet_field(controller,1, 1, 1);
+                  bx_bool sub_q = get_packet_field(controller,2, 6, 1);
+                  Bit8u data_format = get_packet_byte(controller, 3);
+                  Bit8u track_number = get_packet_byte(controller, 6);
+                  Bit16u alloc_length = get_packet_word(controller, 7);
                   int ret_len = 4; // header size
                   UNUSED(msf);
                   UNUSED(track_number);
@@ -1754,24 +1756,23 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     atapi_cmd_error(channel, SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT, 1);
                     raise_interrupt(channel);
                   } else {
-                    BX_SELECTED_CONTROLLER(channel).buffer[0] = 0;
-                    BX_SELECTED_CONTROLLER(channel).buffer[1] = 0; // audio not supported
-                    BX_SELECTED_CONTROLLER(channel).buffer[2] = 0;
-                    BX_SELECTED_CONTROLLER(channel).buffer[3] = 0;
+                    controller->buffer[0] = 0;
+                    controller->buffer[1] = 0; // audio not supported
+                    controller->buffer[2] = 0;
+                    controller->buffer[3] = 0;
 
                     if (sub_q) { // !sub_q == header only
                       if ((data_format == 2) || (data_format == 3)) { // UPC or ISRC
                         ret_len = 24;
-                        BX_SELECTED_CONTROLLER(channel).buffer[4] = data_format;
+                        controller->buffer[4] = data_format;
                         if (data_format == 3) {
-                          BX_SELECTED_CONTROLLER(channel).buffer[5] = 0x14;
-                          BX_SELECTED_CONTROLLER(channel).buffer[6] = 1;
+                          controller->buffer[5] = 0x14;
+                          controller->buffer[6] = 1;
                         }
-                        BX_SELECTED_CONTROLLER(channel).buffer[8] = 0; // no UPC, no ISRC
+                        controller->buffer[8] = 0; // no UPC, no ISRC
                       } else {
                         BX_ERROR(("Read sub-channel with SubQ not implemented (format=%d)", data_format));
-                        atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST,
-                          ASC_INV_FIELD_IN_CMD_PACKET, 1);
+                        atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
                         raise_interrupt(channel);
                         break;
                       }
@@ -1817,7 +1818,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
         default:
           BX_PANIC(("IO write(0x%04x): current command is %02xh", address,
-            (unsigned) BX_SELECTED_CONTROLLER(channel).current_command));
+            (unsigned) controller->current_command));
       }
       break;
 
@@ -1862,7 +1863,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_DEBUG(("IO write 0x%04x (%02x): not 1x1xxxxxb", address, (unsigned) value));
         Bit32u drvsel = BX_HD_THIS channels[channel].drive_select = (value >> 4) & 0x01;
         WRITE_HEAD_NO(channel,value & 0xf);
-        if (!BX_SELECTED_CONTROLLER(channel).lba_mode && ((value >> 6) & 1) == 1)
+        if (!controller->lba_mode && ((value >> 6) & 1) == 1)
           BX_DEBUG(("enabling LBA mode"));
         WRITE_LBA_MODE(channel,(value >> 6) & 1);
         if (!BX_SELECTED_IS_PRESENT(channel)) {
@@ -1879,13 +1880,13 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
       // Writes to the command register clear the IRQ
       DEV_pic_lower_irq(BX_HD_THIS channels[channel].irq);
 
-      if (BX_SELECTED_CONTROLLER(channel).status.busy) {
+      if (controller->status.busy) {
         BX_ERROR(("ata%d: command 0x%02x sent, controller BSY bit set", channel, value));
         break;
       }
       if ((value & 0xf0) == 0x10)
         value = 0x10;
-      BX_SELECTED_CONTROLLER(channel).status.err = 0;
+      controller->status.err = 0;
       switch (value) {
 
         case 0x10: // CALIBRATE DRIVE
@@ -1897,24 +1898,24 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           }
 
           if (!BX_SELECTED_IS_PRESENT(channel)) {
-            BX_SELECTED_CONTROLLER(channel).error_register = 0x02; // Track 0 not found
-            BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-            BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-            BX_SELECTED_CONTROLLER(channel).status.seek_complete = 0;
-            BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-            BX_SELECTED_CONTROLLER(channel).status.err = 1;
+            controller->error_register = 0x02; // Track 0 not found
+            controller->status.busy = 0;
+            controller->status.drive_ready = 1;
+            controller->status.seek_complete = 0;
+            controller->status.drq = 0;
+            controller->status.err = 1;
             raise_interrupt(channel);
             BX_INFO(("calibrate drive: disk ata%d-%d not present", channel, BX_SLAVE_SELECTED(channel)));
             break;
           }
 
           /* move head to cylinder 0, issue IRQ */
-          BX_SELECTED_CONTROLLER(channel).error_register = 0;
-          BX_SELECTED_CONTROLLER(channel).cylinder_no = 0;
-          BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-          BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-          BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
-          BX_SELECTED_CONTROLLER(channel).status.drq = 0;
+          controller->error_register = 0;
+          controller->cylinder_no = 0;
+          controller->status.busy = 0;
+          controller->status.drive_ready = 1;
+          controller->status.seek_complete = 1;
+          controller->status.drq = 0;
           raise_interrupt(channel);
           break;
 
@@ -1939,41 +1940,41 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             break;
           }
           // Lose98 accesses 0/0/0 in CHS mode
-          if (!BX_SELECTED_CONTROLLER(channel).lba_mode &&
-              !BX_SELECTED_CONTROLLER(channel).head_no &&
-              !BX_SELECTED_CONTROLLER(channel).cylinder_no &&
-              !BX_SELECTED_CONTROLLER(channel).sector_no) {
+          if (!controller->lba_mode &&
+              !controller->head_no &&
+              !controller->cylinder_no &&
+              !controller->sector_no) {
             BX_INFO(("ata%d-%d: : read from 0/0/0, aborting command",
               channel, BX_SLAVE_SELECTED(channel)));
             command_aborted(channel, value);
             break;
           }
 
-          lba48_transform(channel, lba48);
+          lba48_transform(controller, lba48);
           if ((value == 0xC4) || (value == 0x29)) {
-            if (BX_SELECTED_CONTROLLER(channel).multiple_sectors == 0) {
+            if (controller->multiple_sectors == 0) {
               command_aborted(channel, value);
               break;
             }
-            if (BX_SELECTED_CONTROLLER(channel).num_sectors > BX_SELECTED_CONTROLLER(channel).multiple_sectors) {
-              BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).multiple_sectors * 512;
+            if (controller->num_sectors > controller->multiple_sectors) {
+              controller->buffer_size = controller->multiple_sectors * 512;
             } else {
-              BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).num_sectors * 512;
+              controller->buffer_size = controller->num_sectors * 512;
             }
           } else {
-            BX_SELECTED_CONTROLLER(channel).buffer_size = 512;
+            controller->buffer_size = 512;
           }
-          BX_SELECTED_CONTROLLER(channel).current_command = value;
+          controller->current_command = value;
 
-          if (ide_read_sector(channel, BX_SELECTED_CONTROLLER(channel).buffer,
-                                  BX_SELECTED_CONTROLLER(channel).buffer_size)) {
-            BX_SELECTED_CONTROLLER(channel).error_register = 0;
-            BX_SELECTED_CONTROLLER(channel).status.busy  = 0;
-            BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-            BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
-            BX_SELECTED_CONTROLLER(channel).status.drq   = 1;
-            BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
-            BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
+          if (ide_read_sector(channel, controller->buffer,
+                                  controller->buffer_size)) {
+            controller->error_register = 0;
+            controller->status.busy  = 0;
+            controller->status.drive_ready = 1;
+            controller->status.seek_complete = 1;
+            controller->status.drq   = 1;
+            controller->status.corrected_data = 0;
+            controller->buffer_index = 0;
             raise_interrupt(channel);
           }
           break;
@@ -1997,35 +1998,35 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             command_aborted(channel, value);
             break;
           }
-          lba48_transform(channel, lba48);
+          lba48_transform(controller, lba48);
           if ((value == 0xC5) || (value ==0x39)) {
-            if (BX_SELECTED_CONTROLLER(channel).multiple_sectors == 0) {
+            if (controller->multiple_sectors == 0) {
               command_aborted(channel, value);
               break;
             }
-            if (BX_SELECTED_CONTROLLER(channel).num_sectors > BX_SELECTED_CONTROLLER(channel).multiple_sectors) {
-              BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).multiple_sectors * 512;
+            if (controller->num_sectors > controller->multiple_sectors) {
+              controller->buffer_size = controller->multiple_sectors * 512;
             } else {
-              BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).num_sectors * 512;
+              controller->buffer_size = controller->num_sectors * 512;
             }
           } else {
-            BX_SELECTED_CONTROLLER(channel).buffer_size = 512;
+            controller->buffer_size = 512;
           }
-          BX_SELECTED_CONTROLLER(channel).current_command = value;
+          controller->current_command = value;
 
           // implicit seek done :^)
-          BX_SELECTED_CONTROLLER(channel).error_register = 0;
-          BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-          // BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-          BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
-          BX_SELECTED_CONTROLLER(channel).status.drq = 1;
-          BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
+          controller->error_register = 0;
+          controller->status.busy = 0;
+          // controller->status.drive_ready = 1;
+          controller->status.seek_complete = 1;
+          controller->status.drq = 1;
+          controller->buffer_index = 0;
           break;
 
         case 0x90: // EXECUTE DEVICE DIAGNOSTIC
           set_signature(channel, BX_SLAVE_SELECTED(channel));
-          BX_SELECTED_CONTROLLER(channel).error_register = 0x01;
-          BX_SELECTED_CONTROLLER(channel).status.drq = 0;
+          controller->error_register = 0x01;
+          controller->status.drq = 0;
           raise_interrupt(channel);
           break;
 
@@ -2039,36 +2040,36 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           // sets logical geometry of specified drive
           BX_DEBUG(("ata%d-%d: init drive params: sec=%u, drive sel=%u, head=%u",
             channel, BX_SLAVE_SELECTED(channel),
-            (unsigned) BX_SELECTED_CONTROLLER(channel).sector_count,
+            (unsigned) controller->sector_count,
             (unsigned) BX_HD_THIS channels[channel].drive_select,
-            (unsigned) BX_SELECTED_CONTROLLER(channel).head_no));
+            (unsigned) controller->head_no));
           if (!BX_SELECTED_IS_PRESENT(channel)) {
             BX_PANIC(("init drive params: disk ata%d-%d not present", channel, BX_SLAVE_SELECTED(channel)));
-            //BX_SELECTED_CONTROLLER(channel).error_register = 0x12;
-            BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-            BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-            BX_SELECTED_CONTROLLER(channel).status.drq = 0;
+            //controller->error_register = 0x12;
+            controller->status.busy = 0;
+            controller->status.drive_ready = 1;
+            controller->status.drq = 0;
             raise_interrupt(channel);
             break;
           }
-          if (BX_SELECTED_CONTROLLER(channel).sector_count != BX_SELECTED_DRIVE(channel).hdimage->spt) {
+          if (controller->sector_count != BX_SELECTED_DRIVE(channel).hdimage->spt) {
             BX_ERROR(("ata%d-%d: init drive params: logical sector count %d not supported", channel, BX_SLAVE_SELECTED(channel),
-              BX_SELECTED_CONTROLLER(channel).sector_count));
+              controller->sector_count));
             command_aborted(channel, value);
             break;
           }
-          if (BX_SELECTED_CONTROLLER(channel).head_no == 0) {
+          if (controller->head_no == 0) {
             // Linux 2.6.x kernels use this value and don't like aborting here
             BX_ERROR(("ata%d-%d: init drive params: max. logical head number 0 not supported", channel, BX_SLAVE_SELECTED(channel)));
-          } else if (BX_SELECTED_CONTROLLER(channel).head_no != (BX_SELECTED_DRIVE(channel).hdimage->heads-1)) {
+          } else if (controller->head_no != (BX_SELECTED_DRIVE(channel).hdimage->heads-1)) {
             BX_ERROR(("ata%d-%d: init drive params: max. logical head number %d not supported", channel, BX_SLAVE_SELECTED(channel),
-              BX_SELECTED_CONTROLLER(channel).head_no));
+              controller->head_no));
             command_aborted(channel, value);
             break;
           }
-          BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-          BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-          BX_SELECTED_CONTROLLER(channel).status.drq = 0;
+          controller->status.busy = 0;
+          controller->status.drive_ready = 1;
+          controller->status.drq = 0;
           raise_interrupt(channel);
           break;
 
@@ -2085,19 +2086,19 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
               set_signature(channel, BX_SLAVE_SELECTED(channel));
               command_aborted(channel, 0xec);
             } else {
-              BX_SELECTED_CONTROLLER(channel).current_command = value;
-              BX_SELECTED_CONTROLLER(channel).error_register = 0;
+              controller->current_command = value;
+              controller->error_register = 0;
 
               // See ATA/ATAPI-4, 8.12
-              BX_SELECTED_CONTROLLER(channel).status.busy  = 0;
-              BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-              BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
-              BX_SELECTED_CONTROLLER(channel).status.drq   = 1;
+              controller->status.busy  = 0;
+              controller->status.drive_ready = 1;
+              controller->status.write_fault = 0;
+              controller->status.drq   = 1;
 
-              BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
-              BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
+              controller->status.seek_complete = 1;
+              controller->status.corrected_data = 0;
 
-              BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
+              controller->buffer_index = 0;
               if (!BX_SELECTED_DRIVE(channel).identify_set) {
                 identify_drive(channel);
               }
@@ -2105,8 +2106,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
               // the controller buffer (512 bytes)
               for (i=0; i<=255; i++) {
                 Bit16u temp16 = BX_SELECTED_DRIVE(channel).id_drive[i];
-                BX_SELECTED_CONTROLLER(channel).buffer[i*2] = temp16 & 0x00ff;
-                BX_SELECTED_CONTROLLER(channel).buffer[i*2+1] = temp16 >> 8;
+                controller->buffer[i*2] = temp16 & 0x00ff;
+                controller->buffer[i*2+1] = temp16 >> 8;
               }
               raise_interrupt(channel);
             }
@@ -2114,36 +2115,36 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 
         case 0xef: // SET FEATURES
-          switch(BX_SELECTED_CONTROLLER(channel).features) {
+          switch(controller->features) {
             case 0x03: // Set Transfer Mode
               {
-                Bit8u type = (BX_SELECTED_CONTROLLER(channel).sector_count >> 3);
-                Bit8u mode = BX_SELECTED_CONTROLLER(channel).sector_count & 0x07;
+                Bit8u type = (controller->sector_count >> 3);
+                Bit8u mode = controller->sector_count & 0x07;
                 switch (type) {
                   case 0x00: // PIO default
                   case 0x01: // PIO mode
                     BX_INFO(("ata%d-%d: set transfer mode to PIO", channel,
                              BX_SLAVE_SELECTED(channel)));
-                    BX_SELECTED_CONTROLLER(channel).mdma_mode = 0x00;
-                    BX_SELECTED_CONTROLLER(channel).udma_mode = 0x00;
-                    BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-                    BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
+                    controller->mdma_mode = 0x00;
+                    controller->udma_mode = 0x00;
+                    controller->status.drive_ready = 1;
+                    controller->status.seek_complete = 1;
                     raise_interrupt(channel);
                     break;
                   case 0x04: // MDMA mode
                     BX_INFO(("ata%d-%d: set transfer mode to MDMA%d", channel,
                              BX_SLAVE_SELECTED(channel), mode));
-                    BX_SELECTED_CONTROLLER(channel).mdma_mode = (1 << mode);
-                    BX_SELECTED_CONTROLLER(channel).udma_mode = 0x00;
-                    BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-                    BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
+                    controller->mdma_mode = (1 << mode);
+                    controller->udma_mode = 0x00;
+                    controller->status.drive_ready = 1;
+                    controller->status.seek_complete = 1;
                     raise_interrupt(channel);
                     break;
                   case 0x08: // UDMA mode
-                    BX_SELECTED_CONTROLLER(channel).mdma_mode = 0x00;
-                    BX_SELECTED_CONTROLLER(channel).udma_mode = (1 << mode);
-                    BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-                    BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
+                    controller->mdma_mode = 0x00;
+                    controller->udma_mode = (1 << mode);
+                    controller->status.drive_ready = 1;
+                    controller->status.seek_complete = 1;
                     raise_interrupt(channel);
                     break;
                   default:
@@ -2162,15 +2163,15 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             case 0xCC: // Enable and
             case 0x66: //  Disable reverting to power-on default
               BX_INFO(("ata%d-%d: SET FEATURES subcommand 0x%02x not supported, but returning success",
-                channel,BX_SLAVE_SELECTED(channel),(unsigned) BX_SELECTED_CONTROLLER(channel).features));
-              BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-              BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
+                channel,BX_SLAVE_SELECTED(channel),(unsigned) controller->features));
+              controller->status.drive_ready = 1;
+              controller->status.seek_complete = 1;
               raise_interrupt(channel);
               break;
 
             default:
               BX_ERROR(("ata%d-%d: SET FEATURES with unknown subcommand: 0x%02x",
-                channel,BX_SLAVE_SELECTED(channel),(unsigned) BX_SELECTED_CONTROLLER(channel).features));
+                channel,BX_SLAVE_SELECTED(channel),(unsigned) controller->features));
               command_aborted(channel, value);
           }
           break;
@@ -2185,11 +2186,11 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             command_aborted(channel, value);
             break;
           }
-          lba48_transform(channel, lba48);
+          lba48_transform(controller, lba48);
           BX_INFO(("ata%d-%d: verify command : 0x%02x !", channel,BX_SLAVE_SELECTED(channel), value));
-          BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-          BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-          BX_SELECTED_CONTROLLER(channel).status.drq = 0;
+          controller->status.busy = 0;
+          controller->status.drive_ready = 1;
+          controller->status.drq = 0;
           raise_interrupt(channel);
           break;
 
@@ -2197,17 +2198,17 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           if (!BX_SELECTED_IS_HD(channel)) {
             BX_INFO(("set multiple mode issued to non-disk"));
             command_aborted(channel, value);
-          } else if ((BX_SELECTED_CONTROLLER(channel).sector_count > MAX_MULTIPLE_SECTORS) ||
-              ((BX_SELECTED_CONTROLLER(channel).sector_count & (BX_SELECTED_CONTROLLER(channel).sector_count - 1)) != 0) ||
-               (BX_SELECTED_CONTROLLER(channel).sector_count == 0)) {
+          } else if ((controller->sector_count > MAX_MULTIPLE_SECTORS) ||
+              ((controller->sector_count & (controller->sector_count - 1)) != 0) ||
+               (controller->sector_count == 0)) {
             command_aborted(channel, value);
           } else {
-            BX_DEBUG(("set multiple mode: sectors=%d", BX_SELECTED_CONTROLLER(channel).sector_count));
-            BX_SELECTED_CONTROLLER(channel).multiple_sectors = BX_SELECTED_CONTROLLER(channel).sector_count;
-            BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-            BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-            BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
-            BX_SELECTED_CONTROLLER(channel).status.drq = 0;
+            BX_DEBUG(("set multiple mode: sectors=%d", controller->sector_count));
+            controller->multiple_sectors = controller->sector_count;
+            controller->status.busy = 0;
+            controller->status.drive_ready = 1;
+            controller->status.write_fault = 0;
+            controller->status.drq = 0;
             raise_interrupt(channel);
           }
           break;
@@ -2216,18 +2217,18 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xa1: // IDENTIFY PACKET DEVICE
           {
             if (BX_SELECTED_IS_CD(channel)) {
-              BX_SELECTED_CONTROLLER(channel).current_command = value;
-              BX_SELECTED_CONTROLLER(channel).error_register = 0;
+              controller->current_command = value;
+              controller->error_register = 0;
 
-              BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-              BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-              BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
-              BX_SELECTED_CONTROLLER(channel).status.drq   = 1;
+              controller->status.busy = 0;
+              controller->status.drive_ready = 1;
+              controller->status.write_fault = 0;
+              controller->status.drq   = 1;
 
-              BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
-              BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
+              controller->status.seek_complete = 1;
+              controller->status.corrected_data = 0;
 
-              BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
+              controller->buffer_index = 0;
               if (!BX_SELECTED_DRIVE(channel).identify_set) {
                 identify_ATAPI_drive(channel);
               }
@@ -2235,8 +2236,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
               // the controller buffer (512 bytes)
               for (i = 0; i <= 255; i++) {
                 Bit16u temp16 = BX_SELECTED_DRIVE(channel).id_drive[i];
-                BX_SELECTED_CONTROLLER(channel).buffer[i*2] = temp16 & 0x00ff;
-                BX_SELECTED_CONTROLLER(channel).buffer[i*2+1] = temp16 >> 8;
+                controller->buffer[i*2] = temp16 & 0x00ff;
+                controller->buffer[i*2+1] = temp16 >> 8;
               }
               raise_interrupt(channel);
             } else {
@@ -2249,14 +2250,14 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           if (BX_SELECTED_IS_CD(channel)) {
             set_signature(channel, BX_SLAVE_SELECTED(channel));
 
-            BX_SELECTED_CONTROLLER(channel).status.busy = 1;
-            BX_SELECTED_CONTROLLER(channel).error_register &= ~(1 << 7);
+            controller->status.busy = 1;
+            controller->error_register &= ~(1 << 7);
 
-            BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
-            BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-            BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
+            controller->status.write_fault = 0;
+            controller->status.drq = 0;
+            controller->status.corrected_data = 0;
 
-            BX_SELECTED_CONTROLLER(channel).status.busy = 0;
+            controller->status.busy = 0;
           } else {
             BX_DEBUG(("ATAPI Device Reset on non-cd device"));
             command_aborted(channel, 0x08);
@@ -2266,21 +2267,21 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xa0: // SEND PACKET (atapi)
           if (BX_SELECTED_IS_CD(channel)) {
             // PACKET
-            BX_SELECTED_CONTROLLER(channel).packet_dma = (BX_SELECTED_CONTROLLER(channel).features & 1);
-            if (BX_SELECTED_CONTROLLER(channel).features & (1 << 1)) {
+            controller->packet_dma = (controller->features & 1);
+            if (controller->features & (1 << 1)) {
               BX_ERROR(("PACKET-overlapped not supported"));
               command_aborted (channel, 0xa0);
             } else {
               // We're already ready!
-              BX_SELECTED_CONTROLLER(channel).sector_count = 1;
-              BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-              BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
+              controller->sector_count = 1;
+              controller->status.busy = 0;
+              controller->status.write_fault = 0;
               // serv bit??
-              BX_SELECTED_CONTROLLER(channel).status.drq = 1;
+              controller->status.drq = 1;
 
               // NOTE: no interrupt here
-              BX_SELECTED_CONTROLLER(channel).current_command = value;
-              BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
+              controller->current_command = value;
+              controller->buffer_index = 0;
             }
           } else {
             command_aborted (channel, 0xa0);
@@ -2301,19 +2302,19 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xE1: // IDLE IMMEDIATE
         case 0xE7: // FLUSH CACHE
         case 0xEA: // FLUSH CACHE EXT
-          BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-          BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-          BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
-          BX_SELECTED_CONTROLLER(channel).status.drq = 0;
+          controller->status.busy = 0;
+          controller->status.drive_ready = 1;
+          controller->status.write_fault = 0;
+          controller->status.drq = 0;
           raise_interrupt(channel);
           break;
 
         case 0xe5: // CHECK POWER MODE
-          BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-          BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-          BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
-          BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-          BX_SELECTED_CONTROLLER(channel).sector_count = 0xff; // Active or Idle mode
+          controller->status.busy = 0;
+          controller->status.drive_ready = 1;
+          controller->status.write_fault = 0;
+          controller->status.drq = 0;
+          controller->sector_count = 0xff; // Active or Idle mode
           raise_interrupt(channel);
           break;
 
@@ -2325,15 +2326,15 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
               command_aborted(channel, value);
               break;
             }
-            BX_SELECTED_CONTROLLER(channel).error_register = 0;
-            BX_SELECTED_CONTROLLER(channel).status.busy  = 0;
-            BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-            BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
-            BX_SELECTED_CONTROLLER(channel).status.drq   = 0;
-            BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
-            BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
+            controller->error_register = 0;
+            controller->status.busy  = 0;
+            controller->status.drive_ready = 1;
+            controller->status.seek_complete = 1;
+            controller->status.drq   = 0;
+            controller->status.corrected_data = 0;
+            controller->buffer_index = 0;
             BX_DEBUG(("ata%d-%d: SEEK completed (IRQ %sabled)", channel,
-              BX_SLAVE_SELECTED(channel), BX_SELECTED_CONTROLLER(channel).control.disable_irq?"dis":"en"));
+              BX_SLAVE_SELECTED(channel), controller->control.disable_irq?"dis":"en"));
             raise_interrupt(channel);
           } else {
             BX_INFO(("write cmd 0x70 (SEEK) not supported for non-disk"));
@@ -2345,11 +2346,11 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           lba48 = 1;
         case 0xC8: // READ DMA
           if (BX_SELECTED_IS_HD(channel) && BX_HD_THIS bmdma_present()) {
-            lba48_transform(channel, lba48);
-            BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-            BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
-            BX_SELECTED_CONTROLLER(channel).status.drq   = 1;
-            BX_SELECTED_CONTROLLER(channel).current_command = value;
+            lba48_transform(controller, lba48);
+            controller->status.drive_ready = 1;
+            controller->status.seek_complete = 1;
+            controller->status.drq   = 1;
+            controller->current_command = value;
           } else {
             BX_ERROR(("write cmd 0x%02x (READ DMA) not supported", value));
             command_aborted(channel, value);
@@ -2360,11 +2361,11 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           lba48 = 1;
         case 0xCA: // WRITE DMA
           if (BX_SELECTED_IS_HD(channel) && BX_HD_THIS bmdma_present()) {
-            lba48_transform(channel, lba48);
-            BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-            BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
-            BX_SELECTED_CONTROLLER(channel).status.drq   = 1;
-            BX_SELECTED_CONTROLLER(channel).current_command = value;
+            lba48_transform(controller, lba48);
+            controller->status.drive_ready = 1;
+            controller->status.seek_complete = 1;
+            controller->status.drq   = 1;
+            controller->current_command = value;
           } else {
             BX_ERROR(("write cmd 0x%02x (WRITE DMA) not supported", value));
             command_aborted(channel, value);
@@ -2374,22 +2375,22 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           lba48 = 1;
         case 0xF8: // READ NATIVE MAX ADDRESS
           if (BX_SELECTED_IS_HD(channel)) {
-            lba48_transform(channel, lba48);
+            lba48_transform(controller, lba48);
             Bit64s max_sector = BX_SELECTED_DRIVE(channel).hdimage->hd_size / 512 - 1;
-            if (BX_SELECTED_CONTROLLER(channel).lba_mode) {
-              if (!BX_SELECTED_CONTROLLER(channel).lba48) {
-                BX_SELECTED_CONTROLLER(channel).head_no = (Bit8u)((max_sector >> 24) & 0xf);
-                BX_SELECTED_CONTROLLER(channel).cylinder_no = (Bit16u)((max_sector >> 8) & 0xffff);
-                BX_SELECTED_CONTROLLER(channel).sector_no = (Bit8u)((max_sector) & 0xff);
+            if (controller->lba_mode) {
+              if (!controller->lba48) {
+                controller->head_no = (Bit8u)((max_sector >> 24) & 0xf);
+                controller->cylinder_no = (Bit16u)((max_sector >> 8) & 0xffff);
+                controller->sector_no = (Bit8u)((max_sector) & 0xff);
               } else {
-                BX_SELECTED_CONTROLLER(channel).hob.hcyl = (Bit8u)((max_sector >> 40) & 0xff);
-                BX_SELECTED_CONTROLLER(channel).hob.lcyl = (Bit8u)((max_sector >> 32) & 0xff);
-                BX_SELECTED_CONTROLLER(channel).hob.sector = (Bit8u)((max_sector >> 24) & 0xff);
-                BX_SELECTED_CONTROLLER(channel).cylinder_no = (Bit16u)((max_sector >> 8) & 0xffff);
-                BX_SELECTED_CONTROLLER(channel).sector_no = (Bit8u)((max_sector) & 0xff);
+                controller->hob.hcyl = (Bit8u)((max_sector >> 40) & 0xff);
+                controller->hob.lcyl = (Bit8u)((max_sector >> 32) & 0xff);
+                controller->hob.sector = (Bit8u)((max_sector >> 24) & 0xff);
+                controller->cylinder_no = (Bit16u)((max_sector >> 8) & 0xffff);
+                controller->sector_no = (Bit8u)((max_sector) & 0xff);
               }
-              BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-              BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
+              controller->status.drive_ready = 1;
+              controller->status.seek_complete = 1;
               raise_interrupt(channel);
             } else {
               command_aborted(channel, value);
@@ -2462,18 +2463,18 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                // (mch) Even if device 1 was selected, a write to this register
                // goes to device 0 (if device 1 is absent)
 
-      prev_control_reset = BX_SELECTED_CONTROLLER(channel).control.reset;
+      prev_control_reset = controller->control.reset;
       BX_HD_THIS channels[channel].drives[0].controller.control.reset       = value & 0x04;
       BX_HD_THIS channels[channel].drives[1].controller.control.reset       = value & 0x04;
       BX_HD_THIS channels[channel].drives[0].controller.control.disable_irq = value & 0x02;
       BX_HD_THIS channels[channel].drives[1].controller.control.disable_irq = value & 0x02;
 
       BX_DEBUG(("ata%d: adapter control reg: reset controller = %d", channel,
-        (unsigned) (BX_SELECTED_CONTROLLER(channel).control.reset) ? 1 : 0));
+        (unsigned) (controller->control.reset) ? 1 : 0));
       BX_DEBUG(("ata%d: adapter control reg: disable irq = %d", channel,
-        (unsigned) (BX_SELECTED_CONTROLLER(channel).control.disable_irq) ? 1 : 0));
+        (unsigned) (controller->control.disable_irq) ? 1 : 0));
 
-      if (!prev_control_reset && BX_SELECTED_CONTROLLER(channel).control.reset) {
+      if (!prev_control_reset && controller->control.reset) {
         // transition from 0 to 1 causes all drives to reset
         BX_DEBUG(("Enter RESET mode"));
 
@@ -2500,8 +2501,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_CONTROLLER(channel,id).control.disable_irq = 0;
           DEV_pic_lower_irq(BX_HD_THIS channels[channel].irq);
         }
-      } else if (BX_SELECTED_CONTROLLER(channel).reset_in_progress &&
-                !BX_SELECTED_CONTROLLER(channel).control.reset) {
+      } else if (controller->reset_in_progress &&
+                !controller->control.reset) {
         // Clear BSY and DRDY
         BX_DEBUG(("Reset complete {%s}", BX_SELECTED_TYPE_STRING(channel)));
         for (int id = 0; id < 2; id++) {
@@ -2513,7 +2514,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
         }
       }
       BX_DEBUG(("ata%d: adapter control reg: disable irq = %d", channel,
-        (unsigned) (BX_SELECTED_CONTROLLER(channel).control.disable_irq) ? 1 : 0));
+        (unsigned) (controller->control.disable_irq) ? 1 : 0));
       break;
 
     default:
@@ -2527,23 +2528,25 @@ bx_hard_drive_c::calculate_logical_address(Bit8u channel, Bit64s *sector)
 {
   Bit64s logical_sector;
 
-  if (BX_SELECTED_CONTROLLER(channel).lba_mode) {
-    if (!BX_SELECTED_CONTROLLER(channel).lba48) {
-      logical_sector = ((Bit32u)BX_SELECTED_CONTROLLER(channel).head_no) << 24 |
-        ((Bit32u)BX_SELECTED_CONTROLLER(channel).cylinder_no) << 8 |
-        (Bit32u)BX_SELECTED_CONTROLLER(channel).sector_no;
+  controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
+
+  if (controller->lba_mode) {
+    if (!controller->lba48) {
+      logical_sector = ((Bit32u)controller->head_no) << 24 |
+        ((Bit32u)controller->cylinder_no) << 8 |
+        (Bit32u)controller->sector_no;
     } else {
-      logical_sector = ((Bit64u)BX_SELECTED_CONTROLLER(channel).hob.hcyl) << 40 |
-        ((Bit64u)BX_SELECTED_CONTROLLER(channel).hob.lcyl) << 32 |
-        ((Bit64u)BX_SELECTED_CONTROLLER(channel).hob.sector) << 24 |
-        ((Bit64u)BX_SELECTED_CONTROLLER(channel).cylinder_no) << 8 |
-        (Bit64u)BX_SELECTED_CONTROLLER(channel).sector_no;
+      logical_sector = ((Bit64u)controller->hob.hcyl) << 40 |
+        ((Bit64u)controller->hob.lcyl) << 32 |
+        ((Bit64u)controller->hob.sector) << 24 |
+        ((Bit64u)controller->cylinder_no) << 8 |
+        (Bit64u)controller->sector_no;
     }
   } else {
-    logical_sector = ((Bit32u)BX_SELECTED_CONTROLLER(channel).cylinder_no * BX_SELECTED_DRIVE(channel).hdimage->heads *
+    logical_sector = ((Bit32u)controller->cylinder_no * BX_SELECTED_DRIVE(channel).hdimage->heads *
       BX_SELECTED_DRIVE(channel).hdimage->spt) +
-      (Bit32u)(BX_SELECTED_CONTROLLER(channel).head_no * BX_SELECTED_DRIVE(channel).hdimage->spt) +
-      (BX_SELECTED_CONTROLLER(channel).sector_no - 1);
+      (Bit32u)(controller->head_no * BX_SELECTED_DRIVE(channel).hdimage->spt) +
+      (controller->sector_no - 1);
   }
 
   Bit64s sector_count = BX_SELECTED_DRIVE(channel).hdimage->hd_size / 512;
@@ -2558,33 +2561,35 @@ bx_hard_drive_c::calculate_logical_address(Bit8u channel, Bit64s *sector)
   void BX_CPP_AttrRegparmN(2)
 bx_hard_drive_c::increment_address(Bit8u channel, Bit64s *sector)
 {
-  BX_SELECTED_CONTROLLER(channel).sector_count--;
-  BX_SELECTED_CONTROLLER(channel).num_sectors--;
+  controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
 
-  if (BX_SELECTED_CONTROLLER(channel).lba_mode) {
+  controller->sector_count--;
+  controller->num_sectors--;
+
+  if (controller->lba_mode) {
     Bit64s logical_sector = *sector;
     logical_sector++;
-    if (!BX_SELECTED_CONTROLLER(channel).lba48) {
-      BX_SELECTED_CONTROLLER(channel).head_no = (Bit8u)((logical_sector >> 24) & 0xf);
-      BX_SELECTED_CONTROLLER(channel).cylinder_no = (Bit16u)((logical_sector >> 8) & 0xffff);
-      BX_SELECTED_CONTROLLER(channel).sector_no = (Bit8u)((logical_sector) & 0xff);
+    if (!controller->lba48) {
+      controller->head_no = (Bit8u)((logical_sector >> 24) & 0xf);
+      controller->cylinder_no = (Bit16u)((logical_sector >> 8) & 0xffff);
+      controller->sector_no = (Bit8u)((logical_sector) & 0xff);
     } else {
-      BX_SELECTED_CONTROLLER(channel).hob.hcyl = (Bit8u)((logical_sector >> 40) & 0xff);
-      BX_SELECTED_CONTROLLER(channel).hob.lcyl = (Bit8u)((logical_sector >> 32) & 0xff);
-      BX_SELECTED_CONTROLLER(channel).hob.sector = (Bit8u)((logical_sector >> 24) & 0xff);
-      BX_SELECTED_CONTROLLER(channel).cylinder_no = (Bit16u)((logical_sector >> 8) & 0xffff);
-      BX_SELECTED_CONTROLLER(channel).sector_no = (Bit8u)((logical_sector) & 0xff);
+      controller->hob.hcyl = (Bit8u)((logical_sector >> 40) & 0xff);
+      controller->hob.lcyl = (Bit8u)((logical_sector >> 32) & 0xff);
+      controller->hob.sector = (Bit8u)((logical_sector >> 24) & 0xff);
+      controller->cylinder_no = (Bit16u)((logical_sector >> 8) & 0xffff);
+      controller->sector_no = (Bit8u)((logical_sector) & 0xff);
     }
   } else {
-    BX_SELECTED_CONTROLLER(channel).sector_no++;
-    if (BX_SELECTED_CONTROLLER(channel).sector_no > BX_SELECTED_DRIVE(channel).hdimage->spt) {
-      BX_SELECTED_CONTROLLER(channel).sector_no = 1;
-      BX_SELECTED_CONTROLLER(channel).head_no++;
-      if (BX_SELECTED_CONTROLLER(channel).head_no >= BX_SELECTED_DRIVE(channel).hdimage->heads) {
-        BX_SELECTED_CONTROLLER(channel).head_no = 0;
-        BX_SELECTED_CONTROLLER(channel).cylinder_no++;
-        if (BX_SELECTED_CONTROLLER(channel).cylinder_no >= BX_SELECTED_DRIVE(channel).hdimage->cylinders)
-          BX_SELECTED_CONTROLLER(channel).cylinder_no = BX_SELECTED_DRIVE(channel).hdimage->cylinders - 1;
+    controller->sector_no++;
+    if (controller->sector_no > BX_SELECTED_DRIVE(channel).hdimage->spt) {
+      controller->sector_no = 1;
+      controller->head_no++;
+      if (controller->head_no >= BX_SELECTED_DRIVE(channel).hdimage->heads) {
+        controller->head_no = 0;
+        controller->cylinder_no++;
+        if (controller->cylinder_no >= BX_SELECTED_DRIVE(channel).hdimage->cylinders)
+          controller->cylinder_no = BX_SELECTED_DRIVE(channel).hdimage->cylinders - 1;
       }
     }
   }
@@ -2614,8 +2619,7 @@ void bx_hard_drive_c::identify_ATAPI_drive(Bit8u channel)
 
   const char* firmware = "ALPHA1  ";
   for (i = 0; i < strlen(firmware)/2; i++) {
-    BX_SELECTED_DRIVE(channel).id_drive[23+i] = (firmware[i*2] << 8) |
-       firmware[i*2 + 1];
+    BX_SELECTED_DRIVE(channel).id_drive[23+i] = (firmware[i*2] << 8) | firmware[i*2 + 1];
   }
   BX_ASSERT((23+i) == 27);
 
@@ -2978,51 +2982,53 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
 
 void bx_hard_drive_c::init_send_atapi_command(Bit8u channel, Bit8u command, int req_length, int alloc_length, bx_bool lazy)
 {
-  // BX_SELECTED_CONTROLLER(channel).byte_count is a union of BX_SELECTED_CONTROLLER(channel).cylinder_no;
+  controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
+
+  // byte_count is a union of cylinder_no;
   // lazy is used to force a data read in the buffer at the next read.
 
-  if (BX_SELECTED_CONTROLLER(channel).byte_count == 0xffff)
-    BX_SELECTED_CONTROLLER(channel).byte_count = 0xfffe;
+  if (controller->byte_count == 0xffff)
+    controller->byte_count = 0xfffe;
 
-  if ((BX_SELECTED_CONTROLLER(channel).byte_count & 1) &&
-     !(alloc_length <= BX_SELECTED_CONTROLLER(channel).byte_count))
+  if ((controller->byte_count & 1) &&
+     !(alloc_length <= controller->byte_count))
   {
     BX_INFO(("Odd byte count (0x%04x) to ATAPI command 0x%02x, using 0x%04x",
-      BX_SELECTED_CONTROLLER(channel).byte_count, command, BX_SELECTED_CONTROLLER(channel).byte_count - 1));
-    BX_SELECTED_CONTROLLER(channel).byte_count -= 1;
+      controller->byte_count, command, controller->byte_count - 1));
+    controller->byte_count--;
   }
 
-  if (!BX_SELECTED_CONTROLLER(channel).packet_dma) {
-    if (BX_SELECTED_CONTROLLER(channel).byte_count == 0)
+  if (!controller->packet_dma) {
+    if (controller->byte_count == 0)
       BX_PANIC(("ATAPI command 0x%02x with zero byte count", command));
   }
 
   if (alloc_length < 0)
     BX_PANIC(("Allocation length < 0"));
   if (alloc_length == 0)
-    alloc_length = BX_SELECTED_CONTROLLER(channel).byte_count;
+    alloc_length = controller->byte_count;
 
-  BX_SELECTED_CONTROLLER(channel).interrupt_reason.i_o = 1;
-  BX_SELECTED_CONTROLLER(channel).interrupt_reason.c_d = 0;
-  BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-  BX_SELECTED_CONTROLLER(channel).status.drq = 1;
-  BX_SELECTED_CONTROLLER(channel).status.err = 0;
+  controller->interrupt_reason.i_o = 1;
+  controller->interrupt_reason.c_d = 0;
+  controller->status.busy = 0;
+  controller->status.drq = 1;
+  controller->status.err = 0;
 
   // no bytes transfered yet
   if (lazy)
-    BX_SELECTED_CONTROLLER(channel).buffer_index = BX_SELECTED_CONTROLLER(channel).buffer_size;
+    controller->buffer_index = controller->buffer_size;
   else
-    BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
-  BX_SELECTED_CONTROLLER(channel).drq_index = 0;
+    controller->buffer_index = 0;
+  controller->drq_index = 0;
 
-  if (BX_SELECTED_CONTROLLER(channel).byte_count > req_length)
-    BX_SELECTED_CONTROLLER(channel).byte_count = req_length;
+  if (controller->byte_count > req_length)
+    controller->byte_count = req_length;
 
-  if (BX_SELECTED_CONTROLLER(channel).byte_count > alloc_length)
-    BX_SELECTED_CONTROLLER(channel).byte_count = alloc_length;
+  if (controller->byte_count > alloc_length)
+    controller->byte_count = alloc_length;
 
   BX_SELECTED_DRIVE(channel).atapi.command = command;
-  BX_SELECTED_DRIVE(channel).atapi.drq_bytes = BX_SELECTED_CONTROLLER(channel).byte_count;
+  BX_SELECTED_DRIVE(channel).atapi.drq_bytes = controller->byte_count;
   BX_SELECTED_DRIVE(channel).atapi.total_bytes_remaining = (req_length < alloc_length) ? req_length : alloc_length;
 }
 
@@ -3034,15 +3040,17 @@ void bx_hard_drive_c::atapi_cmd_error(Bit8u channel, sense_t sense_key, asc_t as
     BX_DEBUG(("ata%d-%d: atapi_cmd_error: key=%02x asc=%02x", channel, BX_SLAVE_SELECTED(channel), sense_key, asc));
   }
 
-  BX_SELECTED_CONTROLLER(channel).error_register = sense_key << 4;
-  BX_SELECTED_CONTROLLER(channel).interrupt_reason.i_o = 1;
-  BX_SELECTED_CONTROLLER(channel).interrupt_reason.c_d = 1;
-  BX_SELECTED_CONTROLLER(channel).interrupt_reason.rel = 0;
-  BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-  BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-  BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
-  BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-  BX_SELECTED_CONTROLLER(channel).status.err = 1;
+  controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
+
+  controller->error_register = sense_key << 4;
+  controller->interrupt_reason.i_o = 1;
+  controller->interrupt_reason.c_d = 1;
+  controller->interrupt_reason.rel = 0;
+  controller->status.busy = 0;
+  controller->status.drive_ready = 1;
+  controller->status.write_fault = 0;
+  controller->status.drq = 0;
+  controller->status.err = 1;
 
   BX_SELECTED_DRIVE(channel).sense.sense_key = sense_key;
   BX_SELECTED_DRIVE(channel).sense.asc = asc;
@@ -3050,34 +3058,36 @@ void bx_hard_drive_c::atapi_cmd_error(Bit8u channel, sense_t sense_key, asc_t as
 }
 
   void BX_CPP_AttrRegparmN(1)
-bx_hard_drive_c::atapi_cmd_nop(Bit8u channel)
+bx_hard_drive_c::atapi_cmd_nop(controller_t *controller)
 {
-  BX_SELECTED_CONTROLLER(channel).interrupt_reason.i_o = 1;
-  BX_SELECTED_CONTROLLER(channel).interrupt_reason.c_d = 1;
-  BX_SELECTED_CONTROLLER(channel).interrupt_reason.rel = 0;
-  BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-  BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-  BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-  BX_SELECTED_CONTROLLER(channel).status.err = 0;
+  controller->interrupt_reason.i_o = 1;
+  controller->interrupt_reason.c_d = 1;
+  controller->interrupt_reason.rel = 0;
+  controller->status.busy = 0;
+  controller->status.drive_ready = 1;
+  controller->status.drq = 0;
+  controller->status.err = 0;
 }
 
 void bx_hard_drive_c::init_mode_sense_single(Bit8u channel, const void* src, int size)
 {
+  controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
+
   // Header
-  BX_SELECTED_CONTROLLER(channel).buffer[0] = (size+6) >> 8;
-  BX_SELECTED_CONTROLLER(channel).buffer[1] = (size+6) & 0xff;
+  controller->buffer[0] = (size+6) >> 8;
+  controller->buffer[1] = (size+6) & 0xff;
   if (BX_SELECTED_DRIVE(channel).cdrom.ready)
-    BX_SELECTED_CONTROLLER(channel).buffer[2] = 0x12; // media present 120mm CD-ROM (CD-R) data/audio  door closed
+    controller->buffer[2] = 0x12; // media present 120mm CD-ROM (CD-R) data/audio  door closed
   else
-    BX_SELECTED_CONTROLLER(channel).buffer[2] = 0x70; // no media present
-  BX_SELECTED_CONTROLLER(channel).buffer[3] = 0; // reserved
-  BX_SELECTED_CONTROLLER(channel).buffer[4] = 0; // reserved
-  BX_SELECTED_CONTROLLER(channel).buffer[5] = 0; // reserved
-  BX_SELECTED_CONTROLLER(channel).buffer[6] = 0; // reserved
-  BX_SELECTED_CONTROLLER(channel).buffer[7] = 0; // reserved
+    controller->buffer[2] = 0x70; // no media present
+  controller->buffer[3] = 0; // reserved
+  controller->buffer[4] = 0; // reserved
+  controller->buffer[5] = 0; // reserved
+  controller->buffer[6] = 0; // reserved
+  controller->buffer[7] = 0; // reserved
 
   // Data
-  memcpy(BX_SELECTED_CONTROLLER(channel).buffer + 8, src, size);
+  memcpy(controller->buffer + 8, src, size);
 }
 
   void BX_CPP_AttrRegparmN(1)
@@ -3105,15 +3115,17 @@ bx_hard_drive_c::raise_interrupt(Bit8u channel)
 
 void bx_hard_drive_c::command_aborted(Bit8u channel, unsigned value)
 {
+  controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
+
   BX_DEBUG(("aborting on command 0x%02x {%s}", value, BX_SELECTED_TYPE_STRING(channel)));
-  BX_SELECTED_CONTROLLER(channel).current_command = 0;
-  BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-  BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-  BX_SELECTED_CONTROLLER(channel).status.err = 1;
-  BX_SELECTED_CONTROLLER(channel).error_register = 0x04; // command ABORTED
-  BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-  BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
-  BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
+  controller->current_command = 0;
+  controller->status.busy = 0;
+  controller->status.drive_ready = 1;
+  controller->status.err = 1;
+  controller->error_register = 0x04; // command ABORTED
+  controller->status.drq = 0;
+  controller->status.corrected_data = 0;
+  controller->buffer_index = 0;
   raise_interrupt(channel);
 }
 
@@ -3203,19 +3215,21 @@ bx_bool bx_hard_drive_c::bmdma_present(void)
 #if BX_SUPPORT_PCI
 bx_bool bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u *sector_size)
 {
-  if ((BX_SELECTED_CONTROLLER(channel).current_command == 0xC8) ||
-      (BX_SELECTED_CONTROLLER(channel).current_command == 0x25)) {
+  controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
+
+  if ((controller->current_command == 0xC8) ||
+      (controller->current_command == 0x25)) {
     *sector_size = 512;
     if (!ide_read_sector(channel, buffer, 512)) {
       return 0;
     }
-  } else if (BX_SELECTED_CONTROLLER(channel).current_command == 0xA0) {
-    if (BX_SELECTED_CONTROLLER(channel).packet_dma) {
+  } else if (controller->current_command == 0xA0) {
+    if (controller->packet_dma) {
       switch (BX_SELECTED_DRIVE(channel).atapi.command) {
         case 0x28: // read (10)
         case 0xa8: // read (12)
         case 0xbe: // read cd
-          *sector_size = BX_SELECTED_CONTROLLER(channel).buffer_size;
+          *sector_size = controller->buffer_size;
           if (!BX_SELECTED_DRIVE(channel).cdrom.ready) {
             BX_PANIC(("Read with CDROM not ready"));
             return 0;
@@ -3224,7 +3238,7 @@ bx_bool bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u 
           bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1);
 #ifdef LOWLEVEL_CDROM
           if (!BX_SELECTED_DRIVE(channel).cdrom.cd->read_block(buffer, BX_SELECTED_DRIVE(channel).cdrom.next_lba,
-                                                               BX_SELECTED_CONTROLLER(channel).buffer_size))
+                                                               controller->buffer_size))
           {
             BX_PANIC(("CDROM: read block %d failed", BX_SELECTED_DRIVE(channel).cdrom.next_lba));
             return 0;
@@ -3236,17 +3250,17 @@ bx_bool bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u 
 #endif
           break;
         default:
-          memcpy(buffer, BX_SELECTED_CONTROLLER(channel).buffer, *sector_size);
+          memcpy(buffer, controller->buffer, *sector_size);
           break;
       }
     } else {
       BX_ERROR(("PACKET-DMA not active"));
-      command_aborted(channel, BX_SELECTED_CONTROLLER(channel).current_command);
+      command_aborted(channel, controller->current_command);
       return 0;
     }
   } else {
     BX_ERROR(("DMA read not active"));
-    command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
+    command_aborted (channel, controller->current_command);
     return 0;
   }
   return 1;
@@ -3254,10 +3268,12 @@ bx_bool bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u 
 
 bx_bool bx_hard_drive_c::bmdma_write_sector(Bit8u channel, Bit8u *buffer)
 {
-  if ((BX_SELECTED_CONTROLLER(channel).current_command != 0xCA) &&
-      (BX_SELECTED_CONTROLLER(channel).current_command != 0x35)) {
+  controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
+
+  if ((controller->current_command != 0xCA) &&
+      (controller->current_command != 0x35)) {
     BX_ERROR(("DMA write not active"));
-    command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
+    command_aborted (channel, controller->current_command);
     return 0;
   }
   if (!ide_write_sector(channel, buffer, 512)) {
@@ -3268,18 +3284,20 @@ bx_bool bx_hard_drive_c::bmdma_write_sector(Bit8u channel, Bit8u *buffer)
 
 void bx_hard_drive_c::bmdma_complete(Bit8u channel)
 {
-  BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-  BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-  BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-  BX_SELECTED_CONTROLLER(channel).status.err = 0;
+  controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
+
+  controller->status.busy = 0;
+  controller->status.drive_ready = 1;
+  controller->status.drq = 0;
+  controller->status.err = 0;
   if (BX_SELECTED_IS_CD(channel)) {
-    BX_SELECTED_CONTROLLER(channel).interrupt_reason.i_o = 1;
-    BX_SELECTED_CONTROLLER(channel).interrupt_reason.c_d = 1;
-    BX_SELECTED_CONTROLLER(channel).interrupt_reason.rel = 0;
+    controller->interrupt_reason.i_o = 1;
+    controller->interrupt_reason.c_d = 1;
+    controller->interrupt_reason.rel = 0;
   } else {
-    BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
-    BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
-    BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
+    controller->status.write_fault = 0;
+    controller->status.seek_complete = 1;
+    controller->status.corrected_data = 0;
   }
   raise_interrupt(channel);
 }
@@ -3303,6 +3321,8 @@ void bx_hard_drive_c::set_signature(Bit8u channel, Bit8u id)
 
 bx_bool bx_hard_drive_c::ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u buffer_size)
 {
+  controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
+
   Bit64s logical_sector = 0;
   Bit64s ret;
 
@@ -3311,13 +3331,13 @@ bx_bool bx_hard_drive_c::ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u bu
   do {
     if (!calculate_logical_address(channel, &logical_sector)) {
       BX_ERROR(("ide_read_sector() reached invalid sector %lu, aborting", (unsigned long)logical_sector));
-      command_aborted(channel, BX_SELECTED_CONTROLLER(channel).current_command);
+      command_aborted(channel, controller->current_command);
       return 0;
     }
     ret = BX_SELECTED_DRIVE(channel).hdimage->lseek(logical_sector * 512, SEEK_SET);
     if (ret < 0) {
       BX_ERROR(("could not lseek() hard drive image file"));
-      command_aborted(channel, BX_SELECTED_CONTROLLER(channel).current_command);
+      command_aborted(channel, controller->current_command);
       return 0;
     }
     /* set status bar conditions for device */
@@ -3325,7 +3345,7 @@ bx_bool bx_hard_drive_c::ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u bu
     ret = BX_SELECTED_DRIVE(channel).hdimage->read((bx_ptr_t)bufptr, 512);
     if (ret < 512) {
       BX_ERROR(("could not read() hard drive image file at byte %lu", (unsigned long)logical_sector*512));
-      command_aborted(channel, BX_SELECTED_CONTROLLER(channel).current_command);
+      command_aborted(channel, controller->current_command);
       return 0;
     }
     increment_address(channel, &logical_sector);
@@ -3337,6 +3357,8 @@ bx_bool bx_hard_drive_c::ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u bu
 
 bx_bool bx_hard_drive_c::ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u buffer_size)
 {
+  controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
+
   Bit64s logical_sector = 0;
   Bit64s ret;
 
@@ -3345,13 +3367,13 @@ bx_bool bx_hard_drive_c::ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u b
   do {
     if (!calculate_logical_address(channel, &logical_sector)) {
       BX_ERROR(("ide_write_sector() reached invalid sector %lu, aborting", (unsigned long)logical_sector));
-      command_aborted(channel, BX_SELECTED_CONTROLLER(channel).current_command);
+      command_aborted(channel, controller->current_command);
       return 0;
     }
     ret = BX_SELECTED_DRIVE(channel).hdimage->lseek(logical_sector * 512, SEEK_SET);
     if (ret < 0) {
       BX_ERROR(("could not lseek() hard drive image file at byte %lu", (unsigned long)logical_sector * 512));
-      command_aborted(channel, BX_SELECTED_CONTROLLER(channel).current_command);
+      command_aborted(channel, controller->current_command);
       return 0;
     }
     /* set status bar conditions for device */
@@ -3359,7 +3381,7 @@ bx_bool bx_hard_drive_c::ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u b
     ret = BX_SELECTED_DRIVE(channel).hdimage->write((bx_ptr_t)bufptr, 512);
     if (ret < 512) {
       BX_ERROR(("could not write() hard drive image file at byte %lu", (unsigned long)logical_sector*512));
-      command_aborted(channel, BX_SELECTED_CONTROLLER(channel).current_command);
+      command_aborted(channel, controller->current_command);
       return 0;
     }
     increment_address(channel, &logical_sector);
@@ -3369,21 +3391,21 @@ bx_bool bx_hard_drive_c::ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u b
   return 1;
 }
 
-void bx_hard_drive_c::lba48_transform(Bit8u channel, bx_bool lba48)
+void bx_hard_drive_c::lba48_transform(controller_t *controller, bx_bool lba48)
 {
-  BX_SELECTED_CONTROLLER(channel).lba48 = lba48;
+  controller->lba48 = lba48;
 
-  if (!BX_SELECTED_CONTROLLER(channel).lba48) {
-    if (!BX_SELECTED_CONTROLLER(channel).sector_count)
-      BX_SELECTED_CONTROLLER(channel).num_sectors = 256;
+  if (!controller->lba48) {
+    if (!controller->sector_count)
+      controller->num_sectors = 256;
     else
-      BX_SELECTED_CONTROLLER(channel).num_sectors = BX_SELECTED_CONTROLLER(channel).sector_count;
+      controller->num_sectors = controller->sector_count;
   } else {
-    if (!BX_SELECTED_CONTROLLER(channel).sector_count && !BX_SELECTED_CONTROLLER(channel).hob.nsector)
-      BX_SELECTED_CONTROLLER(channel).num_sectors = 65536;
+    if (!controller->sector_count && !controller->hob.nsector)
+      controller->num_sectors = 65536;
     else
-      BX_SELECTED_CONTROLLER(channel).num_sectors = (BX_SELECTED_CONTROLLER(channel).hob.nsector << 8) |
-                                                     BX_SELECTED_CONTROLLER(channel).sector_count;
+      controller->num_sectors = (controller->hob.nsector << 8) |
+                                 controller->sector_count;
   }
 }
 
