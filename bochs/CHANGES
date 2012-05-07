@@ -13,6 +13,7 @@ Changes after 2.5.1 release:
   ! Added Corei5 750 (Lynnfield) configuration to the CPUDB
   ! Added Turion64 (Tyler) configuration to the CPUDB
   ! Added AMD Phenom X3 8650 (Toliman) configuration to the CPUDB
+  ! Added Corei7 3770K (Ivy Bridge) configuration to the CPUDB
   - Bugfixes for CPU emulation correctness and stability
 
 - Bochs Debugger and Instrumentation

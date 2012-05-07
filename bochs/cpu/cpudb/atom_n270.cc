@@ -76,7 +76,7 @@ void atom_n270_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
     get_std_cpuid_leaf_2(leaf);
     return;
   case 0x00000003:
-    get_std_cpuid_leaf_3(leaf);
+    get_reserved_leaf(leaf);
     return;
   case 0x00000004:
     get_std_cpuid_leaf_4(subfunction, leaf);
@@ -310,15 +310,7 @@ void atom_n270_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
   leaf->edx = 0x00000000;
 }
 
-// leaf 0x00000003 //
-void atom_n270_t::get_std_cpuid_leaf_3(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000003 - Processor Serial Number
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
+// leaf 0x00000003 - Processor Serial Number (not supported) //
 
 // leaf 0x00000004 //
 void atom_n270_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const

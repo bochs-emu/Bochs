@@ -50,7 +50,6 @@ private:
   void get_std_cpuid_leaf_0(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_2(cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_3(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_5(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_6(cpuid_function_t *leaf) const;
