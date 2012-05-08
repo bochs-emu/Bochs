@@ -24,7 +24,7 @@
 #include "bochs.h"
 #include "cpu.h"
 #include "param_names.h"
-#include "corei7_ivy_bridge_3770k.h"
+#include "corei7_ivy_bridge_3770K.h"
 
 #define LOG_THIS cpu->
 
