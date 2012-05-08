@@ -387,7 +387,7 @@ void bx_pci_bridge_c::smram_control(Bit8u value8)
 #if BX_DEBUGGER
 void bx_pci_bridge_c::debug_dump(int argc, char **argv)
 {
-  int arg, i;
+  int arg, i, j, r;
 
   dbg_printf("i440FX PMC/DBX\n\n");
   dbg_printf("confAddr = 0x%08x\n", BX_PCI_THIS confAddr);
@@ -403,9 +403,14 @@ void bx_pci_bridge_c::debug_dump(int argc, char **argv)
   } else {
     for (arg = 0; arg < argc; arg++) {
       if (!strcmp(argv[arg], "dump=full")) {
-        dbg_printf("\nPCI config space (reg = value)\n");
-        for (i=0; i<256; i++) {
-          dbg_printf("0x%02x = 0x%02x\n", i, BX_PCI_THIS pci_conf[i]);
+        dbg_printf("\nPCI config space\n\n");
+        r = 0;
+        for (i=0; i<16; i++) {
+          dbg_printf("%04x ", r);
+          for (j=0; j<16; j++) {
+            dbg_printf(" %02x", BX_PCI_THIS pci_conf[r++]);
+          }
+          dbg_printf("\n");
         }
       } else {
         dbg_printf("\nUnknown option: '%s'\n", argv[arg]);
