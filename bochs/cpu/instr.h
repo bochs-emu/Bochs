@@ -122,14 +122,14 @@ public:
     Bit8u metaInfo1;
   } metaInfo;
 
-#define BX_INSTR_METADATA_SEG   0
-#define BX_INSTR_METADATA_B1    1
-#define BX_INSTR_METADATA_NNN   2
-#define BX_INSTR_METADATA_RM    3
-#define BX_INSTR_METADATA_BASE  4
-#define BX_INSTR_METADATA_INDEX 5
-#define BX_INSTR_METADATA_SCALE 6
-#define BX_INSTR_METADATA_VVV   7
+#define BX_INSTR_METADATA_NNN   0
+#define BX_INSTR_METADATA_RM    1
+#define BX_INSTR_METADATA_SEG   2
+#define BX_INSTR_METADATA_BASE  3
+#define BX_INSTR_METADATA_INDEX 4
+#define BX_INSTR_METADATA_SCALE 5
+#define BX_INSTR_METADATA_VVV   6
+#define BX_INSTR_METADATA_B1    7
 
   // using 5-bit field for registers (16 regs in 64-bit, RIP, NIL)
   Bit8u metaData[8];

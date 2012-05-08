@@ -179,7 +179,6 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G1AEq[8] = {
 /* ******* */
 
 static const BxOpcodeInfo_t BxOpcodeInfoG2Eb[8] = {
-  // attributes defined in main area
   /* 0 */ { 0, BX_IA_ROL_Eb },
   /* 1 */ { 0, BX_IA_ROR_Eb },
   /* 2 */ { 0, BX_IA_RCL_Eb },
@@ -191,7 +190,6 @@ static const BxOpcodeInfo_t BxOpcodeInfoG2Eb[8] = {
 };
 
 static const BxOpcodeInfo_t BxOpcodeInfoG2Ew[8] = {
-  // attributes defined in main area
   /* 0 */ { 0, BX_IA_ROL_Ew },
   /* 1 */ { 0, BX_IA_ROR_Ew },
   /* 2 */ { 0, BX_IA_RCL_Ew },
@@ -203,7 +201,6 @@ static const BxOpcodeInfo_t BxOpcodeInfoG2Ew[8] = {
 };
 
 static const BxOpcodeInfo_t BxOpcodeInfoG2Ed[8] = {
-  // attributes defined in main area
   /* 0 */ { 0, BX_IA_ROL_Ed },
   /* 1 */ { 0, BX_IA_ROR_Ed },
   /* 2 */ { 0, BX_IA_RCL_Ed },
@@ -216,7 +213,6 @@ static const BxOpcodeInfo_t BxOpcodeInfoG2Ed[8] = {
 
 #if BX_SUPPORT_X86_64
 static const BxOpcodeInfo_t BxOpcodeInfo64G2Eq[8] = {
-  // attributes defined in main area
   /* 0 */ { 0, BX_IA_ROL_Eq },
   /* 1 */ { 0, BX_IA_ROR_Eq },
   /* 2 */ { 0, BX_IA_RCL_Eq },
@@ -225,6 +221,60 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G2Eq[8] = {
   /* 5 */ { 0, BX_IA_SHR_Eq },
   /* 6 */ { 0, BX_IA_SHL_Eq },
   /* 7 */ { 0, BX_IA_SAR_Eq }
+};
+#endif
+
+/* ********* */
+/* Group2 Ib */
+/* ********* */
+
+static const BxOpcodeInfo_t BxOpcodeInfoG2EbIb[8] = {
+  // attributes defined in main area
+  /* 0 */ { 0, BX_IA_ROL_EbIb },
+  /* 1 */ { 0, BX_IA_ROR_EbIb },
+  /* 2 */ { 0, BX_IA_RCL_EbIb },
+  /* 3 */ { 0, BX_IA_RCR_EbIb },
+  /* 4 */ { 0, BX_IA_SHL_EbIb },
+  /* 5 */ { 0, BX_IA_SHR_EbIb },
+  /* 6 */ { 0, BX_IA_SHL_EbIb },
+  /* 7 */ { 0, BX_IA_SAR_EbIb }
+};
+
+static const BxOpcodeInfo_t BxOpcodeInfoG2EwIb[8] = {
+  // attributes defined in main area
+  /* 0 */ { 0, BX_IA_ROL_EwIb },
+  /* 1 */ { 0, BX_IA_ROR_EwIb },
+  /* 2 */ { 0, BX_IA_RCL_EwIb },
+  /* 3 */ { 0, BX_IA_RCR_EwIb },
+  /* 4 */ { 0, BX_IA_SHL_EwIb },
+  /* 5 */ { 0, BX_IA_SHR_EwIb },
+  /* 6 */ { 0, BX_IA_SHL_EwIb },
+  /* 7 */ { 0, BX_IA_SAR_EwIb }
+};
+
+static const BxOpcodeInfo_t BxOpcodeInfoG2EdIb[8] = {
+  // attributes defined in main area
+  /* 0 */ { 0, BX_IA_ROL_EdIb },
+  /* 1 */ { 0, BX_IA_ROR_EdIb },
+  /* 2 */ { 0, BX_IA_RCL_EdIb },
+  /* 3 */ { 0, BX_IA_RCR_EdIb },
+  /* 4 */ { 0, BX_IA_SHL_EdIb },
+  /* 5 */ { 0, BX_IA_SHR_EdIb },
+  /* 6 */ { 0, BX_IA_SHL_EdIb },
+  /* 7 */ { 0, BX_IA_SAR_EdIb }
+};
+
+#if BX_SUPPORT_X86_64
+static const BxOpcodeInfo_t BxOpcodeInfo64G2EqIb[8] = {
+  // attributes defined in main area
+  /* 0 */ { 0, BX_IA_ROL_EqIb },
+  /* 1 */ { 0, BX_IA_ROR_EqIb },
+  /* 2 */ { 0, BX_IA_RCL_EqIb },
+  /* 3 */ { 0, BX_IA_RCR_EqIb },
+  /* 4 */ { 0, BX_IA_SHL_EqIb },
+  /* 5 */ { 0, BX_IA_SHR_EqIb },
+  /* 6 */ { 0, BX_IA_SHL_EqIb },
+  /* 7 */ { 0, BX_IA_SAR_EqIb }
 };
 #endif
 

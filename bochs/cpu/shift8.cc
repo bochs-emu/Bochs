@@ -29,9 +29,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EbR(bxInstruction_c *i)
   unsigned count;
   unsigned bit0, bit7;
 
-  if (i->b1() == 0xd2)
+  if (i->getIaOpcode() == BX_IA_ROL_Eb)
     count = CL;
-  else // 0xc0 or 0xd0
+  else
     count = i->Ib();
 
   Bit8u op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
@@ -67,9 +67,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EbM(bxInstruction_c *i)
   unsigned count;
   unsigned bit0, bit7;
 
-  if (i->b1() == 0xd2)
+  if (i->getIaOpcode() == BX_IA_ROL_Eb)
     count = CL;
-  else // 0xc0 or 0xd0
+  else
     count = i->Ib();
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -107,9 +107,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EbR(bxInstruction_c *i)
   unsigned count;
   unsigned bit6, bit7;
 
-  if (i->b1() == 0xd2)
+  if (i->getIaOpcode() == BX_IA_ROR_Eb)
     count = CL;
-  else // 0xc0 or 0xd0
+  else
     count = i->Ib();
 
   Bit8u op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
@@ -146,9 +146,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EbM(bxInstruction_c *i)
   unsigned count;
   unsigned bit6, bit7;
 
-  if (i->b1() == 0xd2)
+  if (i->getIaOpcode() == BX_IA_ROR_Eb)
     count = CL;
-  else // 0xc0 or 0xd0
+  else
     count = i->Ib();
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -188,9 +188,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EbR(bxInstruction_c *i)
   unsigned count;
   unsigned of, cf;
 
-  if (i->b1() == 0xd2)
+  if (i->getIaOpcode() == BX_IA_RCL_Eb)
     count = CL;
-  else // 0xc0 or 0xd0
+  else
     count = i->Ib();
 
   count = (count & 0x1f) % 9;
@@ -224,9 +224,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EbM(bxInstruction_c *i)
   unsigned count;
   unsigned of, cf;
 
-  if (i->b1() == 0xd2)
+  if (i->getIaOpcode() == BX_IA_RCL_Eb)
     count = CL;
-  else // 0xc0 or 0xd0
+  else
     count = i->Ib();
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -261,9 +261,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EbR(bxInstruction_c *i)
   unsigned count;
   unsigned cf, of;
 
-  if (i->b1() == 0xd2)
+  if (i->getIaOpcode() == BX_IA_RCR_Eb)
     count = CL;
-  else // 0xc0 or 0xd0
+  else
     count = i->Ib();
 
   count = (count & 0x1f) % 9;
@@ -289,9 +289,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EbM(bxInstruction_c *i)
   unsigned count;
   unsigned cf, of;
 
-  if (i->b1() == 0xd2)
+  if (i->getIaOpcode() == BX_IA_RCR_Eb)
     count = CL;
-  else // 0xc0 or 0xd0
+  else
     count = i->Ib();
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -320,9 +320,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EbR(bxInstruction_c *i)
   unsigned count;
   unsigned of = 0, cf = 0;
 
-  if (i->b1() == 0xd2)
+  if (i->getIaOpcode() == BX_IA_SHL_Eb)
     count = CL;
-  else // 0xc0 or 0xd0
+  else
     count = i->Ib();
 
   count &= 0x1f;
@@ -356,9 +356,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EbM(bxInstruction_c *i)
   unsigned count;
   unsigned of = 0, cf = 0;
 
-  if (i->b1() == 0xd2)
+  if (i->getIaOpcode() == BX_IA_SHL_Eb)
     count = CL;
-  else // 0xc0 or 0xd0
+  else
     count = i->Ib();
 
   count &= 0x1f;
@@ -392,9 +392,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EbR(bxInstruction_c *i)
 {
   unsigned count;
 
-  if (i->b1() == 0xd2)
+  if (i->getIaOpcode() == BX_IA_SHR_Eb)
     count = CL;
-  else // 0xc0 or 0xd0
+  else
     count = i->Ib();
 
   count &= 0x1f;
@@ -420,9 +420,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EbM(bxInstruction_c *i)
 {
   unsigned count;
 
-  if (i->b1() == 0xd2)
+  if (i->getIaOpcode() == BX_IA_SHR_Eb)
     count = CL;
-  else // 0xc0 or 0xd0
+  else
     count = i->Ib();
 
   count &= 0x1f;
@@ -452,9 +452,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EbR(bxInstruction_c *i)
 {
   unsigned count;
 
-  if (i->b1() == 0xd2)
+  if (i->getIaOpcode() == BX_IA_SAR_Eb)
     count = CL;
-  else // 0xc0 or 0xd0
+  else
     count = i->Ib();
 
   count &= 0x1f;
@@ -478,9 +478,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EbM(bxInstruction_c *i)
 {
   unsigned count;
 
-  if (i->b1() == 0xd2)
+  if (i->getIaOpcode() == BX_IA_SAR_Eb)
     count = CL;
-  else // 0xc0 or 0xd0
+  else
     count = i->Ib();
 
   count &= 0x1f;

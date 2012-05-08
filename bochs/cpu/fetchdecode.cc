@@ -369,8 +369,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* BD /w */ { BxImmediate_Iw, BX_IA_MOV_RXIw },
   /* BE /w */ { BxImmediate_Iw, BX_IA_MOV_RXIw },
   /* BF /w */ { BxImmediate_Iw, BX_IA_MOV_RXIw },
-  /* C0 /w */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2Eb },
-  /* C1 /w */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2Ew },
+  /* C0 /w */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2EbIb },
+  /* C1 /w */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2EwIb },
   /* C2 /w */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETnear16_Iw },
   /* C3 /w */ { BxTraceEnd,                  BX_IA_RETnear16 },
   /* C4 /w */ { BxPrefixVEX, BX_IA_LES_GwMp },
@@ -385,8 +385,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* CD /w */ { BxImmediate_Ib | BxTraceEnd, BX_IA_INT_Ib },
   /* CE /w */ { BxTraceEnd, BX_IA_INTO },
   /* CF /w */ { BxTraceEnd, BX_IA_IRET16 },
-  /* D0 /w */ { BxGroup2 | BxImmediate_I1, BX_IA_ERROR, BxOpcodeInfoG2Eb },
-  /* D1 /w */ { BxGroup2 | BxImmediate_I1, BX_IA_ERROR, BxOpcodeInfoG2Ew },
+  /* D0 /w */ { BxGroup2 | BxImmediate_I1, BX_IA_ERROR, BxOpcodeInfoG2EbIb },
+  /* D1 /w */ { BxGroup2 | BxImmediate_I1, BX_IA_ERROR, BxOpcodeInfoG2EwIb },
   /* D2 /w */ { BxGroup2, BX_IA_ERROR, BxOpcodeInfoG2Eb },
   /* D3 /w */ { BxGroup2, BX_IA_ERROR, BxOpcodeInfoG2Ew },
   /* D4 /w */ { BxImmediate_Ib, BX_IA_AAM },
@@ -628,16 +628,16 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F A1 /w */ { 0, BX_IA_POP16_FS },
   /* 0F A2 /w */ { 0, BX_IA_CPUID },
   /* 0F A3 /w */ { 0, BX_IA_BT_EwGw },
-  /* 0F A4 /w */ { BxImmediate_Ib, BX_IA_SHLD_EwGw },
-  /* 0F A5 /w */ { 0,              BX_IA_SHLD_EwGw },
+  /* 0F A4 /w */ { BxImmediate_Ib, BX_IA_SHLD_EwGwIb },
+  /* 0F A5 /w */ { 0,              BX_IA_SHLD_EwGw   },
   /* 0F A6 /w */ { 0, BX_IA_ERROR }, // CMPXCHG_XBTS not implemented
   /* 0F A7 /w */ { 0, BX_IA_ERROR }, // CMPXCHG_IBTS not implemented
   /* 0F A8 /w */ { 0, BX_IA_PUSH16_GS },
   /* 0F A9 /w */ { 0, BX_IA_POP16_GS },
   /* 0F AA /w */ { BxTraceEnd, BX_IA_RSM },
   /* 0F AB /w */ { BxLockable, BX_IA_BTS_EwGw },
-  /* 0F AC /w */ { BxImmediate_Ib, BX_IA_SHRD_EwGw },
-  /* 0F AD /w */ { 0,              BX_IA_SHRD_EwGw },
+  /* 0F AC /w */ { BxImmediate_Ib, BX_IA_SHRD_EwGwIb },
+  /* 0F AD /w */ { 0,              BX_IA_SHRD_EwGw   },
   /* 0F AE /w */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15 },
   /* 0F AF /w */ { 0, BX_IA_IMUL_GwEw },
   /* 0F B0 /w */ { BxLockable, BX_IA_CMPXCHG_EbGb },
@@ -914,8 +914,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* BD /d */ { BxImmediate_Id, BX_IA_MOV_ERXId },
   /* BE /d */ { BxImmediate_Id, BX_IA_MOV_ERXId },
   /* BF /d */ { BxImmediate_Id, BX_IA_MOV_ERXId },
-  /* C0 /d */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2Eb },
-  /* C1 /d */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2Ed },
+  /* C0 /d */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2EbIb },
+  /* C1 /d */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2EdIb },
   /* C2 /d */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETnear32_Iw },
   /* C3 /d */ { BxTraceEnd,                  BX_IA_RETnear32 },
   /* C4 /d */ { BxPrefixVEX, BX_IA_LES_GdMp },
@@ -930,8 +930,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* CD /d */ { BxImmediate_Ib | BxTraceEnd, BX_IA_INT_Ib },
   /* CE /d */ { BxTraceEnd, BX_IA_INTO },
   /* CF /d */ { BxTraceEnd, BX_IA_IRET32 },
-  /* D0 /d */ { BxGroup2 | BxImmediate_I1, BX_IA_ERROR, BxOpcodeInfoG2Eb },
-  /* D1 /d */ { BxGroup2 | BxImmediate_I1, BX_IA_ERROR, BxOpcodeInfoG2Ed },
+  /* D0 /d */ { BxGroup2 | BxImmediate_I1, BX_IA_ERROR, BxOpcodeInfoG2EbIb },
+  /* D1 /d */ { BxGroup2 | BxImmediate_I1, BX_IA_ERROR, BxOpcodeInfoG2EdIb },
   /* D2 /d */ { BxGroup2, BX_IA_ERROR, BxOpcodeInfoG2Eb },
   /* D3 /d */ { BxGroup2, BX_IA_ERROR, BxOpcodeInfoG2Ed },
   /* D4 /d */ { BxImmediate_Ib, BX_IA_AAM },
@@ -1173,16 +1173,16 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F A1 /d */ { 0, BX_IA_POP32_FS },
   /* 0F A2 /d */ { 0, BX_IA_CPUID },
   /* 0F A3 /d */ { 0, BX_IA_BT_EdGd },
-  /* 0F A4 /d */ { BxImmediate_Ib, BX_IA_SHLD_EdGd },
-  /* 0F A5 /d */ { 0,              BX_IA_SHLD_EdGd },
+  /* 0F A4 /d */ { BxImmediate_Ib, BX_IA_SHLD_EdGdIb },
+  /* 0F A5 /d */ { 0,              BX_IA_SHLD_EdGd   },
   /* 0F A6 /d */ { 0, BX_IA_ERROR }, // CMPXCHG_XBTS not implemented
   /* 0F A7 /d */ { 0, BX_IA_ERROR }, // CMPXCHG_IBTS not implemented
   /* 0F A8 /d */ { 0, BX_IA_PUSH32_GS },
   /* 0F A9 /d */ { 0, BX_IA_POP32_GS },
   /* 0F AA /d */ { BxTraceEnd, BX_IA_RSM },
   /* 0F AB /d */ { BxLockable, BX_IA_BTS_EdGd },
-  /* 0F AC /d */ { BxImmediate_Ib, BX_IA_SHRD_EdGd },
-  /* 0F AD /d */ { 0,              BX_IA_SHRD_EdGd },
+  /* 0F AC /d */ { BxImmediate_Ib, BX_IA_SHRD_EdGdIb },
+  /* 0F AD /d */ { 0,              BX_IA_SHRD_EdGd   },
   /* 0F AE /d */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15 },
   /* 0F AF /d */ { 0, BX_IA_IMUL_GdEd },
   /* 0F B0 /d */ { BxLockable, BX_IA_CMPXCHG_EbGb },
@@ -1987,8 +1987,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BxError(bxInstruction_c *i)
   unsigned ia_opcode = i->getIaOpcode();
  
   if (ia_opcode == BX_IA_ERROR) {
-    BX_DEBUG(("BxError: Encountered an unknown instruction b1=0x%02x (signalling #UD)", i->b1()));
-    BX_DEBUG(("modrm was 0x%02x, nnn was %u, rm was %u", i->modrm(), i->nnn(), i->rm()));
+    BX_DEBUG(("BxError: Encountered an unknown instruction (signalling #UD)"));
 
 #if BX_DISASM && BX_DEBUGGER == 0 // with debugger it easy to see the #UD
     if (LOG_THIS getonoff(LOGLEV_DEBUG))

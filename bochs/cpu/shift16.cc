@@ -26,26 +26,24 @@
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGwM(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, result_16;
   Bit32u temp_32, result_32;
   unsigned count;
   unsigned of, cf;
 
   /* op1:op2 << count.  result stored in op1 */
-  if (i->b1() == 0xa4) // 0x1a4
-    count = i->Ib();
-  else // 0x1a5
+  if (i->getIaOpcode() == BX_IA_SHLD_EwGw)
     count = CL;
+  else // BX_IA_SHLD_EwGwIb
+    count = i->Ib();
 
   count &= 0x1f; // use only 5 LSB's
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  /* pointer, segment address pair */
-  op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
 
   if (count) {
-    op2_16 = BX_READ_16BIT_REG(i->nnn());
+    Bit16u op2_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* count < 32, since only lower 5 bits used */
     temp_32 = ((Bit32u)(op1_16) << 16) | (op2_16); // double formed by op1:op2
@@ -58,7 +56,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGwM(bxInstruction_c *i)
       result_32 |= (op1_16 << (count - 16));
     }
 
-    result_16 = (Bit16u)(result_32 >> 16);
+    Bit16u result_16 = (Bit16u)(result_32 >> 16);
 
     write_RMW_virtual_word(result_16);
 
@@ -74,22 +72,21 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGwM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGwR(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, result_16;
   Bit32u temp_32, result_32;
   unsigned count;
   unsigned of, cf;
 
   /* op1:op2 << count.  result stored in op1 */
-  if (i->b1() == 0xa4) // 0x1a4
-    count = i->Ib();
-  else // 0x1a5
+  if (i->getIaOpcode() == BX_IA_SHLD_EwGw)
     count = CL;
+  else // BX_IA_SHLD_EwGwIb
+    count = i->Ib();
 
   count &= 0x1f; // use only 5 LSB's
 
   if (count) {
-    op1_16 = BX_READ_16BIT_REG(i->rm());
-    op2_16 = BX_READ_16BIT_REG(i->nnn());
+    Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
+    Bit16u op2_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* count < 32, since only lower 5 bits used */
     temp_32 = ((Bit32u)(op1_16) << 16) | (op2_16); // double formed by op1:op2
@@ -102,7 +99,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGwR(bxInstruction_c *i)
       result_32 |= (op1_16 << (count - 16));
     }
 
-    result_16 = (Bit16u)(result_32 >> 16);
+    Bit16u result_16 = (Bit16u)(result_32 >> 16);
 
     BX_WRITE_16BIT_REG(i->rm(), result_16);
 
@@ -118,25 +115,23 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGwR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGwM(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, result_16;
   Bit32u temp_32, result_32;
   unsigned count;
   unsigned cf, of;
 
-  if (i->b1() == 0xac) // 0x1ac
-    count = i->Ib();
-  else // 0x1ad
+  if (i->getIaOpcode() == BX_IA_SHRD_EwGw)
     count = CL;
+  else // BX_IA_SHRD_EwGwIb
+    count = i->Ib();
 
   count &= 0x1f; /* use only 5 LSB's */
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  /* pointer, segment address pair */
-  op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
 
   if (count) {
-    op2_16 = BX_READ_16BIT_REG(i->nnn());
+    Bit16u op2_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* count < 32, since only lower 5 bits used */
     temp_32 = (op2_16 << 16) | op1_16; // double formed by op2:op1
@@ -149,7 +144,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGwM(bxInstruction_c *i)
       result_32 |= (op1_16 << (32 - count));
     }
 
-    result_16 = (Bit16u) result_32;
+    Bit16u result_16 = (Bit16u) result_32;
 
     write_RMW_virtual_word(result_16);
 
@@ -165,21 +160,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGwM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGwR(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, result_16;
   Bit32u temp_32, result_32;
   unsigned count;
   unsigned cf, of;
 
-  if (i->b1() == 0xac) // 0x1ac
-    count = i->Ib();
-  else // 0x1ad
+  if (i->getIaOpcode() == BX_IA_SHRD_EwGw)
     count = CL;
+  else // BX_IA_SHRD_EwGwIb
+    count = i->Ib();
 
   count &= 0x1f; /* use only 5 LSB's */
 
   if (count) {
-    op1_16 = BX_READ_16BIT_REG(i->rm());
-    op2_16 = BX_READ_16BIT_REG(i->nnn());
+    Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
+    Bit16u op2_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* count < 32, since only lower 5 bits used */
     temp_32 = (op2_16 << 16) | op1_16; // double formed by op2:op1
@@ -192,7 +186,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGwR(bxInstruction_c *i)
       result_32 |= (op1_16 << (32 - count));
     }
 
-    result_16 = (Bit16u) result_32;
+    Bit16u result_16 = (Bit16u) result_32;
 
     BX_WRITE_16BIT_REG(i->rm(), result_16);
 
@@ -211,9 +205,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EwM(bxInstruction_c *i)
   unsigned count;
   unsigned bit0, bit15;
 
-  if (i->b1() == 0xd3)
+  if (i->getIaOpcode() == BX_IA_ROL_Ew)
     count = CL;
-  else // 0xc1 or 0xd1
+  else
     count = i->Ib();
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -249,9 +243,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EwR(bxInstruction_c *i)
   unsigned count;
   unsigned bit0, bit15;
 
-  if (i->b1() == 0xd3)
+  if (i->getIaOpcode() == BX_IA_ROL_Ew)
     count = CL;
-  else // 0xc1 or 0xd1
+  else
     count = i->Ib();
 
   Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
@@ -285,9 +279,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EwM(bxInstruction_c *i)
   unsigned count;
   unsigned bit14, bit15;
 
-  if (i->b1() == 0xd3)
+  if (i->getIaOpcode() == BX_IA_ROR_Ew)
     count = CL;
-  else // 0xc1 or 0xd1
+  else
     count = i->Ib();
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -323,9 +317,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EwR(bxInstruction_c *i)
   unsigned count;
   unsigned bit14, bit15;
 
-  if (i->b1() == 0xd3)
+  if (i->getIaOpcode() == BX_IA_ROR_Ew)
     count = CL;
-  else // 0xc1 or 0xd1
+  else
     count = i->Ib();
 
   Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
@@ -360,9 +354,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EwM(bxInstruction_c *i)
   unsigned count;
   unsigned of, cf;
 
-  if (i->b1() == 0xd3)
+  if (i->getIaOpcode() == BX_IA_RCL_Ew)
     count = CL;
-  else // 0xc1 or 0xd1
+  else
     count = i->Ib();
 
   count = (count & 0x1f) % 17;
@@ -399,9 +393,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EwR(bxInstruction_c *i)
   unsigned count;
   unsigned of, cf;
 
-  if (i->b1() == 0xd3)
+  if (i->getIaOpcode() == BX_IA_RCL_Ew)
     count = CL;
-  else // 0xc1 or 0xd1
+  else
     count = i->Ib();
 
   count = (count & 0x1f) % 17;
@@ -435,9 +429,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EwM(bxInstruction_c *i)
   unsigned count;
   unsigned of, cf;
 
-  if (i->b1() == 0xd3)
+  if (i->getIaOpcode() == BX_IA_RCR_Ew)
     count = CL;
-  else // 0xc1 or 0xd1
+  else
     count = i->Ib();
 
   count = (count & 0x1f) % 17;
@@ -465,9 +459,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EwR(bxInstruction_c *i)
   unsigned count;
   unsigned of, cf;
 
-  if (i->b1() == 0xd3)
+  if (i->getIaOpcode() == BX_IA_RCR_Ew)
     count = CL;
-  else // 0xc1 or 0xd1
+  else
     count = i->Ib();
 
   count = (count & 0x1f) % 17;
@@ -494,9 +488,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EwM(bxInstruction_c *i)
   unsigned count;
   unsigned of = 0, cf = 0;
 
-  if (i->b1() == 0xd3)
+  if (i->getIaOpcode() == BX_IA_SHL_Ew)
     count = CL;
-  else // 0xc1 or 0xd1
+  else
     count = i->Ib();
 
   count &= 0x1f; /* use only 5 LSB's */
@@ -530,9 +524,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EwR(bxInstruction_c *i)
   unsigned count;
   unsigned of = 0, cf = 0;
 
-  if (i->b1() == 0xd3)
+  if (i->getIaOpcode() == BX_IA_SHL_Ew)
     count = CL;
-  else // 0xc1 or 0xd1
+  else
     count = i->Ib();
 
   count &= 0x1f; /* use only 5 LSB's */
@@ -563,9 +557,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EwM(bxInstruction_c *i)
   unsigned count;
   unsigned of, cf;
 
-  if (i->b1() == 0xd3)
+  if (i->getIaOpcode() == BX_IA_SHR_Ew)
     count = CL;
-  else // 0xc1 or 0xd1
+  else
     count = i->Ib();
 
   count &= 0x1f; /* use only 5 LSB's */
@@ -596,9 +590,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EwR(bxInstruction_c *i)
   unsigned count;
   unsigned of, cf;
 
-  if (i->b1() == 0xd3)
+  if (i->getIaOpcode() == BX_IA_SHR_Ew)
     count = CL;
-  else // 0xc1 or 0xd1
+  else
     count = i->Ib();
 
   count &= 0x1f; /* use only 5 LSB's */
@@ -624,9 +618,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EwM(bxInstruction_c *i)
 {
   unsigned count, cf;
 
-  if (i->b1() == 0xd3)
+  if (i->getIaOpcode() == BX_IA_SAR_Ew)
     count = CL;
-  else // 0xc1 or 0xd1
+  else
     count = i->Ib();
 
   count &= 0x1f;  /* use only 5 LSB's */
@@ -654,9 +648,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EwR(bxInstruction_c *i)
 {
   unsigned count, cf;
 
-  if (i->b1() == 0xd3)
+  if (i->getIaOpcode() == BX_IA_SAR_Ew)
     count = CL;
-  else // 0xc1 or 0xd1
+  else
     count = i->Ib();
 
   count &= 0x1f;  /* use only 5 LSB's */
