@@ -75,12 +75,10 @@ private:
   void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
 #if BX_CPU_LEVEL >= 6
   void get_std_cpuid_leaf_2(cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_3(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_5(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_6(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_9(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_A(cpuid_function_t *leaf) const;
   void get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
   void get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;

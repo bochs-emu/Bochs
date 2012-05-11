@@ -133,7 +133,7 @@ void bx_generic_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
     get_std_cpuid_leaf_2(leaf);
     return;
   case 0x00000003:
-    get_std_cpuid_leaf_3(leaf);
+    get_reserved_leaf(leaf);
     return;
   case 0x00000004:
     get_std_cpuid_leaf_4(subfunction, leaf);
@@ -148,10 +148,8 @@ void bx_generic_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
     get_std_cpuid_leaf_7(subfunction, leaf);
     return;
   case 0x00000008:
-    get_reserved_leaf(leaf);
-    return;
   case 0x00000009:
-    get_std_cpuid_leaf_9(leaf);
+    get_reserved_leaf(leaf);
     return;
   case 0x0000000A:
     get_std_cpuid_leaf_A(leaf);
@@ -249,15 +247,7 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
 #endif
 }
 
-// leaf 0x00000003 //
-void bx_generic_cpuid_t::get_std_cpuid_leaf_3(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000003 - Processor Serial Number
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
+// leaf 0x00000003 - Processor Serial Number (not supported) //
 
 // leaf 0x00000004 //
 void bx_generic_cpuid_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const
@@ -323,17 +313,8 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function
   leaf->edx = 0;
 }
 
-// leaf 0x00000008 - reserved //
-
-// leaf 0x00000009 //
-void bx_generic_cpuid_t::get_std_cpuid_leaf_9(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000009 - Direct Cache Access Information Leaf
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
+// leaf 0x00000008 reserved                          //
+// leaf 0x00000009 direct cache access not supported //
 
 // leaf 0x0000000A //
 void bx_generic_cpuid_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
