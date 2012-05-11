@@ -102,9 +102,7 @@ public:
   BxResolvePtr_tR ResolveModrm;
 
   struct {
-    // 15..14 VEX Vector Length  (0=no VL, 1=128 bit, 2=256 bit)
-    // 13..13 VEX.W
-    // 12..12 lock
+    // 15..12 (unused)
     // 11...0 opcode
     Bit16u ia_opcode;
 
@@ -122,6 +120,13 @@ public:
     Bit8u metaInfo1;
   } metaInfo;
 
+
+  // METADATA FLAGS:
+  //    7...4 (unused)
+  //    3...3 lock prefix
+  //    2...2 VEX.W
+  //    1...0 VEX Vector Length (0=no VL, 1=128 bit, 2=256 bit)
+
 #define BX_INSTR_METADATA_NNN   0
 #define BX_INSTR_METADATA_RM    1
 #define BX_INSTR_METADATA_SEG   2
@@ -129,7 +134,7 @@ public:
 #define BX_INSTR_METADATA_INDEX 4
 #define BX_INSTR_METADATA_SCALE 5
 #define BX_INSTR_METADATA_VVV   6
-#define BX_INSTR_METADATA_B1    7
+#define BX_INSTR_METADATA_FLAGS 7
 
   // using 5-bit field for registers (16 regs in 64-bit, RIP, NIL)
   Bit8u metaData[8];
@@ -177,19 +182,17 @@ public:
     metaData[BX_INSTR_METADATA_SEG] = val;
   }
 
-  BX_CPP_INLINE unsigned b1(void) const {
-    return metaData[BX_INSTR_METADATA_B1];
-  }
-  BX_CPP_INLINE void setB1(unsigned b1) {
-    metaData[BX_INSTR_METADATA_B1] = b1 & 0xff;
-  }
-  BX_CPP_INLINE void setModRM(unsigned modrm) {
+  BX_CPP_INLINE void setFoo(unsigned foo) {
     // none of x87 instructions has immediate
-    modRMForm.Ib = modrm;
+    modRMForm.Iw = foo;
   }
-  BX_CPP_INLINE unsigned modrm() const {
-    return modRMForm.Ib;
+  BX_CPP_INLINE unsigned foo() const {
+    return modRMForm.Iw;
   }
+  BX_CPP_INLINE unsigned b1() const {
+    return modRMForm.Iw >> 8;
+  }
+
   BX_CPP_INLINE void setNnn(unsigned nnn) {
     metaData[BX_INSTR_METADATA_NNN] = nnn;
   }
@@ -239,7 +242,7 @@ public:
   BX_CPP_INLINE void init(unsigned os32, unsigned as32, unsigned os64, unsigned as64)
   {
     metaInfo.metaInfo1 = (os32<<2) | (os64<<3) | (as32<<0) | (as64<<1);
-    metaInfo.ia_opcode = 0; // clear VEX.W and VEX.VL
+    metaData[BX_INSTR_METADATA_FLAGS] = 0; // clear VEX.W and VEX.VL
   }
 
   BX_CPP_INLINE unsigned os32L(void) const {
@@ -306,10 +309,10 @@ public:
   }
 
   BX_CPP_INLINE unsigned getIaOpcode(void) const {
-    return metaInfo.ia_opcode & 0xfff;
+    return metaInfo.ia_opcode;
   }
   BX_CPP_INLINE void setIaOpcode(Bit16u op) {
-    metaInfo.ia_opcode = (metaInfo.ia_opcode & 0xf000) | op;
+    metaInfo.ia_opcode = op;
   }
   BX_CPP_INLINE const char* getIaOpcodeName(void) const {
     return get_bx_opcode_name(getIaOpcode());
@@ -327,24 +330,24 @@ public:
 
   BX_CPP_INLINE unsigned getVL(void) const {
 #if BX_SUPPORT_AVX
-    return metaInfo.ia_opcode >> 14;
+    return metaData[BX_INSTR_METADATA_FLAGS] & 0x3;
 #else
     return 0;
 #endif
   }
   BX_CPP_INLINE void setVL(unsigned value) {
-    metaInfo.ia_opcode = (metaInfo.ia_opcode & 0x3fff) | (value << 14);
+    metaData[BX_INSTR_METADATA_FLAGS] = (metaData[BX_INSTR_METADATA_FLAGS] & ~0x3) | (value & 0x3);
   }
 
 #if BX_SUPPORT_AVX
   BX_CPP_INLINE unsigned getVexW(void) const {
-    return metaInfo.metaInfo1 & (1<<13);
+    return metaData[BX_INSTR_METADATA_FLAGS] & (1<<2);
   }
   BX_CPP_INLINE void setVexW(unsigned bit) {
-    metaInfo.ia_opcode = (metaInfo.ia_opcode & 0xdfff) | (bit << 13);
+    metaData[BX_INSTR_METADATA_FLAGS] = (metaData[BX_INSTR_METADATA_FLAGS] & ~(1<<2)) | (bit<<2);
   }
   BX_CPP_INLINE void assertVexW(void) {
-    metaInfo.ia_opcode |= (1 << 13);
+    metaData[BX_INSTR_METADATA_FLAGS] |= (1<<2);
   }
 #endif
 
@@ -369,11 +372,11 @@ public:
 
   BX_CPP_INLINE unsigned lock() const
   {
-    return metaInfo.ia_opcode & (1<<12);
+    return metaData[BX_INSTR_METADATA_FLAGS] & (1<<3);
   }
   BX_CPP_INLINE void assertLock()
   {
-    metaInfo.ia_opcode |= (1<<12);
+    metaData[BX_INSTR_METADATA_FLAGS] |= (1<<3);
   }
 };
 // <TAG-CLASS-INSTRUCTION-END>

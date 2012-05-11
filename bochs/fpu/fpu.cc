@@ -43,7 +43,7 @@ void BX_CPU_C::prepareFPU(bxInstruction_c *i, bx_bool check_pending_exceptions)
 
 void BX_CPU_C::FPU_update_last_instruction(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR the_i387.foo = (((Bit32u)(i->b1()) << 8) | i->modrm()) & 0x7ff;
+  BX_CPU_THIS_PTR the_i387.foo = i->foo();
   BX_CPU_THIS_PTR the_i387.fcs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
   BX_CPU_THIS_PTR the_i387.fip = BX_CPU_THIS_PTR prev_rip;
 
