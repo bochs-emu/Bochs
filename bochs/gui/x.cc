@@ -2036,7 +2036,8 @@ void bx_x_gui_c::show_ips(Bit32u ips_count)
 {
   if (x11_mouse_msg_counter == 0) {
     if (!x11_ips_update && !x11_hide_ips) {
-      sprintf(x11_ips_text, "IPS: %3.3fM", ips_count / 1000000.0);
+      ips_count /= 1000;
+      sprintf(x11_ips_text, "IPS: %u.%3.3uM", ips_count / 1000, ips_count % 1000);
       x11_ips_update = 1;
     }
   } else {

@@ -114,6 +114,7 @@ wxCriticalSection event_thread_lock;
 BxEvent event_queue[MAX_EVENTS];
 unsigned long num_events = 0;
 static bx_bool mouse_captured = 0;
+static bx_bool wx_hide_ips = 0;
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)
 static Bit32u convertStringToGDKKey (const char *string);
 #endif
@@ -953,6 +954,22 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     bx_keymap.loadKeymap(NULL);
 #endif
 
+  // parse x11 specific options
+  if (argc > 1) {
+    for (i = 1; i < argc; i++) {
+#if BX_SHOW_IPS
+      if (!strcmp(argv[i], "hideIPS")) {
+        BX_INFO(("hide IPS display in status bar"));
+        wx_hide_ips = 1;
+      } else {
+        BX_PANIC(("Unknown wx option '%s'", argv[i]));
+      }
+#else
+      BX_PANIC(("Unknown wx option '%s'", argv[i]));
+#endif
+    }
+  }
+
   new_gfx_api = 1;
   dialog_caps = BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT | BX_GUI_DLG_SAVE_RESTORE;
 }
@@ -1660,12 +1677,16 @@ int bx_wx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 void bx_wx_gui_c::show_ips(Bit32u ips_count)
 {
   char ips_text[40];
-  bx_bool is_main_thread = wxThread::IsMain();
-  bx_bool needmutex = !is_main_thread && SIM->is_sim_thread();
-  if (needmutex) wxMutexGuiEnter();
-  sprintf(ips_text, "IPS: %3.3fM", ips_count / 1000000.0);
-  theFrame->SetStatusText(wxString(ips_text, wxConvUTF8), 0);
-  if (needmutex) wxMutexGuiLeave();
+
+  if (!wx_hide_ips) {
+    bx_bool is_main_thread = wxThread::IsMain();
+    bx_bool needmutex = !is_main_thread && SIM->is_sim_thread();
+    if (needmutex) wxMutexGuiEnter();
+    ips_count /= 1000;
+    sprintf(ips_text, "IPS: %u.%3.3uM", ips_count / 1000, ips_count % 1000);
+    theFrame->SetStatusText(wxString(ips_text, wxConvUTF8), 0);
+    if (needmutex) wxMutexGuiLeave();
+  }
 }
 #endif
 

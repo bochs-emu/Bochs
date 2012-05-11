@@ -61,8 +61,14 @@ plugin_ctrl: unmapped=1, biosdev=1, speaker=1, e1000=1, parallel=1
 # the "wx" display library.
 #
 # Specific options:
-# Some display libraries now support specific option to control their
-# behaviour. See the examples below for currently supported options.
+# Some display libraries now support specific options to control their
+# behaviour. These options are supported by more than one display library:
+#
+# "gui_debug"   - use GTK debugger gui (sdl, x) / Win32 debugger gui (win32)
+# "hideIPS"     - disable IPS output in status bar (sdl, wx, x)
+# "nokeyrepeat" - turn off host keyboard repeat (sdl, win32, x)
+#
+# See the examples below for other currently supported options.
 #=======================================================================
 #display_library: amigaos
 #display_library: carbon
@@ -71,11 +77,9 @@ plugin_ctrl: unmapped=1, biosdev=1, speaker=1, e1000=1, parallel=1
 #display_library: rfb, options="timeout=60" # time to wait for client
 #display_library: sdl, options="fullscreen" # startup in fullscreen mode
 #display_library: term
-#display_library: win32, options="gui_debug" # use Win32 debugger gui
+#display_library: win32
 #display_library: wx
-#display_library: x, options="hideIPS" # disable IPS output in status bar
-#display_library: x, options="gui_debug" # use GTK debugger gui
-#display_library: x, options="nokeyrepeat" # turn off host keyboard repeat
+#display_library: x
 
 #=======================================================================
 # ROMIMAGE:

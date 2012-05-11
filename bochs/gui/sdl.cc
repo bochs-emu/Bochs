@@ -123,6 +123,7 @@ static unsigned statusitem_pos[12] = {
 };
 static bx_bool statusitem_active[12];
 #if BX_SHOW_IPS
+static bx_bool sdl_hide_ips = 0;
 static bx_bool sdl_ips_update = 0;
 static char sdl_ips_text[20];
 #endif
@@ -341,6 +342,11 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned header_bar_y)
         assert (old_callback != NULL);
         SIM->set_notify_callback (sdl_notify_callback, NULL);
         InitDebugDialog();
+#endif
+#if BX_SHOW_IPS
+      } else if (!strcmp(argv[i], "hideIPS")) {
+        BX_INFO(("hide IPS display in status bar"));
+        sdl_hide_ips = 1;
 #endif
       } else {
         BX_PANIC(("Unknown sdl option '%s'", argv[i]));
@@ -1586,13 +1592,13 @@ void bx_sdl_gui_c::set_display_mode(disp_mode_t newmode)
   if (sdl_fullscreen_toggle) {
     switch (newmode) {
       case DISP_MODE_CONFIG:
-	BX_DEBUG(("switch to configuration mode (windowed)"));
-	switch_to_windowed();
-	break;
+        BX_DEBUG(("switch to configuration mode (windowed)"));
+        switch_to_windowed();
+        break;
       case DISP_MODE_SIM:
-	BX_DEBUG(("switch to simulation mode (fullscreen)"));
-	switch_to_fullscreen();
-	break;
+        BX_DEBUG(("switch to simulation mode (fullscreen)"));
+        switch_to_fullscreen();
+        break;
     }
   }
 }
@@ -1600,8 +1606,9 @@ void bx_sdl_gui_c::set_display_mode(disp_mode_t newmode)
 #if BX_SHOW_IPS
 void bx_sdl_gui_c::show_ips(Bit32u ips_count)
 {
-  if (!sdl_ips_update) {
-    sprintf(sdl_ips_text, "IPS: %3.3fM", ips_count / 1000000.0);
+  if (!sdl_hide_ips && !sdl_ips_update) {
+    ips_count /= 1000;
+    sprintf(sdl_ips_text, "IPS: %u.%3.3uM", ips_count / 1000, ips_count % 1000);
     sdl_ips_update = 1;
   }
 }
