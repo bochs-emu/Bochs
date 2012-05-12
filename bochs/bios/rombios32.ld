@@ -12,6 +12,7 @@ SECTIONS
         /DISCARD/ : { *(.stab)
                      *(.stabstr)
                      *(.comment)
+                     *(.eh_frame)
                      *(.note)
                   }
 }
