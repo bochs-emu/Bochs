@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -42,6 +42,9 @@ public:
   virtual void save_image(void);
   virtual void register_state(void);
   virtual void after_restore_state(void);
+#if BX_DEBUGGER
+  virtual void debug_dump(int argc, char **argv);
+#endif
 
   virtual Bit32u get_reg(unsigned reg) {
     return s.reg[reg];

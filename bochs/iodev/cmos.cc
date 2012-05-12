@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -257,6 +257,11 @@ void bx_cmos_c::init(void)
   free(tmptime);
 
   BX_CMOS_THIS s.timeval_change = 0;
+
+#if BX_DEBUGGER
+  // register device for the 'info device' command (calls debug_dump())
+  bx_dbg_register_debug_info("cmos", this);
+#endif
 }
 
 void bx_cmos_c::reset(unsigned type)
@@ -829,3 +834,24 @@ void bx_cmos_c::update_timeval()
 
   BX_CMOS_THIS s.timeval = mktime(& time_calendar);
 }
+
+#if BX_DEBUGGER
+void bx_cmos_c::debug_dump(int argc, char **argv)
+{
+  int i, j, r;
+
+  dbg_printf("CMOS RTC\n\n");
+  dbg_printf("Index register: 0x%02x\n\n", BX_CMOS_THIS s.cmos_mem_address);
+  r = 0;
+  for (i=0; i<8; i++) {
+    dbg_printf("%04x ", r);
+    for (j=0; j<16; j++) {
+      dbg_printf(" %02x", BX_CMOS_THIS s.reg[r++]);
+    }
+    dbg_printf("\n");
+  }
+  if (argc > 0) {
+    dbg_printf("\nAdditional options not supported\n");
+  }
+}
+#endif
