@@ -15,6 +15,7 @@ Changes after 2.5.1 release:
   ! Added AMD Phenom X3 8650 (Toliman) configuration to the CPUDB
   ! Added Corei7 3770K (Ivy Bridge) configuration to the CPUDB
   - Bugfixes for CPU emulation correctness and stability
+    (critical fixes for VMX and XOP emulation)
 
 - Bochs Debugger and Instrumentation
   - Implemented new debugger command 'info device [string]' that shows the

@@ -274,7 +274,7 @@ int DoMatch(const char *text, const char *p, bx_bool IsCaseSensitive)
             // NO BREAK HERE
 
             default:
-                if (IsCaseSensitive != FALSE)
+                if (IsCaseSensitive)
                 {
                     if (text[pT] != p[pP])
                         return MATCH_FALSE;
@@ -1000,7 +1000,7 @@ void LoadRegList()
     cols[1] = regtxt;
     cols[2] = regtxt + 40;
     itemnum = 0;
-    if (In64Mode != FALSE)
+    if (In64Mode)
     {
         showEreg = SeeReg[0];       // get user option setting for EAX, etc.
         for (i = RAX_Rnum; i <= R15_Rnum; i++)
@@ -1978,7 +1978,7 @@ void FillDataX(char* t, char C, bx_bool doHex)
         *d = AsciiHex[2* (unsigned char)C];
         d[1] = AsciiHex[2* (unsigned char)C + 1];
         d[2] = 0;
-        if (isLittleEndian != FALSE)    // little endian => reverse hex digits
+        if (isLittleEndian) // little endian => reverse hex digits
         {
             strcat(d,t);
             strcpy(t,d);    // so append the new bytes to the FRONT of t
@@ -2206,7 +2206,7 @@ void OnBreak()
             In32Mode = d_b;
         }
     }
-    if (CpuModeChange != FALSE)
+    if (CpuModeChange)
     {
         GrayMenuItem ((int) In64Mode, CMD_EREG);
         BottomAsmLA = ~0;       // force an ASM autoload
@@ -2285,20 +2285,21 @@ bx_bool InitDataDump(bx_bool isLinear, Bit64u newDS)
     }
 
     // load 4k DataDump array from bochs emulated linear or physical memory
-    if (isLinear != FALSE)
+    if (isLinear)
     {
         // cannot read linear mem across a 4K boundary -- so break the read in two
         // -- calculate location of 4K boundary (h):
-        unsigned int len = (int) newDS & 0xfff;
-        unsigned int i = 4096 - len;
+        unsigned len = (int) newDS & 0xfff;
+        unsigned i = 4096 - len;
         Bit64u h = newDS + i;
         retval = ReadBxLMem(newDS,i,(Bit8u *)DataDump);
         if (retval != FALSE && len != 0)
             retval = ReadBxLMem(h,len,(Bit8u *)DataDump + i);
     }
-    else
-        retval = (bx_bool) bx_mem.dbg_fetch_mem( BX_CPU(CurrentCPU),
+    else {
+        retval = (bx_bool) bx_mem.dbg_fetch_mem(BX_CPU(CurrentCPU),
             (bx_phy_address)newDS, 4096, (Bit8u *)DataDump);
+    }
     if (retval == FALSE)
     {
         // assume that the DataDump array is still valid -- fetch_mem should error without damage
@@ -2306,6 +2307,7 @@ bx_bool InitDataDump(bx_bool isLinear, Bit64u newDS)
             DispMessage ("Address range was not legal memory","Memory Error");
         return retval;
     }
+
     SA_valid = FALSE;       // any previous MemDump click is now irrelevant
     ResizeColmns = TRUE;    // autosize column 0 once
     DumpInitted = TRUE;     // OK to refresh the Dump window in the future (it has data)
@@ -2721,7 +2723,7 @@ void SetMemLine(int L)
         char *x = tmpcb;
         upr(x);         // force input string to uppercase
 
-        if (LinearDump != FALSE)    // is h is a LINEAR address? Convert to physical!
+        if (LinearDump)    // is h is a LINEAR address? Convert to physical!
         {
             // use the ReadBx function to calculate the lin->phys offset
             if (ReadBxLMem(h,0,(Bit8u *)addrstr) == FALSE) // "read" 0 bytes

@@ -1077,20 +1077,23 @@ void bx_local_apic_c::periodic(void)
 
   Bit32u timervec = lvt[APIC_LVT_TIMER];
 
-    // If timer is not masked, trigger interrupt.
-    if((timervec & 0x10000)==0) {
-      trigger_irq(timervec & 0xff, APIC_EDGE_TRIGGERED);
-    }
-    else {
-      BX_DEBUG(("local apic timer LVT masked"));
-    }
+  // If timer is not masked, trigger interrupt
+  if((timervec & 0x10000)==0) {
+    trigger_irq(timervec & 0xff, APIC_EDGE_TRIGGERED);
+  }
+  else {
+    BX_DEBUG(("local apic timer LVT masked"));
+  }
 
-  // timer reached zero since the last call to periodic.
+  // timer reached zero since the last call to periodic
   if(timervec & 0x20000) {
     // Periodic mode - reload timer values
     timer_current = timer_initial;
+    timer_active = 1;
     ticksInitial = bx_pc_system.time_ticks(); // timer value when it started to count
     BX_DEBUG(("local apic timer(periodic) triggered int, reset counter to 0x%08x", timer_current));
+    bx_pc_system.activate_timer_ticks(timer_handle,
+            Bit64u(timer_initial) * Bit64u(timer_divide_factor), 0);
   }
   else {
     // one-shot mode
@@ -1104,7 +1107,7 @@ void bx_local_apic_c::periodic(void)
 void bx_local_apic_c::set_divide_configuration(Bit32u value)
 {
   BX_ASSERT(value == (value & 0x0b));
-  // move bit 3 down to bit 0.
+  // move bit 3 down to bit 0
   value = ((value & 8) >> 1) | (value & 3);
   BX_ASSERT(value >= 0 && value <= 7);
   timer_divide_factor = (value==7) ? 1 : (2 << value);
@@ -1136,10 +1139,9 @@ void bx_local_apic_c::set_initial_timer_count(Bit32u value)
     BX_DEBUG(("APIC: Initial Timer Count Register = %u", value));
     timer_current = timer_initial;
     timer_active = 1;
-    bx_bool continuous = (timervec & 0x20000) > 0;
     ticksInitial = bx_pc_system.time_ticks(); // timer value when it started to count
     bx_pc_system.activate_timer_ticks(timer_handle,
-            Bit64u(timer_initial) * Bit64u(timer_divide_factor), continuous);
+            Bit64u(timer_initial) * Bit64u(timer_divide_factor), 0);
   }
 }
 

@@ -222,9 +222,11 @@ void bx_ioapic_c::write_aligned(bx_phy_address address, Bit32u value)
 
 void bx_ioapic_c::set_irq_level(Bit8u int_in, bx_bool level)
 {
+/*
   if (int_in == 0) { // timer connected to pin #2
     int_in = 2;
   }
+*/
   BX_DEBUG(("set_irq_level(): INTIN%d: level=%d", int_in, level));
   if (int_in < BX_IOAPIC_NUM_PINS) {
     Bit32u bit = 1<<int_in;
