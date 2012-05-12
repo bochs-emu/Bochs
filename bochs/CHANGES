@@ -15,13 +15,13 @@ Changes after 2.5.1 release:
   ! Added AMD Phenom X3 8650 (Toliman) configuration to the CPUDB
   ! Added Corei7 3770K (Ivy Bridge) configuration to the CPUDB
   - Bugfixes for CPU emulation correctness and stability
-    (critical fixes for VMX and XOP emulation)
+    (critical fixes in APIC/X2APIC, VMX and XOP emulation)
 
 - Bochs Debugger and Instrumentation
   - Implemented new debugger command 'info device [string]' that shows the
     state of the device specified in 'string'
   - Improved debug dump for ne2k, pci, pic and vga/cirrus devices. Added
-    debug dump for pci2isa, i/o apic, pit, floppy and dma controller devices.
+    debug dump for pci2isa, i/o apic, cmos, pit, floppy and dma devices.
   - Added TLB to CPU param tree - now it can be browsed from Bochs internal
     debugger and Bochs debugger GUI through param tree interfaces
   - Implemented 'writemem' debugger command to dump virtual memory block
@@ -53,6 +53,7 @@ Changes after 2.5.1 release:
 
 - GUI and display libraries
   - implemented "auto-off" timer for status LEDs indicating a data transfer
+  - Implemented "hideIPS" option in sdl and wx libraries
 
 - Config interface
   - The bochsrc option 'plugin_ctrl' is now used to load optional plugins
