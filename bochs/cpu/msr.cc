@@ -451,7 +451,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
   if (bx_cpuid_support_x2apic()) {
     if (index >= 0x800 && index <= 0xBFF) {
       if (BX_CPU_THIS_PTR msr.apicbase & 0x400)  // X2APIC mode
-        return BX_CPU_THIS_PTR lapic.write_x2apic(index, val_64);
+        return BX_CPU_THIS_PTR lapic.write_x2apic(index, val32_hi, val32_lo);
       else
         return 0;
     }

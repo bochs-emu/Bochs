@@ -1314,15 +1314,13 @@ bx_bool bx_local_apic_c::read_x2apic(unsigned index, Bit64u *val_64)
 }
 
 // return false when x2apic is not supported/not writeable
-bx_bool bx_local_apic_c::write_x2apic(unsigned index, Bit64u val_64)
+bx_bool bx_local_apic_c::write_x2apic(unsigned index, Bit32u val32_hi, Bit32u val32_lo)
 {
-  Bit32u val32_lo = GET32L(val_64);
-
   index = (index - 0x800) << 4;
 
   if (index != BX_LAPIC_ICR_LO) {
     // upper 32-bit are reserved for all x2apic MSRs except for the ICR
-    if (GET32H(val_64) != 0)
+    if (val32_hi != 0)
       return 0;
   }
 
@@ -1367,7 +1365,7 @@ bx_bool bx_local_apic_c::write_x2apic(unsigned index, Bit64u val_64)
     return 1;
   case BX_LAPIC_ICR_LO:
     // handle full 64-bit write
-    send_ipi(GET32H(val_64), val32_lo);
+    send_ipi(val32_hi, val32_lo);
     return 1;
   case BX_LAPIC_TPR:
     // handle reserved bits, only bits 0-7 are writeable
@@ -1382,7 +1380,7 @@ bx_bool bx_local_apic_c::write_x2apic(unsigned index, Bit64u val_64)
     break; // use legacy write
   case BX_LAPIC_EOI:
   case BX_LAPIC_ESR:
-    if (val_64 != 0) return 0;
+    if (val32_lo != 0) return 0;
     break; // use legacy write
   case BX_LAPIC_LVT_TIMER:
   case BX_LAPIC_LVT_THERMAL:

@@ -151,7 +151,7 @@ public:
   Bit32u read_aligned(bx_phy_address address);
 #if BX_CPU_LEVEL >= 6
   bx_bool read_x2apic(unsigned index, Bit64u *msr);
-  bx_bool write_x2apic(unsigned index, Bit64u msr);
+  bx_bool write_x2apic(unsigned index, Bit32u msr_hi, Bit32u msr_lo);
 #endif
   // on local APIC, trigger means raise the CPU's INTR line. For now
   // I also have to raise pc_system.INTR but that should be replaced
