@@ -1320,6 +1320,12 @@ bx_bool bx_local_apic_c::write_x2apic(unsigned index, Bit64u val_64)
 
   index = (index - 0x800) << 4;
 
+  if (index != BX_LAPIC_ICR_LO) {
+    // upper 32-bit are reserved for all x2apic MSRs except for the ICR
+    if (GET32H(val_64) != 0)
+      return 0;
+  }
+
   switch(index) {
   // read only/not available in x2apic mode
   case BX_LAPIC_ID:
@@ -1358,9 +1364,9 @@ bx_bool bx_local_apic_c::write_x2apic(unsigned index, Bit64u val_64)
   // send self ipi
   case BX_LAPIC_SELF_IPI:
     trigger_irq(val32_lo & 0xff, APIC_EDGE_TRIGGERED);
-    break;
-  // handle full 64-bit write
+    return 1;
   case BX_LAPIC_ICR_LO:
+    // handle full 64-bit write
     send_ipi(GET32H(val_64), val32_lo);
     return 1;
   case BX_LAPIC_TPR:
@@ -1391,9 +1397,6 @@ bx_bool bx_local_apic_c::write_x2apic(unsigned index, Bit64u val_64)
     BX_DEBUG(("write_x2apic: not supported apic register 0x%08x", index));
     return 0;
   }
-
-  if (GET32H(val_64) != 0) // upper 32-bit are reserved for all x2apic MSRs 
-    return 0;
 
   write_aligned(index, val32_lo);
   return 1;
