@@ -1360,7 +1360,7 @@ bx_bool bx_local_apic_c::write_x2apic(unsigned index, Bit64u val_64)
   // handle full 64-bit write
   case BX_LAPIC_ICR_LO:
     send_ipi(GET32H(val_64), val32_lo);
-    break;
+    return 1;
   case BX_LAPIC_TPR:
     // handle reserved bits, only bits 0-7 are writeable
     if ((val32_lo & 0xffffff00) != 0)
