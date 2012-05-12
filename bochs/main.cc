@@ -1347,6 +1347,7 @@ int bx_atexit(void)
 
 #if BX_SHOW_IPS
 #if !defined(__MINGW32__) && !defined(_MSC_VER)
+  alarm(0);
   signal(SIGALRM, SIG_DFL);
 #endif
 #endif
