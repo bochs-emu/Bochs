@@ -1136,12 +1136,10 @@ static void mptable_init(void)
 
     /* irqs */
     for(i = 0; i < 16; i++) {
-#ifdef BX_QEMU
         /* One entry per ioapic input. Input 2 is covered by 
            irq0->inti2 override (i == 0). irq 2 is unused */
         if (i == 2)
             continue;
-#endif        
         putb(&q, 3); /* entry type = I/O interrupt */
         putb(&q, 0); /* interrupt type = vectored interrupt */
         putb(&q, 0); /* flags: po=0, el=0 */
@@ -1149,11 +1147,7 @@ static void mptable_init(void)
         putb(&q, 0); /* source bus ID = ISA */
         putb(&q, i); /* source bus IRQ */
         putb(&q, ioapic_id); /* dest I/O APIC ID */
-#ifdef BX_QEMU
         putb(&q, i == 0 ? 2 : i); /* dest I/O APIC interrupt in */
-#else
-        putb(&q, i); /* dest I/O APIC interrupt in */
-#endif        
     }
     /* patch length */
     len = q - mp_config_table;
@@ -1430,7 +1424,6 @@ struct madt_io_apic
 			  * lines start */
 } __attribute__((__packed__));
 
-#ifdef BX_QEMU
 struct madt_int_override
 {
 	APIC_HEADER_DEF
@@ -1439,7 +1432,6 @@ struct madt_int_override
 	uint32_t               gsi;     /* GSI that source will signal */
 	uint16_t               flags;   /* MPS INTI flags */
 } __attribute__((__packed__));
-#endif
 
 #include "acpi-dsdt.hex"
 
@@ -1599,11 +1591,7 @@ void acpi_bios_init(void)
     madt_addr = addr;
     madt_size = sizeof(*madt) +
         sizeof(struct madt_processor_apic) * smp_cpus +
-#ifdef BX_QEMU
         sizeof(struct madt_io_apic) + sizeof(struct madt_int_override);
-#else
-        sizeof(struct madt_io_apic);
-#endif
     madt = (void *)(addr);
     addr += madt_size;
 
@@ -1678,9 +1666,7 @@ void acpi_bios_init(void)
     {
         struct madt_processor_apic *apic;
         struct madt_io_apic *io_apic;
-#ifdef BX_QEMU
         struct madt_int_override *int_override;
-#endif
 
         memset(madt, 0, madt_size);
         madt->local_apic_address = cpu_to_le32(0xfee00000);
@@ -1700,7 +1686,6 @@ void acpi_bios_init(void)
         io_apic->io_apic_id = smp_cpus;
         io_apic->address = cpu_to_le32(0xfec00000);
         io_apic->interrupt = cpu_to_le32(0);
-#ifdef BX_QEMU
         io_apic++;
 
         int_override = (void *)io_apic;
@@ -1710,7 +1695,6 @@ void acpi_bios_init(void)
         int_override->source = cpu_to_le32(0);
         int_override->gsi = cpu_to_le32(2);
         int_override->flags = cpu_to_le32(0);
-#endif
 
         acpi_build_table_header((struct acpi_table_header *)madt,
                                 "APIC", madt_size, 1);
