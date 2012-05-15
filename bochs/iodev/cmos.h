@@ -66,6 +66,7 @@ public:
     bx_bool timeval_change;
     bx_bool rtc_mode_12hour;
     bx_bool rtc_mode_binary;
+    bx_bool rtc_sync;
 
     Bit8u   reg[128];
   } s;  // state information

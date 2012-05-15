@@ -527,6 +527,10 @@ boot: disk
 #  preserve performance and host-time correlation.
 #  It is possible to enable both synchronization methods.
 #
+#  RTC_SYNC:
+#  If this option is enabled together with the realtime synchronization,
+#  the RTC runs at realtime speed. This feature is disabled by default.
+#
 #  TIME0:
 #  Specifies the start (boot) time of the virtual machine. Use a time 
 #  value as returned by the time(2) system call. If no time0 value is 

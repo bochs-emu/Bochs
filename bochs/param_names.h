@@ -96,6 +96,7 @@
 #define BXPN_OPTRAM4_ADDRESS             "memory.optram.4.addr"
 #define BXPN_CLOCK_SYNC                  "clock_cmos.clock_sync"
 #define BXPN_CLOCK_TIME0                 "clock_cmos.time0"
+#define BXPN_CLOCK_RTC_SYNC              "clock_cmos.rtc_sync"
 #define BXPN_CMOSIMAGE_ENABLED           "clock_cmos.cmosimage.enabled"
 #define BXPN_CMOSIMAGE_PATH              "clock_cmos.cmosimage.path"
 #define BXPN_CMOSIMAGE_RTC_INIT          "clock_cmos.cmosimage.rtc_init"

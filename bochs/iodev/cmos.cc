@@ -26,6 +26,7 @@
 
 #include "iodev.h"
 #include "cmos.h"
+#include "virt_timer.h"
 
 #define LOG_THIS theCmosDevice->
 
@@ -150,15 +151,27 @@ void bx_cmos_c::init(void)
   DEV_register_iowrite_handler(this, write_handler, 0x0070, "CMOS RAM", 1);
   DEV_register_iowrite_handler(this, write_handler, 0x0071, "CMOS RAM", 1);
   DEV_register_irq(8, "CMOS RTC");
+
+  int clock_sync = SIM->get_param_enum(BXPN_CLOCK_SYNC)->get();
+  BX_CMOS_THIS s.rtc_sync = ((clock_sync == BX_CLOCK_SYNC_REALTIME) ||
+                             (clock_sync == BX_CLOCK_SYNC_BOTH)) &&
+                            SIM->get_param_bool(BXPN_CLOCK_RTC_SYNC)->get();
+
   if (BX_CMOS_THIS s.periodic_timer_index == BX_NULL_TIMER_HANDLE) {
     BX_CMOS_THIS s.periodic_timer_index =
       DEV_register_timer(this, periodic_timer_handler,
         1000000, 1,0, "cmos"); // continuous, not-active
   }
   if (BX_CMOS_THIS s.one_second_timer_index == BX_NULL_TIMER_HANDLE) {
-    BX_CMOS_THIS s.one_second_timer_index =
-      DEV_register_timer(this, one_second_timer_handler,
-        1000000, 1,0, "cmos"); // continuous, not-active
+    if (BX_CMOS_THIS s.rtc_sync) {
+      BX_CMOS_THIS s.one_second_timer_index =
+        bx_virt_timer.register_timer(this, one_second_timer_handler,
+          1000000, 1, 0, "cmos"); // continuous, not-active
+    } else {
+      BX_CMOS_THIS s.one_second_timer_index =
+        DEV_register_timer(this, one_second_timer_handler,
+          1000000, 1,0, "cmos"); // continuous, not-active
+    }
   }
   if (BX_CMOS_THIS s.uip_timer_index == BX_NULL_TIMER_HANDLE) {
     BX_CMOS_THIS s.uip_timer_index =
@@ -277,8 +290,13 @@ void bx_cmos_c::reset(unsigned type)
   BX_CMOS_THIS s.reg[REG_STAT_C] = 0;
 
   // One second timer for updating clock & alarm functions
-  bx_pc_system.activate_timer(BX_CMOS_THIS s.one_second_timer_index,
-                         1000000, 1);
+  if (BX_CMOS_THIS s.rtc_sync) {
+    bx_virt_timer.activate_timer(BX_CMOS_THIS s.one_second_timer_index,
+                                1000000, 1);
+  } else {
+    bx_pc_system.activate_timer(BX_CMOS_THIS s.one_second_timer_index,
+                                1000000, 1);
+  }
 
   // handle periodic interrupt rate select
   BX_CMOS_THIS CRA_change();

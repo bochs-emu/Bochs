@@ -732,6 +732,15 @@ void bx_init_options()
       "Initial time for Bochs CMOS clock, used if you really want two runs to be identical",
       0, BX_MAX_BIT32U,
       BX_CLOCK_TIME0_LOCAL);
+  bx_param_bool_c *rtc_sync = new bx_param_bool_c(clock_cmos,
+      "rtc_sync", "Sync RTC speed with realtime",
+      "If enabled, the RTC runs at realtime speed",
+      0);
+  deplist = new bx_list_c(NULL);
+  deplist->add(rtc_sync);
+  clock_sync->set_dependent_list(deplist, 0);
+  clock_sync->set_dependent_bitmap(BX_CLOCK_SYNC_REALTIME, 1);
+  clock_sync->set_dependent_bitmap(BX_CLOCK_SYNC_BOTH, 1);
 
   bx_list_c *cmosimage = new bx_list_c(clock_cmos, "cmosimage", "CMOS Image Options");
   bx_param_bool_c *use_cmosimage = new bx_param_bool_c(cmosimage,
@@ -2883,6 +2892,9 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       if (!strncmp(params[i], "sync=", 5)) {
         SIM->get_param_enum(BXPN_CLOCK_SYNC)->set_by_name(&params[i][5]);
       }
+      else if (!strncmp(params[i], "rtc_sync=", 9)) {
+        SIM->get_param_bool(BXPN_CLOCK_RTC_SYNC)->set(atol(&params[i][9]));
+      }
       else if (!strcmp(params[i], "time0=local")) {
         SIM->get_param_num(BXPN_CLOCK_TIME0)->set(BX_CLOCK_TIME0_LOCAL);
       }
@@ -3311,7 +3323,7 @@ int bx_write_clock_cmos_options(FILE *fp)
       fprintf(fp, ", time0=%u", SIM->get_param_num(BXPN_CLOCK_TIME0)->get());
   }
 
-  fprintf(fp, "\n");
+  fprintf(fp, ", rtc_sync=%d\n", SIM->get_param_bool(BXPN_CLOCK_RTC_SYNC)->get());
 
   if (strlen(SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->getptr()) > 0) {
     fprintf(fp, "cmosimage: file=%s, ", SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->getptr());
