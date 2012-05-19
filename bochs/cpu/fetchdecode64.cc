@@ -1828,7 +1828,7 @@ fetch_b1:
     // VEX
     had_vex = 1;
     if (sse_prefix | rex_prefix) had_vex = -1;
-    if (! protected_mode()) had_vex = -1;
+    if (! protected_mode()) had_xop = -1;
     unsigned vex, vex_opcext = 1;
 
     if (remain != 0) {

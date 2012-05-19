@@ -1419,7 +1419,7 @@ fetch_b1:
   else if (b1 == 0x8f && (*iptr & 0xc8) == 0xc8) {
     // 3 byte XOP prefix
     had_xop = 1;
-    if (! protected_mode()) had_vex = -1;
+    if (! protected_mode()) had_xop = -1;
     unsigned vex;
 
     if (remain != 0) {
