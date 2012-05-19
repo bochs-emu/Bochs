@@ -1639,6 +1639,10 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
   handleCpuContextChange();
 
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_CPU_THIS_PTR monitor.reset_monitor();
+#endif
+
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
 
   return VMXERR_NO_ERROR;
@@ -2063,6 +2067,10 @@ void BX_CPU_C::VMexitLoadHostState(void)
   setEFlagsOSZAPC(0);
 
   handleCpuContextChange();
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_CPU_THIS_PTR monitor.reset_monitor();
+#endif
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
 }

@@ -282,7 +282,7 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
 #if BX_SUPPORT_VMX
   else if (BX_CPU_THIS_PTR vmx_interrupt_window && BX_CPU_THIS_PTR get_IF()) {
     // interrupt-window exiting
-    BX_ERROR(("VMEXIT: interrupt window exiting"));
+    BX_DEBUG(("VMEXIT: interrupt window exiting"));
     VMexit(0, VMX_VMEXIT_INTERRUPT_WINDOW, 0);
   }
 #endif

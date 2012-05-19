@@ -73,7 +73,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    BX_ERROR(("VMEXIT: CPUID in VMX non-root operation"));
+    BX_DEBUG(("VMEXIT: CPUID in VMX non-root operation"));
     VMexit(i, VMX_VMEXIT_CPUID, 0);
   }
 #endif
@@ -226,7 +226,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
 {
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
-    BX_ERROR(("INVD/WBINVD: priveledge check failed, generate #GP(0)"));
+    BX_ERROR(("WBINVD: priveledge check failed, generate #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -349,7 +349,7 @@ void BX_CPU_C::handleCpuModeChange(void)
 
 #if BX_CPU_LEVEL >= 6
 #if BX_SUPPORT_AVX
-  handleAvxModeChange();
+  handleAvxModeChange(); /* protected mode reloaded */
 #endif
 #endif
 
@@ -450,10 +450,6 @@ void BX_CPU_C::handleCpuContextChange(void)
 {
   TLB_flush();
 
-#if BX_SUPPORT_MONITOR_MWAIT
-  BX_CPU_THIS_PTR monitor.reset_monitor();
-#endif
-
   invalidate_prefetch_q();
   invalidate_stack_cache();
 #if BX_CPU_LEVEL >= 4
@@ -479,7 +475,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)  {
     if (VMEXIT(VMX_VM_EXEC_CTRL2_RDPMC_VMEXIT)) {
-      BX_ERROR(("VMEXIT: RDPMC"));
+      BX_DEBUG(("VMEXIT: RDPMC"));
       VMexit(i, VMX_VMEXIT_RDPMC, 0);
     }
   }
@@ -554,7 +550,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (VMEXIT(VMX_VM_EXEC_CTRL2_RDTSC_VMEXIT)) {
-      BX_ERROR(("VMEXIT: RDTSC"));
+      BX_DEBUG(("VMEXIT: RDTSC"));
       VMexit(i, VMX_VMEXIT_RDTSC, 0);
     }
   }
@@ -599,7 +595,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (VMEXIT(VMX_VM_EXEC_CTRL2_RDTSC_VMEXIT)) {
-      BX_ERROR(("VMEXIT: RDTSCP"));
+      BX_DEBUG(("VMEXIT: RDTSCP"));
       VMexit(i, VMX_VMEXIT_RDTSCP, 0);
     }
   }
@@ -663,7 +659,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (VMEXIT(VMX_VM_EXEC_CTRL2_MONITOR_VMEXIT)) {
-      BX_ERROR(("VMEXIT: MONITOR"));
+      BX_DEBUG(("VMEXIT: MONITOR"));
       VMexit(i, VMX_VMEXIT_MONITOR, 0);
     }
   }
@@ -739,7 +735,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (VMEXIT(VMX_VM_EXEC_CTRL2_MWAIT_VMEXIT)) {
-      BX_ERROR(("VMEXIT: MWAIT"));
+      BX_DEBUG(("VMEXIT: MWAIT"));
       VMexit(i, VMX_VMEXIT_MWAIT, BX_CPU_THIS_PTR monitor.armed);
     }
   }

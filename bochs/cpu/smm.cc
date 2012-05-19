@@ -225,6 +225,10 @@ void BX_CPU_C::enter_system_management_mode(void)
 
   handleCpuContextChange();
 
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_CPU_THIS_PTR monitor.reset_monitor();
+#endif
+
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
 }
 
@@ -672,6 +676,10 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
      BX_CPU_THIS_PTR smbase = SMRAM_FIELD(saved_state, SMRAM_FIELD_SMBASE_OFFSET);
 
   handleCpuContextChange();
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_CPU_THIS_PTR monitor.reset_monitor();
+#endif
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
 

@@ -33,6 +33,9 @@ Changes after 2.5.1 release:
   - Moved MWAIT_IS_NOP .bochsrc option from CPUID to CPU so it can be set
     even if cpu was configured using pre-defined CPUDB profile.
   - pcidev: enable support for Linux kernel 3.x (Debian patch by Guillem Jover)
+  - Added new parameter 'rtc_sync' for the 'clock' option. If this option
+    is enabled together with the realtime synchronization, the RTC runs
+    at realtime speed.
 
 - I/O Devices
   - Networking
@@ -50,6 +53,7 @@ Changes after 2.5.1 release:
 
 - ROM BIOS
   - improved PCI boot ROM support (for VGA and other devices)
+  - added MADT entry for Interrupt Source Override to ACPI tables
 
 - GUI and display libraries
   - implemented "auto-off" timer for status LEDs indicating a data transfer
@@ -76,6 +80,7 @@ Changes after 2.5.1 release:
   [3486555] Fix critical stack leak in Win32 GUI by Carlo Bramini
 
 - these S.F. bugs were closed/fixed
+  [3526069] MADT:Interrupt Source Override missed
   [3518753] update dump after manual chages to memory contents
   [3516859] bug in svn e1000 module
   [3516029] stepping not working in debugger GUI in case of smp vm

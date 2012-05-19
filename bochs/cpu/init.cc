@@ -754,18 +754,7 @@ void BX_CPU_C::param_restore(bx_param_c *param, Bit64s val)
 
 void BX_CPU_C::after_restore_state(void)
 {
-  TLB_flush();
-
-#if BX_CPU_LEVEL >= 4
-  handleAlignmentCheck();
-#endif
-  handleCpuModeChange();
-#if BX_CPU_LEVEL >= 6
-  handleSseModeChange();
-#if BX_SUPPORT_AVX
-  handleAvxModeChange();
-#endif
-#endif
+  handleCpuContextChange();
 
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_IA32_REAL) CPL = 0;
   else {
@@ -777,7 +766,6 @@ void BX_CPU_C::after_restore_state(void)
 #endif
 
   assert_checks();
-  invalidate_prefetch_q();
   debug(RIP);
 }
 // end of save/restore functionality
