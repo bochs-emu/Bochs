@@ -22,7 +22,10 @@
 
 #include "iodev.h"
 #include "speaker.h"
+
+#if BX_SUPPORT_SOUNDLOW
 #include "sound/soundmod.h"
+#endif
 
 #ifdef __linux__
 #include <unistd.h>
