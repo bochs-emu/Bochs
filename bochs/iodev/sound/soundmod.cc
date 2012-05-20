@@ -34,6 +34,10 @@
 #include "soundosx.h"
 #include "soundwin.h"
 
+#ifndef WIN32
+#include <pthread.h>
+#endif
+
 #define LOG_THIS theSoundModCtl->
 
 bx_soundmod_ctl_c* theSoundModCtl = NULL;
@@ -72,12 +76,53 @@ void* bx_soundmod_ctl_c::init_module(const char *type, logfunctions *device)
   return soundmod;
 }
 
+#ifndef WIN32
+pthread_t thread;
+#endif
+Bit8u *beep_buffer;
+int beep_bytes, beep_bufsize;
+bx_bool beep_active = 0;
+
+void beep_thread(void *indata)
+{
+  Bit8u level;
+  int i;
+
+  beep_active = 1;
+  bx_sound_lowlevel_c *soundmod = (bx_sound_lowlevel_c*)indata;
+  level = 0x40;
+  i = 0;
+  do {
+    beep_buffer[i] = level;
+    if ((++i % beep_bytes) == 0) level ^= 0x40;
+  } while (i < beep_bufsize);
+  while (beep_bytes > 0) {
+    soundmod->sendwavepacket(beep_bufsize, beep_buffer);
+  }
+  soundmod->stopwaveplayback();
+  free(beep_buffer);
+  beep_active = 0;
+#ifndef WIN32
+  pthread_exit(NULL);
+#endif
+}
+
 bx_bool bx_soundmod_ctl_c::beep_on(float frequency)
 {
   if (soundmod != NULL) {
-    BX_INFO(("Beep ON (frequency=%.2f)",frequency));
-    // TODO
+    BX_DEBUG(("Beep ON (frequency=%.2f)",frequency));
+#ifndef WIN32
+    if (!beep_active) {
+      soundmod->startwaveplayback(44100, 8, 0, 0);
+      beep_bytes = (int)(44100.0 / frequency / 2);
+      beep_bufsize = (4410 / beep_bytes / 2) * beep_bytes * 2;
+      beep_buffer = (Bit8u*)malloc(beep_bufsize);
+      pthread_create(&thread, NULL, (void *(*)(void *))&beep_thread, soundmod);
+    }
     return 1;
+#else
+    return 0;
+#endif
   }
   return 0;
 }
@@ -85,9 +130,16 @@ bx_bool bx_soundmod_ctl_c::beep_on(float frequency)
 bx_bool bx_soundmod_ctl_c::beep_off()
 {
   if (soundmod != NULL) {
-    BX_INFO(("Beep OFF"));
-    // TODO
+    BX_DEBUG(("Beep OFF"));
+    if (beep_active) {
+      beep_bytes = 0;
+#ifndef WIN32
+      pthread_join(thread, NULL);
+#endif
+    }
+#ifndef WIN32
     return 1;
+#endif
   }
   return 0;
 }
