@@ -207,7 +207,13 @@ void bx_es1370_c::init(void)
   BX_ES1370_THIS pci_base_address[0] = 0;
 
   BX_ES1370_THIS soundmod = DEV_sound_init_module("default", BX_ES1370_THIS_PTR);
-  BX_ES1370_THIS s.dac_outputinit = 0;
+  int ret = BX_ES1370_THIS soundmod->openwaveoutput(SIM->get_param_string(BXPN_ES1370_WAVEDEV)->getptr());
+  if (ret != BX_SOUNDLOW_OK) {
+    BX_ERROR(("could not open wave output device"));
+    BX_ES1370_THIS s.dac_outputinit = 0;
+  } else {
+    BX_ES1370_THIS s.dac_outputinit = 1;
+  }
   BX_ES1370_THIS s.adc_inputinit = 0;
   BX_ES1370_THIS s.dac_nr_active = -1;
 
@@ -306,7 +312,6 @@ void bx_es1370_c::after_restore_state(void)
     BX_INFO(("new base address: 0x%04x", BX_ES1370_THIS pci_base_address[0]));
   }
   BX_ES1370_THIS check_lower_irq(BX_ES1370_THIS s.sctl);
-  BX_ES1370_THIS s.dac_outputinit = 0;
   BX_ES1370_THIS s.adc_inputinit = 0;
   BX_ES1370_THIS s.dac_nr_active = -1;
   BX_ES1370_THIS update_voices(BX_ES1370_THIS s.ctl, BX_ES1370_THIS s.sctl, 1);
@@ -657,15 +662,6 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
               BX_ERROR(("could not open wave input device"));
             } else {
               BX_ES1370_THIS s.adc_inputinit = 1;
-            }
-          }
-        } else {
-          if (!BX_ES1370_THIS s.dac_outputinit) {
-            ret = BX_ES1370_THIS soundmod->openwaveoutput(SIM->get_param_string(BXPN_ES1370_WAVEDEV)->getptr());
-            if (ret != BX_SOUNDLOW_OK) {
-              BX_ERROR(("could not open wave output device"));
-            } else {
-              BX_ES1370_THIS s.dac_outputinit = 1;
             }
           }
         }

@@ -34,7 +34,7 @@
 #include "soundosx.h"
 #include "soundwin.h"
 
-#define LOG_THIS device->
+#define LOG_THIS theSoundModCtl->
 
 bx_soundmod_ctl_c* theSoundModCtl = NULL;
 
@@ -54,19 +54,42 @@ void libsoundmod_LTX_plugin_fini(void)
   delete theSoundModCtl;
 }
 
+bx_soundmod_ctl_c::bx_soundmod_ctl_c()
+{
+  put("sound", "SOUND");
+  soundmod = NULL;
+}
+
 void* bx_soundmod_ctl_c::init_module(const char *type, logfunctions *device)
 {
-  bx_sound_lowlevel_c *soundmod;
-
   if (!strcmp(type, "default")) {
     soundmod = new BX_SOUND_LOWLEVEL_C(device);
   } else if (!strcmp(type, "dummy")) {
     soundmod = new bx_sound_lowlevel_c(device);
   } else {
     BX_PANIC(("unknown sound module type '%s'", type));
-    soundmod = NULL;
   }
   return soundmod;
+}
+
+bx_bool bx_soundmod_ctl_c::beep_on(float frequency)
+{
+  if (soundmod != NULL) {
+    BX_INFO(("Beep ON (frequency=%.2f)",frequency));
+    // TODO
+    return 1;
+  }
+  return 0;
+}
+
+bx_bool bx_soundmod_ctl_c::beep_off()
+{
+  if (soundmod != NULL) {
+    BX_INFO(("Beep OFF"));
+    // TODO
+    return 1;
+  }
+  return 0;
 }
 
 // The dummy sound lowlevel functions. They don't do anything.

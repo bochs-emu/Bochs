@@ -302,19 +302,29 @@ void bx_sb16_c::init(void)
   BX_SB16_THIS dmatimer = SIM->get_param_num("dmatimer", base)->get();
   BX_SB16_THIS loglevel = SIM->get_param_num("loglevel", base)->get();
 
-  // let the output functions initialize
-  BX_SB16_OUTPUT = DEV_sound_init_module("default", BX_SB16_THISP);
+  if ((BX_SB16_THIS wavemode == 1) || (BX_SB16_THIS midimode == 1)) {
+    // let the output functions initialize
+    BX_SB16_OUTPUT = DEV_sound_init_module("default", BX_SB16_THISP);
 
-  if (BX_SB16_OUTPUT == NULL)
-  {
-    writelog(MIDILOG(2), "Couldn't initialize output devices. Output disabled.");
-    BX_SB16_THIS midimode = 0;
-    BX_SB16_THIS wavemode = 0;
+    if (BX_SB16_OUTPUT == NULL) {
+      writelog(MIDILOG(2), "Couldn't initialize output devices. Output disabled.");
+      BX_SB16_THIS midimode = 0;
+      BX_SB16_THIS wavemode = 0;
+    }
   }
 
   DSP.dma.chunk = new Bit8u[BX_SOUNDLOW_WAVEPACKETSIZE];
   DSP.dma.chunkindex = 0;
-  DSP.outputinit = 0;
+  if (BX_SB16_THIS wavemode == 1) {
+    int ret = BX_SB16_OUTPUT->openwaveoutput(SIM->get_param_string(BXPN_SB16_WAVEFILE)->getptr());
+    if (ret != BX_SOUNDLOW_OK) {
+      writelog(WAVELOG(2), "Error: Could not open wave output device.");
+      BX_SB16_THIS wavemode = 0;
+      DSP.outputinit = 0;
+    } else {
+      DSP.outputinit = 1;
+    }
+  }
   DSP.inputinit = 0;
   MPU.outputinit = 0;
 
@@ -1287,15 +1297,6 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
   // write the output to the device/file
   if (DSP.dma.output == 1) {
     if (BX_SB16_THIS wavemode == 1) {
-      if (DSP.outputinit == 0) {
-        ret = BX_SB16_OUTPUT->openwaveoutput(SIM->get_param_string(BXPN_SB16_WAVEFILE)->getptr());
-        if (ret != BX_SOUNDLOW_OK) {
-          BX_SB16_THIS wavemode = 0;
-          writelog(WAVELOG(2), "Error: Could not open wave output device.");
-        } else {
-          DSP.outputinit = 1;
-        }
-      }
       if (DSP.outputinit == 1) {
         ret = BX_SB16_OUTPUT->startwaveplayback(DSP.dma.samplerate, DSP.dma.bits, DSP.dma.stereo, DSP.dma.format);
         if (ret != BX_SOUNDLOW_OK) {

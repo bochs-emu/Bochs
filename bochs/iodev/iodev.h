@@ -379,6 +379,12 @@ public:
   virtual void* init_module(const char *type, logfunctions *dev) {
     STUBFUNC(soundmod_ctl, init_module); return NULL;
   }
+  virtual bx_bool beep_on(float frequency) {
+    return 0;
+  }
+  virtual bx_bool beep_off() {
+    return 0;
+  }
 };
 #endif
 

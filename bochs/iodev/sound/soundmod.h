@@ -31,12 +31,18 @@
 
 typedef Bit32u (*sound_record_handler_t)(void *arg, Bit32u len);
 
+class bx_sound_lowlevel_c;
+
 // Pseudo device that loads the lowlevel sound module
 class bx_soundmod_ctl_c : public bx_soundmod_ctl_stub_c {
 public:
-  bx_soundmod_ctl_c() {}
+  bx_soundmod_ctl_c();
   virtual ~bx_soundmod_ctl_c() {}
   virtual void* init_module(const char *type, logfunctions *device);
+  virtual bx_bool beep_on(float frequency);
+  virtual bx_bool beep_off();
+private:
+  bx_sound_lowlevel_c *soundmod;
 };
 
 // The class with the input/output functions

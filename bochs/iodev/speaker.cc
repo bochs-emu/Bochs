@@ -22,6 +22,7 @@
 
 #include "iodev.h"
 #include "speaker.h"
+#include "sound/soundmod.h"
 
 #ifdef __linux__
 #include <unistd.h>
@@ -97,6 +98,10 @@ void bx_speaker_c::beep_on(float frequency)
 {
   beep_frequency = frequency;
 
+#if BX_SUPPORT_SOUNDLOW
+  if (DEV_soundmod_beep_on(frequency))
+    return;
+#endif
 #ifdef __linux__
   if (consolefd != -1) {
     this->info("pc speaker on with frequency %f", frequency);
@@ -106,7 +111,7 @@ void bx_speaker_c::beep_on(float frequency)
   usec_start = bx_pc_system.time_usec();
 #endif
 
-  // give the gui a chance to signal beep off
+  // give the gui a chance to signal beep on
   bx_gui->beep_on(frequency);
 }
 
@@ -132,6 +137,10 @@ DWORD WINAPI BeepThread(LPVOID)
 
 void bx_speaker_c::beep_off()
 {
+#if BX_SUPPORT_SOUNDLOW
+  if (DEV_soundmod_beep_off())
+    return;
+#endif
   if (beep_frequency != 0.0) {
 #ifdef __linux__
     if (consolefd != -1) {

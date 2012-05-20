@@ -255,6 +255,8 @@ extern "C" {
 ///////// Sound module macro
 #define DEV_sound_init_module(a,b) \
   ((bx_sound_lowlevel_c*)bx_devices.pluginSoundModCtl->init_module(a,b))
+#define DEV_soundmod_beep_on(a) bx_devices.pluginSoundModCtl->beep_on(a)
+#define DEV_soundmod_beep_off() bx_devices.pluginSoundModCtl->beep_off()
 
 ///////// Networking module macro
 #define DEV_net_init_module(a,b,c,d) \
