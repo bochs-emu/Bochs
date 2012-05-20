@@ -756,6 +756,8 @@ void BX_CPU_C::after_restore_state(void)
 {
   handleCpuContextChange();
 
+  BX_CPU_THIS_PTR prev_rip = RIP = 0x00000000;
+
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_IA32_REAL) CPL = 0;
   else {
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_IA32_V8086) CPL = 3;
