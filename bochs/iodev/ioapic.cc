@@ -73,17 +73,26 @@ static bx_bool ioapic_read(bx_phy_address a20addr, unsigned len, void *data, voi
 
 static bx_bool ioapic_write(bx_phy_address a20addr, unsigned len, void *data, void *param)
 {
-  if (len != 4) {
-    BX_PANIC(("I/O apic write with len=%d (should be 4)", len));
-    return 1;
-  }
-
   if(a20addr & 0xf) {
     BX_PANIC(("I/O apic write at unaligned address 0x" FMT_PHY_ADDRX, a20addr));
     return 1;
   }
 
-  theIOAPIC->write_aligned(a20addr, *((Bit32u*) data));
+  if (len == 4) {
+    theIOAPIC->write_aligned(a20addr, *((Bit32u*) data));
+  }
+  else {
+    if ((a20addr & 0xff) != 0)
+      BX_PANIC(("I/O apic write with len=%d (should be 4) at address 0x" FMT_PHY_ADDRX, len, a20addr));
+
+    if (len == 2)
+      theIOAPIC->write_aligned(a20addr, (Bit32u) *((Bit16u*) data));
+    else if (len == 1)
+      theIOAPIC->write_aligned(a20addr, (Bit32u) *((Bit8u*) data));
+    else
+      BX_PANIC(("Unsupported I/O APIC write at address 0x" FMT_PHY_ADDRX ", len=%d", a20addr, len));
+  }
+
   return 1;
 }
 
