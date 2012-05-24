@@ -61,9 +61,8 @@ bx_speaker_c::bx_speaker_c()
   put("speaker", "SPEAK");
 
   beep_frequency = 0.0; // Off
-
 #ifdef __linux__
-  consolefd = open("/dev/console", O_WRONLY);
+  consolefd = -1;
 #endif
 }
 
@@ -80,20 +79,32 @@ bx_speaker_c::~bx_speaker_c()
 
 void bx_speaker_c::init(void)
 {
-#ifdef __linux__
-  if (consolefd != -1) {
-    BX_INFO(("Open /dev/console successfully"));
-  } else {
-    BX_INFO(("Failed to open /dev/console: %s", strerror(errno)));
-    BX_INFO(("Deactivating beep on console"));
-  }
-#endif
-
-  this->beep_off();
+  outputinit = 0;
 }
 
 void bx_speaker_c::reset(unsigned type)
 {
+  if (!outputinit) {
+    outputinit = 1;
+#if BX_SUPPORT_SOUNDLOW
+    if (DEV_soundmod_beep_off()) {
+      BX_INFO(("Using lowlevel sound support for output"));
+      return;
+    }
+#endif
+#ifdef __linux__
+    consolefd = open("/dev/console", O_WRONLY);
+    if (consolefd != -1) {
+      BX_INFO(("Using /dev/console for output"));
+    } else {
+      BX_ERROR(("Failed to open /dev/console: %s", strerror(errno)));
+      BX_ERROR(("Deactivating beep on console"));
+    }
+#elif defined(WIN32)
+    BX_INFO(("Using system beep for output"));
+#endif
+  }
+
   beep_off();
 }
 

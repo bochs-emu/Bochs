@@ -40,6 +40,7 @@ public:
     void beep_off();
 private:
     float beep_frequency;  // 0 : beep is off
+    bx_bool outputinit;
 #ifdef __linux__
     /* Do we have access?  If not, just skip everything else. */
     signed int consolefd;
