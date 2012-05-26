@@ -80,6 +80,8 @@ Changes after 2.5.1 release:
   [3486555] Fix critical stack leak in Win32 GUI by Carlo Bramini
 
 - these S.F. bugs were closed/fixed
+  [3528809] IO APIC index register width
+  [3528516] Missing #if in soundmod.h
   [3526069] MADT:Interrupt Source Override missed
   [3518753] update dump after manual chages to memory contents
   [3516859] bug in svn e1000 module
