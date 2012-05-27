@@ -506,7 +506,7 @@ clean:
 local-dist-clean: clean
 	@RMCOMMAND@ config.h config.status config.log config.cache
 	@RMCOMMAND@ .dummy `find . -name '*.dsp' -o -name '*.dsw' -o -name '*.opt' -o -name '.DS_Store'`
-	@RMCOMMAND@ bxversion.h build/linux/bochs-dlx _rpm_top *.rpm
+	@RMCOMMAND@ bxversion.h bxversion.rc build/linux/bochs-dlx _rpm_top *.rpm
 	@RMCOMMAND@ build/win32/nsis/Makefile build/win32/nsis/bochs.nsi
 	@RMCOMMAND@ build/macosx/Info.plist build/macosx/script_compiled.rsrc
 	@RMCOMMAND@ libtool
@@ -560,6 +560,15 @@ dist-clean: local-dist-clean
 	cd iodev @COMMAND_SEPARATOR@
 	$(MAKE) dist-clean
 	@CD_UP_ONE@
+	cd iodev/usb @COMMAND_SEPARATOR@
+	$(MAKE) dist-clean
+	@CD_UP_TWO@
+	cd iodev/network @COMMAND_SEPARATOR@
+	$(MAKE) dist-clean
+	@CD_UP_TWO@
+	cd iodev/sound @COMMAND_SEPARATOR@
+	$(MAKE) dist-clean
+	@CD_UP_TWO@
 	cd bx_debug @COMMAND_SEPARATOR@
 	$(MAKE) dist-clean
 	@CD_UP_ONE@
