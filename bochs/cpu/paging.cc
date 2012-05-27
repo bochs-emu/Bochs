@@ -1493,7 +1493,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
   BX_DEBUG(("EPT walk for guest paddr 0x" FMT_ADDRX, guest_paddr));
 
   // when EPT A/D enabled treat guest page table accesses as writes
-  if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_ACCESS_DIRTY) && is_page_walk && guest_laddr_valid)
+  if (BX_VMX_EPT_ACCESS_DIRTY_ENABLED && is_page_walk && guest_laddr_valid)
     rw = BX_WRITE;
 
   if (rw == BX_EXECUTE) access_mask |= BX_EPT_EXECUTE;
@@ -1586,7 +1586,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
     }
   }
 
-  if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_ACCESS_DIRTY)) {
+  if (BX_VMX_EPT_ACCESS_DIRTY_ENABLED) {
     update_ept_access_dirty(entry_addr, entry, leaf, rw & 1);
   }
 

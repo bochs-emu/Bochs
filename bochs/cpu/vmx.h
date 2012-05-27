@@ -986,6 +986,8 @@ enum VMX_INVEPT_INVVPID_type {
 #define VMX_MSR_VMX_EPT_VPID_CAP \
    (BX_CPU_THIS_PTR vmx_cap.vmx_ept_vpid_cap_supported_bits)
 
+#define BX_VMX_EPT_ACCESS_DIRTY_ENABLED (BX_CPU_THIS_PTR vmcs.eptptr & 0x40)
+
 #endif
 
 #endif // _BX_VMX_INTEL_H_
