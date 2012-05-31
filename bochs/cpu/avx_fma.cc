@@ -958,7 +958,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADD231SS_VpsHssWssR(bxInstruct
   BX_NEXT_INSTR(i);
 }
 
-// FNMADDPD
+// FNMSUBPD
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUB132PD_VpdHpdWpdR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->nnn());

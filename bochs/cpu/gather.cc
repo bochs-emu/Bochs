@@ -105,7 +105,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c 
   BxPackedAvxRegister *mask = &BX_AVX_REG(i->vvv()), *dest = &BX_AVX_REG(i->nnn());
   unsigned num_elements = 2 * i->getVL();
 
-  for (unsigned n=0; n < 4; n++) // index size = 64, element_size = 32, max vector size = 256
+  for (unsigned n=0; n < 8; n++) // index size = 64, element_size = 32, max vector size = 256
   {
     if (n >= num_elements) {
         mask->avx32u(n) = 0;

@@ -229,8 +229,8 @@ float32 float32_muladd(float32 a, float32 b, float32 c, int flags, float_status_
                 return packFloat32(cSign, 0, 0);
             }
         }
-        /* Zero plus something non-zero : just return the something */
-        return c;
+        /* Zero plus something non-zero */
+        return packFloat32(cSign, cExp, cSig);
     }
 
     if (aExp == 0) {
@@ -442,8 +442,8 @@ float64 float64_muladd(float64 a, float64 b, float64 c, int flags, float_status_
                 return packFloat64(cSign, 0, 0);
             }
         }
-        /* Zero plus something non-zero : just return the something */
-        return c;
+        /* Zero plus something non-zero */
+        return packFloat64(cSign, cExp, cSig);
     }
 
     if (aExp == 0) {
