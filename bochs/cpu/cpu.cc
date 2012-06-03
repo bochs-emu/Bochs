@@ -584,7 +584,6 @@ void BX_CPU_C::prefetch(void)
 bx_bool BX_CPU_C::dbg_instruction_epilog(void)
 {
 #if BX_DEBUGGER
-  Bit64u tt = bx_pc_system.time_ticks();
   bx_address debug_eip = RIP;
   Bit16u cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
 
@@ -599,6 +598,7 @@ bx_bool BX_CPU_C::dbg_instruction_epilog(void)
 
   // Check if we hit read/write or time breakpoint
   if (BX_CPU_THIS_PTR break_point) {
+    Bit64u tt = bx_pc_system.time_ticks();
     switch (BX_CPU_THIS_PTR break_point) {
     case BREAK_POINT_TIME:
       BX_INFO(("[" FMT_LL "d] Caught time breakpoint", tt));
