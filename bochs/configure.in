@@ -273,15 +273,6 @@ else
     fi
 fi
 
-AC_MSG_CHECKING(for struct timeval)
-AC_TRY_COMPILE([#include <sys/time.h>],
-    [struct timeval x;],
-    [
-      AC_MSG_RESULT(yes)
-      AC_DEFINE(BX_HAVE_STRUCT_TIMEVAL, 1)
-    ],
-    AC_MSG_RESULT(no))
-
 AC_MSG_CHECKING(if compiler allows __attribute__)
 AC_TRY_COMPILE([], [typedef struct { } __attribute__ ((packed)) junk;],
     AC_MSG_RESULT(yes),
