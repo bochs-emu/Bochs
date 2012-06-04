@@ -80,6 +80,8 @@ Changes after 2.5.1 release:
   [3486555] Fix critical stack leak in Win32 GUI by Carlo Bramini
 
 - these S.F. bugs were closed/fixed
+   [635789] mapping mode 0 not supported
+  [3307201] BOCHS panics when execute HBIOS.COM
   [3528809] IO APIC index register width
   [3528516] Missing #if in soundmod.h
   [3526069] MADT:Interrupt Source Override missed

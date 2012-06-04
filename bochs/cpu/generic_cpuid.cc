@@ -47,6 +47,12 @@ bx_generic_cpuid_t::bx_generic_cpuid_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
   init_isa_extensions_bitmask();
   init_cpu_extensions_bitmask();
+#if BX_SUPPORT_VMX
+  init_vmx_extensions_bitmask();
+#endif
+#if BX_SUPPORT_SVM
+  init_svm_extensions_bitmask();
+#endif
 
 #if BX_CPU_LEVEL <= 5
   // 486 and Pentium processors

@@ -184,6 +184,7 @@ public:
   Bit64u get_tsc_deadline(void);
   void set_tsc_deadline(Bit64u value);
   void receive_SEOI(Bit8u vec);
+  void enable_xapic_extensions(void);
 #endif
 
   void startup_msg(Bit8u vector);

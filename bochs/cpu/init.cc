@@ -989,6 +989,10 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR lapic.reset(source);
   BX_CPU_THIS_PTR msr.apicbase |= 0x900;
   BX_CPU_THIS_PTR lapic.set_base(BX_CPU_THIS_PTR msr.apicbase);
+#if BX_CPU_LEVEL >= 6
+  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_XAPIC_EXT))
+    BX_CPU_THIS_PTR lapic.enable_xapic_extensions();
+#endif
 #endif
 
   BX_CPU_THIS_PTR efer.set32(0);

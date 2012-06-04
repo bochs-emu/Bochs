@@ -259,15 +259,17 @@ void bx_local_apic_c::reset(unsigned type)
     apic_version_id = 0x00030010; // P6 has 4 LVT entries
 
 #if BX_CPU_LEVEL >= 6
-  if (cpu->bx_cpuid_support_xapic_extensions()) {
-    apic_version_id |= 0x80000000;
-    xapic_ext = BX_XAPIC_EXT_SUPPORT_IER | BX_XAPIC_EXT_SUPPORT_SEOI;
-  }
-  else {
-    xapic_ext = 0;
-  }
+  xapic_ext = 0;
 #endif
 }
+
+#if BX_CPU_LEVEL >= 6
+void bx_local_apic_c::enable_xapic_extensions(void)
+{
+  apic_version_id |= 0x80000000;
+  xapic_ext = BX_XAPIC_EXT_SUPPORT_IER | BX_XAPIC_EXT_SUPPORT_SEOI;
+}
+#endif
 
 void bx_local_apic_c::set_base(bx_phy_address newbase)
 {
