@@ -2012,6 +2012,9 @@ void bx_x_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
   int event_base, error_base;
 
   Display *dpy = XOpenDisplay(NULL);
+  if (dpy == NULL) {
+    BX_PANIC(("Cannot connect to X display"));
+  }
   Window root = RootWindow(dpy, 0);
 
   if (XRRQueryExtension (dpy, &event_base, &error_base)) {
