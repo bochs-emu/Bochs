@@ -801,8 +801,8 @@ void BX_CPU_C::reset(unsigned source)
   // initialize NIL register
   BX_WRITE_32BIT_REGZ(BX_NIL_REGISTER, 0);
 
-  // status and control flags register set
-  setEFlags(0x2); // Bit1 is always set
+  BX_CPU_THIS_PTR eflags = 0x2; // Bit1 is always set
+  setEFlagsOSZAPC(0);           // Update lazy flags state
 
   if (source == BX_RESET_HARDWARE)
     BX_CPU_THIS_PTR icount = 0;
@@ -947,9 +947,6 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR pending_NMI = 0;
   BX_CPU_THIS_PTR disable_INIT = 0;
   BX_CPU_THIS_PTR pending_INIT = 0;
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
-#endif
 
   if (source == BX_RESET_HARDWARE) {
     BX_CPU_THIS_PTR smbase = 0x30000; // do not change SMBASE on INIT
@@ -1067,8 +1064,6 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR EXT = 0;
   BX_CPU_THIS_PTR errorno = 0;
 
-  TLB_flush();
-
   // invalidate the code prefetch queue
   BX_CPU_THIS_PTR eipPageBias = 0;
   BX_CPU_THIS_PTR eipPageWindowSize = 0;
@@ -1078,8 +1073,6 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR espPageBias = 0;
   BX_CPU_THIS_PTR espPageWindowSize = 0;
   BX_CPU_THIS_PTR espHostPtr = NULL;
-
-  handleCpuModeChange();
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR stop_reason = STOP_NO_REASON;
@@ -1160,7 +1153,7 @@ void BX_CPU_C::reset(unsigned source)
   }
 #endif
 
-  updateFetchModeMask();
+  handleCpuContextChange();
 
 #if BX_CPU_LEVEL >= 4
   BX_CPU_THIS_PTR cpuid->dump_cpuid();

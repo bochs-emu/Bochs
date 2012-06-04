@@ -280,6 +280,7 @@ int bx_dbg_main(void)
     BX_CPU(i)->guard_found.eip = BX_CPU(i)->get_instruction_pointer();
     BX_CPU(i)->guard_found.laddr =
       BX_CPU(i)->get_laddr(BX_SEG_REG_CS, BX_CPU(i)->guard_found.eip);
+    BX_CPU(i)->guard_found.code_32_64 = 0;
     // 00 - 16 bit, 01 - 32 bit, 10 - 64-bit, 11 - illegal
     if (BX_CPU(i)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b)
       BX_CPU(i)->guard_found.code_32_64 |= 0x1;
