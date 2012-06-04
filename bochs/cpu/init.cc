@@ -923,6 +923,8 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR tr.cache.u.segment.avl = 0;
   BX_CPU_THIS_PTR tr.cache.u.segment.g   = 0;  /* byte granular */
 
+  BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
+
   // DR0 - DR7 (Debug Registers)
 #if BX_CPU_LEVEL >= 3
   for (n=0; n<4; n++)
