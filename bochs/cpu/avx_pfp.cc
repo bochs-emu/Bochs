@@ -1339,13 +1339,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPH2PS_VpsWpsR(bxInstruction_c 
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  status.flush_underflow_to_zero = 0; // ignore MXCSR.FUZ
+  status.denormals_are_zeros = 0; // ignore MXCSR.DAZ
 
   for (unsigned n=0; n < (4*len); n++) {
      result.avx32u(n) = float16_to_float32(op.xmm16u(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  // no denormal exception is reported on MXCSR
+  check_exceptionsSSE(status.float_exception_flags & ~float_flag_denormal);
 
   BX_WRITE_AVX_REGZ(i->nnn(), result, len);
 
