@@ -802,7 +802,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_WRITE_32BIT_REGZ(BX_NIL_REGISTER, 0);
 
   BX_CPU_THIS_PTR eflags = 0x2; // Bit1 is always set
-  setEFlagsOSZAPC(0);           // Update lazy flags state
+  memset(&oszapc, 0, sizeof(oszapc)); // Clear lazy flags state
 
   if (source == BX_RESET_HARDWARE)
     BX_CPU_THIS_PTR icount = 0;
