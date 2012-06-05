@@ -802,7 +802,9 @@ void BX_CPU_C::reset(unsigned source)
   BX_WRITE_32BIT_REGZ(BX_NIL_REGISTER, 0);
 
   BX_CPU_THIS_PTR eflags = 0x2; // Bit1 is always set
-  memset(&BX_CPU_THIS_PTR oszapc, 0, sizeof(BX_CPU_THIS_PTR oszapc)); // Clear lazy flags state
+  // clear lazy flags state to satisfy Valgrind uninitialized variables checker
+  memset(&BX_CPU_THIS_PTR oszapc, 0, sizeof(BX_CPU_THIS_PTR oszapc));
+  setEFlagsOSZAPC(0);	        // update lazy flags state
 
   if (source == BX_RESET_HARDWARE)
     BX_CPU_THIS_PTR icount = 0;
