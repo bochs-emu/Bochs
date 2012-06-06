@@ -66,9 +66,22 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_VpsHps(bxInstruction_c 
   }
 
   BxPackedAvxRegister *mask = &BX_AVX_REG(i->vvv()), *dest = &BX_AVX_REG(i->nnn());
-  unsigned num_elements = 4 * i->getVL();
 
-  for (unsigned n=0; n < 8; n++) // index size = 32, element_size = 32, max vector size = 256
+  // index size = 32, element_size = 32, max vector size = 256
+  // num_elements:
+  //     128 bit => 4
+  //     256 bit => 8
+
+  unsigned n, num_elements = 4 * i->getVL();
+
+  for (n=0; n < num_elements; n++) {
+    if (mask->avx32u(n) & 0x80000000)
+      mask->avx32u(n) = 0xffffffff;
+    else
+      mask->avx32u(n) = 0;
+  }
+
+  for (n=0; n < 8; n++)
   {
     if (n >= num_elements) {
         mask->avx32u(n) = 0;
@@ -76,7 +89,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_VpsHps(bxInstruction_c 
         continue;
     }
 
-    if (mask->avx32u(n) & 0x80000000) {
+    if (mask->avx32u(n)) {
         dest->avx32u(n) = read_virtual_dword(i->seg(), BxResolveGatherD(i, n));
     }
     mask->avx32u(n) = 0;
@@ -102,10 +115,22 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c 
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  BxPackedAvxRegister *mask = &BX_AVX_REG(i->vvv()), *dest = &BX_AVX_REG(i->nnn());
-  unsigned num_elements = 2 * i->getVL();
+  // index size = 64, element_size = 32, max vector size = 256
+  // num_elements:
+  //     128 bit => 2
+  //     256 bit => 4
 
-  for (unsigned n=0; n < 8; n++) // index size = 64, element_size = 32, max vector size = 256
+  BxPackedAvxRegister *mask = &BX_AVX_REG(i->vvv()), *dest = &BX_AVX_REG(i->nnn());
+  unsigned n, num_elements = 2 * i->getVL();
+
+  for (n=0; n < num_elements; n++) {
+    if (mask->avx32u(n) & 0x80000000)
+      mask->avx32u(n) = 0xffffffff;
+    else
+      mask->avx32u(n) = 0;
+  }
+
+  for (n=0; n < 4; n++)
   {
     if (n >= num_elements) {
         mask->avx32u(n) = 0;
@@ -113,11 +138,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c 
         continue;
     }
 
-    if (mask->avx32u(n) & 0x80000000) {
+    if (mask->avx32u(n)) {
         dest->avx32u(n) = read_virtual_dword(i->seg(), BxResolveGatherQ(i, n));
     }
     mask->avx32u(n) = 0;
   }
+
+  BX_CLEAR_AVX_HIGH(i->vvv());
+  BX_CLEAR_AVX_HIGH(i->nnn());
 
   BX_NEXT_INSTR(i);
 }
@@ -139,10 +167,22 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_VpdHpd(bxInstruction_c 
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  BxPackedAvxRegister *mask = &BX_AVX_REG(i->vvv()), *dest = &BX_AVX_REG(i->nnn());
-  unsigned num_elements = 2 * i->getVL();
+  // index size = 32, element_size = 64, max vector size = 256
+  // num_elements:
+  //     128 bit => 2
+  //     256 bit => 4
 
-  for (unsigned n=0; n < 4; n++) // index size = 32, element_size = 64, max vector size = 256
+  BxPackedAvxRegister *mask = &BX_AVX_REG(i->vvv()), *dest = &BX_AVX_REG(i->nnn());
+  unsigned n, num_elements = 2 * i->getVL();
+
+  for (n=0; n < num_elements; n++) {
+    if (mask->avx64u(n) & BX_CONST64(0x8000000000000000))
+      mask->avx64u(n) = BX_CONST64(0xffffffffffffffff);
+    else
+      mask->avx64u(n) = 0;
+  }
+
+  for (unsigned n=0; n < 4; n++)
   {
     if (n >= num_elements) {
         mask->avx64u(n) = 0;
@@ -150,7 +190,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_VpdHpd(bxInstruction_c 
         continue;
     }
 
-    if (mask->avx64u(n) & BX_CONST64(0x8000000000000000)) {
+    if (mask->avx64u(n)) {
         dest->avx64u(n) = read_virtual_qword(i->seg(), BxResolveGatherD(i, n));
     }
     mask->avx64u(n) = 0;
@@ -176,10 +216,22 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_VpdHpd(bxInstruction_c 
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  BxPackedAvxRegister *mask = &BX_AVX_REG(i->vvv()), *dest = &BX_AVX_REG(i->nnn());
-  unsigned num_elements = 2 * i->getVL();
+  // index size = 64, element_size = 64, max vector size = 256
+  // num_elements:
+  //     128 bit => 2
+  //     256 bit => 4
 
-  for (unsigned n=0; n < 4; n++) // index size = 64, element_size = 64, max vector size = 256
+  BxPackedAvxRegister *mask = &BX_AVX_REG(i->vvv()), *dest = &BX_AVX_REG(i->nnn());
+  unsigned n, num_elements = 2 * i->getVL();
+
+  for (n=0; n < num_elements; n++) {
+    if (mask->avx64u(n) & BX_CONST64(0x8000000000000000))
+      mask->avx64u(n) = BX_CONST64(0xffffffffffffffff);
+    else
+      mask->avx64u(n) = 0;
+  }
+
+  for (n=0; n < 4; n++)
   {
     if (n >= num_elements) {
         mask->avx64u(n) = 0;
@@ -187,7 +239,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_VpdHpd(bxInstruction_c 
         continue;
     }
 
-    if (mask->avx64u(n) & BX_CONST64(0x8000000000000000)) {
+    if (mask->avx64u(n)) {
         dest->avx64u(n) = read_virtual_qword(i->seg(), BxResolveGatherQ(i, n));
     }
     mask->avx64u(n) = 0;

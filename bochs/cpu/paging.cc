@@ -1849,10 +1849,6 @@ page_fault:
 
 void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_pl, void *data)
 {
-#if BX_X86_DEBUGGER
-  hwbreakpoint_match(laddr, len, BX_WRITE);
-#endif
-
   Bit32u pageOffset = PAGE_OFFSET(laddr);
 
   /* check for reference across multiple pages */
@@ -1865,6 +1861,10 @@ void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr
                           len, curr_pl, BX_WRITE, (Bit8u*) data);
 
     access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress1, len, data);
+
+#if BX_X86_DEBUGGER
+    hwbreakpoint_match(laddr, len, BX_WRITE);
+#endif
   }
   else {
     // access across 2 pages
@@ -1903,16 +1903,17 @@ void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr
     access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
         BX_CPU_THIS_PTR address_xlation.len2, data);
 #endif
+
+#if BX_X86_DEBUGGER
+    hwbreakpoint_match(laddr,  BX_CPU_THIS_PTR address_xlation.len1, BX_WRITE);
+    hwbreakpoint_match(laddr2, BX_CPU_THIS_PTR address_xlation.len2, BX_WRITE);
+#endif
   }
 }
 
 void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned xlate_rw, void *data)
 {
   BX_ASSERT(xlate_rw == BX_READ || xlate_rw == BX_RW);
-
-#if BX_X86_DEBUGGER
-  hwbreakpoint_match(laddr, len, xlate_rw);
-#endif
 
   Bit32u pageOffset = PAGE_OFFSET(laddr);
 
@@ -1923,6 +1924,10 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
     BX_CPU_THIS_PTR address_xlation.pages     = 1;
     access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress1, len, data);
     BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1, len, curr_pl, BX_READ, (Bit8u*) data);
+
+#if BX_X86_DEBUGGER
+    hwbreakpoint_match(laddr, len, xlate_rw);
+#endif
   }
   else {
     // access across 2 pages
@@ -1960,6 +1965,11 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
     BX_NOTIFY_LIN_MEMORY_ACCESS(laddr2, BX_CPU_THIS_PTR address_xlation.paddress2,
         BX_CPU_THIS_PTR address_xlation.len2, curr_pl, 
         BX_READ, (Bit8u*) data);
+#endif
+
+#if BX_X86_DEBUGGER
+    hwbreakpoint_match(laddr,  BX_CPU_THIS_PTR address_xlation.len1, xlate_rw);
+    hwbreakpoint_match(laddr2, BX_CPU_THIS_PTR address_xlation.len2, xlate_rw);
 #endif
   }
 }
