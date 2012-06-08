@@ -41,6 +41,8 @@ public:
     bx_sound_osx_c(logfunctions *dev);
     virtual ~bx_sound_osx_c();
 
+    virtual int get_type() {return BX_SOUNDLOW_OSX;}
+
     virtual int    waveready();
     virtual int    midiready();
 

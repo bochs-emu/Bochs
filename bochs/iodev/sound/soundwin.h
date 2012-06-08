@@ -169,6 +169,8 @@ public:
   bx_sound_windows_c(logfunctions *dev);
   virtual ~bx_sound_windows_c();
 
+  virtual int get_type() {return BX_SOUNDLOW_WIN;}
+
   virtual int    waveready();
   virtual int    midiready();
 

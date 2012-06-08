@@ -206,8 +206,13 @@ void bx_es1370_c::init(void)
   }
   BX_ES1370_THIS pci_base_address[0] = 0;
 
-  BX_ES1370_THIS soundmod = DEV_sound_init_module("default", BX_ES1370_THIS_PTR);
-  int ret = BX_ES1370_THIS soundmod->openwaveoutput(SIM->get_param_string(BXPN_ES1370_WAVEDEV)->getptr());
+  char *wavedev = SIM->get_param_string(BXPN_ES1370_WAVEDEV)->getptr();
+  if (!strcmp(wavedev, "sdl")) {
+    BX_ES1370_THIS soundmod = DEV_sound_init_module("sdl", BX_ES1370_THIS_PTR);
+  } else {
+    BX_ES1370_THIS soundmod = DEV_sound_init_module("default", BX_ES1370_THIS_PTR);
+  }
+  int ret = BX_ES1370_THIS soundmod->openwaveoutput(wavedev);
   if (ret != BX_SOUNDLOW_OK) {
     BX_ERROR(("could not open wave output device"));
     BX_ES1370_THIS s.dac_outputinit = 0;

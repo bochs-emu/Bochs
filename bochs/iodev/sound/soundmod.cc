@@ -33,9 +33,13 @@
 #include "soundlnx.h"
 #include "soundosx.h"
 #include "soundwin.h"
+//#include "soundsdl.h"
 
 #ifndef WIN32
 #include <pthread.h>
+#endif
+#if BX_WITH_SDL
+#include <SDL.h>
 #endif
 
 #define LOG_THIS theSoundModCtl->
@@ -68,6 +72,10 @@ void* bx_soundmod_ctl_c::init_module(const char *type, logfunctions *device)
 {
   if (!strcmp(type, "default")) {
     soundmod = new BX_SOUND_LOWLEVEL_C(device);
+#if 0
+  } else if (!strcmp(type, "sdl")) {
+    soundmod = new bx_sound_sdl_c(device);
+#endif
   } else if (!strcmp(type, "dummy")) {
     soundmod = new bx_sound_lowlevel_c(device);
   } else {
@@ -103,9 +111,15 @@ void beep_thread(void *indata)
       if ((++i % beep_bytes) == 0) level ^= 0x40;
     } while (j < beep_bufsize);
     soundmod->sendwavepacket(beep_bufsize, beep_buffer);
+    if (soundmod->get_type() == BX_SOUNDLOW_WIN) {
 #ifdef WIN32
-    Sleep(100);
+      Sleep(100);
 #endif
+    } else if (soundmod->get_type() == BX_SOUNDLOW_SDL) {
+#if BX_WITH_SDL
+      SDL_Delay(100);
+#endif
+    }
   }
   soundmod->stopwaveplayback();
   free(beep_buffer);

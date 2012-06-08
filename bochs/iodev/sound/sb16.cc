@@ -301,10 +301,15 @@ void bx_sb16_c::init(void)
   BX_SB16_THIS wavemode = SIM->get_param_num("wavemode", base)->get();
   BX_SB16_THIS dmatimer = SIM->get_param_num("dmatimer", base)->get();
   BX_SB16_THIS loglevel = SIM->get_param_num("loglevel", base)->get();
+  char *wavefile = SIM->get_param_string(BXPN_SB16_WAVEFILE)->getptr();
 
   if ((BX_SB16_THIS wavemode == 1) || (BX_SB16_THIS midimode == 1)) {
     // let the output functions initialize
-    BX_SB16_OUTPUT = DEV_sound_init_module("default", BX_SB16_THISP);
+    if (!strcmp(wavefile, "sdl")) {
+      BX_SB16_OUTPUT = DEV_sound_init_module("sdl", BX_SB16_THISP);
+    } else {
+      BX_SB16_OUTPUT = DEV_sound_init_module("default", BX_SB16_THISP);
+    }
 
     if (BX_SB16_OUTPUT == NULL) {
       writelog(MIDILOG(2), "Couldn't initialize output devices. Output disabled.");
@@ -316,7 +321,7 @@ void bx_sb16_c::init(void)
   DSP.dma.chunk = new Bit8u[BX_SOUNDLOW_WAVEPACKETSIZE];
   DSP.dma.chunkindex = 0;
   if (BX_SB16_THIS wavemode == 1) {
-    int ret = BX_SB16_OUTPUT->openwaveoutput(SIM->get_param_string(BXPN_SB16_WAVEFILE)->getptr());
+    int ret = BX_SB16_OUTPUT->openwaveoutput(wavefile);
     if (ret != BX_SOUNDLOW_OK) {
       writelog(WAVELOG(2), "Error: Could not open wave output device.");
       BX_SB16_THIS wavemode = 0;

@@ -29,6 +29,13 @@
 #define BX_SOUNDLOW_OK   0
 #define BX_SOUNDLOW_ERR  1
 
+// Lowlvel sound modules
+#define BX_SOUNDLOW_DUMMY   0
+#define BX_SOUNDLOW_LINUX   1
+#define BX_SOUNDLOW_OSX     2
+#define BX_SOUNDLOW_WIN     3
+#define BX_SOUNDLOW_SDL     4
+
 typedef Bit32u (*sound_record_handler_t)(void *arg, Bit32u len);
 
 class bx_sound_lowlevel_c;
@@ -58,6 +65,8 @@ public:
 
   bx_sound_lowlevel_c(logfunctions *dev);
   virtual ~bx_sound_lowlevel_c();
+
+  virtual int get_type() {return BX_SOUNDLOW_DUMMY;}
 
   virtual int waveready();
   virtual int midiready();

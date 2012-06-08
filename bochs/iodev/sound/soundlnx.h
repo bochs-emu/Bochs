@@ -38,6 +38,8 @@ public:
   bx_sound_linux_c(logfunctions *dev);
   virtual ~bx_sound_linux_c();
 
+  virtual int get_type() {return BX_SOUNDLOW_LINUX;}
+
   virtual int waveready();
   virtual int midiready();
 
