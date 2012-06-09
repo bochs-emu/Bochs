@@ -36,6 +36,7 @@
 #include "soundlnx.h"
 #include "soundwin.h"
 #include "soundosx.h"
+#include "soundsdl.h"
 
 #define LOG_THIS theSB16Device->
 

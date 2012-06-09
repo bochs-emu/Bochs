@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011  The Bochs Project
+//  Copyright (C) 2011-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -33,7 +33,7 @@
 #include "soundlnx.h"
 #include "soundosx.h"
 #include "soundwin.h"
-//#include "soundsdl.h"
+#include "soundsdl.h"
 
 #ifndef WIN32
 #include <pthread.h>
@@ -72,7 +72,7 @@ void* bx_soundmod_ctl_c::init_module(const char *type, logfunctions *device)
 {
   if (!strcmp(type, "default")) {
     soundmod = new BX_SOUND_LOWLEVEL_C(device);
-#if 0
+#if BX_WITH_SDL
   } else if (!strcmp(type, "sdl")) {
     soundmod = new bx_sound_sdl_c(device);
 #endif

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011  The Bochs Project
+//  Copyright (C) 2011-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -35,6 +35,7 @@
 #include "soundlnx.h"
 #include "soundwin.h"
 #include "soundosx.h"
+#include "soundsdl.h"
 
 #define LOG_THIS theES1370Device->
 

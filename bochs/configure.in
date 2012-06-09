@@ -1782,6 +1782,16 @@ if test "$soundcard_present" = 1; then
       AC_MSG_RESULT(dummy)
       ;;
   esac
+  AC_MSG_CHECKING(for additional sound lowlevel modules)
+  if test "$with_sdl" = yes; then
+    SOUNDLOW_OBJS="$SOUNDLOW_OBJS soundsdl.o"
+    if test "$bx_plugins" = 1; then
+      SOUND_LINK_OPTS="$SOUND_LINK_OPTS `sdl-config --libs`"
+    fi
+    AC_MSG_RESULT(sdl)
+  else
+    AC_MSG_RESULT(none)
+  fi
   if test "$bx_plugins" = 0; then
     SOUND_LIB_VAR='iodev/sound/libsound.a'
     AC_SUBST(SOUND_LIB_VAR)
