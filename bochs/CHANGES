@@ -50,6 +50,9 @@ Changes after 2.5.1 release:
     - Added VGA graphics blinking support
     - More accurate vertical and horizontal retrace emulation
       (based on the DOSBox implementation)
+    - Sound
+      - implemented PC speaker beep using the lowlevel sound interface
+      - added SDL audio output support
 
 - ROM BIOS
   - improved PCI boot ROM support (for VGA and other devices)
@@ -100,6 +103,7 @@ Changes after 2.5.1 release:
   [1703452] Other Network Devices?
   [2919376] Disable show the console window
    [534271] can't set log action by device (bochsrc)
+  [3409396] sdl sound
 
 -------------------------------------------------------------------------
 Changes in 2.5.1 (January 6, 2012):

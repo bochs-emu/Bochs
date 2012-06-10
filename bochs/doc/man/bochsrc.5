@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "16 Apr 2012" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "10 Jun 2012" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -764,6 +764,9 @@ Example for output to ALSA:
   wavemode=1, wave=alsa,
   log=sb16.log, dmatimer=600000
 
+Example for output using SDL:
+  sb16: wavemode=1, wave=sdl
+
 .B NOTE:
 The  examples are wrapped onto three  lines for
 formatting  reasons, but  it should all be  on
@@ -778,8 +781,9 @@ soundcard. The emulation supports recording and playback (except DAC1+DAC2
 output at the same time).
 
 Examples:
-  es1370: enabled=1, wavedev=""       # win32
-  es1370: enabled=1, wavedev=alsa     # Linux with ALSA
+  es1370: enabled=1, wavedev=""    # win32
+  es1370: enabled=1, wavedev=alsa  # Linux with ALSA
+  es1370: enabled=1, wavedev=sdl   # use SDL audio (if present) for output
 
 .TP
 .I "keyboard_serial_delay:"

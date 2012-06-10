@@ -729,6 +729,7 @@ parport1: enabled=1, file="parport.out"
 # Examples for output devices:
 #   sb16: midimode=1, midi="", wavemode=1, wave=""           # win32
 #   sb16: midimode=1, midi=alsa:128:0, wavemode=1, wave=alsa # Linux with ALSA
+#   sb16: wavemode=1, wave=sdl # use SDL audio (if present) for output
 #=======================================================================
 #sb16: midimode=1, midi=/dev/midi00, wavemode=1, wave=/dev/dsp, loglevel=2, log=sb16.log, dmatimer=600000
 
@@ -741,8 +742,9 @@ parport1: enabled=1, file="parport.out"
 # (except DAC1+DAC2 output at the same time).
 #
 # Examples:
-#   es1370: enabled=1, wavedev=""       # win32
-#   es1370: enabled=1, wavedev=alsa     # Linux with ALSA
+#   es1370: enabled=1, wavedev=""    # win32
+#   es1370: enabled=1, wavedev=alsa  # Linux with ALSA
+#   es1370: enabled=1, wavedev=sdl   # use SDL audio (if present) for output
 #=======================================================================
 #es1370: enabled=1, wavedev=alsa
 

@@ -3838,7 +3838,9 @@ are in the usual "property=value" format.
    wave: This is the device/file where wave output is stored.
    On a Windows host this parameter is ignored when using output to the sound
    device. On a Linux host with ALSA present and this parameter set to "alsa",
-   the default PCM output device will be used instead of an OSS device.
+   the default PCM output device will be used instead of an OSS device. If Bochs
+   is compiled with SDL support, this parameter can be set to "sdl" to use the
+   SDL audio subsystem for output.
    </para></listitem>
 
    <listitem><para>
@@ -3885,6 +3887,7 @@ Examples:
 <screen>
   es1370: enabled=1, wavedev=""    # win32
   es1370: enabled=1, wavedev=alsa  # Linux with ALSA
+  es1370: enabled=1, wavedev=sdl   # use SDL audio (if present) for output
 </screen>
 This defines the ES1370 sound emulation. The parameter 'enabled' controls the
 presence of the device. In addition to this, it must be assigned to a PCI
