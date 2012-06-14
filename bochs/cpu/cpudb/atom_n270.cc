@@ -55,7 +55,7 @@ void atom_n270_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
     get_ext_cpuid_brand_string_leaf(function, leaf);
     return;
   case 0x80000005:
-    get_ext_cpuid_leaf_5(leaf);
+    get_reserved_leaf(leaf);
     return;
   case 0x80000006:
     get_ext_cpuid_leaf_6(leaf);
@@ -521,15 +521,7 @@ void atom_n270_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_functio
 #endif
 }
 
-// leaf 0x80000005 //
-void atom_n270_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x800000005 - L1 Cache and TLB Identifiers
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0; // reserved for Intel
-  leaf->edx = 0;
-}
+// leaf 0x80000005 - L1 Cache and TLB Identifiers (reserved for Intel)
 
 // leaf 0x80000006 //
 void atom_n270_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const

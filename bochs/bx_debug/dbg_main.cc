@@ -2944,25 +2944,33 @@ void bx_dbg_print_descriptor(Bit32u lo, Bit32u hi)
   unsigned s = (hi >> 12) & 0x1;
   unsigned d_b = (hi >> 22) & 0x1;
   unsigned g = (hi >> 23) & 0x1;
+#if BX_SUPPORT_X86_64
+  unsigned l = (hi >> 21) & 0x1;
+#endif
 
   // 32-bit trap gate, target=0010:c0108ec4, DPL=0, present=1
   // code segment, base=0000:00cfffff, length=0xffff
   if (s) {
     // either a code or a data segment. bit 11 (type file MSB) then says
     // 0=data segment, 1=code seg
-    if (type&8) {
-      dbg_printf("Code segment, base=0x%08x, limit=0x%08x, %s%s%s, %d-bit\n",
+    if (IS_CODE_SEGMENT(type)) {
+      dbg_printf("Code segment, base=0x%08x, limit=0x%08x, %s%s%s",
         base, g ? (limit * 4096 + 4095) : limit,
-        (type&2)? "Execute/Read" : "Execute-Only",
-        (type&4)? ", Conforming" : "",
-        (type&1)? ", Accessed" : "",
-        d_b ? 32 : 16);
+        IS_CODE_SEGMENT_READABLE(type) ? "Execute/Read" : "Execute-Only",
+        IS_CODE_SEGMENT_CONFORMING(type)? ", Conforming" : "Non-Conforming",
+        IS_SEGMENT_ACCESSED(type)? ", Accessed" : "");
+#if BX_SUPPORT_X86_64
+      if (l && !d_b)
+        dbg_printf(", 64-bit\n");
+      else
+#endif
+        dbg_printf(", %d-bit\n", d_b ? 32 : 16);
     } else {
       dbg_printf("Data segment, base=0x%08x, limit=0x%08x, %s%s%s\n",
         base, g ? (limit * 4096 + 4095) : limit,
-        (type&2)? "Read/Write" : "Read-Only",
-        (type&4)? ", Expand-down" : "",
-        (type&1)? ", Accessed" : "");
+        IS_DATA_SEGMENT_WRITEABLE(type)? "Read/Write" : "Read-Only",
+        IS_DATA_SEGMENT_EXPAND_DOWN(type)? ", Expand-down" : "",
+        IS_SEGMENT_ACCESSED(type)? ", Accessed" : "");
     }
   } else {
     // types from IA32-devel-guide-3, page 3-15.

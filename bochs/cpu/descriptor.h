@@ -155,20 +155,19 @@ union {
   #define IS_LONG64_SEGMENT(descriptor)   (0)
 #endif
 
-#define IS_CODE_SEGMENT(type)             (((type) >> 3) & 0x1)
-#define IS_CODE_SEGMENT_CONFORMING(type)  (((type) >> 2) & 0x1)
-#define IS_DATA_SEGMENT_EXPAND_DOWN(type) (((type) >> 2) & 0x1)
-#define IS_CODE_SEGMENT_READABLE(type)    (((type) >> 1) & 0x1)
-#define IS_DATA_SEGMENT_WRITEABLE(type)   (((type) >> 1) & 0x1)
-
-#define IS_SEGMENT_ACCESSED(type)         ((type) & 0x1)
-
 #define BX_SEGMENT_CODE                   (0x8)
 #define BX_SEGMENT_DATA_EXPAND_DOWN       (0x4)
 #define BX_SEGMENT_CODE_CONFORMING        (0x4)
 #define BX_SEGMENT_DATA_WRITE             (0x2)
 #define BX_SEGMENT_CODE_READ              (0x2)
 #define BX_SEGMENT_ACCESSED               (0x1)
+
+#define IS_CODE_SEGMENT(type)             ((type) & BX_SEGMENT_CODE)
+#define IS_CODE_SEGMENT_CONFORMING(type)  ((type) & BX_SEGMENT_CODE_CONFORMING)
+#define IS_DATA_SEGMENT_EXPAND_DOWN(type) ((type) & BX_SEGMENT_DATA_EXPAND_DOWN)
+#define IS_CODE_SEGMENT_READABLE(type)    ((type) & BX_SEGMENT_CODE_READ)
+#define IS_DATA_SEGMENT_WRITEABLE(type)   ((type) & BX_SEGMENT_DATA_WRITE)
+#define IS_SEGMENT_ACCESSED(type)         ((type) & BX_SEGMENT_ACCESSED)
 
 #define IS_DATA_SEGMENT(type) (! IS_CODE_SEGMENT(type))
 #define IS_CODE_SEGMENT_NON_CONFORMING(type) \
