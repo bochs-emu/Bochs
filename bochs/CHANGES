@@ -83,6 +83,9 @@ Changes after 2.5.1 release:
   [3486555] Fix critical stack leak in Win32 GUI by Carlo Bramini
 
 - these S.F. bugs were closed/fixed
+  [3535228] info gdt does not show long mode segments
+  [3531806] Bochs crashes (SIGSEGV) when starting via ssh console
+  [3531807] Various missing initialization values reported by Valgrind
    [635789] mapping mode 0 not supported
   [3307201] BOCHS panics when execute HBIOS.COM
   [3528809] IO APIC index register width
@@ -98,12 +101,12 @@ Changes after 2.5.1 release:
   [3493315] Changing VGA 9/8 dot mode causes screen corruption
 
 - these S.F. feature requests were closed/implemented
+  [3409396] sdl sound
   [3519794] debugger's ability to save physical/linear memory dumps
   [1429612] Idea how to speedup simulation - stack direct access
   [1703452] Other Network Devices?
   [2919376] Disable show the console window
    [534271] can't set log action by device (bochsrc)
-  [3409396] sdl sound
 
 -------------------------------------------------------------------------
 Changes in 2.5.1 (January 6, 2012):
