@@ -2954,10 +2954,10 @@ void bx_dbg_print_descriptor(Bit32u lo, Bit32u hi)
     // either a code or a data segment. bit 11 (type file MSB) then says
     // 0=data segment, 1=code seg
     if (IS_CODE_SEGMENT(type)) {
-      dbg_printf("Code segment, base=0x%08x, limit=0x%08x, %s%s%s",
+      dbg_printf("Code segment, base=0x%08x, limit=0x%08x, %s, %s%s",
         base, g ? (limit * 4096 + 4095) : limit,
         IS_CODE_SEGMENT_READABLE(type) ? "Execute/Read" : "Execute-Only",
-        IS_CODE_SEGMENT_CONFORMING(type)? ", Conforming" : "Non-Conforming",
+        IS_CODE_SEGMENT_CONFORMING(type)? "Conforming" : "Non-Conforming",
         IS_SEGMENT_ACCESSED(type)? ", Accessed" : "");
 #if BX_SUPPORT_X86_64
       if (l && !d_b)
