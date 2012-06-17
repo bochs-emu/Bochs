@@ -84,6 +84,7 @@ typedef struct {
     bx_bool resume;          //(bit 2)
     bx_bool error_interrupt; //(bit 1)
     bx_bool interrupt;       //(bit 0)
+    Bit8u   status2; // bit 0 and 1 are used to generate the interrupt
   } usb_status;
 
   // Interrupt Enable Register
@@ -202,7 +203,7 @@ private:
 
   USBPacket usb_packet;
 
-  static void set_irq_level(bx_bool level);
+  static void update_irq(void);
 
   static void init_device(Bit8u port, bx_list_c *portconf);
   static void remove_device(Bit8u port);

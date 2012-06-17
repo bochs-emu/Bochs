@@ -240,6 +240,7 @@ void bx_usb_uhci_c::reset(unsigned type)
   BX_UHCI_THIS hub.usb_status.host_error = 0;
   BX_UHCI_THIS hub.usb_status.host_halted = 0;
   BX_UHCI_THIS hub.usb_status.interrupt = 0;
+  BX_UHCI_THIS hub.usb_status.status2 = 0;
   BX_UHCI_THIS hub.usb_status.pci_error = 0;
   BX_UHCI_THIS hub.usb_status.resume = 0;
   BX_UHCI_THIS hub.usb_enable.short_packet = 0;
@@ -294,6 +295,7 @@ void bx_usb_uhci_c::register_state(void)
   new bx_shadow_bool_c(usb_st, "resume", &BX_UHCI_THIS hub.usb_status.resume);
   new bx_shadow_bool_c(usb_st, "error_interrupt", &BX_UHCI_THIS hub.usb_status.error_interrupt);
   new bx_shadow_bool_c(usb_st, "interrupt", &BX_UHCI_THIS hub.usb_status.interrupt);
+  new bx_shadow_num_c(usb_st, "status2", &BX_UHCI_THIS hub.usb_status.status2, BASE_HEX);
   usb_en = new bx_list_c(hub, "usb_enable");
   new bx_shadow_bool_c(usb_en, "short_packet", &BX_UHCI_THIS hub.usb_enable.short_packet);
   new bx_shadow_bool_c(usb_en, "on_complete", &BX_UHCI_THIS hub.usb_enable.on_complete);
@@ -375,8 +377,20 @@ void bx_usb_uhci_c::remove_device(Bit8u port)
   }
 }
 
-void bx_usb_uhci_c::set_irq_level(bx_bool level)
+void bx_usb_uhci_c::update_irq()
 {
+  bx_bool level;
+
+  if (((BX_UHCI_THIS hub.usb_status.status2 & 1) && (BX_UHCI_THIS hub.usb_enable.on_complete)) ||
+      ((BX_UHCI_THIS hub.usb_status.status2 & 2) && (BX_UHCI_THIS hub.usb_enable.short_packet)) ||
+      ((BX_UHCI_THIS hub.usb_status.error_interrupt) && (BX_UHCI_THIS hub.usb_enable.timeout_crc)) ||
+      ((BX_UHCI_THIS hub.usb_status.resume) && (BX_UHCI_THIS hub.usb_enable.resume)) ||
+      (BX_UHCI_THIS hub.usb_status.pci_error) ||
+      (BX_UHCI_THIS hub.usb_status.host_error)) {
+    level = 1;
+  } else {
+    level = 0;
+  }
   DEV_pci_set_irq(BX_UHCI_THIS hub.devfunc, BX_UHCI_THIS pci_conf[0x3d], level);
 }
 
@@ -571,6 +585,10 @@ void bx_usb_uhci_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_UHCI_THIS hub.usb_status.resume = (value & 0x04) ? 0: BX_UHCI_THIS hub.usb_status.resume;
       BX_UHCI_THIS hub.usb_status.error_interrupt = (value & 0x02) ? 0: BX_UHCI_THIS hub.usb_status.error_interrupt;
       BX_UHCI_THIS hub.usb_status.interrupt = (value & 0x01) ? 0: BX_UHCI_THIS hub.usb_status.interrupt;
+      if (value & 0x01) {
+        BX_UHCI_THIS hub.usb_status.status2 = 0;
+      }
+      update_irq();
       break;
 
     case 0x04: // interrupt enable register (16-bit)
@@ -591,6 +609,7 @@ void bx_usb_uhci_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (value & 0x02) {
         BX_DEBUG(("Host set Enable Interrupt on Resume"));
       }
+      update_irq();
       break;
 
     case 0x06: // frame number register (16-bit)
@@ -716,8 +735,6 @@ void bx_usb_uhci_c::usb_timer(void)
   }
   if (BX_UHCI_THIS hub.usb_command.schedule) {
     BX_UHCI_THIS busy = 1;
-    bx_bool fire_int = 0;
-    set_irq_level(0);  // make sure it is low
     bx_bool interrupt = 0, shortpacket = 0, stalled = 0;
     struct TD td;
     struct HCSTACK stack[USB_STACK_SIZE+1];  // queue stack for this item only
@@ -815,21 +832,21 @@ void bx_usb_uhci_c::usb_timer(void)
 
       // set the status register bit:0 to 1 if SPD is enabled
       // and if interrupts not masked via interrupt register, raise irq interrupt.
+      BX_UHCI_THIS hub.usb_status.status2 = (shortpacket) ? 2 : 0;
       if (shortpacket && BX_UHCI_THIS hub.usb_enable.short_packet) {
-        fire_int = 1;
         BX_DEBUG((" [SPD] We want it to fire here (Frame: %04i)", BX_UHCI_THIS hub.usb_frame_num.frame_num));
       }
 
       // if one of the TD's in this frame had the ioc bit set, we need to
       //   raise an interrupt, if interrupts are not masked via interrupt register.
       //   always set the status register if IOC.
+      BX_UHCI_THIS hub.usb_status.status2 |= interrupt;
       if (interrupt && BX_UHCI_THIS hub.usb_enable.on_complete) {
-        fire_int = 1;
         BX_DEBUG((" [IOC] We want it to fire here (Frame: %04i)", BX_UHCI_THIS hub.usb_frame_num.frame_num));
       }
 
+      BX_UHCI_THIS hub.usb_status.error_interrupt = stalled;
       if (stalled && BX_UHCI_THIS hub.usb_enable.timeout_crc) {
-        fire_int = 1;
         BX_DEBUG((" [stalled] We want it to fire here (Frame: %04i)", BX_UHCI_THIS hub.usb_frame_num.frame_num));
       }
     }
@@ -838,16 +855,12 @@ void bx_usb_uhci_c::usb_timer(void)
     BX_UHCI_THIS hub.usb_frame_num.frame_num++;
     BX_UHCI_THIS hub.usb_frame_num.frame_num &= (1024-1);
 
-    // if we needed to fire an interrupt now, lets do it *after* we increment the frame_num register
-    if (fire_int) {
-      BX_UHCI_THIS hub.usb_status.interrupt = 1;
-      BX_UHCI_THIS hub.usb_status.error_interrupt = stalled;
-      set_irq_level(1);
-    }
-
     // The status.interrupt bit should be set regardless of the enable bits if a IOC or SPD is found
-    if (shortpacket || interrupt)
+    if (BX_UHCI_THIS hub.usb_status.status2 != 0) {
       BX_UHCI_THIS hub.usb_status.interrupt = 1;
+    }
+    // if we needed to fire an interrupt now, lets do it *after* we increment the frame_num register
+    update_irq();
 
     BX_UHCI_THIS busy = 0;  // ready to do next frame item
   }  // end run schedule
@@ -933,7 +946,8 @@ bx_bool bx_usb_uhci_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *t
       break;
     default:
       BX_UHCI_THIS hub.usb_status.host_error = 1;
-      BX_UHCI_THIS set_irq_level(1);
+      update_irq();
+      return 0;
   }
   if (ret >= 0) {
     BX_UHCI_THIS set_status(td, 0, 0, 0, 0, 0, 0, len-1);
@@ -1103,8 +1117,8 @@ void bx_usb_uhci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
           BX_UHCI_THIS hub.usb_status.resume = 1;
           if (BX_UHCI_THIS hub.usb_enable.resume) {
             BX_UHCI_THIS hub.usb_status.interrupt = 1;
-            set_irq_level(1);
           }
+          update_irq();
         }
 
         if (!device->get_connected()) {
