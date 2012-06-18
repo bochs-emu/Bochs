@@ -229,8 +229,8 @@ void print_tree(bx_param_c *node, int level = 0);
         if (bx_guard.report.io) bx_dbg_io_report(port, size, op, val)
 #  define BX_DBG_LIN_MEMORY_ACCESS(cpu, lin, phy, len, pl, rw, data) \
         bx_dbg_lin_memory_access(cpu, lin, phy, len, pl, rw, data)
-#  define BX_DBG_PHY_MEMORY_ACCESS(cpu, phy, len, rw, attr, data) \
-        bx_dbg_phy_memory_access(cpu, phy, len, rw, attr, data)
+#  define BX_DBG_PHY_MEMORY_ACCESS(cpu, phy, len, rw, why, data) \
+        bx_dbg_phy_memory_access(cpu, phy, len, rw, why, data)
 #else  // #if BX_DEBUGGER
 // debugger not compiled in, use empty stubs
 #  define BX_DBG_ASYNC_INTR 1

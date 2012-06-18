@@ -65,9 +65,7 @@ void bx_instr_inp2(Bit16u addr, unsigned len, unsigned val);
 void bx_instr_outp(Bit16u addr, unsigned len, unsigned val);
 
 void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_address phy, unsigned len, unsigned rw);
-
-void bx_instr_phy_write(unsigned cpu, bx_address addr, unsigned len);
-void bx_instr_phy_read(unsigned cpu, bx_address addr, unsigned len);
+void bx_instr_phy_access(unsigned cpu, bx_address phy, unsigned len, unsigned rw);
 
 void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 
@@ -117,12 +115,11 @@ void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 #define BX_INSTR_AFTER_EXECUTION(cpu_id, i)   bx_instr_after_execution(cpu_id, i)
 #define BX_INSTR_REPEAT_ITERATION(cpu_id, i)  bx_instr_repeat_iteration(cpu_id, i)
 
-/* memory access */
+/* linear memory access */
 #define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, rw)  bx_instr_lin_access(cpu_id, lin, phy, len, rw)
 
-/* called from memory object */
-#define BX_INSTR_PHY_WRITE(cpu_id, addr, len) bx_instr_phy_write(cpu_id, addr, len)
-#define BX_INSTR_PHY_READ(cpu_id, addr, len)  bx_instr_phy_read(cpu_id, addr, len)
+/* physical memory access */
+#define BX_INSTR_PHY_ACCESS(cpu_id, phy, len, rw)  bx_instr_phy_access(cpu_id, phy, len, rw)
 
 /* feedback from device units */
 #define BX_INSTR_INP(addr, len)               bx_instr_inp(addr, len)
@@ -174,12 +171,11 @@ void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 #define BX_INSTR_AFTER_EXECUTION(cpu_id, i)
 #define BX_INSTR_REPEAT_ITERATION(cpu_id, i)
 
-/* memory access */
+/* linear memory access */
 #define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, rw)
 
-/* called from memory object */
-#define BX_INSTR_PHY_WRITE(cpu_id, addr, len)
-#define BX_INSTR_PHY_READ(cpu_id, addr, len)
+/* physical memory access */
+#define BX_INSTR_PHY_ACCESS(cpu_id, phy, len, rw)
 
 /* feedback from device units */
 #define BX_INSTR_INP(addr, len)

@@ -26,7 +26,8 @@ Changes after 2.5.1 release:
     debugger and Bochs debugger GUI through param tree interfaces
   - Implemented 'writemem' debugger command to dump virtual memory block
     starting from selected linear address into a file
-  - Updated / Fixed instrumentation examples
+  - Updated definition of instrumentation callbacks, see description in
+    instrumentation.txt / Fixed instrumentation examples
 
 - Configure and compile
   - Moved networking, sound and USB devices to subdirectories in iodev.

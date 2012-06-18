@@ -94,9 +94,7 @@ void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsig
 #define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, rw) \
                 bx_instr_lin_access(cpu_id, lin, phy, len, rw)
 
-/* called from memory object */
-#define BX_INSTR_PHY_WRITE(cpu_id, addr, len)
-#define BX_INSTR_PHY_READ(cpu_id, addr, len)
+#define BX_INSTR_PHY_ACCESS(cpu_id, phy, len, rw)
 
 /* feedback from device units */
 #define BX_INSTR_INP(addr, len)
@@ -148,12 +146,11 @@ void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsig
 #define BX_INSTR_AFTER_EXECUTION(cpu_id, i)
 #define BX_INSTR_REPEAT_ITERATION(cpu_id, i)
 
-/* memory access */
+/* linear memory access */
 #define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, rw)
 
-/* called from memory object */
-#define BX_INSTR_PHY_WRITE(cpu_id, addr, len)
-#define BX_INSTR_PHY_READ(cpu_id, addr, len)
+/* physical memory access */
+#define BX_INSTR_PHY_ACCESS(cpu_id, phy, len, rw)
 
 /* feedback from device units */
 #define BX_INSTR_INP(addr, len)
