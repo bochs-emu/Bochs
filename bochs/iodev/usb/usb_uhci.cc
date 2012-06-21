@@ -832,7 +832,7 @@ void bx_usb_uhci_c::usb_timer(void)
 
       // set the status register bit:0 to 1 if SPD is enabled
       // and if interrupts not masked via interrupt register, raise irq interrupt.
-      BX_UHCI_THIS hub.usb_status.status2 = (shortpacket) ? 2 : 0;
+      if (shortpacket) BX_UHCI_THIS hub.usb_status.status2 |= 2;
       if (shortpacket && BX_UHCI_THIS hub.usb_enable.short_packet) {
         BX_DEBUG((" [SPD] We want it to fire here (Frame: %04i)", BX_UHCI_THIS hub.usb_frame_num.frame_num));
       }
@@ -845,7 +845,7 @@ void bx_usb_uhci_c::usb_timer(void)
         BX_DEBUG((" [IOC] We want it to fire here (Frame: %04i)", BX_UHCI_THIS hub.usb_frame_num.frame_num));
       }
 
-      BX_UHCI_THIS hub.usb_status.error_interrupt = stalled;
+      BX_UHCI_THIS hub.usb_status.error_interrupt |= stalled;
       if (stalled && BX_UHCI_THIS hub.usb_enable.timeout_crc) {
         BX_DEBUG((" [stalled] We want it to fire here (Frame: %04i)", BX_UHCI_THIS hub.usb_frame_num.frame_num));
       }
@@ -856,7 +856,7 @@ void bx_usb_uhci_c::usb_timer(void)
     BX_UHCI_THIS hub.usb_frame_num.frame_num &= (1024-1);
 
     // The status.interrupt bit should be set regardless of the enable bits if a IOC or SPD is found
-    if (BX_UHCI_THIS hub.usb_status.status2 != 0) {
+    if (interrupt || shortpacket) {
       BX_UHCI_THIS hub.usb_status.interrupt = 1;
     }
     // if we needed to fire an interrupt now, lets do it *after* we increment the frame_num register
