@@ -398,6 +398,7 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
   } else if (d.type == USB_DEV_TYPE_TABLET) {
     strcpy(d.devname, "USB Tablet");
     DEV_register_removable_mouse((void*)this, mouse_enq_static, mouse_enabled_changed);
+    bx_gui->set_mouse_mode_absxy(1);
   } else if (d.type == USB_DEV_TYPE_KEYPAD) {
     strcpy(d.devname, "USB/PS2 Keypad");
     DEV_register_removable_keyboard((void*)this, key_enq_static);
@@ -412,6 +413,7 @@ usb_hid_device_c::~usb_hid_device_c(void)
 {
   if ((d.type == USB_DEV_TYPE_MOUSE) ||
       (d.type == USB_DEV_TYPE_TABLET)) {
+    bx_gui->set_mouse_mode_absxy(0);
     DEV_unregister_removable_mouse((void*)this);
   } else if (d.type == USB_DEV_TYPE_KEYPAD) {
     DEV_unregister_removable_keyboard((void*)this);
@@ -703,7 +705,7 @@ int usb_hid_device_c::mouse_poll(Bit8u *buf, int len)
       (d.type == USB_DEV_TYPE_KEYPAD)) {
     if (!s.mouse_x && !s.mouse_y) {
       // if there's no new movement, handle delayed one
-      mouse_enq(0, 0, s.mouse_z, s.b_state);
+      mouse_enq(0, 0, s.mouse_z, s.b_state, 0);
     }
     buf[0] = (Bit8u) s.b_state;
     buf[1] = (Bit8s) s.mouse_x;
@@ -734,12 +736,12 @@ void usb_hid_device_c::mouse_enabled_changed(void *dev, bx_bool enabled)
   if (enabled) ((usb_hid_device_c*)dev)->handle_reset();
 }
 
-void usb_hid_device_c::mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state)
+void usb_hid_device_c::mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy)
 {
-  ((usb_hid_device_c*)dev)->mouse_enq(delta_x, delta_y, delta_z, button_state);
+  ((usb_hid_device_c*)dev)->mouse_enq(delta_x, delta_y, delta_z, button_state, absxy);
 }
 
-void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state)
+void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy)
 {
   if (d.type == USB_DEV_TYPE_MOUSE) {
     // scale down the motion
@@ -780,9 +782,13 @@ void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned
     s.mouse_x = (Bit8s) delta_x;
     s.mouse_y = (Bit8s) delta_y;
   } else if (d.type == USB_DEV_TYPE_TABLET) {
-    // FIXME: Bochs gui should generate absolute x/y values if tablet connected
-    s.mouse_x += delta_x;
-    s.mouse_y -= delta_y;
+    if (absxy) {
+      s.mouse_x = delta_x;
+      s.mouse_y = delta_y;
+    } else {
+      s.mouse_x += delta_x;
+      s.mouse_y -= delta_y;
+    }
     if (s.mouse_x < 0)
       s.mouse_x = 0;
     if (s.mouse_y < 0)

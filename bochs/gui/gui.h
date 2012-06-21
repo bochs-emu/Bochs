@@ -136,6 +136,7 @@ public:
   virtual void beep_on(float frequency);
   virtual void beep_off();
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
+  virtual void set_mouse_mode_absxy(bx_bool mode) {}
 
   // The following function(s) are defined already, and your
   // GUI code calls them

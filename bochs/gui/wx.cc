@@ -1081,7 +1081,8 @@ void bx_wx_gui_c::handle_events(void)
         DEV_mouse_motion(
             event_queue[i].u.mouse.dx,
             event_queue[i].u.mouse.dy,
-            event_queue[i].u.mouse.buttons);
+            0,
+            event_queue[i].u.mouse.buttons, 0);
         break;
       default:
         wxLogError (wxT ("handle_events received unhandled event type %d in queue"), (int)event_queue[i].type);

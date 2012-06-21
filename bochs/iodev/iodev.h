@@ -41,7 +41,7 @@ typedef Bit32u (*bx_read_handler_t)(void *, Bit32u, unsigned);
 typedef void   (*bx_write_handler_t)(void *, Bit32u, Bit32u, unsigned);
 
 typedef bx_bool (*bx_keyb_enq_t)(void *, Bit8u *);
-typedef void (*bx_mouse_enq_t)(void *, int, int, int, unsigned);
+typedef void (*bx_mouse_enq_t)(void *, int, int, int, unsigned, bx_bool);
 typedef void (*bx_mouse_enabled_changed_t)(void *, bx_bool);
 
 #if BX_USE_DEV_SMF
@@ -449,7 +449,7 @@ public:
   void unregister_removable_mouse(void *dev);
   bx_bool optional_key_enq(Bit8u *scan_code);
   void mouse_enabled_changed(bx_bool enabled);
-  void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state);
+  void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
 
   static void timer_handler(void *);
   void timer(void);

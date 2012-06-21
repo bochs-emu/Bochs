@@ -1646,7 +1646,7 @@ void rfbMouseMove(int x, int y, int bmask)
     return;
   }
   if(y > rfbHeaderbarY) {
-    DEV_mouse_motion(x - oldx, oldy - y, bmask);
+    DEV_mouse_motion(x - oldx, oldy - y, 0, bmask, 0);
     oldx = x;
     oldy = y;
   } else {

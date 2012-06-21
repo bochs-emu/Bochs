@@ -1620,12 +1620,12 @@ void bx_keyb_c::mouse_enabled_changed(bx_bool enabled)
   BX_DEBUG(("PS/2 mouse %s", enabled?"enabled":"disabled"));
 }
 
-void bx_keyb_c::mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state)
+void bx_keyb_c::mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy)
 {
-  ((bx_keyb_c*)dev)->mouse_motion(delta_x, delta_y, delta_z, button_state);
+  ((bx_keyb_c*)dev)->mouse_motion(delta_x, delta_y, delta_z, button_state, absxy);
 }
 
-void bx_keyb_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state)
+void bx_keyb_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy)
 {
   bx_bool force_enq=0;
 

@@ -74,35 +74,35 @@ struct InputEvent *MyInputHandler(void)
       case IECODE_LBUTTON:
       {
         mouse_button_state |= 0x01;
-        DEV_mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
+        DEV_mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, 0, mouse_button_state, 0);
         return NULL;
       }
 
       case (IECODE_LBUTTON | IECODE_UP_PREFIX):
       {
         mouse_button_state &= ~0x01;
-        DEV_mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
+        DEV_mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, 0, mouse_button_state, 0);
         return NULL;
       }
 
       case IECODE_RBUTTON:
       {
         mouse_button_state |= 0x02;
-        DEV_mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
+        DEV_mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, 0, mouse_button_state, 0);
         return NULL;
       }
 
       case (IECODE_RBUTTON | IECODE_UP_PREFIX):
       {
         mouse_button_state &= 0x01;
-        DEV_mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
+        DEV_mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, 0, mouse_button_state, 0);
         return NULL;
       }
     }
 
     if (event->ie_Class == IECLASS_RAWMOUSE)
     {
-      DEV_mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
+      DEV_mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, 0, mouse_button_state, 0);
       return NULL;
     }
 

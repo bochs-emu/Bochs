@@ -235,8 +235,8 @@ private:
   static void fifo_timer_handler(void *);
   BX_SER_SMF void fifo_timer(void);
 
-  static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state);
-  void mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
+  static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
+  void mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);

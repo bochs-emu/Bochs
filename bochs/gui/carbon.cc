@@ -1052,7 +1052,7 @@ void bx_carbon_gui_c::handle_events(void)
         dy = 0;
       }
 
-      DEV_mouse_motion(dx, dy, mouse_button_state);
+      DEV_mouse_motion(dx, dy, 0, mouse_button_state, 0);
 
       if (!cursorVisible && mouseMoved)
       {

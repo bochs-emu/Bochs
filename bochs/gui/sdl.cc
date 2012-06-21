@@ -987,11 +987,11 @@ void bx_sdl_gui_c::handle_events(void)
 	//fprintf (stderr, "processing relative mouse event\n");
         new_mousebuttons = ((sdl_event.motion.state & 0x01)|((sdl_event.motion.state>>1)&0x02)
                             |((sdl_event.motion.state<<1)&0x04));
-        DEV_mouse_motion_ext(
+        DEV_mouse_motion(
             sdl_event.motion.xrel,
             -sdl_event.motion.yrel,
             wheel_status,
-            new_mousebuttons);
+            new_mousebuttons, 0);
 	old_mousebuttons = new_mousebuttons;
 	old_mousex = (int)(sdl_event.motion.x);
 	old_mousey = (int)(sdl_event.motion.y);
@@ -1047,11 +1047,11 @@ void bx_sdl_gui_c::handle_events(void)
         if(sdl_fullscreen_toggle == 0)
           new_mousebuttons &= 0x07;
         // send motion information
-        DEV_mouse_motion_ext(
+        DEV_mouse_motion(
             new_mousex - old_mousex,
             -(new_mousey - old_mousey),
             wheel_status,
-            new_mousebuttons);
+            new_mousebuttons, 0);
         // mark current state to diff with next packet
         old_mousebuttons = new_mousebuttons;
         old_mousex = new_mousex;

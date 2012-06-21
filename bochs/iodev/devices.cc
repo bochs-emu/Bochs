@@ -977,7 +977,7 @@ void bx_devices_c::mouse_enabled_changed(bx_bool enabled)
   }
 }
 
-void bx_devices_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state)
+void bx_devices_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy)
 {
   // If mouse events are disabled on the GUI headerbar, don't
   // generate any mouse data
@@ -986,13 +986,13 @@ void bx_devices_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned 
 
   // if a removable mouse is connected, redirect mouse data to the device
   if (bx_mouse[1].dev != NULL) {
-    bx_mouse[1].enq_event(bx_mouse[1].dev, delta_x, delta_y, delta_z, button_state);
+    bx_mouse[1].enq_event(bx_mouse[1].dev, delta_x, delta_y, delta_z, button_state, absxy);
     return;
   }
 
   // if a mouse is connected, direct mouse data to the device
   if (bx_mouse[0].dev != NULL) {
-    bx_mouse[0].enq_event(bx_mouse[0].dev, delta_x, delta_y, delta_z, button_state);
+    bx_mouse[0].enq_event(bx_mouse[0].dev, delta_x, delta_y, delta_z, button_state, absxy);
   }
 }
 

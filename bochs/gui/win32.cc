@@ -1433,12 +1433,12 @@ void bx_win32_gui_c::handle_events(void)
     key = queue_event->key_event;
     if (key==MOUSE_MOTION)
     {
-      DEV_mouse_motion_ext(queue_event->mouse_x,
-        queue_event->mouse_y, queue_event->mouse_z, queue_event->mouse_button_state);
+      DEV_mouse_motion(queue_event->mouse_x, queue_event->mouse_y,
+                       queue_event->mouse_z, queue_event->mouse_button_state, 0);
     }
     // Check for mouse buttons first
     else if (key & MOUSE_PRESSED) {
-      DEV_mouse_motion_ext(0, 0, 0, LOWORD(key));
+      DEV_mouse_motion(0, 0, 0, LOWORD(key), 0);
     }
     else if (key & HEADERBAR_CLICKED) {
       headerbar_click(LOWORD(key));

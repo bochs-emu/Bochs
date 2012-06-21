@@ -51,8 +51,8 @@ private:
   static bx_bool key_enq_static(void *dev, Bit8u *scan_code);
   bx_bool key_enq(Bit8u *scan_code);
   static void mouse_enabled_changed(void *dev, bx_bool enabled);
-  static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state);
-  void mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
+  static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
+  void mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
   int mouse_poll(Bit8u *buf, int len);
   int keypad_poll(Bit8u *buf, int len);
 };

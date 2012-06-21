@@ -417,7 +417,7 @@ void mouse_handler(int button, int dx, int dy, int dz,
     bx_bool old = SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get();
     SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set(!old);
   } else {
-    DEV_mouse_motion((int) (0.25 * dx), (int) -(0.25 * dy), buttons);
+    DEV_mouse_motion((int) (0.25 * dx), (int) -(0.25 * dy), 0, buttons, 0);
   }
 }
 

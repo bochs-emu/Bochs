@@ -815,7 +815,7 @@ void bx_macintosh_gui_c::handle_events(void)
     dx = mousePt.h - prevPt.h;
     dy = prevPt.v - mousePt.v;
 
-    DEV_mouse_motion(dx, dy, mouse_button_state);
+    DEV_mouse_motion(dx, dy, 0, mouse_button_state, 0);
 
     if (!cursorVisible)
     {

@@ -65,6 +65,7 @@ public:
   virtual void beep_off();
   virtual void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
+  virtual void set_mouse_mode_absxy(bx_bool mode);
 #if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
 #endif
@@ -1006,7 +1007,7 @@ void send_keyboard_mouse_status(void)
     dz = current_z;
     warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
 
-    DEV_mouse_motion_ext(dx, dy, dz, mouse_button_state);
+    DEV_mouse_motion(dx, dy, dz, mouse_button_state, 0);
     prev_x = current_x;
     prev_y = current_y;
   } else {
@@ -2032,6 +2033,11 @@ void bx_x_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
   XCloseDisplay(dpy);
   // always return 32 bit depth
   *bpp = 32;
+}
+
+void bx_x_gui_c::set_mouse_mode_absxy(bx_bool mode)
+{
+  // TODO
 }
 
 #if BX_SHOW_IPS

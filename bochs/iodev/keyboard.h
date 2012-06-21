@@ -222,8 +222,8 @@ private:
 
   static void mouse_enabled_changed_static(void *dev, bx_bool enabled);
   void mouse_enabled_changed(bx_bool enabled);
-  static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state);
-  void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state);
+  static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
+  void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
 
   static void   timer_handler(void *);
   void   timer(void);

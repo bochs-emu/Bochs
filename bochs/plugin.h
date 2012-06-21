@@ -135,8 +135,7 @@ extern "C" {
 
 #define DEV_register_timer(a,b,c,d,e,f) bx_pc_system.register_timer(a,b,c,d,e,f)
 #define DEV_mouse_enabled_changed(en) (bx_devices.mouse_enabled_changed(en))
-#define DEV_mouse_motion(dx, dy, state) (bx_devices.mouse_motion(dx, dy, 0, state))
-#define DEV_mouse_motion_ext(dx, dy, dz, state) (bx_devices.mouse_motion(dx, dy, dz, state))
+#define DEV_mouse_motion(dx, dy, dz, bs, absxy) (bx_devices.mouse_motion(dx, dy, dz, bs, absxy))
 
 ///////// Removable devices macros
 #define DEV_optional_key_enq(a) (bx_devices.optional_key_enq(a))
