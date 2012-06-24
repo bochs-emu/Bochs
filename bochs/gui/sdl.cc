@@ -335,13 +335,12 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned header_bar_y)
         SDL_EnableKeyRepeat(0, 0);
 #if !defined(WIN32) && BX_DEBUGGER && BX_DEBUGGER_GUI
       } else if (!strcmp(argv[i], "gui_debug")) {
-        extern void InitDebugDialog();
         SIM->set_debug_gui(1);
         // redirect notify callback to sdl specific code
         SIM->get_notify_callback (&old_callback, &old_callback_arg);
         assert (old_callback != NULL);
         SIM->set_notify_callback (sdl_notify_callback, NULL);
-        InitDebugDialog();
+        init_debug_dialog();
 #endif
 #if BX_SHOW_IPS
       } else if (!strcmp(argv[i], "hideIPS")) {

@@ -911,7 +911,7 @@ VOID CDECL UIThread(PVOID pvoid)
       ShowWindow(stInfo.mainWnd, SW_SHOW);
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
       if (gui_debug) {
-        InitDebugDialog();
+        bx_gui->init_debug_dialog();
       }
 #endif
 #if BX_SHOW_IPS

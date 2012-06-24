@@ -656,9 +656,8 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
         x11_nokeyrepeat = 1;
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
       } else if (!strcmp(argv[i], "gui_debug")) {
-        void InitDebugDialog();
         SIM->set_debug_gui(1);
-        InitDebugDialog();
+        init_debug_dialog();
 #endif
 #if BX_SHOW_IPS
       } else if (!strcmp(argv[i], "hideIPS")) {

@@ -1093,7 +1093,7 @@ void LoadRegList()
         {
             RitemToRnum[itemnum] = i;
 
-            if (In64Mode && (i == CR2_Rnum || i == CR3_RNum))
+            if (In64Mode && (i == CR2_Rnum || i == CR3_Rnum))
                 sprintf(regtxt,Fmt64b[UprCase],rV[i]);
             else
                 sprintf(regtxt,Fmt32b[UprCase],(Bit32u)rV[i]);

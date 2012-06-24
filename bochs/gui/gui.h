@@ -156,6 +156,9 @@ public:
   static void toggle_mouse_enable(void);
   bx_bool mouse_toggle_check(Bit32u key, bx_bool pressed);
   const char* get_toggle_info(void);
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+  void init_debug_dialog(void);
+#endif
 
 protected:
   // And these are defined and used privately in gui.cc
