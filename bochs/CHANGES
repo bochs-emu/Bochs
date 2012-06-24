@@ -84,6 +84,11 @@ Changes after 2.5.1 release:
   [3486555] Fix critical stack leak in Win32 GUI by Carlo Bramini
 
 - these S.F. bugs were closed/fixed
+  [3537556] Missing initializations
+  [3537309] Unable to use the debug GUI with SDL and plugins
+  [3537473] GUI debugger only shows 32-bit CRx registers in x86-64 mode
+  [3533426] UHCI PCI interrupts
+  [3459359] svga cirrus initialization
   [3535228] info gdt does not show long mode segments
   [3531806] Bochs crashes (SIGSEGV) when starting via ssh console
   [3531807] Various missing initialization values reported by Valgrind
