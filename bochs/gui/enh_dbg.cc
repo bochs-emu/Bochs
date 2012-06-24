@@ -1000,6 +1000,7 @@ void LoadRegList()
     cols[1] = regtxt;
     cols[2] = regtxt + 40;
     itemnum = 0;
+#if BX_SUPPORT_X86_64
     if (In64Mode)
     {
         showEreg = SeeReg[0];       // get user option setting for EAX, etc.
@@ -1013,6 +1014,7 @@ void LoadRegList()
             ++itemnum;
         }
     }
+#endif
 
     // then 32bit GP registers (if appropriate)
     if (showEreg != FALSE)
@@ -1481,9 +1483,9 @@ void FillIDT()
     char *cols[18];
     char idttxt[80];
     unsigned int mode = 0;
-    if (In32Mode != FALSE)
+    if (In32Mode)
         mode = 1;
-    if (In64Mode != FALSE)
+    if (In64Mode)
         mode = 2;
     doDumpRefresh = FALSE;
 
@@ -1690,7 +1692,7 @@ void FillStack()
     wordsize = 4;       // assume Pmode
     if (In32Mode == FALSE)
         wordsize = 2;
-    else if (In64Mode != FALSE)
+    else if (In64Mode)
         wordsize = 8;
     len = STACK_ENTRIES * wordsize;
 
