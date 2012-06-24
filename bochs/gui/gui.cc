@@ -93,7 +93,7 @@ static user_key_t user_keys[N_USER_KEYS] =
   { "power", BX_KEY_POWER_POWER }
 };
 
-bx_gui_c::bx_gui_c(void)
+bx_gui_c::bx_gui_c(void): disp_mode(DISP_MODE_SIM)
 {
   put("GUI"); // Init in specific_init
   statusitem_count = 0;

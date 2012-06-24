@@ -1084,6 +1084,10 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR trace = 0;
   BX_CPU_THIS_PTR trace_reg = 0;
   BX_CPU_THIS_PTR trace_mem = 0;
+  BX_CPU_THIS_PTR mode_break = 0;
+#if BX_SUPPORT_VMX
+  BX_CPU_THIS_PTR vmexit_break = 0;
+#endif
 #endif
 
   // Reset the Floating Point Unit
