@@ -1090,7 +1090,12 @@ void LoadRegList()
         for(i = CR0_Rnum; i <= EFER_Rnum; i++)
         {
             RitemToRnum[itemnum] = i;
-            sprintf(regtxt,"%08X",(Bit32u)rV[i]);
+
+            if (In64Mode && (i == CR2_Rnum || i == CR3_RNum))
+                sprintf(regtxt,Fmt64b[UprCase],rV[i]);
+            else
+                sprintf(regtxt,Fmt32b[UprCase],(Bit32u)rV[i]);
+
             cols[0] = RDispName[i];
             InsertListRow(cols, 2, REG_WND, itemnum, 2);    // 2 cols, group 2
             ++itemnum;
