@@ -50,6 +50,7 @@ public:
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
   virtual void set_display_mode(disp_mode_t newmode);
   virtual void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
+  virtual void set_mouse_mode_absxy(bx_bool mode);
 #if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
 #endif
@@ -114,7 +115,8 @@ Uint32 headerbar_fg, headerbar_bg;
 Bit8u old_mousebuttons=0, new_mousebuttons=0;
 int old_mousex=0, new_mousex=0;
 int old_mousey=0, new_mousey=0;
-bx_bool just_warped = false;
+bx_bool just_warped = 0;
+bx_bool sdl_mouse_mode_absxy = 0;
 bitmaps *sdl_bitmaps[MAX_SDL_BITMAPS];
 int n_sdl_bitmaps = 0;
 int statusbar_height = 18;
@@ -953,7 +955,7 @@ void bx_sdl_gui_c::handle_events(void)
 {
   Bit32u key_event;
   Bit8u mouse_state;
-  int wheel_status;
+  int dx, dy, wheel_status;
   bx_bool mouse_toggle = 0;
 
   while(SDL_PollEvent(&sdl_event))
@@ -962,42 +964,44 @@ void bx_sdl_gui_c::handle_events(void)
     switch(sdl_event.type)
     {
       case SDL_VIDEOEXPOSE:
-	if(sdl_fullscreen_toggle == 0)
-	  SDL_UpdateRect(sdl_screen, 0,0, res_x, res_y+headerbar_height+statusbar_height);
-	else
-	  SDL_UpdateRect(sdl_fullscreen, 0, headerbar_height, res_x, res_y);
-	break;
+        if (sdl_fullscreen_toggle == 0)
+          SDL_UpdateRect(sdl_screen, 0,0, res_x, res_y+headerbar_height+statusbar_height);
+        else
+          SDL_UpdateRect(sdl_fullscreen, 0, headerbar_height, res_x, res_y);
+        break;
 
       case SDL_MOUSEMOTION:
-	//fprintf (stderr, "mouse event to (%d,%d), relative (%d,%d)\n", (int)(sdl_event.motion.x), (int)(sdl_event.motion.y), (int)sdl_event.motion.xrel, (int)sdl_event.motion.yrel);
-	if (!sdl_grab) {
-	  //fprintf (stderr, "ignore mouse event because sdl_grab is off\n");
-	  break;
-	}
-	if (just_warped
-	    && sdl_event.motion.x == half_res_x
-	    && sdl_event.motion.y == half_res_y) {
-	  // This event was generated as a side effect of the WarpMouse,
-	  // and it must be ignored.
-	  //fprintf (stderr, "ignore mouse event because it is a side effect of SDL_WarpMouse\n");
-	  just_warped = false;
-	  break;
-	}
-	//fprintf (stderr, "processing relative mouse event\n");
+        if (!sdl_grab) {
+          break;
+        }
+        if (just_warped
+            && sdl_event.motion.x == half_res_x
+            && sdl_event.motion.y == half_res_y) {
+          // This event was generated as a side effect of the WarpMouse,
+          // and it must be ignored.
+          just_warped = 0;
+          break;
+        }
         new_mousebuttons = ((sdl_event.motion.state & 0x01)|((sdl_event.motion.state>>1)&0x02)
                             |((sdl_event.motion.state<<1)&0x04));
-        DEV_mouse_motion(
-            sdl_event.motion.xrel,
-            -sdl_event.motion.yrel,
-            wheel_status,
-            new_mousebuttons, 0);
-	old_mousebuttons = new_mousebuttons;
-	old_mousex = (int)(sdl_event.motion.x);
-	old_mousey = (int)(sdl_event.motion.y);
-	//fprintf (stderr, "warping mouse to center\n");
-	SDL_WarpMouse(half_res_x, half_res_y);
-	just_warped = 1;
-	break;
+        if (sdl_mouse_mode_absxy) {
+          if ((sdl_event.motion.y > headerbar_height) && (sdl_event.motion.y < (res_y + headerbar_height))) {
+            dx = sdl_event.motion.x * 0x7fff / (res_x - 1);
+            dy = (sdl_event.motion.y - headerbar_height) * 0x7fff / (res_y - 1);
+            DEV_mouse_motion(dx, dy, wheel_status, new_mousebuttons, 1);
+          }
+        } else {
+          DEV_mouse_motion(sdl_event.motion.xrel, -sdl_event.motion.yrel,
+                           wheel_status,  new_mousebuttons, 0);
+        }
+        old_mousebuttons = new_mousebuttons;
+        old_mousex = (int)(sdl_event.motion.x);
+        old_mousey = (int)(sdl_event.motion.y);
+        if (!sdl_mouse_mode_absxy) {
+          SDL_WarpMouse(half_res_x, half_res_y);
+          just_warped = 1;
+        }
+        break;
 
       case SDL_MOUSEBUTTONDOWN:
         // mouse capture toggle-check
@@ -1046,11 +1050,16 @@ void bx_sdl_gui_c::handle_events(void)
         if(sdl_fullscreen_toggle == 0)
           new_mousebuttons &= 0x07;
         // send motion information
-        DEV_mouse_motion(
-            new_mousex - old_mousex,
-            -(new_mousey - old_mousey),
-            wheel_status,
-            new_mousebuttons, 0);
+        if (sdl_mouse_mode_absxy) {
+          if ((new_mousey > headerbar_height) && (new_mousey < (res_y + headerbar_height))) {
+            dx = new_mousex * 0x7fff / (res_x - 1);
+            dy = (new_mousey - headerbar_height) * 0x7fff / (res_y - 1);
+            DEV_mouse_motion(dx, dy, wheel_status, new_mousebuttons, 1);
+          }
+        } else {
+          DEV_mouse_motion(new_mousex - old_mousex, -(new_mousey - old_mousey),
+                           wheel_status, new_mousebuttons, 0);
+        }
         // mark current state to diff with next packet
         old_mousebuttons = new_mousebuttons;
         old_mousex = new_mousex;
@@ -1600,6 +1609,11 @@ void bx_sdl_gui_c::set_display_mode(disp_mode_t newmode)
         break;
     }
   }
+}
+
+void bx_sdl_gui_c::set_mouse_mode_absxy(bx_bool mode)
+{
+  sdl_mouse_mode_absxy = mode;
 }
 
 #if BX_SHOW_IPS
