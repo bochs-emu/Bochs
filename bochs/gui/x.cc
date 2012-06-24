@@ -114,6 +114,7 @@ static bx_bool mouse_captured = 0;
 static int prev_x=-1, prev_y=-1;
 static int current_x=-1, current_y=-1, current_z=0;
 static unsigned mouse_button_state = 0;
+static bx_bool x11_mouse_mode_absxy = 0;
 
 static int warp_home_x = 200;
 static int warp_home_y = 200;
@@ -994,13 +995,23 @@ void bx_x_gui_c::handle_events(void)
 
 void send_keyboard_mouse_status(void)
 {
-   BX_DEBUG(("XXX: prev=(%d,%d) curr=(%d,%d)",
-                        prev_x, prev_y, current_x, current_y));
+  int dx, dy, dz;
+  BX_DEBUG(("XXX: prev=(%d,%d) curr=(%d,%d)",
+            prev_x, prev_y, current_x, current_y));
 
+  if (x11_mouse_mode_absxy) {
+    if ((current_y > bx_headerbar_y) && (current_y < (dimension_y + bx_headerbar_y))) {
+      dx = current_x * 0x7fff / (dimension_x - 1);
+      dy = (current_y - bx_headerbar_y) * 0x7fff / (dimension_y - 1);
+      dz = current_z;
+      DEV_mouse_motion(dx, dy, dz, mouse_button_state, 1);
+    }
+    prev_x = current_x;
+    prev_y = current_y;
+    return;
+  }
   if (((prev_x!=-1) && (current_x!=-1) && (prev_y!=-1) && (current_y!=-1)) ||
      (current_z != 0)) {
-    int dx, dy, dz;
-
     // (mch) consider warping here
     dx = current_x - prev_x - warp_dx;
     dy = -(current_y - prev_y - warp_dy);
@@ -2037,7 +2048,7 @@ void bx_x_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
 
 void bx_x_gui_c::set_mouse_mode_absxy(bx_bool mode)
 {
-  // TODO
+  x11_mouse_mode_absxy = mode;
 }
 
 #if BX_SHOW_IPS

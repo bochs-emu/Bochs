@@ -203,7 +203,7 @@ static const Bit8u bx_tablet_hid_descriptor[] = {
 
 static const Bit8u bx_tablet_hid_report_descriptor[] = {
   0x05, 0x01, /* Usage Page Generic Desktop */
-  0x09, 0x01, /* Usage Mouse */
+  0x09, 0x01, /* Usage Pointer */
   0xA1, 0x01, /* Collection Application */
   0x09, 0x01, /* Usage Pointer */
   0xA1, 0x00, /* Collection Physical */
@@ -224,7 +224,7 @@ static const Bit8u bx_tablet_hid_report_descriptor[] = {
   0x15, 0x00, /* Logical Minimum 0 */
   0x26, 0xFF, 0x7F, /* Logical Maximum 0x7fff */
   0x35, 0x00, /* Physical Minimum 0 */
-  0x46, 0xFE, 0x7F, /* Physical Maximum 0x7fff */
+  0x46, 0xFF, 0x7F, /* Physical Maximum 0x7fff */
   0x75, 0x10, /* Report Size 16 */
   0x95, 0x02, /* Report Count 2 */
   0x81, 0x02, /* Input (Data, Var, Abs) */
@@ -236,7 +236,7 @@ static const Bit8u bx_tablet_hid_report_descriptor[] = {
   0x45, 0x00, /* Physical Maximum 0 (same as logical) */
   0x75, 0x08, /* Report Size 8 */
   0x95, 0x01, /* Report Count 1 */
-  0x81, 0x02, /* Input (Data, Var, Rel) */
+  0x81, 0x06, /* Input (Data, Var, Rel) */
   0xC0,       /* End Collection */
   0xC0,       /* End Collection */
 };
