@@ -52,6 +52,7 @@ public:
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
   void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
   void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
+  virtual void set_mouse_mode_absxy(bx_bool mode);
 #if BX_SHOW_IPS
   void show_ips(Bit32u ips_count);
 #endif
@@ -158,6 +159,7 @@ static unsigned long  rfbCursorX = 0;
 static unsigned long  rfbCursorY = 0;
 static unsigned long  rfbOriginLeft  = 0;
 static unsigned long  rfbOriginRight = 0;
+static bx_bool  rfbMouseModeAbsXY = 0;
 static unsigned  rfbStatusbarY = 18;
 static unsigned rfbStatusitemPos[12] = {
   0, 170, 210, 250, 290, 330, 370, 410, 450, 490, 530, 570
@@ -1638,7 +1640,7 @@ void rfbMouseMove(int x, int y, int bmask)
 {
   static int oldx = -1;
   static int oldy = -1;
-  int xorigin;
+  int dx, dy, xorigin;
 
   if ((oldx == 1) && (oldy == -1)) {
     oldx = x;
@@ -1646,7 +1648,15 @@ void rfbMouseMove(int x, int y, int bmask)
     return;
   }
   if(y > rfbHeaderbarY) {
-    DEV_mouse_motion(x - oldx, oldy - y, 0, bmask, 0);
+    if (rfbMouseModeAbsXY) {
+      if ((y >= rfbHeaderbarY) && (y < (rfbDimensionY + rfbHeaderbarY))) {
+        dx = x * 0x7fff / rfbDimensionX;
+        dy = (y - rfbHeaderbarY) * 0x7fff / rfbDimensionY;
+        DEV_mouse_motion(dx, dy, 0, bmask, 1);
+      }
+    } else {
+      DEV_mouse_motion(x - oldx, oldy - y, 0, bmask, 0);
+    }
     oldx = x;
     oldy = y;
   } else {
@@ -1679,6 +1689,11 @@ void bx_rfb_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
     *yres = BX_RFB_DEF_YDIM;
   }
   *bpp = 8;
+}
+
+void bx_rfb_gui_c::set_mouse_mode_absxy(bx_bool mode)
+{
+  rfbMouseModeAbsXY = mode;
 }
 
 #if BX_SHOW_IPS

@@ -999,9 +999,9 @@ void send_keyboard_mouse_status(void)
             prev_x, prev_y, current_x, current_y));
 
   if (x11_mouse_mode_absxy) {
-    if ((current_y > bx_headerbar_y) && (current_y < (dimension_y + bx_headerbar_y))) {
-      dx = current_x * 0x7fff / (dimension_x - 1);
-      dy = (current_y - bx_headerbar_y) * 0x7fff / (dimension_y - 1);
+    if ((current_y >= bx_headerbar_y) && (current_y < (dimension_y + bx_headerbar_y))) {
+      dx = current_x * 0x7fff / dimension_x;
+      dy = (current_y - bx_headerbar_y) * 0x7fff / dimension_y;
       dz = current_z;
       DEV_mouse_motion(dx, dy, dz, mouse_button_state, 1);
     }
@@ -1717,6 +1717,8 @@ void bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsi
     XResizeWindow(bx_x_display, win, x, y+bx_headerbar_y+bx_statusbar_y);
     dimension_x = x;
     dimension_y = y;
+    warp_home_x = x / 2;
+    warp_home_y = y / 2;
   }
 }
 

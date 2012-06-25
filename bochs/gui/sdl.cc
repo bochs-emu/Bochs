@@ -985,9 +985,9 @@ void bx_sdl_gui_c::handle_events(void)
         new_mousebuttons = ((sdl_event.motion.state & 0x01)|((sdl_event.motion.state>>1)&0x02)
                             |((sdl_event.motion.state<<1)&0x04));
         if (sdl_mouse_mode_absxy) {
-          if ((sdl_event.motion.y > headerbar_height) && (sdl_event.motion.y < (res_y + headerbar_height))) {
-            dx = sdl_event.motion.x * 0x7fff / (res_x - 1);
-            dy = (sdl_event.motion.y - headerbar_height) * 0x7fff / (res_y - 1);
+          if ((sdl_event.motion.y >= headerbar_height) && (sdl_event.motion.y < (res_y + headerbar_height))) {
+            dx = sdl_event.motion.x * 0x7fff / res_x;
+            dy = (sdl_event.motion.y - headerbar_height) * 0x7fff / res_y;
             DEV_mouse_motion(dx, dy, wheel_status, new_mousebuttons, 1);
           }
         } else {
@@ -1051,9 +1051,9 @@ void bx_sdl_gui_c::handle_events(void)
           new_mousebuttons &= 0x07;
         // send motion information
         if (sdl_mouse_mode_absxy) {
-          if ((new_mousey > headerbar_height) && (new_mousey < (res_y + headerbar_height))) {
-            dx = new_mousex * 0x7fff / (res_x - 1);
-            dy = (new_mousey - headerbar_height) * 0x7fff / (res_y - 1);
+          if ((new_mousey >= headerbar_height) && (new_mousey < (res_y + headerbar_height))) {
+            dx = new_mousex * 0x7fff / res_x;
+            dy = (new_mousey - headerbar_height) * 0x7fff / res_y;
             DEV_mouse_motion(dx, dy, wheel_status, new_mousebuttons, 1);
           }
         } else {
