@@ -49,6 +49,7 @@ public:
   virtual void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
   virtual void set_tooltip(unsigned hbar_id, const char *tip);
+  virtual void set_mouse_mode_absxy(bx_bool mode);
 #if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
 #endif
@@ -96,6 +97,7 @@ static int ms_xdelta=0, ms_ydelta=0, ms_zdelta=0;
 static int ms_lastx=0, ms_lasty=0;
 static int ms_savedx=0, ms_savedy=0;
 static BOOL mouseCaptureMode, mouseCaptureNew, mouseToggleReq;
+static BOOL win32MouseModeAbsXY = 0;
 static UINT_PTR workerThread = 0;
 static DWORD workerThreadID = 0;
 static int mouse_buttons = 3;
@@ -1090,7 +1092,7 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       SetMouseCapture();
     }
     // If mouse escaped, bring it back
-    if (mouseCaptureMode)
+    if (mouseCaptureMode && !win32MouseModeAbsXY)
     {
       pt.x = 0;
       pt.y = 0;
@@ -1383,8 +1385,13 @@ void enq_mouse_event(void)
     }
     QueueEvent& current=keyevents[tail];
     current.key_event=MOUSE_MOTION;
-    current.mouse_x=ms_xdelta;
-    current.mouse_y=ms_ydelta;
+    if (win32MouseModeAbsXY) {
+      current.mouse_x = ms_lastx * 0x7fff / dimension_x;
+      current.mouse_y = ms_lasty * 0x7fff / dimension_y;
+    } else {
+      current.mouse_x = ms_xdelta;
+      current.mouse_y = ms_ydelta;
+    }
     current.mouse_z=ms_zdelta;
     current.mouse_button_state=mouse_button_state;
     resetDelta();
@@ -1434,7 +1441,7 @@ void bx_win32_gui_c::handle_events(void)
     if (key==MOUSE_MOTION)
     {
       DEV_mouse_motion(queue_event->mouse_x, queue_event->mouse_y,
-                       queue_event->mouse_z, queue_event->mouse_button_state, 0);
+                       queue_event->mouse_z, queue_event->mouse_button_state, win32MouseModeAbsXY);
     }
     // Check for mouse buttons first
     else if (key & MOUSE_PRESSED) {
@@ -2186,6 +2193,11 @@ void bx_win32_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
 void bx_win32_gui_c::set_tooltip(unsigned hbar_id, const char *tip)
 {
   bx_headerbar_entry[hbar_id].tooltip = tip;
+}
+
+void bx_win32_gui_c::set_mouse_mode_absxy(bx_bool mode)
+{
+  win32MouseModeAbsXY = mode;
 }
 
 #if BX_SHOW_IPS
