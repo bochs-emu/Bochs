@@ -68,6 +68,7 @@ public:
   DECLARE_GUI_VIRTUAL_METHODS()
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
   void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
+  virtual void set_mouse_mode_absxy(bx_bool mode);
 #if BX_SHOW_IPS
   void show_ips(Bit32u ips_count);
 #endif
@@ -99,6 +100,7 @@ static unsigned wxTileX = 0;
 static unsigned wxTileY = 0;
 static unsigned long wxCursorX = 0;
 static unsigned long wxCursorY = 0;
+static bx_bool wxMouseModeAbsXY = 0;
 static unsigned long wxFontX = 0;
 static unsigned long wxFontY = 0;
 static unsigned int text_rows=25, text_cols=80;
@@ -216,15 +218,23 @@ void MyPanel::ToggleMouse (bool fromToolbar)
     wxMessageBox(msg, wxT("Mouse Capture Enabled"), wxOK | wxICON_INFORMATION);
     first_enable = false;
   }
-  enable->set (en);
-  IFDBG_MOUSE (wxLogDebug (wxT ("now mouse is %sabled", en ? "en" : "dis")));
+  enable->set(en);
+  IFDBG_MOUSE(wxLogDebug (wxT ("now mouse is %sabled", en ? "en" : "dis")));
   if (en) {
     mouseSavedX = wxScreenX / 2;
     mouseSavedY = wxScreenY / 2;
-    WarpPointer (mouseSavedX, mouseSavedY);
-    SetCursor (*blankCursor);
+    WarpPointer(mouseSavedX, mouseSavedY);
+#if defined(__WXMSW__)
+    ShowCursor(0);
+#else
+    SetCursor(*blankCursor);
+#endif
   } else {
-    SetCursor (wxNullCursor);
+#if defined(__WXMSW__)
+    ShowCursor(1);
+#else
+    SetCursor(wxNullCursor);
+#endif
   }
   if (needmutex) wxMutexGuiLeave();
 }
@@ -274,8 +284,13 @@ void MyPanel::OnMouse(wxMouseEvent& event)
       Bit16s dy = y - mouseSavedY;
       IFDBG_MOUSE (wxLogDebug (wxT ("mouse moved by delta %d,%d", dx, dy)));
       event_queue[num_events].type = BX_ASYNC_EVT_MOUSE;
-      event_queue[num_events].u.mouse.dx = dx;
-      event_queue[num_events].u.mouse.dy = -dy;
+      if (wxMouseModeAbsXY) {
+        event_queue[num_events].u.mouse.dx = x * 0x7fff / wxScreenX;
+        event_queue[num_events].u.mouse.dy = y * 0x7fff / wxScreenY;
+      } else {
+        event_queue[num_events].u.mouse.dx = dx;
+        event_queue[num_events].u.mouse.dy = -dy;
+      }
       event_queue[num_events].u.mouse.buttons = buttons;
       num_events++;
       mouseSavedX = x;
@@ -285,9 +300,11 @@ void MyPanel::OnMouse(wxMouseEvent& event)
     }
   }
 
-  mouseSavedX = wxScreenX / 2;
-  mouseSavedY = wxScreenY / 2;
-  WarpPointer (mouseSavedX, mouseSavedY);
+  if (!wxMouseModeAbsXY) {
+    mouseSavedX = wxScreenX / 2;
+    mouseSavedY = wxScreenY / 2;
+    WarpPointer(mouseSavedX, mouseSavedY);
+  }
   // The WarpPointer moves the pointer back to the middle of the
   // screen.  This WILL produce another mouse motion event, which needs
   // to be ignored.  It will be ignored because the new motion event
@@ -1082,7 +1099,7 @@ void bx_wx_gui_c::handle_events(void)
             event_queue[i].u.mouse.dx,
             event_queue[i].u.mouse.dy,
             0,
-            event_queue[i].u.mouse.buttons, 0);
+            event_queue[i].u.mouse.buttons, wxMouseModeAbsXY);
         break;
       default:
         wxLogError (wxT ("handle_events received unhandled event type %d in queue"), (int)event_queue[i].type);
@@ -1672,6 +1689,11 @@ int bx_wx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
   }
   wxMutexGuiLeave();
   return ret;
+}
+
+void bx_wx_gui_c::set_mouse_mode_absxy(bx_bool mode)
+{
+  wxMouseModeAbsXY = mode;
 }
 
 #if BX_SHOW_IPS
