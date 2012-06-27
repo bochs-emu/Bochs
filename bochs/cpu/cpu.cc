@@ -505,6 +505,13 @@ void BX_CPU_C::prefetch(void)
   else
 #endif
   {
+    if (USER_PL && BX_CPU_THIS_PTR get_VIP() && BX_CPU_THIS_PTR get_VIF()) {
+      if (BX_CPU_THIS_PTR cr4.get_PVI() | (v8086_mode() && BX_CPU_THIS_PTR cr4.get_VME())) {
+        BX_ERROR(("prefetch: inconsistent VME state"));
+        exception(BX_GP_EXCEPTION, 0);
+      }
+    }
+
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RIP); /* avoid 32-bit EIP wrap */
     laddr = get_laddr32(BX_SEG_REG_CS, EIP);
     pageOffset = PAGE_OFFSET(laddr);
