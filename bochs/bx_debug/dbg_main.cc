@@ -1002,8 +1002,8 @@ void bx_dbg_info_control_regs_command(void)
     (cr4 & (1<<0))  ? "VME" : "vme");
 #if BX_SUPPORT_X86_64
   Bit64u cpu_extensions_bitmask = SIM->get_param_num("cpu_extensions_bitmask", dbg_cpu_list)->get();
-  if ((cpu_extensions_bitmask & BX_ISA_LONG_MODE) != 0) {
-    dbg_printf("CR8: %04x\n", BX_CPU(dbg_cpu)->get_cr8());
+  if ((cpu_extensions_bitmask & BX_CPU_LONG_MODE) != 0) {
+    dbg_printf("CR8: 0x%x\n", BX_CPU(dbg_cpu)->get_cr8());
   }
 #endif
   Bit32u efer = SIM->get_param_num("MSR.EFER", dbg_cpu_list)->get();
