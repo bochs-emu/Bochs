@@ -227,10 +227,8 @@ typedef unsigned long  Bit32u;
       mov  cx, 10[bp] ; count
       test cx, cx
       je   memsetb_end
-      mov  ax, 4[bp] ; segment
-      mov  es, ax
-      mov  ax, 6[bp] ; offset
-      mov  di, ax
+      mov  es, 4[bp] ; segment
+      mov  di, 6[bp] ; offset
       mov  al, 8[bp] ; value
       cld
       rep
@@ -259,7 +257,6 @@ typedef unsigned long  Bit32u;
     push bp
     mov  bp, sp
 
-      push ax
       push cx
       push es
       push di
@@ -269,14 +266,10 @@ typedef unsigned long  Bit32u;
       mov  cx, 12[bp] ; count
       test cx, cx
       je   memcpyb_end
-      mov  ax, 4[bp] ; dsegment
-      mov  es, ax
-      mov  ax, 6[bp] ; doffset
-      mov  di, ax
-      mov  ax, 8[bp] ; ssegment
-      mov  ds, ax
-      mov  ax, 10[bp] ; soffset
-      mov  si, ax
+      mov  es, 4[bp] ; dsegment
+      mov  di, 6[bp] ; doffset
+      mov  ds, 8[bp] ; ssegment
+      mov  si, 10[bp] ; soffset
       cld
       rep
        movsb
@@ -287,7 +280,6 @@ typedef unsigned long  Bit32u;
       pop di
       pop es
       pop cx
-      pop ax
 
     pop bp
   ASM_END
@@ -306,7 +298,6 @@ typedef unsigned long  Bit32u;
     push bp
     mov  bp, sp
 
-      push ax
       push cx
       push es
       push di
@@ -316,14 +307,10 @@ typedef unsigned long  Bit32u;
       mov  cx, 12[bp] ; count
       test cx, cx
       je   memcpyd_end
-      mov  ax, 4[bp] ; dsegment
-      mov  es, ax
-      mov  ax, 6[bp] ; doffset
-      mov  di, ax
-      mov  ax, 8[bp] ; ssegment
-      mov  ds, ax
-      mov  ax, 10[bp] ; soffset
-      mov  si, ax
+      mov  es, 4[bp] ; dsegment
+      mov  di, 6[bp] ; doffset
+      mov  ds, 8[bp] ; ssegment
+      mov  si, 10[bp] ; soffset
       cld
       rep
        movsd
@@ -334,7 +321,6 @@ typedef unsigned long  Bit32u;
       pop di
       pop es
       pop cx
-      pop ax
 
     pop bp
   ASM_END
@@ -355,12 +341,10 @@ typedef unsigned long  Bit32u;
 
       push bx
       push ds
-      mov  ax, 4[bp] ; segment
-      mov  ds, ax
+      mov  ds, 4[bp] ; segment
       mov  bx, 6[bp] ; offset
       mov  ax, [bx]
-      add  bx, #2
-      mov  dx, [bx]
+      mov  dx, 2[bx]
       ;; ax = return value (word)
       ;; dx = return value (word)
       pop  ds
@@ -380,20 +364,16 @@ typedef unsigned long  Bit32u;
     push bp
     mov  bp, sp
 
-      push ax
+      push eax
       push bx
       push ds
-      mov  ax, 4[bp] ; segment
-      mov  ds, ax
+      mov  ds, 4[bp] ; segment
       mov  bx, 6[bp] ; offset
-      mov  ax, 8[bp] ; data word
-      mov  [bx], ax  ; write data word
-      add  bx, #2
-      mov  ax, 10[bp] ; data word
-      mov  [bx], ax  ; write data word
+      mov  eax, 8[bp] ; data dword
+      mov  [bx], eax  ; write data dword
       pop  ds
       pop  bx
-      pop  ax
+      pop  eax
 
     pop  bp
   ASM_END
@@ -1231,8 +1211,7 @@ ASM_START
 
     push bx
     push ds
-    mov  ax, 4[bp] ; segment
-    mov  ds, ax
+    mov  ds, 4[bp] ; segment
     mov  bx, 6[bp] ; offset
     mov  al, [bx]
     ;; al = return value (byte)
@@ -1254,8 +1233,7 @@ ASM_START
 
     push bx
     push ds
-    mov  ax, 4[bp] ; segment
-    mov  ds, ax
+    mov  ds, 4[bp] ; segment
     mov  bx, 6[bp] ; offset
     mov  ax, [bx]
     ;; ax = return value (word)
@@ -1279,8 +1257,7 @@ ASM_START
     push ax
     push bx
     push ds
-    mov  ax, 4[bp] ; segment
-    mov  ds, ax
+    mov  ds, 4[bp] ; segment
     mov  bx, 6[bp] ; offset
     mov  al, 8[bp] ; data byte
     mov  [bx], al  ; write data byte
@@ -1305,8 +1282,7 @@ ASM_START
     push ax
     push bx
     push ds
-    mov  ax, 4[bp] ; segment
-    mov  ds, ax
+    mov  ds, 4[bp] ; segment
     mov  bx, 6[bp] ; offset
     mov  ax, 8[bp] ; data word
     mov  [bx], ax  ; write data word
@@ -1420,22 +1396,6 @@ send(action, c)
     if (c == '\n') wrch('\r');
     wrch(c);
   }
-}
-
-  void
-put_int(action, val, width, neg)
-  Bit16u action;
-  short val, width;
-  bx_bool neg;
-{
-  short nval = val / 10;
-  if (nval)
-    put_int(action, nval, width - 1, neg);
-  else {
-    while (--width > 0) send(action, ' ');
-    if (neg) send(action, '-');
-  }
-  send(action, val - (nval * 10) + '0');
 }
 
   void
@@ -1607,16 +1567,12 @@ bios_printf(action, s)
       else {
         arg_ptr++; // increment to next arg
         arg = read_word(arg_seg, arg_ptr);
-        if (c == 'x' || c == 'X') {
+        if ((c & 0xdf) == 'X') {
           if (format_width == 0)
             format_width = 4;
-          if (c == 'x')
-            hexadd = 'a';
-          else
-            hexadd = 'A';
           for (i=format_width-1; i>=0; i--) {
             nibble = (arg >> (4 * i)) & 0x000f;
-            send (action, (nibble<=9)? (nibble+'0') : (nibble-10+hexadd));
+            send (action, (nibble<=9)? (nibble+'0') : (nibble+c-33));
           }
         }
         else if (c == 'u') {
@@ -1636,25 +1592,21 @@ bios_printf(action, s)
           else if (c == 'u') {
             put_luint(action, ((Bit32u) hibyte << 16) | arg, format_width, 0);
           }
-          else if (c == 'x' || c == 'X')
+          else if ((c & 0xdf) == 'X')
           {
             if (format_width == 0)
               format_width = 8;
-            if (c == 'x')
-              hexadd = 'a';
-            else
-              hexadd = 'A';
             for (i=format_width-1; i>=0; i--) {
               nibble = ((((Bit32u) hibyte <<16) | arg) >> (4 * i)) & 0x000f;
-              send (action, (nibble<=9)? (nibble+'0') : (nibble-10+hexadd));
+              send (action, (nibble<=9)? (nibble+'0') : (nibble+c-33));
             }
           }
         }
         else if (c == 'd') {
           if (arg & 0x8000)
-            put_int(action, -arg, format_width - 1, 1);
+            put_uint(action, -arg, format_width - 1, 1);
           else
-            put_int(action, arg, format_width, 0);
+            put_uint(action, arg, format_width, 0);
         }
         else if (c == 's') {
           put_str(action, get_CS(), arg);
@@ -9474,37 +9426,9 @@ timer_tick_post:
   ;;           (BcdToBin(hours)   * 65543.427)
   ;; To get a little more accuracy, since Im using integer
   ;; arithmetic, I use:
-  ;;   ticks = (BcdToBin(seconds) * 18206507) / 1000000 +
-  ;;           (BcdToBin(minutes) * 10923904) / 10000 +
-  ;;           (BcdToBin(hours)   * 65543427) / 1000
+  ;;   ticks = (((BcdToBin(hours) * 60 + BcdToBin(minutes)) * 60 + BcdToBin(seconds)) * (18 * 4294967296 + 886942379)) / 4294967296
 
   ;; assuming DS=0000
-
-  ;; get CMOS seconds
-  xor  eax, eax ;; clear EAX
-  mov  al, #0x00
-  out  PORT_CMOS_INDEX, al
-  in   al, PORT_CMOS_DATA ;; AL has CMOS seconds in BCD
-  call BcdToBin  ;; EAX now has seconds in binary
-  mov  edx, #18206507
-  mul  eax, edx
-  mov  ebx, #1000000
-  xor  edx, edx
-  div  eax, ebx
-  mov  ecx, eax  ;; ECX will accumulate total ticks
-
-  ;; get CMOS minutes
-  xor  eax, eax ;; clear EAX
-  mov  al, #0x02
-  out  PORT_CMOS_INDEX, al
-  in   al, PORT_CMOS_DATA ;; AL has CMOS minutes in BCD
-  call BcdToBin  ;; EAX now has minutes in binary
-  mov  edx, #10923904
-  mul  eax, edx
-  mov  ebx, #10000
-  xor  edx, edx
-  div  eax, ebx
-  add  ecx, eax  ;; add to total ticks
 
   ;; get CMOS hours
   xor  eax, eax ;; clear EAX
@@ -9512,12 +9436,34 @@ timer_tick_post:
   out  PORT_CMOS_INDEX, al
   in   al, PORT_CMOS_DATA ;; AL has CMOS hours in BCD
   call BcdToBin  ;; EAX now has hours in binary
-  mov  edx, #65543427
-  mul  eax, edx
-  mov  ebx, #1000
-  xor  edx, edx
-  div  eax, ebx
-  add  ecx, eax  ;; add to total ticks
+  imul eax, #60
+  mov  edx, eax
+
+  ;; get CMOS minutes
+  xor  eax, eax ;; clear EAX
+  mov  al, #0x02
+  out  PORT_CMOS_INDEX, al
+  in   al, PORT_CMOS_DATA ;; AL has CMOS minutes in BCD
+  call BcdToBin  ;; EAX now has minutes in binary
+  add  eax, edx
+  imul eax, #60
+  mov  edx, eax
+
+  ;; get CMOS seconds
+  xor  eax, eax ;; clear EAX
+  mov  al, #0x00
+  out  PORT_CMOS_INDEX, al
+  in   al, PORT_CMOS_DATA ;; AL has CMOS seconds in BCD
+  call BcdToBin  ;; EAX now has seconds in binary
+  add  eax, edx
+
+  ;; multiplying 18.2065073649
+  mov  ecx, eax
+  imul ecx, #18
+
+  mov  edx, #886942379
+  mul  edx
+  add  ecx, edx
 
   mov  0x46C, ecx ;; Timer Ticks Count
   xor  al, al
@@ -10708,9 +10654,8 @@ post_init_ivt:
 
 post_default_ints:
   mov  [bx], ax
-  add  bx, #2
-  mov  [bx], dx
-  add  bx, #2
+  mov  2[bx], dx
+  add  bx, #4
   loop post_default_ints
 
   ;; Printer Services vector
