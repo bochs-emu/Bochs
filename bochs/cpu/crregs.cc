@@ -1373,8 +1373,7 @@ Bit32u BX_CPU_C::ReadCR8(bxInstruction_c *i)
   //   APIC.TPR[3:0] = 0
   // Reads of CR8 return zero extended APIC.TPR[7:4]
   // Write to CR8 update APIC.TPR[7:4]
-  Bit32u tpr = (BX_CPU_THIS_PTR lapic.get_tpr() >> 4) & 0xf;
-  return tpr;
+  return BX_CPU_THIS_PTR get_cr8();
 }
 
 #endif

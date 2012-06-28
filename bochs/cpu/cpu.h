@@ -4217,6 +4217,8 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF BX_CPP_INLINE Bit64u get_reg64(unsigned reg);
   BX_SMF BX_CPP_INLINE void   set_reg64(unsigned reg, Bit64u val);
+
+  BX_SMF BX_CPP_INLINE unsigned get_cr8();
 #endif
 
   BX_SMF bx_address get_segment_base(unsigned seg);
@@ -4590,6 +4592,15 @@ BX_CPP_INLINE void BX_CPU_C::set_reg64(unsigned reg, Bit64u val)
 {
    assert(reg < BX_GENERAL_REGISTERS);
    BX_CPU_THIS_PTR gen_reg[reg].rrx = val;
+}
+
+// CR8 is aliased to APIC->TASK PRIORITY register
+//   APIC.TPR[7:4] = CR8[3:0]
+//   APIC.TPR[3:0] = 0
+// Reads of CR8 return zero extended APIC.TPR[7:4]
+BX_CPP_INLINE unsigned BX_CPU_C::get_cr8(void)
+{
+   return (BX_CPU_THIS_PTR lapic.get_tpr() >> 4) & 0xf;
 }
 #endif
 
