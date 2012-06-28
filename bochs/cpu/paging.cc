@@ -1619,6 +1619,11 @@ void dbg_print_paging_pte(int level, Bit64u entry)
 {
   dbg_printf("%4s: 0x%08x%08x", bx_paging_level[level], GET32H(entry), GET32L(entry));
 
+  if (entry & BX_CONST64(0x8000000000000000))
+    dbg_printf(" XD");
+  else
+    dbg_printf("   ");
+
   if (level == BX_LEVEL_PTE) {
     dbg_printf("    %s %s %s",
       (entry & 0x0100) ? "G" : "g",
