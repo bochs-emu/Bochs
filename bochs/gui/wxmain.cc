@@ -539,7 +539,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   bxToolBar->Realize();
 
   // create a MyPanel that covers the whole frame
-  panel = new MyPanel(this, -1);
+  panel = new MyPanel(this, -1, wxDefaultPosition, wxDefaultSize, wxNO_BORDER);
   panel->SetBackgroundColour(wxColour(0,0,0));
   panel->SetFocus();
   wxGridSizer *sz = new wxGridSizer(1, 1);
