@@ -1313,14 +1313,25 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDPPS_VpsHpsWpsIbR(bxInstruction_c
     if (mask & 0x80)
        tmp.xmm32u(3) = float32_mul(op1.avx32u(n+3), op2.avx32u(n+3), status);
 
-    float32 r1 = float32_add(tmp.xmm32u(0), tmp.xmm32u(1), status);
-    float32 r2 = float32_add(tmp.xmm32u(2), tmp.xmm32u(3), status);
-    float32 r  = float32_add(r1, r2, status);
+    float32 tmp1 = float32_add(tmp.xmm32u(0), tmp.xmm32u(1), status);
+    float32 tmp2 = float32_add(tmp.xmm32u(2), tmp.xmm32u(3), status);
+
+#ifdef BX_DPPS_DPPD_NAN_MATCHING_HARDWARE
+    float32 r1 = float32_add(tmp1, tmp2, status);
+    float32 r2 = float32_add(tmp2, tmp1, status);
+
+    op1.avx32u(n+0) = (mask & 0x01) ? r1 : 0;
+    op1.avx32u(n+1) = (mask & 0x02) ? r1 : 0;
+    op1.avx32u(n+2) = (mask & 0x04) ? r2 : 0;
+    op1.avx32u(n+3) = (mask & 0x08) ? r2 : 0;
+#else
+    float32 r  = float32_add(tmp1, tmp2, status);
 
     op1.avx32u(n+0) = (mask & 0x01) ? r : 0;
     op1.avx32u(n+1) = (mask & 0x02) ? r : 0;
     op1.avx32u(n+2) = (mask & 0x04) ? r : 0;
     op1.avx32u(n+3) = (mask & 0x08) ? r : 0;
+#endif
   }
 
   check_exceptionsSSE(status.float_exception_flags);

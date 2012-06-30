@@ -1845,16 +1845,27 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPS_VpsWpsIbR(bxInstruction_c *i)
   if (mask & 0x80)
      tmp.xmm32u(3) = float32_mul(op1.xmm32u(3), op2.xmm32u(3), status);
 
-  float32 r1 = float32_add(tmp.xmm32u(0), tmp.xmm32u(1), status);
-  float32 r2 = float32_add(tmp.xmm32u(2), tmp.xmm32u(3), status);
-  float32 r  = float32_add(r1, r2, status);
+  float32 tmp1 = float32_add(tmp.xmm32u(0), tmp.xmm32u(1), status);
+  float32 tmp2 = float32_add(tmp.xmm32u(2), tmp.xmm32u(3), status);
 
   op1.xmm64u(0) = op1.xmm64u(1) = 0;
+
+#ifdef BX_DPPS_DPPD_NAN_MATCHING_HARDWARE
+  float32 r1 = float32_add(tmp1, tmp2, status);
+  float32 r2 = float32_add(tmp2, tmp1, status);
+
+  if (mask & 0x01) op1.xmm32u(0) = r1;
+  if (mask & 0x02) op1.xmm32u(1) = r1;
+  if (mask & 0x04) op1.xmm32u(2) = r2;
+  if (mask & 0x08) op1.xmm32u(3) = r2;
+#else
+  float32 r  = float32_add(tmp1, tmp2, status);
 
   if (mask & 0x01) op1.xmm32u(0) = r;
   if (mask & 0x02) op1.xmm32u(1) = r;
   if (mask & 0x04) op1.xmm32u(2) = r;
   if (mask & 0x08) op1.xmm32u(3) = r;
+#endif
 
   check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
@@ -1883,12 +1894,17 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPD_VpdWpdIbR(bxInstruction_c *i)
   if (mask & 0x20)
      tmp.xmm64u(1) = float64_mul(op1.xmm64u(1), op2.xmm64u(1), status);
 
-  float64 result = float64_add(tmp.xmm64u(0), tmp.xmm64u(1), status);
-
   op1.xmm64u(0) = op1.xmm64u(1) = 0;
+
+#ifdef BX_DPPS_DPPD_NAN_MATCHING_HARDWARE
+  if (mask & 0x01) op1.xmm64u(0) = float64_add(tmp.xmm64u(0), tmp.xmm64u(1), status);
+  if (mask & 0x02) op1.xmm64u(1) = float64_add(tmp.xmm64u(1), tmp.xmm64u(0), status);
+#else
+  float64 result = float64_add(tmp.xmm64u(0), tmp.xmm64u(1), status);
 
   if (mask & 0x01) op1.xmm64u(0) = result;
   if (mask & 0x02) op1.xmm64u(1) = result;
+#endif
 
   check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_XMM_REGZ(i->nnn(), op1, i->getVL());
