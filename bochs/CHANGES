@@ -86,6 +86,8 @@ Changes after 2.5.1 release:
   [3486555] Fix critical stack leak in Win32 GUI by Carlo Bramini
 
 - these S.F. bugs were closed/fixed
+  [3538731] Missing CR8 register
+  [3538574] Missing XD flag ( Execute Disable ) when showing PTEs
   [3537556] Missing initializations
   [3537309] Unable to use the debug GUI with SDL and plugins
   [3537473] GUI debugger only shows 32-bit CRx registers in x86-64 mode
