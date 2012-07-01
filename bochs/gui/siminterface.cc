@@ -73,7 +73,7 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   jmp_buf *quit_context;
   int exit_code;
   unsigned param_id;
-  bx_bool wx_debug_gui;
+  bx_bool bx_debug_gui;
 public:
   bx_real_sim_c();
   virtual ~bx_real_sim_c() {}
@@ -165,8 +165,8 @@ public:
   virtual void update_runtime_options();
   virtual void set_sim_thread_func(is_sim_thread_func_t func) {}
   virtual bx_bool is_sim_thread();
-  virtual void set_debug_gui(bx_bool val) { wx_debug_gui = val; }
-  virtual bx_bool has_debug_gui() const { return wx_debug_gui; }
+  virtual void set_debug_gui(bx_bool val) { bx_debug_gui = val; }
+  virtual bx_bool has_debug_gui() const { return bx_debug_gui; }
   // provide interface to bx_gui->set_display_mode() method for config
   // interfaces to use.
   virtual void set_display_mode(disp_mode_t newmode) {
@@ -335,7 +335,7 @@ bx_real_sim_c::bx_real_sim_c()
   ci_callback = NULL;
   ci_callback_data = NULL;
   is_sim_thread_func = NULL;
-  wx_debug_gui = 0;
+  bx_debug_gui = 0;
 
   enabled = 1;
   init_done = 0;
@@ -719,7 +719,6 @@ int bx_real_sim_c::create_disk_image(const char *filename, int sectors, bx_bool 
 void bx_real_sim_c::refresh_ci()
 {
   if (SIM->has_debug_gui()) {
-    // presently, only wxWidgets interface uses these events
     // It's an async event, so allocate a pointer and send it.
     // The event will be freed by the recipient.
     BxEvent *event = new BxEvent();
@@ -782,7 +781,7 @@ char *bx_real_sim_c::debug_get_next_command()
 void bx_real_sim_c::debug_puts(const char *text)
 {
   if (SIM->has_debug_gui()) {
-    // send message to the wxWidgets debugger
+    // send message to the gui debugger
     BxEvent *event = new BxEvent();
     event->type = BX_ASYNC_EVT_DBG_MSG;
     event->u.logmsg.msg = text;
@@ -817,9 +816,9 @@ int bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t comm
     return -1;
   }
   if (!strcmp(name, "wx"))
-    wx_debug_gui = 1;
+    bx_debug_gui = 1;
   else
-    wx_debug_gui = 0;
+    bx_debug_gui = 0;
   // enter configuration mode, just while running the configuration interface
   set_display_mode(DISP_MODE_CONFIG);
   int retval = (*ci_callback)(ci_callback_data, command);

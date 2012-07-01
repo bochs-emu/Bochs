@@ -264,6 +264,20 @@ void bx_sdl_morphos_exit(void)
 }
 #endif
 
+#if defined(WIN32) && BX_DEBUGGER && BX_DEBUGGER_GUI
+DWORD WINAPI DebugGuiThread(LPVOID)
+{
+  MSG msg;
+
+  bx_gui->init_debug_dialog();
+  while (GetMessage(&msg, NULL, 0, 0)) {
+    TranslateMessage(&msg);
+    DispatchMessage(&msg);
+  }
+  return 0;
+}
+#endif
+
 void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned header_bar_y)
 {
   int i,j;
@@ -335,14 +349,24 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned header_bar_y)
       } else if (!strcmp(argv[i], "nokeyrepeat")) {
         BX_INFO(("disabled host keyboard repeat"));
         SDL_EnableKeyRepeat(0, 0);
-#if !defined(WIN32) && BX_DEBUGGER && BX_DEBUGGER_GUI
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
       } else if (!strcmp(argv[i], "gui_debug")) {
         SIM->set_debug_gui(1);
+#ifdef WIN32
+        if (gui_ci) {
+          // on Windows the debugger gui must run in a separate thread
+          DWORD threadID;
+          CreateThread(NULL, 0, DebugGuiThread, NULL, 0, &threadID);
+        } else {
+          BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
+        }
+#else
         // redirect notify callback to sdl specific code
         SIM->get_notify_callback (&old_callback, &old_callback_arg);
         assert (old_callback != NULL);
         SIM->set_notify_callback (sdl_notify_callback, NULL);
         init_debug_dialog();
+#endif 
 #endif
 #if BX_SHOW_IPS
       } else if (!strcmp(argv[i], "hideIPS")) {
@@ -1660,7 +1684,7 @@ BxEvent *sdl_notify_callback(void *unused, BxEvent *event)
       }
     case BX_ASYNC_EVT_DBG_MSG:
       {
-        ParseIDText (event->u.logmsg.msg);
+        ParseIDText(event->u.logmsg.msg);
         return event;
       }
     default:

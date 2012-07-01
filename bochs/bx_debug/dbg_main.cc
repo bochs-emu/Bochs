@@ -373,7 +373,7 @@ void bx_get_command(void)
     sprintf(prompt, "<bochs:%d> ", bx_infile_stack[bx_infile_stack_index].lineno);
   }
   if (SIM->has_debug_gui() && bx_infile_stack_index == 0) {
-    // wait for wxWidgets to send another debugger command
+    // wait for gui debugger to send another debugger command
     charptr_ret = SIM->debug_get_next_command();
     if (charptr_ret) {
       strncpy(tmp_buf, charptr_ret, sizeof(tmp_buf));

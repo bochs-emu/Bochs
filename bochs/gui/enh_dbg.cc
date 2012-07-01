@@ -35,6 +35,20 @@
 // -- i.e. No further initialization necessary.
 static disassembler bx_disassemble;
 
+const char* DC0txt[2] = {"P.Address","L.Address"};    // DumpMode definitions in text
+
+const char* BTxt[6] = {
+  "Continue [c]",
+  "Step [s]",
+  "Step N [s ###]",
+  "Refresh",
+  "Break [^C]",
+  "Break All"};
+
+int BtnLkup[6] = {
+    CMD_CONT, CMD_STEP1, CMD_STEPN, CMD_RFRSH, CMD_BREAK
+};
+
 #ifdef WIN32
 int useCR = 1;                    // Win32 needs CRLF pairs for an EOL
 bx_bool NeedSysRresize = TRUE;    // use Sys Reg to help autosize Reg "hex" column
