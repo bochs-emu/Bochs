@@ -4217,7 +4217,9 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF BX_CPP_INLINE Bit64u get_reg64(unsigned reg);
   BX_SMF BX_CPP_INLINE void   set_reg64(unsigned reg, Bit64u val);
+#endif
 
+#if BX_CPU_LEVEL >= 6
   BX_SMF BX_CPP_INLINE unsigned get_cr8();
 #endif
 
@@ -4593,7 +4595,9 @@ BX_CPP_INLINE void BX_CPU_C::set_reg64(unsigned reg, Bit64u val)
    assert(reg < BX_GENERAL_REGISTERS);
    BX_CPU_THIS_PTR gen_reg[reg].rrx = val;
 }
+#endif
 
+#if BX_CPU_LEVEL >= 6
 // CR8 is aliased to APIC->TASK PRIORITY register
 //   APIC.TPR[7:4] = CR8[3:0]
 //   APIC.TPR[3:0] = 0

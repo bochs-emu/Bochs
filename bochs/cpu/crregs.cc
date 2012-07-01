@@ -1307,6 +1307,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetEFER(bx_address val_64)
 #endif
 
 #if BX_CPU_LEVEL >= 6
+
 void BX_CPU_C::WriteCR8(bxInstruction_c *i, bx_address val)
 {
 #if BX_SUPPORT_SVM
