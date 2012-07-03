@@ -64,6 +64,7 @@ Changes after 2.5.1 release:
   - Implemented "hideIPS" option in sdl and wx libraries
   - Added support for sending absolute mouse position values from the gui if an
     absolute pointing device (USB tablet) is active (rfb, sdl, win32, wx, x).
+  - Gui debugger now supported when using sdl gui on Windows
 
 - Config interface
   - The bochsrc option 'plugin_ctrl' is now used to load optional plugins
