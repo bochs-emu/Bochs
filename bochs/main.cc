@@ -767,7 +767,9 @@ int bx_init_main(int argc, char *argv[])
     norcfile = 0;
   }
   if (load_rcfile) {
-    /* parse configuration file and command line arguments */
+    // load pre-defined optional plugins before parsing configuration
+    SIM->opt_plugin_ctrl("*", 1);
+    // parse configuration file and command line arguments
 #ifdef WIN32
     int length;
     if (bochsrc_filename != NULL) {
@@ -906,6 +908,9 @@ int bx_begin_simulation (int argc, char *argv[])
       BX_PANIC(("cannot restore configuration"));
       SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(0);
     }
+  } else {
+    // make sure all optional plugins have been loaded
+    SIM->opt_plugin_ctrl("*", 1);
   }
 
   // deal with gui selection
@@ -1277,6 +1282,8 @@ void bx_init_hardware()
       SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(0);
     }
   } else {
+    // unload optional plugins which are unused and marked for removal
+    SIM->opt_plugin_ctrl("*", 0);
     bx_set_log_actions_by_device(1);
   }
 

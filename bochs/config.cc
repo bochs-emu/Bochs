@@ -316,8 +316,15 @@ void bx_init_options()
   new bx_list_c(logfn, "error", "");
   new bx_list_c(logfn, "panic", "");
 
-  // optional plugin control (empty list)
+  // optional plugin control
   menu = new bx_list_c(menu, "plugin_ctrl", "Optional Plugin Control");
+  // add the default set of plugins to the list
+  new bx_param_bool_c(menu, "unmapped", "", "", 1);
+  new bx_param_bool_c(menu, "biosdev", "", "", 1);
+  new bx_param_bool_c(menu, "speaker", "", "", 1);
+  new bx_param_bool_c(menu, "extfpuirq", "", "", 1);
+  new bx_param_bool_c(menu, "parallel", "", "", 1);
+  new bx_param_bool_c(menu, "serial", "", "", 1);
 
   // subtree for special menus
   bx_list_c *special_menus = new bx_list_c(root_param, "menu", "");

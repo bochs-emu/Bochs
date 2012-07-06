@@ -1381,12 +1381,26 @@ bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_
 
 bx_bool bx_real_sim_c::opt_plugin_ctrl(const char *plugname, bx_bool load)
 {
-  bx_list_c *base = (bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL);
+  bx_list_c *plugin_ctrl = (bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL);
+  if (!strcmp(plugname, "*")) {
+    // verify optional plugin configuration and load/unload plugins if necessary
+    int i = 0;
+    while (i < plugin_ctrl->get_size()) {
+      bx_param_bool_c *plugin = (bx_param_bool_c*)plugin_ctrl->get(i);
+      if (load == (bx_bool)plugin->get()) {
+        opt_plugin_ctrl(plugin->get_name(), load);
+        if (load) i++;
+      } else {
+        i++;
+      }
+    }
+    return 1;
+  }
   if (load != PLUG_device_present(plugname)) {
     if (load) {
       if (PLUG_load_opt_plugin(plugname)) {
-        if (base->get_by_name(plugname) == NULL) {
-          new bx_param_bool_c(base, plugname, "", "", 1);
+        if (plugin_ctrl->get_by_name(plugname) == NULL) {
+          new bx_param_bool_c(plugin_ctrl, plugname, "", "", 1);
         }
         return 1;
       } else {
@@ -1395,7 +1409,7 @@ bx_bool bx_real_sim_c::opt_plugin_ctrl(const char *plugname, bx_bool load)
       }
     } else {
       PLUG_unload_opt_plugin(plugname);
-      base->remove(plugname);
+      plugin_ctrl->remove(plugname);
       return 1;
     }
   }

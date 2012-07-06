@@ -141,7 +141,8 @@ void bx_pcipnic_c::init(void)
   // Check if the device is disabled or not configured
   if (!SIM->get_param_bool("enabled", base)->get()) {
     BX_INFO(("PCI Pseudo NIC disabled"));
-    BX_UNREGISTER_DEVICE_DEVMODEL("pcipnic");
+    // mark unused plugin for removal
+    ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("pcipnic"))->set(0);
     return;
   }
 

@@ -164,7 +164,8 @@ void bx_usb_ohci_c::init(void)
   // Check if the device is disabled or not configured
   if (!SIM->get_param_bool("enabled", ohci)->get()) {
     BX_INFO(("USB OHCI disabled"));
-    BX_UNREGISTER_DEVICE_DEVMODEL("usb_ohci");
+    // mark unused plugin for removal
+    ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("usb_ohci"))->set(0);
     return;
   }
 

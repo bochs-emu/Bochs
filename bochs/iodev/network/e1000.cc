@@ -441,7 +441,8 @@ void bx_e1000_c::init(void)
   // Check if the device is disabled or not configured
   if (!SIM->get_param_bool("enabled", base)->get()) {
     BX_INFO(("E1000 disabled"));
-    BX_UNREGISTER_DEVICE_DEVMODEL("e1000");
+    // mark unused plugin for removal
+    ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("e1000"))->set(0);
     return;
   }
   memcpy(macaddr, SIM->get_param_string("macaddr", base)->getptr(), 6);

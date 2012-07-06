@@ -596,11 +596,10 @@ PluginControlDialog::PluginControlDialog(
   btn = new wxButton(this, wxID_OK, BTNLABEL_OK);
   buttonSizer->Add(btn, 0, wxALL, 5);
   // make sure all plugins are loaded and add them to the listbox
+  SIM->opt_plugin_ctrl("*", 1);
   bx_list_c *plugin_ctrl = (bx_list_c*) SIM->get_param(BXPN_PLUGIN_CTRL);
-  unsigned count = plugin_ctrl->get_size();
-  for (unsigned i = 0; i < count; i++) {
+  for (int i = 0; i < plugin_ctrl->get_size(); i++) {
     bx_param_bool_c *plugin = (bx_param_bool_c*)plugin_ctrl->get(i);
-    SIM->opt_plugin_ctrl(plugin->get_name(), 1);
     pluglist->Insert(wxString(plugin->get_name(), wxConvUTF8), i);
   }
   btn_load->Enable(0);

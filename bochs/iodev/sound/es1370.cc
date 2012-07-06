@@ -195,7 +195,8 @@ void bx_es1370_c::init(void)
   // Check if the device is disabled or not configured
   if (!SIM->get_param_bool("enabled", base)->get()) {
     BX_INFO(("ES1370 disabled"));
-    BX_UNREGISTER_DEVICE_DEVMODEL("es1370");
+    // mark unused plugin for removal
+    ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("es1370"))->set(0);
     return;
   }
   BX_ES1370_THIS s.devfunc = 0x00;

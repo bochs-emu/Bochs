@@ -2896,7 +2896,7 @@ The section below lists all the supported <filename>bochsrc</filename> options.
 <para>
 Example:
 <screen>
-  plugin_ctrl: biosdev=1, speaker=1, unmapped=1, e1000=1
+  plugin_ctrl: unmapped=0, e1000=1 # unload 'unmapped' and load 'e1000'
 </screen>
 Controls the presence of optional device plugins. These plugins are loaded
 directly with this option and some of them install a config option that is
@@ -2904,9 +2904,12 @@ only available when the plugin device is loaded. The value "1" means to load
 the plugin and "0" will unload it (if loaded before).
 </para>
 <para>
-These plugins are currently supported: 'biosdev', 'e1000', 'es1370',
-'extfpuirq', 'gameport', 'iodebug', 'ne2k', 'parallel', 'pcidev', 'pcipnic',
-'serial', 'sb16', 'speaker', 'unmapped', 'usb_ohci', 'usb_uhci' and 'usb_xhci'.
+These plugins will be loaded by default: 'biosdev', 'extfpuirq', 'parallel',
+'serial', 'speaker' and 'unmapped'.
+</para>
+<para>
+These plugins can be loaded on demand: 'e1000', 'es1370', 'gameport', 'iodebug',
+'ne2k', 'pcidev', 'pcipnic', 'sb16', 'usb_ohci', 'usb_uhci' and 'usb_xhci'.
 </para>
 </section>
 

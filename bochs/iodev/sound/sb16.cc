@@ -283,7 +283,8 @@ void bx_sb16_c::init(void)
   // Check if the device is disabled or not configured
   if (!SIM->get_param_bool("enabled", base)->get()) {
     BX_INFO(("SB16 disabled"));
-    BX_UNREGISTER_DEVICE_DEVMODEL("sb16");
+    // mark unused plugin for removal
+    ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("sb16"))->set(0);
     return;
   }
   if ((strlen(SIM->get_param_string("logfile", base)->getptr()) < 1))
