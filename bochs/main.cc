@@ -530,6 +530,7 @@ void print_usage(void)
     "  -noconsole       disable console window\n"
 #endif
     "  --help           display this help and exit\n"
+    "  --help features  display available features / devices and exit\n"
 #if BX_CPU_LEVEL > 4
     "  --help cpu       display supported CPU models and exit\n"
 #endif
@@ -572,9 +573,50 @@ int bx_init_main(int argc, char *argv[])
         || !strncmp("/?", argv[arg], 2)
 #endif
        ) {
-#if BX_CPU_LEVEL > 4
       if ((arg+1) < argc) {
-        if (!strcmp("cpu", argv[arg+1])) {
+        if (!strcmp("features", argv[arg+1])) {
+          fprintf(stderr, "Supported features:\n\n");
+#if BX_SUPPORT_CLGD54XX
+          fprintf(stderr, "cirrus\n");
+#endif
+#if BX_SUPPORT_PCI
+          fprintf(stderr, "pci\n");
+#endif
+#if BX_SUPPORT_PCIDEV
+          fprintf(stderr, "pcidev\n");
+#endif
+#if BX_SUPPORT_NE2K
+          fprintf(stderr, "ne2k\n");
+#endif
+#if BX_SUPPORT_PCIPNIC
+          fprintf(stderr, "pcipnic\n");
+#endif
+#if BX_SUPPORT_E1000
+          fprintf(stderr, "e1000\n");
+#endif
+#if BX_SUPPORT_SB16
+          fprintf(stderr, "sb16\n");
+#endif
+#if BX_SUPPORT_ES1370
+          fprintf(stderr, "es1370\n");
+#endif
+#if BX_SUPPORT_USB_OHCI
+          fprintf(stderr, "usb_ohci\n");
+#endif
+#if BX_SUPPORT_USB_UHCI
+          fprintf(stderr, "usb_uhci\n");
+#endif
+#if BX_SUPPORT_USB_XHCI
+          fprintf(stderr, "usb_xhci\n");
+#endif
+#if BX_GDBSTUB
+          fprintf(stderr, "gdbstub\n");
+#endif
+          fprintf(stderr, "\n");
+          arg++;
+        }
+#if BX_CPU_LEVEL > 4
+        else if (!strcmp("cpu", argv[arg+1])) {
           fprintf(stderr, "Supported CPU models:\n\n");
           do {
             fprintf(stderr, "%s\n", SIM->get_param_enum(BXPN_CPU_MODEL)->get_choice(i));
@@ -582,10 +624,8 @@ int bx_init_main(int argc, char *argv[])
           fprintf(stderr, "\n");
           arg++;
         }
-      }
-      else
 #endif
-      {
+      } else {
         print_usage();
       }
       SIM->quit_sim(0);
