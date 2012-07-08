@@ -2070,57 +2070,6 @@ int bx_parse_nic_params(const char *context, const char *param, bx_list_c *base)
   return valid;
 }
 
-// Check for optional plugins with add-on bochsrc options
-// NOTE: This check should be removed some day
-bx_bool is_optplugin_option(const char *param)
-{
-  static const char *optplugin_list[] = {
-    "parport1",
-    "parport2",
-    "com1",
-    "com2",
-    "com3",
-    "com4",
-#if BX_SUPPORT_E1000
-    "e1000",
-#endif
-#if BX_SUPPORT_ES1370
-    "es1370",
-#endif
-#if BX_SUPPORT_NE2K
-    "ne2k",
-#endif
-#if BX_SUPPORT_PCIDEV
-    "pcidev",
-#endif
-#if BX_SUPPORT_PCIPNIC
-    "pnic",
-#endif
-#if BX_SUPPORT_SB16
-    "sb16",
-#endif
-#if BX_SUPPORT_USB_OHCI
-    "usb_ohci",
-#endif
-#if BX_SUPPORT_USB_UHCI
-    "usb_uhci",
-#endif
-#if BX_SUPPORT_USB_XHCI
-    "usb_xhci",
-#endif
-    NULL
-  };
-
-  int i = 0;
-  while (optplugin_list[i] != NULL) {
-    if (!strcmp(param, optplugin_list[i])) {
-      return 1;
-    }
-    i++;
-  }
-  return 0;
-}
-
 static int parse_line_formatted(const char *context, int num_params, char *params[])
 {
   int i, slot, t;
@@ -3140,10 +3089,15 @@ static int parse_line_formatted(const char *context, int num_params, char *param
   {
     return SIM->parse_addon_option(context, num_params, &params[0]);
   }
-  // this check should force the user to enable the plugin
-  else if (is_optplugin_option(params[0]))
+  // treat unknown option as plugin name and try to load it
+  else if (SIM->opt_plugin_ctrl(params[0], 1))
   {
-    PARSE_ERR(("%s: directive '%s' requires to enable the plugin with 'plugin_ctrl'", context, params[0]));
+    // after loading the plugin a bochsrc option with it's name must exist
+    if (SIM->is_addon_option(params[0])) {
+      return SIM->parse_addon_option(context, num_params, &params[0]);
+    } else {
+      PARSE_ERR(("%s: directive '%s' not understood", context, params[0]));
+    }
   }
   else
   {
