@@ -207,7 +207,8 @@ void bx_parallel_c::init(void)
   // Check if the device is disabled or not configured
   if (count == 0) {
     BX_INFO(("parallel ports disabled"));
-    BX_UNREGISTER_DEVICE_DEVMODEL("parallel");
+    // mark unused plugin for removal
+    ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("parallel"))->set(0);
     return;
   }
 }

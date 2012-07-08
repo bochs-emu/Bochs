@@ -325,6 +325,12 @@ void bx_init_options()
   new bx_param_bool_c(menu, "extfpuirq", "", "", 1);
   new bx_param_bool_c(menu, "parallel", "", "", 1);
   new bx_param_bool_c(menu, "serial", "", "", 1);
+#if BX_SUPPORT_GAMEPORT
+  new bx_param_bool_c(menu, "gameport", "", "", 1);
+#endif
+#if BX_DEBUGGER
+  new bx_param_bool_c(menu, "iodebug", "", "", 1);
+#endif
 
   // subtree for special menus
   bx_list_c *special_menus = new bx_list_c(root_param, "menu", "");
