@@ -425,6 +425,7 @@ bx_bool bx_pci_bridge_c::register_pci_handlers(bx_pci_device_stub_c *dev,
                                         const char *descr)
 {
   unsigned i, handle;
+  int first_free_slot = -1;
   char devname[80];
   char *device;
 
@@ -433,15 +434,30 @@ bx_bool bx_pci_bridge_c::register_pci_handlers(bx_pci_device_stub_c *dev,
     for (i = 0; i < BX_N_PCI_SLOTS; i++) {
       sprintf(devname, "pci.slot.%d", i+1);
       device = SIM->get_param_string(devname)->getptr();
-      if ((strlen(device) > 0) && (!strcmp(name, device))) {
-        *devfunc = (i + 2) << 3;
-        BX_PCI_THIS slot_used[i] = 1;
-        BX_INFO(("PCI slot #%d used by plugin '%s'", i+1, name));
-        break;
+      if (strlen(device) > 0) {
+        if (!strcmp(name, device)) {
+          *devfunc = (i + 2) << 3;
+          BX_PCI_THIS slot_used[i] = 1;
+          BX_INFO(("PCI slot #%d used by plugin '%s'", i+1, name));
+          break;
+        }
+      } else if (first_free_slot == -1) {
+        first_free_slot = i;
       }
     }
     if (*devfunc == 0x00) {
-      BX_ERROR(("Plugin '%s' not connected to a PCI slot", name));
+      // auto-assign device to PCI slot if possible
+      if (first_free_slot != -1) {
+        i = (unsigned)first_free_slot;
+        sprintf(devname, "pci.slot.%d", i+1);
+        SIM->get_param_string(devname)->set(name);
+        *devfunc = (i + 2) << 3;
+        BX_PCI_THIS slot_used[i] = 1;
+        BX_INFO(("PCI slot #%d used by plugin '%s'", i+1, name));
+      } else {
+        BX_ERROR(("Plugin '%s' not connected to a PCI slot", name));
+        return 0;
+      }
     }
   }
   /* check if device/function is available */
@@ -449,17 +465,16 @@ bx_bool bx_pci_bridge_c::register_pci_handlers(bx_pci_device_stub_c *dev,
     if (BX_PCI_THIS num_pci_handlers >= BX_MAX_PCI_DEVICES) {
       BX_INFO(("too many PCI devices installed."));
       BX_PANIC(("  try increasing BX_MAX_PCI_DEVICES"));
-      return false;
+      return 0;
     }
     handle = BX_PCI_THIS num_pci_handlers++;
     BX_PCI_THIS pci_handler[handle].handler = dev;
     BX_PCI_THIS pci_handler_id[*devfunc] = handle;
     BX_INFO(("%s present at device %d, function %d", descr, *devfunc >> 3,
              *devfunc & 0x07));
-    return true; // device/function mapped successfully
-  }
-  else {
-    return false; // device/function not available, return false.
+    return 1; // device/function mapped successfully
+  } else {
+    return 0; // device/function not available, return false.
   }
 }
 
