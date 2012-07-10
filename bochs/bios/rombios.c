@@ -3789,6 +3789,17 @@ BX_DEBUG_INT15("int15 AX=%04x\n",regs.u.r16.ax);
       regs.u.r8.ah = 0;  // "ok ejection may proceed"
       break;
 
+    case 0x80:
+    case 0x81:
+    case 0x82:
+    case 0x90:
+      /* Device busy interrupt.  Called by Int 16h when no key available */
+    case 0x91:
+      /* Interrupt complete.  Called by IRQ handlers */
+      CLEAR_CF();
+      regs.u.r8.ah = 0;  // "operation success"
+      break;
+
     case 0x83: {
       if( regs.u.r8.al == 0 ) {
         // Set Interval requested.
@@ -4070,13 +4081,6 @@ ASM_END
 
       break;
 
-    case 0x90:
-      /* Device busy interrupt.  Called by Int 16h when no key available */
-      break;
-
-    case 0x91:
-      /* Interrupt complete.  Called by Int 16h when key becomes available */
-      break;
 
     case 0xbf:
       BX_INFO("*** int 15h function AH=bf not yet supported!\n");
@@ -9477,8 +9481,12 @@ int76_handler:
   push  ds
   mov   ax, #0x0040
   mov   ds, ax
-  mov   0x008E, #0xff
+  mov   BYTE 0x008E, #0xff
   call  eoi_both_pics
+
+  // Notify fixed disk interrupt complete w/ int 15h, function AX=9100
+  mov   ax, #0x9100
+  int   0x15
   pop   ds
   pop   ax
   iret
@@ -10658,6 +10666,24 @@ post_default_ints:
   add  bx, #4
   loop post_default_ints
 
+  ;; Master PIC vector
+  mov  bx, #0x0020
+  mov  cl, #0x08
+  mov  ax, #dummy_master_pic_irq_handler
+post_default_master_pic_ints:
+  mov  [bx], ax
+  add  bx, #4
+  loop post_default_master_pic_ints
+
+  ;; Slave PIC vector
+  add  bx, #0x0180
+  mov  cl, #0x08
+  mov  ax, #dummy_slave_pic_irq_handler
+post_default_slave_pic_ints:
+  mov  [bx], ax
+  add  bx, #4
+  loop post_default_slave_pic_ints
+
   ;; Printer Services vector
   SET_INT_VECTOR(0x17, #0xF000, #int17_handler)
 
@@ -10868,7 +10894,7 @@ normal_post:
 
 
   ;; Parallel setup
-  SET_INT_VECTOR(0x0F, #0xF000, #dummy_iret_handler)
+  ;; SET_INT_VECTOR(0x0F, #0xF000, #dummy_master_pic_irq_handler) ; commented it because this vector is already initialized
   xor ax, ax
   mov ds, ax
   xor bx, bx
@@ -10884,7 +10910,7 @@ normal_post:
   mov 0x410, ax
 
   ;; Serial setup
-  SET_INT_VECTOR(0x0C, #0xF000, #dummy_iret_handler)
+  ;; SET_INT_VECTOR(0x0C, #0xF000, #dummy_master_pic_irq_handler) ; commented it because this vector is already initialized
   SET_INT_VECTOR(0x14, #0xF000, #int14_handler)
   xor bx, bx
   mov cl, #0x0a ; timeout value
@@ -10908,6 +10934,9 @@ normal_post:
   SET_INT_VECTOR(0x70, #0xF000, #int70_handler)
   ;; BIOS DATA AREA 0x4CE ???
   call timer_tick_post
+
+  ;; IRQ9 (IRQ2 redirect) setup
+  SET_INT_VECTOR(0x71, #0xF000, #int71_handler)
 
   ;; PS/2 mouse setup
   SET_INT_VECTOR(0x74, #0xF000, #int74_handler)
@@ -11109,8 +11138,8 @@ int16_handler:
   cmp   ah, #0x10
   je    int16_F00
 
-  mov  bx, #0xf000
-  mov  ds, bx
+  push cs
+  pop ds
   call _int16_function
   popa
   popf
@@ -11134,40 +11163,33 @@ int16_zero_set:
   iret
 
 int16_F00:
-  mov  bx, #0x0040
-  mov  ds, bx
+  mov  ax, #0x0040
+  mov  ds, ax
+
+  cli
+  mov  ax, 0x001a
+  cmp  ax, 0x001c
+  jne  int16_key_found
+  sti
+  // no key yet, call int 15h, function AX=9002
+  mov  ax, #0x9002
+  int  #0x15
 
 int16_wait_for_key:
   cli
-  mov  bx, 0x001a
-  cmp  bx, 0x001c
+  mov  ax, 0x001a
+  cmp  ax, 0x001c
   jne  int16_key_found
   sti
-  nop
-#if 0
-                           /* no key yet, call int 15h, function AX=9002 */
-  0x50,                    /* push AX */
-  0xb8, 0x02, 0x90,        /* mov AX, #0x9002 */
-  0xcd, 0x15,              /* int 15h */
-  0x58,                    /* pop  AX */
-  0xeb, 0xea,              /* jmp   WAIT_FOR_KEY */
-#endif
   jmp  int16_wait_for_key
 
 int16_key_found:
-  mov  bx, #0xf000
-  mov  ds, bx
+  push cs
+  pop ds
   call _int16_function
   popa
   popf
   pop  ds
-#if 0
-                           /* notify int16 complete w/ int 15h, function AX=9102 */
-  0x50,                    /* push AX */
-  0xb8, 0x02, 0x91,        /* mov AX, #0x9102 */
-  0xcd, 0x15,              /* int 15h */
-  0x58,                    /* pop  AX */
-#endif
   iret
 
 
@@ -11221,8 +11243,8 @@ int09_check_pause: ;; check for pause key
   jmp int09_done
 
 int09_process_key:
-  mov   bx, #0xf000
-  mov   ds, bx
+  push cs
+  pop  ds
   call  _int09_function
 
 int09_done:
@@ -11231,10 +11253,37 @@ int09_done:
   cli
   call eoi_master_pic
 
+  // Notify keyboard interrupt complete w/ int 15h, function AX=9102
+  mov ax, #0x9102
+  int #0x15
+
 int09_finish:
   mov al, #0xAE      ;;enable keyboard
   out PORT_PS2_STATUS, al
   pop ax
+  iret
+
+; IRQ9 handler(Redirect to IRQ2)
+;--------------------
+int71_handler:
+  push ax
+  mov  al, #0x20
+  out  #0xA0, al
+  pop  ax
+  int  #0x0A
+  iret
+
+;--------------------
+dummy_master_pic_irq_handler:
+  push  ax
+  call  eoi_master_pic
+  pop   ax
+  iret
+;--------------------
+dummy_slave_pic_irq_handler:
+  push  ax
+  call  eoi_both_pics
+  pop   ax
   iret
 
 
@@ -11283,6 +11332,10 @@ int0e_normal:
   or   al, #0x80 ;; diskette interrupt has occurred
   mov  0x043e, al
   pop  ds
+
+  // Notify diskette interrupt complete w/ int 15h, function AX=9101
+  mov  ax, #0x9101
+  int  #0x15
   pop  dx
   pop  ax
   iret
