@@ -852,8 +852,7 @@ void   ata_detect();
 void   ata_reset();
 
 Bit16u ata_cmd_non_data();
-Bit16u ata_cmd_data_in();
-Bit16u ata_cmd_data_out();
+Bit16u ata_cmd_data_io();
 Bit16u ata_cmd_packet();
 
 Bit16u atapi_get_sense();
@@ -2484,7 +2483,7 @@ void ata_detect( )
       write_byte(ebda_seg,&EbdaData->ata.devices[device].device,ATA_DEVICE_HD);
       write_byte(ebda_seg,&EbdaData->ata.devices[device].mode, ATA_MODE_PIO16);
 
-      if (ata_cmd_data_in(device,ATA_CMD_IDENTIFY_DEVICE, 1, 0, 0, 0, 0L, 0L, get_SS(),buffer) !=0 )
+      if (ata_cmd_data_io(0, device,ATA_CMD_IDENTIFY_DEVICE, 1, 0, 0, 0, 0L, 0L, get_SS(),buffer) !=0 )
         BX_PANIC("ata-detect: Failed to detect ATA device\n");
 
       removable = (read_byte(get_SS(),buffer+0) & 0x80) ? 1 : 0;
@@ -2591,7 +2590,7 @@ void ata_detect( )
       write_byte(ebda_seg,&EbdaData->ata.devices[device].device,ATA_DEVICE_CDROM);
       write_byte(ebda_seg,&EbdaData->ata.devices[device].mode, ATA_MODE_PIO16);
 
-      if (ata_cmd_data_in(device,ATA_CMD_IDENTIFY_DEVICE_PACKET, 1, 0, 0, 0, 0L, 0L, get_SS(),buffer) != 0)
+      if (ata_cmd_data_io(0, device,ATA_CMD_IDENTIFY_DEVICE_PACKET, 1, 0, 0, 0, 0L, 0L, get_SS(),buffer) != 0)
         BX_PANIC("ata-detect: Failed to detect ATAPI device\n");
 
       type      = read_byte(get_SS(),buffer+1) & 0x1f;
@@ -2751,7 +2750,7 @@ Bit16u ata_cmd_non_data()
 {return 0;}
 
 // ---------------------------------------------------------------------------
-// ATA/ATAPI driver : execute a data-in command
+// ATA/ATAPI driver : execute a data-in/out command
 // ---------------------------------------------------------------------------
       // returns
       // 0 : no error
@@ -2762,8 +2761,8 @@ Bit16u ata_cmd_non_data()
       // 5 : more sectors to read/verify
       // 6 : no sectors left to write
       // 7 : more sectors to write
-Bit16u ata_cmd_data_in(device, command, count, cylinder, head, sector, lba_low, lba_high, segment, offset)
-Bit16u device, command, count, cylinder, head, sector, segment, offset;
+Bit16u ata_cmd_data_io(ioflag, device, command, count, cylinder, head, sector, lba_low, lba_high, segment, offset)
+Bit16u ioflag, device, command, count, cylinder, head, sector, segment, offset;
 Bit32u lba_low, lba_high;
 {
   Bit16u ebda_seg=read_word(0x0040,0x000E);
@@ -2820,10 +2819,10 @@ Bit32u lba_low, lba_high;
   status = inb(iobase1 + ATA_CB_STAT);
 
   if (status & ATA_CB_STAT_ERR) {
-    BX_DEBUG_ATA("ata_cmd_data_in : read error\n");
+    BX_DEBUG_ATA("ata_cmd_data_io : read error\n");
     return 2;
   } else if ( !(status & ATA_CB_STAT_DRQ) ) {
-    BX_DEBUG_ATA("ata_cmd_data_in : DRQ not set (status %02x)\n", (unsigned) status);
+    BX_DEBUG_ATA("ata_cmd_data_io : DRQ not set (status %02x)\n", (unsigned) status);
     return 3;
   }
 
@@ -2835,12 +2834,14 @@ ASM_END
 
   while (1) {
 
+    if(ioflag == 0)
+    {
 ASM_START
         push bp
         mov  bp, sp
-        mov  di, _ata_cmd_data_in.offset + 2[bp]
-        mov  ax, _ata_cmd_data_in.segment + 2[bp]
-        mov  cx, _ata_cmd_data_in.blksize + 2[bp]
+        mov  di, _ata_cmd_data_io.offset + 2[bp]
+        mov  ax, _ata_cmd_data_io.segment + 2[bp]
+        mov  cx, _ata_cmd_data_io.blksize + 2[bp]
 
         ;; adjust if there will be an overrun. 2K max sector size
         cmp   di, #0xf800 ;;
@@ -2853,9 +2854,9 @@ ata_in_adjust:
 ata_in_no_adjust:
         mov   es, ax      ;; segment in es
 
-        mov   dx, _ata_cmd_data_in.iobase1 + 2[bp] ;; ATA data read port
+        mov   dx, _ata_cmd_data_io.iobase1 + 2[bp] ;; ATA data read port
 
-        mov  ah, _ata_cmd_data_in.mode + 2[bp]
+        mov  ah, _ata_cmd_data_io.mode + 2[bp]
         cmp  ah, #ATA_MODE_PIO32
         je   ata_in_32
 
@@ -2869,129 +2870,19 @@ ata_in_32:
           insd ;; CX dwords transferred from port(DX) to ES:[DI]
 
 ata_in_done:
-        mov  _ata_cmd_data_in.offset + 2[bp], di
-        mov  _ata_cmd_data_in.segment + 2[bp], es
+        mov  _ata_cmd_data_io.offset + 2[bp], di
+        mov  _ata_cmd_data_io.segment + 2[bp], es
         pop  bp
 ASM_END
-
-    current++;
-    write_word(ebda_seg, &EbdaData->ata.trsfsectors,current);
-    count--;
-    await_ide(NOT_BSY, iobase1, IDE_TIMEOUT);
-    status = inb(iobase1 + ATA_CB_STAT);
-    if (count == 0) {
-      if ( (status & (ATA_CB_STAT_BSY | ATA_CB_STAT_RDY | ATA_CB_STAT_DRQ | ATA_CB_STAT_ERR) )
-          != ATA_CB_STAT_RDY ) {
-        BX_DEBUG_ATA("ata_cmd_data_in : no sectors left (status %02x)\n", (unsigned) status);
-        return 4;
-      }
-      break;
     }
-    else {
-      if ( (status & (ATA_CB_STAT_BSY | ATA_CB_STAT_RDY | ATA_CB_STAT_DRQ | ATA_CB_STAT_ERR) )
-          != (ATA_CB_STAT_RDY | ATA_CB_STAT_DRQ) ) {
-        BX_DEBUG_ATA("ata_cmd_data_in : more sectors left (status %02x)\n", (unsigned) status);
-        return 5;
-      }
-      continue;
-    }
-  }
-  // Enable interrupts
-  outb(iobase2+ATA_CB_DC, ATA_CB_DC_HD15);
-  return 0;
-}
-
-// ---------------------------------------------------------------------------
-// ATA/ATAPI driver : execute a data-out command
-// ---------------------------------------------------------------------------
-      // returns
-      // 0 : no error
-      // 1 : BUSY bit set
-      // 2 : read error
-      // 3 : expected DRQ=1
-      // 4 : no sectors left to read/verify
-      // 5 : more sectors to read/verify
-      // 6 : no sectors left to write
-      // 7 : more sectors to write
-Bit16u ata_cmd_data_out(device, command, count, cylinder, head, sector, lba_low, lba_high, segment, offset)
-Bit16u device, command, count, cylinder, head, sector, segment, offset;
-Bit32u lba_low, lba_high;
-{
-  Bit16u ebda_seg=read_word(0x0040,0x000E);
-  Bit16u iobase1, iobase2, blksize;
-  Bit8u  channel, slave;
-  Bit8u  status, current, mode;
-
-  channel = device / 2;
-  slave   = device % 2;
-
-  iobase1 = read_word(ebda_seg, &EbdaData->ata.channels[channel].iobase1);
-  iobase2 = read_word(ebda_seg, &EbdaData->ata.channels[channel].iobase2);
-  mode    = read_byte(ebda_seg, &EbdaData->ata.devices[device].mode);
-  blksize = 0x200; // was = read_word(ebda_seg, &EbdaData->ata.devices[device].blksize);
-  if (mode == ATA_MODE_PIO32) blksize>>=2;
-  else blksize>>=1;
-
-  // Reset count of transferred data
-  write_word(ebda_seg, &EbdaData->ata.trsfsectors,0);
-  write_dword(ebda_seg, &EbdaData->ata.trsfbytes,0L);
-  current = 0;
-
-  status = inb(iobase1 + ATA_CB_STAT);
-  if (status & ATA_CB_STAT_BSY) return 1;
-
-  outb(iobase2 + ATA_CB_DC, ATA_CB_DC_HD15 | ATA_CB_DC_NIEN);
-
-  // sector will be 0 only on lba access. Convert to lba-chs
-  if (sector == 0) {
-    if ((count >= 1 << 8) || lba_high || (lba_low >= ((1UL << 28) - count))) {
-      outb(iobase1 + ATA_CB_FR, 0x00);
-      outb(iobase1 + ATA_CB_SC, (count >> 8) & 0xff);
-      outb(iobase1 + ATA_CB_SN, lba_low >> 24);
-      outb(iobase1 + ATA_CB_CL, lba_high & 0xff);
-      outb(iobase1 + ATA_CB_CH, lba_high >> 8);
-      command |= 0x04;
-      count &= (1UL << 8) - 1;
-      lba_low &= (1UL << 24) - 1;
-    }
-    sector = (Bit16u) (lba_low & 0x000000ffL);
-    cylinder = (Bit16u) ((lba_low>>8) & 0x0000ffffL);
-    head = ((Bit16u) ((lba_low>>24) & 0x0000000fL)) | ATA_CB_DH_LBA;
-  }
-
-  outb(iobase1 + ATA_CB_FR, 0x00);
-  outb(iobase1 + ATA_CB_SC, count);
-  outb(iobase1 + ATA_CB_SN, sector);
-  outb(iobase1 + ATA_CB_CL, cylinder & 0x00ff);
-  outb(iobase1 + ATA_CB_CH, cylinder >> 8);
-  outb(iobase1 + ATA_CB_DH, (slave ? ATA_CB_DH_DEV1 : ATA_CB_DH_DEV0) | (Bit8u) head );
-  outb(iobase1 + ATA_CB_CMD, command);
-
-  await_ide(NOT_BSY_DRQ, iobase1, IDE_TIMEOUT);
-  status = inb(iobase1 + ATA_CB_STAT);
-
-  if (status & ATA_CB_STAT_ERR) {
-    BX_DEBUG_ATA("ata_cmd_data_out : read error\n");
-    return 2;
-  } else if ( !(status & ATA_CB_STAT_DRQ) ) {
-    BX_DEBUG_ATA("ata_cmd_data_out : DRQ not set (status %02x)\n", (unsigned) status);
-    return 3;
-  }
-
-  // FIXME : move seg/off translation here
-
-ASM_START
-        sti  ;; enable higher priority interrupts
-ASM_END
-
-  while (1) {
-
+    else
+    {
 ASM_START
         push bp
         mov  bp, sp
-        mov  si, _ata_cmd_data_out.offset + 2[bp]
-        mov  ax, _ata_cmd_data_out.segment + 2[bp]
-        mov  cx, _ata_cmd_data_out.blksize + 2[bp]
+        mov  si, _ata_cmd_data_io.offset + 2[bp]
+        mov  ax, _ata_cmd_data_io.segment + 2[bp]
+        mov  cx, _ata_cmd_data_io.blksize + 2[bp]
 
         ;; adjust if there will be an overrun. 2K max sector size
         cmp   si, #0xf800 ;;
@@ -3004,9 +2895,9 @@ ata_out_adjust:
 ata_out_no_adjust:
         mov   es, ax      ;; segment in es
 
-        mov   dx, _ata_cmd_data_out.iobase1 + 2[bp] ;; ATA data write port
+        mov   dx, _ata_cmd_data_io.iobase1 + 2[bp] ;; ATA data write port
 
-        mov  ah, _ata_cmd_data_out.mode + 2[bp]
+        mov  ah, _ata_cmd_data_io.mode + 2[bp]
         cmp  ah, #ATA_MODE_PIO32
         je   ata_out_32
 
@@ -3022,30 +2913,54 @@ ata_out_32:
           outsd ;; CX dwords transferred from port(DX) to ES:[SI]
 
 ata_out_done:
-        mov  _ata_cmd_data_out.offset + 2[bp], si
-        mov  _ata_cmd_data_out.segment + 2[bp], es
+        mov  _ata_cmd_data_io.offset + 2[bp], si
+        mov  _ata_cmd_data_io.segment + 2[bp], es
         pop  bp
 ASM_END
+    }
 
     current++;
     write_word(ebda_seg, &EbdaData->ata.trsfsectors,current);
     count--;
+    if(ioflag == 0) await_ide(NOT_BSY, iobase1, IDE_TIMEOUT);
     status = inb(iobase1 + ATA_CB_STAT);
-    if (count == 0) {
-      if ( (status & (ATA_CB_STAT_BSY | ATA_CB_STAT_RDY | ATA_CB_STAT_DF | ATA_CB_STAT_DRQ | ATA_CB_STAT_ERR) )
-          != ATA_CB_STAT_RDY ) {
-        BX_DEBUG_ATA("ata_cmd_data_out : no sectors left (status %02x)\n", (unsigned) status);
-        return 6;
+    if(ioflag == 0)
+    {
+      if (count == 0) {
+        if ( (status & (ATA_CB_STAT_BSY | ATA_CB_STAT_RDY | ATA_CB_STAT_DRQ | ATA_CB_STAT_ERR) )
+            != ATA_CB_STAT_RDY ) {
+          BX_DEBUG_ATA("ata_cmd_data_io : no sectors left (status %02x)\n", (unsigned) status);
+          return 4;
+        }
+        break;
       }
-      break;
+      else {
+        if ( (status & (ATA_CB_STAT_BSY | ATA_CB_STAT_RDY | ATA_CB_STAT_DRQ | ATA_CB_STAT_ERR) )
+            != (ATA_CB_STAT_RDY | ATA_CB_STAT_DRQ) ) {
+          BX_DEBUG_ATA("ata_cmd_data_io : more sectors left (status %02x)\n", (unsigned) status);
+          return 5;
+        }
+        continue;
+      }
     }
-    else {
-      if ( (status & (ATA_CB_STAT_BSY | ATA_CB_STAT_RDY | ATA_CB_STAT_DRQ | ATA_CB_STAT_ERR) )
-          != (ATA_CB_STAT_RDY | ATA_CB_STAT_DRQ) ) {
-        BX_DEBUG_ATA("ata_cmd_data_out : more sectors left (status %02x)\n", (unsigned) status);
-        return 7;
+    else
+    {
+      if (count == 0) {
+        if ( (status & (ATA_CB_STAT_BSY | ATA_CB_STAT_RDY | ATA_CB_STAT_DF | ATA_CB_STAT_DRQ | ATA_CB_STAT_ERR) )
+            != ATA_CB_STAT_RDY ) {
+          BX_DEBUG_ATA("ata_cmd_data_io : no sectors left (status %02x)\n", (unsigned) status);
+          return 6;
+        }
+        break;
       }
-      continue;
+      else {
+        if ( (status & (ATA_CB_STAT_BSY | ATA_CB_STAT_RDY | ATA_CB_STAT_DRQ | ATA_CB_STAT_ERR) )
+            != (ATA_CB_STAT_RDY | ATA_CB_STAT_DRQ) ) {
+          BX_DEBUG_ATA("ata_cmd_data_io : more sectors left (status %02x)\n", (unsigned) status);
+          return 7;
+        }
+        continue;
+      }
     }
   }
   // Enable interrupts
@@ -3541,7 +3456,7 @@ cdrom_boot()
     if(buffer[7+i]!=read_byte(0xf000,&eltorito[i])) return 6;
 
   // ok, now we calculate the Boot catalog address
-  lba=buffer[0x4A]*0x1000000+buffer[0x49]*0x10000+buffer[0x48]*0x100+buffer[0x47];
+  lba=*((Bit32u *)&buffer[0x47]);
 
   // And we read the Boot Catalog
   memsetb(get_SS(),atacmd,0,12);
@@ -3578,16 +3493,16 @@ cdrom_boot()
   write_byte(ebda_seg,&EbdaData->cdemu.controller_index,device/2);
   write_byte(ebda_seg,&EbdaData->cdemu.device_spec,device%2);
 
-  boot_segment=buffer[0x23]*0x100+buffer[0x22];
+  boot_segment=*((Bit16u *)&buffer[0x22]);
   if(boot_segment==0x0000)boot_segment=0x07C0;
 
   write_word(ebda_seg,&EbdaData->cdemu.load_segment,boot_segment);
   write_word(ebda_seg,&EbdaData->cdemu.buffer_segment,0x0000);
 
-  nbsectors=buffer[0x27]*0x100+buffer[0x26];
+  nbsectors=*((Bit16u *)&buffer[0x26]);
   write_word(ebda_seg,&EbdaData->cdemu.sector_count,nbsectors);
 
-  lba=buffer[0x2B]*0x1000000+buffer[0x2A]*0x10000+buffer[0x29]*0x100+buffer[0x28];
+  lba=*((Bit32u *)&buffer[0x28]);
   write_dword(ebda_seg,&EbdaData->cdemu.ilba,lba);
 
   // And we read the image in memory
@@ -3747,12 +3662,8 @@ BX_DEBUG_INT15("int15 AX=%04x\n",regs.u.r16.ax);
     case 0x24: /* A20 Control */
       switch (regs.u.r8.al) {
         case 0x00:
-          set_enable_a20(0);
-          CLEAR_CF();
-          regs.u.r8.ah = 0;
-          break;
         case 0x01:
-          set_enable_a20(1);
+          set_enable_a20(regs.u.r8.al);
           CLEAR_CF();
           regs.u.r8.ah = 0;
           break;
@@ -4448,15 +4359,13 @@ void set_e820_range(ES, DI, start, end, extra_start, extra_end, type)
      Bit8u extra_end;
      Bit16u type;
 {
-    write_word(ES, DI, start);
-    write_word(ES, DI+2, start >> 16);
+    write_dword(ES, DI, start);
     write_word(ES, DI+4, extra_start);
     write_word(ES, DI+6, 0x00);
 
     end -= start;
     extra_end -= extra_start;
-    write_word(ES, DI+8, end);
-    write_word(ES, DI+10, end >> 16);
+    write_dword(ES, DI+8, end);
     write_word(ES, DI+12, extra_end);
     write_word(ES, DI+14, 0x0000);
 
@@ -5521,9 +5430,9 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
       }
 
       if (GET_AH() == 0x02)
-        status=ata_cmd_data_in(device, ATA_CMD_READ_SECTORS, count, cylinder, head, sector, lba_low, lba_high, segment, offset);
+        status=ata_cmd_data_io(0, device, ATA_CMD_READ_SECTORS, count, cylinder, head, sector, lba_low, lba_high, segment, offset);
       else
-        status=ata_cmd_data_out(device, ATA_CMD_WRITE_SECTORS, count, cylinder, head, sector, lba_low, lba_high, segment, offset);
+        status=ata_cmd_data_io(1, device, ATA_CMD_WRITE_SECTORS, count, cylinder, head, sector, lba_low, lba_high, segment, offset);
 
       // Set nb of sector transferred
       SET_AL(read_word(ebda_seg, &EbdaData->ata.trsfsectors));
@@ -5630,9 +5539,9 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
 
       // Execute the command
       if (GET_AH() == 0x42)
-        status=ata_cmd_data_in(device, ATA_CMD_READ_SECTORS, count, 0, 0, 0, lba_low, lba_high, segment, offset);
+        status=ata_cmd_data_io(0, device, ATA_CMD_READ_SECTORS, count, 0, 0, 0, lba_low, lba_high, segment, offset);
       else
-        status=ata_cmd_data_out(device, ATA_CMD_WRITE_SECTORS, count, 0, 0, 0, lba_low, lba_high, segment, offset);
+        status=ata_cmd_data_io(1, device, ATA_CMD_WRITE_SECTORS, count, 0, 0, 0, lba_low, lba_high, segment, offset);
 
       count=read_word(ebda_seg, &EbdaData->ata.trsfsectors);
       write_word(DS, SI+(Bit16u)&Int13Ext->count, count);
@@ -6997,60 +6906,37 @@ floppy_media_sense(drive)
   else
     drive_type &= 0x0f;
 
-  if (drive_type == 1) {
-    // 360K 5.25" drive
-    config_data = 0x00; // 0000 0000
-    media_state = 0x25; // 0010 0101
-    retval = 1;
-  }
-  else if (drive_type == 2) {
-    // 1.2 MB 5.25" drive
-    config_data = 0x00; // 0000 0000
-    media_state = 0x25; // 0010 0101   // need double stepping??? (bit 5)
-    retval = 1;
-  }
-  else if (drive_type == 3) {
-    // 720K 3.5" drive
-    config_data = 0x00; // 0000 0000 ???
-    media_state = 0x17; // 0001 0111
-    retval = 1;
-  }
-  else if (drive_type == 4) {
-    // 1.44 MB 3.5" drive
-    config_data = 0x00; // 0000 0000
-    media_state = 0x17; // 0001 0111
-    retval = 1;
-  }
-  else if (drive_type == 5) {
-    // 2.88 MB 3.5" drive
-    config_data = 0xCC; // 1100 1100
-    media_state = 0xD7; // 1101 0111
-    retval = 1;
-  }
-  // Extended floppy size uses special cmos setting
-  else if (drive_type == 6) {
-    // 160k 5.25" drive
-    config_data = 0x00; // 0000 0000
-    media_state = 0x27; // 0010 0111
-    retval = 1;
-  }
-  else if (drive_type == 7) {
-    // 180k 5.25" drive
-    config_data = 0x00; // 0000 0000
-    media_state = 0x27; // 0010 0111
-    retval = 1;
-  }
-  else if (drive_type == 8) {
-    // 320k 5.25" drive
-    config_data = 0x00; // 0000 0000
-    media_state = 0x27; // 0010 0111
-    retval = 1;
-  }
-  else {
-    // not recognized
-    config_data = 0x00; // 0000 0000
-    media_state = 0x00; // 0000 0000
-    retval = 0;
+  // Changed if-else to switch
+  switch(drive_type) {
+    case 1:    // 360K 5.25" drive
+    case 2:    // 1.2 MB 5.25" drive
+      config_data = 0x00; // 0000 0000
+      media_state = 0x25; // 0010 0101
+      retval = 1;
+      break;
+    case 3:    // 720K 3.5" drive
+    case 4:    // 1.44 MB 3.5" drive
+      config_data = 0x00; // 0000 0000 ???
+      media_state = 0x17; // 0001 0111
+      retval = 1;
+      break;
+    case 5:    // 2.88 MB 3.5" drive
+      config_data = 0xCC; // 1100 1100
+      media_state = 0xD7; // 1101 0111
+      retval = 1;
+      break;
+    case 6:    // 160k 5.25" drive
+    case 7:    // 180k 5.25" drive
+    case 8:    // 320k 5.25" drive
+      config_data = 0x00; // 0000 0000
+      media_state = 0x27; // 0010 0111
+      retval = 1;
+      break;
+    default:   // not recognized
+      config_data = 0x00; // 0000 0000
+      media_state = 0x00; // 0000 0000
+      retval = 0;
+      break;
   }
 
   if (drive == 0)
@@ -7217,47 +7103,53 @@ BX_DEBUG_INT13_FL("floppy f00\n");
         }
       }
 
+      if(ah == 0x04) {
+        // Verify Diskette Sectors
+
+        goto floppy_return_success;
+      }
+
+      //-----------------------------------
+      // set up DMA controller for transfer
+      //-----------------------------------
+
+      // es:bx = pointer to where to place information from diskette
+      // port 04: DMA-1 base and current address, channel 2
+      // port 05: DMA-1 base and current count, channel 2
+      page = (ES >> 12);   // upper 4 bits
+      base_es = (ES << 4); // lower 16bits contributed by ES
+      base_address = base_es + BX; // lower 16 bits of address
+                                   // contributed by ES:BX
+      if ( base_address < base_es ) {
+        // in case of carry, adjust page by 1
+        page++;
+      }
+      base_count = (num_sectors * 512) - 1;
+
+      // check for 64K boundary overrun
+      last_addr = base_address + base_count;
+      if (last_addr < base_address) {
+        SET_AH(0x09);
+        set_diskette_ret_status(0x09);
+        SET_AL(0); // no sectors read
+        SET_CF(); // error occurred
+        return;
+      }
+
+      BX_DEBUG_INT13_FL("masking DMA-1 c2\n");
+      outb(PORT_DMA1_MASK_REG, 0x06);
+
+  BX_DEBUG_INT13_FL("clear flip-flop\n");
+      outb(PORT_DMA1_CLEAR_FF_REG, 0x00); // clear flip-flop
+      outb(PORT_DMA_ADDR_2, base_address);
+      outb(PORT_DMA_ADDR_2, base_address>>8);
+  BX_DEBUG_INT13_FL("clear flip-flop\n");
+      outb(PORT_DMA1_CLEAR_FF_REG, 0x00); // clear flip-flop
+      outb(PORT_DMA_CNT_2, base_count);
+      outb(PORT_DMA_CNT_2, base_count>>8);
+
       if (ah == 0x02) {
         // Read Diskette Sectors
-
-        //-----------------------------------
-        // set up DMA controller for transfer
-        //-----------------------------------
-
-        // es:bx = pointer to where to place information from diskette
-        // port 04: DMA-1 base and current address, channel 2
-        // port 05: DMA-1 base and current count, channel 2
-        page = (ES >> 12);   // upper 4 bits
-        base_es = (ES << 4); // lower 16bits contributed by ES
-        base_address = base_es + BX; // lower 16 bits of address
-                                     // contributed by ES:BX
-        if ( base_address < base_es ) {
-          // in case of carry, adjust page by 1
-          page++;
-        }
-        base_count = (num_sectors * 512) - 1;
-
-        // check for 64K boundary overrun
-        last_addr = base_address + base_count;
-        if (last_addr < base_address) {
-          SET_AH(0x09);
-          set_diskette_ret_status(0x09);
-          SET_AL(0); // no sectors read
-          SET_CF(); // error occurred
-          return;
-        }
-
-        BX_DEBUG_INT13_FL("masking DMA-1 c2\n");
-        outb(PORT_DMA1_MASK_REG, 0x06);
-
-  BX_DEBUG_INT13_FL("clear flip-flop\n");
-        outb(PORT_DMA1_CLEAR_FF_REG, 0x00); // clear flip-flop
-        outb(PORT_DMA_ADDR_2, base_address);
-        outb(PORT_DMA_ADDR_2, base_address>>8);
-  BX_DEBUG_INT13_FL("clear flip-flop\n");
-        outb(PORT_DMA1_CLEAR_FF_REG, 0x00); // clear flip-flop
-        outb(PORT_DMA_CNT_2, base_count);
-        outb(PORT_DMA_CNT_2, base_count>>8);
 
         // port 0b: DMA-1 Mode Register
         mode_register = 0x46; // single mode, increment, autoinit disable,
@@ -7282,121 +7174,8 @@ BX_DEBUG_INT13_FL("floppy f00\n");
 
         // send read-normal-data command (9 bytes) to controller
         outb(PORT_FD_DATA, 0xe6); // e6: read normal data
-        outb(PORT_FD_DATA, (head << 2) | drive); // HD DR1 DR2
-        outb(PORT_FD_DATA, track);
-        outb(PORT_FD_DATA, head);
-        outb(PORT_FD_DATA, sector);
-        outb(PORT_FD_DATA, 2); // 512 byte sector size
-        outb(PORT_FD_DATA, sector + num_sectors - 1); // last sector to read on track
-        outb(PORT_FD_DATA, 0); // Gap length
-        outb(PORT_FD_DATA, 0xff); // Gap length
-
-        // turn on interrupts
-  ASM_START
-        sti
-  ASM_END
-
-        // wait on 40:3e bit 7 to become 1
-        do {
-          val8 = read_byte(0x0040, 0x0040);
-          if (val8 == 0) {
-            floppy_reset_controller();
-            SET_AH(0x80); // drive not ready (timeout)
-            set_diskette_ret_status(0x80);
-            SET_AL(0); // no sectors read
-            SET_CF(); // error occurred
-            return;
-          }
-          val8 = (read_byte(0x0040, 0x003e) & 0x80);
-        } while ( val8 == 0 );
-
-        val8 = 0; // separate asm from while() loop
-        // turn off interrupts
-  ASM_START
-        cli
-  ASM_END
-
-        // set 40:3e bit 7 to 0
-        val8 = read_byte(0x0040, 0x003e);
-        val8 &= 0x7f;
-        write_byte(0x0040, 0x003e, val8);
-
-        // check port 3f4 for accessibility to status bytes
-        val8 = inb(PORT_FD_STATUS);
-        if ( (val8 & 0xc0) != 0xc0 )
-          BX_PANIC("int13_diskette: ctrl not ready\n");
-
-        // read 7 return status bytes from controller
-        // using loop index broken, have to unroll...
-        return_status[0] = inb(PORT_FD_DATA);
-        return_status[1] = inb(PORT_FD_DATA);
-        return_status[2] = inb(PORT_FD_DATA);
-        return_status[3] = inb(PORT_FD_DATA);
-        return_status[4] = inb(PORT_FD_DATA);
-        return_status[5] = inb(PORT_FD_DATA);
-        return_status[6] = inb(PORT_FD_DATA);
-        // record in BIOS Data Area
-        write_byte(0x0040, 0x0042, return_status[0]);
-        write_byte(0x0040, 0x0043, return_status[1]);
-        write_byte(0x0040, 0x0044, return_status[2]);
-        write_byte(0x0040, 0x0045, return_status[3]);
-        write_byte(0x0040, 0x0046, return_status[4]);
-        write_byte(0x0040, 0x0047, return_status[5]);
-        write_byte(0x0040, 0x0048, return_status[6]);
-
-        if ( (return_status[0] & 0xc0) != 0 ) {
-          SET_AH(0x20);
-          set_diskette_ret_status(0x20);
-          SET_AL(0); // no sectors read
-          SET_CF(); // error occurred
-          return;
-        }
-
-        // ??? should track be new val from return_status[3] ?
-        set_diskette_current_cyl(drive, track);
-        // AL = number of sectors read (same value as passed)
-        SET_AH(0x00); // success
-        CLEAR_CF();   // success
-        return;
-      } else if (ah == 0x03) {
+      } else {  // if (ah == 0x03)
         // Write Diskette Sectors
-
-        //-----------------------------------
-        // set up DMA controller for transfer
-        //-----------------------------------
-
-        // es:bx = pointer to where to place information from diskette
-        // port 04: DMA-1 base and current address, channel 2
-        // port 05: DMA-1 base and current count, channel 2
-        page = (ES >> 12);   // upper 4 bits
-        base_es = (ES << 4); // lower 16bits contributed by ES
-        base_address = base_es + BX; // lower 16 bits of address
-                                     // contributed by ES:BX
-        if ( base_address < base_es ) {
-          // in case of carry, adjust page by 1
-          page++;
-        }
-        base_count = (num_sectors * 512) - 1;
-
-        // check for 64K boundary overrun
-        last_addr = base_address + base_count;
-        if (last_addr < base_address) {
-          SET_AH(0x09);
-          set_diskette_ret_status(0x09);
-          SET_AL(0); // no sectors read
-          SET_CF(); // error occurred
-          return;
-        }
-
-        BX_DEBUG_INT13_FL("masking DMA-1 c2\n");
-        outb(PORT_DMA1_MASK_REG, 0x06);
-
-        outb(PORT_DMA1_CLEAR_FF_REG, 0x00); // clear flip-flop
-        outb(PORT_DMA_ADDR_2, base_address);
-        outb(PORT_DMA_ADDR_2, base_address>>8);
-        outb(PORT_DMA1_CLEAR_FF_REG, 0x00); // clear flip-flop
-        outb(PORT_DMA_CNT_2, base_count);
-        outb(PORT_DMA_CNT_2, base_count>>8);
 
         // port 0b: DMA-1 Mode Register
         mode_register = 0x4a; // single mode, increment, autoinit disable,
@@ -7416,69 +7195,71 @@ BX_DEBUG_INT13_FL("floppy f00\n");
 
         // send write-normal-data command (9 bytes) to controller
         outb(PORT_FD_DATA, 0xc5); // c5: write normal data
-        outb(PORT_FD_DATA, (head << 2) | drive); // HD DR1 DR2
-        outb(PORT_FD_DATA, track);
-        outb(PORT_FD_DATA, head);
-        outb(PORT_FD_DATA, sector);
-        outb(PORT_FD_DATA, 2); // 512 byte sector size
-        outb(PORT_FD_DATA, sector + num_sectors - 1); // last sector to write on track
-        outb(PORT_FD_DATA, 0); // Gap length
-        outb(PORT_FD_DATA, 0xff); // Gap length
+      }
+      outb(PORT_FD_DATA, (head << 2) | drive); // HD DR1 DR2
+      outb(PORT_FD_DATA, track);
+      outb(PORT_FD_DATA, head);
+      outb(PORT_FD_DATA, sector);
+      outb(PORT_FD_DATA, 2); // 512 byte sector size
+      outb(PORT_FD_DATA, sector + num_sectors - 1); // last sector to read/write on track
+      outb(PORT_FD_DATA, 0); // Gap length
+      outb(PORT_FD_DATA, 0xff); // Gap length
 
-        // turn on interrupts
+      // turn on interrupts
   ASM_START
-        sti
+      sti
   ASM_END
 
-        // wait on 40:3e bit 7 to become 1
-        do {
-          val8 = read_byte(0x0040, 0x0040);
-          if (val8 == 0) {
-            floppy_reset_controller();
-            SET_AH(0x80); // drive not ready (timeout)
-            set_diskette_ret_status(0x80);
-            SET_AL(0); // no sectors written
-            SET_CF(); // error occurred
-            return;
-          }
-          val8 = (read_byte(0x0040, 0x003e) & 0x80);
-        } while ( val8 == 0 );
+      // wait on 40:3e bit 7 to become 1
+      do {
+        val8 = read_byte(0x0040, 0x0040);
+        if (val8 == 0) {
+          floppy_reset_controller();
+          SET_AH(0x80); // drive not ready (timeout)
+          set_diskette_ret_status(0x80);
+          SET_AL(0); // no sectors read / write
+          SET_CF(); // error occurred
+          return;
+        }
+        val8 = (read_byte(0x0040, 0x003e) & 0x80);
+      } while ( val8 == 0 );
 
-        val8 = 0; // separate asm from while() loop
-        // turn off interrupts
+      val8 = 0; // separate asm from while() loop
+      // turn off interrupts
   ASM_START
-        cli
+      cli
   ASM_END
 
-        // set 40:3e bit 7 to 0
-        val8 = read_byte(0x0040, 0x003e);
-        val8 &= 0x7f;
-        write_byte(0x0040, 0x003e, val8);
+      // set 40:3e bit 7 to 0
+      val8 = read_byte(0x0040, 0x003e);
+      val8 &= 0x7f;
+      write_byte(0x0040, 0x003e, val8);
 
-        // check port 3f4 for accessibility to status bytes
-        val8 = inb(PORT_FD_STATUS);
-        if ( (val8 & 0xc0) != 0xc0 )
-          BX_PANIC("int13_diskette: ctrl not ready\n");
+      // check port 3f4 for accessibility to status bytes
+      val8 = inb(PORT_FD_STATUS);
+      if ( (val8 & 0xc0) != 0xc0 )
+        BX_PANIC("int13_diskette: ctrl not ready\n");
 
-        // read 7 return status bytes from controller
-        // using loop index broken, have to unroll...
-        return_status[0] = inb(PORT_FD_DATA);
-        return_status[1] = inb(PORT_FD_DATA);
-        return_status[2] = inb(PORT_FD_DATA);
-        return_status[3] = inb(PORT_FD_DATA);
-        return_status[4] = inb(PORT_FD_DATA);
-        return_status[5] = inb(PORT_FD_DATA);
-        return_status[6] = inb(PORT_FD_DATA);
-        // record in BIOS Data Area
-        write_byte(0x0040, 0x0042, return_status[0]);
-        write_byte(0x0040, 0x0043, return_status[1]);
-        write_byte(0x0040, 0x0044, return_status[2]);
-        write_byte(0x0040, 0x0045, return_status[3]);
-        write_byte(0x0040, 0x0046, return_status[4]);
-        write_byte(0x0040, 0x0047, return_status[5]);
-        write_byte(0x0040, 0x0048, return_status[6]);
+      // read 7 return status bytes from controller
+      // using loop index broken, have to unroll...
+      return_status[0] = inb(PORT_FD_DATA);
+      return_status[1] = inb(PORT_FD_DATA);
+      return_status[2] = inb(PORT_FD_DATA);
+      return_status[3] = inb(PORT_FD_DATA);
+      return_status[4] = inb(PORT_FD_DATA);
+      return_status[5] = inb(PORT_FD_DATA);
+      return_status[6] = inb(PORT_FD_DATA);
+      // record in BIOS Data Area
+      memcpyb(0x0040, 0x0042, get_SS(), return_status, 7);
 
-        if ( (return_status[0] & 0xc0) != 0 ) {
+      if ( (return_status[0] & 0xc0) != 0 ) {
+        if (ah == 0x02) {
+          SET_AH(0x20);
+          set_diskette_ret_status(0x20);
+          SET_AL(0); // no sectors read
+          SET_CF(); // error occurred
+          return;
+        } else {  // if (ah == 0x03)
           if ( (return_status[1] & 0x02) != 0 ) {
             // diskette not writable.
             // AH=status code=0x03 (tried to write on write-protected disk)
@@ -7490,23 +7271,14 @@ BX_DEBUG_INT13_FL("floppy f00\n");
             BX_PANIC("int13_diskette_function: read error\n");
           }
         }
-
-        // ??? should track be new val from return_status[3] ?
-        set_diskette_current_cyl(drive, track);
-        // AL = number of sectors read (same value as passed)
-        SET_AH(0x00); // success
-        CLEAR_CF();   // success
-        return;
-      } else {  // if (ah == 0x04)
-        // Verify Diskette Sectors
-
-        // ??? should track be new val from return_status[3] ?
-        set_diskette_current_cyl(drive, track);
-        // AL = number of sectors verified (same value as passed)
-        CLEAR_CF();   // success
-        SET_AH(0x00); // success
-        return;
       }
+
+floppy_return_success:
+      // ??? should track be new val from return_status[3] ?
+      set_diskette_current_cyl(drive, track);
+      // AL = number of sectors read (same value as passed)
+      SET_AH(0x00); // success
+      CLEAR_CF();   // success
       break;
 
     case 0x05: // format diskette track
@@ -7630,13 +7402,7 @@ BX_DEBUG_INT13_FL("floppy f05\n");
       return_status[5] = inb(PORT_FD_DATA);
       return_status[6] = inb(PORT_FD_DATA);
       // record in BIOS Data Area
-      write_byte(0x0040, 0x0042, return_status[0]);
-      write_byte(0x0040, 0x0043, return_status[1]);
-      write_byte(0x0040, 0x0044, return_status[2]);
-      write_byte(0x0040, 0x0045, return_status[3]);
-      write_byte(0x0040, 0x0046, return_status[4]);
-      write_byte(0x0040, 0x0047, return_status[5]);
-      write_byte(0x0040, 0x0048, return_status[6]);
+      memcpyb(0x0040, 0x0042, get_SS(), return_status, 7);
 
       if ( (return_status[0] & 0xc0) != 0 ) {
         if ( (return_status[1] & 0x02) != 0 ) {
@@ -8903,12 +8669,6 @@ int19_next_boot:
   ;; Boot failed: invoke the boot recovery function
   int  #0x18
 
-;----------
-;- INT1Ch -
-;----------
-int1c_handler: ;; User Timer Tick
-  iret
-
 
 ;----------------------
 ;- POST: Floppy Drive -
@@ -9868,40 +9628,33 @@ pci_real_f0d: ;; write configuration dword
 pci_real_f0e: ;; get irq routing options
   cmp al, #0x0e
   jne pci_real_unknown
+  push ax
+  mov ax, #pci_routing_table_structure_end - pci_routing_table_structure_start
   SEG ES
-  cmp word ptr [di], #pci_routing_table_structure_end - pci_routing_table_structure_start
+  cmp word ptr [di], ax
   jb pci_real_too_small
-  SEG ES
-  mov word ptr [di], #pci_routing_table_structure_end - pci_routing_table_structure_start
+  stosw
   pushf
-  push ds
   push es
   push cx
-  push si
-  push di
   cld
   mov si, #pci_routing_table_structure_start
   push cs
   pop ds
   SEG ES
-  mov cx, [di+2]
-  SEG ES
-  mov es, [di+4]
-  mov di, cx
-  mov cx, #pci_routing_table_structure_end - pci_routing_table_structure_start
+  les di, [di+2]
+  mov cx, ax
   rep
       movsb
-  pop di
-  pop si
   pop cx
   pop es
-  pop ds
   popf
+  pop ax
   mov bx, #(1 << 9) | (1 << 11)   ;; irq 9 and 11 are used
   jmp pci_real_ok
 pci_real_too_small:
-  SEG ES
-  mov word ptr [di], #pci_routing_table_structure_end - pci_routing_table_structure_start
+  stosw
+  pop ax
   mov ah, #0x89
   jmp pci_real_fail
 
@@ -10078,7 +9831,7 @@ pci_init_io_loop2:
   in   eax, dx
   cmp  eax, ecx
   je   next_pci_base
-  xor  eax, #0xffffffff
+  not  eax
   mov  ecx, eax
   mov  eax, [bp-4]
   out  dx, eax
@@ -10121,8 +9874,7 @@ next_pci_dev:
   inc  bx
   cmp  bx, #0x0100
   jne  pci_init_io_loop1
-  mov  sp, bp
-  pop  bp
+  leave
   ret
 
 pcibios_init_set_elcr:
@@ -10147,8 +9899,8 @@ is_master_pic:
 pcibios_init_irqs:
   push ds
   push bp
-  mov  ax, #0xf000
-  mov  ds, ax
+  push cs
+  pop  ds
   mov  dx, #0x04d0 ;; reset ELCR1 + ELCR2
   mov  al, #0x00
   out  dx, al
@@ -10177,10 +9929,8 @@ pcibios_init_irqs:
   mov  cx, ax
   add  si, #0x20 ;; set pointer to 1st entry
   mov  bp, sp
-  mov  ax, #pci_irq_list
-  push ax
-  xor  ax, ax
-  push ax
+  push #pci_irq_list
+  push #0x00
 pci_init_irq_loop1:
   mov  bh, [si]
   mov  bl, [si+1]
@@ -10485,14 +10235,13 @@ pnpbios_code:
   mov  ax, 8[ebp]
   cmp  ax, #0x60 ;; Get Version and Installation Check
   jnz  pnpbios_fail
-  push ds
+  push es
   push di
-  mov  ds, 12[bp]
-  mov  di, 10[bp]
+  les  di, 10[bp]
   mov  ax, #0x0101
-  mov  [di], ax
+  stosw
   pop  di
-  pop  ds
+  pop  es
   xor  ax, ax ;; SUCCESS
   jmp  pnpbios_exit
 pnpbios_fail:
@@ -10692,9 +10441,6 @@ post_default_slave_pic_ints:
 
   ;; Bootstrap Loader vector
   SET_INT_VECTOR(0x19, #0xF000, #int19_handler)
-
-  ;; User Timer Tick vector
-  SET_INT_VECTOR(0x1c, #0xF000, #int1c_handler)
 
   ;; Memory Size Check vector
   SET_INT_VECTOR(0x12, #0xF000, #int12_handler)
@@ -11492,6 +11238,7 @@ pmode_IDT_info:
 dw 0x0000  ;; limit 15:00
 dw 0x0000  ;; base  15:00
 db 0x0f    ;; base  23:16
+db 0x00    ;; base  31:24
 
 ;; Real mode IDT descriptor
 ;;
@@ -11503,7 +11250,7 @@ rmode_IDT_info:
 dw 0x03ff  ;; limit 15:00
 dw 0x0000  ;; base  15:00
 db 0x00    ;; base  23:16
-
+db 0x00    ;; base  31:24
 
 ;----------
 ;- INT1Ah -
