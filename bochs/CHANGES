@@ -82,6 +82,11 @@ Changes after 2.5.1 release:
   - bxcommit: support command line options and non-interactive (quiet) mode
 
 - SF patches applied
+  [3540389] Patch 5 : Change memory reference functions argument order by Yeong-uk Jo
+  [3539254] Patch 4 : Memory reference optimization 2 by Yeong-uk Jo
+  [3539251] Patch 3 : Memory reference optimization by Yeong-uk Jo
+  [3539237] Patch 2 : Some optimization by Yeong-uk Jo
+  [3539228] Patch 1 : ROM BIOS Compatibility patch by Yeong-uk Jo
   [3505209] Fixed combo box size by Konrad Grochowski
   [2864391] Gui debugger default regs by Thomas Nilsen
   [3486555] Fix critical stack leak in Win32 GUI by Carlo Bramini
@@ -112,6 +117,7 @@ Changes after 2.5.1 release:
   [3493315] Changing VGA 9/8 dot mode causes screen corruption
 
 - these S.F. feature requests were closed/implemented
+  [1251456] command line method to query boch for features
   [3409396] sdl sound
   [3519794] debugger's ability to save physical/linear memory dumps
   [1429612] Idea how to speedup simulation - stack direct access
