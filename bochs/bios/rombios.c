@@ -337,6 +337,8 @@ typedef unsigned long  Bit32u;
   // read_dword and write_dword functions
   static Bit32u         read_dword();
   static void           write_dword();
+  static Bit32u         read_dword_SS();
+  //static void           write_dword_SS();
 
     Bit32u
   read_dword(seg, offset)
@@ -386,6 +388,46 @@ typedef unsigned long  Bit32u;
     pop  bp
   ASM_END
   }
+
+    Bit32u
+  read_dword_SS(offset)
+    Bit16u offset;
+  {
+  ASM_START
+    push bp
+    mov  bp, sp
+
+    mov  bp, 4[bp] ; offset
+    mov  ax, [bp]
+    mov  dx, 2[bp]
+    ;; ax = return value (word)
+    ;; dx = return value (word)
+
+    pop  bp
+  ASM_END
+  }
+
+// Not currently used
+#if 0
+    void
+  write_dword_SS(offset, data)
+    Bit16u offset;
+    Bit32u data;
+  {
+  ASM_START
+    push bp
+    mov  bp, sp
+
+    push eax
+    mov  eax, 6[bp] ; data word
+    mov  bp, 4[bp] ; offset
+    mov  [bp], eax  ; write data dword
+    pop  eax
+
+    pop  bp
+  ASM_END
+  }
+#endif
 
   // Bit32u (unsigned long) and long helper functions
   ASM_START
@@ -802,6 +844,10 @@ static Bit8u          read_byte();
 static Bit16u         read_word();
 static void           write_byte();
 static void           write_word();
+static Bit8u          read_byte_SS();
+static Bit16u         read_word_SS();
+static void           write_byte_SS();
+static void           write_word_SS();
 static void           bios_printf();
 
 static Bit8u          inhibit_mouse_int_and_events();
@@ -1302,6 +1348,76 @@ ASM_START
 ASM_END
 }
 
+  Bit8u
+read_byte_SS(offset)
+  Bit16u offset;
+{
+ASM_START
+  push bp
+  mov  bp, sp
+
+  mov  bp, 4[bp] ; offset
+  mov  al, [bp]
+  ;; al = return value (byte)
+
+  pop  bp
+ASM_END
+}
+
+  Bit16u
+read_word_SS(offset)
+  Bit16u offset;
+{
+ASM_START
+  push bp
+  mov  bp, sp
+
+  mov  bp, 4[bp] ; offset
+  mov  ax, [bp]
+  ;; ax = return value (word)
+
+  pop  bp
+ASM_END
+}
+
+  void
+write_byte_SS(offset, data)
+  Bit16u offset;
+  Bit8u data;
+{
+ASM_START
+  push bp
+  mov  bp, sp
+
+  push ax
+  mov  al, 6[bp] ; data byte
+  mov  bp, 4[bp] ; offset
+  mov  [bp], al  ; write data byte
+  pop  ax
+
+  pop  bp
+ASM_END
+}
+
+  void
+write_word_SS(offset, data)
+  Bit16u offset;
+  Bit16u data;
+{
+ASM_START
+  push bp
+  mov  bp, sp
+
+  push ax
+  mov  ax, 8[bp] ; data word
+  mov  bp, 6[bp] ; offset
+  mov  [bp], ax  ; write data word
+  pop  ax
+
+  pop  bp
+ASM_END
+}
+
   Bit16u
 get_CS()
 {
@@ -1567,11 +1683,10 @@ bios_printf(action, s)
   bx_bool  in_format;
   short i;
   Bit16u  *arg_ptr;
-  Bit16u   arg_seg, arg, nibble, hibyte, shift_count, format_width;
+  Bit16u  arg, nibble, hibyte, shift_count, format_width;
   Bit16u  old_ds = set_DS(get_CS());
 
   arg_ptr = &s;
-  arg_seg = get_SS();
 
   in_format = 0;
   format_width = 0;
@@ -1594,7 +1709,7 @@ bios_printf(action, s)
       }
       else {
         arg_ptr++; // increment to next arg
-        arg = read_word(arg_seg, arg_ptr);
+        arg = read_word_SS(arg_ptr);
         if ((c & 0xdf) == 'X') {
           if (format_width == 0)
             format_width = 4;
@@ -1610,7 +1725,7 @@ bios_printf(action, s)
           s++;
           c = read_byte_DS(s); /* is it ld,lx,lu? */
           arg_ptr++; /* increment to next arg */
-          hibyte = read_word(arg_seg, arg_ptr);
+          hibyte = read_word_SS(arg_ptr);
           if (c == 'd') {
             if (hibyte & 0x8000)
               put_luint(action, 0L-(((Bit32u) hibyte << 16) | arg), format_width-1, 1);
@@ -1642,7 +1757,7 @@ bios_printf(action, s)
         else if (c == 'S') {
           hibyte = arg;
           arg_ptr++;
-          arg = read_word(arg_seg, arg_ptr);
+          arg = read_word_SS(arg_ptr);
           put_str(action, hibyte, arg);
         }
         else if (c == 'c') {
@@ -2531,19 +2646,19 @@ void ata_detect( )
       if (ata_cmd_data_io(0, device,ATA_CMD_IDENTIFY_DEVICE, 1, 0, 0, 0, 0L, 0L, get_SS(),buffer) !=0 )
         BX_PANIC("ata-detect: Failed to detect ATA device\n");
 
-      removable = (read_byte(get_SS(),buffer+0) & 0x80) ? 1 : 0;
-      mode      = read_byte(get_SS(),buffer+96) ? ATA_MODE_PIO32 : ATA_MODE_PIO16;
-      blksize   = read_word(get_SS(),buffer+10);
+      removable = (read_byte_SS(buffer+0) & 0x80) >> 7;
+      mode      = read_byte_SS(buffer+96) ? ATA_MODE_PIO32 : ATA_MODE_PIO16;
+      blksize   = read_word_SS(buffer+10);
 
-      cylinders = read_word(get_SS(),buffer+(1*2)); // word 1
-      heads     = read_word(get_SS(),buffer+(3*2)); // word 3
-      spt       = read_word(get_SS(),buffer+(6*2)); // word 6
+      cylinders = read_word_SS(buffer+(1*2)); // word 1
+      heads     = read_word_SS(buffer+(3*2)); // word 3
+      spt       = read_word_SS(buffer+(6*2)); // word 6
 
-      if (read_word(get_SS(),buffer+(83*2)) & (1 << 10)) { // word 83 - lba48 support
-        sectors_low  = read_dword(get_SS(),buffer+(100*2)); // word 100 and word 101
-        sectors_high = read_dword(get_SS(),buffer+(102*2)); // word 102 and word 103
+      if (read_word_SS(buffer+(83*2)) & (1 << 10)) { // word 83 - lba48 support
+        sectors_low  = read_dword_SS(buffer+(100*2)); // word 100 and word 101
+        sectors_high = read_dword_SS(buffer+(102*2)); // word 102 and word 103
       } else {
-        sectors_low = read_dword(get_SS(),buffer+(60*2)); // word 60 and word 61
+        sectors_low = read_dword_SS(buffer+(60*2)); // word 60 and word 61
         sectors_high = 0;
       }
 
@@ -2638,9 +2753,9 @@ void ata_detect( )
       if (ata_cmd_data_io(0, device,ATA_CMD_IDENTIFY_DEVICE_PACKET, 1, 0, 0, 0, 0L, 0L, get_SS(),buffer) != 0)
         BX_PANIC("ata-detect: Failed to detect ATAPI device\n");
 
-      type      = read_byte(get_SS(),buffer+1) & 0x1f;
-      removable = (read_byte(get_SS(),buffer+0) & 0x80) ? 1 : 0;
-      mode      = read_byte(get_SS(),buffer+96) ? ATA_MODE_PIO32 : ATA_MODE_PIO16;
+      type      = read_byte_SS(buffer+1) & 0x1f;
+      removable = (read_byte_SS(buffer+0) & 0x80) ? 1 : 0;
+      mode      = read_byte_SS(buffer+96) ? ATA_MODE_PIO32 : ATA_MODE_PIO16;
       blksize   = 2048;
 
       write_byte_DS(&EbdaData->ata.devices[device].device, type);
@@ -2664,7 +2779,7 @@ void ata_detect( )
             | (read_dword_DS(&EbdaData->ata.devices[device].sectors_low) >> 11);
         case ATA_TYPE_ATAPI:
           // Read ATA/ATAPI version
-          ataversion=((Bit16u)(read_byte(get_SS(),buffer+161))<<8)|read_byte(get_SS(),buffer+160);
+          ataversion=((Bit16u)(read_byte_SS(buffer+161))<<8)|read_byte_SS(buffer+160);
           for(version=15;version>0;version--) {
             if((ataversion&(1<<version))!=0)
             break;
@@ -2672,21 +2787,21 @@ void ata_detect( )
 
           // Read model name
           for(i=0;i<20;i++) {
-            write_byte(get_SS(),model+(i*2),read_byte(get_SS(),buffer+(i*2)+54+1));
-            write_byte(get_SS(),model+(i*2)+1,read_byte(get_SS(),buffer+(i*2)+54));
+            write_byte_SS(model+(i*2),read_byte_SS(buffer+(i*2)+54+1));
+            write_byte_SS(model+(i*2)+1,read_byte_SS(buffer+(i*2)+54));
           }
 
           // Reformat
-          write_byte(get_SS(),model+40,0x00);
+          write_byte_SS(model+40,0x00);
           for(i=39;i>0;i--){
-            if(read_byte(get_SS(),model+i)==0x20)
-              write_byte(get_SS(),model+i,0x00);
+            if(read_byte_SS(model+i)==0x20)
+              write_byte_SS(model+i,0x00);
             else break;
           }
           if (i>36) {
-            write_byte(get_SS(),model+36,0x00);
+            write_byte_SS(model+36,0x00);
             for(i=35;i>32;i--){
-              write_byte(get_SS(),model+i,0x2E);
+              write_byte_SS(model+i,0x2E);
             }
           }
           break;
@@ -2696,7 +2811,7 @@ void ata_detect( )
         case ATA_TYPE_ATA:
           printf("ata%d %s: ",channel,slave?" slave":"master");
           i=0;
-          while(c=read_byte(get_SS(),model+i++))
+          while(c=read_byte_SS(model+i++))
             printf("%c",c);
           if (sizeinmb < (1UL<<16))
             printf(" ATA-%d Hard-Disk (%4u MBytes)\n", version, (Bit16u)sizeinmb);
@@ -2705,7 +2820,7 @@ void ata_detect( )
           break;
         case ATA_TYPE_ATAPI:
           printf("ata%d %s: ",channel,slave?" slave":"master");
-          i=0; while(c=read_byte(get_SS(),model+i++)) printf("%c",c);
+          i=0; while(c=read_byte_SS(model+i++)) printf("%c",c);
           if(read_byte_DS(&EbdaData->ata.devices[device].device)==ATA_DEVICE_CDROM)
             printf(" ATAPI-%d CD-Rom/DVD-Rom\n",version);
           else
@@ -4818,7 +4933,6 @@ dequeue_key(scan_code, ascii_code, incr)
   unsigned int incr;
 {
   Bit16u buffer_start, buffer_end, buffer_head, buffer_tail;
-  Bit16u ss;
   Bit8u  acode, scode;
 
   // DS is already set to 40 at int16 handler
@@ -4830,11 +4944,10 @@ dequeue_key(scan_code, ascii_code, incr)
   buffer_tail = read_word_DS(0x001c);
 
   if (buffer_head != buffer_tail) {
-    ss = get_SS();
     acode = read_byte_DS(buffer_head);
     scode = read_byte_DS(buffer_head+1);
-    write_byte(ss, ascii_code, acode);
-    write_byte(ss, scan_code, scode);
+    write_byte_SS(ascii_code, acode);
+    write_byte_SS(scan_code, scode);
 
     if (incr) {
       buffer_head += 2;
@@ -4913,14 +5026,12 @@ get_mouse_data(data)
   Bit8u *data;
 {
   Bit8u response;
-  Bit16u ss;
 
   while ((inb(PORT_PS2_STATUS) & 0x21) != 0x21) { }
 
   response = inb(PORT_PS2_DATA);
 
-  ss = get_SS();
-  write_byte(ss, data, response);
+  write_byte_SS(data, response);
   return(0);
 }
 
@@ -6844,11 +6955,9 @@ get_hd_geometry(drive, hd_cylinders, hd_heads, hd_sectors)
   Bit8u  *hd_sectors;
 {
   Bit8u hd_type;
-  Bit16u ss;
   Bit16u cylinders;
   Bit8u iobase;
 
-  ss = get_SS();
   if (drive == 0x80) {
     hd_type = inb_cmos(0x12) & 0xf0;
     if (hd_type != 0xf0)
@@ -6869,13 +6978,13 @@ get_hd_geometry(drive, hd_cylinders, hd_heads, hd_sectors)
 
   // cylinders
   cylinders = inb_cmos(iobase) | (inb_cmos(iobase+1) << 8);
-  write_word(ss, hd_cylinders, cylinders);
+  write_word_SS(hd_cylinders, cylinders);
 
   // heads
-  write_byte(ss, hd_heads, inb_cmos(iobase+2));
+  write_byte_SS(hd_heads, inb_cmos(iobase+2));
 
   // sectors per track
-  write_byte(ss, hd_sectors, inb_cmos(iobase+8));
+  write_byte_SS(hd_sectors, inb_cmos(iobase+8));
 }
 
 #endif //else BX_USE_ATADRV
