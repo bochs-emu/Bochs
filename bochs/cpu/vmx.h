@@ -130,7 +130,9 @@ enum VMX_vmexit_reason {
    VMX_VMEXIT_RESERVED56 = 56,
    VMX_VMEXIT_RDRAND = 57,
    VMX_VMEXIT_INVPCID = 58,
-   VMX_VMEXIT_VMFUNC = 59
+   VMX_VMEXIT_VMFUNC = 59,
+   VMX_VMEXIT_RESERVED60 = 60,
+   VMX_VMEXIT_RDSEED = 61
 };
 
 // VMexit on CR register access
@@ -586,6 +588,7 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL3_RDRAND_VMEXIT             (1 << 11)
 #define VMX_VM_EXEC_CTRL3_INVPCID                   (1 << 12)
 #define VMX_VM_EXEC_CTRL3_VMFUNC_ENABLE             (1 << 13) /* VM Functions */
+#define VMX_VM_EXEC_CTRL3_RDSEED_VMEXIT             (1 << 16)
 
 #define VMX_VM_EXEC_CTRL3_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl2_supported_bits)

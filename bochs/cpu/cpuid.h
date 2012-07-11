@@ -311,7 +311,10 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [9:9]    Support for Enhanced REP MOVSB/STOSB
 //   [10:10]  Support for INVPCID instruction
 //   [11:11]  RTM: Restricted Transactional Memory
-//   [31:10]  reserved
+//   [17:12]  reserved
+//   [18:18]  RDSEED instruction support
+//   [19:19]  ADCX/ADOX instructions support
+//   [31:20]  reserved
 
 #define BX_CPUID_EXT3_FSGSBASE               (1 <<  0)
 #define BX_CPUID_EXT3_RESERVED1              (1 <<  1)
@@ -325,6 +328,14 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT3_ENCHANCED_REP_STRINGS  (1 <<  9)
 #define BX_CPUID_EXT3_INVPCID                (1 << 10)
 #define BX_CPUID_EXT3_RTM                    (1 << 11)
+#define BX_CPUID_EXT3_RESERVED12             (1 << 12)
+#define BX_CPUID_EXT3_RESERVED13             (1 << 13)
+#define BX_CPUID_EXT3_RESERVED14             (1 << 14)
+#define BX_CPUID_EXT3_RESERVED15             (1 << 15)
+#define BX_CPUID_EXT3_RESERVED16             (1 << 16)
+#define BX_CPUID_EXT3_RESERVED17             (1 << 17)
+#define BX_CPUID_EXT3_RDSEED                 (1 << 18)
+#define BX_CPUID_EXT3_ADX                    (1 << 19)
 // ...
 
 
