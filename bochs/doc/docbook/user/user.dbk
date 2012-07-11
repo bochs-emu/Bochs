@@ -2904,12 +2904,13 @@ only available when the plugin device is loaded. The value "1" means to load
 the plugin and "0" will unload it (if loaded before).
 </para>
 <para>
-These plugins will be loaded by default: 'biosdev', 'extfpuirq', 'parallel',
-'serial', 'speaker' and 'unmapped'.
+These plugins will be loaded by default (if present): 'biosdev', 'extfpuirq',
+'gameport', 'iodebug','parallel', 'serial', 'speaker' and 'unmapped'.
 </para>
 <para>
-These plugins can be loaded on demand: 'e1000', 'es1370', 'gameport', 'iodebug',
-'ne2k', 'pcidev', 'pcipnic', 'sb16', 'usb_ohci', 'usb_uhci' and 'usb_xhci'.
+These plugins are also supported, but they are usually loaded directly with
+their bochsrc option: 'e1000', 'es1370', 'ne2k', 'pcidev', 'pcipnic', 'sb16',
+'usb_ohci', 'usb_uhci' and 'usb_xhci'.
 </para>
 </section>
 
@@ -3895,10 +3896,9 @@ Examples:
   es1370: enabled=1, wavedev=sdl   # use SDL audio (if present) for output
 </screen>
 This defines the ES1370 sound emulation. The parameter 'enabled' controls the
-presence of the device. In addition to this, it must be assigned to a PCI
-slot. The 'wavedev' parameter is similar to the 'wave' parameter of the SB16
-soundcard. The emulation supports recording and playback (except DAC1+DAC2
-output at the same time).
+presence of the device. The 'wavedev' parameter is similar to the 'wave'
+parameter of the SB16 soundcard. The emulation supports recording and playback
+(except DAC1+DAC2 output at the same time).
 </para>
 </section>
 
@@ -4033,8 +4033,11 @@ Examples:
 </screen>
 This option controls the presence of a PCI chipset in Bochs. Currently it only
 supports the i440FX chipset. You can also specify the devices connected to
-PCI slots. Up to 5 slots are available. These devices are currently supported:
-cirrus, e1000, es1370, ne2k, pcivga, pcidev, pcipnic, usb_ohci and usb_xhci.
+PCI slots. Up to 5 slots are available. For these combined PCI/ISA devices
+assigning to slot is mandatory if you want to emulate the PCI model: cirrus,
+ne2k and pcivga. These PCI-only devices are also supported, but they are
+auto-assigned if you don't use the slot configuration: e1000, es1370, pcidev,
+pcipnic, usb_ohci and usb_xhci.
 </para>
 </section>
 
@@ -4115,8 +4118,7 @@ code to the file if the file already existed. It would probably be nice to
 overwrite the file instead, asking user first.
 </para>
 <note><para>
-PCI support must be enabled and UHCI loaded with
-<link linkend="bochsopt-plugin-ctrl">plugin_ctrl</link>.
+PCI support must be enabled to use USB UHCI.
 </para></note>
 </section>
 
@@ -4129,8 +4131,6 @@ Example:
 This option controls the presence of the USB OHCI host controller with a
 2-port hub. The portX option accepts the same device types with the same
 syntax as the UHCI controller (see the <link linkend="bochsopt-usb-uhci">usb_uhci option</link>).
-The OHCI HC must be assigned to a PCI slot and loaded with
-<link linkend="bochsopt-plugin-ctrl">plugin_ctrl</link>.
 </para>
 </section>
 
@@ -4143,8 +4143,6 @@ Example:
 This option controls the presence of the experimental USB xHCI host controller
 with a 4-port hub. The portX option accepts the same device types with the same
 syntax as the UHCI controller (see the <link linkend="bochsopt-usb-uhci">usb_uhci option</link>).
-The xHCI HC must be assigned to a PCI slot and loaded with
-<link linkend="bochsopt-plugin-ctrl">plugin_ctrl</link>.
 </para>
 </section>
 
@@ -4318,16 +4316,15 @@ version where this module was added.
 </table>
 </section>
 
-<section><title>pnic</title>
+<section><title>pcipnic</title>
 <para>
 Example:
 <screen>
-  pnic: enabled=1, mac=b0:c4:20:00:00:00, ethmod=vnet
+  pcipnic: enabled=1, mac=b0:c4:20:00:00:00, ethmod=vnet
 </screen>
 To support the Bochs/Etherboot pseudo-NIC, Bochs must be compiled with the
 --enable-pnic configure option. It accepts the same syntax (for mac, ethmod,
 ethdev, script, bootrom) and supports the same networking modules as the NE2000 adapter.
-In addition to this, it must be assigned to a PCI slot.
 </para>
 </section>
 
@@ -4340,7 +4337,6 @@ Example:
 To support the Intel(R) 82540EM Gigabit Ethernet adapter, Bochs must be compiled
 with the --enable-e1000 configure option. It accepts the same syntax (for mac, ethmod,
 ethdev, script, bootrom) and supports the same networking modules as the NE2000 adapter.
-In addition to this, it must be assigned to a PCI slot.
 </para>
 </section>
 

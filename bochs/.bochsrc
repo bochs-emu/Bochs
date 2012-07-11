@@ -8,11 +8,12 @@
 # only available when the plugin device is loaded. The value "1" means to load
 # the plugin and "0" will unload it (if loaded before).
 #
-# These plugins will be loaded by default: 'biosdev', 'extfpuirq', 'parallel',
-# 'serial', 'speaker' and 'unmapped'.
+# These plugins will be loaded by default (if present): 'biosdev', 'extfpuirq',
+# 'gameport', 'iodebug','parallel', 'serial', 'speaker' and 'unmapped'.
 #
-# These plugins can be loaded on demand: 'e1000', 'es1370', 'gameport', 'iodebug',
-# 'ne2k', 'pcidev', 'pcipnic', 'sb16', 'usb_ohci', 'usb_uhci' and 'usb_xhci'.
+# These plugins are also supported, but they are usually loaded directly with
+# their bochsrc option: 'e1000', 'es1370', 'ne2k', 'pcidev', 'pcipnic', 'sb16',
+# 'usb_ohci', 'usb_uhci' and 'usb_xhci'.
 #=======================================================================
 #plugin_ctrl: unmapped=0, e1000=1 # unload 'unmapped' and load 'e1000'
 
@@ -739,8 +740,7 @@ parport1: enabled=1, file="parport.out"
 #=======================================================================
 # ES1370:
 # This defines the ES1370 sound emulation. The parameter 'enabled' controls the
-# presence of the device. In addition to this, it must be loaded with 'plugin_ctrl'
-# and assigned to a PCI slot. The 'wavedev' parameter is similar to the 'wave'
+# presence of the device. The 'wavedev' parameter is similar to the 'wave'
 # parameter of the SB16 soundcard. The emulation supports recording and playback
 # (except DAC1+DAC2 output at the same time).
 #
@@ -892,18 +892,16 @@ private_colormap: enabled=0
 # ne2k: mac=b0:c4:20:00:00:01, ethmod=slirp, script=/usr/local/bin/slirp, bootrom=ne2k_pci.rom
 
 #=======================================================================
-# pnic: Bochs/Etherboot pseudo-NIC
+# pcipnic: Bochs/Etherboot pseudo-NIC
 #
 # Format:
-# pnic: enabled=1, mac=MACADDR, ethmod=MODULE, ethdev=DEVICE, script=SCRIPT,
-#       bootrom=BOOTROM
+# pcipnic: enabled=1, mac=MACADDR, ethmod=MODULE, ethdev=DEVICE, script=SCRIPT,
+#          bootrom=BOOTROM
 #
 # The pseudo-NIC accepts the same syntax (for mac, ethmod, ethdev, script,
 # bootrom) and supports the same networking modules as the NE2000 adapter.
-# In addition to this, it must be loaded with 'plugin_ctrl' and assigned
-# to a PCI slot.
 #=======================================================================
-#pnic: enabled=1, mac=b0:c4:20:00:00:00, ethmod=vnet
+#pcipnic: enabled=1, mac=b0:c4:20:00:00:00, ethmod=vnet
 
 #=======================================================================
 # e1000: Intel(R) 82540EM Gigabit Ethernet adapter
@@ -913,8 +911,7 @@ private_colormap: enabled=0
 #        bootrom=BOOTROM
 #
 # The E1000 accepts the same syntax (for mac, ethmod, ethdev, script, bootrom)
-# and supports the same networking modules as the NE2000 adapter. In addition
-# to this, it must be loaded with 'plugin_ctrl' and assigned to a PCI slot.
+# and supports the same networking modules as the NE2000 adapter.
 #=======================================================================
 #e1000: enabled=1, mac=52:54:00:12:34:56, ethmod=slirp, script=/usr/local/bin/slirp
 
@@ -960,8 +957,11 @@ keyboard_mapping: enabled=0, map=
 # PCI:
 # This option controls the presence of a PCI chipset in Bochs. Currently it only
 # supports the i440FX chipset. You can also specify the devices connected to
-# PCI slots. Up to 5 slots are available. These devices are currently supported:
-# cirrus, e1000, es1370, ne2k, pcivga, pcidev, pcipnic, usb_ohci and usb_xhci.
+# PCI slots. Up to 5 slots are available. For these combined PCI/ISA devices
+# assigning to slot is mandatory if you want to emulate the PCI model: cirrus,
+# ne2k and pcivga. These PCI-only devices are also supported, but they are
+# auto-assigned if you don't use the slot configuration: e1000, es1370, pcidev,
+# pcipnic, usb_ohci and usb_xhci.
 #
 # Example:
 #   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k
@@ -973,7 +973,7 @@ pci: enabled=1, chipset=i440fx
 # This option controls the presence of the USB root hub which is a part
 # of the i440FX PCI chipset. With the portX parameter you can connect devices
 # to the hub (currently supported: 'mouse', 'tablet', 'keypad', 'disk', 'cdrom'
-# 'hub' and 'printer'). NOTE: UHCI must be loaded with 'plugin_ctrl'.
+# 'hub' and 'printer').
 #
 # The optionsX parameter can be used to assign specific options to the device
 # connected to the corresponding USB port. Currently this feature is only used
@@ -1013,8 +1013,7 @@ pci: enabled=1, chipset=i440fx
 # USB_OHCI:
 # This option controls the presence of the USB OHCI host controller with a
 # 2-port hub. The portX option accepts the same device types with the same
-# syntax as the UHCI controller (see above). The OHCI HC must be assigned to
-# a PCI slot and loaded with 'plugin_ctrl'.
+# syntax as the UHCI controller (see above).
 #=======================================================================
 #usb_ohci: enabled=1
 #usb_ohci: enabled=1, port1=printer:usbprinter.bin
@@ -1023,8 +1022,7 @@ pci: enabled=1, chipset=i440fx
 # USB_XHCI:
 # This option controls the presence of the experimental USB xHCI host controller
 # with a 4-port hub. The portX option accepts the same device types with the
-# same syntax as the UHCI controller (see above). The xHCI HC must be assigned
-# to a PCI slot and loaded with 'plugin_ctrl'.
+# same syntax as the UHCI controller (see above).
 #=======================================================================
 #usb_xhci: enabled=1
 

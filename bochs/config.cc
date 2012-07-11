@@ -2080,6 +2080,13 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     PARSE_ERR(("%s: a bochsrc option needs at least one parameter", context));
   }
 
+#if BX_SUPPORT_PCIPNIC
+  // Temporary HACK for the PCI Pseudo NIC's bochsrc option name change
+  if (!strcmp(params[0], "pnic")) {
+    strcpy(params[0], "pcipnic");
+  }
+#endif
+
   if (!strcmp(params[0], "#include")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: ignoring malformed #include directive.", context));

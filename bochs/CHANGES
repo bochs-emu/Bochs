@@ -43,6 +43,8 @@ Changes after 2.5.1 release:
     - Ported Intel(R) 82540EM Gigabit Ethernet adapter emulation from Qemu,
       to enable configure with option --enable-e1000
     - Added PCI network boot ROM support to all network adapters
+  - PCI
+    - added "auto-assign to PCI slot" feature for PCI-only devices
   - VGA
     - Major rewrite of the vga / cirrus code:
       - vgacore (shared standard VGA emulation code)
@@ -67,8 +69,10 @@ Changes after 2.5.1 release:
   - Gui debugger now supported when using sdl gui on Windows
 
 - Config interface
-  - The bochsrc option 'plugin_ctrl' is now used to load optional plugins
-    directly when parsing the config file or command line. See the bochsrc
+  - Added support for direct device plugin loading with bochsrc directive for
+    devices which have the same name for the plugin and config option.
+  - The bochsrc option 'plugin_ctrl' can now be used to load/unload optional
+    plugins directly when parsing the config file or command line. See the bochsrc
     sample for supported devices.
   - Moved bochsrc parsing / writing and config parameter handling for networking,
     sound and USB devices to the plugin device code. The options are only
@@ -76,6 +80,7 @@ Changes after 2.5.1 release:
   - Added ability to set log action per device from .bochsrc.
   - Added new command line option '-noconsole' to disable the console
     window on Windows host.
+  - renamed PCI Pseudo NIC option to "pcipnic" (for direct plugin loading)
 
 - Tools
   - bxcommit: added support for converting growing to flat mode images
@@ -117,7 +122,7 @@ Changes after 2.5.1 release:
   [3493315] Changing VGA 9/8 dot mode causes screen corruption
 
 - these S.F. feature requests were closed/implemented
-  [1251456] command line method to query boch for features
+  [1251456] command line method to query bochs for features
   [3409396] sdl sound
   [3519794] debugger's ability to save physical/linear memory dumps
   [1429612] Idea how to speedup simulation - stack direct access

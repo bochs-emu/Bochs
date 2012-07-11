@@ -44,7 +44,7 @@ const Bit8u pnic_iomask[16] = {2, 0, 2, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 void pnic_init_options(void)
 {
   bx_param_c *network = SIM->get_param("network");
-  bx_list_c *menu = new bx_list_c(network, "pnic", "PCI Pseudo NIC");
+  bx_list_c *menu = new bx_list_c(network, "pcipnic", "PCI Pseudo NIC");
   menu->set_options(menu->SHOW_PARENT);
   bx_param_bool_c *enabled = new bx_param_bool_c(menu,
     "enabled",
@@ -59,7 +59,7 @@ Bit32s pnic_options_parser(const char *context, int num_params, char *params[])
 {
   int ret, valid = 0;
 
-  if (!strcmp(params[0], "pnic")) {
+  if (!strcmp(params[0], "pcipnic")) {
     bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_PNIC);
     if (!SIM->get_param_bool("enabled", base)->get()) {
       SIM->get_param_enum("ethmod", base)->set_by_name("null");
@@ -74,7 +74,7 @@ Bit32s pnic_options_parser(const char *context, int num_params, char *params[])
       if (valid == 0x04) {
         SIM->get_param_bool("enabled", base)->set(1);
       } else if (valid < 0x80) {
-        BX_PANIC(("%s: 'pnic' directive incomplete (mac is required)", context));
+        BX_PANIC(("%s: 'pcipnic' directive incomplete (mac is required)", context));
       }
     } else {
       if (valid & 0x80) {
@@ -102,13 +102,13 @@ int libpcipnic_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, ch
   // add new configuration parameter for the config interface
   pnic_init_options();
   // register add-on option for bochsrc and command line
-  SIM->register_addon_option("pnic", pnic_options_parser, pnic_options_save);
+  SIM->register_addon_option("pcipnic", pnic_options_parser, pnic_options_save);
   return 0; // Success
 }
 
 void libpcipnic_LTX_plugin_fini(void)
 {
-  SIM->unregister_addon_option("pnic");
+  SIM->unregister_addon_option("pcipnic");
   bx_list_c *menu = (bx_list_c*)SIM->get_param("network");
   menu->remove("pnic");
   delete thePNICDevice;
