@@ -148,6 +148,7 @@ struct bx_dr6_t {
   IMPLEMENT_CRREG_ACCESSORS(B2, 2);
   IMPLEMENT_CRREG_ACCESSORS(B3, 3);
 
+#define BX_DEBUG_TRAP_HIT             (1 << 12)
 #define BX_DEBUG_DR_ACCESS_BIT        (1 << 13)
 #define BX_DEBUG_SINGLE_STEP_BIT      (1 << 14)
 #define BX_DEBUG_TRAP_TASK_SWITCH_BIT (1 << 15)

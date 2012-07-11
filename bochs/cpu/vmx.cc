@@ -1613,8 +1613,10 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
       BX_CPU_THIS_PTR debug_trap = guest.tmpDR6 & 0x0000400F;
     else
       BX_CPU_THIS_PTR debug_trap = guest.tmpDR6 & 0x00004000;
-    if (BX_CPU_THIS_PTR debug_trap)
+    if (BX_CPU_THIS_PTR debug_trap) {
+      BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_TRAP_HIT;
       BX_CPU_THIS_PTR async_event = 1;
+    }
 
     if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_BY_STI)
       inhibit_interrupts(BX_INHIBIT_INTERRUPTS);
@@ -1855,9 +1857,9 @@ void BX_CPU_C::VMexitSaveGuestState(void)
 #endif
 #endif
 
-  Bit32u tmpDR6 = BX_CPU_THIS_PTR debug_trap;
+  Bit32u tmpDR6 = BX_CPU_THIS_PTR debug_trap & 0x0000400f;
   if (tmpDR6 & 0xf) tmpDR6 |= (1 << 12);
-  VMwrite_natural(VMCS_GUEST_PENDING_DBG_EXCEPTIONS, tmpDR6 & 0x0000500f);
+  VMwrite_natural(VMCS_GUEST_PENDING_DBG_EXCEPTIONS, tmpDR6);
   
   Bit32u interruptibility_state = 0;
   if (interrupts_inhibited(BX_INHIBIT_INTERRUPTS)) {

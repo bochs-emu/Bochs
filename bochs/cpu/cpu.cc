@@ -546,7 +546,12 @@ void BX_CPU_C::prefetch(void)
        // check only if not fetching page cross instruction
        // this check is 32-bit wrap safe as well
        if (EIP == (Bit32u) BX_CPU_THIS_PTR prev_rip) {
-         if (code_breakpoint_match(laddr)) exception(BX_DB_EXCEPTION, 0);
+         Bit32u dr6_bits = code_breakpoint_match(laddr);
+         if (dr6_bits & BX_DEBUG_TRAP_HIT) {
+           BX_ERROR(("#DB: x86 code breakpoint catched"));
+           BX_CPU_THIS_PTR debug_trap |= dr6_bits;
+           exception(BX_DB_EXCEPTION, 0);
+         }
        }
     }
   }

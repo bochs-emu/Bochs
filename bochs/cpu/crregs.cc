@@ -1442,12 +1442,7 @@ Bit32u BX_CPU_C::code_breakpoint_match(bx_address laddr)
 
   if (BX_CPU_THIS_PTR dr7.get_bp_enabled()) {
     Bit32u dr6_bits = hwdebug_compare(laddr, 1, BX_HWDebugInstruction, BX_HWDebugInstruction);
-    if (dr6_bits) {
-      // Add to the list of debug events thus far.
-      BX_CPU_THIS_PTR debug_trap |= dr6_bits;
-      BX_ERROR(("#DB: x86 code breakpoint catched"));
-      return dr6_bits;
-    }
+    return dr6_bits;
   }
 
   return 0;
@@ -1466,7 +1461,10 @@ void BX_CPU_C::hwbreakpoint_match(bx_address laddr, unsigned len, unsigned rw)
     Bit32u dr6_bits = hwdebug_compare(laddr, len, opa, opb);
     if (dr6_bits) {
       BX_CPU_THIS_PTR debug_trap |= dr6_bits;
-      BX_CPU_THIS_PTR async_event = 1;
+      if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_HIT) {
+        BX_ERROR(("#DB: Code/Data breakpoint hit - report debug trap on next instruction"));
+        BX_CPU_THIS_PTR async_event = 1;
+      }
     }
   }
 }
@@ -1482,7 +1480,13 @@ Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size,
 
   bx_address laddr_n = laddr_0 + (size - 1);
   Bit32u dr_op[4], dr_len[4];
-  bx_bool ibpoint_found_n[4], ibpoint_found = 0;
+
+  // If *any* enabled breakpoints matched, then we need to
+  // set status bits for *all* breakpoints, even disabled ones,
+  // as long as they meet the other breakpoint criteria.
+  // dr6_mask is the return value.  These bits represent the bits
+  // to be OR'd into DR6 as a result of the debug event.
+  Bit32u dr6_mask = 0;
 
   dr_len[0] = BX_CPU_THIS_PTR dr7.get_LEN0();
   dr_len[1] = BX_CPU_THIS_PTR dr7.get_LEN1();
@@ -1497,31 +1501,17 @@ Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size,
   for (unsigned n=0;n<4;n++) {
     bx_address dr_start = BX_CPU_THIS_PTR dr[n] & ~alignment_mask[dr_len[n]];
     bx_address dr_end = dr_start + alignment_mask[dr_len[n]];
-    ibpoint_found_n[n] = 0;
 
     // See if this instruction address matches any breakpoints
-    if (dr7 & (3 << n*2)) {
-      if ((dr_op[n]==opa || dr_op[n]==opb) &&
-           (laddr_0 <= dr_end) &&
-           (laddr_n >= dr_start)) {
-        ibpoint_found_n[n] = 1;
-        ibpoint_found = 1;
+    if ((dr_op[n]==opa || dr_op[n]==opb) &&
+         (laddr_0 <= dr_end) &&
+         (laddr_n >= dr_start)) {
+      dr6_mask |= (1<<n);
+      // tell if breakpoint was enabled
+      if (dr7 & (3 << n*2)) {
+        dr6_mask |= BX_DEBUG_TRAP_HIT;
       }
     }
-  }
-
-  // If *any* enabled breakpoints matched, then we need to
-  // set status bits for *all* breakpoints, even disabled ones,
-  // as long as they meet the other breakpoint criteria.
-  // dr6_mask is the return value.  These bits represent the bits
-  // to be OR'd into DR6 as a result of the debug event.
-  Bit32u dr6_mask = 0;
-
-  if (ibpoint_found) {
-    if (ibpoint_found_n[0]) dr6_mask |= 0x1;
-    if (ibpoint_found_n[1]) dr6_mask |= 0x2;
-    if (ibpoint_found_n[2]) dr6_mask |= 0x4;
-    if (ibpoint_found_n[3]) dr6_mask |= 0x8;
   }
 
   return dr6_mask;
@@ -1536,7 +1526,10 @@ void BX_CPU_C::iobreakpoint_match(unsigned port, unsigned len)
     Bit32u dr6_bits = hwdebug_compare(port, len, BX_HWDebugIO, BX_HWDebugIO);
     if (dr6_bits) {
       BX_CPU_THIS_PTR debug_trap |= dr6_bits;
-      BX_CPU_THIS_PTR async_event = 1;
+      if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_HIT) {
+        BX_ERROR(("#DB: I/O breakpoint hit - report debug trap on next instruction"));
+        BX_CPU_THIS_PTR async_event = 1;
+      }
     }
   }
 }

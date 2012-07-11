@@ -180,7 +180,7 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
   // ignored and discarded if GIF == 0
   // debug traps due to EFLAGS.TF remain untouched
   if (! BX_CPU_THIS_PTR svm_gif)
-    BX_CPU_THIS_PTR debug_trap &= ~BX_DEBUG_SINGLE_STEP_BIT;
+    BX_CPU_THIS_PTR debug_trap &= BX_DEBUG_SINGLE_STEP_BIT;
 #endif
 
   // Priority 2: Trap on Task Switch
@@ -233,12 +233,17 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
   //   Breakpoints
   //   Debug Trap Exceptions (TF flag set or data/IO breakpoint)
   if (! interrupts_inhibited(BX_INHIBIT_DEBUG)) {
-    // A trap may be inhibited on this boundary due to an instruction which loaded SS.
+    // A trap may be inhibited on this boundary due to an instruction which loaded SS
 #if BX_X86_DEBUGGER
-    code_breakpoint_match(get_laddr(BX_SEG_REG_CS, BX_CPU_THIS_PTR prev_rip));
+    // Pages with code breakpoints always have async_event=1 and therefore come here
+    BX_CPU_THIS_PTR debug_trap |= code_breakpoint_match(get_laddr(BX_SEG_REG_CS, BX_CPU_THIS_PTR prev_rip));
 #endif
-    if (BX_CPU_THIS_PTR debug_trap)
+    if (BX_CPU_THIS_PTR debug_trap & 0xf000) {
       exception(BX_DB_EXCEPTION, 0); // no error, not interrupt
+    }
+    else {
+      BX_CPU_THIS_PTR debug_trap = 0;
+    }
   }
 
   // Priority 5: External Interrupts
