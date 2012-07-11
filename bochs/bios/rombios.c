@@ -3873,12 +3873,15 @@ BX_DEBUG_INT15("int15 AX=%04x\n",regs.u.r16.ax);
       break;
 
     case 0x80:
+      /* Device open */
     case 0x81:
+      /* Device close */
     case 0x82:
+      /* Program termination */
     case 0x90:
-      /* Device busy interrupt.  Called by Int 16h when no key available */
+      /* Device busy interrupt. Called by Int 16h when no key available */
     case 0x91:
-      /* Interrupt complete.  Called by IRQ handlers */
+      /* Interrupt complete. Called by IRQ handlers */
       CLEAR_CF();
       regs.u.r8.ah = 0;  // "operation success"
       break;
