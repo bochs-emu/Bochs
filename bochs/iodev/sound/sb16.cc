@@ -1564,7 +1564,7 @@ void bx_sb16_c::dsp_dmadone()
 // now the actual transfer routines, called by the DMA controller
 // note that read = from application to soundcard (output),
 // and write = from soundcard to application (input)
-void bx_sb16_c::dma_read8(Bit8u *data_byte)
+Bit16u bx_sb16_c::dma_read8(Bit8u *data_byte, Bit16u maxlen)
 {
   DEV_dma_set_drq(BX_SB16_DMAL, 0);  // the timer will raise it again
 
@@ -1577,9 +1577,11 @@ void bx_sb16_c::dma_read8(Bit8u *data_byte)
 
   if (DSP.dma.count == 0xffff) // last byte received
     dsp_dmadone();
+
+  return 1;
 }
 
-void bx_sb16_c::dma_write8(Bit8u *data_byte)
+Bit16u bx_sb16_c::dma_write8(Bit8u *data_byte, Bit16u maxlen)
 {
   DEV_dma_set_drq(BX_SB16_DMAL, 0);  // the timer will raise it again
 
@@ -1593,9 +1595,11 @@ void bx_sb16_c::dma_write8(Bit8u *data_byte)
 
   if (DSP.dma.count == 0xffff) // last byte sent
     dsp_dmadone();
+
+  return 1;
 }
 
-void bx_sb16_c::dma_read16(Bit16u *data_word)
+Bit16u bx_sb16_c::dma_read16(Bit16u *data_word, Bit16u maxlen)
 {
   DEV_dma_set_drq(BX_SB16_DMAH, 0);  // the timer will raise it again
 
@@ -1610,9 +1614,11 @@ void bx_sb16_c::dma_read16(Bit16u *data_word)
 
   if (DSP.dma.count == 0xffff) // last word received
     dsp_dmadone();
+
+  return 1;
 }
 
-void bx_sb16_c::dma_write16(Bit16u *data_word)
+Bit16u bx_sb16_c::dma_write16(Bit16u *data_word, Bit16u maxlen)
 {
   Bit8u byte1, byte2;
 
@@ -1632,6 +1638,8 @@ void bx_sb16_c::dma_write16(Bit16u *data_word)
 
   if (DSP.dma.count == 0xffff) // last word sent
     dsp_dmadone();
+
+  return 1;
 }
 
 // the mixer, supported type is CT1745 (as in an SB16)

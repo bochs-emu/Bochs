@@ -192,16 +192,16 @@ class BOCHSAPI bx_dma_stub_c : public bx_devmodel_c {
 public:
   virtual unsigned registerDMA8Channel(
     unsigned channel,
-    void (* dmaRead)(Bit8u *data_byte),
-    void (* dmaWrite)(Bit8u *data_byte),
+    Bit16u (* dmaRead)(Bit8u *data_byte, Bit16u maxlen),
+    Bit16u (* dmaWrite)(Bit8u *data_byte, Bit16u maxlen),
     const char *name)
   {
     STUBFUNC(dma, registerDMA8Channel); return 0;
   }
   virtual unsigned registerDMA16Channel(
     unsigned channel,
-    void (* dmaRead)(Bit16u *data_word),
-    void (* dmaWrite)(Bit16u *data_word),
+    Bit16u (* dmaRead)(Bit16u *data_word, Bit16u maxlen),
+    Bit16u (* dmaWrite)(Bit16u *data_word, Bit16u maxlen),
     const char *name)
   {
     STUBFUNC(dma, registerDMA16Channel); return 0;

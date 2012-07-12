@@ -134,8 +134,8 @@ private:
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
-  BX_FD_SMF void   dma_write(Bit8u *data_byte);
-  BX_FD_SMF void   dma_read(Bit8u *data_byte);
+  BX_FD_SMF Bit16u dma_write(Bit8u *buffer, Bit16u maxlen);
+  BX_FD_SMF Bit16u dma_read(Bit8u *buffer, Bit16u maxlen);
   BX_FD_SMF void   floppy_command(void);
   BX_FD_SMF void   floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer, Bit32u bytes, Bit8u direction);
   BX_FD_SMF void   raise_interrupt(void);

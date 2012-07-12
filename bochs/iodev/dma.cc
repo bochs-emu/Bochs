@@ -66,8 +66,8 @@ bx_dma_c::~bx_dma_c()
 }
 
 unsigned bx_dma_c::registerDMA8Channel(unsigned channel,
-    void (* dmaRead)(Bit8u *data_byte),
-    void (* dmaWrite)(Bit8u *data_byte),
+    Bit16u (* dmaRead)(Bit8u *data_byte, Bit16u maxlen),
+    Bit16u (* dmaWrite)(Bit8u *data_byte, Bit16u maxlen),
     const char *name)
 {
   if (channel > 3) {
@@ -86,8 +86,8 @@ unsigned bx_dma_c::registerDMA8Channel(unsigned channel,
 }
 
 unsigned bx_dma_c::registerDMA16Channel(unsigned channel,
-    void (* dmaRead)(Bit16u *data_word),
-    void (* dmaWrite)(Bit16u *data_word),
+    Bit16u (* dmaRead)(Bit16u *data_word, Bit16u maxlen),
+    Bit16u (* dmaWrite)(Bit16u *data_word, Bit16u maxlen),
     const char *name)
 {
   if ((channel < 4) || (channel > 7)) {
@@ -661,8 +661,10 @@ void bx_dma_c::raise_HLDA(void)
 {
   unsigned channel;
   bx_phy_address phy_addr;
-  bx_bool count_expired = 0;
   bx_bool ma_sl = 0;
+  Bit16u maxlen, len = 1;
+  Bit8u buffer[512];
+  Bit16u data_word;
 
   BX_DMA_THIS HLDA = 1;
   // find highest priority channel
@@ -691,53 +693,32 @@ void bx_dma_c::raise_HLDA(void)
   phy_addr = (BX_DMA_THIS s[ma_sl].chan[channel].page_reg << 16) |
              (BX_DMA_THIS s[ma_sl].chan[channel].current_address << ma_sl);
 
-  BX_DMA_THIS s[ma_sl].DACK[channel] = 1;
-  // check for expiration of count, so we can signal TC and DACK(n)
-  // at the same time.
-  if (BX_DMA_THIS s[ma_sl].chan[channel].mode.address_decrement==0)
-    BX_DMA_THIS s[ma_sl].chan[channel].current_address++;
-  else
-    BX_DMA_THIS s[ma_sl].chan[channel].current_address--;
-  BX_DMA_THIS s[ma_sl].chan[channel].current_count--;
-  if (BX_DMA_THIS s[ma_sl].chan[channel].current_count == 0xffff) {
-    // count expired, done with transfer
-    // assert TC, deassert HRQ & DACK(n) lines
-    BX_DMA_THIS s[ma_sl].status_reg |= (1 << channel); // hold TC in status reg
-    BX_DMA_THIS TC = 1;
-    count_expired = 1;
-    if (BX_DMA_THIS s[ma_sl].chan[channel].mode.autoinit_enable == 0) {
-      // set mask bit if not in autoinit mode
-      BX_DMA_THIS s[ma_sl].mask[channel] = 1;
+  if (!BX_DMA_THIS s[ma_sl].chan[channel].mode.address_decrement) {
+    maxlen = BX_DMA_THIS s[ma_sl].chan[channel].current_count + 1;
+    BX_DMA_THIS TC = (maxlen <= 512);
+    if (maxlen > 512) {
+      maxlen = 512;
     }
-    else {
-      // count expired, but in autoinit mode
-      // reload count and base address
-      BX_DMA_THIS s[ma_sl].chan[channel].current_address =
-        BX_DMA_THIS s[ma_sl].chan[channel].base_address;
-      BX_DMA_THIS s[ma_sl].chan[channel].current_count =
-        BX_DMA_THIS s[ma_sl].chan[channel].base_count;
-    }
+  } else {
+    BX_DMA_THIS TC = (BX_DMA_THIS s[ma_sl].chan[channel].current_count == 0);
+    maxlen = 1;
   }
-
-  Bit8u data_byte;
-  Bit16u data_word;
 
   if (BX_DMA_THIS s[ma_sl].chan[channel].mode.transfer_type == 1) { // write
     // DMA controlled xfer of byte from I/O to Memory
 
     if (!ma_sl) {
       if (BX_DMA_THIS h[channel].dmaWrite8)
-        BX_DMA_THIS h[channel].dmaWrite8(&data_byte);
+        len = BX_DMA_THIS h[channel].dmaWrite8(buffer, maxlen);
       else
         BX_PANIC(("no dmaWrite handler for channel %u.", channel));
 
-      DEV_MEM_WRITE_PHYSICAL(phy_addr, 1, &data_byte);
+      DEV_MEM_WRITE_PHYSICAL_DMA(phy_addr, len, buffer);
 
-      BX_DBG_DMA_REPORT(phy_addr, 1, BX_WRITE, data_byte);
-    }
-    else {
+      BX_DBG_DMA_REPORT(phy_addr, 1, BX_WRITE, buffer[0]);
+    } else {
       if (BX_DMA_THIS h[channel].dmaWrite16)
-        BX_DMA_THIS h[channel].dmaWrite16(&data_word);
+        len = BX_DMA_THIS h[channel].dmaWrite16(&data_word, 1);
       else
         BX_PANIC(("no dmaWrite handler for channel %u.", channel));
 
@@ -745,48 +726,65 @@ void bx_dma_c::raise_HLDA(void)
 
       BX_DBG_DMA_REPORT(phy_addr, 2, BX_WRITE, data_word);
     }
-  }
-  else if (BX_DMA_THIS s[ma_sl].chan[channel].mode.transfer_type == 2) { // read
+  } else if (BX_DMA_THIS s[ma_sl].chan[channel].mode.transfer_type == 2) { // read
     // DMA controlled xfer of byte from Memory to I/O
 
     if (!ma_sl) {
-      DEV_MEM_READ_PHYSICAL(phy_addr, 1, &data_byte);
+      DEV_MEM_READ_PHYSICAL_DMA(phy_addr, maxlen, buffer);
 
       if (BX_DMA_THIS h[channel].dmaRead8)
-        BX_DMA_THIS h[channel].dmaRead8(&data_byte);
+        len = BX_DMA_THIS h[channel].dmaRead8(buffer, maxlen);
 
-      BX_DBG_DMA_REPORT(phy_addr, 1, BX_READ, data_byte);
-    }
-    else {
+      BX_DBG_DMA_REPORT(phy_addr, 1, BX_READ, buffer[0]);
+    } else {
       DEV_MEM_READ_PHYSICAL(phy_addr, 2, (Bit8u*) &data_word);
 
       if (BX_DMA_THIS h[channel].dmaRead16)
-        BX_DMA_THIS h[channel].dmaRead16(&data_word);
+        len = BX_DMA_THIS h[channel].dmaRead16(&data_word, 1);
 
       BX_DBG_DMA_REPORT(phy_addr, 2, BX_READ, data_word);
     }
-  }
-  else if (BX_DMA_THIS s[ma_sl].chan[channel].mode.transfer_type == 0) {
+  } else if (BX_DMA_THIS s[ma_sl].chan[channel].mode.transfer_type == 0) {
     // verify
 
     if (!ma_sl) {
       if (BX_DMA_THIS h[channel].dmaWrite8)
-        BX_DMA_THIS h[channel].dmaWrite8(&data_byte);
+        len = BX_DMA_THIS h[channel].dmaWrite8(buffer, 1);
       else
         BX_PANIC(("no dmaWrite handler for channel %u.", channel));
-      }
-    else {
+    } else {
       if (BX_DMA_THIS h[channel].dmaWrite16)
-        BX_DMA_THIS h[channel].dmaWrite16(&data_word);
+        len = BX_DMA_THIS h[channel].dmaWrite16(&data_word, 1);
       else
         BX_PANIC(("no dmaWrite handler for channel %u.", channel));
     }
-  }
-  else {
+  } else {
     BX_PANIC(("hlda: transfer_type 3 is undefined"));
   }
 
-  if (count_expired) {
+  BX_DMA_THIS s[ma_sl].DACK[channel] = 1;
+  // check for expiration of count, so we can signal TC and DACK(n)
+  // at the same time.
+  if (!BX_DMA_THIS s[ma_sl].chan[channel].mode.address_decrement)
+    BX_DMA_THIS s[ma_sl].chan[channel].current_address += len;
+  else
+    BX_DMA_THIS s[ma_sl].chan[channel].current_address--;
+  BX_DMA_THIS s[ma_sl].chan[channel].current_count -= len;
+  if (BX_DMA_THIS s[ma_sl].chan[channel].current_count == 0xffff) {
+    // count expired, done with transfer
+    // assert TC, deassert HRQ & DACK(n) lines
+    BX_DMA_THIS s[ma_sl].status_reg |= (1 << channel); // hold TC in status reg
+    if (BX_DMA_THIS s[ma_sl].chan[channel].mode.autoinit_enable == 0) {
+      // set mask bit if not in autoinit mode
+      BX_DMA_THIS s[ma_sl].mask[channel] = 1;
+    } else {
+      // count expired, but in autoinit mode
+      // reload count and base address
+      BX_DMA_THIS s[ma_sl].chan[channel].current_address =
+        BX_DMA_THIS s[ma_sl].chan[channel].base_address;
+      BX_DMA_THIS s[ma_sl].chan[channel].current_count =
+        BX_DMA_THIS s[ma_sl].chan[channel].base_count;
+    }
     BX_DMA_THIS TC = 0;            // clear TC, adapter card already notified
     BX_DMA_THIS HLDA = 0;
     bx_pc_system.set_HRQ(0);           // clear HRQ to CPU

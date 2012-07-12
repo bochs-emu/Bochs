@@ -444,7 +444,7 @@ Bit32u bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
     case 0x3F5: /* diskette controller data */
       if ((BX_FD_THIS s.main_status_reg & FD_MS_NDMA) &&
           ((BX_FD_THIS s.pending_command & 0x4f) == 0x46)) {
-        dma_write(&value);
+        dma_write(&value, 1);
         lower_interrupt();
         // don't enter idle phase until we've given CPU last data byte
         if (BX_FD_THIS s.TC) enter_idle_phase();
@@ -603,7 +603,7 @@ void bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x3F5: /* diskette controller data */
       BX_DEBUG(("command = 0x%02x", (unsigned) value));
       if ((BX_FD_THIS s.main_status_reg & FD_MS_NDMA) && ((BX_FD_THIS s.pending_command & 0x4f) == 0x45)) {
-        BX_FD_THIS dma_read((Bit8u *) &value);
+        BX_FD_THIS dma_read((Bit8u *) &value, 1);
         BX_FD_THIS lower_interrupt();
         break;
       } else if (BX_FD_THIS s.command_complete) {
@@ -1222,18 +1222,21 @@ void bx_floppy_ctrl_c::timer()
   }
 }
 
-void bx_floppy_ctrl_c::dma_write(Bit8u *data_byte)
+Bit16u bx_floppy_ctrl_c::dma_write(Bit8u *buffer, Bit16u maxlen)
 {
   // A DMA write is from I/O to Memory
-  // We need to return the next data byte from the floppy buffer
+  // We need to return the next data byte(s) from the floppy buffer
   // to be transfered via the DMA to memory. (read block from floppy)
+  //
+  // maxlen is the maximum length of the DMA transfer
 
-  Bit8u drive;
+  Bit8u drive = BX_FD_THIS s.DOR & 0x03;
+  Bit16u len = 512 - BX_FD_THIS s.floppy_buffer_index;
+  if (len > maxlen) len = maxlen;
+  memcpy(buffer, &BX_FD_THIS s.floppy_buffer[BX_FD_THIS s.floppy_buffer_index], len);
+  BX_FD_THIS s.floppy_buffer_index += len;
+  BX_FD_THIS s.TC = get_tc() && (len == maxlen);
 
-  drive = BX_FD_THIS s.DOR & 0x03;
-  *data_byte = BX_FD_THIS s.floppy_buffer[BX_FD_THIS s.floppy_buffer_index++];
-
-  BX_FD_THIS s.TC = get_tc();
   if ((BX_FD_THIS s.floppy_buffer_index >= 512) || (BX_FD_THIS s.TC)) {
 
     if (BX_FD_THIS s.floppy_buffer_index >= 512) {
@@ -1277,33 +1280,35 @@ void bx_floppy_ctrl_c::dma_write(Bit8u *data_byte)
                                   sector_time , 0);
     }
   }
+  return len;
 }
 
-void bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
+Bit16u bx_floppy_ctrl_c::dma_read(Bit8u *buffer, Bit16u maxlen)
 {
   // A DMA read is from Memory to I/O
   // We need to write the data_byte which was already transfered from memory
   // via DMA to I/O (write block to floppy)
+  //
+  // maxlen is the length of the DMA transfer (not implemented yet)
 
-  Bit8u drive;
+  Bit8u drive = BX_FD_THIS s.DOR & 0x03;
   Bit32u logical_sector, sector_time;
 
-  drive = BX_FD_THIS s.DOR & 0x03;
   if (BX_FD_THIS s.pending_command == 0x4d) { // format track in progress
     BX_FD_THIS s.format_count--;
     switch (3 - (BX_FD_THIS s.format_count & 0x03)) {
       case 0:
-        BX_FD_THIS s.cylinder[drive] = *data_byte;
+        BX_FD_THIS s.cylinder[drive] = *buffer;
         break;
       case 1:
-        if (*data_byte != BX_FD_THIS s.head[drive])
+        if (*buffer != BX_FD_THIS s.head[drive])
           BX_ERROR(("head number does not match head field"));
         break;
       case 2:
-        BX_FD_THIS s.sector[drive] = *data_byte;
+        BX_FD_THIS s.sector[drive] = *buffer;
         break;
       case 3:
-        if (*data_byte != 2) BX_ERROR(("dma_read: sector size %d not supported", 128<<(*data_byte)));
+        if (*buffer != 2) BX_ERROR(("dma_read: sector size %d not supported", 128<<(*buffer)));
         BX_DEBUG(("formatting cylinder %u head %u sector %u",
                   BX_FD_THIS s.cylinder[drive], BX_FD_THIS s.head[drive],
                   BX_FD_THIS s.sector[drive]));
@@ -1324,10 +1329,14 @@ void bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
                                     sector_time , 0);
         break;
     }
+    return 1;
   } else { // write normal data
-    BX_FD_THIS s.floppy_buffer[BX_FD_THIS s.floppy_buffer_index++] = *data_byte;
+    Bit16u len = 512 - BX_FD_THIS s.floppy_buffer_index;
+    if (len > maxlen) len = maxlen;
+    memcpy(&BX_FD_THIS s.floppy_buffer[BX_FD_THIS s.floppy_buffer_index], buffer, len);
+    BX_FD_THIS s.floppy_buffer_index += len;
+    BX_FD_THIS s.TC = get_tc() && (len == maxlen);
 
-    BX_FD_THIS s.TC = get_tc();
     if ((BX_FD_THIS s.floppy_buffer_index >= 512) || (BX_FD_THIS s.TC)) {
       logical_sector = (BX_FD_THIS s.cylinder[drive] * BX_FD_THIS s.media[drive].heads * BX_FD_THIS s.media[drive].sectors_per_track) +
                        (BX_FD_THIS s.head[drive] * BX_FD_THIS s.media[drive].sectors_per_track) +
@@ -1342,7 +1351,7 @@ void bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
         // ST2: CRCE=1, SERR=1, BCYL=1, NDAM=1.
         BX_FD_THIS s.status_reg2 = 0x31; // 0011 0001
         enter_result_phase();
-        return;
+        return 1;
       }
       floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
                   512, TO_FLOPPY);
@@ -1360,6 +1369,7 @@ void bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
         enter_result_phase();
       }
     }
+    return len;
   }
 }
 

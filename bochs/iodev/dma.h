@@ -46,12 +46,12 @@ public:
 #endif
 
   virtual unsigned registerDMA8Channel(unsigned channel,
-    void (* dmaRead)(Bit8u *data_byte),
-    void (* dmaWrite)(Bit8u *data_byte),
+    Bit16u (* dmaRead)(Bit8u *data_byte, Bit16u maxlen),
+    Bit16u (* dmaWrite)(Bit8u *data_byte, Bit16u maxlen),
     const char *name);
   virtual unsigned registerDMA16Channel(unsigned channel,
-    void (* dmaRead)(Bit16u *data_word),
-    void (* dmaWrite)(Bit16u *data_word),
+    Bit16u (* dmaRead)(Bit16u *data_word, Bit16u maxlen),
+    Bit16u (* dmaWrite)(Bit16u *data_word, Bit16u maxlen),
     const char *name);
   virtual unsigned unregisterDMAChannel(unsigned channel);
 
@@ -97,10 +97,10 @@ private:
   Bit8u   ext_page_reg[16]; // Extra page registers (unused)
 
   struct {
-    void (* dmaRead8)(Bit8u *data_byte);
-    void (* dmaWrite8)(Bit8u *data_byte);
-    void (* dmaRead16)(Bit16u *data_word);
-    void (* dmaWrite16)(Bit16u *data_word);
+    Bit16u (* dmaRead8)(Bit8u *data_byte, Bit16u maxlen);
+    Bit16u (* dmaWrite8)(Bit8u *data_byte, Bit16u maxlen);
+    Bit16u (* dmaRead16)(Bit16u *data_word, Bit16u maxlen);
+    Bit16u (* dmaWrite16)(Bit16u *data_word, Bit16u maxlen);
   } h[4]; // DMA read and write handlers
 };
 
