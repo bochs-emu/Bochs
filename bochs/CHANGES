@@ -4,6 +4,8 @@ Changes after 2.5.1 release:
   - Implemented EPT A/D extensions support.
     Bochs is fully aligned with the latest published revision of
     Intel Architecture Manual (revision 043) now.
+  - Implemented ADX (ADCX/ADOX) instructions support, the feature can
+    be enabled using .bochsrc CPUID option.
   - Another 10% CPU emulation speedup with even more optimal lazy flags
     handling and stack access optimizations
   - Support for AMD's SVM hardware emulation in Bochs CPU, to enable

@@ -782,6 +782,17 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
     }
   }
 
+  static bx_bool adx_enabled = SIM->get_param_bool(BXPN_CPUID_ADX)->get();
+  if (adx_enabled) {
+    features_bitmask |= BX_ISA_ADX;
+
+    // ADX required 3-byte opcode (SSS3E support or more)
+    if (sse_enabled < BX_CPUID_SUPPORT_SSSE3) {
+      BX_PANIC(("PANIC: ADX support requires SSSE3 or higher !"));
+      return;
+    }
+  }
+
 #if BX_SUPPORT_X86_64
   static bx_bool x86_64_enabled = SIM->get_param_bool(BXPN_CPUID_X86_64)->get();
   if (x86_64_enabled) {

@@ -79,6 +79,7 @@
 #define IA_XOP              (BX_CONST64(1) << 37)  /* XOP instruction (AMD) */
 #define IA_TBM              (BX_CONST64(1) << 38)  /* TBM instruction (AMD) */
 #define IA_SVM              (BX_CONST64(1) << 39)  /* SVM instruction (AMD) */
+#define IA_ADX              (BX_CONST64(1) << 40)  /* ADCX/ADOX instruction */
 
 /* general purpose bit register */
 enum {

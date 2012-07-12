@@ -3063,6 +3063,11 @@ This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 Select MOVBE Intel(R) Atom instruction support.
 This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 </para>
+<para><command>adx</command></para>
+<para>
+Select ADCX/ADOX instructions support.
+This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+</para>
 <para><command>xsave</command></para>
 <para>
 Select XSAVE extensions support.

@@ -3240,6 +3240,13 @@ public: // for now...
   BX_SMF BX_INSF_TYPE POPCNT_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
+  BX_SMF BX_INSF_TYPE ADCX_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE ADOX_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#if BX_SUPPORT_X86_64
+  BX_SMF BX_INSF_TYPE ADCX_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE ADOX_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
+
 #if BX_SUPPORT_X86_64
   // 64 bit extensions
   BX_SMF BX_INSF_TYPE ADD_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

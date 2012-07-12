@@ -2121,3 +2121,11 @@ bx_define_opcode(BX_IA_EXTRQ_VdqUq, &BX_CPU_C::BxError, &BX_CPU_C::EXTRQ_VdqUq, 
 bx_define_opcode(BX_IA_INSERTQ_VdqUqIbIb, &BX_CPU_C::BxError, &BX_CPU_C::INSERTQ_VdqUqIbIb, BX_ISA_SSE4A, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_INSERTQ_VdqUdq, &BX_CPU_C::BxError, &BX_CPU_C::INSERTQ_VdqUdq, BX_ISA_SSE4A, BX_PREPARE_SSE)
 // SSE4A
+
+// ADCX/ADOX
+bx_define_opcode(BX_IA_ADCX_GdEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::ADCX_GdEdR, BX_ISA_ADX, 0)
+bx_define_opcode(BX_IA_ADOX_GdEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::ADOX_GdEdR, BX_ISA_ADX, 0)
+#if BX_SUPPORT_X86_64
+bx_define_opcode(BX_IA_ADCX_GqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::ADCX_GqEqR, BX_ISA_ADX, 0)
+bx_define_opcode(BX_IA_ADOX_GqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::ADOX_GqEqR, BX_ISA_ADX, 0)
+#endif

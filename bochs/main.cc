@@ -1191,6 +1191,8 @@ void bx_init_hardware()
     BX_INFO(("  AES support: %s", aes_enabled?"yes":"no"));
     bx_bool movbe_enabled = SIM->get_param_bool(BXPN_CPUID_MOVBE)->get();
     BX_INFO(("  MOVBE support: %s", movbe_enabled?"yes":"no"));
+    bx_bool adx_enabled = SIM->get_param_bool(BXPN_CPUID_ADX)->get();
+    BX_INFO(("  ADX support: %s", adx_enabled?"yes":"no"));
 #if BX_SUPPORT_X86_64
     bx_bool x86_64_enabled = SIM->get_param_bool(BXPN_CPUID_X86_64)->get();
     BX_INFO(("  x86-64 support: %s", x86_64_enabled?"yes":"no"));

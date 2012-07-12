@@ -225,6 +225,10 @@ cpu: cpuid_limit_winnt=0
 #    Select MOVBE Intel(R) Atom instruction support.
 #    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 #
+#  ADX:
+#    Select ADCX/ADOX instructions support.
+#    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+#
 #  XSAVE:
 #    Select XSAVE extensions support.
 #    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.

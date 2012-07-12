@@ -54,6 +54,7 @@
 #define BXPN_CPUID_SSE4A                 "cpuid.sse4a"
 #define BXPN_CPUID_AES                   "cpuid.aes"
 #define BXPN_CPUID_MOVBE                 "cpuid.movbe"
+#define BXPN_CPUID_ADX                   "cpuid.adx"
 #define BXPN_CPUID_SEP                   "cpuid.sep"
 #define BXPN_CPUID_XSAVE                 "cpuid.xsave"
 #define BXPN_CPUID_XSAVEOPT              "cpuid.xsaveopt"

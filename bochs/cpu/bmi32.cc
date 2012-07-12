@@ -243,3 +243,31 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PDEP_GdEdBdR(bxInstruction_c *i)
 }
 
 #endif
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADCX_GdEdR(bxInstruction_c *i)
+{
+  Bit32u op1_32 = BX_READ_32BIT_REG(i->nnn());
+  Bit32u op2_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u sum_32 = op1_32 + op2_32 + getB_CF();
+
+  BX_WRITE_32BIT_REGZ(i->nnn(), sum_32);
+
+  Bit32u carry_out = ADD_COUT_VEC(op1_32, op2_32, sum_32);
+  set_CF(carry_out >> 31);
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADOX_GdEdR(bxInstruction_c *i)
+{
+  Bit32u op1_32 = BX_READ_32BIT_REG(i->nnn());
+  Bit32u op2_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u sum_32 = op1_32 + op2_32 + getB_OF();
+
+  BX_WRITE_32BIT_REGZ(i->nnn(), sum_32);
+
+  Bit32u overflow = GET_ADD_OVERFLOW(op1_32, op2_32, sum_32, 0x80000000);
+  set_OF(!!overflow);
+
+  BX_NEXT_INSTR(i);
+}

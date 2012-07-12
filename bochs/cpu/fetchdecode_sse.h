@@ -955,6 +955,28 @@ static const BxOpcodeInfo_t BxOpcodeGroupOsize0f38f1[BX_SUPPORT_X86_64 + 2] = {
 #endif
 };
 
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f38f6d[3] = {
+  /* 66 */ { 0, BX_IA_ADCX_GdEd },
+  /* F3 */ { 0, BX_IA_ADOX_GdEd },
+  /* F2 */ { 0, BX_IA_ERROR }
+};
+
+#if BX_SUPPORT_X86_64
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f38f6q[3] = {
+  /* 66 */ { 0, BX_IA_ADCX_GqEq },
+  /* F3 */ { 0, BX_IA_ADOX_GqEq },
+  /* F2 */ { 0, BX_IA_ERROR }
+};
+#endif
+
+static const BxOpcodeInfo_t BxOpcodeGroupOsize0f38f6[BX_SUPPORT_X86_64 + 2] = {
+  /* 16 */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f38f6d },
+  /* 32 */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f38f6d },
+#if BX_SUPPORT_X86_64
+  /* 64 */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f38f6q },
+#endif
+};
+
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f3a0f[3] = {
   /* 66 */ { 0, BX_IA_PALIGNR_VdqWdqIb },
   /* F3 */ { 0, BX_IA_ERROR },
@@ -1211,7 +1233,7 @@ static const BxOpcodeInfo_t BxOpcode3ByteTable0f38[256] = {
   /* F3 */ { 0, BX_IA_ERROR },
   /* F4 */ { 0, BX_IA_ERROR },
   /* F5 */ { 0, BX_IA_ERROR },
-  /* F6 */ { 0, BX_IA_ERROR },
+  /* F6 */ { BxOSizeGrp, BX_IA_ERROR, BxOpcodeGroupOsize0f38f6 },
   /* F7 */ { 0, BX_IA_ERROR },
   /* F8 */ { 0, BX_IA_ERROR },
   /* F9 */ { 0, BX_IA_ERROR },

@@ -505,3 +505,11 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Enables CPUID[0x80000001].ECX[8] flag.
  Set if PREFETCHW implemented as real HW prefetch.
  Uarch only. Has no effect for Bochs. 
+
+60. ISA Feature: ADX
+
+ Enables CPUID[0x00000007].EBX[19] flag.
+ Enables ADCX/ADOX instructions (will #UD otherwise).
+
+ Dependency: SSSE3 (3-byte opcodes)
+

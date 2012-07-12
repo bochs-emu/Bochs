@@ -281,9 +281,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMACSSWD_VdqHdqWdqVIbR(bxInstruct
   BX_NEXT_INSTR(i);
 }
 
-#define GET_ADD_OVERFLOW(op1, op2, result, mask) \
-  ((((op1) ^ (result)) & ((op2) ^ (result))) & (mask))
-
 BX_CPP_INLINE Bit64s add_saturate64(Bit64s a, Bit64s b)
 {
   Bit64s r = a + b;
