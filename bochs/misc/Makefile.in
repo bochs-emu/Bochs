@@ -24,7 +24,7 @@
 @SUFFIX_LINE@
 
 
-SHELL = /bin/sh
+SHELL = @SHELL@
 
 @SET_MAKE@
 

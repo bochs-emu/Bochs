@@ -21,7 +21,7 @@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
-SHELL = /bin/sh
+SHELL = @SHELL@
 
 @SET_MAKE@
 

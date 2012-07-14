@@ -34,7 +34,7 @@ sharedir        = $(datarootdir)/bochs
 top_builddir    = ..
 top_srcdir      = @top_srcdir@
 
-SHELL = /bin/sh
+SHELL = @SHELL@
 
 @SET_MAKE@
 
@@ -116,32 +116,32 @@ pcidev.o : pcidev.@CPP_SUFFIX@
 
 ##### building plugins with libtool
 %.lo: %.@CPP_SUFFIX@
-	$(LIBTOOL) --mode=compile $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
+	$(LIBTOOL) --mode=compile --tag CXX $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
 
 pcidev.lo : pcidev.@CPP_SUFFIX@
-	$(LIBTOOL) --mode=compile $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(PCIDEV_CXXFLAGS) $< -o $@
+	$(LIBTOOL) --mode=compile --tag CXX $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(PCIDEV_CXXFLAGS) $< -o $@
 
 libbx_%.la: %.lo
-	$(LIBTOOL) --mode=link $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
 
 # special link rules for plugins that require more than one object file
 libbx_hdimage.la: hdimage.lo vmware3.lo vmware4.lo vvfat.lo $(CDROM_OBJS:.o=.lo)
-	$(LIBTOOL) --mode=link $(CXX) -module hdimage.lo vmware3.lo vmware4.lo vvfat.lo $(CDROM_OBJS:.o=.lo) -o libbx_hdimage.la -rpath $(PLUGIN_PATH)
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module hdimage.lo vmware3.lo vmware4.lo vvfat.lo $(CDROM_OBJS:.o=.lo) -o libbx_hdimage.la -rpath $(PLUGIN_PATH)
 
 libbx_keyboard.la: keyboard.lo scancodes.lo
-	$(LIBTOOL) --mode=link $(CXX) -module keyboard.lo scancodes.lo -o libbx_keyboard.la -rpath $(PLUGIN_PATH)
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module keyboard.lo scancodes.lo -o libbx_keyboard.la -rpath $(PLUGIN_PATH)
 
 libbx_pit.la: pit82c54.lo pit.lo
-	$(LIBTOOL) --mode=link $(CXX) -module pit82c54.lo pit.lo -o libbx_pit.la -rpath $(PLUGIN_PATH)
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module pit82c54.lo pit.lo -o libbx_pit.la -rpath $(PLUGIN_PATH)
 
 libbx_serial.la: serial.lo serial_raw.lo
-	$(LIBTOOL) --mode=link $(CXX) -module serial.lo serial_raw.lo -o libbx_serial.la -rpath $(PLUGIN_PATH)
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module serial.lo serial_raw.lo -o libbx_serial.la -rpath $(PLUGIN_PATH)
 
 libbx_vga.la: vga.lo vgacore.lo
-	$(LIBTOOL) --mode=link $(CXX) -module vga.lo vgacore.lo -o libbx_vga.la -rpath $(PLUGIN_PATH)
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module vga.lo vgacore.lo -o libbx_vga.la -rpath $(PLUGIN_PATH)
 
 libbx_svga_cirrus.la: svga_cirrus.lo vgacore.lo
-	$(LIBTOOL) --mode=link $(CXX) -module svga_cirrus.lo vgacore.lo -o libbx_svga_cirrus.la -rpath $(PLUGIN_PATH)
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module svga_cirrus.lo vgacore.lo -o libbx_svga_cirrus.la -rpath $(PLUGIN_PATH)
 
 #### building DLLs for win32  (tested on cygwin only)
 bx_%.dll: %.o
