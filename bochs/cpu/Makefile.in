@@ -111,6 +111,7 @@ OBJS = \
 	bit.o \
 	bit16.o \
 	bit32.o \
+	bmi32.o \
 	string.o \
 	paging.o
 	
@@ -131,7 +132,6 @@ OBJS64 = \
 	avx_fma.o \
 	avx2.o \
 	gather.o \
-	bmi32.o \
 	bmi64.o \
 	tbm32.o \
 	tbm64.o \
