@@ -47,6 +47,8 @@ Changes after 2.5.1 release:
     - Added PCI network boot ROM support to all network adapters
   - PCI
     - added "auto-assign to PCI slot" feature for PCI-only devices
+  - DMA
+    - Added the capability to transfer more then one byte per ISA DMA cycle
   - VGA
     - Major rewrite of the vga / cirrus code:
       - vgacore (shared standard VGA emulation code)
@@ -83,6 +85,7 @@ Changes after 2.5.1 release:
   - Added new command line option '-noconsole' to disable the console
     window on Windows host.
   - renamed PCI Pseudo NIC option to "pcipnic" (for direct plugin loading)
+  - moved several related options to the new "keyboard" bochsrc option
 
 - Tools
   - bxcommit: added support for converting growing to flat mode images

@@ -756,30 +756,38 @@ parport1: enabled=1, file="parport.out"
 #es1370: enabled=1, wavedev=alsa
 
 #=======================================================================
-# KEYBOARD_SERIAL_DELAY:
-# Approximate time in microseconds that it takes one character to
-# be transfered from the keyboard to controller over the serial path.
-# Examples:
-#   keyboard_serial_delay: 200
-#=======================================================================
-keyboard_serial_delay: 250
-
-#=======================================================================
-# KEYBOARD_PASTE_DELAY:
-# Approximate time in microseconds between attempts to paste
-# characters to the keyboard controller. This leaves time for the
-# guest os to deal with the flow of characters.  The ideal setting
-# depends on how your operating system processes characters.  The
-# default of 100000 usec (.1 seconds) was chosen because it works 
-# consistently in Windows.
+# KEYBOARD:
+# This defines parameters related to the emulated keyboard
 #
-# If your OS is losing characters during a paste, increase the paste
-# delay until it stops losing characters.
+#   TYPE:
+#     Type of keyboard return by a "identify keyboard" command to the
+#     keyboard controler. It must be one of "xt", "at" or "mf".
+#     Defaults to "mf". It should be ok for almost everybody. A known
+#     exception is french macs, that do have a "at"-like keyboard.
+#
+#   SERIAL_DELAY:
+#     Approximate time in microseconds that it takes one character to
+#     be transfered from the keyboard to controller over the serial path.
+#
+#   KEYBOARD_PASTE_DELAY:
+#     Approximate time in microseconds between attempts to paste
+#     characters to the keyboard controller. This leaves time for the
+#     guest os to deal with the flow of characters.  The ideal setting
+#     depends on how your operating system processes characters.  The
+#     default of 100000 usec (.1 seconds) was chosen because it works 
+#     consistently in Windows.
+#     If your OS is losing characters during a paste, increase the paste
+#     delay until it stops losing characters.
+#
+#   KEYMAP:
+#     This enables a remap of a physical localized keyboard to a
+#     virtualized us keyboard, as the PC architecture expects.
 #
 # Examples:
-#   keyboard_paste_delay: 100000
+#   keyboard: type=mf, serial_delay=200, paste_delay=100000
+#   keyboard: keymap=gui/keymaps/x11-pc-de.map
 #=======================================================================
-keyboard_paste_delay: 100000
+#keyboard: type=mf, serial_delay=250
 
 #=======================================================================
 # MOUSE:
@@ -918,29 +926,6 @@ private_colormap: enabled=0
 # and supports the same networking modules as the NE2000 adapter.
 #=======================================================================
 #e1000: enabled=1, mac=52:54:00:12:34:56, ethmod=slirp, script=/usr/local/bin/slirp
-
-#=======================================================================
-# KEYBOARD_MAPPING:
-# This enables a remap of a physical localized keyboard to a
-# virtualized us keyboard, as the PC architecture expects.
-# If enabled, the keymap file must be specified.
-# 
-# Examples:
-#   keyboard_mapping: enabled=1, map=gui/keymaps/x11-pc-de.map
-#=======================================================================
-keyboard_mapping: enabled=0, map=
-
-#=======================================================================
-# KEYBOARD_TYPE:
-# Type of keyboard return by a "identify keyboard" command to the
-# keyboard controler. It must be one of "xt", "at" or "mf".
-# Defaults to "mf". It should be ok for almost everybody. A known
-# exception is french macs, that do have a "at"-like keyboard.
-#
-# Examples:
-#   keyboard_type: mf
-#=======================================================================
-#keyboard_type: mf
 
 #=======================================================================
 # USER_SHORTCUT:

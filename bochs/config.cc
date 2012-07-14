@@ -2737,6 +2737,34 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_string(BXPN_VGA_EXTENSION)->set(&params[i][10]);
       } else if (!strncmp(params[i], "update_freq=", 12)) {
         SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY)->set(atol(&params[i][12]));
+      } else {
+        PARSE_ERR(("%s: vga directive malformed.", context));
+      }
+    }
+  } else if (!strcmp(params[0], "keyboard")) {
+    if (num_params < 2) {
+      PARSE_ERR(("%s: keyboard directive malformed.", context));
+    }
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "serial_delay=", 13)) {
+        SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->set(atol(&params[i][13]));
+        if (SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->get() < 5) {
+          PARSE_ERR (("%s: keyboard serial delay not big enough!", context));
+        }
+      } else if (!strncmp(params[i], "paste_delay=", 12)) {
+        SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set(atol(&params[i][12]));
+        if (SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->get() < 1000) {
+          PARSE_ERR (("%s: keyboard paste delay not big enough!", context));
+        }
+      } else if (!strncmp(params[i], "type=", 5)) {
+        if (!SIM->get_param_enum(BXPN_KBD_TYPE)->set_by_name(&params[i][5])) {
+          PARSE_ERR(("%s: keyboard_type directive: wrong arg '%s'.", context,params[1]));
+        }
+      } else if (!strncmp(params[i], "keymap=", 7)) {
+        SIM->get_param_bool(BXPN_KBD_USEMAPPING)->set(strlen(params[i]) > 7);
+        SIM->get_param_string(BXPN_KBD_KEYMAP)->set(&params[i][7]);
+      } else {
+        PARSE_ERR(("%s: keyboard directive malformed.", context));
       }
     }
   } else if (!strcmp(params[0], "keyboard_serial_delay")) {
@@ -2747,6 +2775,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     if (SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->get() < 5) {
       PARSE_ERR (("%s: keyboard_serial_delay not big enough!", context));
     }
+    PARSE_WARN(("%s: 'keyboard_serial_delay' will be replaced by new 'keyboard' option.", context));
   } else if (!strcmp(params[0], "keyboard_paste_delay")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: keyboard_paste_delay directive: wrong # args.", context));
@@ -2755,6 +2784,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     if (SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->get() < 1000) {
       PARSE_ERR (("%s: keyboard_paste_delay not big enough!", context));
     }
+    PARSE_WARN(("%s: 'keyboard_paste_delay' will be replaced by new 'keyboard' option.", context));
   } else if (!strcmp(params[0], "text_snapshot_check")) {
     PARSE_ERR(("%s: the 'text_snapshot_check' feature has been removed.", context));
   } else if (!strcmp(params[0], "mouse")) {
@@ -3019,6 +3049,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     if (!SIM->get_param_enum(BXPN_KBD_TYPE)->set_by_name(params[1])) {
       PARSE_ERR(("%s: keyboard_type directive: wrong arg '%s'.", context,params[1]));
     }
+    PARSE_WARN(("%s: 'keyboard_type' will be replaced by new 'keyboard' option.", context));
   }
   else if (!strcmp(params[0], "keyboard_mapping")
          ||!strcmp(params[0], "keyboardmapping")) {
@@ -3030,6 +3061,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_string(BXPN_KBD_KEYMAP)->set(&params[i][4]);
       }
     }
+    PARSE_WARN(("%s: '%s' will be replaced by new 'keyboard' option.", context, params[0]));
   }
   else if (!strcmp(params[0], "user_shortcut"))
   {
@@ -3333,12 +3365,15 @@ int bx_write_log_options(FILE *fp, bx_list_c *base)
 
 int bx_write_keyboard_options(FILE *fp)
 {
-  fprintf(fp, "keyboard_type: %s\n", SIM->get_param_enum(BXPN_KBD_TYPE)->get_selected());
-  fprintf(fp, "keyboard_serial_delay: %u\n", SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->get());
-  fprintf(fp, "keyboard_paste_delay: %u\n", SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->get());
-  fprintf(fp, "keyboard_mapping: enabled=%d, map=%s\n",
-    SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get(),
-    SIM->get_param_string(BXPN_KBD_KEYMAP)->getptr());
+  fprintf(fp, "keyboard: type=%s, serial_delay=%u, paste_delay=%u, ",
+    SIM->get_param_enum(BXPN_KBD_TYPE)->get_selected(),
+    SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->get(),
+    SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->get());
+  if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
+    fprintf(fp, "keymap=%s\n", SIM->get_param_string(BXPN_KBD_KEYMAP)->getptr());
+  } else {
+    fprintf(fp, "keymap=\n");
+  }
   fprintf(fp, "user_shortcut: keys=%s\n", SIM->get_param_string(BXPN_USER_SHORTCUT)->getptr());
   return 0;
 }
