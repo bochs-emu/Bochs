@@ -1286,10 +1286,10 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
   Bit32u sampledatarate = (Bit32u) DSP.dma.samplerate * (Bit32u) DSP.dma.bps;
   if ((DSP.dma.bits == 16) && (BX_SB16_DMAH != 0)) {
     DSP.dma.count = (DSP.dma.blocklength + 1) * (DSP.dma.bps / 2) - 1;
-    DSP.dma.timer = BX_SB16_THIS dmatimer / (sampledatarate / 2);
+    DSP.dma.timer = BX_SB16_THIS dmatimer / (sampledatarate / 2) * BX_DMA_BUFFER_SIZE;
   } else {
     DSP.dma.count = (DSP.dma.blocklength + 1) * DSP.dma.bps - 1;
-    DSP.dma.timer = BX_SB16_THIS dmatimer / sampledatarate;
+    DSP.dma.timer = BX_SB16_THIS dmatimer / sampledatarate * BX_DMA_BUFFER_SIZE;
   }
 
   writelog(WAVELOG(5), "DMA is %db, %dHz, %s, %s, mode %d, %s, %s, %d bps, %d usec/DMA",
@@ -1564,82 +1564,92 @@ void bx_sb16_c::dsp_dmadone()
 // now the actual transfer routines, called by the DMA controller
 // note that read = from application to soundcard (output),
 // and write = from soundcard to application (input)
-Bit16u bx_sb16_c::dma_read8(Bit8u *data_byte, Bit16u maxlen)
+Bit16u bx_sb16_c::dma_read8(Bit8u *buffer, Bit16u maxlen)
 {
+  Bit16u len = 0;
+
   DEV_dma_set_drq(BX_SB16_DMAL, 0);  // the timer will raise it again
 
-  if (DSP.dma.count % 100 == 0) // otherwise it's just too many lines of log
-    writelog(WAVELOG(5), "Received 8-bit DMA %2x, %d remaining ",
-             *data_byte, DSP.dma.count);
-  DSP.dma.count--;
+  writelog(WAVELOG(5), "Received 8-bit DMA: 0x%02x, %d remaining ",
+           buffer[0], DSP.dma.count);
 
-  dsp_getsamplebyte(*data_byte);
+  do {
+    dsp_getsamplebyte(buffer[len++]);
+    DSP.dma.count--;
+  } while ((len < maxlen) && (DSP.dma.count != 0xffff));
 
   if (DSP.dma.count == 0xffff) // last byte received
     dsp_dmadone();
 
-  return 1;
+  return len;
 }
 
-Bit16u bx_sb16_c::dma_write8(Bit8u *data_byte, Bit16u maxlen)
+Bit16u bx_sb16_c::dma_write8(Bit8u *buffer, Bit16u maxlen)
 {
+  Bit16u len = 0;
+
   DEV_dma_set_drq(BX_SB16_DMAL, 0);  // the timer will raise it again
 
-  DSP.dma.count--;
+  do {
+    buffer[len++] = dsp_putsamplebyte();
+    DSP.dma.count--;
+  } while ((len < maxlen) && (DSP.dma.count != 0xffff));
 
-  *data_byte = dsp_putsamplebyte();
-
-  if (DSP.dma.count % 100 == 0) // otherwise it's just too many lines of log
-    writelog(WAVELOG(5), "Sent 8-bit DMA %2x, %d remaining ",
-             *data_byte, DSP.dma.count);
+  writelog(WAVELOG(5), "Sent 8-bit DMA: 0x%02x, %d remaining ",
+           buffer[0], DSP.dma.count);
 
   if (DSP.dma.count == 0xffff) // last byte sent
     dsp_dmadone();
 
-  return 1;
+  return len;
 }
 
-Bit16u bx_sb16_c::dma_read16(Bit16u *data_word, Bit16u maxlen)
+Bit16u bx_sb16_c::dma_read16(Bit16u *buffer, Bit16u maxlen)
 {
+  Bit16u len = 0;
+  Bit8u *buf8;
+
   DEV_dma_set_drq(BX_SB16_DMAH, 0);  // the timer will raise it again
 
-  if (DSP.dma.count % 100 == 0) // otherwise it's just too many lines of log
-    writelog(WAVELOG(5), "Received 16-bit DMA %04x, %d remaining ",
-             *data_word, DSP.dma.count);
+  writelog(WAVELOG(5), "Received 16-bit DMA: 0x%04x, %d remaining ",
+           buffer[0], DSP.dma.count);
 
-  DSP.dma.count--;
-
-  dsp_getsamplebyte(*data_word & 0xff);
-  dsp_getsamplebyte(*data_word >> 8);
+  do {
+    buf8 = (Bit8u*)(buffer+len);
+    dsp_getsamplebyte(buf8[0]);
+    dsp_getsamplebyte(buf8[1]);
+    len++;
+    DSP.dma.count--;
+  } while ((len < maxlen) && (DSP.dma.count != 0xffff));
 
   if (DSP.dma.count == 0xffff) // last word received
     dsp_dmadone();
 
-  return 1;
+  return len;
 }
 
-Bit16u bx_sb16_c::dma_write16(Bit16u *data_word, Bit16u maxlen)
+Bit16u bx_sb16_c::dma_write16(Bit16u *buffer, Bit16u maxlen)
 {
-  Bit8u byte1, byte2;
+  Bit16u len = 0;
+  Bit8u *buf8;
 
   DEV_dma_set_drq(BX_SB16_DMAH, 0);  // the timer will raise it again
 
-  DSP.dma.count--;
+  do {
+    buf8 = (Bit8u*)(buffer+len);
+    buf8[0] = dsp_putsamplebyte();
+    buf8[1] = dsp_putsamplebyte();
+    len++;
+    DSP.dma.count--;
+  } while ((len < maxlen) && (DSP.dma.count != 0xffff));
 
-  byte1 = dsp_putsamplebyte();
-  byte2 = dsp_putsamplebyte();
-
-  // all input is in little endian
-  *data_word = byte1 | (byte2 << 8);
-
-  if (DSP.dma.count % 100 == 0) // otherwise it's just too many lines of log
-    writelog(WAVELOG(5), "Sent 16-bit DMA %4x, %d remaining ",
-             *data_word, DSP.dma.count);
+  writelog(WAVELOG(5), "Sent 16-bit DMA: 0x%4x, %d remaining ",
+           buffer[0], DSP.dma.count);
 
   if (DSP.dma.count == 0xffff) // last word sent
     dsp_dmadone();
 
-  return 1;
+  return len;
 }
 
 // the mixer, supported type is CT1745 (as in an SB16)

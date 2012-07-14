@@ -286,10 +286,10 @@ private:
   } emuldata;
 
       /* DMA input and output, 8 and 16 bit */
-  BX_SB16_SMF Bit16u dma_write8(Bit8u *data_byte, Bit16u maxlen);
-  BX_SB16_SMF Bit16u dma_read8(Bit8u *data_byte, Bit16u maxlen);
-  BX_SB16_SMF Bit16u dma_write16(Bit16u *data_word, Bit16u maxlen);
-  BX_SB16_SMF Bit16u dma_read16(Bit16u *data_word, Bit16u maxlen);
+  BX_SB16_SMF Bit16u dma_write8(Bit8u *buffer, Bit16u maxlen);
+  BX_SB16_SMF Bit16u dma_read8(Bit8u *buffer, Bit16u maxlen);
+  BX_SB16_SMF Bit16u dma_write16(Bit16u *buffer, Bit16u maxlen);
+  BX_SB16_SMF Bit16u dma_read16(Bit16u *buffer, Bit16u maxlen);
 
       /* the MPU 401 part of the emulator */
   BX_SB16_SMF Bit32u mpu_status();                   // read status port   3x1

@@ -37,6 +37,9 @@
 /* size of internal buffer for mouse devices */
 #define BX_MOUSE_BUFF_SIZE 48
 
+/* maximum size of the ISA DMA buffer */
+#define BX_DMA_BUFFER_SIZE 512
+
 typedef Bit32u (*bx_read_handler_t)(void *, Bit32u, unsigned);
 typedef void   (*bx_write_handler_t)(void *, Bit32u, Bit32u, unsigned);
 

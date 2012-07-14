@@ -663,8 +663,7 @@ void bx_dma_c::raise_HLDA(void)
   bx_phy_address phy_addr;
   bx_bool ma_sl = 0;
   Bit16u maxlen, len = 1;
-  Bit8u buffer[512];
-  Bit16u data_word;
+  Bit8u buffer[BX_DMA_BUFFER_SIZE];
 
   BX_DMA_THIS HLDA = 1;
   // find highest priority channel
@@ -694,18 +693,18 @@ void bx_dma_c::raise_HLDA(void)
              (BX_DMA_THIS s[ma_sl].chan[channel].current_address << ma_sl);
 
   if (!BX_DMA_THIS s[ma_sl].chan[channel].mode.address_decrement) {
-    maxlen = BX_DMA_THIS s[ma_sl].chan[channel].current_count + 1;
-    BX_DMA_THIS TC = (maxlen <= 512);
-    if (maxlen > 512) {
-      maxlen = 512;
+    maxlen = (BX_DMA_THIS s[ma_sl].chan[channel].current_count + 1) << ma_sl;
+    BX_DMA_THIS TC = (maxlen <= BX_DMA_BUFFER_SIZE);
+    if (maxlen > BX_DMA_BUFFER_SIZE) {
+      maxlen = BX_DMA_BUFFER_SIZE;
     }
   } else {
     BX_DMA_THIS TC = (BX_DMA_THIS s[ma_sl].chan[channel].current_count == 0);
-    maxlen = 1;
+    maxlen = 1 << ma_sl;
   }
 
   if (BX_DMA_THIS s[ma_sl].chan[channel].mode.transfer_type == 1) { // write
-    // DMA controlled xfer of byte from I/O to Memory
+    // DMA controlled xfer of bytes from I/O to Memory
 
     if (!ma_sl) {
       if (BX_DMA_THIS h[channel].dmaWrite8)
@@ -715,19 +714,19 @@ void bx_dma_c::raise_HLDA(void)
 
       DEV_MEM_WRITE_PHYSICAL_DMA(phy_addr, len, buffer);
 
-      BX_DBG_DMA_REPORT(phy_addr, 1, BX_WRITE, buffer[0]);
+      BX_DBG_DMA_REPORT(phy_addr, len, BX_WRITE, buffer[0]); // FIXME
     } else {
       if (BX_DMA_THIS h[channel].dmaWrite16)
-        len = BX_DMA_THIS h[channel].dmaWrite16(&data_word, 1);
+        len = BX_DMA_THIS h[channel].dmaWrite16((Bit16u*)buffer, maxlen / 2);
       else
         BX_PANIC(("no dmaWrite handler for channel %u.", channel));
 
-      DEV_MEM_WRITE_PHYSICAL(phy_addr, 2, (Bit8u*) &data_word);
+      DEV_MEM_WRITE_PHYSICAL_DMA(phy_addr, len, buffer);
 
-      BX_DBG_DMA_REPORT(phy_addr, 2, BX_WRITE, data_word);
+      BX_DBG_DMA_REPORT(phy_addr, len * 2, BX_WRITE, buffer[0] | (buffer[1] << 16)); // FIXME
     }
   } else if (BX_DMA_THIS s[ma_sl].chan[channel].mode.transfer_type == 2) { // read
-    // DMA controlled xfer of byte from Memory to I/O
+    // DMA controlled xfer of bytes from Memory to I/O
 
     if (!ma_sl) {
       DEV_MEM_READ_PHYSICAL_DMA(phy_addr, maxlen, buffer);
@@ -735,14 +734,14 @@ void bx_dma_c::raise_HLDA(void)
       if (BX_DMA_THIS h[channel].dmaRead8)
         len = BX_DMA_THIS h[channel].dmaRead8(buffer, maxlen);
 
-      BX_DBG_DMA_REPORT(phy_addr, 1, BX_READ, buffer[0]);
+      BX_DBG_DMA_REPORT(phy_addr, len, BX_READ, buffer[0]); // FIXME
     } else {
-      DEV_MEM_READ_PHYSICAL(phy_addr, 2, (Bit8u*) &data_word);
+      DEV_MEM_READ_PHYSICAL_DMA(phy_addr, maxlen, buffer);
 
       if (BX_DMA_THIS h[channel].dmaRead16)
-        len = BX_DMA_THIS h[channel].dmaRead16(&data_word, 1);
+        len = BX_DMA_THIS h[channel].dmaRead16((Bit16u*)buffer, maxlen / 2);
 
-      BX_DBG_DMA_REPORT(phy_addr, 2, BX_READ, data_word);
+      BX_DBG_DMA_REPORT(phy_addr, len * 2, BX_READ, buffer[0] | (buffer[1] << 16)); // FIXME
     }
   } else if (BX_DMA_THIS s[ma_sl].chan[channel].mode.transfer_type == 0) {
     // verify
@@ -754,7 +753,7 @@ void bx_dma_c::raise_HLDA(void)
         BX_PANIC(("no dmaWrite handler for channel %u.", channel));
     } else {
       if (BX_DMA_THIS h[channel].dmaWrite16)
-        len = BX_DMA_THIS h[channel].dmaWrite16(&data_word, 1);
+        len = BX_DMA_THIS h[channel].dmaWrite16((Bit16u*)buffer, 1);
       else
         BX_PANIC(("no dmaWrite handler for channel %u.", channel));
     }
