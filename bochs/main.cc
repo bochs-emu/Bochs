@@ -806,9 +806,9 @@ int bx_init_main(int argc, char *argv[])
     load_rcfile = 0;
     norcfile = 0;
   }
+  // load pre-defined optional plugins before parsing configuration
+  SIM->opt_plugin_ctrl("*", 1);
   if (load_rcfile) {
-    // load pre-defined optional plugins before parsing configuration
-    SIM->opt_plugin_ctrl("*", 1);
     // parse configuration file and command line arguments
 #ifdef WIN32
     int length;
@@ -1316,6 +1316,8 @@ void bx_init_hardware()
 #endif
 
   DEV_init_devices();
+  // unload optional plugins which are unused and marked for removal
+  SIM->opt_plugin_ctrl("*", 0);
   bx_pc_system.register_state();
   DEV_register_state();
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
@@ -1324,8 +1326,6 @@ void bx_init_hardware()
       SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(0);
     }
   } else {
-    // unload optional plugins which are unused and marked for removal
-    SIM->opt_plugin_ctrl("*", 0);
     bx_set_log_actions_by_device(1);
   }
 
