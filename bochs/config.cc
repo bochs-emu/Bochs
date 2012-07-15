@@ -923,7 +923,7 @@ void bx_init_options()
 
   new bx_param_num_c(keyboard,
       "serial_delay", "Keyboard serial delay",
-      "Approximate time in microseconds that it takes one character to be transfered from the keyboard to controller over the serial path.",
+      "Approximate time in microseconds that it takes one character to be transferred from the keyboard to controller over the serial path.",
       1, BX_MAX_BIT32U,
       250);
   new bx_param_num_c(keyboard,

@@ -761,15 +761,15 @@ parport1: enabled=1, file="parport.out"
 #
 #   TYPE:
 #     Type of keyboard return by a "identify keyboard" command to the
-#     keyboard controler. It must be one of "xt", "at" or "mf".
+#     keyboard controller. It must be one of "xt", "at" or "mf".
 #     Defaults to "mf". It should be ok for almost everybody. A known
 #     exception is french macs, that do have a "at"-like keyboard.
 #
 #   SERIAL_DELAY:
 #     Approximate time in microseconds that it takes one character to
-#     be transfered from the keyboard to controller over the serial path.
+#     be transferred from the keyboard to controller over the serial path.
 #
-#   KEYBOARD_PASTE_DELAY:
+#   PASTE_DELAY:
 #     Approximate time in microseconds between attempts to paste
 #     characters to the keyboard controller. This leaves time for the
 #     guest os to deal with the flow of characters.  The ideal setting

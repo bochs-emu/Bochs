@@ -3907,29 +3907,49 @@ parameter of the SB16 soundcard. The emulation supports recording and playback
 </para>
 </section>
 
-<section><title>keyboard_serial_delay</title>
+<section><title>keyboard</title>
 <para>
-Example:
+Examples:
 <screen>
-  keyboard_serial_delay: 250 # default
+  keyboard: type=mf, serial_delay=200, paste_delay=100000
+  keyboard: keymap=gui/keymaps/x11-pc-de.map
 </screen>
-Approximate time in microseconds that it takes one character to be
-transferred from the keyboard to controller over the serial path.
+This defines parameters related to the emulated keyboard.
 </para>
-</section>
-
-<section><title>keyboard_paste_delay</title>
+<para><command>type</command></para>
 <para>
-Example:
-<screen>
-  keyboard_paste_delay: 100000 # default
-</screen>
+Type of keyboard return by a "identify keyboard" command to the
+keyboard controller. It must be one of "xt", "at" or "mf".
+Defaults to "mf". It should be ok for almost everybody. A known
+exception is french macs, that do have a "at"-like keyboard.
+</para>
+<para><command>serial_delay</command></para>
+<para>
+Approximate time in microseconds that it takes one character to
+be transferred from the keyboard to controller over the serial path.
+</para>
+<para><command>paste_delay</command></para>
+<para>
 Approximate time in microseconds between attempts to paste
 characters to the keyboard controller. This leaves time for the
 guest os to deal with the flow of characters.  The ideal setting
 depends on how your operating system processes characters.  The
-default of 100000 usec (.1 seconds) was chosen because it works
+default of 100000 usec (.1 seconds) was chosen because it works 
 consistently in Windows.
+</para>
+<para>
+If your OS is losing characters during a paste, increase the paste
+delay until it stops losing characters.
+</para>
+<para><command>keymap</command></para>
+<para>
+This enables a remap of a physical localized keyboard to a
+virtualized us keyboard, as the PC architecture expects.
+</para>
+<para>
+Keyboard mapping is available for the display libraries x, sdl (Linux port) and
+wx (GTK port). For SDL you have to use keymaps designed for SDL, the wxWidgets GUI
+uses the keymaps for X11.
 </para>
 </section>
 
@@ -4342,37 +4362,6 @@ Example:
 To support the Intel(R) 82540EM Gigabit Ethernet adapter, Bochs must be compiled
 with the --enable-e1000 configure option. It accepts the same syntax (for mac, ethmod,
 ethdev, script, bootrom) and supports the same networking modules as the NE2000 adapter.
-</para>
-</section>
-
-<section><title>keyboard_mapping</title>
-<para>
-Examples:
-<screen>
-  keyboard_mapping: enabled=0, map=
-  keyboard_mapping: enabled=1, map=gui/keymaps/x11-pc-de.map
-</screen>
-This enables a remap of a physical localized keyboard to a
-virtualized U.S. keyboard, as the PC architecture expects.
-If enabled, the keymap file must be specified. Keyboard mapping is
-available for X windows, SDL (Linux port) and wxWidgets (GTK port).
-For SDL you have to use keymaps designed for SDL, the wxWidgets GUI
-uses the keymaps for X windows.
-</para>
-</section>
-
-<section><title>keyboard_type</title>
-<para>
-Examples:
-<screen>
-  keyboard_type: xt
-  keyboard_type: at
-  keyboard_type: mf
-</screen>
-Type of keyboard returned by a "identify keyboard" command to the
-keyboard controller. It must be one of "xt", "at" or "mf".
-Defaults to "mf". It should be ok for almost everybody. A known
-exception is French macs, that do have a "at"-like keyboard.
 </para>
 </section>
 
@@ -4956,8 +4945,20 @@ For other arguments, see section <link linkend="bochsrc">bochsrc</link>.
   <entry>specify path for restoring state</entry>
 </row>
 <row>
+  <entry>-noconsole</entry>
+  <entry>disable console window (Windows only)</entry>
+</row>
+<row>
   <entry>--help</entry>
   <entry>display help message and exit</entry>
+</row>
+<row>
+  <entry>--help features</entry>
+  <entry>display available features / devices and exit</entry>
+</row>
+<row>
+  <entry>--help cpu</entry>
+  <entry>display supported CPU models and exit (CPU level > 4 only)</entry>
 </row>
 </tbody>
 </tgroup>
@@ -8980,8 +8981,7 @@ panic: action=ask
 error: action=report
 info: action=report
 debug: action=ignore
-keyboard_mapping: enabled=0, map=
-keyboard_type: mf
+keyboard: type=mf, keymap=
 user_shortcut: keys=none
 config_interface: textconfig
 display_library: x
