@@ -1850,8 +1850,11 @@ void bx_x_gui_c::exit(void)
     XFreePixmap(bx_x_display,vgafont[i]);
   }
 
+  if (mouse_captured)
+    enable_cursor();
+
   if (bx_x_display)
-    XCloseDisplay (bx_x_display);
+    XCloseDisplay(bx_x_display);
 
   BX_INFO(("Exit"));
 }
