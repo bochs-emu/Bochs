@@ -11252,7 +11252,7 @@ int09_finish:
 int71_handler:
   push ax
   mov  al, #0x20
-  out  #0xA0, al
+  out  PORT_PIC2_CMD, al
   pop  ax
   int  #0x0A
   iret
