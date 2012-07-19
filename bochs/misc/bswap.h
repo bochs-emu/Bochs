@@ -20,7 +20,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef BX_BSWAP_H
-#define BX_BSAPP_H
+#define BX_BSWAP_H
 
 #if BX_HAVE___BUILTIN_BSWAP32
 #define bx_bswap32 __builtin_bswap32
