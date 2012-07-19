@@ -10885,7 +10885,6 @@ normal_post:
 
 
   ;; Parallel setup
-  ;; SET_INT_VECTOR(0x0F, #0xF000, #dummy_master_pic_irq_handler) ; commented it because this vector is already initialized
   xor ax, ax
   mov ds, ax
   xor bx, bx
@@ -10901,7 +10900,6 @@ normal_post:
   mov 0x410, ax
 
   ;; Serial setup
-  ;; SET_INT_VECTOR(0x0C, #0xF000, #dummy_master_pic_irq_handler) ; commented it because this vector is already initialized
   SET_INT_VECTOR(0x14, #0xF000, #int14_handler)
   xor bx, bx
   mov cl, #0x0a ; timeout value
