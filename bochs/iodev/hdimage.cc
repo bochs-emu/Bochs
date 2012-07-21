@@ -159,6 +159,7 @@ int default_image_t::open(const char* pathname, int flags)
   if (hFile != INVALID_HANDLE_VALUE) {
     ULARGE_INTEGER FileSize;
     FileSize.LowPart = GetFileSize(hFile, &FileSize.HighPart);
+    GetFileTime(hFile, NULL, NULL, &mtime);
     CloseHandle(hFile);
     if ((FileSize.LowPart != INVALID_FILE_SIZE) || (GetLastError() == NO_ERROR)) {
       hd_size = FileSize.QuadPart;
@@ -195,6 +196,7 @@ int default_image_t::open(const char* pathname, int flags)
   {
     hd_size = (Bit64u)stat_buf.st_size; // standard unix procedure to get size of regular files
   }
+  mtime = stat_buf.st_mtime;
 #endif
   BX_INFO(("hd_size: "FMT_LL"u", hd_size));
   if (hd_size <= 0) BX_PANIC(("size of disk image not detected / invalid"));
@@ -222,6 +224,11 @@ ssize_t default_image_t::read(void* buf, size_t count)
 ssize_t default_image_t::write(const void* buf, size_t count)
 {
   return ::write(fd, (char*) buf, count);
+}
+
+Bit32u default_image_t::get_timestamp()
+{
+  return (fat_datetime(mtime, 1) | (fat_datetime(mtime, 0) << 16));
 }
 
 char increment_string(char *str, int diff)
@@ -1032,6 +1039,7 @@ int redolog_t::make_header(const char* type, Bit64u size)
     else entries *= 2;
   } while (maxsize < size);
 
+  header.specific.timestamp = 0;
   header.specific.disk = htod64(size);
 
   print_header();
@@ -1199,6 +1207,20 @@ void redolog_t::close()
 Bit64u redolog_t::get_size()
 {
   return dtoh64(header.specific.disk);
+}
+
+Bit32u redolog_t::get_timestamp()
+{
+  return dtoh32(header.specific.timestamp);
+}
+
+bx_bool redolog_t::set_timestamp(Bit32u timestamp)
+{
+  header.specific.timestamp = htod32(timestamp);
+  // Update header
+  ::lseek(fd, 0, SEEK_SET);
+  ::write(fd, &header, dtoh32(header.standard.header));
+  return 1;
 }
 
 Bit64s redolog_t::lseek(Bit64s offset, int whence)
@@ -1444,6 +1466,7 @@ undoable_image_t::~undoable_image_t()
 int undoable_image_t::open(const char* pathname)
 {
   char *logname=NULL;
+  Bit32u timestamp1, timestamp2;
 
   if (ro_disk->open(pathname, O_RDONLY)<0)
     return -1;
@@ -1463,19 +1486,27 @@ int undoable_image_t::open(const char* pathname)
     sprintf(logname, "%s%s", pathname, UNDOABLE_REDOLOG_EXTENSION);
   }
 
-  if (redolog->open(logname,REDOLOG_SUBTYPE_UNDOABLE) < 0)
-  {
-    if (redolog->create(logname, REDOLOG_SUBTYPE_UNDOABLE, hd_size) < 0)
-    {
+  if (redolog->open(logname,REDOLOG_SUBTYPE_UNDOABLE) < 0) {
+    if (redolog->create(logname, REDOLOG_SUBTYPE_UNDOABLE, hd_size) < 0) {
       BX_PANIC(("Can't open or create redolog '%s'",logname));
       return -1;
     }
-    if (hd_size != redolog->get_size())
-    {
-      BX_PANIC(("size reported by redolog doesn't match r/o disk size"));
+  }
+  if (hd_size != redolog->get_size()) {
+    BX_PANIC(("size reported by redolog doesn't match r/o disk size"));
+    free(logname);
+    return -1;
+  }
+  timestamp1 = ro_disk->get_timestamp();
+  timestamp2 = redolog->get_timestamp();
+  if (timestamp2 != 0) {
+    if (timestamp1 != timestamp2) {
+      BX_PANIC(("unexpected modification time of the r/o disk"));
       free(logname);
       return -1;
     }
+  } else if (timestamp1 != 0) {
+    redolog->set_timestamp(timestamp1);
   }
 
   BX_INFO(("'undoable' disk opened: ro-file is '%s', redolog is '%s'", pathname, logname));
@@ -1484,7 +1515,7 @@ int undoable_image_t::open(const char* pathname)
   return 0;
 }
 
-void undoable_image_t::close ()
+void undoable_image_t::close()
 {
   redolog->close();
   ro_disk->close();

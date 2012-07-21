@@ -78,7 +78,7 @@
    Bit32u  catalog;    // #entries in the catalog
    Bit32u  bitmap;     // bitmap size in bytes
    Bit32u  extent;     // extent size in bytes
-   Bit32u  reserved;   // for data alignment
+   Bit32u  timestamp;  // modification time in FAT format (subtype 'undoable' only)
    Bit64u  disk;       // disk size in bytes
  } redolog_specific_header_t;
 
@@ -182,8 +182,16 @@ class default_image_t : public device_image_t
       // written (count).
       ssize_t write(const void* buf, size_t count);
 
+      // Get modification time in FAT format
+      Bit32u get_timestamp();
+
   private:
       int fd;
+#ifndef WIN32
+      time_t mtime;
+#else
+      FILETIME mtime;
+#endif
 };
 
 // CONCAT MODE
@@ -349,6 +357,8 @@ class redolog_t
       int open(const char* filename, const char* type);
       void close();
       Bit64u get_size();
+      Bit32u get_timestamp();
+      bx_bool set_timestamp(Bit32u timestamp);
 
       Bit64s lseek(Bit64s offset, int whence);
       ssize_t read(void* buf, size_t count);

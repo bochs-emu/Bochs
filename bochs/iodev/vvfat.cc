@@ -487,7 +487,7 @@ static inline Bit8u fat_chksum(const direntry_t* entry)
 
 // if return_time==0, this returns the fat_date, else the fat_time
 #ifndef WIN32
-static Bit16u fat_datetime(time_t time, int return_time)
+Bit16u fat_datetime(time_t time, int return_time)
 {
   struct tm* t;
   struct tm t1;
@@ -499,7 +499,7 @@ static Bit16u fat_datetime(time_t time, int return_time)
   return htod16((t->tm_mday) | ((t->tm_mon+1)<<5) | ((t->tm_year-80)<<9));
 }
 #else
-static Bit16u fat_datetime(FILETIME time, int return_time)
+Bit16u fat_datetime(FILETIME time, int return_time)
 {
   FILETIME localtime;
   SYSTEMTIME systime;
