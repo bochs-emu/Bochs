@@ -3,7 +3,7 @@ comments from the mailing list and the irc chat.
 Anybody is welcome to work on any of these issues. Some of
 these items are rather simple and can be implemented by single
 individuals. Other items are quite complex and development needs
-to be coordonated. So, if you want to contribute, please drop
+to be coordinated. So, if you want to contribute, please drop
 us a note in the mailing list, so you can get help or exchange
 ideas.
 Christophe Bothamy.
@@ -35,7 +35,7 @@ time) that puts the video card interface in its own thread. It has
 troubles though that I have not resolved. It may also be easier to debug
 a threaded peripheral.
 I also think that it might be possible to thread a chunk of the CPU
-emulation to improve performance on a SMP/SMT machine. Specificaly
+emulation to improve performance on a SMP/SMT machine. Specifically
 write_virtual_dword, write_virtual_word, write_virtual_byte, etc...
 might just be able to be threaded. I think the threading overhead might
 be less than the protection and address translation code. We would have
@@ -48,7 +48,7 @@ The home page of the project: http://grid.hust.edu.cn/cluster/VirtualMachine/mai
 
 3. Plugin architecture
 3.1 The plugin architecture can be reworked if we want to support
-multiple similar devices like seral net or vga cards.
+multiple similar devices like serial, net or vga cards.
 We currently have two "types" of plugins: "core" and "optional".
 Maybe we could add "classes" of plugins. The current version of
 Bochs supports the classes "display_library" and "io_device".
@@ -128,7 +128,7 @@ Not done yet.
 9.2 use Coreboot or SeaBios as possible alternatives/extensions to
 Bochs Bios ROM we have.
 Status:
-In Bochs 2.5 SeaBIOS is usable.
+Starting from Bochs 2.5 SeaBIOS is usable.
 
 10. LGPL VGABios
 11.1 Video parameters table
@@ -157,7 +157,7 @@ USB xHCI support is under construction.
 13.1 Benjamen R. Meyer wrote :
 I think we should rework the .bochsrc file to be more standard across all
 devices. I like how the USB configuration is done in it, and think we should
-put something similar together for everything else. In otherwords, create
+put something similar together for everything else. In other words, create
 something that can be easily used for everything, and make it easier to
 configure in the process.
 From what I can tell right now, most of the configuration lines are randomly
@@ -199,7 +199,7 @@ simplify its usage.
 17. Patches / Bug reports
 There are dozens of patches floating around. Some are outdated,
 don't apply cleanly, are obsolete/unneeded. We could try to do
-some clean-up, and keep only relevent ones.
+some clean-up, and keep only relevant ones.
 We should also clean up the SF bug tracker. Some bugreports are
 very old and we asked for more information with no response.
 Status:
@@ -208,7 +208,7 @@ There is some progress, but still a lot of work to do.
 18. Positions
 If you want to help without coding, here are available positions :
 19.1 Webmaster : update website (Jan Bruun Andersen offered to help)
-19.2 patch coordonator : look at incoming patches (sourceforge and
+19.2 patch coordinator : look at incoming patches (sourceforge and
 mailing list) and upload / update in the SVN patches directory.
 19.3 platform maintainers for macos / win32
 19.4 disk image maintainer : create and maintain our collection

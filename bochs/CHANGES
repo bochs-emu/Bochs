@@ -102,6 +102,7 @@ Changes after 2.5.1 release:
   [3486555] Fix critical stack leak in Win32 GUI by Carlo Bramini
 
 - these S.F. bugs were closed/fixed
+  [3545941] Typo in preprocessor symbol
   [3538731] Missing CR8 register
   [3538574] Missing XD flag ( Execute Disable ) when showing PTEs
   [3537556] Missing initializations
