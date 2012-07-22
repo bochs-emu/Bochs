@@ -561,10 +561,10 @@ int parse_cmdline(int argc, char *argv[])
         if (sscanf(&argv[arg][6], "%d", &bx_hdsize) != 1) {
           printf("Error in hard disk image size argument: %s\n\n", &argv[arg][6]);
           ret = 0;
-        } else if ((bx_hdsize < 1) || (bx_hdsize > 32255)) {
+        } else if ((bx_hdsize < 1) || (bx_hdsize > 2064383)) {
           printf("Hard disk image size out of range\n\n");
           ret = 0;
-	}
+        }
       } else {
         printf("Image type (fd/hd) not specified\n\n");
       }
@@ -633,14 +633,14 @@ int CDECL main(int argc, char *argv[])
     if (bx_interactive) {
       if (ask_menu(hdmode_menu, hdmode_n_choices, hdmode_choices, bx_hdimagemode, &mode) < 0)
         fatal (EOF_ERR);
-      if (ask_int("\nEnter the hard disk size in megabytes, between 1 and 129023\n", 1, 129023, bx_hdsize, &hdsize) < 0)
+      if (ask_int("\nEnter the hard disk size in megabytes, between 1 and 2064383\n", 1, 2064383, bx_hdsize, &hdsize) < 0)
         fatal(EOF_ERR);
     } else {
       mode = bx_hdimagemode;
       hdsize = bx_hdsize;
     }
     cyl = (unsigned int) (hdsize*1024.0*1024.0/16.0/63.0/512.0);
-    assert (cyl < 262144);
+    assert (cyl < 4194304);
     sectors = cyl*heads*spt;
     printf("\nI will create a '%s' hard disk image with\n", hdmode_choices[mode]);
     printf("  cyl=%d\n", cyl);
