@@ -9489,7 +9489,7 @@ int76_handler:
   mov   BYTE 0x008E, #0xff
   call  eoi_both_pics
 
-  // Notify fixed disk interrupt complete w/ int 15h, function AX=9100
+  ;; Notify fixed disk interrupt complete w/ int 15h, function AX=9100
   mov   ax, #0x9100
   int   0x15
   pop   ds
@@ -11159,7 +11159,7 @@ int16_F00:
   cmp  ax, 0x001c
   jne  int16_key_found
   sti
-  // no key yet, call int 15h, function AX=9002
+  ;; no key yet, call int 15h, function AX=9002
   mov  ax, #0x9002
   int  #0x15
 
@@ -11235,7 +11235,7 @@ int09_done:
   cli
   call eoi_master_pic
 
-  // Notify keyboard interrupt complete w/ int 15h, function AX=9102
+  ;; Notify keyboard interrupt complete w/ int 15h, function AX=9102
   mov ax, #0x9102
   int #0x15
 
@@ -11315,7 +11315,7 @@ int0e_normal:
   mov  0x043e, al
   pop  ds
 
-  // Notify diskette interrupt complete w/ int 15h, function AX=9101
+  ;; Notify diskette interrupt complete w/ int 15h, function AX=9101
   mov  ax, #0x9101
   int  #0x15
   pop  dx
