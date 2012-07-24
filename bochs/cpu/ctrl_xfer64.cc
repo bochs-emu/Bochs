@@ -59,7 +59,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
   RIP = return_RIP;
   RSP += 8 + i->Iw();
 
-  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, RIP);
+  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, PREV_RIP, RIP);
 
   BX_NEXT_TRACE(i);
 }
@@ -80,7 +80,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear64(bxInstruction_c *i)
   RIP = return_RIP;
   RSP += 8;
 
-  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, RIP);
+  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, PREV_RIP, RIP);
 
   BX_NEXT_TRACE(i);
 }
@@ -123,7 +123,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_Jq(bxInstruction_c *i)
   RIP = new_RIP;
   RSP -= 8;
 
-  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, RIP);
+  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, PREV_RIP, RIP);
 
   BX_NEXT_TRACE(i);
 }
@@ -148,7 +148,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EqR(bxInstruction_c *i)
   RIP = new_RIP;
   RSP -= 8;
 
-  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL_INDIRECT, RIP);
+  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL_INDIRECT, PREV_RIP, RIP);
 
   BX_NEXT_TRACE(i);
 }
@@ -189,7 +189,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_Jq(bxInstruction_c *i)
 
   RIP = new_RIP;
 
-  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, RIP);
+  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, PREV_RIP, RIP);
 
   BX_NEXT_TRACE(i);
 }
@@ -198,11 +198,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JO_Jq(bxInstruction_c *i)
 {
   if (get_OF()) {
     branch_near64(i);
-    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     BX_NEXT_TRACE(i);
   }
 
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
   BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
@@ -210,11 +210,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNO_Jq(bxInstruction_c *i)
 {
   if (! get_OF()) {
     branch_near64(i);
-    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     BX_NEXT_TRACE(i);
   }
 
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
   BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
@@ -222,11 +222,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JB_Jq(bxInstruction_c *i)
 {
   if (get_CF()) {
     branch_near64(i);
-    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     BX_NEXT_TRACE(i);
   }
 
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
   BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
@@ -234,11 +234,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNB_Jq(bxInstruction_c *i)
 {
   if (! get_CF()) {
     branch_near64(i);
-    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     BX_NEXT_TRACE(i);
   }
 
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
   BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
@@ -246,11 +246,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JZ_Jq(bxInstruction_c *i)
 {
   if (get_ZF()) {
     branch_near64(i);
-    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     BX_NEXT_TRACE(i);
   }
 
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
   BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
@@ -258,11 +258,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNZ_Jq(bxInstruction_c *i)
 {
   if (! get_ZF()) {
     branch_near64(i);
-    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     BX_NEXT_TRACE(i);
   }
 
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
   BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
@@ -270,11 +270,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JBE_Jq(bxInstruction_c *i)
 {
   if (get_CF() || get_ZF()) {
     branch_near64(i);
-    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     BX_NEXT_TRACE(i);
   }
 
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
   BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
@@ -282,11 +282,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNBE_Jq(bxInstruction_c *i)
 {
   if (! (get_CF() || get_ZF())) {
     branch_near64(i);
-    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     BX_NEXT_TRACE(i);
   }
 
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
   BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
@@ -294,11 +294,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JS_Jq(bxInstruction_c *i)
 {
   if (get_SF()) {
     branch_near64(i);
-    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     BX_NEXT_TRACE(i);
   }
 
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
   BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
@@ -306,11 +306,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNS_Jq(bxInstruction_c *i)
 {
   if (! get_SF()) {
     branch_near64(i);
-    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     BX_NEXT_TRACE(i);
   }
 
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
   BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
@@ -318,11 +318,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JP_Jq(bxInstruction_c *i)
 {
   if (get_PF()) {
     branch_near64(i);
-    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     BX_NEXT_TRACE(i);
   }
 
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
   BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
@@ -330,11 +330,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNP_Jq(bxInstruction_c *i)
 {
   if (! get_PF()) {
     branch_near64(i);
-    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     BX_NEXT_TRACE(i);
   }
 
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
   BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
@@ -342,11 +342,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JL_Jq(bxInstruction_c *i)
 {
   if (getB_SF() != getB_OF()) {
     branch_near64(i);
-    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     BX_NEXT_TRACE(i);
   }
 
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
   BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
@@ -354,11 +354,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNL_Jq(bxInstruction_c *i)
 {
   if (getB_SF() == getB_OF()) {
     branch_near64(i);
-    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     BX_NEXT_TRACE(i);
   }
 
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
   BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
@@ -366,11 +366,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JLE_Jq(bxInstruction_c *i)
 {
   if (get_ZF() || (getB_SF() != getB_OF())) {
     branch_near64(i);
-    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     BX_NEXT_TRACE(i);
   }
 
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
   BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
@@ -378,11 +378,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNLE_Jq(bxInstruction_c *i)
 {
   if (! get_ZF() && (getB_SF() == getB_OF())) {
     branch_near64(i);
-    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     BX_NEXT_TRACE(i);
   }
 
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
   BX_NEXT_INSTR(i); // trace can continue over non-taken branch
 }
 
@@ -397,7 +397,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EqR(bxInstruction_c *i)
 
   RIP = op1_64;
 
-  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP_INDIRECT, RIP);
+  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP_INDIRECT, PREV_RIP, RIP);
 
   BX_NEXT_TRACE(i);
 }
@@ -456,11 +456,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JRCXZ_Jb(bxInstruction_c *i)
 
   if (temp_RCX == 0) {
     branch_near64(i);
-    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
   }
 #if BX_INSTRUMENTATION
   else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
   }
 #endif
 
@@ -484,11 +484,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOPNE64_Jb(bxInstruction_c *i)
 
     if (((--count) != 0) && (get_ZF()==0)) {
       branch_near64(i);
-      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
     }
 #endif
 
@@ -499,11 +499,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOPNE64_Jb(bxInstruction_c *i)
 
     if (((--count) != 0) && (get_ZF()==0)) {
       branch_near64(i);
-      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
     }
 #endif
 
@@ -520,11 +520,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOPE64_Jb(bxInstruction_c *i)
 
     if (((--count) != 0) && get_ZF()) {
       branch_near64(i);
-      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
     }
 #endif
 
@@ -535,11 +535,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOPE64_Jb(bxInstruction_c *i)
 
     if (((--count) != 0) && get_ZF()) {
       branch_near64(i);
-      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
     }
 #endif
 
@@ -556,11 +556,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOP64_Jb(bxInstruction_c *i)
 
     if ((--count) != 0) {
       branch_near64(i);
-      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
     }
 #endif
 
@@ -571,11 +571,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOP64_Jb(bxInstruction_c *i)
 
     if ((--count) != 0) {
       branch_near64(i);
-      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
     }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
     }
 #endif
 

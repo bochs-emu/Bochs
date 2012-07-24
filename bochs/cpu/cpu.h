@@ -163,6 +163,8 @@
 
 #define TMP64 (BX_CPU_THIS_PTR gen_reg[BX_TMP_REGISTER].rrx)
 
+#define PREV_RIP (BX_CPU_THIS_PTR prev_rip)
+
 // access to 64 bit MSR registers
 #define MSR_FSBASE  (BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.base)
 #define MSR_GSBASE  (BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.base)

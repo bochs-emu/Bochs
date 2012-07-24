@@ -66,19 +66,19 @@ state.  The  callback  receives  monitored  memory  range and MWAIT flags as a
 parameters.
 
 
-	void bx_instr_cnear_branch_taken(unsigned cpu, bx_address new_eip);
+	void bx_instr_cnear_branch_taken(unsigned cpu, bx_address branch_eip, bx_address new_eip);
 
 The  callback  is  called  each time, when currently executed instruction is a
 conditional near branch and it is taken.
 
 
-	void bx_instr_cnear_branch_not_taken(unsigned cpu);
+	void bx_instr_cnear_branch_not_taken(unsigned cpu, bx_address branch_eip);
 
 The  callback  is  called  each time, when currently executed instruction is a
 conditional near branch and it is not taken.
 
 
-	void bx_instr_ucnear_branch(unsigned cpu, unsigned what, bx_address new_eip);
+	void bx_instr_ucnear_branch(unsigned cpu, unsigned what, bx_address branch_eip, bx_address new_eip);
 
 The  callback  is  called each time, when currently executed instruction is an
 unconditional near branch (always taken).

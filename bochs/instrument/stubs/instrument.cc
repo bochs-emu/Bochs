@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2006-2009 Stanislav Shwartsman
+//   Copyright (c) 2006-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -36,9 +36,9 @@ void bx_instr_mwait(unsigned cpu, bx_phy_address addr, unsigned len, Bit32u flag
 void bx_instr_debug_promt() {}
 void bx_instr_debug_cmd(const char *cmd) {}
 
-void bx_instr_cnear_branch_taken(unsigned cpu, bx_address new_eip) {}
-void bx_instr_cnear_branch_not_taken(unsigned cpu) {}
-void bx_instr_ucnear_branch(unsigned cpu, unsigned what, bx_address new_eip) {}
+void bx_instr_cnear_branch_taken(unsigned cpu, bx_address branch_eip, bx_address new_eip) {}
+void bx_instr_cnear_branch_not_taken(unsigned cpu, bx_address branch_eip) {}
+void bx_instr_ucnear_branch(unsigned cpu, unsigned what, bx_address branch_eip, bx_address new_eip) {}
 void bx_instr_far_branch(unsigned cpu, unsigned what, Bit16u new_cs, bx_address new_eip) {}
 
 void bx_instr_opcode(unsigned cpu, const Bit8u *opcode, unsigned len, bx_bool is32, bx_bool is64) {}

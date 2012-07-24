@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2006-2009 Stanislav Shwartsman
+//   Copyright (c) 2006-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -147,20 +147,19 @@ static void branch_taken(unsigned cpu, bx_address new_eip)
 {
   if (!active || !instruction[cpu].ready) return;
 
-  // find linear address
-  bx_address laddr = BX_CPU(cpu)->get_laddr(BX_SEG_REG_CS, new_eip);
-
   instruction[cpu].is_branch = 1;
   instruction[cpu].is_taken = 1;
-  instruction[cpu].target_linear = laddr;
+
+  // find linear address
+  instruction[cpu].target_linear = BX_CPU(cpu)->get_laddr(BX_SEG_REG_CS, new_eip);
 }
 
-void bx_instr_cnear_branch_taken(unsigned cpu, bx_address new_eip)
+void bx_instr_cnear_branch_taken(unsigned cpu, bx_address branch_eip, bx_address new_eip)
 {
   branch_taken(cpu, new_eip);
 }
 
-void bx_instr_cnear_branch_not_taken(unsigned cpu)
+void bx_instr_cnear_branch_not_taken(unsigned cpu, bx_address branch_eip)
 {
   if (!active || !instruction[cpu].ready) return;
 
@@ -168,7 +167,7 @@ void bx_instr_cnear_branch_not_taken(unsigned cpu)
   instruction[cpu].is_taken = 0;
 }
 
-void bx_instr_ucnear_branch(unsigned cpu, unsigned what, bx_address new_eip)
+void bx_instr_ucnear_branch(unsigned cpu, unsigned what, bx_address branch_eip, bx_address new_eip)
 {
   branch_taken(cpu, new_eip);
 }

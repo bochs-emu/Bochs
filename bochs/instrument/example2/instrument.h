@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009 Stanislav Shwartsman
+//   Copyright (c) 2009-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -53,10 +53,10 @@ void bx_instr_before_execution(unsigned cpu, bxInstruction_c *i);
 #define BX_INSTR_DEBUG_PROMPT()
 #define BX_INSTR_DEBUG_CMD(cmd)
 
-/* branch resoultion */
-#define BX_INSTR_CNEAR_BRANCH_TAKEN(cpu_id, new_eip)
-#define BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(cpu_id)
-#define BX_INSTR_UCNEAR_BRANCH(cpu_id, what, new_eip)
+/* branch resolution */
+#define BX_INSTR_CNEAR_BRANCH_TAKEN(cpu_id, branch_eip, new_eip)
+#define BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(cpu_id, branch_eip)
+#define BX_INSTR_UCNEAR_BRANCH(cpu_id, what, branch_eip, new_eip)
 #define BX_INSTR_FAR_BRANCH(cpu_id, what, new_cs, new_eip)
 
 /* decoding completed */
@@ -113,10 +113,10 @@ void bx_instr_before_execution(unsigned cpu, bxInstruction_c *i);
 #define BX_INSTR_DEBUG_PROMPT()
 #define BX_INSTR_DEBUG_CMD(cmd)
 
-/* branch resoultion */
-#define BX_INSTR_CNEAR_BRANCH_TAKEN(cpu_id, new_eip)
-#define BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(cpu_id)
-#define BX_INSTR_UCNEAR_BRANCH(cpu_id, what, new_eip)
+/* branch resolution */
+#define BX_INSTR_CNEAR_BRANCH_TAKEN(cpu_id, branch_eip, new_eip)
+#define BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(cpu_id, branch_eip)
+#define BX_INSTR_UCNEAR_BRANCH(cpu_id, what, branch_eip, new_eip)
 #define BX_INSTR_FAR_BRANCH(cpu_id, what, new_cs, new_eip)
 
 /* decoding completed */
