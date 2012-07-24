@@ -379,7 +379,7 @@ ssize_t concat_image_t::write(const void* buf, size_t count)
 
 /*** sparse_image_t function definitions ***/
 
-sparse_image_t::sparse_image_t ()
+sparse_image_t::sparse_image_t()
 {
   fd = -1;
   pathname = NULL;
@@ -494,7 +494,7 @@ void sparse_image_t::read_header()
  }
 }
 
-int sparse_image_t::open (const char* pathname0)
+int sparse_image_t::open(const char* pathname0)
 {
   pathname = strdup(pathname0);
   BX_DEBUG(("sparse_image_t.open"));
@@ -552,6 +552,7 @@ int sparse_image_t::open (const char* pathname0)
 
   if (dtoh32(header.version) == SPARSE_HEADER_VERSION) {
     hd_size = dtoh64(header.disk);
+    BX_INFO(("sparse: pagesize = 0x%x, data_start = 0x" FMT_LL "x", pagesize, data_start));
   }
 
   return 0; // success
@@ -690,10 +691,11 @@ ssize_t sparse_image_t::read(void* buf, size_t count)
 
     BX_ASSERT (can_read != 0);
 
-#if BX_ASSERT_ENABLE
     size_t was_read = read_page_fragment(position_virtual_page, position_page_offset, can_read, buf);
-#endif
-    BX_ASSERT(was_read == can_read);
+
+    if (was_read != can_read) {
+      BX_PANIC(("could not read from sparse disk"));
+    }
 
     total_read += can_read;
 
@@ -727,7 +729,7 @@ void sparse_image_t::panic(const char * message)
   BX_PANIC(("%s", buffer));
 }
 
-ssize_t sparse_image_t::write (const void* buf, size_t count)
+ssize_t sparse_image_t::write(const void* buf, size_t count)
 {
   //showpagetable(pagetable, header.numpages);
 

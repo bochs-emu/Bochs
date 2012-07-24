@@ -250,69 +250,69 @@ class sparse_image_t : public device_image_t
 // Physical pages till end of file
 
   public:
-      // Default constructor
-      sparse_image_t();
+    // Default constructor
+    sparse_image_t();
 
-      // Open a image. Returns non-negative if successful.
-      int open(const char* pathname);
+    // Open a image. Returns non-negative if successful.
+    int open(const char* pathname);
 
-      // Close the image.
-      void close();
+    // Close the image.
+    void close();
 
-      // Position ourselves. Return the resulting offset from the
-      // beginning of the file.
-      Bit64s lseek(Bit64s offset, int whence);
+    // Position ourselves. Return the resulting offset from the
+    // beginning of the file.
+    Bit64s lseek(Bit64s offset, int whence);
 
-      // Read count bytes to the buffer buf. Return the number of
-      // bytes read (count).
-      ssize_t read(void* buf, size_t count);
+    // Read count bytes to the buffer buf. Return the number of
+    // bytes read (count).
+    ssize_t read(void* buf, size_t count);
 
-      // Write count bytes from buf. Return the number of bytes
-      // written (count).
-      ssize_t write(const void* buf, size_t count);
+    // Write count bytes from buf. Return the number of bytes
+    // written (count).
+    ssize_t write(const void* buf, size_t count);
 
   private:
- int fd;
+    int fd;
 
 #ifdef _POSIX_MAPPED_FILES
- void *  mmap_header;
- size_t  mmap_length;
- size_t  system_pagesize_mask;
+    void *  mmap_header;
+    size_t  mmap_length;
+    size_t  system_pagesize_mask;
 #endif
- Bit32u *pagetable;
+    Bit32u *pagetable;
 
- // Header is written to disk in little-endian (x86) format
- // Thus needs to be converted on big-endian systems before read
- // The pagetable is also kept little endian
+    // Header is written to disk in little-endian (x86) format
+    // Thus needs to be converted on big-endian systems before read
+    // The pagetable is also kept little endian
 
- sparse_header_t header;
+    sparse_header_t header;
 
- Bit32u pagesize;
- int    pagesize_shift;
- Bit32u pagesize_mask;
+    Bit32u pagesize;
+    int    pagesize_shift;
+    Bit32u pagesize_mask;
 
- Bit64s data_start;
- Bit64s underlying_filesize;
+    Bit64s data_start;
+    Bit64s underlying_filesize;
 
- char *pathname;
+    char *pathname;
 
- Bit64s position;
+    Bit64s position;
 
- Bit32u position_virtual_page;
- Bit32u position_physical_page;
- Bit32u position_page_offset;
+    Bit32u position_virtual_page;
+    Bit32u position_physical_page;
+    Bit32u position_page_offset;
 
- Bit64s underlying_current_filepos;
+    Bit64s underlying_current_filepos;
 
- Bit64s total_size;
+    Bit64s total_size;
 
- void panic(const char * message);
- Bit64s get_physical_offset();
- void set_virtual_page(Bit32u new_virtual_page);
- void read_header();
- ssize_t read_page_fragment(Bit32u read_virtual_page, Bit32u read_page_offset, size_t read_size, void * buf);
+    void panic(const char * message);
+    Bit64s get_physical_offset();
+    void set_virtual_page(Bit32u new_virtual_page);
+    void read_header();
+    ssize_t read_page_fragment(Bit32u read_virtual_page, Bit32u read_page_offset, size_t read_size, void * buf);
 
- sparse_image_t *parent_image;
+    sparse_image_t *parent_image;
 };
 
 #if EXTERNAL_DISK_SIMULATOR
