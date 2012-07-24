@@ -29,6 +29,9 @@
 #define HDIMAGE_HEADERS_ONLY 1
 #include "../iodev/hdimage.h"
 
+#define BX_MAX_HD_MEGS  2064383
+#define BX_MAX_CYL_BITS 22
+
 int bx_hdimage;
 int bx_fdsize_idx;
 int bx_hdsize;
@@ -561,7 +564,7 @@ int parse_cmdline(int argc, char *argv[])
         if (sscanf(&argv[arg][6], "%d", &bx_hdsize) != 1) {
           printf("Error in hard disk image size argument: %s\n\n", &argv[arg][6]);
           ret = 0;
-        } else if ((bx_hdsize < 1) || (bx_hdsize > 2064383)) {
+        } else if ((bx_hdsize < 1) || (bx_hdsize > BX_MAX_HD_MEGS)) {
           printf("Hard disk image size out of range\n\n");
           ret = 0;
         }
@@ -611,6 +614,7 @@ int CDECL main(int argc, char *argv[])
   Bit64s sectors = 0;
   char filename[256];
   char bochsrc_line[256];
+  char prompt[80];
 
   WRITE_IMAGE write_function=NULL;
 #ifdef WIN32
@@ -626,24 +630,25 @@ int CDECL main(int argc, char *argv[])
       fatal(EOF_ERR);
   }
   if (bx_hdimage) {
-    unsigned int cyl;
+    Bit64u cyl;
     int hdsize, heads=16, spt=63;
     int mode;
 
     if (bx_interactive) {
       if (ask_menu(hdmode_menu, hdmode_n_choices, hdmode_choices, bx_hdimagemode, &mode) < 0)
         fatal (EOF_ERR);
-      if (ask_int("\nEnter the hard disk size in megabytes, between 1 and 2064383\n", 1, 2064383, bx_hdsize, &hdsize) < 0)
+      sprintf(prompt, "\nEnter the hard disk size in megabytes, between 1 and %d\n", BX_MAX_HD_MEGS);
+      if (ask_int(prompt, 1, BX_MAX_HD_MEGS, bx_hdsize, &hdsize) < 0)
         fatal(EOF_ERR);
     } else {
       mode = bx_hdimagemode;
       hdsize = bx_hdsize;
     }
-    cyl = (unsigned int) (hdsize*1024.0*1024.0/16.0/63.0/512.0);
-    assert (cyl < 4194304);
+    cyl = (Bit64u)(hdsize*1024.0*1024.0/16.0/63.0/512.0);
+    assert(cyl < (1 << BX_MAX_CYL_BITS));
     sectors = cyl*heads*spt;
     printf("\nI will create a '%s' hard disk image with\n", hdmode_choices[mode]);
-    printf("  cyl=%d\n", cyl);
+    printf("  cyl=" FMT_LL "d\n", cyl);
     printf("  heads=%d\n", heads);
     printf("  sectors per track=%d\n", spt);
     printf("  total sectors=" FMT_LL "d\n", sectors);
@@ -656,7 +661,7 @@ int CDECL main(int argc, char *argv[])
       strcpy(filename, bx_filename);
     }
 
-    sprintf(bochsrc_line, "ata0-master: type=disk, path=\"%s\", mode=%s, cylinders=%d, heads=%d, spt=%d", filename, hdmode_choices[mode], cyl, heads, spt);
+    sprintf(bochsrc_line, "ata0-master: type=disk, path=\"%s\", mode=%s, cylinders=" FMT_LL "d, heads=%d, spt=%d", filename, hdmode_choices[mode], cyl, heads, spt);
 
     switch (mode) {
       case 1:
