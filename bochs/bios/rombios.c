@@ -7136,17 +7136,18 @@ floppy_media_sense(drive)
   else
     drive_type &= 0x0f;
 
-  // Changed if-else to switch
   switch(drive_type) {
     case 1:    // 360K 5.25" drive
     case 2:    // 1.2 MB 5.25" drive
       config_data = 0x00; // 0000 0000
+      /* 1.2 MB 5.25" drive: media_state - need double stepping??? (bit 5) */
       media_state = 0x25; // 0010 0101
       retval = 1;
       break;
     case 3:    // 720K 3.5" drive
+      /* config_data - 0000 0000 ??? */
     case 4:    // 1.44 MB 3.5" drive
-      config_data = 0x00; // 0000 0000 ???
+      config_data = 0x00; // 0000 0000
       media_state = 0x17; // 0001 0111
       retval = 1;
       break;
@@ -7155,6 +7156,7 @@ floppy_media_sense(drive)
       media_state = 0xD7; // 1101 0111
       retval = 1;
       break;
+    /* Extended floppy size uses special cmos setting */
     case 6:    // 160k 5.25" drive
     case 7:    // 180k 5.25" drive
     case 8:    // 320k 5.25" drive
