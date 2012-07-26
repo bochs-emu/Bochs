@@ -403,7 +403,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     BX_ERROR(("VMEXIT: XSETBV in VMX non-root operation"));
-    VMexit(i, VMX_VMEXIT_XSETBV, 0);
+    VMexit(VMX_VMEXIT_XSETBV, 0);
   }
 #endif
 

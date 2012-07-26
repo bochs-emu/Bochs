@@ -492,7 +492,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (VMEXIT(VMX_VM_EXEC_CTRL2_INVLPG_VMEXIT)) {
       BX_ERROR(("VMEXIT: INVLPG 0x" FMT_ADDRX, laddr));
-      VMexit(i, VMX_VMEXIT_INVLPG, laddr);
+      VMexit(VMX_VMEXIT_INVLPG, laddr);
     }
   }
 #endif
@@ -540,7 +540,7 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsig
 #endif
 
 #if BX_SUPPORT_VMX
-  VMexit_Event(0, BX_HARDWARE_EXCEPTION, BX_PF_EXCEPTION, error_code, 1, laddr); // before the CR2 was modified
+  VMexit_Event(BX_HARDWARE_EXCEPTION, BX_PF_EXCEPTION, error_code, 1, laddr); // before the CR2 was modified
 #endif
 
   BX_CPU_THIS_PTR cr2 = laddr;
@@ -1569,7 +1569,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
     VMwrite64(VMCS_64BIT_GUEST_PHYSICAL_ADDR, guest_paddr);
 
     if (vmexit_reason == VMX_VMEXIT_EPT_MISCONFIGURATION) {
-      VMexit(0, VMX_VMEXIT_EPT_MISCONFIGURATION, 0);
+      VMexit(VMX_VMEXIT_EPT_MISCONFIGURATION, 0);
     }
     else {
       if (guest_laddr_valid) {
@@ -1577,7 +1577,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
         vmexit_qualification |= 0x80;
         if (! is_page_walk) vmexit_qualification |= 0x100;
       }
-      VMexit(0, VMX_VMEXIT_EPT_VIOLATION, vmexit_qualification | (combined_access << 3));
+      VMexit(VMX_VMEXIT_EPT_VIOLATION, vmexit_qualification | (combined_access << 3));
     }
   }
 

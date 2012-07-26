@@ -72,7 +72,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR in_vmx) {
     if (BX_CPU_THIS_PTR in_vmx_guest) {
       BX_ERROR(("VMEXIT: RSM in VMX non-root operation"));
-      VMexit(i, VMX_VMEXIT_RSM, 0);
+      VMexit(VMX_VMEXIT_RSM, 0);
     }
     else {
       BX_ERROR(("RSM in VMX root operation !"));
@@ -530,8 +530,8 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
     BX_CPU_THIS_PTR in_vmx = 1;
     BX_CPU_THIS_PTR in_vmx_guest = BX_CPU_THIS_PTR in_smm_vmx_guest;
     BX_INFO(("SMM Restore: enable VMX %s mode", BX_CPU_THIS_PTR in_vmx_guest ? "guest" : "host"));
-    temp_cr4 |= BX_CR4_VMXE_MASK; /* set VMXE */
-    temp_cr0 |= (1<<31)  /* PG */ | (1 << 5) /* NE */ | 0x1 /* PE */;
+    temp_cr4 |= BX_CR4_VMXE_MASK;
+    temp_cr0 |= BX_CR0_PG_MASK | BX_CR0_NE_MASK | BX_CR0_PE_MASK;
     // block and disable A20M;
   }
 #endif

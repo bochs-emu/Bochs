@@ -210,7 +210,7 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
 #if BX_SUPPORT_VMX
     if (BX_CPU_THIS_PTR in_vmx_guest) {
       BX_ERROR(("VMEXIT: INIT pin asserted"));
-      VMexit(0, VMX_VMEXIT_INIT, 0);
+      VMexit(VMX_VMEXIT_INIT, 0);
     }
 #endif
     // reset will clear pending INIT
@@ -266,7 +266,7 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
   {
     // NMI-window exiting
     BX_ERROR(("VMEXIT: NMI window exiting"));
-    VMexit(0, VMX_VMEXIT_NMI_WINDOW, 0);
+    VMexit(VMX_VMEXIT_NMI_WINDOW, 0);
   }
 #endif
   else if (BX_CPU_THIS_PTR pending_NMI && ! BX_CPU_THIS_PTR disable_NMI) {
@@ -279,7 +279,7 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
     BX_CPU_THIS_PTR disable_NMI = 1;
     BX_CPU_THIS_PTR EXT = 1; /* external event */
 #if BX_SUPPORT_VMX
-    VMexit_Event(0, BX_NMI, 2, 0, 0);
+    VMexit_Event(BX_NMI, 2, 0, 0);
 #endif
     BX_INSTR_HWINTERRUPT(BX_CPU_ID, 2, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
     interrupt(2, BX_NMI, 0, 0);
@@ -288,7 +288,7 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
   else if (BX_CPU_THIS_PTR vmx_interrupt_window && BX_CPU_THIS_PTR get_IF()) {
     // interrupt-window exiting
     BX_DEBUG(("VMEXIT: interrupt window exiting"));
-    VMexit(0, VMX_VMEXIT_INTERRUPT_WINDOW, 0);
+    VMexit(VMX_VMEXIT_INTERRUPT_WINDOW, 0);
   }
 #endif
   else if (BX_CPU_INTR && BX_DBG_ASYNC_INTR && 

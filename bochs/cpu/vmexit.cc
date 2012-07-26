@@ -98,15 +98,6 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_Instruction(bxInstruction_c *i, Bit
   Bit32u instr_info = 0;
 
   switch(reason) {
-    case VMX_VMEXIT_VMCALL:
-    case VMX_VMEXIT_VMLAUNCH:
-    case VMX_VMEXIT_VMRESUME:
-    case VMX_VMEXIT_VMXOFF:
-#if BX_SUPPORT_VMX >= 2
-    case VMX_VMEXIT_VMFUNC:
-#endif
-      // do not have VMEXIT instruction info
-      break;
     case VMX_VMEXIT_VMREAD:
     case VMX_VMEXIT_VMWRITE:
     case VMX_VMEXIT_VMPTRLD:
@@ -137,16 +128,16 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_Instruction(bxInstruction_c *i, Bit
       BX_PANIC(("VMexit_Instruction reason %d", reason));
   }
 
-  VMexit(i, reason, qualification);
+  VMexit(reason, qualification);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_PAUSE(bxInstruction_c *i)
+void BX_CPU_C::VMexit_PAUSE(void)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
   if (VMEXIT(VMX_VM_EXEC_CTRL2_PAUSE_VMEXIT)) {
     BX_DEBUG(("VMEXIT: PAUSE"));
-    VMexit(i, VMX_VMEXIT_PAUSE, 0);
+    VMexit(VMX_VMEXIT_PAUSE, 0);
   }
 
 #if BX_SUPPORT_VMX >= 2
@@ -158,7 +149,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_PAUSE(bxInstruction_c *i)
     }
     else {
       if ((currtime - vm->first_pause_time) > vm->pause_loop_exiting_window)
-        VMexit(i, VMX_VMEXIT_PAUSE, 0);
+        VMexit(VMX_VMEXIT_PAUSE, 0);
     }
     vm->last_pause_time = currtime;
   }
@@ -174,7 +165,7 @@ void BX_CPU_C::VMexit_ExtInterrupt(void)
     if (! (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT)) {
        // interrupt wasn't acknowledged and still pending, interruption info is invalid
        VMwrite32(VMCS_32BIT_VMEXIT_INTERRUPTION_INFO, 0);
-       VMexit(0, VMX_VMEXIT_EXTERNAL_INTERRUPT, 0);
+       VMexit(VMX_VMEXIT_EXTERNAL_INTERRUPT, 0);
     }
   }
 }
@@ -186,12 +177,12 @@ void BX_CPU_C::VMexit_PreemptionTimerExpired(void)
 
   if (PIN_VMEXIT(VMX_VM_EXEC_CTRL1_VMX_PREEMPTION_TIMER_VMEXIT)) {
     BX_DEBUG(("VMEXIT: VMX Preemption Timer Expired"));
-    VMexit(0, VMX_VMEXIT_VMX_PREEMPTION_TIMER_EXPIRED, 0);
+    VMexit(VMX_VMEXIT_VMX_PREEMPTION_TIMER_EXPIRED, 0);
   }
 }
 #endif
 
-void BX_CPU_C::VMexit_Event(bxInstruction_c *i, unsigned type, unsigned vector, Bit16u errcode, bx_bool errcode_valid, Bit64u qualification)
+void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bx_bool errcode_valid, Bit64u qualification)
 {
   if (! BX_CPU_THIS_PTR in_vmx_guest) return;
 
@@ -244,10 +235,6 @@ void BX_CPU_C::VMexit_Event(bxInstruction_c *i, unsigned type, unsigned vector, 
   // [31:31] | interruption info valid
   //
 
-  if (i) {
-    VMwrite32(VMCS_32BIT_VMEXIT_INSTRUCTION_LENGTH, i->ilen());
-  }
-
   if (! vmexit) {
     // record IDT vectoring information 
     vm->idt_vector_error_code = errcode;
@@ -281,7 +268,7 @@ void BX_CPU_C::VMexit_Event(bxInstruction_c *i, unsigned type, unsigned vector, 
   VMwrite32(VMCS_32BIT_VMEXIT_INTERRUPTION_INFO, interruption_info);
   VMwrite32(VMCS_32BIT_VMEXIT_INTERRUPTION_ERR_CODE, errcode);
 
-  VMexit(0, reason, qualification);
+  VMexit(reason, qualification);
 }
 
 void BX_CPU_C::VMexit_TripleFault(void)
@@ -294,16 +281,16 @@ void BX_CPU_C::VMexit_TripleFault(void)
   // in a triple fault exception (that causes VMEXIT directly)
   BX_CPU_THIS_PTR in_event = 0;
 
-  VMexit(0, VMX_VMEXIT_TRIPLE_FAULT, 0);
+  VMexit(VMX_VMEXIT_TRIPLE_FAULT, 0);
 }
 
-void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_TaskSwitch(bxInstruction_c *i, Bit16u tss_selector, unsigned source)
+void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_TaskSwitch(Bit16u tss_selector, unsigned source)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
   BX_ERROR(("VMEXIT: task switch"));
 
-  VMexit(i, VMX_VMEXIT_TASK_SWITCH, tss_selector | (source << 30));
+  VMexit(VMX_VMEXIT_TASK_SWITCH, tss_selector | (source << 30));
 }
 
 #define BX_VMX_LO_MSR_START  0x00000000
@@ -311,7 +298,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_TaskSwitch(bxInstruction_c *i, Bit1
 #define BX_VMX_HI_MSR_START  0xC0000000
 #define BX_VMX_HI_MSR_END    0xC0001FFF
 
-void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_MSR(bxInstruction_c *i, unsigned op, Bit32u msr)
+void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
@@ -347,7 +334,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_MSR(bxInstruction_c *i, unsigned op
 
   if (vmexit) {
      BX_DEBUG(("VMEXIT: %sMSR 0x%08x", (op == VMX_VMEXIT_RDMSR) ? "RD" : "WR", msr));
-     VMexit(i, op, 0);
+     VMexit(op, 0);
   }
 }
 
@@ -469,7 +456,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
        VMwrite32(VMCS_32BIT_VMEXIT_INSTRUCTION_INFO, instruction_info);
      }
 
-     VMexit(i, VMX_VMEXIT_IO_INSTRUCTION, qualification | (len-1) | (port << 16));
+     VMexit(VMX_VMEXIT_IO_INSTRUCTION, qualification | (len-1) | (port << 16));
   }
 }
 
@@ -487,7 +474,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
 // [63:32] | reserved
 //
 
-bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CLTS(bxInstruction_c *i)
+bx_bool BX_CPU_C::VMexit_CLTS(void)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
@@ -500,7 +487,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CLTS(bxInstruction_c *i)
     // all rest of the fields cleared to zero
     Bit64u qualification = VMX_VMEXIT_CR_ACCESS_CLTS << 4;
 
-    VMexit(i, VMX_VMEXIT_CR_ACCESS, qualification);
+    VMexit(VMX_VMEXIT_CR_ACCESS, qualification);
   }
 
   if ((vm->vm_cr0_mask & 0x8) != 0 && (vm->vm_cr0_read_shadow & 0x8) == 0)
@@ -533,7 +520,7 @@ Bit32u BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_LMSW(bxInstruction_c *i, Bit32u m
        VMwrite_natural(VMCS_GUEST_LINEAR_ADDR, get_laddr(i->seg(), RMAddr(i)));
     }
 
-    VMexit(i, VMX_VMEXIT_CR_ACCESS, qualification);
+    VMexit(VMX_VMEXIT_CR_ACCESS, qualification);
   }
 
   // keep untouched all the bits set in CR0 mask
@@ -550,7 +537,7 @@ bx_address BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_CR0_Write(bxInstruction_c *i,
   {
     BX_DEBUG(("VMEXIT: CR0 write"));
     Bit64u qualification = i->rm() << 8;
-    VMexit(i, VMX_VMEXIT_CR_ACCESS, qualification);
+    VMexit(VMX_VMEXIT_CR_ACCESS, qualification);
   }
 
   // keep untouched all the bits set in CR0 mask
@@ -567,7 +554,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CR3_Read(bxInstruction_c *i)
     Bit64u qualification = 3 | (VMX_VMEXIT_CR_ACCESS_CR_READ << 4);
     qualification |= (i->rm() << 8);
 
-    VMexit(i, VMX_VMEXIT_CR_ACCESS, qualification);
+    VMexit(VMX_VMEXIT_CR_ACCESS, qualification);
   }
 }
 
@@ -584,7 +571,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_CR3_Write(bxInstruction_c *i, bx_ad
 
     BX_DEBUG(("VMEXIT: CR3 write"));
     Bit64u qualification = 3 | (i->rm() << 8);
-    VMexit(i, VMX_VMEXIT_CR_ACCESS, qualification);
+    VMexit(VMX_VMEXIT_CR_ACCESS, qualification);
   }
 }
 
@@ -598,7 +585,7 @@ bx_address BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_CR4_Write(bxInstruction_c *i,
   {
     BX_DEBUG(("VMEXIT: CR4 write"));
     Bit64u qualification = 4 | (i->rm() << 8);
-    VMexit(i, VMX_VMEXIT_CR_ACCESS, qualification);
+    VMexit(VMX_VMEXIT_CR_ACCESS, qualification);
   }
 
   // keep untouched all the bits set in CR4 mask
@@ -615,7 +602,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CR8_Read(bxInstruction_c *i)
     Bit64u qualification = 8 | (VMX_VMEXIT_CR_ACCESS_CR_READ << 4);
     qualification |= (i->rm() << 8);
 
-    VMexit(i, VMX_VMEXIT_CR_ACCESS, qualification);
+    VMexit(VMX_VMEXIT_CR_ACCESS, qualification);
   }
 }
 
@@ -626,7 +613,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CR8_Write(bxInstruction_c *i)
   if (VMEXIT(VMX_VM_EXEC_CTRL2_CR8_WRITE_VMEXIT)) {
     BX_DEBUG(("VMEXIT: CR8 write"));
     Bit64u qualification = 8 | (i->rm() << 8);
-    VMexit(i, VMX_VMEXIT_CR_ACCESS, qualification);
+    VMexit(VMX_VMEXIT_CR_ACCESS, qualification);
   }
 }
 
@@ -653,7 +640,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_DR_Access(bxInstruction_c *i, unsig
     if (read)
        qualification |= (1 << 4);
 
-    VMexit(i, VMX_VMEXIT_DR_ACCESS, qualification);
+    VMexit(VMX_VMEXIT_DR_ACCESS, qualification);
   }
 }
 
@@ -680,7 +667,7 @@ void BX_CPU_C::VMX_Write_VTPR(Bit8u vtpr)
   if (tpr_shadow < vm->vm_tpr_threshold) {
     // commit current instruction to produce trap-like VMexit
     BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
-    VMexit(0, VMX_VMEXIT_TPR_THRESHOLD, 0);
+    VMexit(VMX_VMEXIT_TPR_THRESHOLD, 0);
   }
 }
 
@@ -720,7 +707,7 @@ void BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *d
 
   Bit32u qualification = offset | 
       (BX_CPU_THIS_PTR in_event) ? VMX_APIC_ACCESS_DURING_EVENT_DELIVERY : VMX_APIC_READ_INSTRUCTION_EXECUTION;
-  VMexit(0, VMX_VMEXIT_APIC_ACCESS, qualification);
+  VMexit(VMX_VMEXIT_APIC_ACCESS, qualification);
 }
 
 // apic virtualization
@@ -738,7 +725,7 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
 
   Bit32u qualification = offset | 
       (BX_CPU_THIS_PTR in_event) ? VMX_APIC_ACCESS_DURING_EVENT_DELIVERY : VMX_APIC_WRITE_INSTRUCTION_EXECUTION;
-  VMexit(0, VMX_VMEXIT_APIC_ACCESS, qualification);
+  VMexit(VMX_VMEXIT_APIC_ACCESS, qualification);
 }
 
 #endif

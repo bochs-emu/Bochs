@@ -169,7 +169,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)
-    VMexit_TaskSwitch(i, tss_selector->value, source);
+    VMexit_TaskSwitch(tss_selector->value, source);
 #endif
 
   // Gather info about old TSS

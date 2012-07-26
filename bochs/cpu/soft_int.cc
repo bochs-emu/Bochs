@@ -63,7 +63,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GdMa(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT1(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
-  VMexit_Event(i, BX_PRIVILEGED_SOFTWARE_INTERRUPT, 1, 0, 0);
+  VMexit_Event(BX_PRIVILEGED_SOFTWARE_INTERRUPT, 1, 0, 0);
 #endif
 
 #if BX_SUPPORT_SVM
@@ -95,7 +95,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT3(bxInstruction_c *i)
   // INT 3 is not IOPL sensitive
 
 #if BX_SUPPORT_VMX
-  VMexit_Event(i, BX_SOFTWARE_EXCEPTION, 3, 0, 0);
+  VMexit_Event(BX_SOFTWARE_EXCEPTION, 3, 0, 0);
 #endif
 
 #if BX_SUPPORT_SVM
@@ -122,7 +122,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
   Bit8u vector = i->Ib();
 
 #if BX_SUPPORT_VMX
-  VMexit_Event(i, BX_SOFTWARE_INTERRUPT, vector, 0, 0);
+  VMexit_Event(BX_SOFTWARE_INTERRUPT, vector, 0, 0);
 #endif
 
 #if BX_SUPPORT_SVM
@@ -155,7 +155,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INTO(bxInstruction_c *i)
   if (get_OF()) {
 
 #if BX_SUPPORT_VMX
-    VMexit_Event(i, BX_SOFTWARE_EXCEPTION, 4, 0, 0);
+    VMexit_Event(BX_SOFTWARE_EXCEPTION, 4, 0, 0);
 #endif
 
 #if BX_SUPPORT_SVM

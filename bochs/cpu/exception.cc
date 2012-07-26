@@ -851,7 +851,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
   }
 
 #if BX_SUPPORT_VMX
-  VMexit_Event(0, BX_HARDWARE_EXCEPTION, vector, error_code, push_error);
+  VMexit_Event(BX_HARDWARE_EXCEPTION, vector, error_code, push_error);
 #endif
 
 #if BX_SUPPORT_SVM

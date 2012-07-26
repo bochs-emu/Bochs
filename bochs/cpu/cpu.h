@@ -4336,7 +4336,7 @@ public: // for now...
   BX_SMF VMX_error_code VMenterLoadCheckHostState(void);
   BX_SMF Bit32u VMenterLoadCheckGuestState(Bit64u *qualification);
   BX_SMF void VMenterInjectEvents(void);
-  BX_SMF void VMexit(bxInstruction_c *i, Bit32u reason, Bit64u qualification);
+  BX_SMF void VMexit(Bit32u reason, Bit64u qualification);
   BX_SMF void VMexitSaveGuestState(void);
   BX_SMF void VMexitSaveGuestMSRs(void);
   BX_SMF void VMexitLoadHostState(void);
@@ -4357,17 +4357,17 @@ public: // for now...
 #endif
   // vmexit reasons
   BX_SMF void VMexit_Instruction(bxInstruction_c *i, Bit32u reason) BX_CPP_AttrRegparmN(2);
-  BX_SMF void VMexit_Event(bxInstruction_c *i, unsigned type, unsigned vector,
+  BX_SMF void VMexit_Event(unsigned type, unsigned vector,
        Bit16u errcode, bx_bool errcode_valid, Bit64u qualification = 0);
   BX_SMF void VMexit_TripleFault(void);
   BX_SMF void VMexit_ExtInterrupt(void);
-  BX_SMF void VMexit_TaskSwitch(bxInstruction_c *i, Bit16u tss_selector, unsigned source) BX_CPP_AttrRegparmN(3);
-  BX_SMF void VMexit_PAUSE(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMexit_TaskSwitch(Bit16u tss_selector, unsigned source) BX_CPP_AttrRegparmN(2);
+  BX_SMF void VMexit_PAUSE(void);
 #if BX_SUPPORT_VMX >= 2
   BX_SMF void VMexit_PreemptionTimerExpired(void);  
 #endif
-  BX_SMF bx_bool VMexit_CLTS(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VMexit_MSR(bxInstruction_c *i, unsigned op, Bit32u msr) BX_CPP_AttrRegparmN(3);
+  BX_SMF bx_bool VMexit_CLTS(void);
+  BX_SMF void VMexit_MSR(unsigned op, Bit32u msr) BX_CPP_AttrRegparmN(2);
   BX_SMF void VMexit_IO(bxInstruction_c *i, unsigned port, unsigned len) BX_CPP_AttrRegparmN(3);
   BX_SMF Bit32u VMexit_LMSW(bxInstruction_c *i, Bit32u msw) BX_CPP_AttrRegparmN(2);
   BX_SMF bx_address VMexit_CR0_Write(bxInstruction_c *i, bx_address) BX_CPP_AttrRegparmN(2);
@@ -4378,7 +4378,7 @@ public: // for now...
   BX_SMF void VMexit_CR8_Write(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMexit_DR_Access(bxInstruction_c *i, unsigned read) BX_CPP_AttrRegparmN(2);
 #if BX_SUPPORT_VMX >= 2
-  BX_SMF void vmfunc_eptp_switching(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void vmfunc_eptp_switching(void);
 #endif
 #endif
 

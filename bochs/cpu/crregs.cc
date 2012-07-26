@@ -1389,7 +1389,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if(VMexit_CLTS(i)) {
+    if(VMexit_CLTS()) {
       BX_NEXT_TRACE(i);
     }
   }

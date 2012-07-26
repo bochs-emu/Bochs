@@ -2077,7 +2077,7 @@ void BX_CPU_C::VMexitLoadHostState(void)
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
 }
 
-void BX_CPU_C::VMexit(bxInstruction_c *i, Bit32u reason, Bit64u qualification)
+void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
@@ -2086,11 +2086,6 @@ void BX_CPU_C::VMexit(bxInstruction_c *i, Bit32u reason, Bit64u qualification)
       BX_PANIC(("PANIC: VMEXIT not in VMX guest mode !"));
   }
 
-  // VMEXITs are FAULT-like: restore RIP/RSP to value before VMEXIT occurred
-  RIP = BX_CPU_THIS_PTR prev_rip;
-  if (BX_CPU_THIS_PTR speculative_rsp)
-    RSP = BX_CPU_THIS_PTR prev_rsp;
-
   //
   // STEP 0: Update VMEXIT reason
   //
@@ -2098,8 +2093,8 @@ void BX_CPU_C::VMexit(bxInstruction_c *i, Bit32u reason, Bit64u qualification)
   VMwrite32(VMCS_32BIT_VMEXIT_REASON, reason);
   VMwrite_natural(VMCS_VMEXIT_QUALIFICATION, qualification);
 
-  if (i != 0)
-     VMwrite32(VMCS_32BIT_VMEXIT_INSTRUCTION_LENGTH, i->ilen());
+  // clipping with 0xf not really necessary but keep it for safety
+  VMwrite32(VMCS_32BIT_VMEXIT_INSTRUCTION_LENGTH, (RIP-BX_CPU_THIS_PTR prev_rip) & 0xf);
 
   reason &= 0xffff; /* keep only basic VMEXIT reason */
 
@@ -2115,6 +2110,11 @@ void BX_CPU_C::VMexit(bxInstruction_c *i, Bit32u reason, Bit64u qualification)
   else {
     VMwrite32(VMCS_32BIT_IDT_VECTORING_INFO, 0);
   }
+
+  // VMEXITs are FAULT-like: restore RIP/RSP to value before VMEXIT occurred
+  RIP = BX_CPU_THIS_PTR prev_rip;
+  if (BX_CPU_THIS_PTR speculative_rsp)
+    RSP = BX_CPU_THIS_PTR prev_rsp;
 
   //
   // STEP 1: Saving Guest State to VMCS
@@ -2244,7 +2244,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXOFF(bxInstruction_c *i)
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     BX_ERROR(("VMEXIT: VMXOFF in VMX non-root operation"));
-    VMexit_Instruction(i, VMX_VMEXIT_VMXOFF);
+    VMexit(VMX_VMEXIT_VMXOFF, 0);
   }
 
   if (CPL != 0) {
@@ -2280,7 +2280,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCALL(bxInstruction_c *i)
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     BX_ERROR(("VMEXIT: VMCALL in VMX non-root operation"));
-    VMexit_Instruction(i, VMX_VMEXIT_VMCALL);
+    VMexit(VMX_VMEXIT_VMCALL, 0);
   }
 
   if (BX_CPU_THIS_PTR get_VM() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
@@ -2366,7 +2366,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     BX_ERROR(("VMEXIT: VMLAUNCH in VMX non-root operation"));
-    VMexit_Instruction(i, vmlaunch ? VMX_VMEXIT_VMLAUNCH : VMX_VMEXIT_VMRESUME);
+    VMexit(vmlaunch ? VMX_VMEXIT_VMLAUNCH : VMX_VMEXIT_VMRESUME, 0);
   }
 
   if (CPL != 0) {
@@ -2436,13 +2436,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
   Bit32u state_load_error = VMenterLoadCheckGuestState(&qualification);
   if (state_load_error) {
     BX_ERROR(("VMEXIT: Guest State Checks Failed"));
-    VMexit(0, VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE | (1 << 31), qualification);
+    VMexit(VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE | (1 << 31), qualification);
   }
 
   Bit32u msr = LoadMSRs(BX_CPU_THIS_PTR vmcs.vmentry_msr_load_cnt, BX_CPU_THIS_PTR vmcs.vmentry_msr_load_addr);
   if (msr) {
     BX_ERROR(("VMEXIT: Error when loading guest MSR 0x%08x", msr));
-    VMexit(0, VMX_VMEXIT_VMENTRY_FAILURE_MSR | (1 << 31), msr);
+    VMexit(VMX_VMEXIT_VMENTRY_FAILURE_MSR | (1 << 31), msr);
   }
 
   ///////////////////////////////////////////////////////
@@ -3095,7 +3095,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::GETSEC(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     BX_ERROR(("VMEXIT: GETSEC in VMX non-root operation"));
-    VMexit(i, VMX_VMEXIT_GETSEC, 0);
+    VMexit(VMX_VMEXIT_GETSEC, 0);
   }
 #endif
 
