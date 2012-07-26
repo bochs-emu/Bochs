@@ -29,8 +29,9 @@
 #define HDIMAGE_HEADERS_ONLY 1
 #include "../iodev/hdimage.h"
 
-#define BX_MAX_HD_MEGS  2064383
-#define BX_MAX_CYL_BITS 22
+#define BX_MAX_CYL_BITS 24 // 8 TB
+
+const int bx_max_hd_megs = (int)(((1 << BX_MAX_CYL_BITS) - 1) * 16.0 * 63.0 / 2048.0);
 
 int bx_hdimage;
 int bx_fdsize_idx;
@@ -564,7 +565,7 @@ int parse_cmdline(int argc, char *argv[])
         if (sscanf(&argv[arg][6], "%d", &bx_hdsize) != 1) {
           printf("Error in hard disk image size argument: %s\n\n", &argv[arg][6]);
           ret = 0;
-        } else if ((bx_hdsize < 1) || (bx_hdsize > BX_MAX_HD_MEGS)) {
+        } else if ((bx_hdsize < 1) || (bx_hdsize > bx_max_hd_megs)) {
           printf("Hard disk image size out of range\n\n");
           ret = 0;
         }
@@ -637,8 +638,8 @@ int CDECL main(int argc, char *argv[])
     if (bx_interactive) {
       if (ask_menu(hdmode_menu, hdmode_n_choices, hdmode_choices, bx_hdimagemode, &mode) < 0)
         fatal (EOF_ERR);
-      sprintf(prompt, "\nEnter the hard disk size in megabytes, between 1 and %d\n", BX_MAX_HD_MEGS);
-      if (ask_int(prompt, 1, BX_MAX_HD_MEGS, bx_hdsize, &hdsize) < 0)
+      sprintf(prompt, "\nEnter the hard disk size in megabytes, between 1 and %d\n", bx_max_hd_megs);
+      if (ask_int(prompt, 1, bx_max_hd_megs, bx_hdsize, &hdsize) < 0)
         fatal(EOF_ERR);
     } else {
       mode = bx_hdimagemode;

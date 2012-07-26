@@ -5889,7 +5889,7 @@ by pressing <keycap>Enter</keycap>. Then, bximage will ask
 for the size of the disk image you want to create, in Megabytes:
 
 <screen>
-Enter the hard disk size in megabytes, between 1 and 32255
+Enter the hard disk size in megabytes, between 1 and 8257535
 [10]
 </screen>
 </para>
@@ -8922,7 +8922,7 @@ Please type hd or fd. [hd] hd
 What kind of image should I create?
 Please type flat, sparse or growing. [flat]
 
-Enter the hard disk size in megabytes, between 1 and 32255
+Enter the hard disk size in megabytes, between 1 and 8257535
 [10] 2048
 
 I will create a hard disk image with

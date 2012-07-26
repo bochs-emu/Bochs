@@ -57,6 +57,9 @@ Changes after 2.5.1 release:
     - Added VGA graphics blinking support
     - More accurate vertical and horizontal retrace emulation
       (based on the DOSBox implementation)
+  - hard drive / hdimage
+    - undoable mode: added coherency check (flat image size and timestamp)
+    - sparse mode: fixed read support
   - Sound
     - implemented PC speaker beep using the lowlevel sound interface
     - added SDL audio output support
@@ -90,6 +93,7 @@ Changes after 2.5.1 release:
 - Tools
   - bxcommit: added support for converting growing to flat mode images
   - bxcommit: support command line options and non-interactive (quiet) mode
+  - bximage: increased maximum disk size to 8 TB
 
 - SF patches applied
   [3540389] Patch 5 : Change memory reference functions argument order by Yeong-uk Jo
