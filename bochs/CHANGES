@@ -106,6 +106,8 @@ Changes after 2.5.1 release:
   [3486555] Fix critical stack leak in Win32 GUI by Carlo Bramini
 
 - these S.F. bugs were closed/fixed
+  [3548109] VMX State Not Restored After Entering SMM on 32-bit Systems
+  [3548108] VMEXIT Instruction Length Not Always Getting Updated
   [3545941] Typo in preprocessor symbol
   [3538731] Missing CR8 register
   [3538574] Missing XD flag ( Execute Disable ) when showing PTEs

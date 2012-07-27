@@ -39,6 +39,69 @@
 #define SMM_REVISION_ID \
     ((BX_SUPPORT_X86_64 ? 0x00000064 : 0) | SMM_SMBASE_RELOCATION)
 
+//
+// Some of the CPU field must be saved and restored in order to continue the
+// simulation correctly after the RSM instruction:
+//
+//      ---------------------------------------------------------------
+//
+// 1. General purpose registers: EAX-EDI, R8-R15
+// 2. EIP, RFLAGS
+// 3. Segment registers CS, DS, SS, ES, FS, GS
+//    fields: valid      - not required, initialized according to selector value
+//            p          - must be saved/restored
+//            dpl        - must be saved/restored
+//            segment    - must be 1 for seg registers, not required to save
+//            type       - must be saved/restored
+//            base       - must be saved/restored
+//            limit      - must be saved/restored
+//            g          - must be saved/restored
+//            d_b        - must be saved/restored
+//            l          - must be saved/restored
+//            avl        - must be saved/restored
+// 4. GDTR, IDTR
+//     fields: base, limit
+// 5. LDTR, TR
+//     fields: base, limit, anything else ?
+// 6. Debug Registers DR0-DR7, only DR6 and DR7 are saved
+// 7. Control Registers: CR0, CR2 is NOT saved, CR3, CR4, EFER
+// 8. SMBASE
+// 9. MSR/FPU/XMM/APIC are NOT saved accoring to Intel docs
+//
+
+struct BX_SMM_State
+{
+  Bit32u smbase;
+  Bit32u smm_revision_id;
+
+  bx_address gen_reg[BX_GENERAL_REGISTERS];
+
+  bx_address rip;
+  Bit32u eflags;
+  Bit32u dr6;
+  Bit32u dr7;
+
+  bx_cr0_t   cr0;
+  bx_address cr3;
+#if BX_CPU_LEVEL >= 5
+  bx_cr4_t   cr4;
+  bx_efer_t efer;
+#endif
+
+  Bit32u io_insruction_restart;
+  Bit32u autohalt_restart;
+  Bit32u nmi_mask;
+
+  bx_global_segment_reg_t gdtr;
+  bx_global_segment_reg_t idtr;
+
+  struct {
+    bx_address base;
+    Bit32u limit;
+    Bit32u selector_ar;
+  } segreg[6], tr, ldtr;
+};
+
 #if BX_SUPPORT_X86_64
 
 enum SMMRAM_Fields {

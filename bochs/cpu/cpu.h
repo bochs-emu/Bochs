@@ -884,6 +884,8 @@ struct monitor_addr_t {
 };
 #endif
 
+class BX_SMM_State;
+
 class BOCHSAPI BX_CPU_C : public logfunctions {
 
 public: // for now...
@@ -4037,8 +4039,6 @@ public: // for now...
   BX_SMF void exception(unsigned vector, Bit16u error_code)
                   BX_CPP_AttrNoReturn();
   BX_SMF void init_SMRAM(void);
-  BX_SMF void smram_save_state(Bit32u *smm_saved_state);
-  BX_SMF bx_bool smram_restore_state(const Bit32u *smm_saved_state);
   BX_SMF int  int_number(unsigned s);
   BX_SMF bx_bool SetCR0(bx_address val) BX_CPP_AttrRegparmN(1);
   BX_SMF bx_bool check_CR0(bx_address val) BX_CPP_AttrRegparmN(1);
@@ -4150,7 +4150,12 @@ public: // for now...
 #endif
   BX_SMF void    sanity_checks(void);
   BX_SMF void    assert_checks(void);
+
   BX_SMF void    enter_system_management_mode(void);
+  BX_SMF bx_bool resume_from_system_management_mode(BX_SMM_State *smm_state);
+  BX_SMF void    smram_save_state(Bit32u *smm_saved_state);
+  BX_SMF bx_bool smram_restore_state(const Bit32u *smm_saved_state);
+
   BX_SMF void    deliver_INIT(void);
   BX_SMF void    deliver_NMI(void);
   BX_SMF void    deliver_SMI(void);
