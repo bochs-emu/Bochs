@@ -896,8 +896,8 @@ You can download Bochs from our web site at &bochs-sf-net;.  First, you
 need to choose what version to get: a recent release or a development
 version.  If you trying to get things working for the first time, a release
 version is recommended since it has been tested the most.  The development
-versions (sometimes called snapshots) may have some newer bug fixes and new
-features, but have not been tested as much as the releases.
+versions (sometimes called SVN snapshots) may have some newer bug fixes and
+new features, but have not been tested as much as the releases.
 </para>
 
 <para>
@@ -5123,9 +5123,11 @@ feature work.</para>
 </listitem>
 <listitem>
 <para>snapshot button</para>
-<para>Press this button if you want to save a snapshot of the text mode screen.
-Bochs for win32 presents you a "Save as..." dialog box. All other platforms are
-using the fixed filename "snapshot.txt".</para>
+<para>Press this button if you want to save a snapshot of the Bochs screen. The
+text modes and most of the graphics modes (except CGA) are supported. If gui dialogs
+are supported (e.g. on win32) Bochs presents you a "Save as..." dialog box to specify
+the filename. All other platforms are using the fixed filenames "snapshot.txt" or
+"snapshot.bmp".</para>
 </listitem>
 <listitem><para>config button</para>
 <para>This button stops the Bochs simulation and starts the runtime configuration.
