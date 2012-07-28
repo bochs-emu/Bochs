@@ -450,6 +450,11 @@ void bx_gui_c::snapshot_handler(void)
       strcpy (filename, "snapshot.txt");
     }
     FILE *fp = fopen(filename, "wb");
+    if (! fp) {
+      BX_ERROR(("snapshot button failed: cannot create text file"));
+      free(snapshot_ptr);
+      return;
+    }
     fwrite(snapshot_ptr, 1, len, fp);
     fclose(fp);
     free(snapshot_ptr);
