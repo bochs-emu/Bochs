@@ -3449,7 +3449,7 @@ sparse : stackable, commitable, rollbackable
 vmware3 : vmware version 3 disk support
 </para></listitem>
 <listitem><para>
-vmware4 : vmware version 4 disk support
+vmware4 : vmware version 4 disk support (aka VMDK)
 </para></listitem>
 <listitem><para>
 undoable : flat file with commitable redolog
@@ -7720,7 +7720,7 @@ If unspecified, the default "mode" is flat.
  </row>
  <row> <entry> vmware4 </entry> <entry> vmware4 disk support </entry>
        <entry>
-       vmware version 4 compatibility
+       vmware version 4 (VMDK) compatibility
        </entry>
  </row>
  <row> <entry> undoable </entry> <entry> flat file with a commitable redolog </entry>

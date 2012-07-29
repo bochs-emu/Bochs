@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochs 1 "29 Dec 2005" "bochs @version@" "The Bochs Project"
+.TH bochs 1 "29 Jul 2012" "bochs @version@" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochs \- Portable x86 Emulator.
@@ -39,8 +39,20 @@ With this option bochs doesn't load a configuration file.
 In that case the setup for the emulation must be done with
 bochsrc options on the command line or in the start menu.
 .TP
+.BI \-r\ path
+Restore the Bochs state from path
+.TP
+.BI \-log\ filename
+Specify Bochs log file name
+.TP
 .BI \-h,\ --help
 Print a summary of the command line options for bochs and exit.
+.TP
+.BI \-h,\ --help\ features
+Display available features / devices and exit
+.TP
+.BI \-h,\ --help\ cpu
+Display supported CPU models and exit
 .LP
 You can override the settings from the configuration file
 with command line arguments, using the  same  syntax  as the

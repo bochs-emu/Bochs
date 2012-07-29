@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "15 Jul 2012" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "29 Jul 2012" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -485,7 +485,7 @@ Examples:
 This defines the type and characteristics of all attached ata devices:
    type=       type of attached device [disk|cdrom]
    path=       path of the image
-   mode=       image mode [flat|concat|external|dll|sparse|vmware3|undoable|growing|volatile], only valid for disks
+   mode=       image mode [flat|concat|external|dll|sparse|vmware3|vmware4|undoable|growing|volatile], only valid for disks
    cylinders=  only valid for disks
    heads=      only valid for disks
    spt=        only valid for disks
@@ -517,6 +517,7 @@ The mode option defines how the disk image is handled. Disks can be defined as:
   - dll : developer's specific, through a DLL
   - sparse : stackable, commitable, rollbackable
   - vmware3 : vmware3 disk support
+  - vmware4 : vmware4 disk support (aka VMDK)
   - undoable : flat file with commitable redolog
   - growing : growing file
   - volatile : flat file with volatile redolog
