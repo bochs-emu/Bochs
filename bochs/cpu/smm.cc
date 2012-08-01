@@ -495,7 +495,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
   smm_state.ldtr.limit = SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_LIMIT);
 
   smm_state.tr.selector_ar = SMRAM_FIELD(saved_state, SMRAM_FIELD_TR_SELECTOR_AR);
-  smm_state.tr.base = SMRAM_FIELD64(saved_state, SMRAM_FIELD_TR_BASE_HI32, SMRAM_FIELD_LDTR_BASE);
+  smm_state.tr.base = SMRAM_FIELD64(saved_state, SMRAM_FIELD_TR_BASE_HI32, SMRAM_FIELD_TR_BASE);
   smm_state.tr.limit = SMRAM_FIELD(saved_state, SMRAM_FIELD_TR_LIMIT);
 
   if (SMM_REVISION_ID & SMM_SMBASE_RELOCATION)
