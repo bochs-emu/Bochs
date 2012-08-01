@@ -233,8 +233,7 @@ typedef unsigned long  Bit32u;
       push di
 
       mov  cx, 10[bp] ; count
-      test cx, cx
-      je   memsetb_end
+      jcxz memsetb_end
       les  di, 6[bp] ; segment & offset
       mov  al, 4[bp] ; value
       cld
@@ -271,8 +270,7 @@ typedef unsigned long  Bit32u;
       push si
 
       mov  cx, 12[bp] ; count
-      test cx, cx
-      je   memcpyb_end
+      jcxz memcpyb_end
       les  di, 4[bp] ; dsegment & doffset
       lds  si, 8[bp] ; ssegment & soffset
       cld
@@ -310,8 +308,7 @@ typedef unsigned long  Bit32u;
       push si
 
       mov  cx, 12[bp] ; count
-      test cx, cx
-      je   memcpyd_end
+      jcxz memcpyb_end
       les  di, 4[bp] ; dsegment & doffset
       lds  si, 8[bp] ; ssegment & soffset
       cld
