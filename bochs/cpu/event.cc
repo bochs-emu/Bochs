@@ -123,7 +123,7 @@ void BX_CPU_C::InterruptAcknowledge(void)
 
   BX_CPU_THIS_PTR EXT = 1; /* external event */
 #if BX_SUPPORT_VMX
-  VMexit_Event(0, BX_EXTERNAL_INTERRUPT, vector, 0, 0);
+  VMexit_Event(BX_EXTERNAL_INTERRUPT, vector, 0, 0);
 #endif
 
   BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
