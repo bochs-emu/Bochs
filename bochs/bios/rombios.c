@@ -308,7 +308,7 @@ typedef unsigned long  Bit32u;
       push si
 
       mov  cx, 12[bp] ; count
-      jcxz memcpyb_end
+      jcxz memcpyd_end
       les  di, 4[bp] ; dsegment & doffset
       lds  si, 8[bp] ; ssegment & soffset
       cld
