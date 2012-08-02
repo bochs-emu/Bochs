@@ -25,7 +25,9 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
+#if BX_SUPPORT_X86_64 
+
+#if BX_SUPPORT_AVX
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ANDN_GqBqEqR(bxInstruction_c *i)
 {
@@ -250,7 +252,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PDEP_GqEqBqR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-#endif
+#endif // BX_SUPPORT_AVX
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADCX_GqEqR(bxInstruction_c *i)
 {
@@ -279,3 +281,5 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADOX_GqEqR(bxInstruction_c *i)
 
   BX_NEXT_INSTR(i);
 }
+
+#endif
