@@ -151,7 +151,7 @@
 // how many instructions each CPU could execute in one
 // shot (one cpu_loop call)
 #define BX_SMP_QUANTUM_MIN  1
-#define BX_SMP_QUANTUM_MAX 16
+#define BX_SMP_QUANTUM_MAX 32
 
 // Use Static Member Funtions to eliminate 'this' pointer passing
 // If you want the efficiency of 'C', you can make all the

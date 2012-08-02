@@ -389,7 +389,7 @@ void bx_init_options()
       "quantum", "Quantum ticks in SMP simulation",
       "Maximum amount of instructions allowed to execute before returning control to another CPU.",
       BX_SMP_QUANTUM_MIN, BX_SMP_QUANTUM_MAX,
-      5);
+      16);
 #endif
   new bx_param_bool_c(cpu_param,
       "reset_on_triple_fault", "Enable CPU reset on triple fault",

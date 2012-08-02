@@ -151,7 +151,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (VMEXIT(VMX_VM_EXEC_CTRL2_HLT_VMEXIT)) {
-      BX_ERROR(("VMEXIT: HLT"));
+      BX_DEBUG(("VMEXIT: HLT"));
       VMexit(VMX_VMEXIT_HLT, 0);
     }
   }

@@ -39,6 +39,8 @@ Changes after 2.5.1 release:
   - Added new parameter 'rtc_sync' for the 'clock' option. If this option
     is enabled together with the realtime synchronization, the RTC runs
     at realtime speed.
+  - Allow larger CPU 'quantum' values when emulating SMP systems for speed
+    (quantum values up to 32 are allowed now).
 
 - I/O Devices
   - Networking
@@ -106,6 +108,7 @@ Changes after 2.5.1 release:
   [3486555] Fix critical stack leak in Win32 GUI by Carlo Bramini
 
 - these S.F. bugs were closed/fixed
+  [3550175] Crash when saving snapshot to directory instead of file
   [3548109] VMX State Not Restored After Entering SMM on 32-bit Systems
   [3548108] VMEXIT Instruction Length Not Always Getting Updated
   [3545941] Typo in preprocessor symbol
