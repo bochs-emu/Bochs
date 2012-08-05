@@ -3360,7 +3360,7 @@ This defines the type and characteristics of all attached ata devices:
 <row>
   <entry> mode  </entry>
   <entry> image type, only valid for disks </entry>
-  <entry> [flat | concat | external | dll | sparse | vmware3 | vmware4 | undoable | growing | volatile | vvfat ]</entry>
+  <entry> [flat | concat | external | dll | sparse | vmware3 | vmware4 | undoable | growing | volatile | vpc | vvfat ]</entry>
 </row>
 <row> <entry> cylinders </entry> <entry> only valid for disks </entry> </row>
 <row> <entry> heads </entry> <entry> only valid for disks </entry> </row>
@@ -3459,6 +3459,9 @@ growing : growing file
 </para></listitem>
 <listitem><para>
 volatile : flat file with volatile redolog
+</para></listitem>
+<listitem><para>
+vpc: fixed / dynamic size VirtualPC image
 </para></listitem>
 <listitem><para>
 vvfat: local directory appears as VFAT disk (with volatile redolog / optional commit)
@@ -7737,6 +7740,11 @@ If unspecified, the default "mode" is flat.
        always rollbacked
        </entry>
  </row>
+ <row> <entry> vpc </entry> <entry> VirtualPC disk support </entry>
+       <entry>
+       fixed / dynamic size supported
+       </entry>
+ </row>
  <row> <entry> vvfat </entry> <entry> local directory appears as VFAT disk (with volatile redolog) </entry>
        <entry>
        optional commit or rollback
@@ -8294,6 +8302,43 @@ The flat disk images must be created with the bximage utility
 <section><title>limitations</title>
 <para>
 &FIXME; to be completed
+</para>
+</section>
+</section>
+
+<section><title>vpc</title>
+<para>
+</para>
+<section><title>description</title>
+<para>
+    The "vpc" disk image mode is mostly a port of Qemu's "vpc" block
+    driver for VirtualPC disk images (written by Alex Beregszaszi and Kevin Wolf).
+</para>
+</section>
+<section><title>image creation</title>
+<para>
+    Create such disk image with Microsoft VirtualPC (tm) or Qemu's disk image utility (qemu-img).
+</para>
+</section>
+<section><title>path</title>
+<para>
+    The "path" option of the ataX-xxx directive in the configuration file
+    must point to the VirtualPC disk image.
+</para>
+</section>
+<section><title>external tools</title>
+<para>
+    Use Microsoft VirtualPC (tm) tools to manipulate these disk images.
+</para>
+</section>
+<section><title>typical use</title>
+<para>
+    Share disk images with VirtualPC.
+</para>
+</section>
+<section><title>limitations</title>
+<para>
+    The based on the Qemu code the disk size is limited to 127 GB.
 </para>
 </section>
 </section>

@@ -455,7 +455,7 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x360, irq=9
 # This defines the type and characteristics of all attached ata devices:
 #   type=       type of attached device [disk|cdrom] 
 #   mode=       only valid for disks [flat|concat|external|dll|sparse|vmware3]
-#                                    [vmware4|undoable|growing|volatile|vvfat]
+#                                    [vmware4|undoable|growing|volatile|vpc|vvfat]
 #   path=       path of the image / directory
 #   cylinders=  only valid for disks
 #   heads=      only valid for disks

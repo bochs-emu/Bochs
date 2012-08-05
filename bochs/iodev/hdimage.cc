@@ -30,6 +30,7 @@
 #include "vmware3.h"
 #include "vmware4.h"
 #include "vvfat.h"
+#include "vpc-img.h"
 
 #if BX_HAVE_SYS_MMAN_H
 #include <sys/mman.h>
@@ -119,6 +120,10 @@ device_image_t* bx_hdimage_ctl_c::init_image(Bit8u image_mode, Bit64u disk_size,
       hdimage = new vvfat_image_t(disk_size, journal);
       break;
 
+    case BX_HDIMAGE_MODE_VPC:
+      hdimage = new vpc_image_t();
+      break;
+
     default:
       BX_PANIC(("unsupported HD mode : '%s'", hdimage_mode_names[image_mode]));
       break;
@@ -132,6 +137,24 @@ LOWLEVEL_CDROM* bx_hdimage_ctl_c::init_cdrom(const char *dev)
   return new LOWLEVEL_CDROM(dev);
 }
 #endif
+
+// helper functions
+int bx_read_image(int fd, Bit64s offset, void *buf, int count)
+{
+  if (lseek(fd, offset, SEEK_SET) == -1) {
+    fprintf(stderr, "lseek() failed! fd=%d, offset=%ld, errno=%d\n", fd, offset, errno);
+    return -1;
+  }
+  return read(fd, buf, count);
+}
+
+int bx_write_image(int fd, Bit64s offset, void *buf, int count)
+{
+  if (lseek(fd, offset, SEEK_SET) == -1) {
+    return -1;
+  }
+  return write(fd, buf, count);
+}
 
 /*** base class device_image_t ***/
 

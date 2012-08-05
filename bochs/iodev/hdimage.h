@@ -123,6 +123,9 @@
 
 #ifndef HDIMAGE_HEADERS_ONLY
 
+int bx_read_image(int fd, Bit64s offset, void *buf, int count);
+int bx_write_image(int fd, Bit64s offset, void *buf, int count);
+
 class device_image_t
 {
   public:

@@ -93,6 +93,7 @@ OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
   vmware3.o \
   vmware4.o \
   vvfat.o \
+  vpc-img.o \
   $(CDROM_OBJS)
 
 NONPLUGIN_OBJS = @IODEV_NON_PLUGIN_OBJS@
@@ -125,8 +126,8 @@ libbx_%.la: %.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
 
 # special link rules for plugins that require more than one object file
-libbx_hdimage.la: hdimage.lo vmware3.lo vmware4.lo vvfat.lo $(CDROM_OBJS:.o=.lo)
-	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module hdimage.lo vmware3.lo vmware4.lo vvfat.lo $(CDROM_OBJS:.o=.lo) -o libbx_hdimage.la -rpath $(PLUGIN_PATH)
+libbx_hdimage.la: hdimage.lo vmware3.lo vmware4.lo vvfat.lo vpc-img.lo $(CDROM_OBJS:.o=.lo)
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module hdimage.lo vmware3.lo vmware4.lo vvfat.lo vpc-img.lo $(CDROM_OBJS:.o=.lo) -o libbx_hdimage.la -rpath $(PLUGIN_PATH)
 
 libbx_keyboard.la: keyboard.lo scancodes.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module keyboard.lo scancodes.lo -o libbx_keyboard.la -rpath $(PLUGIN_PATH)
@@ -148,8 +149,8 @@ bx_%.dll: %.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)
 
 # special link rules for plugins that require more than one object file
-bx_hdimage.dll: hdimage.o vmware3.o vmware4.o vvfat.o $(CDROM_OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o bx_hdimage.dll hdimage.o vmware3.o vmware4.o vvfat.o $(CDROM_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
+bx_hdimage.dll: hdimage.o vmware3.o vmware4.o vvfat.o vpc-img.o $(CDROM_OBJS)
+	$(CXX) $(CXXFLAGS) -shared -o bx_hdimage.dll hdimage.o vmware3.o vmware4.o vvfat.o vpc-img.o $(CDROM_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_keyboard.dll: keyboard.o scancodes.o
 	$(CXX) $(CXXFLAGS) -shared -o bx_keyboard.dll keyboard.o scancodes.o $(WIN32_DLL_IMPORT_LIBRARY)
@@ -262,7 +263,8 @@ hdimage.o: hdimage.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../ltdl.h ../param_names.h cdrom.h hdimage.h vmware3.h vmware4.h vvfat.h
+ ../ltdl.h ../param_names.h cdrom.h hdimage.h vmware3.h vmware4.h vvfat.h \
+ vpc-img.h
 ioapic.o: ioapic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
@@ -377,6 +379,11 @@ vmware4.o: vmware4.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
  ../ltdl.h ../param_names.h hdimage.h vmware4.h
+vpc-img.o: vpc-img.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../ltdl.h ../param_names.h hdimage.h vpc-img.h
 vvfat.o: vvfat.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
@@ -457,7 +464,8 @@ hdimage.lo: hdimage.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../ltdl.h ../param_names.h cdrom.h hdimage.h vmware3.h vmware4.h vvfat.h
+ ../ltdl.h ../param_names.h cdrom.h hdimage.h vmware3.h vmware4.h vvfat.h \
+ vpc-img.h
 ioapic.lo: ioapic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
@@ -572,6 +580,11 @@ vmware4.lo: vmware4.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
  ../ltdl.h ../param_names.h hdimage.h vmware4.h
+vpc-img.lo: vpc-img.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../ltdl.h ../param_names.h hdimage.h vpc-img.h
 vvfat.lo: vvfat.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
