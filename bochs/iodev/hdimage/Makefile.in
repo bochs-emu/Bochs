@@ -14,7 +14,7 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-# Makefile for the iodev/usb component of bochs
+# Makefile for the iodev/hdimage component of bochs
 
 
 @SUFFIX_LINE@
@@ -49,31 +49,32 @@ top_builddir    = ../..
 LIBTOOL=@LIBTOOL@
 WIN32_DLL_IMPORT_LIBRARY=../../dllexports.a
 
-USBDEV_OBJS = @USBDEV_OBJS@
-SCSI_OBJS = @SCSI_OBJS@
+CDROM_OBJS = @CDROM_OBJS@
 
 BX_INCDIRS = -I.. -I../.. -I$(srcdir)/.. -I$(srcdir)/../.. -I../../@INSTRUMENT_DIR@ -I$(srcdir)/../../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS = $(MCH_CFLAGS)
 
 OBJS_THAT_CAN_BE_PLUGINS = \
-  @USBHC_OBJS@ \
-  @USBCORE_OBJ@
+  hdimage.o
 
 OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
-  $(USBDEV_OBJS) \
-  $(SCSI_OBJS)
+  vmware3.o \
+  vmware4.o \
+  vvfat.o \
+  vpc-img.o \
+  $(CDROM_OBJS)
 
 NONPLUGIN_OBJS = @IODEV_EXT_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @IODEV_EXT_PLUGIN_OBJS@
 
-all: libusb.a
+all: libhdimage.a
 
 plugins: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-libusb.a: $(NONPLUGIN_OBJS)
-	@RMCOMMAND@ libusb.a
+libhdimage.a: $(NONPLUGIN_OBJS)
+	@RMCOMMAND@ libhdimage.a
 	@MAKELIB@ $(NONPLUGIN_OBJS)
-	@RANLIB@ libusb.a
+	@RANLIB@ libhdimage.a
 
 # standard compile rule for C++ files
 .@CPP_SUFFIX@.o:
@@ -87,16 +88,16 @@ libbx_%.la: %.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
 
 # special link rules for plugins that require more than one object file
-libbx_usb_common.la: usb_common.lo $(USBDEV_OBJS:.o=.lo) scsi_device.lo
-	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module usb_common.lo $(USBDEV_OBJS:.o=.lo) scsi_device.lo -o libbx_usb_common.la -rpath $(PLUGIN_PATH)
+libbx_hdimage.la: hdimage.lo vmware3.lo vmware4.lo vvfat.lo vpc-img.lo $(CDROM_OBJS:.o=.lo)
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module hdimage.lo vmware3.lo vmware4.lo vvfat.lo vpc-img.lo $(CDROM_OBJS:.o=.lo) -o libbx_hdimage.la -rpath $(PLUGIN_PATH)
 
 #### building DLLs for win32  (tested on cygwin only)
 bx_%.dll: %.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)
 
 # special link rules for plugins that require more than one object file
-bx_usb_common.dll: usb_common.o $(USBDEV_OBJS) scsi_device.o
-	$(CXX) $(CXXFLAGS) -shared -o bx_usb_common.dll usb_common.o $(USBDEV_OBJS) scsi_device.o $(WIN32_DLL_IMPORT_LIBRARY)
+bx_hdimage.dll: hdimage.o vmware3.o vmware4.o vvfat.o vpc-img.o $(CDROM_OBJS)
+	$(CXX) $(CXXFLAGS) -shared -o bx_hdimage.dll hdimage.o vmware3.o vmware4.o vvfat.o vpc-img.o $(CDROM_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
 
 ##### end DLL section
 
@@ -116,117 +117,115 @@ dist-clean: clean
 # and then again with an identical .lo rule.  The .lo rules are used when
 # building plugins.
 ###########################################
-scsi_device.o: scsi_device.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+cdrom_amigaos.o: cdrom_amigaos.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
+ ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h scsi_commands.h cdrom.h
+cdrom.o: cdrom.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h cdrom.h
+cdrom_misc.o: cdrom_misc.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h cdrom.h
+cdrom_osx.o: cdrom_osx.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h cdrom.h
+cdrom_win32.o: cdrom_win32.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h cdrom.h
+hdimage.o: hdimage.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
  ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../ltdl.h ../../param_names.h ../hdimage/hdimage.h ../hdimage/cdrom.h \
- scsi_device.h
-usb_common.o: usb_common.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../ltdl.h ../../param_names.h cdrom.h hdimage.h vmware3.h vmware4.h \
+ vvfat.h vpc-img.h
+vmware3.o: vmware3.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
  ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../ltdl.h ../../param_names.h usb_common.h usb_hid.h usb_hub.h \
- usb_msd.h usb_printer.h
-usb_hid.o: usb_hid.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../ltdl.h ../../param_names.h hdimage.h vmware3.h
+vmware4.o: vmware4.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
  ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../ltdl.h ../../param_names.h usb_common.h usb_hid.h
-usb_hub.o: usb_hub.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../ltdl.h ../../param_names.h hdimage.h vmware4.h
+vpc-img.o: vpc-img.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
  ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../ltdl.h ../../param_names.h usb_common.h usb_hub.h
-usb_msd.o: usb_msd.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../ltdl.h ../../param_names.h hdimage.h vpc-img.h
+vvfat.o: vvfat.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
+ ../../ltdl.h ../../param_names.h hdimage.h vvfat.h
+cdrom_amigaos.lo: cdrom_amigaos.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
+ ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h scsi_commands.h cdrom.h
+cdrom.lo: cdrom.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h cdrom.h
+cdrom_misc.lo: cdrom_misc.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h cdrom.h
+cdrom_osx.lo: cdrom_osx.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h cdrom.h
+cdrom_win32.lo: cdrom_win32.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h cdrom.h
+hdimage.lo: hdimage.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
  ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../ltdl.h ../../param_names.h usb_common.h ../hdimage/cdrom.h \
- ../hdimage/hdimage.h scsi_device.h usb_msd.h
-usb_ohci.o: usb_ohci.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../ltdl.h ../../param_names.h cdrom.h hdimage.h vmware3.h vmware4.h \
+ vvfat.h vpc-img.h
+vmware3.lo: vmware3.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
  ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../ltdl.h ../../param_names.h ../pci.h usb_common.h usb_ohci.h
-usb_printer.o: usb_printer.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../ltdl.h ../../param_names.h hdimage.h vmware3.h
+vmware4.lo: vmware4.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
  ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../ltdl.h ../../param_names.h usb_common.h usb_printer.h
-usb_uhci.o: usb_uhci.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../ltdl.h ../../param_names.h hdimage.h vmware4.h
+vpc-img.lo: vpc-img.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
  ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../ltdl.h ../../param_names.h ../pci.h usb_common.h usb_uhci.h
-usb_xhci.o: usb_xhci.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../ltdl.h ../../param_names.h hdimage.h vpc-img.h
+vvfat.lo: vvfat.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
  ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../ltdl.h ../../param_names.h ../pci.h usb_common.h usb_xhci.h
-scsi_device.lo: scsi_device.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
- ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../ltdl.h ../../param_names.h ../hdimage/hdimage.h ../hdimage/cdrom.h \
- scsi_device.h
-usb_common.lo: usb_common.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
- ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../ltdl.h ../../param_names.h usb_common.h usb_hid.h usb_hub.h \
- usb_msd.h usb_printer.h
-usb_hid.lo: usb_hid.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
- ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../ltdl.h ../../param_names.h usb_common.h usb_hid.h
-usb_hub.lo: usb_hub.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
- ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../ltdl.h ../../param_names.h usb_common.h usb_hub.h
-usb_msd.lo: usb_msd.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
- ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../ltdl.h ../../param_names.h usb_common.h ../hdimage/cdrom.h \
- ../hdimage/hdimage.h scsi_device.h usb_msd.h
-usb_ohci.lo: usb_ohci.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
- ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../ltdl.h ../../param_names.h ../pci.h usb_common.h usb_ohci.h
-usb_printer.lo: usb_printer.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
- ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../ltdl.h ../../param_names.h usb_common.h usb_printer.h
-usb_uhci.lo: usb_uhci.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
- ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../ltdl.h ../../param_names.h ../pci.h usb_common.h usb_uhci.h
-usb_xhci.lo: usb_xhci.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
- ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../ltdl.h ../../param_names.h ../pci.h usb_common.h usb_xhci.h
+ ../../ltdl.h ../../param_names.h hdimage.h vvfat.h

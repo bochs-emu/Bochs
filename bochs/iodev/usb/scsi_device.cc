@@ -28,8 +28,8 @@
 #include "iodev.h"
 
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
-#include "hdimage.h"
-#include "cdrom.h"
+#include "hdimage/hdimage.h"
+#include "hdimage/cdrom.h"
 #include "scsi_device.h"
 
 #define LOG_THIS

@@ -30,8 +30,8 @@
 
 #include "iodev.h"
 #include "harddrv.h"
-#include "hdimage.h"
-#include "cdrom.h"
+#include "hdimage/hdimage.h"
+#include "hdimage/cdrom.h"
 
 #define LOG_THIS theHardDrive->
 

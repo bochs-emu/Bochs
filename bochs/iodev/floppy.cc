@@ -49,7 +49,7 @@ extern "C" {
 }
 #endif
 #include "iodev.h"
-#include "hdimage.h"
+#include "hdimage/hdimage.h"
 #include "floppy.h"
 // windows.h included by bochs.h
 #ifdef WIN32

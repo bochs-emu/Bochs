@@ -47,7 +47,7 @@ int snprintf(char *s, size_t maxlen, const char *format, ...)
 #include "bswap.h"
 
 #define HDIMAGE_HEADERS_ONLY 1
-#include "../iodev/hdimage.h"
+#include "../iodev/hdimage/hdimage.h"
 
 #define BXCOMMIT_MODE_COMMIT_UNDOABLE 1
 #define BXCOMMIT_MODE_GROWING_TO_FLAT 2

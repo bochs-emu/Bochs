@@ -27,7 +27,7 @@
 #include "bswap.h"
 
 #define HDIMAGE_HEADERS_ONLY 1
-#include "../iodev/hdimage.h"
+#include "../iodev/hdimage/hdimage.h"
 
 #define BX_MAX_CYL_BITS 24 // 8 TB
 

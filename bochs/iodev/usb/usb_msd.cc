@@ -30,8 +30,8 @@
 
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
 #include "usb_common.h"
-#include "cdrom.h"
-#include "hdimage.h"
+#include "hdimage/cdrom.h"
+#include "hdimage/hdimage.h"
 #include "scsi_device.h"
 #include "usb_msd.h"
 
