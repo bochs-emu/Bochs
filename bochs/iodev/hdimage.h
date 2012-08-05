@@ -373,6 +373,7 @@ class redolog_t
       redolog_header_t header;     // Header is kept in x86 (little) endianness
       Bit32u          *catalog;
       Bit8u           *bitmap;
+      bx_bool          bitmap_update;
       Bit32u           extent_index;
       Bit32u           extent_offset;
       Bit32u           extent_next;

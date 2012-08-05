@@ -313,8 +313,8 @@ Bit32u vmware4_image_t::read_block_index(Bit64u sector, Bit32u index)
 {
     Bit32u ret;
 
-    ::lseek(file_descriptor, sector * SECTOR_SIZE + index * sizeof(Bit32u), SEEK_SET);
-    ::read(file_descriptor, &ret, sizeof(Bit32u));
+    bx_read_image(file_descriptor, sector * SECTOR_SIZE + index * sizeof(Bit32u),
+                  &ret, sizeof(Bit32u));
 
     return dtoh32(ret);
 }
@@ -323,8 +323,8 @@ void vmware4_image_t::write_block_index(Bit64u sector, Bit32u index, Bit32u bloc
 {
     block_sector = htod32(block_sector);
 
-    ::lseek(file_descriptor, sector * SECTOR_SIZE + index * sizeof(Bit32u), SEEK_SET);
-    ::write(file_descriptor, &block_sector, sizeof(Bit32u));
+    bx_write_image(file_descriptor, sector * SECTOR_SIZE + index * sizeof(Bit32u),
+                   &block_sector, sizeof(Bit32u));
 }
 
 Bit32u vmware4_image_t::get_capabilities(void)

@@ -60,6 +60,7 @@ Changes after 2.5.1 release:
     - More accurate vertical and horizontal retrace emulation
       (based on the DOSBox implementation)
   - hard drive / hdimage
+    - added new disk image mode 'vpc' for VirtualPC images
     - undoable mode: added coherency check (flat image size and timestamp)
     - sparse mode: fixed read support
   - Sound
