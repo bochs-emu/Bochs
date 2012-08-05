@@ -89,7 +89,8 @@ iodev/net/...   --> for ne2k and host net access
 isa and pci devices would be mixed in the directories, but this should
 be manageable.
 Status:
-Subfolders for sound, network and usb devices were created under iodev folder.
+Subfolders for disk imaging, sound, network and usb devices were created
+under the iodev folder.
 
 6. VGA
 For SVGA emulation we have Bochs VBE and the Cirrus adapter. We should have

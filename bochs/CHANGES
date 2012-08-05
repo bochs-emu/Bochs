@@ -32,13 +32,29 @@ Changes after 2.5.1 release:
     instrumentation.txt / Fixed instrumentation examples
 
 - Configure and compile
-  - Moved networking, sound and USB devices to subdirectories in iodev.
-  - Moved MWAIT_IS_NOP .bochsrc option from CPUID to CPU so it can be set
-    even if cpu was configured using pre-defined CPUDB profile.
+  - Moved disk imaging, networking, sound and USB devices to subdirectories
+    in the iodev folder.
   - pcidev: enable support for Linux kernel 3.x (Debian patch by Guillem Jover)
+
+- Config interface
+  - Added support for direct device plugin loading with bochsrc directive for
+    devices which have the same name for the plugin and config option.
+  - The bochsrc option 'plugin_ctrl' can now be used to load/unload optional
+    plugins directly when parsing the config file or command line. See the bochsrc
+    sample for supported devices.
+  - Moved bochsrc parsing / writing and config parameter handling for networking,
+    sound and USB devices to the plugin device code. The options are only
+    available when the corresponding plugin device is loaded.
+  - Added ability to set log action per device from .bochsrc.
+  - Added new command line option '-noconsole' to disable the console
+    window on Windows host.
+  - Renamed PCI Pseudo NIC option to "pcipnic" (for direct plugin loading)
+  - Moved several related options to the new "keyboard" bochsrc option.
   - Added new parameter 'rtc_sync' for the 'clock' option. If this option
     is enabled together with the realtime synchronization, the RTC runs
     at realtime speed.
+  - Moved MWAIT_IS_NOP bochsrc option from CPUID to CPU so it can be set
+    even if cpu was configured using pre-defined CPUDB profile.
   - Allow larger CPU 'quantum' values when emulating SMP systems for speed
     (quantum values up to 32 are allowed now).
 
@@ -77,21 +93,6 @@ Changes after 2.5.1 release:
   - Added support for sending absolute mouse position values from the gui if an
     absolute pointing device (USB tablet) is active (rfb, sdl, win32, wx, x).
   - Gui debugger now supported when using sdl gui on Windows
-
-- Config interface
-  - Added support for direct device plugin loading with bochsrc directive for
-    devices which have the same name for the plugin and config option.
-  - The bochsrc option 'plugin_ctrl' can now be used to load/unload optional
-    plugins directly when parsing the config file or command line. See the bochsrc
-    sample for supported devices.
-  - Moved bochsrc parsing / writing and config parameter handling for networking,
-    sound and USB devices to the plugin device code. The options are only
-    available when the corresponding plugin device is loaded.
-  - Added ability to set log action per device from .bochsrc.
-  - Added new command line option '-noconsole' to disable the console
-    window on Windows host.
-  - renamed PCI Pseudo NIC option to "pcipnic" (for direct plugin loading)
-  - moved several related options to the new "keyboard" bochsrc option
 
 - Tools
   - bxcommit: added support for converting growing to flat mode images
