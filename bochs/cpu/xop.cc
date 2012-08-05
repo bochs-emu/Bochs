@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011 Stanislav Shwartsman
+//   Copyright (c) 2011-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -167,72 +167,52 @@ static vpperm_operation vpperm_op[8] = {
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMOV_VdqHdqWdqVIb(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2, op3;
-  if (i->getVexW()) {
-    op2 = BX_READ_AVX_REG(i->Ib());
-    op3 = BX_READ_AVX_REG(i->rm());
-  }
-  else {
-    op2 = BX_READ_AVX_REG(i->rm());
-    op3 = BX_READ_AVX_REG(i->Ib());
-  }
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
+  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++) {
     sse_pselect(&op1.avx128(n), &op2.avx128(n), &op3.avx128(n));
   }
 
-  BX_WRITE_AVX_REGZ(i->nnn(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPPERM_VdqHdqWdqVIb(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2, op3, dest;
-  if (i->getVexW()) {
-    op2 = BX_READ_XMM_REG(i->Ib());
-    op3 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    op2 = BX_READ_XMM_REG(i->rm());
-    op3 = BX_READ_XMM_REG(i->Ib());
-  }
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->src2());
+  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->src3()), dst;
 
   for (unsigned n=0;n<16;n++) {
     unsigned control = op3.xmmubyte(n);
 
     if (control & 0x10)
-      dest.xmmubyte(n) = op1.xmmubyte(control & 0xf);
+      dst.xmmubyte(n) = op1.xmmubyte(control & 0xf);
     else
-      dest.xmmubyte(n) = op2.xmmubyte(control & 0xf);
+      dst.xmmubyte(n) = op2.xmmubyte(control & 0xf);
 
-    dest.xmmubyte(n) = vpperm_op[control >> 5](dest.xmmubyte(n));
+    dst.xmmubyte(n) = vpperm_op[control >> 5](dst.xmmubyte(n));
   }
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), dest);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
 
   BX_NEXT_INSTR(i);
 }
 
-#define XOP_SHIFT_ROTATE(HANDLER, func)                                                    \
-  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)              \
-  {                                                                                        \
-    BxPackedXmmRegister op1, op2;                                                          \
-    if (i->getVexW()) {                                                                    \
-      op1 = BX_READ_XMM_REG(i->rm());                                                      \
-      op2 = BX_READ_XMM_REG(i->vvv());                                                     \
-    }                                                                                      \
-    else {                                                                                 \
-      op1 = BX_READ_XMM_REG(i->vvv());                                                     \
-      op2 = BX_READ_XMM_REG(i->rm());                                                      \
-    }                                                                                      \
-                                                                                           \
-    (func)(&op1, &op2);                                                                 \
-                                                                                           \
-    BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);                                            \
-                                                                                           \
-    BX_NEXT_INSTR(i);                                                                      \
+#define XOP_SHIFT_ROTATE(HANDLER, func)                                                     \
+  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)               \
+  {                                                                                         \
+    BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2()); \
+                                                                                            \
+    (func)(&op1, &op2);                                                                     \
+                                                                                            \
+    BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);                                             \
+                                                                                            \
+    BX_NEXT_INSTR(i);                                                                       \
   }
 
 XOP_SHIFT_ROTATE(VPSHAB_VdqWdqHdq, sse_pshab);
@@ -252,31 +232,31 @@ XOP_SHIFT_ROTATE(VPROTQ_VdqWdqHdq, sse_protq);
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMACSSWW_VdqHdqWdqVIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm());
-  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->Ib());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->src2());
+  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->src3());
 
   for(unsigned n=0;n<8;n++) {
     op1.xmm16s(n) = SaturateDwordSToWordS(((Bit32s) op1.xmm16s(n) * (Bit32s) op2.xmm16s(n)) + (Bit32s) op3.xmm16s(n));
   }
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMACSSWD_VdqHdqWdqVIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm());
-  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->Ib());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->src2());
+  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->src3());
 
   op1.xmm32s(0) = SaturateQwordSToDwordS(((Bit32s) op1.xmm16s(1) * (Bit32s) op2.xmm16s(1)) + (Bit64s) op3.xmm32s(0));
   op1.xmm32s(1) = SaturateQwordSToDwordS(((Bit32s) op1.xmm16s(3) * (Bit32s) op2.xmm16s(3)) + (Bit64s) op3.xmm32s(1));
   op1.xmm32s(2) = SaturateQwordSToDwordS(((Bit32s) op1.xmm16s(5) * (Bit32s) op2.xmm16s(5)) + (Bit64s) op3.xmm32s(2));
   op1.xmm32s(3) = SaturateQwordSToDwordS(((Bit32s) op1.xmm16s(7) * (Bit32s) op2.xmm16s(7)) + (Bit64s) op3.xmm32s(3));
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
@@ -293,9 +273,9 @@ BX_CPP_INLINE Bit64s add_saturate64(Bit64s a, Bit64s b)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMACSSDQL_VdqHdqWdqVIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm());
-  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->Ib());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->src2());
+  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->src3());
 
   Bit64s product1 = (Bit64s) op1.xmm32s(0) * (Bit64s) op2.xmm32s(0);
   Bit64s product2 = (Bit64s) op1.xmm32s(2) * (Bit64s) op2.xmm32s(2);
@@ -303,31 +283,31 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMACSSDQL_VdqHdqWdqVIbR(bxInstruc
   op1.xmm64s(0) = add_saturate64(product1, op3.xmm64s(0));
   op1.xmm64s(1) = add_saturate64(product2, op3.xmm64s(1));
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMACSSDD_VdqHdqWdqVIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm());
-  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->Ib());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->src2());
+  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->src3());
 
   for(unsigned n=0;n<4;n++) {
     op1.xmm32s(n) = SaturateQwordSToDwordS(((Bit64s) op1.xmm32s(n) * (Bit64s) op2.xmm32s(n)) + (Bit64s) op3.xmm32s(n));
   }
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMACSSDQH_VdqHdqWdqVIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm());
-  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->Ib());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->src2());
+  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->src3());
 
   Bit64s product1 = (Bit64s) op1.xmm32s(1) * (Bit64s) op2.xmm32s(1);
   Bit64s product2 = (Bit64s) op1.xmm32s(3) * (Bit64s) op2.xmm32s(3);
@@ -335,47 +315,47 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMACSSDQH_VdqHdqWdqVIbR(bxInstruc
   op1.xmm64s(0) = add_saturate64(product1, op3.xmm64s(0));
   op1.xmm64s(1) = add_saturate64(product2, op3.xmm64s(1));
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMACSWW_VdqHdqWdqVIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm());
-  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->Ib());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->src2());
+  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->src3());
 
   for(unsigned n=0;n<8;n++) {
     op1.xmm16s(n) = ((Bit32s) op1.xmm16s(n) * (Bit32s) op2.xmm16s(n)) + (Bit32s) op3.xmm16s(n);
   }
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMACSWD_VdqHdqWdqVIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm());
-  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->Ib());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->src2());
+  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->src3());
 
   op1.xmm32s(0) = ((Bit32s) op1.xmm16s(1) * (Bit32s) op2.xmm16s(1)) + (Bit64s) op3.xmm32s(0);
   op1.xmm32s(1) = ((Bit32s) op1.xmm16s(3) * (Bit32s) op2.xmm16s(3)) + (Bit64s) op3.xmm32s(1);
   op1.xmm32s(2) = ((Bit32s) op1.xmm16s(5) * (Bit32s) op2.xmm16s(5)) + (Bit64s) op3.xmm32s(2);
   op1.xmm32s(3) = ((Bit32s) op1.xmm16s(7) * (Bit32s) op2.xmm16s(7)) + (Bit64s) op3.xmm32s(3);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMACSDQL_VdqHdqWdqVIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm());
-  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->Ib());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->src2());
+  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->src3());
 
   Bit64s product1 = (Bit64s) op1.xmm32s(0) * (Bit64s) op2.xmm32s(0);
   Bit64s product2 = (Bit64s) op1.xmm32s(2) * (Bit64s) op2.xmm32s(2);
@@ -383,31 +363,31 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMACSDQL_VdqHdqWdqVIbR(bxInstruct
   op1.xmm64s(0) = product1 + op3.xmm64s(0);
   op1.xmm64s(1) = product2 + op3.xmm64s(1);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMACSDD_VdqHdqWdqVIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm());
-  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->Ib());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->src2());
+  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->src3());
 
   for(unsigned n=0;n<4;n++) {
     op1.xmm32s(n) = ((Bit64s) op1.xmm32s(n) * (Bit64s) op2.xmm32s(n)) + (Bit64s) op3.xmm32s(n);
   }
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMACSDQH_VdqHdqWdqVIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm());
-  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->Ib());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->src2());
+  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->src3());
 
   Bit64s product1 = (Bit64s) op1.xmm32s(1) * (Bit64s) op2.xmm32s(1);
   Bit64s product2 = (Bit64s) op1.xmm32s(3) * (Bit64s) op2.xmm32s(3);
@@ -415,16 +395,16 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMACSDQH_VdqHdqWdqVIbR(bxInstruct
   op1.xmm64s(0) = product1 + op3.xmm64s(0);
   op1.xmm64s(1) = product2 + op3.xmm64s(1);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMADCSSWD_VdqHdqWdqVIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm());
-  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->Ib());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->src2());
+  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->src3());
 
   Bit32s product[8];
 
@@ -436,16 +416,16 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMADCSSWD_VdqHdqWdqVIbR(bxInstruc
   op1.xmm32s(2) = SaturateQwordSToDwordS((Bit64s) product[4] + (Bit64s) product[5] + (Bit64s) op3.xmm32s(2));
   op1.xmm32s(3) = SaturateQwordSToDwordS((Bit64s) product[6] + (Bit64s) product[7] + (Bit64s) op3.xmm32s(3));
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMADCSWD_VdqHdqWdqVIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm());
-  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->Ib());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->src2());
+  BxPackedXmmRegister op3 = BX_READ_XMM_REG(i->src3());
 
   Bit32s product[8];
 
@@ -457,14 +437,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMADCSWD_VdqHdqWdqVIbR(bxInstruct
   op1.xmm32s(2) = product[4] + product[5] + op3.xmm32s(2);
   op1.xmm32s(3) = product[6] + product[7] + op3.xmm32s(3);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPROTB_VdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
   int count = i->Ib();
 
   if (count > 0) {
@@ -476,14 +456,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPROTB_VdqWdqIbR(bxInstruction_c *
     sse_prorb(&op, -count);
   }
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPROTW_VdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
   int count = i->Ib();
 
   if (count > 0) {
@@ -495,14 +475,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPROTW_VdqWdqIbR(bxInstruction_c *
     sse_prorw(&op, -count);
   }
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPROTD_VdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
   int count = i->Ib();
 
   if (count > 0) {
@@ -514,14 +494,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPROTD_VdqWdqIbR(bxInstruction_c *
     sse_prord(&op, -count);
   }
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPROTQ_VdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
   int count = i->Ib();
 
   if (count > 0) {
@@ -533,102 +513,102 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPROTQ_VdqWdqIbR(bxInstruction_c *
     sse_prorq(&op, -count);
   }
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMB_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2());
 
   compare8[i->Ib() & 7](&op1, &op2);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMW_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2());
 
   compare16[i->Ib() & 7](&op1, &op2);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMD_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2());
 
   compare32[i->Ib() & 7](&op1, &op2);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMQ_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2());
 
   compare64[i->Ib() & 7](&op1, &op2);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMUB_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2());
 
   compare8u[i->Ib() & 7](&op1, &op2);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMUW_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2());
 
   compare16u[i->Ib() & 7](&op1, &op2);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMUD_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2());
 
   compare32u[i->Ib() & 7](&op1, &op2);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMUQ_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2());
 
   compare64u[i->Ib() & 7](&op1, &op2);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op1);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZPS_VpsWpsR(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->rm());
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   unsigned len = i->getVL();
 
   float_status_t status;
@@ -639,14 +619,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZPS_VpsWpsR(bxInstruction_c *i
   }
 
   check_exceptionsSSE(status.float_exception_flags);
-  BX_WRITE_AVX_REGZ(i->nnn(), op, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op, len);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZPD_VpdWpdR(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->rm());
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   unsigned len = i->getVL();
   
   float_status_t status;
@@ -658,14 +638,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZPD_VpdWpdR(bxInstruction_c *i
 
   check_exceptionsSSE(status.float_exception_flags);
 
-  BX_WRITE_AVX_REGZ(i->nnn(), op, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op, len);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZSS_VssWssR(bxInstruction_c *i)
 {
-  float32 op = BX_READ_XMM_REG_LO_DWORD(i->rm());
+  float32 op = BX_READ_XMM_REG_LO_DWORD(i->src());
   BxPackedXmmRegister r;
 
   float_status_t status;
@@ -675,14 +655,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZSS_VssWssR(bxInstruction_c *i
   r.xmm64u(1) = 0;
 
   check_exceptionsSSE(status.float_exception_flags);
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), r);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), r);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZSD_VsdWsdR(bxInstruction_c *i)
 {
-  float64 op = BX_READ_XMM_REG_LO_QWORD(i->rm());
+  float64 op = BX_READ_XMM_REG_LO_QWORD(i->src());
   BxPackedXmmRegister r;
 
   float_status_t status;
@@ -692,14 +672,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZSD_VsdWsdR(bxInstruction_c *i
   r.xmm64u(1) = 0;
 
   check_exceptionsSSE(status.float_exception_flags);
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), r);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), r);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHADDBW_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
   op.xmm16s(0) = (Bit16s) op.xmmsbyte(0x0) + (Bit16s) op.xmmsbyte(0x1);
   op.xmm16s(1) = (Bit16s) op.xmmsbyte(0x2) + (Bit16s) op.xmmsbyte(0x3);
@@ -710,14 +690,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHADDBW_VdqWdqR(bxInstruction_c *
   op.xmm16s(6) = (Bit16s) op.xmmsbyte(0xC) + (Bit16s) op.xmmsbyte(0xD);
   op.xmm16s(7) = (Bit16s) op.xmmsbyte(0xE) + (Bit16s) op.xmmsbyte(0xF);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHADDBD_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
   op.xmm32s(0) = (Bit32s) op.xmmsbyte(0x0) + (Bit32s) op.xmmsbyte(0x1) +
                  (Bit32s) op.xmmsbyte(0x2) + (Bit32s) op.xmmsbyte(0x3);
@@ -728,14 +708,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHADDBD_VdqWdqR(bxInstruction_c *
   op.xmm32s(3) = (Bit32s) op.xmmsbyte(0xC) + (Bit32s) op.xmmsbyte(0xD) +
                  (Bit32s) op.xmmsbyte(0xE) + (Bit32s) op.xmmsbyte(0xF);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHADDBQ_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
   op.xmm64s(0) = (Bit32s) op.xmmsbyte(0x0) + (Bit32s) op.xmmsbyte(0x1) +
                  (Bit32s) op.xmmsbyte(0x2) + (Bit32s) op.xmmsbyte(0x3) +
@@ -746,54 +726,54 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHADDBQ_VdqWdqR(bxInstruction_c *
                  (Bit32s) op.xmmsbyte(0xC) + (Bit32s) op.xmmsbyte(0xD) +
                  (Bit32s) op.xmmsbyte(0xE) + (Bit32s) op.xmmsbyte(0xF);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHADDWD_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
   op.xmm32s(0) = (Bit32s) op.xmm16s(0) + (Bit32s) op.xmm16s(1);
   op.xmm32s(1) = (Bit32s) op.xmm16s(2) + (Bit32s) op.xmm16s(3);
   op.xmm32s(2) = (Bit32s) op.xmm16s(4) + (Bit32s) op.xmm16s(5);
   op.xmm32s(3) = (Bit32s) op.xmm16s(6) + (Bit32s) op.xmm16s(7);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHADDWQ_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
   op.xmm64s(0) = (Bit32s) op.xmm16s(0) + (Bit32s) op.xmm16s(1) +
                  (Bit32s) op.xmm16s(2) + (Bit32s) op.xmm16s(3);
   op.xmm64s(1) = (Bit32s) op.xmm16s(4) + (Bit32s) op.xmm16s(5) +
                  (Bit32s) op.xmm16s(6) + (Bit32s) op.xmm16s(7);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHADDDQ_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
   op.xmm64s(0) = (Bit64s) op.xmm32s(0) + (Bit64s) op.xmm32s(1);
   op.xmm64s(1) = (Bit64s) op.xmm32s(2) + (Bit64s) op.xmm32s(3);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHADDUBW_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
   op.xmm16u(0) = (Bit16u) op.xmmubyte(0x0) + (Bit16u) op.xmmubyte(0x1);
   op.xmm16u(1) = (Bit16u) op.xmmubyte(0x2) + (Bit16u) op.xmmubyte(0x3);
@@ -804,14 +784,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHADDUBW_VdqWdqR(bxInstruction_c 
   op.xmm16u(6) = (Bit16u) op.xmmubyte(0xC) + (Bit16u) op.xmmubyte(0xD);
   op.xmm16u(7) = (Bit16u) op.xmmubyte(0xE) + (Bit16u) op.xmmubyte(0xF);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHADDUBD_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
   op.xmm32u(0) = (Bit32u) op.xmmubyte(0x0) + (Bit32s) op.xmmubyte(0x1) +
                  (Bit32u) op.xmmubyte(0x2) + (Bit32s) op.xmmubyte(0x3);
@@ -822,14 +802,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHADDUBD_VdqWdqR(bxInstruction_c 
   op.xmm32u(3) = (Bit32u) op.xmmubyte(0xC) + (Bit32s) op.xmmubyte(0xD) +
                  (Bit32u) op.xmmubyte(0xE) + (Bit32s) op.xmmubyte(0xF);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHADDUBQ_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
   op.xmm64u(0) = (Bit32u) op.xmmubyte(0x0) + (Bit32u) op.xmmubyte(0x1) +
                  (Bit32u) op.xmmubyte(0x2) + (Bit32u) op.xmmubyte(0x3) +
@@ -840,54 +820,54 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHADDUBQ_VdqWdqR(bxInstruction_c 
                  (Bit32u) op.xmmubyte(0xC) + (Bit32u) op.xmmubyte(0xD) +
                  (Bit32u) op.xmmubyte(0xE) + (Bit32u) op.xmmubyte(0xF);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHADDUWD_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
   op.xmm32u(0) = (Bit32u) op.xmm16u(0) + (Bit32u) op.xmm16u(1);
   op.xmm32u(1) = (Bit32u) op.xmm16u(2) + (Bit32u) op.xmm16u(3);
   op.xmm32u(2) = (Bit32u) op.xmm16u(4) + (Bit32u) op.xmm16u(5);
   op.xmm32u(3) = (Bit32u) op.xmm16u(6) + (Bit32u) op.xmm16u(7);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHADDUWQ_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
   op.xmm64u(0) = (Bit32u) op.xmm16u(0) + (Bit32u) op.xmm16u(1) +
                  (Bit32u) op.xmm16u(2) + (Bit32u) op.xmm16u(3);
   op.xmm64u(1) = (Bit32u) op.xmm16u(4) + (Bit32u) op.xmm16u(5) +
                  (Bit32u) op.xmm16u(6) + (Bit32u) op.xmm16u(7);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHADDUDQ_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
   op.xmm64u(0) = (Bit64u) op.xmm32u(0) + (Bit64u) op.xmm32u(1);
   op.xmm64u(1) = (Bit64u) op.xmm32u(2) + (Bit64u) op.xmm32u(3);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHSUBBW_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
   op.xmm16s(0) = (Bit16s) op.xmmsbyte(0x0) - (Bit16s) op.xmmsbyte(0x1);
   op.xmm16s(1) = (Bit16s) op.xmmsbyte(0x2) - (Bit16s) op.xmmsbyte(0x3);
@@ -898,85 +878,65 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHSUBBW_VdqWdqR(bxInstruction_c *
   op.xmm16s(6) = (Bit16s) op.xmmsbyte(0xC) - (Bit16s) op.xmmsbyte(0xD);
   op.xmm16s(7) = (Bit16s) op.xmmsbyte(0xE) - (Bit16s) op.xmmsbyte(0xF);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHSUBWD_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
   op.xmm32s(0) = (Bit32s) op.xmm16s(0) - (Bit32s) op.xmm16s(1);
   op.xmm32s(1) = (Bit32s) op.xmm16s(2) - (Bit32s) op.xmm16s(3);
   op.xmm32s(2) = (Bit32s) op.xmm16s(4) - (Bit32s) op.xmm16s(5);
   op.xmm32s(3) = (Bit32s) op.xmm16s(6) - (Bit32s) op.xmm16s(7);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHSUBDQ_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
   op.xmm64s(0) = (Bit64s) op.xmm32s(0) - (Bit64s) op.xmm32s(1);
   op.xmm64s(1) = (Bit64s) op.xmm32s(2) - (Bit64s) op.xmm32s(3);
 
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->nnn(), op);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMIL2PS_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2, op3, result;
-
-  int imm_reg = i->Ib() >> 4;
-  if (! long64_mode()) imm_reg &= 0x7;
-
-  if (i->getVexW()) {
-    op2 = BX_READ_AVX_REG(imm_reg);
-    op3 = BX_READ_AVX_REG(i->rm());
-  }
-  else {
-    op2 = BX_READ_AVX_REG(i->rm());
-    op3 = BX_READ_AVX_REG(imm_reg);
-  }
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
+  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3()), result;
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++) {
     sse_permil2ps(&result.avx128(n), &op1.avx128(n), &op2.avx128(n), &op3.avx128(n), i->Ib() & 3);
   }
 
-  BX_WRITE_AVX_REGZ(i->nnn(), result, len);
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMIL2PD_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2, op3, result;
-
-  int imm_reg = i->Ib() >> 4;
-  if (! long64_mode()) imm_reg &= 0x7;
-
-  if (i->getVexW()) {
-    op2 = BX_READ_AVX_REG(imm_reg);
-    op3 = BX_READ_AVX_REG(i->rm());
-  }
-  else {
-    op2 = BX_READ_AVX_REG(i->rm());
-    op3 = BX_READ_AVX_REG(imm_reg);
-  }
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
+  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3()), result;
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++) {
     sse_permil2pd(&result.avx128(n), &op1.avx128(n), &op2.avx128(n), &op3.avx128(n), i->Ib() & 3);
   }
 
-  BX_WRITE_AVX_REGZ(i->nnn(), result, len);
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
 
   BX_NEXT_INSTR(i);
 }

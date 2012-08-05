@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2011 Stanislav Shwartsman
+//   Copyright (c) 2003-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -347,14 +347,14 @@ float32 approximate_rcp(float32 op)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPPS_VpsWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
   op.xmm32u(0) = approximate_rcp(op.xmm32u(0));
   op.xmm32u(1) = approximate_rcp(op.xmm32u(1));
   op.xmm32u(2) = approximate_rcp(op.xmm32u(2));
   op.xmm32u(3) = approximate_rcp(op.xmm32u(3));
 
-  BX_WRITE_XMM_REG(i->nnn(), op);
+  BX_WRITE_XMM_REG(i->dst(), op);
 #endif
 
   BX_NEXT_INSTR(i);
@@ -368,9 +368,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPPS_VpsWpsR(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPSS_VssWssR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  float32 op = BX_READ_XMM_REG_LO_DWORD(i->rm());
+  float32 op = BX_READ_XMM_REG_LO_DWORD(i->src());
   op = approximate_rcp(op);
-  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), op);
+  BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op);
 #endif
 
   BX_NEXT_INSTR(i);
@@ -704,9 +704,9 @@ float32 approximate_rsqrt(float32 op)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTSS_VssWssR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  float32 op = BX_READ_XMM_REG_LO_DWORD(i->rm());
+  float32 op = BX_READ_XMM_REG_LO_DWORD(i->src());
   op = approximate_rsqrt(op);
-  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), op);
+  BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op);
 #endif
 
   BX_NEXT_INSTR(i);
@@ -721,14 +721,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTSS_VssWssR(bxInstruction_c *i
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTPS_VpsWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
   op.xmm32u(0) = approximate_rsqrt(op.xmm32u(0));
   op.xmm32u(1) = approximate_rsqrt(op.xmm32u(1));
   op.xmm32u(2) = approximate_rsqrt(op.xmm32u(2));
   op.xmm32u(3) = approximate_rsqrt(op.xmm32u(3));
 
-  BX_WRITE_XMM_REG(i->nnn(), op);
+  BX_WRITE_XMM_REG(i->dst(), op);
 #endif
 
   BX_NEXT_INSTR(i);

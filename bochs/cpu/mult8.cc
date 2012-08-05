@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -27,7 +27,7 @@
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_ALEbR(bxInstruction_c *i)
 {
   Bit8u op1 = AL;
-  Bit8u op2 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
+  Bit8u op2 = BX_READ_8BIT_REGx(i->src(), i->extend8bitL());
 
   Bit32u product_16 = ((Bit16u) op1) * ((Bit16u) op2);
 
@@ -50,7 +50,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_ALEbR(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_ALEbR(bxInstruction_c *i)
 {
   Bit8s op1 = AL;
-  Bit8s op2 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
+  Bit8s op2 = BX_READ_8BIT_REGx(i->src(), i->extend8bitL());
 
   Bit16s product_16 = op1 * op2;
   Bit8u  product_8 = (product_16 & 0xFF);
@@ -74,7 +74,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_ALEbR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DIV_ALEbR(bxInstruction_c *i)
 {
-  Bit8u op2 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
+  Bit8u op2 = BX_READ_8BIT_REGx(i->src(), i->extend8bitL());
   if (op2 == 0) {
     exception(BX_DE_EXCEPTION, 0);
   }
@@ -105,7 +105,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_ALEbR(bxInstruction_c *i)
   if (op1 == ((Bit16s)0x8000))
     exception(BX_DE_EXCEPTION, 0);
 
-  Bit8s op2 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
+  Bit8s op2 = BX_READ_8BIT_REGx(i->src(), i->extend8bitL());
 
   if (op2 == 0)
     exception(BX_DE_EXCEPTION, 0);

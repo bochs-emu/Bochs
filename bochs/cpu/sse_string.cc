@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2007-2011 Stanislav Shwartsman
+//   Copyright (c) 2007-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -281,8 +281,8 @@ static Bit16u aggregate(Bit8u BoolRes[16][16], unsigned len1, unsigned len2, Bit
 /* 66 0F 3A 60 */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPESTRM_VdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->src()), result;
   Bit8u imm8 = i->Ib();
 
   // compare all pairs of Ai, Bj
@@ -337,7 +337,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPESTRM_VdqWdqIbR(bxInstruction_
 /* 66 0F 3A 61 */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPESTRI_VdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
   Bit8u imm8 = i->Ib();
 
   // compare all pairs of Ai, Bj
@@ -388,8 +388,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPESTRI_VdqWdqIbR(bxInstruction_
 /* 66 0F 3A 62 */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPISTRM_VdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->src()), result;
   Bit8u imm8 = i->Ib();
 
   // compare all pairs of Ai, Bj
@@ -435,7 +435,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPISTRM_VdqWdqIbR(bxInstruction_
 /* 66 0F 3A 63 */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPISTRI_VdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
   Bit8u imm8 = i->Ib();
 
   // compare all pairs of Ai, Bj

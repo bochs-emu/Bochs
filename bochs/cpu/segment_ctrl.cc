@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -37,7 +37,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LES_GwMp(bxInstruction_c *i)
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], es);
 
-  BX_WRITE_16BIT_REG(i->nnn(), reg_16);
+  BX_WRITE_16BIT_REG(i->dst(), reg_16);
 
   BX_NEXT_INSTR(i);
 }
@@ -54,7 +54,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LES_GdMp(bxInstruction_c *i)
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], es);
 
-  BX_WRITE_32BIT_REGZ(i->nnn(), reg_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), reg_32);
 
   BX_NEXT_INSTR(i);
 }
@@ -71,7 +71,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LDS_GwMp(bxInstruction_c *i)
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], ds);
 
-  BX_WRITE_16BIT_REG(i->nnn(), reg_16);
+  BX_WRITE_16BIT_REG(i->dst(), reg_16);
 
   BX_NEXT_INSTR(i);
 }
@@ -88,7 +88,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LDS_GdMp(bxInstruction_c *i)
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], ds);
 
-  BX_WRITE_32BIT_REGZ(i->nnn(), reg_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), reg_32);
 
   BX_NEXT_INSTR(i);
 }
@@ -102,7 +102,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LFS_GwMp(bxInstruction_c *i)
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
 
-  BX_WRITE_16BIT_REG(i->nnn(), reg_16);
+  BX_WRITE_16BIT_REG(i->dst(), reg_16);
 
   BX_NEXT_INSTR(i);
 }
@@ -116,7 +116,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LFS_GdMp(bxInstruction_c *i)
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
 
-  BX_WRITE_32BIT_REGZ(i->nnn(), reg_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), reg_32);
 
   BX_NEXT_INSTR(i);
 }
@@ -131,7 +131,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LFS_GqMp(bxInstruction_c *i)
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
 
-  BX_WRITE_64BIT_REG(i->nnn(), reg_64);
+  BX_WRITE_64BIT_REG(i->dst(), reg_64);
 
   BX_NEXT_INSTR(i);
 }
@@ -146,7 +146,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LGS_GwMp(bxInstruction_c *i)
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
 
-  BX_WRITE_16BIT_REG(i->nnn(), reg_16);
+  BX_WRITE_16BIT_REG(i->dst(), reg_16);
 
   BX_NEXT_INSTR(i);
 }
@@ -160,7 +160,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LGS_GdMp(bxInstruction_c *i)
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
 
-  BX_WRITE_32BIT_REGZ(i->nnn(), reg_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), reg_32);
 
   BX_NEXT_INSTR(i);
 }
@@ -175,7 +175,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LGS_GqMp(bxInstruction_c *i)
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
 
-  BX_WRITE_64BIT_REG(i->nnn(), reg_64);
+  BX_WRITE_64BIT_REG(i->dst(), reg_64);
 
   BX_NEXT_INSTR(i);
 }
@@ -190,7 +190,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LSS_GwMp(bxInstruction_c *i)
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], ss);
 
-  BX_WRITE_16BIT_REG(i->nnn(), reg_16);
+  BX_WRITE_16BIT_REG(i->dst(), reg_16);
 
   BX_NEXT_INSTR(i);
 }
@@ -204,7 +204,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LSS_GdMp(bxInstruction_c *i)
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], ss);
 
-  BX_WRITE_32BIT_REGZ(i->nnn(), reg_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), reg_32);
 
   BX_NEXT_INSTR(i);
 }
@@ -219,7 +219,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LSS_GqMp(bxInstruction_c *i)
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], ss);
 
-  BX_WRITE_64BIT_REG(i->nnn(), reg_64);
+  BX_WRITE_64BIT_REG(i->dst(), reg_64);
 
   BX_NEXT_INSTR(i);
 }

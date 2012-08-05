@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2011 Stanislav Shwartsman
+//   Copyright (c) 2008-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -102,15 +102,15 @@ public:
   BxResolvePtr_tR ResolveModrm;
 
   struct {
-    // 15..12 (unused)
-    // 11...0 opcode
+    // 15...0 opcode
     Bit16u ia_opcode;
 
     //  7...4 (unused)
     //  3...0 ilen (0..15)
     Bit8u ilen;
 
-    //  7...6 repUsed (0=none, 2=0xF2, 3=0xF3)
+    //  7...6 VEX Vector Length (0=no VL, 1=128 bit, 2=256 bit)
+    //        repUsed (0=none, 2=0xF2, 3=0xF3)
     //  5...5 extend8bit
     //  4...4 mod==c0 (modrm)
     //  3...3 os64
@@ -120,21 +120,14 @@ public:
     Bit8u metaInfo1;
   } metaInfo;
 
-
-  // METADATA FLAGS:
-  //    7...4 (unused)
-  //    3...3 lock prefix
-  //    2...2 VEX.W
-  //    1...0 VEX Vector Length (0=no VL, 1=128 bit, 2=256 bit)
-
-#define BX_INSTR_METADATA_NNN   0
-#define BX_INSTR_METADATA_RM    1
-#define BX_INSTR_METADATA_SEG   2
-#define BX_INSTR_METADATA_BASE  3
-#define BX_INSTR_METADATA_INDEX 4
-#define BX_INSTR_METADATA_SCALE 5
-#define BX_INSTR_METADATA_VVV   6
-#define BX_INSTR_METADATA_FLAGS 7
+#define BX_INSTR_METADATA_DST   0
+#define BX_INSTR_METADATA_SRC1  1
+#define BX_INSTR_METADATA_SRC2  2
+#define BX_INSTR_METADATA_SRC3  3
+#define BX_INSTR_METADATA_SEG   4
+#define BX_INSTR_METADATA_BASE  5
+#define BX_INSTR_METADATA_INDEX 6
+#define BX_INSTR_METADATA_SCALE 7
 
   // using 5-bit field for registers (16 regs in 64-bit, RIP, NIL)
   Bit8u metaData[8];
@@ -193,18 +186,6 @@ public:
     return modRMForm.Iw >> 8;
   }
 
-  BX_CPP_INLINE void setNnn(unsigned nnn) {
-    metaData[BX_INSTR_METADATA_NNN] = nnn;
-  }
-  BX_CPP_INLINE unsigned nnn() const {
-    return metaData[BX_INSTR_METADATA_NNN];
-  }
-  BX_CPP_INLINE void setRm(unsigned rm) {
-    metaData[BX_INSTR_METADATA_RM] = rm;
-  }
-  BX_CPP_INLINE unsigned rm() const {
-    return metaData[BX_INSTR_METADATA_RM];
-  }
   BX_CPP_INLINE void setSibScale(unsigned scale) {
     metaData[BX_INSTR_METADATA_SCALE] = scale;
   }
@@ -241,8 +222,7 @@ public:
   // code, when a strict 0 or 1 is not necessary.
   BX_CPP_INLINE void init(unsigned os32, unsigned as32, unsigned os64, unsigned as64)
   {
-    metaInfo.metaInfo1 = (os32<<2) | (os64<<3) | (as32<<0) | (as64<<1);
-    metaData[BX_INSTR_METADATA_FLAGS] = 0; // clear VEX.W and VEX.VL
+    metaInfo.metaInfo1 = (os32<<2) | (os64<<3) | (as32<<0) | (as64<<1); // VL = 0
   }
 
   BX_CPP_INLINE unsigned os32L(void) const {
@@ -330,33 +310,34 @@ public:
 
   BX_CPP_INLINE unsigned getVL(void) const {
 #if BX_SUPPORT_AVX
-    return metaData[BX_INSTR_METADATA_FLAGS] & 0x3;
+    return metaInfo.metaInfo1 >> 6;
 #else
     return 0;
 #endif
   }
   BX_CPP_INLINE void setVL(unsigned value) {
-    metaData[BX_INSTR_METADATA_FLAGS] = (metaData[BX_INSTR_METADATA_FLAGS] & ~0x3) | (value & 0x3);
+    metaInfo.metaInfo1 = (metaInfo.metaInfo1 & 0x3f) | (value << 6);
   }
 
-#if BX_SUPPORT_AVX
-  BX_CPP_INLINE unsigned getVexW(void) const {
-    return metaData[BX_INSTR_METADATA_FLAGS] & (1<<2);
+  BX_CPP_INLINE void setSrcReg(unsigned src, unsigned reg) {
+    metaData[src] = reg;
   }
-  BX_CPP_INLINE void setVexW(unsigned bit) {
-    metaData[BX_INSTR_METADATA_FLAGS] = (metaData[BX_INSTR_METADATA_FLAGS] & ~(1<<2)) | (bit<<2);
-  }
-  BX_CPP_INLINE void assertVexW(void) {
-    metaData[BX_INSTR_METADATA_FLAGS] |= (1<<2);
-  }
-#endif
 
-  BX_CPP_INLINE void setVvv(unsigned vvv) {
-    metaData[BX_INSTR_METADATA_VVV] = vvv;
+  BX_CPP_INLINE unsigned dst() const {
+    return metaData[BX_INSTR_METADATA_DST];
   }
-  BX_CPP_INLINE unsigned vvv() const {
-    return metaData[BX_INSTR_METADATA_VVV];
+ 
+  BX_CPP_INLINE unsigned src1() const {
+    return metaData[BX_INSTR_METADATA_SRC1];
   }
+  BX_CPP_INLINE unsigned src2() const {
+    return metaData[BX_INSTR_METADATA_SRC2];
+  }
+  BX_CPP_INLINE unsigned src3() const {
+    return metaData[BX_INSTR_METADATA_SRC3];
+  }
+
+  BX_CPP_INLINE unsigned src() const { return src1(); }
 
   BX_CPP_INLINE unsigned modC0() const
   {
@@ -368,21 +349,11 @@ public:
   BX_CPP_INLINE void assertModC0()
   {
     metaInfo.metaInfo1 |= (1<<4);
-  }
-
-  BX_CPP_INLINE unsigned lock() const
-  {
-    return metaData[BX_INSTR_METADATA_FLAGS] & (1<<3);
-  }
-  BX_CPP_INLINE void assertLock()
-  {
-    metaData[BX_INSTR_METADATA_FLAGS] |= (1<<3);
-  }
-};
+  }};
 // <TAG-CLASS-INSTRUCTION-END>
 
 enum {
-#define bx_define_opcode(a, b, c, d, e) a,
+#define bx_define_opcode(a, b, c, d, s1, s2, s3, s4, e) a,
 #include "ia_opcodes.h"
    BX_IA_LAST
 };

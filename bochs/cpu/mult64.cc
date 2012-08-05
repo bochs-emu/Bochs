@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -204,7 +204,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_RAXEqR(bxInstruction_c *i)
   Bit128u product_128;
 
   Bit64u op1_64 = RAX;
-  Bit64u op2_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op2_64 = BX_READ_64BIT_REG(i->src());
 
   // product_128 = ((Bit128u) op1_64) * ((Bit128u) op2_64);
   // product_64l = (Bit64u) (product_128 & 0xFFFFFFFFFFFFFFFF);
@@ -231,7 +231,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_RAXEqR(bxInstruction_c *i)
   Bit128s product_128;
 
   Bit64s op1_64 = RAX;
-  Bit64s op2_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64s op2_64 = BX_READ_64BIT_REG(i->src());
 
   // product_128 = ((Bit128s) op1_64) * ((Bit128s) op2_64);
   // product_64l = (Bit64u) (product_128 & 0xFFFFFFFFFFFFFFFF);
@@ -263,7 +263,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DIV_RAXEqR(bxInstruction_c *i)
   Bit64u remainder_64, quotient_64l;
   Bit128u op1_128, quotient_128;
 
-  Bit64u op2_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op2_64 = BX_READ_64BIT_REG(i->src());
   if (op2_64 == 0) {
     exception(BX_DE_EXCEPTION, 0);
   }
@@ -304,7 +304,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_RAXEqR(bxInstruction_c *i)
   if ((op1_128.hi == (Bit64s) BX_CONST64(0x8000000000000000)) && (!op1_128.lo))
     exception(BX_DE_EXCEPTION, 0);
 
-  Bit64s op2_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64s op2_64 = BX_READ_64BIT_REG(i->src());
 
   if (op2_64 == 0) {
     exception(BX_DE_EXCEPTION, 0);
@@ -338,13 +338,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GqEqIdR(bxInstruction_c *i)
 {
   Bit128s product_128;
 
-  Bit64s op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64s op1_64 = BX_READ_64BIT_REG(i->src());
   Bit64s op2_64 = (Bit32s) i->Id();
 
   long_imul(&product_128,op1_64,op2_64);
 
   /* now write product back to destination */
-  BX_WRITE_64BIT_REG(i->nnn(), product_128.lo);
+  BX_WRITE_64BIT_REG(i->dst(), product_128.lo);
 
   SET_FLAGS_OSZAPC_LOGIC_64(product_128.lo);
 
@@ -359,13 +359,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GqEqR(bxInstruction_c *i)
 {
   Bit128s product_128;
 
-  Bit64s op1_64 = BX_READ_64BIT_REG(i->nnn());
-  Bit64s op2_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64s op1_64 = BX_READ_64BIT_REG(i->dst());
+  Bit64s op2_64 = BX_READ_64BIT_REG(i->src());
 
   long_imul(&product_128,op1_64,op2_64);
 
   /* now write product back to destination */
-  BX_WRITE_64BIT_REG(i->nnn(), product_128.lo);
+  BX_WRITE_64BIT_REG(i->dst(), product_128.lo);
 
   SET_FLAGS_OSZAPC_LOGIC_64(product_128.lo);
 

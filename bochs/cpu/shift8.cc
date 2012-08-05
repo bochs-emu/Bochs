@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -34,7 +34,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EbR(bxInstruction_c *i)
   else
     count = i->Ib();
 
-  Bit8u op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
+  Bit8u op1_8 = BX_READ_8BIT_REGx(i->dst(), i->extend8bitL());
 
   if ((count & 0x07) == 0) {
     if (count & 0x18) {
@@ -48,7 +48,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EbR(bxInstruction_c *i)
 
     Bit8u result_8 = (op1_8 << count) | (op1_8 >> (8 - count));
 
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
+    BX_WRITE_8BIT_REGx(i->dst(), i->extend8bitL(), result_8);
 
     /* set eflags:
      * ROL count affects the following flags: C, O
@@ -112,7 +112,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EbR(bxInstruction_c *i)
   else
     count = i->Ib();
 
-  Bit8u op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
+  Bit8u op1_8 = BX_READ_8BIT_REGx(i->dst(), i->extend8bitL());
 
   if ((count & 0x07) == 0) {
     if (count & 0x18) {
@@ -127,7 +127,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EbR(bxInstruction_c *i)
 
     Bit8u result_8 = (op1_8 >> count) | (op1_8 << (8 - count));
 
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
+    BX_WRITE_8BIT_REGx(i->dst(), i->extend8bitL(), result_8);
 
     /* set eflags:
      * ROR count affects the following flags: C, O
@@ -199,7 +199,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EbR(bxInstruction_c *i)
     BX_NEXT_INSTR(i);
   }
 
-  Bit8u op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
+  Bit8u op1_8 = BX_READ_8BIT_REGx(i->dst(), i->extend8bitL());
 
   if (count==1) {
     result_8 = (op1_8 << 1) | getB_CF();
@@ -209,7 +209,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EbR(bxInstruction_c *i)
                (op1_8 >> (9 - count));
   }
 
-  BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
+  BX_WRITE_8BIT_REGx(i->dst(), i->extend8bitL(), result_8);
 
   cf = (op1_8 >> (8 - count)) & 0x01;
   of = cf ^ (result_8 >> 7);  // of = cf ^ result7
@@ -269,12 +269,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EbR(bxInstruction_c *i)
   count = (count & 0x1f) % 9;
 
   if (count) {
-    Bit8u op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
+    Bit8u op1_8 = BX_READ_8BIT_REGx(i->dst(), i->extend8bitL());
 
     Bit8u result_8 = (op1_8 >> count) | (getB_CF() << (8 - count)) |
                      (op1_8 << (9 - count));
 
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
+    BX_WRITE_8BIT_REGx(i->dst(), i->extend8bitL(), result_8);
 
     cf = (op1_8 >> (count - 1)) & 0x1;
     of = (((result_8 << 1) ^ result_8) >> 7) & 0x1; // of = result6 ^ result7
@@ -331,7 +331,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EbR(bxInstruction_c *i)
     BX_NEXT_INSTR(i);
   }
 
-  Bit8u op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
+  Bit8u op1_8 = BX_READ_8BIT_REGx(i->dst(), i->extend8bitL());
 
   if (count <= 8) {
     result_8 = (op1_8 << count);
@@ -342,7 +342,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EbR(bxInstruction_c *i)
     result_8 = 0;
   }
 
-  BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
+  BX_WRITE_8BIT_REGx(i->dst(), i->extend8bitL(), result_8);
 
   SET_FLAGS_OSZAPC_LOGIC_8(result_8);
   SET_FLAGS_OxxxxC(of, cf);
@@ -400,9 +400,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EbR(bxInstruction_c *i)
   count &= 0x1f;
 
   if (count) {
-    Bit8u op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
+    Bit8u op1_8 = BX_READ_8BIT_REGx(i->dst(), i->extend8bitL());
     Bit8u result_8 = (op1_8 >> count);
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
+    BX_WRITE_8BIT_REGx(i->dst(), i->extend8bitL(), result_8);
 
     unsigned cf = (op1_8 >> (count - 1)) & 0x1;
     // note, that of == result7 if count == 1 and
@@ -460,9 +460,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EbR(bxInstruction_c *i)
   count &= 0x1f;
 
   if (count) {
-    Bit8u op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
+    Bit8u op1_8 = BX_READ_8BIT_REGx(i->dst(), i->extend8bitL());
     Bit8u result_8 = ((Bit8s) op1_8) >> count;
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
+    BX_WRITE_8BIT_REGx(i->dst(), i->extend8bitL(), result_8);
 
     unsigned cf = (((Bit8s) op1_8) >> (count - 1)) & 0x1;
 

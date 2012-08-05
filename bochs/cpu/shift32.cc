@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -41,7 +41,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EdGdM(bxInstruction_c *i)
   count &= 0x1f; // use only 5 LSB's
 
   if (count) {
-    Bit32u op2_32 = BX_READ_32BIT_REG(i->nnn());
+    Bit32u op2_32 = BX_READ_32BIT_REG(i->src());
 
     Bit32u result_32 = (op1_32 << count) | (op2_32 >> (32 - count));
 
@@ -71,15 +71,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EdGdR(bxInstruction_c *i)
   count &= 0x1f; // use only 5 LSB's
 
   if (!count) {
-    BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
+    BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
   }
   else {
-    op1_32 = BX_READ_32BIT_REG(i->rm());
-    op2_32 = BX_READ_32BIT_REG(i->nnn());
+    op1_32 = BX_READ_32BIT_REG(i->dst());
+    op2_32 = BX_READ_32BIT_REG(i->src());
 
     result_32 = (op1_32 << count) | (op2_32 >> (32 - count));
 
-    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+    BX_WRITE_32BIT_REGZ(i->dst(), result_32);
 
     SET_FLAGS_OSZAPC_LOGIC_32(result_32);
 
@@ -108,7 +108,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EdGdM(bxInstruction_c *i)
   count &= 0x1f; // use only 5 LSB's
 
   if (count) {
-    Bit32u op2_32 = BX_READ_32BIT_REG(i->nnn());
+    Bit32u op2_32 = BX_READ_32BIT_REG(i->src());
 
     Bit32u result_32 = (op2_32 << (32 - count)) | (op1_32 >> count);
 
@@ -138,15 +138,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EdGdR(bxInstruction_c *i)
   count &= 0x1f; // use only 5 LSB's
 
   if (!count) {
-    BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
+    BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
   }
   else {
-    op1_32 = BX_READ_32BIT_REG(i->rm());
-    op2_32 = BX_READ_32BIT_REG(i->nnn());
+    op1_32 = BX_READ_32BIT_REG(i->dst());
+    op2_32 = BX_READ_32BIT_REG(i->src());
 
     result_32 = (op2_32 << (32 - count)) | (op1_32 >> count);
 
-    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+    BX_WRITE_32BIT_REGZ(i->dst(), result_32);
 
     SET_FLAGS_OSZAPC_LOGIC_32(result_32);
 
@@ -201,12 +201,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EdR(bxInstruction_c *i)
   count &= 0x1f;
 
   if (!count) {
-    BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
+    BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
   }
   else {
-    op1_32 = BX_READ_32BIT_REG(i->rm());
+    op1_32 = BX_READ_32BIT_REG(i->dst());
     result_32 = (op1_32 << count) | (op1_32 >> (32 - count));
-    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+    BX_WRITE_32BIT_REGZ(i->dst(), result_32);
 
     bit0  = (result_32 & 0x1);
     bit31 = (result_32 >> 31);
@@ -261,12 +261,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EdR(bxInstruction_c *i)
   count &= 0x1f;
 
   if (!count) {
-    BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
+    BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
   }
   else {
-    op1_32 = BX_READ_32BIT_REG(i->rm());
+    op1_32 = BX_READ_32BIT_REG(i->dst());
     result_32 = (op1_32 >> count) | (op1_32 << (32 - count));
-    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+    BX_WRITE_32BIT_REGZ(i->dst(), result_32);
 
     bit31 = (result_32 >> 31) & 1;
     bit30 = (result_32 >> 30) & 1;
@@ -327,11 +327,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EdR(bxInstruction_c *i)
 
   count &= 0x1f;
   if (!count) {
-    BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
+    BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
     BX_NEXT_INSTR(i);
   }
 
-  Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u op1_32 = BX_READ_32BIT_REG(i->dst());
 
   if (count==1) {
     result_32 = (op1_32 << 1) | getB_CF();
@@ -341,7 +341,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EdR(bxInstruction_c *i)
                 (op1_32 >> (33 - count));
   }
 
-  BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), result_32);
 
   cf = (op1_32 >> (32 - count)) & 0x1;
   of = cf ^ (result_32 >> 31); // of = cf ^ result31
@@ -402,11 +402,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EdR(bxInstruction_c *i)
   count &= 0x1f;
 
   if (!count) {
-    BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
+    BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
     BX_NEXT_INSTR(i);
   }
 
-  Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u op1_32 = BX_READ_32BIT_REG(i->dst());
 
   if (count==1) {
     result_32 = (op1_32 >> 1) | (getB_CF() << 31);
@@ -416,7 +416,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EdR(bxInstruction_c *i)
                 (op1_32 << (33 - count));
   }
 
-  BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), result_32);
 
   cf = (op1_32 >> (count - 1)) & 0x1;
   of = ((result_32 << 1) ^ result_32) >> 31; // of = result30 ^ result31
@@ -468,18 +468,18 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EdR(bxInstruction_c *i)
   count &= 0x1f;
 
   if (!count) {
-    BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
+    BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
   }
   else {
-    Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
+    Bit32u op1_32 = BX_READ_32BIT_REG(i->dst());
 
     /* count < 32, since only lower 5 bits used */
     Bit32u result_32 = (op1_32 << count);
 
+    BX_WRITE_32BIT_REGZ(i->dst(), result_32);
+
     unsigned cf = (op1_32 >> (32 - count)) & 0x1;
     unsigned of = cf ^ (result_32 >> 31);
-
-    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
 
     SET_FLAGS_OSZAPC_LOGIC_32(result_32);
     SET_FLAGS_OxxxxC(of, cf);
@@ -532,12 +532,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EdR(bxInstruction_c *i)
   count &= 0x1f;
 
   if (!count) {
-    BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
+    BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
   }
   else {
-    Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
+    Bit32u op1_32 = BX_READ_32BIT_REG(i->dst());
     Bit32u result_32 = (op1_32 >> count);
-    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+    BX_WRITE_32BIT_REGZ(i->dst(), result_32);
 
     unsigned cf = (op1_32 >> (count - 1)) & 0x1;
     // note, that of == result31 if count == 1 and
@@ -592,15 +592,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EdR(bxInstruction_c *i)
   count &= 0x1f;
 
   if (!count) {
-    BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
+    BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
   }
   else {
-    Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
+    Bit32u op1_32 = BX_READ_32BIT_REG(i->dst());
 
     /* count < 32, since only lower 5 bits used */
     Bit32u result_32 = ((Bit32s) op1_32) >> count;
 
-    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+    BX_WRITE_32BIT_REGZ(i->dst(), result_32);
 
     SET_FLAGS_OSZAPC_LOGIC_32(result_32);
     unsigned cf = (op1_32 >> (count - 1)) & 1;

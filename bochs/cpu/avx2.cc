@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011 Stanislav Shwartsman
+//   Copyright (c) 2011-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -31,19 +31,19 @@
 #include "simd_int.h"
 #include "simd_compare.h"
 
-#define AVX_2OP(HANDLER, func)                                                             \
-  /* AVX instruction with two src operands */                                              \
-  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)             \
-  {                                                                                        \
-    BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2 = BX_READ_AVX_REG(i->rm());   \
-    unsigned len = i->getVL();                                                             \
-                                                                                           \
-    for (unsigned n=0; n < len; n++)                                                       \
-      (func)(&op1.avx128(n), &op2.avx128(n));                                              \
-                                                                                           \
-    BX_WRITE_AVX_REGZ(i->nnn(), op1, len);                                                 \
-                                                                                           \
-    BX_NEXT_INSTR(i);                                                                      \
+#define AVX_2OP(HANDLER, func)                                                              \
+  /* AVX instruction with two src operands */                                               \
+  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)              \
+  {                                                                                         \
+    BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
+    unsigned len = i->getVL();                                                              \
+                                                                                            \
+    for (unsigned n=0; n < len; n++)                                                        \
+      (func)(&op1.avx128(n), &op2.avx128(n));                                               \
+                                                                                            \
+    BX_WRITE_AVX_REGZ(i->dst(), op1, len);                                                  \
+                                                                                            \
+    BX_NEXT_INSTR(i);                                                                       \
   }
 
 AVX_2OP(VANDPS_VpsHpsWpsR, sse_andps)
@@ -143,13 +143,13 @@ AVX_2OP(VPSRLVQ_VdqHdqWdqR, sse_psrlvq)
   /* AVX instruction with single src operand */                                            \
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)             \
   {                                                                                        \
-    BxPackedAvxRegister op = BX_READ_AVX_REG(i->rm());                                     \
+    BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());                                    \
     unsigned len = i->getVL();                                                             \
                                                                                            \
     for (unsigned n=0; n < len; n++)                                                       \
       (func)(&op.avx128(n));                                                               \
                                                                                            \
-    BX_WRITE_AVX_REGZ(i->nnn(), op, len);                                                  \
+    BX_WRITE_AVX_REGZ(i->dst(), op, len);                                                  \
                                                                                            \
     BX_NEXT_INSTR(i);                                                                      \
   }
@@ -162,13 +162,13 @@ AVX_1OP(VPABSD_VdqWdqR, sse_pabsd)
   /* AVX packed shift instruction */                                                       \
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)              \
   {                                                                                        \
-    BxPackedAvxRegister op  = BX_READ_AVX_REG(i->vvv());                                   \
+    BxPackedAvxRegister op  = BX_READ_AVX_REG(i->src1());                                  \
     unsigned len = i->getVL();                                                             \
                                                                                            \
     for (unsigned n=0; n < len; n++)                                                       \
-      (func)(&op.avx128(n), BX_READ_XMM_REG_LO_QWORD(i->rm()));                            \
+      (func)(&op.avx128(n), BX_READ_XMM_REG_LO_QWORD(i->src2()));                          \
                                                                                            \
-    BX_WRITE_AVX_REGZ(i->nnn(), op, len);                                                  \
+    BX_WRITE_AVX_REGZ(i->dst(), op, len);                                                  \
                                                                                            \
     BX_NEXT_INSTR(i);                                                                      \
   }
@@ -186,13 +186,13 @@ AVX_PSHIFT(VPSLLQ_VdqHdqWdqR, sse_psllq);
   /* AVX packed shift with imm8 instruction */                                             \
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)              \
   {                                                                                        \
-    BxPackedAvxRegister op  = BX_READ_AVX_REG(i->rm());                                    \
+    BxPackedAvxRegister op  = BX_READ_AVX_REG(i->src());                                   \
     unsigned len = i->getVL();                                                             \
                                                                                            \
     for (unsigned n=0; n < len; n++)                                                       \
       (func)(&op.avx128(n), i->Ib());                                                      \
                                                                                            \
-    BX_WRITE_AVX_REGZ(i->vvv(), op, len);                                                  \
+    BX_WRITE_AVX_REGZ(i->dst(), op, len);                                                  \
                                                                                            \
     BX_NEXT_INSTR(i);                                                                      \
   }
@@ -211,50 +211,50 @@ AVX_PSHIFT_IMM(VPSLLDQ_UdqIb, sse_pslldq);
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPSHUFHW_VdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->rm()), result;
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
   Bit8u order = i->Ib();
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++)
     sse_pshufhw(&result.avx128(n), &op.avx128(n), order);
 
-  BX_WRITE_AVX_REGZ(i->nnn(), result, len);
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPSHUFLW_VdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->rm()), result;
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
   Bit8u order = i->Ib();
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++)
     sse_pshuflw(&result.avx128(n), &op.avx128(n), order);
 
-  BX_WRITE_AVX_REGZ(i->nnn(), result, len);
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPSHUFB_VdqHdqWdqR(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->rm()), result;
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2()), result;
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++)
     sse_pshufb(&result.avx128(n), &op1.avx128(n), &op2.avx128(n));
 
-  BX_WRITE_AVX_REGZ(i->nnn(), result, len);
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPSADBW_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->rm()), result;
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2()), result;
 
   Bit8u control = i->Ib();
   unsigned len = i->getVL();
@@ -264,14 +264,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPSADBW_VdqHdqWdqIbR(bxInstructio
     control >>= 3;
   }
 
-  BX_WRITE_AVX_REGZ(i->nnn(), result, len);
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBLENDW_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2 = BX_READ_AVX_REG(i->rm());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
 
   unsigned len = i->getVL();
   Bit8u mask = i->Ib();
@@ -279,7 +279,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBLENDW_VdqHdqWdqIbR(bxInstructio
   for (unsigned n=0; n < len; n++)
     sse_pblendw(&op1.avx128(n), &op2.avx128(n), mask);
 
-  BX_WRITE_AVX_REGZ(i->nnn(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -289,12 +289,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTB_VdqWb(bxInstruction_c
   unsigned len = i->getVL();
   BxPackedAvxRegister op;
 
-  Bit8u val_8 = BX_READ_XMM_REG_LO_BYTE(i->rm());
+  Bit8u val_8 = BX_READ_XMM_REG_LO_BYTE(i->src());
   
   for (unsigned n=0; n < len; n++)
     sse_pbroadcastb(&op.avx128(n), val_8);
 
-  BX_WRITE_AVX_REGZ(i->nnn(), op, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -304,12 +304,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTW_VdqWw(bxInstruction_c
   unsigned len = i->getVL();
   BxPackedAvxRegister op;
 
-  Bit16u val_16 = BX_READ_XMM_REG_LO_WORD(i->rm());
+  Bit16u val_16 = BX_READ_XMM_REG_LO_WORD(i->src());
   
   for (unsigned n=0; n < len; n++)
     sse_pbroadcastw(&op.avx128(n), val_16);
 
-  BX_WRITE_AVX_REGZ(i->nnn(), op, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -319,12 +319,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTD_VdqWd(bxInstruction_c
   unsigned len = i->getVL();
   BxPackedAvxRegister op;
 
-  Bit32u val_32 = BX_READ_XMM_REG_LO_DWORD(i->rm());
+  Bit32u val_32 = BX_READ_XMM_REG_LO_DWORD(i->src());
   
   for (unsigned n=0; n < len; n++)
     sse_pbroadcastd(&op.avx128(n), val_32);
 
-  BX_WRITE_AVX_REGZ(i->nnn(), op, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -334,25 +334,25 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTQ_VdqWq(bxInstruction_c
   unsigned len = i->getVL();
   BxPackedAvxRegister op;
 
-  Bit64u val_64 = BX_READ_XMM_REG_LO_QWORD(i->rm());
+  Bit64u val_64 = BX_READ_XMM_REG_LO_QWORD(i->src());
   
   for (unsigned n=0; n < len; n++)
     sse_pbroadcastq(&op.avx128(n), val_64);
 
-  BX_WRITE_AVX_REGZ(i->nnn(), op, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op, len);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXBW256_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
   BxPackedAvxRegister result;
 
   for (int n=0; n<16; n++)
     result.avx16u(n) = (Bit8s) op.xmmsbyte(n);
 
-  BX_WRITE_AVX_REG(i->nnn(), result);
+  BX_WRITE_AVX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 }
@@ -363,7 +363,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXBD256_VdqWqR(bxInstruction_
   BxPackedMmxRegister op;
 
   // use MMX register as 64-bit value with convinient accessors
-  MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->rm());
+  MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->src());
 
   result.avx32u(0) = (Bit8s) MMXSB0(op);
   result.avx32u(1) = (Bit8s) MMXSB1(op);
@@ -374,7 +374,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXBD256_VdqWqR(bxInstruction_
   result.avx32u(6) = (Bit8s) MMXSB6(op);
   result.avx32u(7) = (Bit8s) MMXSB7(op);
 
-  BX_WRITE_AVX_REG(i->nnn(), result);
+  BX_WRITE_AVX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 }
@@ -382,21 +382,21 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXBD256_VdqWqR(bxInstruction_
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXBQ256_VdqWdR(bxInstruction_c *i)
 {
   BxPackedAvxRegister result;
-  Bit32u val32 = BX_READ_XMM_REG_LO_DWORD(i->rm());
+  Bit32u val32 = BX_READ_XMM_REG_LO_DWORD(i->src());
 
   result.avx64u(0) = (Bit8s) (val32 & 0xFF);
   result.avx64u(1) = (Bit8s) ((val32 >> 8) & 0xFF);
   result.avx64u(2) = (Bit8s) ((val32 >> 16) & 0xFF);
   result.avx64u(3) = (Bit8s) (val32 >> 24);
 
-  BX_WRITE_AVX_REG(i->nnn(), result);
+  BX_WRITE_AVX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXWD256_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
   BxPackedAvxRegister result;
 
   result.avx32u(0) = op.xmm16s(0);
@@ -408,7 +408,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXWD256_VdqWdqR(bxInstruction
   result.avx32u(6) = op.xmm16s(6);
   result.avx32u(7) = op.xmm16s(7);
 
-  BX_WRITE_AVX_REG(i->nnn(), result);
+  BX_WRITE_AVX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 }
@@ -419,21 +419,21 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXWQ256_VdqWqR(bxInstruction_
   BxPackedMmxRegister op;
 
   // use MMX register as 64-bit value with convinient accessors
-  MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->rm());
+  MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->src());
 
   result.avx64u(0) = MMXSW0(op);
   result.avx64u(1) = MMXSW1(op);
   result.avx64u(2) = MMXSW2(op);
   result.avx64u(3) = MMXSW3(op);
 
-  BX_WRITE_AVX_REG(i->nnn(), result);
+  BX_WRITE_AVX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXDQ256_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
   BxPackedAvxRegister result;
 
   result.avx64u(0) = op.xmm32s(0);
@@ -441,20 +441,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXDQ256_VdqWdqR(bxInstruction
   result.avx64u(2) = op.xmm32s(2);
   result.avx64u(3) = op.xmm32s(3);
 
-  BX_WRITE_AVX_REG(i->nnn(), result);
+  BX_WRITE_AVX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXBW256_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
   BxPackedAvxRegister result;
 
   for (int n=0; n<16; n++)
     result.avx16u(n) = op.xmmubyte(n);
 
-  BX_WRITE_AVX_REG(i->nnn(), result);
+  BX_WRITE_AVX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 }
@@ -465,7 +465,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXBD256_VdqWqR(bxInstruction_
   BxPackedMmxRegister op;
 
   // use MMX register as 64-bit value with convinient accessors
-  MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->rm());
+  MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->src());
 
   result.avx32u(0) = MMXUB0(op);
   result.avx32u(1) = MMXUB1(op);
@@ -476,7 +476,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXBD256_VdqWqR(bxInstruction_
   result.avx32u(6) = MMXUB6(op);
   result.avx32u(7) = MMXUB7(op);
 
-  BX_WRITE_AVX_REG(i->nnn(), result);
+  BX_WRITE_AVX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 }
@@ -484,21 +484,21 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXBD256_VdqWqR(bxInstruction_
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXBQ256_VdqWdR(bxInstruction_c *i)
 {
   BxPackedAvxRegister result;
-  Bit32u val32 = BX_READ_XMM_REG_LO_DWORD(i->rm());
+  Bit32u val32 = BX_READ_XMM_REG_LO_DWORD(i->src());
 
   result.avx64u(0) = (Bit8u) (val32 & 0xFF);
   result.avx64u(1) = (Bit8u) ((val32 >> 8) & 0xFF);
   result.avx64u(2) = (Bit8u) ((val32 >> 16) & 0xFF);
   result.avx64u(3) = (Bit8u) (val32 >> 24);
 
-  BX_WRITE_AVX_REG(i->nnn(), result);
+  BX_WRITE_AVX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXWD256_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
   BxPackedAvxRegister result;
 
   result.avx32u(0) = op.xmm16u(0);
@@ -510,7 +510,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXWD256_VdqWdqR(bxInstruction
   result.avx32u(6) = op.xmm16u(6);
   result.avx32u(7) = op.xmm16u(7);
 
-  BX_WRITE_AVX_REG(i->nnn(), result);
+  BX_WRITE_AVX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 }
@@ -521,21 +521,21 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXWQ256_VdqWqR(bxInstruction_
   BxPackedMmxRegister op;
 
   // use MMX register as 64-bit value with convinient accessors
-  MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->rm());
+  MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->src());
 
   result.avx64u(0) = MMXUW0(op);
   result.avx64u(1) = MMXUW1(op);
   result.avx64u(2) = MMXUW2(op);
   result.avx64u(3) = MMXUW3(op);
 
-  BX_WRITE_AVX_REG(i->nnn(), result);
+  BX_WRITE_AVX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXDQ256_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
   BxPackedAvxRegister result;
 
   result.avx64u(0) = op.xmm32u(0);
@@ -543,28 +543,28 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXDQ256_VdqWdqR(bxInstruction
   result.avx64u(2) = op.xmm32u(2);
   result.avx64u(3) = op.xmm32u(3);
 
-  BX_WRITE_AVX_REG(i->nnn(), result);
+  BX_WRITE_AVX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPALIGNR_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv()), op2 = BX_READ_AVX_REG(i->rm());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
   unsigned len = i->getVL();
 
   for (unsigned n=0; n<len; n++)
     sse_palignr(&op2.avx128(n), &op1.avx128(n), i->Ib());
 
-  BX_WRITE_AVX_REGZ(i->nnn(), op2, i->getVL());
+  BX_WRITE_AVX_REGZ(i->dst(), op2, i->getVL());
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMD_VdqHdqWdqR(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->vvv());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->rm()), result;
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2()), result;
 
   result.avx32u(0) = op2.avx32u(op1.avx32u(0) & 0x7);
   result.avx32u(1) = op2.avx32u(op1.avx32u(1) & 0x7);
@@ -575,14 +575,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMD_VdqHdqWdqR(bxInstruction_c 
   result.avx32u(6) = op2.avx32u(op1.avx32u(6) & 0x7);
   result.avx32u(7) = op2.avx32u(op1.avx32u(7) & 0x7);
 
-  BX_WRITE_AVX_REG(i->nnn(), result);
+  BX_WRITE_AVX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMQ_VdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->rm()), result;
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src()), result;
   Bit8u control = i->Ib();
 
   result.avx64u(0) = op2.avx64u((control)      & 0x3);
@@ -590,7 +590,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMQ_VdqWdqIbR(bxInstruction_c *
   result.avx64u(2) = op2.avx64u((control >> 4) & 0x3);
   result.avx64u(3) = op2.avx64u((control >> 6) & 0x3);
 
-  BX_WRITE_AVX_REG(i->nnn(), result);
+  BX_WRITE_AVX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 }

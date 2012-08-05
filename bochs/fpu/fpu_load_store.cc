@@ -49,7 +49,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_STi(bxInstruction_c *i)
 
   floatx80 sti_reg = floatx80_default_nan;
 
-  if (IS_TAG_EMPTY(i->rm()))
+  if (IS_TAG_EMPTY(i->src()))
   {
     FPU_exception(FPU_EX_Stack_Underflow);
 
@@ -57,7 +57,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_STi(bxInstruction_c *i)
       BX_NEXT_INSTR(i);
   }
   else {
-    sti_reg = BX_READ_FPU_REG(i->rm());
+    sti_reg = BX_READ_FPU_REG(i->src());
   }
 
   BX_CPU_THIS_PTR the_i387.FPU_push();
@@ -280,12 +280,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_STi(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-    FPU_stack_underflow(i->rm(), pop_stack);
+    FPU_stack_underflow(i->dst(), pop_stack);
   }
   else {
     floatx80 st0_reg = BX_READ_FPU_REG(0);
 
-    BX_WRITE_FPU_REG(st0_reg, i->rm());
+    BX_WRITE_FPU_REG(st0_reg, i->dst());
     if (pop_stack)
       BX_CPU_THIS_PTR the_i387.FPU_pop();
   }

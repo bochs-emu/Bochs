@@ -30,12 +30,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)
-    VMexit_DR_Access(i, 0 /* write */);
+    VMexit_DR_Access(0 /* write */, i->dst(), i->src());
 #endif
 
 #if BX_CPU_LEVEL >= 5
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
-    if ((i->nnn() & 0xE) == 4) {
+    if ((i->dst() & 0xE) == 4) {
       BX_ERROR(("MOV_DdRd: access to DR4/DR5 causes #UD"));
       exception(BX_UD_EXCEPTION, 0);
     }
@@ -58,26 +58,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_DR_WRITE_INTERCEPTED(i->nnn())) Svm_Vmexit(SVM_VMEXIT_DR0_WRITE + i->nnn());
+    if (SVM_DR_WRITE_INTERCEPTED(i->dst())) Svm_Vmexit(SVM_VMEXIT_DR0_WRITE + i->dst());
   }
 #endif
 
   invalidate_prefetch_q();
 
-  /* This instruction is always treated as a register-to-register,
-   * regardless of the encoding of the MOD field in the MODRM byte.
-   */
-  if (!i->modC0())
-    BX_PANIC(("MOV_DdRd(): rm field not a register!"));
+  Bit32u val_32 = BX_READ_32BIT_REG(i->src());
 
-  Bit32u val_32 = BX_READ_32BIT_REG(i->rm());
-
-  switch (i->nnn()) {
+  switch (i->dst()) {
     case 0: // DR0
     case 1: // DR1
     case 2: // DR2
     case 3: // DR3
-      BX_CPU_THIS_PTR dr[i->nnn()] = val_32;
+      BX_CPU_THIS_PTR dr[i->dst()] = val_32;
       TLB_invlpg(val_32);
       break;
 
@@ -141,12 +135,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)
-    VMexit_DR_Access(i, 1 /* read */);
+    VMexit_DR_Access(1 /* read */, i->src(), i->dst());
 #endif
 
 #if BX_CPU_LEVEL >= 5
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
-    if ((i->nnn() & 0xE) == 4) {
+    if ((i->src() & 0xE) == 4) {
       BX_ERROR(("MOV_RdDd: access to DR4/DR5 causes #UD"));
       exception(BX_UD_EXCEPTION, 0);
     }
@@ -169,22 +163,16 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_DR_READ_INTERCEPTED(i->nnn())) Svm_Vmexit(SVM_VMEXIT_DR0_READ + i->nnn());
+    if (SVM_DR_READ_INTERCEPTED(i->src())) Svm_Vmexit(SVM_VMEXIT_DR0_READ + i->src());
   }
 #endif
 
-  /* This instruction is always treated as a register-to-register,
-   * regardless of the encoding of the MOD field in the MODRM byte.
-   */
-  if (!i->modC0())
-    BX_PANIC(("MOV_RdDd(): rm field not a register!"));
-
-  switch (i->nnn()) {
+  switch (i->src()) {
     case 0: // DR0
     case 1: // DR1
     case 2: // DR2
     case 3: // DR3
-      val_32 = (Bit32u) BX_CPU_THIS_PTR dr[i->nnn()];
+      val_32 = (Bit32u) BX_CPU_THIS_PTR dr[i->src()];
       break;
 
     case 4: // DR4
@@ -206,7 +194,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
       exception(BX_UD_EXCEPTION, 0);
   }
 
-  BX_WRITE_32BIT_REGZ(i->rm(), val_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), val_32);
 
   BX_NEXT_INSTR(i);
 }
@@ -216,17 +204,17 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)
-    VMexit_DR_Access(i, 0 /* write */);
+    VMexit_DR_Access(0 /* write */, i->dst(), i->src());
 #endif
 
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
-    if ((i->nnn() & 0xE) == 4) {
+    if ((i->dst() & 0xE) == 4) {
       BX_ERROR(("MOV_DqRq: access to DR4/DR5 causes #UD"));
       exception(BX_UD_EXCEPTION, 0);
     }
   }
 
-  if (i->nnn() >= 8) {
+  if (i->dst() >= 8) {
     BX_ERROR(("MOV_DqRq: #UD - register index out of range"));
     exception(BX_UD_EXCEPTION, 0);
   }
@@ -247,26 +235,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_DR_WRITE_INTERCEPTED(i->nnn())) Svm_Vmexit(SVM_VMEXIT_DR0_WRITE + i->nnn());
+    if (SVM_DR_WRITE_INTERCEPTED(i->dst())) Svm_Vmexit(SVM_VMEXIT_DR0_WRITE + i->dst());
   }
 #endif
 
   invalidate_prefetch_q();
 
-  /* This instruction is always treated as a register-to-register,
-   * regardless of the encoding of the MOD field in the MODRM byte.
-   */
-  if (!i->modC0())
-    BX_PANIC(("MOV_DqRq(): rm field not a register!"));
+  Bit64u val_64 = BX_READ_64BIT_REG(i->src());
 
-  Bit64u val_64 = BX_READ_64BIT_REG(i->rm());
-
-  switch (i->nnn()) {
+  switch (i->dst()) {
     case 0: // DR0
     case 1: // DR1
     case 2: // DR2
     case 3: // DR3
-      BX_CPU_THIS_PTR dr[i->nnn()] = val_64;
+      BX_CPU_THIS_PTR dr[i->dst()] = val_64;
       TLB_invlpg(val_64);
       break;
 
@@ -328,17 +310,17 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)
-    VMexit_DR_Access(i, 1 /* read */);
+    VMexit_DR_Access(1 /* read */, i->src(), i->dst());
 #endif
 
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
-    if ((i->nnn() & 0xE) == 4) {
+    if ((i->src() & 0xE) == 4) {
       BX_ERROR(("MOV_RqDq: access to DR4/DR5 causes #UD"));
       exception(BX_UD_EXCEPTION, 0);
     }
   }
 
-  if (i->nnn() >= 8) {
+  if (i->src() >= 8) {
     BX_ERROR(("MOV_RqDq: #UD - register index out of range"));
     exception(BX_UD_EXCEPTION, 0);
   }
@@ -359,22 +341,16 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_DR_READ_INTERCEPTED(i->nnn())) Svm_Vmexit(SVM_VMEXIT_DR0_READ + i->nnn());
+    if (SVM_DR_READ_INTERCEPTED(i->src())) Svm_Vmexit(SVM_VMEXIT_DR0_READ + i->src());
   }
 #endif
 
-  /* This instruction is always treated as a register-to-register,
-   * regardless of the encoding of the MOD field in the MODRM byte.
-   */
-  if (!i->modC0())
-    BX_PANIC(("MOV_RqDq(): rm field not a register!"));
-
-  switch (i->nnn()) {
+  switch (i->src()) {
     case 0: // DR0
     case 1: // DR1
     case 2: // DR2
     case 3: // DR3
-      val_64 = BX_CPU_THIS_PTR dr[i->nnn()];
+      val_64 = BX_CPU_THIS_PTR dr[i->src()];
       break;
 
     case 4: // DR4
@@ -396,7 +372,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
       exception(BX_UD_EXCEPTION, 0);
   }
 
-  BX_WRITE_64BIT_REG(i->rm(), val_64);
+  BX_WRITE_64BIT_REG(i->dst(), val_64);
 
   BX_NEXT_INSTR(i);
 }
@@ -412,9 +388,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rd(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  Bit32u val_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u val_32 = BX_READ_32BIT_REG(i->src());
 
-  if (i->nnn() == 0) {
+  if (i->dst() == 0) {
     // CR0
 #if BX_SUPPORT_VMX
     if (BX_CPU_THIS_PTR in_vmx_guest)
@@ -449,7 +425,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR2Rd(bxInstruction_c *i)
   }
 #endif
 
-  BX_CPU_THIS_PTR cr2 = BX_READ_32BIT_REG(i->rm());
+  BX_CPU_THIS_PTR cr2 = BX_READ_32BIT_REG(i->src());
 
   BX_NEXT_INSTR(i);
 }
@@ -464,7 +440,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rd(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  Bit32u val_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u val_32 = BX_READ_32BIT_REG(i->src());
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)
@@ -499,7 +475,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rd(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  Bit32u val_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u val_32 = BX_READ_32BIT_REG(i->src());
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)
     val_32 = (Bit32u) VMexit_CR4_Write(i, val_32);
@@ -523,7 +499,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR0(bxInstruction_c *i)
 
   Bit32u val_32 = 0;
 
-  if (i->nnn() == 0) {
+  if (i->src() == 0) {
     // CR0
     val_32 = (Bit32u) read_CR0(); /* correctly handle VMX */
   }
@@ -534,7 +510,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR0(bxInstruction_c *i)
   }
 #endif
 
-  BX_WRITE_32BIT_REGZ(i->rm(), val_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), val_32);
 
   BX_NEXT_INSTR(i);
 }
@@ -553,7 +529,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR2(bxInstruction_c *i)
   }
 #endif
 
-  BX_WRITE_32BIT_REGZ(i->rm(), (Bit32u) BX_CPU_THIS_PTR cr2);
+  BX_WRITE_32BIT_REGZ(i->dst(), (Bit32u) BX_CPU_THIS_PTR cr2);
 
   BX_NEXT_INSTR(i);
 }
@@ -579,7 +555,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR3(bxInstruction_c *i)
 
   Bit32u val_32 = (Bit32u) BX_CPU_THIS_PTR cr3;
 
-  BX_WRITE_32BIT_REGZ(i->rm(), val_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), val_32);
 
   BX_NEXT_INSTR(i);
 }
@@ -595,7 +571,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR4(bxInstruction_c *i)
 
   Bit32u val_32 = (Bit32u) read_CR4(); /* correctly handle VMX */
 
-  BX_WRITE_32BIT_REGZ(i->rm(), val_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), val_32);
 #endif
 
   BX_NEXT_INSTR(i);
@@ -611,9 +587,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rq(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  Bit64u val_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u val_64 = BX_READ_64BIT_REG(i->src());
 
-  if (i->nnn() == 0) {
+  if (i->dst() == 0) {
     // CR0
 #if BX_SUPPORT_VMX
     if (BX_CPU_THIS_PTR in_vmx_guest)
@@ -633,7 +609,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rq(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR2Rq(bxInstruction_c *i)
 {
-  if (i->nnn() != 2) {
+  if (i->dst() != 2) {
     BX_ERROR(("MOV_CR2Rq: #UD - register index out of range"));
     exception(BX_UD_EXCEPTION, 0);
   }
@@ -649,14 +625,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR2Rq(bxInstruction_c *i)
   }
 #endif
 
-  BX_CPU_THIS_PTR cr2 = BX_READ_64BIT_REG(i->rm());
+  BX_CPU_THIS_PTR cr2 = BX_READ_64BIT_REG(i->src());
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rq(bxInstruction_c *i)
 {
-  if (i->nnn() != 3) {
+  if (i->dst() != 3) {
     BX_ERROR(("MOV_CR3Rq: #UD - register index out of range"));
     exception(BX_UD_EXCEPTION, 0);
   }
@@ -668,7 +644,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rq(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  Bit64u val_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u val_64 = BX_READ_64BIT_REG(i->src());
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)
@@ -686,7 +662,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rq(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rq(bxInstruction_c *i)
 {
-  if (i->nnn() != 4) {
+  if (i->dst() != 4) {
     BX_ERROR(("MOV_CR4Rq: #UD - register index out of range"));
     exception(BX_UD_EXCEPTION, 0);
   }
@@ -698,7 +674,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rq(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  Bit64u val_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u val_64 = BX_READ_64BIT_REG(i->src());
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)
     val_64 = VMexit_CR4_Write(i, val_64);
@@ -720,7 +696,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR0(bxInstruction_c *i)
 
   Bit64u val_64;
 
-  if (i->nnn() == 0) {
+  if (i->src() == 0) {
     // CR0
     val_64 = read_CR0(); /* correctly handle VMX */
   }
@@ -729,14 +705,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR0(bxInstruction_c *i)
     val_64 = ReadCR8(i);
   }
 
-  BX_WRITE_64BIT_REG(i->rm(), val_64);
+  BX_WRITE_64BIT_REG(i->dst(), val_64);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR2(bxInstruction_c *i)
 {
-  if (i->nnn() != 2) {
+  if (i->src() != 2) {
     BX_ERROR(("MOV_RqCR2: #UD - register index out of range"));
     exception(BX_UD_EXCEPTION, 0);
   }
@@ -752,14 +728,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR2(bxInstruction_c *i)
   }
 #endif
 
-  BX_WRITE_64BIT_REG(i->rm(), BX_CPU_THIS_PTR cr2);
+  BX_WRITE_64BIT_REG(i->dst(), BX_CPU_THIS_PTR cr2);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR3(bxInstruction_c *i)
 {
-  if (i->nnn() != 3) {
+  if (i->src() != 3) {
     BX_ERROR(("MOV_RqCR3: #UD - register index out of range"));
     exception(BX_UD_EXCEPTION, 0);
   }
@@ -780,14 +756,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR3(bxInstruction_c *i)
     VMexit_CR3_Read(i);
 #endif
 
-  BX_WRITE_64BIT_REG(i->rm(), BX_CPU_THIS_PTR cr3);
+  BX_WRITE_64BIT_REG(i->dst(), BX_CPU_THIS_PTR cr3);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR4(bxInstruction_c *i)
 {
-  if (i->nnn() != 4) {
+  if (i->src() != 4) {
     BX_ERROR(("MOV_RqCR4: #UD - register index out of range"));
     exception(BX_UD_EXCEPTION, 0);
   }
@@ -799,7 +775,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR4(bxInstruction_c *i)
 
   Bit64u val_64 = read_CR4(); /* correctly handle VMX */
 
-  BX_WRITE_64BIT_REG(i->rm(), val_64);
+  BX_WRITE_64BIT_REG(i->dst(), val_64);
 
   BX_NEXT_INSTR(i);
 }
@@ -822,7 +798,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
 #endif
 
   if (i->modC0()) {
-    msw = BX_READ_16BIT_REG(i->rm());
+    msw = BX_READ_16BIT_REG(i->src());
   }
   else {
     /* use RMAddr(i) to save address for VMexit */
@@ -856,10 +832,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwR(bxInstruction_c *i)
   Bit32u msw = (Bit32u) read_CR0();  // handle CR0 shadow in VMX
 
   if (i->os32L()) {
-    BX_WRITE_32BIT_REGZ(i->rm(), msw);
+    BX_WRITE_32BIT_REGZ(i->dst(), msw);
   }
   else {
-    BX_WRITE_16BIT_REG(i->rm(), msw & 0xffff);
+    BX_WRITE_16BIT_REG(i->dst(), msw & 0xffff);
   }
 
   BX_NEXT_INSTR(i);

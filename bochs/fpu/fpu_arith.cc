@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2009 Stanislav Shwartsman
+//   Copyright (c) 2003-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -169,14 +169,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FADD_ST0_STj(bxInstruction_c *i)
 
   clear_C1();
 
-  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
+  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->src()))
   {
      FPU_stack_underflow(0);
      BX_NEXT_INSTR(i);
   }
 
   floatx80 a = BX_READ_FPU_REG(0);
-  floatx80 b = BX_READ_FPU_REG(i->rm());
+  floatx80 b = BX_READ_FPU_REG(i->src());
 
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -198,13 +198,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FADD_STi_ST0(bxInstruction_c *i)
 
   clear_C1();
 
-  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
+  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->dst()))
   {
-     FPU_stack_underflow(i->rm(), pop_stack);
+     FPU_stack_underflow(i->dst(), pop_stack);
      BX_NEXT_INSTR(i);
   }
 
-  floatx80 a = BX_READ_FPU_REG(i->rm());
+  floatx80 a = BX_READ_FPU_REG(i->dst());
   floatx80 b = BX_READ_FPU_REG(0);
 
   float_status_t status =
@@ -213,7 +213,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FADD_STi_ST0(bxInstruction_c *i)
   floatx80 result = floatx80_add(a, b, status);
 
   if (! FPU_exception(status.float_exception_flags)) {
-     BX_WRITE_FPU_REG(result, i->rm());
+     BX_WRITE_FPU_REG(result, i->dst());
      if (pop_stack)
         BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
@@ -346,14 +346,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FMUL_ST0_STj(bxInstruction_c *i)
 
   clear_C1();
 
-  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
+  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->src()))
   {
      FPU_stack_underflow(0);
      BX_NEXT_INSTR(i);
   }
 
   floatx80 a = BX_READ_FPU_REG(0);
-  floatx80 b = BX_READ_FPU_REG(i->rm());
+  floatx80 b = BX_READ_FPU_REG(i->src());
 
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -375,13 +375,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FMUL_STi_ST0(bxInstruction_c *i)
 
   clear_C1();
 
-  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
+  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->dst()))
   {
-     FPU_stack_underflow(i->rm(), pop_stack);
+     FPU_stack_underflow(i->dst(), pop_stack);
      BX_NEXT_INSTR(i);
   }
 
-  floatx80 a = BX_READ_FPU_REG(i->rm());
+  floatx80 a = BX_READ_FPU_REG(i->dst());
   floatx80 b = BX_READ_FPU_REG(0);
 
   float_status_t status =
@@ -390,7 +390,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FMUL_STi_ST0(bxInstruction_c *i)
   floatx80 result = floatx80_mul(a, b, status);
 
   if (! FPU_exception(status.float_exception_flags)) {
-     BX_WRITE_FPU_REG(result, i->rm());
+     BX_WRITE_FPU_REG(result, i->dst());
      if (pop_stack)
         BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
@@ -523,14 +523,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUB_ST0_STj(bxInstruction_c *i)
 
   clear_C1();
 
-  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
+  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->src()))
   {
      FPU_stack_underflow(0);
      BX_NEXT_INSTR(i);
   }
 
   floatx80 a = BX_READ_FPU_REG(0);
-  floatx80 b = BX_READ_FPU_REG(i->rm());
+  floatx80 b = BX_READ_FPU_REG(i->src());
 
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -550,13 +550,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUBR_ST0_STj(bxInstruction_c *i)
 
   clear_C1();
 
-  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
+  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->src()))
   {
      FPU_stack_underflow(0);
      BX_NEXT_INSTR(i);
   }
 
-  floatx80 a = BX_READ_FPU_REG(i->rm());
+  floatx80 a = BX_READ_FPU_REG(i->src());
   floatx80 b = BX_READ_FPU_REG(0);
 
   float_status_t status =
@@ -579,13 +579,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUB_STi_ST0(bxInstruction_c *i)
 
   clear_C1();
 
-  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
+  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->dst()))
   {
-     FPU_stack_underflow(i->rm(), pop_stack);
+     FPU_stack_underflow(i->dst(), pop_stack);
      BX_NEXT_INSTR(i);
   }
 
-  floatx80 a = BX_READ_FPU_REG(i->rm());
+  floatx80 a = BX_READ_FPU_REG(i->dst());
   floatx80 b = BX_READ_FPU_REG(0);
 
   float_status_t status =
@@ -594,7 +594,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUB_STi_ST0(bxInstruction_c *i)
   floatx80 result = floatx80_sub(a, b, status);
 
   if (! FPU_exception(status.float_exception_flags)) {
-     BX_WRITE_FPU_REG(result, i->rm());
+     BX_WRITE_FPU_REG(result, i->dst());
      if (pop_stack)
         BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
@@ -611,14 +611,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUBR_STi_ST0(bxInstruction_c *i)
 
   clear_C1();
 
-  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
+  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->dst()))
   {
-     FPU_stack_underflow(i->rm(), pop_stack);
+     FPU_stack_underflow(i->dst(), pop_stack);
      BX_NEXT_INSTR(i);
   }
 
   floatx80 a = BX_READ_FPU_REG(0);
-  floatx80 b = BX_READ_FPU_REG(i->rm());
+  floatx80 b = BX_READ_FPU_REG(i->dst());
 
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -626,7 +626,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUBR_STi_ST0(bxInstruction_c *i)
   floatx80 result = floatx80_sub(a, b, status);
 
   if (! FPU_exception(status.float_exception_flags)) {
-     BX_WRITE_FPU_REG(result, i->rm());
+     BX_WRITE_FPU_REG(result, i->dst());
      if (pop_stack)
         BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
@@ -875,14 +875,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIV_ST0_STj(bxInstruction_c *i)
 
   clear_C1();
 
-  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
+  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->src()))
   {
      FPU_stack_underflow(0);
      BX_NEXT_INSTR(i);
   }
 
   floatx80 a = BX_READ_FPU_REG(0);
-  floatx80 b = BX_READ_FPU_REG(i->rm());
+  floatx80 b = BX_READ_FPU_REG(i->src());
 
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -902,13 +902,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIVR_ST0_STj(bxInstruction_c *i)
 
   clear_C1();
 
-  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
+  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->src()))
   {
      FPU_stack_underflow(0);
      BX_NEXT_INSTR(i);
   }
 
-  floatx80 a = BX_READ_FPU_REG(i->rm());
+  floatx80 a = BX_READ_FPU_REG(i->src());
   floatx80 b = BX_READ_FPU_REG(0);
 
   float_status_t status =
@@ -931,13 +931,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIV_STi_ST0(bxInstruction_c *i)
 
   clear_C1();
 
-  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
+  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->dst()))
   {
-     FPU_stack_underflow(i->rm(), pop_stack);
+     FPU_stack_underflow(i->dst(), pop_stack);
      BX_NEXT_INSTR(i);
   }
 
-  floatx80 a = BX_READ_FPU_REG(i->rm());
+  floatx80 a = BX_READ_FPU_REG(i->dst());
   floatx80 b = BX_READ_FPU_REG(0);
 
   float_status_t status =
@@ -946,7 +946,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIV_STi_ST0(bxInstruction_c *i)
   floatx80 result = floatx80_div(a, b, status);
 
   if (! FPU_exception(status.float_exception_flags)) {
-     BX_WRITE_FPU_REG(result, i->rm());
+     BX_WRITE_FPU_REG(result, i->dst());
      if (pop_stack)
         BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
@@ -963,14 +963,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIVR_STi_ST0(bxInstruction_c *i)
 
   clear_C1();
 
-  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
+  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->dst()))
   {
-     FPU_stack_underflow(i->rm(), pop_stack);
+     FPU_stack_underflow(i->dst(), pop_stack);
      BX_NEXT_INSTR(i);
   }
 
   floatx80 a = BX_READ_FPU_REG(0);
-  floatx80 b = BX_READ_FPU_REG(i->rm());
+  floatx80 b = BX_READ_FPU_REG(i->dst());
 
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -978,7 +978,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIVR_STi_ST0(bxInstruction_c *i)
   floatx80 result = floatx80_div(a, b, status);
 
   if (! FPU_exception(status.float_exception_flags)) {
-     BX_WRITE_FPU_REG(result, i->rm());
+     BX_WRITE_FPU_REG(result, i->dst());
      if (pop_stack)
         BX_CPU_THIS_PTR the_i387.FPU_pop();
   }

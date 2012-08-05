@@ -26,14 +26,14 @@
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_RX(bxInstruction_c *i)
 {
-  push_16(BX_READ_16BIT_REG(i->rm()));
+  push_16(BX_READ_16BIT_REG(i->dst()));
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_Sw(bxInstruction_c *i)
 {
-  push_16(BX_CPU_THIS_PTR sregs[i->nnn()].selector.value);
+  push_16(BX_CPU_THIS_PTR sregs[i->src()].selector.value);
 
   BX_NEXT_INSTR(i);
 }
@@ -43,11 +43,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_Sw(bxInstruction_c *i)
   RSP_SPECULATIVE;
 
   Bit16u selector = pop_16();
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[i->nnn()], selector);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[i->dst()], selector);
 
   RSP_COMMIT;
 
-  if (i->nnn() == BX_SEG_REG_SS) {
+  if (i->dst() == BX_SEG_REG_SS) {
     // POP SS inhibits interrupts, debug exceptions and single-step
     // trap exceptions until the execution boundary following the
     // next instruction is reached.
@@ -60,7 +60,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_Sw(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_RX(bxInstruction_c *i)
 {
-  BX_WRITE_16BIT_REG(i->rm(), pop_16());
+  BX_WRITE_16BIT_REG(i->dst(), pop_16());
 
   BX_NEXT_INSTR(i);
 }

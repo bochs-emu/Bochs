@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2011 Stanislav Shwartsman
+//   Copyright (c) 2008-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -74,9 +74,9 @@ static Bit32u mod2_64bit(Bit64u divisor, Bit64u dividend)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEbR(bxInstruction_c *i)
 {
-  Bit8u op1 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
+  Bit8u op1 = BX_READ_8BIT_REGx(i->src(), i->extend8bitL());
 
-  Bit32u op2 = BX_READ_32BIT_REG(i->nnn());
+  Bit32u op2 = BX_READ_32BIT_REG(i->dst());
   op2 = BitReflect32(op2);
 
   Bit64u tmp1 = ((Bit64u) BitReflect8 (op1)) << 32;
@@ -84,42 +84,39 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEbR(bxInstruction_c *i)
   Bit64u tmp3 = tmp1 ^ tmp2;
   op2 = mod2_64bit(CRC32_POLYNOMIAL, tmp3);
 
-  /* now write result back to destination */
-  BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
+  BX_WRITE_32BIT_REGZ(i->dst(), BitReflect32(op2));
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEwR(bxInstruction_c *i)
 {
-  Bit32u op2 = BX_READ_32BIT_REG(i->nnn());
+  Bit32u op2 = BX_READ_32BIT_REG(i->dst());
   op2 = BitReflect32(op2);
-  Bit16u op1 = BX_READ_16BIT_REG(i->rm());
+  Bit16u op1 = BX_READ_16BIT_REG(i->src());
 
   Bit64u tmp1 = ((Bit64u) BitReflect16(op1)) << 32;
   Bit64u tmp2 = ((Bit64u) op2) << 16;
   Bit64u tmp3 = tmp1 ^ tmp2;
   op2 = mod2_64bit(CRC32_POLYNOMIAL, tmp3);
 
-  /* now write result back to destination */
-  BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
+  BX_WRITE_32BIT_REGZ(i->dst(), BitReflect32(op2));
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEdR(bxInstruction_c *i)
 {
-  Bit32u op2 = BX_READ_32BIT_REG(i->nnn());
+  Bit32u op2 = BX_READ_32BIT_REG(i->dst());
   op2 = BitReflect32(op2);
-  Bit32u op1 = BX_READ_32BIT_REG(i->rm());
+  Bit32u op1 = BX_READ_32BIT_REG(i->src());
 
   Bit64u tmp1 = ((Bit64u) BitReflect32(op1)) << 32;
   Bit64u tmp2 = ((Bit64u) op2) << 32;
   Bit64u tmp3 = tmp1 ^ tmp2;
   op2 = mod2_64bit(CRC32_POLYNOMIAL, tmp3);
 
-  /* now write result back to destination */
-  BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
+  BX_WRITE_32BIT_REGZ(i->dst(), BitReflect32(op2));
 
   BX_NEXT_INSTR(i);
 }
@@ -128,9 +125,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEdR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEqR(bxInstruction_c *i)
 {
-  Bit32u op2 = BX_READ_32BIT_REG(i->nnn());
+  Bit32u op2 = BX_READ_32BIT_REG(i->dst());
   op2 = BitReflect32(op2);
-  Bit64u op1 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op1 = BX_READ_64BIT_REG(i->src());
 
   Bit64u tmp1 = ((Bit64u) BitReflect32(op1 & 0xffffffff)) << 32;
   Bit64u tmp2 = ((Bit64u) op2) << 32;
@@ -141,8 +138,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEqR(bxInstruction_c *i)
   tmp3 = tmp1 ^ tmp2;
   op2  = mod2_64bit(CRC32_POLYNOMIAL, tmp3);
 
-  /* now write result back to destination */
-  BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
+  BX_WRITE_32BIT_REGZ(i->dst(), BitReflect32(op2));
 
   BX_NEXT_INSTR(i);
 }

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -43,7 +43,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGwM(bxInstruction_c *i)
   Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
 
   if (count) {
-    Bit16u op2_16 = BX_READ_16BIT_REG(i->nnn());
+    Bit16u op2_16 = BX_READ_16BIT_REG(i->src());
 
     /* count < 32, since only lower 5 bits used */
     temp_32 = ((Bit32u)(op1_16) << 16) | (op2_16); // double formed by op1:op2
@@ -85,8 +85,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGwR(bxInstruction_c *i)
   count &= 0x1f; // use only 5 LSB's
 
   if (count) {
-    Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
-    Bit16u op2_16 = BX_READ_16BIT_REG(i->nnn());
+    Bit16u op1_16 = BX_READ_16BIT_REG(i->dst());
+    Bit16u op2_16 = BX_READ_16BIT_REG(i->src());
 
     /* count < 32, since only lower 5 bits used */
     temp_32 = ((Bit32u)(op1_16) << 16) | (op2_16); // double formed by op1:op2
@@ -101,7 +101,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGwR(bxInstruction_c *i)
 
     Bit16u result_16 = (Bit16u)(result_32 >> 16);
 
-    BX_WRITE_16BIT_REG(i->rm(), result_16);
+    BX_WRITE_16BIT_REG(i->dst(), result_16);
 
     SET_FLAGS_OSZAPC_LOGIC_16(result_16);
 
@@ -131,7 +131,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGwM(bxInstruction_c *i)
   Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
 
   if (count) {
-    Bit16u op2_16 = BX_READ_16BIT_REG(i->nnn());
+    Bit16u op2_16 = BX_READ_16BIT_REG(i->src());
 
     /* count < 32, since only lower 5 bits used */
     temp_32 = (op2_16 << 16) | op1_16; // double formed by op2:op1
@@ -172,8 +172,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGwR(bxInstruction_c *i)
   count &= 0x1f; /* use only 5 LSB's */
 
   if (count) {
-    Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
-    Bit16u op2_16 = BX_READ_16BIT_REG(i->nnn());
+    Bit16u op1_16 = BX_READ_16BIT_REG(i->dst());
+    Bit16u op2_16 = BX_READ_16BIT_REG(i->src());
 
     /* count < 32, since only lower 5 bits used */
     temp_32 = (op2_16 << 16) | op1_16; // double formed by op2:op1
@@ -188,7 +188,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGwR(bxInstruction_c *i)
 
     Bit16u result_16 = (Bit16u) result_32;
 
-    BX_WRITE_16BIT_REG(i->rm(), result_16);
+    BX_WRITE_16BIT_REG(i->dst(), result_16);
 
     SET_FLAGS_OSZAPC_LOGIC_16(result_16);
 
@@ -248,7 +248,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EwR(bxInstruction_c *i)
   else
     count = i->Ib();
 
-  Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
+  Bit16u op1_16 = BX_READ_16BIT_REG(i->dst());
 
   if ((count & 0x0f) == 0) {
     if (count & 0x10) {
@@ -263,7 +263,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EwR(bxInstruction_c *i)
 
     Bit16u result_16 = (op1_16 << count) | (op1_16 >> (16 - count));
 
-    BX_WRITE_16BIT_REG(i->rm(), result_16);
+    BX_WRITE_16BIT_REG(i->dst(), result_16);
 
     bit0  = (result_16 & 0x1);
     bit15 = (result_16 >> 15);
@@ -322,7 +322,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EwR(bxInstruction_c *i)
   else
     count = i->Ib();
 
-  Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
+  Bit16u op1_16 = BX_READ_16BIT_REG(i->dst());
 
   if ((count & 0x0f) == 0) {
     if (count & 0x10) {
@@ -337,7 +337,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EwR(bxInstruction_c *i)
 
     Bit16u result_16 = (op1_16 >> count) | (op1_16 << (16 - count));
 
-    BX_WRITE_16BIT_REG(i->rm(), result_16);
+    BX_WRITE_16BIT_REG(i->dst(), result_16);
 
     bit14 = (result_16 >> 14) & 1;
     bit15 = (result_16 >> 15) & 1;
@@ -401,7 +401,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EwR(bxInstruction_c *i)
   count = (count & 0x1f) % 17;
 
   if (count) {
-    Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
+    Bit16u op1_16 = BX_READ_16BIT_REG(i->dst());
 
     if (count==1) {
       result_16 = (op1_16 << 1) | getB_CF();
@@ -414,7 +414,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EwR(bxInstruction_c *i)
                   (op1_16 >> (17 - count));
     }
 
-    BX_WRITE_16BIT_REG(i->rm(), result_16);
+    BX_WRITE_16BIT_REG(i->dst(), result_16);
 
     cf = (op1_16 >> (16 - count)) & 0x1;
     of = cf ^ (result_16 >> 15); // of = cf ^ result15
@@ -467,12 +467,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EwR(bxInstruction_c *i)
   count = (count & 0x1f) % 17;
 
   if (count) {
-    Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
+    Bit16u op1_16 = BX_READ_16BIT_REG(i->dst());
 
     Bit16u result_16 = (op1_16 >> count) | (getB_CF() << (16 - count)) |
                        (op1_16 << (17 - count));
 
-    BX_WRITE_16BIT_REG(i->rm(), result_16);
+    BX_WRITE_16BIT_REG(i->dst(), result_16);
 
     cf = (op1_16 >> (count - 1)) & 0x1;
     of = ((Bit16u)((result_16 << 1) ^ result_16) >> 15) & 0x1; // of = result15 ^ result14
@@ -532,7 +532,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EwR(bxInstruction_c *i)
   count &= 0x1f; /* use only 5 LSB's */
 
   if (count) {
-    Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
+    Bit16u op1_16 = BX_READ_16BIT_REG(i->dst());
 
     if (count <= 16) {
       result_16 = (op1_16 << count);
@@ -543,7 +543,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EwR(bxInstruction_c *i)
       result_16 = 0;
     }
 
-    BX_WRITE_16BIT_REG(i->rm(), result_16);
+    BX_WRITE_16BIT_REG(i->dst(), result_16);
 
     SET_FLAGS_OSZAPC_LOGIC_16(result_16);
     SET_FLAGS_OxxxxC(of, cf);
@@ -598,9 +598,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EwR(bxInstruction_c *i)
   count &= 0x1f; /* use only 5 LSB's */
 
   if (count) {
-    Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
+    Bit16u op1_16 = BX_READ_16BIT_REG(i->dst());
     Bit16u result_16 = (op1_16 >> count);
-    BX_WRITE_16BIT_REG(i->rm(), result_16);
+    BX_WRITE_16BIT_REG(i->dst(), result_16);
 
     cf = (op1_16 >> (count - 1)) & 0x1;
     // note, that of == result15 if count == 1 and
@@ -656,9 +656,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EwR(bxInstruction_c *i)
   count &= 0x1f;  /* use only 5 LSB's */
 
   if (count) {
-    Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
+    Bit16u op1_16 = BX_READ_16BIT_REG(i->dst());
     Bit16u result_16 = ((Bit16s) op1_16) >> count;
-    BX_WRITE_16BIT_REG(i->rm(), result_16);
+    BX_WRITE_16BIT_REG(i->dst(), result_16);
 
     cf = (((Bit16s) op1_16) >> (count - 1)) & 0x1;
 

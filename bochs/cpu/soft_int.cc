@@ -26,7 +26,7 @@
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GwMa(bxInstruction_c *i)
 {
-  Bit16s op1_16 = BX_READ_16BIT_REG(i->nnn());
+  Bit16s op1_16 = BX_READ_16BIT_REG(i->dst());
 
   Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
@@ -43,7 +43,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GwMa(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GdMa(bxInstruction_c *i)
 {
-  Bit32s op1_32 = BX_READ_32BIT_REG(i->nnn());
+  Bit32s op1_32 = BX_READ_32BIT_REG(i->dst());
 
   Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 

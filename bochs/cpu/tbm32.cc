@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011 Stanislav Shwartsman
+//   Copyright (c) 2011-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -35,7 +35,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BEXTR_GdEdIdR(bxInstruction_c *i)
   Bit32u op1_32 = 0;
 
   if (start < 32 && len > 0) {
-    op1_32 = BX_READ_32BIT_REG(i->rm());
+    op1_32 = BX_READ_32BIT_REG(i->src());
     op1_32 >>= start;
 
     if (len < 32) {
@@ -46,133 +46,133 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BEXTR_GdEdIdR(bxInstruction_c *i)
 
   SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
 
-  BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), op1_32);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLCFILL_BdEdR(bxInstruction_c *i)
 {
-  Bit32u op_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u op_32 = BX_READ_32BIT_REG(i->src());
 
   Bit32u result_32 = (op_32 + 1) & op_32;
 
   SET_FLAGS_OSZAPC_LOGIC_32(result_32);
   set_CF((op_32 + 1) == 0);
 
-  BX_WRITE_32BIT_REGZ(i->vvv(), result_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), result_32);
   
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLCI_BdEdR(bxInstruction_c *i)
 {
-  Bit32u op_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u op_32 = BX_READ_32BIT_REG(i->src());
 
   Bit32u result_32 = ~(op_32 + 1) | op_32;
 
   SET_FLAGS_OSZAPC_LOGIC_32(result_32);
   set_CF((op_32 + 1) == 0);
 
-  BX_WRITE_32BIT_REGZ(i->vvv(), result_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), result_32);
   
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLCIC_BdEdR(bxInstruction_c *i)
 {
-  Bit32u op_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u op_32 = BX_READ_32BIT_REG(i->src());
 
   Bit32u result_32 = (op_32 + 1) & ~op_32;
 
   SET_FLAGS_OSZAPC_LOGIC_32(result_32);
   set_CF((op_32 + 1) == 0);
 
-  BX_WRITE_32BIT_REGZ(i->vvv(), result_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), result_32);
   
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLCMSK_BdEdR(bxInstruction_c *i)
 {
-  Bit32u op_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u op_32 = BX_READ_32BIT_REG(i->src());
 
   Bit32u result_32 = (op_32 + 1) ^ op_32;
 
   SET_FLAGS_OSZAPC_LOGIC_32(result_32);
   set_CF((op_32 + 1) == 0);
 
-  BX_WRITE_32BIT_REGZ(i->vvv(), result_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), result_32);
   
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLCS_BdEdR(bxInstruction_c *i)
 {
-  Bit32u op_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u op_32 = BX_READ_32BIT_REG(i->src());
 
   Bit32u result_32 = (op_32 + 1) | op_32;
 
   SET_FLAGS_OSZAPC_LOGIC_32(result_32);
   set_CF((op_32 + 1) == 0);
 
-  BX_WRITE_32BIT_REGZ(i->vvv(), result_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), result_32);
   
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSFILL_BdEdR(bxInstruction_c *i)
 {
-  Bit32u op_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u op_32 = BX_READ_32BIT_REG(i->src());
 
   Bit32u result_32 = (op_32 - 1) | op_32;
 
   SET_FLAGS_OSZAPC_LOGIC_32(result_32);
   set_CF(op_32 == 0);
 
-  BX_WRITE_32BIT_REGZ(i->vvv(), result_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), result_32);
   
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSIC_BdEdR(bxInstruction_c *i)
 {
-  Bit32u op_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u op_32 = BX_READ_32BIT_REG(i->src());
 
   Bit32u result_32 = (op_32 - 1) | ~op_32;
 
   SET_FLAGS_OSZAPC_LOGIC_32(result_32);
   set_CF(op_32 == 0);
 
-  BX_WRITE_32BIT_REGZ(i->vvv(), result_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), result_32);
   
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::T1MSKC_BdEdR(bxInstruction_c *i)
 {
-  Bit32u op_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u op_32 = BX_READ_32BIT_REG(i->src());
 
   Bit32u result_32 = (op_32 + 1) | ~op_32;
 
   SET_FLAGS_OSZAPC_LOGIC_32(result_32);
   set_CF((op_32 + 1) == 0);
 
-  BX_WRITE_32BIT_REGZ(i->vvv(), result_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), result_32);
   
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::TZMSK_BdEdR(bxInstruction_c *i)
 {
-  Bit32u op_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u op_32 = BX_READ_32BIT_REG(i->src());
 
   Bit32u result_32 = (op_32 - 1) & ~op_32;
 
   SET_FLAGS_OSZAPC_LOGIC_32(result_32);
   set_CF(op_32 == 0);
 
-  BX_WRITE_32BIT_REGZ(i->vvv(), result_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), result_32);
   
   BX_NEXT_INSTR(i);
 }

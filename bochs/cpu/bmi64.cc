@@ -31,14 +31,14 @@
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ANDN_GqBqEqR(bxInstruction_c *i)
 {
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
-  Bit64u op2_64 = BX_READ_64BIT_REG(i->vvv());
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->src1());
+  Bit64u op2_64 = BX_READ_64BIT_REG(i->src2());
 
-  op1_64 = op1_64 & ~op2_64;
+  op1_64 = ~op1_64 & op2_64;
 
   SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
 
-  BX_WRITE_64BIT_REG(i->nnn(), op1_64);
+  BX_WRITE_64BIT_REG(i->dst(), op1_64);
 
   BX_NEXT_INSTR(i);
 }
@@ -48,7 +48,7 @@ extern void long_mul(Bit128u *product, Bit64u op1, Bit64u op2);
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MULX_GqBqEqR(bxInstruction_c *i)
 {
   Bit64u op1_64 = RDX;
-  Bit64u op2_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op2_64 = BX_READ_64BIT_REG(i->src2());
 
   Bit128u product_128;
 
@@ -58,15 +58,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MULX_GqBqEqR(bxInstruction_c *i)
 
   long_mul(&product_128,op1_64,op2_64);
 
-  BX_WRITE_64BIT_REG(i->vvv(), product_128.lo);
-  BX_WRITE_64BIT_REG(i->nnn(), product_128.hi);
+  BX_WRITE_64BIT_REG(i->src1(), product_128.lo);
+  BX_WRITE_64BIT_REG(i->dst(),  product_128.hi);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSI_BqEqR(bxInstruction_c *i)
 {
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->src());
   bx_bool tmpCF = (op1_64 != 0);
 
   op1_64 = (-op1_64) & op1_64;
@@ -74,14 +74,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSI_BqEqR(bxInstruction_c *i)
   SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
   set_CF(tmpCF);
 
-  BX_WRITE_64BIT_REG(i->vvv(), op1_64);
+  BX_WRITE_64BIT_REG(i->dst(), op1_64);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSMSK_BqEqR(bxInstruction_c *i)
 {
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->src());
   bx_bool tmpCF = (op1_64 == 0);
 
   op1_64 = (op1_64-1) ^ op1_64;
@@ -89,14 +89,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSMSK_BqEqR(bxInstruction_c *i)
   SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
   set_CF(tmpCF);
 
-  BX_WRITE_64BIT_REG(i->vvv(), op1_64);
+  BX_WRITE_64BIT_REG(i->dst(), op1_64);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSR_BqEqR(bxInstruction_c *i)
 {
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->src());
   bx_bool tmpCF = (op1_64 == 0);
 
   op1_64 = (op1_64-1) & op1_64;
@@ -104,75 +104,75 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSR_BqEqR(bxInstruction_c *i)
   SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
   set_CF(tmpCF);
 
-  BX_WRITE_64BIT_REG(i->vvv(), op1_64);
+  BX_WRITE_64BIT_REG(i->dst(), op1_64);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RORX_GqEqIbR(bxInstruction_c *i)
 {
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->src());
 
   unsigned count = i->Ib() & 0x3f;
   if (count) {
     op1_64 = (op1_64 >> count) | (op1_64 << (64 - count));
   }
 
-  BX_WRITE_64BIT_REG(i->nnn(), op1_64);
+  BX_WRITE_64BIT_REG(i->dst(), op1_64);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRX_GqEqBqR(bxInstruction_c *i)
 {
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->src1());
 
-  unsigned count = BX_READ_32BIT_REG(i->vvv()) & 0x3f;
+  unsigned count = BX_READ_32BIT_REG(i->src2()) & 0x3f;
   if (count)
     op1_64 >>= count;
 
-  BX_WRITE_64BIT_REG(i->nnn(), op1_64);
+  BX_WRITE_64BIT_REG(i->dst(), op1_64);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SARX_GqEqBqR(bxInstruction_c *i)
 {
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->src1());
 
-  unsigned count = BX_READ_32BIT_REG(i->vvv()) & 0x3f;
+  unsigned count = BX_READ_32BIT_REG(i->src2()) & 0x3f;
   if (count) {
     /* count < 64, since only lower 6 bits used */
     op1_64 = ((Bit64s) op1_64) >> count;
   }
 
-  BX_WRITE_64BIT_REG(i->nnn(), op1_64);
+  BX_WRITE_64BIT_REG(i->dst(), op1_64);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLX_GqEqBqR(bxInstruction_c *i)
 {
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->src1());
 
-  unsigned count = BX_READ_32BIT_REG(i->vvv()) & 0x3f;
+  unsigned count = BX_READ_32BIT_REG(i->src2()) & 0x3f;
   if (count)
     op1_64 <<= count;
 
-  BX_WRITE_64BIT_REG(i->nnn(), op1_64);
+  BX_WRITE_64BIT_REG(i->dst(), op1_64);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BEXTR_GqEqBqR(bxInstruction_c *i)
 {
-  Bit16u control = BX_READ_16BIT_REG(i->vvv());
+  Bit16u control = BX_READ_16BIT_REG(i->src2());
   unsigned start = control & 0xff;
   unsigned len   = control >> 8;
   Bit64u op1_64 = 0;
   
   if (start < 64 && len > 0) {
-    op1_64 = BX_READ_64BIT_REG(i->rm());
+    op1_64 = BX_READ_64BIT_REG(i->src1());
     op1_64 >>= start;
 
     if (len < 64) {
@@ -183,16 +183,16 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BEXTR_GqEqBqR(bxInstruction_c *i)
 
   SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
 
-  BX_WRITE_64BIT_REG(i->nnn(), op1_64);
+  BX_WRITE_64BIT_REG(i->dst(), op1_64);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BZHI_GqEqBqR(bxInstruction_c *i)
 {
-  unsigned control = BX_READ_16BIT_REG(i->vvv()) & 0xff;
+  unsigned control = BX_READ_16BIT_REG(i->src1()) & 0xff;
   bx_bool tmpCF = 0;
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->src2());
   
   if (control < 64) {
     Bit64u mask = (BX_CONST64(1) << control) - 1;
@@ -205,15 +205,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BZHI_GqEqBqR(bxInstruction_c *i)
   SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
   set_CF(tmpCF);
 
-  BX_WRITE_64BIT_REG(i->nnn(), op1_64);
+  BX_WRITE_64BIT_REG(i->dst(), op1_64);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXT_GqEqBqR(bxInstruction_c *i)
 {
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->vvv());
-  Bit64u op2_64 = BX_READ_64BIT_REG(i->rm()), result_64 = 0;
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->src1());
+  Bit64u op2_64 = BX_READ_64BIT_REG(i->src2()), result_64 = 0;
 
   Bit64u wr_mask = 0x1;
 
@@ -226,15 +226,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXT_GqEqBqR(bxInstruction_c *i)
     op1_64 >>= 1;
   }
 
-  BX_WRITE_64BIT_REG(i->nnn(), result_64);
+  BX_WRITE_64BIT_REG(i->dst(), result_64);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PDEP_GqEqBqR(bxInstruction_c *i)
 {
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->vvv());
-  Bit64u op2_64 = BX_READ_64BIT_REG(i->rm()), result_64 = 0;
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->src1());
+  Bit64u op2_64 = BX_READ_64BIT_REG(i->src2()), result_64 = 0;
 
   Bit64u wr_mask = 0x1;
 
@@ -247,7 +247,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PDEP_GqEqBqR(bxInstruction_c *i)
     wr_mask <<= 1;
   }
   
-  BX_WRITE_64BIT_REG(i->nnn(), result_64);
+  BX_WRITE_64BIT_REG(i->dst(), result_64);
 
   BX_NEXT_INSTR(i);
 }
@@ -256,11 +256,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PDEP_GqEqBqR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADCX_GqEqR(bxInstruction_c *i)
 {
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->nnn());
-  Bit64u op2_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
+  Bit64u op2_64 = BX_READ_64BIT_REG(i->src());
   Bit64u sum_64 = op1_64 + op2_64 + getB_CF();
 
-  BX_WRITE_64BIT_REG(i->nnn(), sum_64);
+  BX_WRITE_64BIT_REG(i->dst(), sum_64);
 
   Bit64u carry_out = ADD_COUT_VEC(op1_64, op2_64, sum_64);
   set_CF(carry_out >> 63);
@@ -270,11 +270,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADCX_GqEqR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADOX_GqEqR(bxInstruction_c *i)
 {
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->nnn());
-  Bit64u op2_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
+  Bit64u op2_64 = BX_READ_64BIT_REG(i->src());
   Bit64u sum_64 = op1_64 + op2_64 + getB_OF();
 
-  BX_WRITE_64BIT_REG(i->nnn(), sum_64);
+  BX_WRITE_64BIT_REG(i->dst(), sum_64);
 
   Bit64u overflow = GET_ADD_OVERFLOW(op1_64, op2_64, sum_64, BX_CONST64(0x8000000000000000));
   set_OF(!!overflow);

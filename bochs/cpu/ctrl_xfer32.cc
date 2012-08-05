@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -219,7 +219,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EdR(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
-  Bit32u new_EIP = BX_READ_32BIT_REG(i->rm());
+  Bit32u new_EIP = BX_READ_32BIT_REG(i->dst());
 
   RSP_SPECULATIVE;
 
@@ -538,7 +538,7 @@ done:
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EdR(bxInstruction_c *i)
 {
-  Bit32u new_EIP = BX_READ_32BIT_REG(i->rm());
+  Bit32u new_EIP = BX_READ_32BIT_REG(i->dst());
   branch_near32(new_EIP);
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP_INDIRECT, PREV_RIP, new_EIP);
 

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -27,7 +27,7 @@
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_EAXEdR(bxInstruction_c *i)
 {
   Bit32u op1_32 = EAX;
-  Bit32u op2_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u op2_32 = BX_READ_32BIT_REG(i->src());
 
   Bit64u product_64  = ((Bit64u) op1_32) * ((Bit64u) op2_32);
   Bit32u product_32l = GET32L(product_64);
@@ -50,7 +50,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_EAXEdR(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_EAXEdR(bxInstruction_c *i)
 {
   Bit32s op1_32 = EAX;
-  Bit32s op2_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32s op2_32 = BX_READ_32BIT_REG(i->src());
 
   Bit64s product_64  = ((Bit64s) op1_32) * ((Bit64s) op2_32);
   Bit32u product_32l = GET32L(product_64);
@@ -75,7 +75,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_EAXEdR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DIV_EAXEdR(bxInstruction_c *i)
 {
-  Bit32u op2_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u op2_32 = BX_READ_32BIT_REG(i->src());
   if (op2_32 == 0) {
     exception(BX_DE_EXCEPTION, 0);
   }
@@ -110,7 +110,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_EAXEdR(bxInstruction_c *i)
   if (op1_64 == ((Bit64s)BX_CONST64(0x8000000000000000)))
     exception(BX_DE_EXCEPTION, 0);
 
-  Bit32s op2_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32s op2_32 = BX_READ_32BIT_REG(i->src());
 
   if (op2_32 == 0)
     exception(BX_DE_EXCEPTION, 0);
@@ -137,14 +137,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_EAXEdR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GdEdIdR(bxInstruction_c *i)
 {
-  Bit32s op2_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32s op2_32 = BX_READ_32BIT_REG(i->src());
   Bit32s op3_32 = i->Id();
 
   Bit64s product_64 = ((Bit64s) op2_32) * ((Bit64s) op3_32);
   Bit32u product_32 = (Bit32u)(product_64 & 0xFFFFFFFF);
 
   /* now write product back to destination */
-  BX_WRITE_32BIT_REGZ(i->nnn(), product_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), product_32);
 
   /* set eflags:
    * IMUL r32,r/m32,imm32: condition for clearing CF & OF:
@@ -161,14 +161,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GdEdIdR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GdEdR(bxInstruction_c *i)
 {
-  Bit32s op1_32 = BX_READ_32BIT_REG(i->nnn());
-  Bit32s op2_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32s op1_32 = BX_READ_32BIT_REG(i->dst());
+  Bit32s op2_32 = BX_READ_32BIT_REG(i->src());
 
   Bit64s product_64 = ((Bit64s) op1_32) * ((Bit64s) op2_32);
   Bit32u product_32 = (Bit32u)(product_64 & 0xFFFFFFFF);
 
   /* now write product back to destination */
-  BX_WRITE_32BIT_REGZ(i->nnn(), product_32);
+  BX_WRITE_32BIT_REGZ(i->dst(), product_32);
 
   /* set eflags:
    * IMUL r32,r/m32: condition for clearing CF & OF:

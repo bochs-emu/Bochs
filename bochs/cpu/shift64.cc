@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -45,7 +45,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EqGqM(bxInstruction_c *i)
   count &= 0x3f; // use only 6 LSB's
 
   if (count) {
-    op2_64 = BX_READ_64BIT_REG(i->nnn());
+    op2_64 = BX_READ_64BIT_REG(i->src());
 
     result_64 = (op1_64 << count) | (op2_64 >> (64 - count));
 
@@ -75,12 +75,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EqGqR(bxInstruction_c *i)
   count &= 0x3f; // use only 6 LSB's
 
   if (count) {
-    op1_64 = BX_READ_64BIT_REG(i->rm());
-    op2_64 = BX_READ_64BIT_REG(i->nnn());
+    op1_64 = BX_READ_64BIT_REG(i->dst());
+    op2_64 = BX_READ_64BIT_REG(i->src());
 
     result_64 = (op1_64 << count) | (op2_64 >> (64 - count));
 
-    BX_WRITE_64BIT_REG(i->rm(), result_64);
+    BX_WRITE_64BIT_REG(i->dst(), result_64);
 
     SET_FLAGS_OSZAPC_LOGIC_64(result_64);
 
@@ -111,7 +111,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EqGqM(bxInstruction_c *i)
   count &= 0x3f; // use only 6 LSB's
 
   if (count) {
-    op2_64 = BX_READ_64BIT_REG(i->nnn());
+    op2_64 = BX_READ_64BIT_REG(i->src());
 
     result_64 = (op2_64 << (64 - count)) | (op1_64 >> count);
 
@@ -141,12 +141,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EqGqR(bxInstruction_c *i)
   count &= 0x3f; // use only 6 LSB's
 
   if (count) {
-    op1_64 = BX_READ_64BIT_REG(i->rm());
-    op2_64 = BX_READ_64BIT_REG(i->nnn());
+    op1_64 = BX_READ_64BIT_REG(i->dst());
+    op2_64 = BX_READ_64BIT_REG(i->src());
 
     result_64 = (op2_64 << (64 - count)) | (op1_64 >> count);
 
-    BX_WRITE_64BIT_REG(i->rm(), result_64);
+    BX_WRITE_64BIT_REG(i->dst(), result_64);
 
     SET_FLAGS_OSZAPC_LOGIC_64(result_64);
 
@@ -199,9 +199,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EqR(bxInstruction_c *i)
   count &= 0x3f;
   
   if (count) {
-    Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
+    Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
     Bit64u result_64 = (op1_64 << count) | (op1_64 >> (64 - count));
-    BX_WRITE_64BIT_REG(i->rm(), result_64);
+    BX_WRITE_64BIT_REG(i->dst(), result_64);
 
     unsigned bit0  = (result_64 & 0x1);
     unsigned bit63 = (result_64 >> 63);
@@ -253,9 +253,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EqR(bxInstruction_c *i)
   count &= 0x3f;
 
   if (count) {
-    Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
+    Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
     Bit64u result_64 = (op1_64 >> count) | (op1_64 << (64 - count));
-    BX_WRITE_64BIT_REG(i->rm(), result_64);
+    BX_WRITE_64BIT_REG(i->dst(), result_64);
 
     unsigned bit63 = (result_64 >> 63) & 1;
     unsigned bit62 = (result_64 >> 62) & 1;
@@ -321,7 +321,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EqR(bxInstruction_c *i)
     BX_NEXT_INSTR(i);
   }
 
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
 
   if (count==1) {
     result_64 = (op1_64 << 1) | getB_CF();
@@ -331,7 +331,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EqR(bxInstruction_c *i)
                 (op1_64 >> (65 - count));
   }
 
-  BX_WRITE_64BIT_REG(i->rm(), result_64);
+  BX_WRITE_64BIT_REG(i->dst(), result_64);
 
   cf = (op1_64 >> (64 - count)) & 0x1;
   of = cf ^ (result_64 >> 63); // of = cf ^ result63
@@ -395,7 +395,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EqR(bxInstruction_c *i)
     BX_NEXT_INSTR(i);
   }
 
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
 
   if (count==1) {
     result_64 = (op1_64 >> 1) | (((Bit64u) getB_CF()) << 63);
@@ -405,7 +405,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EqR(bxInstruction_c *i)
                 (op1_64 << (65 - count));
   }
 
-  BX_WRITE_64BIT_REG(i->rm(), result_64);
+  BX_WRITE_64BIT_REG(i->dst(), result_64);
 
   cf = (op1_64 >> (count - 1)) & 0x1;
   of = ((result_64 << 1) ^ result_64) >> 63;
@@ -459,10 +459,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EqR(bxInstruction_c *i)
   count &= 0x3f;
 
   if (count) {
-    op1_64 = BX_READ_64BIT_REG(i->rm());
+    op1_64 = BX_READ_64BIT_REG(i->dst());
     /* count < 64, since only lower 6 bits used */
     result_64 = (op1_64 << count);
-    BX_WRITE_64BIT_REG(i->rm(), result_64);
+    BX_WRITE_64BIT_REG(i->dst(), result_64);
 
     cf = (op1_64 >> (64 - count)) & 0x1;
     of = cf ^ (result_64 >> 63);
@@ -517,9 +517,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EqR(bxInstruction_c *i)
   count &= 0x3f;
 
   if (count) {
-    Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
+    Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
     Bit64u result_64 = (op1_64 >> count);
-    BX_WRITE_64BIT_REG(i->rm(), result_64);
+    BX_WRITE_64BIT_REG(i->dst(), result_64);
 
     unsigned cf = (op1_64 >> (count - 1)) & 0x1;
     // note, that of == result63 if count == 1 and
@@ -574,12 +574,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EqR(bxInstruction_c *i)
   count &= 0x3f;
 
   if (count) {
-    Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
+    Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
 
     /* count < 64, since only lower 6 bits used */
     Bit64u result_64 = ((Bit64s) op1_64) >> count;
 
-    BX_WRITE_64BIT_REG(i->rm(), result_64);
+    BX_WRITE_64BIT_REG(i->dst(), result_64);
 
     SET_FLAGS_OSZAPC_LOGIC_64(result_64);
     unsigned cf = (op1_64 >> (count - 1)) & 1;

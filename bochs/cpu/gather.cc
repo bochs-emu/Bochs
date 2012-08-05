@@ -60,12 +60,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_VpsHps(bxInstruction_c 
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  if (i->sibIndex() == i->vvv() || i->sibIndex() == i->nnn() || i->vvv() == i->nnn()) {
+  if (i->sibIndex() == i->src2() || i->sibIndex() == i->dst() || i->src2() == i->dst()) {
     BX_ERROR(("VGATHERDPS_VpsHps: incorrect source operands"));
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  BxPackedAvxRegister *mask = &BX_AVX_REG(i->vvv()), *dest = &BX_AVX_REG(i->nnn());
+  BxPackedAvxRegister *mask = &BX_AVX_REG(i->src2()), *dest = &BX_AVX_REG(i->dst());
 
   // index size = 32, element_size = 32, max vector size = 256
   // num_elements:
@@ -110,7 +110,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c 
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  if (i->sibIndex() == i->vvv() || i->sibIndex() == i->nnn() || i->vvv() == i->nnn()) {
+  if (i->sibIndex() == i->src2() || i->sibIndex() == i->dst() || i->src2() == i->dst()) {
     BX_ERROR(("VGATHERQPS_VpsHps: incorrect source operands"));
     exception(BX_UD_EXCEPTION, 0);
   }
@@ -120,7 +120,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c 
   //     128 bit => 2
   //     256 bit => 4
 
-  BxPackedAvxRegister *mask = &BX_AVX_REG(i->vvv()), *dest = &BX_AVX_REG(i->nnn());
+  BxPackedAvxRegister *mask = &BX_AVX_REG(i->src2()), *dest = &BX_AVX_REG(i->dst());
   unsigned n, num_elements = 2 * i->getVL();
 
   for (n=0; n < num_elements; n++) {
@@ -144,8 +144,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c 
     mask->avx32u(n) = 0;
   }
 
-  BX_CLEAR_AVX_HIGH(i->vvv());
-  BX_CLEAR_AVX_HIGH(i->nnn());
+  BX_CLEAR_AVX_HIGH(i->dst());
+  BX_CLEAR_AVX_HIGH(i->src2());
 
   BX_NEXT_INSTR(i);
 }
@@ -162,7 +162,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_VpdHpd(bxInstruction_c 
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  if (i->sibIndex() == i->vvv() || i->sibIndex() == i->nnn() || i->vvv() == i->nnn()) {
+  if (i->sibIndex() == i->src2() || i->sibIndex() == i->dst() || i->src2() == i->dst()) {
     BX_ERROR(("VGATHERDPD_VpdHpd: incorrect source operands"));
     exception(BX_UD_EXCEPTION, 0);
   }
@@ -172,7 +172,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_VpdHpd(bxInstruction_c 
   //     128 bit => 2
   //     256 bit => 4
 
-  BxPackedAvxRegister *mask = &BX_AVX_REG(i->vvv()), *dest = &BX_AVX_REG(i->nnn());
+  BxPackedAvxRegister *mask = &BX_AVX_REG(i->src2()), *dest = &BX_AVX_REG(i->dst());
   unsigned n, num_elements = 2 * i->getVL();
 
   for (n=0; n < num_elements; n++) {
@@ -211,7 +211,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_VpdHpd(bxInstruction_c 
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  if (i->sibIndex() == i->vvv() || i->sibIndex() == i->nnn() || i->vvv() == i->nnn()) {
+  if (i->sibIndex() == i->src2() || i->sibIndex() == i->dst() || i->src2() == i->dst()) {
     BX_ERROR(("VGATHERQPD_VpdHpd: incorrect source operands"));
     exception(BX_UD_EXCEPTION, 0);
   }
@@ -221,7 +221,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_VpdHpd(bxInstruction_c 
   //     128 bit => 2
   //     256 bit => 4
 
-  BxPackedAvxRegister *mask = &BX_AVX_REG(i->vvv()), *dest = &BX_AVX_REG(i->nnn());
+  BxPackedAvxRegister *mask = &BX_AVX_REG(i->src2()), *dest = &BX_AVX_REG(i->dst());
   unsigned n, num_elements = 2 * i->getVL();
 
   for (n=0; n < num_elements; n++) {

@@ -46,21 +46,21 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_EqM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_RRX(bxInstruction_c *i)
 {
-  push_64(BX_READ_64BIT_REG(i->rm()));
+  push_64(BX_READ_64BIT_REG(i->dst()));
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_RRX(bxInstruction_c *i)
 {
-  BX_WRITE_64BIT_REG(i->rm(), pop_64());
+  BX_WRITE_64BIT_REG(i->dst(), pop_64());
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH64_Sw(bxInstruction_c *i)
 {
-  push_64(BX_CPU_THIS_PTR sregs[i->nnn()].selector.value);
+  push_64(BX_CPU_THIS_PTR sregs[i->src()].selector.value);
 
   BX_NEXT_INSTR(i);
 }
@@ -68,7 +68,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH64_Sw(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP64_Sw(bxInstruction_c *i)
 {
   Bit16u selector = stack_read_word(RSP);
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[i->nnn()], selector);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[i->dst()], selector);
   RSP += 8;
 
   BX_NEXT_INSTR(i);

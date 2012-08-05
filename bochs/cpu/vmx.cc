@@ -2607,7 +2607,7 @@ BX_CPP_INLINE Bit32u rotate_l(Bit32u val_32)
   return (val_32 << 8) | (val_32 >> 24);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD_EdGd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
@@ -2615,7 +2615,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     BX_ERROR(("VMEXIT: VMREAD in VMX non-root operation"));
-    VMexit_Instruction(i, VMX_VMEXIT_VMREAD);
+    VMexit_Instruction(i, VMX_VMEXIT_VMREAD, BX_READ);
   }
 
   if (CPL != 0) {
@@ -2631,14 +2631,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    if (BX_READ_64BIT_REG_HIGH(i->nnn())) {
+    if (BX_READ_64BIT_REG_HIGH(i->src())) {
       BX_ERROR(("VMREAD: not supported field (upper 32-bit not zero)"));
       VMfail(VMXERR_UNSUPPORTED_VMCS_COMPONENT_ACCESS);
       BX_NEXT_INSTR(i);
     }
   }
 #endif
-  unsigned encoding = BX_READ_32BIT_REG(i->nnn());
+  unsigned encoding = BX_READ_32BIT_REG(i->src());
 
   if (vmcs_field_offset(encoding) == 0xffffffff) {
     BX_ERROR(("VMREAD: not supported field 0x%08x", encoding));
@@ -2672,7 +2672,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
     if (i->modC0()) {
-       BX_WRITE_64BIT_REG(i->rm(), field_64);
+       BX_WRITE_64BIT_REG(i->dst(), field_64);
     }
     else {
        Bit64u eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -2685,7 +2685,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
     Bit32u field_32 = GET32L(field_64);
 
     if (i->modC0()) {
-       BX_WRITE_32BIT_REGZ(i->rm(), field_32);
+       BX_WRITE_32BIT_REGZ(i->dst(), field_32);
     }
     else {
        Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -2699,7 +2699,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE_GdEd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
@@ -2707,7 +2707,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     BX_ERROR(("VMEXIT: VMWRITE in VMX non-root operation"));
-    VMexit_Instruction(i, VMX_VMEXIT_VMWRITE);
+    VMexit_Instruction(i, VMX_VMEXIT_VMWRITE, BX_WRITE);
   }
 
   if (CPL != 0) {
@@ -2727,14 +2727,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
     if (i->modC0()) {
-       val_64 = BX_READ_64BIT_REG(i->rm());
+       val_64 = BX_READ_64BIT_REG(i->src());
     }
     else {
        Bit64u eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
        val_64 = read_virtual_qword_64(i->seg(), eaddr);
     }
 
-    if (BX_READ_64BIT_REG_HIGH(i->nnn())) {
+    if (BX_READ_64BIT_REG_HIGH(i->dst())) {
        BX_ERROR(("VMWRITE: not supported field (upper 32-bit not zero)"));
        VMfail(VMXERR_UNSUPPORTED_VMCS_COMPONENT_ACCESS);
        BX_NEXT_INSTR(i);
@@ -2746,7 +2746,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
 #endif
   {
     if (i->modC0()) {
-       val_32 = BX_READ_32BIT_REG(i->rm());
+       val_32 = BX_READ_32BIT_REG(i->src());
     }
     else {
        Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -2756,7 +2756,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     val_64 = (Bit64u) val_32;
   }
 
-  Bit32u encoding = BX_READ_32BIT_REG(i->nnn());
+  Bit32u encoding = BX_READ_32BIT_REG(i->dst());
 
   if (vmcs_field_offset(encoding) == 0xffffffff) {
     BX_ERROR(("VMWRITE: not supported field 0x%08x", encoding));
@@ -2859,7 +2859,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     BX_ERROR(("VMEXIT: INVEPT in VMX non-root operation"));
-    VMexit_Instruction(i, VMX_VMEXIT_INVEPT);
+    VMexit_Instruction(i, VMX_VMEXIT_INVEPT, BX_READ);
   }
 
   if (CPL != 0) {
@@ -2869,10 +2869,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
 
   bx_address type;
   if (i->os64L()) {
-    type = BX_READ_64BIT_REG(i->nnn());
+    type = BX_READ_64BIT_REG(i->dst());
   }
   else {
-    type = BX_READ_32BIT_REG(i->nnn());
+    type = BX_READ_32BIT_REG(i->dst());
   }
 
   BxPackedXmmRegister inv_eptp;
@@ -2918,7 +2918,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     BX_ERROR(("VMEXIT: INVVPID in VMX non-root operation"));
-    VMexit_Instruction(i, VMX_VMEXIT_INVVPID);
+    VMexit_Instruction(i, VMX_VMEXIT_INVVPID, BX_READ);
   }
 
   if (CPL != 0) {
@@ -2928,10 +2928,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
 
   bx_address type;
   if (i->os64L()) {
-    type = BX_READ_64BIT_REG(i->nnn());
+    type = BX_READ_64BIT_REG(i->dst());
   }
   else {
-    type = BX_READ_32BIT_REG(i->nnn());
+    type = BX_READ_32BIT_REG(i->dst());
   }
 
   BxPackedXmmRegister invvpid_desc;
@@ -3009,7 +3009,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
     if (VMEXIT(VMX_VM_EXEC_CTRL2_INVLPG_VMEXIT)) {
       BX_ERROR(("VMEXIT: INVPCID in VMX non-root operation"));
-      VMexit_Instruction(i, VMX_VMEXIT_INVPCID);
+      VMexit_Instruction(i, VMX_VMEXIT_INVPCID, BX_READ);
     }
 #endif
 
@@ -3024,12 +3024,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
   bx_address type;
 #if BX_SUPPORT_X86_64
   if (i->os64L()) {
-    type = BX_READ_64BIT_REG(i->nnn());
+    type = BX_READ_64BIT_REG(i->dst());
   }
   else
 #endif
   {
-    type = BX_READ_32BIT_REG(i->nnn());
+    type = BX_READ_32BIT_REG(i->dst());
   }
 
   BxPackedXmmRegister invpcid_desc;

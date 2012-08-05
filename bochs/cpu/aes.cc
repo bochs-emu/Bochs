@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2011 Stanislav Shwartsman
+//   Copyright (c) 2008-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -290,19 +290,19 @@ BX_CPP_INLINE Bit32u AES_RotWord(Bit32u x)
 /* 66 0F 38 DB */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESIMC_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
   AES_InverseMixColumns(op);
 
-  BX_WRITE_XMM_REGZ(i->nnn(), op, i->getVL());
+  BX_WRITE_XMM_REGZ(i->dst(), op, i->getVL());
 
   BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 38 DC */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENC_VdqWdqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENC_VdqHdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2());
 
   AES_ShiftRows(op1);
   AES_SubstituteBytes(op1);
@@ -311,15 +311,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENC_VdqWdqR(bxInstruction_c *i)
   op1.xmm64u(0) ^= op2.xmm64u(0);
   op1.xmm64u(1) ^= op2.xmm64u(1);
 
-  BX_WRITE_XMM_REGZ(i->nnn(), op1, i->getVL());
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
 
   BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 38 DD */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENCLAST_VdqWdqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENCLAST_VdqHdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2());
 
   AES_ShiftRows(op1);
   AES_SubstituteBytes(op1);
@@ -327,15 +327,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENCLAST_VdqWdqR(bxInstruction_c
   op1.xmm64u(0) ^= op2.xmm64u(0);
   op1.xmm64u(1) ^= op2.xmm64u(1);
 
-  BX_WRITE_XMM_REGZ(i->nnn(), op1, i->getVL());
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
 
   BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 38 DE */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDEC_VdqWdqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDEC_VdqHdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2());
 
   AES_InverseShiftRows(op1);
   AES_InverseSubstituteBytes(op1);
@@ -344,15 +344,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDEC_VdqWdqR(bxInstruction_c *i)
   op1.xmm64u(0) ^= op2.xmm64u(0);
   op1.xmm64u(1) ^= op2.xmm64u(1);
 
-  BX_WRITE_XMM_REGZ(i->nnn(), op1, i->getVL());
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
 
   BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 38 DF */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDECLAST_VdqWdqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDECLAST_VdqHdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2());
 
   AES_InverseShiftRows(op1);
   AES_InverseSubstituteBytes(op1);
@@ -360,7 +360,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDECLAST_VdqWdqR(bxInstruction_c
   op1.xmm64u(0) ^= op2.xmm64u(0);
   op1.xmm64u(1) ^= op2.xmm64u(1);
 
-  BX_WRITE_XMM_REGZ(i->nnn(), op1, i->getVL());
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
 
   BX_NEXT_INSTR(i);
 }
@@ -368,7 +368,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDECLAST_VdqWdqR(bxInstruction_c
 /* 66 0F 3A DF */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESKEYGENASSIST_VdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src()), result;
 
   Bit32u rcon32 = i->Ib();
 
@@ -377,15 +377,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESKEYGENASSIST_VdqWdqIbR(bxInstru
   result.xmm32u(2) = AES_SubWord(op.xmm32u(3));
   result.xmm32u(3) = AES_RotWord(result.xmm32u(2)) ^ rcon32;
 
-  BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
+  BX_WRITE_XMM_REGZ(i->dst(), result, i->getVL());
 
   BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 3A 44 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PCLMULQDQ_VdqWdqIbR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PCLMULQDQ_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2());
   BxPackedXmmRegister r, a;
 
   Bit8u imm8 = i->Ib();
@@ -414,7 +414,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PCLMULQDQ_VdqWdqIbR(bxInstruction_
       b >>= 1;
   }
 
-  BX_WRITE_XMM_REGZ(i->nnn(), r, i->getVL());
+  BX_WRITE_XMM_REGZ(i->dst(), r, i->getVL());
 
   BX_NEXT_INSTR(i);
 }

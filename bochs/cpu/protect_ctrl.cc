@@ -35,7 +35,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
 
   /* op1_16 is a register or memory reference */
   if (i->modC0()) {
-    op1_16 = BX_READ_16BIT_REG(i->rm());
+    op1_16 = BX_READ_16BIT_REG(i->dst());
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -43,13 +43,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
     op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
   }
 
-  op2_16 = BX_READ_16BIT_REG(i->nnn());
+  op2_16 = BX_READ_16BIT_REG(i->src());
 
   if ((op1_16 & 0x03) < (op2_16 & 0x03)) {
     op1_16 = (op1_16 & 0xfffc) | (op2_16 & 0x03);
     /* now write back to destination */
     if (i->modC0()) {
-      BX_WRITE_16BIT_REG(i->rm(), op1_16);
+      BX_WRITE_16BIT_REG(i->dst(), op1_16);
     }
     else {
       write_RMW_virtual_word(op1_16);
@@ -80,7 +80,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
   }
 
   if (i->modC0()) {
-    raw_selector = BX_READ_16BIT_REG(i->rm());
+    raw_selector = BX_READ_16BIT_REG(i->src());
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -167,10 +167,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
   assert_ZF();
   if (i->os32L()) {
     /* masked by 00FxFF00, where x is undefined */
-    BX_WRITE_32BIT_REGZ(i->nnn(), dword2 & 0x00ffff00);
+    BX_WRITE_32BIT_REGZ(i->dst(), dword2 & 0x00ffff00);
   }
   else {
-    BX_WRITE_16BIT_REG(i->nnn(), dword2 & 0xff00);
+    BX_WRITE_16BIT_REG(i->dst(), dword2 & 0xff00);
   }
 
   BX_NEXT_INSTR(i);
@@ -193,7 +193,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
   }
 
   if (i->modC0()) {
-    raw_selector = BX_READ_16BIT_REG(i->rm());
+    raw_selector = BX_READ_16BIT_REG(i->src());
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -269,11 +269,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
   assert_ZF();
 
   if (i->os32L()) {
-    BX_WRITE_32BIT_REGZ(i->nnn(), limit32);
+    BX_WRITE_32BIT_REGZ(i->dst(), limit32);
   }
   else {
     // chop off upper 16 bits
-    BX_WRITE_16BIT_REG(i->nnn(), (Bit16u) limit32);
+    BX_WRITE_16BIT_REG(i->dst(), (Bit16u) limit32);
   }
 
   BX_NEXT_INSTR(i);
@@ -289,16 +289,16 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
-      VMexit_Instruction(i, VMX_VMEXIT_LDTR_TR_ACCESS);
+      VMexit_Instruction(i, VMX_VMEXIT_LDTR_TR_ACCESS, BX_WRITE);
 #endif
 
   Bit16u val16 = BX_CPU_THIS_PTR ldtr.selector.value;
   if (i->modC0()) {
     if (i->os32L()) {
-      BX_WRITE_32BIT_REGZ(i->rm(), val16);
+      BX_WRITE_32BIT_REGZ(i->dst(), val16);
     }
     else {
-      BX_WRITE_16BIT_REG(i->rm(), val16);
+      BX_WRITE_16BIT_REG(i->dst(), val16);
     }
   }
   else {
@@ -320,16 +320,16 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::STR_Ew(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
-      VMexit_Instruction(i, VMX_VMEXIT_LDTR_TR_ACCESS);
+      VMexit_Instruction(i, VMX_VMEXIT_LDTR_TR_ACCESS, BX_WRITE);
 #endif
 
   Bit16u val16 = BX_CPU_THIS_PTR tr.selector.value;
   if (i->modC0()) {
     if (i->os32L()) {
-      BX_WRITE_32BIT_REGZ(i->rm(), val16);
+      BX_WRITE_32BIT_REGZ(i->dst(), val16);
     }
     else {
-      BX_WRITE_16BIT_REG(i->rm(), val16);
+      BX_WRITE_16BIT_REG(i->dst(), val16);
     }
   }
   else {
@@ -365,11 +365,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
-      VMexit_Instruction(i, VMX_VMEXIT_LDTR_TR_ACCESS);
+      VMexit_Instruction(i, VMX_VMEXIT_LDTR_TR_ACCESS, BX_READ);
 #endif
 
   if (i->modC0()) {
-    raw_selector = BX_READ_16BIT_REG(i->rm());
+    raw_selector = BX_READ_16BIT_REG(i->src());
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -462,11 +462,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
-      VMexit_Instruction(i, VMX_VMEXIT_LDTR_TR_ACCESS);
+      VMexit_Instruction(i, VMX_VMEXIT_LDTR_TR_ACCESS, BX_READ);
 #endif
 
   if (i->modC0()) {
-    raw_selector = BX_READ_16BIT_REG(i->rm());
+    raw_selector = BX_READ_16BIT_REG(i->src());
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -566,7 +566,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VERR_Ew(bxInstruction_c *i)
   }
 
   if (i->modC0()) {
-    raw_selector = BX_READ_16BIT_REG(i->rm());
+    raw_selector = BX_READ_16BIT_REG(i->src());
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -658,7 +658,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VERW_Ew(bxInstruction_c *i)
   }
 
   if (i->modC0()) {
-    raw_selector = BX_READ_16BIT_REG(i->rm());
+    raw_selector = BX_READ_16BIT_REG(i->src());
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -725,7 +725,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
-      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS);
+      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS, BX_WRITE);
 #endif
 
 #if BX_SUPPORT_SVM
@@ -752,7 +752,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
-      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS);
+      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS, BX_WRITE);
 #endif
 
 #if BX_SUPPORT_SVM
@@ -785,7 +785,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
-      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS);
+      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS, BX_READ);
 #endif
 
 #if BX_SUPPORT_SVM
@@ -820,7 +820,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
-      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS);
+      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS, BX_READ);
 #endif
 
 #if BX_SUPPORT_SVM
@@ -851,7 +851,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
-      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS);
+      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS, BX_WRITE);
 #endif
 
 #if BX_SUPPORT_SVM
@@ -878,7 +878,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
-      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS);
+      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS, BX_WRITE);
 #endif
 
 #if BX_SUPPORT_SVM
@@ -910,7 +910,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
-      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS);
+      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS, BX_READ);
 #endif
 
 #if BX_SUPPORT_SVM
@@ -946,7 +946,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
-      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS);
+      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS, BX_READ);
 #endif
 
 #if BX_SUPPORT_SVM

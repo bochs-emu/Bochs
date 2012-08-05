@@ -60,8 +60,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PAUSE(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PREFETCH(bxInstruction_c *i)
 {
 #if BX_INSTRUMENTATION
-  BX_INSTR_PREFETCH_HINT(BX_CPU_ID, i->nnn(), i->seg(),
-     BX_CPU_CALL_METHODR(i->ResolveModrm, (i)));
+  BX_INSTR_PREFETCH_HINT(BX_CPU_ID, i->src(), i->seg(), BX_CPU_CALL_METHODR(i->ResolveModrm, (i)));
 #endif
 
   BX_NEXT_INSTR(i);
@@ -1284,10 +1283,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDFSBASE(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (i->os64L()) {
-    BX_WRITE_64BIT_REG(i->rm(), MSR_FSBASE);
+    BX_WRITE_64BIT_REG(i->dst(), MSR_FSBASE);
   }
   else {
-    BX_WRITE_32BIT_REGZ(i->rm(), (Bit32u) MSR_FSBASE);
+    BX_WRITE_32BIT_REGZ(i->dst(), (Bit32u) MSR_FSBASE);
   }
 
   BX_NEXT_INSTR(i);
@@ -1300,10 +1299,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDGSBASE(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (i->os64L()) {
-    BX_WRITE_64BIT_REG(i->rm(), MSR_GSBASE);
+    BX_WRITE_64BIT_REG(i->dst(), MSR_GSBASE);
   }
   else {
-    BX_WRITE_32BIT_REGZ(i->rm(), (Bit32u) MSR_GSBASE);
+    BX_WRITE_32BIT_REGZ(i->dst(), (Bit32u) MSR_GSBASE);
   }
 
   BX_NEXT_INSTR(i);
@@ -1316,7 +1315,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WRFSBASE(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (i->os64L()) {
-    Bit64u fsbase = BX_READ_64BIT_REG(i->rm());
+    Bit64u fsbase = BX_READ_64BIT_REG(i->src());
     if (!IsCanonical(fsbase)) {
       BX_ERROR(("WRFSBASE: canonical failure !"));
       exception(BX_GP_EXCEPTION, 0);
@@ -1325,7 +1324,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WRFSBASE(bxInstruction_c *i)
   }
   else {
     // 32-bit value is always canonical
-    MSR_FSBASE = BX_READ_32BIT_REG(i->rm());
+    MSR_FSBASE = BX_READ_32BIT_REG(i->src());
   }
 
   BX_NEXT_INSTR(i);
@@ -1338,7 +1337,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WRGSBASE(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (i->os64L()) {
-    Bit64u gsbase = BX_READ_64BIT_REG(i->rm());
+    Bit64u gsbase = BX_READ_64BIT_REG(i->src());
     if (!IsCanonical(gsbase)) {
       BX_ERROR(("WRGSBASE: canonical failure !"));
       exception(BX_GP_EXCEPTION, 0);
@@ -1347,7 +1346,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WRGSBASE(bxInstruction_c *i)
   }
   else {
     // 32-bit value is always canonical
-    MSR_GSBASE = BX_READ_32BIT_REG(i->rm());
+    MSR_GSBASE = BX_READ_32BIT_REG(i->src());
   }
 
   BX_NEXT_INSTR(i);

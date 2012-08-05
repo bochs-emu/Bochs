@@ -59,15 +59,30 @@ BX_CPP_INLINE Bit64u FetchQWORD(const Bit8u *iptr)
 }
 #endif
 
-#define BX_PREPARE_SSE (0x01)
-#define BX_PREPARE_AVX (0x02)
-#define BX_VEX_NO_VVV  (0x04) /* no VEX.VVV allowed */
+#define BX_PREPARE_SSE (0x80)
+#define BX_PREPARE_AVX (0x40)
 
 struct bxIAOpcodeTable {
   BxExecutePtr_tR execute1;
   BxExecutePtr_tR execute2;
-  Bit32u flags;
+  Bit8u src[4];
 };
+
+enum {
+  BX_SRC_NONE = 0,
+  BX_SRC_EAX,
+  BX_SRC_NNN,
+  BX_SRC_RM,
+  BX_SRC_MEM_NO_VVV,
+  BX_SRC_VVV,
+  BX_SRC_VIB,
+  BX_SRC_VIB_RM, // RM when VEX.W = 1, VIB otherwise
+  BX_SRC_RM_VIB, // RM when VEX.W = 0, VIB otherwise
+  BX_SRC_RM_VVV, // RM when VEX.W = 1, VVV otherwise
+  BX_SRC_VVV_RM  // RM when VEX.W = 0, VVV otherwise
+};
+
+#define BX_SRC_XMM0 (BX_SRC_EAX)
 
 //
 // Common FetchDecode Opcode Tables

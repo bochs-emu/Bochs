@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2009 Stanislav Shwartsman
+//   Copyright (c) 2003-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -37,10 +37,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXCH_STi(bxInstruction_c *i)
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   int st0_tag = BX_CPU_THIS_PTR the_i387.FPU_gettagi(0);
-  int sti_tag = BX_CPU_THIS_PTR the_i387.FPU_gettagi(i->rm());
+  int sti_tag = BX_CPU_THIS_PTR the_i387.FPU_gettagi(i->src());
 
   floatx80 st0_reg = BX_READ_FPU_REG(0);
-  floatx80 sti_reg = BX_READ_FPU_REG(i->rm());
+  floatx80 sti_reg = BX_READ_FPU_REG(i->src());
 
   clear_C1();
 
@@ -62,7 +62,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXCH_STi(bxInstruction_c *i)
      }
   }
 
-  BX_WRITE_FPU_REG(st0_reg, i->rm());
+  BX_WRITE_FPU_REG(st0_reg, i->src());
   BX_WRITE_FPU_REG(sti_reg, 0);
 
   BX_NEXT_INSTR(i);
@@ -138,7 +138,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FFREE_STi(bxInstruction_c *i)
 
   clear_C1();
 
-  BX_CPU_THIS_PTR the_i387.FPU_settagi(FPU_Tag_Empty, i->rm());
+  BX_CPU_THIS_PTR the_i387.FPU_settagi(FPU_Tag_Empty, i->dst());
 
   BX_NEXT_INSTR(i);
 }
@@ -156,7 +156,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FFREEP_STi(bxInstruction_c *i)
 
   clear_C1();
 
-  BX_CPU_THIS_PTR the_i387.FPU_settagi(FPU_Tag_Empty, i->rm());
+  BX_CPU_THIS_PTR the_i387.FPU_settagi(FPU_Tag_Empty, i->dst());
   BX_CPU_THIS_PTR the_i387.FPU_pop();
 
   BX_NEXT_INSTR(i);

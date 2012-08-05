@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2002-2011 Stanislav Shwartsman
+//   Copyright (c) 2002-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -53,7 +53,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FW_PqQq(bxInstruction_c *i)
 
   /* op is a register or memory reference */
   if (i->modC0()) {
-    op = BX_READ_MMX_REG(i->rm());
+    op = BX_READ_MMX_REG(i->src());
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -72,7 +72,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FW_PqQq(bxInstruction_c *i)
         int32_to_float32((Bit32s)(MMXSW2(op)), status_word);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 #endif
@@ -88,7 +88,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FD_PqQq(bxInstruction_c *i)
 
   /* op is a register or memory reference */
   if (i->modC0()) {
-    op = BX_READ_MMX_REG(i->rm());
+    op = BX_READ_MMX_REG(i->src());
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -107,7 +107,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FD_PqQq(bxInstruction_c *i)
         int32_to_float32(MMXSD1(op), status_word);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 #endif
@@ -130,7 +130,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2ID_PqQq(bxInstruction_c *i)
 
   /* op is a register or memory reference */
   if (i->modC0()) {
-    op = BX_READ_MMX_REG(i->rm());
+    op = BX_READ_MMX_REG(i->src());
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -149,7 +149,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2ID_PqQq(bxInstruction_c *i)
         float32_to_int32_round_to_zero(MMXUD1(op), status_word);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 #endif
@@ -273,11 +273,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHRW_PqQq(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2, result;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
-    op2 = BX_READ_MMX_REG(i->rm());
+    op2 = BX_READ_MMX_REG(i->src());
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -298,7 +298,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHRW_PqQq(bxInstruction_c *i)
   MMXUW3(result) = Bit16u(product4 >> 16);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 #endif
@@ -314,7 +314,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSWAPD_PqQq(bxInstruction_c *i)
 
   /* op is a register or memory reference */
   if (i->modC0()) {
-    op = BX_READ_MMX_REG(i->rm());
+    op = BX_READ_MMX_REG(i->src());
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -328,7 +328,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSWAPD_PqQq(bxInstruction_c *i)
   MMXUD1(result) = MMXUD0(op);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 #endif

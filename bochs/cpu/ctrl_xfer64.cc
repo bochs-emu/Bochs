@@ -134,7 +134,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EqR(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
-  Bit64u new_RIP = BX_READ_64BIT_REG(i->rm());
+  Bit64u new_RIP = BX_READ_64BIT_REG(i->dst());
 
   /* push 64 bit EA of next instruction */
   stack_write_qword(RSP-8, RIP);
@@ -388,7 +388,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNLE_Jq(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EqR(bxInstruction_c *i)
 {
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
 
   if (! IsCanonical(op1_64)) {
     BX_ERROR(("JMP_Eq: canonical RIP violation"));

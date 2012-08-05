@@ -86,7 +86,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_STi(bxInstruction_c *i)
 
   clear_C1();
 
-  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
+  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->src()))
   {
       FPU_exception(FPU_EX_Stack_Underflow);
       setcc(FPU_SW_C0|FPU_SW_C2|FPU_SW_C3);
@@ -102,7 +102,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_STi(bxInstruction_c *i)
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  int rc = floatx80_compare(BX_READ_FPU_REG(0), BX_READ_FPU_REG(i->rm()), status);
+  int rc = floatx80_compare(BX_READ_FPU_REG(0), BX_READ_FPU_REG(i->src()), status);
   setcc(status_word_flags_fpu_compare(rc));
 
   if (! FPU_exception(status.float_exception_flags)) {
@@ -122,7 +122,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMI_ST0_STj(bxInstruction_c *i)
 
   clear_C1();
 
-  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
+  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->src()))
   {
       FPU_exception(FPU_EX_Stack_Underflow);
       setEFlagsOSZAPC(EFlagsZFMask | EFlagsPFMask | EFlagsCFMask);
@@ -138,7 +138,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMI_ST0_STj(bxInstruction_c *i)
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  int rc = floatx80_compare(BX_READ_FPU_REG(0), BX_READ_FPU_REG(i->rm()), status);
+  int rc = floatx80_compare(BX_READ_FPU_REG(0), BX_READ_FPU_REG(i->src()), status);
   BX_CPU_THIS_PTR write_eflags_fpu_compare(rc);
 
   if (! FPU_exception(status.float_exception_flags)) {
@@ -158,7 +158,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMI_ST0_STj(bxInstruction_c *i)
 
   clear_C1();
 
-  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
+  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->src()))
   {
       FPU_exception(FPU_EX_Stack_Underflow);
       setEFlagsOSZAPC(EFlagsZFMask | EFlagsPFMask | EFlagsCFMask);
@@ -174,7 +174,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMI_ST0_STj(bxInstruction_c *i)
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  int rc = floatx80_compare_quiet(BX_READ_FPU_REG(0), BX_READ_FPU_REG(i->rm()), status);
+  int rc = floatx80_compare_quiet(BX_READ_FPU_REG(0), BX_READ_FPU_REG(i->src()), status);
   BX_CPU_THIS_PTR write_eflags_fpu_compare(rc);
 
   if (! FPU_exception(status.float_exception_flags)) {
@@ -194,7 +194,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOM_STi(bxInstruction_c *i)
   if (i->getIaOpcode() == BX_IA_FUCOMP_STi)
       pop_stack = 1;
 
-  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
+  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->src()))
   {
       FPU_exception(FPU_EX_Stack_Underflow);
       setcc(FPU_SW_C0|FPU_SW_C2|FPU_SW_C3);
@@ -210,7 +210,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOM_STi(bxInstruction_c *i)
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  int rc = floatx80_compare_quiet(BX_READ_FPU_REG(0), BX_READ_FPU_REG(i->rm()), status);
+  int rc = floatx80_compare_quiet(BX_READ_FPU_REG(0), BX_READ_FPU_REG(i->src()), status);
   setcc(status_word_flags_fpu_compare(rc));
 
   if (! FPU_exception(status.float_exception_flags)) {
