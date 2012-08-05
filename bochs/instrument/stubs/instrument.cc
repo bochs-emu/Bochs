@@ -61,9 +61,7 @@ void bx_instr_inp2(Bit16u addr, unsigned len, unsigned val) {}
 void bx_instr_outp(Bit16u addr, unsigned len, unsigned val) {}
 
 void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_address phy, unsigned len, unsigned rw) {}
-
-void bx_instr_phy_write(unsigned cpu, bx_address addr, unsigned len) {}
-void bx_instr_phy_read(unsigned cpu, bx_address addr, unsigned len) {}
+void bx_instr_phy_access(unsigned cpu, bx_address phy, unsigned len, unsigned rw) {}
 
 void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value) {}
 
