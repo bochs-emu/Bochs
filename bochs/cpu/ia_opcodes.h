@@ -325,14 +325,14 @@ bx_define_opcode(BX_IA_LEAVE16, NULL, &BX_CPU_C::LEAVE16, 0, BX_SRC_NONE, BX_SRC
 bx_define_opcode(BX_IA_LEAVE32, NULL, &BX_CPU_C::LEAVE32, 0, BX_SRC_NONE, BX_SRC_NONE, BX_SRC_NONE, BX_SRC_NONE, 0)
 
 // IDT/GDT/LDTR/TR access - keep NNN for VMX
-bx_define_opcode(BX_IA_LIDT_Ms, &BX_CPU_C::LIDT_Ms, &BX_CPU_C::BxError, 0, BX_SRC_NNN, BX_SRC_RM, BX_SRC_NONE, BX_SRC_NONE, 0)
-bx_define_opcode(BX_IA_LGDT_Ms, &BX_CPU_C::LGDT_Ms, &BX_CPU_C::BxError, 0, BX_SRC_NNN, BX_SRC_RM, BX_SRC_NONE, BX_SRC_NONE, 0)
 bx_define_opcode(BX_IA_SIDT_Ms, &BX_CPU_C::SIDT_Ms, &BX_CPU_C::BxError, 0, BX_SRC_RM, BX_SRC_NNN, BX_SRC_NONE, BX_SRC_NONE, 0)
+bx_define_opcode(BX_IA_LIDT_Ms, &BX_CPU_C::LIDT_Ms, &BX_CPU_C::BxError, 0, BX_SRC_NNN, BX_SRC_RM, BX_SRC_NONE, BX_SRC_NONE, 0)
 bx_define_opcode(BX_IA_SGDT_Ms, &BX_CPU_C::SGDT_Ms, &BX_CPU_C::BxError, 0, BX_SRC_RM, BX_SRC_NNN, BX_SRC_NONE, BX_SRC_NONE, 0)
+bx_define_opcode(BX_IA_LGDT_Ms, &BX_CPU_C::LGDT_Ms, &BX_CPU_C::BxError, 0, BX_SRC_NNN, BX_SRC_RM, BX_SRC_NONE, BX_SRC_NONE, 0)
 bx_define_opcode(BX_IA_SLDT_Ew, &BX_CPU_C::SLDT_Ew, &BX_CPU_C::SLDT_Ew, 0, BX_SRC_RM, BX_SRC_NNN, BX_SRC_NONE, BX_SRC_NONE, 0)
 bx_define_opcode(BX_IA_LLDT_Ew, &BX_CPU_C::LLDT_Ew, &BX_CPU_C::LLDT_Ew, 0, BX_SRC_NNN, BX_SRC_RM, BX_SRC_NONE, BX_SRC_NONE, 0)
-bx_define_opcode(BX_IA_LTR_Ew, &BX_CPU_C::LTR_Ew, &BX_CPU_C::LTR_Ew, 0, BX_SRC_NNN, BX_SRC_RM, BX_SRC_NONE, BX_SRC_NONE, 0)
 bx_define_opcode(BX_IA_STR_Ew, &BX_CPU_C::STR_Ew, &BX_CPU_C::STR_Ew, 0, BX_SRC_RM, BX_SRC_NNN, BX_SRC_NONE, BX_SRC_NONE, 0)
+bx_define_opcode(BX_IA_LTR_Ew, &BX_CPU_C::LTR_Ew, &BX_CPU_C::LTR_Ew, 0, BX_SRC_NNN, BX_SRC_RM, BX_SRC_NONE, BX_SRC_NONE, 0)
 // IDT/GDT/LDTR/TR access - keep NNN for VMX
 
 bx_define_opcode(BX_IA_SMSW_Ew, &BX_CPU_C::SMSW_EwM, &BX_CPU_C::SMSW_EwR, 0, BX_SRC_RM, BX_SRC_NONE, BX_SRC_NONE, BX_SRC_NONE, 0)

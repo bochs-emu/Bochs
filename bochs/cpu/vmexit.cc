@@ -44,9 +44,9 @@ Bit32u gen_instruction_info(bxInstruction_c *i, Bit32u reason, bx_bool rw_form)
     case VMX_VMEXIT_INVPCID:
 #endif
       if (rw_form == BX_READ)
-        instr_info = i->dst() << 28;
+        instr_info |= i->dst() << 28;
       else
-        instr_info = i->src() << 28;
+        instr_info |= i->src() << 28;
       break;
 
     default:
@@ -73,9 +73,9 @@ Bit32u gen_instruction_info(bxInstruction_c *i, Bit32u reason, bx_bool rw_form)
     // reg/reg format
     instr_info |= (1 << 10);
     if (rw_form == BX_READ)
-      instr_info = i->src() << 3;
+      instr_info |= i->src() << 3;
     else
-      instr_info = i->dst() << 3;
+      instr_info |= i->dst() << 3;
   }
   else {
     // memory format
