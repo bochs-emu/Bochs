@@ -327,11 +327,12 @@ Bit64s vpc_image_t::get_sector_offset(Bit64s sector_num, int write)
   // miss sparse read optimization, but it's not a problem in terms of
   // correctness.
   if (write && (last_bitmap_offset != bitmap_offset)) {
-    Bit8u bitmap[bitmap_size];
+    Bit8u *bitmap = new Bit8u[bitmap_size];
 
     last_bitmap_offset = bitmap_offset;
     memset(bitmap, 0xff, bitmap_size);
     bx_write_image(fd, bitmap_offset, bitmap, bitmap_size);
+    delete [] bitmap;
   }
 
   return (Bit64s)block_offset;
@@ -368,7 +369,6 @@ Bit64s vpc_image_t::alloc_block(Bit64s sector_num)
   Bit64u old_fdbo;
   Bit32u index, bat_value;
   int ret;
-  Bit8u bitmap[bitmap_size];
 
   // Check if sector_num is valid
   if ((sector_num < 0) || (sector_num > sector_count))
@@ -382,8 +382,10 @@ Bit64s vpc_image_t::alloc_block(Bit64s sector_num)
   pagetable[index] = free_data_block_offset / 512;
 
   // Initialize the block's bitmap
+  Bit8u *bitmap = new Bit8u[bitmap_size];
   memset(bitmap, 0xff, bitmap_size);
   ret = bx_write_image(fd, free_data_block_offset, bitmap, bitmap_size);
+  delete [] bitmap;
   if (ret < 0) {
     return ret;
   }
