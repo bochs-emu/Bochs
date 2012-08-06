@@ -3884,7 +3884,7 @@ BX_DEBUG_INT15("int15 AX=%04x\n",regs.u.r16.ax);
       break;
 
     case 0x83: {
-      // Set DS to 40
+      // Set DS to 0x40
       set_DS(0x40);
       if( regs.u.r8.al == 0 ) {
         // Set Interval requested.
@@ -4773,7 +4773,7 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
   Bit16u kbd_code, max;
 
   //
-  // DS has been set to 40 before call
+  // DS has been set to 0x40 before call
   //
   BX_DEBUG_INT16("int16: AX=%04x BX=%04x CX=%04x DX=%04x \n", AX, BX, CX, DX);
 
@@ -4924,7 +4924,7 @@ dequeue_key(scan_code, ascii_code, incr)
   Bit16u buffer_start, buffer_end, buffer_head, buffer_tail;
   Bit8u  acode, scode;
 
-  // DS is already set to 40 at int16 handler
+  // DS is already set to 0x40 at int16 handler
 
   buffer_start = read_word_DS(0x0080);
   buffer_end   = read_word_DS(0x0082);
@@ -5044,7 +5044,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
   Bit8u mf2_flags, mf2_state;
 
   //
-  // DS has been set to 40 before call
+  // DS has been set to 0x40 before call
   //
 
 
@@ -5244,7 +5244,7 @@ ASM_END
       }
 
       //
-      // Set DS back to 40
+      // Set DS back to 0x40
       //
 
       set_DS(0x40);
@@ -5267,7 +5267,7 @@ enqueue_key(scan_code, ascii_code)
 {
   Bit16u buffer_start, buffer_end, buffer_head, buffer_tail, temp_tail, old_ds;
 
-  // Set DS to 40
+  // Set DS to 0x40
   old_ds = set_DS(0x40);
 
   buffer_start = read_word_DS(0x0080);
@@ -7005,7 +7005,7 @@ void floppy_prepare_controller(drive)
   Bit8u  val8, dor, prev_reset;
 
   //
-  // DS has been set to 40 before call
+  // DS has been set to 0x40 before call
   //
 
   // set 40:3e bit 7 to 0
@@ -7056,7 +7056,7 @@ floppy_media_known(drive)
   Bit16u media_state_offset;
 
   //
-  // DS has been set to 40 before call
+  // DS has been set to 0x40 before call
   //
 
   val8 = read_byte_DS(0x003e); // diskette recal status
@@ -7088,7 +7088,7 @@ floppy_media_sense(drive)
   Bit8u   drive_type, config_data, media_state;
 
   //
-  // DS has been set to 40 before call
+  // DS has been set to 0x40 before call
   //
 
   if (floppy_drive_recal(drive) == 0) {
@@ -7186,7 +7186,7 @@ floppy_drive_recal(drive)
   Bit16u curr_cyl_offset;
 
   //
-  // DS has been set to 40 before call
+  // DS has been set to 0x40 before call
   //
 
   floppy_prepare_controller(drive);
@@ -7257,7 +7257,7 @@ int13_diskette_function(DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
   Bit16u es, last_addr, maxCyl;
 
   //
-  // DS has been set to 40 before call
+  // DS has been set to 0x40 before call
   //
 
   BX_DEBUG_INT13_FL("int13_diskette: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
@@ -8803,7 +8803,7 @@ int13_legacy:
   push  es
   push  ds
   push #0x40
-  pop  ds                    ;; Set DS to 40
+  pop  ds                    ;; Set DS to 0x40
 
   ;; now the 16-bit registers can be restored with:
   ;; pop ds; pop es; popa; iret
@@ -9312,7 +9312,7 @@ ebda_post:
   mov ds, ax
   mov byte ptr [0x0], #EBDA_SIZE
 #endif
-  xor ax, ax            ; mov EBDA seg into 40E
+  xor ax, ax            ; mov EBDA seg into 0x40E
   mov ds, ax
   mov word ptr [0x40E], #EBDA_SEG
   ret;;
