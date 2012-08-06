@@ -1,4 +1,5 @@
 #define ICON_BOCHS  1000
+#define ICON_BOCHS2 1001
 
 #define MAINMENU_DLG 1100
 #define IDCONFIG     1110
