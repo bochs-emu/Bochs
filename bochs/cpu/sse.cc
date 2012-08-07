@@ -364,21 +364,26 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::EXTRACTPS_EdVpsIbM(bxInstruction_c
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRB_VdqHdqEbIb(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRB_VdqHdqEbIbR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-  Bit8u op2;
 
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = (Bit8u) BX_READ_16BIT_REG(i->src2()); // won't allow reading of AH/CH/BH/DH
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    op2 = read_virtual_byte(i->seg(), eaddr);
-  }
+  Bit8u op2 = (Bit8u) BX_READ_16BIT_REG(i->src2()); // won't allow reading of AH/CH/BH/DH
 
   op1.xmmubyte(i->Ib() & 0xF) = op2;
+
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRB_VdqHdqEbIbM(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  op1.xmmubyte(i->Ib() & 0xF) = read_virtual_byte(i->seg(), eaddr);
 
   BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
 
