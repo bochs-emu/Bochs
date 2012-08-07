@@ -67,8 +67,8 @@ OBJS_THAT_CANNOT_BE_PLUGINS = keymap.o gui.o siminterface.o paramtree.o textconf
 OBJS_THAT_CAN_BE_PLUGINS = @GUI_OBJS@
 
 X_LIBS = @X_LIBS@
-XPM_LIB = @XPM_LIB@
-GUI_LINK_OPTS_X = $(X_LIBS)
+X_PRE_LIBS = @X_PRE_LIBS@
+GUI_LINK_OPTS_X = $(X_LIBS) $(X_PRE_LIBS)
 GUI_LINK_OPTS_SDL = `sdl-config --cflags --libs`
 GUI_LINK_OPTS_SVGA =  -lvga -lvgagl
 GUI_LINK_OPTS_RFB = @RFB_LIBS@

@@ -131,6 +131,11 @@ if test "$MSVC_TARGET" != 1; then
   AC_LIB_LTDL
 fi
 
+AC_PATH_PROG(PKGCONFIG, pkg-config, not_found)
+if test "$PKGCONFIG" = not_found; then
+  AC_PATH_XTRA
+fi
+
 AC_C_BIGENDIAN
 AC_C_INLINE
 AC_CHECK_SIZEOF(unsigned char)
@@ -2055,8 +2060,12 @@ if test "$with_x11" = yes; then
       ])
   fi
 
-  X_CFLAGS="`pkg-config --cflags x11`"
-  X_LIBS="`pkg-config --libs x11` \$(XPM_LIB) -lXrandr"
+  if test "$PKGCONFIG" != not_found; then
+    X_CFLAGS="`pkg-config --cflags x11`"
+    X_LIBS="`pkg-config --libs x11` $XPM_LIB -lXrandr"
+  else
+    X_LIBS="$X_LIBS -lX11 $XPM_LIB -lXrandr"
+  fi
 
   AC_DEFINE(BX_WITH_X11, 1)
   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_X11)"
@@ -2068,7 +2077,6 @@ if test "$with_x11" = yes; then
     needs_gtk2=1
   fi
 fi
-AC_SUBST(XPM_LIB)
 AC_SUBST(X_CFLAGS)
 AC_SUBST(X_LIBS)
 
@@ -2237,11 +2245,9 @@ fi
 
 # some display libraries and the enhanced debugger may depend on the GTK+ software package
 if test "$needs_gtk2" = 1; then
-  # if pkg-config exists, then add it to the /gui cflags.
-  gtkconf=`pkg-config --cflags gtk+-2.0`
-  if test $? = 0; then
-    # pkg-config was found and returned 0, so it must return valid output
-    TOOLKIT_CXXFLAGS="$gtkconf"
+  # pkg-config is required to set TOOLKIT_CXXFLAGS and LIBS
+  if test "$PKGCONFIG" != not_found; then
+    TOOLKIT_CXXFLAGS="`pkg-config --cflags gtk+-2.0`"
     LIBS="$LIBS `pkg-config --libs gtk+-2.0`"
   else
     echo "ERROR: pkg-config was not found, or unable to access the gtk+-2.0 package."
