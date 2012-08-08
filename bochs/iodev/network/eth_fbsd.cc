@@ -144,7 +144,7 @@ protected:
 bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
                                        const char *macaddr,
                                        eth_rx_handler_t rxh,
-                                       eth_rx_stat_t rxstat,
+                                       eth_rx_status_t rxstat,
                                        bx_devmodel_c *dev,
                                        const char *script)
 {
