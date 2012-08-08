@@ -2118,6 +2118,8 @@ modrm_done:
           break;
         case BxOSizeGrp:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[offset >> 9]);
+          if (sse_prefix == SSE_PREFIX_66)
+              sse_prefix = 0;
           break;
         case BxPrefixSSE:
           /* For SSE opcodes look into another table

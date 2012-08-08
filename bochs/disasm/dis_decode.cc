@@ -301,6 +301,8 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
 
        case _GRP64B:
          entry = &(OPCODE_TABLE(entry)[insn.os_64 ? 2 : insn.os_32]);
+         if (sse_prefix == SSE_PREFIX_66)
+             sse_prefix = 0;
          break;
 
        case _GRPVEXW:

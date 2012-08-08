@@ -1692,6 +1692,8 @@ modrm_done:
 #endif
         case BxOSizeGrp:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[os_32]);
+          if (sse_prefix == SSE_PREFIX_66)
+              sse_prefix = 0;
           break;
         case BxPrefixSSE:
           /* For SSE opcodes look into another table
