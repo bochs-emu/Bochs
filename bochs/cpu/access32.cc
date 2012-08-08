@@ -350,7 +350,7 @@ void BX_CPU_C::write_virtual_dword_vector_32(unsigned s, Bit32u offset, unsigned
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
   if (seg->cache.valid & SegAccessWOK) {
-    if (offset < (seg->cache.u.segment.limit_scaled-len)) {
+    if (offset <= (seg->cache.u.segment.limit_scaled-len+1)) {
 accessOK:
       laddr = get_laddr32(s, offset);
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, len-1);
@@ -406,7 +406,7 @@ void BX_CPU_C::write_virtual_dword_vector_aligned_32(unsigned s, Bit32u offset, 
   }
 
   if (seg->cache.valid & SegAccessWOK) {
-    if (offset < (seg->cache.u.segment.limit_scaled-len)) {
+    if (offset <= (seg->cache.u.segment.limit_scaled-len+1)) {
 accessOK:
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
       Bit32u lpf = LPFOf(laddr);
