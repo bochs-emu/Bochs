@@ -258,10 +258,9 @@ static BxDisasmOpcodeTable_t BxDisasmGroupAVX_0f5f[4] = {
   /* F2 */ { 0, &Ia_vmaxsd_Vsd_Hpd_Wsd }
 };
 
-static BxDisasmOpcodeTable_t BxDisasmGrpOs64B_AVX0f6e[3] = {
-  /* 16 */ { GRPSSE66(Ia_vmovd_Vdq_Ed) },
-  /* 32 */ { GRPSSE66(Ia_vmovd_Vdq_Ed) },
-  /* 64 */ { GRPSSE66(Ia_vmovq_Vdq_Eq) },
+static BxDisasmOpcodeTable_t BxDisasmGrpVexW_AVX0f6e[3] = {
+  /* 0 */ { GRPSSE66(Ia_vmovd_Vdq_Ed) },
+  /* 1 */ { GRPSSE66(Ia_vmovq_Vdq_Eq) }
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupAVX_0f6f[4] = {
@@ -299,24 +298,16 @@ static BxDisasmOpcodeTable_t BxDisasmGroupAVX_0f7d[4] = {
   /* F2 */ { 0, &Ia_vhsubps_Vps_Hps_Wps }
 };
 
+static BxDisasmOpcodeTable_t BxDisasmGrpVexW_AVX660f7e[3] = {
+  /* 0 */ { 0, &Ia_vmovd_Ed_Vd },
+  /* 1 */ { 0, &Ia_vmovq_Eq_Vq }
+};
+
 static BxDisasmOpcodeTable_t BxDisasmGroupAVX_0f7e[4] = {
   /* -- */ { 0, &Ia_Invalid },
-  /* 66 */ { 0, &Ia_vmovd_Ed_Vd },
+  /* 66 */ { GRPVEXW(AVX660f7e) },
   /* F3 */ { 0, &Ia_vmovq_Vq_Wq },
   /* F2 */ { 0, &Ia_Invalid }
-};
-
-static BxDisasmOpcodeTable_t BxDisasmGroupAVX_0f7eQ[4] = {
-  /* -- */ { 0, &Ia_Invalid },
-  /* 66 */ { 0, &Ia_vmovq_Eq_Vq },
-  /* F3 */ { 0, &Ia_vmovq_Vq_Wq },
-  /* F2 */ { 0, &Ia_Invalid }
-};
-
-static BxDisasmOpcodeTable_t BxDisasmGrpOs64B_AVX0f7e[3] = {
-  /* 16 */ { GRPAVX(0f7e)  },
-  /* 32 */ { GRPAVX(0f7e)  },
-  /* 64 */ { GRPAVX(0f7eQ) },
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupAVX_0f7f[4] = {
@@ -859,7 +850,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodesAVX[256*3] = {
   /* 6B */ { GRPSSE66(Ia_vpackssdw_Vdq_Hdq_Wdq) },
   /* 6C */ { GRPSSE66(Ia_vpunpcklqdq_Vdq_Hdq_Wdq) },
   /* 6D */ { GRPSSE66(Ia_vpunpckhqdq_Vdq_Hdq_Wdq) },
-  /* 6E */ { GR64BIT(AVX0f6e) },
+  /* 6E */ { GRPVEXW(AVX0f6e) },
   /* 6F */ { GRPAVX(0f6f) },
   /* 70 */ { GRPAVX(0f70) },
   /* 71 */ { GRPN(AVXG12) },
@@ -875,7 +866,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodesAVX[256*3] = {
   /* 7B */ { 0, &Ia_Invalid },
   /* 7C */ { GRPAVX(0f7c) },
   /* 7D */ { GRPAVX(0f7d) },
-  /* 7E */ { GR64BIT(AVX0f7e) },
+  /* 7E */ { GRPAVX(0f7e) },
   /* 7F */ { GRPAVX(0f7f) },
   /* 80 */ { 0, &Ia_Invalid },
   /* 81 */ { 0, &Ia_Invalid },
