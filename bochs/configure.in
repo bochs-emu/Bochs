@@ -727,6 +727,7 @@ AC_ARG_ENABLE(pcidev,
 	  INSMOD="insmod"
 	  RMMOD="rmmod"
 	  DEPMOD="depmod"
+	  CLEAN_PCIDEV_VAR=clean_pcidev
 	  AC_SUBST(KERNELDIR)
 	  AC_SUBST(LSMOD)
 	  AC_SUBST(INSMOD)
@@ -734,6 +735,7 @@ AC_ARG_ENABLE(pcidev,
 	  AC_SUBST(DEPMOD)
 	  AC_SUBST(PCIDEV_MODULE_MAKE_ALL)
 	  AC_SUBST(KERNEL_MODULE_SUFFIX)
+	  AC_SUBST(CLEAN_PCIDEV_VAR)
         ;;
         *)
           AC_MSG_ERROR([PCI host device mapping requires Linux as host])
@@ -1074,6 +1076,12 @@ AC_ARG_ENABLE(debugger,
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_DEBUGGER, 1)
     DEBUGGER_VAR='$(DEBUGGER_LIB)'
+    NOFLEX=''
+    AC_PATH_PROG(FLEX, flex, not_found)
+    if test "$FLEX" = not_found; then
+      NOFLEX='#'
+    fi
+    AC_SUBST(NOFLEX)
     bx_debugger=1
    else
     AC_MSG_RESULT(no)

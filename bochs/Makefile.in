@@ -521,7 +521,12 @@ local-dist-clean: clean
 	@RMCOMMAND@ libtool
 	@RMCOMMAND@ ltdlconf.h
 
-all-clean: clean @CLEAN_DOCBOOK_VAR@
+clean_pcidev::
+	cd host/linux/pcidev @COMMAND_SEPARATOR@
+	$(MAKE) clean
+	@CD_UP_THREE@
+
+all-clean: clean @CLEAN_DOCBOOK_VAR@ @CLEAN_PCIDEV_VAR@
 	cd iodev @COMMAND_SEPARATOR@
 	$(MAKE) clean
 	@CD_UP_ONE@
@@ -564,9 +569,6 @@ all-clean: clean @CLEAN_DOCBOOK_VAR@
 	cd fpu @COMMAND_SEPARATOR@
 	$(MAKE) clean
 	@CD_UP_ONE@
-	cd host/linux/pcidev @COMMAND_SEPARATOR@
-	$(MAKE) clean
-	@CD_UP_THREE@
 
 dist-clean: local-dist-clean
 	cd iodev @COMMAND_SEPARATOR@
