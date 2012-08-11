@@ -1076,12 +1076,17 @@ AC_ARG_ENABLE(debugger,
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_DEBUGGER, 1)
     DEBUGGER_VAR='$(DEBUGGER_LIB)'
-    NOFLEX=''
+    NO_FLEX_YACC=''
     AC_PATH_PROG(FLEX, flex, not_found)
-    if test "$FLEX" = not_found; then
-      NOFLEX='#'
+    AC_PATH_PROG(YACC, yacc, not_found)
+    AC_MSG_CHECKING(whether to generate parser / lexer files)
+    if test "$FLEX" = not_found -o "$YACC" = not_found -o "$MSVC_TARGET" = 1; then
+      NO_FLEX_YACC='#'
+      AC_MSG_RESULT(no)
+    else
+      AC_MSG_RESULT(yes)
     fi
-    AC_SUBST(NOFLEX)
+    AC_SUBST(NO_FLEX_YACC)
     bx_debugger=1
    else
     AC_MSG_RESULT(no)
