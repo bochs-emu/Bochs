@@ -108,8 +108,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PS_VpsQqR(bxInstruction_c *i
   MMXUD0(op) = int32_to_float32(MMXUD0(op), status);
   MMXUD1(op) = int32_to_float32(MMXUD1(op), status);
 
-  check_exceptionsSSE(status.float_exception_flags);
   prepareFPU2MMX(); /* cause FPU2MMX state transition */
+  check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_XMM_REG_LO_QWORD(i->dst(), MMXUQ(op));
 #endif
 
@@ -121,7 +121,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PS_VpsQqM(bxInstruction_c *i
 #if BX_CPU_LEVEL >= 6
   BxPackedMmxRegister op;
 
-  // do not cause transition to MMX state if no MMX register touched
+  // do not cause transition to MMX state because no MMX register touched
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
 
@@ -169,7 +169,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQqM(bxInstruction_c *i
   BxPackedMmxRegister op;
   BxPackedXmmRegister result;
 
-  // do not cause transition to MMX state if no MMX register touched
+  // do not cause transition to MMX state because no MMX register touched
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
 
@@ -279,8 +279,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPS2PI_PqWps(bxInstruction_c *i
   MMXUD0(op) = float32_to_int32_round_to_zero(MMXUD0(op), status);
   MMXUD1(op) = float32_to_int32_round_to_zero(MMXUD1(op), status);
 
-  check_exceptionsSSE(status.float_exception_flags);
   prepareFPU2MMX(); /* cause FPU2MMX state transition */
+  check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_MMX_REG(i->dst(), op);
 #endif
 
@@ -323,8 +323,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPD2PI_PqWpd(bxInstruction_c *i
   MMXUD0(result) = float64_to_int32_round_to_zero(op.xmm64u(0), status);
   MMXUD1(result) = float64_to_int32_round_to_zero(op.xmm64u(1), status);
 
-  check_exceptionsSSE(status.float_exception_flags);
   prepareFPU2MMX(); /* cause FPU2MMX state transition */
+  check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_MMX_REG(i->dst(), result);
 #endif
 
@@ -442,8 +442,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPS2PI_PqWps(bxInstruction_c *i)
   MMXUD0(op) = float32_to_int32(MMXUD0(op), status);
   MMXUD1(op) = float32_to_int32(MMXUD1(op), status);
 
-  check_exceptionsSSE(status.float_exception_flags);
   prepareFPU2MMX(); /* cause FPU2MMX state transition */
+  check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_MMX_REG(i->dst(), op);
 #endif
 
@@ -487,8 +487,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2PI_PqWpd(bxInstruction_c *i)
   MMXUD0(result) = float64_to_int32(op.xmm64u(0), status);
   MMXUD1(result) = float64_to_int32(op.xmm64u(1), status);
 
-  check_exceptionsSSE(status.float_exception_flags);
   prepareFPU2MMX(); /* cause FPU2MMX state transition */
+  check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_MMX_REG(i->dst(), result);
 #endif
 
