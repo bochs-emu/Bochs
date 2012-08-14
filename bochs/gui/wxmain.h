@@ -57,9 +57,7 @@ enum
   ID_Simulate_PauseResume,
   ID_Simulate_Stop,
   ID_Debug_ShowCpu,
-  ID_Debug_ShowKeyboard,
   ID_Debug_Console,
-  ID_Debug_ShowMemory,
   ID_Log_View,
   ID_Log_Prefs,
   ID_Log_PrefsDevice,
@@ -189,7 +187,6 @@ public:
   void OnLogPrefsDevice(wxCommandEvent& event);
   void OnEditATA(wxCommandEvent& event);
   void OnShowCpu(wxCommandEvent& event);
-  void OnShowKeyboard(wxCommandEvent& event);
 #if BX_DEBUGGER
   void OnDebugLog(wxCommandEvent& event);
   void DebugBreak();

@@ -134,8 +134,15 @@ bx_floppy_ctrl_c::bx_floppy_ctrl_c()
 
 bx_floppy_ctrl_c::~bx_floppy_ctrl_c()
 {
-  for (int i = 0; i < 4; i++) {
+  char pname[10];
+
+  for (int i = 0; i < 2; i++) {
     close_media(&BX_FD_THIS s.media[i]);
+    sprintf(pname, "floppy.%d", i);
+    bx_list_c *floppy = (bx_list_c*)SIM->get_param(pname);
+    SIM->get_param_string("path", floppy)->set_handler(NULL);
+    SIM->get_param_bool("readonly", floppy)->set_handler(NULL);
+    SIM->get_param_bool("status", floppy)->set_handler(NULL);
   }
   BX_DEBUG(("Exit"));
 }

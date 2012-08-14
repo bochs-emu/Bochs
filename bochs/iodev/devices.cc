@@ -314,6 +314,10 @@ void bx_devices_c::exit()
   // unload optional and user plugins first
   bx_unload_plugins();
   bx_unload_core_plugins();
+  PLUG_unload_plugin(hdimage);
+  PLUG_unload_plugin(netmod);
+  PLUG_unload_plugin(soundmod);
+  PLUG_unload_plugin(usb_common);
   init_stubs();
 }
 

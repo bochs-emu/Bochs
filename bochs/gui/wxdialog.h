@@ -780,13 +780,4 @@ devices at once.
 |                                [ Help ] [ Cancel ] [ Ok ] |
 +-----------------------------------------------------------+
 
-////////////////////////////////////////////////////////////////////////////
-// ViewMemoryDialog
-////////////////////////////////////////////////////////////////////////////
-
-shows portions of memory, in hex or hex+ASCII or disassembled.  updates
-whenever simulation stops (after single steps for example), or we could
-update periodically.  Modeless dialog, and there could be many
-of them at once, showing different regions of memory.
-
 *****************************************************************/

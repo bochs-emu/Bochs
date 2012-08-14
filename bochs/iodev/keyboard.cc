@@ -84,17 +84,12 @@ bx_keyb_c::bx_keyb_c()
 
 bx_keyb_c::~bx_keyb_c()
 {
-  // remove runtime parameter handler
+  // remove runtime parameter handlers
   SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set_handler(NULL);
+  SIM->get_param_num(BXPN_MOUSE_ENABLED)->set_handler(NULL);
   if (pastebuf != NULL) {
     delete [] pastebuf;
   }
-#if BX_WITH_WX
-  bx_list_c *list = (bx_list_c*)SIM->get_param(BXPN_WX_KBD_STATE);
-  if (list != NULL) {
-    list->clear();
-  }
-#endif
   BX_DEBUG(("Exit"));
 }
 
@@ -207,52 +202,6 @@ void bx_keyb_c::init(void)
   BX_KEY_THIS statusbar_id[0] = bx_gui->register_statusitem("NUM");
   BX_KEY_THIS statusbar_id[1] = bx_gui->register_statusitem("CAPS");
   BX_KEY_THIS statusbar_id[2] = bx_gui->register_statusitem("SCRL");
-
-#if BX_WITH_WX
-  bx_param_num_c *param;
-  bx_list_c *list;
-  if (SIM->get_param("wxdebug") != NULL) {
-    // register shadow params (Experimental, not a complete list by far)
-    list = (bx_list_c*)SIM->get_param(BXPN_WX_KBD_STATE);
-    if (list == NULL) {
-      list = new bx_list_c(SIM->get_param("wxdebug"), "keyboard",
-                           "Keyboard State");
-    }
-    new bx_shadow_bool_c(list, "irq1_req",
-          "Keyboard IRQ1 requested",
-          &BX_KEY_THIS s.kbd_controller.irq1_requested);
-    new bx_shadow_bool_c(list, "irq12_req",
-          "Keyboard IRQ12 requested",
-          &BX_KEY_THIS s.kbd_controller.irq12_requested);
-    param = new bx_shadow_num_c(list, "timer_pending",
-          &BX_KEY_THIS s.kbd_controller.timer_pending);
-    param->set_label("Keyboard timer pending");
-    new bx_shadow_bool_c(list, "pare",
-          "Keyboard PARE",
-          &BX_KEY_THIS s.kbd_controller.pare);
-    new bx_shadow_bool_c(list, "tim",
-          "Keyboard TIM",
-          &BX_KEY_THIS s.kbd_controller.tim);
-    new bx_shadow_bool_c(list, "auxb",
-          "Keyboard AUXB",
-          &BX_KEY_THIS s.kbd_controller.auxb);
-    new bx_shadow_bool_c(list, "keyl",
-          "Keyboard KEYL",
-          &BX_KEY_THIS s.kbd_controller.keyl);
-    new bx_shadow_bool_c(list, "c_d",
-          "Keyboard C_D",
-          &BX_KEY_THIS s.kbd_controller.c_d);
-    new bx_shadow_bool_c(list, "sysf",
-          "Keyboard SYSF",
-          &BX_KEY_THIS s.kbd_controller.sysf);
-    new bx_shadow_bool_c(list, "inpb",
-          "Keyboard INPB",
-          &BX_KEY_THIS s.kbd_controller.inpb);
-    new bx_shadow_bool_c(list, "outb",
-          "Keyboard OUTB",
-          &BX_KEY_THIS s.kbd_controller.outb);
-  }
-#endif
 
   if ((BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_PS2) ||
       (BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_IMPS2)) {

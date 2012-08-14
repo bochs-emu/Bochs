@@ -347,7 +347,6 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Log_Prefs, MyFrame::OnLogPrefs)
   EVT_MENU(ID_Log_PrefsDevice, MyFrame::OnLogPrefsDevice)
   EVT_MENU(ID_Debug_ShowCpu, MyFrame::OnShowCpu)
-  EVT_MENU(ID_Debug_ShowKeyboard, MyFrame::OnShowKeyboard)
 #if BX_DEBUGGER
   EVT_MENU(ID_Debug_Console, MyFrame::OnDebugLog)
 #endif
@@ -404,8 +403,7 @@ END_EVENT_TABLE()
 // - Debug
 //   +----------------------|
 //   | Show CPU             |
-//   | Show Memory          |
-//   | ? what else ?        |
+//   | Debug Console        |
 //   +----------------------|
 // - Event Log
 //   +----------------------+
@@ -473,11 +471,9 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
 
   menuDebug = new wxMenu;
   menuDebug->Append(ID_Debug_ShowCpu, wxT("Show &CPU"));
-  menuDebug->Append(ID_Debug_ShowKeyboard, wxT("Show &Keyboard"));
 #if BX_DEBUGGER
   menuDebug->Append(ID_Debug_Console, wxT("Debug Console"));
 #endif
-  menuDebug->Append(ID_Debug_ShowMemory, wxT("Show &memory"));
 
   menuLog = new wxMenu;
   menuLog->Append(ID_Log_View, wxT("&View"));
@@ -497,7 +493,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   SetMenuBar(menuBar);
 
   // disable things that don't work yet
-  menuDebug->Enable(ID_Debug_ShowMemory, FALSE);  // not implemented
   menuLog->Enable(ID_Log_View, FALSE);  // not implemented
   // enable ATA channels in menu
   menuEdit->Enable(ID_Edit_ATA1, BX_MAX_ATA_CHANNEL > 1);
@@ -840,31 +835,6 @@ void MyFrame::OnShowCpu(wxCommandEvent& WXUNUSED(event))
   showCpu->Show(TRUE);
 }
 
-void MyFrame::OnShowKeyboard(wxCommandEvent& WXUNUSED(event))
-{
-  bx_list_c *list = (bx_list_c*)SIM->get_param(BXPN_WX_KBD_STATE);
-  int list_size = 0;
-
-  if (list != NULL) {
-    list_size = list->get_size();
-  }
-  if (list_size == 0) {
-    // if params not initialized yet, then give up
-    wxMessageBox(wxT("Cannot show the debugger window until the simulation has begun."),
-                 wxT("Sim not running"), wxOK | wxICON_ERROR, this);
-    return;
-  }
-  if (showKbd == NULL) {
-    showKbd = new ParamDialog(this, -1);
-    showKbd->SetTitle(wxT("Keyboard State (incomplete, this is a demo)"));
-    showKbd->AddParam(SIM->get_param(BXPN_WX_KBD_STATE));
-    showKbd->Init();
-  } else {
-    showKbd->CopyParamToGui();
-  }
-  showKbd->Show(TRUE);
-}
-
 #if BX_DEBUGGER
 void MyFrame::OnDebugLog(wxCommandEvent& WXUNUSED(event))
 {
@@ -994,8 +964,8 @@ void MyFrame::simStatusChanged(StatusChange change, bx_bool popupNotify) {
     if (!SIM->get_param_bool("enabled", base)->get()) {
       menuEdit->Enable(ID_Edit_ATA0+i, canConfigure);
     } else {
-    sprintf(ata_name, "ata.%d.master", i);
-    base = (bx_list_c*) SIM->get_param(ata_name);
+      sprintf(ata_name, "ata.%d.master", i);
+      base = (bx_list_c*) SIM->get_param(ata_name);
       if (SIM->get_param_enum("type", base)->get() != BX_ATA_DEVICE_CDROM) {
         sprintf(ata_name, "ata.%d.slave", i);
         base = (bx_list_c*) SIM->get_param(ata_name);
