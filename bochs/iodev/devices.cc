@@ -315,9 +315,18 @@ void bx_devices_c::exit()
   bx_unload_plugins();
   bx_unload_core_plugins();
   PLUG_unload_plugin(hdimage);
-  PLUG_unload_plugin(netmod);
-  PLUG_unload_plugin(soundmod);
-  PLUG_unload_plugin(usb_common);
+#if BX_NETWORKING
+  if (is_network_enabled())
+    PLUG_unload_plugin(netmod);
+#endif
+#if BX_SUPPORT_SOUNDLOW
+  if (is_sound_enabled())
+    PLUG_unload_plugin(soundmod);
+#endif
+#if BX_SUPPORT_PCIUSB
+  if (is_usb_enabled())
+    PLUG_unload_plugin(usb_common);
+#endif
   init_stubs();
 }
 
