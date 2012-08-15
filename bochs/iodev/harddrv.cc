@@ -139,6 +139,9 @@ bx_hard_drive_c::bx_hard_drive_c()
 
 bx_hard_drive_c::~bx_hard_drive_c()
 {
+  char  ata_name[20];
+  bx_list_c *base;
+
   for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     for (Bit8u device=0; device<2; device ++) {
       if (channels[channel].drives[device].hdimage != NULL) {
@@ -152,6 +155,10 @@ bx_hard_drive_c::~bx_hard_drive_c()
         channels[channel].drives[device].cdrom.cd = NULL;
       }
 #endif
+      sprintf(ata_name, "ata.%d.%s", channel, (device==0)?"master":"slave");
+      base = (bx_list_c*) SIM->get_param(ata_name);
+      SIM->get_param_string("path", base)->set_handler(NULL);
+      SIM->get_param_bool("status", base)->set_handler(NULL);
     }
   }
   BX_DEBUG(("Exit"));
