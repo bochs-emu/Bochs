@@ -109,10 +109,8 @@ bool isSimThread() {
   if (wxThread::IsMain()) return false;
   wxThread *current = wxThread::This();
   if (current == (wxThread*) theFrame->GetSimThread()) {
-    // wxLogDebug("isSimThread? yes");
     return true;
   }
-  // wxLogDebug("isSimThread? no");
   return false;
 }
 
@@ -218,7 +216,7 @@ extern "C" int libwx_LTX_plugin_init(plugin_t *plugin, plugintype_t type,
 
 extern "C" void libwx_LTX_plugin_fini()
 {
-  // fprintf(stderr, "plugin_fini for wxmain.cc\n");
+  // Nothing here yet
 }
 
 

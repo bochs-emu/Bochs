@@ -119,7 +119,6 @@ void LogMsgAskDialog::Init()
     wxButton *btn = new wxButton(this, ids[i], names[i]);
     btnSizer->Add(btn, 1, wxALL, 5);
   }
-  wxSize ms = message->GetSize();
   SetAutoLayout(TRUE);
   SetSizer(vertSizer);
   vertSizer->Fit(this);

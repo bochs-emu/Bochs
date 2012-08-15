@@ -89,6 +89,7 @@ enum
   ID_Debug_Step,
   ID_Debug_Commit,
   ID_Close,
+  // Debug console
   ID_Execute,
   ID_DebugCommand,
   // advanced log options
