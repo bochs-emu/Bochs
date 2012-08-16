@@ -149,22 +149,6 @@ private:
     const Bit8u *ipheader, unsigned ipheader_len,
     unsigned sourceport, unsigned targetport,
     const Bit8u *data, unsigned data_len);
-  void tftp_send_error(
-    Bit8u *buffer,
-    unsigned sourceport, unsigned targetport,
-    unsigned code, const char *msg);
-  void tftp_send_data(
-    Bit8u *buffer,
-    unsigned sourceport, unsigned targetport,
-    unsigned block_nr);
-  void tftp_send_ack(
-    Bit8u *buffer,
-    unsigned sourceport, unsigned targetport,
-    unsigned block_nr);
-  void tftp_send_optack(
-    Bit8u *buffer,
-    unsigned sourceport, unsigned targetport,
-    size_t tsize_option, unsigned blksize_option);
 
   dhcp_cfg_t dhcp;
 
