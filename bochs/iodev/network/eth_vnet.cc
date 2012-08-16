@@ -91,15 +91,6 @@ typedef void (*layer4_handler_t)(
 
 #define INET_PORT_TFTP_SERVER 69
 
-#define TFTP_RRQ    1
-#define TFTP_WRQ    2
-#define TFTP_DATA   3
-#define TFTP_ACK    4
-#define TFTP_ERROR  5
-#define TFTP_OPTACK 6
-
-#define TFTP_BUFFER_SIZE 512
-
 class bx_vnet_pktmover_c : public eth_pktmover_c {
 public:
   bx_vnet_pktmover_c();
@@ -175,12 +166,9 @@ private:
     unsigned sourceport, unsigned targetport,
     size_t tsize_option, unsigned blksize_option);
 
-  char tftp_filename[BX_PATHNAME_LEN];
-  char tftp_rootdir[BX_PATHNAME_LEN];
-  bx_bool tftp_write;
-  Bit16u tftp_tid;
-
   dhcp_cfg_t dhcp;
+
+  tftp_data_t tftp;
 
   struct {
     unsigned ipprotocol;
@@ -222,28 +210,6 @@ protected:
 } bx_vnet_match;
 
 
-// duplicate the part of tftp_send_data() that constructs the filename
-// but ignore errors since tftp_send_data() will respond for us
-static size_t get_file_size(bx_devmodel_c *netdev, const char *tpath, const char *tname)
-{
-  struct stat stbuf;
-  char path[BX_PATHNAME_LEN];
-
-  if (strlen(tname) == 0)
-    return 0;
-
-  if ((strlen(tpath) + strlen(tname)) > BX_PATHNAME_LEN)
-    return 0;
-
-  sprintf(path, "%s/%s", tpath, tname);
-  if (stat(path, &stbuf) < 0)
-    return 0;
-
-  BX_INFO(("tftp filesize: %lu", (unsigned long)stbuf.st_size));
-  return (size_t)stbuf.st_size;
-}
-
-
 bx_vnet_pktmover_c::bx_vnet_pktmover_c()
 {
 }
@@ -257,9 +223,9 @@ void bx_vnet_pktmover_c::pktmover_init(
   BX_INFO(("vnet network driver"));
   this->rxh    = rxh;
   this->rxstat = rxstat;
-  strcpy(this->tftp_rootdir, netif);
-  this->tftp_tid = 0;
-  this->tftp_write = 0;
+  strcpy(this->tftp.rootdir, netif);
+  this->tftp.tid = 0;
+  this->tftp.write = 0;
 
   memcpy(&dhcp.host_macaddr[0], macaddr, 6);
   memcpy(&dhcp.guest_macaddr[0], macaddr, 6);
@@ -477,7 +443,7 @@ void bx_vnet_pktmover_c::host_to_guest_arp(Bit8u *buf, unsigned io_len)
 void bx_vnet_pktmover_c::process_ipv4(const Bit8u *buf, unsigned io_len)
 {
   unsigned total_len;
-  unsigned packet_id;
+//  unsigned packet_id;
   unsigned fragment_flags;
   unsigned fragment_offset;
   unsigned ipproto;
@@ -520,7 +486,7 @@ void bx_vnet_pktmover_c::process_ipv4(const Bit8u *buf, unsigned io_len)
     return;
   }
 
-  packet_id = get_net2(&buf[14+4]);
+//  packet_id = get_net2(&buf[14+4]);
   fragment_flags = (unsigned)buf[14+6] >> 5;
   fragment_offset = ((unsigned)get_net2(&buf[14+6]) & 0x1fff) << 3;
   ipproto = buf[14+9];
@@ -672,13 +638,13 @@ void bx_vnet_pktmover_c::process_udpipv4(
 {
   unsigned udp_targetport;
   unsigned udp_sourceport;
-  unsigned udp_len;
+//  unsigned udp_len;
   layer4_handler_t func;
 
   if (l4pkt_len < 8) return;
   udp_sourceport = get_net2(&l4pkt[0]);
   udp_targetport = get_net2(&l4pkt[2]);
-  udp_len = get_net2(&l4pkt[4]);
+//  udp_len = get_net2(&l4pkt[4]);
 
   func = get_layer4_handler(0x11,udp_targetport);
   if (func != (layer4_handler_t)NULL) {
@@ -796,232 +762,13 @@ void bx_vnet_pktmover_c::udpipv4_tftp_handler_ns(
   unsigned sourceport, unsigned targetport,
   const Bit8u *data, unsigned data_len)
 {
-  Bit8u buffer[TFTP_BUFFER_SIZE + 4];
-  char path[BX_PATHNAME_LEN];
-  FILE *fp;
-  unsigned block_nr;
-  unsigned tftp_len;
+  Bit8u replybuf[TFTP_BUFFER_SIZE + 4];
+  int len;
 
-  switch (get_net2(data)) {
-    case TFTP_RRQ:
-      if (tftp_tid == 0) {
-        strncpy((char*)buffer, (const char*)data + 2, data_len - 2);
-        buffer[data_len - 4] = 0;
-
-        // options
-        size_t tsize_option = 0;
-        int blksize_option = 0;
-        if (strlen((char*)buffer) < data_len - 2) {
-          const char *mode = (const char*)data + 2 + strlen((char*)buffer) + 1;
-          int octet_option = 0;
-          while (mode < (const char*)data + data_len) {
-            if (memcmp(mode, "octet\0", 6) == 0) {
-              mode += 6;
-              octet_option = 1;
-            } else if (memcmp(mode, "tsize\0", 6) == 0) {
-              mode += 6;
-              tsize_option = 1;             // size needed
-              mode += strlen(mode)+1;
-            } else if (memcmp(mode, "blksize\0", 8) == 0) {
-              mode += 8;
-              blksize_option = atoi(mode);
-              mode += strlen(mode)+1;
-            } else {
-              BX_INFO(("tftp req: unknown option %s", mode));
-              break;
-            }
-          }
-          if (!octet_option) {
-            tftp_send_error(buffer, sourceport, targetport, 4, "Unsupported transfer mode");
-            return;
-          }
-        }
-
-        strcpy(tftp_filename, (char*)buffer);
-        BX_INFO(("tftp req: %s", tftp_filename));
-        if (tsize_option) {
-          tsize_option = get_file_size(netdev, tftp_rootdir, tftp_filename);
-          if (tsize_option > 0) {
-            // if tsize requested and file exists, send optack and return
-            // optack ack will pick up where we leave off here.
-            // if blksize_option is less than TFTP_BUFFER_SIZE should
-            // probably use blksize_option...
-            tftp_send_optack(buffer, sourceport, targetport, tsize_option, TFTP_BUFFER_SIZE);
-            return;
-          }
-        }
-        tftp_tid = sourceport;
-        tftp_write = 0;
-        tftp_send_data(buffer, sourceport, targetport, 1);
-      } else {
-        tftp_send_error(buffer, sourceport, targetport, 4, "Illegal request");
-      }
-      break;
-    case TFTP_WRQ:
-      if (tftp_tid == 0) {
-        strncpy((char*)buffer, (const char*)data + 2, data_len - 2);
-        buffer[data_len - 4] = 0;
-
-        // transfer mode
-        if (strlen((char*)buffer) < data_len - 2) {
-          const char *mode = (const char*)data + 2 + strlen((char*)buffer) + 1;
-          if (memcmp(mode, "octet\0", 6) != 0) {
-            tftp_send_error(buffer, sourceport, targetport, 4, "Unsupported transfer mode");
-            return;
-          }
-        }
-
-        strcpy(tftp_filename, (char*)buffer);
-        sprintf(path, "%s/%s", tftp_rootdir, tftp_filename);
-        fp = fopen(path, "rb");
-        if (fp) {
-          tftp_send_error(buffer, sourceport, targetport, 6, "File exists");
-          fclose(fp);
-          return;
-        }
-        fp = fopen(path, "wb");
-        if (!fp) {
-          tftp_send_error(buffer, sourceport, targetport, 2, "Access violation");
-          return;
-        }
-        fclose(fp);
-        tftp_tid = sourceport;
-        tftp_write = 1;
-
-        tftp_send_ack(buffer, sourceport, targetport, 0);
-      } else {
-        tftp_send_error(buffer, sourceport, targetport, 4, "Illegal request");
-      }
-      break;
-    case TFTP_DATA:
-      if ((tftp_tid == sourceport) && (tftp_write == 1)) {
-        block_nr = get_net2(data + 2);
-        strncpy((char*)buffer, (const char*)data + 4, data_len - 4);
-        tftp_len = data_len - 4;
-        buffer[tftp_len] = 0;
-        if (tftp_len <= 512) {
-          sprintf(path, "%s/%s", tftp_rootdir, tftp_filename);
-          fp = fopen(path, "ab");
-          if (!fp) {
-            tftp_send_error(buffer, sourceport, targetport, 2, "Access violation");
-            return;
-          }
-          if (fseek(fp, (block_nr - 1) * TFTP_BUFFER_SIZE, SEEK_SET) < 0) {
-            tftp_send_error(buffer, sourceport, targetport, 3, "Block not seekable");
-            return;
-          }
-          fwrite(buffer, 1, tftp_len, fp);
-          fclose(fp);
-          tftp_send_ack(buffer, sourceport, targetport, block_nr);
-          if (tftp_len < 512) {
-            tftp_tid = 0;
-          }
-        } else {
-          tftp_send_error(buffer, sourceport, targetport, 4, "Illegal request");
-        }
-      } else {
-        tftp_send_error(buffer, sourceport, targetport, 4, "Illegal request");
-      }
-      break;
-    case TFTP_ACK:
-      tftp_send_data(buffer, sourceport, targetport, get_net2(data + 2) + 1);
-      break;
-    case TFTP_ERROR:
-      // silently ignore error packets
-      break;
-    default:
-      BX_ERROR(("TFTP unknown opt %d", get_net2(data)));
+  len = process_tftp(netdev, data, data_len, sourceport, replybuf, &tftp);
+  if (len > 0) {
+    host_to_guest_udpipv4_packet(sourceport, targetport, replybuf, len);
   }
-}
-
-void bx_vnet_pktmover_c::tftp_send_error(
-  Bit8u *buffer,
-  unsigned sourceport, unsigned targetport,
-  unsigned code, const char *msg)
-{
-  put_net2(buffer, TFTP_ERROR);
-  put_net2(buffer + 2, code);
-  strcpy((char*)buffer + 4, msg);
-  host_to_guest_udpipv4_packet(sourceport, targetport, buffer, strlen(msg) + 5);
-  tftp_tid = 0;
-}
-
-void bx_vnet_pktmover_c::tftp_send_data(
-  Bit8u *buffer,
-  unsigned sourceport, unsigned targetport,
-  unsigned block_nr)
-{
-  char path[BX_PATHNAME_LEN];
-  char msg[BX_PATHNAME_LEN];
-  int rd;
-
-  if (strlen(tftp_filename) == 0) {
-    tftp_send_error(buffer, sourceport, targetport, 1, "File not found");
-    return;
-  }
-
-  if ((strlen(tftp_rootdir) + strlen(tftp_filename)) > BX_PATHNAME_LEN) {
-    tftp_send_error(buffer, sourceport, targetport, 1, "Path name too long");
-    return;
-  }
-
-  sprintf(path, "%s/%s", tftp_rootdir, tftp_filename);
-  FILE *fp = fopen(path, "rb");
-  if (!fp) {
-    sprintf(msg, "File not found: %s", tftp_filename);
-    tftp_send_error(buffer, sourceport, targetport, 1, msg);
-    return;
-  }
-
-  if (fseek(fp, (block_nr - 1) * TFTP_BUFFER_SIZE, SEEK_SET) < 0) {
-    tftp_send_error(buffer, sourceport, targetport, 3, "Block not seekable");
-    return;
-  }
-
-  rd = fread(buffer + 4, 1, TFTP_BUFFER_SIZE, fp);
-  fclose(fp);
-
-  if (rd < 0) {
-    tftp_send_error(buffer, sourceport, targetport, 3, "Block not readable");
-    return;
-  }
-
-  put_net2(buffer, TFTP_DATA);
-  put_net2(buffer + 2, block_nr);
-  host_to_guest_udpipv4_packet(sourceport, targetport, buffer, rd + 4);
-  if (rd < TFTP_BUFFER_SIZE) {
-    tftp_tid = 0;
-  }
-}
-
-void bx_vnet_pktmover_c::tftp_send_ack(
-  Bit8u *buffer,
-  unsigned sourceport, unsigned targetport,
-  unsigned block_nr)
-{
-  put_net2(buffer, TFTP_ACK);
-  put_net2(buffer + 2, block_nr);
-  host_to_guest_udpipv4_packet(sourceport, targetport, buffer, 4);
-}
-
-void bx_vnet_pktmover_c::tftp_send_optack(
-  Bit8u *buffer,
-  unsigned sourceport, unsigned targetport,
-  size_t tsize_option, unsigned blksize_option)
-{
-  Bit8u *p = buffer;
-  put_net2(p, TFTP_OPTACK);
-  p += 2;
-  if (tsize_option > 0) {
-    *p++='t'; *p++='s'; *p++='i'; *p++='z'; *p++='e'; *p++='\0';
-    sprintf((char *)p, "%lu", (unsigned long)tsize_option);
-    p += strlen((const char *)p) + 1;
-  }
-  if (blksize_option > 0) {
-    *p++='b'; *p++='l'; *p++='k'; *p++='s'; *p++='i'; *p++='z'; *p++='e'; *p++='\0';
-    sprintf((char *)p, "%d", blksize_option); p += strlen((const char *)p) + 1;
-  }
-  host_to_guest_udpipv4_packet(sourceport, targetport, buffer, p - buffer);
 }
 
 #endif /* if BX_NETWORKING */

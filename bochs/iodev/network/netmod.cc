@@ -269,6 +269,8 @@ Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
   return (Bit16u)sum;
 }
 
+// DHCP server
+
 #define BOOTREQUEST 1
 #define BOOTREPLY 2
 
@@ -310,6 +312,15 @@ Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
 #define DHCPINFORM   8
 
 #define DEFAULT_LEASE_TIME 28800
+
+// TFTP server support by EaseWay <easeway@123.com>
+
+#define TFTP_RRQ    1
+#define TFTP_WRQ    2
+#define TFTP_DATA   3
+#define TFTP_ACK    4
+#define TFTP_ERROR  5
+#define TFTP_OPTACK 6
 
 static const Bit8u subnetmask_ipv4addr[4] = {0xff,0xff,0xff,0x00};
 static const Bit8u broadcast_ipv4addr1[4] = {0xff,0xff,0xff,0xff};
@@ -640,6 +651,235 @@ int process_dhcp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bi
   }
   memcpy(reply, replybuf, opts_len);
   return opts_len;
+}
+
+int tftp_send_error(Bit8u *buffer, unsigned code, const char *msg, tftp_data_t *tftp)
+{
+  put_net2(buffer, TFTP_ERROR);
+  put_net2(buffer + 2, code);
+  strcpy((char*)buffer + 4, msg);
+  tftp->tid = 0;
+  return (strlen(msg) + 5);
+}
+
+int tftp_send_data(Bit8u *buffer, unsigned block_nr, tftp_data_t *tftp)
+{
+  char path[BX_PATHNAME_LEN];
+  char msg[BX_PATHNAME_LEN];
+  int rd;
+
+  if (strlen(tftp->filename) == 0) {
+    return tftp_send_error(buffer, 1, "File not found", tftp);
+  }
+
+  if ((strlen(tftp->rootdir) + strlen(tftp->filename)) > BX_PATHNAME_LEN) {
+    return tftp_send_error(buffer, 1, "Path name too long", tftp);
+  }
+
+  sprintf(path, "%s/%s", tftp->rootdir, tftp->filename);
+  FILE *fp = fopen(path, "rb");
+  if (!fp) {
+    sprintf(msg, "File not found: %s", tftp->filename);
+    return tftp_send_error(buffer, 1, msg, tftp);
+  }
+
+  if (fseek(fp, (block_nr - 1) * TFTP_BUFFER_SIZE, SEEK_SET) < 0) {
+    return tftp_send_error(buffer, 3, "Block not seekable", tftp);
+  }
+
+  rd = fread(buffer + 4, 1, TFTP_BUFFER_SIZE, fp);
+  fclose(fp);
+
+  if (rd < 0) {
+    return tftp_send_error(buffer, 3, "Block not readable", tftp);
+  }
+
+  put_net2(buffer, TFTP_DATA);
+  put_net2(buffer + 2, block_nr);
+  if (rd < TFTP_BUFFER_SIZE) {
+    tftp->tid = 0;
+  }
+  return (rd + 4);
+}
+
+int tftp_send_ack(Bit8u *buffer, unsigned block_nr)
+{
+  put_net2(buffer, TFTP_ACK);
+  put_net2(buffer + 2, block_nr);
+  return 4;
+}
+
+int tftp_send_optack(Bit8u *buffer, size_t tsize_option, unsigned blksize_option)
+{
+  Bit8u *p = buffer;
+  put_net2(p, TFTP_OPTACK);
+  p += 2;
+  if (tsize_option > 0) {
+    *p++='t'; *p++='s'; *p++='i'; *p++='z'; *p++='e'; *p++='\0';
+    sprintf((char *)p, "%lu", (unsigned long)tsize_option);
+    p += strlen((const char *)p) + 1;
+  }
+  if (blksize_option > 0) {
+    *p++='b'; *p++='l'; *p++='k'; *p++='s'; *p++='i'; *p++='z'; *p++='e'; *p++='\0';
+    sprintf((char *)p, "%d", blksize_option); p += strlen((const char *)p) + 1;
+  }
+  return (p - buffer);
+}
+
+// duplicate the part of tftp_send_data() that constructs the filename
+// but ignore errors since tftp_send_data() will respond for us
+static size_t get_file_size(bx_devmodel_c *netdev, const char *tpath, const char *tname)
+{
+  struct stat stbuf;
+  char path[BX_PATHNAME_LEN];
+
+  if (strlen(tname) == 0)
+    return 0;
+
+  if ((strlen(tpath) + strlen(tname)) > BX_PATHNAME_LEN)
+    return 0;
+
+  sprintf(path, "%s/%s", tpath, tname);
+  if (stat(path, &stbuf) < 0)
+    return 0;
+
+  BX_INFO(("tftp filesize: %lu", (unsigned long)stbuf.st_size));
+  return (size_t)stbuf.st_size;
+}
+
+int process_tftp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit16u req_tid, Bit8u *reply, tftp_data_t *tftp)
+{
+  char path[BX_PATHNAME_LEN];
+  FILE *fp;
+  unsigned block_nr;
+  unsigned tftp_len;
+
+  switch (get_net2(data)) {
+    case TFTP_RRQ:
+      if (tftp->tid == 0) {
+        strncpy((char*)reply, (const char*)data + 2, data_len - 2);
+        reply[data_len - 4] = 0;
+
+        // options
+        size_t tsize_option = 0;
+        int blksize_option = 0;
+        if (strlen((char*)reply) < data_len - 2) {
+          const char *mode = (const char*)data + 2 + strlen((char*)reply) + 1;
+          int octet_option = 0;
+          while (mode < (const char*)data + data_len) {
+            if (memcmp(mode, "octet\0", 6) == 0) {
+              mode += 6;
+              octet_option = 1;
+            } else if (memcmp(mode, "tsize\0", 6) == 0) {
+              mode += 6;
+              tsize_option = 1;             // size needed
+              mode += strlen(mode)+1;
+            } else if (memcmp(mode, "blksize\0", 8) == 0) {
+              mode += 8;
+              blksize_option = atoi(mode);
+              mode += strlen(mode)+1;
+            } else {
+              BX_INFO(("tftp req: unknown option %s", mode));
+              break;
+            }
+          }
+          if (!octet_option) {
+            return tftp_send_error(reply, 4, "Unsupported transfer mode", tftp);
+          }
+        }
+
+        strcpy(tftp->filename, (char*)reply);
+        BX_INFO(("tftp req: %s", tftp->filename));
+        if (tsize_option) {
+          tsize_option = get_file_size(netdev, tftp->rootdir, tftp->filename);
+          if (tsize_option > 0) {
+            // if tsize requested and file exists, send optack and return
+            // optack ack will pick up where we leave off here.
+            // if blksize_option is less than TFTP_BUFFER_SIZE should
+            // probably use blksize_option...
+            return tftp_send_optack(reply, tsize_option, TFTP_BUFFER_SIZE);
+          }
+        }
+        if (blksize_option) {
+          BX_INFO(("tftp req: blksize (val = %d) unused", blksize_option));
+        }
+        tftp->tid = req_tid;
+        tftp->write = 0;
+        return tftp_send_data(reply, 1, tftp);
+      } else {
+        return tftp_send_error(reply, 4, "Illegal request", tftp);
+      }
+      break;
+    case TFTP_WRQ:
+      if (tftp->tid == 0) {
+        strncpy((char*)reply, (const char*)data + 2, data_len - 2);
+        reply[data_len - 4] = 0;
+
+        // transfer mode
+        if (strlen((char*)reply) < data_len - 2) {
+          const char *mode = (const char*)data + 2 + strlen((char*)reply) + 1;
+          if (memcmp(mode, "octet\0", 6) != 0) {
+            return tftp_send_error(reply, 4, "Unsupported transfer mode", tftp);
+          }
+        }
+
+        strcpy(tftp->filename, (char*)reply);
+        sprintf(path, "%s/%s", tftp->rootdir, tftp->filename);
+        fp = fopen(path, "rb");
+        if (fp) {
+          fclose(fp);
+          return tftp_send_error(reply, 6, "File exists", tftp);
+        }
+        fp = fopen(path, "wb");
+        if (!fp) {
+          return tftp_send_error(reply, 2, "Access violation", tftp);
+        }
+        fclose(fp);
+        tftp->tid = req_tid;
+        tftp->write = 1;
+
+        return tftp_send_ack(reply, 0);
+      } else {
+        return tftp_send_error(reply, 4, "Illegal request", tftp);
+      }
+      break;
+    case TFTP_DATA:
+      if ((tftp->tid == req_tid) && (tftp->write == 1)) {
+        block_nr = get_net2(data + 2);
+        strncpy((char*)reply, (const char*)data + 4, data_len - 4);
+        tftp_len = data_len - 4;
+        reply[tftp_len] = 0;
+        if (tftp_len <= 512) {
+          sprintf(path, "%s/%s", tftp->rootdir, tftp->filename);
+          fp = fopen(path, "ab");
+          if (!fp) {
+            return tftp_send_error(reply, 2, "Access violation", tftp);
+          }
+          if (fseek(fp, (block_nr - 1) * TFTP_BUFFER_SIZE, SEEK_SET) < 0) {
+            return tftp_send_error(reply, 3, "Block not seekable", tftp);
+          }
+          fwrite(reply, 1, tftp_len, fp);
+          fclose(fp);
+          if (tftp_len < 512) {
+            tftp->tid = 0;
+          }
+          return tftp_send_ack(reply, block_nr);
+        } else {
+          return tftp_send_error(reply, 4, "Illegal request", tftp);
+        }
+      } else {
+        return tftp_send_error(reply, 4, "Illegal request", tftp);
+      }
+      break;
+    case TFTP_ACK:
+      return tftp_send_data(reply, get_net2(data + 2) + 1, tftp);
+    case TFTP_ERROR:
+      // silently ignore error packets
+      break;
+    default:
+      BX_ERROR(("TFTP unknown opt %d", get_net2(data)));
+  }
+  return 0;
 }
 
 #endif /* if BX_NETWORKING */

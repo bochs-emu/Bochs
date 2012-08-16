@@ -44,6 +44,8 @@ public:
 #define BX_NETDEV_100MBIT  0x0004
 #define BX_NETDEV_1GBIT    0x0008
 
+#define TFTP_BUFFER_SIZE 512
+
 typedef void (*eth_rx_handler_t)(void *arg, const void *buf, unsigned len);
 typedef Bit32u (*eth_rx_status_t)(void *arg);
 
@@ -55,6 +57,13 @@ typedef struct {
   Bit8u guest_ipv4addr[4];
   Bit8u dns_ipv4addr[4];
 } dhcp_cfg_t;
+
+typedef struct {
+  char filename[BX_PATHNAME_LEN];
+  char rootdir[BX_PATHNAME_LEN];
+  bx_bool write;
+  Bit16u tid;
+} tftp_data_t;
 
 static const Bit8u broadcast_macaddr[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
 
@@ -91,6 +100,7 @@ BX_CPP_INLINE void put_net4(Bit8u *buf,Bit32u data)
 
 Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len);
 int process_dhcp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t *dhcp);
+int process_tftp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit16u req_tid, Bit8u *reply, tftp_data_t *tftp);
 
 //
 //  The eth_pktmover class is used by ethernet chip emulations

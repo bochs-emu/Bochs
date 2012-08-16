@@ -4322,14 +4322,16 @@ version where this module was added.
   </row>
   <row>
     <entry>slirp</entry>
-    <entry>Ethernet backend for Slirp and a builtin DHCP server. Adds user mode
+    <entry>Ethernet backend for Slirp with builtin DHCP / TFTP servers. Adds user mode
     networking to Bochs using Slirp. Only tested with the most recent Slirp
     version with Debian patches applied. The fullbolt Slirp version should be
-    used. The "script" parameter should point to the Slirp binary.
+    used for maximum speed. The "script" parameter should point to the Slirp binary.
+    The TFTP server uses the 'ethdev' value for the root directory and doesn't
+    overwrite files.
     </entry>
     <entry>No</entry>
     <entry>Yes</entry>
-    <entry>2.2</entry>
+    <entry>2.5</entry>
   </row>
   <row>
     <entry>win32</entry>

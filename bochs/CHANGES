@@ -63,6 +63,7 @@ Changes after 2.5.1 release:
     - Ported Intel(R) 82540EM Gigabit Ethernet adapter emulation from Qemu,
       to enable configure with option --enable-e1000
     - Added PCI network boot ROM support to all network adapters
+    - Added TFTP support to the 'slirp' networking module
   - PCI
     - added "auto-assign to PCI slot" feature for PCI-only devices
   - DMA
