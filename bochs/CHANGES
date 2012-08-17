@@ -1,4 +1,4 @@
-Changes after 2.5.1 release:
+Changes in 2.6 (not yet released):
 
 - CPU
   - Implemented EPT A/D extensions support.
@@ -35,6 +35,7 @@ Changes after 2.5.1 release:
   - Moved disk imaging, networking, sound and USB devices to subdirectories
     in the iodev folder.
   - pcidev: enable support for Linux kernel 3.x (Debian patch by Guillem Jover)
+  - debugger: generate parser / lexer files only if all required tools are present
 
 - Config interface
   - Added support for direct device plugin loading with bochsrc directive for
@@ -67,7 +68,7 @@ Changes after 2.5.1 release:
   - PCI
     - added "auto-assign to PCI slot" feature for PCI-only devices
   - DMA
-    - Added the capability to transfer more then one byte per ISA DMA cycle
+    - Added the capability to transfer more then one byte / word per ISA DMA cycle
   - VGA
     - Major rewrite of the vga / cirrus code:
       - vgacore (shared standard VGA emulation code)

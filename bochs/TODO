@@ -65,9 +65,11 @@ If the configuration interface is to be reworked, could we also make it so
 that plugins are self-contained, rather than needing to pollute config.cc
 with code for defining and parsing plugin-specific options
 Status:
-A little bit of the basic work is done now: The config parameter handling has
+Some of the basic work is done now: The config parameter handling has
 been rewritten to a parameter tree and user-defined bochsrc options are now
-supported. The main plugin architecture rewrite is not done yet.
+supported. For most of the optional plugins the config parameter creation and
+bochsrc parsing has been moved to the plugin code. Unknown bochsrc options are
+now treated as plugin names and Bochs tries to load them.
 
 4. PCI host<->guest proxy
 Being able to use a real pci device from inside Bochs would be a
@@ -107,10 +109,11 @@ image file, by storing its fstat-mtime field in the redolog.
 Status:
 Autodetection now works for all image types created with bximage and vmware3
 images. Vmware4 disk images support was added in Bochs 2.3.5 release.
-The other items are not done yet.
+Coherency check for 'undoable' mode images added for Bochs 2.6.
 
 8. net
 8.1 bootable ethernet rom ?
+8.2 user mode networking ?
 see etherboot, Micheal Brown wrote :
 This already works; you can build an Etherboot rom image with the pnic
 driver, specify it as an option ROM in bochsrc and it will boot.  I'm
@@ -119,7 +122,10 @@ In the Etherboot project's CVS, in the contrib/bochs directory, you can
 find a working bochsrc file and an up-to-date README with step-by-step
 instructions on getting this working.
 Status:
-The pnic device is present in SVN, but the status is unknown.
+The pnic device is present in SVN, but the status is unknown. PCI boot ROM support
+has been added for Bochs 2.6. User mode networking currently requires the 'slirp'
+program and it is not possible on all platforms. The slirp core should be added
+to the Bochs sources.
 
 9. Bios
 9.1 add "jump table placeholder" and log missing function calls in the bios.
@@ -152,7 +158,7 @@ is present in Bochs and almost stable. USB flash disk support has been
 started and the runtime device change support should be completed.
 Status:
 OHCI and UHCI host controller and 7 devices are known to work in Bochs.
-USB xHCI support is under construction.
+USB xHCI support is present, but needs more testing.
 
 13. Config file and dynamic menu
 13.1 Benjamen R. Meyer wrote :
