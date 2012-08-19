@@ -144,6 +144,7 @@ public:
         Bit16u displ16u; // for 16-bit modrm forms
         Bit32u displ32u; // for 32-bit modrm forms
 
+        Bit32u Id2;
         Bit16u Iw2;
         Bit8u  Ib2;
       };
@@ -349,7 +350,9 @@ public:
   BX_CPP_INLINE void assertModC0()
   {
     metaInfo.metaInfo1 |= (1<<4);
-  }};
+  }
+
+};
 // <TAG-CLASS-INSTRUCTION-END>
 
 enum {
