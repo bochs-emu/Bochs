@@ -808,6 +808,7 @@ int bx_init_main(int argc, char *argv[])
   }
   // load pre-defined optional plugins before parsing configuration
   SIM->opt_plugin_ctrl("*", 1);
+  SIM->init_save_restore();
   if (load_rcfile) {
     // parse configuration file and command line arguments
 #ifdef WIN32
@@ -942,7 +943,6 @@ bx_bool load_and_init_display_lib(void)
 
 int bx_begin_simulation (int argc, char *argv[])
 {
-  SIM->init_save_restore();
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
     if (!SIM->restore_config()) {
       BX_PANIC(("cannot restore configuration"));

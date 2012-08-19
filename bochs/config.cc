@@ -242,6 +242,33 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports)
   enabled->set_dependent_list(deplist);
 }
 
+void bx_plugin_ctrl_reset(bx_bool init_done)
+{
+  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_PLUGIN_CTRL);
+  if (init_done) {
+    for (int i = 0; i < base->get_size(); i++) {
+      ((bx_param_bool_c*)base->get(i))->set(0);
+    }
+    SIM->opt_plugin_ctrl("*", 0);
+  }
+  // add the default set of plugins to the list
+  new bx_param_bool_c(base, "unmapped", "", "", 1);
+  new bx_param_bool_c(base, "biosdev", "", "", 1);
+  new bx_param_bool_c(base, "speaker", "", "", 1);
+  new bx_param_bool_c(base, "extfpuirq", "", "", 1);
+  new bx_param_bool_c(base, "parallel", "", "", 1);
+  new bx_param_bool_c(base, "serial", "", "", 1);
+#if BX_SUPPORT_GAMEPORT
+  new bx_param_bool_c(base, "gameport", "", "", 1);
+#endif
+#if BX_SUPPORT_IODEBUG && BX_DEBUGGER
+  new bx_param_bool_c(base, "iodebug", "", "", 1);
+#endif
+  if (init_done) {
+    SIM->opt_plugin_ctrl("*", 1);
+  }
+}
+
 void bx_init_options()
 {
   int i;
@@ -317,20 +344,8 @@ void bx_init_options()
   new bx_list_c(logfn, "panic", "");
 
   // optional plugin control
-  menu = new bx_list_c(menu, "plugin_ctrl", "Optional Plugin Control");
-  // add the default set of plugins to the list
-  new bx_param_bool_c(menu, "unmapped", "", "", 1);
-  new bx_param_bool_c(menu, "biosdev", "", "", 1);
-  new bx_param_bool_c(menu, "speaker", "", "", 1);
-  new bx_param_bool_c(menu, "extfpuirq", "", "", 1);
-  new bx_param_bool_c(menu, "parallel", "", "", 1);
-  new bx_param_bool_c(menu, "serial", "", "", 1);
-#if BX_SUPPORT_GAMEPORT
-  new bx_param_bool_c(menu, "gameport", "", "", 1);
-#endif
-#if BX_SUPPORT_IODEBUG && BX_DEBUGGER
-  new bx_param_bool_c(menu, "iodebug", "", "", 1);
-#endif
+  new bx_list_c(menu, "plugin_ctrl", "Optional Plugin Control");
+  bx_plugin_ctrl_reset(0);
 
   // subtree for special menus
   bx_list_c *special_menus = new bx_list_c(root_param, "menu", "");
@@ -1555,6 +1570,9 @@ void bx_init_options()
 
 void bx_reset_options()
 {
+  // optional plugin control
+  bx_plugin_ctrl_reset(1);
+
   // cpu
   SIM->get_param("cpu")->reset();
 
