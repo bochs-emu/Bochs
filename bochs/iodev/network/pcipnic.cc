@@ -128,6 +128,7 @@ bx_pcipnic_c::~bx_pcipnic_c()
   if (ethdev != NULL) {
     delete ethdev;
   }
+  SIM->get_bochs_root()->remove("pcipnic");
   BX_DEBUG(("Exit"));
 }
 

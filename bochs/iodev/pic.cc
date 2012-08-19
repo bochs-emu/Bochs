@@ -55,6 +55,7 @@ bx_pic_c::bx_pic_c(void)
 
 bx_pic_c::~bx_pic_c(void)
 {
+  SIM->get_bochs_root()->remove("pic");
   BX_DEBUG(("Exit"));
 }
 

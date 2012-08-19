@@ -70,6 +70,7 @@ bx_pci_ide_c::~bx_pci_ide_c()
   if (s.bmdma[1].buffer != NULL) {
     delete [] s.bmdma[1].buffer;
   }
+  SIM->get_bochs_root()->remove("pci_ide");
   BX_DEBUG(("Exit"));
 }
 

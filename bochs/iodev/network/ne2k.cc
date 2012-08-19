@@ -194,6 +194,7 @@ bx_ne2k_c::~bx_ne2k_c()
   if (ethdev != NULL) {
     delete ethdev;
   }
+  SIM->get_bochs_root()->remove("ne2k");
   BX_DEBUG(("Exit"));
 }
 

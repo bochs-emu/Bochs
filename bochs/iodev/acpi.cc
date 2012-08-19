@@ -117,6 +117,7 @@ bx_acpi_ctrl_c::bx_acpi_ctrl_c()
 
 bx_acpi_ctrl_c::~bx_acpi_ctrl_c()
 {
+  SIM->get_bochs_root()->remove("acpi");
   BX_DEBUG(("Exit"));
 }
 

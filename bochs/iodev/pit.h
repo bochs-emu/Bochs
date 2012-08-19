@@ -35,7 +35,7 @@
 class bx_pit_c : public bx_devmodel_c {
 public:
   bx_pit_c();
-  virtual ~bx_pit_c() {}
+  virtual ~bx_pit_c();
   virtual void init(void);
   virtual void reset(unsigned type);
   virtual void register_state(void);

@@ -247,6 +247,7 @@ bx_svga_cirrus_c::bx_svga_cirrus_c() : bx_vgacore_c()
 
 bx_svga_cirrus_c::~bx_svga_cirrus_c()
 {
+  SIM->get_bochs_root()->remove("svga_cirrus");
   BX_DEBUG(("Exit"));
 }
 

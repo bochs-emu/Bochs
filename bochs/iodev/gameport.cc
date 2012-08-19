@@ -77,6 +77,7 @@ bx_gameport_c::bx_gameport_c()
 bx_gameport_c::~bx_gameport_c()
 {
   if (joyfd >= 0) close(joyfd);
+  SIM->get_bochs_root()->remove("gameport");
   BX_DEBUG(("Exit"));
 }
 

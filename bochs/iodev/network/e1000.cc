@@ -426,6 +426,7 @@ bx_e1000_c::~bx_e1000_c()
   if (ethdev != NULL) {
     delete ethdev;
   }
+  SIM->get_bochs_root()->remove("e1000");
   BX_DEBUG(("Exit"));
 }
 

@@ -125,6 +125,12 @@ bx_ioapic_c::bx_ioapic_c(): base_addr(BX_IOAPIC_BASE_ADDR)
   put("ioapic", "IOAP");
 }
 
+bx_ioapic_c::~bx_ioapic_c()
+{
+  SIM->get_bochs_root()->remove("ioapic");
+  BX_DEBUG(("Exit"));
+}
+
 void bx_ioapic_c::init(void)
 {
   BX_INFO(("initializing I/O APIC"));

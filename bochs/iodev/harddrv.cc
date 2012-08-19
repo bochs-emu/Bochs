@@ -161,6 +161,7 @@ bx_hard_drive_c::~bx_hard_drive_c()
       SIM->get_param_bool("status", base)->set_handler(NULL);
     }
   }
+  SIM->get_bochs_root()->remove("hard_drive");
   BX_DEBUG(("Exit"));
 }
 

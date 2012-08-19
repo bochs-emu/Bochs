@@ -185,6 +185,7 @@ bx_es1370_c::~bx_es1370_c()
   }
   delete soundmod;
 
+  SIM->get_bochs_root()->remove("es1370");
   BX_DEBUG(("Exit"));
 }
 

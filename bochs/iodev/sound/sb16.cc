@@ -271,6 +271,7 @@ bx_sb16_c::~bx_sb16_c(void)
   if ((SIM->get_param_num(BXPN_SB16_LOGLEVEL)->get() > 0) && LOGFILE)
     fclose(LOGFILE);
 
+  SIM->get_bochs_root()->remove("sb16");
   BX_DEBUG(("Exit"));
 }
 

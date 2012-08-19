@@ -61,6 +61,7 @@ bx_pci_bridge_c::bx_pci_bridge_c()
 
 bx_pci_bridge_c::~bx_pci_bridge_c()
 {
+  SIM->get_bochs_root()->remove("pci_bridge");
   BX_DEBUG(("Exit"));
 }
 

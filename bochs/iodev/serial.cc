@@ -237,6 +237,7 @@ bx_serial_c::~bx_serial_c(void)
       }
     }
   }
+  SIM->get_bochs_root()->remove("serial");
   BX_DEBUG(("Exit"));
 }
 

@@ -62,6 +62,7 @@ bx_dma_c::bx_dma_c()
 
 bx_dma_c::~bx_dma_c()
 {
+  SIM->get_bochs_root()->remove("dma");
   BX_DEBUG(("Exit"));
 }
 

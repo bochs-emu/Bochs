@@ -144,6 +144,7 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c()
     SIM->get_param_bool("readonly", floppy)->set_handler(NULL);
     SIM->get_param_bool("status", floppy)->set_handler(NULL);
   }
+  SIM->get_bochs_root()->remove("floppy");
   BX_DEBUG(("Exit"));
 }
 

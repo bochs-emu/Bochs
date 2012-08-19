@@ -74,7 +74,7 @@ public:
 class bx_ioapic_c : public bx_ioapic_stub_c {
 public:
   bx_ioapic_c();
-  virtual ~bx_ioapic_c() {}
+  virtual ~bx_ioapic_c();
   virtual void init();
   virtual void reset(unsigned type);
   virtual void register_state(void);

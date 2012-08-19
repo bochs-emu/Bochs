@@ -90,6 +90,7 @@ bx_keyb_c::~bx_keyb_c()
   if (pastebuf != NULL) {
     delete [] pastebuf;
   }
+  SIM->get_bochs_root()->remove("keyboard");
   BX_DEBUG(("Exit"));
 }
 

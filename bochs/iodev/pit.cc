@@ -89,6 +89,12 @@ bx_pit_c::bx_pit_c()
   s.timer_handle[0] = BX_NULL_TIMER_HANDLE;
 }
 
+bx_pit_c::~bx_pit_c()
+{
+  SIM->get_bochs_root()->remove("pit");
+  BX_DEBUG(("Exit"));
+}
+
 void bx_pit_c::init(void)
 {
   DEV_register_irq(0, "8254 PIT");

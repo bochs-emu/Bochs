@@ -82,6 +82,7 @@ bx_vga_c::bx_vga_c() : bx_vgacore_c()
 
 bx_vga_c::~bx_vga_c()
 {
+  SIM->get_bochs_root()->remove("vga");
   BX_DEBUG(("Exit"));
 }
 

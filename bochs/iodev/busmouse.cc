@@ -56,6 +56,7 @@ bx_busm_c::bx_busm_c()
 
 bx_busm_c::~bx_busm_c()
 {
+  SIM->get_bochs_root()->remove("busmouse");
   BX_DEBUG(("Exit"));
 }
 

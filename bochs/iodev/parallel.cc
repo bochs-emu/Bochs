@@ -152,6 +152,7 @@ bx_parallel_c::~bx_parallel_c()
     if (s[i].output != NULL)
       fclose(s[i].output);
   }
+  SIM->get_bochs_root()->remove("parallel");
   BX_DEBUG(("Exit"));
 }
 

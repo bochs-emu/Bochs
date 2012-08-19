@@ -62,6 +62,7 @@ bx_piix3_c::bx_piix3_c()
 
 bx_piix3_c::~bx_piix3_c()
 {
+  SIM->get_bochs_root()->remove("pci2isa");
   BX_DEBUG(("Exit"));
 }
 

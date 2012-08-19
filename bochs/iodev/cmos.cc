@@ -138,6 +138,7 @@ bx_cmos_c::~bx_cmos_c(void)
     BX_INFO(("Last time is %u (%s)", (unsigned) get_timeval(), tmptime));
     free(tmptime);
   }
+  SIM->get_bochs_root()->remove("cmos");
   BX_DEBUG(("Exit"));
 }
 

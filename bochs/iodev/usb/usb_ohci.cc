@@ -149,6 +149,7 @@ bx_usb_ohci_c::~bx_usb_ohci_c()
     remove_device(i);
   }
 
+  SIM->get_bochs_root()->remove("usb_ohci");
   BX_DEBUG(("Exit"));
 }
 
