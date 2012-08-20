@@ -162,11 +162,13 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   //
   PLUG_load_plugin(hdimage, PLUGTYPE_CORE);
 #if BX_NETWORKING
-  if (is_network_enabled())
+  network_enabled = is_network_enabled();
+  if (network_enabled)
     PLUG_load_plugin(netmod, PLUGTYPE_CORE);
 #endif
 #if BX_SUPPORT_SOUNDLOW
-  if (is_sound_enabled())
+  sound_enabled = is_sound_enabled();
+  if (sound_enabled)
     PLUG_load_plugin(soundmod, PLUGTYPE_CORE);
 #endif
   // PCI logic (i440FX)
@@ -175,7 +177,8 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     PLUG_load_plugin(pci, PLUGTYPE_CORE);
     PLUG_load_plugin(pci2isa, PLUGTYPE_CORE);
 #if BX_SUPPORT_PCIUSB
-    if (is_usb_enabled())
+    usb_enabled = is_usb_enabled();
+    if (usb_enabled)
       PLUG_load_plugin(usb_common, PLUGTYPE_CORE);
 #endif
     PLUG_load_plugin(acpi, PLUGTYPE_STANDARD);
@@ -316,15 +319,15 @@ void bx_devices_c::exit()
   bx_unload_core_plugins();
   PLUG_unload_plugin(hdimage);
 #if BX_NETWORKING
-  if (is_network_enabled())
+  if (network_enabled)
     PLUG_unload_plugin(netmod);
 #endif
 #if BX_SUPPORT_SOUNDLOW
-  if (is_sound_enabled())
+  if (sound_enabled)
     PLUG_unload_plugin(soundmod);
 #endif
 #if BX_SUPPORT_PCIUSB
-  if (is_usb_enabled())
+  if (usb_enabled)
     PLUG_unload_plugin(usb_common);
 #endif
   init_stubs();

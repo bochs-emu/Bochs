@@ -581,6 +581,10 @@ private:
 
   int timer_handle;
 
+  bx_bool network_enabled;
+  bx_bool sound_enabled;
+  bx_bool usb_enabled;
+
   bx_bool is_harddrv_enabled();
   bx_bool is_network_enabled();
   bx_bool is_sound_enabled();
