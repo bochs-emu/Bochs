@@ -284,7 +284,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_Jw(bxInstruction_c *i)
   branch_near16(new_IP);
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, PREV_RIP, new_IP);
 
-  BX_NEXT_TRACE(i);
+  BX_LINK_TRACE(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JO_Jw(bxInstruction_c *i)
@@ -293,7 +293,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JO_Jw(bxInstruction_c *i)
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, new_IP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -306,7 +306,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNO_Jw(bxInstruction_c *i)
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, new_IP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -319,7 +319,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JB_Jw(bxInstruction_c *i)
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, new_IP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -332,7 +332,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNB_Jw(bxInstruction_c *i)
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, new_IP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -345,7 +345,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JZ_Jw(bxInstruction_c *i)
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, new_IP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -358,7 +358,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNZ_Jw(bxInstruction_c *i)
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, new_IP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -371,7 +371,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JBE_Jw(bxInstruction_c *i)
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, new_IP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -384,7 +384,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNBE_Jw(bxInstruction_c *i)
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, new_IP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -397,7 +397,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JS_Jw(bxInstruction_c *i)
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, new_IP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -410,7 +410,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNS_Jw(bxInstruction_c *i)
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, new_IP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -423,7 +423,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JP_Jw(bxInstruction_c *i)
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, new_IP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -436,7 +436,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNP_Jw(bxInstruction_c *i)
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, new_IP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -449,7 +449,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JL_Jw(bxInstruction_c *i)
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, new_IP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -462,7 +462,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNL_Jw(bxInstruction_c *i)
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, new_IP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -475,7 +475,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JLE_Jw(bxInstruction_c *i)
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, new_IP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -488,7 +488,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNLE_Jw(bxInstruction_c *i)
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, new_IP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -606,13 +606,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
     Bit16u new_IP = IP + i->Iw();
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, new_IP);
+    BX_LINK_TRACE(i);
   }
-#if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
-  }
-#endif
 
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
   BX_NEXT_TRACE(i);
 }
 

@@ -201,7 +201,6 @@ public:
   {
     return &(entry[hash(pAddr, fetchModeMask)]);
   }
-
 };
 
 BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
@@ -224,6 +223,10 @@ BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
 
   mpindex = 0;
 }
+
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+extern void genDummyICacheEntry(bxInstruction_c *i);
+#endif
 
 BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr, Bit32u mask)
 {
@@ -248,12 +251,17 @@ BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr, Bit32u mask)
 
   bxICacheEntry_c *e = get_entry(pAddr, 0);
 
+  // go over 32 "cache lines" of 128 byte each
   for (unsigned n=0; n < 32; n++) {
     Bit32u line_mask = (1 << n);
     if (line_mask > mask) break;
     for (unsigned index=0; index < 128; index++, e++) {
       if (pAddr == LPFOf(e->pAddr) && (e->traceMask & mask) != 0) {
         e->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+        for (unsigned instr=0;instr < e->tlen; instr++)
+          genDummyICacheEntry(e->i + instr);
+#endif
       }
     }
   }

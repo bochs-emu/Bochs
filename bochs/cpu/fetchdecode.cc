@@ -1954,8 +1954,8 @@ modrm_done:
 #endif
 
   if (mod_mem) {
-    i->execute  = BxOpcodesTable[ia_opcode].execute1;
-    i->execute2 = BxOpcodesTable[ia_opcode].execute2;
+    i->execute = BxOpcodesTable[ia_opcode].execute1;
+    i->handlers.execute2 = BxOpcodesTable[ia_opcode].execute2;
 
     if (ia_opcode == BX_IA_MOV32_GdEd) {
       if (seg == BX_SEG_REG_SS)
@@ -1967,8 +1967,8 @@ modrm_done:
     }
   }
   else {
-    i->execute  = BxOpcodesTable[ia_opcode].execute2;
-    i->execute2 = NULL;
+    i->execute = BxOpcodesTable[ia_opcode].execute2;
+    i->handlers.execute2 = NULL;
   }
 
   BX_ASSERT(i->execute);

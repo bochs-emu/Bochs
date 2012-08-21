@@ -6,8 +6,8 @@ Changes in 2.6 (not yet released):
     Intel Architecture Manual (revision 043) now.
   - Implemented ADX (ADCX/ADOX) instructions support, the feature can
     be enabled using .bochsrc CPUID option.
-  - Another 10% CPU emulation speedup with even more optimal lazy flags
-    handling and stack access optimizations
+  - More than 10% CPU emulation speedup with even more optimal lazy flags
+    handling, stack access optimizations and cross branch trace linking.
   - Support for AMD's SVM hardware emulation in Bochs CPU, to enable
     configure with --enable-svm option
   - Implemented AMD Extended XAPIC support, to enable set .bochsrc CPU
@@ -112,6 +112,7 @@ Changes in 2.6 (not yet released):
   [3486555] Fix critical stack leak in Win32 GUI by Carlo Bramini
 
 - these S.F. bugs were closed/fixed
+  [3534063] Configure does not check for flex presence
   [3555237] NE2000 doesn't compile on OS/X
   [3553168] X doesn't build in latest code on OS/X
   [3550175] Crash when saving snapshot to directory instead of file

@@ -191,7 +191,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_Jq(bxInstruction_c *i)
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, PREV_RIP, RIP);
 
-  BX_NEXT_TRACE(i);
+  BX_LINK_TRACE(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JO_Jq(bxInstruction_c *i)
@@ -199,7 +199,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JO_Jq(bxInstruction_c *i)
   if (get_OF()) {
     branch_near64(i);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -211,7 +211,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNO_Jq(bxInstruction_c *i)
   if (! get_OF()) {
     branch_near64(i);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -223,7 +223,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JB_Jq(bxInstruction_c *i)
   if (get_CF()) {
     branch_near64(i);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -235,7 +235,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNB_Jq(bxInstruction_c *i)
   if (! get_CF()) {
     branch_near64(i);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -247,7 +247,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JZ_Jq(bxInstruction_c *i)
   if (get_ZF()) {
     branch_near64(i);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -259,7 +259,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNZ_Jq(bxInstruction_c *i)
   if (! get_ZF()) {
     branch_near64(i);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -271,7 +271,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JBE_Jq(bxInstruction_c *i)
   if (get_CF() || get_ZF()) {
     branch_near64(i);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -283,7 +283,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNBE_Jq(bxInstruction_c *i)
   if (! (get_CF() || get_ZF())) {
     branch_near64(i);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -295,7 +295,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JS_Jq(bxInstruction_c *i)
   if (get_SF()) {
     branch_near64(i);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -307,7 +307,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNS_Jq(bxInstruction_c *i)
   if (! get_SF()) {
     branch_near64(i);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -319,7 +319,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JP_Jq(bxInstruction_c *i)
   if (get_PF()) {
     branch_near64(i);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -331,7 +331,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNP_Jq(bxInstruction_c *i)
   if (! get_PF()) {
     branch_near64(i);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -343,7 +343,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JL_Jq(bxInstruction_c *i)
   if (getB_SF() != getB_OF()) {
     branch_near64(i);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -355,7 +355,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNL_Jq(bxInstruction_c *i)
   if (getB_SF() == getB_OF()) {
     branch_near64(i);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -367,7 +367,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JLE_Jq(bxInstruction_c *i)
   if (get_ZF() || (getB_SF() != getB_OF())) {
     branch_near64(i);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -379,7 +379,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JNLE_Jq(bxInstruction_c *i)
   if (! get_ZF() && (getB_SF() == getB_OF())) {
     branch_near64(i);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
-    BX_NEXT_TRACE(i);
+    BX_LINK_TRACE(i);
   }
 
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
@@ -457,13 +457,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JRCXZ_Jb(bxInstruction_c *i)
   if (temp_RCX == 0) {
     branch_near64(i);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, PREV_RIP, RIP);
+    BX_LINK_TRACE(i);
   }
-#if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
-  }
-#endif
 
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
   BX_NEXT_TRACE(i);
 }
 

@@ -57,6 +57,12 @@ typedef void BX_INSF_TYPE;
   return;                                              \
 }
 
+#define BX_LINK_TRACE(i) {                             \
+  BX_COMMIT_INSTRUCTION(i);                            \
+  linkTrace(i);                                        \
+  return;                                              \
+}
+
 #define BX_NEXT_INSTR(i) {                             \
   BX_COMMIT_INSTRUCTION(i);                            \
   if (BX_CPU_THIS_PTR async_event) return;             \
@@ -68,6 +74,7 @@ typedef void BX_INSF_TYPE;
 
 #define BX_NEXT_TRACE(i) { return; }
 #define BX_NEXT_INSTR(i) { return; }
+#define BX_LINK_TRACE(i) { return; }
 
 #define BX_SYNC_TIME_IF_SINGLE_PROCESSOR(allowed_delta) \
   if (BX_SMP_PROCESSORS == 1) BX_TICK1()
@@ -98,7 +105,12 @@ public:
   // and a function to execute the instruction after resolving
   // the memory address (if any).
   BxExecutePtr_tR execute;
-  BxExecutePtr_tR execute2;
+
+  union {
+    BxExecutePtr_tR execute2;
+    bxInstruction_c *next;
+  } handlers;
+
   BxResolvePtr_tR ResolveModrm;
 
   struct {
@@ -168,6 +180,10 @@ public:
     memcpy(opcode_bytes, opcode, ilen());
   }
 #endif
+
+  BX_CPP_INLINE BxExecutePtr_tR execute2(void) const {
+    return handlers.execute2;
+  }
 
   BX_CPP_INLINE unsigned seg(void) const {
     return metaData[BX_INSTR_METADATA_SEG];
@@ -351,6 +367,15 @@ public:
   {
     metaInfo.metaInfo1 |= (1<<4);
   }
+
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+  BX_CPP_INLINE bxInstruction_c* getNextTrace() const {
+    return handlers.next;
+  }
+  BX_CPP_INLINE void setNextTrace(bxInstruction_c* iptr) {
+    handlers.next = iptr;
+  }
+#endif
 
 };
 // <TAG-CLASS-INSTRUCTION-END>

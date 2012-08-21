@@ -55,11 +55,11 @@ BX_INSF_TYPE BX_CPU_C::BxEndTrace(bxInstruction_c *i)
   // do nothing, return to main cpu_loop
 }
 
-void genDummyICacheEntry(bxInstruction_c *i, BxExecutePtr_tR execute)
+void genDummyICacheEntry(bxInstruction_c *i)
 {
   i->setILen(0);
   i->setIaOpcode(BX_INSERTED_OPCODE);
-  i->execute = execute;
+  i->execute = &BX_CPU_C::BxEndTrace;
 }
 
 #endif
@@ -127,7 +127,7 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBia
 
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
       entry->tlen++; /* Add the inserted end of trace opcode */
-      genDummyICacheEntry(++i, &BX_CPU_C::BxEndTrace);
+      genDummyICacheEntry(++i);
 #endif
 
       BX_CPU_THIS_PTR iCache.commit_page_split_trace(BX_CPU_THIS_PTR pAddrFetchPage, entry);
@@ -175,7 +175,7 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBia
 
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
   entry->tlen++; /* Add the inserted end of trace opcode */
-  genDummyICacheEntry(i, &BX_CPU_C::BxEndTrace);
+  genDummyICacheEntry(i);
 #endif
 
   BX_CPU_THIS_PTR iCache.commit_trace(entry->tlen);
