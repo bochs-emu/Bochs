@@ -2211,8 +2211,8 @@ Check date, update/sumup info in CHANGES. Run autoconf to regenerate configure a
 Create an SVN tag that contains all files of the revision that was used in the release.
 For prereleases I create a normal SVN tag like this:
 <screen>
-  svn mkdir tags/REL_2_5_pre1
-  svn copy trunk/bochs tags/REL_2_5_pre1/bochs
+  svn mkdir tags/REL_2_5_pre1_FINAL
+  svn copy trunk/bochs tags/REL_2_5_pre1_FINAL/bochs
   svn commit
 </screen>
 But for a real release, I make an SVN branch tag AND a normal tag.
@@ -2283,10 +2283,10 @@ cd doc/docbook; touch */*.html
 </screen>
 Do make install_win32 into /tmp or someplace:
 <screen>
-make install_win32 prefix=/tmp/bochs-2.4
+make install_win32 prefix=/tmp/bochs-2.5
 </screen>
-This copies all the files into /tmp/bochs-2.4 and then creates a
-binary ZIP at /tmp/bochs-2.4.zip. Rename that bochs-2.4.win32-bin.zip.
+This copies all the files into /tmp/bochs-2.5 and then creates a
+binary ZIP at /tmp/bochs-2.5.zip. Rename that bochs-2.5.win32-bin.zip.
 </para>
 <para>
 Now make the NSIS installer package (the current script is known to work with NSIS 2.44)
@@ -2296,10 +2296,10 @@ cd build/win32/nsis
 Unzip the binary ZIP file into bochs-$VERSION (must match Makefile) and
 then run make.
 <screen>
-unzip ~/bochs-2.4.zip
+unzip ~/bochs-2.5.zip
 make
 </screen>
-That gives an installer called <filename>Bochs-2.4.exe</filename>. Test and upload it.
+That gives an installer called <filename>Bochs-2.5.exe</filename>. Test and upload it.
 </para>
 </section>
 <section><title>Building the release on Linux</title>
@@ -2309,9 +2309,9 @@ directory name with the version number as the destination. Then create the
 source package from this new directory.
 <screen>
   svn co https://bochs.svn.sourceforge.net/svnroot/bochs/tags/REL_2_4_FINAL/bochs bochs-2.4
-  tar czvf bochs-2.4.tar.gz --exclude=.svn bochs-2.4
+  tar czvf bochs-2.5.tar.gz --exclude=.svn bochs-2.5
 </screen>
-The source TAR file bochs-2.4.tar.gz is ready to upload.
+The source TAR file bochs-2.5.tar.gz is ready to upload.
 </para>
 <para>
 The RPM will be building using the configuration in .conf.linux with
