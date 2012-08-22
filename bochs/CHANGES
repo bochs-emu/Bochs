@@ -1,5 +1,27 @@
 Changes in 2.6 (not yet released):
 
+Brief summary :
+- More than 10% CPU emulation speedup !
+- Support for AMD's SVM hardware emulation (including extended XAPIC support).
+- Implemented support for new x86 ISA extensions, Bochs is aligned
+  with latest published Intel Architecture Manual (rev 043).
+- Improved emulation accuracy (critical fixes for APIC, VMX and AVX/XOP emulation).
+- Bochs internal debugger: new command to show state of a device from the debugger.
+- ROM BIOS: improved PCI boot ROM support (for VGA and other devices)
+- Networking:
+    - Ported Intel(R) 82540EM Gigabit Ethernet adapter emulation from Qemu.
+    - Added PCI network boot ROM support to all network adapters.
+    - Added TFTP support to the 'slirp' networking module.
+- Harddrive: added support for VirtualPC disk images, fixed sparse disk images.
+- Sound:
+    - implemented PC speaker beep using the lowlevel sound interface.
+    - SDL audio output support.
+- Added ability to set log action per device from .bochsrc.
+- Moved disk imaging, networking, sound and USB devices to subdirectories
+  in the iodev folder.
+
+Detailed change log :
+
 - CPU
   - Implemented EPT A/D extensions support.
     Bochs is fully aligned with the latest published revision of
@@ -17,7 +39,7 @@ Changes in 2.6 (not yet released):
   ! Added AMD Phenom X3 8650 (Toliman) configuration to the CPUDB
   ! Added Corei7 3770K (Ivy Bridge) configuration to the CPUDB
   - Bugfixes for CPU emulation correctness and stability
-    (critical fixes in APIC/X2APIC, VMX and AVX/XOP emulation)
+    (critical fixes for APIC/X2APIC, VMX and AVX/XOP emulation)
 
 - Bochs Debugger and Instrumentation
   - Implemented new debugger command 'info device [string]' that shows the
