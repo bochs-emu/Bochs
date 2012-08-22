@@ -294,14 +294,14 @@ typedef struct {
 // Event type: BX_ASYNC_EVT_MOUSE
 //
 // A mouse event can be sent from the VGA window to the Bochs
-// simulator.  It is asynchronous.  Currently unused because mouse
-// events aren't implemented in our wxWidgets code yet.
+// simulator.  It is asynchronous.
 typedef struct {
   // type is BX_EVT_MOUSE
-  Bit16s dx, dy;           // mouse motion delta
+  Bit16s dx, dy, dz;       // mouse motion delta
   Bit8u buttons;           // which buttons are pressed.
                            // bit 0: 1=left button down, 0=up
                            // bit 1: 1=right button down, 0=up
+                           // bit 2: 1=middle button down, 0=up
 } BxMouseEvent;
 
 // Event type: BX_SYNC_EVT_GET_PARAM, BX_ASYNC_EVT_SET_PARAM

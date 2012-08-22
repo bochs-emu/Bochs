@@ -1,31 +1,31 @@
-Readme for wxWindows Interface
+Readme for wxWidgets Interface
 updated Sat Dec 21 11:09:34 EST 2002
 
-Contributors to wxWindows port:
+Contributors to wxWidgets port:
   Don Becker (Psyon)
   Bryce Denney
   Dave Poirier
   Volker Ruppert
 
-wxWindows Configuration Interface
+wxWidgets Configuration Interface
 
-The wxWindows port began in June 2001 around the time of Bochs 1.2.1.  Dave
-Poirier and Bryce Denney started adding a wxWindows configuration interface.
+The wxWidgets port began in June 2001 around the time of Bochs 1.2.1.  Dave
+Poirier and Bryce Denney started adding a wxWidgets configuration interface.
 We made some progress, but stopped after a while.  Then in March/April 2002
-Bryce and Psyon revived the wxWindows branch and turned it into a usable
+Bryce and Psyon revived the wxWidgets branch and turned it into a usable
 interface.  Psyon did most of the work to get text and graphics working, and
 Bryce worked on event passing between threads, and keyboard mapping.
 Starting in August 2002, Bryce added lots of dialog boxes to allow you
 to set all the bochsrc parameters.  At the time of release 2.0, there
 are still some bugs but it is pretty stable and usable.
 
-Bochs should be build with wxWindows 2.3.3 or later.  It will probably
-not compile with 2.2.x without some work.  wxWindows 2.3.3 includes
+Bochs should be build with wxWidgets 2.3.3 or later.  It will probably
+not compile with 2.2.x without some work.  wxWidgets 2.3.3 includes
 a patch by Bryce Denney to allow us to get raw keycode data for several
 OSes.
 
-On any UNIX platform with wxWindows installed, configure with
---with-wx to enable the wxWindows display library.
+On any UNIX platform with wxWidgets installed, configure with
+--with-wx to enable the wxWidgets display library.
 
 To build in MS VC++:
 - edit .conf.win32-vcpp and add "--with-wx" to the configure line.
@@ -36,14 +36,14 @@ To build in MS VC++:
   For cygwin: unzip build/win32/wxworkspace.zip
   or use winzip or whatever else.
 - open up bochs.dsw, the workspace file
-- edit project settings so that VC++ can find the wxWindows include
+- edit project settings so that VC++ can find the wxWidgets include
   files and libraries on your system.  Bryce installed them in
   d:/wx/wx233/include and d:/wx/wx233/lib.  Specifically, edit
   - Project>Settings>C/C++>Category=Preprocessor: include directories.
   - Project>Settings>Link>Category=Input: additional library path.
 - build
 
-Note that the project is set up for wxWindows 2.3.3.  To use on other
+Note that the project is set up for wxWidgets 2.3.3.  To use on other
 wxwindows versions, you will have to change some of the names of the libraries
 to include.  Use the samples that came with that version of wxwindows for
 reference.

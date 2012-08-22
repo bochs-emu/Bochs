@@ -291,6 +291,7 @@ void MyPanel::OnMouse(wxMouseEvent& event)
         event_queue[num_events].u.mouse.dx = dx;
         event_queue[num_events].u.mouse.dy = -dy;
       }
+      // TODO: handle mouse wheel
       event_queue[num_events].u.mouse.buttons = buttons;
       num_events++;
       mouseSavedX = x;
@@ -1702,8 +1703,12 @@ void bx_wx_gui_c::show_ips(Bit32u ips_count)
   char ips_text[40];
 
   if (!wx_hide_ips) {
+#if defined(__WXMSW__)
     bx_bool is_main_thread = wxThread::IsMain();
     bx_bool needmutex = !is_main_thread && SIM->is_sim_thread();
+#else
+    bx_bool needmutex = 1;
+#endif
     if (needmutex) wxMutexGuiEnter();
     ips_count /= 1000;
     sprintf(ips_text, "IPS: %u.%3.3uM", ips_count / 1000, ips_count % 1000);
