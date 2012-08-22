@@ -420,19 +420,18 @@ install_doc::
 	install -m 644 $(srcdir)/.bochsrc $(DESTDIR)$(docdir)/bochsrc-sample.txt
 
 
+# docbook section: the -C option can be used here
 build_docbook::
-	cd doc/docbook; make
+	$(MAKE) -C doc/docbook
 
 dl_docbook::
-	cd doc/docbook; make dl_docs
+	$(MAKE) -C doc/docbook dl_docs
 
 install_docbook: build_docbook
-	cd doc/docbook; make install
+	$(MAKE) -C doc/docbook install
 
 clean_docbook::
-	cd doc/docbook @COMMAND_SEPARATOR@
-	$(MAKE) clean
-	@CD_UP_TWO@
+	$(MAKE) -C doc/docbook clean
 
 install_man::
 	-mkdir -p $(DESTDIR)$(man1dir)
