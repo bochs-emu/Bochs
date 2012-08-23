@@ -80,8 +80,7 @@ the simulator typically takes control and simulates that code in
 software at much slower speed, just like Bochs does.
 </para>
 </footnote>, but they are neither portable to non-x86 platforms nor open
-source.  The <ulink url="http://savannah.nongnu.org/projects/plex86">Plex86</ulink> project is
-working toward an open-source x86 simulator with virtualization.
+source.
 </para>
 
 <para>
@@ -351,13 +350,7 @@ currently work with.
   <row>
     <entry>P6 and later CPU Emulation</entry>
     <entry>Yes</entry>
-    <entry>Bochs can be configured to emulate any P6 family processor including optional MMX and SSE instructions.
-    </entry>
-  </row>
-  <row>
-    <entry>Pentium 4 Emulation</entry>
-    <entry>Incomplete</entry>
-    <entry>A few Pentium 4 features are incomplete, such as an on-chip APIC extensions (XAPIC) for SMP simulation.
+    <entry>Bochs can be configured to emulate any P6 family processor including optional MMX and SSEx instructions.
     </entry>
   </row>
   <row>
@@ -390,7 +383,8 @@ currently work with.
     <entry>Yes</entry>
     <entry>Implements ElTorito, EDD v3.0, basic APM feature, PCIBIOS features
     and the PCI interrupt routing table. The latest version of the Bochs BIOS
-    has a 32-bit init for ACPI, SMM and SMP.
+    has a 32-bit init for ACPI, SMM and SMP. Bochs also known no work with recent
+    <ulink url="http://www.seabios.org/">SeaBIOS</ulink> images.
     </entry>
   </row>
   <row>
@@ -557,7 +551,7 @@ currently work with.
   <row>
     <entry>Simulate a Multiprocessor</entry>
     <entry>Yes</entry>
-    <entry>Bochs can be configured to simulate up to 8 processors.  This
+    <entry>Bochs can be configured to simulate up to 255 processor threads.  This
     feature is still experimental, but it can boot several Linux or Windows guests
     with SMP support.  Please note that this does NOT mean that Bochs can run
     faster on a physical SMP machine.
@@ -2924,7 +2918,8 @@ supported is 2048MB.
 </para>
 
 <note><para>
-Due to limitations in the host OS, Bochs fails to allocated even 1024MB on most systems.
+Due to limitations in the host OS, Bochs fails to allocate more than 1024MB on most 32-bit systems.
+In order to overcome this problem configure and build Bochs with --enable-large-ramfile option.
 </para></note>
 </section>
 
@@ -2991,7 +2986,7 @@ simulation.  For example, changing IPS affects the frequency of VGA updates,
 the duration of time before a key starts to autorepeat, and the measurement
 of BogoMips and other benchmarks.  The table below lists some typical
 IPS settings for different machines<footnote><para>IPS measurements depend on
-OS and compiler configuration in addition to processor clock
+OS and compiler configuration in addition to host processor clock
 speed.</para></footnote>.
 </para>
 
@@ -8877,17 +8872,11 @@ cpuid: cpuid_limit_winnt=1
 </section>
 
 <section id="guest-win2k">
-        <title>Windows 2000</title>
+        <title>Windows 2000 / Windows 2000 Server</title>
 <para>You must read the message regarding software licenses in
-<xref linkend="thirdparty"> before you install Windows 2000 as a guest operating system in Bochs.</para>
+<xref linkend="thirdparty"> before you install Windows 2000 / Windows 2000 Server as a guest operating system in Bochs.</para>
         <para>
         </para>
-
-</section>
-<section id="guest-win2k-server">
-<title>Windows 2000 Server</title>
-<para>You must read the message regarding software licenses in
-<xref linkend="thirdparty"> before you install Windows 2000 Server as a guest operating system in Bochs.</para>
 </section>
 
 <section id="guest-winxp">
@@ -8900,6 +8889,13 @@ cpuid: cpuid_limit_winnt=1
         </para>
 </section>
 
+<section id="guest-win7">
+        <title>Windows 7</title>
+<para>You must read the message regarding software licenses in
+<xref linkend="thirdparty"> before you install Windows 7 as a guest operating system in Bochs.</para>
+        <para>
+        </para>
+</section>
 
 <section id="guest-osr5">
 <title>SCO OpenServer 5.0.5</title>
