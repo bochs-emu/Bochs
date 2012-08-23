@@ -62,7 +62,7 @@ system and applications that Bochs is simulating.
 host platform is, Bochs still simulates x86 hardware.  In other words, it
 does not depend on the native instructions of the host machine at all.
 This is both a strength and a weakness, and it's the major difference between
-Bochs and many other x86 emulation software such as plex86, VMware, etc.
+Bochs and many other x86 emulation software such as VirtualBox, VMware, etc.
 Because Bochs uses software simulation for every single x86 instruction, it
 can simulate a Windows application on an Alpha or Sun workstation.  However,
 the downside of Bochs' approach is simulation performance.  To model the
@@ -191,7 +191,7 @@ Perhaps all you want to do is run one or two applications native to Microsoft Wi
 on GNU/Linux, or vice-versa.  Perhaps your biggest concern is speed and performance.
 Maybe you don't mind tweaking a few files here and there when you want another application
 to work in that setting.
-In cases where the objective is to simulate x86 hardware on an x86, Plex86, Wine, and
+In cases where the objective is to simulate x86 hardware on an x86, VirtualBox, Wine, and
 VMware might be your best options.</para>
 
 <para>
@@ -243,7 +243,7 @@ Bochs only provides you with the "virtual hardware", and it is up to you to do t
 If you are running on x86 hardware, you have a range of choices.
 Check the installation section for your host platform to see what options
 Bochs supports on your platform.  If the most important factor is speed,
-you may want to try a virtualization product instead of Bochs (VMware, VirtualBox, plex86).
+you may want to try a virtualization product instead of Bochs (VMware, VirtualBox, QEMU).
 </para>
 
 <para>
@@ -723,7 +723,7 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
      Because Bochs emulates every x86 instruction and all the devices in a PC
      system, it does not reach high emulation speeds. Users who have an x86
      processor and want the highest emulation speeds may want to consider PC
-     virtualization software such as plex86 or VirtualBox (free software).
+     virtualization software such as Vmware or VirtualBox (free software).
      Another related project is <ulink url="http://www.nongnu.org/qemu/">QEMU</ulink>.
      </para></answer>
   </qandaentry>
@@ -1128,6 +1128,14 @@ The tag tells which release you want, and it can be one of the following:
       </row>
     </thead>
     <tbody>
+      <row>
+        <entry>2.5.1 (bugfix)</entry>
+        <entry>REL_2_5_1_FINAL</entry>
+      </row>
+      <row>
+        <entry>2.5</entry>
+        <entry>REL_2_5_FINAL</entry>
+      </row>
       <row>
         <entry>2.4.6</entry>
         <entry>REL_2_4_6_FINAL</entry>
