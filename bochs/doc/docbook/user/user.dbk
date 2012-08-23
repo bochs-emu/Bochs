@@ -417,7 +417,7 @@ currently work with.
     <entry>Floppy disk</entry>
     <entry>Yes</entry>
     <entry>Supports floppy disk images on all platforms: 2.88M 3.5", 1.44M 3.5", 1.2M 5.25",
-    720K 3.5" and 360K 5.25". On Unix and Windows 9x/NT/2000/XP, Bochs can access the
+    720K 3.5" and 360K 5.25". On Unix and Windows NT/2000/XP, Bochs can access the
     physical floppy drive. It is also possible to use a local directory as VFAT media
     (1.44M only).
     </entry>
@@ -436,7 +436,7 @@ currently work with.
     <entry>Yes</entry>
     <entry>Emulates ATA-6/IDE hard drives via image files.  Physical
     hard disk access is supported on some architecture, but NOT recommended, primarily for safety reasons.
-    Hard disks up to 127GB are supported, on any platform that support large files access.
+    With LBA48 support, hard disks up to 255TB are supported, on any platform that support large files access.
     It is also possible to use a local directory as VFAT drive.
     </entry>
   </row>
@@ -446,8 +446,7 @@ currently work with.
     <entry>Emulates ATAPI-4/IDE CD-ROM.  The CD-ROMs can read from an ISO disk image
     on any platform. On Windows (9x/ME/NT/2000/XP), Linux, SunOS, FreeBSD,
     NetBSD, OpenBSD, Amiga/MorphOS and MacOSX, Bochs can read from the
-    physical CD-ROM drive. Starting with version 1.4, Bochs is even able to boot from
-    a bootable CD or bootable ISO image.
+    physical CD-ROM drive. The Bochs BIOS supports booting from the first CD-ROM drive.
     </entry>
   </row>
   <row>
@@ -466,18 +465,20 @@ currently work with.
     </entry>
   </row>
   <row>
-    <entry>Sound Blaster</entry>
+    <entry>Sound card</entry>
     <entry>Yes</entry>
-    <entry>Emulates a Sound Blaster 16 card (ISA, no plug&amp;play). On Windows, Linux, FreeBSD, MacOS 9 and
-    MacOSX, the output can be sent to the host computer's sound system, see
-    <xref linkend="sb16-emulation"> for details.
+    <entry>Emulates a Sound Blaster 16 card (ISA, no plug&amp;play) or an ES1370 PCI
+    card. On Windows, Linux, FreeBSD, MacOS 9 and MacOSX, the output can be sent to
+    the host computer's sound system. For the SB16, see <xref linkend="sb16-emulation">
+    for details.
     </entry>
   </row>
   <row>
     <entry>Network card</entry>
     <entry>Yes</entry>
-    <entry>Emulates an NE2000 compatible network card.  On Windows NT/2000,
-    Linux, FreeBSD, and NetBSD, Bochs will forward packets to and from the
+    <entry>Emulates an NE2000 compatible network card (ISA / PCI) or an Intel(R)
+    82540EM Gigabit Ethernet adapter (PCI). On Windows NT/2000, Linux, FreeBSD,
+    and NetBSD, Bochs will forward packets to and from the
     operating system so that the guest OS can talk on the physical network.
     Unfortunately, on some platforms the guest OS can talk to any machine on
     the network BUT NOT the host machine.  On Windows and on systems that
@@ -532,7 +533,7 @@ currently work with.
     <entry>Plugins</entry>
     <entry>Yes</entry>
     <entry>Compiling gui and devices as plugins is supported on Linux, MacOS X,
-    Solaris, Cygwin and MinGW/MSYS.</entry>
+    Solaris, Cygwin, MinGW/MSYS and VS2008Ex (workspace provided).</entry>
   </row>
   <row>
     <entry>PIC</entry>
@@ -652,19 +653,6 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
         <xref linkend="compile-morphos"> for compile instructions.
       </entry>
       <entry>amigaos</entry>
-    </row>
-
-    <row>
-      <entry>OS/2</entry>
-      <entry>
-        Nick Behnken used PE2LX to translate David Ross' Win32
-        port to an OS/2 program. This hasn't been updated for a long time,
-        and Nick Behnken's page seems to be inactive.
-        Also, Craig Ballantyne ported Bochs to OS/2, but his web page has
-        disappeared and his port has not been updated since March 2000.
-        If you want to bring the OS/2 port up to date, contact the &devlist;.
-      </entry>
-      <entry>???</entry>
     </row>
 
   </tbody>
@@ -805,8 +793,9 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
      Does Bochs support a sound device?
      </para></question>
      <answer><para>
-       Yes, there is Sound Blaster emulation support for most common operation systems,
-       see <xref linkend="sb16-emulation"> for details.
+       Yes, Bochs emulates a Sound Blaster 16 card (ISA, no plug&amp;play) or
+       an ES1370 PCI. Output to the host sound system is implemented for some
+       platforms. See <xref linkend="features"> for details.
      </para></answer>
   </qandaentry>
 
@@ -815,9 +804,9 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
      Does Bochs support a network card?
      </para></question>
      <answer><para>
-     Yes.  Bochs contains a model of an NE2000 compatible network card.
-     Networking is not supported on all platforms.  See
-     <xref linkend="features"> for details.
+     Yes.  Bochs emulates an NE2000 compatible network card (ISA / PCI) or an
+     Intel(R) 82540EM Gigabit Ethernet adapter (PCI). Networking is not supported
+     on all platforms. See <xref linkend="features"> for details.
      </para></answer>
   </qandaentry>
 
