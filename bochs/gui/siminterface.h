@@ -257,7 +257,8 @@ typedef enum {
   BX_ASYNC_EVT_DBG_MSG,           // simulator -> CI
   BX_ASYNC_EVT_VALUE_CHANGED,     // simulator -> CI
   BX_ASYNC_EVT_TOOLBAR,           // CI -> simulator
-  BX_ASYNC_EVT_REFRESH            // simulator -> CI
+  BX_ASYNC_EVT_REFRESH,           // simulator -> CI
+  BX_ASYNC_EVT_QUIT_SIM           // simulator -> CI
 } BxEventType;
 
 typedef union {

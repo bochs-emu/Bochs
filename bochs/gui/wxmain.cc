@@ -1224,6 +1224,10 @@ void MyFrame::OnSim2CIEvent(wxCommandEvent& event)
       sim_thread->SendSyncResponse(be);
     }
     break;
+  case BX_ASYNC_EVT_QUIT_SIM:
+    wxMessageBox(wxT("Bochs simulation has stopped."), wxT("Bochs Stopped"),
+        wxOK | wxICON_INFORMATION, this);
+    break;
   default:
     wxLogDebug(wxT("OnSim2CIEvent: event type %d ignored"), (int)be->type);
     if (!BX_EVT_IS_ASYNC(be->type)) {
@@ -1400,7 +1404,10 @@ void *SimThread::Entry(void)
   if (!wxBochsClosing) {
     if (!wxBochsStopSim) {
       wxLogDebug(wxT("SimThread::Entry: sim thread ending.  call simStatusChanged"));
-      theFrame->simStatusChanged(theFrame->Stop, true);
+      theFrame->simStatusChanged(theFrame->Stop, false);
+      BxEvent *be = new BxEvent;
+      be->type = BX_ASYNC_EVT_QUIT_SIM;
+      SIM->sim_to_ci_event(be);
     }
   } else {
     wxLogMessage(wxT("SimThread::Entry: the gui is waiting for sim to finish.  Now that it has finished, I will close the frame."));
