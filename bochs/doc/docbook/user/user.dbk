@@ -104,13 +104,14 @@ operating system has not been written.
 <para>
 <!-- really more like Background or Bochs History, but maybe it doesn't need its own section unless it gets to 3 paras or so  -->
 
-Bochs was written by Kevin Lawton starting in 1994.  It began as a
-commercial product, which you could buy with source code for ...
+Bochs was written by Kevin Lawton starting in 1994. It started as a program with a
+commercial license, at the price of 25 USD, for use as-is. If a user needed to link
+it to other software, that user would have to negotiate a special license.
 &NEEDHELP; <footnote>
 <para>
 We need a Bochs historian to help out here.  For background, it would be
-interesting to know how much Bochs used to cost and what it was used for.  I
-thought I saw an interview out there somewhere where Kevin says why he started
+interesting to know how much Bochs sources used to cost and what it was used for.
+I thought I saw an interview out there somewhere where Kevin says why he started
 it and some more background information.
 </para>
 </footnote> Finally, in March 2000, MandrakeSoft (now called
@@ -383,7 +384,7 @@ currently work with.
     <entry>Yes</entry>
     <entry>Implements ElTorito, EDD v3.0, basic APM feature, PCIBIOS features
     and the PCI interrupt routing table. The latest version of the Bochs BIOS
-    has a 32-bit init for ACPI, SMM and SMP. Bochs also known no work with recent
+    has a 32-bit init for ACPI, SMM and SMP. Bochs also known to work with recent
     <ulink url="http://www.seabios.org/">SeaBIOS</ulink> images.
     </entry>
   </row>
@@ -1014,8 +1015,8 @@ for instructions.
 </tip>
 
 <para>
-The SVN checkout process (above) gives you a directory called bochs that
-contains the very latest source code.  I will refer to this directory
+The SVN checkout process (above) gives you a directory called <filename>bochs</filename>
+that contains the very latest source code.  I will refer to this directory
 as &bochsdir;.  In each subdirectory directory there's also a
 directory called ".svn" which tells the SVN software where the code was checked
 out, what version you have, and where to go for future updates.
@@ -1110,7 +1111,7 @@ any release since March 2000.  The command is
 <screen>
   user$ <command>svn co https://bochs.svn.sourceforge.net/svnroot/bochs/tags/<replaceable>tagname</replaceable> bochs</command>
 </screen>
-The tag tells which release you want, and it can be one of the following:
+The <replaceable>tagname</replaceable> tells which release you want, and it can be one of the following:
 
 <table frame="all">
 <title>Bochs Release Tags</title>
