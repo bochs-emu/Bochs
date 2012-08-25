@@ -1352,8 +1352,10 @@ void bx_init_hardware()
 
 #if BX_SHOW_IPS
 #if !defined(WIN32)
-  signal(SIGALRM, bx_signal_handler);
-  alarm(1);
+  if (!SIM->is_wx_selected()) {
+    signal(SIGALRM, bx_signal_handler);
+    alarm(1);
+  }
 #endif
 #endif
 }
@@ -1396,8 +1398,10 @@ int bx_atexit(void)
 
 #if BX_SHOW_IPS
 #if !defined(__MINGW32__) && !defined(_MSC_VER)
-  alarm(0);
-  signal(SIGALRM, SIG_DFL);
+  if (!SIM->is_wx_selected()) {
+    alarm(0);
+    signal(SIGALRM, SIG_DFL);
+  }
 #endif
 #endif
 
@@ -1448,8 +1452,10 @@ void CDECL bx_signal_handler(int signum)
       }
     }
 #if !defined(WIN32)
-    signal(SIGALRM, bx_signal_handler);
-    alarm(1);
+    if (!SIM->is_wx_selected()) {
+      signal(SIGALRM, bx_signal_handler);
+      alarm(1);
+    }
 #endif
     return;
   }

@@ -74,6 +74,7 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   int exit_code;
   unsigned param_id;
   bx_bool bx_debug_gui;
+  bx_bool wxsel;
 public:
   bx_real_sim_c();
   virtual ~bx_real_sim_c() {}
@@ -167,6 +168,7 @@ public:
   virtual bx_bool is_sim_thread();
   virtual void set_debug_gui(bx_bool val) { bx_debug_gui = val; }
   virtual bx_bool has_debug_gui() const { return bx_debug_gui; }
+  virtual bx_bool is_wx_selected() const { return wxsel; }
   // provide interface to bx_gui->set_display_mode() method for config
   // interfaces to use.
   virtual void set_display_mode(disp_mode_t newmode) {
@@ -336,6 +338,7 @@ bx_real_sim_c::bx_real_sim_c()
   ci_callback_data = NULL;
   is_sim_thread_func = NULL;
   bx_debug_gui = 0;
+  wxsel = 0;
 
   enabled = 1;
   init_done = 0;
@@ -817,9 +820,10 @@ int bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t comm
     return -1;
   }
   if (!strcmp(name, "wx"))
-    bx_debug_gui = 1;
+    wxsel = 1;
   else
-    bx_debug_gui = 0;
+    wxsel = 0;
+  bx_debug_gui = wxsel;
   // enter configuration mode, just while running the configuration interface
   set_display_mode(DISP_MODE_CONFIG);
   int retval = (*ci_callback)(ci_callback_data, command);
