@@ -2203,7 +2203,7 @@ void bx_win32_gui_c::set_mouse_mode_absxy(bx_bool mode)
 #if BX_SHOW_IPS
 VOID CALLBACK MyTimer(HWND hwnd,UINT uMsg, UINT idEvent, DWORD dwTime)
 {
-  bx_signal_handler(SIGALRM);
+  bx_show_ips_handler();
 }
 
 void bx_win32_gui_c::show_ips(Bit32u ips_count)

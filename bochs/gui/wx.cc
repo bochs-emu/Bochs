@@ -175,7 +175,7 @@ void MyPanel::OnTimer(wxTimerEvent& WXUNUSED(event))
 #if BX_SHOW_IPS
   static int i = 10;
   if (--i <= 0) {
-    bx_signal_handler(wxSIGALRM);
+    bx_show_ips_handler();
     i = 10;
   }
 #endif

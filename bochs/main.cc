@@ -1411,6 +1411,28 @@ int bx_atexit(void)
   return 0;
 }
 
+#if BX_SHOW_IPS
+void bx_show_ips_handler(void)
+{
+  static Bit64u ticks_count = 0;
+  static Bit64u counts = 0;
+
+  // amount of system ticks passed from last time the handler was called
+  Bit64u ips_count = bx_pc_system.time_ticks() - ticks_count;
+  if (ips_count) {
+    bx_gui->show_ips((Bit32u) ips_count);
+    ticks_count = bx_pc_system.time_ticks();
+    counts++;
+    if (bx_dbg.print_timestamps) {
+      printf("IPS: %u\taverage = %u\t\t(%us)\n",
+         (unsigned) ips_count, (unsigned) (ticks_count/counts), (unsigned) counts);
+      fflush(stdout);
+    }
+  }
+  return;
+}
+#endif
+
 void CDECL bx_signal_handler(int signum)
 {
   // in a multithreaded environment, a signal such as SIGINT can be sent to all
@@ -1434,23 +1456,8 @@ void CDECL bx_signal_handler(int signum)
 #endif
 
 #if BX_SHOW_IPS
-  static Bit64u ticks_count = 0;
-  static Bit64u counts = 0;
-
-  if (signum == SIGALRM)
-  {
-    // amount of system ticks passed from last time the handler was called
-    Bit64u ips_count = bx_pc_system.time_ticks() - ticks_count;
-    if (ips_count) {
-      bx_gui->show_ips((Bit32u) ips_count);
-      ticks_count = bx_pc_system.time_ticks();
-      counts++;
-      if (bx_dbg.print_timestamps) {
-        printf("IPS: %u\taverage = %u\t\t(%us)\n",
-           (unsigned) ips_count, (unsigned) (ticks_count/counts), (unsigned) counts);
-        fflush(stdout);
-      }
-    }
+  if (signum == SIGALRM) {
+    bx_show_ips_handler();
 #if !defined(WIN32)
     if (!SIM->is_wx_selected()) {
       signal(SIGALRM, bx_signal_handler);

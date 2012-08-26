@@ -146,12 +146,6 @@ static bxevent_handler old_callback = NULL;
 static void *old_callback_arg = NULL;
 #endif
 
-#if BX_SHOW_IPS
-#if  defined(__MINGW32__) || defined(_MSC_VER)
-  void bx_signal_handler(int);
-#endif
-#endif
-
 
 void switch_to_windowed(void)
 {
@@ -250,7 +244,7 @@ void switch_to_fullscreen(void)
 #if defined(__MINGW32__) || defined(_MSC_VER)
 Uint32 SDLCALL sdlTimer(Uint32 interval)
 {
-  bx_signal_handler(SIGALRM);
+  bx_show_ips_handler();
   return interval;
 }
 #endif
