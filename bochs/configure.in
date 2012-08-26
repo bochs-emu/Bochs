@@ -2237,7 +2237,17 @@ if test "$with_wx" = yes; then
        EXTRA_BX_OBJS="$EXTRA_BX_OBJS wxbochs_resources.o"
 	   GUI_LINK_OPTS_WX="$GUI_LINK_OPTS_WX --subsystem,windows -mwindows"
        ;;
+    *)
+      # This is required for XStringToKeysym
+      if test "$with_x11" != yes -a "$bx_plugins" != 1; then
+        GUI_LINK_OPTS="$GUI_LINK_OPTS -lX11"
+      fi
+      ;;
   esac
+  # The enhanced X debugger depends on GTK2 (unused yet, but fixes link failure)
+  if test "$gui_debugger" = 1 -a "$DEFAULT_GUI" != win32; then
+    needs_gtk2=1
+  fi
 fi
 
 if test "$with_nogui" = yes; then
