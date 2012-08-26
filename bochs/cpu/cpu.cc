@@ -37,7 +37,7 @@ static unsigned iCacheMisses=0;
     BX_INFO(("ICACHE lookups: %u, misses: %u, hit rate = %6.2f%% ", \
           iCacheLookups, \
           iCacheMisses,  \
-          (iCacheLookups-iCacheMisses) * 100.0 / iCacheLookups)); \
+          (iCacheLookups-iCacheMisses) * 100.0f / iCacheLookups)); \
     iCacheLookups = iCacheMisses = 0; \
   } \
 }
