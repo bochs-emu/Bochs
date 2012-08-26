@@ -117,6 +117,7 @@ Detailed change log :
   - Added support for sending absolute mouse position values from the gui if an
     absolute pointing device (USB tablet) is active (rfb, sdl, win32, wx, x).
   - Gui debugger now supported when using sdl gui on Windows
+  - wx: fixed random freezes with wxGTK and "show ips" feature enabled
 
 - Tools
   - bxcommit: added support for converting growing to flat mode images
@@ -134,6 +135,7 @@ Detailed change log :
   [3486555] Fix critical stack leak in Win32 GUI by Carlo Bramini
 
 - these S.F. bugs were closed/fixed
+  [625877]  wx: power button -> thread deadlock
   [3534063] Configure does not check for flex presence
   [3555237] NE2000 doesn't compile on OS/X
   [3553168] X doesn't build in latest code on OS/X
