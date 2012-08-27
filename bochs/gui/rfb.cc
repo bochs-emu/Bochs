@@ -266,7 +266,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     BX_ERROR(("private_colormap option ignored."));
   }
 
-  // load keymap for sdl
+  // load keymap for rfb
   if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
     bx_keymap.loadKeymap(convertStringToRfbKey);
   }
@@ -286,13 +286,18 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   io->set_log_action(LOGLEV_PANIC, ACT_FATAL);
 
   while ((!client_connected) && (timeout--)) {
+    fprintf(stderr, "Waiting for RFB client: %2d\r", timeout+1);
 #ifdef WIN32
     Sleep(1000);
 #else
     sleep(1);
 #endif
   }
-  if (timeout < 0) BX_PANIC(("timeout! no client present"));
+  if ((timeout < 0) && (!client_connected)) {
+    BX_PANIC(("timeout! no client present"));
+  } else {
+    fprintf(stderr, "RFB client connected      \r");
+  }
 
   new_gfx_api = 1;
   dialog_caps = 0;
@@ -432,7 +437,6 @@ void HandleRfbClient(SOCKET sClient)
   rfbServerInitMessage sim;
   bx_bool mouse_toggle = 0;
 
-  client_connected = true;
   setsockopt(sClient, IPPROTO_TCP, TCP_NODELAY, (const char *)&one, sizeof(one));
   BX_INFO(("accepted client connection."));
   snprintf(pv, rfbProtocolVersionMessageSize,
@@ -481,6 +485,7 @@ void HandleRfbClient(SOCKET sClient)
     return;
   }
 
+  client_connected = true;
   sGlobal = sClient;
   while(keep_alive) {
     U8 msgType;
@@ -1649,7 +1654,7 @@ void rfbMouseMove(int x, int y, int bmask)
   }
   if(y > rfbHeaderbarY) {
     if (rfbMouseModeAbsXY) {
-      if ((y >= rfbHeaderbarY) && (y < (rfbDimensionY + rfbHeaderbarY))) {
+      if ((y >= rfbHeaderbarY) && (y < (int)(rfbDimensionY + rfbHeaderbarY))) {
         dx = x * 0x7fff / rfbDimensionX;
         dy = (y - rfbHeaderbarY) * 0x7fff / rfbDimensionY;
         DEV_mouse_motion(dx, dy, 0, bmask, 1);
@@ -1700,7 +1705,8 @@ void bx_rfb_gui_c::set_mouse_mode_absxy(bx_bool mode)
 void bx_rfb_gui_c::show_ips(Bit32u ips_count)
 {
   char ips_text[40];
-  sprintf(ips_text, "IPS: %3.3fM", ips_count / 1000000.0);
+  ips_count /= 1000;
+  sprintf(ips_text, "IPS: %u.%3.3uM", ips_count / 1000, ips_count % 1000);
   rfbSetStatusText(0, ips_text, 1);
 }
 #endif
