@@ -73,8 +73,8 @@ typedef struct {
 #define rfbServerProtocolMajorVersion 3
 #define rfbServerProtocolMinorVersion 3
 
-typedef char rfbProtocolVersionMessage[12 + 1]; // Add 1 for null byte
-#define rfbProtocolVersionMessageSize (sizeof(rfbProtocolVersionMessage) - 1) // Real Message Length
+#define rfbProtocolVersionMessageSize 12
+typedef char rfbProtocolVersionMessage[rfbProtocolVersionMessageSize + 1]; // Add 1 for null byte
 
 
 #define rfbSecurityConnFailed 0

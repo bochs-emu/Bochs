@@ -439,7 +439,7 @@ void HandleRfbClient(SOCKET sClient)
 
   setsockopt(sClient, IPPROTO_TCP, TCP_NODELAY, (const char *)&one, sizeof(one));
   BX_INFO(("accepted client connection."));
-  snprintf(pv, rfbProtocolVersionMessageSize,
+  snprintf(pv, rfbProtocolVersionMessageSize + 1,
            rfbProtocolVersionFormat,
            rfbServerProtocolMajorVersion,
            rfbServerProtocolMinorVersion);
