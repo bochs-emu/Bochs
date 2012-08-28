@@ -4120,9 +4120,11 @@ public: // for now...
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_xapic_extensions(void);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
-  BX_SMF BX_CPP_INLINE Bit64u get_icount(void) { return BX_CPU_THIS_PTR icount; }
-  BX_SMF BX_CPP_INLINE Bit64u get_icount_last_sync(void) { return BX_CPU_THIS_PTR icount_last_sync; }
   BX_SMF BX_CPP_INLINE const bx_gen_reg_t *get_gen_regfile() { return BX_CPU_THIS_PTR gen_reg; }
+
+  BX_SMF BX_CPP_INLINE Bit64u get_icount(void) { return BX_CPU_THIS_PTR icount; }
+  BX_SMF BX_CPP_INLINE void sync_icount(void) { BX_CPU_THIS_PTR icount_last_sync = BX_CPU_THIS_PTR icount; }
+  BX_SMF BX_CPP_INLINE Bit64u get_icount_last_sync(void) { return BX_CPU_THIS_PTR icount_last_sync; }
 
   BX_SMF BX_CPP_INLINE bx_address get_instruction_pointer(void);
 

@@ -34,7 +34,7 @@ typedef void BX_INSF_TYPE;
   if (BX_SMP_PROCESSORS == 1) {                                               \
     Bit32u delta = BX_CPU_THIS_PTR icount - BX_CPU_THIS_PTR icount_last_sync; \
     if (delta >= allowed_delta) {                                             \
-      BX_CPU_THIS_PTR icount_last_sync = BX_CPU_THIS_PTR icount;              \
+      BX_CPU_THIS_PTR sync_icount();                                          \
       BX_TICKN(delta);                                                        \
     }                                                                         \
   }                                                                           \
@@ -226,6 +226,7 @@ public:
   BX_CPP_INLINE Bit32u Id() const  { return modRMForm.Id; }
   BX_CPP_INLINE Bit16u Iw() const  { return modRMForm.Iw; }
   BX_CPP_INLINE Bit8u  Ib() const  { return modRMForm.Ib; }
+  BX_CPP_INLINE Bit16u Id2() const { return modRMForm.Id2; }
   BX_CPP_INLINE Bit16u Iw2() const { return modRMForm.Iw2; }
   BX_CPP_INLINE Bit8u  Ib2() const { return modRMForm.Ib2; }
 #if BX_SUPPORT_X86_64
