@@ -7,6 +7,8 @@
 //    Donald Becker
 //    http://www.psyon.org
 //
+//  Copyright (C) 2001-2012  The Bochs Project
+//
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
 //  License as published by the Free Software Foundation; either
@@ -96,10 +98,14 @@ typedef int SOCKET;
 
 #endif
 
-static bool keep_alive;
-static bool client_connected;
-static bool desktop_resizable;
-
+static bx_bool keep_alive;
+static bx_bool client_connected;
+static bx_bool desktop_resizable;
+#if BX_SHOW_IPS
+static bx_bool rfbHideIPS = 0;
+static bx_bool rfbIPSupdate = 0;
+static char rfbIPStext[40];
+#endif
 static unsigned short rfbPort;
 
 // Headerbar stuff
@@ -203,8 +209,8 @@ static const rfbPixelFormat BGR233Format = {
 // Called from gui.cc, once upon program startup, to allow for the
 // specific GUI code (X11, Win32, ...) to be initialized.
 //
-// argc, argv: not used right now, but the intention is to pass native GUI
-//     specific options from the command line.  (X11 options, Win32 options,...)
+// argc, argv: used to pass display library specific options to the init code
+//     (X11 options, Win32 options,...)
 //
 // headerbar_y:  A headerbar (toolbar) is display on the top of the
 //     VGA window, showing floppy status, and other information.  It
@@ -253,9 +259,9 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   clientEncodingsCount=0;
   clientEncodings=NULL;
 
-  keep_alive = true;
-  client_connected = false;
-  desktop_resizable = false;
+  keep_alive = 1;
+  client_connected = 0;
+  desktop_resizable = 0;
   StartThread();
 
 #ifdef WIN32
@@ -276,6 +282,11 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     for (i = 1; i < argc; i++) {
       if (!strncmp(argv[i], "timeout=", 8)) {
         timeout = atoi(&argv[i][8]);
+#if BX_SHOW_IPS
+      } else if (!strcmp(argv[i], "hideIPS")) {
+        BX_INFO(("hide IPS display in status bar"));
+        rfbHideIPS = 1;
+#endif
       } else {
         BX_PANIC(("Unknown rfb option '%s'", argv[i]));
       }
@@ -409,7 +420,7 @@ void CDECL ServerThreadInit(void *indata)
     }
     BX_INFO (("listening for connections on port %i", rfbPort));
     sai_size = sizeof(sai);
-    while(keep_alive) {
+    while (keep_alive) {
         sClient = accept(sServer, (struct sockaddr *)&sai, (socklen_t*)&sai_size);
         if(sClient != INVALID_SOCKET) {
             HandleRfbClient(sClient);
@@ -485,9 +496,9 @@ void HandleRfbClient(SOCKET sClient)
     return;
   }
 
-  client_connected = true;
+  client_connected = 1;
   sGlobal = sClient;
-  while(keep_alive) {
+  while (keep_alive) {
     U8 msgType;
     int n;
 
@@ -574,7 +585,7 @@ void HandleRfbClient(SOCKET sClient)
                 BX_INFO(("%08x %s", rfbEncodings[j].id, rfbEncodings[j].name));
                 found=1;
                 if (clientEncodings[i] == rfbEncodingDesktopSize) {
-                  desktop_resizable = true;
+                  desktop_resizable = 1;
                 }
                 break;
               }
@@ -694,6 +705,12 @@ void bx_rfb_gui_c::handle_events(void)
         rfbUpdateRegion.height = 0;
     }
     rfbUpdateRegion.updated = false;
+#if BX_SHOW_IPS
+  if (rfbIPSupdate) {
+    rfbIPSupdate = 0;
+    rfbSetStatusText(0, rfbIPStext, 1);
+  }
+#endif
 }
 
 // ::FLUSH()
@@ -1110,7 +1127,7 @@ void bx_rfb_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 void bx_rfb_gui_c::exit(void)
 {
     unsigned int i;
-    keep_alive = false;
+    keep_alive = 0;
 #ifdef WIN32
     StopWinsock();
 #endif
@@ -1704,10 +1721,11 @@ void bx_rfb_gui_c::set_mouse_mode_absxy(bx_bool mode)
 #if BX_SHOW_IPS
 void bx_rfb_gui_c::show_ips(Bit32u ips_count)
 {
-  char ips_text[40];
-  ips_count /= 1000;
-  sprintf(ips_text, "IPS: %u.%3.3uM", ips_count / 1000, ips_count % 1000);
-  rfbSetStatusText(0, ips_text, 1);
+  if (!rfbIPSupdate && !rfbHideIPS) {
+    ips_count /= 1000;
+    sprintf(rfbIPStext, "IPS: %u.%3.3uM", ips_count / 1000, ips_count % 1000);
+    rfbIPSupdate = 1;
+  }
 }
 #endif
 
