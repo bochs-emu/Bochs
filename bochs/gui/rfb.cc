@@ -397,7 +397,7 @@ void CDECL ServerThreadInit(void *indata)
 #endif
 
     sServer = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if(sServer == -1) {
+    if(sServer == (SOCKET) -1) {
         BX_PANIC(("could not create socket."));
         goto end_of_thread;
     }
@@ -1731,7 +1731,7 @@ void bx_rfb_gui_c::set_mouse_mode_absxy(bx_bool mode)
 
 #if BX_SHOW_IPS
 #ifdef WIN32
-VOID CALLBACK IPSTimerProc(HWND hWnd, UINT nMsg, UINT nIDEvent, DWORD dwTime)
+VOID CALLBACK IPSTimerProc(HWND hWnd, UINT nMsg, UINT_PTR nIDEvent, DWORD dwTime)
 {
   bx_show_ips_handler();
 }
