@@ -118,6 +118,7 @@ Detailed change log :
     absolute pointing device (USB tablet) is active (rfb, sdl, win32, wx, x).
   - Gui debugger now supported when using sdl gui on Windows
   - wx: fixed random freezes with wxGTK and "show ips" feature enabled
+  - rfb: the "show ips" feature now works on Windows host
 
 - Tools
   - bxcommit: added support for converting growing to flat mode images

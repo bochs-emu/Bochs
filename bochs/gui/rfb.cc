@@ -196,6 +196,10 @@ void rfbKeyPressed(Bit32u key, int press_release);
 void rfbMouseMove(int x, int y, int bmask);
 void DrawColorPalette();
 
+#if BX_SHOW_IPS && defined(WIN32)
+DWORD WINAPI ShowIPSthread(LPVOID);
+#endif
+
 static const rfbPixelFormat BGR233Format = {
     8, 8, 1, 1, 7, 7, 3, 0, 3, 6
 };
@@ -309,6 +313,13 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   } else {
     fprintf(stderr, "RFB client connected      \r");
   }
+
+#if BX_SHOW_IPS && defined(WIN32)
+  if (!rfbHideIPS) {
+    DWORD threadID;
+    CreateThread(NULL, 0, ShowIPSthread, NULL, 0, &threadID);
+  }
+#endif
 
   new_gfx_api = 1;
   dialog_caps = 0;
@@ -1719,6 +1730,25 @@ void bx_rfb_gui_c::set_mouse_mode_absxy(bx_bool mode)
 }
 
 #if BX_SHOW_IPS
+#ifdef WIN32
+VOID CALLBACK IPSTimerProc(HWND hWnd, UINT nMsg, UINT nIDEvent, DWORD dwTime)
+{
+  bx_show_ips_handler();
+}
+
+DWORD WINAPI ShowIPSthread(LPVOID)
+{
+  MSG msg;
+
+  UINT TimerId = SetTimer(NULL, 0, 1000, &IPSTimerProc);
+  while (keep_alive && GetMessage(&msg, NULL, 0, 0)) {
+    DispatchMessage(&msg);
+  }
+  KillTimer(NULL, TimerId);
+  return 0;
+}
+#endif
+
 void bx_rfb_gui_c::show_ips(Bit32u ips_count)
 {
   if (!rfbIPSupdate && !rfbHideIPS) {
