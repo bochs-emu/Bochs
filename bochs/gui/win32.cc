@@ -149,16 +149,16 @@ static unsigned bx_hb_separator;
 // Status Bar stuff
 #if BX_SHOW_IPS
 static BOOL ipsUpdate = FALSE;
+static BOOL  hideIPS = FALSE;
 static char ipsText[20];
-#define BX_SB_TEXT_ELEMENTS 2
-#else
-#define BX_SB_TEXT_ELEMENTS 1
 #endif
+#define BX_SB_MAX_TEXT_ELEMENTS    2
 #define SIZE_OF_SB_ELEMENT        40
 #define SIZE_OF_SB_MOUSE_MESSAGE 170
-#define SIZE_OF_SB_IPS_MESSAGE 90
-long SB_Edges[BX_MAX_STATUSITEMS+BX_SB_TEXT_ELEMENTS+1];
+#define SIZE_OF_SB_IPS_MESSAGE    90
+long SB_Edges[BX_MAX_STATUSITEMS+BX_SB_MAX_TEXT_ELEMENTS+1];
 char SB_Text[BX_MAX_STATUSITEMS][10];
+unsigned SB_Text_Elements;
 bx_bool SB_Active[BX_MAX_STATUSITEMS];
 bx_bool SB_ActiveW[BX_MAX_STATUSITEMS];
 
@@ -199,7 +199,7 @@ sharedThreadInfo stInfo;
 LRESULT CALLBACK mainWndProc (HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK simWndProc (HWND, UINT, WPARAM, LPARAM);
 VOID CDECL UIThread(PVOID);
-void SetStatusText(int Num, const char *Text, bx_bool active, bx_bool w=0);
+void SetStatusText(unsigned Num, const char *Text, bx_bool active, bx_bool w=0);
 void terminateEmul(int);
 void create_vga_font(void);
 static unsigned char reverse_bitorder(unsigned char);
@@ -642,6 +642,11 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
           BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
         }
 #endif
+#if BX_SHOW_IPS
+      } else if (!strcmp(argv[i], "hideIPS")) {
+        BX_INFO(("hide IPS display in status bar"));
+        hideIPS = TRUE;
+#endif
       } else {
         BX_PANIC(("Unknown win32 option '%s'", argv[i]));
       }
@@ -855,15 +860,19 @@ VOID CDECL UIThread(PVOID pvoid)
     hwndSB = CreateStatusWindow(WS_CHILD | WS_VISIBLE, "",
                                 stInfo.mainWnd, 0x7712);
     if (hwndSB) {
-      int elements;
+      unsigned elements;
       SB_Edges[0] = SIZE_OF_SB_MOUSE_MESSAGE + SIZE_OF_SB_ELEMENT;
+      SB_Text_Elements = 1;
 #if BX_SHOW_IPS
-      SB_Edges[1] = SB_Edges[0] + SIZE_OF_SB_IPS_MESSAGE;
+      if (!hideIPS) {
+        SB_Edges[1] = SB_Edges[0] + SIZE_OF_SB_IPS_MESSAGE;
+        SB_Text_Elements = 2;
+      }
 #endif
-      for (elements = BX_SB_TEXT_ELEMENTS; elements < (BX_MAX_STATUSITEMS+BX_SB_TEXT_ELEMENTS); elements++)
+      for (elements = SB_Text_Elements; elements < (BX_MAX_STATUSITEMS+SB_Text_Elements); elements++)
         SB_Edges[elements] = SB_Edges[elements-1] + SIZE_OF_SB_ELEMENT;
       SB_Edges[elements] = -1;
-      SendMessage(hwndSB, SB_SETPARTS, BX_MAX_STATUSITEMS+BX_SB_TEXT_ELEMENTS+1, (LPARAM)&SB_Edges);
+      SendMessage(hwndSB, SB_SETPARTS, BX_MAX_STATUSITEMS+SB_Text_Elements+1, (LPARAM)&SB_Edges);
     }
     SetStatusText(0, szMouseEnable, TRUE);
 
@@ -917,8 +926,10 @@ VOID CDECL UIThread(PVOID pvoid)
       }
 #endif
 #if BX_SHOW_IPS
-      UINT idTimer = 2;
-      SetTimer(stInfo.simWnd, idTimer, 1000, (TIMERPROC)MyTimer);
+      if (!hideIPS) {
+        UINT idTimer = 2;
+        SetTimer(stInfo.simWnd, idTimer, 1000, (TIMERPROC)MyTimer);
+      }
 #endif
       stInfo.UIinited = TRUE;
 
@@ -936,28 +947,28 @@ VOID CDECL UIThread(PVOID pvoid)
   _endthread();
 }
 
-void SetStatusText(int Num, const char *Text, bx_bool active, bx_bool w)
+void SetStatusText(unsigned Num, const char *Text, bx_bool active, bx_bool w)
 {
   char StatText[MAX_PATH];
 
-  if ((Num < BX_SB_TEXT_ELEMENTS) || (Num > (BX_MAX_STATUSITEMS+BX_SB_TEXT_ELEMENTS))) {
+  if ((Num < SB_Text_Elements) || (Num > (BX_MAX_STATUSITEMS+SB_Text_Elements))) {
     StatText[0] = ' ';  // Add space to text in 1st and last items
     lstrcpy(StatText+1, Text);
     SendMessage(hwndSB, SB_SETTEXT, Num, (LPARAM)StatText);
   } else {
     StatText[0] = 9;  // Center the rest
     lstrcpy(StatText+1, Text);
-    lstrcpy(SB_Text[Num-BX_SB_TEXT_ELEMENTS], StatText);
-    SB_Active[Num-BX_SB_TEXT_ELEMENTS] = active;
-    SB_ActiveW[Num-BX_SB_TEXT_ELEMENTS] = w;
-    SendMessage(hwndSB, SB_SETTEXT, Num | SBT_OWNERDRAW, (LPARAM)SB_Text[Num-BX_SB_TEXT_ELEMENTS]);
+    lstrcpy(SB_Text[Num-SB_Text_Elements], StatText);
+    SB_Active[Num-SB_Text_Elements] = active;
+    SB_ActiveW[Num-SB_Text_Elements] = w;
+    SendMessage(hwndSB, SB_SETTEXT, Num | SBT_OWNERDRAW, (LPARAM)SB_Text[Num-SB_Text_Elements]);
   }
   UpdateWindow(hwndSB);
 }
 
 void bx_win32_gui_c::statusbar_setitem_specific(int element, bx_bool active, bx_bool w)
 {
-  SetStatusText(element+BX_SB_TEXT_ELEMENTS, statusitem[element].text, active, w);
+  SetStatusText(element+SB_Text_Elements, statusitem[element].text, active, w);
 }
 
 LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
@@ -1021,8 +1032,8 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     lpdis = (DRAWITEMSTRUCT *)lParam;
     if (lpdis->hwndItem == hwndSB) {
       sbtext = (char *)lpdis->itemData;
-      if (SB_Active[lpdis->itemID-BX_SB_TEXT_ELEMENTS]) {
-        if (SB_ActiveW[lpdis->itemID-BX_SB_TEXT_ELEMENTS])
+      if (SB_Active[lpdis->itemID-SB_Text_Elements]) {
+        if (SB_ActiveW[lpdis->itemID-SB_Text_Elements])
           SetBkColor(lpdis->hDC, 0x000040FF);
         else
           SetBkColor(lpdis->hDC, 0x0000FF00);
@@ -1211,7 +1222,7 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     return DefWindowProc (hwnd, iMsg, wParam, lParam);
 
   case WM_DESTROY:
-    KillTimer (hwnd, 1);
+    KillTimer(hwnd, 1);
     stInfo.UIinited = FALSE;
     return 0;
 

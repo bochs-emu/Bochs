@@ -69,7 +69,7 @@
 # behaviour. These options are supported by more than one display library:
 #
 # "gui_debug"   - use GTK debugger gui (sdl, x) / Win32 debugger gui (sdl, win32)
-# "hideIPS"     - disable IPS output in status bar (rfb, sdl, wx, x)
+# "hideIPS"     - disable IPS output in status bar (rfb, sdl, win32, wx, x)
 # "nokeyrepeat" - turn off host keyboard repeat (sdl, win32, x)
 #
 # See the examples below for other currently supported options.

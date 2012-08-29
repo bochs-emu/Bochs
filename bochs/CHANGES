@@ -113,10 +113,10 @@ Detailed change log :
 
 - GUI and display libraries
   - implemented "auto-off" timer for status LEDs indicating a data transfer
-  - Implemented "hideIPS" option in rfb, sdl and wx libraries
   - Added support for sending absolute mouse position values from the gui if an
     absolute pointing device (USB tablet) is active (rfb, sdl, win32, wx, x).
   - Gui debugger now supported when using sdl gui on Windows
+  - Implemented "hideIPS" option in rfb, sdl, win32 and wx libraries
   - wx: fixed random freezes with wxGTK and "show ips" feature enabled
   - rfb: the "show ips" feature now works on Windows host
 
