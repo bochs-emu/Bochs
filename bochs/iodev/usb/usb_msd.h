@@ -2,6 +2,10 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
+// USB mass storage device support (ported from QEMU)
+//
+//  Copyright (c) 2006 CodeSourcery.
+//  Written by Paul Brook
 //  Copyright (C) 2009-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
@@ -18,8 +22,6 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 /////////////////////////////////////////////////////////////////////////
-
-// USB mass storage device support ported from the Qemu project
 
 #ifndef BX_IODEV_USB_MSD_H
 #define BX_IODEV_USB_MSD_H

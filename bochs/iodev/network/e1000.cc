@@ -2,6 +2,16 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
+//  Intel(R) 82540EM Gigabit Ethernet support (ported from QEMU)
+//  Software developer's manual:
+//  http://download.intel.com/design/network/manuals/8254x_GBe_SDM.pdf
+//
+//  Nir Peleg, Tutis Systems Ltd. for Qumranet Inc.
+//  Copyright (c) 2008 Qumranet
+//  Based on work done by:
+//  Copyright (c) 2007 Dan Aloni
+//  Copyright (c) 2004 Antony T Curtis
+//
 //  Copyright (C) 2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
@@ -18,8 +28,6 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 /////////////////////////////////////////////////////////////////////////
-
-// Intel(R) 82540EM Gigabit Ethernet support ported from Qemu
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE

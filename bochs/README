@@ -22,14 +22,14 @@ the emulator on your workstation, much like you have a machine
 inside of a machine.  Bochs will allow you to run Windows
 applications on a Solaris machine with X11, for example.
 
-Bochs is distributed under the GNU LGPL.  See COPYING for details.
+Bochs is distributed under the GNU LGPL. See LICENSE and COPYING for details.
 
 GETTING CURRENT SOURCE CODE
 
 Source code for Bochs is available from the Bochs home page at
 http://bochs.sourceforge.net.  You can download the most recent
 release, use SVN to get the latest sources, or grab a SVN
-snapshot which is updated nightly.  The releases contain the most
+snapshot which is updated frequently. The releases contain the most
 stable code, but if you want the very newest features try the
 SVN version instead.
 
