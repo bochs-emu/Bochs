@@ -192,6 +192,7 @@ enum VMFunctions {
 #define VMCS_16BIT_GUEST_GS_SELECTOR                       0x0000080A
 #define VMCS_16BIT_GUEST_LDTR_SELECTOR                     0x0000080C
 #define VMCS_16BIT_GUEST_TR_SELECTOR                       0x0000080E
+#define VMCS_16BIT_GUEST_INTERRUPT_STATUS                  0x00000810 /* Virtual Interrupt Delivery */
 
 /* VMCS 16-bit host-state fields */
 /* binary 0000_11xx_xxxx_xxx0 */
@@ -554,6 +555,7 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL1_NMI_VMEXIT                  (1 << 3)
 #define VMX_VM_EXEC_CTRL1_VIRTUAL_NMI                 (1 << 5) /* Virtual NMI */
 #define VMX_VM_EXEC_CTRL1_VMX_PREEMPTION_TIMER_VMEXIT (1 << 6) /* VMX preemption timer */
+#define VMX_VM_EXEC_CTRL1_PROCESS_POSTED_INTERRUPTS   (1 << 7) /* Posted Interrupts */
 
 #define VMX_VM_EXEC_CTRL1_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_pin_vmexec_ctrl_supported_bits)
@@ -595,6 +597,8 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL3_VPID_ENABLE               (1 <<  5) /* VPID */
 #define VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT             (1 <<  6) /* WBINVD VMEXIT */
 #define VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST        (1 <<  7) /* Unrestricted Guest */
+#define VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_REGISTERS (1 <<  8)
+#define VMX_VM_EXEC_CTRL3_VIRTUAL_INT_DELIVERY      (1 <<  9)
 #define VMX_VM_EXEC_CTRL3_PAUSE_LOOP_VMEXIT         (1 << 10) /* PAUSE loop exiting */
 #define VMX_VM_EXEC_CTRL3_RDRAND_VMEXIT             (1 << 11)
 #define VMX_VM_EXEC_CTRL3_INVPCID                   (1 << 12)
