@@ -278,7 +278,12 @@ Complete text of the GNU LGPL is included with the source code in a file
 called COPYING, and is also <ulink url="http://www.gnu.org/licenses/lgpl.html">here</ulink>.
 </para>
 </footnote>.  The following text appears at the
-top of every source code file in the Bochs distribution:
+top of every source code file released under the LGPL in the Bochs distribution:
+<footnote><para>
+Parts of Bochs have specific licenses which are compatible with the
+GNU Lesser General Public License. Hence each source file contains its
+own licensing information.
+</para></footnote>
 <programlisting>
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -1311,6 +1316,7 @@ DLX Linux screenshot.
 <row><entry>bximage.exe </entry> <entry> tool for making new disk images </entry> </row>
 <row><entry>CHANGES.txt </entry> <entry> what has changed between versions </entry> </row>
 <row><entry>COPYING.txt </entry> <entry> copy of the LGPL license </entry> </row>
+<row><entry>LICENSE.txt </entry> <entry> Bochs license information </entry> </row>
 <row><entry>README.txt </entry> <entry> the read-me file from the source distribution. </entry> </row>
 <row><entry>TODO.txt </entry> <entry> the TODO file from the source distribution. </entry> </row>
 <row><entry>niclist.exe </entry> <entry> tool to find out the network interface name </entry> </row>
@@ -1485,6 +1491,7 @@ description of each one.
 
 <row><entry>/usr/share/doc/bochs/CHANGES</entry> <entry> what has changed between versions </entry> </row>
 <row><entry>/usr/share/doc/bochs/COPYING</entry> <entry> copy of the LGPL license </entry> </row>
+<row><entry>/usr/share/doc/bochs/LICENSE</entry> <entry> Bochs license information </entry> </row>
 <row><entry>/usr/share/doc/bochs/README</entry> <entry> the read-me file from the source distribution. </entry> </row>
 <row><entry>/usr/share/doc/bochs/TODO</entry> <entry> the TODO file from the source distribution. </entry> </row>
 <row><entry>/usr/bin/bochs </entry> <entry> the main Bochs executable </entry> </row>
