@@ -3,8 +3,8 @@ Changes in 2.6 (not yet released):
 Brief summary :
 - More than 10% CPU emulation speedup !
 - Support for AMD's SVM hardware emulation (including extended XAPIC support).
-- Implemented support for new x86 ISA extensions, Bochs is aligned
-  with latest published Intel Architecture Manual (rev 043).
+- Implemented support for new x86 ISA extensions.
+  Bochs is fully aligned with rev043 of Intel(R) Architecture Manual.
 - Improved emulation accuracy (critical fixes for APIC, VMX and AVX/XOP emulation).
 - Bochs internal debugger: new command to show state of a device from the debugger.
 - ROM BIOS: improved PCI boot ROM support (for VGA and other devices)
@@ -24,8 +24,7 @@ Detailed change log :
 
 - CPU
   - Implemented EPT A/D extensions support.
-    Bochs is fully aligned with the latest published revision of
-    Intel Architecture Manual (revision 043) now.
+    Bochs is fully aligned with rev043 of the of Intel(R) Architecture Manual.
   - Implemented ADX (ADCX/ADOX) instructions support, the feature can
     be enabled using .bochsrc CPUID option.
   - More than 10% CPU emulation speedup with even more optimal lazy flags
