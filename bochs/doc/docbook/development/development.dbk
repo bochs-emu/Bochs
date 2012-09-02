@@ -211,7 +211,11 @@ disassembler, tracer, instrumentation.
 <row><entry>gui/keymaps</entry><entry>keymaps for the keyboard mapping feature</entry></row>
 <row><entry>host</entry><entry>host specific drivers (currently only used by the pcidev kernel module for Linux)</entry></row>
 <row><entry>instrument</entry><entry>directory tree for the instrumentation feature</entry></row>
-<row><entry>iodev</entry><entry>standard PC devices, PCI devices, lowlevel networking and sound drivers</entry></row>
+<row><entry>iodev</entry><entry>standard PC devices, PCI core devices</entry></row>
+<row><entry>iodev/hdimage</entry><entry>support for different disk image types and lowlevel cdrom access</entry></row>
+<row><entry>iodev/networking</entry><entry>networking devices and lowlevel modules</entry></row>
+<row><entry>iodev/sound</entry><entry>sound devices and lowlevel modules</entry></row>
+<row><entry>iodev/usb</entry><entry>USB HCs and pluggable devices</entry></row>
 <row><entry>memory</entry><entry>memory management and ROM loader</entry></row>
 <row><entry>misc</entry><entry>useful utilities (e.g. bximage, bxcommit, niclist)</entry></row>
 <row><entry>misc/sb16</entry><entry>tool to control the SB16 emulation from the guest side</entry></row>

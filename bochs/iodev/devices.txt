@@ -44,22 +44,29 @@ Attached devices
   |
   +---- Hard Drive + ATA controller                             harddrv.cc
   |        |
-  |        +---- Hard Drive image support (*)                   hdimage.cc
+  |        +---- Hard Drive image support (*)                   hdimage/
   |        |             |
-  |        |             +---- Additional Modules               vmware3.cc, vmware4.cc, vvfat.cc
+  |        |             +---- Core and basic modules           hdimage.cc
+  |        |             |
+  |        |             +---- Additional modules
+  |        |                          |
+  |        |                          +---- VMware version 3    vmware3.cc
+  |        |                          +---- VMware 4 (VMDK)     vmware4.cc
+  |        |                          +---- VirtualPC           vpc-img.cc
+  |        |                          +---- Virtual VFAT        vvfat.cc
   |        |
-  |        +---- CD/DVD-ROM image / device access (*)           cdrom.cc
+  |        +---- CD/DVD-ROM image / device access (*)           hdimage/cdrom.cc
   |                      |
   |                      +---- Host specific Modules
   |                                   |
-  |                                   +---- Amiga/MorphOS       cdrom_amigaos.cc
-  |                                   +---- Windows             cdrom_win32.cc
-  |                                   +---- Mac OSX             cdrom_osx.cc
-  |                                   +---- Linux and others    cdrom_misc.cc
+  |                                   +---- Amiga/MorphOS       hdimage/cdrom_amigaos.cc
+  |                                   +---- Windows             hdimage/cdrom_win32.cc
+  |                                   +---- Mac OSX             hdimage/cdrom_osx.cc
+  |                                   +---- Linux and others    hdimage/cdrom_misc.cc
   |
-  +---- Graphics
+  +---- Graphics (VGA core)                                     vgacore.cc
   |        |
-  |        +---- VGA, PCI VGA adapter                           vga.cc, pci_vga.cc
+  |        +---- VGA adapter with VBE and PCI VGA support       vga.cc
   |        +---- Cirrus Logic PCI/ISA CLGD5446 SVGA adapter     svga_cirrus.cc
   |
   +---- Network support                                         network/
@@ -98,8 +105,8 @@ Attached devices
            +---- Host Controllers
            |             |
            |             +---- USB OHCI adapter                 usb_ohci.cc
-           |             +---- USB XHCI adapter                 usb_xhci.cc
            |             +---- USB UHCI adapter (PIIX3)         usb_uhci.cc
+           |             +---- USB xHCI adapter                 usb_xhci.cc
            |
            +---- Attached USB devices
                          | |
