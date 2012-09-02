@@ -22,7 +22,20 @@
 
 // Experimental USB UHCI adapter
 
-// Notes: See usb_common.cc
+/* Notes by Ben Lunt:
+   - My purpose of coding this emulation was/is to learn about the USB.
+     It has been a challenge, but I have learned a lot.
+   - 31 July 2006:
+     I now have a Beagle USB Protocol Analyzer from Total Phase for my research.
+     (http://www.totalphase.com/products/beagle/usb/)
+     With this device, I plan on doing a lot of research and development to get this
+     code to a state where it is actually very useful.  I plan on adding support
+     of many "plug-in" type modules so that you can simply add a plug-in for your
+     specific device without having to modify the root code.
+     I hope to have some working code to upload to the CVS as soon as possible.
+     Thanks to Total Phase for their help in my research and the development of
+     this project.
+  */
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE

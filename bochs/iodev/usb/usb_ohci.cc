@@ -22,7 +22,7 @@
 
 // Experimental USB OHCI adapter
 
-// Notes: See usb_common.cc
+// Notes: See usb_uhci.cc
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
