@@ -2250,10 +2250,11 @@ In Cygwin:
   sh .conf.win32-vcpp         # runs configure
   make win32_snap             # unzip workspace, make a win32 source ZIP
 </screen>
-Copy the source ZIP to a windows machine, if necessary.
+The source ZIP is now ready for upload. To build the binary package, copy it to
+a windows machine, if necessary.
 </para>
 <para>
-Open up Visual C++ and load the workspace file Bochs.dsw.  Check
+Open up Visual C++ and load the workspace file Bochs.sln.  Check
 the Build:Set Active Project Configuration is set the way you want it.
 For releases I use "Win32 Release".
 </para>
@@ -2312,10 +2313,10 @@ Do a clean SVN checkout from the release tag and specify a not yet existing
 directory name with the version number as the destination. Then create the
 source package from this new directory.
 <screen>
-  svn co https://bochs.svn.sourceforge.net/svnroot/bochs/tags/REL_2_4_FINAL/bochs bochs-2.4
+  svn co https://bochs.svn.sourceforge.net/svnroot/bochs/tags/REL_2_5_FINAL/bochs bochs-2.5
   tar czvf bochs-2.5.tar.gz --exclude=.svn bochs-2.5
 </screen>
-The source TAR file bochs-2.5.tar.gz is ready to upload.
+The source TAR file bochs-2.5.tar.gz is ready for upload.
 </para>
 <para>
 The RPM will be building using the configuration in .conf.linux with
@@ -2336,6 +2337,11 @@ the <filename>bochs</filename> directory. Point the download destination to the
 new directory and start uploading packages. The top of the <filename>CHANGES</filename>
 file should be used as the release notes. After setting up the file properties the
 new release is ready for download.
+</para>
+<para>
+After having all files set up in the download area, don't forget to post an announcement
+containing a brief summary of changes to the bochs-announce mailing list and the "Project
+News" section on SF.
 </para>
 </section>
 
