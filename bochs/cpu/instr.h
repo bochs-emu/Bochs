@@ -49,7 +49,7 @@ typedef void BX_INSF_TYPE;
 #define BX_EXECUTE_INSTRUCTION(i) {                    \
   BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, (i));           \
   RIP += (i)->ilen();                                  \
-  return BX_CPU_CALL_METHOD(i->execute, (i));          \
+  return BX_CPU_CALL_METHOD(i->execute1, (i));         \
 }
 
 #define BX_NEXT_TRACE(i) {                             \
@@ -104,7 +104,7 @@ public:
   // given the current state of the CPU and the instruction data,
   // and a function to execute the instruction after resolving
   // the memory address (if any).
-  BxExecutePtr_tR execute;
+  BxExecutePtr_tR execute1;
 
   union {
     BxExecutePtr_tR execute2;

@@ -103,7 +103,7 @@ void BX_CPU_C::cpu_loop(void)
       BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
       RIP += i->ilen();
       // when handlers chaining is enabled this single call will execute entire trace
-      BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
+      BX_CPU_CALL_METHOD(i->execute1, (i)); // might iterate repeat instruction
 
       BX_SYNC_TIME_IF_SINGLE_PROCESSOR(0);
 
@@ -125,7 +125,7 @@ void BX_CPU_C::cpu_loop(void)
       // want to allow changing of the instruction inside instrumentation callback
       BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
       RIP += i->ilen();
-      BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
+      BX_CPU_CALL_METHOD(i->execute1, (i)); // might iterate repeat instruction
       BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
       BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
       BX_CPU_THIS_PTR icount++;
@@ -180,7 +180,7 @@ void BX_CPU_C::cpu_run_trace(void)
   BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
   RIP += i->ilen();
   // when handlers chaining is enabled this single call will execute entire trace
-  BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
+  BX_CPU_CALL_METHOD(i->execute1, (i)); // might iterate repeat instruction
 
   if (BX_CPU_THIS_PTR async_event) {
     // clear stop trace magic indication that probably was set by repeat or branch32/64
@@ -193,7 +193,7 @@ void BX_CPU_C::cpu_run_trace(void)
     // want to allow changing of the instruction inside instrumentation callback
     BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
     RIP += i->ilen();
-    BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
+    BX_CPU_CALL_METHOD(i->execute1, (i)); // might iterate repeat instruction
     BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
     BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
     BX_CPU_THIS_PTR icount++;
@@ -220,13 +220,13 @@ bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
     eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
   }
 
-  bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrFetchPage + eipBiased;
-  bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache.get_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
-
   InstrICache_Increment(iCacheLookups);
   InstrICache_Stats();
 
-  if (entry->pAddr != pAddr)
+  bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrFetchPage + eipBiased;
+  bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache.find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
+
+  if (entry == NULL)
   {
     // iCache miss. No validated instruction with matching fetch parameters
     // is in the iCache.
@@ -274,13 +274,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::linkTrace(bxInstruction_c *i)
     return;
   }
 
-  bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrFetchPage + eipBiased;
-  bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache.get_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
-
   InstrICache_Increment(iCacheLookups);
   InstrICache_Stats();
 
-  if (entry->pAddr == pAddr) // link traces - handle only hit cases
+  bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrFetchPage + eipBiased;
+  bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache.find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
+
+  if (entry != NULL) // link traces - handle only hit cases
   {
     i->setNextTrace(entry->i);
     i = entry->i;

@@ -2382,36 +2382,36 @@ modrm_done:
 #endif
 
   if (mod_mem) {
-    i->execute = BxOpcodesTable[ia_opcode].execute1;
+    i->execute1 = BxOpcodesTable[ia_opcode].execute1;
     i->handlers.execute2 = BxOpcodesTable[ia_opcode].execute2;
 
     if (ia_opcode == BX_IA_MOV_GqEq) {
       if (seg == BX_SEG_REG_SS)
-        i->execute = &BX_CPU_C::MOV64S_GqEqM;
+        i->execute1 = &BX_CPU_C::MOV64S_GqEqM;
     }
     if (ia_opcode == BX_IA_MOV32_EdGd) {
       if (seg == BX_SEG_REG_SS)
-        i->execute = &BX_CPU_C::MOV64S_EqGqM;
+        i->execute1 = &BX_CPU_C::MOV64S_EqGqM;
     }
   }
   else {
-    i->execute = BxOpcodesTable[ia_opcode].execute2;
+    i->execute1 = BxOpcodesTable[ia_opcode].execute2;
     i->handlers.execute2 = NULL;
   }
 
-  BX_ASSERT(i->execute);
+  BX_ASSERT(i->execute1);
 
   Bit32u op_flags = BxOpcodesTable[ia_opcode].src[3];
   if (! BX_CPU_THIS_PTR sse_ok) {
      if (op_flags & BX_PREPARE_SSE) {
-        if (i->execute != &BX_CPU_C::BxError) i->execute = &BX_CPU_C::BxNoSSE;
+        if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoSSE;
         return(1);
      }
   }
 #if BX_SUPPORT_AVX
   if (! BX_CPU_THIS_PTR avx_ok) {
     if (op_flags & BX_PREPARE_AVX) {
-       if (i->execute != &BX_CPU_C::BxError) i->execute = &BX_CPU_C::BxNoAVX;
+       if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoAVX;
        return(1);
     }
   }

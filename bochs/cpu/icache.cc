@@ -59,17 +59,14 @@ void genDummyICacheEntry(bxInstruction_c *i)
 {
   i->setILen(0);
   i->setIaOpcode(BX_INSERTED_OPCODE);
-  i->execute = &BX_CPU_C::BxEndTrace;
+  i->execute1 = &BX_CPU_C::BxEndTrace;
 }
 
 #endif
 
 bxICacheEntry_c* BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_address pAddr)
 {
-  bxICacheEntry_c *vc_hit = BX_CPU_THIS_PTR iCache.lookup_victim_cache(pAddr, BX_CPU_THIS_PTR fetchModeMask);
-  if (vc_hit) {
-    return vc_hit;
-  }
+  entry = BX_CPU_THIS_PTR iCache.get_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
   BX_CPU_THIS_PTR iCache.victim_entry(entry, BX_CPU_THIS_PTR fetchModeMask);
 
@@ -185,9 +182,9 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBia
 
 bx_bool BX_CPU_C::mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr)
 {
-  bxICacheEntry_c *e = BX_CPU_THIS_PTR iCache.get_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
+  bxICacheEntry_c *e = BX_CPU_THIS_PTR iCache.find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
-  if (e->pAddr == pAddr)
+  if (e != NULL)
   {
     // determine max amount of instruction to take from another entry
     unsigned max_length = e->tlen;

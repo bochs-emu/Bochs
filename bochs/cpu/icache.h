@@ -117,6 +117,16 @@ struct bxICacheEntry_c
 
 #define BX_ICACHE_INVALID_PHY_ADDRESS (bx_phy_address(-1))
 
+BX_CPP_INLINE void flushSMC(bxICacheEntry_c *e)
+{
+  e->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+  extern void genDummyICacheEntry(bxInstruction_c *i);
+  for (unsigned instr=0;instr < e->tlen; instr++)
+    genDummyICacheEntry(e->i + instr);
+#endif
+}
+
 class BOCHSAPI bxICache_c {
 public:
   bxICacheEntry_c entry[BxICacheEntries];
@@ -201,6 +211,15 @@ public:
   {
     return &(entry[hash(pAddr, fetchModeMask)]);
   }
+
+  BX_CPP_INLINE bxICacheEntry_c* find_entry(bx_phy_address pAddr, unsigned fetchModeMask)
+  {
+    bxICacheEntry_c* e = &entry[hash(pAddr, fetchModeMask)];
+    if (e->pAddr != pAddr)
+       e = lookup_victim_cache(pAddr, fetchModeMask);
+
+    return e;
+  }
 };
 
 BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
@@ -224,10 +243,6 @@ BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
   mpindex = 0;
 }
 
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
-extern void genDummyICacheEntry(bxInstruction_c *i);
-#endif
-
 BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr, Bit32u mask)
 {
   pAddr = LPFOf(pAddr);
@@ -240,13 +255,14 @@ BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr, Bit32u mask)
     for (i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++) {
       if (pAddr == pageSplitIndex[i].ppf) {
         pageSplitIndex[i].ppf = BX_ICACHE_INVALID_PHY_ADDRESS;
+        flushSMC(pageSplitIndex[i].e);
       }
     }
   }
 
   for (i=0;i < BX_ICACHE_VICTIM_ENTRIES; i++) {
     bxVictimCacheEntry *e = &victimCache[i];
-    e->vc_entry.pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
+    flushSMC(&e->vc_entry); // can be optimized to flush only relevant victim cache entries
   }
 
   bxICacheEntry_c *e = get_entry(pAddr, 0);
@@ -257,11 +273,7 @@ BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr, Bit32u mask)
     if (line_mask > mask) break;
     for (unsigned index=0; index < 128; index++, e++) {
       if (pAddr == LPFOf(e->pAddr) && (e->traceMask & mask) != 0) {
-        e->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
-        for (unsigned instr=0;instr < e->tlen; instr++)
-          genDummyICacheEntry(e->i + instr);
-#endif
+        flushSMC(e);
       }
     }
   }
