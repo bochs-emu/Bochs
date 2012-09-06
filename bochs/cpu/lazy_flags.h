@@ -53,7 +53,7 @@ typedef struct {
   (((op1) & (op2)) | (((op1) | (op2)) & (~(result))))
 
 #define SUB_COUT_VEC(op1, op2, result) \
-  (((~(op1)) & (op2)) | ((~((op1) ^ (op2))) & (result)))
+  (((~(op1)) & (op2)) | (((~(op1)) ^ (op2)) & (result)))
 
 #define GET_ADD_OVERFLOW(op1, op2, result, mask) \
   ((((op1) ^ (result)) & ((op2) ^ (result))) & (mask))
