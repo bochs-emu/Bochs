@@ -247,12 +247,16 @@ BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr, Bit32u mask)
 {
   pAddr = LPFOf(pAddr);
 
-  unsigned i;
+  // Need to invalidate all trace in the trace cache that might include an
+  // instruction that was modified. But this is not enough, it is possible
+  // that some another trace is linked into invalidated trace and it won't
+  // be invalidated. In order to solve this issue replace all instructions
+  // from the invalidated trace with dummy EndOfTrace opcodes.
 
   if (mask & 0x1) {
     // the store touched 1st cache line in the page, check for
     // page split traces to invalidate.
-    for (i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++) {
+    for (unsigned i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++) {
       if (pAddr == pageSplitIndex[i].ppf) {
         pageSplitIndex[i].ppf = BX_ICACHE_INVALID_PHY_ADDRESS;
         flushSMC(pageSplitIndex[i].e);
@@ -260,9 +264,11 @@ BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr, Bit32u mask)
     }
   }
 
-  for (i=0;i < BX_ICACHE_VICTIM_ENTRIES; i++) {
-    bxVictimCacheEntry *e = &victimCache[i];
-    flushSMC(&e->vc_entry); // can be optimized to flush only relevant victim cache entries
+  for (unsigned i=0;i < BX_ICACHE_VICTIM_ENTRIES; i++) {
+    bxICacheEntry_c *e = &victimCache[i].vc_entry;
+    if (pAddr == LPFOf(e->pAddr) && (e->traceMask & mask) != 0) {
+      flushSMC(e);
+    }
   }
 
   bxICacheEntry_c *e = get_entry(pAddr, 0);
