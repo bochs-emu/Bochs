@@ -710,7 +710,7 @@ void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, un
     "I/O BITMAP",
     "VMX LDMSR",
     "VMX STMSR",
-    "VMX VTPR",
+    "VAPIC",
     "SMRAM"
   };
 
