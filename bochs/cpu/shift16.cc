@@ -40,19 +40,22 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGwM(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  Bit32u op1_16 = (Bit32u) read_RMW_virtual_word(i->seg(), eaddr);
 
   if (count) {
-    Bit16u op2_16 = BX_READ_16BIT_REG(i->src());
+    Bit32u op2_16 = (Bit32u) BX_READ_16BIT_REG(i->src());
 
     /* count < 32, since only lower 5 bits used */
-    temp_32 = ((Bit32u)(op1_16) << 16) | (op2_16); // double formed by op1:op2
+    temp_32 = (op1_16 << 16) | (op2_16); // double formed by op1:op2
     result_32 = temp_32 << count;
 
     // hack to act like x86 SHLD when count > 16
     if (count > 16) {
-      // when count > 16 actually shifting op1:op2:op2 << count,
+      // for Pentium processor, when count > 16, actually shifting op1:op2:op2 << count,
       // it is the same as shifting op2:op2 by count-16
+      // For P6 and later (CPU_LEVEL >= 6), when count > 16, actually shifting op1:op2:op1 << count,
+      // which is the same as shifting op2:op1 by count-16
+      // The behavior is undefined so both ways are correct, we prefer P6 way of implementation
       result_32 |= (op1_16 << (count - 16));
     }
 
@@ -85,17 +88,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGwR(bxInstruction_c *i)
   count &= 0x1f; // use only 5 LSB's
 
   if (count) {
-    Bit16u op1_16 = BX_READ_16BIT_REG(i->dst());
-    Bit16u op2_16 = BX_READ_16BIT_REG(i->src());
+    Bit32u op1_16 = (Bit32u) BX_READ_16BIT_REG(i->dst());
+    Bit32u op2_16 = (Bit32u) BX_READ_16BIT_REG(i->src());
 
     /* count < 32, since only lower 5 bits used */
-    temp_32 = ((Bit32u)(op1_16) << 16) | (op2_16); // double formed by op1:op2
+    temp_32 = (op1_16 << 16) | (op2_16); // double formed by op1:op2
     result_32 = temp_32 << count;
 
     // hack to act like x86 SHLD when count > 16
     if (count > 16) {
-      // when count > 16 actually shifting op1:op2:op2 << count,
+      // for Pentium processor, when count > 16, actually shifting op1:op2:op2 << count,
       // it is the same as shifting op2:op2 by count-16
+      // For P6 and later (CPU_LEVEL >= 6), when count > 16, actually shifting op1:op2:op1 << count,
+      // which is the same as shifting op2:op1 by count-16
+      // The behavior is undefined so both ways are correct, we prefer P6 way of implementation
       result_32 |= (op1_16 << (count - 16));
     }
 
@@ -128,10 +134,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGwM(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  Bit32u op1_16 = (Bit32u) read_RMW_virtual_word(i->seg(), eaddr);
 
   if (count) {
-    Bit16u op2_16 = BX_READ_16BIT_REG(i->src());
+    Bit32u op2_16 = (Bit32u) BX_READ_16BIT_REG(i->src());
 
     /* count < 32, since only lower 5 bits used */
     temp_32 = (op2_16 << 16) | op1_16; // double formed by op2:op1
@@ -139,8 +145,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGwM(bxInstruction_c *i)
 
     // hack to act like x86 SHRD when count > 16
     if (count > 16) {
-      // when count > 16 actually shifting op2:op2:op1 >> count,
+      // for Pentium processor, when count > 16, actually shifting op2:op2:op1 >> count,
       // it is the same as shifting op2:op2 by count-16
+      // For P6 and later (CPU_LEVEL >= 6), when count > 16, actually shifting op1:op2:op1 >> count,
+      // which is the same as shifting op1:op2 by count-16
+      // The behavior is undefined so both ways are correct, we prefer P6 way of implementation
       result_32 |= (op1_16 << (32 - count));
     }
 
@@ -172,8 +181,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGwR(bxInstruction_c *i)
   count &= 0x1f; /* use only 5 LSB's */
 
   if (count) {
-    Bit16u op1_16 = BX_READ_16BIT_REG(i->dst());
-    Bit16u op2_16 = BX_READ_16BIT_REG(i->src());
+    Bit32u op1_16 = (Bit32u) BX_READ_16BIT_REG(i->dst());
+    Bit32u op2_16 = (Bit32u) BX_READ_16BIT_REG(i->src());
 
     /* count < 32, since only lower 5 bits used */
     temp_32 = (op2_16 << 16) | op1_16; // double formed by op2:op1
@@ -181,8 +190,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGwR(bxInstruction_c *i)
 
     // hack to act like x86 SHRD when count > 16
     if (count > 16) {
-      // when count > 16 actually shifting op2:op2:op1 >> count,
+      // for Pentium processor, when count > 16, actually shifting op2:op2:op1 >> count,
       // it is the same as shifting op2:op2 by count-16
+      // For P6 and later (CPU_LEVEL >= 6), when count > 16, actually shifting op1:op2:op1 >> count,
+      // which is the same as shifting op1:op2 by count-16
+      // The behavior is undefined so both ways are correct, we prefer P6 way of implementation
       result_32 |= (op1_16 << (32 - count));
     }
 
