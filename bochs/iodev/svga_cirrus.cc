@@ -1139,6 +1139,10 @@ void bx_svga_cirrus_c::svga_modeupdate(void)
   BX_CIRRUS_THIS svga_bpp = iBpp;
   BX_CIRRUS_THIS svga_dispbpp = iDispBpp;
   BX_CIRRUS_THIS disp_ptr = BX_CIRRUS_THIS s.memory + iTopOffset;
+  // compatibilty settings for VGA core
+  BX_CIRRUS_THIS s.last_xres = iWidth;
+  BX_CIRRUS_THIS s.last_yres = iHeight;
+  BX_CIRRUS_THIS s.last_bpp = iDispBpp;
 }
 
 void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info)

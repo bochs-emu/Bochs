@@ -1304,6 +1304,8 @@ void bx_vgacore_c::set_override(bx_bool enabled)
   } else {
     Bit64u interval = 1000000 / SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY)->get();
     bx_virt_timer.activate_timer(BX_VGA_THIS timer_id, (Bit32u)interval, 1);
+    bx_gui->dimension_update(BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres, 8,
+                             BX_VGA_THIS s.last_msl+1, BX_VGA_THIS s.last_bpp);
     BX_VGA_THIS redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
   }
 }
