@@ -641,9 +641,10 @@ typedef struct bx_VMCS
    Bit64u executive_vmcsptr;
 
 #if BX_SUPPORT_VMX >= 2
+   // used for pause loop exiting
    Bit32u pause_loop_exiting_gap;
    Bit32u pause_loop_exiting_window;
-   Bit64u last_pause_time; // used for pause loop exiting
+   Bit64u last_pause_time;
    Bit32u first_pause_time;
 #endif
 

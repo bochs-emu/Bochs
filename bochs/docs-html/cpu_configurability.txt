@@ -413,7 +413,6 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Enables CPUID[0x00000007].EBX[7] flag.
  Controls ability to set CR4[20] (SMEP) bit.
  Enables Supervisor Mode Execution Protection during PAE mode page walk.
- Enables FS/GS BASE access instructions (will #UD otherwise).
 
  Dependency: PAE
 
@@ -513,3 +512,9 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
  Dependency: SSSE3 (3-byte opcodes)
 
+61. CPU Feature: SMAP
+
+ Enables CPUID[0x00000007].EBX[20] flag.
+ Controls ability to set CR4[21] (SMAP) bit.
+ Enables Supervisor Mode Access Protection during page walk.
+ Enables CLAC/STAC instructions.

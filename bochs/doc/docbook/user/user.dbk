@@ -3194,6 +3194,11 @@ This option exists only if Bochs compiled with x86-64 support.
 Enable Supervisor Mode Execution Protection (SMEP) support.
 This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 </para>
+<para><command>smap</command></para>
+<para>
+Enable Supervisor Mode Access Protection (SMAP) support.
+This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+</para>
 <para><command>mwait</command></para>
 <para>
 Select MONITOR/MWAIT instructions support.

@@ -58,6 +58,7 @@ cpuid
   pcid
   fsgsbase
   smep
+  smap
   mwait
 
 memory

@@ -285,6 +285,10 @@ cpu: cpuid_limit_winnt=0
 #    Enable Supervisor Mode Execution Protection (SMEP) support.
 #    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 #
+#  SMAP:
+#    Enable Supervisor Mode Access Protection (SMAP) support.
+#    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+#
 #  MWAIT:
 #    Select MONITOR/MWAIT instructions support.
 #    This option exists only if Bochs compiled with --enable-monitor-mwait.

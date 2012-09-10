@@ -393,3 +393,27 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SALC(bxInstruction_c *i)
 
   BX_NEXT_INSTR(i);
 }
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::STAC(bxInstruction_c *i)
+{
+  if (CPL != 0) {
+    BX_ERROR(("STAC is not recognized when CPL != 0"));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  assert_AC();
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLAC(bxInstruction_c *i)
+{
+  if (CPL != 0) {
+    BX_ERROR(("CLAC is not recognized when CPL != 0"));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  clear_AC();
+
+  BX_NEXT_INSTR(i);
+}

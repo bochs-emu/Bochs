@@ -750,6 +750,12 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
       page_fault(ERROR_PROTECTION, laddr, user, rw);
   }
 
+  // SMAP protections are disabled if EFLAGS.AC=1
+  if (BX_CPU_THIS_PTR cr4.get_SMAP() && ! BX_CPU_THIS_PTR get_AC() && rw != BX_EXECUTE && ! user) {
+    if (combined_access & 0x4) // User page
+      page_fault(ERROR_PROTECTION, laddr, user, rw);
+  }
+
   if (BX_CPU_THIS_PTR cr4.get_PGE())
     combined_access |= (entry[leaf] & 0x100); // G
 
@@ -956,6 +962,12 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
       page_fault(ERROR_PROTECTION, laddr, user, rw);
   }
 
+  // SMAP protections are disabled if EFLAGS.AC=1
+  if (BX_CPU_THIS_PTR cr4.get_SMAP() && ! BX_CPU_THIS_PTR get_AC() && rw != BX_EXECUTE && ! user) {
+    if (combined_access & 0x4) // User page
+      page_fault(ERROR_PROTECTION, laddr, user, rw);
+  }
+
   if (BX_CPU_THIS_PTR cr4.get_PGE())
     combined_access |= (entry[leaf] & 0x100);     // G
 
@@ -1058,6 +1070,12 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
 
 #if BX_CPU_LEVEL >= 6
   if (BX_CPU_THIS_PTR cr4.get_SMEP() && rw == BX_EXECUTE && !user) {
+    if (combined_access & 0x4) // User page
+      page_fault(ERROR_PROTECTION, laddr, user, rw);
+  }
+
+  // SMAP protections are disabled if EFLAGS.AC=1
+  if (BX_CPU_THIS_PTR cr4.get_SMAP() && ! BX_CPU_THIS_PTR get_AC() && rw != BX_EXECUTE && ! user) {
     if (combined_access & 0x4) // User page
       page_fault(ERROR_PROTECTION, laddr, user, rw);
   }

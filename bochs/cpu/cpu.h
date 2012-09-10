@@ -564,7 +564,7 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
 #if BX_CPU_LEVEL >= 4
 
 #define IMPLEMENT_EFLAG_SET_ACCESSOR_AC(bitnum)                 \
-  BX_CPP_INLINE void BX_CPU_C::assert_AC () {                   \
+  BX_CPP_INLINE void BX_CPU_C::assert_AC() {                    \
     BX_CPU_THIS_PTR eflags |= (1<<bitnum);                      \
     handleAlignmentCheck();                                     \
   }                                                             \
@@ -3170,6 +3170,11 @@ public: // for now...
   BX_SMF BX_INSF_TYPE ADOX_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
+  // SMAP
+  BX_SMF BX_INSF_TYPE CLAC(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE STAC(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  // SMAP
+
 #if BX_SUPPORT_X86_64
   // 64 bit extensions
   BX_SMF BX_INSF_TYPE ADD_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4118,6 +4123,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_rdtscp(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_tsc_deadline(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_xapic_extensions(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_smap(void);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
   BX_SMF BX_CPP_INLINE const bx_gen_reg_t *get_gen_regfile() { return BX_CPU_THIS_PTR gen_reg; }
@@ -4272,8 +4278,10 @@ public: // for now...
   BX_SMF bx_bool is_virtual_apic_page(bx_phy_address paddr) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF void VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *data);
-  BX_SMF Bit32u VMX_Read_VTPR(void);
   BX_SMF void VMX_Write_VTPR(Bit8u vtpr);
+  BX_SMF void VMX_TPR_Virtualization(Bit8u vtpr);
+  BX_SMF Bit32u VMX_Read_Virtual_APIC(unsigned offset);
+  BX_SMF void VMX_Write_Virtual_APIC(unsigned offset, Bit32u val32);
 #endif
   // vmexit reasons
   BX_SMF void VMexit_Instruction(bxInstruction_c *i, Bit32u reason, bx_bool rw = BX_READ) BX_CPP_AttrRegparmN(3);
@@ -4628,6 +4636,11 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_fsgsbase(void)
 #else
   return 0;
 #endif
+}
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_smap(void)
+{
+  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_SMAP) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_smep(void)

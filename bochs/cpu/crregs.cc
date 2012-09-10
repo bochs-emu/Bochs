@@ -1049,6 +1049,7 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
 
   // CR4 bits definitions:
   //   [31-21] Reserved, Must be Zero
+  //   [21]    SMAP: Supervisor Mode Access Protection R/W
   //   [20]    SMEP: Supervisor Mode Execution Protection R/W
   //   [19]    Reserved, Must be Zero
   //   [18]    OSXSAVE: Operating System XSAVE Support R/W
@@ -1127,6 +1128,9 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
 
   if (bx_cpuid_support_smep())
     allowMask |= BX_CR4_SMEP_MASK;
+
+  if (bx_cpuid_support_smap())
+    allowMask |= BX_CR4_SMAP_MASK;
 #endif
 
   return allowMask;
@@ -1340,7 +1344,7 @@ Bit32u BX_CPU_C::ReadCR8(bxInstruction_c *i)
     VMexit_CR8_Read(i);
 
   if (BX_CPU_THIS_PTR in_vmx_guest && VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW)) {
-     Bit32u tpr = (VMX_Read_VTPR() >> 4) & 0xf;
+     Bit32u tpr = (VMX_Read_Virtual_APIC(BX_LAPIC_TPR) >> 4) & 0xf;
      return tpr;
   }
 #endif

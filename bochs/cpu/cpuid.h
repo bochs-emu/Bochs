@@ -117,6 +117,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_ISA_TBM                   (BX_CONST64(1) << 38)  /* TBM instruction (AMD) */
 #define BX_ISA_SVM                   (BX_CONST64(1) << 39)  /* SVM instruction (AMD) */
 #define BX_ISA_ADX                   (BX_CONST64(1) << 40)  /* ADCX/ADOX instruction */
+#define BX_ISA_SMAP                  (BX_CONST64(1) << 41)  /* SMAP support */
 
 // cpuid non-ISA features
 #define BX_CPU_DEBUG_EXTENSIONS      (1 <<  0)              /* Debug Extensions support */
@@ -317,7 +318,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [17:12]  reserved
 //   [18:18]  RDSEED instruction support
 //   [19:19]  ADCX/ADOX instructions support
-//   [31:20]  reserved
+//   [20:20]  SMAP: Supervisor Mode Access Protection
+//   [31:21]  reserved
 
 #define BX_CPUID_EXT3_FSGSBASE               (1 <<  0)
 #define BX_CPUID_EXT3_RESERVED1              (1 <<  1)
@@ -339,6 +341,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT3_RESERVED17             (1 << 17)
 #define BX_CPUID_EXT3_RDSEED                 (1 << 18)
 #define BX_CPUID_EXT3_ADX                    (1 << 19)
+#define BX_CPUID_EXT3_SMAP                   (1 << 20)
 // ...
 
 

@@ -105,6 +105,7 @@ struct bx_cr0_t {
 #define BX_CR4_PCIDE_MASK      (1 << 17)
 #define BX_CR4_OSXSAVE_MASK    (1 << 18)
 #define BX_CR4_SMEP_MASK       (1 << 20)
+#define BX_CR4_SMAP_MASK       (1 << 21)
 
 struct bx_cr4_t {
   Bit32u  val32; // 32bit value of register
@@ -130,6 +131,7 @@ struct bx_cr4_t {
   IMPLEMENT_CRREG_ACCESSORS(PCIDE, 17);
   IMPLEMENT_CRREG_ACCESSORS(OSXSAVE, 18);
   IMPLEMENT_CRREG_ACCESSORS(SMEP, 20);
+  IMPLEMENT_CRREG_ACCESSORS(SMAP, 21);
 
   BX_CPP_INLINE Bit32u get32() const { return val32; }
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }

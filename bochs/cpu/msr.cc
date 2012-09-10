@@ -371,7 +371,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest && index == 0x808) {
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_X2APIC_MODE)) {
-      RAX = VMX_Read_VTPR() & 0xff;
+      RAX = VMX_Read_Virtual_APIC(BX_LAPIC_TPR) & 0xff;
       RDX = 0;
       BX_NEXT_INSTR(i);
     }

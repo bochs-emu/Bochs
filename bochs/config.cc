@@ -597,6 +597,10 @@ void bx_init_options()
       "smep", "Supervisor Mode Execution Protection support",
       "Supervisor Mode Execution Protection support",
       0);
+  new bx_param_bool_c(cpuid_param,
+      "smap", "Supervisor Mode Access Protection support",
+      "Supervisor Mode Access Protection support",
+      0);
 #if BX_SUPPORT_MONITOR_MWAIT
   new bx_param_bool_c(cpuid_param,
       "mwait", "MONITOR/MWAIT instructions support",
@@ -2625,6 +2629,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         if (parse_param_bool(params[i], 5, BXPN_CPUID_SMEP) < 0) {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
         }
+      } else if (!strncmp(params[i], "smap=", 5)) {
+        if (parse_param_bool(params[i], 5, BXPN_CPUID_SMAP) < 0) {
+          PARSE_ERR(("%s: cpuid directive malformed.", context));
+        }
 #if BX_SUPPORT_MONITOR_MWAIT
       } else if (!strncmp(params[i], "mwait=", 6)) {
         if (parse_param_bool(params[i], 6, BXPN_CPUID_MWAIT) < 0) {
@@ -3572,7 +3580,7 @@ int bx_write_configuration(const char *rc, int overwrite)
       SIM->get_param_enum(BXPN_CPUID_APIC)->get_selected());
 #endif
 #if BX_CPU_LEVEL >= 6
-    fprintf(fp, ", sse=%s, sse4a=%d, sep=%d, aes=%d, xsave=%d, xsaveopt=%d, movbe=%d, adx=%d, smep=%d",
+    fprintf(fp, ", sse=%s, sse4a=%d, sep=%d, aes=%d, xsave=%d, xsaveopt=%d, movbe=%d, adx=%d, smep=%d, smap=%d",
       SIM->get_param_enum(BXPN_CPUID_SSE)->get_selected(),
       SIM->get_param_bool(BXPN_CPUID_SSE4A)->get(),
       SIM->get_param_bool(BXPN_CPUID_SEP)->get(),
@@ -3581,7 +3589,8 @@ int bx_write_configuration(const char *rc, int overwrite)
       SIM->get_param_bool(BXPN_CPUID_XSAVEOPT)->get(),
       SIM->get_param_bool(BXPN_CPUID_MOVBE)->get(),
       SIM->get_param_bool(BXPN_CPUID_ADX)->get(),
-      SIM->get_param_bool(BXPN_CPUID_SMEP)->get());
+      SIM->get_param_bool(BXPN_CPUID_SMEP)->get(),
+      SIM->get_param_bool(BXPN_CPUID_SMAP)->get());
 #if BX_SUPPORT_AVX
     fprintf(fp, ", avx=%d, avx_f16c=%d, avx_fma=%d, bmi=%d, xop=%d, tbm=%d, fma4=%d", 
       SIM->get_param_num(BXPN_CPUID_AVX)->get(),

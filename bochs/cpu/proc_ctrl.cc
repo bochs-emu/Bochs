@@ -1351,4 +1351,5 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WRGSBASE(bxInstruction_c *i)
 
   BX_NEXT_INSTR(i);
 }
+
 #endif

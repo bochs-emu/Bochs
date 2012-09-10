@@ -80,6 +80,7 @@
 #define IA_TBM              (BX_CONST64(1) << 38)  /* TBM instruction (AMD) */
 #define IA_SVM              (BX_CONST64(1) << 39)  /* SVM instruction (AMD) */
 #define IA_ADX              (BX_CONST64(1) << 40)  /* ADCX/ADOX instruction */
+#define IA_SMAP             (BX_CONST64(1) << 41)  /* SMAP instruction */
 
 /* general purpose bit register */
 enum {

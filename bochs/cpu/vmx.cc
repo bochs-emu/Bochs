@@ -429,7 +429,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      }
 
      if (! (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES)) {
-       Bit8u tpr_shadow = (VMX_Read_VTPR() >> 4) & 0xf;
+       Bit8u tpr_shadow = (VMX_Read_Virtual_APIC(BX_LAPIC_TPR) >> 4) & 0xf;
        if (vm->vm_tpr_threshold > tpr_shadow) {
          BX_ERROR(("VMFAIL: VMCS EXEC CTRL: TPR threshold > TPR shadow"));
          return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;

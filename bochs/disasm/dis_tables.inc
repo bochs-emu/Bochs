@@ -406,8 +406,8 @@ static BxDisasmOpcodeTable_t BxDisasmGroupSSE_G7VMX[4] = {
 static BxDisasmOpcodeTable_t BxDisasmGroupRmMONITOR[8] = {
   /* 0 */ { 0, &Ia_monitor },
   /* 1 */ { 0, &Ia_mwait   },
-  /* 2 */ { 0, &Ia_Invalid },
-  /* 3 */ { 0, &Ia_Invalid },
+  /* 2 */ { 0, &Ia_clac },
+  /* 3 */ { 0, &Ia_stac },
   /* 4 */ { 0, &Ia_Invalid },
   /* 5 */ { 0, &Ia_Invalid },
   /* 6 */ { 0, &Ia_Invalid },
