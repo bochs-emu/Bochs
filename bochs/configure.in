@@ -1435,12 +1435,14 @@ AC_ARG_ENABLE(raw-serial,
     ]
   )
 
+DISPLAY_OBJS=''
 AC_MSG_CHECKING(for CLGD54XX emulation)
 AC_ARG_ENABLE(clgd54xx,
   [  --enable-clgd54xx                 enable CLGD54XX emulation],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_CLGD54XX, 1)
+    DISPLAY_OBJS="svga_cirrus.o"
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_CLGD54XX, 0)
@@ -1450,6 +1452,7 @@ AC_ARG_ENABLE(clgd54xx,
     AC_DEFINE(BX_SUPPORT_CLGD54XX, 0)
     ]
   )
+AC_SUBST(DISPLAY_OBJS)
 
 support_fpu=1
 AC_MSG_CHECKING(for FPU emulation)
@@ -1892,6 +1895,8 @@ PLUGIN_LIBNAME_TRANSFORMATION='%.o=libbx_%.la'
 if test "$bx_plugins" = 0; then
   HDIMAGE_LIB_VAR='iodev/hdimage/libhdimage.a'
   AC_SUBST(HDIMAGE_LIB_VAR)
+  DISPLAY_LIB_VAR='iodev/display/libdisplay.a'
+  AC_SUBST(DISPLAY_LIB_VAR)
 fi
 IODEV_LIB_VAR='iodev/libiodev.a'
 NONINLINE_VAR='$(NONINLINE_OBJS)'
@@ -2835,9 +2840,9 @@ AC_SUBST(INSTALL_PLUGINS_VAR)
 AC_PATH_PROG(GZIP, gzip)
 AC_PATH_PROG(TAR, tar)
 
-AC_OUTPUT(Makefile iodev/Makefile iodev/hdimage/Makefile iodev/usb/Makefile \
-	 iodev/network/Makefile iodev/sound/Makefile bx_debug/Makefile \
-	 bios/Makefile cpu/Makefile cpu/cpudb/Makefile memory/Makefile \
+AC_OUTPUT(Makefile iodev/Makefile iodev/display/Makefile iodev/hdimage/Makefile \
+	 iodev/usb/Makefile iodev/network/Makefile iodev/sound/Makefile \
+	 bx_debug/Makefile bios/Makefile cpu/Makefile cpu/cpudb/Makefile memory/Makefile \
 	 gui/Makefile disasm/Makefile ${INSTRUMENT_DIR}/Makefile misc/Makefile \
 	 fpu/Makefile doc/docbook/Makefile build/linux/bochs-dlx \
 	 bxversion.h bxversion.rc build/macosx/Info.plist \
