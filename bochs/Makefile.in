@@ -268,7 +268,7 @@ iodev/libiodev.a::
 	$(MAKE) $(MDEFINES) libiodev.a
 	@CD_UP_ONE@
 
-iodev/hdimage/libdisplay.a::
+iodev/display/libdisplay.a::
 	cd iodev/display @COMMAND_SEPARATOR@
 	$(MAKE) $(MDEFINES) libdisplay.a
 	@CD_UP_TWO@
