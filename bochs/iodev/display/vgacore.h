@@ -229,9 +229,12 @@ protected:
     Bit16u max_yres;
     Bit16u num_x_tiles;
     Bit16u num_y_tiles;
+    // vga override mode
+    bx_bool vga_override;
   } s;  // state information
 
   int timer_id;
+  Bit32u update_interval;
   bx_bool extension_init;
   bx_bool pci_enabled;
 };

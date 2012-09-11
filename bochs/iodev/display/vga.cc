@@ -346,12 +346,12 @@ Bit64s bx_vga_c::vga_param_handler(bx_param_c *param, int set, Bit64s val)
 
   // handler for runtime parameter 'vga: update_freq'
   if (set) {
-    interval = (Bit32u)(1000000 / val);
+    BX_VGA_THIS update_interval = (Bit32u)(1000000 / val);
     BX_INFO(("Changing timer interval to %d", interval));
     BX_VGA_THIS timer_handler(theVga);
-    bx_virt_timer.activate_timer(BX_VGA_THIS timer_id, interval, 1);
-    if (interval < 300000) {
-      BX_VGA_THIS s.blink_counter = 300000 / (unsigned)interval;
+    bx_virt_timer.activate_timer(BX_VGA_THIS timer_id, BX_VGA_THIS update_interval, 1);
+    if (BX_VGA_THIS update_interval < 300000) {
+      BX_VGA_THIS s.blink_counter = 300000 / (unsigned)BX_VGA_THIS update_interval;
     } else {
       BX_VGA_THIS s.blink_counter = 1;
     }

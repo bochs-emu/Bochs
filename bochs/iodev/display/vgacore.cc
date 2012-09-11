@@ -258,16 +258,16 @@ void bx_vgacore_c::init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t 
 void bx_vgacore_c::init_systemtimer(bx_timer_handler_t f_timer, param_event_handler f_param)
 {
   bx_param_num_c *vga_update_freq = SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY);
-  Bit64u interval = 1000000 / vga_update_freq->get();
-  BX_INFO(("interval=" FMT_LL "u", interval));
+  BX_VGA_THIS update_interval = (Bit32u)(1000000 / vga_update_freq->get());
+  BX_INFO(("interval=%u", BX_VGA_THIS update_interval));
   if (BX_VGA_THIS timer_id == BX_NULL_TIMER_HANDLE) {
     BX_VGA_THIS timer_id = bx_virt_timer.register_timer(this, f_timer,
-       (Bit32u)interval, 1, 1, "vga");
+       BX_VGA_THIS update_interval, 1, 1, "vga");
     vga_update_freq->set_handler(f_param);
     vga_update_freq->set_runtime_param(1);
   }
-  if (interval < 300000) {
-    BX_VGA_THIS s.blink_counter = 300000 / (unsigned)interval;
+  if (BX_VGA_THIS update_interval < 300000) {
+    BX_VGA_THIS s.blink_counter = 300000 / (unsigned)BX_VGA_THIS update_interval;
   } else {
     BX_VGA_THIS s.blink_counter = 1;
   }
@@ -365,7 +365,11 @@ void bx_vgacore_c::register_state(bx_list_c *parent)
   new bx_shadow_num_c(list, "plane_shift", &BX_VGA_THIS s.plane_shift);
   new bx_shadow_num_c(list, "plane_offset", &BX_VGA_THIS s.plane_offset);
   new bx_shadow_num_c(list, "dac_shift", &BX_VGA_THIS s.dac_shift);
+  new bx_shadow_num_c(list, "last_xres", &BX_VGA_THIS s.last_xres);
+  new bx_shadow_num_c(list, "last_yres", &BX_VGA_THIS s.last_yres);
   new bx_shadow_num_c(list, "last_bpp", &BX_VGA_THIS s.last_bpp);
+  new bx_shadow_num_c(list, "last_msl", &BX_VGA_THIS s.last_msl);
+  new bx_shadow_num_c(list, "vga_override", &BX_VGA_THIS s.vga_override);
   new bx_shadow_data_c(list, "memory", BX_VGA_THIS s.memory, BX_VGA_THIS s.memsize);
 }
 
@@ -377,12 +381,16 @@ void bx_vgacore_c::after_restore_state(void)
                               BX_VGA_THIS s.pel.data[i].blue  << BX_VGA_THIS s.dac_shift);
   }
   bx_gui->set_text_charmap(&BX_VGA_THIS s.memory[0x20000 + BX_VGA_THIS s.charmap_address]);
-  BX_VGA_THIS s.last_xres = BX_VGA_THIS s.max_xres;
-  BX_VGA_THIS s.last_yres = BX_VGA_THIS s.max_yres;
-  BX_VGA_THIS redraw_area(0, 0, BX_VGA_THIS s.max_xres, BX_VGA_THIS s.max_yres);
   BX_VGA_THIS calculate_retrace_timing();
-  BX_VGA_THIS update();
-  bx_gui->flush();
+  if (!BX_VGA_THIS s.vga_override) {
+    BX_VGA_THIS s.last_xres = BX_VGA_THIS s.max_xres;
+    BX_VGA_THIS s.last_yres = BX_VGA_THIS s.max_yres;
+    BX_VGA_THIS redraw_area(0, 0, BX_VGA_THIS s.max_xres, BX_VGA_THIS s.max_yres);
+    BX_VGA_THIS update();
+    bx_gui->flush();
+  } else {
+    bx_virt_timer.deactivate_timer(BX_VGA_THIS timer_id);
+  }
 }
 
 void bx_vgacore_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth)
@@ -1299,11 +1307,11 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool 
 
 void bx_vgacore_c::set_override(bx_bool enabled)
 {
+  BX_VGA_THIS s.vga_override = enabled;
   if (enabled) {
     bx_virt_timer.deactivate_timer(BX_VGA_THIS timer_id);
   } else {
-    Bit64u interval = 1000000 / SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY)->get();
-    bx_virt_timer.activate_timer(BX_VGA_THIS timer_id, (Bit32u)interval, 1);
+    bx_virt_timer.activate_timer(BX_VGA_THIS timer_id, BX_VGA_THIS update_interval, 1);
     bx_gui->dimension_update(BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres, 8,
                              BX_VGA_THIS s.last_msl+1, BX_VGA_THIS s.last_bpp);
     BX_VGA_THIS redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);

@@ -877,12 +877,12 @@ Bit64s bx_svga_cirrus_c::svga_param_handler(bx_param_c *param, int set, Bit64s v
   Bit32u interval;
 
   if (set) {
-    interval = (Bit32u)(1000000 / val);
+    BX_CIRRUS_THIS update_interval = (Bit32u)(1000000 / val);
     BX_INFO(("Changing timer interval to %d", interval));
     BX_CIRRUS_THIS svga_timer_handler(theSvga);
-    bx_virt_timer.activate_timer(BX_CIRRUS_THIS timer_id, interval, 1);
-    if (interval < 300000) {
-      BX_CIRRUS_THIS s.blink_counter = 300000 / (unsigned)interval;
+    bx_virt_timer.activate_timer(BX_CIRRUS_THIS timer_id, BX_CIRRUS_THIS update_interval, 1);
+    if (BX_CIRRUS_THIS update_interval < 300000) {
+      BX_CIRRUS_THIS s.blink_counter = 300000 / (unsigned)BX_CIRRUS_THIS update_interval;
     } else {
       BX_CIRRUS_THIS s.blink_counter = 1;
     }
