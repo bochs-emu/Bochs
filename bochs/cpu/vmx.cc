@@ -669,9 +669,11 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
         }
      }
 
-     if (error_code & 0x7fff0000) {
-        BX_ERROR(("VMFAIL: VMENTRY bad error code 0x%08x for injected event %d", error_code, vector));
-        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+     if (push_error) {
+        if (error_code & 0xffff0000) {
+          BX_ERROR(("VMFAIL: VMENTRY bad error code 0x%08x for injected event %d", error_code, vector));
+          return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+        }
      }
   }
 
