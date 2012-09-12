@@ -2842,9 +2842,9 @@ AC_PATH_PROG(TAR, tar)
 
 AC_OUTPUT(Makefile iodev/Makefile iodev/display/Makefile iodev/hdimage/Makefile \
 	 iodev/usb/Makefile iodev/network/Makefile iodev/sound/Makefile \
-	 bx_debug/Makefile bios/Makefile cpu/Makefile cpu/cpudb/Makefile memory/Makefile \
-	 gui/Makefile disasm/Makefile ${INSTRUMENT_DIR}/Makefile misc/Makefile \
-	 fpu/Makefile doc/docbook/Makefile build/linux/bochs-dlx \
-	 bxversion.h bxversion.rc build/macosx/Info.plist \
+	 bx_debug/Makefile bios/Makefile cpu/Makefile cpu/cpudb/Makefile \
+	 cpu/fpu/Makefile memory/Makefile gui/Makefile disasm/Makefile \
+	 ${INSTRUMENT_DIR}/Makefile misc/Makefile doc/docbook/Makefile \
+	 build/linux/bochs-dlx bxversion.h bxversion.rc build/macosx/Info.plist \
 	 build/win32/nsis/Makefile build/win32/nsis/bochs.nsi \
 	 host/linux/pcidev/Makefile)

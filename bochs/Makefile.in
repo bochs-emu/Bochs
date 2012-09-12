@@ -151,7 +151,7 @@ EXTERN_ENVIRONMENT_OBJS = \
 DEBUGGER_LIB   = bx_debug/libdebug.a
 DISASM_LIB     = disasm/libdisasm.a
 INSTRUMENT_LIB = @INSTRUMENT_DIR@/libinstrument.a
-FPU_LIB        = fpu/libfpu.a
+FPU_LIB        = cpu/fpu/libfpu.a
 READLINE_LIB   = @READLINE_LIB@
 EXTRA_LINK_OPTS = @EXTRA_LINK_OPTS@
 
@@ -308,6 +308,11 @@ cpu/cpudb/libcpudb.a::
 	$(MAKE) $(MDEFINES) libcpudb.a
 	@CD_UP_TWO@
 
+cpu/fpu/libfpu.a::
+	cd cpu/fpu @COMMAND_SEPARATOR@
+	$(MAKE) $(MDEFINES) libfpu.a
+	@CD_UP_TWO@
+
 memory/libmemory.a::
 	cd memory @COMMAND_SEPARATOR@
 	$(MAKE) $(MDEFINES) libmemory.a
@@ -328,20 +333,10 @@ disasm/libdisasm.a::
 	$(MAKE) $(MDEFINES) libinstrument.a
 	@CD_UP_TWO@
 
-fpu/libfpu.a::
-	cd fpu @COMMAND_SEPARATOR@
-	$(MAKE) $(MDEFINES) libfpu.a
-	@CD_UP_ONE@
-
 libbochs.a:
 	-rm -f libbochs.a
 	ar rv libbochs.a $(EXTERN_ENVIRONMENT_OBJS)
 	$(RANLIB) libbochs.a
-
-libbochs_cpu.a: @DEBUGGER_VAR@ $(BX_OBJS)
-	-rm -f libbochs_cpu.a
-	ar rv libbochs_cpu.a $(BX_OBJS)
-	$(RANLIB) libbochs_cpu.a
 
 # for wxWidgets port, on win32 platform
 wxbochs_resources.o: wxbochs.rc
@@ -563,6 +558,9 @@ all-clean: clean @CLEAN_DOCBOOK_VAR@ @CLEAN_PCIDEV_VAR@
 	cd cpu/cpudb @COMMAND_SEPARATOR@
 	$(MAKE) clean
 	@CD_UP_TWO@
+	cd cpu/fpu @COMMAND_SEPARATOR@
+	$(MAKE) clean
+	@CD_UP_TWO@
 	cd memory @COMMAND_SEPARATOR@
 	$(MAKE) clean
 	@CD_UP_ONE@
@@ -576,9 +574,6 @@ all-clean: clean @CLEAN_DOCBOOK_VAR@ @CLEAN_PCIDEV_VAR@
 	$(MAKE) clean
 	@CD_UP_TWO@
 	cd misc @COMMAND_SEPARATOR@
-	$(MAKE) clean
-	@CD_UP_ONE@
-	cd fpu @COMMAND_SEPARATOR@
 	$(MAKE) clean
 	@CD_UP_ONE@
 
@@ -613,6 +608,9 @@ dist-clean: local-dist-clean
 	cd cpu/cpudb @COMMAND_SEPARATOR@
 	$(MAKE) dist-clean
 	@CD_UP_TWO@
+	cd cpu/fpu @COMMAND_SEPARATOR@
+	$(MAKE) dist-clean
+	@CD_UP_TWO@
 	cd memory @COMMAND_SEPARATOR@
 	$(MAKE) dist-clean
 	@CD_UP_ONE@
@@ -626,9 +624,6 @@ dist-clean: local-dist-clean
 	$(MAKE) dist-clean
 	@CD_UP_TWO@
 	cd misc @COMMAND_SEPARATOR@
-	$(MAKE) dist-clean
-	@CD_UP_ONE@
-	cd fpu @COMMAND_SEPARATOR@
 	$(MAKE) dist-clean
 	@CD_UP_ONE@
 	cd doc/docbook @COMMAND_SEPARATOR@
@@ -753,56 +748,54 @@ install_macosx: all download_dlx install_man @INSTALL_DOCBOOK_VAR@
 #  gcc -MM -I. -Iinstrument/stubs *.cc | sed -e 's/\.cc/.@CPP_SUFFIX@/g' -e 's,cpu/,cpu/,g'
 ###########################################
 config.o: config.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config.h \
-  osdep.h bxversion.h gui/siminterface.h gui/paramtree.h memory/memory.h \
-  pc_system.h plugin.h extplugin.h ltdl.h gui/gui.h \
-  instrument/stubs/instrument.h iodev/iodev.h bochs.h param_names.h \
-  param_names.h cpudb.h
+ osdep.h gui/siminterface.h cpudb.h gui/paramtree.h memory/memory.h \
+ pc_system.h gui/gui.h instrument/stubs/instrument.h bxversion.h \
+ iodev/iodev.h bochs.h plugin.h extplugin.h ltdl.h param_names.h \
+ param_names.h cpudb.h
 crc.o: crc.@CPP_SUFFIX@ config.h
 gdbstub.o: gdbstub.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config.h \
-  osdep.h bxversion.h gui/siminterface.h gui/paramtree.h memory/memory.h \
-  pc_system.h plugin.h extplugin.h ltdl.h gui/gui.h \
-  instrument/stubs/instrument.h param_names.h cpu/cpu.h \
-  cpu/cpuid.h cpu/crregs.h cpu/descriptor.h cpu/instr.h \
-  cpu/ia_opcodes.h cpu/lazy_flags.h cpu/icache.h cpu/apic.h cpu/i387.h \
-  fpu/softfloat.h fpu/tag_w.h fpu/status_w.h fpu/control_w.h cpu/xmm.h \
-  cpu/stack.h iodev/iodev.h bochs.h param_names.h
+ osdep.h gui/siminterface.h cpudb.h gui/paramtree.h memory/memory.h \
+ pc_system.h gui/gui.h instrument/stubs/instrument.h param_names.h \
+ cpu/cpu.h cpu/cpuid.h cpu/crregs.h cpu/descriptor.h cpu/instr.h \
+ cpu/ia_opcodes.h cpu/lazy_flags.h cpu/icache.h cpu/apic.h cpu/i387.h \
+ cpu/fpu/softfloat.h cpu/fpu/tag_w.h cpu/fpu/status_w.h \
+ cpu/fpu/control_w.h cpu/xmm.h cpu/stack.h iodev/iodev.h bochs.h plugin.h \
+ extplugin.h ltdl.h param_names.h
 load32bitOShack.o: load32bitOShack.@CPP_SUFFIX@ bochs.h config.h osdep.h \
-  bx_debug/debug.h config.h osdep.h bxversion.h gui/siminterface.h \
-  gui/paramtree.h memory/memory.h pc_system.h plugin.h extplugin.h ltdl.h \
-  gui/gui.h instrument/stubs/instrument.h param_names.h cpu/cpu.h \
-  cpu/cpuid.h cpu/crregs.h cpu/descriptor.h cpu/instr.h \
-  cpu/ia_opcodes.h cpu/lazy_flags.h cpu/icache.h cpu/apic.h cpu/i387.h \
-  fpu/softfloat.h fpu/tag_w.h fpu/status_w.h fpu/control_w.h cpu/xmm.h \
-  iodev/iodev.h bochs.h param_names.h
+ bx_debug/debug.h config.h osdep.h gui/siminterface.h cpudb.h \
+ gui/paramtree.h memory/memory.h pc_system.h gui/gui.h \
+ instrument/stubs/instrument.h param_names.h cpu/cpu.h cpu/cpuid.h \
+ cpu/crregs.h cpu/descriptor.h cpu/instr.h cpu/ia_opcodes.h \
+ cpu/lazy_flags.h cpu/icache.h cpu/apic.h cpu/i387.h cpu/fpu/softfloat.h \
+ cpu/fpu/tag_w.h cpu/fpu/status_w.h cpu/fpu/control_w.h cpu/xmm.h \
+ iodev/iodev.h bochs.h plugin.h extplugin.h ltdl.h param_names.h
 logio.o: logio.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config.h \
-  osdep.h bxversion.h gui/siminterface.h gui/paramtree.h memory/memory.h \
-  pc_system.h plugin.h extplugin.h ltdl.h gui/gui.h \
-  instrument/stubs/instrument.h cpu/cpu.h cpu/cpuid.h \
-  cpu/crregs.h cpu/descriptor.h cpu/instr.h cpu/ia_opcodes.h \
-  cpu/lazy_flags.h cpu/icache.h cpu/apic.h cpu/i387.h fpu/softfloat.h \
-  fpu/tag_w.h fpu/status_w.h fpu/control_w.h cpu/xmm.h iodev/iodev.h \
-  bochs.h param_names.h
+ osdep.h gui/siminterface.h cpudb.h gui/paramtree.h memory/memory.h \
+ pc_system.h gui/gui.h instrument/stubs/instrument.h cpu/cpu.h \
+ cpu/cpuid.h cpu/crregs.h cpu/descriptor.h cpu/instr.h cpu/ia_opcodes.h \
+ cpu/lazy_flags.h cpu/icache.h cpu/apic.h cpu/i387.h cpu/fpu/softfloat.h \
+ cpu/fpu/tag_w.h cpu/fpu/status_w.h cpu/fpu/control_w.h cpu/xmm.h \
+ iodev/iodev.h bochs.h plugin.h extplugin.h ltdl.h param_names.h
 main.o: main.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config.h \
-  osdep.h bxversion.h gui/siminterface.h gui/paramtree.h memory/memory.h \
-  pc_system.h plugin.h extplugin.h ltdl.h gui/gui.h \
-  instrument/stubs/instrument.h param_names.h gui/textconfig.h cpu/cpu.h \
-  cpu/cpuid.h cpu/crregs.h cpu/descriptor.h cpu/instr.h \
-  cpu/ia_opcodes.h cpu/lazy_flags.h cpu/icache.h cpu/apic.h cpu/i387.h \
-  fpu/softfloat.h fpu/tag_w.h fpu/status_w.h fpu/control_w.h cpu/xmm.h \
-  iodev/iodev.h bochs.h param_names.h
+ osdep.h gui/siminterface.h cpudb.h gui/paramtree.h memory/memory.h \
+ pc_system.h gui/gui.h instrument/stubs/instrument.h bxversion.h \
+ param_names.h gui/textconfig.h cpu/cpu.h cpu/cpuid.h cpu/crregs.h \
+ cpu/descriptor.h cpu/instr.h cpu/ia_opcodes.h cpu/lazy_flags.h \
+ cpu/icache.h cpu/apic.h cpu/i387.h cpu/fpu/softfloat.h cpu/fpu/tag_w.h \
+ cpu/fpu/status_w.h cpu/fpu/control_w.h cpu/xmm.h iodev/iodev.h bochs.h \
+ plugin.h extplugin.h ltdl.h param_names.h
 osdep.o: osdep.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config.h \
-  osdep.h bxversion.h gui/siminterface.h gui/paramtree.h memory/memory.h \
-  pc_system.h plugin.h extplugin.h ltdl.h gui/gui.h \
-  instrument/stubs/instrument.h
+ osdep.h gui/siminterface.h cpudb.h gui/paramtree.h memory/memory.h \
+ pc_system.h gui/gui.h instrument/stubs/instrument.h
 pc_system.o: pc_system.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h \
-  config.h osdep.h bxversion.h gui/siminterface.h gui/paramtree.h \
-  memory/memory.h pc_system.h plugin.h extplugin.h ltdl.h gui/gui.h \
-  instrument/stubs/instrument.h cpu/cpu.h cpu/cpuid.h \
-  cpu/crregs.h cpu/descriptor.h cpu/instr.h cpu/ia_opcodes.h \
-  cpu/lazy_flags.h cpu/icache.h cpu/apic.h cpu/i387.h fpu/softfloat.h \
-  fpu/tag_w.h fpu/status_w.h fpu/control_w.h cpu/xmm.h iodev/iodev.h \
-  bochs.h param_names.h
+ config.h osdep.h gui/siminterface.h cpudb.h gui/paramtree.h \
+ memory/memory.h pc_system.h gui/gui.h instrument/stubs/instrument.h \
+ cpu/cpu.h cpu/cpuid.h cpu/crregs.h cpu/descriptor.h cpu/instr.h \
+ cpu/ia_opcodes.h cpu/lazy_flags.h cpu/icache.h cpu/apic.h cpu/i387.h \
+ cpu/fpu/softfloat.h cpu/fpu/tag_w.h cpu/fpu/status_w.h \
+ cpu/fpu/control_w.h cpu/xmm.h iodev/iodev.h bochs.h plugin.h extplugin.h \
+ ltdl.h param_names.h
 plugin.o: plugin.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config.h \
-  osdep.h bxversion.h gui/siminterface.h gui/paramtree.h memory/memory.h \
-  pc_system.h plugin.h extplugin.h ltdl.h gui/gui.h \
-  instrument/stubs/instrument.h iodev/iodev.h bochs.h param_names.h
+ osdep.h gui/siminterface.h cpudb.h gui/paramtree.h memory/memory.h \
+ pc_system.h gui/gui.h instrument/stubs/instrument.h iodev/iodev.h \
+ bochs.h plugin.h extplugin.h ltdl.h param_names.h plugin.h
