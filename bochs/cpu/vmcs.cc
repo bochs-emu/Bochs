@@ -481,8 +481,8 @@ void BX_CPU_C::init_vmx_capabilities(void)
   //   [05] VPID Enable
   //   [06] WBINVD Exiting
   //   [07] Unrestricted Guest (require EPT)
-  //   [08] Reserved
-  //   [09] Reserved
+  //   [08] Virtualize Apic Registers
+  //   [09] Virtualize Interrupt Delivery
   //   [10] PAUSE Loop Exiting
   //   [11] RDRAND Exiting (require RDRAND instruction support)
   //   [12] Enable INVPCID instruction (require INVPCID instruction support)

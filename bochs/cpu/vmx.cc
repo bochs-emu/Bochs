@@ -1511,6 +1511,12 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 #if BX_SUPPORT_X86_64
 #if BX_SUPPORT_VMX >= 2
   // modify EFER.LMA / EFER.LME before setting CR4
+
+  // It is recommended that 64-bit VMM software use the 1-settings of the "load IA32_EFER"
+  // VM entry control and the "save IA32_EFER" VM-exit control. If VMentry is establishing
+  // CR0.PG=0 and if the "IA-32e mode guest" and "load IA32_EFER" VM entry controls are
+  // both 0, VM entry leaves IA32_EFER.LME unmodified (i.e., the host value will persist
+  // in the guest) -- Quote from Intel SDM
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_EFER_MSR) {
      BX_CPU_THIS_PTR efer.set32((Bit32u) guest.efer_msr);
   }
