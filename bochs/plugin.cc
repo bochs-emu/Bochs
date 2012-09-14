@@ -880,6 +880,9 @@ static builtin_plugin_t builtin_opt_plugins[] = {
 #if BX_SUPPORT_USB_XHCI
   BUILTIN_PLUGIN_ENTRY(usb_xhci),
 #endif
+#if BX_SUPPORT_VOODOO
+  BUILTIN_PLUGIN_ENTRY(voodoo),
+#endif
   {"NULL", NULL, NULL, 0}
 };
 

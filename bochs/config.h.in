@@ -629,6 +629,9 @@ typedef
 // CLGD54XX emulation
 #define BX_SUPPORT_CLGD54XX 0
 
+// Experimental 3dfx Voodoo (SST-1/2) emulation
+#define BX_SUPPORT_VOODOO 0
+
 // Experimental host PCI device mapping
 #define BX_SUPPORT_PCIDEV 0
 
