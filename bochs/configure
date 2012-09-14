@@ -1019,10 +1019,6 @@ with_svga
 with_wx
 with_all_libs
 enable_xpm
-enable_apic
-enable_x2apic
-enable_vbe
-enable_acpi
 enable_trace_cache
 '
       ac_precious_vars='build_alias
@@ -1715,10 +1711,6 @@ Optional Features:
   --enable-gameport                 enable standard PC gameport support
   --enable-docbook                  build the Docbook documentation
   --enable-xpm                      enable the check for XPM support
-  --enable-apic                     enable APIC support (deprecated)
-  --enable-x2apic                   enable X2APIC support (deprecated)
-  --enable-vbe                      use VESA BIOS extensions (deprecated)
-  --enable-acpi                     use ACPI extensions support (deprecated)
   --enable-trace-cache              support instruction trace cache (deprecated)
 
 Optional Packages:
@@ -3009,7 +3001,7 @@ $as_echo "$as_me: loading site script $ac_site_file" >&6;}
       || { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "failed to load site script $ac_site_file
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
   fi
 done
 
@@ -3163,7 +3155,7 @@ fi
 $as_echo "$ac_cv_build" >&6; }
 case $ac_cv_build in
 *-*-*) ;;
-*) as_fn_error $? "invalid value of canonical build" "$LINENO" 5;;
+*) as_fn_error $? "invalid value of canonical build" "$LINENO" 5 ;;
 esac
 build=$ac_cv_build
 ac_save_IFS=$IFS; IFS='-'
@@ -3196,7 +3188,7 @@ fi
 $as_echo "$ac_cv_host" >&6; }
 case $ac_cv_host in
 *-*-*) ;;
-*) as_fn_error $? "invalid value of canonical host" "$LINENO" 5;;
+*) as_fn_error $? "invalid value of canonical host" "$LINENO" 5 ;;
 esac
 host=$ac_cv_host
 ac_save_IFS=$IFS; IFS='-'
@@ -3229,7 +3221,7 @@ fi
 $as_echo "$ac_cv_target" >&6; }
 case $ac_cv_target in
 *-*-*) ;;
-*) as_fn_error $? "invalid value of canonical target" "$LINENO" 5;;
+*) as_fn_error $? "invalid value of canonical target" "$LINENO" 5 ;;
 esac
 target=$ac_cv_target
 ac_save_IFS=$IFS; IFS='-'
@@ -3647,7 +3639,7 @@ fi
 test -z "$CC" && { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "no acceptable C compiler found in \$PATH
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
 
 # Provide some information about the compiler.
 $as_echo "$as_me:${as_lineno-$LINENO}: checking for C compiler version" >&5
@@ -3762,7 +3754,7 @@ sed 's/^/| /' conftest.$ac_ext >&5
 { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error 77 "C compiler cannot create executables
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
@@ -3805,7 +3797,7 @@ else
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "cannot compute suffix of executables: cannot compile and link
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
 fi
 rm -f conftest conftest$ac_cv_exeext
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_exeext" >&5
@@ -3864,7 +3856,7 @@ $as_echo "$ac_try_echo"; } >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "cannot run C compiled programs.
 If you meant to cross compile, use \`--host'.
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
     fi
   fi
 fi
@@ -3916,7 +3908,7 @@ sed 's/^/| /' conftest.$ac_ext >&5
 { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "cannot compute suffix of object files: cannot compile
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
 fi
 rm -f conftest.$ac_cv_objext conftest.$ac_ext
 fi
@@ -5113,7 +5105,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 5116 "configure"' > conftest.$ac_ext
+  echo '#line 5108 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -5375,7 +5367,7 @@ else
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "C preprocessor \"$CPP\" fails sanity check
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
 fi
 
 ac_ext=c
@@ -5650,7 +5642,7 @@ else
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "C++ preprocessor \"$CXXCPP\" fails sanity check
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
 fi
 
 ac_ext=cpp
@@ -6801,11 +6793,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6804: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6796: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:6808: \$? = $ac_status" >&5
+   echo "$as_me:6800: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -7034,11 +7026,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7037: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7029: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7041: \$? = $ac_status" >&5
+   echo "$as_me:7033: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -7101,11 +7093,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7104: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7096: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7108: \$? = $ac_status" >&5
+   echo "$as_me:7100: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -8891,7 +8883,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8894 "configure"
+#line 8886 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -8989,7 +8981,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8992 "configure"
+#line 8984 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11104,11 +11096,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11107: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11099: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:11111: \$? = $ac_status" >&5
+   echo "$as_me:11103: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -11171,11 +11163,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11174: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11166: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:11178: \$? = $ac_status" >&5
+   echo "$as_me:11170: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -12196,7 +12188,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 12199 "configure"
+#line 12191 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12294,7 +12286,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 12297 "configure"
+#line 12289 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13117,11 +13109,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13120: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13112: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13124: \$? = $ac_status" >&5
+   echo "$as_me:13116: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -13184,11 +13176,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13187: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13179: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13191: \$? = $ac_status" >&5
+   echo "$as_me:13183: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -15149,11 +15141,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15152: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15144: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15156: \$? = $ac_status" >&5
+   echo "$as_me:15148: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -15382,11 +15374,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15385: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15377: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15389: \$? = $ac_status" >&5
+   echo "$as_me:15381: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -15449,11 +15441,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15452: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15444: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:15456: \$? = $ac_status" >&5
+   echo "$as_me:15448: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -17239,7 +17231,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 17242 "configure"
+#line 17234 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -17337,7 +17329,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 17340 "configure"
+#line 17332 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -19023,7 +19015,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 19026 "configure"
+#line 19018 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -19429,7 +19421,7 @@ if test "x$with_x" = xno; then
   have_x=disabled
 else
   case $x_includes,$x_libraries in #(
-    *\'*) as_fn_error $? "cannot use X directory names containing '" "$LINENO" 5;; #(
+    *\'*) as_fn_error $? "cannot use X directory names containing '" "$LINENO" 5 ;; #(
     *,NONE | NONE,*) if ${ac_cv_have_x+:} false; then :
   $as_echo_n "(cached) " >&6
 else
@@ -20320,7 +20312,7 @@ $as_echo "#define AC_APPLE_UNIVERSAL_BUILD 1" >>confdefs.h
      ;; #(
    *)
      as_fn_error $? "unknown endianness
- presetting ac_cv_c_bigendian=no (or yes) will help" "$LINENO" 5 ;;
+ presetting ac_cv_c_bigendian=no (or yes) will help" "$LINENO" 5  ;;
  esac
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for inline" >&5
@@ -20381,7 +20373,7 @@ else
      { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error 77 "cannot compute sizeof (unsigned char)
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
    else
      ac_cv_sizeof_unsigned_char=0
    fi
@@ -20414,7 +20406,7 @@ else
      { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error 77 "cannot compute sizeof (unsigned short)
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
    else
      ac_cv_sizeof_unsigned_short=0
    fi
@@ -20447,7 +20439,7 @@ else
      { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error 77 "cannot compute sizeof (unsigned int)
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
    else
      ac_cv_sizeof_unsigned_int=0
    fi
@@ -20480,7 +20472,7 @@ else
      { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error 77 "cannot compute sizeof (unsigned long)
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
    else
      ac_cv_sizeof_unsigned_long=0
    fi
@@ -20513,7 +20505,7 @@ else
      { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error 77 "cannot compute sizeof (unsigned long long)
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
    else
      ac_cv_sizeof_unsigned_long_long=0
    fi
@@ -20546,7 +20538,7 @@ else
      { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error 77 "cannot compute sizeof (int *)
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
    else
      ac_cv_sizeof_int_p=0
    fi
@@ -23000,7 +22992,7 @@ $as_echo_n "checking if readline works without -lcurses... " >&6; }
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "cannot run test program while cross compiling
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
 else
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
@@ -23030,7 +23022,7 @@ $as_echo_n "checking if readline works with -lcurses... " >&6; }
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "cannot run test program while cross compiling
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
 else
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
@@ -25307,70 +25299,6 @@ if test "$cross_configure" = 0; then
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for APIC support (deprecated)" >&5
-$as_echo_n "checking for APIC support (deprecated)... " >&6; }
-# Check whether --enable-apic was given.
-if test "${enable_apic+set}" = set; then :
-  enableval=$enable_apic; { $as_echo "$as_me:${as_lineno-$LINENO}: result: $enableval" >&5
-$as_echo "$enableval" >&6; }
-   as_fn_error $? "DEPRECATED - enabled automatically with SMP or when CPU_LEVEL >= 5" "$LINENO" 5
-
-else
-
-   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-
-fi
-
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for X2APIC support (deprecated)" >&5
-$as_echo_n "checking for X2APIC support (deprecated)... " >&6; }
-# Check whether --enable-x2apic was given.
-if test "${enable_x2apic+set}" = set; then :
-  enableval=$enable_x2apic; { $as_echo "$as_me:${as_lineno-$LINENO}: result: $enableval" >&5
-$as_echo "$enableval" >&6; }
-   as_fn_error $? "DEPRECATED - moved to .bochsrc options" "$LINENO" 5
-
-else
-
-   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-
-fi
-
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for VESA BIOS extensions (deprecated)" >&5
-$as_echo_n "checking for VESA BIOS extensions (deprecated)... " >&6; }
-# Check whether --enable-vbe was given.
-if test "${enable_vbe+set}" = set; then :
-  enableval=$enable_vbe; { $as_echo "$as_me:${as_lineno-$LINENO}: result: $enableval" >&5
-$as_echo "$enableval" >&6; }
-   as_fn_error $? "DEPRECATED - this feature always available with .bochsrc option" "$LINENO" 5
-
-else
-
-   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-
-fi
-
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for ACPI extensions support (deprecated)" >&5
-$as_echo_n "checking for ACPI extensions support (deprecated)... " >&6; }
-# Check whether --enable-acpi was given.
-if test "${enable_acpi+set}" = set; then :
-  enableval=$enable_acpi; { $as_echo "$as_me:${as_lineno-$LINENO}: result: $enableval" >&5
-$as_echo "$enableval" >&6; }
-   as_fn_error $? "DEPRECATED - this feature enabled with PCI configure option and could be turned on through .bochsrc option" "$LINENO" 5
-
-else
-
-   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-
-fi
-
-
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for instruction trace cache support (deprecated)" >&5
 $as_echo_n "checking for instruction trace cache support (deprecated)... " >&6; }
 # Check whether --enable-trace-cache was given.
@@ -26248,7 +26176,7 @@ do
     "build/win32/nsis/bochs.nsi") CONFIG_FILES="$CONFIG_FILES build/win32/nsis/bochs.nsi" ;;
     "host/linux/pcidev/Makefile") CONFIG_FILES="$CONFIG_FILES host/linux/pcidev/Makefile" ;;
 
-  *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
+  *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5 ;;
   esac
 done
 
@@ -26565,7 +26493,7 @@ do
   esac
   case $ac_mode$ac_tag in
   :[FHL]*:*);;
-  :L* | :C*:*) as_fn_error $? "invalid tag \`$ac_tag'" "$LINENO" 5;;
+  :L* | :C*:*) as_fn_error $? "invalid tag \`$ac_tag'" "$LINENO" 5 ;;
   :[FH]-) ac_tag=-:-;;
   :[FH]*) ac_tag=$ac_tag:$ac_tag.in;;
   esac
@@ -26593,7 +26521,7 @@ do
 	   [\\/$]*) false;;
 	   *) test -f "$srcdir/$ac_f" && ac_f="$srcdir/$ac_f";;
 	   esac ||
-	   as_fn_error 1 "cannot find input file: \`$ac_f'" "$LINENO" 5;;
+	   as_fn_error 1 "cannot find input file: \`$ac_f'" "$LINENO" 5 ;;
       esac
       case $ac_f in *\'*) ac_f=`$as_echo "$ac_f" | sed "s/'/'\\\\\\\\''/g"`;; esac
       as_fn_append ac_file_inputs " '$ac_f'"
@@ -26620,7 +26548,7 @@ $as_echo "$as_me: creating $ac_file" >&6;}
 
     case $ac_tag in
     *:-:* | *:-) cat >"$ac_tmp/stdin" \
-      || as_fn_error $? "could not create $ac_file" "$LINENO" 5 ;;
+      || as_fn_error $? "could not create $ac_file" "$LINENO" 5  ;;
     esac
     ;;
   esac

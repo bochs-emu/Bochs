@@ -26,7 +26,7 @@ Paths we can explore to get more speed :
 1.1 virtualization : plex86
 1.2 dynamic translation : qemu
 Status:
-Some work has been done for Bochs 2.5 but still long way is ahead.
+Some work has been done for Bochs 2.5 and 2.6 but still long way is ahead.
 
 2 multithreading. Conn Clark wrote :
 Threading might be nice too, for those of us who have SMP/SMT machines.
@@ -91,7 +91,7 @@ iodev/net/...   --> for ne2k and host net access
 isa and pci devices would be mixed in the directories, but this should
 be manageable.
 Status:
-Subfolders for disk imaging, sound, network and usb devices were created
+Subfolders for display, disk imaging, sound, network and usb devices were created
 under the iodev folder.
 
 6. VGA

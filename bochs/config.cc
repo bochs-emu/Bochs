@@ -2536,8 +2536,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       } else if (!strncmp(params[i], "apic=", 5)) {
         if (! SIM->get_param_enum(BXPN_CPUID_APIC)->set_by_name(&params[i][5]))
           PARSE_ERR(("%s: unsupported apic option.", context));
-      } else if (!strncmp(params[i], "xapic=", 6)) {
-        PARSE_ERR(("%s: unsupported xapic option (deprecated).", context));
 #endif
 #if BX_CPU_LEVEL >= 6
       } else if (!strncmp(params[i], "sse=", 4)) {
