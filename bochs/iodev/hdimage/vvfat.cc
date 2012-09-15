@@ -567,6 +567,7 @@ direntry_t* vvfat_image_t::create_short_and_long_name(
   int i, j, long_index = directory.next;
   direntry_t* entry = NULL;
   direntry_t* entry_long = NULL;
+  char tempfn[BX_PATHNAME_LEN];
 
   if (is_dot) {
     entry = (direntry_t*)array_get_next(&directory);
@@ -577,8 +578,16 @@ direntry_t* vvfat_image_t::create_short_and_long_name(
 
   entry_long = create_long_filename(filename);
 
-  i = strlen(filename);
-  for (j = i - 1; j>0  && filename[j]!='.';j--);
+  // short name should not contain spaces
+  j = 0;
+  for (i = 0; i < (int)strlen(filename); i++) {
+    if (filename[i] != ' ')
+      tempfn[j++] = filename[i];
+  }
+  tempfn[j] = 0;
+
+  i = strlen(tempfn);
+  for (j = i - 1; j > 0  && tempfn[j] != '.'; j--);
   if (j > 0)
     i = (j > 8 ? 8 : j);
   else if (i > 8)
@@ -586,16 +595,16 @@ direntry_t* vvfat_image_t::create_short_and_long_name(
 
   entry = (direntry_t*)array_get_next(&directory);
   memset(entry->name, 0x20, 11);
-  memcpy(entry->name, filename, i);
+  memcpy(entry->name, tempfn, i);
 
   if (j > 0)
-    for (i = 0; i < 3 && filename[j+1+i]; i++)
-      entry->extension[i] = filename[j+1+i];
+    for (i = 0; i < 3 && tempfn[j+1+i]; i++)
+      entry->extension[i] = tempfn[j+1+i];
 
   // upcase & remove unwanted characters
   for (i=10;i>=0;i--) {
     if (i==10 || i==7) for (;i>0 && entry->name[i]==' ';i--);
-    if (entry->name[i]<=' ' || entry->name[i]>0x7f
+    if ((entry->name[i]<' ') || (entry->name[i]>0x7f)
       || strchr(".*?<>|\":/\\[];,+='",entry->name[i]))
       entry->name[i]='_';
     else if (entry->name[i]>='a' && entry->name[i]<='z')
