@@ -50,9 +50,14 @@ struct _poly_extent
   poly_param_extent param[MAX_VERTEX_PARAMS]; /* starting and dx values for each parameter */
 };
 
-#define U64(x) (x)
+#define U64(x) BX_CONST64(x)
+
+#ifndef TRUE
 #define TRUE true
+#endif
+#ifndef FALSE
 #define FALSE false
+#endif
 
 
 /* an rgb_t is a single combined R,G,B (and optionally alpha) value */

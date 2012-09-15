@@ -727,7 +727,7 @@ void draw_line (int x1, int y1, int x2, int y2, Bit16u *buf)
   deltay = abs(y2 - y1);
 
   if (deltax >= deltay)
-    {
+  {
       numpixels = deltax + 1;
       d = (deltay<<1) - deltax;
       dinc1 = deltay<<1;
@@ -736,9 +736,9 @@ void draw_line (int x1, int y1, int x2, int y2, Bit16u *buf)
       xinc2 = 1;
       yinc1 = 0;
       yinc2 = 1;
-    }
+  }
   else
-    {
+  {
       numpixels = deltay + 1;
       d = (deltax<<1) - deltay;
       dinc1 = deltax << 1;
@@ -747,40 +747,40 @@ void draw_line (int x1, int y1, int x2, int y2, Bit16u *buf)
       xinc2 = 1;
       yinc1 = 1;
       yinc2 = 1;
-    }
+  }
 
   if (x1 > x2)
-    {
+  {
       xinc1 = - xinc1;
       xinc2 = - xinc2;
-    }
+  }
   if (y1 > y2)
-    {
+  {
       yinc1 = - yinc1;
       yinc2 = - yinc2;
-    }
+  }
 
   x = x1;
   y = y1;
 
   for (i=0; i < numpixels; i++)
-    {
-    if ((x>=0) && (x<XRes) && (y>=0) && (y<YRes) )
-      dest [x + y*XRes] = color;
+  {
+      if ((x>=0) && (x<XRes) && (y>=0) && (y<YRes))
+          dest [x + y*XRes] = color;
 
       if (d < 0)
-        {
+      {
           d = d + dinc1;
           x = x + xinc1;
           y = y + yinc1;
-        }
+      }
       else
-        {
+      {
           d = d + dinc2;
           x = x + xinc2;
           y = y + yinc2;
-        }
-    }
+      }
+  }
 }
 
 Bit32s triangle(voodoo_state *v)
@@ -1010,7 +1010,6 @@ Bit32u poly_render_triangle_custom(/*poly_manager *poly, */void *dest, const rec
   poly->unit_max = MAX(poly->unit_max, poly->unit_next);
 #endif
 
-  
 
   /* enqueue the work items */
 //  if (poly->queue != NULL)
@@ -1225,17 +1224,17 @@ Bit32s swapbuffer(voodoo_state *v, Bit32u data)
   v->fbi.vblank_dont_swap = (data >> 9) & 1;
 
   if (dump_lfb) {
-  FILE *f=fopen("e:/lfb.raw","wb");
-  fwrite(v->fbi.ram,4<<20,1,f);
-  fclose(f);
+    FILE *f=fopen("e:/lfb.raw","wb");
+    fwrite(v->fbi.ram,4<<20,1,f);
+    fclose(f);
   }
   if (dump_tmu) {
-  FILE*f=fopen("e:/tmu0.raw","wb");
-  fwrite(v->tmu[0].ram,4<<20,1,f);
-  fclose(f);
-  f=fopen("e:/tmu1.raw","wb");
-  fwrite(v->tmu[1].ram,4<<20,1,f);
-  fclose(f);
+    FILE*f=fopen("e:/tmu0.raw","wb");
+    fwrite(v->tmu[0].ram,4<<20,1,f);
+    fclose(f);
+    f=fopen("e:/tmu1.raw","wb");
+    fwrite(v->tmu[1].ram,4<<20,1,f);
+    fclose(f);
   }
 
   /* if we're not syncing to the retrace, process the command immediately */
@@ -2057,13 +2056,10 @@ default_case:
       if (chips & 8) v->reg[0x300 + regnum].u = data;
       break;
   }
-
 }
 
-
-
-
-Bit32s texture_w(Bit32u offset, Bit32u data) {
+Bit32s texture_w(Bit32u offset, Bit32u data)
+{
   int tmunum = (offset >> 19) & 0x03;
   LOG_VOODOO("V3D:write TMU%x offset %X value %X", tmunum, offset, data);
 
@@ -2181,7 +2177,8 @@ Bit32s texture_w(Bit32u offset, Bit32u data) {
   return 0;
 }
 
- Bit32u lfb_w(Bit32u offset, Bit32u data, Bit32u mem_mask) {
+ Bit32u lfb_w(Bit32u offset, Bit32u data, Bit32u mem_mask)
+{
   LOG_VOODOO("V3D:WR LFB offset %X value %08X", offset, data);
   Bit16u *dest, *depth;
   Bit32u destmax, depthmax;
@@ -2475,7 +2472,6 @@ Bit32s texture_w(Bit32u offset, Bit32u data) {
       mask >>= 4;
     }
   }
-
   /* tricky case: run the full pixel pipeline on the pixel */
   else
   {
@@ -2548,7 +2544,8 @@ nextpixel:
   return 0;
 }
 
-Bit32u register_r(Bit32u offset) {
+Bit32u register_r(Bit32u offset)
+{
   Bit32u regnum  = (offset) & 0xff;
   Bit32u chips   = (offset>>8) & 0xf;
 
@@ -2650,7 +2647,8 @@ Bit32u register_r(Bit32u offset) {
   return result;
 }
 
-Bit32u lfb_r(Bit32u offset) {
+Bit32u lfb_r(Bit32u offset)
+{
   LOG_VOODOO("Voodoo:read LFB offset %X", offset);
   Bit16u *buffer;
   Bit32u bufmax;
@@ -2721,7 +2719,6 @@ Bit32u lfb_r(Bit32u offset) {
   return data;
 }
 
-
 void voodoo_w(Bit32u offset, Bit32u data, Bit32u mask) {
 
   if ((offset & (0xc00000/4)) == 0)
@@ -2741,8 +2738,6 @@ Bit32u voodoo_r(Bit32u offset) {
 
   return 0xffffffff;
 }
-
-
 
 void init_tmu(voodoo_state *v, tmu_state *t, voodoo_reg *reg, void *memory, int tmem)
 {
@@ -2795,7 +2790,6 @@ void init_tmu(voodoo_state *v, tmu_state *t, voodoo_reg *reg, void *memory, int 
   }
 }
 
-
 void init_tmu_shared(tmu_shared_state *s)
 {
   int val;
@@ -2840,8 +2834,8 @@ void init_tmu_shared(tmu_shared_state *s)
   }
 }
 
-
-void voodoo_init() {
+void voodoo_init()
+{
   int pen;
   int val;
   const raster_info *info;
@@ -2895,7 +2889,6 @@ void voodoo_init() {
     }
   }
 
-
   /* init the pens */
   v->fbi.clut_dirty = TRUE;
   if (v->type <= VOODOO_2)
@@ -2938,8 +2931,6 @@ void voodoo_init() {
 
   soft_reset(v);
 }
-
-
 
 int voodoo_update(/*running_device *device, bitmap_t *bitmap, */const rectangle *cliprect)
 {

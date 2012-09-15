@@ -357,7 +357,6 @@ static const Bit8u register_alias_map[0x40] =
 };
 
 
-
 /*************************************
  *
  *  Table of per-register access rights
@@ -367,7 +366,7 @@ static const Bit8u register_alias_map[0x40] =
 static const Bit8u voodoo_register_access[0x100] =
 {
   /* 0x000 */
-  REG_RP,   0,      REG_WPF,  REG_WPF,
+  REG_RP,   0,        REG_WPF,  REG_WPF,
   REG_WPF,  REG_WPF,  REG_WPF,  REG_WPF,
   REG_WPF,  REG_WPF,  REG_WPF,  REG_WPF,
   REG_WPF,  REG_WPF,  REG_WPF,  REG_WPF,
@@ -379,7 +378,7 @@ static const Bit8u voodoo_register_access[0x100] =
   REG_WPF,  REG_WPF,  REG_WPF,  REG_WPF,
 
   /* 0x080 */
-  REG_WPF,  0,      REG_WPF,  REG_WPF,
+  REG_WPF,  0,        REG_WPF,  REG_WPF,
   REG_WPF,  REG_WPF,  REG_WPF,  REG_WPF,
   REG_WPF,  REG_WPF,  REG_WPF,  REG_WPF,
   REG_WPF,  REG_WPF,  REG_WPF,  REG_WPF,
@@ -394,7 +393,7 @@ static const Bit8u voodoo_register_access[0x100] =
   REG_WPF,  REG_RWPF, REG_RWPF, REG_RWPF,
   REG_RWF,  REG_RWF,  REG_RWF,  REG_RWF,
   REG_WF,   REG_WF,   REG_WF,   REG_WF,
-  REG_WF,   REG_WF,   0,      0,
+  REG_WF,   REG_WF,   0,        0,
 
   /* 0x140 */
   REG_RWF,  REG_RWF,  REG_RWF,  REG_R,
@@ -411,14 +410,14 @@ static const Bit8u voodoo_register_access[0x100] =
   /* 0x1c0 */
   REG_WF,   REG_WF,   REG_WF,   REG_WF,
   REG_WF,   REG_WF,   REG_WF,   REG_WF,
-  0,      0,      0,      0,
-  0,      0,      0,      0,
+  0,        0,        0,        0,
+  0,        0,        0,        0,
 
   /* 0x200 */
   REG_RW,   REG_R,    REG_RW,   REG_RW,
   REG_RW,   REG_RW,   REG_RW,   REG_RW,
   REG_W,    REG_W,    REG_W,    REG_W,
-  REG_W,    0,      0,      0,
+  REG_W,    0,        0,        0,
 
   /* 0x240 */
   0,      0,      0,      0,
@@ -513,15 +512,15 @@ static const Bit8u voodoo2_register_access[0x100] =
 
   /* 0x240 */
   REG_R,    REG_RWT,  REG_RWT,  REG_RWT,
-  0,      0,      REG_R,    REG_R,
+  0,        0,        REG_R,    REG_R,
   REG_WPF,  REG_WPF,  REG_WPF,  REG_WPF,
   REG_WPF,  REG_WPF,  REG_WPF,  REG_WPF,
 
   /* 0x280 */
   REG_WPF,  REG_WPF,  REG_WPF,  REG_WPF,
   REG_WPF,  REG_WPF,  REG_WPF,  REG_WPF,
-  REG_WPF,  REG_WPF,  0,      0,
-  0,      0,      0,      0,
+  REG_WPF,  REG_WPF,  0,        0,
+  0,        0,        0,        0,
 
   /* 0x2c0 */
   REG_RWPF, REG_RWPF, REG_RWPF, REG_RWPF,
@@ -593,17 +592,17 @@ static const Bit8u banshee_register_access[0x100] =
   /* 0x1c0 */
   REG_WF,   REG_WF,   REG_WF,   REG_WF,
   REG_WF,   REG_WF,   REG_WF,   REG_WF,
-  0,      0,      0,      REG_RWF,
+  0,        0,        0,        REG_RWF,
   REG_RWF,  REG_RWF,  REG_RWF,  0,
 
   /* 0x200 */
-  REG_RWF,  REG_RWF,  0,      0,
-  0,      0,      0,      0,
-  0,      0,      0,      0,
-  0,      0,      0,      0,
+  REG_RWF,  REG_RWF,  0,        0,
+  0,        0,        0,        0,
+  0,        0,        0,        0,
+  0,        0,        0,        0,
 
   /* 0x240 */
-  0,      0,      0,      REG_WT,
+  0,        0,        0,        REG_WT,
   REG_RWF,  REG_RWF,  REG_WPF,  REG_WPF,
   REG_WPF,  REG_WPF,  REG_R,    REG_R,
   REG_WPF,  REG_WPF,  REG_WPF,  REG_WPF,
@@ -611,8 +610,8 @@ static const Bit8u banshee_register_access[0x100] =
   /* 0x280 */
   REG_WPF,  REG_WPF,  REG_WPF,  REG_WPF,
   REG_WPF,  REG_WPF,  REG_WPF,  REG_WPF,
-  REG_WPF,  REG_WPF,  0,      0,
-  0,      0,      0,      0,
+  REG_WPF,  REG_WPF,  0,        0,
+  0,        0,        0,        0,
 
   /* 0x2c0 */
   0,      0,      0,      0,
@@ -635,7 +634,6 @@ static const Bit8u banshee_register_access[0x100] =
   /* 0x380 */
   REG_WF
 };
-
 
 
 /*************************************
