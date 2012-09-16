@@ -155,6 +155,19 @@ int bx_write_image(int fd, Bit64s offset, void *buf, int count)
   return write(fd, buf, count);
 }
 
+Bit64s hdimage_save_handler(void *class_ptr, bx_param_c *param)
+{
+  char imgname[BX_PATHNAME_LEN];
+  char path[BX_PATHNAME_LEN];
+
+  param->get_param_path(imgname, BX_PATHNAME_LEN);
+  if (!strncmp(imgname, "bochs.", 6)) {
+    strcpy(imgname, imgname+6);
+  }
+  sprintf(path, "%s/%s", SIM->get_param_string(BXPN_RESTORE_PATH)->getptr(), imgname);
+  return ((device_image_t*)class_ptr)->save_state(path);
+}
+
 /*** base class device_image_t ***/
 
 device_image_t::device_image_t()
@@ -165,6 +178,13 @@ device_image_t::device_image_t()
 Bit32u device_image_t::get_capabilities()
 {
   return (cylinders == 0) ? HDIMAGE_AUTO_GEOMETRY : 0;
+}
+
+void device_image_t::register_state(bx_list_c *parent)
+{
+  bx_param_bool_c *image = new bx_param_bool_c(parent, "image", NULL, NULL, 0);
+  // TODO: restore image
+  image->set_sr_handlers(this, hdimage_save_handler, (param_restore_handler)NULL);
 }
 
 /*** default_image_t function definitions ***/
@@ -252,6 +272,49 @@ Bit32u default_image_t::get_timestamp()
 {
   return (fat_datetime(mtime, 1) | (fat_datetime(mtime, 0) << 16));
 }
+
+bx_bool default_image_t::save_state(const char *backup_fname)
+{
+  char *buf;
+  off_t offset;
+  Bit32u size;
+  bx_bool ret = 1;
+
+  int backup_fd = ::open(backup_fname, O_RDWR | O_CREAT | O_TRUNC
+#ifdef O_BINARY
+    | O_BINARY
+#endif
+    , S_IWUSR | S_IRUSR | S_IRGRP | S_IWGRP);
+  if (backup_fd >= 0) {
+    offset = 0;
+    size = 0x20000;
+    buf = (char*)malloc(size);
+    if (buf == NULL) {
+      ::close(backup_fd);
+      return 0;
+    }
+    while (offset < (off_t)hd_size) {
+      if (bx_read_image(fd, offset, buf, size) < 0) {
+        ret = 0;
+        break;
+      }
+      if (bx_write_image(backup_fd, offset, buf, size) < 0) {
+        ret = 0;
+        break;
+      }
+      offset += size;
+      if ((hd_size - offset) < size) {
+        size = hd_size - offset;
+      }
+    };
+    free(buf);
+    ::close(backup_fd);
+    return ret;
+  }
+  return 0;
+}
+
+// helper function for concat and sparse mode images
 
 char increment_string(char *str, int diff)
 {

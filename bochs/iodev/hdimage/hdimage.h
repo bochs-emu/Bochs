@@ -154,6 +154,10 @@ class device_image_t
       // Get image capabilities
       virtual Bit32u get_capabilities();
 
+      // Save/restore support
+      virtual void register_state(bx_list_c *parent);
+      virtual bx_bool save_state(const char *backup_fname) {return 0;}
+
       unsigned cylinders;
       unsigned heads;
       unsigned spt;
@@ -187,6 +191,9 @@ class default_image_t : public device_image_t
 
       // Get modification time in FAT format
       Bit32u get_timestamp();
+
+      // Save/restore support
+      bx_bool save_state(const char *backup_fname);
 
   private:
       int fd;

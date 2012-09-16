@@ -257,6 +257,9 @@ const char* usb_msd_device_c::get_info()
 void usb_msd_device_c::register_state_specific(bx_list_c *parent)
 {
   s.sr_list = new bx_list_c(parent, "s", "USB MSD Device State");
+  if ((d.type == USB_DEV_TYPE_DISK) && (s.hdimage != NULL)) {
+    s.hdimage->register_state(s.sr_list);
+  }
   new bx_shadow_num_c(s.sr_list, "mode", &s.mode);
   new bx_shadow_num_c(s.sr_list, "scsi_len", &s.scsi_len);
   new bx_shadow_num_c(s.sr_list, "usb_len", &s.usb_len);

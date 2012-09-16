@@ -1008,6 +1008,7 @@ bx_bool bx_real_sim_c::save_state(const char *checkpoint_path)
   int i, dev, ndev = SIM->get_n_log_modules();
   int type, ntype = SIM->get_max_log_level();
 
+  get_param_string(BXPN_RESTORE_PATH)->set(checkpoint_path);
   sprintf(sr_file, "%s/config", checkpoint_path);
   if (write_rc(sr_file, 1) < 0)
     return 0;
