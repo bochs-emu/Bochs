@@ -36,7 +36,7 @@
 #endif
 
 
-int bochsrc_include_count = 0;
+int bochsrc_include_level = 0;
 #if BX_PLUGINS
 Bit8u bx_user_plugin_count = 0;
 #endif
@@ -1712,7 +1712,7 @@ static int parse_bochsrc(const char *rcfile)
 
   // try several possibilities for the bochsrc before giving up
 
-  bochsrc_include_count++;
+  bochsrc_include_level++;
 
   fd = fopen (rcfile, "r");
   if (fd == NULL) return -1;
@@ -1734,7 +1734,7 @@ static int parse_bochsrc(const char *rcfile)
     linenum++;
   } while (!feof(fd));
   fclose(fd);
-  bochsrc_include_count--;
+  bochsrc_include_level--;
   return retval;
 }
 
@@ -2120,8 +2120,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     if (!strcmp(params[1], context)) {
       PARSE_ERR(("%s: cannot include this file again.", context));
     }
-    if (bochsrc_include_count == 2) {
-      PARSE_ERR(("%s: include directive in an included file not supported yet.", context));
+    if (bochsrc_include_level > 2) {
+      PARSE_ERR(("%s: maximum include level exceeded (limit = 2).", context));
     }
     bx_read_configuration(params[1]);
   }
