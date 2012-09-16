@@ -472,7 +472,7 @@ BX_CPP_INLINE Bit32s prepare_tmu(tmu_state *t)
 
 BX_CPP_INLINE Bit32s round_coordinate(float value)
 {
-  Bit32s result = floor(value);
+  Bit32s result = (Bit32s)floor(value);
   return result + (value - (float)result > 0.5f);
 }
 

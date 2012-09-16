@@ -1903,7 +1903,7 @@ BX_CPP_INLINE Bit32s fast_reciplog(Bit64s value, Bit32s *log2)
   }
 
   /* if we've spilled out of 32 bits, push it down under 32 */
-  if (value & (0xffff00000000))
+  if (value & BX_CONST64(0xffff00000000))
   {
     temp = (Bit32u)(value >> 16);
     exp -= 16;
@@ -2004,7 +2004,7 @@ BX_CPP_INLINE Bit64s float_to_Bit64s(Bit32u data, int fixedbits)
     if (exponent < 64)
       result <<= exponent;
     else
-      result = (0x7fffffffffffffff);
+      result = BX_CONST64(0x7fffffffffffffff);
   }
   if (data & 0x80000000)
     result = -result;
