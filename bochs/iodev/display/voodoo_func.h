@@ -2580,7 +2580,6 @@ Bit32u register_r(Bit32u offset)
       /* bit 6 is the vertical retrace */
       //result |= v->fbi.vblank << 6;
       result |= Voodoo_get_retrace() << 6;
-      
 
       /* bit 7 is FBI graphics engine busy */
       if (v->pci.op_pending)
