@@ -168,6 +168,46 @@ Bit64s hdimage_save_handler(void *class_ptr, bx_param_c *param)
   return ((device_image_t*)class_ptr)->save_state(path);
 }
 
+bx_bool hdimage_backup_file(int fd, const char *backup_fname)
+{
+  char *buf;
+  off_t offset;
+  int nread, size;
+  bx_bool ret = 1;
+
+  int backup_fd = ::open(backup_fname, O_RDWR | O_CREAT | O_TRUNC
+#ifdef O_BINARY
+    | O_BINARY
+#endif
+    , S_IWUSR | S_IRUSR | S_IRGRP | S_IWGRP);
+  if (backup_fd >= 0) {
+    offset = 0;
+    size = 0x20000;
+    buf = (char*)malloc(size);
+    if (buf == NULL) {
+      ::close(backup_fd);
+      return 0;
+    }
+    while ((nread = bx_read_image(fd, offset, buf, size)) > 0) {
+      if (bx_write_image(backup_fd, offset, buf, nread) < 0) {
+        ret = 0;
+        break;
+      }
+      if (nread < size) {
+        break;
+      }
+      offset += size;
+    };
+    if (nread < 0) {
+      ret = 0;
+    }
+    free(buf);
+    ::close(backup_fd);
+    return ret;
+  }
+  return 0;
+}
+
 /*** base class device_image_t ***/
 
 device_image_t::device_image_t()
@@ -275,43 +315,7 @@ Bit32u default_image_t::get_timestamp()
 
 bx_bool default_image_t::save_state(const char *backup_fname)
 {
-  char *buf;
-  off_t offset;
-  Bit32u size;
-  bx_bool ret = 1;
-
-  int backup_fd = ::open(backup_fname, O_RDWR | O_CREAT | O_TRUNC
-#ifdef O_BINARY
-    | O_BINARY
-#endif
-    , S_IWUSR | S_IRUSR | S_IRGRP | S_IWGRP);
-  if (backup_fd >= 0) {
-    offset = 0;
-    size = 0x20000;
-    buf = (char*)malloc(size);
-    if (buf == NULL) {
-      ::close(backup_fd);
-      return 0;
-    }
-    while (offset < (off_t)hd_size) {
-      if (bx_read_image(fd, offset, buf, size) < 0) {
-        ret = 0;
-        break;
-      }
-      if (bx_write_image(backup_fd, offset, buf, size) < 0) {
-        ret = 0;
-        break;
-      }
-      offset += size;
-      if ((hd_size - offset) < size) {
-        size = hd_size - offset;
-      }
-    };
-    free(buf);
-    ::close(backup_fd);
-    return ret;
-  }
-  return 0;
+  return hdimage_backup_file(fd, backup_fname);
 }
 
 // helper function for concat and sparse mode images
@@ -1472,6 +1476,11 @@ ssize_t redolog_t::write(const void* buf, size_t count)
   return written;
 }
 
+bx_bool redolog_t::save_state(const char *backup_fname)
+{
+  return hdimage_backup_file(fd, backup_fname);
+}
+
 /*** growing_image_t function definitions ***/
 
 growing_image_t::growing_image_t()
@@ -1527,6 +1536,11 @@ ssize_t growing_image_t::write(const void* buf, size_t count)
     n += 512;
   }
   return (ret < 0) ? ret : count;
+}
+
+bx_bool growing_image_t::save_state(const char *backup_fname)
+{
+  return redolog->save_state(backup_fname);
 }
 
 /*** undoable_image_t function definitions ***/
@@ -1642,6 +1656,11 @@ ssize_t undoable_image_t::write(const void* buf, size_t count)
     n += 512;
   }
   return (ret < 0) ? ret : count;
+}
+
+bx_bool undoable_image_t::save_state(const char *backup_fname)
+{
+  return redolog->save_state(backup_fname);
 }
 
 /*** volatile_image_t function definitions ***/
@@ -1760,4 +1779,9 @@ ssize_t volatile_image_t::write(const void* buf, size_t count)
     n += 512;
   }
   return (ret < 0) ? ret : count;
+}
+
+bx_bool volatile_image_t::save_state(const char *backup_fname)
+{
+  return redolog->save_state(backup_fname);
 }

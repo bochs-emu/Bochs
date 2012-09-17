@@ -1272,7 +1272,7 @@ bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_
 {
   int i;
   Bit64s value;
-  char tmpstr[BX_PATHNAME_LEN], tmpbyte[4];
+  char pname[BX_PATHNAME_LEN], tmpstr[BX_PATHNAME_LEN], tmpbyte[4];
   FILE *fp2;
 
   for (i=0; i<level; i++)
@@ -1332,11 +1332,15 @@ bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_
       }
       break;
     case BXT_PARAM_DATA:
-      fprintf(fp, "%s.%s\n", node->get_parent()->get_name(), node->get_name());
+      node->get_param_path(pname, BX_PATHNAME_LEN);
+      if (!strncmp(pname, "bochs.", 6)) {
+        strcpy(pname, pname+6);
+      }
+      fprintf(fp, "%s\n", pname);
       if (sr_path)
-        sprintf(tmpstr, "%s/%s.%s", sr_path, node->get_parent()->get_name(), node->get_name());
+        sprintf(tmpstr, "%s/%s", sr_path, pname);
       else
-        sprintf(tmpstr, "%s.%s", node->get_parent()->get_name(), node->get_name());
+        strcpy(tmpstr, pname);
       fp2 = fopen(tmpstr, "wb");
       if (fp2 != NULL) {
         fwrite(((bx_shadow_data_c*)node)->getptr(), 1, ((bx_shadow_data_c*)node)->get_size(), fp2);

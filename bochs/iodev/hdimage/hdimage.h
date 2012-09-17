@@ -374,6 +374,8 @@ class redolog_t
       ssize_t read(void* buf, size_t count);
       ssize_t write(const void* buf, size_t count);
 
+      bx_bool save_state(const char *backup_fname);
+
   private:
       void             print_header();
       int              fd;
@@ -417,6 +419,9 @@ class growing_image_t : public device_image_t
       // written (count).
       ssize_t write(const void* buf, size_t count);
 
+      // Save/restore support
+      bx_bool save_state(const char *backup_fname);
+
   private:
       redolog_t *redolog;
 };
@@ -446,6 +451,9 @@ class undoable_image_t : public device_image_t
       // Write count bytes from buf. Return the number of bytes
       // written (count).
       ssize_t write(const void* buf, size_t count);
+
+      // Save/restore support
+      bx_bool save_state(const char *backup_fname);
 
   private:
       redolog_t       *redolog;       // Redolog instance
@@ -479,6 +487,9 @@ class volatile_image_t : public device_image_t
       // Write count bytes from buf. Return the number of bytes
       // written (count).
       ssize_t write(const void* buf, size_t count);
+
+      // Save/restore support
+      bx_bool save_state(const char *backup_fname);
 
   private:
       redolog_t       *redolog;       // Redolog instance
