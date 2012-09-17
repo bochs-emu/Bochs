@@ -1843,25 +1843,12 @@ BX_CPP_INLINE Bit32s fifo_space(fifo_state *f)
 #define count_leading_zeros _count_leading_zeros
 BX_CPP_INLINE Bit8u _count_leading_zeros(Bit32u value)
 {
-  Bit32s result;
+  Bit32s result = 32;
 
-#if defined _MSC_VER
-    __asm
-    {
-      bsr   eax,value
-      jnz   skip
-      mov   eax,63
-    skip:
-      xor   eax,31
-        mov   result,eax
-    }
-#else
-  result = 32;
   while(value > 0) {
     result--;
     value >>= 1;
   }
-#endif
 
   return result;
 }

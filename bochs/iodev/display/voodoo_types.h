@@ -243,22 +243,9 @@ const endianness_t ENDIANNESS_NATIVE = ENDIANNESS_LITTLE;
 #define mul_32x32_shift _mul_32x32_shift
 BX_CPP_INLINE Bit32s _mul_32x32_shift(Bit32s a, Bit32s b, Bit8s shift)
 {
-  Bit32s result;
-
-#if defined _MSC_VER
-    __asm
-    {
-        mov   eax,a
-        imul  b
-        mov   cl,shift
-        shrd  eax,edx,cl
-        mov   result,eax
-    }
-#else
   Bit64s tmp = (Bit64s)a * (Bit64s)b;
   tmp >>= shift;
-  result = (Bit32s)tmp;
-#endif
+  Bit32s result = (Bit32s)tmp;
 
   return result;
 }
