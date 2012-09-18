@@ -229,6 +229,9 @@ class concat_image_t : public device_image_t
       // written (count).
       ssize_t write(const void* buf, size_t count);
 
+      // Save/restore support
+      bx_bool save_state(const char *backup_fname);
+
   private:
 #define BX_CONCAT_MAX_IMAGES 8
       int fd_table[BX_CONCAT_MAX_IMAGES];
@@ -280,6 +283,10 @@ class sparse_image_t : public device_image_t
     // Write count bytes from buf. Return the number of bytes
     // written (count).
     ssize_t write(const void* buf, size_t count);
+
+    // Save/restore support
+    bx_bool save_state(const char *backup_fname);
+    int save_state_specific(int index, const char *backup_fname);
 
   private:
     int fd;

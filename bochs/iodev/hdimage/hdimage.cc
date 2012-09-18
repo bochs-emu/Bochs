@@ -352,9 +352,9 @@ int concat_image_t::open(const char* pathname0)
   for (int i=0; i<BX_CONCAT_MAX_IMAGES; i++) {
     fd_table[i] = ::open(pathname, O_RDWR
 #ifdef O_BINARY
-		| O_BINARY
+                  | O_BINARY
 #endif
-	  );
+                  );
     if (fd_table[i] < 0) {
       // open failed.
       // if no FD was opened successfully, return -1 (fail).
@@ -397,8 +397,10 @@ int concat_image_t::open(const char* pathname0)
 void concat_image_t::close()
 {
   BX_DEBUG(("concat_image_t.close"));
-  if (fd > -1) {
-    ::close(fd);
+  for (int index = 0; index < maxfd; index++) {
+    if (fd_table[index] > -1) {
+      ::close(fd_table[index]);
+    }
   }
 }
 
@@ -412,24 +414,24 @@ Bit64s concat_image_t::lseek(Bit64s offset, int whence)
     // no, look at previous images
     for (int i=index-1; i>=0; i--) {
       if (offset >= start_offset_table[i]) {
-	index = i;
-	fd = fd_table[i];
-	thismin = start_offset_table[i];
-	thismax = thismin + length_table[i] - 1;
-	BX_DEBUG(("concat_image_t.lseek to earlier image, index=%d", index));
-	break;
+        index = i;
+        fd = fd_table[i];
+        thismin = start_offset_table[i];
+        thismax = thismin + length_table[i] - 1;
+        BX_DEBUG(("concat_image_t.lseek to earlier image, index=%d", index));
+        break;
       }
     }
   } else if (offset > thismax) {
     // no, look at later images
     for (int i=index+1; i<maxfd; i++) {
       if (offset < start_offset_table[i] + length_table[i]) {
-	index = i;
-	fd = fd_table[i];
-	thismin = start_offset_table[i];
-	thismax = thismin + length_table[i] - 1;
-	BX_DEBUG(("concat_image_t.lseek to earlier image, index=%d", index));
-	break;
+        index = i;
+        fd = fd_table[i];
+        thismin = start_offset_table[i];
+        thismax = thismin + length_table[i] - 1;
+        BX_DEBUG(("concat_image_t.lseek to earlier image, index=%d", index));
+        break;
       }
     }
   }
@@ -464,6 +466,19 @@ ssize_t concat_image_t::write(const void* buf, size_t count)
   if (!seek_was_last_op)
     BX_PANIC(("no seek before write"));
   return ::write(fd, (char*) buf, count);
+}
+
+bx_bool concat_image_t::save_state(const char *backup_fname)
+{
+  bx_bool ret = 1;
+  char tempfn[BX_PATHNAME_LEN];
+
+  for (int index = 0; index < maxfd; index++) {
+    sprintf(tempfn, "%s%d", backup_fname, index);
+    ret &= hdimage_backup_file(fd_table[index], tempfn);
+    if (ret == 0) break;
+  }
+  return ret;
 }
 
 /*** sparse_image_t function definitions ***/
@@ -989,6 +1004,32 @@ ssize_t sparse_image_t::write(const void* buf, size_t count)
   }
 
   return total_written;
+}
+
+bx_bool sparse_image_t::save_state(const char *backup_fname)
+{
+  if (parent_image != NULL) {
+    int index = save_state_specific(0, backup_fname);
+    return (index > 0) ? 1 : 0;
+  } else {
+    return hdimage_backup_file(fd, backup_fname);
+  }
+}
+
+int sparse_image_t::save_state_specific(int index, const char *backup_fname)
+{
+  char tempfn[BX_PATHNAME_LEN];
+
+  if (parent_image != NULL) {
+    index = parent_image->save_state_specific(index, backup_fname);
+    if (index < 0) return -1;
+  }
+  sprintf(tempfn, "%s%d", backup_fname, index);
+  if (hdimage_backup_file(fd, tempfn) != 0) {
+    return ++index;
+  } else {
+    return -1;
+  }
 }
 
 #if DLL_HD_SUPPORT
@@ -1688,6 +1729,7 @@ int volatile_image_t::open(const char* pathname)
 {
   int filedes;
   const char *logname=NULL;
+  Bit32u timestamp;
 
   if (ro_disk->open(pathname, O_RDONLY)<0)
     return -1;
@@ -1725,6 +1767,10 @@ int volatile_image_t::open(const char* pathname)
   // on unix it is legal to delete an open file
   unlink(redolog_temp);
 #endif
+
+  // timestamp required for save/restore support
+  timestamp = ro_disk->get_timestamp();
+  redolog->set_timestamp(timestamp);
 
   BX_INFO(("'volatile' disk opened: ro-file is '%s', redolog is '%s'", pathname, redolog_temp));
 
