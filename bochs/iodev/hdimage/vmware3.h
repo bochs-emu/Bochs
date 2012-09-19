@@ -40,6 +40,7 @@ class vmware3_image_t : public device_image_t
       ssize_t read(void* buf, size_t count);
       ssize_t write(const void* buf, size_t count);
       Bit32u get_capabilities();
+      bx_bool save_state(const char *backup_fname);
 
   private:
       static const off_t INVALID_OFFSET;

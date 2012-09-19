@@ -41,6 +41,7 @@ class vmware4_image_t : public device_image_t
         ssize_t read(void* buf, size_t count);
         ssize_t write(const void* buf, size_t count);
         Bit32u get_capabilities();
+        bx_bool save_state(const char *backup_fname);
 
     private:
         static const off_t INVALID_OFFSET;
@@ -76,10 +77,10 @@ class vmware4_image_t : public device_image_t
 #pragma options align=reset
 #endif
 
-        bool is_open() const;
-        bool is_valid_header() const;
+        bx_bool is_open() const;
+        bx_bool is_valid_header() const;
 
-        bool read_header();
+        bx_bool read_header();
         off_t perform_seek();
         void flush();
         Bit32u read_block_index(Bit64u sector, Bit32u index);
@@ -90,7 +91,7 @@ class vmware4_image_t : public device_image_t
         Bit8u* tlb;
         off_t tlb_offset;
         off_t current_offset;
-        bool is_dirty;
+        bx_bool is_dirty;
 };
 
 #endif

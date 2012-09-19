@@ -291,6 +291,11 @@ Bit32u vpc_image_t::get_capabilities(void)
   return HDIMAGE_HAS_GEOMETRY;
 }
 
+bx_bool vpc_image_t::save_state(const char *backup_fname)
+{
+  return hdimage_backup_file(fd, backup_fname);
+}
+
 Bit32u vpc_image_t::vpc_checksum(Bit8u *buf, size_t size)
 {
   Bit32u res = 0;

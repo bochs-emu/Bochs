@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2011  The Bochs Project
+//  Copyright (C) 2002-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -168,6 +168,21 @@ Bit64s hdimage_save_handler(void *class_ptr, bx_param_c *param)
   return ((device_image_t*)class_ptr)->save_state(path);
 }
 
+void hdimage_restore_handler(void *class_ptr, bx_param_c *param, Bit64s value)
+{
+  char imgname[BX_PATHNAME_LEN];
+  char path[BX_PATHNAME_LEN];
+
+  if (value != 0) {
+    param->get_param_path(imgname, BX_PATHNAME_LEN);
+    if (!strncmp(imgname, "bochs.", 6)) {
+      strcpy(imgname, imgname+6);
+    }
+    sprintf(path, "%s/%s", SIM->get_param_string(BXPN_RESTORE_PATH)->getptr(), imgname);
+    ((device_image_t*)class_ptr)->restore_state(path);
+  }
+}
+
 bx_bool hdimage_backup_file(int fd, const char *backup_fname)
 {
   char *buf;
@@ -224,7 +239,7 @@ void device_image_t::register_state(bx_list_c *parent)
 {
   bx_param_bool_c *image = new bx_param_bool_c(parent, "image", NULL, NULL, 0);
   // TODO: restore image
-  image->set_sr_handlers(this, hdimage_save_handler, (param_restore_handler)NULL);
+  image->set_sr_handlers(this, hdimage_save_handler, hdimage_restore_handler);
 }
 
 /*** default_image_t function definitions ***/

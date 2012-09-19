@@ -144,6 +144,7 @@ class vpc_image_t : public device_image_t
     ssize_t read(void* buf, size_t count);
     ssize_t write(const void* buf, size_t count);
     Bit32u get_capabilities();
+    bx_bool save_state(const char *backup_fname);
 
   private:
     Bit32u vpc_checksum(Bit8u *buf, size_t size);

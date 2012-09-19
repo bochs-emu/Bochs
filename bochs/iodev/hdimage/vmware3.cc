@@ -520,3 +520,18 @@ Bit32u vmware3_image_t::get_capabilities(void)
 {
   return HDIMAGE_HAS_GEOMETRY;
 }
+
+bx_bool vmware3_image_t::save_state(const char *backup_fname)
+{
+  bx_bool ret = 1;
+  char tempfn[BX_PATHNAME_LEN];
+
+  unsigned count = current->header.number_of_chains;
+  if (count < 1) count = 1;
+  for (unsigned i = 0; i < count; ++i) {
+    sprintf(tempfn, "%s%d", backup_fname, i);
+    ret &= hdimage_backup_file(images[i].fd, tempfn);
+    if (ret == 0) break;
+  }
+  return ret;
+}

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2005-2011  The Bochs Project
+//  Copyright (C) 2005-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -125,6 +125,7 @@
 
 int bx_read_image(int fd, Bit64s offset, void *buf, int count);
 int bx_write_image(int fd, Bit64s offset, void *buf, int count);
+bx_bool hdimage_backup_file(int fd, const char *backup_fname);
 
 class device_image_t
 {
@@ -157,6 +158,7 @@ class device_image_t
       // Save/restore support
       virtual void register_state(bx_list_c *parent);
       virtual bx_bool save_state(const char *backup_fname) {return 0;}
+      virtual void restore_state(const char *backup_fname) {}
 
       unsigned cylinders;
       unsigned heads;
