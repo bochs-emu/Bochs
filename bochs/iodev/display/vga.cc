@@ -342,12 +342,10 @@ void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_l
 
 Bit64s bx_vga_c::vga_param_handler(bx_param_c *param, int set, Bit64s val)
 {
-  Bit32u interval;
-
   // handler for runtime parameter 'vga: update_freq'
   if (set) {
     BX_VGA_THIS update_interval = (Bit32u)(1000000 / val);
-    BX_INFO(("Changing timer interval to %d", interval));
+    BX_INFO(("Changing timer interval to %d", BX_VGA_THIS update_interval));
     BX_VGA_THIS timer_handler(theVga);
     bx_virt_timer.activate_timer(BX_VGA_THIS timer_id, BX_VGA_THIS update_interval, 1);
     if (BX_VGA_THIS update_interval < 300000) {
