@@ -288,7 +288,6 @@ class sparse_image_t : public device_image_t
 
     // Save/restore support
     bx_bool save_state(const char *backup_fname);
-    int save_state_specific(int index, const char *backup_fname);
 
   private:
     int fd;

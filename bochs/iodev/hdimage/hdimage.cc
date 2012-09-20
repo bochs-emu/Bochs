@@ -1023,28 +1023,7 @@ ssize_t sparse_image_t::write(const void* buf, size_t count)
 
 bx_bool sparse_image_t::save_state(const char *backup_fname)
 {
-  if (parent_image != NULL) {
-    int index = save_state_specific(0, backup_fname);
-    return (index > 0) ? 1 : 0;
-  } else {
-    return hdimage_backup_file(fd, backup_fname);
-  }
-}
-
-int sparse_image_t::save_state_specific(int index, const char *backup_fname)
-{
-  char tempfn[BX_PATHNAME_LEN];
-
-  if (parent_image != NULL) {
-    index = parent_image->save_state_specific(index, backup_fname);
-    if (index < 0) return -1;
-  }
-  sprintf(tempfn, "%s%d", backup_fname, index);
-  if (hdimage_backup_file(fd, tempfn) != 0) {
-    return ++index;
-  } else {
-    return -1;
-  }
+  return hdimage_backup_file(fd, backup_fname);
 }
 
 #if DLL_HD_SUPPORT
