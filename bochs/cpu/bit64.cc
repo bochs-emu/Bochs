@@ -356,8 +356,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GqEqR(bxInstruction_c *i)
 
   Bit64u op1_64 = 0;
   while (op2_64 != 0) {
-    if (op2_64 & 1) op1_64++;
-    op2_64 >>= 1;
+    op2_64 &= (op2_64-1);
+    op1_64++;
   }
 
   Bit32u flags = op1_64 ? 0 : EFlagsZFMask;

@@ -347,8 +347,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GwEwR(bxInstruction_c *i)
 
   Bit16u op1_16 = 0;
   while (op2_16 != 0) {
-    if (op2_16 & 1) op1_16++;
-    op2_16 >>= 1;
+    op2_16 &= (op2_16-1);
+    op1_16++;
   }
 
   Bit32u flags = op1_16 ? 0 : EFlagsZFMask;
