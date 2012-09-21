@@ -1578,6 +1578,29 @@ bx_bool growing_image_t::save_state(const char *backup_fname)
   return redolog->save_state(backup_fname);
 }
 
+// compare hd_size and modification time of r/o disk and journal
+
+bx_bool coherency_check(default_image_t *ro_disk, redolog_t *redolog)
+{
+  Bit32u timestamp1, timestamp2;
+
+  if (ro_disk->hd_size != redolog->get_size()) {
+    BX_PANIC(("size reported by redolog doesn't match r/o disk size"));
+    return 0;
+  }
+  timestamp1 = ro_disk->get_timestamp();
+  timestamp2 = redolog->get_timestamp();
+  if (timestamp2 != 0) {
+    if (timestamp1 != timestamp2) {
+      BX_PANIC(("unexpected modification time of the r/o disk"));
+      return 0;
+    }
+  } else if (timestamp1 != 0) {
+    redolog->set_timestamp(timestamp1);
+  }
+  return 1;
+}
+
 /*** undoable_image_t function definitions ***/
 
 undoable_image_t::undoable_image_t(const char* _redolog_name)
@@ -1601,7 +1624,6 @@ undoable_image_t::~undoable_image_t()
 int undoable_image_t::open(const char* pathname)
 {
   char *logname=NULL;
-  Bit32u timestamp1, timestamp2;
 
   if (ro_disk->open(pathname, O_RDONLY)<0)
     return -1;
@@ -1627,21 +1649,9 @@ int undoable_image_t::open(const char* pathname)
       return -1;
     }
   }
-  if (hd_size != redolog->get_size()) {
-    BX_PANIC(("size reported by redolog doesn't match r/o disk size"));
+  if (!coherency_check(ro_disk, redolog)) {
     free(logname);
     return -1;
-  }
-  timestamp1 = ro_disk->get_timestamp();
-  timestamp2 = redolog->get_timestamp();
-  if (timestamp2 != 0) {
-    if (timestamp1 != timestamp2) {
-      BX_PANIC(("unexpected modification time of the r/o disk"));
-      free(logname);
-      return -1;
-    }
-  } else if (timestamp1 != 0) {
-    redolog->set_timestamp(timestamp1);
   }
 
   BX_INFO(("'undoable' disk opened: ro-file is '%s', redolog is '%s'", pathname, logname));
@@ -1696,6 +1706,23 @@ ssize_t undoable_image_t::write(const void* buf, size_t count)
 bx_bool undoable_image_t::save_state(const char *backup_fname)
 {
   return redolog->save_state(backup_fname);
+}
+
+void undoable_image_t::restore_state(const char *backup_fname)
+{
+  redolog_t *temp_redolog = new redolog_t();
+  if (redolog->open(backup_fname, REDOLOG_SUBTYPE_UNDOABLE) < 0) {
+    delete temp_redolog;
+    BX_PANIC(("Can't open redolog backup '%s'", backup_fname));
+    return;
+  } else {
+    if (!coherency_check(ro_disk, temp_redolog)) {
+      delete temp_redolog;
+      return;
+    }
+    delete temp_redolog;
+  }
+  BX_ERROR(("undoable_image_t::restore_state(): UNIMPLEMENTED"));
 }
 
 /*** volatile_image_t function definitions ***/
@@ -1824,4 +1851,21 @@ ssize_t volatile_image_t::write(const void* buf, size_t count)
 bx_bool volatile_image_t::save_state(const char *backup_fname)
 {
   return redolog->save_state(backup_fname);
+}
+
+void volatile_image_t::restore_state(const char *backup_fname)
+{
+  redolog_t *temp_redolog = new redolog_t();
+  if (redolog->open(backup_fname, REDOLOG_SUBTYPE_VOLATILE) < 0) {
+    delete temp_redolog;
+    BX_PANIC(("Can't open redolog backup '%s'", backup_fname));
+    return;
+  } else {
+    if (!coherency_check(ro_disk, temp_redolog)) {
+      delete temp_redolog;
+      return;
+    }
+    delete temp_redolog;
+  }
+  BX_ERROR(("volatile_image_t::restore_state(): UNIMPLEMENTED"));
 }
