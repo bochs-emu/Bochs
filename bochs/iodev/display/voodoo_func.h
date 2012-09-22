@@ -1084,7 +1084,7 @@ Bit32s fastfill(voodoo_state *v)
   /* iterate over blocks of extents */
   for (y = sy; y < ey; y += ARRAY_LENGTH(extents))
   {
-    int count = MIN(ey - y, ARRAY_LENGTH(extents));
+    int count = MIN(ey - y, (int) ARRAY_LENGTH(extents));
 
     extra.state = v;
     memcpy(extra.dither, dithermatrix, sizeof(extra.dither));
@@ -2506,10 +2506,10 @@ Bit32s texture_w(Bit32u offset, Bit32u data)
         /* apply clipping */
         if (FBZMODE_ENABLE_CLIPPING(v->reg[fbzMode].u))
         {
-          if (x < ((v->reg[clipLeftRight].u >> 16) & 0x3ff) ||
-            x >= (v->reg[clipLeftRight].u & 0x3ff) ||
-            scry < ((v->reg[clipLowYHighY].u >> 16) & 0x3ff) ||
-            scry >= (v->reg[clipLowYHighY].u & 0x3ff))
+          if (x < (int)((v->reg[clipLeftRight].u >> 16) & 0x3ff) ||
+            x >= (int)(v->reg[clipLeftRight].u & 0x3ff) ||
+            scry < (int)((v->reg[clipLowYHighY].u >> 16) & 0x3ff) ||
+            scry >= (int)(v->reg[clipLowYHighY].u & 0x3ff))
           {
             stats->pixels_in++;
             stats->clip_fail++;

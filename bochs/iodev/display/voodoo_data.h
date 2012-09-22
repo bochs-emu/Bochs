@@ -3089,7 +3089,7 @@ do                                                                              
   }                                                                              \
                                                                                  \
   /* compute "floating point" W value (used for depth and fog) */                \
-  if ((ITERW) & U64(0xffff00000000))                                             \
+  if ((ITERW) & BX_CONST64(0xffff00000000))                                      \
     wfloat = 0x0000;                                                             \
   else                                                                           \
   {                                                                              \
@@ -3580,8 +3580,8 @@ void raster_##name(void *destbase, Bit32s y, const poly_extent *extent, const vo
     Bit32s tempclip;                                                             \
                                                                                  \
     /* Y clipping buys us the whole scanline */                                  \
-    if (scry < ((v->reg[clipLowYHighY].u >> 16) & 0x3ff) ||                      \
-      scry >= (v->reg[clipLowYHighY].u & 0x3ff))                                 \
+    if (scry < (Bit32s)((v->reg[clipLowYHighY].u >> 16) & 0x3ff) ||              \
+      scry >= (Bit32s)(v->reg[clipLowYHighY].u & 0x3ff))                         \
     {                                                                            \
       stats->pixels_in += stopx - startx;                                        \
       stats->clip_fail += stopx - startx;                                        \
