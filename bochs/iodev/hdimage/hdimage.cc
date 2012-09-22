@@ -223,6 +223,57 @@ bx_bool hdimage_backup_file(int fd, const char *backup_fname)
   return 0;
 }
 
+bx_bool hdimage_copy_file(const char *src, const char *dst)
+{
+#ifdef WIN32
+  return (bx_bool)CopyFile(src, dst, FALSE);
+#else
+  int fd1, fd2;
+  char *buf;
+  off_t offset;
+  int nread, size;
+  bx_bool ret = 1;
+
+  fd1 = ::open(src, O_RDONLY
+#ifdef O_BINARY
+    | O_BINARY
+#endif
+    );
+  if (fd1 < 0) return 0;
+  fd2 = ::open(dst, O_RDWR | O_CREAT | O_TRUNC
+#ifdef O_BINARY
+    | O_BINARY
+#endif
+    , S_IWUSR | S_IRUSR | S_IRGRP | S_IWGRP);
+  if (fd2 < 0) return 0;
+  offset = 0;
+  size = 0x20000;
+  buf = (char*)malloc(size);
+  if (buf == NULL) {
+    ::close(fd1);
+    ::close(fd2);
+    return 0;
+  }
+  while ((nread = bx_read_image(fd1, offset, buf, size)) > 0) {
+    if (bx_write_image(fd2, offset, buf, nread) < 0) {
+      ret = 0;
+      break;
+    }
+    if (nread < size) {
+      break;
+    }
+    offset += size;
+  };
+  if (nread < 0) {
+    ret = 0;
+  }
+  free(buf);
+  ::close(fd1);
+  ::close(fd2);
+  return ret;
+#endif
+}
+
 /*** base class device_image_t ***/
 
 device_image_t::device_image_t()
@@ -298,6 +349,7 @@ int default_image_t::open(const char* pathname, int flags)
   BX_INFO(("hd_size: "FMT_LL"u", hd_size));
   if (hd_size <= 0) BX_PANIC(("size of disk image not detected / invalid"));
   if ((hd_size % 512) != 0) BX_PANIC(("size of disk image must be multiple of 512 bytes"));
+  imgpath = pathname;
   return fd;
 }
 
@@ -331,6 +383,17 @@ Bit32u default_image_t::get_timestamp()
 bx_bool default_image_t::save_state(const char *backup_fname)
 {
   return hdimage_backup_file(fd, backup_fname);
+}
+
+void default_image_t::restore_state(const char *backup_fname)
+{
+  close();
+  if (hdimage_copy_file(backup_fname, imgpath)) {
+    BX_PANIC(("Failed to restore image '%s'", imgpath));
+  }
+  if (open(imgpath) < 0) {
+    BX_PANIC(("Failed to oprn restored image '%s'", imgpath));
+  }
 }
 
 // helper function for concat and sparse mode images
@@ -1623,39 +1686,28 @@ undoable_image_t::~undoable_image_t()
 
 int undoable_image_t::open(const char* pathname)
 {
-  char *logname=NULL;
-
-  if (ro_disk->open(pathname, O_RDONLY)<0)
+  if (ro_disk->open(pathname, O_RDONLY) < 0)
     return -1;
 
   hd_size = ro_disk->hd_size;
-  // if redolog name was set
-  if (redolog_name != NULL) {
-    if (strcmp(redolog_name, "") != 0) {
-      logname = (char*)malloc(strlen(redolog_name) + 1);
-      strcpy(logname, redolog_name);
-    }
+
+  // If not set, we make up the redolog filename from the pathname
+  if (redolog_name == NULL) {
+    redolog_name = (char*)malloc(strlen(pathname) + UNDOABLE_REDOLOG_EXTENSION_LENGTH + 1);
+    sprintf(redolog_name, "%s%s", pathname, UNDOABLE_REDOLOG_EXTENSION);
   }
 
-  // Otherwise we make up the redolog filename from the pathname
-  if (logname == NULL) {
-    logname = (char*)malloc(strlen(pathname) + UNDOABLE_REDOLOG_EXTENSION_LENGTH + 1);
-    sprintf(logname, "%s%s", pathname, UNDOABLE_REDOLOG_EXTENSION);
-  }
-
-  if (redolog->open(logname,REDOLOG_SUBTYPE_UNDOABLE) < 0) {
-    if (redolog->create(logname, REDOLOG_SUBTYPE_UNDOABLE, hd_size) < 0) {
-      BX_PANIC(("Can't open or create redolog '%s'",logname));
+  if (redolog->open(redolog_name, REDOLOG_SUBTYPE_UNDOABLE) < 0) {
+    if (redolog->create(redolog_name, REDOLOG_SUBTYPE_UNDOABLE, hd_size) < 0) {
+      BX_PANIC(("Can't open or create redolog '%s'",redolog_name));
       return -1;
     }
   }
   if (!coherency_check(ro_disk, redolog)) {
-    free(logname);
     return -1;
   }
 
-  BX_INFO(("'undoable' disk opened: ro-file is '%s', redolog is '%s'", pathname, logname));
-  free(logname);
+  BX_INFO(("'undoable' disk opened: ro-file is '%s', redolog is '%s'", pathname, redolog_name));
 
   return 0;
 }
@@ -1665,7 +1717,7 @@ void undoable_image_t::close()
   redolog->close();
   ro_disk->close();
 
-  if (redolog_name!=NULL)
+  if (redolog_name != NULL)
     free(redolog_name);
 }
 
@@ -1711,7 +1763,7 @@ bx_bool undoable_image_t::save_state(const char *backup_fname)
 void undoable_image_t::restore_state(const char *backup_fname)
 {
   redolog_t *temp_redolog = new redolog_t();
-  if (redolog->open(backup_fname, REDOLOG_SUBTYPE_UNDOABLE) < 0) {
+  if (temp_redolog->open(backup_fname, REDOLOG_SUBTYPE_UNDOABLE) < 0) {
     delete temp_redolog;
     BX_PANIC(("Can't open redolog backup '%s'", backup_fname));
     return;
@@ -1722,7 +1774,14 @@ void undoable_image_t::restore_state(const char *backup_fname)
     }
     delete temp_redolog;
   }
-  BX_ERROR(("undoable_image_t::restore_state(): UNIMPLEMENTED"));
+  redolog->close();
+  if (!hdimage_copy_file(backup_fname, redolog_name)) {
+    BX_PANIC(("Failed to restore redolog '%s'", redolog_name));
+  } else {
+    if (redolog->open(redolog_name, REDOLOG_SUBTYPE_UNDOABLE) < 0) {
+      BX_PANIC(("Can't open restored redolog '%s'", redolog_name));
+    }
+  }
 }
 
 /*** volatile_image_t function definitions ***/
@@ -1856,7 +1915,7 @@ bx_bool volatile_image_t::save_state(const char *backup_fname)
 void volatile_image_t::restore_state(const char *backup_fname)
 {
   redolog_t *temp_redolog = new redolog_t();
-  if (redolog->open(backup_fname, REDOLOG_SUBTYPE_VOLATILE) < 0) {
+  if (temp_redolog->open(backup_fname, REDOLOG_SUBTYPE_VOLATILE) < 0) {
     delete temp_redolog;
     BX_PANIC(("Can't open redolog backup '%s'", backup_fname));
     return;
