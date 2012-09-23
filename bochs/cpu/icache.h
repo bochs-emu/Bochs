@@ -38,7 +38,7 @@ public:
   }
  ~bxPageWriteStampTable() { delete [] fineGranularityMapping; }
 
-  BX_CPP_INLINE Bit32u hash(bx_phy_address pAddr) const {
+  BX_CPP_INLINE static Bit32u hash(bx_phy_address pAddr) {
     // can share writeStamps between multiple pages if >32 bit phy address
     return ((Bit32u) pAddr) >> 12;
   }
@@ -150,7 +150,7 @@ public:
 public:
   bxICache_c() { flushICacheEntries(); }
 
-  BX_CPP_INLINE unsigned hash(bx_phy_address pAddr, unsigned fetchModeMask) const
+  BX_CPP_INLINE static unsigned hash(bx_phy_address pAddr, unsigned fetchModeMask)
   {
 //  return ((pAddr + (pAddr << 2) + (pAddr>>6)) & (BxICacheEntries-1)) ^ fetchModeMask;
     return ((pAddr) & (BxICacheEntries-1)) ^ fetchModeMask;
