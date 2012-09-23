@@ -1634,6 +1634,7 @@ int growing_image_t::open(const char* pathname)
   int filedes = redolog->open(pathname, REDOLOG_SUBTYPE_GROWING);
   hd_size = redolog->get_size();
   BX_INFO(("'growing' disk opened, growing file is '%s'", pathname));
+  imgpath = pathname;
   return filedes;
 }
 
@@ -1677,6 +1678,32 @@ ssize_t growing_image_t::write(const void* buf, size_t count)
 bx_bool growing_image_t::save_state(const char *backup_fname)
 {
   return redolog->save_state(backup_fname);
+}
+
+void growing_image_t::restore_state(const char *backup_fname)
+{
+  redolog_t *temp_redolog = new redolog_t();
+  if (temp_redolog->open(backup_fname, REDOLOG_SUBTYPE_GROWING) < 0) {
+    delete temp_redolog;
+    BX_PANIC(("Can't open growing image backup '%s'", backup_fname));
+    return;
+  } else {
+    bx_bool okay = (temp_redolog->get_size() == redolog->get_size());
+    temp_redolog->close();
+    delete temp_redolog;
+    if (!okay) {
+      BX_PANIC(("size reported by backup doesn't match growing disk size"));
+      return;
+    }
+  }
+  redolog->close();
+  if (!hdimage_copy_file(backup_fname, imgpath)) {
+    BX_PANIC(("Failed to restore growing image '%s'", imgpath));
+    return;
+  }
+  if (open(imgpath) < 0) {
+    BX_PANIC(("Failed to open restored growing image '%s'", imgpath));
+  }
 }
 
 // compare hd_size and modification time of r/o disk and journal
@@ -1803,21 +1830,20 @@ void undoable_image_t::restore_state(const char *backup_fname)
   redolog_t *temp_redolog = new redolog_t();
   if (temp_redolog->open(backup_fname, REDOLOG_SUBTYPE_UNDOABLE) < 0) {
     delete temp_redolog;
-    BX_PANIC(("Can't open redolog backup '%s'", backup_fname));
+    BX_PANIC(("Can't open undoable redolog backup '%s'", backup_fname));
     return;
   } else {
-    if (!coherency_check(ro_disk, temp_redolog)) {
-      delete temp_redolog;
-      return;
-    }
+    bx_bool okay = coherency_check(ro_disk, temp_redolog);
+    temp_redolog->close();
     delete temp_redolog;
+    if (!okay) return;
   }
   redolog->close();
   if (!hdimage_copy_file(backup_fname, redolog_name)) {
-    BX_PANIC(("Failed to restore redolog '%s'", redolog_name));
+    BX_PANIC(("Failed to restore undoable redolog '%s'", redolog_name));
   } else {
     if (redolog->open(redolog_name, REDOLOG_SUBTYPE_UNDOABLE) < 0) {
-      BX_PANIC(("Can't open restored redolog '%s'", redolog_name));
+      BX_PANIC(("Can't open restored undoable redolog '%s'", redolog_name));
     }
   }
 }
@@ -1955,14 +1981,13 @@ void volatile_image_t::restore_state(const char *backup_fname)
   redolog_t *temp_redolog = new redolog_t();
   if (temp_redolog->open(backup_fname, REDOLOG_SUBTYPE_VOLATILE) < 0) {
     delete temp_redolog;
-    BX_PANIC(("Can't open redolog backup '%s'", backup_fname));
+    BX_PANIC(("Can't open volatile redolog backup '%s'", backup_fname));
     return;
   } else {
-    if (!coherency_check(ro_disk, temp_redolog)) {
-      delete temp_redolog;
-      return;
-    }
+    bx_bool okay = coherency_check(ro_disk, temp_redolog);
+    temp_redolog->close();
     delete temp_redolog;
+    if (!okay) return;
   }
   BX_ERROR(("volatile_image_t::restore_state(): UNIMPLEMENTED"));
 }
