@@ -208,9 +208,9 @@ void BX_MEM_C::allocate_block(Bit32u block)
     }
     // Write swapped out block
     if (fseeko64(BX_MEM_THIS overflow_file, address, SEEK_SET))
-      BX_PANIC(("FATAL ERROR: Could not seek to 0x%llx in overflow file!", address)); 
+      BX_PANIC(("FATAL ERROR: Could not seek to 0x" FMT_PHY_ADDRX " in overflow file!", address)); 
     if (1 != fwrite (BX_MEM_THIS blocks[BX_MEM_THIS next_swapout_idx], BX_MEM_BLOCK_LEN, 1, BX_MEM_THIS overflow_file))
-      BX_PANIC(("FATAL ERROR: Could not write at 0x%llx in overflow file!", address));
+      BX_PANIC(("FATAL ERROR: Could not write at 0x" FMT_PHY_ADDRX " in overflow file!", address));
     // Mark swapped out block
     BX_MEM_THIS blocks[BX_MEM_THIS next_swapout_idx] = BX_MEM_C::swapped_out;
     BX_MEM_THIS blocks[block] = buffer;
@@ -245,9 +245,9 @@ void ramfile_save_handler(void *devptr, FILE *fp)
     {
       bx_phy_address address = ((bx_phy_address)idx)*BX_MEM_BLOCK_LEN;
       if (fseeko64(fp, address, SEEK_SET))
-        BX_PANIC(("FATAL ERROR: Could not seek to 0x%llx in overflow file!", address)); 
+        BX_PANIC(("FATAL ERROR: Could not seek to 0x" FMT_PHY_ADDRX " in overflow file!", address)); 
       if (1 != fwrite (BX_MEM(0)->blocks[idx], BX_MEM_BLOCK_LEN, 1, fp))
-        BX_PANIC(("FATAL ERROR: Could not write at 0x%llx in overflow file!", address));
+        BX_PANIC(("FATAL ERROR: Could not write at 0x" FMT_PHY_ADDRX " in overflow file!", address));
     }
   }
 }
@@ -814,7 +814,6 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
 
 /*
  * One needs to provide both a read_handler and a write_handler.
- * XXX: maybe we should check for overlapping memory handlers
  */
   bx_bool
 BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
@@ -827,6 +826,21 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
     return 0;
   BX_INFO(("Register memory access handlers: 0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX, begin_addr, end_addr));
   for (unsigned page_idx = (Bit32u)(begin_addr >> 20); page_idx <= (Bit32u)(end_addr >> 20); page_idx++) {
+    Bit16u bitmap = 0xffff;
+    if (begin_addr > (page_idx << 20)) {
+      bitmap &= (0xffff << ((begin_addr >> 16) & 0xf));
+    }
+    if (end_addr < ((page_idx + 1) << 20)) {
+      bitmap &= (0xffff >> (0x0f - ((end_addr >> 16) & 0xf)));
+    }
+    if (BX_MEM_THIS memory_handlers[page_idx] != NULL) {
+      if ((bitmap & BX_MEM_THIS memory_handlers[page_idx]->bitmap) != 0) {
+        BX_ERROR(("Register failed: overlapping memory handlers!"));
+        return 0;
+      } else {
+        bitmap |= BX_MEM_THIS memory_handlers[page_idx]->bitmap;
+      }
+    }
     struct memory_handler_struct *memory_handler = new struct memory_handler_struct;
     memory_handler->next = BX_MEM_THIS memory_handlers[page_idx];
     BX_MEM_THIS memory_handlers[page_idx] = memory_handler;
@@ -836,6 +850,7 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
     memory_handler->param = param;
     memory_handler->begin = begin_addr;
     memory_handler->end = end_addr;
+    memory_handler->bitmap = bitmap;
   }
   return 1;
 }

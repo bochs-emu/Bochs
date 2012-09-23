@@ -70,6 +70,7 @@ struct memory_handler_struct {
   void *param;
   bx_phy_address begin;
   bx_phy_address end;
+  Bit16u bitmap;
   memory_handler_t read_handler;
   memory_handler_t write_handler;
   memory_direct_access_handler_t da_handler;
