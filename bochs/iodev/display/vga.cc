@@ -221,7 +221,7 @@ void bx_vga_c::register_state(void)
   }
 #endif
   // register state for Bochs VBE
-  if (!strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "vbe")) {
+  if (BX_VGA_THIS vbe_present) {
     bx_list_c *vbe = new bx_list_c(list, "vbe");
     new bx_shadow_num_c(vbe, "cur_dispi", &BX_VGA_THIS vbe.cur_dispi, BASE_HEX);
     new bx_shadow_num_c(vbe, "xres", &BX_VGA_THIS vbe.xres);
@@ -1235,7 +1235,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
             BX_INFO(("VBE enabling x %d, y %d, bpp %d, %u bytes visible", BX_VGA_THIS vbe.xres, BX_VGA_THIS vbe.yres, BX_VGA_THIS vbe.bpp, BX_VGA_THIS vbe.visible_screen_size));
 
             if (depth > 4) {
-              BX_VGA_THIS vbe.lfb_enabled = (bx_bool)(value & VBE_DISPI_LFB_ENABLED);
+              BX_VGA_THIS vbe.lfb_enabled = (bx_bool)((value & VBE_DISPI_LFB_ENABLED) != 0);
               if ((value & VBE_DISPI_NOCLEARMEM) == 0) {
                 memset(BX_VGA_THIS s.memory, 0, BX_VGA_THIS vbe.visible_screen_size);
               }
@@ -1251,7 +1251,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
             BX_VGA_THIS s.plane_shift = 16;
             BX_VGA_THIS s.plane_offset = 0;
           }
-          BX_VGA_THIS vbe.enabled = (bx_bool)(value & VBE_DISPI_ENABLED);
+          BX_VGA_THIS vbe.enabled = (bx_bool)((value & VBE_DISPI_ENABLED) != 0);
           BX_VGA_THIS vbe.get_capabilities = (bx_bool)((value & VBE_DISPI_GETCAPS) != 0);
           new_vbe_8bit_dac = (bx_bool)((value & VBE_DISPI_8BIT_DAC) != 0);
           if (new_vbe_8bit_dac != BX_VGA_THIS vbe.dac_8bit) {
