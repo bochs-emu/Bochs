@@ -1056,9 +1056,9 @@ void bx_local_apic_c::set_divide_configuration(Bit32u value)
 
 void bx_local_apic_c::set_initial_timer_count(Bit32u value)
 {
+#if BX_CPU_LEVEL >= 6
   Bit32u timervec = lvt[APIC_LVT_TIMER];
 
-#if BX_CPU_LEVEL >= 6
   // in TSC-deadline mode writes to initial time count are ignored
   if (timervec & 0x40000) return;
 #endif
