@@ -1116,6 +1116,7 @@ public: // for now...
   }
   BX_SMF BX_CPP_INLINE void unmask_event(Bit32u event) {
     BX_CPU_THIS_PTR event_mask &= ~event;
+    if (is_pending(event)) BX_CPU_THIS_PTR async_event = 1;
   }
 
   BX_SMF BX_CPP_INLINE bx_bool is_masked_event(Bit32u event) {
