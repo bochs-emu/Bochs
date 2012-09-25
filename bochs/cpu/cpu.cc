@@ -589,8 +589,7 @@ void BX_CPU_C::prefetch(void)
 
 #if BX_X86_DEBUGGER
   if (hwbreakpoint_check(laddr, BX_HWDebugInstruction, BX_HWDebugInstruction)) {
-    BX_CPU_THIS_PTR async_event = 1;
-    BX_CPU_THIS_PTR codebp = 1;
+    signal_event(BX_EVENT_CODE_BREAKPOINT_ASSIST);
     if (! interrupts_inhibited(BX_INHIBIT_DEBUG)) {
        // The next instruction could already hit a code breakpoint but
        // async_event won't take effect immediatelly.
@@ -609,7 +608,7 @@ void BX_CPU_C::prefetch(void)
     }
   }
   else {
-    BX_CPU_THIS_PTR codebp = 0;
+    clear_event(BX_EVENT_CODE_BREAKPOINT_ASSIST);
   }
 #endif
 

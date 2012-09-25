@@ -624,22 +624,16 @@ void BX_CPU_C::register_state(void)
   register_svm_state(cpu);
 #endif
 
+  BXRS_HEX_PARAM_SIMPLE32(cpu, pending_event);
+  BXRS_HEX_PARAM_SIMPLE32(cpu, event_mask);
   BXRS_HEX_PARAM_SIMPLE32(cpu, async_event);
   BXRS_PARAM_BOOL(cpu, INTR, INTR);
 
 #if BX_X86_DEBUGGER
   BXRS_PARAM_BOOL(cpu, in_repeat, in_repeat);
-  // for debug only (no need for save/restore), calculated in prefetch()
-  BXRS_PARAM_BOOL(cpu, codebp, codebp);
 #endif
 
   BXRS_PARAM_BOOL(cpu, in_smm, in_smm);
-  BXRS_PARAM_BOOL(cpu, disable_SMI, disable_SMI);
-  BXRS_PARAM_BOOL(cpu, pending_SMI, pending_SMI);
-  BXRS_PARAM_BOOL(cpu, disable_NMI, disable_NMI);
-  BXRS_PARAM_BOOL(cpu, pending_NMI, pending_NMI);
-  BXRS_PARAM_BOOL(cpu, disable_INIT, disable_INIT);
-  BXRS_PARAM_BOOL(cpu, pending_INIT, pending_INIT);
 
 #if BX_DEBUGGER
   bx_list_c *tlb = new bx_list_c(cpu, "TLB");
@@ -942,15 +936,11 @@ void BX_CPU_C::reset(unsigned source)
 
 #if BX_X86_DEBUGGER
   BX_CPU_THIS_PTR in_repeat = 0;
-  BX_CPU_THIS_PTR codebp = 0;
 #endif
   BX_CPU_THIS_PTR in_smm = 0;
-  BX_CPU_THIS_PTR disable_SMI = 0;
-  BX_CPU_THIS_PTR pending_SMI = 0;
-  BX_CPU_THIS_PTR disable_NMI = 0;
-  BX_CPU_THIS_PTR pending_NMI = 0;
-  BX_CPU_THIS_PTR disable_INIT = 0;
-  BX_CPU_THIS_PTR pending_INIT = 0;
+
+  BX_CPU_THIS_PTR pending_event = 0;
+  BX_CPU_THIS_PTR event_mask = 0;
 
   if (source == BX_RESET_HARDWARE) {
     BX_CPU_THIS_PTR smbase = 0x30000; // do not change SMBASE on INIT
@@ -1121,10 +1111,6 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_VMX
   BX_CPU_THIS_PTR in_vmx = BX_CPU_THIS_PTR in_vmx_guest = 0;
   BX_CPU_THIS_PTR in_smm_vmx = BX_CPU_THIS_PTR in_smm_vmx_guest = 0;
-  BX_CPU_THIS_PTR vmx_interrupt_window = 0;
-#if BX_SUPPORT_VMX >= 2  
-  BX_CPU_THIS_PTR pending_vmx_timer_expired = 0;
-#endif
   BX_CPU_THIS_PTR vmcsptr = BX_CPU_THIS_PTR vmxonptr = BX_INVALID_VMCSPTR;
   BX_CPU_THIS_PTR vmcshostptr = 0;
   /* enable VMX, should be done in BIOS instead */

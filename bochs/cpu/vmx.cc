@@ -1635,7 +1635,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   }
 
   if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED) {
-    BX_CPU_THIS_PTR disable_NMI = 1;
+    mask_event(BX_EVENT_NMI);
   }
   else {
     if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_NMI_WINDOW_VMEXIT)
@@ -1643,8 +1643,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   }
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_INTERRUPT_WINDOW_VMEXIT) {
-    BX_CPU_THIS_PTR async_event = 1;
-    BX_CPU_THIS_PTR vmx_interrupt_window = 1; // set up interrupt window exiting
+    signal_event(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING);
   }
 
   handleCpuContextChange();
@@ -1876,9 +1875,9 @@ void BX_CPU_C::VMexitSaveGuestState(void)
      else
         interruptibility_state |= BX_VMX_INTERRUPTS_BLOCKED_BY_STI;
   }
-  if (BX_CPU_THIS_PTR disable_SMI)
+  if (is_masked_event(BX_EVENT_SMI))
     interruptibility_state |= BX_VMX_INTERRUPTS_BLOCKED_SMI_BLOCKED;
-  if (BX_CPU_THIS_PTR disable_NMI)
+  if (is_masked_event(BX_EVENT_NMI))
     interruptibility_state |= BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED;
   VMwrite32(VMCS_32BIT_GUEST_INTERRUPTIBILITY_STATE, interruptibility_state);
 
@@ -1896,7 +1895,7 @@ void BX_CPU_C::VMexitSaveGuestState(void)
 
   // Deactivate VMX preemtion timer
   BX_CPU_THIS_PTR lapic.deactivate_vmx_preemption_timer();
-  BX_CPU_THIS_PTR pending_vmx_timer_expired = 0;
+  clear_event(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED);
   // Store back to VMCS
   if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER)
     VMwrite32(VMCS_32BIT_GUEST_PREEMPTION_TIMER_VALUE, BX_CPU_THIS_PTR lapic.read_vmx_preemption_timer());
@@ -2142,6 +2141,11 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
 
   BX_CPU_THIS_PTR in_vmx_guest = 0;
 
+  // entering VMX root mode: clear possibly pending guest VMX events
+  clear_event(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING |
+              BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED |
+              BX_EVENT_VMX_NMI_WINDOW_EXITING);
+
   //
   // STEP 2: Load Host State
   //
@@ -2161,8 +2165,8 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
   // STEP 4: Go back to VMX host
   //
 
-  BX_CPU_THIS_PTR disable_INIT = 1; // INIT is disabled in VMX root mode
-  BX_CPU_THIS_PTR vmx_interrupt_window = 0;
+  mask_event(BX_EVENT_INIT); // INIT is disabled in VMX root mode
+
   BX_CPU_THIS_PTR errorno = 0;
   BX_CPU_THIS_PTR EXT = 0;
 
@@ -2217,7 +2221,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
     BX_CPU_THIS_PTR vmcshostptr = 0;
     BX_CPU_THIS_PTR vmxonptr = pAddr;
     BX_CPU_THIS_PTR in_vmx = 1;
-    BX_CPU_THIS_PTR disable_INIT = 1; // INIT is disabled in VMX root mode
+    mask_event(BX_EVENT_INIT); // INIT is disabled in VMX root mode
     // block and disable A20M;
 
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -2268,7 +2272,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXOFF(bxInstruction_c *i)
   {
     BX_CPU_THIS_PTR vmxonptr = BX_INVALID_VMCSPTR;
     BX_CPU_THIS_PTR in_vmx = 0;  // leave VMX operation mode
-    BX_CPU_THIS_PTR disable_INIT = 0;
+    unmask_event(BX_EVENT_INIT);
      // unblock and enable A20M;
 #if BX_SUPPORT_MONITOR_MWAIT
     BX_CPU_THIS_PTR monitor.reset_monitor();
@@ -2504,7 +2508,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
 */
 
   BX_CPU_THIS_PTR in_vmx_guest = 1;
-  BX_CPU_THIS_PTR disable_INIT = 0;
+
+  unmask_event(BX_EVENT_INIT);
 
   if (VMEXIT(VMX_VM_EXEC_CTRL2_TSC_OFFSET))
     BX_CPU_THIS_PTR tsc_offset = VMread64(VMCS_64BIT_CONTROL_TSC_OFFSET);
@@ -2515,13 +2520,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
   if (PIN_VMEXIT(VMX_VM_EXEC_CTRL1_VMX_PREEMPTION_TIMER_VMEXIT)) {
     Bit32u timer_value = VMread32(VMCS_32BIT_GUEST_PREEMPTION_TIMER_VALUE);
     if (timer_value == 0) {
-      BX_CPU_THIS_PTR pending_vmx_timer_expired = 1;
-      BX_CPU_THIS_PTR async_event = 1;
+      signal_event(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED);
     }
     else {
       // activate VMX preemption timer
       BX_DEBUG(("VMX preemption timer active"));
-      BX_CPU_THIS_PTR pending_vmx_timer_expired = 0;
       BX_CPU_THIS_PTR lapic.set_vmx_preemption_timer(timer_value);
     }
   }
@@ -3127,10 +3130,6 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_PARAM_BOOL(vmx, in_vmx_guest, BX_CPU_THIS_PTR in_vmx_guest);
   BXRS_PARAM_BOOL(vmx, in_smm_vmx, BX_CPU_THIS_PTR in_smm_vmx);
   BXRS_PARAM_BOOL(vmx, in_smm_vmx_guest, BX_CPU_THIS_PTR in_smm_vmx_guest);
-  BXRS_PARAM_BOOL(vmx, vmx_interrupt_window, BX_CPU_THIS_PTR vmx_interrupt_window);
-#if BX_SUPPORT_VMX >= 2
-  BXRS_PARAM_BOOL(vmx, pending_vmx_timer_expired, BX_CPU_THIS_PTR pending_vmx_timer_expired);
-#endif
 
   bx_list_c *vmcache = new bx_list_c(vmx, "VMCS_CACHE");
 

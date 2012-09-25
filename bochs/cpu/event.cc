@@ -34,10 +34,7 @@ bx_bool BX_CPU_C::handleWaitForEvent(void)
   while (1)
   {
     if ((BX_CPU_INTR && (BX_CPU_THIS_PTR get_IF() || BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF)) ||
-#if BX_SUPPORT_VMX >= 2
-         BX_CPU_THIS_PTR pending_vmx_timer_expired ||
-#endif
-         BX_CPU_THIS_PTR pending_NMI || BX_CPU_THIS_PTR pending_SMI || BX_CPU_THIS_PTR pending_INIT)
+         is_pending(BX_EVENT_NMI | BX_EVENT_SMI | BX_EVENT_INIT | BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED))
     {
       // interrupt ends the HALT condition
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -194,14 +191,14 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
   //   STOPCLK
   //   SMI
   //   INIT
-  if (BX_CPU_THIS_PTR pending_SMI && ! BX_CPU_THIS_PTR smm_mode() && SVM_GIF)
+  if (is_pending(BX_EVENT_SMI) && ! BX_CPU_THIS_PTR smm_mode() && SVM_GIF)
   {
     // clear SMI pending flag and disable NMI when SMM was accepted
-    BX_CPU_THIS_PTR pending_SMI = 0;
+    clear_event(BX_EVENT_SMI);
     enter_system_management_mode();
   }
 
-  if (BX_CPU_THIS_PTR pending_INIT && ! BX_CPU_THIS_PTR disable_INIT && SVM_GIF) {
+  if (is_unmasked_event_pending(BX_EVENT_INIT) && SVM_GIF) {
 #if BX_SUPPORT_SVM
     if (BX_CPU_THIS_PTR in_svm_guest) {
       if (SVM_INTERCEPT(SVM_INTERCEPT0_INIT)) Svm_Vmexit(SVM_VMEXIT_INIT);
@@ -255,13 +252,13 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
     // boundary because of certain instructions like STI.
   }
 #if BX_SUPPORT_VMX >= 2
-  else if (BX_CPU_THIS_PTR in_vmx_guest && BX_CPU_THIS_PTR pending_vmx_timer_expired) {
-    BX_CPU_THIS_PTR pending_vmx_timer_expired = 0;
+  else if (BX_CPU_THIS_PTR in_vmx_guest && is_pending(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED)) {
+    clear_event(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED);
     VMexit_PreemptionTimerExpired();
   }
 #endif
 #if BX_SUPPORT_VMX
-  else if (! BX_CPU_THIS_PTR disable_NMI && BX_CPU_THIS_PTR in_vmx_guest && 
+  else if (! is_masked_event(BX_EVENT_NMI) && BX_CPU_THIS_PTR in_vmx_guest && 
        VMEXIT(VMX_VM_EXEC_CTRL2_NMI_WINDOW_VMEXIT))
   {
     // NMI-window exiting
@@ -269,14 +266,14 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
     VMexit(VMX_VMEXIT_NMI_WINDOW, 0);
   }
 #endif
-  else if (BX_CPU_THIS_PTR pending_NMI && ! BX_CPU_THIS_PTR disable_NMI) {
+  else if (is_unmasked_event_pending(BX_EVENT_NMI)) {
 #if BX_SUPPORT_SVM
     if (BX_CPU_THIS_PTR in_svm_guest) {
       if (SVM_INTERCEPT(SVM_INTERCEPT0_NMI)) Svm_Vmexit(SVM_VMEXIT_NMI);
     }
 #endif
-    BX_CPU_THIS_PTR pending_NMI = 0;
-    BX_CPU_THIS_PTR disable_NMI = 1;
+    clear_event(BX_EVENT_NMI);
+     mask_event(BX_EVENT_NMI);
     BX_CPU_THIS_PTR EXT = 1; /* external event */
 #if BX_SUPPORT_VMX
     VMexit_Event(BX_NMI, 2, 0, 0);
@@ -285,7 +282,7 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
     interrupt(2, BX_NMI, 0, 0);
   }
 #if BX_SUPPORT_VMX
-  else if (BX_CPU_THIS_PTR vmx_interrupt_window && BX_CPU_THIS_PTR get_IF()) {
+  else if (is_pending(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING) && BX_CPU_THIS_PTR get_IF()) {
     // interrupt-window exiting
     BX_DEBUG(("VMEXIT: interrupt window exiting"));
     VMexit(VMX_VMEXIT_INTERRUPT_WINDOW, 0);
@@ -351,12 +348,12 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
 //      BX_CPU_THIS_PTR get_TF() // implies debug_trap is set
         BX_HRQ
 #if BX_SUPPORT_VMX
-     || BX_CPU_THIS_PTR vmx_interrupt_window
-     || (BX_CPU_THIS_PTR in_vmx_guest && ! BX_CPU_THIS_PTR disable_NMI &&
+     || is_pending(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING)
+     || (BX_CPU_THIS_PTR in_vmx_guest && ! is_masked_event(BX_EVENT_NMI) &&
        VMEXIT(VMX_VM_EXEC_CTRL2_NMI_WINDOW_VMEXIT))
 #endif
 #if BX_SUPPORT_VMX >= 2
-     || BX_CPU_THIS_PTR pending_vmx_timer_expired
+     || is_pending(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED)
 #endif
 #if BX_SUPPORT_SVM
     || (BX_CPU_THIS_PTR in_svm_guest && SVM_V_IRQ && BX_CPU_THIS_PTR get_IF() &&
@@ -364,7 +361,7 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
 #endif
 #if BX_X86_DEBUGGER
      // a debug code breakpoint is set in current page
-     || BX_CPU_THIS_PTR codebp
+     || is_pending(BX_EVENT_CODE_BREAKPOINT_ASSIST)
 #endif
         ))
     BX_CPU_THIS_PTR async_event = 0;
@@ -391,7 +388,7 @@ void BX_CPU_C::deliver_SIPI(unsigned vector)
     BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
     RIP = 0;
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], vector*0x100);
-    BX_CPU_THIS_PTR disable_INIT = 0; // enable INIT pin back
+    unmask_event(BX_EVENT_INIT); // enable INIT pin back
     BX_INFO(("CPU %d started up at %04X:%08X by APIC",
                    BX_CPU_THIS_PTR bx_cpuid, vector*0x100, EIP));
   } else {
@@ -401,22 +398,19 @@ void BX_CPU_C::deliver_SIPI(unsigned vector)
 
 void BX_CPU_C::deliver_INIT(void)
 {
-  if (! BX_CPU_THIS_PTR disable_INIT) {
-    BX_CPU_THIS_PTR pending_INIT = 1;
-    BX_CPU_THIS_PTR async_event = 1;
+  if (! is_masked_event(BX_EVENT_INIT)) {
+    signal_event(BX_EVENT_INIT);
   }
 }
 
 void BX_CPU_C::deliver_NMI(void)
 {
-  BX_CPU_THIS_PTR pending_NMI = 1;
-  BX_CPU_THIS_PTR async_event = 1;
+  signal_event(BX_EVENT_NMI);
 }
 
 void BX_CPU_C::deliver_SMI(void)
 {
-  BX_CPU_THIS_PTR pending_SMI = 1;
-  BX_CPU_THIS_PTR async_event = 1;
+  signal_event(BX_EVENT_SMI);
 }
 
 void BX_CPU_C::set_INTR(bx_bool value)

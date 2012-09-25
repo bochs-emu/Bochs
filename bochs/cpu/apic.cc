@@ -1173,8 +1173,7 @@ void bx_local_apic_c::deactivate_vmx_preemption_timer(void)
 void bx_local_apic_c::vmx_preemption_timer_expired(void *this_ptr)
 {
   bx_local_apic_c *class_ptr = (bx_local_apic_c *) this_ptr;
-  class_ptr->cpu->pending_vmx_timer_expired = 1;
-  class_ptr->cpu->async_event = 1;
+  class_ptr->cpu->signal_event(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED);
   class_ptr->deactivate_vmx_preemption_timer();
 }
 #endif

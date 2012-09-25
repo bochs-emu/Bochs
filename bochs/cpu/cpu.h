@@ -611,15 +611,15 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
   }
 
 // invalidate prefetch queue and call prefetch() when RF is set
-#define IMPLEMENT_EFLAG_SET_ACCESSOR_RF(name,bitnum)            \
-  BX_CPP_INLINE void BX_CPU_C::assert_##name() {                \
+#define IMPLEMENT_EFLAG_SET_ACCESSOR_RF(bitnum)                 \
+  BX_CPP_INLINE void BX_CPU_C::assert_RF() {                    \
     invalidate_prefetch_q();                                    \
     BX_CPU_THIS_PTR eflags |= (1<<bitnum);                      \
   }                                                             \
-  BX_CPP_INLINE void BX_CPU_C::clear_##name() {                 \
+  BX_CPP_INLINE void BX_CPU_C::clear_RF() {                     \
     BX_CPU_THIS_PTR eflags &= ~(1<<bitnum);                     \
   }                                                             \
-  BX_CPP_INLINE void BX_CPU_C::set_##name(bx_bool val) {        \
+  BX_CPP_INLINE void BX_CPU_C::set_RF(bx_bool val) {            \
     if (val) invalidate_prefetch_q();                           \
     BX_CPU_THIS_PTR eflags =                                    \
       (BX_CPU_THIS_PTR eflags&~(1<<bitnum))|((val)<<bitnum);    \
@@ -1049,10 +1049,6 @@ public: // for now...
   bx_bool in_vmx_guest;
   bx_bool in_smm_vmx; // save in_vmx and in_vmx_guest flags when in SMM mode
   bx_bool in_smm_vmx_guest;
-  bx_bool vmx_interrupt_window;
-#if BX_SUPPORT_VMX >= 2
-  bx_bool pending_vmx_timer_expired;
-#endif
   Bit64u  vmcsptr;
   bx_hostpageaddr_t vmcshostptr;
   Bit64u  vmxonptr;
@@ -1094,24 +1090,54 @@ public: // for now...
 #define BX_ACTIVITY_STATE_MWAIT_IF      (5)
   unsigned activity_state;
 
+#define BX_EVENT_NMI                          (1<<0)
+#define BX_EVENT_SMI                          (1<<1)
+#define BX_EVENT_INIT                         (1<<2)
+#define BX_EVENT_CODE_BREAKPOINT_ASSIST       (1<<3)
+#define BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED (1<<4)
+#define BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING (1<<5)
+#define BX_EVENT_VMX_NMI_WINDOW_EXITING       (1<<6)
+// later the event list will grow rapidly
+  Bit32u  pending_event;
+  Bit32u  event_mask;
   Bit32u  async_event;
 
-#define BX_ASYNC_EVENT_STOP_TRACE (0x80000000)
+  BX_SMF BX_CPP_INLINE void signal_event(Bit32u event) {
+    BX_CPU_THIS_PTR pending_event |= event;
+    BX_CPU_THIS_PTR async_event = 1;
+  }
+
+  BX_SMF BX_CPP_INLINE void clear_event(Bit32u event) {
+    BX_CPU_THIS_PTR pending_event &= ~event;
+  }
+
+  BX_SMF BX_CPP_INLINE void mask_event(Bit32u event) {
+    BX_CPU_THIS_PTR event_mask |= event;
+  }
+  BX_SMF BX_CPP_INLINE void unmask_event(Bit32u event) {
+    BX_CPU_THIS_PTR event_mask &= ~event;
+  }
+
+  BX_SMF BX_CPP_INLINE bx_bool is_masked_event(Bit32u event) {
+    return (BX_CPU_THIS_PTR event_mask & event) != 0;
+  }
+
+  BX_SMF BX_CPP_INLINE bx_bool is_pending(Bit32u event) {
+    return (BX_CPU_THIS_PTR pending_event & event) != 0;
+  }
+  BX_SMF BX_CPP_INLINE bx_bool is_unmasked_event_pending(Bit32u event) {
+    return (BX_CPU_THIS_PTR pending_event & ~BX_CPU_THIS_PTR event_mask & event) != 0;
+  }
+
+#define BX_ASYNC_EVENT_STOP_TRACE (1<<31)
 
 #if BX_X86_DEBUGGER
   bx_bool  in_repeat;
-  bx_bool  codebp;
 #endif
   bx_bool  in_smm;
   unsigned cpu_mode;
   bx_bool  user_pl;
   bx_bool  INTR;
-  bx_bool  pending_SMI;
-  bx_bool  pending_NMI;
-  bx_bool  pending_INIT;
-  bx_bool  disable_SMI;
-  bx_bool  disable_NMI;
-  bx_bool  disable_INIT;
 #if BX_CPU_LEVEL >= 5
   bx_bool  ignore_bad_msrs;
 #endif
@@ -4756,7 +4782,7 @@ IMPLEMENT_EFLAG_SET_ACCESSOR_AC   (     18)
 IMPLEMENT_EFLAG_SET_ACCESSOR      (AC,  18)
 #endif
 IMPLEMENT_EFLAG_SET_ACCESSOR_VM   (     17)
-IMPLEMENT_EFLAG_SET_ACCESSOR_RF   (RF,  16)
+IMPLEMENT_EFLAG_SET_ACCESSOR_RF   (     16)
 IMPLEMENT_EFLAG_SET_ACCESSOR      (NT,  14)
 IMPLEMENT_EFLAG_SET_ACCESSOR      (DF,  10)
 IMPLEMENT_EFLAG_SET_ACCESSOR_IF_TF(IF,   9)

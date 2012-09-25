@@ -777,10 +777,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   if (ECX & 1) {
 #if BX_SUPPORT_VMX
     // When "interrupt window exiting" VMX control is set MWAIT instruction
-    // won't cause the processor to enter BX_ACTIVITY_STATE_MWAIT_IF sleep
-    // state with EFLAGS.IF = 0
-    if (BX_CPU_THIS_PTR vmx_interrupt_window && ! BX_CPU_THIS_PTR get_IF()) {
-      BX_NEXT_TRACE(i);
+    // won't cause the processor to enter sleep state with EFLAGS.IF = 0
+    if (BX_CPU_THIS_PTR in_vmx_guest) {
+      if (VMEXIT(VMX_VM_EXEC_CTRL2_INTERRUPT_WINDOW_VMEXIT) && ! BX_CPU_THIS_PTR get_IF()) {
+        BX_NEXT_TRACE(i);
+      }
     }
 #endif
     BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_MWAIT_IF;
