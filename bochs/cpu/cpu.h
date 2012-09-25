@@ -163,8 +163,6 @@
 
 #define TMP64 (BX_CPU_THIS_PTR gen_reg[BX_TMP_REGISTER].rrx)
 
-#define PREV_RIP (BX_CPU_THIS_PTR prev_rip)
-
 // access to 64 bit MSR registers
 #define MSR_FSBASE  (BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.base)
 #define MSR_GSBASE  (BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.base)
@@ -187,6 +185,8 @@
 #define RIP EIP
 
 #endif // BX_SUPPORT_X86_64 == 0
+
+#define PREV_RIP (BX_CPU_THIS_PTR prev_rip)
 
 #if BX_SUPPORT_X86_64
 #define BX_READ_8BIT_REGx(index,extended)  ((((index) & 4) == 0 || (extended)) ? \
