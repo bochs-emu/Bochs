@@ -1639,7 +1639,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   }
   else {
     if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_NMI_WINDOW_VMEXIT)
-      BX_CPU_THIS_PTR async_event = 1;
+      signal_event(BX_EVENT_VMX_NMI_WINDOW_EXITING);
   }
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_INTERRUPT_WINDOW_VMEXIT) {

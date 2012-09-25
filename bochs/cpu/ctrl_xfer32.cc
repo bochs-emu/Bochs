@@ -590,7 +590,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET32(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (!BX_CPU_THIS_PTR in_vmx_guest || !VMEXIT(VMX_VM_EXEC_CTRL1_NMI_VMEXIT))
 #endif
-    unmask_event(BX_EVENT_NMI);
+    unmask_event(BX_EVENT_NMI | BX_EVENT_VMX_NMI_WINDOW_EXITING);
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_iret;

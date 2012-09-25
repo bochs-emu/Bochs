@@ -34,7 +34,7 @@ bx_bool BX_CPU_C::handleWaitForEvent(void)
   while (1)
   {
     if ((BX_CPU_INTR && (BX_CPU_THIS_PTR get_IF() || BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF)) ||
-         is_pending(BX_EVENT_NMI | BX_EVENT_SMI | BX_EVENT_INIT | BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED))
+         is_pending(BX_EVENT_NMI | BX_EVENT_SMI | BX_EVENT_INIT | BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED | BX_EVENT_VMX_NMI_WINDOW_EXITING))
     {
       // interrupt ends the HALT condition
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -258,10 +258,7 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
   }
 #endif
 #if BX_SUPPORT_VMX
-  else if (! is_masked_event(BX_EVENT_NMI) && BX_CPU_THIS_PTR in_vmx_guest && 
-       VMEXIT(VMX_VM_EXEC_CTRL2_NMI_WINDOW_VMEXIT))
-  {
-    // NMI-window exiting
+  else if (is_unmasked_event_pending(BX_EVENT_VMX_NMI_WINDOW_EXITING)) {
     BX_ERROR(("VMEXIT: NMI window exiting"));
     VMexit(VMX_VMEXIT_NMI_WINDOW, 0);
   }
@@ -273,7 +270,7 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
     }
 #endif
     clear_event(BX_EVENT_NMI);
-     mask_event(BX_EVENT_NMI);
+     mask_event(BX_EVENT_NMI | BX_EVENT_VMX_NMI_WINDOW_EXITING);
     BX_CPU_THIS_PTR EXT = 1; /* external event */
 #if BX_SUPPORT_VMX
     VMexit_Event(BX_NMI, 2, 0, 0);
@@ -348,15 +345,12 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
 //      BX_CPU_THIS_PTR get_TF() // implies debug_trap is set
         BX_HRQ
 #if BX_SUPPORT_VMX
-     || is_pending(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING)
-     || (BX_CPU_THIS_PTR in_vmx_guest && ! is_masked_event(BX_EVENT_NMI) &&
-       VMEXIT(VMX_VM_EXEC_CTRL2_NMI_WINDOW_VMEXIT))
-#endif
-#if BX_SUPPORT_VMX >= 2
-     || is_pending(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED)
+     || is_unmasked_event_pending(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING |
+                                  BX_EVENT_VMX_NMI_WINDOW_EXITING |
+                                  BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED)
 #endif
 #if BX_SUPPORT_SVM
-    || (BX_CPU_THIS_PTR in_svm_guest && SVM_V_IRQ && BX_CPU_THIS_PTR get_IF() &&
+     || (BX_CPU_THIS_PTR in_svm_guest && SVM_V_IRQ && BX_CPU_THIS_PTR get_IF() &&
            ((SVM_V_INTR_PRIO > SVM_V_TPR) || SVM_V_IGNORE_TPR))
 #endif
 #if BX_X86_DEBUGGER
