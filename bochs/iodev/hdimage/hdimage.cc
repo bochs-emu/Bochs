@@ -1863,6 +1863,7 @@ void undoable_image_t::restore_state(const char *backup_fname)
   redolog->close();
   if (!hdimage_copy_file(backup_fname, redolog_name)) {
     BX_PANIC(("Failed to restore undoable redolog '%s'", redolog_name));
+    return;
   } else {
     if (redolog->open(redolog_name, REDOLOG_SUBTYPE_UNDOABLE) < 0) {
       BX_PANIC(("Can't open restored undoable redolog '%s'", redolog_name));
@@ -1894,37 +1895,28 @@ volatile_image_t::~volatile_image_t()
 int volatile_image_t::open(const char* pathname)
 {
   int filedes;
-  const char *logname=NULL;
   Bit32u timestamp;
 
   if (ro_disk->open(pathname, O_RDONLY)<0)
     return -1;
 
   hd_size = ro_disk->hd_size;
-  // if redolog name was set
-  if (redolog_name != NULL) {
-    if (strcmp(redolog_name, "") != 0) {
-      logname = redolog_name;
-    }
+
+  // If not set, use pathname as template
+  if (redolog_name == NULL) {
+    redolog_name = strdup(pathname);
   }
 
-  // otherwise use pathname as template
-  if (logname == NULL) {
-    logname = pathname;
-  }
+  redolog_temp = (char*)malloc(strlen(redolog_name) + VOLATILE_REDOLOG_EXTENSION_LENGTH + 1);
+  sprintf(redolog_temp, "%s%s", redolog_name, VOLATILE_REDOLOG_EXTENSION);
 
-  redolog_temp = (char*)malloc(strlen(logname) + VOLATILE_REDOLOG_EXTENSION_LENGTH + 1);
-  sprintf (redolog_temp, "%s%s", logname, VOLATILE_REDOLOG_EXTENSION);
+  filedes = mkstemp(redolog_temp);
 
-  filedes = mkstemp (redolog_temp);
-
-  if (filedes < 0)
-  {
+  if (filedes < 0) {
     BX_PANIC(("Can't create volatile redolog '%s'", redolog_temp));
     return -1;
   }
-  if (redolog->create(filedes, REDOLOG_SUBTYPE_VOLATILE, hd_size) < 0)
-  {
+  if (redolog->create(filedes, REDOLOG_SUBTYPE_VOLATILE, hd_size) < 0) {
     BX_PANIC(("Can't create volatile redolog '%s'", redolog_temp));
     return -1;
   }
@@ -2011,5 +2003,18 @@ void volatile_image_t::restore_state(const char *backup_fname)
     delete temp_redolog;
     if (!okay) return;
   }
-  BX_ERROR(("volatile_image_t::restore_state(): UNIMPLEMENTED"));
+  redolog->close();
+  if (!hdimage_copy_file(backup_fname, redolog_temp)) {
+    BX_PANIC(("Failed to restore volatile redolog '%s'", redolog_temp));
+    return;
+  } else {
+    if (redolog->open(redolog_temp, REDOLOG_SUBTYPE_VOLATILE) < 0) {
+      BX_PANIC(("Can't open restored volatile redolog '%s'", redolog_temp));
+      return;
+    }
+  }
+#if (!defined(WIN32)) && !BX_WITH_MACOS
+  // on unix it is legal to delete an open file
+  unlink(redolog_temp);
+#endif
 }
