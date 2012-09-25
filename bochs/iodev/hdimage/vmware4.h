@@ -42,6 +42,7 @@ class vmware4_image_t : public device_image_t
         ssize_t write(const void* buf, size_t count);
         Bit32u get_capabilities();
         bx_bool save_state(const char *backup_fname);
+        void restore_state(const char *backup_fname);
 
     private:
         static const off_t INVALID_OFFSET;
@@ -92,6 +93,7 @@ class vmware4_image_t : public device_image_t
         off_t tlb_offset;
         off_t current_offset;
         bx_bool is_dirty;
+        const char *pathname;
 };
 
 #endif

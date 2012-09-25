@@ -183,7 +183,7 @@ char * vmware3_image_t::generate_cow_name(const char * filename, unsigned chain)
  * file. Now if only I could use exceptions to handle the errors in an elegant
  * fashion...
  */
-int vmware3_image_t::open(const char * pathname)
+int vmware3_image_t::open(const char* _pathname)
 {
     COW_Header header;
     int file;
@@ -192,6 +192,7 @@ int vmware3_image_t::open(const char * pathname)
     flags |= O_BINARY;
 #endif
 
+    pathname = _pathname;
     // Set so close doesn't segfault, in case something goes wrong
     images = NULL;
 
@@ -534,4 +535,10 @@ bx_bool vmware3_image_t::save_state(const char *backup_fname)
     if (ret == 0) break;
   }
   return ret;
+}
+
+void vmware3_image_t::restore_state(const char *backup_fname)
+{
+  // TODO
+  BX_ERROR(("vmware3_image_t::restore_state(): UNIMPLEMENTED"));
 }

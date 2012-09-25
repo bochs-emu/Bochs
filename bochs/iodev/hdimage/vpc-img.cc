@@ -52,7 +52,7 @@
 #define cpu_to_be32(val) (val)
 #endif
 
-int vpc_image_t::open(const char* pathname)
+int vpc_image_t::open(const char* _pathname)
 {
   int i;
   vhd_footer_t *footer;
@@ -62,6 +62,7 @@ int vpc_image_t::open(const char* pathname)
   Bit64u imgsize;
   int disk_type = VHD_DYNAMIC;
 
+  pathname = _pathname;
 #ifdef WIN32
   HANDLE hFile = CreateFile(pathname, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
   if (hFile != INVALID_HANDLE_VALUE) {
@@ -294,6 +295,12 @@ Bit32u vpc_image_t::get_capabilities(void)
 bx_bool vpc_image_t::save_state(const char *backup_fname)
 {
   return hdimage_backup_file(fd, backup_fname);
+}
+
+void vpc_image_t::restore_state(const char *backup_fname)
+{
+  // TODO
+  BX_ERROR(("vpc_image_t::restore_state(): UNIMPLEMENTED"));
 }
 
 Bit32u vpc_image_t::vpc_checksum(Bit8u *buf, size_t size)

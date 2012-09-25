@@ -1116,7 +1116,7 @@ void sparse_image_t::restore_state(const char *backup_fname)
   sparse_header_t temp_header;
   char *temp_pathname;
 
-  int backup_fd = ::open(pathname, O_RDWR
+  int backup_fd = ::open(backup_fname, O_RDONLY
 #ifdef O_BINARY
    | O_BINARY
 #endif
@@ -1126,15 +1126,16 @@ void sparse_image_t::restore_state(const char *backup_fname)
     return;
   }
   if (::read(backup_fd, &temp_header, sizeof(header)) != sizeof(header)) {
+    ::close(backup_fd);
     BX_PANIC(("Could not read sparse image header"));
     return;
   }
+  ::close(backup_fd);
   if ((dtoh32(temp_header.magic) != SPARSE_HEADER_MAGIC) ||
       (dtoh32(temp_header.version) != SPARSE_HEADER_VERSION)) {
     BX_PANIC(("Could not detect sparse image header"));
     return;
   }
-  ::close(backup_fd);
   temp_pathname = strdup(pathname);
   close();
   if (!hdimage_copy_file(backup_fname, temp_pathname)) {

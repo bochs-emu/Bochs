@@ -54,8 +54,9 @@ vmware4_image_t::~vmware4_image_t()
   close();
 }
 
-int vmware4_image_t::open(const char * pathname)
+int vmware4_image_t::open(const char* _pathname)
 {
+  pathname = _pathname;
   close();
 
   int flags = O_RDWR;
@@ -323,4 +324,34 @@ Bit32u vmware4_image_t::get_capabilities(void)
 bx_bool vmware4_image_t::save_state(const char *backup_fname)
 {
   return hdimage_backup_file(file_descriptor, backup_fname);
+}
+
+void vmware4_image_t::restore_state(const char *backup_fname)
+{
+  VM4_Header temp_header;
+
+  int backup_fd = ::open(backup_fname, O_RDONLY
+#ifdef O_BINARY
+   | O_BINARY
+#endif
+   );
+  if (backup_fd < 0) {
+    BX_PANIC(("Could not open vmware4 image backup"));
+    return;
+  }
+  if (::read(backup_fd, &temp_header, sizeof(VM4_Header)) != sizeof(VM4_Header)) {
+    ::close(backup_fd);
+    BX_PANIC(("Could not read vmware4 image header"));
+    return;
+  }
+  ::close(backup_fd);
+  if ((temp_header.id[0] != 'K') || (temp_header.id[1] != 'D') ||
+      (temp_header.id[2] != 'M') || (temp_header.id[3] != 'V') ||
+      (header.version != 1)) {
+    BX_PANIC(("Could not detect vmware4 image header"));
+    return;
+  }
+  close();
+  hdimage_copy_file(backup_fname, pathname);
+  open(pathname);
 }
