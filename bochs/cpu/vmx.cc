@@ -1635,7 +1635,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   }
 
   if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED) {
-    mask_event(BX_EVENT_NMI);
+    mask_event(BX_EVENT_NMI | BX_EVENT_VMX_NMI_WINDOW_EXITING);
   }
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_NMI_WINDOW_VMEXIT) {
