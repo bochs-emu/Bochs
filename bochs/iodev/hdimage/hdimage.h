@@ -200,7 +200,7 @@ class default_image_t : public device_image_t
 
   private:
       int fd;
-      const char *imgpath;
+      const char *pathname;
 #ifndef WIN32
       time_t mtime;
 #else
@@ -235,6 +235,7 @@ class concat_image_t : public device_image_t
 
       // Save/restore support
       bx_bool save_state(const char *backup_fname);
+      void restore_state(const char *backup_fname);
 
   private:
 #define BX_CONCAT_MAX_IMAGES 8
@@ -255,6 +256,7 @@ class concat_image_t : public device_image_t
       int index;  // index into table
       int fd;     // fd to use for reads and writes
       Bit64s thismin, thismax; // byte offset boundary of this image
+      const char *pathname0;
 };
 
 // SPARSE MODE
@@ -436,7 +438,7 @@ class growing_image_t : public device_image_t
 
   private:
       redolog_t *redolog;
-      const char *imgpath;
+      const char *pathname;
 };
 
 // UNDOABLE MODE

@@ -295,13 +295,14 @@ void device_image_t::register_state(bx_list_c *parent)
 
 /*** default_image_t function definitions ***/
 
-int default_image_t::open(const char* pathname)
+int default_image_t::open(const char* _pathname)
 {
-  return open(pathname, O_RDWR);
+  return open(_pathname, O_RDWR);
 }
 
-int default_image_t::open(const char* pathname, int flags)
+int default_image_t::open(const char* _pathname, int flags)
 {
+  pathname = _pathname;
 #ifdef WIN32
   HANDLE hFile = CreateFile(pathname, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
   if (hFile != INVALID_HANDLE_VALUE) {
@@ -349,7 +350,6 @@ int default_image_t::open(const char* pathname, int flags)
   BX_INFO(("hd_size: "FMT_LL"u", hd_size));
   if (hd_size <= 0) BX_PANIC(("size of disk image not detected / invalid"));
   if ((hd_size % 512) != 0) BX_PANIC(("size of disk image must be multiple of 512 bytes"));
-  imgpath = pathname;
   return fd;
 }
 
@@ -388,12 +388,12 @@ bx_bool default_image_t::save_state(const char *backup_fname)
 void default_image_t::restore_state(const char *backup_fname)
 {
   close();
-  if (!hdimage_copy_file(backup_fname, imgpath)) {
-    BX_PANIC(("Failed to restore image '%s'", imgpath));
+  if (!hdimage_copy_file(backup_fname, pathname)) {
+    BX_PANIC(("Failed to restore image '%s'", pathname));
     return;
   }
-  if (open(imgpath) < 0) {
-    BX_PANIC(("Failed to open restored image '%s'", imgpath));
+  if (open(pathname) < 0) {
+    BX_PANIC(("Failed to open restored image '%s'", pathname));
   }
 }
 
@@ -423,8 +423,9 @@ void concat_image_t::increment_string(char *str)
  ::increment_string(str, +1);
 }
 
-int concat_image_t::open(const char* pathname0)
+int concat_image_t::open(const char* _pathname0)
 {
+  pathname0 = _pathname0;
   char *pathname = strdup(pathname0);
   BX_DEBUG(("concat_image_t.open"));
   Bit64s start_offset = 0;
@@ -463,6 +464,7 @@ int concat_image_t::open(const char* pathname0)
     start_offset += stat_buf.st_size;
     increment_string(pathname);
   }
+  free(pathname);
   // start up with first image selected
   index = 0;
   fd = fd_table[0];
@@ -558,6 +560,25 @@ bx_bool concat_image_t::save_state(const char *backup_fname)
     if (ret == 0) break;
   }
   return ret;
+}
+
+void concat_image_t::restore_state(const char *backup_fname)
+{
+  char tempfn[BX_PATHNAME_LEN];
+
+  close();
+  char *image_name = strdup(pathname0);
+  for (int index = 0; index < maxfd; index++) {
+    sprintf(tempfn, "%s%d", backup_fname, index);
+    if (!hdimage_copy_file(tempfn, image_name)) {
+      BX_PANIC(("Failed to restore concat image '%s'", image_name));
+      free(image_name);
+      return;
+    }
+    increment_string(image_name);
+  }
+  free(image_name);
+  open(pathname0);
 }
 
 /*** sparse_image_t function definitions ***/
@@ -1629,12 +1650,12 @@ growing_image_t::~growing_image_t()
   delete redolog;
 }
 
-int growing_image_t::open(const char* pathname)
+int growing_image_t::open(const char* _pathname)
 {
+  pathname = _pathname;
   int filedes = redolog->open(pathname, REDOLOG_SUBTYPE_GROWING);
   hd_size = redolog->get_size();
   BX_INFO(("'growing' disk opened, growing file is '%s'", pathname));
-  imgpath = pathname;
   return filedes;
 }
 
@@ -1697,12 +1718,12 @@ void growing_image_t::restore_state(const char *backup_fname)
     }
   }
   redolog->close();
-  if (!hdimage_copy_file(backup_fname, imgpath)) {
-    BX_PANIC(("Failed to restore growing image '%s'", imgpath));
+  if (!hdimage_copy_file(backup_fname, pathname)) {
+    BX_PANIC(("Failed to restore growing image '%s'", pathname));
     return;
   }
-  if (open(imgpath) < 0) {
-    BX_PANIC(("Failed to open restored growing image '%s'", imgpath));
+  if (open(pathname) < 0) {
+    BX_PANIC(("Failed to open restored growing image '%s'", pathname));
   }
 }
 
