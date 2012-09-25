@@ -874,11 +874,9 @@ Bit32u bx_svga_cirrus_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_
 
 Bit64s bx_svga_cirrus_c::svga_param_handler(bx_param_c *param, int set, Bit64s val)
 {
-  Bit32u interval;
-
   if (set) {
     BX_CIRRUS_THIS update_interval = (Bit32u)(1000000 / val);
-    BX_INFO(("Changing timer interval to %d", interval));
+    BX_INFO(("Changing timer interval to %d", BX_CIRRUS_THIS update_interval));
     BX_CIRRUS_THIS svga_timer_handler(theSvga);
     bx_virt_timer.activate_timer(BX_CIRRUS_THIS timer_id, BX_CIRRUS_THIS update_interval, 1);
     if (BX_CIRRUS_THIS update_interval < 300000) {
