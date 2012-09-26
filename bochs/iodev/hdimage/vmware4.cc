@@ -352,6 +352,9 @@ void vmware4_image_t::restore_state(const char *backup_fname)
     return;
   }
   close();
-  hdimage_copy_file(backup_fname, pathname);
+  if (!hdimage_copy_file(backup_fname, pathname)) {
+    BX_PANIC(("Failed to restore vmware4 image '%s'", pathname));
+    return;
+  }
   open(pathname);
 }

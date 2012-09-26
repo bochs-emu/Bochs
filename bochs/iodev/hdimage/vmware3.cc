@@ -539,6 +539,44 @@ bx_bool vmware3_image_t::save_state(const char *backup_fname)
 
 void vmware3_image_t::restore_state(const char *backup_fname)
 {
-  // TODO
-  BX_ERROR(("vmware3_image_t::restore_state(): UNIMPLEMENTED"));
+  int backup_fd;
+  bx_bool ret = 1;
+  COW_Header temp_header;
+  char tempfn[BX_PATHNAME_LEN];
+
+  backup_fd = ::open(backup_fname, O_RDONLY
+#ifdef O_BINARY
+   | O_BINARY
+#endif
+   );
+  if (backup_fd < 0) {
+    BX_PANIC(("Could not open vmware3 image backup"));
+    return;
+  }
+  if (read_header(backup_fd, temp_header) < 0) {
+    ::close(backup_fd);
+    BX_PANIC(("Could not read vmware3 image header"));
+    return;
+  }
+  ::close(backup_fd);
+  if (!is_valid_header(temp_header)) {
+    BX_PANIC(("invalid vmware3 COW Disk image"));
+    return;
+  }
+  unsigned count = current->header.number_of_chains;
+  close();
+  if (count < 1) count = 1;
+  for (unsigned i = 0; i < count; ++i) {
+    sprintf(tempfn, "%s%d", backup_fname, i);
+    char *filename = generate_cow_name(pathname, i);
+    ret &= hdimage_copy_file(tempfn, filename);
+    delete [] filename;
+    if (ret == 0) {
+      BX_PANIC(("Failed to restore vmware3 image '%s'", filename));
+      break;
+    }
+  }
+  if (ret == 1) {
+    open(pathname);
+  }
 }
