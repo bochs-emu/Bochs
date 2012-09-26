@@ -1142,7 +1142,7 @@ void BX_CPU_C::reset(unsigned source)
     BX_CPU_THIS_PTR msr.apicbase &= ~0x0100; /* clear bit 8 BSP */
     BX_INFO(("CPU[%d] is an application processor. Halting until IPI.", apic_id));
     activity_state = BX_ACTIVITY_STATE_WAIT_FOR_SIPI;
-    disable_INIT = 1; // INIT is disabled when CPU is waiting for SIPI
+    mask_event(BX_EVENT_INIT); // INIT is disabled when CPU is waiting for SIPI
     async_event = 1;
   }
 #endif
