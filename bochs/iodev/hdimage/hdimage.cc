@@ -155,6 +155,67 @@ int bx_write_image(int fd, Bit64s offset, void *buf, int count)
   return write(fd, buf, count);
 }
 
+#ifndef WIN32
+int hdimage_open_file(const char *pathname, int flags, Bit64u *fsize, time_t *mtime)
+#else
+int hdimage_open_file(const char *pathname, int flags, Bit64u *fsize, FILETIME *mtime)
+#endif
+{
+#ifdef WIN32
+  if (fsize != NULL) {
+    HANDLE hFile = CreateFile(pathname, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+      ULARGE_INTEGER FileSize;
+      FileSize.LowPart = GetFileSize(hFile, &FileSize.HighPart);
+      if (mtime != NULL) {
+        GetFileTime(hFile, NULL, NULL, mtime);
+      }
+      CloseHandle(hFile);
+      if ((FileSize.LowPart != INVALID_FILE_SIZE) || (GetLastError() == NO_ERROR)) {
+        *fsize = FileSize.QuadPart;
+      } else {
+        return -1;
+      }
+    } else {
+      return -1;
+    }
+  }
+#endif
+
+  int fd = ::open(pathname, flags
+#ifdef O_BINARY
+              | O_BINARY
+#endif
+              );
+
+  if (fd < 0) {
+    return fd;
+  }
+
+#ifndef WIN32
+  if (fsize != NULL) {
+    struct stat stat_buf;
+    if (fstat(fd, &stat_buf)) {
+      BX_PANIC(("fstat() returns error!"));
+      return -1;
+    }
+#ifdef linux
+    if (stat_buf.st_rdev) { // Is this a special device file (e.g. /dev/sde) ?
+      ioctl(fd, BLKGETSIZE64, fsize); // yes it's!
+    }
+    else
+#endif
+    {
+      *fsize = (Bit64u)stat_buf.st_size; // standard unix procedure to get size of regular files
+    }
+    if (mtime != NULL) {
+      *mtime = stat_buf.st_mtime;
+    }
+  }
+#endif
+  return fd;
+}
+
 Bit64s hdimage_save_handler(void *class_ptr, bx_param_c *param)
 {
   char imgname[BX_PATHNAME_LEN];
@@ -303,50 +364,9 @@ int default_image_t::open(const char* _pathname)
 int default_image_t::open(const char* _pathname, int flags)
 {
   pathname = _pathname;
-#ifdef WIN32
-  HANDLE hFile = CreateFile(pathname, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
-  if (hFile != INVALID_HANDLE_VALUE) {
-    ULARGE_INTEGER FileSize;
-    FileSize.LowPart = GetFileSize(hFile, &FileSize.HighPart);
-    GetFileTime(hFile, NULL, NULL, &mtime);
-    CloseHandle(hFile);
-    if ((FileSize.LowPart != INVALID_FILE_SIZE) || (GetLastError() == NO_ERROR)) {
-      hd_size = FileSize.QuadPart;
-    } else {
-      return -1;
-    }
-  } else {
+  if ((fd = hdimage_open_file(pathname, flags, &hd_size, &mtime)) < 0) {
     return -1;
   }
-#endif
-
-  fd = ::open(pathname, flags
-#ifdef O_BINARY
-              | O_BINARY
-#endif
-              );
-
-  if (fd < 0) {
-    return fd;
-  }
-
-#ifndef WIN32
-  /* look at size of image file to calculate disk geometry */
-  struct stat stat_buf;
-  if (fstat(fd, &stat_buf)) {
-    BX_PANIC(("fstat() returns error!"));
-  }
-#ifdef linux
-  if (stat_buf.st_rdev) { // Is this a special device file (e.g. /dev/sde) ?
-    ioctl(fd, BLKGETSIZE64, &hd_size); // yes it's!
-  }
-  else
-#endif
-  {
-    hd_size = (Bit64u)stat_buf.st_size; // standard unix procedure to get size of regular files
-  }
-  mtime = stat_buf.st_mtime;
-#endif
   BX_INFO(("hd_size: "FMT_LL"u", hd_size));
   if (hd_size <= 0) BX_PANIC(("size of disk image not detected / invalid"));
   if ((hd_size % 512) != 0) BX_PANIC(("size of disk image must be multiple of 512 bytes"));

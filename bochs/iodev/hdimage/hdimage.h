@@ -125,9 +125,15 @@
 
 int bx_read_image(int fd, Bit64s offset, void *buf, int count);
 int bx_write_image(int fd, Bit64s offset, void *buf, int count);
+#ifndef WIN32
+int hdimage_open_file(const char *pathname, int flags, Bit64u *fsize, time_t *mtime);
+#else
+int hdimage_open_file(const char *pathname, int flags, Bit64u *fsize, FILETIME *mtime);
+#endif
 bx_bool hdimage_backup_file(int fd, const char *backup_fname);
 bx_bool hdimage_copy_file(const char *src, const char *dst);
 
+// base class
 class device_image_t
 {
   public:

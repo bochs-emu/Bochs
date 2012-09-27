@@ -5263,16 +5263,21 @@ file yet.
 </section>
 <section id="using-save-restore"><title>Save and restore simulation</title>
 <para>
-Starting with version 2.3, Bochs has limited save/restore support. The state of
-cpu(s), memory and all devices can be saved now. When running Bochs with there
-will be a button in the header bar called "Suspend". Depending on config interface
-and gui there will be a prompt where you can enter a path to an existing directory
-or a gui folder selection dialog box. It is possible to save the state at any time,
-but we recommend to do it when the simulation is idle. After pressing OK/Enter,
-Bochs will save a set of files into the selected folder. The state of hard disk
-images is not handled yet, so Bochs will ask you if you want to continue after
-saving state. We don't recommend to continue unless you are running a read-only
-guest system (e.g. Live-CD).
+Bochs has now full save/restore support. The state of cpu(s), memory, devices and
+hard drive images
+<footnote><para>
+The disk image mode "vvfat" does not support save/restore. All other disk image modes
+copy the whole image or the file containing changes (journal). This may take some time,
+so be patient when using this feature.
+</para></footnote>
+can be saved. When running Bochs there will be a button in the
+header bar called "Suspend". Depending on config interface and gui there will be a
+prompt where you can enter a path to an existing directory or a gui folder selection
+dialog box. It is possible to save the state at any time, but we recommend to do it
+when the simulation is idle. After pressing OK/Enter, Bochs will save a set of files
+into the selected folder. It is possible to continue after saving the state, but when
+using the restore function in a new Bochs session, all changes after this checkpoint
+will be lost.
 </para>
 <para>
 To restore the saved simulation state you can select the restore function in the
@@ -8485,6 +8490,11 @@ The flat disk images must be created with the bximage utility
     When using the MBR from image file only the first partition is used and it
     must be of type FAT16 or FAT32. FAT12 can be used for the floppy only.
     An extended partition or other file system types are not supported.
+</para>
+<para>
+    The "vvfat" implementation does not support save/restore, since there is no
+    check if the host directory tree and all files are unmodified after saving
+    the Bochs state.
 </para>
 </section>
 </section>

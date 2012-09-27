@@ -148,6 +148,7 @@ class vpc_image_t : public device_image_t
     void restore_state(const char *backup_fname);
 
   private:
+    int vpc_check_header(const char* pathname, int *disk_type);
     Bit32u vpc_checksum(Bit8u *buf, size_t size);
     Bit64s get_sector_offset(Bit64s sector_num, int write);
     int rewrite_footer(void);

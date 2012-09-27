@@ -52,6 +52,42 @@
 #define cpu_to_be32(val) (val)
 #endif
 
+int vpc_image_t::vpc_check_header(const char* _pathname, int* disk_type)
+{
+  int filedes, vpc_disk_type;
+  Bit64u imgsize;
+  vhd_footer_t *footer;
+
+  vpc_disk_type = VHD_DYNAMIC;
+
+  if ((filedes = hdimage_open_file(_pathname, O_RDWR, &imgsize, NULL)) < 0) {
+    return -1;
+  }
+
+  if (bx_read_image(filedes, 0, (char*)footer_buf, HEADER_SIZE) != HEADER_SIZE) {
+    return -1;
+  }
+
+  footer = (vhd_footer_t*)footer_buf;
+  if (strncmp((char*)footer->creator, "conectix", 8)) {
+    if (imgsize < HEADER_SIZE) {
+      return -1;
+    }
+    // If a fixed disk, the footer is found only at the end of the file
+    if (bx_read_image(filedes, imgsize-HEADER_SIZE, (char*)footer_buf, HEADER_SIZE) != HEADER_SIZE) {
+      return -1;
+    }
+    if (strncmp((char*)footer->creator, "conectix", 8)) {
+      return -1;
+    }
+    vpc_disk_type = VHD_FIXED;
+  }
+  if (disk_type != NULL) {
+    *disk_type = vpc_disk_type;
+  }
+  return filedes;
+}
+
 int vpc_image_t::open(const char* _pathname)
 {
   int i;
@@ -59,66 +95,14 @@ int vpc_image_t::open(const char* _pathname)
   vhd_dyndisk_header_t *dyndisk_header;
   Bit8u buf[HEADER_SIZE];
   Bit32u checksum;
-  Bit64u imgsize;
-  int disk_type = VHD_DYNAMIC;
+  int disk_type;
 
   pathname = _pathname;
-#ifdef WIN32
-  HANDLE hFile = CreateFile(pathname, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
-  if (hFile != INVALID_HANDLE_VALUE) {
-    ULARGE_INTEGER FileSize;
-    FileSize.LowPart = GetFileSize(hFile, &FileSize.HighPart);
-    CloseHandle(hFile);
-    if ((FileSize.LowPart != INVALID_FILE_SIZE) || (GetLastError() == NO_ERROR)) {
-      imgsize = FileSize.QuadPart;
-    } else {
-      return -1;
-    }
-  } else {
-    return -1;
-  }
-#endif
-
-  fd = ::open(pathname, O_RDWR
-#ifdef O_BINARY
-              | O_BINARY
-#endif
-              );
-
-  if (fd < 0) {
-    return fd;
-  }
-
-#ifndef WIN32
-  struct stat stat_buf;
-  if (fstat(fd, &stat_buf)) {
-    BX_PANIC(("fstat() returns error!"));
-  }
-  imgsize = (Bit64u)stat_buf.st_size;
-#endif
-
-  if (bx_read_image(fd, 0, (char*)footer_buf, HEADER_SIZE) != HEADER_SIZE) {
+  if ((fd = vpc_check_header(pathname, &disk_type)) < 0) {
     ::close(fd);
     return -1;
   }
-
   footer = (vhd_footer_t*)footer_buf;
-  if (strncmp((char*)footer->creator, "conectix", 8)) {
-    if (imgsize < HEADER_SIZE) {
-      ::close(fd);
-      return -1;
-    }
-    // If a fixed disk, the footer is found only at the end of the file
-    if (bx_read_image(fd, imgsize-HEADER_SIZE, (char*)footer_buf, HEADER_SIZE) != HEADER_SIZE) {
-      ::close(fd);
-      return -1;
-    }
-    if (strncmp((char*)footer->creator, "conectix", 8)) {
-      ::close(fd);
-      return -1;
-    }
-    disk_type = VHD_FIXED;
-  }
 
   checksum = be32_to_cpu(footer->checksum);
   footer->checksum = 0;
@@ -299,8 +283,19 @@ bx_bool vpc_image_t::save_state(const char *backup_fname)
 
 void vpc_image_t::restore_state(const char *backup_fname)
 {
-  // TODO
-  BX_ERROR(("vpc_image_t::restore_state(): UNIMPLEMENTED"));
+  int temp_fd;
+
+  if ((temp_fd = vpc_check_header(backup_fname, NULL)) < 0) {
+    ::close(temp_fd);
+    BX_PANIC(("Could not detect vpc image header"));
+    return;
+  }
+  close();
+  if (!hdimage_copy_file(backup_fname, pathname)) {
+    BX_PANIC(("Failed to restore vpc image '%s'", pathname));
+    return;
+  }
+  open(pathname);
 }
 
 Bit32u vpc_image_t::vpc_checksum(Bit8u *buf, size_t size)

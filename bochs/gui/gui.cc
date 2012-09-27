@@ -695,9 +695,9 @@ void bx_gui_c::save_restore_handler(void)
     if ((ret >= 0) && (strcmp(sr_path, "none"))) {
       if (SIM->save_state(sr_path)) {
         if (!SIM->ask_yes_no("WARNING",
-              "The save function currently doesn't handle the state of hard drive images,\n"
-              "so we don't recommend to continue, unless you are running a read-only\n"
-              "guest system (e.g. Live-CD).\n\n"
+              "The state of cpu, memory, devices and hard drive images is saved now.\n"
+              "It is possible to continue, but when using the restore function in a\n"
+              "new Bochs session, all changes after this checkpoint will be lost.\n\n"
               "Do you want to continue?", 0)) {
           power_handler();
         }
