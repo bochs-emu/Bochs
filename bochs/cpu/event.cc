@@ -191,11 +191,10 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
   //   STOPCLK
   //   SMI
   //   INIT
-  if (is_pending(BX_EVENT_SMI) && ! BX_CPU_THIS_PTR smm_mode() && SVM_GIF)
+  if (is_unmasked_event_pending(BX_EVENT_SMI) && SVM_GIF)
   {
-    // clear SMI pending flag and disable NMI when SMM was accepted
-    clear_event(BX_EVENT_SMI);
-    enter_system_management_mode();
+    clear_event(BX_EVENT_SMI); // clear SMI pending flag
+    enter_system_management_mode(); // would disable NMI when SMM was accepted
   }
 
   if (is_unmasked_event_pending(BX_EVENT_INIT) && SVM_GIF) {
@@ -252,7 +251,7 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
     // boundary because of certain instructions like STI.
   }
 #if BX_SUPPORT_VMX >= 2
-  else if (BX_CPU_THIS_PTR in_vmx_guest && is_pending(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED)) {
+  else if (is_unmasked_event_pending(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED)) {
     clear_event(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED);
     VMexit_PreemptionTimerExpired();
   }
