@@ -350,7 +350,6 @@ Bit32u device_image_t::get_capabilities()
 void device_image_t::register_state(bx_list_c *parent)
 {
   bx_param_bool_c *image = new bx_param_bool_c(parent, "image", NULL, NULL, 0);
-  // TODO: restore image
   image->set_sr_handlers(this, hdimage_save_handler, hdimage_restore_handler);
 }
 

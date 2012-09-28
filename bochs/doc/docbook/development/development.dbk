@@ -433,7 +433,8 @@ itself. All the hardware objects have register_state() methods to register point
 to the device registers and switches that need to be saved. The simulator interface
 saves the registered data in text format to the specified folder (usually one file
 per item in the save/restore list). Large binary arrays are registered with a
-special parameter type, so they are saved as separate files.
+special parameter type, so they are saved as separate files. The filename is then
+created from the full parameter path without the prefix "bochs.".
 </para>
 <para>
 The table below shows the additional parameter types for save/restore.
@@ -453,15 +454,18 @@ The table below shows the additional parameter types for save/restore.
 </row>
 <row>
 <entry>bx_shadow_bool_c</entry>
-<entry>This parameter type stores a pointer to a boolean variable.</entry>
+<entry>This parameter type stores a pointer to a boolean variable (using bit #0
+of a numerical one).</entry>
 </row>
 <row>
 <entry>bx_shadow_data_c</entry>
-<entry>This special parameter type stores pointer size of a binary array.</entry>
+<entry>This special parameter type stores pointer size of a binary array. The data is
+saved in a separate file and the text file uses the file name as the value.</entry>
 </row>
 <row>
 <entry>bx_shadow_filedata_c</entry>
-<entry>This special parameter type stores the descriptor of an open file (added in Bochs 2.5).</entry>
+<entry>This special parameter type stores the descriptor of an open file
+(added in Bochs 2.5).</entry>
 </row>
 </tbody>
 </tgroup>
@@ -470,14 +474,25 @@ The table below shows the additional parameter types for save/restore.
 <para>
 It is also possible to use the bx_param_num_c object with parameter save/restore
 handlers. With this special way several device settings can be save to and restored
-from one single parameter.
+from one single parameter. The disk image state is also handled this way (see below).
 </para>
 <para>
 All devices can uses these two save/restore specific methods:
 <itemizedlist>
 <listitem><para>register_state() is called after the device init() to register the device members for save/restore</para></listitem>
-<listitem><para>after_restore_state() is an optional method to do things directly after restore</para></listitem>
+<listitem><para>after_restore_state() is an optional method to do things directly after restore (e.g. force a display update)</para></listitem>
 </itemizedlist>
+</para>
+<para>
+To implement save/restore for hard drive images, the new method register_state() has
+been added to the base class of the disk image objects. It creates a bx_param_bool_c
+object called "image" and installs static save and restore handlers. The save
+operation finally sets the parameter's value (1 = success) and the save/restore
+handlers are doing the main job. The static handlers call the class-specific code.
+Depending on the image "mode" they copy either the whole image file or the file
+containing changes (journal). The files are saved similar to binary arrays with
+the same naming convention. The restore methods are doing some format or coherency
+checks, close the open image, copy the file(s) and finally re-open the image.
 </para>
 </section>
 </section>
