@@ -81,8 +81,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT1(bxInstruction_c *i)
   // interrupt is not RSP safe
   interrupt(1, BX_PRIVILEGED_SOFTWARE_INTERRUPT, 0, 0);
 
-  BX_CPU_THIS_PTR EXT = 0;
-
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
                       EIP);

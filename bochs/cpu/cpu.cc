@@ -80,7 +80,6 @@ void BX_CPU_C::cpu_loop(void)
   // mirrors similar code below, after the interrupt() call.
   BX_CPU_THIS_PTR prev_rip = RIP; // commit new EIP
   BX_CPU_THIS_PTR speculative_rsp = 0;
-  BX_CPU_THIS_PTR EXT = 0;
 
   while (1) {
 

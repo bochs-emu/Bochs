@@ -695,7 +695,6 @@ bx_bool BX_CPU_C::SvmInjectEvents(void)
   interrupt(vector, type, push_error, error_code);
 
   BX_CPU_THIS_PTR errorno = 0; // injection success
-  BX_CPU_THIS_PTR EXT = 0;
 
   return 1;
 }

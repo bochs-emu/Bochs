@@ -128,7 +128,6 @@ void BX_CPU_C::InterruptAcknowledge(void)
   interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
 
   BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
-  BX_CPU_THIS_PTR EXT = 0;
 }
 
 #if BX_SUPPORT_SVM
@@ -147,7 +146,6 @@ void BX_CPU_C::VirtualInterruptAcknowledge(void)
   interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
 
   BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
-  BX_CPU_THIS_PTR EXT = 0;
 }
 #endif
 

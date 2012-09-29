@@ -762,6 +762,8 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
   BX_CPU_THIS_PTR in_event = 0;
 #endif
+
+  BX_CPU_THIS_PTR EXT = 0;
 }
 
 /* Exception classes.  These are used as indexes into the 'is_exception_OK'
