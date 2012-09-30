@@ -133,6 +133,7 @@ void bx_voodoo_c::init(void)
     BX_VOODOO_THIS s.update_timer_id = bx_virt_timer.register_timer(this, update_timer_handler,
        50000, 1, 0, "voodoo_update");
   }
+  BX_VOODOO_THIS s.vdraw.clock_enabled = 1;
 
   v = new voodoo_state;
   voodoo_init();
@@ -250,6 +251,8 @@ void bx_voodoo_c::mode_change_timer_handler(void *this_ptr)
   }
 
   if ((BX_VOODOO_THIS s.vdraw.clock_enabled && BX_VOODOO_THIS s.vdraw.output_on) && !BX_VOODOO_THIS s.vdraw.override_on) {
+    if ((v->reg[hSync].u == 0) || (v->reg[vSync].u == 0))
+      return;
     // switching on
     int htotal = ((v->reg[hSync].u >> 16) & 0x3ff) + 1 + (v->reg[hSync].u & 0xff) + 1;
     int vtotal = ((v->reg[vSync].u >> 16) & 0xfff) + (v->reg[vSync].u & 0xfff);
@@ -266,7 +269,7 @@ void bx_voodoo_c::mode_change_timer_handler(void *this_ptr)
 
     BX_VOODOO_THIS s.vdraw.width = v->fbi.width+1;
     BX_VOODOO_THIS s.vdraw.height = v->fbi.height;
-    BX_INFO(("Voodoo output %dx%d@%uHz", v->fbi.width+1, v->fbi.height, vfreq));
+    BX_INFO(("Voodoo output %dx%d@%uHz", v->fbi.width, v->fbi.height, vfreq));
     bx_gui->dimension_update(v->fbi.width+1, v->fbi.height, 0, 0, 16);
     update_timer_handler(NULL);
     bx_virt_timer.activate_timer(BX_VOODOO_THIS s.update_timer_id, BX_VOODOO_THIS s.vdraw.vtotal_usec, 1);
@@ -422,6 +425,11 @@ void bx_voodoo_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
       case 0x12:
       case 0x13:
         baseaddr_change |= (value8 != oldval);
+        break;
+      case 0x40:
+      case 0x41:
+        v->pci.init_enable &= ~(0xff << (i*8));
+        v->pci.init_enable |= (value8 << (i*8));
         break;
       case 0xc0:
         BX_VOODOO_THIS s.vdraw.clock_enabled = 1;
