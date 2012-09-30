@@ -44,11 +44,6 @@ Bit32u voodoo_last_msg = 255;
 #define poly_wait(x,y)
 #define cpu_eat_cycles(x,y)
 
-BX_CPP_INLINE void VOODOO_ShowMsg(char const* format,...) {
-}
-//#define LOG_VOODOO LOG_MSG
-#define LOG_VOODOO VOODOO_ShowMsg
-
 #define DEBUG_DEPTH     (0)
 #define DEBUG_LOD     (0)
 
@@ -371,7 +366,7 @@ void recompute_texture_params(tmu_state *t)
 
   /* start with the base of LOD 0 */
   if (t->texaddr_shift == 0 && (t->reg[texBaseAddr].u & 1))
-    LOG_VOODOO("Tiled texture\n");
+    BX_DEBUG(("Tiled texture"));
   base = (t->reg[texBaseAddr].u & t->texaddr_mask) << t->texaddr_shift;
   t->lodoffset[0] = base & t->mask;
 
@@ -868,7 +863,7 @@ Bit32s triangle(voodoo_state *v)
 //  profiler_mark_end();
 
   /* 1 pixel per clock, plus some setup time */
-  if (LOG_REGISTERS) LOG_VOODOO("cycles = %d\n", TRIANGLE_SETUP_CLOCKS + pixels);
+  if (LOG_REGISTERS) BX_DEBUG(("cycles = %d", TRIANGLE_SETUP_CLOCKS + pixels));
   return TRIANGLE_SETUP_CLOCKS + pixels;
 }
 
@@ -1099,7 +1094,7 @@ Bit32s fastfill(voodoo_state *v)
 void swap_buffers(voodoo_state *v)
 {
   int count;
-//  if (LOG_VBLANK_SWAP) LOG_VOODOO("--- swap_buffers @ %d\n", video_screen_get_vpos(v->screen));
+//  if (LOG_VBLANK_SWAP) BX_DEBUG(("--- swap_buffers @ %d", video_screen_get_vpos(v->screen)));
 
   /* force a partial update */
 //  video_screen_update_partial(v->screen, video_screen_get_vpos(v->screen));
@@ -1321,7 +1316,7 @@ void recompute_video_memory(voodoo_state *v)
   Bit32u memory_config;
   int buf;
 
-  LOG_VOODOO("buffer_pages %x",buffer_pages);
+  BX_DEBUG(("buffer_pages %x",buffer_pages));
   /* memory config is determined differently between V1 and V2 */
   memory_config = FBIINIT2_ENABLE_TRIPLE_BUF(v->reg[fbiInit2].u);
   if (v->type == VOODOO_2 && memory_config == 0)
@@ -1352,7 +1347,7 @@ void recompute_video_memory(voodoo_state *v)
     switch (memory_config)
     {
     case 3: /* reserved */
-      LOG_VOODOO("VOODOO.%d.ERROR:Unexpected memory configuration in recompute_video_memory!\n", v->index);
+      BX_DEBUG(("VOODOO.%d.ERROR:Unexpected memory configuration in recompute_video_memory!", v->index));
 
     case 0: /* 2 color buffers, 1 aux buffer */
       v->fbi.rgboffs[2] = ~0;
@@ -1460,7 +1455,7 @@ void register_w(Bit32u offset, Bit32u data) {
 //  Bit32s cycles = 0;
   Bit64s data64;
 
-  LOG_VOODOO("V3D:WR chip %x reg %x value %08x(%s)", chips, regnum<<2, data, voodoo_reg_name[regnum]);
+  BX_DEBUG(("V3D:WR chip %x reg %x value %08x(%s)", chips, regnum<<2, data, voodoo_reg_name[regnum]));
   voodoo_last_msg=regnum;
 
   if (chips == 0)
@@ -1475,7 +1470,7 @@ void register_w(Bit32u offset, Bit32u data) {
   /* first make sure this register is readable */
   if (!(v->regaccess[regnum] & REGISTER_WRITE))
   {
-    LOG_VOODOO("VOODOO.%d.ERROR:Invalid attempt to write %s\n", v->index, v->regnames[regnum]);
+    BX_DEBUG(("VOODOO.%d.ERROR:Invalid attempt to write %s", v->index, v->regnames[regnum]));
     return;
   }
 
@@ -1784,7 +1779,7 @@ void register_w(Bit32u offset, Bit32u data) {
           }
         }
         else
-          LOG_VOODOO("clutData ignored because video timing reset = 1\n");
+          BX_DEBUG(("clutData ignored because video timing reset = 1"));
       }
       break;
     /* external DAC access -- Voodoo/Voodoo2 only */
@@ -1845,25 +1840,25 @@ void register_w(Bit32u offset, Bit32u data) {
           vgadiff = vgaperiod - refresh;
           if (vgadiff < 0) vgadiff = -vgadiff;
 
-          LOG_VOODOO("hSync=%08X  vSync=%08X  backPorch=%08X  videoDimensions=%08X\n",
-            v->reg[hSync].u, v->reg[vSync].u, v->reg[backPorch].u, v->reg[videoDimensions].u);
-          LOG_VOODOO("Horiz: %d-%d (%d total)  Vert: %d-%d (%d total) -- ", visarea.min_x, visarea.max_x, htotal, visarea.min_y, visarea.max_y, vtotal);
+          BX_DEBUG(("hSync=%08X  vSync=%08X  backPorch=%08X  videoDimensions=%08X",
+            v->reg[hSync].u, v->reg[vSync].u, v->reg[backPorch].u, v->reg[videoDimensions].u));
+          BX_DEBUG(("Horiz: %d-%d (%d total)  Vert: %d-%d (%d total) -- ", visarea.min_x, visarea.max_x, htotal, visarea.min_y, visarea.max_y, vtotal));
 
           /* configure the screen based on which one matches the closest */
           if (stddiff < meddiff && stddiff < vgadiff)
           {
 //            video_screen_configure(v->screen, htotal, vtotal, &visarea, stdperiod);
-            LOG_VOODOO("Standard resolution, %f Hz\n", ATTOSECONDS_TO_HZ(stdperiod));
+            BX_DEBUG(("Standard resolution, %f Hz", ATTOSECONDS_TO_HZ(stdperiod)));
           }
           else if (meddiff < vgadiff)
           {
 //            video_screen_configure(v->screen, htotal, vtotal, &visarea, medperiod);
-            LOG_VOODOO("Medium resolution, %f Hz\n", ATTOSECONDS_TO_HZ(medperiod));
+            BX_DEBUG(("Medium resolution, %f Hz", ATTOSECONDS_TO_HZ(medperiod)));
           }
           else
           {
 //            video_screen_configure(v->screen, htotal, vtotal, &visarea, vgaperiod);
-            LOG_VOODOO("VGA resolution, %f Hz\n", ATTOSECONDS_TO_HZ(vgaperiod));
+            BX_DEBUG(("VGA resolution, %f Hz", ATTOSECONDS_TO_HZ(vgaperiod)));
           }
 
           /* configure the new framebuffer info */
@@ -2061,7 +2056,7 @@ default_case:
 Bit32s texture_w(Bit32u offset, Bit32u data)
 {
   int tmunum = (offset >> 19) & 0x03;
-  LOG_VOODOO("V3D:write TMU%x offset %X value %X", tmunum, offset, data);
+  BX_DEBUG(("V3D:write TMU%x offset %X value %X", tmunum, offset, data));
 
   tmu_state *t;
 
@@ -2116,13 +2111,13 @@ Bit32s texture_w(Bit32u offset, Bit32u data)
       tbaseaddr = t->lodoffset[lod];
       tbaseaddr += tt * ((t->wmask >> lod) + 1) + ts;
 
-      if (LOG_TEXTURE_RAM) LOG_VOODOO("Texture 8-bit w: lod=%d s=%d t=%d data=%08X\n", lod, ts, tt, data);
+      if (LOG_TEXTURE_RAM) BX_DEBUG(("Texture 8-bit w: lod=%d s=%d t=%d data=%08X", lod, ts, tt, data));
     }
     else
     {
       tbaseaddr = t->lodoffset[0] + offset*4;
 
-      if (LOG_TEXTURE_RAM) LOG_VOODOO("Texture 16-bit w: offset=%X data=%08X\n", offset*4, data);
+      if (LOG_TEXTURE_RAM) BX_DEBUG(("Texture 16-bit w: offset=%X data=%08X", offset*4, data));
     }
 
     /* write the four bytes in little-endian order */
@@ -2157,13 +2152,13 @@ Bit32s texture_w(Bit32u offset, Bit32u data)
       tbaseaddr = t->lodoffset[lod];
       tbaseaddr += 2 * (tt * ((t->wmask >> lod) + 1) + ts);
 
-      if (LOG_TEXTURE_RAM) LOG_VOODOO("Texture 16-bit w: lod=%d s=%d t=%d data=%08X\n", lod, ts, tt, data);
+      if (LOG_TEXTURE_RAM) BX_DEBUG(("Texture 16-bit w: lod=%d s=%d t=%d data=%08X", lod, ts, tt, data));
     }
     else
     {
       tbaseaddr = t->lodoffset[0] + offset*4;
 
-      if (LOG_TEXTURE_RAM) LOG_VOODOO("Texture 16-bit w: offset=%X data=%08X\n", offset*4, data);
+      if (LOG_TEXTURE_RAM) BX_DEBUG(("Texture 16-bit w: offset=%X data=%08X", offset*4, data));
     }
 
     /* write the two words in little-endian order */
@@ -2179,7 +2174,7 @@ Bit32s texture_w(Bit32u offset, Bit32u data)
 
  Bit32u lfb_w(Bit32u offset, Bit32u data, Bit32u mem_mask)
 {
-  LOG_VOODOO("V3D:WR LFB offset %X value %08X", offset, data);
+  BX_DEBUG(("V3D:WR LFB offset %X value %08X", offset, data));
   Bit16u *dest, *depth;
   Bit32u destmax, depthmax;
 //  Bit32u mem_mask=0xffffffff;
@@ -2393,7 +2388,7 @@ Bit32s texture_w(Bit32u offset, Bit32u data)
 
   /* select the target buffer */
   destbuf = (v->type >= VOODOO_BANSHEE) ? (!forcefront) : LFBMODE_WRITE_BUFFER_SELECT(v->reg[lfbMode].u);
-//  LOG_VOODOO("destbuf %X lfbmode %X",destbuf, v->reg[lfbMode].u);
+//  BX_DEBUG(("destbuf %X lfbmode %X",destbuf, v->reg[lfbMode].u));
   switch (destbuf)
   {
     case 0:     /* front buffer */
@@ -2423,7 +2418,7 @@ Bit32s texture_w(Bit32u offset, Bit32u data)
     UNUSED(dither);
     Bit32u bufoffs;
 
-    if (LOG_LFB) LOG_VOODOO("VOODOO.%d.LFB:write raw mode %X (%d,%d) = %08X & %08X\n", v->index, LFBMODE_WRITE_FORMAT(v->reg[lfbMode].u), x, y, data, mem_mask);
+    if (LOG_LFB) BX_DEBUG(("VOODOO.%d.LFB:write raw mode %X (%d,%d) = %08X & %08X", v->index, LFBMODE_WRITE_FORMAT(v->reg[lfbMode].u), x, y, data, mem_mask));
 
     /* determine the screen Y */
     scry = y;
@@ -2477,7 +2472,7 @@ Bit32s texture_w(Bit32u offset, Bit32u data)
   {
     DECLARE_DITHER_POINTERS;
 
-    if (LOG_LFB) LOG_VOODOO("VOODOO.%d.LFB:write pipelined mode %X (%d,%d) = %08X & %08X\n", v->index, LFBMODE_WRITE_FORMAT(v->reg[lfbMode].u), x, y, data, mem_mask);
+    if (LOG_LFB) BX_DEBUG(("VOODOO.%d.LFB:write pipelined mode %X (%d,%d) = %08X & %08X", v->index, LFBMODE_WRITE_FORMAT(v->reg[lfbMode].u), x, y, data, mem_mask));
 
     /* determine the screen Y */
     scry = y;
@@ -2550,7 +2545,7 @@ Bit32u register_r(Bit32u offset)
   Bit32u chips   = (offset>>8) & 0xf;
 
   if (!((voodoo_last_msg==regnum) && (regnum==status))) //show status reg only once
-  LOG_VOODOO("Voodoo:read chip %x reg %x (%s)", chips, regnum<<2, voodoo_reg_name[regnum]);
+    BX_DEBUG(("Voodoo:read chip %x reg %x (%s)", chips, regnum<<2, voodoo_reg_name[regnum]));
   voodoo_last_msg=regnum;
 
   Bit32u result;
@@ -2648,7 +2643,7 @@ Bit32u register_r(Bit32u offset)
 
 Bit32u lfb_r(Bit32u offset)
 {
-  LOG_VOODOO("Voodoo:read LFB offset %X", offset);
+  BX_DEBUG(("Voodoo:read LFB offset %X", offset));
   Bit16u *buffer;
   Bit32u bufmax;
   Bit32u bufoffs;
@@ -2666,7 +2661,7 @@ Bit32u lfb_r(Bit32u offset)
 
   /* select the target buffer */
   destbuf = (v->type >= VOODOO_BANSHEE) ? (!forcefront) : LFBMODE_READ_BUFFER_SELECT(v->reg[lfbMode].u);
-//  LOG_VOODOO("destbuf %X lfbmode %X",destbuf, v->reg[lfbMode].u);
+//  BX_DEBUG(("destbuf %X lfbmode %X",destbuf, v->reg[lfbMode].u));
   switch (destbuf)
   {
     case 0:     /* front buffer */
@@ -2714,7 +2709,7 @@ Bit32u lfb_r(Bit32u offset)
   if (LFBMODE_BYTE_SWIZZLE_READS(v->reg[lfbMode].u))
     data = bx_bswap32(data);
 
-  if (LOG_LFB) LOG_VOODOO("VOODOO.%d.LFB:read (%d,%d) = %08X\n", v->index, x, y, data);
+  if (LOG_LFB) BX_DEBUG(("VOODOO.%d.LFB:read (%d,%d) = %08X", v->index, x, y, data));
   return data;
 }
 
