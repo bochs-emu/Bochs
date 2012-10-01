@@ -1048,7 +1048,7 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   Bit32u allowMask = 0;
 
   // CR4 bits definitions:
-  //   [31-21] Reserved, Must be Zero
+  //   [31-22] Reserved, Must be Zero
   //   [21]    SMAP: Supervisor Mode Access Protection R/W
   //   [20]    SMEP: Supervisor Mode Execution Protection R/W
   //   [19]    Reserved, Must be Zero
