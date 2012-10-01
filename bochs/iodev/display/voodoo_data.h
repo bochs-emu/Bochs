@@ -1572,7 +1572,7 @@ struct _fbi_state
   Bit8u         frontbuf;       /* front buffer index */
   Bit8u         backbuf;        /* back buffer index */
   Bit8u         swaps_pending;  /* number of pending swaps */
-  Bit8u         video_changed;  /* did the frontbuffer video change? */
+  bx_bool       video_changed;  /* did the frontbuffer video change? */
 
   Bit32u        yorigin;        /* Y origin subtract value */
   Bit32u        lfb_base;       /* base of LFB in memory */
@@ -1591,13 +1591,13 @@ struct _fbi_state
 //  emu_timer *     vblank_timer  /* VBLANK timer */
   Bit8u         vblank;         /* VBLANK state */
   Bit8u         vblank_count;   /* number of VBLANKs since last swap */
-  Bit8u         vblank_swap_pending; /* a swap is pending, waiting for a vblank */
+  bx_bool       vblank_swap_pending; /* a swap is pending, waiting for a vblank */
   Bit8u         vblank_swap;    /* swap when we hit this count */
   Bit8u         vblank_dont_swap; /* don't actually swap when we hit this point */
 //  voodoo_vblank_func  vblank_client; /* client callback */
 
   /* triangle setup info */
-  Bit8u         cheating_allowed; /* allow cheating? */
+  bx_bool       cheating_allowed; /* allow cheating? */
   Bit32s        sign;           /* triangle sign */
   Bit16s        ax, ay;         /* vertex A x,y (12.4) */
   Bit16s        bx, by;         /* vertex B x,y (12.4) */
@@ -1626,7 +1626,7 @@ struct _fbi_state
 
   rgb_t         pen[65536];     /* mapping from pixels to pens */
   rgb_t         clut[512];      /* clut gamma data */
-  Bit8u         clut_dirty;     /* do we need to recompute? */
+  bx_bool       clut_dirty;     /* do we need to recompute? */
 };
 
 

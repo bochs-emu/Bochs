@@ -187,7 +187,24 @@ void bx_voodoo_c::register_state(void)
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "voodoo", "Voodoo State");
   bx_list_c *vstate = new bx_list_c(list, "vstate", "Voodoo Device State");
   new bx_shadow_data_c(vstate, "reg", (Bit8u*)v->reg, sizeof(v->reg));
-  new bx_shadow_data_c(vstate, "fbi_ram", v->fbi.ram, (4 << 20));
+  new bx_shadow_num_c(vstate, "pci_init_enable", &v->pci.init_enable, BASE_HEX);
+  bx_list_c *fbi = new bx_list_c(vstate, "fbi", "framebuffer");
+  new bx_shadow_data_c(fbi, "ram", v->fbi.ram, (4 << 20));
+  new bx_shadow_num_c(fbi, "mask", &v->fbi.mask, BASE_HEX);
+  new bx_shadow_num_c(fbi, "rgboffs0", &v->fbi.rgboffs[0], BASE_HEX);
+  new bx_shadow_num_c(fbi, "rgboffs1", &v->fbi.rgboffs[1], BASE_HEX);
+  new bx_shadow_num_c(fbi, "rgboffs2", &v->fbi.rgboffs[2], BASE_HEX);
+  new bx_shadow_num_c(fbi, "auxoffs", &v->fbi.auxoffs, BASE_HEX);
+  new bx_shadow_num_c(fbi, "frontbuf", &v->fbi.frontbuf);
+  new bx_shadow_num_c(fbi, "backbuf", &v->fbi.backbuf);
+  new bx_shadow_num_c(fbi, "swaps_pending", &v->fbi.swaps_pending);
+  new bx_shadow_num_c(fbi, "width", &v->fbi.width);
+  new bx_shadow_num_c(fbi, "height", &v->fbi.height);
+  new bx_shadow_num_c(fbi, "rowpixels", &v->fbi.rowpixels);
+  new bx_shadow_bool_c(fbi, "vblank_swap_pending", &v->fbi.vblank_swap_pending);
+  new bx_shadow_bool_c(fbi, "cheating_allowed", &v->fbi.cheating_allowed);
+  new bx_shadow_data_c(fbi, "clut", (Bit8u*)v->fbi.clut, sizeof(v->fbi.clut));
+  new bx_shadow_bool_c(fbi, "clut_dirty", &v->fbi.clut_dirty);
   new bx_shadow_data_c(vstate, "tmu0_ram", v->tmu[0].ram, (4 << 20));
   new bx_shadow_data_c(vstate, "tmu1_ram", v->tmu[1].ram, (4 << 20));
   // TODO
@@ -207,7 +224,9 @@ void bx_voodoo_c::after_restore_state(void)
                            0x1000000)) {
     BX_INFO(("new mem base address: 0x%08x", BX_VOODOO_THIS pci_base_address[0]));
   }
-  BX_VOODOO_THIS s.vdraw.override_on = !BX_VOODOO_THIS s.vdraw.override_on; // force update
+  // force update
+  v->fbi.video_changed = 1;
+  BX_VOODOO_THIS s.vdraw.override_on = !BX_VOODOO_THIS s.vdraw.override_on;
   BX_VOODOO_THIS s.vdraw.frame_start = bx_pc_system.time_usec();
   mode_change_timer_handler(NULL);
 }
@@ -297,7 +316,7 @@ void bx_voodoo_c::update(void)
 
   BX_VOODOO_THIS s.vdraw.frame_start = bx_pc_system.time_usec();
 
-  if (v->fbi.vblank_swap_pending == TRUE) {
+  if (v->fbi.vblank_swap_pending) {
     swap_buffers(v);
   }
 
@@ -305,7 +324,9 @@ void bx_voodoo_c::update(void)
   re.min_x = re.min_y = 0;
   re.max_x = v->fbi.width;
   re.max_y = v->fbi.height;
-  voodoo_update(&re);
+  if (!voodoo_update(&re))
+    return;
+
   Bit8u *disp_ptr = (Bit8u*)(v->fbi.ram + v->fbi.rgboffs[v->fbi.frontbuf]);
   pitch = v->fbi.rowpixels * 2;
 

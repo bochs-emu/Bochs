@@ -836,7 +836,7 @@ Bit32s triangle(voodoo_state *v)
   {
     case 0:   /* front buffer */
       drawbuf = (Bit16u *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.frontbuf]);
-      v->fbi.video_changed = TRUE;
+      v->fbi.video_changed = 1;
       break;
 
     case 1:   /* back buffer */
@@ -1098,7 +1098,7 @@ void swap_buffers(voodoo_state *v)
 
   /* force a partial update */
 //  video_screen_update_partial(v->screen, video_screen_get_vpos(v->screen));
-  v->fbi.video_changed = TRUE;
+  v->fbi.video_changed = 1;
 
   /* keep a history of swap intervals */
   count = v->fbi.vblank_count;
@@ -1130,7 +1130,7 @@ void swap_buffers(voodoo_state *v)
   if (v->fbi.swaps_pending)
     v->fbi.swaps_pending--;
   v->fbi.vblank_count = 0;
-  v->fbi.vblank_swap_pending = FALSE;
+  v->fbi.vblank_swap_pending = 0;
 
   /* reset the last_op_time to now and start processing the next command */
   if (v->pci.op_pending)
@@ -1214,7 +1214,7 @@ bool dump_tmu=false;
 Bit32s swapbuffer(voodoo_state *v, Bit32u data)
 {
   /* set the don't swap value for Voodoo 2 */
-  v->fbi.vblank_swap_pending = TRUE;
+  v->fbi.vblank_swap_pending = 1;
   v->fbi.vblank_swap = (data >> 1) & 0xff;
   v->fbi.vblank_dont_swap = (data >> 9) & 1;
 
@@ -1742,7 +1742,7 @@ void register_w(Bit32u offset, Bit32u data) {
       break;
 
     case ftriangleCMD:
-      v->fbi.cheating_allowed = TRUE;
+      v->fbi.cheating_allowed = 1;
       v->fbi.sign = data;
 /*      cycles = */ triangle(v);
       break;
@@ -1775,7 +1775,7 @@ void register_w(Bit32u offset, Bit32u data) {
           if (index <= 32)
           {
             v->fbi.clut[index] = data;
-            v->fbi.clut_dirty = TRUE;
+            v->fbi.clut_dirty = 1;
           }
         }
         else
@@ -1903,13 +1903,12 @@ void register_w(Bit32u offset, Bit32u data) {
     case fbiInit2:
     case fbiInit4:
       poly_wait(v->poly, v->regnames[regnum]);
-      
 
       if (v->type <= VOODOO_2 && (chips & 1) && INITEN_ENABLE_HW_INIT(v->pci.init_enable))
       {
         v->reg[regnum].u = data;
         recompute_video_memory(v);
-        v->fbi.video_changed = true;
+        v->fbi.video_changed = 1;
       }
       break;
 
@@ -2396,7 +2395,7 @@ Bit32s texture_w(Bit32u offset, Bit32u data)
     case 0:     /* front buffer */
       dest = (Bit16u *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.frontbuf]);
       destmax = (v->fbi.mask + 1 - v->fbi.rgboffs[v->fbi.frontbuf]) / 2;
-      v->fbi.video_changed = TRUE;
+      v->fbi.video_changed = 1;
       break;
 
     case 1:     /* back buffer */
@@ -2886,7 +2885,7 @@ void voodoo_init()
   }
 
   /* init the pens */
-  v->fbi.clut_dirty = TRUE;
+  v->fbi.clut_dirty = 1;
   if (v->type <= VOODOO_2)
   {
     for (pen = 0; pen < 32; pen++)
@@ -2928,39 +2927,35 @@ void voodoo_init()
   soft_reset(v);
 }
 
-int voodoo_update(/*running_device *device, bitmap_t *bitmap, */const rectangle *cliprect)
+bx_bool voodoo_update(/*running_device *device, bitmap_t *bitmap, */const rectangle *cliprect)
 {
 //  voodoo_state *v = get_safe_token(device);
-  int changed = v->fbi.video_changed;
+  bx_bool changed = v->fbi.video_changed;
 //  int drawbuf = v->fbi.frontbuf;
 //  int statskey;
   int x, y;
 
   /* reset the video changed flag */
-  v->fbi.video_changed = FALSE;
+  v->fbi.video_changed = 0;
 
   /* if we are blank, just fill with black */
-  if (v->type <= VOODOO_2 && FBIINIT1_SOFTWARE_BLANK(v->reg[fbiInit1].u))
-  {
+  if (v->type <= VOODOO_2 && FBIINIT1_SOFTWARE_BLANK(v->reg[fbiInit1].u)) {
 //    bitmap_fill(bitmap, cliprect, 0);
     return changed;
   }
 
   /* if the CLUT is dirty, recompute the pens array */
-  if (v->fbi.clut_dirty)
-  {
+  if (v->fbi.clut_dirty) {
     Bit8u rtable[32], gtable[64], btable[32];
 
     /* Voodoo/Voodoo-2 have an internal 33-entry CLUT */
-    if (v->type <= VOODOO_2)
-    {
+    if (v->type <= VOODOO_2) {
       /* kludge: some of the Midway games write 0 to the last entry when they obviously mean FF */
       if ((v->fbi.clut[32] & 0xffffff) == 0 && (v->fbi.clut[31] & 0xffffff) != 0)
         v->fbi.clut[32] = 0x20ffffff;
 
       /* compute the R/G/B pens first */
-      for (x = 0; x < 32; x++)
-      {
+      for (x = 0; x < 32; x++) {
         /* treat X as a 5-bit value, scale up to 8 bits, and linear interpolate for red/blue */
         y = (x << 3) | (x >> 2);
         rtable[x] = (RGB_RED(v->fbi.clut[y >> 3]) * (8 - (y & 7)) + RGB_RED(v->fbi.clut[(y >> 3) + 1]) * (y & 7)) >> 3;
@@ -2985,8 +2980,7 @@ int voodoo_update(/*running_device *device, bitmap_t *bitmap, */const rectangle 
       int bypass = (v->banshee.io[io_vidProcCfg] >> 11) & 1;
 
       /* compute R/G/B pens first */
-      for (x = 0; x < 32; x++)
-      {
+      for (x = 0; x < 32; x++) {
         /* treat X as a 5-bit value, scale up to 8 bits */
         y = (x << 3) | (x >> 2);
         rtable[x] = bypass ? y : RGB_RED(v->fbi.clut[which * 256 + y]);
@@ -3005,8 +2999,7 @@ int voodoo_update(/*running_device *device, bitmap_t *bitmap, */const rectangle 
     }
 
     /* now compute the actual pens array */
-    for (x = 0; x < 65536; x++)
-    {
+    for (x = 0; x < 65536; x++) {
       int r = rtable[(x >> 11) & 0x1f];
       int g = gtable[(x >> 5) & 0x3f];
       int b = btable[x & 0x1f];
@@ -3014,8 +3007,8 @@ int voodoo_update(/*running_device *device, bitmap_t *bitmap, */const rectangle 
     }
 
     /* no longer dirty */
-    v->fbi.clut_dirty = FALSE;
-    changed = TRUE;
+    v->fbi.clut_dirty = 0;
+    changed = 1;
   }
 
   /* debugging! */
