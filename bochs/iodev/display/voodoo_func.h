@@ -1811,10 +1811,6 @@ void register_w(Bit32u offset, Bit32u data) {
           int vvis = (v->reg[videoDimensions].u >> 16) & 0x3ff;
           int hbp = (v->reg[backPorch].u & 0xff) + 2;
           int vbp = (v->reg[backPorch].u >> 16) & 0xff;
-//          attoseconds_t refresh = video_screen_get_frame_period(v->screen).attoseconds;
-          attoseconds_t refresh ;
-          attoseconds_t stdperiod, medperiod, vgaperiod;
-          attoseconds_t stddiff, meddiff, vgadiff;
           rectangle visarea;
 
           /* create a new visarea */
@@ -1827,7 +1823,16 @@ void register_w(Bit32u offset, Bit32u data) {
           visarea.max_x = MIN(visarea.max_x, htotal - 1);
           visarea.max_y = MIN(visarea.max_y, vtotal - 1);
 
+          BX_DEBUG(("hSync=%08X  vSync=%08X  backPorch=%08X  videoDimensions=%08X",
+            v->reg[hSync].u, v->reg[vSync].u, v->reg[backPorch].u, v->reg[videoDimensions].u));
+          BX_DEBUG(("Horiz: %d-%d (%d total)  Vert: %d-%d (%d total) -- ", visarea.min_x, visarea.max_x, htotal, visarea.min_y, visarea.max_y, vtotal));
+
+#if 0
           /* compute the new period for standard res, medium res, and VGA res */
+//        attoseconds_t refresh = video_screen_get_frame_period(v->screen).attoseconds;
+          attoseconds_t stdperiod, medperiod, vgaperiod;
+          attoseconds_t stddiff, meddiff, vgadiff;
+
 //          stdperiod = HZ_TO_ATTOSECONDS(15750) * vtotal;
 //          medperiod = HZ_TO_ATTOSECONDS(25000) * vtotal;
 //          vgaperiod = HZ_TO_ATTOSECONDS(31500) * vtotal;
@@ -1839,10 +1844,6 @@ void register_w(Bit32u offset, Bit32u data) {
           if (meddiff < 0) meddiff = -meddiff;
           vgadiff = vgaperiod - refresh;
           if (vgadiff < 0) vgadiff = -vgadiff;
-
-          BX_DEBUG(("hSync=%08X  vSync=%08X  backPorch=%08X  videoDimensions=%08X",
-            v->reg[hSync].u, v->reg[vSync].u, v->reg[backPorch].u, v->reg[videoDimensions].u));
-          BX_DEBUG(("Horiz: %d-%d (%d total)  Vert: %d-%d (%d total) -- ", visarea.min_x, visarea.max_x, htotal, visarea.min_y, visarea.max_y, vtotal));
 
           /* configure the screen based on which one matches the closest */
           if (stddiff < meddiff && stddiff < vgadiff)
@@ -1860,6 +1861,7 @@ void register_w(Bit32u offset, Bit32u data) {
 //            video_screen_configure(v->screen, htotal, vtotal, &visarea, vgaperiod);
             BX_DEBUG(("VGA resolution, %f Hz", ATTOSECONDS_TO_HZ(vgaperiod)));
           }
+#endif
 
           /* configure the new framebuffer info */
           v->fbi.width = hvis;
