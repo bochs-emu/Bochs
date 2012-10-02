@@ -289,7 +289,6 @@ typedef struct bx_SVM_CONTROLS
   bx_phy_address msrpm_base;
 
   Bit8u v_tpr;
-  bx_bool v_irq;
   Bit8u v_intr_prio;
   bx_bool v_ignore_tpr;
   bx_bool v_intr_masking;
@@ -303,7 +302,6 @@ typedef struct bx_SVM_CONTROLS
 #if defined(NEED_CPU_REG_SHORTCUTS)
 
 #define SVM_V_TPR          (BX_CPU_THIS_PTR vmcb.ctrls.v_tpr)
-#define SVM_V_IRQ          (BX_CPU_THIS_PTR vmcb.ctrls.v_irq)
 #define SVM_V_INTR_PRIO    (BX_CPU_THIS_PTR vmcb.ctrls.v_intr_prio)
 #define SVM_V_IGNORE_TPR   (BX_CPU_THIS_PTR vmcb.ctrls.v_ignore_tpr)
 #define SVM_V_INTR_MASKING (BX_CPU_THIS_PTR vmcb.ctrls.v_intr_masking)

@@ -1097,6 +1097,7 @@ public: // for now...
 #define BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED (1<<4)
 #define BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING (1<<5)
 #define BX_EVENT_VMX_NMI_WINDOW_EXITING       (1<<6)
+#define BX_EVENT_SVM_VIRQ_PENDING             (1<<7)
 // later the event list will grow rapidly
   Bit32u  pending_event;
   Bit32u  event_mask;

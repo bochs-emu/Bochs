@@ -137,7 +137,7 @@ void BX_CPU_C::VirtualInterruptAcknowledge(void)
 
   if (SVM_INTERCEPT(SVM_INTERCEPT0_VINTR)) Svm_Vmexit(SVM_VMEXIT_VINTR);
 
-  SVM_V_IRQ = 0;
+  clear_event(BX_EVENT_SVM_VIRQ_PENDING);
 
   BX_CPU_THIS_PTR EXT = 1; /* external event */
 
@@ -292,7 +292,7 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
     InterruptAcknowledge();
   }
 #if BX_SUPPORT_SVM
-  else if (BX_CPU_THIS_PTR in_svm_guest && SVM_V_IRQ && BX_CPU_THIS_PTR get_IF() &&
+  else if (is_unmasked_event_pending(BX_EVENT_SVM_VIRQ_PENDING) && BX_CPU_THIS_PTR get_IF() &&
           ((SVM_V_INTR_PRIO > SVM_V_TPR) || SVM_V_IGNORE_TPR))
   {
     // virtual interrupt acknowledge
@@ -342,10 +342,10 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
 //      BX_CPU_THIS_PTR get_TF() || // implies debug_trap is set
         BX_HRQ ||
 #if BX_SUPPORT_SVM
-        (BX_CPU_THIS_PTR in_svm_guest && SVM_V_IRQ && BX_CPU_THIS_PTR get_IF() &&
+        (is_unmasked_event_pending(BX_EVENT_SVM_VIRQ_PENDING) && BX_CPU_THIS_PTR get_IF() &&
            ((SVM_V_INTR_PRIO > SVM_V_TPR) || SVM_V_IGNORE_TPR)) ||
 #endif
-        is_unmasked_event_pending()))
+        is_unmasked_event_pending(~BX_EVENT_SVM_VIRQ_PENDING)))
   {
     BX_CPU_THIS_PTR async_event = 0;
   }

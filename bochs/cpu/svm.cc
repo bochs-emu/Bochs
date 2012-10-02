@@ -297,7 +297,8 @@ void BX_CPU_C::SvmExitSaveGuestState(void)
   SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
 
   vmcb_write8(SVM_CONTROL_VTPR, ctrls->v_tpr);
-  vmcb_write8(SVM_CONTROL_VIRQ, ctrls->v_irq);
+  vmcb_write8(SVM_CONTROL_VIRQ, is_pending(BX_EVENT_SVM_VIRQ_PENDING));
+  clear_event(BX_EVENT_SVM_VIRQ_PENDING);
 }
 
 extern bx_bool isValidMSR_PAT(Bit64u pat_msr);
@@ -341,7 +342,6 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
   }
 
   ctrls->v_tpr = vmcb_read8(SVM_CONTROL_VTPR);
-  ctrls->v_irq = vmcb_read8(SVM_CONTROL_VIRQ) & 0x1;
   ctrls->v_intr_masking = vmcb_read8(SVM_CONTROL_VINTR_MASKING) & 0x1;
   ctrls->v_intr_vector = vmcb_read8(SVM_CONTROL_VINTR_VECTOR);
 
@@ -555,8 +555,9 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   setEFlags((Bit32u) guest.eflags);
 
   // injecting virtual interrupt
-  if (SVM_V_IRQ)
-    BX_CPU_THIS_PTR async_event = 1;
+  Bit8u v_irq = vmcb_read8(SVM_CONTROL_VIRQ) & 0x1;
+  if (v_irq)
+    signal_event(BX_EVENT_SVM_VIRQ_PENDING);
 
   handleCpuContextChange();
 
@@ -586,6 +587,8 @@ void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
   RIP = BX_CPU_THIS_PTR prev_rip;
   if (BX_CPU_THIS_PTR speculative_rsp)
     RSP = BX_CPU_THIS_PTR prev_rsp;
+
+  mask_event(BX_EVENT_SVM_VIRQ_PENDING);
 
   BX_CPU_THIS_PTR in_svm_guest = 0;
   BX_CPU_THIS_PTR svm_gif = 0;
@@ -1185,7 +1188,6 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, eventinj, BX_CPU_THIS_PTR vmcb.ctrls.eventinj);
 
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, v_tpr, BX_CPU_THIS_PTR vmcb.ctrls.v_tpr);
-  BXRS_PARAM_BOOL(vmcb_ctrls, v_irq, BX_CPU_THIS_PTR vmcb.ctrls.v_irq);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, v_intr_prio, BX_CPU_THIS_PTR vmcb.ctrls.v_intr_prio);
   BXRS_PARAM_BOOL(vmcb_ctrls, v_ignore_tpr, BX_CPU_THIS_PTR vmcb.ctrls.v_ignore_tpr);
   BXRS_PARAM_BOOL(vmcb_ctrls, v_intr_masking, BX_CPU_THIS_PTR vmcb.ctrls.v_intr_masking);
