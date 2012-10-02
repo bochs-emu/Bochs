@@ -61,16 +61,19 @@ int vpc_image_t::vpc_check_header(const char* _pathname, int* disk_type)
   vpc_disk_type = VHD_DYNAMIC;
 
   if ((filedes = hdimage_open_file(_pathname, O_RDWR, &imgsize, NULL)) < 0) {
+    BX_ERROR(("VPC: cannot open hdimage file", _pathname));
     return -1;
   }
 
   if (bx_read_image(filedes, 0, (char*)footer_buf, HEADER_SIZE) != HEADER_SIZE) {
+    BX_ERROR(("VPC: cannot read image file header", _pathname));
     return -1;
   }
 
   footer = (vhd_footer_t*)footer_buf;
   if (strncmp((char*)footer->creator, "conectix", 8)) {
     if (imgsize < HEADER_SIZE) {
+      BX_ERROR(("VPC: signature missed", _pathname));
       return -1;
     }
     // If a fixed disk, the footer is found only at the end of the file
@@ -78,6 +81,7 @@ int vpc_image_t::vpc_check_header(const char* _pathname, int* disk_type)
       return -1;
     }
     if (strncmp((char*)footer->creator, "conectix", 8)) {
+      BX_ERROR(("VPC: signature missed", _pathname));
       return -1;
     }
     vpc_disk_type = VHD_FIXED;
