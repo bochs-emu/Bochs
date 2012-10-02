@@ -1123,6 +1123,13 @@ public: // for now...
     return (BX_CPU_THIS_PTR event_mask & event) != 0;
   }
 
+  BX_SMF BX_CPP_INLINE bx_bool is_pending(void) {
+    return (BX_CPU_THIS_PTR pending_event) != 0;
+  }
+  BX_SMF BX_CPP_INLINE bx_bool is_unmasked_event_pending() {
+    return (BX_CPU_THIS_PTR pending_event & ~BX_CPU_THIS_PTR event_mask) != 0;
+  }
+
   BX_SMF BX_CPP_INLINE bx_bool is_pending(Bit32u event) {
     return (BX_CPU_THIS_PTR pending_event & event) != 0;
   }

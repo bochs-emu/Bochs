@@ -339,23 +339,16 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
 
   if (!((BX_CPU_INTR && interrupts_enabled() && SVM_GIF) ||
         BX_CPU_THIS_PTR debug_trap ||
-//      BX_CPU_THIS_PTR get_TF() // implies debug_trap is set
-        BX_HRQ
-#if BX_SUPPORT_VMX
-     || is_unmasked_event_pending(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING |
-                                  BX_EVENT_VMX_NMI_WINDOW_EXITING |
-                                  BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED)
-#endif
+//      BX_CPU_THIS_PTR get_TF() || // implies debug_trap is set
+        BX_HRQ ||
 #if BX_SUPPORT_SVM
-     || (BX_CPU_THIS_PTR in_svm_guest && SVM_V_IRQ && BX_CPU_THIS_PTR get_IF() &&
-           ((SVM_V_INTR_PRIO > SVM_V_TPR) || SVM_V_IGNORE_TPR))
+        (BX_CPU_THIS_PTR in_svm_guest && SVM_V_IRQ && BX_CPU_THIS_PTR get_IF() &&
+           ((SVM_V_INTR_PRIO > SVM_V_TPR) || SVM_V_IGNORE_TPR)) ||
 #endif
-#if BX_X86_DEBUGGER
-     // a debug code breakpoint is set in current page
-     || is_pending(BX_EVENT_CODE_BREAKPOINT_ASSIST)
-#endif
-        ))
+        is_unmasked_event_pending()))
+  {
     BX_CPU_THIS_PTR async_event = 0;
+  }
 
   return 0; // Continue executing cpu_loop.
 }
