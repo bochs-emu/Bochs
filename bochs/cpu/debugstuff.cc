@@ -316,11 +316,11 @@ unsigned BX_CPU_C::dbg_query_pending(void)
     ret |= BX_DBG_PENDING_DMA;
   }
 
-  if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR get_IF()) {
+  if (is_unmasked_event_pending(BX_EVENT_PENDING_INTR)) {
     ret |= BX_DBG_PENDING_IRQ;
   }
 
-  return(ret);
+  return ret;
 }
 
 bx_bool BX_CPU_C::dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no)
