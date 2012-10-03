@@ -216,6 +216,35 @@ int hdimage_open_file(const char *pathname, int flags, Bit64u *fsize, FILETIME *
   return fd;
 }
 
+int hdimage_detect_image_mode(const char *pathname)
+{
+  int result = BX_HDIMAGE_MODE_UNKNOWN;
+  Bit64u image_size = 0;
+
+  int fd = hdimage_open_file(pathname, O_RDONLY, &image_size, NULL);
+  if (fd < 0) {
+    return result;
+  }
+
+  if (sparse_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
+    result = BX_HDIMAGE_MODE_SPARSE;
+  } else if (vmware3_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
+    result = BX_HDIMAGE_MODE_VMWARE3;
+  } else if (vmware4_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
+    result = BX_HDIMAGE_MODE_VMWARE4;
+  } else if (growing_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
+    result = BX_HDIMAGE_MODE_GROWING;
+  } else if (vpc_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
+    result = BX_HDIMAGE_MODE_VPC;
+  } else if (default_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
+    result = BX_HDIMAGE_MODE_FLAT;
+  }
+  ::close(fd);
+
+  return result;
+}
+
+// generic save/restore functions
 Bit64s hdimage_save_handler(void *class_ptr, bx_param_c *param)
 {
   char imgname[BX_PATHNAME_LEN];
@@ -397,6 +426,19 @@ ssize_t default_image_t::write(const void* buf, size_t count)
 Bit32u default_image_t::get_timestamp()
 {
   return (fat_datetime(mtime, 1) | (fat_datetime(mtime, 0) << 16));
+}
+
+int default_image_t::check_format(int fd, Bit64u imgsize)
+{
+  char buffer[512];
+
+  if ((imgsize <= 0) || ((imgsize % 512) != 0)) {
+    return HDIMAGE_SIZE_ERROR;
+  } else if (bx_read_image(fd, 0, buffer, 512) < 0) {
+    return HDIMAGE_READ_ERROR;
+  } else {
+    return HDIMAGE_FORMAT_OK;
+  }
 }
 
 bx_bool default_image_t::save_state(const char *backup_fname)
@@ -628,93 +670,86 @@ void showpagetable(Bit32u * pagetable, size_t numpages)
 }
 */
 
-void sparse_image_t::read_header()
+int sparse_image_t::read_header()
 {
- BX_ASSERT(sizeof(header) == SPARSE_HEADER_SIZE);
+  BX_ASSERT(sizeof(header) == SPARSE_HEADER_SIZE);
 
- int ret = ::read(fd, &header, sizeof(header));
+  int ret = check_format(fd, underlying_filesize);
+  if (ret != HDIMAGE_FORMAT_OK) {
+    switch (ret) {
+      case HDIMAGE_READ_ERROR:
+        BX_PANIC(("sparse: could not read entire header"));
+        break;
+      case HDIMAGE_NO_SIGNATURE:
+        BX_PANIC(("sparse: failed header magic check"));
+        break;
+      case HDIMAGE_VERSION_ERROR:
+        BX_PANIC(("sparse: unknown version in header"));
+        break;
+    }
+    return -1;
+  }
 
- if (-1 == ret)
- {
-     panic(strerror(errno));
- }
+  ret = bx_read_image(fd, 0, &header, sizeof(header));
+  if (ret < 0) {
+    return -1;
+  }
 
- if (sizeof(header) != ret)
- {
-   panic("could not read entire header");
- }
+  pagesize = dtoh32(header.pagesize);
+  Bit32u numpages = dtoh32(header.numpages);
 
- if (dtoh32(header.magic) != SPARSE_HEADER_MAGIC)
- {
-   panic("failed header magic check");
- }
+  total_size = pagesize;
+  total_size *= numpages;
 
- if ((dtoh32(header.version) != SPARSE_HEADER_VERSION) &&
-     (dtoh32(header.version) != SPARSE_HEADER_V1))
- {
-   panic("unknown version in header");
- }
+  pagesize_shift = 0;
+  while ((pagesize >> pagesize_shift) > 1) pagesize_shift++;
 
- pagesize = dtoh32(header.pagesize);
- Bit32u numpages = dtoh32(header.numpages);
+  if ((Bit32u)(1 << pagesize_shift) != pagesize) {
+    panic("failed block size header check");
+  }
 
- total_size = pagesize;
- total_size *= numpages;
+  pagesize_mask = pagesize - 1;
 
- pagesize_shift = 0;
- while ((pagesize >> pagesize_shift) > 1) pagesize_shift++;
+  size_t  preamble_size = (sizeof(Bit32u) * numpages) + sizeof(header);
+  data_start = 0;
+  while ((size_t)data_start < preamble_size) data_start += pagesize;
 
- if ((Bit32u)(1 << pagesize_shift) != pagesize)
- {
-   panic("failed block size header check");
- }
-
- pagesize_mask = pagesize - 1;
-
- size_t  preamble_size = (sizeof(Bit32u) * numpages) + sizeof(header);
- data_start = 0;
- while ((size_t)data_start < preamble_size) data_start += pagesize;
-
- bx_bool did_mmap = 0;
+  bx_bool did_mmap = 0;
 
 #ifdef _POSIX_MAPPED_FILES
-// Try to memory map from the beginning of the file (0 is trivially a page multiple)
- void *mmap_header = mmap(NULL, preamble_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
- if (mmap_header == MAP_FAILED)
- {
-   BX_INFO(("failed to mmap sparse disk file - using conventional file access"));
-   mmap_header = NULL;
- }
- else
- {
-   mmap_length = preamble_size;
-   did_mmap = 1;
-   pagetable = ((Bit32u *) (((Bit8u *) mmap_header) + sizeof(header)));
-   system_pagesize_mask = getpagesize() - 1;
- }
+  // Try to memory map from the beginning of the file (0 is trivially a page multiple)
+  void *mmap_header = mmap(NULL, preamble_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (mmap_header == MAP_FAILED) {
+    BX_INFO(("failed to mmap sparse disk file - using conventional file access"));
+    mmap_header = NULL;
+  }
+  else
+  {
+    mmap_length = preamble_size;
+    did_mmap = 1;
+    pagetable = ((Bit32u *) (((Bit8u *) mmap_header) + sizeof(header)));
+    system_pagesize_mask = getpagesize() - 1;
+  }
 #endif
 
- if (!did_mmap)
- {
-   pagetable = new Bit32u[numpages];
+  if (!did_mmap) {
+    pagetable = new Bit32u[numpages];
 
-   if (pagetable == NULL)
-   {
-     panic("could not allocate memory for sparse disk block table");
-   }
+    if (pagetable == NULL) {
+      panic("could not allocate memory for sparse disk block table");
+    }
 
-   ret = ::read(fd, pagetable, sizeof(Bit32u) * numpages);
+    ret = ::read(fd, pagetable, sizeof(Bit32u) * numpages);
 
-   if (-1 == ret)
-   {
-       panic(strerror(errno));
-   }
+    if (ret < 0) {
+      panic(strerror(errno));
+    }
 
-   if ((int)(sizeof(Bit32u) * numpages) != ret)
-   {
-     panic("could not read entire block table");
-   }
- }
+    if ((int)(sizeof(Bit32u) * numpages) != ret) {
+      panic("could not read entire block table");
+    }
+  }
+  return 0;
 }
 
 int sparse_image_t::open(const char* pathname0)
@@ -722,24 +757,14 @@ int sparse_image_t::open(const char* pathname0)
   pathname = strdup(pathname0);
   BX_DEBUG(("sparse_image_t.open"));
 
-  fd = ::open(pathname, O_RDWR
-#ifdef O_BINARY
-   | O_BINARY
-#endif
-   );
-
-  if (fd < 0)
-  {
-    return -1; // open failed
+  if ((fd = hdimage_open_file(pathname, O_RDWR, &underlying_filesize, NULL)) < 0) {
+    return -1;
   }
   BX_DEBUG(("sparse_image: open image %s", pathname));
 
-  read_header();
-
-  struct stat stat_buf;
-  if (fstat(fd, &stat_buf) != 0) panic(("fstat() returns error!"));
-
-  underlying_filesize = stat_buf.st_size;
+  if (read_header() < 0) {
+    return -1;
+  }
 
   if ((underlying_filesize % pagesize) != 0)
     panic("size of sparse disk image is not multiple of page size");
@@ -1125,6 +1150,30 @@ ssize_t sparse_image_t::write(const void* buf, size_t count)
   return total_written;
 }
 
+int sparse_image_t::check_format(int fd, Bit64u imgsize)
+{
+  sparse_header_t temp_header;
+
+  int ret = ::read(fd, &temp_header, sizeof(temp_header));
+  if (ret < 0) {
+    return HDIMAGE_READ_ERROR;
+  }
+  if (ret != sizeof(temp_header)) {
+    return HDIMAGE_READ_ERROR;
+  }
+
+  if (dtoh32(temp_header.magic) != SPARSE_HEADER_MAGIC) {
+    return HDIMAGE_NO_SIGNATURE;
+  }
+
+  if ((dtoh32(temp_header.version) != SPARSE_HEADER_VERSION) &&
+      (dtoh32(temp_header.version) != SPARSE_HEADER_V1)) {
+    return HDIMAGE_VERSION_ERROR;
+  }
+
+  return HDIMAGE_FORMAT_OK;
+}
+
 bx_bool sparse_image_t::save_state(const char *backup_fname)
 {
   return hdimage_backup_file(fd, backup_fname);
@@ -1374,46 +1423,36 @@ int redolog_t::open(const char* filename, const char *type)
               | O_BINARY
 #endif
               );
-  if (fd < 0)
-  {
+  if (fd < 0) {
     BX_INFO(("redolog : could not open image %s", filename));
     // open failed.
     return -1;
   }
   BX_INFO(("redolog : open image %s", filename));
 
-  int res = bx_read_image(fd, 0, &header, sizeof(header));
-  if (res != STANDARD_HEADER_SIZE)
-  {
-    BX_PANIC(("redolog : could not read header"));
+  int res = check_format(fd, type);
+  if (res != HDIMAGE_FORMAT_OK) {
+    switch (res) {
+      case HDIMAGE_READ_ERROR:
+        BX_PANIC(("redolog : could not read header"));
+        break;
+      case HDIMAGE_NO_SIGNATURE:
+        BX_PANIC(("redolog : Bad header magic"));
+        break;
+      case HDIMAGE_TYPE_ERROR:
+        BX_PANIC(("redolog : Bad header type or subtype"));
+        break;
+      case HDIMAGE_VERSION_ERROR:
+        BX_PANIC(("redolog : Bad header version"));
+        break;
+    }
     return -1;
   }
 
+  if (bx_read_image(fd, 0, &header, sizeof(header)) < 0) {
+    return -1;
+  }
   print_header();
-
-  if (strcmp((char*)header.standard.magic, STANDARD_HEADER_MAGIC) != 0)
-  {
-    BX_PANIC(("redolog : Bad header magic"));
-    return -1;
-  }
-
-  if (strcmp((char*)header.standard.type, REDOLOG_TYPE) != 0)
-  {
-    BX_PANIC(("redolog : Bad header type"));
-    return -1;
-  }
-  if (strcmp((char*)header.standard.subtype, type) != 0)
-  {
-    BX_PANIC(("redolog : Bad header subtype"));
-    return -1;
-  }
-
-  if ((dtoh32(header.standard.version) != STANDARD_HEADER_VERSION) &&
-      (dtoh32(header.standard.version) != STANDARD_HEADER_V1))
-  {
-    BX_PANIC(("redolog : Bad header version"));
-    return -1;
-  }
 
   if (dtoh32(header.standard.version) == STANDARD_HEADER_V1) {
     redolog_header_v1_t header_v1;
@@ -1653,6 +1692,33 @@ ssize_t redolog_t::write(const void* buf, size_t count)
   return written;
 }
 
+int redolog_t::check_format(int fd, const char *subtype)
+{
+  redolog_header_t temp_header;
+
+  int res = bx_read_image(fd, 0, &temp_header, sizeof(redolog_header_t));
+  if (res != STANDARD_HEADER_SIZE) {
+    return HDIMAGE_READ_ERROR;
+  }
+
+  if (strcmp((char*)temp_header.standard.magic, STANDARD_HEADER_MAGIC) != 0) {
+    return HDIMAGE_NO_SIGNATURE;
+  }
+
+  if (strcmp((char*)temp_header.standard.type, REDOLOG_TYPE) != 0) {
+    return HDIMAGE_TYPE_ERROR;
+  }
+  if (strcmp((char*)temp_header.standard.subtype, subtype) != 0) {
+    return HDIMAGE_TYPE_ERROR;
+  }
+
+  if ((dtoh32(temp_header.standard.version) != STANDARD_HEADER_VERSION) &&
+      (dtoh32(temp_header.standard.version) != STANDARD_HEADER_V1)) {
+    return HDIMAGE_VERSION_ERROR;
+  }
+  return HDIMAGE_FORMAT_OK;
+}
+
 bx_bool redolog_t::save_state(const char *backup_fname)
 {
   return hdimage_backup_file(fd, backup_fname);
@@ -1714,6 +1780,11 @@ ssize_t growing_image_t::write(const void* buf, size_t count)
     n += 512;
   }
   return (ret < 0) ? ret : count;
+}
+
+int growing_image_t::check_format(int fd, Bit64u imgsize)
+{
+  return redolog_t::check_format(fd, REDOLOG_SUBTYPE_GROWING);
 }
 
 bx_bool growing_image_t::save_state(const char *backup_fname)
@@ -1792,6 +1863,15 @@ undoable_image_t::~undoable_image_t()
 
 int undoable_image_t::open(const char* pathname)
 {
+  int mode = hdimage_detect_image_mode(pathname);
+  if (mode == BX_HDIMAGE_MODE_UNKNOWN) {
+    BX_PANIC(("r/o disk image mode not detected"));
+    return -1;
+  }
+  if (mode != BX_HDIMAGE_MODE_FLAT) {
+    BX_PANIC(("unsupported r/o disk image mode '%s'", hdimage_mode_names[mode]));
+    return -1;
+  }
   if (ro_disk->open(pathname, O_RDONLY) < 0)
     return -1;
 
@@ -1916,6 +1996,15 @@ int volatile_image_t::open(const char* pathname)
   int filedes;
   Bit32u timestamp;
 
+  int mode = hdimage_detect_image_mode(pathname);
+  if (mode == BX_HDIMAGE_MODE_UNKNOWN) {
+    BX_PANIC(("r/o disk image mode not detected"));
+    return -1;
+  }
+  if (mode != BX_HDIMAGE_MODE_FLAT) {
+    BX_PANIC(("unsupported r/o disk image mode '%s'", hdimage_mode_names[mode]));
+    return -1;
+  }
   if (ro_disk->open(pathname, O_RDONLY)<0)
     return -1;
 
