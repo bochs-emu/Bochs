@@ -295,7 +295,7 @@ void bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         else {
           BX_DEBUG(("master: ICW1: edge triggered mode selected"));
         }
-        BX_SET_INTR(0);
+        BX_CLEAR_INTR();
         return;
       }
 
@@ -743,7 +743,7 @@ void bx_pic_c::service_master_pic(void)
           BX_DEBUG(("signalling IRQ(%u)", (unsigned) irq));
           BX_PIC_THIS s.master_pic.INT = 1;
           BX_PIC_THIS s.master_pic.irq = irq;
-          BX_SET_INTR(1);
+          BX_RAISE_INTR();
           return;
         } /* if (unmasked_requests & ... */
       }
@@ -822,7 +822,7 @@ Bit8u bx_pic_c::IAC(void)
   Bit8u vector;
   Bit8u irq;
 
-  BX_SET_INTR(0);
+  BX_CLEAR_INTR();
   BX_PIC_THIS s.master_pic.INT = 0;
   // Check for spurious interrupt
   if (BX_PIC_THIS s.master_pic.irr == 0) {

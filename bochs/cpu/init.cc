@@ -187,7 +187,7 @@ static bx_cpuid_t *cpuid_factory(BX_CPU_C *cpu)
 // BX_CPU_C constructor
 void BX_CPU_C::initialize(void)
 {
-  BX_CPU_THIS_PTR set_INTR(0);
+  BX_CPU_THIS_PTR clear_INTR();
 
 #if BX_CPU_LEVEL >= 4
   BX_CPU_THIS_PTR cpuid = cpuid_factory(this);

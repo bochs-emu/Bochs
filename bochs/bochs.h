@@ -182,7 +182,8 @@ void print_tree(bx_param_c *node, int level = 0);
 #define BX_TICK1()                  bx_pc_system.tick1()
 #define BX_TICKN(n)                 bx_pc_system.tickn(n)
 #define BX_INTR                     bx_pc_system.INTR
-#define BX_SET_INTR(b)              bx_pc_system.set_INTR(b)
+#define BX_RAISE_INTR()             bx_pc_system.raise_INTR()
+#define BX_CLEAR_INTR()             bx_pc_system.clear_INTR()
 #define BX_HRQ                      bx_pc_system.HRQ
 
 #if BX_SUPPORT_SMP

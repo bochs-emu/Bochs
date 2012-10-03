@@ -157,7 +157,9 @@ public:
   volatile bx_bool kill_bochs_request;
 
   void set_HRQ(bx_bool val);  // set the Hold ReQuest line
-  void set_INTR(bx_bool value); // set the INTR line to value
+
+  void raise_INTR(void);
+  void clear_INTR(void);
 
   // Cpu and System Reset
   int Reset(unsigned type);

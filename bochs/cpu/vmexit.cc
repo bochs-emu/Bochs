@@ -178,18 +178,6 @@ void BX_CPU_C::VMexit_ExtInterrupt(void)
   }
 }
 
-#if BX_SUPPORT_VMX >= 2  
-void BX_CPU_C::VMexit_PreemptionTimerExpired(void)
-{
-  BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
-
-  if (PIN_VMEXIT(VMX_VM_EXEC_CTRL1_VMX_PREEMPTION_TIMER_VMEXIT)) {
-    BX_DEBUG(("VMEXIT: VMX Preemption Timer Expired"));
-    VMexit(VMX_VMEXIT_VMX_PREEMPTION_TIMER_EXPIRED, 0);
-  }
-}
-#endif
-
 void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bx_bool errcode_valid, Bit64u qualification)
 {
   if (! BX_CPU_THIS_PTR in_vmx_guest) return;

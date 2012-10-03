@@ -1105,7 +1105,7 @@ public: // for now...
 
   BX_SMF BX_CPP_INLINE void signal_event(Bit32u event) {
     BX_CPU_THIS_PTR pending_event |= event;
-    BX_CPU_THIS_PTR async_event = 1;
+    if (! is_masked_event(event)) BX_CPU_THIS_PTR async_event = 1;
   }
 
   BX_SMF BX_CPP_INLINE void clear_event(Bit32u event) {
@@ -3976,7 +3976,6 @@ public: // for now...
 #endif
   BX_SMF void TLB_flush(void);
   BX_SMF void TLB_invlpg(bx_address laddr);
-  BX_SMF void set_INTR(bx_bool value);
   BX_SMF void inhibit_interrupts(unsigned mask);
   BX_SMF bx_bool interrupts_inhibited(unsigned mask);
   BX_SMF const char *strseg(bx_segment_reg_t *seg);
@@ -4108,6 +4107,9 @@ public: // for now...
   BX_SMF bx_bool resume_from_system_management_mode(BX_SMM_State *smm_state);
   BX_SMF void    smram_save_state(Bit32u *smm_saved_state);
   BX_SMF bx_bool smram_restore_state(const Bit32u *smm_saved_state);
+
+  BX_SMF void    raise_INTR(void);
+  BX_SMF void    clear_INTR(void);
 
   BX_SMF void    deliver_INIT(void);
   BX_SMF void    deliver_NMI(void);
@@ -4326,9 +4328,6 @@ public: // for now...
   BX_SMF void VMexit_ExtInterrupt(void);
   BX_SMF void VMexit_TaskSwitch(Bit16u tss_selector, unsigned source) BX_CPP_AttrRegparmN(2);
   BX_SMF void VMexit_PAUSE(void);
-#if BX_SUPPORT_VMX >= 2
-  BX_SMF void VMexit_PreemptionTimerExpired(void);  
-#endif
   BX_SMF bx_bool VMexit_CLTS(void);
   BX_SMF void VMexit_MSR(unsigned op, Bit32u msr) BX_CPP_AttrRegparmN(2);
   BX_SMF void VMexit_IO(bxInstruction_c *i, unsigned port, unsigned len) BX_CPP_AttrRegparmN(3);

@@ -251,7 +251,8 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
 #if BX_SUPPORT_VMX >= 2
   else if (is_unmasked_event_pending(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED)) {
     clear_event(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED);
-    VMexit_PreemptionTimerExpired();
+    BX_DEBUG(("VMEXIT: VMX Preemption Timer Expired"));
+    VMexit(VMX_VMEXIT_VMX_PREEMPTION_TIMER_EXPIRED, 0);
   }
 #endif
 #if BX_SUPPORT_VMX
@@ -397,10 +398,15 @@ void BX_CPU_C::deliver_SMI(void)
   signal_event(BX_EVENT_SMI);
 }
 
-void BX_CPU_C::set_INTR(bx_bool value)
+void BX_CPU_C::raise_INTR(void)
 {
-  BX_CPU_THIS_PTR INTR = value;
+  BX_CPU_THIS_PTR INTR = 1;
   BX_CPU_THIS_PTR async_event = 1;
+}
+
+void BX_CPU_C::clear_INTR(void)
+{
+  BX_CPU_THIS_PTR INTR = 0;
 }
 
 #if BX_DEBUGGER

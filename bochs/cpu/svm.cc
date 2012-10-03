@@ -950,6 +950,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMRUN(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR in_svm_guest = 1;
   BX_CPU_THIS_PTR svm_gif = 1;
+  BX_CPU_THIS_PTR async_event = 1;
 
   //
   // Step 4: Inject events to the guest
@@ -1108,7 +1109,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLGI(bxInstruction_c *i)
   }
 
   BX_CPU_THIS_PTR svm_gif = 0;
-  BX_CPU_THIS_PTR async_event = 1;
 #endif
 
   BX_NEXT_TRACE(i);

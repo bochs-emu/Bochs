@@ -1066,8 +1066,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.l            = 0;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.avl          = 0; /* available for use by system */
 
-    writeEFlags(read_eflags() & (~MSR_FMASK), EFlagsValidMask);
-    BX_CPU_THIS_PTR clear_RF();
+    writeEFlags(read_eflags() & ~MSR_FMASK & ~(EFlagsRFMask), EFlagsValidMask);
     RIP = temp_RIP;
   }
   else

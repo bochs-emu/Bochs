@@ -880,7 +880,6 @@ Bit8u bx_local_apic_c::acknowledge_int(void)
   if(!INTR)
     BX_PANIC(("APIC %d acknowledged an interrupt, but INTR=0", apic_id));
 
-  BX_ASSERT(INTR);
   int vector = highest_priority_int(irr);
   if (vector < 0) goto spurious;
   if((vector & 0xf0) <= get_ppr()) goto spurious;
@@ -893,13 +892,11 @@ Bit8u bx_local_apic_c::acknowledge_int(void)
     print_status();
   }
   INTR = 0;
-  cpu->async_event = 1;
   service_local_apic();  // will set INTR again if another is ready
   return vector;
 
 spurious:
   INTR = 0;
-  cpu->async_event = 1;
   return spurious_vector;
 }
 
