@@ -187,8 +187,6 @@ static bx_cpuid_t *cpuid_factory(BX_CPU_C *cpu)
 // BX_CPU_C constructor
 void BX_CPU_C::initialize(void)
 {
-  BX_CPU_THIS_PTR clear_INTR();
-
 #if BX_CPU_LEVEL >= 4
   BX_CPU_THIS_PTR cpuid = cpuid_factory(this);
   if (! BX_CPU_THIS_PTR cpuid)
@@ -627,7 +625,6 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_SIMPLE32(cpu, pending_event);
   BXRS_HEX_PARAM_SIMPLE32(cpu, event_mask);
   BXRS_HEX_PARAM_SIMPLE32(cpu, async_event);
-  BXRS_PARAM_BOOL(cpu, INTR, INTR);
 
 #if BX_X86_DEBUGGER
   BXRS_PARAM_BOOL(cpu, in_repeat, in_repeat);

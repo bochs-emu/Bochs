@@ -472,12 +472,6 @@ extern const char* cpu_mode_string(unsigned cpu_mode);
 
 #define IsValidPhyAddr(addr) ((addr & BX_PHY_ADDRESS_RESERVED_BITS) == 0)
 
-#if BX_SUPPORT_APIC
-  #define BX_CPU_INTR  (BX_CPU_THIS_PTR INTR || BX_CPU_THIS_PTR lapic.INTR)
-#else
-  #define BX_CPU_INTR  (BX_CPU_THIS_PTR INTR)
-#endif
-
 #define CACHE_LINE_SIZE 64
 
 class BX_CPU_C;
@@ -595,16 +589,31 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
     }                                                           \
   }
 
-// assert async_event when IF or TF is set
-#define IMPLEMENT_EFLAG_SET_ACCESSOR_IF_TF(name,bitnum)         \
-  BX_CPP_INLINE void BX_CPU_C::assert_##name() {                \
+// need special handling when IF is set
+#define IMPLEMENT_EFLAG_SET_ACCESSOR_IF(bitnum)                 \
+  BX_CPP_INLINE void BX_CPU_C::assert_IF() {                    \
+    BX_CPU_THIS_PTR eflags |= (1<<bitnum);                      \
+    handleInterruptMaskChange();                                \
+  }                                                             \
+  BX_CPP_INLINE void BX_CPU_C::clear_IF() {                     \
+    BX_CPU_THIS_PTR eflags &= ~(1<<bitnum);                     \
+    handleInterruptMaskChange();                                \
+  }                                                             \
+  BX_CPP_INLINE void BX_CPU_C::set_IF(bx_bool val) {            \
+    if (val) assert_IF();                                       \
+    else clear_IF();                                            \
+  }
+
+// assert async_event when TF is set
+#define IMPLEMENT_EFLAG_SET_ACCESSOR_TF(bitnum)                 \
+  BX_CPP_INLINE void BX_CPU_C::assert_TF() {                    \
     BX_CPU_THIS_PTR async_event = 1;                            \
     BX_CPU_THIS_PTR eflags |= (1<<bitnum);                      \
   }                                                             \
-  BX_CPP_INLINE void BX_CPU_C::clear_##name() {                 \
+  BX_CPP_INLINE void BX_CPU_C::clear_TF() {                     \
     BX_CPU_THIS_PTR eflags &= ~(1<<bitnum);                     \
   }                                                             \
-  BX_CPP_INLINE void BX_CPU_C::set_##name(bx_bool val) {        \
+  BX_CPP_INLINE void BX_CPU_C::set_TF(bx_bool val) {            \
     if (val) BX_CPU_THIS_PTR async_event = 1;                   \
     BX_CPU_THIS_PTR eflags =                                    \
       (BX_CPU_THIS_PTR eflags&~(1<<bitnum))|((val)<<bitnum);    \
@@ -1090,15 +1099,17 @@ public: // for now...
 #define BX_ACTIVITY_STATE_MWAIT_IF      (5)
   unsigned activity_state;
 
-#define BX_EVENT_NMI                          (1<<0)
-#define BX_EVENT_SMI                          (1<<1)
-#define BX_EVENT_INIT                         (1<<2)
-#define BX_EVENT_CODE_BREAKPOINT_ASSIST       (1<<3)
-#define BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED (1<<4)
-#define BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING (1<<5)
-#define BX_EVENT_VMX_NMI_WINDOW_EXITING       (1<<6)
-#define BX_EVENT_SVM_VIRQ_PENDING             (1<<7)
-// later the event list will grow rapidly
+#define BX_EVENT_NMI                          (1 <<  0)
+#define BX_EVENT_SMI                          (1 <<  1)
+#define BX_EVENT_INIT                         (1 <<  2)
+#define BX_EVENT_CODE_BREAKPOINT_ASSIST       (1 <<  3)
+#define BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED (1 <<  4)
+#define BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING (1 <<  5)
+#define BX_EVENT_VMX_NMI_WINDOW_EXITING       (1 <<  6)
+#define BX_EVENT_SVM_VIRQ_PENDING             (1 <<  7)
+#define BX_EVENT_PENDING_VMX_VIRTUAL_INTR     (1 <<  8)
+#define BX_EVENT_PENDING_INTR                 (1 <<  9)
+#define BX_EVENT_PENDING_LAPIC_INTR           (1 << 10)
   Bit32u  pending_event;
   Bit32u  event_mask;
   Bit32u  async_event;
@@ -1124,18 +1135,15 @@ public: // for now...
     return (BX_CPU_THIS_PTR event_mask & event) != 0;
   }
 
-  BX_SMF BX_CPP_INLINE bx_bool is_pending(void) {
-    return (BX_CPU_THIS_PTR pending_event) != 0;
-  }
-  BX_SMF BX_CPP_INLINE bx_bool is_unmasked_event_pending() {
-    return (BX_CPU_THIS_PTR pending_event & ~BX_CPU_THIS_PTR event_mask) != 0;
-  }
-
   BX_SMF BX_CPP_INLINE bx_bool is_pending(Bit32u event) {
     return (BX_CPU_THIS_PTR pending_event & event) != 0;
   }
   BX_SMF BX_CPP_INLINE bx_bool is_unmasked_event_pending(Bit32u event) {
     return (BX_CPU_THIS_PTR pending_event & ~BX_CPU_THIS_PTR event_mask & event) != 0;
+  }
+
+  BX_SMF BX_CPP_INLINE Bit32u unmasked_events_pending(void) {
+    return (BX_CPU_THIS_PTR pending_event & ~BX_CPU_THIS_PTR event_mask);
   }
 
 #define BX_ASYNC_EVENT_STOP_TRACE (1<<31)
@@ -1146,7 +1154,6 @@ public: // for now...
   bx_bool  in_smm;
   unsigned cpu_mode;
   bx_bool  user_pl;
-  bx_bool  INTR;
 #if BX_CPU_LEVEL >= 5
   bx_bool  ignore_bad_msrs;
 #endif
@@ -3564,8 +3571,6 @@ public: // for now...
 // <TAG-CLASS-CPU-END>
 
 #if BX_DEBUGGER
-  BX_SMF void       dbg_take_irq(void);
-  BX_SMF void       dbg_force_interrupt(unsigned vector);
   BX_SMF void       dbg_take_dma(void);
   BX_SMF bx_bool    dbg_set_reg(unsigned reg, Bit32u val);
   BX_SMF bx_bool    dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no);
@@ -3597,7 +3602,6 @@ public: // for now...
 #endif
   BX_SMF bx_bool handleAsyncEvent(void);
   BX_SMF bx_bool handleWaitForEvent(void);
-  BX_SMF bx_bool interrupts_enabled(void);
   BX_SMF void InterruptAcknowledge(void);
 
   BX_SMF int fetchDecode32(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage) BX_CPP_AttrRegparmN(3);
@@ -4014,6 +4018,7 @@ public: // for now...
   BX_SMF void shutdown(void);
   BX_SMF void handleCpuModeChange(void);
   BX_SMF void handleCpuContextChange(void);
+  BX_SMF void handleInterruptMaskChange(void);
 #if BX_CPU_LEVEL >= 4
   BX_SMF void handleAlignmentCheck(void);
 #endif
@@ -4781,20 +4786,20 @@ IMPLEMENT_EFLAG_ACCESSOR   (DF,  10)
 IMPLEMENT_EFLAG_ACCESSOR   (IF,   9)
 IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 
-IMPLEMENT_EFLAG_SET_ACCESSOR      (ID,  21)
-IMPLEMENT_EFLAG_SET_ACCESSOR      (VIP, 20)
-IMPLEMENT_EFLAG_SET_ACCESSOR      (VIF, 19)
+IMPLEMENT_EFLAG_SET_ACCESSOR   (ID,  21)
+IMPLEMENT_EFLAG_SET_ACCESSOR   (VIP, 20)
+IMPLEMENT_EFLAG_SET_ACCESSOR   (VIF, 19)
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-IMPLEMENT_EFLAG_SET_ACCESSOR_AC   (     18)
+IMPLEMENT_EFLAG_SET_ACCESSOR_AC(     18)
 #else
-IMPLEMENT_EFLAG_SET_ACCESSOR      (AC,  18)
+IMPLEMENT_EFLAG_SET_ACCESSOR   (AC,  18)
 #endif
-IMPLEMENT_EFLAG_SET_ACCESSOR_VM   (     17)
-IMPLEMENT_EFLAG_SET_ACCESSOR_RF   (     16)
-IMPLEMENT_EFLAG_SET_ACCESSOR      (NT,  14)
-IMPLEMENT_EFLAG_SET_ACCESSOR      (DF,  10)
-IMPLEMENT_EFLAG_SET_ACCESSOR_IF_TF(IF,   9)
-IMPLEMENT_EFLAG_SET_ACCESSOR_IF_TF(TF,   8)
+IMPLEMENT_EFLAG_SET_ACCESSOR_VM(     17)
+IMPLEMENT_EFLAG_SET_ACCESSOR_RF(     16)
+IMPLEMENT_EFLAG_SET_ACCESSOR   (NT,  14)
+IMPLEMENT_EFLAG_SET_ACCESSOR   (DF,  10)
+IMPLEMENT_EFLAG_SET_ACCESSOR_IF(      9)
+IMPLEMENT_EFLAG_SET_ACCESSOR_TF(      8)
                                
 #define BX_TASK_FROM_CALL       0
 #define BX_TASK_FROM_IRET       1

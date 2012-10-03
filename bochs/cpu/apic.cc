@@ -251,8 +251,6 @@ void bx_local_apic_c::reset(unsigned type)
 
   mode = BX_APIC_XAPIC_MODE;
 
-  INTR = 0;
-
   if (xapic)
     apic_version_id = 0x00050014; // P4 has 6 LVT entries
   else 
@@ -781,7 +779,9 @@ void bx_local_apic_c::service_local_apic(void)
     BX_INFO(("service_local_apic()"));
     print_status();
   }
-  if(INTR) return;  // INTR already up; do nothing
+
+  if(cpu->is_pending(BX_EVENT_PENDING_LAPIC_INTR)) return;  // INTR already up; do nothing
+
   // find first interrupt in irr.
   int first_irr = highest_priority_int(irr);
   if (first_irr < 0) return;   // no interrupts, leave INTR=0
@@ -798,8 +798,7 @@ void bx_local_apic_c::service_local_apic(void)
   // acknowledges, we will run highest_priority_int again and
   // return it.
   BX_DEBUG(("service_local_apic(): setting INTR=1 for vector 0x%02x", first_irr));
-  INTR = 1;
-  cpu->async_event = 1;
+  cpu->signal_event(BX_EVENT_PENDING_LAPIC_INTR);
 }
 
 bx_bool bx_local_apic_c::deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode)
@@ -877,7 +876,7 @@ void bx_local_apic_c::untrigger_irq(Bit8u vector, unsigned trigger_mode)
 Bit8u bx_local_apic_c::acknowledge_int(void)
 {
   // CPU calls this when it is ready to service one interrupt
-  if(!INTR)
+  if(! cpu->is_pending(BX_EVENT_PENDING_LAPIC_INTR))
     BX_PANIC(("APIC %d acknowledged an interrupt, but INTR=0", apic_id));
 
   int vector = highest_priority_int(irr);
@@ -891,12 +890,13 @@ Bit8u bx_local_apic_c::acknowledge_int(void)
     BX_INFO(("Status after setting isr:"));
     print_status();
   }
-  INTR = 0;
+
+  cpu->clear_event(BX_EVENT_PENDING_LAPIC_INTR);
   service_local_apic();  // will set INTR again if another is ready
   return vector;
 
 spurious:
-  INTR = 0;
+  cpu->clear_event(BX_EVENT_PENDING_LAPIC_INTR);
   return spurious_vector;
 }
 
@@ -1393,7 +1393,6 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
   BXRS_DEC_PARAM_SIMPLE(lapic, timer_handle);
   BXRS_PARAM_BOOL(lapic, timer_active, timer_active);
   BXRS_HEX_PARAM_SIMPLE(lapic, ticksInitial);
-  BXRS_PARAM_BOOL(lapic, INTR, INTR);
 
 #if BX_SUPPORT_VMX >= 2
   BXRS_DEC_PARAM_SIMPLE(lapic, vmx_timer_handle);

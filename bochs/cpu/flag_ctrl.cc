@@ -142,7 +142,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::STI(bxInstruction_c *i)
   if (! BX_CPU_THIS_PTR get_IF()) {
     BX_CPU_THIS_PTR assert_IF();
     inhibit_interrupts(BX_INHIBIT_INTERRUPTS);
-    BX_CPU_THIS_PTR async_event = 1;
   }
 
   BX_NEXT_INSTR(i);

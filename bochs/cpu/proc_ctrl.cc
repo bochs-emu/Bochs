@@ -451,10 +451,15 @@ void BX_CPU_C::handleCpuContextChange(void)
 
   invalidate_prefetch_q();
   invalidate_stack_cache();
+
+  handleInterruptMaskChange();
+
 #if BX_CPU_LEVEL >= 4
   handleAlignmentCheck();
 #endif
+
   handleCpuModeChange();
+
 #if BX_CPU_LEVEL >= 6
   handleSseModeChange();
 #if BX_SUPPORT_AVX

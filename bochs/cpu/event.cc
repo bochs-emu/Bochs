@@ -33,7 +33,7 @@ bx_bool BX_CPU_C::handleWaitForEvent(void)
   // an interrupt wakes up the CPU.
   while (1)
   {
-    if ((BX_CPU_INTR && (BX_CPU_THIS_PTR get_IF() || BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF)) ||
+    if ((is_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR) && (BX_CPU_THIS_PTR get_IF() || BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF)) ||
          is_pending(BX_EVENT_NMI | BX_EVENT_SMI | BX_EVENT_INIT | BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED | BX_EVENT_VMX_NMI_WINDOW_EXITING))
     {
       // interrupt ends the HALT condition
@@ -87,14 +87,6 @@ bx_bool BX_CPU_C::handleWaitForEvent(void)
   return 0;
 }
 
-BX_CPP_INLINE bx_bool BX_CPU_C::interrupts_enabled(void)
-{
-#if BX_SUPPORT_SVM
-  if (BX_CPU_THIS_PTR in_svm_guest && SVM_V_INTR_MASKING) return SVM_HOST_IF;
-#endif
-  return BX_CPU_THIS_PTR get_IF();
-}
-
 void BX_CPU_C::InterruptAcknowledge(void)
 {
   Bit8u vector;
@@ -111,7 +103,7 @@ void BX_CPU_C::InterruptAcknowledge(void)
 
   // NOTE: similar code in ::take_irq()
 #if BX_SUPPORT_APIC
-  if (BX_CPU_THIS_PTR lapic.INTR)
+  if (is_pending(BX_EVENT_PENDING_LAPIC_INTR))
     vector = BX_CPU_THIS_PTR lapic.acknowledge_int();
   else
 #endif
@@ -283,18 +275,12 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
     VMexit(VMX_VMEXIT_INTERRUPT_WINDOW, 0);
   }
 #endif
-  else if (BX_CPU_INTR && BX_DBG_ASYNC_INTR && 
-          (interrupts_enabled()
-#if BX_SUPPORT_VMX
-       || (BX_CPU_THIS_PTR in_vmx_guest && PIN_VMEXIT(VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT))
-#endif
-          ))
+  else if (is_unmasked_event_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR))
   {
     InterruptAcknowledge();
   }
 #if BX_SUPPORT_SVM
-  else if (is_unmasked_event_pending(BX_EVENT_SVM_VIRQ_PENDING) && BX_CPU_THIS_PTR get_IF() &&
-          ((SVM_V_INTR_PRIO > SVM_V_TPR) || SVM_V_IGNORE_TPR))
+  else if (is_unmasked_event_pending(BX_EVENT_SVM_VIRQ_PENDING))
   {
     // virtual interrupt acknowledge
     VirtualInterruptAcknowledge();
@@ -338,15 +324,9 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
   //   Alignment check
   // (handled by rest of the code)
 
-  if (!((BX_CPU_INTR && interrupts_enabled() && SVM_GIF) ||
-        BX_CPU_THIS_PTR debug_trap ||
+  if (!((SVM_GIF && unmasked_events_pending()) || BX_CPU_THIS_PTR debug_trap ||
 //      BX_CPU_THIS_PTR get_TF() || // implies debug_trap is set
-        BX_HRQ ||
-#if BX_SUPPORT_SVM
-        (is_unmasked_event_pending(BX_EVENT_SVM_VIRQ_PENDING) && BX_CPU_THIS_PTR get_IF() &&
-           ((SVM_V_INTR_PRIO > SVM_V_TPR) || SVM_V_IGNORE_TPR)) ||
-#endif
-        is_unmasked_event_pending(~BX_EVENT_SVM_VIRQ_PENDING)))
+        BX_HRQ))
   {
     BX_CPU_THIS_PTR async_event = 0;
   }
@@ -400,44 +380,15 @@ void BX_CPU_C::deliver_SMI(void)
 
 void BX_CPU_C::raise_INTR(void)
 {
-  BX_CPU_THIS_PTR INTR = 1;
-  BX_CPU_THIS_PTR async_event = 1;
+  signal_event(BX_EVENT_PENDING_INTR);
 }
 
 void BX_CPU_C::clear_INTR(void)
 {
-  BX_CPU_THIS_PTR INTR = 0;
+  clear_event(BX_EVENT_PENDING_INTR);
 }
 
 #if BX_DEBUGGER
-
-void BX_CPU_C::dbg_take_irq(void)
-{
-  // NOTE: similar code in ::cpu_loop()
-
-  if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF()) {
-    if (setjmp(BX_CPU_THIS_PTR jmp_buf_env) == 0) {
-      // normal return from setjmp setup
-      unsigned vector = DEV_pic_iac(); // may set INTR with next interrupt
-      BX_CPU_THIS_PTR EXT = 1; // external event
-      BX_CPU_THIS_PTR async_event = 1; // set in case INTR is triggered
-      interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
-    }
-  }
-}
-
-void BX_CPU_C::dbg_force_interrupt(unsigned vector)
-{
-  // Used to force simulator to take an interrupt, without
-  // regard to IF
-
-  if (setjmp(BX_CPU_THIS_PTR jmp_buf_env) == 0) {
-    // normal return from setjmp setup
-    BX_CPU_THIS_PTR EXT = 1; // external event
-    BX_CPU_THIS_PTR async_event = 1; // probably don't need this
-    interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
-  }
-}
 
 void BX_CPU_C::dbg_take_dma(void)
 {

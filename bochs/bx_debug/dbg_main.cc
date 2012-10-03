@@ -2364,12 +2364,6 @@ void bx_dbg_take_command(const char *what, unsigned n)
     if (bx_guard.report.dma)
       dbg_printf("done\n");
   }
-  else if (! strcmp(what, "irq")) {
-    BX_CPU(0)->dbg_take_irq();
-
-    if (bx_guard.report.irq)
-      dbg_printf("done\n");
-  }
   else {
     dbg_printf("Error: Take '%s' not understood.\n", what);
   }

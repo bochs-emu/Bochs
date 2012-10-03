@@ -25,35 +25,38 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::setEFlags(Bit32u val)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::setEFlags(Bit32u new_eflags)
 {
+  Bit32u eflags = BX_CPU_THIS_PTR eflags;
+
   // VM flag could not be set from long mode
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
     if (BX_CPU_THIS_PTR get_VM()) BX_PANIC(("VM is set in long mode !"));
-    val &= ~EFlagsVMMask;
+    new_eflags &= ~EFlagsVMMask;
   }
 #endif
 
-  if (val & EFlagsRFMask) invalidate_prefetch_q();
+  BX_CPU_THIS_PTR eflags = new_eflags;
+  setEFlagsOSZAPC(new_eflags);			// update lazy flags state
 
-  if (val & EFlagsTFMask) {
+  if (BX_CPU_THIS_PTR get_RF()) invalidate_prefetch_q();
+
+  if (BX_CPU_THIS_PTR get_TF()) {
     BX_CPU_THIS_PTR async_event = 1; // TF == 1
   }
 
-  if (val & EFlagsIFMask) {
-    if (! BX_CPU_THIS_PTR get_IF())
-      BX_CPU_THIS_PTR async_event = 1; // IF bit was set
+  if ((eflags ^ new_eflags) & EFlagsIFMask) {
+    handleInterruptMaskChange();
   }
-
-  BX_CPU_THIS_PTR eflags = val;
-  setEFlagsOSZAPC(val);			// update lazy flags state
 
 #if BX_CPU_LEVEL >= 4
   handleAlignmentCheck(/* EFLAGS.AC reloaded */);
 #endif
 
-  handleCpuModeChange(); // VM flag might be changed
+  if ((eflags ^ new_eflags) & EFlagsVMMask) {
+    handleCpuModeChange(); // VM flag was changed
+  }
 }
 
   void BX_CPP_AttrRegparmN(2)
@@ -108,4 +111,52 @@ Bit32u BX_CPU_C::force_flags(void)
     | (newflags & EFlagsOSZAPCMask);
 
   return BX_CPU_THIS_PTR eflags;
+}
+
+void BX_CPU_C::handleInterruptMaskChange(void)
+{
+  if (BX_CPU_THIS_PTR get_IF()) {
+    // EFLAGS.IF was set, unmask all affected events
+    unmask_event(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING |
+                 BX_EVENT_PENDING_INTR |
+                 BX_EVENT_PENDING_LAPIC_INTR |
+                 BX_EVENT_PENDING_VMX_VIRTUAL_INTR);
+
+#if BX_SUPPORT_SVM
+    if (BX_CPU_THIS_PTR in_svm_guest) {
+      if ((SVM_V_INTR_PRIO > SVM_V_TPR) || SVM_V_IGNORE_TPR)
+        unmask_event(BX_EVENT_SVM_VIRQ_PENDING);
+    }
+#endif
+
+    return;
+  }
+ 
+  // EFLAGS.IF was cleared, some events like INTR would be masked
+
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest && PIN_VMEXIT(VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT)) {
+     // if 'External-interrupt exiting' control is set, the value of EFLAGS.IF
+     // doesn't affect interrupt blocking
+     mask_event(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING | BX_EVENT_PENDING_VMX_VIRTUAL_INTR);
+     return;
+  }
+#endif
+
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest && SVM_V_INTR_MASKING) {
+     if (! SVM_HOST_IF)
+       mask_event(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR);
+
+     mask_event(BX_EVENT_SVM_VIRQ_PENDING);
+  }
+  else
+#endif
+  {
+     mask_event(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING |
+                BX_EVENT_PENDING_INTR |
+                BX_EVENT_PENDING_LAPIC_INTR |
+                BX_EVENT_PENDING_VMX_VIRTUAL_INTR |
+                BX_EVENT_SVM_VIRQ_PENDING);
+  }
 }
