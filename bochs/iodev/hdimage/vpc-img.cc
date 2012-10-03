@@ -52,44 +52,31 @@
 #define cpu_to_be32(val) (val)
 #endif
 
-int vpc_image_t::vpc_check_header(const char* _pathname, int* disk_type)
+int vpc_image_t::check_format(int fd, Bit64u imgsize)
 {
-  int filedes, vpc_disk_type;
-  Bit64u imgsize;
+  Bit8u temp_footer_buf[HEADER_SIZE];
   vhd_footer_t *footer;
+  int vpc_disk_type = VHD_DYNAMIC;
 
-  vpc_disk_type = VHD_DYNAMIC;
-
-  if ((filedes = hdimage_open_file(_pathname, O_RDWR, &imgsize, NULL)) < 0) {
-    BX_ERROR(("VPC: cannot open hdimage file", _pathname));
-    return -1;
+  if (bx_read_image(fd, 0, (char*)temp_footer_buf, HEADER_SIZE) != HEADER_SIZE) {
+    return HDIMAGE_READ_ERROR;
   }
 
-  if (bx_read_image(filedes, 0, (char*)footer_buf, HEADER_SIZE) != HEADER_SIZE) {
-    BX_ERROR(("VPC: cannot read image file header", _pathname));
-    return -1;
-  }
-
-  footer = (vhd_footer_t*)footer_buf;
+  footer = (vhd_footer_t*)temp_footer_buf;
   if (strncmp((char*)footer->creator, "conectix", 8)) {
     if (imgsize < HEADER_SIZE) {
-      BX_ERROR(("VPC: signature missed", _pathname));
-      return -1;
+      return HDIMAGE_NO_SIGNATURE;
     }
     // If a fixed disk, the footer is found only at the end of the file
-    if (bx_read_image(filedes, imgsize-HEADER_SIZE, (char*)footer_buf, HEADER_SIZE) != HEADER_SIZE) {
-      return -1;
+    if (bx_read_image(fd, imgsize-HEADER_SIZE, (char*)temp_footer_buf, HEADER_SIZE) != HEADER_SIZE) {
+      return HDIMAGE_READ_ERROR;
     }
     if (strncmp((char*)footer->creator, "conectix", 8)) {
-      BX_ERROR(("VPC: signature missed", _pathname));
-      return -1;
+      return HDIMAGE_NO_SIGNATURE;
     }
     vpc_disk_type = VHD_FIXED;
   }
-  if (disk_type != NULL) {
-    *disk_type = vpc_disk_type;
-  }
-  return filedes;
+  return vpc_disk_type;
 }
 
 int vpc_image_t::open(const char* _pathname)
@@ -99,11 +86,27 @@ int vpc_image_t::open(const char* _pathname)
   vhd_dyndisk_header_t *dyndisk_header;
   Bit8u buf[HEADER_SIZE];
   Bit32u checksum;
+  Bit64u imgsize = 0;
   int disk_type;
 
   pathname = _pathname;
-  if ((fd = vpc_check_header(pathname, &disk_type)) < 0) {
-    ::close(fd);
+  if ((fd = hdimage_open_file(pathname, O_RDWR, &imgsize, NULL)) < 0) {
+    BX_ERROR(("VPC: cannot open hdimage file '%s'", pathname));
+    return -1;
+  }
+
+  disk_type = check_format(fd, imgsize);
+  if (disk_type < 0) {
+    switch (disk_type) {
+      case HDIMAGE_READ_ERROR:
+        BX_ERROR(("VPC: cannot read image file header of '%s'", _pathname));
+        return -1;
+      case HDIMAGE_NO_SIGNATURE:
+        BX_ERROR(("VPC: signature missed in file '%s'", _pathname));
+        return -1;
+    }
+  }
+  if (bx_read_image(fd, 0, (char*)footer_buf, HEADER_SIZE) != HEADER_SIZE) {
     return -1;
   }
   footer = (vhd_footer_t*)footer_buf;
@@ -288,12 +291,19 @@ bx_bool vpc_image_t::save_state(const char *backup_fname)
 void vpc_image_t::restore_state(const char *backup_fname)
 {
   int temp_fd;
+  Bit64u imgsize;
 
-  if ((temp_fd = vpc_check_header(backup_fname, NULL)) < 0) {
+  if ((temp_fd = hdimage_open_file(backup_fname, O_RDWR, &imgsize, NULL)) < 0) {
+    BX_PANIC(("cannot open vpc image backup '%s'", backup_fname));
+    return;
+  }
+
+  if (check_format(temp_fd, imgsize) < HDIMAGE_FORMAT_OK) {
     ::close(temp_fd);
     BX_PANIC(("Could not detect vpc image header"));
     return;
   }
+  ::close(temp_fd);
   close();
   if (!hdimage_copy_file(backup_fname, pathname)) {
     BX_PANIC(("Failed to restore vpc image '%s'", pathname));

@@ -234,7 +234,7 @@ int hdimage_detect_image_mode(const char *pathname)
     result = BX_HDIMAGE_MODE_VMWARE4;
   } else if (growing_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
     result = BX_HDIMAGE_MODE_GROWING;
-  } else if (vpc_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
+  } else if (vpc_image_t::check_format(fd, image_size) >= HDIMAGE_FORMAT_OK) {
     result = BX_HDIMAGE_MODE_VPC;
   } else if (default_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
     result = BX_HDIMAGE_MODE_FLAT;
