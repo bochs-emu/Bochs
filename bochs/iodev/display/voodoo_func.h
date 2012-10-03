@@ -419,7 +419,7 @@ void recompute_texture_params(tmu_state *t)
   t->detailscale = TEXDETAIL_DETAIL_SCALE(t->reg[tDetail].u);
 
   /* no longer dirty */
-  t->regdirty = FALSE;
+  t->regdirty = 0;
 
   /* check for separate RGBA filtering */
   if (TEXDETAIL_SEPARATE_RGBA_FILTER(t->reg[tDetail].u))
@@ -432,8 +432,7 @@ BX_CPP_INLINE Bit32s prepare_tmu(tmu_state *t)
   Bit32s lodbase;
 
   /* if the texture parameters are dirty, update them */
-  if (t->regdirty)
-  {
+  if (t->regdirty) {
     recompute_texture_params(t);
 
     /* ensure that the NCC tables are up to date */
@@ -2014,12 +2013,12 @@ void register_w(Bit32u offset, Bit32u data) {
       if (chips & 2)
       {
         v->tmu[0].reg[regnum].u = data;
-        v->tmu[0].regdirty = TRUE;
+        v->tmu[0].regdirty = 1;
       }
       if (chips & 4)
       {
         v->tmu[1].reg[regnum].u = data;
-        v->tmu[1].regdirty = TRUE;
+        v->tmu[1].regdirty = 1;
       }
       break;
 
@@ -2740,7 +2739,7 @@ void init_tmu(voodoo_state *v, tmu_state *t, voodoo_reg *reg, void *memory, int 
   t->ram = (Bit8u *)memory;
   t->mask = tmem - 1;
   t->reg = reg;
-  t->regdirty = TRUE;
+  t->regdirty = 1;
   t->bilinear_mask = (v->type >= VOODOO_2) ? 0xff : 0xf0;
 
   /* mark the NCC tables dirty and configure their registers */

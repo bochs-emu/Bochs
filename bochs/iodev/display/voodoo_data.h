@@ -1501,7 +1501,7 @@ struct _tmu_state
   Bit8u*      ram;            /* pointer to our RAM */
   Bit32u      mask;           /* mask to apply to pointers */
   voodoo_reg* reg;            /* pointer to our register base */
-  Bit32u      regdirty;       /* true if the LOD/mode/base registers have changed */
+  bx_bool     regdirty;       /* true if the LOD/mode/base registers have changed */
 
   Bit32u      texaddr_mask;   /* mask for texture address */
   Bit8u       texaddr_shift;  /* shift for texture address */
