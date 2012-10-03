@@ -392,6 +392,18 @@ void bx_floppy_ctrl_c::register_state(void)
   }
 }
 
+void bx_floppy_ctrl_c::after_restore_state(void)
+{
+  if (BX_FD_THIS s.statusbar_id[0] >= 0) {
+    if ((BX_FD_THIS s.DOR & 0x10) > 0)
+      bx_gui->statusbar_setitem(BX_FD_THIS s.statusbar_id[0], 1);
+  }
+  if (BX_FD_THIS s.statusbar_id[1] >= 0) {
+    if ((BX_FD_THIS s.DOR & 0x20) > 0)
+      bx_gui->statusbar_setitem(BX_FD_THIS s.statusbar_id[1], 1);
+  }
+}
+
 void bx_floppy_ctrl_c::runtime_config_handler(void *this_ptr)
 {
   bx_floppy_ctrl_c *class_ptr = (bx_floppy_ctrl_c *) this_ptr;
