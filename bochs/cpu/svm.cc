@@ -629,7 +629,6 @@ void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
   // STEP 3: Go back to SVM host
   //
 
-  BX_CPU_THIS_PTR errorno = 0;
   BX_CPU_THIS_PTR EXT = 0;
 
 #if BX_DEBUGGER
@@ -692,8 +691,7 @@ bx_bool BX_CPU_C::SvmInjectEvents(void)
   if (type == BX_HARDWARE_EXCEPTION) {
     // record exception the same way as BX_CPU_C::exception does
     BX_ASSERT(vector < BX_CPU_HANDLED_EXCEPTIONS);
-    BX_CPU_THIS_PTR curr_exception = exceptions_info[vector].exception_type;
-    BX_CPU_THIS_PTR errorno = 1;
+    BX_CPU_THIS_PTR last_exception_type = exceptions_info[vector].exception_type;
   }
 
   ctrls->exitintinfo = ctrls->eventinj & ~0x80000000;
@@ -701,7 +699,7 @@ bx_bool BX_CPU_C::SvmInjectEvents(void)
 
   interrupt(vector, type, push_error, error_code);
 
-  BX_CPU_THIS_PTR errorno = 0; // injection success
+  BX_CPU_THIS_PTR last_exception_type = 0; // error resolved
 
   return 1;
 }
@@ -745,6 +743,8 @@ void BX_CPU_C::SvmInterceptException(unsigned type, unsigned vector, Bit16u errc
 
   BX_CPU_THIS_PTR debug_trap = 0; // clear debug_trap field
   BX_CPU_THIS_PTR inhibit_mask = 0;
+
+  BX_CPU_THIS_PTR last_exception_type = 0; // error resolved
 
   Svm_Vmexit(SVM_VMEXIT_EXCEPTION + vector, (errcode_valid ? errcode : 0), qualification);
 }

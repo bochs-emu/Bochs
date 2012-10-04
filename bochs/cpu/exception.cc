@@ -860,32 +860,30 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
   SvmInterceptException(BX_HARDWARE_EXCEPTION, vector, error_code, push_error);
 #endif
 
-  if (BX_CPU_THIS_PTR errorno > 0) {
-    if (BX_CPU_THIS_PTR errorno > 2 || BX_CPU_THIS_PTR curr_exception == BX_ET_DOUBLE_FAULT) {
-      // restore RIP/RSP to value before error occurred
-      RIP = BX_CPU_THIS_PTR prev_rip;
-      if (BX_CPU_THIS_PTR speculative_rsp)
-        RSP = BX_CPU_THIS_PTR prev_rsp;
+  if (BX_CPU_THIS_PTR last_exception_type == BX_ET_DOUBLE_FAULT) {
+    // restore RIP/RSP to value before error occurred
+    RIP = BX_CPU_THIS_PTR prev_rip;
+    if (BX_CPU_THIS_PTR speculative_rsp)
+      RSP = BX_CPU_THIS_PTR prev_rsp;
 
-      debug(BX_CPU_THIS_PTR prev_rip); // print debug information to the log
+    debug(BX_CPU_THIS_PTR prev_rip); // print debug information to the log
 #if BX_SUPPORT_VMX
-      VMexit_TripleFault();
+    VMexit_TripleFault();
 #endif
 #if BX_DEBUGGER
-      // trap into debugger (similar as done when PANIC occured)
-      bx_debug_break();
+    // trap into debugger (similar as done when PANIC occured)
+    bx_debug_break();
 #endif
-      if (SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get()) {
-        BX_ERROR(("exception(): 3rd (%d) exception with no resolution, shutdown status is %02xh, resetting", vector, DEV_cmos_get_reg(0x0f)));
-        bx_pc_system.Reset(BX_RESET_HARDWARE);
-      }
-      else {
-        BX_PANIC(("exception(): 3rd (%d) exception with no resolution", vector));
-        BX_ERROR(("WARNING: Any simulation after this point is completely bogus !"));
-        shutdown();
-      }
-      longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
+    if (SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get()) {
+      BX_ERROR(("exception(): 3rd (%d) exception with no resolution, shutdown status is %02xh, resetting", vector, DEV_cmos_get_reg(0x0f)));
+      bx_pc_system.Reset(BX_RESET_HARDWARE);
     }
+    else {
+      BX_PANIC(("exception(): 3rd (%d) exception with no resolution", vector));
+      BX_ERROR(("WARNING: Any simulation after this point is completely bogus !"));
+      shutdown();
+    }
+    longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
   }
 
   // note: fault-class exceptions _except_ #DB set RF in
@@ -913,16 +911,15 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
   BX_CPU_THIS_PTR EXT = 1;
 
   /* if we've already had 1st exception, see if 2nd causes a
-   * Double Fault instead.  Otherwise, just record 1st exception
+   * Double Fault instead. Otherwise, just record 1st exception.
    */
-  if (BX_CPU_THIS_PTR errorno > 0 && exception_type != BX_ET_DOUBLE_FAULT) {
-    if (! is_exception_OK[BX_CPU_THIS_PTR curr_exception][exception_type]) {
+  if (exception_type != BX_ET_DOUBLE_FAULT) {
+    if (! is_exception_OK[BX_CPU_THIS_PTR last_exception_type][exception_type]) {
       exception(BX_DF_EXCEPTION, 0);
     }
   }
 
-  BX_CPU_THIS_PTR curr_exception = exception_type;
-  BX_CPU_THIS_PTR errorno++;
+  BX_CPU_THIS_PTR last_exception_type = exception_type;
 
   if (real_mode()) {
     push_error = 0; // not INT, no error code pushed
@@ -930,6 +927,8 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
   }
 
   interrupt(vector, BX_HARDWARE_EXCEPTION, push_error, error_code);
-  BX_CPU_THIS_PTR errorno = 0; // error resolved
+
+  BX_CPU_THIS_PTR last_exception_type = 0; // error resolved
+
   longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
 }

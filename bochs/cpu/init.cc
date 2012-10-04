@@ -1053,7 +1053,7 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
   BX_CPU_THIS_PTR EXT = 0;
-  BX_CPU_THIS_PTR errorno = 0;
+  BX_CPU_THIS_PTR last_exception_type = 0;
 
   // invalidate the code prefetch queue
   BX_CPU_THIS_PTR eipPageBias = 0;

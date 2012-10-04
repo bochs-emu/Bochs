@@ -1089,7 +1089,6 @@ public: // for now...
   bx_bool EXT; /* 1 if processing external interrupt or exception
                 * or if not related to current instruction,
                 * 0 if current CS:IP caused exception */
-  unsigned errorno;   /* signal exception during instruction emulation */
 
 #define BX_ACTIVITY_STATE_ACTIVE        (0)
 #define BX_ACTIVITY_STATE_HLT           (1)
@@ -1166,7 +1165,7 @@ public: // for now...
 
   // for exceptions
   jmp_buf jmp_buf_env;
-  Bit8u curr_exception;
+  unsigned last_exception_type;
 
   // Boundaries of current code page, based on EIP
   bx_address eipPageBias;

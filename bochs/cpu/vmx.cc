@@ -1774,8 +1774,7 @@ void BX_CPU_C::VMenterInjectEvents(void)
   if (type == BX_HARDWARE_EXCEPTION) {
     // record exception the same way as BX_CPU_C::exception does
     BX_ASSERT(vector < BX_CPU_HANDLED_EXCEPTIONS);
-    BX_CPU_THIS_PTR curr_exception = exceptions_info[vector].exception_type;
-    BX_CPU_THIS_PTR errorno = 1;
+    BX_CPU_THIS_PTR last_exception_type = exceptions_info[vector].exception_type;
   }
 
   vm->idt_vector_info = vm->vmentry_interr_info & ~0x80000000;
@@ -1783,7 +1782,7 @@ void BX_CPU_C::VMenterInjectEvents(void)
 
   interrupt(vector, type, push_error, error_code);
 
-  BX_CPU_THIS_PTR errorno = 0; // injection success
+  BX_CPU_THIS_PTR last_exception_type = 0; // error resolved
 }
 
 Bit32u BX_CPU_C::LoadMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
@@ -2244,7 +2243,6 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
 
   mask_event(BX_EVENT_INIT); // INIT is disabled in VMX root mode
 
-  BX_CPU_THIS_PTR errorno = 0;
   BX_CPU_THIS_PTR EXT = 0;
 
 #if BX_DEBUGGER
