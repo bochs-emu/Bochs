@@ -255,8 +255,6 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bx_b
   BX_CPU_THIS_PTR debug_trap = 0;
   BX_CPU_THIS_PTR inhibit_mask = 0;
 
-  BX_CPU_THIS_PTR last_exception_type = 0; // error resolved
-
   Bit32u interruption_info = vector | (type << 8);
   if (errcode_valid)
     interruption_info |= (1 << 11); // error code delivered

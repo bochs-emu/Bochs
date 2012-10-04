@@ -823,7 +823,6 @@ struct BxExceptionInfo exceptions_info[BX_CPU_HANDLED_EXCEPTIONS] = {
 
 // vector:     0..255: vector in IDT
 // error_code: if exception generates and error, push this error code
-// trap:       override exception class to TRAP
 void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
 {
   BX_INSTR_EXCEPTION(BX_CPU_ID, vector, error_code);
@@ -860,40 +859,34 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
   SvmInterceptException(BX_HARDWARE_EXCEPTION, vector, error_code, push_error);
 #endif
 
-  if (BX_CPU_THIS_PTR last_exception_type == BX_ET_DOUBLE_FAULT) {
-    // restore RIP/RSP to value before error occurred
-    RIP = BX_CPU_THIS_PTR prev_rip;
-    if (BX_CPU_THIS_PTR speculative_rsp)
-      RSP = BX_CPU_THIS_PTR prev_rsp;
-
-    debug(BX_CPU_THIS_PTR prev_rip); // print debug information to the log
-#if BX_SUPPORT_VMX
-    VMexit_TripleFault();
-#endif
-#if BX_DEBUGGER
-    // trap into debugger (similar as done when PANIC occured)
-    bx_debug_break();
-#endif
-    if (SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get()) {
-      BX_ERROR(("exception(): 3rd (%d) exception with no resolution, shutdown status is %02xh, resetting", vector, DEV_cmos_get_reg(0x0f)));
-      bx_pc_system.Reset(BX_RESET_HARDWARE);
-    }
-    else {
-      BX_PANIC(("exception(): 3rd (%d) exception with no resolution", vector));
-      BX_ERROR(("WARNING: Any simulation after this point is completely bogus !"));
-      shutdown();
-    }
-    longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
-  }
-
-  // note: fault-class exceptions _except_ #DB set RF in
-  //       eflags image.
   if (exception_class == BX_EXCEPTION_CLASS_FAULT)
   {
     // restore RIP/RSP to value before error occurred
     RIP = BX_CPU_THIS_PTR prev_rip;
     if (BX_CPU_THIS_PTR speculative_rsp)
       RSP = BX_CPU_THIS_PTR prev_rsp;
+
+    if (BX_CPU_THIS_PTR last_exception_type == BX_ET_DOUBLE_FAULT)
+    {
+      debug(BX_CPU_THIS_PTR prev_rip); // print debug information to the log
+#if BX_SUPPORT_VMX
+      VMexit_TripleFault();
+#endif
+#if BX_DEBUGGER
+      // trap into debugger (similar as done when PANIC occured)
+      bx_debug_break();
+#endif
+      if (SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get()) {
+        BX_ERROR(("exception(): 3rd (%d) exception with no resolution, shutdown status is %02xh, resetting", vector, DEV_cmos_get_reg(0x0f)));
+        bx_pc_system.Reset(BX_RESET_HARDWARE);
+      }
+      else {
+        BX_PANIC(("exception(): 3rd (%d) exception with no resolution", vector));
+        BX_ERROR(("WARNING: Any simulation after this point is completely bogus !"));
+        shutdown();
+      }
+      longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
+    }
 
     if (vector != BX_DB_EXCEPTION) BX_CPU_THIS_PTR assert_RF();
   }

@@ -630,6 +630,7 @@ void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
   //
 
   BX_CPU_THIS_PTR EXT = 0;
+  BX_CPU_THIS_PTR last_exception_type = 0;
 
 #if BX_DEBUGGER
   if (BX_CPU_THIS_PTR vmexit_break) {
@@ -743,8 +744,6 @@ void BX_CPU_C::SvmInterceptException(unsigned type, unsigned vector, Bit16u errc
 
   BX_CPU_THIS_PTR debug_trap = 0; // clear debug_trap field
   BX_CPU_THIS_PTR inhibit_mask = 0;
-
-  BX_CPU_THIS_PTR last_exception_type = 0; // error resolved
 
   Svm_Vmexit(SVM_VMEXIT_EXCEPTION + vector, (errcode_valid ? errcode : 0), qualification);
 }

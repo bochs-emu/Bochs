@@ -2244,6 +2244,7 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
   mask_event(BX_EVENT_INIT); // INIT is disabled in VMX root mode
 
   BX_CPU_THIS_PTR EXT = 0;
+  BX_CPU_THIS_PTR last_exception_type = 0;
 
 #if BX_DEBUGGER
   if (BX_CPU_THIS_PTR vmexit_break) {
