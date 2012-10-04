@@ -1181,29 +1181,20 @@ bx_bool sparse_image_t::save_state(const char *backup_fname)
 
 void sparse_image_t::restore_state(const char *backup_fname)
 {
-  sparse_header_t temp_header;
+  int backup_fd;
+  Bit64u imgsize = 0;
   char *temp_pathname;
 
-  int backup_fd = ::open(backup_fname, O_RDONLY
-#ifdef O_BINARY
-   | O_BINARY
-#endif
-   );
-  if (backup_fd < 0) {
+  if ((backup_fd = hdimage_open_file(backup_fname, O_RDONLY, &imgsize, NULL)) < 0) {
     BX_PANIC(("Could not open sparse image backup"));
     return;
   }
-  if (::read(backup_fd, &temp_header, sizeof(header)) != sizeof(header)) {
+  if (check_format(backup_fd, imgsize) != HDIMAGE_FORMAT_OK) {
     ::close(backup_fd);
-    BX_PANIC(("Could not read sparse image header"));
-    return;
-  }
-  ::close(backup_fd);
-  if ((dtoh32(temp_header.magic) != SPARSE_HEADER_MAGIC) ||
-      (dtoh32(temp_header.version) != SPARSE_HEADER_VERSION)) {
     BX_PANIC(("Could not detect sparse image header"));
     return;
   }
+  ::close(backup_fd);
   temp_pathname = strdup(pathname);
   close();
   if (!hdimage_copy_file(backup_fname, temp_pathname)) {
@@ -1418,7 +1409,12 @@ int redolog_t::create(int filedes, const char* type, Bit64u size)
 
 int redolog_t::open(const char* filename, const char *type)
 {
-  fd = ::open(filename, O_RDWR
+  return open(filename, type, O_RDWR);
+}
+
+int redolog_t::open(const char* filename, const char *type, int flags)
+{
+  fd = ::open(filename, flags
 #ifdef O_BINARY
               | O_BINARY
 #endif
@@ -1795,7 +1791,7 @@ bx_bool growing_image_t::save_state(const char *backup_fname)
 void growing_image_t::restore_state(const char *backup_fname)
 {
   redolog_t *temp_redolog = new redolog_t();
-  if (temp_redolog->open(backup_fname, REDOLOG_SUBTYPE_GROWING) < 0) {
+  if (temp_redolog->open(backup_fname, REDOLOG_SUBTYPE_GROWING, O_RDONLY) < 0) {
     delete temp_redolog;
     BX_PANIC(("Can't open growing image backup '%s'", backup_fname));
     return;
@@ -1949,7 +1945,7 @@ bx_bool undoable_image_t::save_state(const char *backup_fname)
 void undoable_image_t::restore_state(const char *backup_fname)
 {
   redolog_t *temp_redolog = new redolog_t();
-  if (temp_redolog->open(backup_fname, REDOLOG_SUBTYPE_UNDOABLE) < 0) {
+  if (temp_redolog->open(backup_fname, REDOLOG_SUBTYPE_UNDOABLE, O_RDONLY) < 0) {
     delete temp_redolog;
     BX_PANIC(("Can't open undoable redolog backup '%s'", backup_fname));
     return;
@@ -2101,7 +2097,7 @@ bx_bool volatile_image_t::save_state(const char *backup_fname)
 void volatile_image_t::restore_state(const char *backup_fname)
 {
   redolog_t *temp_redolog = new redolog_t();
-  if (temp_redolog->open(backup_fname, REDOLOG_SUBTYPE_VOLATILE) < 0) {
+  if (temp_redolog->open(backup_fname, REDOLOG_SUBTYPE_VOLATILE, O_RDONLY) < 0) {
     delete temp_redolog;
     BX_PANIC(("Can't open volatile redolog backup '%s'", backup_fname));
     return;

@@ -402,6 +402,7 @@ class redolog_t
       int create(const char* filename, const char* type, Bit64u size);
       int create(int filedes, const char* type, Bit64u size);
       int open(const char* filename, const char* type);
+      int open(const char* filename, const char* type, int flags);
       void close();
       Bit64u get_size();
       Bit32u get_timestamp();

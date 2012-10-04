@@ -293,7 +293,7 @@ void vpc_image_t::restore_state(const char *backup_fname)
   int temp_fd;
   Bit64u imgsize;
 
-  if ((temp_fd = hdimage_open_file(backup_fname, O_RDWR, &imgsize, NULL)) < 0) {
+  if ((temp_fd = hdimage_open_file(backup_fname, O_RDONLY, &imgsize, NULL)) < 0) {
     BX_PANIC(("cannot open vpc image backup '%s'", backup_fname));
     return;
   }
