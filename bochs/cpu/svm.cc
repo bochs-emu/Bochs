@@ -659,7 +659,11 @@ bx_bool BX_CPU_C::SvmInjectEvents(void)
 
   switch(type) {
     case BX_NMI:
+      mask_event(BX_EVENT_NMI | BX_EVENT_VMX_NMI_WINDOW_EXITING);
+      BX_CPU_THIS_PTR EXT = 1;
       vector = 2;
+      break;
+
     case BX_EXTERNAL_INTERRUPT:
       BX_CPU_THIS_PTR EXT = 1;
       break;

@@ -39,7 +39,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx) {
     if (BX_CPU_THIS_PTR in_vmx_guest) {
-      BX_ERROR(("VMEXIT: RSM in VMX non-root operation"));
       VMexit(VMX_VMEXIT_RSM, 0);
     }
     else {

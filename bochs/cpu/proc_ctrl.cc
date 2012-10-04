@@ -72,7 +72,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    BX_DEBUG(("VMEXIT: CPUID in VMX non-root operation"));
     VMexit(VMX_VMEXIT_CPUID, 0);
   }
 #endif
@@ -150,7 +149,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (VMEXIT(VMX_VM_EXEC_CTRL2_HLT_VMEXIT)) {
-      BX_DEBUG(("VMEXIT: HLT"));
       VMexit(VMX_VMEXIT_HLT, 0);
     }
   }
@@ -199,7 +197,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVD(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    BX_ERROR(("VMEXIT: INVD in VMX non-root operation"));
     VMexit(VMX_VMEXIT_INVD, 0);
   }
 #endif
@@ -232,7 +229,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT)) {
-      BX_ERROR(("VMEXIT: WBINVD in VMX non-root operation"));
       VMexit(VMX_VMEXIT_WBINVD, 0);
     }
   }
@@ -479,7 +475,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)  {
     if (VMEXIT(VMX_VM_EXEC_CTRL2_RDPMC_VMEXIT)) {
-      BX_DEBUG(("VMEXIT: RDPMC"));
       VMexit(VMX_VMEXIT_RDPMC, 0);
     }
   }
@@ -554,7 +549,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (VMEXIT(VMX_VM_EXEC_CTRL2_RDTSC_VMEXIT)) {
-      BX_DEBUG(("VMEXIT: RDTSC"));
       VMexit(VMX_VMEXIT_RDTSC, 0);
     }
   }
@@ -599,7 +593,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (VMEXIT(VMX_VM_EXEC_CTRL2_RDTSC_VMEXIT)) {
-      BX_DEBUG(("VMEXIT: RDTSCP"));
       VMexit(VMX_VMEXIT_RDTSCP, 0);
     }
   }
@@ -663,7 +656,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (VMEXIT(VMX_VM_EXEC_CTRL2_MONITOR_VMEXIT)) {
-      BX_DEBUG(("VMEXIT: MONITOR"));
       VMexit(VMX_VMEXIT_MONITOR, 0);
     }
   }
@@ -739,7 +731,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (VMEXIT(VMX_VM_EXEC_CTRL2_MWAIT_VMEXIT)) {
-      BX_DEBUG(("VMEXIT: MWAIT"));
       VMexit(VMX_VMEXIT_MWAIT, BX_CPU_THIS_PTR monitor.armed);
     }
   }

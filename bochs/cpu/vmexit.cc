@@ -144,7 +144,6 @@ void BX_CPU_C::VMexit_PAUSE(void)
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
   if (VMEXIT(VMX_VM_EXEC_CTRL2_PAUSE_VMEXIT)) {
-    BX_DEBUG(("VMEXIT: PAUSE"));
     VMexit(VMX_VMEXIT_PAUSE, 0);
   }
 
@@ -271,8 +270,6 @@ void BX_CPU_C::VMexit_TripleFault(void)
 {
   if (! BX_CPU_THIS_PTR in_vmx_guest) return;
 
-  BX_ERROR(("VMEXIT: triple fault"));
-
   // VMEXIT is not considered to occur during event delivery if it results
   // in a triple fault exception (that causes VMEXIT directly)
   BX_CPU_THIS_PTR in_event = 0;
@@ -283,8 +280,6 @@ void BX_CPU_C::VMexit_TripleFault(void)
 void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_TaskSwitch(Bit16u tss_selector, unsigned source)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
-
-  BX_ERROR(("VMEXIT: task switch"));
 
   VMexit(VMX_VMEXIT_TASK_SWITCH, tss_selector | (source << 30));
 }
@@ -478,8 +473,6 @@ bx_bool BX_CPU_C::VMexit_CLTS(void)
 
   if (vm->vm_cr0_mask & vm->vm_cr0_read_shadow & 0x8)
   {
-    BX_DEBUG(("VMEXIT: CLTS"));
-
     // all rest of the fields cleared to zero
     Bit64u qualification = VMX_VMEXIT_CR_ACCESS_CLTS << 4;
 
@@ -546,9 +539,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CR3_Read(bxInstruction_c *i)
 
   if (VMEXIT(VMX_VM_EXEC_CTRL2_CR3_READ_VMEXIT)) {
     BX_DEBUG(("VMEXIT: CR3 read"));
-
     Bit64u qualification = 3 | (VMX_VMEXIT_CR_ACCESS_CR_READ << 4) | (i->dst() << 8);
-
     VMexit(VMX_VMEXIT_CR_ACCESS, qualification);
   }
 }
@@ -593,9 +584,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CR8_Read(bxInstruction_c *i)
 
   if (VMEXIT(VMX_VM_EXEC_CTRL2_CR8_READ_VMEXIT)) {
     BX_DEBUG(("VMEXIT: CR8 read"));
-
     Bit64u qualification = 8 | (VMX_VMEXIT_CR_ACCESS_CR_READ << 4) | (i->dst() << 8);
-
     VMexit(VMX_VMEXIT_CR_ACCESS, qualification);
   }
 }

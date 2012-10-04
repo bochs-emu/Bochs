@@ -195,7 +195,6 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
 #endif
 #if BX_SUPPORT_VMX
     if (BX_CPU_THIS_PTR in_vmx_guest) {
-      BX_ERROR(("VMEXIT: INIT pin asserted"));
       VMexit(VMX_VMEXIT_INIT, 0);
     }
 #endif
@@ -243,13 +242,11 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
 #if BX_SUPPORT_VMX >= 2
   else if (is_unmasked_event_pending(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED)) {
     clear_event(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED);
-    BX_DEBUG(("VMEXIT: VMX Preemption Timer Expired"));
     VMexit(VMX_VMEXIT_VMX_PREEMPTION_TIMER_EXPIRED, 0);
   }
 #endif
 #if BX_SUPPORT_VMX
   else if (is_unmasked_event_pending(BX_EVENT_VMX_NMI_WINDOW_EXITING)) {
-    BX_ERROR(("VMEXIT: NMI window exiting"));
     VMexit(VMX_VMEXIT_NMI_WINDOW, 0);
   }
 #endif
@@ -271,7 +268,6 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
 #if BX_SUPPORT_VMX
   else if (is_pending(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING) && BX_CPU_THIS_PTR get_IF()) {
     // interrupt-window exiting
-    BX_DEBUG(("VMEXIT: interrupt window exiting"));
     VMexit(VMX_VMEXIT_INTERRUPT_WINDOW, 0);
   }
 #endif

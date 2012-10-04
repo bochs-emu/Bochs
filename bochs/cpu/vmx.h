@@ -132,7 +132,8 @@ enum VMX_vmexit_reason {
    VMX_VMEXIT_INVPCID = 58,
    VMX_VMEXIT_VMFUNC = 59,
    VMX_VMEXIT_RESERVED60 = 60,
-   VMX_VMEXIT_RDSEED = 61
+   VMX_VMEXIT_RDSEED = 61,
+   VMX_VMEXIT_LAST_REASON
 };
 
 // VMexit on CR register access

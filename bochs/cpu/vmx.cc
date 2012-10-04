@@ -39,6 +39,75 @@ extern bx_bool isValidMSR_PAT(Bit64u pat_msr);
 #endif
 
 ////////////////////////////////////////////////////////////
+// VMEXIT reasons for BX prints
+////////////////////////////////////////////////////////////
+
+static const char *VMX_vmexit_reason_name[] =
+{
+  "Exception or NMI",
+  "External Interrupt",
+  "Triple Fault",
+  "INIT",
+  "SIPI",
+  "I/O SMI (SMM Vmexit)",
+  "SMI (SMM Vmexit)",
+  "Interrupt Window Exiting",
+  "NMI Window Exiting",
+  "Task Switch",
+  "CPUID",
+  "GETSEC",
+  "HLT",
+  "INVD",
+  "INVLPG",
+  "RDPMC",
+  "RDTSC",
+  "RSM",
+  "VMCALL",
+  "VMCLEAR",
+  "VMLAUNCH",
+  "VMPTRLD",
+  "VMPTRST",
+  "VMREAD",
+  "VMRESUME",
+  "VMWRITE",
+  "VMXOFF",
+  "VMXON",
+  "CR Access",
+  "DR Access",
+  "I/O Instruction",
+  "RDMSR",
+  "WRMSR",
+  "VMEntry failure due to invalid guest state",
+  "VMEntry failure due to MSR loading",
+  "Reserved",
+  "MWAIT",
+  "MTF (Monitor Trap Flag)",
+  "Reserved",
+  "MONITOR",
+  "PAUSE",
+  "VMEntry failure due to machine check",
+  "TPR Below Threshold",
+  "APIC Access",
+  "Virtualized EOI",
+  "GDTR/IDTR Access",
+  "LDTR/TR Access",
+  "EPT Violation",
+  "EPT Misconfiguration",
+  "INVEPT",
+  "RDTSCP",
+  "VMX preemption timer expired",
+  "INVVPID",
+  "WBINVD",
+  "XSETBV",
+  "APIC Write Trap",
+  "RDRAND",
+  "INVPCID",
+  "VMFUNC",
+  "Reserved",
+  "RDSEED"
+};
+
+////////////////////////////////////////////////////////////
 // VMCS access
 ////////////////////////////////////////////////////////////
 
@@ -1673,8 +1742,12 @@ void BX_CPU_C::VMenterInjectEvents(void)
   bx_bool is_INT = 0;
   switch(type) {
     case BX_EXTERNAL_INTERRUPT:
-    case BX_NMI:
     case BX_HARDWARE_EXCEPTION:
+      BX_CPU_THIS_PTR EXT = 1;
+      break;
+
+    case BX_NMI:
+      mask_event(BX_EVENT_NMI | BX_EVENT_VMX_NMI_WINDOW_EXITING);
       BX_CPU_THIS_PTR EXT = 1;
       break;
 
@@ -2104,6 +2177,11 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
 
   reason &= 0xffff; /* keep only basic VMEXIT reason */
 
+  if (reason >= VMX_VMEXIT_LAST_REASON)
+    BX_PANIC(("PANIC: broken VMEXIT reason %d", reason));
+  else
+    BX_DEBUG(("VMEXIT reason = %d (%s)", reason, VMX_vmexit_reason_name[reason]));
+
   if (reason != VMX_VMEXIT_EXCEPTION_NMI && reason != VMX_VMEXIT_EXTERNAL_INTERRUPT) {
     VMwrite32(VMCS_32BIT_VMEXIT_INTERRUPTION_INFO, 0);
   }
@@ -2230,7 +2308,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
     VMsucceed();
   }
   else if (BX_CPU_THIS_PTR in_vmx_guest) { // in VMX non-root operation
-    BX_ERROR(("VMEXIT: VMXON in VMX non-root operation"));
     VMexit_Instruction(i, VMX_VMEXIT_VMXON);
   }
   else {
@@ -2254,7 +2331,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXOFF(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    BX_ERROR(("VMEXIT: VMXOFF in VMX non-root operation"));
     VMexit(VMX_VMEXIT_VMXOFF, 0);
   }
 
@@ -2290,7 +2366,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCALL(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    BX_ERROR(("VMEXIT: VMCALL in VMX non-root operation"));
     VMexit(VMX_VMEXIT_VMCALL, 0);
   }
 
@@ -2376,7 +2451,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
   }
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    BX_ERROR(("VMEXIT: VMLAUNCH in VMX non-root operation"));
     VMexit(vmlaunch ? VMX_VMEXIT_VMLAUNCH : VMX_VMEXIT_VMRESUME, 0);
   }
 
@@ -2546,7 +2620,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRLD(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    BX_ERROR(("VMEXIT: VMPTRLD in VMX non-root operation"));
     VMexit_Instruction(i, VMX_VMEXIT_VMPTRLD);
   }
 
@@ -2590,7 +2663,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRST(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    BX_ERROR(("VMEXIT: VMPTRST in VMX non-root operation"));
     VMexit_Instruction(i, VMX_VMEXIT_VMPTRST);
   }
 
@@ -2624,7 +2696,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD_EdGd(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    BX_ERROR(("VMEXIT: VMREAD in VMX non-root operation"));
     VMexit_Instruction(i, VMX_VMEXIT_VMREAD, BX_READ);
   }
 
@@ -2716,7 +2787,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE_GdEd(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    BX_ERROR(("VMEXIT: VMWRITE in VMX non-root operation"));
     VMexit_Instruction(i, VMX_VMEXIT_VMWRITE, BX_WRITE);
   }
 
@@ -2816,7 +2886,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    BX_ERROR(("VMEXIT: VMCLEAR in VMX non-root operation"));
     VMexit_Instruction(i, VMX_VMEXIT_VMCLEAR);
   }
 
@@ -2868,7 +2937,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    BX_ERROR(("VMEXIT: INVEPT in VMX non-root operation"));
     VMexit_Instruction(i, VMX_VMEXIT_INVEPT, BX_READ);
   }
 
@@ -2927,7 +2995,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    BX_ERROR(("VMEXIT: INVVPID in VMX non-root operation"));
     VMexit_Instruction(i, VMX_VMEXIT_INVVPID, BX_READ);
   }
 
@@ -3018,7 +3085,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
     if (VMEXIT(VMX_VM_EXEC_CTRL2_INVLPG_VMEXIT)) {
-      BX_ERROR(("VMEXIT: INVPCID in VMX non-root operation"));
       VMexit_Instruction(i, VMX_VMEXIT_INVPCID, BX_READ);
     }
 #endif
@@ -3104,7 +3170,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::GETSEC(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    BX_ERROR(("VMEXIT: GETSEC in VMX non-root operation"));
     VMexit(VMX_VMEXIT_GETSEC, 0);
   }
 #endif
