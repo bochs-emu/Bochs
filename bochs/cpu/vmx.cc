@@ -726,6 +726,15 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
          }
          break;
 
+       case 7: /* MTF */
+         if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_MONITOR_TRAP_FLAG)) {
+           if (vector != 0) {
+             BX_ERROR(("VMFAIL: VMENTRY bad MTF injection with vector=%d", vector));
+             return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+           }
+         }
+         break;
+
        default:
          BX_ERROR(("VMFAIL: VMENTRY bad injected event type %d", event_type));
          return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
@@ -1739,6 +1748,13 @@ void BX_CPU_C::VMenterInjectEvents(void)
   unsigned push_error = vm->vmentry_interr_info & (1 << 11);
   unsigned error_code = push_error ? vm->vmentry_excep_err_code : 0;
 
+  if (type == 7) {
+    if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_MONITOR_TRAP_FLAG)) {
+      signal_event(BX_EVENT_VMX_MONITOR_TRAP_FLAG);
+      return;
+    }
+  }
+
   bx_bool is_INT = 0;
   switch(type) {
     case BX_EXTERNAL_INTERRUPT:
@@ -2218,7 +2234,8 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
   BX_CPU_THIS_PTR in_vmx_guest = 0;
 
   // entering VMX root mode: clear possibly pending guest VMX events
-  clear_event(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING |
+  clear_event(BX_EVENT_VMX_MONITOR_TRAP_FLAG |
+              BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING |
               BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED |
               BX_EVENT_VMX_NMI_WINDOW_EXITING);
 

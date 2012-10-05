@@ -34,7 +34,10 @@ bx_bool BX_CPU_C::handleWaitForEvent(void)
   while (1)
   {
     if ((is_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR) && (BX_CPU_THIS_PTR get_IF() || BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF)) ||
-         is_pending(BX_EVENT_NMI | BX_EVENT_SMI | BX_EVENT_INIT | BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED | BX_EVENT_VMX_NMI_WINDOW_EXITING))
+         is_pending(BX_EVENT_NMI | BX_EVENT_SMI | BX_EVENT_INIT |
+            BX_EVENT_VMX_MONITOR_TRAP_FLAG |
+            BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED |
+            BX_EVENT_VMX_NMI_WINDOW_EXITING))
     {
       // interrupt ends the HALT condition
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -214,6 +217,10 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
 #endif
   }
 
+  if (is_unmasked_event_pending(BX_EVENT_VMX_MONITOR_TRAP_FLAG)) {
+    VMexit(VMX_VMEXIT_MONITOR_TRAP_FLAG, 0);
+  }
+
   // Priority 4: Traps on Previous Instruction
   //   Breakpoints
   //   Debug Trap Exceptions (TF flag set or data/IO breakpoint)
@@ -241,7 +248,6 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
   }
 #if BX_SUPPORT_VMX >= 2
   else if (is_unmasked_event_pending(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED)) {
-    clear_event(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED);
     VMexit(VMX_VMEXIT_VMX_PREEMPTION_TIMER_EXPIRED, 0);
   }
 #endif
