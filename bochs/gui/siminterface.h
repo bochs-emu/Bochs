@@ -173,6 +173,16 @@ typedef enum {
   N_ACT
 } bx_log_actions;
 
+// normally all action choices are available for all event types. The exclude
+// expression allows some choices to be eliminated if they don't make any
+// sense.  For example, it would be stupid to ignore a panic.
+#define BX_LOG_OPTS_EXCLUDE(type, choice)  (                           \
+   /* can't die or ask, on debug or info events */                     \
+   (type <= LOGLEV_INFO && (choice == ACT_ASK || choice == ACT_FATAL)) \
+   /* can't ignore panics */                                           \
+   || (type == LOGLEV_PANIC && choice == ACT_IGNORE)                   \
+   )
+
 // boot devices (using the same values as the rombios)
 enum {
   BX_BOOT_NONE,

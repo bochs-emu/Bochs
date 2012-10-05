@@ -1969,6 +1969,12 @@ static Bit32s parse_log_options(const char *context, int num_params, char *param
         free(param);
         return -1;
       }
+      // exclude some action / level combinations (see siminterface.h)
+      if (BX_LOG_OPTS_EXCLUDE(level, action)) {
+        PARSE_ERR(("%s: event type '%s' does not support log action '%s'.", context, params[0], actstr));
+        free(param);
+        return -1;
+      }
       if (def_action) {
         SIM->set_default_log_action(level, action);
       } else {

@@ -376,15 +376,6 @@ private:
 #define LOG_OPTS_N_CHOICES_NORMAL 4
 #define LOG_OPTS_N_CHOICES 5   // number of choices, including "no change"
 #define LOG_OPTS_NO_CHANGE 4   // index of "no change"
-// normally all choices are available for all event types. The exclude
-// expression allows some choices to be eliminated if they don't make any
-// sense.  For example, it would be stupid to ignore a panic.
-#define LOG_OPTS_EXCLUDE(type,choice)  ( \
-   /* can't die or ask, on debug or info events */   \
-   (type <= LOGLEV_INFO && (choice == ACT_ASK || choice == ACT_FATAL)) \
-   /* can't ignore panics or errors */ \
-   || (type == LOGLEV_PANIC && choice == ACT_IGNORE) \
-   )
 #define LOG_OPTS_ADV wxT("For additional control over how each device responds to events, use the menu option \"Log ... By Device\".")
   wxFlexGridSizer *gridSizer;
   wxChoice *action[LOG_OPTS_N_TYPES];

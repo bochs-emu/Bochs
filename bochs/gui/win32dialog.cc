@@ -332,7 +332,9 @@ void SetStandardLogOptions(HWND hDlg)
     idx = 0;
     SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_RESETCONTENT, 0, 0);
     for (int action=0; action<5; action++) {
-      if ((level > 1 && action > 0) || (level < 2 && (action < 2 || action > 3))) {
+      // the exclude expression allows some choices not being available if they
+      // don't make any sense.  For example, it would be stupid to ignore a panic.
+      if (!BX_LOG_OPTS_EXCLUDE(level, action)) {
         SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_ADDSTRING, 0, (LPARAM)log_choices[action]);
         SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_SETITEMDATA, idx, action);
         if (action == defchoice[level]) {
@@ -355,7 +357,8 @@ void SetAdvancedLogOptions(HWND hDlg)
     idx = 0;
     SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_RESETCONTENT, 0, 0);
     for (int action=0; action<4; action++) {
-      if ((level > 1 && action > 0) || (level < 2 && action < 2)) {
+      // exclude some action / level combinations (see above)
+      if (!BX_LOG_OPTS_EXCLUDE(level, action)) {
         SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_ADDSTRING, 0, (LPARAM)log_choices[action]);
         SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_SETITEMDATA, idx, action);
         if (action == SIM->get_log_action (mod, level)) {

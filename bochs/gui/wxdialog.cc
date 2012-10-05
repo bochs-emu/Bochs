@@ -349,7 +349,7 @@ void AdvancedLogOptionsDialog::SetAction(int dev, int evtype, int act) {
     }
   }
   // this can happen if one of the choices that is excluded by
-  // ADVLOG_OPTS_EXCLUDE() is used, for example.
+  // BX_LOG_OPTS_EXCLUDE() is used, for example.
   wxLogDebug(wxT("warning: SetAction type=%d act=%d not found"), evtype, act);
 }
 
@@ -1657,7 +1657,7 @@ void LogOptionsDialog::SetAction(int evtype, int a)
     }
   }
   // this can happen if one of the choices that is excluded by
-  // LOG_OPTS_EXCLUDE() is used, for example.
+  // BX_LOG_OPTS_EXCLUDE() is used, for example.
   wxLogDebug(wxT("SetAction type=%d a=%d not found"), evtype, a);
 }
 
@@ -1772,9 +1772,9 @@ wxChoice *makeLogOptionChoiceBox (wxWindow *parent,
   int lastChoice = 0;  // remember index of last choice
   int nchoice = includeNoChange? LOG_OPTS_N_CHOICES : LOG_OPTS_N_CHOICES_NORMAL;
   for (int choice=0; choice<nchoice; choice++) {
-    // the exclude expression allows some choices to not be available
-    // for some times.  For example, it would be stupid to ignore a panic.
-    if (!LOG_OPTS_EXCLUDE(evtype, choice)) {
+    // the exclude expression allows some choices not being available if they
+    // don't make any sense.  For example, it would be stupid to ignore a panic.
+    if (!BX_LOG_OPTS_EXCLUDE(evtype, choice)) {
       control->Append(choices[choice], &integers[choice]);
       // the client data is an int* that points to the choice number.
       // This is what will be returned by GetAction().
