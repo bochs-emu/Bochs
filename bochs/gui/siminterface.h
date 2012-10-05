@@ -164,6 +164,15 @@ typedef enum {
   N_LOGLEV
 } bx_log_levels;
 
+// Log action defines
+typedef enum {
+  ACT_IGNORE = 0,
+  ACT_REPORT,
+  ACT_ASK,
+  ACT_FATAL,
+  N_ACT
+} bx_log_actions;
+
 // boot devices (using the same values as the rombios)
 enum {
   BX_BOOT_NONE,

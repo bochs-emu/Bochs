@@ -370,8 +370,8 @@ class LogOptionsDialog : public ParamDialog
 private:
 #define LOG_OPTS_TITLE wxT("Configure Log Events")
 #define LOG_OPTS_PROMPT wxT("How should Bochs respond to each type of event?")
-#define LOG_OPTS_TYPE_NAMES { wxT("Debug events: "), wxT("Info events: "), wxT("Error events: "), wxT("Panic events: "), wxT("Pass events: ") }
-#define LOG_OPTS_N_TYPES 5
+#define LOG_OPTS_TYPE_NAMES { wxT("Debug events: "), wxT("Info events: "), wxT("Error events: "), wxT("Panic events: ") }
+#define LOG_OPTS_N_TYPES 4
 #define LOG_OPTS_CHOICES { wxT("ignore"), wxT("log"), wxT("ask user"), wxT("end simulation"), wxT("no change") }
 #define LOG_OPTS_N_CHOICES_NORMAL 4
 #define LOG_OPTS_N_CHOICES 5   // number of choices, including "no change"
@@ -381,9 +381,9 @@ private:
 // sense.  For example, it would be stupid to ignore a panic.
 #define LOG_OPTS_EXCLUDE(type,choice)  ( \
    /* can't die or ask, on debug or info events */   \
-   (type <= 1 && (choice==2 || choice==3)) \
+   (type <= LOGLEV_INFO && (choice == ACT_ASK || choice == ACT_FATAL)) \
    /* can't ignore panics or errors */ \
-   || (type >= 2 && choice==0) \
+   || (type == LOGLEV_PANIC && choice == ACT_IGNORE) \
    )
 #define LOG_OPTS_ADV wxT("For additional control over how each device responds to events, use the menu option \"Log ... By Device\".")
   wxFlexGridSizer *gridSizer;

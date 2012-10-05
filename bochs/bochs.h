@@ -250,12 +250,6 @@ typedef class BOCHSAPI logfunctions
 {
   char *name;
   char *prefix;
-// values of onoff: 0=ignore, 1=report, 2=ask, 3=fatal
-#define ACT_IGNORE 0
-#define ACT_REPORT 1
-#define ACT_ASK    2
-#define ACT_FATAL  3
-#define N_ACT      4
   int onoff[N_LOGLEV];
   class iofunctions *logio;
   // default log actions for all devices, declared and initialized
