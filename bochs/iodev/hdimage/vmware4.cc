@@ -69,8 +69,10 @@ int vmware4_image_t::open(const char* _pathname)
   if (!is_open())
     return -1;
 
-  if (!read_header())
+  if (!read_header()) {
     BX_PANIC(("unable to read vmware4 virtual disk header from file '%s'", pathname));
+    return -1;
+  }
 
   tlb = new Bit8u[(unsigned)header.tlb_size_sectors * SECTOR_SIZE];
   if (tlb == 0)
@@ -165,33 +167,51 @@ ssize_t vmware4_image_t::write(const void * buf, size_t count)
   return total;
 }
 
+int vmware4_image_t::check_format(int fd, Bit64u imgsize)
+{
+  VM4_Header temp_header;
+
+  if (bx_read_image(fd, 0, &temp_header, sizeof(VM4_Header)) != sizeof(VM4_Header)) {
+    return HDIMAGE_READ_ERROR;
+  }
+  if ((temp_header.id[0] != 'K') || (temp_header.id[1] != 'D') ||
+      (temp_header.id[2] != 'M') || (temp_header.id[3] != 'V')) {
+    return HDIMAGE_NO_SIGNATURE;
+  }
+  if (temp_header.version != 1) {
+    return HDIMAGE_VERSION_ERROR;
+  }
+  return HDIMAGE_FORMAT_OK;
+}
+
 bx_bool vmware4_image_t::is_open() const
 {
   return (file_descriptor != -1);
 }
 
-bx_bool vmware4_image_t::is_valid_header() const
-{
-  if (header.id[0] != 'K' || header.id[1] != 'D' || header.id[2] != 'M' ||
-    header.id[3] != 'V') {
-    BX_DEBUG(("not a vmware4 image"));
-    return 0;
-  }
-
-  if (header.version != 1) {
-    BX_DEBUG(("unsupported vmware4 image version"));
-    return 0;
-  }
-
-  return 1;
-}
-
 bx_bool vmware4_image_t::read_header()
 {
+  int ret;
+
   if (!is_open())
     BX_PANIC(("attempt to read vmware4 header from a closed file"));
 
-  if (::read(file_descriptor, &header, sizeof(VM4_Header)) != sizeof(VM4_Header))
+  if ((ret = check_format(file_descriptor, 0)) != HDIMAGE_FORMAT_OK) {
+    switch (ret) {
+      case HDIMAGE_READ_ERROR:
+        BX_ERROR(("vmware4 image read error"));
+        break;
+      case HDIMAGE_NO_SIGNATURE:
+        BX_ERROR(("not a vmware4 image"));
+        break;
+      case HDIMAGE_VERSION_ERROR:
+        BX_ERROR(("unsupported vmware4 image version"));
+        break;
+    }
+    return 0;
+  }
+
+  if (bx_read_image(file_descriptor, 0, &header, sizeof(VM4_Header)) != sizeof(VM4_Header))
     return 0;
 
   header.version = dtoh32(header.version);
@@ -204,9 +224,6 @@ bx_bool vmware4_image_t::read_header()
   header.flb_offset_sectors = dtoh64(header.flb_offset_sectors);
   header.flb_copy_offset_sectors = dtoh64(header.flb_copy_offset_sectors);
   header.tlb_offset_sectors = dtoh64(header.tlb_offset_sectors);
-
-  if(!is_valid_header())
-    BX_PANIC(("invalid vmware4 virtual disk image"));
 
   BX_DEBUG(("VM4_Header (size=%u)", (unsigned)sizeof(VM4_Header)));
   BX_DEBUG(("   .version                    = %d", header.version));
@@ -328,29 +345,20 @@ bx_bool vmware4_image_t::save_state(const char *backup_fname)
 
 void vmware4_image_t::restore_state(const char *backup_fname)
 {
-  VM4_Header temp_header;
+  int temp_fd;
+  Bit64u imgsize;
 
-  int backup_fd = ::open(backup_fname, O_RDONLY
-#ifdef O_BINARY
-   | O_BINARY
-#endif
-   );
-  if (backup_fd < 0) {
-    BX_PANIC(("Could not open vmware4 image backup"));
+  if ((temp_fd = hdimage_open_file(backup_fname, O_RDONLY, &imgsize, NULL)) < 0) {
+    BX_PANIC(("Cannot open vmware4 image backup '%s'", backup_fname));
     return;
   }
-  if (::read(backup_fd, &temp_header, sizeof(VM4_Header)) != sizeof(VM4_Header)) {
-    ::close(backup_fd);
-    BX_PANIC(("Could not read vmware4 image header"));
+
+  if (check_format(temp_fd, imgsize) < HDIMAGE_FORMAT_OK) {
+    ::close(temp_fd);
+    BX_PANIC(("Cannot detect vmware4 image header"));
     return;
   }
-  ::close(backup_fd);
-  if ((temp_header.id[0] != 'K') || (temp_header.id[1] != 'D') ||
-      (temp_header.id[2] != 'M') || (temp_header.id[3] != 'V') ||
-      (header.version != 1)) {
-    BX_PANIC(("Could not detect vmware4 image header"));
-    return;
-  }
+  ::close(temp_fd);
   close();
   if (!hdimage_copy_file(backup_fname, pathname)) {
     BX_PANIC(("Failed to restore vmware4 image '%s'", pathname));

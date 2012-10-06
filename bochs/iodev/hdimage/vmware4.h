@@ -40,7 +40,10 @@ class vmware4_image_t : public device_image_t
         Bit64s lseek(Bit64s offset, int whence);
         ssize_t read(void* buf, size_t count);
         ssize_t write(const void* buf, size_t count);
+
         Bit32u get_capabilities();
+        static int check_format(int fd, Bit64u imgsize);
+
         bx_bool save_state(const char *backup_fname);
         void restore_state(const char *backup_fname);
 
@@ -79,7 +82,6 @@ class vmware4_image_t : public device_image_t
 #endif
 
         bx_bool is_open() const;
-        bx_bool is_valid_header() const;
 
         bx_bool read_header();
         off_t perform_seek();
