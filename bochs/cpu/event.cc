@@ -217,9 +217,11 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
 #endif
   }
 
+#if BX_SUPPORT_VMX
   if (is_unmasked_event_pending(BX_EVENT_VMX_MONITOR_TRAP_FLAG)) {
     VMexit(VMX_VMEXIT_MONITOR_TRAP_FLAG, 0);
   }
+#endif
 
   // Priority 4: Traps on Previous Instruction
   //   Breakpoints
