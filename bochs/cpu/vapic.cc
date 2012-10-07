@@ -59,7 +59,7 @@ void BX_CPU_C::VMX_Write_VTPR(Bit8u vtpr)
 {
   VMX_Write_Virtual_APIC(BX_LAPIC_TPR, vtpr);
 
-  VMX_TPR_Virtualization(vtpr);
+  signal_event(BX_EVENT_VMX_VTPR_UPDATE);
 }
 
 void BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data)
@@ -105,14 +105,12 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
   VMexit(VMX_VMEXIT_APIC_ACCESS, qualification);
 }
 
-void BX_CPU_C::VMX_TPR_Virtualization(Bit8u vtpr)
+void BX_CPU_C::VMX_TPR_Virtualization(void)
 {
-  VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+  Bit8u vtpr = (Bit8u) VMX_Read_Virtual_APIC(BX_LAPIC_TPR);
 
   Bit8u tpr_shadow = vtpr >> 4;
-  if (tpr_shadow < vm->vm_tpr_threshold) {
-    // commit current instruction to produce trap-like VMexit
-    BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
+  if (tpr_shadow < BX_CPU_THIS_PTR vmcs.vm_tpr_threshold) {
     VMexit(VMX_VMEXIT_TPR_THRESHOLD, 0);
   }
 }

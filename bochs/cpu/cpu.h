@@ -1110,6 +1110,7 @@ public: // for now...
 #define BX_EVENT_PENDING_VMX_VIRTUAL_INTR     (1 <<  9)
 #define BX_EVENT_PENDING_INTR                 (1 << 10)
 #define BX_EVENT_PENDING_LAPIC_INTR           (1 << 11)
+#define BX_EVENT_VMX_VTPR_UPDATE              (1 << 12)
   Bit32u  pending_event;
   Bit32u  event_mask;
   Bit32u  async_event;
@@ -4321,7 +4322,7 @@ public: // for now...
   BX_SMF void VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF void VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF void VMX_Write_VTPR(Bit8u vtpr);
-  BX_SMF void VMX_TPR_Virtualization(Bit8u vtpr);
+  BX_SMF void VMX_TPR_Virtualization(void);
   BX_SMF Bit32u VMX_Read_Virtual_APIC(unsigned offset);
   BX_SMF void VMX_Write_Virtual_APIC(unsigned offset, Bit32u val32);
 #endif

@@ -2234,7 +2234,8 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
   BX_CPU_THIS_PTR in_vmx_guest = 0;
 
   // entering VMX root mode: clear possibly pending guest VMX events
-  clear_event(BX_EVENT_VMX_MONITOR_TRAP_FLAG |
+  clear_event(BX_EVENT_VMX_VTPR_UPDATE |
+              BX_EVENT_VMX_MONITOR_TRAP_FLAG |
               BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING |
               BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED |
               BX_EVENT_VMX_NMI_WINDOW_EXITING);
@@ -2270,7 +2271,10 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
   }
 #endif
 
-  longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
+  // skip the longjmp for TRAP-like VMEXITs
+  if (reason != VMX_VMEXIT_TPR_THRESHOLD) {
+    longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
+  }
 }
 
 #endif // BX_SUPPORT_VMX

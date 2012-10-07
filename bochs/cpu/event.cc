@@ -35,6 +35,7 @@ bx_bool BX_CPU_C::handleWaitForEvent(void)
   {
     if ((is_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR) && (BX_CPU_THIS_PTR get_IF() || BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF)) ||
          is_pending(BX_EVENT_NMI | BX_EVENT_SMI | BX_EVENT_INIT |
+            BX_EVENT_VMX_VTPR_UPDATE |
             BX_EVENT_VMX_MONITOR_TRAP_FLAG |
             BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED |
             BX_EVENT_VMX_NMI_WINDOW_EXITING))
@@ -171,6 +172,14 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
   // debug traps due to EFLAGS.TF remain untouched
   if (! BX_CPU_THIS_PTR svm_gif)
     BX_CPU_THIS_PTR debug_trap &= BX_DEBUG_SINGLE_STEP_BIT;
+#endif
+
+  // TPR shadow takes priority over SMI, INIT and lower priority events and
+  // not blocked by EFLAGS.IF or interrupt inhibits by MOV_SS and STI
+#if BX_SUPPORT_VMX
+  if (is_unmasked_event_pending(BX_EVENT_VMX_VTPR_UPDATE)) {
+    VMX_TPR_Virtualization();
+  }
 #endif
 
   // Priority 2: Trap on Task Switch
