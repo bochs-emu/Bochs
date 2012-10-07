@@ -178,6 +178,7 @@ int vmware4_image_t::check_format(int fd, Bit64u imgsize)
       (temp_header.id[2] != 'M') || (temp_header.id[3] != 'V')) {
     return HDIMAGE_NO_SIGNATURE;
   }
+  temp_header.version = dtoh32(temp_header.version);
   if (temp_header.version != 1) {
     return HDIMAGE_VERSION_ERROR;
   }

@@ -39,7 +39,10 @@ class vmware3_image_t : public device_image_t
       Bit64s lseek(Bit64s offset, int whence);
       ssize_t read(void* buf, size_t count);
       ssize_t write(const void* buf, size_t count);
+
       Bit32u get_capabilities();
+      static int check_format(int fd, Bit64u imgsize);
+
       bx_bool save_state(const char *backup_fname);
       void restore_state(const char *backup_fname);
 
@@ -107,14 +110,13 @@ class vmware3_image_t : public device_image_t
           bool synced;
       } * images, * current;
 
-      int read_header(int fd, COW_Header & header);
+      bx_bool read_header(int fd, COW_Header & header);
       int write_header(int fd, COW_Header & header);
 
       int read_ints(int fd, Bit32u *buffer, size_t count);
       int write_ints(int fd, Bit32u *buffer, size_t count);
 
       char * generate_cow_name(const char * filename, Bit32u   chain);
-      bool is_valid_header(COW_Header & header);
       off_t perform_seek();
       bool sync();
 

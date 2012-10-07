@@ -42,63 +42,100 @@ const off_t vmware3_image_t::INVALID_OFFSET=(off_t)-1;
 #define DTOH32_HEADER(field) (header.field = (dtoh32(header.field)))
 #define HTOD32_HEADER(field) (header.field = (htod32(header.field)))
 
-int vmware3_image_t::read_header(int fd, COW_Header & header)
+int vmware3_image_t::check_format(int fd, Bit64u imgsize)
 {
-    int res;
+  COW_Header header;
+  int ret;
 
-    if((res = ::read(fd, &header, sizeof(COW_Header))) < 0)
-      return res;
+  if ((ret = bx_read_image(fd, 0, &header, sizeof(COW_Header))) < 0) {
+    return HDIMAGE_READ_ERROR;
+  }
+  if (header.id[0] != 'C' || header.id[1] != 'O' || header.id[2] != 'W' || header.id[3] != 'D') {
+    return HDIMAGE_NO_SIGNATURE;
+  }
+  DTOH32_HEADER(header_version);
+  DTOH32_HEADER(vmware_version);
+  if (header.header_version != 3) {
+    return HDIMAGE_VERSION_ERROR;
+  }
+  if (header.vmware_version != 2) {
+    return HDIMAGE_VERSION_ERROR;
+  }
+  return HDIMAGE_FORMAT_OK;
+}
 
-    DTOH32_HEADER(header_version);
-    DTOH32_HEADER(flags);
-    DTOH32_HEADER(total_sectors);
-    DTOH32_HEADER(tlb_size_sectors);
-    DTOH32_HEADER(flb_offset_sectors);
-    DTOH32_HEADER(flb_count);
-    DTOH32_HEADER(next_sector_to_allocate);
-    DTOH32_HEADER(cylinders);
-    DTOH32_HEADER(heads);
-    DTOH32_HEADER(sectors);
-    DTOH32_HEADER(last_modified_time);
-    DTOH32_HEADER(last_modified_time_save);
-    DTOH32_HEADER(chain_id);
-    DTOH32_HEADER(number_of_chains);
-    DTOH32_HEADER(cylinders_in_disk);
-    DTOH32_HEADER(heads_in_disk);
-    DTOH32_HEADER(sectors_in_disk);
-    DTOH32_HEADER(total_sectors_in_disk);
-    DTOH32_HEADER(vmware_version);
+bx_bool vmware3_image_t::read_header(int fd, COW_Header & header)
+{
+  int ret;
 
-    return res;
+  if ((ret = check_format(fd, 0)) != HDIMAGE_FORMAT_OK) {
+    switch (ret) {
+      case HDIMAGE_READ_ERROR:
+        BX_ERROR(("vmware3 image read error"));
+        break;
+      case HDIMAGE_NO_SIGNATURE:
+        BX_ERROR(("not a vmware3 COW disk"));
+        break;
+      case HDIMAGE_VERSION_ERROR:
+        BX_ERROR(("unsupported vmware3 image version"));
+        break;
+    }
+    return 0;
+  }
+
+  if (bx_read_image(fd, 0, &header, sizeof(COW_Header)) != sizeof(COW_Header))
+    return 0;
+
+  DTOH32_HEADER(header_version);
+  DTOH32_HEADER(flags);
+  DTOH32_HEADER(total_sectors);
+  DTOH32_HEADER(tlb_size_sectors);
+  DTOH32_HEADER(flb_offset_sectors);
+  DTOH32_HEADER(flb_count);
+  DTOH32_HEADER(next_sector_to_allocate);
+  DTOH32_HEADER(cylinders);
+  DTOH32_HEADER(heads);
+  DTOH32_HEADER(sectors);
+  DTOH32_HEADER(last_modified_time);
+  DTOH32_HEADER(last_modified_time_save);
+  DTOH32_HEADER(chain_id);
+  DTOH32_HEADER(number_of_chains);
+  DTOH32_HEADER(cylinders_in_disk);
+  DTOH32_HEADER(heads_in_disk);
+  DTOH32_HEADER(sectors_in_disk);
+  DTOH32_HEADER(total_sectors_in_disk);
+  DTOH32_HEADER(vmware_version);
+
+  return 1;
 }
 
 int vmware3_image_t::write_header(int fd, COW_Header & hostHeader)
 {
-    COW_Header header;
+  COW_Header header;
 
-    memcpy(&header, &hostHeader, sizeof(COW_Header));
+  memcpy(&header, &hostHeader, sizeof(COW_Header));
 
-    HTOD32_HEADER(header_version);
-    HTOD32_HEADER(flags);
-    HTOD32_HEADER(total_sectors);
-    HTOD32_HEADER(tlb_size_sectors);
-    HTOD32_HEADER(flb_offset_sectors);
-    HTOD32_HEADER(flb_count);
-    HTOD32_HEADER(next_sector_to_allocate);
-    HTOD32_HEADER(cylinders);
-    HTOD32_HEADER(heads);
-    HTOD32_HEADER(sectors);
-    HTOD32_HEADER(last_modified_time);
-    HTOD32_HEADER(last_modified_time_save);
-    HTOD32_HEADER(chain_id);
-    HTOD32_HEADER(number_of_chains);
-    HTOD32_HEADER(cylinders_in_disk);
-    HTOD32_HEADER(heads_in_disk);
-    HTOD32_HEADER(sectors_in_disk);
-    HTOD32_HEADER(total_sectors_in_disk);
-    HTOD32_HEADER(vmware_version);
+  HTOD32_HEADER(header_version);
+  HTOD32_HEADER(flags);
+  HTOD32_HEADER(total_sectors);
+  HTOD32_HEADER(tlb_size_sectors);
+  HTOD32_HEADER(flb_offset_sectors);
+  HTOD32_HEADER(flb_count);
+  HTOD32_HEADER(next_sector_to_allocate);
+  HTOD32_HEADER(cylinders);
+  HTOD32_HEADER(heads);
+  HTOD32_HEADER(sectors);
+  HTOD32_HEADER(last_modified_time);
+  HTOD32_HEADER(last_modified_time_save);
+  HTOD32_HEADER(chain_id);
+  HTOD32_HEADER(number_of_chains);
+  HTOD32_HEADER(cylinders_in_disk);
+  HTOD32_HEADER(heads_in_disk);
+  HTOD32_HEADER(sectors_in_disk);
+  HTOD32_HEADER(total_sectors_in_disk);
+  HTOD32_HEADER(vmware_version);
 
-    return ::write(fd, &header, sizeof(COW_Header));
+  return bx_write_image(fd, 0, &header, sizeof(COW_Header));
 }
 
 #undef DTOH32_HEADER
@@ -106,76 +143,50 @@ int vmware3_image_t::write_header(int fd, COW_Header & hostHeader)
 
 int vmware3_image_t::read_ints(int fd, Bit32u *buffer, size_t count)
 {
-    size_t i;
-    Bit32u *p;
+  size_t i;
+  Bit32u *p;
 
-    int res=::read(fd, (void*)buffer, count * 4);
-    for (p = buffer, i=0; i<count; p++, i++)
-      *p=dtoh32(*p);
+  int res = ::read(fd, (void*)buffer, count * 4);
+  for (p = buffer, i=0; i<count; p++, i++)
+    *p=dtoh32(*p);
 
-    return res;
+  return res;
 }
 
 int vmware3_image_t::write_ints(int fd, Bit32u *buffer, size_t count)
 {
-    size_t i;
-    Bit32u *p;
+  size_t i;
+  Bit32u *p;
 
-    for (p = buffer, i=0; i<count; p++, i++)
-      *p=htod32(*p);
+  for (p = buffer, i=0; i<count; p++, i++)
+    *p=htod32(*p);
 
-    int res=::write(fd, (void*)buffer, count * 4);
+  int res = ::write(fd, (void*)buffer, count * 4);
 
-    for (p = buffer, i=0; i<count; p++, i++)
-      *p=dtoh32(*p);
+  for (p = buffer, i=0; i<count; p++, i++)
+    *p=dtoh32(*p);
 
-    return res;
+  return res;
 }
 
-bool vmware3_image_t::is_valid_header(COW_Header & header)
+char* vmware3_image_t::generate_cow_name(const char * filename, unsigned chain)
 {
-    if(header.id[0] != 'C' || header.id[1] != 'O' || header.id[2] != 'W' || header.id[3] != 'D')
-    {
-        BX_DEBUG(("not a vmware3 COW disk"));
-        return false;
+  char * name = new char[strlen(filename) + 4];
+  if(name == NULL)
+    BX_PANIC(("unable to allocate %u bytes for vmware3 COW file name (base: %s, chain: %u)", (unsigned)strlen(filename) + 4, filename, chain));
+  strcpy(name, filename);
+  if (chain != 0) {
+    char * period = strrchr(name, '.');
+    if (period != 0) {
+      char temp[1024];
+      strcpy(temp, period + 1);
+      *period = 0;
+      sprintf(name, "%s-%02d.%s", name, chain + 1, temp);
+    } else {
+      sprintf(name, "%s-%02d", name, chain + 1);
     }
-
-    if(header.header_version != 3)
-    {
-        BX_DEBUG(("unsupported vmware3 COW disk header version"));
-
-        return false;
-    }
-
-    if(header.vmware_version != 2)
-    {
-        BX_DEBUG(("unsupported vmware3 COW disk version"));
-        return false;
-    }
-
-    return true;
-}
-
-char * vmware3_image_t::generate_cow_name(const char * filename, unsigned chain)
-{
-    char * name = new char[strlen(filename) + 4];
-    if(name == NULL)
-      BX_PANIC(("unable to allocate %u bytes for vmware3 COW file name (base: %s, chain: %u)", (unsigned)strlen(filename) + 4, filename, chain));
-    strcpy(name, filename);
-    if(chain != 0)
-    {
-        char * period = strrchr(name, '.');
-        if (period != 0)
-        {
-            char temp[1024];
-            strcpy(temp, period + 1);
-            *period = 0;
-            sprintf(name, "%s-%02d.%s", name, chain + 1, temp);
-        }
-        else
-            sprintf(name, "%s-%02d", name, chain + 1);
-    }
-    return name;
+  }
+  return name;
 }
 
 /*
@@ -185,116 +196,107 @@ char * vmware3_image_t::generate_cow_name(const char * filename, unsigned chain)
  */
 int vmware3_image_t::open(const char* _pathname)
 {
-    COW_Header header;
-    int file;
-    int flags = O_RDWR;
+  COW_Header header;
+  int file;
+  int flags = O_RDWR;
 #ifdef O_BINARY
-    flags |= O_BINARY;
+  flags |= O_BINARY;
 #endif
 
-    pathname = _pathname;
-    // Set so close doesn't segfault, in case something goes wrong
-    images = NULL;
+  pathname = _pathname;
+  // Set so close doesn't segfault, in case something goes wrong
+  images = NULL;
 
-    /* Open the virtual disk */
-    file = ::open(pathname, flags);
+  /* Open the virtual disk */
+  file = ::open(pathname, flags);
 
-    if(file < 0)
-        return -1;
+  if (file < 0)
+    return -1;
 
-    /* Read the header */
-    if(read_header(file, header) < 0)
-        BX_PANIC(("unable to read vmware3 COW Disk header from file '%s'", pathname));
+  /* Read the header */
+  if (!read_header(file, header)) {
+    BX_PANIC(("unable to read vmware3 COW Disk header or invalid header from file '%s'", pathname));
+    return -1;
+  }
 
-    /* Make sure it's a valid header */
-    if(!is_valid_header(header))
-        BX_PANIC(("invalid vmware3 COW Disk image"));
+  ::close(file);
 
-    ::close(file);
+  tlb_size  = header.tlb_size_sectors * 512;
+  slb_count = (1 << FL_SHIFT) / tlb_size;
 
-    tlb_size  = header.tlb_size_sectors * 512;
-    slb_count = (1 << FL_SHIFT) / tlb_size;
+  // we must have at least one chain
+  unsigned count = header.number_of_chains;
+  if (count < 1) count = 1;
 
-    // we must have at least one chain
-    unsigned count = header.number_of_chains;
-    if (count < 1) count = 1;
+  images = new COW_Image[count];
 
-    images = new COW_Image [count];
+  off_t offset = 0;
+  for (unsigned i = 0; i < count; ++i) {
+    char* filename = generate_cow_name(pathname, i);
+    current = &images[i];
 
-    off_t offset = 0;
-    for (unsigned i = 0; i < count; ++i)
-    {
-        char * filename = generate_cow_name(pathname, i);
-        current = &images[i];
+    current->fd = ::open(filename, flags);
+    if (current->fd < 0)
+      BX_PANIC(("unable to open vmware3 COW Disk file '%s'", filename));
 
-        current->fd = ::open(filename, flags);
-        if(current->fd < 0)
-            BX_PANIC(("unable to open vmware3 COW Disk file '%s'", filename));
+    if (!read_header(current->fd, current->header))
+      BX_PANIC(("unable to read header or invalid header in vmware3 COW Disk file '%s'", filename));
 
-        if(read_header(current->fd, current->header) < 0)
-            BX_PANIC(("unable to read header or invalid header in vmware3 COW Disk file '%s'", filename));
+    current->flb = new unsigned [current->header.flb_count];
+    if (current->flb == 0)
+      BX_PANIC(("cannot allocate %d bytes for flb in vmware3 COW Disk '%s'", current->header.flb_count * 4, filename));
 
-        if(!is_valid_header(current->header))
-            BX_PANIC(("invalid vmware3 COW Disk file '%s'", filename));
+    current->slb = new unsigned* [current->header.flb_count];
+    if (current->slb == 0)
+      BX_PANIC(("cannot allocate %d bytes for slb in vmware3 COW Disk '%s'", current->header.flb_count * 4, filename));
 
-        current->flb = new unsigned [current->header.flb_count];
-        if(current->flb == 0)
-            BX_PANIC(("cannot allocate %d bytes for flb in vmware3 COW Disk '%s'", current->header.flb_count * 4, filename));
-
-        current->slb = new unsigned * [current->header.flb_count];
-        if(current->slb == 0)
-            BX_PANIC(("cannot allocate %d bytes for slb in vmware3 COW Disk '%s'", current->header.flb_count * 4, filename));
-
-        unsigned j;
-        for(j = 0; j < current->header.flb_count; ++j)
-        {
-            current->slb[j] = new unsigned [slb_count];
-            if(current->slb[j] == 0)
-                BX_PANIC(("cannot allocate %d bytes for slb[] in vmware3 COW Disk '%s'", slb_count * 4, filename));
-        }
-
-        current->tlb = new Bit8u [tlb_size];
-        if(current->tlb == 0)
-            BX_PANIC(("cannot allocate %d bytes for tlb in vmware3 COW Disk '%s'", tlb_size, filename));
-
-        if(::lseek(current->fd, current->header.flb_offset_sectors * 512, SEEK_SET) < 0)
-            BX_PANIC(("unable to seek vmware3 COW Disk file '%s'", filename));
-
-        if(read_ints(current->fd, current->flb, current->header.flb_count) < 0)
-            BX_PANIC(("unable to read flb from vmware3 COW Disk file '%s'", filename));
-
-        for(j = 0; j < current->header.flb_count; ++j)
-            if(current->flb[j] != 0)
-            {
-                if(::lseek(current->fd, current->flb[j] * 512, SEEK_SET) < 0)
-                    BX_PANIC(("unable to seek vmware3 COW Disk file '%s'", filename));
-                if(read_ints(current->fd, current->slb[j], slb_count) < 0)
-                    BX_PANIC(("unable to read slb from vmware3 COW Disk file '%s'", filename));
-            }
-
-        current->min_offset = offset;
-        offset += current->header.total_sectors * 512;
-        current->max_offset = offset;
-
-        current->offset = INVALID_OFFSET;
-        current->synced = true;
-        delete[] filename;
-    }
-    current = &images[0];
-    requested_offset = 0;
-    if (header.total_sectors_in_disk!=0) {
-        cylinders = header.cylinders_in_disk;
-        heads = header.heads_in_disk;
-        spt = header.sectors_in_disk;
-        hd_size = header.total_sectors_in_disk * 512;
-    } else {
-        cylinders = header.cylinders;
-        heads = header.heads;
-        spt = header.sectors;
-        hd_size = header.total_sectors * 512;
+    unsigned j;
+    for (j = 0; j < current->header.flb_count; ++j) {
+      current->slb[j] = new unsigned [slb_count];
+      if (current->slb[j] == 0)
+        BX_PANIC(("cannot allocate %d bytes for slb[] in vmware3 COW Disk '%s'", slb_count * 4, filename));
     }
 
-    return 1;
+    current->tlb = new Bit8u[tlb_size];
+    if (current->tlb == 0)
+      BX_PANIC(("cannot allocate %d bytes for tlb in vmware3 COW Disk '%s'", tlb_size, filename));
+
+    if (::lseek(current->fd, current->header.flb_offset_sectors * 512, SEEK_SET) < 0)
+      BX_PANIC(("unable to seek vmware3 COW Disk file '%s'", filename));
+
+    if (read_ints(current->fd, current->flb, current->header.flb_count) < 0)
+      BX_PANIC(("unable to read flb from vmware3 COW Disk file '%s'", filename));
+
+    for (j = 0; j < current->header.flb_count; ++j)
+      if(current->flb[j] != 0) {
+        if (::lseek(current->fd, current->flb[j] * 512, SEEK_SET) < 0)
+          BX_PANIC(("unable to seek vmware3 COW Disk file '%s'", filename));
+        if (read_ints(current->fd, current->slb[j], slb_count) < 0)
+          BX_PANIC(("unable to read slb from vmware3 COW Disk file '%s'", filename));
+      }
+
+    current->min_offset = offset;
+    offset += current->header.total_sectors * 512;
+    current->max_offset = offset;
+
+    current->offset = INVALID_OFFSET;
+    current->synced = true;
+    delete [] filename;
+  }
+  current = &images[0];
+  requested_offset = 0;
+  if (header.total_sectors_in_disk != 0) {
+    cylinders = header.cylinders_in_disk;
+    heads = header.heads_in_disk;
+    spt = header.sectors_in_disk;
+    hd_size = header.total_sectors_in_disk * 512;
+  } else {
+    cylinders = header.cylinders;
+    heads = header.heads;
+    spt = header.sectors;
+    hd_size = header.total_sectors * 512;
+  }
+  return 1;
 }
 
 off_t vmware3_image_t::perform_seek()
@@ -539,30 +541,22 @@ bx_bool vmware3_image_t::save_state(const char *backup_fname)
 
 void vmware3_image_t::restore_state(const char *backup_fname)
 {
-  int backup_fd;
+  int temp_fd;
+  Bit64u imgsize;
   bx_bool ret = 1;
-  COW_Header temp_header;
   char tempfn[BX_PATHNAME_LEN];
 
-  backup_fd = ::open(backup_fname, O_RDONLY
-#ifdef O_BINARY
-   | O_BINARY
-#endif
-   );
-  if (backup_fd < 0) {
-    BX_PANIC(("Could not open vmware3 image backup"));
+  if ((temp_fd = hdimage_open_file(backup_fname, O_RDONLY, &imgsize, NULL)) < 0) {
+    BX_PANIC(("Cannot open vmware3 image backup '%s'", backup_fname));
     return;
   }
-  if (read_header(backup_fd, temp_header) < 0) {
-    ::close(backup_fd);
-    BX_PANIC(("Could not read vmware3 image header"));
+
+  if (check_format(temp_fd, imgsize) < HDIMAGE_FORMAT_OK) {
+    ::close(temp_fd);
+    BX_PANIC(("Cannot detect vmware3 image header"));
     return;
   }
-  ::close(backup_fd);
-  if (!is_valid_header(temp_header)) {
-    BX_PANIC(("invalid vmware3 COW Disk image"));
-    return;
-  }
+  ::close(temp_fd);
   unsigned count = current->header.number_of_chains;
   close();
   if (count < 1) count = 1;
