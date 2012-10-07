@@ -150,7 +150,10 @@ class device_image_t
       virtual ~device_image_t() {}
 
       // Open a image. Returns non-negative if successful.
-      virtual int open(const char* pathname) = 0;
+      virtual int open(const char* pathname);
+
+      // Open an image with specific flags. Returns non-negative if successful.
+      virtual int open(const char* pathname, int flags) = 0;
 
       // Close the image.
       virtual void close() = 0;
@@ -170,6 +173,9 @@ class device_image_t
       // Get image capabilities
       virtual Bit32u get_capabilities();
 
+      // Get modification time in FAT format
+      Bit32u get_timestamp();
+
       // Check image format
       static int check_format(int fd, Bit64u imgsize) {return HDIMAGE_NO_SIGNATURE;}
 
@@ -182,15 +188,18 @@ class device_image_t
       unsigned heads;
       unsigned spt;
       Bit64u   hd_size;
+  protected:
+#ifndef WIN32
+      time_t mtime;
+#else
+      FILETIME mtime;
+#endif
 };
 
 // FLAT MODE
 class default_image_t : public device_image_t
 {
   public:
-      // Open a image. Returns non-negative if successful.
-      int open(const char* pathname);
-
       // Open an image with specific flags. Returns non-negative if successful.
       int open(const char* pathname, int flags);
 
@@ -209,9 +218,6 @@ class default_image_t : public device_image_t
       // written (count).
       ssize_t write(const void* buf, size_t count);
 
-      // Get modification time in FAT format
-      Bit32u get_timestamp();
-
       // Check image format
       static int check_format(int fd, Bit64u imgsize);
 
@@ -222,11 +228,6 @@ class default_image_t : public device_image_t
   private:
       int fd;
       const char *pathname;
-#ifndef WIN32
-      time_t mtime;
-#else
-      FILETIME mtime;
-#endif
 };
 
 // CONCAT MODE
@@ -236,8 +237,8 @@ class concat_image_t : public device_image_t
       // Default constructor
       concat_image_t();
 
-      // Open a image. Returns non-negative if successful.
-      int open(const char* pathname);
+      // Open an image with specific flags. Returns non-negative if successful.
+      int open(const char* pathname, int flags);
 
       // Close the image.
       void close();
@@ -293,8 +294,8 @@ class sparse_image_t : public device_image_t
     // Default constructor
     sparse_image_t();
 
-    // Open a image. Returns non-negative if successful.
-    int open(const char* pathname);
+    // Open an image with specific flags. Returns non-negative if successful.
+    int open(const char* pathname, int flags);
 
     // Close the image.
     void close();
@@ -370,8 +371,8 @@ class sparse_image_t : public device_image_t
 class dll_image_t : public device_image_t
 {
   public:
-      // Open a image. Returns non-negative if successful.
-      int open(const char* pathname);
+      // Open an image with specific flags. Returns non-negative if successful.
+      int open(const char* pathname, int flags);
 
       // Close the image.
       void close();
@@ -441,8 +442,8 @@ class growing_image_t : public device_image_t
       growing_image_t();
       virtual ~growing_image_t();
 
-      // Open a image. Returns non-negative if successful.
-      int open(const char* pathname);
+      // Open an image with specific flags. Returns non-negative if successful.
+      int open(const char* pathname, int flags);
 
       // Close the image.
       void close();
@@ -479,8 +480,8 @@ class undoable_image_t : public device_image_t
       undoable_image_t(const char* redolog_name);
       virtual ~undoable_image_t();
 
-      // Open a image. Returns non-negative if successful.
-      int open(const char* pathname);
+      // Open an image with specific flags. Returns non-negative if successful.
+      int open(const char* pathname, int flags);
 
       // Close the image.
       void close();
@@ -503,7 +504,7 @@ class undoable_image_t : public device_image_t
 
   private:
       redolog_t       *redolog;       // Redolog instance
-      default_image_t *ro_disk;       // Read-only flat disk instance
+      device_image_t  *ro_disk;       // Read-only base disk instance
       char            *redolog_name;  // Redolog name
 };
 
@@ -516,8 +517,8 @@ class volatile_image_t : public device_image_t
       volatile_image_t(const char* redolog_name);
       virtual ~volatile_image_t();
 
-      // Open a image. Returns non-negative if successful.
-      int open(const char* pathname);
+      // Open an image with specific flags. Returns non-negative if successful.
+      int open(const char* pathname, int flags);
 
       // Close the image.
       void close();
@@ -540,7 +541,7 @@ class volatile_image_t : public device_image_t
 
   private:
       redolog_t       *redolog;       // Redolog instance
-      default_image_t *ro_disk;       // Read-only flat disk instance
+      device_image_t  *ro_disk;       // Read-only base disk instance
       char            *redolog_name;  // Redolog name
       char            *redolog_temp;  // Redolog temporary file name
 };

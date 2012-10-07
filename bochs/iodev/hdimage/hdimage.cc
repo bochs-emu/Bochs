@@ -371,9 +371,19 @@ device_image_t::device_image_t()
   hd_size = 0;
 }
 
+int device_image_t::open(const char* _pathname)
+{
+  return open(_pathname, O_RDWR);
+}
+
 Bit32u device_image_t::get_capabilities()
 {
   return (cylinders == 0) ? HDIMAGE_AUTO_GEOMETRY : 0;
+}
+
+Bit32u device_image_t::get_timestamp()
+{
+  return (fat_datetime(mtime, 1) | (fat_datetime(mtime, 0) << 16));
 }
 
 void device_image_t::register_state(bx_list_c *parent)
@@ -383,11 +393,6 @@ void device_image_t::register_state(bx_list_c *parent)
 }
 
 /*** default_image_t function definitions ***/
-
-int default_image_t::open(const char* _pathname)
-{
-  return open(_pathname, O_RDWR);
-}
 
 int default_image_t::open(const char* _pathname, int flags)
 {
@@ -423,11 +428,6 @@ ssize_t default_image_t::write(const void* buf, size_t count)
   return ::write(fd, (char*) buf, count);
 }
 
-Bit32u default_image_t::get_timestamp()
-{
-  return (fat_datetime(mtime, 1) | (fat_datetime(mtime, 0) << 16));
-}
-
 int default_image_t::check_format(int fd, Bit64u imgsize)
 {
   char buffer[512];
@@ -453,7 +453,7 @@ void default_image_t::restore_state(const char *backup_fname)
     BX_PANIC(("Failed to restore image '%s'", pathname));
     return;
   }
-  if (open(pathname) < 0) {
+  if (device_image_t::open(pathname) < 0) {
     BX_PANIC(("Failed to open restored image '%s'", pathname));
   }
 }
@@ -484,8 +484,9 @@ void concat_image_t::increment_string(char *str)
  ::increment_string(str, +1);
 }
 
-int concat_image_t::open(const char* _pathname0)
+int concat_image_t::open(const char* _pathname0, int flags)
 {
+  UNUSED(flags);
   pathname0 = _pathname0;
   char *pathname = strdup(pathname0);
   BX_DEBUG(("concat_image_t.open"));
@@ -639,7 +640,7 @@ void concat_image_t::restore_state(const char *backup_fname)
     increment_string(image_name);
   }
   free(image_name);
-  open(pathname0);
+  device_image_t::open(pathname0);
 }
 
 /*** sparse_image_t function definitions ***/
@@ -752,12 +753,12 @@ int sparse_image_t::read_header()
   return 0;
 }
 
-int sparse_image_t::open(const char* pathname0)
+int sparse_image_t::open(const char* pathname0, int flags)
 {
   pathname = strdup(pathname0);
   BX_DEBUG(("sparse_image_t.open"));
 
-  if ((fd = hdimage_open_file(pathname, O_RDWR, &underlying_filesize, NULL)) < 0) {
+  if ((fd = hdimage_open_file(pathname, flags, &underlying_filesize, &mtime)) < 0) {
     return -1;
   }
   BX_DEBUG(("sparse_image: open image %s", pathname));
@@ -786,7 +787,7 @@ int sparse_image_t::open(const char* pathname0)
     if (0 == stat(parentpathname, &stat_buf))
     {
       parent_image = new sparse_image_t();
-      int ret = parent_image->open(parentpathname);
+      int ret = parent_image->open(parentpathname, flags);
       if (ret != 0) return ret;
       if (    (parent_image->pagesize != pagesize)
           ||  (parent_image->total_size != total_size))
@@ -1202,7 +1203,7 @@ void sparse_image_t::restore_state(const char *backup_fname)
     free(temp_pathname);
     return;
   }
-  if (open(temp_pathname) < 0) {
+  if (device_image_t::open(temp_pathname) < 0) {
     BX_PANIC(("Failed to open restored image '%s'", temp_pathname));
   }
   free(temp_pathname);
@@ -1226,8 +1227,9 @@ void (*vdisk_read)   (int vunit,int blk,void *buf);
 void (*vdisk_write)  (int vunit,int blk,const void *buf);
 void (*vdisk_close) (int vunit);
 
-int dll_image_t::open (const char* pathname)
+int dll_image_t::open (const char* pathname, int flags)
 {
+  UNUSED(flags);
   if (hlib_vdisk == 0) {
     hlib_vdisk = LoadLibrary("vdisk.dll");
     if (hlib_vdisk != 0) {
@@ -1414,11 +1416,14 @@ int redolog_t::open(const char* filename, const char *type)
 
 int redolog_t::open(const char* filename, const char *type, int flags)
 {
-  fd = ::open(filename, flags
-#ifdef O_BINARY
-              | O_BINARY
+  Bit64u imgsize = 0;
+#ifndef WIN32
+  time_t mtime;
+#else
+  FILETIME mtime;
 #endif
-              );
+
+  fd = hdimage_open_file(filename, flags, &imgsize, &mtime);
   if (fd < 0) {
     BX_INFO(("redolog : could not open image %s", filename));
     // open failed.
@@ -1455,6 +1460,9 @@ int redolog_t::open(const char* filename, const char *type, int flags)
 
     memcpy(&header_v1, &header, STANDARD_HEADER_SIZE);
     header.specific.disk = header_v1.specific.disk;
+  }
+  if (!strcmp(type, REDOLOG_SUBTYPE_GROWING)) {
+    set_timestamp(fat_datetime(mtime, 1) | (fat_datetime(mtime, 0) << 16));
   }
 
   catalog = (Bit32u*)malloc(dtoh32(header.specific.catalog) * sizeof(Bit32u));
@@ -1732,10 +1740,10 @@ growing_image_t::~growing_image_t()
   delete redolog;
 }
 
-int growing_image_t::open(const char* _pathname)
+int growing_image_t::open(const char* _pathname, int flags)
 {
   pathname = _pathname;
-  int filedes = redolog->open(pathname, REDOLOG_SUBTYPE_GROWING);
+  int filedes = redolog->open(pathname, REDOLOG_SUBTYPE_GROWING, flags);
   hd_size = redolog->get_size();
   BX_INFO(("'growing' disk opened, growing file is '%s'", pathname));
   return filedes;
@@ -1809,14 +1817,14 @@ void growing_image_t::restore_state(const char *backup_fname)
     BX_PANIC(("Failed to restore growing image '%s'", pathname));
     return;
   }
-  if (open(pathname) < 0) {
+  if (device_image_t::open(pathname) < 0) {
     BX_PANIC(("Failed to open restored growing image '%s'", pathname));
   }
 }
 
 // compare hd_size and modification time of r/o disk and journal
 
-bx_bool coherency_check(default_image_t *ro_disk, redolog_t *redolog)
+bx_bool coherency_check(device_image_t *ro_disk, redolog_t *redolog)
 {
   Bit32u timestamp1, timestamp2;
 
@@ -1842,7 +1850,6 @@ bx_bool coherency_check(default_image_t *ro_disk, redolog_t *redolog)
 undoable_image_t::undoable_image_t(const char* _redolog_name)
 {
   redolog = new redolog_t();
-  ro_disk = new default_image_t();
   redolog_name = NULL;
   if (_redolog_name != NULL) {
     if (strcmp(_redolog_name,"") != 0) {
@@ -1857,15 +1864,16 @@ undoable_image_t::~undoable_image_t()
   delete ro_disk;
 }
 
-int undoable_image_t::open(const char* pathname)
+int undoable_image_t::open(const char* pathname, int flags)
 {
+  UNUSED(flags);
   int mode = hdimage_detect_image_mode(pathname);
   if (mode == BX_HDIMAGE_MODE_UNKNOWN) {
     BX_PANIC(("r/o disk image mode not detected"));
     return -1;
   }
-  if (mode != BX_HDIMAGE_MODE_FLAT) {
-    BX_PANIC(("unsupported r/o disk image mode '%s'", hdimage_mode_names[mode]));
+  ro_disk = theHDImageCtl->init_image(mode, 0, NULL);
+  if (ro_disk == NULL) {
     return -1;
   }
   if (ro_disk->open(pathname, O_RDONLY) < 0)
@@ -1971,7 +1979,6 @@ void undoable_image_t::restore_state(const char *backup_fname)
 volatile_image_t::volatile_image_t(const char* _redolog_name)
 {
   redolog = new redolog_t();
-  ro_disk = new default_image_t();
   redolog_temp = NULL;
   redolog_name = NULL;
   if (_redolog_name != NULL) {
@@ -1987,18 +1994,19 @@ volatile_image_t::~volatile_image_t()
   delete ro_disk;
 }
 
-int volatile_image_t::open(const char* pathname)
+int volatile_image_t::open(const char* pathname, int flags)
 {
   int filedes;
   Bit32u timestamp;
 
+  UNUSED(flags);
   int mode = hdimage_detect_image_mode(pathname);
   if (mode == BX_HDIMAGE_MODE_UNKNOWN) {
     BX_PANIC(("r/o disk image mode not detected"));
     return -1;
   }
-  if (mode != BX_HDIMAGE_MODE_FLAT) {
-    BX_PANIC(("unsupported r/o disk image mode '%s'", hdimage_mode_names[mode]));
+  ro_disk = theHDImageCtl->init_image(mode, 0, NULL);
+  if (ro_disk == NULL) {
     return -1;
   }
   if (ro_disk->open(pathname, O_RDONLY)<0)

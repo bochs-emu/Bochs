@@ -34,7 +34,7 @@ class vmware3_image_t : public device_image_t
   public:
       vmware3_image_t() : FL_SHIFT(25), FL_MASK(0xFE000000)
       { };
-      int open(const char* pathname);
+      int open(const char* pathname, int flags);
       void close();
       Bit64s lseek(Bit64s offset, int whence);
       ssize_t read(void* buf, size_t count);

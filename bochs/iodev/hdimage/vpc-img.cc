@@ -79,7 +79,7 @@ int vpc_image_t::check_format(int fd, Bit64u imgsize)
   return vpc_disk_type;
 }
 
-int vpc_image_t::open(const char* _pathname)
+int vpc_image_t::open(const char* _pathname, int flags)
 {
   int i;
   vhd_footer_t *footer;
@@ -90,7 +90,7 @@ int vpc_image_t::open(const char* _pathname)
   int disk_type;
 
   pathname = _pathname;
-  if ((fd = hdimage_open_file(pathname, O_RDWR, &imgsize, NULL)) < 0) {
+  if ((fd = hdimage_open_file(pathname, flags, &imgsize, &mtime)) < 0) {
     BX_ERROR(("VPC: cannot open hdimage file '%s'", pathname));
     return -1;
   }
@@ -309,7 +309,7 @@ void vpc_image_t::restore_state(const char *backup_fname)
     BX_PANIC(("Failed to restore vpc image '%s'", pathname));
     return;
   }
-  open(pathname);
+  device_image_t::open(pathname);
 }
 
 Bit32u vpc_image_t::vpc_checksum(Bit8u *buf, size_t size)

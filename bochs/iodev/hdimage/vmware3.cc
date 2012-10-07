@@ -194,21 +194,18 @@ char* vmware3_image_t::generate_cow_name(const char * filename, unsigned chain)
  * file. Now if only I could use exceptions to handle the errors in an elegant
  * fashion...
  */
-int vmware3_image_t::open(const char* _pathname)
+int vmware3_image_t::open(const char* _pathname, int flags)
 {
   COW_Header header;
   int file;
-  int flags = O_RDWR;
-#ifdef O_BINARY
-  flags |= O_BINARY;
-#endif
+  Bit64u imgsize = 0;
 
   pathname = _pathname;
   // Set so close doesn't segfault, in case something goes wrong
   images = NULL;
 
   /* Open the virtual disk */
-  file = ::open(pathname, flags);
+  file = hdimage_open_file(pathname, flags, &imgsize, &mtime);
 
   if (file < 0)
     return -1;
@@ -571,6 +568,6 @@ void vmware3_image_t::restore_state(const char *backup_fname)
     }
   }
   if (ret == 1) {
-    open(pathname);
+    device_image_t::open(pathname);
   }
 }

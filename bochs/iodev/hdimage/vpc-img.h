@@ -138,7 +138,7 @@ vhd_dyndisk_header_t;
 class vpc_image_t : public device_image_t
 {
   public:
-    int open(const char* pathname);
+    int open(const char* pathname, int flags);
     void close();
     Bit64s lseek(Bit64s offset, int whence);
     ssize_t read(void* buf, size_t count);

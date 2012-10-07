@@ -54,17 +54,14 @@ vmware4_image_t::~vmware4_image_t()
   close();
 }
 
-int vmware4_image_t::open(const char* _pathname)
+int vmware4_image_t::open(const char* _pathname, int flags)
 {
+  Bit64u imgsize = 0;
+
   pathname = _pathname;
   close();
 
-  int flags = O_RDWR;
-#ifdef O_BINARY
-  flags |= O_BINARY;
-#endif
-
-  file_descriptor = ::open(pathname, flags);
+  file_descriptor = hdimage_open_file(pathname, flags, &imgsize, &mtime);
 
   if (!is_open())
     return -1;
@@ -365,5 +362,5 @@ void vmware4_image_t::restore_state(const char *backup_fname)
     BX_PANIC(("Failed to restore vmware4 image '%s'", pathname));
     return;
   }
-  open(pathname);
+  device_image_t::open(pathname);
 }

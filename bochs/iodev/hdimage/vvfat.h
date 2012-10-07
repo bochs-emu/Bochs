@@ -126,7 +126,7 @@ class vvfat_image_t : public device_image_t
     vvfat_image_t(Bit64u size, const char* redolog_name);
     virtual ~vvfat_image_t();
 
-    int open(const char* dirname);
+    int open(const char* pathname, int flags);
     void close();
     Bit64s lseek(Bit64s offset, int whence);
     ssize_t read(void* buf, size_t count);
