@@ -607,7 +607,14 @@ void bx_log_options(int individual)
         // don't show the no change choice (choices=3)
         if (ask_menu(prompt, "", log_level_n_choices_normal, log_level_choices, default_action, &action)<0)
           return;
-        SIM->set_log_action(id, level, action);
+        // the exclude expression allows some choices not being available if they
+        // don't make any sense.  For example, it would be stupid to ignore a panic.
+        if (!BX_LOG_OPTS_EXCLUDE(level, action)) {
+          SIM->set_log_action(id, level, action);
+        } else {
+          fprintf(stderr, "Event type '%s' does not support log action '%s'.\n",
+                  SIM->get_log_level_name(level), log_level_choices[action]);
+        }
       }
     }
   } else {
@@ -615,14 +622,19 @@ void bx_log_options(int individual)
     bx_print_log_action_table();
     for (int level=0; level<SIM->get_max_log_level(); level++) {
       char prompt[1024];
-      int action, default_action = 3;  // default to no change
+      int action, default_action = 4;  // default to no change
       sprintf(prompt, "Enter action for %s event on all devices: [no change] ", SIM->get_log_level_name(level));
       // do show the no change choice (choices=4)
       if (ask_menu(prompt, "", log_level_n_choices_normal+1, log_level_choices, default_action, &action)<0)
         return;
-      if (action < 3) {
-        SIM->set_default_log_action(level, action);
-        SIM->set_log_action(-1, level, action);
+      if (action < log_level_n_choices_normal) {
+        if  (!BX_LOG_OPTS_EXCLUDE(level, action)) {
+          SIM->set_default_log_action(level, action);
+          SIM->set_log_action(-1, level, action);
+        } else {
+          fprintf(stderr, "Event type '%s' does not support log action '%s'.\n",
+                  SIM->get_log_level_name(level), log_level_choices[action]);
+        }
       }
     }
   }
