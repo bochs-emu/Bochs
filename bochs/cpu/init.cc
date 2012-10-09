@@ -27,6 +27,8 @@
 
 #include "param_names.h"
 
+#include <stdlib.h>
+
 BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
 #if BX_CPU_LEVEL >= 4
    , cpuid(NULL)
@@ -51,6 +53,8 @@ BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
 #if BX_SUPPORT_SVM
   svm_extensions_bitmask = 0;
 #endif
+
+  srand(time(NULL)); // initialize random generator for RDRAND/RDSEED
 }
 
 #if BX_WITH_WX
