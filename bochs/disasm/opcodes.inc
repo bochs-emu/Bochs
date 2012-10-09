@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2011 Stanislav Shwartsman
+//   Copyright (c) 2005-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1134,6 +1134,12 @@ Ia_rdfsbase_Ry = { "rdfsbase", "rdfsbase", Ry, XX, XX, XX, IA_FSGSBASE },
 Ia_rdgsbase_Ry = { "rdgsbase", "rdgsbase", Ry, XX, XX, XX, IA_FSGSBASE },
 Ia_rdmsr = { "rdmsr", "rdmsr", XX, XX, XX, XX, IA_PENTIUM },
 Ia_rdpmc = { "rdpmc", "rdpmc", XX, XX, XX, XX, IA_P6 },
+Ia_rdrand_Ed = { "rdrand", "rdrandd", Ed, XX, XX, XX, IA_RDRAND },
+Ia_rdrand_Eq = { "rdrand", "rdrandq", Eq, XX, XX, XX, IA_RDRAND },
+Ia_rdrand_Ew = { "rdrand", "rdrandw", Ew, XX, XX, XX, IA_RDRAND },
+Ia_rdseed_Ed = { "rdseed", "rdseedd", Ed, XX, XX, XX, IA_RDSEED },
+Ia_rdseed_Eq = { "rdseed", "rdseedq", Eq, XX, XX, XX, IA_RDSEED },
+Ia_rdseed_Ew = { "rdseed", "rdseedw", Ew, XX, XX, XX, IA_RDSEED },
 Ia_rdtsc = { "rdtsc", "rdtsc", XX, XX, XX, XX, IA_PENTIUM },
 Ia_rdtscp = { "rdtscp", "rdtscp", XX, XX, XX, XX, IA_RDTSCP },
 Ia_ret = { "ret", "ret", XX, XX, XX, XX, 0 },
@@ -1844,7 +1850,7 @@ Ia_vunpcklpd_Vpd_Hpd_Wpd = { "vunpcklpd", "vunpcklpd", Vpd, Hpd, Wpd, XX, IA_AVX
 Ia_vunpcklps_Vps_Hps_Wps = { "vunpcklps", "vunpcklps", Vps, Hps, Wps, XX, IA_AVX },
 Ia_vxorpd_Vpd_Hpd_Wpd = { "vxorpd", "vxorpd", Vpd, Hpd, Wpd, XX, IA_AVX },
 Ia_vxorps_Vps_Hps_Wps = { "vxorps", "vxorps", Vps, Hps, Wps, XX, IA_AVX },
-Ia_vzerall = { "vzeroall", "vzeroall", XX, XX, XX, XX, IA_AVX },
+Ia_vzeroall = { "vzeroall", "vzeroall", XX, XX, XX, XX, IA_AVX },
 Ia_vzeroupper = { "vzeroupper", "vzeroupper", XX, XX, XX, XX, IA_AVX },
 Ia_wbinvd = { "wbinvd", "wbinvd", XX, XX, XX, XX, IA_486 },
 Ia_wrfsbase_Ry = { "wrfsbase", "wrfsbase", Ry, XX, XX, XX, IA_FSGSBASE },

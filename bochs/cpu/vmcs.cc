@@ -487,6 +487,8 @@ void BX_CPU_C::init_vmx_capabilities(void)
   //   [11] RDRAND Exiting (require RDRAND instruction support)
   //   [12] Enable INVPCID instruction (require INVPCID instruction support)
   //   [13] Enable VM Functions
+  //    ...
+  //   [16] RDSEED Exiting (require RDSEED instruction support)
 
   cap->vmx_vmexec_ctrl2_supported_bits = 0;
 
@@ -518,6 +520,10 @@ void BX_CPU_C::init_vmx_capabilities(void)
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_INVPCID))
     cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_INVPCID;
 #endif
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_RDRAND))
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_RDRAND_VMEXIT;
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_RDSEED))
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_RDSEED_VMEXIT;
 
   // enable secondary vm exec controls if needed
   if (cap->vmx_vmexec_ctrl2_supported_bits != 0)

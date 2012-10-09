@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2011 Stanislav Shwartsman
+//   Copyright (c) 2005-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -266,6 +266,14 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
          /* SSE opcode group with only prefix 0xF3 allowed */
          sse_opcode = 1;
          if (sse_prefix != SSE_PREFIX_F3)
+             entry = &(BxDisasmGroupSSE_ERR[sse_prefix]);
+         attr = 0;
+         continue;
+
+       case _GRPSSENONE:
+         /* SSE opcode group with no prefix only allowed */
+         sse_opcode = 1;
+         if (sse_prefix != SSE_PREFIX_NONE)
              entry = &(BxDisasmGroupSSE_ERR[sse_prefix]);
          attr = 0;
          continue;

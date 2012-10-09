@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2011 Stanislav Shwartsman
+//   Copyright (c) 2005-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -477,20 +477,6 @@ static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0fc2[4] = {
   /* 66 */ { 0, &Ia_cmppd_Vpd_Wpd_Ib },
   /* F3 */ { 0, &Ia_cmpss_Vss_Wss_Ib },
   /* F2 */ { 0, &Ia_cmpsd_Vsd_Wsd_Ib }
-};
-
-static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0fc3[4] = {
-  /* -- */ { 0, &Ia_movnti_Md_Gd },
-  /* 66 */ { 0, &Ia_Invalid },
-  /* F3 */ { 0, &Ia_Invalid },
-  /* F2 */ { 0, &Ia_Invalid }
-};
-
-static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0fc3Q[4] = {
-  /* -- */ { 0, &Ia_movntiq_Mq_Gq },
-  /* 66 */ { 0, &Ia_Invalid },
-  /* F3 */ { 0, &Ia_Invalid },
-  /* F2 */ { 0, &Ia_Invalid }
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0fc4[4] = {

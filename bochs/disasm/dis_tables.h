@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2011 Stanislav Shwartsman
+//   Copyright (c) 2005-2012 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -31,10 +31,11 @@
 #define _GRPSSE66      6
 #define _GRPSSEF2      7
 #define _GRPSSEF3      8
-#define _GRPRM         9
-#define _GRP3BOP       10
-#define _GRP64B        11
-#define _GRPVEXW       12
+#define _GRPSSENONE    9
+#define _GRPRM         10
+#define _GRP3BOP       11
+#define _GRP64B        12
+#define _GRPVEXW       13
 
 /* ************************************************************************ */
 #define GRPSSE(n)       _GRPSSE,   BxDisasmGroupSSE_##n
@@ -50,9 +51,10 @@
 /* ************************************************************************ */
 
 /* ************************************************************************ */
-#define GRPSSE66(n)     _GRPSSE66, &n
-#define GRPSSEF2(n)     _GRPSSEF2, &n
-#define GRPSSEF3(n)     _GRPSSEF3, &n
+#define GRPSSE66(n)     _GRPSSE66,   &n
+#define GRPSSEF2(n)     _GRPSSEF2,   &n
+#define GRPSSEF3(n)     _GRPSSEF3,   &n
+#define GRPSSENONE(n)   _GRPSSENONE, &n
 /* ************************************************************************ */
 
 #define Apw &disassembler::Apw

@@ -3218,6 +3218,19 @@ public: // for now...
   BX_SMF BX_INSF_TYPE STAC(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   // SMAP
 
+  // RDRAND/RDSEED
+  BX_SMF BX_INSF_TYPE RDRAND_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE RDRAND_Ed(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#if BX_SUPPORT_X86_64
+  BX_SMF BX_INSF_TYPE RDRAND_Eq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
+
+  BX_SMF BX_INSF_TYPE RDSEED_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE RDSEED_Ed(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#if BX_SUPPORT_X86_64
+  BX_SMF BX_INSF_TYPE RDSEED_Eq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
+
 #if BX_SUPPORT_X86_64
   // 64 bit extensions
   BX_SMF BX_INSF_TYPE ADD_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4900,7 +4913,7 @@ enum {
 #define BxGroup6          BxGroupN
 #define BxGroup7          BxFPEscape
 #define BxGroup8          BxGroupN
-#define BxGroup9          BxGroupN
+#define BxGroup9          BxSplitGroupN
 
 #define BxGroup11         BxGroupN
 #define BxGroup12         BxGroupN

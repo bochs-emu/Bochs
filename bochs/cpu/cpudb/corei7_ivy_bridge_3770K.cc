@@ -44,7 +44,7 @@ corei7_ivy_bridge_3770k_t::corei7_ivy_bridge_3770k_t(BX_CPU_C *cpu): bx_cpuid_t(
   if (! BX_SUPPORT_MONITOR_MWAIT)
     BX_INFO(("WARNING: MONITOR/MWAIT support is not compiled in !"));
 
-  BX_INFO(("WARNING: RDRAND is not implemented yet !"));
+  BX_INFO(("WARNING: RDRAND would not produce true random numbers !"));
 }
 
 void corei7_ivy_bridge_3770k_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -151,6 +151,7 @@ Bit64u corei7_ivy_bridge_3770k_t::get_isa_extensions_bitmask(void) const
          BX_ISA_FSGSBASE |
          BX_ISA_AVX |
          BX_ISA_AVX_F16C |
+         BX_ISA_RDRAND |
          BX_ISA_CMPXCHG16B |
          BX_ISA_LM_LAHF_SAHF;
 }
@@ -327,8 +328,8 @@ void corei7_ivy_bridge_3770k_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) con
               BX_CPUID_EXT_AES |
               BX_CPUID_EXT_XSAVE |
               BX_CPUID_EXT_AVX |
-              BX_CPUID_EXT_AVX_F16C;
-           // BX_CPUID_EXT_RDRAND not implemented yet
+              BX_CPUID_EXT_AVX_F16C |
+              BX_CPUID_EXT_RDRAND;
   if (cpu->cr4.get_OSXSAVE())
     leaf->ecx |= BX_CPUID_EXT_OSXSAVE;
 
