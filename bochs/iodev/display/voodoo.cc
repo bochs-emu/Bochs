@@ -185,15 +185,17 @@ void bx_voodoo_c::reset(unsigned type)
 void bx_voodoo_c::register_state(void)
 {
   char name[8];
+  int i, j, k;
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "voodoo", "Voodoo State");
   bx_list_c *vstate = new bx_list_c(list, "vstate", "Voodoo Device State");
   new bx_shadow_data_c(vstate, "reg", (Bit8u*)v->reg, sizeof(v->reg));
+  new bx_shadow_num_c(vstate, "alt_regmap", &v->alt_regmap);
   new bx_shadow_num_c(vstate, "pci_init_enable", &v->pci.init_enable, BASE_HEX);
   bx_list_c *dac = new bx_list_c(vstate, "dac", "DAC");
-  for (int d = 0; d < 8; d++) {
-    sprintf(name, "reg%d", d);
-    new bx_shadow_num_c(dac, name, &v->dac.reg[d], BASE_HEX);
+  for (i = 0; i < 8; i++) {
+    sprintf(name, "reg%d", i);
+    new bx_shadow_num_c(dac, name, &v->dac.reg[i], BASE_HEX);
   }
   new bx_shadow_num_c(dac, "read_result", &v->dac.read_result, BASE_HEX);
   bx_list_c *fbi = new bx_list_c(vstate, "fbi", "framebuffer");
@@ -241,20 +243,19 @@ void bx_voodoo_c::register_state(void)
   new bx_shadow_num_c(fbi, "dzdy", &v->fbi.dzdy);
   new bx_shadow_num_c(fbi, "dwdy", &v->fbi.dwdy);
   bx_list_c *fogblend = new bx_list_c(fbi, "fogblend", "");
-  for (int fb = 0; fb < 64; fb++) {
-    sprintf(name, "%d", fb);
-    new bx_shadow_num_c(fogblend, name, &v->fbi.fogblend[fb]);
+  for (i = 0; i < 64; i++) {
+    sprintf(name, "%d", i);
+    new bx_shadow_num_c(fogblend, name, &v->fbi.fogblend[i]);
   }
   bx_list_c *fogdelta = new bx_list_c(fbi, "fogdelta", "");
-  for (int fd = 0; fd < 64; fd++) {
-    sprintf(name, "%d", fd);
-    new bx_shadow_num_c(fogdelta, name, &v->fbi.fogdelta[fd]);
+  for (i = 0; i < 64; i++) {
+    sprintf(name, "%d", i);
+    new bx_shadow_num_c(fogdelta, name, &v->fbi.fogdelta[i]);
   }
   new bx_shadow_data_c(fbi, "clut", (Bit8u*)v->fbi.clut, sizeof(v->fbi.clut));
   new bx_shadow_bool_c(fbi, "clut_dirty", &v->fbi.clut_dirty);
-  // TODO
   bx_list_c *tmu = new bx_list_c(vstate, "tmu", "textures");
-  for (int i = 0; i < 2; i++) {
+  for (i = 0; i < 2; i++) {
     sprintf(name, "%d", i);
     bx_list_c *num = new bx_list_c(tmu, name, "");
     new bx_shadow_data_c(num, "ram", v->tmu[i].ram, (4 << 20));
@@ -273,7 +274,7 @@ void bx_voodoo_c::register_state(void)
     new bx_shadow_num_c(num, "lodbias", &v->tmu[i].lodbias);
     new bx_shadow_num_c(num, "lodmask", &v->tmu[i].lodmask);
     bx_list_c *lodoffs = new bx_list_c(num, "lodoffset", "");
-    for (int j = 0; j < 9; j++) {
+    for (j = 0; j < 9; j++) {
       sprintf(name, "%d", j);
       new bx_shadow_num_c(lodoffs, name, &v->tmu[i].lodoffset[j]);
     }
@@ -281,10 +282,36 @@ void bx_voodoo_c::register_state(void)
     new bx_shadow_num_c(num, "detailbias", &v->tmu[i].detailbias);
     new bx_shadow_num_c(num, "wmask", &v->tmu[i].wmask);
     new bx_shadow_num_c(num, "hmask", &v->tmu[i].hmask);
+    bx_list_c *ncc = new bx_list_c(num, "ncc", "");
+    for (j = 0; j < 2; j++) {
+      sprintf(name, "%d", j);
+      bx_list_c *ncct = new bx_list_c(ncc, name, "");
+      new bx_shadow_bool_c(ncct, "dirty", &v->tmu[i].ncc[j].dirty);
+      bx_list_c *ir = new bx_list_c(ncct, "ir", "");
+      bx_list_c *ig = new bx_list_c(ncct, "ig", "");
+      bx_list_c *ib = new bx_list_c(ncct, "ib", "");
+      bx_list_c *qr = new bx_list_c(ncct, "qr", "");
+      bx_list_c *qg = new bx_list_c(ncct, "qg", "");
+      bx_list_c *qb = new bx_list_c(ncct, "qb", "");
+      for (k = 0; k < 4; k++) {
+        sprintf(name, "%d", k);
+        new bx_shadow_num_c(ir, name, &v->tmu[i].ncc[j].ir[k]);
+        new bx_shadow_num_c(ig, name, &v->tmu[i].ncc[j].ig[k]);
+        new bx_shadow_num_c(ib, name, &v->tmu[i].ncc[j].ib[k]);
+        new bx_shadow_num_c(qr, name, &v->tmu[i].ncc[j].qr[k]);
+        new bx_shadow_num_c(qg, name, &v->tmu[i].ncc[j].qg[k]);
+        new bx_shadow_num_c(qb, name, &v->tmu[i].ncc[j].qb[k]);
+      }
+      bx_list_c *y = new bx_list_c(ncct, "y", "");
+      for (k = 0; k < 16; k++) {
+        sprintf(name, "%d", k);
+        new bx_shadow_num_c(y, name, &v->tmu[i].ncc[j].y[k]);
+      }
+      new bx_shadow_data_c(ncct, "texel", (Bit8u*)v->tmu[i].ncc[j].texel, 256 * sizeof(rgb_t));
+    }
     new bx_shadow_data_c(num, "palette", (Bit8u*)v->tmu[i].palette, 256 * sizeof(rgb_t));
     new bx_shadow_data_c(num, "palettea", (Bit8u*)v->tmu[i].palettea, 256 * sizeof(rgb_t));
   }
-  // TODO
   new bx_shadow_num_c(vstate, "send_config", &v->send_config);
   bx_list_c *vdraw = new bx_list_c(list, "vdraw", "Voodoo Draw State");
   new bx_shadow_bool_c(vdraw, "clock_enabled", &BX_VOODOO_THIS s.vdraw.clock_enabled);

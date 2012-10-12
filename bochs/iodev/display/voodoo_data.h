@@ -1484,7 +1484,7 @@ struct _pci_state
 typedef struct _ncc_table ncc_table;
 struct _ncc_table
 {
-  Bit8u       dirty;        /* is the texel lookup dirty? */
+  bx_bool     dirty;        /* is the texel lookup dirty? */
   voodoo_reg* reg;          /* pointer to our registers */
   Bit32s      ir[4], ig[4], ib[4];  /* I values for R,G,B */
   Bit32s      qr[4], qg[4], qb[4];  /* Q values for R,G,B */

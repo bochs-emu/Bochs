@@ -298,7 +298,7 @@ void ncc_table_write(ncc_table *n, offs_t regnum, Bit32u data)
   }
 
   /* mark the table dirty */
-  n->dirty = TRUE;
+  n->dirty = 1;
 }
 
 
@@ -330,7 +330,7 @@ void ncc_table_update(ncc_table *n)
   }
 
   /* no longer dirty */
-  n->dirty = FALSE;
+  n->dirty = 0;
 }
 
 void recompute_texture_params(tmu_state *t)
@@ -2743,7 +2743,7 @@ void init_tmu(voodoo_state *v, tmu_state *t, voodoo_reg *reg, void *memory, int 
   t->bilinear_mask = (v->type >= VOODOO_2) ? 0xff : 0xf0;
 
   /* mark the NCC tables dirty and configure their registers */
-  t->ncc[0].dirty = t->ncc[1].dirty = TRUE;
+  t->ncc[0].dirty = t->ncc[1].dirty = 1;
   t->ncc[0].reg = &t->reg[nccTable+0];
   t->ncc[1].reg = &t->reg[nccTable+12];
 
