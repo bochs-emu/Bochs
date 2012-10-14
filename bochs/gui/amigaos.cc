@@ -585,7 +585,7 @@ int bx_amigaos_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
   return 1;
 }
 
-bx_bool bx_amigaos_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
+bx_bool bx_amigaos_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
 {
   Bit8u *ptr = (Bit8u *)(cmap+index);
 
@@ -625,10 +625,14 @@ void bx_amigaos_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight
   if (bpp > 8) {
     BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
   }
+  guest_textmode = (fheight > 0);
+  guest_xres = x;
+  guest_yres = y;
+  guest_bpp = bpp;
 
   int xdiff = w - x;
 
-  if (fheight > 0) {
+  if (guest_textmode) {
     text_cols = x / fwidth;
     text_rows = y / fheight;
     if (fwidth != 8) {

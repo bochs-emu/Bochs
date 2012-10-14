@@ -464,9 +464,9 @@ void bx_svga_cirrus_c::after_restore_state(void)
     }
 #endif
     for (unsigned i=0; i<256; i++) {
-      bx_gui->palette_change(i, BX_CIRRUS_THIS s.pel.data[i].red<<2,
-                                BX_CIRRUS_THIS s.pel.data[i].green<<2,
-                                BX_CIRRUS_THIS s.pel.data[i].blue<<2);
+      bx_gui->palette_change_common(i, BX_CIRRUS_THIS s.pel.data[i].red<<2,
+                                    BX_CIRRUS_THIS s.pel.data[i].green<<2,
+                                    BX_CIRRUS_THIS s.pel.data[i].blue<<2);
     }
     BX_CIRRUS_THIS svga_needs_update_mode = 1;
     BX_CIRRUS_THIS svga_update();
@@ -825,32 +825,19 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
   }
 }
 
-int bx_svga_cirrus_c::get_snapshot_mode()
-{
-  if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
-    return BX_CIRRUS_THIS bx_vgacore_c::get_snapshot_mode();
-  } else {
-    return BX_GUI_SNAPSHOT_GFX;
-  }
-}
-
 void bx_svga_cirrus_c::get_text_snapshot(Bit8u **text_snapshot,
                                     unsigned *txHeight, unsigned *txWidth)
 {
   BX_CIRRUS_THIS bx_vgacore_c::get_text_snapshot(text_snapshot,txHeight,txWidth);
 }
 
-Bit32u bx_svga_cirrus_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
-                                          unsigned *iHeight, unsigned *iWidth, unsigned *iDepth)
+Bit32u bx_svga_cirrus_c::get_gfx_snapshot(Bit8u **snapshot_ptr)
 {
   Bit32u len, len1;
   unsigned i;
   Bit8u *dst_ptr, *src_ptr;
 
   if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) != CIRRUS_SR7_BPP_VGA) {
-    *iHeight = BX_CIRRUS_THIS svga_yres;
-    *iWidth = BX_CIRRUS_THIS svga_xres;
-    *iDepth = BX_CIRRUS_THIS svga_dispbpp;
     len1 = BX_CIRRUS_THIS svga_xres * (BX_CIRRUS_THIS svga_bpp >> 3);
     len = len1 * BX_CIRRUS_THIS svga_yres;
     *snapshot_ptr = (Bit8u*)malloc(len);
@@ -863,12 +850,9 @@ Bit32u bx_svga_cirrus_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_
       src_ptr += BX_CIRRUS_THIS svga_pitch;
       dst_ptr += len1;
     }
-    if (*iDepth == 8) {
-      BX_CIRRUS_THIS get_dac_palette(palette_ptr, 2);
-    }
     return len;
   } else {
-    return BX_CIRRUS_THIS bx_vgacore_c::get_gfx_snapshot(snapshot_ptr, palette_ptr, iHeight, iWidth, iDepth);
+    return BX_CIRRUS_THIS bx_vgacore_c::get_gfx_snapshot(snapshot_ptr);
   }
 }
 

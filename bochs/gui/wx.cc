@@ -106,7 +106,7 @@ static unsigned long wxFontY = 0;
 static unsigned int text_rows=25, text_cols=80;
 static Bit8u h_panning = 0, v_panning = 0;
 static Bit16u line_compare = 1023;
-static unsigned vga_bpp=8;
+static unsigned disp_bpp = 8;
 static struct {
   unsigned char red;
   unsigned char green;
@@ -1160,7 +1160,7 @@ static void UpdateScreen(unsigned char *newBits, int x, int y, int width, int he
   wxCriticalSectionLocker lock(wxScreen_lock);
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::UpdateScreen got lock. wxScreen=%p", wxScreen)));
   if(wxScreen != NULL) {
-    switch (vga_bpp) {
+    switch (disp_bpp) {
       case 8: /* 8 bpp */
         for(int i = 0; i < height; i++) {
           char *pwxScreen = &wxScreen[(y * wxScreenX * 3) + (x * 3)];
@@ -1176,7 +1176,7 @@ static void UpdateScreen(unsigned char *newBits, int x, int y, int width, int he
         }
         break;
       default:
-        BX_PANIC(("%u bpp modes handled by new graphics API", vga_bpp));
+        BX_PANIC(("%u bpp modes handled by new graphics API", disp_bpp));
         return;
     }
   } else {
@@ -1423,7 +1423,7 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 // returns: 0=no screen update needed (color map change has direct effect)
 //          1=screen update needed (redraw using current colormap)
 
-bx_bool bx_wx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
+bx_bool bx_wx_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
 {
   IFDBG_VGA(wxLogDebug (wxT ("palette_change")));
   wxBochsPalette[index].red = red;
@@ -1528,13 +1528,14 @@ void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, uns
   BX_INFO (("dimension update x=%d y=%d fontheight=%d fontwidth=%d bpp=%d", x, y, fheight, fwidth, bpp));
   if ((bpp == 8) || (bpp == 15) || (bpp == 16) || (bpp == 24) || (bpp == 32)) {
     if (bpp == 32) BX_INFO(("wxWidgets ignores bit 24..31 in 32bpp mode"));
-    vga_bpp = bpp;
-  }
-  else
-  {
+    disp_bpp = guest_bpp = bpp;
+  } else {
     BX_PANIC(("%d bpp graphics mode not supported", bpp));
   }
-  if (fheight > 0) {
+  guest_textmode = (fheight > 0);
+  guest_xres = x;
+  guest_yres = y;
+  if (guest_textmode) {
     wxFontX = fwidth;
     wxFontY = fheight;
     text_cols = x / wxFontX;

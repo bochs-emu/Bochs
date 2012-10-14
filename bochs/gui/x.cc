@@ -104,7 +104,6 @@ static unsigned prev_cursor_y=0;
 static Window win;
 static GC gc, gc_inv, gc_headerbar, gc_headerbar_inv;
 static unsigned dimension_x=0, dimension_y=0;
-static unsigned vga_bpp=8;
 
 static XImage *ximage = NULL;
 static unsigned imDepth, imWide, imBPP;
@@ -1490,7 +1489,7 @@ void bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
   } else {
     y_size = y_tilesize;
   }
-  switch (vga_bpp) {
+  switch (guest_bpp) {
     case 8:  // 8 bits per pixel
       for (y=0; y<y_size; y++) {
         for (x=0; x<x_tilesize; x++) {
@@ -1557,7 +1556,7 @@ void bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
       break;
     default:
       BX_PANIC(("X_graphics_tile_update: bits_per_pixel %u handled by new graphics API",
-                (unsigned) vga_bpp));
+                (unsigned) guest_bpp));
       return;
   }
   XPutImage(bx_x_display, win, gc, ximage, 0, 0, x0, y0+bx_headerbar_y,
@@ -1667,7 +1666,7 @@ void bx_x_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
             x0, y0+bx_headerbar_y, w, h);
 }
 
-bx_bool bx_x_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
+bx_bool bx_x_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
 {
   // returns: 0=no screen update needed (color map change has direct effect)
   //          1=screen updated needed (redraw using current colormap)
@@ -1694,11 +1693,14 @@ bx_bool bx_x_gui_c::palette_change(unsigned index, unsigned red, unsigned green,
 void bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
   if ((bpp == 8) || (bpp == 15) || (bpp == 16) || (bpp == 24) || (bpp == 32)) {
-    vga_bpp = bpp;
+    guest_bpp = bpp;
   } else {
     BX_PANIC(("%d bpp graphics mode not supported", bpp));
   }
-  if (fheight > 0) {
+  guest_textmode = (fheight > 0);
+  guest_xres = x;
+  guest_yres = y;
+  if (guest_textmode) {
     font_height = fheight;
     font_width = fwidth;
     text_cols = x / font_width;

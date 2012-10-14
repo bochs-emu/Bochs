@@ -376,9 +376,9 @@ void bx_vgacore_c::register_state(bx_list_c *parent)
 void bx_vgacore_c::after_restore_state(void)
 {
   for (unsigned i=0; i<256; i++) {
-    bx_gui->palette_change(i, BX_VGA_THIS s.pel.data[i].red   << BX_VGA_THIS s.dac_shift,
-                              BX_VGA_THIS s.pel.data[i].green << BX_VGA_THIS s.dac_shift,
-                              BX_VGA_THIS s.pel.data[i].blue  << BX_VGA_THIS s.dac_shift);
+    bx_gui->palette_change_common(i, BX_VGA_THIS s.pel.data[i].red   << BX_VGA_THIS s.dac_shift,
+                                  BX_VGA_THIS s.pel.data[i].green << BX_VGA_THIS s.dac_shift,
+                                  BX_VGA_THIS s.pel.data[i].blue  << BX_VGA_THIS s.dac_shift);
   }
   bx_gui->set_text_charmap(&BX_VGA_THIS s.memory[0x20000 + BX_VGA_THIS s.charmap_address]);
   BX_VGA_THIS calculate_retrace_timing();
@@ -1074,7 +1074,7 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool 
         case 2:
           BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].blue = value;
 
-          needs_update |= bx_gui->palette_change(BX_VGA_THIS s.pel.write_data_register,
+          needs_update |= bx_gui->palette_change_common(BX_VGA_THIS s.pel.write_data_register,
             BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].red   << BX_VGA_THIS s.dac_shift,
             BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].green << BX_VGA_THIS s.dac_shift,
             BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].blue  << BX_VGA_THIS s.dac_shift);
@@ -2283,20 +2283,6 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
   }
 }
 
-int bx_vgacore_c::get_snapshot_mode()
-{
-  if (!BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
-    return BX_GUI_SNAPSHOT_TXT;
-  } else if ((BX_VGA_THIS s.graphics_ctrl.shift_reg == 0) &&
-             ((BX_VGA_THIS s.CRTC.reg[0x17] & 1) != 0)) {
-    return BX_GUI_SNAPSHOT_GFX;
-  } else if (BX_VGA_THIS s.graphics_ctrl.shift_reg == 2) {
-    return BX_GUI_SNAPSHOT_GFX;
-  } else {
-    return BX_GUI_SNAPSHOT_UNSUP;
-  }
-}
-
 void bx_vgacore_c::get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
                                                    unsigned *txWidth)
 {
@@ -2314,34 +2300,13 @@ void bx_vgacore_c::get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
   }
 }
 
-bx_bool bx_vgacore_c::get_dac_palette(Bit8u **palette_ptr, Bit8u shift)
-{
-  unsigned i;
-  Bit8u *dst_ptr;
-
-  *palette_ptr = (Bit8u*)malloc(256 * 4);
-  if (palette_ptr == NULL) return 0;
-  dst_ptr = *palette_ptr;
-  for (i = 0; i < 256; i++) {
-    *(dst_ptr++) = (BX_VGA_THIS s.pel.data[i].blue << shift);
-    *(dst_ptr++) = (BX_VGA_THIS s.pel.data[i].green << shift);
-    *(dst_ptr++) = (BX_VGA_THIS s.pel.data[i].red << shift);
-    *(dst_ptr++) = 0;
-  }
-  return 1;
-}
-
-Bit32u bx_vgacore_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
-                                  unsigned *iHeight, unsigned *iWidth, unsigned *iDepth)
+Bit32u bx_vgacore_c::get_gfx_snapshot(Bit8u **snapshot_ptr)
 {
   Bit32u len;
   unsigned line_compare, start_addr, x, y;
   unsigned byte_offset, px, py;
   Bit8u *dst_ptr, *plane[4];
 
-  *iHeight = BX_VGA_THIS s.last_yres;
-  *iWidth = BX_VGA_THIS s.last_xres;
-  *iDepth = 8;
   len = (BX_VGA_THIS s.last_xres * BX_VGA_THIS s.last_yres);
   *snapshot_ptr = (Bit8u*)malloc(len);
   if (snapshot_ptr == NULL)
@@ -2361,7 +2326,6 @@ Bit32u bx_vgacore_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
         *(dst_ptr++) = BX_VGA_THIS get_vga_pixel(x, y, start_addr, line_compare, 0, plane);
       }
     }
-    BX_VGA_THIS get_dac_palette(palette_ptr, BX_VGA_THIS s.dac_shift);
     return len;
   } else if (BX_VGA_THIS s.graphics_ctrl.shift_reg == 2) {
     for (y = 0; y < BX_VGA_THIS s.last_yres; y++) {
@@ -2379,12 +2343,8 @@ Bit32u bx_vgacore_c::get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
         *(dst_ptr++) = plane[px % 4][byte_offset];
       }
     }
-    BX_VGA_THIS get_dac_palette(palette_ptr, 2);
     return len;
   } else {
-    *iHeight = 0;
-    *iWidth = 0;
-    *iDepth = 0;
     return 0;
   }
 }

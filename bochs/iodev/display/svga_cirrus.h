@@ -73,11 +73,9 @@ public:
                            unsigned width, unsigned height);
   virtual Bit8u mem_read(bx_phy_address addr);
   virtual void mem_write(bx_phy_address addr, Bit8u value);
-  virtual int  get_snapshot_mode(void);
   virtual void get_text_snapshot(Bit8u **text_snapshot,
                                  unsigned *txHeight, unsigned *txWidth);
-  virtual Bit32u get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
-                                  unsigned *iHeight, unsigned *iWidth, unsigned *iDepth);
+  virtual Bit32u get_gfx_snapshot(Bit8u **snapshot_ptr);
   virtual void register_state(void);
   virtual void after_restore_state(void);
 

@@ -70,11 +70,9 @@ public:
   virtual void   redraw_area(unsigned x0, unsigned y0,
                              unsigned width, unsigned height);
 
-  virtual int    get_snapshot_mode(void);
   virtual void   get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
                                    unsigned *txWidth);
-  virtual Bit32u get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
-                                  unsigned *iHeight, unsigned *iWidth, unsigned *iDepth);
+  virtual Bit32u get_gfx_snapshot(Bit8u **snapshot_ptr);
   virtual void   init_vga_extension(void) {}
 
   static void    timer_handler(void *);
@@ -93,7 +91,6 @@ protected:
   void   write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
 
   Bit8u get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, bx_bool bs, Bit8u **plane);
-  bx_bool get_dac_palette(Bit8u **palette_ptr, Bit8u shift);
   void update(void);
   void determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth);
   void calculate_retrace_timing(void);

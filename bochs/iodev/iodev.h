@@ -251,16 +251,11 @@ public:
   virtual void mem_write(bx_phy_address addr, Bit8u value) {
     STUBFUNC(vga, mem_write);
   }
-  virtual int get_snapshot_mode(void) {
-    STUBFUNC(vga, get_snapshot_mode);
-    return 0;
-  }
   virtual void get_text_snapshot(Bit8u **text_snapshot,
                                  unsigned *txHeight, unsigned *txWidth) {
     STUBFUNC(vga, get_text_snapshot);
   }
-  virtual Bit32u get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
-                                  unsigned *iHeight, unsigned *iWidth, unsigned *iDepth) {
+  virtual Bit32u get_gfx_snapshot(Bit8u **snapshot_ptr) {
     STUBFUNC(vga, get_gfx_snapshot);
     return 0;
   }

@@ -177,7 +177,7 @@ int bx_nogui_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 // returns: 0=no screen update needed (color map change has direct effect)
 //          1=screen updated needed (redraw using current colormap)
 
-bx_bool bx_nogui_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
+bx_bool bx_nogui_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
 {
   UNUSED(index);
   UNUSED(red);
@@ -224,11 +224,11 @@ void bx_nogui_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
 void bx_nogui_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
-  UNUSED(x);
-  UNUSED(y);
-  UNUSED(fheight);
+  guest_textmode = (fheight > 0);
+  guest_xres = x;
+  guest_yres = y;
+  guest_bpp = bpp;
   UNUSED(fwidth);
-  UNUSED(bpp);
 }
 
 

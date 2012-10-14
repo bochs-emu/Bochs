@@ -104,9 +104,7 @@ public:
   virtual void   redraw_area(unsigned x0, unsigned y0,
                              unsigned width, unsigned height);
 
-  virtual int    get_snapshot_mode(void);
-  virtual Bit32u get_gfx_snapshot(Bit8u **snapshot_ptr, Bit8u **palette_ptr,
-                                  unsigned *iHeight, unsigned *iWidth, unsigned *iDepth);
+  virtual Bit32u get_gfx_snapshot(Bit8u **snapshot_ptr);
   virtual void   init_vga_extension(void);
 
   static void     timer_handler(void *);

@@ -438,19 +438,13 @@ void bx_svga_gui_c::clear_screen(void)
   gl_clearscreen(0);
 }
 
-bx_bool bx_svga_gui_c::palette_change(
-    unsigned index,
-    unsigned red,
-    unsigned green,
-    unsigned blue)
+bx_bool bx_svga_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
 {
-  if(index > 255) return 0;
-
   // without VGA_CLUT8 extension we have only 6 bits for each r,g,b value
   if (!clut8 && (red > 63 || green > 63 || blue > 63)) {
-	red   = red >> 2;
-	green = green >> 2;
-	blue  = blue >> 2;
+    red   = red >> 2;
+    green = green >> 2;
+    blue  = blue >> 2;
   }
 
   vga_setpalette(index, red, green, blue);
@@ -471,8 +465,11 @@ void bx_svga_gui_c::dimension_update(
   if (bpp > 8) {
     BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
   }
-  if(fheight > 0)
-  {
+  guest_textmode = (fheight > 0);
+  guest_xres = x;
+  guest_yres = y;
+  guest_bpp = bpp;
+  if (guest_textmode) {
     text_cols = x / fwidth;
     text_rows = y / fheight;
     fontheight = fheight;

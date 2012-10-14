@@ -637,7 +637,7 @@ int bx_term_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 // returns: 0=no screen update needed (color map change has direct effect)
 //          1=screen updated needed (redraw using current colormap)
 
-bx_bool bx_term_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
+bx_bool bx_term_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
 {
   BX_DEBUG(("color pallete request (%d,%d,%d,%d) ignored", index,red,green,blue));
   return(0);
@@ -680,7 +680,11 @@ void bx_term_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, u
   if (bpp > 8) {
     BX_PANIC(("%d bpp graphics mode not supported", bpp));
   }
-  if (fheight > 0) {
+  guest_textmode = (fheight > 0);
+  guest_xres = x;
+  guest_yres = y;
+  guest_bpp = bpp;
+  if (guest_textmode) {
     text_cols = x / fwidth;
     text_rows = y / fheight;
 #if BX_HAVE_COLOR_SET

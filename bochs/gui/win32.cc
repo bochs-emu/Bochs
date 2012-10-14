@@ -166,7 +166,6 @@ bx_bool SB_ActiveW[BX_MAX_STATUSITEMS];
 static unsigned dimension_x, dimension_y, current_bpp;
 static unsigned stretched_x, stretched_y;
 static unsigned stretch_factor=1;
-static BOOL BxTextMode = TRUE;
 static BOOL fix_size = FALSE;
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
 static BOOL gui_debug = FALSE;
@@ -1789,8 +1788,8 @@ int bx_win32_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 // returns: 0=no screen update needed (color map change has direct effect)
 //          1=screen updated needed (redraw using current colormap)
 
-bx_bool bx_win32_gui_c::palette_change(unsigned index, unsigned red,
-                                 unsigned green, unsigned blue) {
+bx_bool bx_win32_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green,
+                                       Bit8u blue) {
   if ((current_bpp == 16) && (index < 3)) {
     cmap_index[256+index].rgbRed = red;
     cmap_index[256+index].rgbBlue = blue;
@@ -1857,29 +1856,30 @@ void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
 void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
-  BxTextMode = (fheight > 0);
-  if (BxTextMode) {
+  guest_textmode = (fheight > 0);
+  guest_xres = x;
+  guest_yres = y;
+  if (guest_textmode) {
     text_cols = x / fwidth;
     text_rows = y / fheight;
     xChar = fwidth;
     yChar = fheight;
   }
 
-  if (x==dimension_x && y==dimension_y && bpp==current_bpp)
+  if (x == dimension_x && y == dimension_y && bpp == current_bpp)
     return;
   dimension_x = x;
   dimension_y = y;
   stretched_x = dimension_x;
   stretched_y = dimension_y;
   stretch_factor = 1;
-  if (BxTextMode && (stretched_x<400)) {
+  if (guest_textmode && (stretched_x<400)) {
     stretched_x *= 2;
     stretch_factor *= 2;
   }
 
   bitmap_info->bmiHeader.biBitCount = bpp;
-  if (bpp == 16)
-  {
+  if (bpp == 16) {
     bitmap_info->bmiHeader.biCompression = BI_BITFIELDS;
     static RGBQUAD red_mask   = {0x00, 0xF8, 0x00, 0x00};
     static RGBQUAD green_mask = {0xE0, 0x07, 0x00, 0x00};
@@ -1890,22 +1890,18 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
     bitmap_info->bmiColors[0] = red_mask;
     bitmap_info->bmiColors[1] = green_mask;
     bitmap_info->bmiColors[2] = blue_mask;
-  }
-  else
-  {
-    if (current_bpp == 16)
-    {
+  } else {
+    if (current_bpp == 16) {
       bitmap_info->bmiColors[0] = bitmap_info->bmiColors[256];
       bitmap_info->bmiColors[1] = bitmap_info->bmiColors[257];
       bitmap_info->bmiColors[2] = bitmap_info->bmiColors[258];
     }
     bitmap_info->bmiHeader.biCompression = BI_RGB;
-    if (bpp == 15)
-    {
+    if (bpp == 15) {
       bitmap_info->bmiHeader.biBitCount = 16;
     }
   }
-  current_bpp = bpp;
+  current_bpp = guest_bpp = bpp;
 
   resize_main_window();
 
