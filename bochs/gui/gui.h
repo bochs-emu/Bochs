@@ -90,7 +90,7 @@ public:
   virtual void text_update(Bit8u *old_text, Bit8u *new_text,
                           unsigned long cursor_x, unsigned long cursor_y,
                           bx_vga_tminfo_t *tm_info) = 0;
-  virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y) = 0;
+  virtual void graphics_tile_update(Bit8u *tile, unsigned x, unsigned y) = 0;
   virtual bx_svga_tileinfo_t *graphics_tile_info(bx_svga_tileinfo_t *info);
   virtual Bit8u *graphics_tile_get(unsigned x, unsigned y, unsigned *w, unsigned *h);
   virtual void graphics_tile_update_in_place(unsigned x, unsigned y, unsigned w, unsigned h);
@@ -143,6 +143,7 @@ public:
   void init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
             unsigned x_tilesize, unsigned y_tilesize);
   void cleanup(void);
+  void graphics_tile_update_common(Bit8u *tile, unsigned x, unsigned y);
   bx_bool palette_change_common(Bit8u index, Bit8u red, Bit8u green, Bit8u blue);
   void update_drive_status_buttons(void);
   static void     mouse_enabled_changed(bx_bool val);
@@ -170,8 +171,9 @@ protected:
   static void config_handler(void);
   static void userbutton_handler(void);
   static void save_restore_handler(void);
-  // text snapshot helper function
+  // snapshot helper functions
   static void make_text_snapshot(char **snapshot, Bit32u *length);
+  static void set_snapshot_mode(bx_bool mode);
   // status bar LED timer
   static void led_timer_handler(void *);
   void led_timer(void);
@@ -225,11 +227,13 @@ protected:
   unsigned guest_xres;
   unsigned guest_yres;
   unsigned guest_bpp;
-  // current palette (for graphics snapshot
+  // graphics snapshot
+  bx_bool snapshot_mode;
+  Bit8u *snapshot_buffer;
   struct {
-    Bit8u red;
-    Bit8u green;
     Bit8u blue;
+    Bit8u green;
+    Bit8u red;
     Bit8u reserved;
   } palette[256];
   // mouse toggle setup
@@ -256,7 +260,7 @@ virtual void specific_init(int argc, char **argv,                           \
 virtual void text_update(Bit8u *old_text, Bit8u *new_text,                  \
                   unsigned long cursor_x, unsigned long cursor_y,           \
                   bx_vga_tminfo_t *tm_info);                                \
-virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y); \
+virtual void graphics_tile_update(Bit8u *tile, unsigned x, unsigned y);     \
 virtual void handle_events(void);                                           \
 virtual void flush(void);                                                   \
 virtual void clear_screen(void);                                            \

@@ -677,7 +677,7 @@ void bx_vga_c::update(void)
               }
             }
             SET_TILE_UPDATED (xti, yti, 0);
-            bx_gui->graphics_tile_update(BX_VGA_THIS s.tile, xc, yc);
+            bx_gui->graphics_tile_update_common(BX_VGA_THIS s.tile, xc, yc);
           }
         }
       }
@@ -767,7 +767,7 @@ void bx_vga_c::mem_write(bx_phy_address addr, Bit8u value)
 Bit32u bx_vga_c::get_gfx_snapshot(Bit8u **snapshot_ptr)
 {
   Bit32u len, len1;
-  unsigned i, shift;
+  unsigned i;
   Bit8u *dst_ptr, *src_ptr;
 
   if ((BX_VGA_THIS vbe.enabled) && (BX_VGA_THIS vbe.bpp >= 8)) {

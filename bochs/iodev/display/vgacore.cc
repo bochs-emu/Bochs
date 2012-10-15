@@ -1496,7 +1496,7 @@ void bx_vgacore_c::update(void)
                   }
                 }
                 SET_TILE_UPDATED (xti, yti, 0);
-                bx_gui->graphics_tile_update(BX_VGA_THIS s.tile, xc, yc);
+                bx_gui->graphics_tile_update_common(BX_VGA_THIS s.tile, xc, yc);
               }
             }
           }
@@ -1523,7 +1523,7 @@ void bx_vgacore_c::update(void)
                   }
                 }
                 SET_TILE_UPDATED (xti, yti, 0);
-                bx_gui->graphics_tile_update(BX_VGA_THIS s.tile, xc, yc);
+                bx_gui->graphics_tile_update_common(BX_VGA_THIS s.tile, xc, yc);
               }
             }
           }
@@ -1560,7 +1560,7 @@ void bx_vgacore_c::update(void)
                 }
               }
               SET_TILE_UPDATED (xti, yti, 0);
-              bx_gui->graphics_tile_update(BX_VGA_THIS s.tile, xc, yc);
+              bx_gui->graphics_tile_update_common(BX_VGA_THIS s.tile, xc, yc);
             }
           }
         }
@@ -1594,7 +1594,7 @@ void bx_vgacore_c::update(void)
                   }
                 }
                 SET_TILE_UPDATED (xti, yti, 0);
-                bx_gui->graphics_tile_update(BX_VGA_THIS s.tile, xc, yc);
+                bx_gui->graphics_tile_update_common(BX_VGA_THIS s.tile, xc, yc);
               }
             }
           }
@@ -1618,7 +1618,7 @@ void bx_vgacore_c::update(void)
                   }
                 }
                 SET_TILE_UPDATED (xti, yti, 0);
-                bx_gui->graphics_tile_update(BX_VGA_THIS s.tile, xc, yc);
+                bx_gui->graphics_tile_update_common(BX_VGA_THIS s.tile, xc, yc);
               }
             }
           }
@@ -1642,7 +1642,7 @@ void bx_vgacore_c::update(void)
                   }
                 }
                 SET_TILE_UPDATED (xti, yti, 0);
-                bx_gui->graphics_tile_update(BX_VGA_THIS s.tile, xc, yc);
+                bx_gui->graphics_tile_update_common(BX_VGA_THIS s.tile, xc, yc);
               }
             }
           }
@@ -2302,51 +2302,9 @@ void bx_vgacore_c::get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
 
 Bit32u bx_vgacore_c::get_gfx_snapshot(Bit8u **snapshot_ptr)
 {
-  Bit32u len;
-  unsigned line_compare, start_addr, x, y;
-  unsigned byte_offset, px, py;
-  Bit8u *dst_ptr, *plane[4];
-
-  len = (BX_VGA_THIS s.last_xres * BX_VGA_THIS s.last_yres);
-  *snapshot_ptr = (Bit8u*)malloc(len);
-  if (snapshot_ptr == NULL)
-    return 0;
-  dst_ptr = *snapshot_ptr;
-  plane[0] = &BX_VGA_THIS s.memory[0 << BX_VGA_THIS s.plane_shift];
-  plane[1] = &BX_VGA_THIS s.memory[1 << BX_VGA_THIS s.plane_shift];
-  plane[2] = &BX_VGA_THIS s.memory[2 << BX_VGA_THIS s.plane_shift];
-  plane[3] = &BX_VGA_THIS s.memory[3 << BX_VGA_THIS s.plane_shift];
-  start_addr = (BX_VGA_THIS s.CRTC.reg[0x0c] << 8) | BX_VGA_THIS s.CRTC.reg[0x0d];
-  line_compare = BX_VGA_THIS s.line_compare;
-  if (BX_VGA_THIS s.y_doublescan) line_compare >>= 1;
-  if ((BX_VGA_THIS s.graphics_ctrl.shift_reg == 0) &&
-      (BX_VGA_THIS s.graphics_ctrl.memory_mapping != 3)) {
-    for (y = 0; y < BX_VGA_THIS s.last_yres; y++) {
-      for (x = 0; x < BX_VGA_THIS s.last_xres; x++) {
-        *(dst_ptr++) = BX_VGA_THIS get_vga_pixel(x, y, start_addr, line_compare, 0, plane);
-      }
-    }
-    return len;
-  } else if (BX_VGA_THIS s.graphics_ctrl.shift_reg == 2) {
-    for (y = 0; y < BX_VGA_THIS s.last_yres; y++) {
-      for (x = 0; x < BX_VGA_THIS s.last_xres; x++) {
-        px = x >> 1;
-        py = y >> BX_VGA_THIS s.y_doublescan;
-        byte_offset = start_addr + py * BX_VGA_THIS s.line_offset;
-        if (BX_VGA_THIS s.CRTC.reg[0x14] & 0x40) { // DW set: doubleword mode
-          byte_offset += (px & ~0x03);
-        } else if (BX_VGA_THIS s.CRTC.reg[0x17] & 0x40) { // B/W set: byte mode, modeX
-          byte_offset += (px >> 2);
-        } else {
-          byte_offset += (px >> 1) & ~0x01;
-        }
-        *(dst_ptr++) = plane[px % 4][byte_offset];
-      }
-    }
-    return len;
-  } else {
-    return 0;
-  }
+  // handled in the gui code
+  *snapshot_ptr = NULL;
+  return 0;
 }
 
 #if BX_DEBUGGER

@@ -103,6 +103,8 @@ bx_gui_c::bx_gui_c(void): disp_mode(DISP_MODE_SIM)
   guest_xres = 640;
   guest_yres = 480;
   guest_bpp = 8;
+  snapshot_mode = 0;
+  snapshot_buffer = NULL;
   memset(palette, 0, sizeof(palette));
 }
 
@@ -408,6 +410,29 @@ void bx_gui_c::make_text_snapshot(char **snapshot, Bit32u *length)
   *length = txt_addr;
 }
 
+void bx_gui_c::set_snapshot_mode(bx_bool mode)
+{
+  unsigned pixel_bytes, bufsize;
+
+  BX_GUI_THIS snapshot_mode = mode;
+  if (mode) {
+    pixel_bytes = ((BX_GUI_THIS guest_bpp + 1) >> 3);
+    bufsize = BX_GUI_THIS guest_xres * BX_GUI_THIS guest_yres * pixel_bytes;
+    BX_GUI_THIS snapshot_buffer = (Bit8u*)malloc(bufsize);
+    if (BX_GUI_THIS snapshot_buffer != NULL) {
+      memset(BX_GUI_THIS snapshot_buffer, 0, bufsize);
+      DEV_vga_redraw_area(0, 0, BX_GUI_THIS guest_xres, BX_GUI_THIS guest_yres);
+      DEV_vga_refresh();
+    }
+  } else {
+    if (BX_GUI_THIS snapshot_buffer != NULL) {
+      free(BX_GUI_THIS snapshot_buffer);
+      BX_GUI_THIS snapshot_buffer = NULL;
+      DEV_vga_redraw_area(0, 0, BX_GUI_THIS guest_xres, BX_GUI_THIS guest_yres);
+    }
+  }
+}
+
 // create a text snapshot and copy to the system clipboard.  On guis that
 // we haven't figured out how to support yet, dump to a file instead.
 void bx_gui_c::copy_handler(void)
@@ -432,7 +457,7 @@ void bx_gui_c::copy_handler(void)
 // create a text snapshot and dump it to a file
 void bx_gui_c::snapshot_handler(void)
 {
-  int fd, i, j, mode, pitch;
+  int fd, i, j, pitch;
   Bit8u *snapshot_ptr = NULL;
   Bit8u *row_buffer, *pixel_ptr, *row_ptr;
   Bit8u bmp_header[54], iBits, b1, b2;
@@ -466,16 +491,13 @@ void bx_gui_c::snapshot_handler(void)
     if (ilen > 0) {
       BX_INFO(("GFX snapshot: %u x %u x %u bpp (%u bytes)", BX_GUI_THIS guest_xres,
                BX_GUI_THIS guest_yres, BX_GUI_THIS guest_bpp, ilen));
-    } else {
-      BX_ERROR(("snapshot button failed: cannot allocate memory"));
-      return;
     }
     if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_SNAPSHOT) {
       int ret = SIM->ask_filename (filename, sizeof(filename),
                                    "Save snapshot as...", "snapshot.bmp",
                                    bx_param_string_c::SAVE_FILE_DIALOG);
       if (ret < 0) { // cancelled
-        free(snapshot_ptr);
+        if (snapshot_ptr != NULL) free(snapshot_ptr);
         return;
       }
     } else {
@@ -489,8 +511,12 @@ void bx_gui_c::snapshot_handler(void)
               );
     if (fd < 0) {
       BX_ERROR(("snapshot button failed: cannot create BMP file"));
-      free(snapshot_ptr);
+      if (snapshot_ptr != NULL) free(snapshot_ptr);
       return;
+    }
+    if (ilen == 0) {
+      BX_GUI_THIS set_snapshot_mode(1);
+      snapshot_ptr = BX_GUI_THIS snapshot_buffer;
     }
     iBits = (BX_GUI_THIS guest_bpp == 8) ? 8 : 24;
     rlen = (BX_GUI_THIS guest_xres * (iBits >> 3) + 3) & ~3;
@@ -518,7 +544,7 @@ void bx_gui_c::snapshot_handler(void)
     bmp_header[28] = iBits;
     write(fd, bmp_header, 54);
     if (BX_GUI_THIS guest_bpp == 8) {
-      write(fd, bx_gui->palette, 256 * 4);
+      write(fd, BX_GUI_THIS palette, 256 * 4);
     }
     pitch = BX_GUI_THIS guest_xres * ((BX_GUI_THIS guest_bpp + 1) >> 3);
     row_buffer = (Bit8u*)malloc(rlen);
@@ -555,7 +581,11 @@ void bx_gui_c::snapshot_handler(void)
     }
     free(row_buffer);
     close(fd);
-    free(snapshot_ptr);
+    if (ilen > 0) {
+      free(snapshot_ptr);
+    } else {
+      BX_GUI_THIS set_snapshot_mode(0);
+    }
   }
 }
 
@@ -925,11 +955,40 @@ void bx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
   delete [] tile;
 }
 
+void bx_gui_c::graphics_tile_update_common(Bit8u *tile, unsigned x, unsigned y)
+{
+  unsigned i, pitch, pixel_bytes, nbytes, tilebytes;
+  Bit8u *src, *dst;
+
+  if (BX_GUI_THIS snapshot_mode) {
+    if (BX_GUI_THIS snapshot_buffer != NULL) {
+      pixel_bytes = ((BX_GUI_THIS guest_bpp + 1) >> 3);
+      tilebytes = BX_GUI_THIS x_tilesize * pixel_bytes;
+      if ((x + BX_GUI_THIS x_tilesize) <= BX_GUI_THIS guest_xres) {
+        nbytes = tilebytes;
+      } else {
+        nbytes = (BX_GUI_THIS guest_xres - x) * pixel_bytes;
+      }
+      pitch = BX_GUI_THIS guest_xres * pixel_bytes;
+      src = tile;
+      dst = BX_GUI_THIS snapshot_buffer + (y * pitch) + x;
+      for (i = 0; i < y_tilesize; i++) {
+        memcpy(dst, src, nbytes);
+        src += tilebytes;
+        dst += pitch;
+        if (++y >= BX_GUI_THIS guest_yres) break;
+      }
+    }
+  } else {
+    graphics_tile_update(tile, x, y);
+  }
+}
+
 bx_bool bx_gui_c::palette_change_common(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
 {
-  palette[index].red = red;
-  palette[index].green = green;
-  palette[index].blue = blue;
+  BX_GUI_THIS palette[index].red = red;
+  BX_GUI_THIS palette[index].green = green;
+  BX_GUI_THIS palette[index].blue = blue;
   return palette_change(index, red, green, blue);
 }
 
