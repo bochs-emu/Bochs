@@ -10671,16 +10671,14 @@ post_init_pic:
 
 post_init_ivt:
   ;; set all interrupts to default handler
-  xor  bx, bx         ;; offset index
+  xor  di, di         ;; offset index
   mov  cx, #0x0100    ;; counter (256 interrupts)
+  mov  ax, #0xF000
+  shl  eax, #16
   mov  ax, #dummy_iret_handler
-  mov  dx, #0xF000
-
-post_default_ints:
-  mov  [bx], ax
-  mov  2[bx], dx
-  add  bx, #4
-  loop post_default_ints
+  cld
+  rep
+    stosd
 
   ;; Master PIC vector
   mov  bx, #0x0020
