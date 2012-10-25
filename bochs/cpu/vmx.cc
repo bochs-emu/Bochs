@@ -86,6 +86,7 @@ static const char *VMX_vmexit_reason_name[] =
   "MONITOR",
   "PAUSE",
   "VMEntry failure due to machine check",
+  "Reserved",
   "TPR Below Threshold",
   "APIC Access",
   "Virtualized EOI",
