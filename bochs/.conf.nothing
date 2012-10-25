@@ -16,4 +16,5 @@ export CXXFLAGS
 
 ./configure --enable-cpu-level=3 \
             --disable-fpu \
+            --disable-pci \
             --with-nogui

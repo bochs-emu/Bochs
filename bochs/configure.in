@@ -420,7 +420,7 @@ fi    # end of if $with_all_libs = yes
 
 AC_MSG_CHECKING(for idle hack)
 AC_ARG_ENABLE(idle-hack,
-  [  --enable-idle-hack                use Roland Mainz's idle hack],
+  AS_HELP_STRING([--enable-idle-hack], [use Roland Mainz's idle hack (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_USE_IDLE_HACK, 1)
@@ -440,7 +440,7 @@ AC_CHECK_HEADER(assert.h, AC_DEFINE(HAVE_ASSERT_H, 1))
 
 AC_MSG_CHECKING(for plugins support)
 AC_ARG_ENABLE(plugins,
-  [  --enable-plugins                  enable plugins],
+  AS_HELP_STRING([--enable-plugins], [enable plugin support (no)]),
   [if test "$enableval" = yes; then
      bx_plugins=1
    else
@@ -513,7 +513,7 @@ AC_TRY_COMPILE([], [ { 42LL; } ],
 
 AC_MSG_CHECKING(for A20 support)
 AC_ARG_ENABLE(a20-pin,
-  [  --enable-a20-pin                  compile in support for A20 pin],
+  AS_HELP_STRING([--enable-a20-pin], [compile in support for A20 pin (yes)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_A20, 1)
@@ -531,7 +531,7 @@ AC_ARG_ENABLE(a20-pin,
 use_x86_64=0
 AC_MSG_CHECKING(for x86-64 support)
 AC_ARG_ENABLE(x86-64,
-  [  --enable-x86-64                   compile in support for x86-64 instructions],
+  AS_HELP_STRING([--enable-x86-64], [compile in support for x86-64 instructions (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     OBJS64='$(OBJS64)'
@@ -554,7 +554,7 @@ AC_SUBST(OBJS64)
 use_smp=0
 AC_MSG_CHECKING(for SMP support)
 AC_ARG_ENABLE(smp,
-  [  --enable-smp                      compile in support for SMP configurations],
+  AS_HELP_STRING([--enable-smp], [compile in support for SMP configurations (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_SMP, 1)
@@ -573,7 +573,7 @@ AC_ARG_ENABLE(smp,
 
 AC_MSG_CHECKING(for cpu level)
 AC_ARG_ENABLE(cpu-level,
-  [  --enable-cpu-level                select cpu level (3,4,5,6)],
+  AS_HELP_STRING([--enable-cpu-level], [select cpu level (3,4,5,6 - default is 6)]),
   [case "$enableval" in
      3)
        AC_MSG_RESULT(3)
@@ -616,7 +616,7 @@ AC_ARG_ENABLE(cpu-level,
 
 AC_MSG_CHECKING(for larger than 32 bit physical address emulation)
 AC_ARG_ENABLE(long-phy-address,
-  [  --enable-long-phy-address         compile in support for physical address larger than 32 bit],
+  AS_HELP_STRING([--enable-long-phy-address], [compile in support for physical address larger than 32 bit (yes, if cpu level >= 5)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_PHY_ADDRESS_LONG, 1)
@@ -638,7 +638,7 @@ AC_ARG_ENABLE(long-phy-address,
 
 AC_MSG_CHECKING(for large ramfile support)
 AC_ARG_ENABLE(large-ramfile,
-  [  --enable-large-ramfile                     enable large ramfile support],
+  AS_HELP_STRING([--enable-large-ramfile], [enable large ramfile support (yes)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_LARGE_RAMFILE, 1)
@@ -657,7 +657,7 @@ networking=no
 NETDEV_OBJS=''
 AC_MSG_CHECKING(for NE2000 support)
 AC_ARG_ENABLE(ne2000,
-  [  --enable-ne2000                   enable NE2000 support],
+  AS_HELP_STRING([--enable-ne2000], [enable NE2000 support (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_NE2K, 1)
@@ -675,7 +675,7 @@ AC_ARG_ENABLE(ne2000,
 
 AC_MSG_CHECKING(for i440FX PCI support)
 AC_ARG_ENABLE(pci,
-  [  --enable-pci                      enable i440FX PCI support],
+  AS_HELP_STRING([--enable-pci], [enable i440FX PCI support (yes)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_PCI, 1)
@@ -688,10 +688,10 @@ AC_ARG_ENABLE(pci,
     PCI_OBJ=''
    fi],
   [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_PCI, 0)
-    pci=0
-    PCI_OBJ=''
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_PCI, 1)
+    pci=1
+    PCI_OBJ='pci.o pci2isa.o pci_ide.o acpi.o'
     ]
   )
 AC_SUBST(PCI_OBJ)
@@ -701,7 +701,7 @@ AC_SUBST(PCI_OBJ)
 #
 AC_MSG_CHECKING(for PCI host device mapping support)
 AC_ARG_ENABLE(pcidev,
-  [  --enable-pcidev                   enable PCI host device mapping support (linux host only)],
+  AS_HELP_STRING([--enable-pcidev], [enable PCI host device mapping support (no - linux host only)]),
   [
     if test "$enableval" = "yes"; then
       AC_MSG_RESULT(yes)
@@ -712,33 +712,33 @@ AC_ARG_ENABLE(pcidev,
         *-linux*)
           AC_MSG_NOTICE([Linux detected as host for PCI host device mapping])
           linux_version=`uname -r`
-	  case "$linux_version" in
-		2.4*)
-	  		PCIDEV_MODULE_MAKE_ALL="all-kernel24"
-			KERNEL_MODULE_SUFFIX="o"
-          	;;
-		2.6*|3.*)
-	  		PCIDEV_MODULE_MAKE_ALL="all-kernel26"
-			KERNEL_MODULE_SUFFIX="ko"
-		;;
-		*)
-			AC_MSG_ERROR([Linux kernel 2.4, 2.6 or 3.x is required for PCI host device mapping])
-		;;
-	  esac
-	  KERNELDIR="/lib/modules/$linux_version/build"
-	  LSMOD="lsmod"
-	  INSMOD="insmod"
-	  RMMOD="rmmod"
-	  DEPMOD="depmod"
-	  CLEAN_PCIDEV_VAR=clean_pcidev
-	  AC_SUBST(KERNELDIR)
-	  AC_SUBST(LSMOD)
-	  AC_SUBST(INSMOD)
-	  AC_SUBST(RMMOD)
-	  AC_SUBST(DEPMOD)
-	  AC_SUBST(PCIDEV_MODULE_MAKE_ALL)
-	  AC_SUBST(KERNEL_MODULE_SUFFIX)
-	  AC_SUBST(CLEAN_PCIDEV_VAR)
+          case "$linux_version" in
+            2.4*)
+              PCIDEV_MODULE_MAKE_ALL="all-kernel24"
+              KERNEL_MODULE_SUFFIX="o"
+              ;;
+            2.6*|3.*)
+              PCIDEV_MODULE_MAKE_ALL="all-kernel26"
+              KERNEL_MODULE_SUFFIX="ko"
+              ;;
+            *)
+              AC_MSG_ERROR([Linux kernel 2.4, 2.6 or 3.x is required for PCI host device mapping])
+              ;;
+          esac
+          KERNELDIR="/lib/modules/$linux_version/build"
+          LSMOD="lsmod"
+          INSMOD="insmod"
+          RMMOD="rmmod"
+          DEPMOD="depmod"
+          CLEAN_PCIDEV_VAR=clean_pcidev
+          AC_SUBST(KERNELDIR)
+          AC_SUBST(LSMOD)
+          AC_SUBST(INSMOD)
+          AC_SUBST(RMMOD)
+          AC_SUBST(DEPMOD)
+          AC_SUBST(PCIDEV_MODULE_MAKE_ALL)
+          AC_SUBST(KERNEL_MODULE_SUFFIX)
+          AC_SUBST(CLEAN_PCIDEV_VAR)
         ;;
         *)
           AC_MSG_ERROR([PCI host device mapping requires Linux as host])
@@ -761,7 +761,7 @@ use_usb=0
 USBHC_OBJS=''
 AC_MSG_CHECKING(for USB UHCI support)
 AC_ARG_ENABLE(usb,
-  [  --enable-usb                      enable USB UHCI support],
+  AS_HELP_STRING([--enable-usb], [enable USB UHCI support (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_USB_UHCI, 1)
@@ -779,7 +779,7 @@ AC_ARG_ENABLE(usb,
 
 AC_MSG_CHECKING(for USB OHCI support)
 AC_ARG_ENABLE(usb-ohci,
-  [  --enable-usb-ohci                 enable USB OHCI support],
+  AS_HELP_STRING([--enable-usb-ohci], [enable USB OHCI support (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_USB_OHCI, 1)
@@ -797,7 +797,7 @@ AC_ARG_ENABLE(usb-ohci,
 
 AC_MSG_CHECKING(for experimental USB xHCI support)
 AC_ARG_ENABLE(usb-xhci,
-  [  --enable-usb-xhci                 enable experimental USB xHCI support (incomplete)],
+  AS_HELP_STRING([--enable-usb-xhci], [enable experimental USB xHCI support (no - incomplete)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_USB_XHCI, 1)
@@ -829,7 +829,7 @@ fi
 
 AC_MSG_CHECKING(for PCI pseudo NIC support)
 AC_ARG_ENABLE(pnic,
-  [  --enable-pnic                     enable PCI pseudo NIC support],
+  AS_HELP_STRING([--enable-pnic], [enable PCI pseudo NIC support (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_PCIPNIC, 1)
@@ -847,7 +847,7 @@ AC_ARG_ENABLE(pnic,
 
 AC_MSG_CHECKING(for Intel(R) Gigabit Ethernet support)
 AC_ARG_ENABLE(e1000,
-  [  --enable-e1000                    enable Intel(R) Gigabit Ethernet support],
+  AS_HELP_STRING([--enable-e1000], [enable Intel(R) Gigabit Ethernet support (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_E1000, 1)
@@ -951,7 +951,7 @@ AC_SUBST(NETLOW_OBJS)
 
 AC_MSG_CHECKING(for repeated IO and mem copy speedups)
 AC_ARG_ENABLE(repeat-speedups,
-  [  --enable-repeat-speedups          support repeated IO and mem copy speedups],
+  AS_HELP_STRING([--enable-repeat-speedups], [support repeated IO and mem copy speedups (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     speedup_repeat=1
@@ -967,7 +967,7 @@ AC_ARG_ENABLE(repeat-speedups,
 
 AC_MSG_CHECKING(for gcc fast function calls optimization)
 AC_ARG_ENABLE(fast-function-calls,
-  [  --enable-fast-function-calls      support for fast function calls (gcc on x86 only)],
+  AS_HELP_STRING([--enable-fast-function-calls], [support for fast function calls (no - gcc on x86 only)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     speedup_fastcall=1
@@ -983,7 +983,7 @@ AC_ARG_ENABLE(fast-function-calls,
 
 AC_MSG_CHECKING(for handlers chaining speedups)
 AC_ARG_ENABLE(handlers-chaining,
-  [  --enable-handlers-chaining        support handlers-chaining emulation speedups],
+  AS_HELP_STRING([--enable-handlers-chaining], [support handlers-chaining emulation speedups (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     speedup_handlers_chaining=1
@@ -999,7 +999,7 @@ AC_ARG_ENABLE(handlers-chaining,
 
 AC_MSG_CHECKING(support for configurable MSR registers)
 AC_ARG_ENABLE(configurable-msrs,
-  [  --enable-configurable-msrs        support for configurable MSR registers],
+  AS_HELP_STRING([--enable-configurable-msrs], [support for configurable MSR registers (yes if cpu level >= 5)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_CONFIGURE_MSRS, 1)
@@ -1020,7 +1020,7 @@ AC_ARG_ENABLE(configurable-msrs,
 
 AC_MSG_CHECKING(show IPS)
 AC_ARG_ENABLE(show-ips,
-  [  --enable-show-ips                 show IPS in Bochs log file],
+  AS_HELP_STRING([--enable-show-ips], [show IPS in Bochs status bar / log file (yes)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SHOW_IPS, 1)
@@ -1036,7 +1036,7 @@ AC_ARG_ENABLE(show-ips,
 
 AC_MSG_CHECKING(for use of .cpp as suffix)
 AC_ARG_ENABLE(cpp,
-  [  --enable-cpp                      use .cpp as C++ suffix],
+  AS_HELP_STRING([--enable-cpp], [use .cpp as C++ suffix (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     SUFFIX_LINE='.SUFFIXES: .cpp'
@@ -1074,7 +1074,7 @@ fi
 
 AC_MSG_CHECKING(for Bochs internal debugger support)
 AC_ARG_ENABLE(debugger,
-  [  --enable-debugger                 compile in support for Bochs internal debugger],
+  AS_HELP_STRING([--enable-debugger], [compile in support for Bochs internal debugger (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_DEBUGGER, 1)
@@ -1109,7 +1109,7 @@ AC_SUBST(DEBUGGER_VAR)
 
 AC_MSG_CHECKING(for disassembler support)
 AC_ARG_ENABLE(disasm,
-  [  --enable-disasm                   compile in support for disassembler],
+  AS_HELP_STRING([--enable-disasm], [compile in support for disassembler (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_DISASM, 1)
@@ -1132,7 +1132,7 @@ AC_SUBST(DISASM_VAR)
 
 AC_MSG_CHECKING(enable Bochs internal debugger GUI)
 AC_ARG_ENABLE(debugger-gui,
-  [  --enable-debugger-gui             compile in support for Bochs internal debugger GUI],
+  AS_HELP_STRING([--enable-debugger-gui], [compile in support for Bochs internal debugger GUI (yes, if debugger is on)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_DEBUGGER_GUI, 1)
@@ -1158,7 +1158,7 @@ AC_ARG_ENABLE(debugger-gui,
 bx_gdb_stub=0
 AC_MSG_CHECKING(for gdb stub enable)
 AC_ARG_ENABLE(gdb-stub,
-  [  --enable-gdb-stub                 enable gdb stub support],
+  AS_HELP_STRING([--enable-gdb-stub], [enable gdb stub support (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_GDBSTUB, 1)
@@ -1184,7 +1184,7 @@ AC_SUBST(GDBSTUB_VAR)
 AC_MSG_CHECKING(for I/O Interface to the debugger)
 IODEBUG_OBJS=''
 AC_ARG_ENABLE(iodebug,
-  [  --enable-iodebug                  enable I/O interface to debugger],
+  AS_HELP_STRING([--enable-iodebug], [enable I/O interface to debugger (yes, if debugger is on)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_IODEBUG, 1)
@@ -1210,7 +1210,7 @@ AC_SUBST(IODEBUG_OBJS)
 
 AC_MSG_CHECKING(for ALL optimizations enabled)
 AC_ARG_ENABLE(all-optimizations,
-  [  --enable-all-optimizations        compile in all possible optimizations],
+  AS_HELP_STRING([--enable-all-optimizations], [compile in all possible optimizations (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     speedups_all=1
@@ -1272,7 +1272,7 @@ rl_with_curses_ok=no
 
 AC_MSG_CHECKING(whether user wants readline)
 AC_ARG_ENABLE(readline,
-  [  --enable-readline                 use readline library, if available],
+  AS_HELP_STRING([--enable-readline], [use readline library, if available (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
      want_readline=yes
@@ -1346,7 +1346,7 @@ INSTRUMENT_DIR='instrument/stubs'
 
 AC_MSG_CHECKING(for instrumentation support)
 AC_ARG_ENABLE(instrumentation,
-  [  --enable-instrumentation          compile in support for instrumentation],
+  AS_HELP_STRING([--enable-instrumentation=instrument-dir], [compile in support for instrumentation (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_INSTRUMENTATION, 1)
@@ -1384,7 +1384,7 @@ fi
 
 AC_MSG_CHECKING(enable logging)
 AC_ARG_ENABLE(logging,
-  [  --enable-logging                  enable logging],
+  AS_HELP_STRING([--enable-logging], [enable logging (yes)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_NO_LOGGING, 0)
@@ -1400,7 +1400,7 @@ AC_ARG_ENABLE(logging,
 
 AC_MSG_CHECKING(enable assert checks)
 AC_ARG_ENABLE(assert-checks,
-  [  --enable-assert-checks            enable BX_ASSERT checks],
+  AS_HELP_STRING([--enable-assert-checks], [enable BX_ASSERT checks (yes, if debugger is on)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_ASSERT_ENABLE, 1)
@@ -1421,7 +1421,7 @@ AC_ARG_ENABLE(assert-checks,
 
 AC_MSG_CHECKING(for raw serial support)
 AC_ARG_ENABLE(raw-serial,
-  [  --enable-raw-serial               use raw serial port access],
+  AS_HELP_STRING([--enable-raw-serial], [use raw serial port access (no - incomplete)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(USE_RAW_SERIAL, 1)
@@ -1438,7 +1438,7 @@ AC_ARG_ENABLE(raw-serial,
 DISPLAY_OBJS=''
 AC_MSG_CHECKING(for CLGD54XX emulation)
 AC_ARG_ENABLE(clgd54xx,
-  [  --enable-clgd54xx                 enable CLGD54XX emulation],
+  AS_HELP_STRING([--enable-clgd54xx], [enable CLGD54XX emulation (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_CLGD54XX, 1)
@@ -1455,7 +1455,7 @@ AC_ARG_ENABLE(clgd54xx,
 
 AC_MSG_CHECKING(for 3dfx Voodoo Graphics emulation)
 AC_ARG_ENABLE(voodoo,
-  [  --enable-voodoo                   enable 3dfx Voodoo Graphics emulation],
+  AS_HELP_STRING([--enable-voodoo], [enable 3dfx Voodoo Graphics emulation (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     if test "$pci" != "1"; then
@@ -1478,7 +1478,7 @@ support_fpu=1
 AC_MSG_CHECKING(for FPU emulation)
 FPU_VAR=''
 AC_ARG_ENABLE(fpu,
-  [  --enable-fpu                      compile in FPU emulation],
+  AS_HELP_STRING([--enable-fpu], [compile in FPU emulation (yes)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_FPU, 1)
@@ -1504,7 +1504,7 @@ AC_SUBST(FPU_VAR)
 support_vmx=0
 AC_MSG_CHECKING(for VMX support)
 AC_ARG_ENABLE(vmx,
-  [  --enable-vmx                      VMX (virtualization extensions) emulation (--enable-vmx=[no|1|2])],
+  AS_HELP_STRING([--enable-vmx], [VMX (virtualization extensions) emulation (--enable-vmx=[no|1|2])]),
   [case "$enableval" in
     no | 0)
       support_vmx=0
@@ -1544,7 +1544,7 @@ fi
 support_svm=0
 AC_MSG_CHECKING(for SVM support)
 AC_ARG_ENABLE(svm,
-  [  --enable-svm                      SVM (AMD: secure virtual machine) emulation],
+  AS_HELP_STRING([--enable-svm], [SVM (AMD: secure virtual machine) emulation (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_SVM, 1)
@@ -1570,7 +1570,7 @@ fi
 
 AC_MSG_CHECKING(for 3DNow! support)
 AC_ARG_ENABLE(3dnow,
-  [  --enable-3dnow                    3DNow! support (incomplete)],
+  AS_HELP_STRING([--enable-3dnow], [3DNow! support (no - incomplete)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_3DNOW, 1)
@@ -1587,7 +1587,7 @@ AC_ARG_ENABLE(3dnow,
 
 AC_MSG_CHECKING(for alignment check support)
 AC_ARG_ENABLE(alignment-check,
-  [  --enable-alignment-check          alignment check (#AC) support],
+  AS_HELP_STRING([--enable-alignment-check], [alignment check (#AC) support (yes, if cpu level > 3)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_ALIGNMENT_CHECK, 1)
@@ -1609,7 +1609,7 @@ AC_ARG_ENABLE(alignment-check,
 
 AC_MSG_CHECKING(for misaligned SSE support)
 AC_ARG_ENABLE(misaligned-sse,
-  [  --enable-misaligned-sse           misaligned SSE support],
+  AS_HELP_STRING([--enable-misaligned-sse], [misaligned SSE support (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_MISALIGNED_SSE, 1)
@@ -1626,7 +1626,7 @@ AC_ARG_ENABLE(misaligned-sse,
 
 AC_MSG_CHECKING(for MONITOR/MWAIT instructions support (experimental))
 AC_ARG_ENABLE(monitor_mwait,
-  [  --enable-monitor-mwait            support for MONITOR/MWAIT instructions (experimental)],
+  AS_HELP_STRING([--enable-monitor-mwait], [support for MONITOR/MWAIT instructions (yes, if cpu level > 5 - experimental)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_MONITOR_MWAIT, 1)
@@ -1649,7 +1649,7 @@ AC_ARG_ENABLE(monitor_mwait,
 support_avx=0
 AC_MSG_CHECKING(for AVX instructions support)
 AC_ARG_ENABLE(avx,
-  [  --enable-avx                      support for AVX instructions],
+  AS_HELP_STRING([--enable-avx], [support for AVX instructions (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_AVX, 1)
@@ -1671,7 +1671,7 @@ fi
 
 AC_MSG_CHECKING(for x86 debugger support)
 AC_ARG_ENABLE(x86-debugger,
-  [  --enable-x86-debugger             x86 debugger support],
+  AS_HELP_STRING([--enable-x86-debugger], [x86 debugger support (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_X86_DEBUGGER, 1)
@@ -1688,7 +1688,7 @@ AC_ARG_ENABLE(x86-debugger,
 
 AC_MSG_CHECKING(for CDROM support)
 AC_ARG_ENABLE(cdrom,
-  [  --enable-cdrom                    CDROM support],
+  AS_HELP_STRING([--enable-cdrom], [CDROM support (yes)]),
   [if test "$enableval" = no; then
      bx_cdrom=0
    else
@@ -1739,7 +1739,7 @@ soundcard_present=0
 gameport_present=0
 AC_MSG_CHECKING(for Sound Blaster 16 support)
 AC_ARG_ENABLE(sb16,
-  [  --enable-sb16                     Sound Blaster 16 Support],
+  AS_HELP_STRING([--enable-sb16], [Sound Blaster 16 Support (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
      SOUNDCARD_OBJS='sb16.o'
@@ -1760,7 +1760,7 @@ AC_ARG_ENABLE(sb16,
 
 AC_MSG_CHECKING(for ES1370 soundcard support)
 AC_ARG_ENABLE(es1370,
-  [  --enable-es1370                     enable ES1370 soundcard support],
+  AS_HELP_STRING([--enable-es1370], [enable ES1370 soundcard support (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     if test "$pci" != "1"; then
@@ -1849,7 +1849,7 @@ AC_SUBST(SOUND_LINK_OPTS)
 
 AC_MSG_CHECKING(for standard PC gameport support)
 AC_ARG_ENABLE(gameport,
-  [  --enable-gameport                 enable standard PC gameport support],
+  AS_HELP_STRING([--enable-gameport], [enable standard PC gameport support (yes, if soundcard present)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_GAMEPORT, 1)
@@ -1882,7 +1882,7 @@ AC_PATH_PROG(DOCBOOK2HTML, docbook2html, not_found)
 AC_MSG_CHECKING(whether to build docbook documentation)
 build_docbook=0
 AC_ARG_ENABLE(docbook,
-  [  --enable-docbook                  build the Docbook documentation],
+  AS_HELP_STRING([--enable-docbook], [build the Docbook documentation (yes, if docbook present)]),
   [
     if test "$enableval" = yes; then build_docbook=1; fi
   ],
@@ -2080,7 +2080,7 @@ if test "$with_x11" = yes; then
   check_xpm=0
   AC_MSG_CHECKING(whether user wants XPM support)
   AC_ARG_ENABLE(xpm,
-    [  --enable-xpm                      enable the check for XPM support],
+    AS_HELP_STRING([--enable-xpm], [enable the check for XPM support (yes)]),
     [if test "$enableval" = yes; then
       check_xpm=0
       AC_MSG_RESULT(yes)
@@ -2761,7 +2761,7 @@ dnl // DEPRECATED configure options - force users to remove them
 
 AC_MSG_CHECKING(for instruction trace cache support (deprecated))
 AC_ARG_ENABLE(trace-cache,
-  [  --enable-trace-cache              support instruction trace cache (deprecated)],
+  AS_HELP_STRING([--enable-trace-cache], [support instruction trace cache (deprecated)]),
   [AC_MSG_RESULT($enableval)
    AC_MSG_ERROR([DEPRECATED - this feature will be enabled in all configurations])
   ],
