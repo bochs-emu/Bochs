@@ -176,7 +176,7 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
 
   // TPR shadow takes priority over SMI, INIT and lower priority events and
   // not blocked by EFLAGS.IF or interrupt inhibits by MOV_SS and STI
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_X86_64 && BX_SUPPORT_VMX
   if (is_unmasked_event_pending(BX_EVENT_VMX_VTPR_UPDATE)) {
     VMX_TPR_Virtualization();
   }
