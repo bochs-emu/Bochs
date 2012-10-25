@@ -886,7 +886,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
 #endif
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 #if BX_CONFIGURE_MSRS
