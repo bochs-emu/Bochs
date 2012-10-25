@@ -410,7 +410,7 @@ void bx_gui_c::make_text_snapshot(char **snapshot, Bit32u *length)
   *length = txt_addr;
 }
 
-void bx_gui_c::set_snapshot_mode(bx_bool mode)
+Bit32u bx_gui_c::set_snapshot_mode(bx_bool mode)
 {
   unsigned pixel_bytes, bufsize;
 
@@ -423,6 +423,7 @@ void bx_gui_c::set_snapshot_mode(bx_bool mode)
       memset(BX_GUI_THIS snapshot_buffer, 0, bufsize);
       DEV_vga_redraw_area(0, 0, BX_GUI_THIS guest_xres, BX_GUI_THIS guest_yres);
       DEV_vga_refresh();
+      return bufsize;
     }
   } else {
     if (BX_GUI_THIS snapshot_buffer != NULL) {
@@ -431,6 +432,7 @@ void bx_gui_c::set_snapshot_mode(bx_bool mode)
       DEV_vga_redraw_area(0, 0, BX_GUI_THIS guest_xres, BX_GUI_THIS guest_yres);
     }
   }
+  return 0;
 }
 
 // create a text snapshot and copy to the system clipboard.  On guis that
@@ -487,17 +489,11 @@ void bx_gui_c::snapshot_handler(void)
     fclose(fp);
     free(snapshot_ptr);
   } else {
-    ilen = DEV_vga_get_gfx_snapshot(&snapshot_ptr);
-    if (ilen > 0) {
-      BX_INFO(("GFX snapshot: %u x %u x %u bpp (%u bytes)", BX_GUI_THIS guest_xres,
-               BX_GUI_THIS guest_yres, BX_GUI_THIS guest_bpp, ilen));
-    }
     if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_SNAPSHOT) {
       int ret = SIM->ask_filename (filename, sizeof(filename),
                                    "Save snapshot as...", "snapshot.bmp",
                                    bx_param_string_c::SAVE_FILE_DIALOG);
       if (ret < 0) { // cancelled
-        if (snapshot_ptr != NULL) free(snapshot_ptr);
         return;
       }
     } else {
@@ -511,12 +507,15 @@ void bx_gui_c::snapshot_handler(void)
               );
     if (fd < 0) {
       BX_ERROR(("snapshot button failed: cannot create BMP file"));
-      if (snapshot_ptr != NULL) free(snapshot_ptr);
       return;
     }
-    if (ilen == 0) {
-      BX_GUI_THIS set_snapshot_mode(1);
-      snapshot_ptr = BX_GUI_THIS snapshot_buffer;
+    ilen =  BX_GUI_THIS set_snapshot_mode(1);
+    if (ilen > 0) {
+      BX_INFO(("GFX snapshot: %u x %u x %u bpp (%u bytes)", BX_GUI_THIS guest_xres,
+               BX_GUI_THIS guest_yres, BX_GUI_THIS guest_bpp, ilen));
+    } else {
+      BX_ERROR(("snapshot button failed: cannot allocate memory"));
+      return;
     }
     iBits = (BX_GUI_THIS guest_bpp == 8) ? 8 : 24;
     rlen = (BX_GUI_THIS guest_xres * (iBits >> 3) + 3) & ~3;
@@ -548,7 +547,7 @@ void bx_gui_c::snapshot_handler(void)
     }
     pitch = BX_GUI_THIS guest_xres * ((BX_GUI_THIS guest_bpp + 1) >> 3);
     row_buffer = (Bit8u*)malloc(rlen);
-    row_ptr = snapshot_ptr + ((BX_GUI_THIS guest_yres - 1) * pitch);
+    row_ptr = BX_GUI_THIS snapshot_buffer + ((BX_GUI_THIS guest_yres - 1) * pitch);
     for (i = BX_GUI_THIS guest_yres; i > 0; i--) {
       memset(row_buffer, 0, rlen);
       if ((BX_GUI_THIS guest_bpp == 8) || (BX_GUI_THIS guest_bpp == 24)) {
@@ -581,11 +580,7 @@ void bx_gui_c::snapshot_handler(void)
     }
     free(row_buffer);
     close(fd);
-    if (ilen > 0) {
-      free(snapshot_ptr);
-    } else {
-      BX_GUI_THIS set_snapshot_mode(0);
-    }
+    BX_GUI_THIS set_snapshot_mode(0);
   }
 }
 
@@ -852,13 +847,6 @@ void bx_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
 
 bx_svga_tileinfo_t *bx_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
 {
-  if (!info) {
-    info = (bx_svga_tileinfo_t *)malloc(sizeof(bx_svga_tileinfo_t));
-    if (!info) {
-      return NULL;
-    }
-  }
-
   BX_GUI_THIS host_pitch = BX_GUI_THIS host_xres * ((BX_GUI_THIS host_bpp + 1) >> 3);
 
   info->bpp = BX_GUI_THIS host_bpp;
@@ -982,6 +970,24 @@ void bx_gui_c::graphics_tile_update_common(Bit8u *tile, unsigned x, unsigned y)
   } else {
     graphics_tile_update(tile, x, y);
   }
+}
+
+bx_svga_tileinfo_t * bx_gui_c::graphics_tile_info_common(bx_svga_tileinfo_t *info)
+{
+  if (!info) {
+    info = (bx_svga_tileinfo_t *)malloc(sizeof(bx_svga_tileinfo_t));
+    if (!info) {
+      return NULL;
+    }
+  }
+  info->snapshot_mode = BX_GUI_THIS snapshot_mode;
+  if (BX_GUI_THIS snapshot_mode) {
+    info->pitch = BX_GUI_THIS guest_xres * ((BX_GUI_THIS guest_bpp + 1) >> 3);
+  } else {
+    return graphics_tile_info(info);
+  }
+
+  return info;
 }
 
 bx_bool bx_gui_c::palette_change_common(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)

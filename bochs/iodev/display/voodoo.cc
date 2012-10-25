@@ -370,7 +370,7 @@ void bx_voodoo_c::mode_change_timer_handler(void *this_ptr)
   if ((!BX_VOODOO_THIS s.vdraw.clock_enabled || !BX_VOODOO_THIS s.vdraw.output_on) && BX_VOODOO_THIS s.vdraw.override_on) {
     // switching off
     bx_virt_timer.deactivate_timer(BX_VOODOO_THIS s.update_timer_id);
-    DEV_vga_set_override(0);
+    DEV_vga_set_override(0, NULL);
     BX_VOODOO_THIS s.vdraw.override_on = 0;
   }
 
@@ -388,7 +388,7 @@ void bx_voodoo_c::mode_change_timer_handler(void *this_ptr)
     unsigned vfreq = (unsigned)(hfreq / vtotal);
     BX_VOODOO_THIS s.vdraw.vtotal_usec = 1000000 / vfreq;
     BX_VOODOO_THIS s.vdraw.vsync_usec = vsync * (unsigned)(1000000 / hfreq);
-    DEV_vga_set_override(1);
+    DEV_vga_set_override(1, BX_VOODOO_THIS_PTR);
     BX_VOODOO_THIS s.vdraw.override_on = 1;
 
     BX_VOODOO_THIS s.vdraw.width = v->fbi.width+1;
@@ -398,6 +398,11 @@ void bx_voodoo_c::mode_change_timer_handler(void *this_ptr)
     update_timer_handler(NULL);
     bx_virt_timer.activate_timer(BX_VOODOO_THIS s.update_timer_id, BX_VOODOO_THIS s.vdraw.vtotal_usec, 1);
   }
+}
+
+void bx_voodoo_c::trigger_timer(void *this_ptr)
+{
+  update_timer_handler(this_ptr);
 }
 
 void bx_voodoo_c::update_timer_handler(void *this_ptr)
@@ -435,8 +440,18 @@ void bx_voodoo_c::update(void)
   Bit8u *disp_ptr = (Bit8u*)(v->fbi.ram + v->fbi.rgboffs[v->fbi.frontbuf]);
   pitch = v->fbi.rowpixels * 2;
 
-  if (bx_gui->graphics_tile_info(&info)) {
-    if (info.is_indexed) {
+  if (bx_gui->graphics_tile_info_common(&info)) {
+    if (info.snapshot_mode) {
+      vid_ptr = disp_ptr;
+      tile_ptr = bx_gui->get_snapshot_buffer();
+      if (tile_ptr != NULL) {
+        for (yc = 0; yc < BX_VOODOO_THIS s.vdraw.height; yc++) {
+          memcpy(tile_ptr, vid_ptr, info.pitch);
+          vid_ptr += pitch;
+          tile_ptr += info.pitch;
+        }
+      }
+    } else if (info.is_indexed) {
       BX_ERROR(("current guest pixel format is unsupported on indexed colour host displays"));
     } else {
       for (yc=0, yti = 0; yc<BX_VOODOO_THIS s.vdraw.height; yc+=Y_TILESIZE, yti++) {
@@ -473,6 +488,13 @@ void bx_voodoo_c::update(void)
   } else {
     BX_PANIC(("cannot get svga tile info"));
   }
+}
+
+void bx_voodoo_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
+                      unsigned height)
+{
+  // TODO: implement tile-based update mechanism
+  v->fbi.video_changed = 1;
 }
 
 bx_bool bx_voodoo_c::get_retrace(void)

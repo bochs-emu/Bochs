@@ -357,6 +357,15 @@ Bit64s bx_vga_c::vga_param_handler(bx_param_c *param, int set, Bit64s val)
   return val;
 }
 
+void bx_vga_c::trigger_timer(void *this_ptr)
+{
+  if (BX_VGA_THIS s.vga_override && (BX_VGA_THIS s.nvgadev != NULL)) {
+    BX_VGA_THIS s.nvgadev->trigger_timer(BX_VGA_THIS s.nvgadev);
+  } else {
+    timer_handler(this_ptr);
+  }
+}
+
 void bx_vga_c::timer_handler(void *this_ptr)
 {
 #if BX_USE_VGA_SMF == 0
@@ -411,8 +420,18 @@ void bx_vga_c::update(void)
       pitch = BX_VGA_THIS s.line_offset;
       Bit8u *disp_ptr = &BX_VGA_THIS s.memory[BX_VGA_THIS vbe.virtual_start];
 
-      if (bx_gui->graphics_tile_info(&info)) {
-        if (info.is_indexed) {
+      if (bx_gui->graphics_tile_info_common(&info)) {
+        if (info.snapshot_mode) {
+          vid_ptr = disp_ptr;
+          tile_ptr = bx_gui->get_snapshot_buffer();
+          if (tile_ptr != NULL) {
+            for (yc = 0; yc < iHeight; yc++) {
+              memcpy(tile_ptr, vid_ptr, info.pitch);
+              vid_ptr += pitch;
+              tile_ptr += info.pitch;
+            }
+          }
+        } else if (info.is_indexed) {
           switch (BX_VGA_THIS vbe.bpp) {
             case 4:
             case 15:
@@ -764,37 +783,16 @@ void bx_vga_c::mem_write(bx_phy_address addr, Bit8u value)
   bx_vgacore_c::mem_write(addr, value);
 }
 
-Bit32u bx_vga_c::get_gfx_snapshot(Bit8u **snapshot_ptr)
-{
-  Bit32u len, len1;
-  unsigned i;
-  Bit8u *dst_ptr, *src_ptr;
-
-  if ((BX_VGA_THIS vbe.enabled) && (BX_VGA_THIS vbe.bpp >= 8)) {
-    len1 = BX_VGA_THIS vbe.xres * BX_VGA_THIS vbe.bpp_multiplier;
-    len = len1 * BX_VGA_THIS vbe.yres;
-    *snapshot_ptr = (Bit8u*)malloc(len);
-    if (snapshot_ptr == NULL)
-      return 0;
-    src_ptr = BX_VGA_THIS s.memory + BX_VGA_THIS vbe.virtual_start;
-    dst_ptr = *snapshot_ptr;
-    for (i = 0; i < BX_VGA_THIS vbe.yres; i++) {
-      memcpy(dst_ptr, src_ptr, len1);
-      src_ptr += BX_VGA_THIS s.line_offset;
-      dst_ptr += len1;
-    }
-    return len;
-  } else {
-    return bx_vgacore_c::get_gfx_snapshot(snapshot_ptr);
-  }
-}
-
 void bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
                       unsigned height)
 {
   unsigned xti, yti, xt0, xt1, yt0, yt1, xmax, ymax;
 
   if (width == 0 || height == 0) {
+    return;
+  }
+  if (BX_VGA_THIS s.vga_override && (BX_VGA_THIS s.nvgadev != NULL)) {
+    BX_VGA_THIS s.nvgadev->redraw_area(x0, y0, width, height);
     return;
   }
 

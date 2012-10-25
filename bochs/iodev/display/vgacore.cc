@@ -162,6 +162,8 @@ void bx_vgacore_c::init_standard_vga(void)
   BX_VGA_THIS s.max_xres = 800;
   BX_VGA_THIS s.max_yres = 600;
 
+  BX_VGA_THIS s.vga_override = 0;
+
   // initialize memory, handlers and timer (depending on extension)
   extname = SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr();
   if ((strlen(extname) == 0) || (!strcmp(extname, "none"))) {
@@ -1305,9 +1307,10 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool 
   }
 }
 
-void bx_vgacore_c::set_override(bx_bool enabled)
+void bx_vgacore_c::set_override(bx_bool enabled, void *dev)
 {
   BX_VGA_THIS s.vga_override = enabled;
+  BX_VGA_THIS s.nvgadev = (bx_nonvga_device_c*)dev;
   if (enabled) {
     bx_virt_timer.deactivate_timer(BX_VGA_THIS timer_id);
   } else {
@@ -1316,11 +1319,6 @@ void bx_vgacore_c::set_override(bx_bool enabled)
                              BX_VGA_THIS s.last_msl+1, BX_VGA_THIS s.last_bpp);
     BX_VGA_THIS redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
   }
-}
-
-void bx_vgacore_c::trigger_timer(void *this_ptr)
-{
-  timer_handler(this_ptr);
 }
 
 void bx_vgacore_c::timer_handler(void *this_ptr)
@@ -2298,13 +2296,6 @@ void bx_vgacore_c::get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
     *txHeight = 0;
     *txWidth = 0;
   }
-}
-
-Bit32u bx_vgacore_c::get_gfx_snapshot(Bit8u **snapshot_ptr)
-{
-  // handled in the gui code
-  *snapshot_ptr = NULL;
-  return 0;
 }
 
 #if BX_DEBUGGER

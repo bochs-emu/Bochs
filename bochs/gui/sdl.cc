@@ -731,11 +731,6 @@ void bx_sdl_gui_c::graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y)
 
 bx_svga_tileinfo_t *bx_sdl_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
 {
-  if (!info) {
-    info = (bx_svga_tileinfo_t *)malloc(sizeof(bx_svga_tileinfo_t));
-    if (!info) return NULL;
-  }
-
   if (sdl_screen) {
     info->bpp = sdl_screen->format->BitsPerPixel;
     info->pitch = sdl_screen->pitch;
@@ -746,8 +741,7 @@ bx_svga_tileinfo_t *bx_sdl_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
     info->green_mask = sdl_screen->format->Gmask;
     info->blue_mask = sdl_screen->format->Bmask;
     info->is_indexed = (sdl_screen->format->palette != NULL);
-  }
-  else {
+  } else {
     info->bpp = sdl_fullscreen->format->BitsPerPixel;
     info->pitch = sdl_fullscreen->pitch;
     info->red_shift = sdl_fullscreen->format->Rshift + 8 - sdl_fullscreen->format->Rloss;

@@ -104,8 +104,8 @@ public:
   virtual void   redraw_area(unsigned x0, unsigned y0,
                              unsigned width, unsigned height);
 
-  virtual Bit32u get_gfx_snapshot(Bit8u **snapshot_ptr);
   virtual void   init_vga_extension(void);
+  virtual void   trigger_timer(void *this_ptr);
 
   static void     timer_handler(void *);
 #if BX_USE_VGA_SMF == 0

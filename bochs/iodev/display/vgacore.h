@@ -45,6 +45,13 @@
 #define X_TILESIZE 16
 #define Y_TILESIZE 24
 
+class bx_nonvga_device_c : public bx_devmodel_c {
+public:
+  virtual void redraw_area(unsigned x0, unsigned y0,
+                           unsigned width, unsigned height) {}
+  virtual void trigger_timer(void *this_ptr) {}
+};
+
 class bx_vgacore_c : public bx_vga_stub_c
 #if BX_SUPPORT_PCI
   , public bx_pci_device_stub_c
@@ -59,8 +66,8 @@ public:
   static bx_bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   virtual Bit8u  mem_read(bx_phy_address addr);
   virtual void   mem_write(bx_phy_address addr, Bit8u value);
-  virtual void   trigger_timer(void *this_ptr);
-  virtual void   set_override(bx_bool enabled);
+  virtual void   trigger_timer(void *this_ptr) {}
+  virtual void   set_override(bx_bool enabled, void *dev);
   virtual void   register_state(bx_list_c *parent);
   virtual void   after_restore_state(void);
 #if BX_DEBUGGER
@@ -72,7 +79,6 @@ public:
 
   virtual void   get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
                                    unsigned *txWidth);
-  virtual Bit32u get_gfx_snapshot(Bit8u **snapshot_ptr);
   virtual void   init_vga_extension(void) {}
 
   static void    timer_handler(void *);
@@ -228,6 +234,7 @@ protected:
     Bit16u num_y_tiles;
     // vga override mode
     bx_bool vga_override;
+    bx_nonvga_device_c *nvgadev;
   } s;  // state information
 
   int timer_id;

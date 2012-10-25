@@ -42,7 +42,7 @@ typedef struct {
 } bx_voodoo_t;
 
 
-class bx_voodoo_c : public bx_devmodel_c, bx_pci_device_stub_c {
+class bx_voodoo_c : public bx_nonvga_device_c, bx_pci_device_stub_c {
 public:
   bx_voodoo_c();
   virtual ~bx_voodoo_c();
@@ -50,6 +50,10 @@ public:
   virtual void reset(unsigned type);
   virtual void register_state(void);
   virtual void after_restore_state(void);
+
+  virtual void trigger_timer(void *this_ptr);
+  virtual void redraw_area(unsigned x0, unsigned y0,
+                           unsigned width, unsigned height);
 
   virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
   virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);

@@ -481,6 +481,10 @@ void bx_svga_cirrus_c::redraw_area(unsigned x0, unsigned y0,
   if ((width == 0) || (height == 0)) {
     return;
   }
+  if (BX_CIRRUS_THIS s.vga_override && (BX_CIRRUS_THIS s.nvgadev != NULL)) {
+    BX_CIRRUS_THIS s.nvgadev->redraw_area(x0, y0, width, height);
+    return;
+  }
 
   if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
     BX_CIRRUS_THIS bx_vgacore_c::redraw_area(x0,y0,width,height);
@@ -831,31 +835,6 @@ void bx_svga_cirrus_c::get_text_snapshot(Bit8u **text_snapshot,
   BX_CIRRUS_THIS bx_vgacore_c::get_text_snapshot(text_snapshot,txHeight,txWidth);
 }
 
-Bit32u bx_svga_cirrus_c::get_gfx_snapshot(Bit8u **snapshot_ptr)
-{
-  Bit32u len, len1;
-  unsigned i;
-  Bit8u *dst_ptr, *src_ptr;
-
-  if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) != CIRRUS_SR7_BPP_VGA) {
-    len1 = BX_CIRRUS_THIS svga_xres * (BX_CIRRUS_THIS svga_bpp >> 3);
-    len = len1 * BX_CIRRUS_THIS svga_yres;
-    *snapshot_ptr = (Bit8u*)malloc(len);
-    if (snapshot_ptr == NULL)
-      return 0;
-    src_ptr = BX_CIRRUS_THIS disp_ptr;
-    dst_ptr = *snapshot_ptr;
-    for (i = 0; i < BX_CIRRUS_THIS svga_yres; i++) {
-      memcpy(dst_ptr, src_ptr, len1);
-      src_ptr += BX_CIRRUS_THIS svga_pitch;
-      dst_ptr += len1;
-    }
-    return len;
-  } else {
-    return BX_CIRRUS_THIS bx_vgacore_c::get_gfx_snapshot(snapshot_ptr);
-  }
-}
-
 Bit64s bx_svga_cirrus_c::svga_param_handler(bx_param_c *param, int set, Bit64s val)
 {
   if (set) {
@@ -1048,6 +1027,15 @@ void bx_svga_cirrus_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
   }
 
   VGA_WRITE(address,value,io_len);
+}
+
+void bx_svga_cirrus_c::trigger_timer(void *this_ptr)
+{
+  if (BX_CIRRUS_THIS s.vga_override && (BX_CIRRUS_THIS s.nvgadev != NULL)) {
+    BX_CIRRUS_THIS s.nvgadev->trigger_timer(BX_CIRRUS_THIS s.nvgadev);
+  } else {
+    svga_timer_handler(this_ptr);
+  }
 }
 
 void bx_svga_cirrus_c::svga_timer_handler(void *this_ptr)
@@ -1305,8 +1293,18 @@ void bx_svga_cirrus_c::svga_update(void)
   Bit8u * tile_ptr, * tile_ptr2;
   bx_svga_tileinfo_t info;
 
-  if (bx_gui->graphics_tile_info(&info)) {
-    if (info.is_indexed) {
+  if (bx_gui->graphics_tile_info_common(&info)) {
+    if (info.snapshot_mode) {
+      vid_ptr = BX_CIRRUS_THIS disp_ptr;
+      tile_ptr = bx_gui->get_snapshot_buffer();
+      if (tile_ptr != NULL) {
+        for (yc = 0; yc < height; yc++) {
+          memcpy(tile_ptr, vid_ptr, info.pitch);
+          vid_ptr += pitch;
+          tile_ptr += info.pitch;
+        }
+      }
+    } else if (info.is_indexed) {
       switch (BX_CIRRUS_THIS svga_dispbpp) {
         case 4:
         case 15:

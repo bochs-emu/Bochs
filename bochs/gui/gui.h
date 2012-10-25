@@ -67,6 +67,7 @@ typedef struct {
   Bit8u red_shift, green_shift, blue_shift;
   Bit8u is_indexed, is_little_endian;
   unsigned long red_mask, green_mask, blue_mask;
+  bx_bool snapshot_mode;
 } bx_svga_tileinfo_t;
 
 
@@ -144,6 +145,8 @@ public:
             unsigned x_tilesize, unsigned y_tilesize);
   void cleanup(void);
   void graphics_tile_update_common(Bit8u *tile, unsigned x, unsigned y);
+  bx_svga_tileinfo_t *graphics_tile_info_common(bx_svga_tileinfo_t *info);
+  Bit8u* get_snapshot_buffer(void) {return snapshot_buffer;}
   bx_bool palette_change_common(Bit8u index, Bit8u red, Bit8u green, Bit8u blue);
   void update_drive_status_buttons(void);
   static void     mouse_enabled_changed(bx_bool val);
@@ -173,7 +176,7 @@ protected:
   static void save_restore_handler(void);
   // snapshot helper functions
   static void make_text_snapshot(char **snapshot, Bit32u *length);
-  static void set_snapshot_mode(bx_bool mode);
+  static Bit32u set_snapshot_mode(bx_bool mode);
   // status bar LED timer
   static void led_timer_handler(void *);
   void led_timer(void);

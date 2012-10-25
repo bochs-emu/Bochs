@@ -255,11 +255,7 @@ public:
                                  unsigned *txHeight, unsigned *txWidth) {
     STUBFUNC(vga, get_text_snapshot);
   }
-  virtual Bit32u get_gfx_snapshot(Bit8u **snapshot_ptr) {
-    STUBFUNC(vga, get_gfx_snapshot);
-    return 0;
-  }
-  virtual void set_override(bx_bool enabled) {
+  virtual void set_override(bx_bool enabled, void *dev) {
     STUBFUNC(vga, set_override);
   }
   virtual void trigger_timer(void *this_ptr) {
