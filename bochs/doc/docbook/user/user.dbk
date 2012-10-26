@@ -861,7 +861,7 @@ to mention, running DOOM, though at then-pathetic speeds.
 
 <para>
 The change log is stored in the Bochs source code in a file called
-CHANGES.  Click <ulink url="http://bochs.svn.sourceforge.net/viewvc/bochs/trunk/bochs/CHANGES">here</ulink>
+CHANGES.  Click <ulink url="http://svn.code.sf.net/p/bochs/code/trunk/bochs/CHANGES">here</ulink>
 to see the latest version of the CHANGES file.
 </para>
 <para>
@@ -1114,7 +1114,7 @@ below.
 You can also use the SVN checkout command to get the Bochs source code for
 any release since March 2000.  The command is
 <screen>
-  user$ <command>svn co https://bochs.svn.sourceforge.net/svnroot/bochs/tags/<replaceable>tagname</replaceable> bochs</command>
+  user$ <command>svn co http://svn.code.sf.net/p/bochs/code/tags/<replaceable>tagname</replaceable>/bochs bochs</command>
 </screen>
 The <replaceable>tagname</replaceable> tells which release you want, and it can be one of the following:
 

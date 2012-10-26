@@ -71,7 +71,7 @@ SF username and type your password.
   $ svn update file.cc
   $ svn commit --username <replaceable>sfusername</replaceable> file.cc
   [editor opens. type log message, save, and exit.]
-  Login area: &lt;https://bochs.svn.sourceforge.net:443&gt; SourceForge Subversion area
+  Login area: &lt;https://svn.code.sf.net:443&gt; SourceForge Subversion area
   Username: <replaceable>sfusername</replaceable>
   Password for '<replaceable>sfusername</replaceable>': <replaceable><--type your password</replaceable>
   Sending        file.cc
@@ -2328,7 +2328,7 @@ Do a clean SVN checkout from the release tag and specify a not yet existing
 directory name with the version number as the destination. Then create the
 source package from this new directory.
 <screen>
-  svn co https://svn.code.sf.net/p/bochs/code/tags/REL_2_5_FINAL/bochs bochs-2.5
+  svn co http://svn.code.sf.net/p/bochs/code/tags/REL_2_5_FINAL/bochs bochs-2.5
   tar czvf bochs-2.5.tar.gz --exclude=.svn bochs-2.5
 </screen>
 The source TAR file bochs-2.5.tar.gz is ready for upload.
