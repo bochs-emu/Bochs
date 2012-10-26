@@ -43,7 +43,7 @@ you might want to get the whole tree to work with branches and tags.
 </para>
 
 <screen>
-  <command>svn co https://bochs.svn.sourceforge.net/svnroot/bochs bochs-svn</command>
+  <command>svn co https://svn.code.sf.net/p/bochs/code bochs-svn</command>
 </screen>
 
 <para>
