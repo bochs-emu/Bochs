@@ -136,6 +136,11 @@ enum VMX_vmexit_reason {
    VMX_VMEXIT_LAST_REASON
 };
 
+#define IS_TRAP_LIKE_VMEXIT(reason) \
+      (reason == VMX_VMEXIT_TPR_THRESHOLD || \
+       reason == VMX_VMEXIT_VIRTUALIZED_EOI || \
+       reason == VMX_VMEXIT_APIC_WRITE)
+
 // VMexit on CR register access
 enum {
    VMX_VMEXIT_CR_ACCESS_CR_WRITE = 0,
@@ -647,6 +652,16 @@ typedef struct bx_VMCS
    Bit32u pause_loop_exiting_window;
    Bit64u last_pause_time;
    Bit32u first_pause_time;
+#endif
+
+#if BX_SUPPORT_VMX >= 2
+   Bit8u svi; /* Servicing Virtual Interrupt */
+   Bit8u rvi; /* Requesting Virtual Interrupt */
+   Bit8u vppr;
+
+   Bit32u eoi_exit_bitmap[8];
+
+   unsigned apic_access;
 #endif
 
    //

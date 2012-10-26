@@ -2013,8 +2013,7 @@ void BX_CPU_C::access_read_physical(bx_phy_address paddr, unsigned len, void *da
 {
 #if BX_SUPPORT_VMX && BX_SUPPORT_X86_64
   if (is_virtual_apic_page(paddr)) {
-    VMX_Virtual_Apic_Read(paddr, len, data);
-    return;
+    paddr = VMX_Virtual_Apic_Read(paddr, len, data);
   }
 #endif
 

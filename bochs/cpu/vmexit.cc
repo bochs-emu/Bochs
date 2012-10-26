@@ -165,7 +165,7 @@ void BX_CPU_C::VMexit_PAUSE(void)
 
 void BX_CPU_C::VMexit_ExtInterrupt(void)
 {
-  if (! BX_CPU_THIS_PTR in_vmx_guest) return;
+  BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
   if (PIN_VMEXIT(VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT)) {
     VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;

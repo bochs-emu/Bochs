@@ -359,6 +359,26 @@ bx_bool BX_CPU_C::is_eptptr_valid(Bit64u eptptr)
 }
 #endif
 
+BX_CPP_INLINE Bit32u rotate_r(Bit32u val_32)
+{
+  return (val_32 >> 8) | (val_32 << 24);
+}
+
+BX_CPP_INLINE Bit32u rotate_l(Bit32u val_32)
+{
+  return (val_32 << 8) | (val_32 >> 24);
+}
+
+BX_CPP_INLINE Bit32u vmx_from_ar_byte_rd(Bit32u ar_byte)
+{
+  return rotate_r(ar_byte);
+}
+
+BX_CPP_INLINE Bit32u vmx_from_ar_byte_wr(Bit32u ar_byte)
+{
+  return rotate_l(ar_byte);
+}
+
 ////////////////////////////////////////////////////////////
 // VMenter
 ////////////////////////////////////////////////////////////
@@ -486,26 +506,56 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
 #if BX_SUPPORT_X86_64
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_TPR_SHADOW) {
      vm->virtual_apic_page_addr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR);
-     vm->vm_tpr_threshold = VMread32(VMCS_32BIT_CONTROL_TPR_THRESHOLD);
-
      if ((vm->virtual_apic_page_addr & 0xfff) != 0 || ! IsValidPhyAddr(vm->virtual_apic_page_addr)) {
        BX_ERROR(("VMFAIL: VMCS EXEC CTRL: virtual apic phy addr malformed"));
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
 
-     if (vm->vm_tpr_threshold & 0xfffffff0) {
-       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: TPR threshold too big"));
-       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-     }
-
-     if (! (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES)) {
-       Bit8u tpr_shadow = (VMX_Read_Virtual_APIC(BX_LAPIC_TPR) >> 4) & 0xf;
-       if (vm->vm_tpr_threshold > tpr_shadow) {
-         BX_ERROR(("VMFAIL: VMCS EXEC CTRL: TPR threshold > TPR shadow"));
+#if BX_SUPPORT_VMX >= 2
+     if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUAL_INT_DELIVERY) {
+       if (! PIN_VMEXIT(VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT)) {
+         BX_ERROR(("VMFAIL: VMCS EXEC CTRL: virtual interrupt delivery must be set together with external interrupt exiting"));
          return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+       }
+
+       for (int reg = 0; reg < 8; reg++) {
+         vm->eoi_exit_bitmap[reg] = VMread32(VMCS_64BIT_CONTROL_EOI_EXIT_BITMAP0 + reg);
+       }
+
+       Bit16u guest_interrupt_status = VMread16(VMCS_16BIT_GUEST_INTERRUPT_STATUS);
+       vm->rvi = guest_interrupt_status & 0xff;
+       vm->svi = guest_interrupt_status >> 8;
+     }
+     else
+#endif
+     {
+       vm->vm_tpr_threshold = VMread32(VMCS_32BIT_CONTROL_TPR_THRESHOLD);
+
+       if (vm->vm_tpr_threshold & 0xfffffff0) {
+         BX_ERROR(("VMFAIL: VMCS EXEC CTRL: TPR threshold too big"));
+         return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+       }
+
+       if (! (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES)) {
+         Bit8u tpr_shadow = (VMX_Read_Virtual_APIC(BX_LAPIC_TPR) >> 4) & 0xf;
+         if (vm->vm_tpr_threshold > tpr_shadow) {
+           BX_ERROR(("VMFAIL: VMCS EXEC CTRL: TPR threshold > TPR shadow"));
+           return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+         }
        }
      }
   }
+#if BX_SUPPORT_VMX >= 2
+  else { // TPR shadow is disabled
+     if (vm->vmexec_ctrls3 & (VMX_VM_EXEC_CTRL3_VIRTUALIZE_X2APIC_MODE |
+                              VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_REGISTERS |
+                              VMX_VM_EXEC_CTRL3_VIRTUAL_INT_DELIVERY))
+     {
+       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: apic virtualization is enabled without TPR shadow"));
+       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+     }
+  }
+#endif // BX_SUPPORT_VMX >= 2
 
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES) {
      vm->apic_access_page = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR);
@@ -513,19 +563,16 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
        BX_ERROR(("VMFAIL: VMCS EXEC CTRL: apic access page phy addr malformed"));
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
-  }
-#endif
 
 #if BX_SUPPORT_VMX >= 2
-  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUALIZE_X2APIC_MODE) {
-     // 'use TPR shadow' must be set and "virtualize APIC accesses" must be clear
-     if (!(vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_TPR_SHADOW) || 
-          (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES)) {
-       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: virtualize X2APIC mode misconfigured"));
+     if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUALIZE_X2APIC_MODE) {
+       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: virtualize X2APIC mode enabled together with APIC access virtualization"));
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
+#endif
   }
 
+#if BX_SUPPORT_VMX >= 2
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_EPT_ENABLE) {
      vm->eptptr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_EPTPTR);
      if (! is_eptptr_valid(vm->eptptr)) {
@@ -577,6 +624,8 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      }
   }
 #endif
+
+#endif // BX_SUPPORT_X86_64
 
   //
   // Load VM-exit control fields to VMCS Cache
@@ -1110,7 +1159,8 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
      Bit16u selector = VMread16(VMCS_16BIT_GUEST_ES_SELECTOR + 2*n);
      bx_address base = (bx_address) VMread_natural(VMCS_GUEST_ES_BASE + 2*n);
      Bit32u limit = VMread32(VMCS_32BIT_GUEST_ES_LIMIT + 2*n);
-     Bit32u ar = VMread32(VMCS_32BIT_GUEST_ES_ACCESS_RIGHTS + 2*n) >> 8;
+     Bit32u ar = VMread32(VMCS_32BIT_GUEST_ES_ACCESS_RIGHTS + 2*n);
+     ar = vmx_from_ar_byte_rd(ar);
      bx_bool invalid = (ar >> 16) & 1;
 
      set_segment_ar_data(&guest.sregs[n], !invalid,
@@ -1308,7 +1358,8 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   Bit16u ldtr_selector = VMread16(VMCS_16BIT_GUEST_LDTR_SELECTOR);
   Bit64u ldtr_base = VMread_natural(VMCS_GUEST_LDTR_BASE);
   Bit32u ldtr_limit = VMread32(VMCS_32BIT_GUEST_LDTR_LIMIT);
-  Bit32u ldtr_ar = VMread32(VMCS_32BIT_GUEST_LDTR_ACCESS_RIGHTS) >> 8;
+  Bit32u ldtr_ar = VMread32(VMCS_32BIT_GUEST_LDTR_ACCESS_RIGHTS);
+  ldtr_ar = vmx_from_ar_byte_rd(ldtr_ar);
   bx_bool ldtr_invalid = (ldtr_ar >> 16) & 1;
   if (set_segment_ar_data(&guest.ldtr, !ldtr_invalid, 
          (Bit16u) ldtr_selector, ldtr_base, ldtr_limit, (Bit16u)(ldtr_ar)))
@@ -1319,7 +1370,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
      }
      if (guest.ldtr.cache.type != BX_SYS_SEGMENT_LDT) {
-        BX_ERROR(("VMENTER FAIL: VMCS guest incorrect LDTR type"));
+        BX_ERROR(("VMENTER FAIL: VMCS guest incorrect LDTR type (%d)", guest.ldtr.cache.type));
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
      }
      if (guest.ldtr.cache.segment) {
@@ -1349,7 +1400,8 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   Bit16u tr_selector = VMread16(VMCS_16BIT_GUEST_TR_SELECTOR);
   Bit64u tr_base = VMread_natural(VMCS_GUEST_TR_BASE);
   Bit32u tr_limit = VMread32(VMCS_32BIT_GUEST_TR_LIMIT);
-  Bit32u tr_ar = VMread32(VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS) >> 8;
+  Bit32u tr_ar = VMread32(VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS);
+  tr_ar = vmx_from_ar_byte_rd(tr_ar);
   bx_bool tr_invalid = (tr_ar >> 16) & 1;
 
 #if BX_SUPPORT_X86_64
@@ -1379,8 +1431,8 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
   }
   if (! IsLimitAccessRightsConsistent(tr_limit, tr_ar)) {
-    BX_ERROR(("VMENTER FAIL: VMCS guest TR.AR/LIMIT malformed"));
-    return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+     BX_ERROR(("VMENTER FAIL: VMCS guest TR.AR/LIMIT malformed"));
+     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
   }
 
   switch(guest.tr.cache.type) {
@@ -1902,12 +1954,13 @@ void BX_CPU_C::VMexitSaveGuestState(void)
      bx_bool invalid = !BX_CPU_THIS_PTR sregs[n].cache.valid;
      bx_address base = BX_CPU_THIS_PTR sregs[n].cache.u.segment.base;
      Bit32u limit = BX_CPU_THIS_PTR sregs[n].cache.u.segment.limit_scaled;
-     Bit32u ar = get_descriptor_h(&BX_CPU_THIS_PTR sregs[n].cache) & 0x00f0ff00;
+     Bit32u ar = (get_descriptor_h(&BX_CPU_THIS_PTR sregs[n].cache) & 0x00f0ff00) >> 8;
+     ar = vmx_from_ar_byte_wr(ar | (invalid << 16));
 
      VMwrite16(VMCS_16BIT_GUEST_ES_SELECTOR + 2*n, selector);
+     VMwrite32(VMCS_32BIT_GUEST_ES_ACCESS_RIGHTS + 2*n, ar);
      VMwrite_natural(VMCS_GUEST_ES_BASE + 2*n, base);
      VMwrite32(VMCS_32BIT_GUEST_ES_LIMIT + 2*n, limit);
-     VMwrite32(VMCS_32BIT_GUEST_ES_ACCESS_RIGHTS + 2*n, ar | (invalid << 24));
   }
 
   // save guest LDTR
@@ -1915,24 +1968,26 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   bx_bool ldtr_invalid = !BX_CPU_THIS_PTR ldtr.cache.valid;
   bx_address ldtr_base = BX_CPU_THIS_PTR ldtr.cache.u.segment.base;
   Bit32u ldtr_limit = BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled;
-  Bit32u ldtr_ar = get_descriptor_h(&BX_CPU_THIS_PTR ldtr.cache) & 0x00f0ff00;
+  Bit32u ldtr_ar = (get_descriptor_h(&BX_CPU_THIS_PTR ldtr.cache) & 0x00f0ff00) >> 8;
+  ldtr_ar = vmx_from_ar_byte_wr(ldtr_ar | (ldtr_invalid << 16));
 
   VMwrite16(VMCS_16BIT_GUEST_LDTR_SELECTOR, ldtr_selector);
+  VMwrite32(VMCS_32BIT_GUEST_LDTR_ACCESS_RIGHTS, ldtr_ar);
   VMwrite_natural(VMCS_GUEST_LDTR_BASE, ldtr_base);
   VMwrite32(VMCS_32BIT_GUEST_LDTR_LIMIT, ldtr_limit);
-  VMwrite32(VMCS_32BIT_GUEST_LDTR_ACCESS_RIGHTS, ldtr_ar | (ldtr_invalid << 24));
 
   // save guest TR
   Bit32u tr_selector = BX_CPU_THIS_PTR tr.selector.value;
   bx_bool tr_invalid = !BX_CPU_THIS_PTR tr.cache.valid;
   bx_address tr_base = BX_CPU_THIS_PTR tr.cache.u.segment.base;
   Bit32u tr_limit = BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled;
-  Bit32u tr_ar = get_descriptor_h(&BX_CPU_THIS_PTR tr.cache) & 0x00f0ff00;
+  Bit32u tr_ar = (get_descriptor_h(&BX_CPU_THIS_PTR tr.cache) & 0x00f0ff00) >> 8;
+  tr_ar = vmx_from_ar_byte_wr(tr_ar | (tr_invalid << 16));
 
   VMwrite16(VMCS_16BIT_GUEST_TR_SELECTOR, tr_selector);
+  VMwrite32(VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS, tr_ar);
   VMwrite_natural(VMCS_GUEST_TR_BASE, tr_base);
   VMwrite32(VMCS_32BIT_GUEST_TR_LIMIT, tr_limit);
-  VMwrite32(VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS, tr_ar | (tr_invalid << 24));
 
   VMwrite_natural(VMCS_GUEST_GDTR_BASE, BX_CPU_THIS_PTR gdtr.base);
   VMwrite32(VMCS_32BIT_GUEST_GDTR_LIMIT, BX_CPU_THIS_PTR gdtr.limit);
@@ -1987,6 +2042,10 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   // Store back to VMCS
   if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER)
     VMwrite32(VMCS_32BIT_GUEST_PREEMPTION_TIMER_VALUE, BX_CPU_THIS_PTR lapic.read_vmx_preemption_timer());
+
+  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUAL_INT_DELIVERY) {
+    VMwrite16(VMCS_16BIT_GUEST_INTERRUPT_STATUS, (((Bit16u) vm->svi) << 8) | vm->rvi);
+  }
 #endif
 }
 
@@ -2212,9 +2271,11 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
   }
 
   // VMEXITs are FAULT-like: restore RIP/RSP to value before VMEXIT occurred
-  RIP = BX_CPU_THIS_PTR prev_rip;
-  if (BX_CPU_THIS_PTR speculative_rsp)
-    RSP = BX_CPU_THIS_PTR prev_rsp;
+  if (! IS_TRAP_LIKE_VMEXIT(reason)) {
+    RIP = BX_CPU_THIS_PTR prev_rip;
+    if (BX_CPU_THIS_PTR speculative_rsp)
+      RSP = BX_CPU_THIS_PTR prev_rsp;
+  }
 
   //
   // STEP 1: Saving Guest State to VMCS
@@ -2236,10 +2297,13 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
 
   // entering VMX root mode: clear possibly pending guest VMX events
   clear_event(BX_EVENT_VMX_VTPR_UPDATE |
+              BX_EVENT_VMX_VEOI_UPDATE |
+              BX_EVENT_VMX_VIRTUAL_APIC_WRITE |
               BX_EVENT_VMX_MONITOR_TRAP_FLAG |
               BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING |
               BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED |
-              BX_EVENT_VMX_NMI_WINDOW_EXITING);
+              BX_EVENT_VMX_NMI_WINDOW_EXITING |
+              BX_EVENT_PENDING_VMX_VIRTUAL_INTR);
 
   //
   // STEP 2: Load Host State
@@ -2272,8 +2336,7 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
   }
 #endif
 
-  // skip the longjmp for TRAP-like VMEXITs
-  if (reason != VMX_VMEXIT_TPR_THRESHOLD) {
+  if (! IS_TRAP_LIKE_VMEXIT(reason)) {
     longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
   }
 }
@@ -2629,6 +2692,17 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
   ///////////////////////////////////////////////////////
 
   VMenterInjectEvents();
+
+  // - When virtual-interrupt-delivery is set this will cause PPR virtualization
+  //   followed by Virtual Interrupt Evaluation
+  // - When use TPR shadow together with Virtualize APIC Access are set this would
+  //   cause TPR threshold check
+  // - When Virtualize APIC Access is disabled the code would pass through TPR
+  //   threshold check but no VMExit would occur (otherwise VMEntry should fail
+  //   consistency checks before).
+  if (VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW)) {
+    VMX_TPR_Virtualization();
+  }
 #endif  
 
   BX_NEXT_TRACE(i);
@@ -2700,16 +2774,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRST(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_CPP_INLINE Bit32u rotate_r(Bit32u val_32)
-{
-  return (val_32 >> 8) | (val_32 << 24);
-}
-
-BX_CPP_INLINE Bit32u rotate_l(Bit32u val_32)
-{
-  return (val_32 << 8) | (val_32 >> 24);
-}
-
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD_EdGd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
@@ -2757,7 +2821,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD_EdGd(bxInstruction_c *i)
   else if(width == VMCS_FIELD_WIDTH_32BIT) {
     // the real hardware write access rights rotated
     if (encoding >= VMCS_32BIT_GUEST_ES_ACCESS_RIGHTS && encoding <= VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS)
-      field_64 = rotate_r(VMread32(encoding));
+      field_64 = vmx_from_ar_byte_rd(VMread32(encoding));
     else
       field_64 = VMread32(encoding);
   }
@@ -2880,7 +2944,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE_GdEd(bxInstruction_c *i)
   else if(width == VMCS_FIELD_WIDTH_32BIT) {
     // the real hardware write access rights rotated
     if (encoding >= VMCS_32BIT_GUEST_ES_ACCESS_RIGHTS && encoding <= VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS)
-      VMwrite32(encoding, rotate_l(val_32));
+      VMwrite32(encoding, vmx_from_ar_byte_wr(val_32));
     else
       VMwrite32(encoding, val_32);
   }
@@ -3257,6 +3321,20 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, pause_loop_exiting_window, BX_CPU_THIS_PTR vmcs.pause_loop_exiting_window);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, first_pause_time, BX_CPU_THIS_PTR vmcs.first_pause_time);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, last_pause_time, BX_CPU_THIS_PTR vmcs.last_pause_time);
+#endif
+#if BX_SUPPORT_VMX >= 2
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, svi, BX_CPU_THIS_PTR vmcs.svi);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, rvi, BX_CPU_THIS_PTR vmcs.rvi);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vppr, BX_CPU_THIS_PTR vmcs.vppr);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, apic_access, BX_CPU_THIS_PTR vmcs.apic_access);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, eoi_exit_bitmap0, BX_CPU_THIS_PTR vmcs.eoi_exit_bitmap[0]);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, eoi_exit_bitmap1, BX_CPU_THIS_PTR vmcs.eoi_exit_bitmap[1]);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, eoi_exit_bitmap2, BX_CPU_THIS_PTR vmcs.eoi_exit_bitmap[2]);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, eoi_exit_bitmap3, BX_CPU_THIS_PTR vmcs.eoi_exit_bitmap[3]);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, eoi_exit_bitmap4, BX_CPU_THIS_PTR vmcs.eoi_exit_bitmap[4]);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, eoi_exit_bitmap5, BX_CPU_THIS_PTR vmcs.eoi_exit_bitmap[5]);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, eoi_exit_bitmap6, BX_CPU_THIS_PTR vmcs.eoi_exit_bitmap[6]);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, eoi_exit_bitmap7, BX_CPU_THIS_PTR vmcs.eoi_exit_bitmap[7]);
 #endif
 
   //

@@ -1322,7 +1322,8 @@ void BX_CPU_C::WriteCR8(bxInstruction_c *i, bx_address val)
 
 #if BX_SUPPORT_VMX && BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR in_vmx_guest && VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW)) {
-    VMX_Write_VTPR(tpr);
+    VMX_Write_Virtual_APIC(BX_LAPIC_TPR, tpr);
+    VMX_TPR_Virtualization();
     return;
   }
 #endif

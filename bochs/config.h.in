@@ -512,6 +512,9 @@ typedef Bit32u bx_phy_address;
 // on any system.
 typedef Bit32u bx_bool;
 
+#define BX_TRUE  (1)
+#define BX_FALSE (0)
+
 #if BX_WITH_MACOS
 #  define bx_ptr_t char *
 #else

@@ -36,6 +36,8 @@ bx_bool BX_CPU_C::handleWaitForEvent(void)
     if ((is_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR) && (BX_CPU_THIS_PTR get_IF() || BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF)) ||
          is_pending(BX_EVENT_NMI | BX_EVENT_SMI | BX_EVENT_INIT |
             BX_EVENT_VMX_VTPR_UPDATE |
+            BX_EVENT_VMX_VEOI_UPDATE |
+            BX_EVENT_VMX_VIRTUAL_APIC_WRITE |
             BX_EVENT_VMX_MONITOR_TRAP_FLAG |
             BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED |
             BX_EVENT_VMX_NMI_WINDOW_EXITING))
@@ -102,7 +104,17 @@ void BX_CPU_C::InterruptAcknowledge(void)
 #endif
 
 #if BX_SUPPORT_VMX
-  VMexit_ExtInterrupt();
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+
+#if BX_SUPPORT_VMX >= 2
+    if (is_pending(BX_EVENT_PENDING_VMX_VIRTUAL_INTR)) {
+      VMX_Deliver_Virtual_Interrupt();
+      return;
+    }
+#endif
+
+    VMexit_ExtInterrupt();
+  }
 #endif
 
   // NOTE: similar code in ::take_irq()
@@ -174,11 +186,13 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
     BX_CPU_THIS_PTR debug_trap &= BX_DEBUG_SINGLE_STEP_BIT;
 #endif
 
-  // TPR shadow takes priority over SMI, INIT and lower priority events and
+  // APIC virtualization trap take priority over SMI, INIT and lower priority events and
   // not blocked by EFLAGS.IF or interrupt inhibits by MOV_SS and STI
-#if BX_SUPPORT_X86_64 && BX_SUPPORT_VMX
-  if (is_unmasked_event_pending(BX_EVENT_VMX_VTPR_UPDATE)) {
-    VMX_TPR_Virtualization();
+#if BX_SUPPORT_VMX && BX_SUPPORT_X86_64
+  if (is_unmasked_event_pending(BX_EVENT_VMX_VTPR_UPDATE |
+                                BX_EVENT_VMX_VEOI_UPDATE | BX_EVENT_VMX_VIRTUAL_APIC_WRITE))
+  {
+    VMX_Virtual_Apic_Access_Trap();
   }
 #endif
 
@@ -288,7 +302,8 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
     VMexit(VMX_VMEXIT_INTERRUPT_WINDOW, 0);
   }
 #endif
-  else if (is_unmasked_event_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR))
+  else if (is_unmasked_event_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR |
+                                     BX_EVENT_PENDING_VMX_VIRTUAL_INTR))
   {
     InterruptAcknowledge();
   }

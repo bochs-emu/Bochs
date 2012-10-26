@@ -369,11 +369,16 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 #endif
 
 #if BX_SUPPORT_VMX >= 2
-  if (BX_CPU_THIS_PTR in_vmx_guest && index == 0x808) {
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_X2APIC_MODE)) {
-      RAX = VMX_Read_Virtual_APIC(BX_LAPIC_TPR) & 0xff;
-      RDX = 0;
-      BX_NEXT_INSTR(i);
+      if (index >= 0x800 && index <= 0x8FF) {
+        if (index == 0x808 || SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_REGISTERS)) {
+          unsigned vapic_offset = (index & 0xff) << 4;
+          RAX = VMX_Read_Virtual_APIC(vapic_offset);
+          RDX = VMX_Read_Virtual_APIC(vapic_offset + 4);
+          BX_NEXT_INSTR(i);
+        }
+      }
     }
   }
 #endif
@@ -859,6 +864,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
+  invalidate_prefetch_q();
+
   Bit64u val_64 = ((Bit64u) EDX << 32) | EAX;
   Bit32u index = ECX;
 
@@ -874,10 +881,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 #endif
 
 #if BX_SUPPORT_VMX >= 2
-  if (BX_CPU_THIS_PTR in_vmx_guest && index == 0x808) {
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_X2APIC_MODE)) {
-      VMX_Write_VTPR(AL);
-      BX_NEXT_INSTR(i);
+      if (Virtualize_X2APIC_Write(index, val_64))
+        BX_NEXT_INSTR(i);
     }
   }
 #endif

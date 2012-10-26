@@ -1111,6 +1111,8 @@ public: // for now...
 #define BX_EVENT_PENDING_INTR                 (1 << 10)
 #define BX_EVENT_PENDING_LAPIC_INTR           (1 << 11)
 #define BX_EVENT_VMX_VTPR_UPDATE              (1 << 12)
+#define BX_EVENT_VMX_VEOI_UPDATE              (1 << 13)
+#define BX_EVENT_VMX_VIRTUAL_APIC_WRITE       (1 << 14)
   Bit32u  pending_event;
   Bit32u  event_mask;
   Bit32u  async_event;
@@ -4332,12 +4334,24 @@ public: // for now...
 #endif
 #if BX_SUPPORT_X86_64
   BX_SMF bx_bool is_virtual_apic_page(bx_phy_address paddr) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data);
+  BX_SMF bx_bool virtual_apic_access_vmexit(unsigned offset, unsigned len) BX_CPP_AttrRegparmN(2);
+  BX_SMF bx_phy_address VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF void VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *data);
-  BX_SMF void VMX_Write_VTPR(Bit8u vtpr);
-  BX_SMF void VMX_TPR_Virtualization(void);
+  BX_SMF void VMX_Write_VICR(void);
   BX_SMF Bit32u VMX_Read_Virtual_APIC(unsigned offset);
   BX_SMF void VMX_Write_Virtual_APIC(unsigned offset, Bit32u val32);
+  BX_SMF void VMX_TPR_Virtualization(void);
+  BX_SMF bx_bool Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64);
+  BX_SMF void VMX_Virtual_Apic_Access_Trap(void);
+#if BX_SUPPORT_VMX >= 2
+  BX_SMF void vapic_set_vector(unsigned apic_arrbase, Bit8u vector);
+  BX_SMF Bit8u vapic_clear_and_find_highest_priority_int(unsigned apic_arrbase, Bit8u vector);
+  BX_SMF void VMX_PPR_Virtualization(void);
+  BX_SMF void VMX_EOI_Virtualization(void);
+  BX_SMF void VMX_Self_IPI_Virtualization(Bit8u vector);
+  BX_SMF void VMX_Evaluate_Pending_Virtual_Interrupts(void);
+  BX_SMF void VMX_Deliver_Virtual_Interrupt(void);
+#endif
 #endif
   // vmexit reasons
   BX_SMF void VMexit_Instruction(bxInstruction_c *i, Bit32u reason, bx_bool rw = BX_READ) BX_CPP_AttrRegparmN(3);
