@@ -967,7 +967,7 @@ available at <ulink url="http://www.cygwin.com">www.cygwin.com</ulink>.
 
 <figure><title>Checking out Bochs in SVN</title>
 <screen>
-  user$ <command>svn co https://bochs.svn.sourceforge.net/svnroot/bochs/trunk/bochs bochs</command>
+  user$ <command>svn co http://svn.code.sf.net/p/bochs/code/trunk/bochs bochs</command>
   A    bochs/ltdl.c
   A    bochs/Makefile.in
   A    bochs/bochs.h
