@@ -2161,6 +2161,13 @@ to explicitly turn it off.
       </entry>
     </row>
     <row>
+      <entry>--enable-voodoo</entry>
+      <entry>no</entry>
+      <entry>Enable experimental 3dfx Voodoo Graphics emulation. Currently only
+      the Voodoo1 model can be emulated.
+      </entry>
+    </row>
+    <row>
       <entry>--enable-plugins</entry>
       <entry>no</entry>
       <entry>
@@ -2258,7 +2265,7 @@ to explicitly turn it off.
     </row>
     <row>
       <entry>--enable-pci</entry>
-      <entry>no</entry>
+      <entry>yes</entry>
       <entry>Enable limited i440FX PCI support. This is still incomplete, but usable.
       </entry>
     </row>
@@ -3518,13 +3525,13 @@ vmware3 : vmware version 3 disk support
 vmware4 : vmware version 4 disk support (aka VMDK)
 </para></listitem>
 <listitem><para>
-undoable : flat file with commitable redolog
+undoable : read-only base file with commitable redolog
 </para></listitem>
 <listitem><para>
 growing : growing file
 </para></listitem>
 <listitem><para>
-volatile : flat file with volatile redolog
+volatile : read-only base file with volatile redolog
 </para></listitem>
 <listitem><para>
 vpc: fixed / dynamic size VirtualPC image
@@ -7801,7 +7808,7 @@ If unspecified, the default "mode" is flat.
        vmware version 4 (VMDK) compatibility
        </entry>
  </row>
- <row> <entry> undoable </entry> <entry> flat file with a commitable redolog </entry>
+ <row> <entry> undoable </entry> <entry> read-only base file with a commitable redolog </entry>
        <entry>
        commitable, rollbackable
        </entry>
@@ -7810,7 +7817,7 @@ If unspecified, the default "mode" is flat.
        <entry> growing
        </entry>
  </row>
- <row> <entry> volatile </entry> <entry> flat file with a volatile redolog </entry>
+ <row> <entry> volatile </entry> <entry> read-only base file with a volatile redolog </entry>
        <entry>
        always rollbacked
        </entry>
@@ -8130,10 +8137,11 @@ Only vmware versions 3 and 4 disk image files are supported.
 <section><title>description</title>
 <para>
     Undoable disks are commitable/rollbackable disk images.
-    An undoable disk is based on a read-only flat image
-    (see <xref linkend="harddisk-mode-flat">), associated with
-    a growing redolog, that contains all changes (writes)
-    made to the flat image content.
+    An undoable disk is based on a read-only image, associated
+    with a growing redolog, that contains all changes (writes)
+    made to the base image content. Currently, base images of
+    types 'flat', 'sparse', 'growing', 'vmware3', 'vmware4' and
+    'vpc' are supported.
 </para>
 <para>
     This redolog is dynamically created at runtime, if it does not
@@ -8141,13 +8149,13 @@ Only vmware versions 3 and 4 disk image files are supported.
 </para>
 <para>
     All writes go to the redolog, reads are done from the
-    redolog if previously written, or from the flat file
+    redolog if previously written, or from the base file
     otherwise.
 </para>
 <para>
     If unspecified with the "journal" option of the ataX-xxx directive,
     the redolog file name is created by adding a ".redolog"
-    suffix to the flat image name.
+    suffix to the base image name.
 </para>
 <para>
     File size of the redolog can grow up to the total disk
@@ -8161,7 +8169,7 @@ Only vmware versions 3 and 4 disk image files are supported.
 </para>
 <para>
     After a run, the redolog can be committed (merged)
-    to the flat image with the bxcommit utility.
+    to the base image with the bxcommit utility (flat type only).
 </para>
 <para>
     After a run, the redolog can be rollbacked (discarded)
@@ -8169,25 +8177,24 @@ Only vmware versions 3 and 4 disk image files are supported.
 </para>
 <note>
 <para>
-    In this mode, the flat file is always open in read-only mode,
+    In this mode, the base file is always open in read-only mode,
     so it can safely be stored on a read-only medium (for example on a cdrom).
 </para>
 </note>
 </section>
 <section><title>image creation</title>
 <para>
-The flat disk images must be created with the bximage utility
+The flat / sparse / growing disk images must be created with the bximage utility
 (see <xref linkend="using-bximage"> for more information).
-    The growing redolog is created automatically if needed.
+The growing redolog is created automatically if needed.
 </para>
 </section>
 <section><title>path</title>
 <para>
     The "path" option of the ataX-xxx directive in the configuration file
-    must be the flat image name. The redolog name can be set with the "journal"
-    option of the same directive.
-    If not set, the redolog name is created by adding the
-    ".redolog" suffix to the flat image name.
+    must be the base image name. The redolog name can be set with the "journal"
+    option of the same directive. If not set, the redolog name is created by
+    adding the ".redolog" suffix to the base image name.
 </para>
 </section>
 <section><title>external tools</title>
@@ -8292,12 +8299,11 @@ before writing new data. If no disk space is available, a panic will occur.
 <section><title>description</title>
 <para>
     Volatile disks are always-rollbacked disk images.
-    An volatile disk is based on a read-only flat image
-    (see <xref linkend="harddisk-mode-flat">), associated with
-    a growing temporary redolog, that contains all changes (writes)
-    made to the flat image content. All data written to
-    the  disk image are lost at the end of the Bochs
-    session.
+    An volatile disk is based on a read-only image, associated with
+    a growing redolog, that contains all changes (writes)
+    made to the base image content. Currently, base images of
+    types 'flat', 'sparse', 'growing', 'vmware3', 'vmware4' and
+    'vpc' are supported.
 </para>
 <para>
     The redolog is dynamically created at runtime, when
@@ -8306,13 +8312,13 @@ before writing new data. If no disk space is available, a panic will occur.
 </para>
 <para>
     All writes go to the redolog, reads are done from the
-    redolog if previously written, or from the flat file
+    redolog if previously written, or from the base file
     otherwise.
 </para>
 <para>
     If unspecified with the "journal" option of the ataX-xxx directive,
     the redolog file name is created by adding a ".redolog"
-    suffix to the flat image name.
+    suffix to the base image name.
 </para>
 <para>
     File size of the redolog can grow up to the total disk
@@ -8326,25 +8332,25 @@ before writing new data. If no disk space is available, a panic will occur.
 </para>
 <note>
 <para>
-    In this mode, the flat file is always open in read-only mode,
+    In this mode, the base file is always open in read-only mode,
     so it can safely be stored on a read-only medium (for example on a cdrom).
 </para>
 </note>
 </section>
 <section><title>image creation</title>
 <para>
-The flat disk images must be created with the bximage utility
+The flat / sparse / growing disk images must be created with the bximage utility
 (see <xref linkend="using-bximage"> for more information).
-    The growing redolog is created automatically.
+The growing redolog is created automatically.
 </para>
 </section>
 <section><title>path</title>
 <para>
     The "path" option of the ataX-xxx directive in the configuration file
-    must be the flat image name. The redolog name can be set with the "journal"
+    must be the base image name. The redolog name can be set with the "journal"
     option of the same directive.
     If not set, the redolog name is created by adding the
-    ".redolog" suffix to the flat image name.
+    ".redolog" suffix to the base image name.
     A random suffix is also appended to the redolog name.
 </para>
 </section>
