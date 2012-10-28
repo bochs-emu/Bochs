@@ -83,11 +83,10 @@ SF username and type your password.
 When SVN starts an editor, The default is usually vi. If you want a different
 editor, set the EDITOR environment variable to the name of your preferred
 editor.  When you're done, just save the file and quit the editor.  Unless
-there's some problem, you will see a message that says what the new revision
-number for the file is, and then "done".  If while you're editing the log
-message, you decide that you don't want to commit after all, don't save the
-file.  Quit the editor, and when it asks where the log message went, tell it
-to abort.
+there's some problem, you will see a message that says what the new SVN revision
+number is, and then "done".  If while you're editing the log message, you decide
+that you don't want to commit after all, don't save the file. Quit the editor,
+and when it asks where the log message went, tell it to abort.
 </para>
 
 <para>
@@ -113,6 +112,40 @@ And here is an aborted one:
 
 </para>
 </section> <!--end of "Checking in Files" -->
+
+<section><title>Creating a backup of the SVN repository</title>
+<para>
+Backups of the SVN repository can be made with the <command>rsync</command> utility.
+In case of data corruption or other problems on the server, the repository with all
+revisions, branches and tags can be restored easily. It is recommended to update this
+backup frequently. The following example creates a folder called
+<filename>bochs-svn-rsync</filename> that contains the repository.
+<screen>
+  rsync -av svn.code.sf.net::p/bochs/code bochs-svn-rsync
+</screen>
+</para>
+</section>
+
+<section><title>Setting SVN commit notifications</title>
+<para>
+The Bochs SVN repository is set up to send a notification email to the "bochs-cvs"
+mailing list after each successful commit. This email contains the log message, a list
+of the modified files and a diff against the previous revision. The diff of large
+commits will be truncated at 96 kByte.
+</para>
+<para>
+After each commit the SVN server runs the script <command>post-commit</command> located
+in the <filename>hooks</filename> folder. On SourceForge, this script forces a refresh
+of the Allura code browser and it can call a script <command>post-commit-user</command>
+for addition operations if it exists. For Bochs we have set up this script and call
+<command>svnnotify</command> from it to create the notification email.
+<screen>
+#!/bin/sh
+
+svnnotify --repos-path $1 --revision $2 -O -C -d -e 98304 -t bochs-cvs@lists.sourceforge.net
+</screen>
+</para>
+</section>
 
 </section> <!--end of "Using SVN write access" -->
 
