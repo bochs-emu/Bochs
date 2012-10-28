@@ -637,6 +637,7 @@ typedef struct bx_VMCS
    bx_phy_address virtual_apic_page_addr;
    Bit32u vm_tpr_threshold;
    bx_phy_address apic_access_page;
+   unsigned apic_access;
 #endif
 
 #if BX_SUPPORT_VMX >= 2
@@ -660,8 +661,6 @@ typedef struct bx_VMCS
    Bit8u vppr;
 
    Bit32u eoi_exit_bitmap[8];
-
-   unsigned apic_access;
 #endif
 
    //
