@@ -69,7 +69,7 @@ public:
 
   virtual void init_vga_extension(void);
   virtual void reset(unsigned type);
-  virtual void trigger_timer(void *this_ptr);
+  virtual void refresh_display(void *this_ptr, bx_bool redraw);
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height);
   virtual Bit8u mem_read(bx_phy_address addr);

@@ -421,8 +421,7 @@ Bit32u bx_gui_c::set_snapshot_mode(bx_bool mode)
     BX_GUI_THIS snapshot_buffer = (Bit8u*)malloc(bufsize);
     if (BX_GUI_THIS snapshot_buffer != NULL) {
       memset(BX_GUI_THIS snapshot_buffer, 0, bufsize);
-      DEV_vga_redraw_area(0, 0, BX_GUI_THIS guest_xres, BX_GUI_THIS guest_yres);
-      DEV_vga_refresh();
+      DEV_vga_refresh(1);
       return bufsize;
     }
   } else {

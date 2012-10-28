@@ -22,7 +22,6 @@
 
 #include "bochs.h"
 #include "cpu/cpu.h"
-#include "iodev/iodev.h"
 #include <assert.h>
 
 #if BX_WITH_CARBON
@@ -452,7 +451,7 @@ void logfunctions::ask(int level, const char *prefix, const char *fmt, va_list a
   // are printed on the screen just before a panic.  It's also potentially
   // dangerous if this function calls ask again...  That's why I added
   // the reentry check above.
-  if (SIM->get_init_done()) DEV_vga_refresh();
+  SIM->refresh_vga();
 
   // ensure the text screen is showing
   SIM->set_display_mode(DISP_MODE_CONFIG);

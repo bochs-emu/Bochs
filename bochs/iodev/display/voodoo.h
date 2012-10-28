@@ -51,7 +51,7 @@ public:
   virtual void register_state(void);
   virtual void after_restore_state(void);
 
-  virtual void trigger_timer(void *this_ptr);
+  virtual void refresh_display(void *this_ptr, bx_bool redraw);
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height);
 

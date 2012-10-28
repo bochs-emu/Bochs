@@ -105,7 +105,7 @@ public:
                              unsigned width, unsigned height);
 
   virtual void   init_vga_extension(void);
-  virtual void   trigger_timer(void *this_ptr);
+  virtual void   refresh_display(void *this_ptr, bx_bool redraw);
 
   static void     timer_handler(void *);
 #if BX_USE_VGA_SMF == 0

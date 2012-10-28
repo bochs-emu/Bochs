@@ -216,8 +216,8 @@ extern "C" {
   (bx_devices.pluginVgaDevice->redraw_area(left, top, right, bottom))
 #define DEV_vga_get_text_snapshot(rawsnap, height, width) \
   (bx_devices.pluginVgaDevice->get_text_snapshot(rawsnap, height, width))
-#define DEV_vga_refresh() \
-  (bx_devices.pluginVgaDevice->trigger_timer(bx_devices.pluginVgaDevice))
+#define DEV_vga_refresh(a) \
+  (bx_devices.pluginVgaDevice->refresh_display(bx_devices.pluginVgaDevice,a))
 #define DEV_vga_set_override(a,b) (bx_devices.pluginVgaDevice->set_override(a,b))
 
 ///////// PCI macros

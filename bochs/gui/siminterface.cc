@@ -135,8 +135,9 @@ public:
   virtual int create_disk_image(const char *filename, int sectors, bx_bool overwrite);
   virtual void refresh_ci();
   virtual void refresh_vga() {
-    // maybe need to check if something has been initialized yet?
-    DEV_vga_refresh();
+    if (init_done) {
+      DEV_vga_refresh(0);
+    }
   }
   virtual void handle_events() {
     // maybe need to check if something has been initialized yet?

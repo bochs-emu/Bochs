@@ -1486,7 +1486,7 @@ void bx_dbg_show_command(const char* arg)
       dbg_printf("Turned OFF all bx_dbg flags\n");
       return;
     } else if(!strcmp(arg,"vga")){
-      DEV_vga_refresh();
+      SIM->refresh_vga();
       return;
     } else {
       dbg_printf("Unrecognized arg: %s (only 'mode', 'int', 'softint', 'extint', 'iret', 'call', 'off', 'dbg-all' and 'dbg-none' are valid)\n", arg);
@@ -1822,7 +1822,7 @@ one_more:
   SIM->refresh_ci();
 
   // (mch) hack
-  DEV_vga_refresh();
+  SIM->refresh_vga();
 
   BX_INSTR_DEBUG_PROMPT();
   bx_dbg_print_guard_results();

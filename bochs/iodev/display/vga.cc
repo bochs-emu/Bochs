@@ -357,11 +357,14 @@ Bit64s bx_vga_c::vga_param_handler(bx_param_c *param, int set, Bit64s val)
   return val;
 }
 
-void bx_vga_c::trigger_timer(void *this_ptr)
+void bx_vga_c::refresh_display(void *this_ptr, bx_bool redraw)
 {
   if (BX_VGA_THIS s.vga_override && (BX_VGA_THIS s.nvgadev != NULL)) {
-    BX_VGA_THIS s.nvgadev->trigger_timer(BX_VGA_THIS s.nvgadev);
+    BX_VGA_THIS s.nvgadev->refresh_display(BX_VGA_THIS s.nvgadev, redraw);
   } else {
+    if (redraw) {
+      redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
+    }
     timer_handler(this_ptr);
   }
 }

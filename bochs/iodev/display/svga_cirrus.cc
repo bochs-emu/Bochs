@@ -1029,11 +1029,14 @@ void bx_svga_cirrus_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
   VGA_WRITE(address,value,io_len);
 }
 
-void bx_svga_cirrus_c::trigger_timer(void *this_ptr)
+void bx_svga_cirrus_c::refresh_display(void *this_ptr, bx_bool redraw)
 {
   if (BX_CIRRUS_THIS s.vga_override && (BX_CIRRUS_THIS s.nvgadev != NULL)) {
-    BX_CIRRUS_THIS s.nvgadev->trigger_timer(BX_CIRRUS_THIS s.nvgadev);
+    BX_CIRRUS_THIS s.nvgadev->refresh_display(BX_CIRRUS_THIS s.nvgadev, redraw);
   } else {
+    if (redraw) {
+      redraw_area(0, 0, BX_CIRRUS_THIS s.last_xres, BX_CIRRUS_THIS s.last_yres);
+    }
     svga_timer_handler(this_ptr);
   }
 }

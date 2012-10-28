@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2006  The Bochs Project Team
+//  Copyright (C) 2002-2012  The Bochs Project Team
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -40,7 +40,6 @@
 #include "bochs.h"
 #include "param_names.h"
 #include "cpu/cpu.h"
-#include "iodev/iodev.h"
 
 #define LOG_THIS gdbstublog->
 #define IFDBG(x) x
@@ -473,7 +472,7 @@ static void debug_loop(void)
         stub_trace_flag = 0;
         bx_cpu.cpu_loop();
 
-        DEV_vga_refresh();
+        SIM->refresh_vga();
 
         if (buffer[1] != 0)
         {
@@ -506,7 +505,7 @@ static void debug_loop(void)
         BX_INFO(("stepping"));
         stub_trace_flag = 1;
         bx_cpu.cpu_loop();
-        DEV_vga_refresh();
+        SIM->refresh_vga();
         stub_trace_flag = 0;
         BX_INFO(("stopped with %x", last_stop_reason));
         buf[0] = 'S';

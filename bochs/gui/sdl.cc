@@ -1644,7 +1644,7 @@ BxEvent *sdl_notify_callback(void *unused, BxEvent *event)
         while (debug_cmd_ready == 0 && bx_user_quit == 0)
         {
           if (vgaw_refresh != 0)  // is the GUI frontend requesting a VGAW refresh?
-            DEV_vga_refresh();
+            SIM->refresh_vga();
           vgaw_refresh = 0;
 #ifdef WIN32
           Sleep(100);

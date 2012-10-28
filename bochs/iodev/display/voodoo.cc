@@ -400,8 +400,11 @@ void bx_voodoo_c::mode_change_timer_handler(void *this_ptr)
   }
 }
 
-void bx_voodoo_c::trigger_timer(void *this_ptr)
+void bx_voodoo_c::refresh_display(void *this_ptr, bx_bool redraw)
 {
+  if (redraw) {
+    redraw_area(0, 0, v->fbi.width, v->fbi.height);
+  }
   update_timer_handler(this_ptr);
 }
 

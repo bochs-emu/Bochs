@@ -258,8 +258,8 @@ public:
   virtual void set_override(bx_bool enabled, void *dev) {
     STUBFUNC(vga, set_override);
   }
-  virtual void trigger_timer(void *this_ptr) {
-    STUBFUNC(vga, trigger_timer);
+  virtual void refresh_display(void *this_ptr, bx_bool redraw) {
+    STUBFUNC(vga, refresh_display);
   }
 };
 

@@ -49,7 +49,7 @@ class bx_nonvga_device_c : public bx_devmodel_c {
 public:
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height) {}
-  virtual void trigger_timer(void *this_ptr) {}
+  virtual void refresh_display(void *this_ptr, bx_bool redraw) {}
 };
 
 class bx_vgacore_c : public bx_vga_stub_c
@@ -66,7 +66,7 @@ public:
   static bx_bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   virtual Bit8u  mem_read(bx_phy_address addr);
   virtual void   mem_write(bx_phy_address addr, Bit8u value);
-  virtual void   trigger_timer(void *this_ptr) {}
+  virtual void   refresh_display(void *this_ptr, bx_bool redraw) {}
   virtual void   set_override(bx_bool enabled, void *dev);
   virtual void   register_state(bx_list_c *parent);
   virtual void   after_restore_state(void);
