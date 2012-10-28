@@ -159,7 +159,7 @@ svnnotify --repos-path $1 --revision $2 -O -C -d -e 98304 -t bochs-cvs@lists.sou
 <para>
 <screen>
 Ideas:
-- how to browse code with viewvc
+- how to browse code with the Allura code browser
 - how to find an identifier, variable, or specific text in the code
 - how to make patches with SVN
 </screen>
@@ -184,9 +184,9 @@ includes both RAM and BIOS ROMs), a video card (usually VGA), a keyboard port
 motherboard circuitry.
 </para>
 <para>
-There might also be a NE2K ethernet card, a PCI controller, a Sound Blaster 16,
+There might also be an ethernet card, a PCI controller, a soundcard,
 an IDE controller (+ harddisks/CDROM), a SCSI controller (+ harddisks), a
-floppy controller, an APIC ..
+floppy controller, an APIC ...
 </para>
 <para>
 There may also be more than one CPU.
@@ -204,16 +204,33 @@ requests, DMA acknowledges, and NMI request/acknowledge. How that is simulated
 is explained later.&FIXME;
 </para>
 <para>
-Other important pieces of the puzzle are: the options object (reads/writes
-configuration files, can be written to and queried while Bochs is running) and
-the GUI object. There are many different but compatible implementations of the
-GUI object, depending on whether you compile for X (Unix/Linux), Win32,
-Macintosh (two versions: one for Mac OS X and one for older OS's), Amiga,
-etc.
+In addition to the simulator itself, some other components are required for
+the communication with the user. The most important parts are these:
+<itemizedlist>
+<listitem><para>the window that simulates the monitor and receives keyboard / mouse events</para></listitem>
+<listitem><para>the configuration interface that allows to adjust simulation settings</para></listitem>
+<listitem><para>the simulator interface for the communication between the other componnents</para></listitem>
+<listitem><para>the parameter tree (for configuration settings and save/restore)</para></listitem>
+<listitem><para>the logfunctions class (handle and configure panic/error/info/debug)</para></listitem>
+</itemizedlist>
+These componnents of Bochs are optional:
+<itemizedlist>
+<listitem><para>the plugin interface</para></listitem>
+<listitem><para>the builtin debugger</para></listitem>
+<listitem><para>the disassembler</para></listitem>
+<listitem><para>the instrumentation feature</para></listitem>
+</itemizedlist>
 </para>
 <para>
-And then there is the supporting cast: debugger, config menu, panic handler,
-disassembler, tracer, instrumentation.
+The simulation window is handled by the GUI object (other terms used in the
+sources are "display library", "VGAW"). There are many different but compatible
+implementations of the GUI object, depending on whether you compile for X (Unix/Linux),
+Win32, Macintosh (two versions: one for Mac OS X and one for older OS's), Amiga,
+etc. The cross-platform libraries SDL and wxWidgets are also supported.
+</para>
+<para>
+For the configuration interface there are also some different implementations: textconfig
+(text menus only), wxdialog (wxWidgets port), win32dialog/win32paramdlg (Windows port).
 </para>
 </section>
 
@@ -233,11 +250,11 @@ disassembler, tracer, instrumentation.
 <row><entry>build</entry><entry>additional stuff required for building Bochs on different platforms</entry></row>
 <row><entry>bx_debug</entry><entry>the builtin Bochs debugger</entry></row>
 <row><entry>cpu</entry><entry>the cpu emulation sources</entry></row>
+<row><entry>cpu/fpu</entry><entry>the fpu emulation sources</entry></row>
 <row><entry>disasm</entry><entry>the disassembler for the Bochs debugger</entry></row>
 <row><entry>doc/docbook</entry><entry>the Bochs documentation in DocBook format</entry></row>
 <row><entry>doc/man</entry><entry>Bochs manual pages</entry></row>
 <row><entry>docs-html</entry><entry>old Bochs documentation in HTML (will be replaced by DocBook)</entry></row>
-<row><entry>fpu</entry><entry>the fpu emulation sources</entry></row>
 <row><entry>gui</entry><entry>display libraries (guis), the simulator interface and text mode config interface</entry></row>
 <row><entry>gui/bitmaps</entry><entry>bitmaps for the headerbar</entry></row>
 <row><entry>gui/font</entry><entry>the default VGA font used by most of the display libraries</entry></row>
@@ -245,6 +262,7 @@ disassembler, tracer, instrumentation.
 <row><entry>host</entry><entry>host specific drivers (currently only used by the pcidev kernel module for Linux)</entry></row>
 <row><entry>instrument</entry><entry>directory tree for the instrumentation feature</entry></row>
 <row><entry>iodev</entry><entry>standard PC devices, PCI core devices</entry></row>
+<row><entry>iodev/display</entry><entry>display adapters (vga, cirrus, voodoo)</entry></row>
 <row><entry>iodev/hdimage</entry><entry>support for different disk image types and lowlevel cdrom access</entry></row>
 <row><entry>iodev/networking</entry><entry>networking devices and lowlevel modules</entry></row>
 <row><entry>iodev/sound</entry><entry>sound devices and lowlevel modules</entry></row>
