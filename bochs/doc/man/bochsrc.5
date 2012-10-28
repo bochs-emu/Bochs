@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "28 Aug 2012" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "28 Oct 2012" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -54,6 +54,8 @@ These plugins will be loaded by default (if present): 'biosdev', 'extfpuirq',
 These plugins are also supported, but they are usually loaded directly with
 their bochsrc option: 'e1000', 'es1370', 'ne2k', 'pcidev', 'pcipnic', 'sb16',
 'usb_ohci', 'usb_uhci' and 'usb_xhci'.
+
+This plugin currently must be loaded with plugin_ctrl: 'voodoo'.
 
 Example:
   plugin_ctrl: unmapped=0, e1000=1 # unload 'unmapped' and load 'e1000'
@@ -1128,7 +1130,7 @@ Example:
 .SH LICENSE
 This program  is distributed  under the terms of the  GNU
 Lesser General Public License as published  by  the  Free
-Software  Foundation.  See  the LICENSE and COPYING files located
+Software  Foundation.  See the LICENSE and COPYING files located
 in /usr/share/doc/bochs/ for details on the license and
 the lack of warranty.
 .\"SKIP_SECTION"

@@ -14,6 +14,8 @@
 # These plugins are also supported, but they are usually loaded directly with
 # their bochsrc option: 'e1000', 'es1370', 'ne2k', 'pcidev', 'pcipnic', 'sb16',
 # 'usb_ohci', 'usb_uhci' and 'usb_xhci'.
+#
+# This plugin currently must be loaded with plugin_ctrl: 'voodoo'.
 #=======================================================================
 #plugin_ctrl: unmapped=0, e1000=1 # unload 'unmapped' and load 'e1000'
 

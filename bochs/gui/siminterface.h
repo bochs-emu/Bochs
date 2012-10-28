@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009  The Bochs Project
+//  Copyright (C) 2001-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -238,8 +238,8 @@ enum {
 // quickly because the window will not be updated until it's done.)
 // Some time later, the simulator reaches the point where it checks
 // for new events from the user (actually controlled by
-// bx_keyb_c::periodic() in iodev/keyboard.cc) and calls
-// bx_gui.handle_events().  Then all the events in the queue are
+// bx_devices_c::timer() in iodev/devices.cc) and calls
+// bx_gui->handle_events(). Then all the events in the queue are
 // processed by the simulator.  There is no "response" sent back to
 // the originating thread.
 //
@@ -687,7 +687,7 @@ public:
   virtual int ask_filename(const char *filename, int maxlen, const char *prompt, const char *the_default, int flags) {return -1;}
   // yes/no dialog
   virtual int ask_yes_no(const char *title, const char *prompt, bx_bool the_default) {return -1;}
-  // called at a regular interval, currently by the keyboard handler.
+  // called at a regular interval, currently by the bx_devices_c::timer()
   virtual void periodic() {}
   virtual int create_disk_image(const char *filename, int sectors, bx_bool overwrite) {return -3;}
   // Tell the configuration interface (CI) that some parameter values have
@@ -696,7 +696,7 @@ public:
   virtual void refresh_ci() {}
   // forces a vga update.  This was added so that a debugger can force
   // a vga update when single stepping, without having to wait thousands
-  // of cycles for the normal vga refresh triggered by iodev/keyboard.cc.
+  // of cycles for the normal vga refresh triggered by the vga timer handler..
   virtual void refresh_vga() {}
   // forces a call to bx_gui.handle_events.  This was added so that a debugger
   // can force the gui events to be handled, so that interactive things such
