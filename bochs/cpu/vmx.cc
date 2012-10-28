@@ -2693,6 +2693,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
 
   VMenterInjectEvents();
 
+#if BX_SUPPORT_X86_64
   // - When virtual-interrupt-delivery is set this will cause PPR virtualization
   //   followed by Virtual Interrupt Evaluation
   // - When use TPR shadow together with Virtualize APIC Access are set this would
@@ -2703,7 +2704,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
   if (VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW)) {
     VMX_TPR_Virtualization();
   }
-#endif  
+#endif
+
+#endif // BX_SUPPORT_VMX
 
   BX_NEXT_TRACE(i);
 }
