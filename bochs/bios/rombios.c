@@ -10724,10 +10724,12 @@ post_default_slave_pic_ints:
   rep
     stosw
 
-  ;; set vector 0x79 to zero
-  ;; this is used by 'guardian angel' protection system
-  SET_INT_VECTOR(0x79, #0, #0)
-
+  ;; set vector 0x78 and above to zero
+  xor  eax, eax
+  mov  cl, #0x88 ;; 136 dwords
+  mov  di, #0x1e0
+  rep
+    stosd
   ret
 
 ;; the following area can be used to write dynamically generated tables
