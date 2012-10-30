@@ -451,10 +451,9 @@ BOCHSAPI extern Bit32u apic_id_mask;
 extern bx_bool bx_gui_sighandler;
 #endif
 
-// This value controls how often each I/O device's periodic() method
+// This value controls how often each I/O device's timer handler
 // gets called.  The timer is set up in iodev/devices.cc.
-#define BX_IODEV_HANDLER_PERIOD 100    // microseconds
-//#define BX_IODEV_HANDLER_PERIOD 10    // microseconds
+#define BX_IODEV_HANDLER_PERIOD 1000   // microseconds
 
 #define BX_PATHNAME_LEN 512
 

@@ -397,17 +397,9 @@ void bx_devices_c::timer_handler(void *this_ptr)
 
 void bx_devices_c::timer()
 {
-  // separate calls to bx_gui->handle_events from the keyboard code.
-  {
-    static int multiple=0;
-    if (++multiple==10)
-    {
-      multiple=0;
-      SIM->periodic();
-      if (! bx_pc_system.kill_bochs_request)
-	bx_gui->handle_events();
-    }
-  }
+  SIM->periodic();
+  if (!bx_pc_system.kill_bochs_request)
+    bx_gui->handle_events();
 }
 
 bx_bool bx_devices_c::register_irq(unsigned irq, const char *name)

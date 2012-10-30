@@ -133,7 +133,7 @@ void bx_keyb_c::init(void)
                                       0x0064, "8042 Keyboard controller", 1);
   BX_KEY_THIS timer_handle = bx_pc_system.register_timer(this, timer_handler,
                                  SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->get(), 1, 1,
-				 "8042 Keyboard controller");
+                                 "8042 Keyboard controller");
 
   resetinternals(1);
 
@@ -329,7 +329,7 @@ Bit64s bx_keyb_c::kbd_param_handler(bx_param_c *param, int set, Bit64s val)
 
 void bx_keyb_c::paste_delay_changed(Bit32u value)
 {
-  BX_KEY_THIS pastedelay = value / BX_IODEV_HANDLER_PERIOD;
+  BX_KEY_THIS pastedelay = value / SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->get();
   BX_INFO(("will paste characters every %d keyboard ticks",BX_KEY_THIS pastedelay));
 }
 
@@ -1179,14 +1179,13 @@ void bx_keyb_c::timer_handler(void *this_ptr)
 
 unsigned bx_keyb_c::periodic(Bit32u usec_delta)
 {
-/*  static int multiple=0; */
   static unsigned count_before_paste=0;
   Bit8u  retval;
 
   UNUSED(usec_delta);
 
   if (BX_KEY_THIS s.kbd_controller.kbd_clock_enabled) {
-    if(++count_before_paste>=BX_KEY_THIS pastedelay) {
+    if(++count_before_paste >= BX_KEY_THIS pastedelay) {
       // after the paste delay, consider adding moving more chars
       // from the paste buffer to the keyboard buffer.
       BX_KEY_THIS service_paste_buf();
