@@ -1445,8 +1445,9 @@ void bx_vgacore_c::update(void)
   if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
     // Graphics mode
     Bit8u color;
-    unsigned bit_no, r, c, x, y;
-    unsigned long byte_offset, start_addr;
+    Bit16u x, y, start_addr;
+    unsigned bit_no, r, c;
+    unsigned long byte_offset;
     unsigned xc, yc, xti, yti;
 
     start_addr = (BX_VGA_THIS s.CRTC.reg[0x0c] << 8) | BX_VGA_THIS s.CRTC.reg[0x0d];
@@ -1466,7 +1467,7 @@ void bx_vgacore_c::update(void)
     switch (BX_VGA_THIS s.graphics_ctrl.shift_reg) {
       case 0: // interleaved shift
         Bit8u attribute, palette_reg_val, DAC_regno;
-        unsigned long line_compare;
+        Bit16u line_compare;
         Bit8u *plane[4];
 
         if ((BX_VGA_THIS s.CRTC.reg[0x17] & 1) == 0) { // CGA 640x200x2

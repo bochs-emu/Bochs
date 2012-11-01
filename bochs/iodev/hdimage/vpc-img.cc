@@ -227,12 +227,12 @@ ssize_t vpc_image_t::read(void* buf, size_t count)
     if (offset == -1) {
       memset(buf, 0, 512);
     } else {
-      ret = bx_read_image(fd, offset, cbuf, sectors * 512);
+      ret = bx_read_image(fd, offset, cbuf, (int)sectors * 512);
       if (ret != 512) {
         return -1;
       }
     }
-    scount -= sectors;
+    scount -= (Bit32u)sectors;
     cur_sector += sectors;
     cbuf += sectors * 512;
   }
@@ -266,12 +266,12 @@ ssize_t vpc_image_t::write(const void* buf, size_t count)
         return -1;
     }
 
-    ret = bx_write_image(fd, offset, cbuf, sectors * 512);
+    ret = bx_write_image(fd, offset, cbuf, (int)sectors * 512);
     if (ret != sectors * 512) {
       return -1;
     }
 
-    scount -= sectors;
+    scount -= (Bit32u)sectors;
     cur_sector += sectors;
     cbuf += sectors * 512;
   }
@@ -336,7 +336,7 @@ Bit64s vpc_image_t::get_sector_offset(Bit64s sector_num, int write)
   Bit64u bitmap_offset, block_offset;
   Bit32u pagetable_index, pageentry_index;
 
-  pagetable_index = offset / block_size;
+  pagetable_index = (Bit32u)(offset / block_size);
   pageentry_index = (offset % block_size) / 512;
 
   if ((pagetable_index >= (Bit32u)max_table_entries) ||
@@ -400,11 +400,11 @@ Bit64s vpc_image_t::alloc_block(Bit64s sector_num)
     return -1;
 
   // Write entry into in-memory BAT
-  index = (sector_num * 512) / block_size;
+  index = (Bit32u)((sector_num * 512) / block_size);
   if (pagetable[index] != 0xFFFFFFFF)
     return -1;
 
-  pagetable[index] = free_data_block_offset / 512;
+  pagetable[index] = (Bit32u)(free_data_block_offset / 512);
 
   // Initialize the block's bitmap
   Bit8u *bitmap = new Bit8u[bitmap_size];

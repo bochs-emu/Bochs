@@ -396,7 +396,7 @@ void bx_voodoo_c::mode_change_timer_handler(void *this_ptr)
     BX_INFO(("Voodoo output %dx%d@%uHz", v->fbi.width, v->fbi.height, vfreq));
     bx_gui->dimension_update(v->fbi.width+1, v->fbi.height, 0, 0, 16);
     update_timer_handler(NULL);
-    bx_virt_timer.activate_timer(BX_VOODOO_THIS s.update_timer_id, BX_VOODOO_THIS s.vdraw.vtotal_usec, 1);
+    bx_virt_timer.activate_timer(BX_VOODOO_THIS s.update_timer_id, (Bit32u)BX_VOODOO_THIS s.vdraw.vtotal_usec, 1);
   }
 }
 

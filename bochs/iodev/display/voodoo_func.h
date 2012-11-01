@@ -1704,10 +1704,10 @@ void register_w(Bit32u offset, Bit32u data) {
     case sARGB:
       if (chips & 1)
       {
-        v->reg[sAlpha].f = RGB_ALPHA(data);
-        v->reg[sRed].f = RGB_RED(data);
-        v->reg[sGreen].f = RGB_GREEN(data);
-        v->reg[sBlue].f = RGB_BLUE(data);
+        v->reg[sAlpha].f = (float)RGB_ALPHA(data);
+        v->reg[sRed].f = (float)RGB_RED(data);
+        v->reg[sGreen].f = (float)RGB_GREEN(data);
+        v->reg[sBlue].f = (float)RGB_BLUE(data);
       }
       break;
 

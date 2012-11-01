@@ -947,7 +947,7 @@ int vvfat_image_t::init_directories(const char* dirname)
   if (!use_boot_file) {
     volume_sector_count = sector_count - offset_to_bootsector;
     tmpsc = volume_sector_count - reserved_sectors - root_entries / 16;
-    cluster_count = (tmpsc * 0x200) / ((sectors_per_cluster * 0x200) + fat_type / 4);
+    cluster_count = (Bit32u)((tmpsc * 0x200) / ((sectors_per_cluster * 0x200) + fat_type / 4));
     sectors_per_fat = ((cluster_count + 2) * fat_type / 8) / 0x200;
     sectors_per_fat += (((cluster_count + 2) * fat_type / 8) % 0x200) > 0;
   } else {
@@ -1069,7 +1069,7 @@ int vvfat_image_t::init_directories(const char* dirname)
     if (fat_type != 32) {
       bootsector->root_entries = htod16(root_entries);
     }
-    bootsector->total_sectors16 = (volume_sector_count > 0xffff) ? 0:htod16(volume_sector_count);
+    bootsector->total_sectors16 = (Bit16u)((volume_sector_count > 0xffff) ? 0:htod16(volume_sector_count));
     bootsector->media_type = ((fat_type != 12) ? 0xf8:0xf0);
     if (fat_type != 32) {
       bootsector->sectors_per_fat = htod16(sectors_per_fat);
@@ -1077,7 +1077,7 @@ int vvfat_image_t::init_directories(const char* dirname)
     bootsector->sectors_per_track = htod16(spt);
     bootsector->number_of_heads = htod16(heads);
     bootsector->hidden_sectors = htod32(offset_to_bootsector);
-    bootsector->total_sectors = htod32((volume_sector_count > 0xffff) ? volume_sector_count:0);
+    bootsector->total_sectors = (Bit32u)(htod32((volume_sector_count > 0xffff) ? volume_sector_count:0));
     if (fat_type != 32) {
       bootsector->u.fat16.drive_number = (fat_type == 12) ? 0:0x80; // assume this is hda (TODO)
       bootsector->u.fat16.signature = 0x29;
