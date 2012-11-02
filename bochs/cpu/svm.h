@@ -42,6 +42,7 @@ enum SVM_intercept_codes {
    SVM_VMEXIT_DR0_READ  = 32,
    SVM_VMEXIT_DR0_WRITE = 48,
    SVM_VMEXIT_EXCEPTION = 64,
+   SVM_VMEXIT_PF_EXCEPTION = (64+BX_PF_EXCEPTION),
    SVM_VMEXIT_INTR = 96,
    SVM_VMEXIT_NMI = 97,
    SVM_VMEXIT_SMI = 98,
@@ -131,6 +132,9 @@ enum SVM_intercept_codes {
 #define SVM_CONTROL_LBR_VIRTUALIZATION_ENABLE   (0x0b8)
 #define SVM_CONTROL32_VMCB_CLEAN_BITS           (0x0c0)
 #define SVM_CONTROL64_NRIP                      (0x0c8)
+
+#define SVM_CONTROL64_GUEST_INSTR_BYTES         (0x0d0)
+#define SVM_CONTROL64_GUEST_INSTR_BYTES_HI      (0x0d8)
 
 // ======================
 //  VMCB save state area

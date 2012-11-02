@@ -490,16 +490,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (VMEXIT(VMX_VM_EXEC_CTRL2_INVLPG_VMEXIT)) {
-      BX_ERROR(("VMEXIT: INVLPG 0x" FMT_ADDRX, laddr));
-      VMexit(VMX_VMEXIT_INVLPG, laddr);
-    }
+    if (VMEXIT(VMX_VM_EXEC_CTRL2_INVLPG_VMEXIT)) VMexit(VMX_VMEXIT_INVLPG, laddr);
   }
 #endif
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(SVM_INTERCEPT0_INVLPG)) Svm_Vmexit(SVM_VMEXIT_INVLPG);
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_INVLPG))
+      Svm_Vmexit(SVM_VMEXIT_INVLPG, BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_DECODE_ASSIST) ? laddr : 0);
   }
 #endif
 

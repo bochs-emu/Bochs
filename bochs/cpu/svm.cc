@@ -588,6 +588,28 @@ void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
   if (BX_CPU_THIS_PTR speculative_rsp)
     RSP = BX_CPU_THIS_PTR prev_rsp;
 
+  if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_DECODE_ASSIST)) {
+    //
+    // In the case of a Nested #PF or intercepted #PF, guest instruction bytes at
+    // guest CS:RIP are stored into the 16-byte wide field Guest Instruction Bytes.
+    // Up to 15 bytes are recorded, read from guest CS:RIP. The number of bytes
+    // fetched is put into the first byte of this field. Zero indicates that no
+    // bytes were fetched.
+    //
+    // This field is filled in only during data page faults. Instruction-fetch
+    // page faults provide no additional information. All other intercepts clear
+    // bits 0:7 in this field to zero.
+    //
+
+    if ((reason == SVM_VMEXIT_PF_EXCEPTION || reason == SVM_VMEXIT_NPF) && !(exitinfo1 & 0x10))
+    {
+      // TODO
+    }
+    else {
+      vmcb_write8(SVM_CONTROL64_GUEST_INSTR_BYTES, 0);
+    }
+  }
+
   mask_event(BX_EVENT_SVM_VIRQ_PENDING);
 
   BX_CPU_THIS_PTR in_svm_guest = 0;

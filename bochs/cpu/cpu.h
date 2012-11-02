@@ -4012,11 +4012,12 @@ public: // for now...
                   BX_CPP_AttrNoReturn();
   BX_SMF void init_SMRAM(void);
   BX_SMF int  int_number(unsigned s);
-  BX_SMF bx_bool SetCR0(bx_address val) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF bx_bool SetCR0(bxInstruction_c *i, bx_address val);
   BX_SMF bx_bool check_CR0(bx_address val) BX_CPP_AttrRegparmN(1);
   BX_SMF bx_bool SetCR3(bx_address val) BX_CPP_AttrRegparmN(1);
 #if BX_CPU_LEVEL >= 5
-  BX_SMF bx_bool SetCR4(bx_address val) BX_CPP_AttrRegparmN(1);
+  BX_SMF bx_bool SetCR4(bxInstruction_c *i, bx_address val);
   BX_SMF bx_bool check_CR4(bx_address val) BX_CPP_AttrRegparmN(1);
   BX_SMF Bit32u get_cr4_allow_mask(void);
 #endif
@@ -4028,6 +4029,15 @@ public: // for now...
 #endif
 #if BX_CPU_LEVEL >= 5
   BX_SMF bx_bool SetEFER(bx_address val) BX_CPP_AttrRegparmN(1);
+#endif
+
+  BX_SMF bx_address read_CR0(void);
+#if BX_CPU_LEVEL >= 5
+  BX_SMF bx_address read_CR4(void);
+#endif
+#if BX_CPU_LEVEL >= 6
+  BX_SMF Bit32u ReadCR8(bxInstruction_c *i);
+  BX_SMF void WriteCR8(bxInstruction_c *i, bx_address val);
 #endif
 
   BX_SMF void reset(unsigned source);
@@ -4292,14 +4302,6 @@ public: // for now...
   BX_SMF void    check_monitor(bx_phy_address addr, unsigned len);
 #endif
 
-  BX_SMF bx_address read_CR0(void);
-#if BX_CPU_LEVEL >= 5
-  BX_SMF bx_address read_CR4(void);
-#endif
-#if BX_CPU_LEVEL >= 6
-  BX_SMF Bit32u ReadCR8(bxInstruction_c *i);
-  BX_SMF void WriteCR8(bxInstruction_c *i, bx_address val);
-#endif
 #if BX_SUPPORT_VMX
   BX_SMF Bit16u VMread16(unsigned encoding) BX_CPP_AttrRegparmN(1);
   BX_SMF Bit32u VMread32(unsigned encoding) BX_CPP_AttrRegparmN(1);
