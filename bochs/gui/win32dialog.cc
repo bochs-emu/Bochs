@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009  The Bochs Project
+//  Copyright (C) 2003-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -204,27 +204,20 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
   static bx_param_bool_c *status, *readonly;
   static bx_param_enum_c *devtype;
   static bx_param_enum_c *mediatype;
+  bx_list_c *list;
   char mesg[MAX_PATH];
   char path[MAX_PATH];
-  char pname[80];
   const char *title;
   int i, cap;
 
   switch (msg) {
     case WM_INITDIALOG:
       param = (bx_param_filename_c *)lParam;
-      param->get_param_path(pname, 80);
-      if (!strcmp(pname, BXPN_FLOPPYA_PATH)) {
-        status = SIM->get_param_bool(BXPN_FLOPPYA_STATUS);
-        readonly = SIM->get_param_bool(BXPN_FLOPPYA_READONLY);
-        devtype = SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE);
-        mediatype = SIM->get_param_enum(BXPN_FLOPPYA_TYPE);
-      } else {
-        status = SIM->get_param_bool(BXPN_FLOPPYB_STATUS);
-        readonly = SIM->get_param_bool(BXPN_FLOPPYB_READONLY);
-        devtype = SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE);
-        mediatype = SIM->get_param_enum(BXPN_FLOPPYB_TYPE);
-      }
+      list = (bx_list_c *)param->get_parent();
+      status = SIM->get_param_bool("status", list);
+      readonly = SIM->get_param_bool("readonly", list);
+      devtype = SIM->get_param_enum("devtype", list);
+      mediatype = SIM->get_param_enum("type", list);
       cap = devtype->get() - (int)devtype->get_min();
       SetWindowText(GetDlgItem(hDlg, IDDEVTYPE), floppy_devtype_names[cap]);
       i = 0;
