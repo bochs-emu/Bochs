@@ -780,16 +780,14 @@ void bx_x_gui_c::handle_events(void)
   XEvent report;
   XKeyEvent *key_event;
   KeySym keysym;
-  XComposeStatus compose;
   char buffer[MAX_MAPPED_STRING_LENGTH];
   int bufsize = MAX_MAPPED_STRING_LENGTH;
-  int charcount;
   bx_bool mouse_update;
   int y, height;
 
   XPointerMovedEvent *pointer_event;
   XEnterWindowEvent *enter_event;
-  XLeaveWindowEvent *leave_event;
+//  XLeaveWindowEvent *leave_event;
   XButtonEvent *button_event;
   XExposeEvent *expose_event;
 
@@ -928,13 +926,13 @@ void bx_x_gui_c::handle_events(void)
 
     case KeyPress:
       key_event = (XKeyEvent *) &report;
-      charcount = XLookupString(key_event, buffer, bufsize, &keysym, &compose);
+      XLookupString(key_event, buffer, bufsize, &keysym, NULL);
       xkeypress(keysym, 0);
       break;
 
     case KeyRelease:
       key_event = (XKeyEvent *) &report;
-      charcount = XLookupString(key_event, buffer, bufsize, &keysym, &compose);
+      XLookupString(key_event, buffer, bufsize, &keysym, NULL);
       xkeypress(keysym, 1);
       break;
 
@@ -952,7 +950,7 @@ void bx_x_gui_c::handle_events(void)
       break;
 
     case LeaveNotify:
-      leave_event = (XLeaveWindowEvent *) &report;
+//      leave_event = (XLeaveWindowEvent *) &report;
       prev_x = current_x = -1;
       prev_y = current_y = -1;
       break;
@@ -998,7 +996,7 @@ void send_keyboard_mouse_status(void)
             prev_x, prev_y, current_x, current_y));
 
   if (x11_mouse_mode_absxy) {
-    if ((current_y >= bx_headerbar_y) && (current_y < (dimension_y + bx_headerbar_y))) {
+    if ((current_y >= (int)bx_headerbar_y) && (current_y < (dimension_y + bx_headerbar_y))) {
       dx = current_x * 0x7fff / dimension_x;
       dy = (current_y - bx_headerbar_y) * 0x7fff / dimension_y;
       dz = current_z;
@@ -2213,7 +2211,6 @@ public:
 
   x11_control_c* add_control(int type, int x, int y, unsigned int width,
                              unsigned int height, const char *text);
-  void draw_controls(Display *display);
   void add_static_text(int x, int y, const char *text, int length);
   void draw_text(Display *display, int x, int y, const char *text, int length);
   int run(int start_ctrl, int ok, int cancel);
@@ -2295,13 +2292,6 @@ x11_control_c* x11_dialog_c::add_control(int type, int x, int y, unsigned int wi
     controls[cur_ctrl++] = xctrl;
   }
   return xctrl;
-}
-
-void x11_dialog_c::draw_controls(Display *display)
-{
-  for (int i = 0; i < ctrl_cnt; i++) {
-    controls[i]->draw(display, dlgwin, gc);
-  }
 }
 
 void x11_dialog_c::add_static_text(int x, int y, const char *text, int length)
@@ -2452,9 +2442,7 @@ int x11_dialog_c::run(int start_ctrl, int ok, int cancel)
 
 int x11_ask_dialog(BxEvent *event)
 {
-  x11_control_c *xbtn_cont, *xbtn_acont, *xbtn_quit;
 #if BX_DEBUGGER || BX_GDBSTUB
-  x11_control_c *xbtn_debug;
   const int button_x[4] = { 36, 121, 206, 291 };
   const int ask_code[4] = { BX_LOG_ASK_CHOICE_CONTINUE,
                             BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS,
@@ -2487,12 +2475,12 @@ int x11_ask_dialog(BxEvent *event)
   } else {
     xdlg->add_static_text(20, 45, message, strlen(message));
   }
-  xbtn_cont = xdlg->add_control(XDC_BUTTON, button_x[0] + 2, 80, 65, 20, "Continue");
-  xbtn_acont = xdlg->add_control(XDC_BUTTON, button_x[1] + 2, 80, 65, 20, "Alwayscont");
+  xdlg->add_control(XDC_BUTTON, button_x[0] + 2, 80, 65, 20, "Continue");
+  xdlg->add_control(XDC_BUTTON, button_x[1] + 2, 80, 65, 20, "Alwayscont");
 #if BX_DEBUGGER || BX_GDBSTUB
-  xbtn_debug = xdlg->add_control(XDC_BUTTON, button_x[2] + 2, 80, 65, 20, "Debugger");
+  xdlg->add_control(XDC_BUTTON, button_x[2] + 2, 80, 65, 20, "Debugger");
 #endif
-  xbtn_quit = xdlg->add_control(XDC_BUTTON, button_x[num_ctrls-1] + 2, 80, 65, 20, "Quit");
+  xdlg->add_control(XDC_BUTTON, button_x[num_ctrls-1] + 2, 80, 65, 20, "Quit");
   control = xdlg->run(num_ctrls-1, 0, num_ctrls-1);
   retcode = ask_code[control];
   delete xdlg;
@@ -2501,7 +2489,7 @@ int x11_ask_dialog(BxEvent *event)
 
 int x11_string_dialog(bx_param_string_c *param, bx_param_bool_c *param2)
 {
-  x11_control_c *xctl_edit, *xbtn_ok, *xbtn_cancel, *xbtn_status = NULL;
+  x11_control_c *xctl_edit, *xbtn_status = NULL;
   int control = 0, h, num_ctrls, ok_button;
   bx_bool status = 0;
   char name[80], text[10];
@@ -2531,8 +2519,8 @@ int x11_string_dialog(bx_param_string_c *param, bx_param_bool_c *param2)
     xbtn_status = xdlg->add_control(XDC_CHECKBOX, 45, 50, 15, 16, text);
     xdlg->add_static_text(70, 62, "Inserted", 8);
   }
-  xbtn_ok = xdlg->add_control(XDC_BUTTON, 55, h - 30, 65, 20, "OK");
-  xbtn_cancel = xdlg->add_control(XDC_BUTTON, 130, h - 30, 65, 20, "Cancel");
+  xdlg->add_control(XDC_BUTTON, 55, h - 30, 65, 20, "OK");
+  xdlg->add_control(XDC_BUTTON, 130, h - 30, 65, 20, "Cancel");
   control = xdlg->run(0, ok_button, num_ctrls-1);
   if (control == ok_button) {
     value = xctl_edit->get_value();
@@ -2562,7 +2550,6 @@ int x11_string_dialog(bx_param_string_c *param, bx_param_bool_c *param2)
 
 int x11_yesno_dialog(bx_param_bool_c *param)
 {
-  x11_control_c *xbtn_yes, *xbtn_no;
   int button_x[2], size_x, size_y;
   int control, ypos;
   unsigned int cpos1, cpos2, len, maxlen, lines;
@@ -2613,8 +2600,8 @@ int x11_yesno_dialog(bx_param_bool_c *param)
     cpos1 = cpos2;
     ypos += 15;
   }
-  xbtn_yes = xdlg->add_control(XDC_BUTTON, button_x[0], size_y - 30, 65, 20, "Yes");
-  xbtn_no = xdlg->add_control(XDC_BUTTON, button_x[1], size_y - 30, 65, 20, "No");
+  xdlg->add_control(XDC_BUTTON, button_x[0], size_y - 30, 65, 20, "Yes");
+  xdlg->add_control(XDC_BUTTON, button_x[1], size_y - 30, 65, 20, "No");
   control = xdlg->run(control, 0, 1);
   param->set(1 - control);
   delete xdlg;
