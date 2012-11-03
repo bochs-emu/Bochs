@@ -323,27 +323,9 @@ BOCHSAPI extern int (*pluginRegisterDefaultIOReadHandler)(void *thisPtr, ioReadH
 BOCHSAPI extern int (*pluginRegisterDefaultIOWriteHandler)(void *thisPtr, ioWriteHandler_t callback,
                                  const char *name, Bit8u mask);
 
-/* === A20 enable line stuff === */
-BOCHSAPI extern unsigned (*pluginGetA20E)(void);
-BOCHSAPI extern void     (*pluginSetA20E)(unsigned val);
-
 /* === IRQ stuff === */
 BOCHSAPI extern void  (*pluginRegisterIRQ)(unsigned irq, const char *name);
 BOCHSAPI extern void  (*pluginUnregisterIRQ)(unsigned irq, const char *name);
-
-/* === Floppy stuff ===*/
-BOCHSAPI extern unsigned (* pluginFloppyGetMediaStatus)(unsigned drive);
-BOCHSAPI extern unsigned (* pluginFloppySetMediaStatus)(unsigned drive, unsigned status);
-
-/* === VGA stuff === */
-BOCHSAPI extern void (* pluginVGARedrawArea)(unsigned x0, unsigned y0,
-                 unsigned width, unsigned height);
-BOCHSAPI extern Bit8u (* pluginVGAMemRead)(Bit32u addr);
-BOCHSAPI extern void  (* pluginVGAMemWrite)(Bit32u addr, Bit8u value);
-BOCHSAPI extern void  (* pluginVGAGetTextSnapshot)(Bit8u **text_snapshot,
-		          unsigned *txHeight, unsigned *txWidth);
-BOCHSAPI extern void  (* pluginVGARefresh)(void *);
-BOCHSAPI extern void  (* pluginVGASetUpdateInterval)(unsigned);
 
 /* === Timer stuff === */
 BOCHSAPI extern int     (*pluginRegisterTimer)(void *this_ptr, void (*funct)(void *),
@@ -351,19 +333,10 @@ BOCHSAPI extern int     (*pluginRegisterTimer)(void *this_ptr, void (*funct)(voi
                              bx_bool active, const char *name);
 
 BOCHSAPI extern void    (*pluginActivateTimer)(unsigned id, Bit32u usec, bx_bool continuous);
-BOCHSAPI extern void    (*pluginDeactivateTimer)(unsigned id);
 
 /* === HRQ stuff === */
 BOCHSAPI extern void    (*pluginSetHRQ)(unsigned val);
 BOCHSAPI extern void    (*pluginSetHRQHackCallback)(void (*callback)(void));
-
-/* === PCI stuff === */
-BOCHSAPI extern bx_bool (*pluginRegisterPCIDevice)(void *this_ptr,
-                             Bit32u (*bx_pci_read_handler)(void *, Bit8u, unsigned),
-                             void(*bx_pci_write_handler)(void *, Bit8u, Bit32u, unsigned),
-                             Bit8u *devfunc, const char *name, const char *descr);
-BOCHSAPI extern Bit8u   (*pluginRd_memType)(Bit32u addr);
-BOCHSAPI extern Bit8u   (*pluginWr_memType)(Bit32u addr);
 
 void plugin_abort(void);
 
