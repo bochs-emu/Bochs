@@ -47,42 +47,48 @@ DefinitionBlock (
                    section 6.2.8.1 */
                 /* Note: we provide the same info as the PCI routing
                    table of the Bochs BIOS */
+#define prt_slot(nr, lnk0, lnk1, lnk2, lnk3) \
+       Package() { nr##ffff, 0, lnk0, 0 }, \
+       Package() { nr##ffff, 1, lnk1, 0 }, \
+       Package() { nr##ffff, 2, lnk2, 0 }, \
+       Package() { nr##ffff, 3, lnk3, 0 }
 
-                // PCI Slot 0
-                Package() {0x0000ffff, 0, LNKD, 0},
-                Package() {0x0000ffff, 1, LNKA, 0},
-                Package() {0x0000ffff, 2, LNKB, 0},
-                Package() {0x0000ffff, 3, LNKC, 0},
-
-                // PCI Slot 1
-                Package() {0x0001ffff, 0, LNKA, 0},
-                Package() {0x0001ffff, 1, LNKB, 0},
-                Package() {0x0001ffff, 2, LNKC, 0},
-                Package() {0x0001ffff, 3, LNKD, 0},
-
-                // PCI Slot 2
-                Package() {0x0002ffff, 0, LNKB, 0},
-                Package() {0x0002ffff, 1, LNKC, 0},
-                Package() {0x0002ffff, 2, LNKD, 0},
-                Package() {0x0002ffff, 3, LNKA, 0},
-
-                // PCI Slot 3
-                Package() {0x0003ffff, 0, LNKC, 0},
-                Package() {0x0003ffff, 1, LNKD, 0},
-                Package() {0x0003ffff, 2, LNKA, 0},
-                Package() {0x0003ffff, 3, LNKB, 0},
-
-                // PCI Slot 4
-                Package() {0x0004ffff, 0, LNKD, 0},
-                Package() {0x0004ffff, 1, LNKA, 0},
-                Package() {0x0004ffff, 2, LNKB, 0},
-                Package() {0x0004ffff, 3, LNKC, 0},
-
-                // PCI Slot 5
-                Package() {0x0005ffff, 0, LNKA, 0},
-                Package() {0x0005ffff, 1, LNKB, 0},
-                Package() {0x0005ffff, 2, LNKC, 0},
-                Package() {0x0005ffff, 3, LNKD, 0},
+#define prt_slot0(nr) prt_slot(nr, LNKD, LNKA, LNKB, LNKC)
+#define prt_slot1(nr) prt_slot(nr, LNKA, LNKB, LNKC, LNKD)
+#define prt_slot2(nr) prt_slot(nr, LNKB, LNKC, LNKD, LNKA)
+#define prt_slot3(nr) prt_slot(nr, LNKC, LNKD, LNKA, LNKB)
+               prt_slot0(0x0000),
+               prt_slot1(0x0001),
+               prt_slot2(0x0002),
+               prt_slot3(0x0003),
+               prt_slot0(0x0004),
+               prt_slot1(0x0005),
+               prt_slot2(0x0006),
+               prt_slot3(0x0007),
+               prt_slot0(0x0008),
+               prt_slot1(0x0009),
+               prt_slot2(0x000a),
+               prt_slot3(0x000b),
+               prt_slot0(0x000c),
+               prt_slot1(0x000d),
+               prt_slot2(0x000e),
+               prt_slot3(0x000f),
+               prt_slot0(0x0010),
+               prt_slot1(0x0011),
+               prt_slot2(0x0012),
+               prt_slot3(0x0013),
+               prt_slot0(0x0014),
+               prt_slot1(0x0015),
+               prt_slot2(0x0016),
+               prt_slot3(0x0017),
+               prt_slot0(0x0018),
+               prt_slot1(0x0019),
+               prt_slot2(0x001a),
+               prt_slot3(0x001b),
+               prt_slot0(0x001c),
+               prt_slot1(0x001d),
+               prt_slot2(0x001e),
+               prt_slot3(0x001f),
             })
 
             Name (_CRS, ResourceTemplate ()
