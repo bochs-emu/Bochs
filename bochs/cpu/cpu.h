@@ -4339,7 +4339,6 @@ public: // for now...
   BX_SMF bx_bool virtual_apic_access_vmexit(unsigned offset, unsigned len) BX_CPP_AttrRegparmN(2);
   BX_SMF bx_phy_address VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF void VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *data);
-  BX_SMF void VMX_Write_VICR(void);
   BX_SMF Bit32u VMX_Read_Virtual_APIC(unsigned offset);
   BX_SMF void VMX_Write_Virtual_APIC(unsigned offset, Bit32u val32);
   BX_SMF void VMX_TPR_Virtualization(void);
@@ -4348,6 +4347,7 @@ public: // for now...
 #if BX_SUPPORT_VMX >= 2
   BX_SMF void vapic_set_vector(unsigned apic_arrbase, Bit8u vector);
   BX_SMF Bit8u vapic_clear_and_find_highest_priority_int(unsigned apic_arrbase, Bit8u vector);
+  BX_SMF void VMX_Write_VICR(void);
   BX_SMF void VMX_PPR_Virtualization(void);
   BX_SMF void VMX_EOI_Virtualization(void);
   BX_SMF void VMX_Self_IPI_Virtualization(Bit8u vector);

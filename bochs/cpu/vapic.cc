@@ -79,25 +79,6 @@ void BX_CPU_C::VMX_Write_Virtual_APIC(unsigned offset, Bit32u val32)
   BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 4, BX_WRITE, BX_VMX_VAPIC_ACCESS, (Bit8u*)(&val32));
 }
 
-void BX_CPU_C::VMX_Write_VICR(void)
-{
-  Bit32u vicr = VMX_Read_Virtual_APIC(BX_LAPIC_ICR_LO);
-
-  unsigned dest_shorthand = (vicr >> 18) & 0x3;
-  Bit8u vector = vicr & 0xff;
-
-  // reserved bits (31:20, 17:16, 13), 15 (trigger mode), 12 (delivery status), 10:8 (delivery mode) must be 0
-  // destination shorthand: must be self
-  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUAL_INT_DELIVERY) &&
-     (vicr & 0xfff3b700) == 0 && (dest_shorthand == 0x1) && vector >= 16)
-  {
-    VMX_Self_IPI_Virtualization(vector);
-  }
-  else {
-    VMexit(VMX_VMEXIT_APIC_WRITE, BX_LAPIC_ICR_LO); // trap-like vmexit
-  }
-}
-
 bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data)
 {
   BX_ASSERT(SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES));
@@ -418,6 +399,25 @@ void BX_CPU_C::VMX_Deliver_Virtual_Interrupt(void)
 
   // might be not necessary but cleaner code
   longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
+}
+
+void BX_CPU_C::VMX_Write_VICR(void)
+{
+  Bit32u vicr = VMX_Read_Virtual_APIC(BX_LAPIC_ICR_LO);
+
+  unsigned dest_shorthand = (vicr >> 18) & 0x3;
+  Bit8u vector = vicr & 0xff;
+
+  // reserved bits (31:20, 17:16, 13), 15 (trigger mode), 12 (delivery status), 10:8 (delivery mode) must be 0
+  // destination shorthand: must be self
+  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUAL_INT_DELIVERY) &&
+     (vicr & 0xfff3b700) == 0 && (dest_shorthand == 0x1) && vector >= 16)
+  {
+    VMX_Self_IPI_Virtualization(vector);
+  }
+  else {
+    VMexit(VMX_VMEXIT_APIC_WRITE, BX_LAPIC_ICR_LO); // trap-like vmexit
+  }
 }
 
 #endif // BX_SUPPORT_VMX >= 2
