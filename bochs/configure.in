@@ -2433,7 +2433,7 @@ ENH_DBG_OBJS=""
 if test "$gui_debugger" = 1; then
   if test "$needs_gtk2" = 1; then
      ENH_DBG_OBJS="gtk_enh_dbg_osdep.o"
-  elif test "$DEFAULT_GUI" = win32; then
+  elif test "$DEFAULT_GUI" = win32 -o "$with_win32" = yes; then
      ENH_DBG_OBJS="win32_enh_dbg_osdep.o"
   fi
 fi
