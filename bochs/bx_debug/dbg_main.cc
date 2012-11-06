@@ -2754,12 +2754,16 @@ void bx_dbg_setpmem_command(bx_phy_address paddr, unsigned len, Bit32u val)
   }
 }
 
-void bx_dbg_set_symbol_command(const char *symbol, Bit32u val)
+void bx_dbg_set_symbol_command(const char *symbol, bx_address val)
 {
   bx_bool is_OK = false;
   symbol++; // get past '$'
 
-if (!strcmp(symbol, "eflags")) {
+  if (!strcmp(symbol, "eip") || !strcmp(symbol, "rip")) {
+    bx_dbg_set_rip_value(val);
+    return;
+  }
+  else if (!strcmp(symbol, "eflags")) {
     is_OK = BX_CPU(dbg_cpu)->dbg_set_eflags(val);
   }
   else if (!strcmp(symbol, "cpu")) {
@@ -2798,7 +2802,7 @@ if (!strcmp(symbol, "eflags")) {
   }
 
   if (!is_OK) {
-    dbg_printf("Error: could not set register '%s'\n", symbol);
+    dbg_printf("Error: could not set value for '%s'\n", symbol);
   }
 }
 
