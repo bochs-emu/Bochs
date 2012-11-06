@@ -485,6 +485,14 @@ set_command:
       { 
         bx_dbg_set_reg64_value($2, $4);
       }
+    | BX_TOKEN_SET BX_TOKEN_REG_EIP '=' expression '\n'
+      { 
+        bx_dbg_set_rip_value($4);
+      }
+    | BX_TOKEN_SET BX_TOKEN_REG_RIP '=' expression '\n'
+      { 
+        bx_dbg_set_rip_value($4);
+      }
     | BX_TOKEN_SET BX_TOKEN_SEGREG '=' expression '\n'
       { 
         bx_dbg_load_segreg($2, $4);
@@ -1109,7 +1117,8 @@ help_command:
      | BX_TOKEN_HELP BX_TOKEN_SET '\n'
        {
          dbg_printf("set <regname> = <expr> - set register value to expression\n");
-         dbg_printf("set $reg = val - set CPU register to value val\n");
+         dbg_printf("set eflags = <expr> - set eflags value to expression, not all flags can be modified\n");
+         dbg_printf("set $cpu = <N> - move debugger control to cpu <N> in SMP simulation\n");
          dbg_printf("set $auto_disassemble = 1 - cause debugger to disassemble current instruction\n");
          dbg_printf("       every time execution stops\n");
          dbg_printf("set u|disasm|disassemble on  - same as 'set $auto_disassemble = 1'\n");

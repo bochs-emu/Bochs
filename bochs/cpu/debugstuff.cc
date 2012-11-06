@@ -271,41 +271,38 @@ void BX_CPU_C::debug(bx_address offset)
 
 
 #if BX_DEBUGGER
-bx_bool BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
+void BX_CPU_C::dbg_set_eip(bx_address val)
+{
+  RIP = BX_CPU_THIS_PTR prev_rip = val;
+  invalidate_prefetch_q();
+}
+
+bx_bool BX_CPU_C::dbg_set_eflags(Bit32u val)
 {
   // returns 1=OK, 0=can't change
-  Bit32u current_sys_bits;
 
-  switch (reg) {
-    case BX_DBG_REG_EIP:
-      RIP = BX_CPU_THIS_PTR prev_rip = val;
-      invalidate_prefetch_q();
-      return(1);
-    case BX_DBG_REG_EFLAGS:
-      if (val & 0xffff0000) {
-        BX_INFO(("dbg_set_reg: can not set upper 16 bits of eflags."));
-        return(0);
-      }
-      // make sure none of the system bits are being changed
-      current_sys_bits = ((BX_CPU_THIS_PTR getB_NT()) << 14) |
-                         (BX_CPU_THIS_PTR get_IOPL () << 12) |
-                         ((BX_CPU_THIS_PTR getB_TF()) << 8);
-      if (current_sys_bits != (val & 0x0000f100)) {
-        BX_INFO(("dbg_set_reg: can not modify NT, IOPL, or TF."));
-        return(0);
-      }
-      BX_CPU_THIS_PTR set_CF(val & 0x01); val >>= 2;
-      BX_CPU_THIS_PTR set_PF(val & 0x01); val >>= 2;
-      BX_CPU_THIS_PTR set_AF(val & 0x01); val >>= 2;
-      BX_CPU_THIS_PTR set_ZF(val & 0x01); val >>= 1;
-      BX_CPU_THIS_PTR set_SF(val & 0x01); val >>= 2;
-      BX_CPU_THIS_PTR set_IF(val & 0x01); val >>= 1;
-      BX_CPU_THIS_PTR set_DF(val & 0x01); val >>= 1;
-      BX_CPU_THIS_PTR set_OF(val & 0x01);
-      return(1);
+  if (val & 0xffff0000) {
+    BX_INFO(("dbg_set_eflags: can't set upper 16 bits of EFLAGS !"));
+    return(0);
   }
 
-  return(0);
+  // make sure none of the system bits are being changed
+  Bit32u current_sys_bits = ((BX_CPU_THIS_PTR getB_NT()) << 14) |
+                             (BX_CPU_THIS_PTR get_IOPL () << 12) |
+                            ((BX_CPU_THIS_PTR getB_TF()) << 8);
+  if (current_sys_bits != (val & 0x0000f100)) {
+    BX_INFO(("dbg_set_eflags: can't modify NT, IOPL, or TF !"));
+    return(0);
+  }
+
+  BX_CPU_THIS_PTR set_CF(val & 0x01); val >>= 2;
+  BX_CPU_THIS_PTR set_PF(val & 0x01); val >>= 2;
+  BX_CPU_THIS_PTR set_AF(val & 0x01); val >>= 2;
+  BX_CPU_THIS_PTR set_ZF(val & 0x01); val >>= 1;
+  BX_CPU_THIS_PTR set_SF(val & 0x01); val >>= 2;
+  BX_CPU_THIS_PTR set_DF(val & 0x01); val >>= 1;
+  BX_CPU_THIS_PTR set_OF(val & 0x01);
+  return(1);
 }
 
 unsigned BX_CPU_C::dbg_query_pending(void)

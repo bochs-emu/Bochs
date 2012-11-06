@@ -2759,11 +2759,8 @@ void bx_dbg_set_symbol_command(const char *symbol, Bit32u val)
   bx_bool is_OK = false;
   symbol++; // get past '$'
 
-  if (!strcmp(symbol, "eip")) {
-    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_EIP, val);
-  }
-  else if (!strcmp(symbol, "eflags")) {
-    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_EFLAGS, val);
+if (!strcmp(symbol, "eflags")) {
+    is_OK = BX_CPU(dbg_cpu)->dbg_set_eflags(val);
   }
   else if (!strcmp(symbol, "cpu")) {
     if (val >= BX_SMP_PROCESSORS) {
@@ -2801,7 +2798,7 @@ void bx_dbg_set_symbol_command(const char *symbol, Bit32u val)
   }
 
   if (!is_OK) {
-    dbg_printf("Error: could not set register '%s'.\n", symbol);
+    dbg_printf("Error: could not set register '%s'\n", symbol);
   }
 }
 
@@ -3733,6 +3730,17 @@ void bx_dbg_set_reg64_value(unsigned reg, Bit64u value)
   else
 #endif
     dbg_printf("Unknown 64B register [%d] !!!\n", reg);
+}
+
+void bx_dbg_set_rip_value(bx_address value)
+{
+#if BX_SUPPORT_X86_64
+  if ((value >> 32) != 0 && ! BX_CPU(dbg_cpu)->long64_mode()) {
+    dbg_printf("Cannot set EIP to 64-bit value hen not in long64 mode !\n");
+  }
+  else
+#endif
+    BX_CPU(dbg_cpu)->dbg_set_eip(value);
 }
 
 Bit16u bx_dbg_get_selector_value(unsigned int seg_no)

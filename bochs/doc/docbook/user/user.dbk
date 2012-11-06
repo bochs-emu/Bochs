@@ -6957,9 +6957,9 @@ From here, you may use the following commands:
 <para>
 <screen>
   set reg = expr    Change a CPU register to value of expression.
-                    Currently only general purpose registers are supported,
-                    you may not change:
-                      eflags, eip, cs, ss, ds, es, fs, gs.
+                    Currently only general purpose registers and instruction pointer
+                    are supported. You may not change eflags, segment registers,
+                    floating point or SIMD registers.
 
     Examples: set eax = 2+2/2
               set esi = 2*eax+ebx

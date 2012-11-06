@@ -219,6 +219,7 @@ void bx_dbg_set_reg8h_value(unsigned reg, Bit8u value);
 void bx_dbg_set_reg16_value(unsigned reg, Bit16u value);
 void bx_dbg_set_reg32_value(unsigned reg, Bit32u value);
 void bx_dbg_set_reg64_value(unsigned reg, Bit64u value);
+void bx_dbg_set_rip_value(bx_address value);
 void bx_dbg_load_segreg(unsigned reg, unsigned value);
 bx_address bx_dbg_get_laddr(Bit16u sel, bx_address ofs);
 void bx_dbg_step_over_command(void);
@@ -344,19 +345,6 @@ typedef enum {
 typedef enum {
   BREAK_POINT_MAGIC, BREAK_POINT_READ, BREAK_POINT_WRITE, BREAK_POINT_TIME
 } break_point_t;
-
-#define BX_DBG_REG_EIP          10
-#define BX_DBG_REG_EFLAGS       11
-#define BX_DBG_REG_CS           20
-#define BX_DBG_REG_SS           21
-#define BX_DBG_REG_DS           22
-#define BX_DBG_REG_ES           23
-#define BX_DBG_REG_FS           24
-#define BX_DBG_REG_GS           25
-#define BX_DBG_REG_CR0          30
-#define BX_DBG_REG_CR2          32
-#define BX_DBG_REG_CR3          33
-#define BX_DBG_REG_CR4          34
 
 #define BX_DBG_PENDING_DMA 1
 #define BX_DBG_PENDING_IRQ 2
