@@ -3740,7 +3740,7 @@ void bx_dbg_set_rip_value(bx_address value)
 {
 #if BX_SUPPORT_X86_64
   if ((value >> 32) != 0 && ! BX_CPU(dbg_cpu)->long64_mode()) {
-    dbg_printf("Cannot set EIP to 64-bit value hen not in long64 mode !\n");
+    dbg_printf("Cannot set EIP to 64-bit value when not in long64 mode !\n");
   }
   else
 #endif
