@@ -90,8 +90,6 @@ void bx_vga_c::init_vga_extension(void)
 {
   unsigned addr;
   Bit16u max_xres, max_yres, max_bpp;
-  Bit8u devfunc = 0x00;
-  unsigned i;
 
   BX_VGA_THIS init_iohandlers(read_handler, write_handler);
   BX_VGA_THIS init_systemtimer(timer_handler, vga_param_handler);
@@ -156,6 +154,9 @@ void bx_vga_c::init_vga_extension(void)
     BX_INFO(("VBE Bochs Display Extension Enabled"));
   }
 #if BX_SUPPORT_PCI
+  Bit8u devfunc = 0x00;
+  unsigned i;
+
   if (BX_VGA_THIS pci_enabled) {
     DEV_register_pci_handlers(this, &devfunc, "pcivga", "Experimental PCI VGA");
     for (i = 0; i < 256; i++) {
@@ -826,7 +827,7 @@ void bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
   }
 }
 
-
+#if BX_SUPPORT_PCI
 bx_bool bx_vga_c::vbe_set_base_addr(Bit32u *addr, Bit8u *pci_conf)
 {
   if (DEV_pci_set_base_mem(BX_VGA_THIS_PTR, mem_read_handler,
@@ -837,6 +838,7 @@ bx_bool bx_vga_c::vbe_set_base_addr(Bit32u *addr, Bit8u *pci_conf)
   }
   return 0;
 }
+#endif
 
   Bit8u  BX_CPP_AttrRegparmN(1)
 bx_vga_c::vbe_mem_read(bx_phy_address addr)

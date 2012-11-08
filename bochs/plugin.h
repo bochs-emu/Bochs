@@ -222,13 +222,13 @@ extern "C" {
 
 ///////// PCI macros
 #define DEV_register_pci_handlers(a,b,c,d) \
-  (bx_devices.pluginPciBridge->register_pci_handlers(a,b,c,d))
-#define DEV_is_pci_device(name) bx_devices.pluginPciBridge->is_pci_device(name)
+  (bx_devices.register_pci_handlers(a,b,c,d))
+#define DEV_is_pci_device(name) bx_devices.is_pci_device(name)
 #define DEV_pci_set_irq(a,b,c) bx_devices.pluginPci2IsaBridge->pci_set_irq(a,b,c)
 #define DEV_pci_set_base_mem(a,b,c,d,e,f) \
-  (bx_devices.pluginPciBridge->pci_set_base_mem(a,b,c,d,e,f))
+  (bx_devices.pci_set_base_mem(a,b,c,d,e,f))
 #define DEV_pci_set_base_io(a,b,c,d,e,f,g,h) \
-  (bx_devices.pluginPciBridge->pci_set_base_io(a,b,c,d,e,f,g,h))
+  (bx_devices.pci_set_base_io(a,b,c,d,e,f,g,h))
 #define DEV_ide_bmdma_present() bx_devices.pluginPciIdeController->bmdma_present()
 #define DEV_ide_bmdma_set_irq(a) bx_devices.pluginPciIdeController->bmdma_set_irq(a)
 #define DEV_acpi_generate_smi(a) bx_devices.pluginACPIController->generate_smi(a)

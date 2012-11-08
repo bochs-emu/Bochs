@@ -40,6 +40,8 @@
 /* maximum size of the ISA DMA buffer */
 #define BX_DMA_BUFFER_SIZE 512
 
+#define BX_MAX_PCI_DEVICES 20
+
 typedef Bit32u (*bx_read_handler_t)(void *, Bit32u, unsigned);
 typedef void   (*bx_write_handler_t)(void *, Bit32u, Bit32u, unsigned);
 
@@ -263,31 +265,6 @@ public:
   }
 };
 
-class BOCHSAPI bx_pci_bridge_stub_c : public bx_devmodel_c, public bx_pci_device_stub_c {
-public:
-  virtual bx_bool register_pci_handlers(bx_pci_device_stub_c *device,
-                                        Bit8u *devfunc, const char *name,
-                                        const char *descr)
-  {
-    STUBFUNC(pci, register_pci_handlers); return 0;
-  }
-  virtual bx_bool is_pci_device(const char *name) {
-    return 0;
-  }
-  virtual bx_bool pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
-                                   Bit32u *addr, Bit8u *pci_conf, unsigned size) {
-    STUBFUNC(pci, pci_set_base_mem);
-    return 0;
-  }
-
-  virtual bx_bool pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_write_handler_t f2,
-                                  Bit32u *addr, Bit8u *pci_conf, unsigned size,
-                                  const Bit8u *iomask, const char *name) {
-    STUBFUNC(pci, pci_set_base_io);
-    return 0;
-  }
-};
-
 class BOCHSAPI bx_pci2isa_stub_c : public bx_devmodel_c, public bx_pci_device_stub_c {
 public:
   virtual void pci_set_irq (Bit8u devfunc, unsigned line, bx_bool level) {
@@ -445,10 +422,23 @@ public:
   void mouse_enabled_changed(bx_bool enabled);
   void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
 
+  virtual bx_bool is_pci_device(const char *name);
+#if BX_SUPPORT_PCI
+  virtual bx_bool register_pci_handlers(bx_pci_device_stub_c *device,
+                                        Bit8u *devfunc, const char *name,
+                                        const char *descr);
+  virtual bx_bool pci_set_base_mem(void *this_ptr, memory_handler_t f1,
+                                   memory_handler_t f2, Bit32u *addr,
+                                   Bit8u *pci_conf, unsigned size);
+  virtual bx_bool pci_set_base_io(void *this_ptr, bx_read_handler_t f1,
+                                  bx_write_handler_t f2, Bit32u *addr,
+                                  Bit8u *pci_conf, unsigned size,
+                                  const Bit8u *iomask, const char *name);
+#endif
+
   static void timer_handler(void *);
   void timer(void);
 
-  bx_pci_bridge_stub_c *pluginPciBridge;
   bx_pci2isa_stub_c *pluginPci2IsaBridge;
   bx_pci_ide_stub_c *pluginPciIdeController;
 #if BX_SUPPORT_PCI
@@ -493,7 +483,6 @@ public:
   bx_pic_stub_c  stubPic;
   bx_floppy_stub_c  stubFloppy;
   bx_vga_stub_c  stubVga;
-  bx_pci_bridge_stub_c  stubPci;
   bx_pci2isa_stub_c stubPci2Isa;
   bx_pci_ide_stub_c stubPciIde;
   bx_speaker_stub_c stubSpeaker;
@@ -532,13 +521,13 @@ public:
 private:
 
   struct io_handler_struct {
-	struct io_handler_struct *next;
-	struct io_handler_struct *prev;	
-	void *funct; // C++ type checking is great, but annoying
-	void *this_ptr;
-	char *handler_name;  // name of device
-	int usage_count;
-	Bit8u mask;          // io_len mask
+    struct io_handler_struct *next;
+    struct io_handler_struct *prev;
+    void *funct; // C++ type checking is great, but annoying
+    void *this_ptr;
+    char *handler_name;  // name of device
+    int usage_count;
+    Bit8u mask;          // io_len mask
   };
   struct io_handler_struct io_read_handlers;
   struct io_handler_struct io_write_handlers;
@@ -552,8 +541,8 @@ private:
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
-  BX_DEV_SMF Bit32u port92_read(Bit32u address, unsigned io_len);
-  BX_DEV_SMF void   port92_write(Bit32u address, Bit32u value, unsigned io_len);
+  BX_DEV_SMF Bit32u read(Bit32u address, unsigned io_len);
+  BX_DEV_SMF void   write(Bit32u address, Bit32u value, unsigned io_len);
 
   static Bit32u default_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   default_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
@@ -569,6 +558,22 @@ private:
     void *dev;
     bx_keyb_enq_t enq_event;
   } bx_keyboard;
+
+  struct {
+    bx_bool enabled;
+#if BX_SUPPORT_PCI
+    Bit8u handler_id[0x100];  // 256 devices/functions
+    struct {
+      bx_pci_device_stub_c *handler;
+    } pci_handler[BX_MAX_PCI_DEVICES];
+    unsigned num_pci_handlers;
+
+    bx_bool slot_used[BX_N_PCI_SLOTS];
+
+    Bit32u confAddr;
+    Bit32u confData;
+#endif
+  } pci;
 
   int timer_handle;
 

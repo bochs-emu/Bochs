@@ -132,7 +132,9 @@ protected:
   BX_VGA_SMF void update(void);
 
   // Bochs VBE section
+#if BX_SUPPORT_PCI
   virtual bx_bool vbe_set_base_addr(Bit32u *addr, Bit8u *pci_conf);
+#endif
 
   BX_VGA_SMF Bit8u vbe_mem_read(bx_phy_address addr) BX_CPP_AttrRegparmN(1);
   BX_VGA_SMF void  vbe_mem_write(bx_phy_address addr, Bit8u value) BX_CPP_AttrRegparmN(2);

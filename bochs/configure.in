@@ -814,6 +814,9 @@ AC_ARG_ENABLE(usb-xhci,
   )
 
 if test "$use_usb" = 1; then
+  if test "$pci" != "1"; then
+    AC_MSG_ERROR([USB requires PCI support])
+  fi
   USBCORE_OBJ="usb_common.o"
   USBDEV_OBJS="usb_hid.o usb_hub.o usb_msd.o usb_printer.o"
   SCSI_OBJS="scsi_device.o"
@@ -850,6 +853,9 @@ AC_ARG_ENABLE(e1000,
   AS_HELP_STRING([--enable-e1000], [enable Intel(R) Gigabit Ethernet support (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
+    if test "$pci" != "1"; then
+      AC_MSG_ERROR([E1000 network adapter requires PCI support])
+    fi
     AC_DEFINE(BX_SUPPORT_E1000, 1)
     NETDEV_OBJS="$NETDEV_OBJS e1000.o"
     networking=yes
