@@ -250,8 +250,7 @@ void bx_pci_bridge_c::debug_dump(int argc, char **argv)
   int arg, i, j, r;
 
   dbg_printf("i440FX PMC/DBX\n\n");
-  dbg_printf("confAddr = 0x%08x\n", BX_PCI_THIS confAddr);
-  dbg_printf("confData = 0x%08x\n", BX_PCI_THIS confData);
+  dbg_printf("confAddr = 0x%08x\n\n", DEV_pci_get_confAddr());
 
   if (argc == 0) {
     for (i = 0x59; i < 0x60; i++) {

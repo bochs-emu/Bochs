@@ -224,6 +224,7 @@ extern "C" {
 #define DEV_register_pci_handlers(a,b,c,d) \
   (bx_devices.register_pci_handlers(a,b,c,d))
 #define DEV_is_pci_device(name) bx_devices.is_pci_device(name)
+#define DEV_pci_get_confAddr() bx_devices.pci_get_confAddr()
 #define DEV_pci_set_irq(a,b,c) bx_devices.pluginPci2IsaBridge->pci_set_irq(a,b,c)
 #define DEV_pci_set_base_mem(a,b,c,d,e,f) \
   (bx_devices.pci_set_base_mem(a,b,c,d,e,f))

@@ -317,7 +317,6 @@ void bx_devices_c::reset(unsigned type)
 #if BX_SUPPORT_PCI
   if (pci.enabled) {
     pci.confAddr = 0;
-    pci.confData = 0;
   }
 #endif
   mem->disable_smram();
@@ -328,9 +327,8 @@ void bx_devices_c::register_state()
 {
 #if BX_SUPPORT_PCI
   if (pci.enabled) {
-    bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "devices", "Generic PCI State");
+    bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pcicore", "Generic PCI State");
     BXRS_HEX_PARAM_FIELD(list, confAddr, pci.confAddr);
-    BXRS_HEX_PARAM_FIELD(list, confData, pci.confData);
   }
 #endif
   bx_virt_timer.register_state();
@@ -429,7 +427,6 @@ Bit32u bx_devices_c::read(Bit32u address, unsigned io_len)
       }
       else
         retval = 0xFFFFFFFF;
-      BX_DEV_THIS pci.confData = retval;
       return retval;
     }
 #endif
@@ -485,7 +482,6 @@ void bx_devices_c::write(Bit32u address, Bit32u value, unsigned io_len)
         if ((io_len <= 4) && (handle < BX_MAX_PCI_DEVICES)) {
           if (((regnum>=4) && (regnum<=7)) || (regnum==12) || (regnum==13) || (regnum>14)) {
             BX_DEV_THIS pci.pci_handler[handle].handler->pci_write_handler(regnum, value, io_len);
-            BX_DEV_THIS pci.confData = value << (8 * (address & 0x03));
           }
           else
             BX_DEBUG(("read only register, write ignored"));

@@ -422,18 +422,16 @@ public:
   void mouse_enabled_changed(bx_bool enabled);
   void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
 
-  virtual bx_bool is_pci_device(const char *name);
+  bx_bool is_pci_device(const char *name);
 #if BX_SUPPORT_PCI
-  virtual bx_bool register_pci_handlers(bx_pci_device_stub_c *device,
-                                        Bit8u *devfunc, const char *name,
-                                        const char *descr);
-  virtual bx_bool pci_set_base_mem(void *this_ptr, memory_handler_t f1,
-                                   memory_handler_t f2, Bit32u *addr,
-                                   Bit8u *pci_conf, unsigned size);
-  virtual bx_bool pci_set_base_io(void *this_ptr, bx_read_handler_t f1,
-                                  bx_write_handler_t f2, Bit32u *addr,
-                                  Bit8u *pci_conf, unsigned size,
-                                  const Bit8u *iomask, const char *name);
+  Bit32u pci_get_confAddr(void) {return pci.confAddr;}
+  bx_bool register_pci_handlers(bx_pci_device_stub_c *device, Bit8u *devfunc,
+                                const char *name, const char *descr);
+  bx_bool pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
+                           Bit32u *addr, Bit8u *pci_conf, unsigned size);
+  bx_bool pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_write_handler_t f2,
+                          Bit32u *addr, Bit8u *pci_conf, unsigned size,
+                          const Bit8u *iomask, const char *name);
 #endif
 
   static void timer_handler(void *);
@@ -571,7 +569,6 @@ private:
     bx_bool slot_used[BX_N_PCI_SLOTS];
 
     Bit32u confAddr;
-    Bit32u confData;
 #endif
   } pci;
 
