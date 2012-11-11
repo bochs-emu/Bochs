@@ -89,14 +89,8 @@ Bit32s ne2k_options_parser(const char *context, int num_params, char *params[])
     if (!SIM->get_param_bool("enabled", base)->get()) {
       SIM->get_param_enum("ethmod", base)->set_by_name("null");
     }
-    if (SIM->get_param_bool(BXPN_PCI_ENABLED)->get()) {
-      for (int slot = 1; slot < 6; slot++) {
-        sprintf(tmpdev, "pci.slot.%d", slot);
-        if (!strcmp(SIM->get_param_string(tmpdev)->getptr(), "ne2k")) {
-          valid |= 0x03;
-          break;
-        }
-      }
+    if (SIM->is_pci_device(BX_PLUGIN_NE2K)) {
+      valid |= 0x03;
     }
     for (int i = 1; i < num_params; i++) {
       if (!strncmp(params[i], "ioaddr=", 7)) {
@@ -216,13 +210,11 @@ void bx_ne2k_c::init(void)
     return;
   }
   memcpy(macaddr, SIM->get_param_string("macaddr", base)->getptr(), 6);
-  BX_NE2K_THIS s.pci_enabled = 0;
   strcpy(devname, "NE2000 NIC");
+  BX_NE2K_THIS s.pci_enabled = SIM->is_pci_device(BX_PLUGIN_NE2K);
 
 #if BX_SUPPORT_PCI
-  if ((SIM->get_param_bool(BXPN_PCI_ENABLED)->get()) &&
-      (DEV_is_pci_device(BX_PLUGIN_NE2K))) {
-    BX_NE2K_THIS s.pci_enabled = 1;
+  if (BX_NE2K_THIS s.pci_enabled) {
     strcpy(devname, "NE2000 PCI NIC");
     BX_NE2K_THIS s.devfunc = 0x00;
     DEV_register_pci_handlers(this, &BX_NE2K_THIS s.devfunc,

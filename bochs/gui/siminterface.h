@@ -711,6 +711,8 @@ public:
   virtual bx_param_c *get_first_cdrom() {return NULL;}
   // return first cdrom in ATA interface
   virtual bx_param_c *get_first_hd() {return NULL;}
+  // return 1 if device is connected to a PCI slot
+  virtual bx_bool is_pci_device(const char *name) {return 0;}
 #if BX_DEBUGGER
   // for debugger: same behavior as pressing control-C
   virtual void debug_break() {}

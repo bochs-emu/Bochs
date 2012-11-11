@@ -422,7 +422,6 @@ public:
   void mouse_enabled_changed(bx_bool enabled);
   void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
 
-  bx_bool is_pci_device(const char *name);
 #if BX_SUPPORT_PCI
   Bit32u pci_get_confAddr(void) {return pci.confAddr;}
   bx_bool register_pci_handlers(bx_pci_device_stub_c *device, Bit8u *devfunc,

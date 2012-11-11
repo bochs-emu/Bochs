@@ -1195,24 +1195,6 @@ void bx_pci_device_stub_c::load_pci_rom(const char *path)
   BX_INFO(("loaded PCI ROM '%s' (size=%u / PCI=%uk)", path, (unsigned) stat_buf.st_size, pci_rom_size >> 10));
 }
 
-bx_bool bx_devices_c::is_pci_device(const char *name)
-{
-#if BX_SUPPORT_PCI
-  unsigned i;
-  char devname[80];
-  char *device;
-
-  for (i = 0; i < BX_N_PCI_SLOTS; i++) {
-    sprintf(devname, "pci.slot.%d", i+1);
-    device = SIM->get_param_string(devname)->getptr();
-    if ((strlen(device) > 0) && (!strcmp(name, device))) {
-      return 1;
-    }
-  }
-#endif
-  return 0;
-}
-
 #if BX_SUPPORT_PCI
 bx_bool bx_devices_c::register_pci_handlers(bx_pci_device_stub_c *dev,
                                             Bit8u *devfunc, const char *name,

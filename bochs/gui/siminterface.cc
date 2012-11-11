@@ -151,6 +151,7 @@ public:
   bx_param_c *get_first_hd() {
     return get_first_atadevice(BX_ATA_DEVICE_DISK);
   }
+  virtual bx_bool is_pci_device(const char *name);
 #if BX_DEBUGGER
   virtual void debug_break();
   virtual void debug_interpret_cmd (char *cmd);
@@ -746,11 +747,31 @@ bx_param_c *bx_real_sim_c::get_first_atadevice(Bit32u search_type)
       Bit32u type = SIM->get_param_enum(pname)->get();
       if (present && (type == search_type)) {
         sprintf(pname, "ata.%d.%s", channel, (slave==0)?"master":"slave");
-	return SIM->get_param(pname);
+        return SIM->get_param(pname);
       }
     }
   }
   return NULL;
+}
+
+bx_bool bx_real_sim_c::is_pci_device(const char *name)
+{
+#if BX_SUPPORT_PCI
+  unsigned i;
+  char devname[80];
+  char *device;
+
+  if (SIM->get_param_bool(BXPN_PCI_ENABLED)->get()) {
+    for (i = 0; i < BX_N_PCI_SLOTS; i++) {
+      sprintf(devname, "pci.slot.%d", i+1);
+      device = SIM->get_param_string(devname)->getptr();
+      if ((strlen(device) > 0) && (!strcmp(name, device))) {
+        return 1;
+      }
+    }
+  }
+#endif
+  return 0;
 }
 
 #if BX_DEBUGGER

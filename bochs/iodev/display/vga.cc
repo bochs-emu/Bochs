@@ -93,7 +93,7 @@ void bx_vga_c::init_vga_extension(void)
 
   BX_VGA_THIS init_iohandlers(read_handler, write_handler);
   BX_VGA_THIS init_systemtimer(timer_handler, vga_param_handler);
-  BX_VGA_THIS pci_enabled = DEV_is_pci_device("pcivga");
+  BX_VGA_THIS pci_enabled = SIM->is_pci_device("pcivga");
 
   // The following is for the VBE display extension
   BX_VGA_THIS vbe_present = 0;
