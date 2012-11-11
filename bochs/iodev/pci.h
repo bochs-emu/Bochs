@@ -53,5 +53,7 @@ public:
 
 private:
   void smram_control(Bit8u value);
+
+  unsigned chipset;
 };
 #endif

@@ -93,13 +93,19 @@ void bx_pci_ide_c::init(void)
   BX_PIDE_THIS s.bmdma[0].buffer = new Bit8u[0x20000];
   BX_PIDE_THIS s.bmdma[1].buffer = new Bit8u[0x20000];
 
+  BX_PIDE_THIS s.chipset = SIM->get_param_enum(BXPN_PCI_CHIPSET)->get();
   for (i=0; i<256; i++)
     BX_PIDE_THIS pci_conf[i] = 0x0;
   // readonly registers
   BX_PIDE_THIS pci_conf[0x00] = 0x86;
   BX_PIDE_THIS pci_conf[0x01] = 0x80;
-  BX_PIDE_THIS pci_conf[0x02] = 0x10;
-  BX_PIDE_THIS pci_conf[0x03] = 0x70;
+  if (BX_PIDE_THIS s.chipset == BX_PCI_CHIPSET_I440FX) {
+    BX_PIDE_THIS pci_conf[0x02] = 0x10;
+    BX_PIDE_THIS pci_conf[0x03] = 0x70;
+  } else {
+    BX_PIDE_THIS pci_conf[0x02] = 0x30;
+    BX_PIDE_THIS pci_conf[0x03] = 0x12;
+  }
   BX_PIDE_THIS pci_conf[0x09] = 0x80;
   BX_PIDE_THIS pci_conf[0x0a] = 0x01;
   BX_PIDE_THIS pci_conf[0x0b] = 0x01;

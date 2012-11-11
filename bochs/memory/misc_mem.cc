@@ -144,7 +144,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
   for (idx = 0; idx < BX_MEM_HANDLERS; idx++)
     BX_MEM_THIS memory_handlers[idx] = NULL;
 
-  BX_MEM_THIS pci_enabled = SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get();
+  BX_MEM_THIS pci_enabled = SIM->get_param_bool(BXPN_PCI_ENABLED)->get();
   BX_MEM_THIS smram_available = 0;
   BX_MEM_THIS smram_enable = 0;
   BX_MEM_THIS smram_restricted = 0;

@@ -49,6 +49,7 @@ public:
 private:
 
   struct {
+    unsigned chipset;
     Bit8u elcr1;
     Bit8u elcr2;
     Bit8u apmc;

@@ -563,7 +563,7 @@ void bx_hard_drive_c::init(void)
     // TODO !!!
   }
 
-  BX_HD_THIS pci_enabled = SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get();
+  BX_HD_THIS pci_enabled = SIM->get_param_bool(BXPN_PCI_ENABLED)->get();
 
   // register handler for correct cdrom parameter handling after runtime config
   SIM->register_runtime_config_handler(BX_HD_THIS_PTR, runtime_config_handler);

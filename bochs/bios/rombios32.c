@@ -732,12 +732,13 @@ static void pci_bios_init_bridges(PCIDevice *d)
     device_id = pci_config_readw(d, PCI_DEVICE_ID);
 
     if (vendor_id == PCI_VENDOR_ID_INTEL &&
-       (device_id == PCI_DEVICE_ID_INTEL_82371SB_0 ||
+       (device_id == PCI_DEVICE_ID_INTEL_82371FB_0 ||
+        device_id == PCI_DEVICE_ID_INTEL_82371SB_0 ||
         device_id == PCI_DEVICE_ID_INTEL_82371AB_0)) {
         int i, irq;
         uint8_t elcr[2];
 
-        /* PIIX3/PIIX4 PCI to ISA bridge */
+        /* PIIX/PIIX3/PIIX4 PCI to ISA bridge */
 
         elcr[0] = 0x00;
         elcr[1] = 0x00;
@@ -752,8 +753,9 @@ static void pci_bios_init_bridges(PCIDevice *d)
         outb(0x4d1, elcr[1]);
         BX_INFO("PIIX3/PIIX4 init: elcr=%02x %02x\n",
                 elcr[0], elcr[1]);
-    } else if (vendor_id == PCI_VENDOR_ID_INTEL && device_id == PCI_DEVICE_ID_INTEL_82441) {
-        /* i440 PCI bridge */
+    } else if (vendor_id == PCI_VENDOR_ID_INTEL &&
+              (device_id == PCI_DEVICE_ID_INTEL_82441 || device_id == PCI_DEVICE_ID_INTEL_82437)) {
+        /* i440FX / i430FX PCI bridge */
         bios_shadow_init(d);
     }
 }
@@ -881,7 +883,8 @@ static void pci_bios_init_device(PCIDevice *d)
     switch(class) {
     case PCI_CLASS_STORAGE_IDE:
         if (vendor_id == PCI_VENDOR_ID_INTEL &&
-           (device_id == PCI_DEVICE_ID_INTEL_82371SB_1 ||
+           (device_id == PCI_DEVICE_ID_INTEL_82371FB_1 ||
+            device_id == PCI_DEVICE_ID_INTEL_82371SB_1 ||
             device_id == PCI_DEVICE_ID_INTEL_82371AB)) {
             /* PIIX3/PIIX4 IDE */
             pci_config_writew(d, 0x40, 0x8000); // enable IDE0
@@ -2293,7 +2296,8 @@ static void find_440fx(PCIDevice *d)
     vendor_id = pci_config_readw(d, PCI_VENDOR_ID);
     device_id = pci_config_readw(d, PCI_DEVICE_ID);
 
-    if (vendor_id == PCI_VENDOR_ID_INTEL && device_id == PCI_DEVICE_ID_INTEL_82441)
+    if (vendor_id == PCI_VENDOR_ID_INTEL &&
+       (device_id == PCI_DEVICE_ID_INTEL_82441 || device_id == PCI_DEVICE_ID_INTEL_82437))
         i440_pcidev = *d;
 }
 

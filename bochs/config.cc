@@ -805,13 +805,21 @@ void bx_init_options()
   bx_list_c *pci = new bx_list_c(root_param, "pci", "PCI Options");
 
   // pci options
+  static const char *pci_chipset_names[] = { "i430fx", "i440fx", NULL };
   deplist = new bx_list_c(NULL);
 
-  bx_param_bool_c *i440fx_support = new bx_param_bool_c(pci,
-      "i440fx_support",
-      "Enable i440FX PCI Support",
-      "Controls whether to emulate the i440FX PCI chipset",
+  enabled = new bx_param_bool_c(pci,
+      "enabled",
+      "Enable PCI Support",
+      "Controls whether to emulate a PCI chipset",
       BX_SUPPORT_PCI);
+  bx_param_enum_c *pci_chipset = new bx_param_enum_c(pci,
+      "chipset", "PCI chipset",
+      "Select PCI chipset to emulate",
+      pci_chipset_names,
+      BX_PCI_CHIPSET_I440FX,
+      BX_PCI_CHIPSET_I430FX);
+  deplist->add(pci_chipset);
   // pci slots
   bx_list_c *slot = new bx_list_c(pci, "slot", "PCI Slots");
   deplist->add(slot);
@@ -826,7 +834,7 @@ void bx_init_options()
         "", BX_PATHNAME_LEN);
     deplist->add(devname);
   }
-  i440fx_support->set_dependent_list(deplist);
+  enabled->set_dependent_list(deplist);
   pci->set_options(pci->SHOW_PARENT);
   slot->set_options(slot->SHOW_PARENT);
 
@@ -2868,24 +2876,18 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
     SIM->get_param_string(BXPN_SCREENMODE)->set(&params[1][5]);
 #endif
-  } else if ((!strcmp(params[0], "pci")) ||
-             (!strcmp(params[0], "i440fxsupport"))) {
-    // new option 'pci' for future extensions
+  } else if (!strcmp(params[0], "pci")) {
     char tmpdev[80];
     int enabled = -1;
-    int chipset = -1;
-    if (!strcmp(params[0], "i440fxsupport")) {
-      chipset = 1;
-      PARSE_WARN(("%s: 'i440fxsupport' will be replaced by new 'pci' option.", context));
-    }
+    bx_bool chipset = 0;
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
         enabled = atol(&params[i][8]);
       } else if (!strncmp(params[i], "chipset=", 8)) {
-        if (!strcmp(&params[i][8], "i440fx")) {
-          chipset = 1;
-        } else {
+        if (!SIM->get_param_enum(BXPN_PCI_CHIPSET)->set_by_name(&params[i][8])) {
           PARSE_ERR(("%s: pci: unknown chipset '%s'", context, &params[i][8]));
+        } else {
+          chipset = 1;
         }
       } else if ((!strncmp(params[i], "slot", 4)) && (params[i][5] == '=')) {
         slot = atol(&params[i][4]);
@@ -2900,10 +2902,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       }
     }
     if (enabled == 0) {
-      SIM->get_param_bool(BXPN_I440FX_SUPPORT)->set(0);
+      SIM->get_param_bool(BXPN_PCI_ENABLED)->set(0);
     } else if (enabled == 1) {
       if (chipset == 1) {
-        SIM->get_param_bool(BXPN_I440FX_SUPPORT)->set(1);
+        SIM->get_param_bool(BXPN_PCI_ENABLED)->set(1);
       } else {
         PARSE_ERR(("%s: pci: chipset not specified", context));
       }
@@ -3532,9 +3534,9 @@ int bx_write_configuration(const char *rc, int overwrite)
   }
   // pci
   fprintf(fp, "pci: enabled=%d",
-          SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get());
-  if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
-    fprintf(fp, ", chipset=i440fx");
+          SIM->get_param_bool(BXPN_PCI_ENABLED)->get());
+  if (SIM->get_param_bool(BXPN_PCI_ENABLED)->get()) {
+    fprintf(fp, ", chipset=%s", SIM->get_param_enum(BXPN_PCI_CHIPSET)->get_selected());
     for (i=0; i<BX_N_PCI_SLOTS; i++) {
       sprintf(tmpdev, "pci.slot.%d", i+1);
       strptr = SIM->get_param_string(tmpdev)->getptr();

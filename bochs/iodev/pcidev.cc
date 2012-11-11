@@ -69,7 +69,7 @@ void pcidev_init_options(void)
   pcidid->set_format("0x%04x");
   pcidid->set_long_format("PCI Device ID: 0x%04x");
   pcidev->set_options(pcidev->SHOW_PARENT | pcidev->USE_BOX_TITLE);
-  bx_list_c *deplist = ((bx_param_bool_c*)SIM->get_param(BXPN_I440FX_SUPPORT))->get_dependent_list();
+  bx_list_c *deplist = ((bx_param_bool_c*)SIM->get_param(BXPN_PCI_ENABLED))->get_dependent_list();
   deplist->add(pcidev);
   deplist->add(pcivid);
   deplist->add(pcidid);

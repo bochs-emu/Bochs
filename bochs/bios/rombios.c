@@ -138,7 +138,8 @@
 // define this if you want to make PCIBIOS working on a specific bridge only
 // undef enables PCIBIOS when at least one PCI device is found
 // i440FX is emulated by Bochs and QEMU
-#define PCI_FIXED_HOST_BRIDGE 0x12378086 ;; i440FX PCI bridge
+#define PCI_FIXED_HOST_BRIDGE 0x12378086  ;; i440FX PCI bridge
+#define PCI_FIXED_HOST_BRIDGE2 0x01228086 ;; i430FX PCI bridge
 
 // #20  is dec 20
 // #$20 is hex 20 = 32
@@ -9561,6 +9562,10 @@ bios32_entry_point:
 #ifdef PCI_FIXED_HOST_BRIDGE
   cmp eax, #PCI_FIXED_HOST_BRIDGE
   jne unknown_service
+#ifdef PCI_FIXED_HOST_BRIDGE2
+  cmp eax, #PCI_FIXED_HOST_BRIDGE2
+  jne unknown_service
+#endif
 #else
   ;; say ok if a device is present
   cmp eax, #0xffffffff
@@ -9752,6 +9757,10 @@ pcibios_real:
 #ifdef PCI_FIXED_HOST_BRIDGE
   cmp eax, #PCI_FIXED_HOST_BRIDGE
   je  pci_present
+#ifdef PCI_FIXED_HOST_BRIDGE2
+  cmp eax, #PCI_FIXED_HOST_BRIDGE2
+  je  pci_present
+#endif
 #else
   ;; say ok if a device is present
   cmp eax, #0xffffffff

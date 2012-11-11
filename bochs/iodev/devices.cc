@@ -101,7 +101,7 @@ void bx_devices_c::init_stubs()
 
 void bx_devices_c::init(BX_MEM_C *newmem)
 {
-  unsigned i;
+  unsigned i, chipset;
   const char def_name[] = "Default";
   const char *vga_ext;
 
@@ -171,8 +171,9 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     PLUG_load_plugin(soundmod, PLUGTYPE_CORE);
 #endif
   // PCI logic (i440FX)
-  pci.enabled = SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get();
+  pci.enabled = SIM->get_param_bool(BXPN_PCI_ENABLED)->get();
   if (pci.enabled) {
+    chipset = SIM->get_param_enum(BXPN_PCI_CHIPSET)->get();
 #if BX_SUPPORT_PCI
     PLUG_load_plugin(pci, PLUGTYPE_CORE);
     PLUG_load_plugin(pci2isa, PLUGTYPE_CORE);
@@ -181,7 +182,9 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     if (usb_enabled)
       PLUG_load_plugin(usb_common, PLUGTYPE_CORE);
 #endif
-    PLUG_load_plugin(acpi, PLUGTYPE_STANDARD);
+    if (chipset == BX_PCI_CHIPSET_I440FX) {
+      PLUG_load_plugin(acpi, PLUGTYPE_STANDARD);
+    }
 #else
     BX_ERROR(("Bochs is not compiled with PCI support"));
 #endif

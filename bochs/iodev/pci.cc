@@ -71,15 +71,22 @@ void bx_pci_bridge_c::init(void)
 
   Bit8u devfunc = BX_PCI_DEVICE(0,0);
   DEV_register_pci_handlers(this, &devfunc, BX_PLUGIN_PCI, "440FX Host bridge");
+  BX_PCI_THIS chipset = SIM->get_param_enum(BXPN_PCI_CHIPSET)->get();
 
   for (i=0; i<256; i++)
     BX_PCI_THIS pci_conf[i] = 0x0;
   // readonly registers
   BX_PCI_THIS pci_conf[0x00] = 0x86;
   BX_PCI_THIS pci_conf[0x01] = 0x80;
-  BX_PCI_THIS pci_conf[0x02] = 0x37;
-  BX_PCI_THIS pci_conf[0x03] = 0x12;
   BX_PCI_THIS pci_conf[0x0b] = 0x06;
+  if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
+    BX_PCI_THIS pci_conf[0x02] = 0x37;
+    BX_PCI_THIS pci_conf[0x03] = 0x12;
+  } else {
+    BX_PCI_THIS pci_conf[0x02] = 0x22;
+    BX_PCI_THIS pci_conf[0x03] = 0x01;
+    BX_PCI_THIS pci_conf[0x08] = 0x02;
+  }
 
 #if BX_DEBUGGER
   // register device for the 'info device' command (calls debug_dump())
@@ -94,7 +101,11 @@ bx_pci_bridge_c::reset(unsigned type)
 
   BX_PCI_THIS pci_conf[0x04] = 0x06;
   BX_PCI_THIS pci_conf[0x05] = 0x00;
-  BX_PCI_THIS pci_conf[0x06] = 0x80;
+  if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
+    BX_PCI_THIS pci_conf[0x06] = 0x80;
+  } else {
+    BX_PCI_THIS pci_conf[0x06] = 0x00;
+  }
   BX_PCI_THIS pci_conf[0x07] = 0x02;
   BX_PCI_THIS pci_conf[0x0d] = 0x00;
   BX_PCI_THIS pci_conf[0x0f] = 0x00;
@@ -106,7 +117,11 @@ bx_pci_bridge_c::reset(unsigned type)
   BX_PCI_THIS pci_conf[0x55] = 0x00;
   BX_PCI_THIS pci_conf[0x56] = 0x00;
   BX_PCI_THIS pci_conf[0x57] = 0x01;
-  BX_PCI_THIS pci_conf[0x58] = 0x10;
+  if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
+    BX_PCI_THIS pci_conf[0x58] = 0x10;
+  } else {
+    BX_PCI_THIS pci_conf[0x58] = 0x00;
+  }
   for (i=0x59; i<0x60; i++)
     BX_PCI_THIS pci_conf[i] = 0x00;
   BX_PCI_THIS pci_conf[0x72] = 0x02;
@@ -148,7 +163,11 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
     oldval = BX_PCI_THIS pci_conf[address+i];
     switch (address+i) {
       case 0x04:
-        BX_PCI_THIS pci_conf[address+i] = (value8 & 0x40) | 0x06;
+        if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
+          BX_PCI_THIS pci_conf[address+i] = (value8 & 0x40) | 0x06;
+        } else {
+          BX_PCI_THIS pci_conf[address+i] = (value8 & 0x02) | 0x04;
+        }
         break;
       case 0x06:
       case 0x0c:

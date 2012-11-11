@@ -57,6 +57,7 @@ public:
 private:
 
   struct {
+    unsigned chipset;
     struct {
       bx_bool cmd_ssbm;
       bx_bool cmd_rwcon;

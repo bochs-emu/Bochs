@@ -89,7 +89,7 @@ Bit32s ne2k_options_parser(const char *context, int num_params, char *params[])
     if (!SIM->get_param_bool("enabled", base)->get()) {
       SIM->get_param_enum("ethmod", base)->set_by_name("null");
     }
-    if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
+    if (SIM->get_param_bool(BXPN_PCI_ENABLED)->get()) {
       for (int slot = 1; slot < 6; slot++) {
         sprintf(tmpdev, "pci.slot.%d", slot);
         if (!strcmp(SIM->get_param_string(tmpdev)->getptr(), "ne2k")) {
@@ -220,7 +220,7 @@ void bx_ne2k_c::init(void)
   strcpy(devname, "NE2000 NIC");
 
 #if BX_SUPPORT_PCI
-  if ((SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) &&
+  if ((SIM->get_param_bool(BXPN_PCI_ENABLED)->get()) &&
       (DEV_is_pci_device(BX_PLUGIN_NE2K))) {
     BX_NE2K_THIS s.pci_enabled = 1;
     strcpy(devname, "NE2000 PCI NIC");

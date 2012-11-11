@@ -163,10 +163,10 @@ void bx_usb_uhci_c::init(void)
   BX_UHCI_THIS hub.timer_index =
                    bx_pc_system.register_timer(this, usb_timer_handler, 1000, 1,1, "usb.timer");
 
-  if (DEV_is_pci_device(BX_PLUGIN_USB_UHCI)) {
-    BX_UHCI_THIS hub.devfunc = 0x00;
-  } else {
+  if (SIM->get_param_enum(BXPN_PCI_CHIPSET)->get() == BX_PCI_CHIPSET_I440FX) {
     BX_UHCI_THIS hub.devfunc = BX_PCI_DEVICE(1,2);
+  } else {
+    BX_UHCI_THIS hub.devfunc = 0x00;
   }
   DEV_register_pci_handlers(this, &BX_UHCI_THIS hub.devfunc, BX_PLUGIN_USB_UHCI,
                             "Experimental USB UHCI");

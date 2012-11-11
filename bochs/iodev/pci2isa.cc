@@ -74,6 +74,7 @@ void bx_piix3_c::init(void)
   Bit8u devfunc = BX_PCI_DEVICE(1,0);
   DEV_register_pci_handlers(this, &devfunc, BX_PLUGIN_PCI2ISA,
       "PIIX3 PCI-to-ISA bridge");
+  BX_P2I_THIS s.chipset = SIM->get_param_enum(BXPN_PCI_CHIPSET)->get();
 
   DEV_register_iowrite_handler(this, write_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge", 1);
   DEV_register_iowrite_handler(this, write_handler, 0x00B3, "PIIX3 PCI-to-ISA bridge", 1);
@@ -96,8 +97,14 @@ void bx_piix3_c::init(void)
   // readonly registers
   BX_P2I_THIS pci_conf[0x00] = 0x86;
   BX_P2I_THIS pci_conf[0x01] = 0x80;
-  BX_P2I_THIS pci_conf[0x02] = 0x00;
-  BX_P2I_THIS pci_conf[0x03] = 0x70;
+  if (BX_P2I_THIS s.chipset == BX_PCI_CHIPSET_I440FX) {
+    BX_P2I_THIS pci_conf[0x02] = 0x00;
+    BX_P2I_THIS pci_conf[0x03] = 0x70;
+  } else {
+    BX_P2I_THIS pci_conf[0x02] = 0x2e;
+    BX_P2I_THIS pci_conf[0x03] = 0x12;
+    BX_P2I_THIS pci_conf[0x08] = 0x01;
+  }
   BX_P2I_THIS pci_conf[0x04] = 0x07;
   BX_P2I_THIS pci_conf[0x0a] = 0x01;
   BX_P2I_THIS pci_conf[0x0b] = 0x06;
