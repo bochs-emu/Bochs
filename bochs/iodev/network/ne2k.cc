@@ -85,7 +85,6 @@ Bit32s ne2k_options_parser(const char *context, int num_params, char *params[])
 
   if (!strcmp(params[0], "ne2k")) {
     bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
-    char tmpdev[80];
     if (!SIM->get_param_bool("enabled", base)->get()) {
       SIM->get_param_enum("ethmod", base)->set_by_name("null");
     }
@@ -228,6 +227,7 @@ void bx_ne2k_c::init(void)
     BX_NE2K_THIS pci_conf[0x02] = 0x29;
     BX_NE2K_THIS pci_conf[0x03] = 0x80;
     BX_NE2K_THIS pci_conf[0x04] = 0x01;
+    BX_NE2K_THIS pci_conf[0x07] = 0x02;
     BX_NE2K_THIS pci_conf[0x0a] = 0x00;
     BX_NE2K_THIS pci_conf[0x0b] = 0x02;
     BX_NE2K_THIS pci_conf[0x0e] = 0x00;
@@ -1763,7 +1763,7 @@ void bx_ne2k_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
     value8 = (value >> (i*8)) & 0xFF;
     switch (address+i) {
       case 0x04:
-        value8 &= 0x01;
+        value8 &= 0x03;
         break;
       case 0x3c:
         if (value8 != oldval) {

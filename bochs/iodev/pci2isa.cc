@@ -372,6 +372,7 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
       case 0x61:
       case 0x62:
       case 0x63:
+        value8 &= 0x8f;
         if (value8 != BX_P2I_THIS pci_conf[address+i]) {
           if (value8 >= 0x80) {
             pci_unregister_irq((address+i) & 0x03);
