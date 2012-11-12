@@ -18,9 +18,9 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-//
-// i440FX Support - PMC/DBX
-//
+// PCI host bridge support
+// i430FX - TSC/TDP
+// i440FX - PMC/DBX
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
@@ -34,6 +34,8 @@
 #include "pci.h"
 
 #define LOG_THIS thePciBridge->
+
+const char csname[2][20] = {"i430FX TSC", "i440FX PMC"};
 
 bx_pci_bridge_c *thePciBridge = NULL;
 
@@ -70,8 +72,8 @@ void bx_pci_bridge_c::init(void)
   unsigned i;
 
   Bit8u devfunc = BX_PCI_DEVICE(0,0);
-  DEV_register_pci_handlers(this, &devfunc, BX_PLUGIN_PCI, "440FX Host bridge");
   BX_PCI_THIS chipset = SIM->get_param_enum(BXPN_PCI_CHIPSET)->get();
+  DEV_register_pci_handlers(this, &devfunc, BX_PLUGIN_PCI, csname[BX_PCI_THIS chipset]);
 
   for (i=0; i<256; i++)
     BX_PCI_THIS pci_conf[i] = 0x0;
@@ -101,16 +103,10 @@ bx_pci_bridge_c::reset(unsigned type)
 
   BX_PCI_THIS pci_conf[0x04] = 0x06;
   BX_PCI_THIS pci_conf[0x05] = 0x00;
-  if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
-    BX_PCI_THIS pci_conf[0x06] = 0x80;
-  } else {
-    BX_PCI_THIS pci_conf[0x06] = 0x00;
-  }
   BX_PCI_THIS pci_conf[0x07] = 0x02;
   BX_PCI_THIS pci_conf[0x0d] = 0x00;
   BX_PCI_THIS pci_conf[0x0f] = 0x00;
   BX_PCI_THIS pci_conf[0x50] = 0x00;
-  BX_PCI_THIS pci_conf[0x51] = 0x01;
   BX_PCI_THIS pci_conf[0x52] = 0x00;
   BX_PCI_THIS pci_conf[0x53] = 0x80;
   BX_PCI_THIS pci_conf[0x54] = 0x00;
@@ -118,8 +114,11 @@ bx_pci_bridge_c::reset(unsigned type)
   BX_PCI_THIS pci_conf[0x56] = 0x00;
   BX_PCI_THIS pci_conf[0x57] = 0x01;
   if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
+    BX_PCI_THIS pci_conf[0x06] = 0x80;
+    BX_PCI_THIS pci_conf[0x51] = 0x01;
     BX_PCI_THIS pci_conf[0x58] = 0x10;
   } else {
+    BX_PCI_THIS pci_conf[0x06] = 0x00;
     BX_PCI_THIS pci_conf[0x58] = 0x00;
   }
   for (i=0x59; i<0x60; i++)
@@ -146,7 +145,7 @@ Bit32u bx_pci_bridge_c::pci_read_handler(Bit8u address, unsigned io_len)
   for (unsigned i=0; i<io_len; i++) {
     value |= (BX_PCI_THIS pci_conf[address+i] << (i*8));
   }
-  BX_DEBUG(("440FX PMC read  register 0x%02x value 0x%08x", address, value));
+  BX_DEBUG(("%s read  register 0x%02x value 0x%08x", csname[BX_PCI_THIS chipset], address, value));
   return value;
 }
 
@@ -169,8 +168,37 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
           BX_PCI_THIS pci_conf[address+i] = (value8 & 0x02) | 0x04;
         }
         break;
+      case 0x05:
+        if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
+          BX_PCI_THIS pci_conf[address+i] = (value8 & 0x01);
+        }
+        break;
+      case 0x07:
+        if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
+          value8 &= 0xf9;
+        } else {
+          value8 &= 0x30;
+        }
+        BX_PCI_THIS pci_conf[address+i] &= ~value8;
+        break;
+      case 0x0d:
+        BX_PCI_THIS pci_conf[address+i] = (value8 & 0xf8);
+        break;
       case 0x06:
       case 0x0c:
+      case 0x0f:
+        break;
+      case 0x50:
+        if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
+          BX_PCI_THIS pci_conf[address+i] = (value8 & 0x70);
+        } else {
+          BX_PCI_THIS pci_conf[address+i] = (value8 & 0xef);
+        }
+        break;
+      case 0x51:
+        if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
+          BX_PCI_THIS pci_conf[address+i] = (value8 & 0x80) | 0x01;
+        }
         break;
       case 0x59:
       case 0x5A:
@@ -193,7 +221,7 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
             DEV_mem_set_memory_type(area, 0, (value >> 4) & 0x1);
             DEV_mem_set_memory_type(area, 1, (value >> 5) & 0x1);
           }
-          BX_INFO(("440FX PMC write to PAM register %x (TLB Flush)", address+i));
+          BX_INFO(("%s write to PAM register %x (TLB Flush)", csname[BX_PCI_THIS chipset], address+i));
           bx_pc_system.MemoryMappingChanged();
         }
         break;
@@ -202,7 +230,7 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
         break;
       default:
         BX_PCI_THIS pci_conf[address+i] = value8;
-        BX_DEBUG(("440FX PMC write register 0x%02x value 0x%02x", address+i, value8));
+        BX_DEBUG(("%s write register 0x%02x value 0x%02x", csname[BX_PCI_THIS chipset], address+i, value8));
     }
   }
 }
@@ -268,7 +296,11 @@ void bx_pci_bridge_c::debug_dump(int argc, char **argv)
 {
   int arg, i, j, r;
 
-  dbg_printf("i440FX PMC/DBX\n\n");
+  if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
+    dbg_printf("i440FX PMC/DBX\n\n");
+  } else {
+    dbg_printf("i430FX TSC/TDP\n\n");
+  }
   dbg_printf("confAddr = 0x%08x\n\n", DEV_pci_get_confAddr());
 
   if (argc == 0) {

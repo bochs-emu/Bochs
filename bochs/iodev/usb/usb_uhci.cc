@@ -21,6 +21,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 // Experimental USB UHCI adapter
+// PIIX3/PIIX4 function 2
 
 /* Notes by Ben Lunt:
    - My purpose of coding this emulation was/is to learn about the USB.

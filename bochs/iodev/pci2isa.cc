@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2012  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -18,9 +18,9 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-//
-// i440FX Support - PCI-to-ISA bridge (PIIX3)
-//
+// PCI-to-ISA bridge
+// i430FX - PIIX
+// i440FX - PIIX3
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
