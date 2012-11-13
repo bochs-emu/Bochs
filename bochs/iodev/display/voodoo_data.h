@@ -2725,14 +2725,14 @@ do                                                                              
   if (TEXMODE_ENABLE_PERSPECTIVE(TEXMODE))                                       \
   {                                                                              \
     oow = fast_reciplog((ITERW), &lod);                                          \
-    s = ((Bit64s)oow * (ITERS)) >> 29;                                           \
-    t = ((Bit64s)oow * (ITERT)) >> 29;                                           \
+    s = (Bit32s)((Bit64s)oow * (ITERS) >> 29);                                   \
+    t = (Bit32s)((Bit64s)oow * (ITERT) >> 29);                                   \
     lod += (LODBASE);                                                            \
   }                                                                              \
   else                                                                           \
   {                                                                              \
-    s = (ITERS) >> 14;                                                           \
-    t = (ITERT) >> 14;                                                           \
+    s = (Bit32s)((ITERS) >> 14);                                                 \
+    t = (Bit32s)((ITERT) >> 14);                                                 \
     lod = (LODBASE);                                                             \
   }                                                                              \
                                                                                  \
