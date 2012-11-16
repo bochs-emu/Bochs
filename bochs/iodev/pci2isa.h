@@ -59,8 +59,8 @@ private:
     Bit8u pci_reset;
   } s;
 
-  static void pci_register_irq(unsigned pirq, unsigned irq);
-  static void pci_unregister_irq(unsigned pirq);
+  static void pci_register_irq(unsigned pirq, Bit8u irq);
+  static void pci_unregister_irq(unsigned pirq, Bit8u irq);
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
