@@ -10728,6 +10728,9 @@ post_default_slave_pic_ints:
   ;; MDA/CGA Video Parameter Table is not available
   SET_INT_VECTOR(0x1D, #0, #0)
 
+  ;; Character Font for upper 128 characters is not available
+  SET_INT_VECTOR(0x1F, #0, #0)
+
   ;; set vectors 0x60 - 0x67h to zero (0:180..0:19f)
   xor  ax, ax
   mov  cx, #0x0010 ;; 16 words
