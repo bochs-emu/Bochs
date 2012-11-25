@@ -388,8 +388,12 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
         break;
       case 0x4f:
         if (BX_P2I_THIS s.chipset == BX_PCI_CHIPSET_I440FX) {
-          // TODO: enable / disable IOAPIC chip select
           BX_P2I_THIS pci_conf[address+i] = (value8 & 0x01);
+#if BX_SUPPORT_APIC
+          if (DEV_ioapic_present()) {
+            DEV_ioapic_set_enabled(value8 & 0x01, (BX_P2I_THIS pci_conf[0x80] & 0x3f) << 10);
+          }
+#endif
         }
         break;
       case 0x60:
@@ -411,6 +415,16 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
         if (BX_P2I_THIS s.chipset == BX_PCI_CHIPSET_I440FX) {
           // TODO: bit #4: enable / disable USB function at boot time
           BX_P2I_THIS pci_conf[address+i] = (value8 & 0xd7);
+        }
+        break;
+      case 0x80:
+        if (BX_P2I_THIS s.chipset == BX_PCI_CHIPSET_I440FX) {
+          BX_P2I_THIS pci_conf[address+i] = (value8 & 0x7f);
+#if BX_SUPPORT_APIC
+          if (DEV_ioapic_present()) {
+            DEV_ioapic_set_enabled(BX_P2I_THIS pci_conf[0x4f] & 0x01, (value8 & 0x3f) << 10);
+          }
+#endif
         }
         break;
       default:

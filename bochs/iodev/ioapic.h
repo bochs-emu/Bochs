@@ -82,6 +82,7 @@ public:
   virtual void debug_dump(int argc, char **argv);
 #endif
 
+  virtual void set_enabled(bx_bool enabled, Bit16u base_offset);
   virtual void receive_eoi(Bit8u vector);
   virtual void set_irq_level(Bit8u int_in, bx_bool level);
 
@@ -89,12 +90,12 @@ public:
   void write_aligned(bx_phy_address address, Bit32u data);
 
 private:
-  bx_phy_address get_base(void) const { return base_addr; }
   void set_id(Bit32u new_id) { id = new_id; }
   Bit32u get_id() const { return id; }
 
   void service_ioapic(void);
 
+  bx_bool enabled;
   bx_phy_address base_addr;
   Bit32u id;
 

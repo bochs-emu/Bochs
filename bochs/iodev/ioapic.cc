@@ -119,7 +119,7 @@ void bx_io_redirect_entry_t::register_state(bx_param_c *parent)
 #define BX_IOAPIC_BASE_ADDR  (0xfec00000)
 #define BX_IOAPIC_DEFAULT_ID (BX_SMP_PROCESSORS)
 
-bx_ioapic_c::bx_ioapic_c(): base_addr(BX_IOAPIC_BASE_ADDR)
+bx_ioapic_c::bx_ioapic_c(): enabled(0), base_addr(BX_IOAPIC_BASE_ADDR)
 {
   set_id(BX_IOAPIC_DEFAULT_ID);
   put("ioapic", "IOAP");
@@ -134,8 +134,7 @@ bx_ioapic_c::~bx_ioapic_c()
 void bx_ioapic_c::init(void)
 {
   BX_INFO(("initializing I/O APIC"));
-  DEV_register_memory_handlers(theIOAPIC,
-      ioapic_read, ioapic_write, base_addr, base_addr + 0xfff);
+  set_enabled(1, 0x0000);
   reset(BX_RESET_HARDWARE);
 #if BX_DEBUGGER
   // register device for the 'info device' command (calls debug_dump())
@@ -233,6 +232,26 @@ void bx_ioapic_c::write_aligned(bx_phy_address address, Bit32u value)
       }
       BX_PANIC(("IOAPIC: IOREGSEL points to undefined register %02x", ioregsel));
   }
+}
+
+void bx_ioapic_c::set_enabled(bx_bool _enabled, Bit16u base_offset)
+{
+  if (_enabled != enabled) {
+    if (_enabled) {
+      base_addr = BX_IOAPIC_BASE_ADDR | base_offset;
+      DEV_register_memory_handlers(theIOAPIC,
+        ioapic_read, ioapic_write, base_addr, base_addr + 0xfff);
+    } else {
+      DEV_unregister_memory_handlers(theIOAPIC, base_addr, base_addr + 0xfff);
+    }
+    enabled = _enabled;
+  } else if (enabled && (base_offset != (base_addr & 0xffff))) {
+      DEV_unregister_memory_handlers(theIOAPIC, base_addr, base_addr + 0xfff);
+      base_addr = BX_IOAPIC_BASE_ADDR | base_offset;
+      DEV_register_memory_handlers(theIOAPIC,
+        ioapic_read, ioapic_write, base_addr, base_addr + 0xfff);
+  }
+  BX_INFO(("IOAPIC %sabled (base address = 0x%08x)", enabled?"en":"dis", (Bit32u)base_addr));
 }
 
 void bx_ioapic_c::set_irq_level(Bit8u int_in, bx_bool level)

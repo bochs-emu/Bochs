@@ -308,6 +308,7 @@ public:
 #if BX_SUPPORT_APIC
 class BOCHSAPI bx_ioapic_stub_c : public bx_devmodel_c {
 public:
+  virtual void set_enabled(bx_bool enabled, Bit16u base_offset) {}
   virtual void receive_eoi(Bit8u vector) {}
   virtual void set_irq_level(Bit8u int_in, bx_bool level) {}
 };

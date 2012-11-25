@@ -148,6 +148,7 @@ extern "C" {
 
 ///////// I/O APIC macros
 #define DEV_ioapic_present() (bx_devices.pluginIOAPIC != &bx_devices.stubIOAPIC)
+#define DEV_ioapic_set_enabled(a,b) (bx_devices.pluginIOAPIC->set_enabled(a,b))
 #define DEV_ioapic_receive_eoi(a) (bx_devices.pluginIOAPIC->receive_eoi(a))
 #define DEV_ioapic_set_irq_level(a,b) (bx_devices.pluginIOAPIC->set_irq_level(a,b))
 
