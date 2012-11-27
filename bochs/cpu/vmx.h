@@ -652,7 +652,7 @@ typedef struct bx_VMCS
    Bit32u pause_loop_exiting_gap;
    Bit32u pause_loop_exiting_window;
    Bit64u last_pause_time;
-   Bit32u first_pause_time;
+   Bit64u first_pause_time;
 #endif
 
 #if BX_SUPPORT_VMX >= 2

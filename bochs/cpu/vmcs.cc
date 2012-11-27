@@ -259,7 +259,7 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
 
     case VMCS_64BIT_CONTROL_VMFUNC_CTRLS:
     case VMCS_64BIT_CONTROL_VMFUNC_CTRLS_HI:
-      return BX_CPU_THIS_PTR vmx_cap.vmx_vmfunc_supported_bits;
+      return BX_CPU_THIS_PTR vmx_cap.vmx_vmfunc_supported_bits != 0;
 
     case VMCS_64BIT_CONTROL_EPTP_LIST_ADDRESS:
     case VMCS_64BIT_CONTROL_EPTP_LIST_ADDRESS_HI:

@@ -893,7 +893,7 @@ struct monitor_addr_t {
 };
 #endif
 
-class BX_SMM_State;
+struct BX_SMM_State;
 
 class BOCHSAPI BX_CPU_C : public logfunctions {
 

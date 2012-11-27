@@ -248,7 +248,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::linkTrace(bxInstruction_c *i)
 
   if (BX_CPU_THIS_PTR async_event) return;
 
-  Bit32u delta = BX_CPU_THIS_PTR icount - BX_CPU_THIS_PTR icount_last_sync;
+  Bit32u delta = (Bit32u) (BX_CPU_THIS_PTR icount - BX_CPU_THIS_PTR icount_last_sync);
   if(delta >= bx_pc_system.getNumCpuTicksLeftNextEvent())
     return;
 

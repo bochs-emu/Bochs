@@ -266,7 +266,7 @@ float32 float32_muladd(float32 a, float32 b, float32 c, int flags, float_status_
     if (cExp == 0) {
         if (!cSig) {
             /* Throw out the special case of c being an exact zero now */
-            pSig = shift64RightJamming(pSig64, 32);
+            pSig = (Bit32u) shift64RightJamming(pSig64, 32);
             return roundAndPackFloat32(zSign, pExp - 1, pSig, status);
         }
         float_raise(status, float_flag_denormal);

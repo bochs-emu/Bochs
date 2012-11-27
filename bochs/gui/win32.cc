@@ -1142,7 +1142,7 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
   case WM_MOUSEMOVE:
     if (!mouseModeChange) {
-      processMouseXY(LOWORD(lParam), HIWORD(lParam), 0, wParam, 0);
+      processMouseXY(LOWORD(lParam), HIWORD(lParam), 0, (int) wParam, 0);
     }
     return 0;
 
@@ -1172,11 +1172,11 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
         bx_gui->mouse_toggle_check(BX_MT_LBUTTON, 0);
         mouseModeChange = FALSE;
       } else {
-        processMouseXY(LOWORD(lParam), HIWORD(lParam), 0, wParam, 1);
+        processMouseXY(LOWORD(lParam), HIWORD(lParam), 0, (int) wParam, 1);
       }
       return 0;
     }
-    processMouseXY(LOWORD(lParam), HIWORD(lParam), 0, wParam, 1);
+    processMouseXY(LOWORD(lParam), HIWORD(lParam), 0, (int) wParam, 1);
     return 0;
 
   case WM_MBUTTONDOWN:
@@ -1192,7 +1192,7 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       bx_gui->mouse_toggle_check(BX_MT_MBUTTON, 0);
       mouseModeChange = FALSE;
     } else {
-      processMouseXY(LOWORD(lParam), HIWORD(lParam), 0, wParam, 4);
+      processMouseXY(LOWORD(lParam), HIWORD(lParam), 0, (int) wParam, 4);
     }
     return 0;
 
@@ -1210,11 +1210,11 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
         bx_gui->mouse_toggle_check(BX_MT_RBUTTON, 0);
         mouseModeChange = FALSE;
       } else {
-        processMouseXY(LOWORD(lParam), HIWORD(lParam), 0, wParam, 2);
+        processMouseXY(LOWORD(lParam), HIWORD(lParam), 0, (int) wParam, 2);
       }
       return 0;
     }
-    processMouseXY(LOWORD(lParam), HIWORD(lParam), 0, wParam, 2);
+    processMouseXY(LOWORD(lParam), HIWORD(lParam), 0, (int) wParam, 2);
     return 0;
 
   case WM_CLOSE:

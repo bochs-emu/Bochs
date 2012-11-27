@@ -729,7 +729,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
          page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, user, rw);
       }
 
-      lpf_mask = offset_mask;
+      lpf_mask = (Bit32u) offset_mask;
       break;
     }
   }

@@ -57,7 +57,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::stackPrefetch(bx_address offset, unsigned 
       return;
 
     Bit32u limit = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled;
-    Bit32u pageStart = offset - pageOffset;
+    Bit32u pageStart = (Bit32u) offset - pageOffset;
 
     if (! BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid) {
       BX_ERROR(("stackPrefetch: SS not valid"));

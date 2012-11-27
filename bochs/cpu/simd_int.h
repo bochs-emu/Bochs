@@ -826,7 +826,7 @@ BX_CPP_INLINE void sse_pbroadcastb(BxPackedXmmRegister *op, Bit8u val_8)
   }
 }
 
-BX_CPP_INLINE void sse_pbroadcastw(BxPackedXmmRegister *op, Bit8u val_16)
+BX_CPP_INLINE void sse_pbroadcastw(BxPackedXmmRegister *op, Bit16u val_16)
 {
   for(unsigned n=0; n<8; n++) {
     op->xmm16u(n) = val_16;
