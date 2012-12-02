@@ -83,6 +83,7 @@ class BOCHSAPI BX_MEM_C : public logfunctions {
 private:
   struct memory_handler_struct **memory_handlers;
   bx_bool pci_enabled;
+  bx_bool bios_write_enabled;
   bx_bool smram_available;
   bx_bool smram_enable;
   bx_bool smram_restricted;
@@ -117,6 +118,7 @@ public:
   BX_MEM_SMF void    disable_smram(void);
   BX_MEM_SMF bx_bool is_smram_accessible(void);
 
+  BX_MEM_SMF void    set_bios_write(bx_bool enabled);
   BX_MEM_SMF void    set_memory_type(memory_area_t area, bx_bool rw, bx_bool dram);
 
   BX_MEM_SMF Bit8u*  getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw);

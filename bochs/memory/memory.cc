@@ -176,8 +176,23 @@ inc_one:
 #endif
 
     }
-  }
-  else {
+  } else if (BX_MEM_THIS bios_write_enabled && (a20addr >= (bx_phy_address)~BIOS_MASK)) {
+    // volatile BIOS write support
+#ifdef BX_LITTLE_ENDIAN
+    data_ptr = (Bit8u *) data;
+#else // BX_BIG_ENDIAN
+    data_ptr = (Bit8u *) data + (len - 1);
+#endif
+    for (unsigned i = 0; i < len; i++) {
+      BX_MEM_THIS rom[a20addr & BIOS_MASK] = *data_ptr;
+      a20addr++;
+#ifdef BX_LITTLE_ENDIAN
+      data_ptr++;
+#else // BX_BIG_ENDIAN
+      data_ptr--;
+#endif
+    }
+  } else {
     // access outside limits of physical memory, ignore
     BX_DEBUG(("Write outside the limits of physical memory (0x"FMT_PHY_ADDRX") (ignore)", a20addr));
   }

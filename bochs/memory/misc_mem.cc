@@ -145,6 +145,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
     BX_MEM_THIS memory_handlers[idx] = NULL;
 
   BX_MEM_THIS pci_enabled = SIM->get_param_bool(BXPN_PCI_ENABLED)->get();
+  BX_MEM_THIS bios_write_enabled = 0;
   BX_MEM_THIS smram_available = 0;
   BX_MEM_THIS smram_enable = 0;
   BX_MEM_THIS smram_restricted = 0;
@@ -910,6 +911,11 @@ void BX_MEM_C::set_memory_type(memory_area_t area, bx_bool rw, bx_bool dram)
   if (area <= BX_MEM_AREA_F0000) {
     BX_MEM_THIS memory_type[area][rw] = dram;
   }
+}
+
+void BX_MEM_C::set_bios_write(bx_bool enabled)
+{
+  BX_MEM_THIS bios_write_enabled = enabled;
 }
 
 #if BX_SUPPORT_MONITOR_MWAIT
