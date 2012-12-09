@@ -98,7 +98,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_VpsWpsM(bxInstruction_c *i
   unsigned len = i->getVL();
   
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  read_virtual_dword_vector_aligned(i->seg(), eaddr, len << 2, &op);
+
+  if (len == BX_VL256)
+    read_virtual_ymmword_aligned(i->seg(), eaddr, &op);
+  else
+    read_virtual_xmmword_aligned(i->seg(), eaddr, &op);
 
   BX_WRITE_AVX_REGZ(i->dst(), op, len);
 
@@ -114,7 +118,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_VpsWpsM(bxInstruction_c *i
   unsigned len = i->getVL();
   
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  read_virtual_dword_vector(i->seg(), eaddr, len << 2, &op);
+
+  if (len == BX_VL256)
+    read_virtual_ymmword(i->seg(), eaddr, &op);
+  else
+    read_virtual_xmmword(i->seg(), eaddr, &op);
 
   BX_WRITE_AVX_REGZ(i->dst(), op, len);
 
@@ -129,7 +137,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_WpsVpsM(bxInstruction_c *i
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  write_virtual_dword_vector(i->seg(), eaddr, i->getVL() << 2, &op);
+
+  if (i->getVL() == BX_VL256)
+    write_virtual_ymmword(i->seg(), eaddr, &op);
+  else
+    write_virtual_xmmword(i->seg(), eaddr, &op);
 
   BX_NEXT_INSTR(i);
 }
@@ -142,7 +154,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_WpsVpsM(bxInstruction_c *i
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  write_virtual_dword_vector_aligned(i->seg(), eaddr, i->getVL() << 2, &op);
+
+  if (i->getVL() == BX_VL256)
+    write_virtual_ymmword_aligned(i->seg(), eaddr, &op);
+  else
+    write_virtual_xmmword_aligned(i->seg(), eaddr, &op);
 
   BX_NEXT_INSTR(i);
 }
@@ -353,7 +369,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF128_VdqMdq(bxInstructio
   BxPackedXmmRegister src;
   
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  read_virtual_dqword(i->seg(), eaddr, (Bit8u*) &src);
+  read_virtual_xmmword(i->seg(), eaddr, (Bit8u*) &src);
 
   for (unsigned n=0; n < len; n++) {
     op.avx64u(n*2)   = src.xmm64u(0);
@@ -465,7 +481,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF128_WdqVdqIbM(bxInstructi
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  write_virtual_dqword(i->seg(), eaddr, &(op.avx128(i->Ib() & 1)));
+  write_virtual_xmmword(i->seg(), eaddr, &(op.avx128(i->Ib() & 1)));
 
   BX_NEXT_INSTR(i);
 }
@@ -587,12 +603,21 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPS_VpsHpsMps(bxInstruction
   }
 #endif
 
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
   for (int n=4*len-1; n >= 0; n--) {
     if (mask.avx32u(n) & 0x80000000)
        result.avx32u(n) = read_virtual_dword(i->seg(), (eaddr + 4*n) & i->asize_mask());
     else
        result.avx32u(n) = 0;
   }
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
 
   BX_WRITE_AVX_REGZ(i->dst(), result, len);
 
@@ -618,12 +643,21 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPD_VpdHpdMpd(bxInstruction
   }
 #endif
 
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
   for (int n=2*len-1; n >= 0; n--) {
     if (mask.avx32u(n*2+1) & 0x80000000)
        result.avx64u(n) = read_virtual_qword(i->seg(), (eaddr + 8*n) & i->asize_mask());
     else
        result.avx64u(n) = 0;
   }
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
 
   BX_WRITE_AVX_REGZ(i->dst(), result, len);
 
@@ -649,6 +683,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPS_MpsHpsVps(bxInstruction
   }
 #endif
 
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
   // see you can successfully write all the elements first
   for (int n=4*len-1; n >= 0; n--) {
     if (mask.avx32u(n) & 0x80000000)
@@ -659,6 +698,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPS_MpsHpsVps(bxInstruction
     if (mask.avx32u(n) & 0x80000000)
        write_virtual_dword(i->seg(), (eaddr + 4*n) & i->asize_mask(), op.avx32u(n));
   }
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -682,6 +725,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPD_MpdHpdVpd(bxInstruction
   }
 #endif
 
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
   // see you can successfully write all the elements first
   for (int n=2*len-1; n >= 0; n--) {
     if (mask.avx32u(2*n+1) & 0x80000000)
@@ -692,6 +740,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPD_MpdHpdVpd(bxInstruction
     if (mask.avx32u(2*n+1) & 0x80000000)
        write_virtual_qword(i->seg(), (eaddr + 8*n) & i->asize_mask(), op.avx64u(n));
   }
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
 
   BX_NEXT_INSTR(i);
 }

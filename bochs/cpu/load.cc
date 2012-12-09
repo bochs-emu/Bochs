@@ -107,10 +107,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wdq(bxInstruction_c *i)
 
 #if BX_SUPPORT_MISALIGNED_SSE
   if (BX_CPU_THIS_PTR mxcsr.get_MM())
-    read_virtual_dqword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_TMP_REGISTER));
+    read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_TMP_REGISTER));
   else
 #endif
-    read_virtual_dqword_aligned(i->seg(), eaddr, &BX_READ_XMM_REG(BX_TMP_REGISTER));
+    read_virtual_xmmword_aligned(i->seg(), eaddr, &BX_READ_XMM_REG(BX_TMP_REGISTER));
 
   return BX_CPU_CALL_METHOD(i->execute2(), (i));
 #endif
@@ -120,7 +120,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADU_Wdq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  read_virtual_dqword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_TMP_REGISTER));
+  read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_TMP_REGISTER));
 
   return BX_CPU_CALL_METHOD(i->execute2(), (i));
 #endif
@@ -131,15 +131,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADU_Wdq(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Vector(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  read_virtual_dword_vector(i->seg(), eaddr, i->getVL() << 2, &BX_READ_AVX_REG(BX_TMP_REGISTER));
 
-  return BX_CPU_CALL_METHOD(i->execute2(), (i));
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_VectorQ(bxInstruction_c *i)
-{
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  read_virtual_dword_vector(i->seg(), eaddr, i->getVL() << 1, &BX_READ_AVX_REG(BX_TMP_REGISTER));
+  if (i->getVL() == BX_VL256)
+    read_virtual_ymmword(i->seg(), eaddr, &BX_READ_AVX_REG(BX_TMP_REGISTER));
+  else
+    read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_TMP_REGISTER));
 
   return BX_CPU_CALL_METHOD(i->execute2(), (i));
 }

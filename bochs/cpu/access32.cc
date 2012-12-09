@@ -243,7 +243,7 @@ accessOK:
 #if BX_CPU_LEVEL >= 6
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::write_virtual_dqword_32(unsigned s, Bit32u offset, const BxPackedXmmRegister *data)
+BX_CPU_C::write_virtual_xmmword_32(unsigned s, Bit32u offset, const BxPackedXmmRegister *data)
 {
   Bit32u laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
@@ -277,7 +277,7 @@ accessOK:
       return;
     }
     else {
-      BX_ERROR(("write_virtual_dqword_32(): segment limit violation"));
+      BX_ERROR(("write_virtual_xmmword_32(): segment limit violation"));
       exception(int_number(s), 0);
     }
   }
@@ -288,7 +288,7 @@ accessOK:
 }
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::write_virtual_dqword_aligned_32(unsigned s, Bit32u offset, const BxPackedXmmRegister *data)
+BX_CPU_C::write_virtual_xmmword_aligned_32(unsigned s, Bit32u offset, const BxPackedXmmRegister *data)
 {
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
 
@@ -298,7 +298,7 @@ BX_CPU_C::write_virtual_dqword_aligned_32(unsigned s, Bit32u offset, const BxPac
   // must check alignment here because #GP on misaligned access is higher
   // priority than other segment related faults
   if (laddr & 15) {
-    BX_ERROR(("write_virtual_dqword_aligned_32(): #GP misaligned access"));
+    BX_ERROR(("write_virtual_xmmword_aligned_32(): #GP misaligned access"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -327,7 +327,7 @@ accessOK:
       return;
     }
     else {
-      BX_ERROR(("write_virtual_dqword_aligned_32(): segment limit violation"));
+      BX_ERROR(("write_virtual_xmmword_aligned_32(): segment limit violation"));
       exception(int_number(s), 0);
     }
   }
@@ -339,21 +339,18 @@ accessOK:
 
 #if BX_SUPPORT_AVX
 
-void BX_CPU_C::write_virtual_dword_vector_32(unsigned s, Bit32u offset, unsigned elements, const BxPackedAvxRegister *data)
+void BX_CPU_C::write_virtual_ymmword_32(unsigned s, Bit32u offset, const BxPackedAvxRegister *data)
 {
-  BX_ASSERT(elements > 0);
-
   Bit32u laddr;
-  unsigned len = elements << 2;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
   if (seg->cache.valid & SegAccessWOK) {
-    if (offset <= (seg->cache.u.segment.limit_scaled-len+1)) {
+    if (offset <= (seg->cache.u.segment.limit_scaled-31)) {
 accessOK:
       laddr = get_laddr32(s, offset);
-      unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, len-1);
+      unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 31);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
       if (tlbEntry->lpf == lpf) {
@@ -363,36 +360,32 @@ accessOK:
           bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
           Bit32u pageOffset = PAGE_OFFSET(laddr);
           bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
-          BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, pAddr, len, CPL, BX_WRITE, (Bit8u*) data);
-          Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
-          pageWriteStampTable.decWriteStamp(pAddr, len);
-          for (unsigned n=0; n < elements; n++) {
-            WriteHostDWordToLittleEndian(hostAddr, data->avx32u(n));
-            hostAddr++;
+          BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, pAddr, 32, CPL, BX_WRITE, (Bit8u*) data);
+          Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
+          pageWriteStampTable.decWriteStamp(pAddr, 32);
+          for (unsigned n=0; n < 4; n++) {
+            WriteHostQWordToLittleEndian(hostAddr+n, data->avx64u(n));
           }
           return;
         }
       }
 
-      access_write_linear(laddr, len, CPL, (void *) data);
+      access_write_linear(laddr, 32, CPL, (void *) data);
       return;
     }
     else {
-      BX_ERROR(("write_virtual_dword_vector_32(): segment limit violation"));
+      BX_ERROR(("write_virtual_ymmword_32(): segment limit violation"));
       exception(int_number(s), 0);
     }
   }
 
-  if (!write_virtual_checks(seg, offset, len))
+  if (!write_virtual_checks(seg, offset, 32))
     exception(int_number(s), 0);
   goto accessOK;
 }
 
-void BX_CPU_C::write_virtual_dword_vector_aligned_32(unsigned s, Bit32u offset, unsigned elements, const BxPackedAvxRegister *data)
+void BX_CPU_C::write_virtual_ymmword_aligned_32(unsigned s, Bit32u offset, const BxPackedAvxRegister *data)
 {
-  BX_ASSERT(elements > 0);
-
-  unsigned len = elements << 2;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
@@ -400,13 +393,13 @@ void BX_CPU_C::write_virtual_dword_vector_aligned_32(unsigned s, Bit32u offset, 
   Bit32u laddr = get_laddr32(s, offset);
   // must check alignment here because #GP on misaligned access is higher
   // priority than other segment related faults
-  if (laddr & (len-1)) {
-    BX_ERROR(("write_virtual_dword_vector_aligned_32(): #GP misaligned access"));
+  if (laddr & 31) {
+    BX_ERROR(("write_virtual_ymmword_aligned_32(): #GP misaligned access"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
   if (seg->cache.valid & SegAccessWOK) {
-    if (offset <= (seg->cache.u.segment.limit_scaled-len+1)) {
+    if (offset <= (seg->cache.u.segment.limit_scaled-31)) {
 accessOK:
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
       Bit32u lpf = LPFOf(laddr);
@@ -418,26 +411,25 @@ accessOK:
           bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
           Bit32u pageOffset = PAGE_OFFSET(laddr);
           bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
-          BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, pAddr, len, CPL, BX_WRITE, (Bit8u*) data);
-          Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
-          pageWriteStampTable.decWriteStamp(pAddr, len);
-          for (unsigned n=0; n < elements; n++) {
-            WriteHostDWordToLittleEndian(hostAddr, data->avx32u(n));
-            hostAddr++;
+          BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, pAddr, 32, CPL, BX_WRITE, (Bit8u*) data);
+          Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
+          pageWriteStampTable.decWriteStamp(pAddr, 32);
+          for (unsigned n=0; n < 4; n++) {
+            WriteHostQWordToLittleEndian(hostAddr+n, data->avx64u(n));
           }
           return;
         }
       }
-      access_write_linear(laddr, len, CPL, (void *) data);
+      access_write_linear(laddr, 32, CPL, (void *) data);
       return;
     }
     else {
-      BX_ERROR(("write_virtual_dword_vector_aligned_32(): segment limit violation"));
+      BX_ERROR(("write_virtual_ymmword_aligned_32(): segment limit violation"));
       exception(int_number(s), 0);
     }
   }
 
-  if (!write_virtual_checks(seg, offset, len))
+  if (!write_virtual_checks(seg, offset, 32))
     exception(int_number(s), 0);
   goto accessOK;
 }
@@ -660,7 +652,7 @@ accessOK:
 #if BX_CPU_LEVEL >= 6
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::read_virtual_dqword_32(unsigned s, Bit32u offset, BxPackedXmmRegister *data)
+BX_CPU_C::read_virtual_xmmword_32(unsigned s, Bit32u offset, BxPackedXmmRegister *data)
 {
   Bit32u laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
@@ -691,7 +683,7 @@ accessOK:
       return;
     }
     else {
-      BX_ERROR(("read_virtual_dqword_32(): segment limit violation"));
+      BX_ERROR(("read_virtual_xmmword_32(): segment limit violation"));
       exception(int_number(s), 0);
     }
   }
@@ -702,7 +694,7 @@ accessOK:
 }
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::read_virtual_dqword_aligned_32(unsigned s, Bit32u offset, BxPackedXmmRegister *data)
+BX_CPU_C::read_virtual_xmmword_aligned_32(unsigned s, Bit32u offset, BxPackedXmmRegister *data)
 {
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
 
@@ -712,7 +704,7 @@ BX_CPU_C::read_virtual_dqword_aligned_32(unsigned s, Bit32u offset, BxPackedXmmR
   // must check alignment here because #GP on misaligned access is higher
   // priority than other segment related faults
   if (laddr & 15) {
-    BX_ERROR(("read_virtual_dqword_aligned_32(): #GP misaligned access"));
+    BX_ERROR(("read_virtual_xmmword_aligned_32(): #GP misaligned access"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -739,7 +731,7 @@ accessOK:
       return;
     }
     else {
-      BX_ERROR(("read_virtual_dqword_aligned_32(): segment limit violation"));
+      BX_ERROR(("read_virtual_xmmword_aligned_32(): segment limit violation"));
       exception(int_number(s), 0);
     }
   }
@@ -751,21 +743,18 @@ accessOK:
 
 #if BX_SUPPORT_AVX
 
-void BX_CPU_C::read_virtual_dword_vector_32(unsigned s, Bit32u offset, unsigned elements, BxPackedAvxRegister *data)
+void BX_CPU_C::read_virtual_ymmword_32(unsigned s, Bit32u offset, BxPackedAvxRegister *data)
 {
-  BX_ASSERT(elements > 0);
-
   Bit32u laddr;
-  unsigned len = elements << 2;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
   if (seg->cache.valid & SegAccessROK) {
-    if (offset <= (seg->cache.u.segment.limit_scaled-len+1)) {
+    if (offset <= (seg->cache.u.segment.limit_scaled-31)) {
 accessOK:
       laddr = get_laddr32(s, offset);
-      unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, len-1);
+      unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 31);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
       if (tlbEntry->lpf == lpf) {
@@ -774,34 +763,30 @@ accessOK:
         if (! (tlbEntry->accessBits & USER_PL)) { // Read this pl OK.
           bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
           Bit32u pageOffset = PAGE_OFFSET(laddr);
-          Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
-          for (unsigned n=0; n < elements; n++) {
-            ReadHostDWordFromLittleEndian(hostAddr, data->avx32u(n));
-            hostAddr++;
+          Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
+          for (unsigned n=0; n < 4; n++) {
+            ReadHostQWordFromLittleEndian(hostAddr+n, data->avx64u(n));
           }
-          BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, (tlbEntry->ppf | pageOffset), len, CPL, BX_READ, (Bit8u*) data);
+          BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, (tlbEntry->ppf | pageOffset), 32, CPL, BX_READ, (Bit8u*) data);
           return;
         }
       }
-      access_read_linear(laddr, len, CPL, BX_READ, (void *) data);
+      access_read_linear(laddr, 32, CPL, BX_READ, (void *) data);
       return;
     }
     else {
-      BX_ERROR(("read_virtual_dword_vector_32(len=%d): segment limit violation", len));
+      BX_ERROR(("read_virtual_ymmword_32: segment limit violation"));
       exception(int_number(s), 0);
     }
   }
 
-  if (!read_virtual_checks(seg, offset, len))
+  if (!read_virtual_checks(seg, offset, 32))
     exception(int_number(s), 0);
   goto accessOK;
 }
 
-void BX_CPU_C::read_virtual_dword_vector_aligned_32(unsigned s, Bit32u offset, unsigned elements, BxPackedAvxRegister *data)
+void BX_CPU_C::read_virtual_ymmword_aligned_32(unsigned s, Bit32u offset, BxPackedAvxRegister *data)
 {
-  BX_ASSERT(elements > 0);
-
-  unsigned len = elements << 2;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
@@ -809,13 +794,13 @@ void BX_CPU_C::read_virtual_dword_vector_aligned_32(unsigned s, Bit32u offset, u
   Bit32u laddr = get_laddr32(s, offset);
   // must check alignment here because #GP on misaligned access is higher
   // priority than other segment related faults
-  if (laddr & (len-1)) {
-    BX_ERROR(("read_virtual_dword_vector_aligned_32(): #GP misaligned access"));
+  if (laddr & 31) {
+    BX_ERROR(("read_virtual_ymmword_aligned_32(): #GP misaligned access"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
   if (seg->cache.valid & SegAccessROK) {
-    if (offset <= (seg->cache.u.segment.limit_scaled-len+1)) {
+    if (offset <= (seg->cache.u.segment.limit_scaled-31)) {
 accessOK:
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
       Bit32u lpf = LPFOf(laddr);
@@ -826,25 +811,24 @@ accessOK:
         if (! (tlbEntry->accessBits & USER_PL)) { // Read this pl OK.
           bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
           Bit32u pageOffset = PAGE_OFFSET(laddr);
-          Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
-          for (unsigned n=0; n < elements; n++) {
-            ReadHostDWordFromLittleEndian(hostAddr, data->avx32u(n));
-            hostAddr++;
+          Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
+          for (unsigned n=0; n < 4; n++) {
+            ReadHostQWordFromLittleEndian(hostAddr+n, data->avx64u(n));
           }
-          BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, (tlbEntry->ppf | pageOffset), len, CPL, BX_READ, (Bit8u*) data);
+          BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, (tlbEntry->ppf | pageOffset), 32, CPL, BX_READ, (Bit8u*) data);
           return;
         }
       }
-      access_read_linear(laddr, len, CPL, BX_READ, (void *) data);
+      access_read_linear(laddr, 32, CPL, BX_READ, (void *) data);
       return;
     }
     else {
-      BX_ERROR(("read_virtual_dword_vector_aligned_32(): segment limit violation"));
+      BX_ERROR(("read_virtual_ymmword_aligned_32(): segment limit violation"));
       exception(int_number(s), 0);
     }
   }
 
-  if (!read_virtual_checks(seg, offset, len))
+  if (!read_virtual_checks(seg, offset, 32))
     exception(int_number(s), 0);
   goto accessOK;
 }

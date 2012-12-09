@@ -3043,7 +3043,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
 
   BxPackedXmmRegister inv_eptp;
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  read_virtual_dqword(i->seg(), eaddr, (Bit8u *) &inv_eptp);
+  read_virtual_xmmword(i->seg(), eaddr, (Bit8u *) &inv_eptp);
 
   switch(type) {
   case BX_INVEPT_INVVPID_SINGLE_CONTEXT_INVALIDATION:
@@ -3101,7 +3101,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
 
   BxPackedXmmRegister invvpid_desc;
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  read_virtual_dqword(i->seg(), eaddr, (Bit8u *) &invvpid_desc);
+  read_virtual_xmmword(i->seg(), eaddr, (Bit8u *) &invvpid_desc);
 
   if (invvpid_desc.xmm64u(0) > 0xffff) {
     BX_ERROR(("INVVPID: INVVPID_DESC reserved bits set"));
@@ -3198,7 +3198,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
 
   BxPackedXmmRegister invpcid_desc;
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  read_virtual_dqword(i->seg(), eaddr, (Bit8u *) &invpcid_desc);
+  read_virtual_xmmword(i->seg(), eaddr, (Bit8u *) &invpcid_desc);
 
   if (invpcid_desc.xmm64u(0) > 0xfff) {
     BX_ERROR(("INVPCID: INVPCID_DESC reserved bits set"));

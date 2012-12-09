@@ -87,7 +87,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
       xmm.xmm32u(3) =         (BX_CPU_THIS_PTR the_i387.fcs);
     }
 
-    write_virtual_dqword(i->seg(), eaddr, (Bit8u *) &xmm);
+    write_virtual_xmmword(i->seg(), eaddr, (Bit8u *) &xmm);
 
     /*
      * x87 FPU Instruction Operand (Data) Pointer Offset (32/64 bits)
@@ -120,7 +120,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
       xmm.xmm64u(1) = 0;
       xmm.xmm16u(4) = fp.exp;
 
-      write_virtual_dqword(i->seg(), (eaddr+index*16+32) & asize_mask, (Bit8u *) &xmm);
+      write_virtual_xmmword(i->seg(), (eaddr+index*16+32) & asize_mask, (Bit8u *) &xmm);
     }
 
     header1 |= BX_XCR0_FPU_MASK;
@@ -142,7 +142,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
     {
       // save XMM8-XMM15 only in 64-bit mode
       if (index < 8 || long64_mode()) {
-        write_virtual_dqword(i->seg(),
+        write_virtual_xmmword(i->seg(),
            (eaddr+index*16+160) & asize_mask, (Bit8u *)(&BX_READ_XMM_REG(index)));
       }
     }
@@ -159,7 +159,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
     {
       // save YMM8-YMM15 only in 64-bit mode
       if (index < 8 || long64_mode()) {
-        write_virtual_dqword(i->seg(),
+        write_virtual_xmmword(i->seg(),
            (eaddr+index*16+576) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG_LINE(index, 1)));
       }
     }
@@ -221,7 +221,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   {
     if (header1 & BX_XCR0_FPU_MASK) {
       // load FPU state from XSAVE area
-      read_virtual_dqword(i->seg(), eaddr, (Bit8u *) &xmm);
+      read_virtual_xmmword(i->seg(), eaddr, (Bit8u *) &xmm);
 
       BX_CPU_THIS_PTR the_i387.cwd =  xmm.xmm16u(0);
       BX_CPU_THIS_PTR the_i387.swd =  xmm.xmm16u(1);
@@ -251,7 +251,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
       Bit32u tag_byte = xmm.xmmubyte(4);
 
       /* Restore x87 FPU DP */
-      read_virtual_dqword(i->seg(), (eaddr + 16) & asize_mask, (Bit8u *) &xmm);
+      read_virtual_xmmword(i->seg(), (eaddr + 16) & asize_mask, (Bit8u *) &xmm);
 
 #if BX_SUPPORT_X86_64
       if (i->os64L()) {
@@ -321,7 +321,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
       {
          // restore XMM8-XMM15 only in 64-bit mode
          if (index < 8 || long64_mode()) {
-           read_virtual_dqword(i->seg(),
+           read_virtual_xmmword(i->seg(),
                (eaddr+index*16+160) & asize_mask, (Bit8u *)(&BX_READ_XMM_REG(index)));
          }
       }
@@ -346,7 +346,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
       {
          // restore YMM8-YMM15 only in 64-bit mode
          if (index < 8 || long64_mode()) {
-           read_virtual_dqword(i->seg(),
+           read_virtual_xmmword(i->seg(),
                (eaddr+index*16+576) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG_LINE(index, 1)));
          }
       }
