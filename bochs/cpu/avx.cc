@@ -102,7 +102,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_VpsWpsM(bxInstruction_c *i
   if (len == BX_VL256)
     read_virtual_ymmword_aligned(i->seg(), eaddr, &op);
   else
-    read_virtual_xmmword_aligned(i->seg(), eaddr, &op);
+    read_virtual_xmmword_aligned(i->seg(), eaddr, &op.avx128(0));
 
   BX_WRITE_AVX_REGZ(i->dst(), op, len);
 
@@ -122,7 +122,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_VpsWpsM(bxInstruction_c *i
   if (len == BX_VL256)
     read_virtual_ymmword(i->seg(), eaddr, &op);
   else
-    read_virtual_xmmword(i->seg(), eaddr, &op);
+    read_virtual_xmmword(i->seg(), eaddr, &op.avx128(0));
 
   BX_WRITE_AVX_REGZ(i->dst(), op, len);
 
@@ -131,17 +131,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_VpsWpsM(bxInstruction_c *i
 
 /* VMOVUPS: VEX    0F 11 (VEX.W ignore, VEX.VVV #UD) */ 
 /* VMOVUPD: VEX.66.0F 11 (VEX.W ignore, VEX.VVV #UD) */
-/* VMOVUQA: VEX.66.0F 7F (VEX.W ignore, VEX.VVV #UD) */
+/* VMOVDQU: VEX.66.0F 7F (VEX.W ignore, VEX.VVV #UD) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_WpsVpsM(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
-  
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-  if (i->getVL() == BX_VL256)
-    write_virtual_ymmword(i->seg(), eaddr, &op);
-  else
-    write_virtual_xmmword(i->seg(), eaddr, &op);
+  write_virtual_ymmword(i->seg(), eaddr, &BX_AVX_REG(i->src()));
 
   BX_NEXT_INSTR(i);
 }
@@ -151,14 +145,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_WpsVpsM(bxInstruction_c *i
 /* VMOVDQA: VEX.66.0F 7F (VEX.W ignore, VEX.VVV #UD) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_WpsVpsM(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-  if (i->getVL() == BX_VL256)
-    write_virtual_ymmword_aligned(i->seg(), eaddr, &op);
-  else
-    write_virtual_xmmword_aligned(i->seg(), eaddr, &op);
+  write_virtual_ymmword_aligned(i->seg(), eaddr, &BX_AVX_REG(i->src()));
 
   BX_NEXT_INSTR(i);
 }
