@@ -391,13 +391,13 @@ static const BxOpcodeInfo_t BxOpcodeGroupAVX256_0f11[3] = {
 static const BxOpcodeInfo_t BxOpcodeGroupAVX128_0f12[3] = {
   /* 66 */ { 0, BX_IA_V128_VMOVLPD_VpdHpdMq },
   /* F3 */ { 0, BX_IA_VMOVSLDUP_VpsWps },
-  /* F2 */ { 0, BX_IA_VMOVDDUP_VpdWpd }
+  /* F2 */ { 0, BX_IA_V128_VMOVDDUP_VpdWpd }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX256_0f12[3] = {
   /* 66 */ { 0, BX_IA_ERROR },
   /* F3 */ { 0, BX_IA_VMOVSLDUP_VpsWps },
-  /* F2 */ { 0, BX_IA_VMOVDDUP_VpdWpd }
+  /* F2 */ { 0, BX_IA_V256_VMOVDDUP_VpdWpd }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX128_0f13M[3] = {
