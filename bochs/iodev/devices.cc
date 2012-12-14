@@ -178,6 +178,13 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     PLUG_load_plugin(pci, PLUGTYPE_CORE);
     PLUG_load_plugin(pci2isa, PLUGTYPE_CORE);
 #if BX_SUPPORT_PCIUSB
+    if (chipset == BX_PCI_CHIPSET_I440FX) {
+      // UHCI is a part of the PIIX3, so load / enable it
+      if (!PLUG_device_present("usb_uhci")) {
+        PLUG_load_plugin(usb_uhci, PLUGTYPE_OPTIONAL);
+      }
+      SIM->get_param_bool(BXPN_UHCI_ENABLED)->set(1);
+    }
     usb_enabled = is_usb_enabled();
     if (usb_enabled)
       PLUG_load_plugin(usb_common, PLUGTYPE_CORE);
