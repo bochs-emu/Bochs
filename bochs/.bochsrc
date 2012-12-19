@@ -299,6 +299,10 @@ cpu: cpuid_limit_winnt=0
 #    Select VMX extensions emulation support.
 #    This option exists only if Bochs compiled with --enable-vmx option.
 #
+#  SVM:
+#    Select AMD SVM (Secure Virtual Machine) extensions emulation support.
+#    This option exists only if Bochs compiled with --enable-svm option.
+#
 #  VENDOR_STRING:
 #    Set the CPUID vendor string returned by CPUID(0x0). This should be a
 #    twelve-character ASCII string.  
