@@ -46,11 +46,15 @@ TODO (know issues in CPU model):
 
    - Dual-monitor treatment of SMIs and SMM not implemented yet
    - VMENTER to not-active state not supported yet
+   - Posted Interrupts Processing is not implemented yet
+   - MTF is not implemented yet
 
 [!] SVM:
 
    - Decoding assists, pause filter, VMCB clean are not implemented yet
    - More?
 
+[!] AMD misaligned SSE mode should convert #GP on misaligned SSE access to #AC
+    exception when #AC is enabled
 
 [!] TODO: Convert CPUDB to plugins and search for them in runtime

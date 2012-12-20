@@ -3124,6 +3124,11 @@ This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 Select AMD SSE4A instructions support.
 This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 </para>
+<para><command>misaligned_sse</command></para>
+<para>
+Select AMD Misaligned SSE mode support.
+This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+</para>
 <para><command>aes</command></para>
 <para>
 Select AES instruction set support.

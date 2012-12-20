@@ -38,6 +38,7 @@ cpuid
   sep
   sse
   sse4a
+  misaligned_sse
   aes
   movbe
   adx

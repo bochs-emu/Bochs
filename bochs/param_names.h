@@ -52,6 +52,7 @@
 #define BXPN_CPUID_MMX                   "cpuid.mmx"
 #define BXPN_CPUID_SSE                   "cpuid.sse"
 #define BXPN_CPUID_SSE4A                 "cpuid.sse4a"
+#define BXPN_CPUID_MISALIGNED_SSE        "cpuid.misaligned_sse"
 #define BXPN_CPUID_AES                   "cpuid.aes"
 #define BXPN_CPUID_MOVBE                 "cpuid.movbe"
 #define BXPN_CPUID_ADX                   "cpuid.adx"

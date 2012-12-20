@@ -990,9 +990,9 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
   features_bitmask |= BX_CPU_MTRR;
   features_bitmask |= BX_CPU_PAT;
 
-#if BX_SUPPORT_MISALIGNED_SSE
-  features_bitmask |= BX_CPU_MISALIGNED_SSE;
-#endif
+  static bx_bool misaligned_sse_enabled = SIM->get_param_bool(BXPN_CPUID_MISALIGNED_SSE)->get();
+  if (misaligned_sse_enabled)
+    features_bitmask |= BX_CPU_MISALIGNED_SSE;
 
   static bx_bool smep_enabled = SIM->get_param_bool(BXPN_CPUID_SMEP)->get();
   if (smep_enabled)
@@ -1431,9 +1431,8 @@ Bit32u bx_generic_cpuid_t::get_ext2_cpuid_features(void) const
     features |= BX_CPUID_EXT2_LAHF_SAHF | BX_CPUID_EXT2_PREFETCHW;
 #endif
 
-#if BX_SUPPORT_MISALIGNED_SSE
-  features |= BX_CPUID_EXT2_MISALIGNED_SSE;
-#endif
+  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_MISALIGNED_SSE))
+    features |= BX_CPUID_EXT2_MISALIGNED_SSE;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LZCNT))
     features |= BX_CPUID_EXT2_LZCNT;

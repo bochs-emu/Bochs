@@ -36,9 +36,6 @@ phenom_8650_toliman_t::phenom_8650_toliman_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 
   BX_INFO(("WARNING: 3DNow! is not implemented yet !"));
 
-  if (! BX_SUPPORT_MISALIGNED_SSE)
-    BX_INFO(("WARNING: Misaligned SSE support is not compiled in !"));
-
   if (! BX_SUPPORT_SVM)
     BX_INFO(("WARNING: SVM support is not compiled in !"));
 
@@ -143,9 +140,7 @@ Bit32u phenom_8650_toliman_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_NX |
          BX_CPU_FFXSR |
          BX_CPU_1G_PAGES |
-#if BX_SUPPORT_MISALIGNED_SSE
          BX_CPU_MISALIGNED_SSE |
-#endif
          BX_CPU_ALT_MOV_CR8 |
          BX_CPU_XAPIC_EXT;
 }
@@ -406,9 +401,7 @@ void phenom_8650_toliman_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
               BX_CPUID_EXT2_ALT_MOV_CR8 |
               BX_CPUID_EXT2_LZCNT |
               BX_CPUID_EXT2_SSE4A |
-#if BX_SUPPORT_MISALIGNED_SSE
               BX_CPUID_EXT2_MISALIGNED_SSE |
-#endif
               BX_CPUID_EXT2_PREFETCHW |
               BX_CPUID_EXT2_OSVW |
               BX_CPUID_EXT2_IBS;

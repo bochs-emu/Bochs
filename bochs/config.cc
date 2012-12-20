@@ -518,6 +518,10 @@ void bx_init_options()
       "sse4a", "Support for AMD SSE4A instructions",
       "Support for AMD SSE4A instructions",
       0);
+  new bx_param_bool_c(cpuid_param,
+      "misaligned_sse", "Support for AMD Misaligned SSE mode",
+      "Support for AMD Misaligned SSE mode",
+      0);
 
   new bx_param_bool_c(cpuid_param,
       "sep", "Support for SYSENTER/SYSEXIT instructions",
@@ -2559,6 +2563,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         if (parse_param_bool(params[i], 6, BXPN_CPUID_SSE4A) < 0) {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
         }
+      } else if (!strncmp(params[i], "misaligned_sse=", 15)) {
+        if (parse_param_bool(params[i], 15, BXPN_CPUID_MISALIGNED_SSE) < 0) {
+          PARSE_ERR(("%s: cpuid directive malformed.", context));
+        }
       } else if (!strncmp(params[i], "aes=", 4)) {
         if (parse_param_bool(params[i], 4, BXPN_CPUID_AES) < 0) {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
@@ -3586,9 +3594,10 @@ int bx_write_configuration(const char *rc, int overwrite)
       SIM->get_param_enum(BXPN_CPUID_APIC)->get_selected());
 #endif
 #if BX_CPU_LEVEL >= 6
-    fprintf(fp, ", sse=%s, sse4a=%d, sep=%d, aes=%d, xsave=%d, xsaveopt=%d, movbe=%d, adx=%d, smep=%d, smap=%d",
+    fprintf(fp, ", sse=%s, sse4a=%d, misaligned_sse=%d, sep=%d, aes=%d, xsave=%d, xsaveopt=%d, movbe=%d, adx=%d, smep=%d, smap=%d",
       SIM->get_param_enum(BXPN_CPUID_SSE)->get_selected(),
       SIM->get_param_bool(BXPN_CPUID_SSE4A)->get(),
+      SIM->get_param_bool(BXPN_CPUID_MISALIGNED_SSE)->get(),
       SIM->get_param_bool(BXPN_CPUID_SEP)->get(),
       SIM->get_param_bool(BXPN_CPUID_AES)->get(),
       SIM->get_param_bool(BXPN_CPUID_XSAVE)->get(),
