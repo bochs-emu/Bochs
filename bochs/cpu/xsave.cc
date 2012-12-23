@@ -425,13 +425,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  if (EDX != 0 || (EAX & ~BX_CPU_THIS_PTR xcr0_suppmask) != 0 || (EAX & 1) == 0) {
+  if (EDX != 0 || (EAX & ~BX_CPU_THIS_PTR xcr0_suppmask) != 0 || (EAX & BX_XCR0_FPU_MASK) == 0) {
     BX_ERROR(("XSETBV: Attempting to change reserved bits!"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
 #if BX_SUPPORT_AVX
-  if ((EAX & (BX_XCR0_AVX_BIT | BX_XCR0_SSE_BIT)) == BX_XCR0_AVX_BIT) {
+  if ((EAX & (BX_XCR0_AVX_MASK | BX_XCR0_SSE_MASK)) == BX_XCR0_AVX_MASK) {
     BX_ERROR(("XSETBV: Attempting to set AVX without SSE!"));
     exception(BX_GP_EXCEPTION, 0);
   }
