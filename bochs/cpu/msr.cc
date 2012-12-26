@@ -664,7 +664,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR SVM_HSAVE_PA_MSR: SVM support not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
-      if ((val_64 & 0xfff) != 0 || ! IsValidPhyAddr(val_64)) {
+      if (! IsValidPageAlignedPhyAddr(val_64)) {
         BX_ERROR(("WRMSR SVM_HSAVE_PA_MSR: invalid or not page aligned physical address !"));
       }
       BX_CPU_THIS_PTR msr.svm_hsave_pa = val_64;

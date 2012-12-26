@@ -318,7 +318,7 @@ void BX_CPU_C::VMabort(VMX_vmabort_code error_code)
   shutdown();
 }
 
-unsigned BX_CPU_C::VMXReadRevisionID(bx_phy_address pAddr)
+Bit32u BX_CPU_C::VMXReadRevisionID(bx_phy_address pAddr)
 {
   Bit32u revision;
   access_read_physical(pAddr + VMCS_REVISION_ID_FIELD_ADDR, 4, &revision);
@@ -476,11 +476,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      vm->io_bitmap_addr[1] = VMread64(VMCS_64BIT_CONTROL_IO_BITMAP_B);
      // I/O bitmaps control enabled
      for (int bitmap=0; bitmap < 2; bitmap++) {
-       if (vm->io_bitmap_addr[bitmap] & 0xfff) {
-         BX_ERROR(("VMFAIL: VMCS EXEC CTRL: I/O bitmap %c must be 4K aligned", 'A' + bitmap));
-         return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-       }
-       if (! IsValidPhyAddr(vm->io_bitmap_addr[bitmap])) {
+       if (! IsValidPageAlignedPhyAddr(vm->io_bitmap_addr[bitmap])) {
          BX_ERROR(("VMFAIL: VMCS EXEC CTRL: I/O bitmap %c phy addr malformed", 'A' + bitmap));
          return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
        }
@@ -490,7 +486,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_MSR_BITMAPS) {
      // MSR bitmaps control enabled
      vm->msr_bitmap_addr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_MSR_BITMAPS);
-     if ((vm->msr_bitmap_addr & 0xfff) != 0 || ! IsValidPhyAddr(vm->msr_bitmap_addr)) {
+     if (! IsValidPageAlignedPhyAddr(vm->msr_bitmap_addr)) {
        BX_ERROR(("VMFAIL: VMCS EXEC CTRL: MSR bitmap phy addr malformed"));
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
@@ -506,7 +502,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
 #if BX_SUPPORT_X86_64
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_TPR_SHADOW) {
      vm->virtual_apic_page_addr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR);
-     if ((vm->virtual_apic_page_addr & 0xfff) != 0 || ! IsValidPhyAddr(vm->virtual_apic_page_addr)) {
+     if (! IsValidPageAlignedPhyAddr(vm->virtual_apic_page_addr)) {
        BX_ERROR(("VMFAIL: VMCS EXEC CTRL: virtual apic phy addr malformed"));
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
@@ -559,7 +555,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
 
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES) {
      vm->apic_access_page = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR);
-     if ((vm->apic_access_page & 0xfff) != 0 || ! IsValidPhyAddr(vm->apic_access_page)) {
+     if (! IsValidPageAlignedPhyAddr(vm->apic_access_page)) {
        BX_ERROR(("VMFAIL: VMCS EXEC CTRL: apic access page phy addr malformed"));
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
@@ -618,7 +614,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      }
 
      vm->eptp_list_address = VMread64(VMCS_64BIT_CONTROL_EPTP_LIST_ADDRESS);
-     if ((vm->eptp_list_address & 0xfff) != 0 || ! IsValidPhyAddr(vm->eptp_list_address)) {
+     if (! IsValidPageAlignedPhyAddr(vm->eptp_list_address)) {
        BX_ERROR(("VMFAIL: VMFUNC EPTP-SWITCHING: eptp list phy addr malformed"));
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
@@ -1514,7 +1510,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
   guest.link_pointer = VMread64(VMCS_64BIT_GUEST_LINK_POINTER);
   if (guest.link_pointer != BX_INVALID_VMCSPTR) {
-    if ((guest.link_pointer & 0xfff) != 0 || ! IsValidPhyAddr(guest.link_pointer)) {
+    if (! IsValidPageAlignedPhyAddr(guest.link_pointer)) {
       *qualification = (Bit64u) VMENTER_ERR_GUEST_STATE_LINK_POINTER;
       BX_ERROR(("VMFAIL: VMCS link pointer malformed"));
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
@@ -2365,7 +2361,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
 
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     Bit64u pAddr = read_virtual_qword(i->seg(), eaddr); // keep 64-bit
-    if ((pAddr & 0xfff) != 0 || ! IsValidPhyAddr(pAddr)) {
+    if (! IsValidPageAlignedPhyAddr(pAddr)) {
       BX_ERROR(("VMXON: invalid or not page aligned physical address !"));
       VMfailInvalid();
       BX_NEXT_INSTR(i);
@@ -2728,7 +2724,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRLD(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit64u pAddr = read_virtual_qword(i->seg(), eaddr); // keep 64-bit
-  if ((pAddr & 0xfff) != 0 || ! IsValidPhyAddr(pAddr)) {
+  if (! IsValidPageAlignedPhyAddr(pAddr)) {
     BX_ERROR(("VMFAIL: invalid or not page aligned physical address !"));
     VMfail(VMXERR_VMPTRLD_INVALID_PHYSICAL_ADDRESS);
     BX_NEXT_INSTR(i);
@@ -2984,7 +2980,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit64u pAddr = read_virtual_qword(i->seg(), eaddr); // keep 64-bit
-  if ((pAddr & 0xfff) != 0 || ! IsValidPhyAddr(pAddr)) {
+  if (! IsValidPageAlignedPhyAddr(pAddr)) {
     BX_ERROR(("VMFAIL: VMCLEAR with invalid physical address!"));
     VMfail(VMXERR_VMCLEAR_WITH_INVALID_ADDR);
     BX_NEXT_INSTR(i);

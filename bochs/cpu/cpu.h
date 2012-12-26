@@ -470,7 +470,9 @@ extern const char* cpu_mode_string(unsigned cpu_mode);
 #define IsCanonical(offset) ((Bit64u)((((Bit64s)(offset)) >> (BX_LIN_ADDRESS_WIDTH-1)) + 1) < 2)
 #endif
 
-#define IsValidPhyAddr(addr) ((addr & BX_PHY_ADDRESS_RESERVED_BITS) == 0)
+#define IsValidPhyAddr(addr) (((addr) & BX_PHY_ADDRESS_RESERVED_BITS) == 0)
+
+#define IsValidPageAlignedPhyAddr(addr) (((addr) & BX_PHY_ADDRESS_RESERVED_BITS & ~BX_CONST64(0xfff)) == 0)
 
 #define CACHE_LINE_SIZE 64
 
@@ -4317,7 +4319,7 @@ public: // for now...
   BX_SMF void VMabort(VMX_vmabort_code error_code);
   BX_SMF Bit32u LoadMSRs(Bit32u msr_cnt, bx_phy_address pAddr);
   BX_SMF Bit32u StoreMSRs(Bit32u msr_cnt, bx_phy_address pAddr);
-  BX_SMF unsigned VMXReadRevisionID(bx_phy_address pAddr);
+  BX_SMF Bit32u VMXReadRevisionID(bx_phy_address pAddr);
   BX_SMF VMX_error_code VMenterLoadCheckVmControls(void);
   BX_SMF VMX_error_code VMenterLoadCheckHostState(void);
   BX_SMF Bit32u VMenterLoadCheckGuestState(Bit64u *qualification);

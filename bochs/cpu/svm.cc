@@ -947,7 +947,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMRUN(bxInstruction_c *i)
   }
 
   bx_address pAddr = RAX & i->asize_mask();
-  if ((pAddr & 0xfff) != 0 || ! IsValidPhyAddr(pAddr)) {
+  if (! IsValidPageAlignedPhyAddr(pAddr)) {
     BX_ERROR(("VMRUN: invalid or not page aligned VMCB physical address !"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -1018,7 +1018,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLOAD(bxInstruction_c *i)
   }
 
   bx_address pAddr = RAX & i->asize_mask();
-  if ((pAddr & 0xfff) != 0 || ! IsValidPhyAddr(pAddr)) {
+  if (! IsValidPageAlignedPhyAddr(pAddr)) {
     BX_ERROR(("VMLOAD: invalid or not page aligned VMCB physical address !"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -1069,7 +1069,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMSAVE(bxInstruction_c *i)
   }
 
   bx_address pAddr = RAX & i->asize_mask();
-  if ((pAddr & 0xfff) != 0 || ! IsValidPhyAddr(pAddr)) {
+  if (! IsValidPageAlignedPhyAddr(pAddr)) {
     BX_ERROR(("VMSAVE: invalid or not page aligned VMCB physical address !"));
     exception(BX_GP_EXCEPTION, 0);
   }
