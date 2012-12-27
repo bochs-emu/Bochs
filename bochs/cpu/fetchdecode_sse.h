@@ -920,10 +920,10 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f38f0[3] = {
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupOsize0f38f0[BX_SUPPORT_X86_64 + 2] = {
-  /* 16 */ { BxPrefixSSE, BX_IA_MOVBE_GwMw, BxOpcodeGroupSSE_0f38f0 },
-  /* 32 */ { BxPrefixSSE, BX_IA_MOVBE_GdMd, BxOpcodeGroupSSE_0f38f0 },
+  /* 16 */ { BxPrefixSSEF2F3, BX_IA_MOVBE_GwMw, BxOpcodeGroupSSE_0f38f0 },
+  /* 32 */ { BxPrefixSSEF2F3, BX_IA_MOVBE_GdMd, BxOpcodeGroupSSE_0f38f0 },
 #if BX_SUPPORT_X86_64
-  /* 64 */ { BxPrefixSSE, BX_IA_MOVBE_GqMq, BxOpcodeGroupSSE_0f38f0 },
+  /* 64 */ { BxPrefixSSEF2F3, BX_IA_MOVBE_GqMq, BxOpcodeGroupSSE_0f38f0 },
 #endif
 };
 
@@ -948,10 +948,10 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f38f1q[3] = {
 #endif
 
 static const BxOpcodeInfo_t BxOpcodeGroupOsize0f38f1[BX_SUPPORT_X86_64 + 2] = {
-  /* 16 */ { BxPrefixSSE, BX_IA_MOVBE_MwGw, BxOpcodeGroupSSE_0f38f1w },
-  /* 32 */ { BxPrefixSSE, BX_IA_MOVBE_MdGd, BxOpcodeGroupSSE_0f38f1d },
+  /* 16 */ { BxPrefixSSEF2F3, BX_IA_MOVBE_MwGw, BxOpcodeGroupSSE_0f38f1w },
+  /* 32 */ { BxPrefixSSEF2F3, BX_IA_MOVBE_MdGd, BxOpcodeGroupSSE_0f38f1d },
 #if BX_SUPPORT_X86_64
-  /* 64 */ { BxPrefixSSE, BX_IA_MOVBE_MqGq, BxOpcodeGroupSSE_0f38f1q },
+  /* 64 */ { BxPrefixSSEF2F3, BX_IA_MOVBE_MqGq, BxOpcodeGroupSSE_0f38f1q },
 #endif
 };
 

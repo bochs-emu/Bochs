@@ -1654,6 +1654,12 @@ modrm_done:
       Bit32u group = attr & BxGroupX;
       attr &= ~BxGroupX;
 
+      // ignore 0x66 SSE prefix is required
+      if (group == BxPrefixSSEF2F3) {
+        if (sse_prefix == SSE_PREFIX_66) sse_prefix = SSE_PREFIX_NONE;
+        group = BxPrefixSSE;
+      }
+
       if (group < BxPrefixSSE) {
         /* For opcodes with only one allowed SSE prefix */
         if (sse_prefix != (group >> 4)) {
@@ -1691,8 +1697,6 @@ modrm_done:
 #endif
         case BxOSizeGrp:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[os_32]);
-          if (sse_prefix == SSE_PREFIX_66)
-              sse_prefix = 0;
           break;
         case BxPrefixSSE:
           /* For SSE opcodes look into another table

@@ -649,8 +649,8 @@ static const BxOpcodeInfo_t BxOpcodeInfoG9w[8*2] = {
   /* 3 */ { 0, BX_IA_ERROR },
   /* 4 */ { 0, BX_IA_ERROR },
   /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { BxPrefixSSE, BX_IA_RDRAND_Ew, BxOpcodeGroupSSE_ERR },
-  /* 7 */ { BxPrefixSSE, BX_IA_RDSEED_Ew, BxOpcodeGroupSSE_ERR },
+  /* 6 */ { BxPrefixSSEF2F3, BX_IA_RDRAND_Ew, BxOpcodeGroupSSE_ERR },
+  /* 7 */ { BxPrefixSSEF2F3, BX_IA_RDSEED_Ew, BxOpcodeGroupSSE_ERR },
 
   /* /m form */
   /* 0 */ { 0, BX_IA_ERROR },
@@ -671,8 +671,8 @@ static const BxOpcodeInfo_t BxOpcodeInfoG9d[8*2] = {
   /* 3 */ { 0, BX_IA_ERROR },
   /* 4 */ { 0, BX_IA_ERROR },
   /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { BxPrefixSSE, BX_IA_RDRAND_Ed, BxOpcodeGroupSSE_ERR },
-  /* 7 */ { BxPrefixSSE, BX_IA_RDSEED_Ed, BxOpcodeGroupSSE_ERR },
+  /* 6 */ { BxPrefixSSEF2F3, BX_IA_RDRAND_Ed, BxOpcodeGroupSSE_ERR },
+  /* 7 */ { BxPrefixSSEF2F3, BX_IA_RDSEED_Ed, BxOpcodeGroupSSE_ERR },
 
   /* /m form */
   /* 0 */ { 0, BX_IA_ERROR },
@@ -694,8 +694,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G9q[8*2] = {
   /* 3 */ { 0, BX_IA_ERROR },
   /* 4 */ { 0, BX_IA_ERROR },
   /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { BxPrefixSSE, BX_IA_RDRAND_Eq, BxOpcodeGroupSSE_ERR },
-  /* 7 */ { BxPrefixSSE, BX_IA_RDSEED_Eq, BxOpcodeGroupSSE_ERR },
+  /* 6 */ { BxPrefixSSEF2F3, BX_IA_RDRAND_Eq, BxOpcodeGroupSSE_ERR },
+  /* 7 */ { BxPrefixSSEF2F3, BX_IA_RDSEED_Eq, BxOpcodeGroupSSE_ERR },
 
   /* /m form */
   /* 0 */ { 0, BX_IA_ERROR },
