@@ -472,7 +472,7 @@ extern const char* cpu_mode_string(unsigned cpu_mode);
 
 #define IsValidPhyAddr(addr) (((addr) & BX_PHY_ADDRESS_RESERVED_BITS) == 0)
 
-#define IsValidPageAlignedPhyAddr(addr) (((addr) & BX_PHY_ADDRESS_RESERVED_BITS & ~BX_CONST64(0xfff)) == 0)
+#define IsValidPageAlignedPhyAddr(addr) (((addr) & (BX_PHY_ADDRESS_RESERVED_BITS | 0xfff)) == 0)
 
 #define CACHE_LINE_SIZE 64
 
