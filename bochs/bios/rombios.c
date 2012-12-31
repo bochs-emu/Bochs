@@ -10679,9 +10679,9 @@ post_init_pic:
   ret
 
 post_init_ivt:
-  ;; set all interrupts to default handler
+  ;; set first 120 interrupts to default handler
   xor  di, di         ;; offset index
-  mov  cx, #0x0100    ;; counter (256 interrupts)
+  mov  cx, #0x0078    ;; counter (120 interrupts)
   mov  ax, #0xF000
   shl  eax, #16
   mov  ax, #dummy_iret_handler
