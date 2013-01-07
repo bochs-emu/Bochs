@@ -49,6 +49,7 @@ CPUDB_OBJS = pentium_mmx.o \
              core2_penryn_t9600.o \
              corei5_lynnfield_750.o \
              corei5_arrandale_m520.o \
+             zambezi.o \
              corei7_sandy_bridge_2600K.o \
              corei7_ivy_bridge_3770K.o \
              atom_n270.o
@@ -209,6 +210,15 @@ pentium_mmx.o: pentium_mmx.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep
  ../descriptor.h ../instr.h ../ia_opcodes.h ../lazy_flags.h ../icache.h \
  ../apic.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
  ../fpu/control_w.h ../xmm.h pentium_mmx.h
+zambezi.o: zambezi.@CPP_SUFFIX@ ../../bochs.h \
+ ../../config.h ../../osdep.h ../../bx_debug/debug.h ../../config.h \
+ ../../osdep.h ../../gui/siminterface.h ../../cpudb.h \
+ ../../gui/paramtree.h ../../memory/memory.h ../../pc_system.h \
+ ../../gui/gui.h ../../instrument/stubs/instrument.h ../cpu.h ../cpuid.h \
+ ../crregs.h ../descriptor.h ../instr.h ../ia_opcodes.h ../lazy_flags.h \
+ ../icache.h ../apic.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
+ ../fpu/status_w.h ../fpu/control_w.h ../xmm.h phenomx3_8650_toliman.h \
+ ../../cpu/cpuid.h
 phenomx3_8650_toliman.o: phenomx3_8650_toliman.@CPP_SUFFIX@ ../../bochs.h \
  ../../config.h ../../osdep.h ../../bx_debug/debug.h ../../config.h \
  ../../osdep.h ../../gui/siminterface.h ../../cpudb.h \
