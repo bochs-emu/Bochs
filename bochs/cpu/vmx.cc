@@ -592,8 +592,8 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   }
 
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_PAUSE_LOOP_VMEXIT) {
-     vm->pause_loop_exiting_gap = VMread32(VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_GAP);
-     vm->pause_loop_exiting_window = VMread32(VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_WINDOW);
+     vm->ple.pause_loop_exiting_gap = VMread32(VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_GAP);
+     vm->ple.pause_loop_exiting_window = VMread32(VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_WINDOW);
   }
 
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VMFUNC_ENABLE)
@@ -1728,7 +1728,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_PAT_MSR) {
     BX_CPU_THIS_PTR msr.pat = guest.pat_msr;
   }
-  vm->last_pause_time = vm->first_pause_time = 0;
+  vm->ple.last_pause_time = vm->ple.first_pause_time = 0;
 #endif
 
   //
@@ -3155,8 +3155,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
 {
   if (v8086_mode()) {
-    BX_ERROR(("INVPCID: not recognized in v8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
+    BX_ERROR(("INVPCID: #GP - not recognized in v8086 mode"));
+    exception(BX_GP_EXCEPTION, 0);
   }
 
 #if BX_SUPPORT_VMX
@@ -3317,10 +3317,10 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
 #endif
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, executive_vmcsptr, BX_CPU_THIS_PTR vmcs.executive_vmcsptr);
 #if BX_SUPPORT_VMX >= 2
-  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, pause_loop_exiting_gap, BX_CPU_THIS_PTR vmcs.pause_loop_exiting_gap);
-  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, pause_loop_exiting_window, BX_CPU_THIS_PTR vmcs.pause_loop_exiting_window);
-  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, first_pause_time, BX_CPU_THIS_PTR vmcs.first_pause_time);
-  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, last_pause_time, BX_CPU_THIS_PTR vmcs.last_pause_time);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, pause_loop_exiting_gap, BX_CPU_THIS_PTR vmcs.ple.pause_loop_exiting_gap);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, pause_loop_exiting_window, BX_CPU_THIS_PTR vmcs.ple.pause_loop_exiting_window);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, first_pause_time, BX_CPU_THIS_PTR vmcs.ple.first_pause_time);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, last_pause_time, BX_CPU_THIS_PTR vmcs.ple.last_pause_time);
 #endif
 #if BX_SUPPORT_VMX >= 2
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, svi, BX_CPU_THIS_PTR vmcs.svi);

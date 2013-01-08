@@ -301,6 +301,9 @@ typedef struct bx_SVM_CONTROLS
   bx_bool nested_paging;
   Bit64u ncr3;
 
+  Bit16u pause_filter_count;
+//Bit16u pause_filter_threshold;
+
 } SVM_CONTROLS;
 
 #if defined(NEED_CPU_REG_SHORTCUTS)

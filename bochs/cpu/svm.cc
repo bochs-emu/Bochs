@@ -349,6 +349,11 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
   ctrls->v_intr_prio = vintr_control & 0xf;
   ctrls->v_ignore_tpr = (vintr_control >> 4) & 0x1;
 
+  if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_PAUSE_FILTER))
+    ctrls->pause_filter_count = vmcb_read16(SVM_CONTROL16_PAUSE_FILTER_COUNT);
+  else
+    ctrls->pause_filter_count = 0;
+
   ctrls->nested_paging = vmcb_read8(SVM_CONTROL_NESTED_PAGING_ENABLE);
   if (! BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_NESTED_PAGING)) {
      if (ctrls->nested_paging) {
@@ -926,6 +931,19 @@ void BX_CPU_C::SvmInterceptTaskSwitch(Bit16u tss_selector, unsigned source, bx_b
     qualification |= BX_CONST64(1) << 48;
 
   Svm_Vmexit(SVM_VMEXIT_TASK_SWITCH, tss_selector, qualification);
+}
+
+void BX_CPU_C::SvmInterceptPAUSE(void)
+{
+  if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_PAUSE_FILTER)) {
+    SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
+    if (ctrls->pause_filter_count) {
+      ctrls->pause_filter_count--;
+      return;
+    }
+  }
+
+  Svm_Vmexit(SVM_VMEXIT_PAUSE);
 }
 
 #endif

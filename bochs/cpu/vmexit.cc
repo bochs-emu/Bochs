@@ -149,16 +149,16 @@ void BX_CPU_C::VMexit_PAUSE(void)
 
 #if BX_SUPPORT_VMX >= 2
   if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_PAUSE_LOOP_VMEXIT) && CPL == 0) {
-    VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+    VMX_PLE *ple = &BX_CPU_THIS_PTR vmcs.ple;
     Bit64u currtime = bx_pc_system.time_ticks();
-    if ((currtime - vm->last_pause_time) > vm->pause_loop_exiting_gap) {
-      vm->first_pause_time = currtime;
+    if ((currtime - ple->last_pause_time) > ple->pause_loop_exiting_gap) {
+      ple->first_pause_time = currtime;
     }
     else {
-      if ((currtime - vm->first_pause_time) > vm->pause_loop_exiting_window)
+      if ((currtime - ple->first_pause_time) > ple->pause_loop_exiting_window)
         VMexit(VMX_VMEXIT_PAUSE, 0);
     }
-    vm->last_pause_time = currtime;
+    ple->last_pause_time = currtime;
   }
 #endif
 }

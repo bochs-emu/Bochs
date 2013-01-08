@@ -551,6 +551,18 @@ typedef struct bx_VMX_Cap
 #endif
 } VMX_CAP;
 
+#if BX_SUPPORT_VMX >= 2
+
+// used for pause loop exiting
+struct VMX_PLE {
+  Bit32u pause_loop_exiting_gap;
+  Bit32u pause_loop_exiting_window;
+  Bit64u last_pause_time;
+  Bit64u first_pause_time;
+};
+
+#endif
+
 typedef struct bx_VMCS
 {
   //
@@ -648,11 +660,7 @@ typedef struct bx_VMCS
    Bit64u executive_vmcsptr;
 
 #if BX_SUPPORT_VMX >= 2
-   // used for pause loop exiting
-   Bit32u pause_loop_exiting_gap;
-   Bit32u pause_loop_exiting_window;
-   Bit64u last_pause_time;
-   Bit64u first_pause_time;
+   VMX_PLE ple;
 #endif
 
 #if BX_SUPPORT_VMX >= 2
