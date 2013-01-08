@@ -11621,10 +11621,6 @@ int08_store_ticks:
 
 .org 0xfef3 ; Initial Interrupt Vector Offsets Loaded by POST
 
-
-.org 0xff00
-.ascii BIOS_COPYRIGHT_STRING
-
 ;------------------------------------------------
 ;- IRET Instruction for Dummy Interrupt Handler -
 ;------------------------------------------------
@@ -11788,5 +11784,6 @@ static Bit8u vgafont8[128*8]=
 ASM_START
 .org 0xcc00
 bios_table_area_end:
+.ascii BIOS_COPYRIGHT_STRING
 // bcc-generated data will be placed here
 ASM_END
