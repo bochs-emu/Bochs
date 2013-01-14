@@ -107,6 +107,7 @@ pending         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PENDING); }
 take            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TAKE); }
 dma             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DMA); }
 irq             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_IRQ); }
+tlb             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TLB); }
 u               |
 disasm          { BEGIN(DISASM); bxlval.sval = strdup(bxtext); return(BX_TOKEN_DISASM); }
 hex             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_HEX); }

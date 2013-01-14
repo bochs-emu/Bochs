@@ -80,6 +80,7 @@
 %token <sval> BX_TOKEN_TAKE
 %token <sval> BX_TOKEN_DMA
 %token <sval> BX_TOKEN_IRQ
+%token <sval> BX_TOKEN_TLB
 %token <sval> BX_TOKEN_HEX
 %token <sval> BX_TOKEN_DISASM
 %token <sval> BX_TOKEN_INSTRUMENT
@@ -179,6 +180,7 @@ command:
     | print_stack_command
     | watch_point_command
     | page_command
+    | tlb_command
     | show_command
     | symbol_command
     | where_command
@@ -269,6 +271,14 @@ page_command:
       BX_TOKEN_PAGE expression '\n'
       {
           bx_dbg_xlate_address($2);
+          free($1);
+      }
+    ;
+
+tlb_command:
+      BX_TOKEN_TLB expression '\n'
+      {
+          bx_dbg_tlb_lookup($2);
           free($1);
       }
     ;

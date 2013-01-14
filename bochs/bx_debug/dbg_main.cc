@@ -1412,6 +1412,14 @@ void bx_dbg_xlate_address(bx_lin_address laddr)
   }
 }
 
+void bx_dbg_tlb_lookup(bx_lin_address laddr)
+{
+  Bit32u index = BX_TLB_INDEX_OF(laddr, 0);
+  char cpu_param_name[16];
+  sprintf(cpu_param_name, "TLB.entry%d", index);
+  bx_dbg_show_param_command(cpu_param_name);
+}
+
 unsigned dbg_show_mask = 0;
 
 #define BX_DBG_SHOW_CALLRET  (Flag_call|Flag_ret)
