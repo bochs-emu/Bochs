@@ -264,6 +264,12 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_CONTROL_EPTP_LIST_ADDRESS:
     case VMCS_64BIT_CONTROL_EPTP_LIST_ADDRESS_HI:
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPTP_SWITCHING);
+
+    case VMCS_64BIT_CONTROL_VMREAD_BITMAP_ADDR:
+    case VMCS_64BIT_CONTROL_VMREAD_BITMAP_ADDR_HI:
+    case VMCS_64BIT_CONTROL_VMWRITE_BITMAP_ADDR:
+    case VMCS_64BIT_CONTROL_VMWRITE_BITMAP_ADDR_HI:
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_VMCS_SHADOWING);
 #endif
 
 #if BX_SUPPORT_VMX >= 2
@@ -502,8 +508,11 @@ void BX_CPU_C::init_vmx_capabilities(void)
   //   [11] RDRAND Exiting (require RDRAND instruction support)
   //   [12] Enable INVPCID instruction (require INVPCID instruction support)
   //   [13] Enable VM Functions
-  //    ...
+  //   [14] Enable VMCS Shadowing
+  //   [15] Reserved (must be '0)
   //   [16] RDSEED Exiting (require RDSEED instruction support)
+  //   [17] Reserved (must be '0)
+  //   [18] Support for EPT Violation (#VE) exception
 
   cap->vmx_vmexec_ctrl2_supported_bits = 0;
 
@@ -539,8 +548,16 @@ void BX_CPU_C::init_vmx_capabilities(void)
 #endif
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_RDRAND))
     cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_RDRAND_VMEXIT;
+#if BX_SUPPORT_VMX >= 2
+  if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_VMCS_SHADOWING))
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_VMCS_SHADOWING;
+#endif
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_RDSEED))
     cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_RDSEED_VMEXIT;
+#if BX_SUPPORT_VMX >= 2
+  if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_EXCEPTION))
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_EPT_VIOLATION_EXCEPTION;
+#endif
 
   // enable secondary vm exec controls if needed
   if (cap->vmx_vmexec_ctrl2_supported_bits != 0)

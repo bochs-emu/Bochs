@@ -355,6 +355,7 @@ struct BxExceptionInfo {
 #define BX_AC_EXCEPTION  17
 #define BX_MC_EXCEPTION  18
 #define BX_XM_EXCEPTION  19
+#define BX_VE_EXCEPTION  20
 
 #define BX_CPU_HANDLED_EXCEPTIONS  32
 
@@ -1022,17 +1023,6 @@ public: // for now...
   Bit32u xcr0_suppmask;
 #endif
 
-  /* SMM base register */
-  Bit32u smbase;
-
-#if BX_CPU_LEVEL >= 5
-  bx_regs_msr_t msr;
-#endif
-
-#if BX_CONFIGURE_MSRS
-  MSR *msrs[BX_MSR_MAX_INDEX];
-#endif
-
 #if BX_SUPPORT_FPU
   i387_t the_i387;
 #endif
@@ -1053,6 +1043,17 @@ public: // for now...
 
 #if BX_SUPPORT_APIC
   bx_local_apic_c lapic;
+#endif
+
+  /* SMM base register */
+  Bit32u smbase;
+
+#if BX_CPU_LEVEL >= 5
+  bx_regs_msr_t msr;
+#endif
+
+#if BX_CONFIGURE_MSRS
+  MSR *msrs[BX_MSR_MAX_INDEX];
 #endif
 
 #if BX_SUPPORT_VMX
@@ -2838,6 +2839,7 @@ public: // for now...
   BX_SMF BX_INSF_TYPE VPSIGNB_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPSIGNW_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPSIGND_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   BX_SMF BX_INSF_TYPE VPADDB_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPADDW_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPADDD_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

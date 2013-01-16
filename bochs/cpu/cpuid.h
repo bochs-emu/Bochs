@@ -163,6 +163,9 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_VMX_EPTP_SWITCHING        (1 << 16)              /* EPTP switching (VM Function 0) */
 #define BX_VMX_EPT_ACCESS_DIRTY      (1 << 17)              /* Extended Page Tables (EPT) A/D Bits */
 #define BX_VMX_VINTR_DELIVERY        (1 << 18)              /* Virtual Interrupt Delivery */
+#define BX_VMX_POSTED_INSTERRUPTS    (1 << 19)              /* Posted Interrupts support - not implemented yet */
+#define BX_VMX_VMCS_SHADOWING        (1 << 20)              /* VMCS Shadowing */
+#define BX_VMX_EPT_EXCEPTION         (1 << 21)              /* EPT Violation (#VE) exception - not implemented yet  */
 
 // CPUID defines - STD features CPUID[0x00000001].EDX
 // ----------------------------
@@ -316,7 +319,9 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [9:9]    Support for Enhanced REP MOVSB/STOSB
 //   [10:10]  Support for INVPCID instruction
 //   [11:11]  RTM: Restricted Transactional Memory
-//   [17:12]  reserved
+//   [12:12]  Supports Quality of Service (QoS) capability
+//   [13:13]  Deprecates FPU CS and FPU DS values
+//   [17:14]  reserved
 //   [18:18]  RDSEED instruction support
 //   [19:19]  ADCX/ADOX instructions support
 //   [20:20]  SMAP: Supervisor Mode Access Protection
@@ -334,8 +339,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT3_ENCHANCED_REP_STRINGS  (1 <<  9)
 #define BX_CPUID_EXT3_INVPCID                (1 << 10)
 #define BX_CPUID_EXT3_RTM                    (1 << 11)
-#define BX_CPUID_EXT3_RESERVED12             (1 << 12)
-#define BX_CPUID_EXT3_RESERVED13             (1 << 13)
+#define BX_CPUID_EXT3_QOS                    (1 << 12)
+#define BX_CPUID_EXT3_DEPRECATE_FCS_FDS      (1 << 13)
 #define BX_CPUID_EXT3_RESERVED14             (1 << 14)
 #define BX_CPUID_EXT3_RESERVED15             (1 << 15)
 #define BX_CPUID_EXT3_RESERVED16             (1 << 16)
