@@ -109,7 +109,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::stackPrefetch(bx_address offset, unsigned 
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access from this CPL
     // Assuming that we always can read if write access is OK
-    if (! (tlbEntry->accessBits & (0x2 | USER_PL))) {
+    if (tlbEntry->accessBits & (0x04 << USER_PL)) {
       BX_CPU_THIS_PTR espPageBias = (bx_address) pageOffset - offset;
       BX_CPU_THIS_PTR pAddrStackPage = tlbEntry->ppf;
       BX_CPU_THIS_PTR espHostPtr = (Bit8u*) tlbEntry->hostPageAddr;

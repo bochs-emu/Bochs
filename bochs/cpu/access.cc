@@ -259,12 +259,16 @@ BX_CPU_C::system_read_byte(bx_address laddr)
   bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
   if (tlbEntry->lpf == lpf) {
-    bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-    Bit32u pageOffset = PAGE_OFFSET(laddr);
-    Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
-    data = *hostAddr;
-    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, (tlbEntry->ppf | pageOffset), 1, 0, BX_READ, (Bit8u*) &data);
-    return data;
+    // See if the TLB entry privilege level allows us read access
+    // from this CPL.
+    if (tlbEntry->accessBits & 0x01) {
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
+      data = *hostAddr;
+      BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, (tlbEntry->ppf | pageOffset), 1, 0, BX_READ, (Bit8u*) &data);
+      return data;
+    }
   }
 
 #if BX_SUPPORT_X86_64
@@ -287,12 +291,16 @@ BX_CPU_C::system_read_word(bx_address laddr)
   bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
   if (tlbEntry->lpf == lpf) {
-    bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-    Bit32u pageOffset = PAGE_OFFSET(laddr);
-    Bit16u *hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
-    ReadHostWordFromLittleEndian(hostAddr, data);
-    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, (tlbEntry->ppf | pageOffset), 2, 0, BX_READ, (Bit8u*) &data);
-    return data;
+    // See if the TLB entry privilege level allows us read access
+    // from this CPL.
+    if (tlbEntry->accessBits & 0x01) {
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      Bit16u *hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
+      ReadHostWordFromLittleEndian(hostAddr, data);
+      BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, (tlbEntry->ppf | pageOffset), 2, 0, BX_READ, (Bit8u*) &data);
+      return data;
+    }
   }
 
 #if BX_SUPPORT_X86_64
@@ -315,12 +323,16 @@ BX_CPU_C::system_read_dword(bx_address laddr)
   bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
   if (tlbEntry->lpf == lpf) {
-    bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-    Bit32u pageOffset = PAGE_OFFSET(laddr);
-    Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
-    ReadHostDWordFromLittleEndian(hostAddr, data);
-    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, (tlbEntry->ppf | pageOffset), 4, 0, BX_READ, (Bit8u*) &data);
-    return data;
+    // See if the TLB entry privilege level allows us read access
+    // from this CPL.
+    if (tlbEntry->accessBits & 0x01) {
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
+      ReadHostDWordFromLittleEndian(hostAddr, data);
+      BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, (tlbEntry->ppf | pageOffset), 4, 0, BX_READ, (Bit8u*) &data);
+      return data;
+    }
   }
 
 #if BX_SUPPORT_X86_64
@@ -343,12 +355,16 @@ BX_CPU_C::system_read_qword(bx_address laddr)
   bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
   if (tlbEntry->lpf == lpf) {
-    bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-    Bit32u pageOffset = PAGE_OFFSET(laddr);
-    Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
-    ReadHostQWordFromLittleEndian(hostAddr, data);
-    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, (tlbEntry->ppf | pageOffset), 8, 0, BX_READ, (Bit8u*) &data);
-    return data;
+    // See if the TLB entry privilege level allows us read access
+    // from this CPL.
+    if (tlbEntry->accessBits & 0x01) {
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
+      ReadHostQWordFromLittleEndian(hostAddr, data);
+      BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, (tlbEntry->ppf | pageOffset), 8, 0, BX_READ, (Bit8u*) &data);
+      return data;
+    }
   }
 
 #if BX_SUPPORT_X86_64
@@ -371,7 +387,7 @@ BX_CPU_C::system_write_byte(bx_address laddr, Bit8u data)
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access
     // from this CPL.
-    if (! (tlbEntry->accessBits & 0x2)) {
+    if (tlbEntry->accessBits & 0x04) {
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
@@ -402,7 +418,7 @@ BX_CPU_C::system_write_word(bx_address laddr, Bit16u data)
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access
     // from this CPL.
-    if (! (tlbEntry->accessBits & 0x2)) {
+    if (tlbEntry->accessBits & 0x04) {
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
@@ -433,7 +449,7 @@ BX_CPU_C::system_write_dword(bx_address laddr, Bit32u data)
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access
     // from this CPL.
-    if (! (tlbEntry->accessBits & 0x2)) {
+    if (tlbEntry->accessBits & 0x04) {
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
@@ -464,7 +480,7 @@ BX_CPU_C::v2h_read_byte(bx_address laddr, bx_bool user)
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us read access
     // from this CPL.
-    if (! (tlbEntry->accessBits & user)) { // Read this pl OK.
+    if (tlbEntry->accessBits & (0x01 << user)) {
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
@@ -485,7 +501,7 @@ BX_CPU_C::v2h_write_byte(bx_address laddr, bx_bool user)
   {
     // See if the TLB entry privilege level allows us write access
     // from this CPL.
-    if (! (tlbEntry->accessBits & (0x2 | user))) {
+    if (tlbEntry->accessBits & (0x04 << user)) {
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);

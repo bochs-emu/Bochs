@@ -302,19 +302,26 @@ static const Bit8u priv_check[BX_PRIV_CHECK_SIZE] =
 //       The values in the following flags is based on the current CR0.WP
 //       value, necessitating a TLB flush when CR0.WP changes.
 //
-//       The test is:
-//         OK = (accessBits & ((E<<2) | (W<<1) | U)) == 0
+//       The test bit:
+//         OK = 1 << ((E<<2) | (W<<1) | U)
 //
 //       where E:1=Execute, 0=Data;
 //             W:1=Write, 0=Read;
 //             U:1=CPL3, 0=CPL0-2
-//
+//       
 //       Thus for reads, it is:
-//         OK =       (          U )
+//         OK = 0x01 << (          U )
 //       for writes:
-//         OK = 0x2 | (          U )
-//       and for code fetches:
-//         OK = 0x4 | (          U )
+//         OK = 0x04 << (          U )
+//       for code fetches:
+//         OK = 0x10 << (          U )
+//
+//     bit 5: Execute from User   privilege is OK
+//     bit 4: Execute from System privilege is OK
+//     bit 3: Write   from User   privilege is OK
+//     bit 2: Write   from System privilege is OK
+//     bit 1: Read    from User   privilege is OK
+//     bit 0: Read    from System privilege is OK
 //
 //       Note, that the TLB should have TLB_NoHostPtr bit set in the lpf when
 //       direct access through host pointer is NOT allowed for the page.
@@ -324,12 +331,14 @@ static const Bit8u priv_check[BX_PRIV_CHECK_SIZE] =
 //
 
 #define TLB_NoHostPtr   (0x800) /* set this bit when direct access is NOT allowed */
-
 #define TLB_GlobalPage  (0x80000000)
 
-#define TLB_SysOnly     (0x1)
-#define TLB_ReadOnly    (0x2)
-#define TLB_NoExecute   (0x4)
+#define TLB_SysReadOK     (0x01)
+#define TLB_UserReadOK    (0x02)
+#define TLB_SysWriteOK    (0x04)
+#define TLB_UserWriteOK   (0x08)
+#define TLB_SysExecuteOK  (0x10)
+#define TLB_UserExecuteOK (0x20)
 
 // === TLB Instrumentation section ==============================
 
@@ -1128,11 +1137,11 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned user, unsig
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
 
   // already looked up TLB for code access
-  if (TLB_LPFOf(tlbEntry->lpf) == lpf)
+  if (! isExecute && TLB_LPFOf(tlbEntry->lpf) == lpf)
   {
     paddress = tlbEntry->ppf | poffset;
 
-    if (! (tlbEntry->accessBits & ((isExecute<<2) | (isWrite<<1) | user)))
+    if (tlbEntry->accessBits & (1 << (/*(isExecute<<2) |*/ (isWrite<<1) | user)))
       return paddress;
 
     // The current access does not have permission according to the info
@@ -1191,27 +1200,47 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned user, unsig
   tlbEntry->ppf = ppf;
   tlbEntry->accessBits = 0;
 
-  if ((combined_access & 4) == 0) { // System
-    tlbEntry->accessBits |= TLB_SysOnly;
-    if (! isWrite)
-      tlbEntry->accessBits |= TLB_ReadOnly;
+  if (! BX_CPU_THIS_PTR cr0.get_PG()) {
+    tlbEntry->accessBits |= TLB_SysReadOK | TLB_UserReadOK |
+                            TLB_SysWriteOK | TLB_UserWriteOK |
+                            TLB_SysExecuteOK | TLB_UserExecuteOK;
   }
-  else {
-    // Current operation is a read or a page is read only
-    // Not efficient handling of system write to user read only page:
-    // hopefully it is very rare case, optimize later
-    if (! isWrite || (combined_access & 2) == 0) {
-       tlbEntry->accessBits |= TLB_ReadOnly;
-    }
+  else if ((combined_access & 4) == 0) { // System Page
+    tlbEntry->accessBits |= TLB_SysReadOK;
+    if (isWrite)
+      tlbEntry->accessBits |= TLB_SysWriteOK;
+
+    if (isExecute)
+      tlbEntry->accessBits |= TLB_SysExecuteOK;
+#if BX_CPU_LEVEL >= 6
+    // EFER.NXE change won't flush TLB
+    else if (! BX_CPU_THIS_PTR cr4.get_PAE())
+      tlbEntry->accessBits |= TLB_SysExecuteOK;
+#endif
+  }
+  else { // User Page
+    tlbEntry->accessBits |= TLB_UserReadOK | TLB_SysReadOK;
+    if (isWrite)
+      tlbEntry->accessBits |= TLB_UserWriteOK | TLB_SysWriteOK;
+
+    if (isExecute)
+      tlbEntry->accessBits |= TLB_SysExecuteOK;
+#if BX_CPU_LEVEL >= 6
+    // EFER.NXE change won't flush TLB
+    else if (! BX_CPU_THIS_PTR cr4.get_PAE())
+      tlbEntry->accessBits |= TLB_SysExecuteOK;
+
+    if (BX_CPU_THIS_PTR cr4.get_SMEP())
+      tlbEntry->accessBits &= ~TLB_SysExecuteOK;
+
+    if (BX_CPU_THIS_PTR cr4.get_SMAP())
+      tlbEntry->accessBits &= ~(TLB_SysReadOK | TLB_SysWriteOK);
+#endif
   }
 
 #if BX_CPU_LEVEL >= 6
   if (combined_access & 0x100) // Global bit
     tlbEntry->accessBits |= TLB_GlobalPage;
-
-  // EFER.NXE change won't flush TLB
-  if (BX_CPU_THIS_PTR cr4.get_PAE() && rw != BX_EXECUTE)
-    tlbEntry->accessBits |= TLB_NoExecute;
 #endif
 
   // Attempt to get a host pointer to this physical page. Put that
