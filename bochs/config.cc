@@ -3194,6 +3194,64 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 }
 
 
+int bx_write_param_list(FILE *fp, bx_list_c *base)
+{
+  char bxrcline[BX_PATHNAME_LEN], tmpstr[BX_PATHNAME_LEN], tmpbyte[4];
+
+  if (base == NULL) return -1;
+  sprintf(bxrcline, "%s: ", base->get_name());
+  for (int i = 0; i < base->get_size(); i++) {
+    bx_param_c *param = base->get(i);
+    sprintf(tmpstr, "%s=", param->get_name());
+    strcat(bxrcline, tmpstr);
+    switch (param->get_type()) {
+      case BXT_PARAM_NUM:
+        if (((bx_param_num_c*)param)->get_base() == BASE_DEC) {
+          sprintf(tmpstr, FMT_LL "d", ((bx_param_num_c*)param)->get64());
+        } else {
+          sprintf(tmpstr, "0x" FMT_LL "x", ((bx_param_num_c*)param)->get64());
+        }
+        break;
+      case BXT_PARAM_BOOL:
+        sprintf(tmpstr, "%d", ((bx_param_bool_c*)param)->get());
+        break;
+      case BXT_PARAM_ENUM:
+        sprintf(tmpstr, "%s", ((bx_param_enum_c*)param)->get_selected());
+        break;
+      case BXT_PARAM_STRING:
+        if (((bx_param_string_c*)param)->get_options() & bx_param_string_c::RAW_BYTES) {
+          tmpstr[0] = 0;
+          for (i = 0; i < ((bx_param_string_c*)param)->get_maxsize(); i++) {
+            if (i > 0) {
+              tmpbyte[0] = ((bx_param_string_c*)param)->get_separator();
+              tmpbyte[1] = 0;
+              strcat(tmpstr, tmpbyte);
+            }
+            sprintf(tmpbyte, "%02x", (Bit8u)((bx_param_string_c*)param)->getptr()[i]);
+            strcat(tmpstr, tmpbyte);
+          }
+        } else {
+          sprintf(tmpstr, "\"%s\"", ((bx_param_string_c*)param)->getptr());
+        }
+        break;
+      default:
+        BX_ERROR(("bx_write_param_list(): unsupported parameter type"));
+    }
+    strcat(bxrcline, tmpstr);
+    if ((i + 1) < base->get_size()) {
+      if (strlen(bxrcline) > 80) {
+        fprintf(fp, "%s\n", bxrcline);
+        sprintf(bxrcline, "%s: ", base->get_name());
+      } else {
+        strcat(bxrcline, ", ");
+      }
+    } else {
+      fprintf(fp, "%s\n", bxrcline);
+    }
+  }
+  return 0;
+}
+
 static const char *fdtypes[] = {
   "none", "1_2", "1_44", "2_88", "720k", "360k", "160k", "180k", "320k"
 };
@@ -3585,64 +3643,7 @@ int bx_write_configuration(const char *rc, int overwrite)
 #if BX_CPU_LEVEL >= 4
   if (! SIM->get_param_enum(BXPN_CPU_MODEL)->get()) {
     // dump only when using BX_GENERIC CPUDB profile
-    fprintf(fp, "cpuid: family=%d, model=0x%02x, stepping=%d", 
-      SIM->get_param_num(BXPN_CPUID_FAMILY)->get(),
-      SIM->get_param_num(BXPN_CPUID_MODEL)->get(),
-      SIM->get_param_num(BXPN_CPUID_STEPPING)->get());
-#if BX_CPU_LEVEL >= 5
-    fprintf(fp, ", mmx=%d, apic=%s", SIM->get_param_bool(BXPN_CPUID_MMX)->get(),
-      SIM->get_param_enum(BXPN_CPUID_APIC)->get_selected());
-#endif
-#if BX_CPU_LEVEL >= 6
-    fprintf(fp, ", sse=%s, sse4a=%d, misaligned_sse=%d, sep=%d, aes=%d, xsave=%d, xsaveopt=%d, movbe=%d, adx=%d, smep=%d, smap=%d",
-      SIM->get_param_enum(BXPN_CPUID_SSE)->get_selected(),
-      SIM->get_param_bool(BXPN_CPUID_SSE4A)->get(),
-      SIM->get_param_bool(BXPN_CPUID_MISALIGNED_SSE)->get(),
-      SIM->get_param_bool(BXPN_CPUID_SEP)->get(),
-      SIM->get_param_bool(BXPN_CPUID_AES)->get(),
-      SIM->get_param_bool(BXPN_CPUID_XSAVE)->get(),
-      SIM->get_param_bool(BXPN_CPUID_XSAVEOPT)->get(),
-      SIM->get_param_bool(BXPN_CPUID_MOVBE)->get(),
-      SIM->get_param_bool(BXPN_CPUID_ADX)->get(),
-      SIM->get_param_bool(BXPN_CPUID_SMEP)->get(),
-      SIM->get_param_bool(BXPN_CPUID_SMAP)->get());
-#if BX_SUPPORT_AVX
-    fprintf(fp, ", avx=%d, avx_f16c=%d, avx_fma=%d, bmi=%d, xop=%d, tbm=%d, fma4=%d", 
-      SIM->get_param_num(BXPN_CPUID_AVX)->get(),
-      SIM->get_param_bool(BXPN_CPUID_AVX_F16CVT)->get(),
-      SIM->get_param_bool(BXPN_CPUID_AVX_FMA)->get(),
-      SIM->get_param_num(BXPN_CPUID_BMI)->get(),
-      SIM->get_param_bool(BXPN_CPUID_XOP)->get(),
-      SIM->get_param_bool(BXPN_CPUID_TBM)->get(),
-      SIM->get_param_bool(BXPN_CPUID_FMA4)->get());
-#endif
-#if BX_SUPPORT_VMX
-    fprintf(fp, ", vmx=%d", SIM->get_param_num(BXPN_CPUID_VMX)->get());
-#endif
-#if BX_SUPPORT_SVM
-    fprintf(fp, ", svm=%d", SIM->get_param_num(BXPN_CPUID_SVM)->get());
-#endif
-#if BX_SUPPORT_X86_64
-    fprintf(fp, ", x86_64=%d, 1g_pages=%d, pcid=%d, fsgsbase=%d",
-      SIM->get_param_bool(BXPN_CPUID_X86_64)->get(),
-      SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get(),
-      SIM->get_param_bool(BXPN_CPUID_PCID)->get(),
-      SIM->get_param_bool(BXPN_CPUID_FSGSBASE)->get());
-#endif
-#if BX_SUPPORT_MONITOR_MWAIT
-    fprintf(fp, ", mwait=%d",
-      SIM->get_param_bool(BXPN_CPUID_MWAIT)->get());
-#endif
-#endif
-    fprintf(fp, "\n");
-
-    const char *vendor_string = SIM->get_param_string(BXPN_VENDOR_STRING)->getptr();
-    if (vendor_string)
-      fprintf(fp, "cpuid: vendor_string=\"%s\"\n", vendor_string);
-    const char *brand_string = SIM->get_param_string(BXPN_BRAND_STRING)->getptr();
-    if (brand_string)
-      fprintf(fp, "cpuid: brand_string=\"%s\"\n", brand_string);
-    fprintf(fp, "\n");
+    bx_write_param_list(fp, (bx_list_c*) SIM->get_param("cpuid"));
   }
 #endif
 
