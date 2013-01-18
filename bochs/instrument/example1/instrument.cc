@@ -171,7 +171,7 @@ void bxInstrumentation::bx_instr_hwinterrupt(unsigned vector, Bit16u cs, bx_addr
   }
 }
 
-void bxInstrumentation::bx_instr_lin_access(bx_address lin, bx_phy_adress phy, unsigned len, unsigned rw)
+void bxInstrumentation::bx_instr_lin_access(bx_address lin, bx_phy_address phy, unsigned len, unsigned rw)
 {
   if(!active || !ready) return;
 
