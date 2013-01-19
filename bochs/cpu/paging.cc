@@ -1200,42 +1200,44 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned user, unsig
   tlbEntry->ppf = ppf;
   tlbEntry->accessBits = 0;
 
-  if (! BX_CPU_THIS_PTR cr0.get_PG()) {
-    tlbEntry->accessBits |= TLB_SysReadOK | TLB_UserReadOK |
-                            TLB_SysWriteOK | TLB_UserWriteOK |
-                            TLB_SysExecuteOK | TLB_UserExecuteOK;
-  }
-  else if ((combined_access & 4) == 0) { // System Page
-    tlbEntry->accessBits |= TLB_SysReadOK;
-    if (isWrite)
-      tlbEntry->accessBits |= TLB_SysWriteOK;
+  tlbEntry->accessBits |= TLB_SysReadOK;
+  if (isWrite)
+    tlbEntry->accessBits |= TLB_SysWriteOK;
+  if (isExecute)
+    tlbEntry->accessBits |= TLB_SysExecuteOK;
 
-    if (isExecute)
-      tlbEntry->accessBits |= TLB_SysExecuteOK;
-#if BX_CPU_LEVEL >= 6
-    // EFER.NXE change won't flush TLB
-    else if (! BX_CPU_THIS_PTR cr4.get_PAE())
-      tlbEntry->accessBits |= TLB_SysExecuteOK;
+  if (! BX_CPU_THIS_PTR cr0.get_PG()
+#if BX_SUPPORT_VMX >= 2
+        && ! BX_CPU_THIS_PTR in_vmx_guest
 #endif
-  }
-  else { // User Page
-    tlbEntry->accessBits |= TLB_UserReadOK | TLB_SysReadOK;
-    if (isWrite)
-      tlbEntry->accessBits |= TLB_UserWriteOK | TLB_SysWriteOK;
-
-    if (isExecute)
-      tlbEntry->accessBits |= TLB_SysExecuteOK;
-#if BX_CPU_LEVEL >= 6
-    // EFER.NXE change won't flush TLB
-    else if (! BX_CPU_THIS_PTR cr4.get_PAE())
-      tlbEntry->accessBits |= TLB_SysExecuteOK;
-
-    if (BX_CPU_THIS_PTR cr4.get_SMEP())
-      tlbEntry->accessBits &= ~TLB_SysExecuteOK;
-
-    if (BX_CPU_THIS_PTR cr4.get_SMAP())
-      tlbEntry->accessBits &= ~(TLB_SysReadOK | TLB_SysWriteOK);
+#if BX_SUPPORT_SVM
+        && ! (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED)
 #endif
+    ) {
+    tlbEntry->accessBits |= TLB_UserReadOK |
+                            TLB_UserWriteOK |
+                            TLB_UserExecuteOK;
+  }
+  else {
+    if ((combined_access & 4) != 0) { // User Page
+
+      if (user) {
+        tlbEntry->accessBits |= TLB_UserReadOK;
+        if (isWrite)
+          tlbEntry->accessBits |= TLB_UserWriteOK;
+        if (isExecute)
+          tlbEntry->accessBits |= TLB_UserExecuteOK;
+      }
+
+#if BX_CPU_LEVEL >= 6
+      if (BX_CPU_THIS_PTR cr4.get_SMEP())
+        tlbEntry->accessBits &= ~TLB_SysExecuteOK;
+
+      if (BX_CPU_THIS_PTR cr4.get_SMAP())
+        tlbEntry->accessBits &= ~(TLB_SysReadOK | TLB_SysWriteOK);
+#endif
+
+    }
   }
 
 #if BX_CPU_LEVEL >= 6
