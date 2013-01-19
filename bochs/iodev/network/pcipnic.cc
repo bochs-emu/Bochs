@@ -89,8 +89,7 @@ Bit32s pnic_options_parser(const char *context, int num_params, char *params[])
 
 Bit32s pnic_options_save(FILE *fp)
 {
-  SIM->write_pci_nic_options(fp, (bx_list_c*) SIM->get_param(BXPN_PNIC));
-  return 0;
+  return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_PNIC), 0);
 }
 
 // device plugin entry points
@@ -147,7 +146,7 @@ void bx_pcipnic_c::init(void)
     return;
   }
 
-  memcpy(BX_PNIC_THIS s.macaddr, SIM->get_param_string("macaddr", base)->getptr(), 6);
+  memcpy(BX_PNIC_THIS s.macaddr, SIM->get_param_string("mac", base)->getptr(), 6);
 
   BX_PNIC_THIS s.devfunc = 0x00;
   DEV_register_pci_handlers(this, &BX_PNIC_THIS s.devfunc, BX_PLUGIN_PCIPNIC,

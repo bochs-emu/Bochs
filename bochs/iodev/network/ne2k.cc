@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -129,26 +129,7 @@ Bit32s ne2k_options_parser(const char *context, int num_params, char *params[])
 
 Bit32s ne2k_options_save(FILE *fp)
 {
-  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
-  fprintf(fp, "ne2k: enabled=%d", SIM->get_param_bool("enabled", base)->get());
-  if (SIM->get_param_bool("enabled", base)->get()) {
-    char *ptr = SIM->get_param_string("macaddr", base)->getptr();
-    fprintf(fp, ", ioaddr=0x%x, irq=%d, mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s, bootrom=%s",
-      SIM->get_param_num("ioaddr", base)->get(),
-      SIM->get_param_num("irq", base)->get(),
-      (unsigned int)(0xff & ptr[0]),
-      (unsigned int)(0xff & ptr[1]),
-      (unsigned int)(0xff & ptr[2]),
-      (unsigned int)(0xff & ptr[3]),
-      (unsigned int)(0xff & ptr[4]),
-      (unsigned int)(0xff & ptr[5]),
-      SIM->get_param_enum("ethmod", base)->get_selected(),
-      SIM->get_param_string("ethdev", base)->getptr(),
-      SIM->get_param_string("script", base)->getptr(),
-      SIM->get_param_string("bootrom", base)->getptr());
-  }
-  fprintf(fp, "\n");
-  return 0;
+  return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_NE2K), 0);
 }
 
 // device plugin entry points
@@ -208,7 +189,7 @@ void bx_ne2k_c::init(void)
     ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("ne2k"))->set(0);
     return;
   }
-  memcpy(macaddr, SIM->get_param_string("macaddr", base)->getptr(), 6);
+  memcpy(macaddr, SIM->get_param_string("mac", base)->getptr(), 6);
   strcpy(devname, "NE2000 NIC");
   BX_NE2K_THIS s.pci_enabled = SIM->is_pci_device(BX_PLUGIN_NE2K);
 

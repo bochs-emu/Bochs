@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2012  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -174,7 +174,7 @@ void bx_init_std_nic_options(const char *name, bx_list_c *menu)
 
   sprintf(descr, "MAC address of the %s device. Don't use an address of a machine on your net.", name);
   macaddr = new bx_param_string_c(menu,
-    "macaddr",
+    "mac",
     "MAC Address",
     descr,
     "", 6);
@@ -2096,7 +2096,7 @@ int bx_parse_nic_params(const char *context, const char *param, bx_list_c *base)
     }
     for (n=0;n<6;n++)
       tmpchar[n] = (unsigned char)tmp[n];
-    SIM->get_param_string("macaddr", base)->set(tmpchar);
+    SIM->get_param_string("mac", base)->set(tmpchar);
     valid |= 0x04;
   } else if (!strncmp(param, "ethmod=", 7)) {
     if (!SIM->get_param_enum("ethmod", base)->set_by_name(&param[7]))
@@ -3194,56 +3194,62 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 }
 
 
-int bx_write_param_list(FILE *fp, bx_list_c *base)
+int bx_write_param_list(FILE *fp, bx_list_c *base, bx_bool multiline)
 {
   char bxrcline[BX_PATHNAME_LEN], tmpstr[BX_PATHNAME_LEN], tmpbyte[4];
 
   if (base == NULL) return -1;
+  int p = 0;
   sprintf(bxrcline, "%s: ", base->get_name());
   for (int i = 0; i < base->get_size(); i++) {
     bx_param_c *param = base->get(i);
-    sprintf(tmpstr, "%s=", param->get_name());
-    strcat(bxrcline, tmpstr);
-    switch (param->get_type()) {
-      case BXT_PARAM_NUM:
-        if (((bx_param_num_c*)param)->get_base() == BASE_DEC) {
-          sprintf(tmpstr, FMT_LL "d", ((bx_param_num_c*)param)->get64());
-        } else {
-          sprintf(tmpstr, "0x" FMT_LL "x", ((bx_param_num_c*)param)->get64());
-        }
-        break;
-      case BXT_PARAM_BOOL:
-        sprintf(tmpstr, "%d", ((bx_param_bool_c*)param)->get());
-        break;
-      case BXT_PARAM_ENUM:
-        sprintf(tmpstr, "%s", ((bx_param_enum_c*)param)->get_selected());
-        break;
-      case BXT_PARAM_STRING:
-        if (((bx_param_string_c*)param)->get_options() & bx_param_string_c::RAW_BYTES) {
-          tmpstr[0] = 0;
-          for (i = 0; i < ((bx_param_string_c*)param)->get_maxsize(); i++) {
-            if (i > 0) {
-              tmpbyte[0] = ((bx_param_string_c*)param)->get_separator();
-              tmpbyte[1] = 0;
+    if (param->get_enabled()) {
+      if (p > 0) {
+        strcat(bxrcline, ", ");
+      }
+      sprintf(tmpstr, "%s=", param->get_name());
+      strcat(bxrcline, tmpstr);
+      switch (param->get_type()) {
+        case BXT_PARAM_NUM:
+          if (((bx_param_num_c*)param)->get_base() == BASE_DEC) {
+            sprintf(tmpstr, FMT_LL "d", ((bx_param_num_c*)param)->get64());
+          } else {
+            sprintf(tmpstr, "0x" FMT_LL "x", ((bx_param_num_c*)param)->get64());
+          }
+          break;
+        case BXT_PARAM_BOOL:
+          sprintf(tmpstr, "%d", ((bx_param_bool_c*)param)->get());
+          break;
+        case BXT_PARAM_ENUM:
+          sprintf(tmpstr, "%s", ((bx_param_enum_c*)param)->get_selected());
+          break;
+        case BXT_PARAM_STRING:
+          if (((bx_param_string_c*)param)->get_options() & bx_param_string_c::RAW_BYTES) {
+            tmpstr[0] = 0;
+            for (int j = 0; j < ((bx_param_string_c*)param)->get_maxsize(); j++) {
+              if (j > 0) {
+                tmpbyte[0] = ((bx_param_string_c*)param)->get_separator();
+                tmpbyte[1] = 0;
+                strcat(tmpstr, tmpbyte);
+              }
+              sprintf(tmpbyte, "%02x", (Bit8u)((bx_param_string_c*)param)->getptr()[j]);
               strcat(tmpstr, tmpbyte);
             }
-            sprintf(tmpbyte, "%02x", (Bit8u)((bx_param_string_c*)param)->getptr()[i]);
-            strcat(tmpstr, tmpbyte);
+          } else {
+            sprintf(tmpstr, "\"%s\"", ((bx_param_string_c*)param)->getptr());
           }
-        } else {
-          sprintf(tmpstr, "\"%s\"", ((bx_param_string_c*)param)->getptr());
-        }
-        break;
-      default:
-        BX_ERROR(("bx_write_param_list(): unsupported parameter type"));
+          break;
+        default:
+          BX_ERROR(("bx_write_param_list(): unsupported parameter type"));
+      }
+      strcat(bxrcline, tmpstr);
+      p++;
     }
-    strcat(bxrcline, tmpstr);
     if ((i + 1) < base->get_size()) {
-      if (strlen(bxrcline) > 80) {
+      if (multiline && (strlen(bxrcline) > 80)) {
         fprintf(fp, "%s\n", bxrcline);
         sprintf(bxrcline, "%s: ", base->get_name());
-      } else {
-        strcat(bxrcline, ", ");
+        p = 0;
       }
     } else {
       fprintf(fp, "%s\n", bxrcline);
@@ -3362,27 +3368,6 @@ int bx_write_usb_options(FILE *fp, int maxports, bx_list_c *base)
     }
   }
   fprintf(fp, "\n");
-  return 0;
-}
-
-int bx_write_pci_nic_options(FILE *fp, bx_list_c *base)
-{
-  fprintf (fp, "%s: enabled=%d", base->get_name(), SIM->get_param_bool("enabled", base)->get());
-  if (SIM->get_param_bool("enabled", base)->get()) {
-    char *ptr = SIM->get_param_string("macaddr", base)->getptr();
-    fprintf (fp, ", mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s, bootrom=%s",
-      (unsigned int)(0xff & ptr[0]),
-      (unsigned int)(0xff & ptr[1]),
-      (unsigned int)(0xff & ptr[2]),
-      (unsigned int)(0xff & ptr[3]),
-      (unsigned int)(0xff & ptr[4]),
-      (unsigned int)(0xff & ptr[5]),
-      SIM->get_param_enum("ethmod", base)->get_selected(),
-      SIM->get_param_string("ethdev", base)->getptr(),
-      SIM->get_param_string("script", base)->getptr(),
-      SIM->get_param_string("bootrom", base)->getptr());
-  }
-  fprintf (fp, "\n");
   return 0;
 }
 
@@ -3643,7 +3628,7 @@ int bx_write_configuration(const char *rc, int overwrite)
 #if BX_CPU_LEVEL >= 4
   if (! SIM->get_param_enum(BXPN_CPU_MODEL)->get()) {
     // dump only when using BX_GENERIC CPUDB profile
-    bx_write_param_list(fp, (bx_list_c*) SIM->get_param("cpuid"));
+    bx_write_param_list(fp, (bx_list_c*) SIM->get_param("cpuid"), 1);
   }
 #endif
 

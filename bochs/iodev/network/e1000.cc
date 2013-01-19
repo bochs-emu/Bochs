@@ -12,7 +12,7 @@
 //  Copyright (c) 2007 Dan Aloni
 //  Copyright (c) 2004 Antony T Curtis
 //
-//  Copyright (C) 2011  The Bochs Project
+//  Copyright (C) 2011-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -335,8 +335,7 @@ Bit32s e1000_options_parser(const char *context, int num_params, char *params[])
 
 Bit32s e1000_options_save(FILE *fp)
 {
-  SIM->write_pci_nic_options(fp, (bx_list_c*) SIM->get_param(BXPN_E1000));
-  return 0;
+  return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_E1000), 0);
 }
 
 // device plugin entry points
@@ -454,7 +453,7 @@ void bx_e1000_c::init(void)
     ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("e1000"))->set(0);
     return;
   }
-  memcpy(macaddr, SIM->get_param_string("macaddr", base)->getptr(), 6);
+  memcpy(macaddr, SIM->get_param_string("mac", base)->getptr(), 6);
 
   memcpy(BX_E1000_THIS s.eeprom_data, e1000_eeprom_template,
          sizeof(e1000_eeprom_template));

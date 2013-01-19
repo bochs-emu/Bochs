@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -763,7 +763,7 @@ public:
   virtual int  parse_nic_params(const char *context, const char *param, bx_list_c *base) {return 0;}
   virtual int  parse_usb_port_params(const char *context, bx_bool devopt,
                                      const char *param, int maxports, bx_list_c *base) {return 0;}
-  virtual int  write_pci_nic_options(FILE *fp, bx_list_c *base) {return 0;}
+  virtual int  write_param_list(FILE *fp, bx_list_c *base, bx_bool multiline) {return 0;}
   virtual int  write_usb_options(FILE *fp, int maxports, bx_list_c *base) {return 0;}
 };
 
