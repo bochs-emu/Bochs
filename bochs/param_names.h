@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2011  The Bochs Project
+//  Copyright (C) 2009-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -120,6 +120,7 @@
 #define BXPN_KBD_USEMAPPING              "keyboard_mouse.keyboard.use_mapping"
 #define BXPN_KBD_KEYMAP                  "keyboard_mouse.keyboard.keymap"
 #define BXPN_USER_SHORTCUT               "keyboard_mouse.keyboard.user_shortcut"
+#define BXPN_MOUSE                       "keyboard_mouse.mouse"
 #define BXPN_MOUSE_TYPE                  "keyboard_mouse.mouse.type"
 #define BXPN_MOUSE_ENABLED               "keyboard_mouse.mouse.enabled"
 #define BXPN_MOUSE_TOGGLE                "keyboard_mouse.mouse.toggle"

@@ -139,7 +139,7 @@ Bit32s es1370_options_parser(const char *context, int num_params, char *params[]
 
 Bit32s es1370_options_save(FILE *fp)
 {
-  return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370), 0);
+  return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370), NULL, 0);
 }
 
 // device plugin entry points

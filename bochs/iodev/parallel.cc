@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -53,7 +53,7 @@ void parport_init_options(void)
       (i==0)? 1 : 0);  // only enable #1 by default
     sprintf(label, "Parallel port #%d output file", i+1);
     sprintf(descr, "Data written to parport#%d by the guest OS is written to this file", i+1);
-    bx_param_filename_c *path = new bx_param_filename_c(menu, "outfile", label, descr,
+    bx_param_filename_c *path = new bx_param_filename_c(menu, "file", label, descr,
       "", BX_PATHNAME_LEN);
     path->set_extension("out");
     bx_list_c *deplist = new bx_list_c(NULL);
@@ -80,7 +80,7 @@ Bit32s parport_options_parser(const char *context, int num_params, char *params[
       if (!strncmp(params[i], "enabled=", 8)) {
         SIM->get_param_bool("enabled", base)->set(atol(&params[i][8]));
       } else if (!strncmp(params[i], "file=", 5)) {
-        SIM->get_param_string("outfile", base)->set(&params[i][5]);
+        SIM->get_param_string("file", base)->set(&params[i][5]);
         SIM->get_param_bool("enabled", base)->set(1);
       } else {
         BX_ERROR(("%s: unknown parameter for parport%d ignored.", context, idx));
@@ -94,16 +94,13 @@ Bit32s parport_options_parser(const char *context, int num_params, char *params[
 
 Bit32s parport_options_save(FILE *fp)
 {
-  char pname[20];
+  char pname[20], optname[10];
 
   for (int i=0; i<BX_N_PARALLEL_PORTS; i++) {
     sprintf(pname, "ports.parallel.%d", i+1);
     bx_list_c *base = (bx_list_c*) SIM->get_param(pname);
-    fprintf(fp, "parport%d: enabled=%d", i+1, SIM->get_param_bool("enabled", base)->get());
-    if (SIM->get_param_bool("enabled", base)->get()) {
-      fprintf(fp, ", file=\"%s\"", SIM->get_param_string("outfile", base)->getptr());
-    }
-    fprintf(fp, "\n");
+    sprintf(optname, "parport%d", i+1);
+    SIM->write_param_list(fp, base, optname, 0);
   }
   return 0;
 }
@@ -195,7 +192,7 @@ void bx_parallel_c::init(void)
 
       BX_PAR_THIS s[i].initmode = 0;
       /* output file */
-      char *outfile = SIM->get_param_string("outfile", base)->getptr();
+      char *outfile = SIM->get_param_string("file", base)->getptr();
       if (strlen(outfile) > 0) {
         s[i].output = fopen(outfile, "wb");
         if (!s[i].output)

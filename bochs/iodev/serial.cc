@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2009  The Bochs Project
+//  Copyright (C) 2004-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -137,17 +137,13 @@ Bit32s serial_options_parser(const char *context, int num_params, char *params[]
 
 Bit32s serial_options_save(FILE *fp)
 {
-  char pname[20];
+  char pname[20], optname[6];
 
   for (int i=0; i<BX_N_SERIAL_PORTS; i++) {
     sprintf(pname, "ports.serial.%d", i+1);
     bx_list_c *base = (bx_list_c*) SIM->get_param(pname);
-    fprintf(fp, "com%d: enabled=%d", i+1, SIM->get_param_bool("enabled", base)->get());
-    if (SIM->get_param_bool("enabled", base)->get()) {
-      fprintf(fp, ", mode=%s", SIM->get_param_enum("mode", base)->get_selected());
-      fprintf(fp, ", dev=\"%s\"", SIM->get_param_string("dev", base)->getptr());
-    }
-    fprintf(fp, "\n");
+    sprintf(optname, "com%d", i+1);
+    SIM->write_param_list(fp, base, optname, 0);
   }
   return 0;
 }

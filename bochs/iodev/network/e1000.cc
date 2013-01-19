@@ -335,7 +335,7 @@ Bit32s e1000_options_parser(const char *context, int num_params, char *params[])
 
 Bit32s e1000_options_save(FILE *fp)
 {
-  return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_E1000), 0);
+  return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_E1000), NULL, 0);
 }
 
 // device plugin entry points

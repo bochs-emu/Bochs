@@ -203,7 +203,7 @@ public:
   virtual int  parse_nic_params(const char *context, const char *param, bx_list_c *base);
   virtual int  parse_usb_port_params(const char *context, bx_bool devopt,
                                      const char *param, int maxports, bx_list_c *base);
-  virtual int  write_param_list(FILE *fp, bx_list_c *base, bx_bool multiline);
+  virtual int  write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool multiline);
   virtual int  write_usb_options(FILE *fp, int maxports, bx_list_c *base);
 
 private:
@@ -1469,9 +1469,9 @@ int bx_real_sim_c::parse_usb_port_params(const char *context, bx_bool devopt,
   return bx_parse_usb_port_params(context, devopt, param, maxports, base);
 }
 
-int bx_real_sim_c::write_param_list(FILE *fp, bx_list_c *base, bx_bool multiline)
+int bx_real_sim_c::write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool multiline)
 {
-  return bx_write_param_list(fp, base, multiline);
+  return bx_write_param_list(fp, base, optname, multiline);
 }
 
 int bx_real_sim_c::write_usb_options(FILE *fp, int maxports, bx_list_c *base)

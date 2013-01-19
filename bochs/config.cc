@@ -2839,7 +2839,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
-        if (parse_param_bool(params[1], 8, BXPN_MOUSE_ENABLED) < 0) {
+        if (parse_param_bool(params[i], 8, BXPN_MOUSE_ENABLED) < 0) {
           PARSE_ERR(("%s: mouse directive malformed.", context));
         }
       } else if (!strncmp(params[i], "type=", 5)) {
@@ -3194,13 +3194,17 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 }
 
 
-int bx_write_param_list(FILE *fp, bx_list_c *base, bx_bool multiline)
+int bx_write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool multiline)
 {
   char bxrcline[BX_PATHNAME_LEN], tmpstr[BX_PATHNAME_LEN], tmpbyte[4];
 
   if (base == NULL) return -1;
   int p = 0;
-  sprintf(bxrcline, "%s: ", base->get_name());
+  if (optname == NULL) {
+    sprintf(bxrcline, "%s: ", base->get_name());
+  } else {
+    sprintf(bxrcline, "%s: ", optname);
+  }
   for (int i = 0; i < base->get_size(); i++) {
     bx_param_c *param = base->get(i);
     if (param->get_enabled()) {
@@ -3248,7 +3252,11 @@ int bx_write_param_list(FILE *fp, bx_list_c *base, bx_bool multiline)
     if ((i + 1) < base->get_size()) {
       if (multiline && (strlen(bxrcline) > 80)) {
         fprintf(fp, "%s\n", bxrcline);
-        sprintf(bxrcline, "%s: ", base->get_name());
+        if (optname == NULL) {
+          sprintf(bxrcline, "%s: ", base->get_name());
+        } else {
+          sprintf(bxrcline, "%s: ", optname);
+        }
         p = 0;
       }
     } else {
@@ -3299,19 +3307,6 @@ int bx_write_floppy_options(FILE *fp, int drive)
       SIM->get_param_bool(status)->get() ? "inserted":"ejected",
       SIM->get_param_bool(readonly)->get());
   }
-  fprintf(fp, "\n");
-  return 0;
-}
-
-int bx_write_ata_options(FILE *fp, Bit8u channel, bx_list_c *base)
-{
-  fprintf(fp, "ata%d: enabled=%d", channel, SIM->get_param_bool("enabled", base)->get());
-
-  if (SIM->get_param_bool("enabled", base)->get()) {
-    fprintf(fp, ", ioaddr1=0x%x, ioaddr2=0x%x, irq=%d", SIM->get_param_num("ioaddr1", base)->get(),
-      SIM->get_param_num("ioaddr2", base)->get(), SIM->get_param_num("irq", base)->get());
-    }
-
   fprintf(fp, "\n");
   return 0;
 }
@@ -3563,7 +3558,8 @@ int bx_write_configuration(const char *rc, int overwrite)
   for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(tmppath, "ata.%d", channel);
     base = (bx_list_c*) SIM->get_param(tmppath);
-    bx_write_ata_options(fp, channel, (bx_list_c*) SIM->get_param("resources", base));
+    sprintf(tmppath, "ata%d", channel);
+    bx_write_param_list(fp, (bx_list_c*) SIM->get_param("resources", base), tmppath, 0);
     bx_write_atadevice_options(fp, channel, 0, (bx_list_c*) SIM->get_param("master", base));
     bx_write_atadevice_options(fp, channel, 1, (bx_list_c*) SIM->get_param("slave", base));
   }
@@ -3628,7 +3624,7 @@ int bx_write_configuration(const char *rc, int overwrite)
 #if BX_CPU_LEVEL >= 4
   if (! SIM->get_param_enum(BXPN_CPU_MODEL)->get()) {
     // dump only when using BX_GENERIC CPUDB profile
-    bx_write_param_list(fp, (bx_list_c*) SIM->get_param("cpuid"), 1);
+    bx_write_param_list(fp, (bx_list_c*) SIM->get_param("cpuid"), NULL, 1);
   }
 #endif
 
@@ -3644,10 +3640,7 @@ int bx_write_configuration(const char *rc, int overwrite)
   bx_write_loader_options(fp);
   bx_write_log_options(fp, (bx_list_c*) SIM->get_param("log"));
   bx_write_keyboard_options(fp);
-  fprintf(fp, "mouse: enabled=%d, type=%s, toggle=%s\n",
-    SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get(),
-    SIM->get_param_enum(BXPN_MOUSE_TYPE)->get_selected(),
-    SIM->get_param_enum(BXPN_MOUSE_TOGGLE)->get_selected());
+  bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_MOUSE), NULL, 0);
   SIM->save_addon_options(fp);
   fclose(fp);
   return 0;
