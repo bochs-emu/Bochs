@@ -5,7 +5,7 @@
 // ES1370 soundcard support (ported from QEMU)
 //
 // Copyright (c) 2005  Vassili Karpov (malc)
-// Copyright (C) 2011  The Bochs Project
+// Copyright (C) 2011-2013  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -139,13 +139,7 @@ Bit32s es1370_options_parser(const char *context, int num_params, char *params[]
 
 Bit32s es1370_options_save(FILE *fp)
 {
-  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370);
-  fprintf(fp, "es1370: enabled=%d", SIM->get_param_bool("enabled", base)->get());
-  if (SIM->get_param_bool("enabled", base)->get()) {
-    fprintf(fp, ", wavedev=%s", SIM->get_param_string("wavedev", base)->getptr());
-  }
-  fprintf(fp, "\n");
-  return 0;
+  return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370), 0);
 }
 
 // device plugin entry points
@@ -214,7 +208,7 @@ void bx_es1370_c::init(void)
   }
   BX_ES1370_THIS pci_base_address[0] = 0;
 
-  char *wavedev = SIM->get_param_string(BXPN_ES1370_WAVEDEV)->getptr();
+  char *wavedev = SIM->get_param_string("wavedev", base)->getptr();
   if (!strcmp(wavedev, "sdl")) {
     BX_ES1370_THIS soundmod = DEV_sound_init_module("sdl", BX_ES1370_THIS_PTR);
   } else {

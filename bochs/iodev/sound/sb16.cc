@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -61,7 +61,7 @@ void sb16_init_options(void)
     0, 3,
     0);
   bx_param_filename_c *midifile = new bx_param_filename_c(menu,
-    "midifile",
+    "midi",
     "MIDI file",
     "The filename is where the MIDI data is sent. This can be device or just a file.",
     "", BX_PATHNAME_LEN);
@@ -72,7 +72,7 @@ void sb16_init_options(void)
     0, 3,
     0);
   bx_param_filename_c *wavefile = new bx_param_filename_c(menu,
-    "wavefile",
+    "wave",
     "Wave file",
     "This is the device/file where the wave output is stored",
     "", BX_PATHNAME_LEN);
@@ -83,7 +83,7 @@ void sb16_init_options(void)
     0, 5,
     0);
   bx_param_filename_c *logfile = new bx_param_filename_c(menu,
-    "logfile",
+    "log",
     "Log file",
     "The file to write the SB16 emulator messages to.",
     "", BX_PATHNAME_LEN);
@@ -126,15 +126,15 @@ Bit32s sb16_options_parser(const char *context, int num_params, char *params[])
       if (!strncmp(params[i], "enabled=", 8)) {
         enable = atol(&params[i][8]);
       } else if (!strncmp(params[i], "midi=", 5)) {
-        SIM->get_param_string("midifile", base)->set(&params[i][5]);
+        SIM->get_param_string("midi", base)->set(&params[i][5]);
       } else if (!strncmp(params[i], "midimode=", 9)) {
         SIM->get_param_num("midimode", base)->set(atol(&params[i][9]));
       } else if (!strncmp(params[i], "wave=", 5)) {
-        SIM->get_param_string("wavefile", base)->set(&params[i][5]);
+        SIM->get_param_string("wave", base)->set(&params[i][5]);
       } else if (!strncmp(params[i], "wavemode=", 9)) {
         SIM->get_param_num("wavemode", base)->set(atol(&params[i][9]));
       } else if (!strncmp(params[i], "log=", 4)) {
-        SIM->get_param_string("logfile", base)->set(&params[i][4]);
+        SIM->get_param_string("log", base)->set(&params[i][4]);
       } else if (!strncmp(params[i], "loglevel=", 9)) {
         SIM->get_param_num("loglevel", base)->set(atol(&params[i][9]));
       } else if (!strncmp(params[i], "dmatimer=", 9)) {
@@ -155,20 +155,7 @@ Bit32s sb16_options_parser(const char *context, int num_params, char *params[])
 
 Bit32s sb16_options_save(FILE *fp)
 {
-  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
-  fprintf(fp, "sb16: enabled=%d", SIM->get_param_bool("enabled", base)->get());
-  if (SIM->get_param_bool("enabled", base)->get()) {
-    fprintf(fp, ", midimode=%d, midi=%s, wavemode=%d, wave=%s, loglevel=%d, log=%s, dmatimer=%d",
-      SIM->get_param_num("midimode", base)->get(),
-      SIM->get_param_string("midifile", base)->getptr(),
-      SIM->get_param_num("wavemode", base)->get(),
-      SIM->get_param_string("wavefile", base)->getptr(),
-      SIM->get_param_num("loglevel", base)->get(),
-      SIM->get_param_string("logfile", base)->getptr(),
-      SIM->get_param_num("dmatimer", base)->get());
-  }
-  fprintf(fp, "\n");
-  return 0;
+  return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16), 0);
 }
 
 // device plugin entry points
@@ -288,15 +275,15 @@ void bx_sb16_c::init(void)
     ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("sb16"))->set(0);
     return;
   }
-  if ((strlen(SIM->get_param_string("logfile", base)->getptr()) < 1))
+  if ((strlen(SIM->get_param_string("log", base)->getptr()) < 1))
     SIM->get_param_num("loglevel", base)->set(0);
 
   if (SIM->get_param_num("loglevel", base)->get() > 0)
   {
-    LOGFILE = fopen(SIM->get_param_string("logfile", base)->getptr(),"w"); // logfile for errors etc.
+    LOGFILE = fopen(SIM->get_param_string("log", base)->getptr(),"w"); // logfile for errors etc.
     if (LOGFILE == NULL)
     {
-      BX_ERROR(("Error opening file %s. Logging disabled.", SIM->get_param_string("logfile", base)->getptr()));
+      BX_ERROR(("Error opening file %s. Logging disabled.", SIM->get_param_string("log", base)->getptr()));
       SIM->get_param_num("loglevel", base)->set(0);
     }
   }
@@ -304,7 +291,7 @@ void bx_sb16_c::init(void)
   BX_SB16_THIS wavemode = SIM->get_param_num("wavemode", base)->get();
   BX_SB16_THIS dmatimer = SIM->get_param_num("dmatimer", base)->get();
   BX_SB16_THIS loglevel = SIM->get_param_num("loglevel", base)->get();
-  char *wavefile = SIM->get_param_string(BXPN_SB16_WAVEFILE)->getptr();
+  char *wavefile = SIM->get_param_string("wave", base)->getptr();
 
   if ((BX_SB16_THIS wavemode == 1) || (BX_SB16_THIS midimode == 1)) {
     // let the output functions initialize
@@ -343,9 +330,9 @@ void bx_sb16_c::init(void)
   }
 
   BX_INFO(("midi=%d,%s  wave=%d,%s  log=%d,%s  dmatimer=%d",
-    BX_SB16_THIS midimode, MIGHT_BE_NULL(SIM->get_param_string("midifile", base)->getptr()),
-    BX_SB16_THIS wavemode, MIGHT_BE_NULL(SIM->get_param_string("wavefile", base)->getptr()),
-    BX_SB16_THIS loglevel, MIGHT_BE_NULL(SIM->get_param_string("logfile", base)->getptr()),
+    BX_SB16_THIS midimode, MIGHT_BE_NULL(SIM->get_param_string("midi", base)->getptr()),
+    BX_SB16_THIS wavemode, MIGHT_BE_NULL(SIM->get_param_string("wave", base)->getptr()),
+    BX_SB16_THIS loglevel, MIGHT_BE_NULL(SIM->get_param_string("log", base)->getptr()),
     BX_SB16_THIS dmatimer));
 
   // allocate the FIFO buffers - except for the MPUMIDICMD buffer
@@ -448,12 +435,12 @@ void bx_sb16_c::init(void)
 
   // init runtime parameters
   bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
-  misc_rt->add(SIM->get_param(BXPN_SB16_DMATIMER));
-  misc_rt->add(SIM->get_param(BXPN_SB16_LOGLEVEL));
-  SIM->get_param_num(BXPN_SB16_DMATIMER)->set_handler(sb16_param_handler);
-  SIM->get_param_num(BXPN_SB16_DMATIMER)->set_runtime_param(1);
-  SIM->get_param_num(BXPN_SB16_LOGLEVEL)->set_handler(sb16_param_handler);
-  SIM->get_param_num(BXPN_SB16_LOGLEVEL)->set_runtime_param(1);
+  misc_rt->add(SIM->get_param("dmatimer", base));
+  misc_rt->add(SIM->get_param("loglevel", base));
+  SIM->get_param_num("dmatimer", base)->set_handler(sb16_param_handler);
+  SIM->get_param_num("dmatimer", base)->set_runtime_param(1);
+  SIM->get_param_num("loglevel", base)->set_handler(sb16_param_handler);
+  SIM->get_param_num("loglevel", base)->set_runtime_param(1);
 }
 
 void bx_sb16_c::reset(unsigned type)
@@ -1303,6 +1290,7 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
   DSP.dma.format = DSP.dma.issigned | ((comp & 7) << 1) | ((comp & 8) << 4);
 
   // write the output to the device/file
+  base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
   if (DSP.dma.output == 1) {
     if (BX_SB16_THIS wavemode == 1) {
       if (DSP.outputinit == 1) {
@@ -1314,7 +1302,6 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
       }
     } else if ((BX_SB16_THIS wavemode == 2) ||
                (BX_SB16_THIS wavemode == 3)) {
-      base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
       WAVEDATA = fopen(SIM->get_param_string("wavefile", base)->getptr(),"wb");
       if (WAVEDATA == NULL) {
         writelog (WAVELOG(2), "Error opening file %s. Wavemode disabled.",
@@ -1331,7 +1318,7 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
   } else {
     if (BX_SB16_THIS wavemode == 1) {
       if (DSP.inputinit == 0) {
-        ret = BX_SB16_OUTPUT->openwaveinput(SIM->get_param_string(BXPN_SB16_WAVEFILE)->getptr(), sb16_adc_handler);
+        ret = BX_SB16_OUTPUT->openwaveinput(SIM->get_param_string("wave", base)->getptr(), sb16_adc_handler);
         if (ret != BX_SOUNDLOW_OK) {
           BX_SB16_THIS wavemode = 0;
           writelog(WAVELOG(2), "Error: Could not open wave input device.");
@@ -3100,10 +3087,11 @@ void bx_sb16_c::writemidicommand(int command, int length, Bit8u data[])
   int deltatime = currentdeltatime();
 
   /* Initialize output device if necessary and not done yet */
+  base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
   if (BX_SB16_THIS midimode == 1) {
     if (MPU.outputinit != 1) {
       writelog(MIDILOG(4), "Initializing Midi output.");
-      if (BX_SB16_OUTPUT->openmidioutput(SIM->get_param_string(BXPN_SB16_MIDIFILE)->getptr()) == BX_SOUNDLOW_OK)
+      if (BX_SB16_OUTPUT->openmidioutput(SIM->get_param_string("midi", base)->getptr()) == BX_SOUNDLOW_OK)
         MPU.outputinit = 1;
       else
         MPU.outputinit = 0;
@@ -3117,7 +3105,6 @@ void bx_sb16_c::writemidicommand(int command, int length, Bit8u data[])
     return;
   } else if ((BX_SB16_THIS midimode == 2) ||
              (BX_SB16_THIS midimode == 3)) {
-    base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
     MIDIDATA = fopen(SIM->get_param_string("midifile", base)->getptr(),"wb");
     if (MIDIDATA == NULL) {
       writelog (MIDILOG(2), "Error opening file %s. Midimode disabled.",
