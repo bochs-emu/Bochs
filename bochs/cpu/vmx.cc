@@ -3007,11 +3007,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD_EdGd(bxInstruction_c *i)
 
     vmcs_pointer = BX_CPU_THIS_PTR vmcs.vmcs_linkptr;
   }
-  else {
-    if (CPL != 0) {
-      BX_ERROR(("VMREAD with CPL!=0 cause #GP(0)"));
-      exception(BX_GP_EXCEPTION, 0);
-    }
+
+  if (CPL != 0) {
+    BX_ERROR(("VMREAD with CPL!=0 cause #GP(0)"));
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   if (vmcs_pointer == BX_INVALID_VMCSPTR) {
@@ -3060,11 +3059,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD_EqGq(bxInstruction_c *i)
 
     vmcs_pointer = BX_CPU_THIS_PTR vmcs.vmcs_linkptr;
   }
-  else {
-    if (CPL != 0) {
-      BX_ERROR(("VMREAD with CPL!=0 cause #GP(0)"));
-      exception(BX_GP_EXCEPTION, 0);
-    }
+
+  if (CPL != 0) {
+    BX_ERROR(("VMREAD with CPL!=0 cause #GP(0)"));
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   if (vmcs_pointer == BX_INVALID_VMCSPTR) {
@@ -3118,11 +3116,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE_GdEd(bxInstruction_c *i)
 
     vmcs_pointer = BX_CPU_THIS_PTR vmcs.vmcs_linkptr;
   }
-  else {
-    if (CPL != 0) {
-      BX_ERROR(("VMWRITE with CPL!=0 cause #GP(0)"));
-      exception(BX_GP_EXCEPTION, 0);
-    }
+
+  if (CPL != 0) {
+    BX_ERROR(("VMWRITE with CPL!=0 cause #GP(0)"));
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   if (vmcs_pointer == BX_INVALID_VMCSPTR) {
@@ -3185,11 +3182,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE_GqEq(bxInstruction_c *i)
 
     vmcs_pointer = BX_CPU_THIS_PTR vmcs.vmcs_linkptr;
   }
-  else {
-    if (CPL != 0) {
-      BX_ERROR(("VMWRITE with CPL!=0 cause #GP(0)"));
-      exception(BX_GP_EXCEPTION, 0);
-    }
+
+  if (CPL != 0) {
+    BX_ERROR(("VMWRITE with CPL!=0 cause #GP(0)"));
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   if (vmcs_pointer == BX_INVALID_VMCSPTR) {
