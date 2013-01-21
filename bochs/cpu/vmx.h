@@ -498,8 +498,6 @@ typedef struct bx_VMCS_GUEST_STATE
    Bit32u interruptibility_state;
    Bit32u tmpDR6;
 
-   Bit64u link_pointer;
-
 #if BX_SUPPORT_VMX >= 2
 #if BX_SUPPORT_X86_64
    Bit64u efer_msr;
@@ -637,6 +635,8 @@ typedef struct bx_VMCS
 
    Bit32u vmexec_ctrls3;
 
+   Bit64u vmcs_linkptr;
+
    Bit32u vm_exceptions_bitmap;
    Bit32u vm_pf_mask;
    Bit32u vm_pf_match;
@@ -676,6 +676,10 @@ typedef struct bx_VMCS
    Bit8u vppr;
 
    Bit32u eoi_exit_bitmap[8];
+#endif
+
+#if BX_SUPPORT_VMX >= 2
+   Bit64u vmread_bitmap_addr, vmwrite_bitmap_addr;
 #endif
 
    //
@@ -942,7 +946,8 @@ enum VMX_Activity_State {
 // [24:16] - number of CR3 target values supported
 // [27:25] - (N+1)*512 - recommended maximum MSRs in MSR store list
 //    [28] - MSR_IA32_SMM_MONITOR_CTL[2] enable
-// [31-29] - Reserved
+//    [29] - Allow VMWRITE to R/O VMCS fields (to be used with VMCS Shadowing)
+// [31-30] - Reserved
 // --------------------------------------------
 // [63:32] - MSEG revision ID used by processor
 
@@ -952,12 +957,15 @@ enum VMX_Activity_State {
   #define VMX_MISC_STORE_LMA_TO_X86_64_GUEST_VMENTRY_CONTROL (0)
 #endif
 
+#define VMX_MISC_SUPPORT_VMWRITE_READ_ONLY_FIELDS (1<<29)
+
 //Rate to increase VMX preemtion timer
 #define VMX_MISC_PREEMPTION_TIMER_RATE (0)
 
-#define VMX_MSR_MISC ((VMX_CR3_TARGET_MAX_CNT << 16) | \
-            VMX_MISC_STORE_LMA_TO_X86_64_GUEST_VMENTRY_CONTROL | \
-            VMX_MISC_PREEMPTION_TIMER_RATE)
+#define VMX_MSR_MISC (VMX_MISC_PREEMPTION_TIMER_RATE | \
+                      VMX_MISC_STORE_LMA_TO_X86_64_GUEST_VMENTRY_CONTROL | \
+                     (VMX_CR3_TARGET_MAX_CNT << 16) | \
+                     (BX_SUPPORT_VMX_EXTENSION(BX_VMX_VMCS_SHADOWING) ? VMX_MISC_SUPPORT_VMWRITE_READ_ONLY_FIELDS : 0))
 
 //
 // IA32_VMX_CR0_FIXED0 MSR (0x486)   IA32_VMX_CR0_FIXED1 MSR (0x487)

@@ -637,4 +637,60 @@ Bit16u BX_CPU_C::VMX_Get_Current_VPID(void)
 }
 #endif
 
+#if BX_SUPPORT_VMX >= 2
+bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::Vmexit_Vmread(bxInstruction_c *i)
+{
+  BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
+
+  if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VMCS_SHADOWING)) return BX_TRUE;
+
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    if (BX_READ_64BIT_REG_HIGH(i->src())) return BX_TRUE;
+  }
+#endif
+  unsigned encoding = BX_READ_32BIT_REG(i->src());
+  if (encoding > 0x7fff) return BX_TRUE;
+
+  VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+
+  Bit8u bitmap;
+  bx_phy_address pAddr = vm->vmread_bitmap_addr | (encoding >> 3);
+  access_read_physical(pAddr, 1, &bitmap);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, BX_READ, BX_VMREAD_BITMAP_ACCESS, &bitmap);
+  
+  if (bitmap & (1 << (encoding & 7)))
+    return BX_TRUE;
+
+  return BX_FALSE;
+}
+
+bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::Vmexit_Vmwrite(bxInstruction_c *i)
+{
+  BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
+
+  if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VMCS_SHADOWING)) return BX_TRUE;
+
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    if (BX_READ_64BIT_REG_HIGH(i->dst())) return BX_TRUE;
+  }
+#endif
+  unsigned encoding = BX_READ_32BIT_REG(i->dst());
+  if (encoding > 0x7fff) return BX_TRUE;
+
+  VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+
+  Bit8u bitmap;
+  bx_phy_address pAddr = vm->vmwrite_bitmap_addr | (encoding >> 3);
+  access_read_physical(pAddr, 1, &bitmap);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, BX_READ, BX_VMWRITE_BITMAP_ACCESS, &bitmap);
+  
+  if (bitmap & (1 << (encoding & 7)))
+    return BX_TRUE;
+
+  return BX_FALSE;
+}
+#endif
+
 #endif // BX_SUPPORT_VMX

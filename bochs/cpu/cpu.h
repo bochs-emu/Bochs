@@ -324,8 +324,11 @@ enum {
   BX_EPT_PDTE_ACCESS,
   BX_EPT_PML4E_ACCESS,
   BX_VMCS_ACCESS,
+  BX_SHADOW_VMCS_ACCESS,
   BX_MSR_BITMAP_ACCESS,
   BX_IO_BITMAP_ACCESS,
+  BX_VMREAD_BITMAP_ACCESS,
+  BX_VMWRITE_BITMAP_ACCESS,
   BX_VMX_LOAD_MSR_ACCESS,
   BX_VMX_STORE_MSR_ACCESS,
   BX_VMX_VAPIC_ACCESS,
@@ -2669,6 +2672,10 @@ public: // for now...
   BX_SMF BX_INSF_TYPE VMPTRST(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VMREAD_EdGd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VMWRITE_GdEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#if BX_SUPPORT_X86_64
+  BX_SMF BX_INSF_TYPE VMREAD_EqGq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VMWRITE_GqEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
   BX_SMF BX_INSF_TYPE VMFUNC(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* VMX instructions */
 
@@ -4315,10 +4322,19 @@ public: // for now...
   BX_SMF void VMwrite32(unsigned encoding, Bit32u val_32) BX_CPP_AttrRegparmN(2);
   BX_SMF void VMwrite64(unsigned encoding, Bit64u val_64) BX_CPP_AttrRegparmN(2);
   BX_SMF void VMwrite_natural(unsigned encoding, bx_address val) BX_CPP_AttrRegparmN(2);
-  BX_SMF void VMsucceed(void);
-  BX_SMF void VMfailInvalid(void);
+
+  BX_SMF Bit64u vmread(unsigned encoding) BX_CPP_AttrRegparmN(1);
+  BX_SMF void vmwrite(unsigned encoding, Bit64u val_64) BX_CPP_AttrRegparmN(2);
+#if BX_SUPPORT_VMX >= 2
+  BX_SMF Bit64u vmread_shadow(unsigned encoding) BX_CPP_AttrRegparmN(1);
+  BX_SMF void vmwrite_shadow(unsigned encoding, Bit64u val_64) BX_CPP_AttrRegparmN(2);
+#endif
+
+  BX_SMF BX_CPP_INLINE void VMsucceed(void) { setEFlagsOSZAPC(0); }
+  BX_SMF BX_CPP_INLINE void VMfailInvalid(void) { setEFlagsOSZAPC(EFlagsCFMask); }
   BX_SMF void VMfail(Bit32u error_code);
   BX_SMF void VMabort(VMX_vmabort_code error_code);
+
   BX_SMF Bit32u LoadMSRs(Bit32u msr_cnt, bx_phy_address pAddr);
   BX_SMF Bit32u StoreMSRs(Bit32u msr_cnt, bx_phy_address pAddr);
   BX_SMF Bit32u VMXReadRevisionID(bx_phy_address pAddr);
@@ -4357,6 +4373,16 @@ public: // for now...
   BX_SMF void VMX_Self_IPI_Virtualization(Bit8u vector);
   BX_SMF void VMX_Evaluate_Pending_Virtual_Interrupts(void);
   BX_SMF void VMX_Deliver_Virtual_Interrupt(void);
+#endif
+#if BX_SUPPORT_VMX >= 2
+  BX_SMF Bit16u VMread16_Shadow(unsigned encoding) BX_CPP_AttrRegparmN(1);
+  BX_SMF Bit32u VMread32_Shadow(unsigned encoding) BX_CPP_AttrRegparmN(1);
+  BX_SMF Bit64u VMread64_Shadow(unsigned encoding) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMwrite16_Shadow(unsigned encoding, Bit16u val_16) BX_CPP_AttrRegparmN(2);
+  BX_SMF void VMwrite32_Shadow(unsigned encoding, Bit32u val_32) BX_CPP_AttrRegparmN(2);
+  BX_SMF void VMwrite64_Shadow(unsigned encoding, Bit64u val_64) BX_CPP_AttrRegparmN(2);
+  BX_SMF bx_bool Vmexit_Vmread(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF bx_bool Vmexit_Vmwrite(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 #endif
 #endif
   // vmexit reasons
