@@ -172,7 +172,6 @@ ata
       ioaddr2
       irq
     master
-      present
       type
       path
       mode

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -373,7 +373,7 @@ void build_runtime_options_prompt(const char *format, char *buf, int size)
   // 4 cdroms supported at run time
   int device;
   for (Bit8u cdrom=0; cdrom<4; cdrom++) {
-    if (!SIM->get_cdrom_options(cdrom, &cdromop, &device) || !SIM->get_param_bool("present", cdromop)->get())
+    if (!SIM->get_cdrom_options(cdrom, &cdromop, &device))
       sprintf(buffer[2+cdrom], "(not present)");
     else
       sprintf(buffer[2+cdrom], "(%s on ata%d) %s, %s",
@@ -524,7 +524,7 @@ int bx_config_interface(int menu)
             case BX_CI_RT_CDROM3:
             case BX_CI_RT_CDROM4:
               int device;
-              if (SIM->get_cdrom_options(choice - BX_CI_RT_CDROM1, &cdromop, &device) && SIM->get_param_bool("present", cdromop)->get()) {
+              if (SIM->get_cdrom_options(choice - BX_CI_RT_CDROM1, &cdromop, &device)) {
                 cdromop->get_param_path(pname, 80);
                 do_menu(pname);
               }

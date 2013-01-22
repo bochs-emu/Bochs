@@ -183,6 +183,10 @@ typedef enum {
    || (type == LOGLEV_PANIC && choice == ACT_IGNORE)                   \
    )
 
+// floppy / cdrom media status
+#define BX_EJECTED  0
+#define BX_INSERTED 1
+
 // boot devices (using the same values as the rombios)
 enum {
   BX_BOOT_NONE,
@@ -511,9 +515,9 @@ enum {
 #define BX_FLOPPY_AUTO     19 // autodetect image size
 #define BX_FLOPPY_UNKNOWN  20 // image size doesn't match one of the types above
 
-#define BX_ATA_DEVICE_DISK       0
-#define BX_ATA_DEVICE_CDROM      1
-#define BX_ATA_DEVICE_LAST       1
+#define BX_ATA_DEVICE_NONE       0
+#define BX_ATA_DEVICE_DISK       1
+#define BX_ATA_DEVICE_CDROM      2
 
 #define BX_ATA_BIOSDETECT_NONE   0
 #define BX_ATA_BIOSDETECT_AUTO   1

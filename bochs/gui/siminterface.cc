@@ -741,11 +741,9 @@ bx_param_c *bx_real_sim_c::get_first_atadevice(Bit32u search_type)
     if (!SIM->get_param_bool(pname)->get())
       continue;
     for (int slave=0; slave<2; slave++) {
-      sprintf(pname, "ata.%d.%s.present", channel, (slave==0)?"master":"slave");
-      Bit32u present = SIM->get_param_bool(pname)->get();
       sprintf(pname, "ata.%d.%s.type", channel, (slave==0)?"master":"slave");
       Bit32u type = SIM->get_param_enum(pname)->get();
-      if (present && (type == search_type)) {
+      if (type == search_type) {
         sprintf(pname, "ata.%d.%s", channel, (slave==0)?"master":"slave");
         return SIM->get_param(pname);
       }

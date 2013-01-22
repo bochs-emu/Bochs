@@ -276,7 +276,7 @@ void bx_init_options()
   bx_list_c *deplist;
   bx_param_num_c *ioaddr, *ioaddr2, *irq;
   bx_param_bool_c *enabled, *readonly, *status;
-  bx_param_enum_c *mode, *type, *toggle;
+  bx_param_enum_c *mode, *type, *toggle, *status2;
   bx_param_filename_c *path;
   char name[BX_PATHNAME_LEN], descr[512], label[512];
 
@@ -1257,22 +1257,15 @@ void bx_init_options()
           s_atadevice[channel][slave]);
       menu->set_options(menu->SERIES_ASK);
 
-      bx_param_bool_c *present = new bx_param_bool_c(menu,
-        "present",
-        "Enable this device",
-        "Controls whether ata device is installed or not",
-        0);
-      present->set_ask_format("Device is enabled: [%s] ");
-
-      static const char *atadevice_type_names[] = { "disk", "cdrom", NULL };
+      static const char *atadevice_type_names[] = { "none", "disk", "cdrom", NULL };
 
       type = new bx_param_enum_c(menu,
         "type",
         "Type of ATA device",
         "Type of ATA device (disk or cdrom)",
         atadevice_type_names,
-        BX_ATA_DEVICE_DISK,
-        BX_ATA_DEVICE_DISK);
+        BX_ATA_DEVICE_NONE,
+        BX_ATA_DEVICE_NONE);
       type->set_ask_format("Enter type of ATA device, disk or cdrom: [%s] ");
 
       path = new bx_param_filename_c(menu,
@@ -1292,13 +1285,17 @@ void bx_init_options()
         BX_HDIMAGE_MODE_FLAT);
       mode->set_ask_format("Enter mode of ATA device, (flat, concat, etc.): [%s] ");
 
-      status = new bx_param_bool_c(menu,
-        "status",
-        "Inserted",
-        "CD-ROM media status (inserted / ejected)",
-        0);
-      status->set_ask_format("Is media inserted in drive? [%s] ");
+      static const char *media_status_names[] = { "ejected", "inserted", NULL };
 
+      status2 = new bx_param_enum_c(menu,
+        "status",
+        "Status",
+        "CD-ROM media status (inserted / ejected)",
+        media_status_names,
+        BX_INSERTED,
+        BX_EJECTED);
+        status2->set_ask_format("Is the device inserted or ejected? [%s] ");
+ 
       bx_param_filename_c *journal = new bx_param_filename_c(menu,
         "journal",
         "Path of journal file",
@@ -1363,32 +1360,15 @@ void bx_init_options()
         BX_ATA_TRANSLATION_NONE);
       translation->set_ask_format("Enter translation type: [%s]");
 
-      // the menu and all items on it depend on the present flag
-      deplist = new bx_list_c(NULL);
-      deplist->add(type);
-      deplist->add(path);
-      deplist->add(model);
-      deplist->add(biosdetect);
-      present->set_dependent_list(deplist);
       // the master/slave menu depends on the ATA channel's enabled flag
       enabled->get_dependent_list()->add(menu);
-      // the present flag depends on the ATA channel's enabled flag
-      enabled->get_dependent_list()->add(present);
+      // the type selector depends on the ATA channel's enabled flag
+      enabled->get_dependent_list()->add(type);
 
-      // some items depend on the drive type
-      bx_param_c *type_deplist[] = {
-        mode,
-        status,
-        cylinders,
-        heads,
-        spt,
-        translation,
-        NULL
-      };
-      deplist = new bx_list_c(NULL, "deplist", "", type_deplist);
-      type->set_dependent_list(deplist, 0);
-      type->set_dependent_bitmap(BX_ATA_DEVICE_DISK, 0x3d);
-      type->set_dependent_bitmap(BX_ATA_DEVICE_CDROM, 0x02);
+      // all items depend on the drive type
+      type->set_dependent_list(menu->clone(), 0);
+      type->set_dependent_bitmap(BX_ATA_DEVICE_DISK, 0x7e6);
+      type->set_dependent_bitmap(BX_ATA_DEVICE_CDROM, 0x30a);
 
       type->set_handler(bx_param_handler);
     }
@@ -2349,9 +2329,9 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       } else if (!strcmp(params[i], "translation=auto")) {
         SIM->get_param_enum("translation", base)->set(BX_ATA_TRANSLATION_AUTO);
       } else if (!strcmp(params[i], "status=ejected")) {
-        SIM->get_param_bool("status", base)->set(0);
+        SIM->get_param_enum("status", base)->set(BX_EJECTED);
       } else if (!strcmp(params[i], "status=inserted")) {
-        SIM->get_param_bool("status", base)->set(1);
+        SIM->get_param_enum("status", base)->set(BX_INSERTED);
       } else if (!strncmp(params[i], "journal=", 8)) {
         SIM->get_param_string("journal", base)->set(&params[i][8]);
       } else {
@@ -2365,7 +2345,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       SIM->get_param_num("biosdetect", base)->set(biosdetect);
       if (type == BX_ATA_DEVICE_DISK) {
         if (strlen(SIM->get_param_string("path", base)->getptr()) > 0) {
-          SIM->get_param_bool("present", base)->set(1);
           SIM->get_param_enum("mode", base)->set(mode);
           SIM->get_param_num("cylinders", base)->set(cylinders);
           if ((cylinders == 0) && (heads == 0) && (sectors == 0)) {
@@ -2378,13 +2357,9 @@ static int parse_line_formatted(const char *context, int num_params, char *param
             SIM->get_param_num("spt", base)->set(sectors);
           }
         } else {
-          SIM->get_param_bool("present", base)->set(0);
+          SIM->get_param_enum("type", base)->set(BX_ATA_DEVICE_NONE);
         }
-      } else if (type == BX_ATA_DEVICE_CDROM) {
-        SIM->get_param_bool("present", base)->set(1);
       }
-    } else {
-      SIM->get_param_bool("present", base)->set(0);
     }
 
   } else if (!strcmp(params[0], "boot")) {
@@ -3199,6 +3174,7 @@ int bx_write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool 
   char bxrcline[BX_PATHNAME_LEN], tmpstr[BX_PATHNAME_LEN], tmpbyte[4];
 
   if (base == NULL) return -1;
+  if (!base->get_enabled()) return -1;
   int p = 0;
   if (optname == NULL) {
     sprintf(bxrcline, "%s: ", base->get_name());
@@ -3308,43 +3284,6 @@ int bx_write_floppy_options(FILE *fp, int drive)
       SIM->get_param_bool(readonly)->get());
   }
   fprintf(fp, "\n");
-  return 0;
-}
-
-int bx_write_atadevice_options(FILE *fp, Bit8u channel, Bit8u drive, bx_list_c *base)
-{
-  if (SIM->get_param_bool("present", base)->get()) {
-    fprintf(fp, "ata%d-%s: ", channel, drive==0?"master":"slave");
-
-    if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_DISK) {
-      fprintf(fp, "type=disk");
-
-      fprintf(fp, ", mode=%s", SIM->get_param_enum("mode", base)->get_selected());
-      fprintf(fp, ", translation=%s", SIM->get_param_enum("translation", base)->get_selected());
-      fprintf(fp, ", path=\"%s\", cylinders=%d, heads=%d, spt=%d",
-          SIM->get_param_string("path", base)->getptr(),
-          SIM->get_param_num("cylinders", base)->get(),
-          SIM->get_param_num("heads", base)->get(),
-          SIM->get_param_num("spt", base)->get());
-
-      if (SIM->get_param_string("journal", base)->getptr() != NULL)
-        if (strcmp(SIM->get_param_string("journal", base)->getptr(), "") != 0)
-          fprintf(fp, ", journal=\"%s\"", SIM->get_param_string("journal", base)->getptr());
-
-    } else if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_CDROM) {
-      fprintf(fp, "type=cdrom, path=\"%s\", status=%s",
-        SIM->get_param_string("path", base)->getptr(),
-        SIM->get_param_bool("status", base)->get() ? "inserted":"ejected");
-    }
-
-    fprintf(fp, ", biosdetect=%s", SIM->get_param_enum("biosdetect", base)->get_selected());
-
-    if (SIM->get_param_string("model", base)->getptr()>0) {
-        fprintf(fp, ", model=\"%s\"", SIM->get_param_string("model", base)->getptr());
-    }
-
-    fprintf(fp, "\n");
-  }
   return 0;
 }
 
@@ -3560,8 +3499,10 @@ int bx_write_configuration(const char *rc, int overwrite)
     base = (bx_list_c*) SIM->get_param(tmppath);
     sprintf(tmppath, "ata%d", channel);
     bx_write_param_list(fp, (bx_list_c*) SIM->get_param("resources", base), tmppath, 0);
-    bx_write_atadevice_options(fp, channel, 0, (bx_list_c*) SIM->get_param("master", base));
-    bx_write_atadevice_options(fp, channel, 1, (bx_list_c*) SIM->get_param("slave", base));
+    sprintf(tmppath, "ata%d-master", channel);
+    bx_write_param_list(fp, (bx_list_c*) SIM->get_param("master", base), tmppath, 0);
+    sprintf(tmppath, "ata%d-slave", channel);
+    bx_write_param_list(fp, (bx_list_c*) SIM->get_param("slave", base), tmppath, 0);
   }
   for (i=0; i<BX_N_OPTROM_IMAGES; i++) {
     sprintf(tmppath, "memory.optrom.%d.path", i+1);

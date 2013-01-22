@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -2487,7 +2487,7 @@ int x11_ask_dialog(BxEvent *event)
   return retcode;
 }
 
-int x11_string_dialog(bx_param_string_c *param, bx_param_bool_c *param2)
+int x11_string_dialog(bx_param_string_c *param, bx_param_enum_c *param2)
 {
   x11_control_c *xctl_edit, *xbtn_status = NULL;
   int control = 0, h, num_ctrls, ok_button;
@@ -2497,7 +2497,7 @@ int x11_string_dialog(bx_param_string_c *param, bx_param_bool_c *param2)
 
   if (param2 != NULL) {
     strcpy(name, "First CD-ROM image/device");
-    status = param2->get();
+    status = (param2->get() == BX_INSERTED);
     h = 110;
     ok_button = 2;
     num_ctrls = 4;
@@ -2613,7 +2613,7 @@ BxEvent *x11_notify_callback (void *unused, BxEvent *event)
   int opts;
   bx_param_c *param;
   bx_param_string_c *sparam;
-  bx_param_bool_c *bparam;
+  bx_param_enum_c *eparam;
   bx_list_c *list;
 
   switch (event->type)
@@ -2637,8 +2637,8 @@ BxEvent *x11_notify_callback (void *unused, BxEvent *event)
       } else if (param->get_type() == BXT_LIST) {
         list = (bx_list_c *)param;
         sparam = (bx_param_string_c *)list->get_by_name("path");
-        bparam = (bx_param_bool_c *)list->get_by_name("status");
-        event->retcode = x11_string_dialog(sparam, bparam);
+        eparam = (bx_param_enum_c *)list->get_by_name("status");
+        event->retcode = x11_string_dialog(sparam, eparam);
         return event;
       } else if (param->get_type() == BXT_PARAM_BOOL) {
         event->retcode = x11_yesno_dialog((bx_param_bool_c *)param);
