@@ -2881,6 +2881,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRST(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+#if BX_SUPPORT_VMX
+
 Bit64u BX_CPP_AttrRegparmN(1) BX_CPU_C::vmread(unsigned encoding)
 {
   unsigned width = VMCS_FIELD_WIDTH(encoding);
@@ -2990,6 +2992,8 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::vmwrite_shadow(unsigned encoding, Bit64u v
     VMwrite64_Shadow(encoding, val_64);
   }
 }
+
+#endif // BX_SUPPORT_VMX >= 2
 
 #endif
 
