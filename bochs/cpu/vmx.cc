@@ -3027,7 +3027,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD_EdGd(bxInstruction_c *i)
     BX_NEXT_INSTR(i);
   }
 
-  Bit32u field_32 = (Bit32u) ((BX_CPU_THIS_PTR in_vmx_guest) ? vmread(encoding) : vmread_shadow(encoding));
+  Bit32u field_32 = (Bit32u) ((BX_CPU_THIS_PTR in_vmx_guest) ? vmread_shadow(encoding) : vmread(encoding));
 
   if (i->modC0()) {
      BX_WRITE_32BIT_REGZ(i->dst(), field_32);
@@ -3084,7 +3084,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD_EqGq(bxInstruction_c *i)
     BX_NEXT_INSTR(i);
   }
 
-  Bit64u field_64 = (BX_CPU_THIS_PTR in_vmx_guest) ? vmread(encoding) : vmread_shadow(encoding);
+  Bit64u field_64 = (BX_CPU_THIS_PTR in_vmx_guest) ? vmread_shadow(encoding) : vmread(encoding);
 
   if (i->modC0()) {
      BX_WRITE_64BIT_REG(i->dst(), field_64);
@@ -3156,9 +3156,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE_GdEd(bxInstruction_c *i)
   }
 
   if (BX_CPU_THIS_PTR in_vmx_guest)
-    vmwrite(encoding, (Bit64u) val_32);
-  else
     vmwrite_shadow(encoding, (Bit64u) val_32);
+  else
+    vmwrite(encoding, (Bit64u) val_32);
 
   VMsucceed();
 #endif  
@@ -3228,9 +3228,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE_GqEq(bxInstruction_c *i)
   }
 
   if (BX_CPU_THIS_PTR in_vmx_guest)
-    vmwrite(encoding, val_64);
-  else
     vmwrite_shadow(encoding, val_64);
+  else
+    vmwrite(encoding, val_64);
 
   VMsucceed();
 #endif  
