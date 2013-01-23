@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2003-2012  The Bochs Project
+//  Copyright (C) 2003-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -201,8 +201,8 @@ static BOOL CALLBACK StringParamProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
 static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   static bx_param_filename_c *param;
-  static bx_param_bool_c *status, *readonly;
-  static bx_param_enum_c *devtype;
+  static bx_param_bool_c *readonly;
+  static bx_param_enum_c *devtype, *status;
   static bx_param_enum_c *mediatype;
   bx_list_c *list;
   char mesg[MAX_PATH];
@@ -214,7 +214,7 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
     case WM_INITDIALOG:
       param = (bx_param_filename_c *)lParam;
       list = (bx_list_c *)param->get_parent();
-      status = SIM->get_param_bool("status", list);
+      status = SIM->get_param_enum("status", list);
       readonly = SIM->get_param_bool("readonly", list);
       devtype = SIM->get_param_enum("devtype", list);
       mediatype = SIM->get_param_enum("type", list);
@@ -228,7 +228,7 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
       }
       cap = mediatype->get() - (int)mediatype->get_min();
       SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_SETCURSEL, cap, 0);
-      if (status->get()) {
+      if (status->get() == BX_INSERTED) {
         SendMessage(GetDlgItem(hDlg, IDSTATUS), BM_SETCHECK, BST_CHECKED, 0);
       }
       if (readonly->get()) {
@@ -257,7 +257,7 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
           }
           return TRUE;
         case IDOK:
-          status->set(0);
+          status->set(BX_EJECTED);
           if (SendMessage(GetDlgItem(hDlg, IDSTATUS), BM_GETCHECK, 0, 0) == BST_CHECKED) {
             GetDlgItemText(hDlg, IDPATH, path, MAX_PATH);
             if (lstrlen(path) == 0) {
@@ -272,7 +272,7 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
           cap = SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_GETITEMDATA, i, 0);
           mediatype->set(cap);
           if (lstrcmp(path, "none")) {
-            status->set(1);
+            status->set(BX_INSERTED);
           }
           EndDialog(hDlg, 1);
           return TRUE;

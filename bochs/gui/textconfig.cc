@@ -365,7 +365,7 @@ void build_runtime_options_prompt(const char *format, char *buf, int size)
     else {
       sprintf(buffer[i], "%s, size=%s, %s", SIM->get_param_string("path", floppyop)->getptr(),
         SIM->get_param_enum("type", floppyop)->get_selected(),
-        SIM->get_param_bool("status", floppyop)->get() ? "inserted":"ejected");
+        SIM->get_param_enum("status", floppyop)->get_selected());
       if (!SIM->get_param_string("path", floppyop)->getptr()[0]) strcpy(buffer[i], "none");
     }
   }

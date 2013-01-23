@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2012  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -142,7 +142,7 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c()
     bx_list_c *floppy = (bx_list_c*)SIM->get_param(pname);
     SIM->get_param_string("path", floppy)->set_handler(NULL);
     SIM->get_param_bool("readonly", floppy)->set_handler(NULL);
-    SIM->get_param_bool("status", floppy)->set_handler(NULL);
+    SIM->get_param_enum("status", floppy)->set_handler(NULL);
   }
   SIM->get_bochs_root()->remove("floppy");
   BX_DEBUG(("Exit"));
@@ -194,7 +194,7 @@ void bx_floppy_ctrl_c::init(void)
   }
 
   if (SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->get() != BX_FLOPPY_NONE) {
-    if (SIM->get_param_bool(BXPN_FLOPPYA_STATUS)->get()) {
+    if (SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->get() == BX_INSERTED) {
       BX_FD_THIS s.media[0].write_protected = SIM->get_param_bool(BXPN_FLOPPYA_READONLY)->get();
       if (evaluate_media(BX_FD_THIS s.device_type[0], SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->get(),
                          SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(), & BX_FD_THIS s.media[0])) {
@@ -207,7 +207,7 @@ void bx_floppy_ctrl_c::init(void)
           SIM->get_param_bool(BXPN_FLOPPYA_READONLY)->set(1);
 #undef MED
       } else {
-        SIM->get_param_bool(BXPN_FLOPPYA_STATUS)->set(0);
+        SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->set(BX_EJECTED);
       }
     }
   }
@@ -227,7 +227,7 @@ void bx_floppy_ctrl_c::init(void)
   }
 
   if (SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->get() != BX_FLOPPY_NONE) {
-    if (SIM->get_param_bool(BXPN_FLOPPYB_STATUS)->get()) {
+    if (SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->get() == BX_INSERTED) {
       BX_FD_THIS s.media[1].write_protected = SIM->get_param_bool(BXPN_FLOPPYB_READONLY)->get();
       if (evaluate_media(BX_FD_THIS s.device_type[1], SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->get(),
                          SIM->get_param_string(BXPN_FLOPPYB_PATH)->getptr(), & BX_FD_THIS s.media[1])) {
@@ -240,7 +240,7 @@ void bx_floppy_ctrl_c::init(void)
           SIM->get_param_bool(BXPN_FLOPPYB_READONLY)->set(1);
 #undef MED
       } else {
-        SIM->get_param_bool(BXPN_FLOPPYB_STATUS)->set(0);
+        SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->set(BX_EJECTED);
       }
     }
   }
@@ -273,8 +273,8 @@ void bx_floppy_ctrl_c::init(void)
     SIM->get_param_string("path", floppy)->set_runtime_param(1);
     SIM->get_param_bool("readonly", floppy)->set_handler(floppy_param_handler);
     SIM->get_param_bool("readonly", floppy)->set_runtime_param(1);
-    SIM->get_param_bool("status", floppy)->set_handler(floppy_param_handler);
-    SIM->get_param_bool("status", floppy)->set_runtime_param(1);
+    SIM->get_param_enum("status", floppy)->set_handler(floppy_param_handler);
+    SIM->get_param_enum("status", floppy)->set_runtime_param(1);
   }
   // register handler for correct floppy parameter handling after runtime config
   SIM->register_runtime_config_handler(this, runtime_config_handler);
@@ -419,7 +419,7 @@ void bx_floppy_ctrl_c::runtime_config(void)
   for (drive=0; drive<2; drive++) {
     if (BX_FD_THIS s.media[drive].status_changed) {
       sprintf(pname, "floppy.%d.status", drive);
-      status = SIM->get_param_bool(pname)->get();
+      status = (SIM->get_param_enum(pname)->get() == BX_INSERTED);
       if (BX_FD_THIS s.media_present[drive]) {
         BX_FD_THIS set_media_status(drive, 0);
       }
@@ -1460,9 +1460,9 @@ unsigned bx_floppy_ctrl_c::set_media_status(unsigned drive, bx_bool status)
     close_media(&BX_FD_THIS s.media[drive]);
     BX_FD_THIS s.media_present[drive] = 0;
     if (drive == 0) {
-      SIM->get_param_bool(BXPN_FLOPPYA_STATUS)->set(0);
+      SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->set(BX_EJECTED);
     } else {
-      SIM->get_param_bool(BXPN_FLOPPYB_STATUS)->set(0);
+      SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->set(BX_EJECTED);
     }
     BX_FD_THIS s.DIR[drive] |= 0x80; // disk changed line
     return(0);
@@ -1485,7 +1485,7 @@ unsigned bx_floppy_ctrl_c::set_media_status(unsigned drive, bx_bool status)
         if (MED.write_protected)
           SIM->get_param_bool(BXPN_FLOPPYA_READONLY)->set(1);
 #undef MED
-        SIM->get_param_bool(BXPN_FLOPPYA_STATUS)->set(1);
+        SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->set(BX_INSERTED);
       } else {
 #define MED (BX_FD_THIS s.media[1])
         BX_INFO(("fd1: '%s' ro=%d, h=%d,t=%d,spt=%d",
@@ -1494,16 +1494,16 @@ unsigned bx_floppy_ctrl_c::set_media_status(unsigned drive, bx_bool status)
         if (MED.write_protected)
           SIM->get_param_bool(BXPN_FLOPPYB_READONLY)->set(1);
 #undef MED
-        SIM->get_param_bool(BXPN_FLOPPYB_STATUS)->set(1);
+        SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->set(BX_INSERTED);
       }
       return(1);
     } else {
       BX_FD_THIS s.media_present[drive] = 0;
       if (drive == 0) {
-        SIM->get_param_bool(BXPN_FLOPPYA_STATUS)->set(0);
+        SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->set(BX_EJECTED);
         SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->set(BX_FLOPPY_NONE);
       } else {
-        SIM->get_param_bool(BXPN_FLOPPYB_STATUS)->set(0);
+        SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->set(BX_EJECTED);
         SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->set(BX_FLOPPY_NONE);
       }
       return(0);
@@ -1947,7 +1947,7 @@ const char* bx_floppy_ctrl_c::floppy_param_string_handler(bx_param_string_c *par
         BX_ERROR(("Cannot add a floppy drive at runtime"));
         SIM->get_param_string("path", base)->set("none");
       }
-      if (SIM->get_param_bool("status", base)->get() == 1) {
+      if (SIM->get_param_enum("status", base)->get() == BX_INSERTED) {
         // tell the device model that we removed, then inserted the disk
         BX_FD_THIS s.media[drive].status_changed = 1;
       }

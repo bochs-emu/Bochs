@@ -2,6 +2,8 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 
+//  Copyright (C) 2002-2013  The Bochs Project
+//
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
@@ -1578,7 +1580,7 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
         createButton->Enable((val1 != BX_FDD_NONE) && (val2 != BX_FLOPPY_NONE));
       } else if ((pstr == pstrPath) && (!pstrPath->u.text->IsModified())) {
         pstrMedia->u.choice->SetSelection(pstrMedia->u.choice->FindString(wxT("auto")));
-        pstrStatus->u.checkbox->SetValue(1);
+        pstrStatus->u.choice->SetSelection(BX_INSERTED);
       }
     }
     ParamDialog::OnEvent(event);

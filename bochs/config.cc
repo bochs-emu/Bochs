@@ -275,8 +275,8 @@ void bx_init_options()
   bx_list_c *menu;
   bx_list_c *deplist;
   bx_param_num_c *ioaddr, *ioaddr2, *irq;
-  bx_param_bool_c *enabled, *readonly, *status;
-  bx_param_enum_c *mode, *type, *toggle, *status2;
+  bx_param_bool_c *enabled, *readonly;
+  bx_param_enum_c *mode, *type, *toggle, *status;
   bx_param_filename_c *path;
   char name[BX_PATHNAME_LEN], descr[512], label[512];
 
@@ -1095,6 +1095,8 @@ void bx_init_options()
   new bx_list_c(floppy, "0", "First Floppy Drive");
   new bx_list_c(floppy, "1", "Second Floppy Drive");
 
+  static const char *media_status_names[] = { "ejected", "inserted", NULL };
+
   bx_param_enum_c *devtype;
   // floppy options
   for (i = 0; i < 2; i++) {
@@ -1140,12 +1142,14 @@ void bx_init_options()
       0);
     readonly->set_ask_format("Is media write protected? [%s] ");
 
-    status = new bx_param_bool_c(floppyX,
+    status = new bx_param_enum_c(floppyX,
       "status",
-      "Inserted",
+      "Status",
       "Floppy media status (inserted / ejected)",
-      0);
-    status->set_ask_format("Is media inserted in drive? [%s] ");
+      media_status_names,
+      BX_INSERTED,
+      BX_EJECTED);
+    status->set_ask_format("Is the device inserted or ejected? [%s] ");
 
     deplist = new bx_list_c(NULL);
     deplist->add(path);
@@ -1285,17 +1289,15 @@ void bx_init_options()
         BX_HDIMAGE_MODE_FLAT);
       mode->set_ask_format("Enter mode of ATA device, (flat, concat, etc.): [%s] ");
 
-      static const char *media_status_names[] = { "ejected", "inserted", NULL };
-
-      status2 = new bx_param_enum_c(menu,
+      status = new bx_param_enum_c(menu,
         "status",
         "Status",
         "CD-ROM media status (inserted / ejected)",
         media_status_names,
         BX_INSERTED,
         BX_EJECTED);
-        status2->set_ask_format("Is the device inserted or ejected? [%s] ");
- 
+      status->set_ask_format("Is the device inserted or ejected? [%s] ");
+
       bx_param_filename_c *journal = new bx_param_filename_c(menu,
         "journal",
         "Path of journal file",
@@ -2196,10 +2198,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
             context, params[0]));
       }
       else if (!strcmp(params[i], "status=inserted")) {
-        SIM->get_param_bool("status", base)->set(1);
+        SIM->get_param_enum("status", base)->set(BX_INSERTED);
       }
       else if (!strcmp(params[i], "status=ejected")) {
-        SIM->get_param_bool("status", base)->set(0);
+        SIM->get_param_enum("status", base)->set(BX_EJECTED);
       }
       else if (!strncmp(params[i], "write_protected=", 16)) {
         SIM->get_param_bool("readonly", base)->set(atol(&params[i][16]));
@@ -3280,7 +3282,7 @@ int bx_write_floppy_options(FILE *fp, int drive)
     fprintf(fp, ", %s=\"%s\", status=%s, write_protected=%d",
       fdtypes[SIM->get_param_enum(type)->get() - BX_FLOPPY_NONE],
       SIM->get_param_string(path)->getptr(),
-      SIM->get_param_bool(status)->get() ? "inserted":"ejected",
+      SIM->get_param_enum(status)->get_selected(),
       SIM->get_param_bool(readonly)->get());
   }
   fprintf(fp, "\n");

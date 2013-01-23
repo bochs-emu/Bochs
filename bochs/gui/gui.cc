@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2012  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -179,7 +179,7 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
   // when that bitmap is clicked on
 
   // Floppy A:
-  BX_GUI_THIS floppyA_status = SIM->get_param_bool(BXPN_FLOPPYA_STATUS)->get();
+  BX_GUI_THIS floppyA_status = (SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->get() == BX_INSERTED);
   if (BX_GUI_THIS floppyA_status)
     BX_GUI_THIS floppyA_hbar_id = headerbar_bitmap(BX_GUI_THIS floppyA_bmap_id,
                           BX_GRAVITY_LEFT, floppyA_handler);
@@ -189,7 +189,7 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
   BX_GUI_THIS set_tooltip(BX_GUI_THIS floppyA_hbar_id, "Change floppy A: media");
 
   // Floppy B:
-  BX_GUI_THIS floppyB_status = SIM->get_param_bool(BXPN_FLOPPYB_STATUS)->get();
+  BX_GUI_THIS floppyB_status = (SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->get() == BX_INSERTED);
   if (BX_GUI_THIS floppyB_status)
     BX_GUI_THIS floppyB_hbar_id = headerbar_bitmap(BX_GUI_THIS floppyB_bmap_id,
                           BX_GRAVITY_LEFT, floppyB_handler);
@@ -271,8 +271,8 @@ void bx_gui_c::cleanup(void)
 
 void bx_gui_c::update_drive_status_buttons(void)
 {
-  BX_GUI_THIS floppyA_status = SIM->get_param_bool(BXPN_FLOPPYA_STATUS)->get();
-  BX_GUI_THIS floppyB_status = SIM->get_param_bool(BXPN_FLOPPYB_STATUS)->get();
+  BX_GUI_THIS floppyA_status = (SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->get() == BX_INSERTED);
+  BX_GUI_THIS floppyB_status = (SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->get() == BX_INSERTED);
   Bit32u handle = DEV_hd_get_first_cd_handle();
   BX_GUI_THIS cdrom1_status = DEV_hd_get_cd_media_status(handle);
   if (BX_GUI_THIS floppyA_status)
