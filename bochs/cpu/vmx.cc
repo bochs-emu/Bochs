@@ -3006,7 +3006,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD_EdGd(bxInstruction_c *i)
   bx_phy_address vmcs_pointer = BX_CPU_THIS_PTR vmcsptr;
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
+#if BX_SUPPORT_VMX >= 2
     if (Vmexit_Vmread(i))
+#endif
         VMexit_Instruction(i, VMX_VMEXIT_VMREAD, BX_READ);
 
     vmcs_pointer = BX_CPU_THIS_PTR vmcs.vmcs_linkptr;
@@ -3031,7 +3033,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD_EdGd(bxInstruction_c *i)
     BX_NEXT_INSTR(i);
   }
 
-  Bit32u field_32 = (Bit32u) ((BX_CPU_THIS_PTR in_vmx_guest) ? vmread_shadow(encoding) : vmread(encoding));
+  Bit32u field_32;
+#if BX_SUPPORT_VMX >= 2
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    field_32 = (Bit32u) vmread_shadow(encoding);
+  else
+#endif
+    field_32 = (Bit32u) vmread(encoding);
 
   if (i->modC0()) {
      BX_WRITE_32BIT_REGZ(i->dst(), field_32);
@@ -3058,7 +3066,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD_EqGq(bxInstruction_c *i)
   bx_phy_address vmcs_pointer = BX_CPU_THIS_PTR vmcsptr;
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
+#if BX_SUPPORT_VMX >= 2
     if (Vmexit_Vmread(i))
+#endif
         VMexit_Instruction(i, VMX_VMEXIT_VMREAD, BX_READ);
 
     vmcs_pointer = BX_CPU_THIS_PTR vmcs.vmcs_linkptr;
@@ -3088,7 +3098,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD_EqGq(bxInstruction_c *i)
     BX_NEXT_INSTR(i);
   }
 
-  Bit64u field_64 = (BX_CPU_THIS_PTR in_vmx_guest) ? vmread_shadow(encoding) : vmread(encoding);
+  Bit64u field_64;
+#if BX_SUPPORT_VMX >= 2
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    field_64 = vmread_shadow(encoding);
+  else
+#endif
+    field_64 = vmread(encoding);
 
   if (i->modC0()) {
      BX_WRITE_64BIT_REG(i->dst(), field_64);
@@ -3115,7 +3131,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE_GdEd(bxInstruction_c *i)
   bx_phy_address vmcs_pointer = BX_CPU_THIS_PTR vmcsptr;
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
+#if BX_SUPPORT_VMX >= 2
     if (Vmexit_Vmwrite(i))
+#endif
         VMexit_Instruction(i, VMX_VMEXIT_VMWRITE, BX_WRITE);
 
     vmcs_pointer = BX_CPU_THIS_PTR vmcs.vmcs_linkptr;
@@ -3159,9 +3177,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE_GdEd(bxInstruction_c *i)
     }
   }
 
+#if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
     vmwrite_shadow(encoding, (Bit64u) val_32);
   else
+#endif
     vmwrite(encoding, (Bit64u) val_32);
 
   VMsucceed();
@@ -3181,7 +3201,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE_GqEq(bxInstruction_c *i)
   bx_phy_address vmcs_pointer = BX_CPU_THIS_PTR vmcsptr;
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
+#if BX_SUPPORT_VMX >= 2
     if (Vmexit_Vmwrite(i))
+#endif
         VMexit_Instruction(i, VMX_VMEXIT_VMWRITE, BX_WRITE);
 
     vmcs_pointer = BX_CPU_THIS_PTR vmcs.vmcs_linkptr;
@@ -3231,9 +3253,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE_GqEq(bxInstruction_c *i)
     }
   }
 
+#if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
     vmwrite_shadow(encoding, val_64);
   else
+#endif
     vmwrite(encoding, val_64);
 
   VMsucceed();
