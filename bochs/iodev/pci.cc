@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2012  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -70,6 +70,7 @@ void bx_pci_bridge_c::init(void)
 {
   // called once when bochs initializes
   unsigned i;
+  Bit32u ramsize;
 
   Bit8u devfunc = BX_PCI_DEVICE(0,0);
   BX_PCI_THIS chipset = SIM->get_param_enum(BXPN_PCI_CHIPSET)->get();
@@ -89,6 +90,66 @@ void bx_pci_bridge_c::init(void)
     BX_PCI_THIS pci_conf[0x03] = 0x01;
     BX_PCI_THIS pci_conf[0x08] = 0x02;
   }
+
+  // DRAM module setup
+  for (i = 0; i < 8; i++)
+    BX_PCI_THIS DRBA[i] = 0x0;
+  ramsize = SIM->get_param_num(BXPN_MEM_SIZE)->get();
+  if ((ramsize & 0x07) != 0) {
+    ramsize = (ramsize & ~0x07) + 8;
+  }
+  if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I430FX) {
+    if (ramsize > 128) ramsize = 128;
+    if (ramsize == 8) {
+      for (i = 0; i < 5; i++) {
+        BX_PCI_THIS DRBA[i] = 0x02;
+      }
+    } else if (ramsize == 16) {
+      BX_PCI_THIS DRBA[0] = 0x02;
+      for (i = 1; i < 5; i++) {
+        BX_PCI_THIS DRBA[i] = 0x04;
+      }
+    } else if (ramsize == 24) {
+      BX_PCI_THIS DRBA[0] = 0x02;
+      BX_PCI_THIS DRBA[1] = 0x04;
+      for (i = 2; i < 5; i++) {
+        BX_PCI_THIS DRBA[i] = 0x06;
+      }
+    } else if (ramsize == 32) {
+      BX_PCI_THIS DRBA[0] = 0x04;
+      for (i = 1; i < 5; i++) {
+        BX_PCI_THIS DRBA[i] = 0x08;
+      }
+    } else if (ramsize <= 48) {
+      BX_PCI_THIS DRBA[0] = 0x04;
+      BX_PCI_THIS DRBA[1] = 0x08;
+      for (i = 2; i < 5; i++) {
+        BX_PCI_THIS DRBA[i] = 0x0c;
+      }
+    } else if (ramsize <= 64) {
+      BX_PCI_THIS DRBA[0] = 0x08;
+      for (i = 1; i < 5; i++) {
+        BX_PCI_THIS DRBA[i] = 0x10;
+      }
+    } else if (ramsize <= 96) {
+      BX_PCI_THIS DRBA[0] = 0x04;
+      BX_PCI_THIS DRBA[1] = 0x08;
+      BX_PCI_THIS DRBA[2] = 0x10;
+      BX_PCI_THIS DRBA[3] = 0x18;
+      BX_PCI_THIS DRBA[4] = 0x18;
+    } else if (ramsize <= 128) {
+      BX_PCI_THIS DRBA[0] = 0x10;
+      for (i = 1; i < 5; i++) {
+        BX_PCI_THIS DRBA[i] = 0x20;
+      }
+    }
+  } else {
+    if (ramsize > 1024) ramsize = 1024;
+    // TODO: i440FX
+  }
+  for (i = 0; i < 8; i++)
+    BX_PCI_THIS pci_conf[0x60 + i] = BX_PCI_THIS DRBA[i];
+  dram_detect = 0;
 
 #if BX_DEBUGGER
   // register device for the 'info device' command (calls debug_dump())
@@ -154,7 +215,10 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
 {
   Bit8u value8, oldval;
   unsigned area;
+  Bit8u drba_reg, old_dram_detect;
+  bx_bool drba_changed;
 
+  old_dram_detect = BX_PCI_THIS dram_detect;
   if ((address >= 0x10) && (address < 0x34))
     return;
   for (unsigned i=0; i<io_len; i++) {
@@ -225,12 +289,40 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
           bx_pc_system.MemoryMappingChanged();
         }
         break;
+      case 0x60:
+      case 0x61:
+      case 0x62:
+      case 0x63:
+      case 0x64:
+      case 0x65:
+      case 0x66:
+      case 0x67:
+        BX_PCI_THIS pci_conf[address+i] = value8;
+        drba_reg = (address + i) & 0x07;
+        drba_changed = (BX_PCI_THIS pci_conf[0x60 + drba_reg] != BX_PCI_THIS DRBA[drba_reg]);
+        if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I430FX) {
+          if (drba_changed) {
+            BX_PCI_THIS dram_detect |= (1 << drba_reg);
+          } else if (!drba_changed && dram_detect) {
+            BX_PCI_THIS dram_detect &= ~(1 << drba_reg);
+          }
+        }
+        break;
       case 0x72:
         smram_control(value);  // SMRAM conrol register
         break;
       default:
         BX_PCI_THIS pci_conf[address+i] = value8;
         BX_DEBUG(("%s write register 0x%02x value 0x%02x", csname[BX_PCI_THIS chipset], address+i, value8));
+    }
+  }
+  if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I430FX) {
+    if ((BX_PCI_THIS dram_detect > 0) && (old_dram_detect == 0)) {
+      // TODO
+      BX_ERROR(("FIXME: DRAM module detection"));
+    } else if ((BX_PCI_THIS dram_detect == 0) && (old_dram_detect > 0)) {
+      // TODO
+      BX_INFO(("normal memory access mode"));
     }
   }
 }
