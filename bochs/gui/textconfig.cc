@@ -378,7 +378,7 @@ void build_runtime_options_prompt(const char *format, char *buf, int size)
     else
       sprintf(buffer[2+cdrom], "(%s on ata%d) %s, %s",
         device&1?"slave":"master", device/2, SIM->get_param_string("path", cdromop)->getptr(),
-        (SIM->get_param_bool("status", cdromop)->get()) ? "inserted" : "ejected");
+        (SIM->get_param_enum("status", cdromop)->get_selected()));
     }
 
   snprintf(buf, size, format, buffer[0], buffer[1], buffer[2],

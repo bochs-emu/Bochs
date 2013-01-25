@@ -1095,8 +1095,6 @@ void bx_init_options()
   new bx_list_c(floppy, "0", "First Floppy Drive");
   new bx_list_c(floppy, "1", "Second Floppy Drive");
 
-  static const char *media_status_names[] = { "ejected", "inserted", NULL };
-
   bx_param_enum_c *devtype;
   // floppy options
   for (i = 0; i < 2; i++) {

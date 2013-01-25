@@ -142,7 +142,7 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
   char tmpfname[BX_PATHNAME_LEN];
   char *ptr1, *ptr2;
   bx_param_string_c *path;
-  bx_param_bool_c *status;
+  bx_param_enum_c *status;
 
   d.type = type;
   d.maxspeed = USB_SPEED_FULL;
@@ -170,16 +170,23 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
     sprintf(pname, "cdrom%d", ++cdrom_count);
     sprintf(label, "USB CD-ROM #%d Configuration", cdrom_count);
     s.config = new bx_list_c(usb_rt, pname, label);
-    s.config->set_options(bx_list_c::SERIES_ASK);
+    s.config->set_options(bx_list_c::SERIES_ASK | bx_list_c::USE_BOX_TITLE);
     s.config->set_runtime_param(1);
     s.config->set_device_param(this);
     path = new bx_param_string_c(s.config, "path", "Path", "", "", BX_PATHNAME_LEN);
     path->set(s.fname);
     path->set_handler(cd_param_string_handler);
     path->set_runtime_param(1);
-    status = new bx_param_bool_c(s.config, "status", "Inserted", "", 1);
+    status = new bx_param_enum_c(s.config,
+      "status",
+      "Status",
+      "CD-ROM media status (inserted / ejected)",
+      media_status_names,
+      BX_INSERTED,
+      BX_EJECTED);
     status->set_handler(cd_param_handler);
     status->set_runtime_param(1);
+    status->set_ask_format("Is the device inserted or ejected? [%s] ");
 #if BX_WITH_WX
     bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
     usb->add(s.config);
@@ -716,7 +723,7 @@ Bit64s usb_msd_device_c::cd_param_handler(bx_param_c *param, int set, Bit64s val
       path = SIM->get_param_string("path", param->get_parent())->getptr();
       val &= ((strlen(path) > 0) && (strcmp(path, "none")));
       if (val != cdrom->get_inserted()) {
-        cdrom->set_inserted((bx_bool)val);
+        cdrom->set_inserted(val == BX_INSERTED);
       }
     } else {
       BX_PANIC(("cd_param_string_handler: cdrom not found"));
