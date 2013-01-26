@@ -73,12 +73,11 @@ Bit32s pnic_options_parser(const char *context, int num_params, char *params[])
     if (!SIM->get_param_bool("enabled", base)->get()) {
       if (valid == 0x04) {
         SIM->get_param_bool("enabled", base)->set(1);
-      } else if (valid < 0x80) {
-        BX_PANIC(("%s: 'pcipnic' directive incomplete (mac is required)", context));
       }
-    } else {
-      if (valid & 0x80) {
-        SIM->get_param_bool("enabled", base)->set(0);
+    }
+    if (valid < 0x80) {
+      if ((valid & 0x04) == 0) {
+        BX_PANIC(("%s: 'pcipnic' directive incomplete (mac is required)", context));
       }
     }
   } else {

@@ -108,17 +108,14 @@ Bit32s ne2k_options_parser(const char *context, int num_params, char *params[])
     if (!SIM->get_param_bool("enabled", base)->get()) {
       if (valid == 0x07) {
         SIM->get_param_bool("enabled", base)->set(1);
-      } else if (valid < 0x80) {
-        if ((valid & 0x03) != 0x03) {
-          BX_ERROR(("%s: 'ne2k' directive incomplete (ioaddr and irq are required)", context));
-        }
-        if ((valid & 0x04) == 0) {
-          BX_ERROR(("%s: 'ne2k' directive incomplete (mac address is required)", context));
-        }
       }
-    } else {
-      if (valid & 0x80) {
-        SIM->get_param_bool("enabled", base)->set(0);
+    }
+    if (valid < 0x80) {
+      if ((valid & 0x03) != 0x03) {
+        BX_ERROR(("%s: 'ne2k' directive incomplete (ioaddr and irq are required)", context));
+      }
+      if ((valid & 0x04) == 0) {
+        BX_ERROR(("%s: 'ne2k' directive incomplete (mac address is required)", context));
       }
     }
   } else {

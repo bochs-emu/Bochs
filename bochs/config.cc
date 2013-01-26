@@ -2041,35 +2041,59 @@ static int parse_param_from_list(const char *input, bx_list_c *list)
   int ret = 0;
 
   if (list == NULL) {
-    return -1;
+    return -1; // list null
   }
   propval = strdup(input);
   property = strtok(propval, "=");
   value = strtok(NULL, "");
+  if (!strcmp(property, input)) {
+    free(propval);
+    return -2; // no equals
+  }
   param = list->get_by_name(property);
   if (param != NULL) {
+    if (!param->get_enabled()) {
+      free(propval);
+      return -4; // parameter disabled
+    }
     switch (param->get_type()) {
       case BXT_PARAM_NUM:
-        ((bx_param_num_c*)param)->set(atol(value));
+        if (value != NULL) {
+          if ((value[0] == '0') && (value[1] == 'x')) {
+            ((bx_param_num_c*)param)->set(strtoul(value, NULL, 16));
+          } else {
+            ((bx_param_num_c*)param)->set(strtoul(value, NULL, 10));
+          }
+        }
         break;
       case BXT_PARAM_BOOL:
-        if (!strcmp(value, "0") || !strcmp(value, "1")) {
-          ((bx_param_bool_c*)param)->set(atol(value));
-        } else {
-          ret = -4;
+        if (value != NULL) {
+          if (!strcmp(value, "0") || !strcmp(value, "1")) {
+            ((bx_param_bool_c*)param)->set(atol(value));
+          } else {
+            ret = -6; // wrong value
+          }
         }
         break;
       case BXT_PARAM_ENUM:
-        ((bx_param_enum_c*)param)->set_by_name(value);
+        if (value != NULL) {
+          if (!((bx_param_enum_c*)param)->set_by_name(value)) {
+            ret = -6; // wrong value
+          }
+        }
         break;
       case BXT_PARAM_STRING:
-        ((bx_param_string_c*)param)->set(value);
+        if (value != NULL) {
+          ((bx_param_string_c*)param)->set(value);
+        } else {
+          ((bx_param_string_c*)param)->set("");
+        }
         break;
       default:
-        ret = -3;
+        ret = -5; // unknown type
     }
   } else {
-    ret = -2;
+    ret = -3; // unknown parameter
   }
   free(propval);
   return ret;
@@ -2108,7 +2132,10 @@ int bx_parse_nic_params(const char *context, const char *param, bx_list_c *base)
   int n;
 
   if (!strncmp(param, "enabled=", 8)) {
-    if (atol(&param[8]) == 0) valid |= 0x80;
+    n = atol(&param[8]);
+    SIM->get_param_bool("enabled", base)->set(n);
+    if (n == 0) valid |= 0x80;
+    else valid &= 0x7f;
   } else if (!strncmp(param, "mac=", 4)) {
     n = sscanf(&param[4], "%x:%x:%x:%x:%x:%x",
                &tmp[0],&tmp[1],&tmp[2],&tmp[3],&tmp[4],&tmp[5]);
@@ -2122,14 +2149,8 @@ int bx_parse_nic_params(const char *context, const char *param, bx_list_c *base)
   } else if (!strncmp(param, "ethmod=", 7)) {
     if (!SIM->get_param_enum("ethmod", base)->set_by_name(&param[7]))
       PARSE_ERR(("%s: ethernet module '%s' not available", context, &param[7]));
-  } else if (!strncmp(param, "ethdev=", 7)) {
-    SIM->get_param_string("ethdev", base)->set(&param[7]);
-  } else if (!strncmp(param, "script=", 7)) {
-    SIM->get_param_string("script", base)->set(&param[7]);
-  } else if (!strncmp(param, "bootrom=", 8)) {
-    SIM->get_param_string("bootrom", base)->set(&param[8]);
-  } else {
-    PARSE_WARN(("%s: unknown parameter '%s' for '%s' ignored.", context, param, base->get_name()));
+  } else if (parse_param_from_list(param, base) < 0) {
+    PARSE_WARN(("%s: expected parameter '%s' for '%s' ignored.", context, param, base->get_name()));
     return -1;
   }
   return valid;
@@ -2268,43 +2289,9 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR(("%s: ataX directive malformed.", context));
     }
     sprintf(tmpname, "ata.%d.resources", channel);
-    base = (bx_list_c*) SIM->get_param(tmpname);
-    if (strncmp(params[1], "enabled=", 8)) {
-      PARSE_ERR(("%s: ataX directive malformed.", context));
-    } else {
-      SIM->get_param_bool("enabled", base)->set(atol(&params[1][8]));
-    }
-
-    if (num_params > 2) {
-      if (strncmp(params[2], "ioaddr1=", 8)) {
+    for (i=1; i<num_params; i++) {
+      if (parse_param_from_list(params[i], (bx_list_c*) SIM->get_param(tmpname)) < 0) {
         PARSE_ERR(("%s: ataX directive malformed.", context));
-      }
-      else {
-        if ((params[2][8] == '0') && (params[2][9] == 'x'))
-          SIM->get_param_num("ioaddr1", base)->set(strtoul(&params[2][8], NULL, 16));
-        else
-          SIM->get_param_num("ioaddr1", base)->set(strtoul(&params[2][8], NULL, 10));
-      }
-    }
-
-    if (num_params > 3) {
-      if (strncmp(params[3], "ioaddr2=", 8)) {
-        PARSE_ERR(("%s: ataX directive malformed.", context));
-      }
-      else {
-        if ((params[3][8] == '0') && (params[3][9] == 'x'))
-          SIM->get_param_num("ioaddr2", base)->set(strtoul(&params[3][8], NULL, 16));
-        else
-          SIM->get_param_num("ioaddr2", base)->set(strtoul(&params[3][8], NULL, 10));
-      }
-    }
-
-    if (num_params > 4) {
-      if (strncmp(params[4], "irq=", 4)) {
-        PARSE_ERR(("%s: ataX directive malformed.", context));
-      }
-      else {
-        SIM->get_param_num("irq", base)->set(atol(&params[4][4]));
       }
     }
   }
@@ -2312,7 +2299,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
   // ataX-master, ataX-slave
   else if ((!strncmp(params[0], "ata", 3)) && (strlen(params[0]) > 4)) {
     Bit8u channel = params[0][3];
-    int type = -1, mode = BX_HDIMAGE_MODE_FLAT, biosdetect = BX_ATA_BIOSDETECT_AUTO;
+    int type = -1;
     Bit32u cylinders = 0, heads = 0, sectors = 0;
     char tmpname[80];
 
@@ -2336,70 +2323,37 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         type = SIM->get_param_enum("type", base)->find_by_name(&params[i][5]);
         if (type < 0) {
           PARSE_ERR(("%s: ataX-master/slave: unknown type '%s'", context, &params[i][5]));
+        } else {
+          SIM->get_param_enum("type", base)->set(type);
         }
-      } else if (!strncmp(params[i], "mode=", 5)) {
-        mode = SIM->get_param_enum("mode", base)->find_by_name(&params[i][5]);
-        if (mode < 0) {
-          PARSE_ERR(("%s: ataX-master/slave: unknown mode '%s'", context, &params[i][5]));
-        }
-      } else if (!strncmp(params[i], "path=", 5)) {
-        SIM->get_param_string("path", base)->set(&params[i][5]);
       } else if (!strncmp(params[i], "cylinders=", 10)) {
         cylinders = atol(&params[i][10]);
       } else if (!strncmp(params[i], "heads=", 6)) {
         heads = atol(&params[i][6]);
       } else if (!strncmp(params[i], "spt=", 4)) {
         sectors = atol(&params[i][4]);
-      } else if (!strncmp(params[i], "model=", 6)) {
-        SIM->get_param_string("model", base)->set(&params[i][6]);
-      } else if (!strncmp(params[i], "biosdetect=", 11)) {
-        biosdetect = SIM->get_param_enum("biosdetect", base)->find_by_name(&params[i][11]);
-        if (biosdetect < 0) {
-          PARSE_ERR(("%s: ataX-master/slave: unknown biosdetect '%s'", context, &params[i][11]));
-        }
-      } else if (!strcmp(params[i], "translation=none")) {
-        SIM->get_param_enum("translation", base)->set(BX_ATA_TRANSLATION_NONE);
-      } else if (!strcmp(params[i], "translation=lba")) {
-        SIM->get_param_enum("translation", base)->set(BX_ATA_TRANSLATION_LBA);
-      } else if (!strcmp(params[i], "translation=large")) {
-        SIM->get_param_enum("translation", base)->set(BX_ATA_TRANSLATION_LARGE);
       } else if (!strcmp(params[i], "translation=echs")) { // synonym of large
         SIM->get_param_enum("translation", base)->set(BX_ATA_TRANSLATION_LARGE);
-      } else if (!strcmp(params[i], "translation=rechs")) {
-        SIM->get_param_enum("translation", base)->set(BX_ATA_TRANSLATION_RECHS);
-      } else if (!strcmp(params[i], "translation=auto")) {
-        SIM->get_param_enum("translation", base)->set(BX_ATA_TRANSLATION_AUTO);
-      } else if (!strcmp(params[i], "status=ejected")) {
-        SIM->get_param_enum("status", base)->set(BX_EJECTED);
-      } else if (!strcmp(params[i], "status=inserted")) {
-        SIM->get_param_enum("status", base)->set(BX_INSERTED);
-      } else if (!strncmp(params[i], "journal=", 8)) {
-        SIM->get_param_string("journal", base)->set(&params[i][8]);
-      } else {
+      } else if (parse_param_from_list(params[i], base) < 0) {
         PARSE_ERR(("%s: ataX-master/slave directive malformed.", context));
       }
     }
 
     // Enables the ata device
-    if (type >= 0) {
-      SIM->get_param_enum("type", base)->set(type);
-      SIM->get_param_num("biosdetect", base)->set(biosdetect);
-      if (type == BX_ATA_DEVICE_DISK) {
-        if (strlen(SIM->get_param_string("path", base)->getptr()) > 0) {
-          SIM->get_param_enum("mode", base)->set(mode);
-          SIM->get_param_num("cylinders", base)->set(cylinders);
-          if ((cylinders == 0) && (heads == 0) && (sectors == 0)) {
-            PARSE_WARN(("%s: ataX-master/slave CHS set to 0/0/0 - autodetection enabled", context));
-            // using heads = 16 and spt = 63 for autodetection (bximage defaults)
-            SIM->get_param_num("heads", base)->set(16);
-            SIM->get_param_num("spt", base)->set(63);
-          } else {
-            SIM->get_param_num("heads", base)->set(heads);
-            SIM->get_param_num("spt", base)->set(sectors);
-          }
+    if (type == BX_ATA_DEVICE_DISK) {
+      if (strlen(SIM->get_param_string("path", base)->getptr()) > 0) {
+        SIM->get_param_num("cylinders", base)->set(cylinders);
+        if ((cylinders == 0) && (heads == 0) && (sectors == 0)) {
+          PARSE_WARN(("%s: ataX-master/slave CHS set to 0/0/0 - autodetection enabled", context));
+          // using heads = 16 and spt = 63 for autodetection (bximage defaults)
+          SIM->get_param_num("heads", base)->set(16);
+          SIM->get_param_num("spt", base)->set(63);
         } else {
-          SIM->get_param_enum("type", base)->set(BX_ATA_DEVICE_NONE);
+          SIM->get_param_num("heads", base)->set(heads);
+          SIM->get_param_num("spt", base)->set(sectors);
         }
+      } else {
+        SIM->get_param_enum("type", base)->set(BX_ATA_DEVICE_NONE);
       }
     }
 
@@ -2722,17 +2676,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR(("%s: mouse directive malformed.", context));
     }
     for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "enabled=", 8)) {
-        if (parse_param_bool(params[i], 8, BXPN_MOUSE_ENABLED) < 0) {
-          PARSE_ERR(("%s: mouse directive malformed.", context));
-        }
-      } else if (!strncmp(params[i], "type=", 5)) {
-        if (!SIM->get_param_enum(BXPN_MOUSE_TYPE)->set_by_name(&params[i][5]))
-          PARSE_ERR(("%s: mouse type '%s' not available", context, &params[i][5]));
-      } else if (!strncmp(params[i], "toggle=", 7)) {
-        if (!SIM->get_param_enum(BXPN_MOUSE_TOGGLE)->set_by_name(&params[i][7]))
-          PARSE_ERR(("%s: mouse toggle method '%s' not available", context, &params[i][7]));
-      } else {
+      if (parse_param_from_list(params[i], (bx_list_c*) SIM->get_param(BXPN_MOUSE)) < 0) {
         PARSE_ERR(("%s: mouse directive malformed.", context));
       }
     }
