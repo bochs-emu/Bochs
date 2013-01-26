@@ -123,11 +123,7 @@ Bit32s es1370_options_parser(const char *context, int num_params, char *params[]
   if (!strcmp(params[0], "es1370")) {
     bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370);
     for (int i = 1; i < num_params; i++) {
-      if (!strncmp(params[i], "enabled=", 8)) {
-        SIM->get_param_bool("enabled", base)->set(atol(&params[i][8]));
-      } else if (!strncmp(params[i], "wavedev=", 8)) {
-        SIM->get_param_string("wavedev", base)->set(&params[i][8]);
-      } else {
+      if (SIM->parse_param_from_list(context, params[i], base) < 0) {
         BX_ERROR(("%s: unknown parameter for es1370 ignored.", context));
       }
     }

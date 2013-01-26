@@ -2034,27 +2034,30 @@ static int parse_param_bool(const char *input, int len, const char *param)
   return -1;
 }
 
-static int parse_param_from_list(const char *input, bx_list_c *list)
+int bx_parse_param_from_list(const char *context, const char *input, bx_list_c *list)
 {
   char *propval, *property, *value;
   bx_param_c *param;
   int ret = 0;
 
   if (list == NULL) {
-    return -1; // list null
+    PARSE_WARN(("%s: parameter list == NULL!", context));
+    return -1;
   }
   propval = strdup(input);
   property = strtok(propval, "=");
   value = strtok(NULL, "");
   if (!strcmp(property, input)) {
     free(propval);
-    return -2; // no equals
+    PARSE_WARN(("%s: incorrect parameter format", context));
+    return -1;
   }
   param = list->get_by_name(property);
   if (param != NULL) {
     if (!param->get_enabled()) {
       free(propval);
-      return -4; // parameter disabled
+      PARSE_WARN(("%s: parameter '%s' disabled", context, property));
+      return -1;
     }
     switch (param->get_type()) {
       case BXT_PARAM_NUM:
@@ -2071,14 +2074,16 @@ static int parse_param_from_list(const char *input, bx_list_c *list)
           if (!strcmp(value, "0") || !strcmp(value, "1")) {
             ((bx_param_bool_c*)param)->set(atol(value));
           } else {
-            ret = -6; // wrong value
+            PARSE_WARN(("%s: wrong value for parameter '%s'", context, property));
+            ret = -1;
           }
         }
         break;
       case BXT_PARAM_ENUM:
         if (value != NULL) {
           if (!((bx_param_enum_c*)param)->set_by_name(value)) {
-            ret = -6; // wrong value
+            PARSE_WARN(("%s: invalid choice '%s' parameter '%s'", context, value, property));
+            ret = -1;
           }
         }
         break;
@@ -2090,10 +2095,12 @@ static int parse_param_from_list(const char *input, bx_list_c *list)
         }
         break;
       default:
-        ret = -5; // unknown type
+        PARSE_WARN(("%s: parameter '%s': unknown type", context, property));
+        ret = -1;
     }
   } else {
-    ret = -3; // unknown parameter
+    PARSE_WARN(("%s: unknown parameter '%s'", context, property));
+    ret = -1;
   }
   free(propval);
   return ret;
@@ -2149,7 +2156,7 @@ int bx_parse_nic_params(const char *context, const char *param, bx_list_c *base)
   } else if (!strncmp(param, "ethmod=", 7)) {
     if (!SIM->get_param_enum("ethmod", base)->set_by_name(&param[7]))
       PARSE_ERR(("%s: ethernet module '%s' not available", context, &param[7]));
-  } else if (parse_param_from_list(param, base) < 0) {
+  } else if (bx_parse_param_from_list(context, param, base) < 0) {
     PARSE_WARN(("%s: expected parameter '%s' for '%s' ignored.", context, param, base->get_name()));
     return -1;
   }
@@ -2290,7 +2297,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
     sprintf(tmpname, "ata.%d.resources", channel);
     for (i=1; i<num_params; i++) {
-      if (parse_param_from_list(params[i], (bx_list_c*) SIM->get_param(tmpname)) < 0) {
+      if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param(tmpname)) < 0) {
         PARSE_ERR(("%s: ataX directive malformed.", context));
       }
     }
@@ -2334,7 +2341,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         sectors = atol(&params[i][4]);
       } else if (!strcmp(params[i], "translation=echs")) { // synonym of large
         SIM->get_param_enum("translation", base)->set(BX_ATA_TRANSLATION_LARGE);
-      } else if (parse_param_from_list(params[i], base) < 0) {
+      } else if (bx_parse_param_from_list(context, params[i], base) < 0) {
         PARSE_ERR(("%s: ataX-master/slave directive malformed.", context));
       }
     }
@@ -2500,7 +2507,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR(("%s: cpuid directive malformed.", context));
     }
     for (i=1; i<num_params; i++) {
-      if (parse_param_from_list(params[i], (bx_list_c*) SIM->get_param("cpuid")) < 0) {
+      if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param("cpuid")) < 0) {
         PARSE_ERR(("%s: cpuid directive malformed.", context));
       }
     }
@@ -2676,7 +2683,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR(("%s: mouse directive malformed.", context));
     }
     for (i=1; i<num_params; i++) {
-      if (parse_param_from_list(params[i], (bx_list_c*) SIM->get_param(BXPN_MOUSE)) < 0) {
+      if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param(BXPN_MOUSE)) < 0) {
         PARSE_ERR(("%s: mouse directive malformed.", context));
       }
     }

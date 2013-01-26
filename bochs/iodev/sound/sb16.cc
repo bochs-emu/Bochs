@@ -120,33 +120,20 @@ void sb16_init_options(void)
 Bit32s sb16_options_parser(const char *context, int num_params, char *params[])
 {
   if (!strcmp(params[0], "sb16")) {
-    int enable = 1;
     bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
+    int enable = 1;
+    SIM->get_param_bool("enabled", base)->set(1);
     for (int i = 1; i < num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
         enable = atol(&params[i][8]);
-      } else if (!strncmp(params[i], "midi=", 5)) {
-        SIM->get_param_string("midi", base)->set(&params[i][5]);
-      } else if (!strncmp(params[i], "midimode=", 9)) {
-        SIM->get_param_num("midimode", base)->set(atol(&params[i][9]));
-      } else if (!strncmp(params[i], "wave=", 5)) {
-        SIM->get_param_string("wave", base)->set(&params[i][5]);
-      } else if (!strncmp(params[i], "wavemode=", 9)) {
-        SIM->get_param_num("wavemode", base)->set(atol(&params[i][9]));
-      } else if (!strncmp(params[i], "log=", 4)) {
-        SIM->get_param_string("log", base)->set(&params[i][4]);
-      } else if (!strncmp(params[i], "loglevel=", 9)) {
-        SIM->get_param_num("loglevel", base)->set(atol(&params[i][9]));
-      } else if (!strncmp(params[i], "dmatimer=", 9)) {
-        SIM->get_param_num("dmatimer", base)->set(atol(&params[i][9]));
-      } else {
+        SIM->get_param_bool("enabled", base)->set(enable);
+      } else if (SIM->parse_param_from_list(context, params[i], base) < 0) {
         BX_ERROR(("%s: unknown parameter for sb16 ignored.", context));
       }
     }
-    if ((enable != 0) && (SIM->get_param_num("dmatimer", base)->get() > 0))
-      SIM->get_param_bool("enabled", base)->set(1);
-    else
+    if ((enable != 0) && (SIM->get_param_num("dmatimer", base)->get() == 0)) {
       SIM->get_param_bool("enabled", base)->set(0);
+    }
   } else {
     BX_PANIC(("%s: unknown directive '%s'", context, params[0]));
   }

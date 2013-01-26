@@ -765,6 +765,7 @@ public:
   virtual bx_bool opt_plugin_ctrl(const char *plugname, bx_bool load) {return 0;}
   virtual void init_std_nic_options(const char *name, bx_list_c *menu) {}
   virtual void init_usb_options(const char *usb_name, const char *pname, int maxports) {}
+  virtual int  parse_param_from_list(const char *context, const char *param, bx_list_c *base) {return 0;}
   virtual int  parse_nic_params(const char *context, const char *param, bx_list_c *base) {return 0;}
   virtual int  parse_usb_port_params(const char *context, bx_bool devopt,
                                      const char *param, int maxports, bx_list_c *base) {return 0;}

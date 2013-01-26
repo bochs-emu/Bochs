@@ -77,12 +77,7 @@ Bit32s parport_options_parser(const char *context, int num_params, char *params[
     sprintf(tmpname, "ports.parallel.%d", idx);
     bx_list_c *base = (bx_list_c*) SIM->get_param(tmpname);
     for (int i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "enabled=", 8)) {
-        SIM->get_param_bool("enabled", base)->set(atol(&params[i][8]));
-      } else if (!strncmp(params[i], "file=", 5)) {
-        SIM->get_param_string("file", base)->set(&params[i][5]);
-        SIM->get_param_bool("enabled", base)->set(1);
-      } else {
+      if (SIM->parse_param_from_list(context, params[i], base) < 0) {
         BX_ERROR(("%s: unknown parameter for parport%d ignored.", context, idx));
       }
     }

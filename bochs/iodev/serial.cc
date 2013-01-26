@@ -116,16 +116,7 @@ Bit32s serial_options_parser(const char *context, int num_params, char *params[]
     sprintf(tmpname, "ports.serial.%d", idx);
     bx_list_c *base = (bx_list_c*) SIM->get_param(tmpname);
     for (int i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "enabled=", 8)) {
-        SIM->get_param_bool("enabled", base)->set(atol(&params[i][8]));
-      } else if (!strncmp(params[i], "mode=", 5)) {
-        if (!SIM->get_param_enum("mode", base)->set_by_name(&params[i][5]))
-          BX_PANIC(("%s: com%d serial port mode '%s' not available", context, idx, &params[i][5]));
-        SIM->get_param_bool("enabled", base)->set(1);
-      } else if (!strncmp(params[i], "dev=", 4)) {
-        SIM->get_param_string("dev", base)->set(&params[i][4]);
-        SIM->get_param_bool("enabled", base)->set(1);
-      } else {
+      if (SIM->parse_param_from_list(context, params[i], base) < 0) {
         BX_ERROR(("%s: unknown parameter for com%d ignored.", context, idx));
       }
     }

@@ -200,6 +200,7 @@ public:
   virtual bx_bool opt_plugin_ctrl(const char *plugname, bx_bool load);
   virtual void init_std_nic_options(const char *name, bx_list_c *menu);
   virtual void init_usb_options(const char *usb_name, const char *pname, int maxports);
+  virtual int  parse_param_from_list(const char *context, const char *param, bx_list_c *base);
   virtual int  parse_nic_params(const char *context, const char *param, bx_list_c *base);
   virtual int  parse_usb_port_params(const char *context, bx_bool devopt,
                                      const char *param, int maxports, bx_list_c *base);
@@ -1455,6 +1456,11 @@ void bx_real_sim_c::init_std_nic_options(const char *name, bx_list_c *menu)
 void bx_real_sim_c::init_usb_options(const char *usb_name, const char *pname, int maxports)
 {
   bx_init_usb_options(usb_name, pname, maxports);
+}
+
+int bx_real_sim_c::parse_param_from_list(const char *context, const char *param, bx_list_c *base)
+{
+  return bx_parse_param_from_list(context, param, base);
 }
 
 int bx_real_sim_c::parse_nic_params(const char *context, const char *param, bx_list_c *base)

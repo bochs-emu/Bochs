@@ -99,15 +99,13 @@ Bit32s ne2k_options_parser(const char *context, int num_params, char *params[])
         SIM->get_param_num("irq", base)->set(atol(&params[i][4]));
         valid |= 0x02;
       } else {
+        if (valid == 0x07) {
+          SIM->get_param_bool("enabled", base)->set(1);
+        }
         ret = SIM->parse_nic_params(context, params[i], base);
         if (ret > 0) {
           valid |= ret;
         }
-      }
-    }
-    if (!SIM->get_param_bool("enabled", base)->get()) {
-      if (valid == 0x07) {
-        SIM->get_param_bool("enabled", base)->set(1);
       }
     }
     if (valid < 0x80) {
