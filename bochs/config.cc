@@ -382,18 +382,21 @@ void bx_init_options()
       1, BX_CPU_PROCESSORS_LIMIT,
       1);
   nprocessors->set_enabled(BX_CPU_PROCESSORS_LIMIT > 1);
+  nprocessors->set_options(bx_param_c::BOCHSRC_HIDDEN);
   bx_param_num_c *ncores = new bx_param_num_c(cpu_param,
       "n_cores", "Number of cores in each processor in SMP mode",
       "Sets the number of cores per processor for multiprocessor emulation",
       1, BX_CPU_CORES_LIMIT,
       1);
   ncores->set_enabled(BX_CPU_CORES_LIMIT > 1);
+  ncores->set_options(bx_param_c::BOCHSRC_HIDDEN);
   bx_param_num_c *nthreads = new bx_param_num_c(cpu_param,
       "n_threads", "Number of HT threads per each core in SMP mode",
       "Sets the number of HT (Intel(R) HyperThreading Technology) threads per core for multiprocessor emulation",
       1, BX_CPU_HT_THREADS_LIMIT,
       1);
   nthreads->set_enabled(BX_CPU_HT_THREADS_LIMIT > 1);
+  nthreads->set_options(bx_param_c::BOCHSRC_HIDDEN);
   new bx_param_num_c(cpu_param,
       "ips", "Emulated instructions per second (IPS)",
       "Emulated instructions per second, used to calibrate bochs emulated time with wall clock time.",
@@ -955,7 +958,7 @@ void bx_init_options()
   new bx_param_num_c(keyboard,
       "serial_delay", "Keyboard serial delay",
       "Approximate time in microseconds that it takes one character to be transferred from the keyboard to controller over the serial path.",
-      1, BX_MAX_BIT32U,
+      5, BX_MAX_BIT32U,
       250);
   new bx_param_num_c(keyboard,
       "paste_delay", "Keyboard paste delay",
@@ -966,6 +969,7 @@ void bx_init_options()
       "use_mapping", "Use keyboard mapping",
       "Controls whether to use the keyboard mapping feature",
       0);
+  use_kbd_mapping->set_options(bx_param_c::BOCHSRC_HIDDEN);
   bx_param_filename_c *keymap = new bx_param_filename_c(keyboard,
       "keymap", "Keymap filename",
       "Pathname of the keymap file used",
@@ -2059,6 +2063,11 @@ int bx_parse_param_from_list(const char *context, const char *input, bx_list_c *
       free(propval);
       return -1;
     }
+    if ((param->get_options() & param->BOCHSRC_HIDDEN) > 0) {
+      PARSE_WARN(("%s: ignoring hidden parameter '%s'", context, property));
+      free(propval);
+      return -1;
+    }
     switch (param->get_type()) {
       case BXT_PARAM_NUM:
         if (value != NULL) {
@@ -2606,24 +2615,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR(("%s: keyboard directive malformed.", context));
     }
     for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "serial_delay=", 13)) {
-        SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->set(atol(&params[i][13]));
-        if (SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->get() < 5) {
-          PARSE_ERR (("%s: keyboard serial delay not big enough!", context));
-        }
-      } else if (!strncmp(params[i], "paste_delay=", 12)) {
-        SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set(atol(&params[i][12]));
-        if (SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->get() < 1000) {
-          PARSE_ERR (("%s: keyboard paste delay not big enough!", context));
-        }
-      } else if (!strncmp(params[i], "type=", 5)) {
-        if (!SIM->get_param_enum(BXPN_KBD_TYPE)->set_by_name(&params[i][5])) {
-          PARSE_ERR(("%s: keyboard_type directive: wrong arg '%s'.", context,params[1]));
-        }
-      } else if (!strncmp(params[i], "keymap=", 7)) {
+      if (!strncmp(params[i], "keymap=", 7)) {
         SIM->get_param_bool(BXPN_KBD_USEMAPPING)->set(strlen(params[i]) > 7);
         SIM->get_param_string(BXPN_KBD_KEYMAP)->set(&params[i][7]);
-      } else {
+      } else if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param(BXPN_KEYBOARD)) < 0) {
         PARSE_ERR(("%s: keyboard directive malformed.", context));
       }
     }
@@ -2914,11 +2909,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
     if(!strncmp(params[1], "keys=", 4)) {
       SIM->get_param_string(BXPN_USER_SHORTCUT)->set(&params[1][5]);
-      if ((strchr(&params[1][5], '-') == NULL) && (strlen(&params[1][5]) > 5))
-        PARSE_WARN(("user_shortcut: old-style syntax detected"));
     } else {
       PARSE_ERR(("%s: user_shortcut directive malformed.", context));
     }
+    PARSE_WARN(("%s: 'user_shortcut' will be replaced by new 'keyboard' option.", context));
   }
   else if (!strcmp(params[0], "config_interface"))
   {
@@ -3012,7 +3006,7 @@ int bx_write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool 
   }
   for (int i = 0; i < base->get_size(); i++) {
     bx_param_c *param = base->get(i);
-    if (param->get_enabled()) {
+    if (param->get_enabled() && ((param->get_options() & param->BOCHSRC_HIDDEN) == 0)) {
       if (p > 0) {
         strcat(bxrcline, ", ");
       }
@@ -3209,21 +3203,6 @@ int bx_write_log_options(FILE *fp, bx_list_c *base)
   return 0;
 }
 
-int bx_write_keyboard_options(FILE *fp)
-{
-  fprintf(fp, "keyboard: type=%s, serial_delay=%u, paste_delay=%u, ",
-    SIM->get_param_enum(BXPN_KBD_TYPE)->get_selected(),
-    SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->get(),
-    SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->get());
-  if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
-    fprintf(fp, "keymap=%s\n", SIM->get_param_string(BXPN_KBD_KEYMAP)->getptr());
-  } else {
-    fprintf(fp, "keymap=\n");
-  }
-  fprintf(fp, "user_shortcut: keys=%s\n", SIM->get_param_string(BXPN_USER_SHORTCUT)->getptr());
-  return 0;
-}
-
 int bx_write_debugger_options(FILE *fp)
 {
 #if BX_DEBUGGER
@@ -3400,7 +3379,7 @@ int bx_write_configuration(const char *rc, int overwrite)
   bx_write_clock_cmos_options(fp);
   bx_write_loader_options(fp);
   bx_write_log_options(fp, (bx_list_c*) SIM->get_param("log"));
-  bx_write_keyboard_options(fp);
+  bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_KEYBOARD), NULL, 0);
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_MOUSE), NULL, 0);
   SIM->save_addon_options(fp);
   fclose(fp);

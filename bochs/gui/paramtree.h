@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010  The Bochs Project
+//  Copyright (C) 2010-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -111,6 +111,11 @@ protected:
   bx_list_c *dependent_list;
   void *device;
 public:
+  enum {
+    // If set, this parameter is not available as a bochsrc option, but in CI only.
+    // In that case, it is set by another (e.g. combined) option
+    BOCHSRC_HIDDEN = (1<<31)
+  } bx_param_opt_bits;
   bx_param_c(Bit32u id, const char *name, const char *description);
   bx_param_c(Bit32u id, const char *name, const char *label, const char *description);
   virtual ~bx_param_c();

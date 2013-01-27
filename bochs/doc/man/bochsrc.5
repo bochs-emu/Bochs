@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "28 Oct 2012" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "27 Jan 2013" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -844,9 +844,22 @@ keymap:
 This enables a remap of a physical localized keyboard to a
 virtualized us keyboard, as the PC architecture expects.
 
+user_shortcut:
+
+This defines the keyboard shortcut to be sent when you press the "user"
+button in the header bar. The shortcut string is a combination of maximum
+3 key names (listed below) separated with a '-' character.
+
+Valid key names:
+
+"alt", "bksl", "bksp", "ctrl", "del", "down", "end", "enter", "esc",
+"f1", ... "f12", "home", "ins", "left", "menu", "minus", "pgdwn", "pgup", "plus",
+"right", "shift", "space", "tab", "up", "win", "print" and "power".
+
 Examples:
   keyboard: type=mf, serial_delay=200, paste_delay=100000
   keyboard: keymap=gui/keymaps/x11-pc-de.map
+  keyboard: user_shortcut=ctrl-alt-del
 
 .TP
 .I "clock:"
@@ -1043,21 +1056,6 @@ modules as the NE2000 adapter.
 
 Example:
   e1000: enabled=1, mac=52:54:00:12:34:56, ethmod=slirp, script=/usr/local/bin/slirp
-
-.TP
-.I "user_shortcut:"
-This defines the keyboard shortcut to be sent when you press the "user"
-button in the header bar. The shortcut string is a combination of maximum
-3 key names (listed below) separated with a '-' character.
-
-Valid key names:
-
-"alt", "bksl", "bksp", "ctrl", "del", "down", "end", "enter", "esc",
-"f1", ... "f12", "home", "ins", "left", "menu", "minus", "pgdwn", "pgup", "plus",
-"right", "shift", "space", "tab", "up", "win", "print" and "power".
-
-Example:
-  user_shortcut: keys=ctrl-alt-del
 
 .TP
 .I "cmosimage:"

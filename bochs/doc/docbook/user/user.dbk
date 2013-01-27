@@ -3991,12 +3991,13 @@ parameter of the SB16 soundcard. The emulation supports recording and playback
 </para>
 </section>
 
-<section><title>keyboard</title>
+<section id="bochsopt-keyboard"><title>keyboard</title>
 <para>
 Examples:
 <screen>
   keyboard: type=mf, serial_delay=200, paste_delay=100000
   keyboard: keymap=gui/keymaps/x11-pc-de.map
+  keyboard: user_shortcut=ctrl-alt-del
 </screen>
 This defines parameters related to the emulated keyboard.
 </para>
@@ -4034,6 +4035,20 @@ virtualized us keyboard, as the PC architecture expects.
 Keyboard mapping is available for the display libraries x, sdl (Linux port) and
 wx (GTK port). For SDL you have to use keymaps designed for SDL, the wxWidgets GUI
 uses the keymaps for X11.
+</para>
+<para><command>user_shortcut</command></para>
+<para>
+This defines the keyboard shortcut to be sent when you press the "user" button
+in the <link linkend="headerbar">headerbar</link>. The shortcut string is a
+combination of maximum 3 key names (listed below) separated with a '-' character.
+</para>
+<para>
+Valid key names:
+</para>
+<para>
+"alt", "bksl", "bksp", "ctrl", "del", "down", "end", "enter", "esc",
+"f1", ... "f12", "home", "ins", "left", "menu", "minus", "pgdwn", "pgup", "plus",
+"right", "shift", "space", "tab", "up", "win", "print" and "power".
 </para>
 </section>
 
@@ -4450,27 +4465,6 @@ To support the Intel(R) 82540EM Gigabit Ethernet adapter, Bochs must be compiled
 with the <option>--enable-e1000</option> configure option. It accepts the same syntax
 (for mac, ethmod, ethdev, script, bootrom) and supports the same networking modules
 as the NE2000 adapter.
-</para>
-</section>
-
-<section id="bochsopt-user-shortcut"><title>user_shortcut</title>
-<para>
-Examples:
-<screen>
-  user_shortcut: keys=ctrl-alt-del
-  user_shortcut: keys=ctrl-alt-esc
-</screen>
-This defines the keyboard shortcut to be sent when you press the "user" button
-in the <link linkend="headerbar">headerbar</link>. The shortcut string is a
-combination of maximum 3 key names (listed below) separated with a '-' character.
-</para>
-<para>
-Valid key names:
-</para>
-<para>
-"alt", "bksl", "bksp", "ctrl", "del", "down", "end", "enter", "esc",
-"f1", ... "f12", "home", "ins", "left", "menu", "minus", "pgdwn", "pgup", "plus",
-"right", "shift", "space", "tab", "up", "win", "print" and "power".
 </para>
 </section>
 
@@ -5193,8 +5187,8 @@ behavoiur of Bochs at runtime if you click on one of these buttons:
 <para>user button</para>
 <para>
   Press this button if you want to send the keyboard shortcut defined with the
-  <link linkend="bochsopt-user-shortcut">user_shortcut option</link> to the guest.
-  Depending on the used <link linkend="bochsopt-displaylibrary">display_library option</link>,
+  <command>user_shortcut</command> parameter of the <link linkend="bochsopt-keyboard">keyboard</link>
+  option to the guest. Depending on the used <link linkend="bochsopt-displaylibrary">display_library option</link>,
   it may even be possible to edit the shortcut before sending it.
 </para>
 </listitem>
@@ -7634,9 +7628,10 @@ the cursor back in the Bochs window and press <keycap>delete</keycap>.
 This should work for any key combination.
 </para>
 <para>
-If you need one key combination frequently, set it up as <link linkend="bochsopt-user-shortcut">user key combination</link>
-in your configuration file.  This key combination is sent to the guest OS
-when you press the user button in the <link linkend="headerbar">headerbar</link>.
+If you need one key combination frequently, set it up as user key combination
+with the <link linkend="bochsopt-keyboard">keyboard</link> option in your
+configuration file. This key combination is sent to the guest OS when you press
+the user button in the <link linkend="headerbar">headerbar</link>.
 Depending on the used <link linkend="bochsopt-displaylibrary">display_library option</link>,
 it may even be possible to edit the shortcut before sending it.
 </para>
@@ -8955,7 +8950,7 @@ will trap this key combination. You can either use the trick described in
 (callable through the user short-cut gui button)
 in you configuration file, for example:
 <programlisting>
-user_shortcut: keys=ctrl-alt-del
+keyboard: user_shortcut=ctrl-alt-del
 </programlisting>
 </para>
 </listitem>
@@ -9123,8 +9118,7 @@ panic: action=ask
 error: action=report
 info: action=report
 debug: action=ignore
-keyboard: type=mf, keymap=
-user_shortcut: keys=none
+keyboard: type=mf, keymap=, user_shortcut=none
 config_interface: textconfig
 display_library: x
 </programlisting>
