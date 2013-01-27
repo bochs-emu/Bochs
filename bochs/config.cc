@@ -2048,15 +2048,15 @@ int bx_parse_param_from_list(const char *context, const char *input, bx_list_c *
   property = strtok(propval, "=");
   value = strtok(NULL, "");
   if (!strcmp(property, input)) {
-    free(propval);
     PARSE_WARN(("%s: incorrect parameter format", context));
+    free(propval);
     return -1;
   }
   param = list->get_by_name(property);
   if (param != NULL) {
     if (!param->get_enabled()) {
-      free(propval);
       PARSE_WARN(("%s: parameter '%s' disabled", context, property));
+      free(propval);
       return -1;
     }
     switch (param->get_type()) {
@@ -2346,7 +2346,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       }
     }
 
-    // Enables the ata device
+    // Check for geometry autodetection mode
     if (type == BX_ATA_DEVICE_DISK) {
       if (strlen(SIM->get_param_string("path", base)->getptr()) > 0) {
         SIM->get_param_num("cylinders", base)->set(cylinders);
@@ -2466,38 +2466,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_num(BXPN_CPU_NPROCESSORS)->set(processors);
         SIM->get_param_num(BXPN_CPU_NCORES)->set(cores);
         SIM->get_param_num(BXPN_CPU_NTHREADS)->set(threads);
-      } else if (!strncmp(params[i], "model=", 6)) {
-        if (! SIM->get_param_enum(BXPN_CPU_MODEL)->set_by_name(&params[i][6]))
-          PARSE_ERR(("%s: unsupported CPU model option.", context));
-      } else if (!strncmp(params[i], "ips=", 4)) {
-        SIM->get_param_num(BXPN_IPS)->set(atol(&params[i][4]));
-#if BX_SUPPORT_SMP
-      } else if (!strncmp(params[i], "quantum=", 8)) {
-        SIM->get_param_num(BXPN_SMP_QUANTUM)->set(atol(&params[i][8]));
-#endif
-      } else if (!strncmp(params[i], "reset_on_triple_fault=", 22)) {
-        if (parse_param_bool(params[i], 22, BXPN_RESET_ON_TRIPLE_FAULT) < 0) {
-          PARSE_ERR(("%s: cpu directive malformed.", context));
-        }
-#if BX_CPU_LEVEL >= 5
-      } else if (!strncmp(params[i], "ignore_bad_msrs=", 16)) {
-        if (parse_param_bool(params[i], 16, BXPN_IGNORE_BAD_MSRS) < 0) {
-          PARSE_ERR(("%s: cpu directive malformed.", context));
-        }
-#endif
-#if BX_SUPPORT_MONITOR_MWAIT
-      } else if (!strncmp(params[i], "mwait_is_nop=", 13)) {
-        if (parse_param_bool(params[i], 13, BXPN_MWAIT_IS_NOP) < 0) {
-          PARSE_ERR(("%s: cpu directive malformed.", context));
-        }
-#endif
-      } else if (!strncmp(params[i], "msrs=", 5)) {
-        SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->set(&params[i][5]);
-      } else if (!strncmp(params[i], "cpuid_limit_winnt=", 18)) {
-        if (parse_param_bool(params[i], 18, BXPN_CPUID_LIMIT_WINNT) < 0) {
-          PARSE_ERR(("%s: cpu directive malformed.", context));
-        }
-      } else {
+      } else if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param("cpu")) < 0) {
         PARSE_ERR(("%s: cpu directive malformed.", context));
       }
     }
