@@ -679,7 +679,7 @@ typedef struct bx_VMCS
 #endif
 
 #if BX_SUPPORT_VMX >= 2
-   Bit64u vmread_bitmap_addr, vmwrite_bitmap_addr;
+   bx_phy_address vmread_bitmap_addr, vmwrite_bitmap_addr;
 #endif
 
    //

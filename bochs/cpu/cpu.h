@@ -1217,6 +1217,8 @@ public: // for now...
 #endif
   } TLB;
 
+#define BX_TLB_ENTRY_OF(lpf) (&BX_CPU_THIS_PTR TLB.entry[BX_TLB_INDEX_OF((lpf), 0)])
+
 #if BX_CPU_LEVEL >= 6
   struct {
     Bit64u entry[4];
@@ -3977,7 +3979,7 @@ public: // for now...
   BX_SMF bx_hostpageaddr_t getHostMemAddr(bx_phy_address addr, unsigned rw);
 
   // linear address for translate_linear expected to be canonical !
-  BX_SMF bx_phy_address translate_linear(bx_address laddr, unsigned user, unsigned rw);
+  BX_SMF bx_phy_address translate_linear(bx_TLB_entry *entry, bx_address laddr, unsigned user, unsigned rw);
   BX_SMF bx_phy_address translate_linear_legacy(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned user, unsigned rw);
   BX_SMF void update_access_dirty(bx_phy_address *entry_addr, Bit32u *entry, unsigned leaf, unsigned write);
 #if BX_CPU_LEVEL >= 6

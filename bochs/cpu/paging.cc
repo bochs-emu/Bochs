@@ -1116,7 +1116,7 @@ void BX_CPU_C::update_access_dirty(bx_phy_address *entry_addr, Bit32u *entry, un
 }
 
 // Translate a linear address to a physical address
-bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned user, unsigned rw)
+bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address laddr, unsigned user, unsigned rw)
 {
   Bit32u combined_access = 0x06;
   Bit32u lpf_mask = 0xfff; // 4K pages
@@ -1133,8 +1133,6 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned user, unsig
   InstrTLB_Stats();
 
   bx_address lpf = LPFOf(laddr);
-  unsigned TLB_index = BX_TLB_INDEX_OF(lpf, 0);
-  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
 
   // already looked up TLB for code access
   if (! isExecute && TLB_LPFOf(tlbEntry->lpf) == lpf)
@@ -1208,7 +1206,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned user, unsig
 
   if (! BX_CPU_THIS_PTR cr0.get_PG()
 #if BX_SUPPORT_VMX >= 2
-        && ! BX_CPU_THIS_PTR in_vmx_guest
+        && ! (BX_CPU_THIS_PTR in_vmx_guest && SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_ENABLE))
 #endif
 #if BX_SUPPORT_SVM
         && ! (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED)
@@ -1896,10 +1894,12 @@ void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr
 {
   Bit32u pageOffset = PAGE_OFFSET(laddr);
 
+  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
+
   /* check for reference across multiple pages */
   if ((pageOffset + len) <= 4096) {
     // Access within single page.
-    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(laddr, (curr_pl==3), BX_WRITE);
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl==3), BX_WRITE);
     BX_CPU_THIS_PTR address_xlation.pages     = 1;
 
     BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1,
@@ -1913,7 +1913,7 @@ void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr
   }
   else {
     // access across 2 pages
-    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(laddr, (curr_pl == 3), BX_WRITE);
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl == 3), BX_WRITE);
     BX_CPU_THIS_PTR address_xlation.len1 = 4096 - pageOffset;
     BX_CPU_THIS_PTR address_xlation.len2 = len - BX_CPU_THIS_PTR address_xlation.len1;
     BX_CPU_THIS_PTR address_xlation.pages = 2;
@@ -1921,7 +1921,7 @@ void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr
 #if BX_SUPPORT_X86_64
     if (! long64_mode()) laddr2 &= 0xffffffff; /* handle linear address wrap in legacy mode */
 #endif
-    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(laddr2, (curr_pl == 3), BX_WRITE);
+    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(BX_TLB_ENTRY_OF(laddr2), laddr2, (curr_pl == 3), BX_WRITE);
 
 #ifdef BX_LITTLE_ENDIAN
     BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1,
@@ -1962,10 +1962,12 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
 
   Bit32u pageOffset = PAGE_OFFSET(laddr);
 
+  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
+
   /* check for reference across multiple pages */
   if ((pageOffset + len) <= 4096) {
     // Access within single page.
-    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(laddr, (curr_pl == 3), xlate_rw);
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl == 3), xlate_rw);
     BX_CPU_THIS_PTR address_xlation.pages     = 1;
     access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress1, len, data);
     BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1, len, curr_pl, BX_READ, (Bit8u*) data);
@@ -1976,7 +1978,7 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
   }
   else {
     // access across 2 pages
-    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(laddr, (curr_pl == 3), xlate_rw);
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl == 3), xlate_rw);
     BX_CPU_THIS_PTR address_xlation.len1 = 4096 - pageOffset;
     BX_CPU_THIS_PTR address_xlation.len2 = len - BX_CPU_THIS_PTR address_xlation.len1;
     BX_CPU_THIS_PTR address_xlation.pages = 2;
@@ -1984,7 +1986,7 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
 #if BX_SUPPORT_X86_64
     if (! long64_mode()) laddr2 &= 0xffffffff; /* handle linear address wrap in legacy mode */
 #endif
-    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(laddr2, (curr_pl == 3), xlate_rw);
+    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(BX_TLB_ENTRY_OF(laddr2), laddr2, (curr_pl == 3), xlate_rw);
 
 #ifdef BX_LITTLE_ENDIAN
     access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress1,

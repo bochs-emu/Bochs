@@ -283,7 +283,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 #if BX_INSTRUMENTATION
   bx_phy_address paddr =
 #endif
-    translate_linear(laddr, USER_PL, BX_READ);
+    translate_linear(BX_TLB_ENTRY_OF(laddr), laddr, USER_PL, BX_READ);
 
   BX_INSTR_CLFLUSH(BX_CPU_ID, laddr, paddr);
 
@@ -696,7 +696,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
     }
   }
 
-  bx_phy_address paddr = translate_linear(laddr, USER_PL, BX_READ);
+  bx_phy_address paddr = translate_linear(BX_TLB_ENTRY_OF(laddr), laddr, USER_PL, BX_READ);
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
