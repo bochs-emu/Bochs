@@ -592,6 +592,14 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
   }
+
+  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_EPT_VIOLATION_EXCEPTION) {
+     vm->ve_info_addr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_VE_EXCEPTION_INFO_ADDR);
+     if (! IsValidPageAlignedPhyAddr(vm->ve_info_addr)) {
+       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: broken #VE information address"));
+       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+     }
+  }
 #endif
 
 #if BX_SUPPORT_X86_64
@@ -3643,6 +3651,10 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
 #if BX_SUPPORT_VMX >= 2
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmread_bitmap_addr, BX_CPU_THIS_PTR vmcs.vmread_bitmap_addr);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmwrite_bitmap_addr, BX_CPU_THIS_PTR vmcs.vmwrite_bitmap_addr);
+#endif
+#if BX_SUPPORT_VMX >= 2
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, ve_info_addr, BX_CPU_THIS_PTR vmcs.ve_info_addr);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, eptp_index, BX_CPU_THIS_PTR vmcs.eptp_index);
 #endif
 
   //

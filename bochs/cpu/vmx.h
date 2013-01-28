@@ -682,6 +682,11 @@ typedef struct bx_VMCS
    bx_phy_address vmread_bitmap_addr, vmwrite_bitmap_addr;
 #endif
 
+#if BX_SUPPORT_VMX >= 2
+   bx_phy_address ve_info_addr;
+   Bit16u eptp_index;
+#endif
+
    //
    // VM-Exit Control Fields
    //

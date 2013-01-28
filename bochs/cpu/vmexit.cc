@@ -691,6 +691,54 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::Vmexit_Vmwrite(bxInstruction_c *i)
 
   return BX_FALSE;
 }
+
+void BX_CPU_C::Virtualization_Exception(Bit64u qualification, Bit64u guest_physical, Bit64u guest_linear)
+{
+  BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
+
+  // A convertible EPT violation causes a virtualization exception if the following all hold:
+  //  - CR0.PE is set
+  //  - the logical processor is not in the process of delivering an event through the IDT
+  //  - the 32 bits at offset 4 in the virtualization-exception information area are all 0
+
+  if (! BX_CPU_THIS_PTR cr0.get_PE() || BX_CPU_THIS_PTR in_event) return;
+
+  VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+
+  Bit32u magic;
+  access_read_physical(vm->ve_info_addr + 4, 4, &magic);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 4, 4, BX_READ, 0, &magic);
+  if (magic != 0) return;
+
+  struct ve_info {
+    Bit32u reason; // always VMX_VMEXIT_EPT_VIOLATION
+    Bit32u magic;
+    Bit64u qualification;
+    Bit64u guest_linear_addr;
+    Bit64u guest_physical_addr;
+    Bit16u eptp_index;
+  } ve_info = { VMX_VMEXIT_EPT_VIOLATION, 0xffffffff, qualification, guest_linear, guest_physical, vm->eptp_index };
+
+  access_write_physical(vm->ve_info_addr, 4, &ve_info.reason);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr, 4, BX_WRITE, 0, &ve_info.reason);
+
+  access_write_physical(vm->ve_info_addr + 4, 4, &ve_info.magic);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 4, 4, BX_WRITE, 0, &ve_info.magic);
+
+  access_write_physical(vm->ve_info_addr + 8, 8, &ve_info.qualification);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 8, 8, BX_WRITE, 0, &ve_info.qualification);
+
+  access_write_physical(vm->ve_info_addr + 16, 8, &ve_info.guest_linear_addr);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 16, 8, BX_WRITE, 0, &ve_info.guest_linear_addr);
+
+  access_write_physical(vm->ve_info_addr + 24, 8, &ve_info.guest_physical_addr);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 24, 8, BX_WRITE, 0, &ve_info.guest_physical_addr);
+
+  access_write_physical(vm->ve_info_addr + 32, 8, &ve_info.eptp_index);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 32, 8, BX_WRITE, 0, &ve_info.eptp_index);
+
+  exception(BX_VE_EXCEPTION, 0);
+}
 #endif
 
 #endif // BX_SUPPORT_VMX

@@ -1505,6 +1505,8 @@ bx_phy_address BX_CPU_C::nested_walk(bx_phy_address guest_paddr, unsigned rw, bx
 #define BX_EPT_ENTRY_WRITE_EXECUTE      0x06
 #define BX_EPT_ENTRY_READ_WRITE_EXECUTE 0x07
 
+#define BX_SUPPRESS_EPT_VIOLATION_EXCEPTION BX_CONST64(0x8000000000000000)
+
 //                   Format of a EPT Entry
 // -----------------------------------------------------------
 // 00    | Read access
@@ -1541,7 +1543,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
   if (rw & 1) access_mask |= BX_EPT_WRITE; // write or r-m-w
   if (rw == BX_READ) access_mask |= BX_EPT_READ;
 
-  Bit32u vmexit_reason = 0, vmexit_qualification = access_mask;
+  Bit32u vmexit_reason = 0;
 
   for (leaf = BX_LEVEL_PML4;; --leaf) {
     entry_addr[leaf] = ppf + ((guest_paddr >> (9 + 9*leaf)) & 0xff8);
@@ -1611,19 +1613,26 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
   if (vmexit_reason) {
     BX_ERROR(("VMEXIT: EPT %s for guest paddr 0x" FMT_ADDRX " laddr 0x" FMT_ADDRX,
        (vmexit_reason == VMX_VMEXIT_EPT_VIOLATION) ? "violation" : "misconfig", guest_paddr, guest_laddr));
-    VMwrite64(VMCS_64BIT_GUEST_PHYSICAL_ADDR, guest_paddr);
 
-    if (vmexit_reason == VMX_VMEXIT_EPT_MISCONFIGURATION) {
-      VMexit(VMX_VMEXIT_EPT_MISCONFIGURATION, 0);
-    }
-    else {
+    Bit32u vmexit_qualification = 0;
+
+    if (vmexit_reason == VMX_VMEXIT_EPT_VIOLATION) {
+      // no VMExit qualification for EPT Misconfiguration VMExit
+      vmexit_qualification = access_mask | (combined_access << 3);
       if (guest_laddr_valid) {
-        VMwrite_natural(VMCS_GUEST_LINEAR_ADDR, guest_laddr);
         vmexit_qualification |= 0x80;
         if (! is_page_walk) vmexit_qualification |= 0x100;
       }
-      VMexit(VMX_VMEXIT_EPT_VIOLATION, vmexit_qualification | (combined_access << 3));
+
+      if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_VIOLATION_EXCEPTION)) {
+        if ((entry[leaf] & BX_SUPPRESS_EPT_VIOLATION_EXCEPTION) == 0)
+          Virtualization_Exception(vmexit_qualification, guest_paddr, guest_laddr);
+      }
     }
+
+    VMwrite64(VMCS_64BIT_GUEST_PHYSICAL_ADDR, guest_paddr);
+    VMwrite_natural(VMCS_GUEST_LINEAR_ADDR, guest_laddr);
+    VMexit(vmexit_reason, vmexit_qualification);
   }
 
   if (BX_VMX_EPT_ACCESS_DIRTY_ENABLED) {

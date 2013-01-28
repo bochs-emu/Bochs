@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2012 Stanislav Shwartsman
+//   Copyright (c) 2011-2013 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -80,5 +80,10 @@ void BX_CPU_C::vmfunc_eptp_switching(void)
   vm->eptptr = temp_eptp;
   VMwrite64(VMCS_64BIT_CONTROL_EPTPTR, temp_eptp);
   TLB_flush();
+
+  if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_EXCEPTION)) {
+    vm->eptp_index = eptp_list_entry /* & 0xffff */ /* not needed because eptp_list_entry < 512 */;
+    VMwrite16(VMCS_16BIT_CONTROL_EPTP_INDEX, vm->eptp_index);
+  }
 }
 #endif

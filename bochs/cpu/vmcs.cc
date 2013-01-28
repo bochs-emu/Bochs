@@ -555,8 +555,11 @@ void BX_CPU_C::init_vmx_capabilities(void)
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_RDSEED))
     cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_RDSEED_VMEXIT;
 #if BX_SUPPORT_VMX >= 2
-  if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_EXCEPTION))
+  if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_EXCEPTION)) {
+    if (! BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPTP_SWITCHING))
+      BX_PANIC(("#VE exception feature requires EPTP switching support !"));
     cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_EPT_VIOLATION_EXCEPTION;
+  }
 #endif
 
   // enable secondary vm exec controls if needed
