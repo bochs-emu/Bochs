@@ -96,6 +96,9 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     /* binary 0000_00xx_xxxx_xxx0 */
     case VMCS_16BIT_CONTROL_VPID:
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_VPID);
+
+    case VMCS_16BIT_CONTROL_EPTP_INDEX:
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_EXCEPTION);
 #endif
 
     /* VMCS 16-bit guest-state fields */
@@ -270,6 +273,10 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_CONTROL_VMWRITE_BITMAP_ADDR:
     case VMCS_64BIT_CONTROL_VMWRITE_BITMAP_ADDR_HI:
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_VMCS_SHADOWING);
+
+    case VMCS_64BIT_CONTROL_VE_EXCEPTION_INFO_ADDR:
+    case VMCS_64BIT_CONTROL_VE_EXCEPTION_INFO_ADDR_HI:
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_EXCEPTION);
 #endif
 
 #if BX_SUPPORT_VMX >= 2
