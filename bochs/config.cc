@@ -2058,11 +2058,13 @@ int bx_parse_param_from_list(const char *context, const char *input, bx_list_c *
   }
   param = list->get_by_name(property);
   if (param != NULL) {
+/*
     if (!param->get_enabled()) {
       PARSE_WARN(("%s: parameter '%s' disabled", context, property));
       free(propval);
       return -1;
     }
+*/
     if ((param->get_options() & param->BOCHSRC_HIDDEN) > 0) {
       PARSE_WARN(("%s: ignoring hidden parameter '%s'", context, property));
       free(propval);
@@ -2584,18 +2586,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       } else {
         PARSE_ERR(("%s: optramimage%d directive malformed.", context, num));
       }
-    }
-  } else if (!strcmp(params[0], "vga_update_interval")) {
-    Bit64u value;
-    if (num_params != 2) {
-      PARSE_ERR(("%s: vga_update_interval directive: wrong # args.", context));
-    }
-    value = atol(params[1]);
-    if (value > 0) {
-      SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY)->set(1000000 / value);
-      PARSE_WARN(("%s: 'vga_update_interval' will be replaced by new 'vga: update_freq' option.", context));
-    } else {
-      PARSE_ERR(("%s: invalid value for vga_update_interval", context));
     }
   } else if (!strcmp(params[0], "vga")) {
     if (num_params < 2) {
