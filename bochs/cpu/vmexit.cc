@@ -707,7 +707,7 @@ void BX_CPU_C::Virtualization_Exception(Bit64u qualification, Bit64u guest_physi
 
   Bit32u magic;
   access_read_physical(vm->ve_info_addr + 4, 4, &magic);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 4, 4, BX_READ, 0, &magic);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 4, 4, BX_READ, 0, (Bit8u*)(&magic));
   if (magic != 0) return;
 
   struct ve_info {
@@ -720,22 +720,22 @@ void BX_CPU_C::Virtualization_Exception(Bit64u qualification, Bit64u guest_physi
   } ve_info = { VMX_VMEXIT_EPT_VIOLATION, 0xffffffff, qualification, guest_linear, guest_physical, vm->eptp_index };
 
   access_write_physical(vm->ve_info_addr, 4, &ve_info.reason);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr, 4, BX_WRITE, 0, &ve_info.reason);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr, 4, BX_WRITE, 0, (Bit8u*)(&ve_info.reason));
 
   access_write_physical(vm->ve_info_addr + 4, 4, &ve_info.magic);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 4, 4, BX_WRITE, 0, &ve_info.magic);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 4, 4, BX_WRITE, 0, (Bit8u*)(&ve_info.magic));
 
   access_write_physical(vm->ve_info_addr + 8, 8, &ve_info.qualification);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 8, 8, BX_WRITE, 0, &ve_info.qualification);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 8, 8, BX_WRITE, 0, (Bit8u*)(&ve_info.qualification));
 
   access_write_physical(vm->ve_info_addr + 16, 8, &ve_info.guest_linear_addr);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 16, 8, BX_WRITE, 0, &ve_info.guest_linear_addr);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 16, 8, BX_WRITE, 0, (Bit8u*)(&ve_info.guest_linear_addr));
 
   access_write_physical(vm->ve_info_addr + 24, 8, &ve_info.guest_physical_addr);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 24, 8, BX_WRITE, 0, &ve_info.guest_physical_addr);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 24, 8, BX_WRITE, 0, (Bit8u*)(&ve_info.guest_physical_addr));
 
   access_write_physical(vm->ve_info_addr + 32, 8, &ve_info.eptp_index);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 32, 8, BX_WRITE, 0, &ve_info.eptp_index);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 32, 8, BX_WRITE, 0, (Bit8u*)(&ve_info.eptp_index));
 
   exception(BX_VE_EXCEPTION, 0);
 }
