@@ -3136,24 +3136,7 @@ int bx_write_loader_options(FILE *fp)
 
 int bx_write_clock_cmos_options(FILE *fp)
 {
-  fprintf(fp, "clock: ");
-
-  switch (SIM->get_param_enum(BXPN_CLOCK_SYNC)->get()) {
-    case BX_CLOCK_SYNC_NONE:
-      fprintf(fp, "sync=none");
-      break;
-    case BX_CLOCK_SYNC_REALTIME:
-      fprintf(fp, "sync=realtime");
-      break;
-    case BX_CLOCK_SYNC_SLOWDOWN:
-      fprintf(fp, "sync=slowdown");
-      break;
-    case BX_CLOCK_SYNC_BOTH:
-      fprintf(fp, "sync=both");
-      break;
-    default:
-      BX_PANIC(("Unknown value for sync method"));
-  }
+  fprintf(fp, "clock: sync=%s", SIM->get_param_enum(BXPN_CLOCK_SYNC)->get_selected());
 
   switch (SIM->get_param_num(BXPN_CLOCK_TIME0)->get()) {
     case 0: break;
