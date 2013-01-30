@@ -382,21 +382,21 @@ void bx_init_options()
       1, BX_CPU_PROCESSORS_LIMIT,
       1);
   nprocessors->set_enabled(BX_CPU_PROCESSORS_LIMIT > 1);
-  nprocessors->set_options(bx_param_c::BOCHSRC_HIDDEN);
+  nprocessors->set_options(bx_param_c::CI_ONLY);
   bx_param_num_c *ncores = new bx_param_num_c(cpu_param,
       "n_cores", "Number of cores in each processor in SMP mode",
       "Sets the number of cores per processor for multiprocessor emulation",
       1, BX_CPU_CORES_LIMIT,
       1);
   ncores->set_enabled(BX_CPU_CORES_LIMIT > 1);
-  ncores->set_options(bx_param_c::BOCHSRC_HIDDEN);
+  ncores->set_options(bx_param_c::CI_ONLY);
   bx_param_num_c *nthreads = new bx_param_num_c(cpu_param,
       "n_threads", "Number of HT threads per each core in SMP mode",
       "Sets the number of HT (Intel(R) HyperThreading Technology) threads per core for multiprocessor emulation",
       1, BX_CPU_HT_THREADS_LIMIT,
       1);
   nthreads->set_enabled(BX_CPU_HT_THREADS_LIMIT > 1);
-  nthreads->set_options(bx_param_c::BOCHSRC_HIDDEN);
+  nthreads->set_options(bx_param_c::CI_ONLY);
   new bx_param_num_c(cpu_param,
       "ips", "Emulated instructions per second (IPS)",
       "Emulated instructions per second, used to calibrate bochs emulated time with wall clock time.",
@@ -969,7 +969,7 @@ void bx_init_options()
       "use_mapping", "Use keyboard mapping",
       "Controls whether to use the keyboard mapping feature",
       0);
-  use_kbd_mapping->set_options(bx_param_c::BOCHSRC_HIDDEN);
+  use_kbd_mapping->set_options(bx_param_c::CI_ONLY);
   bx_param_filename_c *keymap = new bx_param_filename_c(keyboard,
       "keymap", "Keymap filename",
       "Pathname of the keymap file used",
@@ -2058,17 +2058,10 @@ int bx_parse_param_from_list(const char *context, const char *input, bx_list_c *
   }
   param = list->get_by_name(property);
   if (param != NULL) {
-/*
-    if (!param->get_enabled()) {
-      PARSE_WARN(("%s: parameter '%s' disabled", context, property));
-      free(propval);
-      return -1;
-    }
-*/
-    if ((param->get_options() & param->BOCHSRC_HIDDEN) > 0) {
+    if ((param->get_options() & param->CI_ONLY) > 0) {
       PARSE_WARN(("%s: ignoring hidden parameter '%s'", context, property));
       free(propval);
-      return -1;
+      return 0;
     }
     switch (param->get_type()) {
       case BXT_PARAM_NUM:
@@ -2996,7 +2989,7 @@ int bx_write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool 
   }
   for (int i = 0; i < base->get_size(); i++) {
     bx_param_c *param = base->get(i);
-    if (param->get_enabled() && ((param->get_options() & param->BOCHSRC_HIDDEN) == 0)) {
+    if (param->get_enabled() && ((param->get_options() & param->CI_ONLY) == 0)) {
       if (p > 0) {
         strcat(bxrcline, ", ");
       }

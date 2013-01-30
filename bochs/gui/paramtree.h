@@ -112,9 +112,9 @@ protected:
   void *device;
 public:
   enum {
-    // If set, this parameter is not available as a bochsrc option, but in CI only.
-    // In that case, it is set by another (e.g. combined) option
-    BOCHSRC_HIDDEN = (1<<31)
+    // If set, this parameter is available in CI only. In bochsrc, it is set
+    // indirectly from one or more other options (e.g. cpu count)
+    CI_ONLY = (1<<31)
   } bx_param_opt_bits;
   bx_param_c(Bit32u id, const char *name, const char *description);
   bx_param_c(Bit32u id, const char *name, const char *label, const char *description);
