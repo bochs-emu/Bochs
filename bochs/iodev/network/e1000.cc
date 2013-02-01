@@ -477,7 +477,7 @@ void bx_e1000_c::init(void)
   BX_E1000_THIS pci_base_address[1] = 0;
   BX_E1000_THIS pci_rom_address = 0;
   bootrom = SIM->get_param_string("bootrom", base)->getptr();
-  if (strlen(bootrom) > 0) {
+  if ((strlen(bootrom) > 0) && (strcmp(bootrom, "none"))) {
     BX_E1000_THIS load_pci_rom(bootrom);
   }
 

@@ -2599,8 +2599,9 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "keymap=", 7)) {
-        SIM->get_param_bool(BXPN_KBD_USEMAPPING)->set(strlen(params[i]) > 7);
-        SIM->get_param_string(BXPN_KBD_KEYMAP)->set(&params[i][7]);
+        char *kmap = &params[i][7];
+        SIM->get_param_bool(BXPN_KBD_USEMAPPING)->set((strlen(kmap) > 0) && (strcmp(kmap, "none")));
+        SIM->get_param_string(BXPN_KBD_KEYMAP)->set(kmap);
       } else if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param(BXPN_KEYBOARD)) < 0) {
         PARSE_ERR(("%s: keyboard directive malformed.", context));
       }
@@ -2977,7 +2978,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 
 int bx_write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool multiline)
 {
-  char bxrcline[BX_PATHNAME_LEN], tmpstr[BX_PATHNAME_LEN], tmpbyte[4];
+  char bxrcline[BX_PATHNAME_LEN], tmpstr[BX_PATHNAME_LEN];
 
   if (base == NULL) return -1;
   if (!base->get_enabled()) return -1;
@@ -3010,20 +3011,7 @@ int bx_write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool 
           sprintf(tmpstr, "%s", ((bx_param_enum_c*)param)->get_selected());
           break;
         case BXT_PARAM_STRING:
-          if (((bx_param_string_c*)param)->get_options() & bx_param_string_c::RAW_BYTES) {
-            tmpstr[0] = 0;
-            for (int j = 0; j < ((bx_param_string_c*)param)->get_maxsize(); j++) {
-              if (j > 0) {
-                tmpbyte[0] = ((bx_param_string_c*)param)->get_separator();
-                tmpbyte[1] = 0;
-                strcat(tmpstr, tmpbyte);
-              }
-              sprintf(tmpbyte, "%02x", (Bit8u)((bx_param_string_c*)param)->getptr()[j]);
-              strcat(tmpstr, tmpbyte);
-            }
-          } else {
-            sprintf(tmpstr, "\"%s\"", ((bx_param_string_c*)param)->getptr());
-          }
+          ((bx_param_string_c*)param)->sprint(tmpstr, BX_PATHNAME_LEN, 1);
           break;
         default:
           BX_ERROR(("bx_write_param_list(): unsupported parameter type"));
@@ -3096,15 +3084,17 @@ int bx_write_floppy_options(FILE *fp, int drive)
 int bx_write_usb_options(FILE *fp, int maxports, bx_list_c *base)
 {
   int i;
-  char tmpname[20];
+  char tmpname[20], tmpstr[BX_PATHNAME_LEN];
 
   fprintf(fp, "usb_%s: enabled=%d", base->get_name(), SIM->get_param_bool("enabled", base)->get());
   if (SIM->get_param_bool("enabled", base)->get()) {
     for (i = 1; i <= maxports; i++) {
       sprintf(tmpname, "port%d.device", i);
-      fprintf(fp, ", port%d=%s", i, SIM->get_param_string(tmpname, base)->getptr());
+      SIM->get_param_string(tmpname, base)->sprint(tmpstr, BX_PATHNAME_LEN, 1);
+      fprintf(fp, ", port%d=%s", i, tmpstr);
       sprintf(tmpname, "port%d.options", i);
-      fprintf(fp, ", options%d=%s", i, SIM->get_param_string(tmpname, base)->getptr());
+      SIM->get_param_string(tmpname, base)->sprint(tmpstr, BX_PATHNAME_LEN, 1);
+      fprintf(fp, ", options%d=%s", i, tmpstr);
     }
   }
   fprintf(fp, "\n");

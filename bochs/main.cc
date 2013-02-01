@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1155,7 +1155,7 @@ void bx_init_hardware()
   BX_INFO(("  A20 line support: %s", BX_SUPPORT_A20?"yes":"no"));
 #if BX_CONFIGURE_MSRS
   const char *msrs_file = SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->getptr();
-  if(strlen(msrs_file) > 0)
+  if ((strlen(msrs_file) > 0) && strcmp(msrs_file, "none"))
     BX_INFO(("  load configurable MSRs from file \"%s\"", msrs_file));
 #endif
   BX_INFO(("IPS is set to %d", (Bit32u) SIM->get_param_num(BXPN_IPS)->get()));
@@ -1252,7 +1252,7 @@ void bx_init_hardware()
     BX_SUPPORT_VOODOO?" voodoo":""));
 
   // Check if there is a romimage
-  if (strcmp(SIM->get_param_string(BXPN_ROM_PATH)->getptr(),"") == 0) {
+  if (SIM->get_param_string(BXPN_ROM_PATH)->isempty()) {
     BX_ERROR(("No romimage to load. Is your bochsrc file loaded/valid ?"));
   }
 
@@ -1283,23 +1283,23 @@ void bx_init_hardware()
                       SIM->get_param_num(BXPN_ROM_ADDRESS)->get(), 0);
 
   // Then load the optional ROM images
-  if (strcmp(SIM->get_param_string(BXPN_OPTROM1_PATH)->getptr(), "") !=0)
+  if (!SIM->get_param_string(BXPN_OPTROM1_PATH)->isempty())
     BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_OPTROM1_PATH)->getptr(), SIM->get_param_num(BXPN_OPTROM1_ADDRESS)->get(), 2);
-  if (strcmp(SIM->get_param_string(BXPN_OPTROM2_PATH)->getptr(), "") !=0)
+  if (!SIM->get_param_string(BXPN_OPTROM2_PATH)->isempty())
     BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_OPTROM2_PATH)->getptr(), SIM->get_param_num(BXPN_OPTROM2_ADDRESS)->get(), 2);
-  if (strcmp(SIM->get_param_string(BXPN_OPTROM3_PATH)->getptr(), "") !=0)
+  if (!SIM->get_param_string(BXPN_OPTROM3_PATH)->isempty())
     BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_OPTROM3_PATH)->getptr(), SIM->get_param_num(BXPN_OPTROM3_ADDRESS)->get(), 2);
-  if (strcmp(SIM->get_param_string(BXPN_OPTROM4_PATH)->getptr(), "") !=0)
+  if (!SIM->get_param_string(BXPN_OPTROM4_PATH)->isempty())
     BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_OPTROM4_PATH)->getptr(), SIM->get_param_num(BXPN_OPTROM4_ADDRESS)->get(), 2);
 
   // Then load the optional RAM images
-  if (strcmp(SIM->get_param_string(BXPN_OPTRAM1_PATH)->getptr(), "") !=0)
+  if (!SIM->get_param_string(BXPN_OPTRAM1_PATH)->isempty())
     BX_MEM(0)->load_RAM(SIM->get_param_string(BXPN_OPTRAM1_PATH)->getptr(), SIM->get_param_num(BXPN_OPTRAM1_ADDRESS)->get(), 2);
-  if (strcmp(SIM->get_param_string(BXPN_OPTRAM2_PATH)->getptr(), "") !=0)
+  if (!SIM->get_param_string(BXPN_OPTRAM2_PATH)->isempty())
     BX_MEM(0)->load_RAM(SIM->get_param_string(BXPN_OPTRAM2_PATH)->getptr(), SIM->get_param_num(BXPN_OPTRAM2_ADDRESS)->get(), 2);
-  if (strcmp(SIM->get_param_string(BXPN_OPTRAM3_PATH)->getptr(), "") !=0)
+  if (!SIM->get_param_string(BXPN_OPTRAM3_PATH)->isempty())
     BX_MEM(0)->load_RAM(SIM->get_param_string(BXPN_OPTRAM3_PATH)->getptr(), SIM->get_param_num(BXPN_OPTRAM3_ADDRESS)->get(), 2);
-  if (strcmp(SIM->get_param_string(BXPN_OPTRAM4_PATH)->getptr(), "") !=0)
+  if (!SIM->get_param_string(BXPN_OPTRAM4_PATH)->isempty())
     BX_MEM(0)->load_RAM(SIM->get_param_string(BXPN_OPTRAM4_PATH)->getptr(), SIM->get_param_num(BXPN_OPTRAM4_ADDRESS)->get(), 2);
 
 #if BX_SUPPORT_SMP == 0

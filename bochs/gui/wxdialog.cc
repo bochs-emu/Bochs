@@ -887,45 +887,33 @@ void ParamDialog::AddParam (
         break;
       }
     case BXT_PARAM_STRING: {
-	bx_param_string_c *param = (bx_param_string_c*) param_generic;
-	if (!plain) ADD_LABEL (prompt);
+        bx_param_string_c *param = (bx_param_string_c*) param_generic;
+        char value[1024];
+        if (!plain) ADD_LABEL(prompt);
         bool isFilename = param->get_options() & param->IS_FILENAME;
-	wxTextCtrl *txtctrl = new wxTextCtrl (context->parent, pstr->id, wxT(""), wxDefaultPosition, isFilename? longTextSize : normalTextSize);
+        wxTextCtrl *txtctrl = new wxTextCtrl (context->parent, pstr->id, wxT(""), wxDefaultPosition, isFilename? longTextSize : normalTextSize);
         if (description) txtctrl->SetToolTip(wxString(description, wxConvUTF8));
-        if (param->get_options() & param->RAW_BYTES) {
-          char *value = param->getptr();
-          wxString buffer;
-          char sep_string[2];
-          sep_string[0] = param->get_separator();
-          sep_string[1] = 0;
-          for (int i=0; i<param->get_maxsize(); i++) {
-            wxString eachbyte;
-            eachbyte.Printf(wxT("%02x"), (unsigned int)0xff&value[i]);
-            if (i > 0)
-              buffer += wxString(sep_string, wxConvUTF8);
-            buffer += eachbyte;
-          }
-          txtctrl->SetValue(buffer);
-        } else {
-          txtctrl->SetValue(wxString(param->getptr(), wxConvUTF8));
+        param->sprint(value, 1024, 0);
+        txtctrl->SetValue(wxString(value, wxConvUTF8));
+        if ((param->get_options() & param->RAW_BYTES) == 0) {
           txtctrl->SetMaxLength(param->get_maxsize());
         }
-	sizer->Add (txtctrl, 0, wxALL, 2);
-	if (!plain) {
-	  if (isFilename) {
-	    // create Browse button
-	    pstr->browseButtonId = genId ();
-	    pstr->browseButton = new wxButton (context->parent,
-		pstr->browseButtonId, BTNLABEL_BROWSE);
-	    sizer->Add (pstr->browseButton, 0, wxALL, 2);
-	    idHash->Put (pstr->browseButtonId, pstr);  // register under button id
-	  } else {
-	    sizer->Add (1, 1);  // spacer
-	  }
-	}
-	pstr->u.text = txtctrl;
-	idHash->Put (pstr->id, pstr);
-	paramHash->Put (pstr->param->get_id (), pstr);
+        sizer->Add (txtctrl, 0, wxALL, 2);
+        if (!plain) {
+          if (isFilename) {
+            // create Browse button
+            pstr->browseButtonId = genId ();
+            pstr->browseButton = new wxButton (context->parent,
+              pstr->browseButtonId, BTNLABEL_BROWSE);
+            sizer->Add (pstr->browseButton, 0, wxALL, 2);
+            idHash->Put (pstr->browseButtonId, pstr);  // register under button id
+          } else {
+            sizer->Add (1, 1);  // spacer
+          }
+        }
+        pstr->u.text = txtctrl;
+        idHash->Put (pstr->id, pstr);
+        paramHash->Put (pstr->param->get_id (), pstr);
         break;
       }
     case BXT_LIST: {

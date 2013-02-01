@@ -163,7 +163,7 @@ void bx_pcipnic_c::init(void)
   BX_PNIC_THIS pci_base_address[4] = 0;
   BX_PNIC_THIS pci_rom_address = 0;
   bootrom = SIM->get_param_string("bootrom", base)->getptr();
-  if (strlen(bootrom) > 0) {
+  if ((strlen(bootrom) > 0) && (strcmp(bootrom, "none"))) {
     BX_PNIC_THIS load_pci_rom(bootrom);
   }
 

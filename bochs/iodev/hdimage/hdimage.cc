@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2012  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1852,7 +1852,7 @@ undoable_image_t::undoable_image_t(const char* _redolog_name)
   redolog = new redolog_t();
   redolog_name = NULL;
   if (_redolog_name != NULL) {
-    if (strcmp(_redolog_name,"") != 0) {
+    if ((strlen(_redolog_name) > 0) && (strcmp(_redolog_name,"none") != 0)) {
       redolog_name = strdup(_redolog_name);
     }
   }
@@ -1982,7 +1982,7 @@ volatile_image_t::volatile_image_t(const char* _redolog_name)
   redolog_temp = NULL;
   redolog_name = NULL;
   if (_redolog_name != NULL) {
-    if (strcmp(_redolog_name,"") != 0) {
+    if ((strlen(_redolog_name) > 0) && (strcmp(_redolog_name,"none") != 0)) {
       redolog_name = strdup(_redolog_name);
     }
   }

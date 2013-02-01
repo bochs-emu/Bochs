@@ -381,6 +381,8 @@ public:
   char get_separator() const {return separator; }
   int get_maxsize() const {return maxsize; }
   void set_initial_val(const char *buf);
+  bx_bool isempty();
+  int sprint(char *buf, int buflen, bx_bool dquotes);
 #if BX_USE_TEXTCONFIG
   virtual void text_print(FILE *fp);
   virtual int text_ask(FILE *fpin, FILE *fpout);

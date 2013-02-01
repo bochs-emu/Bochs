@@ -851,24 +851,9 @@ void bx_param_enum_c::text_print(FILE *fp)
 
 void bx_param_string_c::text_print(FILE *fp)
 {
-  char *value = getptr();
-  int opts = options;
-  if (opts & RAW_BYTES) {
-    char buffer[1024];
-    buffer[0] = 0;
-    char sep_string[2];
-    sep_string[0] = separator;
-    sep_string[1] = 0;
-    for (int i=0; i<maxsize; i++) {
-      char eachbyte[16];
-      sprintf(eachbyte, "%s%02x", (i>0)?sep_string : "", (unsigned int)0xff&val[i]);
-      strncat(buffer, eachbyte, sizeof(eachbyte));
-    }
-    if (strlen(buffer) > sizeof(buffer)-4) {
-      assert(0); // raw byte print buffer is probably overflowing. increase the max or make it dynamic
-    }
-    value = buffer;
-  }
+  char value[1024];
+
+  this->sprint(value, 1024, 0);
   if (get_format()) {
     fprintf(fp, get_format(), value);
   } else {

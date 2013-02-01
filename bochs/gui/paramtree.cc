@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010  The Bochs Project
+//  Copyright (C) 2010-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -805,6 +805,40 @@ void bx_param_string_c::set_initial_val(const char *buf)
   else
     strncpy(initial_val, buf, maxsize);
   set(initial_val);
+}
+
+bx_bool bx_param_string_c::isempty()
+{
+  return ((strlen(val) == 0) || !strcmp(val, "none"));
+}
+
+int bx_param_string_c::sprint(char *buf, int len, bx_bool dquotes)
+{
+  char tmpbyte[4];
+
+  if (get_options() & RAW_BYTES) {
+    buf[0] = 0;
+    for (int j = 0; j < maxsize; j++) {
+      if (j > 0) {
+        tmpbyte[0] = separator;
+        tmpbyte[1] = 0;
+        strcat(buf, tmpbyte);
+      }
+      sprintf(tmpbyte, "%02x", (Bit8u)val[j]);
+      strcat(buf, tmpbyte);
+    }
+  } else {
+    if (strlen(val) > 0) {
+      if (dquotes) {
+        snprintf(buf, len, "\"%s\"", val);
+      } else {
+        snprintf(buf, len, "%s", val);
+      }
+    } else {
+      strcpy(buf, "none");
+    }
+  }
+  return strlen(buf);
 }
 
 bx_shadow_data_c::bx_shadow_data_c(bx_param_c *parent,

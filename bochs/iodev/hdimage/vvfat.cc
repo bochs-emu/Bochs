@@ -6,7 +6,7 @@
 // ported from QEMU block driver with some additions (see below)
 //
 // Copyright (c) 2004,2005  Johannes E. Schindelin
-// Copyright (C) 2010-2012  The Bochs Project
+// Copyright (C) 2010-2013  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -358,7 +358,7 @@ vvfat_image_t::vvfat_image_t(Bit64u size, const char* _redolog_name)
   redolog_temp = NULL;
   redolog_name = NULL;
   if (_redolog_name != NULL) {
-    if (strcmp(_redolog_name,"") != 0) {
+    if ((strlen(_redolog_name) > 0) && (strcmp(_redolog_name,"none") != 0)) {
       redolog_name = strdup(_redolog_name);
     }
   }

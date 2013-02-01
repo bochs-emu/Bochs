@@ -6,7 +6,7 @@
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (C) 2009       Benjamin D Lunt (fys at frontiernet net)
-//               2009-2012  The Bochs Project
+//               2009-2013  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -143,7 +143,7 @@ void bx_usb_devctl_c::parse_port_options(usb_device_c *device, bx_list_c *portco
   optc = 0;
   raw_options = ((bx_param_string_c*)portconf->get_by_name("options"))->getptr();
   len = strlen(raw_options);
-  if (len > 0) {
+  if ((len > 0) && (strcmp(raw_options, "none"))) {
     options = new char[len + 1];
     strcpy(options, raw_options);
     ptr = strtok(options, ",");
