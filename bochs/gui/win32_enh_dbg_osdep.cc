@@ -8,6 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
+//  Copyright (C) 2008-2013  The Bochs Project
 
 #include "config.h"
 
@@ -1826,7 +1827,8 @@ void MakeBL(HTREEITEM *h_P, bx_param_c *p)
     HTREEITEM h_new;
     bx_list_c *as_list = NULL;
     int i = 0;
-    strcpy (tmpcb, p->get_name());
+    char tmpstr[BX_PATHNAME_LEN];
+    strcpy(tmpcb, p->get_name());
     int j = strlen (tmpcb);
     switch (p->get_type())
     {
@@ -1847,24 +1849,8 @@ void MakeBL(HTREEITEM *h_P, bx_param_c *p)
             sprintf (tmpcb + j,": %s",((bx_param_enum_c*)p)->get_selected());
             break;
         case BXT_PARAM_STRING:
-            if (((bx_param_string_c*)p)->get_options() & bx_param_string_c::RAW_BYTES)
-            {
-                char *cp = tmpcb + j;
-                unsigned char *rp = (unsigned char *)((bx_param_string_c*)p)->getptr();
-                char sc = ((bx_param_string_c*)p)->get_separator();
-                int k = ((bx_param_string_c*)p)->get_maxsize();
-                *(cp++) = ':';
-                *(cp++) = ' ';
-                while (k-- > 0)
-                {
-                    *(cp++) = AsciiHex[2* *rp];
-                    *(cp++) = AsciiHex[2* *rp + 1];
-                    *(cp++) = sc;
-                }
-                *--cp = 0;  // overwrite the last separator char
-            }
-            else
-                sprintf (tmpcb + j,": %s",((bx_param_string_c*)p)->getptr());
+            ((bx_param_string_c*)p)->sprint(tmpstr, BX_PATHNAME_LEN, 0);
+            sprintf(tmpcb + j,": %s", tmpstr);
             break;
         case BXT_PARAM_DATA:
             sprintf (tmpcb + j,": binary data, size=%d",((bx_shadow_data_c*)p)->get_size());

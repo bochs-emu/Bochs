@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -195,9 +195,9 @@ void bx_vgacore_c::init_gui(void)
   len = strlen(SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->getptr());
   if (len > 0) {
     char *options = new char[len + 1];
-    strcpy(options, SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->getptr());
+    SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->get(options, len + 1);
     ptr = strtok(options, ",");
-    while (ptr) {
+    while (ptr && strcmp(ptr, "none")) {
       string_i = 0;
       for (i=0; i<strlen(ptr); i++) {
         if (!isspace(ptr[i])) string[string_i++] = ptr[i];
