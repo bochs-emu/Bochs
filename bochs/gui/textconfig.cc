@@ -996,7 +996,8 @@ int bx_param_string_c::text_ask(FILE *fpin, FILE *fpout)
     int opts = options;
     char buffer2[1024];
     strcpy(buffer2, buffer);
-    if (status == 1 && opts & RAW_BYTES) {
+    if (opts & RAW_BYTES) {
+      if (status == 0) return 0;
       // copy raw hex into buffer
       status = parse_raw_bytes(buffer, buffer2, maxsize, separator);
       if (status < 0) {
