@@ -193,7 +193,7 @@ static void carbonFatalDialog(const char *error, const char *exposition)
 void print_tree(bx_param_c *node, int level)
 {
   int i;
-  char tmpstr[BX_PATHNAME_LEN], tmpbyte[4];
+  char tmpstr[BX_PATHNAME_LEN];
 
   for (i=0; i<level; i++)
     dbg_printf("  ");
@@ -216,30 +216,21 @@ void print_tree(bx_param_c *node, int level)
       dbg_printf("%s = '%s' (enum)\n", node->get_name(), ((bx_param_enum_c*)node)->get_selected());
       break;
     case BXT_PARAM_STRING:
+      ((bx_param_string_c*)node)->sprint(tmpstr, BX_PATHNAME_LEN, 0);
       if (((bx_param_string_c*)node)->get_options() & bx_param_string_c::RAW_BYTES) {
-        tmpstr[0] = 0;
-        for (i = 0; i < ((bx_param_string_c*)node)->get_maxsize(); i++) {
-          if (i > 0) {
-            tmpbyte[0] = ((bx_param_string_c*)node)->get_separator();
-            tmpbyte[1] = 0;
-            strcat(tmpstr, tmpbyte);
-          }
-          sprintf(tmpbyte, "%02x", (Bit8u)((bx_param_string_c*)node)->getptr()[i]);
-          strcat(tmpstr, tmpbyte);
-        }
         dbg_printf("%s = '%s' (raw byte string)\n", node->get_name(), tmpstr);
       } else {
-        dbg_printf("%s = '%s' (string)\n", node->get_name(), ((bx_param_string_c*)node)->getptr());
+        dbg_printf("%s = '%s' (string)\n", node->get_name(), tmpstr);
       }
       break;
     case BXT_LIST:
       {
-	dbg_printf("%s = \n", node->get_name());
-	bx_list_c *list = (bx_list_c*)node;
-	for (i=0; i < list->get_size(); i++) {
-	   print_tree(list->get(i), level+1);
-	}
-	break;
+        dbg_printf("%s = \n", node->get_name());
+        bx_list_c *list = (bx_list_c*)node;
+        for (i=0; i < list->get_size(); i++) {
+          print_tree(list->get(i), level+1);
+        }
+        break;
       }
     case BXT_PARAM_DATA:
       dbg_printf("%s = 'size=%d' (binary data)\n", node->get_name(), ((bx_shadow_data_c*)node)->get_size());

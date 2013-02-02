@@ -1294,7 +1294,7 @@ bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_
 {
   int i;
   Bit64s value;
-  char pname[BX_PATHNAME_LEN], tmpstr[BX_PATHNAME_LEN], tmpbyte[4];
+  char pname[BX_PATHNAME_LEN], tmpstr[BX_PATHNAME_LEN];
   FILE *fp2;
 
   for (i=0; i<level; i++)
@@ -1337,21 +1337,8 @@ bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_
       fprintf(fp, "%s\n", ((bx_param_enum_c*)node)->get_selected());
       break;
     case BXT_PARAM_STRING:
-      if (((bx_param_string_c*)node)->get_options() & bx_param_string_c::RAW_BYTES) {
-        tmpstr[0] = 0;
-        for (i = 0; i < ((bx_param_string_c*)node)->get_maxsize(); i++) {
-          if (i > 0) {
-            tmpbyte[0] = ((bx_param_string_c*)node)->get_separator();
-            tmpbyte[1] = 0;
-            strcat(tmpstr, tmpbyte);
-          }
-          sprintf(tmpbyte, "%02x", (Bit8u)((bx_param_string_c*)node)->getptr()[i]);
-          strcat(tmpstr, tmpbyte);
-        }
-        fprintf(fp, "%s\n", tmpstr);
-      } else {
-        fprintf(fp, "%s\n", ((bx_param_string_c*)node)->getptr());
-      }
+      ((bx_param_string_c*)node)->sprint(tmpstr, BX_PATHNAME_LEN, 0);
+      fprintf(fp, "%s\n", tmpstr);
       break;
     case BXT_PARAM_DATA:
       node->get_param_path(pname, BX_PATHNAME_LEN);

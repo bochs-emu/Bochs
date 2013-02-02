@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009  Volker Ruppert
+//  Copyright (C) 2009-2013  Volker Ruppert
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -479,30 +479,18 @@ HWND CreateInput(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_param_
 {
   HWND Input, Updown;
   RECT r;
-  int code, i, style;
+  int code, style;
   bx_param_num_c *nparam = NULL;
   bx_param_string_c *sparam;
   char buffer[512];
-  char eachbyte[16];
-  char sep_string[2];
-  char *val;
   BOOL spinctrl = FALSE, hexedit = FALSE;
 
   code = ID_PARAM + cid;
   style = WS_CHILD | WS_TABSTOP;
   if (param->get_type() == BXT_PARAM_STRING) {
     sparam = (bx_param_string_c*)param;
-    val = sparam->getptr();
-    if (sparam->get_options() & sparam->RAW_BYTES) {
-      buffer[0] = 0;
-      sep_string[0] = sparam->get_separator();
-      sep_string[1] = 0;
-      for (i = 0; i < sparam->get_maxsize(); i++) {
-        wsprintf(eachbyte, "%s%02x", (i>0)?sep_string : "", (Bit8u)0xff&val[i]);
-        strncat(buffer, eachbyte, sizeof(buffer));
-      }
-    } else {
-      lstrcpyn(buffer, val, 512);
+    sparam->sprint(buffer, 512, 0);
+    if ((sparam->get_options() & sparam->RAW_BYTES) == 0) {
       style |= ES_AUTOHSCROLL;
     }
   } else {
