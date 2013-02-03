@@ -2979,16 +2979,25 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 int bx_write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool multiline)
 {
   char bxrcline[BX_PATHNAME_LEN], tmpstr[BX_PATHNAME_LEN];
+  bx_bool newline = 1;
+  int p = 0;
 
   if (base == NULL) return -1;
   if (!base->get_enabled()) return -1;
-  int p = 0;
-  if (optname == NULL) {
-    sprintf(bxrcline, "%s: ", base->get_name());
-  } else {
-    sprintf(bxrcline, "%s: ", optname);
-  }
+  bxrcline[0] = 0;
   for (int i = 0; i < base->get_size(); i++) {
+    if (newline) {
+      if (strlen(bxrcline) > 0) {
+        fprintf(fp, "%s\n", bxrcline);
+      }
+      if (optname == NULL) {
+        sprintf(bxrcline, "%s: ", base->get_name());
+      } else {
+        sprintf(bxrcline, "%s: ", optname);
+      }
+      newline = 0;
+      p = 0;
+    }
     bx_param_c *param = base->get(i);
     if (param->get_enabled() && ((param->get_options() & param->CI_ONLY) == 0)) {
       if (p > 0) {
@@ -3019,20 +3028,11 @@ int bx_write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool 
       strcat(bxrcline, tmpstr);
       p++;
     }
-    if ((i + 1) < base->get_size()) {
-      if (multiline && (strlen(bxrcline) > 80)) {
-        fprintf(fp, "%s\n", bxrcline);
-        if (optname == NULL) {
-          sprintf(bxrcline, "%s: ", base->get_name());
-        } else {
-          sprintf(bxrcline, "%s: ", optname);
-        }
-        p = 0;
-      }
-    } else {
-      fprintf(fp, "%s\n", bxrcline);
+    if (multiline && (strlen(bxrcline) > 80)) {
+      newline = 1;
     }
   }
+  fprintf(fp, "%s\n", bxrcline);
   return 0;
 }
 
@@ -3107,10 +3107,8 @@ int bx_write_loader_options(FILE *fp)
     fprintf(fp, "# no loader\n");
     return 0;
   }
-  BX_ASSERT((SIM->get_param_enum(BXPN_LOAD32BITOS_WHICH)->get() == Load32bitOSLinux) ||
-            (SIM->get_param_enum(BXPN_LOAD32BITOS_WHICH)->get() == Load32bitOSNullKernel));
   fprintf (fp, "load32bitOSImage: os=%s, path=%s, iolog=%s, initrd=%s\n",
-      (SIM->get_param_enum(BXPN_LOAD32BITOS_WHICH)->get() == Load32bitOSLinux) ? "linux" : "nullkernel",
+      SIM->get_param_enum(BXPN_LOAD32BITOS_WHICH)->get_selected(),
       SIM->get_param_string(BXPN_LOAD32BITOS_PATH)->getptr(),
       SIM->get_param_string(BXPN_LOAD32BITOS_IOLOG)->getptr(),
       SIM->get_param_string(BXPN_LOAD32BITOS_INITRD)->getptr());
@@ -3146,16 +3144,30 @@ int bx_write_clock_cmos_options(FILE *fp)
 
 int bx_write_log_options(FILE *fp, bx_list_c *base)
 {
+  char pname[20];
+  bx_list_c *logfn, *level;
+  bx_param_num_c *mparam;
+  int i, j;
+
   fprintf(fp, "log: %s\n", SIM->get_param_string("filename", base)->getptr());
   fprintf(fp, "logprefix: %s\n", SIM->get_param_string("prefix", base)->getptr());
-  fprintf(fp, "panic: action=%s\n",
-      io->getaction(logfunctions::get_default_action(LOGLEV_PANIC)));
-  fprintf(fp, "error: action=%s\n",
-      io->getaction(logfunctions::get_default_action(LOGLEV_ERROR)));
-  fprintf(fp, "info: action=%s\n",
-      io->getaction(logfunctions::get_default_action(LOGLEV_INFO)));
-  fprintf(fp, "debug: action=%s\n",
-      io->getaction(logfunctions::get_default_action(LOGLEV_DEBUG)));
+
+  strcpy(pname, "general.logfn");
+  logfn = (bx_list_c*) SIM->get_param(pname);
+  for (i = 0; i < logfn->get_size(); i++) {
+    level = (bx_list_c*) logfn->get(i);
+    fprintf(fp, "%s: action=%s", level->get_name(),
+      io->getaction(logfunctions::get_default_action(i)));
+    if (level->get_size() > 0) {
+      for (j = 0; j < level->get_size(); j++) {
+        mparam = (bx_param_num_c*)level->get(j);
+        fprintf(fp, ", %s=%s\n", mparam->get_name(), SIM->get_action_name(mparam->get()));
+      }
+    } else {
+      fprintf(fp, "\n");
+    }
+  }
+
   return 0;
 }
 

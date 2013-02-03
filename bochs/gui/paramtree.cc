@@ -828,7 +828,7 @@ int bx_param_string_c::sprint(char *buf, int len, bx_bool dquotes)
       strcat(buf, tmpbyte);
     }
   } else {
-    if (strlen(val) > 0) {
+    if (!isempty()) {
       if (dquotes) {
         snprintf(buf, len, "\"%s\"", val);
       } else {
