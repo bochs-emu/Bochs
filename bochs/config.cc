@@ -908,6 +908,7 @@ void bx_init_options()
       "Request that the GUI create and use it's own non-shared colormap. This colormap will be used when in the bochs window. If not enabled, a shared colormap scheme may be used. Not implemented on all GUI's.",
       0);
 
+#if BX_WITH_AMIGAOS
   bx_param_bool_c *fullscreen = new bx_param_bool_c(display,
       "fullscreen", "Use full screen mode",
       "When enabled, bochs occupies the whole screen instead of just a window.",
@@ -918,9 +919,6 @@ void bx_init_options()
       "Screen mode name",
       "", BX_PATHNAME_LEN);
   screenmode->set_handler(bx_param_string_handler);
-#if !BX_WITH_AMIGAOS
-  fullscreen->set_enabled(0);
-  screenmode->set_enabled(0);
 #endif
 
   bx_param_num_c *vga_update_freq = new bx_param_num_c(display,
@@ -1412,6 +1410,7 @@ void bx_init_options()
   menu = new bx_list_c(special_menus, "disk", "Bochs Disk Options", disk_menu_init_list);
   menu->set_options(menu->SHOW_PARENT);
 
+#ifdef WIN32
   // disk menu for win32paramdlg
   bx_param_c *disk_menu2_init_list[] = {
     SIM->get_param("floppy"),
@@ -1430,6 +1429,7 @@ void bx_init_options()
   };
   menu = new bx_list_c(special_menus, "disk_win32", "Bochs Disk Options", disk_menu2_init_list);
   menu->set_options(menu->USE_TAB_WINDOW);
+#endif
 
   // ports subtree
   bx_list_c *ports = new bx_list_c(root_param, "ports", "Serial and Parallel Port Options");
@@ -3187,7 +3187,8 @@ int bx_write_debugger_options(FILE *fp)
 int bx_write_configuration(const char *rc, int overwrite)
 {
   int i;
-  char *strptr, tmppath[80], tmpaddr[80], tmpdev[80];
+  char tmppath[80], tmpaddr[80], tmpdev[80];
+  bx_param_string_c *sparam;
   bx_list_c *base;
   BX_INFO(("write current configuration to %s", rc));
   // check if it exists.  If so, only proceed if overwrite is set.
@@ -3213,27 +3214,26 @@ int bx_write_configuration(const char *rc, int overwrite)
 #endif
   fprintf(fp, "config_interface: %s\n", SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE)->get_selected());
   fprintf(fp, "display_library: %s", SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->get_selected());
-  strptr = SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->getptr();
-  if (strlen(strptr) > 0)
-    fprintf(fp, ", options=\"%s\"\n", strptr);
+  sparam = SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS);
+  if (!sparam->isempty())
+    fprintf(fp, ", options=\"%s\"\n", sparam->getptr());
   else
     fprintf(fp, "\n");
   fprintf(fp, "memory: host=%d, guest=%d\n", SIM->get_param_num(BXPN_HOST_MEM_SIZE)->get(),
     SIM->get_param_num(BXPN_MEM_SIZE)->get());
-  strptr = SIM->get_param_string(BXPN_ROM_PATH)->getptr();
-  if (strlen(strptr) > 0) {
-    fprintf(fp, "romimage: file=\"%s\"", strptr);
+  sparam = SIM->get_param_string(BXPN_ROM_PATH);
+  if (!sparam->isempty()) {
+    fprintf(fp, "romimage: file=\"%s\"", sparam->getptr());
     if (SIM->get_param_num(BXPN_ROM_ADDRESS)->get() != 0)
       fprintf(fp, ", address=0x%08x\n", (unsigned int) SIM->get_param_num(BXPN_ROM_ADDRESS)->get());
     else
       fprintf(fp, "\n");
-  }
-  else {
+  } else {
     fprintf(fp, "# no romimage\n");
   }
-  strptr = SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr();
-  if (strlen(strptr) > 0)
-    fprintf(fp, "vgaromimage: file=\"%s\"\n", strptr);
+  sparam = SIM->get_param_string(BXPN_VGA_ROM_PATH);
+  if (!sparam->isempty())
+    fprintf(fp, "vgaromimage: file=\"%s\"\n", sparam->getptr());
   else
     fprintf(fp, "# no vgaromimage\n");
   fprintf(fp, "boot: %s", SIM->get_param_enum(BXPN_BOOTDRIVE1)->get_selected());
@@ -3262,17 +3262,17 @@ int bx_write_configuration(const char *rc, int overwrite)
   for (i=0; i<BX_N_OPTROM_IMAGES; i++) {
     sprintf(tmppath, "memory.optrom.%d.path", i+1);
     sprintf(tmpaddr, "memory.optrom.%d.addr", i+1);
-    strptr = SIM->get_param_string(tmppath)->getptr();
-    if (strlen(strptr) > 0)
-      fprintf(fp, "optromimage%d: file=\"%s\", address=0x%05x\n", i+1, strptr,
+    sparam = SIM->get_param_string(tmppath);
+    if (!sparam->isempty())
+      fprintf(fp, "optromimage%d: file=\"%s\", address=0x%05x\n", i+1, sparam->getptr(),
               (unsigned int)SIM->get_param_num(tmpaddr)->get());
   }
   for (i=0; i<BX_N_OPTRAM_IMAGES; i++) {
     sprintf(tmppath, "memory.optram.%d.path", i+1);
     sprintf(tmpaddr, "memory.optram.%d.addr", i+1);
-    strptr = SIM->get_param_string(tmppath)->getptr();
-    if (strlen(strptr) > 0)
-      fprintf(fp, "optramimage%d: file=\"%s\", address=0x%05x\n", i+1, strptr,
+    sparam = SIM->get_param_string(tmppath);
+    if (!sparam->isempty())
+      fprintf(fp, "optramimage%d: file=\"%s\", address=0x%05x\n", i+1, sparam->getptr(),
               (unsigned int)SIM->get_param_num(tmpaddr)->get());
   }
   // pci
@@ -3282,9 +3282,9 @@ int bx_write_configuration(const char *rc, int overwrite)
     fprintf(fp, ", chipset=%s", SIM->get_param_enum(BXPN_PCI_CHIPSET)->get_selected());
     for (i=0; i<BX_N_PCI_SLOTS; i++) {
       sprintf(tmpdev, "pci.slot.%d", i+1);
-      strptr = SIM->get_param_string(tmpdev)->getptr();
-      if (strlen(strptr) > 0) {
-        fprintf(fp, ", slot%d=%s", i+1, strptr);
+      sparam = SIM->get_param_string(tmpdev);
+      if (!sparam->isempty()) {
+        fprintf(fp, ", slot%d=%s", i+1, sparam->getptr());
       }
     }
   }
@@ -3311,9 +3311,9 @@ int bx_write_configuration(const char *rc, int overwrite)
   fprintf(fp, ", mwait_is_nop=%d", SIM->get_param_bool(BXPN_MWAIT_IS_NOP)->get());
 #endif
 #if BX_CONFIGURE_MSRS
-  strptr = SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->getptr();
-  if (strlen(strptr) > 0)
-    fprintf(fp, ", msrs=\"%s\"", strptr);
+  sparam = SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH);
+  if (!sparam->isempty())
+    fprintf(fp, ", msrs=\"%s\"", sparam->getptr());
 #endif
   fprintf(fp, "\n");
 
