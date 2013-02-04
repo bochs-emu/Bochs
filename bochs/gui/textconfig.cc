@@ -589,7 +589,6 @@ static int log_level_n_choices_normal = 4;
 
 void bx_log_options(int individual)
 {
-  SIM->apply_log_actions_by_device(); // settings from bochsrc
   if (individual) {
     int done = 0;
     while (!done) {

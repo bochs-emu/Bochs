@@ -307,7 +307,6 @@ void AdvancedLogOptionsDialog::Init()
 
 void AdvancedLogOptionsDialog::CopyParamToGui()
 {
-  SIM->apply_log_actions_by_device(); // settings from bochsrc
   bx_param_string_c *logfile = SIM->get_param_string(BXPN_LOG_FILENAME);
   SetLogfile(wxString(logfile->getptr(), wxConvUTF8));
   // copy log action settings from siminterface to gui

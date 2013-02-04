@@ -102,9 +102,6 @@ public:
   virtual void set_default_log_action(int level, int action) {
     logfunctions::set_default_action(level, action);
   }
-  virtual void apply_log_actions_by_device() {
-    bx_set_log_actions_by_device(0);
-  }
   virtual const char *get_log_level_name(int level);
   virtual int get_max_log_level() { return N_LOGLEV; }
   virtual void quit_sim(int code);

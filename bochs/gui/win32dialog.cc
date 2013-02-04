@@ -421,7 +421,6 @@ static BOOL CALLBACK LogOptDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
   switch (msg) {
     case WM_INITDIALOG:
       advanced = (BOOL)lParam;
-      SIM->apply_log_actions_by_device(); // settings from bochsrc
       InitLogOptionsDialog(hDlg, advanced);
       changed = FALSE;
       EnableWindow(GetDlgItem(hDlg, IDAPPLY), FALSE);

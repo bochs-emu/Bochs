@@ -1640,6 +1640,7 @@ int bx_read_configuration(const char *rcfile)
     int action = SIM->get_default_log_action(level);
     io->set_log_action(level, action);
   }
+  bx_set_log_actions_by_device(0);
   return 0;
 }
 
@@ -1657,6 +1658,7 @@ int bx_parse_cmdline(int arg, int argc, char *argv[])
     int action = SIM->get_default_log_action(level);
     io->set_log_action(level, action);
   }
+  bx_set_log_actions_by_device(0);
   return 0;
 }
 
@@ -3145,29 +3147,36 @@ int bx_write_clock_cmos_options(FILE *fp)
 int bx_write_log_options(FILE *fp, bx_list_c *base)
 {
   char pname[20];
-  bx_list_c *logfn, *level;
+  bx_list_c *logfn, *loglev;
   bx_param_num_c *mparam;
-  int i, j;
+  int action, def_action, level, mod;
 
   fprintf(fp, "log: %s\n", SIM->get_param_string("filename", base)->getptr());
   fprintf(fp, "logprefix: %s\n", SIM->get_param_string("prefix", base)->getptr());
 
   strcpy(pname, "general.logfn");
   logfn = (bx_list_c*) SIM->get_param(pname);
-  for (i = 0; i < logfn->get_size(); i++) {
-    level = (bx_list_c*) logfn->get(i);
-    fprintf(fp, "%s: action=%s", level->get_name(),
-      io->getaction(logfunctions::get_default_action(i)));
-    if (level->get_size() > 0) {
-      for (j = 0; j < level->get_size(); j++) {
-        mparam = (bx_param_num_c*)level->get(j);
-        fprintf(fp, ", %s=%s\n", mparam->get_name(), SIM->get_action_name(mparam->get()));
+  for (level = 0; level < N_LOGLEV; level++) {
+    loglev = (bx_list_c*) logfn->get(level);
+    def_action = SIM->get_default_log_action(level);
+    fprintf(fp, "%s: action=%s", loglev->get_name(), SIM->get_action_name(def_action));
+    // stage #1: save log actions of existing modules
+    for (mod = 0; mod < SIM->get_n_log_modules(); mod++) {
+      action = SIM->get_log_action(mod, level);
+      if (action != def_action) {
+        fprintf(fp, ", %s=%s", SIM->get_logfn_name(mod), SIM->get_action_name(action));
       }
-    } else {
-      fprintf(fp, "\n");
     }
+    // stage #2: save log actions of not yet existing modules (from bochsrc)
+    for (mod = 0; mod < loglev->get_size(); mod++) {
+      mparam = (bx_param_num_c*)loglev->get(mod);
+      action = mparam->get();
+      if ((action >= 0) && (action != def_action)) {
+        fprintf(fp, ", %s=%s", mparam->get_name(), SIM->get_action_name(action));
+      }
+    }
+    fprintf(fp, "\n");
   }
-
   return 0;
 }
 
