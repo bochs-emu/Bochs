@@ -1646,17 +1646,22 @@ int bx_read_configuration(const char *rcfile)
 
 int bx_parse_cmdline(int arg, int argc, char *argv[])
 {
-  //if (arg < argc) BX_INFO (("parsing command line arguments"));
+  int level, def_action[N_LOGLEV];
 
+  for (level=0; level<N_LOGLEV; level++) {
+    def_action[level] = SIM->get_default_log_action(level);
+  }
   while (arg < argc) {
     BX_INFO (("parsing arg %d, %s", arg, argv[arg]));
     parse_line_unformatted("cmdline args", argv[arg]);
     arg++;
   }
-  // update log actions
-  for (int level=0; level<N_LOGLEV; level++) {
+  // update log actions if default has been changed
+  for (level=0; level<N_LOGLEV; level++) {
     int action = SIM->get_default_log_action(level);
-    io->set_log_action(level, action);
+    if (action != def_action[level]) {
+      io->set_log_action(level, action);
+    }
   }
   bx_set_log_actions_by_device(0);
   return 0;

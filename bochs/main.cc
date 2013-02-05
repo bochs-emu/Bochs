@@ -1113,13 +1113,6 @@ void bx_init_hardware()
 {
   // all configuration has been read, now initialize everything.
 
-  if (SIM->get_param_enum(BXPN_BOCHS_START)->get()==BX_QUICK_START) {
-    for (int level=0; level<N_LOGLEV; level++) {
-      int action = SIM->get_default_log_action(level);
-      io->set_log_action(level, action);
-    }
-  }
-
   bx_pc_system.initialize(SIM->get_param_num(BXPN_IPS)->get());
 
   if (SIM->get_param_string(BXPN_LOG_FILENAME)->getptr()[0]!='-') {
