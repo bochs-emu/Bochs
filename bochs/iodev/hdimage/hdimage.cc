@@ -254,6 +254,9 @@ Bit64s hdimage_save_handler(void *class_ptr, bx_param_c *param)
   if (!strncmp(imgname, "bochs.", 6)) {
     strcpy(imgname, imgname+6);
   }
+  if (SIM->get_param_string(BXPN_RESTORE_PATH)->isempty()) {
+    return 0;
+  }
   sprintf(path, "%s/%s", SIM->get_param_string(BXPN_RESTORE_PATH)->getptr(), imgname);
   return ((device_image_t*)class_ptr)->save_state(path);
 }

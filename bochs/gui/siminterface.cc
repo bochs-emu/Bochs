@@ -1065,6 +1065,7 @@ bx_bool bx_real_sim_c::save_state(const char *checkpoint_path)
       return 0;
     }
   }
+  get_param_string(BXPN_RESTORE_PATH)->set("none");
   return 1;
 }
 

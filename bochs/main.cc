@@ -987,9 +987,10 @@ int bx_begin_simulation (int argc, char *argv[])
   bx_gui->update_drive_status_buttons();
 
   // iniialize statusbar and set all items inactive
-  if (!SIM->get_param_bool(BXPN_RESTORE_FLAG)->get())
-  {
+  if (!SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
     bx_gui->statusbar_setitem(-1, 0);
+  } else {
+    SIM->get_param_string(BXPN_RESTORE_PATH)->set("none");
   }
 
   // The set handler for mouse_enabled does not actually update the gui
