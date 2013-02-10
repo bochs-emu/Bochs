@@ -1351,8 +1351,6 @@ void Close_cb(GtkWidget *widget, gpointer data)
     gdk_cursor_unref (DockCurs);
 
     gtk_main_quit();
-    debug_cmd_ready = TRUE;     // kill the "get command sleep loop"
-    bx_dbg_quit_command();      // it's OK to call this from the "wrong" thread
 }
 
 // there is only one widget that receives keystrokes, the Input Entry widget

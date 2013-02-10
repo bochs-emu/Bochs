@@ -779,8 +779,9 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
           vgaw_refresh = FALSE;
           Sleep(10);
         }
-        if (bx_user_quit != 0)
-          BX_EXIT(0);
+        if (bx_user_quit != 0) {
+          bx_dbg_exit(0);
+        }
         event->u.debugcmd.command = debug_cmd;
         event->retcode = 1;
         return event;
