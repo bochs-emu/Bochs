@@ -424,7 +424,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   sim_thread = NULL;
   start_bochs_times = 0;
   showCpu = NULL;
-  showKbd = NULL;
   debugCommand = NULL;
   debugCommandEvent = NULL;
 
@@ -1357,14 +1356,12 @@ bool MyFrame::WantRefresh()
 {
   bool anyShowing = false;
   if (showCpu!=NULL && showCpu->IsShowing()) anyShowing = true;
-  if (showKbd!=NULL && showKbd->IsShowing()) anyShowing = true;
   return anyShowing;
 }
 
 void MyFrame::RefreshDialogs()
 {
   if (showCpu!=NULL && showCpu->IsShowing()) showCpu->CopyParamToGui();
-  if (showKbd!=NULL && showKbd->IsShowing()) showKbd->CopyParamToGui();
 }
 
 //////////////////////////////////////////////////////////////////////
