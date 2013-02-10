@@ -2,7 +2,23 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2012  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
+//
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
+//
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
+//
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+//
+/////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
 // wxPanel called a MyPanel, which has methods to display
@@ -10,22 +26,7 @@
 // is instantiated within a MyFrame created by wxmain.cc, but
 // this is not a requirement.
 //
-// The separation between wxmain.cc and wx.cc is as follows:
-// - wxmain.cc implements a Bochs configuration interface (CI),
-//   which is the wxWidgets equivalent of textconfig.cc. wxmain creates
-//   a frame with several menus and a toolbar, and allows the user to
-//   choose the machine configuration and start the simulation.  Note
-//   that wxmain.cc does NOT include bochs.h.  All interactions
-//   between the CI and the simulator are through the siminterface
-//   object.
-// - wx.cc implements a VGA display screen using wxWidgets.  It is
-//   is the wxWidgets equivalent of x.cc, win32.cc, macos.cc, etc.
-//   wx.cc includes bochs.h and has access to all Bochs devices.
-//   The VGA panel accepts only paint, key, and mouse events.  As it
-//   receives events, it builds BxEvents and places them into a
-//   thread-safe BxEvent queue.  The simulation thread periodically
-//   processes events from the BxEvent queue (bx_wx_gui_c::handle_events)
-//   and notifies the appropriate emulated I/O device.
+// See the top of the source file wxmain.cc for more information.
 //
 /////////////////////////////////////////////////////////////////
 

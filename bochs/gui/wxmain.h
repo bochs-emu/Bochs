@@ -1,7 +1,9 @@
 /////////////////////////////////////////////////////////////////
 // $Id$
 /////////////////////////////////////////////////////////////////
-
+//
+//  Copyright (C) 2002-2013  The Bochs Project
+//
 // This file defines variables and classes that the wxWidgets .cc files
 // share.  It should be included only by wx.cc and wxmain.cc.
 

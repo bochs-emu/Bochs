@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
 // When the application starts, the user is given a chance to choose/edit/save
@@ -30,7 +30,7 @@
 //   The VGA panel accepts only paint, key, and mouse events.  As it
 //   receives events, it builds BxEvents and places them into a
 //   thread-safe BxEvent queue.  The simulation thread periodically
-//   processes events from the BxEvent queue (bx_gui_c::handle_events)
+//   processes events from the BxEvent queue (bx_wx_gui_c::handle_events)
 //   and notifies the appropriate emulated I/O device.
 //
 //////////////////////////////////////////////////////////////////////
