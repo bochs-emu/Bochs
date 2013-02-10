@@ -1833,7 +1833,9 @@ one_more:
   SIM->refresh_ci();
 
   // (mch) hack
-  SIM->refresh_vga();
+  if (!bx_user_quit) {
+    SIM->refresh_vga();
+  }
 
   BX_INSTR_DEBUG_PROMPT();
   bx_dbg_print_guard_results();
