@@ -8,6 +8,8 @@
 //
 //  Modified by Bruce Ewing
 //
+//  Copyright (C) 2008-2013  The Bochs Project
+
 
 #ifndef BX_ENH_DBG_DEF_H
 #define BX_ENH_DBG_DEF_H
@@ -177,8 +179,12 @@ extern short DockOrder;        // set the default List "docking" (Reg, ASM, Dump
 
 // END of User Customizable settings
 
-#ifndef WIN32
+#if !defined(_MSC_VER)
+#if SIZEOF_UNSIGNED_LONG == 8
+#define FMT_LLCAPX  "%016lX"
+#else
 #define FMT_LLCAPX  "%016llX"
+#endif
 #else
 #define FMT_LLCAPX  "%016I64X"
 #endif

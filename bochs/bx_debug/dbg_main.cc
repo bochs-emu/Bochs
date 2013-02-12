@@ -3602,7 +3602,7 @@ void bx_dbg_dump_table(void)
     return;
   }
 
-  printf("cr3: 0x"FMT_PHY_ADDRX"\n", BX_CPU(dbg_cpu)->cr3);
+  printf("cr3: 0x"FMT_PHY_ADDRX"\n", (bx_phy_address)BX_CPU(dbg_cpu)->cr3);
 
   lin = 0;
   phy = 0;

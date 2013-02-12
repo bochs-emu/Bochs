@@ -8,6 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
+//  Copyright (C) 2008-2013  The Bochs Project
 
 #include "config.h"
 
@@ -1961,7 +1962,7 @@ void FillBrkp()
             for (i = 0; i < totqty; i++)
             {
                 WWP_Snapshot[i] = write_watchpoint[i].addr;
-                sprintf (cols[0],"%08X",write_watchpoint[i].addr);
+                sprintf (cols[0],"%08X", (Bit32u) write_watchpoint[i].addr);
                 InsertListRow(cols, 18, DUMP_WND, LineCount++, 8);
             }
         }
@@ -1973,7 +1974,7 @@ void FillBrkp()
             for (i = 0; i < totqty; i++)
             {
                 RWP_Snapshot[i] = read_watchpoint[i].addr;
-                sprintf (cols[0],"%08X",read_watchpoint[i].addr);
+                sprintf (cols[0],"%08X", (Bit32u) read_watchpoint[i].addr);
                 InsertListRow(cols, 18, DUMP_WND, LineCount++, 8);
             }
         }
