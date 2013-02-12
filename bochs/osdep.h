@@ -55,10 +55,12 @@ extern "C" {
 #define FMT_LL "%ll"
 #define FMT_TICK "%011llu"
 #define FMT_ADDRX64 "%016llx"
+#define FMT_PHY_ADDRX64 "%012llx"
 #else
 #define FMT_LL "%I64"
 #define FMT_TICK "%011I64u"
 #define FMT_ADDRX64 "%016I64x"
+#define FMT_PHY_ADDRX64 "%012I64x"
 #endif
 
 // always return regular file.

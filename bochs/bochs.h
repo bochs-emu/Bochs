@@ -380,7 +380,7 @@ BOCHSAPI extern logfunc_t *genlog;
 #endif
 
 #if BX_PHY_ADDRESS_LONG
-  #define FMT_PHY_ADDRX FMT_ADDRX64
+  #define FMT_PHY_ADDRX FMT_PHY_ADDRX64
 #else
   #define FMT_PHY_ADDRX FMT_ADDRX32
 #endif
