@@ -3380,8 +3380,13 @@ void ActivateMenuItem (int cmd)
 
 void InitDebugDialog()
 {
-    DoAllInit();    // non-os-specific init stuff
-    OSInit();
+  DoAllInit();    // non-os-specific init stuff
+  OSInit();
+}
+
+void CloseDebugDialog()
+{
+  CloseDialog();
 }
 
 #endif

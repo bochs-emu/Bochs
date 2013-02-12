@@ -1015,4 +1015,10 @@ void bx_gui_c::init_debug_dialog()
   extern void InitDebugDialog();
   InitDebugDialog();
 }
+
+void bx_gui_c::close_debug_dialog()
+{
+  extern void CloseDebugDialog();
+  CloseDebugDialog();
+}
 #endif

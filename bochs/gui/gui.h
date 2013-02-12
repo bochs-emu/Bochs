@@ -158,6 +158,7 @@ public:
   const char* get_toggle_info(void);
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
   void init_debug_dialog(void);
+  void close_debug_dialog(void);
 #endif
 
 protected:

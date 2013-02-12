@@ -58,8 +58,10 @@ enum
   ID_Simulate_Start,
   ID_Simulate_PauseResume,
   ID_Simulate_Stop,
+#if !BX_DEBUGGER_GUI
   ID_Debug_ShowCpu,
   ID_Debug_Console,
+#endif
   ID_Log_View,
   ID_Log_Prefs,
   ID_Log_PrefsDevice,
@@ -189,12 +191,14 @@ public:
   void OnLogPrefs(wxCommandEvent& event);
   void OnLogPrefsDevice(wxCommandEvent& event);
   void OnEditATA(wxCommandEvent& event);
+#if !BX_DEBUGGER_GUI
   void OnShowCpu(wxCommandEvent& event);
 #if BX_DEBUGGER
   void OnDebugLog(wxCommandEvent& event);
   void DebugBreak();
   void DebugCommand(wxString string);
   void DebugCommand(const char *cmd);
+#endif
 #endif
   void editFloppyConfig(int drive);
   void editFirstCdrom();
@@ -217,6 +221,7 @@ private:
   wxMenu *menuLog;
   wxMenu *menuHelp;
   wxToolBar *bxToolBar;
+#if !BX_DEBUGGER_GUI
   ParamDialog *showCpu;
 #if BX_DEBUGGER
   DebugLogDialog *showDebugLog;
@@ -224,8 +229,11 @@ private:
   void RefreshDialogs();
   char *debugCommand; // maybe need lock on this
   BxEvent *debugCommandEvent;  // maybe need lock on this
+#endif
 public:
+#if !BX_DEBUGGER_GUI
   bool WantRefresh();
+#endif
 
 DECLARE_EVENT_TABLE()
 };

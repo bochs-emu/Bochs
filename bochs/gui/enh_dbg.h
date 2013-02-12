@@ -66,6 +66,7 @@ int GetNextSelectedLI(int listnum, int StartPt);
 
 bx_bool OSInit();
 void SpecialInit();
+void CloseDialog();
 
 void HitBreak();
 void ParseIDText(const char *x);

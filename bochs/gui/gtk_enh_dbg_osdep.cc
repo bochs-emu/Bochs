@@ -2334,6 +2334,11 @@ bx_bool OSInit()
     return TRUE;
 }
 
+void CloseDialog()
+{
+  gtk_widget_destroy(window);
+}
+
 // recurse displaying each leaf/branch of param_tree -- with values for each leaf
 void MakeBL(TreeParent *h_P, bx_param_c *p)
 {

@@ -168,7 +168,7 @@ DECLARE_EVENT_TABLE()
 };
 
 
-#if BX_DEBUGGER
+#if BX_DEBUGGER && !BX_DEBUGGER_GUI
 ////////////////////////////////////////////////////////////////////////////
 // DebugLogDialog
 ////////////////////////////////////////////////////////////////////////////
@@ -430,6 +430,7 @@ public:
 // |      [Go]  [Stop]  [Step]  [Step N]  N=[____]           |
 // +---------------------------------------------------------+
 //
+#if !BX_DEBUGGER_GUI
 class CpuRegistersDialog : public ParamDialog
 {
 
@@ -482,6 +483,7 @@ public:
   virtual void CopyParamToGui();
   DECLARE_EVENT_TABLE()
 };
+#endif
 
 
 /**************************************************************************

@@ -1,7 +1,7 @@
 #include "config.h"
 icon_bochs ICON build\win32\nsis\bochs.ico
 #include "wx/msw/wx.rc"
-#if BX_WITH_WIN32
+#if BX_WITH_WIN32 || BX_DEBUGGER_GUI
 #include "win32res.rc"
 #else
 #include "bxversion.rc"

@@ -1821,6 +1821,11 @@ bx_bool OSInit()
     return TRUE;
 }
 
+void CloseDialog()
+{
+  SendMessage(hY, WM_CLOSE, 0, 0);
+}
+
 // recurse displaying each leaf/branch of param_tree -- with values for each leaf
 void MakeBL(HTREEITEM *h_P, bx_param_c *p)
 {

@@ -57,7 +57,7 @@ BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
   srand(time(NULL)); // initialize random generator for RDRAND/RDSEED
 }
 
-#if BX_WITH_WX
+#if BX_WITH_WX && !BX_DEBUGGER_GUI
 
 #define IF_SEG_REG_GET(x) \
   if (!strcmp(param->get_name(), #x)) { \
@@ -227,12 +227,12 @@ void BX_CPU_C::initialize(void)
   init_VMCS();
 #endif
 
-#if BX_WITH_WX
+#if BX_WITH_WX && !BX_DEBUGGER_GUI
   register_wx_state();
 #endif
 }
 
-#if BX_WITH_WX
+#if BX_WITH_WX && !BX_DEBUGGER_GUI
 void BX_CPU_C::register_wx_state(void)
 {
   if (SIM->get_param(BXPN_WX_CPU_STATE) != NULL) {

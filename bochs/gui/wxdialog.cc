@@ -400,7 +400,7 @@ void AdvancedLogOptionsDialog::ShowHelp()
   wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this);
 }
 
-#if BX_DEBUGGER
+#if BX_DEBUGGER && !BX_DEBUGGER_GUI
 //////////////////////////////////////////////////////////////////////
 // DebugLogDialog implementation
 //////////////////////////////////////////////////////////////////////
@@ -1310,6 +1310,7 @@ void ParamDialog::ShowHelp()
 //     - col2: flexgrid
 //       - CR* params
 
+#if !BX_DEBUGGER_GUI
 // all events go to OnEvent method
 BEGIN_EVENT_TABLE(CpuRegistersDialog, wxDialog)
   EVT_BUTTON(-1, CpuRegistersDialog::OnEvent)
@@ -1512,6 +1513,7 @@ void CpuRegistersDialog::OnEvent(wxCommandEvent& event)
       ParamDialog::OnEvent(event);
   }
 }
+#endif
 
 //////////////////////////////////////////////////////////////////////
 // FloppyConfigDialog implementation

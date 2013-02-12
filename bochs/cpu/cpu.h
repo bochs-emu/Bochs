@@ -1423,7 +1423,7 @@ public: // for now...
   void initialize(void);
   void after_restore_state(void);
   void register_state(void);
-#if BX_WITH_WX
+#if BX_WITH_WX && !BX_DEBUGGER_GUI
   void register_wx_state(void);
 #endif
   static Bit64s param_save_handler(void *devptr, bx_param_c *param);
