@@ -105,6 +105,7 @@ extern "C" {
 #define FMT_LL "%I64"
 #define FMT_TICK "%011I64u"
 #define FMT_ADDRX64 "%016I64x"
+#define FMT_PHY_ADDRX64 "%012I64x"
 
 #define off_t __int64
 // mingw gcc 4.6.1 already has lseek defined
@@ -118,10 +119,12 @@ extern "C" {
 #define FMT_LL "%l"
 #define FMT_TICK "%011lu"
 #define FMT_ADDRX64 "%016lx"
+#define FMT_PHY_ADDRX64 "%012lx"
 #else
 #define FMT_LL "%ll"
 #define FMT_TICK "%011llu"
 #define FMT_ADDRX64 "%016llx"
+#define FMT_PHY_ADDRX64 "%012llx"
 #endif
 #endif   /* not WIN32 definitions */
 
