@@ -566,8 +566,8 @@ int GetNextSelectedLI(int listnum, int StartPt)
 int GetASMTopIdx()
 {
     GtkAdjustment *va;
-    GtkListStore *Database;
-    Database = (GtkListStore *) gtk_tree_view_get_model( GTK_TREE_VIEW(LV[ASM_WND]) );
+//    GtkListStore *Database;
+//    Database = (GtkListStore *) gtk_tree_view_get_model( GTK_TREE_VIEW(LV[ASM_WND]) );
 
     AsmPgSize = 0;
     va = gtk_tree_view_get_vadjustment ( GTK_TREE_VIEW(LV[ASM_WND]) );
@@ -664,10 +664,13 @@ void VSizeChange()
     else
         gtk_widget_show(CmdBHbox);
 
-    if (SingleCPU == FALSE)         // set the visibility of the CPU Buttons
-        gtk_widget_show(CpuBHbox);
-    else
-        gtk_widget_hide(CpuBHbox);
+    if (BX_SMP_PROCESSORS > 1) {
+        if (SingleCPU == FALSE) {       // set the visibility of the CPU Buttons
+            gtk_widget_show(CpuBHbox);
+        } else {
+            gtk_widget_hide(CpuBHbox);
+        }
+    }
 
     if (ShowIOWindows == FALSE)
     {
@@ -746,10 +749,10 @@ void SetMenuCheckmark (int set, int ChkIdx)
 // pass in FALSE or 0 to gray out a menu item
 void GrayMenuItem (int flag, int CmdIndex)
 {
-    GtkWidget *lbl;
+//    GtkWidget *lbl;
     GtkWidget *MI = Cmd2MI[CmdIndex - CMD_IDX_LO + 1];
     // convert the Command Index to a Menu Item widget, and get its label
-    lbl = GTK_BIN(GTK_MENU_ITEM( MI ))->child;
+//    lbl = GTK_BIN(GTK_MENU_ITEM( MI ))->child;
     gtk_widget_set_sensitive ( MI, flag );
 }
 
@@ -1672,17 +1675,17 @@ void AttachSignals()
     int i;
     g_signal_connect (G_OBJECT(window), "destroy",
         GTK_SIGNAL_FUNC(Close_cb), (gpointer) NULL);
-    g_signal_connect (G_OBJECT(CmdBtn[0]), "clicked", GTK_SIGNAL_FUNC(nbCmd_cb), (gpointer) BtnLkup[0]);
-    g_signal_connect (G_OBJECT(CmdBtn[1]), "clicked", GTK_SIGNAL_FUNC(nbCmd_cb), (gpointer) BtnLkup[1]);
-    g_signal_connect (G_OBJECT(CmdBtn[2]), "clicked", GTK_SIGNAL_FUNC(nbCmd_cb), (gpointer) BtnLkup[2]);
-    g_signal_connect (G_OBJECT(CmdBtn[3]), "clicked", GTK_SIGNAL_FUNC(Cmd_cb), (gpointer) BtnLkup[3]);
-    g_signal_connect (G_OBJECT(CmdBtn[4]), "clicked", GTK_SIGNAL_FUNC(nbCmd_cb), (gpointer) BtnLkup[4]);
+    g_signal_connect (G_OBJECT(CmdBtn[0]), "clicked", GTK_SIGNAL_FUNC(nbCmd_cb), (gpointer) (glong) BtnLkup[0]);
+    g_signal_connect (G_OBJECT(CmdBtn[1]), "clicked", GTK_SIGNAL_FUNC(nbCmd_cb), (gpointer) (glong) BtnLkup[1]);
+    g_signal_connect (G_OBJECT(CmdBtn[2]), "clicked", GTK_SIGNAL_FUNC(nbCmd_cb), (gpointer) (glong) BtnLkup[2]);
+    g_signal_connect (G_OBJECT(CmdBtn[3]), "clicked", GTK_SIGNAL_FUNC(Cmd_cb), (gpointer) (glong) BtnLkup[3]);
+    g_signal_connect (G_OBJECT(CmdBtn[4]), "clicked", GTK_SIGNAL_FUNC(nbCmd_cb), (gpointer) (glong) BtnLkup[4]);
 
     i = BX_SMP_PROCESSORS;
     if (i > 1)
     {
         while (--i >= 0)
-            g_signal_connect (G_OBJECT(CpuBtn[i]), "clicked", GTK_SIGNAL_FUNC(CPUb_cb), (gpointer) i);
+            g_signal_connect (G_OBJECT(CpuBtn[i]), "clicked", GTK_SIGNAL_FUNC(CPUb_cb), (gpointer) (glong) i);
     }
 
 // activate the menu items
@@ -2043,7 +2046,7 @@ void MakeList(int listnum, const char *ColNameArray[])
         column = gtk_tree_view_column_new_with_attributes(cp,
             renderer, "text", i, NULL);
         gtk_tree_view_append_column(GTK_TREE_VIEW(LV[listnum]), column);
-        gtk_tree_view_column_set_cell_data_func(column, renderer, ListClr_PaintCb, (gpointer) ((listnum*3) + i), NULL);
+        gtk_tree_view_column_set_cell_data_func(column, renderer, ListClr_PaintCb, (gpointer) (glong) ((listnum*3) + i), NULL);
 
     // Note: column and renderer are not technically "GTK Objects", so don't unref them
         cp = txt;
