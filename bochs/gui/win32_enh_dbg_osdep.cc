@@ -1751,10 +1751,11 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
             KillTimer(hh,2);
             if (*CustomFont != DefFont)
                 DeleteObject (*CustomFont);
-            DeleteObject (CustomFont[1]);
-            DeleteObject (CustomFont[2]);
-            DeleteObject (CustomFont[3]);
+            DeleteObject(CustomFont[1]);
+            DeleteObject(CustomFont[2]);
+            DeleteObject(CustomFont[3]);
             DestroyWindow(hY);
+            hY = NULL;
             break;
         }
     }
