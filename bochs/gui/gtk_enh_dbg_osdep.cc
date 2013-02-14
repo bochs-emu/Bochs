@@ -1353,7 +1353,10 @@ void Close_cb(GtkWidget *widget, gpointer data)
     gdk_cursor_unref (SizeCurs);
     gdk_cursor_unref (DockCurs);
 
-    gtk_main_quit();
+    if (!SIM->is_wx_selected()) {
+      gtk_main_quit();
+    }
+    window = NULL;
 }
 
 // there is only one widget that receives keystrokes, the Input Entry widget
@@ -2330,13 +2333,17 @@ bx_bool OSInit()
     AllCols[4]->fixed_width = AllCols[4]->width;
     AllCols[4]->column_type = GTK_TREE_VIEW_COLUMN_FIXED;
 
-    MakeGTKthreads();
+    if (!SIM->is_wx_selected()) {
+      MakeGTKthreads();
+    }
     return TRUE;
 }
 
 void CloseDialog()
 {
-  gtk_widget_destroy(window);
+  if (window != NULL) {
+    gtk_widget_destroy(window);
+  }
 }
 
 // recurse displaying each leaf/branch of param_tree -- with values for each leaf
