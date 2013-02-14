@@ -71,8 +71,6 @@ void CloseDialog();
 void HitBreak();
 void ParseIDText(const char *x);
 
-extern char *debug_cmd;
-extern bx_bool debug_cmd_ready;
 extern bx_bool vgaw_refresh;
 
 #ifdef WIN32

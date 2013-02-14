@@ -121,11 +121,6 @@ static bx_bool wx_hide_ips = 0;
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)
 static Bit32u convertStringToGDKKey (const char *string);
 #endif
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
-BxEvent *wx_notify_callback (void *unused, BxEvent *event);
-static bxevent_handler old_callback = NULL;
-static void *old_callback_arg = NULL;
-#endif
 
 
 //////////////////////////////////////////////////////////////
@@ -1009,10 +1004,6 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   }
 
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
-  // redirect notify callback to wx specific code
-  SIM->get_notify_callback(&old_callback, &old_callback_arg);
-  assert(old_callback != NULL);
-  SIM->set_notify_callback(wx_notify_callback, NULL);
 #ifdef WIN32
   // on Windows the debugger gui must run in a separate thread
   DWORD threadID;
@@ -1676,7 +1667,6 @@ void bx_wx_gui_c::exit(void)
 {
   clear_screen();
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
-  SIM->set_notify_callback(old_callback, old_callback_arg);
   close_debug_dialog();
 #endif
 }
@@ -1767,47 +1757,4 @@ static Bit32u convertStringToGDKKey (const char *string)
 }
 #endif
 
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
-
-#include "enh_dbg.h"
-
-BxEvent *wx_notify_callback(void *unused, BxEvent *event)
-{
-  switch (event->type)
-  {
-    case BX_SYNC_EVT_GET_DBG_COMMAND:
-      {
-        debug_cmd = new char[512];
-        debug_cmd_ready = 0;
-        HitBreak();
-        while (debug_cmd_ready == 0 && bx_user_quit == 0)
-        {
-          if (vgaw_refresh != 0)  // is the GUI frontend requesting a VGAW refresh?
-            SIM->refresh_vga();
-          vgaw_refresh = 0;
-#ifdef WIN32
-          Sleep(10);
-#elif BX_HAVE_USLEEP
-          usleep(10000);
-#else
-          sleep(1);
-#endif
-        }
-        if (bx_user_quit != 0) {
-          bx_dbg_exit(0);
-        }
-        event->u.debugcmd.command = debug_cmd;
-        event->retcode = 1;
-        return event;
-      }
-    case BX_ASYNC_EVT_DBG_MSG:
-      {
-        ParseIDText(event->u.logmsg.msg);
-        return event;
-      }
-    default:
-      return (*old_callback)(old_callback_arg, event);
-  }
-}
-#endif /* if BX_DEBUGGER && BX_DEBUGGER_GUI */
 #endif /* if BX_WITH_WX */

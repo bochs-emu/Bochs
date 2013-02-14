@@ -235,6 +235,13 @@ unsigned short RWPSnapCount;
 bx_phy_address WWP_Snapshot[16];
 bx_phy_address RWP_Snapshot[16];
 
+char *debug_cmd;
+bx_bool debug_cmd_ready;
+bx_bool vgaw_refresh;
+
+static bxevent_handler old_callback = NULL;
+static void *old_callback_arg = NULL;
+
 short nDock[36] = {     // lookup table for alternate DockOrders
     0x231, 0x312, 0x231, 0x213, 0x132, 0x132,
     0x213, 0x321, 0x123, 0x123, 0x321, 0x312,
@@ -3378,14 +3385,58 @@ void ActivateMenuItem (int cmd)
     }
 }
 
+BxEvent *enh_dbg_notify_callback(void *unused, BxEvent *event)
+{
+  switch (event->type)
+  {
+    case BX_SYNC_EVT_GET_DBG_COMMAND:
+      {
+        debug_cmd = new char[512];
+        debug_cmd_ready = 0;
+        HitBreak();
+        while (debug_cmd_ready == 0 && bx_user_quit == 0)
+        {
+          if (vgaw_refresh != 0)  // is the GUI frontend requesting a VGAW refresh?
+            SIM->refresh_vga();
+          vgaw_refresh = 0;
+#ifdef WIN32
+          Sleep(10);
+#elif BX_HAVE_USLEEP
+          usleep(10000);
+#else
+          sleep(1);
+#endif
+        }
+        if (bx_user_quit != 0) {
+          bx_dbg_exit(0);
+        }
+        event->u.debugcmd.command = debug_cmd;
+        event->retcode = 1;
+        return event;
+      }
+    case BX_ASYNC_EVT_DBG_MSG:
+      {
+        ParseIDText(event->u.logmsg.msg);
+        return event;
+      }
+    default:
+      return (*old_callback)(old_callback_arg, event);
+  }
+}
+
 void InitDebugDialog()
 {
+  // redirect notify callback to the debugger specific code
+  SIM->get_notify_callback(&old_callback, &old_callback_arg);
+  assert (old_callback != NULL);
+  SIM->set_notify_callback(enh_dbg_notify_callback, NULL);
   DoAllInit();    // non-os-specific init stuff
   OSInit();
 }
 
 void CloseDebugDialog()
 {
+  SIM->set_notify_callback(old_callback, old_callback_arg);
   CloseDialog();
 }
 

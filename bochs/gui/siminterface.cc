@@ -208,13 +208,6 @@ private:
   bx_bool save_sr_param(FILE *fp, bx_param_c *node, const char *sr_path, int level);
 };
 
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
-// FIXME: these probably belong inside the bx_simulator_interface_c structure
-char *debug_cmd = NULL;
-bx_bool debug_cmd_ready = 0;
-bx_bool vgaw_refresh = 0;
-#endif
-
 // recursive function to find parameters from the path
 static bx_param_c *find_param(const char *full_pname, const char *rest_of_pname, bx_param_c *base)
 {

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2012  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -139,12 +139,6 @@ static char sdl_ips_text[20];
 #endif
 
 static void headerbar_click(int x);
-
-#if !defined(WIN32) && BX_DEBUGGER && BX_DEBUGGER_GUI
-BxEvent *sdl_notify_callback (void *unused, BxEvent *event);
-static bxevent_handler old_callback = NULL;
-static void *old_callback_arg = NULL;
-#endif
 
 
 void switch_to_windowed(void)
@@ -355,10 +349,6 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned header_bar_y)
           BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
         }
 #else
-        // redirect notify callback to sdl specific code
-        SIM->get_notify_callback (&old_callback, &old_callback_arg);
-        assert (old_callback != NULL);
-        SIM->set_notify_callback (sdl_notify_callback, NULL);
         init_debug_dialog();
 #endif 
 #endif
@@ -1627,47 +1617,5 @@ void bx_sdl_gui_c::show_ips(Bit32u ips_count)
   }
 }
 #endif
-
-#if !defined(WIN32) && BX_DEBUGGER && BX_DEBUGGER_GUI
-
-#include "enh_dbg.h"
-
-BxEvent *sdl_notify_callback(void *unused, BxEvent *event)
-{
-  switch (event->type)
-  {
-    case BX_SYNC_EVT_GET_DBG_COMMAND:
-      {
-        debug_cmd = new char[512];
-        debug_cmd_ready = 0;
-        HitBreak();
-        while (debug_cmd_ready == 0 && bx_user_quit == 0)
-        {
-          if (vgaw_refresh != 0)  // is the GUI frontend requesting a VGAW refresh?
-            SIM->refresh_vga();
-          vgaw_refresh = 0;
-#if BX_HAVE_USLEEP
-          usleep(10000);
-#else
-          sleep(1);
-#endif
-        }
-        if (bx_user_quit != 0) {
-          bx_dbg_exit(0);
-        }
-        event->u.debugcmd.command = debug_cmd;
-        event->retcode = 1;
-        return event;
-      }
-    case BX_ASYNC_EVT_DBG_MSG:
-      {
-        ParseIDText(event->u.logmsg.msg);
-        return event;
-      }
-    default:
-      return (*old_callback)(old_callback_arg, event);
-  }
-}
-#endif /* if BX_DEBUGGER && BX_DEBUGGER_GUI */
 
 #endif /* if BX_WITH_SDL */

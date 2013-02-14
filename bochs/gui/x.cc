@@ -2644,36 +2644,6 @@ BxEvent *x11_notify_callback (void *unused, BxEvent *event)
         event->retcode = x11_yesno_dialog((bx_param_bool_c *)param);
         return event;
       }
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
-    case BX_SYNC_EVT_GET_DBG_COMMAND:
-      {
-        debug_cmd = new char[512];
-        debug_cmd_ready = 0;
-        HitBreak();
-        while (debug_cmd_ready == 0 && bx_user_quit == 0)
-        {
-          if (vgaw_refresh != 0)  // is the GUI frontend requesting a VGAW refresh?
-            SIM->refresh_vga();
-          vgaw_refresh = 0;
-#if BX_HAVE_USLEEP
-          usleep(10000);
-#else
-          sleep(1);
-#endif
-        }
-        if (bx_user_quit != 0) {
-          bx_dbg_exit(0);
-        }
-        event->u.debugcmd.command = debug_cmd;
-        event->retcode = 1;
-        return event;
-      }
-    case BX_ASYNC_EVT_DBG_MSG:
-      {
-        ParseIDText (event->u.logmsg.msg);
-        return event;
-      }
-#endif
     case BX_SYNC_EVT_TICK: // called periodically by siminterface.
     case BX_ASYNC_EVT_REFRESH: // called when some bx_param_c parameters have changed.
       // fall into default case

@@ -28,11 +28,6 @@
 #include "win32paramdlg.h"
 
 const char log_choices[5][16] = {"ignore", "log", "ask user", "end simulation", "no change"};
-#if BX_DEBUGGER
-extern char *debug_cmd;
-extern bx_bool debug_cmd_ready;
-extern bx_bool vgaw_refresh;
-#endif
 
 char *backslashes(char *s)
 {
@@ -765,31 +760,6 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
     case BX_SYNC_EVT_LOG_ASK:
       LogAskDialog(event);
       return event;
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
-    case BX_SYNC_EVT_GET_DBG_COMMAND:
-      {
-        // sim is at a "break" -- internal debugger is ready for a command
-        debug_cmd = new char[512];
-        debug_cmd_ready = FALSE;
-        HitBreak();
-        while (debug_cmd_ready == FALSE && bx_user_quit == 0)
-        {
-          if (vgaw_refresh != FALSE)  // is the GUI frontend requesting a VGAW refresh?
-            SIM->refresh_vga();
-          vgaw_refresh = FALSE;
-          Sleep(10);
-        }
-        if (bx_user_quit != 0) {
-          bx_dbg_exit(0);
-        }
-        event->u.debugcmd.command = debug_cmd;
-        event->retcode = 1;
-        return event;
-      }
-    case BX_ASYNC_EVT_DBG_MSG:
-      ParseIDText (event->u.logmsg.msg);
-      return event;
-#endif
     case BX_SYNC_EVT_ASK_PARAM:
       param = event->u.param.param;
       if (param->get_type() == BXT_PARAM_STRING) {
