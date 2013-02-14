@@ -840,8 +840,8 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      unsigned error_code = push_error ? vm->vmentry_excep_err_code : 0;
 
      unsigned push_error_reference = 0;
-     if (event_type == BX_HARDWARE_EXCEPTION && vector < BX_CPU_HANDLED_EXCEPTIONS &&
-             exceptions_info[vector].push_error) push_error_reference = 1;
+     if (event_type == BX_HARDWARE_EXCEPTION && vector < BX_CPU_HANDLED_EXCEPTIONS)
+        push_error_reference = exceptions_info[vector].push_error;
 
      if (vm->vmentry_interr_info & 0x7ffff000) {
         BX_ERROR(("VMFAIL: VMENTRY broken interruption info field"));
@@ -889,11 +889,16 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
          return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
 
+#if BX_SUPPORT_VMX >= 2
+     if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST) {
+       unsigned protected_mode_guest = (Bit32u) VMread_natural(VMCS_GUEST_CR0) & BX_CR0_PE_MASK;
+       if (! protected_mode_guest) push_error_reference = 0;
+     }
+#endif
+
      if (push_error != push_error_reference) {
-        if (! (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST)) {
-          BX_ERROR(("VMFAIL: VMENTRY injected event vector %d should push error", vector));
-          return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-        }
+       BX_ERROR(("VMFAIL: VMENTRY injected event vector %d broken error code", vector));
+       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
 
      if (push_error) {
