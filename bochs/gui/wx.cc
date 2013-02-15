@@ -1667,7 +1667,9 @@ void bx_wx_gui_c::exit(void)
 {
   clear_screen();
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
+  wxMutexGuiEnter();
   close_debug_dialog();
+  wxMutexGuiLeave();
 #endif
 }
 

@@ -1067,11 +1067,15 @@ void MyFrame::OnKillSim(wxCommandEvent& WXUNUSED(event))
   // OnSimThreadExit, which also tries to lock sim_thread_lock.
   // If we grab the lock at this level, deadlock results.
   wxLogDebug(wxT("OnKillSim()"));
-#if BX_DEBUGGER && !BX_DEBUGGER_GUI
+#if BX_DEBUGGER
+#if BX_DEBUGGER_GUI
+  bx_user_quit = 1;
+#else
   // the sim_thread may be waiting for a debugger command.  If so, send
   // it a "quit"
   DebugCommand("quit");
   debugCommand = NULL;
+#endif
 #endif
   if (sim_thread) {
     wxBochsStopSim = true;
