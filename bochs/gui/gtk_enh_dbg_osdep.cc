@@ -2131,9 +2131,13 @@ bx_bool OSInit()
     argvp = argv;
     argc = 1;
 
-    // you MUST call gtk_init, even with faked arguments, because it inits GDK and Glib
-    if (gtk_init_check(&argc, &argvp) == FALSE)
-        printf ("gtk init failed, can not access display?\n");
+    if (!SIM->is_wx_selected()) {
+      // you MUST call gtk_init, even with faked arguments, because it inits GDK and Glib
+      if (gtk_init_check(&argc, &argvp) == FALSE) {
+        fprintf(stderr, "gtk init failed, can not access display?\n");
+        return FALSE;
+      }
+    }
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "Bochs Enhanced Debugger");
     gtk_window_set_default_size(GTK_WINDOW(window), 500, 500);

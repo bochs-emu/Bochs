@@ -17,7 +17,6 @@
 #include <math.h>
 
 #include "bochs.h"
-#include "param_names.h"
 #include "cpu/cpu.h"
 #include "disasm/disasm.h"
 
@@ -2559,10 +2558,8 @@ void doStepN()
     PrevStepNSize = i;
     AtBreak = FALSE;
     StatusChange = TRUE;
-    bx_dbg_stepN_command(CurrentCPU, i);
-    AtBreak = TRUE;
-    StatusChange = TRUE;
-    OnBreak();
+    sprintf(debug_cmd, "s %d", i);
+    debug_cmd_ready = TRUE;
 }
 
 // User wants a custom disassembly
