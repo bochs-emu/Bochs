@@ -2558,7 +2558,7 @@ void doStepN()
     PrevStepNSize = i;
     AtBreak = FALSE;
     StatusChange = TRUE;
-    sprintf(debug_cmd, "s %d", i);
+    sprintf(debug_cmd, "s %d %d", CurrentCPU, i);
     debug_cmd_ready = TRUE;
 }
 
