@@ -186,8 +186,5 @@
 #define BXPN_MENU_RUNTIME_CDROM          "menu.runtime.cdrom"
 #define BXPN_MENU_RUNTIME_USB            "menu.runtime.usb"
 #define BXPN_MENU_RUNTIME_MISC           "menu.runtime.misc"
-#define BXPN_WX_CPU_STATE                "wxdebug.cpu"
-#define BXPN_WX_CPU0_STATE               "wxdebug.cpu.0"
-#define BXPN_WX_CPU0_EFLAGS_IOPL         "wxdebug.cpu.0.IOPL"
 
 #endif

@@ -291,8 +291,5 @@ menu
 bochs
   (subtree containing Bochs state)
 
-wxdebug
-  (special subtree for wxBochs debugger)
-
 user
   (subtree for user-defined options)

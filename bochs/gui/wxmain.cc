@@ -202,17 +202,6 @@ extern "C" int libwx_LTX_plugin_init(plugin_t *plugin, plugintype_t type,
   wxLogDebug(wxT("installing %s as the Bochs GUI"), wxT("wxWidgets"));
   SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->set_enabled(0);
   MyPanel::OnPluginInit();
-#if !BX_DEBUGGER_GUI
-  bx_list_c *list = new bx_list_c(SIM->get_param("."),
-      "wxdebug",
-      "subtree for the wx debugger"
-      );
-  bx_list_c *cpu = new bx_list_c(list,
-      "cpu",
-      "CPU State"
-      );
-  cpu->set_options(bx_list_c::USE_TAB_WINDOW);
-#endif
   return 0; // success
 }
 
@@ -346,12 +335,6 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_Other, MyFrame::OnEditOther)
   EVT_MENU(ID_Log_Prefs, MyFrame::OnLogPrefs)
   EVT_MENU(ID_Log_PrefsDevice, MyFrame::OnLogPrefsDevice)
-#if !BX_DEBUGGER_GUI
-  EVT_MENU(ID_Debug_ShowCpu, MyFrame::OnShowCpu)
-#if BX_DEBUGGER
-  EVT_MENU(ID_Debug_Console, MyFrame::OnDebugLog)
-#endif
-#endif
   // toolbar events
   EVT_TOOL(ID_Edit_FD_0, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Edit_FD_1, MyFrame::OnToolbarClick)
@@ -427,11 +410,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   // init variables
   sim_thread = NULL;
   start_bochs_times = 0;
-#if !BX_DEBUGGER_GUI
-  showCpu = NULL;
-  debugCommand = NULL;
-  debugCommandEvent = NULL;
-#endif
 
   // set up the gui
   menuConfiguration = new wxMenu;
@@ -472,14 +450,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuSimulate->Enable(ID_Simulate_PauseResume, FALSE);
   menuSimulate->Enable(ID_Simulate_Stop, FALSE);
 
-#if !BX_DEBUGGER_GUI
-  menuDebug = new wxMenu;
-  menuDebug->Append(ID_Debug_ShowCpu, wxT("Show &CPU"));
-#if BX_DEBUGGER
-  menuDebug->Append(ID_Debug_Console, wxT("Debug Console"));
-#endif
-#endif
-
   menuLog = new wxMenu;
   menuLog->Append(ID_Log_View, wxT("&View"));
   menuLog->Append(ID_Log_Prefs, wxT("&Preferences..."));
@@ -492,9 +462,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuBar->Append(menuConfiguration, wxT("&File"));
   menuBar->Append(menuEdit, wxT("&Edit"));
   menuBar->Append(menuSimulate, wxT("&Simulate"));
-#if !BX_DEBUGGER_GUI
-  menuBar->Append(menuDebug, wxT("&Debug"));
-#endif
   menuBar->Append(menuLog, wxT("&Log"));
   menuBar->Append(menuHelp, wxT("&Help"));
   SetMenuBar(menuBar);
@@ -548,13 +515,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   sz->Add(panel, 0, wxGROW);
   SetAutoLayout(TRUE);
   SetSizer(sz);
-
-#if BX_DEBUGGER && !BX_DEBUGGER_GUI
-  // create the debug log dialog box immediately so that we can write output
-  // to it.
-  showDebugLog = new DebugLogDialog(this, -1);
-  showDebugLog->Init();
-#endif
 }
 
 MyFrame::~MyFrame()
@@ -806,101 +766,6 @@ void MyFrame::OnLogPrefsDevice(wxCommandEvent& WXUNUSED(event))
   dlg.ShowModal();
 }
 
-// How is this going to work?
-// The dialog box shows the value of CPU registers, which will be changing
-// all the time.  What causes the dialog to reread the register value and
-// display it?  Brainstorm:
-// 1) The update could be controlled by a real-time timer.
-// 2) It could be triggered by periodic BX_SYNC_EVT_TICK events.
-// 3) It could be triggered by changes in the actual value.  This is
-//    good for values that rarely change, but horrible for values like
-//    EIP that change constantly.
-// 4) An update can be forced by explictly calling an update function.  For
-//   example after a single-step you would want to force an update.  If you
-//   interrupt the simulation, you want to force an update.  If you manually
-//   change a parameter, you would force an update.
-// When simulation is free running, #1 or #2 might make sense.  Try #2.
-#if !BX_DEBUGGER_GUI
-void MyFrame::OnShowCpu(wxCommandEvent& WXUNUSED(event))
-{
-  if (SIM->get_param(BXPN_WX_CPU0_STATE) == NULL) {
-    // if params not initialized yet, then give up
-    wxMessageBox(wxT("Cannot show the debugger window until the simulation has begun."),
-                 wxT("Sim not started"), wxOK | wxICON_ERROR, this);
-    return;
-  }
-  if (showCpu == NULL) {
-    showCpu = new CpuRegistersDialog(this, -1);
-#if BX_DEBUGGER
-    showCpu->SetTitle(wxT("Bochs Debugger"));
-#else
-    showCpu->SetTitle(wxT("CPU Registers"));
-#endif
-    showCpu->Init();
-  } else {
-    showCpu->CopyParamToGui();
-  }
-  showCpu->Show(TRUE);
-}
-
-#if BX_DEBUGGER
-void MyFrame::OnDebugLog(wxCommandEvent& WXUNUSED(event))
-{
-  wxASSERT(showDebugLog != NULL);
-  showDebugLog->CopyParamToGui();
-  showDebugLog->Show(TRUE);
-}
-
-void MyFrame::DebugBreak()
-{
-  if (debugCommand) {
-    delete [] debugCommand;
-    debugCommand = NULL;
-  }
-  wxASSERT(showDebugLog != NULL);
-  showDebugLog->AppendCommand("*** break ***");
-  SIM->debug_break();
-}
-
-void MyFrame::DebugCommand(wxString cmd)
-{
-  char buf[1024];
-  safeWxStrcpy(buf, cmd, sizeof(buf));
-  DebugCommand(buf);
-}
-
-void MyFrame::DebugCommand(const char *cmd)
-{
-  wxLogDebug(wxT("debugger command: %s"), cmd);
-  wxASSERT(showDebugLog != NULL);
-  showDebugLog->AppendCommand(cmd);
-  if (debugCommand != NULL) {
-    // one is already waiting
-    wxLogDebug(wxT("multiple debugger commands, discarding the earlier one"));
-    delete [] debugCommand;
-    debugCommand = NULL;
-  }
-  int len = strlen(cmd);
-  char *tmp = new char[len+1];
-  strncpy(tmp, cmd, len+1);
-  // if an event is waiting for us, fill it an send back to sim_thread.
-  if (debugCommandEvent != NULL) {
-    wxLogDebug(wxT("sim_thread was waiting for this command '%s'"), tmp);
-    wxASSERT(debugCommandEvent->type == BX_SYNC_EVT_GET_DBG_COMMAND);
-    debugCommandEvent->u.debugcmd.command = tmp;
-    debugCommandEvent->retcode = 1;
-    sim_thread->SendSyncResponse(debugCommandEvent);
-    wxASSERT(debugCommand == NULL);
-    debugCommandEvent = NULL;
-  } else {
-    // store this command in debugCommand for the future
-    wxLogDebug(wxT("storing debugger command '%s'"), tmp);
-    debugCommand = tmp;
-  }
-}
-#endif
-#endif
-
 void MyFrame::OnQuit(wxCommandEvent& event)
 {
   wxBochsClosing = true;
@@ -943,9 +808,6 @@ void MyFrame::simStatusChanged(StatusChange change, bx_bool popupNotify) {
       menuSimulate->Enable(ID_Simulate_PauseResume, FALSE);
       menuSimulate->Enable(ID_Simulate_Stop, FALSE);
       menuSimulate->SetLabel(ID_Simulate_PauseResume, wxT("&Pause"));
-#if BX_DEBUGGER && !BX_DEBUGGER_GUI
-      showDebugLog->Show(FALSE);
-#endif
       // This should only be used if the simulation stops due to error.
       // Obviously if the user asked it to stop, they don't need to be told.
       if (popupNotify)
@@ -1067,15 +929,8 @@ void MyFrame::OnKillSim(wxCommandEvent& WXUNUSED(event))
   // OnSimThreadExit, which also tries to lock sim_thread_lock.
   // If we grab the lock at this level, deadlock results.
   wxLogDebug(wxT("OnKillSim()"));
-#if BX_DEBUGGER
-#if BX_DEBUGGER_GUI
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
   bx_user_quit = 1;
-#else
-  // the sim_thread may be waiting for a debugger command.  If so, send
-  // it a "quit"
-  DebugCommand("quit");
-  debugCommand = NULL;
-#endif
 #endif
   if (sim_thread) {
     wxBochsStopSim = true;
@@ -1196,11 +1051,6 @@ void MyFrame::OnSim2CIEvent(wxCommandEvent& event)
   // all cases should return.  sync event handlers MUST send back a
   // response.  async event handlers MUST delete the event.
   switch (be->type) {
-#if !BX_DEBUGGER_GUI
-  case BX_ASYNC_EVT_REFRESH:
-    RefreshDialogs();
-    break;
-#endif
   case BX_SYNC_EVT_ASK_PARAM:
     wxLogDebug(wxT("before HandleAskParam"));
     be->retcode = HandleAskParam(be);
@@ -1209,40 +1059,10 @@ void MyFrame::OnSim2CIEvent(wxCommandEvent& event)
     sim_thread->SendSyncResponse(be);
     wxLogDebug(wxT("after SendSyncResponse"));
     break;
-#if BX_DEBUGGER && !BX_DEBUGGER_GUI
-  case BX_ASYNC_EVT_DBG_MSG:
-    showDebugLog->AppendText(wxString(be->u.logmsg.msg, wxConvUTF8));
-    break;
-#endif
   case BX_SYNC_EVT_LOG_ASK:
   case BX_ASYNC_EVT_LOG_MSG:
     OnLogMsg(be);
     break;
-#if !BX_DEBUGGER_GUI
-  case BX_SYNC_EVT_GET_DBG_COMMAND:
-    wxLogDebug(wxT("BX_SYNC_EVT_GET_DBG_COMMAND received"));
-    if (debugCommand == NULL) {
-      // no debugger command is ready to send, so don't send a response yet.
-      // When a command is issued, MyFrame::DebugCommand will fill in the
-      // event and call SendSyncResponse() so that the simulation thread can
-      // continue.
-      debugCommandEvent = be;
-      //
-      if (showCpu == NULL || !showCpu->IsShowing()) {
-        wxCommandEvent unused;
-        OnShowCpu(unused);
-      }
-    } else {
-      // a debugger command is waiting for us!
-      wxLogDebug(wxT("sending debugger command '%s' that was waiting"), debugCommand);
-      be->u.debugcmd.command = debugCommand;
-      debugCommand = NULL;  // ready for the next one
-      debugCommandEvent = NULL;
-      be->retcode = 1;
-      sim_thread->SendSyncResponse(be);
-    }
-    break;
-#endif
   case BX_ASYNC_EVT_QUIT_SIM:
     wxMessageBox(wxT("Bochs simulation has stopped."), wxT("Bochs Stopped"),
         wxOK | wxICON_INFORMATION, this);
@@ -1371,21 +1191,6 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
   }
 }
 
-// warning: This can be called from the simulator thread!!!
-#if !BX_DEBUGGER_GUI
-bool MyFrame::WantRefresh()
-{
-  bool anyShowing = false;
-  if (showCpu!=NULL && showCpu->IsShowing()) anyShowing = true;
-  return anyShowing;
-}
-
-void MyFrame::RefreshDialogs()
-{
-  if (showCpu!=NULL && showCpu->IsShowing()) showCpu->CopyParamToGui();
-}
-#endif
-
 //////////////////////////////////////////////////////////////////////
 // Simulation Thread
 //////////////////////////////////////////////////////////////////////
@@ -1487,14 +1292,6 @@ BxEvent *SimThread::SiminterfaceCallback2(BxEvent *event)
         }
         return event;
   }
-
-#if !BX_DEBUGGER_GUI
-  // prune refresh events if the frame is going to ignore them anyway
-  if (event->type == BX_ASYNC_EVT_REFRESH && !theFrame->WantRefresh()) {
-    delete event;
-    return NULL;
-  }
-#endif
 
   //encapsulate the bxevent in a wxwidgets event
   wxCommandEvent wxevent(wxEVT_COMMAND_MENU_SELECTED, ID_Sim2CI_Event);
