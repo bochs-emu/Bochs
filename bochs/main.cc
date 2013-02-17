@@ -247,7 +247,6 @@ int bxmain(void)
   // Initialize locale (for isprint() and other functions)
   setlocale (LC_ALL, "");
 #endif
-  bx_user_quit = 0;
   bx_init_siminterface();   // create the SIM object
   static jmp_buf context;
   if (setjmp (context) == 0) {
@@ -937,6 +936,7 @@ bx_bool load_and_init_display_lib(void)
 
 int bx_begin_simulation (int argc, char *argv[])
 {
+  bx_user_quit = 0;
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
     if (!SIM->restore_config()) {
       BX_PANIC(("cannot restore configuration"));

@@ -147,6 +147,8 @@ bx_usb_xhci_c::~bx_usb_xhci_c()
   }
 
   SIM->get_bochs_root()->remove("usb_xhci");
+  bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
+  usb_rt->remove("xhci");
   BX_DEBUG(("Exit"));
 }
 

@@ -1422,6 +1422,8 @@ bx_bool bx_real_sim_c::opt_plugin_ctrl(const char *plugname, bx_bool load)
       plugin_ctrl->remove(plugname);
       return 1;
     }
+  } else if (!load && !PLUG_device_present(plugname)) {
+    plugin_ctrl->remove(plugname);
   }
   return 0;
 }

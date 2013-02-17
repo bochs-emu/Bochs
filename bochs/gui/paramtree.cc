@@ -1087,17 +1087,15 @@ void bx_list_c::remove(const char *name)
     if (!stricmp(name, p->get_name())) {
       if (p->get_parent() == this) {
         delete p;
-        if (prev == NULL) {
-          list = item->next;
-        } else {
-          prev->next = item->next;
-        }
-        free(item);
-        size--;
-        break;
-      } else {
-        prev = item;
       }
+      if (prev == NULL) {
+        list = item->next;
+      } else {
+        prev->next = item->next;
+      }
+      free(item);
+      size--;
+      break;
     } else {
       prev = item;
     }
