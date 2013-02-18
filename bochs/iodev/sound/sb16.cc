@@ -246,6 +246,9 @@ bx_sb16_c::~bx_sb16_c(void)
     fclose(LOGFILE);
 
   SIM->get_bochs_root()->remove("sb16");
+  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
+  misc_rt->remove("dmatimer");
+  misc_rt->remove("loglevel");
   BX_DEBUG(("Exit"));
 }
 

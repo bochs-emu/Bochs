@@ -593,7 +593,7 @@ bx_bool SpBtn()             // Superclasses a button control
 void SpecialInit()
 {
     int i = 8;
-    doOneTimeInit = FALSE;
+    doSimuInit = FALSE;
     EnableMenuItem (hOptMenu, CMD_EREG, MF_GRAYED);
     EnableMenuItem (hCmdMenu, CMD_WPTWR, MF_GRAYED);
     EnableMenuItem (hCmdMenu, CMD_WPTRD, MF_GRAYED);
@@ -1779,22 +1779,28 @@ void HitBreak()
 bx_bool OSInit()
 {
     TEXTMETRIC tm;
-    InitCommonControls();   // start the common control dll
-    SpListView();       // create superclass for listviews to use when they are created
-    SpBtn();            // same for buttons
-    WNDCLASSEX wC = {0};
-    wC.cbSize = sizeof(wC);
-    wC.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-    hCursArrow = LoadCursor(NULL,IDC_ARROW);
-    wC.hCursor = hCursArrow;
-    wC.hInstance = GetModuleHandle(0);
-    wC.style = CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS | CS_DBLCLKS;
-    wC.lpfnWndProc = B_WP;
-    wC.cbWndExtra = sizeof(void*);
-    wC.lpszClassName = "bochs_dbg_x";
-    wC.hIcon = LoadIcon(GetModuleHandle(0),"ICON_D");
-    wC.hIconSm = LoadIcon(GetModuleHandle(0),"ICON_D");
-    RegisterClassEx(&wC);
+
+    if (doOneTimeInit) {
+        InitCommonControls();   // start the common control dll
+        SpListView();       // create superclass for listviews to use when they are created
+        SpBtn();            // same for buttons
+        WNDCLASSEX wC = {0};
+        wC.cbSize = sizeof(wC);
+        wC.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+        hCursArrow = LoadCursor(NULL,IDC_ARROW);
+        wC.hCursor = hCursArrow;
+        wC.hInstance = GetModuleHandle(0);
+        wC.style = CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS | CS_DBLCLKS;
+        wC.lpfnWndProc = B_WP;
+        wC.cbWndExtra = sizeof(void*);
+        wC.lpszClassName = "bochs_dbg_x";
+        wC.hIcon = LoadIcon(GetModuleHandle(0),"ICON_D");
+        wC.hIconSm = LoadIcon(GetModuleHandle(0),"ICON_D");
+        RegisterClassEx(&wC);
+        doOneTimeInit = FALSE;
+    }
+    CurXSize = 0;
+    CurYSize = 0;
     HMENU hTopMenu = LoadMenu(GetModuleHandle(0),"MENU_1");     // build the menus from the resource
     hOptMenu = GetSubMenu (hTopMenu, 2);                // need the main menu handles
     hViewMenu = GetSubMenu (hTopMenu, 1);

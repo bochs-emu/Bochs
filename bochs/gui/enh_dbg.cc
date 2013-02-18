@@ -114,7 +114,7 @@ bx_bool DumpHasFocus = FALSE;
 unsigned short BarClix[2];
 
 bx_bool AtBreak = FALSE;    // Status indicators
-bx_bool CpuModeChange = TRUE;
+bx_bool CpuModeChange;
 bx_bool StatusChange = TRUE;
 
 bx_bool In64Mode = FALSE;       // CPU modes
@@ -122,7 +122,8 @@ bx_bool In32Mode = FALSE;
 unsigned CpuMode = 0;
 Bit32u InPaging = 0;            // Storage for the top bit of CR0, unmodified
 
-bx_bool doOneTimeInit = TRUE;   // Internal flags
+bx_bool doOneTimeInit = TRUE;   // Internal flag #1
+bx_bool doSimuInit;             // Internal flag #2
 bx_bool ResizeColmns;           // address/value column autosize flag
 bx_bool FWflag = FALSE;         // friendly warning has been shown to user once already
 
@@ -1357,7 +1358,7 @@ void InitRegObjects()
 void doUpdate()
 {
     void FillStack();
-    if (doOneTimeInit != FALSE)
+    if (doSimuInit != FALSE)
         SpecialInit();
     // begin an autoupdate of Register and Asm windows
     LoadRegList();      // build and show ListView
@@ -2111,6 +2112,8 @@ void DoAllInit()
     char *p;
     int i;
 
+    doSimuInit = TRUE;
+    CpuModeChange = TRUE;
     CurrentCPU = 0;     // need to init CPU info once only
     if (SingleCPU == FALSE)
         TotCPUs = BX_SMP_PROCESSORS;

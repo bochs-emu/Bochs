@@ -782,7 +782,7 @@ void SpecialInit()
     if (! CpuSupportSSE)
       GrayMenuItem (0, CMD_XMMR);
 
-    doOneTimeInit = FALSE;      // make sure this function is never called again
+    doSimuInit = FALSE; // make sure this function is called once per simulation
 }
 
 // this routine is stubbed in the GTK version

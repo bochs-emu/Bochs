@@ -227,7 +227,8 @@ extern unsigned short BarClix[2];
 extern bx_bool AtBreak;        // Status indicators
 extern bx_bool StatusChange;
 
-extern bx_bool doOneTimeInit;  // Internal flags
+extern bx_bool doOneTimeInit;  // Internal flag #1
+extern bx_bool doSimuInit;     // Internal flag #2
 extern bx_bool ResizeColmns;   // address/value column autosize flag
 extern bx_bool FWflag;         // friendly warning has been shown to user once already
 

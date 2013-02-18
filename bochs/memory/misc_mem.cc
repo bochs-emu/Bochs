@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2013  The Bochs Project
 //
 //  I/O memory handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -38,8 +38,6 @@ Bit8u* const BX_MEM_C::swapped_out = ((Bit8u*)NULL - sizeof(Bit8u));
 
 BX_MEM_C::BX_MEM_C()
 {
-  int i;
-
   put("memory", "MEM0");
 
   vector = NULL;
@@ -47,12 +45,6 @@ BX_MEM_C::BX_MEM_C()
   blocks = NULL;
   len    = 0;
   used_blocks = 0;
-  for (i = 0; i < 65; i++)
-    rom_present[i] = 0;
-  for (i = 0; i <= BX_MEM_AREA_F0000; i++) {
-    memory_type[i][0] = 0;
-    memory_type[i][1] = 0;
-  }
 
   memory_handlers = NULL;
 
@@ -93,7 +85,7 @@ BX_MEM_C::~BX_MEM_C()
 
 void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
 {
-  unsigned idx;
+  unsigned i, idx;
 
   BX_DEBUG(("Init $Id$"));
 
@@ -149,6 +141,13 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
   BX_MEM_THIS smram_available = 0;
   BX_MEM_THIS smram_enable = 0;
   BX_MEM_THIS smram_restricted = 0;
+
+  for (i = 0; i < 65; i++)
+    BX_MEM_THIS rom_present[i] = 0;
+  for (i = 0; i <= BX_MEM_AREA_F0000; i++) {
+    BX_MEM_THIS memory_type[i][0] = 0;
+    BX_MEM_THIS memory_type[i][1] = 0;
+  }
 
   BX_MEM_THIS register_state();
 }
