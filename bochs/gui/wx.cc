@@ -115,7 +115,7 @@ static struct {
 } wxBochsPalette[256];
 wxCriticalSection event_thread_lock;
 BxEvent event_queue[MAX_EVENTS];
-unsigned long num_events = 0;
+unsigned long num_events;
 static bx_bool mouse_captured = 0;
 static bx_bool wx_hide_ips = 0;
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)
@@ -918,10 +918,6 @@ bx_bool MyPanel::fillBxKeyEvent(wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool rele
   return true;
 }
 
-//////////////////////////////////////////////////////////////
-// fill in methods of bx_gui
-//////////////////////////////////////////////////////////////
-
 #if defined(WIN32) && BX_DEBUGGER && BX_DEBUGGER_GUI
 DWORD WINAPI DebugGuiThread(LPVOID)
 {
@@ -935,6 +931,10 @@ DWORD WINAPI DebugGuiThread(LPVOID)
   return 0;
 }
 #endif
+
+//////////////////////////////////////////////////////////////
+// fill in methods of bx_gui
+//////////////////////////////////////////////////////////////
 
 void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
@@ -1014,6 +1014,11 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   wxMutexGuiLeave();
 #endif
 #endif
+
+  num_events = 0;
+  // When exiting simulation with the power button, the event thread lock is
+  // still active, since power_handler() never returns.
+  event_thread_lock.Leave();
 
   new_gfx_api = 1;
   dialog_caps = BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT | BX_GUI_DLG_SAVE_RESTORE;
