@@ -56,6 +56,7 @@ void bx_dbg_print_descriptor(Bit32u lo, Bit32u hi);
 void bx_dbg_print_descriptor64(Bit32u lo1, Bit32u hi1, Bit32u lo2, Bit32u hi2);
 
 static bx_param_bool_c *sim_running = NULL;
+static bx_bool bx_dbg_exit_called;
 
 static char tmp_buf[512];
 static char tmp_buf_prev[512];
@@ -222,6 +223,7 @@ int bx_dbg_main(void)
   setbuf(stdout, NULL);
   setbuf(stderr, NULL);
 
+  bx_dbg_exit_called = 0;
   bx_dbg_batch_dma.this_many = 1;
   bx_dbg_batch_dma.Qsize     = 0;
 
@@ -770,6 +772,8 @@ void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, un
 
 void bx_dbg_exit(int code)
 {
+  if (bx_dbg_exit_called) return;
+  bx_dbg_exit_called = 1;
   BX_DEBUG(("dbg: before exit"));
   for (int cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
     if (BX_CPU(cpu)) BX_CPU(cpu)->atexit();

@@ -1016,9 +1016,6 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 #endif
 
   num_events = 0;
-  // When exiting simulation with the power button, the event thread lock is
-  // still active, since power_handler() never returns.
-  event_thread_lock.Leave();
 
   new_gfx_api = 1;
   dialog_caps = BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT | BX_GUI_DLG_SAVE_RESTORE;
@@ -1032,113 +1029,121 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
 void bx_wx_gui_c::handle_events(void)
 {
-  wxCriticalSectionLocker lock(event_thread_lock);
-  Bit32u bx_key = 0;
-  for(unsigned int i = 0; i < num_events; i++) {
-    switch(event_queue[i].type) {
-      case BX_ASYNC_EVT_TOOLBAR:
-        switch (event_queue[i].u.toolbar.button) {
-          case BX_TOOLBAR_FLOPPYA: floppyA_handler(); break;
-          case BX_TOOLBAR_FLOPPYB: floppyB_handler(); break;
-          case BX_TOOLBAR_CDROM1: cdrom1_handler(); break;
-          case BX_TOOLBAR_RESET: reset_handler(); break;
-          case BX_TOOLBAR_POWER: power_handler(); break;
-          case BX_TOOLBAR_SAVE_RESTORE: save_restore_handler(); break;
-          case BX_TOOLBAR_COPY: copy_handler(); break;
-          case BX_TOOLBAR_PASTE: paste_handler(); break;
-          case BX_TOOLBAR_SNAPSHOT: snapshot_handler(); break;
-          case BX_TOOLBAR_CONFIG: config_handler(); break;
-          case BX_TOOLBAR_MOUSE_EN: thePanel->ToggleMouse(true); break;
-          case BX_TOOLBAR_USER: userbutton_handler(); break;
-          default:
-            wxLogDebug (wxT ("unknown toolbar id %d"), event_queue[i].u.toolbar.button);
-        }
-        break;
-      case BX_ASYNC_EVT_KEY:
-        bx_key = event_queue[i].u.key.bx_key;
-        if (event_queue[i].u.key.raw_scancode) {
-          // event contains raw scancodes: convert to BX_KEY values first
-          bx_bool released = ((bx_key & 0x80) > 0);
-          if (bx_key & 0xFF00) { // for extended keys
-            switch (bx_key & 0x7f) {
-              case 0x1C:
-                bx_key = BX_KEY_KP_ENTER;
-                break;
-              case 0x1D:
-                bx_key = BX_KEY_CTRL_R;
-                break;
-              case 0x35:
-                bx_key = BX_KEY_KP_DIVIDE;
-                break;
-              case 0x38:
-                // This makes the "AltGr" key on European keyboards work
-                DEV_kbd_gen_scancode(BX_KEY_CTRL_L | BX_KEY_RELEASED);
-                bx_key = BX_KEY_ALT_R;
-                break;
-              case 0x45:
-                bx_key = BX_KEY_NUM_LOCK;
-                break;
-              case 0x47:
-                bx_key = BX_KEY_HOME;
-                break;
-              case 0x48:
-                bx_key = BX_KEY_UP;
-                break;
-              case 0x49:
-                bx_key = BX_KEY_PAGE_UP;
-                break;
-              case 0x4B:
-                bx_key = BX_KEY_LEFT;
-                break;
-              case 0x4D:
-                bx_key = BX_KEY_RIGHT;
-                break;
-              case 0x4F:
-                bx_key = BX_KEY_END;
-                break;
-              case 0x50:
-                bx_key = BX_KEY_DOWN;
-                break;
-              case 0x51:
-                bx_key = BX_KEY_PAGE_DOWN;
-                break;
-              case 0x52:
-                bx_key = BX_KEY_INSERT;
-                break;
-              case 0x53:
-                bx_key = BX_KEY_DELETE;
-                break;
-              case 0x5B:
-                bx_key = BX_KEY_WIN_L;
-                break;
-              case 0x5C:
-                bx_key = BX_KEY_WIN_R;
-                break;
-              case 0x5D:
-                bx_key = BX_KEY_MENU;
-                break;
-            }
-          } else {
-            bx_key = wxMSW_to_bx_key[bx_key & 0x7f];
+  bx_bool quit_sim = 0;
+  { // critical section start
+    wxCriticalSectionLocker lock(event_thread_lock);
+    Bit32u bx_key = 0;
+    for(unsigned int i = 0; i < num_events; i++) {
+      switch(event_queue[i].type) {
+        case BX_ASYNC_EVT_TOOLBAR:
+          switch (event_queue[i].u.toolbar.button) {
+            case BX_TOOLBAR_FLOPPYA: floppyA_handler(); break;
+            case BX_TOOLBAR_FLOPPYB: floppyB_handler(); break;
+            case BX_TOOLBAR_CDROM1: cdrom1_handler(); break;
+            case BX_TOOLBAR_RESET: reset_handler(); break;
+            case BX_TOOLBAR_POWER: quit_sim = 1; break;
+            case BX_TOOLBAR_SAVE_RESTORE: save_restore_handler(); break;
+            case BX_TOOLBAR_COPY: copy_handler(); break;
+            case BX_TOOLBAR_PASTE: paste_handler(); break;
+            case BX_TOOLBAR_SNAPSHOT: snapshot_handler(); break;
+            case BX_TOOLBAR_CONFIG: config_handler(); break;
+            case BX_TOOLBAR_MOUSE_EN: thePanel->ToggleMouse(true); break;
+            case BX_TOOLBAR_USER: userbutton_handler(); break;
+            default:
+              wxLogDebug (wxT ("unknown toolbar id %d"), event_queue[i].u.toolbar.button);
           }
-          if (released) bx_key |= BX_KEY_RELEASED;
-        }
-        // event contains BX_KEY_* codes: use gen_scancode
-        IFDBG_KEY (wxLogDebug (wxT ("sending key event 0x%02x", bx_key)));
-        DEV_kbd_gen_scancode(bx_key);
-        break;
-      case BX_ASYNC_EVT_MOUSE:
-        DEV_mouse_motion(
-            event_queue[i].u.mouse.dx,
-            event_queue[i].u.mouse.dy,
-            0,
-            event_queue[i].u.mouse.buttons, wxMouseModeAbsXY);
-        break;
-      default:
-        wxLogError (wxT ("handle_events received unhandled event type %d in queue"), (int)event_queue[i].type);
+          break;
+        case BX_ASYNC_EVT_KEY:
+          bx_key = event_queue[i].u.key.bx_key;
+          if (event_queue[i].u.key.raw_scancode) {
+            // event contains raw scancodes: convert to BX_KEY values first
+            bx_bool released = ((bx_key & 0x80) > 0);
+            if (bx_key & 0xFF00) { // for extended keys
+              switch (bx_key & 0x7f) {
+                case 0x1C:
+                  bx_key = BX_KEY_KP_ENTER;
+                  break;
+                case 0x1D:
+                  bx_key = BX_KEY_CTRL_R;
+                  break;
+                case 0x35:
+                  bx_key = BX_KEY_KP_DIVIDE;
+                  break;
+                case 0x38:
+                  // This makes the "AltGr" key on European keyboards work
+                  DEV_kbd_gen_scancode(BX_KEY_CTRL_L | BX_KEY_RELEASED);
+                  bx_key = BX_KEY_ALT_R;
+                  break;
+                case 0x45:
+                  bx_key = BX_KEY_NUM_LOCK;
+                  break;
+                case 0x47:
+                  bx_key = BX_KEY_HOME;
+                  break;
+                case 0x48:
+                  bx_key = BX_KEY_UP;
+                  break;
+                case 0x49:
+                  bx_key = BX_KEY_PAGE_UP;
+                  break;
+                case 0x4B:
+                  bx_key = BX_KEY_LEFT;
+                  break;
+                case 0x4D:
+                  bx_key = BX_KEY_RIGHT;
+                  break;
+                case 0x4F:
+                  bx_key = BX_KEY_END;
+                  break;
+                case 0x50:
+                  bx_key = BX_KEY_DOWN;
+                  break;
+                case 0x51:
+                  bx_key = BX_KEY_PAGE_DOWN;
+                  break;
+                case 0x52:
+                  bx_key = BX_KEY_INSERT;
+                  break;
+                case 0x53:
+                  bx_key = BX_KEY_DELETE;
+                  break;
+                case 0x5B:
+                  bx_key = BX_KEY_WIN_L;
+                  break;
+                case 0x5C:
+                  bx_key = BX_KEY_WIN_R;
+                  break;
+                case 0x5D:
+                  bx_key = BX_KEY_MENU;
+                  break;
+              }
+            } else {
+              bx_key = wxMSW_to_bx_key[bx_key & 0x7f];
+            }
+            if (released) bx_key |= BX_KEY_RELEASED;
+          }
+          // event contains BX_KEY_* codes: use gen_scancode
+          IFDBG_KEY (wxLogDebug (wxT ("sending key event 0x%02x", bx_key)));
+          DEV_kbd_gen_scancode(bx_key);
+          break;
+        case BX_ASYNC_EVT_MOUSE:
+          DEV_mouse_motion(
+              event_queue[i].u.mouse.dx,
+              event_queue[i].u.mouse.dy,
+              0,
+              event_queue[i].u.mouse.buttons, wxMouseModeAbsXY);
+          break;
+        default:
+          wxLogError (wxT ("handle_events received unhandled event type %d in queue"), (int)event_queue[i].type);
+      }
+      if (quit_sim) break;
     }
+    num_events = 0;
+  } // critical section end
+  if (quit_sim) {
+    // power_handler() never returns, so it must be placed outside of the critical section
+    power_handler();
   }
-  num_events = 0;
 }
 
 void bx_wx_gui_c::statusbar_setitem_specific(int element, bx_bool active, bx_bool w)

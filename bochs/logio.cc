@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2010  The Bochs Project
+//  Copyright (C) 2001-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -582,11 +582,7 @@ void logfunctions::fatal(const char *prefix, const char *fmt, va_list ap, int ex
 #if !BX_DEBUGGER
   BX_EXIT(exit_status);
 #else
-  static bx_bool dbg_exit_called = 0;
-  if (dbg_exit_called == 0) {
-    dbg_exit_called = 1;
-    bx_dbg_exit(exit_status);
-  }
+  bx_dbg_exit(exit_status);
 #endif
   // not safe to use BX_* log functions in here.
   fprintf(stderr, "fatal() should never return, but it just did\n");
