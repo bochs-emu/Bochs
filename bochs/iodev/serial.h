@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2009  The Bochs Project
+//  Copyright (C) 2004-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -63,13 +63,15 @@ extern "C" {
 #define BX_SER_MSR  6
 #define BX_SER_SCR  7
 
-#define BX_SER_MODE_NULL  0
-#define BX_SER_MODE_FILE  1
-#define BX_SER_MODE_TERM  2
-#define BX_SER_MODE_RAW   3
-#define BX_SER_MODE_MOUSE 4
-#define BX_SER_MODE_SOCKET 5
-#define BX_SER_MODE_PIPE  6
+#define BX_SER_MODE_NULL          0
+#define BX_SER_MODE_FILE          1
+#define BX_SER_MODE_TERM          2
+#define BX_SER_MODE_RAW           3
+#define BX_SER_MODE_MOUSE         4
+#define BX_SER_MODE_SOCKET_CLIENT 5
+#define BX_SER_MODE_SOCKET_SERVER 6
+#define BX_SER_MODE_PIPE_CLIENT   7
+#define BX_SER_MODE_PIPE_SERVER   8
 
 enum {
   BX_SER_INT_IER,

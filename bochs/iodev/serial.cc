@@ -61,15 +61,13 @@ void serial_init_options(void)
   static const char *serial_mode_list[] = {
     "null",
     "file",
-    "pipe",
-    "pipe-client",
-    "pipe-server",
     "term",
     "raw",
     "mouse",
-    "socket",
     "socket-client",
     "socket-server",
+    "pipe-client",
+    "pipe-server",
     NULL
   };
 
@@ -87,8 +85,8 @@ void serial_init_options(void)
       (i==0)?1 : 0);  // only enable the first by default
     sprintf(label, "I/O mode of the serial device for COM%d", i+1);
     bx_param_enum_c *mode = new bx_param_enum_c(menu, "mode", label,
-      "The mode can be one these: 'null', 'file', 'pipe', 'term', 'raw', 'mouse', 'socket'",
-      serial_mode_list, 0, 0);
+      "The mode can be one these: 'null', 'file', 'term', 'raw', 'mouse', 'socket*', 'pipe*'",
+      serial_mode_list, BX_SER_MODE_NULL, BX_SER_MODE_NULL);
     mode->set_ask_format("Choose I/O mode of the serial device [%s] ");
     sprintf(label, "Pathname of the serial device for COM%d", i+1);
     bx_param_filename_c *path = new bx_param_filename_c(menu, "dev", label, 
@@ -212,10 +210,12 @@ bx_serial_c::~bx_serial_c(void)
           delete [] BX_SER_THIS s[i].raw;
 #endif
           break;
-        case BX_SER_MODE_SOCKET:
+        case BX_SER_MODE_SOCKET_CLIENT:
+        case BX_SER_MODE_SOCKET_SERVER:
           if (BX_SER_THIS s[i].socket_id >= 0) closesocket(BX_SER_THIS s[i].socket_id);
           break;
-        case BX_SER_MODE_PIPE:
+        case BX_SER_MODE_PIPE_CLIENT:
+        case BX_SER_MODE_PIPE_SERVER:
 #ifdef WIN32
           if (BX_SER_THIS s[i].pipe)
             CloseHandle(BX_SER_THIS s[i].pipe);
@@ -353,15 +353,15 @@ bx_serial_c::init(void)
       }
 
       BX_SER_THIS s[i].io_mode = BX_SER_MODE_NULL;
-      const char *mode = SIM->get_param_enum("mode", base)->get_selected();
+      Bit8u mode = SIM->get_param_enum("mode", base)->get();
       const char *dev = SIM->get_param_string("dev", base)->getptr();
-      if (!strcmp(mode, "file")) {
+      if (mode == BX_SER_MODE_FILE) {
         if (strlen(dev) > 0) {
           BX_SER_THIS s[i].output = fopen(dev, "wb");
           if (BX_SER_THIS s[i].output)
             BX_SER_THIS s[i].io_mode = BX_SER_MODE_FILE;
         }
-      } else if (!strcmp(mode, "term")) {
+      } else if (mode == BX_SER_MODE_TERM) {
 #if defined(SERIAL_ENABLE) && !defined(WIN32)
         if (strlen(dev) > 0) {
           BX_SER_THIS s[i].tty_id = open(dev, O_RDWR|O_NONBLOCK,600);
@@ -400,25 +400,26 @@ bx_serial_c::init(void)
 #else
         BX_PANIC(("serial terminal support not available"));
 #endif   /* def SERIAL_ENABLE */
-      } else if (!strcmp(mode, "raw")) {
+      } else if (mode == BX_SER_MODE_RAW) {
 #if USE_RAW_SERIAL
         BX_SER_THIS s[i].raw = new serial_raw(dev);
         BX_SER_THIS s[i].io_mode = BX_SER_MODE_RAW;
 #else
         BX_PANIC(("raw serial support not present"));
 #endif
-      } else if (!strcmp(mode, "mouse")) {
+      } else if (mode == BX_SER_MODE_MOUSE) {
         BX_SER_THIS s[i].io_mode = BX_SER_MODE_MOUSE;
         BX_SER_THIS mouse_port = i;
         BX_SER_THIS mouse_type = SIM->get_param_enum(BXPN_MOUSE_TYPE)->get();
-      } else if (!strncmp(mode, "socket", 6)) {
-        BX_SER_THIS s[i].io_mode = BX_SER_MODE_SOCKET;
+      } else if ((mode == BX_SER_MODE_SOCKET_CLIENT) ||
+                 (mode == BX_SER_MODE_SOCKET_SERVER)) {
+        BX_SER_THIS s[i].io_mode = mode;
         struct sockaddr_in  sin;
         struct hostent      *hp;
         char                host[BX_PATHNAME_LEN];
         int                 port;
         SOCKET              socket;
-        bx_bool             server = !strcmp(mode, "socket-server");
+        bx_bool             server = (mode == BX_SER_MODE_SOCKET_SERVER);
 
 #if defined(WIN32)
         static bx_bool winsock_init = false;
@@ -487,13 +488,14 @@ bx_serial_c::init(void)
         if (socket > 0)
           BX_INFO(("com%d - inet %s - socket_id: %d, ip:%s, port:%d",
             i+1, server ? "server" : "client", socket, host, port));
-      } else if (!strncmp(mode, "pipe", 4)) {
+      } else if ((mode == BX_SER_MODE_PIPE_CLIENT) ||
+                 (mode == BX_SER_MODE_PIPE_SERVER)) {
         if (strlen(dev) > 0) {
+          bx_bool server = (mode == BX_SER_MODE_PIPE_SERVER);
 #ifdef WIN32
-          bx_bool server = !strcmp(mode, "pipe-server");
           HANDLE pipe;
 
-          BX_SER_THIS s[i].io_mode = BX_SER_MODE_PIPE;
+          BX_SER_THIS s[i].io_mode = mode;
 
           // server mode
           if (server) {
@@ -526,11 +528,11 @@ bx_serial_c::init(void)
           if (pipe != INVALID_HANDLE_VALUE)
             BX_SER_THIS s[i].pipe = pipe;
 #else
-          BX_PANIC(("support for serial mode '%s' not available", mode));
+          BX_PANIC(("support for serial mode 'pipe-%s' not available", server?"server":"client"));
 #endif
         }
-      } else if (strcmp(mode, "null")) {
-        BX_PANIC(("unknown serial i/o mode '%s'", mode));
+      } else if (mode != BX_SER_MODE_NULL) {
+        BX_PANIC(("unknown serial i/o mode %d", mode));
       }
       // simulate device connected
       if (BX_SER_THIS s[i].io_mode != BX_SER_MODE_RAW) {
@@ -1201,8 +1203,7 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_SER_THIS s[port].line_status.framing_error = 1;
             rx_fifo_enq(port, 0x00);
           }
-        }
-        else {
+        } else {
           /* transition to normal mode */
 #if USE_RAW_SERIAL
           if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
@@ -1269,9 +1270,7 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_SER_THIS s[port].raw->set_modem_control(value & 0x03);
           }
 #endif
-        }
-        else
-        {
+        } else {
           /* simulate device connected */
           BX_SER_THIS s[port].modem_status.cts = 1;
           BX_SER_THIS s[port].modem_status.dsr = 1;
@@ -1397,7 +1396,8 @@ void bx_serial_c::tx_timer(void)
       case BX_SER_MODE_MOUSE:
         BX_INFO(("com%d: write to mouse ignored: 0x%02x", port+1, BX_SER_THIS s[port].tsrbuffer));
         break;
-      case BX_SER_MODE_SOCKET:
+      case BX_SER_MODE_SOCKET_CLIENT:
+      case BX_SER_MODE_SOCKET_SERVER:
         if (BX_SER_THIS s[port].socket_id >= 0) {
 #ifdef WIN32
           BX_INFO(("attempting to write win32 : %c", BX_SER_THIS s[port].tsrbuffer));
@@ -1407,8 +1407,10 @@ void bx_serial_c::tx_timer(void)
           ::write(BX_SER_THIS s[port].socket_id,
                   (bx_ptr_t) & BX_SER_THIS s[port].tsrbuffer, 1);
 #endif
-      }
-      case BX_SER_MODE_PIPE:
+        }
+        break;
+      case BX_SER_MODE_PIPE_CLIENT:
+      case BX_SER_MODE_PIPE_SERVER:
 #ifdef WIN32
         if (BX_SER_THIS s[port].pipe) {
           DWORD written;
@@ -1490,7 +1492,8 @@ void bx_serial_c::rx_timer(void)
   if ((BX_SER_THIS s[port].line_status.rxdata_ready == 0) ||
       (BX_SER_THIS s[port].fifo_cntl.enable)) {
     switch (BX_SER_THIS s[port].io_mode) {
-      case BX_SER_MODE_SOCKET:
+      case BX_SER_MODE_SOCKET_CLIENT:
+      case BX_SER_MODE_SOCKET_SERVER:
 #if BX_HAVE_SELECT && defined(SERIAL_ENABLE)
         if (BX_SER_THIS s[port].line_status.rxdata_ready == 0) {
           tval.tv_sec  = 0;
@@ -1573,7 +1576,8 @@ void bx_serial_c::rx_timer(void)
           data_ready = 1;
         }
         break;
-      case BX_SER_MODE_PIPE:
+      case BX_SER_MODE_PIPE_CLIENT:
+      case BX_SER_MODE_PIPE_SERVER:
 #ifdef WIN32
         DWORD avail = 0;
         if (BX_SER_THIS s[port].pipe &&

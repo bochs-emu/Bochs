@@ -663,10 +663,10 @@ debugger_log: -
 
 #=======================================================================
 # COM1, COM2, COM3, COM4:
-# This defines a serial port (UART type 16550A). In the 'term' you can specify
-# a device to use as com1. This can be a real serial line, or a pty.  To use
-# a pty (under X/Unix), create two windows (xterms, usually).  One of them will
-# run bochs, and the other will act as com1. Find out the tty the com1
+# This defines a serial port (UART type 16550A). In the 'term' mode you can
+# specify a device to use as com1. This can be a real serial line, or a pty.
+# To use a pty (under X/Unix), create two windows (xterms, usually).  One of
+# them will run bochs, and the other will act as com1. Find out the tty the com1
 # window using the `tty' command, and use that as the `dev' parameter.
 # Then do `sleep 1000000' in the com1 window to keep the shell from
 # messing with things, and run bochs in the other window.  Serial I/O to
@@ -677,9 +677,8 @@ debugger_log: -
 # opens socket/named pipe and waits until a client application connects to it
 # before starting simulation. This mode is useful for remote debugging (e.g.
 # with gdb's "target remote host:port" command or windbg's command line option
-# -k com:pipe,port=\\.\pipe\pipename). Note: 'socket' is a shorthand for
-# 'socket-client' and 'pipe' for 'pipe-client'. Socket modes use simple TCP
-# communication, pipe modes use duplex byte mode pipes.
+# -k com:pipe,port=\\.\pipe\pipename). Socket modes use simple TCP communication,
+#  pipe modes use duplex byte mode pipes.
 # Other serial modes are 'null' (no input/output), 'file' (output to a file
 # specified as the 'dev' parameter), 'raw' (use the real serial port - under
 # construction for win32), 'mouse' (standard serial mouse - requires

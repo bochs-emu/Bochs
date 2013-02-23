@@ -3861,10 +3861,8 @@ Examples:
   In server mode it opens socket/named pipe and waits until a client application
   connects to it before starting simulation. This mode is useful for remote
   debugging (e.g. with gdb's "target remote host:port" command or windbg's command
-  line option -k com:pipe,port=\\.\pipe\pipename).
-
-  Note: 'socket' is a shorthand for 'socket-client', 'pipe' for 'pipe-client'.
-  Socket modes use simple TCP communication, pipe modes use duplex byte mode pipes.
+  line option -k com:pipe,port=\\.\pipe\pipename). Socket modes use simple TCP
+  communication, pipe modes use duplex byte mode pipes.
 </para>
 <para>
   Other serial modes are 'null' (no input/output), 'file' (output to a file

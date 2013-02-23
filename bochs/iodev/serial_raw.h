@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004  The Bochs Project
+//  Copyright (C) 2004-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -56,8 +56,8 @@ public:
     serial_raw(const char *devname);
     virtual ~serial_raw();
     void set_baudrate(int rate);
-    void set_data_bits(int);
-    void set_stop_bits(int);
+    void set_data_bits(int val);
+    void set_stop_bits(int val);
     void set_parity_mode(int mode);
     void set_break(int mode);
     void set_modem_control(int ctrl);
@@ -65,7 +65,7 @@ public:
     void transmit(Bit8u byte);
     bx_bool ready_transmit();
     bx_bool ready_receive();
-    int receive ();
+    int receive();
 #ifdef WIN32_RECEIVE_RAW
     void serial_thread();
 #endif

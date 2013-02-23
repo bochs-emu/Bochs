@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004  The Bochs Project
+//  Copyright (C) 2004-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -107,7 +107,7 @@ serial_raw::~serial_raw(void)
 
 void serial_raw::set_baudrate(int rate)
 {
-  BX_DEBUG (("set_baudrate %d", rate));
+  BX_DEBUG(("set_baudrate %d", rate));
 #ifdef WIN32
   switch (rate) {
     case 110: dcb.BaudRate = CBR_110; break;
@@ -129,7 +129,7 @@ void serial_raw::set_baudrate(int rate)
 
 void serial_raw::set_data_bits(int val)
 {
-  BX_DEBUG (("set data bits (%d)", val));
+  BX_DEBUG(("set data bits (%d)", val));
 #ifdef WIN32
   dcb.ByteSize = val;
   DCBchanged = TRUE;
@@ -138,7 +138,7 @@ void serial_raw::set_data_bits(int val)
 
 void serial_raw::set_stop_bits(int val)
 {
-  BX_DEBUG (("set stop bits (%d)", val));
+  BX_DEBUG(("set stop bits (%d)", val));
 #ifdef WIN32
   if (val == 1) {
     dcb.StopBits = ONESTOPBIT;
@@ -153,26 +153,26 @@ void serial_raw::set_stop_bits(int val)
 
 void serial_raw::set_parity_mode(int mode)
 {
-  BX_DEBUG (("set parity mode %d", mode));
+  BX_DEBUG(("set parity mode %d", mode));
 #ifdef WIN32
   switch (mode) {
-    case 0:
+    case P_NONE:
       dcb.fParity = FALSE;
       dcb.Parity = NOPARITY;
       break;
-    case 1:
+    case P_ODD:
       dcb.fParity = TRUE;
       dcb.Parity = ODDPARITY;
       break;
-    case 2:
+    case P_EVEN:
       dcb.fParity = TRUE;
       dcb.Parity = EVENPARITY;
       break;
-    case 3:
+    case P_HIGH:
       dcb.fParity = TRUE;
       dcb.Parity = MARKPARITY;
       break;
-    case 4:
+    case P_LOW:
       dcb.fParity = TRUE;
       dcb.Parity = SPACEPARITY;
       break;
@@ -183,7 +183,7 @@ void serial_raw::set_parity_mode(int mode)
 
 void serial_raw::set_break(int mode)
 {
-  BX_DEBUG (("set break %s", mode?"on":"off"));
+  BX_DEBUG(("set break %s", mode?"on":"off"));
 #ifdef WIN32
   if (mode) {
     SetCommBreak(hCOM);
@@ -195,7 +195,7 @@ void serial_raw::set_break(int mode)
 
 void serial_raw::set_modem_control(int ctrl)
 {
-  BX_DEBUG (("set modem control 0x%02x", ctrl));
+  BX_DEBUG(("set modem control 0x%02x", ctrl));
 #ifdef WIN32
   EscapeCommFunction(hCOM, (ctrl & 0x01)?SETDTR:CLRDTR);
   EscapeCommFunction(hCOM, (ctrl & 0x02)?SETRTS:CLRRTS);
@@ -209,7 +209,7 @@ int serial_raw::get_modem_status()
 #ifdef WIN32
   status = MSR_value;
 #endif
-  BX_DEBUG (("get modem status returns 0x%02x", status));
+  BX_DEBUG(("get modem status returns 0x%02x", status));
   return status;
 }
 
@@ -239,7 +239,7 @@ void serial_raw::transmit(Bit8u byte)
   OVERLAPPED tx_ovl;
 #endif
 
-  BX_DEBUG (("transmit %d", byte));
+  BX_DEBUG(("transmit %d", byte));
   if (present) {
 #ifdef WIN32
     if (DCBchanged) {
@@ -265,7 +265,7 @@ void serial_raw::transmit(Bit8u byte)
 
 bx_bool serial_raw::ready_transmit()
 {
-  BX_DEBUG (("ready_transmit returning %d", present));
+  BX_DEBUG(("ready_transmit returning %d", present));
   return present;
 }
 
@@ -277,7 +277,7 @@ bx_bool serial_raw::ready_receive()
     SetEvent(rx_ovl.hEvent);
   }
 #endif
-  BX_DEBUG (("ready_receive returning %d", (rxdata_count > 0)));
+  BX_DEBUG(("ready_receive returning %d", (rxdata_count > 0)));
   return (rxdata_count > 0);
 }
 
@@ -327,11 +327,11 @@ int serial_raw::receive()
     }
     return data;
 #else
-    BX_DEBUG (("receive returning 'A'"));
+    BX_DEBUG(("receive returning 'A'"));
     return (int)'A';
 #endif
   } else {
-    BX_DEBUG (("receive returning 'A'"));
+    BX_DEBUG(("receive returning 'A'"));
     return (int)'A';
   }
 }
