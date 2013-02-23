@@ -1516,7 +1516,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                 NMLVKEYDOWN* key = (NMLVKEYDOWN*)ll;        // pass any keystrokes from listview up to parent
                 SendMessage(hh,WM_KEYDOWN,key->wVKey,0);
             }
-            if (n->code == NM_CUSTOMDRAW && n->hwndFrom == hL[ASM_WND]) // custom drawing of ASM window
+            if (n->code == (UINT)NM_CUSTOMDRAW && n->hwndFrom == hL[ASM_WND]) // custom drawing of ASM window
             {
                 // highlight the breakpoints, and current opcode, if any
                 NMLVCUSTOMDRAW *d = (NMLVCUSTOMDRAW *) ll;
@@ -1568,7 +1568,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                 }
                 break;
             }
-            if (n->code == NM_CUSTOMDRAW && n->hwndFrom == hL[DUMP_WND])    // custom drawing of data window
+            if (n->code == (UINT)NM_CUSTOMDRAW && n->hwndFrom == hL[DUMP_WND])    // custom drawing of data window
             {
                 NMLVCUSTOMDRAW *d = (NMLVCUSTOMDRAW *) ll;
                 if (d->nmcd.dwDrawStage == CDDS_PREPAINT)
@@ -1635,7 +1635,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                 }
                 break;
             }
-            if (n->code == NM_CUSTOMDRAW && n->hwndFrom == hL[REG_WND]) // custom drawing of register window
+            if (n->code == (UINT)NM_CUSTOMDRAW && n->hwndFrom == hL[REG_WND]) // custom drawing of register window
             {
                 // highlight changed registers
                 NMLVCUSTOMDRAW *d = (NMLVCUSTOMDRAW *) ll;
@@ -1662,7 +1662,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                 }
                 break;
             }
-            if (n->code == NM_DBLCLK)
+            if (n->code == (UINT)NM_DBLCLK)
             {
                 if (AtBreak == FALSE)
                     break;
@@ -1812,6 +1812,7 @@ bx_bool OSInit()
         return FALSE;
     HDC hdc = GetDC (hY);
     *CustomFont = DefFont;  // create the deffont with modded attributes (bold, italic)
+    memset(&mylf, 0, sizeof(LOGFONT));
     GetTextFace(hdc, LF_FULLFACESIZE, mylf.lfFaceName); // (constant is max length of a fontname)
     GetTextMetrics (hdc, &tm);
     ReleaseDC (hY, hdc);
