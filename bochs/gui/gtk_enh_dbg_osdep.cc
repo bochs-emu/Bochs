@@ -2131,6 +2131,7 @@ bx_bool OSInit()
     argvp = argv;
     argc = 1;
 
+    CurXSize = 0;
     if (!SIM->is_wx_selected()) {
       // you MUST call gtk_init, even with faked arguments, because it inits GDK and Glib
       if (gtk_init_check(&argc, &argvp) == FALSE) {
