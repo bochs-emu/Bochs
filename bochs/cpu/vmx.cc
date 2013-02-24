@@ -572,8 +572,15 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      }
   }
 
+  if (! (vm->vmexec_ctrls1 & VMX_VM_EXEC_CTRL1_NMI_EXITING)) {
+     if (vm->vmexec_ctrls1 & VMX_VM_EXEC_CTRL1_VIRTUAL_NMI) {
+       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: misconfigured virtual NMI control"));
+       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+     }
+  }
+
   if (! (vm->vmexec_ctrls1 & VMX_VM_EXEC_CTRL1_VIRTUAL_NMI)) {
-     if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_NMI_WINDOW_VMEXIT) {
+     if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_NMI_WINDOW_EXITING) {
        BX_ERROR(("VMFAIL: VMCS EXEC CTRL: misconfigured virtual NMI control"));
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
@@ -1881,7 +1888,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     mask_event(BX_EVENT_NMI | BX_EVENT_VMX_NMI_WINDOW_EXITING);
   }
 
-  if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_NMI_WINDOW_VMEXIT) {
+  if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_NMI_WINDOW_EXITING) {
     signal_event(BX_EVENT_VMX_NMI_WINDOW_EXITING);
   }
 

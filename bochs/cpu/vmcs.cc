@@ -422,7 +422,7 @@ void BX_CPU_C::init_vmx_capabilities(void)
 
   cap->vmx_pin_vmexec_ctrl_supported_bits =
        VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT |
-       VMX_VM_EXEC_CTRL1_NMI_VMEXIT;
+       VMX_VM_EXEC_CTRL1_NMI_EXITING;
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_VIRTUAL_NMI))
     cap->vmx_pin_vmexec_ctrl_supported_bits |= VMX_VM_EXEC_CTRL1_VIRTUAL_NMI;
 #if BX_SUPPORT_VMX >= 2
@@ -489,7 +489,7 @@ void BX_CPU_C::init_vmx_capabilities(void)
   }
 #endif
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_VIRTUAL_NMI))
-    cap->vmx_proc_vmexec_ctrl_supported_bits |= VMX_VM_EXEC_CTRL2_NMI_WINDOW_VMEXIT;
+    cap->vmx_proc_vmexec_ctrl_supported_bits |= VMX_VM_EXEC_CTRL2_NMI_WINDOW_EXITING;
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_MONITOR_TRAP_FLAG))
     cap->vmx_proc_vmexec_ctrl_supported_bits |= VMX_VM_EXEC_CTRL2_MONITOR_TRAP_FLAG;
 #if BX_SUPPORT_VMX >= 2

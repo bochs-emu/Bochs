@@ -575,7 +575,7 @@ typedef struct bx_VMCS
   //
 
 #define VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT   (1 << 0)
-#define VMX_VM_EXEC_CTRL1_NMI_VMEXIT                  (1 << 3)
+#define VMX_VM_EXEC_CTRL1_NMI_EXITING                 (1 << 3)
 #define VMX_VM_EXEC_CTRL1_VIRTUAL_NMI                 (1 << 5) /* Virtual NMI */
 #define VMX_VM_EXEC_CTRL1_VMX_PREEMPTION_TIMER_VMEXIT (1 << 6) /* VMX preemption timer */
 #define VMX_VM_EXEC_CTRL1_PROCESS_POSTED_INTERRUPTS   (1 << 7) /* Posted Interrupts */
@@ -597,7 +597,7 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL2_CR8_WRITE_VMEXIT          (1 << 19) /* TPR shadow */
 #define VMX_VM_EXEC_CTRL2_CR8_READ_VMEXIT           (1 << 20) /* TPR shadow */
 #define VMX_VM_EXEC_CTRL2_TPR_SHADOW                (1 << 21) /* TPR shadow */
-#define VMX_VM_EXEC_CTRL2_NMI_WINDOW_VMEXIT         (1 << 22) /* Virtual NMI */
+#define VMX_VM_EXEC_CTRL2_NMI_WINDOW_EXITING        (1 << 22) /* Virtual NMI */
 #define VMX_VM_EXEC_CTRL2_DRx_ACCESS_VMEXIT         (1 << 23)
 #define VMX_VM_EXEC_CTRL2_IO_VMEXIT                 (1 << 24)
 #define VMX_VM_EXEC_CTRL2_IO_BITMAPS                (1 << 25)

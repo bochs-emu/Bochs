@@ -193,7 +193,7 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bx_b
       break;
 
     case BX_NMI:
-      if (PIN_VMEXIT(VMX_VM_EXEC_CTRL1_NMI_VMEXIT))
+      if (PIN_VMEXIT(VMX_VM_EXEC_CTRL1_NMI_EXITING))
          vmexit = 1;
       break;
 
