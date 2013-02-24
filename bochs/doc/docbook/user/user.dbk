@@ -2983,23 +2983,45 @@ This plugin currently must be loaded with plugin_ctrl: 'voodoo'.
 </para>
 </section>
 
-<section id="bochsopt-megs"><title>megs</title>
+<section id="bochsopt-memory"><title>memory</title>
+<para>
+Examples:
+<screen>
+  memory: guest=512, host=256
+</screen>
+Set the amount of physical memory you want to emulate.
+</para>
+<para><command>guest</command></para>
+<para>
+Set amount of guest physical memory to emulate. The default is 32MB,
+the maximum amount limited only by physical address space limitations.
+</para>
+<para><command>host</command></para>
+<para>
+Set amount of host memory you want to allocate for guest RAM emulation.
+It is possible to allocate less memory than you want to emulate in guest
+system. This will fake guest to see the non-existing memory. Once guest
+system touches new memory block it will be dynamically taken from the
+memory pool. You will be warned (by FATAL PANIC) in case guest already
+used all allocated host memory and wants more.
+</para>
+<note><para>
+Due to limitations in the host OS, Bochs fails to allocate more than 1024MB on most 32-bit systems.
+In order to overcome this problem configure and build Bochs with <option>--enable-large-ramfile</option>
+option.
+</para></note>
+</section>
+
+<section><title>megs</title>
 <para>
 Examples:
 <screen>
   megs: 32
   megs: 128
 </screen>
-Set the number of megabytes of physical memory you want to emulate. The default
-is 32MB; most OS's won't need more than that. The maximum amount of memory
-supported is 2048MB.
+This option sets the 'guest' and 'host' memory parameters to the same
+value. In all other cases the 'memory' option should be used instead.
 </para>
-
-<note><para>
-Due to limitations in the host OS, Bochs fails to allocate more than 1024MB on most 32-bit systems.
-In order to overcome this problem configure and build Bochs with <option>--enable-large-ramfile</option>
-option.
-</para></note>
 </section>
 
 <section id="bochsopt-cpu"><title>cpu</title>
@@ -8691,7 +8713,7 @@ Known problems
       the location of the downloaded ISO image in your <filename>bochsrc</filename>, and make Bochs boot
       from it. Because Knoppix contains a graphical user interface, and has no other storage space but
       the emulated RAM, it needs at least 128MB of it, see
-      <link linkend="bochsopt-megs">megs option</link>. Furthermore, you need to enable VBE support in
+      <link linkend="bochsopt-memory">megs option</link>. Furthermore, you need to enable VBE support in
       Bochs (see <xref linkend="vesa-notes">).
     </para>
   </section>

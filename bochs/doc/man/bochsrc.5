@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "23 Feb 2013" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "24 Feb 2013" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -379,10 +379,30 @@ Example:
   cpuid: mmx=1, sep=1, sse=sse4_2, xapic=1, aes=1, movbe=1, xsave=1
 
 .TP
+.I "memory:"
+Set the amount of physical memory you want to emulate.
+
+guest:
+
+Set amount of guest physical memory to emulate. The default is 32MB,
+the maximum amount limited only by physical address space limitations.
+
+host:
+
+Set amount of host memory you want to allocate for guest RAM emulation.
+It is possible to allocate less memory than you want to emulate in guest
+system. This will fake guest to see the non-existing memory. Once guest
+system touches new memory block it will be dynamically taken from the
+memory pool. You will be warned (by FATAL PANIC) in case guest already
+used all allocated host memory and wants more.
+
+Example:
+  memory: guest=512, host=256
+
+.TP
 .I "megs:"
-Set the number of Megabytes of physical memory you want to emulate.
-The default is 32MB, most OS's won't need more than that.
-The maximum amount of memory supported is 2048Mb.
+The 'megs:' option sets the 'guest' and 'host' memory parameters to the same
+value. In all other cases the 'memory' option should be used instead.
 
 Example:
   megs: 32
