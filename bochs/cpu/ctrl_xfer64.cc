@@ -426,6 +426,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET64(bxInstruction_c *i)
 {
   invalidate_prefetch_q();
 
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_IRET)) Svm_Vmexit(SVM_VMEXIT_IRET);
+  }
+#endif
+
 #if BX_SUPPORT_VMX
   if (!BX_CPU_THIS_PTR in_vmx_guest || !VMEXIT(VMX_VM_EXEC_CTRL1_NMI_EXITING))
 #endif

@@ -57,9 +57,9 @@ Bit32u gen_instruction_info(bxInstruction_c *i, Bit32u reason, bx_bool rw_form)
   //  instruction information field format
   // --------------------------------------
   //
-  // [.2:.0] | Memory operand scale field (encoded)
-  // [.6:.3] | Reg1, undefined when memory operand
-  // [.9:.7] | Memory operand address size
+  // [02:00] | Memory operand scale field (encoded)
+  // [06:03] | Reg1, undefined when memory operand
+  // [09:07] | Memory operand address size
   // [10:10] | Memory/Register format (0 - mem, 1 - reg)
   // [14:11] | Reserved
   // [17:15] | Memory operand segment register field
@@ -222,8 +222,8 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bx_b
   // ----------------------------------------------------
   //              VMExit interruption info
   // ----------------------------------------------------
-  // [.7:.0] | Interrupt/Exception vector
-  // [10:.8] | Interrupt/Exception type
+  // [07:00] | Interrupt/Exception vector
+  // [10:08] | Interrupt/Exception type
   // [11:11] | error code pushed to the stack
   // [12:12] | NMI unblocking due to IRET
   // [30:13] | reserved
@@ -455,11 +455,11 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
 // ----------------------------------------------------------------
 //                 Exit qualification for CR access
 // ----------------------------------------------------------------
-// [.3:.0] | Number of CR register (CR0, CR3, CR4, CR8)
-// [.5:.4] | CR access type (0 - MOV to CR, 1 - MOV from CR, 2 - CLTS, 3 - LMSW)
-// [.6:.6] | LMSW operand reg/mem (cleared for CR access and CLTS)
-// [.7:.7] | reserved
-// [11:.8] | Source Operand Register for CR access (cleared for CLTS and LMSW)
+// [03:00] | Number of CR register (CR0, CR3, CR4, CR8)
+// [05:04] | CR access type (0 - MOV to CR, 1 - MOV from CR, 2 - CLTS, 3 - LMSW)
+// [06:06] | LMSW operand reg/mem (cleared for CR access and CLTS)
+// [07:07] | reserved
+// [11:08] | Source Operand Register for CR access (cleared for CLTS and LMSW)
 // [15:12] | reserved
 // [31:16] | LMSW source data (cleared for CR access and CLTS)
 // [63:32] | reserved
@@ -604,10 +604,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CR8_Write(bxInstruction_c *i)
 // ----------------------------------------------------------------
 //                 Exit qualification for DR access
 // ----------------------------------------------------------------
-// [.3:.0] | Number of DR register
-// [.4:.4] | DR access type (0 - MOV to DR, 1 - MOV from DR)
-// [.7:.5] | reserved
-// [11:.8] | Source Operand Register
+// [03:00] | Number of DR register
+// [04:04] | DR access type (0 - MOV to DR, 1 - MOV from DR)
+// [07:05] | reserved
+// [11:08] | Source Operand Register
 // [63:12] | reserved
 //
 

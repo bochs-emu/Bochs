@@ -36,6 +36,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_RSM)) Svm_Vmexit(SVM_VMEXIT_RSM);
+  }
+#endif
+
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx) {
     if (BX_CPU_THIS_PTR in_vmx_guest) {

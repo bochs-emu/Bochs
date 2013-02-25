@@ -747,8 +747,8 @@ void BX_CPU_C::SvmInterceptException(unsigned type, unsigned vector, Bit16u errc
     // -----------------------------------------
     //              EXITINTINFO
     // -----------------------------------------
-    // [.7:.0] | Interrupt/Exception vector
-    // [10:.8] | Interrupt/Exception type
+    // [07:00] | Interrupt/Exception vector
+    // [10:08] | Interrupt/Exception type
     // [11:11] | error code pushed to the stack
     // [30:12] | reserved
     // [31:31] | interruption info valid
