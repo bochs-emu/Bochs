@@ -970,9 +970,14 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR0(bx_address cr0_val)
 
   temp_cr0.set32((Bit32u) cr0_val);
 
-  if (temp_cr0.get_PG() && !temp_cr0.get_PE()) {
-    BX_ERROR(("check_CR0(0x%08x): attempt to set CR0.PG with CR0.PE cleared !", temp_cr0.get32()));
-    return 0;
+#if BX_SUPPORT_SVM
+  if (! BX_CPU_THIS_PTR in_svm_guest) // it should be fine to enter paged real mode in SVM guest
+#endif
+  {
+    if (temp_cr0.get_PG() && !temp_cr0.get_PE()) {
+      BX_ERROR(("check_CR0(0x%08x): attempt to set CR0.PG with CR0.PE cleared !", temp_cr0.get32()));
+      return 0;
+    }
   }
 
 #if BX_CPU_LEVEL >= 4
