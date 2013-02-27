@@ -143,9 +143,25 @@ void bx_pci_bridge_c::init(void)
         BX_PCI_THIS DRBA[i] = 0x20;
       }
     }
-  } else {
+  } else if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
+    const Bit8u type[3] = {128, 32, 8};
     if (ramsize > 1024) ramsize = 1024;
-    // TODO: i440FX
+    Bit8u drbval = 0;
+    unsigned row = 0;
+    unsigned ti = 0;
+    while ((ramsize > 0) && (row < 8) && (ti < 3)) {
+      unsigned mc = ramsize / type[ti];
+      ramsize = ramsize % type[ti];
+      for (i = 0; i < mc; i++) {
+        drbval += (type[ti] >> 3);
+        BX_PCI_THIS DRBA[row++] = drbval;
+        if (row == 8) break;
+      }
+      ti++;
+    }
+    while (row < 8) {
+      BX_PCI_THIS DRBA[row++] = drbval;
+    }
   }
   for (i = 0; i < 8; i++)
     BX_PCI_THIS pci_conf[0x60 + i] = BX_PCI_THIS DRBA[i];
@@ -300,7 +316,8 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
         BX_PCI_THIS pci_conf[address+i] = value8;
         drba_reg = (address + i) & 0x07;
         drba_changed = (BX_PCI_THIS pci_conf[0x60 + drba_reg] != BX_PCI_THIS DRBA[drba_reg]);
-        if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I430FX) {
+        if ((BX_PCI_THIS chipset == BX_PCI_CHIPSET_I430FX) ||
+            (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX)) {
           if (drba_changed) {
             BX_PCI_THIS dram_detect |= (1 << drba_reg);
           } else if (!drba_changed && dram_detect) {
@@ -316,7 +333,8 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
         BX_DEBUG(("%s write register 0x%02x value 0x%02x", csname[BX_PCI_THIS chipset], address+i, value8));
     }
   }
-  if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I430FX) {
+  if ((BX_PCI_THIS chipset == BX_PCI_CHIPSET_I430FX) ||
+      (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX)) {
     if ((BX_PCI_THIS dram_detect > 0) && (old_dram_detect == 0)) {
       // TODO
       BX_ERROR(("FIXME: DRAM module detection"));
