@@ -655,7 +655,6 @@ void bx_init_options()
       1, ((Bit64u)(1) << BX_PHY_ADDRESS_WIDTH) / (1024*1024),
       BX_DEFAULT_MEM_MEGS);
   ramsize->set_ask_format("Enter memory size (MB): [%d] ");
-  ramsize->set_options(ramsize->USE_SPIN_CONTROL);
 
   bx_param_num_c *host_ramsize = new bx_param_num_c(ram,
       "host_size",
@@ -664,7 +663,6 @@ void bx_init_options()
       1, 2048,
       BX_DEFAULT_MEM_MEGS);
   host_ramsize->set_ask_format("Enter host memory size (MB): [%d] ");
-  host_ramsize->set_options(ramsize->USE_SPIN_CONTROL);
   ram->set_options(ram->SERIES_ASK);
 
   path = new bx_param_filename_c(rom,
