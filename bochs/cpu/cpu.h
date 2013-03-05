@@ -1111,7 +1111,7 @@ public: // for now...
 #define BX_EVENT_VMX_MONITOR_TRAP_FLAG        (1 <<  4)
 #define BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED (1 <<  5)
 #define BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING (1 <<  6)
-#define BX_EVENT_VMX_NMI_WINDOW_EXITING       (1 <<  7)
+#define BX_EVENT_VMX_VIRTUAL_NMI              (1 <<  7)
 #define BX_EVENT_SVM_VIRQ_PENDING             (1 <<  8)
 #define BX_EVENT_PENDING_VMX_VIRTUAL_INTR     (1 <<  9)
 #define BX_EVENT_PENDING_INTR                 (1 << 10)

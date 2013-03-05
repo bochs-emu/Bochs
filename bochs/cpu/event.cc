@@ -40,7 +40,7 @@ bx_bool BX_CPU_C::handleWaitForEvent(void)
             BX_EVENT_VMX_VIRTUAL_APIC_WRITE |
             BX_EVENT_VMX_MONITOR_TRAP_FLAG |
             BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED |
-            BX_EVENT_VMX_NMI_WINDOW_EXITING))
+            BX_EVENT_VMX_VIRTUAL_NMI))
     {
       // interrupt ends the HALT condition
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -277,7 +277,7 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
   }
 #endif
 #if BX_SUPPORT_VMX
-  else if (is_unmasked_event_pending(BX_EVENT_VMX_NMI_WINDOW_EXITING)) {
+  else if (is_unmasked_event_pending(BX_EVENT_VMX_VIRTUAL_NMI)) {
     VMexit(VMX_VMEXIT_NMI_WINDOW, 0);
   }
 #endif
@@ -288,7 +288,7 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
     }
 #endif
     clear_event(BX_EVENT_NMI);
-     mask_event(BX_EVENT_NMI | BX_EVENT_VMX_NMI_WINDOW_EXITING);
+     mask_event(BX_EVENT_NMI);
     BX_CPU_THIS_PTR EXT = 1; /* external event */
 #if BX_SUPPORT_VMX
     VMexit_Event(BX_NMI, 2, 0, 0);

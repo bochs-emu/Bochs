@@ -433,9 +433,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET64(bxInstruction_c *i)
 #endif
 
 #if BX_SUPPORT_VMX
-  if (!BX_CPU_THIS_PTR in_vmx_guest || !VMEXIT(VMX_VM_EXEC_CTRL1_NMI_EXITING))
+  if (BX_CPU_THIS_PTR in_vmx_guest && PIN_VMEXIT(VMX_VM_EXEC_CTRL1_NMI_EXITING)) {
+    if (PIN_VMEXIT(VMX_VM_EXEC_CTRL1_VIRTUAL_NMI)) unmask_event(BX_EVENT_VMX_VIRTUAL_NMI);
+  }
+  else
 #endif
-    unmask_event(BX_EVENT_NMI | BX_EVENT_VMX_NMI_WINDOW_EXITING);
+    unmask_event(BX_EVENT_NMI);
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_iret;

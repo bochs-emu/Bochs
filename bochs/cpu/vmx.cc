@@ -864,6 +864,15 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
            BX_ERROR(("VMFAIL: VMENTRY bad injected event vector %d", vector));
            return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
          }
+/*
+         // injecting NMI
+         if (vm->vmexec_ctrls1 & VMX_VM_EXEC_CTRL1_VIRTUAL_NMI) {
+           if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED) {
+             BX_ERROR(("VMFAIL: VMENTRY injected NMI vector when blocked by NMI in interruptibility state", vector));
+             return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+           }
+         }
+*/
          break;
 
        case BX_HARDWARE_EXCEPTION:
@@ -1885,11 +1894,14 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   }
 
   if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED) {
-    mask_event(BX_EVENT_NMI | BX_EVENT_VMX_NMI_WINDOW_EXITING);
+    if (vm->vmexec_ctrls1 & VMX_VM_EXEC_CTRL1_VIRTUAL_NMI)
+      mask_event(BX_EVENT_VMX_VIRTUAL_NMI);
+    else
+      mask_event(BX_EVENT_NMI);
   }
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_NMI_WINDOW_EXITING) {
-    signal_event(BX_EVENT_VMX_NMI_WINDOW_EXITING);
+    signal_event(BX_EVENT_VMX_VIRTUAL_NMI);
   }
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_INTERRUPT_WINDOW_VMEXIT) {
@@ -1935,7 +1947,11 @@ void BX_CPU_C::VMenterInjectEvents(void)
       break;
 
     case BX_NMI:
-      mask_event(BX_EVENT_NMI | BX_EVENT_VMX_NMI_WINDOW_EXITING);
+      if (vm->vmexec_ctrls1 & VMX_VM_EXEC_CTRL1_VIRTUAL_NMI)
+        mask_event(BX_EVENT_VMX_VIRTUAL_NMI);
+      else
+        mask_event(BX_EVENT_NMI);
+
       BX_CPU_THIS_PTR EXT = 1;
       break;
 
@@ -2137,10 +2153,19 @@ void BX_CPU_C::VMexitSaveGuestState(void)
      else
         interruptibility_state |= BX_VMX_INTERRUPTS_BLOCKED_BY_STI;
   }
+
   if (is_masked_event(BX_EVENT_SMI))
     interruptibility_state |= BX_VMX_INTERRUPTS_BLOCKED_SMI_BLOCKED;
-  if (is_masked_event(BX_EVENT_NMI))
-    interruptibility_state |= BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED;
+  
+  if (vm->vmexec_ctrls1 & VMX_VM_EXEC_CTRL1_VIRTUAL_NMI) {
+    if (is_masked_event(BX_EVENT_VMX_VIRTUAL_NMI))
+      interruptibility_state |= BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED;
+  }
+  else {
+    if (is_masked_event(BX_EVENT_NMI))
+      interruptibility_state |= BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED;
+  }
+
   VMwrite32(VMCS_32BIT_GUEST_INTERRUPTIBILITY_STATE, interruptibility_state);
 
 #if BX_SUPPORT_VMX >= 2
@@ -2421,7 +2446,7 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
               BX_EVENT_VMX_MONITOR_TRAP_FLAG |
               BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING |
               BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED |
-              BX_EVENT_VMX_NMI_WINDOW_EXITING |
+              BX_EVENT_VMX_VIRTUAL_NMI |
               BX_EVENT_PENDING_VMX_VIRTUAL_INTR);
 
   //

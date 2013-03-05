@@ -56,7 +56,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
 
   BX_INFO(("RSM: Resuming from System Management Mode"));
 
-  unmask_event(BX_EVENT_SMI | BX_EVENT_NMI | BX_EVENT_VMX_NMI_WINDOW_EXITING);
+  unmask_event(BX_EVENT_SMI | BX_EVENT_NMI | BX_EVENT_VMX_VIRTUAL_NMI);
 
   Bit32u saved_state[SMM_SAVE_STATE_MAP_SIZE], n;
   // reset reserved bits
@@ -120,7 +120,7 @@ void BX_CPU_C::enter_system_management_mode(void)
 
   BX_CPU_THIS_PTR in_smm = 1;
 
-  mask_event(BX_EVENT_SMI | BX_EVENT_NMI | BX_EVENT_VMX_NMI_WINDOW_EXITING);
+  mask_event(BX_EVENT_SMI | BX_EVENT_NMI | BX_EVENT_VMX_VIRTUAL_NMI);
 
   Bit32u saved_state[SMM_SAVE_STATE_MAP_SIZE], n;
   // reset reserved bits
