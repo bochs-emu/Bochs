@@ -1092,6 +1092,10 @@ public: // for now...
   bx_bool in_event;
 #endif
 
+#if BX_SUPPORT_VMX
+  bx_bool nmi_unblocking_iret;
+#endif
+
   bx_bool EXT; /* 1 if processing external interrupt or exception
                 * or if not related to current instruction,
                 * 0 if current CS:IP caused exception */

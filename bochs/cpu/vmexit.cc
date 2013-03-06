@@ -236,6 +236,8 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bx_b
     vm->idt_vector_info = vector | (type << 8);
     if (errcode_valid)
       vm->idt_vector_info |= (1 << 11); // error code delivered
+
+    BX_CPU_THIS_PTR nmi_unblocking_iret = 0;
     return;
   }
 
@@ -259,6 +261,9 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bx_b
   if (errcode_valid)
     interruption_info |= (1 << 11); // error code delivered
   interruption_info   |= (1 << 31); // valid
+
+  if (BX_CPU_THIS_PTR nmi_unblocking_iret)
+    interruption_info |= (1 << 12);
 
   VMwrite32(VMCS_32BIT_VMEXIT_INTERRUPTION_INFO, interruption_info);
   VMwrite32(VMCS_32BIT_VMEXIT_INTERRUPTION_ERR_CODE, errcode);

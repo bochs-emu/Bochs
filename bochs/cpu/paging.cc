@@ -1620,9 +1620,11 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
       // no VMExit qualification for EPT Misconfiguration VMExit
       vmexit_qualification = access_mask | (combined_access << 3);
       if (guest_laddr_valid) {
-        vmexit_qualification |= 0x80;
-        if (! is_page_walk) vmexit_qualification |= 0x100;
+        vmexit_qualification |= (1<<7);
+        if (! is_page_walk) vmexit_qualification |= (1<<8);
       }
+      if (BX_CPU_THIS_PTR nmi_unblocking_iret)
+        vmexit_qualification |= (1 << 12);
 
       if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_VIOLATION_EXCEPTION)) {
         if ((entry[leaf] & BX_SUPPRESS_EPT_VIOLATION_EXCEPTION) == 0)

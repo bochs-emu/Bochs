@@ -2414,6 +2414,8 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
     VMwrite32(VMCS_32BIT_IDT_VECTORING_INFO, 0);
   }
 
+  BX_CPU_THIS_PTR nmi_unblocking_iret = 0;
+
   // VMEXITs are FAULT-like: restore RIP/RSP to value before VMEXIT occurred
   if (! IS_TRAP_LIKE_VMEXIT(reason)) {
     RIP = BX_CPU_THIS_PTR prev_rip;

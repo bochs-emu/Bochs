@@ -551,6 +551,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET16(bxInstruction_c *i)
 #endif
 
 #if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    if (is_masked_event(PIN_VMEXIT(VMX_VM_EXEC_CTRL1_VIRTUAL_NMI) ? BX_EVENT_VMX_VIRTUAL_NMI : BX_EVENT_NMI))
+      BX_CPU_THIS_PTR nmi_unblocking_iret = 1;
+
   if (BX_CPU_THIS_PTR in_vmx_guest && PIN_VMEXIT(VMX_VM_EXEC_CTRL1_NMI_EXITING)) {
     if (PIN_VMEXIT(VMX_VM_EXEC_CTRL1_VIRTUAL_NMI)) unmask_event(BX_EVENT_VMX_VIRTUAL_NMI);
   }
@@ -592,6 +596,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET16(bxInstruction_c *i)
   RSP_COMMIT;
 
 done:
+
+#if BX_SUPPORT_VMX
+  BX_CPU_THIS_PTR nmi_unblocking_iret = 0;
+#endif
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_IRET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);

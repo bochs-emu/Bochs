@@ -381,7 +381,6 @@ void BX_CPU_C::deliver_SIPI(unsigned vector)
     BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
     RIP = 0;
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], vector*0x100);
-    unmask_event(BX_EVENT_INIT); // enable INIT pin back
     BX_INFO(("CPU %d started up at %04X:%08X by APIC",
                    BX_CPU_THIS_PTR bx_cpuid, vector*0x100, EIP));
   } else {
