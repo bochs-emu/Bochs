@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2005-2012  The Bochs Project
+//  Copyright (C) 2005-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -367,10 +367,12 @@ class sparse_image_t : public device_image_t
 #include "external-disk-simulator.h"
 #endif
 
-#if DLL_HD_SUPPORT
+#ifdef WIN32
 class dll_image_t : public device_image_t
 {
   public:
+      dll_image_t();
+
       // Open an image with specific flags. Returns non-negative if successful.
       int open(const char* pathname, int flags);
 
@@ -390,7 +392,8 @@ class dll_image_t : public device_image_t
       ssize_t write(const void* buf, size_t count);
 
   private:
-      int vunit,vblk;
+      int vunit;
+      Bit64s vblk;
 };
 #endif
 

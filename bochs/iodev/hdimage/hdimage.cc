@@ -86,7 +86,7 @@ device_image_t* bx_hdimage_ctl_c::init_image(Bit8u image_mode, Bit64u disk_size,
       break;
 #endif //EXTERNAL_DISK_SIMULATOR
 
-#if DLL_HD_SUPPORT
+#ifdef WIN32
     case BX_HDIMAGE_MODE_DLL_HD:
       hdimage = new dll_image_t();
       break;
@@ -1212,76 +1212,93 @@ void sparse_image_t::restore_state(const char *backup_fname)
   free(temp_pathname);
 }
 
-#if DLL_HD_SUPPORT
+#ifdef WIN32
 
 /*** dll_image_t function definitions ***/
 
-/*
-function vdisk_open(path:PChar;numclusters,clustersize:integer):integer;
-procedure vdisk_read(vunit:integer;blk:integer;var buf:TBlock);
-procedure vdisk_write(vunit:integer;blk:integer;var buf:TBlock);
-procedure vdisk_close(vunit:integer);
-*/
+HINSTANCE hlib_vdisk = NULL;
 
-HINSTANCE hlib_vdisk = 0;
-
-int (*vdisk_open)  (const char *path,int numclusters,int clustersize);
-void (*vdisk_read)   (int vunit,int blk,void *buf);
-void (*vdisk_write)  (int vunit,int blk,const void *buf);
+int  (*vdisk_open)  (const char *path, int flags);
+BOOL (*vdisk_read)  (int vunit, LONGLONG blk, void *buf);
+BOOL (*vdisk_write) (int vunit, LONGLONG blk, const void *buf);
 void (*vdisk_close) (int vunit);
+LONGLONG (*vdisk_get_size) (int vunit);
 
-int dll_image_t::open (const char* pathname, int flags)
+dll_image_t::dll_image_t()
 {
-  UNUSED(flags);
-  if (hlib_vdisk == 0) {
+  if (hlib_vdisk == NULL) {
     hlib_vdisk = LoadLibrary("vdisk.dll");
-    if (hlib_vdisk != 0) {
-      vdisk_read = (void (*)(int,int,void*))        GetProcAddress(hlib_vdisk,"vdisk_read");
-      vdisk_write = (void (*)(int,int,const void*)) GetProcAddress(hlib_vdisk,"vdisk_write");
-      vdisk_open = (int (*)(const char *,int,int))  GetProcAddress(hlib_vdisk,"vdisk_open");
-      vdisk_close = (void (*)(int))                 GetProcAddress(hlib_vdisk,"vdisk_close");
+    if (hlib_vdisk != NULL) {
+      vdisk_open =  (int (*)(const char *,int))          GetProcAddress(hlib_vdisk,"vdisk_open");
+      vdisk_read =  (BOOL (*)(int,LONGLONG,void*))       GetProcAddress(hlib_vdisk,"vdisk_read");
+      vdisk_write = (BOOL (*)(int,LONGLONG,const void*)) GetProcAddress(hlib_vdisk,"vdisk_write");
+      vdisk_close = (void (*)(int))                      GetProcAddress(hlib_vdisk,"vdisk_close");
+      vdisk_get_size = (LONGLONG (*)(int))               GetProcAddress(hlib_vdisk,"vdisk_get_size");
+      if ((vdisk_open == NULL) || (vdisk_read == NULL) || (vdisk_write == NULL) ||
+          (vdisk_close == NULL) || (vdisk_get_size == NULL)) {
+        FreeLibrary(hlib_vdisk);
+        hlib_vdisk = NULL;
+      }
     }
   }
-  if (hlib_vdisk != 0) {
-    vunit = vdisk_open(pathname,0x10000,64);
-    vblk = 0;
+}
+
+int dll_image_t::open(const char* pathname, int flags)
+{
+  if (hlib_vdisk != NULL) {
+    vunit = vdisk_open(pathname, flags);
+    if (vunit >= 0) {
+      hd_size = (Bit64u)vdisk_get_size(vunit) << 9;
+      vblk = 0;
+    }
   } else {
     vunit = -2;
   }
   return vunit;
 }
 
-void dll_image_t::close ()
+void dll_image_t::close()
 {
-  if (vunit >= 0 && hlib_vdisk != 0) {
+  if ((vunit >= 0) && (hlib_vdisk != NULL)) {
     vdisk_close(vunit);
   }
 }
 
 Bit64s dll_image_t::lseek(Bit64s offset, int whence)
 {
-  vblk = (int)(offset >> 9);
+  if (whence == SEEK_SET) {
+    vblk = offset >> 9;
+  } else if (whence == SEEK_CUR) {
+    vblk += offset >> 9;
+  } else {
+    BX_ERROR(("lseek: mode not supported yet"));
+    return -1;
+  }
+  if (vblk >= (Bit64s)(hd_size >> 9))
+    return -1;
   return 0;
 }
 
-ssize_t dll_image_t::read (void* buf, size_t count)
+ssize_t dll_image_t::read(void* buf, size_t count)
 {
-  if (vunit >= 0 && hlib_vdisk != 0) {
-    vdisk_read(vunit,vblk,buf);
-    return count;
-  } else {
-    return -1;
+  if ((vunit >= 0) && (hlib_vdisk != NULL)) {
+    if (vdisk_read(vunit, vblk, buf)) {
+      vblk++;
+      return count;
+    }
   }
+  return -1;
 }
 
-ssize_t dll_image_t::write (const void* buf, size_t count)
+ssize_t dll_image_t::write(const void* buf, size_t count)
 {
-  if (vunit >= 0 && hlib_vdisk != 0) {
-    vdisk_write(vunit,vblk,buf);
-    return count;
-  } else {
-    return -1;
+  if ((vunit >= 0) && (hlib_vdisk != 0)) {
+    if (vdisk_write(vunit, vblk, buf)) {
+      vblk++;
+      return count;
+    }
   }
+  return -1;
 }
 #endif // DLL_HD_SUPPORT
 
