@@ -10,6 +10,7 @@ set echo
             --enable-x86-64 \
             --enable-pci \
             --enable-clgd54xx \
+            --enable-voodoo \
             --enable-usb \
             --enable-usb-ohci \
             --enable-es1370 \
