@@ -10,21 +10,29 @@ Changes in 2.6.1 (not released yet):
   - Bugfixes for CPU emulation correctness (critical fixes for SVM and AVX2 emulation)
 
 - Bochs Debugger and Instrumentation
-  - Use Enhanced GUI Debugger instead of old style wx debugger with WX GUI.
-    The old style WX debugger support was deprecated and removed from the source code.
+  - Use Enhanced GUI Debugger instead of old-style wx debugger with wx gui.
+    The old-style wx debugger support was deprecated and removed from the source code.
 
 - I/O Devices
   - Implemented 3dfx Voodoo Graphics card emulation based on DOSBox patch, to enable
     configure with --enable-voodoo option.
   - Hard drive / HD image
-    - Added full save restore support for the disk image formats
+    - Added full save restore support for most of the disk image formats
+    - undoable / volatile mode: added support of other types of r/o base images
     - DLL HD support rewritten and enabled for WIN32 host
-  - Chipset
+  - PCI chipset
     - Implemented i430FX chipset emulation
+    - USB UHCI always enabled in the i440FX case
 
 - Config interface
   - Configure option --enable-misaligned-sse moved to runtime option in .bochsrc. The old
     option is deprecated and should not be used anymore.
+  - moved 'user_shortcut' bochsrc option to the 'keyboard' option
+  - save log options per device to bochsrc
+
+- GUI and display libraries
+  - Graphics snapshot feature rewritten to support all kinds of graphics modes
+  - wx: starting a second simulation without closing Bochs now almost possible
 
 -------------------------------------------------------------------------
 Changes in 2.6 (September 2, 2012):
