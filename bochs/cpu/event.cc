@@ -29,6 +29,14 @@
 
 bx_bool BX_CPU_C::handleWaitForEvent(void)
 {
+  if (BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_WAIT_FOR_SIPI) {
+    // HALT condition remains, return so other CPUs have a chance
+#if BX_DEBUGGER
+    BX_CPU_THIS_PTR stop_reason = STOP_CPU_HALTED;
+#endif
+    return 1; // Return to caller of cpu_loop.
+  }
+
   // For one processor, pass the time as quickly as possible until
   // an interrupt wakes up the CPU.
   while (1)
@@ -381,6 +389,7 @@ void BX_CPU_C::deliver_SIPI(unsigned vector)
     BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
     RIP = 0;
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], vector*0x100);
+    unmask_event(BX_EVENT_INIT | BX_EVENT_SMI | BX_EVENT_NMI);
     BX_INFO(("CPU %d started up at %04X:%08X by APIC",
                    BX_CPU_THIS_PTR bx_cpuid, vector*0x100, EIP));
   } else {
