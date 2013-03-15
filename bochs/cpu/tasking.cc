@@ -129,7 +129,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 
   // Discard any traps and inhibits for new context; traps will
   // resume upon return.
-  BX_CPU_THIS_PTR debug_trap = 0;
+  BX_CPU_THIS_PTR debug_trap &= ~BX_DEBUG_SINGLE_STEP_BIT;
   BX_CPU_THIS_PTR inhibit_mask = 0;
 
   // STEP 1: The following checks are made before calling task_switch(),
