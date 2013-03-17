@@ -474,7 +474,12 @@ public:
     // When a bx_list_c is displayed as a menu, SHOW_GROUP_NAME controls whether
     // or not the name of group the item belongs to is added to the name of the
     // item (used in the runtime menu).
-    SHOW_GROUP_NAME = (1<<4)
+    SHOW_GROUP_NAME = (1<<4),
+    // When a bx_list_c is displayed in a dialog, USE_SCROLL_WINDOW suggests
+    // to the CI that the list items should be displayed in a scrollable dialog
+    // window. Large lists can make the dialog unusable and using this flag
+    // can force the CI to limit the dialog height with all items accessible.
+    USE_SCROLL_WINDOW = (1<<5)
   } bx_listopt_bits;
   bx_list_c(bx_param_c *parent);
   bx_list_c(bx_param_c *parent, const char *name);

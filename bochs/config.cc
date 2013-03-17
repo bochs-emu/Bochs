@@ -629,7 +629,7 @@ void bx_init_options()
 #endif
 #endif // CPU_LEVEL >= 6
 
-  cpuid_param->set_options(menu->SHOW_PARENT);
+  cpuid_param->set_options(menu->SHOW_PARENT | menu->USE_SCROLL_WINDOW);
 
   // CPUID subtree depends on CPU model
   SIM->get_param_enum(BXPN_CPU_MODEL)->set_dependent_list(cpuid_param->clone(), 0);
