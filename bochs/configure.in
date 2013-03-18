@@ -2443,7 +2443,7 @@ case $target in
         LIBS="$LIBS comctl32.lib"
       fi
     fi
-    DIALOG_OBJS="win32dialog.o win32paramdlg.o"
+    DIALOG_OBJS="win32dialog.o win32paramdlg.o scrollwin.o"
     EXPORT_DYNAMIC=""
     ;;
   *-cygwin* | *-mingw*)
