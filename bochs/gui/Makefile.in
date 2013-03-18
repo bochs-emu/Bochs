@@ -256,6 +256,7 @@ win32.o: win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.
 win32dialog.o: win32dialog.@CPP_SUFFIX@ win32dialog.h ../config.h
 win32_enh_dbg_osdep.o: win32_enh_dbg_osdep.@CPP_SUFFIX@ ../config.h
 win32paramdlg.o: win32paramdlg.@CPP_SUFFIX@ win32dialog.h ../config.h
+scrollwin.o: scrollwin.@CPP_SUFFIX@
 wx.o: wx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../plugin.h \
