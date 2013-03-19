@@ -613,6 +613,10 @@ void EnableParam(HWND hDlg, UINT cid, bx_param_c *param, BOOL val)
     cid = findDlgIDFromParam(param);
   }
   if (param->get_type() != BXT_LIST) {
+    bx_list_c *list = (bx_list_c*)param->get_parent();
+    if (list->get_options() & list->USE_SCROLL_WINDOW) {
+      hDlg = FindWindowEx(hDlg, NULL, "ScrollWin", NULL);
+    }
     EnableWindow(GetDlgItem(hDlg, ID_LABEL + cid), val);
     EnableWindow(GetDlgItem(hDlg, ID_PARAM + cid), val);
     Button = GetDlgItem(hDlg, ID_BROWSE + cid);

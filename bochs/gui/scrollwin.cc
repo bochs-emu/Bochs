@@ -25,11 +25,12 @@ LRESULT CALLBACK ScrollWinProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 {
   SCROLLINFO si;
   BOOL pull = FALSE, redraw = FALSE;
-  static int vsize = 0, wsize = 0;
-  static int starty = 0, scrolly = 0;
-  int oldy = 0;
+  static int vsize = 0, wsize = 0, starty = 0;
+  int scrolly, oldy = 0;
+  short delta;
   RECT R;
 
+  oldy = starty;
   switch (msg) {
     case WM_CREATE:
       GetClientRect(hwnd, &R);
@@ -44,7 +45,6 @@ LRESULT CALLBACK ScrollWinProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
       SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
       break;
     case WM_VSCROLL:
-      oldy = starty;
       switch (LOWORD(wParam)) {
         case SB_LINEDOWN:
           if (starty < (vsize - wsize)) {
@@ -93,8 +93,28 @@ LRESULT CALLBACK ScrollWinProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
           pull = TRUE;
           redraw = (starty != oldy);
           break;
+      }
+      break;
+    case WM_MOUSEWHEEL:
+      delta = (short)HIWORD(wParam);
+      if (delta < 0) {
+        if (starty < (vsize - wsize)) {
+          starty += 3;
+          if (starty > (vsize - wsize)) {
+            starty = vsize - wsize;
+          }
+          redraw = TRUE;
+          break;
         }
-        break;
+      } else if (delta > 0) {
+        if (starty > 0) {
+          starty -= 3;
+          if (starty < 0) starty = 0;
+          redraw = TRUE;
+          break;
+        }
+      }
+      return 0;
     case WM_USER:
       if (wParam == 0x1234) {
         vsize = (int)lParam;
