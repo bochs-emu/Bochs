@@ -36,6 +36,7 @@ LRESULT CALLBACK ScrollWinProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
       GetClientRect(hwnd, &R);
       wsize = R.bottom;
       vsize = wsize;
+      starty = 0;
       si.cbSize = sizeof(SCROLLINFO);
       si.fMask = SIF_POS | SIF_PAGE | SIF_RANGE | SIF_DISABLENOSCROLL;
       si.nMin = 0;

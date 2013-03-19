@@ -683,7 +683,7 @@ SIZE CreateParamList(HWND hDlg, UINT lid, UINT xpos, UINT ypos, BOOL hide, bx_li
   } else if (options & list->USE_SCROLL_WINDOW) {
     x0 = 5;
     y = 5;
-    size.cy = 8;
+    size.cy = 3;
   } else {
     y = ypos + 10;
     size.cy = 13;
