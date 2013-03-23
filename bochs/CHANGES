@@ -29,6 +29,7 @@ Changes in 2.6.1 (not released yet):
     option is deprecated and should not be used anymore.
   - moved 'user_shortcut' bochsrc option to the 'keyboard' option
   - save log options per device to bochsrc
+  - win32: implemented scrollable dialog items for large parameter lists
 
 - GUI and display libraries
   - Graphics snapshot feature rewritten to support all kinds of graphics modes
