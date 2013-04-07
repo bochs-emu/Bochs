@@ -1,4 +1,4 @@
-Changes in 2.6.1 (not released yet):
+Changes in 2.6.1 (April 7, 2013):
 
 - CPU / CPUDB
   - Bochs is fully aligned with rev45 of the of Intel(R) Architecture Manual.
