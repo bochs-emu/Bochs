@@ -1,0 +1,48 @@
+Here's a useful usenet article that shows how to build a filelist
+instead of having to specify each one. 
+-----------------------------------------------------------------
+
+From: John Ross Hunt (bigboote@mediaone.net)
+Subject: RE: Newbie to build spec files 
+Newsgroups: linux.redhat.rpm
+Date: 2000/07/27 
+
+
+> So, is there a better way, in RPM 3, to populate %files?
+> Because I know
+> 'buildroot' and it has nothing to do with %files.
+
+I found this bit of code in a .spec file to build a %files list on the fly
+and have been using it ever since.  I've always thought RPM should be able
+to provide a default %files list in the event one isn't present in the .spec
+file.
+
+--
+John Ross Hunt
+bigboote@mediaone.net <mailto:bigboote@mediaone.net>
+
+
+
+%define pkg_name foo
+
+%install
+rm -rf $RPM_BUILD_ROOT
+make install DESTDIR=$RPM_BUILD_ROOT
+
+cd $RPM_BUILD_ROOT
+find . -type d | sed '1,2d;s,^\.,\%attr(-\,root\,root) \%dir ,' > \
+      $RPM_BUILD_DIR/file.list.%{pkg_name}
+
+find . -type f | sed -e 's,^\.,\%attr(-\,root\,root) ,' \
+      -e '/\/etc\//s|^|%config|' >> \
+      $RPM_BUILD_DIR/file.list.%{pkg_name}
+
+find . -type l | sed 's,^\.,\%attr(-\,root\,root) ,' >> \
+      $RPM_BUILD_DIR/file.list.%{pkg_name}
+
+%clean
+rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/file.list.%{pkg_name}
+
+%files -f ../file.list.%{pkg_name}
+%doc README TODO example
+-----------------------------------------------------------------

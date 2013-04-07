@@ -1,0 +1,357 @@
+README-plugins
+
+This is the README file that came from the CVS branch called BRANCH_PLUGINS.
+It's not intended to be user documentation for plugins.  It's more like a
+bunch of to-do lists that the developers used to coordinate their efforts
+while working on plugins.  At the bottom are some miscellaneous notes by the
+plugin developers and some references to useful usenet articles.
+
+-------------------------------------------------------------------------
+BRANCH_PLUGINS
+
+The branch is called BRANCH_PLUGINS.  There is a normal tag called
+BRANCH_PLUGINS_BASE that marks the point where the branch began.  The
+base marker will help at merge time.
+
+This branch is a place to experiment with Bochs plugins.  Bryce created
+the branch on October 4, 2002, and he and Christophe began working on
+Bochs plugins.
+
+We started from Bryce's patch.plugins3, which was a patch from December 2001
+that copied in some of the plugin architecture from plex86.  Here are the
+comments from that patch:
+
+> Patch name: patch.plugins3
+> Author: Bryce Denney
+> Date: Wed Dec 12 17:56:11 EST 2001
+>
+> This patch replaces the Bochs keyboard with a slightly modified version
+> of the plex86 keyboard device, which is implemented as a plugin.  This
+> is sort of a proof of concept, rather than anything that I'm about to
+> check in.  It uses GNU libtool to compile the plex86 keyboard code into
+> a shared library, and installs that shared library in
+> /tmp/bochslib/libplex-keyboard.so.  Then the new code in plugin.cc (which
+> is adapted from the plex86 plugin code) loads the libplex-keyboard library
+> during initialization and installs the plex86 keyboard instead of the
+> bochs keyboard.
+>
+> I chose the keyboard because it takes about 2 seconds to test that it's
+> basically working, and because the bochs and plex86 implementations hadn't
+> changed very much since they split.
+>
+> If you look at plex-keyboard.cc and plex-keyboard.h, it is fundamentally the
+> same as the current plex86 code.  I have changed lots of names from bx_* to
+> plex_* just to reduce confusion and mayhem when I was compiling with both
+> kbd implementations.  I didn't change anything except to get it to compile.
+
+Christophe had made a plugins5 patch, so he checked it in, with these
+changes:
+ - plex86 keyboard device was marged with Bochs keyboard, as a plugin
+ - plugin.cc was cleaned up
+ - a device registration mechanism was set up
+ - the biosdev and unmapped devices were plugin-ized
+
+TO DO:
+- (LATER) some plugins, such as the GUI, PIT, SB, and NE2000, have several different
+  possible implementations.  In this case, all implementations should be
+  children of a single stub class.  The stub's methods produce errors or
+  panics if they are called, depending on the importance of the device.
+  There is always one instance of the stub class lying around, which will be
+  used if none of the implementation plugins is loaded.  Either an optional
+  plugin or a user plugin can fill in these slots.
+
+- platform specific issues
+  - (LATER) make sure LTDL works on VC++.  It doesn't and won't without
+    significant work.  Maybe it's easier to support VC++ with ifdefs in
+    plugin.cc rather than using ltdl at all.  This will have to wait.
+  - (DONE) nmake build: we must use lib.exe, not $(LIBTOOL) $(CXX) stuff
+
+- configure script work
+  - LTDL has a feature called dlpreload which sort of emulates dlopen
+    by linking all the modules statically and then emulating dlopen calls.
+    I don't see any value in this for plugins.  If the platform cannot
+    support dlopen or some equivalent, let the configure script crash and
+    tell the user to configure without plugins instead.
+  - (DONE) to support plugins on MacOSX, the user must install dlcompat.
+    Otherwise libtool's configure script will discover that no dlopen() or
+    equivalent function is found, and it will not be able to build/load
+    plugins.  The configure script should bomb in this case, with an error
+    that says where to find dlcompat.  dlcompat IS installed on SF compile
+    farm in /sw/include and /sw/lib.
+
+- Understand/resolve simulation differences between CVS head and
+  BRANCH_PLUGINS.  Simulation is slightly different.
+  - compare four versions
+    - BRANCH_PLUGINS with --enable-plugins
+    - BRANCH_PLUGINS without --enable-plugins
+    - BRANCH_PLUGINS_BASE
+    - CVS head
+  - these differences seem to be explained by a few things:
+    1. devices are initialized in a different order, so they are assigned
+       different timer id.  For any events that occur at the same tick, the
+       timer handlers would get called in a different order.  I believe I
+       have fixed the order of timer registration so that it matches, and
+       that cleaned up some simulation differences.
+    2. bx_gui->handle_events is now called from iodev/devices.cc instead of
+       from iodev/keyboard.cc.
+    3. bx_keyb_c::periodic() used to be called directly from devices.cc
+       but now the keyboard registers its own timer
+  - I have never seen any problems caused by the sim differences, but they
+    make me nervous. -Bryce
+
+- (LATER) convert remaining devices
+
+- (LATER) maybe the implementation class for each plugin device should go into
+  the .cc file instead of the header file.  If all their methods are called
+  through the stub class virtual functions, and no external file has access to
+  the real non-stub class, then maybe there is no point in letting anybody
+  else see the real class at all?  (If you do use the class you will get
+  undefined symbols when you compile for plugins anyway.)  For the hard drive,
+  we could put bx_hard_drive_stub_c in harddrv.h, and any constants or types
+  that external files might need, and then put the real class, bx_hard_drive_c,
+  at the top of harddrv.cc.
+
+
+- (LATER) eventually we need to clarify the connection between plugins and
+  devices.  At the moment, each plugin creates exactly one device, but it does
+  not have to work that way.
+  - it would be more correct to mark the devices as core, optional, etc. than
+    to use a type field in the plugin struct.  The reason that the type
+    (core,optional,user) is currently passed into the PLUG_load_plugin macro
+    and placed in the plugin struct instead of letting the device code decide
+    is: devices.cc is responsible for initting and resetting devices, so I
+    wanted devices.cc to decide whether the device would be managed by the
+    plugin infrastructure (init_all, reset_all) or not.  This is not that
+    important yet, but when Volker wants to write a plugin with multiple
+    devices, we will need to sort it out.
+
+- (LATER) make a way for users to replace a core plugin with one of their
+  choice.
+
+- (LATER) implement user plugins.  These are plugins that Bochs does not know
+  anything about at compile time.  The user asks Bochs to load a plugin using
+  just its filename.  It loads the plugin and registers any bx_params that
+  the user can configure, and either the text config interface or the
+  wxWindows interface can display this param list as a menu or dialog.
+  Then at simulation start time, we call init() on the user device and
+  it can be used like any other device.
+
+- (LATER) make plugin CPU???
+
+DONE:
+- applied patch.plugins5
+- updated makefile dependencies now that plugin.h is in there
+- all guis converted to plugins
+- 8 I/O devices are converted to plugins
+- make the Makefile use libtool to build dynamic libraries
+- use libtool's ltdl library to open and read dynamic libraries, since it
+  has cross platform support
+- the Boolean/bx_bool thing will be resolved in the main branch.  I have
+  made patch.replace-Boolean.gz which I will apply later, after the
+  plugins branch has been merged.  This become more urgent because it
+  caused bug #623152 MacOSX: Triple Exception Booting win95
+- take a look at the code generated by calls to virtual functions, to
+  check if there's huge overhead that I don't know about.
+  Answer: I don't believe there is that much extra overhead.  If you call
+  a nonvirtual function, it must push all the args onto the stack, then
+  push the THIS pointer, then call the method using a known constant address.
+  With a virtual function, you push all the args onto the stack, then push
+  the THIS pointer, then do one extra memory reference to THIS+constant to read
+  the pointer to the virtual method, and call it.  This is just what I
+  expected to find--no strange and magicial code was inserted by the
+  compiler in this case.
+- wxWindows configuration interface and display works fine as a plugin now
+- selection of config interface is controlled by the bochsrc line
+  "config_interface: NAME" and the parameter bx_options.Osel_config.
+- selection of display library is controlled by the bochsrc line
+  "display_library: NAME" and the parameter bx_options.Osel_displaylib.
+- renamed vga_library to display_library (Christophe's suggestion)
+- add --with-all-libs option, which attempts to detect all the display
+  libraries that Bochs can compile with.  You can use this with or without
+  plugins, compile with multiple guis in the same binary, and select between
+  them at runtime.  If the detection fails, you can always write a bunch
+  of --with-PACKAGE options yourself.
+- load plugins as they are needed, in main.cc and iodev/devices.cc.
+  - plugins are loaded using a macro PLUG_load_plugin(plugin_name, plugin_type).
+    When plugins are enabled, this macro calls bx_load_plugin() in plugin.cc,
+    which loads the plugin with lt_dlopen and calls its plugin_init method.
+    When plugins are disabled, the code is already linked into the binary so
+    the macro calls the plugin_init method directly.
+  - The plugin_init method for plugin ABC is called libABC_LTX_plugin_init()
+    and the same prefix is added before the plugin_fini method.  This "name
+    mangling" makes the symbols unique so that they can all be linked
+    statically into the binary when plugins are turned off.  This turned out
+    to be a very useful thing!
+  - The choice of lib*_LTX_* is not random...  The libtool LTDL library
+    automatically searches for symbols of the form lib<module>_LTX_<symbol>
+    before looking for <symbol>.  Libtool recommends making global symbols in
+    every plugin unique in some way, and in fact on MacOSX the dynamic linker
+    will not allow two libs to be linked in that both have plugin_init symbols,
+    so this sort of mangling is required.
+- how do we know what plugins should be available when we start Bochs?
+  - we have core plugins, optional plugins, and user plugins.
+    - (V2.0) core plugin: These are so fundamental that Bochs won't even
+      initialize without them, for example the CMOS.  The user can substitute
+      his own equivalent plugin to replace the CMOS, but he cannot say "Don't
+      load the CMOS at all."  Core plugin devices are initialized and reset
+      explictly by code in iodev/devices.cc, since the initialization order for
+      some of them is critical.  They are currently NOT added to the device
+      list in pluginRegisterDevice and pluginRegisterDeviceDevmodel, so that
+      the plugin system does not call init() and reset().  If a core plugin
+      cannot be found, Bochs will panic.
+      In the bochsrc we can provide a way for the user to REPLACE a core plugin
+      with a different plugin that implements the same C++ interface, but there
+      is no way to ask bochs to NOT load a core plugin.  I'm not sure how to
+      configure the replacement plugin--this may have to be added later.
+      Bochsrc line:
+        replace_core_plugin: old=pic, new=mypic
+    - (V2.0) optional plugin: These can be loaded or not without affecting
+      Bochs's ability to start up and simulate.  Initialization and reset for
+      all optional plugins are handled by bx_init_plugins() and
+      bx_reset_plugins(), which are now called from bx_devices_c::init() and
+      bx_devices_c::reset().  Bochs knows how to configure optional plugins at
+      compile time, and they are loaded only if the configuration settings
+      enables the device.  Examples: serial, parallel, ne2k.  See the call to
+      is_serial_enabled() in iodev/devices.cc.  There are some plugins that you
+      wouldn't ever want to leave out, like vga.  Maybe the term "optional" is
+      not clear and I need to think of a better name.  Bochs will panic if an
+      optional plugin cannot be found.  If the plugin was compiled, then
+      it should be available at runtime too!
+    - (NOT DONE) user plugin: These are plugins that Bochs does not know
+      anything about at compile time.  The user asks Bochs to load a plugin
+      using just its filename.  It loads the plugin and (somehow) gets
+      information about what settings the user can configure.  The settings are
+      adjusted by either bochsrc lines or the user interface, and then the
+      device can be used.  I'm missing some details here because I haven't
+      thought through it all the way.  User plugins may not be supported until
+      after v2.0.
+  - list of plugins sorted into categories
+    - core plugins: unmapped, biosdev, cmos, dma, pic, vga
+    - optional: floppy, harddrv, keyboard, serial, parallel
+    - user: none yet
+- clarify relationship of plugin and device
+  - a plugin is a shared object that you load that has a plugin_init() and
+    plugin_fini() function inside.  The plugin_init() can create any number of
+    "devices" and register them.  Devices are added to a global list so that we
+    can do operations on every registered device.
+  - There is (now) a pointer from each device to the plugin that created it.
+  - Devices created by core plugins are called core devices.  These will not be
+    added to the device list because they are managed by existing code in
+    devices.cc and elsewhere.  Instead of referring to them by their device_t
+    structure, we will use a global pointer to them, similar to the
+    bx_devices.pluginKeyboard pointer.  (Alternative: maybe we should add
+    them to device list anyway, but exclude them in init_all and reset_all
+    functions.)
+  - MACOSX PLUGINS WORK!  to support plugins on MacOSX, we must ensure that no
+    plugins have any global symbol names in common, including plugin_init!  An
+    easy solution to this is to say that all plugin functions which can be
+    looked up with dlsym must follow a pattern like "%s_BXPLUG_%s", where the
+    first %s is the module name and the second is the plain symbol name, e.g.
+    pic_BXPLUG_plugin_init.  Symbols that are used internally can be declared
+    static (file scope only).
+  - SOLARIS PLUGINS WORK!  to support plugins on Solaris, we must not rely on
+    the use of global object constructors.  In fact every global variable in a
+    module MUST BE set to a compile-time constant.  We must declare object
+    pointers as globals, not actual objects.
+  - WIN32 PLUGINS WORK!  to support plugins on win32, I added the
+    BOCHSAPI macro which expands to __declspec(dllexport) in the nonplugin
+    code and __declspec(dllimport) in the plugin code.  Some makefile hacks
+    were required too.  A few differences between win32 and other platforms:
+    - use semicolon to separate path names in LTDL_LIBRARY_PATH
+    - every path name in LTDL_LIBRARY_PATH should start with a drive letter,
+      for example: c:/cygwin/home/bryce/plugins.
+- how do we locate plugins on the disk?
+  - make install copies the plugins into ${prefix}/lib
+  - if people install into a standard location, no action may be needed (?)
+  - we can tell people to set the LTDL_LIBRARY_PATH variable.
+  - if necessary we can implement a bochsrc command like
+      plugin_search_directory: /path/to/libs
+    which would call lt_dlsetsearchpath() to add the path to LTDL's list of
+    directories it will search.
+- change log for BRANCH_PLUGINS is in patches/patch.plugins.  It is
+  pretty complete now.
+
+
+
+
+
+
+-----------------------------------------------
+random notes:
+
+class heirarchy:
+ logfunctions
+ - bx_devmodel_c
+   - bx_keyb_stub_c
+     - bx_keyb_c
+
+bx_devmodel_c is an abstract class that defines standard functions that all
+devices should define, like init and reset.  Each method is defined as empty
+in bx_devmodel_c so that child classes can choose to implement them or not.
+
+bx_keyb_stub_c declares the methods that code outside the keyboard would need
+to call, such as mouse_motion, gen_scancode, etc.  It declares these methods
+virtual, and provides a minimal definition for each that just does a panic.   A
+global variable pluginKeyboard initially points to an instance of
+bx_keyb_stub_c so that if you forget/fail to load the load the keyboard plugin,
+you will see these panics when the methods are called.
+
+bx_keyb_c is the real keyboard code.  In its constructor, it changes
+pluginKeyboard to point to "this".  This is equivalent to installing all
+the plugin callbacks associated with the keyboard.  It also works in
+nonplugin code, which is a plus.
+
+
+hard drive read_handler.  Right now the read_handler
+is a static method so it must get its object pointer from somewhere.
+  1) It can get it from global variable bx_hard_drive
+  2) The hard drive object can be passed in to it
+We've always used #2, so every device has methods that look like this:
+
+  static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
+  static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsi
+
+If/when we switch over to using virtual methods, there will no longer be
+any problem finding the this pointer.  If we go that route, the this_ptr
+can be eliminated.  For now, we must use the this_ptr.  Otherwise we could
+never support more than one device of a given type.
+
+
+
+------------------------------------------
+References
+
+From: Tero Pulkkinen (p150650@zori.cs.tut.fi)
+ Subject: Re: undefined reference to `pm virtual table'
+ Newsgroups: gnu.g++.help
+ Date: 1996/11/15
+
+
+> The compile goes off OK, but I get this error at link time:
+>   pm.o(.text+0xa8): undefined reference to `pm virtual table'
+
+This error comes from that the compiler didnt make virtual function
+table for object even though there's implemented functions that use
+objects of that type(constructor for example). Probably your pm-class
+has all implemented member functions *inline* and you still have
+(pure) virtual functions inside the class.
+
+The creation point of virtual function table usually (dunno if g++ does that)
+is at position of first seen noninline function body of that class.
+Now if every of your function is inline, there's no place where compiler
+could make virtual function table.
+
+Fix is to move body of for example constructor(any member is fine) to the .cc
+file instead of keeping it in .h-file and linking that .o file to your
+executable.
+
+Other sollution is to remove *all* implementations of functions from header
+file. If all functions of a class are pure virtual, there's no need for
+virtual function table. (Constructor must set pointer to virtual function
+table to the object, so, if you have constructor, you'll need virtual
+function table too, even in abstract classes...)
+
+> Can someone help me?  Thanks in advance.
+
+Hope this helps....
+

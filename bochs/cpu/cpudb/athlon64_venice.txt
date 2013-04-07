@@ -1,0 +1,102 @@
+CPU-Z TXT Report
+-------------------------------------------------------------------------
+
+Binaries
+-------------------------------------------------------------------------
+
+CPU-Z version			1.52.1
+
+Processors
+-------------------------------------------------------------------------
+
+Number of processors		1
+Number of threads		1
+
+APICs
+-------------------------------------------------------------------------
+
+Processor 0	
+	-- Core 0	
+		-- Thread 0	0
+
+Processors Information
+-------------------------------------------------------------------------
+
+Processor 1			ID = 0
+	Number of cores		1 (max 1)
+	Number of threads	1 (max 1)
+	Name			AMD Athlon 64 3000+
+	Codename		Venice
+	Specification		AMD Athlon(tm) 64 Processor 3000+
+	Package 		Socket 939
+	CPUID			F.F.2
+	Extended CPUID		F.2F
+	Brand ID		4
+	Core Stepping		DH-E6
+	Technology		90 nm
+	Core Speed		1808.4 MHz
+	Multiplier x FSB	9.0 x 200.9 MHz
+	HT Link speed		1004.7 MHz
+	Stock frequency		1800 MHz
+	Instructions sets	MMX (+), 3DNow! (+), SSE, SSE2, SSE3, x86-64
+	L1 Data cache		64 KBytes, 2-way set associative, 64-byte line size
+	L1 Instruction cache	64 KBytes, 2-way set associative, 64-byte line size
+	L2 cache		512 KBytes, 16-way set associative, 64-byte line size
+	FID/VID Control		yes
+	Max FID			9.0x
+	VID range		1.100 V - 1.450 V
+
+	K8 Thermal sensor	yes
+	K8 Revision ID		4.2
+	Attached device		PCI device at bus 0, device 24, function 0
+	Attached device		PCI device at bus 0, device 24, function 1
+	Attached device		PCI device at bus 0, device 24, function 2
+	Attached device		PCI device at bus 0, device 24, function 3
+
+Thread dumps
+-------------------------------------------------------------------------
+
+CPU Thread 0	
+	APIC ID			0
+	Topology		Processor ID 0, Core ID 0, Thread ID 0
+	Type			02002001h
+	Max CPUID level		00000001h
+	Max CPUID ext. level	80000018h
+	Cache descriptor	Level 1, I, 64 KB, 1 thread(s)
+	Cache descriptor	Level 1, D, 64 KB, 1 thread(s)
+	Cache descriptor	Level 2, U, 512 KB, 1 thread(s)
+
+	CPUID		 
+	0x00000000		0x00000001	0x68747541	0x444D4163	0x69746E65
+	0x00000001		0x00020FF2	0x00000800	0x00000001	0x078BFBFF
+	0x80000000		0x80000018	0x68747541	0x444D4163	0x69746E65
+	0x80000001		0x00020FF2	0x00000108	0x00000001	0xE3D3FBFF
+	0x80000002		0x20444D41	0x6C687441	0x74286E6F	0x3620296D
+	0x80000003		0x72502034	0x7365636F	0x20726F73	0x30303033
+	0x80000004		0x0000002B	0x00000000	0x00000000	0x00000000
+	0x80000005		0xFF08FF08	0xFF20FF20	0x40020140	0x40020140
+	0x80000006		0x00000000	0x42004200	0x02008140	0x00000000
+	0x80000007		0x00000000	0x00000000	0x00000000	0x0000003F
+	0x80000008		0x00003028	0x00000000	0x00000000	0x00000000
+	0x80000009		0x00000000	0x00000000	0x00000000	0x00000000
+	0x8000000A		0x00000000	0x00000000	0x00000000	0x00000000
+	0x8000000B		0x00000000	0x00000000	0x00000000	0x00000000
+	0x8000000C		0x00000000	0x00000000	0x00000000	0x00000000
+	0x8000000D		0x00000000	0x00000000	0x00000000	0x00000000
+	0x8000000E		0x00000000	0x00000000	0x00000000	0x00000000
+	0x8000000F		0x00000000	0x00000000	0x00000000	0x00000000
+	0x80000010		0x00000000	0x00000000	0x00000000	0x00000000
+	0x80000011		0x00000000	0x00000000	0x00000000	0x00000000
+	0x80000012		0x00000000	0x00000000	0x00000000	0x00000000
+	0x80000013		0x00000000	0x00000000	0x00000000	0x00000000
+	0x80000014		0x00000000	0x00000000	0x00000000	0x00000000
+	0x80000015		0x00000000	0x00000000	0x00000000	0x00000000
+	0x80000016		0x00000000	0x00000000	0x00000000	0x00000000
+	0x80000017		0x00000000	0x00000000	0x00000000	0x00000000
+	0x80000018		0x00000000	0x00000000	0x00000000	0x00000000
+
+	MSR 0x0000001B		0x00000000	0xFEE00900
+	MSR 0xC001001E		0x00000000	0x00000042
+	MSR 0xC0010015		0x00000000	0x0A000000
+	MSR 0xC0010042		0x12040606	0x040A0A0A
+	MSR 0xC0010041		0x00002710	0x0000060A

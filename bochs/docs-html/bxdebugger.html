@@ -1,0 +1,334 @@
+<HTML>
+
+<BODY TEXT="#000000" BGCOLOR="#ececec"  LINK="#3333cc" VLINK="#666666">
+
+<CENTER><H1><I>Welcome to the Bochs x86 PC Emulation Software Home Page!</I></H1></CENTER>
+
+<HR>
+<HR>
+<H3>Debugger Functions:</H3>
+
+<P><B>void bx_dbg_exit(int code)</B>
+<P>When there is a situation in the simulator, where you need to terminate
+due to an unrecoverable error (panic), call <I>bx_dbg_exit()</I>.  Among
+other things, this function will call the <I>at_exit</I> callback function
+in each simulator, and ultimately call the system exit() function.
+
+<P><B>Bit8u bx_dbg_IAC(void)</B>
+<P>The simulator's CPU code should call this function when it is acknowledging an
+interrupt from the PIC via the INTR line.  The interrupt vector number from the PIC
+is returned.
+
+<P><B>Bit32u bx_dbg_inp(Bit16u addr, unsigned len)</B>
+<P>To read data from an IO device, the simulator should call this function.
+Pass in the IO address <I>addr</I>, and the size of the IO operation <I>len</I>.
+
+<P><B>void bx_dbg_outp(Bit16u addr, Bit32u value, unsigned len)</B>
+<P>To write data to an IO device, the simulator should call this function.
+Pass in the IO address <I>addr</I>, and the size of the IO operation <I>len</I>.
+
+<P><B>Bit8u bx_dbg_ucmem_read(Bit32u addr)</B>
+<BR><B>void bx_dbg_ucmem_write(Bit32u addr, Bit8u value)</B>
+<P>For memory read/write accesses which fall in the range of 0xA0000 to 0xBFFFF,
+the accesses should not be to directed to the simulator's memory, since
+these are UnCacheable MEMory addresses.  The VGA adapter maps it's memory to this
+range.  Instead, call these functions to perform reads/writes to memory
+accesses in this range.  For <I>bx_dbg_ucmem_read()</I>, pass the physical address
+<I>addr</I>, and the value of the read is returned.  For <I>bx_dbg_ucmem_write()</I>,
+pass the physical address <I>addr</I> and value <I>value</I> of the write.
+
+<P><B>void bx_dbg_async_pin_ack(unsigned what, bx_bool val)</B>
+<P>In order for the master and slave simulators to accept changes in pins
+such as the A20 line, at the same point, the debugger provides a mechanism
+for pending the pin change, until it is acknowledged by the master simulator.
+The place where the change is ack'd, is recorded by the debugger.  This
+information is used to run the slave simulator, forcing it to accept the
+changes at the same locale as did the master.
+
+<P>Initially, the IO devices call a function <I>bx_dbg_async_pin_request()</I>,
+not listed here, to record the pin change as pending.  The pending status
+is recorded along with the guard information in <I>bx_guard.async_changes_pending.which</I>.
+This field contains a binary OR'd set of pending pin changes.  Currently
+only A20 is supported, which is represented by the macro BX_DBG_ASYNC_PENDING_A20.
+
+<P>At a time prudent to your CPU simulator, check to see if there are
+any pending changes, that the CPU should acknowledge.  If so, acknowledge
+them by calling <I>bx_dbg_async_pin_ack()</I>.  The pending value of
+the A20 enable is stored in <I>bx_guard.async_changes_pending.a20</I>.
+Here is some sample code which performs this task, that you can insert
+into the appropriate place in your CPU simulator.
+
+<PRE>
+  if (bx_guard.async_changes_pending.which) {
+    if (bx_guard.async_changes_pending.which & BX_DBG_ASYNC_PENDING_A20)
+      bx_dbg_async_pin_ack(BX_DBG_ASYNC_PENDING_A20,
+                           bx_guard.async_changes_pending.a20);
+    // ...other checks here when they are supported
+    }
+</PRE>
+
+The <I>bx_dbg_async_pin_ack()</I> function will in turn, invoke
+the <I>set_A20()</I> callback function in the master simulator, so you
+don't have to deal with updating local A20 state in your simulator here,
+as long as you handle it in <I>set_A20()</I>.  Keep in mind, the slave
+simulator will never see the code inside this sample code if-construct,
+since changes are forced in the slave by the debugger at points where the master
+simulator acknowledged them, not as a direct effect of the IO devices.
+
+<HR>
+<HR>
+<H3>Guards:</H3>
+
+Guards are a mechanism by which the debugger requests each simulator
+to stop execution and return control back to the debugger.  The debugger
+runs each simulator for a particular number of instructions, or until
+certain events occur.  Guards are set by the debugger, and it is up
+to each simulator to examine them upon and during execution of the <I>execute()</I>
+callback, and return control back to the debugger when the guard criteria
+are met.
+
+<P>Guard information set by the debugger is stored in global structure
+<I>bx_guard</I> of type <I>bx_guard_t</I>.  For reference, it's declaration
+is shown here, followed by an explanation of the purpose of each field.
+Information about the guard encountered by the simulator, and which
+caused control to return to the debugger is stored in the global structure
+<I>bx_guard_found[]</I> of type <I>bx_guard_found_t</I>.  This is actually
+an array of structures, where <I>bx_guard_found[0]</I> is the first simulator
+with ID 0, and <I>bx_guard_found[1]</I> is the second simulator with
+ID 1.  This structure is also declared below, and the text explains
+the information which should be returned in this structure based on
+the guard encountered.
+
+<PRE>
+typedef struct {
+  unsigned long guard_for;
+
+  // instruction address breakpoints
+  struct {
+#if BX_DBG_SUPPORT_VIR_BPOINT
+    unsigned num_virtual;
+    struct {
+      Bit32u cs;  // only use 16 bits
+      Bit32u eip;
+      unsigned bpoint_id;
+      } vir[BX_DBG_MAX_VIR_BPOINTS];
+#endif
+
+#if BX_DBG_SUPPORT_LIN_BPOINT
+    unsigned num_linear;
+    struct {
+      Bit32u addr;
+      unsigned bpoint_id;
+      } lin[BX_DBG_MAX_LIN_BPOINTS];
+#endif
+
+#if BX_DBG_SUPPORT_PHY_BPOINT
+    unsigned num_physical;
+    struct {
+      Bit32u addr;
+      unsigned bpoint_id;
+      } phy[BX_DBG_MAX_PHY_BPOINTS];
+#endif
+    } iaddr;
+
+  bx_dbg_icount_t icount; // stop after completing this many instructions
+
+  // user typed Ctrl-C, requesting simulator stop at next convient spot
+  volatile bx_bool interrupt_requested;
+
+  // booleans to control whether simulator should report events
+  // to debug controller
+  struct {
+   bx_bool irq;
+   bx_bool a20;
+   bx_bool io;
+   bx_bool ucmem;
+   bx_bool dma;
+   } report;
+
+  struct {
+    bx_bool irq;  // should process IRQs asynchronously
+    bx_bool dma;  // should process DMAs asynchronously
+    } async;
+
+#define BX_DBG_ASYNC_PENDING_A20   0x01
+#define BX_DBG_ASYNC_PENDING_RESET 0x02
+#define BX_DBG_ASYNC_PENDING_NMI   0x04
+
+  // Asynchronous changes which are pending.  These are Q'd by
+  // the debugger, as the master simulator is notified of a pending
+  // async change.  At the simulator's next point, where it checks for
+  // such events, it notifies the debugger with acknowlegement.  This
+  // field contains a logically or'd list of all events which should
+  // be checked, and ack'd.
+  struct {
+    unsigned which; // logical OR of above constants
+    bx_bool a20;
+    bx_bool reset;
+    bx_bool nmi;
+    } async_changes_pending;
+  } bx_guard_t;
+
+typedef struct {
+  unsigned long guard_found;
+  unsigned iaddr_index;
+  bx_dbg_icount_t icount; // number of completed instructions
+  Bit32u   cs;     // cs:eip and linear addr of instruction at guard point
+  Bit32u   eip;
+  Bit32u   laddr;
+  bx_bool  is_32bit_code; // CS seg size at guard point
+  bx_bool  ctrl_c; // simulator stopped due to Ctrl-C request
+  } bx_guard_found_t;
+
+extern bx_guard_t        bx_guard;
+extern bx_guard_found_t  bx_guard_found[];
+</PRE>
+
+<HR>
+<H3>bx_guard_found[]:</H3>
+It is the task of each simulator to update the <I>bx_guard_found</I>
+structure.
+There are some fields which are specific to the type of guard in
+question, and you should update those when a particular guard is
+encountered.  Those fields are explained in more detail in the section
+relating to the specific guard.  There are some fields which are
+updated for every case, no matter what the guard is.  Below is a list
+and explanation of the usage of each field.
+
+<P><B>unsigned long guard_found;</B> this should be filled in with the
+particular guard encountered, for example if an instruction count
+guard is hit, set this to BX_DBG_GUARD_ICOUNT.
+
+<P><B>unsigned iaddr_index;</B>
+This field is updated, whenever a virtual/linear/physical instruction
+address guard is hit.  It is the array index into the bx_guard.iaddr.vir[],
+bx_guard.iaddr.lin[], or bx_guard.iaddr.phy[] arrays, whichever is appropriate.
+
+<P><B>bx_dbg_icount_t icount;</B>
+This contains the number of instructions which have been completely
+executed, when the guard was encountered.
+
+<P><B>Bit32u   cs;</B>
+<BR><B>Bit32u   eip;</B>
+<BR><B>Bit32u   laddr;</B>
+<BR><B>bx_bool  is_32bit_code;</B>
+These all relate to the same instruction address.  From the debugger's
+point of view, instruction addresses can be only at the beginning of
+the instruction.  Once an instruction is completed, use the address
+of the next instruction.
+Set <I>cs</I> and <I>eip</I> to the instruction's address (CS:EIP).
+Set <I>laddr</I> to the instruction's corresponding linear address.
+Set <I>is_32bit_code</I> to the size (0=16bit, 1=32bit) of the code
+segment when the guard is encountered.  This is used for disassembly.
+
+<P><B>bx_bool  ctrl_c;</B>
+To allow the user to interrupt a simulator from the debug prompt, the
+debugger traps Ctrl-C interrupts, and sets <I>bx_guard.interrupt_requested</I>.
+Your simulator can optionally look for this, provided that the
+BX_DBG_GUARD_CTRL_C bit is set in <I>bx_guard.guard_for</I> structure.
+If you chose to do so, you may look for this occurrance whenever is
+convenient.  Set <I>ctrl_c</I> to 1 to signify this guard has occurred.
+Here' some sample code to demonstrate this:
+<PRE>
+    // convenient point to see if user typed Ctrl-C
+    if (bx_guard.interrupt_requested && (bx_guard.guard_for & BX_DBG_GUARD_CTRL_C)) {
+      bx_guard_found[BX_SIM_ID].guard_found = BX_DBG_GUARD_CTRL_C;
+      return; // some mechanism to return control here
+      }
+</PRE>
+
+<HR>
+<H3>bx_guard:</H3>
+<P><B>unsigned long guard_for;</B>
+<P>This is a binary OR'd list of guards the debugger is requesting each
+simulator to stop on.  Only if the corresponding bit is set in this field,
+should the simulator examine the rest of the criteria for that guard.
+Currently, each simulator must be capable of recognizing the following
+guards, and returning to the debugger when they occur:
+<UL>
+<LI>BX_DBG_GUARD_ICOUNT: Instruction count.
+<LI>BX_DBG_GUARD_CTRL_C: User requested interrupt via Ctrl-C
+<LI>BX_DBG_GUARD_IADDR_VIR: Stop on this virtual instruction address
+<LI>BX_DBG_GUARD_IADDR_LIN: Stop on this linear instruction address
+<LI>BX_DBG_GUARD_IADDR_PHY: Stop on this physical instruction address
+</UL>
+
+<P><B>struct { .. } iaddr;</B>
+<P>This structure holds the guard information for instruction address
+guards (breakpoints).  Depending upon your selections, after editing
+<I>config.h</I> in the main directory (generated by running ./configure),
+certain types of instruction address guards are supported.  Which ones,
+are determined by the BX_DBG_SUPPORT_VIR_BPOINT, BX_DBG_SUPPORT_LIN_BPOINT,
+and BX_DBG_SUPPORT_PHY_BPOINT macros.
+
+<P>If the <I>guard_for</I> field contains a set bit represented by
+BX_DBG_GUARD_IADDR_VIR, then the <I>iaddr.num_virtual</I> field holds
+the number of virtual instruction address guards to examine and compare
+to the current address.  For each, you must examine the CS:EIP values
+stored in <I>iaddr.vir[n]</I>, in the <I>cs</I> and <I>eip</I> subfields.
+If there is a match, record this in the guard found structure, and
+return control to the debugger:
+<PRE>
+bx_guard_found[ID].guard_found = BX_DBG_GUARD_IADDR_VIR;
+bx_guard_found[ID].iaddr_index = n; // array index in bx_guard.iaddr.vir[]
+bx_guard_found[ID].icount = .. // number of completed instructions
+bx_guard_found[ID].cs = .. // CS selector value
+bx_guard_found[ID].eip = .. // EIP value
+bx_guard_found[ID].laddr = .. // linear address of CS:EIP
+bx_guard_found[ID].is_32bit_code = .. // 0=16bit code, 1=32bit code
+// return control here
+</PRE>
+
+<P>If the <I>guard_for</I> field contains a set bit represented by
+BX_DBG_GUARD_IADDR_LIN, then the <I>iaddr.num_linear</I> field holds
+the number of linear instruction address guards to examine and compare
+to the current address.  For each, you must examine the linear address values
+stored in <I>iaddr.lin[n]</I>, in the <I>addr</I> subfield.
+If there is a match, record this in the guard found structure, and
+return control to the debugger:
+<PRE>
+bx_guard_found[ID].guard_found = BX_DBG_GUARD_IADDR_LIN;
+bx_guard_found[ID].iaddr_index = n; // array index in bx_guard.iaddr.lin[]
+bx_guard_found[ID].icount = .. // number of completed instructions
+bx_guard_found[ID].cs = .. // CS selector value
+bx_guard_found[ID].eip = .. // EIP value
+bx_guard_found[ID].laddr = .. // linear address of CS:EIP
+bx_guard_found[ID].is_32bit_code = .. // 0=16bit code, 1=32bit code
+// return control here
+</PRE>
+
+<P>If the <I>guard_for</I> field contains a set bit represented by
+BX_DBG_GUARD_IADDR_PHY, then the <I>iaddr.num_physical</I> field holds
+the number of physical instruction address guards to examine and compare
+to the current address.  For each, you must examine the physical address values
+stored in <I>iaddr.phy[n]</I>, in the <I>addr</I> subfield.
+If there is a match, record this in the guard found structure, and
+return control to the debugger:
+<PRE>
+bx_guard_found[ID].guard_found = BX_DBG_GUARD_IADDR_PHY;
+bx_guard_found[ID].iaddr_index = n; // array index in bx_guard.iaddr.phy[]
+bx_guard_found[ID].icount = .. // number of completed instructions
+bx_guard_found[ID].cs = .. // CS selector value
+bx_guard_found[ID].eip = .. // EIP value
+bx_guard_found[ID].laddr = .. // linear address of CS:EIP
+bx_guard_found[ID].is_32bit_code = .. // 0=16bit code, 1=32bit code
+// return control here
+</PRE>
+
+
+<P><B>volatile bx_bool interrupt_requested;</B>
+<P>If the debugger has turned on the guard for a user interrupt, and
+the user has indeed requested one (Ctrl-C), the debugger will set
+this field to 1.  The simulator should record this in the guard found
+information, and return control back to the debugger.  Look above at the
+explanation for the <I>bx_guard.interrupt_requested</I> field for some sample code
+on how to do this.
+
+<P><B>struct { .. } async;</B>
+<P><B>struct { .. } async_changes_pending;</B>
+
+<HR SIZE=5 NOSHADE>
+<P>
+
+</BODY>
+</HTML>
