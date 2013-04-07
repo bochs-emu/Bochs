@@ -1,10 +1,25 @@
 /*
- * misc/bximage.c
  * $Id$
  *
- * Commits a redolog file in a flat file for bochs images.
+ *  Copyright (C) 2003-2013  The Bochs Project
  *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
  */
+
+/* Commits a redolog file in a flat file for bochs images. */
+/* Converts growing mode image to flat and vice versa */
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -51,12 +66,30 @@ int snprintf(char *s, size_t maxlen, const char *format, ...)
 
 #define BXCOMMIT_MODE_COMMIT_UNDOABLE 1
 #define BXCOMMIT_MODE_GROWING_TO_FLAT 2
+#define BXCOMMIT_MODE_FLAT_TO_GROWING 3
+
+typedef struct {
+  int              fd;
+  redolog_header_t header;
+  Bit32u          *catalog;
+  Bit8u           *bitmap;
+  bx_bool          bitmap_update;
+  Bit32u           extent_index;
+  Bit32u           extent_offset;
+  Bit32u           extent_next;
+
+  Bit32u           bitmap_blocks;
+  Bit32u           extent_blocks;
+
+  Bit64s           imagepos;
+} redolog_t;
 
 int  bxcommit_mode;
 int  bx_remove;
 int  bx_interactive;
 char bx_flat_filename[256];
 char bx_redolog_name[256];
+Bit8u null_sector[512];
 
 char *EOF_ERR = "ERROR: End of input";
 char *svnid = "$Id$";
@@ -65,6 +98,7 @@ const char *main_menu_prompt =
 "\n"
 "1. Commit 'undoable' redolog to 'flat' file\n"
 "2. Create 'flat' disk image from 'growing' disk image\n"
+"3. Create 'growing' disk image from 'flat' disk image\n"
 "\n"
 "0. Quit\n"
 "\n"
@@ -224,6 +258,264 @@ int ask_string(const char *prompt, char *the_default, char *out)
     return 0;
   }
   strcpy(out, clean);
+  return 0;
+}
+
+/* helper functions */
+int bx_read_image(int fd, Bit64s offset, void *buf, int count)
+{
+  if (lseek(fd, offset, SEEK_SET) == -1) {
+    return -1;
+  }
+  return read(fd, buf, count);
+}
+
+int bx_write_image(int fd, Bit64s offset, void *buf, int count)
+{
+  if (lseek(fd, offset, SEEK_SET) == -1) {
+    return -1;
+  }
+  return write(fd, buf, count);
+}
+
+/* Create a suited redolog header */
+void redolog_make_header(redolog_header_t *header, const char* type, Bit64u size)
+{
+  Bit32u entries, extent_size, bitmap_size;
+  Bit64u maxsize;
+
+  // Set standard header values
+  strcpy((char*)header->standard.magic, STANDARD_HEADER_MAGIC);
+  strcpy((char*)header->standard.type, REDOLOG_TYPE);
+  strcpy((char*)header->standard.subtype, type);
+  header->standard.version = htod32(STANDARD_HEADER_VERSION);
+  header->standard.header = htod32(STANDARD_HEADER_SIZE);
+
+  entries = 512;
+  bitmap_size = 1;
+
+  // Compute #entries and extent size values
+  do {
+     static Bit32u flip=0;
+
+     extent_size = 8 * bitmap_size * 512;
+
+     header->specific.catalog = htod32(entries);
+     header->specific.bitmap = htod32(bitmap_size);
+     header->specific.extent = htod32(extent_size);
+
+     maxsize = (Bit64u)entries * (Bit64u)extent_size;
+
+     flip++;
+
+     if(flip&0x01) bitmap_size *= 2;
+     else entries *= 2;
+  } while (maxsize < size);
+
+  header->specific.disk = htod64(size);
+}
+
+int flat_image_read_sector(int fd, Bit8u *buffer, Bit64u offset)
+{
+  if (bx_read_image(fd, offset, buffer, 512) < 0)
+    return 0;
+  if (memcmp(buffer, null_sector, 512) == 0)
+    return 0;
+
+  return 1;
+}
+
+Bit64s redolog_lseek(redolog_t *redolog, Bit64s offset, int whence)
+{
+  char msg[80];
+  Bit32u old_extent_index;
+
+  if (whence == SEEK_SET) {
+    redolog->imagepos = offset;
+  } else if (whence == SEEK_CUR) {
+    redolog->imagepos += offset;
+  } else {
+    fatal("redolog: lseek() mode not supported yet");
+    return -1;
+  }
+  if (redolog->imagepos > (Bit64s)dtoh64(redolog->header.specific.disk)) {
+    sprintf(msg, "redolog : lseek() to byte %ld failed", (long)offset);
+    fatal(msg);
+    return -1;
+  }
+
+  old_extent_index = redolog->extent_index;
+  redolog->extent_index = (Bit32u)(redolog->imagepos / dtoh32(redolog->header.specific.extent));
+  if (redolog->extent_index != old_extent_index) {
+    redolog->bitmap_update = 1;
+  }
+  redolog->extent_offset = (Bit32u)((redolog->imagepos % dtoh32(redolog->header.specific.extent)) / 512);
+
+  return redolog->imagepos;
+}
+
+int redolog_write_sector(redolog_t *redolog, Bit8u *buf, Bit64u offset)
+{
+  Bit32u i;
+  Bit64s block_offset, bitmap_offset, catalog_offset;
+  ssize_t written;
+  bx_bool update_catalog = 0;
+  char *zerobuffer;
+  char msg[80];
+
+  redolog_lseek(redolog, offset, SEEK_SET);
+
+  if (dtoh32(redolog->catalog[redolog->extent_index]) == REDOLOG_PAGE_NOT_ALLOCATED) {
+    if (redolog->extent_next >= dtoh32(redolog->header.specific.catalog)) {
+      fatal("redolog : can't allocate new extent... catalog is full");
+      return -1;
+    }
+
+    // Extent not allocated, allocate new
+    redolog->catalog[redolog->extent_index] = htod32(redolog->extent_next);
+
+    redolog->extent_next += 1;
+
+    zerobuffer = (char*)malloc(512);
+    memset(zerobuffer, 0, 512);
+
+    // Write bitmap
+    bitmap_offset  = (Bit64s)STANDARD_HEADER_SIZE + (dtoh32(redolog->header.specific.catalog) * sizeof(Bit32u));
+    bitmap_offset += (Bit64s)512 * dtoh32(redolog->catalog[redolog->extent_index]) * (redolog->extent_blocks + redolog->bitmap_blocks);
+    lseek(redolog->fd, (off_t)bitmap_offset, SEEK_SET);
+    for (i=0; i<redolog->bitmap_blocks; i++) {
+      write(redolog->fd, zerobuffer, 512);
+    }
+    // Write extent
+    for (i=0; i<redolog->extent_blocks; i++) {
+      write(redolog->fd, zerobuffer, 512);
+    }
+
+    free(zerobuffer);
+
+    update_catalog = 1;
+  }
+
+  bitmap_offset  = (Bit64s)STANDARD_HEADER_SIZE + (dtoh32(redolog->header.specific.catalog) * sizeof(Bit32u));
+  bitmap_offset += (Bit64s)512 * dtoh32(redolog->catalog[redolog->extent_index]) * (redolog->extent_blocks + redolog->bitmap_blocks);
+  block_offset    = bitmap_offset + ((Bit64s)512 * (redolog->bitmap_blocks + redolog->extent_offset));
+
+  // Write block
+  written = bx_write_image(redolog->fd, (off_t)block_offset, (void*)buf, 512);
+
+  // Write bitmap
+  if (redolog->bitmap_update) {
+    if (bx_read_image(redolog->fd, (off_t)bitmap_offset, redolog->bitmap,  dtoh32(redolog->header.specific.bitmap)) != (ssize_t)dtoh32(redolog->header.specific.bitmap)) {
+      sprintf(msg, "redolog : failed to read bitmap for extent %d", redolog->extent_index);
+      fatal(msg);
+      return 0;
+    }
+    redolog->bitmap_update = 0;
+  }
+
+  // If block does not belong to extent yet
+  if (((redolog->bitmap[redolog->extent_offset/8] >> (redolog->extent_offset%8)) & 0x01) == 0x00) {
+    redolog->bitmap[redolog->extent_offset/8] |= 1 << (redolog->extent_offset%8);
+    bx_write_image(redolog->fd, (off_t)bitmap_offset, redolog->bitmap,  dtoh32(redolog->header.specific.bitmap));
+  }
+
+  // Write catalog
+  if (update_catalog) {
+    // FIXME if mmap
+    catalog_offset  = (Bit64s)STANDARD_HEADER_SIZE + (redolog->extent_index * sizeof(Bit32u));
+
+    bx_write_image(redolog->fd, (off_t)catalog_offset, &redolog->catalog[redolog->extent_index], sizeof(Bit32u));
+  }
+
+  if (written >= 0) redolog_lseek(redolog, 512, SEEK_CUR);
+
+  return written;
+}
+
+int convert_flat_image()
+{
+  int flatfd, redologfd;
+  Bit64u disk_size, offset;
+  redolog_t redolog;
+  Bit32u i;
+  struct stat stat_buf;
+  Bit8u buffer[512];
+
+  if (bxcommit_mode == BXCOMMIT_MODE_FLAT_TO_GROWING) {
+    // check if flat file exists
+    flatfd = open(bx_flat_filename, O_RDONLY
+#ifdef O_BINARY
+                  | O_BINARY
+#endif
+                  );
+    if (flatfd < 0) {
+      fatal("ERROR: flat file not found or not readable");
+    }
+    if (fstat(flatfd, &stat_buf)) {
+      fatal("fstat() returns error!");
+    }
+    disk_size = (Bit64u)stat_buf.st_size;
+    memset(null_sector, 0, 512);
+
+    redologfd = open(bx_redolog_name, O_RDONLY
+#ifdef O_BINARY
+                     | O_BINARY
+#endif
+                     );
+    if (redologfd >= 0) {
+      close(flatfd);
+      close(redologfd);
+      fatal("ERROR: growing file already exists");
+    }
+    fprintf(stderr, "\nCreating growing image file: [");
+    memset(&redolog, 0, sizeof(redolog_t));
+    redolog.fd = open(bx_redolog_name, O_RDWR | O_CREAT
+#ifdef O_BINARY
+                      | O_BINARY
+#endif
+                      , S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP
+                      );
+    if (redolog.fd < 0) {
+      close(flatfd);
+      fatal("ERROR: redolog file is not writable");
+    }
+    redolog_make_header(&redolog.header, REDOLOG_SUBTYPE_GROWING, disk_size);
+    if (write(redolog.fd, &redolog.header, sizeof(redolog.header)) < 0) {
+      fatal("ERROR: The disk image is not complete - could not write header!");
+    } else {
+      lseek(redolog.fd, sizeof(redolog.header), SEEK_SET);
+    }
+    redolog.catalog = (Bit32u*)malloc(dtoh32(redolog.header.specific.catalog) * sizeof(Bit32u));
+    for (i=0; i<dtoh32(redolog.header.specific.catalog); i++) {
+      redolog.catalog[i] = htod32(REDOLOG_PAGE_NOT_ALLOCATED);
+    }
+    if (bx_write_image(redolog.fd, dtoh32(redolog.header.standard.header), redolog.catalog,
+                       dtoh32(redolog.header.specific.catalog) * sizeof(Bit32u)) < 0) {
+      close(redolog.fd);
+      fatal("ERROR: The disk image is not complete - could not write catalog!");
+    }
+    redolog.bitmap = (Bit8u *)malloc(dtoh32(redolog.header.specific.bitmap));
+    redolog.bitmap_blocks = 1 + (dtoh32(redolog.header.specific.bitmap) - 1) / 512;
+    redolog.extent_blocks = 1 + (dtoh32(redolog.header.specific.extent) - 1) / 512;
+    redolog.bitmap_update = 1;
+
+    offset = 0;
+    while (offset < disk_size) {
+      if (flat_image_read_sector(flatfd, buffer, offset) > 0) {
+        if (redolog_write_sector(&redolog, buffer, offset) <= 0)
+          break;
+      }
+      offset += 512;
+      if (((offset >> 9) % (disk_size >> 15)) == 0) fprintf(stderr, ".");
+    }
+    fprintf(stderr, "]\n");
+  } else {
+    fatal("ERROR: unknown / unsupported mode");
+  }
+
+  close(flatfd);
+  close(redolog.fd);
+
   return 0;
 }
 
@@ -400,11 +692,12 @@ void print_usage()
   fprintf(stderr,
     "Usage: bxcommit [options] [flat filename] [redolog filename]\n\n"
     "Supported options:\n"
-    "  -mode=undoable   commit undoable redolog to flat file\n"
-    "  -mode=growing    create flat disk image from growing disk image\n"
-    "  -d               delete redolog file after commit\n"
-    "  -q               quiet mode (don't prompt for user input)\n"
-    "  --help           display this help and exit\n\n");
+    "  -mode=commit-undoable  commit undoable redolog to flat file\n"
+    "  -mode=growing-to-flat  create flat disk image from growing disk image\n"
+    "  -mode=flat-to-growing  create growing disk image from flat disk image\n"
+    "  -d                     delete source file after commit\n"
+    "  -q                     quiet mode (don't prompt for user input)\n"
+    "  --help                 display this help and exit\n\n");
 }
 
 int parse_cmdline(int argc, char *argv[])
@@ -425,10 +718,12 @@ int parse_cmdline(int argc, char *argv[])
       ret = 0;
     }
     else if (!strncmp("-mode=", argv[arg], 6)) {
-      if (!strcmp(&argv[arg][6], "undoable")) {
+      if (!strcmp(&argv[arg][6], "commit-undoable")) {
         bxcommit_mode = BXCOMMIT_MODE_COMMIT_UNDOABLE;
-      } else if (!strcmp(&argv[arg][6], "growing")) {
+      } else if (!strcmp(&argv[arg][6], "growing-to-flat")) {
         bxcommit_mode = BXCOMMIT_MODE_GROWING_TO_FLAT;
+      } else if (!strcmp(&argv[arg][6], "flat-to-growing")) {
+        bxcommit_mode = BXCOMMIT_MODE_FLAT_TO_GROWING;
       } else {
         printf("Unknown bxcommit mode '%s'\n\n", &argv[arg][6]);
       }
@@ -471,7 +766,7 @@ int CDECL main(int argc, char *argv[])
   print_banner();
 
   if (bx_interactive) {
-    if (ask_int(main_menu_prompt, 0, 2, bxcommit_mode, &bxcommit_mode) < 0)
+    if (ask_int(main_menu_prompt, 0, 3, bxcommit_mode, &bxcommit_mode) < 0)
       fatal(EOF_ERR);
 
     switch (bxcommit_mode) {
@@ -510,14 +805,36 @@ int CDECL main(int argc, char *argv[])
         if (ask_yn("\nShould the 'growing' image been removed afterwards?\n", 0, &bx_remove) < 0)
           fatal(EOF_ERR);
         break;
+
+      case BXCOMMIT_MODE_FLAT_TO_GROWING:
+        if (!strlen(bx_flat_filename)) {
+          strcpy(bx_flat_filename, "flat.img");
+        }
+        if (ask_string("\nWhat is the name of the 'flat' image?\n", bx_flat_filename, bx_flat_filename) < 0)
+          fatal(EOF_ERR);
+        if (!strlen(bx_redolog_name)) {
+          strcpy(bx_redolog_name, "c.img");
+        }
+        if (ask_string("\nWhat should be the 'growing' image name?\n", bx_redolog_name, bx_redolog_name) < 0)
+          fatal(EOF_ERR);
+        if (ask_yn("\nShould the 'flat' image been removed afterwards?\n", 0, &bx_remove) < 0)
+          fatal(EOF_ERR);
+        break;
     }
   }
 
-  commit_redolog();
-
-  if (bx_remove) {
-    if (unlink(bx_redolog_name) != 0)
-      fatal("ERROR: while removing the redolog !\n");
+  if (bxcommit_mode != BXCOMMIT_MODE_FLAT_TO_GROWING) {
+    commit_redolog();
+    if (bx_remove) {
+      if (unlink(bx_redolog_name) != 0)
+        fatal("ERROR: while removing the redolog !\n");
+    }
+  } else {
+    convert_flat_image();
+    if (bx_remove) {
+      if (unlink(bx_flat_filename) != 0)
+        fatal("ERROR: while removing the flat file !\n");
+    }
   }
 
   // make picky compilers (c++, gcc) happy,

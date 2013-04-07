@@ -1,5 +1,5 @@
 .\"Document Author:  Christophe Bothamy   -   cbothamy@free.fr"
-.TH bxcommit 1 "28 Oct 2012" "bxcommit" "The Bochs Project"
+.TH bxcommit 1 "7 Apr 2013" "bxcommit" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bxcommit \- Interactive Tool to Commit Redologs into flat Disk Images for Bochs
@@ -24,11 +24,14 @@ When you run bxcommit without one of the following options,
 it will  appear  in  interactive  mode and  ask   for  all
 required parameters to do the commit.
 .TP
-.BI \-mode=undoable
+.BI \-mode=commit-undoable
 commit undoable redolog to flat file
 .TP
-.BI \-mode=growing
+.BI \-mode=growing-to-flat
 create flat disk image from growing disk image
+.TP
+.BI \-mode=flat-to-growing
+create growing disk image from flat disk image
 .TP
 .BI \-d
 delete redolog file after commit

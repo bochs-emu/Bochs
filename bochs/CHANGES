@@ -35,6 +35,9 @@ Changes in 2.6.1 (not released yet):
   - Graphics snapshot feature rewritten to support all kinds of graphics modes
   - wx: starting a second simulation without closing Bochs now almost possible
 
+- Tools
+  - bxcommit: added support for converting flat to growing mode images
+
 -------------------------------------------------------------------------
 Changes in 2.6 (September 2, 2012):
 

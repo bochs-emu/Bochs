@@ -8602,20 +8602,23 @@ For an example of the usage, refer to <xref linkend="diskimagehowto">.
 This tool can commit redologs into flat images.
 </para>
 <para>
-For now, only "undoable" and "growing" redologs to flat image commits are
-supported. Sparse disk image commits may be added in the future.
+For now, only "undoable" redologs to flat image commits and "growing" to flat
+image conversion (and vice versa) are supported. Commiting / converting other
+disk image types may be added in the future.
 </para>
 <para>
 This tool is completely interactive if no command line arguments are used.
 Then bxcommit asks for the operation mode, the flat image name, the redolog name,
-and whether to remove to redolog file after the commit is done. It can be switched
-to a non-interactive mode if all required parameters are given in the command line.
+and whether to remove the source file after the commit or conversion is done.
+It can be switched to a non-interactive mode if all required parameters are
+given in the command line.
 <screen>
 bxcommit [options] [flat filename] [redolog filename]
 
 Supported options:
-  -mode=undoable   commit undoable redolog to flat file
-  -mode=growing    create flat disk image from growing disk image
+  -mode=commit-undoable  commit undoable redolog to flat file
+  -mode=growing-to-flat  create flat disk image from growing disk image
+  -mode=flat-to-growing  create growing disk image from flat disk image
   -d               delete redolog file after commit
   -q               quiet mode (don't prompt for user input)
   --help           display this help and exit
@@ -8630,8 +8633,16 @@ Session example :
 $ ./bxcommit
 ========================================================================
                                bxcommit
-              Undoable Disk Image Commit Tool for Bochs
+           Growing / Undoable Disk Image Commit Tool for Bochs
 ========================================================================
+
+1. Commit 'undoable' redolog to 'flat' file
+2. Create 'flat' disk image from 'growing' disk image
+3. Create 'growing' disk image from 'flat' disk image
+
+0. Quit
+
+Please choose one [0] 1
 
 What is the flat image name?
 [c.img] myfile.img
@@ -8639,7 +8650,7 @@ What is the flat image name?
 What is the redolog name?
 [myfile.img.redolog] toapply.redolog
 
-Shall I remove the redolog afterwards?
+Should the redolog been removed afterwards?
 [yes]
 </screen>
 </para>
