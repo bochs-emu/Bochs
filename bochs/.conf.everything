@@ -17,7 +17,7 @@
   --enable-3dnow \
   --enable-monitor-mwait \
   --enable-svm \
-  --enable-vmx \
+  --enable-vmx=2 \
   --enable-avx \
   --enable-x86-debugger \
   --enable-a20-pin \
