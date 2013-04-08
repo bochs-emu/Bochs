@@ -2969,7 +2969,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::vmwrite(unsigned encoding, Bit64u val_64)
   else if(width == VMCS_FIELD_WIDTH_32BIT) {
     // the real hardware write access rights rotated
     if (encoding >= VMCS_32BIT_GUEST_ES_ACCESS_RIGHTS && encoding <= VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS)
-      VMwrite16(encoding, (Bit16u) vmx_from_ar_byte_wr(val_32));
+      VMwrite16(encoding, vmx_from_ar_byte_wr(val_32));
     else
       VMwrite32(encoding, val_32);
   }
@@ -3025,7 +3025,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::vmwrite_shadow(unsigned encoding, Bit64u v
   else if(width == VMCS_FIELD_WIDTH_32BIT) {
     // the real hardware write access rights rotated
     if (encoding >= VMCS_32BIT_GUEST_ES_ACCESS_RIGHTS && encoding <= VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS)
-      VMwrite16_Shadow(encoding, (Bit16u) vmx_from_ar_byte_wr(val_32));
+      VMwrite16_Shadow(encoding, vmx_from_ar_byte_wr(val_32));
     else
       VMwrite32_Shadow(encoding, val_32);
   }
