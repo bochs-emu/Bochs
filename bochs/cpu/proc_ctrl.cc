@@ -109,16 +109,42 @@ void BX_CPU_C::shutdown(void)
   }
 #endif
 
-  BX_PANIC(("Entering to shutdown state still not implemented"));
+  enter_sleep_state(BX_ACTIVITY_STATE_SHUTDOWN);
 
-  BX_CPU_THIS_PTR clear_IF();
+  longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
+}
+
+void BX_CPU_C::enter_sleep_state(unsigned state)
+{
+  switch(state) {
+  case BX_ACTIVITY_STATE_ACTIVE:
+    BX_ASSERT(0); // should not be used for entering active CPU state
+    break;
+
+  case BX_ACTIVITY_STATE_HLT:
+    break;
+
+  case BX_ACTIVITY_STATE_WAIT_FOR_SIPI:
+    mask_event(BX_EVENT_INIT | BX_EVENT_SMI | BX_EVENT_NMI); // FIXME: all events should be masked
+    // fall through - mask interrupts as well
+
+  case BX_ACTIVITY_STATE_SHUTDOWN:
+    BX_CPU_THIS_PTR clear_IF(); // masking interrupts
+    break;
+   
+  case BX_ACTIVITY_STATE_MWAIT:
+  case BX_ACTIVITY_STATE_MWAIT_IF:
+    break;
+
+  default:
+    BX_PANIC(("enter_sleep_state: unknown state %d", state));
+  }
 
   // artificial trap bit, why use another variable.
-  BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_HLT;
+  BX_CPU_THIS_PTR activity_state = state;
   BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
-  // Execution of this instruction completes.  The processor
-  // will remain in a halt state until one of the above conditions
-  // is met.
+  // Execution completes.  The processor will remain in a sleep 
+  // state until one of the wakeup conditions is met.
 
   BX_INSTR_HLT(BX_CPU_ID);
 
@@ -129,8 +155,6 @@ void BX_CPU_C::shutdown(void)
 #if BX_USE_IDLE_HACK
   bx_gui->sim_is_idle();
 #endif
-
-  longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
@@ -161,27 +185,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
 #endif
 
   // stops instruction execution and places the processor in a
-  // HALT state.  An enabled interrupt, NMI, or reset will resume
-  // execution.  If interrupt (including NMI) is used to resume
+  // HALT state. An enabled interrupt, NMI, or reset will resume
+  // execution. If interrupt (including NMI) is used to resume
   // execution after HLT, the saved CS:eIP points to instruction
   // following HLT.
-
-  // artificial trap bit, why use another variable.
-  BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_HLT;
-  BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
-  // Execution of this instruction completes.  The processor
-  // will remain in a halt state until one of the above conditions
-  // is met.
-
-  BX_INSTR_HLT(BX_CPU_ID);
-
-#if BX_DEBUGGER
-  bx_dbg_halt(BX_CPU_ID);
-#endif
-
-#if BX_USE_IDLE_HACK
-  bx_gui->sim_is_idle();
-#endif
+  enter_sleep_state(BX_ACTIVITY_STATE_HLT);
 
   BX_NEXT_TRACE(i);
 }
@@ -770,6 +778,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   // the execution. Any far control transfer between MONITOR and MWAIT
   // resets the monitoring logic.
 
+  Bit32u new_state = BX_ACTIVITY_STATE_MWAIT;
   if (ECX & 1) {
 #if BX_SUPPORT_VMX
     // When "interrupt window exiting" VMX control is set MWAIT instruction
@@ -780,26 +789,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
       }
     }
 #endif
-    BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_MWAIT_IF;
+    new_state = BX_ACTIVITY_STATE_MWAIT_IF;
   }
-  else {
-    BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_MWAIT;
-  }
-
-  BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
-  // Execution of this instruction completes.  The processor
-  // will remain in a optimized state until one of the above
-  // conditions is met.
 
   BX_INSTR_MWAIT(BX_CPU_ID, BX_CPU_THIS_PTR monitor.monitor_addr, CACHE_LINE_SIZE, ECX);
 
-#if BX_USE_IDLE_HACK
-  bx_gui->sim_is_idle();
-#endif
-
-#if BX_DEBUGGER
-  bx_dbg_halt(BX_CPU_ID);
-#endif
+  enter_sleep_state(new_state);
 #endif
 
   BX_NEXT_TRACE(i);

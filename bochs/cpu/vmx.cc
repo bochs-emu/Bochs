@@ -1683,7 +1683,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
   }
 
-  if (guest.activity_state == BX_VMX_STATE_HLT) {
+  if (guest.activity_state == BX_ACTIVITY_STATE_HLT) {
     if (guest.sregs[BX_SEG_REG_SS].cache.dpl != 0) {
       BX_ERROR(("VMENTER FAIL: VMCS guest HLT state with SS.DPL=%d", guest.sregs[BX_SEG_REG_SS].cache.dpl));
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
@@ -1694,6 +1694,13 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   if (guest.interruptibility_state & ~BX_VMX_INTERRUPTIBILITY_STATE_MASK) {
     BX_ERROR(("VMENTER FAIL: VMCS guest interruptibility state broken"));
     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+  }
+
+  if (guest.interruptibility_state & 0x3) {
+    if (guest.activity_state != BX_ACTIVITY_STATE_ACTIVE) {
+      BX_ERROR(("VMENTER FAIL: VMCS guest interruptibility state broken when entering non active CPU state %d", guest.activity_state));
+      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
   }
 
   if ((guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_BY_STI) &&
@@ -1713,13 +1720,13 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   if (VMENTRY_INJECTING_EVENT(vm->vmentry_interr_info)) {
     unsigned event_type = (vm->vmentry_interr_info >> 8) & 7;
     if (event_type == BX_EXTERNAL_INTERRUPT) {
-      if ((guest.interruptibility_state & 3) != 0 || (guest.rflags & EFlagsIFMask) == 0) {
+      if ((guest.interruptibility_state & 0x3) != 0 || (guest.rflags & EFlagsIFMask) == 0) {
         BX_ERROR(("VMENTER FAIL: VMCS guest interrupts blocked when injecting external interrupt"));
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
       }
     }
     if (event_type == BX_NMI) {
-      if ((guest.interruptibility_state & 3) != 0) {
+      if ((guest.interruptibility_state & 0x3) != 0) {
         BX_ERROR(("VMENTER FAIL: VMCS guest interrupts blocked when injecting NMI"));
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
       }
@@ -1729,6 +1736,11 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_SMM_ENTER) {
     if (! (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_SMI_BLOCKED)) {
       BX_ERROR(("VMENTER FAIL: VMCS SMM guest should block SMI"));
+      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
+
+    if (guest.activity_state == BX_ACTIVITY_STATE_WAIT_FOR_SIPI) {
+      BX_ERROR(("VMENTER FAIL: The activity state must not indicate the wait-for-SIPI state if entering to SMM guest"));
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
   }
@@ -1900,13 +1912,11 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
       mask_event(BX_EVENT_NMI);
   }
 
-  if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_NMI_WINDOW_EXITING) {
+  if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_NMI_WINDOW_EXITING)
     signal_event(BX_EVENT_VMX_VIRTUAL_NMI);
-  }
 
-  if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_INTERRUPT_WINDOW_VMEXIT) {
+  if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_INTERRUPT_WINDOW_VMEXIT)
     signal_event(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING);
-  }
 
   handleCpuContextChange();
 
@@ -1915,6 +1925,9 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 #endif
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
+
+  if (guest.activity_state)
+    enter_sleep_state(guest.activity_state);
 
   return VMXERR_NO_ERROR;
 }
@@ -2145,6 +2158,12 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   Bit32u tmpDR6 = BX_CPU_THIS_PTR debug_trap & 0x0000400f;
   if (tmpDR6 & 0xf) tmpDR6 |= (1 << 12);
   VMwrite_natural(VMCS_GUEST_PENDING_DBG_EXCEPTIONS, tmpDR6);
+
+  // effectively wakeup from MWAIT state on VMEXIT
+  if (BX_CPU_THIS_PTR activity_state >= BX_VMX_LAST_ACTIVITY_STATE)
+    VMwrite32(VMCS_32BIT_GUEST_ACTIVITY_STATE, BX_ACTIVITY_STATE_ACTIVE);
+  else
+    VMwrite32(VMCS_32BIT_GUEST_ACTIVITY_STATE, BX_CPU_THIS_PTR activity_state);
   
   Bit32u interruptibility_state = 0;
   if (interrupts_inhibited(BX_INHIBIT_INTERRUPTS)) {
@@ -2365,6 +2384,8 @@ void BX_CPU_C::VMexitLoadHostState(void)
   BX_CPU_THIS_PTR eflags = 0x2; // Bit1 is always set
   // Update lazy flags state
   setEFlagsOSZAPC(0);
+
+  BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
 
   handleCpuContextChange();
 
@@ -2969,7 +2990,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::vmwrite(unsigned encoding, Bit64u val_64)
   else if(width == VMCS_FIELD_WIDTH_32BIT) {
     // the real hardware write access rights rotated
     if (encoding >= VMCS_32BIT_GUEST_ES_ACCESS_RIGHTS && encoding <= VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS)
-      VMwrite16(encoding, vmx_from_ar_byte_wr(val_32));
+      VMwrite32(encoding, vmx_from_ar_byte_wr(val_32));
     else
       VMwrite32(encoding, val_32);
   }
@@ -3025,7 +3046,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::vmwrite_shadow(unsigned encoding, Bit64u v
   else if(width == VMCS_FIELD_WIDTH_32BIT) {
     // the real hardware write access rights rotated
     if (encoding >= VMCS_32BIT_GUEST_ES_ACCESS_RIGHTS && encoding <= VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS)
-      VMwrite16_Shadow(encoding, vmx_from_ar_byte_wr(val_32));
+      VMwrite32_Shadow(encoding, vmx_from_ar_byte_wr(val_32));
     else
       VMwrite32_Shadow(encoding, val_32);
   }

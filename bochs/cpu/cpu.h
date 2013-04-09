@@ -1100,12 +1100,17 @@ public: // for now...
                 * or if not related to current instruction,
                 * 0 if current CS:IP caused exception */
 
-#define BX_ACTIVITY_STATE_ACTIVE        (0)
-#define BX_ACTIVITY_STATE_HLT           (1)
-#define BX_ACTIVITY_STATE_SHUTDOWN      (2)
-#define BX_ACTIVITY_STATE_WAIT_FOR_SIPI (3)
-#define BX_ACTIVITY_STATE_MWAIT         (4)
-#define BX_ACTIVITY_STATE_MWAIT_IF      (5)
+  enum CPU_Activity_State {
+    BX_ACTIVITY_STATE_ACTIVE = 0,
+    BX_ACTIVITY_STATE_HLT,
+    BX_ACTIVITY_STATE_SHUTDOWN,
+    BX_ACTIVITY_STATE_WAIT_FOR_SIPI,
+    BX_ACTIVITY_STATE_MWAIT,
+    BX_ACTIVITY_STATE_MWAIT_IF
+  };
+
+#define BX_VMX_LAST_ACTIVITY_STATE (BX_ACTIVITY_STATE_WAIT_FOR_SIPI)
+
   unsigned activity_state;
 
 #define BX_EVENT_NMI                          (1 <<  0)
@@ -4056,6 +4061,7 @@ public: // for now...
 
   BX_SMF void reset(unsigned source);
   BX_SMF void shutdown(void);
+  BX_SMF void enter_sleep_state(unsigned state);
   BX_SMF void handleCpuModeChange(void);
   BX_SMF void handleCpuContextChange(void);
   BX_SMF void handleInterruptMaskChange(void);

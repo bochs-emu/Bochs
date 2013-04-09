@@ -764,14 +764,6 @@ typedef struct bx_VMCS
 
 } VMCS_CACHE;
 
-enum VMX_Activity_State {
-   BX_VMX_ACTIVE_STATE = 0,
-   BX_VMX_STATE_HLT,
-   BX_VMX_STATE_SHUTDOWN,
-   BX_VMX_STATE_WAIT_FOR_SIPI,
-   BX_VMX_LAST_ACTIVITY_STATE
-};
-
 #define PIN_VMEXIT(ctrl) (BX_CPU_THIS_PTR vmcs.vmexec_ctrls1 & (ctrl))
 #define     VMEXIT(ctrl) (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2 & (ctrl))
 
@@ -962,6 +954,8 @@ enum VMX_Activity_State {
   #define VMX_MISC_STORE_LMA_TO_X86_64_GUEST_VMENTRY_CONTROL (0)
 #endif
 
+#define VMX_SUPPORT_VMENTER_TO_NON_ACTIVE_STATE ((1<<6) | (1<<7) | (1<<8))
+
 #define VMX_MISC_SUPPORT_VMWRITE_READ_ONLY_FIELDS (1<<29)
 
 //Rate to increase VMX preemtion timer
@@ -969,6 +963,7 @@ enum VMX_Activity_State {
 
 #define VMX_MSR_MISC (VMX_MISC_PREEMPTION_TIMER_RATE | \
                       VMX_MISC_STORE_LMA_TO_X86_64_GUEST_VMENTRY_CONTROL | \
+                      VMX_SUPPORT_VMENTER_TO_NON_ACTIVE_STATE | \
                      (VMX_CR3_TARGET_MAX_CNT << 16) | \
                      (BX_SUPPORT_VMX_EXTENSION(BX_VMX_VMCS_SHADOWING) ? VMX_MISC_SUPPORT_VMWRITE_READ_ONLY_FIELDS : 0))
 

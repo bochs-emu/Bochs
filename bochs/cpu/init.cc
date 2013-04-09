@@ -909,15 +909,13 @@ void BX_CPU_C::reset(unsigned source)
   int apic_id = lapic.get_id();
   if (BX_BOOTSTRAP_PROCESSOR == apic_id) {
     // boot normally
-    BX_CPU_THIS_PTR msr.apicbase |= 0x0100; /* set bit 8 BSP */
+    BX_CPU_THIS_PTR msr.apicbase |=  0x100; /* set bit 8 BSP */
     BX_INFO(("CPU[%d] is the bootstrap processor", apic_id));
   } else {
     // it's an application processor, halt until IPI is heard.
-    BX_CPU_THIS_PTR msr.apicbase &= ~0x0100; /* clear bit 8 BSP */
+    BX_CPU_THIS_PTR msr.apicbase &= ~0x100; /* clear bit 8 BSP */
     BX_INFO(("CPU[%d] is an application processor. Halting until SIPI.", apic_id));
-    activity_state = BX_ACTIVITY_STATE_WAIT_FOR_SIPI;
-    mask_event(BX_EVENT_INIT | BX_EVENT_SMI | BX_EVENT_NMI);
-    async_event = 1;
+    enter_sleep_state(BX_ACTIVITY_STATE_WAIT_FOR_SIPI);
   }
 #endif
 

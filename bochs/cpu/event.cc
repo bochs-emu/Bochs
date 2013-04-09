@@ -386,6 +386,10 @@ bx_bool BX_CPU_C::interrupts_inhibited(unsigned mask)
 void BX_CPU_C::deliver_SIPI(unsigned vector)
 {
   if (BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_WAIT_FOR_SIPI) {
+#if BX_SUPPORT_VMX
+    if (BX_CPU_THIS_PTR in_vmx_guest)
+      VMexit(VMX_VMEXIT_SIPI, vector);
+#endif
     BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
     RIP = 0;
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], vector*0x100);
@@ -393,7 +397,7 @@ void BX_CPU_C::deliver_SIPI(unsigned vector)
     BX_INFO(("CPU %d started up at %04X:%08X by APIC",
                    BX_CPU_THIS_PTR bx_cpuid, vector*0x100, EIP));
   } else {
-    BX_INFO(("CPU %d started up by APIC, but was not halted at the time", BX_CPU_THIS_PTR bx_cpuid));
+    BX_INFO(("CPU %d started up by APIC, but was not halted at that time", BX_CPU_THIS_PTR bx_cpuid));
   }
 }
 

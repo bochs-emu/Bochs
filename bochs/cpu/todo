@@ -45,7 +45,6 @@ TODO (know issues in CPU model):
 [!] VMX:
 
    - Dual-monitor treatment of SMIs and SMM not implemented yet
-   - VMENTER to not-active state not supported yet
    - Posted Interrupts Processing is not implemented yet
    - MTF is not implemented yet
 
