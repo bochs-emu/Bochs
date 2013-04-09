@@ -1886,6 +1886,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     // the VMENTRY injecting event to the guest
     BX_CPU_THIS_PTR inhibit_mask = 0; // do not block interrupts
     BX_CPU_THIS_PTR debug_trap = 0;
+    guest.activity_state = BX_ACTIVITY_STATE_ACTIVE;
   }
   else {
     if (guest.tmpDR6 & (1 << 12))
@@ -1926,8 +1927,10 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
 
-  if (guest.activity_state)
+  if (guest.activity_state) {
+    BX_ERROR(("VMEntry to non-active CPU state %d", guest.activity_state));
     enter_sleep_state(guest.activity_state);
+  }
 
   return VMXERR_NO_ERROR;
 }
