@@ -345,7 +345,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
   Bit64u nb_sectors;
   Bit64u lba;
   Bit32s len;
-  int cmdlen;
+//int cmdlen;
   int is_write;
   Bit8u command;
   Bit8u *outbuf;
@@ -365,25 +365,25 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
     case 0:
         lba = buf[3] | (buf[2] << 8) | ((buf[1] & 0x1f) << 16);
         len = buf[4];
-        cmdlen = 6;
+        // cmdlen = 6;
         break;
     case 1:
     case 2:
         lba = buf[5] | (buf[4] << 8) | (buf[3] << 16) | (buf[2] << 24);
         len = buf[8] | (buf[7] << 8);
-        cmdlen = 10;
+        // cmdlen = 10;
         break;
     case 4:
         lba = buf[9] | (buf[8] << 8) | (buf[7] << 16) | (buf[6] << 24) |
               ((Bit64u)buf[5] << 32) | ((Bit64u)buf[4] << 40) |
               ((Bit64u)buf[3] << 48) | ((Bit64u)buf[2] << 56);
         len = buf[13] | (buf[12] << 8) | (buf[11] << 16) | (buf[10] << 24);
-        cmdlen = 16;
+        // cmdlen = 16;
         break;
     case 5:
         lba = buf[5] | (buf[4] << 8) | (buf[3] << 16) | (buf[2] << 24);
         len = buf[9] | (buf[8] << 8) | (buf[7] << 16) | (buf[6] << 24);
-        cmdlen = 12;
+        // cmdlen = 12;
         break;
     default:
         BX_ERROR(("Unsupported command length, command %x", command));
