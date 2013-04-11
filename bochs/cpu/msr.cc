@@ -114,6 +114,10 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
     case BX_MSR_PAT:
+      if (! bx_cpuid_support_pat()) {
+        BX_ERROR(("RDMSR BX_MSR_PAT: PAT is not enabled !"));
+        return handle_unknown_rdmsr(index, msr);
+      }
       val64 = BX_CPU_THIS_PTR msr.pat;
       break;
 
@@ -402,9 +406,9 @@ bx_bool isMemTypeValidMTRR(unsigned memtype)
   case BX_MEMTYPE_WT:
   case BX_MEMTYPE_WP:
   case BX_MEMTYPE_WB:
-    return 1;
+    return BX_TRUE;
   default:
-    return 0;
+    return BX_FALSE;
   }
 }
 
@@ -422,9 +426,9 @@ bx_bool isValidMSR_PAT(Bit64u pat_msr)
       ! isMemTypeValidPAT((pat_msr >> 32) & 0xFF) ||
       ! isMemTypeValidPAT((pat_msr >> 40) & 0xFF) || 
       ! isMemTypeValidPAT((pat_msr >> 48) & 0xFF) || 
-      ! isMemTypeValidPAT(pat_msr >> 56)) return 0;
+      ! isMemTypeValidPAT(pat_msr >> 56)) return BX_FALSE;
 
-  return 1;
+  return BX_TRUE;
 }
 
 bx_bool isValidMSR_FixedMTRR(Bit64u fixed_mtrr_msr)
@@ -436,9 +440,9 @@ bx_bool isValidMSR_FixedMTRR(Bit64u fixed_mtrr_msr)
       ! isMemTypeValidMTRR((fixed_mtrr_msr >> 32) & 0xFF) ||
       ! isMemTypeValidMTRR((fixed_mtrr_msr >> 40) & 0xFF) || 
       ! isMemTypeValidMTRR((fixed_mtrr_msr >> 48) & 0xFF) || 
-      ! isMemTypeValidMTRR(fixed_mtrr_msr >> 56)) return 0;
+      ! isMemTypeValidMTRR(fixed_mtrr_msr >> 56)) return BX_FALSE;
 
-  return 1;
+  return BX_TRUE;
 }
 #endif
 
@@ -579,6 +583,11 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_PAT:
+      if (! bx_cpuid_support_pat()) {
+        BX_ERROR(("WRMSR BX_MSR_PAT: PAT is not enabled !"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+
       if (! isValidMSR_PAT(val_64)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_PAT"));
         return 0;
@@ -677,7 +686,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
     case BX_MSR_STAR:
       if ((BX_CPU_THIS_PTR efer_suppmask & BX_EFER_SCE_MASK) == 0) {
-        BX_ERROR(("RDMSR MSR_STAR: SYSCALL/SYSRET support not enabled !"));
+        BX_ERROR(("WRMSR MSR_STAR: SYSCALL/SYSRET support not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
       MSR_STAR = val_64;
