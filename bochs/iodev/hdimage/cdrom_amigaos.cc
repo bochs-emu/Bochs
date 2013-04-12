@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2000-2009  The Bochs Project
+//  Copyright (C) 2000-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -40,6 +40,10 @@
 #include <clib/alib_protos.h>
 #include <stdio.h>
 
+#if BX_WITH_AMIGAOS
+#include <dos/dos.h>
+#endif
+
 #define LOG_THIS /* no SMF tricks here, not needed */
 
 #define BX_CD_FRAMESIZE 2048
@@ -49,6 +53,8 @@
 
 int amiga_cd_unit;
 char amiga_cd_device[256];
+
+int oldpos = 0;
 
 struct MsgPort *CDMP; /* Pointer for message port */
 struct IOExtTD *CDIO; /* Pointer for IORequest */
@@ -76,28 +82,55 @@ typedef struct {
 
 unsigned char sensebuf[SENSELEN];
 
-int DoSCSI (UBYTE * data, int datasize, UBYTE * cmd, int cmdsize, UBYTE flags);
+int DoSCSI(UBYTE * data, int datasize, UBYTE * cmd, int cmdsize, UBYTE flags);
 
-cdrom_interface::cdrom_interface(char *dev)
+cdrom_interface::cdrom_interface(const char *dev)
 {
   char buf[256];
 
-  sscanf(dev, "%s%s", amiga_cd_device, buf);
-  amiga_cd_unit = atoi(buf);
+  fd = -1;
+  fda = NULL;
 
-  CDMP = CreateMsgPort();
-  if (CDMP != NULL) {
-    CDIO = (struct IOExtTD *)CreateIORequest(CDMP, sizeof(struct IOExtTD));
-    if (CDIO != NULL) {
-      cd_error = OpenDevice(amiga_cd_device, amiga_cd_unit, (struct IORequest *)CDIO, 0);
-      if (cd_error != 0)
-        BX_PANIC(("CD_Open: could not open device %s unit %d\n", amiga_cd_device, amiga_cd_unit));
+  if (dev == NULL) {
+    path = NULL;
+  } else {
+    path = strdup(dev);
+  }
+
+  if (strstr(path, ".device ") == 0)
+  {
+    BX_INFO(("Amiga: Using CD ROM as Image"));
+    using_file=1;
+
+    if (fda) Close(fda);
+
+    fda = Open(path, MODE_OLDFILE);
+  }
+  else
+  {
+    using_file=0;
+
+    sscanf(dev, "%s%s", amiga_cd_device, buf);
+    amiga_cd_unit = atoi(buf);
+
+    CDMP = CreateMsgPort();
+    if (CDMP != NULL) {
+      CDIO = (struct IOExtTD *)CreateIORequest(CDMP, sizeof(struct IOExtTD));
+      if (CDIO != NULL) {
+        cd_error = OpenDevice(amiga_cd_device, amiga_cd_unit, (struct IORequest *)CDIO, 0);
+        if (cd_error != 0)
+          BX_PANIC(("CD_Open: could not open device %s unit %d\n", amiga_cd_device, amiga_cd_unit));
+      }
     }
   }
 }
 
 cdrom_interface::~cdrom_interface(void)
 {
+  if(fda)
+    Close(fda);
+  fda = NULL;
+
   if (cd_error == 0) {
     CloseDevice((struct IORequest *)CDIO);
   }
@@ -109,38 +142,53 @@ cdrom_interface::~cdrom_interface(void)
   }
 }
 
-  bx_bool
-cdrom_interface::insert_cdrom(char *dev)
+bx_bool cdrom_interface::insert_cdrom(const char *dev)
 {
   Bit8u cdb[6];
   Bit8u buf[2*BX_CD_FRAMESIZE];
   Bit8u i = 0;
 
-  memset(cdb,0,sizeof(cdb));
+  BX_INFO(("dev = %s", dev));
+  if (dev != NULL) path = strdup(dev);
 
-  cdb[0] = SCSI_DA_START_STOP_UNIT;
-  cdb[4] = 1 | 2;
 
-  DoSCSI(0, 0,cdb,sizeof(cdb),SCSIF_READ);
-
-  /*Check if there's a valid media present in the drive*/
-  CDIO->iotd_Req.io_Data    = buf;
-  CDIO->iotd_Req.io_Command = CMD_READ;
-  CDIO->iotd_Req.io_Length  = BX_CD_FRAMESIZE;
-  CDIO->iotd_Req.io_Offset  = BX_CD_FRAMESIZE;
-
-  for(i = 0; i < 200; i++) /*it takes a while for the cdrom to validate*/
+  if (strstr(path, ".device ") == 0)
   {
-  	DoIO((struct IORequest *)CDIO);
-    if (CDIO->iotd_Req.io_Error == 0)
-    	break;
-    Delay (10);
-  }
+    BX_INFO(("Amiga: Using CD ROM as Image"));
+    using_file=1;
 
-  if (CDIO->iotd_Req.io_Error != 0)
-    return false;
+    if(fda) Close(fda);
+
+    fda = Open(path, MODE_OLDFILE);
+    if(fda){
+      return true;
+    }
+    else return false;
+  }
   else
-    return true;
+  {
+    using_file=0;
+
+    BX_INFO(("Amiga: Using CD ROM as physical drive"));
+
+    memset(cdb,0,sizeof(cdb));
+
+    cdb[0] = SCSI_DA_START_STOP_UNIT;
+    cdb[4] = 1 | 2;
+
+    DoSCSI(0, 0,cdb,sizeof(cdb),SCSIF_READ);
+
+    /*Check if there's a valid media present in the drive*/
+    CDIO->iotd_Req.io_Data    = buf;
+    CDIO->iotd_Req.io_Command = CMD_READ;
+    CDIO->iotd_Req.io_Length  = BX_CD_FRAMESIZE;
+    CDIO->iotd_Req.io_Offset  = BX_CD_FRAMESIZE;
+
+    if (CDIO->iotd_Req.io_Error != 0)
+      return false;
+    else
+      return true;
+  }
 }
 
 
@@ -149,17 +197,24 @@ cdrom_interface::eject_cdrom()
 {
   Bit8u cdb[6];
 
-  memset(cdb,0,sizeof(cdb));
+  if(fda)
+  {
+    Close(fda);
+    fda = NULL;
+  }
+  else
+  {
+    memset(cdb,0,sizeof(cdb));
 
-  cdb[0] = SCSI_DA_START_STOP_UNIT;
-  cdb[4] = 0 | 2;
+    cdb[0] = SCSI_DA_START_STOP_UNIT;
+    cdb[4] = 0 | 2;
 
-  DoSCSI(0, 0,cdb,sizeof(cdb),SCSIF_READ);
+    DoSCSI(0, 0,cdb,sizeof(cdb),SCSIF_READ);
+  }
 }
 
 
-  bx_bool
-cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track, int format)
+bx_bool cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track, int format)
 {
   Bit8u cdb[10];
   TOC *toc;
@@ -170,22 +225,29 @@ cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track,
 
   memset(cdb,0,sizeof(cdb));
 
-  cdb[0] = SCSI_CD_READ_TOC;
-
-  if (msf)
-    cdb[1] = 2;
+  if(using_file){
+    return create_toc(buf, length, msf, start_track, format);
+  }
   else
-    cdb[1] = 0;
+  {
 
-  cdb[6] = start_track;
-  cdb[7] = sizeof(TOC)>>8;
-  cdb[8] = sizeof(TOC)&0xFF;
+    cdb[0] = SCSI_CD_READ_TOC;
 
-  DoSCSI((UBYTE *)buf, sizeof(TOC), cdb, sizeof(cdb), SCSIF_READ);
+    if (msf)
+      cdb[1] = 2;
+    else
+      cdb[1] = 0;
 
-  *length = toc->length + 4;
+    cdb[6] = start_track;
+    cdb[7] = sizeof(TOC)>>8;
+    cdb[8] = sizeof(TOC)&0xFF;
 
-  return true;
+    DoSCSI((UBYTE *)buf, sizeof(TOC), cdb, sizeof(cdb), SCSIF_READ);
+
+    *length = toc->length + 4;
+
+    return true;
+  }
 }
 
 
@@ -195,37 +257,73 @@ cdrom_interface::capacity()
   CAPACITY cap;
   Bit8u cdb[10];
 
-  memset(cdb,0,sizeof(cdb));
-  cdb[0] = SCSI_DA_READ_CAPACITY;
+  if (using_file) {
 
-  int err;
+    int len;
 
-  if ((err = DoSCSI((UBYTE *)&cap, sizeof(cap),
-                    cdb, sizeof (cdb),
-                    (SCSIF_READ | SCSIF_AUTOSENSE))) == 0)
-    return(cap.sectors);
-  else
-    BX_PANIC (("Couldn't get media capacity"));
-}
+    Seek(fda, 0, OFFSET_END);
+    len = Seek(fda, 0, OFFSET_BEGINNING);
+    if ((len % 2048) != 0)  {
+      BX_ERROR (("expected cdrom image to be a multiple of 2048 bytes"));
+    }
+    return (len/2048);
 
-  bx_bool
-cdrom_interface::read_block(Bit8u* buf, int lba, int blocksize)
-{
-  CDIO->iotd_Req.io_Data    = buf;
-  CDIO->iotd_Req.io_Command = CMD_READ;
-  CDIO->iotd_Req.io_Length  = BX_CD_FRAMESIZE;
-  CDIO->iotd_Req.io_Offset  = lba * BX_CD_FRAMESIZE;
-  DoIO((struct IORequest *)CDIO);
-
-  if (CDIO->iotd_Req.io_Error != 0) {
-    BX_PANIC(("Error %d reading CD data sector: %ld", CDIO->iotd_Req.io_Error, lba));
-    return 0;
   }
-  return 1;
+  else
+  {
+    memset(cdb,0,sizeof(cdb));
+    cdb[0] = SCSI_DA_READ_CAPACITY;
+
+    int err;
+
+    if ((err = DoSCSI((UBYTE *)&cap, sizeof(cap),
+                      cdb, sizeof (cdb),
+                      (SCSIF_READ | SCSIF_AUTOSENSE))) == 0)
+      return(cap.sectors);
+    else
+      BX_PANIC (("Couldn't get media capacity"));
+  }
 }
 
   bx_bool
-cdrom_interface::start_cdrom()
+cdrom_interface::read_block(Bit8u* buf, Bit32u lba, int blocksize)
+{
+  int n;
+  Bit8u try_count = 3;
+
+  if (using_file)
+  {
+    do
+    {
+     if(oldpos != lba*BX_CD_FRAMESIZE)
+       Seek(fda, lba*BX_CD_FRAMESIZE, OFFSET_BEGINNING);
+     oldpos = lba*BX_CD_FRAMESIZE+BX_CD_FRAMESIZE;
+     n = Read(fda, buf, BX_CD_FRAMESIZE);
+    } while ((n != BX_CD_FRAMESIZE) && (--try_count > 0));
+    if(try_count <=0)
+    {
+      BX_PANIC(("Error reading CD image sector: %ld", lba));
+      return(0);
+    }
+    return 1;
+  }
+  else
+  {
+    CDIO->iotd_Req.io_Data    = buf;
+    CDIO->iotd_Req.io_Command = CMD_READ;
+    CDIO->iotd_Req.io_Length  = BX_CD_FRAMESIZE;
+    CDIO->iotd_Req.io_Offset  = lba * BX_CD_FRAMESIZE;
+    DoIO((struct IORequest *)CDIO);
+
+    if (CDIO->iotd_Req.io_Error != 0) {
+      BX_PANIC(("Error %d reading CD data sector: %ld", CDIO->iotd_Req.io_Error, lba));
+      return 0;
+    }
+    return 1;
+  }
+}
+
+bx_bool cdrom_interface::start_cdrom()
 {
   // Spin up the cdrom drive.
 
@@ -257,7 +355,7 @@ int DoSCSI(UBYTE *data, int datasize, Bit8u *cmd,int cmdsize, UBYTE direction)
   DoIO((struct IORequest *)CDIO);
 
   if (CDIO->iotd_Req.io_Error != 0) {
-    BX_PANIC(("DoSCSI: error %d", CDIO->iotd_Req.io_Error));
+  //  BX_PANIC(("DoSCSI: error %d", CDIO->iotd_Req.io_Error));
   }
 
   return CDIO->iotd_Req.io_Error;

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -303,6 +303,40 @@ int fd_stat(struct stat *buf)
   return result;
 }
 #endif /* BX_WITH_MACOS */
+
+//////////////////////////////////////////////////////////////////////
+// Missing library functions, implemented for MorphOS only
+//////////////////////////////////////////////////////////////////////
+
+#ifdef __MORPHOS__
+#include <stdio.h>
+#include <time.h>
+typedef unsigned int u_int32_t;
+typedef unsigned short u_int16_t;
+typedef unsigned char u_int8_t;
+
+int fseeko(FILE *stream, off_t offset, int whence)
+{
+  while(offset != (long) offset)
+  {
+     long pos = (offset < 0) ? LONG_MIN : LONG_MAX;
+     if(fseek(stream, pos, whence) != 0)
+       return -1;
+     offset -= pos;
+     whence = SEEK_CUR;
+  }
+  return fseek(stream, (long) offset, whence);
+}
+
+struct tm *localtime_r(const time_t *timep, struct tm *result)
+{
+  struct tm *s = localtime(timep);
+  if(s == NULL)
+    return NULL;
+  *result = *s;
+  return(result);
+}
+#endif
 
 //////////////////////////////////////////////////////////////////////
 // New functions to replace library functions

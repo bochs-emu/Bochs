@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -21,6 +21,9 @@
 
 // Header file for low-level OS specific CDROM emulation
 
+#if BX_WITH_AMIGAOS
+#include <dos/dos.h>
+#endif
 
 class cdrom_base_c : public logfunctions {
 public:
@@ -76,6 +79,9 @@ private:
   int hid;
   int tid;
   int lun;
+#endif
+#if BX_WITH_AMIGAOS
+  BPTR fda;
 #endif
 };
 
