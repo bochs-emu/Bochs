@@ -46,6 +46,7 @@
 #define BXPN_MWAIT_IS_NOP                "cpu.mwait_is_nop"
 #define BXPN_VENDOR_STRING               "cpuid.vendor_string"
 #define BXPN_BRAND_STRING                "cpuid.brand_string"
+#define BXPN_CPUID_LEVEL                 "cpuid.level"
 #define BXPN_CPUID_FAMILY                "cpuid.family"
 #define BXPN_CPUID_MODEL                 "cpuid.model"
 #define BXPN_CPUID_STEPPING              "cpuid.stepping"

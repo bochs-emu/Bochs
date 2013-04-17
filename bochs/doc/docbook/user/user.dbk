@@ -3116,9 +3116,39 @@ speed.</para></footnote>.
 <para>
 Example:
 <screen>
-  cpuid: mmx=1, sep=1, sse=sse4_2, apic=xapic, aes=1, movbe=1, xsave=1
+  cpuid: level=6, mmx=1, sep=1, sse=sse4_2, apic=xapic, aes=1, movbe=1, xsave=1
 </screen>
 This defines features and functionality supported by Bochs emulated CPU:
+</para>
+<para><command>level</command></para>
+<para>
+Set emulated CPU level information returned by CPUID. Default value is
+determined by configure option <link linkend="configure-enable-cpu-level">--enable-cpu-level</link>.
+Currently supported values are 5 (for Pentium and similar processors) and 6 (for P6 and
+later processors).
+</para>
+<para><command>family</command></para>
+<para>
+Set family information returned by CPUID. Default family value determined
+by configure option <link linkend="configure-enable-cpu-level">--enable-cpu-level</link>.
+</para>
+<para><command>model</command></para>
+<para>
+Set model information returned by CPUID. Default model value is 3.
+</para>
+<para><command>stepping</command></para>
+<para>
+Set stepping information returned by CPUID. Default stepping value is 3.
+</para>
+<para><command>vendor_string</command></para>
+<para>
+Set the CPUID vendor string returned by CPUID(0x0).  This should be a
+twelve-character ASCII string.
+</para>
+<para><command>brand_string</command></para>
+<para>
+Set the CPUID brand string returned by CPUID(0x80000002 .. 0x80000004]).  This should be
+at most a forty-eight-character ASCII string.
 </para>
 <para><command>mmx</command></para>
 <para>
@@ -3233,7 +3263,7 @@ This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 </para>
 <para><command>smap</command></para>
 <para>
-Enable Supervisor Mode Access Protection (SMAP) support.
+Enable Supervisor Mode Access Prevention (SMAP) support.
 This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 </para>
 <para><command>mwait</command></para>
@@ -3250,29 +3280,6 @@ This option exists only if Bochs compiled with <option>--enable-vmx</option> opt
 <para>
 Select AMD SVM (Secure Virtual Machine) extensions emulation support.
 This option exists only if Bochs compiled with <option>--enable-svm</option> option.
-</para>
-<para><command>family</command></para>
-<para>
-Set family information returned by CPUID. Default family value determined
-by configure option <link linkend="configure-enable-cpu-level">--enable-cpu-level</link>.
-</para>
-<para><command>model</command></para>
-<para>
-Set model information returned by CPUID. Default model value is 3.
-</para>
-<para><command>stepping</command></para>
-<para>
-Set stepping information returned by CPUID. Default stepping value is 3.
-</para>
-<para><command>vendor_string</command></para>
-<para>
-Set the CPUID vendor string returned by CPUID(0x0).  This should be a
-twelve-character ASCII string.
-</para>
-<para><command>brand_string</command></para>
-<para>
-Set the CPUID brand string returned by CPUID(0x80000002 .. 0x80000004]).  This should be
-at most a forty-eight-character ASCII string.
 </para>
 </section>
 

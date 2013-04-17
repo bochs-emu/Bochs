@@ -221,6 +221,36 @@ Example:
 .I "cpuid:"
 This defines features and functionality supported by Bochs emulated CPU:
 
+level:
+
+Set emulated CPU level information returned by CPUID. Default value is
+determined by configure option --enable-cpu-level. Currently supported
+values are 5 (for Pentium and similar processors) and 6 (for P6 and
+later processors).
+
+family:
+
+Set family information returned by CPUID. Default family value determined
+by configure option --enable-cpu-level.
+
+model:
+
+Set model information returned by CPUID. Default model value is 3.
+
+stepping:
+
+Set stepping information returned by CPUID. Default stepping value is 3.
+
+vendor_string:
+
+Set the CPUID vendor string returned by CPUID(0x0).  This should be a
+twelve-character ASCII string.
+
+brand_string:
+
+Set the CPUID vendor string returned by CPUID(0x80000002 .. 0x80000004).
+This should be at most a forty-eight-character ASCII string.
+
 mmx:
 
 Select MMX instruction set support.
@@ -334,7 +364,7 @@ This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 
 smap:
 
-Enable Supervisor Mode Access Protection (SMAP) support.
+Enable Supervisor Mode Access Prevention (SMAP) support.
 This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 
 mwait:
@@ -351,29 +381,6 @@ svm:
 
 Select AMD SVM (Secure Virtual Machine) extensions emulation support.
 This option exists only if Bochs compiled with --enable-svm option.
-
-family:
-
-Set family information returned by CPUID. Default family value determined
-by configure option --enable-cpu-level.
-
-model:
-
-Set model information returned by CPUID. Default model value is 3.
-
-stepping:
-
-Set stepping information returned by CPUID. Default stepping value is 3.
-
-vendor_string:
-
-Set the CPUID vendor string returned by CPUID(0x0).  This should be a
-twelve-character ASCII string.
-
-brand_string:
-
-Set the CPUID vendor string returned by CPUID(0x80000002 .. 0x80000004).
-This should be at most a forty-eight-character ASCII string.
 
 Example:
   cpuid: mmx=1, sep=1, sse=sse4_2, xapic=1, aes=1, movbe=1, xsave=1

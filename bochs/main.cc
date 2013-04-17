@@ -1145,7 +1145,6 @@ void bx_init_hardware()
 #endif
   BX_INFO(("IPS is set to %d", (Bit32u) SIM->get_param_num(BXPN_IPS)->get()));
   BX_INFO(("CPU configuration"));
-  BX_INFO(("  level: %d", BX_CPU_LEVEL));
 #if BX_SUPPORT_SMP
   BX_INFO(("  SMP support: yes, quantum=%d", SIM->get_param_num(BXPN_SMP_QUANTUM)->get()));
 #else
@@ -1154,6 +1153,8 @@ void bx_init_hardware()
 
   unsigned cpu_model = SIM->get_param_enum(BXPN_CPU_MODEL)->get();
   if (! cpu_model) {
+    unsigned cpu_level = SIM->get_param_num(BXPN_CPUID_LEVEL)->get();
+    BX_INFO(("  level: %d", cpu_level));
 #if BX_CPU_LEVEL >= 5
     BX_INFO(("  APIC support: %s", SIM->get_param_enum(BXPN_CPUID_APIC)->get_selected()));
 #else

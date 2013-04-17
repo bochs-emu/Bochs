@@ -2,7 +2,7 @@ Changes in 2.6.1 (April 7, 2013):
 
 - CPU / CPUDB
   - Bochs is fully aligned with rev45 of the of Intel(R) Architecture Manual.
-    - Implemented Supervisor Mode Access Protection (SMAP) support
+    - Implemented Supervisor Mode Access Prevention (SMAP) support
     - Implemented VMX APIC Registers Virtualization and VMX Virtual Interrupt Delivery
     - Implemented VMCS Shadowing and #VE exception secondary VMEXIT controls emulation
     - Implemented RDRAND and RDSEED instructions

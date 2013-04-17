@@ -21,10 +21,10 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_amd_k6_2_chomper_CPUID_DEFINITIONS_H
-#define BX_amd_k6_2_chomper_CPUID_DEFINITIONS_H
+#ifndef BX_AMD_K6_2_CHOMPER_CPUID_DEFINITIONS_H
+#define BX_AMD_K6_2_CHOMPER_CPUID_DEFINITIONS_H
 
-#if BX_CPU_LEVEL >= 5 && BX_SUPPORT_X86_64 == 0
+#if BX_CPU_LEVEL >= 5
 
 #include "cpu/cpuid.h"
 

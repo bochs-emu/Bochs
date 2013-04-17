@@ -324,7 +324,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [17:14]  reserved
 //   [18:18]  RDSEED instruction support
 //   [19:19]  ADCX/ADOX instructions support
-//   [20:20]  SMAP: Supervisor Mode Access Protection
+//   [20:20]  SMAP: Supervisor Mode Access Prevention
 //   [31:21]  reserved
 
 #define BX_CPUID_EXT3_FSGSBASE               (1 <<  0)

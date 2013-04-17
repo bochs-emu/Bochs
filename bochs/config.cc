@@ -443,6 +443,30 @@ void bx_init_options()
 #if BX_CPU_LEVEL >= 4
   bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options");
 
+  new bx_param_num_c(cpuid_param,
+      "level", "CPU Level",
+      "CPU level",
+      5, BX_CPU_LEVEL,
+      BX_CPU_LEVEL);
+
+  new bx_param_num_c(cpuid_param,
+      "stepping", "Stepping ID",
+      "Processor 4-bits stepping ID",
+      0, 15,
+      3);
+
+  new bx_param_num_c(cpuid_param,
+      "model", "Model ID",
+      "Processor model ID, extended model ID",
+      0, 255,
+      3);
+
+  new bx_param_num_c(cpuid_param,
+      "family", "Family ID",
+      "Processor family ID, extended family ID",
+      BX_CPU_LEVEL, (BX_CPU_LEVEL >= 6) ? 4095 : BX_CPU_LEVEL,
+      BX_CPU_LEVEL);
+
   new bx_param_string_c(cpuid_param,
       "vendor_string",
       "CPUID vendor string",
@@ -463,24 +487,6 @@ void bx_init_options()
       "AMD Athlon(tm) processor",
 #endif
       BX_CPUID_BRAND_LEN+1);
-
-  new bx_param_num_c(cpuid_param,
-      "stepping", "Stepping ID",
-      "Processor 4-bits stepping ID",
-      0, 15,
-      3);
-
-  new bx_param_num_c(cpuid_param,
-      "model", "Model ID",
-      "Processor model ID, extended model ID",
-      0, 255,
-      3);
-
-  new bx_param_num_c(cpuid_param,
-      "family", "Family ID",
-      "Processor family ID, extended family ID",
-      BX_CPU_LEVEL, (BX_CPU_LEVEL >= 6) ? 4095 : BX_CPU_LEVEL,
-      BX_CPU_LEVEL);
 
 #if BX_CPU_LEVEL >= 5
   new bx_param_bool_c(cpuid_param,
@@ -605,8 +611,8 @@ void bx_init_options()
       "Supervisor Mode Execution Protection support",
       0);
   new bx_param_bool_c(cpuid_param,
-      "smap", "Supervisor Mode Access Protection support",
-      "Supervisor Mode Access Protection support",
+      "smap", "Supervisor Mode Access Prevention support",
+      "Supervisor Mode Access Prevention support",
       0);
 #if BX_SUPPORT_MONITOR_MWAIT
   new bx_param_bool_c(cpuid_param,

@@ -24,7 +24,7 @@
 #ifndef BX_PENTIUM_MMX_CPUID_DEFINITIONS_H
 #define BX_PENTIUM_MMX_CPUID_DEFINITIONS_H
 
-#if BX_CPU_LEVEL >= 5 && BX_SUPPORT_X86_64 == 0
+#if BX_CPU_LEVEL >= 5
 
 #include "cpu/cpuid.h"
 

@@ -292,7 +292,7 @@ cpu: cpuid_limit_winnt=0
 #    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 #
 #  SMAP:
-#    Enable Supervisor Mode Access Protection (SMAP) support.
+#    Enable Supervisor Mode Access Prevention (SMAP) support.
 #    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 #
 #  MWAIT:
@@ -314,6 +314,12 @@ cpu: cpuid_limit_winnt=0
 #  BRAND_STRING:
 #    Set the CPUID vendor string returned by CPUID(0x80000002 .. 0x80000004).  
 #    This should be at most a forty-eight-character ASCII string.  
+#
+#  LEVEL:
+#    Set emulated CPU level information returned by CPUID. Default value is
+#    determined by configure option --enable-cpu-level. Currently supported
+#    values are 5 (for Pentium and similar processors) and 6 (for P6 and
+#    later processors).
 #
 #  FAMILY:
 #    Set model information returned by CPUID. Default family value determined

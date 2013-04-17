@@ -664,31 +664,42 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
 #endif
 
 #if BX_CPU_LEVEL >= 4
+  static unsigned cpu_level = SIM->get_param_num(BXPN_CPUID_LEVEL)->get();
+  if (cpu_level < 5) {
+    BX_PANIC(("Unsupported CPUID level selected %d", cpu_level));
+  }
+
   features_bitmask |= BX_ISA_486;
 
 #if BX_CPU_LEVEL >= 5
-  features_bitmask |= BX_ISA_PENTIUM;
-
   static bx_bool mmx_enabled = SIM->get_param_bool(BXPN_CPUID_MMX)->get();
-  if (mmx_enabled)
-    features_bitmask |= BX_ISA_MMX;
+
+  if (cpu_level >= 5) {
+    features_bitmask |= BX_ISA_PENTIUM;
+
+    if (mmx_enabled)
+      features_bitmask |= BX_ISA_MMX;
 
 #if BX_SUPPORT_3DNOW
-  features_bitmask |= BX_ISA_3DNOW;
-
-  if (! mmx_enabled) {
-    BX_PANIC(("PANIC: 3DNOW emulation requires MMX support !"));
-    return;
-  }
+    features_bitmask |= BX_ISA_3DNOW;
+    if (! mmx_enabled) {
+      BX_PANIC(("PANIC: 3DNOW emulation requires MMX support !"));
+      return;
+    }
 #endif
+  }
 
 #if BX_CPU_LEVEL >= 6
-  features_bitmask |= BX_ISA_P6;
+  if (cpu_level >= 6)
+    features_bitmask |= BX_ISA_P6;
 
 #if BX_SUPPORT_MONITOR_MWAIT
   static bx_bool mwait_enabled = SIM->get_param_bool(BXPN_CPUID_MWAIT)->get();
-  if (mwait_enabled)
+  if (mwait_enabled) {
     features_bitmask |= BX_ISA_MONITOR_MWAIT;
+    if (cpu_level < 6)
+      BX_PANIC(("PANIC: MONITOR/MWAIT emulation requires P6 CPU level support !"));
+  }
 #endif
 
   static unsigned sse_enabled = SIM->get_param_enum(BXPN_CPUID_SSE)->get();
@@ -712,7 +723,7 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
   };
 
   if (sse_enabled) {
-    if (mmx_enabled == 0 || BX_CPU_LEVEL < 6) {
+    if (mmx_enabled == 0 || cpu_level < 6 || BX_CPU_LEVEL < 6) {
       BX_PANIC(("PANIC: SSE support requires P6 emulation with MMX enabled !"));
       return;
     }
@@ -737,8 +748,11 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
   }
 
   static bx_bool sep_enabled = SIM->get_param_bool(BXPN_CPUID_SEP)->get();
-  if (sep_enabled)
+  if (sep_enabled) {
     features_bitmask |= BX_ISA_SYSENTER_SYSEXIT;
+    if (cpu_level < 6)
+      BX_PANIC(("PANIC: SYSENTER/SYSEXIT emulation requires P6 CPU level support !"));
+  }
 
   static bx_bool xsave_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVE)->get();
   if (xsave_enabled) {
@@ -796,6 +810,9 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
 #if BX_SUPPORT_X86_64
   static bx_bool x86_64_enabled = SIM->get_param_bool(BXPN_CPUID_X86_64)->get();
   if (x86_64_enabled) {
+    if (cpu_level < 6)
+      BX_PANIC(("PANIC: x86-64 emulation requires P6 CPU level support !"));
+
     features_bitmask |= BX_ISA_CMPXCHG16B | BX_ISA_RDTSCP | BX_ISA_LM_LAHF_SAHF;
 
     if (sse_enabled < BX_CPUID_SUPPORT_SSE2) {
@@ -820,7 +837,7 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
   }
   else {
     if (BX_SUPPORT_VMX >= 2) {
-      BX_PANIC(("PANIC: VMXx2 emulation requires x86-64 support !"));
+      BX_PANIC(("PANIC: VMX=2 emulation requires x86-64 support !"));
       return;
     }
   }
@@ -954,9 +971,19 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
 {
   Bit32u features_bitmask = 0;
 
+  static unsigned cpu_level = SIM->get_param_num(BXPN_CPUID_LEVEL)->get();
+  if (cpu_level < 5) {
+    BX_PANIC(("Unsupported CPUID level selected %d", cpu_level));
+  }
+
 #if BX_SUPPORT_APIC
   static unsigned apic_enabled = SIM->get_param_enum(BXPN_CPUID_APIC)->get();
-  // determine SSE in runtime
+
+  if (cpu_level < 6) {
+    if (apic_enabled != BX_CPUID_SUPPORT_LEGACY_APIC && apic_enabled != BX_CPUID_SUPPORT_XAPIC)
+      BX_PANIC(("PANIC: APIC extensions emulation require P6 CPU level support !"));
+  }
+
   switch (apic_enabled) {
 #if BX_CPU_LEVEL >= 6
     case BX_CPUID_SUPPORT_X2APIC:
@@ -977,34 +1004,51 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
 #endif
 
 #if BX_CPU_LEVEL >= 5
-  features_bitmask |= BX_CPU_VME;
-  features_bitmask |= BX_CPU_DEBUG_EXTENSIONS;
-  features_bitmask |= BX_CPU_PSE;
+  if (cpu_level >= 5) {
+    features_bitmask |= BX_CPU_VME;
+    features_bitmask |= BX_CPU_DEBUG_EXTENSIONS;
+    features_bitmask |= BX_CPU_PSE;
+
+#if BX_PHY_ADDRESS_LONG
+    features_bitmask |= BX_CPU_PSE36;
+#endif
+  }
 
 #if BX_CPU_LEVEL >= 6
-  features_bitmask |= BX_CPU_PAE;
-  features_bitmask |= BX_CPU_PGE;
-#if BX_PHY_ADDRESS_LONG
-  features_bitmask |= BX_CPU_PSE36;
-#endif
-  features_bitmask |= BX_CPU_MTRR;
-  features_bitmask |= BX_CPU_PAT;
+  if (cpu_level >= 6) {
+    features_bitmask |= BX_CPU_PAE;
+    features_bitmask |= BX_CPU_PGE;
+    features_bitmask |= BX_CPU_MTRR;
+    features_bitmask |= BX_CPU_PAT;
 
-  static bx_bool misaligned_sse_enabled = SIM->get_param_bool(BXPN_CPUID_MISALIGNED_SSE)->get();
-  if (misaligned_sse_enabled)
-    features_bitmask |= BX_CPU_MISALIGNED_SSE;
+    static bx_bool misaligned_sse_enabled = SIM->get_param_bool(BXPN_CPUID_MISALIGNED_SSE)->get();
+    if (misaligned_sse_enabled) {
+      features_bitmask |= BX_CPU_MISALIGNED_SSE;
+      if (cpu_level < 6)
+        BX_PANIC(("PANIC: Misaligned SSE emulation requires P6 CPU level support !"));
+    }
 
-  static bx_bool smep_enabled = SIM->get_param_bool(BXPN_CPUID_SMEP)->get();
-  if (smep_enabled)
-    features_bitmask |= BX_CPU_SMEP;
+    static bx_bool smep_enabled = SIM->get_param_bool(BXPN_CPUID_SMEP)->get();
+    if (smep_enabled) {
+      features_bitmask |= BX_CPU_SMEP;
+      if (cpu_level < 6)
+        BX_PANIC(("PANIC: SMEP emulation requires P6 CPU level support !"));
+    }
 
-  static bx_bool smap_enabled = SIM->get_param_bool(BXPN_CPUID_SMAP)->get();
-  if (smap_enabled)
-    features_bitmask |= BX_ISA_SMAP;
+    static bx_bool smap_enabled = SIM->get_param_bool(BXPN_CPUID_SMAP)->get();
+    if (smap_enabled) {
+      features_bitmask |= BX_ISA_SMAP;
+      if (cpu_level < 6)
+        BX_PANIC(("PANIC: SMAP emulation requires P6 CPU level support !"));
+    }
+  }
 
 #if BX_SUPPORT_X86_64
   static bx_bool x86_64_enabled = SIM->get_param_bool(BXPN_CPUID_X86_64)->get();
   if (x86_64_enabled) {
+    if (cpu_level < 6)
+      BX_PANIC(("PANIC: x86-64 emulation requires P6 CPU level support !"));
+
     features_bitmask |= BX_CPU_LONG_MODE | BX_CPU_FFXSR | BX_CPU_NX;
 
     static bx_bool pcid_enabled = SIM->get_param_bool(BXPN_CPUID_PCID)->get();
@@ -1017,9 +1061,13 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
   }
 
 #if BX_SUPPORT_SVM
-  static unsigned svm_enabled = SIM->get_param_num(BXPN_CPUID_SVM)->get();
+  static bx_bool svm_enabled = SIM->get_param_bool(BXPN_CPUID_SVM)->get();
   if (svm_enabled) {
     features_bitmask |= BX_CPU_ALT_MOV_CR8 | BX_CPU_XAPIC_EXT; // auto-enable together with SVM
+    if (! x86_64_enabled) {
+      BX_PANIC(("PANIC: SVM emulation requires x86-64 support !"));
+      return;
+    }
   }
 #endif
 
@@ -1099,12 +1147,13 @@ void bx_generic_cpuid_t::init_svm_extensions_bitmask(void)
 
 Bit32u bx_generic_cpuid_t::get_cpu_version_information(void) const
 {
+  static Bit32u level = SIM->get_param_num(BXPN_CPUID_LEVEL)->get();
   static Bit32u stepping = SIM->get_param_num(BXPN_CPUID_STEPPING)->get();
   static Bit32u model = SIM->get_param_num(BXPN_CPUID_MODEL)->get();
   static Bit32u family = SIM->get_param_num(BXPN_CPUID_FAMILY)->get();
 
-  if (family < 6 && family != BX_CPU_LEVEL)
-    BX_PANIC(("PANIC: CPUID family %x not matching configured cpu level %d", family, BX_CPU_LEVEL));
+  if (family < 6 && family != level)
+    BX_PANIC(("PANIC: CPUID family %x not matching configured cpu level %d", family, level));
 
   return ((family & 0xfff0) << 16) |
          ((model & 0xf0) << 12) |
@@ -1470,7 +1519,7 @@ Bit32u bx_generic_cpuid_t::get_ext3_cpuid_features(void) const
   //   [17:12]  reserved
   //   [18:18]  RDSEED instruction support
   //   [19:19]  ADCX/ADOX instructions support
-  //   [20:20]  SMAP: Supervisor Mode Access Protection
+  //   [20:20]  SMAP: Supervisor Mode Access Prevention
   //   [31:21]  reserved
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FSGSBASE))
     features |= BX_CPUID_EXT3_FSGSBASE;

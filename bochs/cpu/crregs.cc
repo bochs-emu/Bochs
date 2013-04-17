@@ -1125,7 +1125,7 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
 
   // CR4 bits definitions:
   //   [31-22] Reserved, Must be Zero
-  //   [21]    SMAP: Supervisor Mode Access Protection R/W
+  //   [21]    SMAP: Supervisor Mode Access Prevention R/W
   //   [20]    SMEP: Supervisor Mode Execution Protection R/W
   //   [19]    Reserved, Must be Zero
   //   [18]    OSXSAVE: Operating System XSAVE Support R/W

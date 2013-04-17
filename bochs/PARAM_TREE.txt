@@ -29,6 +29,7 @@ cpu
   mwait_is_nop
 
 cpuid
+  level
   family
   model
   stepping

@@ -25,17 +25,14 @@
 #include "cpu.h"
 #include "pentium_mmx.h"
 
-#if BX_CPU_LEVEL >= 5 && BX_SUPPORT_X86_64 == 0
+#if BX_CPU_LEVEL >= 5
 
 #define LOG_THIS cpu->
 
 pentium_mmx_t::pentium_mmx_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
-  if (BX_SUPPORT_X86_64)
-    BX_PANIC(("x86-64 should be disabled for Pentium MMX configuration"));
-
-  if (BX_CPU_LEVEL != 5)
-    BX_PANIC(("Pentium MMX should be compiled with BX_CPU_LEVEL=5"));
+  if (BX_CPU_LEVEL < 5)
+    BX_PANIC(("Pentium MMX should be compiled with BX_CPU_LEVEL=5 or higher"));
 }
 
 void pentium_mmx_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const

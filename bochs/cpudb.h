@@ -22,10 +22,10 @@
 /////////////////////////////////////////////////////////////////////////
 
 bx_define_cpudb(bx_generic)
-#if BX_CPU_LEVEL == 5
+#if BX_CPU_LEVEL >= 5
 bx_define_cpudb(pentium_mmx)
 bx_define_cpudb(amd_k6_2_chomper)
-#elif BX_CPU_LEVEL >= 6
+#if BX_CPU_LEVEL >= 6
 bx_define_cpudb(p2_klamath)
 bx_define_cpudb(p3_katmai)
 bx_define_cpudb(p4_willamette)
@@ -44,6 +44,7 @@ bx_define_cpudb(corei5_arrandale_m520)
 bx_define_cpudb(zambezi)
 bx_define_cpudb(corei7_sandy_bridge_2600k)
 bx_define_cpudb(corei7_ivy_bridge_3770k)
+#endif
 #endif
 #endif
 #endif
