@@ -1020,27 +1020,27 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
     features_bitmask |= BX_CPU_PGE;
     features_bitmask |= BX_CPU_MTRR;
     features_bitmask |= BX_CPU_PAT;
+  }
 
-    static bx_bool misaligned_sse_enabled = SIM->get_param_bool(BXPN_CPUID_MISALIGNED_SSE)->get();
-    if (misaligned_sse_enabled) {
-      features_bitmask |= BX_CPU_MISALIGNED_SSE;
-      if (cpu_level < 6)
-        BX_PANIC(("PANIC: Misaligned SSE emulation requires P6 CPU level support !"));
-    }
+  static bx_bool misaligned_sse_enabled = SIM->get_param_bool(BXPN_CPUID_MISALIGNED_SSE)->get();
+  if (misaligned_sse_enabled) {
+    features_bitmask |= BX_CPU_MISALIGNED_SSE;
+    if (cpu_level < 6)
+      BX_PANIC(("PANIC: Misaligned SSE emulation requires P6 CPU level support !"));
+  }
 
-    static bx_bool smep_enabled = SIM->get_param_bool(BXPN_CPUID_SMEP)->get();
-    if (smep_enabled) {
-      features_bitmask |= BX_CPU_SMEP;
-      if (cpu_level < 6)
-        BX_PANIC(("PANIC: SMEP emulation requires P6 CPU level support !"));
-    }
+  static bx_bool smep_enabled = SIM->get_param_bool(BXPN_CPUID_SMEP)->get();
+  if (smep_enabled) {
+    features_bitmask |= BX_CPU_SMEP;
+    if (cpu_level < 6)
+      BX_PANIC(("PANIC: SMEP emulation requires P6 CPU level support !"));
+  }
 
-    static bx_bool smap_enabled = SIM->get_param_bool(BXPN_CPUID_SMAP)->get();
-    if (smap_enabled) {
-      features_bitmask |= BX_ISA_SMAP;
-      if (cpu_level < 6)
-        BX_PANIC(("PANIC: SMAP emulation requires P6 CPU level support !"));
-    }
+  static bx_bool smap_enabled = SIM->get_param_bool(BXPN_CPUID_SMAP)->get();
+  if (smap_enabled) {
+    features_bitmask |= BX_ISA_SMAP;
+    if (cpu_level < 6)
+      BX_PANIC(("PANIC: SMAP emulation requires P6 CPU level support !"));
   }
 
 #if BX_SUPPORT_X86_64
