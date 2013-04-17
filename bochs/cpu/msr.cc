@@ -72,6 +72,10 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_MTRRCAP:   // read only MSR
+      if (! bx_cpuid_support_mtrr()) {
+        BX_ERROR(("RDMSR MSR_MTRRCAP: MTRR is not enabled !"));
+        return handle_unknown_rdmsr(index, msr);
+      }
       val64 = BX_CONST64(0x0000000000000508);
       break;
 
@@ -91,14 +95,26 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_MTRRPHYSMASK6:
     case BX_MSR_MTRRPHYSBASE7:
     case BX_MSR_MTRRPHYSMASK7:
+      if (! bx_cpuid_support_mtrr()) {
+        BX_ERROR(("RDMSR: MTRR is not enabled !"));
+        return handle_unknown_rdmsr(index, msr);
+      }
       val64 = BX_CPU_THIS_PTR msr.mtrrphys[index - BX_MSR_MTRRPHYSBASE0];
       break;
 
     case BX_MSR_MTRRFIX64K_00000:
+      if (! bx_cpuid_support_mtrr()) {
+        BX_ERROR(("RDMSR: MTRR is not enabled !"));
+        return handle_unknown_rdmsr(index, msr);
+      }
       val64 = BX_CPU_THIS_PTR msr.mtrrfix64k_00000;
       break;
     case BX_MSR_MTRRFIX16K_80000:
     case BX_MSR_MTRRFIX16K_A0000:
+      if (! bx_cpuid_support_mtrr()) {
+        BX_ERROR(("RDMSR: MTRR is not enabled !"));
+        return handle_unknown_rdmsr(index, msr);
+      }
       val64 = BX_CPU_THIS_PTR msr.mtrrfix16k[index - BX_MSR_MTRRFIX16K_80000];
       break;
 
@@ -110,7 +126,19 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_MTRRFIX4K_E8000:
     case BX_MSR_MTRRFIX4K_F0000:
     case BX_MSR_MTRRFIX4K_F8000:
+      if (! bx_cpuid_support_mtrr()) {
+        BX_ERROR(("RDMSR: MTRR is not enabled !"));
+        return handle_unknown_rdmsr(index, msr);
+      }
       val64 = BX_CPU_THIS_PTR msr.mtrrfix4k[index - BX_MSR_MTRRFIX4K_C0000];
+      break;
+
+    case BX_MSR_MTRR_DEFTYPE:
+      if (! bx_cpuid_support_mtrr()) {
+        BX_ERROR(("RDMSR MSR_MTRR_DEFTYPE: MTRR is not enabled !"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = BX_CPU_THIS_PTR msr.mtrr_deftype;
       break;
 
     case BX_MSR_PAT:
@@ -119,10 +147,6 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
         return handle_unknown_rdmsr(index, msr);
       }
       val64 = BX_CPU_THIS_PTR msr.pat;
-      break;
-
-    case BX_MSR_MTRR_DEFTYPE:
-      val64 = BX_CPU_THIS_PTR msr.mtrr_deftype;
       break;
 #endif
 
@@ -509,6 +533,10 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_MTRRCAP:
+      if (! bx_cpuid_support_mtrr()) {
+        BX_ERROR(("WRMSR MSR_MTRRCAP: MTRR is not enabled !"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
       BX_ERROR(("WRMSR: MTRRCAP is read only MSR"));
       return 0;
 
@@ -520,6 +548,10 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_MTRRPHYSBASE5:
     case BX_MSR_MTRRPHYSBASE6:
     case BX_MSR_MTRRPHYSBASE7:
+      if (! bx_cpuid_support_mtrr()) {
+        BX_ERROR(("WRMSR: MTRR is not enabled !"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
       if (! IsValidPhyAddr(val_64)) {
         BX_ERROR(("WRMSR[0x%08x]: attempt to write invalid phy addr to variable range MTRR %08x:%08x", index, val32_hi, val32_lo));
         return 0;
@@ -539,6 +571,10 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_MTRRPHYSMASK5:
     case BX_MSR_MTRRPHYSMASK6:
     case BX_MSR_MTRRPHYSMASK7:
+      if (! bx_cpuid_support_mtrr()) {
+        BX_ERROR(("WRMSR: MTRR is not enabled !"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
       if (! IsValidPhyAddr(val_64)) {
         BX_ERROR(("WRMSR[0x%08x]: attempt to write invalid phy addr to variable range MTRR %08x:%08x", index, val32_hi, val32_lo));
         return 0;
@@ -552,14 +588,23 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_MTRRFIX64K_00000:
+      if (! bx_cpuid_support_mtrr()) {
+        BX_ERROR(("WRMSR: MTRR is not enabled !"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
       if (! isValidMSR_FixedMTRR(val_64)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRRFIX64K_00000 !"));
         return 0;
       }
       BX_CPU_THIS_PTR msr.mtrrfix64k_00000 = val_64;
       break;
+
     case BX_MSR_MTRRFIX16K_80000:
     case BX_MSR_MTRRFIX16K_A0000:
+      if (! bx_cpuid_support_mtrr()) {
+        BX_ERROR(("WRMSR: MTRR is not enabled !"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
       if (! isValidMSR_FixedMTRR(val_64)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRRFIX16K regsiter !"));
         return 0;
@@ -575,11 +620,31 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_MTRRFIX4K_E8000:
     case BX_MSR_MTRRFIX4K_F0000:
     case BX_MSR_MTRRFIX4K_F8000:
+      if (! bx_cpuid_support_mtrr()) {
+        BX_ERROR(("WRMSR: MTRR is not enabled !"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
       if (! isValidMSR_FixedMTRR(val_64)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to fixed memory range MTRR !"));
         return 0;
       }
       BX_CPU_THIS_PTR msr.mtrrfix4k[index - BX_MSR_MTRRFIX4K_C0000] = val_64;
+      break;
+
+    case BX_MSR_MTRR_DEFTYPE:
+      if (! bx_cpuid_support_mtrr()) {
+        BX_ERROR(("WRMSR MSR_MTRR_DEFTYPE: MTRR is not enabled !"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      if (! isMemTypeValidMTRR(val32_lo & 0xFF)) {
+        BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRR_DEFTYPE"));
+        return 0;
+      }
+      if (val32_hi || (val32_lo & 0xfffff300)) {
+        BX_ERROR(("WRMSR: attempt to reserved bits in MSR_MTRR_DEFTYPE"));
+        return 0;
+      }
+      BX_CPU_THIS_PTR msr.mtrr_deftype = val32_lo;
       break;
 
     case BX_MSR_PAT:
@@ -594,18 +659,6 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       
       BX_CPU_THIS_PTR msr.pat = val_64;
-      break;
-
-    case BX_MSR_MTRR_DEFTYPE:
-      if (! isMemTypeValidMTRR(val32_lo & 0xFF)) {
-        BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRR_DEFTYPE"));
-        return 0;
-      }
-      if (val32_hi || (val32_lo & 0xfffff300)) {
-        BX_ERROR(("WRMSR: attempt to reserved bits in MSR_MTRR_DEFTYPE"));
-        return 0;
-      }
-      BX_CPU_THIS_PTR msr.mtrr_deftype = val32_lo;
       break;
 #endif
 
