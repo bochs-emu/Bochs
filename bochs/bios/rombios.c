@@ -11620,6 +11620,31 @@ int08_store_ticks:
   iret
 
 .org 0xfef3 ; Initial Interrupt Vector Offsets Loaded by POST
+initial_int_vector_offset_08_1f:
+  dw int08_handler
+  dw int09_handler
+  dw dummy_master_pic_irq_handler
+  dw dummy_master_pic_irq_handler
+  dw dummy_master_pic_irq_handler
+  dw dummy_master_pic_irq_handler
+  dw int0e_handler
+  dw dummy_master_pic_irq_handler
+  dw int10_handler
+  dw int11_handler
+  dw int12_handler
+  dw int13_handler
+  dw int14_handler
+  dw int15_handler
+  dw int16_handler
+  dw int17_handler
+  dw int18_handler
+  dw int19_handler
+  dw int1a_handler
+  dw dummy_iret_handler
+  dw dummy_iret_handler
+  dw 0
+  dw diskette_param_table2
+  dw 0
 
 ;------------------------------------------------
 ;- IRET Instruction for Dummy Interrupt Handler -
