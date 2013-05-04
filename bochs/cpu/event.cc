@@ -373,9 +373,13 @@ bx_bool BX_CPU_C::handleAsyncEvent(void)
 // Certain instructions inhibit interrupts, some debug exceptions and single-step traps.
 void BX_CPU_C::inhibit_interrupts(unsigned mask)
 {
-  BX_DEBUG(("inhibit interrupts mask = %d", mask));
-  BX_CPU_THIS_PTR inhibit_mask = mask;
-  BX_CPU_THIS_PTR inhibit_icount = get_icount() + 1; // inhibit for next instruction
+  // Loading of SS disables interrupts until the next instruction completes
+  // but only under assumption that previous instruction didn't load SS also.
+  if (! interrupts_inhibited(BX_INHIBIT_INTERRUPTS_BY_MOVSS)) {
+    BX_DEBUG(("inhibit interrupts mask = %d", mask));
+    BX_CPU_THIS_PTR inhibit_mask = mask;
+    BX_CPU_THIS_PTR inhibit_icount = get_icount() + 1; // inhibit for next instruction
+  }
 }
 
 bx_bool BX_CPU_C::interrupts_inhibited(unsigned mask)
