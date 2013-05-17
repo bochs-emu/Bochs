@@ -51,6 +51,7 @@ TODO (know issues in CPU model):
 [!] SVM:
 
    - Decoding assists, pause filter, VMCB clean are not implemented yet
+   - Advanced Virtual Interrupt Controller (AVIC) not implemented yet
    - More?
 
 [!] AMD misaligned SSE mode should convert #GP on misaligned SSE access to #AC

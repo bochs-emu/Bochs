@@ -90,6 +90,8 @@ enum SVM_intercept_codes {
    SVM_VMEXIT_MWAIT_CONDITIONAL = 140,
    SVM_VMEXIT_XSETBV = 141,
    SVM_VMEXIT_NPF = 1024,
+   SVM_VMEXIT_AVIC_INCOMPLETE_IPI = 1025,
+   SVM_VMEXIT_AVIC_NOACCEL = 1026
 };
 
 #define SVM_VMEXIT_INVALID (-1)
@@ -126,6 +128,8 @@ enum SVM_intercept_codes {
 #define SVM_CONTROL32_EXITINTINFO_ERROR_CODE    (0x08c)
 #define SVM_CONTROL_NESTED_PAGING_ENABLE        (0x090)
 
+#define SVM_VIRTUAL_APIC_BAR                    (0x098)
+
 #define SVM_CONTROL32_EVENT_INJECTION           (0x0a8)
 #define SVM_CONTROL32_EVENT_INJECTION_ERRORCODE (0x0ac)
 #define SVM_CONTROL64_NESTED_PAGING_HOST_CR3    (0x0b0)
@@ -135,6 +139,10 @@ enum SVM_intercept_codes {
 
 #define SVM_CONTROL64_GUEST_INSTR_BYTES         (0x0d0)
 #define SVM_CONTROL64_GUEST_INSTR_BYTES_HI      (0x0d8)
+
+#define SVM_AVIC_BACKING_PAGE                   (0x0e0)
+#define SVM_AVIC_LOGICAL_TABLE_PTR              (0x0f0)
+#define SVM_AVIC_PHYSICAL_TABLE_PTR             (0x0f8)
 
 // ======================
 //  VMCB save state area
