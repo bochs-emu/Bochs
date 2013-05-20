@@ -1115,7 +1115,11 @@ void bx_generic_cpuid_t::init_vmx_extensions_bitmask(void)
                             BX_VMX_UNRESTRICTED_GUEST |
                             BX_VMX_DESCRIPTOR_TABLE_EXIT |
                             BX_VMX_X2APIC_VIRTUALIZATION |
-                            BX_VMX_PAUSE_LOOP_EXITING;
+                            BX_VMX_PAUSE_LOOP_EXITING |
+                            BX_VMX_EPT_ACCESS_DIRTY |
+                            BX_VMX_VINTR_DELIVERY |
+                            BX_VMX_VMCS_SHADOWING |
+                            BX_VMX_EPTP_SWITCHING | BX_VMX_EPT_EXCEPTION;
 
         features_bitmask |= BX_VMX_SAVE_DEBUGCTL_DISABLE |
                          /* BX_VMX_MONITOR_TRAP_FLAG | */ // not implemented yet
