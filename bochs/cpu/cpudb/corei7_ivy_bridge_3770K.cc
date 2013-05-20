@@ -167,7 +167,7 @@ Bit32u corei7_ivy_bridge_3770k_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_MTRR |
          BX_CPU_PAT |
          BX_CPU_XAPIC |
-      /* BX_CPU_X2APIC | */
+         BX_CPU_X2APIC |
          BX_CPU_LONG_MODE |
          BX_CPU_NX |
          BX_CPU_PCID |
@@ -291,7 +291,7 @@ void corei7_ivy_bridge_3770k_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) con
   //   [18:18] DCA - Direct Cache Access
   // * [19:19] SSE4.1 Instructions
   // * [20:20] SSE4.2 Instructions
-  //   [21:21] X2APIC
+  // * [21:21] X2APIC
   //   [22:22] MOVBE instruction
   // * [23:23] POPCNT instruction
   // * [24:24] TSC Deadline
@@ -322,7 +322,7 @@ void corei7_ivy_bridge_3770k_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) con
               BX_CPUID_EXT_PCID |
               BX_CPUID_EXT_SSE4_1 |
               BX_CPUID_EXT_SSE4_2 |
-           /* BX_CPUID_EXT_X2APIC | */
+              BX_CPUID_EXT_X2APIC |
               BX_CPUID_EXT_POPCNT |
               BX_CPUID_EXT_TSC_DEADLINE |
               BX_CPUID_EXT_AES |
