@@ -1,14 +1,23 @@
 Changes in 2.6.2 (not yet released):
 
 - CPU
-  - VMX: implemented VMENTER to non-active guest state (HLT, SHUTDOWN,
-    WAIT-FOR-SIPI)
+  - VMX: implemented VMENTER to non-active guest state (HLT, SHUTDOWN, WAIT-FOR-SIPI)
   - VMX: fixed write of guest segment access rights VMCS fields (32-bit field
     was truncated to 16-bit)
-  - Enabled VMX compilation by default in shortcut scripts
+  - CPUID: Don't report Architectural Performance Monitoring in CPUID.
+    Reporting true capabilities without actually supporting them breaks Win7 x64 installation.
+  - CPUID: Fixed bx_generic CPUID std leafs (all std leafs > 2 were corrupted)
+  - CPUID: Enable all supported VMX capabilities for bx_generic CPUID configuration.
+  - CPUID: Enable X2APIC support for Ivy Bridge CPUDB configuration.
 
-- Some fixes for Bochs on MorphOS (based on a patch by Thore Sittly):
-  missing functions, byte-swapping and cdrom support
+- Configure and compile
+  - Enabled VMX compilation by default in shortcut scripts.
+  - Allow CPU_LEVEL=5 configurations (pentium_mmx and amd_k2_chomper) even when Bochs was
+    compiled with CPU_LEVEL > 5.
+
+- Misc
+  - Fixes for Bochs port on MorphOS (based on a patch by Thore Sittly):
+    missing functions, byte-swapping and cdrom support.
 
 -------------------------------------------------------------------------
 Changes in 2.6.1 (April 7, 2013):
