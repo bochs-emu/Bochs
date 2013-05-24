@@ -1,3 +1,16 @@
+Changes in 2.6.2 (not yet released):
+
+- CPU
+  - VMX: implemented VMENTER to non-active guest state (HLT, SHUTDOWN,
+    WAIT-FOR-SIPI)
+  - VMX: fixed write of guest segment access rights VMCS fields (32-bit field
+    was truncated to 16-bit)
+  - Enabled VMX compilation by default in shortcut scripts
+
+- Some fixes for Bochs on MorphOS (based on a patch by Thore Sittly):
+  missing functions, byte-swapping and cdrom support
+
+-------------------------------------------------------------------------
 Changes in 2.6.1 (April 7, 2013):
 
 - CPU / CPUDB

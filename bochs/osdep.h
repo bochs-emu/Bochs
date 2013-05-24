@@ -224,12 +224,106 @@ typedef long ssize_t ;
 #endif
 
 //////////////////////////////////////////////////////////////////////
-// Missing library functions, implemented for MorphOS only
+// Missing library functions and byte-swapping stuff,
+// implemented for MorphOS only
 //////////////////////////////////////////////////////////////////////
 
 #ifdef __MORPHOS__
 int fseeko(FILE *stream, off_t offset, int whence);
 struct tm *localtime_r(const time_t *timep, struct tm *result);
+
+BX_CPP_INLINE Bit16u bx_ppc_bswap16(Bit16u val)
+{
+  Bit32u res;
+
+  __asm__("rlwimi %0,%0,16,8,15"
+          : "=r" (res)
+          : "0" (val));
+
+  return (Bit16u)(res >> 8);
+}
+
+BX_CPP_INLINE Bit32u bx_ppc_bswap32(Bit32u val)
+{
+  Bit32u res;
+
+  __asm__("rotlwi %0,%1,8\n\t"
+          "rlwimi %0,%1,24,0,7\n\t"
+          "rlwimi %0,%1,24,16,23"
+          : "=&r" (res)
+          : "r" (val));
+
+  return res;
+}
+
+BX_CPP_INLINE Bit64u bx_ppc_bswap64(Bit64u val)
+{
+  Bit32u hi, lo;
+
+  __asm__("rotlwi %0,%2,8\n\t"
+          "rlwimi %0,%2,24,0,7\n\t"
+          "rlwimi %0,%2,24,16,23\n\t"
+          "rotlwi %1,%3,8\n\t"
+          "rlwimi %1,%3,24,0,7\n\t"
+          "rlwimi %1,%3,24,16,23"
+          : "=&r" (hi), "=&r" (lo)
+          : "r" ((Bit32u)(val & 0xffffffff)), "r" ((Bit32u)(val >> 32)));
+
+  return ((Bit64u)hi << 32) | (Bit64u)lo;
+}
+
+BX_CPP_INLINE Bit16u bx_ppc_load_le16(const Bit16u *p)
+{
+  Bit16u v;
+  __asm__("lhbrx %0, 0, %1"
+          : "=r" (v)
+          : "r" (p), "m" (*p));
+  return v;
+}
+
+BX_CPP_INLINE void bx_ppc_store_le16(Bit16u *p, Bit16u v)
+{
+  __asm__("sthbrx %1, 0, %2"
+          : "=m" (*p)
+          : "r" (v), "r" (p));
+}
+
+BX_CPP_INLINE Bit32u bx_ppc_load_le32(const Bit32u *p)
+{
+  Bit32u v;
+  __asm__("lwbrx %0, 0, %1"
+          : "=r" (v)
+          : "r" (p), "m" (*p));
+  return v;
+}
+
+BX_CPP_INLINE void bx_ppc_store_le32(Bit32u *p, Bit32u v)
+{
+  __asm__("stwbrx %1, 0, %2"
+          : "=m" (*p)
+          : "r" (v), "r" (p));
+}
+
+BX_CPP_INLINE Bit64u bx_ppc_load_le64(const Bit64u *p)
+{
+  Bit32u hi, lo;
+
+  __asm__("lwbrx %0, 0, %2\n\t"
+          "lwbrx %1, 0, %3"
+          : "=&r" (lo), "=&r" (hi)
+          : "r" ((Bit32u *)p), "r" ((Bit32u *)p+1));
+
+  return ((Bit64u)hi << 32) | (Bit64u)lo;
+}
+
+BX_CPP_INLINE void bx_ppc_store_le64(Bit64u *p, Bit64u v)
+{
+  __asm__("stwbrx %1, 0, %3\n\t"
+          "stwbrx %2, 0, %4"
+          : "=m" (*p)
+          : "r" ((Bit32u)(v & 0xffffffff)), "r" ((Bit32u)(v >> 32)),
+            "r" ((Bit32u *)p), "r" ((Bit32u *)p+1));
+}
 #endif
 
 //////////////////////////////////////////////////////////////////////

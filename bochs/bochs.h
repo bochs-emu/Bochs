@@ -482,6 +482,7 @@ BX_CPP_INLINE Bit16u bx_bswap16(Bit16u val16)
   return (val16<<8) | (val16>>8);
 }
 
+#if !defined(__MORPHOS__)
 #if BX_HAVE___BUILTIN_BSWAP32
 #define bx_bswap32 __builtin_bswap32
 #else
@@ -502,6 +503,7 @@ BX_CPP_INLINE Bit64u bx_bswap64(Bit64u val64)
   return ((Bit64u)hi << 32) | (Bit64u)lo;
 }
 #endif
+#endif // !MorphOS
 
 // These are some convenience macros which abstract out accesses between
 // a variable in native byte ordering to/from guest (x86) memory, which is
@@ -528,6 +530,34 @@ BX_CPP_INLINE Bit64u bx_bswap64(Bit64u val64)
 
 #else
 
+#ifdef __MORPHOS__
+
+#define bx_bswap16 bx_ppc_bswap16
+#define bx_bswap32 bx_ppc_bswap32
+#define bx_bswap64 bx_ppc_bswap64
+
+#define WriteHostWordToLittleEndian(hostPtr, nativeVar16) {        \
+    bx_ppc_store_le16((Bit16u *)(hostPtr), (Bit16u)(nativeVar16)); \
+}
+#define WriteHostDWordToLittleEndian(hostPtr, nativeVar32) {       \
+    bx_ppc_store_le32((Bit32u *)(hostPtr), (Bit32u)(nativeVar32)); \
+}
+#define WriteHostQWordToLittleEndian(hostPtr, nativeVar64) {       \
+    bx_ppc_store_le64((Bit64u *)(hostPtr), (Bit64u)(nativeVar64)); \
+}
+
+#define ReadHostWordFromLittleEndian(hostPtr, nativeVar16) {  \
+    (nativeVar16) =  bx_ppc_load_le16((Bit16u *)(hostPtr));   \
+}
+#define ReadHostDWordFromLittleEndian(hostPtr, nativeVar32) { \
+    (nativeVar32) =  bx_ppc_load_le32((Bit32u *)(hostPtr));   \
+}
+#define ReadHostQWordFromLittleEndian(hostPtr, nativeVar64) { \
+    (nativeVar64) =  bx_ppc_load_le64((Bit64u *)(hostPtr));   \
+}
+
+#else
+
 #define WriteHostWordToLittleEndian(hostPtr,  nativeVar16) {  \
     *(Bit16u *)(hostPtr) = bx_bswap16((Bit16u)(nativeVar16)); \
 }
@@ -547,6 +577,8 @@ BX_CPP_INLINE Bit64u bx_bswap64(Bit64u val64)
 #define ReadHostQWordFromLittleEndian(hostPtr, nativeVar64) { \
     (nativeVar64) =  bx_bswap64(*(Bit64u *)(hostPtr));        \
 }
+
+#endif
 
 #endif
 
