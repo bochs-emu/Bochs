@@ -8897,7 +8897,8 @@ Known problems
 
  <section id="guest-dos"><title>DOS</title>
 <para>You must read the message regarding software licenses in
-<xref linkend="thirdparty"> before you install or use MS-DOS, OS/2, DR-DOS, or any other DOS as a guest operating system in Bochs.</para>
+<xref linkend="thirdparty"> before you install or use MS-DOS, DR-DOS, FreeDOS or
+any other DOS as a guest operating system in Bochs.</para>
 <section><title>Accessing your CDROM</title>
 <para>
 To access your CDROM in DOS, you must download an IDE CDROM driver.
