@@ -1,4 +1,4 @@
-Changes in 2.6.2 (not yet released):
+Changes in 2.6.2 (May 26, 2013):
 
 - CPU
   - VMX: implemented VMENTER to non-active guest state (HLT, SHUTDOWN, WAIT-FOR-SIPI)
