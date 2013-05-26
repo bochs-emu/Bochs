@@ -7,7 +7,59 @@
  <!--content starts here-->
  <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.6.1</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.6.2</font><BR><BR>
+
+Bochs 2.6.2 is a bugfix release. Here is the list of changes :
+
+<ul>
+<li>CPU
+  <ul>
+  <li>VMX: implemented VMENTER to non-active guest state (HLT, SHUTDOWN, WAIT-FOR-SIPI)
+  <li>VMX: fixed write of guest segment access rights VMCS fields (32-bit field was truncated to 16-bit)
+  <li>CPUID: Don't report Architectural Performance Monitoring in CPUID.
+      Reporting true capabilities without actually supporting them breaks Win7 x64 installation.
+  <li>CPUID: Fixed bx_generic CPUID std leafs (all std leafs > 2 were corrupted)
+  <li>CPUID: Enable all supported VMX capabilities for bx_generic CPUID configuration.
+  <li>CPUID: Enable X2APIC support for Ivy Bridge CPUDB configuration.
+  </ul>
+<li>Configure and compile
+  <ul>
+  <li>Enabled VMX compilation by default in shortcut scripts.
+  <li>Allow CPU_LEVEL=5 configurations (pentium_mmx and amd_k2_chomper) even when Bochs was
+      compiled with CPU_LEVEL > 5.
+  </ul>
+<li>Misc
+  <ul>
+  <li>Fixes for Bochs port on MorphOS (based on a patch by Thore Sittly):
+      missing functions, byte-swapping and cdrom support.
+  </ul>
+</ul>
+
+The binary packages for Linux and Windows are built with these featues :
+<ul>
+<li> x86-64 emulation with all optimizations enabled
+<li> devices:
+ <ul>
+ <li> chipset: PCI (i430FX / i440FX), ACPI
+ <li> video: Bochs VBE, Cirrus SVGA and Voodoo1
+ <li> sound: SB16 (ISA) and ES1370 (PCI)
+ <li> network: NE2000 (ISA/PCI) and E1000 (PCI)
+ <li> USB: OHCI, UHCI, xHCI and 7 pluggable device types
+ </ul>
+<li> Display libraries:
+ <ul>
+ <li> Linux: nogui, rfb, sdl, term, wx, x
+ <li> Windows: nogui, rfb, win32
+ </ul>
+</ul>
+
+<a href="http://svn.code.sf.net/p/bochs/code/tags/REL_2_6_1_FINAL/bochs/CHANGES">
+Details on what has changed since version 2.6
+</a>
+
+<BR/><BR/>
+
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.6.1</font><BR><BR>
 
 About seven months after release 2.6 we have a new intermediate (bugfix+) release.
 Here is the summary of changes :
@@ -70,64 +122,10 @@ Here is the summary of changes :
   </ul>
 </ul>
 
-The binary packages for Linux and Windows are built with these featues :
-<ul>
-<li> x86-64 emulation with all optimizations enabled
-<li> devices:
- <ul>
- <li> chipset: PCI (i430FX / i440FX), ACPI
- <li> video: Bochs VBE, Cirrus SVGA and Voodoo1
- <li> sound: SB16 (ISA) and ES1370 (PCI)
- <li> network: NE2000 (ISA/PCI) and E1000 (PCI)
- <li> USB: OHCI, UHCI, xHCI and 7 pluggable device types
- </ul>
-<li> Display libraries:
- <ul>
- <li> Linux: nogui, rfb, sdl, term, wx, x
- <li> Windows: nogui, rfb, win32
- </ul>
-</ul>
+<BR>
 
 <a href="http://svn.code.sf.net/p/bochs/code/tags/REL_2_6_1_FINAL/bochs/CHANGES">
 Details on what has changed since version 2.6
-</a>
-
-<BR/><BR/>
-
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.6</font><BR><BR>
-
-About eight months after the bugfix release 2.5.1 we have a new stable release.
-Here is the summary of changes :
-
-<ul>
-<li>More than 10% CPU emulation speedup !
-<li>Support for AMD's SVM hardware emulation (including extended XAPIC support).
-<li>Implemented support for new x86 ISA extensions.
-  Bochs is fully aligned with rev043 of Intel(R) Architecture Manual.
-<li>Improved emulation accuracy (critical fixes for APIC, VMX and AVX/XOP emulation).
-<li>Bochs internal debugger: new command to show state of a device from the debugger.
-<li>ROM BIOS: improved PCI boot ROM support (for VGA and other devices)
-<li>Networking:
-<ul>
-<li>Ported Intel(R) 82540EM Gigabit Ethernet adapter emulation from Qemu.
-<li>Added PCI network boot ROM support to all network adapters.
-<li>Added TFTP support to the 'slirp' networking module.
-</ul>
-<li>Harddrive: added support for VirtualPC disk images, fixed sparse disk images.
-<li>Sound:
-<ul>
-<li>implemented PC speaker beep using the lowlevel sound interface.
-<li>SDL audio output support.
-</ul>
-<li>Added ability to set log action per device from .bochsrc.
-<li>Moved disk imaging, networking, sound and USB devices to subdirectories
-  in the iodev folder.
-</ul>
-
-<BR>
-
-<a href="http://svn.code.sf.net/p/bochs/code/tags/REL_2_6_FINAL/bochs/CHANGES">
-Details on what has changed since version 2.5.1
 </a>
 
  <BR><BR>
