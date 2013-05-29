@@ -7,7 +7,7 @@
 //    Donald Becker
 //    http://www.psyon.org
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -47,6 +47,9 @@ extern unsigned char sdl_font8x8[256][8];
 #include "sdl.h" // 8x8 font for status text
 #endif
 
+#include "rfb.h"
+#include "rfbkeys.h"
+
 class bx_rfb_gui_c : public bx_gui_c {
 public:
   bx_rfb_gui_c (void) {}
@@ -60,7 +63,7 @@ public:
 #endif
 };
 
-void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w=0);
+void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w = 0);
 static Bit32u convertStringToRfbKey(const char *string);
 
 // declare one instance of the gui object and call macro to insert the
@@ -69,9 +72,6 @@ static bx_rfb_gui_c *theGui = NULL;
 IMPLEMENT_GUI_PLUGIN_CODE(rfb)
 
 #define LOG_THIS theGui->
-
-#include "rfb.h"
-#include "rfbkeys.h"
 
 #ifdef WIN32
 
@@ -111,7 +111,7 @@ static unsigned short rfbPort;
 // Headerbar stuff
 unsigned rfbBitmapCount = 0;
 static struct _rfbBitmaps {
-    char     *bmap;
+    char *bmap;
     unsigned xdim;
     unsigned ydim;
 } rfbBitmaps[BX_MAX_PIXMAPS];
@@ -130,14 +130,14 @@ struct _rfbHeaderbarBitmaps {
 #define MOUSE    false
 #define MAX_KEY_EVENTS 512
 static struct _rfbKeyboardEvent {
-    bool type;
-    int  key;
-    int  down;
-    int  x;
-    int  y;
+    bx_bool type;
+    int key;
+    int down;
+    int x;
+    int y;
 } rfbKeyboardEvent[MAX_KEY_EVENTS];
 static unsigned long rfbKeyboardEvents = 0;
-static bool          bKeyboardInUse = false;
+static bx_bool bKeyboardInUse = 0;
 
 // Misc Stuff
 static struct _rfbUpdateRegion {
@@ -172,11 +172,8 @@ static unsigned rfbStatusitemPos[12] = {
 };
 static bx_bool rfbStatusitemActive[12];
 
-static unsigned int text_rows=25, text_cols=80;
-static unsigned int font_height=16, font_width=8;
-
-//static unsigned long ServerThread   = 0;
-//static unsigned long ServerThreadID = 0;
+static unsigned int text_rows = 25, text_cols = 80;
+static unsigned int font_height = 16, font_width = 8;
 
 static SOCKET sGlobal;
 
@@ -234,18 +231,18 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   rfbDimensionY = BX_RFB_DEF_YDIM;
   rfbWindowX = rfbDimensionX;
   rfbWindowY = rfbDimensionY + rfbHeaderbarY + rfbStatusbarY;
-  rfbTileX      = x_tilesize;
-  rfbTileY      = y_tilesize;
+  rfbTileX = x_tilesize;
+  rfbTileY = y_tilesize;
 
-  for(i = 0; i < 256; i++) {
-    for(int j = 0; j < 16; j++) {
+  for (i = 0; i < 256; i++) {
+    for (int j = 0; j < 16; j++) {
       vc = bx_vgafont[i].data[j];
       fc = 0;
       for (int b = 0; b < 8; b++) {
         fc |= (vc & 0x01) << (7 - b);
         vc >>= 1;
       }
-      vga_charmap[i*32+j] = fc;
+      vga_charmap[i * 32 + j] = fc;
     }
   }
 
@@ -301,7 +298,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   io->set_log_action(LOGLEV_PANIC, ACT_FATAL);
 
   while ((!client_connected) && (timeout--)) {
-    fprintf(stderr, "Waiting for RFB client: %2d\r", timeout+1);
+    fprintf(stderr, "Bochs RFB server waiting for client: %2d\r", timeout+1);
 #ifdef WIN32
     Sleep(1000);
 #else
@@ -332,10 +329,10 @@ void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w)
 
   rfbStatusitemActive[element] = active;
   xleft = rfbStatusitemPos[element] + 2;
-  xsize = rfbStatusitemPos[element+1] - xleft - 1;
-  newBits = (char *)malloc(((xsize / 8) + 1) * (rfbStatusbarY - 2));
+  xsize = rfbStatusitemPos[element + 1] - xleft - 1;
+  newBits = (char *) malloc(((xsize / 8) + 1) * (rfbStatusbarY - 2));
   memset(newBits, 0, ((xsize / 8) + 1) * (rfbStatusbarY - 2));
-  for (i=0; i<(rfbStatusbarY - 2); i++) {
+  for (i = 0; i < (rfbStatusbarY - 2); i++) {
     newBits[((xsize / 8) + 1) * i] = 0;
   }
   if (element > 0) {
@@ -348,7 +345,7 @@ void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w)
   len = ((element > 0) && (strlen(text) > 4)) ? 4 : strlen(text);
   for (i = 0; i < len; i++) {
     DrawChar(xleft + i * 8 + 2, rfbWindowY - rfbStatusbarY + 5, 8, 8, 0,
-      (char *)&sdl_font8x8[(unsigned)text[i]][0], color, 0);
+             (char *) &sdl_font8x8[(unsigned)text[i]][0], color, 0);
   }
   if (xleft < rfbUpdateRegion.x) rfbUpdateRegion.x = xleft;
   if ((rfbWindowY - rfbStatusbarY + 1) < rfbUpdateRegion.y) rfbUpdateRegion.y = rfbWindowY - rfbStatusbarY + 1;
@@ -630,7 +627,7 @@ void HandleRfbClient(SOCKET sClient)
           rfbKeyEventMessage ke;
           ReadExact(sClient, (char *)&ke, sizeof(rfbKeyEventMessage));
           ke.key = ntohl(ke.key);
-          while(bKeyboardInUse);
+          while (bKeyboardInUse) ;
 
           if ((ke.key == XK_Control_L) || (ke.key == XK_Control_R)) {
             mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_CTRL, ke.downFlag);
@@ -644,13 +641,13 @@ void HandleRfbClient(SOCKET sClient)
           if (mouse_toggle) {
             bx_gui->toggle_mouse_enable();
           } else {
-            bKeyboardInUse = true;
+            bKeyboardInUse = 1;
             if (rfbKeyboardEvents >= MAX_KEY_EVENTS) break;
             rfbKeyboardEvent[rfbKeyboardEvents].type = KEYBOARD;
             rfbKeyboardEvent[rfbKeyboardEvents].key  = ke.key;
             rfbKeyboardEvent[rfbKeyboardEvents].down = ke.downFlag;
             rfbKeyboardEvents++;
-            bKeyboardInUse = false;
+            bKeyboardInUse = 0;
           }
           break;
         }
@@ -658,12 +655,12 @@ void HandleRfbClient(SOCKET sClient)
         {
           rfbPointerEventMessage pe;
           ReadExact(sClient, (char *)&pe, sizeof(rfbPointerEventMessage));
-          while(bKeyboardInUse);
+          while (bKeyboardInUse) ;
 
           if (bx_gui->mouse_toggle_check(BX_MT_MBUTTON, (pe.buttonMask & 0x02) > 0)) {
             bx_gui->toggle_mouse_enable();
           } else {
-            bKeyboardInUse = true;
+            bKeyboardInUse = 1;
             if (rfbKeyboardEvents >= MAX_KEY_EVENTS) break;
             rfbKeyboardEvent[rfbKeyboardEvents].type = MOUSE;
             rfbKeyboardEvent[rfbKeyboardEvents].x    = ntohs(pe.xPosition);
@@ -672,7 +669,7 @@ void HandleRfbClient(SOCKET sClient)
                                                        ((pe.buttonMask>>1) & 0x02) |
                                                        ((pe.buttonMask<<1) & 0x04);
             rfbKeyboardEvents++;
-            bKeyboardInUse = false;
+            bKeyboardInUse = 0;
           }
           break;
         }
@@ -693,29 +690,30 @@ void HandleRfbClient(SOCKET sClient)
 
 void bx_rfb_gui_c::handle_events(void)
 {
-    while(bKeyboardInUse);
-    bKeyboardInUse = true;
-    if(rfbKeyboardEvents > 0) {
-        for(unsigned i = 0; i < rfbKeyboardEvents; i++) {
-            if(rfbKeyboardEvent[i].type == KEYBOARD) {
-                rfbKeyPressed(rfbKeyboardEvent[i].key, rfbKeyboardEvent[i].down);
-            } else { //type == MOUSE;
-                rfbMouseMove(rfbKeyboardEvent[i].x, rfbKeyboardEvent[i].y, rfbKeyboardEvent[i].down);
-            }
-        }
-        rfbKeyboardEvents = 0;
-    }
-    bKeyboardInUse = false;
+  while (bKeyboardInUse) ;
 
-    if(rfbUpdateRegion.updated) {
-        SendUpdate(rfbUpdateRegion.x, rfbUpdateRegion.y, rfbUpdateRegion.width,
-                   rfbUpdateRegion.height, rfbEncodingRaw);
-        rfbUpdateRegion.x = rfbWindowX;
-        rfbUpdateRegion.y = rfbWindowY;
-        rfbUpdateRegion.width  = 0;
-        rfbUpdateRegion.height = 0;
+  bKeyboardInUse = 1;
+  if (rfbKeyboardEvents > 0) {
+    for (unsigned i = 0; i < rfbKeyboardEvents; i++) {
+      if (rfbKeyboardEvent[i].type == KEYBOARD) {
+        rfbKeyPressed(rfbKeyboardEvent[i].key, rfbKeyboardEvent[i].down);
+      } else { //type == MOUSE;
+        rfbMouseMove(rfbKeyboardEvent[i].x, rfbKeyboardEvent[i].y, rfbKeyboardEvent[i].down);
+      }
     }
-    rfbUpdateRegion.updated = false;
+    rfbKeyboardEvents = 0;
+  }
+  bKeyboardInUse = 0;
+
+  if (rfbUpdateRegion.updated) {
+    SendUpdate(rfbUpdateRegion.x, rfbUpdateRegion.y, rfbUpdateRegion.width,
+               rfbUpdateRegion.height, rfbEncodingRaw);
+    rfbUpdateRegion.x = rfbWindowX;
+    rfbUpdateRegion.y = rfbWindowY;
+    rfbUpdateRegion.width  = 0;
+    rfbUpdateRegion.height = 0;
+  }
+  rfbUpdateRegion.updated = false;
 #if BX_SHOW_IPS
   if (rfbIPSupdate) {
     rfbIPSupdate = 0;
@@ -739,7 +737,7 @@ void bx_rfb_gui_c::flush(void)
 // clear the area that defines the headerbar.
 void bx_rfb_gui_c::clear_screen(void)
 {
-    memset(&rfbScreen[rfbWindowX * rfbHeaderbarY], 0, rfbWindowX * rfbDimensionY);
+  memset(&rfbScreen[rfbWindowX * rfbHeaderbarY], 0, rfbWindowX * rfbDimensionY);
 }
 
 // ::TEXT_UPDATE()
@@ -765,8 +763,8 @@ void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long c
 {
   Bit8u *old_line, *new_line;
   Bit8u cAttr, cChar;
-  unsigned int  curs, hchars, offset, rows, x, y, xc, yc;
-  bx_bool force_update=0, gfxchar, blink_state, blink_mode;
+  unsigned int curs, hchars, offset, rows, x, y, xc, yc;
+  bx_bool force_update = 0, gfxchar, blink_state, blink_mode;
 
   blink_mode = (tm_info->blink_flags & BX_TEXT_BLINK_MODE) > 0;
   blink_state = (tm_info->blink_flags & BX_TEXT_BLINK_STATE) > 0;
@@ -774,7 +772,7 @@ void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long c
     if (tm_info->blink_flags & BX_TEXT_BLINK_TOGGLE)
       force_update = 1;
   }
-  if(charmap_updated) {
+  if (charmap_updated) {
     force_update = 1;
     charmap_updated = 0;
   }
@@ -784,8 +782,8 @@ void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long c
     curs = rfbCursorY * tm_info->line_offset + rfbCursorX * 2;
     old_text[curs] = ~new_text[curs];
   }
-  if((tm_info->cs_start <= tm_info->cs_end) && (tm_info->cs_start < font_height) &&
-     (cursor_y < text_rows) && (cursor_x < text_cols)) {
+  if ((tm_info->cs_start <= tm_info->cs_end) && (tm_info->cs_start < font_height)
+      && (cursor_y < text_rows) && (cursor_x < text_cols)) {
     curs = cursor_y * tm_info->line_offset + cursor_x * 2;
     old_text[curs] = ~new_text[curs];
   } else {
@@ -815,10 +813,10 @@ void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long c
         gfxchar = tm_info->line_graphics && ((cChar & 0xE0) == 0xC0);
         xc = x * font_width;
         DrawChar(xc, yc, font_width, font_height, 0, (char *)&vga_charmap[cChar<<5], cAttr, gfxchar);
-        if(yc < rfbUpdateRegion.y) rfbUpdateRegion.y = yc;
-        if((yc + font_height - rfbUpdateRegion.y) > rfbUpdateRegion.height) rfbUpdateRegion.height = (yc + font_height - rfbUpdateRegion.y);
-        if(xc < rfbUpdateRegion.x) rfbUpdateRegion.x = xc;
-        if((xc + font_width - rfbUpdateRegion.x) > rfbUpdateRegion.width) rfbUpdateRegion.width = (xc + font_width - rfbUpdateRegion.x);
+        if (yc < rfbUpdateRegion.y) rfbUpdateRegion.y = yc;
+        if ((yc + font_height - rfbUpdateRegion.y) > rfbUpdateRegion.height) rfbUpdateRegion.height = (yc + font_height - rfbUpdateRegion.y);
+        if (xc < rfbUpdateRegion.x) rfbUpdateRegion.x = xc;
+        if ((xc + font_width - rfbUpdateRegion.x) > rfbUpdateRegion.width) rfbUpdateRegion.width = (xc + font_width - rfbUpdateRegion.x);
         rfbUpdateRegion.updated = true;
         if (offset == curs) {
           cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
@@ -827,9 +825,9 @@ void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long c
         }
       }
       x++;
-      new_text+=2;
-      old_text+=2;
-      offset+=2;
+      new_text += 2;
+      old_text += 2;
+      offset += 2;
     } while (--hchars);
     y++;
     new_text = new_line + tm_info->line_offset;
@@ -859,8 +857,8 @@ int bx_rfb_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 
 bx_bool bx_rfb_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
 {
-    rfbPalette[index] = (((red * 7 + 127) / 255) << 0) | (((green * 7 + 127) / 255) << 3) | (((blue * 3 + 127) / 255) << 6);
-    return(1);
+  rfbPalette[index] = (((red * 7 + 127) / 255) << 0) | (((green * 7 + 127) / 255) << 3) | (((blue * 3 + 127) / 255) << 6);
+  return 1;
 }
 
 // ::GRAPHICS_TILE_UPDATE()
@@ -880,10 +878,10 @@ bx_bool bx_rfb_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u 
 void bx_rfb_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
   UpdateScreen(tile, x0, y0 + rfbHeaderbarY, rfbTileX, rfbTileY, false);
-  if(x0 < rfbUpdateRegion.x) rfbUpdateRegion.x = x0;
-  if((y0 + rfbHeaderbarY) < rfbUpdateRegion.y) rfbUpdateRegion.y = y0 + rfbHeaderbarY;
-  if(((y0 + rfbHeaderbarY + rfbTileY) - rfbUpdateRegion.y) > rfbUpdateRegion.height) rfbUpdateRegion.height =  ((y0 + rfbHeaderbarY + rfbTileY) - rfbUpdateRegion.y);
-  if(((x0 + rfbTileX) - rfbUpdateRegion.x) > rfbUpdateRegion.width) rfbUpdateRegion.width = ((x0 + rfbTileX) - rfbUpdateRegion.x);
+  if (x0 < rfbUpdateRegion.x) rfbUpdateRegion.x = x0;
+  if ((y0 + rfbHeaderbarY) < rfbUpdateRegion.y) rfbUpdateRegion.y = y0 + rfbHeaderbarY;
+  if (((y0 + rfbHeaderbarY + rfbTileY) - rfbUpdateRegion.y) > rfbUpdateRegion.height) rfbUpdateRegion.height =  ((y0 + rfbHeaderbarY + rfbTileY) - rfbUpdateRegion.y);
+  if (((x0 + rfbTileX) - rfbUpdateRegion.x) > rfbUpdateRegion.width) rfbUpdateRegion.width = ((x0 + rfbTileX) - rfbUpdateRegion.x);
   if ((rfbUpdateRegion.x + rfbUpdateRegion.width) > rfbWindowX) {
     rfbUpdateRegion.width = rfbWindowX - rfbUpdateRegion.x;
   }
@@ -913,17 +911,15 @@ bx_svga_tileinfo_t *bx_rfb_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
 Bit8u *bx_rfb_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
                             unsigned *w, unsigned *h)
 {
-  if (x0+rfbTileX > rfbDimensionX) {
+  if (x0 + rfbTileX > rfbDimensionX) {
     *w = rfbDimensionX - x0;
-  }
-  else {
+  } else {
     *w = rfbTileX;
   }
 
-  if (y0+rfbTileY > rfbDimensionY) {
+  if (y0 + rfbTileY > rfbDimensionY) {
     *h = rfbDimensionY - y0;
-  }
-  else {
+  } else {
     *h = rfbTileY;
   }
 
@@ -933,10 +929,10 @@ Bit8u *bx_rfb_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
 void bx_rfb_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
                                         unsigned w, unsigned h)
 {
-  if(x0 < rfbUpdateRegion.x) rfbUpdateRegion.x = x0;
-  if((y0 + rfbHeaderbarY) < rfbUpdateRegion.y) rfbUpdateRegion.y = y0 + rfbHeaderbarY;
-  if(((y0 + rfbHeaderbarY + h) - rfbUpdateRegion.y) > rfbUpdateRegion.height) rfbUpdateRegion.height =  ((y0 + rfbHeaderbarY + h) - rfbUpdateRegion.y);
-  if(((x0 + w) - rfbUpdateRegion.x) > rfbUpdateRegion.width) rfbUpdateRegion.width = ((x0 + h) - rfbUpdateRegion.x);
+  if (x0 < rfbUpdateRegion.x) rfbUpdateRegion.x = x0;
+  if ((y0 + rfbHeaderbarY) < rfbUpdateRegion.y) rfbUpdateRegion.y = y0 + rfbHeaderbarY;
+  if (((y0 + rfbHeaderbarY + h) - rfbUpdateRegion.y) > rfbUpdateRegion.height) rfbUpdateRegion.height =  ((y0 + rfbHeaderbarY + h) - rfbUpdateRegion.y);
+  if (((x0 + w) - rfbUpdateRegion.x) > rfbUpdateRegion.width) rfbUpdateRegion.width = ((x0 + h) - rfbUpdateRegion.x);
   if ((rfbUpdateRegion.x + rfbUpdateRegion.width) > rfbWindowX) {
     rfbUpdateRegion.width = rfbWindowX - rfbUpdateRegion.x;
   }
@@ -1005,17 +1001,17 @@ void bx_rfb_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, un
 
 unsigned bx_rfb_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 {
-    if(rfbBitmapCount >= BX_MAX_PIXMAPS) {
-        BX_ERROR(("too many pixmaps."));
-        return 0;
-    }
-    rfbBitmaps[rfbBitmapCount].bmap = (char *)malloc((xdim * ydim) / 8);
-    rfbBitmaps[rfbBitmapCount].xdim = xdim;
-    rfbBitmaps[rfbBitmapCount].ydim = ydim;
-    memcpy(rfbBitmaps[rfbBitmapCount].bmap, bmap, (xdim * ydim) / 8);
+  if (rfbBitmapCount >= BX_MAX_PIXMAPS) {
+    BX_ERROR(("too many pixmaps."));
+    return 0;
+  }
+  rfbBitmaps[rfbBitmapCount].bmap = (char *) malloc((xdim * ydim) / 8);
+  rfbBitmaps[rfbBitmapCount].xdim = xdim;
+  rfbBitmaps[rfbBitmapCount].ydim = ydim;
+  memcpy(rfbBitmaps[rfbBitmapCount].bmap, bmap, (xdim * ydim) / 8);
 
-    rfbBitmapCount++;
-    return(rfbBitmapCount - 1);
+  rfbBitmapCount++;
+  return (rfbBitmapCount - 1);
 }
 
 
@@ -1035,27 +1031,27 @@ unsigned bx_rfb_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, u
 
 unsigned bx_rfb_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
 {
-    int hb_index;
+  int hb_index;
 
-    if((rfbHeaderbarBitmapCount + 1) > BX_MAX_HEADERBAR_ENTRIES) {
-        return 0;
-    }
+  if ((rfbHeaderbarBitmapCount + 1) > BX_MAX_HEADERBAR_ENTRIES) {
+    return 0;
+  }
 
-    rfbHeaderbarBitmapCount++;
-    hb_index = rfbHeaderbarBitmapCount - 1;
-    rfbHeaderbarBitmaps[hb_index].index     = bmap_id;
-    rfbHeaderbarBitmaps[hb_index].alignment = alignment;
-    rfbHeaderbarBitmaps[hb_index].f = f;
-    if (alignment == BX_GRAVITY_LEFT) {
-        rfbHeaderbarBitmaps[hb_index].xorigin = rfbOriginLeft;
-        rfbHeaderbarBitmaps[hb_index].yorigin = 0;
-        rfbOriginLeft += rfbBitmaps[bmap_id].xdim;
-    } else { // BX_GRAVITY_RIGHT
-        rfbOriginRight += rfbBitmaps[bmap_id].xdim;
-        rfbHeaderbarBitmaps[hb_index].xorigin = rfbOriginRight;
-        rfbHeaderbarBitmaps[hb_index].yorigin = 0;
-    }
-    return hb_index;
+  rfbHeaderbarBitmapCount++;
+  hb_index = rfbHeaderbarBitmapCount - 1;
+  rfbHeaderbarBitmaps[hb_index].index = bmap_id;
+  rfbHeaderbarBitmaps[hb_index].alignment = alignment;
+  rfbHeaderbarBitmaps[hb_index].f = f;
+  if (alignment == BX_GRAVITY_LEFT) {
+    rfbHeaderbarBitmaps[hb_index].xorigin = rfbOriginLeft;
+    rfbHeaderbarBitmaps[hb_index].yorigin = 0;
+    rfbOriginLeft += rfbBitmaps[bmap_id].xdim;
+  } else { // BX_GRAVITY_RIGHT
+    rfbOriginRight += rfbBitmaps[bmap_id].xdim;
+    rfbHeaderbarBitmaps[hb_index].xorigin = rfbOriginRight;
+    rfbHeaderbarBitmaps[hb_index].yorigin = 0;
+  }
+  return hb_index;
 }
 
 
@@ -1069,11 +1065,11 @@ void bx_rfb_gui_c::show_headerbar(void)
   char *newBits, value;
   unsigned int i, xorigin, addr;
 
-  newBits = (char *)malloc(rfbWindowX * rfbHeaderbarY);
+  newBits = (char *) malloc(rfbWindowX * rfbHeaderbarY);
   memset(newBits, 0, (rfbWindowX * rfbHeaderbarY));
   DrawBitmap(0, 0, rfbWindowX, rfbHeaderbarY, newBits, (char)0xf0, false);
-  for(i = 0; i < rfbHeaderbarBitmapCount; i++) {
-    if(rfbHeaderbarBitmaps[i].alignment == BX_GRAVITY_LEFT) {
+  for (i = 0; i < rfbHeaderbarBitmapCount; i++) {
+    if (rfbHeaderbarBitmaps[i].alignment == BX_GRAVITY_LEFT) {
       xorigin = rfbHeaderbarBitmaps[i].xorigin;
     } else {
       xorigin = rfbWindowX - rfbHeaderbarBitmaps[i].xorigin;
@@ -1081,19 +1077,19 @@ void bx_rfb_gui_c::show_headerbar(void)
     DrawBitmap(xorigin, 0, rfbBitmaps[rfbHeaderbarBitmaps[i].index].xdim, rfbBitmaps[rfbHeaderbarBitmaps[i].index].ydim, rfbBitmaps[rfbHeaderbarBitmaps[i].index].bmap, (char)0xf0, false);
   }
   free(newBits);
-  newBits = (char *)malloc(rfbWindowX * rfbStatusbarY / 8);
+  newBits = (char *) malloc(rfbWindowX * rfbStatusbarY / 8);
   memset(newBits, 0, (rfbWindowX * rfbStatusbarY / 8));
   for (i = 1; i < 12; i++) {
     addr = rfbStatusitemPos[i] / 8;
     value = 1 << (rfbStatusitemPos[i] % 8);
-    for (unsigned j=1; j<rfbStatusbarY; j++) {
+    for (unsigned j = 1; j < rfbStatusbarY; j++) {
       newBits[(rfbWindowX * j / 8) + addr] = value;
     }
   }
   DrawBitmap(0, rfbWindowY - rfbStatusbarY, rfbWindowX, rfbStatusbarY, newBits, (char)0xf0, false);
   free(newBits);
   for (i = 1; i <= statusitem_count; i++) {
-    rfbSetStatusText(i, statusitem[i-1].text, rfbStatusitemActive[i]);
+    rfbSetStatusText(i, statusitem[i - 1].text, rfbStatusitemActive[i]);
   }
 }
 
@@ -1113,18 +1109,19 @@ void bx_rfb_gui_c::show_headerbar(void)
 
 void bx_rfb_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
-    unsigned int xorigin;
+  unsigned int xorigin;
 
-    if (bmap_id == rfbHeaderbarBitmaps[hbar_id].index) return;
-    rfbHeaderbarBitmaps[hbar_id].index = bmap_id;
-    if (rfbHeaderbarBitmaps[hbar_id].alignment == BX_GRAVITY_LEFT) {
-      xorigin = rfbHeaderbarBitmaps[hbar_id].xorigin;
-    } else {
-      xorigin = rfbWindowX - rfbHeaderbarBitmaps[hbar_id].xorigin;
-    }
-    DrawBitmap(xorigin, 0, rfbBitmaps[rfbHeaderbarBitmaps[hbar_id].index].xdim,
-               rfbBitmaps[rfbHeaderbarBitmaps[hbar_id].index].ydim,
-               rfbBitmaps[rfbHeaderbarBitmaps[hbar_id].index].bmap, (char)0xf0, true);
+  if (bmap_id == rfbHeaderbarBitmaps[hbar_id].index)
+    return;
+  rfbHeaderbarBitmaps[hbar_id].index = bmap_id;
+  if (rfbHeaderbarBitmaps[hbar_id].alignment == BX_GRAVITY_LEFT) {
+    xorigin = rfbHeaderbarBitmaps[hbar_id].xorigin;
+  } else {
+    xorigin = rfbWindowX - rfbHeaderbarBitmaps[hbar_id].xorigin;
+  }
+  DrawBitmap(xorigin, 0, rfbBitmaps[rfbHeaderbarBitmaps[hbar_id].index].xdim,
+             rfbBitmaps[rfbHeaderbarBitmaps[hbar_id].index].ydim,
+             rfbBitmaps[rfbHeaderbarBitmaps[hbar_id].index].bmap, (char)0xf0, true);
 }
 
 
@@ -1134,23 +1131,23 @@ void bx_rfb_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 // exit from the native GUI mechanism.
 void bx_rfb_gui_c::exit(void)
 {
-    unsigned int i;
-    keep_alive = 0;
+  unsigned int i;
+  keep_alive = 0;
 #ifdef WIN32
-    StopWinsock();
+  StopWinsock();
 #endif
-    free(rfbScreen);
-    for(i = 0; i < rfbBitmapCount; i++) {
-        free(rfbBitmaps[i].bmap);
-    }
+  free(rfbScreen);
+  for(i = 0; i < rfbBitmapCount; i++) {
+    free(rfbBitmaps[i].bmap);
+  }
 
-    // Clear supported encodings
-    if (clientEncodings != NULL) {
-        delete [] clientEncodings;
-        clientEncodingsCount = 0;
-    }
+  // Clear supported encodings
+  if (clientEncodings != NULL) {
+    delete [] clientEncodings;
+    clientEncodingsCount = 0;
+  }
 
-    BX_DEBUG(("bx_rfb_gui_c::exit()"));
+  BX_DEBUG(("bx_rfb_gui_c::exit()"));
 }
 
 /*
@@ -1289,11 +1286,11 @@ void DrawColorPalette()
 {
     unsigned char bits[100];
     int x = 0, y = 0, c;
-    for(c = 0; c < 256; c++) {
+    for (c = 0; c < 256; c++) {
         memset(&bits, rfbPalette[c], 100);
         UpdateScreen(bits, x, y, 10, 10, false);
         x += 10;
-        if(x > 70) {
+        if (x > 70) {
             y += 10;
             x = 0;
         }
@@ -1303,14 +1300,14 @@ void DrawColorPalette()
 void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height, bool update_client)
 {
     int i, c;
-    for(i = 0; i < height; i++) {
-        for(c = 0; c < width; c++) {
+    for (i = 0; i < height; i++) {
+        for (c = 0; c < width; c++) {
             newBits[(i * width) + c] = rfbPalette[newBits[(i * width) + c]];
         }
         memcpy(&rfbScreen[y * rfbWindowX + x], &newBits[i * width], width);
         y++;
     }
-    if(update_client) {
+    if (update_client) {
         if(sGlobal == INVALID_SOCKET) return;
         rfbFramebufferUpdateMessage fum;
         rfbFramebufferUpdateRectHeader furh;
@@ -1367,7 +1364,7 @@ void StartThread()
 #ifdef WIN32
     _beginthread(ServerThreadInit, 0, NULL);
 #else
-    pthread_t      thread;
+    pthread_t thread;
     pthread_create(&thread, NULL, (void *(*)(void *))&ServerThreadInit, NULL);
 #endif
 }
@@ -1514,7 +1511,7 @@ void rfbKeyPressed(Bit32u key, int press_release)
   Bit32u key_event;
 
   if (!SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
-    if((key >= XK_space) && (key <= XK_asciitilde)) {
+    if ((key >= XK_space) && (key <= XK_asciitilde)) {
       key_event = rfb_ascii_to_key_event[key - XK_space];
     } else {
       switch (key) {
@@ -1522,131 +1519,227 @@ void rfbKeyPressed(Bit32u key, int press_release)
 #ifdef XK_KP_End
         case XK_KP_End:
 #endif
-          key_event = BX_KEY_KP_END; break;
+          key_event = BX_KEY_KP_END;
+          break;
 
         case XK_KP_2:
 #ifdef XK_KP_Down
         case XK_KP_Down:
 #endif
-          key_event = BX_KEY_KP_DOWN; break;
+          key_event = BX_KEY_KP_DOWN;
+          break;
 
         case XK_KP_3:
 #ifdef XK_KP_Page_Down
         case XK_KP_Page_Down:
 #endif
-          key_event = BX_KEY_KP_PAGE_DOWN; break;
+          key_event = BX_KEY_KP_PAGE_DOWN;
+          break;
 
         case XK_KP_4:
 #ifdef XK_KP_Left
         case XK_KP_Left:
 #endif
-          key_event = BX_KEY_KP_LEFT; break;
+          key_event = BX_KEY_KP_LEFT;
+          break;
 
         case XK_KP_5:
 #ifdef XK_KP_Begin
         case XK_KP_Begin:
 #endif
-          key_event = BX_KEY_KP_5; break;
+          key_event = BX_KEY_KP_5;
+          break;
 
         case XK_KP_6:
 #ifdef XK_KP_Right
         case XK_KP_Right:
 #endif
-          key_event = BX_KEY_KP_RIGHT; break;
+          key_event = BX_KEY_KP_RIGHT;
+          break;
 
         case XK_KP_7:
 #ifdef XK_KP_Home
         case XK_KP_Home:
 #endif
-          key_event = BX_KEY_KP_HOME; break;
+          key_event = BX_KEY_KP_HOME;
+          break;
 
         case XK_KP_8:
 #ifdef XK_KP_Up
         case XK_KP_Up:
 #endif
-          key_event = BX_KEY_KP_UP; break;
+          key_event = BX_KEY_KP_UP;
+          break;
 
         case XK_KP_9:
 #ifdef XK_KP_Page_Up
         case XK_KP_Page_Up:
 #endif
-          key_event = BX_KEY_KP_PAGE_UP; break;
+          key_event = BX_KEY_KP_PAGE_UP;
+          break;
 
         case XK_KP_0:
 #ifdef XK_KP_Insert
         case XK_KP_Insert:
 #endif
-          key_event = BX_KEY_KP_INSERT; break;
+          key_event = BX_KEY_KP_INSERT;
+          break;
 
         case XK_KP_Decimal:
 #ifdef XK_KP_Delete
         case XK_KP_Delete:
 #endif
-          key_event = BX_KEY_KP_DELETE; break;
+          key_event = BX_KEY_KP_DELETE;
+          break;
 
 #ifdef XK_KP_Enter
-        case XK_KP_Enter:    key_event = BX_KEY_KP_ENTER; break;
+        case XK_KP_Enter:
+          key_event = BX_KEY_KP_ENTER;
+          break;
 #endif
 
-        case XK_KP_Subtract: key_event = BX_KEY_KP_SUBTRACT; break;
-        case XK_KP_Add:      key_event = BX_KEY_KP_ADD; break;
+        case XK_KP_Subtract:
+          key_event = BX_KEY_KP_SUBTRACT;
+          break;
+        case XK_KP_Add:
+          key_event = BX_KEY_KP_ADD;
+          break;
 
-        case XK_KP_Multiply: key_event = BX_KEY_KP_MULTIPLY; break;
-        case XK_KP_Divide:   key_event = BX_KEY_KP_DIVIDE; break;
+        case XK_KP_Multiply:
+          key_event = BX_KEY_KP_MULTIPLY;
+          break;
+        case XK_KP_Divide:
+          key_event = BX_KEY_KP_DIVIDE;
+          break;
 
+        case XK_Up:
+          key_event = BX_KEY_UP;
+          break;
+        case XK_Down:
+          key_event = BX_KEY_DOWN;
+          break;
+        case XK_Left:
+          key_event = BX_KEY_LEFT;
+          break;
+        case XK_Right:
+          key_event = BX_KEY_RIGHT;
+          break;
 
-        case XK_Up:          key_event = BX_KEY_UP; break;
-        case XK_Down:        key_event = BX_KEY_DOWN; break;
-        case XK_Left:        key_event = BX_KEY_LEFT; break;
-        case XK_Right:       key_event = BX_KEY_RIGHT; break;
-
-        case XK_Delete:      key_event = BX_KEY_DELETE; break;
-        case XK_BackSpace:   key_event = BX_KEY_BACKSPACE; break;
-        case XK_Tab:         key_event = BX_KEY_TAB; break;
+        case XK_Delete:
+          key_event = BX_KEY_DELETE;
+          break;
+        case XK_BackSpace:
+          key_event = BX_KEY_BACKSPACE;
+          break;
+        case XK_Tab:
+          key_event = BX_KEY_TAB;
+          break;
 #ifdef XK_ISO_Left_Tab
-        case XK_ISO_Left_Tab: key_event = BX_KEY_TAB; break;
+        case XK_ISO_Left_Tab:
+          key_event = BX_KEY_TAB;
+          break;
 #endif
-        case XK_Return:      key_event = BX_KEY_ENTER; break;
-        case XK_Escape:      key_event = BX_KEY_ESC; break;
-        case XK_F1:          key_event = BX_KEY_F1; break;
-        case XK_F2:          key_event = BX_KEY_F2; break;
-        case XK_F3:          key_event = BX_KEY_F3; break;
-        case XK_F4:          key_event = BX_KEY_F4; break;
-        case XK_F5:          key_event = BX_KEY_F5; break;
-        case XK_F6:          key_event = BX_KEY_F6; break;
-        case XK_F7:          key_event = BX_KEY_F7; break;
-        case XK_F8:          key_event = BX_KEY_F8; break;
-        case XK_F9:          key_event = BX_KEY_F9; break;
-        case XK_F10:         key_event = BX_KEY_F10; break;
-        case XK_F11:         key_event = BX_KEY_F11; break;
-        case XK_F12:         key_event = BX_KEY_F12; break;
-        case XK_Control_L:   key_event = BX_KEY_CTRL_L; break;
+        case XK_Return:
+          key_event = BX_KEY_ENTER;
+          break;
+        case XK_Escape:
+          key_event = BX_KEY_ESC;
+          break;
+        case XK_F1:
+          key_event = BX_KEY_F1;
+          break;
+        case XK_F2:
+          key_event = BX_KEY_F2;
+          break;
+        case XK_F3:
+          key_event = BX_KEY_F3;
+          break;
+        case XK_F4:
+          key_event = BX_KEY_F4;
+          break;
+        case XK_F5:
+          key_event = BX_KEY_F5;
+          break;
+        case XK_F6:
+          key_event = BX_KEY_F6;
+          break;
+        case XK_F7:
+          key_event = BX_KEY_F7;
+          break;
+        case XK_F8:
+          key_event = BX_KEY_F8;
+          break;
+        case XK_F9:
+          key_event = BX_KEY_F9;
+          break;
+        case XK_F10:
+          key_event = BX_KEY_F10;
+          break;
+        case XK_F11:
+          key_event = BX_KEY_F11;
+          break;
+        case XK_F12:
+          key_event = BX_KEY_F12;
+          break;
+        case XK_Control_L:
+          key_event = BX_KEY_CTRL_L;
+          break;
 #ifdef XK_Control_R
-        case XK_Control_R:   key_event = BX_KEY_CTRL_R; break;
+        case XK_Control_R:
+          key_event = BX_KEY_CTRL_R;
+          break;
 #endif
-        case XK_Shift_L:     key_event = BX_KEY_SHIFT_L; break;
-        case XK_Shift_R:     key_event = BX_KEY_SHIFT_R; break;
-        case XK_Alt_L:       key_event = BX_KEY_ALT_L; break;
+        case XK_Shift_L:
+          key_event = BX_KEY_SHIFT_L;
+          break;
+        case XK_Shift_R:
+          key_event = BX_KEY_SHIFT_R;
+          break;
+        case XK_Alt_L:
+          key_event = BX_KEY_ALT_L;
+          break;
 #ifdef XK_Alt_R
-        case XK_Alt_R:       key_event = BX_KEY_ALT_R; break;
+        case XK_Alt_R:
+          key_event = BX_KEY_ALT_R;
+          break;
 #endif
-        case XK_Caps_Lock:   key_event = BX_KEY_CAPS_LOCK; break;
-        case XK_Num_Lock:    key_event = BX_KEY_NUM_LOCK; break;
+        case XK_Caps_Lock:
+          key_event = BX_KEY_CAPS_LOCK;
+          break;
+        case XK_Num_Lock:
+          key_event = BX_KEY_NUM_LOCK;
+          break;
 #ifdef XK_Scroll_Lock
-        case XK_Scroll_Lock: key_event = BX_KEY_SCRL_LOCK; break;
+        case XK_Scroll_Lock:
+          key_event = BX_KEY_SCRL_LOCK;
+          break;
 #endif
 #ifdef XK_Print
-        case XK_Print:       key_event = BX_KEY_PRINT; break;
+        case XK_Print:
+          key_event = BX_KEY_PRINT;
+          break;
 #endif
 #ifdef XK_Pause
-        case XK_Pause:       key_event = BX_KEY_PAUSE; break;
+        case XK_Pause:
+          key_event = BX_KEY_PAUSE;
+          break;
 #endif
 
-        case XK_Insert:      key_event = BX_KEY_INSERT; break;
-        case XK_Home:        key_event = BX_KEY_HOME; break;
-        case XK_End:         key_event = BX_KEY_END; break;
-        case XK_Page_Up:     key_event = BX_KEY_PAGE_UP; break;
-        case XK_Page_Down:   key_event = BX_KEY_PAGE_DOWN; break;
+        case XK_Insert:
+          key_event = BX_KEY_INSERT;
+          break;
+        case XK_Home:
+          key_event = BX_KEY_HOME;
+          break;
+        case XK_End:
+          key_event = BX_KEY_END;
+          break;
+        case XK_Page_Up:
+          key_event = BX_KEY_PAGE_UP;
+          break;
+        case XK_Page_Down:
+          key_event = BX_KEY_PAGE_DOWN;
+          break;
 
         default:
           BX_ERROR(("rfbKeyPress(): key %04x unhandled!", key));
@@ -1662,7 +1755,8 @@ void rfbKeyPressed(Bit32u key, int press_release)
     key_event = entry->baseKey;
   }
 
-  if (!press_release) key_event |= BX_KEY_RELEASED;
+  if (!press_release)
+    key_event |= BX_KEY_RELEASED;
   DEV_kbd_gen_scancode(key_event);
 }
 
@@ -1677,7 +1771,7 @@ void rfbMouseMove(int x, int y, int bmask)
     oldy = y;
     return;
   }
-  if(y > rfbHeaderbarY) {
+  if (y > rfbHeaderbarY) {
     if (rfbMouseModeAbsXY) {
       if ((y >= rfbHeaderbarY) && (y < (int)(rfbDimensionY + rfbHeaderbarY))) {
         dx = x * 0x7fff / rfbDimensionX;
@@ -1691,12 +1785,13 @@ void rfbMouseMove(int x, int y, int bmask)
     oldy = y;
   } else {
     if (bmask == 1) {
-      for (unsigned i=0; i<rfbHeaderbarBitmapCount; i++) {
+      for (unsigned i = 0; i < rfbHeaderbarBitmapCount; i++) {
         if (rfbHeaderbarBitmaps[i].alignment == BX_GRAVITY_LEFT)
           xorigin = rfbHeaderbarBitmaps[i].xorigin;
         else
           xorigin = rfbWindowX - rfbHeaderbarBitmaps[i].xorigin;
-        if ((x>=xorigin) && (x<(xorigin+int(rfbBitmaps[rfbHeaderbarBitmaps[i].index].xdim)))) {
+        if ((x >= xorigin) &&
+            (x < (xorigin + int(rfbBitmaps[rfbHeaderbarBitmaps[i].index].xdim)))) {
           rfbHeaderbarBitmaps[i].f();
           return;
         }
