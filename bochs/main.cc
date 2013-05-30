@@ -912,6 +912,10 @@ bx_bool load_and_init_display_lib(void)
   if (!strcmp(gui_name, "term"))
     PLUG_load_plugin (term, PLUGTYPE_OPTIONAL);
 #endif
+#if BX_WITH_VNCSRV
+  if (!strcmp(gui_name, "vncsrv"))
+    PLUG_load_plugin (vncsrv, PLUGTYPE_OPTIONAL);
+#endif
 #if BX_WITH_WIN32
   if (!strcmp(gui_name, "win32"))
     PLUG_load_plugin (win32, PLUGTYPE_OPTIONAL);

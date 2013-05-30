@@ -884,6 +884,9 @@ void bx_init_options()
 #if BX_WITH_RFB
     "rfb",
 #endif
+#if BX_WITH_VNCSRV
+    "vncsrv",
+#endif
 #if BX_WITH_WX
     "wx",
 #endif

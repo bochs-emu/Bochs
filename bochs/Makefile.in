@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2012  The Bochs Project
+# Copyright (C) 2001-2013  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -99,6 +99,7 @@ GUI_LINK_OPTS_X = $(X_LIBS) $(X_PRE_LIBS)
 GUI_LINK_OPTS_SDL = `sdl-config --cflags --libs`
 GUI_LINK_OPTS_SVGA =  -lvga -lvgagl
 GUI_LINK_OPTS_RFB = @RFB_LIBS@
+GUI_LINK_OPTS_VNCSRV = @VNCSRV_LIBS@ -lz -ljpeg -lvncserver
 GUI_LINK_OPTS_AMIGAOS =
 GUI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lcomdlg32 -lcomctl32 -lwsock32 -lshell32
 GUI_LINK_OPTS_WIN32_VCPP = user32.lib gdi32.lib winmm.lib \

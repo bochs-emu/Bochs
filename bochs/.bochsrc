@@ -60,6 +60,7 @@
 #   svga           use SVGALIB library for Linux, allows graphics without X11
 #   term           text only, uses curses/ncurses library, cross platform
 #   rfb            provides an interface to AT&T's VNC viewer, cross platform
+#   vncsrv         use LibVNCServer for extended RFB(VNC) support
 #   wx             use wxWidgets library, cross platform
 #   nogui          no display at all
 #
@@ -71,8 +72,9 @@
 # behaviour. These options are supported by more than one display library:
 #
 # "gui_debug"   - use GTK debugger gui (sdl, x) / Win32 debugger gui (sdl, win32)
-# "hideIPS"     - disable IPS output in status bar (rfb, sdl, win32, wx, x)
+# "hideIPS"     - disable IPS output in status bar (rfb, sdl, vncsrv, win32, wx, x)
 # "nokeyrepeat" - turn off host keyboard repeat (sdl, win32, x)
+# "timeout"     - time (in seconds) to wait for client (rfb, vncsrv)
 #
 # See the examples below for other currently supported options.
 #=======================================================================
@@ -80,9 +82,10 @@
 #display_library: carbon
 #display_library: macintosh
 #display_library: nogui
-#display_library: rfb, options="timeout=60" # time to wait for client
+#display_library: rfb
 #display_library: sdl, options="fullscreen" # startup in fullscreen mode
 #display_library: term
+#display_library: vncsrv
 #display_library: win32
 #display_library: wx
 #display_library: x
