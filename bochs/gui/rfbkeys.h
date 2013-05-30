@@ -21,6 +21,15 @@
 
 // This file includes the rfb key definitions and keyboard mapping stuff
 
+#ifdef HAVE_LIBVNCSERVER
+
+#include <rfb/keysym.h>
+
+#define XK_Oslash           0x00d8
+#define XK_ooblique         0x00f8
+
+#else
+
 enum {
   XK_space = 0x020,
   XK_exclam,
@@ -327,6 +336,8 @@ enum {
 #define XK_Super_L          0xFFEB
 #define XK_Super_R          0xFFEC
 
+#endif
+
 /// key mapping for rfb
 typedef struct {
   const char *name;
@@ -336,6 +347,9 @@ typedef struct {
 #define DEF_RFB_KEY(key) \
   { #key, key },
 
+#if defined(HAVE_LIBVNCSERVER) && BX_WITH_RFB && !BX_PLUGINS
+extern rfbKeyTabEntry rfb_keytable[];
+#else
 rfbKeyTabEntry rfb_keytable[] = {
   // this include provides all the entries.
   DEF_RFB_KEY(XK_space)
@@ -630,3 +644,4 @@ rfbKeyTabEntry rfb_keytable[] = {
   // one final entry to mark the end
   { NULL, 0 }
 };
+#endif

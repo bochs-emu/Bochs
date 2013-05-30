@@ -109,7 +109,7 @@ static char rfbIPStext[40];
 static unsigned short rfbPort;
 
 // Headerbar stuff
-unsigned rfbBitmapCount = 0;
+static unsigned rfbBitmapCount = 0;
 static struct _rfbBitmaps {
     char *bmap;
     unsigned xdim;
@@ -117,7 +117,7 @@ static struct _rfbBitmaps {
 } rfbBitmaps[BX_MAX_PIXMAPS];
 
 static unsigned rfbHeaderbarBitmapCount = 0;
-struct _rfbHeaderbarBitmaps {
+static struct _rfbHeaderbarBitmaps {
     unsigned int index;
     unsigned int xorigin;
     unsigned int yorigin;
@@ -180,7 +180,7 @@ static SOCKET sGlobal;
 static Bit32u clientEncodingsCount = 0;
 static Bit32u *clientEncodings = NULL;
 
-void CDECL ServerThreadInit(void *indata);
+void CDECL rfbServerThreadInit(void *indata);
 void HandleRfbClient(SOCKET sClient);
 int  ReadExact(int sock, char *buf, int len);
 int  WriteExact(int sock, char *buf, int len);
@@ -188,10 +188,9 @@ void DrawBitmap(int x, int y, int width, int height, char *bmap, char color, boo
 void DrawChar(int x, int y, int width, int height, int fonty, char *bmap, char color, bx_bool gfxchar);
 void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height, bool update_client);
 void SendUpdate(int x, int y, int width, int height, Bit32u encoding);
-void StartThread();
+void rfbStartThread();
 void rfbKeyPressed(Bit32u key, int press_release);
 void rfbMouseMove(int x, int y, int bmask);
-void DrawColorPalette();
 
 #if BX_SHOW_IPS && defined(WIN32)
 DWORD WINAPI ShowIPSthread(LPVOID);
@@ -263,7 +262,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   keep_alive = 1;
   client_connected = 0;
   desktop_resizable = 0;
-  StartThread();
+  rfbStartThread();
 
 #ifdef WIN32
   Sleep(1000);
@@ -376,7 +375,7 @@ bool StopWinsock()
 }
 #endif
 
-void CDECL ServerThreadInit(void *indata)
+void CDECL rfbServerThreadInit(void *indata)
 {
     SOCKET             sServer;
     SOCKET             sClient;
@@ -1230,7 +1229,6 @@ void DrawBitmap(int x, int y, int width, int height, char *bmap, char color, boo
         newBits[i * 8 + 7] = (bmap[i] & 0x80) ? fgcolor : bgcolor;
     }
     UpdateScreen(newBits, x, y, width, height, update_client);
-    //DrawColorPalette();
     free(newBits);
 }
 
@@ -1279,22 +1277,6 @@ void DrawChar(int x, int y, int width, int height, int fonty, char *bmap, char c
     fonty++;
   }
   UpdateScreen(newBits, x, y, width, height, false);
-  //DrawColorPalette();
-}
-
-void DrawColorPalette()
-{
-    unsigned char bits[100];
-    int x = 0, y = 0, c;
-    for (c = 0; c < 256; c++) {
-        memset(&bits, rfbPalette[c], 100);
-        UpdateScreen(bits, x, y, 10, 10, false);
-        x += 10;
-        if (x > 70) {
-            y += 10;
-            x = 0;
-        }
-    }
 }
 
 void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height, bool update_client)
@@ -1359,13 +1341,13 @@ void SendUpdate(int x, int y, int width, int height, Bit32u encoding)
     }
 }
 
-void StartThread()
+void rfbStartThread()
 {
 #ifdef WIN32
-    _beginthread(ServerThreadInit, 0, NULL);
+    _beginthread(rfbServerThreadInit, 0, NULL);
 #else
     pthread_t thread;
-    pthread_create(&thread, NULL, (void *(*)(void *))&ServerThreadInit, NULL);
+    pthread_create(&thread, NULL, (void *(*)(void *))&rfbServerThreadInit, NULL);
 #endif
 }
 
@@ -1383,7 +1365,7 @@ static Bit32u convertStringToRfbKey(const char *string)
   return BX_KEYMAP_UNKNOWN;
 }
 
-Bit32u rfb_ascii_to_key_event[0x5f] = {
+static Bit32u rfb_ascii_to_key_event[0x5f] = {
   //  !"#$%&'
   BX_KEY_SPACE,
   BX_KEY_1,
