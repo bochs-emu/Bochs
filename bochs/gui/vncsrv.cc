@@ -35,7 +35,7 @@
 
 // TODO:
 // fix random segfaults in dimension_update()
-// Windows (MinGW) support
+// fix Windows (MinGW) support
 // fixes for clients not supporting 'rfbEncodingNewFBSize'
 // fix cursor shape after dimension update()
 // properly handle SetPixelFormat, including big/little-endian flag
@@ -222,6 +222,9 @@ void dokey(rfbBool down, rfbKeySym key, rfbClientPtr cl);
 void doptr(int buttonMask, int x, int y, rfbClientPtr cl);
 void newframebuffer(rfbScreenInfoPtr screen, int width, int height);
 
+#if BX_SHOW_IPS && defined(WIN32)
+DWORD WINAPI vncShowIPSthread(LPVOID);
+#endif
 
 // ::SPECIFIC_INIT()
 //
@@ -338,6 +341,13 @@ void bx_vncsrv_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   } else {
     fprintf(stderr, "VNC client connected      \r");
   }
+
+#if BX_SHOW_IPS && defined(WIN32)
+  if (!rfbHideIPS) {
+    DWORD threadID;
+    CreateThread(NULL, 0, vncShowIPSthread, NULL, 0, &threadID);
+  }
+#endif
 
   new_gfx_api = 1;
   dialog_caps = 0;
@@ -1432,6 +1442,27 @@ void bx_vncsrv_gui_c::set_mouse_mode_absxy(bx_bool mode)
 }
 
 #if BX_SHOW_IPS
+#ifdef WIN32
+VOID CALLBACK vncIPSTimerProc(HWND hWnd, UINT nMsg, UINT_PTR nIDEvent, DWORD dwTime)
+{
+  if (!rfbServerDown) {
+    bx_show_ips_handler();
+  }
+}
+
+DWORD WINAPI vncShowIPSthread(LPVOID)
+{
+  MSG msg;
+
+  UINT TimerId = SetTimer(NULL, 0, 1000, &vncIPSTimerProc);
+  while (!rfbServerDown && GetMessage(&msg, NULL, 0, 0)) {
+    DispatchMessage(&msg);
+  }
+  KillTimer(NULL, TimerId);
+  return 0;
+}
+#endif
+
 void bx_vncsrv_gui_c::show_ips(Bit32u ips_count)
 {
   if (!rfbIPSupdate && !rfbHideIPS) {

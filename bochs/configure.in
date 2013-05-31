@@ -408,13 +408,16 @@ if test "$with_all_libs" = yes; then
   if test "$with_vncsrv" != yes; then
     can_compile_vncsrv=1
     case $target in
-      *-pc-windows* | *-pc-winnt* | *-pc-cygwin* | *-mingw32*)
+      *-pc-windows* | *-pc-winnt* | *-pc-cygwin*)
         can_compile_vncsrv=0
         ;;
+      *-mingw32*)
+        AC_CHECK_HEADER([rfb/rfb.h], [], [ can_compile_vncsrv=0 ])
+        ;;
       *)
-	AC_CHECK_HEADER([rfb/rfb.h], [], [ can_compile_vncsrv=0 ])
-	AC_CHECK_HEADER([pthread.h], [], [ can_compile_vncsrv=0 ])
-	;;
+        AC_CHECK_HEADER([rfb/rfb.h], [], [ can_compile_vncsrv=0 ])
+        AC_CHECK_HEADER([pthread.h], [], [ can_compile_vncsrv=0 ])
+        ;;
     esac
     if test $can_compile_vncsrv = 1; then
       with_vncsrv=yes
@@ -2178,10 +2181,21 @@ if test "$with_rfb" = yes; then
 fi
 
 if test "$with_vncsrv" = yes; then
-  display_libs="$display_libs vncsrv"
-  AC_DEFINE(BX_WITH_VNCSRV, 1)
-  SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_VNCSRV)"
-  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_VNCSRV)"
+  AC_CHECK_PROG(LIBVNCSERVER_CONFIG, [ libvncserver-config --version ], libvncserver-config, not_found)
+  AC_MSG_CHECKING(for LibVNCServer configuration script)
+  AC_MSG_RESULT($LIBVNCSERVER_CONFIG_CONFIG)
+  if test x$LIBVNCSERVER_CONFIG != xnot_found; then
+    display_libs="$display_libs vncsrv"
+    AC_DEFINE(BX_WITH_VNCSRV, 1)
+    VNCSRV_CXXFLAGS="`$LIBVNCSERVER_CONFIG --cflags`"
+    GUI_LINK_OPTS_VNCSRV="`$LIBVNCSERVER_CONFIG --libs`"
+    SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_VNCSRV)"
+    GUI_CXXFLAGS="$GUI_CXXFLAGS $VNCSRV_CXXFLAGS"
+    GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_VNCSRV)"
+  else
+    AC_MSG_WARN([Bochs for LibVNCServer cannot be compiled here, disabling it])
+    with_vncsrv=no
+  fi
 fi
 
 if test "$with_amigaos" = yes; then
@@ -2753,7 +2767,7 @@ if test "$cross_configure" = 0; then
         RFB_LIBS="$RFB_LIBS $PTHREAD_LIBS"
       fi
       if test "$with_vncsrv" = yes; then
-        VNCSRV_LIBS="$VNCSRV_LIBS $PTHREAD_LIBS"
+        GUI_LINK_OPTS_VNCSRV="$GUI_LINK_OPTS_VNCSRV $PTHREAD_LIBS"
       fi
       if test "$soundcard_present" = 1; then
         if test "$bx_plugins" = 1; then
@@ -2810,7 +2824,7 @@ if test ! -d build/win32/nsis; then mkdir build/win32/nsis; fi
 AC_SUBST(INSTALL_TARGET)
 AC_SUBST(INSTALL_LIST_FOR_PLATFORM)
 AC_SUBST(RFB_LIBS)
-AC_SUBST(VNCSRV_LIBS)
+AC_SUBST(GUI_LINK_OPTS_VNCSRV)
 AC_SUBST(GUI_OBJS)
 AC_SUBST(DEVICE_LINK_OPTS)
 AC_SUBST(GUI_LINK_OPTS)
