@@ -123,8 +123,8 @@ static struct _rfbHeaderbarBitmaps {
 } rfbHeaderbarBitmaps[BX_MAX_HEADERBAR_ENTRIES];
 
 //Keyboard stuff
-#define KEYBOARD true
-#define MOUSE    false
+#define KEYBOARD 1
+#define MOUSE    0
 #define MAX_KEY_EVENTS 512
 static struct _rfbKeyboardEvent {
     bx_bool type;
@@ -160,7 +160,7 @@ static long rfbTileX = 0;
 static long rfbTileY = 0;
 static unsigned long rfbCursorX = 0;
 static unsigned long rfbCursorY = 0;
-static unsigned long rfbOriginLeft  = 0;
+static unsigned long rfbOriginLeft = 0;
 static unsigned long rfbOriginRight = 0;
 static bx_bool rfbMouseModeAbsXY = 0;
 static unsigned rfbStatusbarY = 18;
@@ -332,12 +332,12 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
 void bx_rfb_gui_c::handle_events(void)
 {
-  while (bKeyboardInUse) ;
-
   if (!client_connected) {
     BX_PANIC(("RFB client closed connection"));
     return;
   }
+
+  while (bKeyboardInUse) ;
 
   bKeyboardInUse = 1;
   if (rfbKeyboardEvents > 0) {
