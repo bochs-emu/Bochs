@@ -106,6 +106,7 @@ IMPLEMENT_GUI_PLUGIN_CODE(vncsrv)
 #endif
 
 static bx_bool client_connected;
+static bx_bool noclient_mode;
 static bx_bool desktop_resizable = 1;
 #if BX_SHOW_IPS
 static bx_bool rfbHideIPS = 0;
@@ -271,6 +272,35 @@ void bx_vncsrv_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     }
   }
 
+  noclient_mode = 0;
+  // parse rfb specific options
+  if (argc > 1) {
+    for (i = 1; i < argc; i++) {
+      if (!strncmp(argv[i], "timeout=", 8)) {
+        timeout = atoi(&argv[i][8]);
+        if (timeout < 0) {
+          BX_PANIC(("invalid timeout value: %d", timeout));
+        } else {
+          BX_INFO(("connection timeout set to %d", timeout));
+        }
+      } else if (!strcmp(argv[i], "noclient")) {
+        BX_INFO(("'noclient' mode: simulation runs even without client connected"));
+        noclient_mode = 1;
+#if BX_SHOW_IPS
+      } else if (!strcmp(argv[i], "hideIPS")) {
+        BX_INFO(("hide IPS display in status bar"));
+        rfbHideIPS = 1;
+#endif
+      } else {
+        BX_PANIC(("Unknown rfb option '%s'", argv[i]));
+      }
+    }
+  }
+
+  if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
+    BX_ERROR(("private_colormap option ignored."));
+  }
+
   screen = rfbGetScreen(&argc, argv, rfbWindowX, rfbWindowY, 8, 3, sizeof(rfbPixel));
   if (!screen)
     BX_PANIC(("Create VNC screen failed!"));
@@ -286,11 +316,6 @@ void bx_vncsrv_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   memset(screen->frameBuffer, 0, rfbWindowX * rfbWindowY * sizeof(rfbPixel));
 
-  /* This call creates a mask and then a cursor: */
-  /* rfbScreen->defaultCursor =
-   rfbMakeXCursor(exampleCursorWidth,exampleCursorHeight,exampleCursor,0);
-   */
-
   /* initialize the server */
   rfbInitServer(screen);
 
@@ -301,46 +326,29 @@ void bx_vncsrv_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   Sleep(1000);
   SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 #endif
-  if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
-    BX_ERROR(("private_colormap option ignored."));
-  }
 
   // load keymap for vncsrv
   if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
     bx_keymap.loadKeymap(convertStringToRfbKey);
   }
 
-  // parse rfb specific options
-  if (argc > 1) {
-    for (i = 1; i < argc; i++) {
-      if (!strncmp(argv[i], "timeout=", 8)) {
-        timeout = atoi(&argv[i][8]);
-#if BX_SHOW_IPS
-      } else if (!strcmp(argv[i], "hideIPS")) {
-        BX_INFO(("hide IPS display in status bar"));
-        rfbHideIPS = 1;
-#endif
-      } else {
-        BX_PANIC(("Unknown rfb option '%s'", argv[i]));
-      }
-    }
-  }
-
   // the ask menu doesn't work on the client side
   io->set_log_action(LOGLEV_PANIC, ACT_FATAL);
 
-  while ((!client_connected) && (timeout--)) {
-    fprintf(stderr, "Bochs VNC server waiting for client: %2d\r", timeout+1);
+  if (!noclient_mode || (timeout > 0)) {
+    while ((!client_connected) && (timeout--)) {
+      fprintf(stderr, "Bochs VNC server waiting for client: %2d\r", timeout+1);
 #ifdef WIN32
-    Sleep(1000);
+      Sleep(1000);
 #else
-    sleep(1);
+      sleep(1);
 #endif
-  }
-  if ((timeout < 0) && (!client_connected)) {
-    BX_PANIC(("timeout! no client present"));
-  } else {
-    fprintf(stderr, "VNC client connected                   \r");
+    }
+    if ((timeout < 0) && (!client_connected)) {
+      BX_PANIC(("timeout! no client present"));
+    } else {
+      fprintf(stderr, "VNC client connected                   \r");
+    }
   }
 
 #if BX_SHOW_IPS && defined(WIN32)
@@ -362,7 +370,7 @@ void bx_vncsrv_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
 void bx_vncsrv_gui_c::handle_events(void)
 {
-  if (!client_connected) {
+  if (!noclient_mode && !client_connected) {
     BX_PANIC(("VNC client closed connection"));
     return;
   }
@@ -646,7 +654,6 @@ void bx_vncsrv_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight,
   }
 }
 
-
 // ::CREATE_BITMAP()
 //
 // Create a monochrome bitmap of size 'xdim' by 'ydim', which will
@@ -673,7 +680,6 @@ unsigned bx_vncsrv_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim
   rfbBitmapCount++;
   return (rfbBitmapCount - 1);
 }
-
 
 // ::HEADERBAR_BITMAP()
 //
@@ -714,7 +720,6 @@ unsigned bx_vncsrv_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
   }
   return hb_index;
 }
-
 
 // ::SHOW_HEADERBAR()
 //
@@ -759,7 +764,6 @@ void bx_vncsrv_gui_c::show_headerbar(void)
   }
 }
 
-
 // ::REPLACE_BITMAP()
 //
 // Replace the bitmap installed in the headerbar ID slot 'hbar_id',
@@ -790,7 +794,6 @@ void bx_vncsrv_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
              rfbBitmaps[rfbHeaderbarBitmaps[hbar_id].index].bmap, headerbar_fg,
              headerbar_bg);
 }
-
 
 // ::EXIT()
 //

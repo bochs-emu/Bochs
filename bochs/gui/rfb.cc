@@ -248,6 +248,31 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     }
   }
 
+  // parse rfb specific options
+  if (argc > 1) {
+    for (i = 1; i < argc; i++) {
+      if (!strncmp(argv[i], "timeout=", 8)) {
+        timeout = atoi(&argv[i][8]);
+        if (timeout < 1) {
+          BX_PANIC(("invalid timeout value: %d", timeout));
+        } else {
+          BX_INFO(("connection timeout set to %d", timeout));
+        }
+#if BX_SHOW_IPS
+      } else if (!strcmp(argv[i], "hideIPS")) {
+        BX_INFO(("hide IPS display in status bar"));
+        rfbHideIPS = 1;
+#endif
+      } else {
+        BX_PANIC(("Unknown rfb option '%s'", argv[i]));
+      }
+    }
+  }
+
+  if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
+    BX_ERROR(("private_colormap option ignored."));
+  }
+
   rfbScreen = (char *)malloc(rfbWindowX * rfbWindowY);
   memset(&rfbPalette, 0, sizeof(rfbPalette));
   rfbPalette[7] = (char)0xAD;
@@ -271,29 +296,10 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   Sleep(1000);
   SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 #endif
-  if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
-    BX_ERROR(("private_colormap option ignored."));
-  }
 
   // load keymap for rfb
   if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
     bx_keymap.loadKeymap(convertStringToRfbKey);
-  }
-
-  // parse rfb specific options
-  if (argc > 1) {
-    for (i = 1; i < argc; i++) {
-      if (!strncmp(argv[i], "timeout=", 8)) {
-        timeout = atoi(&argv[i][8]);
-#if BX_SHOW_IPS
-      } else if (!strcmp(argv[i], "hideIPS")) {
-        BX_INFO(("hide IPS display in status bar"));
-        rfbHideIPS = 1;
-#endif
-      } else {
-        BX_PANIC(("Unknown rfb option '%s'", argv[i]));
-      }
-    }
   }
 
   // the ask menu doesn't work on the client side
@@ -571,7 +577,6 @@ void bx_rfb_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, un
   }
 }
 
-
 // ::CREATE_BITMAP()
 //
 // Create a monochrome bitmap of size 'xdim' by 'ydim', which will
@@ -597,7 +602,6 @@ unsigned bx_rfb_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, u
   rfbBitmapCount++;
   return (rfbBitmapCount - 1);
 }
-
 
 // ::HEADERBAR_BITMAP()
 //
@@ -638,7 +642,6 @@ unsigned bx_rfb_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, vo
   return hb_index;
 }
 
-
 // ::SHOW_HEADERBAR()
 //
 // Show (redraw) the current headerbar, which is composed of
@@ -677,7 +680,6 @@ void bx_rfb_gui_c::show_headerbar(void)
   }
 }
 
-
 // ::REPLACE_BITMAP()
 //
 // Replace the bitmap installed in the headerbar ID slot 'hbar_id',
@@ -708,7 +710,6 @@ void bx_rfb_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
              rfbBitmaps[rfbHeaderbarBitmaps[hbar_id].index].bmap, (char)0xf0, true);
 }
 
-
 // ::EXIT()
 //
 // Called before bochs terminates, to allow for a graceful
@@ -733,7 +734,6 @@ void bx_rfb_gui_c::exit(void)
 
   BX_DEBUG(("bx_rfb_gui_c::exit()"));
 }
-
 
 void bx_rfb_gui_c::mouse_enabled_changed_specific(bx_bool val)
 {
