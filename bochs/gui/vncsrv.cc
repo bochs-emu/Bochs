@@ -185,7 +185,6 @@ static unsigned rfbStatusitemPos[12] = {
   0, 170, 210, 250, 290, 330, 370, 410, 450, 490, 530, 570
 };
 static bx_bool rfbStatusitemActive[12];
-static unsigned vga_bpp = 8;
 
 static unsigned int text_rows = 25, text_cols = 80;
 static unsigned int font_height = 16, font_width = 8;
@@ -273,7 +272,7 @@ void bx_vncsrv_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   }
 
   noclient_mode = 0;
-  // parse rfb specific options
+  // parse vncsrv specific options
   if (argc > 1) {
     for (i = 1; i < argc; i++) {
       if (!strncmp(argv[i], "timeout=", 8)) {
@@ -585,7 +584,7 @@ void bx_vncsrv_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0
   if (i <= 0)
     return;
 
-  switch (vga_bpp) {
+  switch (guest_bpp) {
     case 8: /* 8 bpp */
       do {
         buf_row = buf;
@@ -597,7 +596,7 @@ void bx_vncsrv_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0
       } while (--i);
       break;
     default:
-      BX_PANIC(("%u bpp modes handled by new graphics API", vga_bpp));
+      BX_PANIC(("%u bpp modes handled by new graphics API", guest_bpp));
       return;
   }
   SendUpdate(x0, y0 + rfbHeaderbarY, rfbTileX, rfbTileY);
@@ -619,12 +618,14 @@ void bx_vncsrv_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight,
         unsigned fwidth, unsigned bpp)
 {
   if (bpp == 8 || bpp == 15 || bpp == 16 || bpp == 24 || bpp == 32) {
-    vga_bpp = bpp;
+    guest_bpp = bpp;
   } else {
     BX_PANIC(("%d bpp graphics mode not supported", bpp));
   }
-
-  if (fheight > 0) {
+  guest_textmode = (fheight > 0);
+  guest_xres = x;
+  guest_yres = y;
+  if (guest_textmode) {
     font_height = fheight;
     font_width = fwidth;
     text_cols = x / fwidth;
