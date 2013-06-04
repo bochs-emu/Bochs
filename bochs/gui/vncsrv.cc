@@ -106,7 +106,6 @@ IMPLEMENT_GUI_PLUGIN_CODE(vncsrv)
 #endif
 
 static bx_bool client_connected;
-static bx_bool noclient_mode;
 static bx_bool desktop_resizable = 1;
 #if BX_SHOW_IPS
 static bx_bool rfbHideIPS = 0;
@@ -271,7 +270,6 @@ void bx_vncsrv_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     }
   }
 
-  noclient_mode = 0;
   // parse vncsrv specific options
   if (argc > 1) {
     for (i = 1; i < argc; i++) {
@@ -282,9 +280,6 @@ void bx_vncsrv_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
         } else {
           BX_INFO(("connection timeout set to %d", timeout));
         }
-      } else if (!strcmp(argv[i], "noclient")) {
-        BX_INFO(("'noclient' mode: simulation runs even without client connected"));
-        noclient_mode = 1;
 #if BX_SHOW_IPS
       } else if (!strcmp(argv[i], "hideIPS")) {
         BX_INFO(("hide IPS display in status bar"));
@@ -334,7 +329,7 @@ void bx_vncsrv_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   // the ask menu doesn't work on the client side
   io->set_log_action(LOGLEV_PANIC, ACT_FATAL);
 
-  if (!noclient_mode || (timeout > 0)) {
+  if (timeout > 0) {
     while ((!client_connected) && (timeout--)) {
       fprintf(stderr, "Bochs VNC server waiting for client: %2d\r", timeout+1);
 #ifdef WIN32
@@ -369,11 +364,6 @@ void bx_vncsrv_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
 void bx_vncsrv_gui_c::handle_events(void)
 {
-  if (!noclient_mode && !client_connected) {
-    BX_PANIC(("VNC client closed connection"));
-    return;
-  }
-
   while (bKeyboardInUse) ;
 
   bKeyboardInUse = 1;
