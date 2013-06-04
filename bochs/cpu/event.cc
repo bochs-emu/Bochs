@@ -42,12 +42,11 @@ bx_bool BX_CPU_C::handleWaitForEvent(void)
   while (1)
   {
     if ((is_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR) && (BX_CPU_THIS_PTR get_IF() || BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF)) ||
-         is_pending(BX_EVENT_NMI | BX_EVENT_SMI | BX_EVENT_INIT |
+         is_unmasked_event_pending(BX_EVENT_NMI | BX_EVENT_SMI | BX_EVENT_INIT |
             BX_EVENT_VMX_VTPR_UPDATE |
             BX_EVENT_VMX_VEOI_UPDATE |
             BX_EVENT_VMX_VIRTUAL_APIC_WRITE |
             BX_EVENT_VMX_MONITOR_TRAP_FLAG |
-            BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED |
             BX_EVENT_VMX_VIRTUAL_NMI))
     {
       // interrupt ends the HALT condition
@@ -57,6 +56,11 @@ bx_bool BX_CPU_C::handleWaitForEvent(void)
 #endif
       BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
       BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
+      break;
+    }
+
+    if (is_unmasked_event_pending(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED)) {
+      // Exit from waiting loop and proceed to VMEXIT
       break;
     }
 

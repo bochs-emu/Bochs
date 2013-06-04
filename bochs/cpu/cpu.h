@@ -365,6 +365,7 @@ struct BxExceptionInfo {
 /* MSR registers */
 #define BX_MSR_TSC                 0x010
 #define BX_MSR_APICBASE            0x01b
+#define BX_MSR_TSC_ADJUST          0x03b
 
 #if BX_CPU_LEVEL >= 6
   #define BX_MSR_SYSENTER_CS       0x174

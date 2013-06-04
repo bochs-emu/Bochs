@@ -1928,7 +1928,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
 
   if (guest.activity_state) {
-    BX_ERROR(("VMEntry to non-active CPU state %d", guest.activity_state));
+    BX_DEBUG(("VMEntry to non-active CPU state %d", guest.activity_state));
     enter_sleep_state(guest.activity_state);
   }
 
