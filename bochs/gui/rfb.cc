@@ -145,10 +145,16 @@ static struct _rfbUpdateRegion {
     bx_bool updated;
 } rfbUpdateRegion;
 
-#define BX_RFB_MAX_XDIM 1024
-#define BX_RFB_MAX_YDIM 768
+#define BX_RFB_MAX_XDIM 1280
+#define BX_RFB_MAX_YDIM 1024
 #define BX_RFB_DEF_XDIM 720
 #define BX_RFB_DEF_YDIM 480
+
+const char status_led_green = 0x38;
+const char status_gray_text = 0xa4;
+const char status_led_red = 0x07;
+const char headerbar_bg = 0xff;
+const char headerbar_fg = 0x00;
 
 static char *rfbScreen;
 static char rfbPalette[256];
@@ -184,9 +190,12 @@ void rfbStartThread();
 void HandleRfbClient(SOCKET sClient);
 int ReadExact(int sock, char *buf, int len);
 int WriteExact(int sock, char *buf, int len);
-void DrawBitmap(int x, int y, int width, int height, char *bmap, char color, bool update_client);
-void DrawChar(int x, int y, int width, int height, int fonty, char *bmap, char color, bx_bool gfxchar);
-void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height, bool update_client);
+void DrawBitmap(int x, int y, int width, int height, char *bmap, char fg,
+        char bg, bx_bool update_client);
+void DrawChar(int x, int y, int width, int height, int fonty, char *bmap,
+        char fg, char bg, bx_bool gfxchar);
+void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height,
+        bx_bool update_client);
 void SendUpdate(int x, int y, int width, int height, Bit32u encoding);
 void rfbAddUpdateRegion(unsigned x0, unsigned y0, unsigned w, unsigned h);
 void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w = 0);
@@ -194,7 +203,7 @@ static Bit32u convertStringToRfbKey(const char *string);
 void rfbKeyPressed(Bit32u key, int press_release);
 void rfbMouseMove(int x, int y, int bmask);
 #if BX_SHOW_IPS && defined(WIN32)
-DWORD WINAPI ShowIPSthread(LPVOID);
+DWORD WINAPI rfbShowIPSthread(LPVOID);
 #endif
 
 static const rfbPixelFormat BGR233Format = {
@@ -253,7 +262,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     for (i = 1; i < argc; i++) {
       if (!strncmp(argv[i], "timeout=", 8)) {
         timeout = atoi(&argv[i][8]);
-        if (timeout < 1) {
+        if (timeout < 0) {
           BX_PANIC(("invalid timeout value: %d", timeout));
         } else {
           BX_INFO(("connection timeout set to %d", timeout));
@@ -305,24 +314,26 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   // the ask menu doesn't work on the client side
   io->set_log_action(LOGLEV_PANIC, ACT_FATAL);
 
-  while ((!client_connected) && (timeout--)) {
-    fprintf(stderr, "Bochs RFB server waiting for client: %2d\r", timeout+1);
+  if (timeout > 0) {
+    while ((!client_connected) && (timeout--)) {
+      fprintf(stderr, "Bochs RFB server waiting for client: %2d\r", timeout+1);
 #ifdef WIN32
-    Sleep(1000);
+      Sleep(1000);
 #else
-    sleep(1);
+      sleep(1);
 #endif
-  }
-  if ((timeout < 0) && (!client_connected)) {
-    BX_PANIC(("timeout! no client present"));
-  } else {
-    fprintf(stderr, "RFB client connected                   \r");
+    }
+    if ((timeout < 0) && (!client_connected)) {
+      BX_PANIC(("timeout! no client present"));
+    } else {
+      fprintf(stderr, "RFB client connected                   \r");
+    }
   }
 
 #if BX_SHOW_IPS && defined(WIN32)
   if (!rfbHideIPS) {
     DWORD threadID;
-    CreateThread(NULL, 0, ShowIPSthread, NULL, 0, &threadID);
+    CreateThread(NULL, 0, rfbShowIPSthread, NULL, 0, &threadID);
   }
 #endif
 
@@ -338,11 +349,6 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
 void bx_rfb_gui_c::handle_events(void)
 {
-  if (!client_connected) {
-    BX_PANIC(("RFB client closed connection"));
-    return;
-  }
-
   while (bKeyboardInUse) ;
 
   bKeyboardInUse = 1;
@@ -416,8 +422,14 @@ void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long c
 {
   Bit8u *old_line, *new_line;
   Bit8u cAttr, cChar;
-  unsigned int curs, hchars, offset, rows, x, y, xc, yc;
+  unsigned int curs, hchars, offset, rows, x, y, xc, yc, i;
   bx_bool force_update = 0, gfxchar, blink_state, blink_mode;
+  char text_palette[16];
+  char fgcolor, bgcolor;
+
+  for (i = 0; i < 16; i++) {
+    text_palette[i] = rfbPalette[tm_info->actl_palette[i]];
+  }
 
   blink_mode = (tm_info->blink_flags & BX_TEXT_BLINK_MODE) > 0;
   blink_state = (tm_info->blink_flags & BX_TEXT_BLINK_STATE) > 0;
@@ -456,6 +468,7 @@ void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long c
       if (force_update || (old_text[0] != new_text[0])
           || (old_text[1] != new_text[1])) {
         cChar = new_text[0];
+
         if (blink_mode) {
           cAttr = new_text[1] & 0x7F;
           if (!blink_state && (new_text[1] & 0x80))
@@ -463,14 +476,18 @@ void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long c
         } else {
           cAttr = new_text[1];
         }
+        fgcolor = text_palette[cAttr & 0x0F];
+        bgcolor = text_palette[cAttr >> 4];
+
         gfxchar = tm_info->line_graphics && ((cChar & 0xE0) == 0xC0);
         xc = x * font_width;
-        DrawChar(xc, yc, font_width, font_height, 0, (char *)&vga_charmap[cChar<<5], cAttr, gfxchar);
+        DrawChar(xc, yc, font_width, font_height, 0, (char *)&vga_charmap[cChar<<5],
+                 fgcolor, bgcolor, gfxchar);
         rfbAddUpdateRegion(xc, yc, font_width, font_height);
         if (offset == curs) {
           cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
           DrawChar(xc, yc + tm_info->cs_start, font_width, tm_info->cs_end - tm_info->cs_start + 1,
-                   tm_info->cs_start, (char *)&vga_charmap[cChar<<5], cAttr, gfxchar);
+                   tm_info->cs_start, (char *)&vga_charmap[cChar<<5], bgcolor, fgcolor, gfxchar);
         }
       }
       x++;
@@ -526,8 +543,29 @@ bx_bool bx_rfb_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u 
 //       left of the window.
 void bx_rfb_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
-  UpdateScreen(tile, x0, y0 + rfbHeaderbarY, rfbTileX, rfbTileY, false);
-  rfbAddUpdateRegion(x0, y0 + rfbHeaderbarY, rfbTileX, rfbTileY);
+  unsigned c, i, h, y;
+
+  switch (guest_bpp) {
+    case 8: /* 8 bpp */
+      y = y0 + rfbHeaderbarY;
+      if ((y0 + rfbTileY) > rfbDimensionY) {
+        h = rfbDimensionY - y0;
+      } else {
+        h = rfbTileY;
+      }
+      for (i = 0; i < h; i++) {
+        for (c = 0; c < rfbTileX; c++) {
+          tile[(i * rfbTileX) + c] = rfbPalette[tile[(i * rfbTileX) + c]];
+        }
+        memcpy(&rfbScreen[y * rfbWindowX + x0], &tile[i * rfbTileX], rfbTileX);
+        y++;
+      }
+      break;
+    default:
+      BX_PANIC(("%u bpp modes handled by new graphics API", guest_bpp));
+      return;
+  }
+  rfbAddUpdateRegion(x0, y0 + rfbHeaderbarY, rfbTileX, h);
 }
 
 // ::DIMENSION_UPDATE()
@@ -544,23 +582,25 @@ void bx_rfb_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
 void bx_rfb_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
-  if (bpp > 8) {
-    BX_ERROR(("%d bpp graphics mode not supported yet", bpp));
+  if (bpp == 8) {
+    guest_bpp = bpp;
+  } else {
+    BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
   }
   guest_textmode = (fheight > 0);
   guest_xres = x;
   guest_yres = y;
-  guest_bpp = bpp;
   if (guest_textmode) {
     font_height = fheight;
     font_width = fwidth;
     text_cols = x / fwidth;
     text_rows = y / fheight;
   }
-  if ((x > BX_RFB_MAX_XDIM) || (y > BX_RFB_MAX_YDIM)) {
-    BX_PANIC(("dimension_update(): RFB doesn't support graphics mode %dx%d", x, y));
-  } else if ((x != rfbDimensionX) || (y != rfbDimensionY)) {
+  if ((x != rfbDimensionX) || (y != rfbDimensionY)) {
     if (desktop_resizable) {
+      if ((x > BX_RFB_MAX_XDIM) || (y > BX_RFB_MAX_YDIM)) {
+        BX_PANIC(("dimension_update(): RFB doesn't support graphics mode %dx%d", x, y));
+      }
       rfbDimensionX = x;
       rfbDimensionY = y;
       rfbWindowX = rfbDimensionX;
@@ -569,6 +609,9 @@ void bx_rfb_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, un
       SendUpdate(0, 0, rfbWindowX, rfbWindowY, rfbEncodingDesktopSize);
       bx_gui->show_headerbar();
     } else {
+      if ((x > BX_RFB_DEF_XDIM) || (y > BX_RFB_DEF_YDIM)) {
+        BX_PANIC(("dimension_update(): RFB doesn't support graphics mode %dx%d", x, y));
+      }
       clear_screen();
       SendUpdate(0, rfbHeaderbarY, rfbDimensionX, rfbDimensionY, rfbEncodingRaw);
       rfbDimensionX = x;
@@ -654,14 +697,17 @@ void bx_rfb_gui_c::show_headerbar(void)
 
   newBits = (char *) malloc(rfbWindowX * rfbHeaderbarY);
   memset(newBits, 0, (rfbWindowX * rfbHeaderbarY));
-  DrawBitmap(0, 0, rfbWindowX, rfbHeaderbarY, newBits, (char)0xf0, false);
+  DrawBitmap(0, 0, rfbWindowX, rfbHeaderbarY, newBits, headerbar_fg, headerbar_bg, 0);
   for (i = 0; i < rfbHeaderbarBitmapCount; i++) {
     if (rfbHeaderbarBitmaps[i].alignment == BX_GRAVITY_LEFT) {
       xorigin = rfbHeaderbarBitmaps[i].xorigin;
     } else {
       xorigin = rfbWindowX - rfbHeaderbarBitmaps[i].xorigin;
     }
-    DrawBitmap(xorigin, 0, rfbBitmaps[rfbHeaderbarBitmaps[i].index].xdim, rfbBitmaps[rfbHeaderbarBitmaps[i].index].ydim, rfbBitmaps[rfbHeaderbarBitmaps[i].index].bmap, (char)0xf0, false);
+    DrawBitmap(xorigin, 0, rfbBitmaps[rfbHeaderbarBitmaps[i].index].xdim,
+               rfbBitmaps[rfbHeaderbarBitmaps[i].index].ydim,
+               rfbBitmaps[rfbHeaderbarBitmaps[i].index].bmap,
+               headerbar_fg, headerbar_bg, 0);
   }
   free(newBits);
   newBits = (char *) malloc(rfbWindowX * rfbStatusbarY / 8);
@@ -673,7 +719,8 @@ void bx_rfb_gui_c::show_headerbar(void)
       newBits[(rfbWindowX * j / 8) + addr] = value;
     }
   }
-  DrawBitmap(0, rfbWindowY - rfbStatusbarY, rfbWindowX, rfbStatusbarY, newBits, (char)0xf0, false);
+  DrawBitmap(0, rfbWindowY - rfbStatusbarY, rfbWindowX, rfbStatusbarY, newBits,
+             headerbar_fg, headerbar_bg, 0);
   free(newBits);
   for (i = 1; i <= statusitem_count; i++) {
     rfbSetStatusText(i, statusitem[i - 1].text, rfbStatusitemActive[i]);
@@ -707,7 +754,8 @@ void bx_rfb_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
   }
   DrawBitmap(xorigin, 0, rfbBitmaps[rfbHeaderbarBitmaps[hbar_id].index].xdim,
              rfbBitmaps[rfbHeaderbarBitmaps[hbar_id].index].ydim,
-             rfbBitmaps[rfbHeaderbarBitmaps[hbar_id].index].bmap, (char)0xf0, true);
+             rfbBitmaps[rfbHeaderbarBitmaps[hbar_id].index].bmap, headerbar_fg,
+             headerbar_bg, 1);
 }
 
 // ::EXIT()
@@ -982,7 +1030,6 @@ void HandleRfbClient(SOCKET sClient)
       if (n == 0) {
         // client closed connection
         client_connected = 0;
-        keep_alive = 0;
       } else {
         if (errno == EINTR)
           continue;
@@ -1046,7 +1093,6 @@ void HandleRfbClient(SOCKET sClient)
               if (n == 0) {
                 // client closed connection
                 client_connected = 0;
-                keep_alive = 0;
               } else {
                 BX_ERROR(("error receiving data."));
               }
@@ -1197,78 +1243,35 @@ int WriteExact(int sock, char *buf, int len)
     return 1;
 }
 
-void DrawBitmap(int x, int y, int width, int height, char *bmap, char color, bool update_client)
+void DrawBitmap(int x, int y, int width, int height, char *bmap,
+        char fgcolor, char bgcolor, bx_bool update_client)
 {
-    unsigned char *newBits;
-    char fgcolor, bgcolor;
-    static char vgaPalette[] = {
-       (char)0x00, //Black
-       (char)0x01, //Dark Blue
-       (char)0x02, //Dark Green
-       (char)0x03, //Dark Cyan
-       (char)0x04, //Dark Red
-       (char)0x05, //Dark Magenta
-       (char)0x06, //Brown
-       (char)0x07, //Light Gray
-       (char)0x38, //Dark Gray
-       (char)0x09, //Light Blue
-       (char)0x12, //Green
-       (char)0x1B, //Cyan
-       (char)0x24, //Light Red
-       (char)0x2D, //Magenta
-       (char)0x36, //Yellow
-       (char)0x3F  //White
-    };
-
-    bgcolor = vgaPalette[(color >> 4) & 0xF];
-    fgcolor = vgaPalette[color & 0xF];
-    newBits = (unsigned char *)malloc(width * height);
-    memset(newBits, 0, (width * height));
-    for(int i = 0; i < (width * height) / 8; i++) {
-        newBits[i * 8 + 0] = (bmap[i] & 0x01) ? fgcolor : bgcolor;
-        newBits[i * 8 + 1] = (bmap[i] & 0x02) ? fgcolor : bgcolor;
-        newBits[i * 8 + 2] = (bmap[i] & 0x04) ? fgcolor : bgcolor;
-        newBits[i * 8 + 3] = (bmap[i] & 0x08) ? fgcolor : bgcolor;
-        newBits[i * 8 + 4] = (bmap[i] & 0x10) ? fgcolor : bgcolor;
-        newBits[i * 8 + 5] = (bmap[i] & 0x20) ? fgcolor : bgcolor;
-        newBits[i * 8 + 6] = (bmap[i] & 0x40) ? fgcolor : bgcolor;
-        newBits[i * 8 + 7] = (bmap[i] & 0x80) ? fgcolor : bgcolor;
-    }
-    UpdateScreen(newBits, x, y, width, height, update_client);
-    free(newBits);
+  unsigned char *newBits;
+  newBits = (unsigned char *)malloc(width * height);
+  memset(newBits, 0, (width * height));
+  for (int i = 0; i < (width * height) / 8; i++) {
+    newBits[i * 8 + 0] = (bmap[i] & 0x01) ? fgcolor : bgcolor;
+    newBits[i * 8 + 1] = (bmap[i] & 0x02) ? fgcolor : bgcolor;
+    newBits[i * 8 + 2] = (bmap[i] & 0x04) ? fgcolor : bgcolor;
+    newBits[i * 8 + 3] = (bmap[i] & 0x08) ? fgcolor : bgcolor;
+    newBits[i * 8 + 4] = (bmap[i] & 0x10) ? fgcolor : bgcolor;
+    newBits[i * 8 + 5] = (bmap[i] & 0x20) ? fgcolor : bgcolor;
+    newBits[i * 8 + 6] = (bmap[i] & 0x40) ? fgcolor : bgcolor;
+    newBits[i * 8 + 7] = (bmap[i] & 0x80) ? fgcolor : bgcolor;
+  }
+  UpdateScreen(newBits, x, y, width, height, update_client);
+  free(newBits);
 }
 
-void DrawChar(int x, int y, int width, int height, int fonty, char *bmap, char color, bx_bool gfxchar)
+void DrawChar(int x, int y, int width, int height, int fonty, char *bmap,
+        char fgcolor, char bgcolor, bx_bool gfxchar)
 {
   static unsigned char newBits[9 * 32];
   unsigned char mask;
   int bytes = width * height;
-  char fgcolor, bgcolor;
-  static char vgaPalette[] = {
-       (char)0x00, //Black
-       (char)0x01, //Dark Blue
-       (char)0x02, //Dark Green
-       (char)0x03, //Dark Cyan
-       (char)0x04, //Dark Red
-       (char)0x05, //Dark Magenta
-       (char)0x06, //Brown
-       (char)0x07, //Light Gray
-       (char)0x38, //Dark Gray
-       (char)0x09, //Light Blue
-       (char)0x12, //Green
-       (char)0x1B, //Cyan
-       (char)0x24, //Light Red
-       (char)0x2D, //Magenta
-       (char)0x36, //Yellow
-       (char)0x3F  //White
-  };
-
-  bgcolor = vgaPalette[(color >> 4) & 0xF];
-  fgcolor = vgaPalette[color & 0xF];
-
-  for(int i = 0; i < bytes; i+=width) {
+  for (int i = 0; i < bytes; i+=width) {
     mask = 0x80;
-    for(int j = 0; j < width; j++) {
+    for (int j = 0; j < width; j++) {
       if (mask > 0) {
         newBits[i + j] = (bmap[fonty] & mask) ? fgcolor : bgcolor;
       } else {
@@ -1282,34 +1285,40 @@ void DrawChar(int x, int y, int width, int height, int fonty, char *bmap, char c
     }
     fonty++;
   }
-  UpdateScreen(newBits, x, y, width, height, false);
+  UpdateScreen(newBits, x, y, width, height, 0);
 }
 
-void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height, bool update_client)
+void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height,
+        bx_bool update_client)
 {
-    int i, c;
-    for (i = 0; i < height; i++) {
-        for (c = 0; c < width; c++) {
-            newBits[(i * width) + c] = rfbPalette[newBits[(i * width) + c]];
-        }
-        memcpy(&rfbScreen[y * rfbWindowX + x], &newBits[i * width], width);
-        y++;
-    }
-    if (update_client) {
-        if(sGlobal == INVALID_SOCKET) return;
-        rfbFramebufferUpdateMessage fum;
-        rfbFramebufferUpdateRectHeader furh;
-        fum.messageType = rfbFramebufferUpdate;
-        fum.numberOfRectangles = htons(1);
-        WriteExact(sGlobal, (char *)&fum, rfbFramebufferUpdateMessageSize);
-        furh.r.xPosition = htons(x);
-        furh.r.yPosition = htons((y - i));
-        furh.r.width = htons((short)width);
-        furh.r.height = htons((short)height);
-        furh.r.encodingType = htonl(rfbEncodingRaw);
-        WriteExact(sGlobal, (char *)&furh, rfbFramebufferUpdateRectHeaderSize);
-        WriteExact(sGlobal, (char *)newBits, width * height);
-    }
+  int i, x0, y0;
+  x0 = x;
+  y0 = y;
+  if ((x + width - 1) >= rfbWindowX) {
+    width = rfbWindowX - x + 1;
+  }
+  if ((y + height - 1) >= rfbWindowY) {
+    height = rfbWindowY - y + 1;
+  }
+  for (i = 0; i < height; i++) {
+    memcpy(&rfbScreen[y * rfbWindowX + x0], &newBits[i * width], width);
+    y++;
+  }
+  if (update_client) {
+    if(sGlobal == INVALID_SOCKET) return;
+    rfbFramebufferUpdateMessage fum;
+    rfbFramebufferUpdateRectHeader furh;
+    fum.messageType = rfbFramebufferUpdate;
+    fum.numberOfRectangles = htons(1);
+    WriteExact(sGlobal, (char *)&fum, rfbFramebufferUpdateMessageSize);
+    furh.r.xPosition = htons(x0);
+    furh.r.yPosition = htons(y0);
+    furh.r.width = htons((short)width);
+    furh.r.height = htons((short)height);
+    furh.r.encodingType = htonl(rfbEncodingRaw);
+    WriteExact(sGlobal, (char *)&furh, rfbFramebufferUpdateRectHeaderSize);
+    WriteExact(sGlobal, (char *)newBits, width * height);
+  }
 }
 
 void SendUpdate(int x, int y, int width, int height, Bit32u encoding)
@@ -1366,7 +1375,7 @@ void rfbAddUpdateRegion(unsigned x0, unsigned y0, unsigned w, unsigned h)
 void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w)
 {
   char *newBits;
-  unsigned xleft, xsize, color, i, len;
+  unsigned xleft, xsize, i, len;
 
   rfbStatusitemActive[element] = active;
   xleft = rfbStatusitemPos[element] + 2;
@@ -1376,18 +1385,24 @@ void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w)
   for (i = 0; i < (rfbStatusbarY - 2); i++) {
     newBits[((xsize / 8) + 1) * i] = 0;
   }
+
+  char fgcolor = active ? headerbar_fg : status_gray_text;
+  char bgcolor = 0;
   if (element > 0) {
-    color = active?(w?0xc0:0xa0):0xf7;
+    bgcolor = active ? (w ? status_led_red : status_led_green) : headerbar_bg;
   } else {
-    color = 0xf0;
+    bgcolor = headerbar_bg;
   }
-  DrawBitmap(xleft, rfbWindowY - rfbStatusbarY + 1, xsize, rfbStatusbarY - 2, newBits, color, false);
+  DrawBitmap(xleft, rfbWindowY - rfbStatusbarY + 1, xsize, rfbStatusbarY - 2,
+             newBits, fgcolor, bgcolor, 0);
+
   free(newBits);
   len = ((element > 0) && (strlen(text) > 4)) ? 4 : strlen(text);
   for (i = 0; i < len; i++) {
     DrawChar(xleft + i * 8 + 2, rfbWindowY - rfbStatusbarY + 5, 8, 8, 0,
-             (char *) &sdl_font8x8[(unsigned)text[i]][0], color, 0);
+             (char *) &sdl_font8x8[(unsigned) text[i]][0], fgcolor, bgcolor, 0);
   }
+
   rfbAddUpdateRegion(xleft, rfbWindowY - rfbStatusbarY + 1, xsize, rfbStatusbarY - 2);
 }
 
@@ -1825,10 +1840,12 @@ void rfbMouseMove(int x, int y, int bmask)
 #if BX_SHOW_IPS && defined(WIN32)
 VOID CALLBACK IPSTimerProc(HWND hWnd, UINT nMsg, UINT_PTR nIDEvent, DWORD dwTime)
 {
-  bx_show_ips_handler();
+  if (keep_alive) {
+    bx_show_ips_handler();
+  }
 }
 
-DWORD WINAPI ShowIPSthread(LPVOID)
+DWORD WINAPI rfbShowIPSthread(LPVOID)
 {
   MSG msg;
 
