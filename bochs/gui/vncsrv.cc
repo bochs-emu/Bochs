@@ -38,7 +38,6 @@
 // fix Windows (MinGW) support
 // fixes for clients not supporting 'rfbEncodingNewFBSize'
 // fix cursor shape after dimension update()
-// properly handle SetPixelFormat, including big/little-endian flag
 
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -89,6 +88,17 @@ IMPLEMENT_GUI_PLUGIN_CODE(vncsrv)
 
 #include <winsock.h>
 #include <process.h>
+
+#undef LOCK
+#undef UNLOCK
+#undef MUTEX
+#undef INIT_MUTEX
+#undef TINI_MUTEX
+#define LOCK(mutex) EnterCriticalSection(&(mutex))
+#define UNLOCK(mutex) LeaveCriticalSection(&(mutex))
+#define MUTEX(mutex) CRITICAL_SECTION (mutex)
+#define INIT_MUTEX(mutex)  InitializeCriticalSection(&(mutex))
+#define TINI_MUTEX(mutex) DeleteCriticalSection(&(mutex))
 
 #else
 
@@ -142,7 +152,7 @@ static struct _rfbKeyboardEvent {
     int y;
 } rfbKeyboardEvent[MAX_KEY_EVENTS];
 static unsigned long rfbKeyboardEvents = 0;
-static bx_bool bKeyboardInUse = 0;
+static MUTEX(bKeyboardInUse);
 
 // Misc Stuff
 
@@ -314,6 +324,7 @@ void bx_vncsrv_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   rfbInitServer(screen);
 
   client_connected = 0;
+  INIT_MUTEX(bKeyboardInUse);
   vncStartThread();
 
 #ifdef WIN32
@@ -364,9 +375,8 @@ void bx_vncsrv_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
 void bx_vncsrv_gui_c::handle_events(void)
 {
-  while (bKeyboardInUse) ;
+  LOCK(bKeyboardInUse);
 
-  bKeyboardInUse = 1;
   if (rfbKeyboardEvents > 0) {
     for (unsigned i = 0; i < rfbKeyboardEvents; i++) {
       if (rfbKeyboardEvent[i].type == KEYBOARD) {
@@ -377,7 +387,7 @@ void bx_vncsrv_gui_c::handle_events(void)
     }
     rfbKeyboardEvents = 0;
   }
-  bKeyboardInUse = 0;
+  UNLOCK(bKeyboardInUse);
 
 #if BX_SHOW_IPS
   if (rfbIPSupdate) {
@@ -799,6 +809,7 @@ void bx_vncsrv_gui_c::exit(void)
   while (!rfbServerDown) {
     usleep(10000); //10ms
   }
+  TINI_MUTEX(bKeyboardInUse);
 
   for (i = 0; i < rfbBitmapCount; i++) {
     free(rfbBitmaps[i].bmap);
@@ -1400,8 +1411,6 @@ void dokey(rfbBool down, rfbKeySym key, rfbClientPtr cl)
 {
   bx_bool mouse_toggle = 0;
 
-  while (bKeyboardInUse) ;
-
   if ((key == XK_Control_L) || (key == XK_Control_R)) {
     mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_CTRL, down);
   } else if (key == XK_Alt_L) {
@@ -1414,25 +1423,23 @@ void dokey(rfbBool down, rfbKeySym key, rfbClientPtr cl)
   if (mouse_toggle) {
     bx_gui->toggle_mouse_enable();
   } else {
-    bKeyboardInUse = 1;
+    LOCK(bKeyboardInUse);
     if (rfbKeyboardEvents >= MAX_KEY_EVENTS)
         return;
     rfbKeyboardEvent[rfbKeyboardEvents].type = KEYBOARD;
     rfbKeyboardEvent[rfbKeyboardEvents].key = key;
     rfbKeyboardEvent[rfbKeyboardEvents].down = down;
     rfbKeyboardEvents++;
-    bKeyboardInUse = 0;
+    UNLOCK(bKeyboardInUse);
   }
 }
 
 void doptr(int buttonMask, int x, int y, rfbClientPtr cl)
 {
-  while (bKeyboardInUse) ;
-
   if (bx_gui->mouse_toggle_check(BX_MT_MBUTTON, (buttonMask & 0x02) > 0)) {
     bx_gui->toggle_mouse_enable();
   } else {
-    bKeyboardInUse = 1;
+    LOCK(bKeyboardInUse);
     if (rfbKeyboardEvents >= MAX_KEY_EVENTS)
         return;
     rfbKeyboardEvent[rfbKeyboardEvents].type = MOUSE;
@@ -1441,7 +1448,7 @@ void doptr(int buttonMask, int x, int y, rfbClientPtr cl)
     rfbKeyboardEvent[rfbKeyboardEvents].down = (buttonMask & 0x01)
             | ((buttonMask >> 1) & 0x02) | ((buttonMask << 1) & 0x04);
     rfbKeyboardEvents++;
-    bKeyboardInUse = 0;
+    UNLOCK(bKeyboardInUse);
   }
 }
 
