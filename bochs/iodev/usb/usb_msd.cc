@@ -182,7 +182,7 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
       "Status",
       "CD-ROM media status (inserted / ejected)",
       media_status_names,
-      BX_INSERTED,
+      BX_EJECTED,
       BX_EJECTED);
     status->set_handler(cd_param_handler);
     status->set_runtime_param(1);

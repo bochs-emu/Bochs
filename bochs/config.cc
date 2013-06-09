@@ -1154,7 +1154,7 @@ void bx_init_options()
       "Status",
       "Floppy media status (inserted / ejected)",
       media_status_names,
-      BX_INSERTED,
+      BX_EJECTED,
       BX_EJECTED);
     status->set_ask_format("Is the device inserted or ejected? [%s] ");
 
@@ -1301,7 +1301,7 @@ void bx_init_options()
         "Status",
         "CD-ROM media status (inserted / ejected)",
         media_status_names,
-        BX_INSERTED,
+        BX_EJECTED,
         BX_EJECTED);
       status->set_ask_format("Is the device inserted or ejected? [%s] ");
 
