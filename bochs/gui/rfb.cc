@@ -1038,28 +1038,24 @@ void HandleRfbClient(SOCKET sClient)
       return;
     }
 
-    switch(msgType) {
+    switch (msgType) {
       case rfbSetPixelFormat:
         {
           rfbSetPixelFormatMessage spf;
           ReadExact(sClient, (char *)&spf, sizeof(rfbSetPixelFormatMessage));
 
-          spf.pixelFormat.bitsPerPixel = spf.pixelFormat.bitsPerPixel;
-          spf.pixelFormat.depth = spf.pixelFormat.depth;
           spf.pixelFormat.trueColourFlag = (spf.pixelFormat.trueColourFlag ? 1 : 0);
           spf.pixelFormat.bigEndianFlag = (spf.pixelFormat.bigEndianFlag ? 1 : 0);
           spf.pixelFormat.redMax = ntohs(spf.pixelFormat.redMax);
           spf.pixelFormat.greenMax = ntohs(spf.pixelFormat.greenMax);
           spf.pixelFormat.blueMax = ntohs(spf.pixelFormat.blueMax);
-          spf.pixelFormat.redShift = spf.pixelFormat.redShift;
-          spf.pixelFormat.greenShift = spf.pixelFormat.greenShift;
-          spf.pixelFormat.blueShift = spf.pixelFormat.blueShift;
 
           if (!PF_EQ(spf.pixelFormat, BGR233Format)) {
-            BX_ERROR(("client has wrong pixel format (%d %d %d %d %d %d %d %d %d)",
-                      spf.pixelFormat.bitsPerPixel,spf.pixelFormat.depth,spf.pixelFormat.trueColourFlag,
-                      spf.pixelFormat.bigEndianFlag,spf.pixelFormat.redMax,spf.pixelFormat.greenMax,
-                      spf.pixelFormat.blueMax,spf.pixelFormat.redShift,spf.pixelFormat.blueShift));
+            BX_ERROR(("client has wrong pixel format (%d %d %d %d %d %d %d %d %d %d)",
+                      spf.pixelFormat.bitsPerPixel,spf.pixelFormat.depth,spf.pixelFormat.bigEndianFlag,
+                      spf.pixelFormat.trueColourFlag,spf.pixelFormat.redMax,spf.pixelFormat.greenMax,
+                      spf.pixelFormat.blueMax,spf.pixelFormat.redShift,spf.pixelFormat.greenShift,
+                      spf.pixelFormat.blueShift));
             //return;
           }
           break;
