@@ -46,6 +46,7 @@ private:
     signed int consolefd;
     const static unsigned int clock_tick_rate = 1193180;
 #elif defined(WIN32)
+    BOOL useBeep;
     Bit64u usec_start;
 #endif
 };

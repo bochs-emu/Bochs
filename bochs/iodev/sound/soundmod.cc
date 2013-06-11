@@ -135,18 +135,19 @@ bx_bool bx_soundmod_ctl_c::beep_on(float frequency)
 {
   if (soundmod != NULL) {
     BX_DEBUG(("Beep ON (frequency=%.2f)",frequency));
-    if (!beep_active) {
-      soundmod->startwaveplayback(44100, 8, 0, 0);
-      beep_bytes = (int)(44100.0 / frequency / 2);
-      beep_bufsize = 4410;
-      beep_buffer = (Bit8u*)malloc(beep_bufsize);
-#ifdef WIN32
-      DWORD threadID;
-      CreateThread(NULL, 0, beep_thread, soundmod, 0, &threadID);
-#else
-      pthread_create(&thread, NULL, (void *(*)(void *))&beep_thread, soundmod);
-#endif
+    if (beep_active) {
+      beep_off();
     }
+    soundmod->startwaveplayback(44100, 8, 0, 0);
+    beep_bytes = (int)(44100.0 / frequency / 2);
+    beep_bufsize = 4410;
+    beep_buffer = (Bit8u*)malloc(beep_bufsize);
+#ifdef WIN32
+    DWORD threadID;
+    CreateThread(NULL, 0, beep_thread, soundmod, 0, &threadID);
+#else
+    pthread_create(&thread, NULL, (void *(*)(void *))&beep_thread, soundmod);
+#endif
     return 1;
   }
   return 0;

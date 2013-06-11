@@ -80,6 +80,9 @@ bx_speaker_c::~bx_speaker_c()
 void bx_speaker_c::init(void)
 {
   outputinit = 0;
+#if defined(WIN32)
+  useBeep = FALSE;
+#endif
 }
 
 void bx_speaker_c::reset(unsigned type)
@@ -102,6 +105,7 @@ void bx_speaker_c::reset(unsigned type)
     }
 #elif defined(WIN32)
     BX_INFO(("Using system beep for output"));
+    useBeep = TRUE;
 #endif
   }
 
@@ -110,6 +114,11 @@ void bx_speaker_c::reset(unsigned type)
 
 void bx_speaker_c::beep_on(float frequency)
 {
+#if defined(WIN32)
+  if (useBeep && (beep_frequency != 0.0)) {
+    beep_off();
+  }
+#endif
   beep_frequency = frequency;
 
 #if BX_SUPPORT_SOUNDLOW
@@ -122,7 +131,9 @@ void bx_speaker_c::beep_on(float frequency)
     ioctl(consolefd, KIOCSOUND, (int)(clock_tick_rate/frequency));
   }
 #elif defined(WIN32)
-  usec_start = bx_pc_system.time_usec();
+  if (useBeep) {
+    usec_start = bx_pc_system.time_usec();
+  }
 #endif
 
   // give the gui a chance to signal beep on
@@ -162,10 +173,12 @@ void bx_speaker_c::beep_off()
     }
 #elif defined(WIN32)
     // FIXME: sound should start at beep_on() and end here
-    DWORD threadID;
-    beep_info.msec = (DWORD)((bx_pc_system.time_usec() - usec_start) / 1000);
-    beep_info.frequency = (DWORD)beep_frequency;
-    CreateThread(NULL, 0, BeepThread, NULL, 0, &threadID);
+    if (useBeep) {
+      DWORD threadID;
+      beep_info.msec = (DWORD)((bx_pc_system.time_usec() - usec_start) / 1000);
+      beep_info.frequency = (DWORD)beep_frequency;
+      CreateThread(NULL, 0, BeepThread, NULL, 0, &threadID);
+    }
 #endif
 
     // give the gui a chance to signal beep off

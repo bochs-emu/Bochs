@@ -278,7 +278,7 @@ void bx_pit_c::write(Bit32u address, Bit32u dvalue, unsigned io_len)
   Bit32u value32, time_passed32 = (Bit32u)time_passed;
   bx_bool new_speaker_active;
 
-  if(time_passed32) {
+  if (time_passed32) {
     periodic(time_passed32);
   }
   BX_PIT_THIS s.last_usec = BX_PIT_THIS s.last_usec + time_passed;
@@ -298,6 +298,11 @@ void bx_pit_c::write(Bit32u address, Bit32u dvalue, unsigned io_len)
 
     case 0x42: /* timer 2: write count register */
       BX_PIT_THIS s.timer.write(2, value);
+      if (BX_PIT_THIS s.speaker_active) {
+        value32 = BX_PIT_THIS get_timer(2);
+        if (value32 == 0) value32 = 0x10000;
+        DEV_speaker_beep_on((float)(1193180.0 / value32));
+      }
       break;
 
     case 0x43: /* timer 0-2 mode control */
