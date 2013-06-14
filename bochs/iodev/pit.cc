@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -298,7 +298,7 @@ void bx_pit_c::write(Bit32u address, Bit32u dvalue, unsigned io_len)
 
     case 0x42: /* timer 2: write count register */
       BX_PIT_THIS s.timer.write(2, value);
-      if (BX_PIT_THIS s.speaker_active) {
+      if (BX_PIT_THIS s.speaker_active && BX_PIT_THIS new_timer_count(2)) {
         value32 = BX_PIT_THIS get_timer(2);
         if (value32 == 0) value32 = 0x10000;
         DEV_speaker_beep_on((float)(1193180.0 / value32));
@@ -386,6 +386,11 @@ void bx_pit_c::irq_handler(bx_bool value)
 Bit16u bx_pit_c::get_timer(int Timer)
 {
   return BX_PIT_THIS s.timer.get_inlatch(Timer);
+}
+
+Bit16u bx_pit_c::new_timer_count(int Timer)
+{
+  return BX_PIT_THIS s.timer.new_count_ready(Timer);
 }
 
 #if BX_DEBUGGER

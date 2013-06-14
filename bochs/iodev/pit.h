@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -69,6 +69,7 @@ private:
   BX_PIT_SMF void  irq_handler(bx_bool value);
 
   BX_PIT_SMF Bit16u get_timer(int Timer);
+  BX_PIT_SMF Bit16u new_timer_count(int Timer);
 };
 
 #endif  // #ifndef _BX_PIT_H

@@ -2,7 +2,8 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright 2003 by David N. Welton <davidw@dedasys.com>.
+//  Copyright (C) 2003       David N. Welton <davidw@dedasys.com>.
+//  Copyright (C) 2003-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -68,9 +69,9 @@ bx_speaker_c::bx_speaker_c()
 
 bx_speaker_c::~bx_speaker_c()
 {
+  beep_off();
 #ifdef __linux__
   if (consolefd >= 0) {
-    ioctl(consolefd, KIOCSOUND, 0);
     close(consolefd);
   }
 #endif
