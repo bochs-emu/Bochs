@@ -1157,11 +1157,12 @@ void bx_init_hardware()
 
   unsigned cpu_model = SIM->get_param_enum(BXPN_CPU_MODEL)->get();
   if (! cpu_model) {
+#if BX_CPU_LEVEL >= 5
     unsigned cpu_level = SIM->get_param_num(BXPN_CPUID_LEVEL)->get();
     BX_INFO(("  level: %d", cpu_level));
-#if BX_CPU_LEVEL >= 5
     BX_INFO(("  APIC support: %s", SIM->get_param_enum(BXPN_CPUID_APIC)->get_selected()));
 #else
+    BX_INFO(("  level: %d", BX_CPU_LEVEL));
     BX_INFO(("  APIC support: no"));
 #endif
     BX_INFO(("  FPU support: %s", BX_SUPPORT_FPU?"yes":"no"));
