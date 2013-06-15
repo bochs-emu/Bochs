@@ -53,47 +53,6 @@ void corei7_sandy_bridge_2600k_t::get_cpuid_leaf(Bit32u function, Bit32u subfunc
 
   switch(function) {
   case 0x80000000:
-  case 0x80000001:
-  case 0x80000002:
-  case 0x80000003:
-  case 0x80000004:
-  case 0x80000005:
-  case 0x80000006:
-  case 0x80000007:
-  case 0x80000008:
-  case 0x00000000:
-  case 0x00000001:
-  case 0x00000002:
-  case 0x00000003:
-    BX_INFO(("CPUID function 0x%08x", function));
-    break;
-  case 0x00000004:
-    BX_INFO(("CPUID function 0x%08x subfunction 0x%08x", function, subfunction));
-    break;
-  case 0x00000005:
-  case 0x00000006:
-  case 0x00000007:
-  case 0x00000008:
-  case 0x00000009:
-  case 0x0000000A:
-    BX_INFO(("CPUID function 0x%08x", function));
-    break;
-  case 0x0000000B:
-    BX_INFO(("CPUID function 0x%08x subfunction 0x%08x", function, subfunction));
-    break;
-  case 0x0000000C:
-    BX_INFO(("CPUID function 0x%08x", function));
-    break;
-  case 0x0000000D:
-    BX_INFO(("CPUID function 0x%08x subfunction 0x%08x", function, subfunction));
-    break;
-  default:
-    BX_INFO(("CPUID function 0x%08x", function));
-    break;
-  }
-
-  switch(function) {
-  case 0x80000000:
     get_ext_cpuid_leaf_0(leaf);
     return;
   case 0x80000001:
