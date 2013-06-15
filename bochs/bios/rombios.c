@@ -4319,7 +4319,7 @@ BX_DEBUG_INT15("case 1: enable mouse\n");
         case 5: // Initialize Mouse
 BX_DEBUG_INT15("case 1 or 5:\n");
           if (regs.u.r8.al == 5) {
-            if (regs.u.r8.bh != 3) {
+            if ((regs.u.r8.bh != 3) && (regs.u.r8.bh != 4)) {
               SET_CF();
               regs.u.r8.ah = 0x02; // invalid input
               return;
