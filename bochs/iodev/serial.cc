@@ -346,10 +346,15 @@ bx_serial_c::init(void)
 
       BX_SER_THIS s[i].baudrate = 115200;
 
-      for (unsigned addr=ports[i]; addr<(unsigned)(ports[i]+8); addr++) {
-        BX_DEBUG(("com%d initialize register for read/write: 0x%04x",i+1, addr));
-        DEV_register_ioread_handler(this, read_handler, addr, name, 1);
-        DEV_register_iowrite_handler(this, write_handler, addr, name, 1);
+      for (unsigned addr = ports[i]; addr < (unsigned)(ports[i] + 8); addr++) {
+        BX_DEBUG(("com%d initialize register for read/write: 0x%04x", i + 1, addr));
+        if (addr < (ports[i] + 7)) {
+          DEV_register_ioread_handler(this, read_handler, addr, name, 3);
+          DEV_register_iowrite_handler(this, write_handler, addr, name, 3);
+        } else {
+          DEV_register_ioread_handler(this, read_handler, addr, name, 1);
+          DEV_register_iowrite_handler(this, write_handler, addr, name, 1);
+        }
       }
 
       BX_SER_THIS s[i].io_mode = BX_SER_MODE_NULL;
@@ -540,7 +545,8 @@ bx_serial_c::init(void)
         BX_SER_THIS s[i].modem_status.dsr = 1;
       }
       count++;
-      BX_INFO(("com%d at 0x%04x irq %d", i+1, ports[i], BX_SER_THIS s[i].IRQ));
+      BX_INFO(("com%d at 0x%04x irq %d (mode: %s)", i+1, ports[i], BX_SER_THIS s[i].IRQ,
+               SIM->get_param_enum("mode", base)->get_selected()));
     }
   }
   // Check if the device is disabled or not configured
@@ -736,6 +742,13 @@ Bit32u bx_serial_c::read(Bit32u address, unsigned io_len)
 #endif  // !BX_USE_SER_SMF
   Bit8u offset, val;
   Bit8u port = 0;
+  Bit16u ret16;
+
+  if (io_len == 2) {
+    ret16 = BX_SER_THIS read_handler(theSerialDevice, address, 1);
+    ret16 |= (BX_SER_THIS read_handler(theSerialDevice, address + 1, 1)) << 8;
+    return ret16;
+  }
 
   offset = address & 0x07;
   switch (address & 0x03f8) {
@@ -932,6 +945,12 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
   Bit8u p_mode;
 #endif
   Bit8u port = 0;
+
+  if (io_len == 2) {
+    BX_SER_THIS write_handler(theSerialDevice, address, (value & 0xff), 1);
+    BX_SER_THIS write_handler(theSerialDevice, address + 1, ((value >> 8) & 0xff), 1);
+    return;
+  }
 
   offset = address & 0x07;
   switch (address & 0x03f8) {
@@ -1167,8 +1186,12 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if ((BX_SER_THIS s[port].io_mode == BX_SER_MODE_MOUSE) &&
           ((BX_SER_THIS s[port].line_cntl.wordlen_sel == 2) ||
            (BX_SER_THIS s[port].line_cntl.wordlen_sel == 3))) {
-        if (new_b0 && !new_b1) BX_SER_THIS detect_mouse = 1;
-        if (new_b0 && new_b1 && (BX_SER_THIS detect_mouse == 1)) BX_SER_THIS detect_mouse = 2;
+        if (!BX_SER_THIS s[port].modem_cntl.dtr && new_b0) {
+          BX_SER_THIS detect_mouse = 1;
+        }
+        if ((BX_SER_THIS detect_mouse == 1) && new_b1) {
+          BX_SER_THIS detect_mouse = 2;
+        }
       }
 #if USE_RAW_SERIAL
       if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
