@@ -172,6 +172,7 @@
 #define BXPN_PNIC_ENABLED                "network.pcipnic.enabled"
 #define BXPN_E1000                       "network.e1000"
 #define BXPN_E1000_ENABLED               "network.e1000.enabled"
+#define BXPN_SOUND_SPEAKER               "sound.speaker"
 #define BXPN_SOUND_SB16                  "sound.sb16"
 #define BXPN_SB16_DMATIMER               "sound.sb16.dmatimer"
 #define BXPN_SB16_LOGLEVEL               "sound.sb16.loglevel"

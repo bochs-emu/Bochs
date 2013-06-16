@@ -41,12 +41,12 @@ public:
 private:
     float beep_frequency;  // 0 : beep is off
     bx_bool outputinit;
+    unsigned output_mode;
 #ifdef __linux__
     /* Do we have access?  If not, just skip everything else. */
     signed int consolefd;
     const static unsigned int clock_tick_rate = 1193180;
 #elif defined(WIN32)
-    BOOL useBeep;
     Bit64u usec_start;
 #endif
 };
