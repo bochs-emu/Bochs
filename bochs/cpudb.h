@@ -44,6 +44,7 @@ bx_define_cpudb(corei5_arrandale_m520)
 bx_define_cpudb(zambezi)
 bx_define_cpudb(corei7_sandy_bridge_2600k)
 bx_define_cpudb(corei7_ivy_bridge_3770k)
+bx_define_cpudb(corei7_haswell_4770)
 #endif
 #endif
 #endif

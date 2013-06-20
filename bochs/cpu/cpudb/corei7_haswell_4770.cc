@@ -182,7 +182,8 @@ Bit32u corei7_haswell_4770_t::get_cpu_extensions_bitmask(void) const
          BX_CPU_1G_PAGES |
          BX_CPU_PCID |
          BX_CPU_SMEP |
-         BX_CPU_TSC_DEADLINE;
+         BX_CPU_TSC_DEADLINE |
+         BX_CPU_FCS_FDS_DEPRECATION;
 }
 
 #if BX_SUPPORT_VMX >= 2
@@ -548,9 +549,9 @@ void corei7_haswell_4770_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_funct
                 BX_CPUID_EXT3_SMEP | 
                 BX_CPUID_EXT3_BMI2 | 
                 BX_CPUID_EXT3_ENCHANCED_REP_STRINGS |
-                BX_CPUID_EXT3_INVPCID;
+                BX_CPUID_EXT3_INVPCID |
              /* BX_CPUID_EXT3_RTM | */        // not implemented yet
-             /* BX_CPUID_EXT3_DEPRECATE_FCS_FDS */
+                BX_CPUID_EXT3_DEPRECATE_FCS_FDS;
     leaf->ecx = 0;
     leaf->edx = 0;
     break;

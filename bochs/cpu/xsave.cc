@@ -84,7 +84,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 #endif
     {
       xmm.xmm32u(2) = (Bit32u)(BX_CPU_THIS_PTR the_i387.fip);
-      xmm.xmm32u(3) =         (BX_CPU_THIS_PTR the_i387.fcs);
+      if (bx_cpuid_support_fcs_fds_deprecation())
+        xmm.xmm32u(3) = 0;
+      else
+        xmm.xmm32u(3) = (BX_CPU_THIS_PTR the_i387.fcs);
     }
 
     write_virtual_xmmword(i->seg(), eaddr, (Bit8u *) &xmm);
@@ -107,7 +110,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 #endif
     {
       write_virtual_dword(i->seg(), (eaddr + 16) & asize_mask, (Bit32u) BX_CPU_THIS_PTR the_i387.fdp);
-      write_virtual_dword(i->seg(), (eaddr + 20) & asize_mask, (Bit32u) BX_CPU_THIS_PTR the_i387.fds);
+
+      if (bx_cpuid_support_fcs_fds_deprecation())
+        write_virtual_dword(i->seg(), (eaddr + 20) & asize_mask, 0);
+      else
+        write_virtual_dword(i->seg(), (eaddr + 20) & asize_mask, (Bit32u) BX_CPU_THIS_PTR the_i387.fds);
     }
     /* do not touch MXCSR state */
 

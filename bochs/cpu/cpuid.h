@@ -142,6 +142,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPU_ALT_MOV_CR8           (1 << 17)              /* LOCK CR0 access CR8 */
 #define BX_CPU_TSC_DEADLINE          (1 << 18)              /* TSC-Deadline */
 #define BX_CPU_MISALIGNED_SSE        (1 << 19)              /* Misaligned SSE */
+#define BX_CPU_FCS_FDS_DEPRECATION   (1 << 20)              /* FCS/FDS Deprecation */
 
 // cpuid VMX features
 #define BX_VMX_TPR_SHADOW            (1 <<  0)              /* TPR shadow */

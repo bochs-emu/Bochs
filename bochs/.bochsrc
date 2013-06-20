@@ -135,6 +135,8 @@ romimage: file=$BXSHARE/BIOS-bochs-latest
 #  corei5_arrandale_m520      Intel(R) Core(TM) i5 M 520 (Arrandale)
 #  corei7_sandy_bridge_2600k  Intel(R) Core(TM) i7-2600K (Sandy Bridge)
 #  corei7_ivy_bridge_3770k    Intel(R) Core(TM) i7-3770K CPU (Ivy Bridge)
+#  corei7_haswell_4770        Intel(R) Core(TM) i7-4770 CPU (Haswell)
+#  zambezi                    AMD FX(tm)-4100 Quad-Core Processor (Zambezi)
 #
 #  COUNT:
 #    Set the number of processors:cores per processor:threads per core 

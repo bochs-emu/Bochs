@@ -191,7 +191,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
 #endif
   {
     xmm.xmm32u(2) = (Bit32u)(BX_CPU_THIS_PTR the_i387.fip);
-    xmm.xmm32u(3) =         (BX_CPU_THIS_PTR the_i387.fcs);
+    if (bx_cpuid_support_fcs_fds_deprecation())
+      xmm.xmm32u(3) = 0;
+    else
+      xmm.xmm32u(3) = (BX_CPU_THIS_PTR the_i387.fcs);
   }
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -219,7 +222,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
 #endif
   {
     xmm.xmm32u(0) = (Bit32u)(BX_CPU_THIS_PTR the_i387.fdp);
-    xmm.xmm32u(1) =         (BX_CPU_THIS_PTR the_i387.fds);
+    if (bx_cpuid_support_fcs_fds_deprecation())
+      xmm.xmm32u(1) = 0;
+    else
+      xmm.xmm32u(1) = (BX_CPU_THIS_PTR the_i387.fds);
   }
 
   if (bx_cpuid_support_sse()) {

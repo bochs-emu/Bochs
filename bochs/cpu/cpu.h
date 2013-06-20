@@ -4215,6 +4215,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_tsc_deadline(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_xapic_extensions(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_smap(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_fcs_fds_deprecation(void);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
   BX_SMF BX_CPP_INLINE const bx_gen_reg_t *get_gen_regfile() { return BX_CPU_THIS_PTR gen_reg; }
@@ -4749,6 +4750,11 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_fsgsbase(void)
 #else
   return 0;
 #endif
+}
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_fcs_fds_deprecation(void)
+{
+  return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_FCS_FDS_DEPRECATION) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_smap(void)
