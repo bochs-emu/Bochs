@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2013 Stanislav Shwartsman
+//   Copyright (c) 2013 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -21,20 +21,20 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_COREI5_LYNNFIELD_750_CPUID_DEFINITIONS_H
-#define BX_COREI5_LYNNFIELD_750_CPUID_DEFINITIONS_H
+#ifndef BX_COREI7_HASWELL_4770_CPUID_DEFINITIONS_H
+#define BX_COREI7_HASWELL_4770_CPUID_DEFINITIONS_H
 
-#if BX_SUPPORT_X86_64
+#if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
 
 #include "cpu/cpuid.h"
 
-class corei5_lynnfield_750_t : public bx_cpuid_t {
+class corei7_haswell_4770_t : public bx_cpuid_t {
 public:
-  corei5_lynnfield_750_t(BX_CPU_C *cpu);
-  virtual ~corei5_lynnfield_750_t() {}
+  corei7_haswell_4770_t(BX_CPU_C *cpu);
+  virtual ~corei7_haswell_4770_t() {}
 
   // return CPU name
-  virtual const char *get_name(void) const { return "corei5_lynnfield_750"; }
+  virtual const char *get_name(void) const { return "corei7_haswell_4770"; }
 
   virtual Bit64u get_isa_extensions_bitmask(void) const;
   virtual Bit32u get_cpu_extensions_bitmask(void) const;
@@ -53,8 +53,10 @@ private:
   void get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_5(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_6(cpuid_function_t *leaf) const;
+  void get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_A(cpuid_function_t *leaf) const;
   void get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
+  void get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 
   void get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const;
@@ -64,8 +66,8 @@ private:
   void get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const;
 };
 
-extern bx_cpuid_t *create_corei5_lynnfield_750_cpuid(BX_CPU_C *cpu);
+extern bx_cpuid_t *create_corei7_haswell_4770_cpuid(BX_CPU_C *cpu);
 
-#endif // BX_SUPPORT_X86_64
+#endif // BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
 
 #endif

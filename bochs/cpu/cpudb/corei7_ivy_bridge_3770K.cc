@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2012 Stanislav Shwartsman
+//   Copyright (c) 2011-2013 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -523,17 +523,25 @@ void corei7_ivy_bridge_3770k_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_f
   case 0:
     leaf->eax = 0; /* report max sub-leaf that supported in leaf 7 */
 
-    // * [0:0]    FS/GS BASE access instructions
-    //   [2:1]    reserved
-    //   [3:3]    BMI1: Advanced Bit Manipulation Extensions
-    //   [4:4]    reserved
-    //   [5:5]    AVX2
-    //   [6:6]    reserved
-    // * [7:7]    SMEP: Supervisor Mode Execution Protection
-    //   [8:8]    BMI2: Advanced Bit Manipulation Extensions
-    // * [9:9]    Support for Enhanced REP MOVSB/STOSB
-    //   [10:10]  Support for INVPCID instruction
-    //   [31:10]  reserved
+    // * [0:0]   FS/GS BASE access instructions
+    //   [1:1]   Support for IA32_TSC_ADJUST MSR
+    //   [2:2]   reserved
+    //   [3:3]   BMI1: Advanced Bit Manipulation Extensions
+    //   [4:4]   HLE: Hardware Lock Elision
+    //   [5:5]   AVX2
+    //   [6:6]   reserved
+    // * [7:7]   SMEP: Supervisor Mode Execution Protection
+    //   [8:8]   BMI2: Advanced Bit Manipulation Extensions
+    // * [9:9]   Support for Enhanced REP MOVSB/STOSB
+    //   [10:10] Support for INVPCID instruction
+    //   [11:11] RTM: Restricted Transactional Memory
+    //   [12:12] Supports Quality of Service (QoS) capability
+    //   [13:13] Deprecates FPU CS and FPU DS values
+    //   [17:14] reserved
+    //   [18:18] RDSEED instruction support
+    //   [19:19] ADCX/ADOX instructions support
+    //   [20:20] SMAP: Supervisor Mode Access Prevention
+    //   [31:21] reserved
     leaf->ebx = BX_CPUID_EXT3_FSGSBASE | 
                 BX_CPUID_EXT3_SMEP | 
                 BX_CPUID_EXT3_ENCHANCED_REP_STRINGS;
@@ -715,14 +723,26 @@ void corei7_ivy_bridge_3770k_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) con
   //   [3:3]   Extended APIC Space
   //   [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
   //   [5:5]   LZCNT: LZCNT instruction support
-  //   [6:6]   SSE4A: SSE4A Instructions support (deprecated?)
+  //   [6:6]   SSE4A: SSE4A Instructions support
   //   [7:7]   Misaligned SSE support
   //   [8:8]   PREFETCHW: PREFETCHW instruction support
   //   [9:9]   OSVW: OS visible workarounds (AMD)
-  //   [11:10] reserved
+  //   [10:10] IBS: Instruction based sampling
+  //   [11:11] XOP: Extended Operations Support and XOP Prefix
   //   [12:12] SKINIT support
   //   [13:13] WDT: Watchdog timer support
-  //   [31:14] reserved
+  //   [14:14] Reserved
+  //   [15:15] LWP: Light weight profiling
+  //   [16:16] FMA4: Four-operand FMA instructions support
+  //   [17:17] Reserved
+  //   [18:18] Reserved
+  //   [19:19] NodeId: Indicates support for NodeId MSR (0xc001100c)
+  //   [20:20] Reserved
+  //   [21:21] TBM: trailing bit manipulation instructions support
+  //   [22:22] Topology extensions support
+  //   [23:23] PerfCtrExtCore: core perf counter extensions support
+  //   [24:24] PerfCtrExtNB: NB perf counter extensions support
+  //   [31:25] Reserved
 
   leaf->ecx = BX_CPUID_EXT2_LAHF_SAHF;
 

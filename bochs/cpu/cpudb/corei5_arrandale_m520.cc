@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011 Stanislav Shwartsman
+//   Copyright (c) 2011-2013 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -609,7 +609,7 @@ void corei5_arrandale_m520_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [3:3]   Extended APIC Space
   //   [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
   //   [5:5]   LZCNT: LZCNT instruction support
-  //   [6:6]   SSE4A: SSE4A Instructions support (deprecated?)
+  //   [6:6]   SSE4A: SSE4A Instructions support
   //   [7:7]   Misaligned SSE support
   //   [8:8]   PREFETCHW: PREFETCHW instruction support
   //   [9:9]   OSVW: OS visible workarounds (AMD)
