@@ -1520,7 +1520,8 @@ Bit32u bx_generic_cpuid_t::get_ext3_cpuid_features(void) const
   Bit32u features = 0;
 
   //   [0:0]    FS/GS BASE access instructions
-  //   [2:1]    reserved
+  //   [1:1]    Support for IA32_TSC_ADJUST MSR
+  //   [2:2]    reserved
   //   [3:3]    BMI1: Advanced Bit Manipulation Extensions
   //   [4:4]    HLE: Hardware Lock Elision
   //   [5:5]    AVX2
