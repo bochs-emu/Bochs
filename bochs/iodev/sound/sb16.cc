@@ -74,7 +74,7 @@ void sb16_init_options(void)
   bx_param_filename_c *wavefile = new bx_param_filename_c(menu,
     "wave",
     "Wave file",
-    "This is the device/file where the wave output is stored",
+    "This is the device to be used as wave input source",
     "", BX_PATHNAME_LEN);
   bx_param_num_c *loglevel = new bx_param_num_c(menu,
     "loglevel",
@@ -227,8 +227,6 @@ bx_sb16_c::~bx_sb16_c(void)
         finishvocfile();
       break;
     case 1:
-      if (DSP.outputinit != 0)
-        BX_SB16_OUTPUT->closewaveoutput();
       if (DSP.inputinit != 0)
         BX_SB16_OUTPUT->closewaveinput();
       break;
@@ -237,8 +235,6 @@ bx_sb16_c::~bx_sb16_c(void)
         fclose(WAVEDATA);
       break;
   }
-
-  delete(BX_SB16_OUTPUT);
 
   delete [] DSP.dma.chunk;
 
@@ -281,15 +277,10 @@ void bx_sb16_c::init(void)
   BX_SB16_THIS wavemode = SIM->get_param_num("wavemode", base)->get();
   BX_SB16_THIS dmatimer = SIM->get_param_num("dmatimer", base)->get();
   BX_SB16_THIS loglevel = SIM->get_param_num("loglevel", base)->get();
-  char *wavefile = SIM->get_param_string("wave", base)->getptr();
 
   if ((BX_SB16_THIS wavemode == 1) || (BX_SB16_THIS midimode == 1)) {
     // let the output functions initialize
-    if (!strcmp(wavefile, "sdl")) {
-      BX_SB16_OUTPUT = DEV_sound_init_module("sdl", BX_SB16_THISP);
-    } else {
-      BX_SB16_OUTPUT = DEV_sound_init_module("default", BX_SB16_THISP);
-    }
+    BX_SB16_OUTPUT = DEV_sound_get_module();
 
     if (BX_SB16_OUTPUT == NULL) {
       writelog(MIDILOG(2), "Couldn't initialize output devices. Output disabled.");
@@ -301,14 +292,7 @@ void bx_sb16_c::init(void)
   DSP.dma.chunk = new Bit8u[BX_SOUNDLOW_WAVEPACKETSIZE];
   DSP.dma.chunkindex = 0;
   if (BX_SB16_THIS wavemode == 1) {
-    int ret = BX_SB16_OUTPUT->openwaveoutput(wavefile);
-    if (ret != BX_SOUNDLOW_OK) {
-      writelog(WAVELOG(2), "Error: Could not open wave output device.");
-      BX_SB16_THIS wavemode = 0;
-      DSP.outputinit = 0;
-    } else {
-      DSP.outputinit = 1;
-    }
+    DSP.outputinit = 1;
   }
   DSP.inputinit = 0;
   MPU.outputinit = 0;

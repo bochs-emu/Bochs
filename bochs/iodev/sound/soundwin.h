@@ -166,7 +166,7 @@ typedef struct {
 
 class bx_sound_windows_c : public bx_sound_lowlevel_c {
 public:
-  bx_sound_windows_c(logfunctions *dev);
+  bx_sound_windows_c();
   virtual ~bx_sound_windows_c();
 
   virtual int get_type() {return BX_SOUNDLOW_WIN;}

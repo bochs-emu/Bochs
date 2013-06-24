@@ -44,8 +44,9 @@ class bx_sound_lowlevel_c;
 class bx_soundmod_ctl_c : public bx_soundmod_ctl_stub_c {
 public:
   bx_soundmod_ctl_c();
-  virtual ~bx_soundmod_ctl_c() {}
-  virtual void* init_module(const char *type, logfunctions *device);
+  virtual ~bx_soundmod_ctl_c();
+  virtual void init(void);
+  virtual void* get_module();
   virtual bx_bool beep_on(float frequency);
   virtual bx_bool beep_off();
 private:
@@ -63,7 +64,7 @@ public:
   non-portable, while everything in the soundcard code is portable
   */
 
-  bx_sound_lowlevel_c(logfunctions *dev);
+  bx_sound_lowlevel_c();
   virtual ~bx_sound_lowlevel_c();
 
   virtual int get_type() {return BX_SOUNDLOW_DUMMY;}
@@ -90,7 +91,6 @@ public:
   static void record_timer_handler(void *);
   void record_timer(void);
 protected:
-  logfunctions *device;
   int record_timer_index;
   int record_packet_size;
   sound_record_handler_t record_handler;

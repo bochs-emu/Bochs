@@ -32,10 +32,10 @@
 
 #if defined(WIN32) && BX_SUPPORT_SOUNDLOW
 
-#define LOG_THIS device->
+#define LOG_THIS
 
-bx_sound_windows_c::bx_sound_windows_c(logfunctions *dev)
-  :bx_sound_lowlevel_c(dev)
+bx_sound_windows_c::bx_sound_windows_c()
+  :bx_sound_lowlevel_c()
 {
   MidiOpen = 0;
   WaveOutOpen = 0;
@@ -640,7 +640,7 @@ void bx_sound_windows_c::record_timer_handler(void *this_ptr)
 
 void bx_sound_windows_c::record_timer(void)
 {
-  record_handler(this->device, record_packet_size);
+  record_handler(this, record_packet_size);
 }
 
 #endif // defined(WIN32)

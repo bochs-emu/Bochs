@@ -26,7 +26,7 @@
 
 #if BX_WITH_SDL && BX_SUPPORT_SOUNDLOW
 
-#define LOG_THIS device->
+#define LOG_THIS
 
 #if BX_WITH_SDL
 #include <SDL.h>
@@ -41,8 +41,8 @@ static struct {
 } audio_buffer;
 
 
-bx_sound_sdl_c::bx_sound_sdl_c(logfunctions *dev)
-    :bx_sound_lowlevel_c(dev)
+bx_sound_sdl_c::bx_sound_sdl_c()
+    :bx_sound_lowlevel_c()
 {
   WaveOpen = 0;
   if (SDL_InitSubSystem(SDL_INIT_AUDIO)) {

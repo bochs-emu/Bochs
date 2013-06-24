@@ -156,7 +156,15 @@ void bx_speaker_c::init(void)
   const char *mode = SIM->get_param_enum("mode", base)->get_selected();
   if (!strcmp(mode, "sound")) {
     output_mode = BX_SPK_MODE_SOUND;
-    BX_INFO(("Using lowlevel sound support for output"));
+    outputinit = 0;
+#if BX_SUPPORT_SOUNDLOW
+    if (DEV_soundmod_beep_off()) {
+      BX_INFO(("Using lowlevel sound support for output"));
+      outputinit = 1;
+    } else {
+      BX_ERROR(("Failed to use lowlevel sound support for output"));
+    }
+#endif
   } else if (!strcmp(mode, "system")) {
     output_mode = BX_SPK_MODE_SYSTEM;
 #ifdef __linux__
@@ -176,20 +184,10 @@ void bx_speaker_c::init(void)
   } else {
     output_mode = BX_SPK_MODE_NONE;
   }
-  outputinit = 0;
 }
 
 void bx_speaker_c::reset(unsigned type)
 {
-  if (!outputinit) {
-    outputinit = 1;
-#if BX_SUPPORT_SOUNDLOW
-    if (!DEV_soundmod_beep_off()) {
-      BX_ERROR(("Failed to use lowlevel sound support for output"));
-    }
-#endif
-  }
-
   beep_off();
 }
 
@@ -204,7 +202,9 @@ void bx_speaker_c::beep_on(float frequency)
 
   if (output_mode == BX_SPK_MODE_SOUND) {
 #if BX_SUPPORT_SOUNDLOW
-    DEV_soundmod_beep_on(frequency);
+    if (outputinit) {
+      DEV_soundmod_beep_on(frequency);
+    }
 #endif
   } else if (output_mode == BX_SPK_MODE_SYSTEM) {
 #ifdef __linux__
@@ -245,7 +245,9 @@ void bx_speaker_c::beep_off()
 {
   if (output_mode == BX_SPK_MODE_SOUND) {
 #if BX_SUPPORT_SOUNDLOW
-    DEV_soundmod_beep_off();
+    if (outputinit) {
+      DEV_soundmod_beep_off();
+    }
 #endif
   } else if (output_mode == BX_SPK_MODE_SYSTEM) {
     if (beep_frequency != 0.0) {

@@ -29,14 +29,14 @@
 
 #if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)) && BX_SUPPORT_SOUNDLOW
 
-#define LOG_THIS device->
+#define LOG_THIS
 
 #include <errno.h>
 #include <sys/ioctl.h>
 #include <sys/soundcard.h>
 
-bx_sound_linux_c::bx_sound_linux_c(logfunctions *dev)
-  :bx_sound_lowlevel_c(dev)
+bx_sound_linux_c::bx_sound_linux_c()
+  :bx_sound_lowlevel_c()
 {
 #if BX_HAVE_ALSASOUND
   alsa_seq.handle = NULL;
@@ -737,7 +737,7 @@ void bx_sound_linux_c::record_timer_handler(void *this_ptr)
 
 void bx_sound_linux_c::record_timer(void)
 {
-  record_handler(this->device, record_packet_size);
+  record_handler(this, record_packet_size);
 }
 
 #endif

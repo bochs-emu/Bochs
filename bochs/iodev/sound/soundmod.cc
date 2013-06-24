@@ -68,19 +68,43 @@ bx_soundmod_ctl_c::bx_soundmod_ctl_c()
   soundmod = NULL;
 }
 
-void* bx_soundmod_ctl_c::init_module(const char *type, logfunctions *device)
+bx_soundmod_ctl_c::~bx_soundmod_ctl_c()
 {
-  if (!strcmp(type, "default")) {
-    soundmod = new BX_SOUND_LOWLEVEL_C(device);
-#if BX_WITH_SDL
-  } else if (!strcmp(type, "sdl")) {
-    soundmod = new bx_sound_sdl_c(device);
-#endif
-  } else if (!strcmp(type, "dummy")) {
-    soundmod = new bx_sound_lowlevel_c(device);
-  } else {
-    BX_PANIC(("unknown sound module type '%s'", type));
+  if (soundmod != NULL) {
+    soundmod->closewaveoutput();
   }
+  delete soundmod;
+}
+
+void bx_soundmod_ctl_c::init()
+{
+  const char *driver = SIM->get_param_string(BXPN_SOUND_DRIVER)->getptr();
+  const char *wavedev = SIM->get_param_string(BXPN_SOUND_WAVEDEV)->getptr();
+  if (!strcmp(driver, "default")) {
+    soundmod = new BX_SOUND_LOWLEVEL_C();
+#if BX_HAVE_ALSASOUND
+  } else if (!strcmp(driver, "alsa")) {
+    soundmod = new bx_sound_linux_c();
+    wavedev = "alsa";
+#endif
+#if BX_WITH_SDL
+  } else if (!strcmp(driver, "sdl")) {
+    soundmod = new bx_sound_sdl_c();
+#endif
+  } else if (!strcmp(driver, "dummy")) {
+    soundmod = new bx_sound_lowlevel_c();
+  } else {
+    BX_PANIC(("unknown lowlevel sound driver '%s'", driver));
+    return;
+  }
+  int ret = soundmod->openwaveoutput(wavedev);
+  if (ret != BX_SOUNDLOW_OK) {
+    BX_PANIC(("Could not open wave output device"));
+  }
+}
+
+void* bx_soundmod_ctl_c::get_module()
+{
   return soundmod;
 }
 
@@ -171,9 +195,9 @@ bx_bool bx_soundmod_ctl_c::beep_off()
 }
 
 // The dummy sound lowlevel functions. They don't do anything.
-bx_sound_lowlevel_c::bx_sound_lowlevel_c(logfunctions *dev)
+bx_sound_lowlevel_c::bx_sound_lowlevel_c()
 {
-  device = dev;
+  put("sound", "SOUND");
   record_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
@@ -302,7 +326,7 @@ void bx_sound_lowlevel_c::record_timer_handler(void *this_ptr)
 
 void bx_sound_lowlevel_c::record_timer(void)
 {
-  record_handler(this->device, record_packet_size);
+  record_handler(this, record_packet_size);
 }
 
 #endif

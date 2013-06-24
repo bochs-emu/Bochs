@@ -1465,6 +1465,22 @@ void bx_init_options()
   // sound subtree
   bx_list_c *sound = new bx_list_c(root_param, "sound", "Sound Configuration");
   sound->set_options(sound->USE_TAB_WINDOW | sound->SHOW_PARENT);
+  bx_list_c *soundlow = new bx_list_c(sound, "lowlevel", "Lowlevel Sound Configuration");
+  soundlow->set_options(soundlow->SHOW_PARENT | soundlow->SERIES_ASK);
+  soundlow->set_enabled(BX_SUPPORT_SOUNDLOW);
+
+#if BX_SUPPORT_SOUNDLOW
+  new bx_param_string_c(soundlow,
+    "driver",
+    "Sound driver",
+    "This is the lowlevel driver to use for emulated sound devices",
+    "default", BX_PATHNAME_LEN);
+  new bx_param_filename_c(soundlow,
+    "wavedev",
+    "Wave output device",
+    "This is the device where the wave output is sent to",
+    "", BX_PATHNAME_LEN);
+#endif
   // sound device options initialized in the devive plugin code
 
   // misc options subtree
@@ -2752,6 +2768,23 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         BX_ERROR(("%s: unknown parameter for clock ignored.", context));
       }
     }
+  }
+  else if (!strcmp(params[0], "sound")) {
+#if BX_SUPPORT_SOUNDLOW
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "driver=", 7)) {
+        SIM->get_param_string(BXPN_SOUND_DRIVER)->set(&params[i][7]);
+      }
+      else if (!strncmp(params[i], "wavedev=", 8)) {
+        SIM->get_param_string(BXPN_SOUND_WAVEDEV)->set(&params[i][8]);
+      }
+      else {
+        BX_ERROR(("%s: unknown parameter for sound ignored.", context));
+      }
+    }
+#else
+    PARSE_ERR(("%s: Bochs is not compiled with lowlevel sound support", context));
+#endif
   }
   else if (!strcmp(params[0], "gdbstub")) {
 #if BX_GDBSTUB

@@ -167,8 +167,10 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 #endif
 #if BX_SUPPORT_SOUNDLOW
   sound_enabled = is_sound_enabled();
-  if (sound_enabled)
+  if (sound_enabled) {
     PLUG_load_plugin(soundmod, PLUGTYPE_CORE);
+    pluginSoundModCtl->init();
+  }
 #endif
   // PCI logic (i440FX)
   pci.enabled = SIM->get_param_bool(BXPN_PCI_ENABLED)->get();
@@ -1030,7 +1032,8 @@ bx_bool bx_devices_c::is_network_enabled(void)
 bx_bool bx_devices_c::is_sound_enabled(void)
 {
   if (PLUG_device_present("es1370") ||
-      PLUG_device_present("sb16")) {
+      PLUG_device_present("sb16") ||
+      PLUG_device_present("speaker")) {
     return 1;
   }
   return 0;

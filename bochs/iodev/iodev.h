@@ -348,8 +348,8 @@ public:
 #if BX_SUPPORT_SOUNDLOW
 class BOCHSAPI bx_soundmod_ctl_stub_c : public bx_devmodel_c {
 public:
-  virtual void* init_module(const char *type, logfunctions *dev) {
-    STUBFUNC(soundmod_ctl, init_module); return NULL;
+  virtual void* get_module() {
+    STUBFUNC(soundmod_ctl, get_module); return NULL;
   }
   virtual bx_bool beep_on(float frequency) {
     return 0;

@@ -38,7 +38,7 @@
 
 class bx_sound_osx_c : public bx_sound_lowlevel_c {
 public:
-    bx_sound_osx_c(logfunctions *dev);
+    bx_sound_osx_c();
     virtual ~bx_sound_osx_c();
 
     virtual int get_type() {return BX_SOUNDLOW_OSX;}

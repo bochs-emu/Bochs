@@ -252,6 +252,12 @@ network
     bootrom
 
 sound
+  lowlevel
+    driver
+    wavedev
+  speaker
+    enabled
+    mode
   sb16
     enabled
     midifile

@@ -111,7 +111,7 @@ void es1370_init_options(void)
   bx_param_filename_c *wavedev = new bx_param_filename_c(menu,
     "wavedev",
     "Wave device",
-    "This is the device where the wave output is sent to",
+    "This is the device to be used as wave input source",
     "", BX_PATHNAME_LEN);
   bx_list_c *deplist = new bx_list_c(NULL);
   deplist->add(wavedev);
@@ -172,13 +172,9 @@ bx_es1370_c::bx_es1370_c()
 
 bx_es1370_c::~bx_es1370_c()
 {
-  if (s.dac_outputinit) {
-    soundmod->closewaveoutput();
-  }
   if (s.adc_inputinit) {
     soundmod->closewaveinput();
   }
-  delete soundmod;
 
   SIM->get_bochs_root()->remove("es1370");
   BX_DEBUG(("Exit"));
@@ -204,19 +200,8 @@ void bx_es1370_c::init(void)
   }
   BX_ES1370_THIS pci_base_address[0] = 0;
 
-  char *wavedev = SIM->get_param_string("wavedev", base)->getptr();
-  if (!strcmp(wavedev, "sdl")) {
-    BX_ES1370_THIS soundmod = DEV_sound_init_module("sdl", BX_ES1370_THIS_PTR);
-  } else {
-    BX_ES1370_THIS soundmod = DEV_sound_init_module("default", BX_ES1370_THIS_PTR);
-  }
-  int ret = BX_ES1370_THIS soundmod->openwaveoutput(wavedev);
-  if (ret != BX_SOUNDLOW_OK) {
-    BX_ERROR(("could not open wave output device"));
-    BX_ES1370_THIS s.dac_outputinit = 0;
-  } else {
-    BX_ES1370_THIS s.dac_outputinit = 1;
-  }
+  BX_ES1370_THIS soundmod = DEV_sound_get_module();
+  BX_ES1370_THIS s.dac_outputinit = 1;
   BX_ES1370_THIS s.adc_inputinit = 0;
   BX_ES1370_THIS s.dac_nr_active = -1;
 

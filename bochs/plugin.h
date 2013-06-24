@@ -251,9 +251,9 @@ extern "C" {
 #define DEV_usb_init_device(a,b,c,d) (usbdev_type)bx_devices.pluginUsbDevCtl->init_device(a,b,(void**)c,d)
 #define DEV_usb_send_msg(a,b) bx_devices.pluginUsbDevCtl->usb_send_msg((void*)a,b)
 
-///////// Sound module macro
-#define DEV_sound_init_module(a,b) \
-  ((bx_sound_lowlevel_c*)bx_devices.pluginSoundModCtl->init_module(a,b))
+///////// Sound module macros
+#define DEV_sound_get_module() \
+  ((bx_sound_lowlevel_c*)bx_devices.pluginSoundModCtl->get_module())
 #define DEV_soundmod_beep_on(a) bx_devices.pluginSoundModCtl->beep_on(a)
 #define DEV_soundmod_beep_off() bx_devices.pluginSoundModCtl->beep_off()
 

@@ -30,7 +30,7 @@
 
 #if defined(macintosh) && BX_SUPPORT_SOUNDLOW
 
-#define LOG_THIS device->
+#define LOG_THIS
 
 #if BX_WITH_MACOS
 #include <QuickTimeMusic.h>
@@ -76,8 +76,8 @@ AudioUnit WaveOutputUnit = NULL;
 AudioConverterRef WaveConverter = NULL;
 #endif
 
-bx_sound_osx_c::bx_sound_osx_c(logfunctions *dev)
-    :bx_sound_lowlevel_c(dev)
+bx_sound_osx_c::bx_sound_osx_c()
+    :bx_sound_lowlevel_c()
 {
     MidiOpen = 0;
     WaveOpen = 0;
@@ -634,7 +634,7 @@ void bx_sound_osx_c::record_timer_handler(void *this_ptr)
 
 void bx_sound_osx_c::record_timer(void)
 {
-  record_handler(this->device, record_packet_size);
+  record_handler(this, record_packet_size);
 }
 
 #endif  // defined(macintosh)
