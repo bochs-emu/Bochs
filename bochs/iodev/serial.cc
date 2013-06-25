@@ -348,7 +348,7 @@ bx_serial_c::init(void)
 
       for (unsigned addr = ports[i]; addr < (unsigned)(ports[i] + 8); addr++) {
         BX_DEBUG(("com%d initialize register for read/write: 0x%04x", i + 1, addr));
-        if (addr < (ports[i] + 7)) {
+        if (addr < (unsigned)(ports[i] + 7)) {
           DEV_register_ioread_handler(this, read_handler, addr, name, 3);
           DEV_register_iowrite_handler(this, write_handler, addr, name, 3);
         } else {
