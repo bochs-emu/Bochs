@@ -1944,8 +1944,9 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
       dbg_printf("[0x"FMT_PHY_ADDRX"] %04x:%04x (%s): ",
         phy, BX_CPU(which_cpu)->guard_found.cs,
         (unsigned) BX_CPU(which_cpu)->guard_found.eip,
-        bx_dbg_symbolic_address_16bit(BX_CPU(which_cpu)->guard_found.eip,
-          BX_CPU(which_cpu)->sregs[BX_SEG_REG_CS].selector.value));
+        bx_dbg_symbolic_address(0,
+           BX_CPU(which_cpu)->guard_found.eip & 0xffff,
+           BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS)));
     }
     dbg_printf("%-25s ; ", bx_disasm_tbuf);
     for (unsigned j=0; j<ilen; j++) {

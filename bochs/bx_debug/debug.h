@@ -318,7 +318,6 @@ void bx_dbg_show_param_command(const char *param);
 int bx_dbg_show_symbolic(void);
 void bx_dbg_set_symbol_command(const char *symbol, bx_address val);
 const char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);
-const char* bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs);
 int bx_dbg_symbol_command(const char* filename, bx_bool global, Bit32u offset);
 void bx_dbg_info_symbols_command(const char *Symbol);
 int bx_dbg_lbreakpoint_symbol_command(const char *Symbol);

@@ -37,30 +37,24 @@ const char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
   return "unk. ctxt";
 }
 
-const char* bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs)
-{
-  // just prints an error anyway
-  return bx_dbg_symbolic_address (0,0,0);
-}
-
 int bx_dbg_symbol_command(const char* filename, bx_bool global, Bit32u offset)
 {
   dbg_printf(BX_HAVE_MAP_ERR);
   return -1;
 }
 
-void bx_dbg_info_symbols_command(const char *Symbol)
+void bx_dbg_info_symbols_command(const char *symbol)
 {
   dbg_printf(BX_HAVE_MAP_ERR);
 }
 
-int bx_dbg_lbreakpoint_symbol_command(const char *Symbol)
+int bx_dbg_lbreakpoint_symbol_command(const char *symbol)
 {
   dbg_printf(BX_HAVE_MAP_ERR);
   return -1;
 }
 
-Bit32u bx_dbg_get_symbol_value(const char *Symbol)
+Bit32u bx_dbg_get_symbol_value(const char *symbol)
 {
   return 0;
 }
@@ -134,7 +128,7 @@ struct context_t
 
   static context_t* get_context(Bit32u);
   symbol_entry_t* get_symbol_entry(Bit32u);
-  symbol_entry_t* get_symbol_entry(const char *Symbol) const;
+  symbol_entry_t* get_symbol_entry(const char *symbol) const;
   void add_symbol(symbol_entry_t*);
   const sym_set_t* get_all_symbols() const {return &m_syms;}
   const rsym_set_t* get_all_rsymbols() const {return &m_rsyms;}
@@ -191,12 +185,12 @@ symbol_entry_t* context_t::get_symbol_entry(Bit32u ip)
   return *iter;
 }
 
-symbol_entry_t* context_t::get_symbol_entry(const char *Symbol) const
+symbol_entry_t* context_t::get_symbol_entry(const char *symbol) const
 {
   if (m_rsyms.empty())
     return 0;
 
-  symbol_entry_t probe(0, Symbol);
+  symbol_entry_t probe(0, symbol);
   rsym_set_t::const_iterator iter;
   iter=m_rsyms.find(&probe);
   if(iter==m_rsyms.end()) // No symbol found
@@ -220,17 +214,17 @@ void symbol_entry_t::trim_quotes(void)
   }
 }
 
-Bit32u bx_dbg_get_symbol_value(const char *Symbol)
+Bit32u bx_dbg_get_symbol_value(const char *symbol)
 {
   context_t* cntx = context_t::get_context(0);
   if(!cntx) // Context not found
     return 0;
 
-  symbol_entry_t s(0, Symbol);
+  symbol_entry_t s(0, symbol);
   s.trim_quotes();
 
   symbol_entry_t* sym=cntx->get_symbol_entry(s.name);
-  if(!sym) // Symbol not found
+  if(!sym) // symbol not found
     return 0;
 
   return sym->start;
@@ -277,15 +271,6 @@ const char* bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base)
   }
   snprintf (buf, 80, "%s+%x", entr->name, (base+eip) - entr->start);
   return buf;
-}
-
-const char* bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs)
-{
-  // in 16-bit code, the segment selector and offset are combined into a
-  // 20-bit linear address = (segment selector<<4) + offset.
-  eip &= 0xffff;
-  cs &= 0xffff;
-  return bx_dbg_symbolic_address (0, eip+(cs<<4), 0);
 }
 
 int bx_dbg_symbol_command(const char* filename, bx_bool global, Bit32u offset)
@@ -364,7 +349,7 @@ static bool bx_dbg_strprefix(const char *s1, const char *s2)
   return strncmp(s1, s2, len)==0;
 }
 
-void bx_dbg_info_symbols_command(const char *Symbol)
+void bx_dbg_info_symbols_command(const char *symbol)
 {
   context_t* cntx = context_t::get_context(0);
 
@@ -373,16 +358,16 @@ void bx_dbg_info_symbols_command(const char *Symbol)
     return;
   }
 
-  if(Symbol) {
+  if(symbol) {
     const context_t::rsym_set_t* rsyms;
 
     rsyms=cntx->get_all_rsymbols();
     if (rsyms->empty ()) {
-      dbg_printf ("Symbols not loaded\n");
+      dbg_printf ("symbols not loaded\n");
       return;
     }
 
-    symbol_entry_t probe(0, Symbol);
+    symbol_entry_t probe(0, symbol);
     // remove leading and trailing quotas
     probe.trim_quotes();
     context_t::rsym_set_t::const_iterator iter;
@@ -400,8 +385,8 @@ void bx_dbg_info_symbols_command(const char *Symbol)
     const context_t::sym_set_t* syms;
 
     syms=cntx->get_all_symbols();
-    if (syms->empty ()) {
-      dbg_printf ("Symbols not loaded\n");
+    if (syms->empty()) {
+      dbg_printf ("symbols not loaded\n");
       return;
     }
 
@@ -426,7 +411,7 @@ int bx_dbg_lbreakpoint_symbol_command(const char *symbol)
   const symbol_entry_t* sym=cntx->get_symbol_entry(probe.name);
   if(sym)
     return bx_dbg_lbreakpoint_command(bkRegular, sym->start);
-  dbg_printf ("Symbol not found\n");
+  dbg_printf ("symbol not found\n");
   return -1;
 }
 
