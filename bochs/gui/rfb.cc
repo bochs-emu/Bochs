@@ -150,11 +150,11 @@ static struct _rfbUpdateRegion {
 #define BX_RFB_DEF_XDIM 720
 #define BX_RFB_DEF_YDIM 480
 
-const char status_led_green = 0x38;
-const char status_gray_text = 0xa4;
-const char status_led_red = 0x07;
-const char headerbar_bg = 0xff;
-const char headerbar_fg = 0x00;
+const unsigned char status_led_green = 0x38;
+const unsigned char status_gray_text = 0xa4;
+const unsigned char status_led_red = 0x07;
+const unsigned char headerbar_bg = 0xff;
+const unsigned char headerbar_fg = 0x00;
 
 static char *rfbScreen;
 static char rfbPalette[256];
@@ -1382,8 +1382,8 @@ void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w)
     newBits[((xsize / 8) + 1) * i] = 0;
   }
 
-  char fgcolor = active ? headerbar_fg : status_gray_text;
-  char bgcolor = 0;
+  unsigned char fgcolor = active ? headerbar_fg : status_gray_text;
+  unsigned char bgcolor = 0;
   if (element > 0) {
     bgcolor = active ? (w ? status_led_red : status_led_green) : headerbar_bg;
   } else {
