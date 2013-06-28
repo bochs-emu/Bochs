@@ -123,8 +123,9 @@ BX_CPP_INLINE void flushSMC(bxICacheEntry_c *e)
     e->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
     extern void genDummyICacheEntry(bxInstruction_c *i);
-    for (unsigned instr=0;instr < e->tlen; instr++)
-      genDummyICacheEntry(e->i + instr);
+//  for (unsigned instr=0;instr < e->tlen; instr++)
+//    genDummyICacheEntry(e->i + instr);
+    genDummyICacheEntry(e->i);
 #endif
   }
 }
