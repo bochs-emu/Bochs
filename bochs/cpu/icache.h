@@ -136,6 +136,8 @@ public:
   bxInstruction_c mpool[BxICacheMemPool];
   unsigned mpindex;
 
+  Bit32u traceLinkTimeStamp;
+
 #define BX_ICACHE_PAGE_SPLIT_ENTRIES 8 /* must be power of two */
   struct pageSplitEntryIndex {
     bx_phy_address ppf; // Physical address of 2nd page of the trace 
@@ -244,11 +246,19 @@ BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
     victimCache[i].vc_entry.pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
 
   mpindex = 0;
+
+  traceLinkTimeStamp = 0;
 }
 
 BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr, Bit32u mask)
 {
   Bit32u pAddrIndex = bxPageWriteStampTable::hash(pAddr);
+
+  // break all links bewteen traces
+  if (++traceLinkTimeStamp == 0xffffffff) {
+    flushICacheEntries();
+    return;
+  }
 
   // Need to invalidate all traces in the trace cache that might include an
   // instruction that was modified.  But this is not enough, it is possible

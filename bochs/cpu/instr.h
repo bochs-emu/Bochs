@@ -370,11 +370,13 @@ public:
   }
 
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
-  BX_CPP_INLINE bxInstruction_c* getNextTrace() const {
+  BX_CPP_INLINE bxInstruction_c* getNextTrace(Bit32u currTraceLinkTimeStamp) {
+    if (currTraceLinkTimeStamp > modRMForm.Id2) handlers.next = NULL;
     return handlers.next;
   }
-  BX_CPP_INLINE void setNextTrace(bxInstruction_c* iptr) {
+  BX_CPP_INLINE void setNextTrace(bxInstruction_c* iptr, Bit32u traceLinkTimeStamp) {
     handlers.next = iptr;
+    modRMForm.Id2 = traceLinkTimeStamp;
   }
 #endif
 

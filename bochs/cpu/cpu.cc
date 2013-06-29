@@ -252,18 +252,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::linkTrace(bxInstruction_c *i)
   if(delta >= bx_pc_system.getNumCpuTicksLeftNextEvent())
     return;
 
-  bxInstruction_c *next = i->getNextTrace();
+  bxInstruction_c *next = i->getNextTrace(BX_CPU_THIS_PTR iCache.traceLinkTimeStamp);
   if (next) {
-    // still don't allow link over page boundary until SMC detection will be solved
-    // causes Win98 crash
-/*
     bx_address eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
     if (eipBiased >= BX_CPU_THIS_PTR eipPageWindowSize) {
       prefetch();
     }
 
     BX_EXECUTE_INSTRUCTION(next);
-*/
     return;
   }
 
@@ -281,7 +277,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::linkTrace(bxInstruction_c *i)
 
   if (entry != NULL) // link traces - handle only hit cases
   {
-    i->setNextTrace(entry->i);
+    i->setNextTrace(entry->i, BX_CPU_THIS_PTR iCache.traceLinkTimeStamp);
     i = entry->i;
     BX_EXECUTE_INSTRUCTION(i);
   }
