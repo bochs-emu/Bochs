@@ -101,7 +101,7 @@ BX_CPP_INLINE void bxPageWriteStampTable::resetWriteStamps(void)
 
 extern bxPageWriteStampTable pageWriteStampTable;
 
-#define BxICacheEntries (256 * 1024)  // Must be a power of 2.
+#define BxICacheEntries (64  * 1024)  // Must be a power of 2.
 #define BxICacheMemPool (576 * 1024)
 
 #define BX_MAX_TRACE_LENGTH 32
