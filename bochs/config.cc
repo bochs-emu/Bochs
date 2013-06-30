@@ -1476,7 +1476,7 @@ void bx_init_options()
     "This is the lowlevel driver to use for emulated sound devices",
     "default", BX_PATHNAME_LEN);
   new bx_param_filename_c(soundlow,
-    "wavedev",
+    "waveout",
     "Wave output device",
     "This is the device where the wave output is sent to",
     "", BX_PATHNAME_LEN);
@@ -2772,13 +2772,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
   else if (!strcmp(params[0], "sound")) {
 #if BX_SUPPORT_SOUNDLOW
     for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "driver=", 7)) {
-        SIM->get_param_string(BXPN_SOUND_DRIVER)->set(&params[i][7]);
-      }
-      else if (!strncmp(params[i], "wavedev=", 8)) {
-        SIM->get_param_string(BXPN_SOUND_WAVEDEV)->set(&params[i][8]);
-      }
-      else {
+      if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param(BXPN_SOUNDLOW)) < 0) {
         BX_ERROR(("%s: unknown parameter for sound ignored.", context));
       }
     }
@@ -3403,6 +3397,7 @@ int bx_write_configuration(const char *rc, int overwrite)
   bx_write_log_options(fp, (bx_list_c*) SIM->get_param("log"));
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_KEYBOARD), NULL, 0);
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_MOUSE), NULL, 0);
+  bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_SOUNDLOW), NULL, 0);
   SIM->save_addon_options(fp);
   fclose(fp);
   return 0;

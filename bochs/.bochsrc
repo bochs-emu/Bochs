@@ -731,7 +731,7 @@ parport1: enabled=1, file="parport.out"
 # 'sdl' (if present). For some drivers the wave output device must be
 # specified.
 #=======================================================================
-sound: driver=default, wavedev=/dev/dsp
+sound: driver=default, waveout=/dev/dsp
 
 #=======================================================================
 # SPEAKER:

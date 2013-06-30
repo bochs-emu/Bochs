@@ -79,13 +79,13 @@ bx_soundmod_ctl_c::~bx_soundmod_ctl_c()
 void bx_soundmod_ctl_c::init()
 {
   const char *driver = SIM->get_param_string(BXPN_SOUND_DRIVER)->getptr();
-  const char *wavedev = SIM->get_param_string(BXPN_SOUND_WAVEDEV)->getptr();
+  const char *waveout = SIM->get_param_string(BXPN_SOUND_WAVEOUT)->getptr();
   if (!strcmp(driver, "default")) {
     soundmod = new BX_SOUND_LOWLEVEL_C();
 #if BX_HAVE_ALSASOUND
   } else if (!strcmp(driver, "alsa")) {
     soundmod = new bx_sound_linux_c();
-    wavedev = "alsa";
+    waveout = "alsa";
 #endif
 #if BX_WITH_SDL
   } else if (!strcmp(driver, "sdl")) {
@@ -97,7 +97,7 @@ void bx_soundmod_ctl_c::init()
     BX_PANIC(("unknown lowlevel sound driver '%s'", driver));
     return;
   }
-  int ret = soundmod->openwaveoutput(wavedev);
+  int ret = soundmod->openwaveoutput(waveout);
   if (ret != BX_SOUNDLOW_OK) {
     BX_PANIC(("Could not open wave output device"));
   }
