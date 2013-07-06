@@ -254,7 +254,8 @@ network
 sound
   lowlevel
     driver
-    wavedev
+    waveout
+    wavein
   speaker
     enabled
     mode
@@ -269,7 +270,8 @@ sound
     dmatimer
   es1370
     enabled
-    wavedev
+    wavemode
+    wavefile
 
 misc
   port_e9_hack

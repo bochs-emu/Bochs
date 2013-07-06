@@ -80,6 +80,7 @@ void bx_soundmod_ctl_c::init()
 {
   const char *driver = SIM->get_param_string(BXPN_SOUND_DRIVER)->getptr();
   const char *waveout = SIM->get_param_string(BXPN_SOUND_WAVEOUT)->getptr();
+  const char *wavein = SIM->get_param_string(BXPN_SOUND_WAVEIN)->getptr();
   if (!strcmp(driver, "default")) {
     soundmod = new BX_SOUND_LOWLEVEL_C();
 #if BX_HAVE_ALSASOUND
@@ -96,6 +97,9 @@ void bx_soundmod_ctl_c::init()
   } else {
     BX_PANIC(("unknown lowlevel sound driver '%s'", driver));
     return;
+  }
+  if (!strlen(wavein)) {
+    SIM->get_param_string(BXPN_SOUND_WAVEIN)->set(waveout);
   }
   int ret = soundmod->openwaveoutput(waveout);
   if (ret != BX_SOUNDLOW_OK) {

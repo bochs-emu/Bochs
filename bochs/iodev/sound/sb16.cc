@@ -74,7 +74,7 @@ void sb16_init_options(void)
   bx_param_filename_c *wavefile = new bx_param_filename_c(menu,
     "wave",
     "Wave file",
-    "This is the device to be used as wave input source",
+    "This is the file where the wave output is stored",
     "", BX_PATHNAME_LEN);
   bx_param_num_c *loglevel = new bx_param_num_c(menu,
     "loglevel",
@@ -1292,7 +1292,7 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
   } else {
     if (BX_SB16_THIS wavemode == 1) {
       if (DSP.inputinit == 0) {
-        ret = BX_SB16_OUTPUT->openwaveinput(SIM->get_param_string("wave", base)->getptr(), sb16_adc_handler);
+        ret = BX_SB16_OUTPUT->openwaveinput(SIM->get_param_string(BXPN_SOUND_WAVEIN, base)->getptr(), sb16_adc_handler);
         if (ret != BX_SOUNDLOW_OK) {
           BX_SB16_THIS wavemode = 0;
           writelog(WAVELOG(2), "Error: Could not open wave input device.");

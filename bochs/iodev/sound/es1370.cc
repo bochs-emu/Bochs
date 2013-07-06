@@ -107,15 +107,23 @@ void es1370_init_options(void)
     "Enables the ES1370 emulation",
     0);
   enabled->set_enabled(BX_SUPPORT_ES1370);
-
-  bx_param_filename_c *wavedev = new bx_param_filename_c(menu,
-    "wavedev",
-    "Wave device",
-    "This is the device to be used as wave input source",
+/*
+  bx_param_num_c *wavemode = new bx_param_num_c(menu,
+    "wavemode",
+    "Wave mode",
+    "Controls the wave output format.",
+    0, 3,
+    0);
+  bx_param_filename_c *wavefile = new bx_param_filename_c(menu,
+    "wavefile",
+    "Wave file",
+    "This is the file where the wave output is stored",
     "", BX_PATHNAME_LEN);
   bx_list_c *deplist = new bx_list_c(NULL);
-  deplist->add(wavedev);
+  deplist->add(wavemode);
+  deplist->add(wavefile);
   enabled->set_dependent_list(deplist);
+*/
 }
 
 Bit32s es1370_options_parser(const char *context, int num_params, char *params[])
@@ -123,7 +131,9 @@ Bit32s es1370_options_parser(const char *context, int num_params, char *params[]
   if (!strcmp(params[0], "es1370")) {
     bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370);
     for (int i = 1; i < num_params; i++) {
-      if (SIM->parse_param_from_list(context, params[i], base) < 0) {
+      if (!strncmp(params[i], "wavedev=", 8)) {
+        BX_ERROR(("%s: wave device now specified with the 'sound' option.", context));
+      } else if (SIM->parse_param_from_list(context, params[i], base) < 0) {
         BX_ERROR(("%s: unknown parameter for es1370 ignored.", context));
       }
     }
@@ -644,7 +654,7 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
       if (new_freq) {
         if (i == ADC_CHANNEL) {
           if (!BX_ES1370_THIS s.adc_inputinit) {
-            ret = BX_ES1370_THIS soundmod->openwaveinput(SIM->get_param_string(BXPN_ES1370_WAVEDEV)->getptr(),
+            ret = BX_ES1370_THIS soundmod->openwaveinput(SIM->get_param_string(BXPN_SOUND_WAVEIN)->getptr(),
                                                          es1370_adc_handler);
             if (ret != BX_SOUNDLOW_OK) {
               BX_ERROR(("could not open wave input device"));

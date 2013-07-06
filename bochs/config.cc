@@ -1480,6 +1480,11 @@ void bx_init_options()
     "Wave output device",
     "This is the device where the wave output is sent to",
     "", BX_PATHNAME_LEN);
+  new bx_param_filename_c(soundlow,
+    "wavein",
+    "Wave input device",
+    "This is the device to be used as the wave input source",
+    "", BX_PATHNAME_LEN);
 #endif
   // sound device options initialized in the devive plugin code
 

@@ -725,13 +725,14 @@ parport1: enabled=1, file="parport.out"
 
 #=======================================================================
 # SOUND:
-# This defines the lowlevel sound driver and the wave (PCM) output device
-# to be used by sound output devices. Possible values for the driver
-# parameter are 'default', 'dummy' (no output), 'alsa' (if present) and
-# 'sdl' (if present). For some drivers the wave output device must be
-# specified.
+# This defines the lowlevel sound driver and the wave (PCM) input and
+# output devices to be used by sound emulation devices. Possible values
+# for the driver parameter are 'default', 'dummy' (no input/output),
+# 'alsa' (if present) and 'sdl' (if present). For some drivers the wave
+# devices must be specified. If the 'wavein' parameter is not set, Bochs
+# uses the 'waveout' device for input, too.
 #=======================================================================
-sound: driver=default, waveout=/dev/dsp
+sound: driver=default, waveout=/dev/dsp. wavein=
 
 #=======================================================================
 # SPEAKER:
@@ -752,22 +753,20 @@ speaker: enabled=1, mode=sound
 # enabled:
 #      This optional property controls the presence of the SB16 emulation.
 #      The emulation is turned on unless this property is used and set to 0.
-# midi: The filename is where the midi data is sent. This can be a
-#       device or just a file if you want to record the midi data.
 # midimode:
 #      0=no data
 #      1=output to device (system dependent. midi denotes the device driver)
 #      2=SMF file output, including headers
 #      3=output the midi data stream to the file (no midi headers and no
 #        delta times, just command and data bytes)
-# wave: This is the device to be used as wave input source. The wave output
-        device must be specified with the 'sound' bochsrc option if necessary.
+# midi: The filename is where the midi data is sent. This can be a
+#       device or just a file if you want to record the midi data.
 # wavemode:
 #      0=no data
 #      1=output to device (system dependent. wave denotes the device driver)
 #      2=VOC file output, incl. headers
 #      3=output the raw wave stream to the file
-# log:  The file to write the sb16 emulator messages to.
+# wave: This is the file where the wave output is stored (wavemode 2 or 3)
 # loglevel:
 #      0=no log
 #      1=resource changes, midi program and bank changes
@@ -775,29 +774,28 @@ speaker: enabled=1, mode=sound
 #      3=all errors
 #      4=all errors plus all port accesses
 #      5=all errors and port accesses plus a lot of extra info
+# log:  The file to write the sb16 emulator messages to.
 # dmatimer:
 #      microseconds per second for a DMA cycle.  Make it smaller to fix
 #      non-continuous sound.  750000 is usually a good value.  This needs a
 #      reasonably correct setting for the IPS parameter of the CPU option.
 #
 # Examples for output devices:
-#   sb16: midimode=1, midi="", wavemode=1, wave=""           # win32
-#   sb16: midimode=1, midi=alsa:128:0, wavemode=1, wave=alsa # Linux with ALSA
+#   sb16: midimode=1, midi="", wavemode=1, wave=""         # win32
+#   sb16: midimode=1, midi=alsa:128:0, wavemode=1, wave="" # Linux with ALSA
 #=======================================================================
 #sb16: midimode=1, midi=/dev/midi00, wavemode=1, wave=/dev/dsp, loglevel=2, log=sb16.log, dmatimer=600000
 
 #=======================================================================
 # ES1370:
-# This defines the ES1370 sound emulation. The parameter 'enabled' controls the
-# presence of the device. The 'wavedev' parameter is similar to the 'wave'
-# parameter of the SB16 soundcard. The emulation supports recording and playback
-# (except DAC1+DAC2 output at the same time).
+# This defines the ES1370 sound emulation (recording and playback - except
+# DAC1+DAC2 output at the same time). The parameter 'enabled' controls the
+# presence of the device. TODO: implement 'wavemode' feature similar to SB16.
 #
 # Examples:
-#   es1370: enabled=1, wavedev=""    # win32
-#   es1370: enabled=1, wavedev=alsa  # Linux with ALSA
+#   es1370: enabled=1
 #=======================================================================
-#es1370: enabled=1, wavedev=alsa
+#es1370: enabled=1
 
 #=======================================================================
 # KEYBOARD:
