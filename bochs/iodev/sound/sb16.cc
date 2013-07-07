@@ -1248,11 +1248,10 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
   Bit32u sampledatarate = (Bit32u) DSP.dma.samplerate * (Bit32u) DSP.dma.bps;
   if ((DSP.dma.bits == 16) && (BX_SB16_DMAH != 0)) {
     DSP.dma.count = (DSP.dma.blocklength + 1) * (DSP.dma.bps / 2) - 1;
-    DSP.dma.timer = BX_SB16_THIS dmatimer / (sampledatarate / 2) * BX_DMA_BUFFER_SIZE;
   } else {
     DSP.dma.count = (DSP.dma.blocklength + 1) * DSP.dma.bps - 1;
-    DSP.dma.timer = BX_SB16_THIS dmatimer / sampledatarate * BX_DMA_BUFFER_SIZE;
   }
+  DSP.dma.timer = BX_SB16_THIS dmatimer * BX_DMA_BUFFER_SIZE / sampledatarate;
 
   writelog(WAVELOG(5), "DMA is %db, %dHz, %s, %s, mode %d, %s, %s, %d bps, %d usec/DMA",
            DSP.dma.bits, DSP.dma.samplerate, (DSP.dma.stereo != 0)?"stereo":"mono",
