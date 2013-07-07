@@ -1276,10 +1276,10 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
       }
     } else if ((BX_SB16_THIS wavemode == 2) ||
                (BX_SB16_THIS wavemode == 3)) {
-      WAVEDATA = fopen(SIM->get_param_string("wavefile", base)->getptr(),"wb");
+      WAVEDATA = fopen(SIM->get_param_string("wave", base)->getptr(),"wb");
       if (WAVEDATA == NULL) {
         writelog (WAVELOG(2), "Error opening file %s. Wavemode disabled.",
-          SIM->get_param_string("wavefile", base)->getptr());
+          SIM->get_param_string("wave", base)->getptr());
         BX_SB16_THIS wavemode = 0;
       } else if (BX_SB16_THIS wavemode == 2) {
         initvocfile();
@@ -1436,17 +1436,17 @@ void bx_sb16_c::dsp_sendwavepacket()
       switch ((DSP.dma.format >> 1) & 7)
       {
        case 2:
-         temparray[7] = 3;
+         temparray[6] = 3;
          break;
        case 3:
-         temparray[7] = 2;
+         temparray[6] = 2;
          break;
        case 4:
-         temparray[7] = 1;
+         temparray[6] = 1;
          break;
       }
       if (DSP.dma.bits == 16)
-         temparray[7] = 4;
+         temparray[6] = 4;
 
       writevocblock(9, 12, temparray, DSP.dma.chunkindex, DSP.dma.chunk);
       break;
