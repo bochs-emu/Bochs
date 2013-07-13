@@ -5,7 +5,7 @@
 // ES1370 soundcard support (ported from QEMU)
 //
 // Copyright (c) 2005  Vassili Karpov (malc)
-// Copyright (C) 2011  The Bochs Project
+// Copyright (C) 2011-2013  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -89,6 +89,7 @@ private:
   BX_ES1370_SMF void check_lower_irq(Bit32u sctl);
   BX_ES1370_SMF void update_voices(Bit32u ctl, Bit32u sctl, bx_bool force);
   BX_ES1370_SMF void run_channel(unsigned channel, int timer_id, Bit32u buflen);
+  BX_ES1370_SMF void sendwavepacket(unsigned channel, Bit32u buflen, Bit8u *buffer);
 
   static void es1370_timer_handler(void *);
   void es1370_timer(void);
@@ -103,6 +104,8 @@ private:
 #endif
 
   bx_sound_lowlevel_c *soundmod;
+  int wavemode;
+  FILE *wavefile;
 };
 
 #endif

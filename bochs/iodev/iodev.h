@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2012  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -357,6 +357,9 @@ public:
   virtual bx_bool beep_off() {
     return 0;
   }
+  virtual void VOC_init_file(FILE *stream) {}
+  virtual void VOC_write_block(FILE *stream, int block, Bit32u headerlen,
+                               Bit8u header[], Bit32u datalen, Bit8u data[]) {}
 };
 #endif
 

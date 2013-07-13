@@ -356,9 +356,6 @@ private:
 
   BX_SB16_SMF void   initmidifile();            // Write midi file header
   BX_SB16_SMF void   finishmidifile();          // write track length etc.
-  BX_SB16_SMF void   initvocfile();             // Write voc file header
-  BX_SB16_SMF void   writevocblock(int block, Bit32u headerlen, Bit8u header[],
-				   Bit32u datalen, Bit8u data[]);
   BX_SB16_SMF void   finishvocfile();           // close voc file
 
       /* The port IO multiplexer functions */

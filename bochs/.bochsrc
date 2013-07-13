@@ -790,12 +790,15 @@ speaker: enabled=1, mode=sound
 # ES1370:
 # This defines the ES1370 sound emulation (recording and playback - except
 # DAC1+DAC2 output at the same time). The parameter 'enabled' controls the
-# presence of the device. TODO: implement 'wavemode' feature similar to SB16.
+# presence of the device. The 'wavemode' parameter can be used to redirect
+# the output to a file (see SB16). The 'wavefile' parameter is similar to the
+# 'wave' parameter of the SB16 soundcard.
 #
 # Examples:
-#   es1370: enabled=1
+#   es1370: enabled=1, wavemode=1                       # use 'sound' parameters
+#   es1370: enabled=1, wavemode=2, wavefile=output.voc  # send output to file
 #=======================================================================
-#es1370: enabled=1
+#es1370: enabled=1, wavemode=1
 
 #=======================================================================
 # KEYBOARD:

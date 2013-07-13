@@ -222,14 +222,13 @@ bx_sb16_c::~bx_sb16_c(void)
 
   switch (wavemode)
   {
-    case 2:
-      if (WAVEDATA != NULL)
-        finishvocfile();
-      break;
     case 1:
       if (DSP.inputinit != 0)
         BX_SB16_OUTPUT->closewaveinput();
       break;
+    case 2:
+      if (WAVEDATA != NULL)
+        finishvocfile();
     case 3:
       if (WAVEDATA != NULL)
         fclose(WAVEDATA);
@@ -976,7 +975,7 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
          if (BX_SB16_THIS wavemode == 2)
          {
             Bit8u temparray[3] = { length & 0xff, length >> 8, DSP.dma.timeconstant >> 8 };
-            writevocblock(3, 3, temparray, 0, NULL);
+            DEV_soundmod_VOC_write_block(WAVEDATA, 3, 3, temparray, 0, NULL);
          }
          break;
 
@@ -1281,7 +1280,7 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
           SIM->get_param_string("wave", base)->getptr());
         BX_SB16_THIS wavemode = 0;
       } else if (BX_SB16_THIS wavemode == 2) {
-        initvocfile();
+        DEV_soundmod_VOC_init_file(WAVEDATA);
       }
     }
     DSP.dma.chunkcount = sampledatarate / 10; // 0.1 sec
@@ -1447,7 +1446,7 @@ void bx_sb16_c::dsp_sendwavepacket()
       if (DSP.dma.bits == 16)
          temparray[6] = 4;
 
-      writevocblock(9, 12, temparray, DSP.dma.chunkindex, DSP.dma.chunk);
+      DEV_soundmod_VOC_write_block(WAVEDATA, 9, 12, temparray, DSP.dma.chunkindex, DSP.dma.chunk);
       break;
   }
 
@@ -2263,13 +2262,15 @@ void bx_sb16_c::emul_write(Bit32u value)
          BX_SB16_THIS midimode = 0;
 
          if ((BX_SB16_THIS wavemode == 2) ||
-             (BX_SB16_THIS wavemode == 3))
-         {
-             if (BX_SB16_THIS wavemode == 2) finishvocfile();
-             fclose(WAVEDATA);
-         }
-         else
+             (BX_SB16_THIS wavemode == 3)) {
+             if (BX_SB16_THIS wavemode == 2)
+               finishvocfile();
+             else
+               fclose(WAVEDATA);
+             WAVEDATA = NULL;
+         } else {
            BX_SB16_OUTPUT->closewaveoutput();
+         }
          BX_SB16_THIS wavemode = 0;
          break;
        case 7: // clear bank/program mappings
@@ -3296,61 +3297,6 @@ void bx_sb16_c::finishmidifile()
 
 
 /* Handlers for the voc file output */
-
-// Write the header of the voc file.
-
-void bx_sb16_c::initvocfile()
-{
-  struct {
-    char id[20];
-    Bit16u headerlen;  // All in LITTLE Endian!
-    Bit16u version;
-    Bit16u chksum;
-  } vocheader =
-    { "Creative Voice File",
-#ifdef BX_LITTLE_ENDIAN
-      0x1a, 0x0114, 0x111f };
-#else
-      0x1a00, 0x1401, 0x1f11 };
-#endif
-
-  vocheader.id[19] = 26;    // Replace string end with 26
-
-  fwrite(&vocheader, 1, sizeof vocheader, WAVEDATA);
-}
-
-// write one block to the voc file
-void bx_sb16_c::writevocblock(int block,
-                           Bit32u headerlen, Bit8u header[],
-                           Bit32u datalen, Bit8u data[])
-{
-  Bit32u i;
-
-  if (block > 9)
-  {
-      writelog(WAVELOG(3), "VOC Block %d not recognized, ignored.", block);
-      return;
-  }
-
-  fputc(block, WAVEDATA);
-
-  i = headerlen + datalen;
-#ifdef BX_LITTLE_ENDIAN
-  fwrite(&i, 1, 3, WAVEDATA);       // write the length in 24-bit little endian
-#else
-  Bit8u lengthbytes[3];
-  lengthbytes[0] = i & 0xff; i >>= 8;
-  lengthbytes[1] = i & 0xff; i >>= 8;
-  lengthbytes[2] = i & 0xff;
-  fwrite(lengthbytes, 1, 3, WAVEDATA);
-#endif
-  writelog(WAVELOG(5), "Voc block %d; Headerlen %d; Datalen %d",
-           block, headerlen, datalen);
-  if (headerlen > 0)
-    fwrite(header, 1, headerlen, WAVEDATA);
-  if (datalen > 0)
-    fwrite(data, 1, datalen, WAVEDATA);
-}
 
 // close the voc file
 void bx_sb16_c::finishvocfile()

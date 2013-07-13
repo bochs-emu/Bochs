@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2012  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -256,6 +256,10 @@ extern "C" {
   ((bx_sound_lowlevel_c*)bx_devices.pluginSoundModCtl->get_module())
 #define DEV_soundmod_beep_on(a) bx_devices.pluginSoundModCtl->beep_on(a)
 #define DEV_soundmod_beep_off() bx_devices.pluginSoundModCtl->beep_off()
+#define DEV_soundmod_VOC_init_file(a) \
+  (bx_devices.pluginSoundModCtl->VOC_init_file(a))
+#define DEV_soundmod_VOC_write_block(a,b,c,d,e,f) \
+  (bx_devices.pluginSoundModCtl->VOC_write_block(a,b,c,d,e,f))
 
 ///////// Networking module macro
 #define DEV_net_init_module(a,b,c,d) \

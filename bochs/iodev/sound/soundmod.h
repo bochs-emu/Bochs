@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011-2012  The Bochs Project
+//  Copyright (C) 2011-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -49,6 +49,9 @@ public:
   virtual void* get_module();
   virtual bx_bool beep_on(float frequency);
   virtual bx_bool beep_off();
+  virtual void VOC_init_file(FILE *stream);
+  virtual void VOC_write_block(FILE *stream, int block, Bit32u headerlen,
+                               Bit8u header[], Bit32u datalen, Bit8u data[]);
 private:
   bx_sound_lowlevel_c *soundmod;
 };
