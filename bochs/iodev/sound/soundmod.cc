@@ -128,7 +128,6 @@ void beep_thread(void *indata)
   Bit8u level;
   int i, j;
 
-  beep_active = 1;
   bx_sound_lowlevel_c *soundmod = (bx_sound_lowlevel_c*)indata;
   level = 0x40;
   i = 0;
@@ -170,6 +169,7 @@ bx_bool bx_soundmod_ctl_c::beep_on(float frequency)
     beep_bytes = (int)(44100.0 / frequency / 2);
     beep_bufsize = 4410;
     beep_buffer = (Bit8u*)malloc(beep_bufsize);
+    beep_active = 1;
 #ifdef WIN32
     DWORD threadID;
     CreateThread(NULL, 0, beep_thread, soundmod, 0, &threadID);
