@@ -37,10 +37,6 @@
 #include "pci.h"
 #include "es1370.h"
 #include "soundmod.h"
-#include "soundlnx.h"
-#include "soundwin.h"
-#include "soundosx.h"
-#include "soundsdl.h"
 
 #define LOG_THIS theES1370Device->
 

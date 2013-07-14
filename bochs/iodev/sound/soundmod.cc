@@ -34,6 +34,7 @@
 #include "soundosx.h"
 #include "soundwin.h"
 #include "soundsdl.h"
+#include "soundalsa.h"
 
 #ifndef WIN32
 #include <pthread.h>
@@ -85,8 +86,7 @@ void bx_soundmod_ctl_c::init()
     soundmod = new BX_SOUND_LOWLEVEL_C();
 #if BX_HAVE_ALSASOUND
   } else if (!strcmp(driver, "alsa")) {
-    soundmod = new bx_sound_linux_c();
-    waveout = "alsa";
+    soundmod = new bx_sound_alsa_c();
 #endif
 #if BX_WITH_SDL
   } else if (!strcmp(driver, "sdl")) {

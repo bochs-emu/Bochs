@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -17,22 +17,23 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
-//
 /////////////////////////////////////////////////////////////////////////
 
-// Josef Drexler coded the original version of the lowlevel sound support
-// for Linux using OSS. The current version also supports OSS on FreeBSD.
+// ALSA PCM input/output and MIDI output support written by Volker Ruppert
 
-#if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
+#if BX_HAVE_ALSASOUND
 
 #define BX_SOUND_LINUX_BUFSIZE   BX_SOUNDLOW_WAVEPACKETSIZE * 2
 
-class bx_sound_linux_c : public bx_sound_lowlevel_c {
-public:
-  bx_sound_linux_c();
-  virtual ~bx_sound_linux_c();
+#define ALSA_PCM_NEW_HW_PARAMS_API
+#include <alsa/asoundlib.h>
 
-  virtual int get_type() {return BX_SOUNDLOW_LINUX;}
+class bx_sound_alsa_c : public bx_sound_lowlevel_c {
+public:
+  bx_sound_alsa_c();
+  virtual ~bx_sound_alsa_c();
+
+  virtual int get_type() {return BX_SOUNDLOW_ALSA;}
 
   virtual int waveready();
   virtual int midiready();
@@ -56,9 +57,21 @@ public:
   static void record_timer_handler(void *);
   void record_timer(void);
 private:
-  FILE *midi;
-  char *wave_device[2];
-  int  wave_fd[2];
+  int alsa_seq_open(const char *alsadev);
+  int alsa_seq_output(int delta, int command, int length, Bit8u data[]);
+  int alsa_pcm_open(bx_bool input, int frequency, int bits, bx_bool stereo, int format);
+  int alsa_pcm_write();
+
+  struct {
+    snd_seq_t *handle;
+    int source_port;
+  } alsa_seq;
+  struct {
+    snd_pcm_t *handle;
+    snd_pcm_uframes_t frames;
+    int alsa_bufsize, audio_bufsize;
+    char *buffer;
+  } alsa_pcm[2];
   struct {
     int oldfreq, oldbits, oldformat;
     bx_bool oldstereo;

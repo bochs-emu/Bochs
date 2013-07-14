@@ -35,6 +35,7 @@
 #define BX_SOUNDLOW_OSX     2
 #define BX_SOUNDLOW_WIN     3
 #define BX_SOUNDLOW_SDL     4
+#define BX_SOUNDLOW_ALSA    5
 
 typedef Bit32u (*sound_record_handler_t)(void *arg, Bit32u len);
 

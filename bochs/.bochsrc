@@ -781,8 +781,8 @@ speaker: enabled=1, mode=sound
 #      reasonably correct setting for the IPS parameter of the CPU option.
 #
 # Examples for output devices:
-#   sb16: midimode=1, midi="", wavemode=1, wave=""         # win32
-#   sb16: midimode=1, midi=alsa:128:0, wavemode=1, wave="" # Linux with ALSA
+#   sb16: midimode=1, midi="", wavemode=1, wave=""    # win32
+#   sb16: midimode=1, midi=128:0, wavemode=1, wave="" # Linux with ALSA
 #=======================================================================
 #sb16: midimode=1, midi=/dev/midi00, wavemode=1, wave=/dev/dsp, loglevel=2, log=sb16.log, dmatimer=600000
 

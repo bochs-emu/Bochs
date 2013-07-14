@@ -1801,6 +1801,7 @@ if test "$soundcard_present" = 1; then
       bx_have_alsa=0
       AC_CHECK_HEADER([alsa/asoundlib.h], [bx_have_alsa=1])
       if test "$bx_have_alsa" = 1; then
+        SOUNDLOW_OBJS="$SOUNDLOW_OBJS soundalsa.o"
         AC_DEFINE(BX_HAVE_ALSASOUND, 1)
         if test "$bx_plugins" = 1; then
           SOUND_LINK_OPTS="$SOUND_LINK_OPTS -lasound"
