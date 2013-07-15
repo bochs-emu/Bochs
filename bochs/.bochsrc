@@ -548,6 +548,16 @@ ata0-master: type=disk, mode=flat, path="30M.sample"
 boot: disk
 
 #=======================================================================
+# FLOPPY_BOOTSIG_CHECK: disabled=[0|1]
+# Enables or disables the 0xaa55 signature check on boot floppies
+# Defaults to disabled=0
+# Examples:
+#   floppy_bootsig_check: disabled=0
+#   floppy_bootsig_check: disabled=1
+#=======================================================================
+floppy_bootsig_check: disabled=0
+
+#=======================================================================
 # CLOCK:
 # This defines the parameters of the clock inside Bochs:
 #
@@ -588,16 +598,6 @@ boot: disk
 #=======================================================================
 #clock: sync=none, time0=local
 
-
-#=======================================================================
-# FLOPPY_BOOTSIG_CHECK: disabled=[0|1]
-# Enables or disables the 0xaa55 signature check on boot floppies
-# Defaults to disabled=0
-# Examples:
-#   floppy_bootsig_check: disabled=0
-#   floppy_bootsig_check: disabled=1
-#=======================================================================
-floppy_bootsig_check: disabled=0
 
 #=======================================================================
 # LOG:
@@ -891,16 +891,19 @@ mouse: enabled=0
 private_colormap: enabled=0
 
 #=======================================================================
-# fullscreen: ONLY IMPLEMENTED ON AMIGA
-#             Request that Bochs occupy the entire screen instead of a 
-#             window.
+# PCI:
+# This option controls the presence of a PCI chipset in Bochs. Currently it only
+# supports the i440FX chipset. You can also specify the devices connected to
+# PCI slots. Up to 5 slots are available. For these combined PCI/ISA devices
+# assigning to slot is mandatory if you want to emulate the PCI model: cirrus,
+# ne2k and pcivga. These PCI-only devices are also supported, but they are
+# auto-assigned if you don't use the slot configuration: e1000, es1370, pcidev,
+# pcipnic, usb_ohci and usb_xhci.
 #
-# Examples:
-#   fullscreen: enabled=0
-#   fullscreen: enabled=1
+# Example:
+#   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k
 #=======================================================================
-#fullscreen: enabled=0
-#screenmode: name="sample"
+pci: enabled=1, chipset=i440fx
 
 #=======================================================================
 # ne2k: NE2000 compatible ethernet adapter
@@ -981,21 +984,6 @@ private_colormap: enabled=0
 # and supports the same networking modules as the NE2000 adapter.
 #=======================================================================
 #e1000: enabled=1, mac=52:54:00:12:34:56, ethmod=slirp, script=/usr/local/bin/slirp
-
-#=======================================================================
-# PCI:
-# This option controls the presence of a PCI chipset in Bochs. Currently it only
-# supports the i440FX chipset. You can also specify the devices connected to
-# PCI slots. Up to 5 slots are available. For these combined PCI/ISA devices
-# assigning to slot is mandatory if you want to emulate the PCI model: cirrus,
-# ne2k and pcivga. These PCI-only devices are also supported, but they are
-# auto-assigned if you don't use the slot configuration: e1000, es1370, pcidev,
-# pcipnic, usb_ohci and usb_xhci.
-#
-# Example:
-#   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k
-#=======================================================================
-pci: enabled=1, chipset=i440fx
 
 #=======================================================================
 # USB_UHCI:
@@ -1104,6 +1092,18 @@ pci: enabled=1, chipset=i440fx
 #   debug_symbols: file="kernel.sym", offset=0x80000000
 #=======================================================================
 #debug_symbols: file="kernel.sym"
+
+#=======================================================================
+# fullscreen: ONLY IMPLEMENTED ON AMIGA
+#             Request that Bochs occupy the entire screen instead of a 
+#             window.
+#
+# Examples:
+#   fullscreen: enabled=0
+#   fullscreen: enabled=1
+#=======================================================================
+#fullscreen: enabled=0
+#screenmode: name="sample"
 
 #=======================================================================
 # other stuff
