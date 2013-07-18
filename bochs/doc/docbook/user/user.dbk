@@ -468,9 +468,9 @@ currently work with.
     <entry>Sound card</entry>
     <entry>Yes</entry>
     <entry>Emulates a Sound Blaster 16 card (ISA, no plug&amp;play) or an ES1370 PCI
-    card. On Windows, Linux, FreeBSD, MacOS 9 and MacOSX, the output can be sent to
-    the host computer's sound system. For the SB16, see <xref linkend="sb16-emulation">
-    for details.
+    card. On Windows, Linux, FreeBSD, MacOS 9, MacOSX and all platforms supported by
+    SDL, the output can be sent to the host computer's sound system. For the SB16,
+    see <xref linkend="sb16-emulation"> for details.
     </entry>
   </row>
   <row>
@@ -609,7 +609,7 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
         tried first in Unix and then ported to the others; see
         <xref linkend="compiling"> for compile instructions.
       </entry>
-      <entry>x, sdl, wx, term, rfb</entry>
+      <entry>x, sdl, wx, term, rfb, vncsrv</entry>
     </row>
 
     <row>
@@ -1911,6 +1911,13 @@ In Bochs 1.3 and before, the X11 GUI was always the default.
       </entry>
     </row>
     <row>
+      <entry>--with-vncsrv</entry>
+      <entry>
+        Enable support for an extended RFB(VNC) GUI using the LibVNCServer library.
+        Refer to <xref linkend="compile-vncsrv"> for details.
+      </entry>
+    </row>
+    <row>
       <entry>--with-sdl</entry>
       <entry>Enable support for the SDL GUI interface; see <xref linkend="compile-sdl">.</entry>
     </row>
@@ -2665,12 +2672,35 @@ Bochs GUIs. Use <option>--with-x11</option> for X windows,
 <itemizedlist>
   <listitem><para>port range 5900 to 5949 (using the first one available)</para></listitem>
   <listitem><para>no authentification</para></listitem>
-  <listitem><para>30 seconds waiting for client</para></listitem>
+  <listitem><para>by default 30 seconds waiting for client</para></listitem>
   <listitem><para>8 bpp (BGR233) supported only</para></listitem>
-  <listitem><para>desktop size 720x480 (for text mode and standard VGA)</para></listitem>
+  <listitem><para>if client doesn't support resize: desktop size 720x480 (for text mode and standard VGA)</para></listitem>
+  <listitem><para>if resize supported: maximum resolution 1280x1024</para></listitem>
 </itemizedlist>
 </para>
+<para>
+With the display library option "timeout" the default value of 30 seconds can
+be changed. With a value of 0 it is possible to start the simulation without a
+client connected.
+</para>
 </section><!-- end compile-rfb -->
+
+<section id="compile-vncsrv"><title>Compiling with the VNCSRV interface</title>
+<para>
+  The <ulink url="http://libvncserver.sourceforge.net/">LibVNCServer</ulink> is
+  a cross-platform library that allows to implement VNC server functionality easily.
+  On platforms supported by LibVNCServer Bochs can be compiled with support for
+  it this way:
+<screen>
+  configure --with-vncsrv
+  make
+</screen>
+</para>
+<para>
+Unlike the RFB GUI this new implementation is not limited to 8 bpp and it is
+possible to connect a Bochs session with a web browser.
+</para>
+</section><!-- end compile-vncsrv -->
 
 <section id="compile-sdl"><title>Compiling with the SDL interface</title>
 <para>
@@ -2981,6 +3011,141 @@ their bochsrc option: 'e1000', 'es1370', 'ne2k', 'pcidev', 'pcipnic', 'sb16',
 <para>
 This plugin currently must be loaded with plugin_ctrl: 'voodoo'.
 </para>
+</section>
+
+<section id="bochsopt-configinterface"><title>config_interface</title>
+<para>
+The configuration interface is a series of menus or dialog boxes that
+allows you to edit all the settings that control Bochs' behavior.
+Depending on the platform there are up to 3 choices of configuration
+interface: a text mode version called "textconfig" and two graphical versions
+called "win32config" and "wx".  The text mode version uses stdin/stdout and
+is always compiled in, unless Bochs is compiled for wx only. The choice
+"win32config" is only available on win32 and it is the default there.
+The choice "wx" is only available when Bochs is compiled with wxWidgets support,
+see <xref linkend="compile-wx">. If you do not write a config_interface line,
+Bochs will choose a default for you (usually textconfig).
+</para>
+
+<note><para>
+wxWidgets provides both a configuration interface and a display library.
+So if you use the "wx" configuration interface, you must also use
+the "wx" display library, see
+<link linkend="bochsopt-displaylibrary">display_library option</link>.
+</para></note>
+
+<para>
+Examples:
+<screen>
+  config_interface: textconfig
+  config_interface: win32config
+  config_interface: wx
+</screen>
+</para>
+</section>
+
+<section id="bochsopt-displaylibrary"><title>display_library</title>
+<para>
+The display library is the code that displays the Bochs VGA screen.  Bochs
+has a selection of about 10 different display library implementations for
+different platforms.  If you run configure with multiple <option>--with-*</option>
+options, the display_library option lets you choose which one you want to run with.
+If you do not use a display_library line, Bochs will choose a default for
+you.
+</para>
+
+<note><para>
+wxWidgets provides both a configuration interface and a display library.
+So if you use the "wx" display library, you must also use
+the "wx" configuration interface, see
+<link linkend="bochsopt-configinterface">config_interface option</link>.
+</para></note>
+
+<para>
+Examples:
+<screen>
+  display_library: x
+  display_library: sdl
+</screen>
+Some display libraries now support specific options to control their
+behaviour. These options are supported by more than one display library:
+<screen>
+  "gui_debug"   - use GTK debugger gui (sdl, x) / Win32 debugger gui (sdl, win32)
+  "hideIPS"     - disable IPS output in status bar (rfb, sdl, vncsrv, win32, wx, x)
+  "nokeyrepeat" - turn off host keyboard repeat (sdl, win32, x)
+  "timeout"     - time (in seconds) to wait for client (rfb, vncsrv)
+</screen>
+See the examples below for other currently supported options.
+<screen>
+  display_library: sdl, options="fullscreen"  # startup in fullscreen mode
+</screen>
+</para>
+
+<table>
+<title>display_library values</title>
+<tgroup cols="2">
+<thead>
+<row>
+  <entry>Option</entry>
+  <entry>Description</entry>
+</row>
+</thead>
+<tbody>
+<row>
+  <entry>x</entry>
+  <entry>use X windows interface, cross platform</entry>
+</row>
+<row>
+  <entry>win32</entry>
+  <entry>use native win32 libraries</entry>
+</row>
+<row>
+  <entry>carbon</entry>
+  <entry>use Carbon library (for MacOS X)</entry>
+</row>
+<row>
+  <entry>macintosh</entry>
+  <entry>use MacOS pre-10</entry>
+</row>
+<row>
+  <entry>amigaos</entry>
+  <entry>use native AmigaOS libraries</entry>
+</row>
+<row>
+  <entry>sdl</entry>
+  <entry>use SDL library, cross platform,
+    details in <xref linkend="compile-sdl"></entry>
+</row>
+<row>
+  <entry>svga</entry>
+  <entry>use SVGALIB library for Linux, allows graphics without X windows</entry>
+</row>
+<row>
+  <entry>term</entry>
+  <entry>text only, uses curses/ncurses library, cross platform</entry>
+</row>
+<row>
+  <entry>rfb</entry>
+  <entry>provides an interface to AT&amp;T's VNC viewer, cross platform,
+    details in <xref linkend="compile-rfb"></entry>
+</row>
+<row>
+  <entry>vncsrv</entry>
+  <entry>use LibVNCServer for extended RFB(VNC) support,
+    details in <xref linkend="compile-vncsrv"></entry>
+</row>
+<row>
+  <entry>wx</entry>
+  <entry>use wxWidgets library, cross platform,
+    details in <xref linkend="compile-wx"></entry>
+</row>
+<row>
+  <entry>nogui</entry>
+  <entry>no display at all</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
 </section>
 
 <section id="bochsopt-memory"><title>memory</title>
@@ -3623,134 +3788,47 @@ The check is enabled by default.
 </para>
 </section>
 
-<section id="bochsopt-configinterface"><title>config_interface</title>
+<section id="bochsopt-clock"><title>clock</title>
 <para>
-The configuration interface is a series of menus or dialog boxes that
-allows you to edit all the settings that control Bochs' behavior.
-Depending on the platform there are up to 3 choices of configuration
-interface: a text mode version called "textconfig" and two graphical versions
-called "win32config" and "wx".  The text mode version uses stdin/stdout and
-is always compiled in, unless Bochs is compiled for wx only. The choice
-"win32config" is only available on win32 and it is the default there.
-The choice "wx" is only available when Bochs is compiled with wxWidgets support,
-see <xref linkend="compile-wx">. If you do not write a config_interface line,
-Bochs will choose a default for you (usually textconfig).
+This defines the parameters of the clock inside Bochs:
 </para>
-
-<note><para>
-wxWidgets provides both a configuration interface and a display library.
-So if you use the "wx" configuration interface, you must also use
-the "wx" display library, see
-<link linkend="bochsopt-displaylibrary">display_library option</link>.
-</para></note>
-
+<para><command>sync</command></para>
 <para>
+This defines the method how to synchronize the Bochs internal time
+with realtime. With the value 'none' the Bochs time relies on the IPS
+value and no host time synchronization is used. The 'slowdown' method
+sacrifices performance to preserve reproducibility while allowing host
+time correlation. The 'realtime' method sacrifices reproducibility to
+preserve performance and host-time correlation.
+It is possible to enable both synchronization methods.
+</para>
+<para><command>time0</command></para>
+<para>
+Specifies the start (boot) time of the virtual machine. Use a time
+value as returned by the time(2) system call. If no time0 value is
+set or if time0 equal to 1 (special case) or if time0 equal 'local',
+the simulation will be started at the current local host time.
+If time0 equal to 2 (special case) or if time0 equal 'utc',
+the simulation will be started at the current utc time.
+</para>
+<para>
+<screen>
+Syntax:
+  clock: sync=[none|slowdown|realtime|both], time0=[timeValue|local|utc]
+
 Examples:
-<screen>
-  config_interface: textconfig
-  config_interface: win32config
-  config_interface: wx
-</screen>
-</para>
-</section>
+  clock: sync=none,     time0=local       # Now (localtime)
+  clock: sync=slowdown, time0=315529200   # Tue Jan  1 00:00:00 1980
+  clock: sync=none,     time0=631148400   # Mon Jan  1 00:00:00 1990
+  clock: sync=realtime, time0=938581955   # Wed Sep 29 07:12:35 1999
+  clock: sync=realtime, time0=946681200   # Sat Jan  1 00:00:00 2000
+  clock: sync=none,     time0=1           # Now (localtime)
+  clock: sync=none,     time0=utc         # Now (utc/gmt)
 
-<section id="bochsopt-displaylibrary"><title>display_library</title>
-<para>
-The display library is the code that displays the Bochs VGA screen.  Bochs
-has a selection of about 10 different display library implementations for
-different platforms.  If you run configure with multiple <option>--with-*</option>
-options, the display_library option lets you choose which one you want to run with.
-If you do not use a display_library line, Bochs will choose a default for
-you.
-</para>
-
-<note><para>
-wxWidgets provides both a configuration interface and a display library.
-So if you use the "wx" display library, you must also use
-the "wx" configuration interface, see
-<link linkend="bochsopt-configinterface">config_interface option</link>.
-</para></note>
-
-<para>
-Examples:
-<screen>
-  display_library: x
-  display_library: sdl
-</screen>
-Some display libraries now support specific options to control their
-behaviour. These options are supported by more than one display library:
-<screen>
-  "gui_debug"   - use GTK debugger gui (sdl, x) / Win32 debugger gui (sdl, win32)
-  "hideIPS"     - disable IPS output in status bar (rfb, sdl, win32, wx, x)
-  "nokeyrepeat" - turn off host keyboard repeat (sdl, win32, x)
-</screen>
-See the examples below for other currently supported options.
-<screen>
-  display_library: rfb, options="timeout=60"  # time to wait for client
-  display_library: sdl, options="fullscreen"  # startup in fullscreen mode
+Default value are sync=none, time0=local
 </screen>
 </para>
 
-<table>
-<title>display_library values</title>
-<tgroup cols="2">
-<thead>
-<row>
-  <entry>Option</entry>
-  <entry>Description</entry>
-</row>
-</thead>
-<tbody>
-<row>
-  <entry>x</entry>
-  <entry>use X windows interface, cross platform</entry>
-</row>
-<row>
-  <entry>win32</entry>
-  <entry>use native win32 libraries</entry>
-</row>
-<row>
-  <entry>carbon</entry>
-  <entry>use Carbon library (for MacOS X)</entry>
-</row>
-<row>
-  <entry>macintosh</entry>
-  <entry>use MacOS pre-10</entry>
-</row>
-<row>
-  <entry>amigaos</entry>
-  <entry>use native AmigaOS libraries</entry>
-</row>
-<row>
-  <entry>sdl</entry>
-  <entry>use SDL library, cross platform,
-    details in <xref linkend="compile-sdl"></entry>
-</row>
-<row>
-  <entry>svga</entry>
-  <entry>use SVGALIB library for Linux, allows graphics without X windows</entry>
-</row>
-<row>
-  <entry>term</entry>
-  <entry>text only, uses curses/ncurses library, cross platform</entry>
-</row>
-<row>
-  <entry>rfb</entry>
-  <entry>provides an interface to AT&amp;T's VNC viewer, cross platform,
-    details in <xref linkend="compile-rfb"></entry>
-</row>
-<row>
-  <entry>wx</entry>
-  <entry>use wxWidgets library, cross platform,
-    details in <xref linkend="compile-wx"></entry>
-</row>
-<row>
-  <entry>nogui</entry>
-  <entry>no display at all</entry>
-</row>
-</tbody>
-</tgroup>
-</table>
 </section>
 
 <section id="bochsopt-log"><title>log</title>
@@ -3919,7 +3997,39 @@ win32 platforms).
 </para>
 </section>
 
-<section id="sb16line"><title>sb16</title>
+<section>
+<title>sound</title>
+<para>
+Example:
+<screen>
+  sound: driver=default, waveout=/dev/dsp. wavein=
+</screen>
+This defines the lowlevel sound driver and the wave (PCM) input and
+output devices to be used by sound emulation devices. Possible values
+for the driver parameter are 'default', 'dummy' (no input/output),
+'alsa' (if present) and 'sdl' (if present). For some drivers the wave
+devices must be specified. If the 'wavein' parameter is not set, Bochs
+uses the 'waveout' device for input, too.
+</para>
+</section>
+
+<section>
+<title>speaker</title>
+<para>
+Example:
+<screen>
+  speaker: enabled=1, mode=sound
+</screen>
+This defines the PC speaker output mode. In the 'sound' mode the beep
+is generated by the square wave generator which is a part of the
+lowlevel sound support. The 'system' mode is only available on Linux
+and Windows. On Linux /dev/console is used for output and on Windows
+the Beep() function. The 'gui' mode forwards the beep to the related
+gui methods (currently only used by the Carbon gui).
+</para>
+</section>
+
+<section id="bochsopt-sb16"><title>sb16</title>
 <para>
 Example:
 <screen>
@@ -3937,12 +4047,8 @@ are in the usual "property=value" format.
 
  <itemizedlist>
    <listitem><para>
-   midi: The filename is where the midi data is sent to. This
-   can be a device or just a file if you want to record the midi data.
-   On a Windows host this parameter is ignored when using output to the sound
-   device. On a Linux host with ALSA present and this parameter starting with
-   "alsa:", the default sequencer device will be used with the given client
-   and port parameters instead of an OSS device.
+   enabled: This optional property controls the presence of the SB16 emulation.
+   The emulation is turned on unless this property is used and set to 0.
    </para></listitem>
 
    <listitem><para>
@@ -3957,12 +4063,11 @@ are in the usual "property=value" format.
    </para></listitem>
 
    <listitem><para>
-   wave: This is the device/file where wave output is stored.
+   midi: The filename is where the midi data is sent to. This
+   can be a device or just a file if you want to record the midi data.
    On a Windows host this parameter is ignored when using output to the sound
-   device. On a Linux host with ALSA present and this parameter set to "alsa",
-   the default PCM output device will be used instead of an OSS device. If Bochs
-   is compiled with SDL support, this parameter can be set to "sdl" to use the
-   SDL audio subsystem for output.
+   device. On a Linux host and with the ALSA driver selected the default sequencer
+   device will be used with the given client and port parameters.
    </para></listitem>
 
    <listitem><para>
@@ -3973,6 +4078,10 @@ are in the usual "property=value" format.
    2 = VOC file output, including headers.
    3 = Output the raw wave stream to the file.
    </screen>
+   </para></listitem>
+
+   <listitem><para>
+   wave: This is the file where the wave output is stored (wavemode 2 or 3).
    </para></listitem>
 
    <listitem><para>
@@ -4007,14 +4116,14 @@ are in the usual "property=value" format.
 <para>
 Examples:
 <screen>
-  es1370: enabled=1, wavedev=""    # win32
-  es1370: enabled=1, wavedev=alsa  # Linux with ALSA
-  es1370: enabled=1, wavedev=sdl   # use SDL audio (if present) for output
+  es1370: enabled=1, wavemode=1                       # use 'sound' parameters
+  es1370: enabled=1, wavemode=2, wavefile=output.voc  # send output to file
 </screen>
-This defines the ES1370 sound emulation. The parameter 'enabled' controls the
-presence of the device. The 'wavedev' parameter is similar to the 'wave'
-parameter of the SB16 soundcard. The emulation supports recording and playback
-(except DAC1+DAC2 output at the same time).
+This defines the ES1370 sound emulation (recording and playback - except
+DAC1+DAC2 output at the same time). The parameter 'enabled' controls the
+presence of the device. The 'wavemode' parameter can be used to redirect
+the output to a file (see SB16). The 'wavefile' parameter is similar to the
+'wave' parameter of the SB16 soundcard.
 </para>
 </section>
 
@@ -4077,49 +4186,6 @@ Valid key names:
 "f1", ... "f12", "home", "ins", "left", "menu", "minus", "pgdwn", "pgup", "plus",
 "right", "shift", "space", "tab", "up", "win", "print" and "power".
 </para>
-</section>
-
-<section id="bochsopt-clock"><title>clock</title>
-<para>
-This defines the parameters of the clock inside Bochs:
-</para>
-<para><command>sync</command></para>
-<para>
-This defines the method how to synchronize the Bochs internal time
-with realtime. With the value 'none' the Bochs time relies on the IPS
-value and no host time synchronization is used. The 'slowdown' method
-sacrifices performance to preserve reproducibility while allowing host
-time correlation. The 'realtime' method sacrifices reproducibility to
-preserve performance and host-time correlation.
-It is possible to enable both synchronization methods.
-</para>
-<para><command>time0</command></para>
-<para>
-Specifies the start (boot) time of the virtual machine. Use a time
-value as returned by the time(2) system call. If no time0 value is
-set or if time0 equal to 1 (special case) or if time0 equal 'local',
-the simulation will be started at the current local host time.
-If time0 equal to 2 (special case) or if time0 equal 'utc',
-the simulation will be started at the current utc time.
-</para>
-<para>
-<screen>
-Syntax:
-  clock: sync=[none|slowdown|realtime|both], time0=[timeValue|local|utc]
-
-Examples:
-  clock: sync=none,     time0=local       # Now (localtime)
-  clock: sync=slowdown, time0=315529200   # Tue Jan  1 00:00:00 1980
-  clock: sync=none,     time0=631148400   # Mon Jan  1 00:00:00 1990
-  clock: sync=realtime, time0=938581955   # Wed Sep 29 07:12:35 1999
-  clock: sync=realtime, time0=946681200   # Sat Jan  1 00:00:00 2000
-  clock: sync=none,     time0=1           # Now (localtime)
-  clock: sync=none,     time0=utc         # Now (utc/gmt)
-
-Default value are sync=none, time0=local
-</screen>
-</para>
-
 </section>
 
 <section id="bochsopt-mouse">
@@ -4571,7 +4637,7 @@ debugger command at start up.
 <para>
 This section is a detailed description for configuring Sound Blaster 16 from
 source. If you have a binary and all you want to know is what to put in your
-<filename>bochsrc</filename> file, see <link linkend="sb16line">sb16 option</link>.
+<filename>bochsrc</filename> file, see <link linkend="bochsopt-sb16">sb16 option</link>.
 </para>
 
 <para>
@@ -4605,7 +4671,8 @@ sox for example.
 <section><title>Output to a sound card</title>
 
 <para>
-Output is supported on Windows, Linux, FreeBSD, MacOS 9 and MacOSX at the moment.
+Output is supported on Windows, Linux, FreeBSD, MacOS 9, MacOSX and platforms supported
+by SDL.
 </para>
 <para>
 On Linux, the output goes to any file or device. If you have a wavetable synthesizer,
@@ -4613,8 +4680,8 @@ midi can go to <filename class="devicefile">/dev/midi00</filename>, otherwise yo
 a midi interpreter. For example, the midid program from the DosEmu project would work.
 Wave output should go to <filename class="devicefile">/dev/dsp</filename>. These devices
 are assumed to be OSS devices, if they're not some of the ioctl's might fail.
-If ALSA is present on Linux and the wave device is set to <filename>alsa</filename>,
-Bochs uses it's default PCM output device instead of an OSS device.
+If ALSA is present on Linux and the sound driver is set to <filename>alsa</filename>,
+Bochs uses it's default PCM output device.
 </para>
 <para>
 On Windows, midi and (wave) output go to the midi mapper and the wave mapper,
@@ -4640,8 +4707,10 @@ from the DosEmu project instead of <filename class="devicefile">/dev/midi00</fil
 <para>
 You need to <command>configure</command> Bochs using the <option>--enable-sb16</option>
 option.
-There are a few values in <filename>config.h</filename> that are relevant to the sound functions.
-Edit <filename>config.h</filename> after running configure, but before compiling.
+There are a few values in <filename>config.h</filename> that are relevant to the
+sound functions. Editing <filename>config.h</filename> after running configure
+is usually not necessary, since it detects the available drivers and enables them
+for the compilation.
 </para>
 
 <para>
@@ -4650,9 +4719,10 @@ running at the same time.
 </para>
 
 <para>
-BX_SOUND_OUTPUT_C is the name of the class used for output.  The default is
-to have no output functions, so you need to change this if you want any sound.
-The following are supported at the moment:
+BX_SOUND_OUTPUT_C is the name of the class used as the "default" sound driver for
+output.  The default value of this setting is the dummy driver with no output. The
+configure script usually changes this value. The following are supported at the
+moment:
 </para>
 
 <programlisting>
@@ -4660,12 +4730,16 @@ The following are supported at the moment:
                             FreeBSD and maybe other OSes that use the OSS driver.
         bx_sound_windows_c  for output to the midi and wave mapper of
                             Windows 3.1 and higher.
+        bx_sound_alsa_c     for output to the default ALSA PCM device and the
+                            default ALSA sequencer.
+        bx_sound_osx_c      for output on Mac OS 9 and Mac OSX.
+        bx_sound_sdl_c      for wave output on platforms supported by SDL.
         bx_sound_output_c   for no output at all.
 </programlisting>
 
 <para>
 Setup the SB16 emulation in your <filename>bochsrc</filename>, according to instructions
-in that file (see <link linkend="sb16line">sb16 option</link>).
+in that file (see <link linkend="bochsopt-sb16">sb16 option</link>).
 </para>
 </section>
 
@@ -5232,11 +5306,10 @@ feature work.</para>
 </listitem>
 <listitem>
 <para>snapshot button</para>
-<para>Press this button if you want to save a snapshot of the Bochs screen. The
-text modes and most of the graphics modes (except CGA) are supported. If gui dialogs
-are supported (e.g. on win32) Bochs presents you a "Save as..." dialog box to specify
-the filename. All other platforms are using the fixed filenames "snapshot.txt" or
-"snapshot.bmp".</para>
+<para>Press this button if you want to save a snapshot of the Bochs screen. All
+text and graphics modes are now supported. If gui dialogs are supported (e.g. on win32)
+Bochs presents you a "Save as..." dialog box to specify the filename. All other
+platforms are using the fixed filenames "snapshot.txt" or "snapshot.bmp".</para>
 </listitem>
 <listitem><para>config button</para>
 <para>This button stops the Bochs simulation and starts the runtime configuration.
