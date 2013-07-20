@@ -2230,8 +2230,41 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR(("%s: maximum include level exceeded (limit = 2).", context));
     }
     bx_read_configuration(params[1]);
-  }
-  else if ((!strcmp(params[0], "floppya")) ||
+  } else if (!strcmp(params[0], "plugin_ctrl")) {
+    char *param, *pname, *val;
+    for (i=1; i<num_params; i++) {
+      param = strdup(params[i]);
+      pname = strtok(param, "=");
+      val = strtok(NULL, "");
+      if (val != NULL) {
+        if (isdigit(val[0])) {
+          SIM->opt_plugin_ctrl(pname, atoi(val));
+        } else {
+          PARSE_ERR(("%s: plugin_ctrl directive malformed", context));
+        }
+      } else {
+        PARSE_ERR(("%s: plugin_ctrl directive malformed", context));
+      }
+      free(param);
+    }
+  } else if (!strcmp(params[0], "config_interface")) {
+    if (num_params != 2) {
+      PARSE_ERR(("%s: config_interface directive: wrong # args.", context));
+    }
+    if (!SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE)->set_by_name(params[1]))
+      PARSE_ERR(("%s: config_interface '%s' not available", context, params[1]));
+  } else if (!strcmp(params[0], "display_library")) {
+    if ((num_params < 2) || (num_params > 3)) {
+      PARSE_ERR(("%s: display_library directive: wrong # args.", context));
+    }
+    if (!SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->set_by_name(params[1]))
+      PARSE_ERR(("%s: display library '%s' not available", context, params[1]));
+    if (num_params == 3) {
+      if (!strncmp(params[2], "options=", 8)) {
+        SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->set(&params[2][8]);
+      }
+    }
+  } else if ((!strcmp(params[0], "floppya")) ||
            (!strcmp(params[0], "floppyb"))) {
     if (!strcmp(params[0], "floppya")) {
       base = (bx_list_c*) SIM->get_param(BXPN_FLOPPYA);
@@ -2317,9 +2350,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
           params[i]));
       }
     }
-  }
-
-  else if ((!strncmp(params[0], "ata", 3)) && (strlen(params[0]) == 4)) {
+  } else if ((!strncmp(params[0], "ata", 3)) && (strlen(params[0]) == 4)) {
     char tmpname[80];
     Bit8u channel = params[0][3];
 
@@ -2340,10 +2371,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         PARSE_ERR(("%s: ataX directive malformed.", context));
       }
     }
-  }
-
-  // ataX-master, ataX-slave
-  else if ((!strncmp(params[0], "ata", 3)) && (strlen(params[0]) > 4)) {
+  } else if ((!strncmp(params[0], "ata", 3)) && (strlen(params[0]) > 4)) {
+    // ataX-master, ataX-slave
     Bit8u channel = params[0][3];
     int type = -1;
     Bit32u cylinders = 0, heads = 0, sectors = 0;
@@ -2402,7 +2431,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_enum("type", base)->set(BX_ATA_DEVICE_NONE);
       }
     }
-
   } else if (!strcmp(params[0], "boot")) {
     char tmppath[80];
     if (num_params < 2) {
@@ -2641,26 +2669,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         PARSE_ERR(("%s: keyboard directive malformed.", context));
       }
     }
-  } else if (!strcmp(params[0], "keyboard_serial_delay")) {
-    if (num_params != 2) {
-      PARSE_ERR(("%s: keyboard_serial_delay directive: wrong # args.", context));
-    }
-    SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->set(atol(params[1]));
-    if (SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->get() < 5) {
-      PARSE_ERR (("%s: keyboard_serial_delay not big enough!", context));
-    }
-    PARSE_WARN(("%s: 'keyboard_serial_delay' will be replaced by new 'keyboard' option.", context));
-  } else if (!strcmp(params[0], "keyboard_paste_delay")) {
-    if (num_params != 2) {
-      PARSE_ERR(("%s: keyboard_paste_delay directive: wrong # args.", context));
-    }
-    SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set(atol(params[1]));
-    if (SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->get() < 1000) {
-      PARSE_ERR (("%s: keyboard_paste_delay not big enough!", context));
-    }
-    PARSE_WARN(("%s: 'keyboard_paste_delay' will be replaced by new 'keyboard' option.", context));
-  } else if (!strcmp(params[0], "text_snapshot_check")) {
-    PARSE_ERR(("%s: the 'text_snapshot_check' feature has been removed.", context));
   } else if (!strcmp(params[0], "mouse")) {
     if (num_params < 2) {
       PARSE_ERR(("%s: mouse directive malformed.", context));
@@ -2773,8 +2781,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         BX_ERROR(("%s: unknown parameter for clock ignored.", context));
       }
     }
-  }
-  else if (!strcmp(params[0], "sound")) {
+  } else if (!strcmp(params[0], "sound")) {
 #if BX_SUPPORT_SOUNDLOW
     for (i=1; i<num_params; i++) {
       if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param(BXPN_SOUNDLOW)) < 0) {
@@ -2784,8 +2791,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 #else
     PARSE_ERR(("%s: Bochs is not compiled with lowlevel sound support", context));
 #endif
-  }
-  else if (!strcmp(params[0], "gdbstub")) {
+  } else if (!strcmp(params[0], "gdbstub")) {
 #if BX_GDBSTUB
     if (num_params < 2) {
       PARSE_ERR(("%s: gdbstub directive: wrong # args.", context));
@@ -2826,8 +2832,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 #else
     PARSE_ERR(("%s: Bochs is not compiled with gdbstub support", context));
 #endif
-  }
-  else if (!strcmp(params[0], "magic_break")) {
+  } else if (!strcmp(params[0], "magic_break")) {
 #if BX_DEBUGGER
     if (num_params != 2) {
       PARSE_ERR(("%s: magic_break directive: wrong # args.", context));
@@ -2849,13 +2854,11 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 #else
     PARSE_WARN(("%s: Bochs is not compiled with internal debugger support", context));
 #endif
-  }
-  else if (!strcmp(params[0], "debug_symbols")) {
+  } else if (!strcmp(params[0], "debug_symbols")) {
     if (parse_debug_symbols(context, (const char **)(params + 1), num_params - 1) < 0) {
       return -1;
     }
-  }
-  else if (!strcmp(params[0], "print_timestamps")) {
+  } else if (!strcmp(params[0], "print_timestamps")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: print_timestamps directive: wrong # args.", context));
     }
@@ -2868,8 +2871,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     else {
       PARSE_ERR(("%s: print_timestamps directive malformed.", context));
     }
-  }
-  else if (!strcmp(params[0], "port_e9_hack")) {
+  } else if (!strcmp(params[0], "port_e9_hack")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: port_e9_hack directive: wrong # args.", context));
     }
@@ -2879,8 +2881,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     if (parse_param_bool(params[1], 8, BXPN_PORT_E9_HACK) < 0) {
       PARSE_ERR(("%s: port_e9_hack directive malformed.", context));
     }
-  }
-  else if (!strcmp(params[0], "load32bitOSImage")) {
+  } else if (!strcmp(params[0], "load32bitOSImage")) {
     if ((num_params!=4) && (num_params!=5)) {
       PARSE_ERR(("%s: load32bitOSImage directive: wrong # args.", context));
     }
@@ -2910,8 +2911,28 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       }
       SIM->get_param_string(BXPN_LOAD32BITOS_INITRD)->set(&params[4][7]);
     }
-  }
-  else if (!strcmp(params[0], "keyboard_type")) {
+  } else if (!strcmp(params[0], "keyboard_serial_delay")) {
+    // handled by 'keyboard' option since Bochs 2.6
+    if (num_params != 2) {
+      PARSE_ERR(("%s: keyboard_serial_delay directive: wrong # args.", context));
+    }
+    SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->set(atol(params[1]));
+    if (SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->get() < 5) {
+      PARSE_ERR (("%s: keyboard_serial_delay not big enough!", context));
+    }
+    PARSE_WARN(("%s: 'keyboard_serial_delay' will be replaced by new 'keyboard' option.", context));
+  } else if (!strcmp(params[0], "keyboard_paste_delay")) {
+    // handled by 'keyboard' option since Bochs 2.6
+    if (num_params != 2) {
+      PARSE_ERR(("%s: keyboard_paste_delay directive: wrong # args.", context));
+    }
+    SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set(atol(params[1]));
+    if (SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->get() < 1000) {
+      PARSE_ERR (("%s: keyboard_paste_delay not big enough!", context));
+    }
+    PARSE_WARN(("%s: 'keyboard_paste_delay' will be replaced by new 'keyboard' option.", context));
+  } else if (!strcmp(params[0], "keyboard_type")) {
+    // handled by 'keyboard' option since Bochs 2.6
     if (num_params != 2) {
       PARSE_ERR(("%s: keyboard_type directive: wrong # args.", context));
     }
@@ -2919,9 +2940,9 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR(("%s: keyboard_type directive: wrong arg '%s'.", context,params[1]));
     }
     PARSE_WARN(("%s: 'keyboard_type' will be replaced by new 'keyboard' option.", context));
-  }
-  else if (!strcmp(params[0], "keyboard_mapping")
+  } else if (!strcmp(params[0], "keyboard_mapping")
          ||!strcmp(params[0], "keyboardmapping")) {
+    // handled by 'keyboard' option since Bochs 2.6
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
         SIM->get_param_bool(BXPN_KBD_USEMAPPING)->set(atol(&params[i][8]));
@@ -2931,9 +2952,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       }
     }
     PARSE_WARN(("%s: '%s' will be replaced by new 'keyboard' option.", context, params[0]));
-  }
-  else if (!strcmp(params[0], "user_shortcut"))
-  {
+  } else if (!strcmp(params[0], "user_shortcut")) {
+    // handled by 'keyboard' option since Bochs 2.6.1
     if (num_params != 2) {
       PARSE_ERR(("%s: user_shortcut directive: wrong # args.", context));
     }
@@ -2943,29 +2963,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR(("%s: user_shortcut directive malformed.", context));
     }
     PARSE_WARN(("%s: 'user_shortcut' will be replaced by new 'keyboard' option.", context));
-  }
-  else if (!strcmp(params[0], "config_interface"))
-  {
-    if (num_params != 2) {
-      PARSE_ERR(("%s: config_interface directive: wrong # args.", context));
-    }
-    if (!SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE)->set_by_name(params[1]))
-      PARSE_ERR(("%s: config_interface '%s' not available", context, params[1]));
-  }
-  else if (!strcmp(params[0], "display_library")) {
-    if ((num_params < 2) || (num_params > 3)) {
-      PARSE_ERR(("%s: display_library directive: wrong # args.", context));
-    }
-    if (!SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->set_by_name(params[1]))
-      PARSE_ERR(("%s: display library '%s' not available", context, params[1]));
-    if (num_params == 3) {
-      if (!strncmp(params[2], "options=", 8)) {
-        SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->set(&params[2][8]);
-      }
-    }
-  }
+  } else if (!strcmp(params[0], "user_plugin")) {
 #if BX_PLUGINS
-  else if (!strcmp(params[0], "user_plugin")) {
     char tmpname[80];
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "name=", 5)) {
@@ -2979,43 +2978,21 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         PARSE_ERR(("%s: unknown user plugin parameter '%s'", context, params[i]));
       }
     }
-  }
+#else
+    PARSE_ERR(("%s: Bochs is not compiled with plugin support", context));
 #endif
-  else if (!strcmp(params[0], "plugin_ctrl")) {
-    char *param, *pname, *val;
-    for (i=1; i<num_params; i++) {
-      param = strdup(params[i]);
-      pname = strtok(param, "=");
-      val = strtok(NULL, "");
-      if (val != NULL) {
-        if (isdigit(val[0])) {
-          SIM->opt_plugin_ctrl(pname, atoi(val));
-        } else {
-          PARSE_ERR(("%s: plugin_ctrl directive malformed", context));
-        }
-      } else {
-        PARSE_ERR(("%s: plugin_ctrl directive malformed", context));
-      }
-      free(param);
-    }
-  }
-  // add-on options handled by registered functions
-  else if (SIM->is_addon_option(params[0]))
-  {
+  } else if (SIM->is_addon_option(params[0])) {
+    // add-on options handled by registered functions
     return SIM->parse_addon_option(context, num_params, &params[0]);
-  }
-  // treat unknown option as plugin name and try to load it
-  else if (SIM->opt_plugin_ctrl(params[0], 1))
-  {
-    // after loading the plugin a bochsrc option with it's name must exist
+  } else if (SIM->opt_plugin_ctrl(params[0], 1)) {
+    // treat unknown option as plugin name and try to load it
     if (SIM->is_addon_option(params[0])) {
+      // after loading the plugin a bochsrc option with it's name must exist
       return SIM->parse_addon_option(context, num_params, &params[0]);
     } else {
       PARSE_ERR(("%s: directive '%s' not understood", context, params[0]));
     }
-  }
-  else
-  {
+  } else {
     PARSE_ERR(("%s: directive '%s' not understood", context, params[0]));
   }
   return 0;
