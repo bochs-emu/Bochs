@@ -91,23 +91,6 @@
 #display_library: x
 
 #=======================================================================
-# ROMIMAGE:
-# The ROM BIOS controls what the PC does when it first powers on.
-# Normally, you can use a precompiled BIOS in the source or binary
-# distribution called BIOS-bochs-latest. The ROM BIOS is usually loaded
-# starting at address 0xf0000, and it is exactly 64k long. Another option
-# is 128k BIOS which is loaded at address 0xe0000.
-# You can also use the environment variable $BXSHARE to specify the
-# location of the BIOS.
-# The usage of external large BIOS images (up to 512k) at memory top is
-# now supported, but we still recommend to use the BIOS distributed with
-# Bochs. The start address optional, since it can be calculated from image size.
-#=======================================================================
-romimage: file=$BXSHARE/BIOS-bochs-latest 
-#romimage: file=bios/seabios-1.6.3.bin
-#romimage: file=mybios.bin, address=0xfff80000 # 512k at memory top
-
-#=======================================================================
 # CPU:
 # This defines cpu-related parameters inside Bochs:
 #
@@ -359,6 +342,31 @@ cpu: cpuid_limit_winnt=0
 memory: guest=512, host=256
 
 #=======================================================================
+# ROMIMAGE:
+# The ROM BIOS controls what the PC does when it first powers on.
+# Normally, you can use a precompiled BIOS in the source or binary
+# distribution called BIOS-bochs-latest. The ROM BIOS is usually loaded
+# starting at address 0xf0000, and it is exactly 64k long. Another option
+# is 128k BIOS which is loaded at address 0xe0000.
+# You can also use the environment variable $BXSHARE to specify the
+# location of the BIOS.
+# The usage of external large BIOS images (up to 512k) at memory top is
+# now supported, but we still recommend to use the BIOS distributed with
+# Bochs. The start address optional, since it can be calculated from image size.
+#=======================================================================
+romimage: file=$BXSHARE/BIOS-bochs-latest 
+#romimage: file=bios/seabios-1.6.3.bin
+#romimage: file=mybios.bin, address=0xfff80000 # 512k at memory top
+
+#=======================================================================
+# VGAROMIMAGE
+# You now need to load a VGA ROM BIOS into C0000.
+#=======================================================================
+#vgaromimage: file=bios/VGABIOS-elpin-2.40
+vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
+#vgaromimage: file=bios/VGABIOS-lgpl-latest-cirrus
+
+#=======================================================================
 # OPTROMIMAGE[1-4]:
 # You may now load up to 4 optional ROM images. Be sure to use a 
 # read-only area, typically between C8000 and EFFFF. These optional
@@ -378,14 +386,6 @@ memory: guest=512, host=256
 #optramimage2: file=/path/file2.img, address=0x0020000
 #optramimage3: file=/path/file3.img, address=0x0030000
 #optramimage4: file=/path/file4.img, address=0x0040000
-
-#=======================================================================
-# VGAROMIMAGE
-# You now need to load a VGA ROM BIOS into C0000.
-#=======================================================================
-#vgaromimage: file=bios/VGABIOS-elpin-2.40
-vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
-#vgaromimage: file=bios/VGABIOS-lgpl-latest-cirrus
 
 #=======================================================================
 # VGA:
@@ -408,6 +408,164 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 #   vga: extension=cirrus, update_freq=10
 #=======================================================================
 #vga: extension=vbe, update_freq=5
+
+#=======================================================================
+# KEYBOARD:
+# This defines parameters related to the emulated keyboard
+#
+#   TYPE:
+#     Type of keyboard return by a "identify keyboard" command to the
+#     keyboard controller. It must be one of "xt", "at" or "mf".
+#     Defaults to "mf". It should be ok for almost everybody. A known
+#     exception is french macs, that do have a "at"-like keyboard.
+#
+#   SERIAL_DELAY:
+#     Approximate time in microseconds that it takes one character to
+#     be transferred from the keyboard to controller over the serial path.
+#
+#   PASTE_DELAY:
+#     Approximate time in microseconds between attempts to paste
+#     characters to the keyboard controller. This leaves time for the
+#     guest os to deal with the flow of characters.  The ideal setting
+#     depends on how your operating system processes characters.  The
+#     default of 100000 usec (.1 seconds) was chosen because it works 
+#     consistently in Windows.
+#     If your OS is losing characters during a paste, increase the paste
+#     delay until it stops losing characters.
+#
+#   KEYMAP:
+#     This enables a remap of a physical localized keyboard to a
+#     virtualized us keyboard, as the PC architecture expects.
+#
+#   USER_SHORTCUT:
+#     This defines the keyboard shortcut to be sent when you press the "user"
+#     button in the headerbar. The shortcut string is a combination of maximum
+#     3 key names (listed below) separated with a '-' character.
+#     Valid key names:
+#     "alt", "bksl", "bksp", "ctrl", "del", "down", "end", "enter", "esc",
+#     "f1", ... "f12", "home", "ins", "left", "menu", "minus", "pgdwn", "pgup",
+#     "plus", "right", "shift", "space", "tab", "up", "win", "print" and "power".
+
+# Examples:
+#   keyboard: type=mf, serial_delay=200, paste_delay=100000
+#   keyboard: keymap=gui/keymaps/x11-pc-de.map
+#   keyboard: user_shortcut=ctrl-alt-del
+#=======================================================================
+#keyboard: type=mf, serial_delay=250
+
+#=======================================================================
+# MOUSE:
+# This defines parameters for the emulated mouse type, the initial status
+# of the mouse capture and the runtime method to toggle it.
+#
+#  TYPE:
+#  With the mouse type option you can select the type of mouse to emulate.
+#  The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
+#  on PS/2), 'serial', 'serial_wheel' and 'serial_msys' (one com port requires
+#  setting 'mode=mouse'). To connect a mouse to an USB port, see the 'usb_uhci',
+#  'usb_ohci' or 'usb_xhci' options (requires PCI and USB support).
+#
+#  ENABLED:
+#  The Bochs gui creates mouse "events" unless the 'enabled' option is
+#  set to 0. The hardware emulation itself is not disabled by this.
+#  Unless you have a particular reason for enabling the mouse by default,
+#  it is recommended that you leave it off. You can also toggle the mouse
+#  usage at runtime (RFB, SDL, Win32, wxWidgets and X11 - see below).
+#
+#  TOGGLE:
+#  The default method to toggle the mouse capture at runtime is to press the
+#  CTRL key and the middle mouse button ('ctrl+mbutton'). This option allows
+#  to change the method to 'ctrl+f10' (like DOSBox), 'ctrl+alt' (like QEMU)
+#  or 'f12' (replaces win32 'legacyF12' option).
+#
+# Examples:
+#   mouse: enabled=1
+#   mouse: type=imps2, enabled=1
+#   mouse: type=serial, enabled=1
+#   mouse: enabled=0, toggle=ctrl+f10
+#=======================================================================
+mouse: enabled=0
+
+#=======================================================================
+# PCI:
+# This option controls the presence of a PCI chipset in Bochs. Currently it only
+# supports the i440FX chipset. You can also specify the devices connected to
+# PCI slots. Up to 5 slots are available. For these combined PCI/ISA devices
+# assigning to slot is mandatory if you want to emulate the PCI model: cirrus,
+# ne2k and pcivga. These PCI-only devices are also supported, but they are
+# auto-assigned if you don't use the slot configuration: e1000, es1370, pcidev,
+# pcipnic, usb_ohci and usb_xhci.
+#
+# Example:
+#   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k
+#=======================================================================
+pci: enabled=1, chipset=i440fx
+
+#=======================================================================
+# CLOCK:
+# This defines the parameters of the clock inside Bochs:
+#
+#  SYNC:
+#  This defines the method how to synchronize the Bochs internal time
+#  with realtime. With the value 'none' the Bochs time relies on the IPS
+#  value and no host time synchronization is used. The 'slowdown' method
+#  sacrifices performance to preserve reproducibility while allowing host
+#  time correlation. The 'realtime' method sacrifices reproducibility to
+#  preserve performance and host-time correlation.
+#  It is possible to enable both synchronization methods.
+#
+#  RTC_SYNC:
+#  If this option is enabled together with the realtime synchronization,
+#  the RTC runs at realtime speed. This feature is disabled by default.
+#
+#  TIME0:
+#  Specifies the start (boot) time of the virtual machine. Use a time 
+#  value as returned by the time(2) system call. If no time0 value is 
+#  set or if time0 equal to 1 (special case) or if time0 equal 'local', 
+#  the simulation will be started at the current local host time.
+#  If time0 equal to 2 (special case) or if time0 equal 'utc',
+#  the simulation will be started at the current utc time.
+#
+# Syntax:
+#  clock: sync=[none|slowdown|realtime|both], time0=[timeValue|local|utc]
+#
+# Example:
+#   clock: sync=none,     time0=local       # Now (localtime)
+#   clock: sync=slowdown, time0=315529200   # Tue Jan  1 00:00:00 1980
+#   clock: sync=none,     time0=631148400   # Mon Jan  1 00:00:00 1990
+#   clock: sync=realtime, time0=938581955   # Wed Sep 29 07:12:35 1999
+#   clock: sync=realtime, time0=946681200   # Sat Jan  1 00:00:00 2000
+#   clock: sync=none,     time0=1           # Now (localtime)
+#   clock: sync=none,     time0=utc         # Now (utc/gmt)
+# 
+# Default value are sync=none, time0=local
+#=======================================================================
+#clock: sync=none, time0=local
+
+#=======================================================================
+# CMOSIMAGE:
+# This defines image file that can be loaded into the CMOS RAM at startup.
+# The rtc_init parameter controls whether initialize the RTC with values stored
+# in the image. By default the time0 argument given to the clock option is used.
+# With 'rtc_init=image' the image is the source for the initial time.
+#
+# Example:
+#   cmosimage: file=cmos.img, rtc_init=image
+#=======================================================================
+#cmosimage: file=cmos.img, rtc_init=time0
+
+#=======================================================================
+# private_colormap: Request that the GUI create and use it's own
+#                   non-shared colormap.  This colormap will be used
+#                   when in the bochs window.  If not enabled, a
+#                   shared colormap scheme may be used.  Not implemented
+#                   on all GUI's.
+#
+# Examples:
+#   private_colormap: enabled=1
+#   private_colormap: enabled=0
+#=======================================================================
+private_colormap: enabled=0
 
 #=======================================================================
 # FLOPPYA:
@@ -556,48 +714,6 @@ boot: disk
 #   floppy_bootsig_check: disabled=1
 #=======================================================================
 floppy_bootsig_check: disabled=0
-
-#=======================================================================
-# CLOCK:
-# This defines the parameters of the clock inside Bochs:
-#
-#  SYNC:
-#  This defines the method how to synchronize the Bochs internal time
-#  with realtime. With the value 'none' the Bochs time relies on the IPS
-#  value and no host time synchronization is used. The 'slowdown' method
-#  sacrifices performance to preserve reproducibility while allowing host
-#  time correlation. The 'realtime' method sacrifices reproducibility to
-#  preserve performance and host-time correlation.
-#  It is possible to enable both synchronization methods.
-#
-#  RTC_SYNC:
-#  If this option is enabled together with the realtime synchronization,
-#  the RTC runs at realtime speed. This feature is disabled by default.
-#
-#  TIME0:
-#  Specifies the start (boot) time of the virtual machine. Use a time 
-#  value as returned by the time(2) system call. If no time0 value is 
-#  set or if time0 equal to 1 (special case) or if time0 equal 'local', 
-#  the simulation will be started at the current local host time.
-#  If time0 equal to 2 (special case) or if time0 equal 'utc',
-#  the simulation will be started at the current utc time.
-#
-# Syntax:
-#  clock: sync=[none|slowdown|realtime|both], time0=[timeValue|local|utc]
-#
-# Example:
-#   clock: sync=none,     time0=local       # Now (localtime)
-#   clock: sync=slowdown, time0=315529200   # Tue Jan  1 00:00:00 1980
-#   clock: sync=none,     time0=631148400   # Mon Jan  1 00:00:00 1990
-#   clock: sync=realtime, time0=938581955   # Wed Sep 29 07:12:35 1999
-#   clock: sync=realtime, time0=946681200   # Sat Jan  1 00:00:00 2000
-#   clock: sync=none,     time0=1           # Now (localtime)
-#   clock: sync=none,     time0=utc         # Now (utc/gmt)
-# 
-# Default value are sync=none, time0=local
-#=======================================================================
-#clock: sync=none, time0=local
-
 
 #=======================================================================
 # LOG:
@@ -801,111 +917,6 @@ speaker: enabled=1, mode=sound
 #es1370: enabled=1, wavemode=1
 
 #=======================================================================
-# KEYBOARD:
-# This defines parameters related to the emulated keyboard
-#
-#   TYPE:
-#     Type of keyboard return by a "identify keyboard" command to the
-#     keyboard controller. It must be one of "xt", "at" or "mf".
-#     Defaults to "mf". It should be ok for almost everybody. A known
-#     exception is french macs, that do have a "at"-like keyboard.
-#
-#   SERIAL_DELAY:
-#     Approximate time in microseconds that it takes one character to
-#     be transferred from the keyboard to controller over the serial path.
-#
-#   PASTE_DELAY:
-#     Approximate time in microseconds between attempts to paste
-#     characters to the keyboard controller. This leaves time for the
-#     guest os to deal with the flow of characters.  The ideal setting
-#     depends on how your operating system processes characters.  The
-#     default of 100000 usec (.1 seconds) was chosen because it works 
-#     consistently in Windows.
-#     If your OS is losing characters during a paste, increase the paste
-#     delay until it stops losing characters.
-#
-#   KEYMAP:
-#     This enables a remap of a physical localized keyboard to a
-#     virtualized us keyboard, as the PC architecture expects.
-#
-#   USER_SHORTCUT:
-#     This defines the keyboard shortcut to be sent when you press the "user"
-#     button in the headerbar. The shortcut string is a combination of maximum
-#     3 key names (listed below) separated with a '-' character.
-#     Valid key names:
-#     "alt", "bksl", "bksp", "ctrl", "del", "down", "end", "enter", "esc",
-#     "f1", ... "f12", "home", "ins", "left", "menu", "minus", "pgdwn", "pgup",
-#     "plus", "right", "shift", "space", "tab", "up", "win", "print" and "power".
-
-# Examples:
-#   keyboard: type=mf, serial_delay=200, paste_delay=100000
-#   keyboard: keymap=gui/keymaps/x11-pc-de.map
-#   keyboard: user_shortcut=ctrl-alt-del
-#=======================================================================
-#keyboard: type=mf, serial_delay=250
-
-#=======================================================================
-# MOUSE:
-# This defines parameters for the emulated mouse type, the initial status
-# of the mouse capture and the runtime method to toggle it.
-#
-#  TYPE:
-#  With the mouse type option you can select the type of mouse to emulate.
-#  The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
-#  on PS/2), 'serial', 'serial_wheel' and 'serial_msys' (one com port requires
-#  setting 'mode=mouse'). To connect a mouse to an USB port, see the 'usb_uhci',
-#  'usb_ohci' or 'usb_xhci' options (requires PCI and USB support).
-#
-#  ENABLED:
-#  The Bochs gui creates mouse "events" unless the 'enabled' option is
-#  set to 0. The hardware emulation itself is not disabled by this.
-#  Unless you have a particular reason for enabling the mouse by default,
-#  it is recommended that you leave it off. You can also toggle the mouse
-#  usage at runtime (RFB, SDL, Win32, wxWidgets and X11 - see below).
-#
-#  TOGGLE:
-#  The default method to toggle the mouse capture at runtime is to press the
-#  CTRL key and the middle mouse button ('ctrl+mbutton'). This option allows
-#  to change the method to 'ctrl+f10' (like DOSBox), 'ctrl+alt' (like QEMU)
-#  or 'f12' (replaces win32 'legacyF12' option).
-#
-# Examples:
-#   mouse: enabled=1
-#   mouse: type=imps2, enabled=1
-#   mouse: type=serial, enabled=1
-#   mouse: enabled=0, toggle=ctrl+f10
-#=======================================================================
-mouse: enabled=0
-
-#=======================================================================
-# private_colormap: Request that the GUI create and use it's own
-#                   non-shared colormap.  This colormap will be used
-#                   when in the bochs window.  If not enabled, a
-#                   shared colormap scheme may be used.  Not implemented
-#                   on all GUI's.
-#
-# Examples:
-#   private_colormap: enabled=1
-#   private_colormap: enabled=0
-#=======================================================================
-private_colormap: enabled=0
-
-#=======================================================================
-# PCI:
-# This option controls the presence of a PCI chipset in Bochs. Currently it only
-# supports the i440FX chipset. You can also specify the devices connected to
-# PCI slots. Up to 5 slots are available. For these combined PCI/ISA devices
-# assigning to slot is mandatory if you want to emulate the PCI model: cirrus,
-# ne2k and pcivga. These PCI-only devices are also supported, but they are
-# auto-assigned if you don't use the slot configuration: e1000, es1370, pcidev,
-# pcipnic, usb_ohci and usb_xhci.
-#
-# Example:
-#   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k
-#=======================================================================
-pci: enabled=1, chipset=i440fx
-
-#=======================================================================
 # ne2k: NE2000 compatible ethernet adapter
 #
 # Format:
@@ -1044,16 +1055,17 @@ pci: enabled=1, chipset=i440fx
 #usb_xhci: enabled=1
 
 #=======================================================================
-# CMOSIMAGE:
-# This defines image file that can be loaded into the CMOS RAM at startup.
-# The rtc_init parameter controls whether initialize the RTC with values stored
-# in the image. By default the time0 argument given to the clock option is used.
-# With 'rtc_init=image' the image is the source for the initial time.
-#
-# Example:
-#   cmosimage: file=cmos.img, rtc_init=image
+# PCIDEV:
+# PCI host device mapping
 #=======================================================================
-#cmosimage: file=cmos.img, rtc_init=time0
+#pcidev: vendor=0x1234, device=0x5678
+
+#=======================================================================
+# GDBSTUB:
+# Enable GDB stub. See user documentation for details.
+# Default value is enabled=0.
+#=======================================================================
+#gdbstub: enabled=0, port=1234, text_base=0, data_base=0, bss_base=0
 
 #=======================================================================
 # MAGIC_BREAK:
@@ -1065,6 +1077,20 @@ pci: enabled=1, chipset=i440fx
 #   magic_break: enabled=1
 #=======================================================================
 #magic_break: enabled=1
+
+#=======================================================================
+# DEBUG_SYMBOLS:
+# This loads symbols from the specified file for use in Bochs' internal
+# debugger. Symbols are loaded into global context. This is equivalent to
+# issuing ldsym debugger command at start up.
+#
+# Example:
+#   debug_symbols: file="kernel.sym"
+#   debug_symbols: file="kernel.sym", offset=0x80000000
+#=======================================================================
+#debug_symbols: file="kernel.sym"
+
+#print_timestamps: enabled=1
 
 #=======================================================================
 # PORT_E9_HACK:
@@ -1082,20 +1108,14 @@ pci: enabled=1, chipset=i440fx
 #port_e9_hack: enabled=1
 
 #=======================================================================
-# DEBUG_SYMBOLS:
-# This loads symbols from the specified file for use in Bochs' internal
-# debugger. Symbols are loaded into global context. This is equivalent to
-# issuing ldsym debugger command at start up.
-#
-# Example:
-#   debug_symbols: file="kernel.sym"
-#   debug_symbols: file="kernel.sym", offset=0x80000000
+# other stuff
 #=======================================================================
-#debug_symbols: file="kernel.sym"
+#load32bitOSImage: os=nullkernel, path=../kernel.img, iolog=../vga_io.log
+#load32bitOSImage: os=linux, path=../linux.img, iolog=../vga_io.log, initrd=../initrd.img
 
 #=======================================================================
 # fullscreen: ONLY IMPLEMENTED ON AMIGA
-#             Request that Bochs occupy the entire screen instead of a 
+#             Request that Bochs occupy the entire screen instead of a
 #             window.
 #
 # Examples:
@@ -1104,25 +1124,6 @@ pci: enabled=1, chipset=i440fx
 #=======================================================================
 #fullscreen: enabled=0
 #screenmode: name="sample"
-
-#=======================================================================
-# other stuff
-#=======================================================================
-#load32bitOSImage: os=nullkernel, path=../kernel.img, iolog=../vga_io.log
-#load32bitOSImage: os=linux, path=../linux.img, iolog=../vga_io.log, initrd=../initrd.img
-#print_timestamps: enabled=1
-
-#-------------------------
-# PCI host device mapping
-#-------------------------
-#pcidev: vendor=0x1234, device=0x5678
-
-#=======================================================================
-# GDBSTUB:
-# Enable GDB stub. See user documentation for details.
-# Default value is enabled=0.
-#=======================================================================
-#gdbstub: enabled=0, port=1234, text_base=0, data_base=0, bss_base=0
 
 #=======================================================================
 # USER_PLUGIN:

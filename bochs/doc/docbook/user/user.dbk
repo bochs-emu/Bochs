@@ -3148,47 +3148,6 @@ See the examples below for other currently supported options.
 </table>
 </section>
 
-<section id="bochsopt-memory"><title>memory</title>
-<para>
-Examples:
-<screen>
-  memory: guest=512, host=256
-</screen>
-Set the amount of physical memory you want to emulate.
-</para>
-<para><command>guest</command></para>
-<para>
-Set amount of guest physical memory to emulate. The default is 32MB,
-the maximum amount limited only by physical address space limitations.
-</para>
-<para><command>host</command></para>
-<para>
-Set amount of host memory you want to allocate for guest RAM emulation.
-It is possible to allocate less memory than you want to emulate in guest
-system. This will fake guest to see the non-existing memory. Once guest
-system touches new memory block it will be dynamically taken from the
-memory pool. You will be warned (by FATAL PANIC) in case guest already
-used all allocated host memory and wants more.
-</para>
-<note><para>
-Due to limitations in the host OS, Bochs fails to allocate more than 1024MB on most 32-bit systems.
-In order to overcome this problem configure and build Bochs with <option>--enable-large-ramfile</option>
-option.
-</para></note>
-</section>
-
-<section><title>megs</title>
-<para>
-Examples:
-<screen>
-  megs: 32
-  megs: 128
-</screen>
-This option sets the 'guest' and 'host' memory parameters to the same
-value. In all other cases the 'memory' option should be used instead.
-</para>
-</section>
-
 <section id="bochsopt-cpu"><title>cpu</title>
 <para>
 Example:
@@ -3448,6 +3407,47 @@ This option exists only if Bochs compiled with <option>--enable-svm</option> opt
 </para>
 </section>
 
+<section id="bochsopt-memory"><title>memory</title>
+<para>
+Examples:
+<screen>
+  memory: guest=512, host=256
+</screen>
+Set the amount of physical memory you want to emulate.
+</para>
+<para><command>guest</command></para>
+<para>
+Set amount of guest physical memory to emulate. The default is 32MB,
+the maximum amount limited only by physical address space limitations.
+</para>
+<para><command>host</command></para>
+<para>
+Set amount of host memory you want to allocate for guest RAM emulation.
+It is possible to allocate less memory than you want to emulate in guest
+system. This will fake guest to see the non-existing memory. Once guest
+system touches new memory block it will be dynamically taken from the
+memory pool. You will be warned (by FATAL PANIC) in case guest already
+used all allocated host memory and wants more.
+</para>
+<note><para>
+Due to limitations in the host OS, Bochs fails to allocate more than 1024MB on most 32-bit systems.
+In order to overcome this problem configure and build Bochs with <option>--enable-large-ramfile</option>
+option.
+</para></note>
+</section>
+
+<section><title>megs</title>
+<para>
+Examples:
+<screen>
+  megs: 32
+  megs: 128
+</screen>
+This option sets the 'guest' and 'host' memory parameters to the same
+value. In all other cases the 'memory' option should be used instead.
+</para>
+</section>
+
 <section><title>romimage</title>
 <para>
 Examples:
@@ -3468,6 +3468,24 @@ The usage of external large BIOS images (up to 512k) at memory top is
 now supported, but we still recommend to use the BIOS distributed with Bochs.
 The start address is optional, since it can be calculated from image size.
 </para>
+</section>
+
+<section id="bochsopt-vgaromimage"><title>vgaromimage</title>
+<para>
+Examples:
+<screen>
+  vgaromimage: file=bios/VGABIOS-elpin-2.40
+  vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
+  vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest-cirrus
+</screen>
+This tells Bochs what VGA ROM BIOS to load (at 0xC0000).
+</para>
+<para>A VGA BIOS from Elpin Systems, Inc. as well as a free LGPL'd VGA BIOS
+are provided in the source and binary distributions.</para>
+<note><para>
+  Please check with the <link linkend="bochsopt-vga">vga option</link> to decide
+  what VGA BIOS to use.
+</para></note>
 </section>
 
 <section><title>optromimage1, optromimage2, optromimage3 or optromimage4</title>
@@ -3495,24 +3513,6 @@ in the simulation, that can be retrieved by the boot loader
 </para>
 </section>
 
-<section id="bochsopt-vgaromimage"><title>vgaromimage</title>
-<para>
-Examples:
-<screen>
-  vgaromimage: file=bios/VGABIOS-elpin-2.40
-  vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
-  vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest-cirrus
-</screen>
-This tells Bochs what VGA ROM BIOS to load (at 0xC0000).
-</para>
-<para>A VGA BIOS from Elpin Systems, Inc. as well as a free LGPL'd VGA BIOS
-are provided in the source and binary distributions.</para>
-<note><para>
-  Please check with the <link linkend="bochsopt-vga">vga option</link> to decide
-  what VGA BIOS to use.
-</para></note>
-</section>
-
 <section id="bochsopt-vga">
 <title>vga</title>
 <para>
@@ -3538,6 +3538,194 @@ to be as close to the number of emulated instructions-per-second your
 workstation can do, for this to be accurate. If the realtime sync is
 enabled with the <link linkend="bochsopt-clock">clock option</link>, the value
 is based on the real time. This parameter can be changed at runtime.
+</para>
+</section>
+
+<section id="bochsopt-keyboard"><title>keyboard</title>
+<para>
+Examples:
+<screen>
+  keyboard: type=mf, serial_delay=200, paste_delay=100000
+  keyboard: keymap=gui/keymaps/x11-pc-de.map
+  keyboard: user_shortcut=ctrl-alt-del
+</screen>
+This defines parameters related to the emulated keyboard.
+</para>
+<para><command>type</command></para>
+<para>
+Type of keyboard return by a "identify keyboard" command to the
+keyboard controller. It must be one of "xt", "at" or "mf".
+Defaults to "mf". It should be ok for almost everybody. A known
+exception is french macs, that do have a "at"-like keyboard.
+</para>
+<para><command>serial_delay</command></para>
+<para>
+Approximate time in microseconds that it takes one character to
+be transferred from the keyboard to controller over the serial path.
+</para>
+<para><command>paste_delay</command></para>
+<para>
+Approximate time in microseconds between attempts to paste
+characters to the keyboard controller. This leaves time for the
+guest os to deal with the flow of characters.  The ideal setting
+depends on how your operating system processes characters.  The
+default of 100000 usec (.1 seconds) was chosen because it works 
+consistently in Windows.
+</para>
+<para>
+If your OS is losing characters during a paste, increase the paste
+delay until it stops losing characters.
+</para>
+<para><command>keymap</command></para>
+<para>
+This enables a remap of a physical localized keyboard to a
+virtualized us keyboard, as the PC architecture expects.
+</para>
+<para>
+Keyboard mapping is available for the display libraries x, sdl (Linux port) and
+wx (GTK port). For SDL you have to use keymaps designed for SDL, the wxWidgets GUI
+uses the keymaps for X11.
+</para>
+<para><command>user_shortcut</command></para>
+<para>
+This defines the keyboard shortcut to be sent when you press the "user" button
+in the <link linkend="headerbar">headerbar</link>. The shortcut string is a
+combination of maximum 3 key names (listed below) separated with a '-' character.
+</para>
+<para>
+Valid key names:
+</para>
+<para>
+"alt", "bksl", "bksp", "ctrl", "del", "down", "end", "enter", "esc",
+"f1", ... "f12", "home", "ins", "left", "menu", "minus", "pgdwn", "pgup", "plus",
+"right", "shift", "space", "tab", "up", "win", "print" and "power".
+</para>
+</section>
+
+<section id="bochsopt-mouse">
+<title>mouse</title>
+<para>
+Examples:
+<screen>
+  mouse: enabled=1
+  mouse: type=imps2, enabled=1
+  mouse: type=serial, enabled=1
+  mouse: enabled=0, toggle=ctrl+f10
+</screen>
+This defines parameters for the emulated mouse type, the initial status
+of the mouse capture and the runtime method to toggle it.
+</para>
+<para><command>type</command></para>
+<para>
+With the mouse type option you can select the type of mouse to emulate.
+The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
+on PS/2), 'serial', 'serial_wheel' and 'serial_msys' (one com port requires
+setting 'mode=mouse', see <link linkend="bochsopt-com">com option</link>).
+To connect a mouse to an USB port, see the <link linkend="bochsopt-usb-uhci">usb_uhci</link>,
+'usb_ohci 'or 'usb_xhci' option (requires PCI and USB support).
+</para>
+<para><command>enabled</command></para>
+<para>
+The Bochs gui creates mouse "events" unless the 'enabled' option is
+set to 0. The hardware emulation itself is not disabled by this.
+Unless you have a particular reason for enabling the mouse by default,
+it is recommended that you leave it off. You can also toggle the
+mouse usage at runtime (see <link linkend="headerbar">headerbar</link>
+and the 'toggle' option below).
+</para>
+<para><command>toggle</command></para>
+<para>
+The default method to toggle the mouse capture at runtime is to press the
+CTRL key and the middle mouse button ('ctrl+mbutton'). This option allows
+to change the method to 'ctrl+f10' (like DOSBox) or 'ctrl+alt' (like QEMU)
+or 'f12' (replaces win32 'legacyF12' option).
+</para>
+</section>
+
+<section><title>pci</title>
+<para>
+Examples:
+<screen>
+  pci: enabled=1, chipset=i440fx # default if compiled with PCI support
+  pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k
+</screen>
+This option controls the presence of a PCI chipset in Bochs. Currently it only
+supports the i440FX chipset. You can also specify the devices connected to
+PCI slots. Up to 5 slots are available. For these combined PCI/ISA devices
+assigning to slot is mandatory if you want to emulate the PCI model: cirrus,
+ne2k and pcivga. These PCI-only devices are also supported, but they are
+auto-assigned if you don't use the slot configuration: e1000, es1370, pcidev,
+pcipnic, usb_ohci and usb_xhci.
+</para>
+</section>
+
+<section id="bochsopt-clock"><title>clock</title>
+<para>
+This defines the parameters of the clock inside Bochs:
+</para>
+<para><command>sync</command></para>
+<para>
+This defines the method how to synchronize the Bochs internal time
+with realtime. With the value 'none' the Bochs time relies on the IPS
+value and no host time synchronization is used. The 'slowdown' method
+sacrifices performance to preserve reproducibility while allowing host
+time correlation. The 'realtime' method sacrifices reproducibility to
+preserve performance and host-time correlation.
+It is possible to enable both synchronization methods.
+</para>
+<para><command>time0</command></para>
+<para>
+Specifies the start (boot) time of the virtual machine. Use a time
+value as returned by the time(2) system call. If no time0 value is
+set or if time0 equal to 1 (special case) or if time0 equal 'local',
+the simulation will be started at the current local host time.
+If time0 equal to 2 (special case) or if time0 equal 'utc',
+the simulation will be started at the current utc time.
+</para>
+<para>
+<screen>
+Syntax:
+  clock: sync=[none|slowdown|realtime|both], time0=[timeValue|local|utc]
+
+Examples:
+  clock: sync=none,     time0=local       # Now (localtime)
+  clock: sync=slowdown, time0=315529200   # Tue Jan  1 00:00:00 1980
+  clock: sync=none,     time0=631148400   # Mon Jan  1 00:00:00 1990
+  clock: sync=realtime, time0=938581955   # Wed Sep 29 07:12:35 1999
+  clock: sync=realtime, time0=946681200   # Sat Jan  1 00:00:00 2000
+  clock: sync=none,     time0=1           # Now (localtime)
+  clock: sync=none,     time0=utc         # Now (utc/gmt)
+
+Default value are sync=none, time0=local
+</screen>
+</para>
+
+</section>
+
+<section><title>cmosimage</title>
+<para>
+Example:
+<screen>
+  cmosimage: file=cmos.img, rtc_init=time0
+</screen>
+This defines image file that can be loaded into the CMOS RAM at startup.
+The rtc_init parameter controls whether initialize the RTC with values stored
+in the image. By default the time0 argument given to the
+<link linkend="bochsopt-clock">clock option</link> is used. With 'rtc_init=image'
+the image is the source for the initial time.
+</para>
+</section>
+
+<section id="bochsopt-private-colormap"><title>private_colormap</title>
+<para>
+Example:
+<screen>
+  private_colormap: enabled=1
+</screen>
+Requests that the GUI creates and uses its own non-shared colormap. This
+colormap will be used when in the Bochs window. If not enabled, a shared
+colormap scheme may be used. Once again, <varname>enabled=1</varname>
+turns on this feature and 0 turns it off.
 </para>
 </section>
 
@@ -3786,49 +3974,6 @@ Example:
 This disables the 0xaa55 signature check on boot floppies
 The check is enabled by default.
 </para>
-</section>
-
-<section id="bochsopt-clock"><title>clock</title>
-<para>
-This defines the parameters of the clock inside Bochs:
-</para>
-<para><command>sync</command></para>
-<para>
-This defines the method how to synchronize the Bochs internal time
-with realtime. With the value 'none' the Bochs time relies on the IPS
-value and no host time synchronization is used. The 'slowdown' method
-sacrifices performance to preserve reproducibility while allowing host
-time correlation. The 'realtime' method sacrifices reproducibility to
-preserve performance and host-time correlation.
-It is possible to enable both synchronization methods.
-</para>
-<para><command>time0</command></para>
-<para>
-Specifies the start (boot) time of the virtual machine. Use a time
-value as returned by the time(2) system call. If no time0 value is
-set or if time0 equal to 1 (special case) or if time0 equal 'local',
-the simulation will be started at the current local host time.
-If time0 equal to 2 (special case) or if time0 equal 'utc',
-the simulation will be started at the current utc time.
-</para>
-<para>
-<screen>
-Syntax:
-  clock: sync=[none|slowdown|realtime|both], time0=[timeValue|local|utc]
-
-Examples:
-  clock: sync=none,     time0=local       # Now (localtime)
-  clock: sync=slowdown, time0=315529200   # Tue Jan  1 00:00:00 1980
-  clock: sync=none,     time0=631148400   # Mon Jan  1 00:00:00 1990
-  clock: sync=realtime, time0=938581955   # Wed Sep 29 07:12:35 1999
-  clock: sync=realtime, time0=946681200   # Sat Jan  1 00:00:00 2000
-  clock: sync=none,     time0=1           # Now (localtime)
-  clock: sync=none,     time0=utc         # Now (utc/gmt)
-
-Default value are sync=none, time0=local
-</screen>
-</para>
-
 </section>
 
 <section id="bochsopt-log"><title>log</title>
@@ -4127,257 +4272,6 @@ the output to a file (see SB16). The 'wavefile' parameter is similar to the
 </para>
 </section>
 
-<section id="bochsopt-keyboard"><title>keyboard</title>
-<para>
-Examples:
-<screen>
-  keyboard: type=mf, serial_delay=200, paste_delay=100000
-  keyboard: keymap=gui/keymaps/x11-pc-de.map
-  keyboard: user_shortcut=ctrl-alt-del
-</screen>
-This defines parameters related to the emulated keyboard.
-</para>
-<para><command>type</command></para>
-<para>
-Type of keyboard return by a "identify keyboard" command to the
-keyboard controller. It must be one of "xt", "at" or "mf".
-Defaults to "mf". It should be ok for almost everybody. A known
-exception is french macs, that do have a "at"-like keyboard.
-</para>
-<para><command>serial_delay</command></para>
-<para>
-Approximate time in microseconds that it takes one character to
-be transferred from the keyboard to controller over the serial path.
-</para>
-<para><command>paste_delay</command></para>
-<para>
-Approximate time in microseconds between attempts to paste
-characters to the keyboard controller. This leaves time for the
-guest os to deal with the flow of characters.  The ideal setting
-depends on how your operating system processes characters.  The
-default of 100000 usec (.1 seconds) was chosen because it works 
-consistently in Windows.
-</para>
-<para>
-If your OS is losing characters during a paste, increase the paste
-delay until it stops losing characters.
-</para>
-<para><command>keymap</command></para>
-<para>
-This enables a remap of a physical localized keyboard to a
-virtualized us keyboard, as the PC architecture expects.
-</para>
-<para>
-Keyboard mapping is available for the display libraries x, sdl (Linux port) and
-wx (GTK port). For SDL you have to use keymaps designed for SDL, the wxWidgets GUI
-uses the keymaps for X11.
-</para>
-<para><command>user_shortcut</command></para>
-<para>
-This defines the keyboard shortcut to be sent when you press the "user" button
-in the <link linkend="headerbar">headerbar</link>. The shortcut string is a
-combination of maximum 3 key names (listed below) separated with a '-' character.
-</para>
-<para>
-Valid key names:
-</para>
-<para>
-"alt", "bksl", "bksp", "ctrl", "del", "down", "end", "enter", "esc",
-"f1", ... "f12", "home", "ins", "left", "menu", "minus", "pgdwn", "pgup", "plus",
-"right", "shift", "space", "tab", "up", "win", "print" and "power".
-</para>
-</section>
-
-<section id="bochsopt-mouse">
-<title>mouse</title>
-<para>
-Examples:
-<screen>
-  mouse: enabled=1
-  mouse: type=imps2, enabled=1
-  mouse: type=serial, enabled=1
-  mouse: enabled=0, toggle=ctrl+f10
-</screen>
-This defines parameters for the emulated mouse type, the initial status
-of the mouse capture and the runtime method to toggle it.
-</para>
-<para><command>type</command></para>
-<para>
-With the mouse type option you can select the type of mouse to emulate.
-The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
-on PS/2), 'serial', 'serial_wheel' and 'serial_msys' (one com port requires
-setting 'mode=mouse', see <link linkend="bochsopt-com">com option</link>).
-To connect a mouse to an USB port, see the <link linkend="bochsopt-usb-uhci">usb_uhci</link>,
-'usb_ohci 'or 'usb_xhci' option (requires PCI and USB support).
-</para>
-<para><command>enabled</command></para>
-<para>
-The Bochs gui creates mouse "events" unless the 'enabled' option is
-set to 0. The hardware emulation itself is not disabled by this.
-Unless you have a particular reason for enabling the mouse by default,
-it is recommended that you leave it off. You can also toggle the
-mouse usage at runtime (see <link linkend="headerbar">headerbar</link>
-and the 'toggle' option below).
-</para>
-<para><command>toggle</command></para>
-<para>
-The default method to toggle the mouse capture at runtime is to press the
-CTRL key and the middle mouse button ('ctrl+mbutton'). This option allows
-to change the method to 'ctrl+f10' (like DOSBox) or 'ctrl+alt' (like QEMU)
-or 'f12' (replaces win32 'legacyF12' option).
-</para>
-</section>
-
-<section id="bochsopt-private-colormap"><title>private_colormap</title>
-<para>
-Example:
-<screen>
-  private_colormap: enabled=1
-</screen>
-Requests that the GUI creates and uses its own non-shared colormap. This
-colormap will be used when in the Bochs window. If not enabled, a shared
-colormap scheme may be used. Once again, <varname>enabled=1</varname>
-turns on this feature and 0 turns it off.
-</para>
-</section>
-
-<section><title>pci</title>
-<para>
-Examples:
-<screen>
-  pci: enabled=1, chipset=i440fx # default if compiled with PCI support
-  pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k
-</screen>
-This option controls the presence of a PCI chipset in Bochs. Currently it only
-supports the i440FX chipset. You can also specify the devices connected to
-PCI slots. Up to 5 slots are available. For these combined PCI/ISA devices
-assigning to slot is mandatory if you want to emulate the PCI model: cirrus,
-ne2k and pcivga. These PCI-only devices are also supported, but they are
-auto-assigned if you don't use the slot configuration: e1000, es1370, pcidev,
-pcipnic, usb_ohci and usb_xhci.
-</para>
-</section>
-
-<section><title>pcidev</title>
-<para>
-Example:
-<screen>
-  pcidev: vendor=0xbabe, device=0x2bad
-</screen>
-Enables the mapping of a host PCI hardware device within the virtual PCI
-subsystem of the Bochs x86 emulator. The arguments
-<varname>vendor</varname> and <varname>device</varname>
-should contain the PCI vendor ID respectively the PCI
-device ID of the host PCI device you want to map within Bochs.
-</para>
-<note>
-<para>
-The PCI device mapping is still in a very early stage of development and thus it is very experimental.
-This feature requires Linux as a host operating system.
-</para>
-</note>
-<para>
-Besides the <varname>pcidev</varname> config line you will need to load
-a pcidev kernel module within your Linux host OS. This kernel module is
-located in the <constant>bochs/host/linux/pcidev/</constant> directory.
-</para>
-</section>
-
-<section id="bochsopt-usb-uhci"><title>usb_uhci</title>
-<para>
-Examples:
-<screen>
-  usb_uhci: enabled=1, port1=mouse, port2=disk:usbstick.img
-  usb_uhci: enabled=1, port1=hub:7, port2=disk:growing:usbdisk.img
-  usb_uhci: enabled=1, port2=disk:undoable:usbdisk.img, options1=journal:redo.log
-  usb_uhci: enabled=1, port1=printer:printdata.bin, port2=cdrom:image.iso
-</screen>
-This option controls the presence of the USB root hub which is a part of the
-i440FX PCI chipset.
-</para>
-<para>
-With the port<replaceable>X</replaceable> option you can connect devices
-to the hub (currently supported: 'mouse', 'tablet', 'keypad', 'disk', 'cdrom',
-'hub' and 'printer').
-</para>
-<para>
-The options<replaceable>X</replaceable> parameter can be used to assign specific
-options to the device connected to the corresponding USB port. Currently this
-feature is only used to set the speed reported by device and by the 'disk'
-device to specify an alternative redolog file of some image modes.
-</para>
-<para>
-If you connect the mouse or tablet to one of the ports, Bochs forwards the
-mouse movement data to the USB device instead of the selected mouse type.
-When connecting the keypad to one of the ports, Bochs forwards the input of
-the numeric keypad to the USB device instead of the PS/2 keyboard.
-</para>
-<para>
-To connect a 'flat' mode image as an USB hardisk you can use the 'disk' device
-with the path to the image separated with a colon. To use other disk image modes
-similar to ATA disks the syntax 'disk:mode:filename' must be used (see above).
-</para>
-<para>
-To emulate an USB cdrom you can use the 'cdrom' device name and the path to
-an ISO image or raw device name also separated with a colon. An option to
-insert/eject media is available in the runtime configuration.
-</para>
-<para>
-The device name 'hub' connects an external hub with max. 8 ports (default: 4)
-to the root hub. To specify the number of ports you have to add the value
-separated with a colon. Connecting devices to the external hub ports is only
-available in the runtime configuration.
-</para>
-<para>
-The device 'printer' emulates the HP Deskjet 920C printer. The PCL data is
-sent to a file specified in bochsrc.txt. The current code appends the PCL
-code to the file if the file already existed. It would probably be nice to
-overwrite the file instead, asking user first.
-</para>
-<note><para>
-PCI support must be enabled to use USB UHCI.
-</para></note>
-</section>
-
-<section id="bochsopt-usb-ohci"><title>usb_ohci</title>
-<para>
-Example:
-<screen>
-  usb_ohci: enabled=1, port1=printer:printdata.bin
-</screen>
-This option controls the presence of the USB OHCI host controller with a
-2-port hub. The portX option accepts the same device types with the same
-syntax as the UHCI controller (see the <link linkend="bochsopt-usb-uhci">usb_uhci option</link>).
-</para>
-</section>
-
-<section id="bochsopt-usb-xhci"><title>usb_xhci</title>
-<para>
-Example:
-<screen>
-  usb_xhci: enabled=1
-</screen>
-This option controls the presence of the experimental USB xHCI host controller
-with a 4-port hub. The portX option accepts the same device types with the same
-syntax as the UHCI controller (see the <link linkend="bochsopt-usb-uhci">usb_uhci option</link>).
-</para>
-</section>
-
-<section id="bochsopt-gdbstub">
-<title>gdbstub</title>
-<para>
-Example:
-<screen>
-  gdbstub: enabled=1, port=1234, text_base=0, data_base=0, bss_base=0
-</screen>
-Default:
-<screen>
-  gdbstub: enabled=0
-</screen>
-This enables the GDB stub. See <xref linkend="debugging-with-gdb">.
-</para>
-</section>
-
 <section><title>ne2k</title>
 <para>
 The ne2k line configures an emulated NE2000-compatible Ethernet adapter,
@@ -4561,29 +4455,123 @@ as the NE2000 adapter.
 </para>
 </section>
 
-<section><title>cmosimage</title>
+<section id="bochsopt-usb-uhci"><title>usb_uhci</title>
+<para>
+Examples:
+<screen>
+  usb_uhci: enabled=1, port1=mouse, port2=disk:usbstick.img
+  usb_uhci: enabled=1, port1=hub:7, port2=disk:growing:usbdisk.img
+  usb_uhci: enabled=1, port2=disk:undoable:usbdisk.img, options1=journal:redo.log
+  usb_uhci: enabled=1, port1=printer:printdata.bin, port2=cdrom:image.iso
+</screen>
+This option controls the presence of the USB root hub which is a part of the
+i440FX PCI chipset.
+</para>
+<para>
+With the port<replaceable>X</replaceable> option you can connect devices
+to the hub (currently supported: 'mouse', 'tablet', 'keypad', 'disk', 'cdrom',
+'hub' and 'printer').
+</para>
+<para>
+The options<replaceable>X</replaceable> parameter can be used to assign specific
+options to the device connected to the corresponding USB port. Currently this
+feature is only used to set the speed reported by device and by the 'disk'
+device to specify an alternative redolog file of some image modes.
+</para>
+<para>
+If you connect the mouse or tablet to one of the ports, Bochs forwards the
+mouse movement data to the USB device instead of the selected mouse type.
+When connecting the keypad to one of the ports, Bochs forwards the input of
+the numeric keypad to the USB device instead of the PS/2 keyboard.
+</para>
+<para>
+To connect a 'flat' mode image as an USB hardisk you can use the 'disk' device
+with the path to the image separated with a colon. To use other disk image modes
+similar to ATA disks the syntax 'disk:mode:filename' must be used (see above).
+</para>
+<para>
+To emulate an USB cdrom you can use the 'cdrom' device name and the path to
+an ISO image or raw device name also separated with a colon. An option to
+insert/eject media is available in the runtime configuration.
+</para>
+<para>
+The device name 'hub' connects an external hub with max. 8 ports (default: 4)
+to the root hub. To specify the number of ports you have to add the value
+separated with a colon. Connecting devices to the external hub ports is only
+available in the runtime configuration.
+</para>
+<para>
+The device 'printer' emulates the HP Deskjet 920C printer. The PCL data is
+sent to a file specified in bochsrc.txt. The current code appends the PCL
+code to the file if the file already existed. It would probably be nice to
+overwrite the file instead, asking user first.
+</para>
+<note><para>
+PCI support must be enabled to use USB UHCI.
+</para></note>
+</section>
+
+<section id="bochsopt-usb-ohci"><title>usb_ohci</title>
 <para>
 Example:
 <screen>
-  cmosimage: file=cmos.img, rtc_init=time0
+  usb_ohci: enabled=1, port1=printer:printdata.bin
 </screen>
-This defines image file that can be loaded into the CMOS RAM at startup.
-The rtc_init parameter controls whether initialize the RTC with values stored
-in the image. By default the time0 argument given to the
-<link linkend="bochsopt-clock">clock option</link> is used. With 'rtc_init=image'
-the image is the source for the initial time.
+This option controls the presence of the USB OHCI host controller with a
+2-port hub. The portX option accepts the same device types with the same
+syntax as the UHCI controller (see the <link linkend="bochsopt-usb-uhci">usb_uhci option</link>).
 </para>
 </section>
 
-<section><title>user_plugin</title>
+<section id="bochsopt-usb-xhci"><title>usb_xhci</title>
 <para>
 Example:
 <screen>
-  user_plugin: name=testdev
+  usb_xhci: enabled=1
 </screen>
-Load user-defined plugin. This option is available only if Bochs is
-compiled with plugin support. Maximum 8 different plugins are supported.
-See the example in the Bochs sources how to write a plugin device.
+This option controls the presence of the experimental USB xHCI host controller
+with a 4-port hub. The portX option accepts the same device types with the same
+syntax as the UHCI controller (see the <link linkend="bochsopt-usb-uhci">usb_uhci option</link>).
+</para>
+</section>
+
+<section><title>pcidev</title>
+<para>
+Example:
+<screen>
+  pcidev: vendor=0xbabe, device=0x2bad
+</screen>
+Enables the mapping of a host PCI hardware device within the virtual PCI
+subsystem of the Bochs x86 emulator. The arguments
+<varname>vendor</varname> and <varname>device</varname>
+should contain the PCI vendor ID respectively the PCI
+device ID of the host PCI device you want to map within Bochs.
+</para>
+<note>
+<para>
+The PCI device mapping is still in a very early stage of development and thus it is very experimental.
+This feature requires Linux as a host operating system.
+</para>
+</note>
+<para>
+Besides the <varname>pcidev</varname> config line you will need to load
+a pcidev kernel module within your Linux host OS. This kernel module is
+located in the <constant>bochs/host/linux/pcidev/</constant> directory.
+</para>
+</section>
+
+<section id="bochsopt-gdbstub">
+<title>gdbstub</title>
+<para>
+Example:
+<screen>
+  gdbstub: enabled=1, port=1234, text_base=0, data_base=0, bss_base=0
+</screen>
+Default:
+<screen>
+  gdbstub: enabled=0
+</screen>
+This enables the GDB stub. See <xref linkend="debugging-with-gdb">.
 </para>
 </section>
 
@@ -4596,6 +4584,19 @@ Example:
 This enables the "magic breakpoint" feature when using the debugger.
 The useless cpu instruction XCHG BX, BX causes Bochs to enter the
 debugger mode. This might be useful for software development.
+</para>
+</section>
+
+<section><title>debug_symbols</title>
+<para>
+Example:
+<screen>
+  debug_symbols: file=mysymbols.sym
+  debug_symbols: file=mysymbols.sym, offset=0x1000
+</screen>
+This loads symbols from the specified file for use in Bochs' internal debugger.
+Symbols are loaded into global context. This is equivalent to issuing ldsym
+debugger command at start up.
 </para>
 </section>
 
@@ -4615,16 +4616,15 @@ this 0 unless you have a reason to use it.
 </para>
 </section>
 
-<section><title>debug_symbols</title>
+<section><title>user_plugin</title>
 <para>
 Example:
 <screen>
-  debug_symbols: file=mysymbols.sym
-  debug_symbols: file=mysymbols.sym, offset=0x1000
+  user_plugin: name=testdev
 </screen>
-This loads symbols from the specified file for use in Bochs' internal debugger.
-Symbols are loaded into global context. This is equivalent to issuing ldsym
-debugger command at start up.
+Load user-defined plugin. This option is available only if Bochs is
+compiled with plugin support. Maximum 8 different plugins are supported.
+See the example in the Bochs sources how to write a plugin device.
 </para>
 </section>
 
