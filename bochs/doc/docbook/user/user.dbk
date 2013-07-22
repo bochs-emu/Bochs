@@ -3673,6 +3673,11 @@ time correlation. The 'realtime' method sacrifices reproducibility to
 preserve performance and host-time correlation.
 It is possible to enable both synchronization methods.
 </para>
+<para><command>rtc_sync</command></para>
+<para>
+If this option is enabled together with the realtime synchronization,
+the RTC runs at realtime speed. This feature is disabled by default.
+</para>
 <para><command>time0</command></para>
 <para>
 Specifies the start (boot) time of the virtual machine. Use a time
@@ -3696,7 +3701,7 @@ Examples:
   clock: sync=none,     time0=1           # Now (localtime)
   clock: sync=none,     time0=utc         # Now (utc/gmt)
 
-Default value are sync=none, time0=local
+Default value are sync=none, rtc_sync=0, time0=local
 </screen>
 </para>
 

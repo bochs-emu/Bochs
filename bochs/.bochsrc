@@ -538,7 +538,7 @@ pci: enabled=1, chipset=i440fx
 #   clock: sync=none,     time0=1           # Now (localtime)
 #   clock: sync=none,     time0=utc         # Now (utc/gmt)
 # 
-# Default value are sync=none, time0=local
+# Default value are sync=none, rtc_sync=0, time0=local
 #=======================================================================
 #clock: sync=none, time0=local
 

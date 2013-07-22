@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "20 Jul 2013" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "22 Jul 2013" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -572,6 +572,11 @@ time correlation. The 'realtime' method sacrifices reproducibility to
 preserve performance and host-time correlation.
 It is possible to enable both synchronization methods.
 
+rtc_sync
+
+If this option is enabled together with the realtime synchronization,
+the RTC runs at realtime speed. This feature is disabled by default.
+
 time0
 
 Specifies the start (boot) time of the virtual machine. Use a time
@@ -584,7 +589,7 @@ the simulation will be started at the current utc time.
 Syntax:
   clock: sync=[none|slowdown|realtime|both], time0=[timeValue|local|utc]
 
-Default value are sync=none, time0=local
+Default value are sync=none, rtc_sync=0, time0=local
 
 Example:
   clock: sync=realtime, time0=938581955   # Wed Sep 29 07:12:35 1999
