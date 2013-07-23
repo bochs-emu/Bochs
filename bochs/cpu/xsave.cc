@@ -134,7 +134,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  if ((features_save_enable_mask & (BX_XCR0_SSE_MASK | BX_XCR0_AVX_MASK)) != 0)
+  if ((features_save_enable_mask & (BX_XCR0_SSE_MASK | BX_XCR0_YMM_MASK)) != 0)
   {
     // store MXCSR
     write_virtual_dword(i->seg(), (eaddr + 24) & asize_mask, BX_MXCSR_REGISTER);
@@ -159,7 +159,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 
 #if BX_SUPPORT_AVX
   /////////////////////////////////////////////////////////////////////////////
-  if ((features_save_enable_mask & BX_XCR0_AVX_MASK) != 0)
+  if ((features_save_enable_mask & BX_XCR0_YMM_MASK) != 0)
   {
     /* store AVX state */
     for(index=0; index < BX_XMM_REGISTERS; index++)
@@ -171,7 +171,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
       }
     }
 
-    header1 |= BX_XCR0_AVX_MASK;
+    header1 |= BX_XCR0_YMM_MASK;
   }
 #endif
 
@@ -309,7 +309,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  if ((features_load_enable_mask & (BX_XCR0_SSE_MASK | BX_XCR0_AVX_MASK)) != 0)
+  if ((features_load_enable_mask & (BX_XCR0_SSE_MASK | BX_XCR0_YMM_MASK)) != 0)
   {
     Bit32u new_mxcsr = read_virtual_dword(i->seg(), (eaddr + 24) & asize_mask);
     if(new_mxcsr & ~MXCSR_MASK)
@@ -345,9 +345,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 
 #if BX_SUPPORT_AVX
   /////////////////////////////////////////////////////////////////////////////
-  if ((features_load_enable_mask & BX_XCR0_AVX_MASK) != 0)
+  if ((features_load_enable_mask & BX_XCR0_YMM_MASK) != 0)
   {
-    if (header1 & BX_XCR0_AVX_MASK) {
+    if (header1 & BX_XCR0_YMM_MASK) {
       // load AVX state from XSAVE area
       for(index=0; index < BX_XMM_REGISTERS; index++)
       {
@@ -438,8 +438,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_AVX
-  if ((EAX & (BX_XCR0_AVX_MASK | BX_XCR0_SSE_MASK)) == BX_XCR0_AVX_MASK) {
-    BX_ERROR(("XSETBV: Attempting to set AVX without SSE!"));
+  if ((EAX & (BX_XCR0_YMM_MASK | BX_XCR0_SSE_MASK)) == BX_XCR0_YMM_MASK) {
+    BX_ERROR(("XSETBV: Attempting to enable AVX without SSE!"));
     exception(BX_GP_EXCEPTION, 0);
   }
 #endif

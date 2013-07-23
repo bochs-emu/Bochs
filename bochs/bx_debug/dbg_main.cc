@@ -1026,8 +1026,13 @@ void bx_dbg_info_control_regs_command(void)
   Bit64u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get();
   if ((isa_extensions_bitmask & BX_ISA_XSAVE) != 0) {
     Bit32u xcr0 = SIM->get_param_num("XCR0", dbg_cpu_list)->get();
-    dbg_printf("XCR0=0x%08x: %s %s %s\n", xcr0,
-      (xcr0 & (1<<2)) ? "AVX" : "avx",
+    dbg_printf("XCR0=0x%08x: %s %s %s %s %s %s %s %s\n", xcr0,
+      (xcr0 & (1<<7)) ? "HI_ZMM" : "hi_zmm",
+      (xcr0 & (1<<6)) ? "ZMM_HI256" : "zmm_hi256",
+      (xcr0 & (1<<5)) ? "OPMASK" : "opmask",
+      (xcr0 & (1<<4)) ? "BNDCFG" : "bndcfg",
+      (xcr0 & (1<<3)) ? "BNDREGS" : "bndregs",
+      (xcr0 & (1<<2)) ? "YMM" : "ymm",
       (xcr0 & (1<<1)) ? "SSE" : "sse",
       (xcr0 & (1<<0)) ? "FPU" : "fpu");
   }

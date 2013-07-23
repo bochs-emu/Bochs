@@ -323,11 +323,20 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [11:11]  RTM: Restricted Transactional Memory
 //   [12:12]  Supports Quality of Service (QoS) capability
 //   [13:13]  Deprecates FPU CS and FPU DS values
-//   [17:14]  reserved
+//   [14:14]  Intel Memory Protection Extensions
+//   [15:15]  reserved
+//   [16:16]  AVX512F instructions support
+//   [17:17]  reserved
 //   [18:18]  RDSEED instruction support
 //   [19:19]  ADCX/ADOX instructions support
 //   [20:20]  SMAP: Supervisor Mode Access Prevention
-//   [31:21]  reserved
+//   [24:21]  reserved
+//   [25:25]  Intel Processor Trace
+//   [26:26]  AVX512PF instructions support
+//   [27:27]  AVX512ER instructions support
+//   [28:28]  AVX512CD instructions support
+//   [29:29]  SHA instructions support
+//   [31:30]  reserved
 
 #define BX_CPUID_EXT3_FSGSBASE               (1 <<  0)
 #define BX_CPUID_EXT3_TSC_ADJUST             (1 <<  1)
@@ -343,14 +352,24 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT3_RTM                    (1 << 11)
 #define BX_CPUID_EXT3_QOS                    (1 << 12)
 #define BX_CPUID_EXT3_DEPRECATE_FCS_FDS      (1 << 13)
-#define BX_CPUID_EXT3_RESERVED14             (1 << 14)
+#define BX_CPUID_EXT3_MEMORY_PROTECTION_EXT  (1 << 14)
 #define BX_CPUID_EXT3_RESERVED15             (1 << 15)
-#define BX_CPUID_EXT3_RESERVED16             (1 << 16)
+#define BX_CPUID_EXT3_AVX512F                (1 << 16)
 #define BX_CPUID_EXT3_RESERVED17             (1 << 17)
 #define BX_CPUID_EXT3_RDSEED                 (1 << 18)
 #define BX_CPUID_EXT3_ADX                    (1 << 19)
 #define BX_CPUID_EXT3_SMAP                   (1 << 20)
-// ...
+#define BX_CPUID_EXT3_RESERVED21             (1 << 21)
+#define BX_CPUID_EXT3_RESERVED22             (1 << 22)
+#define BX_CPUID_EXT3_RESERVED23             (1 << 23)
+#define BX_CPUID_EXT3_RESERVED24             (1 << 24)
+#define BX_CPUID_EXT3_PROCESSOR_TRACE        (1 << 25)
+#define BX_CPUID_EXT3_AVX512PF               (1 << 26)
+#define BX_CPUID_EXT3_AVX512ER               (1 << 27)
+#define BX_CPUID_EXT3_AVX512CD               (1 << 28)
+#define BX_CPUID_EXT3_SHA                    (1 << 29)
+#define BX_CPUID_EXT3_RESERVED30             (1 << 30)
+#define BX_CPUID_EXT3_RESERVED31             (1 << 31)
 
 
 // CPUID defines - STD2 features CPUID[0x80000001].EDX

@@ -738,7 +738,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR xcr0_suppmask = 0x3;
 #if BX_SUPPORT_AVX
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX))
-    BX_CPU_THIS_PTR xcr0_suppmask |= BX_XCR0_AVX_MASK;
+    BX_CPU_THIS_PTR xcr0_suppmask |= BX_XCR0_YMM_MASK;
 #endif
 #endif
 

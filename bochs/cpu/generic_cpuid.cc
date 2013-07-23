@@ -432,12 +432,12 @@ void bx_generic_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_func
       leaf->eax = cpu->xcr0_suppmask;
       leaf->ebx = 512+64;
 #if BX_SUPPORT_AVX
-      if (cpu->xcr0.get_AVX())
+      if (cpu->xcr0.get_YMM())
         leaf->ebx += 256;
 #endif
       leaf->ecx = 512+64;
 #if BX_SUPPORT_AVX
-      if (cpu->xcr0_suppmask & BX_XCR0_AVX_MASK)
+      if (cpu->xcr0_suppmask & BX_XCR0_YMM_MASK)
         leaf->ecx += 256;
 #endif
       leaf->edx = 0;
@@ -452,7 +452,7 @@ void bx_generic_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_func
 
 #if BX_SUPPORT_AVX
     case 2: // AVX leaf
-      if (cpu->xcr0_suppmask & BX_XCR0_AVX_MASK) {
+      if (cpu->xcr0_suppmask & BX_XCR0_YMM_MASK) {
         leaf->eax = 256;
         leaf->ebx = 576;
         leaf->ecx = 0;

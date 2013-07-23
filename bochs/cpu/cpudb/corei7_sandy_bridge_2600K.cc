@@ -615,7 +615,7 @@ void corei7_sandy_bridge_2600k_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, c
     // EDX - valid bits of XCR0 (upper part)
     leaf->eax = cpu->xcr0_suppmask;
     leaf->ebx = 512+64;
-    if (cpu->xcr0.get_AVX())
+    if (cpu->xcr0.get_YMM())
       leaf->ebx += 256;
     leaf->ecx = 512+64+256 /* AVX */;
     leaf->edx = 0;
