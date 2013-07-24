@@ -870,7 +870,7 @@ accessOK:
           data = *hostAddr;
           BX_CPU_THIS_PTR address_xlation.pages = (bx_ptr_equiv_t) hostAddr;
           BX_CPU_THIS_PTR address_xlation.paddress1 = pAddr;
-          BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, pAddr, 1, CPL, BX_READ, (Bit8u*) &data);
+          BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, pAddr, 1, CPL, BX_RW, (Bit8u*) &data);
           return data;
         }
       }
@@ -920,7 +920,7 @@ accessOK:
           ReadHostWordFromLittleEndian(hostAddr, data);
           BX_CPU_THIS_PTR address_xlation.pages = (bx_ptr_equiv_t) hostAddr;
           BX_CPU_THIS_PTR address_xlation.paddress1 = pAddr;
-          BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, pAddr, 2, CPL, BX_READ, (Bit8u*) &data);
+          BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, pAddr, 2, CPL, BX_RW, (Bit8u*) &data);
           return data;
         }
       }
@@ -980,7 +980,7 @@ accessOK:
           ReadHostDWordFromLittleEndian(hostAddr, data);
           BX_CPU_THIS_PTR address_xlation.pages = (bx_ptr_equiv_t) hostAddr;
           BX_CPU_THIS_PTR address_xlation.paddress1 = pAddr;
-          BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, pAddr, 4, CPL, BX_READ, (Bit8u*) &data);
+          BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, pAddr, 4, CPL, BX_RW, (Bit8u*) &data);
           return data;
         }
       }
@@ -1040,7 +1040,7 @@ accessOK:
           ReadHostQWordFromLittleEndian(hostAddr, data);
           BX_CPU_THIS_PTR address_xlation.pages = (bx_ptr_equiv_t) hostAddr;
           BX_CPU_THIS_PTR address_xlation.paddress1 = pAddr;
-          BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, pAddr, 8, CPL, BX_READ, (Bit8u*) &data);
+          BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, pAddr, 8, CPL, BX_RW, (Bit8u*) &data);
           return data;
         }
       }

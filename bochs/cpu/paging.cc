@@ -1981,7 +1981,7 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
     BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl == 3), xlate_rw);
     BX_CPU_THIS_PTR address_xlation.pages     = 1;
     access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress1, len, data);
-    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1, len, curr_pl, BX_READ, (Bit8u*) data);
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1, len, curr_pl, xlate_rw, (Bit8u*) data);
 
 #if BX_X86_DEBUGGER
     hwbreakpoint_match(laddr, len, xlate_rw);
@@ -2004,25 +2004,25 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
         BX_CPU_THIS_PTR address_xlation.len1, data);
     BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1,
         BX_CPU_THIS_PTR address_xlation.len1, curr_pl,
-        BX_READ, (Bit8u*) data);
+        xlate_rw, (Bit8u*) data);
     access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
         BX_CPU_THIS_PTR address_xlation.len2,
         ((Bit8u*)data) + BX_CPU_THIS_PTR address_xlation.len1);
     BX_NOTIFY_LIN_MEMORY_ACCESS(laddr2, BX_CPU_THIS_PTR address_xlation.paddress2,
         BX_CPU_THIS_PTR address_xlation.len2, curr_pl,
-        BX_READ, ((Bit8u*)data) + BX_CPU_THIS_PTR address_xlation.len1);
+        xlate_rw, ((Bit8u*)data) + BX_CPU_THIS_PTR address_xlation.len1);
 #else // BX_BIG_ENDIAN
     access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
         BX_CPU_THIS_PTR address_xlation.len1,
         ((Bit8u*)data) + (len - BX_CPU_THIS_PTR address_xlation.len1));
     BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1,
         BX_CPU_THIS_PTR address_xlation.len1, curr_pl,
-        BX_READ, ((Bit8u*)data) + (len - BX_CPU_THIS_PTR address_xlation.len1));
+        xlate_rw, ((Bit8u*)data) + (len - BX_CPU_THIS_PTR address_xlation.len1));
     access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
         BX_CPU_THIS_PTR address_xlation.len2, data);
     BX_NOTIFY_LIN_MEMORY_ACCESS(laddr2, BX_CPU_THIS_PTR address_xlation.paddress2,
         BX_CPU_THIS_PTR address_xlation.len2, curr_pl, 
-        BX_READ, (Bit8u*) data);
+        xlate_rw, (Bit8u*) data);
 #endif
 
 #if BX_X86_DEBUGGER
