@@ -567,6 +567,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EqGqM(bxInstruction_c *i)
   }
   else {
     // accumulator <-- dest
+    write_RMW_virtual_qword(op1_64);
     RAX = op1_64;
   }
 

@@ -518,6 +518,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EwGwM(bxInstruction_c *i)
   }
   else {
     // accumulator <-- dest
+    write_RMW_virtual_word(op1_16);
     AX = op1_16;
   }
 

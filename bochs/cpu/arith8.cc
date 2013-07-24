@@ -503,6 +503,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EbGbM(bxInstruction_c *i)
   }
   else {
     // accumulator <-- dest
+    write_RMW_virtual_byte(op1_8);
     AL = op1_8;
   }
 
