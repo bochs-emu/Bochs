@@ -215,6 +215,10 @@ cpu: cpuid_limit_winnt=0
 #    Select AES instruction set support.
 #    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 #
+#  SHA:
+#    Select SHA instruction set support.
+#    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+#
 #  MOVBE:
 #    Select MOVBE Intel(R) Atom instruction support.
 #    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.

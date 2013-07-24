@@ -1183,6 +1183,8 @@ void bx_init_hardware()
       xsave_enabled?"xsave":"no", xsaveopt_enabled?"xsaveopt":""));
     bx_bool aes_enabled = SIM->get_param_bool(BXPN_CPUID_AES)->get();
     BX_INFO(("  AES support: %s", aes_enabled?"yes":"no"));
+    bx_bool sha_enabled = SIM->get_param_bool(BXPN_CPUID_SHA)->get();
+    BX_INFO(("  SHA support: %s", sha_enabled?"yes":"no"));
     bx_bool movbe_enabled = SIM->get_param_bool(BXPN_CPUID_MOVBE)->get();
     BX_INFO(("  MOVBE support: %s", movbe_enabled?"yes":"no"));
     bx_bool adx_enabled = SIM->get_param_bool(BXPN_CPUID_ADX)->get();

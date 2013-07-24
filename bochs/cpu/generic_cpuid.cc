@@ -795,6 +795,17 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
     }
   }
 
+  static bx_bool sha_enabled = SIM->get_param_bool(BXPN_CPUID_SHA)->get();
+  if (sha_enabled) {
+    features_bitmask |= BX_ISA_SHA;
+
+    // SHA required 3-byte opcode (SSS3E support or more)
+    if (sse_enabled < BX_CPUID_SUPPORT_SSSE3) {
+      BX_PANIC(("PANIC: SHA support requires SSSE3 or higher !"));
+      return;
+    }
+  }
+
   static bx_bool movbe_enabled = SIM->get_param_bool(BXPN_CPUID_MOVBE)->get();
   if (movbe_enabled) {
     features_bitmask |= BX_ISA_MOVBE;

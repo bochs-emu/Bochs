@@ -120,6 +120,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_ISA_ADX                   (BX_CONST64(1) << 41)  /* ADCX/ADOX instruction */
 #define BX_ISA_SMAP                  (BX_CONST64(1) << 42)  /* SMAP support */
 #define BX_ISA_RDSEED                (BX_CONST64(1) << 43)  /* RDSEED instruction */
+#define BX_ISA_SHA                   (BX_CONST64(1) << 44)  /* SHA instruction */
 
 // cpuid non-ISA features
 #define BX_CPU_DEBUG_EXTENSIONS      (1 <<  0)              /* Debug Extensions support */

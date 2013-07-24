@@ -41,6 +41,7 @@ cpuid
   sse4a
   misaligned_sse
   aes
+  sha
   movbe
   adx
   xsave

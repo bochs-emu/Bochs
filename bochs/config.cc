@@ -549,6 +549,10 @@ void bx_init_options()
       "Support for AES instruction set",
       0);
   new bx_param_bool_c(cpuid_param,
+      "sha", "Support for SHA instruction set",
+      "Support for SHA instruction set",
+      0);
+  new bx_param_bool_c(cpuid_param,
       "xsave", "Support for XSAVE extensions",
       "Support for XSAVE extensions",
       0);

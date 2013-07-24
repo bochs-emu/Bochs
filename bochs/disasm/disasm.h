@@ -83,6 +83,7 @@
 #define IA_ADX              (BX_CONST64(1) << 41)  /* ADCX/ADOX instruction */
 #define IA_SMAP             (BX_CONST64(1) << 42)  /* SMAP support */
 #define IA_RDSEED           (BX_CONST64(1) << 43)  /* RDSEED instruction */
+#define IA_SHA              (BX_CONST64(1) << 44)  /* SHA instruction */
 
 /* general purpose bit register */
 enum {
