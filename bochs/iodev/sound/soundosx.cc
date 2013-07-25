@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2011  The Bochs Project
+//  Copyright (C) 2004-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -85,7 +85,7 @@ bx_sound_osx_c::bx_sound_osx_c()
     tail = 0;
     for (int i=0; i<BX_SOUND_OSX_NBUF; i++)
         WaveLength[i] = 0;
-    BX_INFO(("Sound output module 'osx' initialized"));
+    BX_INFO(("Sound lowlevel module 'osx' initialized"));
 }
 
 bx_sound_osx_c::~bx_sound_osx_c()

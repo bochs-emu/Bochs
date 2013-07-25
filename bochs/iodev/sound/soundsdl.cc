@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012  The Bochs Project
+//  Copyright (C) 2012-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -46,9 +46,9 @@ bx_sound_sdl_c::bx_sound_sdl_c()
 {
   WaveOpen = 0;
   if (SDL_InitSubSystem(SDL_INIT_AUDIO)) {
-    BX_PANIC(("Initialization of sound output module 'sdl' failed"));
+    BX_PANIC(("Initialization of sound lowlevel module 'sdl' failed"));
   } else {
-    BX_INFO(("Sound output module 'sdl' initialized"));
+    BX_INFO(("Sound lowlevel module 'sdl' initialized"));
   }
 }
 

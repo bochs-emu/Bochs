@@ -42,7 +42,7 @@ bx_sound_linux_c::bx_sound_linux_c()
   wave_device[1] = NULL;
   wave_fd[0] = -1;
   wave_fd[1] = -1;
-  BX_INFO(("Sound lowlevel module 'linux' initialized"));
+  BX_INFO(("Sound lowlevel module 'oss' initialized"));
 }
 
 bx_sound_linux_c::~bx_sound_linux_c()

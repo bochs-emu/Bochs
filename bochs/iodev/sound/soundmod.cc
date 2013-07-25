@@ -92,6 +92,18 @@ void bx_soundmod_ctl_c::init()
   } else if (!strcmp(driver, "sdl")) {
     soundmod = new bx_sound_sdl_c();
 #endif
+#if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
+  } else if (!strcmp(driver, "oss")) {
+    soundmod = new bx_sound_linux_c();
+#endif
+#if defined(macintosh)
+  } else if (!strcmp(driver, "osx")) {
+    soundmod = new bx_sound_osx_c();
+#endif
+#if defined(WIN32)
+  } else if (!strcmp(driver, "win")) {
+    soundmod = new bx_sound_windows_c();
+#endif
   } else if (!strcmp(driver, "dummy")) {
     soundmod = new bx_sound_lowlevel_c();
   } else {
