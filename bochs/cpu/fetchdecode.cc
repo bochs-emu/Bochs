@@ -285,10 +285,10 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 69 /w */ { BxImmediate_Iw, BX_IA_IMUL_GwEwIw },
   /* 6A /w */ { BxImmediate_Ib_SE, BX_IA_PUSH_Iw },
   /* 6B /w */ { BxImmediate_Ib_SE, BX_IA_IMUL_GwEwIw },
-  /* 6C /w */ { BxRepeatable, BX_IA_REP_INSB_YbDX },
-  /* 6D /w */ { BxRepeatable, BX_IA_REP_INSW_YwDX },
-  /* 6E /w */ { BxRepeatable, BX_IA_REP_OUTSB_DXXb },
-  /* 6F /w */ { BxRepeatable, BX_IA_REP_OUTSW_DXXw },
+  /* 6C /w */ { 0, BX_IA_REP_INSB_YbDX },
+  /* 6D /w */ { 0, BX_IA_REP_INSW_YwDX },
+  /* 6E /w */ { 0, BX_IA_REP_OUTSB_DXXb },
+  /* 6F /w */ { 0, BX_IA_REP_OUTSW_DXXw },
   /* 70 /w */ { BxImmediate_BrOff8 | BxTraceJCC, BX_IA_JO_Jw },
   /* 71 /w */ { BxImmediate_BrOff8 | BxTraceJCC, BX_IA_JNO_Jw },
   /* 72 /w */ { BxImmediate_BrOff8 | BxTraceJCC, BX_IA_JB_Jw },
@@ -341,18 +341,18 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* A1 /w */ { BxImmediate_O, BX_IA_MOV_AXOd },
   /* A2 /w */ { BxImmediate_O, BX_IA_MOV_OdAL },
   /* A3 /w */ { BxImmediate_O, BX_IA_MOV_OdAX },
-  /* A4 /w */ { BxRepeatable, BX_IA_REP_MOVSB_XbYb },
-  /* A5 /w */ { BxRepeatable, BX_IA_REP_MOVSW_XwYw },
-  /* A6 /w */ { BxRepeatable, BX_IA_REP_CMPSB_XbYb },
-  /* A7 /w */ { BxRepeatable, BX_IA_REP_CMPSW_XwYw },
+  /* A4 /w */ { 0, BX_IA_REP_MOVSB_XbYb },
+  /* A5 /w */ { 0, BX_IA_REP_MOVSW_XwYw },
+  /* A6 /w */ { 0, BX_IA_REP_CMPSB_XbYb },
+  /* A7 /w */ { 0, BX_IA_REP_CMPSW_XwYw },
   /* A8 /w */ { BxImmediate_Ib, BX_IA_TEST_ALIb },
   /* A9 /w */ { BxImmediate_Iw, BX_IA_TEST_AXIw },
-  /* AA /w */ { BxRepeatable, BX_IA_REP_STOSB_YbAL },
-  /* AB /w */ { BxRepeatable, BX_IA_REP_STOSW_YwAX },
-  /* AC /w */ { BxRepeatable, BX_IA_REP_LODSB_ALXb },
-  /* AD /w */ { BxRepeatable, BX_IA_REP_LODSW_AXXw },
-  /* AE /w */ { BxRepeatable, BX_IA_REP_SCASB_ALXb },
-  /* AF /w */ { BxRepeatable, BX_IA_REP_SCASW_AXXw },
+  /* AA /w */ { 0, BX_IA_REP_STOSB_YbAL },
+  /* AB /w */ { 0, BX_IA_REP_STOSW_YwAX },
+  /* AC /w */ { 0, BX_IA_REP_LODSB_ALXb },
+  /* AD /w */ { 0, BX_IA_REP_LODSW_AXXw },
+  /* AE /w */ { 0, BX_IA_REP_SCASB_ALXb },
+  /* AF /w */ { 0, BX_IA_REP_SCASW_AXXw },
   /* B0 /w */ { BxImmediate_Ib, BX_IA_MOV_RLIb },
   /* B1 /w */ { BxImmediate_Ib, BX_IA_MOV_RLIb },
   /* B2 /w */ { BxImmediate_Ib, BX_IA_MOV_RLIb },
@@ -830,10 +830,10 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 69 /d */ { BxImmediate_Id, BX_IA_IMUL_GdEdId },
   /* 6A /d */ { BxImmediate_Ib_SE, BX_IA_PUSH_Id },
   /* 6B /d */ { BxImmediate_Ib_SE, BX_IA_IMUL_GdEdId },
-  /* 6C /d */ { BxRepeatable, BX_IA_REP_INSB_YbDX },
-  /* 6D /d */ { BxRepeatable, BX_IA_REP_INSD_YdDX },
-  /* 6E /d */ { BxRepeatable, BX_IA_REP_OUTSB_DXXb },
-  /* 6F /d */ { BxRepeatable, BX_IA_REP_OUTSD_DXXd },
+  /* 6C /d */ { 0, BX_IA_REP_INSB_YbDX },
+  /* 6D /d */ { 0, BX_IA_REP_INSD_YdDX },
+  /* 6E /d */ { 0, BX_IA_REP_OUTSB_DXXb },
+  /* 6F /d */ { 0, BX_IA_REP_OUTSD_DXXd },
   /* 70 /d */ { BxImmediate_BrOff8 | BxTraceJCC, BX_IA_JO_Jd },
   /* 71 /d */ { BxImmediate_BrOff8 | BxTraceJCC, BX_IA_JNO_Jd },
   /* 72 /d */ { BxImmediate_BrOff8 | BxTraceJCC, BX_IA_JB_Jd },
@@ -886,18 +886,18 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* A1 /d */ { BxImmediate_O, BX_IA_MOV_EAXOd },
   /* A2 /d */ { BxImmediate_O, BX_IA_MOV_OdAL },
   /* A3 /d */ { BxImmediate_O, BX_IA_MOV_OdEAX },
-  /* A4 /d */ { BxRepeatable, BX_IA_REP_MOVSB_XbYb },
-  /* A5 /d */ { BxRepeatable, BX_IA_REP_MOVSD_XdYd },
-  /* A6 /d */ { BxRepeatable, BX_IA_REP_CMPSB_XbYb },
-  /* A7 /d */ { BxRepeatable, BX_IA_REP_CMPSD_XdYd },
+  /* A4 /d */ { 0, BX_IA_REP_MOVSB_XbYb },
+  /* A5 /d */ { 0, BX_IA_REP_MOVSD_XdYd },
+  /* A6 /d */ { 0, BX_IA_REP_CMPSB_XbYb },
+  /* A7 /d */ { 0, BX_IA_REP_CMPSD_XdYd },
   /* A8 /d */ { BxImmediate_Ib, BX_IA_TEST_ALIb },
   /* A9 /d */ { BxImmediate_Id, BX_IA_TEST_EAXId },
-  /* AA /d */ { BxRepeatable, BX_IA_REP_STOSB_YbAL },
-  /* AB /d */ { BxRepeatable, BX_IA_REP_STOSD_YdEAX },
-  /* AC /d */ { BxRepeatable, BX_IA_REP_LODSB_ALXb },
-  /* AD /d */ { BxRepeatable, BX_IA_REP_LODSD_EAXXd },
-  /* AE /d */ { BxRepeatable, BX_IA_REP_SCASB_ALXb  },
-  /* AF /d */ { BxRepeatable, BX_IA_REP_SCASD_EAXXd },
+  /* AA /d */ { 0, BX_IA_REP_STOSB_YbAL },
+  /* AB /d */ { 0, BX_IA_REP_STOSD_YdEAX },
+  /* AC /d */ { 0, BX_IA_REP_LODSB_ALXb },
+  /* AD /d */ { 0, BX_IA_REP_LODSD_EAXXd },
+  /* AE /d */ { 0, BX_IA_REP_SCASB_ALXb  },
+  /* AF /d */ { 0, BX_IA_REP_SCASD_EAXXd },
   /* B0 /d */ { BxImmediate_Ib, BX_IA_MOV_RLIb },
   /* B1 /d */ { BxImmediate_Ib, BX_IA_MOV_RLIb },
   /* B2 /d */ { BxImmediate_Ib, BX_IA_MOV_RLIb },
@@ -1275,7 +1275,7 @@ BX_CPU_C::fetchDecode32(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
   unsigned remain = remainingInPage; // remain must be at least 1
   bx_bool is_32, lock=0;
   unsigned b1, b2 = 0, os_32, ia_opcode = 0;
-  unsigned rm = 0, mod=0, nnn=0, mod_mem = 0, rep = 0;
+  unsigned rm = 0, mod=0, nnn=0, mod_mem = 0;
   unsigned seg = BX_SEG_REG_DS, seg_override = BX_SEG_REG_NULL;
 
 #define SSE_PREFIX_NONE 0
@@ -1325,7 +1325,7 @@ fetch_b1:
     case 0xf2: // REPNE/REPNZ
     case 0xf3: // REP/REPE/REPZ
       sse_prefix = (b1 & 3) ^ 1;
-      rep = b1 & 3;
+      i->setRepUsed(b1 & 3);
       if (remain != 0) {
         goto fetch_b1;
       }
@@ -1778,9 +1778,6 @@ modrm_done:
       }
     }
   }
-
-  if (attr & BxRepeatable)
-    i->setRepUsed(rep);
 
   unsigned imm_mode = attr & BxImmediate;
   if (imm_mode) {

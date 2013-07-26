@@ -5054,9 +5054,8 @@ enum {
 #define BxImmediate_Id2     0x0300
 
 #define BxLockable          0x0400 // bit 10
-#define BxRepeatable        0x0800 // bit 11
-#define BxVexW0             0x1000 // bit 12
-#define BxVexW1             0x2000 // bit 13
+#define BxVexW0             0x0800 // bit 11
+#define BxVexW1             0x1000 // bit 12
 
 #define BxTraceEnd          0x8000 // bit 15
 
