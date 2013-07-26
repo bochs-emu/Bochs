@@ -2862,8 +2862,8 @@ at least one bootable media, either as disk image (floppy, hard disk or CD-ROM) 
 </para>
 
 <note><para>
-Both VGA BIOS versions as well as the ROM BIOS are part of Bochs. No separate download is necessary.
-</para></note>
+Both VGA BIOS versions as well as the ROM BIOS are part of the Bochs package. No separate download is necessary.
+See <xref linkend="rom-images"> for more information.</para></note>
 
 <note><para>
 If you want to use the Cirrus SVGA adapter instead of VGA + Bochs VBE, you should
@@ -2910,14 +2910,51 @@ images are the size of a floppy disk (1 meg compressed) and others are gigantic
 <xref linkend="diskimagehowto">.
 </para>
 
-<para> &FIXME; This should be completed </para>
-<para>
-<screen>
-  - BIOS/VGABIOS, what do they do?
-</screen>
-</para>
 </section>
 
+<section id="rom-images">
+<title>ROM images</title>
+<para>
+Just like a real PC, Bochs needs a system BIOS and VGA BIOS to initialize the
+machine when it powers on or after a hardware reset. Bochs needs to load them
+from image file into the emulated memory. The Bochs package contains a set of
+system BIOS and VGA BIOS images.
+<table><title>System and VGA BIOS images</title>
+<tgroup cols="2" align="left" colsep="1" rowsep="1">
+<thead> <row> <entry>File</entry> <entry>Description</entry> </row>
+</thead>
+<tbody>
+<row><entry>BIOS-bochs-latest </entry> <entry> default ROM BIOS image for Bochs </entry> </row>
+<row><entry>BIOS-bochs-legacy </entry> <entry> ROM BIOS image without 32-bit init code </entry> </row>
+<row><entry>VGABIOS-elpin-2.40 </entry> <entry> legacy VGA BIOS image for Bochs </entry> </row>
+<row><entry>VGABIOS-lgpl-latest </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
+<row><entry>VGABIOS-lgpl-latest-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with debug output to the logfile </entry> </row>
+<row><entry>VGABIOS-lgpl-latest-cirrus </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled </entry> </row>
+<row><entry>VGABIOS-lgpl-latest-cirrus-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled and debug output to the logfile </entry> </row>
+</tbody>
+</tgroup>
+</table>
+</para>
+
+<para>
+Bochs must be set up to use system and VGA BIOS like this:
+<screen>
+  romimage: file=BIOS-bochs-latest, address=0xe0000
+  vgaromimage: file=VGABIOS-lgpl-latest
+</screen>
+We recommend to use the ROM images distributed with Bochs or one of the latest
+<ulink url="http://www.seabios.org/">SeaBIOS</ulink> images. BIOS images designed
+for real hardware mostly do not work properly.
+</para>
+
+<para>
+Bochs supports optional ROM images to be loaded into the ISA ROM space,
+typically between C8000 and EFFFF (see <xref linkend="bochsopt-optrom">). The PCI
+versions of the Bochs network adapter emulation support loading a boot ROM into
+the PCI ROM space (see <xref linkend="bochsopt-ne2k">).
+</para>
+
+</section>
 
 <section id="bochsrc">
 <title>bochsrc</title>
@@ -3493,7 +3530,8 @@ are provided in the source and binary distributions.</para>
 </para></note>
 </section>
 
-<section><title>optromimage1, optromimage2, optromimage3 or optromimage4</title>
+<section id="bochsopt-optrom">
+<title>optromimage1, optromimage2, optromimage3 or optromimage4</title>
 <para>
 Example:
 <screen>
@@ -4282,7 +4320,8 @@ the output to a file (see SB16). The 'wavefile' parameter is similar to the
 </para>
 </section>
 
-<section><title>ne2k</title>
+<section id="bochsopt-ne2k">
+<title>ne2k</title>
 <para>
 The ne2k line configures an emulated NE2000-compatible Ethernet adapter,
 which allows the guest machine to communicate on the network.  To disable
@@ -5375,8 +5414,7 @@ Please choose one:  [15]
 In the runtime configuration you can change the floppy/cdrom image or device,
 change the log options or adjust some other settings. If you have trouble with
 a specific device, you can change the log options for this device only to get
-more information (e.g. report debug messages). This cannot be done in the configuration
-file yet.
+more information (e.g. report debug messages).
 </para>
 </section>
 </section>
