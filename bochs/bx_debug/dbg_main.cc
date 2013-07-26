@@ -670,10 +670,20 @@ void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, 
   }
 #if BX_SUPPORT_AVX
   else if (len == 32) {
-     const BxPackedAvxRegister *xmmdata = (const BxPackedAvxRegister*)(data);
+     const BxPackedYmmRegister *ymmdata = (const BxPackedYmmRegister*)(data);
      dbg_printf(": 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X",
-        xmmdata->avx32u(7), xmmdata->avx32u(6), xmmdata->avx32u(5), xmmdata->avx32u(4),
-        xmmdata->avx32u(3), xmmdata->avx32u(2), xmmdata->avx32u(1), xmmdata->avx32u(0));
+        ymmdata->ymm32u(7), ymmdata->ymm32u(6), ymmdata->ymm32u(5), ymmdata->ymm32u(4),
+        ymmdata->ymm32u(3), ymmdata->ymm32u(2), ymmdata->ymm32u(1), ymmdata->ymm32u(0));
+  }
+#endif
+#if BX_SUPPORT_EVEX
+  else if (len == 64) {
+     const BxPackedZmmRegister *zmmdata = (const BxPackedZmmRegister*)(data);
+     dbg_printf(": 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X",
+        zmmdata->ymm32u(15), zmmdata->ymm32u(14), zmmdata->ymm32u(13), zmmdata->ymm32u(12),
+        zmmdata->ymm32u(11), zmmdata->ymm32u(10), zmmdata->ymm32u(9),  zmmdata->ymm32u(8),
+        zmmdata->ymm32u(7),  zmmdata->ymm32u(6),  zmmdata->ymm32u(5),  zmmdata->ymm32u(4),
+        zmmdata->ymm32u(3),  zmmdata->ymm32u(2),  zmmdata->ymm32u(1),  zmmdata->ymm32u(0));
   }
 #endif
 #endif
@@ -751,10 +761,20 @@ void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, un
   }
 #if BX_SUPPORT_AVX
   else if (len == 32) {
-     const BxPackedAvxRegister *xmmdata = (const BxPackedAvxRegister*)(data);
+     const BxPackedYmmRegister *ymmdata = (const BxPackedYmmRegister*)(data);
      dbg_printf(": 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X",
-        xmmdata->avx32u(7), xmmdata->avx32u(6), xmmdata->avx32u(5), xmmdata->avx32u(4),
-        xmmdata->avx32u(3), xmmdata->avx32u(2), xmmdata->avx32u(1), xmmdata->avx32u(0));
+        ymmdata->ymm32u(7), ymmdata->ymm32u(6), ymmdata->ymm32u(5), ymmdata->ymm32u(4),
+        ymmdata->ymm32u(3), ymmdata->ymm32u(2), ymmdata->ymm32u(1), ymmdata->ymm32u(0));
+  }
+#endif
+#if BX_SUPPORT_EVEX
+  else if (len == 64) {
+     const BxPackedZmmRegister *zmmdata = (const BxPackedZmmRegister*)(data);
+     dbg_printf(": 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X",
+        zmmdata->ymm32u(15), zmmdata->ymm32u(14), zmmdata->ymm32u(13), zmmdata->ymm32u(12),
+        zmmdata->ymm32u(11), zmmdata->ymm32u(10), zmmdata->ymm32u(9),  zmmdata->ymm32u(8),
+        zmmdata->ymm32u(7),  zmmdata->ymm32u(6),  zmmdata->ymm32u(5),  zmmdata->ymm32u(4),
+        zmmdata->ymm32u(3),  zmmdata->ymm32u(2),  zmmdata->ymm32u(1),  zmmdata->ymm32u(0));
   }
 #endif
 #endif

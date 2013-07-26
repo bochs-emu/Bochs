@@ -167,16 +167,16 @@ static vpperm_operation vpperm_op[8] = {
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMOV_VdqHdqWdqVIb(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
-  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
+  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1());
+  BxPackedYmmRegister op2 = BX_READ_YMM_REG(i->src2());
+  BxPackedYmmRegister op3 = BX_READ_YMM_REG(i->src3());
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++) {
-    sse_pselect(&op1.avx128(n), &op2.avx128(n), &op3.avx128(n));
+    sse_pselect(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n));
   }
 
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
+  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -608,37 +608,37 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMUQ_VdqHdqWdqIbR(bxInstruction
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZPS_VpsWpsR(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
   unsigned len = i->getVL();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (4*len); n++) {
-    op.avx32u(n) = float32_frc(op.avx32u(n), status);
+    op.ymm32u(n) = float32_frc(op.ymm32u(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
-  BX_WRITE_AVX_REGZ(i->dst(), op, len);
+  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZPD_VpdWpdR(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
   unsigned len = i->getVL();
   
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < (2*len); n++) {
-    op.avx64u(n) = float64_frc(op.avx64u(n), status);
+    op.ymm64u(n) = float64_frc(op.ymm64u(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
 
-  BX_WRITE_AVX_REGZ(i->dst(), op, len);
+  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -911,32 +911,32 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPHSUBDQ_VdqWdqR(bxInstruction_c *
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMIL2PS_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
-  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3()), result;
+  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1());
+  BxPackedYmmRegister op2 = BX_READ_YMM_REG(i->src2());
+  BxPackedYmmRegister op3 = BX_READ_YMM_REG(i->src3()), result;
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++) {
-    sse_permil2ps(&result.avx128(n), &op1.avx128(n), &op2.avx128(n), &op3.avx128(n), i->Ib() & 3);
+    sse_permil2ps(&result.ymm128(n), &op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), i->Ib() & 3);
   }
 
-  BX_WRITE_AVX_REGZ(i->dst(), result, len);
+  BX_WRITE_YMM_REGZ_VLEN(i->dst(), result, len);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMIL2PD_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
-  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3()), result;
+  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1());
+  BxPackedYmmRegister op2 = BX_READ_YMM_REG(i->src2());
+  BxPackedYmmRegister op3 = BX_READ_YMM_REG(i->src3()), result;
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++) {
-    sse_permil2pd(&result.avx128(n), &op1.avx128(n), &op2.avx128(n), &op3.avx128(n), i->Ib() & 3);
+    sse_permil2pd(&result.ymm128(n), &op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), i->Ib() & 3);
   }
 
-  BX_WRITE_AVX_REGZ(i->dst(), result, len);
+  BX_WRITE_YMM_REGZ_VLEN(i->dst(), result, len);
 
   BX_NEXT_INSTR(i);
 }

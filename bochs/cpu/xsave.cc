@@ -167,7 +167,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
       // save YMM8-YMM15 only in 64-bit mode
       if (index < 8 || long64_mode()) {
         write_virtual_xmmword(i->seg(),
-           (eaddr+index*16+576) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG_LINE(index, 1)));
+           (eaddr+index*16+576) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG_LANE(index, 1)));
       }
     }
 
@@ -354,7 +354,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
          // restore YMM8-YMM15 only in 64-bit mode
          if (index < 8 || long64_mode()) {
            read_virtual_xmmword(i->seg(),
-               (eaddr+index*16+576) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG_LINE(index, 1)));
+               (eaddr+index*16+576) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG_LANE(index, 1)));
          }
       }
     }
@@ -362,10 +362,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
        // initialize upper part of AVX registers with reset values
        for(index=0; index < BX_XMM_REGISTERS; index++) {
          // set YMM8-YMM15 only in 64-bit mode
-         if (index < 8 || long64_mode()) {
-           for (int j=2;j < BX_VLMAX*2;j++)
-             BX_CPU_THIS_PTR vmm[index].avx64u(j) = 0;
-         }
+         if (index < 8 || long64_mode()) BX_CLEAR_AVX_HIGH128(index);
        }
     }
   }

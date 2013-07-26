@@ -367,11 +367,7 @@ void BX_CPU_C::register_state(void)
     for (n=0; n<BX_XMM_REGISTERS; n++) {
       for(unsigned j=0;j < BX_VLMAX*2;j++) {
         sprintf(name, "xmm%02d_%d", n, j);
-#if BX_SUPPORT_AVX
-        new bx_shadow_num_c(sse, name, &vmm[n].avx64u(j), BASE_HEX);
-#else
-        new bx_shadow_num_c(sse, name, &vmm[n].xmm64u(j), BASE_HEX);
-#endif
+        new bx_shadow_num_c(sse, name, &vmm[n].vmm64u(j), BASE_HEX);
       }
     }
   }
@@ -865,9 +861,11 @@ void BX_CPU_C::reset(unsigned source)
 
   // Reset XMM state - unchanged on #INIT
   if (source == BX_RESET_HARDWARE) {
-    static BxPackedXmmRegister xmmnil; /* compiler will clear the variable */
-    for(n=0; n<BX_XMM_REGISTERS; n++)
+    for(n=0; n<BX_XMM_REGISTERS; n++) {
+      // prepare empty AVX register - zeroed by compiler because of static variable
+      static BxPackedXmmRegister xmmnil;
       BX_WRITE_XMM_REG_CLEAR_HIGH(n, xmmnil);
+    }
 
     BX_CPU_THIS_PTR mxcsr.mxcsr = MXCSR_RESET;
     BX_CPU_THIS_PTR mxcsr_mask = 0x0000ffbf;

@@ -79,7 +79,7 @@
 # define BX_GENERAL_REGISTERS 8
 #endif
 
-#define BX_TMP_REGISTER (BX_GENERAL_REGISTERS)
+#define BX_TMP_REGISTER  (BX_GENERAL_REGISTERS)
 
 #define BX_16BIT_REG_IP  (BX_GENERAL_REGISTERS+1)
 #define BX_32BIT_REG_EIP (BX_GENERAL_REGISTERS+1)
@@ -943,9 +943,9 @@ public: // for now...
   // rdi: destination index
   // esp: stack pointer
   // r8..r15 x86-64 extended registers
+  // tmp: temp register
   // rip: instruction pointer
   // nil: null register
-  // tmp: temp register
   bx_gen_reg_t gen_reg[BX_GENERAL_REGISTERS+3];
 
   /* 31|30|29|28| 27|26|25|24| 23|22|21|20| 19|18|17|16
@@ -1032,13 +1032,27 @@ public: // for now...
 #endif
 
 #if BX_CPU_LEVEL >= 6
+
+  // Vector register set
+  // vmm0-vmmN: up to 32 vector registers
+  // vtmp: temp register
+#if BX_SUPPORT_EVEX
+  bx_zmm_reg_t vmm[BX_XMM_REGISTERS+1];
+#else
 #if BX_SUPPORT_AVX
-  bx_avx_reg_t vmm[BX_XMM_REGISTERS+1];
+  bx_ymm_reg_t vmm[BX_XMM_REGISTERS+1];
 #else
   bx_xmm_reg_t vmm[BX_XMM_REGISTERS+1];
 #endif
+#endif
+
   bx_mxcsr_t mxcsr;
   Bit32u mxcsr_mask;
+
+#if BX_SUPPORT_EVEX
+  Bit64u mask[8];
+#endif
+
 #endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -3685,8 +3699,12 @@ public: // for now...
   BX_SMF void read_virtual_xmmword_32(unsigned seg, Bit32u off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_virtual_xmmword_aligned_32(unsigned seg, Bit32u off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
 #if BX_SUPPORT_AVX
-  BX_SMF void read_virtual_ymmword_32(unsigned seg, Bit32u off, BxPackedAvxRegister *data);
-  BX_SMF void read_virtual_ymmword_aligned_32(unsigned seg, Bit32u off, BxPackedAvxRegister *data);
+  BX_SMF void read_virtual_ymmword_32(unsigned seg, Bit32u off, BxPackedYmmRegister *data);
+  BX_SMF void read_virtual_ymmword_aligned_32(unsigned seg, Bit32u off, BxPackedYmmRegister *data);
+#endif
+#if BX_SUPPORT_EVEX
+  BX_SMF void read_virtual_zmmword_32(unsigned seg, Bit32u off, BxPackedZmmRegister *data);
+  BX_SMF void read_virtual_zmmword_aligned_32(unsigned seg, Bit32u off, BxPackedZmmRegister *data);
 #endif
 #endif
 
@@ -3698,8 +3716,12 @@ public: // for now...
   BX_SMF void write_virtual_xmmword_32(unsigned seg, Bit32u offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_xmmword_aligned_32(unsigned seg, Bit32u offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
 #if BX_SUPPORT_AVX
-  BX_SMF void write_virtual_ymmword_32(unsigned seg, Bit32u off, const BxPackedAvxRegister *data);
-  BX_SMF void write_virtual_ymmword_aligned_32(unsigned seg, Bit32u off, const BxPackedAvxRegister *data);
+  BX_SMF void write_virtual_ymmword_32(unsigned seg, Bit32u off, const BxPackedYmmRegister *data);
+  BX_SMF void write_virtual_ymmword_aligned_32(unsigned seg, Bit32u off, const BxPackedYmmRegister *data);
+#endif
+#if BX_SUPPORT_EVEX
+  BX_SMF void write_virtual_zmmword_32(unsigned seg, Bit32u off, const BxPackedZmmRegister *data);
+  BX_SMF void write_virtual_zmmword_aligned_32(unsigned seg, Bit32u off, const BxPackedZmmRegister *data);
 #endif
 #endif
 
@@ -3721,8 +3743,12 @@ public: // for now...
   BX_SMF void write_virtual_xmmword_64(unsigned seg, Bit64u offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_xmmword_aligned_64(unsigned seg, Bit64u offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
 #if BX_SUPPORT_AVX
-  BX_SMF void write_virtual_ymmword_64(unsigned seg, Bit64u offset, const BxPackedAvxRegister *data);
-  BX_SMF void write_virtual_ymmword_aligned_64(unsigned seg, Bit64u offset, const BxPackedAvxRegister *data);
+  BX_SMF void write_virtual_ymmword_64(unsigned seg, Bit64u offset, const BxPackedYmmRegister *data);
+  BX_SMF void write_virtual_ymmword_aligned_64(unsigned seg, Bit64u offset, const BxPackedYmmRegister *data);
+#endif
+#if BX_SUPPORT_EVEX
+  BX_SMF void write_virtual_zmmword_64(unsigned seg, Bit64u offset, const BxPackedZmmRegister *data);
+  BX_SMF void write_virtual_zmmword_aligned_64(unsigned seg, Bit64u offset, const BxPackedZmmRegister *data);
 #endif
 
   BX_SMF Bit8u read_virtual_byte_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
@@ -3732,8 +3758,12 @@ public: // for now...
   BX_SMF void read_virtual_xmmword_64(unsigned seg, Bit64u off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_virtual_xmmword_aligned_64(unsigned seg, Bit64u off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
 #if BX_SUPPORT_AVX
-  BX_SMF void read_virtual_ymmword_64(unsigned seg, Bit64u offset, BxPackedAvxRegister *data);
-  BX_SMF void read_virtual_ymmword_aligned_64(unsigned seg, Bit64u offset, BxPackedAvxRegister *data);
+  BX_SMF void read_virtual_ymmword_64(unsigned seg, Bit64u offset, BxPackedYmmRegister *data);
+  BX_SMF void read_virtual_ymmword_aligned_64(unsigned seg, Bit64u offset, BxPackedYmmRegister *data);
+#endif
+#if BX_SUPPORT_EVEX
+  BX_SMF void read_virtual_zmmword_64(unsigned seg, Bit64u offset, BxPackedZmmRegister *data);
+  BX_SMF void read_virtual_zmmword_aligned_64(unsigned seg, Bit64u offset, BxPackedZmmRegister *data);
 #endif
 
   BX_SMF Bit8u read_RMW_virtual_byte_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
@@ -3789,13 +3819,27 @@ public: // for now...
 
 #define write_virtual_ymmword(seg, offset, data)   \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      write_virtual_ymmword_64(seg, (Bit64u) offset, (const BxPackedAvxRegister*)(data)) : \
-      write_virtual_ymmword_32(seg, (Bit32u) offset, (const BxPackedAvxRegister*)(data))
+      write_virtual_ymmword_64(seg, (Bit64u) offset, (const BxPackedYmmRegister*)(data)) : \
+      write_virtual_ymmword_32(seg, (Bit32u) offset, (const BxPackedYmmRegister*)(data))
 
 #define write_virtual_ymmword_aligned(seg, offset, data) \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      write_virtual_ymmword_aligned_64(seg, (Bit64u) offset, (const BxPackedAvxRegister*)(data)) : \
-      write_virtual_ymmword_aligned_32(seg, (Bit32u) offset, (const BxPackedAvxRegister*)(data))
+      write_virtual_ymmword_aligned_64(seg, (Bit64u) offset, (const BxPackedYmmRegister*)(data)) : \
+      write_virtual_ymmword_aligned_32(seg, (Bit32u) offset, (const BxPackedYmmRegister*)(data))
+
+#endif
+
+#if BX_SUPPORT_EVEX
+
+#define write_virtual_zmmword(seg, offset, data)   \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      write_virtual_zmmword_64(seg, (Bit64u) offset, (const BxPackedZmmRegister*)(data)) : \
+      write_virtual_zmmword_32(seg, (Bit32u) offset, (const BxPackedZmmRegister*)(data))
+
+#define write_virtual_zmmword_aligned(seg, offset, data) \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      write_virtual_zmmword_aligned_64(seg, (Bit64u) offset, (const BxPackedZmmRegister*)(data)) : \
+      write_virtual_zmmword_aligned_32(seg, (Bit32u) offset, (const BxPackedZmmRegister*)(data))
 
 #endif
 
@@ -3834,13 +3878,27 @@ public: // for now...
 
 #define read_virtual_ymmword(seg, offset, data)    \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      read_virtual_ymmword_64(seg, (Bit64u) offset, (BxPackedAvxRegister*)(data)) : \
-      read_virtual_ymmword_32(seg, (Bit32u) offset, (BxPackedAvxRegister*)(data))
+      read_virtual_ymmword_64(seg, (Bit64u) offset, (BxPackedYmmRegister*)(data)) : \
+      read_virtual_ymmword_32(seg, (Bit32u) offset, (BxPackedYmmRegister*)(data))
 
 #define read_virtual_ymmword_aligned(seg, offset, data) \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      read_virtual_ymmword_aligned_64(seg, (Bit64u) offset, (BxPackedAvxRegister*)(data)) : \
-      read_virtual_ymmword_aligned_32(seg, (Bit32u) offset, (BxPackedAvxRegister*)(data))
+      read_virtual_ymmword_aligned_64(seg, (Bit64u) offset, (BxPackedYmmRegister*)(data)) : \
+      read_virtual_ymmword_aligned_32(seg, (Bit32u) offset, (BxPackedYmmRegister*)(data))
+
+#endif
+
+#if BX_SUPPORT_EVEX
+
+#define read_virtual_zmmword(seg, offset, data)    \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      read_virtual_zmmword_64(seg, (Bit64u) offset, (BxPackedZmmRegister*)(data)) : \
+      read_virtual_zmmword_32(seg, (Bit32u) offset, (BxPackedZmmRegister*)(data))
+
+#define read_virtual_zmmword_aligned(seg, offset, data) \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      read_virtual_zmmword_aligned_64(seg, (Bit64u) offset, (BxPackedZmmRegister*)(data)) : \
+      read_virtual_zmmword_aligned_32(seg, (Bit32u) offset, (BxPackedZmmRegister*)(data))
 
 #endif
 
@@ -3884,9 +3942,18 @@ public: // for now...
 #if BX_SUPPORT_AVX
 
 #define write_virtual_ymmword(seg, offset, data) \
-  write_virtual_ymmword_32(seg, offset, (const BxPackedAvxRegister*)(data))
+  write_virtual_ymmword_32(seg, offset, (const BxPackedYmmRegister*)(data))
 #define write_virtual_ymmword_aligned(seg, offset, data) \
-  write_virtual_ymmword_aligned_32(seg, offset, (const BxPackedAvxRegister*)(data))
+  write_virtual_ymmword_aligned_32(seg, offset, (const BxPackedYmmRegister*)(data))
+
+#endif
+
+#if BX_SUPPORT_EVEX
+
+#define write_virtual_zmmword(seg, offset, data) \
+  write_virtual_zmmword_32(seg, offset, (const BxPackedZmmRegister*)(data))
+#define write_virtual_zmmword_aligned(seg, offset, data) \
+  write_virtual_zmmword_aligned_32(seg, offset, (const BxPackedZmmRegister*)(data))
 
 #endif
 
@@ -3907,9 +3974,18 @@ public: // for now...
 #if BX_SUPPORT_AVX
 
 #define read_virtual_ymmword(seg, offset, data) \
-  read_virtual_ymmword_32(seg, offset, (BxPackedAvxRegister*)(data))
+  read_virtual_ymmword_32(seg, offset, (BxPackedYmmRegister*)(data))
 #define read_virtual_ymmword_aligned(seg, offset, data) \
-  read_virtual_ymmword_aligned_32(seg, offset, (BxPackedAvxRegister*)(data))
+  read_virtual_ymmword_aligned_32(seg, offset, (BxPackedYmmRegister*)(data))
+
+#endif
+
+#if BX_SUPPORT_EVEX
+
+#define read_virtual_zmmword(seg, offset, data) \
+  read_virtual_zmmword_32(seg, offset, (BxPackedZmmRegister*)(data))
+#define read_virtual_zmmword_aligned(seg, offset, data) \
+  read_virtual_zmmword_aligned_32(seg, offset, (BxPackedZmmRegister*)(data))
 
 #endif
 

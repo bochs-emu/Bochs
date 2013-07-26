@@ -422,7 +422,8 @@ void BX_CPU_C::handleAvxModeChange(void)
   }
   else {
     if (! protected_mode() || ! BX_CPU_THIS_PTR cr4.get_OSXSAVE() ||
-        (~BX_CPU_THIS_PTR xcr0.val32 & 0x6) != 0) BX_CPU_THIS_PTR avx_ok = 0;
+        (~BX_CPU_THIS_PTR xcr0.val32 & (BX_XCR0_SSE_MASK | BX_XCR0_YMM_MASK)) != 0)
+      BX_CPU_THIS_PTR avx_ok = 0;
     else
       BX_CPU_THIS_PTR avx_ok = 1;
   }
@@ -435,7 +436,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoAVX(bxInstruction_c *i)
   if (! protected_mode() || ! BX_CPU_THIS_PTR cr4.get_OSXSAVE())
     exception(BX_UD_EXCEPTION, 0);
 
-  if (~BX_CPU_THIS_PTR xcr0.val32 & 0x6)
+  if (~BX_CPU_THIS_PTR xcr0.val32 & (BX_XCR0_SSE_MASK | BX_XCR0_YMM_MASK))
     exception(BX_UD_EXCEPTION, 0);
 
   if(BX_CPU_THIS_PTR cr0.get_TS())

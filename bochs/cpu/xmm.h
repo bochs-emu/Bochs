@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2011 Stanislav Shwartsman
+//   Copyright (c) 2003-2013 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -62,90 +62,180 @@ typedef union bx_xmm_reg_t {
 enum bx_avx_vector_length {
   BX_NO_VL,
   BX_VL128,
-  BX_VL256
+  BX_VL256,
+  BX_VL512
 };
 
-#if BX_SUPPORT_AVX
-#define BX_VLMAX BX_VL256
+#if BX_SUPPORT_EVEX
+#  define BX_VLMAX BX_VL512
 #else
-#define BX_VLMAX BX_VL128
+#  if BX_SUPPORT_AVX
+#    define BX_VLMAX BX_VL256
+#  else
+#    define BX_VLMAX BX_VL128
+#  endif
 #endif
 
+#if BX_SUPPORT_EVEX
+#  define BX_XMM_REGISTERS 32
+#else
+#  if BX_SUPPORT_X86_64
+#    define BX_XMM_REGISTERS 16
+#  else
+#    define BX_XMM_REGISTERS 8
+#  endif
+#endif
+
+#define BX_VECTOR_TMP_REGISTER (BX_XMM_REGISTERS)
+
 #if BX_SUPPORT_AVX
 
-typedef union bx_avx_reg_t {
-   Bit8s   avx_sbyte[32];
-   Bit16s  avx_s16[16];
-   Bit32s  avx_s32[8];
-   Bit64s  avx_s64[4];
-   Bit8u   avx_ubyte[32];
-   Bit16u  avx_u16[16];
-   Bit32u  avx_u32[8];
-   Bit64u  avx_u64[4];
-   BxPackedXmmRegister avx_v128[2];
-} BxPackedAvxRegister;
+typedef union bx_ymm_reg_t {
+   Bit8s   ymm_sbyte[32];
+   Bit16s  ymm_s16[16];
+   Bit32s  ymm_s32[8];
+   Bit64s  ymm_s64[4];
+   Bit8u   ymm_ubyte[32];
+   Bit16u  ymm_u16[16];
+   Bit32u  ymm_u32[8];
+   Bit64u  ymm_u64[4];
+   BxPackedXmmRegister ymm_v128[2];
+} BxPackedYmmRegister;
 
 #ifdef BX_BIG_ENDIAN
-#define avx64s(i)   avx_s64[3 - (i)]
-#define avx32s(i)   avx_s32[7 - (i)]
-#define avx16s(i)   avx_s16[15 - (i)]
-#define avxsbyte(i) avx_sbyte[31 - (i)]
-#define avxubyte(i) avx_ubyte[31 - (i)]
-#define avx16u(i)   avx_u16[15 - (i)]
-#define avx32u(i)   avx_u32[7 - (i)]
-#define avx64u(i)   avx_u64[3 - (i)]
-#define avx128(i)   avx_v128[1 - (i)]
+#define ymm64s(i)   ymm_s64[3 - (i)]
+#define ymm32s(i)   ymm_s32[7 - (i)]
+#define ymm16s(i)   ymm_s16[15 - (i)]
+#define ymmsbyte(i) ymm_sbyte[31 - (i)]
+#define ymmubyte(i) ymm_ubyte[31 - (i)]
+#define ymm16u(i)   ymm_u16[15 - (i)]
+#define ymm32u(i)   ymm_u32[7 - (i)]
+#define ymm64u(i)   ymm_u64[3 - (i)]
+#define ymm128(i)   ymm_v128[1 - (i)]
 #else
-#define avx64s(i)   avx_s64[(i)]
-#define avx32s(i)   avx_s32[(i)]
-#define avx16s(i)   avx_s16[(i)]
-#define avxsbyte(i) avx_sbyte[(i)]
-#define avxubyte(i) avx_ubyte[(i)]
-#define avx16u(i)   avx_u16[(i)]
-#define avx32u(i)   avx_u32[(i)]
-#define avx64u(i)   avx_u64[(i)]
-#define avx128(i)   avx_v128[(i)]
+#define ymm64s(i)   ymm_s64[(i)]
+#define ymm32s(i)   ymm_s32[(i)]
+#define ymm16s(i)   ymm_s16[(i)]
+#define ymmsbyte(i) ymm_sbyte[(i)]
+#define ymmubyte(i) ymm_ubyte[(i)]
+#define ymm16u(i)   ymm_u16[(i)]
+#define ymm32u(i)   ymm_u32[(i)]
+#define ymm64u(i)   ymm_u64[(i)]
+#define ymm128(i)   ymm_v128[(i)]
 #endif
 
 #endif
 
-#if BX_SUPPORT_X86_64
-#  define BX_XMM_REGISTERS 16
+#if BX_SUPPORT_EVEX
+
+typedef union bx_zmm_reg_t {
+   Bit8s   zmm_sbyte[64];
+   Bit16s  zmm_s16[32];
+   Bit32s  zmm_s32[16];
+   Bit64s  zmm_s64[8];
+   Bit8u   zmm_ubyte[64];
+   Bit16u  zmm_u16[32];
+   Bit32u  zmm_u32[16];
+   Bit64u  zmm_u64[8];
+   BxPackedXmmRegister zmm_v128[4];
+   BxPackedYmmRegister zmm_v256[2];
+} BxPackedZmmRegister;
+
+#ifdef BX_BIG_ENDIAN
+#define zmm64s(i)   zmm_s64[7 - (i)]
+#define zmm32s(i)   zmm_s32[15 - (i)]
+#define zmm16s(i)   zmm_s16[31 - (i)]
+#define zmmsbyte(i) zmm_sbyte[63 - (i)]
+#define zmmubyte(i) zmm_ubyte[63 - (i)]
+#define zmm16u(i)   zmm_u16[31 - (i)]
+#define zmm32u(i)   zmm_u32[15 - (i)]
+#define zmm64u(i)   zmm_u64[7 - (i)]
+#define zmm128(i)   zmm_v128[3 - (i)]
+#define zmm256(i)   zmm_v256[1 - (i)]
 #else
-#  define BX_XMM_REGISTERS 8
+#define zmm64s(i)   zmm_s64[(i)]
+#define zmm32s(i)   zmm_s32[(i)]
+#define zmm16s(i)   zmm_s16[(i)]
+#define zmmsbyte(i) zmm_sbyte[(i)]
+#define zmmubyte(i) zmm_ubyte[(i)]
+#define zmm16u(i)   zmm_u16[(i)]
+#define zmm32u(i)   zmm_u32[(i)]
+#define zmm64u(i)   zmm_u64[(i)]
+#define zmm128(i)   zmm_v128[(i)]
+#define zmm256(i)   zmm_v256[(i)]
 #endif
+
+#endif
+
+#if BX_SUPPORT_EVEX
+#  define vmm64s(i)   zmm64s(i)
+#  define vmm32s(i)   zmm64s(i)
+#  define vmm16s(i)   zmm16s(i)
+#  define vmmsbyte(i) zmmsbyte(i)
+#  define vmmubyte(i) zmmubyte(i)
+#  define vmm16u(i)   zmm16u(i)
+#  define vmm32u(i)   zmm32u(i)
+#  define vmm64u(i)   zmm64u(i)
+#  define vmm128(i)   zmm128(i)
+#  define vmm256(i)   zmm256(i)
+#else
+#  if BX_SUPPORT_AVX
+#    define vmm64s(i)   ymm64s(i)
+#    define vmm32s(i)   ymm64s(i)
+#    define vmm16s(i)   ymm16s(i)
+#    define vmmsbyte(i) ymmsbyte(i)
+#    define vmmubyte(i) ymmubyte(i)
+#    define vmm16u(i)   ymm16u(i)
+#    define vmm32u(i)   ymm32u(i)
+#    define vmm64u(i)   ymm64u(i)
+#    define vmm128(i)   ymm128(i)
+#  else
+#    define vmm64s(i)   xmm64s(i)
+#    define vmm32s(i)   xmm64s(i)
+#    define vmm16s(i)   xmm16s(i)
+#    define vmmsbyte(i) xmmsbyte(i)
+#    define vmmubyte(i) xmmubyte(i)
+#    define vmm16u(i)   xmm16u(i)
+#    define vmm32u(i)   xmm32u(i)
+#    define vmm64u(i)   xmm64u(i)
+#  endif
+#endif
+
+/* ************ */
+/* XMM REGISTER */
+/* ************ */
 
 #if BX_SUPPORT_AVX
 
 /* read XMM register */
-#define BX_READ_XMM_REG(index) ((BX_CPU_THIS_PTR vmm[index]).avx128(0))
+#define BX_READ_XMM_REG(index) (BX_CPU_THIS_PTR vmm[index].vmm128(0))
 
-#else
+#else /* BX_SUPPORT_AVX */
 
 /* read XMM register */
-#define BX_READ_XMM_REG(index) ((BX_CPU_THIS_PTR vmm[index]))
+#define BX_READ_XMM_REG(index) (BX_CPU_THIS_PTR vmm[index])
 
-#endif
+#endif /* BX_SUPPORT_AVX */
 
 /* read only high 64 bit of the register */
 #define BX_READ_XMM_REG_HI_QWORD(index) \
-    ((BX_READ_XMM_REG(index)).xmm64u(1))
+    (BX_CPU_THIS_PTR vmm[index].vmm64u(1))
 
 /* read only low 64 bit of the register */
 #define BX_READ_XMM_REG_LO_QWORD(index) \
-    ((BX_READ_XMM_REG(index)).xmm64u(0))
+    (BX_CPU_THIS_PTR vmm[index].vmm64u(0))
 
 /* read only low 32 bit of the register */
 #define BX_READ_XMM_REG_LO_DWORD(index) \
-    ((BX_READ_XMM_REG(index)).xmm32u(0))
+    (BX_CPU_THIS_PTR vmm[index].vmm32u(0))
 
 /* read only low 16 bit of the register */
 #define BX_READ_XMM_REG_LO_WORD(index) \
-    ((BX_READ_XMM_REG(index)).xmm16u(0))
+    (BX_CPU_THIS_PTR vmm[index].vmm16u(0))
 
 /* read only low 8 bit of the register */
 #define BX_READ_XMM_REG_LO_BYTE(index) \
-    ((BX_READ_XMM_REG(index)).xmmubyte(0))
+    (BX_CPU_THIS_PTR vmm[index].vmmubyte(0))
 
 /* short names for above macroses */
 #define BX_XMM_REG_HI_QWORD BX_READ_XMM_REG_HI_QWORD
@@ -156,72 +246,116 @@ typedef union bx_avx_reg_t {
 
 /* store only high 64 bit of the register, rest of the register unchanged */
 #define BX_WRITE_XMM_REG_HI_QWORD(index, reg64) \
-    { (BX_XMM_REG(index)).xmm64u(1) = (reg64); }
+    { BX_CPU_THIS_PTR vmm[index].vmm64u(1) = (reg64); }
 
 /* store only low 64 bit of the register, rest of the register unchanged */
 #define BX_WRITE_XMM_REG_LO_QWORD(index, reg64) \
-    { (BX_XMM_REG(index)).xmm64u(0) = (reg64); }
+    { BX_CPU_THIS_PTR vmm[index].vmm64u(0) = (reg64); }
 
 /* store only low 32 bit of the register, rest of the register unchanged */
 #define BX_WRITE_XMM_REG_LO_DWORD(index, reg32) \
-    { (BX_XMM_REG(index)).xmm32u(0) = (reg32); }
+    { BX_CPU_THIS_PTR vmm[index].vmm32u(0) = (reg32); }
 
 /* store only low 16 bit of the register, rest of the register unchanged */
 #define BX_WRITE_XMM_REG_LO_WORD(index, reg16) \
-    { (BX_XMM_REG(index)).xmm16u(0) = (reg16); }
+    { BX_CPU_THIS_PTR vmm[index].vmm16u(0) = (reg16); }
 
 /* store only low 8 bit of the register, rest of the register unchanged */
 #define BX_WRITE_XMM_REG_LO_BYTE(index, reg8) \
-    { (BX_XMM_REG(index)).xmmubyte(0) = (reg8); }
+    { BX_CPU_THIS_PTR vmm[index].vmmubyte(0) = (reg8); }
 
-/* store XMM register */
+/* store XMM register, upper part of the YMM or ZMM register unchanged */
 #define BX_WRITE_XMM_REG(index, reg) \
     { (BX_XMM_REG(index)) = (reg); }
 
+
+/* ************ */
+/* YMM REGISTER */
+/* ************ */
+
 #if BX_SUPPORT_AVX
+
+#if BX_SUPPORT_EVEX
+
+/* read YMM register */
+#define BX_READ_YMM_REG(index) (BX_CPU_THIS_PTR vmm[index].vmm256(0))
+
+/* clear upper part of the ZMM register */
+#define BX_CLEAR_AVX_HIGH256(index) \
+  { BX_CPU_THIS_PTR vmm[index].vmm64u(4) = BX_CPU_THIS_PTR vmm[index].vmm64u(5) = \
+    BX_CPU_THIS_PTR vmm[index].vmm64u(6) = BX_CPU_THIS_PTR vmm[index].vmm64u(7) = 0; }
+
+#else /* BX_SUPPORT_EVEX */
+
+/* read YMM register */
+#define BX_READ_YMM_REG(index) (BX_CPU_THIS_PTR vmm[index])
+
+/* clear upper part of the ZMM register - no upper part ;) */
+#define BX_CLEAR_AVX_HIGH256(index)
+
+#endif /* BX_SUPPORT_EVEX */
+
+#define BX_YMM_REG BX_READ_YMM_REG
+
+/* clear upper part of AVX128 register */
+#define BX_CLEAR_AVX_HIGH128(index) \
+    { BX_CPU_THIS_PTR vmm[index].vmm64u(2) = BX_CPU_THIS_PTR vmm[index].vmm64u(3) = 0; \
+      BX_CLEAR_AVX_HIGH256(index); }
+
+/* write YMM register and clear upper part of the AVX register */
+#define BX_WRITE_YMM_REGZ(index, reg) \
+    { (BX_READ_YMM_REG(index)) = (reg); BX_CLEAR_AVX_HIGH256(index); }
+
+/* write XMM register and clear upper part of AVX register (if not SSE instruction) */
+#define BX_WRITE_XMM_REGZ(index, reg, vlen) \
+    { (BX_XMM_REG(index)) = (reg); \
+       if (vlen) BX_CLEAR_AVX_HIGH128(index); }
+
+/* write XMM register while clearing upper part of the AVX register */
+#define BX_WRITE_XMM_REG_CLEAR_HIGH(index, reg) \
+    { BX_XMM_REG(index) = (reg); BX_CLEAR_AVX_HIGH128(index); }
+
+#else /* BX_SUPPORT_AVX */
+
+/* write XMM register while clearing upper part of AVX register */
+#define BX_WRITE_XMM_REG_CLEAR_HIGH(index, reg) \
+    BX_WRITE_XMM_REG(index, reg)
+
+/* write XMM register while clearing upper part of AVX register */
+#define BX_WRITE_XMM_REGZ(index, reg, vlen) \
+    BX_WRITE_XMM_REG(index, reg)
+
+#endif /* BX_SUPPORT_AVX */
+
+/* ************ */
+/* AVX REGISTER */
+/* ************ */
 
 /* read AVX register */
 #define BX_READ_AVX_REG(index) (BX_CPU_THIS_PTR vmm[index])
 
 #define BX_AVX_REG BX_READ_AVX_REG
 
-/* read AVX register */
-#define BX_READ_AVX_REG_LINE(index, line) \
-     ((BX_READ_AVX_REG(index)).avx128(line))
-
 /* write AVX register */
-#define BX_WRITE_AVX_REG(index, reg) \
-    { (BX_READ_AVX_REG(index)) = (reg); }
+#define BX_WRITE_AVX_REG(index, reg) { (BX_CPU_THIS_PTR vmm[index]) = (reg); }
 
-/* clear upper part of AVX register */
-#define BX_CLEAR_AVX_HIGH(index) \
-    { (BX_READ_AVX_REG(index)).avx64u(2) = (BX_READ_AVX_REG(index)).avx64u(3) = 0; }
+/* read AVX register lane */
+#define BX_READ_AVX_REG_LANE(index, line) \
+     (BX_CPU_THIS_PTR vmm[index].vmm128(line))
 
 /* write AVX register and potentialy clear upper part of the register */
-#define BX_WRITE_AVX_REGZ(index, reg, vlen) \
-    { BX_CPU_THIS_PTR vmm[index] = (reg);   \
-      if (vlen == BX_VL128) BX_CLEAR_AVX_HIGH(index); }
+#define BX_WRITE_YMM_REGZ_VLEN(index, reg256, vlen)               \
+    { (BX_YMM_REG(index)) = (reg256);                             \
+      if (vlen == BX_VL256) { BX_CLEAR_AVX_HIGH256(index); }      \
+      else if (vlen == BX_VL128) { BX_CLEAR_AVX_HIGH128(index); } \
+    }
 
-/* write XMM register while clearing upper part of AVX register */
-#define BX_WRITE_XMM_REG_CLEAR_HIGH(index, reg) \
-    { BX_XMM_REG(index) = (reg); BX_CLEAR_AVX_HIGH(index); }
-
-/* write XMM register while clearing upper part of AVX register */
-#define BX_WRITE_XMM_REGZ(index, reg, vlen) \
-    { (BX_XMM_REG(index)) = (reg);   \
-      if (vlen == BX_VL128) BX_CLEAR_AVX_HIGH(index); }
-
-#else
-
-/* write XMM register while clearing upper part of AVX register */
-#define BX_WRITE_XMM_REG_CLEAR_HIGH(index, reg) \
-    BX_WRITE_XMM_REG(index, reg)
-
-/* write XMM register while clearing upper part of AVX register */
-#define BX_WRITE_XMM_REGZ(index, reg, vlen) \
-    BX_WRITE_XMM_REG(index, reg)
-
-#endif
+/* write AVX register and potentialy clear upper part of the register */
+#define BX_WRITE_AVX_REGZ(index, reg, vlen)                       \
+    { BX_CPU_THIS_PTR vmm[index] = (reg);                         \
+      if (vlen == BX_VL256) { BX_CLEAR_AVX_HIGH256(index); }      \
+      else if (vlen == BX_VL128) { BX_CLEAR_AVX_HIGH128(index); } \
+    }
 
 /* MXCSR REGISTER */
 

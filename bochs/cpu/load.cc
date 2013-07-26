@@ -131,9 +131,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Vector(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   if (i->getVL() == BX_VL256)
-    read_virtual_ymmword(i->seg(), eaddr, &BX_READ_AVX_REG(BX_TMP_REGISTER));
+    read_virtual_ymmword(i->seg(), eaddr, &BX_READ_YMM_REG(BX_VECTOR_TMP_REGISTER));
   else
-    read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_TMP_REGISTER));
+    read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_VECTOR_TMP_REGISTER));
 
   return BX_CPU_CALL_METHOD(i->execute2(), (i));
 }

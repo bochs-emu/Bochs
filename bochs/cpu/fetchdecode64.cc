@@ -1961,7 +1961,11 @@ fetch_b1:
     nnn = ((b2 >> 3) & 0x7) | rex_r;
     rm  = (b2 & 0x7) | rex_b;
 
-    i->setFoo((b2 | (b1 << 8)) & 0x7ff); /* for x87 */
+#if BX_SUPPORT_AVX
+    if (! had_vex && ! had_xop)
+#endif
+      if (b1 >= 0xd8 && b1 <= 0xdf)
+        i->setFoo((b2 | (b1 << 8)) & 0x7ff); /* for x87 */
 
     // MOVs with CRx and DRx always use register ops and ignore the mod field.
     if ((b1 & ~3) == 0x120)
@@ -2205,11 +2209,11 @@ modrm_done:
     // make sure iptr was advanced after Ib(), Iw() and Id()
     switch (imm_mode) {
       case BxImmediate_I1:
-        i->modRMForm.Ib = 1;
+        i->modRMForm.Ib[0] = 1;
         break;
       case BxImmediate_Ib:
         if (remain != 0) {
-          i->modRMForm.Ib = *iptr++;
+          i->modRMForm.Ib[0] = *iptr++;
           remain--;
         }
         else {
@@ -2221,9 +2225,9 @@ modrm_done:
           Bit8s temp8s = *iptr;
           // this code works correctly both for LE and BE hosts
           if (i->os32L())
-            i->modRMForm.Id = (Bit32s) temp8s;
+            i->modRMForm.Id    = (Bit32s) temp8s;
           else
-            i->modRMForm.Iw = (Bit16s) temp8s;
+            i->modRMForm.Iw[0] = (Bit16s) temp8s;
           remain--;
         }
         else {
@@ -2242,7 +2246,7 @@ modrm_done:
         break;
       case BxImmediate_Iw:
         if (remain > 1) {
-          i->modRMForm.Iw = FetchWORD(iptr);
+          i->modRMForm.Iw[0] = FetchWORD(iptr);
           iptr += 2;
           remain -= 2;
         }
@@ -2296,7 +2300,7 @@ modrm_done:
     if (imm_mode2) {
       if (imm_mode2 == BxImmediate_Ib2) {
         if (remain != 0) {
-          i->modRMForm.Ib2 = *iptr;
+          i->modRMForm.Ib2[0] = *iptr;
           remain--;
         }
         else {
