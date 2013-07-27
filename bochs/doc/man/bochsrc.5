@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "22 Jul 2013" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "27 Jul 2013" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -130,8 +130,9 @@ count:
 
 Set the number of processors:cores per processor:threads per core when
 Bochs is compiled for SMP emulation. Bochs currently supports up to
-8 processors. If Bochs is compiled without SMP support, it won't accept
-values different from 1.
+14 threads (legacy APIC) or 254 threads (xAPIC or higher) running simultaniosly.
+If Bochs is compiled without SMP support, it won't accept values
+different from 1.
 
 quantum:
 

@@ -557,7 +557,7 @@ currently work with.
   <row>
     <entry>Simulate a Multiprocessor</entry>
     <entry>Yes</entry>
-    <entry>Bochs can be configured to simulate up to 255 processor threads.  This
+    <entry>Bochs can be configured to simulate up to 254 processor threads.  This
     feature is still experimental, but it can boot several Linux or Windows guests
     with SMP support.  Please note that this does NOT mean that Bochs can run
     faster on a physical SMP machine.
@@ -3196,9 +3196,10 @@ This defines the parameters of the cpu inside Bochs:
 <para><command>count</command></para>
 <para>
 Set the number of processors:cores per processor:threads per core when Bochs
-is compiled for SMP emulation. Bochs currently supports up to 8 processors.
-If Bochs is compiled without SMP support, it won't accept values different from 1.
-For more information on SMP see <xref linkend="SMP">.
+is compiled for SMP emulation. Bochs currently supports up to 14 threads
+(legacy APIC) or 254 threads (xAPIC or higher) running simultaniosly.
+If Bochs is compiled without SMP support, it won't accept values
+different from 1. For more information on SMP see <xref linkend="SMP">.
 </para>
 <para><command>quantum</command></para>
 <para>

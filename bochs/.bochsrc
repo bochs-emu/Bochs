@@ -122,11 +122,11 @@
 #  zambezi                    AMD FX(tm)-4100 Quad-Core Processor (Zambezi)
 #
 #  COUNT:
-#    Set the number of processors:cores per processor:threads per core 
-#    when Bochs is compiled for SMP emulation.
-#    Bochs currently supports up to 8 threads running simultaniosly. 
-#    If Bochs is compiled without SMP support, it won't accept values 
-#    different from 1.
+#    Set the number of processors:cores per processor:threads per core when
+#    Bochs is compiled for SMP emulation. Bochs currently supports up to
+#    14 threads (legacy APIC) or 254 threads (xAPIC or higher) running
+#    simultaniosly. If Bochs is compiled without SMP support, it won't accept
+#    values different from 1.
 #
 #  QUANTUM:
 #    Maximum amount of instructions allowed to execute by processor before
