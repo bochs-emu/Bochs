@@ -2957,7 +2957,7 @@ the PCI ROM space (see <xref linkend="bochsopt-ne2k">).
 </section>
 
 <section id="bochsrc">
-<title>bochsrc</title>
+<title>The configuration file <filename>bochsrc</filename></title>
 <para>
 Bochs uses a configuration file called <filename>bochsrc</filename> to know
 where to look for disk images, how the Bochs emulation layer should work, etc.
@@ -2971,7 +2971,7 @@ Here are a few lines from a sample file:
 The format is very strict, so be sure to put the right number of spaces and
 use lowercase letters.  As you can see, most lines have a keyword telling what
 is being configured, followed by a colon, followed by a few
-<varname>variable</varname>=<varname>value</varname> pairs, separated by
+<varname>property</varname>=<varname>value</varname> pairs, separated by
 commas.  For very simple options, sometimes just a single value is needed.
 The source and binary distributions come with a sample
 <filename>bochsrc</filename>, so you can just copy the sample file and edit the
@@ -2989,36 +2989,46 @@ For other arguments, see section <link linkend="commandline">Command line argume
 </para>
 
 <para>
-Starting with version 1.3, you can use environment variables in
-the <filename>bochsrc</filename> file, for example:
+You can use environment variables with the dollar sign prefix in the
+<filename>bochsrc</filename> file, for example:
 <screen>
   floppya: 1_44="$IMAGES/bootdisk.img", status=inserted
   boot: floppy
 </screen>
-Starting with version 2.0, two environment variables have a built-in
-default value which is set at compile time.  $BXSHARE points to the
+There are two environment variables with a built-in default value which is set
+at compile or installation time.  $BXSHARE points to the
 "share" directory which is typically /usr/local/share/bochs on UNIX
 machines.  See the $(sharedir) variable in the Makefile for the exact
-value.  $BXSHARE is used by disk images to locate the directory where
-the BIOS images and keymaps can be found.  If $BXSHARE is not defined, Bochs
-will supply the default value.  Also, $LTDL_LIBRARY_PATH points to a list of
-directories (separated by colons if more than one) to search in for Bochs
-plugins.  A compile-time default is provided if this variable is not defined
-by the user.  On Win32 and MacOSX, the default for the share directory is
-determined by a platform-specific specific algorithm.  On Win32, we use the
-registry to see what directory Bochs and its support files were installed in.
-On MacOSX, the share directory is the directory where the application is
-located.
+value.  $BXSHARE is used in the config files of the Bochs disk images to
+locate the directory where the BIOS images and keymaps can be found.
+If $BXSHARE is not defined, Bochs will supply the default value.
+Also, $LTDL_LIBRARY_PATH points to a list of directories (separated by colons,
+if more than one) to search in for Bochs plugins.  A compile-time default is
+provided if this variable is not defined by the user.  On Win32 and MacOSX, the
+default for the share directory is determined by a platform-specific specific
+algorithm. On Win32, we use the registry to see what directory Bochs and its
+support files were installed in. On MacOSX, the share directory is the directory
+where the application is located.
 </para>
 
 <para>
-Starting with version 2.0, you can can use #include in the bochsrc to read the
+You can use the <command>#include</command> statement in the bochsrc to read the
 configuration from other files. Now it is possible to put platform or
 installation defaults in a global config file (e.g. location of rom images).
 Put this on top of your config file if the global configuration is stored in /etc:
 <screen>
  #include /etc/bochsrc
 </screen>
+</para>
+
+<para>
+Bochs now treats unknown options as device plugin names. It tries to load this
+plugin and if successful it tries to call the parser function for this configuration
+line which is located in the plugin. This mechanism is implemented for the Bochs
+network, sound and USB devices. If there is a typo in an option name or an obsolete
+option is used, Bochs will panic and exit with a plugin load failure error
+message. In that case the failing line in your bochsrc file must be reviewed
+and fixed.
 </para>
 
 <para>
@@ -4203,11 +4213,12 @@ output devices to be used by sound emulation devices. Possible values
 for the driver parameter are 'default', 'dummy' (no input/output),
 'alsa' (if present) and 'sdl' (if present). For some drivers the wave
 devices must be specified. If the 'wavein' parameter is not set, Bochs
-uses the 'waveout' device for input, too.
+uses the 'waveout' device for input, too. See <xref linkend="using-sound">
+for more information.
 </para>
 </section>
 
-<section>
+<section id="bochsopt-speaker">
 <title>speaker</title>
 <para>
 Example:
@@ -4462,7 +4473,7 @@ version where this module was added.
     The TFTP server uses the 'ethdev' value for the root directory and doesn't
     overwrite files.
     </entry>
-    <entry>No</entry>
+    <entry>Yes, for TFTP</entry>
     <entry>Yes</entry>
     <entry>2.5</entry>
   </row>
@@ -4685,9 +4696,14 @@ See the example in the Bochs sources how to write a plugin device.
 <title>Sound Blaster 16 Emulation</title>
 
 <para>
+&FIXME; This section should be removed and the related section in the developer
+doc should be updated.
+</para>
+<para>
 This section is a detailed description for configuring Sound Blaster 16 from
 source. If you have a binary and all you want to know is what to put in your
-<filename>bochsrc</filename> file, see <link linkend="bochsopt-sb16">sb16 option</link>.
+<filename>bochsrc</filename> file, see the <link linkend="bochsopt-sb16">sb16</link>
+bochsrc option.
 </para>
 
 <para>
@@ -4789,96 +4805,10 @@ moment:
 
 <para>
 Setup the SB16 emulation in your <filename>bochsrc</filename>, according to instructions
-in that file (see <link linkend="bochsopt-sb16">sb16 option</link>).
+in that file (see <link linkend="bochsopt-sb16">sb16</link> option).
 </para>
 </section>
 
-<section><title>Runtime configuration</title>
-
-<para>
-The source for the SB16CTRL program that is used to modify
-the runtime behavior of the SB16 emulation is included in
-<filename class="directory">misc/sb16/</filename>. It is a C
-program that can be run from inside the emulation.
-</para>
-
-<para>
-It currently supports the following commands:
-</para>
-
-<table><title>Supported options for <command>sb16ctl</command></title>
-<tgroup cols="2">
-  <thead>
-    <row>
-      <entry>Option</entry>
-      <entry>Description</entry>
-   </row>
-  </thead>
-  <tbody>
-    <row>
-      <entry><option>-i <replaceable>number</replaceable></option></entry>
-      <entry>
-        Show the selected emulator info string,
-        e.g. <command>sb16ctrl -i 3</command> to show how many patch translations are active.
-      </entry>
-    </row>
-    <row>
-      <entry><option>-t <replaceable>six numbers</replaceable></option></entry>
-      <entry>
-        Load a translation into the translation table. The numbers are:
-        "OldBankMSB,OldBankLSB,OldProgram,NewBankMSB,NewBankLSB,NewProgram".
-        All values can be 0..127 or 255. 255 for "Old" values means <emphasis>match
-        any</emphasis> and for "New" values means <emphasis>don't change</emphasis>,
-        e.g. <command>sb16ctrl -t 255,255,0,255,255,32</command>
-        to change patch 0 (Piano) to patch 32 (Acoustic Bass).
-      </entry>
-    </row>
-    <row>
-      <entry><option>-r</option></entry>
-      <entry>
-        Reset the patch translation table e.g. <command>sb16ctrl -r</command>.
-      </entry>
-    </row>
-    <row>
-      <entry><option>-m <replaceable>some numbers</replaceable></option></entry>
-      <entry>
-        Upload the given numbers to the midi output device. Note
-        that it should be a complete midi message, and also that it is
-        subject to patch translation,
-        e.g. <command>sb16ctrl -m 0x80,64,0</command>
-        to send a note-off message to channel 0.
-      </entry>
-    </row>
-    <row>
-      <entry><option>-f <replaceable>filename</replaceable></option></entry>
-      <entry>
-        Read in a file and execute the commands in it. These have
-        the same format as the above commands, except that they don't have
-        the dash "-" in front of them.
-        Comment lines are supported and start with a hash sign "#".
-      </entry>
-    </row>
-    <row>
-      <entry><option>-h</option></entry>
-      <entry>
-        Show a brief summary of the commands.
-      </entry>
-    </row>
-  </tbody>
-</tgroup>
-</table>
-
-<para>
-All numbers can be valid parameters to the <function>strtol()</function> function, so hex and
-octal notation is fine. They have to be delimited by either commas "," or
-slashes "/", spaces are not allowed.
-</para>
-
-<para>
-The command line can have any number of commands. However, if none are given,
-"-f -" is assumed, which means commands are taken from stdin.
-</para>
-</section>
 </section>
 
 <section><title>Features planned for the future</title>
@@ -5332,7 +5262,7 @@ behavoiur of Bochs at runtime if you click on one of these buttons:
 </para>
 <para>&FIXME; Support for 2 button mouse to toggle the capture mode not yet complete.
   Some display libraries still don't support changing the mouse capture at runtime,
-  but it is already supported on RFB, SDL, Win32, wxWidgets and X11.</para>
+  but it is already supported on RFB, SDL, VNCSRV, Win32, wxWidgets and X11.</para>
 </listitem>
 <listitem>
 <para>user button</para>
@@ -5372,8 +5302,8 @@ platforms are using the fixed filenames "snapshot.txt" or "snapshot.bmp".</para>
 <listitem>
 <para>suspend button</para>
 <para>Press this button to save current simulation state to a disk. The simulation
-could be restored back using bochs -r command. For more details read
-"Save and restore simulation" section of the user manual.</para>
+could be restored back using bochs -r command. For more details read the
+<link linkend="using-save-restore">Save and restore simulation</link> section.</para>
 </listitem>
 <listitem>
 <para>power button</para>
@@ -5419,6 +5349,7 @@ more information (e.g. report debug messages).
 </para>
 </section>
 </section>
+
 <section id="using-save-restore"><title>Save and restore simulation</title>
 <para>
 Bochs has now full save/restore support. The state of cpu(s), memory, devices and
@@ -5450,6 +5381,199 @@ the state of the hardware and begins the simulation. In the restore mode Bochs
 will ignore bochsrc options from the command line and does not load a normal
 config file.
 </para>
+</section>
+
+<section id="using-sound"><title>Using sound</title>
+<section><title>Sound basics</title>
+<para>
+Bochs supports two types of soundcards (SB16 ISA and ES1370 PCI) and the legacy
+PC speaker. The lowlevel sound interface provides a set of functions for wave
+(PCM) input / output and MIDI output using the host sound system. A driver must
+not implement all of these functions. The following table shows the supported
+drivers and their features.
+<table><title>Sound lowlevel modules</title>
+<tgroup cols="4" align="left" colsep="1" rowsep="1">
+<thead>
+  <row>
+    <entry>Name</entry>
+    <entry>Description</entry>
+    <entry>Wave input</entry>
+    <entry>MIDI output</entry>
+  </row>
+</thead>
+<tbody>
+  <row>
+    <entry>alsa</entry>
+    <entry>use the default ALSA PCM device and the default ALSA sequencer
+    on Linux</entry>
+    <entry>Yes</entry>
+    <entry>Yes</entry>
+  </row>
+  <row>
+    <entry>oss</entry>
+    <entry>use the Open Sound System on Linux and FreeBSD</entry>
+    <entry>Yes</entry>
+    <entry>Yes</entry>
+  </row>
+  <row>
+    <entry>osx</entry>
+    <entry>for output on Mac OS 9 and Mac OSX</entry>
+    <entry>No</entry>
+    <entry>Yes</entry>
+  </row>
+  <row>
+    <entry>sdl</entry>
+    <entry>for wave output on platforms supported by SDL</entry>
+    <entry>No</entry>
+    <entry>No</entry>
+  </row>
+  <row>
+    <entry>win</entry>
+    <entry>for output to the midi and wave mapper of Windows</entry>
+    <entry>Yes</entry>
+    <entry>Yes</entry>
+  </row>
+</tbody>
+</tgroup>
+</table>
+</para>
+<para>
+These special values are also valid for the sound driver:
+<itemizedlist>
+<listitem><para><option>default</option> - select platform-default sound driver.</para></listitem>
+<listitem><para><option>dummy</option> - no output at all</para></listitem>
+</itemizedlist>
+</para>
+
+</section>
+<section><title>The PC speaker</title>
+<para>
+The PC speaker is connected to the PIT 8254 timer #2 and generates a square
+wave beep with a frequency depending on the timer value. In Bochs the
+speaker is a separate plugin that is controlled by the two events "beep on"
+and "beep off". The "beep on" event is also called when the frequency
+changes while turned on.
+</para>
+<para>
+The destination for the speaker output can be selected with the <option>mode</option>
+parameter of the <link linkend="bochsopt-speaker">speaker</link> option. Three choices are available:
+<itemizedlist>
+<listitem><para><option>sound</option> : the beep is generated by the square wave
+generator which is a part of the lowlevel sound support.</para></listitem>
+<listitem><para><option>system</option> : only available on Linux and Windows.
+On Linux /dev/console is used for output and on Windows the Beep() function.</para></listitem>
+<listitem><para><option>gui</option> : forwards the beep to the related gui methods
+(currently only used by the Carbon gui).</para></listitem>
+</itemizedlist>
+</para>
+</section>
+<section><title>SB16 runtime configuration</title>
+<para>
+The SB16 configuration parameters <option>loglevel</option> and <option>dmatimer</option>
+are available in the runtime configuration menu or dialog. In addition to this,
+there is a small program called <command>SB16CTRL</command> to change emulation
+settings from inside the simulation.
+</para>
+<section><title>Runtime options <option>loglevel</option> and <option>dmatimer</option></title>
+<para>
+Unlike other devices, the SB16 emulation has it's own logfile and a loglevel parameter
+to control what should be printed there. See the <link linkend="bochsopt-sb16">sb16</link>
+bochsrc option for details.
+</para>
+<para>
+The <option>dmatimer</option> parameter controls the DMA timing for wave (PCM)
+input and output. When you get non-continuous sound this value can be ajusted
+to fix this. This needs a reasonably correct setting for the
+<link linkend="bochsopt-cpu-ips">cpu: ips</link> option.
+</para>
+</section>
+<section><title>SB16CTRL</title>
+
+<para>
+The source for the SB16CTRL program that is used to modify
+the runtime behavior of the SB16 emulation is included in
+<filename class="directory">misc/sb16/</filename>. It is a C
+program that can be run from inside the emulation.
+</para>
+
+<para>
+It currently supports the following commands:
+</para>
+
+<table><title>Supported options for <command>sb16ctl</command></title>
+<tgroup cols="2">
+  <thead>
+    <row>
+      <entry>Option</entry>
+      <entry>Description</entry>
+   </row>
+  </thead>
+  <tbody>
+    <row>
+      <entry><option>-i <replaceable>number</replaceable></option></entry>
+      <entry>
+        Show the selected emulator info string,
+        e.g. <command>sb16ctrl -i 3</command> to show how many patch translations are active.
+      </entry>
+    </row>
+    <row>
+      <entry><option>-t <replaceable>six numbers</replaceable></option></entry>
+      <entry>
+        Load a translation into the translation table. The numbers are:
+        "OldBankMSB,OldBankLSB,OldProgram,NewBankMSB,NewBankLSB,NewProgram".
+        All values can be 0..127 or 255. 255 for "Old" values means <emphasis>match
+        any</emphasis> and for "New" values means <emphasis>don't change</emphasis>,
+        e.g. <command>sb16ctrl -t 255,255,0,255,255,32</command>
+        to change patch 0 (Piano) to patch 32 (Acoustic Bass).
+      </entry>
+    </row>
+    <row>
+      <entry><option>-r</option></entry>
+      <entry>
+        Reset the patch translation table e.g. <command>sb16ctrl -r</command>.
+      </entry>
+    </row>
+    <row>
+      <entry><option>-m <replaceable>some numbers</replaceable></option></entry>
+      <entry>
+        Upload the given numbers to the midi output device. Note
+        that it should be a complete midi message, and also that it is
+        subject to patch translation,
+        e.g. <command>sb16ctrl -m 0x80,64,0</command>
+        to send a note-off message to channel 0.
+      </entry>
+    </row>
+    <row>
+      <entry><option>-f <replaceable>filename</replaceable></option></entry>
+      <entry>
+        Read in a file and execute the commands in it. These have
+        the same format as the above commands, except that they don't have
+        the dash "-" in front of them.
+        Comment lines are supported and start with a hash sign "#".
+      </entry>
+    </row>
+    <row>
+      <entry><option>-h</option></entry>
+      <entry>
+        Show a brief summary of the commands.
+      </entry>
+    </row>
+  </tbody>
+</tgroup>
+</table>
+
+<para>
+All numbers can be valid parameters to the <function>strtol()</function> function, so hex and
+octal notation is fine. They have to be delimited by either commas "," or
+slashes "/", spaces are not allowed.
+</para>
+
+<para>
+The command line can have any number of commands. However, if none are given,
+"-f -" is assumed, which means commands are taken from stdin.
+</para>
+</section>
+</section>
 </section>
 </chapter>
 
