@@ -470,7 +470,8 @@ currently work with.
     <entry>Emulates a Sound Blaster 16 card (ISA, no plug&amp;play) or an ES1370 PCI
     card. On Windows, Linux, FreeBSD, MacOS 9, MacOSX and all platforms supported by
     SDL, the output can be sent to the host computer's sound system. For the SB16,
-    see <xref linkend="sb16-emulation"> for details.
+    see the <ulink url="../development/sb16-emulation-basics.html">developer documentation</ulink>
+    for details.
     </entry>
   </row>
   <row>
@@ -2103,10 +2104,10 @@ to explicitly turn it off.
       <entry>no</entry>
       <entry>
       Enable Sound Blaster emulation. The lowlevel sound interface is autodetected.
-      See section <link linkend="sb16-emulation">Sound Blaster 16 Emulation</link>
-      for supported platforms and more info. This option also enables the standard
-      PC gameport which is a part of the SB16. If you don't want to use it, you
-      might use <option>--disable-gameport</option>.
+      See section <link linkend="using-sound">Using Sound</link> for supported
+      platforms and more info. This option also enables the standard PC gameport
+      which is a part of the SB16. If you don't want to use it, you might use
+      <option>--disable-gameport</option>.
       </entry>
     </row>
     <row>
@@ -4201,7 +4202,7 @@ win32 platforms).
 </para>
 </section>
 
-<section>
+<section id="bochsopt-sound">
 <title>sound</title>
 <para>
 Example:
@@ -4246,7 +4247,7 @@ The example is wrapped onto several lines for formatting reasons, but it
 should all be on one line in the actual <filename>bochsrc</filename> file.
 </para></note>
 
-This defines the Sound Blaster 16 emulation, see <xref linkend="sb16-emulation">
+This defines the Sound Blaster 16 emulation, see the <ulink url="../development/sb16-emulation-basics.html">developer documentation</ulink>
 for more information. It can have several of the following properties. All properties
 are in the usual "property=value" format.
 
@@ -4690,143 +4691,6 @@ See the example in the Bochs sources how to write a plugin device.
 </section>
 
 </section> <!--end of bochsrc section-->
-
-<section id="sb16-emulation"> <!-- start of SB16 section-->
-
-<title>Sound Blaster 16 Emulation</title>
-
-<para>
-&FIXME; This section should be removed and the related section in the developer
-doc should be updated.
-</para>
-<para>
-This section is a detailed description for configuring Sound Blaster 16 from
-source. If you have a binary and all you want to know is what to put in your
-<filename>bochsrc</filename> file, see the <link linkend="bochsopt-sb16">sb16</link>
-bochsrc option.
-</para>
-
-<para>
-The original version of the Sound Blaster 16 (SB16) emulation for Bochs was
-written and donated by Josef Drexler. The entire set of his SB16 patches have
-been integrated into Bochs, however, so you can find everything you need here.
-</para>
-
-<section><title>How well does it work?</title>
-<para>
-Right now, MPU401 emulation is next to perfect. It supports UART
-and SBMIDI mode, because the SB16's MPU401 ports can't do anything else as well.
-</para>
-
-<para>
-The digital audio basically works, but the emulation is too slow for fluent
-output unless the application doesn't do much in the background (or the
-foreground, really). The sound tends to looping or crackle on slower
-computer, but the emulation appears to be correct. Even a MOD
-player works, although only for lower sampling speeds.
-</para>
-<para>
-Also, the MIDI data running through the MPU401 ports can be written
-into a SMF, that is the standard midi file. The wave output
-can be written into a VOC file, which has a format defined by
-Creative Labs. This file format can be converted to WAV by
-sox for example.
-</para>
-</section>
-
-<section><title>Output to a sound card</title>
-
-<para>
-Output is supported on Windows, Linux, FreeBSD, MacOS 9, MacOSX and platforms supported
-by SDL.
-</para>
-<para>
-On Linux, the output goes to any file or device. If you have a wavetable synthesizer,
-midi can go to <filename class="devicefile">/dev/midi00</filename>, otherwise you may need
-a midi interpreter. For example, the midid program from the DosEmu project would work.
-Wave output should go to <filename class="devicefile">/dev/dsp</filename>. These devices
-are assumed to be OSS devices, if they're not some of the ioctl's might fail.
-If ALSA is present on Linux and the sound driver is set to <filename>alsa</filename>,
-Bochs uses it's default PCM output device.
-</para>
-<para>
-On Windows, midi and (wave) output go to the midi mapper and the wave mapper,
-respectively. A future version might have selectable output devices.
-</para>
-</section>
-
-<section><title>Installation on Linux</title>
-
-<section><title>Prerequisites</title>
-
-<para>
-A wavetable synthesizer on <filename class="devicefile">/dev/midi00</filename>
-and a working <filename class="devicefile">/dev/dsp</filename> if you want real
-time music and sound, otherwise output to midi and wave files is also possible.
-Optionally, you can use a software midi interpreter, such as the midid program
-from the DosEmu project instead of <filename class="devicefile">/dev/midi00</filename>.
-</para>
-</section>
-
-<section><title>Configuring Bochs</title>
-
-<para>
-You need to <command>configure</command> Bochs using the <option>--enable-sb16</option>
-option.
-There are a few values in <filename>config.h</filename> that are relevant to the
-sound functions. Editing <filename>config.h</filename> after running configure
-is usually not necessary, since it detects the available drivers and enables them
-for the compilation.
-</para>
-
-<para>
-BX_USE_SB16_SMF should be 1 unless you intend to have several sound cards
-running at the same time.
-</para>
-
-<para>
-BX_SOUND_OUTPUT_C is the name of the class used as the "default" sound driver for
-output.  The default value of this setting is the dummy driver with no output. The
-configure script usually changes this value. The following are supported at the
-moment:
-</para>
-
-<programlisting>
-        bx_sound_linux_c    for output to /dev/dsp and /dev/midi00 on Linux,
-                            FreeBSD and maybe other OSes that use the OSS driver.
-        bx_sound_windows_c  for output to the midi and wave mapper of
-                            Windows 3.1 and higher.
-        bx_sound_alsa_c     for output to the default ALSA PCM device and the
-                            default ALSA sequencer.
-        bx_sound_osx_c      for output on Mac OS 9 and Mac OSX.
-        bx_sound_sdl_c      for wave output on platforms supported by SDL.
-        bx_sound_output_c   for no output at all.
-</programlisting>
-
-<para>
-Setup the SB16 emulation in your <filename>bochsrc</filename>, according to instructions
-in that file (see <link linkend="bochsopt-sb16">sb16</link> option).
-</para>
-</section>
-
-</section>
-
-<section><title>Features planned for the future</title>
-<itemizedlist>
-<listitem><para>Port it to more OS's.</para></listitem>
-<listitem><para>Finish the OPL3 FM emulation by translating the music to midi data.</para></listitem>
-</itemizedlist>
-</section>
-
-<section>
-<title>Description of the sound output classes</title>
-<para>
-You can find a description of the sound output classes and more details on
-Sound Blaster 16 emulation in the
-<ulink url="../development/sb16-emulation-basics.html">developer documentation</ulink>.
-</para>
-</section>
-</section> <!-- end of SB16 section-->
 
 <section id="keymap"><title>How to write your own keymap table</title>
 <para>
@@ -5444,7 +5308,17 @@ These special values are also valid for the sound driver:
 <listitem><para><option>dummy</option> - no output at all</para></listitem>
 </itemizedlist>
 </para>
-
+<para>
+When compiling Bochs, the lowlevel sound support is activated if one of the soundcards
+is enabled (<option>--enable-sb16</option> or <option>--enable-es1370</option>).
+The configure script detects the available drivers and sets up a platform-default
+one.
+</para>
+<para>
+At runtime the lowlevel sound module will be loaded automatically if one of the
+sound devices is enabled in the <filename>bochsrc</filename>. The driver and the
+wave input and output devices must be set up with the <link linkend="bochsopt-sound">sound</link> option.
+</para>
 </section>
 <section><title>The PC speaker</title>
 <para>
@@ -5487,7 +5361,7 @@ to fix this. This needs a reasonably correct setting for the
 <link linkend="bochsopt-cpu-ips">cpu: ips</link> option.
 </para>
 </section>
-<section><title>SB16CTRL</title>
+<section id="sb16ctrl"><title>SB16CTRL</title>
 
 <para>
 The source for the SB16CTRL program that is used to modify

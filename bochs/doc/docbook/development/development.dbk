@@ -702,22 +702,18 @@ LOC	NOTES	MEANING
 <section id="sb16-emulation-basics"> <!-- start of SB16 section-->
 
 <title>Sound Blaster 16 Emulation</title>
-<note><para>
-  A little more up-to-date version of the user related part of this section is
-  available in the <ulink url="../user/sb16-emulation.html">user guide</ulink>.
-</para></note>
+
 <para>
-Sound Blaster 16 (SB16) emulation for Bochs was written and donated by
-Josef Drexler, who has a
-<ulink url="http://publish.uwo.ca/~jdrexler/bochs/">web page</ulink> on the topic.
-  The entire set of his SB16 patches have been integrated into
-Bochs, however, so you can find everything you need here.
+This section is a detailed description for configuring Sound Blaster 16 from
+source. If you have a binary and all you want to know is what to put in your
+<filename>bochsrc</filename> file, see the <ulink url="../user/bochsrc.html#BOCHSOPT-SB16">sb16</ulink>
+bochsrc option in the user guide.
 </para>
 
 <para>
-SB16 Emulation has been tested with several soundcards and versions of Linux.  Please give
-Josef <ulink url="mailto:jdrexler@julian.uwo.ca">feedback</ulink> on
-whether is does or doesn't work on your combination of software and hardware.
+The original version of the Sound Blaster 16 (SB16) emulation for Bochs was
+written and donated by Josef Drexler. The entire set of his SB16 patches have
+been integrated into Bochs, however, so you can find everything you need here.
 </para>
 
 <section><title>How well does it work?</title>
@@ -745,14 +741,20 @@ sox for example.
 <section><title>Output to a sound card</title>
 
 <para>
-Output is supported on Linux and Windows 95 at the moment.
-On Linux, the output goes to any file or device. If you have a
-wavetable synthesizer, midi can go to /dev/midi00, otherwise you may need
-a midi interpreter. For example, the midid program from the
-DosEmu project would work. Wave output should go to /dev/dsp.
-These devices are assumed to be OSS devices, if they're not
-some of the ioctl's might fail.
-On Windows, midi and output goes to the midi mapper and the wave mapper,
+Output is supported on Windows, Linux, FreeBSD, MacOS 9, MacOSX and platforms supported
+by SDL.
+</para>
+<para>
+On Linux, the output goes to any file or device. If you have a wavetable synthesizer,
+midi can go to <filename class="devicefile">/dev/midi00</filename>, otherwise you may need
+a midi interpreter. For example, the midid program from the DosEmu project would work.
+Wave output should go to <filename class="devicefile">/dev/dsp</filename>. These devices
+are assumed to be OSS devices, if they're not some of the ioctl's might fail.
+If ALSA is present on Linux and the sound driver is set to <filename>alsa</filename>,
+Bochs uses it's default PCM output device.
+</para>
+<para>
+On Windows, midi and (wave) output go to the midi mapper and the wave mapper,
 respectively. A future version might have selectable output devices.
 </para>
 </section>
@@ -764,16 +766,23 @@ respectively. A future version might have selectable output devices.
 </para>
 
 <para>
-A wavetable synthesizer on /dev/midi00 and a working /dev/dsp if you want real time music and sound, otherwise output to midi and wave files is also possible.
-Optionally, you can use a software midi interpreter, such as the midid program from the DosEmu project instead of /dev/midi00.
+A wavetable synthesizer on <filename class="devicefile">/dev/midi00</filename>
+and a working <filename class="devicefile">/dev/dsp</filename> if you want real
+time music and sound, otherwise output to midi and wave files is also possible.
+Optionally, you can use a software midi interpreter, such as the midid program
+from the DosEmu project instead of <filename class="devicefile">/dev/midi00</filename>.
 </para>
 </section>
 
 <section><title>Configuring Bochs</title>
 
 <para>
-There are a few values in config.h that are relevant to the sound functions.
-Edit config.h after running configure, but before compiling.
+You need to <command>configure</command> Bochs using the <option>--enable-sb16</option>
+option.
+There are a few values in <filename>config.h</filename> that are relevant to the
+sound functions. Editing <filename>config.h</filename> after running configure
+is usually not necessary, since it detects the available drivers and enables them
+for the compilation.
 </para>
 
 <para>
@@ -782,49 +791,51 @@ running at the same time.
 </para>
 
 <para>
-BX_SOUND_OUTPUT_C is the name of the class used for output.  The default is
-to have no output functions, so you need to change this if you want any sound.
-The following are supported at the moment:
+BX_SOUND_OUTPUT_C is the name of the class used as the "default" sound driver for
+output.  The default value of this setting is the dummy driver with no output. The
+configure script usually changes this value. The following are supported at the
+moment:
 </para>
 
 <programlisting>
-        bx_sound_linux_c    for output to /dev/dsp and /dev/midi00 on Linux
-                            (and maybe other OSes that use the OSS driver)
+        bx_sound_linux_c    for output to /dev/dsp and /dev/midi00 on Linux,
+                            FreeBSD and maybe other OSes that use the OSS driver.
         bx_sound_windows_c  for output to the midi and wave mapper of
                             Windows 3.1 and higher.
+        bx_sound_alsa_c     for output to the default ALSA PCM device and the
+                            default ALSA sequencer.
+        bx_sound_osx_c      for output on Mac OS 9 and Mac OSX.
+        bx_sound_sdl_c      for wave output on platforms supported by SDL.
         bx_sound_output_c   for no output at all.
 </programlisting>
 
 <para>
-Setup the SB16 emulation in your .bochsrc, according to instructions
-in that file.
+Setup the SB16 emulation in your <filename>bochsrc</filename>, according to instructions
+in that file (see <ulink url="../user/bochsrc.html#BOCHSOPT-SB16">sb16</ulink> option
+in the user guide).
 </para>
 </section>
 
 <section><title>Runtime configuration</title>
 
 <para>
-The source for the SB16CTRL program that is used to modify
+The source and the DOS executable for the SB16CTRL program that is used to modify
 the runtime behaviour of the SB16 emulator is included in
-misc/sb16. You can compile it or download the
-<ulink url="http://publish.uwo.ca/~jdrexler/bochs/">executable</ulink>.
+misc/sb16.
 </para>
 
 <para>
-See the section "Sound Blaster 16 Emulation" in the user documentation for
-information about the commands of SB16CTRL.
+See the section <ulink url="../user/using-sound.html#SB16CTRL">SB16CTRL</ulink>
+in the user documentation for information about the commands of SB16CTRL.
 </para>
-</section>
-
-<section><title>Features planned for the future</title>
-<itemizedlist>
-<listitem><para>Ports to more OS's, but I can't do this myself</para></listitem>
-<listitem><para>Finishing the OPL3 FM emulation by translating the music to midi data</para></listitem>
-</itemizedlist>
 </section>
 
 <section>
 <title>Description of the sound output classes</title>
+
+<para>
+&FIXME; The sections below are not up-to-date yet!
+</para>
 
 <para>
 This file is intended for programmers who would like to port the sound
