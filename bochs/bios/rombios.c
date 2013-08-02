@@ -9561,7 +9561,7 @@ bios32_entry_point:
   in  eax, dx
 #ifdef PCI_FIXED_HOST_BRIDGE
   cmp eax, #PCI_FIXED_HOST_BRIDGE
-  jne unknown_service
+  je pci_found
 #ifdef PCI_FIXED_HOST_BRIDGE2
   cmp eax, #PCI_FIXED_HOST_BRIDGE2
   jne unknown_service
@@ -9571,6 +9571,7 @@ bios32_entry_point:
   cmp eax, #0xffffffff
   je unknown_service
 #endif
+pci_found:
   mov ebx, #0x000f0000
   mov ecx, #0x10000
   mov edx, #pcibios_protected
