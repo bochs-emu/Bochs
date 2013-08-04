@@ -138,7 +138,7 @@ void beep_thread(void *indata)
 #endif
 {
   Bit8u level;
-  int i, j;
+  int i, j, ret;
 
   bx_sound_lowlevel_c *soundmod = (bx_sound_lowlevel_c*)indata;
   level = 0x40;
@@ -149,7 +149,8 @@ void beep_thread(void *indata)
       beep_buffer[j++] = level;
       if ((++i % beep_bytes) == 0) level ^= 0x40;
     } while (j < beep_bufsize);
-    soundmod->sendwavepacket(beep_bufsize, beep_buffer);
+    ret = soundmod->sendwavepacket(beep_bufsize, beep_buffer);
+    if (ret == BX_SOUNDLOW_ERR) break;
     if (soundmod->get_type() == BX_SOUNDLOW_WIN) {
 #ifdef WIN32
       Sleep(100);

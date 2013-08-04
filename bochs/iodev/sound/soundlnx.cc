@@ -193,8 +193,11 @@ int bx_sound_linux_c::startwaveplayback(int frequency, int bits, bx_bool stereo,
 
 int bx_sound_linux_c::sendwavepacket(int length, Bit8u data[])
 {
-  int ret = write(wave_fd[0], data, length);
+  if (wave_fd[0] == -1) {
+    return BX_SOUNDLOW_ERR;
+  }
 
+  int ret = write(wave_fd[0], data, length);
   if (ret == length) {
     return BX_SOUNDLOW_OK;
   } else {
