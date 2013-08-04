@@ -34,7 +34,15 @@ bx_address bx_asize_mask[] = {
 #endif
 };
 
-#define BX_MAX_MEM_ACCESS_LENGTH 64
+#if BX_SUPPORT_EVEX
+  #define BX_MAX_MEM_ACCESS_LENGTH 64
+#else
+  #if BX_SUPPORT_AVX
+    #define BX_MAX_MEM_ACCESS_LENGTH 32
+  #else
+    #define BX_MAX_MEM_ACCESS_LENGTH 16
+  #endif
+#endif
 
   bx_bool BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length)

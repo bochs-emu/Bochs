@@ -594,31 +594,23 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EqGqR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG16B(bxInstruction_c *i)
 {
-  Bit64u diff;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  bx_address laddr = get_laddr64(i->seg(), eaddr);
-  if (laddr & 0xf) {
-    BX_ERROR(("CMPXCHG16B: not aligned memory location (#GP)"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
+
+  Bit64u op1_64_lo, op1_64_hi, diff;
 
   // check write permission for following write
-  Bit64u op1_64_lo = read_RMW_virtual_qword_64(i->seg(), eaddr);
-  Bit64u op1_64_hi = read_RMW_virtual_qword_64(i->seg(), (eaddr + 8) & i->asize_mask());
+  read_RMW_virtual_dqword_aligned_64(i->seg(), eaddr, &op1_64_hi, &op1_64_lo);
 
   diff  = RAX - op1_64_lo;
   diff |= RDX - op1_64_hi;
 
   if (diff == 0) {  // if accumulator == dest
-    // dest <-- src (RCX:RBX)
-    write_RMW_virtual_qword(RCX);
-    // write permissions already checked by read_RMW_virtual_qword_64
-    write_virtual_qword_64(i->seg(), eaddr, RBX);
+    write_RMW_virtual_dqword(RCX, RBX);
     assert_ZF();
   }
   else {
     clear_ZF();
+    write_RMW_virtual_dqword(op1_64_hi, op1_64_lo);
     // accumulator <-- dest
     RAX = op1_64_lo;
     RDX = op1_64_hi;
