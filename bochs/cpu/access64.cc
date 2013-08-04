@@ -1043,7 +1043,7 @@ void BX_CPU_C::read_RMW_virtual_dqword_aligned_64(unsigned s, Bit64u offset, Bit
       Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
       pageWriteStampTable.decWriteStamp(pAddr, 16);
       ReadHostQWordFromLittleEndian(hostAddr,     *lo);
-      ReadHostQWordFromLittleEndian(hostAddr + 8, *hi);
+      ReadHostQWordFromLittleEndian(hostAddr + 1, *hi);
       BX_CPU_THIS_PTR address_xlation.pages = (bx_ptr_equiv_t) hostAddr;
       BX_CPU_THIS_PTR address_xlation.paddress1 = pAddr;
       BX_NOTIFY_LIN_MEMORY_ACCESS(laddr,     pAddr,     8, CPL, BX_RW, (Bit8u*) lo);
