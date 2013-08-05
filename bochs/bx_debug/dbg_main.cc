@@ -638,11 +638,9 @@ void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, 
   if (! BX_CPU(cpu)->trace_mem)
     return;
 
-  bx_bool write = rw & 1;
-
   dbg_printf("[CPU%d %s]: LIN 0x" FMT_ADDRX " PHY 0x" FMT_PHY_ADDRX " (len=%d, pl=%d)",
      cpu, 
-     (write) ? "WR" : "RD",
+     (rw == BX_WRITE) ? "WR" : "RD",
      lin, phy,
      len, pl);
 
@@ -729,11 +727,9 @@ void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, un
     "SMRAM"
   };
 
-  bx_bool write = rw & 1;
-
   dbg_printf("[CPU%d %s]: PHY 0x" FMT_PHY_ADDRX " (len=%d)",
      cpu, 
-     (write) ? "WR" : "RD",
+     (rw == BX_WRITE) ? "WR" : "RD",
      phy,
      len);
 
