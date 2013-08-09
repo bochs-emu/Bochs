@@ -741,8 +741,8 @@ sox for example.
 <section><title>Output to a sound card</title>
 
 <para>
-Output is supported on Windows, Linux, FreeBSD, MacOS 9, MacOSX and platforms supported
-by SDL.
+Output to the host sound system is supported on Windows, Linux, FreeBSD, MacOS 9,
+MacOSX and platforms supported by SDL.
 </para>
 <para>
 On Linux, the output goes to any file or device. If you have a wavetable synthesizer,
@@ -751,26 +751,14 @@ a midi interpreter. For example, the midid program from the DosEmu project would
 Wave output should go to <filename class="devicefile">/dev/dsp</filename>. These devices
 are assumed to be OSS devices, if they're not some of the ioctl's might fail.
 If ALSA is present on Linux and the sound driver is set to <filename>alsa</filename>,
-Bochs uses it's default PCM output device.
+Bochs uses it's default PCM output device and MIDI sequencer.
 </para>
 <para>
 On Windows, midi and (wave) output go to the midi mapper and the wave mapper,
 respectively. A future version might have selectable output devices.
 </para>
-</section>
-
-<section><title>Installation on Linux</title>
-
 <para>
-<emphasis>Prerequisites:</emphasis>
-</para>
-
-<para>
-A wavetable synthesizer on <filename class="devicefile">/dev/midi00</filename>
-and a working <filename class="devicefile">/dev/dsp</filename> if you want real
-time music and sound, otherwise output to midi and wave files is also possible.
-Optionally, you can use a software midi interpreter, such as the midid program
-from the DosEmu project instead of <filename class="devicefile">/dev/midi00</filename>.
+See the next section for more information about the sound lowlevel interface.
 </para>
 </section>
 
@@ -791,7 +779,7 @@ running at the same time.
 </para>
 
 <para>
-BX_SOUND_OUTPUT_C is the name of the class used as the "default" sound driver for
+BX_SOUND_LOWLEVEL_C is the name of the class used as the "default" sound driver for
 output.  The default value of this setting is the dummy driver with no output. The
 configure script usually changes this value. The following are supported at the
 moment:
@@ -830,12 +818,10 @@ in the user documentation for information about the commands of SB16CTRL.
 </para>
 </section>
 
-<section>
-<title>Description of the sound output classes</title>
+</section> <!-- end of SB16 section-->
 
-<para>
-&FIXME; The sections below are not up-to-date yet!
-</para>
+<section id="sound-lowlovel-basics">
+<title>The sound lowlevel interface</title>
 
 <para>
 This file is intended for programmers who would like to port the sound
@@ -843,57 +829,60 @@ output routines to their platform. It gives a short outline what services
 have to be provided.
 </para>
 <para>
-You should also have a look at the exisiting files, <emphasis>SOUNDLNX.CC</emphasis>
-for Linux and <emphasis>SOUNDWIN.CC</emphasis> for Windows and their respective
-header files to get an idea about how these things really work.
+You should also have a look at the exisiting files, <emphasis>SOUNDMOD.CC</emphasis>
+and e.g. <emphasis>SOUNDLNX.CC</emphasis> for Linux or <emphasis>SOUNDWIN.CC</emphasis>
+for Windows and their respective header files to get an idea about how these things
+really work.
 </para>
-</section>
 
 <section><title>Files</title>
 
 <para>
-The main include file is <emphasis>bochs.h</emphasis>. It has all definitions
-for the system-independent functions that the SB16 emulation uses, which
-are defined in <emphasis>sb16.h</emphasis>.
+The main include file for a lowlevel sound driver is <emphasis>iodev.h</emphasis>.
+It has all definitions for the system-independent functions that a sound driver
+uses. The sound driver also needs to include <emphasis>soundmod.h</emphasis> for
+the definition of the base class <emphasis>bx_sound_output_c</emphasis>.
 </para>
 
 <para>
-Additionally, every output driver will have an include file, which
-should be included at the end of sb16.h to allow the emulator
-to use that driver.
+Additionally, every output driver will have an include file, which should be
+included on top of <filename>soundmod.cc</filename> to allow the emulator
+to use that driver. A soundcard does not need to include the specific driver
+header.
 </para>
 
 <para>
-To actually make the emulator use any specific driver,
-<emphasis>BX_SOUND_OUTPUT_C</emphasis> has to be set to the name of the respective
-output class.
+To actually make the emulator use any specific driver as the default,
+<emphasis>BX_SOUND_LOWLEVEL_C</emphasis> has to be set to the name of the
+respective output class.
 </para>
 
 <para>
 Note that if your class contains any system-specific statements,
 include-files and so on, you should enclose both the include-file and
 the CC-file in an <emphasis>#if defined</emphasis> (OS-define) construct.
-Also don't forget to add your file to the object list in
-iodev/Makefile and iodev/Makefile.in.
+Also don't forget to add your file to the list of lowlevel sound object
+files (<emphasis>SOUNDLOW_OBJS</emphasis>) in the file <emphasis>configure.in</emphasis>
+and to regenerate the configure script,
 </para>
 </section>
 
 <section><title>Classes</title>
 
 <para>
-The following classes are involved with the SB16 emulation:
+The following classes are involved with the sound lowlevel interface:
 </para>
 <itemizedlist>
 <listitem><para>
-<emphasis>bx_sb16_c</emphasis> is the class containing the emulator itself, that
-is the part acting on port accesses by the application, handling the
-DMA transfers and so on. It also prepares the data for the output
-classes.
+<emphasis>bx_soundmod_ctl_c</emphasis> is a pseudo device that is used to
+initialize the sound driver depending on the configuration. In addition to
+this, it has methods for the PC speaker beep generation and the VOC file
+output.
 </para></listitem>
 
 <listitem><para>
 <emphasis>bx_sound_output_c</emphasis> is the base output class. It has all
-the methods used by the emulator, but only as stubs and does not
+the methods used by the soundcard emulation, but only as stubs and does not
 actually produce any output. These methods are then called by
 the emulator whenever output is necessary.
 </para></listitem>
@@ -902,56 +891,82 @@ the emulator whenever output is necessary.
 <emphasis>bx_sound_OS_c</emphasis> is derived from
 <emphasis>bx_sound_output_c</emphasis>. It contains the code to generate
 output for the <emphasis>OS</emphasis> operating system.
-It is necessary to override all
-the methods defined in the base class, unless virtual functions
-are used. Note that this should remain an option, so try to
-override all methods, even if only as stubs. They should be
-declared <emphasis>virtual</emphasis> if and only if <emphasis>BX_USE_SOUND_VIRTUAL</emphasis>
-is defined, just as in the examples.
-The constructor should call the inherited constructor
-as usual, even though the current constructor does not do
-anything yet.
+It is not necessary to override all the methods defined in the base class, since
+virtual functions are used. The constructor should call the inherited constructor
+as usual, even though the current constructor does not do anything yet.
 </para></listitem>
 </itemizedlist>
 </section>
 
-
-<section><title>Methods</title>
+<section><title>The base class <emphasis>bx_sound_output_c</emphasis></title>
 <para>
-The following are the methods that the output class has to override.
-All but constructor and destructor have to return either
-<emphasis>BX_SOUND_OUTPUT_OK</emphasis> <emphasis>(0)</emphasis> if the function was successful,
-or <emphasis>BX_SOUND_OUTPUT_ERR</emphasis> <emphasis>(1)</emphasis> if not. If any of the initialization
-functions fail, output to that device is disabled until the emulator is restarted.
+<screen>
+class bx_sound_lowlevel_c : public logfunctions {
+public:
+
+  bx_sound_lowlevel_c();
+  virtual ~bx_sound_lowlevel_c();
+
+  virtual int get_type() {return BX_SOUNDLOW_DUMMY;}
+
+  virtual int waveready();
+  virtual int midiready();
+
+  virtual int openmidioutput(const char *mididev);
+  virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
+  virtual int closemidioutput();
+
+  virtual int openwaveoutput(const char *wavedev);
+  virtual int startwaveplayback(int frequency, int bits, bx_bool stereo, int format);
+  virtual int sendwavepacket(int length, Bit8u data[]);
+  virtual int stopwaveplayback();
+  virtual int closewaveoutput();
+
+  virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
+  virtual int startwaverecord(int frequency, int bits, bx_bool stereo, int format);
+  virtual int getwavepacket(int length, Bit8u data[]);
+  virtual int stopwaverecord();
+  virtual int closewaveinput();
+
+  static void record_timer_handler(void *);
+  void record_timer(void);
+protected:
+  int record_timer_index;
+  int record_packet_size;
+  sound_record_handler_t record_handler;
+};
+</screen>
+The base class for sound lowlevel syupport is derived from the <emphasis>logfunctions</emphasis>
+class to make the Bochs logging capabilities available in the sound driver code.
+It contains the framework for wave input (recording) support. The base class is
+in use if the "dummy" sound driver is selected or in case no platform or library
+specific implementation is available.
 </para>
 </section>
 
-<section><title>bx_sound_OS_c(bx_sb16_c*sb16)</title>
+<section><title>Methods</title>
+<para>
+The following are the methods that the sound driver class has to override.
+All but constructor and destructor have to return either
+<emphasis>BX_SOUNDLOW_OK</emphasis> <emphasis>(0)</emphasis> if the function
+was successful, or <emphasis>BX_SOUNDLOW_ERR</emphasis> <emphasis>(1)</emphasis>
+if not. If any of the initialization functions fail, output to that device is
+disabled until the emulator is restarted.
+</para>
+
+<section><title>bx_sound_OS_c()</title>
 
 <para>
 The emulator instantiates the class at the initialization of Bochs.
 </para>
 
 <para>
-Description of the parameter:
-</para>
-
-<itemizedlist>
-<listitem><para>
-<emphasis>sb16</emphasis> is a pointer to the emulator class.
-This pointer can then be used to access for example the <emphasis>writelog</emphasis> function to generate
-sound-related log messages. Apart from that, no access to the emulator
-should be necessary.
-</para></listitem>
-
-<listitem><para>
 The constructor should <emphasis>not</emphasis> allocate the output devices.
 This shouldn't be done until the actual output occurs; in either
-<emphasis>initmidioutput()</emphasis> or <emphasis>initwaveoutput()</emphasis>.
+<emphasis>openmidioutput()</emphasis> or <emphasis>openwaveoutput()</emphasis>.
 Otherwise it would be impossible to have two copies of Bochs running
 concurrently (if anybody ever wants to do this).
-</para></listitem>
-</itemizedlist>
+</para>
 </section>
 
 <section><title>~bx_sound_OS_c()</title>
@@ -961,25 +976,28 @@ The instance is destroyed just before Bochs ends.
 </para>
 </section>
 
+<section><title>int get_type()</title>
+<para>
+Returns.the ID of the sound driver module. The default value is <emphasis>BX_SOUNDLOW_DUMMY</emphasis>.
+New values should be added to the list in <emphasis>soundmod.h</emphasis>.
+</para>
+</section>
+
 <section><title>int openmidioutput(char *device)</title>
 
 <itemizedlist>
 <listitem><para>
 <emphasis>openmidioutput()</emphasis> is called when the first midi output starts.
-It is only called if the midi output mode is 1 (midimode 1). It should
+It is only called if the midi output to the driver is active (midimode 1). It should
 prepare the given MIDI hardware for receiving midi commands.
 </para></listitem>
-
-<listitem><para>
-<emphasis>openmidioutput()</emphasis> will always be called before <emphasis>openwaveoutput()</emphasis>,
-and <emphasis>closemidioutput()</emphasis>will always be called before <emphasis>closewaveoutput()</emphasis>, but not in all cases will both functions be called.
-</para></listitem>
 </itemizedlist>
-</section>
 
-<section>
-<title>Description of the parameters:</title>
+<para>
+Description of the parameters:
+</para>
 
+<para>
 <itemizedlist>
 
 <listitem><para>
@@ -994,6 +1012,7 @@ may not have the same value throughout one session, but it will be closed
 before it is changed.
 </para></listitem>
 </itemizedlist>
+</para>
 </section>
 
 <section><title>int midiready()</title>
@@ -1009,11 +1028,11 @@ Return values:
 
 <itemizedlist>
 <listitem><para>
-<emphasis>BX_SOUND_OUTPUT_OK</emphasis> if the midi output device is ready.
+<emphasis>BX_SOUNDLOW_OK</emphasis> if the midi output device is ready.
 </para></listitem>
 
 <listitem><para>
-<emphasis>BX_SOUND_OUTPUT_ERR</emphasis> if it isn't ready.
+<emphasis>BX_SOUNDLOW_ERR</emphasis> if it isn't ready.
 </para></listitem>
 </itemizedlist>
 
@@ -1095,8 +1114,13 @@ Reset and close the midi output device
 <section><title>int openwaveoutput(char *device)</title>
 
 <para>
+&FIXME; The wave output descriptions still need to be reviewed !
+</para>
+
+<para>
 <emphasis>openwaveoutput()</emphasis> is called when the first wave output occurs,
-and only if the selected wavemode is 1. It should do the following:
+and only if output to the sound driver (wavemode 1) is selected. It should do the
+following:
 </para>
 
 <itemizedlist>
@@ -1112,11 +1136,6 @@ Open the given device, and prepare it for wave output
 Store the device name so that the device can be opened in <emphasis>startplayback()</emphasis>.
 </para></listitem>
 </itemizedlist>
-
-<para>
-<emphasis>openmidioutput()</emphasis> will always be called before <emphasis>openwaveoutput()</emphasis>,
-and <emphasis>closemidioutput()</emphasis>will always be called before <emphasis>closewaveoutput()</emphasis>, but not in all cases will both functions be called.
-</para>
 
 <para>
 <emphasis>openwaveoutput()</emphasis> will typically be called once, whereas
@@ -1150,8 +1169,8 @@ tries to synchronize it with for example graphics.
 <listitem><para>
 <emphasis>device</emphasis> is the wave device selected by
 the user. It is strictly system-dependent. The value is that of the
-<emphasis>WAVE=device</emphasis>
-configuration option.
+<emphasis>waveout=device</emphasis>
+configuration parameter of the <emphasis>sound</emphasis> option.
 </para></listitem>
 </itemizedlist>
 
@@ -1268,8 +1287,8 @@ is done or aborted.
 
 <para>
 It should return whether the output device is ready for another buffer
-of <emphasis>BX_SOUND_OUTPUT_WAVEPACKETSIZE</emphasis> bytes.
-If <emphasis>BX_SOUND_OUTPUT_ERR</emphasis>
+of <emphasis>BX_SOUNDLOW_WAVEPACKETSIZE</emphasis> bytes.
+If <emphasis>BX_SOUNDLOW_ERR</emphasis>
 is returned, the emulator waits about 1/(frequency * bytes per sample) seconds
 and then asks again. The DMA transfer is stalled during that time, but
 the application keeps running, until the output device becomes ready.
@@ -1388,8 +1407,27 @@ Bochs was running. This is not supported at the moment, but might be in
 the future.
 </para>
 </section>
+</section>
 
-</section> <!-- end of SB16 section-->
+<section><title>Methods and members for wave input (recording) support</title>
+<para>
+The wave input feature is relatively new in Bochs. If a lowlevel driver does not
+implement recording, the methods of the base class ("dummy" driver) are used. They
+return silence to let the input mechanism of the soundcard emulation work. The
+soundcard emulator object needs to implement a callback function to notifies
+the emulation about available data. This function usually calls the driver method
+to get the wave data packet. The driver objects has a periodic timer with an
+interval of 0.1 emulated seconds that is active during recording. The timer
+handler processes the wave data recorded with platform or library specific
+function and finally notifies the emulator.
+</para>
+<para>
+&FIXME; To be completed.
+</para>
+
+</section>
+
+</section>
 
 <section id="harddisk-redologs"><title>Harddisk Images based on redologs</title>
 <para>
