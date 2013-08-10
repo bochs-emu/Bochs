@@ -936,7 +936,7 @@ protected:
   sound_record_handler_t record_handler;
 };
 </screen>
-The base class for sound lowlevel syupport is derived from the <emphasis>logfunctions</emphasis>
+The base class for sound lowlevel support is derived from the <emphasis>logfunctions</emphasis>
 class to make the Bochs logging capabilities available in the sound driver code.
 It contains the framework for wave input (recording) support. The base class is
 in use if the "dummy" sound driver is selected or in case no platform or library
@@ -1114,13 +1114,8 @@ Reset and close the midi output device
 <section><title>int openwaveoutput(char *device)</title>
 
 <para>
-&FIXME; The wave output descriptions still need to be reviewed !
-</para>
-
-<para>
-<emphasis>openwaveoutput()</emphasis> is called when the first wave output occurs,
-and only if output to the sound driver (wavemode 1) is selected. It should do the
-following:
+<emphasis>openwaveoutput()</emphasis> is called when the sound subsystem
+initializes. It should do the following:
 </para>
 
 <itemizedlist>
@@ -1133,17 +1128,17 @@ Open the given device, and prepare it for wave output
 </para>
 <itemizedlist>
 <listitem><para>
-Store the device name so that the device can be opened in <emphasis>startplayback()</emphasis>.
+Store the device name so that the device can be opened in <emphasis>startwaveplayback()</emphasis>.
 </para></listitem>
 </itemizedlist>
 
 <para>
-<emphasis>openwaveoutput()</emphasis> will typically be called once, whereas
-<emphasis>startplayback()</emphasis> is called for every new DMA transfer to the SB16 emulation. If feasible,
-it could be useful to open and/or lock the output device in
-<emphasis>startplayback()</emphasis> as opposed to <emphasis>openwaveoutput()</emphasis>
-to ensure that it can be used by other applications while Bochs doesn't
-need it.
+<emphasis>openwaveoutput()</emphasis> will only be called once, whereas
+<emphasis>startwaveplayback()</emphasis> is called for every new wave output
+command to the soundcard emulation. If feasible, it could be useful to open
+and/or lock  the output device in <emphasis>startwaveplayback()</emphasis> as
+opposed to <emphasis>openwaveoutput()</emphasis> to ensure that it can be used
+by other applications while Bochs doesn't need it.
 </para>
 
 <para>
@@ -1167,17 +1162,16 @@ tries to synchronize it with for example graphics.
 
 <itemizedlist>
 <listitem><para>
-<emphasis>device</emphasis> is the wave device selected by
-the user. It is strictly system-dependent. The value is that of the
-<emphasis>waveout=device</emphasis>
-configuration parameter of the <emphasis>sound</emphasis> option.
+<emphasis>device</emphasis> is the wave device selected by the user. It is
+strictly system-dependent. The value is that of the <emphasis>waveout=device</emphasis>
+configuration parameter of the <emphasis>sound</emphasis> bochsrc option.
 </para></listitem>
 </itemizedlist>
 
 <para>
 Note that only one wave output device will be used at any one time.
-<emphasis>device</emphasis> may not have the same value throughout one session, but it will be closed
-before it is changed.
+<emphasis>device</emphasis> may not have the same value throughout one session,
+but it will be closed before it is changed.
 </para>
 </section>
 
@@ -1185,7 +1179,8 @@ before it is changed.
 <title>int startwaveplayback(int frequency, int bits, int stereo, int format)</title>
 
 <para>
-This function is called whenever the application starts a new DMA transfer.  It should do the following:
+This function is called whenever the emulator receives a new wave output command.
+It should do the following:
 </para>
 
 <itemizedlist>
@@ -1207,8 +1202,8 @@ The parameters are the following:
 <itemizedlist>
 <listitem><para>
 <emphasis>frequency</emphasis> is the desired frequency of the
-output. Because of the capabities of the SB16, it can have any value between
-5000 and 44,100.
+output. Because of the capabities of the soundcards, it can have any value
+between 5000 and 44,100.
 </para></listitem>
 
 <listitem><para>
@@ -1281,7 +1276,7 @@ The number of bytes per sample can be calculated from this as (bits / 8) * (ster
 <para>
 This is called whenever the emulator has another output buffer ready
 and would like to pass it to the output class. This happens every
-<emphasis>BX_SOUND_OUTPUT_WAVEPACKETSIZE</emphasis> bytes, or whenever a DMA transfer
+<emphasis>BX_SOUNDLOW_WAVEPACKETSIZE</emphasis> bytes, or whenever a DMA transfer
 is done or aborted.
 </para>
 
@@ -1304,8 +1299,9 @@ called unless the device is open.
 <title>int sendwavepacket(int length, Bit8u data[])</title>
 
 <para>
-This function is called whenever a data packet of at most <emphasis>BX_SB16_WAVEPACKETSIZE</emphasis>
-is ready at the SB16 emulator. It should then do the following:
+This function is called whenever a data packet of at most
+<emphasis>BX_SOUNDLOW_WAVEPACKETSIZE</emphasis> is ready at the soundcard
+emulation. It should then do the following:
 </para>
 
 <itemizedlist>
@@ -1332,7 +1328,7 @@ Parameters:
 <itemizedlist>
 <listitem><para>
 <emphasis>length</emphasis> is the number of data bytes in
-the data stream. It will never be larger than <emphasis>BX_SB16_WAVEPACKETSIZE</emphasis>.
+the data stream. It will never be larger than <emphasis>BX_SOUNDLOW_WAVEPACKETSIZE</emphasis>.
 </para></listitem>
 
 <listitem><para>
@@ -1375,7 +1371,7 @@ site.
 <section><title>int stopwaveplayback()</title>
 
 <para>
-This function is called at the end of a DMA transfer. It should do the following:
+This function is called at the end of a wave data transfer. It should do the following:
 </para>
 
 <itemizedlist>
@@ -1394,13 +1390,13 @@ This function is called just before Bochs exits. It should do the following:
 
 <itemizedlist>
 <listitem><para>
- Close the output device, if this hasn't been done by <emphasis>stopwaveplayback()</emphasis>.
+Close the output device, if this hasn't been done by <emphasis>stopwaveplayback()</emphasis>.
 </para></listitem>
 </itemizedlist>
 
 <para>
 Typically, <emphasis>stopwaveplayback()</emphasis> will be called several times, whenever
-a DMA transfer is done, where <emphasis>closewaveoutput()</emphasis> will only be called
+a data transfer is done, where <emphasis>closewaveoutput()</emphasis> will only be called
 once. However, in the future it might be possible that <emphasis>openwaveoutput()</emphasis>
 is called again, for example if the user chose to switch devices while
 Bochs was running. This is not supported at the moment, but might be in
@@ -1437,13 +1433,13 @@ image mode in Bochs 2.4.6.
 </para>
 <itemizedlist>
 <listitem><para>
-undoable -> flat file, plus growing, commitable, rollbackable redolog file
+undoable -> base r/o file, plus growing, commitable, rollbackable redolog file
 </para></listitem>
 <listitem><para>
 growing  -> growing files, all previously unwritten sectors go to the end of file
 </para></listitem>
 <listitem><para>
-volatile -> flat file, plus hidden growing redolog
+volatile -> base r/o file, plus hidden growing redolog
 </para></listitem>
 <listitem><para>
 vvfat -> virtual VFAT disk created from directory, plus hidden growing redolog
@@ -1458,17 +1454,17 @@ vvfat -> virtual VFAT disk created from directory, plus hidden growing redolog
         Description
 </title>
 <para>
-The idea behind volatile and undoable disk images
-is to have a flat file, associated with one redolog file.
-In case of vvfat, a directory is associated with the redolog file.
+The idea behind volatile and undoable disk images is to have a read-only base
+file, associated with one redolog file. In case of vvfat, a directory is
+associated with the redolog file.
 </para>
 <para>
 Reading a sector is done from the redolog file if it contains
-the sector, or from the flat file / vvfat directory otherwise.
+the sector, or from the base file / vvfat directory otherwise.
 </para>
 <para>
 Sectors written go to the redolog,
-so flat files are opened in read only mode in this configuration.
+so base image files are opened in read only mode in this configuration.
 </para>
 <para>
 The redolog is designed in a way so it starts as a small file
@@ -1480,7 +1476,7 @@ The redolog is a growing file that can be created on the fly.
 </para>
 <para>
 Now, it turns out that if you only use a redolog without any
-flat file, you get a "growing" disk image.
+base image file, you get a "growing" disk image.
 </para>
 <para>
 So "undoable", "volatile", "growing" and "vvfat" harddisk images classes
@@ -1496,8 +1492,8 @@ are implemented on top of a redolog class.
 <para>
 At the start of a redolog file, there is a header, so Bochs can check whether
 a file is consistent.
-This header could also be checked when we implement
-automatic type and size detection.
+This header is also checked when the automatic type and size detection is
+selected.
 </para>
 <para>
 The generic part of the header contains values like type of image, and
@@ -1557,14 +1553,17 @@ The header length is 512 bytes. It contains :
 <row> <entry> 0 </entry> <entry> 32 </entry> <entry> string </entry> <entry> magical value </entry> <entry> Bochs Virtual HD Image </entry> </row>
 <row> <entry> 32 </entry> <entry> 16 </entry> <entry> string </entry> <entry> type of file </entry> <entry> Redolog </entry> </row>
 <row> <entry> 48 </entry> <entry> 16 </entry> <entry> string </entry> <entry> subtype of file </entry> <entry> Undoable, Volatile, Growing </entry> </row>
-<row> <entry> 64 </entry> <entry> 4 </entry> <entry> Bit32u </entry> <entry> version of used specification </entry> <entry> 0x00010000 </entry> </row>
+<row> <entry> 64 </entry> <entry> 4 </entry> <entry> Bit32u </entry> <entry> version of used specification </entry> <entry> 0x00010000, 0x00020000 </entry> </row>
 <row> <entry> 68 </entry> <entry> 4 </entry> <entry> Bit32u </entry> <entry> header size </entry> <entry> 512 </entry> </row>
 </tbody>
 </tgroup>
 </table>
+</para>
+<para>
+The current version of the header is 0x00020000 (2.0) - see below for details.
 <table>
 <title>Redolog specific header description</title>
-<tgroup cols="5">
+<tgroup cols="4">
 <thead>
 <row>
 <entry>Start position in bytes</entry>
@@ -1577,12 +1576,22 @@ The header length is 512 bytes. It contains :
 <row> <entry> 72 </entry> <entry> 4 </entry> <entry> Bit32u </entry> <entry> number of entries in the catalog </entry> </row>
 <row> <entry> 76 </entry> <entry> 4 </entry> <entry> Bit32u </entry> <entry> bitmap size in bytes </entry> </row>
 <row> <entry> 80 </entry> <entry> 4 </entry> <entry> Bit32u </entry> <entry> extent size in bytes</entry> </row>
-<row> <entry> 84 </entry> <entry> 8 </entry> <entry> Bit64u </entry> <entry> disk size in bytes </entry> </row>
+<row> <entry> 84 </entry> <entry> 4 </entry> <entry> Bit32u </entry> <entry> timestamp in FAT format ("undoable" mode only - otherwise reserved)</entry> </row>
+<row> <entry> 88 </entry> <entry> 8 </entry> <entry> Bit64u </entry> <entry> disk size in bytes </entry> </row>
 </tbody>
 </tgroup>
 </table>
 </para>
+<para>
+The reserved field between "extent" and "disk" has been added in redolog version
+2.0 to fix an alignment bug on some platforms. It is now used for consistency
+check of the "undoable" mode. When creating the redolog file, the timestamp of
+the read-only file is stored there (in FAT format). After that, the "undoable"
+mode init code compares the timestamp of the r/o file with the one stored in
+the redolog.
+</para>
 </section>
+
 <section>
 <title>
         Catalog
@@ -1594,14 +1603,26 @@ the position number (in extents) where each extent is located in the file.
 <para>
 Each position is a Bit32u entity.
 </para>
-
 </section>
+
+<section>
+<title>
+        Bitmap
+</title>
+<para>
+Each extent starts with a bitmap block of n*512 bytes size. Each byte of the
+bitmap stores the write status of 8 coresponding disk sectors in the extent
+(1 = data written).
+</para>
+</section>
+
 <section>
 <title>
         Extent
 </title>
 <para>
-	 &FIXME;
+This is a collection of successive 512-bytes sectors of the disk image.
+The bitmap preceeding this data block contains the write status of each sector.
 </para>
 </section>
 </section>
@@ -1712,8 +1733,9 @@ The following tables shows what parameters are used when creating redologs or cr
 <para>
 The class <emphasis>redolog_t();</emphasis> implements the necessary
 methods to create, open, close, read and write data to a redolog.
-Managment of header catalog and sector bitmaps is done internally
-by the class.
+It also contains methods for the subtype and consistency check and
+for the save/restore support. Managment of header catalog and sector
+bitmaps is done internally by the class.
 </para>
 <section>
 <title>
@@ -1722,7 +1744,7 @@ by the class.
 <para>
 <screen>
 #define STANDARD_HEADER_MAGIC     "Bochs Virtual HD Image"
-#define STANDARD_HEADER_VERSION   (0x00010000)
+#define STANDARD_HEADER_VERSION   (0x00020000)
 #define STANDARD_HEADER_SIZE      (512)
 </screen>
 These constants are used in the generic part of the header.
@@ -1752,44 +1774,50 @@ This constant is used in the catalog for an unwritten extent.
 <emphasis>redolog_t();</emphasis> instanciates a new redolog.
 </para>
 <para>
-<emphasis>int make_header (const char* type, Bit64u size);</emphasis> creates a header
+<emphasis>int make_header(const char* type, Bit64u size);</emphasis> creates a header
 structure in memory, and sets its <emphasis>type</emphasis> and parameters based on the
 disk image <emphasis>size</emphasis>. Returns 0.
 </para>
 <para>
-<emphasis>int create (const char* filename, const char* type, Bit64u size);</emphasis>
+<emphasis>int create(const char* filename, const char* type, Bit64u size);</emphasis>
 creates a new empty redolog file, with header and catalog, named <emphasis>filename</emphasis>
 of type <emphasis>type</emphasis> for a <emphasis>size</emphasis> bytes image.
 Returns 0 for OK or -1 if a problem occured.
 </para>
 <para>
-<emphasis>int create (int filedes, const char* type, Bit64u size);</emphasis>
+<emphasis>int create(int filedes, const char* type, Bit64u size);</emphasis>
 creates a new empty redolog file, with header and catalog, in a previously
 opened file described by <emphasis>filedes</emphasis>, of type <emphasis>type</emphasis>
 for a <emphasis>size</emphasis> bytes image.
 Returns 0 for OK or -1 if a problem occured.
 </para>
 <para>
-<emphasis>int open (const char* filename, const char* type, Bit64u size);</emphasis>
+<emphasis>int open(const char* filename, const char* type, Bit64u size);</emphasis>
 opens a redolog file named <emphasis>filename</emphasis>, and checks
 for consistency of header values against a <emphasis>type</emphasis> and
 <emphasis>size</emphasis>.
 Returns 0 for OK or -1 if a problem occured.
 </para>
 <para>
-<emphasis>void close ();</emphasis>
+<emphasis>int open(const char* filename, const char* type, Bit64u size, int flags);</emphasis>
+opens a redolog file with <emphasis>flags</emphasis> applied. This allows to
+open a redolog in read-only mode. All other parameters and the return value are
+similar to the default <emphasis>open()</emphasis> method above.
+</para>
+<para>
+<emphasis>void close();</emphasis>
 closes a redolog file.
 </para>
 <para>
-<emphasis>off_t lseek (off_t offset, int whence);</emphasis>
+<emphasis>off_t lseek(off_t offset, int whence);</emphasis>
 seeks at logical data offset <emphasis>offset</emphasis> in a redolog.
 <emphasis>offset</emphasis> must be a multiple of 512.
-Only SEEK_SET is supported for <emphasis>whence</emphasis>.
+Only SEEK_SET and SEEK_CUR are supported for <emphasis>whence</emphasis>.
 Returns -1 if a problem occured, or the current logical offset in
 the redolog.
 </para>
 <para>
-<emphasis>ssize_t read (void* buf, size_t count);</emphasis>
+<emphasis>ssize_t read(void* buf, size_t count);</emphasis>
 reads <emphasis>count</emphasis> bytes of data of the redolog, from current logical offset,
 and copies it into <emphasis>buf</emphasis>.
 <emphasis>count</emphasis> must be 512.
@@ -1797,13 +1825,41 @@ Returns the number of bytes read, that can be 0 if the data
 has not previously be written to the redolog.
 </para>
 <para>
-<emphasis>ssize_t write (const void* buf, size_t count);</emphasis>
+<emphasis>ssize_t write(const void* buf, size_t count);</emphasis>
 writes <emphasis>count</emphasis> bytes of data from <emphasis>buf</emphasis>
 to the redolog, at current logical offset.
 <emphasis>count</emphasis> must be 512.
 Returns the number of bytes written.
 </para>
-
+<para>
+<emphasis>Bit64u get_size();</emphasis>
+returns the size stored in the "disk" field in the header. This is used for size
+autodetection feature ("growing" mode) and the consistency check ("undoable"
+mode).
+</para>
+<para>
+<emphasis>Bit32u get_timestamp();</emphasis>
+returns the value of the "timestamp" field in the header (only used by the
+"undoable" mode).
+</para>
+<para>
+<emphasis>bx_bool set_timestamp(Bit32u timestamp);</emphasis>
+writes the <emphasis>timestamp</emphasis> to the header. This is done
+by the "undoable" mode init code if <emphasis>get_timestamp()</emphasis> returns
+0 or the redolog is newly created.
+</para>
+<para>
+<emphasis>static int check_format(int fd, const char *subtype);</emphasis>
+checks the format of the file with descriptor <emphasis>fd</emphasis>. Returns
+<emphasis>HDIMAGE_FORMAT_OK</emphasis> if the <emphasis>subtype</emphasis>
+matches the requested one. This is used for for the image mode autodetection
+feature.
+</para>
+<para>
+<emphasis>bx_bool save_state(const char *backup_fname);</emphasis>
+copies the redolog file to a new file <emphasis>backup_fname</emphasis>. This is
+used by the hdimage save/restore feature.
+</para>
 </section>
 
 </section> <!-- Redolog class description -->
@@ -1814,21 +1870,20 @@ Returns the number of bytes written.
 </title>
 <para>
 "volatile" and "undoable" disk images are easily implemented
-by instanciating a <emphasis>default_image_t</emphasis> object (flat image)
+by instanciating a <emphasis>device_image_t</emphasis> object (base image)
 and a <emphasis>redolog_t</emphasis> object (redolog).
 </para>
 <para>
 "growing" disk images only instanciates a <emphasis>redolog_t</emphasis> object.
 </para>
 <para>
-Classe names are <emphasis>undoable_image_t</emphasis>, <emphasis>volatile_image_t</emphasis>
+Class names are <emphasis>undoable_image_t</emphasis>, <emphasis>volatile_image_t</emphasis>
 and <emphasis>growing_image_t</emphasis>.
 </para>
 <para>
 When using these disk images, the underlying data structure and layout
-is completely
-hidden to the caller. Then, all offset and size values are "logical" values,
-as if the disk was a flat file.
+is completely hidden to the caller. Then, all offset and size values are
+"logical" values, as if the disk was a flat file.
 </para>
 <section>
 <title>
@@ -1860,37 +1915,37 @@ the redolog filename is <emphasis>redolog_name</emphasis>.
 
 <para>
 <emphasis>
-int open (const char* pathname);
+int open(const char* pathname);
 </emphasis>
-opens the flat disk image <emphasis>pathname</emphasis>,
-as an undoable disk image. The associated redolog will
-be named <emphasis>pathname</emphasis> with a
-<emphasis>UNDOABLE_REDOLOG_EXTENSION</emphasis>
-suffix, unless set in the constructor.
-Returns 0 for OK or -1 if a problem occured.
+opens the disk image <emphasis>pathname</emphasis> in read-only mode,
+as an undoable disk image. The image mode of this base image is auto-detected.
+All supported disk image modes can be used here. The associated
+redolog will be named <emphasis>pathname</emphasis> with a
+<emphasis>UNDOABLE_REDOLOG_EXTENSION</emphasis> suffix, unless set in the
+constructor. Returns 0 for OK or -1 if a problem occured.
 </para>
 
 <para>
 <emphasis>
-void close ();
+void close();
 </emphasis>
-closes the flat image and its redolog.
+closes the base image and its redolog.
 </para>
 
 <para>
 <emphasis>
-off_t lseek (off_t offset, int whence);
+off_t lseek(off_t offset, int whence);
 </emphasis>
 seeks at logical data position <emphasis>offset</emphasis> in
 the undoable disk image.
-Only SEEK_SET is supported for <emphasis>whence</emphasis>.
+Only SEEK_SET and SEEK_CUR are supported for <emphasis>whence</emphasis>.
 Returns -1 if a problem occured, or the current logical
 offset in the undoable disk image.
 </para>
 
 <para>
 <emphasis>
-ssize_t read (void* buf, size_t count);
+ssize_t read(void* buf, size_t count);
 </emphasis>
 reads <emphasis>count</emphasis> bytes of data
 from the undoable disk image, from current logical offset,
@@ -1898,19 +1953,34 @@ and copies it into <emphasis>buf</emphasis>.
 <emphasis>count</emphasis> must be 512.
 Returns the number of bytes read.
 Data will be read from the redolog if it has
-been previously written or from the flat image
+been previously written or from the base image
 otherwise.
 </para>
 
 <para>
 <emphasis>
-ssize_t write (const void* buf, size_t count);
+ssize_t write(const void* buf, size_t count);
 </emphasis>
 writes <emphasis>count</emphasis> bytes of data from <emphasis>buf</emphasis>
 to the undoable disk image, at current logical offset.
 <emphasis>count</emphasis> must be 512.
 Returns the number of bytes written.
 Data will always be written to the redolog.
+</para>
+
+<para>
+<emphasis>
+bx_bool save_state(const char *backup_fname);
+</emphasis>
+calls the related redolog_t method to save the image state.
+</para>
+
+<para>
+<emphasis>
+void restore_state(const char *backup_fname);
+called by the hdimage restore code. Copies the backup file to the original
+location and overwrites the existing redolog file.
+</emphasis>
 </para>
 </section>
 
@@ -1930,37 +2000,36 @@ random suffix.
 
 <para>
 <emphasis>
-int open (const char* pathname);
+int open(const char* pathname);
 </emphasis>
-opens the flat disk image <emphasis>pathname</emphasis>,
-as a volatile disk image. The associated redolog will
-be named <emphasis>pathname</emphasis> with a
-random suffix, unless set in the constructor.
-Returns 0 for OK or -1 if a problem occured.
+opens the disk image <emphasis>pathname</emphasis> in read-only mode,
+as a volatile disk image. The image mode is auto-detected. The associated
+redolog will be named <emphasis>pathname</emphasis> with a random suffix,
+unless set in the constructor. Returns 0 for OK or -1 if a problem occured.
 </para>
 
 <para>
 <emphasis>
-void close ();
+void close();
 </emphasis>
-closes the flat image and its redolog.
+closes the base image and its redolog.
 The redolog is deleted/lost after close is called.
 </para>
 
 <para>
 <emphasis>
-off_t lseek (off_t offset, int whence);
+off_t lseek(off_t offset, int whence);
 </emphasis>
 seeks at logical data position <emphasis>offset</emphasis> in
 the volatile disk image.
-Only SEEK_SET is supported for <emphasis>whence</emphasis>.
+Only SEEK_SET and SEEK_CUR are supported for <emphasis>whence</emphasis>.
 Returns -1 if a problem occured, or the current logical offset in
 the volatile disk image.
 </para>
 
 <para>
 <emphasis>
-ssize_t read (void* buf, size_t count);
+ssize_t read(void* buf, size_t count);
 </emphasis>
 reads <emphasis>count</emphasis> bytes of data
 from the volatile disk image, from current logical offset,
@@ -1968,19 +2037,34 @@ and copies it into <emphasis>buf</emphasis>.
 <emphasis>count</emphasis> must be 512.
 Returns the number of bytes read.
 Data will be read from the redolog if it has
-been previously written or from the flat image
+been previously written or from the base image
 otherwise.
 </para>
 
 <para>
 <emphasis>
-ssize_t write (const void* buf, size_t count);
+ssize_t write(const void* buf, size_t count);
 </emphasis>
 writes <emphasis>count</emphasis> bytes of data from <emphasis>buf</emphasis>
 to the volatile disk image, at current logical offset.
 <emphasis>count</emphasis> must be 512.
 Returns the number of bytes written.
 Data will always be written to the redolog.
+</para>
+
+<para>
+<emphasis>
+bx_bool save_state(const char *backup_fname);
+</emphasis>
+calls the related redolog_t method to save the image state.
+</para>
+
+<para>
+<emphasis>
+void restore_state(const char *backup_fname);
+called by the hdimage restore code. Copies the backup file to the original
+location and overwrites the existing redolog file.
+</emphasis>
 </para>
 </section>
 
@@ -1998,7 +2082,7 @@ object. This disk image logical length is <emphasis>size</emphasis> bytes.
 
 <para>
 <emphasis>
-int open (const char* pathname);
+int open(const char* pathname);
 </emphasis>
 opens the growing disk image <emphasis>pathname</emphasis>,
 Returns 0 for OK or -1 if a problem occured.
@@ -2006,25 +2090,25 @@ Returns 0 for OK or -1 if a problem occured.
 
 <para>
 <emphasis>
-void close ();
+void close();
 </emphasis>
 closes the growing disk image.
 </para>
 
 <para>
 <emphasis>
-off_t lseek (off_t offset, int whence);
+off_t lseek(off_t offset, int whence);
 </emphasis>
 seeks at logical data position <emphasis>offset</emphasis> in
 the growable disk image.
-Only SEEK_SET is supported for <emphasis>whence</emphasis>.
+Only SEEK_SET and SEEK_CUR are supported for <emphasis>whence</emphasis>.
 Returns -1 if a problem occured, or the current logical offset in
 the grwoing image.
 </para>
 
 <para>
 <emphasis>
-ssize_t read (void* buf, size_t count);
+ssize_t read(void* buf, size_t count);
 </emphasis>
 reads <emphasis>count</emphasis> bytes of data
 from the growing disk image, from current logical offset,
@@ -2037,12 +2121,36 @@ has not been previously written to the growing image.
 
 <para>
 <emphasis>
-ssize_t write (const void* buf, size_t count);
+ssize_t write(const void* buf, size_t count);
 </emphasis>
 writes <emphasis>count</emphasis> bytes of data from <emphasis>buf</emphasis>
 to the growing disk image, at current logical offset.
 <emphasis>count</emphasis> must be 512.
 Returns the number of bytes written.
+</para>
+
+<para>
+<emphasis>
+static int check_format(int fd, Bit64u imgsize);
+</emphasis>
+checks the format of the file with descriptor <emphasis>fd</emphasis>. Returns
+<emphasis>HDIMAGE_FORMAT_OK</emphasis> if the file format matches the "growing"
+one. This is used for the image mode autodetection feature.
+</para>
+
+<para>
+<emphasis>
+bx_bool save_state(const char *backup_fname);
+</emphasis>
+calls the related redolog_t method to save the image state.
+</para>
+
+<para>
+<emphasis>
+void restore_state(const char *backup_fname);
+called by the hdimage restore code. Copies the backup file to the original
+location and overwrites the existing redolog file.
+</emphasis>
 </para>
 </section>
 
