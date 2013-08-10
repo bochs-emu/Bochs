@@ -2206,22 +2206,36 @@ int bx_parse_nic_params(const char *context, const char *param, bx_list_c *base)
   return valid;
 }
 
+bx_bool is_deprecated_option(const char *oldparam, const char **newparam)
+{
+  if (!strcmp(oldparam, "i440fxsupport")) {
+    // replaced v2.5 / removed v2.6.1
+    *newparam = "pci";
+    return 1;
+  } else if (!strcmp(oldparam, "vga_update_interval")) {
+    // replaced v2.5 / removed v2.6.1
+    *newparam = "vga";
+    return 1;
+#if BX_SUPPORT_PCIPNIC
+  } else if (!strcmp(oldparam, "pnic")) {
+    // replaced v2.6 / removed v2.6.2.svn
+    *newparam = "pcipnic";
+    return 1;
+#endif
+  }
+  return 0;
+}
+
 static int parse_line_formatted(const char *context, int num_params, char *params[])
 {
   int i, slot, t;
   bx_list_c *base;
+  const char *newparam;
 
   if (num_params < 1) return 0;
   if (num_params < 2) {
     PARSE_ERR(("%s: a bochsrc option needs at least one parameter", context));
   }
-
-#if BX_SUPPORT_PCIPNIC
-  // Temporary HACK for the PCI Pseudo NIC's bochsrc option name change
-  if (!strcmp(params[0], "pnic")) {
-    strcpy(params[0], "pcipnic");
-  }
-#endif
 
   if (!strcmp(params[0], "#include")) {
     if (num_params != 2) {
@@ -2988,6 +3002,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
   } else if (SIM->is_addon_option(params[0])) {
     // add-on options handled by registered functions
     return SIM->parse_addon_option(context, num_params, &params[0]);
+  } else if (is_deprecated_option(params[0], &newparam)) {
+    PARSE_ERR(("%s: '%s' is deprecated - use '%s' option instead.", context, params[0], newparam));
   } else if (SIM->opt_plugin_ctrl(params[0], 1)) {
     // treat unknown option as plugin name and try to load it
     if (SIM->is_addon_option(params[0])) {
