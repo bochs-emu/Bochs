@@ -1,10 +1,4 @@
-# Copyright (C) 2001  MandrakeSoft S.A.
-#
-#   MandrakeSoft S.A.
-#   43, rue d'Aboukir
-#   75002 Paris - France
-#   http://www.linux-mandrake.com/
-#   http://www.mandrakesoft.com/
+# Copyright (C) 2001-2013  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -24,6 +18,8 @@
 @SUFFIX_LINE@
 
 
+top_builddir = ..
+
 SHELL = @SHELL@
 
 @SET_MAKE@
@@ -36,6 +32,7 @@ CXXFLAGS = @CXXFLAGS@ @GUI_CXXFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 RANLIB = @RANLIB@
+LIBTOOL=@LIBTOOL@
 
 
 .@CPP_SUFFIX@.o:
@@ -45,7 +42,7 @@ RANLIB = @RANLIB@
 all: make_cmos_image
 
 make_cmos_image@EXE@: make_cmos_image.o
-	@LINK@ make_cmos_image.o
+	@LINK_CONSOLE@ make_cmos_image.o
 
 clean:
 	@RMCOMMAND@ *.o
