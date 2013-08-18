@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "27 Jul 2013" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "18 Aug 2013" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -586,11 +586,12 @@ the RTC runs at realtime speed. This feature is disabled by default.
 time0
 
 Specifies the start (boot) time of the virtual machine. Use a time
-value as returned by the time(2) system call. If no time0 value is
-set or if time0 equal to 1 (special case) or if time0 equal 'local',
-the simulation will be started at the current local host time.
-If time0 equal to 2 (special case) or if time0 equal 'utc',
-the simulation will be started at the current utc time.
+value as returned by the time(2) system call or a string as returned
+by the ctime(3) system call. If no time0 value is set or if time0
+equal to 1 (special case) or if time0 equal 'local', the simulation
+will be started at the current local host time. If time0 equal to 2
+(special case) or if time0 equal 'utc', the simulation will be started
+at the current utc time.
 
 Syntax:
   clock: sync=[none|slowdown|realtime|both], time0=[timeValue|local|utc]
@@ -599,6 +600,7 @@ Default value are sync=none, rtc_sync=0, time0=local
 
 Example:
   clock: sync=realtime, time0=938581955   # Wed Sep 29 07:12:35 1999
+  clock: sync=realtime, time0="Sat Jan  1 00:00:00 2000" # 946681200
 
 .TP
 .I "cmosimage:"

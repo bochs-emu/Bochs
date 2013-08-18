@@ -2779,6 +2779,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       SIM->get_param_bool(BXPN_CMOSIMAGE_ENABLED)->set(1);
     }
   } else if (!strcmp(params[0], "clock")) {
+    const char months[] = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec ";
+    char wday[4], mon[4];
+    int year;
+    struct tm tm_time;
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "sync=", 5)) {
         SIM->get_param_enum(BXPN_CLOCK_SYNC)->set_by_name(&params[i][5]);
@@ -2793,7 +2797,16 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_num(BXPN_CLOCK_TIME0)->set(BX_CLOCK_TIME0_UTC);
       }
       else if (!strncmp(params[i], "time0=", 6)) {
-        SIM->get_param_num(BXPN_CLOCK_TIME0)->set(atoi(&params[i][6]));
+        if (isalpha(params[i][6])) {
+          memset(&tm_time, 0, sizeof(tm_time));
+          sscanf(&params[i][6], "%3s %3s%3d %2d:%2d:%2d %d", wday, mon, &tm_time.tm_mday,
+                 &tm_time.tm_hour, &tm_time.tm_min, &tm_time.tm_sec, &year);
+          tm_time.tm_mon = 12 - (strlen(strstr(months, mon)) / 4);
+          tm_time.tm_year = year - 1900;
+          SIM->get_param_num(BXPN_CLOCK_TIME0)->set(mktime(&tm_time));
+        } else {
+          SIM->get_param_num(BXPN_CLOCK_TIME0)->set(atoi(&params[i][6]));
+        }
       }
       else {
         BX_ERROR(("%s: unknown parameter for clock ignored.", context));

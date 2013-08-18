@@ -523,12 +523,13 @@ pci: enabled=1, chipset=i440fx
 #  the RTC runs at realtime speed. This feature is disabled by default.
 #
 #  TIME0:
-#  Specifies the start (boot) time of the virtual machine. Use a time 
-#  value as returned by the time(2) system call. If no time0 value is 
-#  set or if time0 equal to 1 (special case) or if time0 equal 'local', 
-#  the simulation will be started at the current local host time.
-#  If time0 equal to 2 (special case) or if time0 equal 'utc',
-#  the simulation will be started at the current utc time.
+#  Specifies the start (boot) time of the virtual machine. Use a time
+#  value as returned by the time(2) system call or a string as returned
+#  by the ctime(3) system call. If no time0 value is set or if time0
+#  equal to 1 (special case) or if time0 equal 'local', the simulation
+#  will be started at the current local host time. If time0 equal to 2
+#  (special case) or if time0 equal 'utc', the simulation will be started
+#  at the current utc time.
 #
 # Syntax:
 #  clock: sync=[none|slowdown|realtime|both], time0=[timeValue|local|utc]
@@ -536,12 +537,12 @@ pci: enabled=1, chipset=i440fx
 # Example:
 #   clock: sync=none,     time0=local       # Now (localtime)
 #   clock: sync=slowdown, time0=315529200   # Tue Jan  1 00:00:00 1980
-#   clock: sync=none,     time0=631148400   # Mon Jan  1 00:00:00 1990
+#   clock: sync=none,     time0="Mon Jan  1 00:00:00 1990" # 631148400
 #   clock: sync=realtime, time0=938581955   # Wed Sep 29 07:12:35 1999
-#   clock: sync=realtime, time0=946681200   # Sat Jan  1 00:00:00 2000
+#   clock: sync=realtime, time0="Sat Jan  1 00:00:00 2000" # 946681200
 #   clock: sync=none,     time0=1           # Now (localtime)
 #   clock: sync=none,     time0=utc         # Now (utc/gmt)
-# 
+#
 # Default value are sync=none, rtc_sync=0, time0=local
 #=======================================================================
 #clock: sync=none, time0=local
