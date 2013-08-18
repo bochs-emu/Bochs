@@ -555,12 +555,20 @@ checks, close the open image, copy the file(s) and finally re-open the image.
       </para>
      </section>
 
-      <section id="logfunctions"><title>Log Functions</title>
-      <para>
-      &FIXME;
-      log functions: what is a panic, what is an error, etc.
-      </para>
-      </section>
+<section id="logfunctions"><title>Log Functions</title>
+<para>
+The <emphasis>logfunctions</emphasis> class is one of the base classes of Bochs.
+It supports 4 log levels (debug, info, error, panic) and 4 possible "actions"
+that can be done when a log event occurs. All higher level C++ classes of Bochs
+inherit this class to make the logging configuration per object (here called "module")
+possible. In the Bochs sources the log events appear as macros (BX_DEBUG, BX_INFO,
+BX_ERROR, BX_PANIC) and they call the related logfunction methods, unless the
+symbol BX_NO_LOGGING is set to 1.
+</para>
+<para>
+&FIXME; To be continued.
+</para>
+</section>
 
       <section id="timers"><title>timers</title>
       <para>
@@ -1417,9 +1425,76 @@ interval of 0.1 emulated seconds that is active during recording. The timer
 handler processes the wave data recorded with platform or library specific
 function and finally notifies the emulator.
 </para>
+
+<section><title>int openwaveinput(char *device, sound_record_handler_t rh)</title>
+<para>
+<emphasis>openwaveinput()</emphasis> is called when the sound emulation first
+receives a sound recording command. It should do the following:
+</para>
+
+<itemizedlist>
+<listitem><para>
+Open the given device, and prepare it for wave input
+</para></listitem>
+</itemizedlist>
+<para>
+<emphasis>or</emphasis>
+</para>
+<itemizedlist>
+<listitem><para>
+Store the device name so that the device can be opened in <emphasis>startwaverecord()</emphasis>.
+</para></listitem>
+</itemizedlist>
+
+<para>
+In addition to this the record handler value should be stored and the record timer
+should be registered.
+</para>
+
+<para>
+<emphasis>openwaveinput()</emphasis> will only be called once, whereas
+<emphasis>startwaverecord()</emphasis> is called for every new wave input
+command to the soundcard emulation. If feasible, it could be useful to open
+and/or lock  the input device in <emphasis>startwaverecord()</emphasis> as
+opposed to <emphasis>openwaveinput()</emphasis> to ensure that it can be used
+by other applications while Bochs doesn't need it.
+</para>
+
+<para>The parameters are the following: </para>
+
+<itemizedlist>
+<listitem><para>
+<emphasis>device</emphasis> is the wave device selected by the user. It is
+strictly system-dependent. The value is that of the <emphasis>wavein=device</emphasis>
+configuration parameter of the <emphasis>sound</emphasis> bochsrc option.
+</para></listitem>
+<listitem><para>
+<emphasis>rh</emphasis> is a pointer to the record handler method of the sound
+emulation. When sound recording is active, this handler is called periodicly to
+notify the sound emulation about newly available data.
+</para></listitem>
+</itemizedlist>
+
+<para>
+Note that only one wave input device will be used at any one time.
+<emphasis>device</emphasis> may not have the same value throughout one session,
+but it will be closed before it is changed.
+</para>
+</section>
+
+<section>
+<title>int startwaverecord(int frequency, int bits, int stereo, int format)</title>
+<para>
+This method is very similar to the <emphasis>startwaveplayback()</emphasis> method for
+sound output and it takes the same argument list. It should set up the input device
+for recording, calculate the size of the recording packet for 0.1 second and start
+the record timer.
+</para>
+
 <para>
 &FIXME; To be completed.
 </para>
+</section>
 
 </section>
 
