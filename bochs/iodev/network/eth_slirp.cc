@@ -3,6 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2011  Heikki Lindholm
+//  Copyright (C) 2011-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -35,65 +36,15 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <stdint.h>
+#ifndef WIN32
 #include <arpa/inet.h> /* ntohs, htons */
+#else
+#include <winsock.h>
+#endif
 
 #define LOG_THIS netdev->
 
 #define BX_ETH_SLIRP_LOGGING 0
-
-#if defined(_MSC_VER)
-#pragma pack(push, 1)
-#elif defined(__MWERKS__) && defined(macintosh)
-#pragma options align=packed
-#endif
-
-// this should not be smaller than an arp reply with an ethernet header
-#define MIN_RX_PACKET_LEN 60
-
-#define ETHERNET_MAC_ADDR_LEN   6
-#define ETHERNET_TYPE_IPV4 0x0800
-#define ETHERNET_TYPE_ARP  0x0806
-
-typedef struct ethernet_header {
-#if defined(_MSC_VER) && (_MSC_VER>=1300)
-  __declspec(align(1))
-#endif
-  Bit8u  dst_mac_addr[ETHERNET_MAC_ADDR_LEN];
-  Bit8u  src_mac_addr[ETHERNET_MAC_ADDR_LEN];
-  Bit16u type;
-} 
-#if !defined(_MSC_VER)
-  GCC_ATTRIBUTE((packed))
-#endif
-ethernet_header_t;
-
-#define ARP_OPCODE_REQUEST 1
-#define ARP_OPCODE_REPLY   2
-
-typedef struct arp_header {
-#if defined(_MSC_VER) && (_MSC_VER>=1300)
-  __declspec(align(1))
-#endif
-  Bit16u  hw_addr_space;
-  Bit16u  proto_addr_space;
-  Bit8u   hw_addr_len;
-  Bit8u   proto_addr_len;
-  Bit16u  opcode;
-  /* HW address of sender */
-  /* Protocol address of sender */
-  /* HW address of target*/
-  /* Protocol address of target */
-}
-#if !defined(_MSC_VER)
-  GCC_ATTRIBUTE((packed))
-#endif
-arp_header_t;
-
-#if defined(_MSC_VER)
-#pragma pack(pop)
-#elif defined(__MWERKS__) && defined(macintosh)
-#pragma options align=reset
-#endif
 
 const Bit8u default_host_ipv4addr[4] = {10, 0, 2, 2};
 const Bit8u default_dns_ipv4addr[4] = {10, 0, 2, 3};
@@ -227,7 +178,7 @@ private:
   void rx_timer();
 
   bx_bool handle_ipv4(const Bit8u *buf, unsigned len);
-  void handle_arp(void *buf, unsigned len);
+  void handle_arp(Bit8u *buf, unsigned len);
   void prepare_builtin_reply(unsigned type);
 
 #if BX_ETH_SLIRP_LOGGING
@@ -318,6 +269,7 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
   memcpy(&dhcp.guest_ipv4addr[0], &broadcast_ipv4addr[1][0], 4);
   dhcp.default_guest_ipv4addr = default_guest_ipv4addr;
   memcpy(&dhcp.dns_ipv4addr[0], &default_dns_ipv4addr[0], 4);
+  dhcp.max_guest_ipv4addr = 3;
 
   pending_reply_size = 0;
   slip_input_buffer_filled = slip_input_buffer_decoded = 0;
@@ -340,48 +292,14 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
 #endif
 }
 
-void bx_slirp_pktmover_c::handle_arp(void *buf, unsigned len)
+void bx_slirp_pktmover_c::handle_arp(Bit8u *buf, unsigned len)
 {
-  arp_header_t *arphdr = (arp_header_t *)((Bit8u *)buf +
-                                          sizeof(ethernet_header_t));
-
   if (pending_reply_size > 0)
     return;
 
-  if ((ntohs(arphdr->hw_addr_space) != 0x0001) ||
-      (ntohs(arphdr->proto_addr_space) != 0x0800) ||
-      (arphdr->hw_addr_len != ETHERNET_MAC_ADDR_LEN) ||
-      (arphdr->proto_addr_len != 4)) {
-    BX_ERROR(("Unhandled ARP message hw: %04x (%d) proto: %04x (%d)\n",
-              ntohs(arphdr->hw_addr_space), arphdr->hw_addr_len,
-              ntohs(arphdr->proto_addr_space), arphdr->proto_addr_len));
-    return;
-  }
-
-  arp_header_t *arprhdr = (arp_header_t *)((Bit8u *)reply_buffer +
-                                                    sizeof(ethernet_header_t));
-  switch(ntohs(arphdr->opcode)) {
-    case ARP_OPCODE_REQUEST:
-      // Slirp uses addresses x.x.x.0 - x.x.x.3
-      if (((Bit8u *)arphdr)[27] > 3)
-        break;
-      memset(reply_buffer, 0, MIN_RX_PACKET_LEN);
-      arprhdr->hw_addr_space = htons(0x0001);
-      arprhdr->proto_addr_space = htons(0x0800);
-      arprhdr->hw_addr_len = ETHERNET_MAC_ADDR_LEN;
-      arprhdr->proto_addr_len = 4;
-      arprhdr->opcode = htons(ARP_OPCODE_REPLY);
-      memcpy((Bit8u *)arprhdr+8, dhcp.host_macaddr, ETHERNET_MAC_ADDR_LEN);
-      memcpy((Bit8u *)arprhdr+14, (Bit8u *)arphdr+24, 4);
-      memcpy((Bit8u *)arprhdr+18, dhcp.guest_macaddr, ETHERNET_MAC_ADDR_LEN);
-      memcpy((Bit8u *)arprhdr+24, (Bit8u *)arphdr+14, 4);
-      pending_reply_size = MIN_RX_PACKET_LEN;
-      prepare_builtin_reply(ETHERNET_TYPE_ARP);
-      break;
-    case ARP_OPCODE_REPLY:
-      break;
-    default:
-      break;
+  pending_reply_size = process_arp(netdev, buf, len, reply_buffer, &dhcp);
+  if (pending_reply_size > 0) {
+    prepare_builtin_reply(ETHERNET_TYPE_ARP);
   }
 }
 
@@ -506,7 +424,7 @@ void bx_slirp_pktmover_c::sendpkt(void *buf, unsigned io_len)
       }
       break;
     case ETHERNET_TYPE_ARP:
-      handle_arp(buf, io_len);
+      handle_arp((Bit8u*)buf, io_len);
       break;
     default:
       break;

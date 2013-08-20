@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -44,7 +44,39 @@ public:
 #define BX_NETDEV_100MBIT  0x0004
 #define BX_NETDEV_1GBIT    0x0008
 
+// this should not be smaller than an arp reply with an ethernet header
+#define MIN_RX_PACKET_LEN 60
+
+#define ETHERNET_MAC_ADDR_LEN   6
+#define ETHERNET_TYPE_IPV4 0x0800
+#define ETHERNET_TYPE_ARP  0x0806
+
 #define TFTP_BUFFER_SIZE 512
+
+#if defined(_MSC_VER)
+#pragma pack(push, 1)
+#elif defined(__MWERKS__) && defined(macintosh)
+#pragma options align=packed
+#endif
+
+typedef struct ethernet_header {
+#if defined(_MSC_VER) && (_MSC_VER>=1300)
+  __declspec(align(1))
+#endif
+  Bit8u  dst_mac_addr[ETHERNET_MAC_ADDR_LEN];
+  Bit8u  src_mac_addr[ETHERNET_MAC_ADDR_LEN];
+  Bit16u type;
+} 
+#if !defined(_MSC_VER)
+  GCC_ATTRIBUTE((packed))
+#endif
+ethernet_header_t;
+
+#if defined(_MSC_VER)
+#pragma pack(pop)
+#elif defined(__MWERKS__) && defined(macintosh)
+#pragma options align=reset
+#endif
 
 typedef void (*eth_rx_handler_t)(void *arg, const void *buf, unsigned len);
 typedef Bit32u (*eth_rx_status_t)(void *arg);
@@ -56,6 +88,7 @@ typedef struct {
   const Bit8u *default_guest_ipv4addr;
   Bit8u guest_ipv4addr[4];
   Bit8u dns_ipv4addr[4];
+  int max_guest_ipv4addr;
 } dhcp_cfg_t;
 
 typedef struct {
@@ -99,6 +132,7 @@ BX_CPP_INLINE void put_net4(Bit8u *buf,Bit32u data)
 }
 
 Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len);
+int process_arp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t *dhcp);
 int process_dhcp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t *dhcp);
 int process_tftp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit16u req_tid, Bit8u *reply, tftp_data_t *tftp);
 

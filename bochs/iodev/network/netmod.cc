@@ -35,6 +35,12 @@
 
 #include "netmod.h"
 
+#ifndef WIN32
+#include <arpa/inet.h> /* ntohs, htons */
+#else
+#include <winsock.h>
+#endif
+
 #define LOG_THIS netdev->
 
 bx_netmod_ctl_c* theNetModCtl = NULL;
@@ -284,6 +290,42 @@ Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
   return (Bit16u)sum;
 }
 
+// ARP support
+
+#if defined(_MSC_VER)
+#pragma pack(push, 1)
+#elif defined(__MWERKS__) && defined(macintosh)
+#pragma options align=packed
+#endif
+
+#define ARP_OPCODE_REQUEST 1
+#define ARP_OPCODE_REPLY   2
+
+typedef struct arp_header {
+#if defined(_MSC_VER) && (_MSC_VER>=1300)
+  __declspec(align(1))
+#endif
+  Bit16u  hw_addr_space;
+  Bit16u  proto_addr_space;
+  Bit8u   hw_addr_len;
+  Bit8u   proto_addr_len;
+  Bit16u  opcode;
+  /* HW address of sender */
+  /* Protocol address of sender */
+  /* HW address of target*/
+  /* Protocol address of target */
+}
+#if !defined(_MSC_VER)
+  GCC_ATTRIBUTE((packed))
+#endif
+arp_header_t;
+
+#if defined(_MSC_VER)
+#pragma pack(pop)
+#elif defined(__MWERKS__) && defined(macintosh)
+#pragma options align=reset
+#endif
+
 // DHCP server
 
 #define BOOTREQUEST 1
@@ -339,6 +381,50 @@ Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
 
 static const Bit8u subnetmask_ipv4addr[4] = {0xff,0xff,0xff,0x00};
 static const Bit8u broadcast_ipv4addr1[4] = {0xff,0xff,0xff,0xff};
+
+int process_arp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t *dhcp)
+{
+  int reply_size = 0;
+
+  arp_header_t *arphdr = (arp_header_t *)((Bit8u *)data +
+                                          sizeof(ethernet_header_t));
+
+  if ((ntohs(arphdr->hw_addr_space) != 0x0001) ||
+      (ntohs(arphdr->proto_addr_space) != 0x0800) ||
+      (arphdr->hw_addr_len != ETHERNET_MAC_ADDR_LEN) ||
+      (arphdr->proto_addr_len != 4)) {
+    BX_ERROR(("Unhandled ARP message hw: %04x (%d) proto: %04x (%d)\n",
+              ntohs(arphdr->hw_addr_space), arphdr->hw_addr_len,
+              ntohs(arphdr->proto_addr_space), arphdr->proto_addr_len));
+    return 0;
+  }
+
+  arp_header_t *arprhdr = (arp_header_t *)((Bit8u *)reply +
+                                                    sizeof(ethernet_header_t));
+  switch(ntohs(arphdr->opcode)) {
+    case ARP_OPCODE_REQUEST:
+      // Slirp uses addresses x.x.x.0 - x.x.x.3
+      if (((Bit8u *)arphdr)[27] > dhcp->max_guest_ipv4addr)
+        break;
+      memset(reply, 0, MIN_RX_PACKET_LEN);
+      arprhdr->hw_addr_space = htons(0x0001);
+      arprhdr->proto_addr_space = htons(0x0800);
+      arprhdr->hw_addr_len = ETHERNET_MAC_ADDR_LEN;
+      arprhdr->proto_addr_len = 4;
+      arprhdr->opcode = htons(ARP_OPCODE_REPLY);
+      memcpy((Bit8u *)arprhdr+8, dhcp->host_macaddr, ETHERNET_MAC_ADDR_LEN);
+      memcpy((Bit8u *)arprhdr+14, (Bit8u *)arphdr+24, 4);
+      memcpy((Bit8u *)arprhdr+18, dhcp->guest_macaddr, ETHERNET_MAC_ADDR_LEN);
+      memcpy((Bit8u *)arprhdr+24, (Bit8u *)arphdr+14, 4);
+      reply_size = MIN_RX_PACKET_LEN;
+      break;
+    case ARP_OPCODE_REPLY:
+      break;
+    default:
+      break;
+  }
+  return reply_size;
+}
 
 int process_dhcp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t *dhcp)
 {

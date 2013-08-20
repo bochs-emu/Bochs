@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011  The Bochs Project
+//  Copyright (C) 2005-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -102,7 +102,6 @@ public:
 private:
   void guest_to_host(const Bit8u *buf, unsigned io_len);
   void host_to_guest(Bit8u *buf, unsigned io_len);
-  void process_arp(const Bit8u *buf, unsigned io_len);
   void host_to_guest_arp(Bit8u *buf, unsigned io_len);
   void process_ipv4(const Bit8u *buf, unsigned io_len);
   void host_to_guest_ipv4(Bit8u *buf, unsigned io_len);
@@ -219,6 +218,7 @@ void bx_vnet_pktmover_c::pktmover_init(
   memcpy(&dhcp.guest_ipv4addr[0], &broadcast_ipv4addr[1][0], 4);
   dhcp.default_guest_ipv4addr = default_guest_ipv4addr;
   memcpy(&dhcp.dns_ipv4addr[0], &broadcast_ipv4addr[0][0], 4);
+  dhcp.max_guest_ipv4addr = 1;
 
   l4data_used = 0;
 
@@ -261,6 +261,8 @@ void bx_vnet_pktmover_c::sendpkt(void *buf, unsigned io_len)
 
 void bx_vnet_pktmover_c::guest_to_host(const Bit8u *buf, unsigned io_len)
 {
+  Bit8u replybuf[60];
+
 #if BX_ETH_VNET_LOGGING
   write_pktlog_txt(pktlog_txt, buf, io_len, 0);
 #endif
@@ -286,7 +288,9 @@ void bx_vnet_pktmover_c::guest_to_host(const Bit8u *buf, unsigned io_len)
       process_ipv4(buf, io_len);
       break;
     case 0x0806: // ARP.
-      process_arp(buf, io_len);
+      if (process_arp(netdev, buf, io_len, replybuf, &dhcp) > 0) {
+        host_to_guest_arp(replybuf, MIN_RX_PACKET_LEN);
+      }
       break;
     default: // unknown packet type.
       break;
@@ -350,66 +354,6 @@ void bx_vnet_pktmover_c::host_to_guest(Bit8u *buf, unsigned io_len)
 /////////////////////////////////////////////////////////////////////////
 // ARP
 /////////////////////////////////////////////////////////////////////////
-
-void bx_vnet_pktmover_c::process_arp(const Bit8u *buf, unsigned io_len)
-{
-  unsigned opcode;
-  unsigned protocol;
-  Bit8u replybuf[60];
-
-  if (io_len < 22) return;
-  if (io_len < (unsigned)(22+buf[18]*2+buf[19]*2)) return;
-  // hardware:Ethernet
-  if (buf[14] != 0x00 || buf[15] != 0x01 || buf[18] != 0x06) return;
-  opcode = get_net2(&buf[20]);
-  protocol = get_net2(&buf[16]);
-  memset(&replybuf[0],0,60);
-
-  // protocol
-  switch (protocol) {
-  case 0x0800: // IPv4
-    if (buf[19] == 0x04) {
-      switch (opcode) {
-      case 0x0001: // ARP REQUEST
-        if (!memcmp(&buf[22],&dhcp.guest_macaddr[0],6)) {
-          memcpy(&dhcp.guest_ipv4addr[0],&buf[28],4);
-          if (!memcmp(&buf[38],&dhcp.host_ipv4addr[0],4)) {
-            memcpy(&replybuf[14],&buf[14],6);
-            replybuf[20]=0x00;
-            replybuf[21]=0x02;
-            memcpy(&replybuf[22],&dhcp.host_macaddr[0],6);
-            memcpy(&replybuf[28],&dhcp.host_ipv4addr[0],4);
-            memcpy(&replybuf[32],&dhcp.guest_macaddr[0],6);
-            memcpy(&replybuf[38],&dhcp.guest_ipv4addr[0],4);
-
-            host_to_guest_arp(replybuf,60);
-          }
-        }
-        break;
-      case 0x0002: // ARP REPLY
-        BX_INFO(("unexpected ARP REPLY"));
-        break;
-      case 0x0003: // RARP REQUEST
-        BX_ERROR(("RARP is not implemented"));
-        break;
-      case 0x0004: // RARP REPLY
-        BX_INFO(("unexpected RARP REPLY"));
-        break;
-      default:
-        BX_INFO(("arp: unknown ARP opcode %04x",opcode));
-        break;
-      }
-    }
-    else
-    {
-      BX_INFO(("arp: unknown address length %u",(unsigned)buf[19]));
-    }
-    break;
-  default:
-    BX_INFO(("arp: unknown protocol 0x%04x",protocol));
-    break;
-  }
-}
 
 void bx_vnet_pktmover_c::host_to_guest_arp(Bit8u *buf, unsigned io_len)
 {
