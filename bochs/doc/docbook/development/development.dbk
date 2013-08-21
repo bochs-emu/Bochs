@@ -559,15 +559,101 @@ checks, close the open image, copy the file(s) and finally re-open the image.
 <para>
 The <emphasis>logfunctions</emphasis> class is one of the base classes of Bochs.
 It supports 4 log levels (debug, info, error, panic) and 4 possible "actions"
-that can be done when a log event occurs. All higher level C++ classes of Bochs
+that can be done when a log event occurs. Most of the higher level C++ classes of Bochs
 inherit this class to make the logging configuration per object (here called "module")
 possible. In the Bochs sources the log events appear as macros (BX_DEBUG, BX_INFO,
 BX_ERROR, BX_PANIC) and they call the related logfunction methods, unless the
-symbol BX_NO_LOGGING is set to 1.
+symbol BX_NO_LOGGING is set to 1. This is the definition in <emphasis>bochs.h</emphasis>:
+<screen>
+typedef class BOCHSAPI logfunctions
+{
+  char *name;
+  char *prefix;
+  int onoff[N_LOGLEV];
+  class iofunctions *logio;
+  // default log actions for all devices, declared and initialized
+  // in logio.cc.
+  BOCHSAPI_CYGONLY static int default_onoff[N_LOGLEV];
+public:
+  logfunctions(void);
+  logfunctions(class iofunctions *);
+ ~logfunctions(void);
+
+  void info(const char *fmt, ...)   BX_CPP_AttrPrintf(2, 3);
+  void error(const char *fmt, ...)  BX_CPP_AttrPrintf(2, 3);
+  void panic(const char *fmt, ...)  BX_CPP_AttrPrintf(2, 3);
+  void ldebug(const char *fmt, ...) BX_CPP_AttrPrintf(2, 3);
+  void fatal (const char *prefix, const char *fmt, va_list ap, int exit_status);
+  void ask (int level, const char *prefix, const char *fmt, va_list ap);
+  void put(const char *p);
+  void put(const char *n, const char *p);
+  void setio(class iofunctions *);
+  void setonoff(int loglev, int value) {
+    assert (loglev >= 0 && loglev < N_LOGLEV);
+    onoff[loglev] = value;
+  }
+  const char *get_name() const { return name; }
+  const char *getprefix() const { return prefix; }
+  int getonoff(int level) const {
+    assert (level>=0 && level&lt;N_LOGLEV);
+    return onoff[level];
+  }
+  static void set_default_action(int loglev, int action) {
+    assert (loglev >= 0 && loglev &lt; N_LOGLEV);
+    assert (action >= 0 && action &lt; N_ACT);
+    default_onoff[loglev] = action;
+  }
+  static int get_default_action(int loglev) {
+    assert (loglev >= 0 && loglev &lt; N_LOGLEV);
+    return default_onoff[loglev];
+  }
+} logfunc_t;
+</screen>
+</para>
+<section><title>Methods</title>
+<para>
+Here is a short description of some <emphasis>logfunctions</emphasis> methods.
+<itemizedlist>
+<listitem><para>
+The <emphasis>constructor</emphasis> registers a new log module with default values.
+The module's log prefix is empty and the log levels are set up with default actions.
+</para></listitem>
+
+<listitem><para>
+The <emphasis>destructor</emphasis> removes the log module from the table.
+</para></listitem>
+
+<listitem><para>
+The <emphasis>info()</emphasis>, <emphasis>error()</emphasis>, <emphasis>panic()</emphasis>
+and <emphasis>ldebug()</emphasis> methods are called via macros to create a log event
+of the related level.
+</para></listitem>
+
+<listitem><para>
+The <emphasis>fatal()</emphasis> method is called if a log event occurs and it's
+action is set to "fatal". It is used to shut down the Bochs simulation.
+</para></listitem>
+
+<listitem><para>
+The <emphasis>ask()</emphasis> method is called if a log event occurs and it's
+action is set to "ask". It sends an event to the simulator interface and depending
+on the return value the simulation continues or it is terminated by calling
+<emphasis>fatal()</emphasis>. The simulator interface either prompts the user on
+the console or calls some platform / gui specific code to handle the
+<emphasis>ask</emphasis> request.
+</para></listitem>
+
+<listitem><para>
+The <emphasis>put()</emphasis> methods are used to set up the log module prefix in
+that appears in the log file and the log module name that appears in the config
+interface. If the name is not specified, the prefix is used instead.
+</para></listitem>
+</itemizedlist>
 </para>
 <para>
 &FIXME; To be continued.
 </para>
+</section>
 </section>
 
       <section id="timers"><title>timers</title>
