@@ -5039,16 +5039,14 @@ enum {
 #define BxPrefixSSEF2       0x0030 // Group encoding: 0011, SSE_PREFIX_F2 only
 #define BxPrefixSSE         0x0040 // Group encoding: 0100
 #define BxPrefixSSEF2F3     0x0050 // Group encoding: 0101, ignore SSE_PREFIX_66
-#define BxAliasSSE          0x0060 // Group encoding: 0110, form opcode using SSE prefix and current opcode
-#define BxGroupN            0x0070 // Group encoding: 0111
-#define BxSplitGroupN       0x0080 // Group encoding: 1000
-#define BxFPEscape          0x0090 // Group encoding: 1001
-#define Bx3ByteOp           0x00A0 // Group encoding: 1010
-#define BxOSizeGrp          0x00B0 // Group encoding: 1011
-#define BxPrefixVEX         0x00C0 // Group encoding: 1100
-#define BxSplitVexW         0x00D0 // Group encoding: 1101
-#define BxSplitVexW64       0x00E0 // Group encoding: 1110 - VexW ignored in 32-bit mode
-#define BxSplitMod11B       0x00F0 // Group encoding: 1111
+#define BxGroupN            0x0060 // Group encoding: 0110
+#define BxSplitGroupN       0x0070 // Group encoding: 0111
+#define BxFPEscape          0x0080 // Group encoding: 1000
+#define Bx3ByteOp           0x0090 // Group encoding: 1001
+#define BxOSizeGrp          0x00A0 // Group encoding: 1010
+#define BxSplitVexW         0x00B0 // Group encoding: 1011
+#define BxSplitVexW64       0x00C0 // Group encoding: 1100 - VexW ignored in 32-bit mode
+#define BxSplitMod11B       0x00D0 // Group encoding: 1101
 
 // The BxImmediate2 mask specifies kind of second immediate data
 // required by instruction.
@@ -5057,12 +5055,14 @@ enum {
 #define BxImmediate_Iw2     0x0200
 #define BxImmediate_Id2     0x0300
 
-#define BxLockable          0x0400 // bit 10
-#define BxVexW0             0x0800 // bit 11
-#define BxVexW1             0x1000 // bit 12
+#define BxAliasSSE          0x0400 // bit 10, form final opcode using SSE prefix and current opcode
+#define BxAliasVexW         0x0800 // bit 11, form final opcode using VEX.W and current opcode
+
+#define BxLockable          0x1000 // bit 12
+#define BxVexW0             0x2000 // bit 13
+#define BxVexW1             0x4000 // bit 14
 
 #define BxTraceEnd          0x8000 // bit 15
-
 
 #ifdef BX_TRACE_CACHE_NO_SPECULATIVE_TRACING
   #define BxTraceJCC      BxTraceEnd

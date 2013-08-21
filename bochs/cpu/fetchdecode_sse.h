@@ -265,12 +265,6 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f57[3] = {
   /* F2 */ { 0, BX_IA_ERROR }
 };
 
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f5a[3] = {
-  /* 66 */ { 0, BX_IA_CVTPD2PS_VpsWpd },
-  /* F3 */ { 0, BX_IA_CVTSS2SD_VsdWss },
-  /* F2 */ { 0, BX_IA_CVTSD2SS_VssWsd }
-};
-
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f5b[3] = {
   /* 66 */ { 0, BX_IA_CVTPS2DQ_VdqWps },
   /* F3 */ { 0, BX_IA_CVTTPS2DQ_VdqWps },

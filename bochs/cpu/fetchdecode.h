@@ -75,11 +75,7 @@ enum {
   BX_SRC_RM,
   BX_SRC_MEM_NO_VVV,
   BX_SRC_VVV,
-  BX_SRC_VIB,
-  BX_SRC_VIB_RM, // RM when VEX.W = 1, VIB otherwise
-  BX_SRC_RM_VIB, // RM when VEX.W = 0, VIB otherwise
-  BX_SRC_RM_VVV, // RM when VEX.W = 1, VVV otherwise
-  BX_SRC_VVV_RM  // RM when VEX.W = 0, VVV otherwise
+  BX_SRC_VIB
 };
 
 #define BX_SRC_XMM0 (BX_SRC_EAX)

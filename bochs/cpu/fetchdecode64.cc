@@ -335,8 +335,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* C1 /w */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2EwIb },
   /* C2 /w */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETnear64_Iw },
   /* C3 /w */ { BxTraceEnd,                  BX_IA_RETnear64 },
-  /* C4 /w */ { BxPrefixVEX, BX_IA_ERROR },
-  /* C5 /w */ { BxPrefixVEX, BX_IA_ERROR },
+  /* C4 /w */ { 0, BX_IA_ERROR },
+  /* C5 /w */ { 0, BX_IA_ERROR },
   /* C6 /w */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11Eb },
   /* C7 /w */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11Ew },
   /* C8 /w */ { BxImmediate_Iw | BxImmediate_Ib2, BX_IA_ENTER64_IwIb },
@@ -486,7 +486,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 57 /w */ { BxPrefixSSE, BX_IA_XORPS_VpsWps, BxOpcodeGroupSSE_0f57 },
   /* 0F 58 /w */ { BxAliasSSE, BX_IA_ADDPS_VpsWps },
   /* 0F 59 /w */ { BxAliasSSE, BX_IA_MULPS_VpsWps },
-  /* 0F 5A /w */ { BxPrefixSSE, BX_IA_CVTPS2PD_VpdWps, BxOpcodeGroupSSE_0f5a },
+  /* 0F 5A /w */ { BxAliasSSE, BX_IA_CVTPS2PD_VpdWps },
   /* 0F 5B /w */ { BxPrefixSSE, BX_IA_CVTDQ2PS_VpsWdq, BxOpcodeGroupSSE_0f5b },
   /* 0F 5C /w */ { BxAliasSSE, BX_IA_SUBPS_VpsWps },
   /* 0F 5D /w */ { BxAliasSSE, BX_IA_MINPS_VpsWps },
@@ -850,8 +850,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* C1 /d */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2EdIb },
   /* C2 /d */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETnear64_Iw },
   /* C3 /d */ { BxTraceEnd,                  BX_IA_RETnear64 },
-  /* C4 /d */ { BxPrefixVEX, BX_IA_ERROR },
-  /* C5 /d */ { BxPrefixVEX, BX_IA_ERROR },
+  /* C4 /d */ { 0, BX_IA_ERROR },
+  /* C5 /d */ { 0, BX_IA_ERROR },
   /* C6 /d */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11Eb },
   /* C7 /d */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11Ed },
   /* C8 /d */ { BxImmediate_Iw | BxImmediate_Ib2, BX_IA_ENTER64_IwIb },
@@ -1001,7 +1001,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 57 /d */ { BxPrefixSSE, BX_IA_XORPS_VpsWps, BxOpcodeGroupSSE_0f57 },
   /* 0F 58 /d */ { BxAliasSSE, BX_IA_ADDPS_VpsWps },
   /* 0F 59 /d */ { BxAliasSSE, BX_IA_MULPS_VpsWps },
-  /* 0F 5A /d */ { BxPrefixSSE, BX_IA_CVTPS2PD_VpdWps, BxOpcodeGroupSSE_0f5a },
+  /* 0F 5A /d */ { BxAliasSSE, BX_IA_CVTPS2PD_VpdWps },
   /* 0F 5B /d */ { BxPrefixSSE, BX_IA_CVTDQ2PS_VpsWdq, BxOpcodeGroupSSE_0f5b },
   /* 0F 5C /d */ { BxAliasSSE, BX_IA_SUBPS_VpsWps },
   /* 0F 5D /d */ { BxAliasSSE, BX_IA_MINPS_VpsWps },
@@ -1365,8 +1365,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* C1 /q */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfo64G2EqIb },
   /* C2 /q */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETnear64_Iw },
   /* C3 /q */ { BxTraceEnd,                  BX_IA_RETnear64 },
-  /* C4 /q */ { BxPrefixVEX, BX_IA_ERROR },
-  /* C5 /q */ { BxPrefixVEX, BX_IA_ERROR },
+  /* C4 /q */ { 0, BX_IA_ERROR },
+  /* C5 /q */ { 0, BX_IA_ERROR },
   /* C6 /q */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11Eb },
   /* C7 /q */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfo64G11Eq },
   /* C8 /q */ { BxImmediate_Iw | BxImmediate_Ib2, BX_IA_ENTER64_IwIb },
@@ -1516,7 +1516,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 57 /q */ { BxPrefixSSE, BX_IA_XORPS_VpsWps, BxOpcodeGroupSSE_0f57 },
   /* 0F 58 /q */ { BxAliasSSE, BX_IA_ADDPS_VpsWps },
   /* 0F 59 /q */ { BxAliasSSE, BX_IA_MULPS_VpsWps },
-  /* 0F 5A /q */ { BxPrefixSSE, BX_IA_CVTPS2PD_VpdWps, BxOpcodeGroupSSE_0f5a },
+  /* 0F 5A /q */ { BxAliasSSE, BX_IA_CVTPS2PD_VpdWps },
   /* 0F 5B /q */ { BxPrefixSSE, BX_IA_CVTDQ2PS_VpsWdq, BxOpcodeGroupSSE_0f5b },
   /* 0F 5C /q */ { BxAliasSSE, BX_IA_SUBPS_VpsWps },
   /* 0F 5D /q */ { BxAliasSSE, BX_IA_MINPS_VpsWps },
@@ -1822,7 +1822,7 @@ fetch_b1:
   bx_bool has_modrm = 0;
 
 #if BX_SUPPORT_AVX
-  if ((attr & BxGroupX) == BxPrefixVEX) {
+  if ((b1 & ~0x01) == 0xc4) {
     // VEX
     had_vex = 1;
     if (sse_prefix | rex_prefix) had_vex = -1;
@@ -2085,6 +2085,18 @@ modrm_done:
 
     attr = OpcodeInfoPtr->Attr;
 
+    if (attr & BxAliasSSE) {
+      // SSE alias always comes alone
+      alias = sse_prefix;
+    }
+#if BX_SUPPORT_AVX
+    else if (attr & BxAliasSSE) {
+      // VexW alias could come with BxPrefixSSE
+      BX_ASSERT(had_vex != 0 || had_xop != 0);
+      alias = vex_w;
+    }
+#endif
+
     while(attr & BxGroupX) {
       Bit32u group = attr & BxGroupX;
       attr &= ~BxGroupX;
@@ -2099,12 +2111,8 @@ modrm_done:
         /* For opcodes with only one allowed SSE prefix */
         if (sse_prefix != (group >> 4)) {
           OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
+          alias = 0;
         }
-        break;
-      }
-
-      if (group == BxAliasSSE) {
-        alias = sse_prefix;
         break;
       }
 
@@ -2322,20 +2330,6 @@ modrm_done:
   // assign sources
   for (unsigned n = 0; n <= 3; n++) {
     unsigned def = (unsigned) BxOpcodesTable[ia_opcode].src[n] & 0xf;
-#if BX_SUPPORT_AVX
-    if (def == BX_SRC_RM_VIB) {
-      def = (vex_w) ? BX_SRC_RM : BX_SRC_VIB;
-    }
-    else if (def == BX_SRC_VIB_RM) {
-      def = (vex_w) ? BX_SRC_VIB : BX_SRC_RM;
-    }
-    else if (def == BX_SRC_RM_VVV) {
-      def = (vex_w) ? BX_SRC_RM : BX_SRC_VVV;
-    }
-    else if (def == BX_SRC_VVV_RM) {
-      def = (vex_w) ? BX_SRC_VVV : BX_SRC_RM;
-    }
-#endif
     switch(def) {
     case BX_SRC_EAX:
       i->setSrcReg(n, 0);
