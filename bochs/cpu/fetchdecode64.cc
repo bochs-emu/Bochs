@@ -477,21 +477,21 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 4E /w */ { 0, BX_IA_CMOVLE_GwEw },
   /* 0F 4F /w */ { 0, BX_IA_CMOVNLE_GwEw },
   /* 0F 50 /w */ { BxPrefixSSE, BX_IA_MOVMSKPS_GdVRps, BxOpcodeGroupSSE_0f50R },
-  /* 0F 51 /w */ { BxPrefixSSE, BX_IA_SQRTPS_VpsWps, BxOpcodeGroupSSE_0f51 },
+  /* 0F 51 /w */ { BxAliasSSE, BX_IA_SQRTPS_VpsWps },
   /* 0F 52 /w */ { BxPrefixSSE, BX_IA_RSQRTPS_VpsWps, BxOpcodeGroupSSE_0f52 },
   /* 0F 53 /w */ { BxPrefixSSE, BX_IA_RCPPS_VpsWps, BxOpcodeGroupSSE_0f53 },
   /* 0F 54 /w */ { BxPrefixSSE, BX_IA_ANDPS_VpsWps, BxOpcodeGroupSSE_0f54 },
   /* 0F 55 /w */ { BxPrefixSSE, BX_IA_ANDNPS_VpsWps, BxOpcodeGroupSSE_0f55 },
   /* 0F 56 /w */ { BxPrefixSSE, BX_IA_ORPS_VpsWps, BxOpcodeGroupSSE_0f56 },
   /* 0F 57 /w */ { BxPrefixSSE, BX_IA_XORPS_VpsWps, BxOpcodeGroupSSE_0f57 },
-  /* 0F 58 /w */ { BxPrefixSSE, BX_IA_ADDPS_VpsWps, BxOpcodeGroupSSE_0f58 },
-  /* 0F 59 /w */ { BxPrefixSSE, BX_IA_MULPS_VpsWps, BxOpcodeGroupSSE_0f59 },
+  /* 0F 58 /w */ { BxAliasSSE, BX_IA_ADDPS_VpsWps },
+  /* 0F 59 /w */ { BxAliasSSE, BX_IA_MULPS_VpsWps },
   /* 0F 5A /w */ { BxPrefixSSE, BX_IA_CVTPS2PD_VpdWps, BxOpcodeGroupSSE_0f5a },
   /* 0F 5B /w */ { BxPrefixSSE, BX_IA_CVTDQ2PS_VpsWdq, BxOpcodeGroupSSE_0f5b },
-  /* 0F 5C /w */ { BxPrefixSSE, BX_IA_SUBPS_VpsWps, BxOpcodeGroupSSE_0f5c },
-  /* 0F 5D /w */ { BxPrefixSSE, BX_IA_MINPS_VpsWps, BxOpcodeGroupSSE_0f5d },
-  /* 0F 5E /w */ { BxPrefixSSE, BX_IA_DIVPS_VpsWps, BxOpcodeGroupSSE_0f5e },
-  /* 0F 5F /w */ { BxPrefixSSE, BX_IA_MAXPS_VpsWps, BxOpcodeGroupSSE_0f5f },
+  /* 0F 5C /w */ { BxAliasSSE, BX_IA_SUBPS_VpsWps },
+  /* 0F 5D /w */ { BxAliasSSE, BX_IA_MINPS_VpsWps },
+  /* 0F 5E /w */ { BxAliasSSE, BX_IA_DIVPS_VpsWps },
+  /* 0F 5F /w */ { BxAliasSSE, BX_IA_MAXPS_VpsWps },
   /* 0F 60 /w */ { BxPrefixSSE, BX_IA_PUNPCKLBW_PqQd, BxOpcodeGroupSSE_0f60 },
   /* 0F 61 /w */ { BxPrefixSSE, BX_IA_PUNPCKLWD_PqQd, BxOpcodeGroupSSE_0f61 },
   /* 0F 62 /w */ { BxPrefixSSE, BX_IA_PUNPCKLDQ_PqQd, BxOpcodeGroupSSE_0f62 },
@@ -590,7 +590,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F BF /w */ { 0, BX_IA_MOV_GwEw }, // MOVSX_GwEw
   /* 0F C0 /w */ { BxLockable, BX_IA_XADD_EbGb },
   /* 0F C1 /w */ { BxLockable, BX_IA_XADD_EwGw },
-  /* 0F C2 /w */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_CMPPS_VpsWpsIb, BxOpcodeGroupSSE_0fc2 },
+  /* 0F C2 /w */ { BxAliasSSE | BxImmediate_Ib, BX_IA_CMPPS_VpsWpsIb },
   /* 0F C3 /w */ { BxPrefixSSE, BX_IA_MOVNTI64_MdGd, BxOpcodeGroupSSE_ERR },
   /* 0F C4 /w */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_PINSRW_PqEwIb, BxOpcodeGroupSSE_0fc4 },
   /* 0F C5 /w */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_PEXTRW_GdPqIb, BxOpcodeGroupSSE_0fc5R },
@@ -992,21 +992,21 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 4E /d */ { 0, BX_IA_CMOVLE_GdEd },
   /* 0F 4F /d */ { 0, BX_IA_CMOVNLE_GdEd },
   /* 0F 50 /d */ { BxPrefixSSE, BX_IA_MOVMSKPS_GdVRps, BxOpcodeGroupSSE_0f50R },
-  /* 0F 51 /d */ { BxPrefixSSE, BX_IA_SQRTPS_VpsWps, BxOpcodeGroupSSE_0f51 },
+  /* 0F 51 /d */ { BxAliasSSE, BX_IA_SQRTPS_VpsWps },
   /* 0F 52 /d */ { BxPrefixSSE, BX_IA_RSQRTPS_VpsWps, BxOpcodeGroupSSE_0f52 },
   /* 0F 53 /d */ { BxPrefixSSE, BX_IA_RCPPS_VpsWps, BxOpcodeGroupSSE_0f53 },
   /* 0F 54 /d */ { BxPrefixSSE, BX_IA_ANDPS_VpsWps, BxOpcodeGroupSSE_0f54 },
   /* 0F 55 /d */ { BxPrefixSSE, BX_IA_ANDNPS_VpsWps, BxOpcodeGroupSSE_0f55 },
   /* 0F 56 /d */ { BxPrefixSSE, BX_IA_ORPS_VpsWps, BxOpcodeGroupSSE_0f56 },
   /* 0F 57 /d */ { BxPrefixSSE, BX_IA_XORPS_VpsWps, BxOpcodeGroupSSE_0f57 },
-  /* 0F 58 /d */ { BxPrefixSSE, BX_IA_ADDPS_VpsWps, BxOpcodeGroupSSE_0f58 },
-  /* 0F 59 /d */ { BxPrefixSSE, BX_IA_MULPS_VpsWps, BxOpcodeGroupSSE_0f59 },
+  /* 0F 58 /d */ { BxAliasSSE, BX_IA_ADDPS_VpsWps },
+  /* 0F 59 /d */ { BxAliasSSE, BX_IA_MULPS_VpsWps },
   /* 0F 5A /d */ { BxPrefixSSE, BX_IA_CVTPS2PD_VpdWps, BxOpcodeGroupSSE_0f5a },
   /* 0F 5B /d */ { BxPrefixSSE, BX_IA_CVTDQ2PS_VpsWdq, BxOpcodeGroupSSE_0f5b },
-  /* 0F 5C /d */ { BxPrefixSSE, BX_IA_SUBPS_VpsWps, BxOpcodeGroupSSE_0f5c },
-  /* 0F 5D /d */ { BxPrefixSSE, BX_IA_MINPS_VpsWps, BxOpcodeGroupSSE_0f5d },
-  /* 0F 5E /d */ { BxPrefixSSE, BX_IA_DIVPS_VpsWps, BxOpcodeGroupSSE_0f5e },
-  /* 0F 5F /d */ { BxPrefixSSE, BX_IA_MAXPS_VpsWps, BxOpcodeGroupSSE_0f5f },
+  /* 0F 5C /d */ { BxAliasSSE, BX_IA_SUBPS_VpsWps },
+  /* 0F 5D /d */ { BxAliasSSE, BX_IA_MINPS_VpsWps },
+  /* 0F 5E /d */ { BxAliasSSE, BX_IA_DIVPS_VpsWps },
+  /* 0F 5F /d */ { BxAliasSSE, BX_IA_MAXPS_VpsWps },
   /* 0F 60 /d */ { BxPrefixSSE, BX_IA_PUNPCKLBW_PqQd, BxOpcodeGroupSSE_0f60 },
   /* 0F 61 /d */ { BxPrefixSSE, BX_IA_PUNPCKLWD_PqQd, BxOpcodeGroupSSE_0f61 },
   /* 0F 62 /d */ { BxPrefixSSE, BX_IA_PUNPCKLDQ_PqQd, BxOpcodeGroupSSE_0f62 },
@@ -1105,7 +1105,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F BF /d */ { 0, BX_IA_MOVSX_GdEw },
   /* 0F C0 /d */ { BxLockable, BX_IA_XADD_EbGb },
   /* 0F C1 /d */ { BxLockable, BX_IA_XADD_EdGd },
-  /* 0F C2 /d */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_CMPPS_VpsWpsIb, BxOpcodeGroupSSE_0fc2 },
+  /* 0F C2 /d */ { BxAliasSSE | BxImmediate_Ib, BX_IA_CMPPS_VpsWpsIb },
   /* 0F C3 /d */ { BxPrefixSSE, BX_IA_MOVNTI64_MdGd, BxOpcodeGroupSSE_ERR },
   /* 0F C4 /d */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_PINSRW_PqEwIb, BxOpcodeGroupSSE_0fc4 },
   /* 0F C5 /d */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_PEXTRW_GdPqIb, BxOpcodeGroupSSE_0fc5R },
@@ -1507,21 +1507,21 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 4E /q */ { 0, BX_IA_CMOVLE_GqEq },
   /* 0F 4F /q */ { 0, BX_IA_CMOVNLE_GqEq },
   /* 0F 50 /q */ { BxPrefixSSE, BX_IA_MOVMSKPS_GdVRps, BxOpcodeGroupSSE_0f50R },
-  /* 0F 51 /q */ { BxPrefixSSE, BX_IA_SQRTPS_VpsWps, BxOpcodeGroupSSE_0f51 },
+  /* 0F 51 /q */ { BxAliasSSE, BX_IA_SQRTPS_VpsWps },
   /* 0F 52 /q */ { BxPrefixSSE, BX_IA_RSQRTPS_VpsWps, BxOpcodeGroupSSE_0f52 },
   /* 0F 53 /q */ { BxPrefixSSE, BX_IA_RCPPS_VpsWps, BxOpcodeGroupSSE_0f53 },
   /* 0F 54 /q */ { BxPrefixSSE, BX_IA_ANDPS_VpsWps, BxOpcodeGroupSSE_0f54 },
   /* 0F 55 /q */ { BxPrefixSSE, BX_IA_ANDNPS_VpsWps, BxOpcodeGroupSSE_0f55 },
   /* 0F 56 /q */ { BxPrefixSSE, BX_IA_ORPS_VpsWps, BxOpcodeGroupSSE_0f56 },
   /* 0F 57 /q */ { BxPrefixSSE, BX_IA_XORPS_VpsWps, BxOpcodeGroupSSE_0f57 },
-  /* 0F 58 /q */ { BxPrefixSSE, BX_IA_ADDPS_VpsWps, BxOpcodeGroupSSE_0f58 },
-  /* 0F 59 /q */ { BxPrefixSSE, BX_IA_MULPS_VpsWps, BxOpcodeGroupSSE_0f59 },
+  /* 0F 58 /q */ { BxAliasSSE, BX_IA_ADDPS_VpsWps },
+  /* 0F 59 /q */ { BxAliasSSE, BX_IA_MULPS_VpsWps },
   /* 0F 5A /q */ { BxPrefixSSE, BX_IA_CVTPS2PD_VpdWps, BxOpcodeGroupSSE_0f5a },
   /* 0F 5B /q */ { BxPrefixSSE, BX_IA_CVTDQ2PS_VpsWdq, BxOpcodeGroupSSE_0f5b },
-  /* 0F 5C /q */ { BxPrefixSSE, BX_IA_SUBPS_VpsWps, BxOpcodeGroupSSE_0f5c },
-  /* 0F 5D /q */ { BxPrefixSSE, BX_IA_MINPS_VpsWps, BxOpcodeGroupSSE_0f5d },
-  /* 0F 5E /q */ { BxPrefixSSE, BX_IA_DIVPS_VpsWps, BxOpcodeGroupSSE_0f5e },
-  /* 0F 5F /q */ { BxPrefixSSE, BX_IA_MAXPS_VpsWps, BxOpcodeGroupSSE_0f5f },
+  /* 0F 5C /q */ { BxAliasSSE, BX_IA_SUBPS_VpsWps },
+  /* 0F 5D /q */ { BxAliasSSE, BX_IA_MINPS_VpsWps },
+  /* 0F 5E /q */ { BxAliasSSE, BX_IA_DIVPS_VpsWps },
+  /* 0F 5F /q */ { BxAliasSSE, BX_IA_MAXPS_VpsWps },
   /* 0F 60 /q */ { BxPrefixSSE, BX_IA_PUNPCKLBW_PqQd, BxOpcodeGroupSSE_0f60 },
   /* 0F 61 /q */ { BxPrefixSSE, BX_IA_PUNPCKLWD_PqQd, BxOpcodeGroupSSE_0f61 },
   /* 0F 62 /q */ { BxPrefixSSE, BX_IA_PUNPCKLDQ_PqQd, BxOpcodeGroupSSE_0f62 },
@@ -1620,7 +1620,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F BF /q */ { 0, BX_IA_MOVSX_GqEw },
   /* 0F C0 /q */ { BxLockable, BX_IA_XADD_EbGb },
   /* 0F C1 /q */ { BxLockable, BX_IA_XADD_EqGq },
-  /* 0F C2 /q */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_CMPPS_VpsWpsIb, BxOpcodeGroupSSE_0fc2 },
+  /* 0F C2 /q */ { BxAliasSSE | BxImmediate_Ib, BX_IA_CMPPS_VpsWpsIb },
   /* 0F C3 /q */ { BxPrefixSSE, BX_IA_MOVNTI_MqGq, BxOpcodeGroupSSE_ERR },
   /* 0F C4 /q */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_PINSRW_PqEwIb, BxOpcodeGroupSSE_0fc4 },
   /* 0F C5 /q */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_PEXTRW_GdPqIb, BxOpcodeGroupSSE_0fc5R },
@@ -1690,7 +1690,7 @@ BX_CPU_C::fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
   if (remainingInPage > 15) remainingInPage = 15;
 
   unsigned remain = remainingInPage; // remain must be at least 1
-  unsigned b1, b2 = 0, ia_opcode = 0;
+  unsigned b1, b2 = 0, ia_opcode = 0, alias = 0;
   bx_bool lock=0;
   unsigned offset = 512, rex_r = 0, rex_x = 0, rex_b = 0;
   unsigned rm = 0, mod = 0, nnn = 0, mod_mem = 0;
@@ -2100,8 +2100,11 @@ modrm_done:
         if (sse_prefix != (group >> 4)) {
           OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
         }
-        /* get additional attributes from group table */
-        attr |= OpcodeInfoPtr->Attr;
+        break;
+      }
+
+      if (group == BxAliasSSE) {
+        alias = sse_prefix;
         break;
       }
 
@@ -2150,7 +2153,7 @@ modrm_done:
       attr |= OpcodeInfoPtr->Attr;
     }
 
-    ia_opcode = OpcodeInfoPtr->IA;
+    ia_opcode = OpcodeInfoPtr->IA + alias;
   }
   else {
     // Opcode does not require a MODRM byte.

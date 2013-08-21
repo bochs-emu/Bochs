@@ -229,12 +229,6 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f50R[3] = {
   /* F2 */ { 0, BX_IA_ERROR }
 };
 
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f51[3] = {
-  /* 66 */ { 0, BX_IA_SQRTPD_VpdWpd },
-  /* F3 */ { 0, BX_IA_SQRTSS_VssWss },
-  /* F2 */ { 0, BX_IA_SQRTSD_VsdWsd }
-};
-
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f52[3] = {
   /* 66 */ { 0, BX_IA_ERROR },
   /* F3 */ { 0, BX_IA_RSQRTSS_VssWss },
@@ -271,18 +265,6 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f57[3] = {
   /* F2 */ { 0, BX_IA_ERROR }
 };
 
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f58[3] = {
-  /* 66 */ { 0, BX_IA_ADDPD_VpdWpd },
-  /* F3 */ { 0, BX_IA_ADDSS_VssWss },
-  /* F2 */ { 0, BX_IA_ADDSD_VsdWsd }
-};
-
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f59[3] = {
-  /* 66 */ { 0, BX_IA_MULPD_VpdWpd },
-  /* F3 */ { 0, BX_IA_MULSS_VssWss },
-  /* F2 */ { 0, BX_IA_MULSD_VsdWsd }
-};
-
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f5a[3] = {
   /* 66 */ { 0, BX_IA_CVTPD2PS_VpsWpd },
   /* F3 */ { 0, BX_IA_CVTSS2SD_VsdWss },
@@ -293,30 +275,6 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f5b[3] = {
   /* 66 */ { 0, BX_IA_CVTPS2DQ_VdqWps },
   /* F3 */ { 0, BX_IA_CVTTPS2DQ_VdqWps },
   /* F2 */ { 0, BX_IA_ERROR }
-};
-
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f5c[3] = {
-  /* 66 */ { 0, BX_IA_SUBPD_VpdWpd },
-  /* F3 */ { 0, BX_IA_SUBSS_VssWss },
-  /* F2 */ { 0, BX_IA_SUBSD_VsdWsd }
-};
-
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f5d[3] = {
-  /* 66 */ { 0, BX_IA_MINPD_VpdWpd },
-  /* F3 */ { 0, BX_IA_MINSS_VssWss },
-  /* F2 */ { 0, BX_IA_MINSD_VsdWsd }
-};
-
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f5e[3] = {
-  /* 66 */ { 0, BX_IA_DIVPD_VpdWpd },
-  /* F3 */ { 0, BX_IA_DIVSS_VssWss },
-  /* F2 */ { 0, BX_IA_DIVSD_VsdWsd }
-};
-
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f5f[3] = {
-  /* 66 */ { 0, BX_IA_MAXPD_VpdWpd },
-  /* F3 */ { 0, BX_IA_MAXSS_VssWss },
-  /* F2 */ { 0, BX_IA_MAXSD_VsdWsd }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f60[3] = {
@@ -465,12 +423,6 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f7f[3] = {
   /* 66 */ { 0, BX_IA_MOVDQA_WdqVdq },
   /* F3 */ { 0, BX_IA_MOVDQU_WdqVdq },
   /* F2 */ { 0, BX_IA_ERROR }
-};
-
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_0fc2[3] = {
-  /* 66 */ { 0, BX_IA_CMPPD_VpdWpdIb },
-  /* F3 */ { 0, BX_IA_CMPSS_VssWssIb },
-  /* F2 */ { 0, BX_IA_CMPSD_VsdWsdIb }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0fc4[3] = {
