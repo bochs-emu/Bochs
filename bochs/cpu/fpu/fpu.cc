@@ -75,6 +75,22 @@ void BX_CPU_C::FPU_check_pending_exceptions(void)
   }
 }
 
+Bit16u BX_CPU_C::x87_get_FCS(void)
+{
+  if (bx_cpuid_support_fcs_fds_deprecation())
+    return 0;
+  else
+    return BX_CPU_THIS_PTR the_i387.fcs;
+}
+
+Bit16u BX_CPU_C::x87_get_FDS(void)
+{
+  if (bx_cpuid_support_fcs_fds_deprecation())
+    return 0;
+  else
+    return BX_CPU_THIS_PTR the_i387.fds;
+}
+
 bx_address BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
 {
     unsigned offset;
@@ -106,12 +122,11 @@ bx_address BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
             write_virtual_dword(i->seg(), (eaddr + 0x08) & asize_mask, tmp);
             tmp = (Bit32u)(BX_CPU_THIS_PTR the_i387.fip);
             write_virtual_dword(i->seg(), (eaddr + 0x0c) & asize_mask, tmp);
-            tmp  = (BX_CPU_THIS_PTR the_i387.fcs & 0xffff) |
-                          ((Bit32u)(BX_CPU_THIS_PTR the_i387.foo)) << 16;
+            tmp  = x87_get_FCS() | ((Bit32u)(BX_CPU_THIS_PTR the_i387.foo)) << 16;
             write_virtual_dword(i->seg(), (eaddr + 0x10) & asize_mask, tmp);
             tmp = (Bit32u)(BX_CPU_THIS_PTR the_i387.fdp);
             write_virtual_dword(i->seg(), (eaddr + 0x14) & asize_mask, tmp);
-            tmp = 0xffff0000 | (BX_CPU_THIS_PTR the_i387.fds);
+            tmp = 0xffff0000 | x87_get_FDS();
             write_virtual_dword(i->seg(), (eaddr + 0x18) & asize_mask, tmp);
 
             offset = 0x1c;
@@ -128,11 +143,11 @@ bx_address BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
             write_virtual_word(i->seg(), (eaddr + 0x04) & asize_mask, tmp);
             tmp = (Bit16u)(BX_CPU_THIS_PTR the_i387.fip) & 0xffff;
             write_virtual_word(i->seg(), (eaddr + 0x06) & asize_mask, tmp);
-            tmp = (BX_CPU_THIS_PTR the_i387.fcs);
+            tmp = x87_get_FCS();
             write_virtual_word(i->seg(), (eaddr + 0x08) & asize_mask, tmp);
             tmp = (Bit16u)(BX_CPU_THIS_PTR the_i387.fdp) & 0xffff;
             write_virtual_word(i->seg(), (eaddr + 0x0a) & asize_mask, tmp);
-            tmp = (BX_CPU_THIS_PTR the_i387.fds);
+            tmp = x87_get_FDS();
             write_virtual_word(i->seg(), (eaddr + 0x0c) & asize_mask, tmp);
 
             offset = 0x0e;
@@ -140,9 +155,9 @@ bx_address BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
     }
     else   /* Real or V86 Mode */
     {
-        Bit32u fp_ip = ((Bit32u)(BX_CPU_THIS_PTR the_i387.fcs) << 4) +
+        Bit32u fp_ip = ((Bit32u) x87_get_FCS() << 4) +
               (Bit32u)(BX_CPU_THIS_PTR the_i387.fip);
-        Bit32u fp_dp = ((Bit32u)(BX_CPU_THIS_PTR the_i387.fds) << 4) +
+        Bit32u fp_dp = ((Bit32u) x87_get_FDS() << 4) +
               (Bit32u)(BX_CPU_THIS_PTR the_i387.fdp);
 
         if (i->os32L())

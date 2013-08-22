@@ -4394,6 +4394,8 @@ public: // for now...
   BX_SMF bx_address fpu_load_environment(bxInstruction_c *i);
   BX_SMF Bit8u pack_FPU_TW(Bit16u tag_word);
   BX_SMF Bit16u unpack_FPU_TW(Bit16u tag_byte);
+  BX_SMF Bit16u x87_get_FCS(void);
+  BX_SMF Bit16u x87_get_FDS(void);
 #endif
 
 #if BX_CPU_LEVEL >= 5
