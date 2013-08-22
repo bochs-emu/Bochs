@@ -321,31 +321,34 @@ bx_bool bx_slirp_pktmover_c::handle_ipv4(const Bit8u *buf, unsigned len)
   if (len < (14U+20U)) {
     return 0;
   }
-  if ((buf[14+0] & 0xf0) != 0x40) {
+
+  ip_header_t *iphdr = (ip_header_t *)((Bit8u *)buf +
+                                       sizeof(ethernet_header_t));
+  if (iphdr->version != 4) {
     return 0;
   }
-  l3header_len = ((unsigned)(buf[14+0] & 0x0f) << 2);
+  l3header_len = (iphdr->header_len << 2);
   if (l3header_len != 20) {
     return 0;
   }
   if (len < (14U+l3header_len)) return 0;
-  if (ip_checksum(&buf[14],l3header_len) != (Bit16u)0xffff) {
+  if (ip_checksum((Bit8u*)iphdr, l3header_len) != (Bit16u)0xffff) {
     return 0;
   }
 
-  total_len = get_net2(&buf[14+2]);
+  total_len = ntohs(iphdr->total_len);
 
-  if (memcmp(&buf[14+16],dhcp.host_ipv4addr, 4) &&
-      memcmp(&buf[14+16],broadcast_ipv4addr[0],4) &&
-      memcmp(&buf[14+16],broadcast_ipv4addr[1],4) &&
-      memcmp(&buf[14+16],broadcast_ipv4addr[2],4))
+  if (memcmp(&iphdr->dst_addr, dhcp.host_ipv4addr, 4) &&
+      memcmp(&iphdr->dst_addr, broadcast_ipv4addr[0],4) &&
+      memcmp(&iphdr->dst_addr, broadcast_ipv4addr[1],4) &&
+      memcmp(&iphdr->dst_addr, broadcast_ipv4addr[2],4))
   {
     return 0;
   }
 
-  fragment_flags = (unsigned)buf[14+6] >> 5;
-  fragment_offset = ((unsigned)get_net2(&buf[14+6]) & 0x1fff) << 3;
-  ipproto = buf[14+9];
+  fragment_flags = ntohs(iphdr->frag_offs) >> 13;
+  fragment_offset = (ntohs(iphdr->frag_offs) & 0x1fff) << 3;
+  ipproto = iphdr->protocol;
 
   if ((fragment_flags & 0x1) || (fragment_offset != 0)) {
     return 0;
@@ -357,8 +360,9 @@ bx_bool bx_slirp_pktmover_c::handle_ipv4(const Bit8u *buf, unsigned len)
   if (ipproto == 0x11) {
     // guest-to-host UDP IPv4
     if (l4pkt_len < 8) return 0;
-    udp_sourceport = get_net2(&l4pkt[0]);
-    udp_targetport = get_net2(&l4pkt[2]);
+    udp_header_t *udphdr = (udp_header_t *)l4pkt;
+    udp_sourceport = ntohs(udphdr->src_port);
+    udp_targetport = ntohs(udphdr->dst_port);
     if ((udp_targetport == 67) || (udp_targetport == 69)) { // BOOTP & TFTP
       if (udp_targetport == 67) { // BOOTP
         udp_reply_size = process_dhcp(netdev, &l4pkt[8], l4pkt_len-8, &reply_buffer[42], &dhcp);

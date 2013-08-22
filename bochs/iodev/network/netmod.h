@@ -72,6 +72,46 @@ typedef struct ethernet_header {
 #endif
 ethernet_header_t;
 
+typedef struct ip_header {
+#if defined(_MSC_VER) && (_MSC_VER>=1300)
+  __declspec(align(1))
+#endif
+#ifdef BX_LITTLE_ENDIAN
+  Bit8u header_len : 4;
+  Bit8u version : 4;
+#else
+  Bit8u version : 4;
+  Bit8u header_len : 4;
+#endif
+  Bit8u tos;
+  Bit16u total_len;
+  Bit16u id;
+  Bit16u frag_offs;
+  Bit8u ttl;
+  Bit8u protocol;
+  Bit16u checksum;
+  Bit32u src_addr;
+  Bit32u dst_addr;
+} 
+#if !defined(_MSC_VER)
+  GCC_ATTRIBUTE((packed))
+#endif
+ip_header_t;
+
+typedef struct udp_header {
+#if defined(_MSC_VER) && (_MSC_VER>=1300)
+  __declspec(align(1))
+#endif
+  Bit16u src_port;
+  Bit16u dst_port;
+  Bit16u length;
+  Bit16u checksum;
+} 
+#if !defined(_MSC_VER)
+  GCC_ATTRIBUTE((packed))
+#endif
+udp_header_t;
+
 #if defined(_MSC_VER)
 #pragma pack(pop)
 #elif defined(__MWERKS__) && defined(macintosh)

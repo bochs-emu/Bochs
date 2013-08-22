@@ -43,6 +43,12 @@
 #define BX_ETH_VNET_LOGGING 1
 #define BX_ETH_VNET_PCAP_LOGGING 0
 
+#ifndef WIN32
+#include <arpa/inet.h> /* ntohs, htons */
+#else
+#include <winsock.h>
+#endif
+
 #if BX_ETH_VNET_PCAP_LOGGING
 #include <pcap.h>
 #endif
@@ -284,16 +290,16 @@ void bx_vnet_pktmover_c::guest_to_host(const Bit8u *buf, unsigned io_len)
       (!memcmp(&buf[0],&dhcp.host_macaddr[0],6) ||
        !memcmp(&buf[0],&broadcast_macaddr[0],6))) {
     switch (get_net2(&buf[12])) {
-    case 0x0800: // IPv4.
-      process_ipv4(buf, io_len);
-      break;
-    case 0x0806: // ARP.
-      if (process_arp(netdev, buf, io_len, replybuf, &dhcp) > 0) {
-        host_to_guest_arp(replybuf, MIN_RX_PACKET_LEN);
-      }
-      break;
-    default: // unknown packet type.
-      break;
+      case ETHERNET_TYPE_IPV4:
+        process_ipv4(buf, io_len);
+        break;
+    case ETHERNET_TYPE_ARP:
+        if (process_arp(netdev, buf, io_len, replybuf, &dhcp) > 0) {
+          host_to_guest_arp(replybuf, MIN_RX_PACKET_LEN);
+        }
+        break;
+      default: // unknown packet type.
+        break;
     }
   }
 }
@@ -383,30 +389,34 @@ void bx_vnet_pktmover_c::process_ipv4(const Bit8u *buf, unsigned io_len)
     BX_INFO(("ip packet - too small packet"));
     return;
   }
-  if ((buf[14+0] & 0xf0) != 0x40) {
-    BX_INFO(("ipv%u packet - not implemented",((unsigned)buf[14+0] >> 4)));
+
+  ip_header_t *iphdr = (ip_header_t *)((Bit8u *)buf +
+                                       sizeof(ethernet_header_t));
+  if (iphdr->version != 4) {
+    BX_INFO(("ipv%u packet - not implemented", iphdr->version));
     return;
   }
-  l3header_len = ((unsigned)(buf[14+0] & 0x0f) << 2);
+  l3header_len = (iphdr->header_len << 2);
   if (l3header_len != 20) {
     BX_ERROR(("ip: option header is not implemented"));
     return;
   }
   if (io_len < (14U+l3header_len)) return;
-  if (ip_checksum(&buf[14],l3header_len) != (Bit16u)0xffff) {
+  if (ip_checksum((Bit8u*)iphdr, l3header_len) != (Bit16u)0xffff) {
     BX_INFO(("ip: invalid checksum"));
     return;
   }
 
-  total_len = get_net2(&buf[14+2]);
+  total_len = ntohs(iphdr->total_len);
+
   // FIXED By EaseWay
   // Ignore this check to tolerant some cases
   //if (io_len > (14U+total_len)) return;
 
-  if (memcmp(&buf[14+16],dhcp.host_ipv4addr,4) &&
-      memcmp(&buf[14+16],broadcast_ipv4addr[0],4) &&
-      memcmp(&buf[14+16],broadcast_ipv4addr[1],4) &&
-      memcmp(&buf[14+16],broadcast_ipv4addr[2],4))
+  if (memcmp(&iphdr->dst_addr, dhcp.host_ipv4addr, 4) &&
+      memcmp(&iphdr->dst_addr, broadcast_ipv4addr[0],4) &&
+      memcmp(&iphdr->dst_addr, broadcast_ipv4addr[1],4) &&
+      memcmp(&iphdr->dst_addr, broadcast_ipv4addr[2],4))
   {
     BX_INFO(("target IP address %u.%u.%u.%u is unknown",
       (unsigned)buf[14+16],(unsigned)buf[14+17],
@@ -414,10 +424,9 @@ void bx_vnet_pktmover_c::process_ipv4(const Bit8u *buf, unsigned io_len)
     return;
   }
 
-//  packet_id = get_net2(&buf[14+4]);
-  fragment_flags = (unsigned)buf[14+6] >> 5;
-  fragment_offset = ((unsigned)get_net2(&buf[14+6]) & 0x1fff) << 3;
-  ipproto = buf[14+9];
+  fragment_flags = ntohs(iphdr->frag_offs) >> 13;
+  fragment_offset = (ntohs(iphdr->frag_offs) & 0x1fff) << 3;
+  ipproto = iphdr->protocol;
 
   if ((fragment_flags & 0x1) || (fragment_offset != 0)) {
     BX_INFO(("ignore fragmented packet!"));
@@ -570,16 +579,17 @@ void bx_vnet_pktmover_c::process_udpipv4(
   layer4_handler_t func;
 
   if (l4pkt_len < 8) return;
-  udp_sourceport = get_net2(&l4pkt[0]);
-  udp_targetport = get_net2(&l4pkt[2]);
-//  udp_len = get_net2(&l4pkt[4]);
+  udp_header_t *udphdr = (udp_header_t *)l4pkt;
+  udp_sourceport = ntohs(udphdr->src_port);
+  udp_targetport = ntohs(udphdr->dst_port);
+//  udp_len = ntohs(udphdr->length);
 
-  func = get_layer4_handler(0x11,udp_targetport);
+  func = get_layer4_handler(0x11, udp_targetport);
   if (func != (layer4_handler_t)NULL) {
-    (*func)((void *)this,ipheader,ipheader_len,
-      udp_sourceport,udp_targetport,&l4pkt[8],l4pkt_len-8);
+    (*func)((void *)this,ipheader, ipheader_len,
+      udp_sourceport, udp_targetport, &l4pkt[8], l4pkt_len-8);
   } else {
-    BX_INFO(("udp - unhandled port %u",udp_targetport));
+    BX_INFO(("udp - unhandled port %u", udp_targetport));
   }
 }
 
