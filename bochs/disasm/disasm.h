@@ -450,9 +450,6 @@ public:
   // segment registers
   void Sw(const x86_insn *insn);
 
-  // test registers
-  void Td(const x86_insn *insn);
-
   // control register
   void Cd(const x86_insn *insn);
   void Cq(const x86_insn *insn);

@@ -83,15 +83,6 @@ void disassembler::GS(const x86_insn *insn) { dis_sprintf("%s", segment_name[GS_
 
 void disassembler::Sw(const x86_insn *insn) { dis_sprintf("%s", segment_name[insn->nnn]); }
 
-// test registers
-void disassembler::Td(const x86_insn *insn)
-{
-  if (intel_mode)
-    dis_sprintf  ("tr%d", insn->nnn);
-  else
-    dis_sprintf("%%tr%d", insn->nnn);
-}
-
 // control register
 void disassembler::Cd(const x86_insn *insn)
 {

@@ -78,8 +78,6 @@
 
 #define Sw &disassembler::Sw
 
-#define Td &disassembler::Td
-
 #define Cd &disassembler::Cd
 #define Cq &disassembler::Cq
 
