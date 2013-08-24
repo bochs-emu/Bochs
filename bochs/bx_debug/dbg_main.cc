@@ -678,10 +678,10 @@ void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, 
   else if (len == 64) {
      const BxPackedZmmRegister *zmmdata = (const BxPackedZmmRegister*)(data);
      dbg_printf(": 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X",
-        zmmdata->ymm32u(15), zmmdata->ymm32u(14), zmmdata->ymm32u(13), zmmdata->ymm32u(12),
-        zmmdata->ymm32u(11), zmmdata->ymm32u(10), zmmdata->ymm32u(9),  zmmdata->ymm32u(8),
-        zmmdata->ymm32u(7),  zmmdata->ymm32u(6),  zmmdata->ymm32u(5),  zmmdata->ymm32u(4),
-        zmmdata->ymm32u(3),  zmmdata->ymm32u(2),  zmmdata->ymm32u(1),  zmmdata->ymm32u(0));
+        zmmdata->zmm32u(15), zmmdata->zmm32u(14), zmmdata->zmm32u(13), zmmdata->zmm32u(12),
+        zmmdata->zmm32u(11), zmmdata->zmm32u(10), zmmdata->zmm32u(9),  zmmdata->zmm32u(8),
+        zmmdata->zmm32u(7),  zmmdata->zmm32u(6),  zmmdata->zmm32u(5),  zmmdata->zmm32u(4),
+        zmmdata->zmm32u(3),  zmmdata->zmm32u(2),  zmmdata->zmm32u(1),  zmmdata->zmm32u(0));
   }
 #endif
 #endif
@@ -767,10 +767,10 @@ void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, un
   else if (len == 64) {
      const BxPackedZmmRegister *zmmdata = (const BxPackedZmmRegister*)(data);
      dbg_printf(": 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X",
-        zmmdata->ymm32u(15), zmmdata->ymm32u(14), zmmdata->ymm32u(13), zmmdata->ymm32u(12),
-        zmmdata->ymm32u(11), zmmdata->ymm32u(10), zmmdata->ymm32u(9),  zmmdata->ymm32u(8),
-        zmmdata->ymm32u(7),  zmmdata->ymm32u(6),  zmmdata->ymm32u(5),  zmmdata->ymm32u(4),
-        zmmdata->ymm32u(3),  zmmdata->ymm32u(2),  zmmdata->ymm32u(1),  zmmdata->ymm32u(0));
+        zmmdata->zmm32u(15), zmmdata->zmm32u(14), zmmdata->zmm32u(13), zmmdata->zmm32u(12),
+        zmmdata->zmm32u(11), zmmdata->zmm32u(10), zmmdata->zmm32u(9),  zmmdata->zmm32u(8),
+        zmmdata->zmm32u(7),  zmmdata->zmm32u(6),  zmmdata->zmm32u(5),  zmmdata->zmm32u(4),
+        zmmdata->zmm32u(3),  zmmdata->zmm32u(2),  zmmdata->zmm32u(1),  zmmdata->zmm32u(0));
   }
 #endif
 #endif
