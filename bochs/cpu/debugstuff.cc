@@ -147,10 +147,8 @@ void BX_CPU_C::debug(bx_address offset)
   else
 #endif
   {
-    BX_INFO(("| EAX=%08x  EBX=%08x  ECX=%08x  EDX=%08x",
-          (unsigned) EAX, (unsigned) EBX, (unsigned) ECX, (unsigned) EDX));
-    BX_INFO(("| ESP=%08x  EBP=%08x  ESI=%08x  EDI=%08x",
-          (unsigned) ESP, (unsigned) EBP, (unsigned) ESI, (unsigned) EDI));
+    BX_INFO(("| EAX=%08x  EBX=%08x  ECX=%08x  EDX=%08x", EAX, EBX, ECX, EDX));
+    BX_INFO(("| ESP=%08x  EBP=%08x  ESI=%08x  EDI=%08x", ESP, EBP, ESI, EDI));
   }
   BX_INFO(("| IOPL=%1u %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s",
     BX_CPU_THIS_PTR get_IOPL(),

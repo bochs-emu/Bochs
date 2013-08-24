@@ -61,7 +61,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wb(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit8u val_8 = read_virtual_byte(i->seg(), eaddr);
-  BX_WRITE_XMM_REG_LO_BYTE(BX_TMP_REGISTER, val_8);
+  BX_WRITE_XMM_REG_LO_BYTE(BX_VECTOR_TMP_REGISTER, val_8);
 
   return BX_CPU_CALL_METHOD(i->execute2(), (i));
 #endif
@@ -72,7 +72,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ww(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit16u val_16 = read_virtual_word(i->seg(), eaddr);
-  BX_WRITE_XMM_REG_LO_WORD(BX_TMP_REGISTER, val_16);
+  BX_WRITE_XMM_REG_LO_WORD(BX_VECTOR_TMP_REGISTER, val_16);
 
   return BX_CPU_CALL_METHOD(i->execute2(), (i));
 #endif
@@ -83,7 +83,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wss(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit32u val_32 = read_virtual_dword(i->seg(), eaddr);
-  BX_WRITE_XMM_REG_LO_DWORD(BX_TMP_REGISTER, val_32);
+  BX_WRITE_XMM_REG_LO_DWORD(BX_VECTOR_TMP_REGISTER, val_32);
 
   return BX_CPU_CALL_METHOD(i->execute2(), (i));
 #endif
@@ -94,7 +94,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wsd(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit64u val_64 = read_virtual_qword(i->seg(), eaddr);
-  BX_WRITE_XMM_REG_LO_QWORD(BX_TMP_REGISTER, val_64);
+  BX_WRITE_XMM_REG_LO_QWORD(BX_VECTOR_TMP_REGISTER, val_64);
 
   return BX_CPU_CALL_METHOD(i->execute2(), (i));
 #endif
@@ -108,7 +108,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wdq(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR mxcsr.get_MM())
     read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_TMP_REGISTER));
   else
-    read_virtual_xmmword_aligned(i->seg(), eaddr, &BX_READ_XMM_REG(BX_TMP_REGISTER));
+    read_virtual_xmmword_aligned(i->seg(), eaddr, &BX_READ_XMM_REG(BX_VECTOR_TMP_REGISTER));
 
   return BX_CPU_CALL_METHOD(i->execute2(), (i));
 #endif
@@ -118,7 +118,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADU_Wdq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_TMP_REGISTER));
+  read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_VECTOR_TMP_REGISTER));
 
   return BX_CPU_CALL_METHOD(i->execute2(), (i));
 #endif

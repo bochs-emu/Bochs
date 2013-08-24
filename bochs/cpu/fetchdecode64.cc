@@ -2340,6 +2340,9 @@ modrm_done:
     case BX_SRC_RM:
       i->setSrcReg(n, mod_mem ? BX_TMP_REGISTER : rm);
       break;
+    case BX_SRC_VEC_RM:
+      i->setSrcReg(n, mod_mem ? BX_VECTOR_TMP_REGISTER : rm);
+      break;
 #if BX_SUPPORT_AVX
     case BX_SRC_MEM_NO_VVV:
       if (mod_mem) break;
