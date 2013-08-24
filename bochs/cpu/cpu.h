@@ -1050,7 +1050,7 @@ public: // for now...
   Bit32u mxcsr_mask;
 
 #if BX_SUPPORT_EVEX
-  Bit64u mask[8];
+  bx_gen_reg_t mask[8];
 #endif
 
 #endif

@@ -1871,7 +1871,7 @@ fetch_b1:
 
     b1 += 256 * vex_opcext;
     if (b1 < 256 || b1 >= 1024) had_vex = -1;
-    else has_modrm = (b1 == 0x77); // if not VZEROUPPER/VZEROALL opcode
+    else has_modrm = (b1 != 0x77); // if not VZEROUPPER/VZEROALL opcode
   }
   else if (b1 == 0x8f && (*iptr & 0x08) == 0x08) {
     // 3 byte XOP prefix
