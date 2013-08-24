@@ -1406,12 +1406,7 @@ fetch_b1:
 
     b1 += 256 * vex_opcext;
     if (b1 < 256 || b1 >= 1024) had_vex = -1;
-    else {
-      if (b1 >= 512)
-        has_modrm = 1;
-      else
-        has_modrm = BxOpcodeHasModrm32[b1];
-    }
+    else has_modrm = (b1 == 0x77); // if not VZEROUPPER/VZEROALL opcode
   }
   else if (b1 == 0x8f && (*iptr & 0xc8) == 0xc8) {
     // 3 byte XOP prefix
@@ -1752,12 +1747,8 @@ modrm_done:
       else
          OpcodeInfoPtr = &BxOpcodeTableAVX[(b1-256) + 768*vex_l];
     }
-    else if (had_xop != 0) {
-      if (had_xop < 0)
-         OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
-      else
-         OpcodeInfoPtr = &BxOpcodeTableXOP[b1 + 768*vex_l];
-    }
+    // XOP always has modrm byte
+    BX_ASSERT(had_xop == 0);
 #endif
 
     unsigned group = attr & BxGroupX;

@@ -1691,10 +1691,10 @@ BX_CPU_C::fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
 
   unsigned remain = remainingInPage; // remain must be at least 1
   unsigned b1, b2 = 0, ia_opcode = 0, alias = 0;
-  bx_bool lock=0;
   unsigned offset = 512, rex_r = 0, rex_x = 0, rex_b = 0;
   unsigned rm = 0, mod = 0, nnn = 0, mod_mem = 0;
   unsigned seg = BX_SEG_REG_DS, seg_override = BX_SEG_REG_NULL;
+  bx_bool lock = 0;
 
 #define SSE_PREFIX_NONE 0
 #define SSE_PREFIX_66   1
@@ -1871,12 +1871,7 @@ fetch_b1:
 
     b1 += 256 * vex_opcext;
     if (b1 < 256 || b1 >= 1024) had_vex = -1;
-    else {
-      if (b1 >= 512)
-        has_modrm = 1;
-      else
-        has_modrm = BxOpcodeHasModrm64[b1];
-    }
+    else has_modrm = (b1 == 0x77); // if not VZEROUPPER/VZEROALL opcode
   }
   else if (b1 == 0x8f && (*iptr & 0x08) == 0x08) {
     // 3 byte XOP prefix
