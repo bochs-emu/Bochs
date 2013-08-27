@@ -254,7 +254,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
   if(BX_CPU_THIS_PTR cr4.get_OSFXSR() && bx_cpuid_support_sse())
   {
     /* store XMM register file */
-    for(index=0; index < BX_XMM_REGISTERS; index++)
+    for(index=0; index < 16; index++)
     {
       // save XMM8-XMM15 only in 64-bit mode
       if (index < 8 || long64_mode()) {
@@ -374,7 +374,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   if(BX_CPU_THIS_PTR cr4.get_OSFXSR() && bx_cpuid_support_sse())
   {
     /* load XMM register file */
-    for(index=0; index < BX_XMM_REGISTERS; index++)
+    for(index=0; index < 16; index++)
     {
       // restore XMM8-XMM15 only in 64-bit mode
       if (index < 8 || long64_mode()) {

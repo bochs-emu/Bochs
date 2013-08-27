@@ -859,6 +859,10 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR avx_ok = 0;
 #endif
 
+#if BX_SUUPORT_EVEX
+  for (n=0; n<8; n++) BX_WRITE_OPMASK(index, 0);
+#endif
+
   // Reset XMM state - unchanged on #INIT
   if (source == BX_RESET_HARDWARE) {
     for(n=0; n<BX_XMM_REGISTERS; n++) {

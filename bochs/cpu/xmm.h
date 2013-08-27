@@ -357,6 +357,14 @@ typedef union bx_zmm_reg_t {
       else if (vlen == BX_VL128) { BX_CLEAR_AVX_HIGH128(index); } \
     }
 
+#if BX_SUPPORT_EVEX
+
+/* read upper 256-bit part of ZMM register */
+#define BX_READ_ZMM_REG_HI(index) \
+     (BX_CPU_THIS_PTR vmm[index].vmm256(1))
+
+#endif
+
 /* MXCSR REGISTER */
 
 /* 31|30|29|28|27|26|25|24|23|22|21|20|19|18|17|16

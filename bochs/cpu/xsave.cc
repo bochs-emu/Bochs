@@ -26,6 +26,12 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#define XSAVE_SSE_STATE_OFFSET        160
+#define XSAVE_YMM_STATE_OFFSET        576
+#define XSAVE_OPMASK_STATE_OFFSET    1088
+#define XSAVE_ZMM_HI256_STATE_OFFSET 1152
+#define XSAVE_HI_ZMM_STATE_OFFSET    1664
+
 /* 0F AE /4 */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 {
@@ -138,12 +144,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   if ((features_save_enable_mask & BX_XCR0_SSE_MASK) != 0)
   {
     /* store XMM register file */
-    for(index=0; index < BX_XMM_REGISTERS; index++)
+    for(index=0; index < 16; index++)
     {
       // save XMM8-XMM15 only in 64-bit mode
       if (index < 8 || long64_mode()) {
         write_virtual_xmmword(i->seg(),
-           (eaddr+index*16+160) & asize_mask, (Bit8u *)(&BX_READ_XMM_REG(index)));
+           (eaddr+index*16+XSAVE_SSE_STATE_OFFSET) & asize_mask, (Bit8u *)(&BX_READ_XMM_REG(index)));
       }
     }
 
@@ -155,16 +161,53 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   if ((features_save_enable_mask & BX_XCR0_YMM_MASK) != 0)
   {
     /* store AVX state */
-    for(index=0; index < BX_XMM_REGISTERS; index++)
+    for(index=0; index < 16; index++)
     {
       // save YMM8-YMM15 only in 64-bit mode
       if (index < 8 || long64_mode()) {
         write_virtual_xmmword(i->seg(),
-           (eaddr+index*16+576) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG_LANE(index, 1)));
+           (eaddr+index*16+XSAVE_YMM_STATE_OFFSET) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG_LANE(index, 1)));
       }
     }
 
     header1 |= BX_XCR0_YMM_MASK;
+  }
+#endif
+
+#if BX_SUPPORT_EVEX
+  /////////////////////////////////////////////////////////////////////////////
+  if ((features_save_enable_mask & BX_XCR0_OPMASK_MASK) != 0)
+  {
+    // save OPMASK state to XSAVE area
+    for(index=0; index < 8; index++) {
+      write_virtual_qword(i->seg(), (eaddr+index*8+XSAVE_OPMASK_STATE_OFFSET) & asize_mask, BX_READ_OPMASK(index));
+    }
+
+    header1 |= BX_XCR0_OPMASK_MASK;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  if ((features_save_enable_mask & BX_XCR0_ZMM_HI256_MASK) != 0)
+  {
+    // save upper part of ZMM registrs to XSAVE area
+    for(index=0; index < 16; index++) {
+      write_virtual_ymmword(i->seg(), (eaddr+index*32+XSAVE_ZMM_HI256_STATE_OFFSET) & asize_mask,
+           (Bit8u *)(&BX_READ_ZMM_REG_HI(index)));
+    }
+
+    header1 |= BX_XCR0_ZMM_HI256_MASK;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  if ((features_save_enable_mask & BX_XCR0_HI_ZMM_MASK) != 0)
+  {
+    // load ZMM state from XSAVE area
+    for(index=0; index < 16; index++) {
+      write_virtual_zmmword(i->seg(), (eaddr+index*64+XSAVE_HI_ZMM_STATE_OFFSET) & asize_mask,
+           (Bit8u *)(&BX_READ_AVX_REG(index+16)));
+    }
+
+    header1 |= BX_XCR0_HI_ZMM_MASK;
   }
 #endif
 
@@ -317,18 +360,18 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   {
     if (header1 & BX_XCR0_SSE_MASK) {
       // load SSE state from XSAVE area
-      for(index=0; index < BX_XMM_REGISTERS; index++)
+      for(index=0; index < 16; index++)
       {
          // restore XMM8-XMM15 only in 64-bit mode
          if (index < 8 || long64_mode()) {
            read_virtual_xmmword(i->seg(),
-               (eaddr+index*16+160) & asize_mask, (Bit8u *)(&BX_READ_XMM_REG(index)));
+               (eaddr+index*16+XSAVE_SSE_STATE_OFFSET) & asize_mask, (Bit8u *)(&BX_READ_XMM_REG(index)));
          }
       }
     }
     else {
        // initialize SSE with reset values
-       for(index=0; index < BX_XMM_REGISTERS; index++) {
+       for(index=0; index < 16; index++) {
          // set XMM8-XMM15 only in 64-bit mode
          if (index < 8 || long64_mode())
            BX_WRITE_XMM_REG(index, xmmnil);
@@ -342,24 +385,81 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   {
     if (header1 & BX_XCR0_YMM_MASK) {
       // load AVX state from XSAVE area
-      for(index=0; index < BX_XMM_REGISTERS; index++)
+      for(index=0; index < 16; index++)
       {
          // restore YMM8-YMM15 only in 64-bit mode
          if (index < 8 || long64_mode()) {
            read_virtual_xmmword(i->seg(),
-               (eaddr+index*16+576) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG_LANE(index, 1)));
+               (eaddr+index*16+XSAVE_YMM_STATE_OFFSET) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG_LANE(index, 1)));
          }
       }
     }
     else {
        // initialize upper part of AVX registers with reset values
-       for(index=0; index < BX_XMM_REGISTERS; index++) {
+       for(index=0; index < 16; index++) {
          // set YMM8-YMM15 only in 64-bit mode
          if (index < 8 || long64_mode()) BX_CLEAR_AVX_HIGH128(index);
        }
     }
   }
 #endif
+
+#if BX_SUPPORT_EVEX
+  /////////////////////////////////////////////////////////////////////////////
+  if ((features_load_enable_mask & BX_XCR0_OPMASK_MASK) != 0)
+  {
+    if (header1 & BX_XCR0_OPMASK_MASK) {
+      // load opmask registers from XSAVE area
+      for(index=0; index < 8; index++) {
+        Bit64u opmask = read_virtual_qword(i->seg(), (eaddr+index*8+XSAVE_OPMASK_STATE_OFFSET) & asize_mask);
+        BX_WRITE_OPMASK(index, opmask);
+      }
+    }
+    else {
+      // initialize opmask registers with reset values
+      for(index=0; index < 8; index++) {
+        BX_WRITE_OPMASK(index, 0);
+      }
+    }
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  if ((features_load_enable_mask & BX_XCR0_ZMM_HI256_MASK) != 0)
+  {
+    if (header1 & BX_XCR0_ZMM_HI256_BIT) {
+      // load upper part of ZMM registers from XSAVE area
+      for(index=0; index < 16; index++) {
+        read_virtual_ymmword(i->seg(), (eaddr+index*32+XSAVE_ZMM_HI256_STATE_OFFSET) & asize_mask,
+           (Bit8u *)(&BX_READ_ZMM_REG_HI(index)));
+      }
+    }
+    else {
+      // initialize upper part of ZMM registers with reset values
+      for(index=0; index < 16; index++) {
+        BX_CLEAR_AVX_HIGH256(index);
+      }
+    }
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  if ((features_load_enable_mask & BX_XCR0_HI_ZMM_MASK) != 0)
+  {
+    if (header1 & BX_XCR0_HI_ZMM_MASK) {
+      // load ZMM state from XSAVE area
+      for(index=0; index < 16; index++) {
+        read_virtual_zmmword(i->seg(), (eaddr+index*64+XSAVE_HI_ZMM_STATE_OFFSET) & asize_mask,
+           (Bit8u *)(&BX_READ_AVX_REG(index+16)));
+      }
+    }
+    else {
+      // initialize upper part of ZMM registers with reset values
+      for(index=0; index < 16; index++) {
+        BX_WRITE_XMM_REG_CLEAR_HIGH(index+16, xmmnil);
+      }
+    }
+  }
+#endif
+
 #endif
 
   BX_NEXT_INSTR(i);

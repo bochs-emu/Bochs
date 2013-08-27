@@ -269,6 +269,19 @@
 #define BX_CPU_ID (0)
 #endif
 
+#if BX_SUPPORT_EVEX
+
+#define BX_READ_8BIT_OPMASK(index)  (BX_CPU_THIS_PTR opmask[index].word.byte.rh)
+#define BX_READ_16BIT_OPMASK(index) (BX_CPU_THIS_PTR opmask[index].word.rx)
+#define BX_READ_32BIT_OPMASK(index) (BX_CPU_THIS_PTR opmask[index].dword.erx)
+#define BX_READ_OPMASK(index)       (BX_CPU_THIS_PTR opmask[index].rrx)
+
+#define BX_WRITE_OPMASK(index, val_64) { \
+  BX_CPU_THIS_PTR opmask[index].rrx = val_64; \
+}
+
+#endif
+
 #endif  // defined(NEED_CPU_REG_SHORTCUTS)
 
 // <TAG-INSTRUMENTATION_COMMON-BEGIN>
@@ -1050,7 +1063,7 @@ public: // for now...
   Bit32u mxcsr_mask;
 
 #if BX_SUPPORT_EVEX
-  bx_gen_reg_t mask[8];
+  bx_gen_reg_t opmask[8];
 #endif
 
 #endif
