@@ -2085,7 +2085,7 @@ modrm_done:
       alias = sse_prefix;
     }
 #if BX_SUPPORT_AVX
-    else if (attr & BxAliasSSE) {
+    else if (attr & BxAliasVexW) {
       // VexW alias could come with BxPrefixSSE
       BX_ASSERT(had_vex != 0 || had_xop != 0);
       alias = vex_w;
