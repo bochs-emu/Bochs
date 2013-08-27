@@ -1704,8 +1704,8 @@ BX_CPU_C::fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
   unsigned rex_prefix = 0;
 
 #if BX_SUPPORT_AVX
-  int had_vex = 0, had_xop = 0, use_vvv = 0, vvv = -1;
-  bx_bool vex_w = 0, vex_l = 0;
+  int had_vex = 0, had_xop = 0, vvv = -1;
+  bx_bool vex_w = 0, vex_l = 0, use_vvv = 0;
 #endif
 
   i->ResolveModrm = 0;
@@ -1871,7 +1871,7 @@ fetch_b1:
 
     b1 += 256 * vex_opcext;
     if (b1 < 256 || b1 >= 1024) had_vex = -1;
-    else has_modrm = (b1 != 0x77); // if not VZEROUPPER/VZEROALL opcode
+    else has_modrm = (b1 != 0x177); // if not VZEROUPPER/VZEROALL opcode
   }
   else if (b1 == 0x8f && (*iptr & 0x08) == 0x08) {
     // 3 byte XOP prefix
