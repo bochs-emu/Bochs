@@ -1411,11 +1411,12 @@ fetch_b1:
   else if (b1 == 0x8f && (*iptr & 0xc8) == 0xc8) {
     // 3 byte XOP prefix
     had_xop = 1;
+    if (sse_prefix) had_xop = -1;
     if (! protected_mode()) had_xop = -1;
     unsigned vex;
 
-    if (remain != 0) {
-      remain--;
+    if (remain > 2) {
+      remain -= 3;
       vex = *iptr++; // fetch XOP2
     }
     else
@@ -1425,12 +1426,7 @@ fetch_b1:
     if (xop_opcext >= 3)
       had_xop = -1;
 
-    if (remain != 0) {
-      remain--;
-      vex = *iptr++; // fetch XOP3
-    }
-    else
-      return(-1);
+    vex = *iptr++; // fetch XOP3
 
     vex_w = (vex >> 7) & 0x1;
     vvv = 15 - ((vex >> 3) & 0xf);
@@ -1439,13 +1435,7 @@ fetch_b1:
     sse_prefix = vex & 0x3;
     if (sse_prefix) had_xop = -1;
 
-    if (remain != 0) {
-      remain--;
-      b1 = *iptr++; // fetch new b1
-    }
-    else
-      return(-1);
-
+    b1 = *iptr++; // fetch new b1
     has_modrm = 1;
     b1 += 256 * xop_opcext;
   }
