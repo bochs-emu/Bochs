@@ -421,6 +421,11 @@ void bx_generic_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction
 // leaf 0x0000000D //
 void bx_generic_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
 {
+  leaf->eax = 0;
+  leaf->ebx = 0;
+  leaf->ecx = 0;
+  leaf->edx = 0;
+
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVE))
   {
     switch(subfunction) {
@@ -441,14 +446,14 @@ void bx_generic_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_func
         leaf->ecx += 256;
 #endif
       leaf->edx = 0;
-      return;
+      break;
 
     case 1:
       leaf->eax = BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVEOPT);
       leaf->ebx = 0;
       leaf->ecx = 0;
       leaf->edx = 0;
-      return;
+      break;
 
 #if BX_SUPPORT_AVX
     case 2: // AVX leaf
@@ -457,17 +462,9 @@ void bx_generic_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_func
         leaf->ebx = XSAVE_YMM_STATE_OFFSET;
         leaf->ecx = 0;
         leaf->edx = 0;
-        break;
       }
-      // else fall through
-#endif
-
-    default:
-      leaf->eax = 0; // reserved
-      leaf->ebx = 0; // reserved
-      leaf->ecx = 0; // reserved
-      leaf->edx = 0; // reserved
       break;
+#endif
     }
   }
 }
