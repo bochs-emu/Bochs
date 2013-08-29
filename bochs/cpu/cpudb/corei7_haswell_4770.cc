@@ -686,7 +686,7 @@ void corei7_haswell_4770_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_f
 
   case 2: // AVX leaf
     leaf->eax = 256;
-    leaf->ebx = 576;
+    leaf->ebx = XSAVE_YMM_STATE_OFFSET;
     leaf->ecx = 0;
     leaf->edx = 0;
     return;

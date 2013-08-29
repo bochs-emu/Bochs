@@ -860,7 +860,10 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
 #if BX_SUUPORT_EVEX
-  for (n=0; n<8; n++) BX_WRITE_OPMASK(index, 0);
+  BX_CPU_THIS_PTR evex_ok = 0;
+
+  for (n=0; n<8; n++)
+    BX_WRITE_OPMASK(index, 0);
 #endif
 
   // Reset XMM state - unchanged on #INIT

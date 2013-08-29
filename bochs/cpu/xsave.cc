@@ -26,12 +26,6 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#define XSAVE_SSE_STATE_OFFSET        160
-#define XSAVE_YMM_STATE_OFFSET        576
-#define XSAVE_OPMASK_STATE_OFFSET    1088
-#define XSAVE_ZMM_HI256_STATE_OFFSET 1152
-#define XSAVE_HI_ZMM_STATE_OFFSET    1664
-
 /* 0F AE /4 */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 {
@@ -426,7 +420,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   /////////////////////////////////////////////////////////////////////////////
   if ((features_load_enable_mask & BX_XCR0_ZMM_HI256_MASK) != 0)
   {
-    if (header1 & BX_XCR0_ZMM_HI256_BIT) {
+    if (header1 & BX_XCR0_ZMM_HI256_MASK) {
       // load upper part of ZMM registers from XSAVE area
       for(index=0; index < 16; index++) {
         read_virtual_ymmword(i->seg(), (eaddr+index*32+XSAVE_ZMM_HI256_STATE_OFFSET) & asize_mask,

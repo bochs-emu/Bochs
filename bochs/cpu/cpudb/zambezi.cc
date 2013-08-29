@@ -421,7 +421,7 @@ void zambezi_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *l
 
   case 2: // AVX leaf
     leaf->eax = 256;
-    leaf->ebx = 576;
+    leaf->ebx = XSAVE_YMM_STATE_OFFSET;
     leaf->ecx = 0;
     leaf->edx = 0;
     return;

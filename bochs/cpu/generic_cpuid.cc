@@ -454,7 +454,7 @@ void bx_generic_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_func
     case 2: // AVX leaf
       if (cpu->xcr0_suppmask & BX_XCR0_YMM_MASK) {
         leaf->eax = 256;
-        leaf->ebx = 576;
+        leaf->ebx = XSAVE_YMM_STATE_OFFSET;
         leaf->ecx = 0;
         leaf->edx = 0;
         break;

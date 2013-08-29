@@ -1208,6 +1208,9 @@ public: // for now...
 #if BX_SUPPORT_AVX
   unsigned avx_ok;
 #endif
+#if BX_SUPPORT_EVEX
+  unsigned evex_ok;
+#endif
 #endif
 
   // for exceptions
@@ -3624,9 +3627,15 @@ public: // for now...
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
   BX_SMF BX_INSF_TYPE BxEndTrace(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
+
 #if BX_CPU_LEVEL >= 6
   BX_SMF BX_INSF_TYPE BxNoSSE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#if BX_SUPPORT_AVX
   BX_SMF BX_INSF_TYPE BxNoAVX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
+#if BX_SUPPORT_EVEX
+  BX_SMF BX_INSF_TYPE BxNoEVEX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
 #endif
 
   BX_SMF bx_address BxResolve16BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4614,6 +4623,7 @@ BX_CPP_INLINE void BX_CPU_C::prepareXSAVE(void)
 // bit 1 - long64 mode (CS.L)
 // bit 2 - SSE_OK
 // bit 3 - AVX_OK
+// bit 4 - EVEX_OK
 //
 // updateFetchModeMask - has to be called everytime 
 //   CS.L / CS.D_B / CR0.PE, CR0.TS or CR0.EM / CR4.OSFXSR / CR4.OSXSAVE changes
@@ -4622,6 +4632,9 @@ BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 {
   BX_CPU_THIS_PTR fetchModeMask =
 #if BX_CPU_LEVEL >= 6
+#if BX_SUPPORT_EVEX
+     (BX_CPU_THIS_PTR evex_ok << 4) |
+#endif
 #if BX_SUPPORT_AVX
      (BX_CPU_THIS_PTR avx_ok << 3) |
 #endif

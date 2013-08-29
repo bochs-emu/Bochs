@@ -231,25 +231,34 @@ struct bx_efer_t {
 
 #if BX_CPU_LEVEL >= 6
 
+#define XSAVE_SSE_STATE_OFFSET        (160)
+#define XSAVE_YMM_STATE_OFFSET        (576)
+#define XSAVE_OPMASK_STATE_OFFSET    (1088)
+#define XSAVE_ZMM_HI256_STATE_OFFSET (1152)
+#define XSAVE_HI_ZMM_STATE_OFFSET    (1664)
+
 struct xcr0_t {
   Bit32u  val32; // 32bit value of register
 
-#define BX_XCR0_FPU_BIT         0
-#define BX_XCR0_FPU_MASK       (1<<BX_XCR0_FPU_BIT)
-#define BX_XCR0_SSE_BIT         1
-#define BX_XCR0_SSE_MASK       (1<<BX_XCR0_SSE_BIT)
-#define BX_XCR0_YMM_BIT         2
-#define BX_XCR0_YMM_MASK       (1<<BX_XCR0_YMM_BIT)
-#define BX_XCR0_BNDREGS_BIT     3
-#define BX_XCR0_BNDREGS_MASK   (1<<BX_XCR0_BNDREGS_BIT)
-#define BX_XCR0_BNDCFG_BIT      4
-#define BX_XCR0_BNDCFG_MASK    (1<<BX_XCR0_BNDCFG_BIT)
-#define BX_XCR0_OPMASK_BIT      5
-#define BX_XCR0_OPMASK_MASK    (1<<BX_XCR0_OPMASK_BIT)
-#define BX_XCR0_ZMM_HI256_BIT   6
-#define BX_XCR0_ZMM_HI256_MASK (1<<BX_XCR0_ZMM_HI256_BIT)
-#define BX_XCR0_HI_ZMM_BIT      7
-#define BX_XCR0_HI_ZMM_MASK    (1<<BX_XCR0_HI_ZMM_BIT)
+  enum {
+    BX_XCR0_FPU_BIT = 0,
+    BX_XCR0_SSE_BIT = 1,
+    BX_XCR0_YMM_BIT = 2,
+    BX_XCR0_BNDREGS_BIT = 3,
+    BX_XCR0_BNDCFG_BIT = 4,
+    BX_XCR0_OPMASK_BIT = 5,
+    BX_XCR0_ZMM_HI256_BIT = 6,
+    BX_XCR0_HI_ZMM_BIT = 7
+  };
+
+#define BX_XCR0_FPU_MASK       (1 << xcr0_t::BX_XCR0_FPU_BIT)
+#define BX_XCR0_SSE_MASK       (1 << xcr0_t::BX_XCR0_SSE_BIT)
+#define BX_XCR0_YMM_MASK       (1 << xcr0_t::BX_XCR0_YMM_BIT)
+#define BX_XCR0_BNDREGS_MASK   (1 << xcr0_t::BX_XCR0_BNDREGS_BIT)
+#define BX_XCR0_BNDCFG_MASK    (1 << xcr0_t::BX_XCR0_BNDCFG_BIT)
+#define BX_XCR0_OPMASK_MASK    (1 << xcr0_t::BX_XCR0_OPMASK_BIT)
+#define BX_XCR0_ZMM_HI256_MASK (1 << xcr0_t::BX_XCR0_ZMM_HI256_BIT)
+#define BX_XCR0_HI_ZMM_MASK    (1 << xcr0_t::BX_XCR0_HI_ZMM_BIT)
 
   IMPLEMENT_CRREG_ACCESSORS(FPU, BX_XCR0_FPU_BIT);
   IMPLEMENT_CRREG_ACCESSORS(SSE, BX_XCR0_SSE_BIT);

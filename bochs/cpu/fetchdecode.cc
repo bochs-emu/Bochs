@@ -1274,7 +1274,7 @@ BX_CPU_C::fetchDecode32(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
 
   unsigned remain = remainingInPage; // remain must be at least 1
   bx_bool is_32, lock=0;
-  unsigned b1, b2 = 0, os_32, ia_opcode = 0, alias = 0;
+  unsigned b1, b2 = 0, os_32, ia_opcode = BX_IA_ERROR, alias = 0, imm_mode = 0;
   unsigned rm = 0, mod=0, nnn=0, mod_mem = 0;
   unsigned seg = BX_SEG_REG_DS, seg_override = BX_SEG_REG_NULL;
 
@@ -1360,7 +1360,8 @@ fetch_b1:
 
   unsigned index = b1 + (os_32 << 9); // *512
 
-  unsigned attr = BxOpcodeInfo32[index].Attr;
+  const BxOpcodeInfo_t *OpcodeInfoPtr = &(BxOpcodeInfo32[index]);
+  unsigned attr = OpcodeInfoPtr->Attr;
 
   bx_bool has_modrm = 0;
 
@@ -1368,10 +1369,10 @@ fetch_b1:
   if ((b1 & ~0x01) == 0xc4 && (*iptr & 0xc0) == 0xc0) {
     // VEX 0xC4 and VEX 0xC5
     had_vex = 1;
-    if (sse_prefix) had_vex = -1;
-    if (! protected_mode()) had_vex = -1;
-    unsigned vex, vex_opcext = 1;
+    if (sse_prefix || ! protected_mode())
+      goto decode_done;
 
+    unsigned vex, vex_opcext = 1;
     if (remain != 0) {
       remain--;
       vex = *iptr++;
@@ -1405,16 +1406,18 @@ fetch_b1:
       return(-1);
 
     b1 += 256 * vex_opcext;
-    if (b1 < 256 || b1 >= 1024) had_vex = -1;
-    else has_modrm = (b1 != 0x177); // if not VZEROUPPER/VZEROALL opcode
+    if (b1 < 256 || b1 >= 1024) goto decode_done;
+    has_modrm = (b1 != 0x177); // if not VZEROUPPER/VZEROALL opcode
+
+    OpcodeInfoPtr = &BxOpcodeTableAVX[(b1-256) + 768*vex_l];
   }
   else if (b1 == 0x8f && (*iptr & 0xc8) == 0xc8) {
     // 3 byte XOP prefix
     had_xop = 1;
-    if (sse_prefix) had_xop = -1;
-    if (! protected_mode()) had_xop = -1;
-    unsigned vex;
+    if (sse_prefix || ! protected_mode())
+      goto decode_done;
 
+    unsigned vex;
     if (remain > 2) {
       remain -= 3;
       vex = *iptr++; // fetch XOP2
@@ -1424,7 +1427,7 @@ fetch_b1:
 
     unsigned xop_opcext = (vex & 0x1f) - 8;
     if (xop_opcext >= 3)
-      had_xop = -1;
+      goto decode_done;
 
     vex = *iptr++; // fetch XOP3
 
@@ -1433,11 +1436,13 @@ fetch_b1:
     vex_l = (vex >> 2) & 0x1;
     i->setVL(BX_VL128 + vex_l);
     sse_prefix = vex & 0x3;
-    if (sse_prefix) had_xop = -1;
+    if (sse_prefix) goto decode_done;
 
     b1 = *iptr++; // fetch new b1
     has_modrm = 1;
     b1 += 256 * xop_opcext;
+
+    OpcodeInfoPtr = &BxOpcodeTableXOP[b1 + 768*vex_l];
   }
   else
 #endif
@@ -1619,24 +1624,6 @@ fetch_b1:
 
 modrm_done:
 
-    // Resolve ExecutePtr and additional opcode Attr
-    const BxOpcodeInfo_t *OpcodeInfoPtr = &(BxOpcodeInfo32[index]);
-
-#if BX_SUPPORT_AVX
-    if (had_vex != 0) {
-      if (had_vex < 0)
-         OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
-      else
-         OpcodeInfoPtr = &BxOpcodeTableAVX[(b1-256) + 768*vex_l];
-    }
-    else if (had_xop != 0) {
-      if (had_xop < 0)
-         OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
-      else
-         OpcodeInfoPtr = &BxOpcodeTableXOP[b1 + 768*vex_l];
-    }
-#endif
-
     attr = OpcodeInfoPtr->Attr;
 
     if (attr & BxAliasSSE) {
@@ -1646,7 +1633,7 @@ modrm_done:
 #if BX_SUPPORT_AVX
     else if (attr & BxAliasVexW) {
       // VexW alias could come with BxPrefixSSE
-      BX_ASSERT(had_vex != 0 || had_xop != 0);
+      BX_ASSERT(had_vex | had_xop);
       alias = vex_w;
     }
 #endif
@@ -1663,10 +1650,7 @@ modrm_done:
 
       if (group < BxPrefixSSE) {
         /* For opcodes with only one allowed SSE prefix */
-        if (sse_prefix != (group >> 4)) {
-          OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
-          alias = 0;
-        }
+        if (sse_prefix != (group >> 4)) goto decode_done;
         break;
       }
 
@@ -1679,11 +1663,11 @@ modrm_done:
           break;
 #if BX_SUPPORT_AVX
         case BxSplitVexW64: // VexW is ignored in 32-bit mode
-          BX_ASSERT(had_vex != 0 || had_xop != 0);
+          BX_ASSERT(had_vex | had_xop);
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[0]);
           break;
         case BxSplitVexW:   // VexW is a real opcode extension
-          BX_ASSERT(had_vex != 0 || had_xop != 0);
+          BX_ASSERT(had_vex | had_xop);
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[vex_w]);
           break;
         case BxSplitMod11B:
@@ -1728,19 +1712,6 @@ modrm_done:
     // the if() above after fetching the 2nd byte, so this path is
     // taken in all cases if a modrm byte is NOT required.
 
-    const BxOpcodeInfo_t *OpcodeInfoPtr = &(BxOpcodeInfo32[index]);
-
-#if BX_SUPPORT_AVX
-    if (had_vex != 0) {
-      if (had_vex < 0)
-         OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
-      else
-         OpcodeInfoPtr = &BxOpcodeTableAVX[(b1-256) + 768*vex_l];
-    }
-    // XOP always has modrm byte
-    BX_ASSERT(had_xop == 0);
-#endif
-
     unsigned group = attr & BxGroupX;
     if (group == BxPrefixSSE && sse_prefix) {
       OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix-1]);
@@ -1764,12 +1735,12 @@ modrm_done:
       {
         BX_INFO(("LOCK prefix unallowed (op1=0x%x, modrm=0x%02x)", b1, b2));
         // replace execution function with undefined-opcode
-        ia_opcode = BX_IA_ERROR;
+        goto decode_done;
       }
     }
   }
 
-  unsigned imm_mode = attr & BxImmediate;
+  imm_mode = attr & BxImmediate;
   if (imm_mode) {
     // make sure iptr was advanced after Ib(), Iw() and Id()
     switch (imm_mode) {
@@ -1920,7 +1891,7 @@ modrm_done:
   i->setIaOpcode(ia_opcode);
 
 #if BX_SUPPORT_AVX
-  if (had_vex > 0 || had_xop > 0) {
+  if (had_vex | had_xop) {
     if (! use_vvv && vvv != 0) {
       ia_opcode = BX_IA_ERROR;
     }
@@ -1935,6 +1906,8 @@ modrm_done:
     BX_ASSERT(! use_vvv);
   }
 #endif
+
+decode_done:
 
   if (mod_mem) {
     i->execute1 = BxOpcodesTable[ia_opcode].execute1;

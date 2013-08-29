@@ -679,7 +679,7 @@ void corei7_ivy_bridge_3770k_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpu
 
   case 2: // AVX leaf
     leaf->eax = 256;
-    leaf->ebx = 576;
+    leaf->ebx = XSAVE_YMM_STATE_OFFSET;
     leaf->ecx = 0;
     leaf->edx = 0;
     return;
