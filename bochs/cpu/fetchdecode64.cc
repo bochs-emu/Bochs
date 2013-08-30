@@ -2163,7 +2163,7 @@ modrm_done:
       else {
         BX_INFO(("LOCK prefix unallowed (op1=0x%x, modrm=0x%02x)", b1, b2));
         // replace execution function with undefined-opcode
-        goto decode_done;
+        ia_opcode = BX_IA_ERROR;
       }
     }
   }
