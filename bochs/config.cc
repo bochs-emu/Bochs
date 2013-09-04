@@ -446,7 +446,7 @@ void bx_init_options()
   new bx_param_num_c(cpuid_param,
       "level", "CPU Level",
       "CPU level",
-      5, BX_CPU_LEVEL,
+     (BX_CPU_LEVEL < 5) ? BX_CPU_LEVEL : 5, BX_CPU_LEVEL,
       BX_CPU_LEVEL);
 
   new bx_param_num_c(cpuid_param,
