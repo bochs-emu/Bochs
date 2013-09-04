@@ -672,9 +672,6 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
 
 #if BX_CPU_LEVEL >= 4
   static unsigned cpu_level = SIM->get_param_num(BXPN_CPUID_LEVEL)->get();
-  if (cpu_level < 5) {
-    BX_PANIC(("Unsupported CPUID level selected %d", cpu_level));
-  }
 
   features_bitmask |= BX_ISA_486;
 
