@@ -1409,7 +1409,7 @@ fetch_b1:
     if (b1 < 256 || b1 >= 1024) goto decode_done;
     has_modrm = (b1 != 0x177); // if not VZEROUPPER/VZEROALL opcode
 
-    OpcodeInfoPtr = &BxOpcodeTableAVX[(b1-256) + 768*vex_l];
+    OpcodeInfoPtr = &BxOpcodeTableAVX[(b1-256)*2 + vex_l];
   }
   else if (b1 == 0x8f && (*iptr & 0xc8) == 0xc8) {
     // 3 byte XOP prefix
@@ -1442,7 +1442,7 @@ fetch_b1:
     has_modrm = 1;
     b1 += 256 * xop_opcext;
 
-    OpcodeInfoPtr = &BxOpcodeTableXOP[b1 + 768*vex_l];
+    OpcodeInfoPtr = &BxOpcodeTableXOP[b1*2 + vex_l];
   }
   else
 #endif
