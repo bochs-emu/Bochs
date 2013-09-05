@@ -513,13 +513,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F 36 /w */ { 0, BX_IA_ERROR },
   /* 0F 37 /w */ { 0, BX_IA_GETSEC },
 #if BX_CPU_LEVEL >= 6
-  /* 0F 38 /w */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
+  /* 0F 38 /w */ { 0, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
 #else
   /* 0F 38 /w */ { 0, BX_IA_ERROR },
 #endif
   /* 0F 39 /w */ { 0, BX_IA_ERROR },
 #if BX_CPU_LEVEL >= 6
-  /* 0F 3A /w */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
+  /* 0F 3A /w */ { BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
 #else
   /* 0F 3A /w */ { 0, BX_IA_ERROR },
 #endif
@@ -1058,13 +1058,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F 36 /d */ { 0, BX_IA_ERROR },
   /* 0F 37 /d */ { 0, BX_IA_GETSEC },
 #if BX_CPU_LEVEL >= 6
-  /* 0F 38 /d */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
+  /* 0F 38 /d */ { 0, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
 #else
   /* 0F 38 /d */ { 0, BX_IA_ERROR },
 #endif
   /* 0F 39 /d */ { 0, BX_IA_ERROR },
 #if BX_CPU_LEVEL >= 6
-  /* 0F 3A /d */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
+  /* 0F 3A /d */ { BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
 #else
   /* 0F 3A /d */ { 0, BX_IA_ERROR },
 #endif
@@ -1366,7 +1366,7 @@ fetch_b1:
   bx_bool has_modrm = 0;
 
 #if BX_SUPPORT_AVX
-  if ((b1 & ~0x01) == 0xc4 && (*iptr & 0xc0) == 0xc0) {
+  if ((b1 & ~0x1) == 0xc4 && (*iptr & 0xc0) == 0xc0) {
     // VEX 0xC4 and VEX 0xC5
     had_vex_xop = 1;
     if (sse_prefix || ! protected_mode())
@@ -1398,18 +1398,19 @@ fetch_b1:
     i->setVL(BX_VL128 + vex_l);
     sse_prefix = vex & 0x3;
 
+    unsigned opcode_byte = 0;
     if (remain != 0) {
       remain--;
-      b1 = *iptr++; // fetch new b1
+      opcode_byte = *iptr++;
     }
     else
       return(-1);
 
-    b1 += 256 * vex_opcext;
-    if (b1 < 256 || b1 >= 1024) goto decode_done;
-    has_modrm = (b1 != 0x177); // if not VZEROUPPER/VZEROALL opcode
+    opcode_byte += 256 * vex_opcext;
+    if (opcode_byte < 256 || opcode_byte >= 1024) goto decode_done;
+    has_modrm = (opcode_byte != 0x177); // if not VZEROUPPER/VZEROALL opcode
 
-    OpcodeInfoPtr = &BxOpcodeTableAVX[(b1-256)*2 + vex_l];
+    OpcodeInfoPtr = &BxOpcodeTableAVX[(opcode_byte-256)*2 + vex_l];
   }
   else if (b1 == 0x8f && (*iptr & 0xc8) == 0xc8) {
     // 3 byte XOP prefix
@@ -1438,11 +1439,11 @@ fetch_b1:
     sse_prefix = vex & 0x3;
     if (sse_prefix) goto decode_done;
 
-    b1 = *iptr++; // fetch new b1
+    unsigned opcode_byte = *iptr++;
     has_modrm = 1;
-    b1 += 256 * xop_opcext;
+    opcode_byte += 256 * xop_opcext;
 
-    OpcodeInfoPtr = &BxOpcodeTableXOP[b1*2 + vex_l];
+    OpcodeInfoPtr = &BxOpcodeTableXOP[opcode_byte*2 + vex_l];
   }
   else
 #endif
@@ -1453,12 +1454,12 @@ fetch_b1:
   if (has_modrm) {
 
 #if BX_CPU_LEVEL >= 6
-    unsigned b3 = 0;
     // handle 3-byte escape
-    if ((attr & BxGroupX) == Bx3ByteOp) {
+    if (b1 == 0x138 || b1 == 0x13a) {
       if (remain != 0) {
         remain--;
-        b3 = *iptr++;
+        unsigned b3 = *iptr++;
+        OpcodeInfoPtr = &OpcodeInfoPtr->AnotherArray[b3];
       }
       else
         return(-1);
@@ -1478,11 +1479,8 @@ fetch_b1:
     nnn = (b2 >> 3) & 0x7;
     rm  = b2 & 0x7;
 
-#if BX_SUPPORT_AVX
-    if (! had_vex_xop)
-#endif
-      if (b1 >= 0xd8 && b1 <= 0xdf)
-        i->setFoo((b2 | (b1 << 8)) & 0x7ff); /* for x87 */
+    if (b1 >= 0xd8 && b1 <= 0xdf)
+      i->setFoo((b2 | (b1 << 8)) & 0x7ff); /* for x87 */
 
     // MOVs with CRx and DRx always use register ops and ignore the mod field.
     if ((b1 & ~3) == 0x120)
@@ -1624,7 +1622,7 @@ fetch_b1:
 
 modrm_done:
 
-    attr = OpcodeInfoPtr->Attr;
+    attr |= OpcodeInfoPtr->Attr;
 
     if (attr & BxAliasSSE) {
       // SSE alias always comes alone
@@ -1672,11 +1670,6 @@ modrm_done:
           break;
         case BxSplitMod11B:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[mod_mem]);
-          break;
-#endif
-#if BX_CPU_LEVEL >= 6
-        case Bx3ByteOp:
-          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3]);
           break;
 #endif
         case BxOSizeGrp:

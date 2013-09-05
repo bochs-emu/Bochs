@@ -452,9 +452,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 35 /w */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /w */ { 0, BX_IA_ERROR },
   /* 0F 37 /w */ { 0, BX_IA_GETSEC },
-  /* 0F 38 /w */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
+  /* 0F 38 /w */ { 0, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
   /* 0F 39 /w */ { 0, BX_IA_ERROR },
-  /* 0F 3A /w */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
+  /* 0F 3A /w */ { BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
   /* 0F 3B /w */ { 0, BX_IA_ERROR },
   /* 0F 3C /w */ { 0, BX_IA_ERROR },
   /* 0F 3D /w */ { 0, BX_IA_ERROR },
@@ -967,9 +967,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 35 /d */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /d */ { 0, BX_IA_ERROR },
   /* 0F 37 /d */ { 0, BX_IA_GETSEC },
-  /* 0F 38 /d */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
+  /* 0F 38 /d */ { 0, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
   /* 0F 39 /d */ { 0, BX_IA_ERROR },
-  /* 0F 3A /d */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
+  /* 0F 3A /d */ { BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
   /* 0F 3B /d */ { 0, BX_IA_ERROR },
   /* 0F 3C /d */ { 0, BX_IA_ERROR },
   /* 0F 3D /d */ { 0, BX_IA_ERROR },
@@ -1482,9 +1482,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 35 /q */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /q */ { 0, BX_IA_ERROR },
   /* 0F 37 /q */ { 0, BX_IA_GETSEC },
-  /* 0F 38 /q */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
+  /* 0F 38 /q */ { 0, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
   /* 0F 39 /q */ { 0, BX_IA_ERROR },
-  /* 0F 3A /q */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
+  /* 0F 3A /q */ { BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
   /* 0F 3B /q */ { 0, BX_IA_ERROR },
   /* 0F 3C /q */ { 0, BX_IA_ERROR },
   /* 0F 3D /q */ { 0, BX_IA_ERROR },
@@ -1823,7 +1823,7 @@ fetch_b1:
   bx_bool has_modrm = 0;
 
 #if BX_SUPPORT_AVX
-  if ((b1 & ~0x01) == 0xc4) {
+  if ((b1 & ~0x1) == 0xc4) {
     // VEX
     had_vex_xop = 1;
     if (sse_prefix | rex_prefix)
@@ -1863,19 +1863,20 @@ fetch_b1:
     i->setVL(BX_VL128 + vex_l);
     sse_prefix = vex & 0x3;
 
+    unsigned opcode_byte = 0;
     if (remain != 0) {
       remain--;
-      b1 = *iptr++; // fetch new b1
+      opcode_byte = *iptr++; // fetch new b1
     }
     else
       return(-1);
 
-    b1 += 256 * vex_opcext;
-    if (b1 < 256 || b1 >= 1024)
+    opcode_byte += 256 * vex_opcext;
+    if (opcode_byte < 256 || opcode_byte >= 1024)
       goto decode_done;
-    has_modrm = (b1 != 0x177); // if not VZEROUPPER/VZEROALL opcode
+    has_modrm = (opcode_byte != 0x177); // if not VZEROUPPER/VZEROALL opcode
 
-    OpcodeInfoPtr = &BxOpcodeTableAVX[(b1-256)*2 + vex_l];
+    OpcodeInfoPtr = &BxOpcodeTableAVX[(opcode_byte-256)*2 + vex_l];
   }
   else if (b1 == 0x8f && (*iptr & 0x08) == 0x08) {
     // 3 byte XOP prefix
@@ -1913,11 +1914,11 @@ fetch_b1:
     sse_prefix = vex & 0x3;
     if (sse_prefix) goto decode_done;
 
-    b1 = *iptr++; // fetch new b1
+    unsigned opcode_byte = *iptr++;
     has_modrm = 1;
-    b1 += 256 * xop_opcext;
+    opcode_byte += 256 * xop_opcext;
 
-    OpcodeInfoPtr = &BxOpcodeTableXOP[b1*2 + vex_l];
+    OpcodeInfoPtr = &BxOpcodeTableXOP[opcode_byte*2 + vex_l];
   }
   else
 #endif
@@ -1927,12 +1928,12 @@ fetch_b1:
 
   if (has_modrm) {
 
-    unsigned b3 = 0;
     // handle 3-byte escape
-    if ((attr & BxGroupX) == Bx3ByteOp) {
+    if (b1 == 0x138 || b1 == 0x13a) {
       if (remain != 0) {
         remain--;
-        b3 = *iptr++;
+        unsigned b3 = *iptr++;
+        OpcodeInfoPtr = &OpcodeInfoPtr->AnotherArray[b3];
       }
       else
         return(-1);
@@ -1951,11 +1952,8 @@ fetch_b1:
     nnn = ((b2 >> 3) & 0x7) | rex_r;
     rm  = (b2 & 0x7) | rex_b;
 
-#if BX_SUPPORT_AVX
-    if (! had_vex_xop)
-#endif
-      if (b1 >= 0xd8 && b1 <= 0xdf)
-        i->setFoo((b2 | (b1 << 8)) & 0x7ff); /* for x87 */
+    if (b1 >= 0xd8 && b1 <= 0xdf)
+      i->setFoo((b2 | (b1 << 8)) & 0x7ff); /* for x87 */
 
     // MOVs with CRx and DRx always use register ops and ignore the mod field.
     if ((b1 & ~3) == 0x120)
@@ -2055,7 +2053,7 @@ get_32bit_displ:
 
 modrm_done:
 
-    attr = OpcodeInfoPtr->Attr;
+    attr |= OpcodeInfoPtr->Attr;
 
     if (attr & BxAliasSSE) {
       // SSE alias always comes alone
@@ -2102,9 +2100,6 @@ modrm_done:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[mod_mem]);
           break;
 #endif
-        case Bx3ByteOp:
-          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3]);
-          break;
         case BxOSizeGrp:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[offset >> 9]);
           break;

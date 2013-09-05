@@ -429,7 +429,7 @@ void BX_CPU_C::handleAvxModeChange(void)
       BX_CPU_THIS_PTR avx_ok = 1;
 
 #if BX_SUPPORT_EVEX
-      if (~BX_CPU_THIS_PTR xcr0.val32 & (BX_XCR0_OPMASK_MASK | BX_XCR0_ZMM_HI256_MASK | BX_XCR0_HI_ZMM_MASK) != 0)
+      if ((~BX_CPU_THIS_PTR xcr0.val32 & (BX_XCR0_OPMASK_MASK | BX_XCR0_ZMM_HI256_MASK | BX_XCR0_HI_ZMM_MASK)) != 0)
         BX_CPU_THIS_PTR evex_ok = 0;
       else
         BX_CPU_THIS_PTR evex_ok = 1;

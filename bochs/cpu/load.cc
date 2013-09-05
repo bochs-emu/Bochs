@@ -130,10 +130,29 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Vector(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
+  BX_ASSERT(i->getVL() != BX_VL512);
+
   if (i->getVL() == BX_VL256)
     read_virtual_ymmword(i->seg(), eaddr, &BX_READ_YMM_REG(BX_VECTOR_TMP_REGISTER));
   else
     read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_VECTOR_TMP_REGISTER));
+
+  return BX_CPU_CALL_METHOD(i->execute2(), (i));
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Half_Vector(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  BX_ASSERT(i->getVL() != BX_VL512);
+
+  if (i->getVL() == BX_VL256) {
+    read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_VECTOR_TMP_REGISTER));
+  }
+  else {
+    Bit64u val_64 = read_virtual_qword(i->seg(), eaddr);
+    BX_WRITE_XMM_REG_LO_QWORD(BX_VECTOR_TMP_REGISTER, val_64);
+  }
 
   return BX_CPU_CALL_METHOD(i->execute2(), (i));
 }

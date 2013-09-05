@@ -2114,6 +2114,7 @@ public: // for now...
   BX_SMF BX_INSF_TYPE LOAD_Wb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_AVX
   BX_SMF BX_INSF_TYPE LOAD_Vector(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE LOAD_Half_Vector(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
 #if BX_SUPPORT_FPU == 0	// if FPU is disabled
@@ -3605,6 +3606,9 @@ public: // for now...
   BX_SMF BX_INSF_TYPE CVTTSS2SI_GqWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE CVTSD2SI_GqWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE CVTSS2SI_GqWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF BX_INSF_TYPE PEXTRQ_EqVdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE PEXTRQ_EqVdqIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif  // #if BX_SUPPORT_X86_64
 
   BX_SMF BX_INSF_TYPE RDTSCP(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -5070,11 +5074,10 @@ enum {
 #define BxGroupN            0x0060 // Group encoding: 0110
 #define BxSplitGroupN       0x0070 // Group encoding: 0111
 #define BxFPEscape          0x0080 // Group encoding: 1000
-#define Bx3ByteOp           0x0090 // Group encoding: 1001
-#define BxOSizeGrp          0x00A0 // Group encoding: 1010
-#define BxSplitVexW         0x00B0 // Group encoding: 1011
-#define BxSplitVexW64       0x00C0 // Group encoding: 1100 - VexW ignored in 32-bit mode
-#define BxSplitMod11B       0x00D0 // Group encoding: 1101
+#define BxOSizeGrp          0x0090 // Group encoding: 1001
+#define BxSplitVexW         0x00A0 // Group encoding: 1010
+#define BxSplitVexW64       0x00B0 // Group encoding: 1011 - VexW ignored in 32-bit mode
+#define BxSplitMod11B       0x00C0 // Group encoding: 1100
 
 // The BxImmediate2 mask specifies kind of second immediate data
 // required by instruction.

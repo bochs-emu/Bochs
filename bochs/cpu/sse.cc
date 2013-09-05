@@ -322,6 +322,18 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRD_EdVdqIbR(bxInstruction_c *i
   BX_NEXT_INSTR(i);
 }
 
+#if BX_SUPPORT_X86_64
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRQ_EqVdqIbR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
+
+  Bit64u result = op.xmm64u(i->Ib() & 1);
+  BX_WRITE_64BIT_REG(i->dst(), result);
+
+  BX_NEXT_INSTR(i);
+}
+#endif
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRD_EdVdqIbM(bxInstruction_c *i)
 {
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
@@ -343,6 +355,19 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRD_EdVdqIbM(bxInstruction_c *i
 
   BX_NEXT_INSTR(i);
 }
+
+#if BX_SUPPORT_X86_64
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRQ_EqVdqIbM(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
+  Bit64u result = op.xmm64u(i->Ib() & 1);
+  write_virtual_qword_64(i->seg(), eaddr, result);
+
+  BX_NEXT_INSTR(i);
+}
+#endif
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::EXTRACTPS_EdVpsIbR(bxInstruction_c *i)
 {
