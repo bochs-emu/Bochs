@@ -987,9 +987,6 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
   Bit32u features_bitmask = 0;
 
   static unsigned cpu_level = SIM->get_param_num(BXPN_CPUID_LEVEL)->get();
-  if (cpu_level < 5) {
-    BX_PANIC(("Unsupported CPUID level selected %d", cpu_level));
-  }
 
 #if BX_SUPPORT_APIC
   static unsigned apic_enabled = SIM->get_param_enum(BXPN_CPUID_APIC)->get();
