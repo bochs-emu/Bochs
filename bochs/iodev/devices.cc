@@ -208,7 +208,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 #if BX_SUPPORT_CLGD54XX
     PLUG_load_plugin(svga_cirrus, PLUGTYPE_CORE);
 #else
-    BX_ERROR(("Bochs is not compiled with Cirrus support"));
+    BX_PANIC(("Bochs is not compiled with Cirrus support"));
 #endif
   } else {
     PLUG_load_plugin(vga, PLUGTYPE_CORE);
