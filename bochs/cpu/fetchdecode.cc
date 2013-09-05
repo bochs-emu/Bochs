@@ -1285,7 +1285,7 @@ BX_CPU_C::fetchDecode32(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
   unsigned sse_prefix = SSE_PREFIX_NONE;
 
 #if BX_SUPPORT_AVX
-  int had_vex = 0, had_xop = 0, vvv = -1;
+  int had_vex_xop = 0, vvv = -1;
   bx_bool vex_w = 0, vex_l = 0, use_vvv = 0;
 #endif
 
@@ -1368,7 +1368,7 @@ fetch_b1:
 #if BX_SUPPORT_AVX
   if ((b1 & ~0x01) == 0xc4 && (*iptr & 0xc0) == 0xc0) {
     // VEX 0xC4 and VEX 0xC5
-    had_vex = 1;
+    had_vex_xop = 1;
     if (sse_prefix || ! protected_mode())
       goto decode_done;
 
@@ -1413,7 +1413,7 @@ fetch_b1:
   }
   else if (b1 == 0x8f && (*iptr & 0xc8) == 0xc8) {
     // 3 byte XOP prefix
-    had_xop = 1;
+    had_vex_xop = 1;
     if (sse_prefix || ! protected_mode())
       goto decode_done;
 
@@ -1479,7 +1479,7 @@ fetch_b1:
     rm  = b2 & 0x7;
 
 #if BX_SUPPORT_AVX
-    if (! had_vex && ! had_xop)
+    if (! had_vex_xop)
 #endif
       if (b1 >= 0xd8 && b1 <= 0xdf)
         i->setFoo((b2 | (b1 << 8)) & 0x7ff); /* for x87 */
@@ -1633,7 +1633,7 @@ modrm_done:
 #if BX_SUPPORT_AVX
     else if (attr & BxAliasVexW) {
       // VexW alias could come with BxPrefixSSE
-      BX_ASSERT(had_vex | had_xop);
+      BX_ASSERT(had_vex_xop);
       alias = vex_w;
     }
 #endif
@@ -1663,11 +1663,11 @@ modrm_done:
           break;
 #if BX_SUPPORT_AVX
         case BxSplitVexW64: // VexW is ignored in 32-bit mode
-          BX_ASSERT(had_vex | had_xop);
+          BX_ASSERT(had_vex_xop);
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[0]);
           break;
         case BxSplitVexW:   // VexW is a real opcode extension
-          BX_ASSERT(had_vex | had_xop);
+          BX_ASSERT(had_vex_xop);
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[vex_w]);
           break;
         case BxSplitMod11B:
@@ -1891,7 +1891,7 @@ modrm_done:
   i->setIaOpcode(ia_opcode);
 
 #if BX_SUPPORT_AVX
-  if (had_vex | had_xop) {
+  if (had_vex_xop) {
     if (! use_vvv && vvv != 0) {
       ia_opcode = BX_IA_ERROR;
     }
