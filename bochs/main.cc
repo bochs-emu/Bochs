@@ -555,7 +555,7 @@ int bx_init_main(int argc, char *argv[])
   SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_RUN_START);
 
   // interpret the args that start with -, like -q, -f, etc.
-  int arg = 1, load_rcfile=1, i = 0;
+  int arg = 1, load_rcfile=1;
   while (arg < argc) {
     // parse next arg
     if (!strcmp("--help", argv[arg]) || !strncmp("-h", argv[arg], 2)
@@ -610,6 +610,7 @@ int bx_init_main(int argc, char *argv[])
         }
 #if BX_CPU_LEVEL > 4
         else if (!strcmp("cpu", argv[arg+1])) {
+          int i = 0;
           fprintf(stderr, "Supported CPU models:\n\n");
           do {
             fprintf(stderr, "%s\n", SIM->get_param_enum(BXPN_CPU_MODEL)->get_choice(i));
