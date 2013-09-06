@@ -1918,7 +1918,7 @@ fetch_b1:
     has_modrm = 1;
     opcode_byte += 256 * xop_opcext;
 
-    OpcodeInfoPtr = &BxOpcodeTableXOP[opcode_byte*2 + vex_l];
+    OpcodeInfoPtr = &BxOpcodeTableXOP[opcode_byte];
   }
   else
 #endif
@@ -2255,20 +2255,25 @@ modrm_done:
         BX_PANIC(("fetchdecode64: imm_mode = %u", imm_mode));
     }
 
-    unsigned imm_mode2 = attr & BxImmediate2;
-    if (imm_mode2) {
-      if (imm_mode2 == BxImmediate_Ib2) {
-        if (remain != 0) {
-          i->modRMForm.Ib2[0] = *iptr;
-          remain--;
+#if BX_SUPPORT_AVX
+    if (! had_vex_xop)
+#endif
+    {
+      unsigned imm_mode2 = attr & BxImmediate2;
+      if (imm_mode2) {
+        if (imm_mode2 == BxImmediate_Ib2) {
+          if (remain != 0) {
+            i->modRMForm.Ib2[0] = *iptr;
+            remain--;
+          }
+          else {
+            return(-1);
+          }
         }
         else {
-          return(-1);
+          BX_INFO(("b1 was %x", b1));
+          BX_PANIC(("fetchdecode64: imm_mode2 = %u", imm_mode2));
         }
-      }
-      else {
-        BX_INFO(("b1 was %x", b1));
-        BX_PANIC(("fetchdecode64: imm_mode2 = %u", imm_mode2));
       }
     }
   }
@@ -2323,6 +2328,12 @@ modrm_done:
 #if BX_SUPPORT_AVX
   if (had_vex_xop) {
     if (! use_vvv && vvv != 0) {
+      ia_opcode = BX_IA_ERROR;
+    }
+    if ((attr & BxVexL0) != 0 && vex_l) {
+      ia_opcode = BX_IA_ERROR;
+    }
+    if ((attr & BxVexL1) != 0 && !vex_l) {
       ia_opcode = BX_IA_ERROR;
     }
     if ((attr & BxVexW0) != 0 && vex_w) {

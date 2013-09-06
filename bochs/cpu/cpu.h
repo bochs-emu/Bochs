@@ -5086,13 +5086,15 @@ enum {
 #define BxImmediate_Iw2     0x0200
 #define BxImmediate_Id2     0x0300
 
-#define BxAliasSSE          0x0400 // bit 10, form final opcode using SSE prefix and current opcode
-#define BxAliasVexW         0x0800 // bit 11, form final opcode using VEX.W and current opcode
+#define BxVexL0             0x0100 // bit 8 (aliased with imm2)
+#define BxVexL1             0x0200 // bit 9 (aliased with imm2)
+#define BxVexW0             0x0400 // bit 10
+#define BxVexW1             0x0800 // bit 11
 
-#define BxLockable          0x1000 // bit 12
-#define BxVexW0             0x2000 // bit 13
-#define BxVexW1             0x4000 // bit 14
+#define BxAliasSSE          0x1000 // bit 12, form final opcode using SSE prefix and current opcode
+#define BxAliasVexW         0x2000 // bit 13, form final opcode using VEX.W and current opcode
 
+#define BxLockable          0x4000 // bit 14
 #define BxTraceEnd          0x8000 // bit 15
 
 #ifdef BX_TRACE_CACHE_NO_SPECULATIVE_TRACING
