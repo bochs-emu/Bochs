@@ -35,8 +35,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KANDW_KGwKHwKEwR(bxInstruction_c *
     exception(BX_UD_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_EVEX
   Bit16u opmask = BX_READ_16BIT_OPMASK(i->src1()) & BX_READ_16BIT_OPMASK(i->src2());
   BX_WRITE_OPMASK(i->dst(), opmask);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -48,8 +50,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KANDNW_KGwKHwKEwR(bxInstruction_c 
     exception(BX_UD_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_EVEX
   Bit16u opmask = ~(BX_READ_16BIT_OPMASK(i->src1())) & BX_READ_16BIT_OPMASK(i->src2());
   BX_WRITE_OPMASK(i->dst(), opmask);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -61,11 +65,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVW_KGwKEwM(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_EVEX
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   Bit16u opmask = read_virtual_word(i->seg(), eaddr);
 
   BX_WRITE_OPMASK(i->dst(), opmask);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -77,7 +83,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVW_KGwKEwR(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_EVEX
   BX_WRITE_OPMASK(i->dst(), BX_READ_16BIT_OPMASK(i->src()));
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -89,9 +97,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVW_KEwKGwM(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_EVEX
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   write_virtual_word(i->seg(), eaddr, BX_READ_16BIT_OPMASK(i->src()));
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -103,7 +113,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVW_KGwEwR(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_EVEX
   BX_WRITE_OPMASK(i->dst(), BX_READ_16BIT_REG(i->src()));
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -115,7 +127,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVW_GdKEwR(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_EVEX
   BX_WRITE_32BIT_REGZ(i->dst(), BX_READ_16BIT_OPMASK(i->src()));
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -127,10 +141,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KUNPCKBW_KGwKHwKEwR(bxInstruction_
     exception(BX_UD_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_EVEX
   Bit16u opmask = BX_READ_8BIT_OPMASK(i->src1());
          opmask = (opmask << 8) | BX_READ_8BIT_OPMASK(i->src2());
 
   BX_WRITE_OPMASK(i->dst(), opmask);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -142,8 +158,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KNOTW_KGwKEwR(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_EVEX
   Bit16u opmask = ~BX_READ_16BIT_OPMASK(i->src());
   BX_WRITE_OPMASK(i->dst(), opmask);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -155,8 +173,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KORW_KGwKHwKEwR(bxInstruction_c *i
     exception(BX_UD_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_EVEX
   Bit16u opmask = BX_READ_16BIT_OPMASK(i->src1()) | BX_READ_16BIT_OPMASK(i->src2());
   BX_WRITE_OPMASK(i->dst(), opmask);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -168,11 +188,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KORTESTW_KGwKEw(bxInstruction_c *i
     exception(BX_UD_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_EVEX
   Bit16u tmp = BX_READ_16BIT_OPMASK(i->src1()) | BX_READ_16BIT_OPMASK(i->src2());
   if (tmp == 0)
     setEFlagsOSZAPC(EFlagsZFMask);
   else if (tmp == 0xffff)
     setEFlagsOSZAPC(EFlagsCFMask);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -184,12 +206,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KSHIFTLW_KGwKEw(bxInstruction_c *i
     exception(BX_UD_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_EVEX
   unsigned count = i->Ib();
   Bit16u opmask = 0;
   if (count < 15)
     opmask = BX_READ_16BIT_OPMASK(i->src()) << count;
 
   BX_WRITE_OPMASK(i->dst(), opmask);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -201,12 +225,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KSHIFTRW_KGwKEw(bxInstruction_c *i
     exception(BX_UD_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_EVEX
   unsigned count = i->Ib();
   Bit16u opmask = 0;
   if (count < 15)
     opmask = BX_READ_16BIT_OPMASK(i->src()) >> count;
 
   BX_WRITE_OPMASK(i->dst(), opmask);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -218,8 +244,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KXNORW_KGwKHwKEw(bxInstruction_c *
     exception(BX_UD_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_EVEX
   Bit16u opmask = ~(BX_READ_16BIT_OPMASK(i->src1()) ^ BX_READ_16BIT_OPMASK(i->src2()));
   BX_WRITE_OPMASK(i->dst(), opmask);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -231,8 +259,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KXORW_KGwKHwKEw(bxInstruction_c *i
     exception(BX_UD_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_EVEX
   Bit16u opmask = BX_READ_16BIT_OPMASK(i->src1()) ^ BX_READ_16BIT_OPMASK(i->src2());
   BX_WRITE_OPMASK(i->dst(), opmask);
+#endif
 
   BX_NEXT_INSTR(i);
 }
