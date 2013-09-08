@@ -76,6 +76,7 @@ enum {
   BX_SRC_VEC_RM, // will use vector TMP register
   BX_SRC_MEM_NO_VVV,
   BX_SRC_VVV,
+  BX_SRC_KMASK_VVV,
   BX_SRC_VIB
 };
 

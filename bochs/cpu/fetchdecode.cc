@@ -1870,6 +1870,13 @@ modrm_done:
       i->setSrcReg(n, vvv);
       use_vvv = 1;
       break;
+    case BX_SRC_KMASK_VVV:
+      if (vvv >= 8) ia_opcode = BX_IA_ERROR;
+      else {
+        i->setSrcReg(n, vvv);
+        use_vvv = 1;
+      }
+      break;
     case BX_SRC_VIB:
       i->setSrcReg(n, (i->Ib() >> 4) & 7);
       break;

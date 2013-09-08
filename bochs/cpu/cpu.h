@@ -269,7 +269,7 @@
 #define BX_CPU_ID (0)
 #endif
 
-#if BX_SUPPORT_EVEX
+#if BX_SUPPORT_AVX
 
 #define BX_READ_8BIT_OPMASK(index)  (BX_CPU_THIS_PTR opmask[index].word.byte.rh)
 #define BX_READ_16BIT_OPMASK(index) (BX_CPU_THIS_PTR opmask[index].word.rx)
@@ -3148,6 +3148,26 @@ public: // for now...
   BX_SMF BX_INSF_TYPE T1MSKC_BqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE TZMSK_BqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* TBM (AMD) */
+#endif
+
+#if BX_SUPPORT_AVX
+  // AVX512 OPMASK instructions (VEX encoded)
+  BX_SMF BX_INSF_TYPE KANDW_KGwKHwKEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE KANDNW_KGwKHwKEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE KMOVW_KGwKEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE KMOVW_KGwKEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE KMOVW_KEwKGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE KMOVW_KGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE KMOVW_GdKEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE KUNPCKBW_KGwKHwKEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE KNOTW_KGwKEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE KORW_KGwKHwKEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE KORTESTW_KGwKEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE KSHIFTLW_KGwKEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE KSHIFTRW_KGwKEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE KXNORW_KGwKHwKEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE KXORW_KGwKHwKEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  // AVX512 OPMASK instructions (VEX encoded)
 #endif
 
   BX_SMF BX_INSF_TYPE LZCNT_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
