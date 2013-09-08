@@ -371,7 +371,16 @@ void BX_CPU_C::register_state(void)
       }
     }
   }
+#if BX_SUPPORT_EVEX
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX512)) {
+    bx_list_c *mask = new bx_list_c(cpu, "OPMASK");
+    for (n=0; n<8; n++) {
+      sprintf(name, "k%d", n);
+      new bx_shadow_num_c(mask, name, &opmask[n].rrx, BASE_HEX);
+    }
+  }
 #endif
+#endif // BX_CPU_LEVEL >= 6
 
 #if BX_SUPPORT_MONITOR_MWAIT
   bx_list_c *monitor_list = new bx_list_c(cpu, "MONITOR");
@@ -735,8 +744,12 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_AVX
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX))
     BX_CPU_THIS_PTR xcr0_suppmask |= BX_XCR0_YMM_MASK;
+#if BX_SUPPORT_EVEX
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX512))
+    BX_CPU_THIS_PTR xcr0_suppmask |= BX_XCR0_OPMASK_MASK | BX_XCR0_ZMM_HI256_MASK | BX_XCR0_HI_ZMM_MASK;
 #endif
-#endif
+#endif // BX_SUPPORT_AVX
+#endif // BX_CPU_LEVEL >= 6
 
 /* initialise MSR registers to defaults */
 #if BX_CPU_LEVEL >= 5
