@@ -152,8 +152,8 @@ public:
         // use Ib[3] as AVX mask register
         // use Ib[2] as AVX attributes
         //     7..4 (unused)
-        //     3..3 Broadcast/RC/SAE context (EVEX.B)
-        //     2..2 Zeroing/Merging mask (EVEX.Z)
+        //     3..3 Broadcast/RC/SAE control (EVEX.b)
+        //     2..2 Zeroing/Merging mask (EVEX.z)
         //     1..0 Round control
         // use Ib[1] as AVX VL
         Bit8u  Ib[4];
@@ -342,6 +342,29 @@ public:
   BX_CPP_INLINE void setVL(unsigned value) {
     modRMForm.Ib[1] = value;
   }
+
+#if BX_SUPPORT_EVEX
+  BX_CPP_INLINE void setOpmask(unsigned reg) {
+    modRMForm.Ib[3] = reg;
+  }
+  BX_CPP_INLINE unsigned opmask(void) const {
+    return modRMForm.Ib[3];
+  }
+
+  BX_CPP_INLINE void setBroadcast(unsigned bit) {
+    modRMForm.Ib[2] = (modRMForm.Ib[2] & ~(1<<3)) | (bit<<3);
+  } 
+  BX_CPP_INLINE unsigned getBroadcast(void) const {
+    return modRMForm.Ib[2] & (1 << 3);
+  } 
+
+  BX_CPP_INLINE void setZeroMasking(unsigned bit) {
+    modRMForm.Ib[2] = (modRMForm.Ib[2] & ~(1<<2)) | (bit<<2);
+  } 
+  BX_CPP_INLINE unsigned isZeroMasking(void) const {
+    return modRMForm.Ib[2] & (1 << 2);
+  } 
+#endif
 
   BX_CPP_INLINE void setSrcReg(unsigned src, unsigned reg) {
     metaData[src] = reg;

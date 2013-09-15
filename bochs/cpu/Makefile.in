@@ -403,7 +403,7 @@ fetchdecode64.o: fetchdecode64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  descriptor.h instr.h ia_opcodes.h lazy_flags.h icache.h apic.h i387.h \
  fpu/softfloat.h fpu/tag_w.h fpu/status_w.h fpu/control_w.h xmm.h vmx.h stack.h \
  fetchdecode.h fetchdecode_x87.h fetchdecode_sse.h fetchdecode_avx.h \
- fetchdecode_xop.h
+ fetchdecode_xop.h fetchdecode_evex.h
 fetchdecode.o: fetchdecode.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
@@ -411,7 +411,7 @@ fetchdecode.o: fetchdecode.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  descriptor.h instr.h ia_opcodes.h lazy_flags.h icache.h apic.h i387.h \
  fpu/softfloat.h fpu/tag_w.h fpu/status_w.h fpu/control_w.h xmm.h vmx.h stack.h \
  fetchdecode.h fetchdecode_x87.h fetchdecode_sse.h fetchdecode_avx.h \
- fetchdecode_xop.h
+ fetchdecode_xop.h fetchdecode_evex.h
 flag_ctrl.o: flag_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \

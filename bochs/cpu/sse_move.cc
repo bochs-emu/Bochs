@@ -549,7 +549,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLPS_VpsMq(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDDUP_VpdWqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  sse_pbroadcastq(&BX_XMM_REG(i->dst()), BX_READ_XMM_REG_LO_QWORD(i->src()));
+  simd_pbroadcastq(BX_XMM_REG(i->dst()).xmm_u64ptr(), BX_READ_XMM_REG_LO_QWORD(i->src()), 2);
 #endif
 
   BX_NEXT_INSTR(i);

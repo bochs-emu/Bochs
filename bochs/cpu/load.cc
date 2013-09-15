@@ -158,3 +158,63 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Half_Vector(bxInstruction_c *
 }
 
 #endif
+
+#if BX_SUPPORT_EVEX
+
+#include "simd_int.h"
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_VectorD(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  Bit16u opmask = BX_READ_16BIT_OPMASK(i->opmask());
+  if (opmask == 0) {
+    BX_NEXT_INSTR(i);
+  }
+
+  unsigned vl = i->getVL();
+
+  if (i->getBroadcast()) {
+    Bit32u val_32 = read_virtual_dword(i->seg(), eaddr);
+    simd_pbroadcastd(BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER).vmm_u32ptr(), val_32, vl * 4);
+  }
+  else {
+    if (vl == BX_VL512)
+      read_virtual_zmmword(i->seg(), eaddr, &BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER));
+    if (vl == BX_VL256)
+      read_virtual_ymmword(i->seg(), eaddr, &BX_READ_YMM_REG(BX_VECTOR_TMP_REGISTER));
+    else
+      read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_VECTOR_TMP_REGISTER));
+  }
+
+  return BX_CPU_CALL_METHOD(i->execute2(), (i));
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_VectorQ(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  Bit16u opmask = BX_READ_8BIT_OPMASK(i->opmask());
+  if (opmask == 0) {
+    BX_NEXT_INSTR(i);
+  }
+
+  unsigned vl = i->getVL();
+
+  if (i->getBroadcast()) {
+    Bit64u val_64 = read_virtual_qword(i->seg(), eaddr);
+    simd_pbroadcastq(BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER).vmm_u64ptr(), val_64, vl * 2);
+  }
+  else {
+    if (vl == BX_VL512)
+      read_virtual_zmmword(i->seg(), eaddr, &BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER));
+    if (vl == BX_VL256)
+      read_virtual_ymmword(i->seg(), eaddr, &BX_READ_YMM_REG(BX_VECTOR_TMP_REGISTER));
+    else
+      read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_VECTOR_TMP_REGISTER));
+  }
+
+  return BX_CPU_CALL_METHOD(i->execute2(), (i));
+}
+
+#endif

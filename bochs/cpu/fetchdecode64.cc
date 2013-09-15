@@ -1708,6 +1708,11 @@ BX_CPU_C::fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
   bx_bool vex_w = 0, vex_l = 0, use_vvv = 0;
 #endif
 
+#if BX_SUPPORT_EVEX
+  unsigned evex_rc = 0;
+  bx_bool evex_v = 0;
+#endif
+
   i->ResolveModrm = 0;
   i->init(/*os32*/ 1,  // operand size 32 override defaults to 1
           /*as32*/ 1,  // address size 32 override defaults to 1
@@ -1878,6 +1883,49 @@ fetch_b1:
 
     OpcodeInfoPtr = &BxOpcodeTableAVX[(opcode_byte-256)*2 + vex_l];
   }
+#if BX_SUPPORT_EVEX
+  else if (b1 == 0x62) {
+    had_vex_xop = 1;
+    if (sse_prefix || ! protected_mode())
+      goto decode_done;
+
+    Bit32u evex;
+    if (remain > 3) {
+      evex = FetchDWORD(iptr);
+      iptr += 4;
+      remain -= 4;
+    }
+    else {
+      return(-1);
+    }
+
+    // check for reserved EVEX bits
+    if ((evex & 0x0c) != 0 || (evex & 0x400) == 0)
+      goto decode_done;
+
+    unsigned evex_opcext = evex & 0x3;
+    if (evex_opcext == 0)
+      goto decode_done;
+
+    sse_prefix = (evex >> 8) & 0x3;
+    vvv = 15 - ((evex >> 11) & 0xf);
+    vex_w = (evex >> 15) & 0x1;
+    unsigned opmask = (evex >> 16) & 0x7;
+    i->setOpmask(opmask);
+    evex_v = ((evex >> 19) & 0x1) ^ 0x1;
+    unsigned evex_b = (evex >> 20) & 0x1;
+    i->setBroadcast(evex_b);
+    evex_rc = (evex >> 21) & 0x3;
+    unsigned evex_z = (evex >> 23) & 0x1;
+    i->setZeroMasking(evex_z);
+    
+    unsigned opcode_byte = (evex >> 24);
+    opcode_byte += 256 * (evex_opcext-1);
+    has_modrm = 1;
+
+    OpcodeInfoPtr = &BxOpcodeTableEVEX[opcode_byte*2 + (opmask != 0)];
+  }
+#endif
   else if (b1 == 0x8f && (*iptr & 0x08) == 0x08) {
     // 3 byte XOP prefix
     had_vex_xop = 1;

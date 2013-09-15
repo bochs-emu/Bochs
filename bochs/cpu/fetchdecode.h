@@ -59,8 +59,9 @@ BX_CPP_INLINE Bit64u FetchQWORD(const Bit8u *iptr)
 }
 #endif
 
-#define BX_PREPARE_SSE (0x80)
-#define BX_PREPARE_AVX (0x40)
+#define BX_PREPARE_SSE  (0x80)
+#define BX_PREPARE_AVX  (0x40)
+#define BX_PREPARE_EVEX (0x20)
 
 struct bxIAOpcodeTable {
   BxExecutePtr_tR execute1;
@@ -88,8 +89,15 @@ enum {
 
 #include "fetchdecode_x87.h"
 #include "fetchdecode_sse.h"
+
+#if BX_SUPPORT_AVX
 #include "fetchdecode_avx.h"
 #include "fetchdecode_xop.h"
+#endif
+
+#if BX_SUPPORT_EVEX
+#include "fetchdecode_evex.h"
+#endif
 
 /* ************************************************************************ */
 /* Opcode Groups */
