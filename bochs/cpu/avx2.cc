@@ -289,7 +289,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTB_VdqWb(bxInstruction_c
   unsigned len = i->getVL();
   BxPackedYmmRegister op;
 
-  simd_pbroadcastb(op.ymm_ubyteptr(), BX_READ_XMM_REG_LO_BYTE(i->src()), len*16);
+  Bit8u val_8 = BX_READ_XMM_REG_LO_BYTE(i->src());
+  
+  for (unsigned n=0; n < len; n++)
+    sse_pbroadcastb(&op.ymm128(n), val_8);
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
 
@@ -301,7 +304,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTW_VdqWw(bxInstruction_c
   unsigned len = i->getVL();
   BxPackedYmmRegister op;
 
-  simd_pbroadcastw(op.ymm_u16ptr(), BX_READ_XMM_REG_LO_WORD(i->src()), len*8);
+  Bit16u val_16 = BX_READ_XMM_REG_LO_WORD(i->src());
+  
+  for (unsigned n=0; n < len; n++)
+    sse_pbroadcastw(&op.ymm128(n), val_16);
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
 
@@ -313,7 +319,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTD_VdqWd(bxInstruction_c
   unsigned len = i->getVL();
   BxPackedYmmRegister op;
 
-  simd_pbroadcastd(op.ymm_u32ptr(), BX_READ_XMM_REG_LO_DWORD(i->src()), len*4);
+  Bit32u val_32 = BX_READ_XMM_REG_LO_DWORD(i->src());
+  
+  for (unsigned n=0; n < len; n++)
+    sse_pbroadcastd(&op.ymm128(n), val_32);
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
 
@@ -325,7 +334,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTQ_VdqWq(bxInstruction_c
   unsigned len = i->getVL();
   BxPackedYmmRegister op;
 
-  simd_pbroadcastq(op.ymm_u64ptr(), BX_READ_XMM_REG_LO_QWORD(i->src()), len*2);
+  Bit64u val_64 = BX_READ_XMM_REG_LO_QWORD(i->src());
+  
+  for (unsigned n=0; n < len; n++)
+    sse_pbroadcastq(&op.ymm128(n), val_64);
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
 

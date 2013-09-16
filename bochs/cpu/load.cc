@@ -176,7 +176,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_VectorD(bxInstructi
 
   if (i->getBroadcast()) {
     Bit32u val_32 = read_virtual_dword(i->seg(), eaddr);
-    simd_pbroadcastd(BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER).vmm_u32ptr(), val_32, vl * 4);
+    simd_pbroadcastd(&BX_AVX_REG(BX_VECTOR_TMP_REGISTER), val_32, vl * 4);
   }
   else {
     if (vl == BX_VL512)
@@ -203,7 +203,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_VectorQ(bxInstructi
 
   if (i->getBroadcast()) {
     Bit64u val_64 = read_virtual_qword(i->seg(), eaddr);
-    simd_pbroadcastq(BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER).vmm_u64ptr(), val_64, vl * 2);
+    simd_pbroadcastq(&BX_AVX_REG(BX_VECTOR_TMP_REGISTER), val_64, vl * 2);
   }
   else {
     if (vl == BX_VL512)

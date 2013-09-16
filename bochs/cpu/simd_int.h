@@ -819,33 +819,65 @@ BX_CPP_INLINE void sse_pmaddwd(BxPackedXmmRegister *op1, const BxPackedXmmRegist
 
 // broadcast
 
-BX_CPP_INLINE void simd_pbroadcastb(Bit8u *dst, Bit8u val_8, unsigned len)
+BX_CPP_INLINE void sse_pbroadcastb(BxPackedXmmRegister *op, Bit8u val_8)
 {
-  for(unsigned n=0; n < len; n++) {
-    dst[n] = val_8;
+  for(unsigned n=0; n<16; n++) {
+    op->xmmubyte(n) = val_8;
   }
 }
 
-BX_CPP_INLINE void simd_pbroadcastw(Bit16u *dst, Bit16u val_16, unsigned len)
+BX_CPP_INLINE void sse_pbroadcastw(BxPackedXmmRegister *op, Bit16u val_16)
 {
-  for(unsigned n=0; n < len; n++) {
-    dst[n] = val_16;
+  for(unsigned n=0; n<8; n++) {
+    op->xmm16u(n) = val_16;
   }
 }
 
-BX_CPP_INLINE void simd_pbroadcastd(Bit32u *dst, Bit32u val_32, unsigned len)
+BX_CPP_INLINE void sse_pbroadcastd(BxPackedXmmRegister *op, Bit32u val_32)
 {
-  for(unsigned n=0; n < len; n++) {
-    dst[n] = val_32;
+  for(unsigned n=0; n<4; n++) {
+    op->xmm32u(n) = val_32;
   }
 }
 
-BX_CPP_INLINE void simd_pbroadcastq(Bit64u *dst, Bit64u val_64, unsigned len)
+BX_CPP_INLINE void sse_pbroadcastq(BxPackedXmmRegister *op, Bit64u val_64)
 {
-  for(unsigned n=0; n < len; n++) {
-    dst[n] = val_64;
+  for(unsigned n=0; n<2; n++) {
+    op->xmm64u(n) = val_64;
   }
 }
+
+#if BX_SUPPORT_EVEX
+
+BX_CPP_INLINE void simd_pbroadcastb(BxPackedZmmRegister *op, Bit8u val_8, unsigned len)
+{
+  for(unsigned n=0; n < len; n++) {
+    op->vmmubyte(n) = val_8;
+  }
+}
+
+BX_CPP_INLINE void simd_pbroadcastw(BxPackedZmmRegister *op, Bit16u val_16, unsigned len)
+{
+  for(unsigned n=0; n < len; n++) {
+    op->vmm16u(n) = val_16;
+  }
+}
+
+BX_CPP_INLINE void simd_pbroadcastd(BxPackedZmmRegister *op, Bit32u val_32, unsigned len)
+{
+  for(unsigned n=0; n < len; n++) {
+    op->vmm32u(n) = val_32;
+  }
+}
+
+BX_CPP_INLINE void simd_pbroadcastq(BxPackedZmmRegister *op, Bit64u val_64, unsigned len)
+{
+  for(unsigned n=0; n < len; n++) {
+    op->vmm64u(n) = val_64;
+  }
+}
+
+#endif
 
 // sum of absolute differences (SAD)
 

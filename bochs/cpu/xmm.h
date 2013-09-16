@@ -35,16 +35,6 @@ typedef union bx_xmm_reg_t {
    Bit16u  xmm_u16[8];
    Bit32u  xmm_u32[4];
    Bit64u  xmm_u64[2];
-
-   Bit8s*  xmm_sbyteptr() { return &xmm_sbyte[0]; }
-   Bit16s* xmm_s16ptr() { return &xmm_s16[0]; }
-   Bit32s* xmm_s32ptr() { return &xmm_s32[0]; }
-   Bit64s* xmm_s64ptr() { return &xmm_s64[0]; }
-   Bit8u*  xmm_ubyteptr() { return &xmm_ubyte[0]; }
-   Bit16u* xmm_u16ptr() { return &xmm_u16[0]; }
-   Bit32u* xmm_u32ptr() { return &xmm_u32[0]; }
-   Bit64u* xmm_u64ptr() { return &xmm_u64[0]; }
-
 } BxPackedXmmRegister;
 
 #ifdef BX_BIG_ENDIAN
@@ -110,15 +100,6 @@ typedef union bx_ymm_reg_t {
    Bit32u  ymm_u32[8];
    Bit64u  ymm_u64[4];
    BxPackedXmmRegister ymm_v128[2];
-
-   Bit8s*  ymm_sbyteptr() { return &ymm_sbyte[0]; }
-   Bit16s* ymm_s16ptr() { return &ymm_s16[0]; }
-   Bit32s* ymm_s32ptr() { return &ymm_s32[0]; }
-   Bit64s* ymm_s64ptr() { return &ymm_s64[0]; }
-   Bit8u*  ymm_ubyteptr() { return &ymm_ubyte[0]; }
-   Bit16u* ymm_u16ptr() { return &ymm_u16[0]; }
-   Bit32u* ymm_u32ptr() { return &ymm_u32[0]; }
-   Bit64u* ymm_u64ptr() { return &ymm_u64[0]; }
 } BxPackedYmmRegister;
 
 #ifdef BX_BIG_ENDIAN
@@ -158,15 +139,6 @@ typedef union bx_zmm_reg_t {
    Bit64u  zmm_u64[8];
    BxPackedXmmRegister zmm_v128[4];
    BxPackedYmmRegister zmm_v256[2];
-
-   Bit8s*  zmm_sbyteptr() { return &zmm_sbyte[0]; }
-   Bit16s* zmm_s16ptr() { return &zmm_s16[0]; }
-   Bit32s* zmm_s32ptr() { return &zmm_s32[0]; }
-   Bit64s* zmm_s64ptr() { return &zmm_s64[0]; }
-   Bit8u*  zmm_ubyteptr() { return &zmm_ubyte[0]; }
-   Bit16u* zmm_u16ptr() { return &zmm_u16[0]; }
-   Bit32u* zmm_u32ptr() { return &zmm_u32[0]; }
-   Bit64u* zmm_u64ptr() { return &zmm_u64[0]; }
 } BxPackedZmmRegister;
 
 #ifdef BX_BIG_ENDIAN
@@ -196,60 +168,36 @@ typedef union bx_zmm_reg_t {
 #endif
 
 #if BX_SUPPORT_EVEX
-#  define vmm64s(i)      zmm64s(i)
-#  define vmm32s(i)      zmm64s(i)
-#  define vmm16s(i)      zmm16s(i)
-#  define vmmsbyte(i)    zmmsbyte(i)
-#  define vmmubyte(i)    zmmubyte(i)
-#  define vmm16u(i)      zmm16u(i)
-#  define vmm32u(i)      zmm32u(i)
-#  define vmm64u(i)      zmm64u(i)
-#  define vmm128(i)      zmm128(i)
-#  define vmm256(i)      zmm256(i)
-#  define vmm_ubyteptr() zmm_ubyteptr()
-#  define vmm_sbyteptr() zmm_sbyteptr()
-#  define vmm_u16ptr()   zmm_u16ptr()
-#  define vmm_s16ptr()   zmm_s16ptr()
-#  define vmm_u32ptr()   zmm_u32ptr()
-#  define vmm_s32ptr()   zmm_s32ptr()
-#  define vmm_u64ptr()   zmm_u64ptr()
-#  define vmm_s64ptr()   zmm_s64ptr()
+#  define vmm64s(i)   zmm64s(i)
+#  define vmm32s(i)   zmm64s(i)
+#  define vmm16s(i)   zmm16s(i)
+#  define vmmsbyte(i) zmmsbyte(i)
+#  define vmmubyte(i) zmmubyte(i)
+#  define vmm16u(i)   zmm16u(i)
+#  define vmm32u(i)   zmm32u(i)
+#  define vmm64u(i)   zmm64u(i)
+#  define vmm128(i)   zmm128(i)
+#  define vmm256(i)   zmm256(i)
 #else
 #  if BX_SUPPORT_AVX
-#    define vmm64s(i)      ymm64s(i)
-#    define vmm32s(i)      ymm64s(i)
-#    define vmm16s(i)      ymm16s(i)
-#    define vmmsbyte(i)    ymmsbyte(i)
-#    define vmmubyte(i)    ymmubyte(i)
-#    define vmm16u(i)      ymm16u(i)
-#    define vmm32u(i)      ymm32u(i)
-#    define vmm64u(i)      ymm64u(i)
-#    define vmm128(i)      ymm128(i)
-#    define vmm_ubyteptr() ymm_ubyteptr()
-#    define vmm_sbyteptr() ymm_sbyteptr()
-#    define vmm_u16ptr()   ymm_u16ptr()
-#    define vmm_s16ptr()   ymm_s16ptr()
-#    define vmm_u32ptr()   ymm_u32ptr()
-#    define vmm_s32ptr()   ymm_s32ptr()
-#    define vmm_u64ptr()   ymm_u64ptr()
-#    define vmm_s64ptr()   ymm_s64ptr()
+#    define vmm64s(i)   ymm64s(i)
+#    define vmm32s(i)   ymm64s(i)
+#    define vmm16s(i)   ymm16s(i)
+#    define vmmsbyte(i) ymmsbyte(i)
+#    define vmmubyte(i) ymmubyte(i)
+#    define vmm16u(i)   ymm16u(i)
+#    define vmm32u(i)   ymm32u(i)
+#    define vmm64u(i)   ymm64u(i)
+#    define vmm128(i)   ymm128(i)
 #  else
-#    define vmm64s(i)      xmm64s(i)
-#    define vmm32s(i)      xmm64s(i)
-#    define vmm16s(i)      xmm16s(i)
-#    define vmmsbyte(i)    xmmsbyte(i)
-#    define vmmubyte(i)    xmmubyte(i)
-#    define vmm16u(i)      xmm16u(i)
-#    define vmm32u(i)      xmm32u(i)
-#    define vmm64u(i)      xmm64u(i)
-#    define vmm_ubyteptr() xmm_ubyteptr()
-#    define vmm_sbyteptr() xmm_sbyteptr()
-#    define vmm_u16ptr()   xmm_u16ptr()
-#    define vmm_s16ptr()   xmm_s16ptr()
-#    define vmm_u32ptr()   xmm_u32ptr()
-#    define vmm_s32ptr()   xmm_s32ptr()
-#    define vmm_u64ptr()   xmm_u64ptr()
-#    define vmm_s64ptr()   xmm_s64ptr()
+#    define vmm64s(i)   xmm64s(i)
+#    define vmm32s(i)   xmm64s(i)
+#    define vmm16s(i)   xmm16s(i)
+#    define vmmsbyte(i) xmmsbyte(i)
+#    define vmmubyte(i) xmmubyte(i)
+#    define vmm16u(i)   xmm16u(i)
+#    define vmm32u(i)   xmm32u(i)
+#    define vmm64u(i)   xmm64u(i)
 #  endif
 #endif
 
