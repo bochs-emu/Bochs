@@ -706,9 +706,15 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
   }
 #endif
 
-  static unsigned sse_enabled = SIM->get_param_enum(BXPN_CPUID_SSE)->get();
+  static unsigned simd_enabled = SIM->get_param_enum(BXPN_CPUID_SIMD)->get();
   // determine SSE in runtime
-  switch (sse_enabled) {
+  switch (simd_enabled) {
+#if BX_SUPPORT_AVX
+    case BX_CPUID_SUPPORT_AVX2:
+      features_bitmask |= BX_ISA_AVX2;
+    case BX_CPUID_SUPPORT_AVX:
+      features_bitmask |= BX_ISA_AVX;
+#endif
     case BX_CPUID_SUPPORT_SSE4_2:
       features_bitmask |= BX_ISA_SSE4_2;
     case BX_CPUID_SUPPORT_SSE4_1:
@@ -726,7 +732,7 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
       break;
   };
 
-  if (sse_enabled) {
+  if (simd_enabled) {
     if (mmx_enabled == 0 || cpu_level < 6 || BX_CPU_LEVEL < 6) {
       BX_PANIC(("PANIC: SSE support requires P6 emulation with MMX enabled !"));
       return;
@@ -734,18 +740,18 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
   }
 
   // enable CLFLUSH only when SSE2 or higher is enabled
-  if (sse_enabled >= BX_CPUID_SUPPORT_SSE2)
+  if (simd_enabled >= BX_CPUID_SUPPORT_SSE2)
     features_bitmask |= BX_ISA_CLFLUSH;
 
   // enable POPCNT if SSE4.2 is enabled
-  if (sse_enabled >= BX_CPUID_SUPPORT_SSE4_2)
+  if (simd_enabled >= BX_CPUID_SUPPORT_SSE4_2)
     features_bitmask |= BX_ISA_POPCNT;
 
   static bx_bool sse4a_enabled = SIM->get_param_bool(BXPN_CPUID_SSE4A)->get();
   if (sse4a_enabled) {
     features_bitmask |= BX_ISA_SSE4A;
 
-    if (! sse_enabled) {
+    if (! simd_enabled) {
       BX_PANIC(("PANIC: SSE4A require SSE to be enabled !"));
       return;
     }
@@ -762,7 +768,7 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
   if (xsave_enabled) {
     features_bitmask |= BX_ISA_XSAVE;
 
-    if (! sse_enabled) {
+    if (! simd_enabled) {
        BX_PANIC(("PANIC: XSAVE emulation requires SSE support !"));
        return;
     }
@@ -783,7 +789,7 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
     features_bitmask |= BX_ISA_AES_PCLMULQDQ;
 
     // AES required 3-byte opcode (SSS3E support or more)
-    if (sse_enabled < BX_CPUID_SUPPORT_SSSE3) {
+    if (simd_enabled < BX_CPUID_SUPPORT_SSSE3) {
       BX_PANIC(("PANIC: AES support requires SSSE3 or higher !"));
       return;
     }
@@ -794,7 +800,7 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
     features_bitmask |= BX_ISA_SHA;
 
     // SHA required 3-byte opcode (SSS3E support or more)
-    if (sse_enabled < BX_CPUID_SUPPORT_SSSE3) {
+    if (simd_enabled < BX_CPUID_SUPPORT_SSSE3) {
       BX_PANIC(("PANIC: SHA support requires SSSE3 or higher !"));
       return;
     }
@@ -805,7 +811,7 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
     features_bitmask |= BX_ISA_MOVBE;
 
     // MOVBE required 3-byte opcode (SSS3E support or more)
-    if (sse_enabled < BX_CPUID_SUPPORT_SSSE3) {
+    if (simd_enabled < BX_CPUID_SUPPORT_SSSE3) {
       BX_PANIC(("PANIC: MOVBE support requires SSSE3 or higher !"));
       return;
     }
@@ -816,7 +822,7 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
     features_bitmask |= BX_ISA_ADX;
 
     // ADX required 3-byte opcode (SSS3E support or more)
-    if (sse_enabled < BX_CPUID_SUPPORT_SSSE3) {
+    if (simd_enabled < BX_CPUID_SUPPORT_SSSE3) {
       BX_PANIC(("PANIC: ADX support requires SSSE3 or higher !"));
       return;
     }
@@ -830,7 +836,7 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
 
     features_bitmask |= BX_ISA_CMPXCHG16B | BX_ISA_RDTSCP | BX_ISA_LM_LAHF_SAHF;
 
-    if (sse_enabled < BX_CPUID_SUPPORT_SSE2) {
+    if (simd_enabled < BX_CPUID_SUPPORT_SSE2) {
       BX_PANIC(("PANIC: x86-64 emulation requires SSE2 support !"));
       return;
     }
@@ -858,10 +864,7 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
   }
 
 #if BX_SUPPORT_AVX
-  static unsigned avx_enabled = SIM->get_param_num(BXPN_CPUID_AVX)->get();
-  if (avx_enabled) {
-    features_bitmask |= BX_ISA_AVX;
-
+  if (simd_enabled >= BX_CPUID_SUPPORT_AVX) {
     if (! xsave_enabled) {
       BX_PANIC(("PANIC: AVX emulation requires XSAVE support !"));
       return;
@@ -871,14 +874,11 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
       BX_PANIC(("PANIC: AVX emulation requires x86-64 support !"));
       return;
     }
-
-    if (avx_enabled >= 2)
-      features_bitmask |= BX_ISA_AVX2;
   }
 
   static bx_bool avx_f16c_enabled = SIM->get_param_bool(BXPN_CPUID_AVX_F16CVT)->get();
   if (avx_f16c_enabled) {
-    if (! avx_enabled) {
+    if (simd_enabled < BX_CPUID_SUPPORT_AVX) {
       BX_PANIC(("PANIC: Float16 convert emulation requires AVX support !"));
       return;
     }
@@ -888,7 +888,7 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
 
   static bx_bool avx_fma_enabled = SIM->get_param_bool(BXPN_CPUID_AVX_FMA)->get();
   if (avx_fma_enabled) {
-    if (avx_enabled < 2) {
+    if (simd_enabled < BX_CPUID_SUPPORT_AVX2) {
       BX_PANIC(("PANIC: FMA emulation requires AVX2 support !"));
       return;
     }
@@ -900,7 +900,7 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
   if (bmi_enabled) {
     features_bitmask |= BX_ISA_BMI1 | BX_ISA_LZCNT;
 
-    if (! avx_enabled) {
+    if (simd_enabled < BX_CPUID_SUPPORT_AVX) {
       BX_PANIC(("PANIC: Bit Manipulation Instructions (BMI) emulation requires AVX support !"));
       return;
     }
@@ -911,7 +911,7 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
 
   static bx_bool fma4_enabled = SIM->get_param_bool(BXPN_CPUID_FMA4)->get();
   if (fma4_enabled) {
-    if (! avx_enabled) {
+    if (simd_enabled < BX_CPUID_SUPPORT_AVX) {
       BX_PANIC(("PANIC: FMA4 emulation requires AVX support !"));
       return;
     }
@@ -921,7 +921,7 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
 
   static bx_bool xop_enabled = SIM->get_param_bool(BXPN_CPUID_XOP)->get();
   if (xop_enabled) {
-    if (! avx_enabled) {
+    if (simd_enabled < BX_CPUID_SUPPORT_AVX) {
       BX_PANIC(("PANIC: XOP emulation requires AVX support !"));
       return;
     }
@@ -931,7 +931,7 @@ void bx_generic_cpuid_t::init_isa_extensions_bitmask(void)
 
   static bx_bool tbm_enabled = SIM->get_param_bool(BXPN_CPUID_TBM)->get();
   if (tbm_enabled) {
-    if (! avx_enabled || ! xop_enabled) {
+    if (simd_enabled < BX_CPUID_SUPPORT_AVX || ! xop_enabled) {
       BX_PANIC(("PANIC: TBM emulation requires AVX and XOP support !"));
       return;
     }

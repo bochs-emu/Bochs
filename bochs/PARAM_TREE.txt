@@ -37,9 +37,11 @@ cpuid
   brand_string
   mmx
   sep
-  sse
+  simd
   sse4a
   misaligned_sse
+  avx_f16c
+  avx_fma
   aes
   sha
   movbe
@@ -48,13 +50,10 @@ cpuid
   xsaveopt
   svm
   vmx
-  avx
-  avx_f16c
-  avx_fma
   bmi
   xop
-  tbm
   fma4
+  tbm
   apic
   x86_64
   1g_pages

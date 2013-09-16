@@ -515,11 +515,27 @@ void bx_init_options()
 
 #if BX_CPU_LEVEL >= 6
   // configure defaults to CPU_LEVEL = 6 with SSE2 enabled
-  static const char *sse_names[] = { "none", "sse", "sse2", "sse3", "ssse3", "sse4_1", "sse4_2", NULL };
+  static const char *simd_names[] = {
+      "none",
+      "sse",
+      "sse2",
+      "sse3",
+      "ssse3",
+      "sse4_1",
+      "sse4_2",
+#if BX_SUPPORT_AVX
+      "avx",
+      "avx2",
+#if BX_SUPPORT_EVEX
+      "avx512",
+#endif
+#endif
+      NULL };
+
   new bx_param_enum_c(cpuid_param,
-      "sse", "Support for SSE instruction set",
-      "Support for SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 instruction set",
-      sse_names,
+      "simd", "Support for SIMD instruction set",
+      "Support for SIMD (SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2/AVX/AVX2/AVX512) instruction set",
+      simd_names,
       BX_CPUID_SUPPORT_SSE2,
       BX_CPUID_SUPPORT_NOSSE);
 
@@ -561,11 +577,6 @@ void bx_init_options()
       "Support for XSAVEOPT instruction",
       0);
 #if BX_SUPPORT_AVX
-  new bx_param_num_c(cpuid_param,
-      "avx", "Support for AVX instruction set",
-      "Support for AVX instruction set",
-      0, 2,
-      0);
   new bx_param_bool_c(cpuid_param,
       "avx_f16c", "Support for AVX F16 convert instructions",
       "Support for AVX F16 convert instructions",

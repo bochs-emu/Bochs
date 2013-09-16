@@ -198,10 +198,13 @@ cpu: cpuid_limit_winnt=0
 #    Select SYSENTER/SYSEXIT instruction set support.
 #    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 #
-#  SSE:
-#    Select SSE instruction set support.
-#    Any of NONE/SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 could be selected.
+#  SIMD:
+#    Select SIMD instructions support.
+#    Any of NONE/SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2/AVX/AVX2/AVX512
+#    could be selected.
+#
 #    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+#    The AVX choises exists only if Bochs compiled with --enable-avx option.
 #
 #  SSE4A:
 #    Select AMD SSE4A instructions support.
@@ -234,10 +237,6 @@ cpu: cpuid_limit_winnt=0
 #  XSAVEOPT:
 #    Select XSAVEOPT instruction support.
 #    This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
-#
-#  AVX:
-#    Select AVX/AVX2 instruction set support.
-#    This option exists only if Bochs compiled with --enable-avx option.
 #
 #  AVX_F16C:
 #    Select AVX float16 convert instructions support.
@@ -323,7 +322,7 @@ cpu: cpuid_limit_winnt=0
 #  STEPPING:
 #    Set stepping information returned by CPUID. Default stepping value is 3.
 #=======================================================================
-#cpuid: x86_64=1, mmx=1, sep=1, sse=sse4_2, apic=xapic, aes=1, movbe=1, xsave=1
+#cpuid: x86_64=1, mmx=1, sep=1, simd=sse4_2, apic=xapic, aes=1, movbe=1, xsave=1
 #cpuid: family=6, model=0x1a, stepping=5
 
 #=======================================================================

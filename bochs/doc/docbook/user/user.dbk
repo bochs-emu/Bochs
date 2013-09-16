@@ -3338,11 +3338,12 @@ This option exists only if Bochs compiled with BX_CPU_LEVEL >= 5.
 Select SYSENTER/SYSEXIT instruction set support.
 This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 </para>
-<para><command>sse</command></para>
+<para><command>simd</command></para>
 <para>
-Select SSE instruction set support.
-Any of NONE/SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 could be selected.
+Select SIMD instructions support.
+Any of NONE/SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2/AVX/AVX2/AVX512 could be selected.
 This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+The AVX choises exists only if Bochs compiled with --enable-avx option.
 </para>
 <para><command>sse4a</command></para>
 <para>
@@ -3383,11 +3384,6 @@ This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 <para>
 Select XSAVEOPT instruction support.
 This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
-</para>
-<para><command>avx</command></para>
-<para>
-Select AVX/AVX2 instruction set support.
-This option exists only if Bochs compiled with <option>--enable-avx</option> option.
 </para>
 <para><command>avx_f16c</command></para>
 <para>
