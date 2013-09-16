@@ -46,6 +46,8 @@
 
 #define BX_ETH_SLIRP_LOGGING 0
 
+static unsigned int bx_slirp_instances = 0;
+
 const Bit8u default_host_ipv4addr[4] = {10, 0, 2, 2};
 const Bit8u default_dns_ipv4addr[4] = {10, 0, 2, 3};
 const Bit8u default_guest_ipv4addr[4] = {10, 0, 2, 15};
@@ -155,6 +157,7 @@ public:
                      eth_rx_handler_t rxh, eth_rx_status_t rxstat,
                      bx_devmodel_c *dev, const char *script);
   void sendpkt(void *buf, unsigned io_len);
+  virtual ~bx_slirp_pktmover_c();
 private:
   pid_t slirp_pid;
   int slirp_pipe_fds[2];
@@ -206,8 +209,12 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
 {
   int flags;
 
+  if (bx_slirp_instances > 0) {
+    BX_PANIC(("only one 'slirp' instance supported yet"));
+  }
   this->netdev = dev;
-  BX_INFO(("slirp network driver"));
+  this->rxh   = rxh;
+  this->rxstat = rxstat;
 
   if (socketpair(AF_UNIX, SOCK_STREAM, 0, slirp_pipe_fds))
     BX_PANIC(("socketpair() failed: %s", strerror(errno)));
@@ -249,8 +256,6 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
     }
   }
 
-  this->rxh   = rxh;
-  this->rxstat = rxstat;
   strcpy(this->tftp.rootdir, netif);
   this->tftp.tid = 0;
   this->tftp.write = 0;
@@ -276,6 +281,9 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
 
   close(slirp_pipe_fds[1]);
 
+  BX_INFO(("'slirp' network driver initialized"));
+  bx_slirp_instances++;
+
 #if BX_ETH_SLIRP_LOGGING
   pktlog_txt = fopen("ne2k-pktlog.txt", "wb");
   if (!pktlog_txt) BX_PANIC(("ne2k-pktlog.txt failed"));
@@ -290,6 +298,11 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
   fprintf(pktlog_txt, "--\n");
   fflush(pktlog_txt);
 #endif
+}
+
+bx_slirp_pktmover_c::~bx_slirp_pktmover_c()
+{
+  bx_slirp_instances--;
 }
 
 void bx_slirp_pktmover_c::handle_arp(Bit8u *buf, unsigned len)

@@ -53,6 +53,8 @@
 #include <pcap.h>
 #endif
 
+static unsigned int bx_vnet_instances = 0;
+
 /////////////////////////////////////////////////////////////////////////
 // handler to send/receive packets
 /////////////////////////////////////////////////////////////////////////
@@ -100,6 +102,7 @@ typedef void (*layer4_handler_t)(
 class bx_vnet_pktmover_c : public eth_pktmover_c {
 public:
   bx_vnet_pktmover_c();
+  virtual ~bx_vnet_pktmover_c();
   void pktmover_init(
     const char *netif, const char *macaddr,
     eth_rx_handler_t rxh, eth_rx_status_t rxstat,
@@ -208,8 +211,10 @@ void bx_vnet_pktmover_c::pktmover_init(
   eth_rx_handler_t rxh, eth_rx_status_t rxstat,
   bx_devmodel_c *dev, const char *script)
 {
+  if (bx_vnet_instances > 0) {
+    BX_PANIC(("only one 'vnet' instance supported yet"));
+  }
   this->netdev = dev;
-  BX_INFO(("vnet network driver"));
   this->rxh    = rxh;
   this->rxstat = rxstat;
   strcpy(this->tftp.rootdir, netif);
@@ -238,6 +243,9 @@ void bx_vnet_pktmover_c::pktmover_init(
     bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
                               	 0, 0, "eth_vnet");
 
+  BX_INFO(("'vnet' network driver initialized"));
+  bx_vnet_instances++;
+
 #if BX_ETH_VNET_LOGGING
   pktlog_txt = fopen("ne2k-pktlog.txt", "wb");
   if (!pktlog_txt) BX_PANIC(("ne2k-pktlog.txt failed"));
@@ -258,6 +266,11 @@ void bx_vnet_pktmover_c::pktmover_init(
   pktlog_pcap = pcap_dump_open(pcapp, "ne2k-pktlog.pcap");
   if (pktlog_pcap == NULL) BX_PANIC(("ne2k-pktlog.pcap failed"));
 #endif
+}
+
+bx_vnet_pktmover_c::~bx_vnet_pktmover_c()
+{
+  bx_vnet_instances--;
 }
 
 void bx_vnet_pktmover_c::sendpkt(void *buf, unsigned io_len)
