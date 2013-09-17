@@ -260,7 +260,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVMSKPS_GdVRps(bxInstruction_c *
   Bit32u mask = 0;
 
   for (unsigned n=0; n < len; n++)
-    mask |= sse_pmovmskd(&op.ymm128(n)) << (4*n);
+    mask |= xmm_pmovmskd(&op.ymm128(n)) << (4*n);
 
   BX_WRITE_32BIT_REGZ(i->dst(), mask);
 
@@ -275,7 +275,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVMSKPD_GdVRpd(bxInstruction_c *
   Bit32u mask = 0;
 
   for (unsigned n=0; n < len; n++)
-    mask |= sse_pmovmskq(&op.ymm128(n)) << (2*n);
+    mask |= xmm_pmovmskq(&op.ymm128(n)) << (2*n);
 
   BX_WRITE_32BIT_REGZ(i->dst(), mask);
 
@@ -290,7 +290,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVMSKB_GdUdq(bxInstruction_c *i
   Bit32u mask = 0;
 
   for (unsigned n=0; n < len; n++)
-    mask |= sse_pmovmskb(&op.ymm128(n)) << (16*n);
+    mask |= xmm_pmovmskb(&op.ymm128(n)) << (16*n);
 
   BX_WRITE_32BIT_REGZ(i->dst(), mask);
 
@@ -305,7 +305,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSHUFPS_VpsHpsWpsIbR(bxInstruction
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++)
-    sse_shufps(&result.ymm128(n), &op1.ymm128(n), &op2.ymm128(n), i->Ib());
+    xmm_shufps(&result.ymm128(n), &op1.ymm128(n), &op2.ymm128(n), i->Ib());
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), result, len);
 
@@ -322,7 +322,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSHUFPD_VpdHpdWpdIbR(bxInstruction
   Bit8u order = i->Ib();
 
   for (unsigned n=0; n < len; n++) {
-    sse_shufpd(&result.ymm128(n), &op1.ymm128(n), &op2.ymm128(n), order);
+    xmm_shufpd(&result.ymm128(n), &op1.ymm128(n), &op2.ymm128(n), order);
     order >>= 2;
   }
 
@@ -377,7 +377,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBLENDPS_VpsHpsWpsIbR(bxInstructio
   Bit8u mask = i->Ib();
 
   for (unsigned n=0; n < len; n++) {
-    sse_blendps(&op1.ymm128(n), &op2.ymm128(n), mask);
+    xmm_blendps(&op1.ymm128(n), &op2.ymm128(n), mask);
     mask >>= 4;
   }
 
@@ -394,7 +394,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBLENDPD_VpdHpdWpdIbR(bxInstructio
   Bit8u mask = i->Ib();
 
   for (unsigned n=0; n < len; n++) {
-    sse_blendpd(&op1.ymm128(n), &op2.ymm128(n), mask);
+    xmm_blendpd(&op1.ymm128(n), &op2.ymm128(n), mask);
     mask >>= 2;
   }
 
@@ -412,7 +412,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBLENDVPS_VpsHpsWpsIbR(bxInstructi
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++)
-    sse_blendvps(&op1.ymm128(n), &op2.ymm128(n), &mask.ymm128(n));
+    xmm_blendvps(&op1.ymm128(n), &op2.ymm128(n), &mask.ymm128(n));
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
 
@@ -428,7 +428,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBLENDVPD_VpdHpdWpdIbR(bxInstructi
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++)
-    sse_blendvpd(&op1.ymm128(n), &op2.ymm128(n), &mask.ymm128(n));
+    xmm_blendvpd(&op1.ymm128(n), &op2.ymm128(n), &mask.ymm128(n));
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
 
@@ -444,7 +444,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBLENDVB_VdqHdqWdqIbR(bxInstructi
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++)
-    sse_pblendvb(&op1.ymm128(n), &op2.ymm128(n), &mask.ymm128(n));
+    xmm_pblendvb(&op1.ymm128(n), &op2.ymm128(n), &mask.ymm128(n));
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
 
@@ -491,7 +491,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMILPS_VpsHpsWpsR(bxInstruction
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++)
-    sse_permilps(&result.ymm128(n), &op1.ymm128(n), &op2.ymm128(n));
+    xmm_permilps(&result.ymm128(n), &op1.ymm128(n), &op2.ymm128(n));
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), result, len);
 
@@ -506,7 +506,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMILPD_VpdHpdWpdR(bxInstruction
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++)
-    sse_permilpd(&result.ymm128(n), &op1.ymm128(n), &op2.ymm128(n));
+    xmm_permilpd(&result.ymm128(n), &op1.ymm128(n), &op2.ymm128(n));
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), result, len);
 
@@ -520,7 +520,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMILPS_VpsWpsIbR(bxInstruction_
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++)
-    sse_shufps(&result.ymm128(n), &op1.ymm128(n), &op1.ymm128(n), i->Ib());
+    xmm_shufps(&result.ymm128(n), &op1.ymm128(n), &op1.ymm128(n), i->Ib());
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), result, len);
 
@@ -536,7 +536,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMILPD_VpdWpdIbR(bxInstruction_
   Bit8u order = i->Ib();
 
   for (unsigned n=0; n < len; n++) {
-    sse_shufpd(&result.ymm128(n), &op1.ymm128(n), &op1.ymm128(n), order);
+    xmm_shufpd(&result.ymm128(n), &op1.ymm128(n), &op1.ymm128(n), order);
     order >>= 2;
   }
 

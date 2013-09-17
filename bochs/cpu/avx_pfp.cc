@@ -329,7 +329,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDPS_VpsHpsWpsR(bxInstruction_c 
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++) {
-    sse_addps(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_addps(&op1.ymm128(n), &op2.ymm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
@@ -349,7 +349,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDPD_VpdHpdWpdR(bxInstruction_c 
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++) {
-    sse_addpd(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_addpd(&op1.ymm128(n), &op2.ymm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
@@ -399,7 +399,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULPS_VpsHpsWpsR(bxInstruction_c 
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++) {
-    sse_mulps(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_mulps(&op1.ymm128(n), &op2.ymm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
@@ -419,7 +419,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULPD_VpdHpdWpdR(bxInstruction_c 
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++) {
-    sse_mulpd(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_mulpd(&op1.ymm128(n), &op2.ymm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
@@ -604,7 +604,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBPS_VpsHpsWpsR(bxInstruction_c 
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++) {
-    sse_subps(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_subps(&op1.ymm128(n), &op2.ymm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
@@ -624,7 +624,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBPD_VpdHpdWpdR(bxInstruction_c 
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++) {
-    sse_subpd(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_subpd(&op1.ymm128(n), &op2.ymm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
@@ -674,7 +674,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINPS_VpsHpsWpsR(bxInstruction_c 
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++) {
-    sse_minps(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_minps(&op1.ymm128(n), &op2.ymm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
@@ -694,7 +694,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINPD_VpdHpdWpdR(bxInstruction_c 
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++) {
-    sse_minpd(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_minpd(&op1.ymm128(n), &op2.ymm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
@@ -746,7 +746,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVPS_VpsHpsWpsR(bxInstruction_c 
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++) {
-    sse_divps(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_divps(&op1.ymm128(n), &op2.ymm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
@@ -766,7 +766,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVPD_VpdHpdWpdR(bxInstruction_c 
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++) {
-    sse_divpd(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_divpd(&op1.ymm128(n), &op2.ymm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
@@ -816,7 +816,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXPS_VpsHpsWpsR(bxInstruction_c 
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++) {
-    sse_maxps(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_maxps(&op1.ymm128(n), &op2.ymm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
@@ -836,7 +836,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXPD_VpdHpdWpdR(bxInstruction_c 
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++) {
-    sse_maxpd(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_maxpd(&op1.ymm128(n), &op2.ymm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
@@ -888,7 +888,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHADDPD_VpdHpdWpdR(bxInstruction_c
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++) {
-    sse_haddpd(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_haddpd(&op1.ymm128(n), &op2.ymm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
@@ -908,7 +908,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHADDPS_VpsHpsWpsR(bxInstruction_c
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++) {
-    sse_haddps(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_haddps(&op1.ymm128(n), &op2.ymm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
@@ -928,7 +928,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHSUBPD_VpdHpdWpdR(bxInstruction_c
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++) {
-    sse_hsubpd(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_hsubpd(&op1.ymm128(n), &op2.ymm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
@@ -948,7 +948,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHSUBPS_VpsHpsWpsR(bxInstruction_c
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++) {
-    sse_hsubps(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_hsubps(&op1.ymm128(n), &op2.ymm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
@@ -1053,7 +1053,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSUBPD_VpdHpdWpdR(bxInstruction
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++) {
-    sse_addsubpd(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_addsubpd(&op1.ymm128(n), &op2.ymm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
@@ -1073,7 +1073,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSUBPS_VpsHpsWpsR(bxInstruction
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++) {
-    sse_addsubps(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_addsubps(&op1.ymm128(n), &op2.ymm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);

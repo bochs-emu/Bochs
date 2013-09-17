@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011 Stanislav Shwartsman
+//   Copyright (c) 2011-2013 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -26,28 +26,28 @@
 
 // compare less than (signed)
 
-BX_CPP_INLINE void sse_pcmpltb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpltb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<16; n++) {
     op1->xmmubyte(n) = (op1->xmmsbyte(n) < op2->xmmsbyte(n)) ? 0xff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpltw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpltw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<8; n++) {
     op1->xmm16u(n) = (op1->xmm16s(n) < op2->xmm16s(n)) ? 0xffff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpltd(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpltd(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<4; n++) {
     op1->xmm32u(n) = (op1->xmm32s(n) < op2->xmm32s(n)) ? 0xffffffff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpltq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpltq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<2; n++) {
     op1->xmm64u(n) = (op1->xmm64s(n) < op2->xmm64s(n)) ? BX_CONST64(0xffffffffffffffff) : 0;
@@ -56,28 +56,28 @@ BX_CPP_INLINE void sse_pcmpltq(BxPackedXmmRegister *op1, const BxPackedXmmRegist
 
 // compare less than (unsigned)
 
-BX_CPP_INLINE void sse_pcmpltub(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpltub(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<16; n++) {
     op1->xmmubyte(n) = (op1->xmmubyte(n) < op2->xmmubyte(n)) ? 0xff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpltuw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpltuw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<8; n++) {
     op1->xmm16u(n) = (op1->xmm16u(n) < op2->xmm16u(n)) ? 0xffff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpltud(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpltud(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<4; n++) {
     op1->xmm32u(n) = (op1->xmm32u(n) < op2->xmm32u(n)) ? 0xffffffff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpltuq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpltuq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<2; n++) {
     op1->xmm64u(n) = (op1->xmm64u(n) < op2->xmm64u(n)) ? BX_CONST64(0xffffffffffffffff) : 0;
@@ -86,28 +86,28 @@ BX_CPP_INLINE void sse_pcmpltuq(BxPackedXmmRegister *op1, const BxPackedXmmRegis
 
 // compare less than or equal (signed)
 
-BX_CPP_INLINE void sse_pcmpleb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpleb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<16; n++) {
     op1->xmmubyte(n) = (op1->xmmsbyte(n) <= op2->xmmsbyte(n)) ? 0xff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmplew(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmplew(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<8; n++) {
     op1->xmm16u(n) = (op1->xmm16s(n) <= op2->xmm16s(n)) ? 0xffff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpled(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpled(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<4; n++) {
     op1->xmm32u(n) = (op1->xmm32s(n) <= op2->xmm32s(n)) ? 0xffffffff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpleq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpleq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<2; n++) {
     op1->xmm64u(n) = (op1->xmm64s(n) <= op2->xmm64s(n)) ? BX_CONST64(0xffffffffffffffff) : 0;
@@ -116,28 +116,28 @@ BX_CPP_INLINE void sse_pcmpleq(BxPackedXmmRegister *op1, const BxPackedXmmRegist
 
 // compare less than or equal (unsigned)
 
-BX_CPP_INLINE void sse_pcmpleub(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpleub(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<16; n++) {
     op1->xmmubyte(n) = (op1->xmmubyte(n) <= op2->xmmubyte(n)) ? 0xff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpleuw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpleuw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<8; n++) {
     op1->xmm16u(n) = (op1->xmm16u(n) <= op2->xmm16u(n)) ? 0xffff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpleud(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpleud(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<4; n++) {
     op1->xmm32u(n) = (op1->xmm32u(n) <= op2->xmm32u(n)) ? 0xffffffff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpleuq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpleuq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<2; n++) {
     op1->xmm64u(n) = (op1->xmm64u(n) <= op2->xmm64u(n)) ? BX_CONST64(0xffffffffffffffff) : 0;
@@ -146,28 +146,28 @@ BX_CPP_INLINE void sse_pcmpleuq(BxPackedXmmRegister *op1, const BxPackedXmmRegis
 
 // compare greater than (signed)
 
-BX_CPP_INLINE void sse_pcmpgtb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpgtb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<16; n++) {
     op1->xmmubyte(n) = (op1->xmmsbyte(n) > op2->xmmsbyte(n)) ? 0xff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpgtw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpgtw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<8; n++) {
     op1->xmm16u(n) = (op1->xmm16s(n) > op2->xmm16s(n)) ? 0xffff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpgtd(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpgtd(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<4; n++) {
     op1->xmm32u(n) = (op1->xmm32s(n) > op2->xmm32s(n)) ? 0xffffffff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpgtq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpgtq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<2; n++) {
     op1->xmm64u(n) = (op1->xmm64s(n) > op2->xmm64s(n)) ? BX_CONST64(0xffffffffffffffff) : 0;
@@ -176,28 +176,28 @@ BX_CPP_INLINE void sse_pcmpgtq(BxPackedXmmRegister *op1, const BxPackedXmmRegist
 
 // compare greater than (unsigned)
 
-BX_CPP_INLINE void sse_pcmpgtub(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpgtub(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<16; n++) {
     op1->xmmubyte(n) = (op1->xmmubyte(n) > op2->xmmubyte(n)) ? 0xff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpgtuw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpgtuw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<8; n++) {
     op1->xmm16u(n) = (op1->xmm16u(n) > op2->xmm16u(n)) ? 0xffff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpgtud(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpgtud(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<4; n++) {
     op1->xmm32u(n) = (op1->xmm32u(n) > op2->xmm32u(n)) ? 0xffffffff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpgtuq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpgtuq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<2; n++) {
     op1->xmm64u(n) = (op1->xmm64u(n) > op2->xmm64u(n)) ? BX_CONST64(0xffffffffffffffff) : 0;
@@ -206,28 +206,28 @@ BX_CPP_INLINE void sse_pcmpgtuq(BxPackedXmmRegister *op1, const BxPackedXmmRegis
 
 // compare greater than or equal (signed)
 
-BX_CPP_INLINE void sse_pcmpgeb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpgeb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<16; n++) {
     op1->xmmubyte(n) = (op1->xmmsbyte(n) >= op2->xmmsbyte(n)) ? 0xff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpgew(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpgew(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<8; n++) {
     op1->xmm16u(n) = (op1->xmm16s(n) >= op2->xmm16s(n)) ? 0xffff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpged(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpged(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<4; n++) {
     op1->xmm32u(n) = (op1->xmm32s(n) >= op2->xmm32s(n)) ? 0xffffffff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpgeq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpgeq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<2; n++) {
     op1->xmm64u(n) = (op1->xmm64s(n) >= op2->xmm64s(n)) ? BX_CONST64(0xffffffffffffffff) : 0;
@@ -236,28 +236,28 @@ BX_CPP_INLINE void sse_pcmpgeq(BxPackedXmmRegister *op1, const BxPackedXmmRegist
 
 // compare greater than or equal (unsigned)
 
-BX_CPP_INLINE void sse_pcmpgeub(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpgeub(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<16; n++) {
     op1->xmmubyte(n) = (op1->xmmubyte(n) >= op2->xmmubyte(n)) ? 0xff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpgeuw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpgeuw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<8; n++) {
     op1->xmm16u(n) = (op1->xmm16u(n) >= op2->xmm16u(n)) ? 0xffff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpgeud(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpgeud(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<4; n++) {
     op1->xmm32u(n) = (op1->xmm32u(n) >= op2->xmm32u(n)) ? 0xffffffff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpgeuq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpgeuq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<2; n++) {
     op1->xmm64u(n) = (op1->xmm64u(n) >= op2->xmm64u(n)) ? BX_CONST64(0xffffffffffffffff) : 0;
@@ -266,28 +266,28 @@ BX_CPP_INLINE void sse_pcmpgeuq(BxPackedXmmRegister *op1, const BxPackedXmmRegis
 
 // compare equal
 
-BX_CPP_INLINE void sse_pcmpeqb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpeqb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<16; n++) {
     op1->xmmubyte(n) = (op1->xmmubyte(n) == op2->xmmubyte(n)) ? 0xff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpeqw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpeqw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<8; n++) {
     op1->xmm16u(n) = (op1->xmm16u(n) == op2->xmm16u(n)) ? 0xffff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpeqd(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpeqd(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<4; n++) {
     op1->xmm32u(n) = (op1->xmm32u(n) == op2->xmm32u(n)) ? 0xffffffff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpeqq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpeqq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<2; n++) {
     op1->xmm64u(n) = (op1->xmm64u(n) == op2->xmm64u(n)) ? BX_CONST64(0xffffffffffffffff) : 0;
@@ -296,28 +296,28 @@ BX_CPP_INLINE void sse_pcmpeqq(BxPackedXmmRegister *op1, const BxPackedXmmRegist
 
 // compare not equal
 
-BX_CPP_INLINE void sse_pcmpneb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpneb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<16; n++) {
     op1->xmmubyte(n) = (op1->xmmubyte(n) != op2->xmmubyte(n)) ? 0xff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpnew(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpnew(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<8; n++) {
     op1->xmm16u(n) = (op1->xmm16u(n) != op2->xmm16u(n)) ? 0xffff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpned(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpned(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<4; n++) {
     op1->xmm32u(n) = (op1->xmm32u(n) != op2->xmm32u(n)) ? 0xffffffff : 0;
   }
 }
 
-BX_CPP_INLINE void sse_pcmpneq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpneq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<2; n++) {
     op1->xmm64u(n) = (op1->xmm64u(n) != op2->xmm64u(n)) ? BX_CONST64(0xffffffffffffffff) : 0;
@@ -326,14 +326,14 @@ BX_CPP_INLINE void sse_pcmpneq(BxPackedXmmRegister *op1, const BxPackedXmmRegist
 
 // compare true/false
 
-BX_CPP_INLINE void sse_pcmptrue(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmptrue(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<2; n++) {
     op1->xmm64u(n) = BX_CONST64(0xffffffffffffffff);
   }
 }
 
-BX_CPP_INLINE void sse_pcmpfalse(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+BX_CPP_INLINE void xmm_pcmpfalse(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<2; n++) {
     op1->xmm64u(n) = 0;

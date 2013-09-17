@@ -201,6 +201,12 @@ typedef union bx_zmm_reg_t {
 #  endif
 #endif
 
+#if BX_SUPPORT_EVEX
+typedef BxPackedZmmRegister BxPackedAvxRegister;
+#else
+typedef BxPackedYmmRegister BxPackedAvxRegister;
+#endif
+
 /* ************ */
 /* XMM REGISTER */
 /* ************ */

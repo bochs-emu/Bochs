@@ -48,7 +48,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDPD_VpdHpdWpdR(bxInstruction_
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmaddpd(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fmaddpd(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -69,7 +69,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDPS_VpsHpsWpsR(bxInstruction_
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmaddps(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fmaddps(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -126,7 +126,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDSUBPD_VpdHpdWpdR(bxInstructi
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmaddsubpd(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fmaddsubpd(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -147,7 +147,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDSUBPS_VpsHpsWpsR(bxInstructi
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmaddsubps(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fmaddsubps(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -168,7 +168,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBADDPD_VpdHpdWpdR(bxInstructi
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmsubaddpd(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fmsubaddpd(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -189,7 +189,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBADDPS_VpsHpsWpsR(bxInstructi
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmsubaddps(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fmsubaddps(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -210,7 +210,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBPD_VpdHpdWpdR(bxInstruction_
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmsubpd(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fmsubpd(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -231,7 +231,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBPS_VpsHpsWpsR(bxInstruction_
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fmsubps(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fmsubps(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -288,7 +288,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADDPD_VpdHpdWpdR(bxInstruction
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fnmaddpd(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fnmaddpd(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -309,7 +309,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADDPS_VpsHpsWpsR(bxInstruction
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fnmaddps(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fnmaddps(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -366,7 +366,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUBPD_VpdHpdWpdR(bxInstruction
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fnmsubpd(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fnmsubpd(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -387,7 +387,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUBPS_VpsHpsWpsR(bxInstruction
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    fnmsubps(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fnmsubps(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 

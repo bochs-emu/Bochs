@@ -37,98 +37,98 @@ typedef void (*simd_compare_method)(BxPackedXmmRegister *op1, const BxPackedXmmR
 
 // comparison predicate for PCOMB
 static simd_compare_method compare8[8] = {
-  sse_pcmpltb,
-  sse_pcmpleb,
-  sse_pcmpgtb,
-  sse_pcmpgeb,
-  sse_pcmpeqb,
-  sse_pcmpneb,
-  sse_pcmpfalse,
-  sse_pcmptrue
+  xmm_pcmpltb,
+  xmm_pcmpleb,
+  xmm_pcmpgtb,
+  xmm_pcmpgeb,
+  xmm_pcmpeqb,
+  xmm_pcmpneb,
+  xmm_pcmpfalse,
+  xmm_pcmptrue
 };
 
 // comparison predicate for PCOMUB
 static simd_compare_method compare8u[8] = {
-  sse_pcmpltub,
-  sse_pcmpleub,
-  sse_pcmpgtub,
-  sse_pcmpgeub,
-  sse_pcmpeqb,
-  sse_pcmpneb,
-  sse_pcmpfalse,
-  sse_pcmptrue
+  xmm_pcmpltub,
+  xmm_pcmpleub,
+  xmm_pcmpgtub,
+  xmm_pcmpgeub,
+  xmm_pcmpeqb,
+  xmm_pcmpneb,
+  xmm_pcmpfalse,
+  xmm_pcmptrue
 };
 
 // comparison predicate for PCOMW
 static simd_compare_method compare16[8] = {
-  sse_pcmpltw,
-  sse_pcmplew,
-  sse_pcmpgtw,
-  sse_pcmpgew,
-  sse_pcmpeqw,
-  sse_pcmpnew,
-  sse_pcmpfalse,
-  sse_pcmptrue
+  xmm_pcmpltw,
+  xmm_pcmplew,
+  xmm_pcmpgtw,
+  xmm_pcmpgew,
+  xmm_pcmpeqw,
+  xmm_pcmpnew,
+  xmm_pcmpfalse,
+  xmm_pcmptrue
 };
 
 // comparison predicate for PCOMUW
 static simd_compare_method compare16u[8] = {
-  sse_pcmpltuw,
-  sse_pcmpleuw,
-  sse_pcmpgtuw,
-  sse_pcmpgeuw,
-  sse_pcmpeqw,
-  sse_pcmpnew,
-  sse_pcmpfalse,
-  sse_pcmptrue
+  xmm_pcmpltuw,
+  xmm_pcmpleuw,
+  xmm_pcmpgtuw,
+  xmm_pcmpgeuw,
+  xmm_pcmpeqw,
+  xmm_pcmpnew,
+  xmm_pcmpfalse,
+  xmm_pcmptrue
 };
 
 // comparison predicate for PCOMD
 static simd_compare_method compare32[8] = {
-  sse_pcmpltd,
-  sse_pcmpled,
-  sse_pcmpgtd,
-  sse_pcmpged,
-  sse_pcmpeqd,
-  sse_pcmpned,
-  sse_pcmpfalse,
-  sse_pcmptrue
+  xmm_pcmpltd,
+  xmm_pcmpled,
+  xmm_pcmpgtd,
+  xmm_pcmpged,
+  xmm_pcmpeqd,
+  xmm_pcmpned,
+  xmm_pcmpfalse,
+  xmm_pcmptrue
 };
 
 // comparison predicate for PCOMUD
 static simd_compare_method compare32u[8] = {
-  sse_pcmpltud,
-  sse_pcmpleud,
-  sse_pcmpgtud,
-  sse_pcmpgeud,
-  sse_pcmpeqd,
-  sse_pcmpned,
-  sse_pcmpfalse,
-  sse_pcmptrue
+  xmm_pcmpltud,
+  xmm_pcmpleud,
+  xmm_pcmpgtud,
+  xmm_pcmpgeud,
+  xmm_pcmpeqd,
+  xmm_pcmpned,
+  xmm_pcmpfalse,
+  xmm_pcmptrue
 };
 
 // comparison predicate for PCOMQ
 static simd_compare_method compare64[8] = {
-  sse_pcmpltq,
-  sse_pcmpleq,
-  sse_pcmpgtq,
-  sse_pcmpgeq,
-  sse_pcmpeqq,
-  sse_pcmpneq,
-  sse_pcmpfalse,
-  sse_pcmptrue
+  xmm_pcmpltq,
+  xmm_pcmpleq,
+  xmm_pcmpgtq,
+  xmm_pcmpgeq,
+  xmm_pcmpeqq,
+  xmm_pcmpneq,
+  xmm_pcmpfalse,
+  xmm_pcmptrue
 };
 
 // comparison predicate for PCOMUQ
 static simd_compare_method compare64u[8] = {
-  sse_pcmpltuq,
-  sse_pcmpleuq,
-  sse_pcmpgtuq,
-  sse_pcmpgeuq,
-  sse_pcmpeqq,
-  sse_pcmpneq,
-  sse_pcmpfalse,
-  sse_pcmptrue
+  xmm_pcmpltuq,
+  xmm_pcmpleuq,
+  xmm_pcmpgtuq,
+  xmm_pcmpgeuq,
+  xmm_pcmpeqq,
+  xmm_pcmpneq,
+  xmm_pcmpfalse,
+  xmm_pcmptrue
 };
 
 typedef Bit8u (*vpperm_operation)(Bit8u byte);
@@ -173,7 +173,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMOV_VdqHdqWdqVIb(bxInstruction_
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++) {
-    sse_pselect(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n));
+    xmm_pselect(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n));
   }
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
@@ -215,20 +215,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPPERM_VdqHdqWdqVIb(bxInstruction_
     BX_NEXT_INSTR(i);                                                                       \
   }
 
-XOP_SHIFT_ROTATE(VPSHAB_VdqWdqHdq, sse_pshab);
-XOP_SHIFT_ROTATE(VPSHAW_VdqWdqHdq, sse_pshaw);
-XOP_SHIFT_ROTATE(VPSHAD_VdqWdqHdq, sse_pshad);
-XOP_SHIFT_ROTATE(VPSHAQ_VdqWdqHdq, sse_pshaq);
+XOP_SHIFT_ROTATE(VPSHAB_VdqWdqHdq, xmm_pshab);
+XOP_SHIFT_ROTATE(VPSHAW_VdqWdqHdq, xmm_pshaw);
+XOP_SHIFT_ROTATE(VPSHAD_VdqWdqHdq, xmm_pshad);
+XOP_SHIFT_ROTATE(VPSHAQ_VdqWdqHdq, xmm_pshaq);
 
-XOP_SHIFT_ROTATE(VPSHLB_VdqWdqHdq, sse_pshlb);
-XOP_SHIFT_ROTATE(VPSHLW_VdqWdqHdq, sse_pshlw);
-XOP_SHIFT_ROTATE(VPSHLD_VdqWdqHdq, sse_pshld);
-XOP_SHIFT_ROTATE(VPSHLQ_VdqWdqHdq, sse_pshlq);
+XOP_SHIFT_ROTATE(VPSHLB_VdqWdqHdq, xmm_pshlb);
+XOP_SHIFT_ROTATE(VPSHLW_VdqWdqHdq, xmm_pshlw);
+XOP_SHIFT_ROTATE(VPSHLD_VdqWdqHdq, xmm_pshld);
+XOP_SHIFT_ROTATE(VPSHLQ_VdqWdqHdq, xmm_pshlq);
 
-XOP_SHIFT_ROTATE(VPROTB_VdqWdqHdq, sse_protb);
-XOP_SHIFT_ROTATE(VPROTW_VdqWdqHdq, sse_protw);
-XOP_SHIFT_ROTATE(VPROTD_VdqWdqHdq, sse_protd);
-XOP_SHIFT_ROTATE(VPROTQ_VdqWdqHdq, sse_protq);
+XOP_SHIFT_ROTATE(VPROTB_VdqWdqHdq, xmm_protb);
+XOP_SHIFT_ROTATE(VPROTW_VdqWdqHdq, xmm_protw);
+XOP_SHIFT_ROTATE(VPROTD_VdqWdqHdq, xmm_protd);
+XOP_SHIFT_ROTATE(VPROTQ_VdqWdqHdq, xmm_protq);
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMACSSWW_VdqHdqWdqVIbR(bxInstruction_c *i)
 {
@@ -449,11 +449,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPROTB_VdqWdqIbR(bxInstruction_c *
 
   if (count > 0) {
     // rotate left
-    sse_prolb(&op,  count);
+    xmm_prolb(&op,  count);
   }
   else if (count < 0) {
     // rotate right
-    sse_prorb(&op, -count);
+    xmm_prorb(&op, -count);
   }
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
@@ -468,11 +468,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPROTW_VdqWdqIbR(bxInstruction_c *
 
   if (count > 0) {
     // rotate left
-    sse_prolw(&op,  count);
+    xmm_prolw(&op,  count);
   }
   else if (count < 0) {
     // rotate right
-    sse_prorw(&op, -count);
+    xmm_prorw(&op, -count);
   }
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
@@ -487,11 +487,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPROTD_VdqWdqIbR(bxInstruction_c *
 
   if (count > 0) {
     // rotate left
-    sse_prold(&op,  count);
+    xmm_prold(&op,  count);
   }
   else if (count < 0) {
     // rotate right
-    sse_prord(&op, -count);
+    xmm_prord(&op, -count);
   }
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
@@ -506,11 +506,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPROTQ_VdqWdqIbR(bxInstruction_c *
 
   if (count > 0) {
     // rotate left
-    sse_prolq(&op,  count);
+    xmm_prolq(&op,  count);
   }
   else if (count < 0) {
     // rotate right
-    sse_prorq(&op, -count);
+    xmm_prorq(&op, -count);
   }
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
@@ -917,7 +917,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMIL2PS_VdqHdqWdqIbR(bxInstruct
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++) {
-    sse_permil2ps(&result.ymm128(n), &op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), i->Ib() & 3);
+    xmm_permil2ps(&result.ymm128(n), &op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), i->Ib() & 3);
   }
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), result, len);
@@ -933,7 +933,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMIL2PD_VdqHdqWdqIbR(bxInstruct
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++) {
-    sse_permil2pd(&result.ymm128(n), &op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), i->Ib() & 3);
+    xmm_permil2pd(&result.ymm128(n), &op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), i->Ib() & 3);
   }
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), result, len);

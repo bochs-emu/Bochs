@@ -549,7 +549,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLPS_VpsMq(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDDUP_VpdWqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  sse_pbroadcastq(&BX_XMM_REG(i->dst()), BX_READ_XMM_REG_LO_QWORD(i->src()));
+  xmm_pbroadcastq(&BX_XMM_REG(i->dst()), BX_READ_XMM_REG_LO_QWORD(i->src()));
 #endif
 
   BX_NEXT_INSTR(i);
@@ -656,7 +656,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPS_GdVRps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  Bit32u mask = sse_pmovmskd(&BX_XMM_REG(i->src()));
+  Bit32u mask = xmm_pmovmskd(&BX_XMM_REG(i->src()));
   BX_WRITE_32BIT_REGZ(i->dst(), mask);
 #endif
 
@@ -667,7 +667,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPS_GdVRps(bxInstruction_c *i
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPD_GdVRpd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  Bit32u mask = sse_pmovmskq(&BX_XMM_REG(i->src()));
+  Bit32u mask = xmm_pmovmskq(&BX_XMM_REG(i->src()));
   BX_WRITE_32BIT_REGZ(i->dst(), mask);
 #endif
 
@@ -793,7 +793,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ2DQ_VdqQq(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVMSKB_GdUdq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  Bit32u mask = sse_pmovmskb(&BX_XMM_REG(i->src()));
+  Bit32u mask = xmm_pmovmskb(&BX_XMM_REG(i->src()));
   BX_WRITE_32BIT_REGZ(i->dst(), mask);
 #endif
 
@@ -1011,7 +1011,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PALIGNR_VdqWdqIbR(bxInstruction_c 
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
 
-  sse_palignr(&op2, &op1, i->Ib());
+  xmm_palignr(&op2, &op1, i->Ib());
 
   BX_WRITE_XMM_REG(i->dst(), op2);
 

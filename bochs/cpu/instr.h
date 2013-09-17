@@ -364,6 +364,13 @@ public:
   BX_CPP_INLINE unsigned isZeroMasking(void) const {
     return modRMForm.Ib[2] & (1 << 2);
   } 
+
+  BX_CPP_INLINE void setRC(unsigned rc) {
+    modRMForm.Ib[2] = (modRMForm.Ib[2] & ~0x3) | rc;
+  } 
+  BX_CPP_INLINE unsigned getRC(void) const {
+    return modRMForm.Ib[2] & 0x3;
+  } 
 #endif
 
   BX_CPP_INLINE void setSrcReg(unsigned src, unsigned reg) {

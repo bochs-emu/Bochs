@@ -1709,7 +1709,6 @@ BX_CPU_C::fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
 #endif
 
 #if BX_SUPPORT_EVEX
-  unsigned evex_rc = 0;
   bx_bool evex_v = 0;
 #endif
 
@@ -1915,7 +1914,8 @@ fetch_b1:
     evex_v = ((evex >> 19) & 0x1) ^ 0x1;
     unsigned evex_b = (evex >> 20) & 0x1;
     i->setBroadcast(evex_b);
-    evex_rc = (evex >> 21) & 0x3;
+    unsigned evex_rc = (evex >> 21) & 0x3;
+    i->setRC(evex_rc);
     unsigned evex_z = (evex >> 23) & 0x1;
     i->setZeroMasking(evex_z);
     

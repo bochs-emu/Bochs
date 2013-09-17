@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2012 Stanislav Shwartsman
+//   Copyright (c) 2003-2013 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1004,7 +1004,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDPS_VpsWpsR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  sse_addps(&op1, &op2, status);
+  xmm_addps(&op1, &op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG(i->dst(), op1);
@@ -1025,7 +1025,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDPD_VpdWpdR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  sse_addpd(&op1, &op2, status);
+  xmm_addpd(&op1, &op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG(i->dst(), op1);
@@ -1086,7 +1086,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MULPS_VpsWpsR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  sse_mulps(&op1, &op2, status);
+  xmm_mulps(&op1, &op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG(i->dst(), op1);
@@ -1107,7 +1107,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MULPD_VpdWpdR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  sse_mulpd(&op1, &op2, status);
+  xmm_mulpd(&op1, &op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG(i->dst(), op1);
@@ -1168,7 +1168,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SUBPS_VpsWpsR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  sse_subps(&op1, &op2, status);
+  xmm_subps(&op1, &op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG(i->dst(), op1);
@@ -1189,7 +1189,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SUBPD_VpdWpdR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  sse_subpd(&op1, &op2, status);
+  xmm_subpd(&op1, &op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG(i->dst(), op1);
@@ -1250,7 +1250,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MINPS_VpsWpsR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  sse_minps(&op1, &op2, status);
+  xmm_minps(&op1, &op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG(i->dst(), op1);
@@ -1271,7 +1271,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MINPD_VpdWpdR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  sse_minpd(&op1, &op2, status);
+  xmm_minpd(&op1, &op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG(i->dst(), op1);
@@ -1332,7 +1332,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DIVPS_VpsWpsR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  sse_divps(&op1, &op2, status);
+  xmm_divps(&op1, &op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG(i->dst(), op1);
@@ -1353,7 +1353,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DIVPD_VpdWpdR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  sse_divpd(&op1, &op2, status);
+  xmm_divpd(&op1, &op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG(i->dst(), op1);
@@ -1414,7 +1414,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXPS_VpsWpsR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  sse_maxps(&op1, &op2, status);
+  xmm_maxps(&op1, &op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG(i->dst(), op1);
@@ -1435,7 +1435,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXPD_VpdWpdR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  sse_maxpd(&op1, &op2, status);
+  xmm_maxpd(&op1, &op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG(i->dst(), op1);
@@ -1496,7 +1496,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::HADDPD_VpdWpdR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  sse_haddpd(&op1, &op2, status);
+  xmm_haddpd(&op1, &op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG(i->dst(), op1);
@@ -1517,7 +1517,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::HADDPS_VpsWpsR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  sse_haddps(&op1, &op2, status);
+  xmm_haddps(&op1, &op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG(i->dst(), op1);
@@ -1538,7 +1538,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::HSUBPD_VpdWpdR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  sse_hsubpd(&op1, &op2, status);
+  xmm_hsubpd(&op1, &op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG(i->dst(), op1);
@@ -1559,7 +1559,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::HSUBPS_VpsWpsR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  sse_hsubps(&op1, &op2, status);
+  xmm_hsubps(&op1, &op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG(i->dst(), op1);
@@ -1682,7 +1682,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSUBPD_VpdWpdR(bxInstruction_c *
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  sse_addsubpd(&op1, &op2, status);
+  xmm_addsubpd(&op1, &op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG(i->dst(), op1);
@@ -1703,7 +1703,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSUBPS_VpsWpsR(bxInstruction_c *
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  sse_addsubps(&op1, &op2, status);
+  xmm_addsubps(&op1, &op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG(i->dst(), op1);

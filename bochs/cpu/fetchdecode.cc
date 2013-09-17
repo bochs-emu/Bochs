@@ -1289,10 +1289,6 @@ BX_CPU_C::fetchDecode32(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
   bx_bool vex_w = 0, vex_l = 0, use_vvv = 0;
 #endif
 
-#if BX_SUPPORT_EVEX
-  unsigned evex_rc = 0;
-#endif
-
   os_32 = is_32 =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
 
@@ -1453,7 +1449,8 @@ fetch_b1:
       goto decode_done;
     unsigned evex_b = (evex >> 20) & 0x1;
     i->setBroadcast(evex_b);
-    evex_rc = (evex >> 21) & 0x3;
+    unsigned evex_rc = (evex >> 21) & 0x3;
+    i->setRC(evex_rc);
     unsigned evex_z = (evex >> 23) & 0x1;
     i->setZeroMasking(evex_z);
     
