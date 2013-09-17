@@ -58,3 +58,5 @@ TODO (know issues in CPU model):
     exception when #AC is enabled
 
 [!] TODO: Convert CPUDB to plugins and search for them in runtime
+
+[!] Implement MPX, AVX-512 and their extensions

@@ -1826,25 +1826,16 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSD_VsdWsdIbR(bxInstruction_c 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPS_VpsWpsIbR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->src()), tmp;
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->src());
   Bit8u mask = i->Ib();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
-  tmp.xmm64u(0) = tmp.xmm64u(1) = 0;
+  xmm_mulps_mask(&op1, &op2, status, mask >> 4);
 
-  if (mask & 0x10)
-     tmp.xmm32u(0) = float32_mul(op1.xmm32u(0), op2.xmm32u(0), status);
-  if (mask & 0x20)
-     tmp.xmm32u(1) = float32_mul(op1.xmm32u(1), op2.xmm32u(1), status);
-  if (mask & 0x40)
-     tmp.xmm32u(2) = float32_mul(op1.xmm32u(2), op2.xmm32u(2), status);
-  if (mask & 0x80)
-     tmp.xmm32u(3) = float32_mul(op1.xmm32u(3), op2.xmm32u(3), status);
-
-  float32 tmp1 = float32_add(tmp.xmm32u(0), tmp.xmm32u(1), status);
-  float32 tmp2 = float32_add(tmp.xmm32u(2), tmp.xmm32u(3), status);
+  float32 tmp1 = float32_add(op1.xmm32u(0), op1.xmm32u(1), status);
+  float32 tmp2 = float32_add(op1.xmm32u(2), op1.xmm32u(3), status);
 
   op1.xmm64u(0) = op1.xmm64u(1) = 0;
 

@@ -337,6 +337,9 @@ typedef BxPackedYmmRegister BxPackedAvxRegister;
 /* AVX REGISTER */
 /* ************ */
 
+// vector length independent accessors, i.e. access YMM when no EVEX was compiled in
+// or ZMM when EVEX support was compiled in
+
 /* read AVX register */
 #define BX_READ_AVX_REG(index) (BX_CPU_THIS_PTR vmm[index])
 
