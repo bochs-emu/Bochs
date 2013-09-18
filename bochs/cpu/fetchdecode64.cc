@@ -1829,7 +1829,7 @@ fetch_b1:
 #if BX_SUPPORT_AVX
   if ((b1 & ~0x1) == 0xc4) {
     // VEX
-    had_vex_xop = 1;
+    had_vex_xop = b1;
     if (sse_prefix | rex_prefix)
       goto decode_done;
 
@@ -1884,7 +1884,7 @@ fetch_b1:
   }
 #if BX_SUPPORT_EVEX
   else if (b1 == 0x62) {
-    had_vex_xop = 1;
+    had_vex_xop = b1;
     if (sse_prefix || ! protected_mode())
       goto decode_done;
 
@@ -1928,7 +1928,7 @@ fetch_b1:
 #endif
   else if (b1 == 0x8f && (*iptr & 0x08) == 0x08) {
     // 3 byte XOP prefix
-    had_vex_xop = 1;
+    had_vex_xop = b1;
     if (sse_prefix | rex_prefix)
       goto decode_done;
 
