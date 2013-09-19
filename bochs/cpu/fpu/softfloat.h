@@ -91,6 +91,8 @@ enum float_exception_flag_t {
     float_flag_inexact   = 0x20
 };
 
+const unsigned float_all_exceptions_mask = 0x3f;
+
 #ifdef FLOATX80
 #define RAISE_SW_C1 0x0200
 #endif

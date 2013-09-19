@@ -505,26 +505,26 @@ BX_CPP_INLINE void xmm_blendvpd(BxPackedXmmRegister *op1, const BxPackedXmmRegis
 
 BX_CPP_INLINE void xmm_andps(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
-  op1->xmm64u(0) &= op2->xmm64u(0);
-  op1->xmm64u(1) &= op2->xmm64u(1);
+  for (unsigned n=0; n < 2; n++)
+    op1->xmm64u(n) &= op2->xmm64u(n);
 }
 
 BX_CPP_INLINE void xmm_andnps(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
-  op1->xmm64u(0) = ~(op1->xmm64u(0)) & op2->xmm64u(0);
-  op1->xmm64u(1) = ~(op1->xmm64u(1)) & op2->xmm64u(1);
+  for (unsigned n=0; n < 2; n++)
+    op1->xmm64u(n) = ~(op1->xmm64u(n)) & op2->xmm64u(n);
 }
 
 BX_CPP_INLINE void xmm_orps(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
-  op1->xmm64u(0) |= op2->xmm64u(0);
-  op1->xmm64u(1) |= op2->xmm64u(1);
+  for (unsigned n=0; n < 2; n++)
+    op1->xmm64u(n) |= op2->xmm64u(n);
 }
 
 BX_CPP_INLINE void xmm_xorps(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
-  op1->xmm64u(0) ^= op2->xmm64u(0);
-  op1->xmm64u(1) ^= op2->xmm64u(1);
+  for (unsigned n=0; n < 2; n++)
+    op1->xmm64u(n) ^= op2->xmm64u(n);
 }
 
 // arithmetic (add/sub)
@@ -883,25 +883,13 @@ BX_CPP_INLINE void simd_pbroadcastq(BxPackedZmmRegister *op, Bit64u val_64, unsi
 
 BX_CPP_INLINE void xmm_psadbw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
-  Bit16u temp1 = 0, temp2 = 0;
+  unsigned temp1 = 0, temp2 = 0, n;
 
-  temp1 += abs(op1->xmmubyte(0x0) - op2->xmmubyte(0x0));
-  temp1 += abs(op1->xmmubyte(0x1) - op2->xmmubyte(0x1));
-  temp1 += abs(op1->xmmubyte(0x2) - op2->xmmubyte(0x2));
-  temp1 += abs(op1->xmmubyte(0x3) - op2->xmmubyte(0x3));
-  temp1 += abs(op1->xmmubyte(0x4) - op2->xmmubyte(0x4));
-  temp1 += abs(op1->xmmubyte(0x5) - op2->xmmubyte(0x5));
-  temp1 += abs(op1->xmmubyte(0x6) - op2->xmmubyte(0x6));
-  temp1 += abs(op1->xmmubyte(0x7) - op2->xmmubyte(0x7));
+  for (n=0; n < 8; n++)
+    temp1 += abs(op1->xmmubyte(n) - op2->xmmubyte(n));
 
-  temp2 += abs(op1->xmmubyte(0x8) - op2->xmmubyte(0x8));
-  temp2 += abs(op1->xmmubyte(0x9) - op2->xmmubyte(0x9));
-  temp2 += abs(op1->xmmubyte(0xA) - op2->xmmubyte(0xA));
-  temp2 += abs(op1->xmmubyte(0xB) - op2->xmmubyte(0xB));
-  temp2 += abs(op1->xmmubyte(0xC) - op2->xmmubyte(0xC));
-  temp2 += abs(op1->xmmubyte(0xD) - op2->xmmubyte(0xD));
-  temp2 += abs(op1->xmmubyte(0xE) - op2->xmmubyte(0xE));
-  temp2 += abs(op1->xmmubyte(0xF) - op2->xmmubyte(0xF));
+  for (; n < 16; n++)
+    temp2 += abs(op1->xmmubyte(n) - op2->xmmubyte(n));
 
   op1->xmm64u(0) = Bit64u(temp1);
   op1->xmm64u(1) = Bit64u(temp2);
