@@ -87,7 +87,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDSD_VpdHsdWsdR(bxInstruction_
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  op1 = float64_muladd(op1, op2, op3, 0, status);
+  op1 = float64_fmadd(op1, op2, op3, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);
@@ -105,7 +105,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDSS_VpsHssWssR(bxInstruction_
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  op1 = float32_muladd(op1, op2, op3, 0, status);
+  op1 = float32_fmadd(op1, op2, op3, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);
@@ -249,7 +249,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBSD_VpdHsdWsdR(bxInstruction_
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  op1 = float64_muladd(op1, op2, op3, float_muladd_negate_c, status);
+  op1 = float64_fmsub(op1, op2, op3, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);
@@ -267,7 +267,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBSS_VpsHssWssR(bxInstruction_
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  op1 = float32_muladd(op1, op2, op3, float_muladd_negate_c, status);
+  op1 = float32_fmsub(op1, op2, op3, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);
@@ -327,7 +327,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADDSD_VpdHsdWsdR(bxInstruction
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  op1 = float64_muladd(op1, op2, op3, float_muladd_negate_product, status);
+  op1 = float64_fnmadd(op1, op2, op3, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);
@@ -345,7 +345,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADDSS_VpsHssWssR(bxInstruction
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  op1 = float32_muladd(op1, op2, op3, float_muladd_negate_product, status);
+  op1 = float32_fnmadd(op1, op2, op3, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);
@@ -405,7 +405,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUBSD_VpdHsdWsdR(bxInstruction
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  op1 = float64_muladd(op1, op2, op3, float_muladd_negate_result, status);
+  op1 = float64_fnmsub(op1, op2, op3, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);
@@ -423,7 +423,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUBSS_VpsHssWssR(bxInstruction
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  op1 = float32_muladd(op1, op2, op3, float_muladd_negate_result, status);
+  op1 = float32_fnmsub(op1, op2, op3, status);
   check_exceptionsSSE(status.float_exception_flags);
 
   BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);
