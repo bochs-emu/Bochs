@@ -34,7 +34,6 @@ extern float32 approximate_rsqrt(float32 op);
 extern float32 approximate_rcp(float32 op);
 
 #include "fpu/softfloat-compare.h"
-
 #include "simd_pfp.h"
 
 void BX_CPU_C::print_state_AVX(void)
@@ -58,7 +57,7 @@ void BX_CPU_C::print_state_AVX(void)
 }
 
 /* Comparison predicate for VCMPSS/VCMPPS instructions */
-static float32_compare_method compare32[32] = {
+float32_compare_method avx_compare32[32] = {
   float32_eq_ordered_quiet,
   float32_lt_ordered_signalling,
   float32_le_ordered_signalling,
@@ -94,7 +93,7 @@ static float32_compare_method compare32[32] = {
 };
 
 /* Comparison predicate for VCMPSD/VCMPPD instructions */
-static float64_compare_method compare64[32] = {
+float64_compare_method avx_compare64[32] = {
   float64_eq_ordered_quiet,
   float64_lt_ordered_signalling,
   float64_le_ordered_signalling,
@@ -969,7 +968,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPS_VpsHpsWpsIbR(bxInstruction_
   int ib = i->Ib() & 0x1F;
 
   for (unsigned n=0; n < (4*len); n++) {
-    op1.ymm32u(n) = compare32[ib](op1.ymm32u(n), op2.ymm32u(n), status) ? 0xFFFFFFFF : 0;
+    op1.ymm32u(n) = avx_compare32[ib](op1.ymm32u(n), op2.ymm32u(n), status) ? 0xFFFFFFFF : 0;
   }
 
   check_exceptionsSSE(status.float_exception_flags);
@@ -989,7 +988,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPD_VpdHpdWpdIbR(bxInstruction_
   int ib = i->Ib() & 0x1F;
 
   for (unsigned n=0; n < (2*len); n++) {
-    op1.ymm64u(n) = compare64[ib](op1.ymm64u(n), op2.ymm64u(n), status) ?
+    op1.ymm64u(n) = avx_compare64[ib](op1.ymm64u(n), op2.ymm64u(n), status) ?
        BX_CONST64(0xFFFFFFFFFFFFFFFF) : 0;
   }
 
@@ -1009,7 +1008,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSD_VsdHpdWsdIbR(bxInstruction_
   mxcsr_to_softfloat_status_word(status, MXCSR);
   int ib = i->Ib() & 0x1F;
 
-  if(compare64[ib](op1.xmm64u(0), op2, status)) {
+  if(avx_compare64[ib](op1.xmm64u(0), op2, status)) {
     op1.xmm64u(0) = BX_CONST64(0xFFFFFFFFFFFFFFFF);
   } else {
     op1.xmm64u(0) = 0;
@@ -1031,7 +1030,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSS_VssHpsWssIbR(bxInstruction_
   mxcsr_to_softfloat_status_word(status, MXCSR);
   int ib = i->Ib() & 0x1F;
 
-  if(compare32[ib](op1.xmm32u(0), op2, status)) {
+  if(avx_compare32[ib](op1.xmm32u(0), op2, status)) {
     op1.xmm32u(0) = 0xFFFFFFFF;
   } else {
     op1.xmm32u(0) = 0;

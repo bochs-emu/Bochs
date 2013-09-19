@@ -174,7 +174,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_VectorD(bxInstructi
 
   unsigned vl = i->getVL();
 
-  if (i->getBroadcast()) {
+  if (i->getEvexb()) {
     Bit32u val_32 = read_virtual_dword(i->seg(), eaddr);
     simd_pbroadcastd(&BX_AVX_REG(BX_VECTOR_TMP_REGISTER), val_32, vl * 4);
   }
@@ -201,7 +201,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_VectorQ(bxInstructi
 
   unsigned vl = i->getVL();
 
-  if (i->getBroadcast()) {
+  if (i->getEvexb()) {
     Bit64u val_64 = read_virtual_qword(i->seg(), eaddr);
     simd_pbroadcastq(&BX_AVX_REG(BX_VECTOR_TMP_REGISTER), val_64, vl * 2);
   }

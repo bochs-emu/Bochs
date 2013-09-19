@@ -351,10 +351,10 @@ public:
     return modRMForm.Ib[3];
   }
 
-  BX_CPP_INLINE void setBroadcast(unsigned bit) {
+  BX_CPP_INLINE void setEvexb(unsigned bit) {
     modRMForm.Ib[2] = (modRMForm.Ib[2] & ~(1<<3)) | (bit<<3);
   } 
-  BX_CPP_INLINE unsigned getBroadcast(void) const {
+  BX_CPP_INLINE unsigned getEvexb(void) const {
     return modRMForm.Ib[2] & (1 << 3);
   } 
 

@@ -1913,7 +1913,7 @@ fetch_b1:
     i->setOpmask(opmask);
     evex_v = ((evex >> 19) & 0x1) ^ 0x1;
     unsigned evex_b = (evex >> 20) & 0x1;
-    i->setBroadcast(evex_b);
+    i->setEvexb(evex_b);
     unsigned evex_rc = (evex >> 21) & 0x3;
     i->setRC(evex_rc);
     unsigned evex_z = (evex >> 23) & 0x1;
