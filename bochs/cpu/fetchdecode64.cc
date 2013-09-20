@@ -1906,18 +1906,33 @@ fetch_b1:
     if (evex_opcext == 0)
       goto decode_done;
 
+    rex_r = ((evex >> 4) & 0x8) ^ 0x8;
+    rex_r |= (evex & 0x10) ^ 0x10;
+    rex_x = ((evex >> 3) & 0x8) ^ 0x8;
+    rex_b = ((evex >> 2) & 0x8) ^ 0x8;
+    rex_b |= (rex_x << 1);
+
     sse_prefix = (evex >> 8) & 0x3;
     vvv = 15 - ((evex >> 11) & 0xf);
+    evex_v = ((evex >> 15) & 0x10) ^ 0x10;
+    vvv |= evex_v;
     vex_w = (evex >> 15) & 0x1;
+    if (vex_w) {
+      i->assertOs64();
+      i->assertOs32();
+    }
+
     unsigned opmask = (evex >> 16) & 0x7;
     i->setOpmask(opmask);
-    evex_v = ((evex >> 19) & 0x1) ^ 0x1;
     unsigned evex_b = (evex >> 20) & 0x1;
     i->setEvexb(evex_b);
-    unsigned evex_rc = (evex >> 21) & 0x3;
-    i->setRC(evex_rc);
+    unsigned evex_ll_rc = (evex >> 21) & 0x3;
+    i->setRC(evex_ll_rc);
     unsigned evex_z = (evex >> 23) & 0x1;
     i->setZeroMasking(evex_z);
+
+    if (evex_z && ! opmask)
+      goto decode_done;
     
     unsigned opcode_byte = (evex >> 24);
     opcode_byte += 256 * (evex_opcext-1);

@@ -176,6 +176,7 @@ public:
 #define BX_AVX_VL256 1
   Bit8u vex_vvv, vex_l, vex_w;
   int is_vex; // 0 - no VEX used, 1 - VEX is used, -1 - invalid VEX
+  int is_evex; // 0 - no EVEX used, 1 - EVEX is used, -1 - invalid EVEX
   int is_xop; // 0 - no XOP used, 1 - XOP is used, -1 - invalid XOP
   Bit8u modrm, mod, nnn, rm;
   Bit8u sib, scale, index, base;
@@ -183,6 +184,10 @@ public:
      Bit16u displ16;
      Bit32u displ32;
   } displacement;
+
+  bx_bool evex_b;
+  bx_bool evex_z;
+  unsigned evex_ll_rc; 
 };
 
 BX_CPP_INLINE x86_insn::x86_insn(bx_bool is32, bx_bool is64)
@@ -210,6 +215,7 @@ BX_CPP_INLINE x86_insn::x86_insn(bx_bool is32, bx_bool is64)
   b1 = 0;
 
   is_vex = 0;
+  is_evex = 0;
   is_xop = 0;
   vex_vvv = 0;
   vex_l = BX_AVX_VL128;
@@ -217,6 +223,10 @@ BX_CPP_INLINE x86_insn::x86_insn(bx_bool is32, bx_bool is64)
   modrm = mod = nnn = rm = 0;
   sib = scale = index = base = 0;
   displacement.displ32 = 0;
+
+  evex_b = 0;
+  evex_ll_rc = 0;
+  evex_z = 0;
 }
 
 class disassembler {
@@ -318,6 +328,7 @@ private:
   void dis_sprintf(const char *fmt, ...);
   void decode_modrm(x86_insn *insn);
   unsigned decode_vex(x86_insn *insn);
+  unsigned decode_evex(x86_insn *insn);
   unsigned decode_xop(x86_insn *insn);
 
   void resolve16_mod0   (const x86_insn *insn, unsigned mode);

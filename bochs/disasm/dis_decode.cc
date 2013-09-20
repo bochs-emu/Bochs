@@ -213,6 +213,22 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
     else
       entry = BxDisasmOpcodesAVX + (insn.b1 - 256);
   }
+/*
+  if (insn.b1== 0x62 && (is_64 || (peek_byte() & 0xc0) == 0xc0))
+  {
+    if (sse_prefix)
+      dis_sprintf("(bad evex+rex prefix) ");
+    if (rex_prefix)
+      dis_sprintf("(bad evex+sse prefix) ");
+
+    // decode 0x62 EVEX prefix
+    sse_prefix = decode_evex(&insn);
+    if (insn.b1 < 256 || insn.b1 >= 1024)
+      entry = &BxDisasmGroupSSE_ERR[0];
+//  else
+//    entry = BxDisasmOpcodesEVEX + (insn.b1 - 256);
+  }
+*/
   else if (insn.b1 == 0x8f && (is_64 || (peek_byte() & 0xc0) == 0xc0) && (peek_byte() & 0x8) == 0x8)
   {
     if (sse_prefix)
@@ -392,6 +408,10 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
 
   if (insn.is_vex < 0)
     dis_sprintf(" (bad vex)");
+  else if (insn.is_evex < 0)
+    dis_sprintf(" (bad evex)");
+  else if (insn.is_xop < 0)
+    dis_sprintf(" (bad xop)");
 
   insn.ilen = (unsigned)(instruction - instruction_begin);
 
@@ -425,23 +445,71 @@ unsigned disassembler::decode_vex(x86_insn *insn)
   }
 
   insn->vex_vvv = 15 - ((b2 >> 3) & 0xf);
+  if (! insn->is_64) insn->vex_vvv &= 7;
   insn->vex_l = (b2 >> 2) & 0x1;
   insn->b1 = fetch_byte() + 256 * vex_opcode_extension;
   return b2 & 0x3;
+}
+
+unsigned disassembler::decode_evex(x86_insn *insn)
+{
+  insn->is_evex = 1;
+
+  Bit32u evex = fetch_dword();
+
+  // check for reserved EVEX bits
+  if ((evex & 0x0c) != 0 || (evex & 0x400) == 0) {
+    insn->is_evex = -1;
+  }
+
+  unsigned evex_opcext = evex & 0x3;
+  if (evex_opcext == 0) {
+    insn->is_evex = -1;
+  }
+    
+  if (insn->is_64) {
+    insn->rex_r = ((evex >> 4) & 0x8) ^ 0x8;
+    insn->rex_r |= (evex & 0x10) ^ 0x10;
+    insn->rex_x = ((evex >> 3) & 0x8) ^ 0x8;
+    insn->rex_b = ((evex >> 2) & 0x8) ^ 0x8;
+    insn->rex_b |= (insn->rex_x << 1);
+  }
+
+  unsigned sse_prefix = (evex >> 8) & 0x3;
+
+  insn->vex_vvv = 15 - ((evex >> 11) & 0xf);
+  unsigned evex_v = ((evex >> 15) & 0x10) ^ 0x10;
+  insn->vex_vvv |= evex_v;
+  if (! insn->is_64) insn->vex_vvv &= 7;
+
+  insn->vex_w = (evex >> 15) & 0x1;
+  if (insn->vex_w) {
+    insn->os_64 = 1;
+    insn->os_32 = 1;
+  }
+
+  insn->evex_b = (evex >> 20) & 0x1;
+  insn->evex_ll_rc = (evex >> 21) & 0x3;
+  insn->evex_z = (evex >> 23) & 0x1;
+  
+  insn->b1 = (evex >> 24);
+  insn->b1 += 256 * (evex_opcext-1);
+
+  return sse_prefix;
 }
 
 unsigned disassembler::decode_xop(x86_insn *insn)
 {
   insn->is_xop = 1;
 
-  unsigned b2 = fetch_byte(), xop_opcode_extension = 1;
+  unsigned b2 = fetch_byte();
 
   insn->rex_r = (b2 & 0x80) ? 0 : 0x8;
   insn->rex_x = (b2 & 0x40) ? 0 : 0x8;
   if (insn->is_64)
     insn->rex_b = (b2 & 0x20) ? 0 : 0x8;
 
-  xop_opcode_extension = (b2 & 0x1f) - 8;
+  unsigned xop_opcode_extension = (b2 & 0x1f) - 8;
   if (xop_opcode_extension >= 3)
     insn->is_xop = -1;
 
@@ -453,6 +521,7 @@ unsigned disassembler::decode_xop(x86_insn *insn)
   }
 
   insn->vex_vvv = 15 - ((b2 >> 3) & 0xf);
+  if (! insn->is_64) insn->vex_vvv &= 7;
   insn->vex_l = (b2 >> 2) & 0x1;
   insn->b1 = fetch_byte() + 256 * xop_opcode_extension;
 
