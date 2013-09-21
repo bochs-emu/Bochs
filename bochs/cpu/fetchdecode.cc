@@ -273,8 +273,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 5D /w */ { 0, BX_IA_POP_RX },
   /* 5E /w */ { 0, BX_IA_POP_RX },
   /* 5F /w */ { 0, BX_IA_POP_RX },
-  /* 60 /w */ { 0, BX_IA_PUSHAD16 },
-  /* 61 /w */ { 0, BX_IA_POPAD16 },
+  /* 60 /w */ { 0, BX_IA_PUSHA16 },
+  /* 61 /w */ { 0, BX_IA_POPA16 },
   /* 62 /w */ { 0, BX_IA_BOUND_GwMa },
   /* 63 /w */ { 0, BX_IA_ARPL_EwGw },
   /* 64 /w */ { 0, BX_IA_ERROR }, // FS:
@@ -818,8 +818,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 5D /d */ { 0, BX_IA_POP_ERX },
   /* 5E /d */ { 0, BX_IA_POP_ERX },
   /* 5F /d */ { 0, BX_IA_POP_ERX },
-  /* 60 /d */ { 0, BX_IA_PUSHAD32 },
-  /* 61 /d */ { 0, BX_IA_POPAD32 },
+  /* 60 /d */ { 0, BX_IA_PUSHA32 },
+  /* 61 /d */ { 0, BX_IA_POPA32 },
   /* 62 /d */ { 0, BX_IA_BOUND_GdMa },
   /* 63 /d */ { 0, BX_IA_ARPL_EwGw },
   /* 64 /d */ { 0, BX_IA_ERROR }, // FS:

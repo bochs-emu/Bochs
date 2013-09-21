@@ -204,7 +204,9 @@ typedef union bx_zmm_reg_t {
 #if BX_SUPPORT_EVEX
 typedef BxPackedZmmRegister BxPackedAvxRegister;
 #else
+#if BX_SUPPORT_AVX
 typedef BxPackedYmmRegister BxPackedAvxRegister;
+#endif
 #endif
 
 /* ************ */
