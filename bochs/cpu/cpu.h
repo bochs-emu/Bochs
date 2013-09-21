@@ -5146,13 +5146,6 @@ enum {
 #define BxAliasVexW         0x2000 // bit 13, form final opcode using VEX.W and current opcode
 
 #define BxLockable          0x4000 // bit 14
-#define BxTraceEnd          0x8000 // bit 15
-
-#ifdef BX_TRACE_CACHE_NO_SPECULATIVE_TRACING
-  #define BxTraceJCC      BxTraceEnd
-#else
-  #define BxTraceJCC      0
-#endif
 
 #define BxGroup1          BxGroupN
 #define BxGroup1A         BxGroupN
