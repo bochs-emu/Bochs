@@ -294,13 +294,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRTSS_VssHpsWssR(bxInstruction_
 /* Opcode: VEX.0F 53 (VEX.W ignore, VEX.VVV #UD) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCPPS_VpsWpsR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < (4*len); n++)
-    op.ymm32u(n) = approximate_rcp(op.ymm32u(n));
+    op.vmm32u(n) = approximate_rcp(op.vmm32u(n));
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -327,7 +327,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDPS_VpsHpsWpsR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, len);
+  softfloat_status_word_rc_override(status, i);
 #endif
 
   for (unsigned n=0; n < len; n++) {
@@ -350,7 +350,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDPD_VpdHpdWpdR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, len);
+  softfloat_status_word_rc_override(status, i);
 #endif
 
   for (unsigned n=0; n < len; n++) {
@@ -373,7 +373,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSS_VssHpsWssR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, BX_VL512);
+  softfloat_status_word_rc_override(status, i);
 #endif
   op1.xmm32u(0) = float32_add(op1.xmm32u(0), op2, status);
   check_exceptionsSSE(status.float_exception_flags);
@@ -391,7 +391,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSD_VsdHpdWsdR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, BX_VL512);
+  softfloat_status_word_rc_override(status, i);
 #endif
   op1.xmm64u(0) = float64_add(op1.xmm64u(0), op2, status);
   check_exceptionsSSE(status.float_exception_flags);
@@ -409,7 +409,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULPS_VpsHpsWpsR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, len);
+  softfloat_status_word_rc_override(status, i);
 #endif
 
   for (unsigned n=0; n < len; n++) {
@@ -432,7 +432,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULPD_VpdHpdWpdR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, len);
+  softfloat_status_word_rc_override(status, i);
 #endif
 
   for (unsigned n=0; n < len; n++) {
@@ -455,7 +455,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULSS_VssHpsWssR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, BX_VL512);
+  softfloat_status_word_rc_override(status, i);
 #endif
   op1.xmm32u(0) = float32_mul(op1.xmm32u(0), op2, status);
   check_exceptionsSSE(status.float_exception_flags);
@@ -473,7 +473,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULSD_VsdHpdWsdR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, BX_VL512);
+  softfloat_status_word_rc_override(status, i);
 #endif
   op1.xmm64u(0) = float64_mul(op1.xmm64u(0), op2, status);
   check_exceptionsSSE(status.float_exception_flags);
@@ -626,7 +626,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBPS_VpsHpsWpsR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, len);
+  softfloat_status_word_rc_override(status, i);
 #endif
 
   for (unsigned n=0; n < len; n++) {
@@ -649,7 +649,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBPD_VpdHpdWpdR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, len);
+  softfloat_status_word_rc_override(status, i);
 #endif
 
   for (unsigned n=0; n < len; n++) {
@@ -672,7 +672,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBSS_VssHpsWssR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, BX_VL512);
+  softfloat_status_word_rc_override(status, i);
 #endif
   op1.xmm32u(0) = float32_sub(op1.xmm32u(0), op2, status);
   check_exceptionsSSE(status.float_exception_flags);
@@ -690,7 +690,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBSD_VsdHpdWsdR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, BX_VL512);
+  softfloat_status_word_rc_override(status, i);
 #endif
   op1.xmm64u(0) = float64_sub(op1.xmm64u(0), op2, status);
   check_exceptionsSSE(status.float_exception_flags);
@@ -708,7 +708,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINPS_VpsHpsWpsR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, len);
+  softfloat_status_word_rc_override(status, i);
 #endif
 
   for (unsigned n=0; n < len; n++) {
@@ -731,7 +731,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINPD_VpdHpdWpdR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, len);
+  softfloat_status_word_rc_override(status, i);
 #endif
 
   for (unsigned n=0; n < len; n++) {
@@ -754,7 +754,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINSS_VssHpsWssR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, BX_VL512);
+  softfloat_status_word_rc_override(status, i);
 #endif
   op1.xmm32u(0) = float32_min(op1.xmm32u(0), op2, status);
   check_exceptionsSSE(status.float_exception_flags);
@@ -773,7 +773,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINSD_VsdHpdWsdR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, BX_VL512);
+  softfloat_status_word_rc_override(status, i);
 #endif
   op1.xmm64u(0) = float64_min(op1.xmm64u(0), op2, status);
   check_exceptionsSSE(status.float_exception_flags);
@@ -792,7 +792,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVPS_VpsHpsWpsR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, len);
+  softfloat_status_word_rc_override(status, i);
 #endif
 
   for (unsigned n=0; n < len; n++) {
@@ -815,7 +815,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVPD_VpdHpdWpdR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, len);
+  softfloat_status_word_rc_override(status, i);
 #endif
 
   for (unsigned n=0; n < len; n++) {
@@ -838,7 +838,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVSS_VssHpsWssR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, BX_VL512);
+  softfloat_status_word_rc_override(status, i);
 #endif
   op1.xmm32u(0) = float32_div(op1.xmm32u(0), op2, status);
   check_exceptionsSSE(status.float_exception_flags);
@@ -856,7 +856,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVSD_VsdHpdWsdR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, BX_VL512);
+  softfloat_status_word_rc_override(status, i);
 #endif
   op1.xmm64u(0) = float64_div(op1.xmm64u(0), op2, status);
   check_exceptionsSSE(status.float_exception_flags);
@@ -874,7 +874,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXPS_VpsHpsWpsR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, len);
+  softfloat_status_word_rc_override(status, i);
 #endif
 
   for (unsigned n=0; n < len; n++) {
@@ -897,7 +897,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXPD_VpdHpdWpdR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, len);
+  softfloat_status_word_rc_override(status, i);
 #endif
 
   for (unsigned n=0; n < len; n++) {
@@ -920,7 +920,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXSS_VssHpsWssR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, BX_VL512);
+  softfloat_status_word_rc_override(status, i);
 #endif
   op1.xmm32u(0) = float32_max(op1.xmm32u(0), op2, status);
   check_exceptionsSSE(status.float_exception_flags);
@@ -939,7 +939,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXSD_VsdHpdWsdR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, BX_VL512);
+  softfloat_status_word_rc_override(status, i);
 #endif
   op1.xmm64u(0) = float64_max(op1.xmm64u(0), op2, status);
   check_exceptionsSSE(status.float_exception_flags);
@@ -952,22 +952,22 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXSD_VsdHpdWsdR(bxInstruction_c 
 /* Opcode: VEX.NDS.66.0F 7C (VEX.W ignore) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHADDPD_VpdHpdWpdR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1()), op2 = BX_READ_YMM_REG(i->src2());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
   unsigned len = i->getVL();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, len);
+  softfloat_status_word_rc_override(status, i);
 #endif
 
   for (unsigned n=0; n < len; n++) {
-    xmm_haddpd(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_haddpd(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -975,22 +975,22 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHADDPD_VpdHpdWpdR(bxInstruction_c
 /* Opcode: VEX.NDS.F2.0F 7C (VEX.W ignore) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHADDPS_VpsHpsWpsR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1()), op2 = BX_READ_YMM_REG(i->src2());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
   unsigned len = i->getVL();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, len);
+  softfloat_status_word_rc_override(status, i);
 #endif
 
   for (unsigned n=0; n < len; n++) {
-    xmm_haddps(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_haddps(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -998,22 +998,22 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHADDPS_VpsHpsWpsR(bxInstruction_c
 /* Opcode: VEX.NDS.66.0F 7D (VEX.W ignore) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHSUBPD_VpdHpdWpdR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1()), op2 = BX_READ_YMM_REG(i->src2());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
   unsigned len = i->getVL();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, len);
+  softfloat_status_word_rc_override(status, i);
 #endif
 
   for (unsigned n=0; n < len; n++) {
-    xmm_hsubpd(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_hsubpd(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -1021,22 +1021,22 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHSUBPD_VpdHpdWpdR(bxInstruction_c
 /* Opcode: VEX.NDS.F2.0F 7D (VEX.W ignore) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHSUBPS_VpsHpsWpsR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1()), op2 = BX_READ_YMM_REG(i->src2());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
   unsigned len = i->getVL();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, len);
+  softfloat_status_word_rc_override(status, i);
 #endif
 
   for (unsigned n=0; n < len; n++) {
-    xmm_hsubps(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_hsubps(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -1129,22 +1129,22 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSS_VssHpsWssIbR(bxInstruction_
 /* Opcode: VEX.NDS.F2.0F D0 (VEX.W ignore) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSUBPD_VpdHpdWpdR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1()), op2 = BX_READ_YMM_REG(i->src2());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
   unsigned len = i->getVL();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, len);
+  softfloat_status_word_rc_override(status, i);
 #endif
 
   for (unsigned n=0; n < len; n++) {
-    xmm_addsubpd(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_addsubpd(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -1152,22 +1152,22 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSUBPD_VpdHpdWpdR(bxInstruction
 /* Opcode: VEX.NDS.F2.0F D0 (VEX.W ignore) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSUBPS_VpsHpsWpsR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1()), op2 = BX_READ_YMM_REG(i->src2());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
   unsigned len = i->getVL();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 #if BX_SUPPORT_EVEX
-  evex_softfloat_status_word_override(status, i, len);
+  softfloat_status_word_rc_override(status, i);
 #endif
 
   for (unsigned n=0; n < len; n++) {
-    xmm_addsubps(&op1.ymm128(n), &op2.ymm128(n), status);
+    xmm_addsubps(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }

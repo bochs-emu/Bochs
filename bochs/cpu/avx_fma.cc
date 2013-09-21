@@ -39,20 +39,20 @@ extern void mxcsr_to_softfloat_status_word(float_status_t &status, bx_mxcsr_t mx
 // FMADDPD
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDPD_VpdHpdWpdR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1());
-  BxPackedYmmRegister op2 = BX_READ_YMM_REG(i->src2());
-  BxPackedYmmRegister op3 = BX_READ_YMM_REG(i->src3());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
+  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
   unsigned len = i->getVL();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    xmm_fmaddpd(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fmaddpd(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -60,20 +60,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDPD_VpdHpdWpdR(bxInstruction_
 // FMADDPS
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDPS_VpsHpsWpsR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1());
-  BxPackedYmmRegister op2 = BX_READ_YMM_REG(i->src2());
-  BxPackedYmmRegister op3 = BX_READ_YMM_REG(i->src3());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
+  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
   unsigned len = i->getVL();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    xmm_fmaddps(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fmaddps(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -117,20 +117,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDSS_VpsHssWssR(bxInstruction_
 // FMADDSUBPD
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDSUBPD_VpdHpdWpdR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1());
-  BxPackedYmmRegister op2 = BX_READ_YMM_REG(i->src2());
-  BxPackedYmmRegister op3 = BX_READ_YMM_REG(i->src3());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
+  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
   unsigned len = i->getVL();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    xmm_fmaddsubpd(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fmaddsubpd(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -138,20 +138,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDSUBPD_VpdHpdWpdR(bxInstructi
 // FMADDSUBPS
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDSUBPS_VpsHpsWpsR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1());
-  BxPackedYmmRegister op2 = BX_READ_YMM_REG(i->src2());
-  BxPackedYmmRegister op3 = BX_READ_YMM_REG(i->src3());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
+  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
   unsigned len = i->getVL();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    xmm_fmaddsubps(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fmaddsubps(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -159,20 +159,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDSUBPS_VpsHpsWpsR(bxInstructi
 // FMSUBADDPD
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBADDPD_VpdHpdWpdR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1());
-  BxPackedYmmRegister op2 = BX_READ_YMM_REG(i->src2());
-  BxPackedYmmRegister op3 = BX_READ_YMM_REG(i->src3());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
+  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
   unsigned len = i->getVL();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    xmm_fmsubaddpd(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fmsubaddpd(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -180,20 +180,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBADDPD_VpdHpdWpdR(bxInstructi
 // FMSUBADDPS
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBADDPS_VpsHpsWpsR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1());
-  BxPackedYmmRegister op2 = BX_READ_YMM_REG(i->src2());
-  BxPackedYmmRegister op3 = BX_READ_YMM_REG(i->src3());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
+  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
   unsigned len = i->getVL();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    xmm_fmsubaddps(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fmsubaddps(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -201,20 +201,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBADDPS_VpsHpsWpsR(bxInstructi
 // FMSUBPD
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBPD_VpdHpdWpdR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1());
-  BxPackedYmmRegister op2 = BX_READ_YMM_REG(i->src2());
-  BxPackedYmmRegister op3 = BX_READ_YMM_REG(i->src3());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
+  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
   unsigned len = i->getVL();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    xmm_fmsubpd(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fmsubpd(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -222,20 +222,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBPD_VpdHpdWpdR(bxInstruction_
 // FMSUBPS
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBPS_VpsHpsWpsR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1());
-  BxPackedYmmRegister op2 = BX_READ_YMM_REG(i->src2());
-  BxPackedYmmRegister op3 = BX_READ_YMM_REG(i->src3());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
+  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
   unsigned len = i->getVL();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    xmm_fmsubps(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fmsubps(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -279,20 +279,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBSS_VpsHssWssR(bxInstruction_
 // FNMADDPD
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADDPD_VpdHpdWpdR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1());
-  BxPackedYmmRegister op2 = BX_READ_YMM_REG(i->src2());
-  BxPackedYmmRegister op3 = BX_READ_YMM_REG(i->src3());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
+  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
   unsigned len = i->getVL();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    xmm_fnmaddpd(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fnmaddpd(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -300,20 +300,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADDPD_VpdHpdWpdR(bxInstruction
 // FNMADDPS
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADDPS_VpsHpsWpsR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1());
-  BxPackedYmmRegister op2 = BX_READ_YMM_REG(i->src2());
-  BxPackedYmmRegister op3 = BX_READ_YMM_REG(i->src3());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
+  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
   unsigned len = i->getVL();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    xmm_fnmaddps(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fnmaddps(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -357,20 +357,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADDSS_VpsHssWssR(bxInstruction
 // FNMSUBPD
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUBPD_VpdHpdWpdR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1());
-  BxPackedYmmRegister op2 = BX_READ_YMM_REG(i->src2());
-  BxPackedYmmRegister op3 = BX_READ_YMM_REG(i->src3());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
+  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
   unsigned len = i->getVL();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    xmm_fnmsubpd(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fnmsubpd(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -378,20 +378,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUBPD_VpdHpdWpdR(bxInstruction
 // FNMSUBPS
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUBPS_VpsHpsWpsR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1());
-  BxPackedYmmRegister op2 = BX_READ_YMM_REG(i->src2());
-  BxPackedYmmRegister op3 = BX_READ_YMM_REG(i->src3());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
+  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
   unsigned len = i->getVL();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
   for (unsigned n=0; n < len; n++)
-    xmm_fnmsubps(&op1.ymm128(n), &op2.ymm128(n), &op3.ymm128(n), status);
+    xmm_fnmsubps(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
 
   check_exceptionsSSE(status.float_exception_flags);
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }

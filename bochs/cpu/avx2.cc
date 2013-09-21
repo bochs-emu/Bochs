@@ -35,13 +35,13 @@
   /* AVX instruction with two src operands */                                               \
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)              \
   {                                                                                         \
-    BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1()), op2 = BX_READ_YMM_REG(i->src2()); \
+    BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
     unsigned len = i->getVL();                                                              \
                                                                                             \
     for (unsigned n=0; n < len; n++)                                                        \
-      (func)(&op1.ymm128(n), &op2.ymm128(n));                                               \
+      (func)(&op1.vmm128(n), &op2.vmm128(n));                                               \
                                                                                             \
-    BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);                                             \
+    BX_WRITE_AVX_REGZ(i->dst(), op1, len);                                                  \
                                                                                             \
     BX_NEXT_INSTR(i);                                                                       \
   }
@@ -143,13 +143,13 @@ AVX_2OP(VPSRLVQ_VdqHdqWdqR, xmm_psrlvq)
   /* AVX instruction with single src operand */                                            \
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)             \
   {                                                                                        \
-    BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());                                    \
+    BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());                                    \
     unsigned len = i->getVL();                                                             \
                                                                                            \
     for (unsigned n=0; n < len; n++)                                                       \
-      (func)(&op.ymm128(n));                                                               \
+      (func)(&op.vmm128(n));                                                               \
                                                                                            \
-    BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);                                             \
+    BX_WRITE_AVX_REGZ(i->dst(), op, len);                                                  \
                                                                                            \
     BX_NEXT_INSTR(i);                                                                      \
   }
@@ -162,13 +162,13 @@ AVX_1OP(VPABSD_VdqWdqR, xmm_pabsd)
   /* AVX packed shift instruction */                                                       \
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)              \
   {                                                                                        \
-    BxPackedYmmRegister op  = BX_READ_YMM_REG(i->src1());                                  \
+    BxPackedAvxRegister op  = BX_READ_AVX_REG(i->src1());                                  \
     unsigned len = i->getVL();                                                             \
                                                                                            \
     for (unsigned n=0; n < len; n++)                                                       \
-      (func)(&op.ymm128(n), BX_READ_XMM_REG_LO_QWORD(i->src2()));                          \
+      (func)(&op.vmm128(n), BX_READ_XMM_REG_LO_QWORD(i->src2()));                          \
                                                                                            \
-    BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);                                             \
+    BX_WRITE_AVX_REGZ(i->dst(), op, len);                                                  \
                                                                                            \
     BX_NEXT_INSTR(i);                                                                      \
   }
@@ -186,13 +186,13 @@ AVX_PSHIFT(VPSLLQ_VdqHdqWdqR, xmm_psllq);
   /* AVX packed shift with imm8 instruction */                                             \
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)              \
   {                                                                                        \
-    BxPackedYmmRegister op  = BX_READ_YMM_REG(i->src());                                   \
+    BxPackedAvxRegister op  = BX_READ_AVX_REG(i->src());                                   \
     unsigned len = i->getVL();                                                             \
                                                                                            \
     for (unsigned n=0; n < len; n++)                                                       \
-      (func)(&op.ymm128(n), i->Ib());                                                      \
+      (func)(&op.vmm128(n), i->Ib());                                                      \
                                                                                            \
-    BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);                                             \
+    BX_WRITE_AVX_REGZ(i->dst(), op, len);                                                  \
                                                                                            \
     BX_NEXT_INSTR(i);                                                                      \
   }
@@ -211,75 +211,75 @@ AVX_PSHIFT_IMM(VPSLLDQ_UdqIb, xmm_pslldq);
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPSHUFHW_VdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src()), result;
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
   Bit8u order = i->Ib();
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++)
-    xmm_pshufhw(&result.ymm128(n), &op.ymm128(n), order);
+    xmm_pshufhw(&result.vmm128(n), &op.vmm128(n), order);
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), result, len);
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPSHUFLW_VdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src()), result;
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
   Bit8u order = i->Ib();
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++)
-    xmm_pshuflw(&result.ymm128(n), &op.ymm128(n), order);
+    xmm_pshuflw(&result.vmm128(n), &op.vmm128(n), order);
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), result, len);
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPSHUFB_VdqHdqWdqR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1());
-  BxPackedYmmRegister op2 = BX_READ_YMM_REG(i->src2()), result;
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2()), result;
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++)
-    xmm_pshufb(&result.ymm128(n), &op1.ymm128(n), &op2.ymm128(n));
+    xmm_pshufb(&result.vmm128(n), &op1.vmm128(n), &op2.vmm128(n));
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), result, len);
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPSADBW_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1());
-  BxPackedYmmRegister op2 = BX_READ_YMM_REG(i->src2()), result;
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2()), result;
 
   Bit8u control = i->Ib();
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++) {
-    xmm_mpsadbw(&result.ymm128(n), &op1.ymm128(n), &op2.ymm128(n), control & 0x7);
+    xmm_mpsadbw(&result.vmm128(n), &op1.vmm128(n), &op2.vmm128(n), control & 0x7);
     control >>= 3;
   }
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), result, len);
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBLENDW_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1()), op2 = BX_READ_YMM_REG(i->src2());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
 
   unsigned len = i->getVL();
   Bit8u mask = i->Ib();
 
   for (unsigned n=0; n < len; n++)
-    xmm_pblendw(&op1.ymm128(n), &op2.ymm128(n), mask);
+    xmm_pblendw(&op1.vmm128(n), &op2.vmm128(n), mask);
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }
