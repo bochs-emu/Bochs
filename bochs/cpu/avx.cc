@@ -253,7 +253,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVHPD_VpdHpdMq(bxInstruction_c *
 }
 
 /* VEX.0F 50 (VEX.W ignore, VEX.VVV #UD) */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVMSKPS_GdVRps(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVMSKPS_GdUps(bxInstruction_c *i)
 {
   BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
   unsigned len = i->getVL();
@@ -268,7 +268,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVMSKPS_GdVRps(bxInstruction_c *
 }
 
 /* VEX.66.0F 50 (VEX.W ignore, VEX.VVV #UD) */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVMSKPD_GdVRpd(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVMSKPD_GdUpd(bxInstruction_c *i)
 {
   BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
   unsigned len = i->getVL();

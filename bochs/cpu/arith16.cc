@@ -24,7 +24,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_RX(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_EwR(bxInstruction_c *i)
 {
   Bit32u rx = ++BX_READ_16BIT_REG(i->dst());
   SET_FLAGS_OSZAP_ADD_16(rx - 1, 0, rx);
@@ -32,7 +32,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_RX(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_RX(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_EwR(bxInstruction_c *i)
 {
   Bit32u rx = --BX_READ_16BIT_REG(i->dst());
   SET_FLAGS_OSZAP_SUB_16(rx + 1, 0, rx);

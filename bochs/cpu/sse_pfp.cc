@@ -869,7 +869,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::UCOMISD_VsdWsdR(bxInstruction_c *i
  * Compare two single precision FP numbers and set EFLAGS accordintly.
  * Possible floating point exceptions: #I, #D
  */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::COMISS_VpsWpsR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::COMISS_VssWssR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->dst()), op2 = BX_READ_XMM_REG_LO_DWORD(i->src());
@@ -889,7 +889,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::COMISS_VpsWpsR(bxInstruction_c *i)
  * Compare two double precision FP numbers and set EFLAGS accordintly.
  * Possible floating point exceptions: #I, #D
  */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::COMISD_VpdWpdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::COMISD_VsdWsdR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->dst()), op2 = BX_READ_XMM_REG_LO_QWORD(i->src());

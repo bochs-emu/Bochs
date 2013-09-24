@@ -83,7 +83,122 @@ enum {
   BX_SRC_VIB
 };
 
+enum {
+  BX_NO_REG = 0,
+  BX_GPR8,
+  BX_GPR16,
+  BX_GPR32,
+  BX_FPU_REG,
+  BX_MMX_REG,
+  BX_VMM_REG,
+  BX_KMASK_REG,
+  BX_SEGREG,
+  BX_CREG,
+  BX_DREG
+};
+
 #define BX_SRC_XMM0 (BX_SRC_EAX)
+
+const Bit8u OP_NONE = BX_SRC_NONE;
+
+const Bit8u OP_Eb = BX_SRC_RM;
+const Bit8u OP_Ebd = BX_SRC_RM;
+const Bit8u OP_Ew = BX_SRC_RM;
+const Bit8u OP_Ewd = BX_SRC_RM;
+const Bit8u OP_Ed = BX_SRC_RM;
+const Bit8u OP_Eq = BX_SRC_RM;
+
+const Bit8u OP_Gb = BX_SRC_NNN;
+const Bit8u OP_Gw = BX_SRC_NNN;
+const Bit8u OP_Gd = BX_SRC_NNN;
+const Bit8u OP_Gq = BX_SRC_NNN;
+
+const Bit8u OP_ALReg  = BX_SRC_EAX;
+const Bit8u OP_AXReg  = BX_SRC_EAX;
+const Bit8u OP_EAXReg = BX_SRC_EAX;
+const Bit8u OP_RAXReg = BX_SRC_EAX;
+
+const Bit8u OP_CLReg  = BX_SRC_NONE;
+const Bit8u OP_DXReg  = BX_SRC_NONE;
+
+const Bit8u OP_Ib = BX_SRC_NONE;
+const Bit8u OP_Iw = BX_SRC_NONE;
+const Bit8u OP_Id = BX_SRC_NONE;
+const Bit8u OP_Iq = BX_SRC_NONE;
+
+const Bit8u OP_Jb = BX_SRC_NONE;
+const Bit8u OP_Jw = BX_SRC_NONE;
+const Bit8u OP_Jd = BX_SRC_NONE;
+const Bit8u OP_Jq = BX_SRC_NONE; /* always same as OP_Jd ? */
+
+const Bit8u OP_M  = BX_SRC_RM;
+const Bit8u OP_Mb = BX_SRC_RM;
+const Bit8u OP_Mw = BX_SRC_RM;
+const Bit8u OP_Md = BX_SRC_RM;
+const Bit8u OP_Mq = BX_SRC_RM;
+const Bit8u OP_Mp = BX_SRC_RM;
+
+const Bit8u OP_Mdq = BX_SRC_VEC_RM;
+const Bit8u OP_Mps = BX_SRC_VEC_RM;
+const Bit8u OP_Mpd = BX_SRC_VEC_RM;
+const Bit8u OP_Mss = BX_SRC_VEC_RM;
+const Bit8u OP_Msd = BX_SRC_VEC_RM;
+
+const Bit8u OP_Pq = BX_SRC_NNN;
+const Bit8u OP_Pd = BX_SRC_NNN;
+const Bit8u OP_Qq = BX_SRC_RM;
+const Bit8u OP_Qd = BX_SRC_RM;
+const Bit8u OP_Nq = BX_SRC_RM;
+
+const Bit8u OP_Vdq = BX_SRC_NNN;
+const Bit8u OP_Vps = BX_SRC_NNN;
+const Bit8u OP_Vpd = BX_SRC_NNN;
+const Bit8u OP_Vss = BX_SRC_NNN;
+const Bit8u OP_Vsd = BX_SRC_NNN;
+const Bit8u OP_Vq  = BX_SRC_NNN;
+const Bit8u OP_Vd  = BX_SRC_NNN;
+
+const Bit8u OP_Wdq = BX_SRC_VEC_RM;
+const Bit8u OP_Wq = BX_SRC_VEC_RM;
+const Bit8u OP_Wd = BX_SRC_VEC_RM;
+const Bit8u OP_Ww = BX_SRC_VEC_RM;
+const Bit8u OP_Wb = BX_SRC_VEC_RM;
+const Bit8u OP_Wps = BX_SRC_VEC_RM;
+const Bit8u OP_Wpd = BX_SRC_VEC_RM;
+const Bit8u OP_Wss = BX_SRC_VEC_RM;
+const Bit8u OP_Wsd = BX_SRC_VEC_RM;
+
+const Bit8u OP_Uq  = BX_SRC_VEC_RM;
+const Bit8u OP_Udq = BX_SRC_VEC_RM;
+const Bit8u OP_Ups = BX_SRC_VEC_RM;
+const Bit8u OP_Upd = BX_SRC_VEC_RM;
+
+const Bit8u OP_Hdq = BX_SRC_VVV;
+const Bit8u OP_Hps = BX_SRC_VVV;
+const Bit8u OP_Hpd = BX_SRC_VVV;
+const Bit8u OP_Hss = BX_SRC_VVV;
+const Bit8u OP_Hsd = BX_SRC_VVV;
+
+const Bit8u OP_Bd = BX_SRC_VVV;
+const Bit8u OP_Bq = BX_SRC_VVV;
+
+const Bit8u OP_VIb = BX_SRC_VIB;
+
+const Bit8u OP_VSib = BX_SRC_RM;
+
+const Bit8u OP_Cd = BX_SRC_NNN;
+const Bit8u OP_Cq = BX_SRC_NNN;
+const Bit8u OP_Dd = BX_SRC_NNN;
+const Bit8u OP_Dq = BX_SRC_NNN;
+
+const Bit8u OP_Sw = BX_SRC_NNN;
+
+const Bit8u OP_Od = BX_SRC_NONE;
+const Bit8u OP_Oq = BX_SRC_NONE;
+
+const Bit8u OP_KGw = BX_SRC_NNN;
+const Bit8u OP_KEw = BX_SRC_RM;
+const Bit8u OP_KHw = BX_SRC_KMASK_VVV;
 
 //
 // Common FetchDecode Opcode Tables
@@ -774,11 +889,11 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G11Eq[8] = {
 static const BxOpcodeInfo_t BxOpcodeInfoG12R[8] = {
   /* 0 */ { 0, BX_IA_ERROR },
   /* 1 */ { 0, BX_IA_ERROR },
-  /* 2 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSRLW_PqIb, BxOpcodeGroupSSE_G1202 },
+  /* 2 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSRLW_NqIb, BxOpcodeGroupSSE_G1202 },
   /* 3 */ { 0, BX_IA_ERROR },
-  /* 4 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSRAW_PqIb, BxOpcodeGroupSSE_G1204 },
+  /* 4 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSRAW_NqIb, BxOpcodeGroupSSE_G1204 },
   /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSLLW_PqIb, BxOpcodeGroupSSE_G1206 },
+  /* 6 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSLLW_NqIb, BxOpcodeGroupSSE_G1206 },
   /* 7 */ { 0, BX_IA_ERROR }
 };
 
@@ -789,11 +904,11 @@ static const BxOpcodeInfo_t BxOpcodeInfoG12R[8] = {
 static const BxOpcodeInfo_t BxOpcodeInfoG13R[8] = {
   /* 0 */ { 0, BX_IA_ERROR },
   /* 1 */ { 0, BX_IA_ERROR },
-  /* 2 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSRLD_PqIb, BxOpcodeGroupSSE_G1302 },
+  /* 2 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSRLD_NqIb, BxOpcodeGroupSSE_G1302 },
   /* 3 */ { 0, BX_IA_ERROR },
-  /* 4 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSRAD_PqIb, BxOpcodeGroupSSE_G1304 },
+  /* 4 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSRAD_NqIb, BxOpcodeGroupSSE_G1304 },
   /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSLLD_PqIb, BxOpcodeGroupSSE_G1306 },
+  /* 6 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSLLD_NqIb, BxOpcodeGroupSSE_G1306 },
   /* 7 */ { 0, BX_IA_ERROR }
 };
 
@@ -804,11 +919,11 @@ static const BxOpcodeInfo_t BxOpcodeInfoG13R[8] = {
 static const BxOpcodeInfo_t BxOpcodeInfoG14R[8] = {
   /* 0 */ { 0, BX_IA_ERROR },
   /* 1 */ { 0, BX_IA_ERROR },
-  /* 2 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSRLQ_PqIb, BxOpcodeGroupSSE_G1402 },
+  /* 2 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSRLQ_NqIb, BxOpcodeGroupSSE_G1402 },
   /* 3 */ { BxImmediate_Ib | BxPrefixSSE66, BX_IA_PSRLDQ_UdqIb },
   /* 4 */ { 0, BX_IA_ERROR },
   /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSLLQ_PqIb, BxOpcodeGroupSSE_G1406 },
+  /* 6 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSLLQ_NqIb, BxOpcodeGroupSSE_G1406 },
   /* 7 */ { BxImmediate_Ib | BxPrefixSSE66, BX_IA_PSLLDQ_UdqIb }
 };
 

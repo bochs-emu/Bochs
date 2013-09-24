@@ -653,7 +653,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c 
 }
 
 /* 0F 50 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPS_GdVRps(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPS_GdUps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   Bit32u mask = xmm_pmovmskd(&BX_XMM_REG(i->src()));
@@ -664,7 +664,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPS_GdVRps(bxInstruction_c *i
 }
 
 /* 66 0F 50 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPD_GdVRpd(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPD_GdUpd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   Bit32u mask = xmm_pmovmskq(&BX_XMM_REG(i->src()));

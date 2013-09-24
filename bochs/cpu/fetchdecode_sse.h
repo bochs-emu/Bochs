@@ -218,13 +218,13 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f2e[3] = {
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f2f[3] = {
-  /* 66 */ { 0, BX_IA_COMISD_VpdWpd },
+  /* 66 */ { 0, BX_IA_COMISD_VsdWsd },
   /* F3 */ { 0, BX_IA_ERROR },
   /* F2 */ { 0, BX_IA_ERROR }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f50R[3] = {
-  /* 66 */ { 0, BX_IA_MOVMSKPD_GdVRpd },
+  /* 66 */ { 0, BX_IA_MOVMSKPD_GdUpd },
   /* F3 */ { 0, BX_IA_ERROR },
   /* F2 */ { 0, BX_IA_ERROR }
 };

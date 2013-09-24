@@ -1216,7 +1216,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRW_PqEwIb(bxInstruction_c *i)
 }
 
 /* 0F C5 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRW_GdPqIb(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRW_GdNqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
@@ -1401,7 +1401,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULLW_PqQq(bxInstruction_c *i)
 }
 
 /* 0F D7 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVMSKB_GdPRq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVMSKB_GdNq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
@@ -2374,7 +2374,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSADBW_PqQq(bxInstruction_c *i)
 }
 
 /* 0F F7 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVQ_PqPRq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVQ_PqNq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
@@ -2625,7 +2625,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDD_PqQq(bxInstruction_c *i)
 }
 
 /* 0F 71 GrpA 010 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLW_PqIb(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLW_NqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
@@ -2650,7 +2650,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLW_PqIb(bxInstruction_c *i)
 }
 
 /* 0F 71 GrpA 100 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_PqIb(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_NqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
@@ -2683,7 +2683,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_PqIb(bxInstruction_c *i)
 }
 
 /* 0F 71 GrpA 110 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLW_PqIb(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLW_NqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
@@ -2708,7 +2708,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLW_PqIb(bxInstruction_c *i)
 }
 
 /* 0F 72 GrpA 010 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLD_PqIb(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLD_NqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
@@ -2731,7 +2731,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLD_PqIb(bxInstruction_c *i)
 }
 
 /* 0F 72 GrpA 100 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_PqIb(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_NqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
@@ -2760,7 +2760,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_PqIb(bxInstruction_c *i)
 }
 
 /* 0F 72 GrpA 110 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLD_PqIb(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLD_NqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
@@ -2783,7 +2783,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLD_PqIb(bxInstruction_c *i)
 }
 
 /* 0F 73 GrpA 010 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLQ_PqIb(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLQ_NqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
@@ -2806,7 +2806,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLQ_PqIb(bxInstruction_c *i)
 }
 
 /* 0F 73 GrpA 110 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLQ_PqIb(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLQ_NqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
