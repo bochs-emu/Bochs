@@ -73,50 +73,52 @@ struct bxIAOpcodeTable {
 
 enum {
   BX_SRC_NONE = 0,
-  BX_SRC_EAX,
-  BX_SRC_NNN,
-  BX_SRC_RM,
-  BX_SRC_VEC_RM, // will use vector TMP register
-  BX_SRC_MEM_NO_VVV,
-  BX_SRC_VVV,
-  BX_SRC_KMASK_VVV,
-  BX_SRC_VIB
+  BX_SRC_EAX = 1,
+  BX_SRC_NNN = 2,
+  BX_SRC_RM = 3,
+  BX_SRC_MEM_NO_VVV = 4,
+  BX_SRC_VVV = 5,
+  BX_SRC_VIB = 6
 };
 
 enum {
   BX_NO_REG = 0,
-  BX_GPR8,
-  BX_GPR16,
-  BX_GPR32,
-  BX_FPU_REG,
-  BX_MMX_REG,
-  BX_VMM_REG,
-  BX_KMASK_REG,
-  BX_SEGREG,
-  BX_CREG,
-  BX_DREG
+  BX_GPR8 = 0x10,
+  BX_GPR8_32 = 0x20,  // 8-bit memory reference but 32-bit GPR
+  BX_GPR16 = 0x30,
+  BX_GPR16_32 = 0x40, // 16-bit memory reference but 32-bit GPR
+  BX_GPR32 = 0x50,
+  BX_GPR64 = 0x60,
+  BX_FPU_REG = 0x70,
+  BX_MMX_REG = 0x80,
+  BX_VMM_REG = 0x90,
+  BX_KMASK_REG = 0xA0,
+  BX_SEGREG = 0xB0,
+  BX_CREG = 0xC0,
+  BX_DREG = 0xD0,
+  BX_VSIB = 0xE0      // gather/scatter vector index
 };
 
-#define BX_SRC_XMM0 (BX_SRC_EAX)
+#define BX_SRC_KMASK_VVV (BX_KMASK_REG | BX_SRC_VVV)
 
 const Bit8u OP_NONE = BX_SRC_NONE;
 
-const Bit8u OP_Eb = BX_SRC_RM;
-const Bit8u OP_Ebd = BX_SRC_RM;
-const Bit8u OP_Ew = BX_SRC_RM;
-const Bit8u OP_Ewd = BX_SRC_RM;
-const Bit8u OP_Ed = BX_SRC_RM;
-const Bit8u OP_Eq = BX_SRC_RM;
+const Bit8u OP_Eb = (BX_GPR8 | BX_SRC_RM);
+const Bit8u OP_Ebd = (BX_GPR8_32 | BX_SRC_RM);
+const Bit8u OP_Ew = (BX_GPR16 | BX_SRC_RM);
+const Bit8u OP_Ewd = (BX_GPR16_32 | BX_SRC_RM);
+const Bit8u OP_Ed = (BX_GPR32 | BX_SRC_RM);
+const Bit8u OP_Eq = (BX_GPR64 | BX_SRC_RM);
 
-const Bit8u OP_Gb = BX_SRC_NNN;
-const Bit8u OP_Gw = BX_SRC_NNN;
-const Bit8u OP_Gd = BX_SRC_NNN;
-const Bit8u OP_Gq = BX_SRC_NNN;
+const Bit8u OP_Gb = (BX_GPR8 | BX_SRC_NNN);
+const Bit8u OP_Gw = (BX_GPR16 | BX_SRC_NNN);
+const Bit8u OP_Gd = (BX_GPR32 | BX_SRC_NNN);
+const Bit8u OP_Gq = (BX_GPR64 | BX_SRC_NNN);
 
-const Bit8u OP_ALReg  = BX_SRC_EAX;
-const Bit8u OP_AXReg  = BX_SRC_EAX;
-const Bit8u OP_EAXReg = BX_SRC_EAX;
-const Bit8u OP_RAXReg = BX_SRC_EAX;
+const Bit8u OP_ALReg  = BX_GPR8 | BX_SRC_EAX;
+const Bit8u OP_AXReg  = BX_GPR16 | BX_SRC_EAX;
+const Bit8u OP_EAXReg = BX_GPR32 | BX_SRC_EAX;
+const Bit8u OP_RAXReg = BX_GPR64 | BX_SRC_EAX;
 
 const Bit8u OP_CLReg  = BX_SRC_NONE;
 const Bit8u OP_DXReg  = BX_SRC_NONE;
@@ -138,67 +140,67 @@ const Bit8u OP_Md = BX_SRC_RM;
 const Bit8u OP_Mq = BX_SRC_RM;
 const Bit8u OP_Mp = BX_SRC_RM;
 
-const Bit8u OP_Mdq = BX_SRC_VEC_RM;
-const Bit8u OP_Mps = BX_SRC_VEC_RM;
-const Bit8u OP_Mpd = BX_SRC_VEC_RM;
-const Bit8u OP_Mss = BX_SRC_VEC_RM;
-const Bit8u OP_Msd = BX_SRC_VEC_RM;
+const Bit8u OP_Mdq = (BX_VMM_REG | BX_SRC_RM);
+const Bit8u OP_Mps = (BX_VMM_REG | BX_SRC_RM);
+const Bit8u OP_Mpd = (BX_VMM_REG | BX_SRC_RM);
+const Bit8u OP_Mss = (BX_VMM_REG | BX_SRC_RM);
+const Bit8u OP_Msd = (BX_VMM_REG | BX_SRC_RM);
 
-const Bit8u OP_Pq = BX_SRC_NNN;
-const Bit8u OP_Pd = BX_SRC_NNN;
-const Bit8u OP_Qq = BX_SRC_RM;
-const Bit8u OP_Qd = BX_SRC_RM;
-const Bit8u OP_Nq = BX_SRC_RM;
+const Bit8u OP_Pq = (BX_MMX_REG | BX_SRC_NNN);
+const Bit8u OP_Pd = (BX_MMX_REG | BX_SRC_NNN);
+const Bit8u OP_Qq = (BX_MMX_REG | BX_SRC_RM);
+const Bit8u OP_Qd = (BX_MMX_REG | BX_SRC_RM);
+const Bit8u OP_Nq = (BX_MMX_REG | BX_SRC_RM);
 
-const Bit8u OP_Vdq = BX_SRC_NNN;
-const Bit8u OP_Vps = BX_SRC_NNN;
-const Bit8u OP_Vpd = BX_SRC_NNN;
-const Bit8u OP_Vss = BX_SRC_NNN;
-const Bit8u OP_Vsd = BX_SRC_NNN;
-const Bit8u OP_Vq  = BX_SRC_NNN;
-const Bit8u OP_Vd  = BX_SRC_NNN;
+const Bit8u OP_Vdq = (BX_VMM_REG | BX_SRC_NNN);
+const Bit8u OP_Vps = (BX_VMM_REG | BX_SRC_NNN);
+const Bit8u OP_Vpd = (BX_VMM_REG | BX_SRC_NNN);
+const Bit8u OP_Vss = (BX_VMM_REG | BX_SRC_NNN);
+const Bit8u OP_Vsd = (BX_VMM_REG | BX_SRC_NNN);
+const Bit8u OP_Vq  = (BX_VMM_REG | BX_SRC_NNN);
+const Bit8u OP_Vd  = (BX_VMM_REG | BX_SRC_NNN);
 
-const Bit8u OP_Wdq = BX_SRC_VEC_RM;
-const Bit8u OP_Wq = BX_SRC_VEC_RM;
-const Bit8u OP_Wd = BX_SRC_VEC_RM;
-const Bit8u OP_Ww = BX_SRC_VEC_RM;
-const Bit8u OP_Wb = BX_SRC_VEC_RM;
-const Bit8u OP_Wps = BX_SRC_VEC_RM;
-const Bit8u OP_Wpd = BX_SRC_VEC_RM;
-const Bit8u OP_Wss = BX_SRC_VEC_RM;
-const Bit8u OP_Wsd = BX_SRC_VEC_RM;
+const Bit8u OP_Wdq = (BX_VMM_REG | BX_SRC_RM);
+const Bit8u OP_Wq = (BX_VMM_REG | BX_SRC_RM);
+const Bit8u OP_Wd = (BX_VMM_REG | BX_SRC_RM);
+const Bit8u OP_Ww = (BX_VMM_REG | BX_SRC_RM);
+const Bit8u OP_Wb = (BX_VMM_REG | BX_SRC_RM);
+const Bit8u OP_Wps = (BX_VMM_REG | BX_SRC_RM);
+const Bit8u OP_Wpd = (BX_VMM_REG | BX_SRC_RM);
+const Bit8u OP_Wss = (BX_VMM_REG | BX_SRC_RM);
+const Bit8u OP_Wsd = (BX_VMM_REG | BX_SRC_RM);
 
-const Bit8u OP_Uq  = BX_SRC_VEC_RM;
-const Bit8u OP_Udq = BX_SRC_VEC_RM;
-const Bit8u OP_Ups = BX_SRC_VEC_RM;
-const Bit8u OP_Upd = BX_SRC_VEC_RM;
+const Bit8u OP_Uq  = (BX_VMM_REG | BX_SRC_RM);
+const Bit8u OP_Udq = (BX_VMM_REG | BX_SRC_RM);
+const Bit8u OP_Ups = (BX_VMM_REG | BX_SRC_RM);
+const Bit8u OP_Upd = (BX_VMM_REG | BX_SRC_RM);
 
-const Bit8u OP_Hdq = BX_SRC_VVV;
-const Bit8u OP_Hps = BX_SRC_VVV;
-const Bit8u OP_Hpd = BX_SRC_VVV;
-const Bit8u OP_Hss = BX_SRC_VVV;
-const Bit8u OP_Hsd = BX_SRC_VVV;
+const Bit8u OP_Hdq = (BX_VMM_REG | BX_SRC_VVV);
+const Bit8u OP_Hps = (BX_VMM_REG | BX_SRC_VVV);
+const Bit8u OP_Hpd = (BX_VMM_REG | BX_SRC_VVV);
+const Bit8u OP_Hss = (BX_VMM_REG | BX_SRC_VVV);
+const Bit8u OP_Hsd = (BX_VMM_REG | BX_SRC_VVV);
 
-const Bit8u OP_Bd = BX_SRC_VVV;
-const Bit8u OP_Bq = BX_SRC_VVV;
+const Bit8u OP_Bd = (BX_GPR32 | BX_SRC_VVV);
+const Bit8u OP_Bq = (BX_GPR64 | BX_SRC_VVV);
 
-const Bit8u OP_VIb = BX_SRC_VIB;
+const Bit8u OP_VIb = (BX_VMM_REG | BX_SRC_VIB);
 
 const Bit8u OP_VSib = BX_SRC_RM;
 
-const Bit8u OP_Cd = BX_SRC_NNN;
-const Bit8u OP_Cq = BX_SRC_NNN;
-const Bit8u OP_Dd = BX_SRC_NNN;
-const Bit8u OP_Dq = BX_SRC_NNN;
+const Bit8u OP_Cd = (BX_CREG | BX_SRC_NNN);
+const Bit8u OP_Cq = (BX_CREG | BX_SRC_NNN);
+const Bit8u OP_Dd = (BX_DREG | BX_SRC_NNN);
+const Bit8u OP_Dq = (BX_DREG | BX_SRC_NNN);
 
-const Bit8u OP_Sw = BX_SRC_NNN;
+const Bit8u OP_Sw = (BX_SEGREG | BX_SRC_NNN);
 
 const Bit8u OP_Od = BX_SRC_NONE;
 const Bit8u OP_Oq = BX_SRC_NONE;
 
-const Bit8u OP_KGw = BX_SRC_NNN;
-const Bit8u OP_KEw = BX_SRC_RM;
-const Bit8u OP_KHw = BX_SRC_KMASK_VVV;
+const Bit8u OP_KGw = (BX_KMASK_REG | BX_SRC_NNN);
+const Bit8u OP_KEw = (BX_KMASK_REG | BX_SRC_RM);
+const Bit8u OP_KHw = (BX_KMASK_REG | BX_SRC_VVV);
 
 //
 // Common FetchDecode Opcode Tables

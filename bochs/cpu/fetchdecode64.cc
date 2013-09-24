@@ -2348,8 +2348,11 @@ modrm_done:
 
   // assign sources
   for (unsigned n = 0; n <= 3; n++) {
-    unsigned def = (unsigned) BxOpcodesTable[ia_opcode].src[n] & 0xf;
-    switch(def) {
+    unsigned src = (unsigned) BxOpcodesTable[ia_opcode].src[n];
+    unsigned type = src & 0xf0;
+    switch(src & 0x7) {
+    case BX_SRC_NONE:
+      break;
     case BX_SRC_EAX:
       i->setSrcReg(n, 0);
       break;
@@ -2357,10 +2360,10 @@ modrm_done:
       i->setSrcReg(n, nnn);
       break;
     case BX_SRC_RM:
-      i->setSrcReg(n, mod_mem ? BX_TMP_REGISTER : rm);
-      break;
-    case BX_SRC_VEC_RM:
-      i->setSrcReg(n, mod_mem ? BX_VECTOR_TMP_REGISTER : rm);
+      if (! mod_mem)
+        i->setSrcReg(n, rm);
+      else
+        i->setSrcReg(n, (type == BX_VMM_REG) ? BX_VECTOR_TMP_REGISTER : BX_TMP_REGISTER);
       break;
 #if BX_SUPPORT_AVX
     case BX_SRC_MEM_NO_VVV:
@@ -2369,21 +2372,15 @@ modrm_done:
     case BX_SRC_VVV:
       i->setSrcReg(n, vvv);
       use_vvv = 1;
-      break;
-    case BX_SRC_KMASK_VVV:
-      if (vvv >= 8) ia_opcode = BX_IA_ERROR;
-      else {
-        i->setSrcReg(n, vvv);
-        use_vvv = 1;
-      }
+      if (type == BX_KMASK_REG)
+        if (vvv >= 8) ia_opcode = BX_IA_ERROR;
       break;
     case BX_SRC_VIB:
       i->setSrcReg(n, i->Ib() >> 4);
       break;
 #endif
     default:
-      if (def != BX_SRC_NONE)
-        BX_PANIC(("fetchdecode64: unknown definition %d for src %d", def, n));
+      BX_PANIC(("fetchdecode64: unknown definition %d for src %d", src, n));
     }
   }
 
