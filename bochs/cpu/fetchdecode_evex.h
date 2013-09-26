@@ -207,7 +207,7 @@ static const BxOpcodeInfo_t BxOpcodeTableEVEX[256*3*2] = {
   /* 57 k0 */ { 0, BX_IA_ERROR },
   /* 57    */ { 0, BX_IA_ERROR },
   /* 58 k0 */ { BxAliasSSE, BX_IA_V512_VADDPS_VpsHpsWps },
-  /* 58    */ { BxAliasSSE, BX_IA_V512_VADDPS_VpsHpsWps_MASK },
+  /* 58    */ { BxAliasSSE, BX_IA_V512_VADDPS_VpsHpsWps_Kmask },
   /* 59 k0 */ { 0, BX_IA_ERROR },
   /* 59    */ { 0, BX_IA_ERROR },
   /* 5A k0 */ { 0, BX_IA_ERROR },
