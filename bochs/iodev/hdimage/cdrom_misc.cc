@@ -93,11 +93,18 @@ extern "C" {
 #define CD_FRAMESIZE    2048
 
 #elif !defined(WIN32) // all others (Irix, Tru64)
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #define BX_CD_FRAMESIZE 2048
 #define CD_FRAMESIZE 2048
+
+#else // WIN32
+
+#define BX_CD_FRAMESIZE 2048
+#define CD_FRAMESIZE 2048
+
 #endif
 
 #include <stdio.h>
