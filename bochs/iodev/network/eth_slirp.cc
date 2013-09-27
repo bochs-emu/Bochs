@@ -171,7 +171,7 @@ private:
 
   dhcp_cfg_t dhcp;
 
-  tftp_data_t tftp;
+  char tftp_rootdir[BX_PATHNAME_LEN];
 
   int rx_timer_index;
   unsigned netdev_speed;
@@ -256,9 +256,7 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
     }
   }
 
-  strcpy(this->tftp.rootdir, netif);
-  this->tftp.tid = 0;
-  this->tftp.write = 0;
+  strcpy(this->tftp_rootdir, netif);
   Bit32u status = this->rxstat(this->netdev) & BX_NETDEV_SPEED;
   this->netdev_speed = (status == BX_NETDEV_1GBIT) ? 1000 :
                        (status == BX_NETDEV_100MBIT) ? 100 : 10;
@@ -380,7 +378,7 @@ bx_bool bx_slirp_pktmover_c::handle_ipv4(const Bit8u *buf, unsigned len)
       if (udp_targetport == 67) { // BOOTP
         udp_reply_size = process_dhcp(netdev, &l4pkt[8], l4pkt_len-8, &reply_buffer[42], &dhcp);
       } else {
-        udp_reply_size = process_tftp(netdev, &l4pkt[8], l4pkt_len-8, udp_sourceport, &reply_buffer[42], &tftp);
+        udp_reply_size = process_tftp(netdev, &l4pkt[8], l4pkt_len-8, udp_sourceport, &reply_buffer[42], tftp_rootdir);
       }
       if (udp_reply_size > 0) {
         pending_reply_size = udp_reply_size + 42;
@@ -457,6 +455,10 @@ void bx_slirp_pktmover_c::prepare_builtin_reply(unsigned type)
   memcpy(ethhdr->dst_mac_addr, dhcp.guest_macaddr, ETHERNET_MAC_ADDR_LEN);
   memcpy(ethhdr->src_mac_addr, dhcp.host_macaddr, ETHERNET_MAC_ADDR_LEN);
   ethhdr->type = htons(type);
+  if (pending_reply_size < 60) {
+    memset(&reply_buffer[pending_reply_size], 0, 60 - pending_reply_size);
+    pending_reply_size = 60;
+  }
   rx_time = (64 + 96 + 4 * 8 + pending_reply_size * 8) / this->netdev_speed;
   bx_pc_system.activate_timer(this->rx_timer_index, this->tx_time + rx_time + 100, 0);
 }

@@ -160,7 +160,7 @@ private:
 
   dhcp_cfg_t dhcp;
 
-  tftp_data_t tftp;
+  char tftp_rootdir[BX_PATHNAME_LEN];
 
   struct {
     unsigned ipprotocol;
@@ -217,9 +217,7 @@ void bx_vnet_pktmover_c::pktmover_init(
   this->netdev = dev;
   this->rxh    = rxh;
   this->rxstat = rxstat;
-  strcpy(this->tftp.rootdir, netif);
-  this->tftp.tid = 0;
-  this->tftp.write = 0;
+  strcpy(this->tftp_rootdir, netif);
 
   memcpy(&dhcp.host_macaddr[0], macaddr, 6);
   memcpy(&dhcp.guest_macaddr[0], macaddr, 6);
@@ -716,7 +714,7 @@ void bx_vnet_pktmover_c::udpipv4_tftp_handler_ns(
   Bit8u replybuf[TFTP_BUFFER_SIZE + 4];
   int len;
 
-  len = process_tftp(netdev, data, data_len, sourceport, replybuf, &tftp);
+  len = process_tftp(netdev, data, data_len, sourceport, replybuf, tftp_rootdir);
   if (len > 0) {
     host_to_guest_udpipv4_packet(sourceport, targetport, replybuf, len);
   }
