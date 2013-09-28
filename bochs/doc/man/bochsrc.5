@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "18 Aug 2013" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "28 Sep 2013" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -405,10 +405,10 @@ Example:
 The ROM BIOS controls what the PC does when it first powers on.  Normally, you
 can use a precompiled BIOS in the source or binary distribution called
 .B BIOS-bochs-latest.
-The default ROM BIOS is usually loaded starting at address 0xe0000, and it is
+The default ROM BIOS is usually loaded starting at address 0xfffe0000, and it is
 exactly 128k long. The legacy version of the Bochs BIOS is usually loaded starting
-at address 0xf0000, and it is exactly 64k long.
-You can also use the environment variable $BXSHARE to specify the location of the BIOS.
+at address 0xffff0000, and it is exactly 64k long.
+You can use the environment variable $BXSHARE to specify the location of the BIOS.
 The usage of external large BIOS images (up to 512k) at memory top is
 now supported, but we still recommend to use the BIOS distributed with Bochs.
 The start address is optional, since it can be calculated from image size.

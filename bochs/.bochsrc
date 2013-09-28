@@ -348,14 +348,15 @@ memory: guest=512, host=256
 # ROMIMAGE:
 # The ROM BIOS controls what the PC does when it first powers on.
 # Normally, you can use a precompiled BIOS in the source or binary
-# distribution called BIOS-bochs-latest. The ROM BIOS is usually loaded
-# starting at address 0xf0000, and it is exactly 64k long. Another option
-# is 128k BIOS which is loaded at address 0xe0000.
-# You can also use the environment variable $BXSHARE to specify the
-# location of the BIOS.
+# distribution called BIOS-bochs-latest. The default ROM BIOS is usually loaded
+# starting at address 0xfffe0000, and it is exactly 128k long. The legacy
+# version of the Bochs BIOS is usually loaded starting at address 0xffff0000,
+# and it is exactly 64k long.
+# You can use the environment variable $BXSHARE to specify the location
+# of the BIOS.
 # The usage of external large BIOS images (up to 512k) at memory top is
-# now supported, but we still recommend to use the BIOS distributed with
-# Bochs. The start address optional, since it can be calculated from image size.
+# now supported, but we still recommend to use the BIOS distributed with Bochs.
+# The start address is optional, since it can be calculated from image size.
 #=======================================================================
 romimage: file=$BXSHARE/BIOS-bochs-latest 
 #romimage: file=bios/seabios-1.6.3.bin
