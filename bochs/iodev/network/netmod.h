@@ -131,13 +131,6 @@ typedef struct {
   int max_guest_ipv4addr;
 } dhcp_cfg_t;
 
-typedef struct tftp_session {
-  char filename[BX_PATHNAME_LEN];
-  Bit16u tid;
-  bx_bool write;
-  struct tftp_session *next;
-} tftp_session_t;
-
 static const Bit8u broadcast_macaddr[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
 
 int execute_script(bx_devmodel_c *netdev, const char *name, char* arg1);
