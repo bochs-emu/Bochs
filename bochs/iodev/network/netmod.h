@@ -51,7 +51,7 @@ public:
 #define ETHERNET_TYPE_IPV4 0x0800
 #define ETHERNET_TYPE_ARP  0x0806
 
-#define TFTP_BUFFER_SIZE 512
+#define TFTP_BUFFER_SIZE 1024
 
 #if defined(_MSC_VER)
 #pragma pack(push, 1)

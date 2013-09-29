@@ -166,7 +166,7 @@ private:
   size_t slip_input_buffer_filled;
   size_t slip_input_buffer_decoded;
 
-  Bit8u reply_buffer[1024];
+  Bit8u *reply_buffer;
   int pending_reply_size;
 
   dhcp_cfg_t dhcp;
@@ -274,6 +274,10 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
   memcpy(&dhcp.dns_ipv4addr[0], &default_dns_ipv4addr[0], 4);
   dhcp.max_guest_ipv4addr = 3;
 
+  reply_buffer = new Bit8u[BX_PACKET_BUFSIZE];
+  if (reply_buffer == NULL) {
+    BX_PANIC(("cannot allocate reply buffer"));
+  }
   pending_reply_size = 0;
   slip_input_buffer_filled = slip_input_buffer_decoded = 0;
 
@@ -300,6 +304,7 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
 
 bx_slirp_pktmover_c::~bx_slirp_pktmover_c()
 {
+  delete [] reply_buffer;
   bx_slirp_instances--;
 }
 
