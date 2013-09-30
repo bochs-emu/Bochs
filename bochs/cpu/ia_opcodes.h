@@ -271,8 +271,8 @@ bx_define_opcode(BX_IA_CALL_Ed, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::CALL_EdR, 0, OP_E
 bx_define_opcode(BX_IA_CALL_Ew, &BX_CPU_C::LOAD_Ew, &BX_CPU_C::CALL_EwR, 0, OP_Ew, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_CALL_Jd, NULL, &BX_CPU_C::CALL_Jd, 0, OP_Jd, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_CALL_Jw, NULL, &BX_CPU_C::CALL_Jw, 0, OP_Jw, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
-bx_define_opcode(BX_IA_CALL_Op16_Ap, NULL, &BX_CPU_C::CALL16_Ap, 0, OP_Iw, OP_Iw, OP_NONE, OP_NONE, BX_TRACE_END)
-bx_define_opcode(BX_IA_CALL_Op32_Ap, NULL, &BX_CPU_C::CALL32_Ap, 0, OP_Id, OP_Iw, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_CALL_Op16_Ap, NULL, &BX_CPU_C::CALL16_Ap, 0, OP_Iw, OP_Iw2, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_CALL_Op32_Ap, NULL, &BX_CPU_C::CALL32_Ap, 0, OP_Id, OP_Iw2, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_CALL_Op16_Ep, &BX_CPU_C::CALL16_Ep, &BX_CPU_C::BxError, 0, OP_M, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_CALL_Op32_Ep, &BX_CPU_C::CALL32_Ep, &BX_CPU_C::BxError, 0, OP_M, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 
@@ -288,8 +288,8 @@ bx_define_opcode(BX_IA_CWD, NULL, &BX_CPU_C::CWD, 0, OP_NONE, OP_NONE, OP_NONE, 
 bx_define_opcode(BX_IA_CWDE, NULL, &BX_CPU_C::CWDE, 0, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_HLT, NULL, &BX_CPU_C::HLT, 0, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 
-bx_define_opcode(BX_IA_ENTER_Op16_IwIb, NULL, &BX_CPU_C::ENTER16_IwIb, 0, OP_Iw, OP_Ib, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_ENTER_Op32_IwIb, NULL, &BX_CPU_C::ENTER32_IwIb, 0, OP_Iw, OP_Ib, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_ENTER_Op16_IwIb, NULL, &BX_CPU_C::ENTER16_IwIb, 0, OP_Iw, OP_Ib2, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_ENTER_Op32_IwIb, NULL, &BX_CPU_C::ENTER32_IwIb, 0, OP_Iw, OP_Ib2, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_LEAVE_Op16, NULL, &BX_CPU_C::LEAVE16, 0, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_LEAVE_Op32, NULL, &BX_CPU_C::LEAVE32, 0, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 
@@ -324,8 +324,8 @@ bx_define_opcode(BX_IA_JMP_Ew, &BX_CPU_C::LOAD_Ew, &BX_CPU_C::JMP_EwR, 0, OP_Ew,
 bx_define_opcode(BX_IA_JMP_Jw, NULL, &BX_CPU_C::JMP_Jw, 0, OP_Jw, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_JMP_Jd, NULL, &BX_CPU_C::JMP_Jd, 0, OP_Jd, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 
-bx_define_opcode(BX_IA_JMP_Op16_Ap, NULL, &BX_CPU_C::JMP_Ap, 0, OP_Iw, OP_Iw, OP_NONE, OP_NONE, BX_TRACE_END)
-bx_define_opcode(BX_IA_JMP_Op32_Ap, NULL, &BX_CPU_C::JMP_Ap, 0, OP_Id, OP_Iw, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_JMP_Op16_Ap, NULL, &BX_CPU_C::JMP_Ap, 0, OP_Iw, OP_Iw2, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_JMP_Op32_Ap, NULL, &BX_CPU_C::JMP_Ap, 0, OP_Id, OP_Iw2, OP_NONE, OP_NONE, BX_TRACE_END)
 
 bx_define_opcode(BX_IA_JMP_Op16_Ep, &BX_CPU_C::JMP16_Ep, &BX_CPU_C::BxError, 0, OP_M, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_JMP_Op32_Ep, &BX_CPU_C::JMP32_Ep, &BX_CPU_C::BxError, 0, OP_M, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
@@ -1412,7 +1412,7 @@ bx_define_opcode(BX_IA_JNL_Jq, NULL, &BX_CPU_C::JNL_Jq, 0, OP_Jq, OP_NONE, OP_NO
 bx_define_opcode(BX_IA_JLE_Jq, NULL, &BX_CPU_C::JLE_Jq, 0, OP_Jq, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_JNLE_Jq, NULL, &BX_CPU_C::JNLE_Jq, 0, OP_Jq, OP_NONE, OP_NONE, OP_NONE, 0)
 
-bx_define_opcode(BX_IA_ENTER_Op64_IwIb, NULL, &BX_CPU_C::ENTER64_IwIb, 0, OP_Iw, OP_Ib, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_ENTER_Op64_IwIb, NULL, &BX_CPU_C::ENTER64_IwIb, 0, OP_Iw, OP_Ib2, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_LEAVE_Op64, NULL, &BX_CPU_C::LEAVE64, 0, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_IRET_Op64, NULL, &BX_CPU_C::IRET64, 0, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 
@@ -2409,9 +2409,9 @@ bx_define_opcode(BX_IA_LZCNT_GqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::LZCNT_GqEqR, B
 // SSE4A
 bx_define_opcode(BX_IA_MOVNTSS_MssVss, &BX_CPU_C::MOVSS_WssVssM, &BX_CPU_C::BxError, BX_ISA_SSE4A, OP_Wss, OP_Vss, OP_NONE, OP_NONE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_MOVNTSD_MsdVsd, &BX_CPU_C::MOVSD_WsdVsdM, &BX_CPU_C::BxError, BX_ISA_SSE4A, OP_Wsd, OP_Vsd, OP_NONE, OP_NONE, BX_PREPARE_SSE)
-bx_define_opcode(BX_IA_EXTRQ_UdqIbIb, &BX_CPU_C::BxError, &BX_CPU_C::EXTRQ_UdqIbIb, BX_ISA_SSE4A, OP_Wdq, OP_Ib, OP_Ib, OP_NONE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_EXTRQ_UdqIbIb, &BX_CPU_C::BxError, &BX_CPU_C::EXTRQ_UdqIbIb, BX_ISA_SSE4A, OP_Wdq, OP_Ib, OP_Ib2, OP_NONE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_EXTRQ_VdqUq, &BX_CPU_C::BxError, &BX_CPU_C::EXTRQ_VdqUq, BX_ISA_SSE4A, OP_Vdq, OP_Wq, OP_NONE, OP_NONE, BX_PREPARE_SSE)
-bx_define_opcode(BX_IA_INSERTQ_VdqUqIbIb, &BX_CPU_C::BxError, &BX_CPU_C::INSERTQ_VdqUqIbIb, BX_ISA_SSE4A, OP_Vdq, OP_Wq, OP_Ib, OP_Ib, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_INSERTQ_VdqUqIbIb, &BX_CPU_C::BxError, &BX_CPU_C::INSERTQ_VdqUqIbIb, BX_ISA_SSE4A, OP_Vdq, OP_Wq, OP_Ib, OP_Ib2, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_INSERTQ_VdqUdq, &BX_CPU_C::BxError, &BX_CPU_C::INSERTQ_VdqUdq, BX_ISA_SSE4A, OP_Vdq, OP_Wdq, OP_NONE, OP_NONE, BX_PREPARE_SSE)
 // SSE4A
 

@@ -82,20 +82,36 @@ static const char *intel_segment_name[8] = {
 
 char *resolve_memref(char *disbufptr, const bxInstruction_c *i, const char *regname[])
 {
-  unsigned ops = 0;
-
-  if (i->sibBase() != BX_NIL_REGISTER) {
-    disbufptr = dis_sprintf(disbufptr, "%s", regname[i->sibBase()]);
-    ops++;
-  }
-
-  if (i->sibIndex() != BX_NIL_REGISTER) {
-    if (ops > 0) {
-      disbufptr = dis_putc(disbufptr, '+');
+  if (i->sibBase() == BX_NIL_REGISTER)
+  {
+    if (i->sibIndex() == BX_NIL_REGISTER)
+    {
+      if (! i->os32L()) {
+        if (i->displ16s() != 0) {
+          disbufptr = dis_sprintf(disbufptr, "0x%04x", (Bit32u) (Bit16u) i->displ16s());
+        }
+      }
+      else {
+        if (i->displ32s() != 0) {
+          disbufptr = dis_sprintf(disbufptr, "0x%08x", (Bit32u) i->displ32s());
+        }
+      }
+      return disbufptr;
     }
-    disbufptr = dis_sprintf(disbufptr, "%s", regname[i->sibIndex()]);
-    if (i->sibScale() > 1)
+
+    disbufptr = dis_sprintf(disbufptr, "[%s", regname[i->sibIndex()]);
+    if (i->sibScale())
       disbufptr = dis_sprintf(disbufptr, "*%d", 1 << i->sibScale());
+  }
+  else {
+    disbufptr = dis_sprintf(disbufptr, "[%s", regname[i->sibBase()]);
+
+    if (i->sibIndex() != BX_NIL_REGISTER)
+    {
+      disbufptr = dis_sprintf(disbufptr, "+%s", regname[i->sibIndex()]);
+      if (i->sibScale())
+        disbufptr = dis_sprintf(disbufptr, "*%d", 1 << i->sibScale());
+    }
   }
 
   if (! i->os32L()) {
@@ -104,19 +120,19 @@ char *resolve_memref(char *disbufptr, const bxInstruction_c *i, const char *regn
     }
   }
   else {
-    if (i->displ16s() != 0) {
-      disbufptr = dis_sprintf(disbufptr, "%+d", (Bit32s) i->displ32s());
+    if (i->displ32s() != 0) {
+      disbufptr = dis_sprintf(disbufptr, "%+d", i->displ32s());
     }
   }
 
+  disbufptr = dis_putc(disbufptr, ']');
   return disbufptr;
 }
 
 char *resolve_memref(char *disbufptr, const bxInstruction_c *i)
 {
-  // [base + index*scale + disp]
-
-  disbufptr = dis_sprintf(disbufptr, "%s:[", intel_segment_name[i->seg()]);
+  // seg:[base + index*scale + disp]
+  disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
   if (i->os64L()) {
     disbufptr = resolve_memref(disbufptr, i, intel_general_64bit_regname);
   }
@@ -126,7 +142,6 @@ char *resolve_memref(char *disbufptr, const bxInstruction_c *i)
   else {
     disbufptr = resolve_memref(disbufptr, i, intel_general_16bit_regname);
   }
-  disbufptr = dis_putc(disbufptr, ']');
   return disbufptr;
 }
 
@@ -239,6 +254,12 @@ void disasm(char *disbufptr, const bxInstruction_c *i)
         case BX_IMMQ:
           disbufptr = dis_sprintf(disbufptr, "0x" FMT_LL "x", i->Iq());
           break;
+        case BX_IMMB2:
+          disbufptr = dis_sprintf(disbufptr, "0x%02x", i->Ib2());
+          break;
+        case BX_IMMW2:
+          disbufptr = dis_sprintf(disbufptr, "0x%04x", i->Iw2());
+          break;
         case BX_IMM_BrOff16:
           disbufptr = dis_sprintf(disbufptr, ".%+d", i->Iw());
           break;
@@ -246,25 +267,27 @@ void disasm(char *disbufptr, const bxInstruction_c *i)
           disbufptr = dis_sprintf(disbufptr, ".%+d", i->Id());
           break;
         case BX_RSIREF:
+          disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
           if (i->as64L()) {
-            disbufptr = dis_sprintf(disbufptr, "%s:[%s]", i->seg(), intel_general_64bit_regname[BX_64BIT_REG_RSI]);
+            disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_64bit_regname[BX_64BIT_REG_RSI]);
           }
           else {
             if (i->as32L())
-              disbufptr = dis_sprintf(disbufptr, "%s:[%s]", i->seg(), intel_general_32bit_regname[BX_32BIT_REG_ESI]);
+              disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_32bit_regname[BX_32BIT_REG_ESI]);
             else
-              disbufptr = dis_sprintf(disbufptr, "%s:[%s]", i->seg(), intel_general_16bit_regname[BX_16BIT_REG_SI]);
+              disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_16bit_regname[BX_16BIT_REG_SI]);
           }
           break;
         case BX_RDIREF:
+          disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
           if (i->as64L()) {
-            disbufptr = dis_sprintf(disbufptr, "%s:[%s]", i->seg(), intel_general_64bit_regname[BX_64BIT_REG_RDI]);
+            disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_64bit_regname[BX_64BIT_REG_RDI]);
           }
           else {
             if (i->as32L())
-              disbufptr = dis_sprintf(disbufptr, "%s:[%s]", i->seg(), intel_general_32bit_regname[BX_32BIT_REG_EDI]);
+              disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_32bit_regname[BX_32BIT_REG_EDI]);
             else
-              disbufptr = dis_sprintf(disbufptr, "%s:[%s]", i->seg(), intel_general_16bit_regname[BX_16BIT_REG_DI]);
+              disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_16bit_regname[BX_16BIT_REG_DI]);
           }
           break;
         default:

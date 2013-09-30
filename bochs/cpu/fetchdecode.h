@@ -104,10 +104,12 @@ enum {
   BX_IMMW = 0x11,
   BX_IMMD = 0x12,
   BX_IMMQ = 0x13,
-  BX_IMM_BrOff16 = 0x14,
-  BX_IMM_BrOff32 = 0x15,
-  BX_RSIREF = 0x16,
-  BX_RDIREF = 0x17
+  BX_IMMB2 = 0x14,
+  BX_IMMW2 = 0x15,
+  BX_IMM_BrOff16 = 0x16,
+  BX_IMM_BrOff32 = 0x17,
+  BX_RSIREF = 0x18,
+  BX_RDIREF = 0x19
 };
 
 #define BX_FORM_SRC(type, src) (((type) << 3) | (src))
@@ -138,6 +140,9 @@ const Bit8u OP_Ib = BX_FORM_SRC(BX_IMMB, BX_SRC_NONE);
 const Bit8u OP_Iw = BX_FORM_SRC(BX_IMMW, BX_SRC_NONE);
 const Bit8u OP_Id = BX_FORM_SRC(BX_IMMD, BX_SRC_NONE);
 const Bit8u OP_Iq = BX_FORM_SRC(BX_IMMQ, BX_SRC_NONE);
+
+const Bit8u OP_Ib2 = BX_FORM_SRC(BX_IMMB2, BX_SRC_NONE);
+const Bit8u OP_Iw2 = BX_FORM_SRC(BX_IMMW2, BX_SRC_NONE);
 
 const Bit8u OP_Jw = BX_FORM_SRC(BX_IMM_BrOff16, BX_SRC_NONE);
 const Bit8u OP_Jd = BX_FORM_SRC(BX_IMM_BrOff32, BX_SRC_NONE);
