@@ -333,8 +333,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* BF /w */ { BxImmediate_Iw, BX_IA_MOV_EwIw },
   /* C0 /w */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2EbIb },
   /* C1 /w */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2EwIb },
-  /* C2 /w */ { BxImmediate_Iw, BX_IA_RETnear_Op64_Iw },
-  /* C3 /w */ { 0, BX_IA_RETnear_Op64 },
+  /* C2 /w */ { BxImmediate_Iw, BX_IA_RET_near_Op64_Iw },
+  /* C3 /w */ { 0, BX_IA_RET_near_Op64 },
   /* C4 /w */ { 0, BX_IA_ERROR },
   /* C5 /w */ { 0, BX_IA_ERROR },
   /* C6 /w */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11Eb },
@@ -570,7 +570,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F AB /w */ { BxLockable, BX_IA_BTS_EwGw },
   /* 0F AC /w */ { BxImmediate_Ib, BX_IA_SHRD_EwGwIb },
   /* 0F AD /w */ { 0,              BX_IA_SHRD_EwGw   },
-  /* 0F AE /w */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15q },
+  /* 0F AE /w */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfo64G15d },
   /* 0F AF /w */ { 0, BX_IA_IMUL_GwEw },
   /* 0F B0 /w */ { BxLockable, BX_IA_CMPXCHG_EbGb },
   /* 0F B1 /w */ { BxLockable, BX_IA_CMPXCHG_EwGw },
@@ -848,8 +848,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* BF /d */ { BxImmediate_Id, BX_IA_MOV_EdId },
   /* C0 /d */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2EbIb },
   /* C1 /d */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2EdIb },
-  /* C2 /d */ { BxImmediate_Iw, BX_IA_RETnear_Op64_Iw },
-  /* C3 /d */ { 0, BX_IA_RETnear_Op64 },
+  /* C2 /d */ { BxImmediate_Iw, BX_IA_RET_near_Op64_Iw },
+  /* C3 /d */ { 0, BX_IA_RET_near_Op64 },
   /* C4 /d */ { 0, BX_IA_ERROR },
   /* C5 /d */ { 0, BX_IA_ERROR },
   /* C6 /d */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11Eb },
@@ -1085,7 +1085,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F AB /d */ { BxLockable, BX_IA_BTS_EdGd },
   /* 0F AC /d */ { BxImmediate_Ib, BX_IA_SHRD_EdGdIb },
   /* 0F AD /d */ { 0,              BX_IA_SHRD_EdGd   },
-  /* 0F AE /d */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15q },
+  /* 0F AE /d */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfo64G15d },
   /* 0F AF /d */ { 0, BX_IA_IMUL_GdEd },
   /* 0F B0 /d */ { BxLockable, BX_IA_CMPXCHG_EbGb },
   /* 0F B1 /d */ { BxLockable, BX_IA_CMPXCHG_EdGd },
@@ -1363,8 +1363,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* BF /q */ { BxImmediate_Iq, BX_IA_MOV_RRXIq },
   /* C0 /q */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2EbIb },
   /* C1 /q */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfo64G2EqIb },
-  /* C2 /q */ { BxImmediate_Iw, BX_IA_RETnear_Op64_Iw },
-  /* C3 /q */ { 0, BX_IA_RETnear_Op64 },
+  /* C2 /q */ { BxImmediate_Iw, BX_IA_RET_near_Op64_Iw },
+  /* C3 /q */ { 0, BX_IA_RET_near_Op64 },
   /* C4 /q */ { 0, BX_IA_ERROR },
   /* C5 /q */ { 0, BX_IA_ERROR },
   /* C6 /q */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11Eb },
@@ -1600,7 +1600,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F AB /q */ { BxLockable, BX_IA_BTS_EqGq },
   /* 0F AC /q */ { BxImmediate_Ib, BX_IA_SHRD_EqGqIb },
   /* 0F AD /q */ { 0,              BX_IA_SHRD_EqGq   },
-  /* 0F AE /q */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15q },
+  /* 0F AE /q */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfo64G15q },
   /* 0F AF /q */ { 0, BX_IA_IMUL_GqEq },
   /* 0F B0 /q */ { BxLockable, BX_IA_CMPXCHG_EbGb },
   /* 0F B1 /q */ { BxLockable, BX_IA_CMPXCHG_EqGq },
@@ -2208,6 +2208,7 @@ modrm_done:
       ia_opcode = OpcodeInfoPtr->IA;
       rm = (b1 & 7) | rex_b;
       nnn = (b1 >> 3) & 7;
+      i->assertModC0();
     }
   }
 
@@ -2349,7 +2350,7 @@ modrm_done:
   // assign sources
   for (unsigned n = 0; n <= 3; n++) {
     unsigned src = (unsigned) BxOpcodesTable[ia_opcode].src[n];
-    unsigned type = src & 0xf0;
+    unsigned type = src >> 3;
     switch(src & 0x7) {
     case BX_SRC_NONE:
       break;

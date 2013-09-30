@@ -2,9 +2,9 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2012 Stanislav Shwartsman
+//   Copyright (c) 2013 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
-//
+//                     	
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
 //  License as published by the Free Software Foundation; either
@@ -83,55 +83,65 @@ enum {
 
 enum {
   BX_NO_REG = 0,
-  BX_GPR8 = 0x10,
-  BX_GPR8_32 = 0x20,  // 8-bit memory reference but 32-bit GPR
-  BX_GPR16 = 0x30,
-  BX_GPR16_32 = 0x40, // 16-bit memory reference but 32-bit GPR
-  BX_GPR32 = 0x50,
-  BX_GPR64 = 0x60,
-  BX_FPU_REG = 0x70,
-  BX_MMX_REG = 0x80,
-  BX_VMM_REG = 0x90,
-  BX_KMASK_REG = 0xA0,
-  BX_SEGREG = 0xB0,
-  BX_CREG = 0xC0,
-  BX_DREG = 0xD0,
-  BX_VSIB = 0xE0      // gather/scatter vector index
+  BX_GPR8 = 0x1,
+  BX_GPR8_32 = 0x2,  // 8-bit memory reference but 32-bit GPR
+  BX_GPR16 = 0x3,
+  BX_GPR16_32 = 0x4, // 16-bit memory reference but 32-bit GPR
+  BX_GPR32 = 0x5,
+  BX_GPR64 = 0x6,
+  BX_FPU_REG = 0x7,
+  BX_MMX_REG = 0x8,
+  BX_VMM_REG = 0x9,
+  BX_KMASK_REG = 0xA,
+  BX_SEGREG = 0xB,
+  BX_CREG = 0xC,
+  BX_DREG = 0xD,
+  BX_VSIB = 0xE      // gather/scatter vector index
 };
 
-#define BX_SRC_KMASK_VVV (BX_KMASK_REG | BX_SRC_VVV)
+enum {
+  BX_IMMB = 0x10,
+  BX_IMMW = 0x11,
+  BX_IMMD = 0x12,
+  BX_IMMQ = 0x13,
+  BX_IMM_BrOff16 = 0x14,
+  BX_IMM_BrOff32 = 0x15,
+  BX_RSIREF = 0x16,
+  BX_RDIREF = 0x17
+};
+
+#define BX_FORM_SRC(type, src) (((type) << 3) | (src))
 
 const Bit8u OP_NONE = BX_SRC_NONE;
 
-const Bit8u OP_Eb = (BX_GPR8 | BX_SRC_RM);
-const Bit8u OP_Ebd = (BX_GPR8_32 | BX_SRC_RM);
-const Bit8u OP_Ew = (BX_GPR16 | BX_SRC_RM);
-const Bit8u OP_Ewd = (BX_GPR16_32 | BX_SRC_RM);
-const Bit8u OP_Ed = (BX_GPR32 | BX_SRC_RM);
-const Bit8u OP_Eq = (BX_GPR64 | BX_SRC_RM);
+const Bit8u OP_Eb = BX_FORM_SRC(BX_GPR8, BX_SRC_RM);
+const Bit8u OP_Ebd = BX_FORM_SRC(BX_GPR8_32, BX_SRC_RM);
+const Bit8u OP_Ew = BX_FORM_SRC(BX_GPR16, BX_SRC_RM);
+const Bit8u OP_Ewd = BX_FORM_SRC(BX_GPR16_32, BX_SRC_RM);
+const Bit8u OP_Ed = BX_FORM_SRC(BX_GPR32, BX_SRC_RM);
+const Bit8u OP_Eq = BX_FORM_SRC(BX_GPR64, BX_SRC_RM);
 
-const Bit8u OP_Gb = (BX_GPR8 | BX_SRC_NNN);
-const Bit8u OP_Gw = (BX_GPR16 | BX_SRC_NNN);
-const Bit8u OP_Gd = (BX_GPR32 | BX_SRC_NNN);
-const Bit8u OP_Gq = (BX_GPR64 | BX_SRC_NNN);
+const Bit8u OP_Gb = BX_FORM_SRC(BX_GPR8, BX_SRC_NNN);
+const Bit8u OP_Gw = BX_FORM_SRC(BX_GPR16, BX_SRC_NNN);
+const Bit8u OP_Gd = BX_FORM_SRC(BX_GPR32, BX_SRC_NNN);
+const Bit8u OP_Gq = BX_FORM_SRC(BX_GPR64, BX_SRC_NNN);
 
-const Bit8u OP_ALReg  = BX_GPR8 | BX_SRC_EAX;
-const Bit8u OP_AXReg  = BX_GPR16 | BX_SRC_EAX;
-const Bit8u OP_EAXReg = BX_GPR32 | BX_SRC_EAX;
-const Bit8u OP_RAXReg = BX_GPR64 | BX_SRC_EAX;
+const Bit8u OP_ALReg  = BX_FORM_SRC(BX_GPR8, BX_SRC_EAX);
+const Bit8u OP_AXReg  = BX_FORM_SRC(BX_GPR16, BX_SRC_EAX);
+const Bit8u OP_EAXReg = BX_FORM_SRC(BX_GPR32, BX_SRC_EAX);
+const Bit8u OP_RAXReg = BX_FORM_SRC(BX_GPR64, BX_SRC_EAX);
 
 const Bit8u OP_CLReg  = BX_SRC_NONE;
 const Bit8u OP_DXReg  = BX_SRC_NONE;
 
-const Bit8u OP_Ib = BX_SRC_NONE;
-const Bit8u OP_Iw = BX_SRC_NONE;
-const Bit8u OP_Id = BX_SRC_NONE;
-const Bit8u OP_Iq = BX_SRC_NONE;
+const Bit8u OP_Ib = BX_FORM_SRC(BX_IMMB, BX_SRC_NONE);
+const Bit8u OP_Iw = BX_FORM_SRC(BX_IMMW, BX_SRC_NONE);
+const Bit8u OP_Id = BX_FORM_SRC(BX_IMMD, BX_SRC_NONE);
+const Bit8u OP_Iq = BX_FORM_SRC(BX_IMMQ, BX_SRC_NONE);
 
-const Bit8u OP_Jb = BX_SRC_NONE;
-const Bit8u OP_Jw = BX_SRC_NONE;
-const Bit8u OP_Jd = BX_SRC_NONE;
-const Bit8u OP_Jq = BX_SRC_NONE; /* always same as OP_Jd ? */
+const Bit8u OP_Jw = BX_FORM_SRC(BX_IMM_BrOff16, BX_SRC_NONE);
+const Bit8u OP_Jd = BX_FORM_SRC(BX_IMM_BrOff32, BX_SRC_NONE);
+const Bit8u OP_Jq = BX_FORM_SRC(BX_IMM_BrOff32, BX_SRC_NONE); /* always same as OP_Jd ? */
 
 const Bit8u OP_M  = BX_SRC_RM;
 const Bit8u OP_Mb = BX_SRC_RM;
@@ -140,63 +150,70 @@ const Bit8u OP_Md = BX_SRC_RM;
 const Bit8u OP_Mq = BX_SRC_RM;
 const Bit8u OP_Mp = BX_SRC_RM;
 
-const Bit8u OP_Mdq = (BX_VMM_REG | BX_SRC_RM);
+const Bit8u OP_Mdq = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
 
-const Bit8u OP_Pq = (BX_MMX_REG | BX_SRC_NNN);
-const Bit8u OP_Pd = (BX_MMX_REG | BX_SRC_NNN);
-const Bit8u OP_Qq = (BX_MMX_REG | BX_SRC_RM);
-const Bit8u OP_Qd = (BX_MMX_REG | BX_SRC_RM);
-const Bit8u OP_Nq = (BX_MMX_REG | BX_SRC_RM);
+const Bit8u OP_Pq = BX_FORM_SRC(BX_MMX_REG, BX_SRC_NNN);
+const Bit8u OP_Pd = BX_FORM_SRC(BX_MMX_REG, BX_SRC_NNN);
+const Bit8u OP_Qq = BX_FORM_SRC(BX_MMX_REG, BX_SRC_RM);
+const Bit8u OP_Qd = BX_FORM_SRC(BX_MMX_REG, BX_SRC_RM);
 
-const Bit8u OP_Vdq = (BX_VMM_REG | BX_SRC_NNN);
-const Bit8u OP_Vps = (BX_VMM_REG | BX_SRC_NNN);
-const Bit8u OP_Vpd = (BX_VMM_REG | BX_SRC_NNN);
-const Bit8u OP_Vss = (BX_VMM_REG | BX_SRC_NNN);
-const Bit8u OP_Vsd = (BX_VMM_REG | BX_SRC_NNN);
-const Bit8u OP_Vq  = (BX_VMM_REG | BX_SRC_NNN);
-const Bit8u OP_Vd  = (BX_VMM_REG | BX_SRC_NNN);
+const Bit8u OP_Vdq = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
+const Bit8u OP_Vps = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
+const Bit8u OP_Vpd = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
+const Bit8u OP_Vss = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
+const Bit8u OP_Vsd = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
+const Bit8u OP_Vq  = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
+const Bit8u OP_Vd  = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
 
-const Bit8u OP_Wdq = (BX_VMM_REG | BX_SRC_RM);
-const Bit8u OP_Wq = (BX_VMM_REG | BX_SRC_RM);
-const Bit8u OP_Wd = (BX_VMM_REG | BX_SRC_RM);
-const Bit8u OP_Ww = (BX_VMM_REG | BX_SRC_RM);
-const Bit8u OP_Wb = (BX_VMM_REG | BX_SRC_RM);
-const Bit8u OP_Wps = (BX_VMM_REG | BX_SRC_RM);
-const Bit8u OP_Wpd = (BX_VMM_REG | BX_SRC_RM);
-const Bit8u OP_Wss = (BX_VMM_REG | BX_SRC_RM);
-const Bit8u OP_Wsd = (BX_VMM_REG | BX_SRC_RM);
+const Bit8u OP_Wdq = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
+const Bit8u OP_Wq = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
+const Bit8u OP_Wd = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
+const Bit8u OP_Ww = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
+const Bit8u OP_Wb = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
+const Bit8u OP_Wps = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
+const Bit8u OP_Wpd = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
+const Bit8u OP_Wss = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
+const Bit8u OP_Wsd = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
 
-const Bit8u OP_Uq  = (BX_VMM_REG | BX_SRC_RM);
-const Bit8u OP_Udq = (BX_VMM_REG | BX_SRC_RM);
-const Bit8u OP_Ups = (BX_VMM_REG | BX_SRC_RM);
-const Bit8u OP_Upd = (BX_VMM_REG | BX_SRC_RM);
+const Bit8u OP_Hdq = BX_FORM_SRC(BX_VMM_REG, BX_SRC_VVV);
+const Bit8u OP_Hps = BX_FORM_SRC(BX_VMM_REG, BX_SRC_VVV);
+const Bit8u OP_Hpd = BX_FORM_SRC(BX_VMM_REG, BX_SRC_VVV);
+const Bit8u OP_Hss = BX_FORM_SRC(BX_VMM_REG, BX_SRC_VVV);
+const Bit8u OP_Hsd = BX_FORM_SRC(BX_VMM_REG, BX_SRC_VVV);
 
-const Bit8u OP_Hdq = (BX_VMM_REG | BX_SRC_VVV);
-const Bit8u OP_Hps = (BX_VMM_REG | BX_SRC_VVV);
-const Bit8u OP_Hpd = (BX_VMM_REG | BX_SRC_VVV);
-const Bit8u OP_Hss = (BX_VMM_REG | BX_SRC_VVV);
-const Bit8u OP_Hsd = (BX_VMM_REG | BX_SRC_VVV);
+const Bit8u OP_Bd = BX_FORM_SRC(BX_GPR32, BX_SRC_VVV);
+const Bit8u OP_Bq = BX_FORM_SRC(BX_GPR64, BX_SRC_VVV);
 
-const Bit8u OP_Bd = (BX_GPR32 | BX_SRC_VVV);
-const Bit8u OP_Bq = (BX_GPR64 | BX_SRC_VVV);
-
-const Bit8u OP_VIb = (BX_VMM_REG | BX_SRC_VIB);
+const Bit8u OP_VIb = BX_FORM_SRC(BX_VMM_REG, BX_SRC_VIB);
 
 const Bit8u OP_VSib = BX_SRC_RM;
 
-const Bit8u OP_Cd = (BX_CREG | BX_SRC_NNN);
-const Bit8u OP_Cq = (BX_CREG | BX_SRC_NNN);
-const Bit8u OP_Dd = (BX_DREG | BX_SRC_NNN);
-const Bit8u OP_Dq = (BX_DREG | BX_SRC_NNN);
+const Bit8u OP_Cd = BX_FORM_SRC(BX_CREG, BX_SRC_NNN);
+const Bit8u OP_Cq = BX_FORM_SRC(BX_CREG, BX_SRC_NNN);
+const Bit8u OP_Dd = BX_FORM_SRC(BX_DREG, BX_SRC_NNN);
+const Bit8u OP_Dq = BX_FORM_SRC(BX_DREG, BX_SRC_NNN);
 
-const Bit8u OP_Sw = (BX_SEGREG | BX_SRC_NNN);
+const Bit8u OP_Sw = BX_FORM_SRC(BX_SEGREG, BX_SRC_NNN);
 
 const Bit8u OP_Od = BX_SRC_NONE;
 const Bit8u OP_Oq = BX_SRC_NONE;
 
-const Bit8u OP_KGw = (BX_KMASK_REG | BX_SRC_NNN);
-const Bit8u OP_KEw = (BX_KMASK_REG | BX_SRC_RM);
-const Bit8u OP_KHw = (BX_KMASK_REG | BX_SRC_VVV);
+const Bit8u OP_KGw = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_NNN);
+const Bit8u OP_KEw = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_RM);
+const Bit8u OP_KHw = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_VVV);
+
+const Bit8u OP_ST0 = BX_FORM_SRC(BX_FPU_REG, BX_SRC_EAX);
+const Bit8u OP_STi = BX_FORM_SRC(BX_FPU_REG, BX_SRC_RM);
+
+const Bit8u OP_Xb = BX_FORM_SRC(BX_RSIREF, BX_SRC_NONE);
+const Bit8u OP_Xw = BX_FORM_SRC(BX_RSIREF, BX_SRC_NONE);
+const Bit8u OP_Xd = BX_FORM_SRC(BX_RSIREF, BX_SRC_NONE);
+const Bit8u OP_Xq = BX_FORM_SRC(BX_RSIREF, BX_SRC_NONE);
+
+const Bit8u OP_Yb = BX_FORM_SRC(BX_RDIREF, BX_SRC_NONE);
+const Bit8u OP_Yw = BX_FORM_SRC(BX_RDIREF, BX_SRC_NONE);
+const Bit8u OP_Yd = BX_FORM_SRC(BX_RDIREF, BX_SRC_NONE);
+const Bit8u OP_Yq = BX_FORM_SRC(BX_RDIREF, BX_SRC_NONE);
 
 //
 // Common FetchDecode Opcode Tables
@@ -952,12 +969,34 @@ static const BxOpcodeInfo_t BxOpcodeInfoG15[8*2] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const BxOpcodeInfo_t BxOpcodeInfoG15q[8*2] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G15d[8*2] = {
   /* /r form */
-  /* 0 */ { BxPrefixSSEF3, BX_IA_RDFSBASE },
-  /* 1 */ { BxPrefixSSEF3, BX_IA_RDGSBASE },
-  /* 2 */ { BxPrefixSSEF3, BX_IA_WRFSBASE },
-  /* 3 */ { BxPrefixSSEF3, BX_IA_WRGSBASE },
+  /* 0 */ { BxPrefixSSEF3, BX_IA_RDFSBASE_Ed },
+  /* 1 */ { BxPrefixSSEF3, BX_IA_RDGSBASE_Ed },
+  /* 2 */ { BxPrefixSSEF3, BX_IA_WRFSBASE_Ed },
+  /* 3 */ { BxPrefixSSEF3, BX_IA_WRGSBASE_Ed },
+  /* 4 */ { 0, BX_IA_ERROR },
+  /* 5 */ { BxPrefixSSE, BX_IA_LFENCE, BxOpcodeGroupSSE_ERR },
+  /* 6 */ { BxPrefixSSE, BX_IA_MFENCE, BxOpcodeGroupSSE_ERR },
+  /* 7 */ { BxPrefixSSE, BX_IA_SFENCE, BxOpcodeGroupSSE_ERR },
+
+  /* /m form */
+  /* 0 */ { BxPrefixSSE, BX_IA_FXSAVE,   BxOpcodeGroupSSE_ERR },
+  /* 1 */ { BxPrefixSSE, BX_IA_FXRSTOR,  BxOpcodeGroupSSE_ERR },
+  /* 2 */ { BxPrefixSSE, BX_IA_LDMXCSR,  BxOpcodeGroupSSE_ERR },
+  /* 3 */ { BxPrefixSSE, BX_IA_STMXCSR,  BxOpcodeGroupSSE_ERR },
+  /* 4 */ { BxPrefixSSE, BX_IA_XSAVE,    BxOpcodeGroupSSE_ERR },
+  /* 5 */ { BxPrefixSSE, BX_IA_XRSTOR,   BxOpcodeGroupSSE_ERR },
+  /* 6 */ { BxPrefixSSE, BX_IA_XSAVEOPT, BxOpcodeGroupSSE_ERR },
+  /* 7 */ { BxPrefixSSE, BX_IA_CLFLUSH,  BxOpcodeGroupSSE_ERR }
+};
+
+static const BxOpcodeInfo_t BxOpcodeInfo64G15q[8*2] = {
+  /* /r form */
+  /* 0 */ { BxPrefixSSEF3, BX_IA_RDFSBASE_Eq },
+  /* 1 */ { BxPrefixSSEF3, BX_IA_RDGSBASE_Eq },
+  /* 2 */ { BxPrefixSSEF3, BX_IA_WRFSBASE_Eq },
+  /* 3 */ { BxPrefixSSEF3, BX_IA_WRGSBASE_Eq },
   /* 4 */ { 0, BX_IA_ERROR },
   /* 5 */ { BxPrefixSSE, BX_IA_LFENCE, BxOpcodeGroupSSE_ERR },
   /* 6 */ { BxPrefixSSE, BX_IA_MFENCE, BxOpcodeGroupSSE_ERR },

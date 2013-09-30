@@ -476,7 +476,7 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0fd5[3] = {
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0fd6[3] = {
   /* 66 */ { 0, BX_IA_MOVQ_WqVq },
   /* F3 */ { 0, BX_IA_MOVQ2DQ_VdqQq },
-  /* F2 */ { 0, BX_IA_MOVDQ2Q_PqVRq }
+  /* F2 */ { 0, BX_IA_MOVDQ2Q_PqUdq }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0fd7R[3] = {

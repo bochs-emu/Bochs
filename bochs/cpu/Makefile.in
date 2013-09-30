@@ -115,7 +115,8 @@ OBJS = \
 	bmi32.o \
 	string.o \
 	paging.o \
-	rdrand.o
+	rdrand.o \
+	disasm.o
 	
 # Objects which are only used for x86-64 code
 OBJS64 = \
@@ -772,6 +773,12 @@ xsave.o: xsave.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.
  instr.h ia_opcodes.h lazy_flags.h icache.h apic.h i387.h fpu/softfloat.h \
  fpu/tag_w.h fpu/status_w.h fpu/control_w.h xmm.h vmx.h stack.h
 rdrand.o: rdrand.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
+ ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
+ ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../instrument/stubs/instrument.h cpu.h cpuid.h crregs.h descriptor.h \
+ instr.h ia_opcodes.h lazy_flags.h icache.h apic.h i387.h fpu/softfloat.h \
+ fpu/tag_w.h fpu/status_w.h fpu/control_w.h xmm.h vmx.h stack.h
+disasm.o: disasm.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
  ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h cpu.h cpuid.h crregs.h descriptor.h \

@@ -756,7 +756,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_VqWqM(bxInstruction_c *i)
 }
 
 /* F2 0F D6 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDQ2Q_PqVRq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDQ2Q_PqUdq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR FPU_check_pending_exceptions(); /* check floating point status word for a pending FPU exceptions */

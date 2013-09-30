@@ -376,6 +376,9 @@ public:
   BX_CPP_INLINE void setSrcReg(unsigned src, unsigned reg) {
     metaData[src] = reg;
   }
+  BX_CPP_INLINE unsigned getSrcReg(unsigned src) const {
+    return metaData[src];
+  }
 
   BX_CPP_INLINE unsigned dst() const {
     return metaData[BX_INSTR_METADATA_DST];

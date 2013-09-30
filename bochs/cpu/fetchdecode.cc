@@ -371,8 +371,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* BF /w */ { BxImmediate_Iw, BX_IA_MOV_EwIw },
   /* C0 /w */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2EbIb },
   /* C1 /w */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2EwIb },
-  /* C2 /w */ { BxImmediate_Iw, BX_IA_RETnear_Op16_Iw },
-  /* C3 /w */ { 0, BX_IA_RETnear_Op16 },
+  /* C2 /w */ { BxImmediate_Iw, BX_IA_RET_near_Op16_Iw },
+  /* C3 /w */ { 0, BX_IA_RET_near_Op16 },
   /* C4 /w */ { 0, BX_IA_LES_GwMp },
   /* C5 /w */ { 0, BX_IA_LDS_GwMp },
   /* C6 /w */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11Eb },
@@ -916,8 +916,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* BF /d */ { BxImmediate_Id, BX_IA_MOV_EdId },
   /* C0 /d */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2EbIb },
   /* C1 /d */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2EdIb },
-  /* C2 /d */ { BxImmediate_Iw, BX_IA_RETnear_Op32_Iw },
-  /* C3 /d */ { 0, BX_IA_RETnear_Op32 },
+  /* C2 /d */ { BxImmediate_Iw, BX_IA_RET_near_Op32_Iw },
+  /* C3 /d */ { 0, BX_IA_RET_near_Op32 },
   /* C4 /d */ { 0, BX_IA_LES_GdMp },
   /* C5 /d */ { 0, BX_IA_LDS_GdMp },
   /* C6 /d */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11Eb },
@@ -1765,6 +1765,7 @@ modrm_done:
     ia_opcode = OpcodeInfoPtr->IA;
     rm = b1 & 0x7;
     nnn = (b1 >> 3) & 0x7;
+    i->assertModC0();
   }
 
   if (lock) { // lock prefix invalid opcode
@@ -1901,7 +1902,7 @@ modrm_done:
   // assign sources
   for (unsigned n = 0; n <= 3; n++) {
     unsigned src = (unsigned) BxOpcodesTable[ia_opcode].src[n];
-    unsigned type = src & 0xf0;
+    unsigned type = src >> 3;
     switch(src & 0x7) {
     case BX_SRC_NONE:
       break;
