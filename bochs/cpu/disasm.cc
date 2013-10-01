@@ -151,7 +151,7 @@ char *resolve_memref(char *disbufptr, const bxInstruction_c *i)
   return disbufptr;
 }
 
-char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address base)
+char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_address rip)
 {
   if (i->getIaOpcode() == BX_INSERTED_OPCODE) {
     disbufptr = dis_sprintf(disbufptr, "(bochs inserted internal opcode)");
@@ -295,10 +295,16 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address base)
           disbufptr = dis_sprintf(disbufptr, "0x%04x", i->Iw2());
           break;
         case BX_IMM_BrOff16:
-          disbufptr = dis_sprintf(disbufptr, ".%+d (0x%08x)", i->Iw(), base + i->ilen() + (Bit16s) i->Iw());
+          {
+            Bit16u target = (rip + i->ilen() + (Bit16s) i->Iw()) & 0xffff;
+            disbufptr = dis_sprintf(disbufptr, ".%+d (0x%08x)", i->Iw(), (Bit32u)(cs_base + target));
+          }
           break;
         case BX_IMM_BrOff32:
-          disbufptr = dis_sprintf(disbufptr, ".%+d (0x" FMT_ADDRX ")", i->Id(), base + i->ilen() + (Bit32s) i->Id());
+          {
+            bx_address target = rip + i->ilen() + (Bit32s) i->Id();
+            disbufptr = dis_sprintf(disbufptr, ".%+d (0x" FMT_ADDRX ")", i->Id(), cs_base + target);
+          }
           break;
         case BX_RSIREF:
           disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
