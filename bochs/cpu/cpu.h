@@ -79,12 +79,11 @@
 # define BX_GENERAL_REGISTERS 8
 #endif
 
-#define BX_TMP_REGISTER  (BX_GENERAL_REGISTERS)
+#define BX_16BIT_REG_IP  (BX_GENERAL_REGISTERS)
+#define BX_32BIT_REG_EIP (BX_GENERAL_REGISTERS)
+#define BX_64BIT_REG_RIP (BX_GENERAL_REGISTERS)
 
-#define BX_16BIT_REG_IP  (BX_GENERAL_REGISTERS+1)
-#define BX_32BIT_REG_EIP (BX_GENERAL_REGISTERS+1)
-#define BX_64BIT_REG_RIP (BX_GENERAL_REGISTERS+1)
-
+#define BX_TMP_REGISTER  (BX_GENERAL_REGISTERS+1)
 #define BX_NIL_REGISTER  (BX_GENERAL_REGISTERS+2)
 
 #if defined(NEED_CPU_REG_SHORTCUTS)
@@ -955,8 +954,8 @@ public: // for now...
   // rdi: destination index
   // esp: stack pointer
   // r8..r15 x86-64 extended registers
-  // tmp: temp register
   // rip: instruction pointer
+  // tmp: temp register
   // nil: null register
   bx_gen_reg_t gen_reg[BX_GENERAL_REGISTERS+3];
 

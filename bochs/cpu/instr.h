@@ -121,7 +121,7 @@ public:
     //  3...0 ilen (0..15)
     Bit8u ilen;
 
-    //  7...6 repUsed (0=none, 2=0xF2, 3=0xF3)
+    //  7...6 lockUsed, repUsed (0=none, 1=0xF0, 2=0xF2, 3=0xF3)
     //  5...5 extend8bit
     //  4...4 mod==c0 (modrm)
     //  3...3 os64

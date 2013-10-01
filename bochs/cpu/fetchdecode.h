@@ -109,7 +109,11 @@ enum {
   BX_IMM_BrOff16 = 0x16,
   BX_IMM_BrOff32 = 0x17,
   BX_RSIREF = 0x18,
-  BX_RDIREF = 0x19
+  BX_RDIREF = 0x19,
+  BX_USECL = 0x1A,
+  BX_USEDX = 0x1B,
+  BX_DIRECT_MEMREF32 = 0x1C,
+  BX_DIRECT_MEMREF64 = 0x1D,
 };
 
 #define BX_FORM_SRC(type, src) (((type) << 3) | (src))
@@ -133,8 +137,8 @@ const Bit8u OP_AXReg  = BX_FORM_SRC(BX_GPR16, BX_SRC_EAX);
 const Bit8u OP_EAXReg = BX_FORM_SRC(BX_GPR32, BX_SRC_EAX);
 const Bit8u OP_RAXReg = BX_FORM_SRC(BX_GPR64, BX_SRC_EAX);
 
-const Bit8u OP_CLReg  = BX_SRC_NONE;
-const Bit8u OP_DXReg  = BX_SRC_NONE;
+const Bit8u OP_CLReg  = BX_FORM_SRC(BX_USECL, BX_SRC_NONE);
+const Bit8u OP_DXReg  = BX_FORM_SRC(BX_USEDX, BX_SRC_NONE);
 
 const Bit8u OP_Ib = BX_FORM_SRC(BX_IMMB, BX_SRC_NONE);
 const Bit8u OP_Iw = BX_FORM_SRC(BX_IMMW, BX_SRC_NONE);
@@ -154,6 +158,7 @@ const Bit8u OP_Mw = BX_SRC_RM;
 const Bit8u OP_Md = BX_SRC_RM;
 const Bit8u OP_Mq = BX_SRC_RM;
 const Bit8u OP_Mp = BX_SRC_RM;
+const Bit8u OP_Mt = BX_FORM_SRC(BX_FPU_REG, BX_SRC_RM);
 
 const Bit8u OP_Mdq = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
 
@@ -200,8 +205,8 @@ const Bit8u OP_Dq = BX_FORM_SRC(BX_DREG, BX_SRC_NNN);
 
 const Bit8u OP_Sw = BX_FORM_SRC(BX_SEGREG, BX_SRC_NNN);
 
-const Bit8u OP_Od = BX_SRC_NONE;
-const Bit8u OP_Oq = BX_SRC_NONE;
+const Bit8u OP_Od = BX_FORM_SRC(BX_DIRECT_MEMREF32, BX_SRC_NONE);
+const Bit8u OP_Oq = BX_FORM_SRC(BX_DIRECT_MEMREF64, BX_SRC_NONE);
 
 const Bit8u OP_KGw = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_NNN);
 const Bit8u OP_KEw = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_RM);

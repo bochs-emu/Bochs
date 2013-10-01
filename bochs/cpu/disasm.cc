@@ -57,14 +57,14 @@ static const char *intel_general_16bit_regname[16] = {
     "r8w", "r9w", "r10w", "r11w", "r12w", "r13w", "r14w", "r15w"
 };
 
-static const char *intel_general_32bit_regname[16] = {
+static const char *intel_general_32bit_regname[17] = {
     "eax", "ecx", "edx",  "ebx",  "esp",  "ebp",  "esi",  "edi",
-    "r8d", "r9d", "r10d", "r11d", "r12d", "r13d", "r14d", "r15d"
+    "r8d", "r9d", "r10d", "r11d", "r12d", "r13d", "r14d", "r15d", "eip"
 };
 
-static const char *intel_general_64bit_regname[16] = {
+static const char *intel_general_64bit_regname[17] = {
     "rax", "rcx", "rdx", "rbx", "rsp", "rbp", "rsi", "rdi",
-    "r8",  "r9",  "r10", "r11", "r12", "r13", "r14", "r15"
+    "r8",  "r9",  "r10", "r11", "r12", "r13", "r14", "r15", "rip"
 };
 
 static const char *intel_general_8bit_regname_rex[16] = {
@@ -79,6 +79,12 @@ static const char *intel_general_8bit_regname[8] = {
 static const char *intel_segment_name[8] = {
     "es",  "cs",  "ss",  "ds",  "fs",  "gs",  "??",  "??"
 };
+
+#if BX_SUPPORT_EVEX
+static const char *rounding_mode[4] = {
+    "round_nearest_even", "round_down", "round_up", "round_to_zero"
+};
+#endif
 
 char *resolve_memref(char *disbufptr, const bxInstruction_c *i, const char *regname[])
 {
@@ -145,23 +151,44 @@ char *resolve_memref(char *disbufptr, const bxInstruction_c *i)
   return disbufptr;
 }
 
-void disasm(char *disbufptr, const bxInstruction_c *i)
+char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address base)
 {
+  if (i->getIaOpcode() == BX_INSERTED_OPCODE) {
+    disbufptr = dis_sprintf(disbufptr, "(bochs inserted internal opcode)");
+    return disbufptr;
+  }
+
   if (i->execute1 == BX_CPU_C::BxError) {
-    dis_sprintf(disbufptr, "(invalid)");
-    return;
+    disbufptr = dis_sprintf(disbufptr, "(invalid)");
+    return disbufptr;
   }
 
   const char *opname = i->getIaOpcodeName() + 6; // skip the "BX_IA_"
-//bx_bool is_vex_xop = BX_FALSE;
   unsigned n;
+#if BX_SUPPORT_EVEX
+  bx_bool is_vector = BX_FALSE;
+#endif
 
-  if (! strncmp(opname, "V128_", 4) || ! strncmp(opname, "V256_", 4) || ! strncmp(opname, "V512_", 4)) {
-    opname += 4;
-//  is_vex_xop = BX_TRUE;
+  if (! strncmp(opname, "V128_", 5) || ! strncmp(opname, "V256_", 5) || ! strncmp(opname, "V512_", 5)) {
+    opname += 5;
+#if BX_SUPPORT_EVEX
+    is_vector = BX_TRUE;
+#endif
   }
 
-  // Step 1: print opcode name
+  if (! strncmp(opname, "REP_", 4)) {
+    opname += 4;
+  }
+
+  // Step 1: print prefixes
+  if (i->repUsedL()) {
+    if (i->repUsedValue() == 2)
+      disbufptr = dis_sprintf(disbufptr, "repne ");
+    else
+      disbufptr = dis_sprintf(disbufptr, "rep ");
+  }
+
+  // Step 2: print opcode name
   unsigned opname_len = strlen(opname);
   for (n=0;n < opname_len; n++) {
     if (opname[n] == '_') break;
@@ -170,12 +197,13 @@ void disasm(char *disbufptr, const bxInstruction_c *i)
 
   disbufptr = dis_putc(disbufptr, ' ');
 
-  // Step 2: print sources
+  // Step 3: print sources
   Bit16u ia_opcode = i->getIaOpcode();
   unsigned srcs_used = 0;
   for (n = 0; n <= 3; n++) {
     unsigned src = (unsigned) BxOpcodesTable[ia_opcode].src[n];
-    if (! src) continue;
+    unsigned src_type = src >> 3;
+    if (! src_type && src != BX_SRC_RM) continue;
     if (srcs_used++ > 0)
       disbufptr = dis_sprintf(disbufptr, ", ");
 
@@ -184,8 +212,6 @@ void disasm(char *disbufptr, const bxInstruction_c *i)
     }
     else {
       unsigned srcreg = i->getSrcReg(n);
-      unsigned src_type = src >> 3;
-
       if (src_type < 0x10) {
         switch(src_type) {
         case BX_GPR8:
@@ -215,8 +241,15 @@ void disasm(char *disbufptr, const bxInstruction_c *i)
           break;
         case BX_VMM_REG:
 #if BX_SUPPORT_AVX
-          if (i->getVL() > BX_NO_VL)
+          if (i->getVL() > BX_NO_VL) {
             disbufptr = dis_sprintf(disbufptr, "%cmm%d", 'x' + i->getVL() - 1, srcreg);
+#if BX_SUPPORT_EVEX
+            if (n == 0 && i->opmask()) {
+              disbufptr = dis_sprintf(disbufptr, "{k%d}%s", i->opmask(),
+                i->isZeroMasking() ? "{z}" : "");
+            }
+#endif
+          }
           else
 #endif
             disbufptr = dis_sprintf(disbufptr, "xmm%d", srcreg);
@@ -236,7 +269,8 @@ void disasm(char *disbufptr, const bxInstruction_c *i)
           disbufptr = dis_sprintf(disbufptr, "dr%d", srcreg);
           break;
         default:
-          disbufptr = dis_sprintf(disbufptr, "(unknown source type %d)", src_type);
+          if (src_type != BX_NO_REG)
+            disbufptr = dis_sprintf(disbufptr, "(unknown source type %d)", src_type);
           break;
         }
       }
@@ -261,10 +295,10 @@ void disasm(char *disbufptr, const bxInstruction_c *i)
           disbufptr = dis_sprintf(disbufptr, "0x%04x", i->Iw2());
           break;
         case BX_IMM_BrOff16:
-          disbufptr = dis_sprintf(disbufptr, ".%+d", i->Iw());
+          disbufptr = dis_sprintf(disbufptr, ".%+d (0x%08x)", i->Iw(), base + i->ilen() + (Bit16s) i->Iw());
           break;
         case BX_IMM_BrOff32:
-          disbufptr = dis_sprintf(disbufptr, ".%+d", i->Id());
+          disbufptr = dis_sprintf(disbufptr, ".%+d (0x" FMT_ADDRX ")", i->Id(), base + i->ilen() + (Bit32s) i->Id());
           break;
         case BX_RSIREF:
           disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
@@ -290,6 +324,22 @@ void disasm(char *disbufptr, const bxInstruction_c *i)
               disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_16bit_regname[BX_16BIT_REG_DI]);
           }
           break;
+        case BX_USECL:
+          disbufptr = dis_sprintf(disbufptr, "cl");
+          break;
+        case BX_USEDX:
+          disbufptr = dis_sprintf(disbufptr, "dx");
+          break;
+        case BX_DIRECT_MEMREF32:
+          disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
+          if (! i->as32L())
+            disbufptr = dis_sprintf(disbufptr, "0x%04x", i->Id());
+          else
+            disbufptr = dis_sprintf(disbufptr, "0x%08x", i->Id());
+          break;
+        case BX_DIRECT_MEMREF64:
+          disbufptr = dis_sprintf(disbufptr, "%s:0x" FMT_ADDRX, intel_segment_name[i->seg()], i->Iq());
+          break;
         default:
           disbufptr = dis_sprintf(disbufptr, "(unknown source type %d)", src_type);
           break;
@@ -297,4 +347,15 @@ void disasm(char *disbufptr, const bxInstruction_c *i)
       }
     }
   }
+
+#if BX_SUPPORT_EVEX
+  if (is_vector && i->getEvexb()) {
+    if (! i->modC0())
+      disbufptr = dis_sprintf(disbufptr, "{broadcast TBD}");
+    else
+      disbufptr = dis_sprintf(disbufptr, "{sae/%s}", rounding_mode[i->getRC()]);
+  }
+#endif
+
+  return disbufptr;
 }
