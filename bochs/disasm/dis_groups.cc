@@ -658,9 +658,9 @@ void disassembler::Jb(const x86_insn *insn)
       dis_sprintf(".%+d", (int) imm8);
     }
 
-    if (db_base != BX_JUMP_TARGET_NOT_REQ) {
+    if (db_cs_base != BX_JUMP_TARGET_NOT_REQ) {
       Bit64u target = db_eip + imm64;
-      target += db_base;
+      target += db_cs_base;
       dis_sprintf(" (0x%08x%08x)", GET32H(target), GET32L(target));
     }
 
@@ -677,8 +677,8 @@ void disassembler::Jb(const x86_insn *insn)
       dis_sprintf(".%+d", (int) imm8);
     }
 
-    if (db_base != BX_JUMP_TARGET_NOT_REQ) {
-      Bit32u target = (Bit32u)(db_base + db_eip + (Bit32s) imm32);
+    if (db_cs_base != BX_JUMP_TARGET_NOT_REQ) {
+      Bit32u target = (Bit32u)(db_cs_base + db_eip + (Bit32s) imm32);
       dis_sprintf(" (0x%08x)", target);
     }
   }
@@ -692,9 +692,9 @@ void disassembler::Jb(const x86_insn *insn)
       dis_sprintf(".%+d", (int) imm8);
     }
 
-    if (db_base != BX_JUMP_TARGET_NOT_REQ) {
+    if (db_cs_base != BX_JUMP_TARGET_NOT_REQ) {
       Bit16u target = (Bit16u)((db_eip + (Bit16s) imm16) & 0xffff);
-      dis_sprintf(" (0x%08x)", target + db_base);
+      dis_sprintf(" (0x%08x)", target + db_cs_base);
     }
   }
 }
@@ -713,9 +713,9 @@ void disassembler::Jw(const x86_insn *insn)
     dis_sprintf(".%+d", (int) imm16);
   }
 
-  if (db_base != BX_JUMP_TARGET_NOT_REQ) {
+  if (db_cs_base != BX_JUMP_TARGET_NOT_REQ) {
     Bit16u target = (db_eip + imm16) & 0xffff;
-    dis_sprintf(" (0x%08x)", target + db_base);
+    dis_sprintf(" (0x%08x)", target + db_cs_base);
   }
 }
 
@@ -733,8 +733,8 @@ void disassembler::Jd(const x86_insn *insn)
       dis_sprintf(".%+d", (int) imm32);
     }
 
-    if (db_base != BX_JUMP_TARGET_NOT_REQ) {
-      Bit64u target = db_base + db_eip + (Bit64s) imm64;
+    if (db_cs_base != BX_JUMP_TARGET_NOT_REQ) {
+      Bit64u target = db_cs_base + db_eip + (Bit64s) imm64;
       dis_sprintf(" (0x%08x%08x)", GET32H(target), GET32L(target));
     }
 
@@ -748,8 +748,8 @@ void disassembler::Jd(const x86_insn *insn)
     dis_sprintf(".%+d", (int) imm32);
   }
 
-  if (db_base != BX_JUMP_TARGET_NOT_REQ) {
-    Bit32u target = (Bit32u)(db_base + db_eip + (Bit32s) imm32);
+  if (db_cs_base != BX_JUMP_TARGET_NOT_REQ) {
+    Bit32u target = (Bit32u)(db_cs_base + db_eip + (Bit32s) imm32);
     dis_sprintf(" (0x%08x)", target);
   }
 }

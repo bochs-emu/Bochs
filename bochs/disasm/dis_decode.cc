@@ -70,13 +70,13 @@ static const unsigned char instruction_has_modrm[512] = {
   /*       0 1 2 3 4 5 6 7 8 9 a b c d e f           */
 };
 
-unsigned disassembler::disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_address ip, const Bit8u *instr, char *disbuf)
+unsigned disassembler::disasm(bx_bool is_32, bx_bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf)
 {
-  x86_insn insn = decode(is_32, is_64, base, ip, instr, disbuf);
+  x86_insn insn = decode(is_32, is_64, cs_base, ip, instr, disbuf);
   return insn.ilen;
 }
 
-x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_address ip, const Bit8u *instr, char *disbuf)
+x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf)
 {
   if (is_64) is_32 = 1;
   x86_insn insn(is_32, is_64);
@@ -84,7 +84,7 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
   resolve_modrm = NULL;
 
   db_eip = ip;
-  db_base = base; // cs linear base (base for PM & cs<<4 for RM & VM)
+  db_cs_base = cs_base; // cs linear base (cs_base for PM & cs<<4 for RM & VM)
 
   disbufptr = disbuf; // start sprintf()'ing into beginning of buffer
 

@@ -233,27 +233,27 @@ class disassembler {
 public:
   disassembler(): offset_mode_hex(0) { set_syntax_intel(); }
 
-  unsigned disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_address ip, const Bit8u *instr, char *disbuf);
+  unsigned disasm(bx_bool is_32, bx_bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf);
 
-  unsigned disasm16(bx_address base, bx_address ip, const Bit8u *instr, char *disbuf)
-    { return disasm(0, 0, base, ip, instr, disbuf); }
+  unsigned disasm16(bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf)
+    { return disasm(0, 0, cs_base, ip, instr, disbuf); }
 
-  unsigned disasm32(bx_address base, bx_address ip, const Bit8u *instr, char *disbuf)
-    { return disasm(1, 0, base, ip, instr, disbuf); }
+  unsigned disasm32(bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf)
+    { return disasm(1, 0, cs_base, ip, instr, disbuf); }
 
-  unsigned disasm64(bx_address base, bx_address ip, const Bit8u *instr, char *disbuf)
-    { return disasm(1, 1, base, ip, instr, disbuf); }
+  unsigned disasm64(bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf)
+    { return disasm(1, 1, cs_base, ip, instr, disbuf); }
 
-  x86_insn decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_address ip, const Bit8u *instr, char *disbuf);
+  x86_insn decode(bx_bool is_32, bx_bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf);
 
-  x86_insn decode16(bx_address base, bx_address ip, const Bit8u *instr, char *disbuf)
-    { return decode(0, 0, base, ip, instr, disbuf); }
+  x86_insn decode16(bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf)
+    { return decode(0, 0, cs_base, ip, instr, disbuf); }
 
-  x86_insn decode32(bx_address base, bx_address ip, const Bit8u *instr, char *disbuf)
-    { return decode(1, 0, base, ip, instr, disbuf); }
+  x86_insn decode32(bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf)
+    { return decode(1, 0, cs_base, ip, instr, disbuf); }
 
-  x86_insn decode64(bx_address base, bx_address ip, const Bit8u *instr, char *disbuf)
-    { return decode(1, 1, base, ip, instr, disbuf); }
+  x86_insn decode64(bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf)
+    { return decode(1, 1, cs_base, ip, instr, disbuf); }
 
   void set_syntax_intel();
   void set_syntax_att();
@@ -282,7 +282,7 @@ private:
 
 private:
 
-  bx_address db_eip, db_base;
+  bx_address db_eip, db_cs_base;
 
   const Bit8u *instruction;        // for fetching of next byte of instruction
 
