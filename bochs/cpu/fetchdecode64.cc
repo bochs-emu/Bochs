@@ -1685,7 +1685,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
 };
 
   int BX_CPP_AttrRegparmN(3)
-BX_CPU_C::fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainingInPage)
+BX_CPU_C::fetchDecode64(const Bit8u *iptr, Bit32u fetchModeMask, bxInstruction_c *i, unsigned remainingInPage)
 {
   if (remainingInPage > 15) remainingInPage = 15;
 
@@ -2439,19 +2439,27 @@ decode_done:
   BX_ASSERT(i->execute1);
 
   Bit32u op_flags = BxOpcodesTable[ia_opcode].opflags;
-  if (! BX_CPU_THIS_PTR sse_ok) {
+  if (! (fetchModeMask & BX_FETCH_MODE_SSE_MASK)) {
      if (op_flags & BX_PREPARE_SSE) {
         if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoSSE;
         return(1);
      }
   }
 #if BX_SUPPORT_AVX
-  if (! BX_CPU_THIS_PTR avx_ok) {
+  if (! (fetchModeMask & BX_FETCH_MODE_AVX_MASK)) {
     if (op_flags & BX_PREPARE_AVX) {
        if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoAVX;
        return(1);
     }
   }
+#if BX_SUPPORT_EVEX
+  if (! (fetchModeMask & BX_FETCH_MODE_EVEX_MASK)) {
+    if (op_flags & BX_PREPARE_EVEX) {
+       if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoEVEX;
+       return(1);
+    }
+  }
+#endif
 #endif
 
   if ((op_flags & BX_TRACE_END) != 0 || i->execute1 == &BX_CPU_C::BxError)

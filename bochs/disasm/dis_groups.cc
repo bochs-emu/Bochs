@@ -33,14 +33,14 @@ void disassembler::Apw(const x86_insn *insn)
 {
   Bit16u imm16 = fetch_word();
   Bit16u cs_selector = fetch_word();
-  dis_sprintf("%04x:%04x", (unsigned) cs_selector, (unsigned) imm16);
+  dis_sprintf("0x%04x:%04x", (unsigned) cs_selector, (unsigned) imm16);
 }
 
 void disassembler::Apd(const x86_insn *insn)
 {
   Bit32u imm32 = fetch_dword();
   Bit16u cs_selector = fetch_word();
-  dis_sprintf("%04x:%08x", (unsigned) cs_selector, (unsigned) imm32);
+  dis_sprintf("0x%04x:%08x", (unsigned) cs_selector, (unsigned) imm32);
 }
 
 // 8-bit general purpose registers

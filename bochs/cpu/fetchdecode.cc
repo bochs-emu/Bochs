@@ -331,7 +331,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 97 /w */ { 0, BX_IA_XCHG_RXAX },
   /* 98 /w */ { 0, BX_IA_CBW },
   /* 99 /w */ { 0, BX_IA_CWD },
-  /* 9A /w */ { BxImmediate_Iw | BxImmediate_Iw2, BX_IA_CALL_Op16_Ap },
+  /* 9A /w */ { BxImmediate_Iw | BxImmediate_Iw2, BX_IA_CALLFAR_Op16_Ap },
   /* 9B /w */ { 0, BX_IA_FWAIT },
   /* 9C /w */ { 0, BX_IA_PUSHF_Fw },
   /* 9D /w */ { 0, BX_IA_POPF_Fw },
@@ -422,7 +422,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* E7 /w */ { BxImmediate_Ib, BX_IA_OUT_IbAX },
   /* E8 /w */ { BxImmediate_BrOff16, BX_IA_CALL_Jw },
   /* E9 /w */ { BxImmediate_BrOff16, BX_IA_JMP_Jw },
-  /* EA /w */ { BxImmediate_Iw | BxImmediate_Iw2, BX_IA_JMP_Op16_Ap },
+  /* EA /w */ { BxImmediate_Iw | BxImmediate_Iw2, BX_IA_JMPFAR_Ap },
   /* EB /w */ { BxImmediate_BrOff8, BX_IA_JMP_Jw },
   /* EC /w */ { 0, BX_IA_IN_ALDX },
   /* ED /w */ { 0, BX_IA_IN_AXDX },
@@ -876,7 +876,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 97 /d */ { 0, BX_IA_XCHG_ERXEAX },
   /* 98 /d */ { 0, BX_IA_CWDE },
   /* 99 /d */ { 0, BX_IA_CDQ },
-  /* 9A /d */ { BxImmediate_Id | BxImmediate_Iw2, BX_IA_CALL_Op32_Ap },
+  /* 9A /d */ { BxImmediate_Id | BxImmediate_Iw2, BX_IA_CALLFAR_Op32_Ap },
   /* 9B /d */ { 0, BX_IA_FWAIT },
   /* 9C /d */ { 0, BX_IA_PUSHF_Fd },
   /* 9D /d */ { 0, BX_IA_POPF_Fd },
@@ -967,7 +967,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* E7 /d */ { BxImmediate_Ib, BX_IA_OUT_IbEAX },
   /* E8 /d */ { BxImmediate_BrOff32, BX_IA_CALL_Jd },
   /* E9 /d */ { BxImmediate_BrOff32, BX_IA_JMP_Jd },
-  /* EA /d */ { BxImmediate_Id | BxImmediate_Iw2, BX_IA_JMP_Op32_Ap },
+  /* EA /d */ { BxImmediate_Id | BxImmediate_Iw2, BX_IA_JMPFAR_Ap },
   /* EB /d */ { BxImmediate_BrOff8, BX_IA_JMP_Jd },
   /* EC /d */ { 0, BX_IA_IN_ALDX },
   /* ED /d */ { 0, BX_IA_IN_EAXDX },
@@ -1268,7 +1268,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
 };
 
   int BX_CPP_AttrRegparmN(3)
-BX_CPU_C::fetchDecode32(const Bit8u *iptr, bxInstruction_c *i, unsigned remainingInPage)
+BX_CPU_C::fetchDecode32(const Bit8u *iptr, Bit32u fetchModeMask, bxInstruction_c *i, unsigned remainingInPage)
 {
   if (remainingInPage > 15) remainingInPage = 15;
 
@@ -1289,8 +1289,7 @@ BX_CPU_C::fetchDecode32(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
   bx_bool vex_w = 0, vex_l = 0, use_vvv = 0;
 #endif
 
-  os_32 = is_32 =
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
+  os_32 = is_32 = fetchModeMask & BX_FETCH_MODE_IS32_MASK;
 
   i->ResolveModrm = 0;
   i->init(/*os32*/ is_32,  /*as32*/ is_32,
@@ -1992,19 +1991,27 @@ decode_done:
 
 #if BX_CPU_LEVEL >= 6
   Bit32u op_flags = BxOpcodesTable[ia_opcode].opflags;
-  if (! BX_CPU_THIS_PTR sse_ok) {
+  if (! (fetchModeMask & BX_FETCH_MODE_SSE_MASK)) {
      if (op_flags & BX_PREPARE_SSE) {
         if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoSSE;
         return(1);
      }
   }
 #if BX_SUPPORT_AVX
-  if (! BX_CPU_THIS_PTR avx_ok) {
+  if (! (fetchModeMask & BX_FETCH_MODE_AVX_MASK)) {
     if (op_flags & BX_PREPARE_AVX) {
        if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoAVX;
        return(1);
     }
   }
+#if BX_SUPPORT_EVEX
+  if (! (fetchModeMask & BX_FETCH_MODE_EVEX_MASK)) {
+    if (op_flags & BX_PREPARE_EVEX) {
+       if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoEVEX;
+       return(1);
+    }
+  }
+#endif
 #endif
 #endif
 

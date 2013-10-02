@@ -3742,9 +3742,9 @@ public: // for now...
   BX_SMF bx_bool handleWaitForEvent(void);
   BX_SMF void InterruptAcknowledge(void);
 
-  BX_SMF int fetchDecode32(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage) BX_CPP_AttrRegparmN(3);
+  BX_SMF int fetchDecode32(const Bit8u *fetchPtr, Bit32u fetchModeMask, bxInstruction_c *i, unsigned remainingInPage) BX_CPP_AttrRegparmN(3);
 #if BX_SUPPORT_X86_64
-  BX_SMF int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage) BX_CPP_AttrRegparmN(3);
+  BX_SMF int fetchDecode64(const Bit8u *fetchPtr, Bit32u fetchModeMask, bxInstruction_c *i, unsigned remainingInPage) BX_CPP_AttrRegparmN(3);
 #endif
   BX_SMF void boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *);
   BX_SMF bxICacheEntry_c *serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_address pAddr);
@@ -4680,6 +4680,14 @@ BX_CPP_INLINE void BX_CPU_C::prepareXSAVE(void)
 // bit 2 - SSE_OK
 // bit 3 - AVX_OK
 // bit 4 - EVEX_OK
+//
+
+#define BX_FETCH_MODE_IS32_MASK (1 << 0)
+#define BX_FETCH_MODE_IS64_MASK (1 << 1)
+#define BX_FETCH_MODE_SSE_MASK  (1 << 2)
+#define BX_FETCH_MODE_AVX_MASK  (1 << 3)
+#define BX_FETCH_MODE_EVEX_MASK (1 << 4)
+
 //
 // updateFetchModeMask - has to be called everytime 
 //   CS.L / CS.D_B / CR0.PE, CR0.TS or CR0.EM / CR4.OSFXSR / CR4.OSXSAVE changes

@@ -97,10 +97,10 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBia
   {
 #if BX_SUPPORT_X86_64
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-      ret = fetchDecode64(fetchPtr, i, remainingInPage);
+      ret = fetchDecode64(fetchPtr, BX_CPU_THIS_PTR fetchModeMask, i, remainingInPage);
     else
 #endif
-      ret = fetchDecode32(fetchPtr, i, remainingInPage);
+      ret = fetchDecode32(fetchPtr, BX_CPU_THIS_PTR fetchModeMask, i, remainingInPage);
 
     if (ret < 0) {
       // Fetching instruction on segment/page boundary
@@ -249,10 +249,10 @@ void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bx
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-    ret = fetchDecode64(fetchBuffer, i, remainingInPage+fetchBufferLimit);
+    ret = fetchDecode64(fetchBuffer, BX_CPU_THIS_PTR fetchModeMask, i, remainingInPage+fetchBufferLimit);
   else
 #endif
-    ret = fetchDecode32(fetchBuffer, i, remainingInPage+fetchBufferLimit);
+    ret = fetchDecode32(fetchBuffer, BX_CPU_THIS_PTR fetchModeMask, i, remainingInPage+fetchBufferLimit);
 
   if (ret < 0) {
     BX_INFO(("boundaryFetch #GP(0): failed to complete instruction decoding"));

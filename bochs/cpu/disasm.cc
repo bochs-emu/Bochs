@@ -88,9 +88,11 @@ static const char *rounding_mode[4] = {
 
 char *resolve_memref(char *disbufptr, const bxInstruction_c *i, const char *regname[])
 {
-  if (i->sibBase() == BX_NIL_REGISTER)
+  unsigned sib_base = i->sibBase(), sib_index = i->sibIndex(), sib_scale = i->sibScale();
+
+  if (sib_base == BX_NIL_REGISTER)
   {
-    if (i->sibIndex() == BX_NIL_REGISTER)
+    if (sib_index == BX_NIL_REGISTER)
     {
       if (! i->os32L()) {
         if (i->displ16s() != 0) {
@@ -106,16 +108,16 @@ char *resolve_memref(char *disbufptr, const bxInstruction_c *i, const char *regn
     }
 
     disbufptr = dis_sprintf(disbufptr, "[%s", regname[i->sibIndex()]);
-    if (i->sibScale())
+    if (sib_scale)
       disbufptr = dis_sprintf(disbufptr, "*%d", 1 << i->sibScale());
   }
   else {
     disbufptr = dis_sprintf(disbufptr, "[%s", regname[i->sibBase()]);
 
-    if (i->sibIndex() != BX_NIL_REGISTER)
+    if (sib_index != BX_NIL_REGISTER)
     {
       disbufptr = dis_sprintf(disbufptr, "+%s", regname[i->sibIndex()]);
-      if (i->sibScale())
+      if (sib_scale)
         disbufptr = dis_sprintf(disbufptr, "*%d", 1 << i->sibScale());
     }
   }
@@ -139,10 +141,10 @@ char *resolve_memref(char *disbufptr, const bxInstruction_c *i)
 {
   // seg:[base + index*scale + disp]
   disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
-  if (i->os64L()) {
+  if (i->as64L()) {
     disbufptr = resolve_memref(disbufptr, i, intel_general_64bit_regname);
   }
-  else if (i->os32L()) {
+  else if (i->as32L()) {
     disbufptr = resolve_memref(disbufptr, i, intel_general_32bit_regname);
   }
   else {
@@ -153,10 +155,12 @@ char *resolve_memref(char *disbufptr, const bxInstruction_c *i)
 
 char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_address rip)
 {
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
   if (i->getIaOpcode() == BX_INSERTED_OPCODE) {
     disbufptr = dis_sprintf(disbufptr, "(bochs inserted internal opcode)");
     return disbufptr;
   }
+#endif
 
   if (i->execute1 == BX_CPU_C::BxError) {
     disbufptr = dis_sprintf(disbufptr, "(invalid)");
@@ -178,14 +182,14 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
 
   if (! strncmp(opname, "REP_", 4)) {
     opname += 4;
-  }
 
-  // Step 1: print prefixes
-  if (i->repUsedL()) {
-    if (i->repUsedValue() == 2)
-      disbufptr = dis_sprintf(disbufptr, "repne ");
-    else
-      disbufptr = dis_sprintf(disbufptr, "rep ");
+    // Step 1: print prefixes
+    if (i->repUsedL()) {
+      if (i->repUsedValue() == 2)
+        disbufptr = dis_sprintf(disbufptr, "repne ");
+      else
+        disbufptr = dis_sprintf(disbufptr, "rep ");
+    }
   }
 
   // Step 2: print opcode name
@@ -286,13 +290,10 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
           disbufptr = dis_sprintf(disbufptr, "0x%08x", i->Id());
           break;
         case BX_IMMQ:
-          disbufptr = dis_sprintf(disbufptr, "0x" FMT_LL "x", i->Iq());
+          disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX64, i->Iq());
           break;
         case BX_IMMB2:
           disbufptr = dis_sprintf(disbufptr, "0x%02x", i->Ib2());
-          break;
-        case BX_IMMW2:
-          disbufptr = dis_sprintf(disbufptr, "0x%04x", i->Iw2());
           break;
         case BX_IMM_BrOff16:
           {
@@ -335,6 +336,12 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
           break;
         case BX_USEDX:
           disbufptr = dis_sprintf(disbufptr, "dx");
+          break;
+        case BX_DIRECT_PTR:
+          if (i->os32L())
+            disbufptr = dis_sprintf(disbufptr, "0x%04x:%08x", i->Iw2(), i->Id());
+          else
+            disbufptr = dis_sprintf(disbufptr, "0x%04x:%04x", i->Iw2(), i->Iw());
           break;
         case BX_DIRECT_MEMREF32:
           disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
