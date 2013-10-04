@@ -289,9 +289,11 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
         case BX_IMMD:
           disbufptr = dis_sprintf(disbufptr, "0x%08x", i->Id());
           break;
+#if BX_SUPPORT_X86_64
         case BX_IMMQ:
           disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX64, i->Iq());
           break;
+#endif
         case BX_IMMB2:
           disbufptr = dis_sprintf(disbufptr, "0x%02x", i->Ib2());
           break;
@@ -309,10 +311,13 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
           break;
         case BX_RSIREF:
           disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
+#if BX_SUPPORT_X86_64
           if (i->as64L()) {
             disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_64bit_regname[BX_64BIT_REG_RSI]);
           }
-          else {
+          else
+#endif
+          {
             if (i->as32L())
               disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_32bit_regname[BX_32BIT_REG_ESI]);
             else
@@ -321,10 +326,13 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
           break;
         case BX_RDIREF:
           disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
+#if BX_SUPPORT_X86_64
           if (i->as64L()) {
             disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_64bit_regname[BX_64BIT_REG_RDI]);
           }
-          else {
+          else
+#endif
+          {
             if (i->as32L())
               disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_32bit_regname[BX_32BIT_REG_EDI]);
             else
