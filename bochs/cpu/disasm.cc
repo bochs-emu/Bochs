@@ -67,10 +67,12 @@ static const char *intel_general_64bit_regname[17] = {
     "r8",  "r9",  "r10", "r11", "r12", "r13", "r14", "r15", "rip"
 };
 
+#if BX_SUPPORT_X86_64
 static const char *intel_general_8bit_regname_rex[16] = {
     "al",  "cl",  "dl",   "bl",   "spl",  "bpl",  "sil",  "dil",
     "r8b", "r9b", "r10b", "r11b", "r12b", "r13b", "r14b", "r15b"
 };
+#endif
 
 static const char *intel_general_8bit_regname[8] = {
     "al",  "cl",  "dl",  "bl",  "ah",  "ch",  "dh",  "bh"
@@ -360,9 +362,11 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
           else
             disbufptr = dis_sprintf(disbufptr, "0x%08x", i->Id());
           break;
+#if BX_SUPPORT_X86_64
         case BX_DIRECT_MEMREF64:
           disbufptr = dis_sprintf(disbufptr, "%s:0x" FMT_ADDRX, intel_segment_name[i->seg()], i->Iq());
           break;
+#endif
         default:
           disbufptr = dis_sprintf(disbufptr, "(unknown source type %d)", src_type);
           break;
