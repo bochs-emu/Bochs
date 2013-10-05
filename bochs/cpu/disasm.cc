@@ -325,7 +325,7 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
           }
           break;
         case BX_RDIREF:
-          disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
+          disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[BX_SEG_REG_ES]);
 #if BX_SUPPORT_X86_64
           if (i->as64L()) {
             disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_64bit_regname[BX_64BIT_REG_RDI]);

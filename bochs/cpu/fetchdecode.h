@@ -516,9 +516,9 @@ static const BxOpcodeInfo_t BxOpcodeInfoG5w[8] = {
   /* 0 */ { BxLockable, BX_IA_INC_Ew },
   /* 1 */ { BxLockable, BX_IA_DEC_Ew },
   /* 2 */ { 0, BX_IA_CALL_Ew },
-  /* 3 */ { 0, BX_IA_CALLFAR_Op16_Ep },
+  /* 3 */ { 0, BX_IA_CALLF_Op16_Ep },
   /* 4 */ { 0, BX_IA_JMP_Ew },
-  /* 5 */ { 0, BX_IA_JMPFAR_Op16_Ep },
+  /* 5 */ { 0, BX_IA_JMPF_Op16_Ep },
   /* 6 */ { 0, BX_IA_PUSH_Ew },
   /* 7 */ { 0, BX_IA_ERROR }
 };
@@ -528,9 +528,9 @@ static const BxOpcodeInfo_t BxOpcodeInfoG5d[8] = {
   /* 0 */ { BxLockable, BX_IA_INC_Ed },
   /* 1 */ { BxLockable, BX_IA_DEC_Ed },
   /* 2 */ { 0, BX_IA_CALL_Ed },
-  /* 3 */ { 0, BX_IA_CALLFAR_Op32_Ep },
+  /* 3 */ { 0, BX_IA_CALLF_Op32_Ep },
   /* 4 */ { 0, BX_IA_JMP_Ed },
-  /* 5 */ { 0, BX_IA_JMPFAR_Op32_Ep },
+  /* 5 */ { 0, BX_IA_JMPF_Op32_Ep },
   /* 6 */ { 0, BX_IA_PUSH_Ed },
   /* 7 */ { 0, BX_IA_ERROR }
 };
@@ -540,9 +540,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G5w[8] = {
   /* 0 */ { BxLockable, BX_IA_INC_Ew },
   /* 1 */ { BxLockable, BX_IA_DEC_Ew },
   /* 2 */ { 0, BX_IA_CALL_Eq },
-  /* 3 */ { 0, BX_IA_CALLFAR_Op16_Ep },
+  /* 3 */ { 0, BX_IA_CALLF_Op16_Ep },
   /* 4 */ { 0, BX_IA_JMP_Eq },
-  /* 5 */ { 0, BX_IA_JMPFAR_Op16_Ep },
+  /* 5 */ { 0, BX_IA_JMPF_Op16_Ep },
   /* 6 */ { 0, BX_IA_PUSH_Ew },
   /* 7 */ { 0, BX_IA_ERROR }
 };
@@ -551,9 +551,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G5d[8] = {
   /* 0 */ { BxLockable, BX_IA_INC_Ed },
   /* 1 */ { BxLockable, BX_IA_DEC_Ed },
   /* 2 */ { 0, BX_IA_CALL_Eq },
-  /* 3 */ { 0, BX_IA_CALLFAR_Op32_Ep },
+  /* 3 */ { 0, BX_IA_CALLF_Op32_Ep },
   /* 4 */ { 0, BX_IA_JMP_Eq },
-  /* 5 */ { 0, BX_IA_JMPFAR_Op32_Ep },
+  /* 5 */ { 0, BX_IA_JMPF_Op32_Ep },
   /* 6 */ { 0, BX_IA_PUSH_Eq },
   /* 7 */ { 0, BX_IA_ERROR }
 };
@@ -562,9 +562,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G5q[8] = {
   /* 0 */ { BxLockable, BX_IA_INC_Eq },
   /* 1 */ { BxLockable, BX_IA_DEC_Eq },
   /* 2 */ { 0, BX_IA_CALL_Eq },
-  /* 3 */ { 0, BX_IA_CALLFAR_Op64_Ep }, // TODO: 64-bit offset for Intel
+  /* 3 */ { 0, BX_IA_CALLF_Op64_Ep }, // TODO: 64-bit offset for Intel
   /* 4 */ { 0, BX_IA_JMP_Eq },
-  /* 5 */ { 0, BX_IA_JMPFAR_Op64_Ep },  // TODO: 64-bit offset for Intel
+  /* 5 */ { 0, BX_IA_JMPF_Op64_Ep },  // TODO: 64-bit offset for Intel
   /* 6 */ { 0, BX_IA_PUSH_Eq },
   /* 7 */ { 0, BX_IA_ERROR }
 };
