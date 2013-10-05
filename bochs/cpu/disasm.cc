@@ -90,6 +90,8 @@ char *resolve_memref(char *disbufptr, const bxInstruction_c *i, const char *regn
 {
   unsigned sib_base = i->sibBase(), sib_index = i->sibIndex(), sib_scale = i->sibScale();
 
+  if (sib_index == 4) sib_index = BX_NIL_REGISTER;
+
   if (sib_base == BX_NIL_REGISTER)
   {
     if (sib_index == BX_NIL_REGISTER)
