@@ -397,10 +397,10 @@ bx_define_opcode(BX_IA_SIDT_Ms, &BX_CPU_C::SIDT_Ms, &BX_CPU_C::BxError, 0, OP_M,
 bx_define_opcode(BX_IA_LIDT_Ms, &BX_CPU_C::LIDT_Ms, &BX_CPU_C::BxError, 0, BX_SRC_NNN, OP_M, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_SGDT_Ms, &BX_CPU_C::SGDT_Ms, &BX_CPU_C::BxError, 0, OP_M, BX_SRC_NNN, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_LGDT_Ms, &BX_CPU_C::LGDT_Ms, &BX_CPU_C::BxError, 0, BX_SRC_NNN, OP_M, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_SLDT_Ew, &BX_CPU_C::SLDT_Ew, &BX_CPU_C::SLDT_Ew, 0, OP_M, BX_SRC_NNN, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_LLDT_Ew, &BX_CPU_C::LLDT_Ew, &BX_CPU_C::LLDT_Ew, 0, BX_SRC_NNN, OP_M, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_STR_Ew, &BX_CPU_C::STR_Ew, &BX_CPU_C::STR_Ew, 0, OP_M, BX_SRC_NNN, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_LTR_Ew, &BX_CPU_C::LTR_Ew, &BX_CPU_C::LTR_Ew, 0, BX_SRC_NNN, OP_M, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_SLDT_Ew, &BX_CPU_C::SLDT_Ew, &BX_CPU_C::SLDT_Ew, 0, OP_Ew, BX_SRC_NNN, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_LLDT_Ew, &BX_CPU_C::LLDT_Ew, &BX_CPU_C::LLDT_Ew, 0, BX_SRC_NNN, OP_Ew, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_STR_Ew, &BX_CPU_C::STR_Ew, &BX_CPU_C::STR_Ew, 0, OP_Ew, BX_SRC_NNN, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_LTR_Ew, &BX_CPU_C::LTR_Ew, &BX_CPU_C::LTR_Ew, 0, BX_SRC_NNN, OP_Ew, OP_NONE, OP_NONE, 0)
 // IDT/GDT/LDTR/TR access - keep NNN for VMX
 
 bx_define_opcode(BX_IA_SMSW_Ew, &BX_CPU_C::SMSW_EwM, &BX_CPU_C::SMSW_EwR, 0, OP_Ew, OP_NONE, OP_NONE, OP_NONE, 0)
@@ -604,7 +604,7 @@ bx_define_opcode(BX_IA_XCHG_EbGb, &BX_CPU_C::XCHG_EbGbM, &BX_CPU_C::XCHG_EbGbR, 
 bx_define_opcode(BX_IA_XCHG_EwGw, &BX_CPU_C::XCHG_EwGwM, &BX_CPU_C::XCHG_EwGwR, 0, OP_Ew, OP_Gw, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_XCHG_EdGd, &BX_CPU_C::XCHG_EdGdM, &BX_CPU_C::XCHG_EdGdR, 0, OP_Ed, OP_Gd, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_XCHG_RXAX, NULL, &BX_CPU_C::XCHG_RXAX, 0, OP_Ew, OP_AXReg, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_XCHG_ERXEAX, NULL, &BX_CPU_C::XCHG_ERXEAX, 0, OP_Ew, OP_EAXReg, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_XCHG_ERXEAX, NULL, &BX_CPU_C::XCHG_ERXEAX, 0, OP_Ed, OP_EAXReg, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_XLAT, NULL, &BX_CPU_C::XLAT, 0, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 
 bx_define_opcode(BX_IA_SYSENTER, NULL, &BX_CPU_C::SYSENTER, BX_ISA_SYSENTER_SYSEXIT, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)

@@ -1936,10 +1936,33 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
 
   if (bx_dbg_read_linear(which_cpu, BX_CPU(which_cpu)->guard_found.laddr, 16, bx_disasm_ibuf))
   {
+#if 1
     unsigned ilen = bx_disassemble.disasm(IS_CODE_32(BX_CPU(which_cpu)->guard_found.code_32_64),
       IS_CODE_64(BX_CPU(which_cpu)->guard_found.code_32_64),
       BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS),
       BX_CPU(which_cpu)->guard_found.eip, bx_disasm_ibuf, bx_disasm_tbuf);
+#else
+    extern char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_address rip);
+
+    Bit32u fetchModeMask = BX_CPU(which_cpu)->fetchModeMask | BX_FETCH_MODE_SSE_MASK |
+                                                              BX_FETCH_MODE_AVX_MASK |
+                                                              BX_FETCH_MODE_EVEX_MASK;
+    int ret;
+    bxInstruction_c i;
+
+#if BX_SUPPORT_X86_64
+    if (BX_CPU(which_cpu)->cpu_mode == BX_MODE_LONG_64)
+      ret = BX_CPU(which_cpu)->fetchDecode64(bx_disasm_ibuf, fetchModeMask, &i, 16);
+    else
+#endif
+      ret = BX_CPU(which_cpu)->fetchDecode32(bx_disasm_ibuf, fetchModeMask, &i, 16);
+    if (ret < 0)
+      sprintf(bx_disasm_tbuf, "decode failed");
+    else
+      disasm(bx_disasm_tbuf, &i, BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS), BX_CPU(which_cpu)->guard_found.eip);
+
+    unsigned ilen = i.ilen();
+#endif
 
     // Note: it would be nice to display only the modified registers here, the easy
     // way out I have thought of would be to keep a prev_eax, prev_ebx, etc copies

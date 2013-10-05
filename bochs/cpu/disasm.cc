@@ -98,7 +98,7 @@ char *resolve_memref(char *disbufptr, const bxInstruction_c *i, const char *regn
   {
     if (sib_index == BX_NIL_REGISTER)
     {
-      if (! i->os32L()) {
+      if (! i->as32L()) {
         if (i->displ16s() != 0) {
           disbufptr = dis_sprintf(disbufptr, "0x%04x", (Bit32u) (Bit16u) i->displ16s());
         }
@@ -126,7 +126,7 @@ char *resolve_memref(char *disbufptr, const bxInstruction_c *i, const char *regn
     }
   }
 
-  if (! i->os32L()) {
+  if (! i->as32L()) {
     if (i->displ16s() != 0) {
       disbufptr = dis_sprintf(disbufptr, "%+d", (Bit32s) i->displ16s());
     }
