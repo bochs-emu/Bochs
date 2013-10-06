@@ -312,8 +312,17 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
           break;
         case BX_IMM_BrOff32:
           {
-            bx_address target = rip + i->ilen() + (Bit32s) i->Id();
-            disbufptr = dis_sprintf(disbufptr, ".%+d (0x" FMT_ADDRX ")", i->Id(), cs_base + target);
+#if BX_SUPPORT_X86_64
+            if (i->os64L()) {
+              Bit64u target = rip + i->ilen() + (Bit32s) i->Id();
+              disbufptr = dis_sprintf(disbufptr, ".%+d (0x" FMT_ADDRX ")", i->Id(), (Bit64u) (cs_base + target));
+            }
+            else
+#endif
+            {
+              Bit32u target = rip + i->ilen() + (Bit32s) i->Id();
+              disbufptr = dis_sprintf(disbufptr, ".%+d (0x%08x)", i->Id(), (Bit32u) (cs_base + target));
+            }
           }
           break;
         case BX_RSIREF:
