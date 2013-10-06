@@ -1429,7 +1429,7 @@ static BxDisasmOpcodeTable_t BxDisasm3ByteOpTable0f3a[256] = {
   /* 1D */ { 0, &Ia_Invalid },
   /* 1E */ { 0, &Ia_Invalid },
   /* 1F */ { 0, &Ia_Invalid },
-  /* 20 */ { GRPSSE66(Ia_pinsrb_Vdq_Ed_Ib) },
+  /* 20 */ { GRPSSE66(Ia_pinsrb_Vdq_Ew_Ib) },
   /* 21 */ { GRPSSE66(Ia_insertps_Vps_Wss_Ib) },
   /* 22 */ { GRPSSE(0f3a22) },
   /* 23 */ { 0, &Ia_Invalid },

@@ -389,13 +389,13 @@ void disassembler::print_memory_access16(int datasize,
   {
     if (index == NULL)
     {
-      dis_sprintf("%s:0x%x", seg, (unsigned) disp);
+      dis_sprintf("%s:0x%04x", seg, (unsigned) disp);
     }
     else
     {
       if (disp != 0) {
         if (offset_mode_hex)
-          dis_sprintf("%s:[%s+0x%x]", seg, index, (unsigned) disp);
+          dis_sprintf("%s:[%s+0x%04x]", seg, index, (unsigned) disp);
         else
           dis_sprintf("%s:[%s%+d]", seg, index, (int) (Bit16s) disp);
       }
@@ -407,13 +407,13 @@ void disassembler::print_memory_access16(int datasize,
   {
     if (index == NULL)
     {
-      dis_sprintf("%s:0x%x", seg, (unsigned) disp);
+      dis_sprintf("%s:0x%04x", seg, (unsigned) disp);
     }
     else
     {
       if (disp != 0) {
         if (offset_mode_hex)
-          dis_sprintf("%s:0x%x(%s,1)", seg, (unsigned) disp, index);
+          dis_sprintf("%s:0x%04x(%s,1)", seg, (unsigned) disp, index);
         else
           dis_sprintf("%s:%d(%s,1)", seg, (int) (Bit16s) disp, index);
       }
@@ -436,7 +436,7 @@ void disassembler::print_memory_access32(int datasize,
     {
       if (index == NULL)
       {
-        dis_sprintf("%s:0x%x", seg, (unsigned) disp);
+        dis_sprintf("%s:0x%08x", seg, (unsigned) disp);
       }
       else
       {
@@ -444,7 +444,7 @@ void disassembler::print_memory_access32(int datasize,
         {
           if (disp != 0) {
             if (offset_mode_hex)
-              dis_sprintf("%s:[%s*%d+0x%x]", seg, index, scale, (unsigned) disp);
+              dis_sprintf("%s:[%s*%d+0x%08x]", seg, index, scale, (unsigned) disp);
             else
               dis_sprintf("%s:[%s*%d%+d]", seg, index, scale, (int) disp);
           }
@@ -455,7 +455,7 @@ void disassembler::print_memory_access32(int datasize,
         {
           if (disp != 0) {
             if (offset_mode_hex)
-              dis_sprintf("%s:[%s+0x%x]", seg, index, (unsigned) disp);
+              dis_sprintf("%s:[%s+0x%08x]", seg, index, (unsigned) disp);
             else
               dis_sprintf("%s:[%s%+d]", seg, index, (int) disp);
           }
@@ -471,7 +471,7 @@ void disassembler::print_memory_access32(int datasize,
       {
         if (disp != 0) {
           if (offset_mode_hex)
-            dis_sprintf("%s:[%s+0x%x]", seg, base, (unsigned) disp);
+            dis_sprintf("%s:[%s+0x%08x]", seg, base, (unsigned) disp);
           else
             dis_sprintf("%s:[%s%+d]", seg, base, (int) disp);
         }
@@ -485,7 +485,7 @@ void disassembler::print_memory_access32(int datasize,
         {
           if (disp != 0) {
             if (offset_mode_hex)
-              dis_sprintf("%s:[%s+%s*%d+0x%x]", seg, base, index, scale, (unsigned) disp);
+              dis_sprintf("%s:[%s+%s*%d+0x%08x]", seg, base, index, scale, (unsigned) disp);
             else
               dis_sprintf("%s:[%s+%s*%d%+d]", seg, base, index, scale, (int) disp);
           }
@@ -497,7 +497,7 @@ void disassembler::print_memory_access32(int datasize,
         {
           if (disp != 0) {
             if (offset_mode_hex)
-              dis_sprintf("%s:[%s+%s+0x%x]", seg, base, index, (unsigned) disp);
+              dis_sprintf("%s:[%s+%s+0x%08x]", seg, base, index, (unsigned) disp);
             else
               dis_sprintf("%s:[%s+%s%+d]", seg, base, index, (int) disp);
           }
@@ -513,13 +513,13 @@ void disassembler::print_memory_access32(int datasize,
     {
       if (index == NULL)
       {
-        dis_sprintf("%s:0x%x", seg, (unsigned) disp);
+        dis_sprintf("%s:0x%08x", seg, (unsigned) disp);
       }
       else
       {
         if (disp != 0) {
           if (offset_mode_hex)
-            dis_sprintf("%s:0x%x(,%s,%d)", seg, (unsigned) disp, index, scale);
+            dis_sprintf("%s:0x%08x(,%s,%d)", seg, (unsigned) disp, index, scale);
           else
             dis_sprintf("%s:%d(,%s,%d)", seg, (int) disp, index, scale);
         }
@@ -533,7 +533,7 @@ void disassembler::print_memory_access32(int datasize,
       {
         if (disp != 0) {
           if (offset_mode_hex)
-            dis_sprintf("%s:0x%x(%s)", seg, (unsigned) disp, base);
+            dis_sprintf("%s:0x%08x(%s)", seg, (unsigned) disp, base);
           else
             dis_sprintf("%s:%d(%s)", seg, (int) disp, base);
         }
@@ -544,7 +544,7 @@ void disassembler::print_memory_access32(int datasize,
       {
         if (disp != 0) {
           if (offset_mode_hex)
-            dis_sprintf("%s:0x%x(%s,%s,%d)", seg, (unsigned) disp, base, index, scale);
+            dis_sprintf("%s:0x%08x(%s,%s,%d)", seg, (unsigned) disp, base, index, scale);
           else
             dis_sprintf("%s:%d(%s,%s,%d)", seg, (int) disp, base, index, scale);
         }
