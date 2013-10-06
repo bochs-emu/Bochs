@@ -1989,8 +1989,8 @@ decode_done:
 
   BX_ASSERT(i->execute1);
 
-#if BX_CPU_LEVEL >= 6
   Bit32u op_flags = BxOpcodesTable[ia_opcode].opflags;
+#if BX_CPU_LEVEL >= 6
   if (! (fetchModeMask & BX_FETCH_MODE_SSE_MASK)) {
      if (op_flags & BX_PREPARE_SSE) {
         if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoSSE;
