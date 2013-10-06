@@ -385,6 +385,7 @@ arp_header_t;
 #define TFTP_OPTION_TIMEOUT 0x8
 
 #define TFTP_DEFAULT_BLKSIZE 512
+#define TFTP_DEFAULT_TIMEOUT   5
 
 static const Bit8u subnetmask_ipv4addr[4] = {0xff,0xff,0xff,0x00};
 static const Bit8u broadcast_ipv4addr1[4] = {0xff,0xff,0xff,0xff};
@@ -771,6 +772,7 @@ typedef struct tftp_session {
   size_t   tsize_val;
   unsigned blksize_val;
   unsigned timeout_val;
+  unsigned timestamp;
   struct tftp_session *next;
 } tftp_session_t;
 
@@ -783,6 +785,7 @@ tftp_session_t *tftp_new_session(Bit16u req_tid, bx_bool mode, const char *tpath
   s->write = mode;
   s->options = 0;
   s->blksize_val = TFTP_DEFAULT_BLKSIZE;
+  s->timeout_val = TFTP_DEFAULT_TIMEOUT;
   s->next = tftp_sessions;
   tftp_sessions = s;
   if ((strlen(tname) > 0) && ((strlen(tpath) + strlen(tname)) < BX_PATHNAME_LEN)) {
@@ -826,6 +829,27 @@ void tftp_remove_session(tftp_session_t *s)
   delete s;
 }
 
+void tftp_update_timestamp(tftp_session_t *s)
+{
+  s->timestamp = (unsigned)(bx_pc_system.time_usec() / 1000000);
+}
+
+void tftp_timeout_check()
+{
+  unsigned curtime = (unsigned)(bx_pc_system.time_usec() / 1000000);
+  tftp_session_t *next, *s = tftp_sessions;
+
+  while (s != NULL) {
+    if ((curtime - s->timestamp) > s->timeout_val) {
+      next = s->next;
+      tftp_remove_session(s);
+      s = next;
+    } else {
+      s = s->next;
+    }
+  }
+}
+
 int tftp_send_error(Bit8u *buffer, unsigned code, const char *msg, tftp_session_t *s)
 {
   put_net2(buffer, TFTP_ERROR);
@@ -863,6 +887,8 @@ int tftp_send_data(Bit8u *buffer, unsigned block_nr, tftp_session_t *s)
   put_net2(buffer + 2, block_nr);
   if (rd < (int)s->blksize_val) {
     tftp_remove_session(s);
+  } else {
+    tftp_update_timestamp(s);
   }
   return (rd + 4);
 }
@@ -894,6 +920,7 @@ int tftp_send_optack(Bit8u *buffer, tftp_session_t *s)
     sprintf((char *)p, "%d", s->timeout_val);
     p += strlen((const char *)p) + 1;
   }
+  tftp_update_timestamp(s);
   return (p - buffer);
 }
 
@@ -925,6 +952,11 @@ void tftp_parse_options(bx_devmodel_c *netdev, const char *mode, const Bit8u *da
       s->options |= TFTP_OPTION_TIMEOUT;
       mode += 8;
       s->timeout_val = atoi(mode);
+      if ((s->timeout_val < 1) || (s->timeout_val > 255)) {
+        BX_ERROR(("tftp req: timeout value %d not supported - using %d instead",
+                  s->timeout_val, TFTP_DEFAULT_TIMEOUT));
+        s->timeout_val = TFTP_DEFAULT_TIMEOUT;
+      }
       mode += strlen(mode)+1;
     } else {
       BX_INFO(("tftp req: unknown option %s", mode));
@@ -940,6 +972,7 @@ int process_tftp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bi
   unsigned tftp_len;
   tftp_session_t *s;
 
+  tftp_timeout_check();
   s = tftp_find_session(req_tid);
   switch (get_net2(data)) {
     case TFTP_RRQ:
@@ -971,9 +1004,6 @@ int process_tftp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bi
             BX_INFO(("tftp filesize: %lu", (unsigned long)s->tsize_val));
           }
         }
-        if (s->options & TFTP_OPTION_TIMEOUT) {
-          BX_INFO(("tftp req: timeout (val = %d) unused", s->timeout_val));
-        }
         if ((s->options & ~TFTP_OPTION_OCTET) > 0) {
           return tftp_send_optack(reply, s);
         } else {
@@ -1002,9 +1032,6 @@ int process_tftp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bi
         if (!(s->options & TFTP_OPTION_OCTET)) {
           return tftp_send_error(reply, 4, "Unsupported transfer mode", NULL);
         }
-        if (s->options & TFTP_OPTION_TIMEOUT) {
-          BX_INFO(("tftp req: timeout (val = %d) unused", s->timeout_val));
-        }
 
         fp = fopen(s->filename, "rb");
         if (fp) {
@@ -1020,6 +1047,7 @@ int process_tftp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bi
         if ((s->options & ~TFTP_OPTION_OCTET) > 0) {
           return tftp_send_optack(reply, s);
         } else {
+          tftp_update_timestamp(s);
           return tftp_send_ack(reply, 0);
         }
       }
@@ -1044,6 +1072,8 @@ int process_tftp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bi
             fclose(fp);
             if (tftp_len < s->blksize_val) {
               tftp_remove_session(s);
+            } else {
+              tftp_update_timestamp(s);
             }
             return tftp_send_ack(reply, block_nr);
           } else {
