@@ -294,6 +294,9 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
           disbufptr = dis_sprintf(disbufptr, "0x%08x", i->Id());
           break;
 #if BX_SUPPORT_X86_64
+        case BX_IMMD_SE:
+          disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX64, (Bit64u) (Bit32s) i->Id());
+          break;
         case BX_IMMQ:
           disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX64, i->Iq());
           break;
