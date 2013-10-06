@@ -303,22 +303,25 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
           disbufptr = dis_sprintf(disbufptr, "0x%02x", i->Ib2());
           break;
         case BX_IMM_BrOff16:
-          {
+          disbufptr = dis_sprintf(disbufptr, ".%+d", i->Iw());
+          if (cs_base != BX_JUMP_TARGET_NOT_REQ) {
             Bit16u target = (rip + i->ilen() + (Bit16s) i->Iw()) & 0xffff;
-            disbufptr = dis_sprintf(disbufptr, ".%+d (0x%08x)", i->Iw(), (Bit32u)(cs_base + target));
+            disbufptr = dis_sprintf(disbufptr, " (0x%08x)", (Bit32u)(cs_base + target));
           }
           break;
         case BX_IMM_BrOff32:
-          {
+          disbufptr = dis_sprintf(disbufptr, ".%+d", i->Id());
+          if (cs_base != BX_JUMP_TARGET_NOT_REQ) {
             Bit32u target = rip + i->ilen() + (Bit32s) i->Id();
-            disbufptr = dis_sprintf(disbufptr, ".%+d (0x%08x)", i->Id(), (Bit32u) (cs_base + target));
+            disbufptr = dis_sprintf(disbufptr, " (0x%08x)", (Bit32u) (cs_base + target));
           }
           break;
 #if BX_SUPPORT_X86_64
         case BX_IMM_BrOff64:
-          {
+          disbufptr = dis_sprintf(disbufptr, ".%+d", i->Id());
+          if (cs_base != BX_JUMP_TARGET_NOT_REQ) {
             Bit64u target = rip + i->ilen() + (Bit32s) i->Id();
-            disbufptr = dis_sprintf(disbufptr, ".%+d (0x" FMT_ADDRX ")", i->Id(), (Bit64u) (cs_base + target));
+            disbufptr = dis_sprintf(disbufptr, " (0x" FMT_ADDRX ")", (Bit64u) (cs_base + target));
           }
           break;
 #endif
