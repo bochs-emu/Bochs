@@ -108,13 +108,14 @@ enum {
   BX_IMMB2 = 0x15,
   BX_IMM_BrOff16 = 0x16,
   BX_IMM_BrOff32 = 0x17,
-  BX_RSIREF = 0x18,
-  BX_RDIREF = 0x19,
-  BX_USECL = 0x1A,
-  BX_USEDX = 0x1B,
-  BX_DIRECT_PTR = 0x1C,
-  BX_DIRECT_MEMREF32 = 0x1D,
-  BX_DIRECT_MEMREF64 = 0x1E,
+  BX_IMM_BrOff64 = 0x18,
+  BX_RSIREF = 0x19,
+  BX_RDIREF = 0x1A,
+  BX_USECL = 0x1B,
+  BX_USEDX = 0x1C,
+  BX_DIRECT_PTR = 0x1D,
+  BX_DIRECT_MEMREF32 = 0x1E,
+  BX_DIRECT_MEMREF64 = 0x1F
 };
 
 #define BX_FORM_SRC(type, src) (((type) << 3) | (src))
@@ -150,7 +151,7 @@ const Bit8u OP_Ib2 = BX_FORM_SRC(BX_IMMB2, BX_SRC_NONE);
 
 const Bit8u OP_Jw = BX_FORM_SRC(BX_IMM_BrOff16, BX_SRC_NONE);
 const Bit8u OP_Jd = BX_FORM_SRC(BX_IMM_BrOff32, BX_SRC_NONE);
-const Bit8u OP_Jq = BX_FORM_SRC(BX_IMM_BrOff32, BX_SRC_NONE); /* always same as OP_Jd ? */
+const Bit8u OP_Jq = BX_FORM_SRC(BX_IMM_BrOff64, BX_SRC_NONE);
 
 const Bit8u OP_M  = BX_SRC_RM;
 const Bit8u OP_Mb = BX_SRC_RM;

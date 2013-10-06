@@ -88,6 +88,8 @@ static const char *rounding_mode[4] = {
 };
 #endif
 
+#define BX_JUMP_TARGET_NOT_REQ ((bx_address)(-1))
+
 char *resolve_memref(char *disbufptr, const bxInstruction_c *i, const char *regname[])
 {
   unsigned sib_base = i->sibBase(), sib_index = i->sibIndex(), sib_scale = i->sibScale();
@@ -99,14 +101,10 @@ char *resolve_memref(char *disbufptr, const bxInstruction_c *i, const char *regn
     if (sib_index == BX_NIL_REGISTER)
     {
       if (! i->as32L()) {
-        if (i->displ16s() != 0) {
-          disbufptr = dis_sprintf(disbufptr, "0x%04x", (Bit32u) (Bit16u) i->displ16s());
-        }
+        disbufptr = dis_sprintf(disbufptr, "0x%04x", (Bit32u) (Bit16u) i->displ16s());
       }
       else {
-        if (i->displ32s() != 0) {
-          disbufptr = dis_sprintf(disbufptr, "0x%08x", (Bit32u) i->displ32s());
-        }
+        disbufptr = dis_sprintf(disbufptr, "0x%08x", (Bit32u) i->displ32s());
       }
       return disbufptr;
     }
@@ -312,19 +310,18 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
           break;
         case BX_IMM_BrOff32:
           {
-#if BX_SUPPORT_X86_64
-            if (i->os64L()) {
-              Bit64u target = rip + i->ilen() + (Bit32s) i->Id();
-              disbufptr = dis_sprintf(disbufptr, ".%+d (0x" FMT_ADDRX ")", i->Id(), (Bit64u) (cs_base + target));
-            }
-            else
-#endif
-            {
-              Bit32u target = rip + i->ilen() + (Bit32s) i->Id();
-              disbufptr = dis_sprintf(disbufptr, ".%+d (0x%08x)", i->Id(), (Bit32u) (cs_base + target));
-            }
+            Bit32u target = rip + i->ilen() + (Bit32s) i->Id();
+            disbufptr = dis_sprintf(disbufptr, ".%+d (0x%08x)", i->Id(), (Bit32u) (cs_base + target));
           }
           break;
+#if BX_SUPPORT_X86_64
+        case BX_IMM_BrOff64:
+          {
+            Bit64u target = rip + i->ilen() + (Bit32s) i->Id();
+            disbufptr = dis_sprintf(disbufptr, ".%+d (0x" FMT_ADDRX ")", i->Id(), (Bit64u) (cs_base + target));
+          }
+          break;
+#endif
         case BX_RSIREF:
           disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
 #if BX_SUPPORT_X86_64
