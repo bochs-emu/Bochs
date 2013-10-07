@@ -2359,12 +2359,21 @@ modrm_done:
       break;
     case BX_SRC_NNN:
       i->setSrcReg(n, nnn);
+#if BX_SUPPORT_AVX
+      if (type == BX_KMASK_REG)
+        if (nnn >= 8) ia_opcode = BX_IA_ERROR;
+#endif
       break;
     case BX_SRC_RM:
-      if (! mod_mem)
+      if (! mod_mem) {
+#if BX_SUPPORT_AVX
+        if (type == BX_KMASK_REG) rm &= 0x7;
+#endif
         i->setSrcReg(n, rm);
-      else
+      }
+      else {
         i->setSrcReg(n, (type == BX_VMM_REG) ? BX_VECTOR_TMP_REGISTER : BX_TMP_REGISTER);
+      }
       break;
 #if BX_SUPPORT_AVX
     case BX_SRC_MEM_NO_VVV:

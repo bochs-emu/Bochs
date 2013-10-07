@@ -1533,11 +1533,22 @@ Bit32u bx_generic_cpuid_t::get_ext3_cpuid_features(void) const
   //   [9:9]    Support for Enhanced REP MOVSB/STOSB
   //   [10:10]  Support for INVPCID instruction
   //   [11:11]  RTM: Restricted Transactional Memory
-  //   [17:12]  reserved
+  //   [12:12]  Supports Quality of Service (QoS) capability
+  //   [13:13]  Deprecates FPU CS and FPU DS values
+  //   [14:14]  Intel Memory Protection Extensions
+  //   [15:15]  reserved
+  //   [16:16]  AVX512F instructions support
+  //   [17:17]  reserved
   //   [18:18]  RDSEED instruction support
   //   [19:19]  ADCX/ADOX instructions support
   //   [20:20]  SMAP: Supervisor Mode Access Prevention
-  //   [31:21]  reserved
+  //   [24:21]  reserved
+  //   [25:25]  Intel Processor Trace
+  //   [26:26]  AVX512PF instructions support
+  //   [27:27]  AVX512ER instructions support
+  //   [28:28]  AVX512CD instructions support
+  //   [29:29]  SHA instructions support
+  //   [31:30]  reserved
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FSGSBASE))
     features |= BX_CPUID_EXT3_FSGSBASE;
 
@@ -1556,11 +1567,23 @@ Bit32u bx_generic_cpuid_t::get_ext3_cpuid_features(void) const
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_INVPCID))
     features |= BX_CPUID_EXT3_INVPCID;
 
+  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_FCS_FDS_DEPRECATION))
+    features |= BX_CPUID_EXT3_DEPRECATE_FCS_FDS;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX512))
+    features |= BX_CPUID_EXT3_AVX512F;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_RDSEED))
+    features |= BX_CPUID_EXT3_RDSEED;
+
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_ADX))
     features |= BX_CPUID_EXT3_ADX;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SMAP))
     features |= BX_CPUID_EXT3_SMAP;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SHA))
+    features |= BX_CPUID_EXT3_SHA;
 
   return features;
 }
