@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -416,71 +416,71 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
 // REP MOVS methods
 //
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSB_XbYb(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSB_YbXb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
-    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSB64_XbYb);
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSB64_YbXb);
   else
 #endif
   if (i->as32L()) {
-    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSB32_XbYb);
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSB32_YbXb);
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RSI); // always clear upper part of RSI/RDI
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI);
   }
   else {
-    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSB16_XbYb);
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSB16_YbXb);
   }
 
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSW_XwYw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSW_YwXw(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
-    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSW64_XwYw);
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSW64_YwXw);
   else
 #endif
   if (i->as32L()) {
-    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSW32_XwYw);
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSW32_YwXw);
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RSI); // always clear upper part of RSI/RDI
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI);
   }
   else {
-    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSW16_XwYw);
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSW16_YwXw);
   }
 
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSD_XdYd(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSD_YdXd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
-    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSD64_XdYd);
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSD64_YdXd);
   else
 #endif
   if (i->as32L()) {
-    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSD32_XdYd);
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSD32_YdXd);
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RSI); // always clear upper part of RSI/RDI
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI);
   }
   else {
-    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSD16_XdYd);
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSD16_YdXd);
   }
 
   BX_NEXT_INSTR(i);
 }
 
 #if BX_SUPPORT_X86_64
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSQ_XqYq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSQ_YqXq(bxInstruction_c *i)
 {
   if (i->as64L()) {
-    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSQ64_XqYq);
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSQ64_YqXq);
   }
   else {
-    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSQ32_XqYq);
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSQ32_YqXq);
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RSI); // always clear upper part of RSI/RDI
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI);
   }
@@ -494,7 +494,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSQ_XqYq(bxInstruction_c *i)
 //
 
 // 16 bit address size
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB16_XbYb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB16_YbXb(bxInstruction_c *i)
 {
   Bit8u temp8 = read_virtual_byte_32(i->seg(), SI);
   write_virtual_byte_32(BX_SEG_REG_ES, DI, temp8);
@@ -512,7 +512,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB16_XbYb(bxInstruction_c *i)
 }
 
 // 32 bit address size
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB32_XbYb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB32_YbXb(bxInstruction_c *i)
 {
   Bit8u temp8;
 
@@ -561,7 +561,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB32_XbYb(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
 // 64 bit address size
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB64_XbYb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB64_YbXb(bxInstruction_c *i)
 {
   Bit8u temp8;
 
@@ -588,7 +588,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB64_XbYb(bxInstruction_c *i)
 #endif
 
 /* 16 bit opsize mode, 16 bit address size */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSW16_XwYw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSW16_YwXw(bxInstruction_c *i)
 {
   Bit16u si = SI;
   Bit16u di = DI;
@@ -612,7 +612,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSW16_XwYw(bxInstruction_c *i)
 }
 
 /* 16 bit opsize mode, 32 bit address size */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSW32_XwYw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSW32_YwXw(bxInstruction_c *i)
 {
   Bit16u temp16;
 
@@ -638,7 +638,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSW32_XwYw(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
 /* 16 bit opsize mode, 64 bit address size */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSW64_XwYw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSW64_YwXw(bxInstruction_c *i)
 {
   Bit16u temp16;
 
@@ -663,7 +663,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSW64_XwYw(bxInstruction_c *i)
 #endif
 
 /* 32 bit opsize mode, 16 bit address size */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD16_XdYd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD16_YdXd(bxInstruction_c *i)
 {
   Bit32u temp32;
 
@@ -687,7 +687,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD16_XdYd(bxInstruction_c *i)
 }
 
 /* 32 bit opsize mode, 32 bit address size */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD32_XdYd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD32_YdXd(bxInstruction_c *i)
 {
   Bit32u temp32;
 
@@ -745,7 +745,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD32_XdYd(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 
 /* 32 bit opsize mode, 64 bit address size */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD64_XdYd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD64_YdXd(bxInstruction_c *i)
 {
   Bit32u temp32;
 
@@ -769,7 +769,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD64_XdYd(bxInstruction_c *i)
 }
 
 /* 64 bit opsize mode, 32 bit address size */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSQ32_XqYq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSQ32_YqXq(bxInstruction_c *i)
 {
   Bit64u temp64;
 
@@ -794,7 +794,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSQ32_XqYq(bxInstruction_c *i)
 }
 
 /* 64 bit opsize mode, 64 bit address size */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSQ64_XqYq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSQ64_YqXq(bxInstruction_c *i)
 {
   Bit64u temp64;
 

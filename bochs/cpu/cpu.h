@@ -1569,9 +1569,9 @@ public: // for now...
   BX_SMF BX_INSF_TYPE MOV_OdAX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   // repeatable instructions
-  BX_SMF BX_INSF_TYPE REP_MOVSB_XbYb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE REP_MOVSW_XwYw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE REP_MOVSD_XdYd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE REP_MOVSB_YbXb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE REP_MOVSW_YwXw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE REP_MOVSD_YdXd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE REP_CMPSB_XbYb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE REP_CMPSW_XwYw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE REP_CMPSD_XdYd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -1614,12 +1614,12 @@ public: // for now...
   BX_SMF void STOSW32_YwAX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void STOSD32_YdEAX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void MOVSB16_XbYb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVSW16_XwYw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVSD16_XdYd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVSB32_XbYb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVSW32_XwYw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVSD32_XdYd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVSB16_YbXb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVSW16_YwXw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVSD16_YdXd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVSB32_YbXb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVSW32_YwXw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVSD32_YdXd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF BX_INSF_TYPE MOV_EdIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE MOV_EwIwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3416,7 +3416,7 @@ public: // for now...
   BX_SMF BX_INSF_TYPE MOV64S_GqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   // repeatable instructions
-  BX_SMF BX_INSF_TYPE REP_MOVSQ_XqYq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE REP_MOVSQ_YqXq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE REP_CMPSQ_XqYq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE REP_STOSQ_YqRAX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE REP_LODSQ_RAXXq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3435,9 +3435,9 @@ public: // for now...
   BX_SMF void STOSB64_YbAL(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void STOSW64_YwAX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void STOSD64_YdEAX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVSB64_XbYb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVSW64_XwYw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVSD64_XdYd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVSB64_YbXb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVSW64_YwXw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVSD64_YdXd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void CMPSQ32_XqYq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CMPSQ64_XqYq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3447,8 +3447,8 @@ public: // for now...
   BX_SMF void LODSQ64_RAXXq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void STOSQ32_YqRAX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void STOSQ64_YqRAX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVSQ32_XqYq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVSQ64_XqYq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVSQ32_YqXq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVSQ64_YqXq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void INSB64_YbDX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void INSW64_YwDX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

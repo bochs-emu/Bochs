@@ -643,14 +643,14 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG14[8] = {
 
 /* Group15 */
 static BxDisasmOpcodeTable_t BxDisasmGroupG15M[8] = {
-  /* 0 */ { 0, &Ia_fxsave   },
-  /* 1 */ { 0, &Ia_fxrstor  },
-  /* 2 */ { 0, &Ia_ldmxcsr  },
-  /* 3 */ { 0, &Ia_stmxcsr  },
-  /* 4 */ { 0, &Ia_xsave    },
-  /* 5 */ { 0, &Ia_xrstor   },
+  /* 0 */ { 0, &Ia_fxsave },
+  /* 1 */ { 0, &Ia_fxrstor },
+  /* 2 */ { 0, &Ia_ldmxcsr },
+  /* 3 */ { 0, &Ia_stmxcsr },
+  /* 4 */ { 0, &Ia_xsave },
+  /* 5 */ { 0, &Ia_xrstor },
   /* 6 */ { 0, &Ia_xsaveopt },
-  /* 7 */ { 0, &Ia_cflush   }
+  /* 7 */ { 0, &Ia_clflush }
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG15R[8] = {
@@ -673,9 +673,9 @@ static BxDisasmOpcodeTable_t BxDisasmGroupModG15[2] = {
 static BxDisasmOpcodeTable_t BxDisasmGroupG16[8] =
 {
   /* 0 */ { 0, &Ia_prefetchnta },
-  /* 1 */ { 0, &Ia_prefetcht0  },
-  /* 2 */ { 0, &Ia_prefetcht1  },
-  /* 3 */ { 0, &Ia_prefetcht2  },
+  /* 1 */ { 0, &Ia_prefetcht0 },
+  /* 2 */ { 0, &Ia_prefetcht1 },
+  /* 3 */ { 0, &Ia_prefetcht2 },
   /* 4 */ { 0, &Ia_prefetch_hint },
   /* 5 */ { 0, &Ia_prefetch_hint },
   /* 6 */ { 0, &Ia_prefetch_hint },
