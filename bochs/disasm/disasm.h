@@ -231,7 +231,7 @@ BX_CPP_INLINE x86_insn::x86_insn(bx_bool is32, bx_bool is64)
 
 class disassembler {
 public:
-  disassembler(): offset_mode_hex(0) { set_syntax_intel(); }
+  disassembler(): offset_mode_hex(0), print_mem_datasize(1) { set_syntax_intel(); }
 
   unsigned disasm(bx_bool is_32, bx_bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf);
 
@@ -259,11 +259,12 @@ public:
   void set_syntax_att();
 
   void set_offset_mode_hex(bx_bool mode) { offset_mode_hex = mode; }
+  void set_mem_datasize_print(bx_bool mode) { print_mem_datasize = mode; }
 
   void toggle_syntax_mode();
 
 private:
-  bx_bool intel_mode, offset_mode_hex;
+  bx_bool intel_mode, offset_mode_hex, print_mem_datasize;
 
   const char **general_16bit_regname;
   const char **general_8bit_regname;

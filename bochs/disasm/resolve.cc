@@ -350,7 +350,7 @@ void disassembler::resolve64_mod1or2_rm4(const x86_insn *insn, unsigned datasize
 
 void disassembler::print_datasize(unsigned size)
 {
-  if (!intel_mode) return;
+  if (!intel_mode || !print_mem_datasize) return;
 
   switch(size & 0xf)
   {
