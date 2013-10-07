@@ -246,10 +246,10 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
           break;
 #endif
         case BX_FPU_REG:
-          disbufptr = dis_sprintf(disbufptr, "st(%d)", srcreg);
+          disbufptr = dis_sprintf(disbufptr, "st(%d)", srcreg & 0x7);
           break;
         case BX_MMX_REG:
-          disbufptr = dis_sprintf(disbufptr, "mm%d", srcreg);
+          disbufptr = dis_sprintf(disbufptr, "mm%d", srcreg & 0x7);
           break;
         case BX_VMM_REG:
 #if BX_SUPPORT_AVX
@@ -269,6 +269,7 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
 #if BX_SUPPORT_EVEX
         case BX_KMASK_REG:
           disbufptr = dis_sprintf(disbufptr, "k%d", srcreg);
+          assert(srcreg < 8);
           break;
 #endif
         case BX_SEGREG:
