@@ -1,10 +1,24 @@
 /*
- * misc/bximage.c
  * $Id$
  *
- * Create empty hard disk or floppy disk images for bochs.
+ *  Copyright (C) 2001-2013  The Bochs Project
  *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
  */
+
+/* Create empty hard disk or floppy disk images for bochs. */
 
 #ifdef WIN32
 #  include <conio.h>
@@ -45,23 +59,23 @@ typedef int (*WRITE_IMAGE)(FILE*, Bit64u);
 typedef int (*WRITE_IMAGE_WIN32)(HANDLE, Bit64u);
 #endif
 
-char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id$";
-char *divider = "========================================================================";
+const char *EOF_ERR = "ERROR: End of input";
+const char *svnid = "$Id$";
+const char *divider = "========================================================================";
 
 /* menu data for choosing floppy/hard disk */
-char *fdhd_menu = "\nDo you want to create a floppy disk image or a hard disk image?\nPlease type hd or fd. ";
-char *fdhd_choices[] = { "fd", "hd" };
+const char *fdhd_menu = "\nDo you want to create a floppy disk image or a hard disk image?\nPlease type hd or fd. ";
+const char *fdhd_choices[] = { "fd", "hd" };
 int fdhd_n_choices = 2;
 
 /* menu data for choosing floppy size */
-char *fdsize_menu = "\nChoose the size of floppy disk image to create, in megabytes.\nPlease type 0.16, 0.18, 0.32, 0.36, 0.72, 1.2, 1.44, 1.68, 1.72, or 2.88.\n ";
-char *fdsize_choices[] = { "0.16","0.18","0.32","0.36","0.72","1.2","1.44","1.68","1.72","2.88" };
+const char *fdsize_menu = "\nChoose the size of floppy disk image to create, in megabytes.\nPlease type 0.16, 0.18, 0.32, 0.36, 0.72, 1.2, 1.44, 1.68, 1.72, or 2.88.\n ";
+const char *fdsize_choices[] = { "0.16","0.18","0.32","0.36","0.72","1.2","1.44","1.68","1.72","2.88" };
 int fdsize_n_choices = 10;
 
 /* menu data for choosing disk mode */
-char *hdmode_menu = "\nWhat kind of image should I create?\nPlease type flat, sparse or growing. ";
-                char *hdmode_choices[] = {"flat", "sparse", "growing" };
+const char *hdmode_menu = "\nWhat kind of image should I create?\nPlease type flat, sparse or growing. ";
+const char *hdmode_choices[] = {"flat", "sparse", "growing" };
 int hdmode_n_choices = 3;
 
 void myexit(int code)
@@ -74,7 +88,7 @@ void myexit(int code)
 }
 
 /* stolen from main.cc */
-void bx_center_print(FILE *file, char *line, int maxwidth)
+void bx_center_print(FILE *file, const char *line, int maxwidth)
 {
   int imax;
   int i;
@@ -88,7 +102,7 @@ void print_banner()
   printf("%s\n", divider);
   bx_center_print(stdout, "bximage\n", 72);
   bx_center_print(stdout, "Disk Image Creation Tool for Bochs\n", 72);
-  bx_center_print(stdout, rcsid, 72);
+  bx_center_print(stdout, svnid, 72);
   printf("\n%s\n", divider);
 }
 
@@ -101,7 +115,7 @@ void fatal(const char *c)
 
 /* check if the argument string is present in the list -
    returns index on success, -1 on failure. */
-int get_menu_index(char *arg, int n_choices, char *choice[])
+int get_menu_index(char *arg, int n_choices, const char *choice[])
 {
   int i;
   for (i=0; i<n_choices; i++) {
@@ -160,7 +174,7 @@ int ask_int(const char *prompt, int min, int max, int the_default, int *out)
   }
 }
 
-int ask_menu(const char *prompt, int n_choices, char *choice[], int the_default, int *out)
+int ask_menu(const char *prompt, int n_choices, const char *choice[], int the_default, int *out)
 {
   char buffer[1024];
   char *clean;
