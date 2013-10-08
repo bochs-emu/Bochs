@@ -91,6 +91,20 @@ BX_CPP_INLINE void xmm_pminud(BxPackedXmmRegister *op1, const BxPackedXmmRegiste
   }
 }
 
+BX_CPP_INLINE void xmm_pminsq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for(unsigned n=0; n<2; n++) {
+    if(op2->xmm64s(n) < op1->xmm64s(n)) op1->xmm64u(n) = op2->xmm64u(n);
+  }
+}
+
+BX_CPP_INLINE void xmm_pminuq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for(unsigned n=0; n<2; n++) {
+    if(op2->xmm64u(n) < op1->xmm64u(n)) op1->xmm64u(n) = op2->xmm64u(n);
+  }
+}
+
 BX_CPP_INLINE void xmm_pmaxsb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<16; n++) {
@@ -130,6 +144,20 @@ BX_CPP_INLINE void xmm_pmaxud(BxPackedXmmRegister *op1, const BxPackedXmmRegiste
 {
   for(unsigned n=0; n<4; n++) {
     if(op2->xmm32u(n) > op1->xmm32u(n)) op1->xmm32u(n) = op2->xmm32u(n);
+  }
+}
+
+BX_CPP_INLINE void xmm_pmaxsq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for(unsigned n=0; n<2; n++) {
+    if(op2->xmm64s(n) > op1->xmm64s(n)) op1->xmm64u(n) = op2->xmm64u(n);
+  }
+}
+
+BX_CPP_INLINE void xmm_pmaxuq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for(unsigned n=0; n<2; n++) {
+    if(op2->xmm64u(n) > op1->xmm64u(n)) op1->xmm64u(n) = op2->xmm64u(n);
   }
 }
 
@@ -475,11 +503,29 @@ BX_CPP_INLINE void xmm_blendps(BxPackedXmmRegister *op1, const BxPackedXmmRegist
   if (mask & 0x8) op1->xmm32u(3) = op2->xmm32u(3);
 }
 
+#if BX_SUPPORT_EVEX
+BX_CPP_INLINE void xmm_zero_blendps(BxPackedXmmRegister *op, unsigned mask)
+{
+  if ((mask & 0x1) == 0) op->xmm32u(0) = 0;
+  if ((mask & 0x2) == 0) op->xmm32u(1) = 0;
+  if ((mask & 0x4) == 0) op->xmm32u(2) = 0;
+  if ((mask & 0x8) == 0) op->xmm32u(3) = 0;
+}
+#endif
+
 BX_CPP_INLINE void xmm_blendpd(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, unsigned mask)
 {
   if (mask & 0x1) op1->xmm64u(0) = op2->xmm64u(0);
   if (mask & 0x2) op1->xmm64u(1) = op2->xmm64u(1);
 }
+
+#if BX_SUPPORT_EVEX
+BX_CPP_INLINE void xmm_zero_blendpd(BxPackedXmmRegister *op, unsigned mask)
+{
+  if ((mask & 0x1) == 0) op->xmm64u(0) = 0;
+  if ((mask & 0x2) == 0) op->xmm64u(1) = 0;
+}
+#endif
 
 BX_CPP_INLINE void xmm_pblendvb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, const BxPackedXmmRegister *mask)
 {
@@ -848,7 +894,6 @@ BX_CPP_INLINE void xmm_pbroadcastq(BxPackedXmmRegister *op, Bit64u val_64)
 }
 
 #if BX_SUPPORT_EVEX
-
 BX_CPP_INLINE void simd_pbroadcastb(BxPackedZmmRegister *op, Bit8u val_8, unsigned len)
 {
   for(unsigned n=0; n < len; n++) {
@@ -876,7 +921,6 @@ BX_CPP_INLINE void simd_pbroadcastq(BxPackedZmmRegister *op, Bit64u val_64, unsi
     op->vmm64u(n) = val_64;
   }
 }
-
 #endif
 
 // sum of absolute differences (SAD)
