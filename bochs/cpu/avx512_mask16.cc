@@ -30,11 +30,6 @@
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KANDW_KGwKHwKEwR(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR xcr0.get_OPMASK()) {
-    BX_ERROR(("%s: XCR0.OPMASK should be set", i->getIaOpcodeName()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
 #if BX_SUPPORT_EVEX
   Bit16u opmask = BX_READ_16BIT_OPMASK(i->src1()) & BX_READ_16BIT_OPMASK(i->src2());
   BX_WRITE_OPMASK(i->dst(), opmask);
@@ -45,11 +40,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KANDW_KGwKHwKEwR(bxInstruction_c *
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KANDNW_KGwKHwKEwR(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR xcr0.get_OPMASK()) {
-    BX_ERROR(("%s: XCR0.OPMASK should be set", i->getIaOpcodeName()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
 #if BX_SUPPORT_EVEX
   Bit16u opmask = ~(BX_READ_16BIT_OPMASK(i->src1())) & BX_READ_16BIT_OPMASK(i->src2());
   BX_WRITE_OPMASK(i->dst(), opmask);
@@ -60,11 +50,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KANDNW_KGwKHwKEwR(bxInstruction_c 
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVW_KGwKEwM(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR xcr0.get_OPMASK()) {
-    BX_ERROR(("%s: XCR0.OPMASK should be set", i->getIaOpcodeName()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
 #if BX_SUPPORT_EVEX
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
@@ -78,11 +63,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVW_KGwKEwM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVW_KGwKEwR(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR xcr0.get_OPMASK()) {
-    BX_ERROR(("%s: XCR0.OPMASK should be set", i->getIaOpcodeName()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
 #if BX_SUPPORT_EVEX
   BX_WRITE_OPMASK(i->dst(), BX_READ_16BIT_OPMASK(i->src()));
 #endif
@@ -92,14 +72,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVW_KGwKEwR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVW_KEwKGwM(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR xcr0.get_OPMASK()) {
-    BX_ERROR(("%s: XCR0.OPMASK should be set", i->getIaOpcodeName()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
 #if BX_SUPPORT_EVEX
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
   write_virtual_word(i->seg(), eaddr, BX_READ_16BIT_OPMASK(i->src()));
 #endif
 
@@ -108,11 +82,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVW_KEwKGwM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVW_KGwEwR(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR xcr0.get_OPMASK()) {
-    BX_ERROR(("%s: XCR0.OPMASK should be set", i->getIaOpcodeName()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
 #if BX_SUPPORT_EVEX
   BX_WRITE_OPMASK(i->dst(), BX_READ_16BIT_REG(i->src()));
 #endif
@@ -122,11 +91,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVW_KGwEwR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVW_GdKEwR(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR xcr0.get_OPMASK()) {
-    BX_ERROR(("%s: XCR0.OPMASK should be set", i->getIaOpcodeName()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
 #if BX_SUPPORT_EVEX
   BX_WRITE_32BIT_REGZ(i->dst(), BX_READ_16BIT_OPMASK(i->src()));
 #endif
@@ -134,13 +98,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVW_GdKEwR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KUNPCKBW_KGwKHwKEwR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KUNPCKBW_KGwKHbKEbR(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR xcr0.get_OPMASK()) {
-    BX_ERROR(("%s: XCR0.OPMASK should be set", i->getIaOpcodeName()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
 #if BX_SUPPORT_EVEX
   Bit16u opmask = BX_READ_8BIT_OPMASK(i->src1());
          opmask = (opmask << 8) | BX_READ_8BIT_OPMASK(i->src2());
@@ -153,11 +112,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KUNPCKBW_KGwKHwKEwR(bxInstruction_
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KNOTW_KGwKEwR(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR xcr0.get_OPMASK()) {
-    BX_ERROR(("%s: XCR0.OPMASK should be set", i->getIaOpcodeName()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
 #if BX_SUPPORT_EVEX
   Bit16u opmask = ~BX_READ_16BIT_OPMASK(i->src());
   BX_WRITE_OPMASK(i->dst(), opmask);
@@ -168,11 +122,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KNOTW_KGwKEwR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KORW_KGwKHwKEwR(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR xcr0.get_OPMASK()) {
-    BX_ERROR(("%s: XCR0.OPMASK should be set", i->getIaOpcodeName()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
 #if BX_SUPPORT_EVEX
   Bit16u opmask = BX_READ_16BIT_OPMASK(i->src1()) | BX_READ_16BIT_OPMASK(i->src2());
   BX_WRITE_OPMASK(i->dst(), opmask);
@@ -181,31 +130,24 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KORW_KGwKHwKEwR(bxInstruction_c *i
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KORTESTW_KGwKEw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KORTESTW_KGwKEwR(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR xcr0.get_OPMASK()) {
-    BX_ERROR(("%s: XCR0.OPMASK should be set", i->getIaOpcodeName()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
 #if BX_SUPPORT_EVEX
   Bit16u tmp = BX_READ_16BIT_OPMASK(i->src1()) | BX_READ_16BIT_OPMASK(i->src2());
+  unsigned flags = 0;
   if (tmp == 0)
-    setEFlagsOSZAPC(EFlagsZFMask);
+    flags |= EFlagsZFMask;
   else if (tmp == 0xffff)
-    setEFlagsOSZAPC(EFlagsCFMask);
+    flags |= EFlagsCFMask;
+
+  setEFlagsOSZAPC(flags);
 #endif
 
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KSHIFTLW_KGwKEw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KSHIFTLW_KGwKEwIbR(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR xcr0.get_OPMASK()) {
-    BX_ERROR(("%s: XCR0.OPMASK should be set", i->getIaOpcodeName()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
 #if BX_SUPPORT_EVEX
   unsigned count = i->Ib();
   Bit16u opmask = 0;
@@ -218,13 +160,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KSHIFTLW_KGwKEw(bxInstruction_c *i
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KSHIFTRW_KGwKEw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KSHIFTRW_KGwKEwIbR(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR xcr0.get_OPMASK()) {
-    BX_ERROR(("%s: XCR0.OPMASK should be set", i->getIaOpcodeName()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
 #if BX_SUPPORT_EVEX
   unsigned count = i->Ib();
   Bit16u opmask = 0;
@@ -237,13 +174,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KSHIFTRW_KGwKEw(bxInstruction_c *i
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KXNORW_KGwKHwKEw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KXNORW_KGwKHwKEwR(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR xcr0.get_OPMASK()) {
-    BX_ERROR(("%s: XCR0.OPMASK should be set", i->getIaOpcodeName()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
 #if BX_SUPPORT_EVEX
   Bit16u opmask = ~(BX_READ_16BIT_OPMASK(i->src1()) ^ BX_READ_16BIT_OPMASK(i->src2()));
   BX_WRITE_OPMASK(i->dst(), opmask);
@@ -252,13 +184,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KXNORW_KGwKHwKEw(bxInstruction_c *
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KXORW_KGwKHwKEw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KXORW_KGwKHwKEwR(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR xcr0.get_OPMASK()) {
-    BX_ERROR(("%s: XCR0.OPMASK should be set", i->getIaOpcodeName()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
 #if BX_SUPPORT_EVEX
   Bit16u opmask = BX_READ_16BIT_OPMASK(i->src1()) ^ BX_READ_16BIT_OPMASK(i->src2());
   BX_WRITE_OPMASK(i->dst(), opmask);

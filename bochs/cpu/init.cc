@@ -873,7 +873,7 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
 #if BX_SUUPORT_EVEX
-  BX_CPU_THIS_PTR evex_ok = 0;
+  BX_CPU_THIS_PTR opmask_ok = BX_CPU_THIS_PTR evex_ok = 0;
 
   for (n=0; n<8; n++)
     BX_WRITE_OPMASK(index, 0);

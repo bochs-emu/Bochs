@@ -1207,6 +1207,7 @@ public: // for now...
   unsigned avx_ok;
 #endif
 #if BX_SUPPORT_EVEX
+  unsigned opmask_ok;
   unsigned evex_ok;
 #endif
 #endif
@@ -3165,14 +3166,14 @@ public: // for now...
   BX_SMF BX_INSF_TYPE KMOVW_KEwKGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE KMOVW_KGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE KMOVW_GdKEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE KUNPCKBW_KGwKHwKEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE KUNPCKBW_KGwKHbKEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE KNOTW_KGwKEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE KORW_KGwKHwKEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE KORTESTW_KGwKEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE KSHIFTLW_KGwKEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE KSHIFTRW_KGwKEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE KXNORW_KGwKHwKEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE KXORW_KGwKHwKEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE KORTESTW_KGwKEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE KSHIFTLW_KGwKEwIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE KSHIFTRW_KGwKEwIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE KXNORW_KGwKHwKEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE KXORW_KGwKHwKEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   // AVX512 OPMASK instructions (VEX encoded)
 #endif
 
@@ -3690,6 +3691,7 @@ public: // for now...
   BX_SMF BX_INSF_TYPE BxNoAVX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 #if BX_SUPPORT_EVEX
+  BX_SMF BX_INSF_TYPE BxNoOpMask(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE BxNoEVEX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 #endif
@@ -4679,14 +4681,16 @@ BX_CPP_INLINE void BX_CPU_C::prepareXSAVE(void)
 // bit 1 - long64 mode (CS.L)
 // bit 2 - SSE_OK
 // bit 3 - AVX_OK
-// bit 4 - EVEX_OK
+// bit 4 - OPMASK_OK
+// bit 5 - EVEX_OK
 //
 
 #define BX_FETCH_MODE_IS32_MASK (1 << 0)
 #define BX_FETCH_MODE_IS64_MASK (1 << 1)
-#define BX_FETCH_MODE_SSE_MASK  (1 << 2)
-#define BX_FETCH_MODE_AVX_MASK  (1 << 3)
-#define BX_FETCH_MODE_EVEX_MASK (1 << 4)
+#define BX_FETCH_MODE_SSE_OK    (1 << 2)
+#define BX_FETCH_MODE_AVX_OK    (1 << 3)
+#define BX_FETCH_MODE_OPMASK_OK (1 << 4)
+#define BX_FETCH_MODE_EVEX_OK   (1 << 5)
 
 //
 // updateFetchModeMask - has to be called everytime 
@@ -4697,7 +4701,7 @@ BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
   BX_CPU_THIS_PTR fetchModeMask =
 #if BX_CPU_LEVEL >= 6
 #if BX_SUPPORT_EVEX
-     (BX_CPU_THIS_PTR evex_ok << 4) |
+     (BX_CPU_THIS_PTR evex_ok << 5) | (BX_CPU_THIS_PTR opmask_ok << 4) |
 #endif
 #if BX_SUPPORT_AVX
      (BX_CPU_THIS_PTR avx_ok << 3) |

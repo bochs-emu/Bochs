@@ -397,7 +397,7 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
 #if BX_SUPPORT_EVEX
   if (is_vector && i->getEvexb()) {
     if (! i->modC0())
-      disbufptr = dis_sprintf(disbufptr, "{broadcast TBD}");
+      disbufptr = dis_sprintf(disbufptr, "{broadcast}");
     else
       disbufptr = dis_sprintf(disbufptr, "{sae/%s}", rounding_mode[i->getRC()]);
   }

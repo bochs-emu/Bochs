@@ -59,10 +59,11 @@ BX_CPP_INLINE Bit64u FetchQWORD(const Bit8u *iptr)
 }
 #endif
 
-#define BX_PREPARE_EVEX (0x08)
-#define BX_PREPARE_AVX  (0x04)
-#define BX_PREPARE_SSE  (0x02)
-#define BX_TRACE_END    (0x01)
+#define BX_PREPARE_EVEX   (0x10)
+#define BX_PREPARE_OPMASK (0x08)
+#define BX_PREPARE_AVX    (0x04)
+#define BX_PREPARE_SSE    (0x02)
+#define BX_TRACE_END      (0x01)
 
 struct bxIAOpcodeTable {
   BxExecutePtr_tR execute1;
@@ -210,6 +211,10 @@ const Bit8u OP_Od = BX_FORM_SRC(BX_DIRECT_MEMREF32, BX_SRC_NONE);
 const Bit8u OP_Oq = BX_FORM_SRC(BX_DIRECT_MEMREF64, BX_SRC_NONE);
 
 const Bit8u OP_Ap = BX_FORM_SRC(BX_DIRECT_PTR, BX_SRC_NONE);
+
+const Bit8u OP_KGb = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_NNN);
+const Bit8u OP_KEb = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_RM);
+const Bit8u OP_KHb = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_VVV);
 
 const Bit8u OP_KGw = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_NNN);
 const Bit8u OP_KEw = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_RM);

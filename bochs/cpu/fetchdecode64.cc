@@ -2448,21 +2448,27 @@ decode_done:
   BX_ASSERT(i->execute1);
 
   Bit32u op_flags = BxOpcodesTable[ia_opcode].opflags;
-  if (! (fetchModeMask & BX_FETCH_MODE_SSE_MASK)) {
+  if (! (fetchModeMask & BX_FETCH_MODE_SSE_OK)) {
      if (op_flags & BX_PREPARE_SSE) {
         if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoSSE;
         return(1);
      }
   }
 #if BX_SUPPORT_AVX
-  if (! (fetchModeMask & BX_FETCH_MODE_AVX_MASK)) {
+  if (! (fetchModeMask & BX_FETCH_MODE_AVX_OK)) {
     if (op_flags & BX_PREPARE_AVX) {
        if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoAVX;
        return(1);
     }
   }
 #if BX_SUPPORT_EVEX
-  if (! (fetchModeMask & BX_FETCH_MODE_EVEX_MASK)) {
+  if (! (fetchModeMask & BX_FETCH_MODE_OPMASK_OK)) {
+    if (op_flags & BX_PREPARE_OPMASK) {
+       if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoOpMask;
+       return(1);
+    }
+  }
+  if (! (fetchModeMask & BX_FETCH_MODE_EVEX_OK)) {
     if (op_flags & BX_PREPARE_EVEX) {
        if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoEVEX;
        return(1);

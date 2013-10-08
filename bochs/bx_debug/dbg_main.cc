@@ -1944,9 +1944,10 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
 #else
     extern char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_address rip);
 
-    Bit32u fetchModeMask = BX_CPU(which_cpu)->fetchModeMask | BX_FETCH_MODE_SSE_MASK |
-                                                              BX_FETCH_MODE_AVX_MASK |
-                                                              BX_FETCH_MODE_EVEX_MASK;
+    Bit32u fetchModeMask = BX_CPU(which_cpu)->fetchModeMask | BX_FETCH_MODE_SSE_OK |
+                                                              BX_FETCH_MODE_AVX_OK |
+                                                              BX_FETCH_MODE_OPMASK_OK |
+                                                              BX_FETCH_MODE_EVEX_OK;
     int ret;
     bxInstruction_c i;
 

@@ -423,23 +423,30 @@ void BX_CPU_C::handleAvxModeChange(void)
   else {
     if (! protected_mode() || ! BX_CPU_THIS_PTR cr4.get_OSXSAVE() ||
         (~BX_CPU_THIS_PTR xcr0.val32 & (BX_XCR0_SSE_MASK | BX_XCR0_YMM_MASK)) != 0) {
-      BX_CPU_THIS_PTR avx_ok  = 0;
+      BX_CPU_THIS_PTR avx_ok = 0;
     }
     else {
       BX_CPU_THIS_PTR avx_ok = 1;
 
 #if BX_SUPPORT_EVEX
-      if ((~BX_CPU_THIS_PTR xcr0.val32 & (BX_XCR0_OPMASK_MASK | BX_XCR0_ZMM_HI256_MASK | BX_XCR0_HI_ZMM_MASK)) != 0)
-        BX_CPU_THIS_PTR evex_ok = 0;
-      else
-        BX_CPU_THIS_PTR evex_ok = 1;
+      if ((~BX_CPU_THIS_PTR xcr0.val32 & BX_XCR0_OPMASK_MASK) != 0) {
+        BX_CPU_THIS_PTR opmask_ok = BX_CPU_THIS_PTR evex_ok = 0;
+      }
+      else {
+        BX_CPU_THIS_PTR opmask_ok = 1;
+
+        if ((~BX_CPU_THIS_PTR xcr0.val32 & (BX_XCR0_ZMM_HI256_MASK | BX_XCR0_HI_ZMM_MASK)) != 0)
+          BX_CPU_THIS_PTR evex_ok = 0;
+        else
+          BX_CPU_THIS_PTR evex_ok = 1;
+      }
 #endif
     }
   }
 
 #if BX_SUPPORT_EVEX
   if (! BX_CPU_THIS_PTR avx_ok)
-        BX_CPU_THIS_PTR evex_ok = 0;
+        BX_CPU_THIS_PTR opmask_ok = BX_CPU_THIS_PTR evex_ok = 0;
 #endif
 
   updateFetchModeMask(); /* AVX_OK changed */
@@ -463,6 +470,22 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoAVX(bxInstruction_c *i)
 #endif
 
 #if BX_SUPPORT_EVEX
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoOpMask(bxInstruction_c *i)
+{
+  if (! protected_mode() || ! BX_CPU_THIS_PTR cr4.get_OSXSAVE())
+    exception(BX_UD_EXCEPTION, 0);
+
+  if (~BX_CPU_THIS_PTR xcr0.val32 & (BX_XCR0_SSE_MASK | BX_XCR0_YMM_MASK | BX_XCR0_OPMASK_MASK))
+    exception(BX_UD_EXCEPTION, 0);
+
+  if(BX_CPU_THIS_PTR cr0.get_TS())
+    exception(BX_NM_EXCEPTION, 0);
+
+  BX_ASSERT(0);
+
+  BX_NEXT_TRACE(i); // keep compiler happy
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoEVEX(bxInstruction_c *i)
 {
   if (! protected_mode() || ! BX_CPU_THIS_PTR cr4.get_OSXSAVE())
