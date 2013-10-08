@@ -2005,6 +2005,12 @@ decode_done:
     }
   }
 #if BX_SUPPORT_EVEX
+  if (! (fetchModeMask & BX_FETCH_MODE_OPMASK_OK)) {
+    if (op_flags & BX_PREPARE_OPMASK) {
+       if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoOpMask;
+       return(1);
+    }
+  }
   if (! (fetchModeMask & BX_FETCH_MODE_EVEX_OK)) {
     if (op_flags & BX_PREPARE_EVEX) {
        if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoEVEX;
