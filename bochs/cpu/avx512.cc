@@ -65,8 +65,8 @@ AVX512_2OP_DWORD_EL(VPMAXSD_MASK_VdqHdqWdqR, xmm_pmaxsd)
 AVX512_2OP_DWORD_EL(VPMAXUD_MASK_VdqHdqWdqR, xmm_pmaxud)
 AVX512_2OP_DWORD_EL(VPMINSD_MASK_VdqHdqWdqR, xmm_pminsd)
 AVX512_2OP_DWORD_EL(VPMINUD_MASK_VdqHdqWdqR, xmm_pminud)
-AVX512_2OP_DWORD_EL(VPCMPEQD_MASK_VdqHdqWdqR, xmm_pcmpeqd)
-AVX512_2OP_DWORD_EL(VPCMPGTD_MASK_VdqHdqWdqR, xmm_pcmpgtd)
+AVX512_2OP_DWORD_EL(VUNPCKLPS_MASK_VpsHpsWpsR, xmm_unpcklps)
+AVX512_2OP_DWORD_EL(VUNPCKHPS_MASK_VpsHpsWpsR, xmm_unpckhps)
 
 #define AVX512_2OP_QWORD_EL(HANDLER, func)                                                  \
   /* AVX-512 instruction with two src operands working on DWORD elements */                 \
@@ -102,7 +102,7 @@ AVX512_2OP_QWORD_EL(VPMAXSQ_MASK_VdqHdqWdqR, xmm_pmaxsq)
 AVX512_2OP_QWORD_EL(VPMAXUQ_MASK_VdqHdqWdqR, xmm_pmaxuq)
 AVX512_2OP_QWORD_EL(VPMINSQ_MASK_VdqHdqWdqR, xmm_pminsq)
 AVX512_2OP_QWORD_EL(VPMINUQ_MASK_VdqHdqWdqR, xmm_pminuq)
-AVX512_2OP_QWORD_EL(VPCMPEQQ_MASK_VdqHdqWdqR, xmm_pcmpeqq)
-AVX512_2OP_QWORD_EL(VPCMPGTQ_MASK_VdqHdqWdqR, xmm_pcmpgtq)
+AVX512_2OP_DWORD_EL(VUNPCKLPD_MASK_VpdHpdWpdR, xmm_unpcklpd)
+AVX512_2OP_DWORD_EL(VUNPCKHPD_MASK_VpdHpdWpdR, xmm_unpckhpd)
 
 #endif

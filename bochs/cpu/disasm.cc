@@ -257,7 +257,7 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
             disbufptr = dis_sprintf(disbufptr, "%cmm%d", 'x' + i->getVL() - 1, srcreg);
 #if BX_SUPPORT_EVEX
             if (n == 0 && i->opmask()) {
-              disbufptr = dis_sprintf(disbufptr, "{k%d}%s", i->opmask(),
+              disbufptr = dis_sprintf(disbufptr, " {k%d}%s", i->opmask(),
                 i->isZeroMasking() ? "{z}" : "");
             }
 #endif
