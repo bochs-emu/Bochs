@@ -216,12 +216,12 @@ BX_TOKEN_SEGREG:
 ;
 
 timebp_command:
-      BX_TOKEN_TIMEBP BX_TOKEN_NUMERIC '\n'
+      BX_TOKEN_TIMEBP expression '\n'
       {
           bx_dbg_timebp_command(0, $2);
           free($1);
       }
-    | BX_TOKEN_TIMEBP_ABSOLUTE BX_TOKEN_NUMERIC '\n'
+    | BX_TOKEN_TIMEBP_ABSOLUTE expression '\n'
       {
           bx_dbg_timebp_command(1, $2);
           free($1);
@@ -392,7 +392,7 @@ symbol_command:
         bx_dbg_symbol_command($2, 0, 0);
         free($1); free($2);
       }
-    | BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_STRING BX_TOKEN_NUMERIC '\n'
+    | BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_STRING expression '\n'
       {
         bx_dbg_symbol_command($2, 0, $3);
         free($1); free($2);
@@ -402,7 +402,7 @@ symbol_command:
         bx_dbg_symbol_command($3, 1, 0);
         free($1); free($2); free($3);
       }
-    | BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_GLOBAL BX_TOKEN_STRING BX_TOKEN_NUMERIC '\n'
+    | BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_GLOBAL BX_TOKEN_STRING expression '\n'
       {
         bx_dbg_symbol_command($3, 1, $4);
         free($1); free($2); free($3);
@@ -418,7 +418,7 @@ where_command:
     ;
 
 print_string_command:
-      BX_TOKEN_PRINT_STRING BX_TOKEN_NUMERIC '\n'
+      BX_TOKEN_PRINT_STRING expression '\n'
       {
         bx_dbg_print_string_command($2);
         free($1);
@@ -470,7 +470,7 @@ set_command:
         bx_dbg_set_auto_disassemble($3);
         free($1); free($2);
       }
-    | BX_TOKEN_SET BX_TOKEN_SYMBOLNAME '=' BX_TOKEN_NUMERIC '\n'
+    | BX_TOKEN_SET BX_TOKEN_SYMBOLNAME '=' expression '\n'
       {
         bx_dbg_set_symbol_command($2, $4);
         free($1); free($2);
@@ -653,7 +653,7 @@ info_command:
 
 optional_numeric :
    /* empty */ { $$ = EMPTY_ARG; }
-   | BX_TOKEN_NUMERIC;
+   | expression;
    
 regs_command:
       BX_TOKEN_REGISTERS '\n'
@@ -782,7 +782,7 @@ restore_command:
     ;
 
 writemem_command:
-      BX_TOKEN_WRITEMEM BX_TOKEN_STRING BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'
+      BX_TOKEN_WRITEMEM BX_TOKEN_STRING expression expression '\n'
       {
         bx_dbg_writemem_command($2, $3, $4);
         free($1); free($2);
@@ -790,7 +790,7 @@ writemem_command:
     ;
 
 setpmem_command:
-      BX_TOKEN_SETPMEM BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'
+      BX_TOKEN_SETPMEM expression expression expression '\n'
       {
         bx_dbg_setpmem_command($2, $3, $4);
         free($1);
@@ -885,7 +885,7 @@ instrument_command:
     ;
 
 doit_command:
-      BX_TOKEN_DOIT BX_TOKEN_NUMERIC '\n'
+      BX_TOKEN_DOIT expression '\n'
       {
         bx_dbg_doit_command($2);
         free($1);
@@ -893,7 +893,7 @@ doit_command:
     ;
 
 crc_command:
-      BX_TOKEN_CRC BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'
+      BX_TOKEN_CRC expression expression '\n'
       {
         bx_dbg_crc_command($2, $3);
         free($1);

@@ -36,401 +36,84 @@ extern void mxcsr_to_softfloat_status_word(float_status_t &status, bx_mxcsr_t mx
 // AVX FMA Instructions //
 //////////////////////////
 
-// FMADDPD
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDPD_VpdHpdWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
-  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
-  unsigned len = i->getVL();
-
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  for (unsigned n=0; n < len; n++)
-    xmm_fmaddpd(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
-
-  check_exceptionsSSE(status.float_exception_flags);
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-// FMADDPS
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDPS_VpsHpsWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
-  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
-  unsigned len = i->getVL();
-
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  for (unsigned n=0; n < len; n++)
-    xmm_fmaddps(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
-
-  check_exceptionsSSE(status.float_exception_flags);
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-// FMADDSD
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDSD_VpdHsdWsdR(bxInstruction_c *i)
-{
-  float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->src1());
-  float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());
-  float64 op3 = BX_READ_XMM_REG_LO_QWORD(i->src3());
-
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
-  op1 = float64_fmadd(op1, op2, op3, status);
-  check_exceptionsSSE(status.float_exception_flags);
-
-  BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);
-  BX_CLEAR_AVX_HIGH128(i->dst());
-
-  BX_NEXT_INSTR(i);
-}
-
-// FMADDSS
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDSS_VpsHssWssR(bxInstruction_c *i)
-{
-  float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->src1());
-  float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());
-  float32 op3 = BX_READ_XMM_REG_LO_DWORD(i->src3());
-
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
-  op1 = float32_fmadd(op1, op2, op3, status);
-  check_exceptionsSSE(status.float_exception_flags);
-
-  BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);
-  BX_CLEAR_AVX_HIGH128(i->dst());
-
-  BX_NEXT_INSTR(i);
-}
-
-// FMADDSUBPD
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDSUBPD_VpdHpdWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
-  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
-  unsigned len = i->getVL();
-
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  for (unsigned n=0; n < len; n++)
-    xmm_fmaddsubpd(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
-
-  check_exceptionsSSE(status.float_exception_flags);
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-// FMADDSUBPS
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMADDSUBPS_VpsHpsWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
-  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
-  unsigned len = i->getVL();
-
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  for (unsigned n=0; n < len; n++)
-    xmm_fmaddsubps(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
-
-  check_exceptionsSSE(status.float_exception_flags);
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-// FMSUBADDPD
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBADDPD_VpdHpdWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
-  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
-  unsigned len = i->getVL();
-
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  for (unsigned n=0; n < len; n++)
-    xmm_fmsubaddpd(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
-
-  check_exceptionsSSE(status.float_exception_flags);
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-// FMSUBADDPS
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBADDPS_VpsHpsWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
-  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
-  unsigned len = i->getVL();
-
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  for (unsigned n=0; n < len; n++)
-    xmm_fmsubaddps(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
-
-  check_exceptionsSSE(status.float_exception_flags);
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-// FMSUBPD
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBPD_VpdHpdWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
-  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
-  unsigned len = i->getVL();
-
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  for (unsigned n=0; n < len; n++)
-    xmm_fmsubpd(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
-
-  check_exceptionsSSE(status.float_exception_flags);
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-// FMSUBPS
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBPS_VpsHpsWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
-  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
-  unsigned len = i->getVL();
-
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  for (unsigned n=0; n < len; n++)
-    xmm_fmsubps(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
-
-  check_exceptionsSSE(status.float_exception_flags);
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-// FMSUBSD
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBSD_VpdHsdWsdR(bxInstruction_c *i)
-{
-  float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->src1());
-  float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());
-  float64 op3 = BX_READ_XMM_REG_LO_QWORD(i->src3());
-
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
-  op1 = float64_fmsub(op1, op2, op3, status);
-  check_exceptionsSSE(status.float_exception_flags);
-
-  BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);
-  BX_CLEAR_AVX_HIGH128(i->dst());
-
-  BX_NEXT_INSTR(i);
-}
-
-// FMSUBSS
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFMSUBSS_VpsHssWssR(bxInstruction_c *i)
-{
-  float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->src1());
-  float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());
-  float32 op3 = BX_READ_XMM_REG_LO_DWORD(i->src3());
-
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
-  op1 = float32_fmsub(op1, op2, op3, status);
-  check_exceptionsSSE(status.float_exception_flags);
-
-  BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);
-  BX_CLEAR_AVX_HIGH128(i->dst());
-
-  BX_NEXT_INSTR(i);
-}
-
-// FNMADDPD
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADDPD_VpdHpdWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
-  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
-  unsigned len = i->getVL();
-
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  for (unsigned n=0; n < len; n++)
-    xmm_fnmaddpd(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
-
-  check_exceptionsSSE(status.float_exception_flags);
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-// FNMADDPS
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADDPS_VpsHpsWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
-  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
-  unsigned len = i->getVL();
-
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  for (unsigned n=0; n < len; n++)
-    xmm_fnmaddps(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
-
-  check_exceptionsSSE(status.float_exception_flags);
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-// FNMADDSD
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADDSD_VpdHsdWsdR(bxInstruction_c *i)
-{
-  float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->src1());
-  float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());
-  float64 op3 = BX_READ_XMM_REG_LO_QWORD(i->src3());
-
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
-  op1 = float64_fnmadd(op1, op2, op3, status);
-  check_exceptionsSSE(status.float_exception_flags);
-
-  BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);
-  BX_CLEAR_AVX_HIGH128(i->dst());
-
-  BX_NEXT_INSTR(i);
-}
-
-// FNMADDSS
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMADDSS_VpsHssWssR(bxInstruction_c *i)
-{
-  float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->src1());
-  float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());
-  float32 op3 = BX_READ_XMM_REG_LO_DWORD(i->src3());
-
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
-  op1 = float32_fnmadd(op1, op2, op3, status);
-  check_exceptionsSSE(status.float_exception_flags);
-
-  BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);
-  BX_CLEAR_AVX_HIGH128(i->dst());
-
-  BX_NEXT_INSTR(i);
-}
-
-// FNMSUBPD
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUBPD_VpdHpdWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
-  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
-  unsigned len = i->getVL();
-
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  for (unsigned n=0; n < len; n++)
-    xmm_fnmsubpd(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
-
-  check_exceptionsSSE(status.float_exception_flags);
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-// FNMSUBPS
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUBPS_VpsHpsWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
-  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
-  unsigned len = i->getVL();
-
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
-
-  for (unsigned n=0; n < len; n++)
-    xmm_fnmsubps(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);
-
-  check_exceptionsSSE(status.float_exception_flags);
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-// FNMSUBSD
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUBSD_VpdHsdWsdR(bxInstruction_c *i)
-{
-  float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->src1());
-  float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());
-  float64 op3 = BX_READ_XMM_REG_LO_QWORD(i->src3());
-
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
-  op1 = float64_fnmsub(op1, op2, op3, status);
-  check_exceptionsSSE(status.float_exception_flags);
-
-  BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);
-  BX_CLEAR_AVX_HIGH128(i->dst());
-
-  BX_NEXT_INSTR(i);
-}
-
-// FNMSUBSS
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFNMSUBSS_VpsHssWssR(bxInstruction_c *i)
-{
-  float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->src1());
-  float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());
-  float32 op3 = BX_READ_XMM_REG_LO_DWORD(i->src3());
-
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
-  op1 = float32_fnmsub(op1, op2, op3, status);
-  check_exceptionsSSE(status.float_exception_flags);
-
-  BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);
-  BX_CLEAR_AVX_HIGH128(i->dst());
-
-  BX_NEXT_INSTR(i);
-}
+#define AVX2_FMA_PACKED(HANDLER, func)                                        \
+  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
+  {                                                                           \
+    BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());                     \
+    BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());                     \
+    BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());                     \
+    unsigned len = i->getVL();                                                \
+                                                                              \
+    float_status_t status;                                                    \
+    mxcsr_to_softfloat_status_word(status, MXCSR);                            \
+                                                                              \
+    for (unsigned n=0; n < len; n++)                                          \
+      (func)(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);         \
+                                                                              \
+    check_exceptionsSSE(status.float_exception_flags);                        \
+                                                                              \
+    BX_WRITE_AVX_REGZ(i->dst(), op1, len);                                    \
+    BX_NEXT_INSTR(i);                                                         \
+  }
+
+AVX2_FMA_PACKED(VFMADDPD_VpdHpdWpdR, xmm_fmaddpd)
+AVX2_FMA_PACKED(VFMADDPS_VpsHpsWpsR, xmm_fmaddps)
+AVX2_FMA_PACKED(VFMADDSUBPD_VpdHpdWpdR, xmm_fmaddsubpd)
+AVX2_FMA_PACKED(VFMADDSUBPS_VpsHpsWpsR, xmm_fmaddsubps)
+AVX2_FMA_PACKED(VFMSUBADDPD_VpdHpdWpdR, xmm_fmsubaddpd)
+AVX2_FMA_PACKED(VFMSUBADDPS_VpsHpsWpsR, xmm_fmsubaddps)
+AVX2_FMA_PACKED(VFMSUBPD_VpdHpdWpdR, xmm_fmsubpd)
+AVX2_FMA_PACKED(VFMSUBPS_VpsHpsWpsR, xmm_fmsubps)
+AVX2_FMA_PACKED(VFNMADDPD_VpdHpdWpdR, xmm_fnmaddpd)
+AVX2_FMA_PACKED(VFNMADDPS_VpsHpsWpsR, xmm_fnmaddps)
+AVX2_FMA_PACKED(VFNMSUBPD_VpdHpdWpdR, xmm_fnmsubpd)
+AVX2_FMA_PACKED(VFNMSUBPS_VpsHpsWpsR, xmm_fnmsubps)
+
+#define AVX2_FMA_SCALAR_SINGLE(HANDLER, func)                                 \
+  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
+  {                                                                           \
+    float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->src1());                        \
+    float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());                        \
+    float32 op3 = BX_READ_XMM_REG_LO_DWORD(i->src3());                        \
+                                                                              \
+    float_status_t status;                                                    \
+    mxcsr_to_softfloat_status_word(status, MXCSR);                            \
+    op1 = (func)(op1, op2, op3, status);                                      \
+    check_exceptionsSSE(status.float_exception_flags);                        \
+                                                                              \
+    BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);                                 \
+    BX_CLEAR_AVX_HIGH128(i->dst());                                           \
+                                                                              \
+    BX_NEXT_INSTR(i);                                                         \
+  }
+
+AVX2_FMA_SCALAR_SINGLE(VFMADDSS_VpsHssWssR, float32_fmadd)
+AVX2_FMA_SCALAR_SINGLE(VFMSUBSS_VpsHssWssR, float32_fmsub)
+AVX2_FMA_SCALAR_SINGLE(VFNMADDSS_VpsHssWssR, float32_fnmadd)
+AVX2_FMA_SCALAR_SINGLE(VFNMSUBSS_VpsHssWssR, float32_fnmsub)
+
+#define AVX2_FMA_SCALAR_DOUBLE(HANDLER, func)                                 \
+  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
+  {                                                                           \
+    float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->src1());                        \
+    float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());                        \
+    float64 op3 = BX_READ_XMM_REG_LO_QWORD(i->src3());                        \
+                                                                              \
+    float_status_t status;                                                    \
+    mxcsr_to_softfloat_status_word(status, MXCSR);                            \
+    op1 = (func)(op1, op2, op3, status);                                      \
+    check_exceptionsSSE(status.float_exception_flags);                        \
+                                                                              \
+    BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);                                 \
+    BX_CLEAR_AVX_HIGH128(i->dst());                                           \
+                                                                              \
+    BX_NEXT_INSTR(i);                                                         \
+  }
+
+AVX2_FMA_SCALAR_DOUBLE(VFMADDSD_VpdHsdWsdR, float64_fmadd)
+AVX2_FMA_SCALAR_DOUBLE(VFMSUBSD_VpdHsdWsdR, float64_fmsub)
+AVX2_FMA_SCALAR_DOUBLE(VFNMADDSD_VpdHsdWsdR, float64_fnmadd)
+AVX2_FMA_SCALAR_DOUBLE(VFNMSUBSD_VpdHsdWsdR, float64_fnmsub)
 
 //////////////////////////////////
 // FMA4 (AMD) specific handlers //

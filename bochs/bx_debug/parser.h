@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 2.5.  */
+/* A Bison parser, made by GNU Bison 2.7.1.  */
 
 /* Bison interface for Yacc-like parsers in C
    
-      Copyright (C) 1984, 1989-1990, 2000-2011 Free Software Foundation, Inc.
+      Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
    
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -30,6 +30,15 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
+#ifndef YY_BX_Y_TAB_H_INCLUDED
+# define YY_BX_Y_TAB_H_INCLUDED
+/* Enabling traces.  */
+#ifndef YYDEBUG
+# define YYDEBUG 0
+#endif
+#if YYDEBUG
+extern int bxdebug;
+#endif
 
 /* Tokens.  */
 #ifndef YYTOKENTYPE
@@ -251,12 +260,10 @@
 
 
 
-
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
 {
-
-/* Line 2068 of yacc.c  */
+/* Line 2053 of yacc.c  */
 #line 13 "parser.y"
 
   char    *sval;
@@ -264,9 +271,8 @@ typedef union YYSTYPE
   bx_bool  bval;
 
 
-
-/* Line 2068 of yacc.c  */
-#line 270 "y.tab.h"
+/* Line 2053 of yacc.c  */
+#line 276 "y.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -275,4 +281,18 @@ typedef union YYSTYPE
 
 extern YYSTYPE bxlval;
 
+#ifdef YYPARSE_PARAM
+#if defined __STDC__ || defined __cplusplus
+int bxparse (void *YYPARSE_PARAM);
+#else
+int bxparse ();
+#endif
+#else /* ! YYPARSE_PARAM */
+#if defined __STDC__ || defined __cplusplus
+int bxparse (void);
+#else
+int bxparse ();
+#endif
+#endif /* ! YYPARSE_PARAM */
 
+#endif /* !YY_BX_Y_TAB_H_INCLUDED  */
