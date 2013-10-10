@@ -42,7 +42,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDPS_MASK_VpsHpsWpsR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  softfloat_status_word_rc_override(status, i);;
+  softfloat_status_word_rc_override(status, i);
 
   for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 4) {
     xmm_addps_mask(&op1.vmm128(n), &op2.vmm128(n), status, tmp_mask);
@@ -67,7 +67,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDPD_MASK_VpdHpdWpdR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  softfloat_status_word_rc_override(status, i);;
+  softfloat_status_word_rc_override(status, i);
 
   for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 2) {
     xmm_addpd_mask(&op1.vmm128(n), &op2.vmm128(n), status, tmp_mask);
@@ -148,7 +148,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBPS_MASK_VpsHpsWpsR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  softfloat_status_word_rc_override(status, i);;
+  softfloat_status_word_rc_override(status, i);
 
   for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 4) {
     xmm_subps_mask(&op1.vmm128(n), &op2.vmm128(n), status, tmp_mask);
@@ -173,7 +173,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBPD_MASK_VpdHpdWpdR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  softfloat_status_word_rc_override(status, i);;
+  softfloat_status_word_rc_override(status, i);
 
   for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 2) {
     xmm_subpd_mask(&op1.vmm128(n), &op2.vmm128(n), status, tmp_mask);
@@ -254,7 +254,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULPS_MASK_VpsHpsWpsR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  softfloat_status_word_rc_override(status, i);;
+  softfloat_status_word_rc_override(status, i);
 
   for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 4) {
     xmm_mulps_mask(&op1.vmm128(n), &op2.vmm128(n), status, tmp_mask);
@@ -279,7 +279,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULPD_MASK_VpdHpdWpdR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  softfloat_status_word_rc_override(status, i);;
+  softfloat_status_word_rc_override(status, i);
 
   for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 2) {
     xmm_mulpd_mask(&op1.vmm128(n), &op2.vmm128(n), status, tmp_mask);
@@ -360,7 +360,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVPS_MASK_VpsHpsWpsR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  softfloat_status_word_rc_override(status, i);;
+  softfloat_status_word_rc_override(status, i);
 
   for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 4) {
     xmm_divps_mask(&op1.vmm128(n), &op2.vmm128(n), status, tmp_mask);
@@ -385,7 +385,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVPD_MASK_VpdHpdWpdR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  softfloat_status_word_rc_override(status, i);;
+  softfloat_status_word_rc_override(status, i);
 
   for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 2) {
     xmm_divpd_mask(&op1.vmm128(n), &op2.vmm128(n), status, tmp_mask);
@@ -466,7 +466,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINPS_MASK_VpsHpsWpsR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  softfloat_status_word_rc_override(status, i);;
+  softfloat_status_word_rc_override(status, i);
 
   for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 4) {
     xmm_minps_mask(&op1.vmm128(n), &op2.vmm128(n), status, tmp_mask);
@@ -491,7 +491,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINPD_MASK_VpdHpdWpdR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  softfloat_status_word_rc_override(status, i);;
+  softfloat_status_word_rc_override(status, i);
 
   for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 2) {
     xmm_minpd_mask(&op1.vmm128(n), &op2.vmm128(n), status, tmp_mask);
@@ -566,7 +566,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXPS_MASK_VpsHpsWpsR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  softfloat_status_word_rc_override(status, i);;
+  softfloat_status_word_rc_override(status, i);
 
   for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 4) {
     xmm_maxps_mask(&op1.vmm128(n), &op2.vmm128(n), status, tmp_mask);
@@ -591,7 +591,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXPD_MASK_VpdHpdWpdR(bxInstructi
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  softfloat_status_word_rc_override(status, i);;
+  softfloat_status_word_rc_override(status, i);
 
   for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 2) {
     xmm_maxpd_mask(&op1.vmm128(n), &op2.vmm128(n), status, tmp_mask);

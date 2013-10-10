@@ -5164,14 +5164,15 @@ enum {
 #define BxPrefixSSEF3       0x0020 // Group encoding: 0010, SSE_PREFIX_F3 only
 #define BxPrefixSSEF2       0x0030 // Group encoding: 0011, SSE_PREFIX_F2 only
 #define BxPrefixSSE         0x0040 // Group encoding: 0100
-#define BxPrefixSSEF2F3     0x0050 // Group encoding: 0101, ignore SSE_PREFIX_66
-#define BxGroupN            0x0060 // Group encoding: 0110
-#define BxSplitGroupN       0x0070 // Group encoding: 0111
-#define BxFPEscape          0x0080 // Group encoding: 1000
-#define BxOSizeGrp          0x0090 // Group encoding: 1001
-#define BxSplitVexW         0x00A0 // Group encoding: 1010
-#define BxSplitVexW64       0x00B0 // Group encoding: 1011 - VexW ignored in 32-bit mode
-#define BxSplitMod11B       0x00C0 // Group encoding: 1100
+#define BxPrefixSSE2        0x0050 // Group encoding: 0101, do not allow SSE_PREFIX_F2 or SSE_PREFIX_F3
+#define BxPrefixSSEF2F3     0x0060 // Group encoding: 0110, ignore SSE_PREFIX_66
+#define BxGroupN            0x0070 // Group encoding: 0111
+#define BxSplitGroupN       0x0080 // Group encoding: 1000
+#define BxFPEscape          0x0090 // Group encoding: 1001
+#define BxOSizeGrp          0x00A0 // Group encoding: 1010
+#define BxSplitVexW         0x00B0 // Group encoding: 1011
+#define BxSplitVexW64       0x00C0 // Group encoding: 1100 - VexW ignored in 32-bit mode
+#define BxSplitMod11B       0x00D0 // Group encoding: 1101
 
 // The BxImmediate2 mask specifies kind of second immediate data
 // required by instruction.

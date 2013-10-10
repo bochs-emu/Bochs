@@ -922,11 +922,11 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G11Eq[8] = {
 static const BxOpcodeInfo_t BxOpcodeInfoG12R[8] = {
   /* 0 */ { 0, BX_IA_ERROR },
   /* 1 */ { 0, BX_IA_ERROR },
-  /* 2 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSRLW_NqIb, BxOpcodeGroupSSE_G1202 },
+  /* 2 */ { BxImmediate_Ib | BxPrefixSSE2, BX_IA_ERROR, BxOpcodeGroupSSE_G1202 },
   /* 3 */ { 0, BX_IA_ERROR },
-  /* 4 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSRAW_NqIb, BxOpcodeGroupSSE_G1204 },
+  /* 4 */ { BxImmediate_Ib | BxPrefixSSE2, BX_IA_ERROR, BxOpcodeGroupSSE_G1204 },
   /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSLLW_NqIb, BxOpcodeGroupSSE_G1206 },
+  /* 6 */ { BxImmediate_Ib | BxPrefixSSE2, BX_IA_ERROR, BxOpcodeGroupSSE_G1206 },
   /* 7 */ { 0, BX_IA_ERROR }
 };
 
@@ -937,11 +937,11 @@ static const BxOpcodeInfo_t BxOpcodeInfoG12R[8] = {
 static const BxOpcodeInfo_t BxOpcodeInfoG13R[8] = {
   /* 0 */ { 0, BX_IA_ERROR },
   /* 1 */ { 0, BX_IA_ERROR },
-  /* 2 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSRLD_NqIb, BxOpcodeGroupSSE_G1302 },
+  /* 2 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_G1302 },
   /* 3 */ { 0, BX_IA_ERROR },
-  /* 4 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSRAD_NqIb, BxOpcodeGroupSSE_G1304 },
+  /* 4 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_G1304 },
   /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSLLD_NqIb, BxOpcodeGroupSSE_G1306 },
+  /* 6 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_G1306 },
   /* 7 */ { 0, BX_IA_ERROR }
 };
 
@@ -952,11 +952,11 @@ static const BxOpcodeInfo_t BxOpcodeInfoG13R[8] = {
 static const BxOpcodeInfo_t BxOpcodeInfoG14R[8] = {
   /* 0 */ { 0, BX_IA_ERROR },
   /* 1 */ { 0, BX_IA_ERROR },
-  /* 2 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSRLQ_NqIb, BxOpcodeGroupSSE_G1402 },
+  /* 2 */ { BxImmediate_Ib | BxPrefixSSE2, BX_IA_ERROR, BxOpcodeGroupSSE_G1402 },
   /* 3 */ { BxImmediate_Ib | BxPrefixSSE66, BX_IA_PSRLDQ_UdqIb },
   /* 4 */ { 0, BX_IA_ERROR },
   /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_PSLLQ_NqIb, BxOpcodeGroupSSE_G1406 },
+  /* 6 */ { BxImmediate_Ib | BxPrefixSSE2, BX_IA_ERROR, BxOpcodeGroupSSE_G1406 },
   /* 7 */ { BxImmediate_Ib | BxPrefixSSE66, BX_IA_PSLLDQ_UdqIb }
 };
 
