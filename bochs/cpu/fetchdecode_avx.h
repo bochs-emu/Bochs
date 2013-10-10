@@ -395,10 +395,9 @@ static const BxOpcodeInfo_t BxOpcodeGroupAVX256_0f7f[3] = {
   /* F2 */ { 0, BX_IA_ERROR }
 };
 
-static const BxOpcodeInfo_t BxOpcodeGroupAVX_0fc6[3] = {
-  /* 66 */ { 0, BX_IA_VSHUFPD_VpdHpdWpdIb },
-  /* F3 */ { 0, BX_IA_ERROR },
-  /* F2 */ { 0, BX_IA_ERROR }
+static const BxOpcodeInfo_t BxOpcodeGroupAVX_0fc6[2] = {
+  /* -- */ { 0, BX_IA_VSHUFPS_VpsHpsWpsIb },
+  /* 66 */ { 0, BX_IA_VSHUFPD_VpdHpdWpdIb }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0fd0[3] = {
@@ -906,8 +905,8 @@ static const BxOpcodeInfo_t BxOpcodeTableAVX[256*3*2] = {
   /* C4 /1 */ { 0, BX_IA_ERROR },
   /* C5 /0 */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_V128_VPEXTRW_GdUdqIb },
   /* C5 /1 */ { 0, BX_IA_ERROR },
-  /* C6 /0 */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_VSHUFPS_VpsHpsWpsIb, BxOpcodeGroupAVX_0fc6 },
-  /* C6 /1 */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_VSHUFPS_VpsHpsWpsIb, BxOpcodeGroupAVX_0fc6 },
+  /* C6 /0 */ { BxPrefixSSE2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeGroupAVX_0fc6 },
+  /* C6 /1 */ { BxPrefixSSE2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeGroupAVX_0fc6 },
   /* C7 /0 */ { 0, BX_IA_ERROR },
   /* C7 /1 */ { 0, BX_IA_ERROR },
   /* C8 /0 */ { 0, BX_IA_ERROR },

@@ -32,13 +32,15 @@
 #define _GRPSSEF2      7
 #define _GRPSSEF3      8
 #define _GRPSSENONE    9
-#define _GRPRM         10
-#define _GRP3BOP       11
-#define _GRP64B        12
-#define _GRPVEXW       13
+#define _GRPSSE2       10
+#define _GRPRM         11
+#define _GRP3BOP       12
+#define _GRP64B        13
+#define _GRPVEXW       14
 
 /* ************************************************************************ */
 #define GRPSSE(n)       _GRPSSE,   BxDisasmGroupSSE_##n
+#define GRPSSE2(n)      _GRPSSE2,  BxDisasmGroupSSE_##n
 #define GRPAVX(n)       _GRPSSE,   BxDisasmGroupAVX_##n
 #define GRPN(n)         _GROUPN,   BxDisasmGroup##n
 #define GRPRM(n)        _GRPRM,    BxDisasmGroupRm##n

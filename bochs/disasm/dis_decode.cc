@@ -301,6 +301,17 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address cs_base, 
          entry = &(OPCODE_TABLE(entry)[sse_prefix]);
          break;
 
+       case _GRPSSE2:
+         sse_opcode = 1;
+         /* For SSE opcodes, look into another 2 entries table
+            with the opcode prefixes (NONE, 0x66)
+            SSE prefixes 0xF2 and 0xF3 are not allowed */
+         if (sse_prefix > SSE_PREFIX_66)
+             entry = &(BxDisasmGroupSSE_ERR[sse_prefix]);
+         else
+             entry = &(OPCODE_TABLE(entry)[sse_prefix]);
+         break;
+
        case _SPLIT11B:
          entry = &(OPCODE_TABLE(entry)[insn.mod != 3]); /* REG/MEM */
          break;
