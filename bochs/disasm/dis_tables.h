@@ -42,6 +42,7 @@
 #define GRPSSE(n)       _GRPSSE,   BxDisasmGroupSSE_##n
 #define GRPSSE2(n)      _GRPSSE2,  BxDisasmGroupSSE_##n
 #define GRPAVX(n)       _GRPSSE,   BxDisasmGroupAVX_##n
+#define GRPAVX2(n)      _GRPSSE2,  BxDisasmGroupAVX_##n
 #define GRPN(n)         _GROUPN,   BxDisasmGroup##n
 #define GRPRM(n)        _GRPRM,    BxDisasmGroupRm##n
 #define GRPMOD(n)       _SPLIT11B, BxDisasmGroupMod##n

@@ -389,16 +389,14 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f7f[3] = {
   /* F2 */ { 0, BX_IA_ERROR }
 };
 
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_0fc4[3] = {
-  /* 66 */ { 0, BX_IA_PINSRW_VdqEwIb },
-  /* F3 */ { 0, BX_IA_ERROR },
-  /* F2 */ { 0, BX_IA_ERROR }
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0fc4[2] = {
+  /* -- */ { 0, BX_IA_PINSRW_PqEwIb },
+  /* 66 */ { 0, BX_IA_PINSRW_VdqEwIb }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0fc5R[3] = {
-  /* 66 */ { 0, BX_IA_PEXTRW_GdUdqIb },
-  /* F3 */ { 0, BX_IA_ERROR },
-  /* F2 */ { 0, BX_IA_ERROR }
+  /* -- */ { 0, BX_IA_PEXTRW_GdNqIb },
+  /* 66 */ { 0, BX_IA_PEXTRW_GdUdqIb }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0fc6[2] = {
