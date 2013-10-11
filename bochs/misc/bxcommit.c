@@ -189,39 +189,6 @@ int ask_int(const char *prompt, int min, int max, int the_default, int *out)
   }
 }
 
-int ask_menu(const char *prompt, int n_choices, char *choice[], int the_default, int *out)
-{
-  char buffer[1024];
-  char *clean;
-  int i;
-  *out = -1;
-  while (1) {
-    printf("%s", prompt);
-    printf("[%s] ", choice[the_default]);
-    if (!fgets(buffer, sizeof(buffer), stdin))
-      return -1;
-    clean = clean_string(buffer);
-    if (strlen(clean) < 1) {
-      // empty line, use the default
-      *out = the_default;
-      return 0;
-    }
-    for (i=0; i<n_choices; i++) {
-      if (!strcmp(choice[i], clean)) {
-        // matched, return the choice number
-        *out = i;
-        return 0;
-      }
-    }
-    fprintf(stderr, "Your choice (%s) did not match any of the choices:\n", clean);
-    for (i=0; i<n_choices; i++) {
-      if (i>0) printf(", ");
-      printf("%s", choice[i]);
-    }
-    printf("\n");
-  }
-}
-
 int ask_yn(const char *prompt, int the_default, int *out)
 {
   char buffer[16];
@@ -771,7 +738,7 @@ void print_usage()
   fprintf(stderr,
     "Usage: bxcommit [options] [flat filename] [redolog filename]\n\n"
     "Supported options:\n"
-    "  -mode=commit-undoable  commit undoable redolog to flat file\n"
+    "  -mode=commit-undoable  commit undoable redolog to base image file\n"
     "  -mode=growing-to-flat  create flat disk image from growing disk image\n"
     "  -mode=flat-to-growing  create growing disk image from flat disk image\n"
     "  -d                     delete source file after commit\n"
