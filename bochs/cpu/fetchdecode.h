@@ -220,6 +220,14 @@ const Bit8u OP_KGw = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_NNN);
 const Bit8u OP_KEw = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_RM);
 const Bit8u OP_KHw = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_VVV);
 
+const Bit8u OP_KGd = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_NNN);
+const Bit8u OP_KEd = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_RM);
+const Bit8u OP_KHd = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_VVV);
+
+const Bit8u OP_KGq = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_NNN);
+const Bit8u OP_KEq = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_RM);
+const Bit8u OP_KHq = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_VVV);
+
 const Bit8u OP_ST0 = BX_FORM_SRC(BX_FPU_REG, BX_SRC_EAX);
 const Bit8u OP_STi = BX_FORM_SRC(BX_FPU_REG, BX_SRC_RM);
 
@@ -937,11 +945,11 @@ static const BxOpcodeInfo_t BxOpcodeInfoG12R[8] = {
 static const BxOpcodeInfo_t BxOpcodeInfoG13R[8] = {
   /* 0 */ { 0, BX_IA_ERROR },
   /* 1 */ { 0, BX_IA_ERROR },
-  /* 2 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_G1302 },
+  /* 2 */ { BxImmediate_Ib | BxPrefixSSE2, BX_IA_ERROR, BxOpcodeGroupSSE_G1302 },
   /* 3 */ { 0, BX_IA_ERROR },
-  /* 4 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_G1304 },
+  /* 4 */ { BxImmediate_Ib | BxPrefixSSE2, BX_IA_ERROR, BxOpcodeGroupSSE_G1304 },
   /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_G1306 },
+  /* 6 */ { BxImmediate_Ib | BxPrefixSSE2, BX_IA_ERROR, BxOpcodeGroupSSE_G1306 },
   /* 7 */ { 0, BX_IA_ERROR }
 };
 
