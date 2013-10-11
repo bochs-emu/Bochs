@@ -1676,18 +1676,6 @@ modrm_done:
 
     attr |= OpcodeInfoPtr->Attr;
 
-    if (attr & BxAliasSSE) {
-      // SSE alias always comes alone
-      alias = sse_prefix;
-    }
-#if BX_SUPPORT_AVX
-    else if (attr & BxAliasVexW) {
-      // VexW alias could come with BxPrefixSSE
-      BX_ASSERT(had_vex_xop);
-      alias = vex_w;
-    }
-#endif
-
     while(attr & BxGroupX) {
       Bit32u group = attr & BxGroupX;
       attr &= ~BxGroupX;
@@ -1754,6 +1742,18 @@ modrm_done:
       /* get additional attributes from group table */
       attr |= OpcodeInfoPtr->Attr;
     }
+
+    if (attr & BxAliasSSE) {
+      // SSE alias always comes alone
+      alias = sse_prefix;
+    }
+#if BX_SUPPORT_AVX
+    else if (attr & BxAliasVexW) {
+      // VexW alias could come with BxPrefixSSE
+      BX_ASSERT(had_vex_xop);
+      alias = vex_w;
+    }
+#endif
 
     ia_opcode = OpcodeInfoPtr->IA + alias;
   }
