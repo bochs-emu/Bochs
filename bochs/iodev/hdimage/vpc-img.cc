@@ -35,9 +35,9 @@
 
 #ifdef BXIMAGE
 #include "config.h"
+#include "misc/bxcompat.h"
 #include "osdep.h"
 #include "misc/bswap.h"
-#include "misc/bxcompat.h"
 #else
 #include "iodev.h"
 #endif

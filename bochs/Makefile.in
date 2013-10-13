@@ -248,6 +248,9 @@ bximage@EXE@: misc/bximage.o
 bxcommit@EXE@: misc/bxcommit.o
 	@LINK_CONSOLE@ misc/bxcommit.o
 
+bximage_new@EXE@: misc/bximage_new.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc-img.o
+	@LINK_CONSOLE@ misc/bximage_new.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc-img.o
+
 niclist@EXE@: misc/niclist.o
 	@LINK_CONSOLE@ misc/niclist.o
 
@@ -257,6 +260,26 @@ misc/bximage.o: $(srcdir)/misc/bximage.c $(srcdir)/misc/bswap.h $(srcdir)/iodev/
 
 misc/bxcommit.o: $(srcdir)/misc/bxcommit.c $(srcdir)/misc/bswap.h $(srcdir)/iodev/hdimage/hdimage.h
 	$(CC) @DASH@c $(BX_INCDIRS) $(CFLAGS_CONSOLE) $(srcdir)/misc/bxcommit.c @OFP@$@
+
+misc/bximage_new.o: $(srcdir)/misc/bximage_new.cc $(srcdir)/misc/bswap.h \
+  $(srcdir)/misc/bxcompat.h $(srcdir)/iodev/hdimage/hdimage.h
+	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS_CONSOLE) $(srcdir)/misc/bximage_new.cc @OFP@$@
+
+misc/hdimage.o: $(srcdir)/iodev/hdimage/hdimage.cc \
+  $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
+	$(CXX) @DASH@c $(BX_INCDIRS) -DBXIMAGE $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/hdimage.cc @OFP@$@
+
+misc/vmware3.o: $(srcdir)/iodev/hdimage/vmware3.cc $(srcdir)/iodev/hdimage/vmware3.h \
+  $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
+	$(CXX) @DASH@c $(BX_INCDIRS) -DBXIMAGE $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vmware3.cc @OFP@$@
+
+misc/vmware4.o: $(srcdir)/iodev/hdimage/vmware4.cc $(srcdir)/iodev/hdimage/vmware4.h \
+  $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
+	$(CXX) @DASH@c $(BX_INCDIRS) -DBXIMAGE $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vmware4.cc @OFP@$@
+
+misc/vpc-img.o: $(srcdir)/iodev/hdimage/vpc-img.cc $(srcdir)/iodev/hdimage/vpc-img.h \
+  $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
+	$(CXX) @DASH@c $(BX_INCDIRS) -DBXIMAGE $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vpc-img.cc @OFP@$@
 
 misc/niclist.o: $(srcdir)/misc/niclist.c
 	$(CC) @DASH@c $(BX_INCDIRS) $(CFLAGS_CONSOLE) $(srcdir)/misc/niclist.c @OFP@$@

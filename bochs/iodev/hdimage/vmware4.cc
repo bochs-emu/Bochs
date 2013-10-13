@@ -33,8 +33,8 @@
 
 #ifdef BXIMAGE
 #include "config.h"
-#include "osdep.h"
 #include "misc/bxcompat.h"
+#include "osdep.h"
 #else
 #include "iodev.h"
 #endif
