@@ -22,6 +22,11 @@
 #ifndef BX_BSWAP_H
 #define BX_BSWAP_H
 
+BX_CPP_INLINE Bit16u bx_bswap16(Bit16u val16)
+{
+  return (val16<<8) | (val16>>8);
+}
+
 #if BX_HAVE___BUILTIN_BSWAP32
 #define bx_bswap32 __builtin_bswap32
 #else

@@ -114,12 +114,6 @@ typedef struct mapping_t {
   int read_only;
 } mapping_t;
 
-#ifndef WIN32
-Bit16u fat_datetime(time_t time, int return_time);
-#else
-Bit16u fat_datetime(FILETIME time, int return_time);
-#endif
-
 class vvfat_image_t : public device_image_t
 {
   public:

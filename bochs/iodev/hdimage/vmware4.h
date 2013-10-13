@@ -44,8 +44,10 @@ class vmware4_image_t : public device_image_t
         Bit32u get_capabilities();
         static int check_format(int fd, Bit64u imgsize);
 
+#ifndef BXIMAGE
         bx_bool save_state(const char *backup_fname);
         void restore_state(const char *backup_fname);
+#endif
 
     private:
         static const off_t INVALID_OFFSET;

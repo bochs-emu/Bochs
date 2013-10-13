@@ -31,7 +31,13 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
+#ifdef BXIMAGE
+#include "config.h"
+#include "osdep.h"
+#include "misc/bxcompat.h"
+#else
 #include "iodev.h"
+#endif
 #include "hdimage.h"
 #include "vmware3.h"
 
@@ -521,6 +527,7 @@ Bit32u vmware3_image_t::get_capabilities(void)
   return HDIMAGE_HAS_GEOMETRY;
 }
 
+#ifndef BXIMAGE
 bx_bool vmware3_image_t::save_state(const char *backup_fname)
 {
   bx_bool ret = 1;
@@ -571,3 +578,4 @@ void vmware3_image_t::restore_state(const char *backup_fname)
     device_image_t::open(pathname);
   }
 }
+#endif

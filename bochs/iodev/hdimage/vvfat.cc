@@ -59,13 +59,6 @@
 #define VVFAT_BOOT "vvfat_boot.bin"
 #define VVFAT_ATTR "vvfat_attr.cfg"
 
-#if defined (BX_LITTLE_ENDIAN)
-#define htod16(val) (val)
-#else
-#define htod16(val) ( (((val)&0xff00)>>8) | (((val)&0xff)<<8) )
-#endif
-#define dtoh16 htod16
-
 #ifndef F_OK
 #define F_OK 0
 #endif
@@ -490,33 +483,6 @@ static inline Bit8u fat_chksum(const direntry_t* entry)
 
   return chksum;
 }
-
-// if return_time==0, this returns the fat_date, else the fat_time
-#ifndef WIN32
-Bit16u fat_datetime(time_t time, int return_time)
-{
-  struct tm* t;
-  struct tm t1;
-
-  t = &t1;
-  localtime_r(&time, t);
-  if (return_time)
-    return htod16((t->tm_sec/2) | (t->tm_min<<5) | (t->tm_hour<<11));
-  return htod16((t->tm_mday) | ((t->tm_mon+1)<<5) | ((t->tm_year-80)<<9));
-}
-#else
-Bit16u fat_datetime(FILETIME time, int return_time)
-{
-  FILETIME localtime;
-  SYSTEMTIME systime;
-
-  FileTimeToLocalFileTime(&time, &localtime);
-  FileTimeToSystemTime(&localtime, &systime);
-  if (return_time)
-    return htod16((systime.wSecond/2) | (systime.wMinute<<5) | (systime.wHour<<11));
-  return htod16((systime.wDay) | (systime.wMonth<<5) | ((systime.wYear-1980)<<9));
-}
-#endif
 
 void vvfat_image_t::fat_set(unsigned int cluster, Bit32u value)
 {

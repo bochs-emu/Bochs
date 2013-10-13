@@ -33,7 +33,14 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
+#ifdef BXIMAGE
+#include "config.h"
+#include "osdep.h"
+#include "misc/bswap.h"
+#include "misc/bxcompat.h"
+#else
 #include "iodev.h"
+#endif
 #include "hdimage.h"
 #include "vpc-img.h"
 
@@ -283,6 +290,7 @@ Bit32u vpc_image_t::get_capabilities(void)
   return HDIMAGE_HAS_GEOMETRY;
 }
 
+#ifndef BXIMAGE
 bx_bool vpc_image_t::save_state(const char *backup_fname)
 {
   return hdimage_backup_file(fd, backup_fname);
@@ -311,6 +319,7 @@ void vpc_image_t::restore_state(const char *backup_fname)
   }
   device_image_t::open(pathname);
 }
+#endif
 
 Bit32u vpc_image_t::vpc_checksum(Bit8u *buf, size_t size)
 {
