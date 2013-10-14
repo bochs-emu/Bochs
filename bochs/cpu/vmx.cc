@@ -1649,9 +1649,9 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
       }
       revision &= ~BX_VMCS_SHADOW_BIT_MASK;
     }
-    if (revision != VMX_VMCS_REVISION_ID) {
+    if (revision != BX_CPU_THIS_PTR cpuid->get_vmcs_revision_id()) {
       *qualification = (Bit64u) VMENTER_ERR_GUEST_STATE_LINK_POINTER;
-      BX_ERROR(("VMFAIL: VMCS link pointer incorrect revision ID %d != %d", revision, VMX_VMCS_REVISION_ID));
+      BX_ERROR(("VMFAIL: VMCS link pointer incorrect revision ID %d != %d", revision, BX_CPU_THIS_PTR cpuid->get_vmcs_revision_id()));
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
 
@@ -2543,8 +2543,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
 
     // not allowed to be shadow VMCS
     Bit32u revision = VMXReadRevisionID((bx_phy_address) pAddr);
-    if (revision != VMX_VMCS_REVISION_ID) {
-      BX_ERROR(("VMXON: not expected (%d != %d) VMCS revision id !", revision, VMX_VMCS_REVISION_ID));
+    if (revision != BX_CPU_THIS_PTR cpuid->get_vmcs_revision_id()) {
+      BX_ERROR(("VMXON: not expected (%d != %d) VMCS revision id !", revision, BX_CPU_THIS_PTR cpuid->get_vmcs_revision_id()));
       VMfailInvalid();
       BX_NEXT_INSTR(i);
     }
@@ -2915,8 +2915,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRLD(bxInstruction_c *i)
     if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_VMCS_SHADOWING))
       revision &= ~BX_VMCS_SHADOW_BIT_MASK; // allowed to be shadow VMCS
 
-    if (revision != VMX_VMCS_REVISION_ID) {
-       BX_ERROR(("VMPTRLD: not expected (%d != %d) VMCS revision id !", revision, VMX_VMCS_REVISION_ID));
+    if (revision != BX_CPU_THIS_PTR cpuid->get_vmcs_revision_id()) {
+       BX_ERROR(("VMPTRLD: not expected (%d != %d) VMCS revision id !", revision, BX_CPU_THIS_PTR cpuid->get_vmcs_revision_id()));
        VMfail(VMXERR_VMPTRLD_INCORRECT_VMCS_REVISION_ID);
     }
     else {

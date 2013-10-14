@@ -25,7 +25,6 @@
 #define _BX_VMX_INTEL_H_
 
 #define VMX_VMCS_AREA_SIZE   4096
-#define VMX_VMCS_REVISION_ID 0x10 /* better to be uniq bochs VMCS revision id */
 
 // VMCS pointer is always 64-bit variable
 #define BX_INVALID_VMCSPTR BX_CONST64(0xFFFFFFFFFFFFFFFF)
@@ -803,7 +802,7 @@ typedef struct bx_VMCS
 // 56:63 reserved, must be zero
 //
 
-#define VMX_MSR_VMX_BASIC_LO (VMX_VMCS_REVISION_ID)
+#define VMX_MSR_VMX_BASIC_LO (BX_CPU_THIS_PTR cpuid->get_vmcs_revision_id())
 #define VMX_MSR_VMX_BASIC_HI \
      (VMX_VMCS_AREA_SIZE | ((!bx_cpuid_support_x86_64()) << 16) | \
      (BX_MEMTYPE_WB << 18) | (1<<22)) | ((BX_SUPPORT_VMX >= 2) ? (1<<23) : 0)

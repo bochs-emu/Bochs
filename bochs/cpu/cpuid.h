@@ -57,6 +57,12 @@ public:
   virtual int wrmsr(Bit32u index, Bit64u  msr) { return -1; }
 #endif
 
+#define BX_VMX_VMCS_REVISION_ID 0x2B /* better to be unique bochs VMCS revision id */
+
+#if BX_SUPPORT_VMX
+  virtual Bit32u get_vmcs_revision_id(void) const { return BX_VMX_VMCS_REVISION_ID; }
+#endif
+
 protected:
   BX_CPU_C *cpu;
 
