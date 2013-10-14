@@ -45,8 +45,15 @@
 #define BXIMAGE_MODE_CONVERT_IMAGE   2
 #define BXIMAGE_MODE_COMMIT_UNDOABLE 3
 
+#define BX_MAX_CYL_BITS 24 // 8 TB
+
+const int bx_max_hd_megs = (int)(((1 << BX_MAX_CYL_BITS) - 1) * 16.0 * 63.0 / 2048.0);
+
 int  bximage_mode;
-int  bx_hdimagemode;
+int  bx_hdimage;
+int  bx_fdsize_idx;
+int  bx_hdsize;
+int  bx_imagemode;
 int  bx_remove;
 int  bx_interactive;
 char bx_filename_1[512];
@@ -64,6 +71,17 @@ const char *main_menu_prompt =
 "0. Quit\n"
 "\n"
 "Please choose one ";
+
+// menu data for choosing floppy/hard disk
+const char *fdhd_menu = "\nDo you want to create a floppy disk image or a hard disk image?\nPlease type hd or fd. ";
+const char *fdhd_choices[] = { "fd", "hd" };
+int fdhd_n_choices = 2;
+
+// menu data for choosing floppy size
+const char *fdsize_menu = "\nChoose the size of floppy disk image to create, in megabytes.\nPlease type 160k, 180k, 320k, 360k, 720k, 1.2M, 1.44M, 1.68M, 1.72M, or 2.88M.\n ";
+const char *fdsize_choices[] = { "160k","180k","320k","360k","720k","1.2M","1.44M","1.68M","1.72M","2.88M" };
+const unsigned fdsize_sectors[] = { 320, 360, 640, 720, 1440, 2400, 2880, 3360, 3444, 5760 };
+int fdsize_n_choices = 10;
 
 // menu data for choosing disk mode
 const char *hdmode_menu = "\nWhat kind of image should I create?\nPlease type flat, sparse or growing. ";
@@ -329,7 +347,7 @@ int create_flat_image(const char *filename, Bit64u size)
 
   int fd = create_image_file(filename);
   memset(buffer, 0, 512);
-  if (bx_write_image(fd, size, buffer, 512) != 512)
+  if (bx_write_image(fd, size - 512, buffer, 512) != 512)
     fatal("ERROR: while writing block in flat file !");
   close(fd);
 
@@ -562,6 +580,8 @@ void print_usage()
     "  -mode=create  create new floppy or hard disk image\n"
     "  -mode=convert convert hard disk image to other format (mode)\n"
     "  -mode=commit  commit undoable redolog to base image\n"
+    "  -fd=...       create: floppy image with size code\n"
+    "  -hd=...       create: hard disk image with size in megabytes\n"
     "  -imgmode=...  create/convert: hard disk image mode\n"
     "  -d            convert/commit: delete source file after operation\n"
     "  -q            quiet mode (don't prompt for user input)\n"
@@ -574,6 +594,37 @@ void print_usage()
     "                commit:  redolog (journal) file\n\n");
 }
 
+void set_default_values()
+{
+  if (bximage_mode == BXIMAGE_MODE_CREATE_IMAGE) {
+    if (bx_hdimage == -1) {
+      bx_hdimage = 1;
+      bx_fdsize_idx = 6;
+      bx_interactive = 1;
+    }
+    if (bx_hdimage == 1) {
+      if (bx_imagemode == -1) {
+        bx_imagemode = 0;
+        bx_interactive = 1;
+      }
+      if (bx_hdsize == 0) {
+        bx_hdsize = 10;
+        bx_interactive = 1;
+      }
+    } else {
+      if (bx_fdsize_idx == -1) {
+        bx_fdsize_idx = 6;
+        bx_interactive = 1;
+      }
+    }
+  } else if (bximage_mode == BXIMAGE_MODE_CONVERT_IMAGE) {
+    if (bx_imagemode == -1) {
+      bx_imagemode = 0;
+      bx_interactive = 1;
+    }
+  }
+}
+
 int parse_cmdline(int argc, char *argv[])
 {
   int arg = 1;
@@ -581,7 +632,10 @@ int parse_cmdline(int argc, char *argv[])
   int fnargs = 0;
 
   bximage_mode = BXIMAGE_MODE_NULL;
-  bx_hdimagemode = 0;
+  bx_hdimage = -1;
+  bx_fdsize_idx = -1;
+  bx_hdsize = 0;
+  bx_imagemode = -1;
   bx_remove = 0;
   bx_interactive = 1;
   bx_filename_1[0] = 0;
@@ -603,9 +657,28 @@ int parse_cmdline(int argc, char *argv[])
         printf("Unknown bximage mode '%s'\n\n", &argv[arg][6]);
       }
     }
+    else if (!strncmp("-fd=", argv[arg], 4)) {
+      bx_hdimage = 0;
+      bx_fdsize_idx = get_menu_index(&argv[arg][4], fdsize_n_choices, fdsize_choices);
+      if (bx_fdsize_idx < 0) {
+        printf("Unknown floppy image size: %s\n\n", &argv[arg][6]);
+        ret = 0;
+      }
+    }
+    else if (!strncmp("-hd=", argv[arg], 4)) {
+      bx_hdimage = 1;
+      bx_imagemode = 0;
+      if (sscanf(&argv[arg][4], "%d", &bx_hdsize) != 1) {
+        printf("Error in hard disk image size argument: %s\n\n", &argv[arg][4]);
+        ret = 0;
+      } else if ((bx_hdsize < 1) || (bx_hdsize > bx_max_hd_megs)) {
+        printf("Hard disk image size out of range\n\n");
+        ret = 0;
+      }
+    }
     else if (!strncmp("-imgmode=", argv[arg], 9)) {
-      bx_hdimagemode = get_menu_index(&argv[arg][9], hdmode_n_choices, hdmode_choices);
-      if (bx_hdimagemode < 0) {
+      bx_imagemode = get_menu_index(&argv[arg][9], hdmode_n_choices, hdmode_choices);
+      if (bx_imagemode < 0) {
         printf("Unknown image mode: %s\n\n", &argv[arg][9]);
         ret = 0;
       }
@@ -633,15 +706,22 @@ int parse_cmdline(int argc, char *argv[])
   }
   if (bximage_mode == BXIMAGE_MODE_NULL) {
     bx_interactive = 1;
-  } else if ((bximage_mode != BXIMAGE_MODE_CREATE_IMAGE) && (fnargs < 2)) {
-    bx_interactive = 1;
+  } else {
+    set_default_values();
+    if (bximage_mode == BXIMAGE_MODE_CREATE_IMAGE) {
+      if (fnargs < 1) {
+        bx_interactive = 1;
+      }
+    } else if (fnargs < 2) {
+      bx_interactive = 1;
+    }
   }
   return ret;
 }
 
 int main(int argc, char *argv[])
 {
-  char tmplogname[512];
+  char bochsrc_line[256], prompt[80], tmplogname[512];
   int imgmode = 0;
 
   if (!parse_cmdline(argc, argv))
@@ -653,13 +733,37 @@ int main(int argc, char *argv[])
     if (ask_int(main_menu_prompt, 0, 3, bximage_mode, &bximage_mode) < 0)
       fatal(EOF_ERR);
 
+    set_default_values();
     switch (bximage_mode) {
       case BXIMAGE_MODE_NULL:
         myexit(0);
         break;
 
       case BXIMAGE_MODE_CREATE_IMAGE:
-        // TODO
+        if (ask_menu(fdhd_menu, fdhd_n_choices, fdhd_choices, bx_hdimage, &bx_hdimage) < 0)
+          fatal(EOF_ERR);
+        if (bx_hdimage == 0) { // floppy
+          if (ask_menu(fdsize_menu, fdsize_n_choices, fdsize_choices, bx_fdsize_idx, &bx_fdsize_idx) < 0)
+            fatal(EOF_ERR);
+          if (!strlen(bx_filename_1)) {
+            strcpy(bx_filename_1, "a.img");
+          }
+          if (ask_string("\nWhat should be the name of the image?\n", bx_filename_1, bx_filename_1) < 0)
+            fatal(EOF_ERR);
+          sprintf(bochsrc_line, "floppya: image=\"%s\", status=inserted", bx_filename_1);
+        } else { // hard disk
+          if (ask_menu(hdmode_menu, hdmode_n_choices, hdmode_choices, bx_imagemode, &bx_imagemode) < 0)
+            fatal(EOF_ERR);
+          sprintf(prompt, "\nEnter the hard disk size in megabytes, between 1 and %d\n", bx_max_hd_megs);
+          if (ask_int(prompt, 1, bx_max_hd_megs, bx_hdsize, &bx_hdsize) < 0)
+            fatal(EOF_ERR);
+          if (!strlen(bx_filename_1)) {
+            strcpy(bx_filename_1, "c.img");
+          }
+          if (ask_string("\nWhat should be the name of the image?\n", bx_filename_1, bx_filename_1) < 0)
+            fatal(EOF_ERR);
+          sprintf(bochsrc_line, "ata0-master: type=disk, path=\"%s\", mode=%s", bx_filename_1, hdmode_choices[bx_imagemode]);
+        }
         break;
 
       case BXIMAGE_MODE_CONVERT_IMAGE:
@@ -675,9 +779,9 @@ int main(int argc, char *argv[])
         }
         if (ask_string("\nWhat should be the name of the new image?\n", tmplogname, bx_filename_2) < 0)
           fatal(EOF_ERR);
-        if (ask_menu(hdmode_menu, hdmode_n_choices, hdmode_choices, bx_hdimagemode, &bx_hdimagemode) < 0)
+        if (ask_menu(hdmode_menu, hdmode_n_choices, hdmode_choices, bx_imagemode, &bx_imagemode) < 0)
           fatal(EOF_ERR);
-        imgmode = hdmode_choice_id[bx_hdimagemode];
+        imgmode = hdmode_choice_id[bx_imagemode];
         if (ask_yn("\nShould the source been removed afterwards?\n", 0, &bx_remove) < 0)
           fatal(EOF_ERR);
         break;
@@ -704,8 +808,15 @@ int main(int argc, char *argv[])
     }
   }
   if (bximage_mode == BXIMAGE_MODE_CREATE_IMAGE) {
-    // TODO
-    fatal("\nbximage_new: mode not implemented yet");
+    if (bx_hdimage == 0) {
+      printf("\nCreating floppy image '%s' with %d sectors\n", bx_filename_1, fdsize_sectors[bx_fdsize_idx]);
+      create_flat_image(bx_filename_1, fdsize_sectors[bx_fdsize_idx] * 512);
+    } else {
+      // TODO
+      fatal("\nbximage_new: mode not implemented yet");
+    }
+    printf("\nThe following line should appear in your bochsrc:\n");
+    printf("  %s\n", bochsrc_line);
   } else if (bximage_mode == BXIMAGE_MODE_CONVERT_IMAGE) {
     convert_image(imgmode);
     if (bx_remove) {
