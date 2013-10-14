@@ -2416,6 +2416,8 @@ fi
 # everybody has to re-invent the wheel. differently.
 test "${WGET}" = "curl" && WGET="curl -O"
 
+BXIMAGE_FLAG="-DBXIMAGE"
+
 # modify settings based on target platform
 case "$target" in
   *-macosx*)
@@ -2460,6 +2462,7 @@ case "$target" in
     EXE=".exe"
     PRIMARY_TARGET="bochs.exe"
     BXIMAGE_LINK_OPTS="user32.lib"
+    BXIMAGE_FLAG="/DBXIMAGE"
     # also compile niclist if networking is on
     if test "$networking" = yes; then
       PRIMARY_TARGET="$PRIMARY_TARGET niclist.exe"
@@ -2867,6 +2870,7 @@ AC_SUBST(GUI_LINK_OPTS)
 AC_SUBST(GUI_LINK_OPTS_TERM)
 AC_SUBST(GUI_LINK_OPTS_WX)
 AC_SUBST(BXIMAGE_LINK_OPTS)
+AC_SUBST(BXIMAGE_FLAG)
 AC_SUBST(DASH)
 AC_SUBST(SLASH)
 AC_SUBST(CXXFP)

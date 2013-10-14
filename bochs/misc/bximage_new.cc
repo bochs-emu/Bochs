@@ -658,6 +658,10 @@ int main(int argc, char *argv[])
         myexit(0);
         break;
 
+      case BXIMAGE_MODE_CREATE_IMAGE:
+        // TODO
+        break;
+
       case BXIMAGE_MODE_CONVERT_IMAGE:
         if (!strlen(bx_filename_1)) {
           strcpy(bx_filename_1, "c.img");
@@ -696,11 +700,12 @@ int main(int argc, char *argv[])
         break;
 
       default:
-        fatal("\nbximage_new: mode not implemented yet");
+        fatal("\nbximage_new: unknown mode");
     }
   }
   if (bximage_mode == BXIMAGE_MODE_CREATE_IMAGE) {
     // TODO
+    fatal("\nbximage_new: mode not implemented yet");
   } else if (bximage_mode == BXIMAGE_MODE_CONVERT_IMAGE) {
     convert_image(imgmode);
     if (bx_remove) {

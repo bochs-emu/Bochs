@@ -169,7 +169,7 @@ BX_INCLUDES = bochs.h config.h osdep.h
 	$(CC) @DASH@c $(BX_INCDIRS) $(CFLAGS) $(FPU_FLAGS) $< @OFP@$@
 
 
-all: @PRIMARY_TARGET@ @PLUGIN_TARGET@ bximage@EXE@ bxcommit@EXE@ @BUILD_DOCBOOK_VAR@
+all: @PRIMARY_TARGET@ @PLUGIN_TARGET@ bximage@EXE@ bximage_new@EXE@ bxcommit@EXE@ @BUILD_DOCBOOK_VAR@
 
 @EXTERNAL_DEPENDENCY@
 
@@ -267,19 +267,19 @@ misc/bximage_new.o: $(srcdir)/misc/bximage_new.cc $(srcdir)/misc/bswap.h \
 
 misc/hdimage.o: $(srcdir)/iodev/hdimage/hdimage.cc \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
-	$(CXX) @DASH@c $(BX_INCDIRS) -DBXIMAGE $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/hdimage.cc @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/hdimage.cc @OFP@$@
 
 misc/vmware3.o: $(srcdir)/iodev/hdimage/vmware3.cc $(srcdir)/iodev/hdimage/vmware3.h \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
-	$(CXX) @DASH@c $(BX_INCDIRS) -DBXIMAGE $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vmware3.cc @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vmware3.cc @OFP@$@
 
 misc/vmware4.o: $(srcdir)/iodev/hdimage/vmware4.cc $(srcdir)/iodev/hdimage/vmware4.h \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
-	$(CXX) @DASH@c $(BX_INCDIRS) -DBXIMAGE $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vmware4.cc @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vmware4.cc @OFP@$@
 
 misc/vpc-img.o: $(srcdir)/iodev/hdimage/vpc-img.cc $(srcdir)/iodev/hdimage/vpc-img.h \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
-	$(CXX) @DASH@c $(BX_INCDIRS) -DBXIMAGE $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vpc-img.cc @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vpc-img.cc @OFP@$@
 
 misc/niclist.o: $(srcdir)/misc/niclist.c
 	$(CC) @DASH@c $(BX_INCDIRS) $(CFLAGS_CONSOLE) $(srcdir)/misc/niclist.c @OFP@$@
@@ -527,6 +527,8 @@ clean:
 	@RMCOMMAND@ bochs.exe
 	@RMCOMMAND@ bximage
 	@RMCOMMAND@ bximage.exe
+	@RMCOMMAND@ bximage_new
+	@RMCOMMAND@ bximage_new.exe
 	@RMCOMMAND@ bxcommit
 	@RMCOMMAND@ bxcommit.exe
 	@RMCOMMAND@ niclist
