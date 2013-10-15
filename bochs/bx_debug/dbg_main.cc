@@ -3882,7 +3882,7 @@ bx_bool bx_dbg_read_pmode_descriptor(Bit16u sel, bx_descriptor_t *descriptor)
     return 0;
   }
 
-  memset (descriptor, 0, sizeof (descriptor));
+  memset (descriptor, 0, sizeof (bx_descriptor_t));
   parse_descriptor(dword1, dword2, descriptor);
 
   if (!descriptor->segment) {
