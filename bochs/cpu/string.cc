@@ -1227,71 +1227,71 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSQ64_XqYq(bxInstruction_c *i)
 // REP SCAS methods
 //
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASB_ALXb(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASB_ALYb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
-    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASB64_ALXb);
+    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASB64_ALYb);
   }
   else
 #endif
   if (i->as32L()) {
-    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASB32_ALXb);
+    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASB32_ALYb);
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI); // always clear upper part of RDI
   }
   else {
-    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASB16_ALXb);
+    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASB16_ALYb);
   }
 
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASW_AXXw(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASW_AXYw(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
-    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASW64_AXXw);
+    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASW64_AXYw);
   }
   else
 #endif
   if (i->as32L()) {
-    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASW32_AXXw);
+    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASW32_AXYw);
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI); // always clear upper part of RDI
   }
   else {
-    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASW16_AXXw);
+    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASW16_AXYw);
   }
 
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASD_EAXXd(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASD_EAXYd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
-    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASD64_EAXXd);
+    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASD64_EAXYd);
   }
   else
 #endif
   if (i->as32L()) {
-    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASD32_EAXXd);
+    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASD32_EAXYd);
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI); // always clear upper part of RDI
   }
   else {
-    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASD16_EAXXd);
+    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASD16_EAXYd);
   }
 
   BX_NEXT_INSTR(i);
 }
 
 #if BX_SUPPORT_X86_64
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASQ_RAXXq(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASQ_RAXYq(bxInstruction_c *i)
 {
   if (i->as64L()) {
-    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASQ64_RAXXq);
+    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASQ64_RAXYq);
   }
   else {
-    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASQ32_RAXXq);
+    BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASQ32_RAXYq);
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI); // always clear upper part of RDI
   }
 
@@ -1304,7 +1304,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASQ_RAXXq(bxInstruction_c *i
 //
 
 /* 16 bit address size */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASB16_ALXb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASB16_ALYb(bxInstruction_c *i)
 {
   Bit8u op1_8 = AL, op2_8, diff_8;
 
@@ -1327,7 +1327,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASB16_ALXb(bxInstruction_c *i)
 }
 
 /* 32 bit address size */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASB32_ALXb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASB32_ALYb(bxInstruction_c *i)
 {
   Bit8u op1_8 = AL, op2_8, diff_8;
 
@@ -1351,7 +1351,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASB32_ALXb(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
 /* 64 bit address size */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASB64_ALXb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASB64_ALYb(bxInstruction_c *i)
 {
   Bit8u op1_8 = AL, op2_8, diff_8;
 
@@ -1375,7 +1375,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASB64_ALXb(bxInstruction_c *i)
 #endif
 
 /* 16 bit opsize mode, 16 bit address size */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASW16_AXXw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASW16_AXYw(bxInstruction_c *i)
 {
   Bit16u op1_16 = AX, op2_16, diff_16;
 
@@ -1397,7 +1397,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASW16_AXXw(bxInstruction_c *i)
 }
 
 /* 16 bit opsize mode, 32 bit address size */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASW32_AXXw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASW32_AXYw(bxInstruction_c *i)
 {
   Bit16u op1_16 = AX, op2_16, diff_16;
 
@@ -1421,7 +1421,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASW32_AXXw(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
 /* 16 bit opsize mode, 64 bit address size */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASW64_AXXw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASW64_AXYw(bxInstruction_c *i)
 {
   Bit16u op1_16 = AX, op2_16, diff_16;
 
@@ -1445,7 +1445,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASW64_AXXw(bxInstruction_c *i)
 #endif
 
 /* 32 bit opsize mode, 16 bit address size */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASD16_EAXXd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASD16_EAXYd(bxInstruction_c *i)
 {
   Bit32u op1_32 = EAX, op2_32, diff_32;
 
@@ -1467,7 +1467,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASD16_EAXXd(bxInstruction_c *i)
 }
 
 /* 32 bit opsize mode, 32 bit address size */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASD32_EAXXd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASD32_EAXYd(bxInstruction_c *i)
 {
   Bit32u op1_32 = EAX, op2_32, diff_32;
 
@@ -1492,7 +1492,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASD32_EAXXd(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 
 /* 32 bit opsize mode, 64 bit address size */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASD64_EAXXd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASD64_EAXYd(bxInstruction_c *i)
 {
   Bit32u op1_32 = EAX, op2_32, diff_32;
 
@@ -1515,7 +1515,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASD64_EAXXd(bxInstruction_c *i)
 }
 
 /* 64 bit opsize mode, 32 bit address size */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASQ32_RAXXq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASQ32_RAXYq(bxInstruction_c *i)
 {
   Bit64u op1_64 = RAX, op2_64, diff_64;
 
@@ -1539,7 +1539,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASQ32_RAXXq(bxInstruction_c *i)
 }
 
 /* 64 bit opsize mode, 64 bit address size */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASQ64_RAXXq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASQ64_RAXYq(bxInstruction_c *i)
 {
   Bit64u op1_64 = RAX, op2_64, diff_64;
 

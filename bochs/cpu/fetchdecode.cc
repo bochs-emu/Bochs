@@ -351,8 +351,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* AB /w */ { 0, BX_IA_REP_STOSW_YwAX },
   /* AC /w */ { 0, BX_IA_REP_LODSB_ALXb },
   /* AD /w */ { 0, BX_IA_REP_LODSW_AXXw },
-  /* AE /w */ { 0, BX_IA_REP_SCASB_ALXb },
-  /* AF /w */ { 0, BX_IA_REP_SCASW_AXXw },
+  /* AE /w */ { 0, BX_IA_REP_SCASB_ALYb },
+  /* AF /w */ { 0, BX_IA_REP_SCASW_AXYw },
   /* B0 /w */ { BxImmediate_Ib, BX_IA_MOV_EbIb },
   /* B1 /w */ { BxImmediate_Ib, BX_IA_MOV_EbIb },
   /* B2 /w */ { BxImmediate_Ib, BX_IA_MOV_EbIb },
@@ -590,7 +590,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F 7B /w */ { 0, BX_IA_ERROR },
   /* 0F 7C /w */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7c },
   /* 0F 7D /w */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7d },
-  /* 0F 7E /w */ { BxPrefixSSE, BX_IA_MOVD_EdPd, BxOpcodeGroupSSE_0f7e },
+  /* 0F 7E /w */ { BxPrefixSSE, BX_IA_MOVD_EdPq, BxOpcodeGroupSSE_0f7e },
   /* 0F 7F /w */ { BxPrefixSSE, BX_IA_MOVQ_QqPq, BxOpcodeGroupSSE_0f7f },
   /* 0F 80 /w */ { BxImmediate_BrOff16, BX_IA_JO_Jw },
   /* 0F 81 /w */ { BxImmediate_BrOff16, BX_IA_JNO_Jw },
@@ -896,8 +896,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* AB /d */ { 0, BX_IA_REP_STOSD_YdEAX },
   /* AC /d */ { 0, BX_IA_REP_LODSB_ALXb },
   /* AD /d */ { 0, BX_IA_REP_LODSD_EAXXd },
-  /* AE /d */ { 0, BX_IA_REP_SCASB_ALXb  },
-  /* AF /d */ { 0, BX_IA_REP_SCASD_EAXXd },
+  /* AE /d */ { 0, BX_IA_REP_SCASB_ALYb  },
+  /* AF /d */ { 0, BX_IA_REP_SCASD_EAXYd },
   /* B0 /d */ { BxImmediate_Ib, BX_IA_MOV_EbIb },
   /* B1 /d */ { BxImmediate_Ib, BX_IA_MOV_EbIb },
   /* B2 /d */ { BxImmediate_Ib, BX_IA_MOV_EbIb },
@@ -1135,7 +1135,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F 7B /d */ { 0, BX_IA_ERROR },
   /* 0F 7C /d */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7c },
   /* 0F 7D /d */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7d },
-  /* 0F 7E /d */ { BxPrefixSSE, BX_IA_MOVD_EdPd, BxOpcodeGroupSSE_0f7e },
+  /* 0F 7E /d */ { BxPrefixSSE, BX_IA_MOVD_EdPq, BxOpcodeGroupSSE_0f7e },
   /* 0F 7F /d */ { BxPrefixSSE, BX_IA_MOVQ_QqPq, BxOpcodeGroupSSE_0f7f },
   /* 0F 80 /d */ { BxImmediate_BrOff32, BX_IA_JO_Jd },
   /* 0F 81 /d */ { BxImmediate_BrOff32, BX_IA_JNO_Jd },
@@ -1635,6 +1635,7 @@ fetch_b1:
       i->ResolveModrm = &BX_CPU_C::BxResolve16BaseIndex;
       i->setSibBase(Resolve16BaseReg[rm]);
       i->setSibIndex(Resolve16IndexReg[rm]);
+      i->setSibScale(0);
       if (mod == 0x00) { // mod == 00b
         seg = sreg_mod00_rm16[rm];
         if (rm == 6) {
@@ -1716,15 +1717,20 @@ modrm_done:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[os_32]);
           break;
         case BxPrefixSSE:
-          /* For SSE opcodes look into another table
+          /* For SSE opcodes look into another 3-entry table
              with the opcode prefixes (NONE, 0x66, 0xF3, 0xF2) */
           if (sse_prefix) {
             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix-1]);
             break;
           }
           continue;
+        case BxPrefixSSE4:
+          /* For SSE opcodes look into another 4-entry table
+             with the opcode prefixes (NONE, 0x66, 0xF3, 0xF2) */
+          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix]);
+          break;
         case BxPrefixSSE2:
-          /* For SSE opcodes look into another table
+          /* For SSE opcodes look into another 2-entry table
              with the opcode prefixes (NONE, 0x66), 0xF2 and 0xF3 not allowed */
           if (sse_prefix > SSE_PREFIX_66) goto decode_done;
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix]);
@@ -1937,6 +1943,11 @@ modrm_done:
     case BX_SRC_VIB:
       i->setSrcReg(n, (i->Ib() >> 4) & 7);
       break;
+    case BX_SRC_VSIB:
+      if (! i->as32L() || i->sibIndex() == BX_NIL_REGISTER) {
+        ia_opcode = BX_IA_ERROR;
+      }
+      break;
 #endif
     default:
       BX_PANIC(("fetchdecode32: unknown definition %d for src %d", src, n));
@@ -1947,9 +1958,6 @@ modrm_done:
   if (! BX_NULL_SEG_REG(seg_override))
      seg = seg_override;
   i->setSeg(seg);
-
-  i->setILen(remainingInPage - remain);
-  i->setIaOpcode(ia_opcode);
 
 #if BX_SUPPORT_AVX
   if (had_vex_xop) {
@@ -1975,6 +1983,9 @@ modrm_done:
 #endif
 
 decode_done:
+
+  i->setILen(remainingInPage - remain);
+  i->setIaOpcode(ia_opcode);
 
   if (mod_mem) {
     i->execute1 = BxOpcodesTable[ia_opcode].execute1;

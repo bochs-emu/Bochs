@@ -90,11 +90,27 @@ static const char *rounding_mode[4] = {
 
 #define BX_JUMP_TARGET_NOT_REQ ((bx_address)(-1))
 
-char *resolve_memref(char *disbufptr, const bxInstruction_c *i, const char *regname[])
+char *resolve_sib_scale(char *disbufptr, const bxInstruction_c *i, const char *regname[], unsigned src_index)
 {
-  unsigned sib_base = i->sibBase(), sib_index = i->sibIndex(), sib_scale = i->sibScale();
+  unsigned sib_index = i->sibIndex(), sib_scale = i->sibScale();
 
-  if (sib_index == 4) sib_index = BX_NIL_REGISTER;
+  if (src_index == BX_SRC_VSIB)
+    disbufptr = dis_sprintf(disbufptr, "%cmm%d", 'x' + i->getVL() - 1, sib_index);
+  else
+    disbufptr = dis_sprintf(disbufptr, "%s", regname[sib_index]);
+
+  if (sib_scale)
+    disbufptr = dis_sprintf(disbufptr, "*%d", 1 << sib_scale);
+
+  return disbufptr;
+}
+
+char *resolve_memref(char *disbufptr, const bxInstruction_c *i, const char *regname[], unsigned src_index)
+{
+  unsigned sib_base = i->sibBase(), sib_index = i->sibIndex();
+
+  if (sib_index == 4 && src_index != BX_SRC_VSIB)
+    sib_index = BX_NIL_REGISTER;
 
   if (sib_base == BX_NIL_REGISTER)
   {
@@ -115,18 +131,15 @@ char *resolve_memref(char *disbufptr, const bxInstruction_c *i, const char *regn
       return disbufptr;
     }
 
-    disbufptr = dis_sprintf(disbufptr, "[%s", regname[i->sibIndex()]);
-    if (sib_scale)
-      disbufptr = dis_sprintf(disbufptr, "*%d", 1 << i->sibScale());
+    disbufptr = dis_putc(disbufptr, '[');
+    disbufptr = resolve_sib_scale(disbufptr, i, regname, src_index);
   }
   else {
     disbufptr = dis_sprintf(disbufptr, "[%s", regname[i->sibBase()]);
 
-    if (sib_index != BX_NIL_REGISTER)
-    {
-      disbufptr = dis_sprintf(disbufptr, "+%s", regname[i->sibIndex()]);
-      if (sib_scale)
-        disbufptr = dis_sprintf(disbufptr, "*%d", 1 << i->sibScale());
+    if (sib_index != BX_NIL_REGISTER) {
+      disbufptr = dis_putc(disbufptr, '+');
+      disbufptr = resolve_sib_scale(disbufptr, i, regname, src_index);
     }
   }
 
@@ -145,18 +158,18 @@ char *resolve_memref(char *disbufptr, const bxInstruction_c *i, const char *regn
   return disbufptr;
 }
 
-char *resolve_memref(char *disbufptr, const bxInstruction_c *i)
+char *resolve_memref(char *disbufptr, const bxInstruction_c *i, unsigned src_index)
 {
   // seg:[base + index*scale + disp]
   disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
   if (i->as64L()) {
-    disbufptr = resolve_memref(disbufptr, i, intel_general_64bit_regname);
+    disbufptr = resolve_memref(disbufptr, i, intel_general_64bit_regname, src_index);
   }
   else if (i->as32L()) {
-    disbufptr = resolve_memref(disbufptr, i, intel_general_32bit_regname);
+    disbufptr = resolve_memref(disbufptr, i, intel_general_32bit_regname, src_index);
   }
   else {
-    disbufptr = resolve_memref(disbufptr, i, intel_general_16bit_regname);
+    disbufptr = resolve_memref(disbufptr, i, intel_general_16bit_regname, src_index);
   }
   return disbufptr;
 }
@@ -215,12 +228,13 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
   for (n = 0; n <= 3; n++) {
     unsigned src = (unsigned) BxOpcodesTable[ia_opcode].src[n];
     unsigned src_type = src >> 3;
+    unsigned src_index = src & 0x7;
     if (! src_type && src != BX_SRC_RM) continue;
     if (srcs_used++ > 0)
       disbufptr = dis_sprintf(disbufptr, ", ");
 
-    if (! i->modC0() && ((src & 0x7) == BX_SRC_RM)) {
-      disbufptr = resolve_memref(disbufptr, i);
+    if (! i->modC0() && (src_index == BX_SRC_RM || src_index == BX_SRC_VSIB)) {
+      disbufptr = resolve_memref(disbufptr, i, src_index);
     }
     else {
       unsigned srcreg = i->getSrcReg(n);

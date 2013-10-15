@@ -1578,13 +1578,13 @@ public: // for now...
   BX_SMF BX_INSF_TYPE REP_CMPSD_XdYd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE REP_STOSB_YbAL(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE REP_LODSB_ALXb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE REP_SCASB_ALXb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE REP_SCASB_ALYb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE REP_STOSW_YwAX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE REP_LODSW_AXXw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE REP_SCASW_AXXw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE REP_SCASW_AXYw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE REP_STOSD_YdEAX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE REP_LODSD_EAXXd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE REP_SCASD_EAXXd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE REP_SCASD_EAXYd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   // qualified by address size
   BX_SMF void CMPSB16_XbYb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -1594,12 +1594,12 @@ public: // for now...
   BX_SMF void CMPSW32_XwYw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CMPSD32_XdYd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void SCASB16_ALXb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SCASW16_AXXw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SCASD16_EAXXd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SCASB32_ALXb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SCASW32_AXXw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SCASD32_EAXXd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SCASB16_ALYb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SCASW16_AXYw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SCASD16_EAXYd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SCASB32_ALYb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SCASW32_AXYw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SCASD32_EAXYd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void LODSB16_ALXb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LODSW16_AXXw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2296,8 +2296,8 @@ public: // for now...
   BX_SMF BX_INSF_TYPE PCMPEQW_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE PCMPEQD_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE EMMS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE MOVD_EdPdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE MOVD_EdPdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE MOVD_EdPqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE MOVD_EdPqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE MOVQ_QqPqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE PSRLW_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE PSRLD_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3451,15 +3451,15 @@ public: // for now...
   BX_SMF BX_INSF_TYPE REP_CMPSQ_XqYq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE REP_STOSQ_YqRAX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE REP_LODSQ_RAXXq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE REP_SCASQ_RAXXq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE REP_SCASQ_RAXYq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   // qualified by address size
   BX_SMF void CMPSB64_XbYb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CMPSW64_XwYw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CMPSD64_XdYd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SCASB64_ALXb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SCASW64_AXXw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SCASD64_EAXXd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SCASB64_ALYb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SCASW64_AXYw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SCASD64_EAXYd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LODSB64_ALXb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LODSW64_AXXw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LODSD64_EAXXd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3472,8 +3472,8 @@ public: // for now...
 
   BX_SMF void CMPSQ32_XqYq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CMPSQ64_XqYq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SCASQ32_RAXXq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SCASQ64_RAXXq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SCASQ32_RAXYq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SCASQ64_RAXYq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LODSQ32_RAXXq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LODSQ64_RAXXq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void STOSQ32_YqRAX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -5165,14 +5165,15 @@ enum {
 #define BxPrefixSSEF2       0x0030 // Group encoding: 0011, SSE_PREFIX_F2 only
 #define BxPrefixSSE         0x0040 // Group encoding: 0100
 #define BxPrefixSSE2        0x0050 // Group encoding: 0101, do not allow SSE_PREFIX_F2 or SSE_PREFIX_F3
-#define BxPrefixSSEF2F3     0x0060 // Group encoding: 0110, ignore SSE_PREFIX_66
-#define BxGroupN            0x0070 // Group encoding: 0111
-#define BxSplitGroupN       0x0080 // Group encoding: 1000
-#define BxFPEscape          0x0090 // Group encoding: 1001
-#define BxOSizeGrp          0x00A0 // Group encoding: 1010
-#define BxSplitVexW         0x00B0 // Group encoding: 1011
-#define BxSplitVexW64       0x00C0 // Group encoding: 1100 - VexW ignored in 32-bit mode
-#define BxSplitMod11B       0x00D0 // Group encoding: 1101
+#define BxPrefixSSE4        0x0060 // Group encoding: 0110
+#define BxPrefixSSEF2F3     0x0070 // Group encoding: 0111, ignore SSE_PREFIX_66
+#define BxGroupN            0x0080 // Group encoding: 1000
+#define BxSplitGroupN       0x0090 // Group encoding: 1001
+#define BxFPEscape          0x00A0 // Group encoding: 1010
+#define BxOSizeGrp          0x00B0 // Group encoding: 1011
+#define BxSplitVexW         0x00C0 // Group encoding: 1100
+#define BxSplitVexW64       0x00D0 // Group encoding: 1101 - VexW ignored in 32-bit mode
+#define BxSplitMod11B       0x00E0 // Group encoding: 1110
 
 // The BxImmediate2 mask specifies kind of second immediate data
 // required by instruction.

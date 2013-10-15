@@ -313,8 +313,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* AB /w */ { 0, BX_IA_REP_STOSW_YwAX },
   /* AC /w */ { 0, BX_IA_REP_LODSB_ALXb },
   /* AD /w */ { 0, BX_IA_REP_LODSW_AXXw },
-  /* AE /w */ { 0, BX_IA_REP_SCASB_ALXb },
-  /* AF /w */ { 0, BX_IA_REP_SCASW_AXXw },
+  /* AE /w */ { 0, BX_IA_REP_SCASB_ALYb },
+  /* AF /w */ { 0, BX_IA_REP_SCASW_AXYw },
   /* B0 /w */ { BxImmediate_Ib, BX_IA_MOV_EbIb },
   /* B1 /w */ { BxImmediate_Ib, BX_IA_MOV_EbIb },
   /* B2 /w */ { BxImmediate_Ib, BX_IA_MOV_EbIb },
@@ -522,7 +522,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 7B /w */ { 0, BX_IA_ERROR },
   /* 0F 7C /w */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7c },
   /* 0F 7D /w */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7d },
-  /* 0F 7E /w */ { BxPrefixSSE, BX_IA_MOVD_EdPd, BxOpcodeGroupSSE_0f7e },
+  /* 0F 7E /w */ { BxPrefixSSE, BX_IA_MOVD_EdPq, BxOpcodeGroupSSE_0f7e },
   /* 0F 7F /w */ { BxPrefixSSE, BX_IA_MOVQ_QqPq, BxOpcodeGroupSSE_0f7f },
   /* 0F 80 /w */ { BxImmediate_BrOff32, BX_IA_JO_Jq },
   /* 0F 81 /w */ { BxImmediate_BrOff32, BX_IA_JNO_Jq },
@@ -828,8 +828,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* AB /d */ { 0, BX_IA_REP_STOSD_YdEAX },
   /* AC /d */ { 0, BX_IA_REP_LODSB_ALXb },
   /* AD /d */ { 0, BX_IA_REP_LODSD_EAXXd },
-  /* AE /d */ { 0, BX_IA_REP_SCASB_ALXb  },
-  /* AF /d */ { 0, BX_IA_REP_SCASD_EAXXd },
+  /* AE /d */ { 0, BX_IA_REP_SCASB_ALYb  },
+  /* AF /d */ { 0, BX_IA_REP_SCASD_EAXYd },
   /* B0 /d */ { BxImmediate_Ib, BX_IA_MOV_EbIb },
   /* B1 /d */ { BxImmediate_Ib, BX_IA_MOV_EbIb },
   /* B2 /d */ { BxImmediate_Ib, BX_IA_MOV_EbIb },
@@ -1037,7 +1037,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 7B /d */ { 0, BX_IA_ERROR },
   /* 0F 7C /d */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7c },
   /* 0F 7D /d */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7d },
-  /* 0F 7E /d */ { BxPrefixSSE, BX_IA_MOVD_EdPd, BxOpcodeGroupSSE_0f7e },
+  /* 0F 7E /d */ { BxPrefixSSE, BX_IA_MOVD_EdPq, BxOpcodeGroupSSE_0f7e },
   /* 0F 7F /d */ { BxPrefixSSE, BX_IA_MOVQ_QqPq, BxOpcodeGroupSSE_0f7f },
   /* 0F 80 /d */ { BxImmediate_BrOff32, BX_IA_JO_Jq },
   /* 0F 81 /d */ { BxImmediate_BrOff32, BX_IA_JNO_Jq },
@@ -1343,8 +1343,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* AB /q */ { 0, BX_IA_REP_STOSQ_YqRAX },
   /* AC /q */ { 0, BX_IA_REP_LODSB_ALXb },
   /* AD /q */ { 0, BX_IA_REP_LODSQ_RAXXq },
-  /* AE /q */ { 0, BX_IA_REP_SCASB_ALXb  },
-  /* AF /q */ { 0, BX_IA_REP_SCASQ_RAXXq },
+  /* AE /q */ { 0, BX_IA_REP_SCASB_ALYb  },
+  /* AF /q */ { 0, BX_IA_REP_SCASQ_RAXYq },
   /* B0 /q */ { BxImmediate_Ib, BX_IA_MOV_EbIb },
   /* B1 /q */ { BxImmediate_Ib, BX_IA_MOV_EbIb },
   /* B2 /q */ { BxImmediate_Ib, BX_IA_MOV_EbIb },
@@ -1709,7 +1709,7 @@ BX_CPU_C::fetchDecode64(const Bit8u *iptr, Bit32u fetchModeMask, bxInstruction_c
 #endif
 
 #if BX_SUPPORT_EVEX
-  bx_bool evex_v = 0;
+  unsigned evex_v = 0;
 #endif
 
   i->ResolveModrm = 0;
@@ -2156,15 +2156,20 @@ modrm_done:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[offset >> 9]);
           break;
         case BxPrefixSSE:
-          /* For SSE opcodes look into another table
+          /* For SSE opcodes look into another 3-entry table
                      with the opcode prefixes (NONE, 0x66, 0xF3, 0xF2) */
           if (sse_prefix) {
             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix-1]);
             break;
           }
           continue;
+        case BxPrefixSSE4:
+          /* For SSE opcodes look into another 4-entry table
+             with the opcode prefixes (NONE, 0x66, 0xF3, 0xF2) */
+          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix]);
+          break;
         case BxPrefixSSE2:
-          /* For SSE opcodes look into another table
+          /* For SSE opcodes look into another 2-entry table
              with the opcode prefixes (NONE, 0x66), 0xF2 and 0xF3 not allowed */
           if (sse_prefix > SSE_PREFIX_66) goto decode_done;
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix]);
@@ -2203,9 +2208,10 @@ modrm_done:
     // the if() above after fetching the 2nd byte, so this path is
     // taken in all cases if a modrm byte is NOT required.
 
-    if (b1 == 0x90 && sse_prefix == SSE_PREFIX_F3) {
-      // attention: need to handle VEX separately, XOP never reach here
-      ia_opcode = BX_IA_PAUSE;
+    if (b1 == 0x90) {
+      if (! rex_prefix) {
+        ia_opcode = (sse_prefix == SSE_PREFIX_F3) ? BX_IA_PAUSE : BX_IA_NOP;
+      }
     }
     else {
       unsigned group = attr & BxGroupX;
@@ -2393,7 +2399,20 @@ modrm_done:
         if (vvv >= 8) ia_opcode = BX_IA_ERROR;
       break;
     case BX_SRC_VIB:
-      i->setSrcReg(n, i->Ib() >> 4);
+#if BX_SUPPORT_EVEX
+      if (b1 == 0x62)
+        i->setSrcReg(n, ((i->Ib() << 1) & 0x10) | (i->Ib() >> 4));
+      else
+#endif
+        i->setSrcReg(n, (i->Ib() >> 4));
+      break;
+    case BX_SRC_VSIB:
+      if (i->sibIndex() == BX_NIL_REGISTER) {
+        ia_opcode = BX_IA_ERROR;
+      }
+#if BX_SUPPORT_EVEX
+      i->setSibIndex(i->sibIndex() | evex_v);
+#endif
       break;
 #endif
     default:
@@ -2405,9 +2424,6 @@ modrm_done:
   if (! BX_NULL_SEG_REG(seg_override))
      seg = seg_override;
   i->setSeg(seg);
-
-  i->setILen(remainingInPage - remain);
-  i->setIaOpcode(ia_opcode);
 
 #if BX_SUPPORT_AVX
   if (had_vex_xop) {
@@ -2433,6 +2449,9 @@ modrm_done:
 #endif
 
 decode_done:
+
+  i->setILen(remainingInPage - remain);
+  i->setIaOpcode(ia_opcode);
 
   if (mod_mem) {
     i->execute1 = BxOpcodesTable[ia_opcode].execute1;

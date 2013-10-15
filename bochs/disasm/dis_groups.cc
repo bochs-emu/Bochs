@@ -503,11 +503,11 @@ void disassembler::OP_O(const x86_insn *insn, unsigned size)
   }
   else if (insn->as_32) {
     Bit32u imm32 = fetch_dword();
-    dis_sprintf("%s:0x%x", seg, (unsigned) imm32);
+    dis_sprintf("%s:0x%08x", seg, (unsigned) imm32);
   }
   else {
     Bit16u imm16 = fetch_word();
-    dis_sprintf("%s:0x%x", seg, (unsigned) imm16);
+    dis_sprintf("%s:0x%04x", seg, (unsigned) imm16);
   }
 }
 

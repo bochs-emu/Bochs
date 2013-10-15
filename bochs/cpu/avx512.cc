@@ -105,4 +105,30 @@ AVX512_2OP_QWORD_EL(VPMINUQ_MASK_VdqHdqWdqR, xmm_pminuq)
 AVX512_2OP_DWORD_EL(VUNPCKLPD_MASK_VpdHpdWpdR, xmm_unpcklpd)
 AVX512_2OP_DWORD_EL(VUNPCKHPD_MASK_VpdHpdWpdR, xmm_unpckhpd)
 
+/*
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VALIGND_MASK_VdqHdqWdqIbR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: not implemented yet !", i->get_bx_opcode_name()));
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VALIGNQ_MASK_VdqHdqWdqIbR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: not implemented yet !", i->get_bx_opcode_name()));
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBLENDMPD_MASK_VpdHpdWpdR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: not implemented yet !", i->get_bx_opcode_name()));
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBLENDMPS_MASK_VpsHpsWpsR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: not implemented yet !", i->get_bx_opcode_name()));
+  BX_NEXT_INSTR(i);
+}
+*/
+
 #endif

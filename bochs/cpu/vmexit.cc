@@ -86,7 +86,8 @@ Bit32u gen_instruction_info(bxInstruction_c *i, Bit32u reason, bx_bool rw_form)
 
     instr_info |= i->seg() << 15;
 
-    if (i->sibIndex() != BX_NIL_REGISTER)
+    // index field is always initialized because of gather but not always valid
+    if (i->sibIndex() != BX_NIL_REGISTER && i->sibIndex() != 4)
         instr_info |= i->sibScale() | (i->sibIndex() << 18);
     else
         instr_info |= 1 << 22; // index invalid

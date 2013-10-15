@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2002-2012 Stanislav Shwartsman
+//   Copyright (c) 2002-2013 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1122,7 +1122,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::EMMS(bxInstruction_c *i)
 }
 
 /* 0F 7E */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdPdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdPqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
@@ -1135,7 +1135,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdPdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdPdM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdPqM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();

@@ -50,16 +50,6 @@ bx_address BX_CPP_AttrRegparmN(2) BX_CPU_C::BxResolveGatherQ(bxInstruction_c *i,
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_VpsHps(bxInstruction_c *i)
 {
-  if (! i->as32L()) {
-    BX_ERROR(("VGATHERDPS_VpsHps: Gather with 16-bit address size"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
-  if (i->sibIndex() == BX_NIL_REGISTER) {
-    BX_ERROR(("VGATHERDPS_VpsHps: incorrect source operands"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   if (i->sibIndex() == i->src2() || i->sibIndex() == i->dst() || i->src2() == i->dst()) {
     BX_ERROR(("VGATHERDPS_VpsHps: incorrect source operands"));
     exception(BX_UD_EXCEPTION, 0);
@@ -103,16 +93,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_VpsHps(bxInstruction_c 
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c *i)
 {
-  if (! i->as32L()) {
-    BX_ERROR(("VGATHERQPS_VpsHps: Gather with 16-bit address size"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
-  if (i->sibIndex() == BX_NIL_REGISTER) {
-    BX_ERROR(("VGATHERQPS_VpsHps: incorrect source operands"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   if (i->sibIndex() == i->src2() || i->sibIndex() == i->dst() || i->src2() == i->dst()) {
     BX_ERROR(("VGATHERQPS_VpsHps: incorrect source operands"));
     exception(BX_UD_EXCEPTION, 0);
@@ -155,16 +135,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c 
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_VpdHpd(bxInstruction_c *i)
 {
-  if (! i->as32L()) {
-    BX_ERROR(("VGATHERDPD_VpdHpd: Gather with 16-bit address size"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
-  if (i->sibIndex() == BX_NIL_REGISTER) {
-    BX_ERROR(("VGATHERDPD_VpdHpd: incorrect source operands"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   if (i->sibIndex() == i->src2() || i->sibIndex() == i->dst() || i->src2() == i->dst()) {
     BX_ERROR(("VGATHERDPD_VpdHpd: incorrect source operands"));
     exception(BX_UD_EXCEPTION, 0);
@@ -207,16 +177,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_VpdHpd(bxInstruction_c 
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_VpdHpd(bxInstruction_c *i)
 {
-  if (! i->as32L()) {
-    BX_ERROR(("VGATHERQPD_VpdHpd: Gather with 16-bit address size"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
-  if (i->sibIndex() == BX_NIL_REGISTER) {
-    BX_ERROR(("VGATHERQPD_VpdHpd: incorrect source operands"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   if (i->sibIndex() == i->src2() || i->sibIndex() == i->dst() || i->src2() == i->dst()) {
     BX_ERROR(("VGATHERQPD_VpdHpd: incorrect source operands"));
     exception(BX_UD_EXCEPTION, 0);

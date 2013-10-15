@@ -658,4 +658,30 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXSD_MASK_VsdHpdWsdR(bxInstructi
   BX_NEXT_INSTR(i);
 }
 
+/*
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPD_MASK_VpdHpdWpdIbR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: not implemented yet !", i->get_bx_opcode_name()));
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPS_MASK_VpsHpsWpsIbR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: not implemented yet !", i->get_bx_opcode_name()));
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSD_MASK_VsdHpdWsdIbR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: not implemented yet !", i->get_bx_opcode_name()));
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSS_MASK_VssHpdWssIbR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: not implemented yet !", i->get_bx_opcode_name()));
+  BX_NEXT_INSTR(i);
+}
+*/
+
 #endif

@@ -67,8 +67,8 @@ static const char *intel_index16[8] = {
     "bx"
 };
 
-static const char *intel_vector_reg_name[2] = {
-    "xmm", "ymm"
+static const char *intel_vector_reg_name[3] = {
+    "xmm", "ymm", "zmm"
 };
 
 //////////////////
@@ -114,8 +114,8 @@ static const char *att_index16[8] = {
     "%bx"
 };
 
-static const char *att_vector_reg_name[2] = {
-    "%xmm", "%ymm"
+static const char *att_vector_reg_name[3] = {
+    "%xmm", "%ymm", "%zmm"
 };
 
 #define NULL_SEGMENT_REGISTER 7

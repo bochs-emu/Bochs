@@ -79,7 +79,8 @@ enum {
   BX_SRC_RM = 3,
   BX_SRC_MEM_NO_VVV = 4,
   BX_SRC_VVV = 5,
-  BX_SRC_VIB = 6
+  BX_SRC_VIB = 6,
+  BX_SRC_VSIB = 7    // gather/scatter vector index
 };
 
 enum {
@@ -96,8 +97,7 @@ enum {
   BX_KMASK_REG = 0xA,
   BX_SEGREG = 0xB,
   BX_CREG = 0xC,
-  BX_DREG = 0xD,
-  BX_VSIB = 0xE      // gather/scatter vector index
+  BX_DREG = 0xD
 };
 
 enum {
@@ -165,7 +165,6 @@ const Bit8u OP_Mt = BX_FORM_SRC(BX_FPU_REG, BX_SRC_RM);
 const Bit8u OP_Mdq = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
 
 const Bit8u OP_Pq = BX_FORM_SRC(BX_MMX_REG, BX_SRC_NNN);
-const Bit8u OP_Pd = BX_FORM_SRC(BX_MMX_REG, BX_SRC_NNN);
 const Bit8u OP_Qq = BX_FORM_SRC(BX_MMX_REG, BX_SRC_RM);
 const Bit8u OP_Qd = BX_FORM_SRC(BX_MMX_REG, BX_SRC_RM);
 
@@ -177,11 +176,11 @@ const Bit8u OP_Vsd = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
 const Bit8u OP_Vq  = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
 const Bit8u OP_Vd  = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
 
-const Bit8u OP_Wdq = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
 const Bit8u OP_Wq = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
 const Bit8u OP_Wd = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
 const Bit8u OP_Ww = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
 const Bit8u OP_Wb = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
+const Bit8u OP_Wdq = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
 const Bit8u OP_Wps = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
 const Bit8u OP_Wpd = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
 const Bit8u OP_Wss = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
@@ -198,7 +197,7 @@ const Bit8u OP_Bq = BX_FORM_SRC(BX_GPR64, BX_SRC_VVV);
 
 const Bit8u OP_VIb = BX_FORM_SRC(BX_VMM_REG, BX_SRC_VIB);
 
-const Bit8u OP_VSib = BX_SRC_RM;
+const Bit8u OP_VSib = BX_FORM_SRC(BX_VMM_REG, BX_SRC_VSIB);
 
 const Bit8u OP_Cd = BX_FORM_SRC(BX_CREG, BX_SRC_NNN);
 const Bit8u OP_Cq = BX_FORM_SRC(BX_CREG, BX_SRC_NNN);
