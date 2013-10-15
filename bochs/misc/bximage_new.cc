@@ -329,7 +329,7 @@ device_image_t* init_image(Bit8u image_mode)
 
 int create_image_file(const char *filename)
 {
-  int fd = open(filename, O_WRONLY | O_CREAT
+  int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC
 #ifdef O_BINARY
                 | O_BINARY
 #endif
@@ -341,7 +341,7 @@ int create_image_file(const char *filename)
   return fd;
 }
 
-int create_flat_image(const char *filename, Bit64u size)
+void create_flat_image(const char *filename, Bit64u size)
 {
   char buffer[512];
 
@@ -350,11 +350,16 @@ int create_flat_image(const char *filename, Bit64u size)
   if (bx_write_image(fd, size - 512, buffer, 512) != 512)
     fatal("ERROR: while writing block in flat file !");
   close(fd);
-
-  return 0;
 }
 
-int create_sparse_image(const char *filename, Bit64u size)
+#ifdef WIN32
+void create_flat_image_win32(const char *filename, Bit64u size)
+{
+  // TODO
+}
+#endif
+
+void create_sparse_image(const char *filename, Bit64u size)
 {
   Bit64u numpages;
   sparse_header_t header;
@@ -408,22 +413,42 @@ int create_sparse_image(const char *filename, Bit64u size)
   }
   delete [] padding;
   close(fd);
-
-  return 0;
 }
 
-int create_growing_image(const char *filename, Bit64u size)
+void create_growing_image(const char *filename, Bit64u size)
 {
   redolog_t *redolog = new redolog_t;
   if (redolog->create(filename, REDOLOG_SUBTYPE_GROWING, size) < 0)
     fatal("Can't create growing mode image");
   redolog->close();
   delete redolog;
-
-  return 0;
 }
 
-int convert_image(int newimgmode)
+void create_hard_disk_image(const char *filename, int imgmode, Bit64u size)
+{
+  switch (imgmode) {
+    case BX_HDIMAGE_MODE_FLAT:
+//#ifndef WIN32
+      create_flat_image(filename, size);
+//#else
+//      create_flat_image_win32(filename, size);
+//#endif
+      break;
+
+    case BX_HDIMAGE_MODE_GROWING:
+      create_growing_image(filename, size);
+      break;
+
+    case BX_HDIMAGE_MODE_SPARSE:
+      create_sparse_image(filename, size);
+      break;
+
+    default:
+      fatal("image mode not implemented yet");
+  }
+}
+
+void convert_image(int newimgmode)
 {
   device_image_t *source_image, *dest_image;
   Bit64u i, sc, s;
@@ -440,34 +465,7 @@ int convert_image(int newimgmode)
   if (source_image->open(bx_filename_1, O_RDONLY) < 0)
     fatal("cannot open source disk image");
 
-  int fd = hdimage_open_file(bx_filename_2, O_RDONLY, NULL, NULL);
-  if (fd >= 0) {
-    close(fd);
-    int confirm;
-    sprintf(buffer, "\nThe disk image '%s' already exists.  Are you sure you want to replace it?\nPlease type yes or no. ", bx_filename_2);
-    if (ask_yn(buffer, 0, &confirm) < 0)
-      fatal(EOF_ERR);
-    if (!confirm)
-      fatal("ERROR: Aborted");
-  }
-
-  switch (newimgmode) {
-    case BX_HDIMAGE_MODE_FLAT:
-      create_flat_image(bx_filename_2, source_image->hd_size);
-      break;
-
-    case BX_HDIMAGE_MODE_GROWING:
-      create_growing_image(bx_filename_2, source_image->hd_size);
-      break;
-
-    case BX_HDIMAGE_MODE_SPARSE:
-      create_sparse_image(bx_filename_2, source_image->hd_size);
-      break;
-
-    default:
-      fatal("image mode not implemented yet");
-  }
-
+  create_hard_disk_image(bx_filename_2, newimgmode, source_image->hd_size);
   dest_image = init_image(newimgmode);
   if (dest_image->open(bx_filename_2) < 0)
     fatal("cannot open destination disk image");
@@ -507,11 +505,9 @@ int convert_image(int newimgmode)
   } else {
     printf(" Done.\n");
   }
-
-  return 0;
 }
 
-int commit_redolog()
+void commit_redolog()
 {
   device_image_t *base_image;
   redolog_t *redolog;
@@ -568,8 +564,6 @@ int commit_redolog()
   } else {
     printf(" Done.\n");
   }
-
-  return 0;
 }
 
 void print_usage()
@@ -719,10 +713,27 @@ int parse_cmdline(int argc, char *argv[])
   return ret;
 }
 
+void image_overwrite_check(const char *filename)
+{
+  char buffer[512];
+
+  int fd = hdimage_open_file(filename, O_RDONLY, NULL, NULL);
+  if (fd >= 0) {
+    close(fd);
+    int confirm;
+    sprintf(buffer, "\nThe disk image '%s' already exists.  Are you sure you want to replace it?\nPlease type yes or no. ", filename);
+    if (ask_yn(buffer, 0, &confirm) < 0)
+      fatal(EOF_ERR);
+    if (!confirm)
+      fatal("ERROR: Aborted");
+  }
+}
+
 int main(int argc, char *argv[])
 {
   char bochsrc_line[256], prompt[80], tmplogname[512];
   int imgmode = 0;
+  Bit64u hdsize = 0;
 
   if (!parse_cmdline(argc, argv))
     myexit(1);
@@ -754,9 +765,11 @@ int main(int argc, char *argv[])
         } else { // hard disk
           if (ask_menu(hdmode_menu, hdmode_n_choices, hdmode_choices, bx_imagemode, &bx_imagemode) < 0)
             fatal(EOF_ERR);
+          imgmode = hdmode_choice_id[bx_imagemode];
           sprintf(prompt, "\nEnter the hard disk size in megabytes, between 1 and %d\n", bx_max_hd_megs);
           if (ask_int(prompt, 1, bx_max_hd_megs, bx_hdsize, &bx_hdsize) < 0)
             fatal(EOF_ERR);
+          hdsize = ((Bit64u)bx_hdsize) << 20;
           if (!strlen(bx_filename_1)) {
             strcpy(bx_filename_1, "c.img");
           }
@@ -808,16 +821,33 @@ int main(int argc, char *argv[])
     }
   }
   if (bximage_mode == BXIMAGE_MODE_CREATE_IMAGE) {
+    image_overwrite_check(bx_filename_1);
     if (bx_hdimage == 0) {
       printf("\nCreating floppy image '%s' with %d sectors\n", bx_filename_1, fdsize_sectors[bx_fdsize_idx]);
       create_flat_image(bx_filename_1, fdsize_sectors[bx_fdsize_idx] * 512);
     } else {
-      // TODO
-      fatal("\nbximage_new: mode not implemented yet");
+      Bit64u cyl = (Bit64u)(hdsize/16.0/63.0/512.0);
+      if (cyl >= (1 << BX_MAX_CYL_BITS))
+        fatal("ERROR: number of cylinders out of range !\n");
+      printf("\nCreating hard disk image '%s' with CHS=%ld/16/63\n", bx_filename_1, cyl);
+      create_hard_disk_image(bx_filename_1, imgmode, hdsize);
     }
     printf("\nThe following line should appear in your bochsrc:\n");
     printf("  %s\n", bochsrc_line);
+#ifdef WIN32
+    if (OpenClipboard(NULL)) {
+      HGLOBAL hgClip;
+      EmptyClipboard();
+      hgClip = GlobalAlloc(GMEM_DDESHARE, (strlen(bochsrc_line) + 1));
+      strcpy((char *)GlobalLock(hgClip), bochsrc_line);
+      GlobalUnlock(hgClip);
+      SetClipboardData(CF_TEXT, hgClip);
+      CloseClipboard();
+      printf("(The line is stored in your windows clipboard, use CTRL-V to paste)\n");
+    }
+#endif
   } else if (bximage_mode == BXIMAGE_MODE_CONVERT_IMAGE) {
+    image_overwrite_check(bx_filename_2);
     convert_image(imgmode);
     if (bx_remove) {
       if (unlink(bx_filename_1) != 0)
@@ -830,6 +860,7 @@ int main(int argc, char *argv[])
         fatal("ERROR: while removing the redolog !\n");
     }
   }
+  myexit(0);
 
   return 0;
 }
