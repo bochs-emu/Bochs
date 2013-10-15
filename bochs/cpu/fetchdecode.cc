@@ -470,7 +470,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F 16 /w */ { BxPrefixSSE, BX_IA_MOVHPS_VpsMq, BxOpcodeGroupSSE_0f16 },
   /* 0F 17 /w */ { BxPrefixSSE2, BX_IA_ERROR, BxOpcodeGroupSSE_0f17M },
 #if BX_CPU_LEVEL >= 6
-  /* 0F 18 /w */ { 0, BX_IA_PREFETCH }, // opcode group G16, PREFETCH hints
+  /* 0F 18 /w */ { BxGroup16, BX_IA_ERROR, BxOpcodeInfoG16 }, // opcode group G16, PREFETCH hints
   /* 0F 19 /w */ { 0, BX_IA_NOP },      // multi-byte NOP
   /* 0F 1A /w */ { 0, BX_IA_NOP },      // multi-byte NOP
   /* 0F 1B /w */ { 0, BX_IA_NOP },      // multi-byte NOP
@@ -1015,7 +1015,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F 16 /d */ { BxPrefixSSE, BX_IA_MOVHPS_VpsMq, BxOpcodeGroupSSE_0f16 },
   /* 0F 17 /d */ { BxPrefixSSE2, BX_IA_ERROR, BxOpcodeGroupSSE_0f17M },
 #if BX_CPU_LEVEL >= 6
-  /* 0F 18 /d */ { 0, BX_IA_PREFETCH }, // opcode group G16, PREFETCH hints
+  /* 0F 18 /d */ { BxGroup16, BX_IA_ERROR, BxOpcodeInfoG16 }, // opcode group G16, PREFETCH hints
   /* 0F 19 /d */ { 0, BX_IA_NOP },      // multi-byte NOP
   /* 0F 1A /d */ { 0, BX_IA_NOP },      // multi-byte NOP
   /* 0F 1B /d */ { 0, BX_IA_NOP },      // multi-byte NOP

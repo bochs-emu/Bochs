@@ -1039,6 +1039,23 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G15q[8*2] = {
 };
 #endif
 
+/* ******** */
+/* Group 16 */
+/* ******** */
+
+#if BX_CPU_LEVEL >= 6
+static const BxOpcodeInfo_t BxOpcodeInfoG16[8] = {
+  /* 0 */ { 0, BX_IA_PREFETCHNTA },
+  /* 1 */ { 0, BX_IA_PREFETCHT0 },
+  /* 2 */ { 0, BX_IA_PREFETCHT1 },
+  /* 3 */ { 0, BX_IA_PREFETCHT2 },
+  /* 4 */ { 0, BX_IA_PREFETCH },
+  /* 5 */ { 0, BX_IA_PREFETCH },
+  /* 6 */ { 0, BX_IA_PREFETCH },
+  /* 7 */ { 0, BX_IA_PREFETCH }
+};
+#endif
+
 static const BxOpcodeInfo_t BxOpcodeInfoMOV_RdCd[8] = {
   /* 0 */ { 0, BX_IA_MOV_RdCR0 },
   /* 1 */ { 0, BX_IA_ERROR },
