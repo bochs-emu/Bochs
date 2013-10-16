@@ -26,6 +26,7 @@
 
 #ifdef WIN32
 #  include <conio.h>
+#  include <winioctl.h>
 #endif
 #include <ctype.h>
 
