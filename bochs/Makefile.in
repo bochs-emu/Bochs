@@ -249,7 +249,7 @@ bxcommit@EXE@: misc/bxcommit.o
 	@LINK_CONSOLE@ misc/bxcommit.o
 
 bximage_new@EXE@: misc/bximage_new.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc-img.o
-	@LINK_CONSOLE@ misc/bximage_new.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc-img.o
+	@LINK_CONSOLE@ $(BXIMAGE_LINK_OPTS) misc/bximage_new.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc-img.o
 
 niclist@EXE@: misc/niclist.o
 	@LINK_CONSOLE@ misc/niclist.o

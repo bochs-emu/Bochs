@@ -355,7 +355,46 @@ void create_flat_image(const char *filename, Bit64u size)
 #ifdef WIN32
 void create_flat_image_win32(const char *filename, Bit64u size)
 {
-  // TODO
+  HANDLE hFile;
+  LARGE_INTEGER pos;
+  DWORD dwCount, errCode;
+  USHORT mode;
+  char buffer[1024];
+
+  hFile = CreateFile(filename, GENERIC_WRITE|GENERIC_READ, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+  if (hFile == INVALID_HANDLE_VALUE) {
+    // attempt to print an error
+#ifdef HAVE_PERROR
+    sprintf(buffer, "while opening '%s' for writing", filename);
+    perror(buffer);
+#endif
+    fatal("ERROR: Could not write disk image");
+  }
+
+  SetLastError(NO_ERROR);
+  mode = COMPRESSION_FORMAT_DEFAULT;
+  dwCount = 0;
+  memset(buffer, 0, 512);
+  WriteFile(hFile, buffer, 512, &dwCount, NULL); // set the first sector to 0, Win98 doesn't zero out the file
+                                                 // if there is a write at/over the end
+  DeviceIoControl(hFile, FSCTL_SET_COMPRESSION, &mode, sizeof(mode), NULL, 0, &dwCount, NULL);
+  pos.u.LowPart = (unsigned long)((size - 512));
+  pos.u.HighPart = (unsigned long)((size - 512) >> 32);
+  pos.u.LowPart = SetFilePointer(hFile, pos.u.LowPart, &pos.u.HighPart, FILE_BEGIN);
+  memset(buffer, 0, 512);
+  if ((pos.u.LowPart == 0xffffffff && GetLastError() != NO_ERROR) ||
+      !WriteFile(hFile, buffer, 512, &dwCount, NULL) || (dwCount != 512)) {
+    errCode = GetLastError();
+    CloseHandle(hFile);
+    if (errCode == ERROR_DISK_FULL) {
+      fatal("\nERROR: Not enough space on disk for image!");
+    } else {
+      sprintf(buffer, "\nERROR: Disk image creation failed with error code %i!", errCode);
+      fatal(buffer);
+    }
+  }
+
+  CloseHandle(hFile);
 }
 #endif
 
@@ -428,11 +467,11 @@ void create_hard_disk_image(const char *filename, int imgmode, Bit64u size)
 {
   switch (imgmode) {
     case BX_HDIMAGE_MODE_FLAT:
-//#ifndef WIN32
+#ifndef WIN32
       create_flat_image(filename, size);
-//#else
-//      create_flat_image_win32(filename, size);
-//#endif
+#else
+      create_flat_image_win32(filename, size);
+#endif
       break;
 
     case BX_HDIMAGE_MODE_GROWING:
