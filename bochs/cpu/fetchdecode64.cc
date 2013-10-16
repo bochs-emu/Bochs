@@ -2208,20 +2208,20 @@ modrm_done:
     // the if() above after fetching the 2nd byte, so this path is
     // taken in all cases if a modrm byte is NOT required.
 
-    if (b1 == 0x90) {
-      if (! rex_prefix) {
-        ia_opcode = (sse_prefix == SSE_PREFIX_F3) ? BX_IA_PAUSE : BX_IA_NOP;
-      }
-    }
-    else {
-      unsigned group = attr & BxGroupX;
-      if (group == BxPrefixSSE && sse_prefix)
-        OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix-1]);
+    unsigned group = attr & BxGroupX;
+    if (group == BxPrefixSSE && sse_prefix)
+      OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix-1]);
 
-      ia_opcode = OpcodeInfoPtr->IA;
-      rm = (b1 & 7) | rex_b;
-      nnn = (b1 >> 3) & 7;
-      i->assertModC0();
+    ia_opcode = OpcodeInfoPtr->IA;
+    rm = (b1 & 7) | rex_b;
+    nnn = (b1 >> 3) & 7;
+    i->assertModC0();
+
+    if (b1 == 0x90) {
+      if (sse_prefix == SSE_PREFIX_F3)
+        ia_opcode = BX_IA_PAUSE;
+      else if (! rex_b)
+        ia_opcode = BX_IA_NOP;
     }
   }
 
