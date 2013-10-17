@@ -24,16 +24,16 @@
 // Convert a hard disk image from one format (mode) to another.
 // Commit a redolog file to a supported base image.
 
+#include "config.h"
+#include "bxcompat.h"
+#include "osdep.h"
+#include "bswap.h"
+
 #ifdef WIN32
 #  include <conio.h>
 #  include <winioctl.h>
 #endif
 #include <ctype.h>
-
-#include "config.h"
-#include "bxcompat.h"
-#include "osdep.h"
-#include "bswap.h"
 
 #define BXIMAGE
 #include "iodev/hdimage/hdimage.h"
@@ -615,7 +615,7 @@ void print_usage()
     "  -mode=convert convert hard disk image to other format (mode)\n"
     "  -mode=commit  commit undoable redolog to base image\n"
     "  -fd=...       create: floppy image with size code\n"
-    "  -hd=...       create: hard disk image with size in megabytes\n"
+    "  -hd=...       create: hard disk image with size in megabytes (M) or gigabytes (G)\n"
     "  -imgmode=...  create/convert: hard disk image mode\n"
     "  -d            convert/commit: delete source file after operation\n"
     "  -q            quiet mode (don't prompt for user input)\n"
@@ -664,6 +664,7 @@ int parse_cmdline(int argc, char *argv[])
   int arg = 1;
   int ret = 1;
   int fnargs = 0;
+  char *suffix;
 
   bximage_mode = BXIMAGE_MODE_NULL;
   bx_hdimage = -1;
@@ -702,10 +703,17 @@ int parse_cmdline(int argc, char *argv[])
     else if (!strncmp("-hd=", argv[arg], 4)) {
       bx_hdimage = 1;
       bx_imagemode = 0;
-      if (sscanf(&argv[arg][4], "%d", &bx_hdsize) != 1) {
+      bx_hdsize = (int)strtol(&argv[arg][4], &suffix, 10);
+      if (bx_hdsize <= 0) {
         printf("Error in hard disk image size argument: %s\n\n", &argv[arg][4]);
         ret = 0;
-      } else if ((bx_hdsize < 1) || (bx_hdsize > bx_max_hd_megs)) {
+      } else if (!strcmp(suffix, "G")) {
+        bx_hdsize <<= 10;
+      } else if (strcmp(suffix, "M")) {
+        printf("Error in hard disk image size suffix: %s\n\n", &argv[arg][4]);
+        ret = 0;
+      }
+      if ((bx_hdsize < 1) || (bx_hdsize > bx_max_hd_megs)) {
         printf("Hard disk image size out of range\n\n");
         ret = 0;
       }
