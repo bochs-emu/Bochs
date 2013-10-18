@@ -20,8 +20,9 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 /////////////////////////////////////////////////////////////////////////
 
-// TODO: Create empty hard disk or floppy disk images for bochs.
+// Create empty hard disk or floppy disk images for bochs.
 // Convert a hard disk image from one format (mode) to another.
+// Resize a hard disk image.
 // Commit a redolog file to a supported base image.
 
 #include "config.h"
@@ -44,7 +45,8 @@
 #define BXIMAGE_MODE_NULL            0
 #define BXIMAGE_MODE_CREATE_IMAGE    1
 #define BXIMAGE_MODE_CONVERT_IMAGE   2
-#define BXIMAGE_MODE_COMMIT_UNDOABLE 3
+#define BXIMAGE_MODE_RESIZE_IMAGE    3
+#define BXIMAGE_MODE_COMMIT_UNDOABLE 4
 
 #define BX_MAX_CYL_BITS 24 // 8 TB
 
@@ -53,6 +55,7 @@ const int bx_max_hd_megs = (int)(((1 << BX_MAX_CYL_BITS) - 1) * 16.0 * 63.0 / 20
 int  bximage_mode;
 int  bx_hdimage;
 int  bx_fdsize_idx;
+int  bx_min_hd_megs = 10;
 int  bx_hdsize;
 int  bx_imagemode;
 int  bx_remove;
@@ -67,7 +70,8 @@ const char *main_menu_prompt =
 "\n"
 "1. Create new floppy or hard disk image\n"
 "2. Convert hard disk image to other format (mode)\n"
-"3. Commit 'undoable' redolog to base image\n"
+"3. Resize hard disk image\n"
+"4. Commit 'undoable' redolog to base image\n"
 "\n"
 "0. Quit\n"
 "\n"
@@ -488,7 +492,7 @@ void create_hard_disk_image(const char *filename, int imgmode, Bit64u size)
   }
 }
 
-void convert_image(int newimgmode)
+void convert_image(int newimgmode, Bit64u newsize)
 {
   device_image_t *source_image, *dest_image;
   Bit64u i, sc, s;
@@ -499,13 +503,17 @@ void convert_image(int newimgmode)
   memset(null_sector, 0, 512);
   int mode = hdimage_detect_image_mode(bx_filename_1);
   if (mode == BX_HDIMAGE_MODE_UNKNOWN)
-    fatal("base disk image mode not detected");
+    fatal("source disk image mode not detected");
 
   source_image = init_image(mode);
   if (source_image->open(bx_filename_1, O_RDONLY) < 0)
     fatal("cannot open source disk image");
 
-  create_hard_disk_image(bx_filename_2, newimgmode, source_image->hd_size);
+  if (newsize > 0) {
+    create_hard_disk_image(bx_filename_2, newimgmode, newsize);
+  } else {
+    create_hard_disk_image(bx_filename_2, newimgmode, source_image->hd_size);
+  }
   dest_image = init_image(newimgmode);
   if (dest_image->open(bx_filename_2) < 0)
     fatal("cannot open destination disk image");
@@ -611,20 +619,19 @@ void print_usage()
   fprintf(stderr,
     "Usage: bximage_new [options] [filename1] [filename2]\n\n"
     "Supported options:\n"
-    "  -mode=create  create new floppy or hard disk image\n"
-    "  -mode=convert convert hard disk image to other format (mode)\n"
-    "  -mode=commit  commit undoable redolog to base image\n"
+    "  -mode=...     operation mode (create, convert, resize, commit)\n"
     "  -fd=...       create: floppy image with size code\n"
-    "  -hd=...       create: hard disk image with size in megabytes (M) or gigabytes (G)\n"
+    "  -hd=...       create/resize: hard disk image with size in megabytes (M)\n"
+    "                or gigabytes (G)\n"
     "  -imgmode=...  create/convert: hard disk image mode\n"
-    "  -d            convert/commit: delete source file after operation\n"
+    "  -d            convert/resize/commit: delete source/redolog file after operation\n"
     "  -q            quiet mode (don't prompt for user input)\n"
     "  --help        display this help and exit\n\n"
     "Other arguments:\n"
     "  filename1     create:  new image file\n"
-    "                convert: source image file\n"
+    "                convert/resize: source image file\n"
     "                commit:  base image file\n"
-    "  filename2     convert: destination image file\n"
+    "  filename2     convert/resize: destination image file\n"
     "                commit:  redolog (journal) file\n\n");
 }
 
@@ -686,6 +693,8 @@ int parse_cmdline(int argc, char *argv[])
         bximage_mode = BXIMAGE_MODE_CREATE_IMAGE;
       } else if (!strcmp(&argv[arg][6], "convert")) {
         bximage_mode = BXIMAGE_MODE_CONVERT_IMAGE;
+      } else if (!strcmp(&argv[arg][6], "resize")) {
+        bximage_mode = BXIMAGE_MODE_RESIZE_IMAGE;
       } else if (!strcmp(&argv[arg][6], "commit")) {
         bximage_mode = BXIMAGE_MODE_COMMIT_UNDOABLE;
       } else {
@@ -713,7 +722,7 @@ int parse_cmdline(int argc, char *argv[])
         printf("Error in hard disk image size suffix: %s\n\n", &argv[arg][4]);
         ret = 0;
       }
-      if ((bx_hdsize < 1) || (bx_hdsize > bx_max_hd_megs)) {
+      if ((bx_hdsize < bx_min_hd_megs) || (bx_hdsize > bx_max_hd_megs)) {
         printf("Hard disk image size out of range\n\n");
         ret = 0;
       }
@@ -777,10 +786,23 @@ void image_overwrite_check(const char *filename)
   }
 }
 
+void check_image_names()
+{
+  if (!strlen(bx_filename_2)) {
+    strcpy(bx_filename_2, bx_filename_1);
+  }
+  if (!strcmp(bx_filename_1, bx_filename_2)) {
+    snprintf(bx_filename_1, 256, "%s%s", bx_filename_2, ".orig");
+    if (rename(bx_filename_2, bx_filename_1) != 0)
+      fatal("rename of image file failed");
+  }
+}
+
 int main(int argc, char *argv[])
 {
-  char bochsrc_line[256], prompt[80], tmplogname[512];
+  char bochsrc_line[256], prompt[80], tmpfname[512];
   int imgmode = 0;
+  device_image_t *source_image;
   Bit64u hdsize = 0;
 
   if (!parse_cmdline(argc, argv))
@@ -789,7 +811,7 @@ int main(int argc, char *argv[])
   print_banner();
 
   if (bx_interactive) {
-    if (ask_int(main_menu_prompt, 0, 3, bximage_mode, &bximage_mode) < 0)
+    if (ask_int(main_menu_prompt, 0, 4, bximage_mode, &bximage_mode) < 0)
       fatal(EOF_ERR);
 
     set_default_values();
@@ -814,8 +836,9 @@ int main(int argc, char *argv[])
           if (ask_menu(hdmode_menu, hdmode_n_choices, hdmode_choices, bx_imagemode, &bx_imagemode) < 0)
             fatal(EOF_ERR);
           imgmode = hdmode_choice_id[bx_imagemode];
-          sprintf(prompt, "\nEnter the hard disk size in megabytes, between 1 and %d\n", bx_max_hd_megs);
-          if (ask_int(prompt, 1, bx_max_hd_megs, bx_hdsize, &bx_hdsize) < 0)
+          sprintf(prompt, "\nEnter the hard disk size in megabytes, between %d and %d\n",
+                  bx_min_hd_megs, bx_max_hd_megs);
+          if (ask_int(prompt, bx_min_hd_megs, bx_max_hd_megs, bx_hdsize, &bx_hdsize) < 0)
             fatal(EOF_ERR);
           hdsize = ((Bit64u)bx_hdsize) << 20;
           if (!strlen(bx_filename_1)) {
@@ -834,15 +857,50 @@ int main(int argc, char *argv[])
         if (ask_string("\nWhat is the name of the source image?\n", bx_filename_1, bx_filename_1) < 0)
           fatal(EOF_ERR);
         if (!strlen(bx_filename_2)) {
-          strcpy(tmplogname, "c-new.img");
+          strcpy(tmpfname, "c-new.img");
         } else {
-          strcpy(tmplogname, bx_filename_2);
+          strcpy(tmpfname, bx_filename_2);
         }
-        if (ask_string("\nWhat should be the name of the new image?\n", tmplogname, bx_filename_2) < 0)
+        if (ask_string("\nWhat should be the name of the new image?\n", tmpfname, bx_filename_2) < 0)
           fatal(EOF_ERR);
+        check_image_names();
         if (ask_menu(hdmode_menu, hdmode_n_choices, hdmode_choices, bx_imagemode, &bx_imagemode) < 0)
           fatal(EOF_ERR);
         imgmode = hdmode_choice_id[bx_imagemode];
+        if (ask_yn("\nShould the source been removed afterwards?\n", 0, &bx_remove) < 0)
+          fatal(EOF_ERR);
+        break;
+
+      case BXIMAGE_MODE_RESIZE_IMAGE:
+        if (!strlen(bx_filename_1)) {
+          strcpy(bx_filename_1, "c.img");
+        }
+        if (ask_string("\nWhat is the name of the source image?\n", bx_filename_1, bx_filename_1) < 0)
+          fatal(EOF_ERR);
+        imgmode = hdimage_detect_image_mode(bx_filename_1);
+        if (imgmode == BX_HDIMAGE_MODE_UNKNOWN)
+          fatal("source disk image mode not detected");
+        source_image = init_image(imgmode);
+        if (source_image->open(bx_filename_1, O_RDONLY) < 0) {
+          fatal("cannot open source disk image");
+        } else {
+          bx_min_hd_megs = (int)(source_image->hd_size >> 20);
+          source_image->close();
+        }
+        if (!strlen(bx_filename_2)) {
+          strcpy(tmpfname, "c-new.img");
+        } else {
+          strcpy(tmpfname, bx_filename_2);
+        }
+        if (ask_string("\nWhat should be the name of the new image?\n", tmpfname, bx_filename_2) < 0)
+          fatal(EOF_ERR);
+        check_image_names();
+        sprintf(prompt, "\nEnter the new hard disk size in megabytes, between %d and %d\n",
+                bx_min_hd_megs, bx_max_hd_megs);
+        if (bx_hdsize < bx_min_hd_megs) bx_hdsize = bx_min_hd_megs;
+        if (ask_int(prompt, bx_min_hd_megs, bx_max_hd_megs, bx_hdsize, &bx_hdsize) < 0)
+          fatal(EOF_ERR);
+        hdsize = ((Bit64u)bx_hdsize) << 20;
         if (ask_yn("\nShould the source been removed afterwards?\n", 0, &bx_remove) < 0)
           fatal(EOF_ERR);
         break;
@@ -854,11 +912,11 @@ int main(int argc, char *argv[])
         if (ask_string("\nWhat is the name of the base image?\n", bx_filename_1, bx_filename_1) < 0)
           fatal(EOF_ERR);
         if (!strlen(bx_filename_2)) {
-          snprintf(tmplogname, 256, "%s%s", bx_filename_1, UNDOABLE_REDOLOG_EXTENSION);
+          snprintf(tmpfname, 256, "%s%s", bx_filename_1, UNDOABLE_REDOLOG_EXTENSION);
         } else {
-          strcpy(tmplogname, bx_filename_2);
+          strcpy(tmpfname, bx_filename_2);
         }
-        if (ask_string("\nWhat is the redolog name?\n", tmplogname, bx_filename_2) < 0)
+        if (ask_string("\nWhat is the redolog name?\n", tmpfname, bx_filename_2) < 0)
           fatal(EOF_ERR);
         if (ask_yn("\nShould the redolog been removed afterwards?\n", 1, &bx_remove) < 0)
           fatal(EOF_ERR);
@@ -896,7 +954,14 @@ int main(int argc, char *argv[])
 #endif
   } else if (bximage_mode == BXIMAGE_MODE_CONVERT_IMAGE) {
     image_overwrite_check(bx_filename_2);
-    convert_image(imgmode);
+    convert_image(imgmode, 0);
+    if (bx_remove) {
+      if (unlink(bx_filename_1) != 0)
+        fatal("ERROR: while removing the source image !\n");
+    }
+  } else if (bximage_mode == BXIMAGE_MODE_RESIZE_IMAGE) {
+    image_overwrite_check(bx_filename_2);
+    convert_image(imgmode, hdsize);
     if (bx_remove) {
       if (unlink(bx_filename_1) != 0)
         fatal("ERROR: while removing the source image !\n");

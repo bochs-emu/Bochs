@@ -29,6 +29,36 @@
 #ifndef _VMWARE4_H
 #define _VMWARE4_H 1
 
+#if defined(_MSC_VER)
+#pragma pack(push, 1)
+#elif defined(__MWERKS__) && defined(macintosh)
+#pragma options align=packed
+#endif
+typedef struct _VM4_Header
+{
+    Bit8u  id[4];
+    Bit32u version;
+    Bit32u flags;
+    Bit64u total_sectors;
+    Bit64u tlb_size_sectors;
+    Bit64u description_offset_sectors;
+    Bit64u description_size_sectors;
+    Bit32u slb_count;
+    Bit64u flb_offset_sectors;
+    Bit64u flb_copy_offset_sectors;
+    Bit64u tlb_offset_sectors;
+}
+#if !defined(_MSC_VER)
+GCC_ATTRIBUTE((packed))
+#endif
+VM4_Header;
+
+#if defined(_MSC_VER)
+#pragma pack(pop)
+#elif defined(__MWERKS__) && defined(macintosh)
+#pragma options align=reset
+#endif
+
 class vmware4_image_t : public device_image_t
 {
     public:
@@ -52,36 +82,6 @@ class vmware4_image_t : public device_image_t
     private:
         static const off_t INVALID_OFFSET;
         static const int SECTOR_SIZE;
-
-#if defined(_MSC_VER)
-#pragma pack(push, 1)
-#elif defined(__MWERKS__) && defined(macintosh)
-#pragma options align=packed
-#endif
-        typedef struct _VM4_Header
-        {
-            Bit8u  id[4];
-            Bit32u version;
-            Bit32u flags;
-            Bit64u total_sectors;
-            Bit64u tlb_size_sectors;
-            Bit64u description_offset_sectors;
-            Bit64u description_size_sectors;
-            Bit32u slb_count;
-            Bit64u flb_offset_sectors;
-            Bit64u flb_copy_offset_sectors;
-            Bit64u tlb_offset_sectors;
-        }
-#if !defined(_MSC_VER)
-        GCC_ATTRIBUTE((packed))
-#endif
-        VM4_Header;
-
-#if defined(_MSC_VER)
-#pragma pack(pop)
-#elif defined(__MWERKS__) && defined(macintosh)
-#pragma options align=reset
-#endif
 
         bx_bool is_open() const;
 
