@@ -19,6 +19,32 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 /////////////////////////////////////////////////////////////////////////
+//
+// Portion of this file contain code released under the following license.
+//
+// Connectix / Microsoft Virtual PC image creation code
+//
+// Copyright (c) 2005 Alex Beregszaszi
+// Copyright (c) 2009 Kevin Wolf <kwolf@suse.de>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+/////////////////////////////////////////////////////////////////////////
 
 // Create empty hard disk or floppy disk images for bochs.
 // Convert a hard disk image from one format (mode) to another.
@@ -89,10 +115,10 @@ const unsigned fdsize_sectors[] = { 320, 360, 640, 720, 1440, 2400, 2880, 3360, 
 int fdsize_n_choices = 10;
 
 // menu data for choosing disk mode
-const char *hdmode_menu = "\nWhat kind of image should I create?\nPlease type flat, sparse or growing. ";
-const char *hdmode_choices[] = {"flat", "sparse", "growing" };
-const int hdmode_choice_id[] = {BX_HDIMAGE_MODE_FLAT, BX_HDIMAGE_MODE_SPARSE, BX_HDIMAGE_MODE_GROWING};
-int hdmode_n_choices = 3;
+const char *hdmode_menu = "\nWhat kind of image should I create?\nPlease type flat, sparse, growing or vpc. ";
+const char *hdmode_choices[] = {"flat", "sparse", "growing", "vpc" };
+const int hdmode_choice_id[] = {BX_HDIMAGE_MODE_FLAT, BX_HDIMAGE_MODE_SPARSE, BX_HDIMAGE_MODE_GROWING, BX_HDIMAGE_MODE_VPC};
+int hdmode_n_choices = 4;
 
 #if !BX_HAVE_SNPRINTF
 #include <stdarg.h>
@@ -468,6 +494,88 @@ void create_growing_image(const char *filename, Bit64u size)
   delete redolog;
 }
 
+void create_vpc_image(const char *filename, Bit64u size)
+{
+  Bit8u buf[1024];
+  Bit16u cyls = 0;
+  Bit8u heads = 16, secs_per_cyl = 63;
+  Bit64u total_sectors;
+  Bit64s offset;
+  size_t block_size, num_bat_entries;
+  int fd, i;
+
+  total_sectors = size >> 9;
+  cyls = (Bit64u)(size/heads/secs_per_cyl/512.0);
+
+  vhd_footer_t *footer = (vhd_footer_t*)buf;
+  memset(footer, 0, HEADER_SIZE);
+  memcpy(footer->creator, "conectix", 8);
+  // TODO Check if "bxic" creator_app is ok for VPC
+  memcpy(footer->creator_app, "bxic", 4);
+  memcpy(footer->creator_os, "Wi2k", 4);
+
+  footer->features = be32_to_cpu(0x02);
+  footer->version = be32_to_cpu(0x00010000);
+  footer->data_offset = be64_to_cpu(HEADER_SIZE);
+  footer->timestamp = be32_to_cpu(time(NULL) - VHD_TIMESTAMP_BASE);
+
+  // Version of Virtual PC 2007
+  footer->major = be16_to_cpu(0x0005);
+  footer->minor = be16_to_cpu(0x0003);
+  footer->orig_size = be64_to_cpu(total_sectors * 512);
+  footer->size = be64_to_cpu(total_sectors * 512);
+  footer->cyls = be16_to_cpu(cyls);
+  footer->heads = heads;
+  footer->secs_per_cyl = secs_per_cyl;
+  footer->type = be32_to_cpu(VHD_DYNAMIC);
+  footer->checksum = be32_to_cpu(vpc_checksum(buf, HEADER_SIZE));
+
+  fd = create_image_file(filename);
+  // Write the footer (twice: at the beginning and at the end)
+  block_size = 0x200000;
+  num_bat_entries = (total_sectors + block_size / 512) / (block_size / 512);
+  if (bx_write_image(fd, 0, footer, HEADER_SIZE) != HEADER_SIZE) {
+    close(fd);
+    fatal("ERROR: The disk image is not complete - could not write footer!");
+  }
+  offset = 1536 + ((num_bat_entries * 4 + 511) & ~511);
+  if (bx_write_image(fd, offset, footer, HEADER_SIZE) != HEADER_SIZE) {
+    close(fd);
+    fatal("ERROR: The disk image is not complete - could not write footer!");
+  }
+
+  // Write the initial BAT
+  memset(buf, 0xFF, 512);
+  offset = 3 * 512;
+  for (i = 0; i < (int)(num_bat_entries * 4 + 511) / 512; i++) {
+    if (bx_write_image(fd, offset, buf, 512) != 512) {
+      close(fd);
+      fatal("ERROR: The disk image is not complete - could not write BAT!");
+    }
+    offset += 512;
+  }
+
+  vhd_dyndisk_header_t *header = (vhd_dyndisk_header_t*)buf;
+  memset(header, 0, 1024);
+  memcpy(header->magic, "cxsparse", 8);
+  /*
+   * Note: The spec is actually wrong here for data_offset, it says
+   * 0xFFFFFFFF, but MS tools expect all 64 bits to be set.
+   */
+  header->data_offset = be64_to_cpu(0xFFFFFFFFFFFFFFFFULL);
+  header->table_offset = be64_to_cpu(3 * 512);
+  header->version = be32_to_cpu(0x00010000);
+  header->block_size = be32_to_cpu(block_size);
+  header->max_table_entries = be32_to_cpu(num_bat_entries);
+  header->checksum = be32_to_cpu(vpc_checksum(buf, 1024));
+  if (bx_write_image(fd, 512, header, 1024) != 1024) {
+    close(fd);
+    fatal("ERROR: The disk image is not complete - could not write header!");
+  }
+
+  close(fd);
+}
+
 void create_hard_disk_image(const char *filename, int imgmode, Bit64u size)
 {
   switch (imgmode) {
@@ -485,6 +593,10 @@ void create_hard_disk_image(const char *filename, int imgmode, Bit64u size)
 
     case BX_HDIMAGE_MODE_SPARSE:
       create_sparse_image(filename, size);
+      break;
+
+    case BX_HDIMAGE_MODE_VPC:
+      create_vpc_image(filename, size);
       break;
 
     default:

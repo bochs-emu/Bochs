@@ -6,7 +6,7 @@
 //
 // Copyright (c) 2005  Alex Beregszaszi
 // Copyright (c) 2009  Kevin Wolf <kwolf@suse.de>
-// Copyright (C) 2012  The Bochs Project
+// Copyright (C) 2012-2013  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -38,6 +38,24 @@ enum vhd_type {
     VHD_DYNAMIC         = 3,
     VHD_DIFFERENCING    = 4,
 };
+
+// Seconds since Jan 1, 2000 0:00:00 (UTC)
+#define VHD_TIMESTAMP_BASE 946684800
+
+// be*_to_cpu : convert disk (big) to host endianness
+#if defined (BX_LITTLE_ENDIAN)
+#define be16_to_cpu(val) bx_bswap16(val)
+#define be32_to_cpu(val) bx_bswap32(val)
+#define be64_to_cpu(val) bx_bswap64(val)
+#define cpu_to_be32(val) bx_bswap32(val)
+#else
+#define be16_to_cpu(val) (val)
+#define be32_to_cpu(val) (val)
+#define be64_to_cpu(val) (val)
+#define cpu_to_be32(val) (val)
+#endif
+
+Bit32u vpc_checksum(Bit8u *buf, size_t size);
 
 #if defined(_MSC_VER) && (_MSC_VER<1300)
 #pragma pack(push, 1)
@@ -153,7 +171,6 @@ class vpc_image_t : public device_image_t
 #endif
 
   private:
-    Bit32u vpc_checksum(Bit8u *buf, size_t size);
     Bit64s get_sector_offset(Bit64s sector_num, int write);
     int rewrite_footer(void);
     Bit64s alloc_block(Bit64s sector_num);
