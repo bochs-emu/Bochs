@@ -689,7 +689,10 @@ int parse_cmdline(int argc, char *argv[])
       ret = 0;
     }
     else if (!strncmp("-mode=", argv[arg], 6)) {
-      if (!strcmp(&argv[arg][6], "create")) {
+      if (bximage_mode != BXIMAGE_MODE_NULL) {
+        printf("bximage mode already defined\n\n");
+        ret = 0;
+      } else if (!strcmp(&argv[arg][6], "create")) {
         bximage_mode = BXIMAGE_MODE_CREATE_IMAGE;
       } else if (!strcmp(&argv[arg][6], "convert")) {
         bximage_mode = BXIMAGE_MODE_CONVERT_IMAGE;
@@ -699,6 +702,7 @@ int parse_cmdline(int argc, char *argv[])
         bximage_mode = BXIMAGE_MODE_COMMIT_UNDOABLE;
       } else {
         printf("Unknown bximage mode '%s'\n\n", &argv[arg][6]);
+        ret = 0;
       }
     }
     else if (!strncmp("-fd=", argv[arg], 4)) {
@@ -798,11 +802,27 @@ void check_image_names()
   }
 }
 
+int get_image_mode_and_hdsize(const char *filename, int *hdsize_megs)
+{
+  device_image_t *source_image;
+
+  int imgmode = hdimage_detect_image_mode(filename);
+  if (imgmode == BX_HDIMAGE_MODE_UNKNOWN)
+    fatal("source disk image mode not detected");
+  source_image = init_image(imgmode);
+  if (source_image->open(bx_filename_1, O_RDONLY) < 0) {
+    fatal("cannot open source disk image");
+  } else {
+    *hdsize_megs = (int)(source_image->hd_size >> 20);
+    source_image->close();
+  }
+  return imgmode;
+}
+
 int main(int argc, char *argv[])
 {
   char bochsrc_line[256], prompt[80], tmpfname[512];
   int imgmode = 0;
-  device_image_t *source_image;
   Bit64u hdsize = 0;
 
   if (!parse_cmdline(argc, argv))
@@ -821,6 +841,7 @@ int main(int argc, char *argv[])
         break;
 
       case BXIMAGE_MODE_CREATE_IMAGE:
+        printf("\nCreate image\n");
         if (ask_menu(fdhd_menu, fdhd_n_choices, fdhd_choices, bx_hdimage, &bx_hdimage) < 0)
           fatal(EOF_ERR);
         if (bx_hdimage == 0) { // floppy
@@ -831,26 +852,23 @@ int main(int argc, char *argv[])
           }
           if (ask_string("\nWhat should be the name of the image?\n", bx_filename_1, bx_filename_1) < 0)
             fatal(EOF_ERR);
-          sprintf(bochsrc_line, "floppya: image=\"%s\", status=inserted", bx_filename_1);
         } else { // hard disk
           if (ask_menu(hdmode_menu, hdmode_n_choices, hdmode_choices, bx_imagemode, &bx_imagemode) < 0)
             fatal(EOF_ERR);
-          imgmode = hdmode_choice_id[bx_imagemode];
           sprintf(prompt, "\nEnter the hard disk size in megabytes, between %d and %d\n",
                   bx_min_hd_megs, bx_max_hd_megs);
           if (ask_int(prompt, bx_min_hd_megs, bx_max_hd_megs, bx_hdsize, &bx_hdsize) < 0)
             fatal(EOF_ERR);
-          hdsize = ((Bit64u)bx_hdsize) << 20;
           if (!strlen(bx_filename_1)) {
             strcpy(bx_filename_1, "c.img");
           }
           if (ask_string("\nWhat should be the name of the image?\n", bx_filename_1, bx_filename_1) < 0)
             fatal(EOF_ERR);
-          sprintf(bochsrc_line, "ata0-master: type=disk, path=\"%s\", mode=%s", bx_filename_1, hdmode_choices[bx_imagemode]);
         }
         break;
 
       case BXIMAGE_MODE_CONVERT_IMAGE:
+        printf("\nConvert image\n");
         if (!strlen(bx_filename_1)) {
           strcpy(bx_filename_1, "c.img");
         }
@@ -863,30 +881,19 @@ int main(int argc, char *argv[])
         }
         if (ask_string("\nWhat should be the name of the new image?\n", tmpfname, bx_filename_2) < 0)
           fatal(EOF_ERR);
-        check_image_names();
         if (ask_menu(hdmode_menu, hdmode_n_choices, hdmode_choices, bx_imagemode, &bx_imagemode) < 0)
           fatal(EOF_ERR);
-        imgmode = hdmode_choice_id[bx_imagemode];
         if (ask_yn("\nShould the source been removed afterwards?\n", 0, &bx_remove) < 0)
           fatal(EOF_ERR);
         break;
 
       case BXIMAGE_MODE_RESIZE_IMAGE:
+        printf("\nResize image\n");
         if (!strlen(bx_filename_1)) {
           strcpy(bx_filename_1, "c.img");
         }
         if (ask_string("\nWhat is the name of the source image?\n", bx_filename_1, bx_filename_1) < 0)
           fatal(EOF_ERR);
-        imgmode = hdimage_detect_image_mode(bx_filename_1);
-        if (imgmode == BX_HDIMAGE_MODE_UNKNOWN)
-          fatal("source disk image mode not detected");
-        source_image = init_image(imgmode);
-        if (source_image->open(bx_filename_1, O_RDONLY) < 0) {
-          fatal("cannot open source disk image");
-        } else {
-          bx_min_hd_megs = (int)(source_image->hd_size >> 20);
-          source_image->close();
-        }
         if (!strlen(bx_filename_2)) {
           strcpy(tmpfname, "c-new.img");
         } else {
@@ -894,18 +901,18 @@ int main(int argc, char *argv[])
         }
         if (ask_string("\nWhat should be the name of the new image?\n", tmpfname, bx_filename_2) < 0)
           fatal(EOF_ERR);
-        check_image_names();
+        imgmode = get_image_mode_and_hdsize(bx_filename_1, &bx_min_hd_megs);
         sprintf(prompt, "\nEnter the new hard disk size in megabytes, between %d and %d\n",
                 bx_min_hd_megs, bx_max_hd_megs);
         if (bx_hdsize < bx_min_hd_megs) bx_hdsize = bx_min_hd_megs;
         if (ask_int(prompt, bx_min_hd_megs, bx_max_hd_megs, bx_hdsize, &bx_hdsize) < 0)
           fatal(EOF_ERR);
-        hdsize = ((Bit64u)bx_hdsize) << 20;
         if (ask_yn("\nShould the source been removed afterwards?\n", 0, &bx_remove) < 0)
           fatal(EOF_ERR);
         break;
 
       case BXIMAGE_MODE_COMMIT_UNDOABLE:
+        printf("\nCommit redolog\n");
         if (!strlen(bx_filename_1)) {
           strcpy(bx_filename_1, "c.img");
         }
@@ -926,52 +933,71 @@ int main(int argc, char *argv[])
         fatal("\nbximage_new: unknown mode");
     }
   }
-  if (bximage_mode == BXIMAGE_MODE_CREATE_IMAGE) {
-    image_overwrite_check(bx_filename_1);
-    if (bx_hdimage == 0) {
-      printf("\nCreating floppy image '%s' with %d sectors\n", bx_filename_1, fdsize_sectors[bx_fdsize_idx]);
-      create_flat_image(bx_filename_1, fdsize_sectors[bx_fdsize_idx] * 512);
-    } else {
-      Bit64u cyl = (Bit64u)(hdsize/16.0/63.0/512.0);
-      if (cyl >= (1 << BX_MAX_CYL_BITS))
-        fatal("ERROR: number of cylinders out of range !\n");
-      printf("\nCreating hard disk image '%s' with CHS=%ld/16/63\n", bx_filename_1, cyl);
-      create_hard_disk_image(bx_filename_1, imgmode, hdsize);
-    }
-    printf("\nThe following line should appear in your bochsrc:\n");
-    printf("  %s\n", bochsrc_line);
+  switch (bximage_mode) {
+      case BXIMAGE_MODE_CREATE_IMAGE:
+        image_overwrite_check(bx_filename_1);
+        if (bx_hdimage == 0) {
+          sprintf(bochsrc_line, "floppya: image=\"%s\", status=inserted", bx_filename_1);
+          printf("\nCreating floppy image '%s' with %d sectors\n", bx_filename_1, fdsize_sectors[bx_fdsize_idx]);
+          create_flat_image(bx_filename_1, fdsize_sectors[bx_fdsize_idx] * 512);
+        } else {
+          sprintf(bochsrc_line, "ata0-master: type=disk, path=\"%s\", mode=%s", bx_filename_1, hdmode_choices[bx_imagemode]);
+          imgmode = hdmode_choice_id[bx_imagemode];
+          hdsize = ((Bit64u)bx_hdsize) << 20;
+          Bit64u cyl = (Bit64u)(hdsize/16.0/63.0/512.0);
+          if (cyl >= (1 << BX_MAX_CYL_BITS))
+            fatal("ERROR: number of cylinders out of range !\n");
+          printf("\nCreating hard disk image '%s' with CHS=%ld/16/63\n", bx_filename_1, cyl);
+          create_hard_disk_image(bx_filename_1, imgmode, hdsize);
+        }
+        printf("\nThe following line should appear in your bochsrc:\n");
+        printf("  %s\n", bochsrc_line);
 #ifdef WIN32
-    if (OpenClipboard(NULL)) {
-      HGLOBAL hgClip;
-      EmptyClipboard();
-      hgClip = GlobalAlloc(GMEM_DDESHARE, (strlen(bochsrc_line) + 1));
-      strcpy((char *)GlobalLock(hgClip), bochsrc_line);
-      GlobalUnlock(hgClip);
-      SetClipboardData(CF_TEXT, hgClip);
-      CloseClipboard();
-      printf("(The line is stored in your windows clipboard, use CTRL-V to paste)\n");
-    }
+        if (OpenClipboard(NULL)) {
+          HGLOBAL hgClip;
+          EmptyClipboard();
+          hgClip = GlobalAlloc(GMEM_DDESHARE, (strlen(bochsrc_line) + 1));
+          strcpy((char *)GlobalLock(hgClip), bochsrc_line);
+          GlobalUnlock(hgClip);
+          SetClipboardData(CF_TEXT, hgClip);
+          CloseClipboard();
+          printf("(The line is stored in your windows clipboard, use CTRL-V to paste)\n");
+        }
 #endif
-  } else if (bximage_mode == BXIMAGE_MODE_CONVERT_IMAGE) {
-    image_overwrite_check(bx_filename_2);
-    convert_image(imgmode, 0);
-    if (bx_remove) {
-      if (unlink(bx_filename_1) != 0)
-        fatal("ERROR: while removing the source image !\n");
-    }
-  } else if (bximage_mode == BXIMAGE_MODE_RESIZE_IMAGE) {
-    image_overwrite_check(bx_filename_2);
-    convert_image(imgmode, hdsize);
-    if (bx_remove) {
-      if (unlink(bx_filename_1) != 0)
-        fatal("ERROR: while removing the source image !\n");
-    }
-  } else if (bximage_mode == BXIMAGE_MODE_COMMIT_UNDOABLE) {
-    commit_redolog();
-    if (bx_remove) {
-      if (unlink(bx_filename_2) != 0)
-        fatal("ERROR: while removing the redolog !\n");
-    }
+        break;
+
+      case BXIMAGE_MODE_CONVERT_IMAGE:
+        check_image_names();
+        image_overwrite_check(bx_filename_2);
+        imgmode = hdmode_choice_id[bx_imagemode];
+        convert_image(imgmode, 0);
+        if (bx_remove) {
+          if (unlink(bx_filename_1) != 0)
+            fatal("ERROR: while removing the source image !\n");
+        }
+        break;
+
+      case BXIMAGE_MODE_RESIZE_IMAGE:
+        imgmode = get_image_mode_and_hdsize(bx_filename_1, &bx_min_hd_megs);
+        if (bx_hdsize < bx_min_hd_megs)
+          fatal("invalid image size");
+        hdsize = ((Bit64u)bx_hdsize) << 20;
+        check_image_names();
+        image_overwrite_check(bx_filename_2);
+        convert_image(imgmode, hdsize);
+        if (bx_remove) {
+          if (unlink(bx_filename_1) != 0)
+            fatal("ERROR: while removing the source image !\n");
+        }
+        break;
+
+      case BXIMAGE_MODE_COMMIT_UNDOABLE:
+        commit_redolog();
+        if (bx_remove) {
+          if (unlink(bx_filename_2) != 0)
+            fatal("ERROR: while removing the redolog !\n");
+        }
+        break;
   }
   myexit(0);
 
