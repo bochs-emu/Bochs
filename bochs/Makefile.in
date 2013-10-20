@@ -44,7 +44,7 @@ MAN_PAGE_1_LIST=bochs bximage bxcommit bochs-dlx
 MAN_PAGE_5_LIST=bochsrc
 INSTALL_LIST_SHARE=bios/BIOS-bochs-* bios/VGABIOS* @INSTALL_LIST_FOR_PLATFORM@
 INSTALL_LIST_DOC=CHANGES COPYING LICENSE README TODO
-INSTALL_LIST_BIN=bochs@EXE@ bximage@EXE@ bxcommit@EXE@
+INSTALL_LIST_BIN=bochs@EXE@ bximage@EXE@ bximage_old@EXE@ bxcommit@EXE@
 INSTALL_LIST_BIN_OPTIONAL=bochsdbg@EXE@
 INSTALL_LIST_WIN32=$(INSTALL_LIST_SHARE) $(INSTALL_LIST_DOC) $(INSTALL_LIST_BIN) $(INSTALL_LIST_BIN_OPTIONAL) niclist@EXE@
 INSTALL_LIST_MACOSX=$(INSTALL_LIST_SHARE) $(INSTALL_LIST_DOC) bochs.scpt
@@ -169,7 +169,7 @@ BX_INCLUDES = bochs.h config.h osdep.h
 	$(CC) @DASH@c $(BX_INCDIRS) $(CFLAGS) $(FPU_FLAGS) $< @OFP@$@
 
 
-all: @PRIMARY_TARGET@ @PLUGIN_TARGET@ bximage@EXE@ bximage_new@EXE@ bxcommit@EXE@ @BUILD_DOCBOOK_VAR@
+all: @PRIMARY_TARGET@ @PLUGIN_TARGET@ bximage@EXE@ bximage_old@EXE@ bxcommit@EXE@ @BUILD_DOCBOOK_VAR@
 
 @EXTERNAL_DEPENDENCY@
 
@@ -242,28 +242,22 @@ bochs_plugins:
 	$(MAKE) plugins
 	@CD_UP_TWO@
 
-bximage@EXE@: misc/bximage.o
-	@LINK_CONSOLE@ $(BXIMAGE_LINK_OPTS) misc/bximage.o
+bximage@EXE@: misc/bximage.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc-img.o
+	@LINK_CONSOLE@ $(BXIMAGE_LINK_OPTS) misc/bximage.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc-img.o
+
+bximage_old@EXE@: misc/bximage_old.o
+	@LINK_CONSOLE@ $(BXIMAGE_LINK_OPTS) misc/bximage_old.o
 
 bxcommit@EXE@: misc/bxcommit.o
 	@LINK_CONSOLE@ misc/bxcommit.o
-
-bximage_new@EXE@: misc/bximage_new.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc-img.o
-	@LINK_CONSOLE@ $(BXIMAGE_LINK_OPTS) misc/bximage_new.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc-img.o
 
 niclist@EXE@: misc/niclist.o
 	@LINK_CONSOLE@ misc/niclist.o
 
 # compile with console CXXFLAGS, not gui CXXFLAGS
-misc/bximage.o: $(srcdir)/misc/bximage.c $(srcdir)/misc/bswap.h $(srcdir)/iodev/hdimage/hdimage.h
-	$(CC) @DASH@c $(BX_INCDIRS) $(CFLAGS_CONSOLE) $(srcdir)/misc/bximage.c @OFP@$@
-
-misc/bxcommit.o: $(srcdir)/misc/bxcommit.c $(srcdir)/misc/bswap.h $(srcdir)/iodev/hdimage/hdimage.h
-	$(CC) @DASH@c $(BX_INCDIRS) $(CFLAGS_CONSOLE) $(srcdir)/misc/bxcommit.c @OFP@$@
-
-misc/bximage_new.o: $(srcdir)/misc/bximage_new.cc $(srcdir)/misc/bswap.h \
+misc/bximage.o: $(srcdir)/misc/bximage.cc $(srcdir)/misc/bswap.h \
   $(srcdir)/misc/bxcompat.h $(srcdir)/iodev/hdimage/hdimage.h
-	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS_CONSOLE) $(srcdir)/misc/bximage_new.cc @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS_CONSOLE) $(srcdir)/misc/bximage.cc @OFP@$@
 
 misc/hdimage.o: $(srcdir)/iodev/hdimage/hdimage.cc \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
@@ -280,6 +274,13 @@ misc/vmware4.o: $(srcdir)/iodev/hdimage/vmware4.cc $(srcdir)/iodev/hdimage/vmwar
 misc/vpc-img.o: $(srcdir)/iodev/hdimage/vpc-img.cc $(srcdir)/iodev/hdimage/vpc-img.h \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
 	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vpc-img.cc @OFP@$@
+
+# compile with console CFLAGS, not gui CXXFLAGS
+misc/bximage_old.o: $(srcdir)/misc/bximage_old.c $(srcdir)/misc/bswap.h $(srcdir)/iodev/hdimage/hdimage.h
+	$(CC) @DASH@c $(BX_INCDIRS) $(CFLAGS_CONSOLE) $(srcdir)/misc/bximage_old.c @OFP@$@
+
+misc/bxcommit.o: $(srcdir)/misc/bxcommit.c $(srcdir)/misc/bswap.h $(srcdir)/iodev/hdimage/hdimage.h
+	$(CC) @DASH@c $(BX_INCDIRS) $(CFLAGS_CONSOLE) $(srcdir)/misc/bxcommit.c @OFP@$@
 
 misc/niclist.o: $(srcdir)/misc/niclist.c
 	$(CC) @DASH@c $(BX_INCDIRS) $(CFLAGS_CONSOLE) $(srcdir)/misc/niclist.c @OFP@$@
@@ -527,8 +528,8 @@ clean:
 	@RMCOMMAND@ bochs.exe
 	@RMCOMMAND@ bximage
 	@RMCOMMAND@ bximage.exe
-	@RMCOMMAND@ bximage_new
-	@RMCOMMAND@ bximage_new.exe
+	@RMCOMMAND@ bximage_old
+	@RMCOMMAND@ bximage_old.exe
 	@RMCOMMAND@ bxcommit
 	@RMCOMMAND@ bxcommit.exe
 	@RMCOMMAND@ niclist
