@@ -44,7 +44,7 @@ case "$target" in
     DEFAULT_GUI=win32                 # default to win32 gui
     MSVC_TARGET=1
     ;;
-  *-pc-cygwin*)
+  *-cygwin*)
     NO_LT=1   # do not use libtool at all on cygwin
     if test "$with_term" = yes; then
       # ncurses won't compile with -mno-cygwin or -DWIN32
@@ -390,7 +390,7 @@ if test "$with_all_libs" = yes; then
   if test "$with_rfb" != yes; then
     can_compile_rfb=1
     case $target in
-      *-pc-windows* | *-pc-winnt* | *-pc-cygwin* | *-mingw32*)
+      *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32*)
 	AC_CHECK_HEADER([winsock.h], [], [ can_compile_rfb=0 ])
 	AC_CHECK_HEADER([process.h], [], [ can_compile_rfb=0 ])
         ;;
@@ -408,7 +408,7 @@ if test "$with_all_libs" = yes; then
   if test "$with_vncsrv" != yes; then
     can_compile_vncsrv=1
     case $target in
-      *-pc-windows* | *-pc-winnt* | *-pc-cygwin*)
+      *-pc-windows* | *-pc-winnt* | *-cygwin*)
         can_compile_vncsrv=0
         ;;
       *-mingw32*)
@@ -910,7 +910,7 @@ if test "$networking" = yes; then
     fi
   fi
   case "$target" in
-    *-pc-windows* | *-pc-winnt* | *-pc-cygwin* | *-mingw32*)
+    *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32*)
     NETLOW_OBJS="$NETLOW_OBJS eth_win32.o"
     AC_DEFINE(BX_NETMOD_WIN32, 1)
     ;;
@@ -1733,7 +1733,7 @@ if test "$bx_cdrom" = 1; then
   AC_MSG_RESULT(yes)
   CDROM_OBJS='cdrom.o'
   case $target in
-    *-pc-windows* | *-pc-winnt* | *-pc-cygwin* | *-mingw32*)
+    *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32*)
       CDROM_OBJS="$CDROM_OBJS cdrom_win32.o"
       AC_DEFINE(BX_SUPPORT_CDROM, 1)
       ;;
@@ -2481,7 +2481,7 @@ case "$target" in
     AC_DEFINE(BX_HAVE_DLFCN_H, 0)
     AC_DEFINE(BX_NETMOD_TAP, 0)
     ;;
-  *-pc-cygwin*)
+  *-cygwin*)
     EXE=".exe"
     PRIMARY_TARGET="bochs.exe"
     BXIMAGE_LINK_OPTS="-luser32"
@@ -2574,7 +2574,7 @@ if test "$with_rfb" = yes; then
       RFB_LIBS="$RFB_LIBS wsock32.lib"
       have_socket=yes
       ;;
-    *-pc-winnt* | *-pc-cygwin* | *-mingw32*)
+    *-pc-winnt* | *-cygwin* | *-mingw32*)
       # is this okay without a check ?
       RFB_LIBS="$RFB_LIBS -lwsock32"
       have_socket=yes
