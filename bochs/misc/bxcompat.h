@@ -65,10 +65,12 @@ enum {
 #endif
 
 #define BX_DEBUG(x)
-#define BX_INFO(x)  { (printf) x ; printf("\n"); }
+#define BX_INFO(x)  { if (bx_interactive) { (printf) x ; printf("\n"); } }
 #define BX_ERROR(x) { (printf) x ; printf("\n"); }
 #define BX_PANIC(x) { (printf) x ; printf("\n"); myexit(1); }
 #define BX_ASSERT(x)
+
+extern int bx_interactive;
 
 class device_image_t;
 

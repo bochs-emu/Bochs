@@ -875,12 +875,11 @@ int parse_cmdline(int argc, char *argv[])
     bx_interactive = 1;
   } else {
     set_default_values();
-    if (bximage_mode == BXIMAGE_MODE_CREATE_IMAGE) {
-      if (fnargs < 1) {
-        bx_interactive = 1;
-      }
-    } else if (fnargs < 2) {
+    if (fnargs < 1) {
       bx_interactive = 1;
+    }
+    if ((bximage_mode == BXIMAGE_MODE_COMMIT_UNDOABLE) && (fnargs == 1)) {
+      snprintf(bx_filename_2, 256, "%s%s", bx_filename_1, UNDOABLE_REDOLOG_EXTENSION);
     }
   }
   return ret;
