@@ -1,23 +1,20 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bximage 1 "21 Oct 2013" "bximage" "The Bochs Project"
+.TH bximage_old 1 "21 Oct 2013" "bximage" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
-bximage \- Interactive Disk Image Creation, Conversion, Resize and
-Redolog Commit Tool for Bochs
+bximage_old \- Interactive Disk Image Creator for Bochs
 .\"SKIP_SECTION"
 .SH SYNOPSIS
-.B bximage
+.B bximage_old
 .RI \|[ options \|]
-.RI \|[ filename1 \|]
-.RI \|[ filename2 \|]
+.RI \|[ filename \|]
 .\"SKIP_SECTION"
 .SH DESCRIPTION
 .LP
-Bximage is an easy to use console based tool for creating,
-converting and resizing disk images, particularly for  use
-with Bochs. It also  supports committing  redolog files to
-their  base images.  It is  completely  interactive  if no
-command line  arguments are used.  It can be switched to a
+The legacy version  of bximage is an  easy to  use console
+based tool for creating disk images, particularly  for use
+with  Bochs.  It is  completely  interactive if no command
+line  arguments  are  used.  It   can  be  switched  to  a
 non-interactive mode  if all required parameters are given
 in the command line.
 .\".\"DONT_SPLIT"
@@ -25,25 +22,22 @@ in the command line.
 .LP
 When you run bximage without one of the following options,
 it will  appear  in  interactive  mode and  ask   for  all
-required parameters to manipulate an image.
+required parameters to create an image.
+.TP
+.BI \-fd
+Create a floppy image.
+.TP
+.BI \-hd
+Create a hard disk image.
 .TP
 .BI \-mode=...
-Operation mode (create, convert, resize, commit)
-.TP
-.BI \-fd=...
-Create: floppy image with size code (e.g. 360k, 720k, 1.44M)
-.TP
-.BI \-hd=...
-Create/resize: hard disk image with size in megabytes (M)
-or gigabytes (G)
-.TP
-.BI \-imgmode=...
-Create/convert: hard disk image mode - see the
+Image mode (for hard disks only - see the
 .I bochsrc
-sample for supported options.
+sample for supported options).
 .TP
-.BI \-d
-Convert/resize/commit: delete source/redolog file after operation
+.BI \-size=...
+Image size in megabytes (e.g. 1.44 for floppy image, 10
+for hard disk image).
 .TP
 .BI \-q
 Quiet  mode (don't prompt for user input). Without this
@@ -57,15 +51,8 @@ Print  a  summary  of  the command line options for
 bximage and exit.
 .LP
 The
-.I filename1
-parameter specifies the name of the new image (create),
-the source image (convert/resize) or the base image
-(commit).
-.LP
-The
-.I filename2
-parameter specifies the name of the destination image
-(convert/resize) or the redolog (journal) file (commit).
+.I filename
+parameter specifies the name of the image to be created.
 .\"SKIP_SECTION"
 .SH LICENSE
 This program  is distributed  under the terms of the  GNU
@@ -79,7 +66,7 @@ The latest version of this program can be found at:
   http://bochs.sourceforge.net/getcurrent.html
 .\"SKIP_SECTION"
 .SH SEE ALSO
-bochs(1), bochsrc(5), bochs-dlx(1), bximage_old(1), bxcommit(1)
+bochs(1), bochsrc(5), bochs-dlx(1), bximage(1), bxcommit(1)
 .PP
 .nf
 The Bochs IA-32 Emulator site on the World Wide Web:
@@ -90,10 +77,8 @@ Online Bochs Documentation
 .fi
 .\"SKIP_SECTION"
 .SH AUTHORS
-The original version of bximage  was written  by Bryce Denney,
-based on  several similar tools from the bochs-developers list.
-The support for converting and resizing images has been added
-by Volker Ruppert.
+The legacy version of bximage was written by Bryce Denney,
+based on several similar tools from the bochs-developers list.
 .\"SKIP_SECTION"
 .SH BUGS
 Please  report all  bugs to the bug tracker  on  our  web

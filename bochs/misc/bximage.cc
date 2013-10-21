@@ -62,7 +62,9 @@
 #endif
 #include <ctype.h>
 
+#ifndef BXIMAGE
 #define BXIMAGE
+#endif
 #include "iodev/hdimage/hdimage.h"
 #include "iodev/hdimage/vmware3.h"
 #include "iodev/hdimage/vmware4.h"
@@ -171,8 +173,8 @@ void bx_center_print(FILE *file, const char *line, int maxwidth)
 void print_banner()
 {
   printf("%s\n", divider);
-  bx_center_print(stdout, "bximage_new\n", 72);
-  bx_center_print(stdout, "Disk Image Creation / Conversion and Commit Tool for Bochs\n", 72);
+  bx_center_print(stdout, "bximage\n", 72);
+  bx_center_print(stdout, "Disk Image Creation / Conversion / Resize and Commit Tool for Bochs\n", 72);
   bx_center_print(stdout, svnid, 72);
   printf("\n%s\n", divider);
 }
@@ -729,7 +731,7 @@ void commit_redolog()
 void print_usage()
 {
   fprintf(stderr,
-    "Usage: bximage_new [options] [filename1] [filename2]\n\n"
+    "Usage: bximage [options] [filename1] [filename2]\n\n"
     "Supported options:\n"
     "  -mode=...     operation mode (create, convert, resize, commit)\n"
     "  -fd=...       create: floppy image with size code\n"
@@ -1041,7 +1043,7 @@ int main(int argc, char *argv[])
         break;
 
       default:
-        fatal("\nbximage_new: unknown mode");
+        fatal("\nbximage: unknown mode");
     }
   }
   switch (bximage_mode) {
