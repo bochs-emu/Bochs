@@ -44,22 +44,11 @@ extern "C" {
 #if defined(WIN32)
 // windows.h included by bochs.h
 #include <winioctl.h>
-#include "aspi-win32.h"
-#include "scsidefs.h"
-
-DWORD (*GetASPI32SupportInfo)(void);
-DWORD (*SendASPI32Command)(LPSRB);
-BOOL  (*GetASPI32Buffer)(PASPI32BUFF);
-BOOL  (*FreeASPI32Buffer)(PASPI32BUFF);
-BOOL  (*TranslateASPI32Address)(PDWORD,PDWORD);
-DWORD (*GetASPI32DLLVersion)(void);
 
 
-static OSVERSIONINFO osinfo;
 static BOOL isWindowsXP;
-static BOOL bHaveDev;
+static BOOL isOldWindows;
 static UINT cdromCount = 0;
-static HINSTANCE hASPI = NULL;
 
 #define BX_CD_FRAMESIZE 2048
 #define CD_FRAMESIZE    2048
@@ -111,86 +100,12 @@ typedef struct _CDROM_TOC_SESSION_DATA {
 
 #include <stdio.h>
 
-
-bool ReadCDSector(unsigned int hid, unsigned int tid, unsigned int lun, unsigned long frame, unsigned char *buf, int bufsize)
-{
-  HANDLE hEventSRB;
-  SRB_ExecSCSICmd srb;
-  DWORD dwStatus;
-
-  hEventSRB = CreateEvent(NULL, TRUE, FALSE, NULL);
-
-  memset(&srb,0,sizeof(SRB_ExecSCSICmd));
-  srb.SRB_Cmd        = SC_EXEC_SCSI_CMD;
-  srb.SRB_HaId       = hid;
-  srb.SRB_Target     = tid;
-  srb.SRB_Lun        = lun;
-  srb.SRB_Flags      = SRB_DIR_IN | SRB_EVENT_NOTIFY;
-  srb.SRB_SenseLen   = SENSE_LEN;
-  srb.SRB_PostProc   = hEventSRB;
-  srb.SRB_BufPointer = buf;
-  srb.SRB_BufLen     = bufsize;
-  srb.SRB_CDBLen     = 10;
-  srb.CDBByte[0]     = SCSI_READ10;
-  srb.CDBByte[2]     = (unsigned char) (frame>>24);
-  srb.CDBByte[3]     = (unsigned char) (frame>>16);
-  srb.CDBByte[4]     = (unsigned char) (frame>>8);
-  srb.CDBByte[5]     = (unsigned char) (frame);
-  srb.CDBByte[7]     = 0;
-  srb.CDBByte[8]     = 1; /* read 1 frames */
-
-  ResetEvent(hEventSRB);
-  dwStatus = SendASPI32Command((SRB *)&srb);
-  if(dwStatus == SS_PENDING) {
-    WaitForSingleObject(hEventSRB, 100000);
-  }
-  CloseHandle(hEventSRB);
-  return (srb.SRB_TargStat == STATUS_GOOD);
-}
-
-int GetCDCapacity(unsigned int hid, unsigned int tid, unsigned int lun)
-{
-  HANDLE hEventSRB;
-  SRB_ExecSCSICmd srb;
-  DWORD dwStatus;
-  unsigned char buf[8];
-
-  hEventSRB = CreateEvent(NULL, TRUE, FALSE, NULL);
-
-  memset(&buf, 0, sizeof(buf));
-  memset(&srb,0,sizeof(SRB_ExecSCSICmd));
-  srb.SRB_Cmd        = SC_EXEC_SCSI_CMD;
-  srb.SRB_HaId       = hid;
-  srb.SRB_Target     = tid;
-  srb.SRB_Lun        = lun;
-  srb.SRB_Flags      = SRB_DIR_IN | SRB_EVENT_NOTIFY;
-  srb.SRB_SenseLen   = SENSE_LEN;
-  srb.SRB_PostProc   = hEventSRB;
-  srb.SRB_BufPointer = (unsigned char *)buf;
-  srb.SRB_BufLen     = 8;
-  srb.SRB_CDBLen     = 10;
-  srb.CDBByte[0]     = SCSI_READCDCAP;
-  srb.CDBByte[2]     = 0;
-  srb.CDBByte[3]     = 0;
-  srb.CDBByte[4]     = 0;
-  srb.CDBByte[5]     = 0;
-  srb.CDBByte[8]     = 0;
-
-  ResetEvent(hEventSRB);
-  dwStatus = SendASPI32Command((SRB *)&srb);
-  if(dwStatus == SS_PENDING) {
-    WaitForSingleObject(hEventSRB, 100000);
-  }
-
-  CloseHandle(hEventSRB);
-  return ((buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3]) * ((buf[4] << 24) + (buf[5] << 16) + (buf[6] << 8) + buf[7]);
-}
-
 static unsigned int cdrom_count = 0;
 
 cdrom_interface::cdrom_interface(const char *dev)
 {
   char prefix[6];
+  OSVERSIONINFO osinfo;
 
   sprintf(prefix, "CD%d", ++cdrom_count);
   put(prefix);
@@ -202,11 +117,11 @@ cdrom_interface::cdrom_interface(const char *dev)
     path = strdup(dev);
   }
   using_file=0;
-  bUseASPI = FALSE;
   osinfo.dwOSVersionInfoSize = sizeof(osinfo);
   GetVersionEx(&osinfo);
   isWindowsXP = (osinfo.dwMajorVersion > 5) ||
                 ((osinfo.dwMajorVersion == 5) && (osinfo.dwMinorVersion >= 1));
+  isOldWindows = (osinfo.dwPlatformId != VER_PLATFORM_WIN32_NT);
 }
 
 cdrom_interface::~cdrom_interface(void)
@@ -222,11 +137,11 @@ bx_bool cdrom_interface::insert_cdrom(const char *dev)
 
   // Load CD-ROM. Returns 0 if CD is not ready.
   if (dev != NULL) path = strdup(dev);
-  BX_INFO (("load cdrom with path=%s", path));
+  BX_INFO (("load cdrom with path='%s'", path));
   char drive[256];
   if ((path[1] == ':') && (strlen(path) == 2))
   {
-    if(osinfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
+    if (!isOldWindows) {
       // Use direct device access under windows NT/2k/XP
 
       // With all the backslashes it's hard to see, but to open D: drive
@@ -234,77 +149,17 @@ bx_bool cdrom_interface::insert_cdrom(const char *dev)
       sprintf(drive, "\\\\.\\%s", path);
       BX_INFO (("Using direct access for cdrom."));
       // This trick only works for Win2k and WinNT, so warn the user of that.
+      using_file = 0;
     } else {
-      BX_INFO(("Using ASPI for cdrom. Drive letters are unused yet."));
-      bUseASPI = TRUE;
+      BX_ERROR(("Your Windows version is no longer supported for direct access."));
+      return 0;
     }
-    using_file = 0;
-  }
-  else
-  {
+  } else {
     strcpy(drive,path);
     using_file = 1;
     BX_INFO (("Opening image file as a cd"));
   }
-  if(bUseASPI) {
-    DWORD d;
-    UINT cdr, cnt, max;
-    UINT i, j, k;
-    SRB_HAInquiry sh;
-    SRB_GDEVBlock sd;
-    if (!hASPI) {
-      hASPI = LoadLibrary("WNASPI32.DLL");
-      if (hASPI) {
-        SendASPI32Command    = (DWORD(*)(LPSRB))GetProcAddress(hASPI, "SendASPI32Command");
-        GetASPI32DLLVersion  = (DWORD(*)(void))GetProcAddress(hASPI, "GetASPI32DLLVersion");
-        GetASPI32SupportInfo = (DWORD(*)(void))GetProcAddress(hASPI, "GetASPI32SupportInfo");
-        d = GetASPI32DLLVersion();
-        BX_INFO(("WNASPI32.DLL version %d.%02d initialized", d & 0xff, (d >> 8) & 0xff));
-      } else {
-        BX_PANIC(("Could not load ASPI drivers, so cdrom access will fail"));
-        return 0;
-      }
-    }
-    cdr = 0;
-    bHaveDev = FALSE;
-    d = GetASPI32SupportInfo();
-    cnt = LOBYTE(LOWORD(d));
-    for(i = 0; i < cnt; i++) {
-      memset(&sh, 0, sizeof(sh));
-      sh.SRB_Cmd  = SC_HA_INQUIRY;
-      sh.SRB_HaId = i;
-      SendASPI32Command((LPSRB)&sh);
-      if(sh.SRB_Status != SS_COMP)
-        continue;
-
-      max = (int)sh.HA_Unique[3];
-      for(j = 0; j < max; j++) {
-        for(k = 0; k < 8; k++) {
-          memset(&sd, 0, sizeof(sd));
-          sd.SRB_Cmd    = SC_GET_DEV_TYPE;
-          sd.SRB_HaId   = i;
-          sd.SRB_Target = j;
-          sd.SRB_Lun    = k;
-          SendASPI32Command((LPSRB)&sd);
-          if(sd.SRB_Status == SS_COMP) {
-            if(sd.SRB_DeviceType == DTYPE_CDROM) {
-              cdr++;
-              if(cdr > cdromCount) {
-                hid = i;
-                tid = j;
-                lun = k;
-                cdromCount++;
-                bHaveDev = TRUE;
-              }
-            }
-          }
-          if(bHaveDev) break;
-        }
-        if(bHaveDev) break;
-      }
-    }
-    fd=1;
-  } else {
+  if (!isOldWindows) {
     hFile=CreateFile((char *)&drive, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
     if (hFile !=(void *)0xFFFFFFFF)
       fd=1;
@@ -341,7 +196,7 @@ void cdrom_interface::eject_cdrom()
 
   if (fd >= 0) {
     if (using_file == 0) {
-      if (!bUseASPI) {
+      if (!isOldWindows) {
         DWORD lpBytesReturned;
         DeviceIoControl(hFile, IOCTL_STORAGE_EJECT_MEDIA, NULL, 0, NULL, 0, &lpBytesReturned, NULL);
       }
@@ -365,8 +220,7 @@ bx_bool cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int star
   }
   // the implementation below is the platform-dependent code required
   // to read the TOC from a physical cdrom.
-  if (isWindowsXP)
-  {
+  if (isWindowsXP) {
     // This only works with WinXP
     CDROM_READ_TOC_EX input;
     memset(&input, 0, sizeof(input));
@@ -394,13 +248,11 @@ Bit32u cdrom_interface::capacity()
   // Return CD-ROM capacity.  I believe you want to return
   // the number of blocks of capacity the actual media has.
 
-  if (bUseASPI) {
-    return ((GetCDCapacity(hid, tid, lun) / 2352) + 1);
-  } else if (using_file) {
+  if (using_file) {
     ULARGE_INTEGER FileSize;
     FileSize.LowPart = GetFileSize(hFile, &FileSize.HighPart);
     return (Bit32u)(FileSize.QuadPart / 2048);
-  } else {  /* direct device access */
+  } else if (!isOldWindows) {  /* direct device access */
     if (isWindowsXP) {
       LARGE_INTEGER length;
       DWORD iBytesReturned;
@@ -413,6 +265,8 @@ Bit32u cdrom_interface::capacity()
       GetDiskFreeSpaceEx(path, &FreeBytesForCaller, &TotalNumOfBytes, &TotalFreeBytes);
       return (Bit32u)(TotalNumOfBytes.QuadPart / 2048);
     }
+  } else {
+    return 0;
   }
 }
 
@@ -438,10 +292,7 @@ bx_bool BX_CPP_AttrRegparmN(3) cdrom_interface::read_block(Bit8u* buf, Bit32u lb
     buf1 = buf;
   }
   do {
-    if(bUseASPI) {
-      ReadCDSector(hid, tid, lun, lba, buf1, BX_CD_FRAMESIZE);
-      n = BX_CD_FRAMESIZE;
-    } else {
+    if (using_file || !isOldWindows) {
       pos.QuadPart = (LONGLONG)lba*BX_CD_FRAMESIZE;
       pos.LowPart = SetFilePointer(hFile, pos.LowPart, &pos.HighPart, SEEK_SET);
       if ((pos.LowPart == 0xffffffff) && (GetLastError() != NO_ERROR)) {

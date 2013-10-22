@@ -72,13 +72,9 @@ private:
   int fd;
   char *path;
 
-  int using_file;
+  bx_bool using_file;
 #ifdef WIN32
-  BOOL bUseASPI;
   HANDLE hFile;
-  int hid;
-  int tid;
-  int lun;
 #endif
 #if BX_WITH_AMIGAOS
   BPTR fda;
