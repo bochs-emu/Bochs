@@ -53,14 +53,15 @@
 
 #include "config.h"
 #include "bxcompat.h"
-#include "osdep.h"
-#include "bswap.h"
 
 #ifdef WIN32
 #  include <conio.h>
 #  include <winioctl.h>
 #endif
 #include <ctype.h>
+
+#include "osdep.h"
+#include "bswap.h"
 
 #ifndef BXIMAGE
 #define BXIMAGE
@@ -507,7 +508,7 @@ void create_vpc_image(const char *filename, Bit64u size)
   int fd, i;
 
   total_sectors = size >> 9;
-  cyls = (Bit64u)(size/heads/secs_per_cyl/512.0);
+  cyls = (Bit16u)(size/heads/secs_per_cyl/512.0);
 
   vhd_footer_t *footer = (vhd_footer_t*)buf;
   memset(footer, 0, HEADER_SIZE);
@@ -519,7 +520,7 @@ void create_vpc_image(const char *filename, Bit64u size)
   footer->features = be32_to_cpu(0x02);
   footer->version = be32_to_cpu(0x00010000);
   footer->data_offset = be64_to_cpu(HEADER_SIZE);
-  footer->timestamp = be32_to_cpu(time(NULL) - VHD_TIMESTAMP_BASE);
+  footer->timestamp = be32_to_cpu((Bit32u)time(NULL) - VHD_TIMESTAMP_BASE);
 
   // Version of Virtual PC 2007
   footer->major = be16_to_cpu(0x0005);
@@ -535,7 +536,7 @@ void create_vpc_image(const char *filename, Bit64u size)
   fd = create_image_file(filename);
   // Write the footer (twice: at the beginning and at the end)
   block_size = 0x200000;
-  num_bat_entries = (total_sectors + block_size / 512) / (block_size / 512);
+  num_bat_entries = (size_t)(total_sectors + block_size / 512) / (block_size / 512);
   if (bx_write_image(fd, 0, footer, HEADER_SIZE) != HEADER_SIZE) {
     close(fd);
     fatal("ERROR: The disk image is not complete - could not write footer!");
@@ -777,6 +778,10 @@ void set_default_values()
       bx_imagemode = 0;
       bx_interactive = 1;
     }
+  } else if (bximage_mode == BXIMAGE_MODE_RESIZE_IMAGE) {
+    if (bx_hdsize == 0) {
+      bx_interactive = 1;
+    }
   }
 }
 
@@ -836,7 +841,7 @@ int parse_cmdline(int argc, char *argv[])
         ret = 0;
       } else if (!strcmp(suffix, "G")) {
         bx_hdsize <<= 10;
-      } else if (strcmp(suffix, "M")) {
+      } else if ((strlen(suffix) > 0) && strcmp(suffix, "M")) {
         printf("Error in hard disk image size suffix: %s\n\n", &argv[arg][4]);
         ret = 0;
       }
