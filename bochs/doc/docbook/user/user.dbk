@@ -1313,8 +1313,9 @@ DLX Linux screenshot.
 <row><entry>bochs.ico </entry> <entry> the Bochs icon (used for links in start menu and on the desktop) </entry> </row>
 <row><entry>bochsdbg.exe </entry> <entry> the main Bochs executable with debugger enabled </entry> </row>
 <row><entry>bochsrc-sample.txt </entry> <entry> sample Bochs configuration file </entry> </row>
-<row><entry>bxcommit.exe </entry> <entry> tool for committing redologs to flat disk images </entry> </row>
-<row><entry>bximage.exe </entry> <entry> tool for making new disk images </entry> </row>
+<row><entry>bxcommit.exe </entry> <entry> legacy tool for committing redologs to flat disk images </entry> </row>
+<row><entry>bximage.exe </entry> <entry> tool for manipulating disk images </entry> </row>
+<row><entry>bximage_old.exe </entry> <entry> legacy tool for creating disk images </entry> </row>
 <row><entry>CHANGES.txt </entry> <entry> what has changed between versions </entry> </row>
 <row><entry>COPYING.txt </entry> <entry> copy of the LGPL license </entry> </row>
 <row><entry>LICENSE.txt </entry> <entry> Bochs license information </entry> </row>
@@ -1401,9 +1402,9 @@ anyway, but if it is missing important pieces it may not run properly.
 </para>
 
 <para>
-The Bochs RPM installs four new commands and associated manual pages: bochs,
-bochs-dlx, bximage and bxcommit.  First, let's try out the DLX Linux demo by typing
-<command>bochs-dlx</command>.
+The Bochs RPM installs five new commands and associated manual pages: bochs,
+bochs-dlx, bximage, bximage_old and bxcommit.  First, let's try out the
+DLX Linux demo by typing <command>bochs-dlx</command>.
 
 <screen>
   user$ bochs-dlx
@@ -1496,11 +1497,12 @@ description of each one.
 <row><entry>/usr/share/doc/bochs/README</entry> <entry> the read-me file from the source distribution. </entry> </row>
 <row><entry>/usr/share/doc/bochs/TODO</entry> <entry> the TODO file from the source distribution. </entry> </row>
 <row><entry>/usr/bin/bochs </entry> <entry> the main Bochs executable </entry> </row>
-<row><entry>/usr/bin/bximage </entry> <entry> tool for making new disk images </entry> </row>
-<row><entry>/usr/bin/bxcommit </entry> <entry> tool for committing redologs to flat disk images </entry> </row>
+<row><entry>/usr/bin/bximage </entry> <entry> tool for manipulating disk images </entry> </row>
+<row><entry>/usr/bin/bximage_old </entry> <entry> legacy tool for making new disk images </entry> </row>
+<row><entry>/usr/bin/bxcommit </entry> <entry> legacy tool for committing redologs to flat disk images </entry> </row>
 <row><entry>/usr/lib/bochs/plugins/* </entry> <entry> device and gui plugins for Bochs (plugin version only) </entry> </row>
 <row><entry>/usr/share/doc/bochs/bochsrc-sample.txt</entry> <entry> sample Bochs configuration file </entry> </row>
-<row><entry>/usr/share/man/man1/* </entry> <entry> man pages for bochs, bochs-dlx, bximage and bxcommit</entry> </row>
+<row><entry>/usr/share/man/man1/* </entry> <entry> man pages for bochs, bochs-dlx, bximage, bximage_old and bxcommit</entry> </row>
 <row><entry>/usr/share/man/man5/* </entry> <entry> man page for bochsrc </entry> </row>
 <row><entry>/usr/share/doc/bochs/index.html</entry> <entry> a local copy of all Bochs documentation ( <ulink url="http://bochs.sourceforge.net/doc/docbook/index.html">Online copy</ulink> )</entry> </row>
 <row><entry>/usr/share/bochs/BIOS-bochs-latest </entry> <entry> default ROM BIOS image for Bochs </entry> </row>
@@ -1772,7 +1774,7 @@ tables shows the directories and their contents.
   <tbody>
     <row>
       <entry>bin</entry>
-      <entry>binary executables (bochs, bxcommit, bximage)</entry>
+      <entry>binary executables (bochs, bxcommit, bximage, bximage_old)</entry>
     </row>
     <row>
       <entry>lib/bochs/plugins</entry>
@@ -2520,8 +2522,8 @@ find the workspace file called <filename>bochs.sln</filename> in the folder
 "vs2008" and load it in VC++. Choose <command>Project:Set Active Project</command>
 and be sure that "bochs" is selected. Then choose <command>Build:Build bochs.exe</command>.
 This will build all the required libraries (iodev, cpu, etc.) and the auxiliary
-programs <filename>bximage.exe</filename>, <filename>bxcommit.exe</filename>
-and <filename>niclist.exe</filename>.
+programs <filename>bximage.exe</filename>, <filename>bximage_old.exe</filename>,
+<filename>bxcommit.exe</filename> and <filename>niclist.exe</filename>.
 </para>
 
 <para>
@@ -3903,7 +3905,7 @@ This defines the type and characteristics of all attached ata devices:
 <para>
 You have to point the "path" at a hard disk image file, cdrom iso file,
 or physical cdrom device.
-To create a hard disk image, try running bximage (see
+To create a hard disk image, try running <command>bximage</command> (see
 <xref linkend="diskimagehowto">). It will help you choose the size and
 then suggest a line that works with it.
 </para>
@@ -6030,7 +6032,8 @@ simulation is starting.
 
 <section id="diskimagehowto"><title>How to make a simple disk image</title>
 <para>
-This was contributed by Greg Alexander in October 2001.
+This was contributed by Greg Alexander in October 2001 and updated by
+Volker Ruppert in October 2013.
 </para>
 <para>
 What you need:
@@ -6094,14 +6097,29 @@ You will be greeted with the following prompt:
 <screen>
 ========================================================================
                                 bximage
-                  Disk Image Creation Tool for Bochs
+  Disk Image Creation / Conversion / Resize and Commit Tool for Bochs
+         $Id$
 ========================================================================
 
+1. Create new floppy or hard disk image
+2. Convert hard disk image to other format (mode)
+3. Resize hard disk image
+4. Commit 'undoable' redolog to base image
+
+0. Quit
+
+Please choose one [0]
+</screen>
+</para>
+
+<para>
+Since we want to create a new image, we have to type '1'
+and then <keycap>Enter</keycap>.
+<screen>
 Do you want to create a floppy disk image or a hard disk image?
 Please type hd or fd. [hd]
 </screen>
 </para>
-
 
 <para>
 Since we are creating a hard disk image, accept the default of hd by
@@ -6111,7 +6129,7 @@ hd to create:
 
 <screen>
 What kind of image should I create?
-Please type flat, sparse or growing. [flat]
+Please type flat, sparse, growing or vpc. [flat]
 </screen>
 </para>
 
@@ -6127,48 +6145,30 @@ Enter the hard disk size in megabytes, between 1 and 8257535
 </screen>
 </para>
 
-
 <para>
 Enter the size of the hard disk you want to create, and press
-<keycap>Enter</keycap>.
-Bochs will give you some information about the image it is creating, and
-ask you for a filename to use for the file it is creating.  I told it to
-use the default of 10 megabytes, and was given the following information
-along with the prompt for a filename:
-
+<keycap>Enter</keycap>. Then bximage will ask you for a filename to use
+for the file it is creating.
 <screen>
-[10] 10
-
-I will create a hard disk image with
-  cyl=20
-  heads=16
-  sectors per track=63
-  total sectors=20160
-  total size=9.84 megabytes
-
-What should I name the image?
+What should be the name of the image?
 [c.img]
 </screen>
 </para>
-
 
 <para>
 At this point, type in the filename you want to use for the image.  The
 default of "c.img" is appropriate if this will be your only hard disk
 image.  After you have typed in the name of the filename you want to
-use, press <keycap>Enter</keycap>.  Bximage will tell you it is writing the disk and
-will display a status bar as you wait.  When it is finished, it will
-give you a final status report and tell you a line that should be added
-to your <filename>bochsrc</filename> when you want to use this disk image. I named my
+use, press <keycap>Enter</keycap>.  Bximage will tell you it is writing the disk
+and then it will show you a line that should be added to your
+<filename>bochsrc</filename> when you want to use this disk image. I named my
 10 Megabyte image "teaching.img" and the output of bximage looked like
 this:
 
 <screen>
 [c.img] teaching.img
 
-Writing: [..........] Done.
-
-I wrote 10321920 bytes to teaching.img.
+Creating hard disk image 'c.img' with CHS=20/16/63
 </screen>
 </para>
 
@@ -6178,7 +6178,6 @@ The following line should appear in your <filename>bochsrc</filename>:
   <link linkend="bochsopt-ata-master-slave">ata0-master</link>: type=disk, path="teaching.img", mode=flat, cylinders=20, heads=16, spt=63
 </screen>
 </para>
-
 
 <para>
 At this point, a file called "teaching.img" was created in my current
@@ -8688,37 +8687,57 @@ The growing redolog is created automatically.
 
 <section id="using-bximage"><title>Using the bximage tool</title>
 <para>
-Bximage is an easy to use console based tool for creating disk images,
-particularly for use with Bochs. It is completely  interactive if no command
-line arguments are used. It can be switched to a non-interactive mode if all
-required parameters are given in the command line.
+Bximage is an easy to use console based tool for creating, converting and
+resizing disk images, particularly for use with Bochs. It also supports
+committing redolog files to their base images. It is completely interactive
+if no command line arguments are used. It can be switched to a non-interactive
+mode  if all required parameters are given in the command line.
 </para>
 <para>
-When you run bximage without one of the following options,
-it will  appear  in  interactive  mode and  ask   for  all
-required parameters to create an image.
+When you run bximage without one of the following options, it will appear in
+interactive  mode and ask for all required parameters to manipulate an image.
 <screen>
-bximage [options] [filename]
+Usage: bximage [options] [filename1] [filename2]
 
 Supported options:
--fd        Create a floppy image.
--hd        Create a hard disk image.
--mode=...  Image mode (for hard disks only - see the bochsrc sample for
-           supported options).
--size=...  Image size in megabytes (e.g. 1.44 for floppy image, 10 for hard
-           disk image).
--q         Quiet  mode (don't prompt for user input). Without this option bximage
-           uses the command line parameters as defaults for the interactive mode.
-           If this option is given and one of the required parameters is missing,
-           bximage will fall back to interactive mode.
---help     Print  a  summary  of  the command line options for bximage and exit.
+  -mode=...     operation mode (create, convert, resize, commit)
+  -fd=...       create: floppy image with size code
+  -hd=...       create/resize: hard disk image with size in megabytes (M)
+                or gigabytes (G)
+  -imgmode=...  create/convert: hard disk image mode
+  -d            convert/resize/commit: delete source/redolog file after operation
+  -q            quiet mode (don't prompt for user input)
+  --help        display this help and exit
 
-The filename parameter specifies the name of the image to be created.
+Other arguments:
+  filename1     create:  new image file
+                convert/resize: source image file
+                commit:  base image file
+  filename2     convert/resize: destination image file
+                commit:  redolog (journal) file
 </screen>
 </para>
+<section><title>Create image</title>
 <para>
+&FIXME; Not yet written.
 For an example of the usage, refer to <xref linkend="diskimagehowto">.
 </para>
+</section>
+<section><title>Convert image</title>
+<para>
+&FIXME; Not yet written.
+</para>
+</section>
+<section><title>Resize image</title>
+<para>
+&FIXME; Not yet written.
+</para>
+</section>
+<section><title>Commit 'undoable' redolog to base image</title>
+<para>
+&FIXME; Not yet written. For now see <xref linkend="using-bxcommit">.
+</para>
+</section>
 </section>
 
 <section id="using-bxcommit"><title>Using the bxcommit tool</title>

@@ -1793,7 +1793,7 @@ int redolog_t::check_format(int fd, const char *subtype)
 #ifdef BXIMAGE
 int redolog_t::commit(device_image_t *base_image)
 {
-  bx_bool ret = 0;
+  int ret = 0;
   Bit32u i;
   Bit8u buffer[512];
 

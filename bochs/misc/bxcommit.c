@@ -300,7 +300,8 @@ void redolog_make_header(redolog_header_t *header, const char* type, Bit64u size
 
 int redolog_open(redolog_t *r, int fd, redolog_header_t *header)
 {
-  int i, res;
+  int res;
+  Bit32u i;
 
   memset(r, 0, sizeof(redolog_t));
   r->fd = fd;
@@ -672,7 +673,7 @@ int commit_redolog()
 
   redolog_open(&r2, redologfd, &header);
 
-  printf("\nCommitting changes to flat file: [  0%%]");
+  printf("\nCommitting changes to base image file: [  0%%]");
 
   for(i=0; i<dtoh32(header.specific.catalog); i++) {
     printf("\x8\x8\x8\x8\x8%3d%%]", (i+1)*100/dtoh32(header.specific.catalog));
