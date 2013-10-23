@@ -155,6 +155,9 @@ extern bxInstrumentation *icpu;
 /* wrmsr callback */
 #define BX_INSTR_WRMSR(cpu_id, addr, value)
 
+/* vmexit callback */
+#define BX_INSTR_VMEXIT(cpu_id, reason, qualification)
+
 #else // BX_INSTRUMENTATION
 
 /* initialization/deinitialization of instrumentalization */
@@ -210,5 +213,8 @@ extern bxInstrumentation *icpu;
 
 /* wrmsr callback */
 #define BX_INSTR_WRMSR(cpu_id, addr, value)
+
+/* vmexit callback */
+#define BX_INSTR_VMEXIT(cpu_id, reason, qualification)
 
 #endif // BX_INSTRUMENTATION

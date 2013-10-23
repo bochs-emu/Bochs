@@ -592,6 +592,7 @@ void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
   RIP = BX_CPU_THIS_PTR prev_rip;
   if (BX_CPU_THIS_PTR speculative_rsp)
     RSP = BX_CPU_THIS_PTR prev_rsp;
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 
   if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_DECODE_ASSIST)) {
     //

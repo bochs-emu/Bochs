@@ -65,4 +65,6 @@ void bx_instr_phy_access(unsigned cpu, bx_address phy, unsigned len, unsigned rw
 
 void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value) {}
 
+void bx_instr_vmexit(unsigned cpu, Bit32u reason, Bit64u qualification) {}
+
 #endif

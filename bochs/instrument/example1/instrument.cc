@@ -61,8 +61,8 @@ void bxInstrumentation::bx_print_instruction(void)
     unsigned n;
 
     fprintf(stderr, "----------------------------------------------------------\n");
-    fprintf(stderr, "CPU: %d: %s\n", cpu_id, disasm_tbuf);
-    fprintf(stderr, "LEN: %d\tBYTES: ", opcode_length);
+    fprintf(stderr, "CPU %d: %s\n", cpu_id, disasm_tbuf);
+    fprintf(stderr, "LEN %d\tBYTES: ", opcode_length);
     for(n=0;n < opcode_length;n++) fprintf(stderr, "%02x", opcode[n]);
     if(is_branch)
     {

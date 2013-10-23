@@ -2408,6 +2408,8 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
       BX_PANIC(("PANIC: VMEXIT not in VMX guest mode !"));
   }
 
+  BX_INSTR_VMEXIT(BX_CPU_ID, reason, qualification);
+
   //
   // STEP 0: Update VMEXIT reason
   //
@@ -2446,6 +2448,7 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
     if (BX_CPU_THIS_PTR speculative_rsp)
       RSP = BX_CPU_THIS_PTR prev_rsp;
   }
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 
   //
   // STEP 1: Saving Guest State to VMCS

@@ -104,6 +104,11 @@ Possible operation types, passed through bx_instr_ucnear_branch and bx_instr_far
 	#define BX_INSTR_IS_SYSEXIT        20
 
 
+	void bx_instr_vmexit(unsigned cpu, Bit32u reason, Bit64u qualification);
+
+This callback is called right before Bochs executes a VMEXIT.
+
+
 	void bx_instr_opcode(unsigned cpu, bxInstruction_c *i, const Bit8u *opcode, unsigned len, bx_bool is32, bx_bool is64);
 
 The  callback  is  called  each  time, when Bochs completes  to  decode  a new

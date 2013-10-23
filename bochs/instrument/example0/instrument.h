@@ -104,6 +104,9 @@ void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsig
 /* wrmsr callback */
 #define BX_INSTR_WRMSR(cpu_id, addr, value)
 
+/* vmexit callback */
+#define BX_INSTR_VMEXIT(cpu_id, reason, qualification)
+
 #else // BX_INSTRUMENTATION
 
 /* initialization/deinitialization of instrumentalization */
@@ -159,5 +162,8 @@ void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsig
 
 /* wrmsr callback */
 #define BX_INSTR_WRMSR(cpu_id, addr, value)
+
+/* vmexit callback */
+#define BX_INSTR_VMEXIT(cpu_id, reason, qualification)
 
 #endif // BX_INSTRUMENTATION

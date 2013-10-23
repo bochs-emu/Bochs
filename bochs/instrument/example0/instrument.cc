@@ -88,8 +88,8 @@ void bx_print_instruction(unsigned cpu, const instruction_t *i)
   if(length != 0)
   {
     fprintf(stderr, "----------------------------------------------------------\n");
-    fprintf(stderr, "CPU: %d: %s\n", cpu, disasm_tbuf);
-    fprintf(stderr, "LEN: %d\tBYTES: ", length);
+    fprintf(stderr, "CPU %d: %s\n", cpu, disasm_tbuf);
+    fprintf(stderr, "LEN %d\tBYTES: ", length);
     for(n=0;n < length;n++) fprintf(stderr, "%02x", i->opcode[n]);
     if(i->is_branch)
     {

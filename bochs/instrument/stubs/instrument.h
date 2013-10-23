@@ -69,6 +69,8 @@ void bx_instr_phy_access(unsigned cpu, bx_address phy, unsigned len, unsigned rw
 
 void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 
+void bx_instr_vmexit(unsigned cpu, Bit32u reason, Bit64u qualification);
+
 /* initialization/deinitialization of instrumentalization*/
 #define BX_INSTR_INIT_ENV() bx_instr_init_env()
 #define BX_INSTR_EXIT_ENV() bx_instr_exit_env()
@@ -129,6 +131,9 @@ void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 /* wrmsr callback */
 #define BX_INSTR_WRMSR(cpu_id, addr, value)   bx_instr_wrmsr(cpu_id, addr, value)
 
+/* vmexit callback */
+#define BX_INSTR_VMEXIT(cpu_id, reason, qualification) bx_instr_vmexit(cpu_id, reason, qualification)
+
 #else
 
 /* initialization/deinitialization of instrumentalization */
@@ -184,5 +189,8 @@ void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 
 /* wrmsr callback */
 #define BX_INSTR_WRMSR(cpu_id, addr, value)
+
+/* vmexit callback */
+#define BX_INSTR_VMEXIT(cpu_id, reason, qualification)
 
 #endif
