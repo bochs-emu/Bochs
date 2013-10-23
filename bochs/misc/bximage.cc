@@ -674,9 +674,7 @@ void commit_redolog()
 {
   device_image_t *base_image;
   redolog_t *redolog;
-  Bit64u i, sc, s;
-  Bit8u buffer[512];
-  bx_bool error = 0;
+  int ret;
 
   printf("\n");
   int mode = hdimage_detect_image_mode(bx_filename_1);
@@ -693,39 +691,17 @@ void commit_redolog()
   if (!coherency_check(base_image, redolog))
     fatal("coherency check failed");
 
-  printf("\nCommitting changes to base image file: [  0%%]");
-
-  sc = base_image->hd_size / 512;
-  s = 0;
-  for (i = 0; i < base_image->hd_size; i+=512) {
-    printf("\x8\x8\x8\x8\x8%3d%%]", (int)((s+1)*100/sc));
-    fflush(stdout);
-    if (redolog->lseek(i, SEEK_SET) < 0) {
-      error = 1;
-      break;
-    }
-    if (redolog->read(buffer, 512) == 512) {
-      if (base_image->lseek(i, SEEK_SET) < 0) {
-        error = 1;
-        break;
-      }
-      if (base_image->write(buffer, 512) < 0) {
-        error = 1;
-        break;
-      }
-    }
-    s++;
-  }
+  ret = redolog->commit(base_image);
 
   base_image->close();
   redolog->close();
   delete base_image;
   delete redolog;
 
-  if (error) {
+  if (ret < 0) {
     fatal("redolog commit failed");
   } else {
-    printf(" Done.\n");
+    printf(" Done.\n\n");
   }
 }
 

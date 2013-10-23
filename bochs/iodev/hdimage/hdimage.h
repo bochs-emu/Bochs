@@ -440,7 +440,9 @@ class redolog_t
 
       static int check_format(int fd, const char *subtype);
 
-#ifndef BXIMAGE
+#ifdef BXIMAGE
+      int commit(device_image_t *base_image);
+#else
       bx_bool save_state(const char *backup_fname);
 #endif
 

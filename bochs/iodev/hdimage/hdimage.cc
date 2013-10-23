@@ -1790,6 +1790,67 @@ int redolog_t::check_format(int fd, const char *subtype)
   return HDIMAGE_FORMAT_OK;
 }
 
+#ifdef BXIMAGE
+int redolog_t::commit(device_image_t *base_image)
+{
+  bx_bool ret = 0;
+  Bit32u i;
+  Bit8u buffer[512];
+
+  printf("\nCommitting changes to base image file: [  0%%]");
+
+  for (i = 0; i < dtoh32(header.specific.catalog); i++) {
+    printf("\x8\x8\x8\x8\x8%3d%%]", (i+1)*100/dtoh32(header.specific.catalog));
+    fflush(stdout);
+
+    if (dtoh32(catalog[i]) != REDOLOG_PAGE_NOT_ALLOCATED) {
+      Bit64s bitmap_offset;
+      Bit32u bitmap_size, j;
+
+      bitmap_offset  = (Bit64s)STANDARD_HEADER_SIZE + (dtoh32(header.specific.catalog) * sizeof(Bit32u));
+      bitmap_offset += (Bit64s)512 * dtoh32(catalog[i]) * (extent_blocks + bitmap_blocks);
+
+      // Read bitmap
+      bitmap_size = dtoh32(header.specific.bitmap);
+      if ((Bit32u)bx_read_image(fd, (off_t)bitmap_offset, bitmap, bitmap_size) != bitmap_size) {
+        ret = -1;
+        break;
+      }
+
+      for (j = 0; j < dtoh32(header.specific.bitmap); j++) {
+        Bit32u bit;
+
+        for (bit = 0; bit < 8; bit++) {
+          if ( (bitmap[j] & (1 << bit)) != 0) {
+            Bit64s base_offset, block_offset;
+
+            block_offset = bitmap_offset + ((Bit64s)512 * (bitmap_blocks + ((j * 8) + bit)));
+
+            if (bx_read_image(fd, (off_t)block_offset, buffer, 512) != 512) {
+              ret = -1;
+              break;
+            }
+
+            base_offset  = (Bit64s)i * (dtoh32(header.specific.extent));
+            base_offset += (Bit64s)512 * ((j * 8) + bit);
+
+            if (base_image->lseek(base_offset, SEEK_SET) < 0) {
+              ret = -1;
+              break;
+            }
+            if (base_image->write(buffer, 512) < 0) {
+              ret = -1;
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+  return ret;
+}
+#endif
+
 #ifndef BXIMAGE
 bx_bool redolog_t::save_state(const char *backup_fname)
 {
