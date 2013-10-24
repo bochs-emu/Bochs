@@ -6098,7 +6098,7 @@ You will be greeted with the following prompt:
 ========================================================================
                                 bximage
   Disk Image Creation / Conversion / Resize and Commit Tool for Bochs
-         $Id$
+         $ID: bximage.cc 11906 2013-10-23 08:35:21Z vruppert $
 ========================================================================
 
 1. Create new floppy or hard disk image
@@ -8041,8 +8041,9 @@ in lba order.
 </section>
 <section><title>image creation</title>
 <para>
-Disk images for the usage in 'concat' mode can be created with the bximage
-utility (see <xref linkend="using-bximage"> for more information).
+Disk images for the usage in 'concat' mode can be created as 'flat' mode image
+files with the bximage utility (see <xref linkend="using-bximage"> for more
+information).
 </para>
 </section>
 <section><title>path</title>
@@ -8716,38 +8717,107 @@ Other arguments:
   filename2     convert/resize: destination image file
                 commit:  redolog (journal) file
 </screen>
+<table><title>Bximage: supported disk images modes (formats)</title>
+<tgroup cols="3" align="left" colsep="1" rowsep="1">
+<thead>
+  <row>
+    <entry>Mode</entry>
+    <entry>Create / Resize / Convert target</entry>
+    <entry>Convert source / Commit base</entry>
+  </row>
+</thead>
+<tbody>
+  <row>
+    <entry>flat</entry>
+    <entry>Yes</entry>
+    <entry>Yes</entry>
+  </row>
+  <row>
+    <entry>concat</entry>
+    <entry>Create only</entry>
+    <entry>No</entry>
+  </row>
+  <row>
+    <entry>dll</entry>
+    <entry>No</entry>
+    <entry>No</entry>
+  </row>
+  <row>
+    <entry>sparse</entry>
+    <entry>Yes</entry>
+    <entry>Yes</entry>
+  </row>
+  <row>
+    <entry>vmware3</entry>
+    <entry>No</entry>
+    <entry>Yes</entry>
+  </row>
+  <row>
+    <entry>vmware4</entry>
+    <entry>No</entry>
+    <entry>Yes</entry>
+  </row>
+  <row>
+    <entry>growing</entry>
+    <entry>Yes</entry>
+    <entry>Yes</entry>
+  </row>
+  <row>
+    <entry>vpc</entry>
+    <entry>Yes</entry>
+    <entry>Yes</entry>
+  </row>
+</tbody>
+</tgroup>
+</table>
 </para>
 <section><title>Create image</title>
 <para>
-&FIXME; Not yet written.
+This function can be used to create several disk image formats for the
+use with Bochs. See the table above for supported formats (modes).
 For an example of the usage, refer to <xref linkend="diskimagehowto">.
 </para>
 </section>
 <section><title>Convert image</title>
 <para>
-&FIXME; Not yet written.
+With this function a disk image can be converted from one mode (format)
+to another. The type of the source image is auto-detected. For the target
+format it supports the same disk image modes as the create function. If the
+name of the new image file is not specified and you decided not to remove
+the source file, it will still be present with it's original name plus the
+suffix ".orig".
 </para>
 </section>
 <section><title>Resize image</title>
 <para>
-&FIXME; Not yet written.
+This function can be used to increase the virtual disk size of an image.
+It supports the same disk image modes as the create function.
+Making a disk image smaller is not supported, since it may damage the
+disk and data will be lost. If the name of the new image file is not
+specified and you decided not to remove the source file, it will
+still be present with it's original name plus the suffix ".orig".
 </para>
 </section>
 <section><title>Commit 'undoable' redolog to base image</title>
 <para>
-&FIXME; Not yet written. For now see <xref linkend="using-bxcommit">.
+The type of the base image is auto-detected. The name of the redolog
+file only needs to be specified if it is not based on the base image.
+Removing the redolog file after commit is optional, but we recommend
+to do that. Otherwise Bochs will complain about an unexpected modification
+time of the base image. The legacy tool to commit redologs into flat files
+is still supported, so please see <xref linkend="using-bxcommit">.
 </para>
 </section>
 </section>
 
 <section id="using-bxcommit"><title>Using the bxcommit tool</title>
 <para>
-This tool can commit redologs into flat images.
+This legacy tool has been designed to commit redologs into flat images.
 </para>
 <para>
-For now, only "undoable" redologs to flat image commits and "growing" to flat
-image conversion (and vice versa) are supported. Commiting / converting other
-disk image types may be added in the future.
+It supports committing 'undoable' redologs to 'flat' or 'growing' base images
+and 'growing' to 'flat' image conversion (and vice versa). Committing / converting
+other disk image types is supported by the new bximage utility (<xref linkend="using-bximage">).
 </para>
 <para>
 This tool is completely interactive if no command line arguments are used.
@@ -8766,7 +8836,7 @@ Supported options:
   -q               quiet mode (don't prompt for user input)
   --help           display this help and exit
 
-The first filename parameter specifies the name of the flat image that will be
+The first filename parameter specifies the name of the base image that will be
 created or modified. The second one specifies the name of the redolog.
 </screen>
 </para>
@@ -8779,7 +8849,7 @@ $ ./bxcommit
            Growing / Undoable Disk Image Commit Tool for Bochs
 ========================================================================
 
-1. Commit 'undoable' redolog to 'flat' file
+1. Commit 'undoable' redolog to 'flat' or 'growing' mode base image
 2. Create 'flat' disk image from 'growing' disk image
 3. Create 'growing' disk image from 'flat' disk image
 
@@ -8800,7 +8870,6 @@ Should the redolog been removed afterwards?
 </section>
 
 </chapter>
-
 
 
 <chapter id="guests"><title>Guest operating systems</title>
