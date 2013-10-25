@@ -108,13 +108,14 @@ const char* cpu_state_string(unsigned state)
 
 void BX_CPU_C::debug(bx_address offset)
 {
+#if BX_SUPPORT_VMX
   BX_INFO(("CPU is in %s (%s%s)", cpu_mode_string(BX_CPU_THIS_PTR get_cpu_mode()),
     cpu_state_string(BX_CPU_THIS_PTR activity_state),
-#if BX_SUPPORT_VMX
-    BX_CPU_THIS_PTR in_vmx_guest ? ", vmx guest" :
+    BX_CPU_THIS_PTR in_vmx_guest ? ", vmx guest" : ""));
+#else
+  BX_INFO(("CPU is in %s (%s)", cpu_mode_string(BX_CPU_THIS_PTR get_cpu_mode()),
+    cpu_state_string(BX_CPU_THIS_PTR activity_state)));
 #endif
-    ""
-  ));
   BX_INFO(("CS.mode = %u bit",
     long64_mode() ? 64 : (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b ? 32 : 16)));
   BX_INFO(("SS.mode = %u bit",
