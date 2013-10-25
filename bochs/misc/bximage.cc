@@ -334,6 +334,16 @@ device_image_t* init_image(Bit8u image_mode)
       hdimage = new default_image_t();
       break;
 
+    case BX_HDIMAGE_MODE_CONCAT:
+      hdimage = new concat_image_t();
+      break;
+
+#ifdef WIN32
+    case BX_HDIMAGE_MODE_DLL_HD:
+      hdimage = new dll_image_t();
+      break;
+#endif
+
     case BX_HDIMAGE_MODE_SPARSE:
       hdimage = new sparse_image_t();
       break;
@@ -610,13 +620,27 @@ void create_hard_disk_image(const char *filename, int imgmode, Bit64u size)
 void convert_image(int newimgmode, Bit64u newsize)
 {
   device_image_t *source_image, *dest_image;
+  int mode = -1;
   Bit64u i, sc, s;
   char buffer[512], null_sector[512];
   bx_bool error = 0;
 
   printf("\n");
   memset(null_sector, 0, 512);
-  int mode = hdimage_detect_image_mode(bx_filename_1);
+  if (newsize == 0) {
+    if (!strncmp(bx_filename_1, "concat:", 7)) {
+      mode = BX_HDIMAGE_MODE_CONCAT;
+      strcpy(bx_filename_1, &bx_filename_1[7]);
+#ifdef WIN32
+    } else if (!strncmp(bx_filename_1, "dll:", 4)) {
+      mode = BX_HDIMAGE_MODE_DLL_HD;
+      strcpy(bx_filename_1, &bx_filename_1[4]);
+#endif
+    }
+  }
+  if (mode == -1) {
+    mode = hdimage_detect_image_mode(bx_filename_1);
+  }
   if (mode == BX_HDIMAGE_MODE_UNKNOWN)
     fatal("source disk image mode not detected");
 
@@ -969,7 +993,7 @@ int main(int argc, char *argv[])
         if (ask_string("\nWhat is the name of the source image?\n", bx_filename_1, bx_filename_1) < 0)
           fatal(EOF_ERR);
         if (!strlen(bx_filename_2)) {
-          strcpy(tmpfname, "c-new.img");
+          strcpy(tmpfname, bx_filename_1);
         } else {
           strcpy(tmpfname, bx_filename_2);
         }
@@ -989,7 +1013,7 @@ int main(int argc, char *argv[])
         if (ask_string("\nWhat is the name of the source image?\n", bx_filename_1, bx_filename_1) < 0)
           fatal(EOF_ERR);
         if (!strlen(bx_filename_2)) {
-          strcpy(tmpfname, "c-new.img");
+          strcpy(tmpfname, bx_filename_1);
         } else {
           strcpy(tmpfname, bx_filename_2);
         }
@@ -1035,13 +1059,17 @@ int main(int argc, char *argv[])
           printf("\nCreating floppy image '%s' with %d sectors\n", bx_filename_1, fdsize_sectors[bx_fdsize_idx]);
           create_flat_image(bx_filename_1, fdsize_sectors[bx_fdsize_idx] * 512);
         } else {
+          int heads = 16, spt = 63;
+
           sprintf(bochsrc_line, "ata0-master: type=disk, path=\"%s\", mode=%s", bx_filename_1, hdmode_choices[bx_imagemode]);
           imgmode = hdmode_choice_id[bx_imagemode];
           hdsize = ((Bit64u)bx_hdsize) << 20;
           Bit64u cyl = (Bit64u)(hdsize/16.0/63.0/512.0);
           if (cyl >= (1 << BX_MAX_CYL_BITS))
             fatal("ERROR: number of cylinders out of range !\n");
-          printf("\nCreating hard disk image '%s' with CHS=%ld/16/63\n", bx_filename_1, cyl);
+          printf("\nCreating hard disk image '%s' with CHS=%ld/%d/%d\n", bx_filename_1,
+                 cyl, heads, spt);
+          hdsize = cyl * heads * spt * 512;
           create_hard_disk_image(bx_filename_1, imgmode, hdsize);
         }
         printf("\nThe following line should appear in your bochsrc:\n");

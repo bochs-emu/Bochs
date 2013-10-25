@@ -515,7 +515,7 @@ char increment_string(char *str, int diff)
   p--;  // point to last character of the string
   (*p) += diff;  // increment to next/previous ascii code.
   BX_DEBUG(("increment string returning '%s'", str));
- return (*p);
+  return (*p);
 }
 
 /*** concat_image_t function definitions ***/
@@ -527,7 +527,7 @@ concat_image_t::concat_image_t()
 
 void concat_image_t::increment_string(char *str)
 {
- ::increment_string(str, +1);
+  ::increment_string(str, +1);
 }
 
 int concat_image_t::open(const char* _pathname0, int flags)
@@ -535,7 +535,7 @@ int concat_image_t::open(const char* _pathname0, int flags)
   UNUSED(flags);
   pathname0 = _pathname0;
   char *pathname = strdup(pathname0);
-  BX_DEBUG(("concat_image_t.open"));
+  BX_DEBUG(("concat_image_t::open"));
   Bit64s start_offset = 0;
   for (int i=0; i<BX_CONCAT_MAX_IMAGES; i++) {
     fd_table[i] = ::open(pathname, O_RDWR
@@ -580,6 +580,7 @@ int concat_image_t::open(const char* _pathname0, int flags)
   thismax = length_table[0]-1;
   seek_was_last_op = 0;
   hd_size = start_offset;
+  BX_INFO(("hd_size: "FMT_LL"u", hd_size));
   return 0; // success.
 }
 

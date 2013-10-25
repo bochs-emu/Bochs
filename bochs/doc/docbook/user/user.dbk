@@ -8735,12 +8735,12 @@ Other arguments:
   <row>
     <entry>concat</entry>
     <entry>Create only</entry>
-    <entry>No</entry>
+    <entry>Convert source only</entry>
   </row>
   <row>
     <entry>dll</entry>
     <entry>No</entry>
-    <entry>No</entry>
+    <entry>Convert source only</entry>
   </row>
   <row>
     <entry>sparse</entry>
@@ -8770,6 +8770,11 @@ Other arguments:
 </tbody>
 </tgroup>
 </table>
+</para>
+<para>
+Disk image mode autodetection does not work for the modes <emphasis>concat</emphasis>
+and <emphasis>dll</emphasis>. To use those images as convert source, you have to
+add a prefix ("concat:" or "dll:") to the image path.
 </para>
 <section><title>Create image</title>
 <para>
