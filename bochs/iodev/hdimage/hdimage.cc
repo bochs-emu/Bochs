@@ -2004,6 +2004,8 @@ int undoable_image_t::open(const char* pathname, int flags)
   if (mode == BX_HDIMAGE_MODE_UNKNOWN) {
     BX_PANIC(("r/o disk image mode not detected"));
     return -1;
+  } else {
+    BX_INFO(("base image mode = '%s'", hdimage_mode_names[mode]));
   }
   ro_disk = DEV_hdimage_init_image(mode, 0, NULL);
   if (ro_disk == NULL) {
@@ -2139,6 +2141,8 @@ int volatile_image_t::open(const char* pathname, int flags)
   if (mode == BX_HDIMAGE_MODE_UNKNOWN) {
     BX_PANIC(("r/o disk image mode not detected"));
     return -1;
+  } else {
+    BX_INFO(("base image mode = '%s'", hdimage_mode_names[mode]));
   }
   ro_disk = DEV_hdimage_init_image(mode, 0, NULL);
   if (ro_disk == NULL) {

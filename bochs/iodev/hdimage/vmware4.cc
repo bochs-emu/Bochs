@@ -86,7 +86,7 @@ int vmware4_image_t::open(const char* _pathname, int flags)
   is_dirty = 0;
 
   hd_size = header.total_sectors * SECTOR_SIZE;
-  cylinders = (unsigned)hd_size / (16 * 63);
+  cylinders = (unsigned)(header.total_sectors / (16 * 63));
   heads = 16;
   spt = 63;
 

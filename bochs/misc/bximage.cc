@@ -81,6 +81,22 @@
 
 const int bx_max_hd_megs = (int)(((1 << BX_MAX_CYL_BITS) - 1) * 16.0 * 63.0 / 2048.0);
 
+const char *hdimage_mode_names[] = {
+  "flat",
+  "concat",
+  "external",
+  "dll",
+  "sparse",
+  "vmware3",
+  "vmware4",
+  "undoable",
+  "growing",
+  "volatile",
+  "vvfat",
+  "vpc",
+  NULL
+};
+
 int  bximage_mode;
 int  bx_hdimage;
 int  bx_fdsize_idx;
@@ -641,8 +657,11 @@ void convert_image(int newimgmode, Bit64u newsize)
   if (mode == -1) {
     mode = hdimage_detect_image_mode(bx_filename_1);
   }
-  if (mode == BX_HDIMAGE_MODE_UNKNOWN)
+  if (mode == BX_HDIMAGE_MODE_UNKNOWN) {
     fatal("source disk image mode not detected");
+  } else {
+    BX_INFO(("source image mode = '%s'", hdimage_mode_names[mode]));
+  }
 
   source_image = init_image(mode);
   if (source_image->open(bx_filename_1, O_RDONLY) < 0)

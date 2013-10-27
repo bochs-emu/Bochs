@@ -59,6 +59,8 @@ enum {
 #define BX_HDIMAGE_MODE_LAST     BX_HDIMAGE_MODE_VPC
 #define BX_HDIMAGE_MODE_UNKNOWN  -1
 
+extern const char *hdimage_mode_names[];
+
 // definitions for compatibility with Bochs
 #ifndef UNUSED
 #  define UNUSED(x) ((void)x)
