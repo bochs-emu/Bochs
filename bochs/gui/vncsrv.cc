@@ -979,10 +979,10 @@ void UpdateScreen(rfbPixel *newBits, int x, int y, int width, int height)
   int i, x0, y0;
   x0 = x;
   y0 = y;
-  if ((x + width - 1) >= rfbWindowX) {
+  if ((unsigned)(x + width - 1) >= rfbWindowX) {
     width = rfbWindowX - x + 1;
   }
-  if ((y + height - 1) >= rfbWindowY) {
+  if ((unsigned)(y + height - 1) >= rfbWindowY) {
     height = rfbWindowY - y + 1;
   }
   for (i = 0; i < height; i++) {

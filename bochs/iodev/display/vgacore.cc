@@ -399,7 +399,7 @@ void bx_vgacore_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piW
 {
   int ai[0x20];
   int i,h,v;
-  for (i = 0 ; i < 0x20 ; i++)
+  for (i = 0 ; i < 0x19 ; i++)
    ai[i] = BX_VGA_THIS s.CRTC.reg[i];
 
   h = (ai[1] + 1) * 8;

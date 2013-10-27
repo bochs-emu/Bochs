@@ -767,8 +767,8 @@ void bx_es1370_c::sendwavepacket(unsigned channel, Bit32u buflen, Bit8u *buffer)
       }
       bits = (format >> 1) ? 16 : 8;
       Bit8u temparray[12] =
-       { samplerate & 0xff, samplerate >> 8, 0, 0,
-         bits, (format & 1) + 1, 0, 0, 0, 0, 0, 0 };
+       { (Bit8u)(samplerate & 0xff), (Bit8u)(samplerate >> 8), 0, 0,
+         bits, (Bit8u)((format & 1) + 1), 0, 0, 0, 0, 0, 0 };
       if (bits == 16)
          temparray[6] = 4;
 

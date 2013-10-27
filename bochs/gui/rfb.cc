@@ -162,8 +162,8 @@ static char rfbPalette[256];
 static unsigned rfbWindowX, rfbWindowY;
 static unsigned rfbDimensionX, rfbDimensionY;
 static long rfbHeaderbarY;
-static long rfbTileX = 0;
-static long rfbTileY = 0;
+static unsigned rfbTileX = 0;
+static unsigned rfbTileY = 0;
 static unsigned long rfbCursorX = 0;
 static unsigned long rfbCursorY = 0;
 static unsigned long rfbOriginLeft = 0;
@@ -1290,10 +1290,10 @@ void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height,
   int i, x0, y0;
   x0 = x;
   y0 = y;
-  if ((x + width - 1) >= rfbWindowX) {
+  if ((unsigned)(x + width - 1) >= rfbWindowX) {
     width = rfbWindowX - x + 1;
   }
-  if ((y + height - 1) >= rfbWindowY) {
+  if ((unsigned)(y + height - 1) >= rfbWindowY) {
     height = rfbWindowY - y + 1;
   }
   for (i = 0; i < height; i++) {

@@ -970,7 +970,7 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
          // only handled for VOC output so far
          if (BX_SB16_THIS wavemode == 2)
          {
-            Bit8u temparray[3] = { length & 0xff, length >> 8, DSP.dma.timeconstant >> 8 };
+            Bit8u temparray[3] = { (Bit8u)(length & 0xff), (Bit8u)(length >> 8), (Bit8u)(DSP.dma.timeconstant >> 8) };
             DEV_soundmod_VOC_write_block(WAVEDATA, 3, 3, temparray, 0, NULL);
          }
          break;
@@ -1425,8 +1425,8 @@ void bx_sb16_c::dsp_sendwavepacket()
       break;
     case 2:
       Bit8u temparray[12] =
-       { DSP.dma.samplerate & 0xff, DSP.dma.samplerate >> 8, 0, 0,
-         DSP.dma.bits, DSP.dma.stereo + 1, 0, 0, 0, 0, 0, 0 };
+       { (Bit8u)(DSP.dma.samplerate & 0xff), (Bit8u)(DSP.dma.samplerate >> 8), 0, 0,
+         (Bit8u)DSP.dma.bits, (Bit8u)(DSP.dma.stereo + 1), 0, 0, 0, 0, 0, 0 };
       switch ((DSP.dma.format >> 1) & 7)
       {
        case 2:

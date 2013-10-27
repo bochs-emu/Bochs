@@ -999,7 +999,7 @@ static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, 
           EndDialog(Window, 1);
           break;
         default:
-          if ((code >= ID_BROWSE) && (code < (int)(ID_BROWSE + nextDlgID))) {
+          if ((code >= ID_BROWSE) && (code < (ID_BROWSE + nextDlgID))) {
             i = (UINT)(code - ID_BROWSE);
             sparam = (bx_param_string_c *)findParamFromDlgID(i);
             if (sparam != NULL) {
@@ -1010,7 +1010,7 @@ static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, 
                 SetFocus(GetDlgItem(Window, ID_PARAM + i));
               }
             }
-          } else if ((code >= ID_PARAM) && (code < (int)(ID_PARAM + nextDlgID))) {
+          } else if ((code >= ID_PARAM) && (code < (ID_PARAM + nextDlgID))) {
             i = (UINT)(code - ID_PARAM);
             param = findParamFromDlgID(i);
             if (param != NULL) {

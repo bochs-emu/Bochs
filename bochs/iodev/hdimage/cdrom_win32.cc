@@ -48,7 +48,6 @@ extern "C" {
 
 static BOOL isWindowsXP;
 static BOOL isOldWindows;
-static UINT cdromCount = 0;
 
 #define BX_CD_FRAMESIZE 2048
 #define CD_FRAMESIZE    2048
@@ -230,7 +229,7 @@ bx_bool cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int star
 
     // We have to allocate a chunk of memory to make sure it is aligned on a sector base.
     UCHAR *data = (UCHAR *) VirtualAlloc(NULL, 2048*2, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
-    unsigned long iBytesReturned;
+    DWORD iBytesReturned;
     DeviceIoControl(hFile, IOCTL_CDROM_READ_TOC_EX, &input, sizeof(input), data, 804, &iBytesReturned, NULL);
     // now copy it to the users buffer and free our buffer
     *length = data[1] + (data[0] << 8) + 2;
@@ -298,7 +297,7 @@ bx_bool BX_CPP_AttrRegparmN(3) cdrom_interface::read_block(Bit8u* buf, Bit32u lb
       if ((pos.LowPart == 0xffffffff) && (GetLastError() != NO_ERROR)) {
         BX_PANIC(("cdrom: read_block: SetFilePointer returned error."));
       } else {
-        ReadFile(hFile, (void *) buf1, BX_CD_FRAMESIZE, (unsigned long *) &n, NULL);
+        ReadFile(hFile, (void *) buf1, BX_CD_FRAMESIZE, (LPDWORD) &n, NULL);
       }
     }
   } while ((n != BX_CD_FRAMESIZE) && (--try_count > 0));

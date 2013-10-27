@@ -76,7 +76,7 @@
 #define EXT_CAPS_OFFSET      0x500
   #define EXT_CAPS_SIZE         48
 
-#define PAGE_SIZE                1  // Page size operational register value
+#define XHCI_PAGE_SIZE           1  // Page size operational register value
 
 #define PORT_SET_OFFSET  (0x400 + OPS_REGS_OFFSET)
 #define RUNTIME_OFFSET    0x600

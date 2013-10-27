@@ -329,7 +329,7 @@ void bx_usb_xhci_c::reset_hc()
   BX_XHCI_THIS hub.op_regs.HcStatus.hch     = 1;
 
   // Page Size
-  BX_XHCI_THIS hub.op_regs.HcPageSize.pagesize = PAGE_SIZE;
+  BX_XHCI_THIS hub.op_regs.HcPageSize.pagesize = XHCI_PAGE_SIZE;
 
   // Device Notification Control Register
   BX_XHCI_THIS hub.op_regs.HcNotification.RsvdP = 0;
