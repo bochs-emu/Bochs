@@ -308,7 +308,7 @@
 // have __declspec(dllexport) on variables, functions, or classes that the
 // plugins can access.  The plugins should #define PLUGGABLE which will
 // activate the __declspec(dllimport) instead.
-#if defined(WIN32) || defined(__CYGWIN__)
+#if (defined(WIN32) || defined(__CYGWIN__)) && !defined(BXIMAGE)
 #  if BX_PLUGINS && defined(BX_PLUGGABLE)
 //   #warning I will import DLL symbols from Bochs main program.
 #    define BOCHSAPI __declspec(dllimport)

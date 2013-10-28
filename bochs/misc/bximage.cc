@@ -51,6 +51,10 @@
 // Resize a hard disk image.
 // Commit a redolog file to a supported base image.
 
+#ifndef BXIMAGE
+#define BXIMAGE
+#endif
+
 #include "config.h"
 #include "bxcompat.h"
 
@@ -63,9 +67,6 @@
 #include "osdep.h"
 #include "bswap.h"
 
-#ifndef BXIMAGE
-#define BXIMAGE
-#endif
 #include "iodev/hdimage/hdimage.h"
 #include "iodev/hdimage/vmware3.h"
 #include "iodev/hdimage/vmware4.h"
