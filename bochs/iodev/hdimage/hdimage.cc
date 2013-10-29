@@ -270,11 +270,12 @@ Bit16u fat_datetime(time_t time, int return_time)
 #else
 Bit16u fat_datetime(FILETIME time, int return_time)
 {
-  FILETIME localtime;
-  SYSTEMTIME systime;
+  SYSTEMTIME gmtsystime, systime;
+  TIME_ZONE_INFORMATION tzi;
 
-  FileTimeToLocalFileTime(&time, &localtime);
-  FileTimeToSystemTime(&localtime, &systime);
+  FileTimeToSystemTime(&time, &gmtsystime);
+  GetTimeZoneInformation(&tzi);
+  SystemTimeToTzSpecificLocalTime(&tzi, &gmtsystime, &systime);
   if (return_time)
     return htod16((systime.wSecond/2) | (systime.wMinute<<5) | (systime.wHour<<11));
   return htod16((systime.wDay) | (systime.wMonth<<5) | ((systime.wYear-1980)<<9));
@@ -1960,6 +1961,7 @@ void growing_image_t::restore_state(const char *backup_fname)
 bx_bool coherency_check(device_image_t *ro_disk, redolog_t *redolog)
 {
   Bit32u timestamp1, timestamp2;
+  char buffer[24];
 
   if (ro_disk->hd_size != redolog->get_size()) {
     BX_PANIC(("size reported by redolog doesn't match r/o disk size"));
@@ -1969,7 +1971,11 @@ bx_bool coherency_check(device_image_t *ro_disk, redolog_t *redolog)
   timestamp2 = redolog->get_timestamp();
   if (timestamp2 != 0) {
     if (timestamp1 != timestamp2) {
-      BX_PANIC(("unexpected modification time of the r/o disk"));
+      sprintf(buffer, "%02d.%02d.%04d %02d:%02d:%02d", (timestamp2 >> 16) & 0x001f,
+              (timestamp2 >> 21) & 0x000f, ((timestamp2 >> 25) & 0x007f) + 1980,
+              (timestamp2 & 0xf800) >> 11, (timestamp2 & 0x07e0) >> 5,
+              (timestamp2 & 0x001f) << 1);
+      BX_PANIC(("unexpected modification time of the r/o disk (should be %s)", buffer));
       return 0;
     }
   } else if (timestamp1 != 0) {
