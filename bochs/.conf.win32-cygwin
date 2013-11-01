@@ -7,7 +7,7 @@
 CC="gcc"
 CXX="g++"
 CFLAGS="-O3 -Wall -Wno-format -mno-cygwin"
-#CFLAGS="-O3 -Wall -Wno-format -march=pentium -mno-ms-bitfields" # for GCC 4.7+
+#CFLAGS="-O3 -Wall -Wno-format -mno-ms-bitfields" # for GCC 4.7+
 CXXFLAGS="$CFLAGS"
 
 export CC

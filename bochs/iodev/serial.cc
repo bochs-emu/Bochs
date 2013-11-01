@@ -37,6 +37,8 @@
 #include <netdb.h>
 #define closesocket(s)    close(s)
 typedef int SOCKET;
+#else
+#include <winsock.h>
 #endif
 
 #include "iodev.h"

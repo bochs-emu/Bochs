@@ -42,6 +42,8 @@
 
 #if BX_NETWORKING && BX_NETMOD_WIN32
 
+#include <winsock.h>
+
 // windows.h included by bochs.h
 #define LOG_THIS netdev->
 

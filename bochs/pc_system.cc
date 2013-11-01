@@ -25,13 +25,6 @@
 #include "iodev/iodev.h"
 #define LOG_THIS bx_pc_system.
 
-#ifdef WIN32
-#ifndef __MINGW32__
-// #include <winsock2.h> // +++
-#include <winsock.h>
-#endif
-#endif
-
 #if defined(PROVIDE_M_IPS)
 double     m_ips; // Millions of Instructions Per Second
 #endif
