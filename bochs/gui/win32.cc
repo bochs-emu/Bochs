@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2012  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -98,7 +98,7 @@ static int ms_lastx=0, ms_lasty=0;
 static int ms_savedx=0, ms_savedy=0;
 static BOOL mouseCaptureMode, mouseCaptureNew, mouseToggleReq;
 static BOOL win32MouseModeAbsXY = 0;
-static UINT_PTR workerThread = 0;
+static HANDLE workerThread = 0;
 static DWORD workerThreadID = 0;
 static int mouse_buttons = 3;
 static bx_bool win32_nokeyrepeat = 0;
@@ -197,7 +197,7 @@ sharedThreadInfo stInfo;
 
 LRESULT CALLBACK mainWndProc (HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK simWndProc (HWND, UINT, WPARAM, LPARAM);
-VOID CDECL UIThread(PVOID);
+DWORD WINAPI UIThread(PVOID);
 void SetStatusText(unsigned Num, const char *Text, bx_bool active, bx_bool w=0);
 void terminateEmul(int);
 void create_vga_font(void);
@@ -701,7 +701,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   }
 
   if (stInfo.hInstance)
-    workerThread = _beginthread (UIThread, 0, NULL);
+    workerThread = CreateThread(NULL, 0, UIThread, NULL, 0, &workerThreadID);
   else
     terminateEmul(EXIT_GMH_FAILURE);
 
@@ -795,7 +795,7 @@ void resize_main_window()
 }
 
 // This thread controls the GUI window.
-VOID CDECL UIThread(PVOID pvoid)
+DWORD WINAPI UIThread(LPVOID)
 {
   MSG msg;
   HDC hdc;
@@ -943,7 +943,7 @@ VOID CDECL UIThread(PVOID pvoid)
 
   stInfo.kill = EXIT_GUI_SHUTDOWN;
 
-  _endthread();
+  return 0;
 }
 
 void SetStatusText(unsigned Num, const char *Text, bx_bool active, bx_bool w)

@@ -43,7 +43,7 @@
 #define BX_ETH_VNET_LOGGING 1
 #define BX_ETH_VNET_PCAP_LOGGING 0
 
-#ifndef WIN32
+#if !defined(WIN32) || defined(__CYGWIN__)
 #include <arpa/inet.h> /* ntohs, htons */
 #else
 #include <winsock.h>

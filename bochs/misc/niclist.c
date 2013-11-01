@@ -18,7 +18,11 @@
 
 #include <windows.h>
 #include <stdio.h>
+#ifdef __CYGWIN__
+#include <wchar.h>
+#else
 #include <conio.h>
+#endif
 #include <stdlib.h>
 
 #if defined(_MSC_VER)
@@ -48,8 +52,10 @@ PCHAR   (*PacketGetVersion)() = NULL;
 
 void myexit (int code)
 {
+#ifndef __CYGWIN__
   printf ("\nPress any key to continue\n");
   getch();
+#endif
   exit(code);
 }
 
@@ -59,7 +65,7 @@ int CDECL main(int argc, char **argv)
     HINSTANCE     hPacket;
     DWORD         dwVersion, dwMajorVersion;
     char          AdapterInfo[NIC_BUFFER_SIZE] = { '\0','\0' };
-    unsigned long AdapterLength = NIC_BUFFER_SIZE;
+    ULONG         AdapterLength = NIC_BUFFER_SIZE;
     LPWSTR        wstrName;
     LPSTR         strName, strDesc;
     int           nAdapterCount;

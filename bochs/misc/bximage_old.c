@@ -21,7 +21,9 @@
 /* Create empty hard disk or floppy disk images for bochs. */
 
 #ifdef WIN32
+#ifndef __CYGWIN__
 #  include <conio.h>
+#endif
 #  include <windows.h>
 #  include <winioctl.h>
 #ifdef _MSC_VER
@@ -80,7 +82,7 @@ int hdmode_n_choices = 3;
 
 void myexit(int code)
 {
-#ifdef WIN32
+#if defined(WIN32) && !defined(__CYGWIN__)
   printf("\nPress any key to continue\n");
   getch();
 #endif

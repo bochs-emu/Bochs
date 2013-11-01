@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -42,7 +42,9 @@
 
 #if BX_NETWORKING && BX_NETMOD_WIN32
 
+#ifndef __CYGWIN__
 #include <winsock.h>
+#endif
 
 // windows.h included by bochs.h
 #define LOG_THIS netdev->

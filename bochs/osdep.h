@@ -71,6 +71,7 @@ extern "C" {
 #  define S_ISCHR(m)      (((m) & S_IFMT) == S_IFCHR)
 #endif
 
+#if defined(_MSC_VER)
 // win32 has snprintf though with different name.
 #define snprintf _snprintf
 #define vsnprintf _vsnprintf
@@ -79,7 +80,6 @@ extern "C" {
 #define BX_HAVE_SNPRINTF 1
 #define BX_HAVE_VSNPRINTF 1
 
-#if defined(_MSC_VER)
 #define access _access
 #define fdopen _fdopen
 #define mktemp _mktemp

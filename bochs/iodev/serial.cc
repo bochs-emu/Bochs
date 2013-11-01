@@ -30,7 +30,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#ifndef WIN32
+#if !defined(WIN32) || defined(__CYGWIN__)
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -39,6 +39,7 @@
 typedef int SOCKET;
 #else
 #include <winsock.h>
+#define BX_SER_WIN32
 #endif
 
 #include "iodev.h"
@@ -201,7 +202,7 @@ bx_serial_c::~bx_serial_c(void)
             fclose(BX_SER_THIS s[i].output);
           break;
         case BX_SER_MODE_TERM:
-#if defined(SERIAL_ENABLE) && !defined(WIN32)
+#if defined(SERIAL_ENABLE) && !defined(BX_SER_WIN32)
           if (s[i].tty_id >= 0) {
             tcsetattr(s[i].tty_id, TCSAFLUSH, &s[i].term_orig);
           }
@@ -218,7 +219,7 @@ bx_serial_c::~bx_serial_c(void)
           break;
         case BX_SER_MODE_PIPE_CLIENT:
         case BX_SER_MODE_PIPE_SERVER:
-#ifdef WIN32
+#ifdef BX_SER_WIN32
           if (BX_SER_THIS s[i].pipe)
             CloseHandle(BX_SER_THIS s[i].pipe);
 #endif
@@ -369,7 +370,7 @@ bx_serial_c::init(void)
             BX_SER_THIS s[i].io_mode = BX_SER_MODE_FILE;
         }
       } else if (mode == BX_SER_MODE_TERM) {
-#if defined(SERIAL_ENABLE) && !defined(WIN32)
+#if defined(SERIAL_ENABLE) && !defined(BX_SER_WIN32)
         if (strlen(dev) > 0) {
           BX_SER_THIS s[i].tty_id = open(dev, O_RDWR|O_NONBLOCK,600);
           if (BX_SER_THIS s[i].tty_id < 0) {
@@ -428,7 +429,7 @@ bx_serial_c::init(void)
         SOCKET              socket;
         bx_bool             server = (mode == BX_SER_MODE_SOCKET_SERVER);
 
-#if defined(WIN32)
+#ifdef BX_SER_WIN32
         static bx_bool winsock_init = false;
         if (!winsock_init) {
           WORD wVersionRequested;
@@ -499,7 +500,7 @@ bx_serial_c::init(void)
                  (mode == BX_SER_MODE_PIPE_SERVER)) {
         if (strlen(dev) > 0) {
           bx_bool server = (mode == BX_SER_MODE_PIPE_SERVER);
-#ifdef WIN32
+#ifdef BX_SER_WIN32
           HANDLE pipe;
 
           BX_SER_THIS s[i].io_mode = mode;
@@ -1424,7 +1425,7 @@ void bx_serial_c::tx_timer(void)
       case BX_SER_MODE_SOCKET_CLIENT:
       case BX_SER_MODE_SOCKET_SERVER:
         if (BX_SER_THIS s[port].socket_id >= 0) {
-#ifdef WIN32
+#ifdef BX_SER_WIN32
           BX_INFO(("attempting to write win32 : %c", BX_SER_THIS s[port].tsrbuffer));
           ::send(BX_SER_THIS s[port].socket_id,
                  (const char*) & BX_SER_THIS s[port].tsrbuffer, 1, 0);
@@ -1436,7 +1437,7 @@ void bx_serial_c::tx_timer(void)
         break;
       case BX_SER_MODE_PIPE_CLIENT:
       case BX_SER_MODE_PIPE_SERVER:
-#ifdef WIN32
+#ifdef BX_SER_WIN32
         if (BX_SER_THIS s[port].pipe) {
           DWORD written;
           WriteFile(BX_SER_THIS s[port].pipe, (bx_ptr_t)& BX_SER_THIS s[port].tsrbuffer, 1, &written, NULL);
@@ -1528,7 +1529,7 @@ void bx_serial_c::rx_timer(void)
           if (socketid >= 0) FD_SET(socketid, &fds);
           if ((socketid >= 0) && (select(socketid+1, &fds, NULL, NULL, &tval) == 1)) {
             ssize_t bytes = (ssize_t)
-#ifdef WIN32
+#ifdef BX_SER_WIN32
               ::recv(socketid, (char*) &chbuf, 1, 0);
 #else
                 read(socketid, &chbuf, 1);
@@ -1603,7 +1604,7 @@ void bx_serial_c::rx_timer(void)
         break;
       case BX_SER_MODE_PIPE_CLIENT:
       case BX_SER_MODE_PIPE_SERVER:
-#ifdef WIN32
+#ifdef BX_SER_WIN32
         DWORD avail = 0;
         if (BX_SER_THIS s[port].pipe &&
             PeekNamedPipe(BX_SER_THIS s[port].pipe, NULL, 0, NULL, &avail, NULL) &&

@@ -58,7 +58,7 @@
 #include "config.h"
 #include "bxcompat.h"
 
-#ifdef WIN32
+#if defined(WIN32) && !defined(__CYGWIN__)
 #  include <conio.h>
 #  include <winioctl.h>
 #endif
@@ -171,7 +171,7 @@ int bx_mkstemp(char *tpl)
 
 void myexit(int code)
 {
-#ifdef WIN32
+#if defined(WIN32) && !defined(__CYGWIN__)
   printf("\nPress any key to continue\n");
   getch();
 #endif

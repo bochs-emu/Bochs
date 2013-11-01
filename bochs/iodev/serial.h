@@ -33,11 +33,11 @@
 #  define BX_SER_THIS this->
 #endif
 
-#if defined(WIN32)
+#ifdef BX_SER_WIN32
 #define SERIAL_ENABLE
 #endif
 
-#if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__linux__) || defined(__GNU__) || defined(__GLIBC__) || defined(__APPLE__) || defined(__sun__)
+#if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__linux__) || defined(__GNU__) || defined(__GLIBC__) || defined(__APPLE__) || defined(__sun__) || defined(__CYGWIN__)
 #define SERIAL_ENABLE
 extern "C" {
 #include <termios.h>
@@ -116,14 +116,14 @@ typedef struct {
   int tty_id;
   SOCKET socket_id;
   FILE *output;
-#ifdef WIN32
+#ifdef BX_SER_WIN32
   HANDLE pipe;
 #endif
 
 #if USE_RAW_SERIAL
   serial_raw* raw;
 #endif
-#if defined(SERIAL_ENABLE) && !defined(WIN32)
+#if defined(SERIAL_ENABLE) && !defined(BX_SER_WIN32)
   struct termios term_orig, term_new;
 #endif
 

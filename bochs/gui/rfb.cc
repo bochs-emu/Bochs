@@ -70,10 +70,11 @@ IMPLEMENT_GUI_PLUGIN_CODE(rfb)
 
 #define LOG_THIS theGui->
 
-#ifdef WIN32
+#if defined(WIN32) && !defined(__CYGWIN__)
 
 #include <winsock.h>
 #include <process.h>
+#define BX_RFB_WIN32
 
 #else
 
@@ -183,7 +184,7 @@ static SOCKET sGlobal;
 static Bit32u clientEncodingsCount = 0;
 static Bit32u *clientEncodings = NULL;
 
-#ifdef WIN32
+#ifdef BX_RFB_WIN32
 bool StopWinsock();
 #endif
 void rfbStartThread();
@@ -202,7 +203,7 @@ void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w =
 static Bit32u convertStringToRfbKey(const char *string);
 void rfbKeyPressed(Bit32u key, int press_release);
 void rfbMouseMove(int x, int y, int bmask);
-#if BX_SHOW_IPS && defined(WIN32)
+#if BX_SHOW_IPS && defined(BX_RFB_WIN32)
 DWORD WINAPI rfbShowIPSthread(LPVOID);
 #endif
 
@@ -301,7 +302,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   desktop_resizable = 0;
   rfbStartThread();
 
-#ifdef WIN32
+#ifdef BX_RFB_WIN32
   Sleep(1000);
   SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 #endif
@@ -317,7 +318,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   if (timeout > 0) {
     while ((!client_connected) && (timeout--)) {
       fprintf(stderr, "Bochs RFB server waiting for client: %2d\r", timeout+1);
-#ifdef WIN32
+#ifdef BX_RFB_WIN32
       Sleep(1000);
 #else
       sleep(1);
@@ -330,7 +331,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     }
   }
 
-#if BX_SHOW_IPS && defined(WIN32)
+#if BX_SHOW_IPS && defined(BX_RFB_WIN32)
   if (!rfbHideIPS) {
     DWORD threadID;
     CreateThread(NULL, 0, rfbShowIPSthread, NULL, 0, &threadID);
@@ -766,7 +767,7 @@ void bx_rfb_gui_c::exit(void)
 {
   unsigned int i;
   keep_alive = 0;
-#ifdef WIN32
+#ifdef BX_RFB_WIN32
   StopWinsock();
 #endif
   free(rfbScreen);
@@ -867,7 +868,7 @@ void bx_rfb_gui_c::show_ips(Bit32u ips_count)
 
 // RFB specific functions
 
-#ifdef WIN32
+#ifdef BX_RFB_WIN32
 bool InitWinsock()
 {
   WSADATA wsaData;
@@ -891,7 +892,7 @@ void CDECL rfbServerThreadInit(void *indata)
     int port_ok = 0;
     int one=1;
 
-#ifdef WIN32
+#ifdef BX_RFB_WIN32
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
     if(!InitWinsock()) {
         BX_PANIC(("could not initialize winsock."));
@@ -946,7 +947,7 @@ void CDECL rfbServerThreadInit(void *indata)
     }
 
 end_of_thread:
-#ifdef WIN32
+#ifdef BX_RFB_WIN32
     StopWinsock();
 #endif
     return;
@@ -954,7 +955,7 @@ end_of_thread:
 
 void rfbStartThread()
 {
-#ifdef WIN32
+#ifdef BX_RFB_WIN32
     _beginthread(rfbServerThreadInit, 0, NULL);
 #else
     pthread_t thread;
@@ -1833,7 +1834,7 @@ void rfbMouseMove(int x, int y, int bmask)
   }
 }
 
-#if BX_SHOW_IPS && defined(WIN32)
+#if BX_SHOW_IPS && defined(BX_RFB_WIN32)
 VOID CALLBACK IPSTimerProc(HWND hWnd, UINT nMsg, UINT_PTR nIDEvent, DWORD dwTime)
 {
   if (keep_alive) {

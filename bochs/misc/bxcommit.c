@@ -21,7 +21,7 @@
 /* Commits a redolog file to a 'flat' or 'growing' mode base image. */
 /* Converts growing mode image to flat and vice versa */
 
-#ifdef WIN32
+#if defined(WIN32) && !defined(__CYGWIN__)
 #  include <conio.h>
 #endif
 #include <sys/types.h>
@@ -109,7 +109,7 @@ const char *main_menu_prompt =
 
 void myexit(int code)
 {
-#ifdef WIN32
+#if defined(WIN32) && !defined(__CYGWIN__)
   printf("\nPress any key to continue\n");
   getch();
 #endif

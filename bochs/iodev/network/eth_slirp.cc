@@ -36,7 +36,7 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <stdint.h>
-#ifndef WIN32
+#if !defined(WIN32) || defined(__CYGWIN__)
 #include <arpa/inet.h> /* ntohs, htons */
 #else
 #include <winsock.h>
