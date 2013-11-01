@@ -343,6 +343,10 @@ infosector_t;
 
 vvfat_image_t::vvfat_image_t(Bit64u size, const char* _redolog_name)
 {
+  if (sizeof(bootsector_t) != 512) {
+    BX_PANIC(("system error: invalid bootsector structure size"));
+  }
+
   first_sectors = new Bit8u[0xc000];
   memset(&first_sectors[0], 0, 0xc000);
 

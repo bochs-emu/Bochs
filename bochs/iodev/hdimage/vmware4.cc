@@ -53,6 +53,9 @@ vmware4_image_t::vmware4_image_t()
   current_offset(INVALID_OFFSET),
   is_dirty(0)
 {
+  if (sizeof(_VM4_Header) != 72) {
+    BX_PANIC(("system error: invalid header structure size"));
+  }
 }
 
 vmware4_image_t::~vmware4_image_t()
