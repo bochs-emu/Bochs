@@ -104,7 +104,7 @@ int  bx_fdsize_idx;
 int  bx_min_hd_megs = 10;
 int  bx_hdsize;
 int  bx_imagemode;
-int  bx_remove;
+int  bx_backup;
 int  bx_interactive;
 char bx_filename_1[512];
 char bx_filename_2[512];
@@ -759,7 +759,8 @@ void print_usage()
     "  -hd=...       create/resize: hard disk image with size in megabytes (M)\n"
     "                or gigabytes (G)\n"
     "  -imgmode=...  create/convert: hard disk image mode\n"
-    "  -d            convert/resize/commit: delete source/redolog file after operation\n"
+    "  -b            convert/resize: create a backup of the source image\n"
+    "                commit: create backups of the base image and redolog file\n"
     "  -q            quiet mode (don't prompt for user input)\n"
     "  --help        display this help and exit\n\n"
     "Other arguments:\n"
@@ -817,7 +818,7 @@ int parse_cmdline(int argc, char *argv[])
   bx_fdsize_idx = -1;
   bx_hdsize = 0;
   bx_imagemode = -1;
-  bx_remove = 0;
+  bx_backup = 0;
   bx_interactive = 1;
   bx_filename_1[0] = 0;
   bx_filename_2[0] = 0;
@@ -877,8 +878,8 @@ int parse_cmdline(int argc, char *argv[])
         ret = 0;
       }
     }
-    else if (!strcmp("-d", argv[arg])) {
-      bx_remove = 1;
+    else if (!strcmp("-b", argv[arg])) {
+      bx_backup = 1;
     }
     else if (!strcmp("-q", argv[arg])) {
       bx_interactive = 0;
@@ -930,13 +931,17 @@ void image_overwrite_check(const char *filename)
 
 void check_image_names()
 {
+  char backup_fname[512];
+
   if (!strlen(bx_filename_2)) {
     strcpy(bx_filename_2, bx_filename_1);
   }
-  if (!strcmp(bx_filename_1, bx_filename_2)) {
-    snprintf(bx_filename_1, 256, "%s%s", bx_filename_2, ".orig");
-    if (rename(bx_filename_2, bx_filename_1) != 0)
-      fatal("rename of image file failed");
+  if ((!strcmp(bx_filename_1, bx_filename_2)) && bx_backup) {
+    snprintf(backup_fname, 256, "%s%s", bx_filename_1, ".orig");
+    if (hdimage_copy_file(bx_filename_1, backup_fname) != 1)
+      fatal("backup of source image file failed");
+  } else if (strcmp(bx_filename_1, bx_filename_2)) {
+    image_overwrite_check(bx_filename_2);
   }
 }
 
@@ -1021,8 +1026,10 @@ int main(int argc, char *argv[])
           fatal(EOF_ERR);
         if (ask_menu(hdmode_menu, hdmode_n_choices, hdmode_choices, bx_imagemode, &bx_imagemode) < 0)
           fatal(EOF_ERR);
-        if (ask_yn("\nShould the source been removed afterwards?\n", 0, &bx_remove) < 0)
-          fatal(EOF_ERR);
+        if (!strcmp(bx_filename_1, bx_filename_2)) {
+          if (ask_yn("\nShould I create a backup of the source image\n", 0, &bx_backup) < 0)
+            fatal(EOF_ERR);
+        }
         break;
 
       case BXIMAGE_MODE_RESIZE_IMAGE:
@@ -1045,8 +1052,10 @@ int main(int argc, char *argv[])
         if (bx_hdsize < bx_min_hd_megs) bx_hdsize = bx_min_hd_megs;
         if (ask_int(prompt, bx_min_hd_megs, bx_max_hd_megs, bx_hdsize, &bx_hdsize) < 0)
           fatal(EOF_ERR);
-        if (ask_yn("\nShould the source been removed afterwards?\n", 0, &bx_remove) < 0)
-          fatal(EOF_ERR);
+        if (!strcmp(bx_filename_1, bx_filename_2)) {
+          if (ask_yn("\nShould I create a backup of the source image\n", 0, &bx_backup) < 0)
+            fatal(EOF_ERR);
+        }
         break;
 
       case BXIMAGE_MODE_COMMIT_UNDOABLE:
@@ -1063,7 +1072,7 @@ int main(int argc, char *argv[])
         }
         if (ask_string("\nWhat is the redolog name?\n", tmpfname, bx_filename_2) < 0)
           fatal(EOF_ERR);
-        if (ask_yn("\nShould the redolog been removed afterwards?\n", 1, &bx_remove) < 0)
+        if (ask_yn("\nShould I create a backup of base image and redolog\n", 0, &bx_backup) < 0)
           fatal(EOF_ERR);
         break;
 
@@ -1110,13 +1119,8 @@ int main(int argc, char *argv[])
 
       case BXIMAGE_MODE_CONVERT_IMAGE:
         check_image_names();
-        image_overwrite_check(bx_filename_2);
         imgmode = hdmode_choice_id[bx_imagemode];
         convert_image(imgmode, 0);
-        if (bx_remove) {
-          if (unlink(bx_filename_1) != 0)
-            fatal("ERROR: while removing the source image !\n");
-        }
         break;
 
       case BXIMAGE_MODE_RESIZE_IMAGE:
@@ -1125,17 +1129,21 @@ int main(int argc, char *argv[])
           fatal("invalid image size");
         hdsize = ((Bit64u)bx_hdsize) << 20;
         check_image_names();
-        image_overwrite_check(bx_filename_2);
         convert_image(imgmode, hdsize);
-        if (bx_remove) {
-          if (unlink(bx_filename_1) != 0)
-            fatal("ERROR: while removing the source image !\n");
-        }
         break;
 
       case BXIMAGE_MODE_COMMIT_UNDOABLE:
+        if (bx_backup) {
+          snprintf(tmpfname, 256, "%s%s", bx_filename_1, ".orig");
+          if (hdimage_copy_file(bx_filename_1, tmpfname) != 1)
+            fatal("backup of base image file failed");
+        }
         commit_redolog();
-        if (bx_remove) {
+        if (bx_backup) {
+          snprintf(tmpfname, 256, "%s%s", bx_filename_2, ".orig");
+          if (rename(bx_filename_2, tmpfname) != 0)
+            fatal("rename of redolog file failed");
+        } else {
           if (unlink(bx_filename_2) != 0)
             fatal("ERROR: while removing the redolog !\n");
         }

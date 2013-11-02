@@ -44,6 +44,7 @@
 #ifdef linux
 #include <linux/fs.h>
 #include <sys/ioctl.h>
+#include <sys/wait.h>
 #endif
 
 #define LOG_THIS theHDImageCtl->
@@ -354,11 +355,28 @@ bx_bool hdimage_backup_file(int fd, const char *backup_fname)
   }
   return 0;
 }
+#endif
 
 bx_bool hdimage_copy_file(const char *src, const char *dst)
 {
 #ifdef WIN32
   return (bx_bool)CopyFile(src, dst, FALSE);
+#elif defined(linux)
+  pid_t pid, ws;
+
+  if ((src == NULL) || (dst == NULL)) {
+    return 0;
+  }
+
+  if (!(pid = fork())) {
+    execl("/bin/cp", "/bin/cp", src, dst, (char *)0);
+    return 0;
+  }
+  wait(&ws);
+  if (!WIFEXITED(ws)) {
+    return -1;
+  }
+  return (WEXITSTATUS(ws) == 0);
 #else
   int fd1, fd2;
   char *buf;
@@ -405,7 +423,6 @@ bx_bool hdimage_copy_file(const char *src, const char *dst)
   return ret;
 #endif
 }
-#endif
 
 /*** base class device_image_t ***/
 

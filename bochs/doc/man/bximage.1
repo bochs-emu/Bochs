@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bximage 1 "21 Oct 2013" "bximage" "The Bochs Project"
+.TH bximage 1 "02 Nov 2013" "bximage" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bximage \- Interactive Disk Image Creation, Conversion, Resize and
@@ -42,8 +42,9 @@ Create/convert: hard disk image mode - see the
 .I bochsrc
 sample for supported options.
 .TP
-.BI \-d
-Convert/resize/commit: delete source/redolog file after operation
+.BI \-b
+Convert/resize: create a backup of the source image. Commit:
+create backups of base image and redolog file.
 .TP
 .BI \-q
 Quiet  mode (don't prompt for user input). Without this

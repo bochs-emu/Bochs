@@ -8706,7 +8706,8 @@ Supported options:
   -hd=...       create/resize: hard disk image with size in megabytes (M)
                 or gigabytes (G)
   -imgmode=...  create/convert: hard disk image mode
-  -d            convert/resize/commit: delete source/redolog file after operation
+  -b            convert/resize: create a backup of the source image
+                commit: create backups of the base image and redolog file
   -q            quiet mode (don't prompt for user input)
   --help        display this help and exit
 
@@ -8788,9 +8789,9 @@ For an example of the usage, refer to <xref linkend="diskimagehowto">.
 With this function a disk image can be converted from one mode (format)
 to another. The type of the source image is auto-detected. For the target
 format it supports the same disk image modes as the create function. If the
-name of the new image file is not specified and you decided not to remove
-the source file, it will still be present with it's original name plus the
-suffix ".orig".
+name of the new image file is not specified or identical to the source one
+and you have enabled the backup switch, a backup of the source file will be
+created with it's original name plus the suffix ".orig".
 </para>
 </section>
 <section><title>Resize image</title>
@@ -8799,18 +8800,20 @@ This function can be used to increase the virtual disk size of an image.
 It supports the same disk image modes as the create function.
 Making a disk image smaller is not supported, since it may damage the
 disk and data will be lost. If the name of the new image file is not
-specified and you decided not to remove the source file, it will
-still be present with it's original name plus the suffix ".orig".
+specified or identical to the source one and you have enabled the backup
+switch, a backup of the source file will be created with it's original name
+plus the suffix ".orig".
 </para>
 </section>
 <section><title>Commit 'undoable' redolog to base image</title>
 <para>
 The type of the base image is auto-detected. The name of the redolog
 file only needs to be specified if it is not based on the base image.
-Removing the redolog file after commit is optional, but we recommend
-to do that. Otherwise Bochs will complain about an unexpected modification
-time of the base image. The legacy tool to commit redologs into flat files
-is still supported, so please see <xref linkend="using-bxcommit">.
+If you have enabled the backup switch, backups of the original base and
+redolog files will still be created with their original name plus the
+suffix ".orig". The legacy tool to commit redologs into flat files is
+still supported, so please see <xref linkend="using-bxcommit"> for
+details.
 </para>
 </section>
 </section>
