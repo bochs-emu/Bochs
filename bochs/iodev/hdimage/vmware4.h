@@ -10,6 +10,7 @@
  * Contact: snrrrub@gmail.com
  *
  * Copyright (C) 2006 Sharvil Nanavati.
+ * Copyright (C) 2006-2013  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -47,6 +48,8 @@ typedef struct _VM4_Header
     Bit64u flb_offset_sectors;
     Bit64u flb_copy_offset_sectors;
     Bit64u tlb_offset_sectors;
+    Bit8u  filler;
+    Bit8u  check_bytes[4];
 }
 #if !defined(_MSC_VER)
 GCC_ATTRIBUTE((packed))

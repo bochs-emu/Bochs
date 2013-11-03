@@ -20,12 +20,17 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 /////////////////////////////////////////////////////////////////////////
 //
-// Portion of this file contain code released under the following license.
+// Portions of this file contain code released under the following license.
 //
 // Connectix / Microsoft Virtual PC image creation code
 //
 // Copyright (c) 2005 Alex Beregszaszi
 // Copyright (c) 2009 Kevin Wolf <kwolf@suse.de>
+//
+// VMDK version 4 image creation code
+//
+// Copyright (c) 2004 Fabrice Bellard
+// Copyright (c) 2005 Filip Navara
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -135,10 +140,12 @@ const unsigned fdsize_sectors[] = { 320, 360, 640, 720, 1440, 2400, 2880, 3360, 
 int fdsize_n_choices = 10;
 
 // menu data for choosing disk mode
-const char *hdmode_menu = "\nWhat kind of image should I create?\nPlease type flat, sparse, growing or vpc. ";
-const char *hdmode_choices[] = {"flat", "sparse", "growing", "vpc" };
-const int hdmode_choice_id[] = {BX_HDIMAGE_MODE_FLAT, BX_HDIMAGE_MODE_SPARSE, BX_HDIMAGE_MODE_GROWING, BX_HDIMAGE_MODE_VPC};
-int hdmode_n_choices = 4;
+const char *hdmode_menu = "\nWhat kind of image should I create?\nPlease type flat, sparse, growing, vpc or vmware4. ";
+const char *hdmode_choices[] = {"flat", "sparse", "growing", "vpc", "vmware4" };
+const int hdmode_choice_id[] = {BX_HDIMAGE_MODE_FLAT, BX_HDIMAGE_MODE_SPARSE,
+                                BX_HDIMAGE_MODE_GROWING, BX_HDIMAGE_MODE_VPC,
+                                BX_HDIMAGE_MODE_VMWARE4};
+int hdmode_n_choices = 5;
 
 #if !BX_HAVE_SNPRINTF
 #include <stdarg.h>
@@ -606,6 +613,113 @@ void create_vpc_image(const char *filename, Bit64u size)
   close(fd);
 }
 
+void create_vmware4_image(const char *filename, Bit64u size)
+{
+  const int SECTOR_SIZE = 512;
+  const char desc_template[] =
+    "# Disk DescriptorFile\n"
+    "version=1\n"
+    "CID=%x\n"
+    "parentCID=ffffffff\n"
+    "createType=\"monolithicSparse\"\n"
+    "\n"
+    "# Extent description\n"
+    "%s"
+    "\n"
+    "# The Disk Data Base\n"
+    "#DDB\n"
+    "\n"
+    "ddb.virtualHWVersion = \"4\"\n"
+    "ddb.geometry.cylinders = \"" FMT_LL "d\"\n"
+    "ddb.geometry.heads = \"16\"\n"
+    "ddb.geometry.sectors = \"63\"\n"
+    "ddb.adapterType = \"ide\"\n";
+  int fd, i;
+  Bit64s offset, cyl;
+  Bit32u tmp, grains, gt_size, gt_count, gd_size;
+  Bit8u buffer[SECTOR_SIZE];
+  char desc_line[256];
+  _VM4_Header header;
+
+  header.id[0] = 'K';
+  header.id[1] = 'D';
+  header.id[2] = 'M';
+  header.id[3] = 'V';
+  header.version = htod32(1);
+  header.flags = htod32(3);
+  header.total_sectors = htod64(size / SECTOR_SIZE);
+  header.tlb_size_sectors = 128;
+  header.description_offset_sectors = 1;
+  header.description_size_sectors = 20;
+  header.slb_count = 512;
+  header.flb_offset_sectors = header.description_offset_sectors +
+                              header.description_size_sectors;
+
+  grains = (Bit32u)((size / 512 + header.tlb_size_sectors - 1) / header.tlb_size_sectors);
+  gt_size = ((header.slb_count * sizeof(Bit32u)) + 511) >> 9;
+  gt_count = (grains + header.slb_count - 1) / header.slb_count;
+  gd_size = (gt_count * sizeof(Bit32u) + 511) >> 9;
+
+  header.flb_copy_offset_sectors = header.flb_offset_sectors + gd_size + (gt_size * gt_count);
+  header.tlb_offset_sectors =
+    ((header.flb_copy_offset_sectors + gd_size + (gt_size * gt_count) +
+    header.tlb_size_sectors - 1) / header.tlb_size_sectors) *
+    header.tlb_size_sectors;
+
+  header.tlb_size_sectors = htod64(header.tlb_size_sectors);
+  header.description_offset_sectors = htod64(header.description_offset_sectors);
+  header.description_size_sectors = htod64(header.description_size_sectors);
+  header.slb_count = htod32(header.slb_count);
+  header.flb_offset_sectors = htod64(header.flb_offset_sectors);
+  header.flb_copy_offset_sectors = htod64(header.flb_copy_offset_sectors);
+  header.tlb_offset_sectors = htod64(header.tlb_offset_sectors);
+  header.check_bytes[0] = 0x0a;
+  header.check_bytes[1] = 0x20;
+  header.check_bytes[2] = 0x0d;
+  header.check_bytes[3] = 0x0a;
+
+  memset(buffer, 0, SECTOR_SIZE);
+  memcpy(buffer, &header, sizeof(_VM4_Header));
+
+  fd = create_image_file(filename);
+  if (bx_write_image(fd, 0, buffer, SECTOR_SIZE) != SECTOR_SIZE) {
+    close(fd);
+    fatal("ERROR: The disk image is not complete - could not write header!");
+  }
+  memset(buffer, 0, SECTOR_SIZE);
+  offset = dtoh64(header.tlb_offset_sectors * SECTOR_SIZE) - SECTOR_SIZE;
+  if (bx_write_image(fd, offset, buffer, SECTOR_SIZE) != SECTOR_SIZE) {
+    close(fd);
+    fatal("ERROR: The disk image is not complete - could not write empty table!");
+  }
+  offset = dtoh64(header.flb_offset_sectors) * SECTOR_SIZE;
+  for (i = 0, tmp = dtoh64(header.flb_offset_sectors) + gd_size; i < (int)gt_count; i++, tmp += gt_size) {
+    if (bx_write_image(fd, offset, &tmp, sizeof(tmp)) != sizeof(tmp)) {
+      close(fd);
+      fatal("ERROR: The disk image is not complete - could not write table!");
+    }
+    offset += sizeof(tmp);
+  }
+  offset = dtoh64(header.flb_copy_offset_sectors) * SECTOR_SIZE;
+  for (i = 0, tmp = dtoh64(header.flb_copy_offset_sectors) + gd_size; i < (int)gt_count; i++, tmp += gt_size) {
+    if (bx_write_image(fd, offset, &tmp, sizeof(tmp)) != sizeof(tmp)) {
+      close(fd);
+      fatal("ERROR: The disk image is not complete - could not write backup table!");
+    }
+    offset += sizeof(tmp);
+  }
+  memset(buffer, 0, SECTOR_SIZE);
+  cyl = (Bit64u)(size / 16 / 63 / 512.0);
+  snprintf(desc_line, 256, "RW " FMT_LL "d SPARSE \"%s\"", size / SECTOR_SIZE, filename);
+  sprintf((char*)buffer, desc_template, (Bit32u)time(NULL), desc_line, cyl);
+  offset = dtoh64(header.description_offset_sectors) * SECTOR_SIZE;
+  if (bx_write_image(fd, offset, buffer, SECTOR_SIZE) != SECTOR_SIZE) {
+    close(fd);
+    fatal("ERROR: The disk image is not complete - could not write description!");
+  }
+  close(fd);
+}
+
 void create_hard_disk_image(const char *filename, int imgmode, Bit64u size)
 {
   switch (imgmode) {
@@ -627,6 +741,10 @@ void create_hard_disk_image(const char *filename, int imgmode, Bit64u size)
 
     case BX_HDIMAGE_MODE_VPC:
       create_vpc_image(filename, size);
+      break;
+
+    case BX_HDIMAGE_MODE_VMWARE4:
+      create_vmware4_image(filename, size);
       break;
 
     default:
