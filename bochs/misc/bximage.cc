@@ -82,6 +82,7 @@
 #define BXIMAGE_MODE_CONVERT_IMAGE   2
 #define BXIMAGE_MODE_RESIZE_IMAGE    3
 #define BXIMAGE_MODE_COMMIT_UNDOABLE 4
+#define BXIMAGE_MODE_IMAGE_INFO      5
 
 #define BX_MAX_CYL_BITS 24 // 8 TB
 
@@ -123,6 +124,7 @@ const char *main_menu_prompt =
 "2. Convert hard disk image to other format (mode)\n"
 "3. Resize hard disk image\n"
 "4. Commit 'undoable' redolog to base image\n"
+"5. Disk image info\n"
 "\n"
 "0. Quit\n"
 "\n"
@@ -693,7 +695,7 @@ void create_vmware4_image(const char *filename, Bit64u size)
     fatal("ERROR: The disk image is not complete - could not write empty table!");
   }
   offset = dtoh64(header.flb_offset_sectors) * SECTOR_SIZE;
-  for (i = 0, tmp = dtoh64(header.flb_offset_sectors) + gd_size; i < (int)gt_count; i++, tmp += gt_size) {
+  for (i = 0, tmp = (Bit32u)dtoh64(header.flb_offset_sectors) + gd_size; i < (int)gt_count; i++, tmp += gt_size) {
     if (bx_write_image(fd, offset, &tmp, sizeof(tmp)) != sizeof(tmp)) {
       close(fd);
       fatal("ERROR: The disk image is not complete - could not write table!");
@@ -701,7 +703,7 @@ void create_vmware4_image(const char *filename, Bit64u size)
     offset += sizeof(tmp);
   }
   offset = dtoh64(header.flb_copy_offset_sectors) * SECTOR_SIZE;
-  for (i = 0, tmp = dtoh64(header.flb_copy_offset_sectors) + gd_size; i < (int)gt_count; i++, tmp += gt_size) {
+  for (i = 0, tmp = (Bit32u)dtoh64(header.flb_copy_offset_sectors) + gd_size; i < (int)gt_count; i++, tmp += gt_size) {
     if (bx_write_image(fd, offset, &tmp, sizeof(tmp)) != sizeof(tmp)) {
       close(fd);
       fatal("ERROR: The disk image is not complete - could not write backup table!");
@@ -779,7 +781,7 @@ void convert_image(int newimgmode, Bit64u newsize)
   if (mode == BX_HDIMAGE_MODE_UNKNOWN) {
     fatal("source disk image mode not detected");
   } else {
-    BX_INFO(("source image mode = '%s'", hdimage_mode_names[mode]));
+    printf("source image mode = '%s'\n", hdimage_mode_names[mode]);
   }
 
   source_image = init_image(mode);
@@ -872,7 +874,7 @@ void print_usage()
   fprintf(stderr,
     "Usage: bximage [options] [filename1] [filename2]\n\n"
     "Supported options:\n"
-    "  -mode=...     operation mode (create, convert, resize, commit)\n"
+    "  -mode=...     operation mode (create, convert, resize, commit, info)\n"
     "  -fd=...       create: floppy image with size code\n"
     "  -hd=...       create/resize: hard disk image with size in megabytes (M)\n"
     "                or gigabytes (G)\n"
@@ -958,6 +960,8 @@ int parse_cmdline(int argc, char *argv[])
         bximage_mode = BXIMAGE_MODE_RESIZE_IMAGE;
       } else if (!strcmp(&argv[arg][6], "commit")) {
         bximage_mode = BXIMAGE_MODE_COMMIT_UNDOABLE;
+      } else if (!strcmp(&argv[arg][6], "info")) {
+        bximage_mode = BXIMAGE_MODE_IMAGE_INFO;
       } else {
         printf("Unknown bximage mode '%s'\n\n", &argv[arg][6]);
         ret = 0;
@@ -1085,6 +1089,7 @@ int main(int argc, char *argv[])
   char bochsrc_line[256], prompt[80], tmpfname[512];
   int imgmode = 0;
   Bit64u hdsize = 0;
+  device_image_t *hdimage;
 
   if (!parse_cmdline(argc, argv))
     myexit(1);
@@ -1092,7 +1097,7 @@ int main(int argc, char *argv[])
   print_banner();
 
   if (bx_interactive) {
-    if (ask_int(main_menu_prompt, 0, 4, bximage_mode, &bximage_mode) < 0)
+    if (ask_int(main_menu_prompt, 0, 5, bximage_mode, &bximage_mode) < 0)
       fatal(EOF_ERR);
 
     set_default_values();
@@ -1194,6 +1199,15 @@ int main(int argc, char *argv[])
           fatal(EOF_ERR);
         break;
 
+      case BXIMAGE_MODE_IMAGE_INFO:
+        printf("\nDisk image info\n");
+        if (!strlen(bx_filename_1)) {
+          strcpy(bx_filename_1, "c.img");
+        }
+        if (ask_string("\nWhat is the name of the image?\n", bx_filename_1, bx_filename_1) < 0)
+          fatal(EOF_ERR);
+        break;
+
       default:
         fatal("\nbximage: unknown mode");
     }
@@ -1264,6 +1278,28 @@ int main(int argc, char *argv[])
         } else {
           if (unlink(bx_filename_2) != 0)
             fatal("ERROR: while removing the redolog !\n");
+        }
+        break;
+
+      case BXIMAGE_MODE_IMAGE_INFO:
+        imgmode = hdimage_detect_image_mode(bx_filename_1);
+        if (imgmode == BX_HDIMAGE_MODE_UNKNOWN) {
+          fatal("disk image mode not detected");
+        } else {
+          printf("\ndisk image mode = '%s'\n", hdimage_mode_names[imgmode]);
+        }
+        hdimage = init_image(imgmode);
+        if (hdimage->open(bx_filename_1, O_RDONLY) < 0) {
+          fatal("cannot open source disk image");
+        } else {
+          if (hdimage->get_capabilities() & HDIMAGE_AUTO_GEOMETRY) {
+            Bit64u cyl = (Bit64u)(hdimage->hd_size/16.0/63.0/512.0);
+            printf("geometry = %ld/16/63 (%ld MB)\n\n", cyl, hdimage->hd_size >> 20);
+          } else {
+            printf("geometry = %d/%d/%d (%ld MB)\n\n", hdimage->cylinders, hdimage->heads, hdimage->spt,
+                   hdimage->hd_size >> 20);
+          }
+          hdimage->close();
         }
         break;
   }

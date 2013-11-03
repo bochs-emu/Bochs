@@ -8316,7 +8316,7 @@ Only vmware versions 3 and 4 disk image files are supported.
 </para>
 <para>
     After a run, the redolog can be committed (merged)
-    to the base image with the bxcommit utility (flat type only).
+    to the base image with the bximage utility.
 </para>
 <para>
     After a run, the redolog can be rollbacked (discarded)
@@ -8352,7 +8352,7 @@ The growing redolog is created automatically if needed.
 <note>
 <para>
     The up-to-date content can only be seen after you commit the redolog
-    to the flat file with the bxcommit utility.
+    to the flat file with the bximage utility.
 </para>
 </note>
 </section>
@@ -8701,7 +8701,7 @@ interactive  mode and ask for all required parameters to manipulate an image.
 Usage: bximage [options] [filename1] [filename2]
 
 Supported options:
-  -mode=...     operation mode (create, convert, resize, commit)
+  -mode=...     operation mode (create, convert, resize, commit, info)
   -fd=...       create: floppy image with size code
   -hd=...       create/resize: hard disk image with size in megabytes (M)
                 or gigabytes (G)
@@ -8814,6 +8814,16 @@ redolog files will still be created with their original name plus the
 suffix ".orig". The legacy tool to commit redologs into flat files is
 still supported, so please see <xref linkend="using-bxcommit"> for
 details.
+</para>
+</section>
+<section><title>Disk image info</title>
+<para>
+This function can be used to determine the disk image format, geometry
+and size. Note that Bochs can only detect the formats growing, sparse,
+vmware3, vmware4 and vpc correctly. Other images with a file size
+multiple of 512 are treated as flat ones. If the image doesn't support
+returning the geometry, the cylinders are calculated based on 16 heads
+and 63 sectors per track.
 </para>
 </section>
 </section>
