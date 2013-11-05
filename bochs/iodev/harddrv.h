@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2011  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -38,7 +38,9 @@ typedef enum _asc {
 } asc_t;
 
 class device_image_t;
-class LOWLEVEL_CDROM;
+#if BX_SUPPORT_CDROM
+class cdrom_base_c;
+#endif
 
 typedef struct {
   struct {
@@ -132,8 +134,8 @@ struct cdrom_t
 {
   bx_bool ready;
   bx_bool locked;
-#ifdef LOWLEVEL_CDROM
-  LOWLEVEL_CDROM* cd;
+#if BX_SUPPORT_CDROM
+  cdrom_base_c *cd;
 #endif
   Bit32u capacity;
   int next_lba;

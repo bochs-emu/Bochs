@@ -25,6 +25,8 @@
 #include <dos/dos.h>
 #endif
 
+extern unsigned int bx_cdrom_count;
+
 class cdrom_base_c : public logfunctions {
 public:
   virtual ~cdrom_base_c(void) {}

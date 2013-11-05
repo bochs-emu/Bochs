@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2011  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -34,6 +34,8 @@
 #define LOG_THIS /* no SMF tricks here, not needed */
 
 #define BX_CD_FRAMESIZE 2048
+
+unsigned int bx_cdrom_count = 0;
 
 bx_bool cdrom_interface::create_toc(Bit8u* buf, int* length, bx_bool msf, int start_track, int format)
 {

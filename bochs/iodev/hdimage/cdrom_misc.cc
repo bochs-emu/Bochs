@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2011  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -110,13 +110,11 @@ extern "C" {
 #include <stdio.h>
 
 
-static unsigned int cdrom_count = 0;
-
 cdrom_interface::cdrom_interface(const char *dev)
 {
   char prefix[6];
 
-  sprintf(prefix, "CD%d", ++cdrom_count);
+  sprintf(prefix, "CD%d", ++bx_cdrom_count);
   put(prefix);
   fd = -1; // File descriptor not yet allocated
 
@@ -175,14 +173,16 @@ bx_bool cdrom_interface::start_cdrom()
   // Spin up the cdrom drive.
 
   if (fd >= 0) {
+    if (!using_file) {
 #if defined(__NetBSD__) || defined(__NetBSD_kernel__)
-    if (ioctl (fd, CDIOCSTART) < 0)
-       BX_DEBUG(("start_cdrom: start returns error: %s", strerror (errno)));
-    return 1;
+      if (ioctl (fd, CDIOCSTART) < 0)
+        BX_DEBUG(("start_cdrom: start returns error: %s", strerror (errno)));
+      return 1;
 #else
-    BX_INFO(("start_cdrom: your OS is not supported yet"));
-    return 0; // OS not supported yet, return 0 always
+      BX_INFO(("start_cdrom: your OS is not supported yet"));
+      return 0; // OS not supported yet, return 0 always
 #endif
+    }
   }
   return 0;
 }
@@ -193,18 +193,15 @@ void cdrom_interface::eject_cdrom()
   // some ioctl() calls to really eject the CD as well.
 
   if (fd >= 0) {
+    if (!using_file) {
 #if (defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
-    (void) ioctl (fd, CDIOCALLOW);
-    if (ioctl (fd, CDIOCEJECT) < 0)
-      BX_DEBUG(("eject_cdrom: eject returns error"));
-#endif
-
-
-#if __linux__
-    if (!using_file)
+      (void) ioctl (fd, CDIOCALLOW);
+      if (ioctl (fd, CDIOCEJECT) < 0)
+        BX_ERROR(("eject_cdrom: eject returns error"));
+#elif defined(__linux__)
       ioctl (fd, CDROMEJECT, NULL);
 #endif
-
+    }
     close(fd);
     fd = -1;
   }

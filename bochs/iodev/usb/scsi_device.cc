@@ -9,7 +9,7 @@
 //
 //  Written by Paul Brook
 //
-//  Copyright (C) 2007-2012  The Bochs Project
+//  Copyright (C) 2007-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -49,7 +49,7 @@ scsi_device_t::scsi_device_t(device_image_t *_hdimage, int _tcq,
                            scsi_completionfn _completion, void *_dev)
 {
   type = SCSIDEV_TYPE_DISK;
-#ifdef LOWLEVEL_CDROM
+#if BX_SUPPORT_CDROM
   cdrom = NULL;
 #endif
   hdimage = _hdimage;
@@ -67,8 +67,8 @@ scsi_device_t::scsi_device_t(device_image_t *_hdimage, int _tcq,
   put("SCSID");
 }
 
-#ifdef LOWLEVEL_CDROM
-scsi_device_t::scsi_device_t(LOWLEVEL_CDROM *_cdrom, int _tcq,
+#if BX_SUPPORT_CDROM
+scsi_device_t::scsi_device_t(cdrom_base_c *_cdrom, int _tcq,
                            scsi_completionfn _completion, void *_dev)
 {
   type = SCSIDEV_TYPE_CDROM;
@@ -239,7 +239,7 @@ void scsi_device_t::scsi_read_data(Bit32u tag)
     n = SCSI_DMA_BUF_SIZE / (512 * cluster_size);
   r->buf_len = n * 512 * cluster_size;
   if (type == SCSIDEV_TYPE_CDROM) {
-#ifdef LOWLEVEL_CDROM
+#if BX_SUPPORT_CDROM
     if (!cdrom->read_block(r->dma_buf, (Bit32u)r->sector, 2048)) {
       scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
     } else {
@@ -637,7 +637,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
       if (type == SCSIDEV_TYPE_CDROM && (buf[4] & 2)) {
         if (!(buf[4] & 1)) {
           // eject medium
-#ifdef LOWLEVEL_CDROM
+#if BX_SUPPORT_CDROM
           cdrom->eject_cdrom();
 #endif
           inserted = 0;
@@ -653,7 +653,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
       // The normal LEN field for this command is zero
       memset(outbuf, 0, 8);
       if (type == SCSIDEV_TYPE_CDROM) {
-#ifdef LOWLEVEL_CDROM
+#if BX_SUPPORT_CDROM
         nb_sectors = cdrom->capacity();
 #else
         nb_sectors = 0;
@@ -704,22 +704,22 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
       break;
     case 0x43:
       {
-        int start_track, format, msf, toclen;
+        int start_track, format, msf, toclen = 0;
 
         if (type == SCSIDEV_TYPE_CDROM) {
           msf = buf[1] & 2;
           format = buf[2] & 0xf;
           start_track = buf[6];
           BX_DEBUG(("Read TOC (track %d format %d msf %d)", start_track, format, msf >> 1));
-#ifdef LOWLEVEL_CDROM
+#if BX_SUPPORT_CDROM
           cdrom->read_toc(outbuf, &toclen, msf, start_track, format);
+#endif
           if (toclen > 0) {
             if (len > toclen)
               len = toclen;
             r->buf_len = len;
             break;
           }
-#endif
           BX_ERROR(("Read TOC error"));
           goto fail;
         } else {
@@ -770,7 +770,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
 
       // Current/Max Cap Header
       if (type == SCSIDEV_TYPE_CDROM) {
-#ifdef LOWLEVEL_CDROM
+#if BX_SUPPORT_CDROM
         nb_sectors = cdrom->capacity();
 #else
         nb_sectors = 0;

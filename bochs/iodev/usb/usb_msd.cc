@@ -6,7 +6,7 @@
 //
 //  Copyright (c) 2006 CodeSourcery.
 //  Written by Paul Brook
-//  Copyright (C) 2009-2012  The Bochs Project
+//  Copyright (C) 2009-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -132,7 +132,7 @@ static const Bit8u bx_msd_config_descriptor[] = {
   0x00        /*  u8  ep_bInterval; */
 };
 
-static int cdrom_count = 0;
+static int usb_cdrom_count = 0;
 
 
 usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
@@ -167,8 +167,8 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
     s.fname = filename;
     // config options
     bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
-    sprintf(pname, "cdrom%d", ++cdrom_count);
-    sprintf(label, "USB CD-ROM #%d Configuration", cdrom_count);
+    sprintf(pname, "cdrom%d", ++usb_cdrom_count);
+    sprintf(label, "USB CD-ROM #%d Configuration", usb_cdrom_count);
     s.config = new bx_list_c(usb_rt, pname, label);
     s.config->set_options(bx_list_c::SERIES_ASK | bx_list_c::USE_BOX_TITLE);
     s.config->set_runtime_param(1);
@@ -202,7 +202,7 @@ usb_msd_device_c::~usb_msd_device_c(void)
     delete s.scsi_dev;
   if (s.hdimage != NULL) {
     delete s.hdimage;
-#ifdef LOWLEVEL_CDROM
+#if BX_SUPPORT_CDROM
   } else if (s.cdrom != NULL) {
     delete s.cdrom;
 #if BX_WITH_WX
@@ -236,7 +236,7 @@ bx_bool usb_msd_device_c::init()
     }
     sprintf(s.info_txt, "USB HD: path='%s', mode='%s'", s.fname, hdimage_mode_names[s.image_mode]);
   } else if (d.type == USB_DEV_TYPE_CDROM) {
-#ifdef LOWLEVEL_CDROM
+#if BX_SUPPORT_CDROM
     s.cdrom = DEV_hdimage_init_cdrom(s.fname);
     if (!s.cdrom->insert_cdrom()) {
       BX_ERROR(("could not open cdrom image file '%s'", s.fname));
@@ -246,7 +246,7 @@ bx_bool usb_msd_device_c::init()
     }
     sprintf(s.info_txt, "USB CD: path='%s'", s.fname);
 #else
-    BX_PANIC(("missing LOWLEVEL_CDROM support"));
+    BX_PANIC(("missing lowlevel cdrom support"));
     return 0;
 #endif
   }
@@ -661,7 +661,7 @@ void usb_msd_device_c::cancel_packet(USBPacket *p)
 
 void usb_msd_device_c::set_inserted(bx_bool value)
 {
-#ifdef LOWLEVEL_CDROM
+#if BX_SUPPORT_CDROM
   const char *path;
 
   if (value) {

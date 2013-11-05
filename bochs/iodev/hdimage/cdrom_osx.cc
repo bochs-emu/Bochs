@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2011  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -278,13 +278,11 @@ Exit:
 }
 
 
-static unsigned int cdrom_count = 0;
-
 cdrom_interface::cdrom_interface(const char *dev)
 {
   char prefix[6];
 
-  sprintf(prefix, "CD%d", ++cdrom_count);
+  sprintf(prefix, "CD%d", ++bx_cdrom_count);
   put(prefix);
   fd = -1; // File descriptor not yet allocated
 

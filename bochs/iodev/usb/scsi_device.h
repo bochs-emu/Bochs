@@ -9,7 +9,7 @@
 //
 //  Written by Paul Brook
 //
-//  Copyright (C) 2007-2012  The Bochs Project
+//  Copyright (C) 2007-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -31,7 +31,7 @@
 typedef void (*scsi_completionfn)(void *opaque, int reason, Bit32u tag,
                                   Bit32u arg);
 class scsi_device_t;
-class LOWLEVEL_CDROM;
+class cdrom_base_c;
 
 enum scsidev_type {
   SCSIDEV_TYPE_DISK,
@@ -70,8 +70,8 @@ class scsi_device_t : public logfunctions {
 public:
   scsi_device_t(device_image_t *_hdimage, int _tcq,
                scsi_completionfn _completion, void *_dev);
-#ifdef LOWLEVEL_CDROM
-  scsi_device_t(LOWLEVEL_CDROM *_cdrom, int _tcq,
+#if BX_SUPPORT_CDROM
+  scsi_device_t(cdrom_base_c *_cdrom, int _tcq,
                scsi_completionfn _completion, void *_dev);
 #endif
   virtual ~scsi_device_t(void);
@@ -97,8 +97,8 @@ protected:
 private:
   enum scsidev_type type;
   device_image_t *hdimage;
-#ifdef LOWLEVEL_CDROM
-  LOWLEVEL_CDROM *cdrom;
+#if BX_SUPPORT_CDROM
+  cdrom_base_c *cdrom;
 #endif
   SCSIRequest *requests;
   int cluster_size;

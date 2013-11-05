@@ -6,7 +6,7 @@
 //
 //  Copyright (c) 2006 CodeSourcery.
 //  Written by Paul Brook
-//  Copyright (C) 2009-2012  The Bochs Project
+//  Copyright (C) 2009-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -27,7 +27,7 @@
 #define BX_IODEV_USB_MSD_H
 
 class device_image_t;
-class LOWLEVEL_CDROM;
+class cdrom_base_c;
 class scsi_device_t;
 
 class usb_msd_device_c : public usb_device_c {
@@ -66,8 +66,8 @@ private:
     int result;
     Bit8u image_mode;
     device_image_t *hdimage;
-#ifdef LOWLEVEL_CDROM
-    LOWLEVEL_CDROM *cdrom;
+#if BX_SUPPORT_CDROM
+    cdrom_base_c *cdrom;
 #endif
     scsi_device_t *scsi_dev;
     USBPacket *packet;
