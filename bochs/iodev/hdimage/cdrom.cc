@@ -31,13 +31,83 @@
 
 #include "cdrom.h"
 
+#include <stdio.h>
+
 #define LOG_THIS /* no SMF tricks here, not needed */
 
 #define BX_CD_FRAMESIZE 2048
 
 unsigned int bx_cdrom_count = 0;
 
-bx_bool cdrom_interface::create_toc(Bit8u* buf, int* length, bx_bool msf, int start_track, int format)
+cdrom_base_c::cdrom_base_c(const char *dev)
+{
+  char prefix[6];
+
+  sprintf(prefix, "CD%d", ++bx_cdrom_count);
+  put(prefix);
+  fd = -1; // File descriptor not yet allocated
+
+  if (dev == NULL) {
+    path = NULL;
+  } else {
+    path = strdup(dev);
+  }
+  using_file = 0;
+}
+
+cdrom_base_c::~cdrom_base_c(void)
+{
+  if (fd >= 0)
+    close(fd);
+  if (path)
+    free(path);
+  BX_DEBUG(("Exit"));
+}
+
+bx_bool cdrom_base_c::insert_cdrom(const char *dev)
+{
+  unsigned char buffer[BX_CD_FRAMESIZE];
+  ssize_t ret;
+
+  // Load CD-ROM. Returns 0 if CD is not ready.
+  if (dev != NULL) path = strdup(dev);
+  BX_INFO(("load cdrom with path=%s", path));
+  // all platforms except win32
+  fd = open(path, O_RDONLY);
+  if (fd < 0) {
+    BX_ERROR(("open cd failed for %s: %s", path, strerror(errno)));
+    return 0;
+  }
+  // do fstat to determine if it's a file or a device, then set using_file.
+  struct stat stat_buf;
+  ret = fstat(fd, &stat_buf);
+  if (ret) {
+    BX_PANIC(("fstat cdrom file returned error: %s", strerror (errno)));
+  }
+  if (S_ISREG(stat_buf.st_mode)) {
+    using_file = 1;
+    BX_INFO(("Opening image file as a cd."));
+  } else {
+    using_file = 0;
+    BX_INFO(("Using direct access for cdrom."));
+  }
+  // I just see if I can read a sector to verify that a
+  // CD is in the drive and readable.
+  return read_block(buffer, 0, 2048);
+}
+
+void cdrom_base_c::eject_cdrom()
+{
+  // Logically eject the CD.  I suppose we could stick in
+  // some ioctl() calls to really eject the CD as well.
+
+  if (fd >= 0) {
+    close(fd);
+    fd = -1;
+  }
+}
+
+bx_bool cdrom_base_c::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track, int format)
 {
   unsigned i;
   Bit32u blocks;
@@ -154,7 +224,7 @@ bx_bool cdrom_interface::create_toc(Bit8u* buf, int* length, bx_bool msf, int st
       break;
 
     default:
-      BX_PANIC(("cdrom: create_toc(): unknown format"));
+      BX_PANIC(("cdrom: read_toc(): unknown format"));
       return 0;
   }
 
@@ -163,7 +233,73 @@ bx_bool cdrom_interface::create_toc(Bit8u* buf, int* length, bx_bool msf, int st
   return 1;
 }
 
-bx_bool cdrom_interface::seek(Bit32u lba)
+bx_bool BX_CPP_AttrRegparmN(3) cdrom_base_c::read_block(Bit8u* buf, Bit32u lba, int blocksize)
+{
+  // Read a single block from the CD
+
+  off_t pos;
+  ssize_t n = 0;
+  Bit8u try_count = 3;
+  Bit8u* buf1;
+
+  if (blocksize == 2352) {
+    memset(buf, 0, 2352);
+    memset(buf+1, 0xff, 10);
+    Bit32u raw_block = lba + 150;
+    buf[12] = (raw_block / 75) / 60;
+    buf[13] = (raw_block / 75) % 60;
+    buf[14] = (raw_block % 75);
+    buf[15] = 0x01;
+    buf1 = buf + 16;
+  } else {
+    buf1 = buf;
+  }
+  do {
+    pos = lseek(fd, (off_t) lba * BX_CD_FRAMESIZE, SEEK_SET);
+    if (pos < 0) {
+      BX_PANIC(("cdrom: read_block: lseek returned error."));
+    } else {
+      n = read(fd, (char*) buf1, BX_CD_FRAMESIZE);
+    }
+  } while ((n != BX_CD_FRAMESIZE) && (--try_count > 0));
+
+  return (n == BX_CD_FRAMESIZE);
+}
+
+Bit32u cdrom_base_c::capacity()
+{
+  // Return CD-ROM capacity.  I believe you want to return
+  // the number of blocks of capacity the actual media has.
+
+  if (using_file) {
+    // return length of the image file
+    struct stat stat_buf;
+    int ret = fstat(fd, &stat_buf);
+    if (ret) {
+       BX_PANIC(("fstat on cdrom image returned err: %s", strerror(errno)));
+    }
+    if ((stat_buf.st_size % 2048) != 0)  {
+      BX_ERROR(("expected cdrom image to be a multiple of 2048 bytes"));
+    }
+    return (Bit32u)(stat_buf.st_size / 2048);
+  } else {
+    BX_ERROR(("capacity: your OS is not supported yet"));
+    return 0;
+  }
+}
+
+bx_bool cdrom_base_c::start_cdrom()
+{
+  // Spin up the cdrom drive.
+
+  if (fd >= 0) {
+    BX_INFO(("start_cdrom: your OS is not supported yet"));
+    return 0; // OS not supported yet, return 0 always
+  }
+  return 0;
+}
+
+bx_bool cdrom_base_c::seek(Bit32u lba)
 {
   unsigned char buffer[BX_CD_FRAMESIZE];
 

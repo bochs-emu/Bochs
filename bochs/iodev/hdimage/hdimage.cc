@@ -31,6 +31,10 @@
 #else
 #include "iodev.h"
 #include "cdrom.h"
+#include "cdrom_amigaos.h"
+#include "cdrom_misc.h"
+#include "cdrom_osx.h"
+#include "cdrom_win32.h"
 #endif
 #include "hdimage.h"
 #include "vmware3.h"

@@ -1749,7 +1749,7 @@ Optional Features:
   --enable-avx            support for AVX instructions (no)
   --enable-evex           support for EVEX prefix and AVX-512 extensions (no)
   --enable-x86-debugger   x86 debugger support (no)
-  --enable-cdrom          CDROM support (yes)
+  --enable-cdrom          lowlevel CDROM support (yes)
   --enable-sb16           Sound Blaster 16 Support (no)
   --enable-es1370         enable ES1370 soundcard support (no)
   --enable-gameport       enable standard PC gameport support (yes, if
@@ -23623,8 +23623,8 @@ $as_echo "no" >&6; }
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for CDROM support" >&5
-$as_echo_n "checking for CDROM support... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for lowlevel CDROM support" >&5
+$as_echo_n "checking for lowlevel CDROM support... " >&6; }
 # Check whether --enable-cdrom was given.
 if test "${enable_cdrom+set}" = set; then :
   enableval=$enable_cdrom; if test "$enableval" = no; then
@@ -23645,6 +23645,8 @@ $as_echo "yes" >&6; }
   case $target in
     *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32*)
       CDROM_OBJS="$CDROM_OBJS cdrom_win32.o"
+      $as_echo "#define LOWLEVEL_CDROM cdrom_win32_c" >>confdefs.h
+
       $as_echo "#define BX_SUPPORT_CDROM 1" >>confdefs.h
 
       ;;
@@ -23659,14 +23661,20 @@ fi
       if test "$with_amigaos" = yes; then
         # use the amiga cdrom file instead.
         CDROM_OBJS="$CDROM_OBJS cdrom_amigaos.o"
+        $as_echo "#define LOWLEVEL_CDROM cdrom_amigaos_c" >>confdefs.h
+
       elif test "$can_use_osx_cdrom" = yes; then
         # use cdrom_osx
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: Using OSX IOKit CD Interface" >&5
 $as_echo "Using OSX IOKit CD Interface" >&6; }
         CDROM_OBJS="$CDROM_OBJS cdrom_osx.o"
+        $as_echo "#define LOWLEVEL_CDROM cdrom_osx_c" >>confdefs.h
+
         EXTRA_LINK_OPTS="${EXTRA_LINK_OPTS} -framework IOKit -framework CoreFoundation "'$(GUI_LINK_OPTS)'
       else
         CDROM_OBJS="$CDROM_OBJS cdrom_misc.o"
+        $as_echo "#define LOWLEVEL_CDROM cdrom_misc_c" >>confdefs.h
+
       fi
       $as_echo "#define BX_SUPPORT_CDROM 1" >>confdefs.h
 

@@ -1677,9 +1677,9 @@ AC_ARG_ENABLE(x86-debugger,
     ]
   )
 
-AC_MSG_CHECKING(for CDROM support)
+AC_MSG_CHECKING(for lowlevel CDROM support)
 AC_ARG_ENABLE(cdrom,
-  AS_HELP_STRING([--enable-cdrom], [CDROM support (yes)]),
+  AS_HELP_STRING([--enable-cdrom], [lowlevel CDROM support (yes)]),
   [if test "$enableval" = no; then
      bx_cdrom=0
    else
@@ -1694,6 +1694,7 @@ if test "$bx_cdrom" = 1; then
   case $target in
     *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32*)
       CDROM_OBJS="$CDROM_OBJS cdrom_win32.o"
+      AC_DEFINE(LOWLEVEL_CDROM, cdrom_win32_c)
       AC_DEFINE(BX_SUPPORT_CDROM, 1)
       ;;
     *)
@@ -1703,13 +1704,16 @@ if test "$bx_cdrom" = 1; then
       if test "$with_amigaos" = yes; then
         # use the amiga cdrom file instead.
         CDROM_OBJS="$CDROM_OBJS cdrom_amigaos.o"
+        AC_DEFINE(LOWLEVEL_CDROM, cdrom_amigaos_c)
       elif test "$can_use_osx_cdrom" = yes; then
         # use cdrom_osx
         AC_MSG_RESULT(Using OSX IOKit CD Interface)
         CDROM_OBJS="$CDROM_OBJS cdrom_osx.o"
+        AC_DEFINE(LOWLEVEL_CDROM, cdrom_osx_c)
         EXTRA_LINK_OPTS="${EXTRA_LINK_OPTS} -framework IOKit -framework CoreFoundation "'$(GUI_LINK_OPTS)'
       else
         CDROM_OBJS="$CDROM_OBJS cdrom_misc.o"
+        AC_DEFINE(LOWLEVEL_CDROM, cdrom_misc_c)
       fi
       AC_DEFINE(BX_SUPPORT_CDROM, 1)
       ;;

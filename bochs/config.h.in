@@ -814,7 +814,7 @@ typedef
 #if BX_SUPPORT_CDROM
    // This is the C++ class name to use if we are supporting
    // low-level CDROM.
-#  define LOWLEVEL_CDROM cdrom_interface
+#  define LOWLEVEL_CDROM cdrom_base_c
 #endif
 
 // NE2K network emulation
