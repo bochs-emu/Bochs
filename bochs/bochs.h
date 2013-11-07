@@ -331,7 +331,7 @@ protected:
   const char *logfn;
 };
 
-typedef class BOCHSAPI iofunctions iofunc_t;
+typedef class iofunctions iofunc_t;
 
 #define SAFE_GET_IOFUNC() \
   ((io==NULL)? (io=new iofunc_t("/dev/stderr")) : io)

@@ -17,10 +17,10 @@
 #ifndef __EXTPLUGIN_H
 #define __EXTPLUGIN_H
 
-#if BX_PLUGINS
+#if BX_PLUGINS && !defined(_MSC_VER)
 #if BX_HAVE_LTDL
 #include <ltdl.h>
-#elif !defined(_MSC_VER)
+#else
 #include "ltdl.h"
 #endif
 #endif
