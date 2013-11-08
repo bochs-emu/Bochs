@@ -373,10 +373,10 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxRepIterationP
 
 void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterationPtr_tR execute)
 {
-  unsigned rep = i->repUsedValue();
+  unsigned rep = i->lockRepUsedValue();
 
   // non repeated instruction
-  if (! rep) {
+  if (rep < 2) {
     BX_CPU_CALL_REP_ITERATION(execute, (i));
     return;
   }

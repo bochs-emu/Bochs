@@ -323,12 +323,12 @@ public:
   }
 
   BX_CPP_INLINE unsigned repUsedL(void) const {
+    return metaInfo.metaInfo1 >> 7;
+  }
+  BX_CPP_INLINE unsigned lockRepUsedValue(void) const {
     return metaInfo.metaInfo1 >> 6;
   }
-  BX_CPP_INLINE unsigned repUsedValue(void) const {
-    return metaInfo.metaInfo1 >> 6;
-  }
-  BX_CPP_INLINE void setRepUsed(unsigned value) {
+  BX_CPP_INLINE void setLockRepUsed(unsigned value) {
     metaInfo.metaInfo1 = (metaInfo.metaInfo1 & 0x3f) | (value << 6);
   }
 

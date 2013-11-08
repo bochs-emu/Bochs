@@ -1324,7 +1324,7 @@ fetch_b1:
     case 0xf2: // REPNE/REPNZ
     case 0xf3: // REP/REPE/REPZ
       sse_prefix = (b1 & 3) ^ 1;
-      i->setRepUsed(b1 & 3);
+      i->setLockRepUsed(b1 & 3);
       if (remain != 0) {
         goto fetch_b1;
       }
@@ -1986,6 +1986,7 @@ decode_done:
 
   i->setILen(remainingInPage - remain);
   i->setIaOpcode(ia_opcode);
+  if (lock) i->setLockRepUsed(1);
 
   if (mod_mem) {
     i->execute1 = BxOpcodesTable[ia_opcode].execute1;
