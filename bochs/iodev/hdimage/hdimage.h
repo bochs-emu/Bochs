@@ -588,9 +588,7 @@ public:
   bx_hdimage_ctl_c();
   virtual ~bx_hdimage_ctl_c() {}
   virtual device_image_t *init_image(Bit8u image_mode, Bit64u disk_size, const char *journal);
-#if BX_SUPPORT_CDROM
   virtual cdrom_base_c *init_cdrom(const char *dev);
-#endif
 };
 #endif // BXIMAGE
 

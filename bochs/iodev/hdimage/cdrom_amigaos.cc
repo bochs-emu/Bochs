@@ -27,6 +27,8 @@
 
 
 #include "bochs.h"
+#if BX_SUPPORT_CDROM
+
 #include "scsi_commands.h"
 #include "cdrom.h"
 #include "cdrom_amigaos.h"
@@ -349,3 +351,5 @@ int DoSCSI(UBYTE *data, int datasize, Bit8u *cmd,int cmdsize, UBYTE direction)
 
   return CDIO->iotd_Req.io_Error;
 }
+
+#endif /* if BX_SUPPORT_CDROM */

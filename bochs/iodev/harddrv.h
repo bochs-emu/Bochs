@@ -38,9 +38,7 @@ typedef enum _asc {
 } asc_t;
 
 class device_image_t;
-#if BX_SUPPORT_CDROM
 class cdrom_base_c;
-#endif
 
 typedef struct {
   struct {
@@ -134,9 +132,7 @@ struct cdrom_t
 {
   bx_bool ready;
   bx_bool locked;
-#if BX_SUPPORT_CDROM
   cdrom_base_c *cd;
-#endif
   Bit32u capacity;
   int next_lba;
   int remaining_blocks;

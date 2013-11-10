@@ -338,11 +338,9 @@ public:
   virtual device_image_t* init_image(Bit8u image_mode, Bit64u disk_size, const char *journal) {
     STUBFUNC(hdimage_ctl, init_image); return NULL;
   }
-#if BX_SUPPORT_CDROM
   virtual cdrom_base_c* init_cdrom(const char *dev) {
     STUBFUNC(hdimage_ctl, init_cdrom); return NULL;
   }
-#endif
 };
 
 #if BX_SUPPORT_SOUNDLOW

@@ -27,8 +27,6 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
-#if BX_SUPPORT_CDROM
-
 #include "cdrom.h"
 
 #include <stdio.h>
@@ -305,5 +303,3 @@ bx_bool cdrom_base_c::seek(Bit32u lba)
 
   return read_block(buffer, lba, BX_CD_FRAMESIZE);
 }
-
-#endif /* if BX_SUPPORT_CDROM */

@@ -144,12 +144,14 @@ device_image_t* bx_hdimage_ctl_c::init_image(Bit8u image_mode, Bit64u disk_size,
   return hdimage;
 }
 
-#if BX_SUPPORT_CDROM
 cdrom_base_c* bx_hdimage_ctl_c::init_cdrom(const char *dev)
 {
+#if BX_SUPPORT_CDROM
   return new LOWLEVEL_CDROM(dev);
-}
+#else
+  return new cdrom_base_c(dev);
 #endif
+}
 
 #endif // ifndef BXIMAGE
 

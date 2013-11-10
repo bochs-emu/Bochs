@@ -49,9 +49,7 @@ scsi_device_t::scsi_device_t(device_image_t *_hdimage, int _tcq,
                            scsi_completionfn _completion, void *_dev)
 {
   type = SCSIDEV_TYPE_DISK;
-#if BX_SUPPORT_CDROM
   cdrom = NULL;
-#endif
   hdimage = _hdimage;
   requests = NULL;
   sense = 0;
@@ -67,7 +65,6 @@ scsi_device_t::scsi_device_t(device_image_t *_hdimage, int _tcq,
   put("SCSID");
 }
 
-#if BX_SUPPORT_CDROM
 scsi_device_t::scsi_device_t(cdrom_base_c *_cdrom, int _tcq,
                            scsi_completionfn _completion, void *_dev)
 {
@@ -87,7 +84,6 @@ scsi_device_t::scsi_device_t(cdrom_base_c *_cdrom, int _tcq,
 
   put("SCSIC");
 }
-#endif
 
 scsi_device_t::~scsi_device_t(void)
 {
@@ -239,15 +235,11 @@ void scsi_device_t::scsi_read_data(Bit32u tag)
     n = SCSI_DMA_BUF_SIZE / (512 * cluster_size);
   r->buf_len = n * 512 * cluster_size;
   if (type == SCSIDEV_TYPE_CDROM) {
-#if BX_SUPPORT_CDROM
     if (!cdrom->read_block(r->dma_buf, (Bit32u)r->sector, 2048)) {
       scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
     } else {
       scsi_read_complete((void*)r, 0);
     }
-#else
-    scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
-#endif
   } else {
     ret = (int)hdimage->lseek(r->sector * 512, SEEK_SET);
     if (ret < 0) {
@@ -637,9 +629,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
       if (type == SCSIDEV_TYPE_CDROM && (buf[4] & 2)) {
         if (!(buf[4] & 1)) {
           // eject medium
-#if BX_SUPPORT_CDROM
           cdrom->eject_cdrom();
-#endif
           inserted = 0;
         }
       }
@@ -653,11 +643,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
       // The normal LEN field for this command is zero
       memset(outbuf, 0, 8);
       if (type == SCSIDEV_TYPE_CDROM) {
-#if BX_SUPPORT_CDROM
         nb_sectors = cdrom->capacity();
-#else
-        nb_sectors = 0;
-#endif
       } else {
         nb_sectors = hdimage->hd_size / 512;
       }
@@ -711,9 +697,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
           format = buf[2] & 0xf;
           start_track = buf[6];
           BX_DEBUG(("Read TOC (track %d format %d msf %d)", start_track, format, msf >> 1));
-#if BX_SUPPORT_CDROM
           cdrom->read_toc(outbuf, &toclen, msf, start_track, format);
-#endif
           if (toclen > 0) {
             if (len > toclen)
               len = toclen;
@@ -770,11 +754,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
 
       // Current/Max Cap Header
       if (type == SCSIDEV_TYPE_CDROM) {
-#if BX_SUPPORT_CDROM
         nb_sectors = cdrom->capacity();
-#else
-        nb_sectors = 0;
-#endif
       } else {
         nb_sectors = (hdimage->hd_size / 512);
       }

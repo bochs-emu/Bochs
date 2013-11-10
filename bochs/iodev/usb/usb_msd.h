@@ -66,9 +66,7 @@ private:
     int result;
     Bit8u image_mode;
     device_image_t *hdimage;
-#if BX_SUPPORT_CDROM
     cdrom_base_c *cdrom;
-#endif
     scsi_device_t *scsi_dev;
     USBPacket *packet;
     bx_list_c *sr_list;

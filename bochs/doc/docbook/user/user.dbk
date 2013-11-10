@@ -2093,8 +2093,8 @@ to explicitly turn it off.
       <entry>--enable-cdrom</entry>
       <entry>yes</entry>
       <entry>
-      Enable use of a real CDROM.  The cdrom emulation is always present, and
-      emulates a drive without media by default.  You can use this option to
+      Enable use of a real CDROM/DVD drive. The cdrom emulation and the portable
+      ISO image file support are always present.  You can use this option to
       compile in support for accessing the media in your workstation's cdrom
       drive.  The supported platforms are Linux, Solaris, FreeBSD, OpenBSD,
       MacOS X and Windows. For other platforms, a small amount of code specific

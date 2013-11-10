@@ -125,9 +125,7 @@ bx_hard_drive_c::bx_hard_drive_c()
   for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     for (Bit8u device=0; device<2; device ++) {
       channels[channel].drives[device].hdimage =  NULL;
-#if BX_SUPPORT_CDROM
       channels[channel].drives[device].cdrom.cd =  NULL;
-#endif
     }
   }
   seek_timer_index = BX_NULL_TIMER_HANDLE;
@@ -145,12 +143,10 @@ bx_hard_drive_c::~bx_hard_drive_c()
         delete channels[channel].drives[device].hdimage;
         channels[channel].drives[device].hdimage = NULL;
       }
-#if BX_SUPPORT_CDROM
       if (channels[channel].drives[device].cdrom.cd != NULL) {
         delete channels[channel].drives[device].cdrom.cd;
         channels[channel].drives[device].cdrom.cd = NULL;
       }
-#endif
       sprintf(ata_name, "ata.%d.%s", channel, (device==0)?"master":"slave");
       base = (bx_list_c*) SIM->get_param(ata_name);
       SIM->get_param_string("path", base)->set_handler(NULL);
@@ -389,7 +385,6 @@ void bx_hard_drive_c::init(void)
         BX_CONTROLLER(channel,device).sector_count = 0;
 
         // allocate low level driver
-#if BX_SUPPORT_CDROM
         BX_HD_THIS channels[channel].drives[device].cdrom.cd = DEV_hdimage_init_cdrom(SIM->get_param_string("path", base)->getptr());
         BX_INFO(("CD on ata%d-%d: '%s'",channel, device, SIM->get_param_string("path", base)->getptr()));
 
@@ -405,10 +400,7 @@ void bx_hard_drive_c::init(void)
             BX_HD_THIS channels[channel].drives[device].cdrom.ready = 0;
             SIM->get_param_enum("status", base)->set(BX_EJECTED);
           }
-        }
-        else
-#endif
-        {
+        } else {
           BX_INFO(("Media not present in CD-ROM drive"));
           BX_HD_THIS channels[channel].drives[device].cdrom.ready = 0;
         }
@@ -863,7 +855,6 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
                 case 0x28: // read (10)
                 case 0xa8: // read (12)
                 case 0xbe: // read cd
-#if BX_SUPPORT_CDROM
                   if (!BX_SELECTED_DRIVE(channel).cdrom.ready) {
                     BX_PANIC(("Read with CDROM not ready"));
                   }
@@ -886,9 +877,6 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
                   }
                   // one block transfered, start at beginning
                   index = 0;
-#else
-                  BX_PANIC(("READ: lowlevel cdrom support disabled"));
-#endif
                   break;
 
                 default: // no need to load a new block
@@ -1270,9 +1258,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     atapi_cmd_nop(controller);
                     raise_interrupt(channel);
                   } else if (!LoEj && Start) { // start (spin up) the disc
-#if BX_SUPPORT_CDROM
                     BX_SELECTED_DRIVE(channel).cdrom.cd->start_cdrom();
-#endif
                     BX_ERROR(("FIXME: ATAPI start disc not reading TOC"));
                     atapi_cmd_nop(controller);
                     raise_interrupt(channel);
@@ -1280,9 +1266,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     atapi_cmd_nop(controller);
 
                     if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
-#if BX_SUPPORT_CDROM
                       BX_SELECTED_DRIVE(channel).cdrom.cd->eject_cdrom();
-#endif
                       BX_SELECTED_DRIVE(channel).cdrom.ready = 0;
                       sprintf(ata_name, "ata.%d.%s", channel, BX_SLAVE_SELECTED(channel)?"slave":"master");
                       bx_list_c *base = (bx_list_c*) SIM->get_param(ata_name);
@@ -1589,17 +1573,14 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
               case 0x43: // read toc
                 if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
-#if BX_SUPPORT_CDROM
                   bx_bool msf = (controller->buffer[1] >> 1) & 1;
                   Bit8u starting_track = controller->buffer[6];
-                  int toc_length;
-#endif
+                  int toc_length = 0;
                   Bit16u alloc_length = read_16bit(controller->buffer + 7);
                   Bit8u format = (controller->buffer[9] >> 6);
-// Win32:  I just read the TOC using Win32's IOCTRL functions (Ben)
-#if defined(WIN32)
-#if BX_SUPPORT_CDROM
                   switch (format) {
+// Win32:  I just read the TOC using Win32's IOCTRL functions (Ben)
+#if BX_SUPPORT_CDROM && defined(WIN32)
                     case 2:
                     case 3:
                     case 4:
@@ -1617,20 +1598,10 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                         ready_to_send_atapi(channel);
                       }
                       break;
-                    default:
-                      BX_ERROR(("(READ TOC) format %d not supported", format));
-                      atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
-                      raise_interrupt(channel);
-                  }
 #else
-                  BX_PANIC(("READ TOC: lowlevel cdrom support disabled"));
-#endif
-#else  // WIN32
-                  switch (format) {
                     case 0:
                     case 1:
                     case 2:
-#if BX_SUPPORT_CDROM
                       if (!(BX_SELECTED_DRIVE(channel).cdrom.cd->read_toc(controller->buffer,
                                                                           &toc_length, msf, starting_track, format))) {
                         atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
@@ -1639,18 +1610,13 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                         init_send_atapi_command(channel, atapi_command, toc_length, alloc_length);
                         ready_to_send_atapi(channel);
                       }
-#else
-                      BX_PANIC(("READ TOC: lowlevel cdrom support disabled"));
-#endif
                       break;
-
+#endif
                     default:
                       BX_ERROR(("(READ TOC) format %d not supported", format));
                       atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
                       raise_interrupt(channel);
-                      break;
                   }
-#endif  // WIN32
                 } else {
                   atapi_cmd_error(channel, SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT, 1);
                   raise_interrupt(channel);
@@ -1728,11 +1694,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     raise_interrupt(channel);
                     break;
                   }
-#if BX_SUPPORT_CDROM
                   BX_SELECTED_DRIVE(channel).cdrom.cd->seek(lba);
-#else
-                  BX_PANIC(("SEEK: lowlevel cdrom support disabled"));
-#endif
                   atapi_cmd_nop(controller);
                   raise_interrupt(channel);
                 }
@@ -3175,17 +3137,15 @@ bx_bool bx_hard_drive_c::set_cd_media_status(Bit32u handle, bx_bool status)
 
   if (status == 0) {
     // eject cdrom if not locked by guest OS
-    if (BX_HD_THIS channels[channel].drives[device].cdrom.locked) return(1);
-    else {
-#if BX_SUPPORT_CDROM
+    if (!BX_HD_THIS channels[channel].drives[device].cdrom.locked) {
       BX_HD_THIS channels[channel].drives[device].cdrom.cd->eject_cdrom();
-#endif
       BX_HD_THIS channels[channel].drives[device].cdrom.ready = 0;
       SIM->get_param_enum("status", base)->set(BX_EJECTED);
+    } else {
+      return(1);
     }
   } else {
     // insert cdrom
-#if BX_SUPPORT_CDROM
     if (BX_HD_THIS channels[channel].drives[device].cdrom.cd->insert_cdrom(SIM->get_param_string("path", base)->getptr())) {
       BX_INFO(("Media present in CD-ROM drive"));
       BX_HD_THIS channels[channel].drives[device].cdrom.ready = 1;
@@ -3197,10 +3157,7 @@ bx_bool bx_hard_drive_c::set_cd_media_status(Bit32u handle, bx_bool status)
       BX_SELECTED_DRIVE(channel).sense.asc = ASC_MEDIUM_MAY_HAVE_CHANGED;
       BX_SELECTED_DRIVE(channel).sense.ascq = 0;
       raise_interrupt(channel);
-    }
-    else
-#endif
-    {
+    } else {
       BX_INFO(("Could not locate CD-ROM, continuing with media not present"));
       BX_HD_THIS channels[channel].drives[device].cdrom.ready = 0;
       SIM->get_param_enum("status", base)->set(BX_EJECTED);
@@ -3243,7 +3200,6 @@ bx_bool bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u 
           }
           /* set status bar conditions for device */
           bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1);
-#if BX_SUPPORT_CDROM
           if (!BX_SELECTED_DRIVE(channel).cdrom.cd->read_block(buffer, BX_SELECTED_DRIVE(channel).cdrom.next_lba,
                                                                controller->buffer_size))
           {
@@ -3252,9 +3208,6 @@ bx_bool bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u 
           }
           BX_SELECTED_DRIVE(channel).cdrom.next_lba++;
           BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks--;
-#else
-          BX_PANIC(("BM-DMA read with lowlevel cdrom support disabled"));
-#endif
           break;
         default:
           memcpy(buffer, controller->buffer, *sector_size);
