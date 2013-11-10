@@ -445,7 +445,7 @@ typedef struct {
 // a type and a spot for a return code (only used for synchronous events).
 typedef struct {
   BxEventType type; // what kind is this?
-  Bit32s retcode;   // sucess or failure. only used for synchronous events.
+  Bit32s retcode;   // success or failure. only used for synchronous events.
   union {
     BxKeyEvent key;
     BxMouseEvent mouse;

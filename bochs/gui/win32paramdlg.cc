@@ -1049,13 +1049,11 @@ static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, 
   return 0;
 }
 
-int win32ParamDialog(HWND parent, const char *menu)
+INT_PTR win32ParamDialog(HWND parent, const char *menu)
 {
-  INT_PTR ret;
-
   InitDlgFont();
   RegisterScrollWindow(NULL);
-  ret = DialogBoxParam(NULL, MAKEINTRESOURCE(PARAM_DLG), parent, (DLGPROC)ParamDlgProc, (LPARAM)menu);
+  INT_PTR ret = DialogBoxParam(NULL, MAKEINTRESOURCE(PARAM_DLG), parent, (DLGPROC)ParamDlgProc, (LPARAM)menu);
   DeleteObject(DlgFont);
   return ret;
 }

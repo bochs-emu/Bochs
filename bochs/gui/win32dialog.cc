@@ -725,25 +725,25 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
 
 void LogAskDialog(BxEvent *event)
 {
-  event->retcode = DialogBoxParam(NULL, MAKEINTRESOURCE(ASK_DLG), GetBochsWindow(),
+  event->retcode = (Bit32s) DialogBoxParam(NULL, MAKEINTRESOURCE(ASK_DLG), GetBochsWindow(),
                                   (DLGPROC)LogAskProc, (LPARAM)event);
 }
 
 int AskString(bx_param_string_c *param)
 {
-  return DialogBoxParam(NULL, MAKEINTRESOURCE(STRING_DLG), GetBochsWindow(),
+  return (int) DialogBoxParam(NULL, MAKEINTRESOURCE(STRING_DLG), GetBochsWindow(),
                         (DLGPROC)StringParamProc, (LPARAM)param);
 }
 
 int FloppyDialog(bx_param_filename_c *param)
 {
-  return DialogBoxParam(NULL, MAKEINTRESOURCE(FLOPPY_DLG), GetBochsWindow(),
+  return (int) DialogBoxParam(NULL, MAKEINTRESOURCE(FLOPPY_DLG), GetBochsWindow(),
                         (DLGPROC)FloppyDlgProc, (LPARAM)param);
 }
 
 int MainMenuDialog(HWND hwnd, bx_bool runtime)
 {
-  return DialogBoxParam(NULL, MAKEINTRESOURCE(MAINMENU_DLG), hwnd,
+  return (int) DialogBoxParam(NULL, MAKEINTRESOURCE(MAINMENU_DLG), hwnd,
                         (DLGPROC)MainMenuDlgProc, (LPARAM)runtime);
 }
 
@@ -780,7 +780,7 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
         }
       } else if (param->get_type() == BXT_LIST) {
         SIM->get_first_cdrom()->get_param_path(pname, BX_PATHNAME_LEN);
-        event->retcode = win32ParamDialog(GetBochsWindow(), pname);
+        event->retcode = (Bit32s) win32ParamDialog(GetBochsWindow(), pname);
         return event;
       } else if (param->get_type() == BXT_PARAM_BOOL) {
         UINT flag = MB_YESNO | MB_SETFOREGROUND;
