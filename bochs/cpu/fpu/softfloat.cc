@@ -271,6 +271,55 @@ Bit64s float32_to_int64_round_to_zero(float32 a, float_status_t &status)
 
 /*----------------------------------------------------------------------------
 | Returns the result of converting the single-precision floating-point value
+| `a' to the 64-bit unsigned integer format.  The conversion is
+| performed according to the IEC/IEEE Standard for Binary Floating-Point
+| Arithmetic---which means in particular that the conversion is rounded
+| according to the current rounding mode.  If `a' is a NaN, the largest
+| unsigned integer is returned.  Otherwise, if the conversion overflows, the
+| largest unsigned integer is returned.  If the 'a' is negative, zero is
+| returned.
+*----------------------------------------------------------------------------*/
+
+Bit64u float32_to_uint64(float32 a, float_status_t &status)
+{
+    int aSign;
+    Bit16s aExp, shiftCount;
+    Bit32u aSig;
+    Bit64u aSig64, aSigExtra;
+
+    aSig = extractFloat32Frac(a);
+    aExp = extractFloat32Exp(a);
+    aSign = extractFloat32Sign(a);
+
+    if (get_denormals_are_zeros(status)) {
+        if (aExp == 0) aSig = 0;
+    }
+
+    if (aSign) {
+        if (aExp) {
+            float_raise(status, float_flag_invalid);
+        } else if (aSig) { /* negative denormalized */
+            float_raise(status, float_flag_inexact);
+        }
+        return 0;
+    }
+    shiftCount = 0xBE - aExp;
+    if (aExp) {
+        aSig |= 0x00800000;
+    }
+    if (shiftCount < 0) {
+        float_raise(status, float_flag_invalid);
+        return BX_CONST64(0xFFFFFFFFFFFFFFFF);
+    }
+
+    aSig64 = aSig;
+    aSig64 <<= 40;
+    shift64ExtraRightJamming(aSig64, 0, shiftCount, &aSig64, &aSigExtra);
+    return roundAndPackUint64(aSig64, aSigExtra, status);
+}
+
+/*----------------------------------------------------------------------------
+| Returns the result of converting the single-precision floating-point value
 | `a' to the double-precision floating-point format.  The conversion is
 | performed according to the IEC/IEEE Standard for Binary Floating-Point
 | Arithmetic.
@@ -1130,6 +1179,59 @@ Bit64s float64_to_int64_round_to_zero(float64 a, float_status_t &status)
     }
     if (aSign) z = -z;
     return z;
+}
+
+/*----------------------------------------------------------------------------
+| Returns the result of converting the double-precision floating-point value
+| `a' to the 64-bit unsigned integer format.  The conversion is
+| performed according to the IEC/IEEE Standard for Binary Floating-Point
+| Arithmetic---which means in particular that the conversion is rounded
+| according to the current rounding mode.  If `a' is a NaN, the largest
+| positive integer is returned.  If the conversion overflows, the
+| largest unsigned integer is returned.  If 'a' is negative, zero is
+| returned.
+*----------------------------------------------------------------------------*/
+ 
+Bit64u float64_to_uint64(float64 a, float_status_t &status)
+{
+    int aSign;
+    Bit16s aExp, shiftCount;
+    Bit64u aSig, aSigExtra;
+ 
+    aSig = extractFloat64Frac(a);
+    aExp = extractFloat64Exp(a);
+    aSign = extractFloat64Sign(a);
+
+    if (get_denormals_are_zeros(status)) {
+        if (aExp == 0) aSig = 0;
+    }
+
+    if (aSign) {
+        if (aExp) {
+            float_raise(status, float_flag_invalid);
+        } else if (aSig) { /* negative denormalized */
+            float_raise(status, float_flag_inexact);
+        }
+        return 0;
+    }
+    if (aExp) {
+        aSig |= BX_CONST64(0x0010000000000000);
+    }
+    shiftCount = 0x433 - aExp;
+    if (shiftCount <= 0) {
+        if (0x43E < aExp) {
+            if ((aSig != BX_CONST64(0x0010000000000000)) || (aExp == 0x7FF)) {
+                float_raise(status, float_flag_invalid);
+            }
+            return BX_CONST64(0xFFFFFFFFFFFFFFFF);
+        }
+        aSigExtra = 0;
+        aSig <<= -shiftCount;
+    } else {
+        shift64ExtraRightJamming(aSig, 0, shiftCount, &aSig, &aSigExtra);
+    }
+
+    return roundAndPackUint64(aSig, aSigExtra, status);
 }
 
 /*----------------------------------------------------------------------------

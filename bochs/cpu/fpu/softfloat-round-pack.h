@@ -63,6 +63,18 @@ Bit32s roundAndPackInt32(int zSign, Bit64u absZ, float_status_t &status);
 
 Bit64s roundAndPackInt64(int zSign, Bit64u absZ0, Bit64u absZ1, float_status_t &status);
 
+/*----------------------------------------------------------------------------
+| Takes the 128-bit fixed-point value formed by concatenating `absZ0' and
+| `absZ1', with binary point between bits 63 and 64 (between the input words),
+| and returns the properly rounded 64-bit unsigned integer corresponding to the
+| input.  Ordinarily, the fixed-point input is simply rounded to an integer,
+| with the inexact exception raised if the input cannot be represented exactly
+| as an integer.  However, if the fixed-point input is too large, the invalid
+| exception is raised and the largest unsigned integer is returned.
+*----------------------------------------------------------------------------*/
+
+Bit64u roundAndPackUint64(Bit64u absZ0, Bit64u absZ1, float_status_t &status);
+
 #ifdef FLOAT16
 
 /*----------------------------------------------------------------------------
