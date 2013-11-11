@@ -41,7 +41,7 @@ void bx_instr_cnear_branch_not_taken(unsigned cpu, bx_address branch_eip) {}
 void bx_instr_ucnear_branch(unsigned cpu, unsigned what, bx_address branch_eip, bx_address new_eip) {}
 void bx_instr_far_branch(unsigned cpu, unsigned what, Bit16u new_cs, bx_address new_eip) {}
 
-void bx_instr_opcode(unsigned cpu, const Bit8u *opcode, unsigned len, bx_bool is32, bx_bool is64) {}
+void bx_instr_opcode(unsigned cpu, bxInstruction_c *i, const Bit8u *opcode, unsigned len, bx_bool is32, bx_bool is64) {}
 
 void bx_instr_interrupt(unsigned cpu, unsigned vector) {}
 void bx_instr_exception(unsigned cpu, unsigned vector, unsigned error_code) {}
