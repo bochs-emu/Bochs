@@ -4270,9 +4270,10 @@ are in the usual "property=value" format.
    <listitem><para>
    midi: The filename is where the midi data is sent to. This
    can be a device or just a file if you want to record the midi data.
-   On a Windows host this parameter is ignored when using output to the sound
-   device. On a Linux host and with the ALSA driver selected the default sequencer
-   device will be used with the given client and port parameters.
+   On a Windows host this parameter specifies the ID of the MIDI device
+   to use. If not specified, the default MIDI mapper is used. On a Linux
+   host and with the ALSA driver selected the default sequencer device
+   will be used with the given client and port parameters.
    </para></listitem>
 
    <listitem><para>

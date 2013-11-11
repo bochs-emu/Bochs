@@ -114,11 +114,18 @@ int bx_sound_windows_c::midiready()
 
 int bx_sound_windows_c::openmidioutput(const char *mididev)
 {
-  // could make the output device selectable,
-  // but currently only the midi mapper is supported
-  UNUSED(mididev);
+  UINT deviceid;
 
-  UINT deviceid = (UINT) MIDIMAPPER;
+  if (strlen(mididev) == 0) {
+    deviceid = (UINT) MIDIMAPPER;
+  } else {
+    deviceid = atoi(mididev);
+    if (((deviceid < 0) || (deviceid >= midiOutGetNumDevs())) &&
+        (deviceid != (UINT) MIDIMAPPER)) {
+      BX_ERROR(("MIDI device ID out of range - using default MIDI mapper"));
+      deviceid = (UINT) MIDIMAPPER;
+    }
+  }
 
   MidiOpen = 0;
 
