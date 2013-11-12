@@ -261,9 +261,9 @@ sound
     mode
   sb16
     enabled
-    midifile
-    wavefile
-    logfile
+    midi
+    wave
+    log
     midimode
     wavemode
     loglevel

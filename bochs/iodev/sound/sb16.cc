@@ -3075,10 +3075,10 @@ void bx_sb16_c::writemidicommand(int command, int length, Bit8u data[])
     return;
   } else if ((BX_SB16_THIS midimode == 2) ||
              (BX_SB16_THIS midimode == 3)) {
-    MIDIDATA = fopen(SIM->get_param_string("midifile", base)->getptr(),"wb");
+    MIDIDATA = fopen(SIM->get_param_string("midi", base)->getptr(),"wb");
     if (MIDIDATA == NULL) {
       writelog (MIDILOG(2), "Error opening file %s. Midimode disabled.",
-        SIM->get_param_string("midifile", base)->getptr());
+        SIM->get_param_string("midi", base)->getptr());
       BX_SB16_THIS midimode = 0;
     } else if (BX_SB16_THIS midimode == 2) {
       initmidifile();
