@@ -3075,13 +3075,15 @@ void bx_sb16_c::writemidicommand(int command, int length, Bit8u data[])
     return;
   } else if ((BX_SB16_THIS midimode == 2) ||
              (BX_SB16_THIS midimode == 3)) {
-    MIDIDATA = fopen(SIM->get_param_string("midi", base)->getptr(),"wb");
     if (MIDIDATA == NULL) {
-      writelog (MIDILOG(2), "Error opening file %s. Midimode disabled.",
-        SIM->get_param_string("midi", base)->getptr());
-      BX_SB16_THIS midimode = 0;
-    } else if (BX_SB16_THIS midimode == 2) {
-      initmidifile();
+      MIDIDATA = fopen(SIM->get_param_string("midi", base)->getptr(),"wb");
+      if (MIDIDATA == NULL) {
+        writelog (MIDILOG(2), "Error opening file %s. Midimode disabled.",
+          SIM->get_param_string("midi", base)->getptr());
+        BX_SB16_THIS midimode = 0;
+      } else if (BX_SB16_THIS midimode == 2) {
+        initmidifile();
+      }
     }
   }
 
@@ -3272,8 +3274,8 @@ void bx_sb16_c::finishmidifile()
     Bit8u delta, statusbyte, metaevent, length;
   } metatrackend = { 0, 0xff, 0x2f, 0 };
 
-     // Meta event track end (0xff 0x2f 0x00) plus leading delta time
-  fwrite(&metatrackend, 1, sizeof metatrackend, MIDIDATA);
+   // Meta event track end (0xff 0x2f 0x00) plus leading delta time
+  fwrite(&metatrackend, 1, sizeof(metatrackend), MIDIDATA);
 
   Bit32u tracklen = ftell(MIDIDATA);
   if (tracklen < 0)
@@ -3284,9 +3286,7 @@ void bx_sb16_c::finishmidifile()
   fseek(MIDIDATA, 22 - 4, SEEK_SET);
   // value has to be in big endian
 #ifdef BX_LITTLE_ENDIAN
-  tracklen = (tracklen << 24) | (tracklen >> 24) |
-       ((tracklen & 0x00ff0000) >> 8) |
-       ((tracklen & 0x0000ff00) << 8);
+  tracklen = bx_bswap32(tracklen);
 #endif
   fwrite(&tracklen, 4, 1, MIDIDATA);
 }
