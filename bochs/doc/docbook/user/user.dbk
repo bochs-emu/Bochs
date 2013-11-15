@@ -3005,13 +3005,13 @@ machines.  See the $(sharedir) variable in the Makefile for the exact
 value.  $BXSHARE is used in the config files of the Bochs disk images to
 locate the directory where the BIOS images and keymaps can be found.
 If $BXSHARE is not defined, Bochs will supply the default value.
-Also, $LTDL_LIBRARY_PATH points to a list of directories (separated by colons,
-if more than one) to search in for Bochs plugins.  A compile-time default is
-provided if this variable is not defined by the user.  On Win32 and MacOSX, the
-default for the share directory is determined by a platform-specific specific
-algorithm. On Win32, we use the registry to see what directory Bochs and its
-support files were installed in. On MacOSX, the share directory is the directory
-where the application is located.
+Also, $LTDL_LIBRARY_PATH points to a list of directories to search in for Bochs
+plugins. The paths are separated by colons (on Windows: semicolons).
+A compile-time default is provided if this variable is not defined by the user.
+On Win32 and MacOSX, the default for the share directory is determined by a
+platform-specific specific algorithm. On Win32, we use the registry to see what
+directory Bochs and its support files were installed in. On MacOSX, the share
+directory is the directory where the application is located.
 </para>
 
 <para>

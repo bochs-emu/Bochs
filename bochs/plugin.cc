@@ -367,6 +367,9 @@ void plugin_fini_all (void)
 void plugin_load(char *name, char *args, plugintype_t type)
 {
   plugin_t *plugin, *temp;
+#if defined(_MSC_VER)
+  char dll_path[MAX_PATH];
+#endif
 
   if (plugins != NULL) {
     temp = plugins;
@@ -402,9 +405,15 @@ void plugin_load(char *name, char *args, plugintype_t type)
   current_plugin_context = plugin;
 #if defined(_MSC_VER)
   plugin->handle = LoadLibrary(plugin_filename);
+  if (!plugin->handle) {
+    if (GetEnvironmentVariable("LTDL_LIBRARY_PATH", dll_path, MAX_PATH)) {
+      strcat(dll_path, "\\");
+      strcat(dll_path, plugin_filename);
+      plugin->handle = LoadLibrary(dll_path);
+    }
+  }
   BX_INFO(("DLL handle is %p", plugin->handle));
-  if (!plugin->handle)
-  {
+  if (!plugin->handle) {
     current_plugin_context = NULL;
     BX_PANIC(("LoadLibrary failed for module '%s': error=%d", name, GetLastError()));
     free(plugin);
