@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2011  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -368,7 +368,7 @@ void plugin_load(char *name, char *args, plugintype_t type)
 {
   plugin_t *plugin, *temp;
 #if defined(_MSC_VER)
-  char dll_path[MAX_PATH];
+  char dll_path_list[MAX_PATH];
 #endif
 
   if (plugins != NULL) {
@@ -383,9 +383,8 @@ void plugin_load(char *name, char *args, plugintype_t type)
     }
   }
 
-  plugin = (plugin_t *)malloc (sizeof(plugin_t));
-  if (!plugin)
-  {
+  plugin = (plugin_t *)malloc(sizeof(plugin_t));
+  if (!plugin) {
     BX_PANIC(("malloc plugin_t failed"));
   }
 
@@ -394,9 +393,9 @@ void plugin_load(char *name, char *args, plugintype_t type)
   plugin->args = args;
   plugin->initialized = 0;
 
-  char plugin_filename[BX_PATHNAME_LEN], buf[BX_PATHNAME_LEN];
-  sprintf(buf, PLUGIN_FILENAME_FORMAT, name);
-  sprintf(plugin_filename, "%s%s", PLUGIN_PATH, buf);
+  char plugin_filename[BX_PATHNAME_LEN], tmpname[BX_PATHNAME_LEN];
+  sprintf(tmpname, PLUGIN_FILENAME_FORMAT, name);
+  sprintf(plugin_filename, "%s%s", PLUGIN_PATH, tmpname);
 
   // Set context so that any devices that the plugin registers will
   // be able to see which plugin created them.  The registration will
@@ -404,12 +403,16 @@ void plugin_load(char *name, char *args, plugintype_t type)
   BX_ASSERT(current_plugin_context == NULL);
   current_plugin_context = plugin;
 #if defined(_MSC_VER)
+  char *ptr;
   plugin->handle = LoadLibrary(plugin_filename);
   if (!plugin->handle) {
-    if (GetEnvironmentVariable("LTDL_LIBRARY_PATH", dll_path, MAX_PATH)) {
-      strcat(dll_path, "\\");
-      strcat(dll_path, plugin_filename);
-      plugin->handle = LoadLibrary(dll_path);
+    if (GetEnvironmentVariable("LTDL_LIBRARY_PATH", dll_path_list, MAX_PATH)) {
+      ptr = strtok(dll_path_list, ";");
+      while ((ptr) && !plugin->handle) {
+        sprintf(plugin_filename, "%s\\%s", ptr, tmpname);
+        plugin->handle = LoadLibrary(plugin_filename);
+        ptr = strtok(NULL, ";");
+      }
     }
   }
   BX_INFO(("DLL handle is %p", plugin->handle));
@@ -420,51 +423,50 @@ void plugin_load(char *name, char *args, plugintype_t type)
     return;
   }
 #else
-  plugin->handle = lt_dlopen (plugin_filename);
+  plugin->handle = lt_dlopen(plugin_filename);
   BX_INFO(("lt_dlhandle is %p", plugin->handle));
-  if (!plugin->handle)
-  {
+  if (!plugin->handle) {
     current_plugin_context = NULL;
-    BX_PANIC(("dlopen failed for module '%s': %s", name, lt_dlerror ()));
+    BX_PANIC(("dlopen failed for module '%s': %s", name, lt_dlerror()));
     free(plugin);
     return;
   }
 #endif
 
   if (type != PLUGTYPE_USER) {
-    sprintf(buf, PLUGIN_INIT_FMT_STRING, name);
+    sprintf(tmpname, PLUGIN_INIT_FMT_STRING, name);
   } else {
-    sprintf(buf, PLUGIN_INIT_FMT_STRING, "user");
+    sprintf(tmpname, PLUGIN_INIT_FMT_STRING, "user");
   }
 #if defined(_MSC_VER)
-  plugin->plugin_init = (plugin_init_t) GetProcAddress(plugin->handle, buf);
+  plugin->plugin_init = (plugin_init_t) GetProcAddress(plugin->handle, tmpname);
   if (plugin->plugin_init == NULL) {
     pluginlog->panic("could not find plugin_init: error=%d", GetLastError());
-    plugin_abort ();
+    plugin_abort();
   }
 #else
-  plugin->plugin_init = (plugin_init_t) lt_dlsym (plugin->handle, buf);
+  plugin->plugin_init = (plugin_init_t) lt_dlsym(plugin->handle, tmpname);
   if (plugin->plugin_init == NULL) {
-    pluginlog->panic("could not find plugin_init: %s", lt_dlerror ());
-    plugin_abort ();
+    pluginlog->panic("could not find plugin_init: %s", lt_dlerror());
+    plugin_abort();
   }
 #endif
 
   if (type != PLUGTYPE_USER) {
-    sprintf(buf, PLUGIN_FINI_FMT_STRING, name);
+    sprintf(tmpname, PLUGIN_FINI_FMT_STRING, name);
   } else {
-    sprintf(buf, PLUGIN_FINI_FMT_STRING, "user");
+    sprintf(tmpname, PLUGIN_FINI_FMT_STRING, "user");
   }
 #if defined(_MSC_VER)
-  plugin->plugin_fini = (plugin_fini_t) GetProcAddress(plugin->handle, buf);
+  plugin->plugin_fini = (plugin_fini_t) GetProcAddress(plugin->handle, tmpname);
   if (plugin->plugin_fini == NULL) {
     pluginlog->panic("could not find plugin_fini: error=%d", GetLastError());
-    plugin_abort ();
+    plugin_abort();
   }
 #else
-  plugin->plugin_fini = (plugin_fini_t) lt_dlsym (plugin->handle, buf);
+  plugin->plugin_fini = (plugin_fini_t) lt_dlsym(plugin->handle, tmpname);
   if (plugin->plugin_fini == NULL) {
-    pluginlog->panic("could not find plugin_fini: %s", lt_dlerror ());
+    pluginlog->panic("could not find plugin_fini: %s", lt_dlerror());
     plugin_abort();
   }
 #endif
@@ -473,13 +475,10 @@ void plugin_load(char *name, char *args, plugintype_t type)
   /* Insert plugin at the _end_ of the plugin linked list. */
   plugin->next = NULL;
 
-  if (!plugins)
-  {
+  if (!plugins) {
     /* Empty list, this become the first entry. */
     plugins = plugin;
-  }
-  else
-  {
+  } else {
    /* Non-empty list.  Add to end. */
    temp = plugins;
 
@@ -539,10 +538,10 @@ plugin_startup(void)
   pluginlog = new logfunctions();
   pluginlog->put("PLGIN");
 #if !defined(_MSC_VER)
-  int status = lt_dlinit ();
+  int status = lt_dlinit();
   if (status != 0) {
-    BX_ERROR (("initialization error in ltdl library (for loading plugins)"));
-    BX_PANIC (("error message was: %s", lt_dlerror ()));
+    BX_ERROR(("initialization error in ltdl library (for loading plugins)"));
+    BX_PANIC(("error message was: %s", lt_dlerror()));
   }
 #endif
 #endif
@@ -557,7 +556,7 @@ void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmod
 {
   device_t *device, **devlist;
 
-  device = (device_t *)malloc (sizeof (device_t));
+  device = (device_t *)malloc(sizeof(device_t));
   if (!device)
   {
     pluginlog->panic("can't allocate device_t");
