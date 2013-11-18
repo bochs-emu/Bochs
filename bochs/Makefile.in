@@ -45,11 +45,11 @@ MAN_PAGE_5_LIST=bochsrc
 INSTALL_LIST_SHARE=bios/BIOS-bochs-* bios/VGABIOS* @INSTALL_LIST_FOR_PLATFORM@
 INSTALL_LIST_DOC=CHANGES COPYING LICENSE README TODO
 INSTALL_LIST_BIN=bochs@EXE@ bximage@EXE@ bximage_old@EXE@ bxcommit@EXE@
-INSTALL_LIST_BIN_OPTIONAL=bochsdbg@EXE@
-INSTALL_LIST_WIN32=$(INSTALL_LIST_SHARE) $(INSTALL_LIST_DOC) $(INSTALL_LIST_BIN) $(INSTALL_LIST_BIN_OPTIONAL) niclist@EXE@
+INSTALL_LIST_BIN_OPTIONAL=bochsdbg@EXE@ @OPTIONAL_TARGET@
+INSTALL_LIST_WIN32=$(INSTALL_LIST_SHARE) $(INSTALL_LIST_DOC) $(INSTALL_LIST_BIN) $(INSTALL_LIST_BIN_OPTIONAL)
 INSTALL_LIST_MACOSX=$(INSTALL_LIST_SHARE) $(INSTALL_LIST_DOC) bochs.scpt
 # for win32 and macosx, these files get renamed to *.txt in install process
-TEXT_FILE_LIST=README CHANGES COPYING TODO VGABIOS-elpin-LICENSE VGABIOS-lgpl-README
+TEXT_FILE_LIST=README CHANGES COPYING LICENSE TODO VGABIOS-elpin-LICENSE VGABIOS-lgpl-README
 CP=cp
 CAT=cat
 RM=rm
@@ -169,7 +169,7 @@ BX_INCLUDES = bochs.h config.h osdep.h
 	$(CC) @DASH@c $(BX_INCDIRS) $(CFLAGS) $(FPU_FLAGS) $< @OFP@$@
 
 
-all: @PRIMARY_TARGET@ @PLUGIN_TARGET@ bximage@EXE@ bximage_old@EXE@ bxcommit@EXE@ @BUILD_DOCBOOK_VAR@
+all: @PRIMARY_TARGET@ @PLUGIN_TARGET@ bximage@EXE@ bximage_old@EXE@ bxcommit@EXE@ @OPTIONAL_TARGET@ @BUILD_DOCBOOK_VAR@
 
 @EXTERNAL_DEPENDENCY@
 
@@ -384,25 +384,26 @@ install: all @INSTALL_TARGET@
 # tools.
 #####################################################################
 
-install_win32: download_dlx @INSTALL_DOCBOOK_VAR@
-	-mkdir -p $(prefix)
-	cp obj-release/*.exe .
-	for i in $(INSTALL_LIST_WIN32); do if test -f $$i; then cp $$i $(prefix); else cp $(srcdir)/$$i $(prefix); fi; done
-	cp $(srcdir)/misc/sb16/sb16ctrl.example $(prefix)/sb16ctrl.txt
-	cp $(srcdir)/misc/sb16/sb16ctrl.exe $(prefix)
-	#cat $(srcdir)/build/win32/DOC-win32.htm | $(SED) -e 's/@VERSION@/$(VERSION)/g' > $(prefix)/DOC-win32.htm
-	cp $(srcdir)/.bochsrc $(prefix)/bochsrc-sample.txt
-	-mkdir $(prefix)/keymaps
-	cp $(srcdir)/gui/keymaps/*.map $(prefix)/keymaps
-	cat $(DLXLINUX_TAR) | (cd $(prefix) && tar xzvf -)
-	echo '..\bochs' > $(prefix)/dlxlinux/start.bat
-	dlxrc=$(prefix)/dlxlinux/bochsrc.txt; mv $$dlxrc $$dlxrc.orig && sed < $$dlxrc.orig 's/\/usr\/local\/bochs\/latest/../' > $$dlxrc && rm -f $$dlxrc.orig
-	mv $(prefix)/README $(prefix)/README.orig
-	cat $(srcdir)/build/win32/README.win32-binary $(prefix)/README.orig > $(prefix)/README
-	rm -f $(prefix)/README.orig
-	for i in $(TEXT_FILE_LIST); do mv $(prefix)/$$i $(prefix)/$$i.txt; done
-	cd $(prefix); $(UNIX2DOS) *.txt */*.txt
-	cd $(prefix); NAME=`pwd|$(SED) 's/.*\///'`; (cd ..; $(ZIP) $$NAME.zip -r $$NAME); ls -l ../$$NAME.zip
+install_win32: download_dlx dl_docbook
+	-mkdir -p $(INSTDIR)
+	-cp -p obj-release/*.exe .
+	for i in $(INSTALL_LIST_WIN32); do if test -f $$i; then cp -p $$i $(INSTDIR); else cp -p $(srcdir)/$$i $(INSTDIR); fi; done
+	cp $(srcdir)/misc/sb16/sb16ctrl.example $(INSTDIR)/sb16ctrl.txt
+	cp -p $(srcdir)/misc/sb16/sb16ctrl.exe $(INSTDIR)
+	cp $(srcdir)/.bochsrc $(INSTDIR)/bochsrc-sample.txt
+	-mkdir $(INSTDIR)/keymaps
+	cp -p $(srcdir)/gui/keymaps/*.map $(INSTDIR)/keymaps
+	cat $(DLXLINUX_TAR) | (cd $(INSTDIR) && tar xzvf -)
+	echo '..\bochs -q' > $(INSTDIR)/dlxlinux/run.bat
+	dlxrc=$(INSTDIR)/dlxlinux/bochsrc.txt; mv $$dlxrc $$dlxrc.orig && sed < $$dlxrc.orig 's/\/usr\/local\/bochs\/latest/../' > $$dlxrc && rm -f $$dlxrc.orig
+	mv $(INSTDIR)/README $(INSTDIR)/README.orig
+	cat $(srcdir)/build/win32/README.win32-binary $(INSTDIR)/README.orig > $(INSTDIR)/README
+	rm -f $(INSTDIR)/README.orig
+	for i in $(TEXT_FILE_LIST); do mv $(INSTDIR)/$$i $(INSTDIR)/$$i.txt; done
+	cd $(INSTDIR); $(UNIX2DOS) *.txt */*.txt
+	-mkdir -p $(INSTDIR)/docs
+	$(GUNZIP) -c $(srcdir)/doc/docbook/bochsdoc.tar.gz | $(TAR) -xvf - -C $(INSTDIR)/docs
+	cd $(INSTDIR); NAME=`pwd|$(SED) 's/.*\///'`; (cd ..; $(ZIP) $$NAME.zip -r $$NAME); ls -l ../$$NAME.zip
 
 #####################################################################
 # install target for unix
@@ -519,7 +520,7 @@ tar:
 	NAME=`pwd|$(SED) 's/.*\///'`; (cd ..; $(RM) -f $$NAME.zip; tar cf - $$NAME | $(GZIP_BIN) > $$NAME.tar.gz); ls -l ../$$NAME.tar.gz
 
 zip:
-	NAME=`pwd|$(SED) 's/.*\///'`; (cd ..; $(RM) -f $$NAME-msvc-src.zip; $(ZIP) $$NAME-msvc-src.zip -r $$NAME -x \*CVS\* -x \*.cvsignore -x \*.svn\* ); ls -l ../$$NAME-msvc-src.zip
+	NAME=`pwd|$(SED) 's/.*\///'`; (cd ..; $(RM) -f $$NAME-msvc-src.zip; $(ZIP) $$NAME-msvc-src.zip -r $$NAME -x \*.svn\* ); ls -l ../$$NAME-msvc-src.zip
 
 clean:
 	@RMCOMMAND@ *.o

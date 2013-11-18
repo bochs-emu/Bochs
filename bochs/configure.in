@@ -2425,7 +2425,7 @@ case "$target" in
     BXIMAGE_LINK_OPTS="user32.lib"
     # also compile niclist if networking is on
     if test "$networking" = yes; then
-      PRIMARY_TARGET="$PRIMARY_TARGET niclist.exe"
+      OPTIONAL_TARGET="$OPTIONAL_TARGET niclist.exe"
     fi
     COMMAND_SEPARATOR=""
     CD_UP_ONE="cd .."
@@ -2446,14 +2446,14 @@ case "$target" in
     PRIMARY_TARGET="bochs.exe"
     BXIMAGE_LINK_OPTS="-luser32"
     if test "$networking" = yes; then
-      PRIMARY_TARGET="$PRIMARY_TARGET niclist.exe"
+      OPTIONAL_TARGET="$OPTIONAL_TARGET niclist.exe"
     fi
     AC_DEFINE(BX_HAVE_SELECT, 1)
     ;;
   *-pc-mingw*)
     BXIMAGE_LINK_OPTS="-luser32"
     if test "$networking" = yes; then
-      PRIMARY_TARGET="$PRIMARY_TARGET niclist"
+      OPTIONAL_TARGET="$OPTIONAL_TARGET niclist"
     fi
     AC_DEFINE(BX_HAVE_SELECT, 1)
     ;;
@@ -2855,6 +2855,7 @@ AC_SUBST(LINK)
 AC_SUBST(LINK_CONSOLE)
 AC_SUBST(EXE)
 AC_SUBST(PRIMARY_TARGET)
+AC_SUBST(OPTIONAL_TARGET)
 AC_SUBST(PLUGIN_LIBNAME_TRANSFORMATION)
 AC_SUBST(COMMAND_SEPARATOR)
 AC_SUBST(CD_UP_ONE)

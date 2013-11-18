@@ -2554,13 +2554,14 @@ to build the release binaries.
 </para>
 
 <para>
-The <command>make install</command> for Win32 is presently broken.  In the
-future, a <command>make install</command> that runs in Cygwin may be provided.
+The <command>make install</command> doesn't work with nmake yet. Currently
+it must be run inside of Cygwin or MinGW/MSYS and requires the environment
+variable <emphasis>INSTDIR</emphasis> to be set.
 </para>
 
 </section>  <!-- end of Compiling:win32 -->
 
-<section id="compile-cygwin"><title>Compiling on Win32 with Cygwin</title>
+<section id="compile-cygwin"><title>Compiling on Win32 with Cygwin or MinGW/MSYS</title>
 <para>Cygwin is a free Unix-like environment for Windows written by
 Steve Chamberlain and now maintained by RedHat, Inc.  You can download
 it from <ulink url="http://www.cygwin.com">www.cygwin.com</ulink>.  Because
@@ -2585,6 +2586,17 @@ commands are
 To find out the options which are known to work in Cygwin, open the file
 <filename>.conf.win32-cygwin</filename> in any text editor/viewer and have
 a look at the end of that file.
+</para>
+<para>
+When using gcc 4.7 or newer you need to add the switch <emphasis>-mno-ms-bitfields</emphasis>
+to the CFLAGS, to make sure that hdimage and network structures are packed as
+expected.
+</para>
+<para>
+The command <emphasis>make install</emphasis> installs the Bochs files in the directory
+structure of your build environment. To install Bochs into any desired folder you
+need to use the <emphasis>install_win32</emphasis> target. It requires the environment
+variable <emphasis>INSTDIR</emphasis> to be set.
 </para>
 </section>  <!-- end of cygwin -->
 
