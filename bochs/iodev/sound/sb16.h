@@ -184,6 +184,9 @@ public:
   int get_wavemode() const {return wavemode;}
   // runtimer parameter handler
   static Bit64s sb16_param_handler(bx_param_c *param, int set, Bit64s val);
+  static const char* sb16_param_string_handler(bx_param_string_c *param, int set,
+                                               const char *oldval, const char *val,
+                                               int maxlen);
 
 private:
 
