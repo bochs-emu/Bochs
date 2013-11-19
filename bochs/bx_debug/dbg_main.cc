@@ -1170,11 +1170,19 @@ void bx_dbg_info_registers_command(int which_regs_mask)
     bx_dbg_print_mmx_state();
   }
 
-  if (which_regs_mask & BX_INFO_AVX_REGS) {
-    bx_dbg_print_avx_state(BX_VLMAX-1);
+#if BX_SUPPORT_EVEX
+  if (which_regs_mask & BX_INFO_ZMM_REGS) {
+    bx_dbg_print_avx_state(BX_VL512);
   }
-  else if (which_regs_mask & BX_INFO_SSE_REGS) {
-    bx_dbg_print_sse_state();
+  else
+#endif
+  {
+    if (which_regs_mask & BX_INFO_YMM_REGS) {
+      bx_dbg_print_avx_state(BX_VL256);
+    }
+    else if (which_regs_mask & BX_INFO_SSE_REGS) {
+      bx_dbg_print_sse_state();
+    }
   }
 }
 

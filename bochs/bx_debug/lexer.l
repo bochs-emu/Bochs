@@ -78,8 +78,10 @@ r               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_R); }
 reg|regs        |
 registers       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_REGS); }
 fp|fpu          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FPU); }
-sse|xmm         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SSE); }
-ymm             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_AVX); }
+sse|xmm         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_XMM); }
+ymm             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_YMM); }
+zmm             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ZMM); }
+avx             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_AVX); }
 mmx             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_MMX); }
 cpu             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CPU); }
 idt		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_IDT); }

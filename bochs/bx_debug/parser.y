@@ -55,7 +55,9 @@
 %token <sval> BX_TOKEN_CPU
 %token <sval> BX_TOKEN_FPU
 %token <sval> BX_TOKEN_MMX
-%token <sval> BX_TOKEN_SSE
+%token <sval> BX_TOKEN_XMM
+%token <sval> BX_TOKEN_YMM
+%token <sval> BX_TOKEN_ZMM
 %token <sval> BX_TOKEN_AVX
 %token <sval> BX_TOKEN_IDT
 %token <sval> BX_TOKEN_IVT
@@ -149,8 +151,9 @@ command:
     | regs_command
     | fpu_regs_command
     | mmx_regs_command
-    | sse_regs_command
-    | avx_regs_command
+    | xmm_regs_command
+    | ymm_regs_command
+    | zmm_regs_command
     | segment_regs_command
     | debug_regs_command
     | control_regs_command
@@ -639,6 +642,16 @@ info_command:
         bx_dbg_info_device("", "");
         free($1); free($2);
       }
+    | BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_COMMAND '\n'
+      {
+        bx_dbg_info_device($3, "");
+        free($1); free($2);
+      }
+    | BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_COMMAND BX_TOKEN_STRING '\n'
+      {
+        bx_dbg_info_device($3, $4);
+        free($1); free($2);
+      }
     | BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_STRING '\n'
       {
         bx_dbg_info_device($3, "");
@@ -679,18 +692,26 @@ mmx_regs_command:
       }
     ;
 
-sse_regs_command:
-      BX_TOKEN_SSE '\n'
+xmm_regs_command:
+      BX_TOKEN_XMM '\n'
       {
         bx_dbg_info_registers_command(BX_INFO_SSE_REGS);
         free($1);
       }
     ;
 
-avx_regs_command:
-      BX_TOKEN_AVX '\n'
+ymm_regs_command:
+      BX_TOKEN_YMM '\n'
       {
-        bx_dbg_info_registers_command(BX_INFO_AVX_REGS);
+        bx_dbg_info_registers_command(BX_INFO_YMM_REGS);
+        free($1);
+      }
+    ;
+
+zmm_regs_command:
+      BX_TOKEN_ZMM '\n'
+      {
+        bx_dbg_info_registers_command(BX_INFO_ZMM_REGS);
         free($1);
       }
     ;
@@ -1044,14 +1065,19 @@ help_command:
          dbg_printf("mmx - print MMX state\n");
          free($1);free($2);
        }
-     | BX_TOKEN_HELP BX_TOKEN_SSE '\n'
+     | BX_TOKEN_HELP BX_TOKEN_XMM '\n'
        {
          dbg_printf("xmm|sse - print SSE state\n");
          free($1);free($2);
        }
-     | BX_TOKEN_HELP BX_TOKEN_AVX '\n'
+     | BX_TOKEN_HELP BX_TOKEN_YMM '\n'
        {
          dbg_printf("ymm - print AVX state\n");
+         free($1);free($2);
+       }
+     | BX_TOKEN_HELP BX_TOKEN_ZMM '\n'
+       {
+         dbg_printf("zmm - print AVX-512 state\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_SEGMENT_REGS '\n'
@@ -1143,6 +1169,7 @@ help_command:
      | BX_TOKEN_HELP BX_TOKEN_INFO '\n'
        {
          dbg_printf("info break - show information about current breakpoint status\n");
+         dbg_printf("info cpu - show dump of all cpu registers\n");
          dbg_printf("info idt - show interrupt descriptor table\n");
          dbg_printf("info ivt - show interrupt vector table\n");
          dbg_printf("info gdt - show global descriptor table\n");
