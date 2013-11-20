@@ -1274,7 +1274,7 @@ BX_CPU_C::fetchDecode32(const Bit8u *iptr, Bit32u fetchModeMask, bxInstruction_c
 
   unsigned remain = remainingInPage; // remain must be at least 1
   bx_bool is_32, lock=0;
-  unsigned b1, b2 = 0, os_32, ia_opcode = BX_IA_ERROR, alias = 0, imm_mode = 0;
+  unsigned b1, b2 = 0, os_32, ia_opcode = BX_IA_ERROR, imm_mode = 0;
   unsigned rm = 0, mod=0, nnn=0, mod_mem = 0;
   unsigned seg = BX_SEG_REG_DS, seg_override = BX_SEG_REG_NULL;
 
@@ -1284,9 +1284,10 @@ BX_CPU_C::fetchDecode32(const Bit8u *iptr, Bit32u fetchModeMask, bxInstruction_c
 #define SSE_PREFIX_F2   3
   unsigned sse_prefix = SSE_PREFIX_NONE;
 
+  bx_bool vex_w = 0;
 #if BX_SUPPORT_AVX
   int had_vex_xop = 0, vvv = -1;
-  bx_bool vex_w = 0, vex_l = 0, use_vvv = 0;
+  bx_bool vex_l = 0, use_vvv = 0;
 #endif
 
   os_32 = is_32 = fetchModeMask & BX_FETCH_MODE_IS32_MASK;
@@ -1360,7 +1361,7 @@ fetch_b1:
   unsigned index = b1 + (os_32 << 9); // *512
 
   const BxOpcodeInfo_t *OpcodeInfoPtr = &(BxOpcodeInfo32[index]);
-  unsigned attr = OpcodeInfoPtr->Attr;
+  Bit16u attr = OpcodeInfoPtr->Attr;
 
   bx_bool has_modrm = 0;
 
@@ -1675,93 +1676,7 @@ fetch_b1:
 
 modrm_done:
 
-    attr |= OpcodeInfoPtr->Attr;
-
-    while(attr & BxGroupX) {
-      Bit32u group = attr & BxGroupX;
-      attr &= ~BxGroupX;
-
-      // ignore 0x66 SSE prefix is required
-      if (group == BxPrefixSSEF2F3) {
-        if (sse_prefix == SSE_PREFIX_66) sse_prefix = SSE_PREFIX_NONE;
-        group = BxPrefixSSE;
-      }
-
-      if (group < BxPrefixSSE) {
-        /* For opcodes with only one allowed SSE prefix */
-        if (sse_prefix != (group >> 4)) goto decode_done;
-        break;
-      }
-
-      switch(group) {
-        case BxGroupN:
-          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn]);
-          break;
-        case BxSplitGroupN:
-          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn + (mod_mem << 3)]);
-          break;
-#if BX_SUPPORT_AVX
-        case BxSplitVexW64: // VexW is ignored in 32-bit mode
-          BX_ASSERT(had_vex_xop);
-          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[0]);
-          break;
-        case BxSplitVexW:   // VexW is a real opcode extension
-          BX_ASSERT(had_vex_xop);
-          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[vex_w]);
-          break;
-        case BxSplitMod11B:
-          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[mod_mem]);
-          break;
-#endif
-        case BxOSizeGrp:
-          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[os_32]);
-          break;
-        case BxPrefixSSE:
-          /* For SSE opcodes look into another 3-entry table
-             with the opcode prefixes (NONE, 0x66, 0xF3, 0xF2) */
-          if (sse_prefix) {
-            OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix-1]);
-            break;
-          }
-          continue;
-        case BxPrefixSSE4:
-          /* For SSE opcodes look into another 4-entry table
-             with the opcode prefixes (NONE, 0x66, 0xF3, 0xF2) */
-          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix]);
-          break;
-        case BxPrefixSSE2:
-          /* For SSE opcodes look into another 2-entry table
-             with the opcode prefixes (NONE, 0x66), 0xF2 and 0xF3 not allowed */
-          if (sse_prefix > SSE_PREFIX_66) goto decode_done;
-          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix]);
-          break;
-        case BxFPEscape:
-          if (mod_mem)
-            OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn]);
-          else
-            OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[(b2 & 0x3f) + 8]);
-          break;
-        default:
-          BX_PANIC(("fetchdecode32: Unknown opcode group %d", group));
-      }
-
-      /* get additional attributes from group table */
-      attr |= OpcodeInfoPtr->Attr;
-    }
-
-    if (attr & BxAliasSSE) {
-      // SSE alias always comes alone
-      alias = sse_prefix;
-    }
-#if BX_SUPPORT_AVX
-    else if (attr & BxAliasVexW) {
-      // VexW alias could come with BxPrefixSSE
-      BX_ASSERT(had_vex_xop);
-      alias = vex_w;
-    }
-#endif
-
-    ia_opcode = OpcodeInfoPtr->IA + alias;
+    ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, b2, sse_prefix, os_32, vex_w);
   }
   else {
     // Opcode does not require a MODRM byte.
@@ -2044,6 +1959,109 @@ decode_done:
      return(1);
 
   return(0);
+}
+
+Bit16u BX_CPU_C::WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &attr, unsigned modrm, unsigned sse_prefix, unsigned osize, bx_bool vex_w)
+{
+  unsigned alias = 0;
+
+  // Parse mod-nnn-rm and related bytes
+  unsigned mod_mem = (modrm & 0xc0) != 0xc0;
+  unsigned nnn = (modrm >> 3) & 0x7;
+//rm  = modrm & 0x7;
+
+  attr = OpcodeInfoPtr->Attr;
+
+  while(attr & BxGroupX) {
+    Bit32u group = attr & BxGroupX;
+    attr &= ~BxGroupX;
+
+    // ignore 0x66 SSE prefix is required
+    if (group == BxPrefixSSEF2F3) {
+      if (sse_prefix == SSE_PREFIX_66) sse_prefix = SSE_PREFIX_NONE;
+      group = BxPrefixSSE;
+    }
+
+    if (group < BxPrefixSSE) {
+      /* For opcodes with only one allowed SSE prefix */
+      if (sse_prefix != (group >> 4)) {
+        attr = 0;
+        return BX_IA_ERROR;
+      }
+      break;
+    }
+
+    switch(group) {
+      case BxGroupN:
+        OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn]);
+        break;
+      case BxSplitGroupN:
+        OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn + (mod_mem << 3)]);
+        break;
+#if BX_SUPPORT_AVX
+      case BxSplitVexW:
+        OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[vex_w]);
+        break;
+      case BxSplitVexW64: // VexW64 is ignored in 32-bit mode
+        OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[long64_mode() ? vex_w : 0]);
+        break;
+      case BxSplitMod11B:
+        OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[mod_mem]);
+        break;
+#endif
+      case BxOSizeGrp:
+        OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[osize]);
+        break;
+      case BxPrefixSSE:
+        /* For SSE opcodes look into another 3-entry table
+                   with the opcode prefixes (NONE, 0x66, 0xF3, 0xF2) */
+        if (sse_prefix) {
+          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix-1]);
+          break;
+        }
+        continue;
+      case BxPrefixSSE4:
+        /* For SSE opcodes look into another 4-entry table
+           with the opcode prefixes (NONE, 0x66, 0xF3, 0xF2) */
+        OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix]);
+        break;
+      case BxPrefixSSE2:
+        /* For SSE opcodes look into another 2-entry table
+           with the opcode prefixes (NONE, 0x66), 0xF2 and 0xF3 not allowed */
+        if (sse_prefix > SSE_PREFIX_66) {
+          attr = 0;
+          return BX_IA_ERROR;
+        }
+        OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix]);
+        break;
+      case BxFPEscape:
+        if (mod_mem)
+          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn]);
+        else
+          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[(modrm & 0x3f) + 8]);
+        break;
+      default:
+        BX_PANIC(("fetchdecode64: Unknown opcode group %d", group));
+    }
+
+    /* get additional attributes from group table */
+    attr |= OpcodeInfoPtr->Attr;
+  }
+
+  if (attr & BxAliasSSE) {
+    // SSE alias always comes alone
+    alias = sse_prefix;
+  }
+#if BX_SUPPORT_AVX
+  else if (attr & BxAliasVexW) {
+    // VexW alias could come with BxPrefixSSE
+    BX_ASSERT(had_vex_xop);
+    alias = vex_w;
+  }
+#endif
+
+  Bit16u ia_opcode = OpcodeInfoPtr->IA + alias;
+  return (ia_opcode);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BxError(bxInstruction_c *i)
