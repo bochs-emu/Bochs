@@ -1970,7 +1970,7 @@ Bit16u BX_CPU_C::WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &a
   unsigned nnn = (modrm >> 3) & 0x7;
 //rm  = modrm & 0x7;
 
-  attr = OpcodeInfoPtr->Attr;
+  attr |= OpcodeInfoPtr->Attr;
 
   while(attr & BxGroupX) {
     Bit32u group = attr & BxGroupX;
