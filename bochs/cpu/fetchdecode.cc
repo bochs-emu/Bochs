@@ -2055,7 +2055,6 @@ Bit16u BX_CPU_C::WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &a
 #if BX_SUPPORT_AVX
   else if (attr & BxAliasVexW) {
     // VexW alias could come with BxPrefixSSE
-    BX_ASSERT(had_vex_xop);
     alias = vex_w;
   }
 #endif
