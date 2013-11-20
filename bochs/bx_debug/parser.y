@@ -641,12 +641,12 @@ info_command:
         bx_dbg_info_device("", "");
         free($1); free($2);
       }
-    | BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_COMMAND '\n'
+    | BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_GENERIC '\n'
       {
         bx_dbg_info_device($3, "");
         free($1); free($2);
       }
-    | BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_COMMAND BX_TOKEN_STRING '\n'
+    | BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_GENERIC BX_TOKEN_STRING '\n'
       {
         bx_dbg_info_device($3, $4);
         free($1); free($2);
