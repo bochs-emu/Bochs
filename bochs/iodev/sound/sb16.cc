@@ -94,10 +94,6 @@ void sb16_init_options(void)
   midimode->set_options(midimode->USE_SPIN_CONTROL);
   wavemode->set_options(wavemode->USE_SPIN_CONTROL);
   loglevel->set_options(loglevel->USE_SPIN_CONTROL);
-  midifile->set_group("SB16");
-  wavefile->set_group("SB16");
-  loglevel->set_group("SB16");
-  dmatimer->set_group("SB16");
   bx_list_c *deplist = new bx_list_c(NULL);
   deplist->add(midimode);
   deplist->add(wavemode);
@@ -237,14 +233,7 @@ bx_sb16_c::~bx_sb16_c(void)
 
   SIM->get_bochs_root()->remove("sb16");
   bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
-  if ((BX_SB16_THIS wavemode == 2) || (BX_SB16_THIS wavemode == 3)) {
-    misc_rt->remove("wave");
-  }
-  if ((BX_SB16_THIS midimode == 2) || (BX_SB16_THIS midimode == 3)) {
-    misc_rt->remove("midi");
-  }
-  misc_rt->remove("dmatimer");
-  misc_rt->remove("loglevel");
+  misc_rt->remove("sb16");
   BX_DEBUG(("Exit"));
 }
 
@@ -409,18 +398,21 @@ void bx_sb16_c::init(void)
 
   // init runtime parameters
   bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
+  bx_list_c *menu = new bx_list_c(misc_rt, "sb16", "SB16 Runtime Configuration");
+  menu->set_options(menu->SHOW_PARENT | menu->USE_BOX_TITLE);
+  menu->set_runtime_param(1);
   if ((BX_SB16_THIS wavemode == 2) || (BX_SB16_THIS wavemode == 3)) {
-    misc_rt->add(SIM->get_param("wave", base));
+    menu->add(SIM->get_param("wave", base));
     SIM->get_param_string("wave", base)->set_handler(sb16_param_string_handler);
     SIM->get_param_string("wave", base)->set_runtime_param(1);
   }
-  if ((BX_SB16_THIS midimode == 2) || (BX_SB16_THIS midimode == 3)) {
-    misc_rt->add(SIM->get_param("midi", base));
+  if (BX_SB16_THIS midimode != 0) {
+    menu->add(SIM->get_param("midi", base));
     SIM->get_param_string("midi", base)->set_handler(sb16_param_string_handler);
     SIM->get_param_string("midi", base)->set_runtime_param(1);
   }
-  misc_rt->add(SIM->get_param("dmatimer", base));
-  misc_rt->add(SIM->get_param("loglevel", base));
+  menu->add(SIM->get_param("dmatimer", base));
+  menu->add(SIM->get_param("loglevel", base));
   SIM->get_param_num("dmatimer", base)->set_handler(sb16_param_handler);
   SIM->get_param_num("dmatimer", base)->set_runtime_param(1);
   SIM->get_param_num("loglevel", base)->set_handler(sb16_param_handler);
@@ -2271,7 +2263,10 @@ void bx_sb16_c::emul_write(Bit32u value)
              if (BX_SB16_THIS midimode == 2) finishmidifile();
              fclose(MIDIDATA);
          } else if (BX_SB16_THIS midimode == 1) {
-           BX_SB16_OUTPUT->closemidioutput();
+           if (MPU.outputinit != 0) {
+             BX_SB16_OUTPUT->closemidioutput();
+             MPU.outputinit = 0;
+           }
          }
          BX_SB16_THIS midimode = 0;
 
@@ -3844,11 +3839,18 @@ const char* bx_sb16_c::sb16_param_string_handler(bx_param_string_c *param, int s
       }
       // dsp_dma() re-opens the output file on demand
     } else if (!strcmp(pname, "midi")) {
-      if (MIDIDATA != NULL) {
-        if (BX_SB16_THIS midimode == 2)
-          finishmidifile();
-        fclose(MIDIDATA);
-        MIDIDATA = NULL;
+      if (BX_SB16_THIS midimode == 1) {
+        if (MPU.outputinit != 0) {
+          BX_SB16_OUTPUT->closemidioutput();
+          MPU.outputinit = 0;
+        }
+      } else {
+        if (MIDIDATA != NULL) {
+          if (BX_SB16_THIS midimode == 2)
+            finishmidifile();
+          fclose(MIDIDATA);
+          MIDIDATA = NULL;
+        }
       }
       // writemidicommand() re-opens the output file on demand
     } else {
