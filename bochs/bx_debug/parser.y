@@ -117,7 +117,6 @@
 %token <sval> BX_TOKEN_HELP
 %token <sval> BX_TOKEN_CALC
 %token <sval> BX_TOKEN_DEVICE
-%token <sval> BX_TOKEN_COMMAND
 %token <sval> BX_TOKEN_GENERIC
 %token BX_TOKEN_RSHIFT
 %token BX_TOKEN_LSHIFT
@@ -247,7 +246,7 @@ vmexitbp_command:
     ;
     
 show_command:
-      BX_TOKEN_SHOW BX_TOKEN_COMMAND '\n'
+      BX_TOKEN_SHOW BX_TOKEN_GENERIC '\n'
       {
           bx_dbg_show_command($2);
           free($1); free($2);
@@ -897,7 +896,7 @@ instrument_command:
         bx_dbg_instrument_command($2);
         free($1); free($2);
       }
-    | BX_TOKEN_INSTRUMENT BX_TOKEN_COMMAND '\n'
+    | BX_TOKEN_INSTRUMENT BX_TOKEN_GENERIC '\n'
       {
         bx_dbg_instrument_command($2);
         free($1); free($2);
