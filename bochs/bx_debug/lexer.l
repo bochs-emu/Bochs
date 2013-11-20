@@ -139,7 +139,6 @@ global          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GLOBAL); }
 where           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_WHERE); }
 print-string    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PRINT_STRING); }
 page            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PAGE); }
-vga             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_VGA); }
 device          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DEVICE); }
 all             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ALL); }
 al              { bxlval.uval = BX_DBG_REG8L_AL; return(BX_TOKEN_8BL_REG);}

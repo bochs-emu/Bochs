@@ -116,7 +116,6 @@
 %token <sval> BX_TOKEN_PAGE
 %token <sval> BX_TOKEN_HELP
 %token <sval> BX_TOKEN_CALC
-%token <sval> BX_TOKEN_VGA
 %token <sval> BX_TOKEN_DEVICE
 %token <sval> BX_TOKEN_COMMAND
 %token <sval> BX_TOKEN_GENERIC

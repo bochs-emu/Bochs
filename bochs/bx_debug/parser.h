@@ -140,18 +140,17 @@ extern int bxdebug;
      BX_TOKEN_PAGE = 349,
      BX_TOKEN_HELP = 350,
      BX_TOKEN_CALC = 351,
-     BX_TOKEN_VGA = 352,
-     BX_TOKEN_DEVICE = 353,
-     BX_TOKEN_COMMAND = 354,
-     BX_TOKEN_GENERIC = 355,
-     BX_TOKEN_RSHIFT = 356,
-     BX_TOKEN_LSHIFT = 357,
-     BX_TOKEN_REG_IP = 358,
-     BX_TOKEN_REG_EIP = 359,
-     BX_TOKEN_REG_RIP = 360,
-     INDIRECT = 361,
-     NEG = 362,
-     NOT = 363
+     BX_TOKEN_DEVICE = 352,
+     BX_TOKEN_COMMAND = 353,
+     BX_TOKEN_GENERIC = 354,
+     BX_TOKEN_RSHIFT = 355,
+     BX_TOKEN_LSHIFT = 356,
+     BX_TOKEN_REG_IP = 357,
+     BX_TOKEN_REG_EIP = 358,
+     BX_TOKEN_REG_RIP = 359,
+     INDIRECT = 360,
+     NEG = 361,
+     NOT = 362
    };
 #endif
 /* Tokens.  */
@@ -249,18 +248,17 @@ extern int bxdebug;
 #define BX_TOKEN_PAGE 349
 #define BX_TOKEN_HELP 350
 #define BX_TOKEN_CALC 351
-#define BX_TOKEN_VGA 352
-#define BX_TOKEN_DEVICE 353
-#define BX_TOKEN_COMMAND 354
-#define BX_TOKEN_GENERIC 355
-#define BX_TOKEN_RSHIFT 356
-#define BX_TOKEN_LSHIFT 357
-#define BX_TOKEN_REG_IP 358
-#define BX_TOKEN_REG_EIP 359
-#define BX_TOKEN_REG_RIP 360
-#define INDIRECT 361
-#define NEG 362
-#define NOT 363
+#define BX_TOKEN_DEVICE 352
+#define BX_TOKEN_COMMAND 353
+#define BX_TOKEN_GENERIC 354
+#define BX_TOKEN_RSHIFT 355
+#define BX_TOKEN_LSHIFT 356
+#define BX_TOKEN_REG_IP 357
+#define BX_TOKEN_REG_EIP 358
+#define BX_TOKEN_REG_RIP 359
+#define INDIRECT 360
+#define NEG 361
+#define NOT 362
 
 
 
@@ -276,7 +274,7 @@ typedef union YYSTYPE
 
 
 /* Line 2053 of yacc.c  */
-#line 280 "y.tab.h"
+#line 278 "y.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
