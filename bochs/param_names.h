@@ -178,8 +178,6 @@
 #define BXPN_SOUND_WAVEIN                "sound.lowlevel.wavein"
 #define BXPN_SOUND_SPEAKER               "sound.speaker"
 #define BXPN_SOUND_SB16                  "sound.sb16"
-#define BXPN_SB16_DMATIMER               "sound.sb16.dmatimer"
-#define BXPN_SB16_LOGLEVEL               "sound.sb16.loglevel"
 #define BXPN_SOUND_ES1370                "sound.es1370"
 #define BXPN_PORT_E9_HACK                "misc.port_e9_hack"
 #define BXPN_GDBSTUB                     "misc.gdbstub"
