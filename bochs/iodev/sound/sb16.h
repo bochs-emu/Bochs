@@ -193,7 +193,7 @@ public:
 private:
 
   int midimode, wavemode, loglevel;
-  bx_bool midi_changed;
+  bx_bool midi_changed, wave_changed;
   Bit32u dmatimer;
   FILE *logfile, *midifile, *wavefile; // the output files or devices
   bx_sound_lowlevel_c *soundmod; // the lowlevel class
@@ -357,11 +357,11 @@ private:
   BX_SB16_SMF void   midiremapprogram(int channel);  // remap program change
   BX_SB16_SMF int    converttodeltatime(Bit32u deltatime, Bit8u value[4]);
   BX_SB16_SMF void   writemidicommand(int command, int length, Bit8u data[]);
-  BX_SB16_SMF void   writedeltatime(Bit32u deltatime);
-						// write in delta time coding
+  BX_SB16_SMF void   writedeltatime(Bit32u deltatime); // write in delta time coding
 
-  BX_SB16_SMF void   initmidifile();            // Write midi file header
-  BX_SB16_SMF void   closemidioutput();         // Close midi file / device
+  BX_SB16_SMF void   initmidifile();            // write midi file header
+  BX_SB16_SMF void   closemidioutput();         // close midi file / device
+  BX_SB16_SMF void   closewaveoutput();         // close wave file
   BX_SB16_SMF void   finishmidifile();          // write track length etc.
   BX_SB16_SMF void   finishvocfile();           // close voc file
 
