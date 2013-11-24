@@ -200,13 +200,13 @@ void MyPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
   needRefresh = false;
 }
 
-void MyPanel::ToggleMouse (bool fromToolbar)
+void MyPanel::ToggleMouse(bool fromToolbar)
 {
   static bool first_enable = true;
   bx_param_bool_c *enable = SIM->get_param_bool(BXPN_MOUSE_ENABLED);
   bool en = ! enable->get();
-  bool is_main_thread = wxThread::IsMain ();
-  bool needmutex = !is_main_thread && SIM->is_sim_thread ();
+  bool is_main_thread = wxThread::IsMain();
+  bool needmutex = !is_main_thread && SIM->is_sim_thread();
   if (needmutex) wxMutexGuiEnter();
   if (fromToolbar && first_enable && en) {
     // only show this help if you click on the toolbar.  If they already
@@ -243,18 +243,22 @@ void MyPanel::ToggleMouse (bool fromToolbar)
 void MyPanel::OnMouse(wxMouseEvent& event)
 {
   long x,y;
-  event.GetPosition (&x, &y);
+
+  if (theFrame->GetSimThread() == NULL)
+    return;
+
+  event.GetPosition(&x, &y);
   IFDBG_MOUSE (
-    if (event.IsButton ()) {
-      wxLogDebug (wxT ("mouse button event at %d,%d", x, y));
-    } else if (event.Entering ()) {
-      wxLogDebug (wxT ("mouse entering at %d,%d", x, y));
-    } else if (event.Leaving ()) {
-      wxLogDebug (wxT ("mouse leaving at %d,%d", x, y));
-    } else if (event.Moving() || event.Dragging ()) {
-      wxLogDebug (wxT ("mouse moved to %d,%d", x, y));
+    if (event.IsButton()) {
+      wxLogDebug(wxT("mouse button event at %d,%d", x, y));
+    } else if (event.Entering()) {
+      wxLogDebug(wxT("mouse entering at %d,%d", x, y));
+    } else if (event.Leaving()) {
+      wxLogDebug(wxT("mouse leaving at %d,%d", x, y));
+    } else if (event.Moving() || event.Dragging()) {
+      wxLogDebug(wxT("mouse moved to %d,%d", x, y));
     } else {
-      wxLogDebug (wxT ("other mouse event at %d,%d", x, y));
+      wxLogDebug(wxT("other mouse event at %d,%d", x, y));
     }
   )
 
@@ -778,6 +782,9 @@ bx_bool MyPanel::fillBxKeyEvent(wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool rele
 {
   Bit32u key = wxev.m_keyCode;
   bx_bool mouse_toggle = 0;
+
+  if (theFrame->GetSimThread() == NULL)
+    return false;
 
   if (key == WXK_CONTROL) {
     mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_CTRL, !release);
@@ -1676,6 +1683,10 @@ bx_wx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 void bx_wx_gui_c::exit(void)
 {
   clear_screen();
+  if (mouse_captured) {
+    thePanel->ToggleMouse(false);
+    mouse_captured = 0;
+  }
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
   wxMutexGuiEnter();
   close_debug_dialog();
