@@ -46,6 +46,7 @@ extern void mxcsr_to_softfloat_status_word(float_status_t &status, bx_mxcsr_t mx
                                                                               \
     float_status_t status;                                                    \
     mxcsr_to_softfloat_status_word(status, MXCSR);                            \
+    softfloat_status_word_rc_override(status, i);                             \
                                                                               \
     for (unsigned n=0; n < len; n++)                                          \
       (func)(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);         \
@@ -78,6 +79,7 @@ AVX2_FMA_PACKED(VFNMSUBPS_VpsHpsWpsR, xmm_fnmsubps)
                                                                               \
     float_status_t status;                                                    \
     mxcsr_to_softfloat_status_word(status, MXCSR);                            \
+    softfloat_status_word_rc_override(status, i);                             \
     op1 = (func)(op1, op2, op3, status);                                      \
     check_exceptionsSSE(status.float_exception_flags);                        \
                                                                               \
@@ -101,6 +103,7 @@ AVX2_FMA_SCALAR_SINGLE(VFNMSUBSS_VpsHssWssR, float32_fnmsub)
                                                                               \
     float_status_t status;                                                    \
     mxcsr_to_softfloat_status_word(status, MXCSR);                            \
+    softfloat_status_word_rc_override(status, i);                             \
     op1 = (func)(op1, op2, op3, status);                                      \
     check_exceptionsSSE(status.float_exception_flags);                        \
                                                                               \

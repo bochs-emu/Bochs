@@ -386,6 +386,8 @@ BX_CPP_INLINE void softfloat_status_word_rc_override(float_status_t &status, bxI
     status.float_exception_masks = float_all_exceptions_mask;
   }
 }
+#else
+  #define softfloat_status_word_rc_override(status, i)
 #endif
 
 /* MXCSR REGISTER */
