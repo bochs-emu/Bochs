@@ -383,7 +383,6 @@ void bx_sb16_c::init(void)
   bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
   bx_list_c *menu = new bx_list_c(misc_rt, "sb16", "SB16 Runtime Options");
   menu->set_options(menu->SHOW_PARENT | menu->USE_BOX_TITLE);
-  menu->set_runtime_param(1);
 
   menu->add(SIM->get_param("wavemode", base));
   menu->add(SIM->get_param("wave", base));
@@ -392,17 +391,11 @@ void bx_sb16_c::init(void)
   menu->add(SIM->get_param("dmatimer", base));
   menu->add(SIM->get_param("loglevel", base));
   SIM->get_param_enum("wavemode", base)->set_handler(sb16_param_handler);
-  SIM->get_param_enum("wavemode", base)->set_runtime_param(1);
   SIM->get_param_string("wave", base)->set_handler(sb16_param_string_handler);
-  SIM->get_param_string("wave", base)->set_runtime_param(1);
   SIM->get_param_num("midimode", base)->set_handler(sb16_param_handler);
-  SIM->get_param_num("midimode", base)->set_runtime_param(1);
   SIM->get_param_string("midi", base)->set_handler(sb16_param_string_handler);
-  SIM->get_param_string("midi", base)->set_runtime_param(1);
   SIM->get_param_num("dmatimer", base)->set_handler(sb16_param_handler);
-  SIM->get_param_num("dmatimer", base)->set_runtime_param(1);
   SIM->get_param_num("loglevel", base)->set_handler(sb16_param_handler);
-  SIM->get_param_num("loglevel", base)->set_runtime_param(1);
   // register handler for correct sb16 parameter handling after runtime config
   SIM->register_runtime_config_handler(this, runtime_config_handler);
   BX_SB16_THIS midi_changed = 0;

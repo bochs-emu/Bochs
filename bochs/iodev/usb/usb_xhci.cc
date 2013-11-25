@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010-2011  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2011-2012  The Bochs Project
+//                2011-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -190,9 +190,8 @@ void bx_usb_xhci_c::init(void)
   BX_XHCI_THIS hub.statusbar_id = bx_gui->register_statusitem("xHCI", 1);
 
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
-  xhci->set_options(xhci->SHOW_PARENT | xhci->USE_BOX_TITLE);
-  xhci->set_runtime_param(1);
-  usb_rt->add(xhci);
+  bx_list_c *xhci_rt = new bx_list_c(usb_rt, "xhci", "xHCI Runtime Options");
+  xhci_rt->set_options(xhci_rt->SHOW_PARENT | xhci_rt->USE_BOX_TITLE);
   for (i=0; i<USB_XHCI_PORTS; i++) {
     // check to see if the speed matches the port given
 //    if (((get_speed(i) <= SPEED_HI)    && (port_speed_allowed[i] != USB2)) ||
@@ -200,12 +199,9 @@ void bx_usb_xhci_c::init(void)
 //        BX_PANIC(("Speed of port given in Bochsrc.txt file doesn't match controllers' port's speed."));
     sprintf(pname, "port%d", i+1);
     port = (bx_list_c*)SIM->get_param(pname, xhci);
-    port->set_runtime_param(1);
+    xhci_rt->add(port);
     device = (bx_param_string_c*)port->get_by_name("device"); 
-    device->set_handler(usb_param_handler); 
-    device->set_runtime_param(1); 
-    options = (bx_param_string_c*)port->get_by_name("options"); 
-    options->set_runtime_param(1); 
+    device->set_handler(usb_param_handler);
     BX_XHCI_THIS hub.usb_port[i].device = NULL;
     BX_XHCI_THIS hub.usb_port[i].portsc.ccs = 0;
     BX_XHCI_THIS hub.usb_port[i].portsc.csc = 0;

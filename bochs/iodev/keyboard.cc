@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -211,9 +211,7 @@ void bx_keyb_c::init(void)
 
   // init runtime parameter
   SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set_handler(kbd_param_handler);
-  SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set_runtime_param(1);
   SIM->get_param_num(BXPN_MOUSE_ENABLED)->set_handler(kbd_param_handler);
-  SIM->get_param_num(BXPN_MOUSE_ENABLED)->set_runtime_param(1);
 }
 
 void bx_keyb_c::reset(unsigned type)

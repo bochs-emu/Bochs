@@ -1023,6 +1023,9 @@ void bx_list_c::add(bx_param_c *param)
       temp = temp->next;
     temp->next = item;
   }
+  if (runtime_param) {
+    param->set_runtime_param(1);
+  }
   size++;
 }
 
@@ -1098,6 +1101,18 @@ void bx_list_c::remove(const char *name)
       break;
     } else {
       prev = item;
+    }
+  }
+}
+
+void bx_list_c::set_runtime_param(int val)
+{
+  bx_listitem_t *item;
+
+  runtime_param = val;
+  if (runtime_param) {
+    for (item = list; item; item = item->next) {
+      item->param->set_runtime_param(1);
     }
   }
 }

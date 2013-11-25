@@ -343,13 +343,12 @@ void bx_hard_drive_c::init(void)
         }
       } else if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_CDROM) {
         bx_list_c *cdrom_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_CDROM);
-        cdrom_rt->add(base);
-        base->set_options(base->SERIES_ASK | base->USE_BOX_TITLE);
-        base->set_runtime_param(1);
+        bx_list_c *menu = new bx_list_c(cdrom_rt, base->get_name(), base->get_title());
+        menu->set_options(menu->SERIES_ASK | menu->USE_BOX_TITLE);
+        menu->add(SIM->get_param("path", base));
+        menu->add(SIM->get_param("status", base));
         SIM->get_param_string("path", base)->set_handler(cdrom_path_handler);
-        SIM->get_param("path", base)->set_runtime_param(1);
         SIM->get_param_enum("status", base)->set_handler(cdrom_status_handler);
-        SIM->get_param("status", base)->set_runtime_param(1);
         BX_DEBUG(("CDROM on target %d/%d",channel,device));
         BX_HD_THIS channels[channel].drives[device].device_type = IDE_CDROM;
         BX_HD_THIS channels[channel].drives[device].cdrom.locked = 0;

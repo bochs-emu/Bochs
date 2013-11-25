@@ -999,12 +999,11 @@ void bx_init_options()
   deplist->add(keymap);
   use_kbd_mapping->set_dependent_list(deplist);
 
-  bx_param_string_c *user_shortcut = new bx_param_string_c(keyboard,
+  new bx_param_string_c(keyboard,
       "user_shortcut",
       "Userbutton shortcut",
       "Defines the keyboard shortcut to be sent when you press the 'user' button in the headerbar.",
       "none", 20);
-  user_shortcut->set_runtime_param(1);
 
   static const char *mouse_type_list[] = {
     "none",
@@ -1599,11 +1598,14 @@ void bx_init_options()
   // runtime options
   menu = new bx_list_c(special_menus, "runtime", "Runtime options");
   bx_list_c *cdrom = new bx_list_c(menu, "cdrom", "CD-ROM options");
+  cdrom->set_runtime_param(1);
   cdrom->set_options(cdrom->SHOW_PARENT);
   usb = new bx_list_c(menu, "usb", "USB options");
+  usb->set_runtime_param(1);
   usb->set_options(usb->SHOW_PARENT | usb->USE_TAB_WINDOW);
   // misc runtime options
   misc = new bx_list_c(menu, "misc", "Misc options");
+  misc->set_runtime_param(1);
   misc->add(SIM->get_param(BXPN_VGA_UPDATE_FREQUENCY));
   misc->add(SIM->get_param(BXPN_MOUSE_ENABLED));
   misc->add(SIM->get_param(BXPN_KBD_PASTE_DELAY));

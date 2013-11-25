@@ -5,7 +5,7 @@
 // USB hub emulation support (ported from QEMU)
 //
 // Copyright (C) 2005       Fabrice Bellard
-// Copyright (C) 2009-2012  The Bochs Project
+// Copyright (C) 2009-2013  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -172,7 +172,7 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
   char pname[10];
   char label[32];
   bx_list_c *port;
-  bx_param_string_c *device, *options;
+  bx_param_string_c *device;
 
   d.type = USB_DEV_TYPE_HUB;
   d.maxspeed = USB_SPEED_FULL;
@@ -195,19 +195,15 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
   sprintf(label, "External Hub #%d Configuration", hub_count);
   hub.config = new bx_list_c(usb_rt, pname, label);
   hub.config->set_options(bx_list_c::SHOW_PARENT);
-  hub.config->set_runtime_param(1);
   hub.config->set_device_param(this);
   for(i = 0; i < hub.n_ports; i++) {
     sprintf(pname, "port%d", i+1);
     sprintf(label, "Port #%d Configuration", i+1);
     port = new bx_list_c(hub.config, pname, label);
     port->set_options(port->SERIES_ASK | port->USE_BOX_TITLE);
-    port->set_runtime_param(1);
     device = new bx_param_string_c(port, "device", "Device", "", "", BX_PATHNAME_LEN);
     device->set_handler(hub_param_handler);
-    device->set_runtime_param(1);
-    options = new bx_param_string_c(port, "options", "Options", "", "", BX_PATHNAME_LEN);
-    options->set_runtime_param(1);
+    new bx_param_string_c(port, "options", "Options", "", "", BX_PATHNAME_LEN);
   }
 #if BX_WITH_WX
   bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");

@@ -171,12 +171,10 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
     sprintf(label, "USB CD-ROM #%d Configuration", usb_cdrom_count);
     s.config = new bx_list_c(usb_rt, pname, label);
     s.config->set_options(bx_list_c::SERIES_ASK | bx_list_c::USE_BOX_TITLE);
-    s.config->set_runtime_param(1);
     s.config->set_device_param(this);
     path = new bx_param_string_c(s.config, "path", "Path", "", "", BX_PATHNAME_LEN);
     path->set(s.fname);
     path->set_handler(cd_param_string_handler);
-    path->set_runtime_param(1);
     status = new bx_param_enum_c(s.config,
       "status",
       "Status",
@@ -185,7 +183,6 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
       BX_EJECTED,
       BX_EJECTED);
     status->set_handler(cd_param_handler);
-    status->set_runtime_param(1);
     status->set_ask_format("Is the device inserted or ejected? [%s] ");
 #if BX_WITH_WX
     bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");

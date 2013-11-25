@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009       Benjamin D Lunt (fys at frontiernet net)
-//                2009-2012  The Bochs Project
+//                2009-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -147,7 +147,7 @@ void bx_usb_uhci_c::init(void)
   unsigned i;
   char pname[6];
   bx_list_c *uhci, *port;
-  bx_param_string_c *device, *options;
+  bx_param_string_c *device;
 
   // Read in values from config interface
   uhci = (bx_list_c*) SIM->get_param(BXPN_USB_UHCI);
@@ -184,18 +184,14 @@ void bx_usb_uhci_c::init(void)
   BX_UHCI_THIS hub.statusbar_id = bx_gui->register_statusitem("UHCI", 1);
 
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
-  uhci->set_options(uhci->SHOW_PARENT);
-  uhci->set_runtime_param(1);
-  usb_rt->add(uhci);
+  bx_list_c *uhci_rt = new bx_list_c(usb_rt, "uhci", "UHCI Runtime Options");
+  uhci_rt->set_options(uhci_rt->SHOW_PARENT);
   for (i=0; i<BX_N_USB_UHCI_PORTS; i++) {
     sprintf(pname, "port%d", i+1);
     port = (bx_list_c*)SIM->get_param(pname, uhci);
-    port->set_runtime_param(1);
+    uhci_rt->add(port);
     device = (bx_param_string_c*)port->get_by_name("device");
     device->set_handler(usb_param_handler);
-    device->set_runtime_param(1);
-    options = (bx_param_string_c*)port->get_by_name("options");
-    options->set_runtime_param(1);
     BX_UHCI_THIS hub.usb_port[i].device = NULL;
   }
 

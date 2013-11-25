@@ -537,7 +537,7 @@ int bx_config_interface(int menu)
             case BX_CI_RT_LOGOPTS1: bx_log_options(0); break;
             case BX_CI_RT_LOGOPTS2: bx_log_options(1); break;
             case BX_CI_RT_INST_TR: NOT_IMPLEMENTED(choice); break;
-            case BX_CI_RT_USB: do_menu(BXPN_MENU_RUNTIME_USB); break;
+            case BX_CI_RT_USB: do_menu(BXPN_MENU_RUNTIME_CDROM); break;
             case BX_CI_RT_MISC: do_menu(BXPN_MENU_RUNTIME_MISC); break;
             case BX_CI_RT_CONT:
               SIM->update_runtime_options();

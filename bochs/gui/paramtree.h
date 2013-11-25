@@ -130,7 +130,7 @@ public:
   void set_label(const char *text);
   void set_description(const char *text);
   const char *get_label() const {return label;}
-  void set_runtime_param(int val) { runtime_param = val; }
+  virtual void set_runtime_param(int val) { runtime_param = val; }
   int get_runtime_param() { return runtime_param; }
   void set_group(const char *group);
   const char *get_group() const {return group_name;}
@@ -499,6 +499,7 @@ public:
   virtual void reset();
   virtual void clear();
   virtual void remove(const char *name);
+  virtual void set_runtime_param(int val);
 #if BX_USE_TEXTCONFIG
   virtual void text_print(FILE *);
   virtual int text_ask(FILE *fpin, FILE *fpout);

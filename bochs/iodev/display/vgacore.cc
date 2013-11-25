@@ -266,7 +266,6 @@ void bx_vgacore_c::init_systemtimer(bx_timer_handler_t f_timer, param_event_hand
     BX_VGA_THIS timer_id = bx_virt_timer.register_timer(this, f_timer,
        BX_VGA_THIS update_interval, 1, 1, "vga");
     vga_update_freq->set_handler(f_param);
-    vga_update_freq->set_runtime_param(1);
   }
   // VGA text mode cursor blink frequency 1.875 Hz
   if (BX_VGA_THIS update_interval < 266666) {
