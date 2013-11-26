@@ -127,6 +127,16 @@ UINT findDlgIDFromParam(bx_param_c *param)
       }
     }
   }
+  // second try: browse all lists (for runtime-only dialogs)
+  for (dlg_list = dlg_lists; dlg_list; dlg_list = dlg_list->next) {
+    list = dlg_list->list;
+    cid = dlg_list->dlg_base_id;
+    for (i = 0; i < list->get_size(); i++) {
+      if (param == list->get(i)) {
+        return (cid + i);
+      }
+    }
+  }
   return 0;
 }
 
@@ -692,7 +702,7 @@ SIZE CreateParamList(HWND hDlg, UINT lid, UINT xpos, UINT ypos, BOOL hide, bx_li
   w1 = 78;
   for (i = 0; i < items; i++) {
     param = list->get(i);
-    if (!SIM->get_init_done() || (param->get_enabled() && param->get_runtime_param())) {
+    if (!SIM->get_init_done() || param->get_runtime_param()) {
       if (param->get_type() != BXT_LIST) {
         lw = GetLabelText(param, list, NULL);
         if (lw > w1) {
@@ -720,7 +730,7 @@ SIZE CreateParamList(HWND hDlg, UINT lid, UINT xpos, UINT ypos, BOOL hide, bx_li
   // create controls
   for (i = 0; i < items; i++) {
     param = list->get(i);
-    if (!SIM->get_init_done() || (param->get_enabled() && param->get_runtime_param())) {
+    if (!SIM->get_init_done() || param->get_runtime_param()) {
       ihide = hide || ((i != 0) && (options & list->USE_TAB_WINDOW));
       if (param->get_type() == BXT_LIST) {
         lsize = CreateParamList(hDlg, cid, x0 + 4, y + 1, ihide, (bx_list_c*)param);
@@ -905,9 +915,11 @@ void ProcessDependentList(HWND hDlg, bx_param_c *param, BOOL enabled)
         if (dparam != param) {
           en = (enable_bitmap & mask) && enabled;
           cid = findDlgIDFromParam(dparam);
-          if (en != IsWindowEnabled(GetDlgItem(hDlg, ID_PARAM + cid))) {
-            ProcessDependentList(hDlg, dparam, en);
-            EnableParam(hDlg, 0, dparam, en);
+          if (cid != 0) {
+            if (en != IsWindowEnabled(GetDlgItem(hDlg, ID_PARAM + cid))) {
+              ProcessDependentList(hDlg, dparam, en);
+              EnableParam(hDlg, 0, dparam, en);
+            }
           }
         }
         mask <<= 1;
@@ -928,9 +940,11 @@ void ProcessDependentList(HWND hDlg, bx_param_c *param, BOOL enabled)
         if (dparam != param) {
           en = (value && enabled);
           cid = findDlgIDFromParam(dparam);
-          if (en != IsWindowEnabled(GetDlgItem(hDlg, ID_PARAM + cid))) {
-            ProcessDependentList(hDlg, dparam, en);
-            EnableParam(hDlg, 0, dparam, en);
+          if (cid != 0) {
+            if (en != IsWindowEnabled(GetDlgItem(hDlg, ID_PARAM + cid))) {
+              ProcessDependentList(hDlg, dparam, en);
+              EnableParam(hDlg, 0, dparam, en);
+            }
           }
         }
       }
@@ -945,7 +959,7 @@ static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, 
   bx_param_string_c *sparam;
   bx_list_c *tmplist;
   int cid;
-  UINT_PTR code, id;
+  UINT_PTR code, id, noticode;
   UINT i, j, k;
   RECT r, r2;
   SIZE size;
@@ -986,6 +1000,7 @@ static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, 
       return TRUE;
     case WM_COMMAND:
       code = LOWORD(wParam);
+      noticode = HIWORD(wParam);
       switch (code) {
         case IDCANCEL:
           cleanupDlgLists();
@@ -1011,10 +1026,12 @@ static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, 
               }
             }
           } else if ((code >= ID_PARAM) && (code < (ID_PARAM + nextDlgID))) {
-            i = (UINT)(code - ID_PARAM);
-            param = findParamFromDlgID(i);
-            if (param != NULL) {
-              ProcessDependentList(Window, param, TRUE);
+            if ((noticode == EN_CHANGE) || ((noticode == CBN_SELCHANGE)) || (noticode == BN_CLICKED)) {
+              i = (UINT)(code - ID_PARAM);
+              param = findParamFromDlgID(i);
+              if (param != NULL) {
+                ProcessDependentList(Window, param, TRUE);
+              }
             }
           }
       }
