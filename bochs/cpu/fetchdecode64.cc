@@ -2051,7 +2051,7 @@ fetch_b1:
         goto modrm_done;
       }
       // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
-      seg = sreg_mod1or2_base32[rm];
+      seg = sreg_mod1or2_base32[rm & 0xf];
     }
     else { // mod!=11b, rm==4, s-i-b byte follows
       unsigned sib, base, index, scale;
@@ -2078,7 +2078,7 @@ fetch_b1:
           i->ResolveModrm = &BX_CPU_C::BxResolve32BaseIndex;
       }
       if (mod == 0x00) { // mod==00b, rm==4
-        seg = sreg_mod0_base32[base];
+        seg = sreg_mod0_base32[base & 0xf];
         if ((base & 0x7) == 5) {
           i->setSibBase(BX_NIL_REGISTER);
           goto get_32bit_displ;
@@ -2087,7 +2087,7 @@ fetch_b1:
         goto modrm_done;
       }
       // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
-      seg = sreg_mod1or2_base32[base];
+      seg = sreg_mod1or2_base32[base & 0xf];
     }
 
     // (mod == 0x40), mod==01b
