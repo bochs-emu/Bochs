@@ -216,7 +216,7 @@ bx_sb16_c::~bx_sb16_c(void)
 
   delete [] DSP.dma.chunk;
 
-  if ((loglevel > 0) && (LOGFILE != NULL))
+  if (LOGFILE != NULL)
     fclose(LOGFILE);
 
   SIM->get_bochs_root()->remove("sb16");
@@ -238,18 +238,7 @@ void bx_sb16_c::init(void)
     ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("sb16"))->set(0);
     return;
   }
-  if ((strlen(SIM->get_param_string("log", base)->getptr()) < 1))
-    SIM->get_param_num("loglevel", base)->set(0);
-
-  if (SIM->get_param_num("loglevel", base)->get() > 0)
-  {
-    LOGFILE = fopen(SIM->get_param_string("log", base)->getptr(),"w"); // logfile for errors etc.
-    if (LOGFILE == NULL)
-    {
-      BX_ERROR(("Error opening file %s. Logging disabled.", SIM->get_param_string("log", base)->getptr()));
-      SIM->get_param_num("loglevel", base)->set(0);
-    }
-  }
+  create_logfile();
   BX_SB16_THIS midimode = SIM->get_param_num("midimode", base)->get();
   BX_SB16_THIS wavemode = SIM->get_param_enum("wavemode", base)->get();
   BX_SB16_THIS dmatimer = SIM->get_param_num("dmatimer", base)->get();
@@ -384,18 +373,20 @@ void bx_sb16_c::init(void)
   bx_list_c *menu = new bx_list_c(misc_rt, "sb16", "SB16 Runtime Options");
   menu->set_options(menu->SHOW_PARENT | menu->USE_BOX_TITLE);
 
-  menu->add(SIM->get_param("wavemode", base));
-  menu->add(SIM->get_param("wave", base));
   menu->add(SIM->get_param("midimode", base));
   menu->add(SIM->get_param("midi", base));
-  menu->add(SIM->get_param("dmatimer", base));
+  menu->add(SIM->get_param("wavemode", base));
+  menu->add(SIM->get_param("wave", base));
   menu->add(SIM->get_param("loglevel", base));
+  menu->add(SIM->get_param("log", base));
+  menu->add(SIM->get_param("dmatimer", base));
   SIM->get_param_enum("wavemode", base)->set_handler(sb16_param_handler);
   SIM->get_param_string("wave", base)->set_handler(sb16_param_string_handler);
   SIM->get_param_num("midimode", base)->set_handler(sb16_param_handler);
   SIM->get_param_string("midi", base)->set_handler(sb16_param_string_handler);
   SIM->get_param_num("dmatimer", base)->set_handler(sb16_param_handler);
   SIM->get_param_num("loglevel", base)->set_handler(sb16_param_handler);
+  SIM->get_param_string("log", base)->set_handler(sb16_param_string_handler);
   // register handler for correct sb16 parameter handling after runtime config
   SIM->register_runtime_config_handler(this, runtime_config_handler);
   BX_SB16_THIS midi_changed = 0;
@@ -556,7 +547,7 @@ void bx_sb16_c::runtime_config(void)
   }
   if (BX_SB16_THIS wave_changed) {
     BX_SB16_THIS closewaveoutput();
-    BX_SB16_THIS wavemode = SIM->get_param_num("wavemode", base)->get();
+    BX_SB16_THIS wavemode = SIM->get_param_enum("wavemode", base)->get();
     // dsp_dma() re-opens the output file on demand
     BX_SB16_THIS wave_changed = 0;
   }
@@ -3577,11 +3568,32 @@ void bx_sb16_c::write(Bit32u address, Bit32u value, unsigned io_len)
           address, value);
 }
 
+void bx_sb16_c::create_logfile(void)
+{
+  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
+  bx_param_string_c *logfile = SIM->get_param_string("log", base);
+
+  if (logfile->isempty()) {
+    SIM->get_param_num("loglevel", base)->set(0);
+    return;
+  }
+
+  if (SIM->get_param_num("loglevel", base)->get() > 0) {
+    LOGFILE = fopen(logfile->getptr(),"w"); // logfile for errors etc.
+    if (LOGFILE == NULL) {
+      BX_ERROR(("Error opening file %s. Logging disabled.", logfile->getptr()));
+      SIM->get_param_num("loglevel", base)->set(0);
+    }
+  }
+}
+
 void bx_sb16_c::writelog(int loglev, const char *str, ...)
 {
+  if ((LOGFILE == NULL) && (BX_SB16_THIS loglevel != 0)) {
+    create_logfile();
+  }
   // append a line to the log file, if desired
-  if (BX_SB16_THIS loglevel >= loglev)
-  {
+  if (BX_SB16_THIS loglevel >= loglev) {
     fprintf(LOGFILE, FMT_TICK, bx_pc_system.time_ticks());
     fprintf(LOGFILE, " (%d) ", loglev);
     va_list ap;
@@ -3863,6 +3875,12 @@ const char* bx_sb16_c::sb16_param_string_handler(bx_param_string_c *param, int s
       BX_SB16_THIS wave_changed = 1;
     } else if (!strcmp(pname, "midi")) {
       BX_SB16_THIS midi_changed = 1;
+    } else if (!strcmp(pname, "log")) {
+      if (LOGFILE != NULL) {
+        fclose(LOGFILE);
+        LOGFILE = NULL;
+      }
+      // writelog() re-opens the log file on demand
     } else {
       BX_PANIC(("sb16_param_string_handler called with unexpected parameter '%s'", pname));
     }

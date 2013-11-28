@@ -81,6 +81,14 @@ public:
   virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
   virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
+  // runtime options
+  static Bit64s es1370_param_handler(bx_param_c *param, int set, Bit64s val);
+  static const char* es1370_param_string_handler(bx_param_string_c *param, int set,
+                                                 const char *oldval, const char *val,
+                                                 int maxlen);
+  static void runtime_config_handler(void *);
+  void runtime_config(void);
+
 private:
   bx_es1370_t s;
 
@@ -90,6 +98,7 @@ private:
   BX_ES1370_SMF void update_voices(Bit32u ctl, Bit32u sctl, bx_bool force);
   BX_ES1370_SMF void run_channel(unsigned channel, int timer_id, Bit32u buflen);
   BX_ES1370_SMF void sendwavepacket(unsigned channel, Bit32u buflen, Bit8u *buffer);
+  BX_ES1370_SMF void closewaveoutput();
 
   static void es1370_timer_handler(void *);
   void es1370_timer(void);
@@ -105,6 +114,7 @@ private:
 
   bx_sound_lowlevel_c *soundmod;
   int wavemode;
+  bx_bool wave_changed;
   FILE *wavefile;
 };
 

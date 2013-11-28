@@ -92,6 +92,14 @@ const Bit16u sctl_loop_sel[3] = {0x2000, 0x4000, 0x8000};
 
 void es1370_init_options(void)
 {
+  static const char *es1370_wavemode_list[] = {
+    "0",
+    "1",
+    "2",
+    "3",
+    NULL
+  };
+
   bx_param_c *sound = SIM->get_param("sound");
   bx_list_c *menu = new bx_list_c(sound, "es1370", "ES1370 Configuration");
   menu->set_options(menu->SHOW_PARENT);
@@ -104,12 +112,12 @@ void es1370_init_options(void)
     0);
   enabled->set_enabled(BX_SUPPORT_ES1370);
 
-  bx_param_num_c *wavemode = new bx_param_num_c(menu,
+  bx_param_enum_c *wavemode = new bx_param_enum_c(menu,
     "wavemode",
     "Wave mode",
     "Controls the wave output format.",
-    0, 3,
-    0);
+    es1370_wavemode_list,
+    0, 0);
   bx_param_filename_c *wavefile = new bx_param_filename_c(menu,
     "wavefile",
     "Wave file",
@@ -117,8 +125,12 @@ void es1370_init_options(void)
     "", BX_PATHNAME_LEN);
   bx_list_c *deplist = new bx_list_c(NULL);
   deplist->add(wavemode);
-  deplist->add(wavefile);
   enabled->set_dependent_list(deplist);
+  deplist = new bx_list_c(NULL);
+  deplist->add(wavefile);
+  wavemode->set_dependent_list(deplist, 0);
+  wavemode->set_dependent_bitmap(2, 0x1);
+  wavemode->set_dependent_bitmap(3, 0x1);
 }
 
 Bit32s es1370_options_parser(const char *context, int num_params, char *params[])
@@ -181,14 +193,11 @@ bx_es1370_c::~bx_es1370_c()
   if (s.adc_inputinit) {
     soundmod->closewaveinput();
   }
-  if (BX_ES1370_THIS wavemode == 2) {
-    fputc(0, BX_ES1370_THIS wavefile);
-  }
-  if (wavefile != NULL) {
-    fclose(wavefile);
-  }
+  closewaveoutput();
 
   SIM->get_bochs_root()->remove("es1370");
+  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
+  misc_rt->remove("es1370");
   BX_DEBUG(("Exit"));
 }
 
@@ -217,18 +226,7 @@ void bx_es1370_c::init(void)
   BX_ES1370_THIS s.adc_inputinit = 0;
   BX_ES1370_THIS s.dac_nr_active = -1;
 
-  BX_ES1370_THIS wavemode = SIM->get_param_num("wavemode", base)->get();
-  if ((BX_ES1370_THIS wavemode == 2) || (BX_ES1370_THIS wavemode == 3)) {
-    BX_ES1370_THIS wavefile = fopen(SIM->get_param_string("wavefile", base)->getptr(), "wb");
-    if (BX_ES1370_THIS wavefile == NULL) {
-      BX_ERROR(("Error opening file '%s' - wave output disabled",
-        SIM->get_param_string("wavefile", base)->getptr()));
-      BX_ES1370_THIS wavemode = 0;
-    }
-    if ((BX_ES1370_THIS wavemode == 2) && (BX_ES1370_THIS wavefile != NULL)) {
-      DEV_soundmod_VOC_init_file(BX_ES1370_THIS wavefile);
-    }
-  }
+  BX_ES1370_THIS wavemode = SIM->get_param_enum("wavemode", base)->get();
 
   if (BX_ES1370_THIS s.dac1_timer_index == BX_NULL_TIMER_HANDLE) {
     BX_ES1370_THIS s.dac1_timer_index = bx_pc_system.register_timer
@@ -240,6 +238,19 @@ void bx_es1370_c::init(void)
       (BX_ES1370_THIS_PTR, es1370_timer_handler, 1, 1, 0, "es1370.dac2");
     // DAC2 timer: inactive, continuous, frequency variable
   }
+
+  // init runtime parameters
+  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
+  bx_list_c *menu = new bx_list_c(misc_rt, "es1370", "ES1370 Runtime Options");
+  menu->set_options(menu->SHOW_PARENT | menu->USE_BOX_TITLE);
+
+  menu->add(SIM->get_param("wavemode", base));
+  menu->add(SIM->get_param("wavefile", base));
+  SIM->get_param_enum("wavemode", base)->set_handler(es1370_param_handler);
+  SIM->get_param_string("wavefile", base)->set_handler(es1370_param_string_handler);
+  // register handler for correct es1370 parameter handling after runtime config
+  SIM->register_runtime_config_handler(this, runtime_config_handler);
+  BX_ES1370_THIS wave_changed = 0;
 
   BX_INFO(("ES1370 initialized"));
 }
@@ -328,6 +339,23 @@ void bx_es1370_c::after_restore_state(void)
   BX_ES1370_THIS s.adc_inputinit = 0;
   BX_ES1370_THIS s.dac_nr_active = -1;
   BX_ES1370_THIS update_voices(BX_ES1370_THIS s.ctl, BX_ES1370_THIS s.sctl, 1);
+}
+
+void bx_es1370_c::runtime_config_handler(void *this_ptr)
+{
+  bx_es1370_c *class_ptr = (bx_es1370_c *) this_ptr;
+  class_ptr->runtime_config();
+}
+
+void bx_es1370_c::runtime_config(void)
+{
+  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370);
+  if (BX_ES1370_THIS wave_changed) {
+    BX_ES1370_THIS closewaveoutput();
+    BX_ES1370_THIS wavemode = SIM->get_param_enum("wavemode", base)->get();
+    // update_voices() re-opens the output file on demand
+    BX_ES1370_THIS wave_changed = 0;
+  }
 }
 
 // static IO port read callback handler
@@ -712,6 +740,21 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
               } else {
                 BX_ES1370_THIS s.dac_nr_active = i;
               }
+            } else if ((BX_ES1370_THIS wavemode == 2) ||
+                       (BX_ES1370_THIS wavemode == 3)) {
+              bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370);
+              bx_param_string_c *waveparam = SIM->get_param_string("wavefile", base);
+              if ((BX_ES1370_THIS wavefile == NULL) && (!waveparam->isempty())) {
+                BX_ES1370_THIS wavefile = fopen(waveparam->getptr(), "wb");
+                if (BX_ES1370_THIS wavefile == NULL) {
+                  BX_ERROR(("Error opening file '%s' - wave output disabled",
+                            waveparam->getptr()));
+                  BX_ES1370_THIS wavemode = 0;
+                } else if (BX_ES1370_THIS wavemode == 2) {
+                  DEV_soundmod_VOC_init_file(BX_ES1370_THIS wavefile);
+                }
+              }
+              BX_ES1370_THIS s.dac_nr_active = i;
             } else {
               BX_ES1370_THIS s.dac_nr_active = i;
             }
@@ -773,6 +816,24 @@ void bx_es1370_c::sendwavepacket(unsigned channel, Bit32u buflen, Bit8u *buffer)
          temparray[6] = 4;
 
       DEV_soundmod_VOC_write_block(BX_ES1370_THIS wavefile, 9, 12, temparray, buflen, buffer);
+      break;
+  }
+}
+
+void bx_es1370_c::closewaveoutput()
+{
+  switch (BX_ES1370_THIS wavemode) {
+    case 1:
+      // nothing to do here yet
+      break;
+    case 2:
+      if (BX_ES1370_THIS wavefile != NULL) {
+        fputc(0, BX_ES1370_THIS wavefile);
+      }
+    case 3:
+      if (BX_ES1370_THIS wavefile != NULL)
+        fclose(BX_ES1370_THIS wavefile);
+      BX_ES1370_THIS wavefile = NULL;
       break;
   }
 }
@@ -852,6 +913,37 @@ void bx_es1370_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
     BX_DEBUG(("write PCI register 0x%02x value 0x%04x", address, value));
   else if (io_len == 4)
     BX_DEBUG(("write PCI register 0x%02x value 0x%08x", address, value));
+}
+
+// runtime parameter handlers
+Bit64s bx_es1370_c::es1370_param_handler(bx_param_c *param, int set, Bit64s val)
+{
+  if (set) {
+    const char *pname = param->get_name();
+    if (!strcmp(pname, "wavemode")) {
+      if (val != BX_ES1370_THIS wavemode) {
+        BX_ES1370_THIS wave_changed = 1;
+      }
+    } else {
+      BX_PANIC(("es1370_param_handler called with unexpected parameter '%s'", pname));
+    }
+  }
+  return val;
+}
+
+const char* bx_es1370_c::es1370_param_string_handler(bx_param_string_c *param, int set,
+                                                 const char *oldval, const char *val,
+                                                 int maxlen)
+{
+  if ((set) && (strcmp(val, oldval))) {
+    const char *pname = param->get_name();
+    if (!strcmp(pname, "wave")) {
+      BX_ES1370_THIS wave_changed = 1;
+    } else {
+      BX_PANIC(("es1370_param_string_handler called with unexpected parameter '%s'", pname));
+    }
+  }
+  return val;
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_ES1370

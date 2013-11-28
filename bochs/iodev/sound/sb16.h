@@ -364,6 +364,7 @@ private:
   BX_SB16_SMF void   closewaveoutput();         // close wave file
   BX_SB16_SMF void   finishmidifile();          // write track length etc.
   BX_SB16_SMF void   finishvocfile();           // close voc file
+  BX_SB16_SMF void   create_logfile();
 
       /* The port IO multiplexer functions */
 
