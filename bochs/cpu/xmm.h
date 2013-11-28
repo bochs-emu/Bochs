@@ -361,11 +361,16 @@ typedef BxPackedYmmRegister BxPackedAvxRegister;
       else if (vlen == BX_VL128) { BX_CLEAR_AVX_HIGH128(index); } \
     }
 
+/* clear upper part of the AVX register */
+#define BX_CLEAR_AVX_REGZ(index, vlen)                              \
+    { if ((vlen) == BX_VL256) { BX_CLEAR_AVX_HIGH256(index); }      \
+      else if ((vlen) == BX_VL128) { BX_CLEAR_AVX_HIGH128(index); } \
+    }
+
 /* write AVX register and potentialy clear upper part of the register */
 #define BX_WRITE_AVX_REGZ(index, reg, vlen)                       \
     { BX_CPU_THIS_PTR vmm[index] = (reg);                         \
-      if (vlen == BX_VL256) { BX_CLEAR_AVX_HIGH256(index); }      \
-      else if (vlen == BX_VL128) { BX_CLEAR_AVX_HIGH128(index); } \
+      BX_CLEAR_AVX_REGZ(index, vlen);                             \
     }
 
 #if BX_SUPPORT_EVEX

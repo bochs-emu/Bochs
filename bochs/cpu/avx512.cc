@@ -31,6 +31,67 @@
 #include "simd_int.h"
 #include "simd_compare.h"
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_MASK_VpsWpsR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  unsigned mask = BX_READ_16BIT_OPMASK(i->opmask());
+  unsigned len = i->getVL();
+
+  if (i->isZeroMasking()) {
+    for (unsigned n=0; n < len; n++, mask >>= 4)
+      xmm_zero_blendps(&op.vmm128(n), mask);
+  }
+  else {
+    for (unsigned n=0; n < len; n++, mask >>= 4)
+      xmm_blendps(&op.vmm128(n), &BX_READ_AVX_REG_LANE(i->dst(), n), ~mask);
+  }
+
+  BX_WRITE_AVX_REGZ(i->dst(), op, len);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_VpdWpdR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  unsigned mask = BX_READ_8BIT_OPMASK(i->opmask());
+  unsigned len = i->getVL();
+
+  if (i->isZeroMasking()) {
+    for (unsigned n=0; n < len; n++, mask >>= 2)
+      xmm_zero_blendpd(&op.vmm128(n), mask);
+  }
+  else {
+    for (unsigned n=0; n < len; n++, mask >>= 2)
+      xmm_blendpd(&op.vmm128(n), &BX_READ_AVX_REG_LANE(i->dst(), n), ~mask);
+  }
+
+  BX_WRITE_AVX_REGZ(i->dst(), op, len);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_MASK_VpsWpsM(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: not implemented yet !", i->getIaOpcodeName()));
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_VpdWpdM(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: not implemented yet !", i->getIaOpcodeName()));
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_MASK_WpsVpsM(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: not implemented yet !", i->getIaOpcodeName()));
+  BX_NEXT_INSTR(i);
+}
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_WpdVpdM(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: not implemented yet !", i->getIaOpcodeName()));
+  BX_NEXT_INSTR(i);
+}
+
 #define AVX512_2OP_DWORD_EL(HANDLER, func)                                                  \
   /* AVX-512 instruction with two src operands working on DWORD elements */                 \
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)              \
@@ -109,25 +170,25 @@ AVX512_2OP_DWORD_EL(VUNPCKHPD_MASK_VpdHpdWpdR, xmm_unpckhpd)
 /*
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VALIGND_MASK_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BX_PANIC(("%s: not implemented yet !", i->get_bx_opcode_name()));
+  BX_PANIC(("%s: not implemented yet !", i->getIaOpcodeName()));
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VALIGNQ_MASK_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BX_PANIC(("%s: not implemented yet !", i->get_bx_opcode_name()));
+  BX_PANIC(("%s: not implemented yet !", i->getIaOpcodeName()));
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBLENDMPD_MASK_VpdHpdWpdR(bxInstruction_c *i)
 {
-  BX_PANIC(("%s: not implemented yet !", i->get_bx_opcode_name()));
+  BX_PANIC(("%s: not implemented yet !", i->getIaOpcodeName()));
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBLENDMPS_MASK_VpsHpsWpsR(bxInstruction_c *i)
 {
-  BX_PANIC(("%s: not implemented yet !", i->get_bx_opcode_name()));
+  BX_PANIC(("%s: not implemented yet !", i->getIaOpcodeName()));
   BX_NEXT_INSTR(i);
 }
 */

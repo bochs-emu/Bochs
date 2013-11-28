@@ -87,24 +87,31 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSD_VsdHpdWsdR(bxInstruction_c 
 /* VMOVDQA: VEX.66.0F 6F (VEX.W ignore, VEX.VVV #UD) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_VpsWpsR(bxInstruction_c *i)
 {
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), BX_READ_YMM_REG(i->src()), i->getVL());
+  BX_WRITE_AVX_REGZ(i->dst(), BX_READ_AVX_REG(i->src()), i->getVL());
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_VpsWpsM(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op;
-  unsigned len = i->getVL();
-  
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  unsigned len = i->getVL();
 
-  if (len == BX_VL256)
-    read_virtual_ymmword_aligned(i->seg(), eaddr, &op);
+#if BX_SUPORT_EVEX
+  if (len == BX_VL512)
+    read_virtual_zmmword_aligned(i->seg(), eaddr, &BX_READ_AVX_REG(i->dst()));
   else
-    read_virtual_xmmword_aligned(i->seg(), eaddr, &op.ymm128(0));
-
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
+#endif
+  {
+    if (len == BX_VL256) {
+      read_virtual_ymmword_aligned(i->seg(), eaddr, &BX_READ_YMM_REG(i->dst()));
+      BX_CLEAR_AVX_HIGH256(i->dst());
+    }
+    else {
+      read_virtual_xmmword_aligned(i->seg(), eaddr, &BX_READ_XMM_REG(i->dst()));
+      BX_CLEAR_AVX_HIGH128(i->dst());
+    }
+  }
 
   BX_NEXT_INSTR(i);
 }
@@ -114,17 +121,24 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_VpsWpsM(bxInstruction_c *i
 /* VMOVDQU: VEX.F3.0F 6F (VEX.W ignore, VEX.VVV #UD) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_VpsWpsM(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op;
-  unsigned len = i->getVL();
-  
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  unsigned len = i->getVL();
 
-  if (len == BX_VL256)
-    read_virtual_ymmword(i->seg(), eaddr, &op);
+#if BX_SUPORT_EVEX
+  if (len == BX_VL512)
+    read_virtual_zmmword(i->seg(), eaddr, &BX_READ_AVX_REG(i->dst()));
   else
-    read_virtual_xmmword(i->seg(), eaddr, &op.ymm128(0));
-
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
+#endif
+  {
+    if (len == BX_VL256) {
+      read_virtual_ymmword(i->seg(), eaddr, &BX_READ_YMM_REG(i->dst()));
+      BX_CLEAR_AVX_HIGH256(i->dst());
+    }
+    else {
+      read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(i->dst()));
+      BX_CLEAR_AVX_HIGH128(i->dst());
+    }
+  }
 
   BX_NEXT_INSTR(i);
 }
@@ -135,7 +149,19 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_VpsWpsM(bxInstruction_c *i
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_WpsVpsM(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  write_virtual_ymmword(i->seg(), eaddr, &BX_AVX_REG(i->src()));
+  unsigned len = i->getVL();
+
+#if BX_SUPORT_EVEX
+  if (len == BX_VL512)
+    write_virtual_zmmword(i->seg(), eaddr, &BX_READ_AVX_REG(i->src()));
+  else
+#endif
+  {
+    if (len == BX_VL256)
+      write_virtual_ymmword(i->seg(), eaddr, &BX_READ_YMM_REG(i->src()));
+    else
+      write_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(i->src()));
+  }
 
   BX_NEXT_INSTR(i);
 }
@@ -146,7 +172,19 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_WpsVpsM(bxInstruction_c *i
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_WpsVpsM(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  write_virtual_ymmword_aligned(i->seg(), eaddr, &BX_AVX_REG(i->src()));
+  unsigned len = i->getVL();
+
+#if BX_SUPORT_EVEX
+  if (len == BX_VL512)
+    write_virtual_zmmword_aligned(i->seg(), eaddr, &BX_READ_AVX_REG(i->src()));
+  else
+#endif
+  {
+    if (len == BX_VL256)
+      write_virtual_ymmword_aligned(i->seg(), eaddr, &BX_READ_YMM_REG(i->src()));
+    else
+      write_virtual_xmmword_aligned(i->seg(), eaddr, &BX_READ_XMM_REG(i->src()));
+  }
 
   BX_NEXT_INSTR(i);
 }

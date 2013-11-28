@@ -46,6 +46,26 @@ static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f15_Mask[2] = {
   /* 66 */ { BxVexW1, BX_IA_V512_VUNPCKHPD_VpdHpdWpd_Kmask }
 };
 
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f28[2] = {
+  /* -- */ { BxVexW0, BX_IA_V512_VMOVAPS_VpsWps },
+  /* 66 */ { BxVexW1, BX_IA_V512_VMOVAPD_VpdWpd }
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f28_Mask[2] = {
+  /* -- */ { BxVexW0, BX_IA_V512_VMOVAPS_VpsWps_KMask },
+  /* 66 */ { BxVexW1, BX_IA_V512_VMOVAPD_VpdWpd_KMask }
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f29[2] = {
+  /* -- */ { BxVexW0, BX_IA_V512_VMOVAPS_WpsVps },
+  /* 66 */ { BxVexW1, BX_IA_V512_VMOVAPD_WpdVpd }
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f29_Mask[2] = {
+  /* -- */ { BxVexW0, BX_IA_V512_VMOVAPS_WpsVps_KMask },
+  /* 66 */ { BxVexW1, BX_IA_V512_VMOVAPD_WpdVpd_KMask }
+};
+
 static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f58[4] = {
   /* -- */ { BxVexW0, BX_IA_V512_VADDPS_VpsHpsWps },
   /* 66 */ { BxVexW1, BX_IA_V512_VADDPD_VpdHpdWpd },
@@ -214,10 +234,10 @@ static const BxOpcodeInfo_t BxOpcodeTableEVEX[256*3*2] = {
   /* 26    */ { 0, BX_IA_ERROR },
   /* 27 k0 */ { 0, BX_IA_ERROR },
   /* 27    */ { 0, BX_IA_ERROR },
-  /* 28 k0 */ { 0, BX_IA_ERROR },
-  /* 28    */ { 0, BX_IA_ERROR },
-  /* 29 k0 */ { 0, BX_IA_ERROR },
-  /* 29    */ { 0, BX_IA_ERROR },
+  /* 28 k0 */ { BxPrefixSSE2, BX_IA_ERROR, BxOpcodeGroupEVEX_0f28 },
+  /* 28    */ { BxPrefixSSE2, BX_IA_ERROR, BxOpcodeGroupEVEX_0f28_Mask },
+  /* 29 k0 */ { BxPrefixSSE2, BX_IA_ERROR, BxOpcodeGroupEVEX_0f29 },
+  /* 29    */ { BxPrefixSSE2, BX_IA_ERROR, BxOpcodeGroupEVEX_0f29_Mask },
   /* 2A k0 */ { 0, BX_IA_ERROR },
   /* 2A    */ { 0, BX_IA_ERROR },
   /* 2B k0 */ { 0, BX_IA_ERROR },
