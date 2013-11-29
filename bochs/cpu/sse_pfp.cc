@@ -836,6 +836,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::UCOMISS_VssWssR(bxInstruction_c *i
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
   int rc = float32_compare_quiet(op1, op2, status);
   check_exceptionsSSE(status.float_exception_flags);
   BX_CPU_THIS_PTR write_eflags_fpu_compare(rc);
@@ -856,6 +857,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::UCOMISD_VsdWsdR(bxInstruction_c *i
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
   int rc = float64_compare_quiet(op1, op2, status);
   check_exceptionsSSE(status.float_exception_flags);
   BX_CPU_THIS_PTR write_eflags_fpu_compare(rc);
@@ -876,6 +878,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::COMISS_VssWssR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
   int rc = float32_compare(op1, op2, status);
   check_exceptionsSSE(status.float_exception_flags);
   BX_CPU_THIS_PTR write_eflags_fpu_compare(rc);
@@ -896,6 +899,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::COMISD_VsdWsdR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
   int rc = float64_compare(op1, op2, status);
   check_exceptionsSSE(status.float_exception_flags);
   BX_CPU_THIS_PTR write_eflags_fpu_compare(rc);

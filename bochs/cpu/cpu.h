@@ -3238,10 +3238,16 @@ public: // for now...
   BX_SMF BX_INSF_TYPE VMOVAPS_MASK_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VMOVAPS_MASK_VpsWpsM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VMOVAPS_MASK_WpsVpsM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
   BX_SMF BX_INSF_TYPE VMOVAPD_MASK_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VMOVAPD_MASK_VpdWpdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VMOVAPD_MASK_WpdVpdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF BX_INSF_TYPE VMOVUPS_MASK_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VMOVUPS_MASK_VpsWpsM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VMOVUPS_MASK_WpsVpsM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VMOVUPD_MASK_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VMOVUPD_MASK_VpdWpdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VMOVUPD_MASK_WpdVpdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF BX_INSF_TYPE VFMADDPD_MASK_VpdHpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VFMADDPS_MASK_VpsHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4306,10 +4312,10 @@ public: // for now...
 #endif
 
 #if BX_SUPPORT_AVX
-  BX_SMF void avx_masked_load32(bxInstruction_c *i, BxPackedAvxRegister *dst, unsigned mask);
-  BX_SMF void avx_masked_load64(bxInstruction_c *i, BxPackedAvxRegister *dst, unsigned mask);
-  BX_SMF void avx_masked_store32(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned mask);
-  BX_SMF void avx_masked_store64(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned mask);
+  BX_SMF void avx_masked_load32(bxInstruction_c *i, bx_address eaddr, BxPackedAvxRegister *dst, unsigned mask);
+  BX_SMF void avx_masked_load64(bxInstruction_c *i, bx_address eaddr, BxPackedAvxRegister *dst, unsigned mask);
+  BX_SMF void avx_masked_store32(bxInstruction_c *i, bx_address eaddr, const BxPackedAvxRegister *op, unsigned mask);
+  BX_SMF void avx_masked_store64(bxInstruction_c *i, bx_address eaddr, const BxPackedAvxRegister *op, unsigned mask);
 #endif
 
 #if BX_SUPPORT_EVEX

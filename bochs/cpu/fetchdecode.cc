@@ -1449,9 +1449,14 @@ fetch_b1:
       goto decode_done;
     unsigned evex_b = (evex >> 20) & 0x1;
     i->setEvexb(evex_b);
+
     unsigned evex_vl_rc = (evex >> 21) & 0x3;
     i->setRC(evex_vl_rc);
-    i->setVL(evex_vl_rc);
+    if (evex_vl_rc == 3)
+      i->setVL(BX_VL512);
+    else
+      i->setVL(BX_VL128+evex_vl_rc);
+
     unsigned evex_z = (evex >> 23) & 0x1;
     i->setZeroMasking(evex_z);
 

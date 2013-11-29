@@ -620,7 +620,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPS_VpsHpsMps(bxInstruction
            opmask <<= 4;
            opmask |= xmm_pmovmskd(&mask.ymm128(0));
 
-  avx_masked_load32(i, &result, opmask);
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  avx_masked_load32(i, eaddr, &result, opmask);
 
   BX_WRITE_AVX_REGZ(i->dst(), result, i->getVL());
 
@@ -637,7 +639,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPD_VpdHpdMpd(bxInstruction
            opmask <<= 2;
            opmask |= xmm_pmovmskq(&mask.ymm128(0));
 
-  avx_masked_load64(i, &result, opmask);
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  avx_masked_load64(i, eaddr, &result, opmask);
 
   BX_WRITE_AVX_REGZ(i->dst(), result, i->getVL());
 
@@ -653,7 +657,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPS_MpsHpsVps(bxInstruction
            opmask <<= 4;
            opmask |= xmm_pmovmskd(&mask.ymm128(0));
 
-  avx_masked_store32(i, &BX_READ_AVX_REG(i->src2()), opmask);
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  avx_masked_store32(i, eaddr, &BX_READ_AVX_REG(i->src2()), opmask);
 
   BX_NEXT_INSTR(i);
 }
@@ -667,7 +673,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPD_MpdHpdVpd(bxInstruction
            opmask <<= 2;
            opmask |= xmm_pmovmskq(&mask.ymm128(0));
 
-  avx_masked_store64(i, &BX_READ_AVX_REG(i->src2()), opmask);
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  avx_masked_store64(i, eaddr, &BX_READ_AVX_REG(i->src2()), opmask);
 
   BX_NEXT_INSTR(i);
 }
