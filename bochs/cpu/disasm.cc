@@ -82,6 +82,10 @@ static const char *intel_segment_name[8] = {
     "es",  "cs",  "ss",  "ds",  "fs",  "gs",  "??",  "??"
 };
 
+static const char *intel_vector_reg_name[4] = {
+     "xmm", "ymm", "???", "zmm"
+};
+
 #if BX_SUPPORT_EVEX
 static const char *rounding_mode[4] = {
     "round_nearest_even", "round_down", "round_up", "round_to_zero"
@@ -95,7 +99,7 @@ char *resolve_sib_scale(char *disbufptr, const bxInstruction_c *i, const char *r
   unsigned sib_index = i->sibIndex(), sib_scale = i->sibScale();
 
   if (src_index == BX_SRC_VSIB)
-    disbufptr = dis_sprintf(disbufptr, "%cmm%d", 'x' + i->getVL() - 1, sib_index);
+    disbufptr = dis_sprintf(disbufptr, "%cmm%d", intel_vector_reg_name[i->getVL() - 1], sib_index);
   else
     disbufptr = dis_sprintf(disbufptr, "%s", regname[sib_index]);
 
@@ -271,7 +275,7 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
         case BX_VMM_REG:
 #if BX_SUPPORT_AVX
           if (i->getVL() > BX_NO_VL) {
-            disbufptr = dis_sprintf(disbufptr, "%cmm%d", 'x' + i->getVL() - 1, srcreg);
+            disbufptr = dis_sprintf(disbufptr, "%cmm%d", intel_vector_reg_name[i->getVL() - 1], srcreg);
 #if BX_SUPPORT_EVEX
             if (n == 0 && i->opmask()) {
               disbufptr = dis_sprintf(disbufptr, "{k%d}%s", i->opmask(),
