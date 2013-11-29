@@ -31,41 +31,47 @@
 #include "simd_int.h"
 #include "simd_compare.h"
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_MASK_VpsWpsR(bxInstruction_c *i)
+BX_CPP_INLINE void BX_CPU_C::avx512_write_regd_masked(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned mask)
 {
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
-  unsigned mask = BX_READ_16BIT_OPMASK(i->opmask());
   unsigned len = i->getVL();
 
   if (i->isZeroMasking()) {
     for (unsigned n=0; n < len; n++, mask >>= 4)
-      xmm_zero_blendps(&op.vmm128(n), mask);
+      xmm_zero_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), mask);
   }
   else {
     for (unsigned n=0; n < len; n++, mask >>= 4)
-      xmm_blendps(&op.vmm128(n), &BX_READ_AVX_REG_LANE(i->dst(), n), ~mask);
+      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), mask);
+  }
+}
+
+BX_CPP_INLINE void BX_CPU_C::avx512_write_regq_masked(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned mask)
+{
+  unsigned len = i->getVL();
+
+  if (i->isZeroMasking()) {
+    for (unsigned n=0; n < len; n++, mask >>= 4)
+      xmm_zero_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), mask);
+  }
+  else {
+    for (unsigned n=0; n < len; n++, mask >>= 4)
+      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), mask);
   }
 
-  BX_WRITE_AVX_REGZ(i->dst(), op, len);
+  BX_CLEAR_AVX_REGZ(i->dst(), len);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_MASK_VpsWpsR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  avx512_write_regd_masked(i, &op, BX_READ_16BIT_OPMASK(i->opmask()));
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_VpdWpdR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
-  unsigned mask = BX_READ_8BIT_OPMASK(i->opmask());
-  unsigned len = i->getVL();
-
-  if (i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, mask >>= 2)
-      xmm_zero_blendpd(&op.vmm128(n), mask);
-  }
-  else {
-    for (unsigned n=0; n < len; n++, mask >>= 2)
-      xmm_blendpd(&op.vmm128(n), &BX_READ_AVX_REG_LANE(i->dst(), n), ~mask);
-  }
-
-  BX_WRITE_AVX_REGZ(i->dst(), op, len);
+  avx512_write_regq_masked(i, &op, BX_READ_8BIT_OPMASK(i->opmask()));
   BX_NEXT_INSTR(i);
 }
 
@@ -97,22 +103,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_WpdVpdM(bxInstruction
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)              \
   {                                                                                         \
     BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
-    unsigned mask = BX_READ_16BIT_OPMASK(i->opmask());                                      \
     unsigned len = i->getVL();                                                              \
                                                                                             \
     for (unsigned n=0; n < len; n++)                                                        \
       (func)(&op1.vmm128(n), &op2.vmm128(n));                                               \
                                                                                             \
-    if (i->isZeroMasking()) {                                                               \
-      for (unsigned n=0; n < len; n++, mask >>= 4)                                          \
-        xmm_zero_blendps(&op1.vmm128(n), mask);                                             \
-    }                                                                                       \
-    else {                                                                                  \
-      for (unsigned n=0; n < len; n++, mask >>= 4)                                          \
-        xmm_blendps(&op1.vmm128(n), &BX_READ_AVX_REG_LANE(i->dst(), n), ~mask);             \
-    }                                                                                       \
+    avx512_write_regd_masked(i, &op1, BX_READ_16BIT_OPMASK(i->opmask()));                   \
                                                                                             \
-    BX_WRITE_AVX_REGZ(i->dst(), op1, len);                                                  \
     BX_NEXT_INSTR(i);                                                                       \
   }
 
@@ -135,22 +132,13 @@ AVX512_2OP_DWORD_EL(VPMULLD_MASK_VdqHdqWdqR, xmm_pmulld)
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)              \
   {                                                                                         \
     BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
-    unsigned mask = BX_READ_8BIT_OPMASK(i->opmask());                                       \
     unsigned len = i->getVL();                                                              \
                                                                                             \
     for (unsigned n=0; n < len; n++)                                                        \
       (func)(&op1.vmm128(n), &op2.vmm128(n));                                               \
                                                                                             \
-    if (i->isZeroMasking()) {                                                               \
-      for (unsigned n=0; n < len; n++, mask >>= 2)                                          \
-        xmm_zero_blendpd(&op1.vmm128(n), mask);                                             \
-    }                                                                                       \
-    else {                                                                                  \
-      for (unsigned n=0; n < len; n++, mask >>= 2)                                          \
-        xmm_blendpd(&op1.vmm128(n), &BX_READ_AVX_REG_LANE(i->dst(), n), ~mask);             \
-    }                                                                                       \
+    avx512_write_regq_masked(i, &op1, BX_READ_8BIT_OPMASK(i->opmask()));                    \
                                                                                             \
-    BX_WRITE_AVX_REGZ(i->dst(), op1, len);                                                  \
     BX_NEXT_INSTR(i);                                                                       \
   }
 

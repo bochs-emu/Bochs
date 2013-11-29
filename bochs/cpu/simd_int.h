@@ -504,12 +504,12 @@ BX_CPP_INLINE void xmm_blendps(BxPackedXmmRegister *op1, const BxPackedXmmRegist
 }
 
 #if BX_SUPPORT_EVEX
-BX_CPP_INLINE void xmm_zero_blendps(BxPackedXmmRegister *op, unsigned mask)
+BX_CPP_INLINE void xmm_zero_blendps(BxPackedXmmRegister *dst, const BxPackedXmmRegister *op, unsigned mask)
 {
-  if ((mask & 0x1) == 0) op->xmm32u(0) = 0;
-  if ((mask & 0x2) == 0) op->xmm32u(1) = 0;
-  if ((mask & 0x4) == 0) op->xmm32u(2) = 0;
-  if ((mask & 0x8) == 0) op->xmm32u(3) = 0;
+  dst->xmm32u(0) = (mask & 0x1) ? op->xmm32u(0) : 0;
+  dst->xmm32u(1) = (mask & 0x2) ? op->xmm32u(1) : 0;
+  dst->xmm32u(2) = (mask & 0x4) ? op->xmm32u(2) : 0;
+  dst->xmm32u(3) = (mask & 0x8) ? op->xmm32u(3) : 0;
 }
 #endif
 
@@ -520,10 +520,10 @@ BX_CPP_INLINE void xmm_blendpd(BxPackedXmmRegister *op1, const BxPackedXmmRegist
 }
 
 #if BX_SUPPORT_EVEX
-BX_CPP_INLINE void xmm_zero_blendpd(BxPackedXmmRegister *op, unsigned mask)
+BX_CPP_INLINE void xmm_zero_blendpd(BxPackedXmmRegister *dst, const BxPackedXmmRegister *op, unsigned mask)
 {
-  if ((mask & 0x1) == 0) op->xmm64u(0) = 0;
-  if ((mask & 0x2) == 0) op->xmm64u(1) = 0;
+  dst->xmm64u(0) = (mask & 0x1) ? op->xmm64u(0) : 0;
+  dst->xmm64u(1) = (mask & 0x2) ? op->xmm64u(1) : 0;
 }
 #endif
 

@@ -57,10 +57,14 @@ extern void mxcsr_to_softfloat_status_word(float_status_t &status, bx_mxcsr_t mx
                                                                                 \
     if (! i->isZeroMasking()) {                                                 \
       for (unsigned n=0; n < len; n++, mask >>= 4)                              \
-        xmm_blendps(&op1.vmm128(n), &BX_READ_AVX_REG_LANE(i->dst(), n), ~mask); \
+        xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op1.vmm128(n), mask);  \
+                                                                                \
+      BX_CLEAR_AVX_REGZ(i->dst(), len);                                         \
+    }                                                                           \
+    else {                                                                      \
+      BX_WRITE_AVX_REGZ(i->dst(), op1, len);                                    \
     }                                                                           \
                                                                                 \
-    BX_WRITE_AVX_REGZ(i->dst(), op1, len);                                      \
     BX_NEXT_INSTR(i);                                                           \
   }
 
@@ -91,10 +95,14 @@ EVEX_FMA_PACKED_SINGLE(VFNMSUBPS_MASK_VpsHpsWpsR, xmm_fnmsubps_mask)
                                                                                 \
     if (! i->isZeroMasking()) {                                                 \
       for (unsigned n=0; n < len; n++, mask >>= 2)                              \
-        xmm_blendpd(&op1.vmm128(n), &BX_READ_AVX_REG_LANE(i->dst(), n), ~mask); \
+        xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op1.vmm128(n), mask);  \
+                                                                                \
+      BX_CLEAR_AVX_REGZ(i->dst(), len);                                         \
+    }                                                                           \
+    else {                                                                      \
+      BX_WRITE_AVX_REGZ(i->dst(), op1, len);                                    \
     }                                                                           \
                                                                                 \
-    BX_WRITE_AVX_REGZ(i->dst(), op1, len);                                      \
     BX_NEXT_INSTR(i);                                                           \
   }
 

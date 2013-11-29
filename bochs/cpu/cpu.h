@@ -4305,6 +4305,11 @@ public: // for now...
   BX_SMF void handleAvxModeChange(void);
 #endif
 
+#if BX_SUPPORT_EVEX
+  BX_SMF void avx512_write_regd_masked(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned mask);
+  BX_SMF void avx512_write_regq_masked(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned mask);
+#endif
+
 #if BX_CPU_LEVEL >= 5
   BX_SMF bx_bool rdmsr(Bit32u index, Bit64u *val_64) BX_CPP_AttrRegparmN(2);
   BX_SMF bx_bool handle_unknown_rdmsr(Bit32u index, Bit64u *val_64) BX_CPP_AttrRegparmN(2);
