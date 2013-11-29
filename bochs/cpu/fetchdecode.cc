@@ -1452,7 +1452,7 @@ fetch_b1:
 
     unsigned evex_vl_rc = (evex >> 21) & 0x3;
     i->setRC(evex_vl_rc);
-    if (evex_vl_rc == 3)
+    if (evex_vl_rc == 2)
       i->setVL(BX_VL512);
     else
       i->setVL(BX_VL128+evex_vl_rc);
