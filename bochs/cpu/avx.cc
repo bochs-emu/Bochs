@@ -613,39 +613,16 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERM2F128_VdqHdqWdqIbR(bxInstruct
 /* Opcode: VEX.66.0F.38 2C (VEX.W=0) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPS_VpsHpsMps(bxInstruction_c *i)
 {
-  BxPackedYmmRegister mask = BX_READ_YMM_REG(i->src1()), result;
-  unsigned len = i->getVL();
+  BxPackedYmmRegister mask = BX_READ_YMM_REG(i->src1());
+  BxPackedAvxRegister result;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  unsigned opmask  = xmm_pmovmskd(&mask.ymm128(1));
+           opmask <<= 4;
+           opmask |= xmm_pmovmskd(&mask.ymm128(0));
 
-#if BX_SUPPORT_X86_64
-  if (i->as64L()) {
-    for (unsigned n=0; n < (4*len); n++) {
-       if (mask.ymm32u(n) & 0x80000000) {
-          if (! IsCanonical(get_laddr64(i->seg(), eaddr + 4*n)))
-             exception(int_number(i->seg()), 0);
-       }
-    }
-  }
-#endif
+  avx_masked_load32(i, &result, opmask);
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
-#endif
-
-  for (int n=4*len-1; n >= 0; n--) {
-    if (mask.ymm32u(n) & 0x80000000)
-       result.ymm32u(n) = read_virtual_dword(i->seg(), eaddr + 4*n);
-    else
-       result.ymm32u(n) = 0;
-  }
-
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
-
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), result, len);
+  BX_WRITE_AVX_REGZ(i->dst(), result, i->getVL());
 
   BX_NEXT_INSTR(i);
 }
@@ -653,39 +630,16 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPS_VpsHpsMps(bxInstruction
 /* Opcode: VEX.66.0F.38 2D (VEX.W=0) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPD_VpdHpdMpd(bxInstruction_c *i)
 {
-  BxPackedYmmRegister mask = BX_READ_YMM_REG(i->src1()), result;
-  unsigned len = i->getVL();
+  BxPackedYmmRegister mask = BX_READ_YMM_REG(i->src1());
+  BxPackedAvxRegister result;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  unsigned opmask  = xmm_pmovmskq(&mask.ymm128(1));
+           opmask <<= 2;
+           opmask |= xmm_pmovmskq(&mask.ymm128(0));
 
-#if BX_SUPPORT_X86_64
-  if (i->as64L()) {
-    for (unsigned n=0; n < (2*len); n++) {
-       if (mask.ymm32u(n*2+1) & 0x80000000) {
-          if (! IsCanonical(get_laddr64(i->seg(), eaddr + 8*n)))
-             exception(int_number(i->seg()), 0);
-       }
-    }
-  }
-#endif
+  avx_masked_load64(i, &result, opmask);
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
-#endif
-
-  for (int n=2*len-1; n >= 0; n--) {
-    if (mask.ymm32u(n*2+1) & 0x80000000)
-       result.ymm64u(n) = read_virtual_qword(i->seg(), eaddr + 8*n);
-    else
-       result.ymm64u(n) = 0;
-  }
-
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
-
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), result, len);
+  BX_WRITE_AVX_REGZ(i->dst(), result, i->getVL());
 
   BX_NEXT_INSTR(i);
 }
@@ -693,41 +647,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPD_VpdHpdMpd(bxInstruction
 /* Opcode: VEX.66.0F.38 2C (VEX.W=0) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPS_MpsHpsVps(bxInstruction_c *i)
 {
-  BxPackedYmmRegister mask = BX_READ_YMM_REG(i->src1()), op = BX_READ_YMM_REG(i->src2());
-  unsigned len = i->getVL();
+  BxPackedYmmRegister mask = BX_READ_YMM_REG(i->src1());
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  unsigned opmask  = xmm_pmovmskd(&mask.ymm128(1));
+           opmask <<= 4;
+           opmask |= xmm_pmovmskd(&mask.ymm128(0));
 
-#if BX_SUPPORT_X86_64
-  if (i->as64L()) {
-    for (unsigned n=0; n < (4*len); n++) {
-       if (mask.ymm32u(n) & 0x80000000) {
-          if (! IsCanonical(get_laddr64(i->seg(), eaddr + 4*n)))
-             exception(int_number(i->seg()), 0);
-       }
-    }
-  }
-#endif
-
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
-#endif
-
-  // see you can successfully write all the elements first
-  for (int n=4*len-1; n >= 0; n--) {
-    if (mask.ymm32u(n) & 0x80000000)
-       read_RMW_virtual_dword(i->seg(), eaddr + 4*n);
-  }
-
-  for (unsigned n=0; n < (4*len); n++) {
-    if (mask.ymm32u(n) & 0x80000000)
-       write_virtual_dword(i->seg(), eaddr + 4*n, op.ymm32u(n));
-  }
-
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
+  avx_masked_store32(i, &BX_READ_AVX_REG(i->src2()), opmask);
 
   BX_NEXT_INSTR(i);
 }
@@ -735,41 +661,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPS_MpsHpsVps(bxInstruction
 /* Opcode: VEX.66.0F.38 2D (VEX.W=0) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPD_MpdHpdVpd(bxInstruction_c *i)
 {
-  BxPackedYmmRegister mask = BX_READ_YMM_REG(i->src1()), op = BX_READ_YMM_REG(i->src2());
-  unsigned len = i->getVL();
+  BxPackedYmmRegister mask = BX_READ_YMM_REG(i->src1());
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  unsigned opmask  = xmm_pmovmskq(&mask.ymm128(1));
+           opmask <<= 2;
+           opmask |= xmm_pmovmskq(&mask.ymm128(0));
 
-#if BX_SUPPORT_X86_64
-  if (i->as64L()) {
-    for (unsigned n=0; n < (2*len); n++) {
-       if (mask.ymm32u(n*2+1) & 0x80000000) {
-          if (! IsCanonical(get_laddr64(i->seg(), eaddr + 8*n)))
-             exception(int_number(i->seg()), 0);
-       }
-    }
-  }
-#endif
-
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
-#endif
-
-  // see you can successfully write all the elements first
-  for (int n=2*len-1; n >= 0; n--) {
-    if (mask.ymm32u(2*n+1) & 0x80000000)
-       read_RMW_virtual_qword(i->seg(), eaddr + 8*n);
-  }
-
-  for (unsigned n=0; n < (2*len); n++) {
-    if (mask.ymm32u(2*n+1) & 0x80000000)
-       write_virtual_qword(i->seg(), eaddr + 8*n, op.ymm64u(n));
-  }
-
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
+  avx_masked_store64(i, &BX_READ_AVX_REG(i->src2()), opmask);
 
   BX_NEXT_INSTR(i);
 }

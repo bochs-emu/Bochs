@@ -26,6 +26,144 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_AVX
+void BX_CPU_C::avx_masked_load32(bxInstruction_c *i, BxPackedAvxRegister *op, unsigned mask)
+{
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  unsigned len = i->getVL();
+
+  if (i->as64L()) {
+    for (unsigned n=0; n < (4*len); n++) {
+       if (mask & (1<<n)) {
+          if (! IsCanonical(get_laddr64(i->seg(), eaddr + 4*n)))
+             exception(int_number(i->seg()), 0);
+       }
+    }
+  }
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
+  for (int n=4*len-1; n >= 0; n--) {
+    if (mask & (1<<n))
+       op->vmm32u(n) = read_virtual_dword(i->seg(), eaddr + 4*n);
+    else
+       op->vmm32u(n) = 0;
+  }
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
+}
+
+void BX_CPU_C::avx_masked_load64(bxInstruction_c *i, BxPackedAvxRegister *op, unsigned mask)
+{
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  unsigned len = i->getVL();
+
+  if (i->as64L()) {
+    for (unsigned n=0; n < (2*len); n++) {
+       if (mask & (1<<n)) {
+          if (! IsCanonical(get_laddr64(i->seg(), eaddr + 8*n)))
+             exception(int_number(i->seg()), 0);
+       }
+    }
+  }
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
+  for (int n=2*len-1; n >= 0; n--) {
+    if (mask & (1<<n))
+       op->vmm64u(n) = read_virtual_qword(i->seg(), eaddr + 8*n);
+    else
+       op->vmm64u(n) = 0;
+  }
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
+}
+
+void BX_CPU_C::avx_masked_store32(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned mask)
+{
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  unsigned len = i->getVL();
+
+#if BX_SUPPORT_X86_64
+  if (i->as64L()) {
+    for (unsigned n=0; n < (4*len); n++) {
+      if (mask & (1<<n)) {
+        if (! IsCanonical(get_laddr64(i->seg(), eaddr + 4*n)))
+           exception(int_number(i->seg()), 0);
+      }
+    }
+  }
+#endif
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
+  // see you can successfully write all the elements first
+  for (int n=4*len-1; n >= 0; n--) {
+    if (mask & (1<<n))
+       read_RMW_virtual_dword(i->seg(), eaddr + 4*n);
+  }
+
+  for (unsigned n=0; n < (4*len); n++) {
+    if (mask & (1<<n))
+       write_virtual_dword(i->seg(), eaddr + 4*n, op->vmm32u(n));
+  }
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
+}
+
+void BX_CPU_C::avx_masked_store64(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned mask)
+{
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  unsigned len = i->getVL();
+
+#if BX_SUPPORT_X86_64
+  if (i->as64L()) {
+    for (unsigned n=0; n < (2*len); n++) {
+      if (mask & (1<<n)) {
+        if (! IsCanonical(get_laddr64(i->seg(), eaddr + 8*n)))
+           exception(int_number(i->seg()), 0);
+      }
+    }
+  }
+#endif
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
+  // see you can successfully write all the elements first
+  for (int n=2*len-1; n >= 0; n--) {
+    if (mask & (1<<n))
+       read_RMW_virtual_qword(i->seg(), eaddr + 8*n);
+  }
+
+  for (unsigned n=0; n < (2*len); n++) {
+    if (mask & (1<<n))
+       write_virtual_qword(i->seg(), eaddr + 8*n, op->vmm64u(n));
+  }
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
+}
+#endif // BX_SUPPORT_AVX
+
 #if BX_SUPPORT_EVEX
 
 #include "simd_int.h"
@@ -89,12 +227,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_VpdWpdM(bxInstruction
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_MASK_WpsVpsM(bxInstruction_c *i)
 {
-  BX_PANIC(("%s: not implemented yet !", i->getIaOpcodeName()));
+  avx_masked_store32(i, &BX_READ_AVX_REG(i->src()), BX_READ_16BIT_OPMASK(i->opmask()));
   BX_NEXT_INSTR(i);
 }
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_WpdVpdM(bxInstruction_c *i)
 {
-  BX_PANIC(("%s: not implemented yet !", i->getIaOpcodeName()));
+  avx_masked_store64(i, &BX_READ_AVX_REG(i->src()), BX_READ_8BIT_OPMASK(i->opmask()));
   BX_NEXT_INSTR(i);
 }
 

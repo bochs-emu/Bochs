@@ -4305,6 +4305,13 @@ public: // for now...
   BX_SMF void handleAvxModeChange(void);
 #endif
 
+#if BX_SUPPORT_AVX
+  BX_SMF void avx_masked_load32(bxInstruction_c *i, BxPackedAvxRegister *dst, unsigned mask);
+  BX_SMF void avx_masked_load64(bxInstruction_c *i, BxPackedAvxRegister *dst, unsigned mask);
+  BX_SMF void avx_masked_store32(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned mask);
+  BX_SMF void avx_masked_store64(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned mask);
+#endif
+
 #if BX_SUPPORT_EVEX
   BX_SMF void avx512_write_regd_masked(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned mask);
   BX_SMF void avx512_write_regq_masked(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned mask);
