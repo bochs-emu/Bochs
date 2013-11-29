@@ -846,12 +846,15 @@ void MyFrame::simStatusChanged(StatusChange change, bx_bool popupNotify) {
       }
     }
   }
+  menuEdit->Enable(ID_Edit_Plugins, canConfigure);
   menuEdit->Enable(ID_Edit_CPU, canConfigure);
+  menuEdit->Enable(ID_Edit_CPUID, canConfigure);
   menuEdit->Enable(ID_Edit_Memory, canConfigure);
   menuEdit->Enable(ID_Edit_Clock_Cmos, canConfigure);
   menuEdit->Enable(ID_Edit_PCI, canConfigure);
   menuEdit->Enable(ID_Edit_Boot, canConfigure);
   menuEdit->Enable(ID_Edit_Network, canConfigure);
+  menuEdit->Enable(ID_Edit_Other, canConfigure);
   // during simulation, certain menu options like the floppy disk
   // can be modified under some circumstances.  A floppy drive can
   // only be edited if it was enabled at boot time.

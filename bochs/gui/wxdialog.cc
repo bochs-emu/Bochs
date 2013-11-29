@@ -600,12 +600,14 @@ void ParamDialog::Init()
 
 static int _next_id = ID_LAST_USER_DEFINED;
 
-int ParamDialog::genId () {
+int ParamDialog::genId()
+{
   return ++_next_id;
 }
 
-bool ParamDialog::isGeneratedId (int id) {
-  return (id >= ID_LAST_USER_DEFINED && id < _next_id);
+bool ParamDialog::isGeneratedId(int id)
+{
+  return (id >= ID_LAST_USER_DEFINED && id <= _next_id);
 }
 
 void ParamDialog::AddParamList(const char *nameList[], bx_param_c *base, wxFlexGridSizer *sizer, bool plain)
@@ -738,77 +740,77 @@ void ParamDialog::AddParam (
         char value[1024];
         if (!plain) ADD_LABEL(prompt);
         bool isFilename = param->get_options() & param->IS_FILENAME;
-        wxTextCtrl *txtctrl = new wxTextCtrl (context->parent, pstr->id, wxT(""), wxDefaultPosition, isFilename? longTextSize : normalTextSize);
+        wxTextCtrl *txtctrl = new wxTextCtrl(context->parent, pstr->id, wxT(""), wxDefaultPosition, isFilename? longTextSize : normalTextSize);
         if (description) txtctrl->SetToolTip(wxString(description, wxConvUTF8));
         param->sprint(value, 1024, 0);
         txtctrl->SetValue(wxString(value, wxConvUTF8));
         if ((param->get_options() & param->RAW_BYTES) == 0) {
           txtctrl->SetMaxLength(param->get_maxsize());
         }
-        sizer->Add (txtctrl, 0, wxALL, 2);
+        sizer->Add(txtctrl, 0, wxALL, 2);
         if (!plain) {
           if (isFilename) {
             // create Browse button
-            pstr->browseButtonId = genId ();
-            pstr->browseButton = new wxButton (context->parent,
+            pstr->browseButtonId = genId();
+            pstr->browseButton = new wxButton(context->parent,
               pstr->browseButtonId, BTNLABEL_BROWSE);
-            sizer->Add (pstr->browseButton, 0, wxALL, 2);
-            idHash->Put (pstr->browseButtonId, pstr);  // register under button id
+            sizer->Add(pstr->browseButton, 0, wxALL, 2);
+            idHash->Put(pstr->browseButtonId, pstr);  // register under button id
           } else {
-            sizer->Add (1, 1);  // spacer
+            sizer->Add(1, 1);  // spacer
           }
         }
         pstr->u.text = txtctrl;
-        idHash->Put (pstr->id, pstr);
-        paramHash->Put (pstr->param->get_id (), pstr);
+        idHash->Put(pstr->id, pstr);
+        paramHash->Put(pstr->param->get_id(), pstr);
         break;
       }
     case BXT_LIST: {
-	bx_list_c *list = (bx_list_c*) param_generic;
+        bx_list_c *list = (bx_list_c*) param_generic;
         if (list->get_options() & bx_list_c::USE_TAB_WINDOW) {
-	  // put each item in a separate tab of a tabbed window
-	  wxNotebook *notebook = new wxNotebook(context->parent, -1);
+          // put each item in a separate tab of a tabbed window
+          wxNotebook *notebook = new wxNotebook(context->parent, -1);
 #if wxMAJOR_VERSION == 2 && wxMINOR_VERSION < 6
-	  wxNotebookSizer *nbsizer = new wxNotebookSizer(notebook);
+          wxNotebookSizer *nbsizer = new wxNotebookSizer(notebook);
 #endif
-	  // put all items in the list into a separate page of the notebook.
-	  for (int i=0; i<list->get_size (); i++) {
-	    bx_list_c *child = (bx_list_c*)list->get(i);
-	    wxASSERT (child->get_type() == BXT_LIST);
-	    // the child must be a list!  I could support other things but
-	    // I don't see any reason to.  It wouldn't make sense to devote
-	    // a whole tab to a single parameter.
-	    wxPanel *panel = new wxPanel(notebook);
-	    wxBoxSizer *boxsz = new wxBoxSizer(wxVERTICAL);
-	    AddParamContext newcontext;
-	    newcontext.depth = 1 + context->depth;
-	    newcontext.parent = panel;
-	    newcontext.vertSizer = boxsz;
-	    newcontext.gridSizer = NULL; // will be created if needed
-	    // the child itself is a list. Add the child's children in
-	    // this new context.
-	    bx_list_c *childl = (bx_list_c *)child;
-	    for (int j=0; j<childl->get_size(); j++)
-	      AddParam (childl->get(j), plain, &newcontext);
-	    const char *pagename = child->get_title();
-	    if (!pagename) pagename = child->get_name();
-	    panel->SetAutoLayout(TRUE);
-	    panel->SetSizer(boxsz);
-	    notebook->AddPage(panel, wxString(pagename, wxConvUTF8));
-	  }
+          // put all items in the list into a separate page of the notebook.
+          for (int i=0; i<list->get_size(); i++) {
+            bx_list_c *child = (bx_list_c*)list->get(i);
+            wxASSERT(child->get_type() == BXT_LIST);
+            // the child must be a list!  I could support other things but
+            // I don't see any reason to.  It wouldn't make sense to devote
+            // a whole tab to a single parameter.
+            wxPanel *panel = new wxPanel(notebook);
+            wxBoxSizer *boxsz = new wxBoxSizer(wxVERTICAL);
+            AddParamContext newcontext;
+            newcontext.depth = 1 + context->depth;
+            newcontext.parent = panel;
+            newcontext.vertSizer = boxsz;
+            newcontext.gridSizer = NULL; // will be created if needed
+            // the child itself is a list. Add the child's children in
+            // this new context.
+            bx_list_c *childl = (bx_list_c *)child;
+            for (int j=0; j<childl->get_size(); j++)
+              AddParam(childl->get(j), plain, &newcontext);
+            const char *pagename = child->get_title();
+            if (!pagename) pagename = child->get_name();
+            panel->SetAutoLayout(TRUE);
+            panel->SetSizer(boxsz);
+            notebook->AddPage(panel, wxString(pagename, wxConvUTF8));
+          }
 #if wxMAJOR_VERSION == 2 && wxMINOR_VERSION < 6
-	  context->vertSizer->Add(nbsizer, 0, wxALL|wxGROW, 10);
+          context->vertSizer->Add(nbsizer, 0, wxALL|wxGROW, 10);
 #else
-	  context->vertSizer->Add(notebook, 0, wxALL|wxGROW, 10);
+          context->vertSizer->Add(notebook, 0, wxALL|wxGROW, 10);
 #endif
-	  // clear gridSizer variable so that any future parameters force
-	  // creation of a new one.
-	  context->gridSizer = NULL;
-	  // add to hashes
-	  pstr->u.notebook = notebook;
-	  idHash->Put(pstr->id, pstr);
-	  paramHash->Put(pstr->param->get_id(), pstr);
-	} else {
+          // clear gridSizer variable so that any future parameters force
+          // creation of a new one.
+          context->gridSizer = NULL;
+          // add to hashes
+          pstr->u.notebook = notebook;
+          idHash->Put(pstr->id, pstr);
+          paramHash->Put(pstr->param->get_id(), pstr);
+        } else {
           wxString boxTitle;
           if (list->get_options() & bx_list_c::USE_BOX_TITLE) {
             boxTitle = wxString(prompt, wxConvUTF8);
@@ -816,28 +818,28 @@ void ParamDialog::AddParam (
             boxTitle = wxT("");
           }
           wxStaticBox *box = new wxStaticBox(context->parent, -1, boxTitle);
-	  wxStaticBoxSizer *boxsz = new wxStaticBoxSizer(box, wxVERTICAL);
-	  AddParamContext newcontext;
-	  newcontext.depth = 1 + context->depth;
-	  newcontext.parent = context->parent;
-	  newcontext.gridSizer = NULL; // it will be created if necessary
-	  newcontext.vertSizer = boxsz;
-	  // put all items in the list inside the boxsz sizer.
-	  for (int i=0; i<list->get_size (); i++) {
-	    bx_param_c *child = list->get (i);
-	    AddParam (child, plain, &newcontext);
-	  }
-	  // add the boxsz to vertSizer
-	  context->vertSizer->Add (boxsz, 0, wxALL|wxGROW, 10);
-	  // clear gridSizer variable so that any future parameters force
-	  // creation of a new one.
-	  context->gridSizer = NULL;
-	  // add to hashes
-	  pstr->u.staticbox = box;
-	  idHash->Put (pstr->id, pstr);
-	  paramHash->Put (pstr->param->get_id (), pstr);
-	}
-	break;
+          wxStaticBoxSizer *boxsz = new wxStaticBoxSizer(box, wxVERTICAL);
+          AddParamContext newcontext;
+          newcontext.depth = 1 + context->depth;
+          newcontext.parent = context->parent;
+          newcontext.gridSizer = NULL; // it will be created if necessary
+          newcontext.vertSizer = boxsz;
+          // put all items in the list inside the boxsz sizer.
+          for (int i=0; i<list->get_size(); i++) {
+            bx_param_c *child = list->get(i);
+            AddParam(child, plain, &newcontext);
+          }
+          // add the boxsz to vertSizer
+          context->vertSizer->Add(boxsz, 0, wxALL|wxGROW, 10);
+          // clear gridSizer variable so that any future parameters force
+          // creation of a new one.
+          context->gridSizer = NULL;
+          // add to hashes
+          pstr->u.staticbox = box;
+          idHash->Put(pstr->id, pstr);
+          paramHash->Put(pstr->param->get_id(), pstr);
+        }
+        break;
       }
     default:
       wxLogError(wxT("ParamDialog::AddParam called with unsupported param type id=%d"), (int)type);
