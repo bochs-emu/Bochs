@@ -115,7 +115,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
           (BX_CPU_THIS_PTR dr7.get_R_W3() == BX_HWDebugInstruction && BX_CPU_THIS_PTR dr7.get_LEN3()))
       {
         // Instruction breakpoint with LENx not 00b (1-byte length)
-        BX_ERROR(("%s: write of 0x%08x, R/W=00b LEN!=00b", , i->getIaOpcodeName(), val_32));
+        BX_ERROR(("%s: write of 0x%08x, R/W=00b LEN!=00b", i->getIaOpcodeName(), val_32));
       }
 #endif
 
@@ -292,7 +292,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
           (BX_CPU_THIS_PTR dr7.get_R_W3() == BX_HWDebugInstruction && BX_CPU_THIS_PTR dr7.get_LEN3()))
       {
         // Instruction breakpoint with LENx not 00b (1-byte length)
-        BX_ERROR(("%s: write of 0x%08x, R/W=00b LEN!=00b", , i->getIaOpcodeName(), BX_CPU_THIS_PTR dr7.get32()));
+        BX_ERROR(("%s: write of 0x%08x, R/W=00b LEN!=00b", i->getIaOpcodeName(), BX_CPU_THIS_PTR dr7.get32()));
       }
 #endif
 
