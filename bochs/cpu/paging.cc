@@ -490,7 +490,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
 {
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
-    BX_ERROR(("INVLPG: priveledge check failed, generate #GP(0)"));
+    BX_ERROR(("%s: priveledge check failed, generate #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 

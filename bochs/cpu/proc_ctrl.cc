@@ -199,7 +199,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVD(bxInstruction_c *i)
 {
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
-    BX_ERROR(("INVD: priveledge check failed, generate #GP(0)"));
+    BX_ERROR(("%s: priveledge check failed, generate #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -230,7 +230,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
 {
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
-    BX_ERROR(("WBINVD: priveledge check failed, generate #GP(0)"));
+    BX_ERROR(("%s: priveledge check failed, generate #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -268,7 +268,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
     if (! IsCanonical(laddr)) {
-      BX_ERROR(("CLFLUSH: non-canonical access !"));
+      BX_ERROR(("%s: non-canonical access !", i->getIaOpcodeName()));
       exception(int_number(i->seg()), 0);
     }
   }
@@ -282,7 +282,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
     }
     else {
       if (eaddr > seg->cache.u.segment.limit_scaled) {
-        BX_ERROR(("CLFLUSH: segment limit violation"));
+        BX_ERROR(("%s: segment limit violation", i->getIaOpcodeName()));
         exception(int_number(i->seg()), 0);
       }
     }
@@ -532,7 +532,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   if (! BX_CPU_THIS_PTR cr4.get_PCE() && CPL != 0 ) {
-    BX_ERROR(("RDPMC: not allowed to use instruction !"));
+    BX_ERROR(("%s: not allowed to use instruction !", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -606,7 +606,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   if (BX_CPU_THIS_PTR cr4.get_TSD() && CPL != 0) {
-    BX_ERROR(("RDTSC: not allowed to use instruction !"));
+    BX_ERROR(("%s: not allowed to use instruction !", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -643,14 +643,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
   // RDTSCP will always #UD in legacy VMX mode
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_RDTSCP)) {
-       BX_ERROR(("RDTSCP in VMX guest: not allowed to use instruction !"));
+       BX_ERROR(("%s in VMX guest: not allowed to use instruction !", i->getIaOpcodeName()));
        exception(BX_UD_EXCEPTION, 0);
     }
   }
 #endif
 
   if (BX_CPU_THIS_PTR cr4.get_TSD() && CPL != 0) {
-    BX_ERROR(("RDTSCP: not allowed to use instruction !"));
+    BX_ERROR(("%s: not allowed to use instruction !", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -754,7 +754,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
     }
     else {
       if (offset > seg->cache.u.segment.limit_scaled) {
-        BX_ERROR(("MONITOR: segment limit violation"));
+        BX_ERROR(("%s: segment limit violation", i->getIaOpcodeName()));
         exception(int_number(i->seg()), 0);
       }
     }
@@ -786,7 +786,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 #if BX_SUPPORT_MONITOR_MWAIT
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL != 0) {
-    BX_DEBUG(("MWAIT instruction not recognized when CPL != 0"));
+    BX_DEBUG(("%s: instruction not recognized when CPL != 0", i->getIaOpcodeName()));
     exception(BX_UD_EXCEPTION, 0);
   }
 
@@ -860,7 +860,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   if (real_mode()) {
-    BX_ERROR(("SYSENTER not recognized in real mode !"));
+    BX_ERROR(("%s: not recognized in real mode !", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
   if ((BX_CPU_THIS_PTR msr.sysenter_cs_msr & BX_SELECTOR_RPL_MASK) == 0) {
@@ -1191,7 +1191,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
   }
 
   if(!protected_mode() || CPL != 0) {
-    BX_ERROR(("SYSRET: priveledge check failed, generate #GP(0)"));
+    BX_ERROR(("%s: priveledge check failed, generate #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -1381,7 +1381,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WRFSBASE_Eq(bxInstruction_c *i)
 
   Bit64u fsbase = BX_READ_64BIT_REG(i->src());
   if (!IsCanonical(fsbase)) {
-    BX_ERROR(("WRFSBASE: canonical failure !"));
+    BX_ERROR(("%s: canonical failure !", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
   MSR_FSBASE = fsbase;
@@ -1408,7 +1408,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WRGSBASE_Eq(bxInstruction_c *i)
 
   Bit64u gsbase = BX_READ_64BIT_REG(i->src());
   if (!IsCanonical(gsbase)) {
-    BX_ERROR(("WRGSBASE: canonical failure !"));
+    BX_ERROR(("%s: canonical failure !", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
   MSR_GSBASE = gsbase;

@@ -221,13 +221,26 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_MASK_VpsWpsM(bxInstruction
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   bx_address laddr = get_laddr(i->seg(), eaddr);
 
-  unsigned len_in_bytes = 16 * i->getVL();
+  unsigned len = i->getVL(), len_in_bytes = 16 * len;
   if (laddr & (len_in_bytes-1)) {
     BX_ERROR(("AVX masked read len=%d: #GP misaligned access", len_in_bytes));
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  BX_PANIC(("%s: not implemented yet !", i->getIaOpcodeName()));
+  BxPackedAvxRegister reg;
+  unsigned mask = BX_READ_16BIT_OPMASK(i->opmask());
+  avx_masked_load32(i, eaddr, &reg, mask);
+
+  if (i->isZeroMasking()) {
+    BX_WRITE_AVX_REGZ(i->dst(), reg, len);
+  }
+  else {
+    for (unsigned n=0; n < len; n++, mask >>= 4)
+      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &reg.vmm128(n), mask);
+
+    BX_CLEAR_AVX_REGZ(i->dst(), len);
+  }
+
   BX_NEXT_INSTR(i);
 }
 
@@ -236,13 +249,26 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_VpdWpdM(bxInstruction
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   bx_address laddr = get_laddr(i->seg(), eaddr);
 
-  unsigned len_in_bytes = 16 * i->getVL();
+  unsigned len = i->getVL(), len_in_bytes = 16 * len;
   if (laddr & (len_in_bytes-1)) {
     BX_ERROR(("AVX masked read len=%d: #GP misaligned access", len_in_bytes));
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  BX_PANIC(("%s: not implemented yet !", i->getIaOpcodeName()));
+  BxPackedAvxRegister reg;
+  unsigned mask = BX_READ_8BIT_OPMASK(i->opmask());
+  avx_masked_load64(i, eaddr, &reg, mask);
+
+  if (i->isZeroMasking()) {
+    BX_WRITE_AVX_REGZ(i->dst(), reg, len);
+  }
+  else {
+    for (unsigned n=0; n < len; n++, mask >>= 2)
+      xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &reg.vmm128(n), mask);
+
+    BX_CLEAR_AVX_REGZ(i->dst(), len);
+  }
+
   BX_NEXT_INSTR(i);
 }
 
@@ -284,13 +310,45 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_WpdVpdM(bxInstruction
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_MASK_VpsWpsM(bxInstruction_c *i)
 {
-  BX_PANIC(("%s: not implemented yet !", i->getIaOpcodeName()));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  unsigned len = i->getVL();
+
+  BxPackedAvxRegister reg;
+  unsigned mask = BX_READ_16BIT_OPMASK(i->opmask());
+  avx_masked_load32(i, eaddr, &reg, mask);
+
+  if (i->isZeroMasking()) {
+    BX_WRITE_AVX_REGZ(i->dst(), reg, len);
+  }
+  else {
+    for (unsigned n=0; n < len; n++, mask >>= 4)
+      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &reg.vmm128(n), mask);
+
+    BX_CLEAR_AVX_REGZ(i->dst(), len);
+  }
+
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPD_MASK_VpdWpdM(bxInstruction_c *i)
 {
-  BX_PANIC(("%s: not implemented yet !", i->getIaOpcodeName()));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  unsigned len = i->getVL();
+
+  BxPackedAvxRegister reg;
+  unsigned mask = BX_READ_8BIT_OPMASK(i->opmask());
+  avx_masked_load64(i, eaddr, &reg, mask);
+
+  if (i->isZeroMasking()) {
+    BX_WRITE_AVX_REGZ(i->dst(), reg, len);
+  }
+  else {
+    for (unsigned n=0; n < len; n++, mask >>= 2)
+      xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &reg.vmm128(n), mask);
+
+    BX_CLEAR_AVX_REGZ(i->dst(), len);
+  }
+
   BX_NEXT_INSTR(i);
 }
 

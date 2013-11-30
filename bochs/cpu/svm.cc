@@ -956,7 +956,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMRUN(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (CPL != 0) {
-    BX_ERROR(("VMRUN with CPL != 0"));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -1028,7 +1028,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLOAD(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (CPL != 0) {
-    BX_ERROR(("VMLOAD with CPL != 0"));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -1079,7 +1079,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMSAVE(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (CPL != 0) {
-    BX_ERROR(("VMSAVE with CPL != 0"));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -1123,7 +1123,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SKINIT(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (CPL != 0) {
-    BX_ERROR(("SKINIT with CPL != 0"));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -1144,7 +1144,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLGI(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (CPL != 0) {
-    BX_ERROR(("CLGI with CPL != 0"));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -1165,7 +1165,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::STGI(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (CPL != 0) {
-    BX_ERROR(("STGI with CPL != 0"));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -1187,7 +1187,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPGA(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (CPL != 0) {
-    BX_ERROR(("INVLPGA with CPL != 0"));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 

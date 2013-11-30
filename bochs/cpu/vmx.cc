@@ -2571,7 +2571,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
   else {
     // in VMX root operation mode
     if (CPL != 0) {
-      BX_ERROR(("VMXON with CPL!=0 cause #GP(0)"));
+      BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
       exception(BX_GP_EXCEPTION, 0);
     }
 
@@ -2593,7 +2593,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXOFF(bxInstruction_c *i)
   }
 
   if (CPL != 0) {
-    BX_ERROR(("VMXOFF with CPL!=0 cause #GP(0)"));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -2631,7 +2631,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCALL(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (CPL != 0) {
-    BX_ERROR(("VMCALL with CPL!=0 cause #GP(0)"));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -2713,7 +2713,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
   }
 
   if (CPL != 0) {
-    BX_ERROR(("VMLAUNCH/VMRESUME with CPL!=0 cause #GP(0)"));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -2943,7 +2943,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRST(bxInstruction_c *i)
   }
 
   if (CPL != 0) {
-    BX_ERROR(("VMPTRST with CPL!=0 cause #GP(0)"));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -3089,7 +3089,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD_EdGd(bxInstruction_c *i)
   }
 
   if (CPL != 0) {
-    BX_ERROR(("VMREAD with CPL!=0 cause #GP(0)"));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -3149,7 +3149,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD_EqGq(bxInstruction_c *i)
   }
 
   if (CPL != 0) {
-    BX_ERROR(("VMREAD with CPL!=0 cause #GP(0)"));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -3214,7 +3214,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE_GdEd(bxInstruction_c *i)
   }
 
   if (CPL != 0) {
-    BX_ERROR(("VMWRITE with CPL!=0 cause #GP(0)"));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -3284,7 +3284,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE_GqEq(bxInstruction_c *i)
   }
 
   if (CPL != 0) {
-    BX_ERROR(("VMWRITE with CPL!=0 cause #GP(0)"));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -3353,7 +3353,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
   }
 
   if (CPL != 0) {
-    BX_ERROR(("VMCLEAR with CPL!=0 cause #GP(0)"));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -3404,7 +3404,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
   }
 
   if (CPL != 0) {
-    BX_ERROR(("INVEPT with CPL!=0 cause #GP(0)"));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -3462,7 +3462,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
   }
 
   if (CPL != 0) {
-    BX_ERROR(("INVVPID with CPL!=0 cause #GP(0)"));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -3556,7 +3556,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
 #endif
 
   if (CPL != 0) {
-    BX_ERROR(("INVPCID with CPL!=0 cause #GP(0)"));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
