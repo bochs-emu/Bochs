@@ -76,6 +76,20 @@ static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f2f[2] = {
   /* 66 */ { BxVexW1, BX_IA_V512_VCOMISD_VsdWsd }
 };
 
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f51[4] = {
+  /* -- */ { BxVexW0, BX_IA_V512_VSQRTPS_VpsWps },
+  /* 66 */ { BxVexW1, BX_IA_V512_VSQRTPD_VpdWpd },
+  /* F3 */ { BxVexW0, BX_IA_V512_VSQRTSS_VssHpsWss },
+  /* F2 */ { BxVexW1, BX_IA_V512_VSQRTSD_VsdHpdWsd }
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f51_Mask[4] = {
+  /* -- */ { BxVexW0, BX_IA_V512_VSQRTPS_VpsWps_Kmask },
+  /* 66 */ { BxVexW1, BX_IA_V512_VSQRTPD_VpdWpd_Kmask },
+  /* F3 */ { BxVexW0, BX_IA_V512_VSQRTSS_VssHpsWss_Kmask },
+  /* F2 */ { BxVexW1, BX_IA_V512_VSQRTSD_VsdHpdWsd_Kmask }
+};
+
 static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f58[4] = {
   /* -- */ { BxVexW0, BX_IA_V512_VADDPS_VpsHpsWps },
   /* 66 */ { BxVexW1, BX_IA_V512_VADDPD_VpdHpdWpd },
@@ -350,8 +364,8 @@ static const BxOpcodeInfo_t BxOpcodeTableEVEX[256*3*2] = {
   /* 4F    */ { 0, BX_IA_ERROR },
   /* 50 k0 */ { 0, BX_IA_ERROR },
   /* 50    */ { 0, BX_IA_ERROR },
-  /* 51 k0 */ { 0, BX_IA_ERROR },
-  /* 51    */ { 0, BX_IA_ERROR },
+  /* 51 k0 */ { BxPrefixSSE4, BX_IA_ERROR, BxOpcodeGroupEVEX_0f51 },
+  /* 51    */ { BxPrefixSSE4, BX_IA_ERROR, BxOpcodeGroupEVEX_0f51_Mask },
   /* 52 k0 */ { 0, BX_IA_ERROR },
   /* 52    */ { 0, BX_IA_ERROR },
   /* 53 k0 */ { 0, BX_IA_ERROR },

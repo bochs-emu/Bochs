@@ -196,39 +196,38 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSI2SD_VsdEqR(bxInstruction_c *
 /* Opcode: VEX.0F 51 (VEX.W ignore, VEX.VVV #UD) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTPS_VpsWpsR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   unsigned len = i->getVL();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
 
-  for (unsigned n=0; n < (4*len); n++) {
-    op.ymm32u(n) = float32_sqrt(op.ymm32u(n), status);
+  for (unsigned n=0; n < len; n++) {
+    xmm_sqrtps(&op.vmm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
-
+  BX_WRITE_AVX_REGZ(i->dst(), op, len);
   BX_NEXT_INSTR(i);
 }
 
 /* Opcode: VEX.66.0F 51 (VEX.W ignore, VEX.VVV #UD) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTPD_VpdWpdR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   unsigned len = i->getVL();
-  
+
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
 
-  for (unsigned n=0; n < (2*len); n++) {
-    op.ymm64u(n) = float64_sqrt(op.ymm64u(n), status);
+  for (unsigned n=0; n < len; n++) {
+    xmm_sqrtpd(&op.vmm128(n), status);
   }
 
   check_exceptionsSSE(status.float_exception_flags);
-
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
-
+  BX_WRITE_AVX_REGZ(i->dst(), op, len);
   BX_NEXT_INSTR(i);
 }
 
@@ -240,6 +239,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTSS_VssHpsWssR(bxInstruction_c
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
   op1.xmm32u(0) = float32_sqrt(op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 
@@ -256,6 +256,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTSD_VsdHpdWsdR(bxInstruction_c
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
   op1.xmm64u(0) = float64_sqrt(op2, status);
   check_exceptionsSSE(status.float_exception_flags);
 

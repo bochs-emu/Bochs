@@ -116,9 +116,7 @@ EVEX_FMA_PACKED_DOUBLE(VFNMSUBPD_MASK_VpdHpdWpdR, xmm_fnmsubpd_mask)
 #define EVEX_FMA_SCALAR_SINGLE(HANDLER, func)                                 \
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
   {                                                                           \
-    unsigned mask = BX_READ_8BIT_OPMASK(i->opmask());                         \
-                                                                              \
-    if (mask & 0x1) {                                                         \
+    if (BX_SCALAR_ELEMENT_MASK(i->opmask())) {                                \
       float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->src1());                      \
       float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());                      \
       float32 op3 = BX_READ_XMM_REG_LO_DWORD(i->src3());                      \
@@ -148,9 +146,7 @@ EVEX_FMA_SCALAR_SINGLE(VFNMSUBSS_MASK_VpsHssWssR, float32_fnmsub)
 #define EVEX_FMA_SCALAR_DOUBLE(HANDLER, func)                                 \
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
   {                                                                           \
-    unsigned mask = BX_READ_8BIT_OPMASK(i->opmask());                         \
-                                                                              \
-    if (mask & 0x1) {                                                         \
+    if (BX_SCALAR_ELEMENT_MASK(i->opmask())) {                                \
       float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->src1());                      \
       float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());                      \
       float64 op3 = BX_READ_XMM_REG_LO_QWORD(i->src3());                      \

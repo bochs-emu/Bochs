@@ -622,4 +622,40 @@ BX_CPP_INLINE void xmm_fnmsubpd_mask(BxPackedXmmRegister *op1, const BxPackedXmm
   }
 }
 
+// sqrt
+
+BX_CPP_INLINE void xmm_sqrtps(BxPackedXmmRegister *op, float_status_t &status)
+{
+  for (unsigned n=0; n < 4; n++) {
+    op->xmm32u(n) = float32_sqrt(op->xmm32u(n), status);
+  }
+}
+
+BX_CPP_INLINE void xmm_sqrtps_mask(BxPackedXmmRegister *op, float_status_t &status, Bit32u mask)
+{
+  for (unsigned n=0; n < 4; n++, mask >>= 1) {
+    if (mask & 0x1)
+      op->xmm32u(n) = float32_sqrt(op->xmm32u(n), status);
+    else
+      op->xmm32u(n) = 0;
+  }
+}
+
+BX_CPP_INLINE void xmm_sqrtpd(BxPackedXmmRegister *op, float_status_t &status)
+{
+  for (unsigned n=0; n < 2; n++) {
+    op->xmm64u(n) = float64_sqrt(op->xmm64u(n), status);
+  }
+}
+
+BX_CPP_INLINE void xmm_sqrtpd_mask(BxPackedXmmRegister *op, float_status_t &status, Bit32u mask)
+{
+  for (unsigned n=0; n < 2; n++, mask >>= 1) {
+    if (mask & 0x1)
+      op->xmm64u(n) = float64_sqrt(op->xmm64u(n), status);
+    else
+      op->xmm64u(n) = 0;
+  }
+}
+
 #endif
