@@ -2032,7 +2032,7 @@ fetch_b1:
     }
 
     mod_mem = 1;
-    i->setSibBase(rm);      // initialize with rm to use BxResolve64Base
+    i->setSibBase(rm & 0xf); // initialize with rm to use BxResolve64Base
     i->setSibIndex(BX_NIL_REGISTER);
     // initialize displ32 with zero to include cases with no diplacement
     i->modRMForm.displ32u = 0;
@@ -2068,11 +2068,11 @@ fetch_b1:
       index = (sib & 0x7) | rex_x; sib >>= 3;
       scale =  sib;
       i->setSibScale(scale);
-      i->setSibBase(base);
+      i->setSibBase(base & 0xf);
       // this part is a little tricky - assign index value always,
       // it will be really used if the instruction is Gather. Others
       // assume that BxResolve32Base will do the right thing.
-      i->setSibIndex(index);
+      i->setSibIndex(index & 0xf);
       if (index != 4) {
         if (i->as64L())
           i->ResolveModrm = &BX_CPU_C::BxResolve64BaseIndex;
