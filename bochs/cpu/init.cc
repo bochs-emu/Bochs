@@ -876,7 +876,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR opmask_ok = BX_CPU_THIS_PTR evex_ok = 0;
 
   for (n=0; n<8; n++)
-    BX_WRITE_OPMASK(index, 0);
+    BX_WRITE_OPMASK(n, 0);
 #endif
 
   // Reset XMM state - unchanged on #INIT
