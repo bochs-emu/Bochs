@@ -190,7 +190,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BEXTR_GqEqBqR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BZHI_GqBqEqR(bxInstruction_c *i)
 {
-  unsigned control = BX_READ_16BIT_REG(i->src1()) & 0xff;
+  unsigned control = BX_READ_8BIT_REGL(i->src1());
   bx_bool tmpCF = 0;
   Bit64u op1_64 = BX_READ_64BIT_REG(i->src2());
   

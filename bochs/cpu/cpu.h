@@ -200,6 +200,7 @@
 #define BX_READ_8BIT_REGx(index,ext) BX_READ_8BIT_REG(index)
 #endif
 
+#define BX_READ_8BIT_REGL(index) (BX_CPU_THIS_PTR gen_reg[index].word.byte.rl)
 #define BX_READ_16BIT_REG(index) (BX_CPU_THIS_PTR gen_reg[index].word.rx)
 #define BX_READ_32BIT_REG(index) (BX_CPU_THIS_PTR gen_reg[index].dword.erx)
 
