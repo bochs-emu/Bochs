@@ -269,7 +269,7 @@
 
 #if BX_SUPPORT_AVX
 
-#define BX_READ_8BIT_OPMASK(index)  (BX_CPU_THIS_PTR opmask[index].word.byte.rh)
+#define BX_READ_8BIT_OPMASK(index)  (BX_CPU_THIS_PTR opmask[index].word.byte.rl)
 #define BX_READ_16BIT_OPMASK(index) (BX_CPU_THIS_PTR opmask[index].word.rx)
 #define BX_READ_32BIT_OPMASK(index) (BX_CPU_THIS_PTR opmask[index].dword.erx)
 #define BX_READ_OPMASK(index)       (BX_CPU_THIS_PTR opmask[index].rrx)

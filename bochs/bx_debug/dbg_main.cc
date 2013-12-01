@@ -861,11 +861,10 @@ void bx_dbg_print_avx_state(unsigned vlen)
 {
 #if BX_SUPPORT_AVX
   Bit64u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get();
+  char param_name[20];
 
   if ((isa_extensions_bitmask & BX_ISA_AVX) != 0) {
     bx_dbg_print_mxcsr_state();
-
-    char param_name[20];
 
     for(unsigned i=0;i<BX_XMM_REGISTERS;i++) {
       dbg_printf("VMM[%02u]: ", i);
@@ -885,6 +884,16 @@ void bx_dbg_print_avx_state(unsigned vlen)
   {
     dbg_printf("The CPU doesn't support AVX state !\n");
   }
+
+#if BX_SUPPORT_EVEX
+  if ((isa_extensions_bitmask & BX_ISA_AVX512) != 0) {
+    for(unsigned i=0;i<8;i++) {
+      sprintf(param_name, "OPMASK.k%d", i);
+      Bit64u opmask = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+      dbg_printf("K%d: %08x_%08x\n", i, GET32H(opmask), GET32L(opmask));
+    }
+  }
+#endif
 }
 
 void bx_dbg_print_mmx_state(void)
