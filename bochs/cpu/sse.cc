@@ -393,9 +393,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRB_VdqHdqEbIbR(bxInstruction_c
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
 
-  Bit8u op2 = (Bit8u) BX_READ_16BIT_REG(i->src2()); // won't allow reading of AH/CH/BH/DH
-
-  op1.xmmubyte(i->Ib() & 0xF) = op2;
+  op1.xmmubyte(i->Ib() & 0xF) = BX_READ_8BIT_REGL(i->src2()); // won't allow reading of AH/CH/BH/DH
 
   BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
 
