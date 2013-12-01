@@ -111,19 +111,19 @@ int libparallel_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, c
   // register add-on options for bochsrc and command line
   SIM->register_addon_option("parport1", parport_options_parser, parport_options_save);
   SIM->register_addon_option("parport2", parport_options_parser, NULL);
-  return(0); // Success
+  return 0; // Success
 }
 
 void libparallel_LTX_plugin_fini(void)
 {
-  char pnum[4];
+  char port[10];
 
-  SIM->unregister_addon_option("parport1");
-  SIM->unregister_addon_option("parport2");
   bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.parallel");
   for (int i=0; i<BX_N_PARALLEL_PORTS; i++) {
-    sprintf(pnum, "%d", i+1);
-    menu->remove(pnum);
+    sprintf(port, "parport%d", i+1);
+    SIM->unregister_addon_option(port);
+    sprintf(port, "%d", i+1);
+    menu->remove(port);
   }
   delete theParallelDevice;
 }
@@ -186,14 +186,7 @@ void bx_parallel_c::init(void)
       BX_PAR_THIS s[i].CONTROL.input    = 0;
 
       BX_PAR_THIS s[i].initmode = 0;
-      /* output file */
-      char *outfile = SIM->get_param_string("file", base)->getptr();
-      if (strlen(outfile) > 0) {
-        s[i].output = fopen(outfile, "wb");
-        if (!s[i].output)
-          BX_PANIC(("Could not open '%s' to write parport%d output",
-                    outfile, i+1));
-      }
+      // virtual_printer() opens output file on demand
       count++;
     }
   }
@@ -240,7 +233,20 @@ void bx_parallel_c::register_state(void)
 
 void bx_parallel_c::virtual_printer(Bit8u port)
 {
+  char pname[20];
+
   if (BX_PAR_THIS s[port].STATUS.slct) {
+    if (BX_PAR_THIS s[port].output == NULL) {
+      sprintf(pname, "ports.parallel.%d", port+1);
+      bx_list_c *base = (bx_list_c*) SIM->get_param(pname);
+      bx_param_string_c *fileparam = SIM->get_param_string("file", base);
+      if (!fileparam->isempty()) {
+        BX_PAR_THIS s[port].output = fopen(fileparam->getptr(), "wb");
+        if (!BX_PAR_THIS s[port].output)
+          BX_ERROR(("Could not open '%s' to write parport%d output",
+                    fileparam->getptr(), port+1));
+      }
+    }
     if (BX_PAR_THIS s[port].output != NULL) {
       fputc(BX_PAR_THIS s[port].data, BX_PAR_THIS s[port].output);
       fflush (BX_PAR_THIS s[port].output);

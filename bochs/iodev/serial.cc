@@ -97,8 +97,12 @@ void serial_init_options(void)
       "", BX_PATHNAME_LEN);
     bx_list_c *deplist = new bx_list_c(NULL);
     deplist->add(mode);
-    deplist->add(path);
     enabled->set_dependent_list(deplist);
+    deplist = new bx_list_c(NULL);
+    deplist->add(path);
+    mode->set_dependent_list(deplist, 1);
+    mode->set_dependent_bitmap(BX_SER_MODE_NULL, 0);
+    mode->set_dependent_bitmap(BX_SER_MODE_MOUSE, 0);
   }
 }
 
@@ -129,13 +133,13 @@ Bit32s serial_options_parser(const char *context, int num_params, char *params[]
 
 Bit32s serial_options_save(FILE *fp)
 {
-  char pname[20], optname[6];
+  char port[20];
 
   for (int i=0; i<BX_N_SERIAL_PORTS; i++) {
-    sprintf(pname, "ports.serial.%d", i+1);
-    bx_list_c *base = (bx_list_c*) SIM->get_param(pname);
-    sprintf(optname, "com%d", i+1);
-    SIM->write_param_list(fp, base, optname, 0);
+    sprintf(port, "ports.serial.%d", i+1);
+    bx_list_c *base = (bx_list_c*) SIM->get_param(port);
+    sprintf(port, "com%d", i+1);
+    SIM->write_param_list(fp, base, port, 0);
   }
   return 0;
 }
@@ -153,22 +157,20 @@ int libserial_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, cha
   SIM->register_addon_option("com2", serial_options_parser, NULL);
   SIM->register_addon_option("com3", serial_options_parser, NULL);
   SIM->register_addon_option("com4", serial_options_parser, NULL);
-  return(0); // Success
+  return 0; // Success
 }
 
 void libserial_LTX_plugin_fini(void)
 {
-  char pnum[4];
+  char port[6];
 
-  SIM->unregister_addon_option("com1");
-  SIM->unregister_addon_option("com2");
-  SIM->unregister_addon_option("com3");
-  SIM->unregister_addon_option("com4");
   delete theSerialDevice;
   bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.serial");
   for (int i=0; i<BX_N_SERIAL_PORTS; i++) {
-    sprintf(pnum, "%d", i+1);
-    menu->remove(pnum);
+    sprintf(port, "com%d", i+1);
+    SIM->unregister_addon_option(port);
+    sprintf(port, "%d", i+1);
+    menu->remove(port);
   }
 }
 
@@ -362,16 +364,16 @@ bx_serial_c::init(void)
 
       BX_SER_THIS s[i].io_mode = BX_SER_MODE_NULL;
       Bit8u mode = SIM->get_param_enum("mode", base)->get();
-      const char *dev = SIM->get_param_string("dev", base)->getptr();
+      bx_param_string_c *devparam = SIM->get_param_string("dev", base);
+      const char *dev = devparam->getptr();
       if (mode == BX_SER_MODE_FILE) {
-        if (strlen(dev) > 0) {
-          BX_SER_THIS s[i].output = fopen(dev, "wb");
-          if (BX_SER_THIS s[i].output)
-            BX_SER_THIS s[i].io_mode = BX_SER_MODE_FILE;
+        if (!devparam->isempty()) {
+          // tx_timer() opens the output file on demand
+          BX_SER_THIS s[i].io_mode = BX_SER_MODE_FILE;
         }
       } else if (mode == BX_SER_MODE_TERM) {
 #if defined(SERIAL_ENABLE) && !defined(BX_SER_WIN32)
-        if (strlen(dev) > 0) {
+        if (!devparam->isempty()) {
           BX_SER_THIS s[i].tty_id = open(dev, O_RDWR|O_NONBLOCK,600);
           if (BX_SER_THIS s[i].tty_id < 0) {
             BX_PANIC(("open of com%d (%s) failed", i+1, dev));
@@ -1384,6 +1386,7 @@ void bx_serial_c::tx_timer(void)
   bx_bool gen_int = 0;
   Bit8u port = 0;
   int timer_id;
+  char pname[20];
 
   timer_id = bx_pc_system.triggeredTimerID();
   if (timer_id == BX_SER_THIS s[0].tx_timer_index) {
@@ -1401,6 +1404,19 @@ void bx_serial_c::tx_timer(void)
   } else {
     switch (BX_SER_THIS s[port].io_mode) {
       case BX_SER_MODE_FILE:
+        if (BX_SER_THIS s[port].output == NULL) {
+          sprintf(pname, "ports.serial.%d", port+1);
+          bx_list_c *base = (bx_list_c*) SIM->get_param(pname);
+          bx_param_string_c *devparam = SIM->get_param_string("dev", base);
+          if (!devparam->isempty()) {
+            BX_SER_THIS s[port].output = fopen(devparam->getptr(), "wb");
+          }
+          if (BX_SER_THIS s[port].output == NULL) {
+            BX_ERROR(("Could not open '%s' to write com%d output",
+                      devparam->getptr(), port+1));
+            BX_SER_THIS s[port].io_mode = BX_SER_MODE_NULL;
+          }
+        }
         fputc(BX_SER_THIS s[port].tsrbuffer, BX_SER_THIS s[port].output);
         fflush(BX_SER_THIS s[port].output);
         break;
