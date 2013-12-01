@@ -926,6 +926,22 @@ void MyFrame::OnPauseResumeSim(wxCommandEvent& WXUNUSED(event))
   }
 }
 
+bx_bool MyFrame::SimThreadControl(bx_bool resume)
+{
+  bx_bool sim_running = 0;
+
+  wxCriticalSectionLocker lock(sim_thread_lock);
+  if (sim_thread) {
+    sim_running = !sim_thread->IsPaused();
+    if (resume) {
+      sim_thread->Resume();
+    } else if (sim_running) {
+      sim_thread->Pause();
+    }
+  }
+  return sim_running;
+}
+
 void MyFrame::OnKillSim(wxCommandEvent& WXUNUSED(event))
 {
   // DON'T use a critical section here.  Delete implicitly calls
@@ -1130,7 +1146,13 @@ void MyFrame::editFloppyConfig(int drive)
 
 void MyFrame::editFirstCdrom()
 {
-  bx_param_c *firstcd = SIM->get_first_cdrom();
+  bx_param_c *firstcd;
+
+  if (sim_thread != NULL) {
+    firstcd = ((bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_CDROM))->get(0);
+  } else {
+    firstcd = SIM->get_first_cdrom();
+  }
   if (!firstcd) {
     wxMessageBox(wxT("No CDROM drive is enabled.  Use Edit:ATA to set one up."),
                  wxT("No CDROM"), wxOK | wxICON_ERROR, this);

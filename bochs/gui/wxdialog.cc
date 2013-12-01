@@ -851,6 +851,11 @@ void ParamDialog::AddParam (
 
 bool ParamDialog::CopyGuiToParam()
 {
+  bx_bool sim_running = 0;
+
+  if (runtime) {
+    sim_running = theFrame->SimThreadControl(0);
+  }
   // loop through all the parameters
   idHash->BeginFind();
   wxNode *node;
@@ -859,6 +864,10 @@ bool ParamDialog::CopyGuiToParam()
     wxLogDebug(wxT("commit changes for param %s"), pstr->param->get_name());
     CopyGuiToParam(pstr->param);
     if (pstr->param->get_type() == BXT_LIST) break;
+  }
+  if (runtime && sim_running) {
+    SIM->update_runtime_options();
+    theFrame->SimThreadControl(1);
   }
   return true;
 }

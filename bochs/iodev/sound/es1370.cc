@@ -937,7 +937,7 @@ const char* bx_es1370_c::es1370_param_string_handler(bx_param_string_c *param, i
 {
   if ((set) && (strcmp(val, oldval))) {
     const char *pname = param->get_name();
-    if (!strcmp(pname, "wave")) {
+    if (!strcmp(pname, "wavefile")) {
       BX_ES1370_THIS wave_changed = 1;
     } else {
       BX_PANIC(("es1370_param_string_handler called with unexpected parameter '%s'", pname));

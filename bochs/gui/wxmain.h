@@ -168,6 +168,7 @@ public:
   void OnAbout(wxCommandEvent& event);
   void OnStartSim(wxCommandEvent& event);
   void OnPauseResumeSim(wxCommandEvent& event);
+  bx_bool SimThreadControl(bx_bool resume);
   void OnKillSim(wxCommandEvent& event);
   void OnSim2CIEvent(wxCommandEvent& event);
   void OnLogMsg(BxEvent *logMsgEvent);
