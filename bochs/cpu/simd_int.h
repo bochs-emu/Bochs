@@ -47,6 +47,13 @@ BX_CPP_INLINE void xmm_pabsd(BxPackedXmmRegister *op)
   }
 }
 
+BX_CPP_INLINE void xmm_pabsq(BxPackedXmmRegister *op)
+{
+  for(unsigned n=0; n<2; n++) {
+    if(op->xmm64s(n) < 0) op->xmm64u(n) = -op->xmm64s(n);
+  }
+}
+
 // min/max
 
 BX_CPP_INLINE void xmm_pminsb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)

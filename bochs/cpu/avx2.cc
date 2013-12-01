@@ -161,6 +161,7 @@ AVX_2OP(VPSRLVQ_VdqHdqWdqR, xmm_psrlvq)
 AVX_1OP(VPABSB_VdqWdqR, xmm_pabsb)
 AVX_1OP(VPABSW_VdqWdqR, xmm_pabsw)
 AVX_1OP(VPABSD_VdqWdqR, xmm_pabsd)
+AVX_1OP(VPABSQ_VdqWdqR, xmm_pabsq)
 
 #define AVX_PSHIFT(HANDLER, func)                                                          \
   /* AVX packed shift instruction */                                                       \

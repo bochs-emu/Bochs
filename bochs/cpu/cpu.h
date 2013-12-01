@@ -2922,6 +2922,7 @@ public: // for now...
   BX_SMF BX_INSF_TYPE VPABSB_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPABSW_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPABSD_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPABSQ_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPSUBSB_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPSUBSW_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPSUBUSB_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3227,6 +3228,7 @@ public: // for now...
   BX_SMF BX_INSF_TYPE VPMULLD_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VUNPCKLPS_MASK_VpsHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VUNPCKHPS_MASK_VpsHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPABSD_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF BX_INSF_TYPE VPADDQ_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPSUBQ_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3240,6 +3242,7 @@ public: // for now...
   BX_SMF BX_INSF_TYPE VPMINUQ_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VUNPCKLPD_MASK_VpdHpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VUNPCKHPD_MASK_VpdHpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPABSQ_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF BX_INSF_TYPE VMOVAPS_MASK_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VMOVAPS_MASK_VpsWpsM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
