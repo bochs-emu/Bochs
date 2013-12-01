@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2002-2012 Stanislav Shwartsman
+//   Copyright (c) 2002-2013 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -38,7 +38,7 @@ BX_CPP_INLINE void prepare_softfloat_status_word(float_status_t &status, int rou
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PFPNACC_PqQq(bxInstruction_c *i)
 {
-  BX_PANIC(("PFPNACC_PqQq: 3DNow! instruction still not implemented"));
+  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeName()));
 
   BX_NEXT_INSTR(i);
 }
@@ -115,7 +115,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FD_PqQq(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2IW_PqQq(bxInstruction_c *i)
 {
-  BX_PANIC(("PF2IW_PqQq: 3DNow! instruction still not implemented"));
+  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeName()));
 
   BX_NEXT_INSTR(i);
 }
@@ -157,112 +157,112 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2ID_PqQq(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PFNACC_PqQq(bxInstruction_c *i)
 {
-  BX_PANIC(("PFNACC_PqQq: 3DNow! instruction still not implemented"));
+  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeName()));
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPGE_PqQq(bxInstruction_c *i)
 {
-  BX_PANIC(("PFCMPGE_PqQq: 3DNow! instruction still not implemented"));
+  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeName()));
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PFMIN_PqQq(bxInstruction_c *i)
 {
-  BX_PANIC(("PFMIN_PqQq: 3DNow! instruction still not implemented"));
+  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeName()));
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRCP_PqQq(bxInstruction_c *i)
 {
-  BX_PANIC(("PFRCP_PqQq: 3DNow! instruction still not implemented"));
+  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeName()));
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRSQRT_PqQq(bxInstruction_c *i)
 {
-  BX_PANIC(("PFRSQRT_PqQq: 3DNow! instruction still not implemented"));
+  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeName()));
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PFSUB_PqQq(bxInstruction_c *i)
 {
-  BX_PANIC(("PFSUB_PqQq: 3DNow! instruction still not implemented"));
+  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeName()));
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PFADD_PqQq(bxInstruction_c *i)
 {
-  BX_PANIC(("PFADD_PqQq: 3DNow! instruction still not implemented"));
+  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeName()));
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPGT_PqQq(bxInstruction_c *i)
 {
-  BX_PANIC(("PFCMPGT_PqQq: 3DNow! instruction still not implemented"));
+  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeName()));
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PFMAX_PqQq(bxInstruction_c *i)
 {
-  BX_PANIC(("PFMAX_PqQq: 3DNow! instruction still not implemented"));
+  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeName()));
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRCPIT1_PqQq(bxInstruction_c *i)
 {
-  BX_PANIC(("PFRCPIT1_PqQq: 3DNow! instruction still not implemented"));
+  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeName()));
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRSQIT1_PqQq(bxInstruction_c *i)
 {
-  BX_PANIC(("PFRSQIT1_PqQq: 3DNow! instruction still not implemented"));
+  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeName()));
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PFSUBR_PqQq(bxInstruction_c *i)
 {
-  BX_PANIC(("PFSUBR_PqQq: 3DNow! instruction still not implemented"));
+  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeName()));
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PFACC_PqQq(bxInstruction_c *i)
 {
-  BX_PANIC(("PFACC_PqQq: 3DNow! instruction still not implemented"));
+  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeName()));
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPEQ_PqQq(bxInstruction_c *i)
 {
-  BX_PANIC(("PFCMPEQ_PqQq: 3DNow! instruction still not implemented"));
+  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeName()));
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PFMUL_PqQq(bxInstruction_c *i)
 {
-  BX_PANIC(("PFMUL_PqQq: 3DNow! instruction still not implemented"));
+  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeName()));
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRCPIT2_PqQq(bxInstruction_c *i)
 {
-  BX_PANIC(("PFRCPIT2_PqQq: 3DNow! instruction still not implemented"));
+  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeName()));
 
   BX_NEXT_INSTR(i);
 }

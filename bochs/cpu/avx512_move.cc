@@ -304,9 +304,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_WpdVpdM(bxInstruction
   BX_NEXT_INSTR(i);
 }
 
-///////////////////////
-// masked load/store //
-///////////////////////
+//////////////////////////////
+// masked packed load/store //
+//////////////////////////////
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_MASK_VpsWpsM(bxInstruction_c *i)
 {
@@ -363,6 +363,88 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPD_MASK_WpdVpdM(bxInstruction
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   avx_masked_store64(i, eaddr, &BX_READ_AVX_REG(i->src()), BX_READ_8BIT_OPMASK(i->opmask()));
+  BX_NEXT_INSTR(i);
+}
+
+//////////////////////////////
+// masked scalar load/store //
+//////////////////////////////
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSD_MASK_VsdWsdM(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op;
+
+  op.xmm64u(1) = 0;
+
+  if (BX_SCALAR_ELEMENT_MASK(i->opmask())) {
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    op.xmm64u(0) = read_virtual_qword(i->seg(), eaddr);
+  }
+  else {
+    if (! i->isZeroMasking()) {
+      op.xmm64u(0) = BX_READ_XMM_REG_LO_QWORD(i->dst());
+    }
+    else {
+      op.xmm64u(0) = 0;
+    }
+  }
+
+  BX_WRITE_XMM_REGZ(i->dst(), op, i->getVL());
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSS_MASK_VssWssM(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op;
+
+  op.xmm64u(1) = 0;
+
+  if (BX_SCALAR_ELEMENT_MASK(i->opmask())) {
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    op.xmm64u(0) = (Bit64u) read_virtual_dword(i->seg(), eaddr);
+  }
+  else {
+    if (! i->isZeroMasking()) {
+      op.xmm64u(0) = (Bit64u) BX_READ_XMM_REG_LO_DWORD(i->dst());
+    }
+    else {
+      op.xmm64u(0) = 0;
+    }
+  }
+
+  BX_WRITE_XMM_REGZ(i->dst(), op, i->getVL());
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSD_MASK_WsdVsdM(bxInstruction_c *i)
+{
+  if (BX_SCALAR_ELEMENT_MASK(i->opmask())) {
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    write_virtual_qword(i->seg(), eaddr, BX_READ_XMM_REG_LO_QWORD(i->src()));
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSS_MASK_WssVssM(bxInstruction_c *i)
+{
+  if (BX_SCALAR_ELEMENT_MASK(i->opmask())) {
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    write_virtual_dword(i->seg(), eaddr, BX_READ_XMM_REG_LO_DWORD(i->src()));
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSD_MASK_VsdHpdWsdR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: instruction still not implemented", i->getIaOpcodeName()));
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSS_MASK_VssHpsWssR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: instruction still not implemented", i->getIaOpcodeName()));
   BX_NEXT_INSTR(i);
 }
 
