@@ -23576,7 +23576,7 @@ if test "${enable_evex+set}" = set; then :
 $as_echo "yes" >&6; }
     $as_echo "#define BX_SUPPORT_EVEX 1" >>confdefs.h
 
-    support_avx=1
+    support_evex=1
    elif test "$enableval" = no; then
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
