@@ -841,7 +841,7 @@ void bx_dbg_print_sse_state(void)
     bx_dbg_print_mxcsr_state();
 
     char param_name[20];
-    for(unsigned i=0;i<BX_XMM_REGISTERS;i++) {
+    for(unsigned i=0;i</*BX_XMM_REGISTERS*/16;i++) {
       sprintf(param_name, "SSE.xmm%02d_1", i);
       Bit64u hi = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
       sprintf(param_name, "SSE.xmm%02d_0", i);
@@ -868,13 +868,13 @@ void bx_dbg_print_avx_state(unsigned vlen)
 
     for(unsigned i=0;i<BX_XMM_REGISTERS;i++) {
       dbg_printf("VMM[%02u]: ", i);
-      for (int j=vlen;j >= 0; j--) {
+      for (int j=vlen-1;j >= 0; j--) {
         sprintf(param_name, "SSE.xmm%02d_%d", i, j*2+1);
         Bit64u hi = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
         sprintf(param_name, "SSE.xmm%02d_%d", i, j*2);
         Bit64u lo = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
-        if (j!=(int)vlen) dbg_printf("_");
         dbg_printf("%08x_%08x_%08x_%08x", GET32H(hi), GET32L(hi), GET32H(lo), GET32L(lo));
+        if (j!=0) dbg_printf("_");
       }
       dbg_printf("\n");
     }

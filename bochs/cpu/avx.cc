@@ -97,7 +97,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_VpsWpsM(bxInstruction_c *i
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   unsigned len = i->getVL();
 
-#if BX_SUPORT_EVEX
+#if BX_SUPPORT_EVEX
   if (len == BX_VL512)
     read_virtual_zmmword_aligned(i->seg(), eaddr, &BX_READ_AVX_REG(i->dst()));
   else
@@ -124,7 +124,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_VpsWpsM(bxInstruction_c *i
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   unsigned len = i->getVL();
 
-#if BX_SUPORT_EVEX
+#if BX_SUPPORT_EVEX
   if (len == BX_VL512)
     read_virtual_zmmword(i->seg(), eaddr, &BX_READ_AVX_REG(i->dst()));
   else
@@ -151,7 +151,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_WpsVpsM(bxInstruction_c *i
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   unsigned len = i->getVL();
 
-#if BX_SUPORT_EVEX
+#if BX_SUPPORT_EVEX
   if (len == BX_VL512)
     write_virtual_zmmword(i->seg(), eaddr, &BX_READ_AVX_REG(i->src()));
   else
@@ -174,7 +174,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_WpsVpsM(bxInstruction_c *i
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   unsigned len = i->getVL();
 
-#if BX_SUPORT_EVEX
+#if BX_SUPPORT_EVEX
   if (len == BX_VL512)
     write_virtual_zmmword_aligned(i->seg(), eaddr, &BX_READ_AVX_REG(i->src()));
   else

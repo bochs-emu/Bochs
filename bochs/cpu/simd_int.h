@@ -1064,6 +1064,21 @@ BX_CPP_INLINE void xmm_psrad(BxPackedXmmRegister *op, Bit64u shift_64)
   }
 }
 
+BX_CPP_INLINE void xmm_psraq(BxPackedXmmRegister *op, Bit64u shift_64)
+{
+  if(shift_64 > 63) {
+    for (unsigned n=0; n < 2; n++)
+      op->xmm64u(n) = (op->xmm64s(n) < 0) ? BX_CONST64(0xffffffffffffffff) : 0;
+  }
+  else
+  {
+    Bit8u shift = (Bit8u) shift_64;
+
+    for (unsigned n=0; n < 2; n++)
+      op->xmm64u(n) = (Bit64u)(op->xmm64s(n) >> shift);
+  }
+}
+
 BX_CPP_INLINE void xmm_psrlw(BxPackedXmmRegister *op, Bit64u shift_64)
 {
   if(shift_64 > 15) {

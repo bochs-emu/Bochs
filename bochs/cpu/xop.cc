@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2012 Stanislav Shwartsman
+//   Copyright (c) 2011-2013 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -36,7 +36,7 @@ extern void mxcsr_to_softfloat_status_word(float_status_t &status, bx_mxcsr_t mx
 typedef void (*simd_compare_method)(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2);
 
 // comparison predicate for PCOMB
-static simd_compare_method compare8[8] = {
+static simd_compare_method xop_compare8[8] = {
   xmm_pcmpltb,
   xmm_pcmpleb,
   xmm_pcmpgtb,
@@ -48,7 +48,7 @@ static simd_compare_method compare8[8] = {
 };
 
 // comparison predicate for PCOMUB
-static simd_compare_method compare8u[8] = {
+static simd_compare_method xop_compare8u[8] = {
   xmm_pcmpltub,
   xmm_pcmpleub,
   xmm_pcmpgtub,
@@ -60,7 +60,7 @@ static simd_compare_method compare8u[8] = {
 };
 
 // comparison predicate for PCOMW
-static simd_compare_method compare16[8] = {
+static simd_compare_method xop_compare16[8] = {
   xmm_pcmpltw,
   xmm_pcmplew,
   xmm_pcmpgtw,
@@ -72,7 +72,7 @@ static simd_compare_method compare16[8] = {
 };
 
 // comparison predicate for PCOMUW
-static simd_compare_method compare16u[8] = {
+static simd_compare_method xop_compare16u[8] = {
   xmm_pcmpltuw,
   xmm_pcmpleuw,
   xmm_pcmpgtuw,
@@ -84,7 +84,7 @@ static simd_compare_method compare16u[8] = {
 };
 
 // comparison predicate for PCOMD
-static simd_compare_method compare32[8] = {
+static simd_compare_method xop_compare32[8] = {
   xmm_pcmpltd,
   xmm_pcmpled,
   xmm_pcmpgtd,
@@ -96,7 +96,7 @@ static simd_compare_method compare32[8] = {
 };
 
 // comparison predicate for PCOMUD
-static simd_compare_method compare32u[8] = {
+static simd_compare_method xop_compare32u[8] = {
   xmm_pcmpltud,
   xmm_pcmpleud,
   xmm_pcmpgtud,
@@ -108,7 +108,7 @@ static simd_compare_method compare32u[8] = {
 };
 
 // comparison predicate for PCOMQ
-static simd_compare_method compare64[8] = {
+static simd_compare_method xop_compare64[8] = {
   xmm_pcmpltq,
   xmm_pcmpleq,
   xmm_pcmpgtq,
@@ -120,7 +120,7 @@ static simd_compare_method compare64[8] = {
 };
 
 // comparison predicate for PCOMUQ
-static simd_compare_method compare64u[8] = {
+static simd_compare_method xop_compare64u[8] = {
   xmm_pcmpltuq,
   xmm_pcmpleuq,
   xmm_pcmpgtuq,
@@ -522,7 +522,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMB_VdqHdqWdqIbR(bxInstruction_
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2());
 
-  compare8[i->Ib() & 7](&op1, &op2);
+  xop_compare8[i->Ib() & 7](&op1, &op2);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
@@ -533,7 +533,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMW_VdqHdqWdqIbR(bxInstruction_
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2());
 
-  compare16[i->Ib() & 7](&op1, &op2);
+  xop_compare16[i->Ib() & 7](&op1, &op2);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
@@ -544,7 +544,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMD_VdqHdqWdqIbR(bxInstruction_
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2());
 
-  compare32[i->Ib() & 7](&op1, &op2);
+  xop_compare32[i->Ib() & 7](&op1, &op2);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
@@ -555,7 +555,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMQ_VdqHdqWdqIbR(bxInstruction_
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2());
 
-  compare64[i->Ib() & 7](&op1, &op2);
+  xop_compare64[i->Ib() & 7](&op1, &op2);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
@@ -566,7 +566,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMUB_VdqHdqWdqIbR(bxInstruction
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2());
 
-  compare8u[i->Ib() & 7](&op1, &op2);
+  xop_compare8u[i->Ib() & 7](&op1, &op2);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
@@ -577,7 +577,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMUW_VdqHdqWdqIbR(bxInstruction
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2());
 
-  compare16u[i->Ib() & 7](&op1, &op2);
+  xop_compare16u[i->Ib() & 7](&op1, &op2);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
@@ -588,7 +588,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMUD_VdqHdqWdqIbR(bxInstruction
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2());
 
-  compare32u[i->Ib() & 7](&op1, &op2);
+  xop_compare32u[i->Ib() & 7](&op1, &op2);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
@@ -599,7 +599,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMUQ_VdqHdqWdqIbR(bxInstruction
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1()), op2 = BX_READ_XMM_REG(i->src2());
 
-  compare64u[i->Ib() & 7](&op1, &op2);
+  xop_compare64u[i->Ib() & 7](&op1, &op2);
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 

@@ -183,12 +183,12 @@ void BX_CPU_C::avx512_write_regq_masked(bxInstruction_c *i, const BxPackedAvxReg
   unsigned len = i->getVL();
 
   if (i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, mask >>= 4)
-      xmm_zero_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), mask);
+    for (unsigned n=0; n < len; n++, mask >>= 2)
+      xmm_zero_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), mask);
   }
   else {
-    for (unsigned n=0; n < len; n++, mask >>= 4)
-      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), mask);
+    for (unsigned n=0; n < len; n++, mask >>= 2)
+      xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), mask);
   }
 
   BX_CLEAR_AVX_REGZ(i->dst(), len);

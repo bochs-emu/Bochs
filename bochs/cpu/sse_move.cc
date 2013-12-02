@@ -32,10 +32,10 @@
 
 void BX_CPU_C::print_state_SSE(void)
 {
-  BX_DEBUG(("MXCSR: 0x%08x\n", BX_MXCSR_REGISTER));
+  BX_DEBUG(("MXCSR: 0x%08x", BX_MXCSR_REGISTER));
   for(unsigned n=0;n<BX_XMM_REGISTERS;n++) {
     BxPackedXmmRegister xmm = BX_READ_XMM_REG(n);
-    BX_DEBUG(("XMM%02u: %08x%08x:%08x%08x\n", n,
+    BX_DEBUG(("XMM%02u: %08x%08x:%08x%08x", n,
        xmm.xmm32u(3), xmm.xmm32u(2), xmm.xmm32u(1), xmm.xmm32u(0)));
   }
 }

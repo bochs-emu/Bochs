@@ -32,7 +32,7 @@ void BX_CPU_C::print_state_MMX(void)
 {
   for(int i=0;i<8;i++) {
     BxPackedMmxRegister mm = BX_READ_MMX_REG(i);
-    BX_DEBUG(("MM%d: %08x%08x\n", i, MMXUD1(mm), MMXUD0(mm)));
+    BX_DEBUG(("MM%d: %08x%08x", i, MMXUD1(mm), MMXUD0(mm)));
   }
 }
 
