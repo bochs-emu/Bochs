@@ -166,13 +166,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Half_Vector(bxInstruction_c *
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_VectorD(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  unsigned vl = i->getVL();
 
   Bit16u opmask = BX_READ_16BIT_OPMASK(i->opmask());
   if (i->opmask() != 0 && opmask == 0) {
+    BX_CLEAR_AVX_REGZ(i->dst(), vl);
     BX_NEXT_INSTR(i);
   }
-
-  unsigned vl = i->getVL();
 
   if (i->getEvexb()) {
     Bit32u val_32 = read_virtual_dword(i->seg(), eaddr);
@@ -193,13 +193,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_VectorD(bxInstructi
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_VectorQ(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  unsigned vl = i->getVL();
 
   Bit16u opmask = BX_READ_8BIT_OPMASK(i->opmask());
   if (i->opmask() != 0 && opmask == 0) {
+    BX_CLEAR_AVX_REGZ(i->dst(), vl);
     BX_NEXT_INSTR(i);
   }
-
-  unsigned vl = i->getVL();
 
   if (i->getEvexb()) {
     Bit64u val_64 = read_virtual_qword(i->seg(), eaddr);
