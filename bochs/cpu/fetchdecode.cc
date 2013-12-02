@@ -1678,6 +1678,12 @@ fetch_b1:
 
 modrm_done:
 
+#if BX_SUPPORT_EVEX
+    if (i->modC0() && i->getEvexb()) {
+      i->setVL(BX_VL512);
+    }
+#endif
+
     ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, b2, sse_prefix, os_32, vex_w);
   }
   else {

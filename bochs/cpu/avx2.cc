@@ -138,6 +138,7 @@ AVX_2OP(VPMADDUBSW_VdqHdqWdqR, xmm_pmaddubsw)
 AVX_2OP(VPSADBW_VdqHdqWdqR, xmm_psadbw)
 
 AVX_2OP(VPSRAVD_VdqHdqWdqR, xmm_psravd)
+AVX_2OP(VPSRAVQ_VdqHdqWdqR, xmm_psravq)
 AVX_2OP(VPSLLVD_VdqHdqWdqR, xmm_psllvd)
 AVX_2OP(VPSLLVQ_VdqHdqWdqR, xmm_psllvq)
 AVX_2OP(VPSRLVD_VdqHdqWdqR, xmm_psrlvd)

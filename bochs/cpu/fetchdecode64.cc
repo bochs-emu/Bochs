@@ -2120,6 +2120,12 @@ get_32bit_displ:
 
 modrm_done:
 
+#if BX_SUPPORT_EVEX
+    if (i->modC0() && i->getEvexb()) {
+      i->setVL(BX_VL512);
+    }
+#endif
+
     ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, b2, sse_prefix, offset >> 9, vex_w);
   }
   else {
