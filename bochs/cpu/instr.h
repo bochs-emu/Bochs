@@ -321,6 +321,9 @@ public:
   BX_CPP_INLINE const char* getIaOpcodeName(void) const {
     return get_bx_opcode_name(getIaOpcode());
   }
+  BX_CPP_INLINE const char* getIaOpcodeNameShort(void) const {
+    return get_bx_opcode_name(getIaOpcode()) + /*"BX_IA_"*/ 6;
+  }
 
   BX_CPP_INLINE unsigned repUsedL(void) const {
     return metaInfo.metaInfo1 >> 7;

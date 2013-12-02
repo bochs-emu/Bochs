@@ -192,7 +192,7 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
     return disbufptr;
   }
 
-  const char *opname = i->getIaOpcodeName() + 6; // skip the "BX_IA_"
+  const char *opname = i->getIaOpcodeNameShort(); // skip the "BX_IA_"
   unsigned n;
 #if BX_SUPPORT_EVEX
   bx_bool is_vector = BX_FALSE;

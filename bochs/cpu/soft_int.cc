@@ -34,7 +34,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GwMa(bxInstruction_c *i)
   Bit16s bound_max = (Bit16s) read_virtual_word_32(i->seg(), (eaddr+2) & i->asize_mask());
 
   if (op1_16 < bound_min || op1_16 > bound_max) {
-    BX_DEBUG(("%s: fails bounds test", i->getIaOpcodeName()));
+    BX_DEBUG(("%s: fails bounds test", i->getIaOpcodeNameShort()));
     exception(BX_BR_EXCEPTION, 0);
   }
 
@@ -51,7 +51,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GdMa(bxInstruction_c *i)
   Bit32s bound_max = (Bit32s) read_virtual_dword_32(i->seg(), (eaddr+4) & i->asize_mask());
 
   if (op1_32 < bound_min || op1_32 > bound_max) {
-    BX_DEBUG(("%s: fails bounds test", i->getIaOpcodeName()));
+    BX_DEBUG(("%s: fails bounds test", i->getIaOpcodeNameShort()));
     exception(BX_BR_EXCEPTION, 0);
   }
 

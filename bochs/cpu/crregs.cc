@@ -36,7 +36,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 5
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
     if ((i->dst() & 0xE) == 4) {
-      BX_ERROR(("%s: access to DR4/DR5 causes #UD", i->getIaOpcodeName()));
+      BX_ERROR(("%s: access to DR4/DR5 causes #UD", i->getIaOpcodeNameShort()));
       exception(BX_UD_EXCEPTION, 0);
     }
   }
@@ -45,14 +45,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
   // Note: processor clears GD upon entering debug exception
   // handler, to allow access to the debug registers
   if (BX_CPU_THIS_PTR dr7.get_GD()) {
-    BX_ERROR(("%s: DR7 GD bit is set", i->getIaOpcodeName()));
+    BX_ERROR(("%s: DR7 GD bit is set", i->getIaOpcodeNameShort()));
     BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_DR_ACCESS_BIT;
     exception(BX_DB_EXCEPTION, 0);
   }
 
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
-    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeName()));
+    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -115,7 +115,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
           (BX_CPU_THIS_PTR dr7.get_R_W3() == BX_HWDebugInstruction && BX_CPU_THIS_PTR dr7.get_LEN3()))
       {
         // Instruction breakpoint with LENx not 00b (1-byte length)
-        BX_ERROR(("%s: write of 0x%08x, R/W=00b LEN!=00b", i->getIaOpcodeName(), val_32));
+        BX_ERROR(("%s: write of 0x%08x, R/W=00b LEN!=00b", i->getIaOpcodeNameShort(), val_32));
       }
 #endif
 
@@ -123,7 +123,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
       break;
 
     default:
-      BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeName()));
+      BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
       exception(BX_UD_EXCEPTION, 0);
   }
 
@@ -142,7 +142,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 5
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
     if ((i->src() & 0xE) == 4) {
-      BX_ERROR(("%s: access to DR4/DR5 causes #UD", i->getIaOpcodeName()));
+      BX_ERROR(("%s: access to DR4/DR5 causes #UD", i->getIaOpcodeNameShort()));
       exception(BX_UD_EXCEPTION, 0);
     }
   }
@@ -151,14 +151,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
   // Note: processor clears GD upon entering debug exception
   // handler, to allow access to the debug registers
   if (BX_CPU_THIS_PTR dr7.get_GD()) {
-    BX_ERROR(("%s: DR7 GD bit is set", i->getIaOpcodeName()));
+    BX_ERROR(("%s: DR7 GD bit is set", i->getIaOpcodeNameShort()));
     BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_DR_ACCESS_BIT;
     exception(BX_DB_EXCEPTION, 0);
   }
 
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
-    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeName()));
+    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -192,7 +192,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
       break;
 
     default:
-      BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeName()));
+      BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
       exception(BX_UD_EXCEPTION, 0);
   }
 
@@ -211,27 +211,27 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
 
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
     if ((i->dst() & 0xE) == 4) {
-      BX_ERROR(("%s: access to DR4/DR5 causes #UD", i->getIaOpcodeName()));
+      BX_ERROR(("%s: access to DR4/DR5 causes #UD", i->getIaOpcodeNameShort()));
       exception(BX_UD_EXCEPTION, 0);
     }
   }
 
   if (i->dst() >= 8) {
-    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeName()));
+    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
     exception(BX_UD_EXCEPTION, 0);
   }
 
   // Note: processor clears GD upon entering debug exception
   // handler, to allow access to the debug registers
   if (BX_CPU_THIS_PTR dr7.get_GD()) {
-    BX_ERROR(("%s: DR7 GD bit is set", i->getIaOpcodeName()));
+    BX_ERROR(("%s: DR7 GD bit is set", i->getIaOpcodeNameShort()));
     BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_DR_ACCESS_BIT;
     exception(BX_DB_EXCEPTION, 0);
   }
 
   /* #GP(0) if CPL is not 0 */
   if (CPL != 0) {
-    BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeName()));
+    BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -260,7 +260,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       // access to DR4 causes #UD
     case 6: // DR6
       if (GET32H(val_64)) {
-        BX_ERROR(("%s: attempt to set upper part of DR6", i->getIaOpcodeName()));
+        BX_ERROR(("%s: attempt to set upper part of DR6", i->getIaOpcodeNameShort()));
         exception(BX_GP_EXCEPTION, 0);
       }
       // On Pentium+, bit12 is always zero
@@ -277,7 +277,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       // by setting the LE and/or GE flags.
 
       if (GET32H(val_64)) {
-        BX_ERROR(("%s: attempt to set upper part of DR7", i->getIaOpcodeName()));
+        BX_ERROR(("%s: attempt to set upper part of DR7", i->getIaOpcodeNameShort()));
         exception(BX_GP_EXCEPTION, 0);
       }
 
@@ -292,7 +292,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
           (BX_CPU_THIS_PTR dr7.get_R_W3() == BX_HWDebugInstruction && BX_CPU_THIS_PTR dr7.get_LEN3()))
       {
         // Instruction breakpoint with LENx not 00b (1-byte length)
-        BX_ERROR(("%s: write of 0x%08x, R/W=00b LEN!=00b", i->getIaOpcodeName(), BX_CPU_THIS_PTR dr7.get32()));
+        BX_ERROR(("%s: write of 0x%08x, R/W=00b LEN!=00b", i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR dr7.get32()));
       }
 #endif
 
@@ -300,7 +300,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       break;
 
     default:
-      BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeName()));
+      BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
       exception(BX_UD_EXCEPTION, 0);
   }
 
@@ -318,27 +318,27 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
     if ((i->src() & 0xE) == 4) {
-      BX_ERROR(("%s: access to DR4/DR5 causes #UD", i->getIaOpcodeName()));
+      BX_ERROR(("%s: access to DR4/DR5 causes #UD", i->getIaOpcodeNameShort()));
       exception(BX_UD_EXCEPTION, 0);
     }
   }
 
   if (i->src() >= 8) {
-    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeName()));
+    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
     exception(BX_UD_EXCEPTION, 0);
   }
 
   // Note: processor clears GD upon entering debug exception
   // handler, to allow access to the debug registers
   if (BX_CPU_THIS_PTR dr7.get_GD()) {
-    BX_ERROR(("%s: DR7 GD bit is set", i->getIaOpcodeName()));
+    BX_ERROR(("%s: DR7 GD bit is set", i->getIaOpcodeNameShort()));
     BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_DR_ACCESS_BIT;
     exception(BX_DB_EXCEPTION, 0);
   }
 
   /* #GP(0) if CPL is not 0 */
   if (CPL != 0) {
-    BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeName()));
+    BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -372,7 +372,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
       break;
 
     default:
-      BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeName()));
+      BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
       exception(BX_UD_EXCEPTION, 0);
   }
 
@@ -388,7 +388,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rd(bxInstruction_c *i)
 {
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
-    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeName()));
+    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -421,7 +421,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR2Rd(bxInstruction_c *i)
 {
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
-    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeName()));
+    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -445,7 +445,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rd(bxInstruction_c *i)
 {
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
-    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeName()));
+    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -472,7 +472,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rd(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
     if (! CheckPDPTR(val_32)) {
-      BX_ERROR(("%s: PDPTR check failed !", i->getIaOpcodeName()));
+      BX_ERROR(("%s: PDPTR check failed !", i->getIaOpcodeNameShort()));
       exception(BX_GP_EXCEPTION, 0);
     }
   }
@@ -491,7 +491,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rd(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 5
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
-    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeName()));
+    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -515,7 +515,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR0(bxInstruction_c *i)
 {
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
-    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeName()));
+    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -548,7 +548,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR2(bxInstruction_c *i)
 {
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
-    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeName()));
+    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -568,7 +568,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR3(bxInstruction_c *i)
 {
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
-    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeName()));
+    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -596,7 +596,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR4(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 5
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
-    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeName()));
+    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -619,7 +619,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR4(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rq(bxInstruction_c *i)
 {
   if (CPL!=0) {
-    BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeName()));
+    BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -648,12 +648,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rq(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR2Rq(bxInstruction_c *i)
 {
   if (i->dst() != 2) {
-    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeName()));
+    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
     exception(BX_UD_EXCEPTION, 0);
   }
 
   if (CPL!=0) {
-    BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeName()));
+    BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -676,12 +676,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR2Rq(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rq(bxInstruction_c *i)
 {
   if (i->dst() != 3) {
-    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeName()));
+    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
     exception(BX_UD_EXCEPTION, 0);
   }
 
   if (CPL!=0) {
-    BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeName()));
+    BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -717,12 +717,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rq(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rq(bxInstruction_c *i)
 {
   if (i->dst() != 4) {
-    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeName()));
+    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
     exception(BX_UD_EXCEPTION, 0);
   }
 
   if (CPL!=0) {
-    BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeName()));
+    BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -744,7 +744,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rq(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR0(bxInstruction_c *i)
 {
   if (CPL!=0) {
-    BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeName()));
+    BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -774,12 +774,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR0(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR2(bxInstruction_c *i)
 {
   if (i->src() != 2) {
-    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeName()));
+    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
     exception(BX_UD_EXCEPTION, 0);
   }
 
   if (CPL!=0) {
-    BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeName()));
+    BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -798,12 +798,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR2(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR3(bxInstruction_c *i)
 {
   if (i->src() != 3) {
-    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeName()));
+    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
     exception(BX_UD_EXCEPTION, 0);
   }
 
   if (CPL!=0) {
-    BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeName()));
+    BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -827,12 +827,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR3(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR4(bxInstruction_c *i)
 {
   if (i->src() != 4) {
-    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeName()));
+    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
     exception(BX_UD_EXCEPTION, 0);
   }
 
   if (CPL!=0) {
-    BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeName()));
+    BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -857,7 +857,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
 
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
-    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeName()));
+    BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -1444,7 +1444,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
 {
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
-    BX_ERROR(("%s: priveledge check failed, generate #GP(0)", i->getIaOpcodeName()));
+    BX_ERROR(("%s: priveledge check failed, generate #GP(0)", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 

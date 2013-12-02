@@ -52,7 +52,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
   Bit64u return_RIP = stack_read_qword(RSP);
 
   if (! IsCanonical(return_RIP)) {
-    BX_ERROR(("%s: canonical RIP violation", i->getIaOpcodeName()));
+    BX_ERROR(("%s: canonical RIP violation", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -73,7 +73,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear64(bxInstruction_c *i)
   Bit64u return_RIP = stack_read_qword(RSP);
 
   if (! IsCanonical(return_RIP)) {
-    BX_ERROR(("%s: canonical RIP violation", i->getIaOpcodeName()));
+    BX_ERROR(("%s: canonical RIP violation", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -116,7 +116,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_Jq(bxInstruction_c *i)
   stack_write_qword(RSP-8, RIP);
 
   if (! IsCanonical(new_RIP)) {
-    BX_ERROR(("%s: canonical RIP violation", i->getIaOpcodeName()));
+    BX_ERROR(("%s: canonical RIP violation", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -141,7 +141,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EqR(bxInstruction_c *i)
 
   if (! IsCanonical(new_RIP))
   {
-    BX_ERROR(("%s: canonical RIP violation", i->getIaOpcodeName()));
+    BX_ERROR(("%s: canonical RIP violation", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -183,7 +183,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_Jq(bxInstruction_c *i)
   Bit64u new_RIP = RIP + (Bit32s) i->Id();
 
   if (! IsCanonical(new_RIP)) {
-    BX_ERROR(("%s: canonical RIP violation", i->getIaOpcodeName()));
+    BX_ERROR(("%s: canonical RIP violation", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -391,7 +391,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EqR(bxInstruction_c *i)
   Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
 
   if (! IsCanonical(op1_64)) {
-    BX_ERROR(("%s: canonical RIP violation", i->getIaOpcodeName()));
+    BX_ERROR(("%s: canonical RIP violation", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 

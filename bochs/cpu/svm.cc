@@ -849,7 +849,7 @@ void BX_CPU_C::SvmInterceptIO(bxInstruction_c *i, unsigned port, unsigned len)
         break;
 
       default:
-        BX_PANIC(("VMexit_IO: I/O instruction %s unknown", i->getIaOpcodeName()));
+        BX_PANIC(("VMexit_IO: I/O instruction %s unknown", i->getIaOpcodeNameShort()));
     }
 
     qualification |= (port << 16);
@@ -956,7 +956,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMRUN(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (CPL != 0) {
-    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -1028,7 +1028,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLOAD(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (CPL != 0) {
-    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -1079,7 +1079,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMSAVE(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (CPL != 0) {
-    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -1123,7 +1123,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SKINIT(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (CPL != 0) {
-    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -1144,7 +1144,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLGI(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (CPL != 0) {
-    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -1165,7 +1165,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::STGI(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (CPL != 0) {
-    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -1187,7 +1187,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPGA(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (CPL != 0) {
-    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeName()));
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
