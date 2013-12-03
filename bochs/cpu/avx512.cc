@@ -229,7 +229,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPEQQ_MASK_KGbHdqWdqR(bxInstruc
     for (unsigned n=0; n < len; n++)                                                        \
       (func)(&op1.vmm128(n), &op2.vmm128(n));                                               \
                                                                                             \
-    avx512_write_regd_masked(i, &op1, BX_READ_16BIT_OPMASK(i->opmask()));                   \
+    avx512_write_regd_masked(i, &op1);                                                      \
                                                                                             \
     BX_NEXT_INSTR(i);                                                                       \
   }
@@ -263,7 +263,7 @@ AVX512_2OP_DWORD_EL(VPROLVD_MASK_VdqHdqWdqR, xmm_prolvd)
     for (unsigned n=0; n < len; n++)                                                        \
       (func)(&op1.vmm128(n), &op2.vmm128(n));                                               \
                                                                                             \
-    avx512_write_regq_masked(i, &op1, BX_READ_8BIT_OPMASK(i->opmask()));                    \
+    avx512_write_regq_masked(i, &op1);                                                      \
                                                                                             \
     BX_NEXT_INSTR(i);                                                                       \
   }
@@ -295,7 +295,7 @@ AVX512_2OP_QWORD_EL(VPROLVQ_MASK_VdqHdqWdqR, xmm_prolvq)
     for (unsigned n=0; n < len; n++)                                          \
       (func)(&op.vmm128(n), BX_READ_XMM_REG_LO_QWORD(i->src2()));             \
                                                                               \
-    avx512_write_regd_masked(i, &op, BX_READ_16BIT_OPMASK(i->opmask()));      \
+    avx512_write_regd_masked(i, &op);                                         \
                                                                               \
     BX_NEXT_INSTR(i);                                                         \
   }
@@ -313,7 +313,7 @@ AVX512_PSHIFT_DWORD_EL(VPSLLD_MASK_VdqHdqWdqR, xmm_pslld);
     for (unsigned n=0; n < len; n++)                                          \
       (func)(&op.vmm128(n), BX_READ_XMM_REG_LO_QWORD(i->src2()));             \
                                                                               \
-    avx512_write_regq_masked(i, &op, BX_READ_8BIT_OPMASK(i->opmask()));       \
+    avx512_write_regq_masked(i, &op);                                         \
                                                                               \
     BX_NEXT_INSTR(i);                                                         \
   }
@@ -332,7 +332,7 @@ AVX512_PSHIFT_QWORD_EL(VPSLLQ_MASK_VdqHdqWdqR, xmm_psllq);
     for (unsigned n=0; n < len; n++)                                          \
       (func)(&op.vmm128(n), i->Ib());                                         \
                                                                               \
-    avx512_write_regd_masked(i, &op, BX_READ_16BIT_OPMASK(i->opmask()));      \
+    avx512_write_regd_masked(i, &op);                                         \
                                                                               \
     BX_NEXT_INSTR(i);                                                         \
   }
@@ -353,7 +353,7 @@ AVX512_PSHIFT_IMM_DWORD_EL(VPROLD_MASK_UdqIb, xmm_prold);
     for (unsigned n=0; n < len; n++)                                          \
       (func)(&op.vmm128(n), i->Ib());                                         \
                                                                               \
-    avx512_write_regq_masked(i, &op, BX_READ_8BIT_OPMASK(i->opmask()));       \
+    avx512_write_regq_masked(i, &op);                                         \
                                                                               \
     BX_NEXT_INSTR(i);                                                         \
   }
@@ -372,7 +372,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPABSD_MASK_VdqWdqR(bxInstruction_
   for (unsigned n=0; n < len; n++)
     xmm_pabsd(&op.vmm128(n));
 
-  avx512_write_regd_masked(i, &op, BX_READ_16BIT_OPMASK(i->opmask()));
+  avx512_write_regd_masked(i, &op);
   BX_NEXT_INSTR(i);
 }
 
@@ -384,7 +384,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPABSQ_MASK_VdqWdqR(bxInstruction_
   for (unsigned n=0; n < len; n++)
     xmm_pabsq(&op.vmm128(n));
 
-  avx512_write_regq_masked(i, &op, BX_READ_8BIT_OPMASK(i->opmask()));
+  avx512_write_regq_masked(i, &op);
   BX_NEXT_INSTR(i);
 }
 
@@ -397,7 +397,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSHUFPS_MASK_VpsHpsWpsIbR(bxInstru
   for (unsigned n=0; n < len; n++)
     xmm_shufps(&result.vmm128(n), &op1.vmm128(n), &op2.vmm128(n), i->Ib());
 
-  avx512_write_regd_masked(i, &result, BX_READ_16BIT_OPMASK(i->opmask()));
+  avx512_write_regd_masked(i, &result);
   BX_NEXT_INSTR(i);
 }
 
@@ -414,7 +414,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSHUFPD_MASK_VpdHpdWpdIbR(bxInstru
     order >>= 2;
   }
 
-  avx512_write_regq_masked(i, &result, BX_READ_8BIT_OPMASK(i->opmask()));
+  avx512_write_regq_masked(i, &result);
   BX_NEXT_INSTR(i);
 }
 

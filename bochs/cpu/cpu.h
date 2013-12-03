@@ -4393,8 +4393,8 @@ public: // for now...
 #endif
 
 #if BX_SUPPORT_EVEX
-  BX_SMF void avx512_write_regd_masked(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned mask);
-  BX_SMF void avx512_write_regq_masked(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned mask);
+  BX_SMF void avx512_write_regd_masked(bxInstruction_c *i, const BxPackedAvxRegister *op);
+  BX_SMF void avx512_write_regq_masked(bxInstruction_c *i, const BxPackedAvxRegister *op);
 #endif
 
 #if BX_CPU_LEVEL >= 5

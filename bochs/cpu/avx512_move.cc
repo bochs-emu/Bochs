@@ -164,37 +164,39 @@ void BX_CPU_C::avx_masked_store64(bxInstruction_c *i, bx_address eaddr, const Bx
 
 #include "simd_int.h"
 
-void BX_CPU_C::avx512_write_regd_masked(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned mask)
+void BX_CPU_C::avx512_write_regd_masked(bxInstruction_c *i, const BxPackedAvxRegister *op)
 {
   unsigned len = i->getVL();
 
   BX_ASSERT(i->opmask() != 0);
+  Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
 
   if (i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, mask >>= 4)
-      xmm_zero_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), mask);
+    for (unsigned n=0; n < len; n++, opmask >>= 4)
+      xmm_zero_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), opmask);
   }
   else {
-    for (unsigned n=0; n < len; n++, mask >>= 4)
-      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), mask);
+    for (unsigned n=0; n < len; n++, opmask >>= 4)
+      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), opmask);
   }
 
   BX_CLEAR_AVX_REGZ(i->dst(), len);
 }
 
-void BX_CPU_C::avx512_write_regq_masked(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned mask)
+void BX_CPU_C::avx512_write_regq_masked(bxInstruction_c *i, const BxPackedAvxRegister *op)
 {
   unsigned len = i->getVL();
 
   BX_ASSERT(i->opmask() != 0);
+  Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask());
 
   if (i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, mask >>= 2)
-      xmm_zero_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), mask);
+    for (unsigned n=0; n < len; n++, opmask >>= 2)
+      xmm_zero_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), opmask);
   }
   else {
-    for (unsigned n=0; n < len; n++, mask >>= 2)
-      xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), mask);
+    for (unsigned n=0; n < len; n++, opmask >>= 2)
+      xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), opmask);
   }
 
   BX_CLEAR_AVX_REGZ(i->dst(), len);
@@ -207,14 +209,14 @@ void BX_CPU_C::avx512_write_regq_masked(bxInstruction_c *i, const BxPackedAvxReg
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_MASK_VpsWpsR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
-  avx512_write_regd_masked(i, &op, BX_READ_16BIT_OPMASK(i->opmask()));
+  avx512_write_regd_masked(i, &op);
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_VpdWpdR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
-  avx512_write_regq_masked(i, &op, BX_READ_8BIT_OPMASK(i->opmask()));
+  avx512_write_regq_masked(i, &op);
   BX_NEXT_INSTR(i);
 }
 
