@@ -272,30 +272,95 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTSD_MASK_VsdHpdWsdR(bxInstruct
   BX_NEXT_INSTR(i);
 }
 
-/*
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPD_MASK_VpdHpdWpdIbR(bxInstruction_c *i)
+extern float32_compare_method avx_compare32[32];
+extern float64_compare_method avx_compare64[32];
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPS_MASK_KGwHpsWpsIbR(bxInstruction_c *i)
 {
-  BX_PANIC(("%s: not implemented yet !", i->get_bx_opcode_name()));
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
+  unsigned num_elements = 4 * i->getVL();
+
+  Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
+  Bit32u result = 0;
+
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
+  int ib = i->Ib() & 0x1F;
+
+  for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
+    if (opmask & mask) {
+      if (avx_compare32[ib](op1.vmm32u(n), op2.vmm32u(n), status)) result |= mask;
+    }
+  }
+
+  check_exceptionsSSE(status.float_exception_flags);
+  BX_WRITE_OPMASK(i->dst(), result);
+
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPS_MASK_VpsHpsWpsIbR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPD_MASK_KGbHpdWpdIbR(bxInstruction_c *i)
 {
-  BX_PANIC(("%s: not implemented yet !", i->get_bx_opcode_name()));
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
+  unsigned num_elements = 2 * i->getVL();
+
+  Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
+  Bit32u result = 0;
+
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
+  int ib = i->Ib() & 0x1F;
+
+  for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
+    if (opmask & mask) {
+      if (avx_compare64[ib](op1.vmm64u(n), op2.vmm64u(n), status)) result |= mask;
+    }
+  }
+
+  check_exceptionsSSE(status.float_exception_flags);
+  BX_WRITE_OPMASK(i->dst(), result);
+
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSD_MASK_VsdHpdWsdIbR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSD_MASK_KGbHsdWsdIbR(bxInstruction_c *i)
 {
-  BX_PANIC(("%s: not implemented yet !", i->get_bx_opcode_name()));
+  Bit32u result = 0;
+
+  if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
+    float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->src1());
+    float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());
+
+    float_status_t status;
+    mxcsr_to_softfloat_status_word(status, MXCSR);
+    softfloat_status_word_rc_override(status, i);
+    if (avx_compare64[i->Ib() & 0x1F](op1, op2, status)) result = 1;
+    check_exceptionsSSE(status.float_exception_flags);
+  }
+
+  BX_WRITE_OPMASK(i->dst(), result);
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSS_MASK_VssHpsWssIbR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSS_MASK_KGbHssWssIbR(bxInstruction_c *i)
 {
-  BX_PANIC(("%s: not implemented yet !", i->get_bx_opcode_name()));
+  Bit32u result = 0;
+
+  if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
+    float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->src1());
+    float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());
+
+    float_status_t status;
+    mxcsr_to_softfloat_status_word(status, MXCSR);
+    softfloat_status_word_rc_override(status, i);
+    if (avx_compare32[i->Ib() & 0x1F](op1, op2, status)) result = 1;
+    check_exceptionsSSE(status.float_exception_flags);
+  }
+
+  BX_WRITE_OPMASK(i->dst(), result);
   BX_NEXT_INSTR(i);
 }
-*/
 
 #endif

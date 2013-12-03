@@ -35,6 +35,8 @@ typedef union bx_xmm_reg_t {
    Bit16u  xmm_u16[8];
    Bit32u  xmm_u32[4];
    Bit64u  xmm_u64[2];
+
+   void clear() { xmm_u64[0] = xmm_u64[1] = 0; }
 } BxPackedXmmRegister;
 
 #ifdef BX_BIG_ENDIAN
@@ -100,6 +102,11 @@ typedef union bx_ymm_reg_t {
    Bit32u  ymm_u32[8];
    Bit64u  ymm_u64[4];
    BxPackedXmmRegister ymm_v128[2];
+
+   void clear() {
+     ymm_v128[0].clear();
+     ymm_v128[1].clear();
+   }
 } BxPackedYmmRegister;
 
 #ifdef BX_BIG_ENDIAN
@@ -139,6 +146,11 @@ typedef union bx_zmm_reg_t {
    Bit64u  zmm_u64[8];
    BxPackedXmmRegister zmm_v128[4];
    BxPackedYmmRegister zmm_v256[2];
+
+   void clear() {
+     zmm_v256[0].clear();
+     zmm_v256[1].clear();
+   }
 } BxPackedZmmRegister;
 
 #ifdef BX_BIG_ENDIAN
@@ -289,9 +301,7 @@ typedef BxPackedYmmRegister BxPackedAvxRegister;
 #define BX_READ_YMM_REG(index) (BX_CPU_THIS_PTR vmm[index].vmm256(0))
 
 /* clear upper part of the ZMM register */
-#define BX_CLEAR_AVX_HIGH256(index) \
-  { BX_CPU_THIS_PTR vmm[index].vmm64u(4) = BX_CPU_THIS_PTR vmm[index].vmm64u(5) = \
-    BX_CPU_THIS_PTR vmm[index].vmm64u(6) = BX_CPU_THIS_PTR vmm[index].vmm64u(7) = 0; }
+#define BX_CLEAR_AVX_HIGH256(index) { BX_CPU_THIS_PTR vmm[index].vmm256(1).clear(); }
 
 #else /* BX_SUPPORT_EVEX */
 
@@ -307,7 +317,7 @@ typedef BxPackedYmmRegister BxPackedAvxRegister;
 
 /* clear upper part of AVX128 register */
 #define BX_CLEAR_AVX_HIGH128(index) \
-    { BX_CPU_THIS_PTR vmm[index].vmm64u(2) = BX_CPU_THIS_PTR vmm[index].vmm64u(3) = 0; \
+    { BX_CPU_THIS_PTR vmm[index].vmm128(1).clear(); \
       BX_CLEAR_AVX_HIGH256(index); }
 
 /* write YMM register and clear upper part of the AVX register */

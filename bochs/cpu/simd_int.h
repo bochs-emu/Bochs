@@ -1092,10 +1092,7 @@ BX_CPP_INLINE void xmm_psraq(BxPackedXmmRegister *op, Bit64u shift_64)
 
 BX_CPP_INLINE void xmm_psrlw(BxPackedXmmRegister *op, Bit64u shift_64)
 {
-  if(shift_64 > 15) {
-    op->xmm64u(0) = 0;
-    op->xmm64u(1) = 0;
-  }
+  if(shift_64 > 15) op->clear();
   else
   {
     Bit8u shift = (Bit8u) shift_64;
@@ -1107,10 +1104,7 @@ BX_CPP_INLINE void xmm_psrlw(BxPackedXmmRegister *op, Bit64u shift_64)
 
 BX_CPP_INLINE void xmm_psrld(BxPackedXmmRegister *op, Bit64u shift_64)
 {
-  if(shift_64 > 31) {
-    op->xmm64u(0) = 0;
-    op->xmm64u(1) = 0;
-  }
+  if(shift_64 > 31) op->clear();
   else
   {
     Bit8u shift = (Bit8u) shift_64;
@@ -1122,10 +1116,7 @@ BX_CPP_INLINE void xmm_psrld(BxPackedXmmRegister *op, Bit64u shift_64)
 
 BX_CPP_INLINE void xmm_psrlq(BxPackedXmmRegister *op, Bit64u shift_64)
 {
-  if(shift_64 > 64) {
-    op->xmm64u(0) = 0;
-    op->xmm64u(1) = 0;
-  }
+  if(shift_64 > 64) op->clear();
   else
   {
     Bit8u shift = (Bit8u) shift_64;
@@ -1137,10 +1128,7 @@ BX_CPP_INLINE void xmm_psrlq(BxPackedXmmRegister *op, Bit64u shift_64)
 
 BX_CPP_INLINE void xmm_psllw(BxPackedXmmRegister *op, Bit64u shift_64)
 {
-  if(shift_64 > 15) {
-    op->xmm64u(0) = 0;
-    op->xmm64u(1) = 0;
-  }
+  if(shift_64 > 15) op->clear();
   else
   {
     Bit8u shift = (Bit8u) shift_64;
@@ -1152,10 +1140,7 @@ BX_CPP_INLINE void xmm_psllw(BxPackedXmmRegister *op, Bit64u shift_64)
 
 BX_CPP_INLINE void xmm_pslld(BxPackedXmmRegister *op, Bit64u shift_64)
 {
-  if(shift_64 > 31) {
-    op->xmm64u(0) = 0;
-    op->xmm64u(1) = 0;
-  }
+  if(shift_64 > 31) op->clear();
   else
   {
     Bit8u shift = (Bit8u) shift_64;
@@ -1167,10 +1152,7 @@ BX_CPP_INLINE void xmm_pslld(BxPackedXmmRegister *op, Bit64u shift_64)
 
 BX_CPP_INLINE void xmm_psllq(BxPackedXmmRegister *op, Bit64u shift_64)
 {
-  if(shift_64 > 63) {
-    op->xmm64u(0) = 0;
-    op->xmm64u(1) = 0;
-  }
+  if(shift_64 > 63) op->clear();
   else
   {
     Bit8u shift = (Bit8u) shift_64;
@@ -1182,10 +1164,7 @@ BX_CPP_INLINE void xmm_psllq(BxPackedXmmRegister *op, Bit64u shift_64)
 
 BX_CPP_INLINE void xmm_psrldq(BxPackedXmmRegister *op, Bit8u shift)
 {
-  if(shift > 15) {
-    op->xmm64u(0) = 0;
-    op->xmm64u(1) = 0;
-  }
+  if(shift > 15) op->clear();
   else {
     if (shift > 7) {
       op->xmm64u(0) = op->xmm64u(1);
@@ -1204,10 +1183,7 @@ BX_CPP_INLINE void xmm_psrldq(BxPackedXmmRegister *op, Bit8u shift)
 
 BX_CPP_INLINE void xmm_pslldq(BxPackedXmmRegister *op, Bit8u shift)
 {
-  if(shift > 15) {
-    op->xmm64u(0) = 0;
-    op->xmm64u(1) = 0;
-  }
+  if(shift > 15) op->clear();
   else {
     if (shift > 7) {
       op->xmm64u(1) = op->xmm64u(0);
@@ -1289,6 +1265,22 @@ BX_CPP_INLINE void xmm_prorq(BxPackedXmmRegister *op, int shift)
   }
 }
 
+BX_CPP_INLINE void xmm_prorvd(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for(unsigned n=0;n<4;n++) {
+    int shift = op2->xmm32u(n) & 0x1f;
+    op1->xmm32u(n) = (op1->xmm32u(n) >> shift) | (op1->xmm32u(n) << (32 - shift));
+  }
+}
+
+BX_CPP_INLINE void xmm_prorvq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for(unsigned n=0;n<2;n++) {
+    int shift = op2->xmm64u(n) & 0x3f;
+    op1->xmm64u(n) = (op1->xmm64u(n) >> shift) | (op1->xmm64u(n) << (64 - shift));
+  }
+}
+
 // rotate (left)
 
 BX_CPP_INLINE void xmm_prolb(BxPackedXmmRegister *op, int shift)
@@ -1324,6 +1316,22 @@ BX_CPP_INLINE void xmm_prolq(BxPackedXmmRegister *op, int shift)
 
   for(unsigned n=0;n<2;n++) {
     op->xmm64u(n) = (op->xmm64u(n) << shift) | (op->xmm64u(n) >> (64 - shift));
+  }
+}
+
+BX_CPP_INLINE void xmm_prolvd(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for(unsigned n=0;n<4;n++) {
+    int shift = op2->xmm32u(n) & 0x1f;
+    op1->xmm32u(n) = (op1->xmm32u(n) << shift) | (op1->xmm32u(n) >> (32 - shift));
+  }
+}
+
+BX_CPP_INLINE void xmm_prolvq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for(unsigned n=0;n<2;n++) {
+    int shift = op2->xmm64u(n) & 0x3f;
+    op1->xmm64u(n) = (op1->xmm64u(n) << shift) | (op1->xmm64u(n) >> (64 - shift));
   }
 }
 

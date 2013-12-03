@@ -143,6 +143,10 @@ AVX_2OP(VPSLLVD_VdqHdqWdqR, xmm_psllvd)
 AVX_2OP(VPSLLVQ_VdqHdqWdqR, xmm_psllvq)
 AVX_2OP(VPSRLVD_VdqHdqWdqR, xmm_psrlvd)
 AVX_2OP(VPSRLVQ_VdqHdqWdqR, xmm_psrlvq)
+AVX_2OP(VPROLVD_VdqHdqWdqR, xmm_prolvd)
+AVX_2OP(VPROLVQ_VdqHdqWdqR, xmm_prolvq)
+AVX_2OP(VPRORVD_VdqHdqWdqR, xmm_prorvd)
+AVX_2OP(VPRORVQ_VdqHdqWdqR, xmm_prorvq)
 
 #define AVX_1OP(HANDLER, func)                                                             \
   /* AVX instruction with single src operand */                                            \
@@ -184,6 +188,7 @@ AVX_PSHIFT(VPSRLD_VdqHdqWdqR, xmm_psrld);
 AVX_PSHIFT(VPSRLQ_VdqHdqWdqR, xmm_psrlq);
 AVX_PSHIFT(VPSRAW_VdqHdqWdqR, xmm_psraw);
 AVX_PSHIFT(VPSRAD_VdqHdqWdqR, xmm_psrad);
+AVX_PSHIFT(VPSRAQ_VdqHdqWdqR, xmm_psraq);
 AVX_PSHIFT(VPSLLW_VdqHdqWdqR, xmm_psllw);
 AVX_PSHIFT(VPSLLD_VdqHdqWdqR, xmm_pslld);
 AVX_PSHIFT(VPSLLQ_VdqHdqWdqR, xmm_psllq);
@@ -208,9 +213,14 @@ AVX_PSHIFT_IMM(VPSRLD_UdqIb, xmm_psrld);
 AVX_PSHIFT_IMM(VPSRLQ_UdqIb, xmm_psrlq);
 AVX_PSHIFT_IMM(VPSRAW_UdqIb, xmm_psraw);
 AVX_PSHIFT_IMM(VPSRAD_UdqIb, xmm_psrad);
+AVX_PSHIFT_IMM(VPSRAQ_UdqIb, xmm_psraq);
 AVX_PSHIFT_IMM(VPSLLW_UdqIb, xmm_psllw);
 AVX_PSHIFT_IMM(VPSLLD_UdqIb, xmm_pslld);
 AVX_PSHIFT_IMM(VPSLLQ_UdqIb, xmm_psllq);
+AVX_PSHIFT_IMM(VPROLD_UdqIb, xmm_prold);
+AVX_PSHIFT_IMM(VPROLQ_UdqIb, xmm_prolq);
+AVX_PSHIFT_IMM(VPRORD_UdqIb, xmm_prord);
+AVX_PSHIFT_IMM(VPRORQ_UdqIb, xmm_prorq);
 
 AVX_PSHIFT_IMM(VPSRLDQ_UdqIb, xmm_psrldq);
 AVX_PSHIFT_IMM(VPSLLDQ_UdqIb, xmm_pslldq);
@@ -556,13 +566,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXDQ256_VdqWdqR(bxInstruction
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPALIGNR_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1()), op2 = BX_READ_YMM_REG(i->src2());
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
   unsigned len = i->getVL();
 
   for (unsigned n=0; n<len; n++)
-    xmm_palignr(&op2.ymm128(n), &op1.ymm128(n), i->Ib());
+    xmm_palignr(&op2.vmm128(n), &op1.vmm128(n), i->Ib());
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op2, i->getVL());
+  BX_WRITE_AVX_REGZ(i->dst(), op2, i->getVL());
 
   BX_NEXT_INSTR(i);
 }

@@ -1841,7 +1841,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPS_VpsWpsIbR(bxInstruction_c *i)
   float32 tmp1 = float32_add(op1.xmm32u(0), op1.xmm32u(1), status);
   float32 tmp2 = float32_add(op1.xmm32u(2), op1.xmm32u(3), status);
 
-  op1.xmm64u(0) = op1.xmm64u(1) = 0;
+  op1.clear();
 
 #ifdef BX_DPPS_DPPD_NAN_MATCHING_HARDWARE
   float32 r1 = float32_add(tmp1, tmp2, status);
@@ -1874,33 +1874,28 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPS_VpsWpsIbR(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPD_VpdHpdWpdIbR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->src2()), tmp;
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->src2());
   Bit8u mask = i->Ib();
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
-  tmp.xmm64u(0) = tmp.xmm64u(1) = 0;
+  xmm_mulpd_mask(&op1, &op2, status, mask >> 4);
 
-  if (mask & 0x10)
-     tmp.xmm64u(0) = float64_mul(op1.xmm64u(0), op2.xmm64u(0), status);
-  if (mask & 0x20)
-     tmp.xmm64u(1) = float64_mul(op1.xmm64u(1), op2.xmm64u(1), status);
-
-  op1.xmm64u(0) = op1.xmm64u(1) = 0;
+  op2.clear();
 
 #ifdef BX_DPPS_DPPD_NAN_MATCHING_HARDWARE
-  if (mask & 0x01) op1.xmm64u(0) = float64_add(tmp.xmm64u(0), tmp.xmm64u(1), status);
-  if (mask & 0x02) op1.xmm64u(1) = float64_add(tmp.xmm64u(1), tmp.xmm64u(0), status);
+  if (mask & 0x01) op2.xmm64u(0) = float64_add(op1.xmm64u(0), op1.xmm64u(1), status);
+  if (mask & 0x02) op2.xmm64u(1) = float64_add(op1.xmm64u(1), op1.xmm64u(0), status);
 #else
-  float64 result = float64_add(tmp.xmm64u(0), tmp.xmm64u(1), status);
+  float64 result = float64_add(op1.xmm64u(0), op1.xmm64u(1), status);
 
-  if (mask & 0x01) op1.xmm64u(0) = result;
-  if (mask & 0x02) op1.xmm64u(1) = result;
+  if (mask & 0x01) op2.xmm64u(0) = result;
+  if (mask & 0x02) op2.xmm64u(1) = result;
 #endif
 
   check_exceptionsSSE(status.float_exception_flags);
-  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+  BX_WRITE_XMM_REGZ(i->dst(), op2, i->getVL());
 
   BX_NEXT_INSTR(i);
 }

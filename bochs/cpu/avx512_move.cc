@@ -176,6 +176,8 @@ void BX_CPU_C::avx512_write_regd_masked(bxInstruction_c *i, const BxPackedAvxReg
     for (unsigned n=0; n < len; n++, mask >>= 4)
       xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), mask);
   }
+
+  BX_CLEAR_AVX_REGZ(i->dst(), len);
 }
 
 void BX_CPU_C::avx512_write_regq_masked(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned mask)

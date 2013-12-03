@@ -401,10 +401,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PCLMULQDQ_VdqHdqWdqIbR(bxInstructi
   // B determined by imm8[4]
   Bit64u b = op2.xmm64u((imm8 >> 4) & 1);
 
-  r.xmm64u(0) = 0;
-  r.xmm64u(1) = 0;
+  r.clear();
 
-  for (int n = 0; b && n < 64; n++) {
+  for (unsigned n = 0; b && n < 64; n++) {
       if (b & 1) {
           r.xmm64u(0) ^= a.xmm64u(0);
           r.xmm64u(1) ^= a.xmm64u(1);

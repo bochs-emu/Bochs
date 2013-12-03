@@ -170,8 +170,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_VectorD(bxInstructi
 
   Bit16u opmask = BX_READ_16BIT_OPMASK(i->opmask());
   if (i->opmask() != 0 && opmask == 0) {
-    BX_CLEAR_AVX_REGZ(i->dst(), vl);
-    BX_NEXT_INSTR(i);
+    BX_CPU_CALL_METHOD(i->execute2(), (i)); // for now let execute method to deal with zero/merge masking semantics
+    return;
   }
 
   if (i->getEvexb()) {
@@ -197,8 +197,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_VectorQ(bxInstructi
 
   Bit16u opmask = BX_READ_8BIT_OPMASK(i->opmask());
   if (i->opmask() != 0 && opmask == 0) {
-    BX_CLEAR_AVX_REGZ(i->dst(), vl);
-    BX_NEXT_INSTR(i);
+    BX_CPU_CALL_METHOD(i->execute2(), (i)); // for now let execute method to deal with zero/merge masking semantics
+    return;
   }
 
   if (i->getEvexb()) {
