@@ -84,7 +84,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPD_MASK_KGwHdqWdqIbR(bxInstruc
   unsigned ib = i->Ib() & 7;
 
   Bit32u result = 0;
-  for (int n=len-1; n >= 0; n++) {
+  for (int n=len-1; n >= 0; n--) {
     result <<= 4;
     result |= avx512_compare32[ib](&op1.vmm128(n), &op2.vmm128(n));
   }
@@ -93,6 +93,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPD_MASK_KGwHdqWdqIbR(bxInstruc
     result &= (Bit32u) BX_READ_16BIT_OPMASK(i->opmask());
 
   BX_WRITE_OPMASK(i->dst(), result);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPUD_MASK_KGwHdqWdqIbR(bxInstruction_c *i)
@@ -102,7 +103,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPUD_MASK_KGwHdqWdqIbR(bxInstru
   unsigned ib = i->Ib() & 7;
 
   Bit32u result = 0;
-  for (int n=len-1; n >= 0; n++) {
+  for (int n=len-1; n >= 0; n--) {
     result <<= 4;
     result |= avx512_compare32u[ib](&op1.vmm128(n), &op2.vmm128(n));
   }
@@ -111,6 +112,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPUD_MASK_KGwHdqWdqIbR(bxInstru
     result &= (Bit32u) BX_READ_16BIT_OPMASK(i->opmask());
 
   BX_WRITE_OPMASK(i->dst(), result);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPQ_MASK_KGbHdqWdqIbR(bxInstruction_c *i)
@@ -120,7 +122,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPQ_MASK_KGbHdqWdqIbR(bxInstruc
   unsigned ib = i->Ib() & 7;
 
   Bit32u result = 0;
-  for (int n=len-1; n >= 0; n++) {
+  for (int n=len-1; n >= 0; n--) {
     result <<= 2;
     result |= avx512_compare64[ib](&op1.vmm128(n), &op2.vmm128(n));
   }
@@ -129,6 +131,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPQ_MASK_KGbHdqWdqIbR(bxInstruc
     result &= (Bit32u) BX_READ_8BIT_OPMASK(i->opmask());
 
   BX_WRITE_OPMASK(i->dst(), result);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPUQ_MASK_KGbHdqWdqIbR(bxInstruction_c *i)
@@ -138,7 +141,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPUQ_MASK_KGbHdqWdqIbR(bxInstru
   unsigned ib = i->Ib() & 7;
 
   Bit32u result = 0;
-  for (int n=len-1; n >= 0; n++) {
+  for (int n=len-1; n >= 0; n--) {
     result <<= 2;
     result |= avx512_compare64u[ib](&op1.vmm128(n), &op2.vmm128(n));
   }
@@ -147,6 +150,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPUQ_MASK_KGbHdqWdqIbR(bxInstru
     result &= (Bit32u) BX_READ_8BIT_OPMASK(i->opmask());
 
   BX_WRITE_OPMASK(i->dst(), result);
+  BX_NEXT_INSTR(i);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -157,7 +161,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPGTD_MASK_KGwHdqWdqR(bxInstruc
   unsigned len = i->getVL();
 
   Bit32u result = 0;
-  for (int n=len-1; n >= 0; n++) {
+  for (int n=len-1; n >= 0; n--) {
     result <<= 4;
     result |= xmm_pcmpgtd_mask(&op1.vmm128(n), &op2.vmm128(n));
   }
@@ -166,6 +170,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPGTD_MASK_KGwHdqWdqR(bxInstruc
     result &= (Bit32u) BX_READ_16BIT_OPMASK(i->opmask());
 
   BX_WRITE_OPMASK(i->dst(), result);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPGTQ_MASK_KGbHdqWdqR(bxInstruction_c *i)
@@ -174,7 +179,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPGTQ_MASK_KGbHdqWdqR(bxInstruc
   unsigned len = i->getVL();
 
   Bit32u result = 0;
-  for (int n=len-1; n >= 0; n++) {
+  for (int n=len-1; n >= 0; n--) {
     result <<= 2;
     result |= xmm_pcmpgtq_mask(&op1.vmm128(n), &op2.vmm128(n));
   }
@@ -183,6 +188,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPGTQ_MASK_KGbHdqWdqR(bxInstruc
     result &= (Bit32u) BX_READ_8BIT_OPMASK(i->opmask());
 
   BX_WRITE_OPMASK(i->dst(), result);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPEQD_MASK_KGwHdqWdqR(bxInstruction_c *i)
@@ -191,7 +197,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPEQD_MASK_KGwHdqWdqR(bxInstruc
   unsigned len = i->getVL();
 
   Bit32u result = 0;
-  for (int n=len-1; n >= 0; n++) {
+  for (int n=len-1; n >= 0; n--) {
     result <<= 4;
     result |= xmm_pcmpeqd_mask(&op1.vmm128(n), &op2.vmm128(n));
   }
@@ -200,6 +206,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPEQD_MASK_KGwHdqWdqR(bxInstruc
     result &= (Bit32u) BX_READ_16BIT_OPMASK(i->opmask());
 
   BX_WRITE_OPMASK(i->dst(), result);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPEQQ_MASK_KGbHdqWdqR(bxInstruction_c *i)
@@ -208,7 +215,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPEQQ_MASK_KGbHdqWdqR(bxInstruc
   unsigned len = i->getVL();
 
   Bit32u result = 0;
-  for (int n=len-1; n >= 0; n++) {
+  for (int n=len-1; n >= 0; n--) {
     result <<= 2;
     result |= xmm_pcmpeqq_mask(&op1.vmm128(n), &op2.vmm128(n));
   }
@@ -217,6 +224,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPEQQ_MASK_KGbHdqWdqR(bxInstruc
     result &= (Bit32u) BX_READ_8BIT_OPMASK(i->opmask());
 
   BX_WRITE_OPMASK(i->dst(), result);
+  BX_NEXT_INSTR(i);
 }
 
 #define AVX512_2OP_DWORD_EL(HANDLER, func)                                                  \
