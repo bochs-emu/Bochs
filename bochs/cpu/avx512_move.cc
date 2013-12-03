@@ -168,6 +168,8 @@ void BX_CPU_C::avx512_write_regd_masked(bxInstruction_c *i, const BxPackedAvxReg
 {
   unsigned len = i->getVL();
 
+  BX_ASSERT(i->opmask() != 0);
+
   if (i->isZeroMasking()) {
     for (unsigned n=0; n < len; n++, mask >>= 4)
       xmm_zero_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), mask);
@@ -183,6 +185,8 @@ void BX_CPU_C::avx512_write_regd_masked(bxInstruction_c *i, const BxPackedAvxReg
 void BX_CPU_C::avx512_write_regq_masked(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned mask)
 {
   unsigned len = i->getVL();
+
+  BX_ASSERT(i->opmask() != 0);
 
   if (i->isZeroMasking()) {
     for (unsigned n=0; n < len; n++, mask >>= 2)
