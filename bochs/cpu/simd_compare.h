@@ -725,4 +725,42 @@ BX_CPP_INLINE Bit32u xmm_pcmpfalse_mask(const BxPackedXmmRegister *op1, const Bx
   return    0x0;
 }
 
+// compare and test
+
+BX_CPP_INLINE Bit32u xmm_ptestmd_mask(const BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  Bit32u mask = 0;
+  for(unsigned n=0; n<4; n++) {
+    if ((op1->xmm32u(n) & op2->xmm32u(n)) != 0) mask |= (1 << n);
+  }
+  return mask;
+}
+
+BX_CPP_INLINE Bit32u xmm_ptestmq_mask(const BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  Bit32u mask = 0;
+  for(unsigned n=0; n<2; n++) {
+    if ((op1->xmm64u(n) & op2->xmm64u(n)) != 0) mask |= (1 << n);
+  }
+  return mask;
+}
+
+BX_CPP_INLINE Bit32u xmm_ptestnmd_mask(const BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  Bit32u mask = 0;
+  for(unsigned n=0; n<4; n++) {
+    if ((op1->xmm32u(n) & op2->xmm32u(n)) == 0) mask |= (1 << n);
+  }
+  return mask;
+}
+
+BX_CPP_INLINE Bit32u xmm_ptestnmq_mask(const BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  Bit32u mask = 0;
+  for(unsigned n=0; n<2; n++) {
+    if ((op1->xmm64u(n) & op2->xmm64u(n)) == 0) mask |= (1 << n);
+  }
+  return mask;
+}
+
 #endif
