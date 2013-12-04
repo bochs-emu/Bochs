@@ -43,9 +43,6 @@ extern "C" {
 //////////////////////////////////////////////////////////////////////
 #ifdef WIN32
 
-// Definitions that are needed for all WIN32 compilers.
-#  define ssize_t long
-
 #ifndef __MINGW32__
 
 // Definitions that are needed for WIN32 compilers EXCEPT FOR
@@ -199,6 +196,11 @@ extern "C" {
 #if !BX_HAVE_SOCKLEN_T
 // needed on MacOS X 10.1
 typedef int socklen_t;
+#endif
+
+#if !BX_HAVE_SSIZE_T
+// needed on Windows
+typedef Bit64s ssize_t;
 #endif
 
 #if !BX_HAVE_MKSTEMP

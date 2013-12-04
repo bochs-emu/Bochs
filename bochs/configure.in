@@ -186,6 +186,7 @@ if test "$MSVC_TARGET" != 1; then
   AC_CHECK_FUNCS(tmpfile64, AC_DEFINE(BX_HAVE_TMPFILE64))
   AC_CHECK_FUNCS(fseek64, AC_DEFINE(BX_HAVE_FSEEK64))
   AC_CHECK_FUNCS(fseeko64, AC_DEFINE(BX_HAVE_FSEEKO64))
+  AC_CHECK_TYPE(ssize_t, AC_DEFINE(BX_HAVE_SSIZE_T), , [#include <sys/types.h>])
 else
   AC_DEFINE(BX_HAVE_SELECT, 1)
   AC_DEFINE(BX_HAVE_SOCKLEN_T, 0)
@@ -204,6 +205,7 @@ else
   AC_DEFINE(BX_HAVE_TMPFILE64, 0)
   AC_DEFINE(BX_HAVE_FSEEK64, 0)
   AC_DEFINE(BX_HAVE_FSEEKO64, 0)
+  AC_DEFINE(BX_HAVE_SSIZE_T, 0)
 fi
 AC_CHECK_FUNCS(sleep, AC_DEFINE(BX_HAVE_SLEEP))
 AC_CHECK_FUNCS(nanosleep, AC_DEFINE(BX_HAVE_NANOSLEEP))
@@ -852,13 +854,16 @@ AC_ARG_ENABLE(e1000,
 NETLOW_OBJS=''
 if test "$networking" = yes; then
   NETLOW_OBJS='eth_null.o eth_vnet.o'
+  ethernet_modules='null vnet'
   if test "$MSVC_TARGET" != 1; then
     AC_CHECK_HEADER(net/bpf.h, [
         NETLOW_OBJS="$NETLOW_OBJS eth_fbsd.o"
+        ethernet_modules="$ethernet_modules fbsd"
         AC_DEFINE(BX_NETMOD_FBSD, 1)
       ])
     AC_CHECK_HEADER(netpacket/packet.h, [
         NETLOW_OBJS="$NETLOW_OBJS eth_linux.o"
+        ethernet_modules="$ethernet_modules linux"
         AC_DEFINE(BX_NETMOD_LINUX, 1)
       ])
     AC_CHECK_FUNCS(fork, have_fork=1)
@@ -866,16 +871,19 @@ if test "$networking" = yes; then
     AC_CHECK_FUNCS(socketpair, have_socketpair=1)
     if test x"$have_fork" = x1 -a x"$have_execlp" = x1 -a x"$have_socketpair" = x1; then
       NETLOW_OBJS="$NETLOW_OBJS eth_slirp.o"
+      ethernet_modules="$ethernet_modules slirp"
       AC_DEFINE(BX_NETMOD_SLIRP, 1)
     fi
   fi
   case "$target" in
     *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32*)
     NETLOW_OBJS="$NETLOW_OBJS eth_win32.o"
+    ethernet_modules="$ethernet_modules win32"
     AC_DEFINE(BX_NETMOD_WIN32, 1)
     ;;
     *-macosx* | *-darwin*)
     NETLOW_OBJS="$NETLOW_OBJS eth_tuntap.o"
+    ethernet_modules="$ethernet_modules tuntap"
     AC_DEFINE(BX_NETMOD_TUNTAP, 1)
     ;;
     *)
@@ -897,6 +905,7 @@ if test "$networking" = yes; then
 
     if test "$use_ethertap" = yes; then
       NETLOW_OBJS="$NETLOW_OBJS eth_tap.o eth_vde.o"
+      ethernet_modules="$ethernet_modules tap vde"
       AC_DEFINE(BX_NETMOD_TAP, 1)
       AC_DEFINE(BX_NETMOD_VDE, 1)
     fi
@@ -918,6 +927,7 @@ if test "$networking" = yes; then
     ])
     if test "$use_tuntap" = yes; then
       NETLOW_OBJS="$NETLOW_OBJS eth_tuntap.o"
+      ethernet_modules="$ethernet_modules tuntap"
       AC_DEFINE(BX_NETMOD_TUNTAP, 1)
     fi
 
@@ -928,6 +938,8 @@ if test "$networking" = yes; then
     AC_SUBST(NETWORK_LIB_VAR)
   fi
   AC_DEFINE(BX_NETWORKING, 1)
+  AC_MSG_CHECKING(for ethernet modules)
+  AC_MSG_RESULT($ethernet_modules)
 else
   AC_DEFINE(BX_NETWORKING, 0)
 fi

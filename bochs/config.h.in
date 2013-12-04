@@ -137,6 +137,7 @@
 #define BX_HAVE_NET_IF_H 0
 #define BX_HAVE___BUILTIN_BSWAP32 0
 #define BX_HAVE___BUILTIN_BSWAP64 0
+#define BX_HAVE_SSIZE_T 0
 
 // This turns on Roland Mainz's idle hack.  Presently it is specific to the X11
 // and term gui. If people try to enable it elsewhere, give a compile error
