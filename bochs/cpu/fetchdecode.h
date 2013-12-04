@@ -77,7 +77,7 @@ enum {
   BX_SRC_EAX = 1,
   BX_SRC_NNN = 2,
   BX_SRC_RM = 3,
-  BX_SRC_MEM_NO_VVV = 4,
+  // place holder
   BX_SRC_VVV = 5,
   BX_SRC_VIB = 6,
   BX_SRC_VSIB = 7    // gather/scatter vector index

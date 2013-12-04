@@ -26,32 +26,80 @@
 
 #if BX_SUPPORT_EVEX
 
-static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f10[4] = {
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f10R[4] = {
   /* -- */ { BxVexW0, BX_IA_V512_VMOVUPS_VpsWps },
   /* 66 */ { BxVexW1, BX_IA_V512_VMOVUPD_VpdWpd },
   /* F3 */ { BxVexW0, BX_IA_V512_VMOVSS_VssHpsWss },
   /* F2 */ { BxVexW1, BX_IA_V512_VMOVSD_VsdHpdWsd }
 };
 
-static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f10_Mask[4] = {
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f10M[4] = {
+  /* -- */ { BxVexW0, BX_IA_V512_VMOVUPS_VpsWps },
+  /* 66 */ { BxVexW1, BX_IA_V512_VMOVUPD_VpdWpd },
+  /* F3 */ { BxVexW0, BX_IA_V512_VMOVSS_VssWss },
+  /* F2 */ { BxVexW1, BX_IA_V512_VMOVSD_VsdWsd }
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f10[2] = {
+  /* R */ { BxPrefixSSE4, BX_IA_ERROR, BxOpcodeGroupEVEX_0f10R },
+  /* M */ { BxPrefixSSE4, BX_IA_ERROR, BxOpcodeGroupEVEX_0f10M },
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f10R_Mask[4] = {
   /* -- */ { BxVexW0, BX_IA_V512_VMOVUPS_VpsWps_Kmask },
   /* 66 */ { BxVexW1, BX_IA_V512_VMOVUPD_VpdWpd_Kmask },
   /* F3 */ { BxVexW0, BX_IA_V512_VMOVSS_VssHpsWss_Kmask },
   /* F2 */ { BxVexW1, BX_IA_V512_VMOVSD_VsdHpdWsd_Kmask }
 };
 
-static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f11[4] = {
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f10M_Mask[4] = {
+  /* -- */ { BxVexW0, BX_IA_V512_VMOVUPS_VpsWps_Kmask },
+  /* 66 */ { BxVexW1, BX_IA_V512_VMOVUPD_VpdWpd_Kmask },
+  /* F3 */ { BxVexW0, BX_IA_V512_VMOVSS_VssWss_Kmask },
+  /* F2 */ { BxVexW1, BX_IA_V512_VMOVSD_VsdWsd_Kmask }
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f10_Mask[2] = {
+  /* R */ { BxPrefixSSE4, BX_IA_ERROR, BxOpcodeGroupEVEX_0f10R_Mask },
+  /* M */ { BxPrefixSSE4, BX_IA_ERROR, BxOpcodeGroupEVEX_0f10M_Mask },
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f11R[4] = {
   /* -- */ { BxVexW0, BX_IA_V512_VMOVUPS_WpsVps },
   /* 66 */ { BxVexW1, BX_IA_V512_VMOVUPD_WpdVpd },
   /* F3 */ { BxVexW0, BX_IA_V512_VMOVSS_WssHpsVss },
   /* F2 */ { BxVexW1, BX_IA_V512_VMOVSD_WsdHpdVsd }
 };
 
-static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f11_Mask[4] = {
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f11M[4] = {
+  /* -- */ { BxVexW0, BX_IA_V512_VMOVUPS_WpsVps },
+  /* 66 */ { BxVexW1, BX_IA_V512_VMOVUPD_WpdVpd },
+  /* F3 */ { BxVexW0, BX_IA_V512_VMOVSS_WssVss },
+  /* F2 */ { BxVexW1, BX_IA_V512_VMOVSD_WsdVsd }
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f11[2] = {
+  /* R */ { BxPrefixSSE4, BX_IA_ERROR, BxOpcodeGroupEVEX_0f11R },
+  /* M */ { BxPrefixSSE4, BX_IA_ERROR, BxOpcodeGroupEVEX_0f11M },
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f11R_Mask[4] = {
   /* -- */ { BxVexW0, BX_IA_V512_VMOVUPS_WpsVps_Kmask },
   /* 66 */ { BxVexW1, BX_IA_V512_VMOVUPD_WpdVpd_Kmask },
   /* F3 */ { BxVexW0, BX_IA_V512_VMOVSS_WssHpsVss_Kmask },
   /* F2 */ { BxVexW1, BX_IA_V512_VMOVSD_WsdHpdVsd_Kmask }
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f11M_Mask[4] = {
+  /* -- */ { BxVexW0, BX_IA_V512_VMOVUPS_WpsVps_Kmask },
+  /* 66 */ { BxVexW1, BX_IA_V512_VMOVUPD_WpdVpd_Kmask },
+  /* F3 */ { BxVexW0, BX_IA_V512_VMOVSS_WssVss_Kmask },
+  /* F2 */ { BxVexW1, BX_IA_V512_VMOVSD_WsdVsd_Kmask }
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f11_Mask[2] = {
+  /* R */ { BxPrefixSSE4, BX_IA_ERROR, BxOpcodeGroupEVEX_0f11R_Mask },
+  /* M */ { BxPrefixSSE4, BX_IA_ERROR, BxOpcodeGroupEVEX_0f11M_Mask },
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f14[2] = {
@@ -355,10 +403,10 @@ static const BxOpcodeInfo_t BxOpcodeTableEVEX[256*3*2] = {
   /* 0E    */ { 0, BX_IA_ERROR },
   /* 0F k0 */ { 0, BX_IA_ERROR },
   /* 0F    */ { 0, BX_IA_ERROR },
-  /* 10 k0 */ { BxPrefixSSE4, BX_IA_ERROR, BxOpcodeGroupEVEX_0f10 },
-  /* 10    */ { BxPrefixSSE4, BX_IA_ERROR, BxOpcodeGroupEVEX_0f10_Mask },
-  /* 11 k0 */ { BxPrefixSSE4, BX_IA_ERROR, BxOpcodeGroupEVEX_0f11 },
-  /* 11    */ { BxPrefixSSE4, BX_IA_ERROR, BxOpcodeGroupEVEX_0f11_Mask },
+  /* 10 k0 */ { BxSplitMod11B, BX_IA_ERROR, BxOpcodeGroupEVEX_0f10 },      // split because of VMOVSS/VMOVSD encoding issue
+  /* 10    */ { BxSplitMod11B, BX_IA_ERROR, BxOpcodeGroupEVEX_0f10_Mask }, // split because of VMOVSS/VMOVSD encoding issue
+  /* 11 k0 */ { BxSplitMod11B, BX_IA_ERROR, BxOpcodeGroupEVEX_0f11 },      // split because of VMOVSS/VMOVSD encoding issue
+  /* 11    */ { BxSplitMod11B, BX_IA_ERROR, BxOpcodeGroupEVEX_0f11_Mask }, // split because of VMOVSS/VMOVSD encoding issue
   /* 12 k0 */ { 0, BX_IA_ERROR },
   /* 12    */ { 0, BX_IA_ERROR },
   /* 13 k0 */ { 0, BX_IA_ERROR },

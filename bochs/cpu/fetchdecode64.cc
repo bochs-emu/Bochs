@@ -2299,8 +2299,9 @@ modrm_done:
     case BX_SRC_NNN:
       i->setSrcReg(n, nnn);
 #if BX_SUPPORT_AVX
-      if (type == BX_KMASK_REG)
+      if (type == BX_KMASK_REG) {
         if (nnn >= 8) ia_opcode = BX_IA_ERROR;
+      }
 #endif
       break;
     case BX_SRC_RM:
@@ -2315,14 +2316,12 @@ modrm_done:
       }
       break;
 #if BX_SUPPORT_AVX
-    case BX_SRC_MEM_NO_VVV:
-      if (mod_mem) break;
-      // else fall through
     case BX_SRC_VVV:
       i->setSrcReg(n, vvv);
       use_vvv = 1;
-      if (type == BX_KMASK_REG)
+      if (type == BX_KMASK_REG) {
         if (vvv >= 8) ia_opcode = BX_IA_ERROR;
+      }
       break;
     case BX_SRC_VIB:
 #if BX_SUPPORT_EVEX

@@ -1856,9 +1856,6 @@ modrm_done:
       }
       break;
 #if BX_SUPPORT_AVX
-    case BX_SRC_MEM_NO_VVV:
-      if (mod_mem) break;
-      // else fall through
     case BX_SRC_VVV:
       i->setSrcReg(n, vvv);
       use_vvv = 1;
