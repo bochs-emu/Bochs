@@ -288,6 +288,8 @@ typedef BxPackedYmmRegister BxPackedAvxRegister;
 #define BX_WRITE_XMM_REG(index, reg) \
     { (BX_XMM_REG(index)) = (reg); }
 
+/* clear XMM register, upper part of the YMM or ZMM register unchanged */
+#define BX_CLEAR_XMM_REG(index) { BX_XMM_REG(index).clear(); }
 
 /* ************ */
 /* YMM REGISTER */
@@ -382,6 +384,9 @@ typedef BxPackedYmmRegister BxPackedAvxRegister;
     { BX_CPU_THIS_PTR vmm[index] = (reg);                         \
       BX_CLEAR_AVX_REGZ(index, vlen);                             \
     }
+
+/* clear AVX register */
+#define BX_CLEAR_AVX_REG(index) { BX_CPU_THIS_PTR vmm[index].clear(); }
 
 #if BX_SUPPORT_EVEX
 

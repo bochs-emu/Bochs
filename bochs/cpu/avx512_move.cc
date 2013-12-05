@@ -442,13 +442,44 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSS_MASK_WssVssM(bxInstruction_
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSD_MASK_VsdHpdWsdR(bxInstruction_c *i)
 {
-  BX_PANIC(("%s: instruction still not implemented", i->getIaOpcodeName()));
+  BxPackedXmmRegister op;
+
+  if (BX_SCALAR_ELEMENT_MASK(i->opmask())) {
+    op.xmm64u(0) = BX_READ_XMM_REG_LO_QWORD(i->src2());
+  }
+  else {
+    if (! i->isZeroMasking()) {
+      op.xmm64u(0) = BX_READ_XMM_REG_LO_QWORD(i->dst());
+    }
+    else {
+      op.xmm64u(0) = 0;
+    }
+  }
+  op.xmm64u(1) = BX_READ_XMM_REG_HI_QWORD(i->src1());
+
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
+
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSS_MASK_VssHpsWssR(bxInstruction_c *i)
 {
-  BX_PANIC(("%s: instruction still not implemented", i->getIaOpcodeName()));
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src1());
+
+  if (BX_SCALAR_ELEMENT_MASK(i->opmask())) {
+    op.xmm32u(0) = BX_READ_XMM_REG_LO_DWORD(i->src2());
+  }
+  else {
+    if (! i->isZeroMasking()) {
+      op.xmm32u(0) = BX_READ_XMM_REG_LO_DWORD(i->dst());
+    }
+    else {
+      op.xmm32u(0) = 0;
+    }
+  }
+
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
+
   BX_NEXT_INSTR(i);
 }
 

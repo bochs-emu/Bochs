@@ -1968,8 +1968,6 @@ decode_done:
 
 Bit16u BX_CPU_C::WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &attr, unsigned modrm, unsigned sse_prefix, unsigned osize, bx_bool vex_w)
 {
-  unsigned alias = 0;
-
   // Parse mod-nnn-rm and related bytes
   unsigned mod_mem = (modrm & 0xc0) != 0xc0;
   unsigned nnn = (modrm >> 3) & 0x7;
@@ -2006,9 +2004,6 @@ Bit16u BX_CPU_C::WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &a
 #if BX_SUPPORT_AVX
       case BxSplitVexW:
         OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[vex_w]);
-        break;
-      case BxSplitVexW64: // VexW64 is ignored in 32-bit mode
-        OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[long64_mode() ? vex_w : 0]);
         break;
       case BxSplitMod11B:
         OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[mod_mem]);
@@ -2053,18 +2048,27 @@ Bit16u BX_CPU_C::WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &a
     attr |= OpcodeInfoPtr->Attr;
   }
 
-  if (attr & BxAliasSSE) {
-    // SSE alias always comes alone
-    alias = sse_prefix;
-  }
-#if BX_SUPPORT_AVX
-  else if (attr & BxAliasVexW) {
-    // VexW alias could come with BxPrefixSSE
-    alias = vex_w;
-  }
-#endif
+  Bit16u ia_opcode = OpcodeInfoPtr->IA;
 
-  Bit16u ia_opcode = OpcodeInfoPtr->IA + alias;
+  if (ia_opcode != BX_IA_ERROR) {
+    unsigned has_alias = attr & BxAlias;
+    if (has_alias) {
+      unsigned alias = 0;
+      if (has_alias == BxAliasSSE) {
+        alias = sse_prefix;
+      }
+#if BX_SUPPORT_AVX
+      else {
+        // VexW64 is ignored in 32-bit mode
+        if (has_alias == BxAliasVexW || long64_mode()) {
+          alias = vex_w;
+        }
+      }
+#endif
+      ia_opcode += alias;
+    }
+  }
+
   return (ia_opcode);
 }
 

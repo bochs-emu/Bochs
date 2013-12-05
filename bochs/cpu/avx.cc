@@ -45,13 +45,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VZEROUPPER(bxInstruction_c *i)
 /* VZEROALL: VEX.256.0F.77 (VEX.W ignore, VEX.VVV #UD) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VZEROALL(bxInstruction_c *i)
 {
-  // prepare empty AVX register - zeroed by compiler because of static variable
-  static BxPackedXmmRegister xmmnil;
-
   for(unsigned index=0; index < BX_XMM_REGISTERS; index++)
   {
     if (index < 8 || long64_mode())
-      BX_WRITE_XMM_REG_CLEAR_HIGH(index, xmmnil);
+      BX_CLEAR_AVX_REG(index);
   }
 
   BX_NEXT_INSTR(i);
@@ -60,9 +57,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VZEROALL(bxInstruction_c *i)
 /* VMOVSS: VEX.F3.0F 10 (VEX.W ignore) */ 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSS_VssHpsWssR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src2());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src1());
 
-  op.xmm32u(0) = BX_READ_XMM_REG_LO_DWORD(i->src1());
+  op.xmm32u(0) = BX_READ_XMM_REG_LO_DWORD(i->src2());
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
 
@@ -74,8 +71,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSD_VsdHpdWsdR(bxInstruction_c 
 {
   BxPackedXmmRegister op;
 
-  op.xmm64u(0) = BX_READ_XMM_REG_LO_QWORD(i->src1());
-  op.xmm64u(1) = BX_READ_XMM_REG_HI_QWORD(i->src2());
+  op.xmm64u(0) = BX_READ_XMM_REG_LO_QWORD(i->src2());
+  op.xmm64u(1) = BX_READ_XMM_REG_HI_QWORD(i->src1());
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
 
@@ -390,19 +387,25 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPTEST_VdqWdqR(bxInstruction_c *i)
 /* Opcode: VEX.256.66.0F.38.1A (VEX.W=0, VEX.VVV #UD) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF128_VdqMdq(bxInstruction_c *i)
 {
-  unsigned len = i->getVL();
-  BxPackedYmmRegister dst;
+  BxPackedAvxRegister dst;
   BxPackedXmmRegister src;
+  unsigned len = i->getVL();
+
+#if BX_SUPPORT_EVEX
+  if (len == BX_VL128) {
+    BX_ERROR(("%s: vector length must be >= 256 bit", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
   
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   read_virtual_xmmword(i->seg(), eaddr, (Bit8u*) &src);
 
   for (unsigned n=0; n < len; n++) {
-    dst.ymm64u(n*2)   = src.xmm64u(0);
-    dst.ymm64u(n*2+1) = src.xmm64u(1);
+    dst.vmm128(n) = src;
   }
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), dst, len);
+  BX_WRITE_AVX_REGZ(i->dst(), dst, len);
 
   BX_NEXT_INSTR(i);
 }

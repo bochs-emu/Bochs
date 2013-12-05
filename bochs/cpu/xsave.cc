@@ -347,8 +347,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     BX_MXCSR_REGISTER = new_mxcsr;
   }
 
-  static BxPackedXmmRegister xmmnil; /* compiler will clear the variable */
-
   /////////////////////////////////////////////////////////////////////////////
   if ((features_load_enable_mask & BX_XCR0_SSE_MASK) != 0)
   {
@@ -368,7 +366,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
        for(index=0; index < 16; index++) {
          // set XMM8-XMM15 only in 64-bit mode
          if (index < 8 || long64_mode())
-           BX_WRITE_XMM_REG(index, xmmnil);
+           BX_CLEAR_XMM_REG(index);
        }
     }
   }
@@ -448,7 +446,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     else {
       // initialize upper part of ZMM registers with reset values
       for(index=0; index < 16; index++) {
-        BX_WRITE_XMM_REG_CLEAR_HIGH(index+16, xmmnil);
+        BX_CLEAR_AVX_REG(index+16);
       }
     }
   }

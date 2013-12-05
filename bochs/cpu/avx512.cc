@@ -529,6 +529,95 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTQ_MASK_VdqEqR(bxInstruc
   BX_NEXT_INSTR(i);
 }
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF32x4_MASK_VpsMps(bxInstruction_c *i)
+{
+  BxPackedAvxRegister dst;
+  BxPackedXmmRegister src;
+  unsigned len = i->getVL();
+
+#if BX_SUPPORT_EVEX
+  if (len == BX_VL128) {
+    BX_ERROR(("%s: vector length must be >= 256 bit", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
+  Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
+  if (opmask != 0) {
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    read_virtual_xmmword(i->seg(), eaddr, (Bit8u*) &src);
+
+    for (unsigned n=0; n < len; n++) {
+      dst.vmm128(n) = src;
+    }
+
+    avx512_write_regd_masked(i, &dst, len);
+  }
+  else {
+    if (i->isZeroMasking()) {
+      BX_CLEAR_AVX_REG(i->dst());
+    }
+    else {
+      BX_CLEAR_AVX_REGZ(i->dst(), len);
+    }
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF64x4_VpdMpd(bxInstruction_c *i)
+{
+  BxPackedAvxRegister dst;
+  BxPackedYmmRegister src;
+
+#if BX_SUPPORT_EVEX
+  if (i->getVL() != BX_VL512) {
+    BX_ERROR(("%s: must have 512-bit vector length", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  read_virtual_ymmword(i->seg(), eaddr, (Bit8u*) &src);
+
+  dst.vmm256(0) = src;
+  dst.vmm256(1) = src;
+
+  BX_WRITE_AVX_REG(i->dst(), dst);
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF64x4_MASK_VpdMpd(bxInstruction_c *i)
+{
+  BxPackedAvxRegister dst;
+  BxPackedYmmRegister src;
+
+#if BX_SUPPORT_EVEX
+  if (i->getVL() != BX_VL512) {
+    BX_ERROR(("%s: must have 512-bit vector length", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
+  Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask());
+  if (opmask != 0) {
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    read_virtual_ymmword(i->seg(), eaddr, (Bit8u*) &src);
+
+    dst.vmm256(0) = src;
+    dst.vmm256(1) = src;
+
+    avx512_write_regq_masked(i, &dst, BX_VL512);
+  }
+  else {
+    if (i->isZeroMasking())
+      BX_CLEAR_AVX_REG(i->dst());
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 // special bit operations
 
 BX_CPP_INLINE Bit32u ternlogd_scalar(Bit32u op1, Bit32u op2, Bit32u op3, unsigned imm8)

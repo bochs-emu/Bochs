@@ -882,9 +882,7 @@ void BX_CPU_C::reset(unsigned source)
   // Reset XMM state - unchanged on #INIT
   if (source == BX_RESET_HARDWARE) {
     for(n=0; n<BX_XMM_REGISTERS; n++) {
-      // prepare empty AVX register - zeroed by compiler because of static variable
-      static BxPackedXmmRegister xmmnil;
-      BX_WRITE_XMM_REG_CLEAR_HIGH(n, xmmnil);
+      BX_CLEAR_AVX_REG(n);
     }
 
     BX_CPU_THIS_PTR mxcsr.mxcsr = MXCSR_RESET;

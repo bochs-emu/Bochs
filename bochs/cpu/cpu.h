@@ -3362,6 +3362,10 @@ public: // for now...
   BX_SMF BX_INSF_TYPE VPBROADCASTD_MASK_VdqEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPBROADCASTQ_MASK_VdqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+  BX_SMF BX_INSF_TYPE VBROADCASTF32x4_MASK_VpsMps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VBROADCASTF64x4_VpdMpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VBROADCASTF64x4_MASK_VpdMpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   BX_SMF BX_INSF_TYPE VPTERNLOGD_VdqHdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPTERNLOGQ_VdqHdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPTERNLOGD_MASK_VdqHdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -5318,8 +5322,7 @@ enum {
 #define BxFPEscape          0x00A0 // Group encoding: 1010
 #define BxOSizeGrp          0x00B0 // Group encoding: 1011
 #define BxSplitVexW         0x00C0 // Group encoding: 1100
-#define BxSplitVexW64       0x00D0 // Group encoding: 1101 - VexW ignored in 32-bit mode
-#define BxSplitMod11B       0x00E0 // Group encoding: 1110
+#define BxSplitMod11B       0x00D0 // Group encoding: 1101
 
 // The BxImmediate2 mask specifies kind of second immediate data
 // required by instruction.
@@ -5333,8 +5336,10 @@ enum {
 #define BxVexW0             0x0400 // bit 10
 #define BxVexW1             0x0800 // bit 11
 
-#define BxAliasSSE          0x1000 // bit 12, form final opcode using SSE prefix and current opcode
-#define BxAliasVexW         0x2000 // bit 13, form final opcode using VEX.W and current opcode
+#define BxAlias             0x3000 // bits 12..13
+#define BxAliasSSE          0x1000 // Encoding 01: form final opcode using SSE prefix and current opcode
+#define BxAliasVexW         0x2000 // Encoding 10: form final opcode using VEX.W and current opcode
+#define BxAliasVexW64       0x3000 // Encoding 11: form final opcode using VEX.W and current opcode in 64-bit mode only
 
 #define BxLockable          0x4000 // bit 14
 

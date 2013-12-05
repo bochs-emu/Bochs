@@ -835,7 +835,7 @@ void bx_dbg_print_mxcsr_state(void)
 void bx_dbg_print_sse_state(void)
 {
 #if BX_CPU_LEVEL >= 6
-  Bit64u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get();
+  Bit64u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get64();
 
   if ((isa_extensions_bitmask & BX_ISA_SSE) != 0) {
     bx_dbg_print_mxcsr_state();
@@ -899,7 +899,7 @@ void bx_dbg_print_avx_state(unsigned vlen)
 void bx_dbg_print_mmx_state(void)
 {
 #if BX_CPU_LEVEL >= 5
-  Bit64u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get();
+  Bit64u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get64();
 
   if ((isa_extensions_bitmask & BX_ISA_MMX) != 0) {
     char param_name[20];
@@ -949,10 +949,10 @@ void bx_dbg_info_flags(void)
 
 void bx_dbg_info_debug_regs_command(void)
 {
-  bx_address dr0 = SIM->get_param_num("DR0", dbg_cpu_list)->get();
-  bx_address dr1 = SIM->get_param_num("DR1", dbg_cpu_list)->get();
-  bx_address dr2 = SIM->get_param_num("DR2", dbg_cpu_list)->get();
-  bx_address dr3 = SIM->get_param_num("DR3", dbg_cpu_list)->get();
+  bx_address dr0 = SIM->get_param_num("DR0", dbg_cpu_list)->get64();
+  bx_address dr1 = SIM->get_param_num("DR1", dbg_cpu_list)->get64();
+  bx_address dr2 = SIM->get_param_num("DR2", dbg_cpu_list)->get64();
+  bx_address dr3 = SIM->get_param_num("DR3", dbg_cpu_list)->get64();
   Bit32u dr6 = SIM->get_param_num("DR6", dbg_cpu_list)->get();
   Bit32u dr7 = SIM->get_param_num("DR7", dbg_cpu_list)->get();
 
@@ -1048,7 +1048,7 @@ void bx_dbg_info_control_regs_command(void)
     (efer & (1<<0))  ? "SCE" : "sce");
 #endif
 #if BX_CPU_LEVEL >= 6
-  Bit64u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get();
+  Bit64u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get64();
   if ((isa_extensions_bitmask & BX_ISA_XSAVE) != 0) {
     Bit32u xcr0 = SIM->get_param_num("XCR0", dbg_cpu_list)->get();
     dbg_printf("XCR0=0x%08x: %s %s %s %s %s %s %s %s\n", xcr0,
