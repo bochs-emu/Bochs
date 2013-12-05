@@ -860,13 +860,21 @@ void bx_dbg_print_sse_state(void)
 void bx_dbg_print_avx_state(unsigned vlen)
 {
 #if BX_SUPPORT_AVX
-  Bit64u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get();
+  Bit64u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get64();
   char param_name[20];
 
   if ((isa_extensions_bitmask & BX_ISA_AVX) != 0) {
     bx_dbg_print_mxcsr_state();
 
-    for(unsigned i=0;i<BX_XMM_REGISTERS;i++) {
+    unsigned num_regs = 16;
+#if BX_SUPPORT_EVEX
+    if ((isa_extensions_bitmask & BX_ISA_AVX512) != 0)
+      num_regs = BX_XMM_REGISTERS;
+    else
+      vlen = BX_VL256;
+#endif
+
+    for(unsigned i=0;i<num_regs;i++) {
       dbg_printf("VMM[%02u]: ", i);
       for (int j=vlen-1;j >= 0; j--) {
         sprintf(param_name, "SSE.xmm%02d_%d", i, j*2+1);
@@ -1130,39 +1138,39 @@ void bx_dbg_info_registers_command(int which_regs_mask)
     dbg_printf("eip: 0x%08x\n", (unsigned) reg);
 #else
     reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RAX);
-    dbg_printf("rax: 0x%08x_%08x ", GET32H(reg), GET32L(reg));
+    dbg_printf("rax: %08x_%08x ", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RCX);
-    dbg_printf("rcx: 0x%08x_%08x\n", GET32H(reg), GET32L(reg));
+    dbg_printf("rcx: %08x_%08x\n", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RDX);
-    dbg_printf("rdx: 0x%08x_%08x ", GET32H(reg), GET32L(reg));
+    dbg_printf("rdx: %08x_%08x ", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RBX);
-    dbg_printf("rbx: 0x%08x_%08x\n", GET32H(reg), GET32L(reg));
+    dbg_printf("rbx: %08x_%08x\n", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RSP);
-    dbg_printf("rsp: 0x%08x_%08x ", GET32H(reg), GET32L(reg));
+    dbg_printf("rsp: %08x_%08x ", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RBP);
-    dbg_printf("rbp: 0x%08x_%08x\n", GET32H(reg), GET32L(reg));
+    dbg_printf("rbp: %08x_%08x\n", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RSI);
-    dbg_printf("rsi: 0x%08x_%08x ", GET32H(reg), GET32L(reg));
+    dbg_printf("rsi: %08x_%08x ", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RDI);
-    dbg_printf("rdi: 0x%08x_%08x\n", GET32H(reg), GET32L(reg));
+    dbg_printf("rdi: %08x_%08x\n", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_R8);
-    dbg_printf("r8 : 0x%08x_%08x ", GET32H(reg), GET32L(reg));
+    dbg_printf("r8 : %08x_%08x ", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_R9);
-    dbg_printf("r9 : 0x%08x_%08x\n", GET32H(reg), GET32L(reg));
+    dbg_printf("r9 : %08x_%08x\n", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_R10);
-    dbg_printf("r10: 0x%08x_%08x ", GET32H(reg), GET32L(reg));
+    dbg_printf("r10: %08x_%08x ", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_R11);
-    dbg_printf("r11: 0x%08x_%08x\n", GET32H(reg), GET32L(reg));
+    dbg_printf("r11: %08x_%08x\n", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_R12);
-    dbg_printf("r12: 0x%08x_%08x ", GET32H(reg), GET32L(reg));
+    dbg_printf("r12: %08x_%08x ", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_R13);
-    dbg_printf("r13: 0x%08x_%08x\n", GET32H(reg), GET32L(reg));
+    dbg_printf("r13: %08x_%08x\n", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_R14);
-    dbg_printf("r14: 0x%08x_%08x ", GET32H(reg), GET32L(reg));
+    dbg_printf("r14: %08x_%08x ", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_R15);
-    dbg_printf("r15: 0x%08x_%08x\n", GET32H(reg), GET32L(reg));
+    dbg_printf("r15: %08x_%08x\n", GET32H(reg), GET32L(reg));
     reg = bx_dbg_get_instruction_pointer();
-    dbg_printf("rip: 0x%08x_%08x\n", GET32H(reg), GET32L(reg));
+    dbg_printf("rip: %08x_%08x\n", GET32H(reg), GET32L(reg));
 #endif
     reg = BX_CPU(dbg_cpu)->read_eflags();
     dbg_printf("eflags 0x%08x: ", (unsigned) reg);
