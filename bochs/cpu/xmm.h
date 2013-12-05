@@ -63,9 +63,10 @@ typedef union bx_xmm_reg_t {
 
 enum bx_avx_vector_length {
   BX_NO_VL,
-  BX_VL128 = 1,
-  BX_VL256 = 2,
-  BX_VL512 = 4
+  BX_VL128  = 1,
+  BX_VL256  = 2,
+  BX_VL512  = 4,
+  BX_VL1024 = 8 // defined in EVEX but currently #UD in all implementations
 };
 
 #if BX_SUPPORT_EVEX

@@ -2373,6 +2373,13 @@ modrm_done:
   }
 #endif
 
+#if BX_SUPPORT_EVEX
+  // EVEX specific #UD conditions
+  if (i->getVL() > BX_VL512) {
+    ia_opcode = BX_IA_ERROR;
+  }
+#endif
+
 decode_done:
 
   i->setILen(remainingInPage - remain);
