@@ -195,7 +195,7 @@ static BOOL CALLBACK StringParamProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
 
 static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-  static bx_param_filename_c *param;
+  static bx_param_string_c *fpath;
   static bx_param_bool_c *readonly;
   static bx_param_enum_c *devtype, *status;
   static bx_param_enum_c *mediatype;
@@ -207,8 +207,8 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 
   switch (msg) {
     case WM_INITDIALOG:
-      param = (bx_param_filename_c *)lParam;
-      list = (bx_list_c *)param->get_parent();
+      list = (bx_list_c *)SIM->get_param((const char*)lParam);
+      fpath = SIM->get_param_string("path", list);
       status = SIM->get_param_enum("status", list);
       readonly = SIM->get_param_bool("readonly", list);
       devtype = SIM->get_param_enum("devtype", list);
@@ -229,9 +229,9 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
       if (readonly->get()) {
         SendMessage(GetDlgItem(hDlg, IDREADONLY), BM_SETCHECK, BST_CHECKED, 0);
       }
-      lstrcpy(path, param->getptr());
-      title = param->get_label();
-      if (!title) title = param->get_name();
+      lstrcpy(path, fpath->getptr());
+      title = fpath->get_label();
+      if (!title) title = fpath->get_name();
       SetWindowText(hDlg, title);
       if (lstrlen(path) && lstrcmp(path, "none")) {
         SetWindowText(GetDlgItem(hDlg, IDPATH), path);
@@ -244,7 +244,7 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
       switch (LOWORD(wParam)) {
         case IDBROWSE:
           GetDlgItemText(hDlg, IDPATH, path, MAX_PATH);
-          if (AskFilename(hDlg, param, path) > 0) {
+          if (AskFilename(hDlg, (bx_param_filename_c*)fpath, path) > 0) {
             SetWindowText(GetDlgItem(hDlg, IDPATH), path);
             SendMessage(GetDlgItem(hDlg, IDSTATUS), BM_SETCHECK, BST_CHECKED, 0);
             SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_SELECTSTRING, (WPARAM)-1, (LPARAM)"auto");
@@ -262,7 +262,7 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
             lstrcpy(path, "none");
           }
           readonly->set(SendMessage(GetDlgItem(hDlg, IDREADONLY), BM_GETCHECK, 0, 0) == BST_CHECKED);
-          param->set(path);
+          fpath->set(path);
           i = SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_GETCURSEL, 0, 0);
           cap = SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_GETITEMDATA, i, 0);
           mediatype->set(cap);
@@ -735,10 +735,10 @@ int AskString(bx_param_string_c *param)
                         (DLGPROC)StringParamProc, (LPARAM)param);
 }
 
-int FloppyDialog(bx_param_filename_c *param)
+int FloppyDialog(HWND window, const char *pname)
 {
-  return (int) DialogBoxParam(NULL, MAKEINTRESOURCE(FLOPPY_DLG), GetBochsWindow(),
-                        (DLGPROC)FloppyDlgProc, (LPARAM)param);
+  return (int) DialogBoxParam(NULL, MAKEINTRESOURCE(FLOPPY_DLG), window,
+                        (DLGPROC)FloppyDlgProc, (LPARAM)pname);
 }
 
 int MainMenuDialog(HWND hwnd, bx_bool runtime)
@@ -768,10 +768,8 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
         if (opts & sparam->IS_FILENAME) {
           if (opts & sparam->SELECT_FOLDER_DLG) {
             event->retcode = BrowseDir(sparam->get_label(), sparam->getptr());
-          } else if (param->get_parent() == NULL) {
-            event->retcode = AskFilename(GetBochsWindow(), (bx_param_filename_c *)sparam, NULL);
           } else {
-            event->retcode = FloppyDialog((bx_param_filename_c *)sparam);
+            event->retcode = AskFilename(GetBochsWindow(), (bx_param_filename_c *)sparam, NULL);
           }
           return event;
         } else {
@@ -779,8 +777,12 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
           return event;
         }
       } else if (param->get_type() == BXT_LIST) {
-        SIM->get_first_cdrom()->get_param_path(pname, BX_PATHNAME_LEN);
-        event->retcode = (Bit32s) win32ParamDialog(GetBochsWindow(), pname);
+        param->get_param_path(pname, BX_PATHNAME_LEN);
+        if (!strncmp(pname, "floppy", 6)) {
+          event->retcode = FloppyDialog(GetBochsWindow(), pname);
+        } else {
+          event->retcode = (Bit32s) win32ParamDialog(GetBochsWindow(), pname);
+        }
         return event;
       } else if (param->get_type() == BXT_PARAM_BOOL) {
         UINT flag = MB_YESNO | MB_SETFOREGROUND;

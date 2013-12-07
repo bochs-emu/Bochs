@@ -311,7 +311,7 @@ void bx_gui_c::floppyA_handler(void)
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_FLOPPY) {
     // instead of just toggling the status, bring up a dialog asking what disk
     // image you want to switch to.
-    int ret = SIM->ask_param(BXPN_FLOPPYA_PATH);
+    int ret = SIM->ask_param(BXPN_FLOPPYA);
     if (ret > 0) {
       SIM->update_runtime_options();
     }
@@ -329,7 +329,7 @@ void bx_gui_c::floppyB_handler(void)
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_FLOPPY) {
     // instead of just toggling the status, bring up a dialog asking what disk
     // image you want to switch to.
-    int ret = SIM->ask_param(BXPN_FLOPPYB_PATH);
+    int ret = SIM->ask_param(BXPN_FLOPPYB);
     if (ret > 0) {
       SIM->update_runtime_options();
     }
