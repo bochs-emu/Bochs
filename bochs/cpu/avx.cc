@@ -189,14 +189,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_WpsVpsM(bxInstruction_c *i
 /* VEX.F2.0F 12 (VEX.W ignore, VEX.VVV #UD) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVDDUP_VpdWpdR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < (2*len); n+=2) {
-    op.ymm64u(n+1) = op.ymm64u(n);
+    op.vmm64u(n+1) = op.vmm64u(n);
   }
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -204,14 +204,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVDDUP_VpdWpdR(bxInstruction_c *
 /* VEX.F3.0F 12 (VEX.W ignore, VEX.VVV #UD) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSLDUP_VpsWpsR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < (4*len); n+=2) {
-    op.ymm32u(n+1) = op.ymm32u(n);
+    op.vmm32u(n+1) = op.vmm32u(n);
   }
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op, len);
 
   BX_NEXT_INSTR(i);
 }
@@ -219,14 +219,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSLDUP_VpsWpsR(bxInstruction_c 
 /* VEX.F3.0F 12 (VEX.W ignore, VEX.VVV #UD) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSHDUP_VpsWpsR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < (4*len); n+=2) {
-    op.ymm32u(n) = op.ymm32u(n+1);
+    op.vmm32u(n) = op.vmm32u(n+1);
   }
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op, len);
 
   BX_NEXT_INSTR(i);
 }
