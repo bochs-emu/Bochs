@@ -1162,14 +1162,14 @@ static const BxOpcodeInfo_t BxOpcodeTableEVEX[256*3*2] = {
   /* 8E    */ { 0, BX_IA_ERROR },
   /* 8F k0 */ { 0, BX_IA_ERROR },
   /* 8F    */ { 0, BX_IA_ERROR },
-  /* 90 k0 */ { 0, BX_IA_ERROR },
-  /* 90    */ { 0, BX_IA_ERROR },
-  /* 91 k0 */ { 0, BX_IA_ERROR },
-  /* 91    */ { 0, BX_IA_ERROR },
-  /* 92 k0 */ { 0, BX_IA_ERROR },
-  /* 92    */ { 0, BX_IA_ERROR },
-  /* 93 k0 */ { 0, BX_IA_ERROR },
-  /* 93    */ { 0, BX_IA_ERROR },
+  /* 90 k0 */ { 0, BX_IA_ERROR }, // #UD
+  /* 90    */ { BxAliasVexW | BxPrefixSSE66, BX_IA_V512_VGATHERDD_VdqVSib },
+  /* 91 k0 */ { 0, BX_IA_ERROR }, // #UD
+  /* 91    */ { BxAliasVexW | BxPrefixSSE66, BX_IA_V512_VGATHERQD_VdqVSib },
+  /* 92 k0 */ { 0, BX_IA_ERROR }, // #UD
+  /* 92    */ { BxAliasVexW | BxPrefixSSE66, BX_IA_V512_VGATHERDPS_VpsVSib },
+  /* 93 k0 */ { 0, BX_IA_ERROR }, // #UD
+  /* 93    */ { BxAliasVexW | BxPrefixSSE66, BX_IA_V512_VGATHERQPS_VpsVSib },
   /* 94 k0 */ { 0, BX_IA_ERROR },
   /* 94    */ { 0, BX_IA_ERROR },
   /* 95 k0 */ { 0, BX_IA_ERROR },
@@ -1194,14 +1194,14 @@ static const BxOpcodeInfo_t BxOpcodeTableEVEX[256*3*2] = {
   /* 9E    */ { BxAliasVexW | BxPrefixSSE66, BX_IA_V512_VFNMSUB132PS_VpsHpsWps_Kmask },
   /* 9F k0 */ { BxAliasVexW | BxPrefixSSE66, BX_IA_V512_VFNMSUB132SS_VpsHssWss },
   /* 9F    */ { BxAliasVexW | BxPrefixSSE66, BX_IA_V512_VFNMSUB132SS_VpsHssWss_Kmask },
-  /* A0 k0 */ { 0, BX_IA_ERROR },
-  /* A0    */ { 0, BX_IA_ERROR },
-  /* A1 k0 */ { 0, BX_IA_ERROR },
-  /* A1    */ { 0, BX_IA_ERROR },
-  /* A2 k0 */ { 0, BX_IA_ERROR },
-  /* A2    */ { 0, BX_IA_ERROR },
-  /* A3 k0 */ { 0, BX_IA_ERROR },
-  /* A3    */ { 0, BX_IA_ERROR },
+  /* A0 k0 */ { 0, BX_IA_ERROR }, // #UD
+  /* A0    */ { BxAliasVexW | BxPrefixSSE66, BX_IA_V512_VSCATTERDD_VSibVdq },
+  /* A1 k0 */ { 0, BX_IA_ERROR }, // #UD
+  /* A1    */ { BxAliasVexW | BxPrefixSSE66, BX_IA_V512_VSCATTERQD_VSibVdq },
+  /* A2 k0 */ { 0, BX_IA_ERROR }, // #UD
+  /* A2    */ { BxAliasVexW | BxPrefixSSE66, BX_IA_V512_VSCATTERDPS_VSibVps },
+  /* A3 k0 */ { 0, BX_IA_ERROR }, // #UD
+  /* A3    */ { BxAliasVexW | BxPrefixSSE66, BX_IA_V512_VSCATTERQPS_VSibVps },
   /* A4 k0 */ { 0, BX_IA_ERROR },
   /* A4    */ { 0, BX_IA_ERROR },
   /* A5 k0 */ { 0, BX_IA_ERROR },

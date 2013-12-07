@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2012 Stanislav Shwartsman
+//   Copyright (c) 2011-2013 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -30,7 +30,7 @@
 
 bx_address BX_CPP_AttrRegparmN(2) BX_CPU_C::BxResolveGatherD(bxInstruction_c *i, unsigned element)
 {
-  Bit32s index = BX_READ_YMM_REG(i->sibIndex()).ymm32s(element);
+  Bit32s index = BX_READ_AVX_REG(i->sibIndex()).vmm32s(element);
   
   if (i->as64L())
     return (BX_READ_64BIT_REG(i->sibBase()) + (((Bit64s) index) << i->sibScale()) + i->displ32s());
@@ -40,7 +40,7 @@ bx_address BX_CPP_AttrRegparmN(2) BX_CPU_C::BxResolveGatherD(bxInstruction_c *i,
 
 bx_address BX_CPP_AttrRegparmN(2) BX_CPU_C::BxResolveGatherQ(bxInstruction_c *i, unsigned element)
 {
-  Bit64s index = BX_READ_YMM_REG(i->sibIndex()).ymm64s(element);
+  Bit64s index = BX_READ_AVX_REG(i->sibIndex()).vmm64s(element);
   
   if (i->as64L())
     return (BX_READ_64BIT_REG(i->sibBase()) + (index << i->sibScale()) + i->displ32s());
@@ -71,6 +71,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_VpsHps(bxInstruction_c 
       mask->ymm32u(n) = 0;
   }
 
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
   for (n=0; n < 8; n++)
   {
     if (n >= num_elements) {
@@ -84,6 +89,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_VpsHps(bxInstruction_c 
     }
     mask->ymm32u(n) = 0;
   }
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
 
   BX_CLEAR_AVX_HIGH256(i->dst());
   BX_CLEAR_AVX_HIGH256(i->src2());
@@ -113,6 +122,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c 
       mask->ymm32u(n) = 0;
   }
 
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
   for (n=0; n < 4; n++)
   {
     if (n >= num_elements) {
@@ -126,6 +140,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c 
     }
     mask->ymm32u(n) = 0;
   }
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
 
   BX_CLEAR_AVX_HIGH128(i->dst());
   BX_CLEAR_AVX_HIGH128(i->src2());
@@ -155,6 +173,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_VpdHpd(bxInstruction_c 
       mask->ymm64u(n) = 0;
   }
 
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
   for (unsigned n=0; n < 4; n++)
   {
     if (n >= num_elements) {
@@ -168,6 +191,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_VpdHpd(bxInstruction_c 
     }
     mask->ymm64u(n) = 0;
   }
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
 
   BX_CLEAR_AVX_HIGH256(i->dst());
   BX_CLEAR_AVX_HIGH256(i->src2());
@@ -197,6 +224,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_VpdHpd(bxInstruction_c 
       mask->ymm64u(n) = 0;
   }
 
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
   for (n=0; n < 4; n++)
   {
     if (n >= num_elements) {
@@ -211,10 +243,326 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_VpdHpd(bxInstruction_c 
     mask->ymm64u(n) = 0;
   }
 
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
+
   BX_CLEAR_AVX_HIGH256(i->dst());
   BX_CLEAR_AVX_HIGH256(i->src2());
 
   BX_NEXT_INSTR(i);
 }
+
+#if BX_SUPPORT_EVEX
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_MASK_VpsVSib(bxInstruction_c *i)
+{
+  if (i->sibIndex() == i->dst()) {
+    BX_ERROR(("%s: incorrect source operands", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  BxPackedAvxRegister *dest = &BX_AVX_REG(i->dst());
+  Bit64u opmask = BX_READ_OPMASK(i->opmask()), mask;
+
+  // index size = 32, element_size = 32, max vector size = 512
+  // num_elements:
+  //     128 bit => 4
+  //     256 bit => 8
+  //     512 bit => 16
+
+  unsigned n, len = i->getVL(), num_elements = 4 * len;
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
+  for (n=0, mask = 0x1; n < num_elements; n++, mask <<= 1)
+  {
+    if (opmask & mask) {
+      dest->vmm32u(n) = read_virtual_dword(i->seg(), BxResolveGatherD(i, n));
+      opmask &= ~mask;
+      BX_WRITE_OPMASK(i->opmask(), opmask);
+    }
+  }
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
+
+  BX_WRITE_OPMASK(i->opmask(), 0);
+  BX_CLEAR_AVX_REGZ(i->dst(), len);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_MASK_VpsVSib(bxInstruction_c *i)
+{
+  if (i->sibIndex() == i->dst()) {
+    BX_ERROR(("%s: incorrect source operands", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  // index size = 64, element_size = 32, max vector size = 512
+  // num_elements:
+  //     128 bit => 2
+  //     256 bit => 4
+  //     512 bit => 8
+
+  BxPackedAvxRegister *dest = &BX_AVX_REG(i->dst());
+  Bit64u opmask = BX_READ_OPMASK(i->opmask()), mask;
+
+  unsigned n, len = i->getVL(), num_elements = 2 * len;
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
+  for (n=0, mask = 0x1; n < num_elements; n++, mask <<= 1)
+  {
+    if (opmask & mask) {
+      dest->vmm32u(n) = read_virtual_dword(i->seg(), BxResolveGatherQ(i, n));
+      opmask &= ~mask;
+      BX_WRITE_OPMASK(i->opmask(), opmask);
+    }
+  }
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
+
+  // ensure correct upper part clearing of the destination register
+  if (len == BX_VL128) dest->vmm64u(1) = 0;
+  else len--;
+
+  BX_WRITE_OPMASK(i->opmask(), 0);
+  BX_CLEAR_AVX_REGZ(i->dst(), len);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_MASK_VpdVSib(bxInstruction_c *i)
+{
+  if (i->sibIndex() == i->dst()) {
+    BX_ERROR(("%s: incorrect source operands", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  // index size = 32, element_size = 64, max vector size = 512
+  // num_elements:
+  //     128 bit => 2
+  //     256 bit => 4
+  //     512 bit => 8
+
+  BxPackedAvxRegister *dest = &BX_AVX_REG(i->dst());
+  Bit64u opmask = BX_READ_OPMASK(i->opmask()), mask;
+
+  unsigned n, len = i->getVL(), num_elements = 2 * len;
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
+  for (n=0, mask = 0x1; n < num_elements; n++, mask <<= 1)
+  {
+    if (opmask & mask) {
+      dest->vmm64u(n) = read_virtual_qword(i->seg(), BxResolveGatherD(i, n));
+      opmask &= ~mask;
+      BX_WRITE_OPMASK(i->opmask(), opmask);
+    }
+  }
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
+
+  BX_WRITE_OPMASK(i->opmask(), 0);
+  BX_CLEAR_AVX_REGZ(i->dst(), len);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_MASK_VpdVSib(bxInstruction_c *i)
+{
+  if (i->sibIndex() == i->dst()) {
+    BX_ERROR(("VGATHERQPD_VpdHpd: incorrect source operands"));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  // index size = 64, element_size = 64, max vector size = 512
+  // num_elements:
+  //     128 bit => 2
+  //     256 bit => 4
+  //     512 bit => 8
+
+  BxPackedAvxRegister *dest = &BX_AVX_REG(i->dst());
+  Bit64u opmask = BX_READ_OPMASK(i->opmask()), mask;
+
+  unsigned n, len = i->getVL(), num_elements = 2 * len;
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
+  for (n=0, mask = 0x1; n < num_elements; n++, mask <<= 1)
+  {
+    if (opmask & mask) {
+      dest->vmm64u(n) = read_virtual_qword(i->seg(), BxResolveGatherQ(i, n));
+      opmask &= ~mask;
+      BX_WRITE_OPMASK(i->opmask(), opmask);
+    }
+  }
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
+
+  BX_WRITE_OPMASK(i->opmask(), 0);
+  BX_CLEAR_AVX_REGZ(i->dst(), len);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERDPS_MASK_VSibVps(bxInstruction_c *i)
+{
+  BxPackedAvxRegister *src = &BX_AVX_REG(i->src());
+  Bit64u opmask = BX_READ_OPMASK(i->opmask()), mask;
+
+  // index size = 32, element_size = 32, max vector size = 512
+  // num_elements:
+  //     128 bit => 4
+  //     256 bit => 8
+  //     512 bit => 16
+
+  unsigned n, num_elements = 4 * i->getVL();
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
+  for (n=0, mask = 0x1; n < num_elements; n++, mask <<= 1)
+  {
+    if (opmask & mask) {
+      write_virtual_dword(i->seg(), BxResolveGatherD(i, n), src->vmm32u(n));
+      opmask &= ~mask;
+      BX_WRITE_OPMASK(i->opmask(), opmask);
+    }
+  }
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
+
+  BX_WRITE_OPMASK(i->opmask(), 0);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERQPS_MASK_VSibVps(bxInstruction_c *i)
+{
+  BxPackedAvxRegister *src = &BX_AVX_REG(i->src());
+  Bit64u opmask = BX_READ_OPMASK(i->opmask()), mask;
+
+  // index size = 64, element_size = 32, max vector size = 512
+  // num_elements:
+  //     128 bit => 2
+  //     256 bit => 4
+  //     512 bit => 8
+
+  unsigned n, num_elements = 2 * i->getVL();
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
+  for (n=0, mask = 0x1; n < num_elements; n++, mask <<= 1)
+  {
+    if (opmask & mask) {
+      write_virtual_dword(i->seg(), BxResolveGatherQ(i, n), src->vmm32u(n));
+      opmask &= ~mask;
+      BX_WRITE_OPMASK(i->opmask(), opmask);
+    }
+  }
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
+
+  BX_WRITE_OPMASK(i->opmask(), 0);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERDPD_MASK_VSibVpd(bxInstruction_c *i)
+{
+  BxPackedAvxRegister *src = &BX_AVX_REG(i->src());
+  Bit64u opmask = BX_READ_OPMASK(i->opmask()), mask;
+
+  // index size = 32, element_size = 64, max vector size = 512
+  // num_elements:
+  //     128 bit => 2
+  //     256 bit => 4
+  //     512 bit => 8
+
+  unsigned n, num_elements = 2 * i->getVL();
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
+  for (n=0, mask = 0x1; n < num_elements; n++, mask <<= 1)
+  {
+    if (opmask & mask) {
+      write_virtual_qword(i->seg(), BxResolveGatherD(i, n), src->vmm64u(n));
+      opmask &= ~mask;
+      BX_WRITE_OPMASK(i->opmask(), opmask);
+    }
+  }
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
+
+  BX_WRITE_OPMASK(i->opmask(), 0);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERQPD_MASK_VSibVpd(bxInstruction_c *i)
+{
+  BxPackedAvxRegister *src = &BX_AVX_REG(i->src());
+  Bit64u opmask = BX_READ_OPMASK(i->opmask()), mask;
+
+  // index size = 64, element_size = 64, max vector size = 512
+  // num_elements:
+  //     128 bit => 2
+  //     256 bit => 4
+  //     512 bit => 8
+
+  unsigned n, num_elements = 2 * i->getVL();
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
+  for (n=0, mask = 0x1; n < num_elements; n++, mask <<= 1)
+  {
+    if (opmask & mask) {
+      write_virtual_qword(i->seg(), BxResolveGatherQ(i, n), src->vmm64u(n));
+      opmask &= ~mask;
+      BX_WRITE_OPMASK(i->opmask(), opmask);
+    }
+  }
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
+
+  BX_WRITE_OPMASK(i->opmask(), 0);
+  BX_NEXT_INSTR(i);
+}
+
+#endif // BX_SUPPORT_EVEX
 
 #endif
