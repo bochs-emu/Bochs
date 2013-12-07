@@ -182,7 +182,7 @@ typedef union bx_zmm_reg_t {
 
 #if BX_SUPPORT_EVEX
 #  define vmm64s(i)   zmm64s(i)
-#  define vmm32s(i)   zmm64s(i)
+#  define vmm32s(i)   zmm32s(i)
 #  define vmm16s(i)   zmm16s(i)
 #  define vmmsbyte(i) zmmsbyte(i)
 #  define vmmubyte(i) zmmubyte(i)
@@ -194,7 +194,7 @@ typedef union bx_zmm_reg_t {
 #else
 #  if BX_SUPPORT_AVX
 #    define vmm64s(i)   ymm64s(i)
-#    define vmm32s(i)   ymm64s(i)
+#    define vmm32s(i)   ymm32s(i)
 #    define vmm16s(i)   ymm16s(i)
 #    define vmmsbyte(i) ymmsbyte(i)
 #    define vmmubyte(i) ymmubyte(i)
@@ -204,7 +204,7 @@ typedef union bx_zmm_reg_t {
 #    define vmm128(i)   ymm128(i)
 #  else
 #    define vmm64s(i)   xmm64s(i)
-#    define vmm32s(i)   xmm64s(i)
+#    define vmm32s(i)   xmm32s(i)
 #    define vmm16s(i)   xmm16s(i)
 #    define vmmsbyte(i) xmmsbyte(i)
 #    define vmmubyte(i) xmmubyte(i)
