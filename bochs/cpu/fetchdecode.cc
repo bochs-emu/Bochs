@@ -1896,16 +1896,15 @@ modrm_done:
     if ((attr & BxVexW1) != 0 && !vex_w) {
       ia_opcode = BX_IA_ERROR;
     }
+#if BX_SUPPORT_EVEX
+    // EVEX specific #UD conditions
+    if (i->getVL() > BX_VL512) {
+      ia_opcode = BX_IA_ERROR;
+    }
+#endif
   }
   else {
     BX_ASSERT(! use_vvv);
-  }
-#endif
-
-#if BX_SUPPORT_EVEX
-  // EVEX specific #UD conditions
-  if (i->getVL() > BX_VL512) {
-    ia_opcode = BX_IA_ERROR;
   }
 #endif
 
