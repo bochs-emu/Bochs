@@ -242,6 +242,12 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
 
     if (! i->modC0() && (src_index == BX_SRC_RM || src_index == BX_SRC_VSIB)) {
       disbufptr = resolve_memref(disbufptr, i, src_index);
+#if BX_SUPPORT_EVEX
+      if (n == 0 && src_type == BX_VMM_REG && i->opmask()) {
+        disbufptr = dis_sprintf(disbufptr, "{k%d}%s", i->opmask(), 
+                i->isZeroMasking() ? "{z}" : "");
+      }
+#endif
     }
     else {
       unsigned srcreg = i->getSrcReg(n);
@@ -279,7 +285,7 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
 #if BX_SUPPORT_EVEX
             if (n == 0 && i->opmask()) {
               disbufptr = dis_sprintf(disbufptr, "{k%d}%s", i->opmask(),
-                i->isZeroMasking() ? "{z}" : "");
+                  i->isZeroMasking() ? "{z}" : "");
             }
 #endif
           }
@@ -291,6 +297,10 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
         case BX_KMASK_REG:
           disbufptr = dis_sprintf(disbufptr, "k%d", srcreg);
           assert(srcreg < 8);
+          if (n == 0 && i->opmask()) {
+            disbufptr = dis_sprintf(disbufptr, "{k%d}%s", i->opmask(),
+                  i->isZeroMasking() ? "{z}" : "");
+          }
           break;
 #endif
         case BX_SEGREG:
