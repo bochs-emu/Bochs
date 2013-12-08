@@ -29,17 +29,6 @@
 
 const char log_choices[5][16] = {"ignore", "log", "ask user", "end simulation", "no change"};
 
-char *backslashes(char *s)
-{
-  if (s != NULL) {
-    while (*s != 0) {
-       if (*s == '/') *s = '\\';
-       s++;
-    }
-  }
-  return s;
-}
-
 HWND GetBochsWindow()
 {
   HWND hwnd;
@@ -49,32 +38,6 @@ HWND GetBochsWindow()
     hwnd = GetForegroundWindow();
   }
   return hwnd;
-}
-
-BOOL CreateImage(HWND hDlg, int sectors, const char *filename)
-{
-  if (sectors < 1) {
-    MessageBox(hDlg, "The disk size is invalid.", "Invalid size", MB_ICONERROR);
-    return FALSE;
-  }
-  if (lstrlen(filename) < 1) {
-    MessageBox(hDlg, "You must type a file name for the new disk image.", "Bad filename", MB_ICONERROR);
-    return FALSE;
-  }
-  int ret = SIM->create_disk_image (filename, sectors, 0);
-  if (ret == -1) {  // already exists
-    int answer = MessageBox(hDlg, "File exists.  Do you want to overwrite it?",
-                            "File exists", MB_YESNO);
-    if (answer == IDYES)
-      ret = SIM->create_disk_image (filename, sectors, 1);
-    else
-      return FALSE;
-  }
-  if (ret == -2) {
-    MessageBox(hDlg, "I could not create the disk image. Check for permission problems or available disk space.", "Failed", MB_ICONERROR);
-    return FALSE;
-  }
-  return TRUE;
 }
 
 int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
@@ -188,107 +151,6 @@ static BOOL CALLBACK StringParamProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
         case IDCANCEL:
           EndDialog(hDlg, -1);
           break;
-      }
-  }
-  return FALSE;
-}
-
-static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-  static bx_param_string_c *fpath;
-  static bx_param_bool_c *readonly;
-  static bx_param_enum_c *devtype, *status;
-  static bx_param_enum_c *mediatype;
-  bx_list_c *list;
-  char mesg[MAX_PATH];
-  char path[MAX_PATH];
-  const char *title;
-  int i, cap;
-
-  switch (msg) {
-    case WM_INITDIALOG:
-      list = (bx_list_c *)SIM->get_param((const char*)lParam);
-      fpath = SIM->get_param_string("path", list);
-      status = SIM->get_param_enum("status", list);
-      readonly = SIM->get_param_bool("readonly", list);
-      devtype = SIM->get_param_enum("devtype", list);
-      mediatype = SIM->get_param_enum("type", list);
-      cap = devtype->get() - (int)devtype->get_min();
-      SetWindowText(GetDlgItem(hDlg, IDDEVTYPE), floppy_devtype_names[cap]);
-      i = 0;
-      while (floppy_type_names[i] != NULL) {
-        SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_ADDSTRING, 0, (LPARAM)floppy_type_names[i]);
-        SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_SETITEMDATA, i, (LPARAM)(mediatype->get_min() + i));
-        i++;
-      }
-      cap = mediatype->get() - (int)mediatype->get_min();
-      SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_SETCURSEL, cap, 0);
-      if (status->get() == BX_INSERTED) {
-        SendMessage(GetDlgItem(hDlg, IDSTATUS), BM_SETCHECK, BST_CHECKED, 0);
-      }
-      if (readonly->get()) {
-        SendMessage(GetDlgItem(hDlg, IDREADONLY), BM_SETCHECK, BST_CHECKED, 0);
-      }
-      lstrcpy(path, fpath->getptr());
-      title = fpath->get_label();
-      if (!title) title = fpath->get_name();
-      SetWindowText(hDlg, title);
-      if (lstrlen(path) && lstrcmp(path, "none")) {
-        SetWindowText(GetDlgItem(hDlg, IDPATH), path);
-      }
-      return TRUE;
-    case WM_CLOSE:
-      EndDialog(hDlg, -1);
-      return TRUE;
-    case WM_COMMAND:
-      switch (LOWORD(wParam)) {
-        case IDBROWSE:
-          GetDlgItemText(hDlg, IDPATH, path, MAX_PATH);
-          if (AskFilename(hDlg, (bx_param_filename_c*)fpath, path) > 0) {
-            SetWindowText(GetDlgItem(hDlg, IDPATH), path);
-            SendMessage(GetDlgItem(hDlg, IDSTATUS), BM_SETCHECK, BST_CHECKED, 0);
-            SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_SELECTSTRING, (WPARAM)-1, (LPARAM)"auto");
-            EnableWindow(GetDlgItem(hDlg, IDCREATE), FALSE);
-          }
-          return TRUE;
-        case IDOK:
-          status->set(BX_EJECTED);
-          if (SendMessage(GetDlgItem(hDlg, IDSTATUS), BM_GETCHECK, 0, 0) == BST_CHECKED) {
-            GetDlgItemText(hDlg, IDPATH, path, MAX_PATH);
-            if (lstrlen(path) == 0) {
-              lstrcpy(path, "none");
-            }
-          } else {
-            lstrcpy(path, "none");
-          }
-          readonly->set(SendMessage(GetDlgItem(hDlg, IDREADONLY), BM_GETCHECK, 0, 0) == BST_CHECKED);
-          fpath->set(path);
-          i = SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_GETCURSEL, 0, 0);
-          cap = SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_GETITEMDATA, i, 0);
-          mediatype->set(cap);
-          if (lstrcmp(path, "none")) {
-            status->set(BX_INSERTED);
-          }
-          EndDialog(hDlg, 1);
-          return TRUE;
-        case IDCANCEL:
-          EndDialog(hDlg, -1);
-          return TRUE;
-        case IDMEDIATYPE:
-          if (HIWORD(wParam) == CBN_SELCHANGE) {
-            i = SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_GETCURSEL, 0, 0);
-            EnableWindow(GetDlgItem(hDlg, IDCREATE), (floppy_type_n_sectors[i] > 0));
-          }
-          break;
-        case IDCREATE:
-          GetDlgItemText(hDlg, IDPATH, path, MAX_PATH);
-          backslashes(path);
-          i = SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_GETCURSEL, 0, 0);
-          if (CreateImage(hDlg, floppy_type_n_sectors[i], path)) {
-            wsprintf(mesg, "Created a %s disk image called %s", floppy_type_names[i], path);
-            MessageBox(hDlg, mesg, "Image created", MB_OK);
-          }
-          return TRUE;
       }
   }
   return FALSE;
@@ -735,12 +597,6 @@ int AskString(bx_param_string_c *param)
                         (DLGPROC)StringParamProc, (LPARAM)param);
 }
 
-int FloppyDialog(HWND window, const char *pname)
-{
-  return (int) DialogBoxParam(NULL, MAKEINTRESOURCE(FLOPPY_DLG), window,
-                        (DLGPROC)FloppyDlgProc, (LPARAM)pname);
-}
-
 int MainMenuDialog(HWND hwnd, bx_bool runtime)
 {
   return (int) DialogBoxParam(NULL, MAKEINTRESOURCE(MAINMENU_DLG), hwnd,
@@ -779,7 +635,7 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
       } else if (param->get_type() == BXT_LIST) {
         param->get_param_path(pname, BX_PATHNAME_LEN);
         if (!strncmp(pname, "floppy", 6)) {
-          event->retcode = FloppyDialog(GetBochsWindow(), pname);
+          event->retcode = (Bit32s) win32FloppyParamDialog(GetBochsWindow(), pname);
         } else {
           event->retcode = (Bit32s) win32ParamDialog(GetBochsWindow(), pname);
         }

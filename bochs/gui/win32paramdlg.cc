@@ -26,10 +26,23 @@
 #include "win32res.h"
 #include "scrollwin.h"
 
-#define ID_LABEL 100
-#define ID_PARAM 1000
+#define ID_LABEL 1000
+#define ID_PARAM 1500
 #define ID_BROWSE 2000
-#define ID_UPDOWN 3000
+#define ID_UPDOWN 2500
+
+// helper function
+
+char *backslashes(char *s)
+{
+  if (s != NULL) {
+    while (*s != 0) {
+       if (*s == '/') *s = '\\';
+       s++;
+    }
+  }
+  return s;
+}
 
 // dialog item list code
 
@@ -458,13 +471,11 @@ HWND CreateTabControl(HWND hDlg, UINT cid, UINT xpos, UINT ypos, SIZE size, BOOL
 }
 
 
-HWND CreateBrowseButton(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide)
+HWND CreateButton(HWND hDlg, UINT id, UINT xpos, UINT ypos, BOOL hide, const char *text)
 {
   HWND Button;
   RECT r;
-  int code;
 
-  code = ID_BROWSE + cid;
   r.left = xpos;
   r.top = ypos;
   r.right = r.left + 50;
@@ -474,10 +485,15 @@ HWND CreateBrowseButton(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide)
   } else {
     MapDialogRect(hDlg, &r);
   }
-  Button = CreateWindow("BUTTON", "Browse...", WS_CHILD, r.left, r.top, r.right-r.left+1, r.bottom-r.top+1, hDlg, (HMENU)code, NULL, NULL);
+  Button = CreateWindow("BUTTON", text, WS_CHILD, r.left, r.top, r.right-r.left+1, r.bottom-r.top+1, hDlg, (HMENU)id, NULL, NULL);
   SendMessage(Button, WM_SETFONT, (WPARAM)DlgFont, TRUE);
   ShowWindow(Button, hide ? SW_HIDE : SW_SHOW);
   return Button;
+}
+
+HWND CreateBrowseButton(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide)
+{
+  return CreateButton(hDlg, ID_BROWSE + cid, xpos, ypos, hide, "Browse...");
 }
 
 HWND CreateCheckbox(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_param_bool_c *bparam)
@@ -794,6 +810,7 @@ void SetParamList(HWND hDlg, bx_list_c *list)
   bx_param_c *param;
   bx_param_num_c *nparam;
   bx_param_enum_c *eparam;
+  bx_param_bool_c *bparam;
   bx_param_string_c *sparam;
   int j;
   LRESULT val;
@@ -813,12 +830,17 @@ void SetParamList(HWND hDlg, bx_list_c *list)
       if (param->get_type() == BXT_LIST) {
         SetParamList(hDlg, (bx_list_c*)param);
       } else if (param->get_type() == BXT_PARAM_BOOL) {
-        val = SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), BM_GETCHECK, 0, 0);
-        ((bx_param_bool_c*)param)->set(val == BST_CHECKED);
+        val = (SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), BM_GETCHECK, 0, 0) == BST_CHECKED);
+        bparam = (bx_param_bool_c*)param;
+        if (val != bparam->get()) {
+          bparam->set(val);
+        }
       } else if (param->get_type() == BXT_PARAM_ENUM) {
-        val = SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), CB_GETCURSEL, 0, 0);
         eparam = (bx_param_enum_c*)param;
-        eparam->set(val + eparam->get_min());
+        val = (LRESULT)(SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), CB_GETCURSEL, 0, 0) + eparam->get_min());
+        if (val != eparam->get()) {
+          eparam->set(val);
+        }
       } else {
         if (SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), EM_GETMODIFY, 0, 0)) {
           if (param->get_type() == BXT_PARAM_NUM) {
@@ -952,6 +974,24 @@ void ProcessDependentList(HWND hDlg, bx_param_c *param, BOOL enabled)
   }
 }
 
+void SetDefaultButtons(HWND Window, UINT xpos, UINT ypos)
+{
+  RECT r;
+
+  r.left = xpos;
+  r.top = ypos;
+  r.right = r.left + 50;
+  r.bottom = r.top + 14;
+  MapDialogRect(Window, &r);
+  MoveWindow(GetDlgItem(Window, IDOK), r.left, r.top, r.right-r.left+1, r.bottom-r.top+1, FALSE);
+  r.left = xpos + 60;
+  r.top = ypos;
+  r.right = r.left + 50;
+  r.bottom = r.top + 14;
+  MapDialogRect(Window, &r);
+  MoveWindow(GetDlgItem(Window, IDCANCEL), r.left, r.top, r.right-r.left+1, r.bottom-r.top+1, FALSE);
+}
+
 static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPARAM lParam)
 {
   static bx_list_c *list = NULL;
@@ -977,18 +1017,7 @@ static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, 
       SetWindowText(Window, list->get_title());
       nextDlgID = 1;
       size = CreateParamList(Window, 0, 6, 6, FALSE, list);
-      r.left = size.cx / 2 - 50;
-      r.top = size.cy + 12;
-      r.right = r.left + 50;
-      r.bottom = r.top + 14;
-      MapDialogRect(Window, &r);
-      MoveWindow(GetDlgItem(Window, IDOK), r.left, r.top, r.right-r.left+1, r.bottom-r.top+1, FALSE);
-      r.left = size.cx / 2 + 10;
-      r.top = size.cy + 12;
-      r.right = r.left + 50;
-      r.bottom = r.top + 14;
-      MapDialogRect(Window, &r);
-      MoveWindow(GetDlgItem(Window, IDCANCEL), r.left, r.top, r.right-r.left+1, r.bottom-r.top+1, FALSE);
+      SetDefaultButtons(Window, size.cx / 2 - 50, size.cy + 12);
       GetWindowRect(Window, &r2);
       r.left = 0;
       r.top = 0;
@@ -1066,11 +1095,122 @@ static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, 
   return 0;
 }
 
+BOOL CreateImage(HWND hDlg, int sectors, const char *filename)
+{
+  if (sectors < 1) {
+    MessageBox(hDlg, "The disk size is invalid.", "Invalid size", MB_ICONERROR);
+    return FALSE;
+  }
+  if (lstrlen(filename) < 1) {
+    MessageBox(hDlg, "You must type a file name for the new disk image.", "Bad filename", MB_ICONERROR);
+    return FALSE;
+  }
+  int ret = SIM->create_disk_image (filename, sectors, 0);
+  if (ret == -1) {  // already exists
+    int answer = MessageBox(hDlg, "File exists.  Do you want to overwrite it?",
+                            "File exists", MB_YESNO);
+    if (answer == IDYES)
+      ret = SIM->create_disk_image (filename, sectors, 1);
+    else
+      return FALSE;
+  }
+  if (ret == -2) {
+    MessageBox(hDlg, "I could not create the disk image. Check for permission problems or available disk space.", "Failed", MB_ICONERROR);
+    return FALSE;
+  }
+  return TRUE;
+}
+
+static INT_PTR CALLBACK FloppyParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPARAM lParam)
+{
+  static bx_list_c *list = NULL;
+  static UINT path_id, type_id;
+  bx_param_enum_c *status;
+  UINT_PTR code;
+  INT_PTR ret;
+  int i;
+  RECT r, r2;
+  SIZE size;
+  char mesg[MAX_PATH];
+  char path[MAX_PATH];
+
+  switch (AMessage) {
+    case WM_INITDIALOG:
+      list = (bx_list_c*)SIM->get_param((const char*)lParam);
+      SetWindowText(Window, list->get_title());
+      nextDlgID = 1;
+      size = CreateParamList(Window, 0, 6, 6, FALSE, list);
+      CreateLabel(Window, 99, 60, size.cy + 12, 160, FALSE,
+                  "Clicking OK signals a media change for this drive.");
+      CreateButton(Window, IDCREATE, size.cx / 2 - 85, size.cy + 30, FALSE, "Create Image");
+      SetDefaultButtons(Window, size.cx / 2 - 25, size.cy + 30);
+      GetWindowRect(Window, &r2);
+      r.left = 0;
+      r.top = 0;
+      r.right = size.cx + 18;
+      r.bottom = size.cy + 70;
+      MapDialogRect(Window, &r);
+      MoveWindow(Window, r2.left, r2.top, r.right, r.bottom, TRUE);
+      CreateParamDlgTooltip(Window);
+      path_id = findDlgIDFromParam(list->get_by_name("path")) + ID_PARAM;
+      type_id = findDlgIDFromParam(list->get_by_name("type")) + ID_PARAM;
+      return TRUE;
+    case WM_COMMAND:
+      code = LOWORD(wParam);
+      switch (code) {
+        case IDOK:
+          // force a media change
+          status = (bx_param_enum_c*)list->get_by_name("status");
+          status->set(BX_EJECTED);
+          SetParamList(Window, list);
+          cleanupDlgLists();
+          DestroyWindow(hwndTT);
+          EndDialog(Window, 1);
+          break;
+        case IDCREATE:
+          GetDlgItemText(Window, path_id, path, MAX_PATH);
+          backslashes(path);
+          i = SendMessage(GetDlgItem(Window, type_id), CB_GETCURSEL, 0, 0);
+          if (CreateImage(Window, floppy_type_n_sectors[i], path)) {
+            wsprintf(mesg, "Created a %s disk image called %s", floppy_type_names[i], path);
+            MessageBox(Window, mesg, "Image created", MB_OK);
+          }
+          return TRUE;
+          break;
+        default:
+          ret = ParamDlgProc(Window, AMessage, wParam, lParam);
+          if (code == path_id) {
+            EnableWindow(GetDlgItem(Window, IDCREATE), IsWindowEnabled(GetDlgItem(Window, type_id)));
+          } else if (code == type_id) {
+            i = SendMessage(GetDlgItem(Window, type_id), CB_GETCURSEL, 0, 0);
+            EnableWindow(GetDlgItem(Window, IDCREATE), (i != 0));
+          }
+          return ret;
+      }
+      break;
+    case WM_CLOSE:
+    case WM_NOTIFY:
+    case WM_CTLCOLOREDIT:
+      return ParamDlgProc(Window, AMessage, wParam, lParam);
+      break;
+  }
+  return 0;
+}
+
 INT_PTR win32ParamDialog(HWND parent, const char *menu)
 {
   InitDlgFont();
   RegisterScrollWindow(NULL);
   INT_PTR ret = DialogBoxParam(NULL, MAKEINTRESOURCE(PARAM_DLG), parent, (DLGPROC)ParamDlgProc, (LPARAM)menu);
+  DeleteObject(DlgFont);
+  return ret;
+}
+
+INT_PTR win32FloppyParamDialog(HWND parent, const char *menu)
+{
+  InitDlgFont();
+  RegisterScrollWindow(NULL);
+  INT_PTR ret = DialogBoxParam(NULL, MAKEINTRESOURCE(PARAM_DLG), parent, (DLGPROC)FloppyParamDlgProc, (LPARAM)menu);
   DeleteObject(DlgFont);
   return ret;
 }
