@@ -152,6 +152,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i, devtype, cmos_value;
   char pname[10];
+  bx_list_c *floppy;
 
   BX_DEBUG(("Init $Id$"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
@@ -183,7 +184,8 @@ void bx_floppy_ctrl_c::init(void)
   // Floppy A setup
   //
 
-  devtype = SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get();
+  floppy = (bx_list_c*)SIM->get_param(BXPN_FLOPPYA);
+  devtype = SIM->get_param_enum("devtype", floppy)->get();
   cmos_value = (devtype << 4);
   if (devtype != BX_FDD_NONE) {
     BX_FD_THIS s.device_type[0] = 1 << (devtype - 1);
@@ -193,21 +195,21 @@ void bx_floppy_ctrl_c::init(void)
     BX_FD_THIS s.statusbar_id[0] = -1;
   }
 
-  if (SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->get() != BX_FLOPPY_NONE) {
-    if (SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->get() == BX_INSERTED) {
-      BX_FD_THIS s.media[0].write_protected = SIM->get_param_bool(BXPN_FLOPPYA_READONLY)->get();
-      if (evaluate_media(BX_FD_THIS s.device_type[0], SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->get(),
-                         SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(), & BX_FD_THIS s.media[0])) {
+  if (SIM->get_param_enum("type", floppy)->get() != BX_FLOPPY_NONE) {
+    if (SIM->get_param_enum("status", floppy)->get() == BX_INSERTED) {
+      BX_FD_THIS s.media[0].write_protected = SIM->get_param_bool("readonly", floppy)->get();
+      if (evaluate_media(BX_FD_THIS s.device_type[0], SIM->get_param_enum("type", floppy)->get(),
+                         SIM->get_param_string("path", floppy)->getptr(), & BX_FD_THIS s.media[0])) {
         BX_FD_THIS s.media_present[0] = 1;
 #define MED (BX_FD_THIS s.media[0])
         BX_INFO(("fd0: '%s' ro=%d, h=%d,t=%d,spt=%d",
-          SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(),
+          SIM->get_param_string("path", floppy)->getptr(),
           MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
         if (MED.write_protected)
-          SIM->get_param_bool(BXPN_FLOPPYA_READONLY)->set(1);
+          SIM->get_param_bool("readonly", floppy)->set(1);
 #undef MED
       } else {
-        SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->set(BX_EJECTED);
+        SIM->get_param_enum("status", floppy)->set(BX_EJECTED);
       }
     }
   }
@@ -216,7 +218,8 @@ void bx_floppy_ctrl_c::init(void)
   // Floppy B setup
   //
 
-  devtype = SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get();
+  floppy = (bx_list_c*)SIM->get_param(BXPN_FLOPPYB);
+  devtype = SIM->get_param_enum("devtype", floppy)->get();
   cmos_value |= devtype;
   if (devtype != BX_FDD_NONE) {
     BX_FD_THIS s.device_type[1] = 1 << (devtype - 1);
@@ -226,21 +229,21 @@ void bx_floppy_ctrl_c::init(void)
     BX_FD_THIS s.statusbar_id[1] = -1;
   }
 
-  if (SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->get() != BX_FLOPPY_NONE) {
-    if (SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->get() == BX_INSERTED) {
-      BX_FD_THIS s.media[1].write_protected = SIM->get_param_bool(BXPN_FLOPPYB_READONLY)->get();
-      if (evaluate_media(BX_FD_THIS s.device_type[1], SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->get(),
-                         SIM->get_param_string(BXPN_FLOPPYB_PATH)->getptr(), & BX_FD_THIS s.media[1])) {
+  if (SIM->get_param_enum("type", floppy)->get() != BX_FLOPPY_NONE) {
+    if (SIM->get_param_enum("status", floppy)->get() == BX_INSERTED) {
+      BX_FD_THIS s.media[1].write_protected = SIM->get_param_bool("readonly", floppy)->get();
+      if (evaluate_media(BX_FD_THIS s.device_type[1], SIM->get_param_enum("type", floppy)->get(),
+                         SIM->get_param_string("path", floppy)->getptr(), & BX_FD_THIS s.media[1])) {
         BX_FD_THIS s.media_present[1] = 1;
 #define MED (BX_FD_THIS s.media[1])
         BX_INFO(("fd1: '%s' ro=%d, h=%d,t=%d,spt=%d",
-          SIM->get_param_string(BXPN_FLOPPYB_PATH)->getptr(),
+          SIM->get_param_string("path", floppy)->getptr(),
           MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
         if (MED.write_protected)
-          SIM->get_param_bool(BXPN_FLOPPYB_READONLY)->set(1);
+          SIM->get_param_bool("readonly", floppy)->set(1);
 #undef MED
       } else {
-        SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->set(BX_EJECTED);
+        SIM->get_param_enum("status", floppy)->set(BX_EJECTED);
       }
     }
   }
@@ -1093,7 +1096,8 @@ void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
             drive, offset, bytes, (direction==FROM_FLOPPY)? "from" : "to"));
 
 #if BX_WITH_MACOS
-  if (strcmp(SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(), SuperDrive))
+  const char *pname = (drive == 0) ? BXPN_FLOPPYA_PATH : BXPN_FLOPPYB_PATH;
+  if (strcmp(SIM->get_param_string(pname)->getptr(), SuperDrive))
 #endif
   {
     if (BX_FD_THIS s.media[drive].vvfat_floppy) {
@@ -1111,7 +1115,7 @@ void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
     if (BX_FD_THIS s.media[drive].vvfat_floppy) {
       ret = BX_FD_THIS s.media[drive].vvfat->read(buffer, bytes);
 #if BX_WITH_MACOS
-    } else if (!strcmp(SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(), SuperDrive))
+    } else if (!strcmp(SIM->get_param_string(pname)->getptr(), SuperDrive))
       ret = fd_read((char *) buffer, offset, bytes);
 #endif
     } else {
@@ -1132,7 +1136,7 @@ void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
     if (BX_FD_THIS s.media[drive].vvfat_floppy) {
       ret = BX_FD_THIS s.media[drive].vvfat->write(buffer, bytes);
 #if BX_WITH_MACOS
-    } else if (!strcmp(SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(), SuperDrive))
+    } else if (!strcmp(SIM->get_param_string(pname)->getptr(), SuperDrive))
       ret = fd_write((char *) buffer, offset, bytes);
 #endif
     } else {
@@ -1444,69 +1448,58 @@ unsigned bx_floppy_ctrl_c::set_media_status(unsigned drive, bx_bool status)
 {
   char *path;
   unsigned type;
+  bx_list_c *floppy;
 
   if (drive == 0)
-    type = SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->get();
+    floppy = (bx_list_c*)SIM->get_param(BXPN_FLOPPYA);
   else
-    type = SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->get();
+    floppy = (bx_list_c*)SIM->get_param(BXPN_FLOPPYB);
 
+  type = SIM->get_param_enum("type", floppy)->get();
   // if setting to the current value, nothing to do
   if ((status == BX_FD_THIS s.media_present[drive]) &&
       ((status == 0) || (type == BX_FD_THIS s.media[drive].type)))
-    return(status);
+    return status;
 
   if (status == 0) {
     // eject floppy
     close_media(&BX_FD_THIS s.media[drive]);
     BX_FD_THIS s.media_present[drive] = 0;
-    if (drive == 0) {
-      SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->set(BX_EJECTED);
-    } else {
-      SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->set(BX_EJECTED);
-    }
+    SIM->get_param_enum("status", floppy)->set(BX_EJECTED);
     BX_FD_THIS s.DIR[drive] |= 0x80; // disk changed line
-    return(0);
+    return 0;
   } else {
     // insert floppy
-    if (drive == 0) {
-      path = SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr();
-    } else {
-      path = SIM->get_param_string(BXPN_FLOPPYB_PATH)->getptr();
-    }
+    path = SIM->get_param_string("path", floppy)->getptr();
     if (!strcmp(path, "none"))
-      return(0);
+      return 0;
     if (evaluate_media(BX_FD_THIS s.device_type[drive], type, path, & BX_FD_THIS s.media[drive])) {
       BX_FD_THIS s.media_present[drive] = 1;
       if (drive == 0) {
 #define MED (BX_FD_THIS s.media[0])
         BX_INFO(("fd0: '%s' ro=%d, h=%d,t=%d,spt=%d",
-          SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(),
+          SIM->get_param_string("path", floppy)->getptr(),
           MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
         if (MED.write_protected)
-          SIM->get_param_bool(BXPN_FLOPPYA_READONLY)->set(1);
+          SIM->get_param_bool("readonly", floppy)->set(1);
 #undef MED
-        SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->set(BX_INSERTED);
+        SIM->get_param_enum("status", floppy)->set(BX_INSERTED);
       } else {
 #define MED (BX_FD_THIS s.media[1])
         BX_INFO(("fd1: '%s' ro=%d, h=%d,t=%d,spt=%d",
-          SIM->get_param_string(BXPN_FLOPPYB_PATH)->getptr(),
+          SIM->get_param_string("path", floppy)->getptr(),
           MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
         if (MED.write_protected)
-          SIM->get_param_bool(BXPN_FLOPPYB_READONLY)->set(1);
+          SIM->get_param_bool("readonly", floppy)->set(1);
 #undef MED
-        SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->set(BX_INSERTED);
+        SIM->get_param_enum("status", floppy)->set(BX_INSERTED);
       }
-      return(1);
+      return 1;
     } else {
       BX_FD_THIS s.media_present[drive] = 0;
-      if (drive == 0) {
-        SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->set(BX_EJECTED);
-        SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->set(BX_FLOPPY_NONE);
-      } else {
-        SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->set(BX_EJECTED);
-        SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->set(BX_FLOPPY_NONE);
-      }
-      return(0);
+      SIM->get_param_enum("status", floppy)->set(BX_EJECTED);
+      SIM->get_param_enum("type", floppy)->set(BX_FLOPPY_NONE);
+      return 0;
     }
   }
 }
@@ -1574,7 +1567,7 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
   // open media file (image file or device)
 #ifdef macintosh
   media->fd = 0;
-  if (strcmp(SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(), SuperDrive))
+  if (strcmp(path, SuperDrive))
 #endif
 #ifdef WIN32
   if ((isalpha(path[0])) && (path[1] == ':') && (strlen(path) == 2)) {
@@ -1616,7 +1609,7 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
     media->write_protected = 1;
 #ifdef macintosh
     media->fd = 0;
-    if (strcmp(SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(), SuperDrive))
+    if (strcmp(path, SuperDrive))
 #endif
 #ifdef WIN32
     if (raw_floppy == 1)
@@ -1634,7 +1627,7 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
   }
 
 #if BX_WITH_MACOS
-  if (!strcmp(SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(), SuperDrive))
+  if (!strcmp(path, SuperDrive))
     ret = fd_stat(&stat_buf);
   else
     ret = fstat(media->fd, &stat_buf);
@@ -1939,8 +1932,7 @@ const char* bx_floppy_ctrl_c::floppy_param_string_handler(bx_param_string_c *par
     val = "none";
   }
   param->get_param_path(pname, BX_PATHNAME_LEN);
-  if ((!strcmp(pname, BXPN_FLOPPYA_PATH)) ||
-      (!strcmp(pname, BXPN_FLOPPYB_PATH))) {
+  if ((!strncmp(pname, "floppy", 6)) && (!strcmp(param->get_name(), "path"))) {
     if (set==1) {
       drive = atoi(base->get_name());
       if (SIM->get_param_enum("devtype", base)->get() == BX_FDD_NONE) {

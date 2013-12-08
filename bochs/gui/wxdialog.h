@@ -244,15 +244,12 @@ class ParamDialog: public wxDialog
 {
 private:
   void ShowHelp();
-  wxChoice *type;
-  wxTextCtrl *serialDelay, *pasteDelay, *mappingFile;
-  wxCheckBox *enableKeymap;
   int genId();
   bool isShowing;
   int nbuttons;
   bool runtime;
 protected:
-  wxBoxSizer *mainSizer, *buttonSizer;
+  wxBoxSizer *mainSizer, *buttonSizer, *infoSizer;
   // hash table that maps the ID of a wxWidgets control (e.g. wxChoice,
   // wxTextCtrl) to the associated ParamStruct object.  Data in the hash table
   // is of ParamStruct*.
