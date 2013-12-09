@@ -992,11 +992,52 @@ void SetDefaultButtons(HWND Window, UINT xpos, UINT ypos)
   MoveWindow(GetDlgItem(Window, IDCANCEL), r.left, r.top, r.right-r.left+1, r.bottom-r.top+1, FALSE);
 }
 
+void HandleOkCancel(HWND hDlg, UINT_PTR id, bx_list_c *list)
+{
+  if (id == IDOK) {
+    SetParamList(hDlg, list);
+  }
+  cleanupDlgLists();
+  DestroyWindow(hwndTT);
+  EndDialog(hDlg, (id == IDOK) ? 1 : -1);
+}
+
+#define BXPD_SET_PATH    1
+#define BXPD_UPDATE_DEPS 2
+
+UINT HandleChildWindowEvents(HWND hDlg, UINT_PTR id, UINT_PTR nc)
+{
+  UINT i, ret = 0;
+  char fname[BX_PATHNAME_LEN];
+
+  if ((id >= ID_BROWSE) && (id < (ID_BROWSE + nextDlgID))) {
+    i = (UINT)(id - ID_BROWSE);
+    bx_param_string_c *sparam = (bx_param_string_c *)findParamFromDlgID(i);
+    if (sparam != NULL) {
+      GetDlgItemText(hDlg, ID_PARAM + i, fname, BX_PATHNAME_LEN);
+      if (AskFilename(hDlg, (bx_param_filename_c *)sparam, fname) > 0) {
+        SetWindowText(GetDlgItem(hDlg, ID_PARAM + i), fname);
+        SendMessage(GetDlgItem(hDlg, ID_PARAM + i), EM_SETMODIFY, 1, 0);
+        SetFocus(GetDlgItem(hDlg, ID_PARAM + i));
+        ret = BXPD_SET_PATH;
+      }
+    }
+  } else if ((id >= ID_PARAM) && (id < (ID_PARAM + nextDlgID))) {
+    if ((nc == EN_CHANGE) || ((nc == CBN_SELCHANGE)) || (nc == BN_CLICKED)) {
+      i = (UINT)(id - ID_PARAM);
+      bx_param_c *param = findParamFromDlgID(i);
+      if (param != NULL) {
+        ProcessDependentList(hDlg, param, TRUE);
+        ret = BXPD_UPDATE_DEPS;
+      }
+    }
+  }
+  return ret;
+}
+
 static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPARAM lParam)
 {
   static bx_list_c *list = NULL;
-  bx_param_c *param;
-  bx_param_string_c *sparam;
   bx_list_c *tmplist;
   int cid;
   UINT_PTR code, id, noticode;
@@ -1004,13 +1045,10 @@ static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, 
   RECT r, r2;
   SIZE size;
   NMHDR nmhdr;
-  char fname[BX_PATHNAME_LEN];
 
   switch (AMessage) {
     case WM_CLOSE:
-      cleanupDlgLists();
-      DestroyWindow(hwndTT);
-      EndDialog(Window, -1);
+      HandleOkCancel(Window, IDCANCEL, list);
       break;
     case WM_INITDIALOG:
       list = (bx_list_c*)SIM->get_param((const char*)lParam);
@@ -1031,38 +1069,12 @@ static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, 
       code = LOWORD(wParam);
       noticode = HIWORD(wParam);
       switch (code) {
-        case IDCANCEL:
-          cleanupDlgLists();
-          DestroyWindow(hwndTT);
-          EndDialog(Window, -1);
-          break;
         case IDOK:
-          SetParamList(Window, list);
-          cleanupDlgLists();
-          DestroyWindow(hwndTT);
-          EndDialog(Window, 1);
+        case IDCANCEL:
+          HandleOkCancel(Window, code, list);
           break;
         default:
-          if ((code >= ID_BROWSE) && (code < (ID_BROWSE + nextDlgID))) {
-            i = (UINT)(code - ID_BROWSE);
-            sparam = (bx_param_string_c *)findParamFromDlgID(i);
-            if (sparam != NULL) {
-              GetDlgItemText(Window, ID_PARAM + i, fname, BX_PATHNAME_LEN);
-              if (AskFilename(Window, (bx_param_filename_c *)sparam, fname) > 0) {
-                SetWindowText(GetDlgItem(Window, ID_PARAM + i), fname);
-                SendMessage(GetDlgItem(Window, ID_PARAM + i), EM_SETMODIFY, 1, 0);
-                SetFocus(GetDlgItem(Window, ID_PARAM + i));
-              }
-            }
-          } else if ((code >= ID_PARAM) && (code < (ID_PARAM + nextDlgID))) {
-            if ((noticode == EN_CHANGE) || ((noticode == CBN_SELCHANGE)) || (noticode == BN_CLICKED)) {
-              i = (UINT)(code - ID_PARAM);
-              param = findParamFromDlgID(i);
-              if (param != NULL) {
-                ProcessDependentList(Window, param, TRUE);
-              }
-            }
-          }
+          HandleChildWindowEvents(Window, code, noticode);
       }
       break;
     case WM_NOTIFY:
@@ -1124,10 +1136,10 @@ BOOL CreateImage(HWND hDlg, int sectors, const char *filename)
 static INT_PTR CALLBACK FloppyParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPARAM lParam)
 {
   static bx_list_c *list = NULL;
-  static UINT path_id, type_id;
+  static UINT path_id, type_id, status_id;
   bx_param_enum_c *status;
-  UINT_PTR code;
-  INT_PTR ret;
+  UINT_PTR code, noticode;
+  UINT ret;
   int i;
   RECT r, r2;
   SIZE size;
@@ -1154,18 +1166,18 @@ static INT_PTR CALLBACK FloppyParamDlgProc(HWND Window, UINT AMessage, WPARAM wP
       CreateParamDlgTooltip(Window);
       path_id = findDlgIDFromParam(list->get_by_name("path")) + ID_PARAM;
       type_id = findDlgIDFromParam(list->get_by_name("type")) + ID_PARAM;
+      status_id = findDlgIDFromParam(list->get_by_name("status")) + ID_PARAM;
       return TRUE;
     case WM_COMMAND:
       code = LOWORD(wParam);
+      noticode = HIWORD(wParam);
       switch (code) {
         case IDOK:
           // force a media change
           status = (bx_param_enum_c*)list->get_by_name("status");
           status->set(BX_EJECTED);
-          SetParamList(Window, list);
-          cleanupDlgLists();
-          DestroyWindow(hwndTT);
-          EndDialog(Window, 1);
+        case IDCANCEL:
+          HandleOkCancel(Window, code, list);
           break;
         case IDCREATE:
           GetDlgItemText(Window, path_id, path, MAX_PATH);
@@ -1178,14 +1190,19 @@ static INT_PTR CALLBACK FloppyParamDlgProc(HWND Window, UINT AMessage, WPARAM wP
           return TRUE;
           break;
         default:
-          ret = ParamDlgProc(Window, AMessage, wParam, lParam);
-          if (code == path_id) {
-            EnableWindow(GetDlgItem(Window, IDCREATE), IsWindowEnabled(GetDlgItem(Window, type_id)));
-          } else if (code == type_id) {
-            i = SendMessage(GetDlgItem(Window, type_id), CB_GETCURSEL, 0, 0);
-            EnableWindow(GetDlgItem(Window, IDCREATE), (i != 0));
+          ret = HandleChildWindowEvents(Window, code, noticode);
+          if (ret == BXPD_SET_PATH) {
+            SendMessage(GetDlgItem(Window, status_id), BM_SETCHECK, BST_CHECKED, 0);
+            SendMessage(GetDlgItem(Window, type_id), CB_SELECTSTRING, (WPARAM)-1, (LPARAM)"auto");
+            EnableWindow(GetDlgItem(Window, IDCREATE), FALSE);
+          } else if (ret == BXPD_UPDATE_DEPS) {
+            if (code == path_id) {
+              EnableWindow(GetDlgItem(Window, IDCREATE), IsWindowEnabled(GetDlgItem(Window, type_id)));
+            } else if (code == type_id) {
+              i = SendMessage(GetDlgItem(Window, type_id), CB_GETCURSEL, 0, 0);
+              EnableWindow(GetDlgItem(Window, IDCREATE), (i != 0));
+            }
           }
-          return ret;
       }
       break;
     case WM_CLOSE:
