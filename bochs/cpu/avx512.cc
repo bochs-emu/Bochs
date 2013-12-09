@@ -465,6 +465,46 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMILPD_MASK_VpdWpdIbR(bxInstruc
   BX_NEXT_INSTR(i);
 }
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSHUFF32x4_MASK_VpsHpsWpsIbR(bxInstruction_c *i)
+{
+  unsigned len = i->getVL();
+  if (len != BX_VL512) {
+    BX_ERROR(("%s: vector length must be 512 bit", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()), result;
+  Bit8u order = i->Ib();
+
+  result.vmm128(0) = op1.vmm128(order & 0x3);
+  result.vmm128(1) = op1.vmm128((order>>2) & 0x3);
+  result.vmm128(2) = op2.vmm128((order>>4) & 0x3);
+  result.vmm128(3) = op2.vmm128((order>>6) & 0x3);
+
+  avx512_write_regd_masked(i, &result, len);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSHUFF64x2_MASK_VpdHpdWpdIbR(bxInstruction_c *i)
+{
+  unsigned len = i->getVL();
+  if (len != BX_VL512) {
+    BX_ERROR(("%s: vector length must be 512 bit", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()), result;
+  Bit8u order = i->Ib();
+
+  result.vmm128(0) = op1.vmm128(order & 0x3);
+  result.vmm128(1) = op1.vmm128((order>>2) & 0x3);
+  result.vmm128(2) = op2.vmm128((order>>4) & 0x3);
+  result.vmm128(3) = op2.vmm128((order>>6) & 0x3);
+
+  avx512_write_regq_masked(i, &result, len);
+  BX_NEXT_INSTR(i);
+}
+
 // broadcast
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTD_MASK_VdqWdR(bxInstruction_c *i)
@@ -726,6 +766,48 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPTERNLOGQ_MASK_VdqHdqWdqIbR(bxIns
       op1.vmm64u(n) = ternlogq_scalar(op1.vmm64u(n), op2.vmm64u(n), op3.vmm64u(n), imm8);
     else
       if (i->isZeroMasking()) op1.vmm64u(n) = 0;
+  }
+
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
+  BX_NEXT_INSTR(i);
+}
+
+// blend
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBLENDMPS_MASK_VpsHpsWpsR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
+  unsigned len = i->getVL();
+
+  Bit32u opmask = (i->opmask() != 0) ? BX_READ_16BIT_OPMASK(i->opmask()) : 0xffff;
+
+  if (i->isZeroMasking()) {
+    for (unsigned n=0; n < len; n++, opmask >>= 4)
+      xmm_zero_blendps(&op1.vmm128(n), &op2.vmm128(n), opmask);
+  }
+  else {
+    for (unsigned n=0; n < len; n++, opmask >>= 4)
+      xmm_blendps(&op1.vmm128(n), &op2.vmm128(n), opmask);
+  }
+
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBLENDMPD_MASK_VpdHpdWpdR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
+  unsigned len = i->getVL();
+
+  Bit32u opmask = (i->opmask() != 0) ? BX_READ_8BIT_OPMASK(i->opmask()) : 0xff;
+
+  if (i->isZeroMasking()) {
+    for (unsigned n=0; n < len; n++, opmask >>= 2)
+      xmm_zero_blendpd(&op1.vmm128(n), &op2.vmm128(n), opmask);
+  }
+  else {
+    for (unsigned n=0; n < len; n++, opmask >>= 2)
+      xmm_blendpd(&op1.vmm128(n), &op2.vmm128(n), opmask);
   }
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);

@@ -59,11 +59,12 @@ BX_CPP_INLINE Bit64u FetchQWORD(const Bit8u *iptr)
 }
 #endif
 
-#define BX_PREPARE_EVEX   (0x10)
-#define BX_PREPARE_OPMASK (0x08)
-#define BX_PREPARE_AVX    (0x04)
-#define BX_PREPARE_SSE    (0x02)
-#define BX_TRACE_END      (0x01)
+#define BX_PREPARE_EVEX_NO_SAE   (0x20 | BX_PREPARE_EVEX)
+#define BX_PREPARE_EVEX          (0x10)
+#define BX_PREPARE_OPMASK        (0x08)
+#define BX_PREPARE_AVX           (0x04)
+#define BX_PREPARE_SSE           (0x02)
+#define BX_TRACE_END             (0x01)
 
 struct bxIAOpcodeTable {
   BxExecutePtr_tR execute1;

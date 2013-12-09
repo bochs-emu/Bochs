@@ -243,9 +243,9 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
     if (! i->modC0() && (src_index == BX_SRC_RM || src_index == BX_SRC_VSIB)) {
       disbufptr = resolve_memref(disbufptr, i, src_index);
 #if BX_SUPPORT_EVEX
+      // EVEX.z is ignored for memory destination forms
       if (n == 0 && src_type == BX_VMM_REG && i->opmask()) {
-        disbufptr = dis_sprintf(disbufptr, "{k%d}%s", i->opmask(), 
-                i->isZeroMasking() ? "{z}" : "");
+        disbufptr = dis_sprintf(disbufptr, "{k%d}", i->opmask());
       }
 #endif
     }

@@ -1679,6 +1679,7 @@ fetch_b1:
 modrm_done:
 
 #if BX_SUPPORT_EVEX
+    // EVEX.b in reg form implies 512-bit vector length
     if (i->modC0() && i->getEvexb()) {
       i->setVL(BX_VL512);
     }
@@ -1935,6 +1936,15 @@ decode_done:
   BX_ASSERT(i->execute1);
 
   Bit32u op_flags = BxOpcodesTable[ia_opcode].opflags;
+#if BX_SUPPORT_EVEX
+  // EVEX.b in reg form is not allowed for instructions which cannot cause floating point exception
+  if (op_flags & BX_PREPARE_EVEX_NO_SAE) {
+    if (i->modC0() && i->getEvexb()) {
+      BX_DEBUG(("%s: EVEX.b in reg form is not allowed for instructions which cannot cause floating point exception", i->getIaOpcodeNameShort()));
+      i->execute1 = &BX_CPU_C::BxError;
+    }
+  }
+#endif
 #if BX_CPU_LEVEL >= 6
   if (! (fetchModeMask & BX_FETCH_MODE_SSE_OK)) {
      if (op_flags & BX_PREPARE_SSE) {

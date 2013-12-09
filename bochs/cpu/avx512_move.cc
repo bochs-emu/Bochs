@@ -166,36 +166,44 @@ void BX_CPU_C::avx_masked_store64(bxInstruction_c *i, bx_address eaddr, const Bx
 
 void BX_CPU_C::avx512_write_regd_masked(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned len)
 {
-  BX_ASSERT(i->opmask() != 0);
-  Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
-
-  if (i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, opmask >>= 4)
-      xmm_zero_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), opmask);
+  if (i->opmask() == 0) {
+    BX_WRITE_AVX_REGZ(i->dst(), *op, len);
   }
   else {
-    for (unsigned n=0; n < len; n++, opmask >>= 4)
-      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), opmask);
-  }
+    Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
 
-  BX_CLEAR_AVX_REGZ(i->dst(), len);
+    if (i->isZeroMasking()) {
+      for (unsigned n=0; n < len; n++, opmask >>= 4)
+        xmm_zero_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), opmask);
+    }
+    else {
+      for (unsigned n=0; n < len; n++, opmask >>= 4)
+        xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), opmask);
+    }
+
+    BX_CLEAR_AVX_REGZ(i->dst(), len);
+  }
 }
 
 void BX_CPU_C::avx512_write_regq_masked(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned len)
 {
-  BX_ASSERT(i->opmask() != 0);
-  Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask());
-
-  if (i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, opmask >>= 2)
-      xmm_zero_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), opmask);
+  if (i->opmask() == 0) {
+    BX_WRITE_AVX_REGZ(i->dst(), *op, len);
   }
   else {
-    for (unsigned n=0; n < len; n++, opmask >>= 2)
-      xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), opmask);
-  }
+    Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask());
 
-  BX_CLEAR_AVX_REGZ(i->dst(), len);
+    if (i->isZeroMasking()) {
+      for (unsigned n=0; n < len; n++, opmask >>= 2)
+        xmm_zero_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), opmask);
+    }
+    else {
+      for (unsigned n=0; n < len; n++, opmask >>= 2)
+        xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op->vmm128(n), opmask);
+    }
+
+    BX_CLEAR_AVX_REGZ(i->dst(), len);
+  }
 }
 
 //////////////////////////

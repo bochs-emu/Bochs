@@ -189,8 +189,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_MASK_VectorD(bxInst
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   unsigned vl = i->getVL();
 
-  Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
-  if (i->opmask() == 0) opmask = 0xffff;
+  Bit32u opmask = (i->opmask() != 0) ? BX_READ_16BIT_OPMASK(i->opmask()) : 0xffff;
 
   if (opmask == 0) {
     BX_CPU_CALL_METHOD(i->execute2(), (i)); // for now let execute method to deal with zero/merge masking semantics
@@ -234,8 +233,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ(bxInst
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   unsigned vl = i->getVL();
 
-  Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask());
-  if (i->opmask() == 0) opmask = 0xff;
+  Bit32u opmask = (i->opmask() != 0) ? BX_READ_8BIT_OPMASK(i->opmask()) : 0xff;
 
   if (opmask == 0) {
     BX_CPU_CALL_METHOD(i->execute2(), (i)); // for now let execute method to deal with zero/merge masking semantics
