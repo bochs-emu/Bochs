@@ -129,13 +129,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADU_Wdq(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Vector(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  unsigned vl = i->getVL();
 
-  BX_ASSERT(i->getVL() != BX_VL512);
-
-  if (i->getVL() == BX_VL256)
-    read_virtual_ymmword(i->seg(), eaddr, &BX_READ_YMM_REG(BX_VECTOR_TMP_REGISTER));
+#if BX_SUPPORT_EVEX
+  if (vl == BX_VL512) {
+    read_virtual_zmmword(i->seg(), eaddr, &BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER));
+  }
   else
-    read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_VECTOR_TMP_REGISTER));
+#endif
+  {
+    if (vl == BX_VL256)
+      read_virtual_ymmword(i->seg(), eaddr, &BX_READ_YMM_REG(BX_VECTOR_TMP_REGISTER));
+    else
+      read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_VECTOR_TMP_REGISTER));
+  }
 
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 }
@@ -143,15 +150,22 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Vector(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Half_Vector(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  unsigned vl = i->getVL();
 
-  BX_ASSERT(i->getVL() != BX_VL512);
-
-  if (i->getVL() == BX_VL256) {
-    read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_VECTOR_TMP_REGISTER));
+#if BX_SUPPORT_EVEX
+  if (vl == BX_VL512) {
+    read_virtual_ymmword(i->seg(), eaddr, &BX_READ_YMM_REG(BX_VECTOR_TMP_REGISTER));
   }
-  else {
-    Bit64u val_64 = read_virtual_qword(i->seg(), eaddr);
-    BX_WRITE_XMM_REG_LO_QWORD(BX_VECTOR_TMP_REGISTER, val_64);
+  else
+#endif
+  {
+    if (vl == BX_VL256) {
+      read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_VECTOR_TMP_REGISTER));
+    }
+    else {
+      Bit64u val_64 = read_virtual_qword(i->seg(), eaddr);
+      BX_WRITE_XMM_REG_LO_QWORD(BX_VECTOR_TMP_REGISTER, val_64);
+    }
   }
 
   BX_CPU_CALL_METHOD(i->execute2(), (i));

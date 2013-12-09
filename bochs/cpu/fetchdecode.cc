@@ -2018,9 +2018,6 @@ Bit16u BX_CPU_C::WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &a
         OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn + (mod_mem << 3)]);
         break;
 #if BX_SUPPORT_AVX
-      case BxSplitVexW:
-        OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[vex_w]);
-        break;
       case BxSplitMod11B:
         OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[mod_mem]);
         break;

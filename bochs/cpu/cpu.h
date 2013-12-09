@@ -5339,8 +5339,7 @@ enum {
 #define BxSplitGroupN       0x0090 // Group encoding: 1001
 #define BxFPEscape          0x00A0 // Group encoding: 1010
 #define BxOSizeGrp          0x00B0 // Group encoding: 1011
-#define BxSplitVexW         0x00C0 // Group encoding: 1100
-#define BxSplitMod11B       0x00D0 // Group encoding: 1101
+#define BxSplitMod11B       0x00C0 // Group encoding: 1100
 
 // The BxImmediate2 mask specifies kind of second immediate data
 // required by instruction.
