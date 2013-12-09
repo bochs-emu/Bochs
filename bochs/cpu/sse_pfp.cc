@@ -342,6 +342,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSD2SI_GdWsdR(bxInstruction_c *
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
 
   Bit32u result = float64_to_int32_round_to_zero(op, status);
 
@@ -359,6 +360,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSD2SI_GqWsdR(bxInstruction_c *
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
 
   Bit64u result = float64_to_int64_round_to_zero(op, status);
 
@@ -382,6 +384,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSS2SI_GdWssR(bxInstruction_c *
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
 
   Bit32u result = float32_to_int32_round_to_zero(op, status);
 
@@ -399,6 +402,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSS2SI_GqWssR(bxInstruction_c *
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
 
   Bit64u result = float32_to_int64_round_to_zero(op, status);
 
@@ -507,6 +511,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSD2SI_GdWsdR(bxInstruction_c *i
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
 
   Bit32u result = float64_to_int32(op, status);
 
@@ -524,6 +529,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSD2SI_GqWsdR(bxInstruction_c *i
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
 
   Bit64u result = float64_to_int64(op, status);
 
@@ -548,6 +554,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSS2SI_GdWssR(bxInstruction_c *i
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
 
   Bit32u result = float32_to_int32(op, status);
 
@@ -565,6 +572,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSS2SI_GqWssR(bxInstruction_c *i
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
 
   Bit64u result = float32_to_int64(op, status);
 
