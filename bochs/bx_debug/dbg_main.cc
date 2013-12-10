@@ -1786,7 +1786,7 @@ void bx_dbg_unwatch(bx_phy_address address)
     if (read_watchpoint[i].addr == address) {
       dbg_printf("read watchpoint at 0x" FMT_PHY_ADDRX " removed\n", address);
       // found watchpoint, delete it by shifting remaining entries left
-      for (unsigned j=i; j<(num_read_watchpoints-1); j++) {
+      for (int j=i; j<(int)(num_read_watchpoints-1); j++) {
         read_watchpoint[j] = read_watchpoint[j+1];
       }
       num_read_watchpoints--;
@@ -1798,7 +1798,7 @@ void bx_dbg_unwatch(bx_phy_address address)
     if (write_watchpoint[i].addr == address) {
       dbg_printf("write watchpoint at 0x" FMT_PHY_ADDRX " removed\n", address);
       // found watchpoint, delete it by shifting remaining entries left
-      for (unsigned j=i; j<(num_write_watchpoints-1); j++) {
+      for (int j=i; j<(int)(num_write_watchpoints-1); j++) {
         write_watchpoint[j] = write_watchpoint[j+1];
       }
       num_write_watchpoints--;
@@ -2231,10 +2231,10 @@ bx_bool bx_dbg_del_pbreak(unsigned handle)
 {
 #if (BX_DBG_MAX_PHY_BPOINTS > 0)
   // see if breakpoint is a physical breakpoint
-  for (unsigned i=0; i<bx_guard.iaddr.num_physical; i++) {
+  for (int i=0; i<(int)bx_guard.iaddr.num_physical; i++) {
     if (bx_guard.iaddr.phy[i].bpoint_id == handle) {
       // found breakpoint, delete it by shifting remaining entries left
-      for (unsigned j=i; j<(bx_guard.iaddr.num_physical-1); j++) {
+      for (int j=i; j<(int)(bx_guard.iaddr.num_physical-1); j++) {
         bx_guard.iaddr.phy[j] = bx_guard.iaddr.phy[j+1];
       }
       bx_guard.iaddr.num_physical--;
@@ -2249,10 +2249,10 @@ bx_bool bx_dbg_del_lbreak(unsigned handle)
 {
 #if (BX_DBG_MAX_LIN_BPOINTS > 0)
   // see if breakpoint is a linear breakpoint
-  for (unsigned i=0; i<bx_guard.iaddr.num_linear; i++) {
+  for (int i=0; i<(int)bx_guard.iaddr.num_linear; i++) {
     if (bx_guard.iaddr.lin[i].bpoint_id == handle) {
       // found breakpoint, delete it by shifting remaining entries left
-      for (unsigned j=i; j<(bx_guard.iaddr.num_linear-1); j++) {
+      for (int j=i; j<(int)(bx_guard.iaddr.num_linear-1); j++) {
         bx_guard.iaddr.lin[j] = bx_guard.iaddr.lin[j+1];
       }
       bx_guard.iaddr.num_linear--;
@@ -2267,10 +2267,10 @@ bx_bool bx_dbg_del_vbreak(unsigned handle)
 {
 #if (BX_DBG_MAX_VIR_BPOINTS > 0)
   // see if breakpoint is a virtual breakpoint
-  for (unsigned i=0; i<bx_guard.iaddr.num_virtual; i++) {
+  for (int i=0; i<(int)bx_guard.iaddr.num_virtual; i++) {
     if (bx_guard.iaddr.vir[i].bpoint_id == handle) {
       // found breakpoint, delete it by shifting remaining entries left
-      for (unsigned j=i; j<(bx_guard.iaddr.num_virtual-1); j++) {
+      for (int j=i; j<(int)(bx_guard.iaddr.num_virtual-1); j++) {
         bx_guard.iaddr.vir[j] = bx_guard.iaddr.vir[j+1];
       }
       bx_guard.iaddr.num_virtual--;
