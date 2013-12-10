@@ -2408,11 +2408,18 @@ decode_done:
 
   Bit32u op_flags = BxOpcodesTable[ia_opcode].opflags;
 #if BX_SUPPORT_EVEX
-  // EVEX.b in reg form is not allowed for instructions which cannot cause floating point exception
-  if (op_flags & BX_PREPARE_EVEX_NO_SAE) {
-    if (i->modC0() && i->getEvexb()) {
-      BX_DEBUG(("%s: EVEX.b in reg form is not allowed for instructions which cannot cause floating point exception", i->getIaOpcodeNameShort()));
-      i->execute1 = &BX_CPU_C::BxError;
+  if ((op_flags & BX_PREPARE_EVEX) != 0 && i->getEvexb()) {
+    if (mod_mem) {
+      if (op_flags & BX_PREPARE_EVEX_NO_BROADCAST) {
+        BX_DEBUG(("%s: broadcast is not supported for this instruction", i->getIaOpcodeNameShort()));
+        i->execute1 = &BX_CPU_C::BxError;
+      }
+    }
+    else {
+      if (op_flags & BX_PREPARE_EVEX_NO_SAE) {
+        BX_DEBUG(("%s: EVEX.b in reg form is not allowed for instructions which cannot cause floating point exception", i->getIaOpcodeNameShort()));
+        i->execute1 = &BX_CPU_C::BxError;
+      }
     }
   }
 #endif

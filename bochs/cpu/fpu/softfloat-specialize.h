@@ -41,6 +41,10 @@ these four paragraphs for those parts of this code that are retained.
 #define int32_indefinite ((Bit32s)0x80000000)
 #define int64_indefinite BX_CONST64(0x8000000000000000)
 
+#define uint16_indefinite (0xffff)
+#define uint32_indefinite (0xffffffff)
+#define uint64_indefinite BX_CONST64(0xffffffffffffffff)
+
 /*----------------------------------------------------------------------------
 | Internal canonical NaN format.
 *----------------------------------------------------------------------------*/

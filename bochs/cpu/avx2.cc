@@ -173,10 +173,11 @@ AVX_1OP(VPABSQ_VdqWdqR, xmm_pabsq)
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)              \
   {                                                                                        \
     BxPackedAvxRegister op  = BX_READ_AVX_REG(i->src1());                                  \
+    Bit64u count = BX_READ_XMM_REG_LO_QWORD(i->src2());                                    \
     unsigned len = i->getVL();                                                             \
                                                                                            \
     for (unsigned n=0; n < len; n++)                                                       \
-      (func)(&op.vmm128(n), BX_READ_XMM_REG_LO_QWORD(i->src2()));                          \
+      (func)(&op.vmm128(n), count);                                                        \
                                                                                            \
     BX_WRITE_AVX_REGZ(i->dst(), op, len);                                                  \
                                                                                            \

@@ -274,10 +274,9 @@ Bit64s float32_to_int64_round_to_zero(float32 a, float_status_t &status)
 | `a' to the 64-bit unsigned integer format.  The conversion is
 | performed according to the IEC/IEEE Standard for Binary Floating-Point
 | Arithmetic---which means in particular that the conversion is rounded
-| according to the current rounding mode.  If `a' is a NaN, the largest
-| unsigned integer is returned.  Otherwise, if the conversion overflows, the
-| largest unsigned integer is returned.  If the 'a' is negative, zero is
-| returned.
+| according to the current rounding mode.  If `a' is a NaN or the conversion
+| overflows, the largest unsigned integer is returned. If the 'a' is
+| negative, zero is returned.
 *----------------------------------------------------------------------------*/
 
 Bit64u float32_to_uint64(float32 a, float_status_t &status)
@@ -309,13 +308,35 @@ Bit64u float32_to_uint64(float32 a, float_status_t &status)
     }
     if (shiftCount < 0) {
         float_raise(status, float_flag_invalid);
-        return BX_CONST64(0xFFFFFFFFFFFFFFFF);
+        return uint64_indefinite;
     }
 
     aSig64 = aSig;
     aSig64 <<= 40;
     shift64ExtraRightJamming(aSig64, 0, shiftCount, &aSig64, &aSigExtra);
     return roundAndPackUint64(aSig64, aSigExtra, status);
+}
+
+/*----------------------------------------------------------------------------
+| Returns the result of converting the single-precision floating-point value
+| `a' to the 32-bit unsigned integer format.  The conversion is
+| performed according to the IEC/IEEE Standard for Binary Floating-Point
+| Arithmetic---which means in particular that the conversion is rounded
+| according to the current rounding mode.  If `a' is a NaN or the conversion
+| overflows, the largest unsigned integer is returned. If the 'a' is
+| negative, zero is returned.
+*----------------------------------------------------------------------------*/
+
+Bit32u float32_to_uint32(float32 a, float_status_t &status)
+{
+    Bit64u val_64 = float32_to_uint64(a, status);
+
+    if (val_64 > 0xffffffff) {
+        status.float_exception_flags = float_flag_invalid; // throw away other flags
+        return uint32_indefinite;
+    }
+
+    return (Bit32u) val_64;
 }
 
 /*----------------------------------------------------------------------------
@@ -1186,10 +1207,9 @@ Bit64s float64_to_int64_round_to_zero(float64 a, float_status_t &status)
 | `a' to the 64-bit unsigned integer format.  The conversion is
 | performed according to the IEC/IEEE Standard for Binary Floating-Point
 | Arithmetic---which means in particular that the conversion is rounded
-| according to the current rounding mode.  If `a' is a NaN, the largest
-| positive integer is returned.  If the conversion overflows, the
-| largest unsigned integer is returned.  If 'a' is negative, zero is
-| returned.
+| according to the current rounding mode.  If `a' is a NaN or the conversion
+| overflows, the largest positive integer is returned. If 'a' is negative,
+| zero is is returned.
 *----------------------------------------------------------------------------*/
  
 Bit64u float64_to_uint64(float64 a, float_status_t &status)
@@ -1223,7 +1243,7 @@ Bit64u float64_to_uint64(float64 a, float_status_t &status)
             if ((aSig != BX_CONST64(0x0010000000000000)) || (aExp == 0x7FF)) {
                 float_raise(status, float_flag_invalid);
             }
-            return BX_CONST64(0xFFFFFFFFFFFFFFFF);
+            return uint64_indefinite;
         }
         aSigExtra = 0;
         aSig <<= -shiftCount;
@@ -1232,6 +1252,28 @@ Bit64u float64_to_uint64(float64 a, float_status_t &status)
     }
 
     return roundAndPackUint64(aSig, aSigExtra, status);
+}
+
+/*----------------------------------------------------------------------------
+| Returns the result of converting the double-precision floating-point value
+| `a' to the 32-bit unsigned integer format.  The conversion is
+| performed according to the IEC/IEEE Standard for Binary Floating-Point
+| Arithmetic---which means in particular that the conversion is rounded
+| according to the current rounding mode.  If `a' is a NaN or the conversion
+| overflows, the largest positive integer is returned. If 'a' is negative,
+| zero is is returned.
+*----------------------------------------------------------------------------*/
+
+Bit64u float64_to_uint32(float32 a, float_status_t &status)
+{
+    Bit64u val_64 = float64_to_uint64(a, status);
+
+    if (val_64 > 0xffffffff) {
+        status.float_exception_flags = float_flag_invalid; // throw away other flags
+        return uint32_indefinite;
+    }
+
+    return (Bit32u) val_64;
 }
 
 /*----------------------------------------------------------------------------
