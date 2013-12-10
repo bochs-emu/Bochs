@@ -823,25 +823,49 @@ void ParamDialog::AddParam(
           paramHash->Put(pstr->param->get_id(), pstr);
         } else {
           wxString boxTitle;
+          wxScrolledWindow *scrollWin = NULL;
+          wxPanel *scrollPanel = NULL;
+          wxBoxSizer *scrollsz = NULL;
+          wxStaticBox *box = NULL;
+          wxStaticBoxSizer *boxsz = NULL;
           if (list->get_options() & bx_list_c::USE_BOX_TITLE) {
             boxTitle = wxString(prompt, wxConvUTF8);
           } else {
             boxTitle = wxT("");
           }
-          wxStaticBox *box = new wxStaticBox(context->parent, -1, boxTitle);
-          wxStaticBoxSizer *boxsz = new wxStaticBoxSizer(box, wxVERTICAL);
           AddParamContext newcontext;
           newcontext.depth = 1 + context->depth;
-          newcontext.parent = context->parent;
           newcontext.gridSizer = NULL; // it will be created if necessary
-          newcontext.vertSizer = boxsz;
+          if (list->get_options() & bx_list_c::USE_SCROLL_WINDOW) {
+            scrollWin = new wxScrolledWindow(context->parent, -1);
+            scrollPanel = new wxPanel(scrollWin, -1);
+            scrollsz = new wxBoxSizer(wxVERTICAL);
+            newcontext.parent = scrollPanel;
+            newcontext.vertSizer = scrollsz;
+          } else {
+            box = new wxStaticBox(context->parent, -1, boxTitle);
+            boxsz = new wxStaticBoxSizer(box, wxVERTICAL);
+            newcontext.parent = context->parent;
+            newcontext.vertSizer = boxsz;
+          }
           // put all items in the list inside the boxsz sizer.
           for (int i=0; i<list->get_size(); i++) {
             bx_param_c *child = list->get(i);
             AddParam(child, plain, &newcontext);
           }
-          // add the boxsz to vertSizer
-          context->vertSizer->Add(boxsz, 0, wxALL|wxGROW, 10);
+          if (list->get_options() & bx_list_c::USE_SCROLL_WINDOW) {
+            scrollPanel->SetAutoLayout(TRUE);
+            scrollPanel->SetSizer(scrollsz);
+            scrollsz->Fit(scrollPanel);
+            scrollsz->SetSizeHints(scrollPanel);
+            wxSize size = scrollPanel->GetBestSize();
+            scrollWin->SetScrollbars(1, 1, size.GetWidth(), size.GetHeight());
+            context->vertSizer->Add(scrollWin, 0, wxALL|wxGROW, 10);
+            context->vertSizer->SetItemMinSize(scrollWin, size.GetWidth() + 30, 400);
+          } else {
+            // add the boxsz to vertSizer
+            context->vertSizer->Add(boxsz, 0, wxALL|wxGROW, 10);
+          }
           // clear gridSizer variable so that any future parameters force
           // creation of a new one.
           context->gridSizer = NULL;
