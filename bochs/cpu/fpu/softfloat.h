@@ -224,6 +224,11 @@ float64 int32_to_float64(Bit32s);
 float32 int64_to_float32(Bit64s, float_status_t &status);
 float64 int64_to_float64(Bit64s, float_status_t &status);
 
+float32 uint32_to_float32(Bit32u, float_status_t &status);
+float64 uint32_to_float64(Bit32u);
+float32 uint64_to_float32(Bit64u, float_status_t &status);
+float64 uint64_to_float64(Bit64u, float_status_t &status);
+
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE single-precision conversion routines.
 *----------------------------------------------------------------------------*/
@@ -232,7 +237,9 @@ Bit32s float32_to_int32_round_to_zero(float32, float_status_t &status);
 Bit64s float32_to_int64(float32, float_status_t &status);
 Bit64s float32_to_int64_round_to_zero(float32, float_status_t &status);
 Bit32u float32_to_uint32(float32, float_status_t &status);
+Bit32u float32_to_uint32_round_to_zero(float32, float_status_t &status);
 Bit64u float32_to_uint64(float32, float_status_t &status);
+Bit64u float32_to_uint64_round_to_zero(float32, float_status_t &status);
 float64 float32_to_float64(float32, float_status_t &status);
 
 /*----------------------------------------------------------------------------
@@ -286,7 +293,9 @@ Bit32s float64_to_int32_round_to_zero(float64, float_status_t &status);
 Bit64s float64_to_int64(float64, float_status_t &status);
 Bit64s float64_to_int64_round_to_zero(float64, float_status_t &status);
 Bit32u float64_to_uint32(float64, float_status_t &status);
+Bit32u float64_to_uint32_round_to_zero(float64, float_status_t &status);
 Bit64u float64_to_uint64(float64, float_status_t &status);
+Bit64u float64_to_uint64_round_to_zero(float64, float_status_t &status);
 float32 float64_to_float32(float64, float_status_t &status);
 
 /*----------------------------------------------------------------------------
