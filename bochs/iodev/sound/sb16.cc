@@ -34,6 +34,8 @@
 #include "sb16.h"
 #include "soundmod.h"
 
+#include <math.h>
+
 #define LOG_THIS theSB16Device->
 
 bx_sb16_c *theSB16Device = NULL;
@@ -1420,8 +1422,43 @@ Bit32u bx_sb16_c::dsp_irq16ack()
 // write a wave packet to the output device
 void bx_sb16_c::dsp_sendwavepacket()
 {
+  int i;
+  Bit8u value8u;
+  Bit8s value8s;
+  Bit16u value16u;
+  Bit16s value16s;
+
   if (DSP.dma.chunkindex == 0)
     return;
+
+  // apply wave volume
+  if (BX_SB16_THIS wave_vol != 255) {
+    if (DSP.dma.bits == 16) {
+      for (i = 0; i < DSP.dma.chunkindex; i += 2) {
+        if (DSP.dma.format & 1) {
+          value16s = (Bit16s)(DSP.dma.chunk[i] | (DSP.dma.chunk[i+1] << 8));
+          value16s = (Bit16s)((Bit32s)value16s * BX_SB16_THIS wave_vol / 256);
+          DSP.dma.chunk[i] = (Bit8u)(value16s & 0xff);
+          DSP.dma.chunk[i+1] = (Bit8u)(value16s >> 8);
+        } else {
+          value16u = DSP.dma.chunk[i] | (DSP.dma.chunk[i+1] << 8);
+          value16u = (Bit16u)((Bit32u)value16u * BX_SB16_THIS wave_vol / 256);
+          DSP.dma.chunk[i] = (Bit8u)(value16u & 0xff);
+          DSP.dma.chunk[i+1] = (Bit8u)(value16u >> 8);
+        }
+      }
+    } else {
+      for (i = 0; i < DSP.dma.chunkindex; i++) {
+        if (DSP.dma.format & 1) {
+          value8s = (Bit8s)DSP.dma.chunk[i];
+          DSP.dma.chunk[i] = (Bit8u)(((Bit16s)value8s * BX_SB16_THIS wave_vol) / 256);
+        } else {
+          value8u = DSP.dma.chunk[i];
+          DSP.dma.chunk[i] = (Bit8u)(((Bit16u)value8u * BX_SB16_THIS wave_vol) / 256);
+        }
+      }
+    }
+  }
 
   switch (BX_SB16_THIS wavemode) {
     case 1:
@@ -1618,6 +1655,8 @@ Bit16u bx_sb16_c::dma_write16(Bit16u *buffer, Bit16u maxlen)
 void bx_sb16_c::mixer_writedata(Bit32u value)
 {
   int i;
+  bx_bool set_wave_vol = 0;
+  Bit8u master_vol, dac_vol;
 
   // do some action depending on what register was written
   switch (MIXER.regindex)
@@ -1643,11 +1682,13 @@ void bx_sb16_c::mixer_writedata(Bit32u value)
         MIXER.reg[i] = 0x80;
 
       MIXER.regindex = 0;   // next mixer register read is register 0
+      set_wave_vol = 1;
       return;
 
     case 0x04: // DAC level
       MIXER.reg[0x32] = (value & 0xf0) | 0x08;
       MIXER.reg[0x33] = ((value & 0x0f) << 4) | 0x08;
+      set_wave_vol = 1;
       break;
 
     case 0x0a: // microphone level
@@ -1657,6 +1698,7 @@ void bx_sb16_c::mixer_writedata(Bit32u value)
     case 0x22: // master volume
       MIXER.reg[0x30] = (value & 0xf0) | 0x08;
       MIXER.reg[0x31] = ((value & 0x0f) << 4) | 0x08;
+      set_wave_vol = 1;
       break;
 
     case 0x26: // FM level
@@ -1677,21 +1719,25 @@ void bx_sb16_c::mixer_writedata(Bit32u value)
     case 0x30: // master volume left
       MIXER.reg[0x22] &= 0x0f;
       MIXER.reg[0x22] |= (value & 0xf0);
+      set_wave_vol = 1;
       break;
 
     case 0x31: // master volume right
       MIXER.reg[0x22] &= 0xf0;
       MIXER.reg[0x22] |= (value >> 4);
+      set_wave_vol = 1;
       break;
 
     case 0x32: // DAC level left
       MIXER.reg[0x04] &= 0x0f;
       MIXER.reg[0x04] |= (value & 0xf0);
+      set_wave_vol = 1;
       break;
 
     case 0x33: // DAC level right
       MIXER.reg[0x04] &= 0xf0;
       MIXER.reg[0x04] |= (value >> 4);
+      set_wave_vol = 1;
       break;
 
     case 0x34: // FM level left
@@ -1755,6 +1801,13 @@ void bx_sb16_c::mixer_writedata(Bit32u value)
 
   // store the value
   MIXER.reg[MIXER.regindex] = value;
+
+  if (set_wave_vol) {
+    master_vol = ((MIXER.reg[0x30] >> 3) + (MIXER.reg[0x31] >> 3)) / 2;
+    dac_vol = ((MIXER.reg[0x32] >> 3) + (MIXER.reg[0x33] >> 3)) / 2;
+    float tmp_vol = (float)master_vol/31.0f*pow(10.0f, (float)(31-dac_vol)*-0.065f);
+    BX_SB16_THIS wave_vol = (Bit8u)(255 * tmp_vol);
+  }
 
   writelog(BOTHLOG(4), "mixer register %02x set to %02x",
           MIXER.regindex, MIXER.reg[MIXER.regindex]);
