@@ -166,7 +166,7 @@ float32 uint64_to_float32(Bit64u a, float_status_t &status)
     if (a == 0) return 0;
     int shiftCount = countLeadingZeros64(a) - 40;
     if (0 <= shiftCount) {
-        return packFloat32(zSign, 0x95 - shiftCount, (Bit32u)(a<<shiftCount));
+        return packFloat32(0, 0x95 - shiftCount, (Bit32u)(a<<shiftCount));
     }
     else {
         shiftCount += 7;
@@ -281,7 +281,11 @@ Bit32u float32_to_uint32_round_to_zero(float32 a, float_status_t &status)
     }
 
     if (aSign) {
-        if (aExp | aSig) float_raise(status, float_flag_invalid);
+        if (aExp) {
+            float_raise(status, float_flag_invalid);
+        } else if (aSig) { /* negative denormalized */
+            float_raise(status, float_flag_inexact);
+        }
         return 0;
     }
     if (0 < shiftCount) {
@@ -1365,7 +1369,7 @@ Bit64s float64_to_int64_round_to_zero(float64 a, float_status_t &status)
 | overflows, the largest positive integer is returned. If 'a' is negative,
 | zero is is returned.
 *----------------------------------------------------------------------------*/
-Bit64u float64_to_uint32(float64 a, float_status_t &status)
+Bit32u float64_to_uint32(float64 a, float_status_t &status)
 {
     Bit64s val_64 = float64_to_int64(a, status);
 

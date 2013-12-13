@@ -1706,7 +1706,7 @@ BX_CPU_C::fetchDecode64(const Bit8u *iptr, Bit32u fetchModeMask, bxInstruction_c
   bx_bool vex_w = 0;
 #if BX_SUPPORT_AVX
   int had_vex_xop = 0, vvv = -1;
-  bx_bool vex_l = 0, use_vvv = 0;
+  bx_bool use_vvv = 0;
 #endif
 
 #if BX_SUPPORT_EVEX
@@ -1864,7 +1864,7 @@ fetch_b1:
     }
 
     vvv = 15 - ((vex >> 3) & 0xf);
-    vex_l = (vex >> 2) & 0x1;
+    unsigned vex_l = (vex >> 2) & 0x1;
     i->setVL(BX_VL128 + vex_l);
     sse_prefix = vex & 0x3;
 
@@ -1976,7 +1976,7 @@ fetch_b1:
     }
 
     vvv = 15 - ((vex >> 3) & 0xf);
-    vex_l = (vex >> 2) & 0x1;
+    unsigned vex_l = (vex >> 2) & 0x1;
     i->setVL(BX_VL128 + vex_l);
     sse_prefix = vex & 0x3;
     if (sse_prefix) goto decode_done;
@@ -2356,24 +2356,24 @@ modrm_done:
     if (! use_vvv && vvv != 0) {
       ia_opcode = BX_IA_ERROR;
     }
-    if ((attr & BxVexL0) != 0 && vex_l) {
+    else if ((attr & BxVexW0) != 0 && vex_w) {
       ia_opcode = BX_IA_ERROR;
     }
-    if ((attr & BxVexL1) != 0 && !vex_l) {
-      ia_opcode = BX_IA_ERROR;
-    }
-    if ((attr & BxVexW0) != 0 && vex_w) {
-      ia_opcode = BX_IA_ERROR;
-    }
-    if ((attr & BxVexW1) != 0 && !vex_w) {
+    else if ((attr & BxVexW1) != 0 && !vex_w) {
       ia_opcode = BX_IA_ERROR;
     }
 #if BX_SUPPORT_EVEX
     // EVEX specific #UD conditions
-    if (i->getVL() > BX_VL512) {
+    else if (i->getVL() > BX_VL512) {
       ia_opcode = BX_IA_ERROR;
     }
 #endif
+    else if ((attr & BxVexL0) != 0 && i->getVL() != BX_VL128) {
+      ia_opcode = BX_IA_ERROR;
+    }
+    else if ((attr & BxVexL1) != 0 && i->getVL() == BX_VL128) {
+      ia_opcode = BX_IA_ERROR;
+    }
   }
   else {
     BX_ASSERT(! use_vvv);

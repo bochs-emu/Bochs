@@ -655,7 +655,7 @@ static const BxOpcodeInfo_t BxOpcodeTableAVX[256*3*2] = {
   /* 6C /1 */ { BxPrefixSSE66, BX_IA_V256_VPUNPCKLQDQ_VdqHdqWdq },
   /* 6D /0 */ { BxPrefixSSE66, BX_IA_V128_VPUNPCKHQDQ_VdqHdqWdq },
   /* 6D /1 */ { BxPrefixSSE66, BX_IA_V256_VPUNPCKHQDQ_VdqHdqWdq },
-  /* 6E /0 */ { BxAliasVexW64, BX_IA_V128_VMOVD_VdqEd },
+  /* 6E /0 */ { BxPrefixSSE66 | BxAliasVexW64, BX_IA_V128_VMOVD_VdqEd },
   /* 6E /1 */ { 0, BX_IA_ERROR },
   /* 6F /0 */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupAVX128_0f6f },
   /* 6F /1 */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupAVX256_0f6f },
