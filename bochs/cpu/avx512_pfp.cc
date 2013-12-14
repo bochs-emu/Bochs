@@ -48,7 +48,7 @@ extern void mxcsr_to_softfloat_status_word(float_status_t &status, bx_mxcsr_t mx
     for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 4)                       \
       (func)(&op1.vmm128(n), &op2.vmm128(n), status, tmp_mask);                             \
                                                                                             \
-    check_exceptionsSSE(status.float_exception_flags);                                      \
+    check_exceptionsSSE(get_exception_flags(status));                                       \
                                                                                             \
     if (! i->isZeroMasking()) {                                                             \
       for (unsigned n=0; n < len; n++, mask >>= 4)                                          \
@@ -84,7 +84,7 @@ EVEX_OP_PACKED_SINGLE(VMINPS_MASK_VpsHpsWpsR, xmm_minps_mask)
     for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 2)                       \
       (func)(&op1.vmm128(n), &op2.vmm128(n), status, tmp_mask);                             \
                                                                                             \
-    check_exceptionsSSE(status.float_exception_flags);                                      \
+    check_exceptionsSSE(get_exception_flags(status));                                       \
                                                                                             \
     if (! i->isZeroMasking()) {                                                             \
       for (unsigned n=0; n < len; n++, mask >>= 2)                                          \
@@ -118,7 +118,7 @@ EVEX_OP_PACKED_DOUBLE(VMINPD_MASK_VpdHpdWpdR, xmm_minpd_mask)
       mxcsr_to_softfloat_status_word(status, MXCSR);                                        \
       softfloat_status_word_rc_override(status, i);                                         \
       op1.xmm32u(0) = (func)(op1.xmm32u(0), op2, status);                                   \
-      check_exceptionsSSE(status.float_exception_flags);                                    \
+      check_exceptionsSSE(get_exception_flags(status));                                     \
     }                                                                                       \
     else {                                                                                  \
       if (i->isZeroMasking())                                                               \
@@ -150,7 +150,7 @@ EVEX_OP_SCALAR_SINGLE(VMAXSS_MASK_VssHpsWssR, float32_max)
       mxcsr_to_softfloat_status_word(status, MXCSR);                                        \
       softfloat_status_word_rc_override(status, i);                                         \
       op1.xmm64u(0) = (func)(op1.xmm64u(0), op2, status);                                   \
-      check_exceptionsSSE(status.float_exception_flags);                                    \
+      check_exceptionsSSE(get_exception_flags(status));                                     \
     }                                                                                       \
     else {                                                                                  \
       if (i->isZeroMasking())                                                               \
@@ -183,7 +183,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTPS_MASK_VpsWpsR(bxInstruction
   for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 4)
     xmm_sqrtps_mask(&op.vmm128(n), status, tmp_mask);
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   if (! i->isZeroMasking()) {
     for (unsigned n=0; n < len; n++, mask >>= 4)
@@ -210,7 +210,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTPD_MASK_VpdWpdR(bxInstruction
   for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 2)
     xmm_sqrtpd_mask(&op.vmm128(n), status, tmp_mask);
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   if (! i->isZeroMasking()) {
     for (unsigned n=0; n < len; n++, mask >>= 2)
@@ -235,7 +235,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTSS_MASK_VssHpsWssR(bxInstruct
     mxcsr_to_softfloat_status_word(status, MXCSR);
     softfloat_status_word_rc_override(status, i);
     op1.xmm32u(0) = float32_sqrt(op2, status);
-    check_exceptionsSSE(status.float_exception_flags);
+    check_exceptionsSSE(get_exception_flags(status));
   }
   else {
     if (i->isZeroMasking())
@@ -259,7 +259,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTSD_MASK_VsdHpdWsdR(bxInstruct
     mxcsr_to_softfloat_status_word(status, MXCSR);
     softfloat_status_word_rc_override(status, i);
     op1.xmm64u(0) = float64_sqrt(op2, status);
-    check_exceptionsSSE(status.float_exception_flags);
+    check_exceptionsSSE(get_exception_flags(status));
   }
   else {
     if (i->isZeroMasking())
@@ -294,7 +294,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPS_MASK_KGwHpsWpsIbR(bxInstruc
     }
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_OPMASK(i->dst(), result);
 
   BX_NEXT_INSTR(i);
@@ -319,7 +319,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPD_MASK_KGbHpdWpdIbR(bxInstruc
     }
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_OPMASK(i->dst(), result);
 
   BX_NEXT_INSTR(i);
@@ -337,7 +337,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSD_MASK_KGbHsdWsdIbR(bxInstruc
     mxcsr_to_softfloat_status_word(status, MXCSR);
     softfloat_status_word_rc_override(status, i);
     if (avx_compare64[i->Ib() & 0x1F](op1, op2, status)) result = 1;
-    check_exceptionsSSE(status.float_exception_flags);
+    check_exceptionsSSE(get_exception_flags(status));
   }
 
   BX_WRITE_OPMASK(i->dst(), result);
@@ -356,7 +356,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSS_MASK_KGbHssWssIbR(bxInstruc
     mxcsr_to_softfloat_status_word(status, MXCSR);
     softfloat_status_word_rc_override(status, i);
     if (avx_compare32[i->Ib() & 0x1F](op1, op2, status)) result = 1;
-    check_exceptionsSSE(status.float_exception_flags);
+    check_exceptionsSSE(get_exception_flags(status));
   }
 
   BX_WRITE_OPMASK(i->dst(), result);

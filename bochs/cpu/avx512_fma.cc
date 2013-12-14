@@ -53,7 +53,7 @@ extern void mxcsr_to_softfloat_status_word(float_status_t &status, bx_mxcsr_t mx
     for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 4)           \
       (func)(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status, tmp_mask); \
                                                                                 \
-    check_exceptionsSSE(status.float_exception_flags);                          \
+    check_exceptionsSSE(get_exception_flags(status));                           \
                                                                                 \
     if (! i->isZeroMasking()) {                                                 \
       for (unsigned n=0; n < len; n++, mask >>= 4)                              \
@@ -91,7 +91,7 @@ EVEX_FMA_PACKED_SINGLE(VFNMSUBPS_MASK_VpsHpsWpsR, xmm_fnmsubps_mask)
     for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 2)           \
       (func)(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status, tmp_mask); \
                                                                                 \
-    check_exceptionsSSE(status.float_exception_flags);                          \
+    check_exceptionsSSE(get_exception_flags(status));                           \
                                                                                 \
     if (! i->isZeroMasking()) {                                                 \
       for (unsigned n=0; n < len; n++, mask >>= 2)                              \
@@ -125,7 +125,7 @@ EVEX_FMA_PACKED_DOUBLE(VFNMSUBPD_MASK_VpdHpdWpdR, xmm_fnmsubpd_mask)
       mxcsr_to_softfloat_status_word(status, MXCSR);                          \
       softfloat_status_word_rc_override(status, i);                           \
       op1 = (func)(op1, op2, op3, status);                                    \
-      check_exceptionsSSE(status.float_exception_flags);                      \
+      check_exceptionsSSE(get_exception_flags(status));                       \
                                                                               \
       BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);                               \
     }                                                                         \
@@ -155,7 +155,7 @@ EVEX_FMA_SCALAR_SINGLE(VFNMSUBSS_MASK_VpsHssWssR, float32_fnmsub)
       mxcsr_to_softfloat_status_word(status, MXCSR);                          \
       softfloat_status_word_rc_override(status, i);                           \
       op1 = (func)(op1, op2, op3, status);                                    \
-      check_exceptionsSSE(status.float_exception_flags);                      \
+      check_exceptionsSSE(get_exception_flags(status));                       \
                                                                               \
       BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);                               \
     }                                                                         \

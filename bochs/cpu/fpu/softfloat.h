@@ -130,6 +130,7 @@ struct float_status_t
     int float_rounding_mode;
     int float_exception_flags;
     int float_exception_masks;
+    int float_suppress_exception;
     int float_nan_handling_mode;	/* flag register */
     int flush_underflow_to_zero;	/* flag register */
     int denormals_are_zeros;            /* flag register */
@@ -143,6 +144,15 @@ struct float_status_t
 BX_CPP_INLINE void float_raise(float_status_t &status, int flags)
 {
     status.float_exception_flags |= flags;
+}
+
+/*----------------------------------------------------------------------------
+| Returns raised IEC/IEEE floating-point exception flags.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE int get_exception_flags(const float_status_t &status)
+{
+    return status.float_exception_flags & ~status.float_suppress_exception;
 }
 
 /*----------------------------------------------------------------------------

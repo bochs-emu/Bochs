@@ -404,6 +404,7 @@ BX_CPP_INLINE void softfloat_status_word_rc_override(float_status_t &status, bxI
   /* must be VL512 otherwise EVEX.LL encodes vector length */
   if (i->modC0() && i->getEvexb()) {
     status.float_rounding_mode = i->getRC();
+    status.float_suppress_exception = float_all_exceptions_mask;
     status.float_exception_masks = float_all_exceptions_mask;
   }
 }

@@ -138,7 +138,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSI2SS_VssEdR(bxInstruction_c *
 
   op1.xmm32u(0) = int32_to_float32(BX_READ_32BIT_REG(i->src2()), status);
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
@@ -156,7 +156,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSI2SS_VssEqR(bxInstruction_c *
 
   op1.xmm32u(0) = int64_to_float32(BX_READ_64BIT_REG(i->src2()), status);
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 #endif
@@ -185,7 +185,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSI2SD_VsdEqR(bxInstruction_c *
 
   op1.xmm64u(0) = int64_to_float64(BX_READ_64BIT_REG(i->src2()), status);
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 #endif
@@ -207,7 +207,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTPS_VpsWpsR(bxInstruction_c *i
     xmm_sqrtps(&op.vmm128(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_AVX_REGZ(i->dst(), op, len);
   BX_NEXT_INSTR(i);
 }
@@ -226,7 +226,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTPD_VpdWpdR(bxInstruction_c *i
     xmm_sqrtpd(&op.vmm128(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_AVX_REGZ(i->dst(), op, len);
   BX_NEXT_INSTR(i);
 }
@@ -241,7 +241,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTSS_VssHpsWssR(bxInstruction_c
   mxcsr_to_softfloat_status_word(status, MXCSR);
   softfloat_status_word_rc_override(status, i);
   op1.xmm32u(0) = float32_sqrt(op2, status);
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
@@ -258,7 +258,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTSD_VsdHpdWsdR(bxInstruction_c
   mxcsr_to_softfloat_status_word(status, MXCSR);
   softfloat_status_word_rc_override(status, i);
   op1.xmm64u(0) = float64_sqrt(op2, status);
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
@@ -333,7 +333,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDPS_VpsHpsWpsR(bxInstruction_c 
     xmm_addps(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
@@ -354,7 +354,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDPD_VpdHpdWpdR(bxInstruction_c 
     xmm_addpd(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
@@ -373,7 +373,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSS_VssHpsWssR(bxInstruction_c 
 
   op1.xmm32u(0) = float32_add(op1.xmm32u(0), op2, status);
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
@@ -391,7 +391,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSD_VsdHpdWsdR(bxInstruction_c 
 
   op1.xmm64u(0) = float64_add(op1.xmm64u(0), op2, status);
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
@@ -411,7 +411,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULPS_VpsHpsWpsR(bxInstruction_c 
     xmm_mulps(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
@@ -432,7 +432,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULPD_VpdHpdWpdR(bxInstruction_c 
     xmm_mulpd(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
@@ -451,7 +451,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULSS_VssHpsWssR(bxInstruction_c 
 
   op1.xmm32u(0) = float32_mul(op1.xmm32u(0), op2, status);
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
@@ -469,7 +469,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULSD_VsdHpdWsdR(bxInstruction_c 
 
   op1.xmm64u(0) = float64_mul(op1.xmm64u(0), op2, status);
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
@@ -489,7 +489,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PD_VpdWpsR(bxInstruction_c 
      result.ymm64u(n) = float32_to_float64(op.xmm32u(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), result, len);
 
@@ -512,7 +512,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2PS_VpsWpdR(bxInstruction_c 
     result.xmm32u(n) = float64_to_float32(op.ymm64u(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), result);
 
   BX_NEXT_INSTR(i);
@@ -527,7 +527,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSS2SD_VsdWssR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
   op1.xmm64u(0) = float32_to_float64(op2, status);
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
@@ -543,7 +543,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSD2SS_VssWsdR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
   op1.xmm32u(0) = float64_to_float32(op2, status);
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
@@ -563,7 +563,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTDQ2PS_VpsWdqR(bxInstruction_c 
     op.ymm32u(n) = int32_to_float32(op.ymm32u(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
 
@@ -583,7 +583,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2DQ_VdqWpsR(bxInstruction_c 
     op.ymm32u(n) = float32_to_int32(op.ymm32u(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
 
@@ -603,7 +603,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTPS2DQ_VdqWpsR(bxInstruction_c
     op.ymm32u(n) = float32_to_int32_round_to_zero(op.ymm32u(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
 
@@ -624,7 +624,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBPS_VpsHpsWpsR(bxInstruction_c 
     xmm_subps(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
@@ -645,7 +645,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBPD_VpdHpdWpdR(bxInstruction_c 
     xmm_subpd(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
@@ -664,7 +664,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBSS_VssHpsWssR(bxInstruction_c 
 
   op1.xmm32u(0) = float32_sub(op1.xmm32u(0), op2, status);
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
@@ -682,7 +682,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBSD_VsdHpdWsdR(bxInstruction_c 
 
   op1.xmm64u(0) = float64_sub(op1.xmm64u(0), op2, status);
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
@@ -702,7 +702,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINPS_VpsHpsWpsR(bxInstruction_c 
     xmm_minps(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
@@ -723,7 +723,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINPD_VpdHpdWpdR(bxInstruction_c 
     xmm_minpd(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
@@ -742,7 +742,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINSS_VssHpsWssR(bxInstruction_c 
 
   op1.xmm32u(0) = float32_min(op1.xmm32u(0), op2, status);
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
@@ -761,7 +761,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINSD_VsdHpdWsdR(bxInstruction_c 
 
   op1.xmm64u(0) = float64_min(op1.xmm64u(0), op2, status);
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
@@ -782,7 +782,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVPS_VpsHpsWpsR(bxInstruction_c 
     xmm_divps(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
@@ -803,7 +803,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVPD_VpdHpdWpdR(bxInstruction_c 
     xmm_divpd(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
@@ -822,7 +822,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVSS_VssHpsWssR(bxInstruction_c 
 
   op1.xmm32u(0) = float32_div(op1.xmm32u(0), op2, status);
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
@@ -840,7 +840,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVSD_VsdHpdWsdR(bxInstruction_c 
 
   op1.xmm64u(0) = float64_div(op1.xmm64u(0), op2, status);
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
@@ -860,7 +860,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXPS_VpsHpsWpsR(bxInstruction_c 
     xmm_maxps(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
@@ -881,7 +881,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXPD_VpdHpdWpdR(bxInstruction_c 
     xmm_maxpd(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
@@ -900,7 +900,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXSS_VssHpsWssR(bxInstruction_c 
 
   op1.xmm32u(0) = float32_max(op1.xmm32u(0), op2, status);
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
@@ -919,7 +919,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXSD_VsdHpdWsdR(bxInstruction_c 
 
   op1.xmm64u(0) = float64_max(op1.xmm64u(0), op2, status);
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
@@ -940,7 +940,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHADDPD_VpdHpdWpdR(bxInstruction_c
     xmm_haddpd(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
@@ -961,7 +961,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHADDPS_VpsHpsWpsR(bxInstruction_c
     xmm_haddps(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
@@ -982,7 +982,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHSUBPD_VpdHpdWpdR(bxInstruction_c
     xmm_hsubpd(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
@@ -1003,7 +1003,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VHSUBPS_VpsHpsWpsR(bxInstruction_c
     xmm_hsubps(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
@@ -1024,7 +1024,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPS_VpsHpsWpsIbR(bxInstruction_
     op1.ymm32u(n) = avx_compare32[ib](op1.ymm32u(n), op2.ymm32u(n), status) ? 0xFFFFFFFF : 0;
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
@@ -1045,7 +1045,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPD_VpdHpdWpdIbR(bxInstruction_
        BX_CONST64(0xFFFFFFFFFFFFFFFF) : 0;
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
@@ -1067,7 +1067,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSD_VsdHpdWsdIbR(bxInstruction_
     op1.xmm64u(0) = 0;
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
@@ -1089,7 +1089,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSS_VssHpsWssIbR(bxInstruction_
     op1.xmm32u(0) = 0;
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
@@ -1109,7 +1109,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSUBPD_VpdHpdWpdR(bxInstruction
     xmm_addsubpd(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
@@ -1130,7 +1130,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSUBPS_VpsHpsWpsR(bxInstruction
     xmm_addsubps(&op1.vmm128(n), &op2.vmm128(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
@@ -1153,7 +1153,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTPD2DQ_VqWpdR(bxInstruction_c 
     result.xmm32u(n) = float64_to_int32_round_to_zero(op.ymm64u(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), result);
 
   BX_NEXT_INSTR(i);
@@ -1175,7 +1175,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2DQ_VqWpdR(bxInstruction_c *
     result.xmm32u(n) = float64_to_int32(op.ymm64u(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), result);
 
   BX_NEXT_INSTR(i);
@@ -1252,16 +1252,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDPS_VpsWpsIbR(bxInstruction_c
   // override MXCSR rounding mode with control coming from imm8
   if ((control & 0x4) == 0)
     status.float_rounding_mode = control & 0x3;
+  // ignore precision exception result
+  if (control & 0x8)
+    status.float_suppress_exception |= float_flag_inexact;
 
   for(unsigned n=0; n < (4*len); n++) {
     op.ymm32u(n) = float32_round_to_int(op.ymm32u(n), status);
   }
 
-  // ignore precision exception result
-  if (control & 0x8)
-    status.float_exception_flags &= ~float_flag_inexact;
-
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
 
@@ -1281,16 +1280,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDPD_VpdWpdIbR(bxInstruction_c
   // override MXCSR rounding mode with control coming from imm8
   if ((control & 0x4) == 0)
     status.float_rounding_mode = control & 0x3;
+  // ignore precision exception result
+  if (control & 0x8)
+    status.float_suppress_exception |= float_flag_inexact;
 
   for(unsigned n=0; n < (2*len); n++) {
     op.ymm64u(n) = float64_round_to_int(op.ymm64u(n), status);
   }
 
-  // ignore precision exception result
-  if (control & 0x8)
-    status.float_exception_flags &= ~float_flag_inexact;
-
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
 
@@ -1310,14 +1308,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDSS_VssHpsWssIbR(bxInstructio
   // override MXCSR rounding mode with control coming from imm8
   if ((control & 0x4) == 0)
     status.float_rounding_mode = control & 0x3;
+  // ignore precision exception result
+  if (control & 0x8)
+    status.float_suppress_exception |= float_flag_inexact;
 
   op1.xmm32u(0) = float32_round_to_int(op2, status);
 
-  // ignore precision exception result
-  if (control & 0x8)
-    status.float_exception_flags &= ~float_flag_inexact;
-
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
@@ -1337,14 +1334,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDSD_VsdHpdWsdIbR(bxInstructio
   // override MXCSR rounding mode with control coming from imm8
   if ((control & 0x4) == 0)
     status.float_rounding_mode = control & 0x3;
+  // ignore precision exception result
+  if (control & 0x8)
+    status.float_suppress_exception |= float_flag_inexact;
 
   op1.xmm64u(0) = float64_round_to_int(op2, status);
 
-  // ignore precision exception result
-  if (control & 0x8)
-    status.float_exception_flags &= ~float_flag_inexact;
-
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
 
@@ -1386,7 +1382,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDPPS_VpsHpsWpsIbR(bxInstruction_c
 #endif
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
 
@@ -1403,13 +1399,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPH2PS_VpsWpsR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
   status.denormals_are_zeros = 0; // ignore MXCSR.DAZ
+  // no denormal exception is reported on MXCSR
+  status.float_suppress_exception = float_flag_denormal;
 
   for (unsigned n=0; n < (4*len); n++) {
      result.ymm32u(n) = float16_to_float32(op.xmm16u(n), status);
   }
 
-  // no denormal exception is reported on MXCSR
-  check_exceptionsSSE(status.float_exception_flags & ~float_flag_denormal);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), result, len);
 
@@ -1439,7 +1436,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PH_WpsVpsIb(bxInstruction_c
     result.xmm16u(n) = float32_to_float16(op.ymm32u(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   if (i->modC0()) {
     BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), result);

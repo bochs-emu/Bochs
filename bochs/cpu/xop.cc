@@ -618,7 +618,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZPS_VpsWpsR(bxInstruction_c *i
     op.ymm32u(n) = float32_frc(op.ymm32u(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
 
   BX_NEXT_INSTR(i);
@@ -636,7 +636,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZPD_VpdWpdR(bxInstruction_c *i
     op.ymm64u(n) = float64_frc(op.ymm64u(n), status);
   }
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
 
@@ -654,7 +654,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZSS_VssWssR(bxInstruction_c *i
   r.xmm64u(0) = (Bit64u) float32_frc(op, status);
   r.xmm64u(1) = 0;
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), r);
 
   BX_NEXT_INSTR(i);
@@ -671,7 +671,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZSD_VsdWsdR(bxInstruction_c *i
   r.xmm64u(0) = float64_frc(op, status);
   r.xmm64u(1) = 0;
 
-  check_exceptionsSSE(status.float_exception_flags);
+  check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), r);
 
   BX_NEXT_INSTR(i);

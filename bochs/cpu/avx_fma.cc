@@ -51,7 +51,7 @@ extern void mxcsr_to_softfloat_status_word(float_status_t &status, bx_mxcsr_t mx
     for (unsigned n=0; n < len; n++)                                          \
       (func)(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);         \
                                                                               \
-    check_exceptionsSSE(status.float_exception_flags);                        \
+    check_exceptionsSSE(get_exception_flags(status));                         \
                                                                               \
     BX_WRITE_AVX_REGZ(i->dst(), op1, len);                                    \
     BX_NEXT_INSTR(i);                                                         \
@@ -81,7 +81,7 @@ AVX2_FMA_PACKED(VFNMSUBPS_VpsHpsWpsR, xmm_fnmsubps)
     mxcsr_to_softfloat_status_word(status, MXCSR);                            \
     softfloat_status_word_rc_override(status, i);                             \
     op1 = (func)(op1, op2, op3, status);                                      \
-    check_exceptionsSSE(status.float_exception_flags);                        \
+    check_exceptionsSSE(get_exception_flags(status));                         \
                                                                               \
     BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);                                 \
     BX_CLEAR_AVX_HIGH128(i->dst());                                           \
@@ -105,7 +105,7 @@ AVX2_FMA_SCALAR_SINGLE(VFNMSUBSS_VpsHssWssR, float32_fnmsub)
     mxcsr_to_softfloat_status_word(status, MXCSR);                            \
     softfloat_status_word_rc_override(status, i);                             \
     op1 = (func)(op1, op2, op3, status);                                      \
-    check_exceptionsSSE(status.float_exception_flags);                        \
+    check_exceptionsSSE(get_exception_flags(status));                         \
                                                                               \
     BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);                                 \
     BX_CLEAR_AVX_HIGH128(i->dst());                                           \
@@ -137,7 +137,7 @@ AVX2_FMA_SCALAR_DOUBLE(VFNMSUBSD_VpdHsdWsdR, float64_fnmsub)
     dest.xmm64u(0) = (func)(op1, op2, op3, status);                           \
     dest.xmm64u(1) = 0;                                                       \
                                                                               \
-    check_exceptionsSSE(status.float_exception_flags);                        \
+    check_exceptionsSSE(get_exception_flags(status));                         \
                                                                               \
     BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dest);                              \
                                                                               \
@@ -164,7 +164,7 @@ FMA4_SINGLE_SCALAR(VFNMSUBSS_VssHssWssVIbR, float32_fnmsub)
     dest.xmm64u(0) = (func)(op1, op2, op3, status);                           \
     dest.xmm64u(1) = 0;                                                       \
                                                                               \
-    check_exceptionsSSE(status.float_exception_flags);                        \
+    check_exceptionsSSE(get_exception_flags(status));                         \
                                                                               \
     BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dest);                              \
                                                                               \
