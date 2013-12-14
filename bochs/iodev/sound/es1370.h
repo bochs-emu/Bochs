@@ -39,6 +39,8 @@
 #  define BX_ES1370_THIS_PTR this
 #endif
 
+#define BX_ES1370_CODEC_REGS 0x1a
+
 typedef struct {
     Bit32u shift;
     Bit32u leftover;
@@ -52,7 +54,9 @@ typedef struct {
   Bit32u ctl;
   Bit32u status;
   Bit32u mempage;
-  Bit32u codec;
+  Bit8u codec_index;
+  Bit8u codec_reg[BX_ES1370_CODEC_REGS];
+  Bit8u wave_vol;
   Bit32u sctl;
 
   int dac1_timer_index;

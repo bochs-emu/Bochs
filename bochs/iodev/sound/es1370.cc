@@ -38,6 +38,8 @@
 #include "es1370.h"
 #include "soundmod.h"
 
+#include <math.h>
+
 #define LOG_THIS theES1370Device->
 
 bx_es1370_c* theES1370Device = NULL;
@@ -290,7 +292,11 @@ void bx_es1370_c::reset(unsigned type)
   BX_ES1370_THIS s.ctl = 1;
   BX_ES1370_THIS s.status = 0x60;
   BX_ES1370_THIS s.mempage = 0;
-  BX_ES1370_THIS s.codec = 0;
+  BX_ES1370_THIS s.codec_index = 0;
+  for (i = 0; i < BX_ES1370_CODEC_REGS; i++) {
+    BX_ES1370_THIS s.codec_reg[i] = 0;
+  }
+  BX_ES1370_THIS s.wave_vol = 0;
   BX_ES1370_THIS s.sctl = 0;
   for (i = 0; i < 3; i++) {
     BX_ES1370_THIS s.chan[i].scount = 0;
@@ -306,12 +312,12 @@ void bx_es1370_c::reset(unsigned type)
 void bx_es1370_c::register_state(void)
 {
   unsigned i;
-  char chname[6];
+  char pname[6];
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "es1370", "ES1370 State");
   for (i = 0; i < 3; i++) {
-    sprintf(chname, "chan%d", i);
-    bx_list_c *chan = new bx_list_c(list, chname, "");
+    sprintf(pname, "chan%d", i);
+    bx_list_c *chan = new bx_list_c(list, pname, "");
     BXRS_HEX_PARAM_FIELD(chan, shift, BX_ES1370_THIS s.chan[i].shift);
     BXRS_HEX_PARAM_FIELD(chan, leftover, BX_ES1370_THIS s.chan[i].leftover);
     BXRS_HEX_PARAM_FIELD(chan, scount, BX_ES1370_THIS s.chan[i].scount);
@@ -321,7 +327,12 @@ void bx_es1370_c::register_state(void)
   BXRS_HEX_PARAM_FIELD(list, ctl, BX_ES1370_THIS s.ctl);
   BXRS_HEX_PARAM_FIELD(list, status, BX_ES1370_THIS s.status);
   BXRS_HEX_PARAM_FIELD(list, mempage, BX_ES1370_THIS s.mempage);
-  BXRS_HEX_PARAM_FIELD(list, codec, BX_ES1370_THIS s.codec);
+  BXRS_HEX_PARAM_FIELD(list, codec_index, BX_ES1370_THIS s.codec_index);
+  bx_list_c *codec_regs = new bx_list_c(list, "codec_regs", "");
+  for (i = 0; i < BX_ES1370_CODEC_REGS; i++) {
+    sprintf(pname, "0x%02x", i);
+    new bx_shadow_num_c(codec_regs, pname, &BX_ES1370_THIS s.codec_reg[i], BASE_HEX);
+  }
   BXRS_HEX_PARAM_FIELD(list, sctl, BX_ES1370_THIS s.sctl);
 
   register_pci_state(list);
@@ -375,6 +386,7 @@ Bit32u bx_es1370_c::read(Bit32u address, unsigned io_len)
 #endif // !BX_USE_ES1370_SMF
   Bit32u val = 0x0, shift;
   Bit16u offset;
+  Bit8u index;
   unsigned i;
 
   BX_DEBUG(("register read from address 0x%04x - ", address));
@@ -401,7 +413,8 @@ Bit32u bx_es1370_c::read(Bit32u address, unsigned io_len)
       val = BX_ES1370_THIS s.mempage;
       break;
     case ES1370_CODEC:
-      val = BX_ES1370_THIS s.codec;
+      index = BX_ES1370_THIS s.codec_index;
+      val = BX_ES1370_THIS s.codec_reg[index] | (index << 8);
       break;
     case ES1370_SCTL:
       val = BX_ES1370_THIS s.sctl >> shift;
@@ -467,6 +480,8 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #endif // !BX_USE_ES1370_SMF
   Bit16u  offset;
   Bit32u shift, mask;
+  Bit8u index, master_vol, dac_vol;
+  bx_bool set_wave_vol = 0;
   unsigned i;
 
   BX_DEBUG(("register write to address 0x%04x - value = 0x%08x", address, value));
@@ -495,8 +510,15 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_ES1370_THIS s.mempage = value & 0x0f;
       break;
     case ES1370_CODEC:
-      BX_ES1370_THIS s.codec = value & 0xffff;
-      BX_DEBUG(("writing to CODEC register 0x%02x, value = 0x%02x", (value >> 8) & 0xff, value & 0xff));
+      index = (value >> 8) & 0xff;
+      BX_ES1370_THIS s.codec_index = index;
+      if (index < BX_ES1370_CODEC_REGS) {
+        BX_ES1370_THIS s.codec_reg[index] = value & 0xff;
+        if ((index >= 0) && (index <= 3)) {
+          set_wave_vol = 1;
+        }
+        BX_DEBUG(("writing to CODEC register 0x%02x, value = 0x%02x", index, value & 0xff));
+      }
       break;
     case ES1370_SCTL:
       mask = (0xffffffff >> ((4 - io_len) << 3)) << shift;
@@ -538,6 +560,15 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
     default:
       BX_ERROR(("unsupported io write to offset=0x%04x!", offset));
       break;
+  }
+
+  if (set_wave_vol) {
+    master_vol = ((0x1f - (BX_ES1370_THIS s.codec_reg[0] & 0x1f)) +
+                  (0x1f - (BX_ES1370_THIS s.codec_reg[1] & 0x1f))) / 2;
+    dac_vol = ((0x1f - (BX_ES1370_THIS s.codec_reg[2] & 0x1f)) +
+               (0x1f - (BX_ES1370_THIS s.codec_reg[3] & 0x1f))) / 2;
+    float tmp_vol = (float)master_vol/31.0f*pow(10.0f, (float)(31-dac_vol)*-0.065f);
+    BX_ES1370_THIS s.wave_vol = (Bit8u)(255 * tmp_vol);
   }
 }
 
@@ -791,6 +822,18 @@ void bx_es1370_c::sendwavepacket(unsigned channel, Bit32u buflen, Bit8u *buffer)
 {
   Bit8u bits, format;
   Bit16u samplerate;
+  bx_bool stereo, issigned;
+
+  format = (BX_ES1370_THIS s.sctl >> (channel << 1)) & 3;
+  bits = (format >> 1) ? 16 : 8;
+  stereo = format & 1;
+  issigned = (format >> 1) & 1;
+
+  // apply wave volume
+  if (BX_ES1370_THIS s.wave_vol != 255) {
+    DEV_soundmod_pcm_apply_volume(buflen, buffer, BX_ES1370_THIS s.wave_vol,
+                                  bits, stereo, issigned);
+  }
 
   switch (BX_ES1370_THIS wavemode) {
     case 1:
@@ -802,17 +845,15 @@ void bx_es1370_c::sendwavepacket(unsigned channel, Bit32u buflen, Bit8u *buffer)
       fwrite(buffer, 1, buflen, BX_ES1370_THIS wavefile);
       break;
     case 2:
-      format = (BX_ES1370_THIS s.sctl >> (channel << 1)) & 3;
       if (channel == DAC1_CHANNEL) {
         samplerate = dac1_freq[(BX_ES1370_THIS s.ctl >> 12) & 3];
       } else {
         samplerate = 1411200 / (((BX_ES1370_THIS s.ctl >> 16) & 0x1fff) + 2);
       }
-      bits = (format >> 1) ? 16 : 8;
       Bit8u temparray[12] =
        { (Bit8u)(samplerate & 0xff), (Bit8u)(samplerate >> 8), 0, 0,
-         bits, (Bit8u)((format & 1) + 1), 0, 0, 0, 0, 0, 0 };
-      if (bits == 16)
+         bits, (Bit8u)(stereo + 1), 0, 0, 0, 0, 0, 0 };
+      if (issigned)
          temparray[6] = 4;
 
       DEV_soundmod_VOC_write_block(BX_ES1370_THIS wavefile, 9, 12, temparray, buflen, buffer);

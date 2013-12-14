@@ -1422,42 +1422,13 @@ Bit32u bx_sb16_c::dsp_irq16ack()
 // write a wave packet to the output device
 void bx_sb16_c::dsp_sendwavepacket()
 {
-  int i;
-  Bit8u value8u;
-  Bit8s value8s;
-  Bit16u value16u;
-  Bit16s value16s;
-
   if (DSP.dma.chunkindex == 0)
     return;
 
   // apply wave volume
   if (BX_SB16_THIS wave_vol != 255) {
-    if (DSP.dma.bits == 16) {
-      for (i = 0; i < DSP.dma.chunkindex; i += 2) {
-        if (DSP.dma.format & 1) {
-          value16s = (Bit16s)(DSP.dma.chunk[i] | (DSP.dma.chunk[i+1] << 8));
-          value16s = (Bit16s)((Bit32s)value16s * BX_SB16_THIS wave_vol / 256);
-          DSP.dma.chunk[i] = (Bit8u)(value16s & 0xff);
-          DSP.dma.chunk[i+1] = (Bit8u)(value16s >> 8);
-        } else {
-          value16u = DSP.dma.chunk[i] | (DSP.dma.chunk[i+1] << 8);
-          value16u = (Bit16u)((Bit32u)value16u * BX_SB16_THIS wave_vol / 256);
-          DSP.dma.chunk[i] = (Bit8u)(value16u & 0xff);
-          DSP.dma.chunk[i+1] = (Bit8u)(value16u >> 8);
-        }
-      }
-    } else {
-      for (i = 0; i < DSP.dma.chunkindex; i++) {
-        if (DSP.dma.format & 1) {
-          value8s = (Bit8s)DSP.dma.chunk[i];
-          DSP.dma.chunk[i] = (Bit8u)(((Bit16s)value8s * BX_SB16_THIS wave_vol) / 256);
-        } else {
-          value8u = DSP.dma.chunk[i];
-          DSP.dma.chunk[i] = (Bit8u)(((Bit16u)value8u * BX_SB16_THIS wave_vol) / 256);
-        }
-      }
-    }
+    DEV_soundmod_pcm_apply_volume(DSP.dma.chunkindex, DSP.dma.chunk, BX_SB16_THIS wave_vol,
+                                  DSP.dma.bits, DSP.dma.stereo, DSP.dma.format & 1);
   }
 
   switch (BX_SB16_THIS wavemode) {

@@ -260,6 +260,8 @@ extern "C" {
   (bx_devices.pluginSoundModCtl->VOC_init_file(a))
 #define DEV_soundmod_VOC_write_block(a,b,c,d,e,f) \
   (bx_devices.pluginSoundModCtl->VOC_write_block(a,b,c,d,e,f))
+#define DEV_soundmod_pcm_apply_volume(a,b,c,d,e,f) \
+  (bx_devices.pluginSoundModCtl->pcm_apply_volume(a,b,c,d,e,f))
 
 ///////// Networking module macro
 #define DEV_net_init_module(a,b,c,d) \

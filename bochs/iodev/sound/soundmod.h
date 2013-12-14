@@ -53,6 +53,8 @@ public:
   virtual void VOC_init_file(FILE *stream);
   virtual void VOC_write_block(FILE *stream, int block, Bit32u headerlen,
                                Bit8u header[], Bit32u datalen, Bit8u data[]);
+  virtual void pcm_apply_volume(Bit32u datalen, Bit8u data[], Bit8u volume,
+                                Bit8u bits, bx_bool stereo, bx_bool issigned);
 private:
   bx_sound_lowlevel_c *soundmod;
 };
