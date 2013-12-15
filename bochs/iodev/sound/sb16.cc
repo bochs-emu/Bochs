@@ -1426,7 +1426,7 @@ void bx_sb16_c::dsp_sendwavepacket()
     return;
 
   // apply wave volume
-  if (BX_SB16_THIS wave_vol != 255) {
+  if (BX_SB16_THIS wave_vol != 0xffff) {
     DEV_soundmod_pcm_apply_volume(DSP.dma.chunkindex, DSP.dma.chunk, BX_SB16_THIS wave_vol,
                                   DSP.dma.bits, DSP.dma.stereo, DSP.dma.format & 1);
   }
@@ -1628,6 +1628,7 @@ void bx_sb16_c::mixer_writedata(Bit32u value)
   int i;
   bx_bool set_wave_vol = 0;
   Bit8u master_vol, dac_vol;
+  float tmp_vol;
 
   // do some action depending on what register was written
   switch (MIXER.regindex)
@@ -1774,10 +1775,14 @@ void bx_sb16_c::mixer_writedata(Bit32u value)
   MIXER.reg[MIXER.regindex] = value;
 
   if (set_wave_vol) {
-    master_vol = ((MIXER.reg[0x30] >> 3) + (MIXER.reg[0x31] >> 3)) / 2;
-    dac_vol = ((MIXER.reg[0x32] >> 3) + (MIXER.reg[0x33] >> 3)) / 2;
-    float tmp_vol = (float)master_vol/31.0f*pow(10.0f, (float)(31-dac_vol)*-0.065f);
+    master_vol = (MIXER.reg[0x30] >> 3);
+    dac_vol = (MIXER.reg[0x32] >> 3);
+    tmp_vol = (float)master_vol/31.0f*pow(10.0f, (float)(31-dac_vol)*-0.065f);
     BX_SB16_THIS wave_vol = (Bit8u)(255 * tmp_vol);
+    master_vol = (MIXER.reg[0x31] >> 3);
+    dac_vol = (MIXER.reg[0x33] >> 3);
+    tmp_vol = (float)master_vol/31.0f*pow(10.0f, (float)(31-dac_vol)*-0.065f);
+    BX_SB16_THIS wave_vol |= ((Bit8u)(255 * tmp_vol) << 8);
   }
 
   writelog(BOTHLOG(4), "mixer register %02x set to %02x",

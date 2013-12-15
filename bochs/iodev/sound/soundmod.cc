@@ -267,39 +267,49 @@ void bx_soundmod_ctl_c::VOC_write_block(FILE *stream, int block,
     fwrite(data, 1, datalen, stream);
 }
 
-void bx_soundmod_ctl_c::pcm_apply_volume(Bit32u datalen, Bit8u data[], Bit8u volume,
+void bx_soundmod_ctl_c::pcm_apply_volume(Bit32u datalen, Bit8u data[], Bit16u volume,
                                          Bit8u bits, bx_bool stereo, bx_bool issigned)
 {
   unsigned i;
   Bit8u value8u;
   Bit8s value8s;
-  Bit16u value16u;
+  Bit16u value16u, tmpvol;
   Bit16s value16s;
+  Bit8u volumes[2], channel = 0;
 
-  UNUSED(stereo); // TODO
+  if (stereo) {
+    volumes[0] = (Bit8u)(volume & 0xff);
+    volumes[1] = (Bit8u)(volume >> 8);
+  } else {
+    tmpvol = ((volume & 0xff) + (volume >> 8)) / 2;
+    volumes[0] = volumes[1] = (Bit8u)tmpvol;
+  }
+
   if (bits == 16) {
     for (i = 0; i < datalen; i += 2) {
       if (issigned) {
         value16s = (Bit16s)(data[i] | (data[i+1] << 8));
-        value16s = (Bit16s)((Bit32s)value16s * volume / 256);
+        value16s = (Bit16s)((Bit32s)value16s * volumes[channel] / 256);
         data[i] = (Bit8u)(value16s & 0xff);
         data[i+1] = (Bit8u)(value16s >> 8);
       } else {
         value16u = data[i] | (data[i+1] << 8);
-        value16u = (Bit16u)((Bit32u)value16u * volume / 256);
+        value16u = (Bit16u)((Bit32u)value16u * volumes[channel] / 256);
         data[i] = (Bit8u)(value16u & 0xff);
         data[i+1] = (Bit8u)(value16u >> 8);
       }
+      channel ^= 1;
     }
   } else {
     for (i = 0; i < datalen; i++) {
       if (issigned) {
         value8s = (Bit8s)data[i];
-        data[i] = (Bit8u)(((Bit16s)value8s * volume) / 256);
+        data[i] = (Bit8u)(((Bit16s)value8s * volumes[channel]) / 256);
       } else {
         value8u = data[i];
-        data[i] = (Bit8u)(((Bit16u)value8u * volume) / 256);
+        data[i] = (Bit8u)(((Bit16u)value8u * volumes[channel]) / 256);
       }
+      channel ^= 1;
     }
   }
 }

@@ -483,6 +483,7 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
   Bit8u index, master_vol, dac_vol;
   bx_bool set_wave_vol = 0;
   unsigned i;
+  float tmp_vol;
 
   BX_DEBUG(("register write to address 0x%04x - value = 0x%08x", address, value));
 
@@ -563,12 +564,14 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
   }
 
   if (set_wave_vol) {
-    master_vol = ((0x1f - (BX_ES1370_THIS s.codec_reg[0] & 0x1f)) +
-                  (0x1f - (BX_ES1370_THIS s.codec_reg[1] & 0x1f))) / 2;
-    dac_vol = ((0x1f - (BX_ES1370_THIS s.codec_reg[2] & 0x1f)) +
-               (0x1f - (BX_ES1370_THIS s.codec_reg[3] & 0x1f))) / 2;
-    float tmp_vol = (float)master_vol/31.0f*pow(10.0f, (float)(31-dac_vol)*-0.065f);
+    master_vol = (0x1f - (BX_ES1370_THIS s.codec_reg[0] & 0x1f));
+    dac_vol = (0x1f - (BX_ES1370_THIS s.codec_reg[2] & 0x1f));
+    tmp_vol = (float)master_vol/31.0f*pow(10.0f, (float)(31-dac_vol)*-0.065f);
     BX_ES1370_THIS s.wave_vol = (Bit8u)(255 * tmp_vol);
+    master_vol = (0x1f - (BX_ES1370_THIS s.codec_reg[1] & 0x1f));
+    dac_vol = (0x1f - (BX_ES1370_THIS s.codec_reg[3] & 0x1f));
+    tmp_vol = (float)master_vol/31.0f*pow(10.0f, (float)(31-dac_vol)*-0.065f);
+    BX_ES1370_THIS s.wave_vol |= ((Bit8u)(255 * tmp_vol) << 8);
   }
 }
 
@@ -830,7 +833,7 @@ void bx_es1370_c::sendwavepacket(unsigned channel, Bit32u buflen, Bit8u *buffer)
   issigned = (format >> 1) & 1;
 
   // apply wave volume
-  if (BX_ES1370_THIS s.wave_vol != 255) {
+  if (BX_ES1370_THIS s.wave_vol != 0xffff) {
     DEV_soundmod_pcm_apply_volume(buflen, buffer, BX_ES1370_THIS s.wave_vol,
                                   bits, stereo, issigned);
   }
