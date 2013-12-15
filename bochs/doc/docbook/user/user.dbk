@@ -1121,125 +1121,174 @@ The <replaceable>tagname</replaceable> tells which release you want, and it can 
 
 <table frame="all">
 <title>Bochs Release Tags</title>
-  <tgroup cols="2">
+  <tgroup cols="3">
     <thead>
       <row>
         <entry>Bochs version</entry>
         <entry>Release tag for SVN</entry>
+        <entry>SVN revision</entry>
       </row>
     </thead>
     <tbody>
       <row>
+        <entry>2.6.2 (bugfix)</entry>
+        <entry>REL_2_6_2_FINAL</entry>
+        <entry>11667</entry>
+      </row>
+      <row>
+        <entry>2.6.1 (intermediate)</entry>
+        <entry>REL_2_6_1_FINAL</entry>
+        <entry>11667</entry>
+      </row>
+      <row>
+        <entry>2.6</entry>
+        <entry>REL_2_6_FINAL</entry>
+        <entry>11395</entry>
+      </row>
+      <row>
         <entry>2.5.1 (bugfix)</entry>
         <entry>REL_2_5_1_FINAL</entry>
+        <entry>10946</entry>
       </row>
       <row>
         <entry>2.5</entry>
         <entry>REL_2_5_FINAL</entry>
+        <entry>10801</entry>
       </row>
       <row>
         <entry>2.4.6</entry>
         <entry>REL_2_4_6_FINAL</entry>
+        <entry>10202</entry>
       </row>
       <row>
         <entry>2.4.5</entry>
         <entry>REL_2_4_5_FINAL</entry>
+        <entry>9914</entry>
       </row>
       <row>
         <entry>2.4.2</entry>
         <entry>REL_2_4_2_FINAL</entry>
+        <entry>9568</entry>
       </row>
       <row>
         <entry>2.4.1</entry>
         <entry>REL_2_4_1_FINAL</entry>
+        <entry>9368</entry>
       </row>
       <row>
         <entry>2.4</entry>
         <entry>REL_2_4_FINAL</entry>
+        <entry>9289</entry>
       </row>
       <row>
         <entry>2.3.7</entry>
         <entry>REL_2_3_7_FINAL</entry>
+        <entry>8537</entry>
       </row>
       <row>
         <entry>2.3.6</entry>
         <entry>REL_2_3_6_FINAL</entry>
+        <entry>8111</entry>
       </row>
       <row>
         <entry>2.3.5</entry>
         <entry>REL_2_3_5_FINAL</entry>
+        <entry>7840</entry>
       </row>
       <row>
         <entry>2.3</entry>
         <entry>REL_2_3_FINAL</entry>
+        <entry>7538</entry>
       </row>
       <row>
         <entry>2.2.6 (intermediate2)</entry>
         <entry>REL_2_2_6_FINAL</entry>
+        <entry>7060</entry>
       </row>
       <row>
         <entry>2.2.5 (intermediate1)</entry>
         <entry>REL_2_2_5_FINAL</entry>
+        <entry>6942</entry>
       </row>
       <row>
         <entry>2.2.1 (bugfix1)</entry>
         <entry>REL_2_2_1_FINAL</entry>
+        <entry>6624</entry>
       </row>
       <row>
         <entry>2.2</entry>
         <entry>REL_2_2_FINAL</entry>
+        <entry>6476</entry>
       </row>
       <row>
         <entry>2.1.1 (bugfix1)</entry>
         <entry>REL_2_1_1_FINAL</entry>
+        <entry>5560</entry>
       </row>
       <row>
         <entry>2.1</entry>
         <entry>REL_2_1_FINAL</entry>
+        <entry>5441</entry>
       </row>
       <row>
         <entry>2.0.2 (bugfix2)</entry>
         <entry>REL_2_0_2_FINAL</entry>
+        <entry>4592</entry>
       </row>
       <row>
         <entry>2.0.1 (bugfix1)</entry>
         <entry>REL_2_0_1_FINAL</entry>
+        <entry>4491</entry>
       </row>
       <row>
         <entry>2.0</entry>
         <entry>REL_2_0_FINAL</entry>
+        <entry>4409</entry>
       </row>
       <row>
         <entry>1.4.1 (bugfix1)</entry>
         <entry>REL_1_4_1_FINAL</entry>
+        <entry>2513</entry>
       </row>
       <row>
         <entry>1.4</entry>
         <entry>REL_1_4_FINAL</entry>
+        <entry>2235</entry>
       </row>
       <row>
         <entry>1.3</entry>
         <entry>REL_1_3_FINAL</entry>
+        <entry>1705</entry>
       </row>
       <row>
         <entry>1.2.1 (bugfix1)</entry>
         <entry>REL_1_2_1_FINAL</entry>
+        <entry>912</entry>
       </row>
       <row>
         <entry>1.2</entry>
         <entry>REL_1_2_FINAL</entry>
+        <entry>797</entry>
       </row>
       <row>
         <entry>1.1.2 (bugfix3)</entry>
         <entry>REL_1_1_2_BASE</entry>
+        <entry>510</entry>
       </row>
       <row>
         <entry>1.1.1 (bugfix2)</entry>
         <entry>REL_1_1_1_BASE</entry>
+        <entry>57</entry>
       </row>
       <row>
         <entry>1.1 (bugfix1)</entry>
         <entry>REL_1_1_BASE</entry>
+        <entry>51</entry>
+      </row>
+      <row>
+        <entry>1.0 (bochs-2000-03-25)</entry>
+        <entry>REL_1_0_BASE</entry>
+        <entry>8</entry>
       </row>
     </tbody>
    </tgroup>
