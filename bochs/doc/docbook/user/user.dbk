@@ -1286,9 +1286,9 @@ The <replaceable>tagname</replaceable> tells which release you want, and it can 
         <entry>51</entry>
       </row>
       <row>
-        <entry>1.0 (bochs-2000-03-25)</entry>
-        <entry>REL_1_0_BASE</entry>
-        <entry>8</entry>
+        <entry>1.0 (bochs-2000_0325a)</entry>
+        <entry>REL-bochs-2000-03-25</entry>
+        <entry>7</entry>
       </row>
     </tbody>
    </tgroup>
