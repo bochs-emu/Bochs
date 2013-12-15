@@ -367,6 +367,66 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSS_MASK_KGbHssWssIbR(bxInstruc
 
 // convert
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTUSI2SS_VssEdR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
+
+  op1.xmm32u(0) = uint32_to_float32(BX_READ_32BIT_REG(i->src2()), status);
+
+  check_exceptionsSSE(get_exception_flags(status));
+
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTUSI2SS_VssEqR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
+
+  op1.xmm32u(0) = uint64_to_float32(BX_READ_64BIT_REG(i->src2()), status);
+
+  check_exceptionsSSE(get_exception_flags(status));
+
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTUSI2SD_VsdEdR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  op1.xmm64u(0) = uint32_to_float64(BX_READ_32BIT_REG(i->src2()));
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTUSI2SD_VsdEqR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
+
+  op1.xmm64u(0) = uint64_to_float64(BX_READ_64BIT_REG(i->src2()), status);
+
+  check_exceptionsSSE(get_exception_flags(status));
+
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
+
+  BX_NEXT_INSTR(i);
+}
+
 #if 0
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PD_MASK_VpdWpsR(bxInstruction_c *i)

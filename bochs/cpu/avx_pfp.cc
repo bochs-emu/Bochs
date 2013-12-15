@@ -149,7 +149,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSI2SS_VssEdR(bxInstruction_c *
 /* Opcode: VEX.F3.0F 2A (VEX.W=1) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSI2SS_VssEqR(bxInstruction_c *i)
 {
-#if BX_SUPPORT_X86_64
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
 
   float_status_t status;
@@ -161,7 +160,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSI2SS_VssEqR(bxInstruction_c *
   check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -179,7 +177,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSI2SD_VsdEdR(bxInstruction_c *
 /* Opcode: VEX.F2.0F 2A (VEX.W=1) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSI2SD_VsdEqR(bxInstruction_c *i)
 {
-#if BX_SUPPORT_X86_64
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
 
   float_status_t status;
@@ -191,7 +188,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSI2SD_VsdEqR(bxInstruction_c *
   check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-#endif
 
   BX_NEXT_INSTR(i);
 }
