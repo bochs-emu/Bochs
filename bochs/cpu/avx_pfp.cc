@@ -135,6 +135,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSI2SS_VssEdR(bxInstruction_c *
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
 
   op1.xmm32u(0) = int32_to_float32(BX_READ_32BIT_REG(i->src2()), status);
 
@@ -153,6 +154,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSI2SS_VssEqR(bxInstruction_c *
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
 
   op1.xmm32u(0) = int64_to_float32(BX_READ_64BIT_REG(i->src2()), status);
 
@@ -182,6 +184,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSI2SD_VsdEqR(bxInstruction_c *
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
 
   op1.xmm64u(0) = int64_to_float64(BX_READ_64BIT_REG(i->src2()), status);
 

@@ -272,6 +272,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTSD_MASK_VsdHpdWsdR(bxInstruct
   BX_NEXT_INSTR(i);
 }
 
+// compare
+
 extern float32_compare_method avx_compare32[32];
 extern float64_compare_method avx_compare64[32];
 
@@ -362,5 +364,43 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSS_MASK_KGbHssWssIbR(bxInstruc
   BX_WRITE_OPMASK(i->dst(), result);
   BX_NEXT_INSTR(i);
 }
+
+// convert
+
+#if 0
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PD_MASK_VpdWpsR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister result;
+  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
+  unsigned mask = BX_READ_8BIT_OPMASK(i->opmask());
+  unsigned len = i->getVL();
+
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
+
+  for (unsigned n=0, tmp_mask = mask; n < (2*len); n++, tmp_mask >>= 1) {
+     if (tmp_mask & 0x1)
+       result.vmm64u(n) = float32_to_float64(op.ymm32u(n), status);
+     else
+       result.vmm64u(n) = 0;
+  }
+
+  check_exceptionsSSE(get_exception_flags(status));
+
+  if (! i->isZeroMasking()) {
+    for (unsigned n=0; n < len; n++, mask >>= 2)
+      xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), mask);
+    BX_CLEAR_AVX_REGZ(i->dst(), len);
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), op, len);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+#endif
 
 #endif
