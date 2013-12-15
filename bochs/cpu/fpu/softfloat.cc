@@ -1257,7 +1257,6 @@ Bit32s float64_to_int32_round_to_zero(float64 a, float_status_t &status)
     aExp = extractFloat64Exp(a);
     aSign = extractFloat64Sign(a);
     if (0x41E < aExp) {
-        if ((aExp == 0x7FF) && aSig) aSign = 0;
         float_raise(status, float_flag_invalid);
         return (Bit32s)(int32_indefinite);
     }
