@@ -265,6 +265,7 @@ Bit32s float32_to_int32_round_to_zero(float32 a, float_status_t &status)
 | except that the conversion is always rounded toward zero.  If `a' is a NaN
 | or conversion overflows, the largest positive integer is returned.
 *----------------------------------------------------------------------------*/
+
 Bit32u float32_to_uint32_round_to_zero(float32 a, float_status_t &status)
 {
     int aSign;
@@ -403,7 +404,11 @@ Bit64u float32_to_uint64_round_to_zero(float32 a, float_status_t &status)
     }
 
     if (aSign) {
-        if (aExp | aSig) float_raise(status, float_flag_invalid);
+        if (aExp) {
+            float_raise(status, float_flag_invalid);
+        } else if (aSig) { /* negative denormalized */
+            float_raise(status, float_flag_inexact);
+        }
         return 0;
     }
     if (0 < shiftCount) {
@@ -1369,6 +1374,7 @@ Bit64s float64_to_int64_round_to_zero(float64 a, float_status_t &status)
 | overflows, the largest positive integer is returned. If 'a' is negative,
 | zero is is returned.
 *----------------------------------------------------------------------------*/
+
 Bit32u float64_to_uint32(float64 a, float_status_t &status)
 {
     Bit64s val_64 = float64_to_int64(a, status);
