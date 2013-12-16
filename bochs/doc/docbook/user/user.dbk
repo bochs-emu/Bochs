@@ -1023,9 +1023,9 @@ for instructions.
 <para>
 The SVN checkout process (above) gives you a directory called <filename>bochs</filename>
 that contains the very latest source code.  I will refer to this directory
-as &bochsdir;.  In each subdirectory directory there's also a
-directory called ".svn" which tells the SVN software where the code was checked
-out, what version you have, and where to go for future updates.
+as &bochsdir;.  In this directory there's also a subdirectory called ".svn"
+which tells the SVN software where the code was checked out, what version
+you have, and where to go for future updates.
 </para>
 </section>
 
@@ -1133,7 +1133,7 @@ The <replaceable>tagname</replaceable> tells which release you want, and it can 
       <row>
         <entry>2.6.2 (bugfix)</entry>
         <entry>REL_2_6_2_FINAL</entry>
-        <entry>11667</entry>
+        <entry>11694</entry>
       </row>
       <row>
         <entry>2.6.1 (intermediate)</entry>

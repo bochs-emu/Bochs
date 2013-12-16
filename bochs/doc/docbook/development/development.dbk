@@ -48,7 +48,7 @@ you might want to get the whole tree to work with branches and tags.
 
 <para>
 Depending on your network connection this may take a long time, since it downloads all
-files from all branches and tags that ever have been created.
+files from all branches and tags that exist in the repository at the current revision.
 </para>
 
 </section> <!-- end setting up svn write access -->
