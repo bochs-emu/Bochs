@@ -1,3 +1,46 @@
+Changes after 2.6.2 (updated Dec 16, 2013):
+
+- CPU
+  TODO
+
+- Bochs Debugger and Instrumentation
+  TODO
+
+- Configure and compile
+  - configure option --enable-cdrom now only controls the presence of
+    platform-specific code for device access
+
+- Config interface
+  - Added global sound control option for the driver and wave input/output
+  - Added new bochsrc option to control the speaker output mode
+  - Added support to specify the initial time in ctime(3) string format
+  - Added support for the LTDL_LIBRARY_PATH variable with MSVC plugins
+  - All SB16 / ES1370 are now changable at runtime
+
+- I/O Devices
+  - Networking
+    - slirp/vnet: all supported TFTP extension options implemented now
+  - CDROM
+    - portable ISO image file access now available on all platforms
+  - Sound
+    - SB16 / ES1370: added volume control support for wave output
+    - ES1370: added 'wavemode' support similar to the SB16
+    - soundwin: added capability to specify the ID of the MIDI device to use
+
+- ROM BIOS
+  - PS/2 mouse function: allow setting mouse packet size to 4 for wheel support
+
+- GUI and display libraries
+  - Added new experimental gui 'vncsrv" using the LibVNCServer library
+  - RFB: set maximum resolution to 1280x1024 (same as vncsrv)
+  - RFB: don't wait for client connection on startup if timeout is set to 0
+  - wx: added mouse wheel support
+
+- Tools
+  - bximage utility rewritten in C++ for image creation, conversion, resize
+    and redolog commit. Now vmware4 and vpc images can be created.
+
+-------------------------------------------------------------------------
 Changes in 2.6.2 (May 26, 2013):
 
 - CPU
