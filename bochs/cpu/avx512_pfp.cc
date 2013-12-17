@@ -712,7 +712,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMSD_MASK_VsdHsdWsdIbR(bxIn
     float_status_t status;
     mxcsr_to_softfloat_status_word(status, MXCSR);
     softfloat_status_word_rc_override(status, i);
-    op1.xmm32u(0) = float64_fixupimm(op1.xmm64u(0), op2, i->Ib(), status);
+    op1.xmm64u(0) = float64_fixupimm(op1.xmm64u(0), op2, i->Ib(), status);
     check_exceptionsSSE(get_exception_flags(status));
   }
   else {
