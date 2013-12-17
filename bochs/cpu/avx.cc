@@ -390,13 +390,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF128_VdqMdq(bxInstructio
   BxPackedAvxRegister dst;
   BxPackedXmmRegister src;
   unsigned len = i->getVL();
-
-#if BX_SUPPORT_EVEX
-  if (len == BX_VL128) {
-    BX_ERROR(("%s: vector length must be >= 256 bit", i->getIaOpcodeNameShort()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-#endif
   
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   read_virtual_xmmword(i->seg(), eaddr, (Bit8u*) &src);
@@ -497,7 +490,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VINSERTF128_VdqHdqWdqIbR(bxInstruc
 {
   BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1());
 
-  op1.ymm128(i->Ib() & 1) = BX_READ_XMM_REG(i->src2());
+  op1.ymm128(i->Ib() & 0x1) = BX_READ_XMM_REG(i->src2());
 
   BX_WRITE_YMM_REGZ(i->dst(), op1);
 

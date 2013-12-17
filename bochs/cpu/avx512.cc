@@ -519,6 +519,50 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSHUFF64x2_MASK_VpdHpdWpdIbR(bxIns
   BX_NEXT_INSTR(i);
 }
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VINSERTF32x4_MASK_VpsHpsWpsIbR(bxInstruction_c *i)
+{
+  unsigned len = i->getVL();
+  if (len != BX_VL512) {
+    BX_ERROR(("%s: vector length must be 512 bit", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+
+  op1.vmm128(i->Ib() & 0x3) = BX_READ_XMM_REG(i->src2());
+
+  if (i->opmask()) {
+    avx512_write_regd_masked(i, &op1, len, BX_READ_16BIT_OPMASK(i->opmask()));
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), op1, len);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VINSERTF64x4_MASK_VpdHpdWpdIbR(bxInstruction_c *i)
+{
+  unsigned len = i->getVL();
+  if (len != BX_VL512) {
+    BX_ERROR(("%s: vector length must be 512 bit", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+
+  op1.vmm256(i->Ib() & 0x1) = BX_READ_YMM_REG(i->src2());
+
+  if (i->opmask()) {
+    avx512_write_regq_masked(i, &op1, len, BX_READ_8BIT_OPMASK(i->opmask()));
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), op1, len);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 // broadcast
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTD_MASK_VdqWdR(bxInstruction_c *i)
@@ -588,13 +632,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF32x4_MASK_VpsMps(bxInst
   BxPackedAvxRegister dst;
   BxPackedXmmRegister src;
   unsigned len = i->getVL();
-
-#if BX_SUPPORT_EVEX
-  if (len == BX_VL128) {
-    BX_ERROR(("%s: vector length must be >= 256 bit", i->getIaOpcodeNameShort()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-#endif
 
   Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
   if (opmask != 0) {

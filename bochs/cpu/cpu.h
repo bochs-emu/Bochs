@@ -3374,6 +3374,11 @@ public: // for now...
   BX_SMF BX_INSF_TYPE VSHUFF32x4_MASK_VpsHpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VSHUFF64x2_MASK_VpdHpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+  BX_SMF BX_INSF_TYPE VINSERTF32x4_MASK_VpsHpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VINSERTI32x4_MASK_VdqHdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VINSERTF64x4_MASK_VpdHpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VINSERTI64x4_MASK_VdqHdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   BX_SMF BX_INSF_TYPE VPBROADCASTD_MASK_VdqWdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPBROADCASTQ_MASK_VdqWqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
