@@ -109,7 +109,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 #define LTDEBUG_PRINTF(x) /* debug output disabled */
 //#define LTDEBUG_PRINTF(x) do{ printf("LT_DEBUG: "); printf x; } while (0)
 
-#include "ltdl.h"
+#include "ltdl-bochs.h"
 
 
 

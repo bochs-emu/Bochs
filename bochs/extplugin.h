@@ -21,7 +21,7 @@
 #if BX_HAVE_LTDL
 #include <ltdl.h>
 #else
-#include "ltdl.h"
+#include "ltdl-bochs.h"
 #endif
 #endif
 

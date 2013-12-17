@@ -1,4 +1,4 @@
-# Copyright (C) 2001  The Bochs Project
+# Copyright (C) 2001-2013  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -118,8 +118,8 @@ dbg_main.o: dbg_main.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../cpu/cpu.h ../cpu/cpuid.h ../cpu/crregs.h ../cpu/descriptor.h \
  ../cpu/instr.h ../cpu/ia_opcodes.h ../cpu/lazy_flags.h ../cpu/icache.h \
  ../cpu/apic.h ../cpu/i387.h ../cpu/fpu/softfloat.h ../cpu/fpu/tag_w.h \
- ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h ../cpu/xmm.h \
- ../iodev/iodev.h ../plugin.h ../extplugin.h ../ltdl.h
+ ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h ../cpu/xmm.h ../cpu/vmx.h \
+ ../iodev/iodev.h ../plugin.h ../extplugin.h
 linux.o: linux.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
  ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
@@ -127,7 +127,7 @@ linux.o: linux.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.
  ../cpu/crregs.h ../cpu/descriptor.h ../cpu/instr.h ../cpu/ia_opcodes.h \
  ../cpu/lazy_flags.h ../cpu/icache.h ../cpu/apic.h ../cpu/i387.h \
  ../cpu/fpu/softfloat.h ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h \
- ../cpu/fpu/control_w.h ../cpu/xmm.h
+ ../cpu/fpu/control_w.h ../cpu/xmm.h ../cpu/vmx.h
 symbols.o: symbols.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
@@ -135,4 +135,4 @@ symbols.o: symbols.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../cpu/cpuid.h ../cpu/crregs.h ../cpu/descriptor.h ../cpu/instr.h \
  ../cpu/ia_opcodes.h ../cpu/lazy_flags.h ../cpu/icache.h ../cpu/apic.h \
  ../cpu/i387.h ../cpu/fpu/softfloat.h ../cpu/fpu/tag_w.h \
- ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h ../cpu/xmm.h
+ ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h ../cpu/xmm.h ../cpu/vmx.h
