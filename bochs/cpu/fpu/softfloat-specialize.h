@@ -59,7 +59,7 @@ typedef struct {
 /*----------------------------------------------------------------------------
 | The pattern for a default generated half-precision NaN.
 *----------------------------------------------------------------------------*/
-#define float16_default_nan 0xFE00
+const float16 float16_default_nan = 0xFE00;
 
 #define float16_fraction extractFloat16Frac
 #define float16_exp extractFloat16Exp
@@ -177,9 +177,21 @@ BX_CPP_INLINE float16 commonNaNToFloat16(commonNaNT a)
 #endif
 
 /*----------------------------------------------------------------------------
+| Commonly used single-precision floating point constants
+*----------------------------------------------------------------------------*/
+const float32 float32_negative_inf  = 0xff800000;
+const float32 float32_positive_inf  = 0x7f800000;
+const float32 float32_negative_zero = 0x80000000;
+const float32 float32_positive_zero = 0x00000000;
+const float32 float32_negative_one  = 0xbf800000;
+const float32 float32_positive_one  = 0x3f800000;
+const float32 float32_max_float     = 0x7f7fffff;
+const float32 float32_min_float     = 0xff7fffff;
+
+/*----------------------------------------------------------------------------
 | The pattern for a default generated single-precision NaN.
 *----------------------------------------------------------------------------*/
-#define float32_default_nan 0xFFC00000
+const float32 float32_default_nan   = 0xffc00000;
 
 #define float32_fraction extractFloat32Frac
 #define float32_exp extractFloat32Exp
@@ -316,9 +328,21 @@ BX_CPP_INLINE float32 propagateFloat32NaN(float32 a, float_status_t &status)
 }
 
 /*----------------------------------------------------------------------------
+| Commonly used single-precision floating point constants
+*----------------------------------------------------------------------------*/
+const float64 float64_negative_inf  = BX_CONST64(0xfff0000000000000);
+const float64 float64_positive_inf  = BX_CONST64(0x7ff0000000000000);
+const float64 float64_negative_zero = BX_CONST64(0x8000000000000000);
+const float64 float64_positive_zero = BX_CONST64(0x0000000000000000);
+const float64 float64_negative_one  = BX_CONST64(0xbff0000000000000);
+const float64 float64_positive_one  = BX_CONST64(0x3ff0000000000000);
+const float64 float64_max_float     = BX_CONST64(0x7fefffffffffffff);
+const float64 float64_min_float     = BX_CONST64(0xffefffffffffffff);
+
+/*----------------------------------------------------------------------------
 | The pattern for a default generated double-precision NaN.
 *----------------------------------------------------------------------------*/
-#define float64_default_nan BX_CONST64(0xFFF8000000000000)
+const float64 float64_default_nan = BX_CONST64(0xFFF8000000000000);
 
 #define float64_fraction extractFloat64Frac
 #define float64_exp extractFloat64Exp

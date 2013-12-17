@@ -30,11 +30,6 @@
 
 #include "fpu/softfloat-specialize.h"
 
-BX_CPP_INLINE float32 convert_to_QNaN(float32 op)
-{
-  return op | 0x00400000;
-}
-
 static Bit16u rcp_table[2048] = {
     0x7ff0, 0x7fd0, 0x7fb0, 0x7f90, 0x7f70, 0x7f50, 0x7f30, 0x7f10,
     0x7ef0, 0x7ed0, 0x7eb0, 0x7e90, 0x7e70, 0x7e50, 0x7e30, 0x7e10,
@@ -298,7 +293,6 @@ static Bit16u rcp_table[2048] = {
 float32 approximate_rcp(float32 op)
 {
   float_class_t op_class = float32_class(op);
-
   int sign = float32_sign(op);
 
   switch(op_class)
@@ -647,7 +641,6 @@ Bit16u rsqrt_table1[1024] =
 float32 approximate_rsqrt(float32 op)
 {
   float_class_t op_class = float32_class(op);
-
   int sign = float32_sign(op);
 
   switch(op_class)

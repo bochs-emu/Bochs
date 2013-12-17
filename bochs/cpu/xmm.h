@@ -412,6 +412,18 @@ BX_CPP_INLINE void softfloat_status_word_rc_override(float_status_t &status, bxI
   #define softfloat_status_word_rc_override(status, i)
 #endif
 
+/* convert float32 NaN number to QNaN */
+BX_CPP_INLINE float32 convert_to_QNaN(float32 op)
+{
+  return op | 0x00400000;
+}
+
+/* convert float64 NaN number to QNaN */
+BX_CPP_INLINE float64 convert_to_QNaN(float64 op)
+{
+  return op | BX_CONST64(0x0008000000000000);
+}
+
 /* MXCSR REGISTER */
 
 /* 31|30|29|28|27|26|25|24|23|22|21|20|19|18|17|16

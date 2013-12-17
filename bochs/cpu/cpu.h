@@ -3333,6 +3333,13 @@ public: // for now...
   BX_SMF BX_INSF_TYPE VFNMSUBSD_MASK_VpdHsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VFNMSUBSS_MASK_VpsHssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+  BX_SMF BX_INSF_TYPE VFIXUPIMMSS_MASK_VssHssWssIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFIXUPIMMSD_MASK_VsdHsdWsdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFIXUPIMMPS_VpsHpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFIXUPIMMPD_VpdHpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFIXUPIMMPS_MASK_VpsHpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VFIXUPIMMPD_MASK_VpdHpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   BX_SMF BX_INSF_TYPE VBLENDMPS_MASK_VpsHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VBLENDMPD_MASK_VpdHpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
