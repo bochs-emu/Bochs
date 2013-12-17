@@ -1,19 +1,26 @@
 Changes after 2.6.2 (updated Dec 16, 2013):
 
 - CPU
-  TODO
+  - Bugfixes for CPU emulation correctness (critical fixes for VMX, TBM/BMI and RDRAND instructions)
+  - Implemented FCS/FDS Deprecation CPU feature
+  - Implemented SHA instructions emulation
+  - Implemented AVX-512 instructions emulation (work in progress)
+  ! CPUDB: Added Intel(R) Core(TM) i7-4770 CPU (Haswell) configuration to CPUDB
 
 - Bochs Debugger and Instrumentation
-  TODO
+  - Added disam for Bochs internal instruction representation, especially useful for instrumentation
+  - Updated definition of instrumentation callbacks, see description in
+    instrumentation.txt / Fixed instrumentation examples
 
 - Configure and compile
+  - configure and compilation fixes for Cygwin and Visual Studio environment
   - configure option --enable-cdrom now only controls the presence of
     platform-specific code for device access
 
 - Config interface
   - Added global sound control option for the driver and wave input/output
   - Added new bochsrc option to control the speaker output mode
-  - Added support to specify the initial time in ctime(3) string format
+  - Added support to specify the initial time for 'clock' option in ctime(3) string format
   - Added support for the LTDL_LIBRARY_PATH variable with MSVC plugins
   - All SB16 / ES1370 are now changable at runtime
 
@@ -26,6 +33,8 @@ Changes after 2.6.2 (updated Dec 16, 2013):
     - SB16 / ES1370: added volume control support for wave output
     - ES1370: added 'wavemode' support similar to the SB16
     - soundwin: added capability to specify the ID of the MIDI device to use
+  - Serial
+    - Serial mouse detection fixes
 
 - ROM BIOS
   - PS/2 mouse function: allow setting mouse packet size to 4 for wheel support
