@@ -2,9 +2,10 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2004 Makoto Suzuki (suzu)
-//                    Volker Ruppert (vruppert)
-//                    Robin Kay (komadori)
+//  Copyright (c) 2004 Makoto Suzuki (suzu)
+//                     Volker Ruppert (vruppert)
+//                     Robin Kay (komadori)
+//  Copyright (C) 2004-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -210,6 +211,7 @@ private:
 
   Bit32u bank_base[2];
   Bit32u bank_limit[2];
+  Bit32u memsize_mask;
   Bit8u *disp_ptr;
 
   struct {

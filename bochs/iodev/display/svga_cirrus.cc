@@ -2,9 +2,10 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2004 Makoto Suzuki (suzu)
-//                    Volker Ruppert (vruppert)
-//                    Robin Kay (komadori)
+//  Copyright (c) 2004 Makoto Suzuki (suzu)
+//                     Volker Ruppert (vruppert)
+//                     Robin Kay (komadori)
+//  Copyright (C) 2004-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -358,6 +359,7 @@ void bx_svga_cirrus_c::svga_init_members()
 
   memset(BX_CIRRUS_THIS s.memory, 0xff, CIRRUS_VIDEO_MEMORY_BYTES);
   BX_CIRRUS_THIS disp_ptr = BX_CIRRUS_THIS s.memory;
+  BX_CIRRUS_THIS memsize_mask = BX_CIRRUS_THIS s.memsize - 1;
 }
 
 void bx_svga_cirrus_c::reset(unsigned type)
@@ -600,7 +602,7 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
         (addr < (BX_CIRRUS_THIS pci_base_address[0] + CIRRUS_PNPMEM_SIZE))) {
       Bit8u *ptr;
 
-      Bit32u offset = addr & (BX_CIRRUS_THIS s.memsize - 1);
+      Bit32u offset = addr & BX_CIRRUS_THIS memsize_mask;
       if ((offset >= (BX_CIRRUS_THIS s.memsize - 256)) &&
           ((BX_CIRRUS_THIS sequencer.reg[0x17] & 0x44) == 0x44)) {
         return svga_mmio_blt_read(offset & 0xff);
@@ -626,7 +628,7 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
       } else if (BX_CIRRUS_THIS control.reg[0x0b] & 0x02) {
         offset <<= 3;
       }
-      offset &= (BX_CIRRUS_THIS s.memsize - 1);
+      offset &= BX_CIRRUS_THIS memsize_mask;
       return *(ptr + offset);
     } else if ((addr >= BX_CIRRUS_THIS pci_base_address[1]) &&
       (addr < (BX_CIRRUS_THIS pci_base_address[1] + CIRRUS_PNPMMIO_SIZE))) {
@@ -671,7 +673,7 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
       } else if (BX_CIRRUS_THIS control.reg[0x0b] & 0x02) {
         offset <<= 3;
       }
-      offset &= (BX_CIRRUS_THIS s.memsize - 1);
+      offset &= BX_CIRRUS_THIS memsize_mask;
       return *(BX_CIRRUS_THIS s.memory + offset);
     }
     else {
@@ -726,7 +728,7 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
     if ((addr >= BX_CIRRUS_THIS pci_base_address[0]) &&
         (addr < (BX_CIRRUS_THIS pci_base_address[0] + CIRRUS_PNPMEM_SIZE))) {
 
-      Bit32u offset = addr & (BX_CIRRUS_THIS s.memsize - 1);
+      Bit32u offset = addr & BX_CIRRUS_THIS memsize_mask;
       if ((offset >= (BX_CIRRUS_THIS s.memsize - 256)) &&
           ((BX_CIRRUS_THIS sequencer.reg[0x17] & 0x44) == 0x44)) {
         svga_mmio_blt_write(addr & 0xff, value);
@@ -748,7 +750,7 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
       } else if (BX_CIRRUS_THIS control.reg[0x0b] & 0x02) {
         offset <<= 3;
       }
-      offset &= (BX_CIRRUS_THIS s.memsize - 1);
+      offset &= BX_CIRRUS_THIS memsize_mask;
       Bit8u mode = BX_CIRRUS_THIS control.reg[0x05] & 0x07;
       if ((mode < 4) || (mode > 5) || ((BX_CIRRUS_THIS control.reg[0x0b] & 0x4) == 0)) {
         *(BX_CIRRUS_THIS s.memory + offset) = value;
@@ -802,7 +804,7 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
       } else if (BX_CIRRUS_THIS control.reg[0x0b] & 0x02) {
         offset <<= 3;
       }
-      offset &= (BX_CIRRUS_THIS s.memsize - 1);
+      offset &= BX_CIRRUS_THIS memsize_mask;
       mode = BX_CIRRUS_THIS control.reg[0x05] & 0x07;
       if ((mode < 4) || (mode > 5) || ((BX_CIRRUS_THIS control.reg[0x0b] & 0x4) == 0)) {
         *(BX_CIRRUS_THIS s.memory + offset) = value;
@@ -2548,9 +2550,9 @@ void bx_svga_cirrus_c::svga_bitblt()
   ReadHostWordFromLittleEndian(&BX_CIRRUS_THIS control.reg[0x26],tmp16);
   BX_CIRRUS_THIS bitblt.srcpitch = (int)tmp16 & (int)0x1fff;
   ReadHostDWordFromLittleEndian(&BX_CIRRUS_THIS control.reg[0x28],tmp32);
-  dstaddr = tmp32 & (BX_CIRRUS_THIS s.memsize - 1);
+  dstaddr = tmp32 & BX_CIRRUS_THIS memsize_mask;
   ReadHostDWordFromLittleEndian(&BX_CIRRUS_THIS control.reg[0x2c],tmp32);
-  srcaddr = tmp32 & (BX_CIRRUS_THIS s.memsize - 1);
+  srcaddr = tmp32 & BX_CIRRUS_THIS memsize_mask;
   BX_CIRRUS_THIS bitblt.srcaddr = srcaddr;
   BX_CIRRUS_THIS bitblt.bltmode = BX_CIRRUS_THIS control.reg[0x30];
   BX_CIRRUS_THIS bitblt.bltmodeext = BX_CIRRUS_THIS control.reg[0x33];
