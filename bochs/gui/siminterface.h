@@ -672,7 +672,6 @@ public:
   virtual int set_log_prefix(char *prefix) {return -1;}
   virtual int get_debugger_log_file(char *path, int len) {return -1;}
   virtual int set_debugger_log_file(char *path) {return -1;}
-  virtual int get_cdrom_options(int drive, bx_list_c **out, int *where = NULL) {return -1;}
   virtual int hdimage_get_mode(const char *mode)  {return -1;}
 
   // The CI calls set_notify_callback to register its event handler function.

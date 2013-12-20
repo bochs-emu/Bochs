@@ -115,7 +115,6 @@ public:
   virtual int set_log_prefix(const char *prefix);
   virtual int get_debugger_log_file(char *path, int len);
   virtual int set_debugger_log_file(const char *path);
-  virtual int get_cdrom_options(int drive, bx_list_c **out, int *device = NULL);
   virtual int hdimage_get_mode(const char *mode);
   virtual void set_notify_callback(bxevent_handler func, void *arg);
   virtual void get_notify_callback(bxevent_handler *func, void **arg);
@@ -482,28 +481,6 @@ int bx_real_sim_c::get_debugger_log_file(char *path, int len)
 int bx_real_sim_c::set_debugger_log_file(const char *path)
 {
   SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set(path);
-  return 0;
-}
-
-int bx_real_sim_c::get_cdrom_options(int level, bx_list_c **out, int *where)
-{
-  char pname[80];
-
-  for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
-    for (Bit8u device=0; device<2; device++) {
-      sprintf(pname, "ata.%d.%s", channel, (device==0)?"master":"slave");
-      bx_list_c *devlist = (bx_list_c*) SIM->get_param(pname);
-      if (SIM->get_param_enum("type", devlist)->get() == BX_ATA_DEVICE_CDROM) {
-        if (level==0) {
-          *out = devlist;
-          if (where != NULL) *where = (channel * 2) + device;
-          return 1;
-        } else {
-          level--;
-        }
-      }
-    }
-  }
   return 0;
 }
 

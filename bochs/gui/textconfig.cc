@@ -318,20 +318,16 @@ static const char *runtime_menu_prompt =
 "---------------------\n"
 "1. Floppy disk 0: %s\n"
 "2. Floppy disk 1: %s\n"
-"3. 1st CDROM: %s\n"
-"4. 2nd CDROM: %s\n"
-"5. 3rd CDROM: %s\n"
-"6. 4th CDROM: %s\n"
-"7. (not implemented)\n"
-"8. Log options for all devices\n"
-"9. Log options for individual devices\n"
-"10. Instruction tracing: off (doesn't exist yet)\n"
-"11. USB runtime options\n"
-"12. Misc runtime options\n"
-"13. Continue simulation\n"
-"14. Quit now\n"
+"3. CDROM runtime options\n"
+"4. Log options for all devices\n"
+"5. Log options for individual devices\n"
+"6. USB runtime options\n"
+"7. Misc runtime options\n"
+"8. Save configuration\n"
+"9. Continue simulation\n"
+"10. Quit now\n"
 "\n"
-"Please choose one:  [13] ";
+"Please choose one:  [9] ";
 
 static const char *plugin_ctrl_prompt =
 "\n-----------------------\n"
@@ -353,7 +349,6 @@ static const char *plugin_ctrl_prompt =
 void build_runtime_options_prompt(const char *format, char *buf, int size)
 {
   bx_list_c *floppyop;
-  bx_list_c *cdromop = NULL;
   char pname[80];
   char buffer[6][128];
 
@@ -370,19 +365,7 @@ void build_runtime_options_prompt(const char *format, char *buf, int size)
     }
   }
 
-  // 4 cdroms supported at run time
-  int device;
-  for (Bit8u cdrom=0; cdrom<4; cdrom++) {
-    if (!SIM->get_cdrom_options(cdrom, &cdromop, &device))
-      sprintf(buffer[2+cdrom], "(not present)");
-    else
-      sprintf(buffer[2+cdrom], "(%s on ata%d) %s, %s",
-        device&1?"slave":"master", device/2, SIM->get_param_string("path", cdromop)->getptr(),
-        (SIM->get_param_enum("status", cdromop)->get_selected()));
-    }
-
-  snprintf(buf, size, format, buffer[0], buffer[1], buffer[2],
-           buffer[3], buffer[4], buffer[5]);
+  snprintf(buf, size, format, buffer[0], buffer[1]);
 }
 
 int do_menu(const char *pname)
@@ -507,8 +490,6 @@ int bx_config_interface(int menu)
         break;
       case BX_CI_RUNTIME:
         {
-          bx_list_c *cdromop = NULL;
-          char pname[80];
           char prompt[1024];
           build_runtime_options_prompt(runtime_menu_prompt, prompt, 1024);
           if (ask_uint(prompt, "", 1, BX_CI_RT_QUIT, BX_CI_RT_CONT, &choice, 10) < 0) return -1;
@@ -519,26 +500,14 @@ int bx_config_interface(int menu)
             case BX_CI_RT_FLOPPYB:
               if (SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get() != BX_FDD_NONE) do_menu(BXPN_FLOPPYB);
               break;
-            case BX_CI_RT_CDROM1:
-            case BX_CI_RT_CDROM2:
-            case BX_CI_RT_CDROM3:
-            case BX_CI_RT_CDROM4:
-              int device;
-              if (SIM->get_cdrom_options(choice - BX_CI_RT_CDROM1, &cdromop, &device)) {
-                cdromop->get_param_path(pname, 80);
-                do_menu(pname);
-              }
-              break;
-            case BX_CI_RT_IPS:
-              // not implemented yet because I would have to mess with
-              // resetting timers and pits and everything on the fly.
-              // askparam(BXPN_IPS);
-              break;
+            case BX_CI_RT_CDROM: do_menu(BXPN_MENU_RUNTIME_CDROM); break;
             case BX_CI_RT_LOGOPTS1: bx_log_options(0); break;
             case BX_CI_RT_LOGOPTS2: bx_log_options(1); break;
-            case BX_CI_RT_INST_TR: NOT_IMPLEMENTED(choice); break;
             case BX_CI_RT_USB: do_menu(BXPN_MENU_RUNTIME_USB); break;
             case BX_CI_RT_MISC: do_menu(BXPN_MENU_RUNTIME_MISC); break;
+            case BX_CI_RT_SAVE_CFG:
+              bx_write_rc(NULL);
+              break;
             case BX_CI_RT_CONT:
               SIM->update_runtime_options();
               fprintf(stderr, "Continuing simulation\n");

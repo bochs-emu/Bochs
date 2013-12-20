@@ -25,6 +25,7 @@ Changes after 2.6.2 (updated Dec 16, 2013):
   - Added support to specify the initial time for 'clock' option in ctime(3) string format
   - Added support for the LTDL_LIBRARY_PATH variable with MSVC plugins
   - All SB16 / ES1370 are now changable at runtime
+  - textconfig: added menu item for saving configuration
 
 - I/O Devices
   - Networking
