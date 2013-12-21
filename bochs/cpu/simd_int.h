@@ -490,47 +490,67 @@ BX_CPP_INLINE Bit32u xmm_pmovmskq(const BxPackedXmmRegister *op)
 
 // blend
 
+BX_CPP_INLINE void xmm_pblendb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, unsigned mask)
+{
+  for (unsigned n=0; n < 16; n++, mask >>= 1) {
+    if (mask & 0x1) op1.xmmubyte(n) = op2->xmmubyte(n);
+  }
+}
+
+#if BX_SUPPORT_EVEX
+BX_CPP_INLINE void xmm_zero_pblendb(BxPackedXmmRegister *dst, const BxPackedXmmRegister *op, unsigned mask)
+{
+  for (unsigned n=0; n < 16; n++, mask >>= 1) {
+    dst->xmmubyte(n) = (mask & 0x1) ? op->xmmubyte(n) : 0;
+  }
+}
+#endif
+
 BX_CPP_INLINE void xmm_pblendw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, unsigned mask)
 {
-  if (mask & 0x01) op1->xmm16u(0) = op2->xmm16u(0);
-  if (mask & 0x02) op1->xmm16u(1) = op2->xmm16u(1);
-  if (mask & 0x04) op1->xmm16u(2) = op2->xmm16u(2);
-  if (mask & 0x08) op1->xmm16u(3) = op2->xmm16u(3);
-  if (mask & 0x10) op1->xmm16u(4) = op2->xmm16u(4);
-  if (mask & 0x20) op1->xmm16u(5) = op2->xmm16u(5);
-  if (mask & 0x40) op1->xmm16u(6) = op2->xmm16u(6);
-  if (mask & 0x80) op1->xmm16u(7) = op2->xmm16u(7);
+  for (unsigned n=0; n < 8; n++, mask>>=1) {
+    if (mask & 0x1) op1.xmm16u(n) = op2->xmm16u(n);
+  }
 }
+
+#if BX_SUPPORT_EVEX
+BX_CPP_INLINE void xmm_zero_pblendw(BxPackedXmmRegister *dst, const BxPackedXmmRegister *op, unsigned mask)
+{
+  for (unsigned n=0; n < 8; n++, mask >>= 1) {
+    dst->xmm16u(n) = (mask & 0x1) ? op->xmm16u(n) : 0;
+  }
+}
+#endif
 
 BX_CPP_INLINE void xmm_blendps(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, unsigned mask)
 {
-  if (mask & 0x1) op1->xmm32u(0) = op2->xmm32u(0);
-  if (mask & 0x2) op1->xmm32u(1) = op2->xmm32u(1);
-  if (mask & 0x4) op1->xmm32u(2) = op2->xmm32u(2);
-  if (mask & 0x8) op1->xmm32u(3) = op2->xmm32u(3);
+  for (unsigned n=0; n < 4; n++, mask>>=1) {
+    if (mask & 0x1) op1.xmm32u(n) = op2->xmm32u(n);
+  }
 }
 
 #if BX_SUPPORT_EVEX
 BX_CPP_INLINE void xmm_zero_blendps(BxPackedXmmRegister *dst, const BxPackedXmmRegister *op, unsigned mask)
 {
-  dst->xmm32u(0) = (mask & 0x1) ? op->xmm32u(0) : 0;
-  dst->xmm32u(1) = (mask & 0x2) ? op->xmm32u(1) : 0;
-  dst->xmm32u(2) = (mask & 0x4) ? op->xmm32u(2) : 0;
-  dst->xmm32u(3) = (mask & 0x8) ? op->xmm32u(3) : 0;
+  for (unsigned n=0; n < 4; n++, mask >>= 1) {
+    dst->xmm32u(n) = (mask & 0x1) ? op->xmm32u(n) : 0;
+  }
 }
 #endif
 
 BX_CPP_INLINE void xmm_blendpd(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, unsigned mask)
 {
-  if (mask & 0x1) op1->xmm64u(0) = op2->xmm64u(0);
-  if (mask & 0x2) op1->xmm64u(1) = op2->xmm64u(1);
+  for (unsigned n=0; n < 2; n++, mask>>=1) {
+    if (mask & 0x1) op1.xmm64u(n) = op2->xmm64u(n);
+  }
 }
 
 #if BX_SUPPORT_EVEX
 BX_CPP_INLINE void xmm_zero_blendpd(BxPackedXmmRegister *dst, const BxPackedXmmRegister *op, unsigned mask)
 {
-  dst->xmm64u(0) = (mask & 0x1) ? op->xmm64u(0) : 0;
-  dst->xmm64u(1) = (mask & 0x2) ? op->xmm64u(1) : 0;
+  for (unsigned n=0; n < 2; n++, mask >>= 1) {
+    dst->xmm64u(n) = (mask & 0x1) ? op->xmm64u(n) : 0;
+  }
 }
 #endif
 
