@@ -4352,9 +4352,9 @@ public: // for now...
   BX_SMF void repeat_ZF(bxInstruction_c *i, BxRepIterationPtr_tR execute) BX_CPP_AttrRegparmN(2);
 
   // linear address for access_linear expected to be canonical !
-  BX_SMF void access_read_linear(bx_address laddr, unsigned len, unsigned curr_pl,
+  BX_SMF int access_read_linear(bx_address laddr, unsigned len, unsigned curr_pl,
        unsigned rw, void *data);
-  BX_SMF void access_write_linear(bx_address laddr, unsigned len, unsigned curr_pl,
+  BX_SMF int access_write_linear(bx_address laddr, unsigned len, unsigned curr_pl,
        void *data);
   BX_SMF void page_fault(unsigned fault, bx_address laddr, unsigned user, unsigned rw);
 

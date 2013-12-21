@@ -314,13 +314,15 @@ BX_CPU_C::system_read_word(bx_address laddr)
   }
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonical(laddr) || ! IsCanonical(laddr+1)) {
+  if (! IsCanonical(laddr)) {
     BX_ERROR(("system_read_word(): canonical failure"));
     exception(BX_GP_EXCEPTION, 0);
   }
 #endif
 
-  access_read_linear(laddr, 2, 0, BX_READ, (void *) &data);
+  if (access_read_linear(laddr, 2, 0, BX_READ, (void *) &data) < 0)
+    exception(BX_GP_EXCEPTION, 0);
+
   return data;
 }
 
@@ -346,13 +348,15 @@ BX_CPU_C::system_read_dword(bx_address laddr)
   }
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonical(laddr) || ! IsCanonical(laddr+3)) {
+  if (! IsCanonical(laddr)) {
     BX_ERROR(("system_read_dword(): canonical failure"));
     exception(BX_GP_EXCEPTION, 0);
   }
 #endif
 
-  access_read_linear(laddr, 4, 0, BX_READ, (void *) &data);
+  if (access_read_linear(laddr, 4, 0, BX_READ, (void *) &data) < 0)
+    exception(BX_GP_EXCEPTION, 0);
+
   return data;
 }
 
@@ -378,13 +382,15 @@ BX_CPU_C::system_read_qword(bx_address laddr)
   }
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonical(laddr) || ! IsCanonical(laddr+7)) {
+  if (! IsCanonical(laddr)) {
     BX_ERROR(("system_read_qword(): canonical failure"));
     exception(BX_GP_EXCEPTION, 0);
   }
 #endif
 
-  access_read_linear(laddr, 8, 0, BX_READ, (void *) &data);
+  if (access_read_linear(laddr, 8, 0, BX_READ, (void *) &data) < 0)
+    exception(BX_GP_EXCEPTION, 0);
+
   return data;
 }
 
@@ -441,13 +447,14 @@ BX_CPU_C::system_write_word(bx_address laddr, Bit16u data)
   }
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonical(laddr) || ! IsCanonical(laddr+1)) {
+  if (! IsCanonical(laddr)) {
     BX_ERROR(("system_write_word(): canonical failure"));
     exception(BX_GP_EXCEPTION, 0);
   }
 #endif
 
-  access_write_linear(laddr, 2, 0, (void *) &data);
+  if (access_write_linear(laddr, 2, 0, (void *) &data) < 0)
+    exception(BX_GP_EXCEPTION, 0);
 }
 
   void BX_CPP_AttrRegparmN(2)
@@ -472,13 +479,14 @@ BX_CPU_C::system_write_dword(bx_address laddr, Bit32u data)
   }
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonical(laddr) || ! IsCanonical(laddr+3)) {
+  if (! IsCanonical(laddr)) {
     BX_ERROR(("system_write_dword(): canonical failure"));
     exception(BX_GP_EXCEPTION, 0);
   }
 #endif
 
-  access_write_linear(laddr, 4, 0, (void *) &data);
+  if (access_write_linear(laddr, 4, 0, (void *) &data) < 0)
+    exception(BX_GP_EXCEPTION, 0);
 }
 
   Bit8u* BX_CPP_AttrRegparmN(2)

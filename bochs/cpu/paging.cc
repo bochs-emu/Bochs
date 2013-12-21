@@ -1901,7 +1901,7 @@ page_fault:
 }
 #endif
 
-void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_pl, void *data)
+int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_pl, void *data)
 {
   Bit32u pageOffset = PAGE_OFFSET(laddr);
 
@@ -1924,14 +1924,21 @@ void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr
   }
   else {
     // access across 2 pages
-    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl == 3), BX_WRITE);
     BX_CPU_THIS_PTR address_xlation.len1 = 4096 - pageOffset;
     BX_CPU_THIS_PTR address_xlation.len2 = len - BX_CPU_THIS_PTR address_xlation.len1;
     BX_CPU_THIS_PTR address_xlation.pages = 2;
     bx_address laddr2 = laddr + BX_CPU_THIS_PTR address_xlation.len1;
 #if BX_SUPPORT_X86_64
     if (! long64_mode()) laddr2 &= 0xffffffff; /* handle linear address wrap in legacy mode */
+    else {
+      if (! IsCanonical(laddr2)) {
+        BX_ERROR(("access_write_linear(): canonical failure for second half of page split access"));
+        return -1;
+      }
+    }
 #endif
+
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl == 3), BX_WRITE);
     BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(BX_TLB_ENTRY_OF(laddr2), laddr2, (curr_pl == 3), BX_WRITE);
 
 #ifdef BX_LITTLE_ENDIAN
@@ -1965,9 +1972,11 @@ void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr
     hwbreakpoint_match(laddr2, BX_CPU_THIS_PTR address_xlation.len2, BX_WRITE);
 #endif
   }
+
+  return 0;
 }
 
-void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned xlate_rw, void *data)
+int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned xlate_rw, void *data)
 {
   BX_ASSERT(xlate_rw == BX_READ || xlate_rw == BX_RW);
 
@@ -1989,14 +1998,20 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
   }
   else {
     // access across 2 pages
-    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl == 3), xlate_rw);
     BX_CPU_THIS_PTR address_xlation.len1 = 4096 - pageOffset;
     BX_CPU_THIS_PTR address_xlation.len2 = len - BX_CPU_THIS_PTR address_xlation.len1;
     BX_CPU_THIS_PTR address_xlation.pages = 2;
     bx_address laddr2 = laddr + BX_CPU_THIS_PTR address_xlation.len1;
 #if BX_SUPPORT_X86_64
     if (! long64_mode()) laddr2 &= 0xffffffff; /* handle linear address wrap in legacy mode */
+    else {
+      if (! IsCanonical(laddr2)) {
+        BX_ERROR(("access_read_linear(): canonical failure for second half of page split access"));
+        return -1;
+      }
+    }
 #endif
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl == 3), xlate_rw);
     BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(BX_TLB_ENTRY_OF(laddr2), laddr2, (curr_pl == 3), xlate_rw);
 
 #ifdef BX_LITTLE_ENDIAN
@@ -2030,6 +2045,8 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
     hwbreakpoint_match(laddr2, BX_CPU_THIS_PTR address_xlation.len2, xlate_rw);
 #endif
   }
+
+  return 0;
 }
 
 void BX_CPU_C::access_write_physical(bx_phy_address paddr, unsigned len, void *data)

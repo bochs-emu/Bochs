@@ -102,12 +102,8 @@ BX_CPU_C::write_virtual_word_64(unsigned s, Bit64u offset, Bit16u data)
   }
 #endif
 
-  if (! IsCanonical(laddr+1)) {
-    BX_ERROR(("write_virtual_word_64(): canonical failure"));
+  if (access_write_linear(laddr, 2, CPL, (void *) &data) < 0)
     exception(int_number(s), 0);
-  }
-
-  access_write_linear(laddr, 2, CPL, (void *) &data);
 }
 
   void BX_CPP_AttrRegparmN(3)
@@ -152,12 +148,8 @@ BX_CPU_C::write_virtual_dword_64(unsigned s, Bit64u offset, Bit32u data)
   }
 #endif
 
-  if (! IsCanonical(laddr+3)) {
-    BX_ERROR(("write_virtual_dword_64(): canonical failure"));
+  if (access_write_linear(laddr, 4, CPL, (void *) &data) < 0)
     exception(int_number(s), 0);
-  }
-
-  access_write_linear(laddr, 4, CPL, (void *) &data);
 }
 
   void BX_CPP_AttrRegparmN(3)
@@ -202,12 +194,8 @@ BX_CPU_C::write_virtual_qword_64(unsigned s, Bit64u offset, Bit64u data)
   }
 #endif
 
-  if (! IsCanonical(laddr+7)) {
-    BX_ERROR(("write_virtual_qword_64(): canonical failure"));
+  if (access_write_linear(laddr, 8, CPL, (void *) &data) < 0)
     exception(int_number(s), 0);
-  }
-
-  access_write_linear(laddr, 8, CPL, (void *) &data);
 }
 
   void BX_CPP_AttrRegparmN(3)
@@ -235,12 +223,13 @@ BX_CPU_C::write_virtual_xmmword_64(unsigned s, Bit64u offset, const BxPackedXmmR
     }
   }
 
-  if (! IsCanonical(laddr) || ! IsCanonical(laddr+15)) {
+  if (! IsCanonical(laddr)) {
     BX_ERROR(("write_virtual_xmmword_64(): canonical failure"));
     exception(int_number(s), 0);
   }
 
-  access_write_linear(laddr, 16, CPL, (void *) data);
+  if (access_write_linear(laddr, 16, CPL, (void *) data) < 0)
+    exception(int_number(s), 0);
 }
 
   void BX_CPP_AttrRegparmN(3)
@@ -308,12 +297,13 @@ void BX_CPU_C::write_virtual_ymmword_64(unsigned s, Bit64u offset, const BxPacke
     }
   }
 
-  if (! IsCanonical(laddr) || ! IsCanonical(laddr+31)) {
+  if (! IsCanonical(laddr)) {
     BX_ERROR(("write_virtual_ymmword_64(): canonical failure"));
     exception(int_number(s), 0);
   }
 
-  access_write_linear(laddr, 32, CPL, (void *) data);
+  if (access_write_linear(laddr, 32, CPL, (void *) data) < 0)
+    exception(int_number(s), 0);
 }
 
 void BX_CPU_C::write_virtual_ymmword_aligned_64(unsigned s, Bit64u offset, const BxPackedYmmRegister *data)
@@ -388,7 +378,8 @@ void BX_CPU_C::write_virtual_zmmword_64(unsigned s, Bit64u offset, const BxPacke
     exception(int_number(s), 0);
   }
 
-  access_write_linear(laddr, 64, CPL, (void *) data);
+  if (access_write_linear(laddr, 64, CPL, (void *) data) < 0)
+    exception(int_number(s), 0);
 }
 
 void BX_CPU_C::write_virtual_zmmword_aligned_64(unsigned s, Bit64u offset, const BxPackedZmmRegister *data)
@@ -504,12 +495,9 @@ BX_CPU_C::read_virtual_word_64(unsigned s, Bit64u offset)
   }
 #endif
 
-  if (! IsCanonical(laddr+1)) {
-    BX_ERROR(("read_virtual_word_64(): canonical failure"));
+  if (access_read_linear(laddr, 2, CPL, BX_READ, (void *) &data) < 0)
     exception(int_number(s), 0);
-  }
 
-  access_read_linear(laddr, 2, CPL, BX_READ, (void *) &data);
   return data;
 }
 
@@ -554,12 +542,9 @@ BX_CPU_C::read_virtual_dword_64(unsigned s, Bit64u offset)
   }
 #endif
 
-  if (! IsCanonical(laddr+3)) {
-    BX_ERROR(("read_virtual_dword_64(): canonical failure"));
+  if (access_read_linear(laddr, 4, CPL, BX_READ, (void *) &data) < 0)
     exception(int_number(s), 0);
-  }
 
-  access_read_linear(laddr, 4, CPL, BX_READ, (void *) &data);
   return data;
 }
 
@@ -604,12 +589,9 @@ BX_CPU_C::read_virtual_qword_64(unsigned s, Bit64u offset)
   }
 #endif
 
-  if (! IsCanonical(laddr+7)) {
-    BX_ERROR(("read_virtual_qword_64(): canonical failure"));
+  if (access_read_linear(laddr, 8, CPL, BX_READ, (void *) &data) < 0)
     exception(int_number(s), 0);
-  }
 
-  access_read_linear(laddr, 8, CPL, BX_READ, (void *) &data);
   return data;
 }
 
@@ -636,12 +618,13 @@ BX_CPU_C::read_virtual_xmmword_64(unsigned s, Bit64u offset, BxPackedXmmRegister
     }
   }
 
-  if (! IsCanonical(laddr) || ! IsCanonical(laddr+15)) {
+  if (! IsCanonical(laddr)) {
     BX_ERROR(("read_virtual_xmmword_64(): canonical failure"));
     exception(int_number(s), 0);
   }
 
-  access_read_linear(laddr, 16, CPL, BX_READ, (void *) data);
+  if (access_read_linear(laddr, 16, CPL, BX_READ, (void *) &data) < 0)
+    exception(int_number(s), 0);
 }
 
   void BX_CPP_AttrRegparmN(3)
@@ -705,12 +688,13 @@ void BX_CPU_C::read_virtual_ymmword_64(unsigned s, Bit64u offset, BxPackedYmmReg
     }
   }
 
-  if (! IsCanonical(laddr) || ! IsCanonical(laddr+31)) {
+  if (! IsCanonical(laddr)) {
     BX_ERROR(("read_virtual_ymmword_64(): canonical failure"));
     exception(int_number(s), 0);
   }
 
-  access_read_linear(laddr, 32, CPL, BX_READ, (void *) data);
+  if (access_read_linear(laddr, 32, CPL, BX_READ, (void *) &data) < 0)
+    exception(int_number(s), 0);
 }
 
 void BX_CPU_C::read_virtual_ymmword_aligned_64(unsigned s, Bit64u offset, BxPackedYmmRegister *data)
@@ -776,12 +760,13 @@ void BX_CPU_C::read_virtual_zmmword_64(unsigned s, Bit64u offset, BxPackedZmmReg
     }
   }
 
-  if (! IsCanonical(laddr) || ! IsCanonical(laddr+63)) {
+  if (! IsCanonical(laddr)) {
     BX_ERROR(("read_virtual_ymmword_64(): canonical failure"));
     exception(int_number(s), 0);
   }
 
-  access_read_linear(laddr, 64, CPL, BX_READ, (void *) data);
+  if (access_read_linear(laddr, 64, CPL, BX_READ, (void *) &data) < 0)
+    exception(int_number(s), 0);
 }
 
 void BX_CPU_C::read_virtual_zmmword_aligned_64(unsigned s, Bit64u offset, BxPackedZmmRegister *data)
@@ -908,12 +893,9 @@ BX_CPU_C::read_RMW_virtual_word_64(unsigned s, Bit64u offset)
   }
 #endif
 
-  if (! IsCanonical(laddr+1)) {
-    BX_ERROR(("read_RMW_virtual_word_64(): canonical failure"));
+  if (access_read_linear(laddr, 2, CPL, BX_RW, (void *) &data) < 0)
     exception(int_number(s), 0);
-  }
 
-  access_read_linear(laddr, 2, CPL, BX_RW, (void *) &data);
   return data;
 }
 
@@ -962,12 +944,9 @@ BX_CPU_C::read_RMW_virtual_dword_64(unsigned s, Bit64u offset)
   }
 #endif
 
-  if (! IsCanonical(laddr+3)) {
-    BX_ERROR(("read_RMW_virtual_dword_64(): canonical failure"));
+  if (access_read_linear(laddr, 4, CPL, BX_RW, (void *) &data) < 0)
     exception(int_number(s), 0);
-  }
 
-  access_read_linear(laddr, 4, CPL, BX_RW, (void *) &data);
   return data;
 }
 
@@ -1016,12 +995,9 @@ BX_CPU_C::read_RMW_virtual_qword_64(unsigned s, Bit64u offset)
   }
 #endif
 
-  if (! IsCanonical(laddr+7)) {
-    BX_ERROR(("read_RMW_virtual_qword_64(): canonical failure"));
+  if (access_read_linear(laddr, 8, CPL, BX_RW, (void *) &data) < 0)
     exception(int_number(s), 0);
-  }
 
-  access_read_linear(laddr, 8, CPL, BX_RW, (void *) &data);
   return data;
 }
 
@@ -1121,12 +1097,8 @@ void BX_CPU_C::write_new_stack_word_64(Bit64u laddr, unsigned curr_pl, Bit16u da
   }
 #endif
 
-  if (! IsCanonical(laddr+1)) {
-    BX_ERROR(("write_new_stack_word_64(): canonical failure"));
+  if (access_write_linear(laddr, 2, curr_pl, (void *) &data) < 0)
     exception(BX_SS_EXCEPTION, 0);
-  }
-
-  access_write_linear(laddr, 2, curr_pl, (void *) &data);
 }
 
 void BX_CPU_C::write_new_stack_dword_64(Bit64u laddr, unsigned curr_pl, Bit32u data)
@@ -1168,12 +1140,8 @@ void BX_CPU_C::write_new_stack_dword_64(Bit64u laddr, unsigned curr_pl, Bit32u d
   }
 #endif
 
-  if (! IsCanonical(laddr+3)) {
-    BX_ERROR(("write_new_stack_dword_64(): canonical failure"));
+  if (access_write_linear(laddr, 4, curr_pl, (void *) &data) < 0)
     exception(BX_SS_EXCEPTION, 0);
-  }
-
-  access_write_linear(laddr, 4, curr_pl, (void *) &data);
 }
 
 void BX_CPU_C::write_new_stack_qword_64(Bit64u laddr, unsigned curr_pl, Bit64u data)
@@ -1215,12 +1183,8 @@ void BX_CPU_C::write_new_stack_qword_64(Bit64u laddr, unsigned curr_pl, Bit64u d
   }
 #endif
 
-  if (! IsCanonical(laddr+7)) {
-    BX_ERROR(("write_new_stack_qword_64(): canonical failure"));
+  if (access_write_linear(laddr, 8, curr_pl, (void *) &data) < 0)
     exception(BX_SS_EXCEPTION, 0);
-  }
-
-  access_write_linear(laddr, 8, curr_pl, (void *) &data);
 }
 
 #endif
