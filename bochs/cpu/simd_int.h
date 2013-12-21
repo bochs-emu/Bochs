@@ -493,7 +493,7 @@ BX_CPP_INLINE Bit32u xmm_pmovmskq(const BxPackedXmmRegister *op)
 BX_CPP_INLINE void xmm_pblendb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, unsigned mask)
 {
   for (unsigned n=0; n < 16; n++, mask >>= 1) {
-    if (mask & 0x1) op1.xmmubyte(n) = op2->xmmubyte(n);
+    if (mask & 0x1) op1->xmmubyte(n) = op2->xmmubyte(n);
   }
 }
 
@@ -509,7 +509,7 @@ BX_CPP_INLINE void xmm_zero_pblendb(BxPackedXmmRegister *dst, const BxPackedXmmR
 BX_CPP_INLINE void xmm_pblendw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, unsigned mask)
 {
   for (unsigned n=0; n < 8; n++, mask>>=1) {
-    if (mask & 0x1) op1.xmm16u(n) = op2->xmm16u(n);
+    if (mask & 0x1) op1->xmm16u(n) = op2->xmm16u(n);
   }
 }
 
@@ -525,7 +525,7 @@ BX_CPP_INLINE void xmm_zero_pblendw(BxPackedXmmRegister *dst, const BxPackedXmmR
 BX_CPP_INLINE void xmm_blendps(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, unsigned mask)
 {
   for (unsigned n=0; n < 4; n++, mask>>=1) {
-    if (mask & 0x1) op1.xmm32u(n) = op2->xmm32u(n);
+    if (mask & 0x1) op1->xmm32u(n) = op2->xmm32u(n);
   }
 }
 
@@ -541,7 +541,7 @@ BX_CPP_INLINE void xmm_zero_blendps(BxPackedXmmRegister *dst, const BxPackedXmmR
 BX_CPP_INLINE void xmm_blendpd(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, unsigned mask)
 {
   for (unsigned n=0; n < 2; n++, mask>>=1) {
-    if (mask & 0x1) op1.xmm64u(n) = op2->xmm64u(n);
+    if (mask & 0x1) op1->xmm64u(n) = op2->xmm64u(n);
   }
 }
 
