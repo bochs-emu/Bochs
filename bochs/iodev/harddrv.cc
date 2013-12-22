@@ -163,6 +163,7 @@ void bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
   char  ata_name[20];
+  char  pname[8];
   bx_list_c *base;
 
   BX_DEBUG(("Init $Id$"));
@@ -186,8 +187,7 @@ void bx_hard_drive_c::init(void)
           BX_HD_THIS channels[channel].ioaddr2,
           BX_HD_THIS channels[channel].irq));
       }
-    }
-    else {
+    } else {
       BX_HD_THIS channels[channel].ioaddr1 = 0;
       BX_HD_THIS channels[channel].ioaddr2 = 0;
       BX_HD_THIS channels[channel].irq = 0;
@@ -343,13 +343,14 @@ void bx_hard_drive_c::init(void)
         }
       } else if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_CDROM) {
         bx_list_c *cdrom_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_CDROM);
-        bx_list_c *menu = new bx_list_c(cdrom_rt, base->get_name(), base->get_title());
+        sprintf(pname, "cdrom%d", BX_HD_THIS cdrom_count + 1);
+        bx_list_c *menu = new bx_list_c(cdrom_rt, pname, base->get_title());
         menu->set_options(menu->SERIES_ASK | menu->USE_BOX_TITLE);
         menu->add(SIM->get_param("path", base));
         menu->add(SIM->get_param("status", base));
         SIM->get_param_string("path", base)->set_handler(cdrom_path_handler);
         SIM->get_param_enum("status", base)->set_handler(cdrom_status_handler);
-        BX_DEBUG(("CDROM on target %d/%d",channel,device));
+        BX_DEBUG(("CDROM on target %d/%d", channel, device));
         BX_HD_THIS channels[channel].drives[device].device_type = IDE_CDROM;
         BX_HD_THIS channels[channel].drives[device].cdrom.locked = 0;
         BX_HD_THIS channels[channel].drives[device].sense.sense_key = SENSE_NONE;
