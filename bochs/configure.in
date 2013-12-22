@@ -44,25 +44,16 @@ case "$target" in
     DEFAULT_GUI=win32                 # default to win32 gui
     MSVC_TARGET=1
     ;;
-  *-cygwin*)
+  *-cygwin* | *-mingw32*)
     NO_LT=1   # do not use libtool at all on cygwin
     if test "$with_term" = yes; then
-      # ncurses won't compile with -mno-cygwin or -DWIN32
-      # also, I can't get it to link without this -DBROKEN_LINKER=1 hack.
-      # see /usr/include/curses.h for details.
-      ADD_FLAGS="-DBROKEN_LINKER=1"
-    fi
-    ;;
-  *-mingw32*)
-    NO_LT=1   # do not use libtool at all on cygwin
-    if test "$with_term" = yes; then
-      # ncurses won't compile with -mno-cygwin or -DWIN32
+      # ncurses won't compile with -DWIN32
       # also, I can't get it to link without this -DBROKEN_LINKER=1 hack.
       # see /usr/include/curses.h for details.
       ADD_FLAGS="-DBROKEN_LINKER=1"
     else
       # default case
-      ADD_FLAGS="-DWIN32"   # required for mingw compile+win32 gui
+      ADD_FLAGS="-DWIN32"   # required for cygwin/mingw compile+win32 gui
       DEFAULT_GUI=win32     # default to win32 gui
     fi
     ;;
@@ -1369,12 +1360,13 @@ AC_SUBST(INSTRUMENT_DIR)
 AC_SUBST(INSTRUMENT_VAR)
 
 dnl // serial mode 'socket' needs wsock32.dll in non-plugin mode
+dnl // but don't use it with cygwin
 if test "$bx_plugins" = 0; then
   case $target in
     *-pc-windows*)
       DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS wsock32.lib"
       ;;
-    *-cygwin* | *-mingw32*)
+    *-mingw32*)
       DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwsock32"
       ;;
   esac
@@ -2556,14 +2548,16 @@ fi
 if test "$with_rfb" = yes; then
   # we need the socket function
   case $target in
-    *-pc-windows*)
-      # is this okay without a check ?
+    *-pc-windows* | *-pc-winnt*)
       RFB_LIBS="$RFB_LIBS wsock32.lib"
       have_socket=yes
       ;;
-    *-pc-winnt* | *-cygwin* | *-mingw32*)
-      # is this okay without a check ?
+    *-mingw32*)
       RFB_LIBS="$RFB_LIBS -lwsock32"
+      have_socket=yes
+      ;;
+    *-cygwin*)
+      # is this okay without a check ?
       have_socket=yes
       ;;
     *)

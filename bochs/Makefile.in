@@ -101,9 +101,9 @@ GUI_LINK_OPTS_SVGA =  -lvga -lvgagl
 GUI_LINK_OPTS_RFB = @RFB_LIBS@
 GUI_LINK_OPTS_VNCSRV = @GUI_LINK_OPTS_VNCSRV@
 GUI_LINK_OPTS_AMIGAOS =
-GUI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lcomdlg32 -lcomctl32 -lwsock32 -lshell32
+GUI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lcomdlg32 -lcomctl32 -lshell32
 GUI_LINK_OPTS_WIN32_VCPP = user32.lib gdi32.lib winmm.lib \
-  comdlg32.lib comctl32.lib wsock32.lib advapi32.lib shell32.lib
+  comdlg32.lib comctl32.lib advapi32.lib shell32.lib
 GUI_LINK_OPTS_MACOS =
 GUI_LINK_OPTS_CARBON = -framework Carbon
 GUI_LINK_OPTS_NOGUI =
