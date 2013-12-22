@@ -623,7 +623,7 @@ BX_CPU_C::read_virtual_xmmword_64(unsigned s, Bit64u offset, BxPackedXmmRegister
     exception(int_number(s), 0);
   }
 
-  if (access_read_linear(laddr, 16, CPL, BX_READ, (void *) &data) < 0)
+  if (access_read_linear(laddr, 16, CPL, BX_READ, (void *) data) < 0)
     exception(int_number(s), 0);
 }
 
@@ -693,7 +693,7 @@ void BX_CPU_C::read_virtual_ymmword_64(unsigned s, Bit64u offset, BxPackedYmmReg
     exception(int_number(s), 0);
   }
 
-  if (access_read_linear(laddr, 32, CPL, BX_READ, (void *) &data) < 0)
+  if (access_read_linear(laddr, 32, CPL, BX_READ, (void *) data) < 0)
     exception(int_number(s), 0);
 }
 
@@ -765,7 +765,7 @@ void BX_CPU_C::read_virtual_zmmword_64(unsigned s, Bit64u offset, BxPackedZmmReg
     exception(int_number(s), 0);
   }
 
-  if (access_read_linear(laddr, 64, CPL, BX_READ, (void *) &data) < 0)
+  if (access_read_linear(laddr, 64, CPL, BX_READ, (void *) data) < 0)
     exception(int_number(s), 0);
 }
 
