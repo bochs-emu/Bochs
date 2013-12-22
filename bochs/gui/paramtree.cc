@@ -50,6 +50,7 @@ bx_param_c::bx_param_c(Bit32u id, const char *param_name, const char *param_desc
   this->long_text_format = default_text_format;
   this->runtime_param = 0;
   this->enabled = 1;
+  this->options = 0;
   // dependent_list must be initialized before the set(),
   // because set calls update_dependents().
   dependent_list = NULL;
@@ -72,6 +73,7 @@ bx_param_c::bx_param_c(Bit32u id, const char *param_name, const char *param_labe
   this->long_text_format = default_text_format;
   this->runtime_param = 0;
   this->enabled = 1;
+  this->options = 0;
   // dependent_list must be initialized before the set(),
   // because set calls update_dependents().
   dependent_list = NULL;
