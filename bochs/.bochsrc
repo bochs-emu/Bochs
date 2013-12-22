@@ -13,9 +13,7 @@
 #
 # These plugins are also supported, but they are usually loaded directly with
 # their bochsrc option: 'e1000', 'es1370', 'ne2k', 'pcidev', 'pcipnic', 'sb16',
-# 'usb_ohci', 'usb_uhci' and 'usb_xhci'.
-#
-# This plugin currently must be loaded with plugin_ctrl: 'voodoo'.
+# 'usb_ohci', 'usb_uhci', 'usb_xhci' and 'voodoo'.
 #=======================================================================
 #plugin_ctrl: unmapped=0, e1000=1 # unload 'unmapped' and load 'e1000'
 
@@ -414,6 +412,15 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 #vga: extension=vbe, update_freq=5
 
 #=======================================================================
+# VOODOO:
+# This defines the Voodoo Graphics emulation.
+#
+# Examples:
+#   voodoo: enabled=1, model=voodoo1
+#=======================================================================
+#voodoo: enabled=1, model=voodoo1
+
+#=======================================================================
 # KEYBOARD:
 # This defines parameters related to the emulated keyboard
 #
@@ -498,7 +505,7 @@ mouse: enabled=0
 # assigning to slot is mandatory if you want to emulate the PCI model: cirrus,
 # ne2k and pcivga. These PCI-only devices are also supported, but they are
 # auto-assigned if you don't use the slot configuration: e1000, es1370, pcidev,
-# pcipnic, usb_ohci and usb_xhci.
+# pcipnic, usb_ohci, usb_xhci and voodoo.
 #
 # Example:
 #   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012  The Bochs Project
+//  Copyright (C) 2012-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -81,17 +81,71 @@ voodoo_state *v;
 #include "voodoo_main.h"
 #include "voodoo_func.h"
 
+// builtin configuration handling functions
+
+void voodoo_init_options(void)
+{
+  static const char *voodoo_model_list[] = {
+    "voodoo1",
+    "voodoo2",
+    NULL
+  };
+
+  bx_param_c *display = SIM->get_param("display");
+  bx_list_c *menu = new bx_list_c(display, "voodoo", "Voodoo Graphics");
+  menu->set_options(menu->SHOW_PARENT);
+  bx_param_bool_c *enabled = new bx_param_bool_c(menu,
+    "enabled",
+    "Enable Voodoo Graphics emulation",
+    "Enables the 3dfx Voodoo Graphics emulation",
+    0);
+  new bx_param_enum_c(menu,
+    "model",
+    "Voodoo model",
+    "Selects the Voodoo model to emulate.",
+    voodoo_model_list,
+    VOODOO_1, VOODOO_1);
+  enabled->set_dependent_list(menu->clone());
+}
+
+Bit32s voodoo_options_parser(const char *context, int num_params, char *params[])
+{
+  if (!strcmp(params[0], "voodoo")) {
+    bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_VOODOO);
+    for (int i = 1; i < num_params; i++) {
+      if (SIM->parse_param_from_list(context, params[i], base) < 0) {
+        BX_ERROR(("%s: unknown parameter for voodoo ignored.", context));
+      }
+    }
+  } else {
+    BX_PANIC(("%s: unknown directive '%s'", context, params[0]));
+  }
+  return 0;
+}
+
+Bit32s voodoo_options_save(FILE *fp)
+{
+  return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_VOODOO), NULL, 0);
+}
+
 // device plugin entry points
 
 int libvoodoo_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theVoodooDevice = new bx_voodoo_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVoodooDevice, BX_PLUGIN_VOODOO);
+  // add new configuration parameter for the config interface
+  voodoo_init_options();
+  // register add-on option for bochsrc and command line
+  SIM->register_addon_option("voodoo", voodoo_options_parser, voodoo_options_save);
   return 0; // Success
 }
 
 void libvoodoo_LTX_plugin_fini(void)
 {
+  SIM->unregister_addon_option("voodoo");
+  bx_list_c *menu = (bx_list_c*)SIM->get_param("display");
+  menu->remove("voodoo");
   delete theVoodooDevice;
 }
 
@@ -116,6 +170,15 @@ bx_voodoo_c::~bx_voodoo_c()
 
 void bx_voodoo_c::init(void)
 {
+  // Read in values from config interface
+  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_VOODOO);
+  // Check if the device is disabled or not configured
+  if (!SIM->get_param_bool("enabled", base)->get()) {
+    BX_INFO(("Voodoo disabled"));
+    // mark unused plugin for removal
+    ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("voodoo"))->set(0);
+    return;
+  }
   BX_VOODOO_THIS s.devfunc = 0x00;
   DEV_register_pci_handlers(this, &BX_VOODOO_THIS s.devfunc, BX_PLUGIN_VOODOO,
                             "Experimental 3dfx Voodoo Graphics (SST-1/2)");
@@ -136,7 +199,9 @@ void bx_voodoo_c::init(void)
   BX_VOODOO_THIS s.vdraw.clock_enabled = 1;
 
   v = new voodoo_state;
-  voodoo_init();
+  Bit8u model = (Bit8u)SIM->get_param_enum("model", base)->get();
+  BX_VOODOO_THIS pci_conf[0x08] = (model == VOODOO_2) ? 2 : 1;
+  voodoo_init(model);
 
   BX_INFO(("Voodoo initialized"));
 }
@@ -153,7 +218,6 @@ void bx_voodoo_c::reset(unsigned type)
     { 0x02, 0x01 }, { 0x03, 0x00 },
     { 0x04, 0x00 }, { 0x05, 0x00 }, // command io / memory
     { 0x06, 0x00 }, { 0x07, 0x00 }, // status
-    { 0x08, 0x01 },                 // revision number
     { 0x09, 0x00 },                 // interface
     { 0x0a, 0x00 },                 // class_sub
     { 0x0b, 0x00 },                 // class_base generic

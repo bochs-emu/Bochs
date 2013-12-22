@@ -2828,7 +2828,7 @@ void init_tmu_shared(tmu_shared_state *s)
   }
 }
 
-void voodoo_init()
+void voodoo_init(Bit8u _type)
 {
   int pen;
   int val;
@@ -2844,7 +2844,7 @@ void voodoo_init()
   v->regaccess = voodoo_register_access;
   v->regnames = voodoo_reg_name;
   v->fbi.lfb_stride = 10;
-  v->type = VOODOO_1;
+  v->type = _type;
   v->pci.init_enable = (1<<2) | 1;
   v->chipmask = 0x01 | 0x02 | 0x04 | 0x08;
   memset(v->dac.reg, 0, sizeof(v->dac.reg));
