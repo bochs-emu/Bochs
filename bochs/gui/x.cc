@@ -996,7 +996,7 @@ void send_keyboard_mouse_status(void)
             prev_x, prev_y, current_x, current_y));
 
   if (x11_mouse_mode_absxy) {
-    if ((current_y >= (int)bx_headerbar_y) && (current_y < (dimension_y + bx_headerbar_y))) {
+    if ((current_y >= (int)bx_headerbar_y) && (current_y < (int)(dimension_y + bx_headerbar_y))) {
       dx = current_x * 0x7fff / dimension_x;
       dy = (current_y - bx_headerbar_y) * 0x7fff / dimension_y;
       dz = current_z;

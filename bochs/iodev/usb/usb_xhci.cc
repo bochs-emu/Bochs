@@ -157,7 +157,7 @@ void bx_usb_xhci_c::init(void)
   unsigned i;
   char pname[6];
   bx_list_c *xhci, *port;
-  bx_param_string_c *device, *options;
+  bx_param_string_c *device;
 
   // Read in values from config interface
   xhci = (bx_list_c*) SIM->get_param(BXPN_USB_XHCI);
@@ -1514,7 +1514,7 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
 {
   struct TRB trb;
   Bit64u address = 0, org_addr;
-  int int_target, td_size, transfer_length;
+  int int_target, /*td_size,*/ transfer_length;
   int ret, len;
   int port_num = BX_XHCI_THIS hub.slots[slot].slot_context.rh_port_num;
   USBPacket packet;
@@ -1569,7 +1569,7 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
     // these are used in some/most items.
     // If not used, won't hurt to extract bad data.
     int_target = TRB_GET_TARGET(trb.status);
-    td_size = TRB_GET_TDSIZE(trb.status);
+//  td_size = TRB_GET_TDSIZE(trb.status);
     transfer_length = TRB_GET_TX_LEN(trb.status);
     is_transfer_trb = 0;  // assume not a transfer
     ioc = TRB_IOC(trb.command);
@@ -1759,7 +1759,7 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
 void bx_usb_xhci_c::process_command_ring(void)
 {
   struct TRB trb;
-  int i, slot, slot_type, ep, comp_code = 0, new_addr = 0, bsr = 0;
+  int i, slot, /*slot_type,*/ ep, comp_code = 0, new_addr = 0, bsr = 0;
   Bit32u a_flags = 0, d_flags, tmpval1, tmpval2;
   Bit64u org_addr;
   Bit8u buffer[CONTEXT_SIZE + 2048];
@@ -1799,7 +1799,7 @@ void bx_usb_xhci_c::process_command_ring(void)
       case ENABLE_SLOT:
         comp_code = NO_SLOTS_ERROR;  // assume no slots
         slot = 0;
-        slot_type = TRB_GET_STYPE(trb.command);  // currently not used
+//      slot_type = TRB_GET_STYPE(trb.command);  // currently not used
         for (i=1; i<MAX_SLOTS; i++) {  // slots are one based
           if (BX_XHCI_THIS hub.slots[i].enabled == 0) {
             memset(&BX_XHCI_THIS hub.slots[i], 0, sizeof(struct HC_SLOT_CONTEXT));
