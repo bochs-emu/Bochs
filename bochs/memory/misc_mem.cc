@@ -215,12 +215,11 @@ void BX_MEM_C::allocate_block(Bit32u block)
     BX_MEM_THIS blocks[BX_MEM_THIS next_swapout_idx] = BX_MEM_C::swapped_out;
     BX_MEM_THIS blocks[block] = buffer;
     read_block(block);
-          BX_INFO(("allocate_block: block=0x%x, replaced 0x%x",   
-                block, BX_MEM_THIS next_swapout_idx));
+    BX_DEBUG(("allocate_block: block=0x%x, replaced 0x%x", block, BX_MEM_THIS next_swapout_idx));
   }
   else {
-          BX_MEM_THIS blocks[block] = BX_MEM_THIS vector + (BX_MEM_THIS used_blocks++ * BX_MEM_BLOCK_LEN);
-        BX_INFO(("allocate_block: block=0x%x used 0x%x of 0x%x",
+    BX_MEM_THIS blocks[block] = BX_MEM_THIS vector + (BX_MEM_THIS used_blocks++ * BX_MEM_BLOCK_LEN);
+    BX_DEBUG(("allocate_block: block=0x%x used 0x%x of 0x%x",
           block, BX_MEM_THIS used_blocks, max_blocks));
   }
 #else
