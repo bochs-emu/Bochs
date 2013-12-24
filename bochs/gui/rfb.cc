@@ -87,7 +87,9 @@ IMPLEMENT_GUI_PLUGIN_CODE(rfb)
 #else
 #include <errno.h>
 #endif
+#if !defined(__CYGWIN__)
 #include <pthread.h>
+#endif
 
 typedef int SOCKET;
 #ifndef INVALID_SOCKET
@@ -203,7 +205,7 @@ void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w =
 static Bit32u convertStringToRfbKey(const char *string);
 void rfbKeyPressed(Bit32u key, int press_release);
 void rfbMouseMove(int x, int y, int bmask);
-#if BX_SHOW_IPS && defined(BX_RFB_WIN32)
+#if BX_SHOW_IPS && defined(WIN32)
 DWORD WINAPI rfbShowIPSthread(LPVOID);
 #endif
 
@@ -302,7 +304,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   desktop_resizable = 0;
   rfbStartThread();
 
-#ifdef BX_RFB_WIN32
+#ifdef WIN32
   Sleep(1000);
   SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 #endif
@@ -331,7 +333,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     }
   }
 
-#if BX_SHOW_IPS && defined(BX_RFB_WIN32)
+#if BX_SHOW_IPS && defined(WIN32)
   if (!rfbHideIPS) {
     DWORD threadID;
     CreateThread(NULL, 0, rfbShowIPSthread, NULL, 0, &threadID);
@@ -883,7 +885,11 @@ bool StopWinsock()
 }
 #endif
 
+#ifdef WIN32
+DWORD WINAPI rfbServerThreadInit(LPVOID)
+#else
 void CDECL rfbServerThreadInit(void *indata)
+#endif
 {
     SOCKET             sServer;
     SOCKET             sClient;
@@ -892,8 +898,10 @@ void CDECL rfbServerThreadInit(void *indata)
     int port_ok = 0;
     int one=1;
 
-#ifdef BX_RFB_WIN32
+#ifdef WIN32
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
+#endif
+#ifdef BX_RFB_WIN32
     if(!InitWinsock()) {
         BX_PANIC(("could not initialize winsock."));
         goto end_of_thread;
@@ -950,16 +958,21 @@ end_of_thread:
 #ifdef BX_RFB_WIN32
     StopWinsock();
 #endif
+#ifdef WIN32
+    return 0;
+#else
     return;
+#endif
 }
 
 void rfbStartThread()
 {
-#ifdef BX_RFB_WIN32
-    _beginthread(rfbServerThreadInit, 0, NULL);
+#ifdef WIN32
+  DWORD threadID;
+  CreateThread(NULL, 0, rfbServerThreadInit, NULL, 0, &threadID);
 #else
-    pthread_t thread;
-    pthread_create(&thread, NULL, (void *(*)(void *))&rfbServerThreadInit, NULL);
+  pthread_t thread;
+  pthread_create(&thread, NULL, (void *(*)(void *))&rfbServerThreadInit, NULL);
 #endif
 }
 
@@ -1834,7 +1847,7 @@ void rfbMouseMove(int x, int y, int bmask)
   }
 }
 
-#if BX_SHOW_IPS && defined(BX_RFB_WIN32)
+#if BX_SHOW_IPS && defined(WIN32)
 VOID CALLBACK IPSTimerProc(HWND hWnd, UINT nMsg, UINT_PTR nIDEvent, DWORD dwTime)
 {
   if (keep_alive) {
