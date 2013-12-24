@@ -127,6 +127,9 @@ display
   screenmode
   vga_extension
   vga_update_interval
+  voodoo
+    enabled
+    model
 
 keyboard_mouse
   keyboard

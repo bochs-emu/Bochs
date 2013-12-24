@@ -413,7 +413,7 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 
 #=======================================================================
 # VOODOO:
-# This defines the Voodoo Graphics emulation.
+# This defines the Voodoo Graphics emulation (experimental).
 #
 # Examples:
 #   voodoo: enabled=1, model=voodoo1
