@@ -502,7 +502,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   // Omit config button because the whole wxWidgets interface is like
   // one really big config button.
   //BX_ADD_TOOL(ID_Toolbar_Config, configbutton_xpm, "Runtime Configuration");
-  BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_xpm, wxT("Enable/disable mouse capture\nThere is also a shortcut for this: a CTRL key + the middle mouse button."));
+  BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_xpm, wxT("Enable mouse capture\nThere is also a shortcut for this: a CTRL key + the middle mouse button."));
   BX_ADD_TOOL(ID_Toolbar_User, userbutton_xpm, wxT("Keyboard shortcut"));
 
   bxToolBar->Realize();
@@ -1185,7 +1185,15 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
   bx_toolbar_buttons which = BX_TOOLBAR_UNDEFINED;
   int id = event.GetId();
   switch (id) {
-    case ID_Toolbar_Power: which = BX_TOOLBAR_POWER; wxBochsStopSim = false; break;
+    case ID_Toolbar_Power:
+      if (theFrame->GetSimThread() == NULL) {
+        wxCommandEvent unusedEvent;
+        OnStartSim(unusedEvent);
+      } else {
+        which = BX_TOOLBAR_POWER;
+        wxBochsStopSim = false;
+      }
+      break;
     case ID_Toolbar_Reset: which = BX_TOOLBAR_RESET; break;
     case ID_Toolbar_SaveRestore: which = BX_TOOLBAR_SAVE_RESTORE; break;
     case ID_Edit_FD_0:
@@ -1214,6 +1222,11 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
     event_queue[num_events].u.toolbar.button = which;
     num_events++;
   }
+}
+
+void MyFrame::SetToolBarHelp(int id, wxString& text)
+{
+  bxToolBar->SetToolShortHelp(id, text);
 }
 
 //////////////////////////////////////////////////////////////////////

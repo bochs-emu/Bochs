@@ -198,6 +198,8 @@ public:
   void OnSimThreadExit();
   SimThread *GetSimThread() { return sim_thread; }
 
+  void SetToolBarHelp(int id, wxString& text);
+
 private:
   wxCriticalSection sim_thread_lock;
   SimThread *sim_thread; // get the lock before accessing sim_thread
