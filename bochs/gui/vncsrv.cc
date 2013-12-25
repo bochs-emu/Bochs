@@ -150,6 +150,7 @@ static struct _rfbKeyboardEvent {
     int down;
     int x;
     int y;
+    int z;
 } rfbKeyboardEvent[MAX_KEY_EVENTS];
 static unsigned long rfbKeyboardEvents = 0;
 static MUTEX(bKeyboardInUse);
@@ -221,7 +222,7 @@ void SendUpdate(int x, int y, int width, int height);
 void vncSetStatusText(int element, const char *text, bx_bool active, bx_bool w = 0);
 static Bit32u convertStringToRfbKey(const char *string);
 void vncKeyPressed(Bit32u key, int press_release);
-void vncMouseMove(int x, int y, int bmask);
+void vncMouseMove(int x, int y, int z, int bmask);
 
 void clientgone(rfbClientPtr cl);
 enum rfbNewClientAction newclient(rfbClientPtr cl);
@@ -382,7 +383,7 @@ void bx_vncsrv_gui_c::handle_events(void)
       if (rfbKeyboardEvent[i].type == KEYBOARD) {
         vncKeyPressed(rfbKeyboardEvent[i].key, rfbKeyboardEvent[i].down);
       } else { //type == MOUSE;
-        vncMouseMove(rfbKeyboardEvent[i].x, rfbKeyboardEvent[i].y, rfbKeyboardEvent[i].down);
+        vncMouseMove(rfbKeyboardEvent[i].x, rfbKeyboardEvent[i].y, rfbKeyboardEvent[i].z, rfbKeyboardEvent[i].down);
       }
     }
     rfbKeyboardEvents = 0;
@@ -1352,7 +1353,7 @@ void vncKeyPressed(Bit32u key, int press_release)
   DEV_kbd_gen_scancode(key_event);
 }
 
-void vncMouseMove(int x, int y, int bmask)
+void vncMouseMove(int x, int y, int z, int bmask)
 {
   static int oldx = -1;
   static int oldy = -1;
@@ -1368,10 +1369,10 @@ void vncMouseMove(int x, int y, int bmask)
       if ((y >= rfbHeaderbarY) && (y < (int)(rfbDimensionY + rfbHeaderbarY))) {
         dx = x * 0x7fff / rfbDimensionX;
         dy = (y - rfbHeaderbarY) * 0x7fff / rfbDimensionY;
-        DEV_mouse_motion(dx, dy, 0, bmask, 1);
+        DEV_mouse_motion(dx, dy, z, bmask, 1);
       }
     } else {
-      DEV_mouse_motion(x - oldx, oldy - y, 0, bmask, 0);
+      DEV_mouse_motion(x - oldx, oldy - y, z, bmask, 0);
     }
     oldx = x;
     oldy = y;
@@ -1436,6 +1437,8 @@ void dokey(rfbBool down, rfbKeySym key, rfbClientPtr cl)
 
 void doptr(int buttonMask, int x, int y, rfbClientPtr cl)
 {
+  static Bit8u wheel_status = 0;
+
   if (bx_gui->mouse_toggle_check(BX_MT_MBUTTON, (buttonMask & 0x02) > 0)) {
     bx_gui->toggle_mouse_enable();
   } else {
@@ -1445,8 +1448,18 @@ void doptr(int buttonMask, int x, int y, rfbClientPtr cl)
     rfbKeyboardEvent[rfbKeyboardEvents].type = MOUSE;
     rfbKeyboardEvent[rfbKeyboardEvents].x = x;
     rfbKeyboardEvent[rfbKeyboardEvents].y = y;
+    rfbKeyboardEvent[rfbKeyboardEvents].z = 0;
     rfbKeyboardEvent[rfbKeyboardEvents].down = (buttonMask & 0x01)
             | ((buttonMask >> 1) & 0x02) | ((buttonMask << 1) & 0x04);
+
+    if ((buttonMask & 0x18) != wheel_status) {
+      if (buttonMask & 0x10) {
+        rfbKeyboardEvent[rfbKeyboardEvents].z = -1;
+      } else if (buttonMask & 0x08) {
+        rfbKeyboardEvent[rfbKeyboardEvents].z = 1;
+      }
+      wheel_status = buttonMask & 0x18;
+    }
     rfbKeyboardEvents++;
     UNLOCK(bKeyboardInUse);
   }

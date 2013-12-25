@@ -47,7 +47,7 @@ Changes after 2.6.2 (updated Dec 16, 2013):
   - Added new experimental gui 'vncsrv" using the LibVNCServer library
   - RFB: set maximum resolution to 1280x1024 (same as vncsrv)
   - RFB: don't wait for client connection on startup if timeout is set to 0
-  - wx: added mouse wheel support
+  - Added mouse wheel support to the rfb, vncsrv and wx guis
 
 - Tools
   - bximage utility rewritten in C++ for image creation, conversion, resize

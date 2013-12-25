@@ -135,6 +135,7 @@ static struct _rfbKeyboardEvent {
     int down;
     int x;
     int y;
+    int z;
 } rfbKeyboardEvent[MAX_KEY_EVENTS];
 static unsigned long rfbKeyboardEvents = 0;
 static bx_bool bKeyboardInUse = 0;
@@ -204,7 +205,7 @@ void rfbAddUpdateRegion(unsigned x0, unsigned y0, unsigned w, unsigned h);
 void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w = 0);
 static Bit32u convertStringToRfbKey(const char *string);
 void rfbKeyPressed(Bit32u key, int press_release);
-void rfbMouseMove(int x, int y, int bmask);
+void rfbMouseMove(int x, int y, int z, int bmask);
 #if BX_SHOW_IPS && defined(WIN32)
 DWORD WINAPI rfbShowIPSthread(LPVOID);
 #endif
@@ -360,7 +361,7 @@ void bx_rfb_gui_c::handle_events(void)
       if (rfbKeyboardEvent[i].type == KEYBOARD) {
         rfbKeyPressed(rfbKeyboardEvent[i].key, rfbKeyboardEvent[i].down);
       } else { //type == MOUSE;
-        rfbMouseMove(rfbKeyboardEvent[i].x, rfbKeyboardEvent[i].y, rfbKeyboardEvent[i].down);
+        rfbMouseMove(rfbKeyboardEvent[i].x, rfbKeyboardEvent[i].y, rfbKeyboardEvent[i].z, rfbKeyboardEvent[i].down);
       }
     }
     rfbKeyboardEvents = 0;
@@ -985,6 +986,7 @@ void HandleRfbClient(SOCKET sClient)
   rfbClientInitMessage cim;
   rfbServerInitMessage sim;
   bx_bool mouse_toggle = 0;
+  static Bit8u wheel_status = 0;
 
   setsockopt(sClient, IPPROTO_TCP, TCP_NODELAY, (const char *)&one, sizeof(one));
   BX_INFO(("accepted client connection."));
@@ -1193,9 +1195,18 @@ void HandleRfbClient(SOCKET sClient)
             rfbKeyboardEvent[rfbKeyboardEvents].type = MOUSE;
             rfbKeyboardEvent[rfbKeyboardEvents].x    = ntohs(pe.xPosition);
             rfbKeyboardEvent[rfbKeyboardEvents].y    = ntohs(pe.yPosition);
+            rfbKeyboardEvent[rfbKeyboardEvents].z    = 0;
             rfbKeyboardEvent[rfbKeyboardEvents].down = (pe.buttonMask & 0x01) |
                                                        ((pe.buttonMask>>1) & 0x02) |
                                                        ((pe.buttonMask<<1) & 0x04);
+            if ((pe.buttonMask & 0x18) != wheel_status) {
+              if (pe.buttonMask & 0x10) {
+                rfbKeyboardEvent[rfbKeyboardEvents].z = -1;
+              } else if (pe.buttonMask & 0x08) {
+                rfbKeyboardEvent[rfbKeyboardEvents].z = 1;
+              }
+              wheel_status = pe.buttonMask & 0x18;
+            }
             rfbKeyboardEvents++;
             bKeyboardInUse = 0;
           }
@@ -1807,7 +1818,7 @@ void rfbKeyPressed(Bit32u key, int press_release)
   DEV_kbd_gen_scancode(key_event);
 }
 
-void rfbMouseMove(int x, int y, int bmask)
+void rfbMouseMove(int x, int y, int z, int bmask)
 {
   static int oldx = -1;
   static int oldy = -1;
@@ -1823,10 +1834,10 @@ void rfbMouseMove(int x, int y, int bmask)
       if ((y >= rfbHeaderbarY) && (y < (int)(rfbDimensionY + rfbHeaderbarY))) {
         dx = x * 0x7fff / rfbDimensionX;
         dy = (y - rfbHeaderbarY) * 0x7fff / rfbDimensionY;
-        DEV_mouse_motion(dx, dy, 0, bmask, 1);
+        DEV_mouse_motion(dx, dy, z, bmask, 1);
       }
     } else {
-      DEV_mouse_motion(x - oldx, oldy - y, 0, bmask, 0);
+      DEV_mouse_motion(x - oldx, oldy - y, z, bmask, 0);
     }
     oldx = x;
     oldy = y;
