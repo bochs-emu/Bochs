@@ -69,7 +69,7 @@ enum
   ID_Toolbar_Copy,
   ID_Toolbar_Paste,
   ID_Toolbar_Snapshot,
-  ID_Toolbar_Config,
+/*ID_Toolbar_Config,*/
   ID_Toolbar_Mouse_en,
   ID_Toolbar_User,
   ID_Toolbar_SaveRestore,
@@ -198,6 +198,7 @@ public:
   void OnSimThreadExit();
   SimThread *GetSimThread() { return sim_thread; }
 
+  void UpdateToolBar(bool simPresent);
   void SetToolBarHelp(int id, wxString& text);
 
 private:

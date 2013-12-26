@@ -345,7 +345,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_TOOL(ID_Toolbar_Copy, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_Paste, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_Snapshot, MyFrame::OnToolbarClick)
-  EVT_TOOL(ID_Toolbar_Config, MyFrame::OnToolbarClick)
+/*EVT_TOOL(ID_Toolbar_Config, MyFrame::OnToolbarClick)*/
   EVT_TOOL(ID_Toolbar_Mouse_en, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_User, MyFrame::OnToolbarClick)
 END_EVENT_TABLE()
@@ -472,7 +472,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuEdit->Enable(ID_Edit_ATA1, BX_MAX_ATA_CHANNEL > 1);
   menuEdit->Enable(ID_Edit_ATA2, BX_MAX_ATA_CHANNEL > 2);
   menuEdit->Enable(ID_Edit_ATA3, BX_MAX_ATA_CHANNEL > 3);
-  // enable restore state if present
+  // enable restore state
   menuConfiguration->Enable(ID_State_Restore, TRUE);
 
   CreateStatusBar();
@@ -494,7 +494,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   BX_ADD_TOOL(ID_Edit_Cdrom1, cdromd_xpm, wxT("Change CDROM"));
   BX_ADD_TOOL(ID_Toolbar_Reset, reset_xpm, wxT("Reset the system"));
   BX_ADD_TOOL(ID_Toolbar_Power, power_xpm, wxT("Turn power on/off"));
-  BX_ADD_TOOL(ID_Toolbar_SaveRestore, saverestore_xpm, wxT("Save simulation state"));
+  BX_ADD_TOOL(ID_Toolbar_SaveRestore, saverestore_xpm, wxT(""));
 
   BX_ADD_TOOL(ID_Toolbar_Copy, copy_xpm, wxT("Copy to clipboard"));
   BX_ADD_TOOL(ID_Toolbar_Paste, paste_xpm, wxT("Paste from clipboard"));
@@ -506,6 +506,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   BX_ADD_TOOL(ID_Toolbar_User, userbutton_xpm, wxT("Keyboard shortcut"));
 
   bxToolBar->Realize();
+  UpdateToolBar(false);
 
   // create a MyPanel that covers the whole frame
   panel = new MyPanel(this, -1, wxDefaultPosition, wxDefaultSize, wxNO_BORDER);
@@ -866,6 +867,22 @@ void MyFrame::simStatusChanged(StatusChange change, bx_bool popupNotify) {
   menuEdit->Enable(ID_Edit_FD_1, canConfigure || (value != BX_FDD_NONE));
   bxToolBar->EnableTool(ID_Edit_FD_1, canConfigure || (value != BX_FDD_NONE));
   bxToolBar->EnableTool(ID_Edit_Cdrom1, canConfigure || (SIM->get_first_cdrom() != NULL));
+  UpdateToolBar(!canConfigure);
+}
+
+void MyFrame::UpdateToolBar(bool simPresent)
+{
+  bxToolBar->EnableTool(ID_Toolbar_Reset, simPresent);
+  bxToolBar->EnableTool(ID_Toolbar_Copy, simPresent);
+  bxToolBar->EnableTool(ID_Toolbar_Paste, simPresent);
+  bxToolBar->EnableTool(ID_Toolbar_Snapshot, simPresent);
+  bxToolBar->EnableTool(ID_Toolbar_Mouse_en, simPresent);
+  bxToolBar->EnableTool(ID_Toolbar_User, simPresent);
+  if (simPresent) {
+    bxToolBar->SetToolShortHelp(ID_Toolbar_SaveRestore, wxT("Save simulation state"));
+  } else {
+    bxToolBar->SetToolShortHelp(ID_Toolbar_SaveRestore, wxT("Restore simulation state"));
+  }
 }
 
 void MyFrame::OnStartSim(wxCommandEvent& event)
@@ -1181,13 +1198,14 @@ void MyFrame::OnEditATA(wxCommandEvent& event)
 
 void MyFrame::OnToolbarClick(wxCommandEvent& event)
 {
+  wxCommandEvent unusedEvent;
+
   wxLogDebug(wxT("clicked toolbar thingy"));
   bx_toolbar_buttons which = BX_TOOLBAR_UNDEFINED;
   int id = event.GetId();
   switch (id) {
     case ID_Toolbar_Power:
       if (theFrame->GetSimThread() == NULL) {
-        wxCommandEvent unusedEvent;
         OnStartSim(unusedEvent);
       } else {
         which = BX_TOOLBAR_POWER;
@@ -1195,7 +1213,13 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
       }
       break;
     case ID_Toolbar_Reset: which = BX_TOOLBAR_RESET; break;
-    case ID_Toolbar_SaveRestore: which = BX_TOOLBAR_SAVE_RESTORE; break;
+    case ID_Toolbar_SaveRestore:
+      if (theFrame->GetSimThread() == NULL) {
+        OnStateRestore(unusedEvent);
+      } else {
+        which = BX_TOOLBAR_SAVE_RESTORE;
+      }
+      break;
     case ID_Edit_FD_0:
       // floppy config dialog box
       editFloppyConfig(0);
@@ -1211,7 +1235,7 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
     case ID_Toolbar_Copy: which = BX_TOOLBAR_COPY; break;
     case ID_Toolbar_Paste: which = BX_TOOLBAR_PASTE; break;
     case ID_Toolbar_Snapshot: which = BX_TOOLBAR_SNAPSHOT; break;
-    case ID_Toolbar_Config: which = BX_TOOLBAR_CONFIG; break;
+//  case ID_Toolbar_Config: which = BX_TOOLBAR_CONFIG; break;
     case ID_Toolbar_Mouse_en: which = BX_TOOLBAR_MOUSE_EN; break;
     case ID_Toolbar_User: which = BX_TOOLBAR_USER; break;
     default:

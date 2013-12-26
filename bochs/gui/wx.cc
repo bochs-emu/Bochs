@@ -1062,7 +1062,7 @@ void bx_wx_gui_c::handle_events(void)
             case BX_TOOLBAR_COPY: copy_handler(); break;
             case BX_TOOLBAR_PASTE: paste_handler(); break;
             case BX_TOOLBAR_SNAPSHOT: snapshot_handler(); break;
-            case BX_TOOLBAR_CONFIG: config_handler(); break;
+//          case BX_TOOLBAR_CONFIG: config_handler(); break;
             case BX_TOOLBAR_MOUSE_EN: thePanel->ToggleMouse(true); break;
             case BX_TOOLBAR_USER: userbutton_handler(); break;
             default:
