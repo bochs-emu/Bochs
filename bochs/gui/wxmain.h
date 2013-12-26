@@ -208,7 +208,6 @@ private:
   wxMenu *menuConfiguration;
   wxMenu *menuEdit;
   wxMenu *menuSimulate;
-  wxMenu *menuDebug;
   wxMenu *menuLog;
   wxMenu *menuHelp;
   wxToolBar *bxToolBar;

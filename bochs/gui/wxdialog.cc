@@ -1202,7 +1202,7 @@ FloppyConfigDialog::FloppyConfigDialog(
 {
   infoSizer = new wxBoxSizer(wxHORIZONTAL);
   infoSizer->Add(new wxStaticText(this, -1, wxString("Clicking OK signals a media change for this drive.", wxConvUTF8)), 0, wxALIGN_CENTER|wxALL, 3);
-  createButton = AddButton(ID_Create, wxT("Create Image"));
+  createButton = AddButton(ID_Create, BTNLABEL_CREATE_IMG);
   AddDefaultButtons();
 }
 

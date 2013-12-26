@@ -14,18 +14,11 @@
 ////////////////////////////////////////////////////////////////////
 #define MSG_NO_HELP wxT("No help is available yet.")
 #define MSG_NO_HELP_CAPTION wxT("No help")
-#define MSG_ENABLED wxT("Enabled")
 #define BTNLABEL_HELP wxT("Help")
 #define BTNLABEL_CANCEL wxT("Cancel")
 #define BTNLABEL_OK wxT("Ok")
 #define BTNLABEL_CREATE_IMG wxT("Create Image")
 #define BTNLABEL_BROWSE wxT("<--Browse")
-#define BTNLABEL_DEBUG_CONTINUE wxT("Continue")
-#define BTNLABEL_DEBUG_STOP wxT("Stop")
-#define BTNLABEL_DEBUG_STEP wxT("Step")
-#define BTNLABEL_DEBUG_COMMIT wxT("Commit")
-#define BTNLABEL_CLOSE wxT("Close")
-#define BTNLABEL_EXECUTE wxT("Execute")
 
 #if defined(WIN32)
 // On win32, apparantly the spinctrl depends on a native control which only
@@ -439,24 +432,6 @@ Or if you choose the CD-ROM, you get to edit the settings for it.
 |                                                     [Help] [Cancel] [Ok]  |
 +---------------------------------------------------------------------------+
 
-The CD-ROM media can still be configured during the simulation.  In this
-context we can just show the Media section.  The same code can be written to
-serve both purposes.  This is the dialog that would appear when you click the
-CD-ROM button on the toolbar at runtime.
-
-+-- CD-ROM Media -----------------------------+
-|                                             |
-|  Bochs can use a physical CD-ROM drive as   |
-|  the data source, or use an image file.     |
-|                                             |
-|   [X]  Ejected                              |
-|   [ ]  Physical CD-ROM drive /dev/cdrom     |
-|   [ ]  Disk image: [_____________] [Browse] |
-|                                             |
-|                                             |
-|                       [Help] [Cancel] [Ok]  |
-+---------------------------------------------+
-
 ////////////////////////////////////////////////////////////////////////////
 // ChooseConfigDialog
 ////////////////////////////////////////////////////////////////////////////
@@ -487,48 +462,6 @@ could grow.
 |    ??      Create new configuration                    |
 |                                                        |
 +--------------------------------------------------------+
-
-////////////////////////////////////////////////////////////////////////////
-// ChooseBootDialog
-////////////////////////////////////////////////////////////////////////////
-
-This dialog basically lets you choose which disk you want to boot: floppy A,
-disk c, or cdrom.  The boot selection could be as simple as
-+-------------------------------------------+
-|  Choose boot drive                        |
-|    [ ] Floppy A                           |
-|    [X] Hard Disk C                        |
-|    [ ] CD-ROM                             |
-|                [ Help ] [ Cancel ] [ Ok ] |
-+-------------------------------------------+
-or fancier with icons for the device types, and Edit buttons that
-let you go right to the configure screen for that disk drive.
-+---------------------------------------------------------------+
-|                                                               |
-|          /----+                                               |
-|          |=  =|   A Drive                             +----+  |
-| [    ]   | __ |   Raw Floppy Drive                    |Edit|  |
-|          ||  ||   A:                                  +----+  |
-|          ++--++                                               |
-|                                                               |
-|          /----+                                               |
-|          |=  =|   B Drive                             +----+  |
-| [    ]   | __ |   Floppy Disk Image                   |Edit|  |
-|          ||  ||   C:\Bochs\Images\A.img               +----+  |
-|          ++--++                                               |
-|                                                               |
-|          +-----+  C Drive                                     |
-|          |=====|  Hard Disk Image                     +----+  |
-| [BOOT]   |    o|  C:\Bochs\Images\HD30meg.img         |Edit|  |
-|          +-----+                                      +----+  |
-|                                                               |
-|            ___                                                |
-|           /   \   D Drive                             +----+  |
-| [    ]   |  O  |  ISO CD Image                        |Edit|  |
-|           \___/   C:\Bochs\Images\BootCD.img          +----+  |
-|                                                               |
-|                                    [ Help ] [ Cancel ] [ Ok ] |
-+---------------------------------------------------------------+
 
 ////////////////////////////////////////////////////////////////////////////
 // KeymappingDialog

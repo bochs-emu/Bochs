@@ -288,8 +288,6 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   rfbScreen = (char *)malloc(rfbWindowX * rfbWindowY);
   memset(&rfbPalette, 0, sizeof(rfbPalette));
-  rfbPalette[7] = (char)0xAD;
-  rfbPalette[63] = (char)0xFF;
 
   rfbUpdateRegion.x = rfbWindowX;
   rfbUpdateRegion.y = rfbWindowY;

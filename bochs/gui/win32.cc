@@ -44,7 +44,7 @@
 
 class bx_win32_gui_c : public bx_gui_c {
 public:
-  bx_win32_gui_c (void) {}
+  bx_win32_gui_c(void) {}
   DECLARE_GUI_VIRTUAL_METHODS();
   virtual void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
@@ -195,15 +195,14 @@ typedef struct {
 
 sharedThreadInfo stInfo;
 
-LRESULT CALLBACK mainWndProc (HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK simWndProc (HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK mainWndProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK simWndProc(HWND, UINT, WPARAM, LPARAM);
 DWORD WINAPI UIThread(PVOID);
 void SetStatusText(unsigned Num, const char *Text, bx_bool active, bx_bool w=0);
 void terminateEmul(int);
 void create_vga_font(void);
 static unsigned char reverse_bitorder(unsigned char);
-void DrawBitmap (HDC, HBITMAP, int, int, int, int, int, int, DWORD, unsigned char);
-void DrawChar (HDC, unsigned char, int, int, unsigned char cColor, int, int);
+void DrawBitmap(HDC, HBITMAP, int, int, int, int, int, int, DWORD, unsigned char);
 void updateUpdated(int,int,int,int);
 static void headerbar_click(int x);
 
