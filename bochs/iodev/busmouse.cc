@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2009  The Bochs Project
+//  Copyright (C) 2004-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -35,13 +35,25 @@
 
 bx_busm_c *theBusMouse = NULL;
 
+#define BUS_MOUSE_IRQ  5
+
+#define PORT_CONTROL     0x023C
+#define PORT_DATA        0x023D
+#define PORT_SIGNATURE   0x023E
+#define PORT_CONFIG      0x023F
+
+#define BUSM_CTRL_READ_BUTTONS 0x00
+#define BUSM_CTRL_READ_X       0x01
+#define BUSM_CTRL_READ_Y       0x02
+#define BUSM_CTRL_COMMAND      0x07
+
 int libbusmouse_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   // Create one instance of the busmouse device object.
   theBusMouse = new bx_busm_c();
   // Register this device.
-  BX_REGISTER_DEVICE_DEVMODEL (plugin, type, theBusMouse, BX_PLUGIN_BUSMOUSE);
-  return(0); // Success
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theBusMouse, BX_PLUGIN_BUSMOUSE);
+  return 0; // Success
 }
 
 void libbusmouse_LTX_plugin_fini(void)
@@ -78,53 +90,35 @@ void bx_busm_c::init(void)
 
   BX_BUSM_THIS mouse_delayed_dx = 0;
   BX_BUSM_THIS mouse_delayed_dy = 0;
+  BX_BUSM_THIS mouse_buttons    = 0;
   BX_BUSM_THIS current_x =
   BX_BUSM_THIS current_y =
   BX_BUSM_THIS current_b = 0;
 
-  BX_BUSM_THIS sig_port_sequ = 0;
-  BX_BUSM_THIS interrupts    = 0;   // interrupts off
-  BX_BUSM_THIS command_val   = 0;   // command byte
-  BX_BUSM_THIS cur_command   = 0;
+  BX_BUSM_THIS control_val   = 0;  // the control port value
+  BX_BUSM_THIS command_val   = 0;  // command byte
+  BX_BUSM_THIS sig_port_sequ = 0;  // signature byte toggle
+  BX_BUSM_THIS interrupts    = 0;  // interrupts off
+  BX_BUSM_THIS needs_update  = 0;
 
-  // the control port values
-  BX_BUSM_THIS control_val             =
-  BX_BUSM_THIS control.mode_set        =
-  BX_BUSM_THIS control.modeA_select    =
-  BX_BUSM_THIS control.portA_dir       =
-  BX_BUSM_THIS control.portC_upper_dir =
-  BX_BUSM_THIS control.modeBC_select   =
-  BX_BUSM_THIS control.portB_dir       =
-  BX_BUSM_THIS control.portC_lower_dir =
-  BX_BUSM_THIS control_val             = 0;
-
-  BX_INFO(("Initialized BusMouse"));
+  BX_INFO(("BusMouse initialized"));
 }
 
 void bx_busm_c::register_state(void)
 {
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "busmouse", "Busmouse State");
-  BXRS_HEX_PARAM_FIELD(list, mouse_delayed_dx, BX_BUSM_THIS mouse_delayed_dx);
-  BXRS_HEX_PARAM_FIELD(list, mouse_delayed_dx, BX_BUSM_THIS mouse_delayed_dy);
+  BXRS_DEC_PARAM_FIELD(list, mouse_delayed_dx, BX_BUSM_THIS mouse_delayed_dx);
+  BXRS_DEC_PARAM_FIELD(list, mouse_delayed_dy, BX_BUSM_THIS mouse_delayed_dy);
+  BXRS_HEX_PARAM_FIELD(list, mouse_buttons, BX_BUSM_THIS mouse_buttons);
   BXRS_HEX_PARAM_FIELD(list, current_x, BX_BUSM_THIS current_x);
   BXRS_HEX_PARAM_FIELD(list, current_y, BX_BUSM_THIS current_y);
   BXRS_HEX_PARAM_FIELD(list, current_b, BX_BUSM_THIS current_b);
-  BXRS_HEX_PARAM_FIELD(list, sig_port_sequ, BX_BUSM_THIS sig_port_sequ);
+
   BXRS_HEX_PARAM_FIELD(list, control_val, BX_BUSM_THIS control_val);
-
-  bx_list_c *ctrl = new bx_list_c(list, "control");
-  BXRS_PARAM_BOOL(ctrl, mode_set, BX_BUSM_THIS control.mode_set);
-  BXRS_HEX_PARAM_FIELD(ctrl, modeA_select, BX_BUSM_THIS control.modeA_select);
-  BXRS_PARAM_BOOL(ctrl, portA_dir, BX_BUSM_THIS control.portA_dir);
-  BXRS_PARAM_BOOL(ctrl, portC_upper_dir, BX_BUSM_THIS control.portC_upper_dir);
-  BXRS_PARAM_BOOL(ctrl, modeBC_select, BX_BUSM_THIS control.modeBC_select);
-  BXRS_PARAM_BOOL(ctrl, portB_dir, BX_BUSM_THIS control.portB_dir);
-  BXRS_PARAM_BOOL(ctrl, portC_lower_dir, BX_BUSM_THIS control.portC_lower_dir);
-
-  BXRS_PARAM_BOOL(list, interrupts, BX_BUSM_THIS interrupts);
-  BXRS_PARAM_BOOL(list, packet_update, BX_BUSM_THIS packet_update);
-  BXRS_HEX_PARAM_FIELD(list, cur_command, BX_BUSM_THIS cur_command);
   BXRS_HEX_PARAM_FIELD(list, command_val, BX_BUSM_THIS command_val);
+  BXRS_PARAM_BOOL(list, sig_port_sequ, BX_BUSM_THIS sig_port_sequ);
+  BXRS_PARAM_BOOL(list, interrupts, BX_BUSM_THIS interrupts);
+  BXRS_PARAM_BOOL(list, needs_update, BX_BUSM_THIS needs_update);
 }
 
 // static IO port read callback handler
@@ -145,47 +139,41 @@ Bit32u bx_busm_c::read(Bit32u address, unsigned io_len)
   Bit8u value = 0;
 
   switch (address) {
-    case 0x023C:
+    case PORT_CONTROL:
       value = BX_BUSM_THIS control_val;
-/*      value = (BX_BUSM_THIS control.mode_set        ? 1<<7 : 0)
- *            | (BX_BUSM_THIS control.modeA_select       <<5)
- *            | (BX_BUSM_THIS control.portA_dir       ? 1<<4 : 0)
- *            | (BX_BUSM_THIS control.portC_upper_dir ? 1<<3 : 0)
- *            | (BX_BUSM_THIS control.modeBC_select   ? 1<<2 : 0)
- *            | (BX_BUSM_THIS control.portB_dir       ? 1<<1 : 0)
- *            | (BX_BUSM_THIS control.portC_lower_dir ? 1<<0 : 0);
- */   break;
-    case 0x023D:  // data
-      switch (BX_BUSM_THIS cur_command) {
-        case 0x00:  // read buttons
+      break;
+    case PORT_DATA:
+      switch (BX_BUSM_THIS control_val) {
+        case BUSM_CTRL_READ_BUTTONS:
           value = BX_BUSM_THIS current_b;
           break;
-        case 0x01:  // read x
+        case BUSM_CTRL_READ_X:
           value = BX_BUSM_THIS current_x;
           break;
-        case 0x02:  // read y
+        case BUSM_CTRL_READ_Y:
           value = BX_BUSM_THIS current_y;
           break;
-        case 0x07:  // command mode
+        case BUSM_CTRL_COMMAND:
           value = BX_BUSM_THIS command_val;
           break;
         default:
-          BX_PANIC(("Unknown command to data port: %x", BX_BUSM_THIS cur_command));
+          BX_ERROR(("Reading data port in unsupported mode 0x%02x", BX_BUSM_THIS control_val));
       }
       break;
-    case 0x023E:  // sig
-      if (!(BX_BUSM_THIS sig_port_sequ & 1))
+    case PORT_SIGNATURE:
+      if (!BX_BUSM_THIS sig_port_sequ) {
         value = 0xDE;
-      else
-        value = 0x22; // Manufacture id?
-      BX_BUSM_THIS sig_port_sequ++;
+      } else {
+        value = 0x22; // Manufacturer id ?
+      }
+      BX_BUSM_THIS sig_port_sequ ^= 1;
       break;
-    case 0x023F:
-      BX_PANIC(("Read from port 0x023F"));
+    case PORT_CONFIG:
+      BX_ERROR(("Unsupported read from port 0x%04x", address));
       break;
   }
 
-  BX_INFO(("read from address 0x%04x, value = 0x%02x ", address, value));
+  BX_DEBUG(("read from address 0x%04x, value = 0x%02x ", address, value));
 
   return value;
 }
@@ -206,66 +194,44 @@ void bx_busm_c::write(Bit32u address, Bit32u value, unsigned io_len)
   UNUSED(this_ptr);
 #endif  // !BX_USE_BUSM_SMF
 
-  BX_INFO(("write  to address 0x%04x, value = 0x%02x ", address, value));
+  BX_DEBUG(("write  to address 0x%04x, value = 0x%02x ", address, value));
 
   switch (address) {
-    case 0x023C:  // control
-      BX_BUSM_THIS control.mode_set        = (value & 0x80) ? 1 : 0;
-      BX_BUSM_THIS control.modeA_select    = (value & 0x60) >> 5;
-      BX_BUSM_THIS control.portA_dir       = (value & 0x10) ? 1 : 0;
-      BX_BUSM_THIS control.portC_upper_dir = (value & 0x08) ? 1 : 0;
-      BX_BUSM_THIS control.modeBC_select   = (value & 0x04) ? 1 : 0;
-      BX_BUSM_THIS control.portB_dir       = (value & 0x02) ? 1 : 0;
-      BX_BUSM_THIS control.portC_lower_dir = (value & 0x01) ? 1 : 0;
-      BX_BUSM_THIS control_val = value;
-
-/*
-      switch (value) {
-        case 0x00:  // read buttons
-        case 0x01:  // read x
-        case 0x02:  // read y
-        case 0x07:
-          BX_BUSM_THIS cur_command = (Bit8u) value;
-          break;
-        case 0x80: // reset
-          BX_BUSM_THIS cur_command = 0x00;
-          BX_BUSM_THIS command_val = 0x80;
-          break;
-        default:
-          BX_PANIC(("Unknown command to control port %x", value));
-      }
-*/
+    case PORT_CONTROL:
+      BX_BUSM_THIS control_val = value & 0x07;
       break;
-    case 0x023D:  // data port
-      switch (BX_BUSM_THIS cur_command) {
-        case 0x07:  // command mode
-          switch (value) {
-            case 0x10: // interrupts off
-              BX_BUSM_THIS interrupts = 0;
-              break;
-            case 0x11: // interrupts on
-              BX_BUSM_THIS interrupts = 1;
-              break;
-            default:
-              BX_BUSM_THIS command_val = value;
-              if ((value & 0x20) == 0)
-                DEV_pic_lower_irq(BUS_MOUSE_IRQ);
-          }
-          break;
-        default:
-          BX_PANIC(("Unknown command written to data port: %x", BX_BUSM_THIS cur_command));
+    case PORT_DATA:
+      if (BX_BUSM_THIS control_val == BUSM_CTRL_COMMAND) {
+        if ((value & 0x20) == 0x20) {
+          BX_BUSM_THIS update_mouse_data();
+        } else {
+          DEV_pic_lower_irq(BUS_MOUSE_IRQ);
+        }
+        switch (value) {
+          case 0x10: // interrupts off
+            BX_BUSM_THIS interrupts = 0;
+            break;
+          case 0x09:
+          case 0x11: // interrupts on
+            BX_BUSM_THIS interrupts = 1;
+            break;
+          case 0x16: // test irq
+            DEV_pic_raise_irq(BUS_MOUSE_IRQ);
+            break;
+        }
+        BX_BUSM_THIS command_val = value;
+      } else {
+        BX_ERROR(("Value 0x%02x written in supported mode 0x%02x", value, BX_BUSM_THIS control_val));
       }
       break;
-    case 0x023E:
-      BX_PANIC(("Write to port 0x023E"));
-      break;
-    case 0x023F:
-      BX_PANIC(("Write to port 0x023F"));
+    case PORT_SIGNATURE:
+    case PORT_CONFIG:
+      BX_ERROR(("Unsupported write to port 0x%04x (value = 0x%02x)", address, value));
       break;
   }
 }
 
-void bx_busm_c::mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state)
+void bx_busm_c::mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy)
 {
   ((bx_busm_c*)dev)->mouse_enq(delta_x, delta_y, delta_z, button_state);
 }
@@ -278,13 +244,21 @@ void bx_busm_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button
   if ((delta_y < -1) || (delta_y > 1))
     delta_y /= 2;
 
-  if(delta_x>127) delta_x=127;
-  if(delta_y>127) delta_y=127;
-  if(delta_x<-128) delta_x=-128;
-  if(delta_y<-128) delta_y=-128;
+  if (delta_x > 127) delta_x =127;
+  if (delta_y > 127) delta_y =127;
+  if (delta_x < -128) delta_x = -128;
+  if (delta_y < -128) delta_y = -128;
 
-  BX_BUSM_THIS mouse_delayed_dx+=delta_x;
-  BX_BUSM_THIS mouse_delayed_dy-=delta_y;
+  BX_BUSM_THIS mouse_delayed_dx += delta_x;
+  BX_BUSM_THIS mouse_delayed_dy -= delta_y;
+  BX_BUSM_THIS mouse_buttons = (Bit8u)(0x40 | ((button_state & 1) << 2) |
+                                       ((button_state & 2) >> 1));
+  BX_BUSM_THIS needs_update = 1;
+}
+
+void bx_busm_c::update_mouse_data()
+{
+  int delta_x, delta_y;
 
   if (BX_BUSM_THIS mouse_delayed_dx > 127) {
     delta_x = 127;
@@ -306,12 +280,14 @@ void bx_busm_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button
     delta_y = BX_BUSM_THIS mouse_delayed_dy;
     BX_BUSM_THIS mouse_delayed_dy = 0;
   }
-
-  if ((BX_BUSM_THIS cur_command & 0x20) == 0x00) {
-    BX_BUSM_THIS current_x = (Bit8u) delta_x;
-    BX_BUSM_THIS current_y = (Bit8u) delta_y;
-    BX_BUSM_THIS current_b = (Bit8u) ~(((button_state & 0x01)<<2) | ((button_state & 0x02) >> 1));
+  if ((BX_BUSM_THIS mouse_delayed_dx == 0) &&
+      (BX_BUSM_THIS mouse_delayed_dy == 0)) {
+    BX_BUSM_THIS needs_update = 0;
   }
+
+  BX_BUSM_THIS current_x = (Bit8u) delta_x;
+  BX_BUSM_THIS current_y = (Bit8u) delta_y;
+  BX_BUSM_THIS current_b = mouse_buttons;
 }
 
 void bx_busm_c::timer_handler(void *this_ptr)
@@ -324,7 +300,7 @@ void bx_busm_c::timer_handler(void *this_ptr)
 void bx_busm_c::busm_timer(void)
 {
   // if interrupts are on, fire the interrupt
-  if (BX_BUSM_THIS interrupts) {
+  if (BX_BUSM_THIS interrupts && BX_BUSM_THIS needs_update) {
     DEV_pic_raise_irq(BUS_MOUSE_IRQ);
   }
 }
