@@ -472,9 +472,10 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 #  TYPE:
 #  With the mouse type option you can select the type of mouse to emulate.
 #  The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
-#  on PS/2), 'serial', 'serial_wheel' and 'serial_msys' (one com port requires
-#  setting 'mode=mouse'). To connect a mouse to an USB port, see the 'usb_uhci',
-#  'usb_ohci' or 'usb_xhci' options (requires PCI and USB support).
+#  on PS/2), 'serial', 'serial_wheel', 'serial_msys' (one com port requires
+#  setting 'mode=mouse') and 'bus' (if present). To connect a mouse to an
+#  USB port, see the 'usb_uhci', 'usb_ohci' or 'usb_xhci' options (requires
+#  PCI and USB support).
 #
 #  ENABLED:
 #  The Bochs gui creates mouse "events" unless the 'enabled' option is

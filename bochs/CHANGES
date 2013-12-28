@@ -39,6 +39,8 @@ Changes after 2.6.2 (updated Dec 16, 2013):
     - soundwin: added capability to specify the ID of the MIDI device to use
   - Serial
     - Serial mouse detection fixes
+  - Busmouse
+    - Non-functional device rewritten to make it work in DOS and Win95
 
 - ROM BIOS
   - PS/2 mouse function: allow setting mouse packet size to 4 for wheel support

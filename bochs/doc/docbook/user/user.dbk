@@ -460,7 +460,7 @@ currently work with.
   <row>
     <entry>Mouse</entry>
     <entry>Yes</entry>
-    <entry>Emulates a serial, PS/2 or USB mouse with 3 buttons + optional mouse
+    <entry>Emulates a serial, PS/2, bus or USB mouse with 3 buttons + optional mouse
     wheel support.
     </entry>
   </row>
@@ -3733,10 +3733,11 @@ of the mouse capture and the runtime method to toggle it.
 <para>
 With the mouse type option you can select the type of mouse to emulate.
 The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
-on PS/2), 'serial', 'serial_wheel' and 'serial_msys' (one com port requires
-setting 'mode=mouse', see <link linkend="bochsopt-com">com option</link>).
-To connect a mouse to an USB port, see the <link linkend="bochsopt-usb-uhci">usb_uhci</link>,
-'usb_ohci 'or 'usb_xhci' option (requires PCI and USB support).
+on PS/2), 'serial', 'serial_wheel', 'serial_msys' (one com port requires
+setting 'mode=mouse', see <link linkend="bochsopt-com">com option</link>)
+and 'bus' (if present). To connect a mouse to an USB port, see the
+<link linkend="bochsopt-usb-uhci">usb_uhci</link>, 'usb_ohci 'or
+'usb_xhci' option (requires PCI and USB support).
 </para>
 <para><command>enabled</command></para>
 <para>
