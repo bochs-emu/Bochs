@@ -1833,6 +1833,8 @@ fetch_b1:
     had_vex_xop = b1;
     if (sse_prefix | rex_prefix)
       goto decode_done;
+    if (! protected_mode())
+      goto decode_done;
 
     unsigned vex, vex_opcext = 1;
     if (remain != 0) {
@@ -1886,7 +1888,9 @@ fetch_b1:
 #if BX_SUPPORT_EVEX
   else if (b1 == 0x62) {
     had_vex_xop = b1;
-    if (sse_prefix || ! protected_mode())
+    if (sse_prefix | rex_prefix)
+      goto decode_done;
+    if (! protected_mode())
       goto decode_done;
 
     Bit32u evex;
@@ -1949,6 +1953,8 @@ fetch_b1:
     // 3 byte XOP prefix
     had_vex_xop = b1;
     if (sse_prefix | rex_prefix)
+      goto decode_done;
+    if (! protected_mode())
       goto decode_done;
 
     unsigned vex;
