@@ -233,7 +233,6 @@ bool MyApp::OnInit()
 {
   // wxLog::AddTraceMask(wxT("mime"));
   wxLog::SetActiveTarget(new wxLogStderr());
-  bx_init_siminterface();
   // Install callback function to handle anything that occurs before the
   // simulation begins.  This is responsible for displaying any error
   // dialogs during bochsrc and command line processing.

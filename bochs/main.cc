@@ -58,19 +58,12 @@ extern "C" {
 bx_bool bx_gui_sighandler = 0;
 #endif
 
-// some prototypes from iodev/
-// I want to stay away from including iodev/iodev.h here
-Bit32u bx_unmapped_io_read_handler(Bit32u address, unsigned io_len);
-void   bx_unmapped_io_write_handler(Bit32u address, Bit32u value,
-                                    unsigned io_len);
-
+int  bx_init_main(int argc, char *argv[]);
 void bx_init_hardware(void);
 void bx_init_options(void);
 void bx_init_bx_dbg(void);
 
 static const char *divider = "========================================================================";
-static logfunctions thePluginLog;
-logfunctions *pluginlog = &thePluginLog;
 
 bx_startup_flags_t bx_startup_flags;
 bx_bool bx_user_quit;

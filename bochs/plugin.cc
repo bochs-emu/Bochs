@@ -46,6 +46,8 @@
 #define PLUGIN_FILENAME_FORMAT "bx_%s.dll"
 #endif
 
+logfunctions *pluginlog;
+
 extern "C" {
 
 void  (*pluginRegisterIRQ)(unsigned irq, const char* name) = 0;
