@@ -41,11 +41,12 @@ MSVC_TARGET=0
 need_dlcompat_for_plugins=0
 case "$target" in
   *-pc-windows* | *-pc-winnt*)
-    DEFAULT_GUI=win32                 # default to win32 gui
+    DEFAULT_GUI=win32 # default to win32 gui
+    NO_LT=1           # do not use libtool at all
     MSVC_TARGET=1
     ;;
   *-cygwin* | *-mingw32*)
-    NO_LT=1   # do not use libtool at all on cygwin
+    NO_LT=1   # do not use libtool at all
     if test "$with_term" = yes; then
       # ncurses won't compile with -DWIN32
       # also, I can't get it to link without this -DBROKEN_LINKER=1 hack.
@@ -109,7 +110,7 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_MAKE_SET
 
-if test "$MSVC_TARGET" != 1; then
+if test "$NO_LT" != 1; then
   dnl------------ libtool configuration
   dnl Configure libtool, and default to shared libraries.  Libtool will only be
   dnl used for compiling and linking plugins.
@@ -430,16 +431,20 @@ if test "$bx_plugins" = 1; then
   GUI_PLUGIN_OBJS='$(OBJS_THAT_CAN_BE_PLUGINS)'
   DEFINE_PLUGIN_PATH='-DBX_PLUGIN_PATH="\"${plugdir}\""'
   # and the $(OBJS_THAT_SUPPORT_OTHER_PLUGINS) will be built and linked
-  # by special link rules for the plugins that they support.
-  LIBS="$LIBS $LIBADD_DL"
-  have_ltdl=0
-  AC_CHECK_HEADER(ltdl.h, [AC_CHECK_LIB(ltdl, lt_dlinit, [have_ltdl=1]]))
-  if test "$have_ltdl" = 1; then
-    PLUGIN_LIB="-lltdl"
-    AC_DEFINE(BX_HAVE_LTDL,1)
+  if test "$NO_LT" != 1; then
+    # by special link rules for the plugins that they support.
+    LIBS="$LIBS $LIBADD_DL"
+    have_ltdl=0
+    AC_CHECK_HEADER(ltdl.h, [AC_CHECK_LIB(ltdl, lt_dlinit, [have_ltdl=1]]))
+    if test "$have_ltdl" = 1; then
+      PLUGIN_LIB="-lltdl"
+      AC_DEFINE(BX_HAVE_LTDL,1)
+    else
+      PLUGIN_VAR="ltdl.o"
+      PLUGIN_LIB="ltdl.o"
+    fi
   else
-    PLUGIN_VAR="ltdl.o"
-    PLUGIN_LIB="ltdl.o"
+    RANLIB="echo"
   fi
   PLUGIN_TARGET=bochs_plugins
   INSTALL_PLUGINS_VAR=install_libtool_plugins
@@ -2419,7 +2424,6 @@ case "$target" in
     MAKE=nmake
     MAKELIB="lib /nologo /subsystem:console /verbose /out:\$@"
     RMCOMMAND="-del"
-    RANLIB="echo"
     #L_OPT="/debug"    # for debugging
     L_OPT=""           # no debug info
     LINK="link $L_OPT /nologo /subsystem:console /incremental:no /out:\$@ "
@@ -2508,7 +2512,6 @@ case $target in
     ;;
   *-cygwin* | *-mingw*)
     if test "$bx_plugins" = 1; then
-      AC_CHECK_LIB(mingwex, opendir, LIBS="$LIBS -lmingwex")
       # set variables for building DLL plugins
       PRIMARY_TARGET=".win32_dll_plugin_target"
       PLUGIN_LIBNAME_TRANSFORMATION='%.o=bx_%.dll'

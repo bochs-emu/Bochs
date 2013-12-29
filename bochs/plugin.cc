@@ -345,7 +345,7 @@ plugin_t *plugin_unload(plugin_t *plugin)
   if (plugin->initialized)
       plugin->plugin_fini();
 
-#if defined(_MSC_VER)
+#if defined(WIN32)
   FreeLibrary(plugin->handle);
 #else
   lt_dlclose(plugin->handle);
@@ -369,7 +369,7 @@ void plugin_fini_all (void)
 void plugin_load(char *name, char *args, plugintype_t type)
 {
   plugin_t *plugin, *temp;
-#if defined(_MSC_VER)
+#if defined(WIN32)
   char dll_path_list[MAX_PATH];
 #endif
 
@@ -404,7 +404,7 @@ void plugin_load(char *name, char *args, plugintype_t type)
   // be called from either dlopen (global constructors) or plugin_init.
   BX_ASSERT(current_plugin_context == NULL);
   current_plugin_context = plugin;
-#if defined(_MSC_VER)
+#if defined(WIN32)
   char *ptr;
   plugin->handle = LoadLibrary(plugin_filename);
   if (!plugin->handle) {
@@ -440,7 +440,7 @@ void plugin_load(char *name, char *args, plugintype_t type)
   } else {
     sprintf(tmpname, PLUGIN_INIT_FMT_STRING, "user");
   }
-#if defined(_MSC_VER)
+#if defined(WIN32)
   plugin->plugin_init = (plugin_init_t) GetProcAddress(plugin->handle, tmpname);
   if (plugin->plugin_init == NULL) {
     pluginlog->panic("could not find plugin_init: error=%d", GetLastError());
@@ -459,7 +459,7 @@ void plugin_load(char *name, char *args, plugintype_t type)
   } else {
     sprintf(tmpname, PLUGIN_FINI_FMT_STRING, "user");
   }
-#if defined(_MSC_VER)
+#if defined(WIN32)
   plugin->plugin_fini = (plugin_fini_t) GetProcAddress(plugin->handle, tmpname);
   if (plugin->plugin_fini == NULL) {
     pluginlog->panic("could not find plugin_fini: error=%d", GetLastError());
@@ -538,7 +538,7 @@ plugin_startup(void)
 
   pluginlog = new logfunctions();
   pluginlog->put("PLUGIN");
-#if BX_PLUGINS && !defined(_MSC_VER)
+#if BX_PLUGINS && !defined(WIN32)
   int status = lt_dlinit();
   if (status != 0) {
     BX_ERROR(("initialization error in ltdl library (for loading plugins)"));

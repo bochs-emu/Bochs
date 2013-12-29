@@ -17,7 +17,7 @@
 #ifndef __EXTPLUGIN_H
 #define __EXTPLUGIN_H
 
-#if BX_PLUGINS && !defined(_MSC_VER)
+#if BX_PLUGINS && !defined(WIN32)
 #if BX_HAVE_LTDL
 #include <ltdl.h>
 #else
@@ -43,7 +43,7 @@ typedef struct _plugin_t
     plugintype_t type;
     int  initialized;
 #if BX_PLUGINS
-#if defined(_MSC_VER)
+#if defined(WIN32)
     HINSTANCE handle;
 #else
     lt_dlhandle handle;
