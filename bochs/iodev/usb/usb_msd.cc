@@ -190,7 +190,7 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
 #endif
   }
 
-  put("usb_msd", "USBMS");
+  put("usb_msd", "USBMSD");
 }
 
 usb_msd_device_c::~usb_msd_device_c(void)

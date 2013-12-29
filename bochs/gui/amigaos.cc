@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2000-2012  The Bochs Project
+//  Copyright (C) 2000-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -304,6 +304,7 @@ bx_bool open_screen(void)
 
 void bx_amigaos_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
+  put("AMGUI");
   bx_headerbar_y = headerbar_y;
 
   IntuitionBase = (struct IntuitionBase *)OpenLibrary("intuition.library", 39);

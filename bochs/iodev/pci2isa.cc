@@ -57,7 +57,7 @@ void libpci2isa_LTX_plugin_fini(void)
 
 bx_piix3_c::bx_piix3_c()
 {
-  put("pci2isa", "P2I");
+  put("pci2isa", "P2ISA");
 }
 
 bx_piix3_c::~bx_piix3_c()

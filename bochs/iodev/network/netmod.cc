@@ -41,7 +41,7 @@
 #include <winsock.h>
 #endif
 
-#define LOG_THIS netdev->
+#define LOG_THIS theNetModCtl->
 
 bx_netmod_ctl_c* theNetModCtl = NULL;
 
@@ -59,6 +59,11 @@ int libnetmod_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, cha
 void libnetmod_LTX_plugin_fini(void)
 {
   delete theNetModCtl;
+}
+
+bx_netmod_ctl_c::bx_netmod_ctl_c()
+{
+  put("netmodctl", "NETCTL");
 }
 
 void* bx_netmod_ctl_c::init_module(bx_list_c *base, void *rxh, void *rxstat, bx_devmodel_c *netdev)

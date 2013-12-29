@@ -30,7 +30,7 @@
 // Pseudo device that loads the lowlevel networking module
 class bx_netmod_ctl_c : public bx_netmod_ctl_stub_c {
 public:
-  bx_netmod_ctl_c() {}
+  bx_netmod_ctl_c();
   virtual ~bx_netmod_ctl_c() {}
   virtual void* init_module(bx_list_c *base, void* rxh, void* rxstat, bx_devmodel_c *dev);
 };

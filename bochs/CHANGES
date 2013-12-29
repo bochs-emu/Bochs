@@ -14,6 +14,9 @@ Changes after 2.6.2 (updated Dec 16, 2013):
   - Updated definition of instrumentation callbacks, see description in
     instrumentation.txt / Fixed instrumentation examples
 
+- General
+  - Increased max. device log prefix size to 6 and added / modified prefixes
+
 - Configure and compile
   - configure and compilation fixes for Cygwin and Visual Studio environment
   - configure option --enable-cdrom now only controls the presence of

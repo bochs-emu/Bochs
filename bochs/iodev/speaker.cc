@@ -123,7 +123,7 @@ void libspeaker_LTX_plugin_fini(void)
 
 bx_speaker_c::bx_speaker_c()
 {
-  put("speaker", "SPEAK");
+  put("speaker", "PCSPK");
 
   beep_frequency = 0.0; // Off
 #ifdef __linux__

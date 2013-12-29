@@ -48,7 +48,7 @@ void libextfpuirq_LTX_plugin_fini(void)
 
 bx_extfpuirq_c::bx_extfpuirq_c(void)
 {
-  put("extfpuirq", "EFIRQ");
+  put("extfpuirq", "EXFIRQ");
 }
 
 bx_extfpuirq_c::~bx_extfpuirq_c(void)

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -42,7 +42,7 @@
 
 bx_biosdev_c *theBiosDevice = NULL;
 
-logfunctions  *bioslog;
+#define bioslog theBiosDevice
 logfunctions  *vgabioslog;
 
 int libbiosdev_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
@@ -61,8 +61,7 @@ bx_biosdev_c::bx_biosdev_c(void)
 {
   memset(&s, 0, sizeof(s));
 
-  bioslog = new logfunctions();
-  bioslog->put("BIOS");
+  put("biosdev", "BIOS");
 
   vgabioslog = new logfunctions();
   vgabioslog->put("vgabios", "VBIOS");
@@ -71,10 +70,6 @@ bx_biosdev_c::bx_biosdev_c(void)
 bx_biosdev_c::~bx_biosdev_c(void)
 {
   bioslog->ldebug("Exit");
-  if (bioslog != NULL) {
-    delete bioslog;
-    bioslog = NULL;
-  }
   if (vgabioslog != NULL) {
     delete vgabioslog;
     vgabioslog = NULL;

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -80,7 +80,7 @@ bx_keymap_c bx_keymap;
 
 bx_keymap_c::bx_keymap_c(void)
 {
-    put("keymap", "KMAP");
+    put("keymap", "KEYMAP");
 
     keymapCount = 0;
     keymapTable = (BXKeyEntry *)NULL;

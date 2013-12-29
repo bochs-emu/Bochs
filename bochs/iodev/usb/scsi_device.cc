@@ -62,7 +62,7 @@ scsi_device_t::scsi_device_t(device_image_t *_hdimage, int _tcq,
   max_lba = (hdimage->hd_size / 512) - 1;
   sprintf(drive_serial_str, "%d", serial_number++);
 
-  put("SCSID");
+  put("SCSIHD");
 }
 
 scsi_device_t::scsi_device_t(cdrom_base_c *_cdrom, int _tcq,
@@ -82,7 +82,7 @@ scsi_device_t::scsi_device_t(cdrom_base_c *_cdrom, int _tcq,
   max_lba = cdrom->capacity() - 1;
   sprintf(drive_serial_str, "%d", serial_number++);
 
-  put("SCSIC");
+  put("SCSICD");
 }
 
 scsi_device_t::~scsi_device_t(void)

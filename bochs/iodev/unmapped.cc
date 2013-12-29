@@ -45,7 +45,7 @@ void libunmapped_LTX_plugin_fini(void)
 
 bx_unmapped_c::bx_unmapped_c(void)
 {
-  put("unmapped", "UNMP");
+  put("unmapped", "UNMAP");
 }
 
 bx_unmapped_c::~bx_unmapped_c(void)

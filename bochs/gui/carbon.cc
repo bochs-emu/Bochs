@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -802,7 +802,7 @@ void bx_carbon_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
   int i;
 
-  put("MGUI");
+  put("CARBON");
   InitToolbox();
 
   font_width = 8;

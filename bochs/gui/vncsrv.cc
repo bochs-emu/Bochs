@@ -255,7 +255,7 @@ void bx_vncsrv_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   unsigned char fc, vc;
   int i, timeout = 30;
 
-  put("VNCSV");
+  put("VNCSRV");
   UNUSED(bochs_icon_bits);
 
   rfbHeaderbarY = headerbar_y;

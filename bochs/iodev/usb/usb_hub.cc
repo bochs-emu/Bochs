@@ -210,7 +210,7 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
   usb->add(hub.config);
 #endif
 
-  put("usb_hub", "USBHB");
+  put("usb_hub", "USBHUB");
 }
 
 usb_hub_device_c::~usb_hub_device_c(void)

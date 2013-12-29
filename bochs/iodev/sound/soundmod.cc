@@ -65,7 +65,7 @@ void libsoundmod_LTX_plugin_fini(void)
 
 bx_soundmod_ctl_c::bx_soundmod_ctl_c()
 {
-  put("sound", "SOUND");
+  put("soundctl", "SNDCTL");
   soundmod = NULL;
 }
 
@@ -317,7 +317,7 @@ void bx_soundmod_ctl_c::pcm_apply_volume(Bit32u datalen, Bit8u data[], Bit16u vo
 // The dummy sound lowlevel functions. They don't do anything.
 bx_sound_lowlevel_c::bx_sound_lowlevel_c()
 {
-  put("sound", "SOUND");
+  put("soundlow", "SNDLOW");
   record_timer_index = BX_NULL_TIMER_HANDLE;
 }
 

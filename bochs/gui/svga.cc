@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2012  The Bochs Project
+//  Copyright (C) 2009-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -97,14 +97,12 @@ bx_svga_gui_c::bx_svga_gui_c()
   put("SVGA");
 }
 
-void bx_svga_gui_c::specific_init(
-    int argc,
-    char **argv,
-    unsigned header_bar_y)
+void bx_svga_gui_c::specific_init(int argc, char **argv, unsigned header_bar_y)
 {
+  put("VGAGUI");
   if (vga_init() != 0) {
     LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
-    BX_PANIC (("Unable to initialize SVGAlib"));
+    BX_PANIC(("Unable to initialize SVGAlib"));
     return;
   }
 

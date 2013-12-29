@@ -62,6 +62,11 @@ void libusb_common_LTX_plugin_fini(void)
   delete theUsbDevCtl;
 }
 
+bx_usb_devctl_c::bx_usb_devctl_c()
+{
+  put("usbdevctl", "USBCTL");
+}
+
 int bx_usb_devctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **dev, bx_list_c *sr_list)
 {
   usbdev_type type = USB_DEV_TYPE_NONE;

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -69,7 +69,7 @@ IMPLEMENT_GUI_PLUGIN_CODE(nogui)
 
 void bx_nogui_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
-  put("NGUI");
+  put("NOGUI");
   UNUSED(argc);
   UNUSED(argv);
   UNUSED(headerbar_y);

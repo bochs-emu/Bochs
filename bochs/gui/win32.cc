@@ -594,7 +594,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   bx_bool gui_ci;
 
   gui_ci = !strcmp(SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE)->get_selected(), "win32config");
-  put("WGUI");
+  put("WINGUI");
 
   // prepare for possible fullscreen mode
   desktopWindow = GetDesktopWindow();

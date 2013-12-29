@@ -137,7 +137,7 @@ void libpcidev_LTX_plugin_fini(void)
 
 bx_pcidev_c::bx_pcidev_c()
 {
-  put("pcidev", "PCI2H");
+  put("pcidev", "PCIDEV");
 }
 
 bx_pcidev_c::~bx_pcidev_c()

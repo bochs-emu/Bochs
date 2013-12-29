@@ -5790,7 +5790,7 @@ simulation is starting.
     </row>
     <row>
       <entry>cirrus</entry>
-      <entry>CLVGA</entry>
+      <entry>CIRRUS</entry>
       <entry>Cirrus SVGA</entry>
     </row>
     <row>
@@ -5820,17 +5820,17 @@ simulation is starting.
     </row>
     <row>
       <entry>es1370</entry>
-      <entry>E1370</entry>
+      <entry>ES1370</entry>
       <entry>ES1370 soundcard</entry>
     </row>
     <row>
       <entry>extfpuirq</entry>
-      <entry>EFIRQ</entry>
+      <entry>EXFIRQ</entry>
       <entry>External FPU IRQ</entry>
     </row>
     <row>
       <entry>floppy</entry>
-      <entry>FDD</entry>
+      <entry>FLOPPY</entry>
       <entry>Floppy controller</entry>
     </row>
     <row>
@@ -5860,7 +5860,7 @@ simulation is starting.
     </row>
     <row>
       <entry>ioapic</entry>
-      <entry>IOAP</entry>
+      <entry>IOAPIC</entry>
       <entry>I/O APIC</entry>
     </row>
     <row>
@@ -5875,7 +5875,7 @@ simulation is starting.
     </row>
     <row>
       <entry>keymap</entry>
-      <entry>KMAP</entry>
+      <entry>KEYMAP</entry>
       <entry>Keyboard mapping</entry>
     </row>
     <row>
@@ -5889,7 +5889,7 @@ simulation is starting.
       <entry>Memory management</entry>
     </row>
     <row>
-      <entry>MGUI</entry>
+      <entry>MACGUI</entry>
       <entry>MGUI</entry>
       <entry>MacOS9 / MacOSX gui</entry>
     </row>
@@ -5899,8 +5899,8 @@ simulation is starting.
       <entry>NE2000 ethernet adapter</entry>
     </row>
     <row>
-      <entry>NGUI</entry>
-      <entry>NGUI</entry>
+      <entry>NOGUI</entry>
+      <entry>NOGUI</entry>
       <entry>GUI without input/output interface ("nogui")</entry>
     </row>
     <row>
@@ -5915,12 +5915,12 @@ simulation is starting.
     </row>
     <row>
       <entry>pci2isa</entry>
-      <entry>P2I</entry>
+      <entry>P2ISA</entry>
       <entry>PCI-to-ISA bridge</entry>
     </row>
     <row>
       <entry>pcidev</entry>
-      <entry>PCI2H</entry>
+      <entry>PCIDEV</entry>
       <entry>Host PCI device mapping</entry>
     </row>
     <row>
@@ -5954,8 +5954,8 @@ simulation is starting.
       <entry>82C54 timer core</entry>
     </row>
     <row>
-      <entry>PLGIN</entry>
-      <entry>PLGIN</entry>
+      <entry>PLUGIN</entry>
+      <entry>PLUGIN</entry>
       <entry>Plugin interface</entry>
     </row>
     <row>
@@ -5969,13 +5969,13 @@ simulation is starting.
       <entry>SB16 soundcard</entry>
     </row>
     <row>
-      <entry>SCSIC</entry>
-      <entry>SCSIC</entry>
+      <entry>SCSICD</entry>
+      <entry>SCSICD</entry>
       <entry>SCSI CD-ROM emulation for USB</entry>
     </row>
     <row>
-      <entry>SCSID</entry>
-      <entry>SCSID</entry>
+      <entry>SCSIHD</entry>
+      <entry>SCSIHD</entry>
       <entry>SCSI hard drive emulation for USB</entry>
     </row>
     <row>
@@ -6000,42 +6000,42 @@ simulation is starting.
     </row>
     <row>
       <entry>slowdown_timer</entry>
-      <entry>STIME</entry>
+      <entry>STIMER</entry>
       <entry>Slowdown timer</entry>
     </row>
     <row>
       <entry>speaker</entry>
-      <entry>SPEAK</entry>
+      <entry>PCSPK</entry>
       <entry>Lowlevel support for the PC speaker</entry>
     </row>
     <row>
-      <entry>SVGA</entry>
-      <entry>SVGA</entry>
+      <entry>VGAGUI</entry>
+      <entry>VGAGUI</entry>
       <entry>SVGA gui</entry>
     </row>
     <row>
-      <entry>TGUI</entry>
-      <entry>TGUI</entry>
+      <entry>TERM</entry>
+      <entry>TERM</entry>
       <entry>Term gui</entry>
     </row>
     <row>
       <entry>unmappped</entry>
-      <entry>UNMP</entry>
+      <entry>UNMAP</entry>
       <entry>Unmapped I/O handler</entry>
     </row>
     <row>
       <entry>usb_hid</entry>
-      <entry>USBHI</entry>
+      <entry>USBHID</entry>
       <entry>USB HID device emulation</entry>
     </row>
     <row>
       <entry>usb_hub</entry>
-      <entry>USBHB</entry>
+      <entry>USBHUB</entry>
       <entry>External USB hub emulation</entry>
     </row>
     <row>
       <entry>usb_msd</entry>
-      <entry>USBMS</entry>
+      <entry>USBMSD</entry>
       <entry>USB MSD (disk/cdrom) emulation</entry>
     </row>
     <row>
@@ -6070,12 +6070,12 @@ simulation is starting.
     </row>
     <row>
       <entry>virt_timer</entry>
-      <entry>VTIME</entry>
+      <entry>VTIMER</entry>
       <entry>Virtual timer</entry>
     </row>
     <row>
-      <entry>WGUI</entry>
-      <entry>WGUI</entry>
+      <entry>WINGUI</entry>
+      <entry>WINGUI</entry>
       <entry>WIN32 gui</entry>
     </row>
     <row>

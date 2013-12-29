@@ -122,7 +122,7 @@ void bx_io_redirect_entry_t::register_state(bx_param_c *parent)
 bx_ioapic_c::bx_ioapic_c(): enabled(0), base_addr(BX_IOAPIC_BASE_ADDR)
 {
   set_id(BX_IOAPIC_DEFAULT_ID);
-  put("ioapic", "IOAP");
+  put("ioapic", "IOAPIC");
 }
 
 bx_ioapic_c::~bx_ioapic_c()
