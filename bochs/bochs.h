@@ -291,11 +291,11 @@ public:
   }
 } logfunc_t;
 
-#define BX_LOGPREFIX_SIZE 51
+#define BX_LOGPREFIX_LEN 20
 
 class BOCHSAPI iofunctions {
   int magic;
-  char logprefix[BX_LOGPREFIX_SIZE];
+  char logprefix[BX_LOGPREFIX_LEN + 1];
   FILE *logfd;
   class logfunctions *log;
   void init(void);

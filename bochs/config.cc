@@ -1583,7 +1583,7 @@ void bx_init_options()
       "prefix",
       "Log output prefix",
       "Prefix prepended to log output",
-      "%t%e%d", BX_PATHNAME_LEN);
+      "%t%e%d", BX_LOGPREFIX_LEN);
   prefix->set_ask_format("Enter log prefix: [%s] ");
 
   path = new bx_param_filename_c(menu,

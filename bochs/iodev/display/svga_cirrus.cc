@@ -255,7 +255,7 @@ bx_svga_cirrus_c::~bx_svga_cirrus_c()
 void bx_svga_cirrus_c::init_vga_extension(void)
 {
   if (!strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "cirrus")) {
-    BX_CIRRUS_THIS put("cirrus", "CLVGA");
+    BX_CIRRUS_THIS put("cirrus", "CIRRUS");
     // initialize SVGA stuffs.
     BX_CIRRUS_THIS bx_vgacore_c::init_iohandlers(svga_read_handler, svga_write_handler);
     BX_CIRRUS_THIS bx_vgacore_c::init_systemtimer(svga_timer_handler, svga_param_handler);

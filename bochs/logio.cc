@@ -176,7 +176,7 @@ void iofunctions::set_log_prefix(const char* prefix)
 
 void iofunctions::out(int level, const char *prefix, const char *fmt, va_list ap)
 {
-  char c=' ', *s;
+  char c = ' ', *s;
   assert(magic==MAGIC_LOGNUM);
   assert(this != NULL);
   assert(logfd != NULL);
@@ -189,9 +189,9 @@ void iofunctions::out(int level, const char *prefix, const char *fmt, va_list ap
     default: break;
   }
 
-  s=logprefix;
-  while(*s) {
-    switch(*s) {
+  s = logprefix;
+  while (*s) {
+    switch (*s) {
       case '%':
         if(*(s+1)) s++;
         else break;
@@ -328,7 +328,7 @@ void logfunctions::put(const char *p)
 
 void logfunctions::put(const char *n, const char *p)
 {
-  char *tmpbuf=strdup("[     ]");   // if we ever have more than 32 chars,
+  char *tmpbuf=strdup("[      ]");  // if we ever have more than 32 chars,
                                     // we need to rethink this
 
   if (tmpbuf == NULL)
@@ -362,7 +362,7 @@ void logfunctions::info(const char *fmt, ...)
 
   assert(logio != NULL);
 
-  if(!onoff[LOGLEV_INFO]) return;
+  if (!onoff[LOGLEV_INFO]) return;
 
   va_start(ap, fmt);
   logio->out(LOGLEV_INFO, prefix, fmt, ap);

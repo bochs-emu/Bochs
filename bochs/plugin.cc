@@ -536,16 +536,14 @@ plugin_startup(void)
   pluginRegisterTimer = builtinRegisterTimer;
   pluginActivateTimer = builtinActivateTimer;
 
-#if BX_PLUGINS
   pluginlog = new logfunctions();
-  pluginlog->put("PLGIN");
-#if !defined(_MSC_VER)
+  pluginlog->put("PLUGIN");
+#if BX_PLUGINS && !defined(_MSC_VER)
   int status = lt_dlinit();
   if (status != 0) {
     BX_ERROR(("initialization error in ltdl library (for loading plugins)"));
     BX_PANIC(("error message was: %s", lt_dlerror()));
   }
-#endif
 #endif
 }
 
