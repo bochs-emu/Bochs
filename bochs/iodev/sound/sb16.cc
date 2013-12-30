@@ -59,7 +59,7 @@ void sb16_init_options(void)
     "enabled",
     "Enable SB16 emulation",
     "Enables the SB16 emulation",
-    0);
+    1);
   bx_param_num_c *midimode = new bx_param_num_c(menu,
     "midimode",
     "Midi mode",

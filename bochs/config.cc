@@ -220,7 +220,7 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports)
   menu->set_options(menu->SHOW_PARENT);
   sprintf(label, "Enable %s emulation", usb_name);
   sprintf(descr, "Enables the %s emulation", usb_name);
-  bx_param_bool_c *enabled = new bx_param_bool_c(menu, "enabled", label, descr, 0);
+  bx_param_bool_c *enabled = new bx_param_bool_c(menu, "enabled", label, descr, 1);
   bx_list_c *deplist = new bx_list_c(NULL);
   for (int i = 0; i < maxports; i++) {
     sprintf(name, "port%d", i+1);

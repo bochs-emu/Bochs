@@ -2,8 +2,8 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2003  Fen Systems Ltd.
-//  http://www.fensystems.co.uk/
+//  Copyright (C) 2003  Fen Systems Ltd. (http://www.fensystems.co.uk/)
+//  Copyright (C) 2003-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -50,7 +50,7 @@ void pnic_init_options(void)
     "enabled",
     "Enable Pseudo NIC emulation",
     "Enables the Pseudo NIC emulation",
-    0);
+    1);
   SIM->init_std_nic_options("Pseudo NIC", menu);
   enabled->set_dependent_list(menu->clone());
 }

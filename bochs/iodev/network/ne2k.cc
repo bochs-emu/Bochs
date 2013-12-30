@@ -59,7 +59,7 @@ void ne2k_init_options(void)
     "enabled",
     "Enable NE2K NIC emulation",
     "Enables the NE2K NIC emulation",
-    0);
+    1);
   bx_param_num_c *ioaddr = new bx_param_num_c(menu,
     "ioaddr",
     "NE2K I/O Address",
@@ -76,7 +76,6 @@ void ne2k_init_options(void)
   irq->set_options(irq->USE_SPIN_CONTROL);
   SIM->init_std_nic_options("NE2K", menu);
   enabled->set_dependent_list(menu->clone());
-
 }
 
 Bit32s ne2k_options_parser(const char *context, int num_params, char *params[])

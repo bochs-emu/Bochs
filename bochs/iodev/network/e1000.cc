@@ -296,7 +296,7 @@ void e1000_init_options(void)
     "enabled",
     "Enable Intel(R) Gigabit Ethernet emulation",
     "Enables the Intel(R) Gigabit Ethernet emulation",
-    0);
+    1);
   SIM->init_std_nic_options("Intel(R) Gigabit Ethernet", menu);
   enabled->set_dependent_list(menu->clone());
 }

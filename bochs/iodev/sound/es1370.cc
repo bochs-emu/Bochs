@@ -111,7 +111,7 @@ void es1370_init_options(void)
     "enabled",
     "Enable ES1370 emulation",
     "Enables the ES1370 emulation",
-    0);
+    1);
   enabled->set_enabled(BX_SUPPORT_ES1370);
 
   bx_param_enum_c *wavemode = new bx_param_enum_c(menu,
