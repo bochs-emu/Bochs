@@ -98,7 +98,7 @@ void voodoo_init_options(void)
     "enabled",
     "Enable Voodoo Graphics emulation",
     "Enables the 3dfx Voodoo Graphics emulation",
-    0);
+    1);
   new bx_param_enum_c(menu,
     "model",
     "Voodoo model",
@@ -156,14 +156,17 @@ bx_voodoo_c::bx_voodoo_c()
   put("voodoo", "VOODOO");
   s.mode_change_timer_id = BX_NULL_TIMER_HANDLE;
   s.update_timer_id = BX_NULL_TIMER_HANDLE;
+  v = NULL;
 }
 
 bx_voodoo_c::~bx_voodoo_c()
 {
-  free(v->fbi.ram);
-  free(v->tmu[0].ram);
-  free(v->tmu[1].ram);
-  delete v;
+  if (v != NULL) {
+    free(v->fbi.ram);
+    free(v->tmu[0].ram);
+    free(v->tmu[1].ram);
+    delete v;
+  }
 
   BX_DEBUG(("Exit"));
 }
@@ -200,7 +203,16 @@ void bx_voodoo_c::init(void)
 
   v = new voodoo_state;
   Bit8u model = (Bit8u)SIM->get_param_enum("model", base)->get();
-  BX_VOODOO_THIS pci_conf[0x08] = (model == VOODOO_2) ? 2 : 1;
+  if (model == VOODOO_2) {
+    BX_VOODOO_THIS pci_conf[0x02] = 0x02;
+    BX_VOODOO_THIS pci_conf[0x08] = 0x02;
+    BX_VOODOO_THIS pci_conf[0x0a] = 0x80;
+    BX_VOODOO_THIS pci_conf[0x0b] = 0x03;
+    BX_VOODOO_THIS pci_conf[0x10] = 0x08;
+  } else {
+    BX_VOODOO_THIS pci_conf[0x02] = 0x01;
+    BX_VOODOO_THIS pci_conf[0x08] = 0x01;
+  }
   voodoo_init(model);
 
   BX_INFO(("Voodoo initialized"));
@@ -215,15 +227,12 @@ void bx_voodoo_c::reset(unsigned type)
     unsigned char val;
   } reset_vals[] = {
     { 0x00, 0x1a }, { 0x01, 0x12 },
-    { 0x02, 0x01 }, { 0x03, 0x00 },
     { 0x04, 0x00 }, { 0x05, 0x00 }, // command io / memory
     { 0x06, 0x00 }, { 0x07, 0x00 }, // status
     { 0x09, 0x00 },                 // interface
-    { 0x0a, 0x00 },                 // class_sub
-    { 0x0b, 0x00 },                 // class_base generic
     { 0x0e, 0x00 },                 // header type generic
     // address space 0x10 - 0x13
-    { 0x10, 0x00 }, { 0x11, 0x00 },
+    { 0x11, 0x00 },
     { 0x12, 0x00 }, { 0x13, 0x00 },
     { 0x3c, 0x00 },                 // IRQ
     { 0x3d, BX_PCI_INTA },          // INT
