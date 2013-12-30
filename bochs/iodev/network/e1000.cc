@@ -358,32 +358,17 @@ void libe1000_LTX_plugin_fini(void)
   delete theE1000Device;
 }
 
-// temporary helper functions 
-// we should use host from/to little endian conversion directly
+// macros and helper functions
 
-Bit16u cpu_to_le16(Bit16u value)
-{
-  Bit16u hvalue;
-
-  WriteHostWordToLittleEndian(&hvalue, value);
-  return hvalue;
-}
-
-Bit32u cpu_to_le32(Bit32u value)
-{
-  Bit32u hvalue;
-
-  WriteHostDWordToLittleEndian(&hvalue, value);
-  return hvalue;
-}
-
-Bit64u cpu_to_le64(Bit64u value)
-{
-  Bit64u hvalue;
-
-  WriteHostQWordToLittleEndian(&hvalue, value);
-  return hvalue;
-}
+#if defined (BX_LITTLE_ENDIAN)
+#define cpu_to_le16(val) (val)
+#define cpu_to_le32(val) (val)
+#define cpu_to_le64(val) (val)
+#else
+#define cpu_to_le16(val) bx_bswap16(val)
+#define cpu_to_le32(val) bx_bswap32(val)
+#define cpu_to_le64(val) bx_bswap64(val)
+#endif
 
 #define le16_to_cpu  cpu_to_le16
 #define le32_to_cpu  cpu_to_le32
