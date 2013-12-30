@@ -2372,32 +2372,22 @@ void bx_svga_cirrus_c::svga_mmio_blt_write(Bit32u address,Bit8u value)
 
 void bx_svga_cirrus_c::svga_init_pcihandlers(void)
 {
-  int i;
-
   Bit8u devfunc = 0x00;
   DEV_register_pci_handlers(BX_CIRRUS_THIS_PTR,
      &devfunc, "cirrus", "SVGA Cirrus PCI");
 
-  for (i=0; i<256; i++) {
-    BX_CIRRUS_THIS pci_conf[i] = 0x0;
-  }
+  // initialize readonly registers
+  BX_CIRRUS_THIS init_pci_conf(PCI_VENDOR_CIRRUS, PCI_DEVICE_CLGD5446, 0x00,
+    (PCI_CLASS_BASE_DISPLAY << 16) | (PCI_CLASS_SUB_VGA << 8),
+    PCI_CLASS_HEADERTYPE_00h);
+  BX_CIRRUS_THIS pci_conf[0x04] = (PCI_COMMAND_IOACCESS | PCI_COMMAND_MEMACCESS);
 
-  WriteHostWordToLittleEndian(
-    &BX_CIRRUS_THIS pci_conf[0x00], PCI_VENDOR_CIRRUS);
-  WriteHostWordToLittleEndian(
-    &BX_CIRRUS_THIS pci_conf[0x02], PCI_DEVICE_CLGD5446);
-  WriteHostWordToLittleEndian(
-    &BX_CIRRUS_THIS pci_conf[0x04],
-    (PCI_COMMAND_IOACCESS | PCI_COMMAND_MEMACCESS));
   WriteHostDWordToLittleEndian(
     &BX_CIRRUS_THIS pci_conf[0x10],
     (PCI_MAP_MEM | PCI_MAP_MEMFLAGS_32BIT | PCI_MAP_MEMFLAGS_CACHEABLE));
   WriteHostDWordToLittleEndian(
     &BX_CIRRUS_THIS pci_conf[0x14],
     (PCI_MAP_MEM | PCI_MAP_MEMFLAGS_32BIT));
-  BX_CIRRUS_THIS pci_conf[0x0a] = PCI_CLASS_SUB_VGA;
-  BX_CIRRUS_THIS pci_conf[0x0b] = PCI_CLASS_BASE_DISPLAY;
-  BX_CIRRUS_THIS pci_conf[0x0e] = PCI_CLASS_HEADERTYPE_00h;
 
   BX_CIRRUS_THIS pci_base_address[0] = 0;
   BX_CIRRUS_THIS pci_base_address[1] = 0;

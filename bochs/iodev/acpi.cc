@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2006  Volker Ruppert
+//  Copyright (C) 2006-2013  Volker Ruppert
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,6 @@
 //
 // PIIX4 ACPI support
 //
-
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
@@ -125,8 +124,6 @@ void bx_acpi_ctrl_c::init(void)
 {
   // called once when bochs initializes
 
-  unsigned i;
-
   BX_ACPI_THIS s.devfunc = BX_PCI_DEVICE(1, 3);
   DEV_register_pci_handlers(this, &BX_ACPI_THIS s.devfunc, BX_PLUGIN_ACPI,
                             "ACPI Controller");
@@ -137,28 +134,12 @@ void bx_acpi_ctrl_c::init(void)
   }
   DEV_register_iowrite_handler(this, write_handler, ACPI_DBG_IO_ADDR, "ACPI", 4);
 
-  for (i=0; i<256; i++) {
-    BX_ACPI_THIS pci_conf[i] = 0x0;
-  }
   BX_ACPI_THIS s.pm_base = 0x0;
   BX_ACPI_THIS s.sm_base = 0x0;
 
-  // readonly registers
-  static const struct init_vals_t {
-    unsigned      addr;
-    unsigned char val;
-  } init_vals[] = {
-    { 0x00, 0x86 }, { 0x01, 0x80 },
-    { 0x02, 0x13 }, { 0x03, 0x71 },
-    { 0x08, 0x03 },                 // revision number
-    { 0x0a, 0x80 },                 // other bridge device
-    { 0x0b, 0x06 },                 // bridge device
-    { 0x0e, 0x00 },                 // header type
-    { 0x3d, BX_PCI_INTA }           // interrupt pin #1
-  };
-  for (i = 0; i < sizeof(init_vals) / sizeof(*init_vals); ++i) {
-    BX_ACPI_THIS pci_conf[init_vals[i].addr] = init_vals[i].val;
-  }
+  // initialize readonly registers
+  init_pci_conf(0x8086, 0x7113, 0x03, 0x068000, 0x00);
+  BX_ACPI_THIS pci_conf[0x3d] = BX_PCI_INTA;
 }
 
 void bx_acpi_ctrl_c::reset(unsigned type)

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2012  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -1138,6 +1138,20 @@ void bx_devices_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned 
 }
 
 // generic PCI support
+void bx_pci_device_stub_c::init_pci_conf(Bit16u vid, Bit16u did, Bit8u rev, Bit32u classc, Bit8u headt)
+{
+  memset(pci_conf, 0, 256);
+  pci_conf[0x00] = (Bit8u)(vid & 0xff);
+  pci_conf[0x01] = (Bit8u)(vid >> 8);
+  pci_conf[0x02] = (Bit8u)(did & 0xff);
+  pci_conf[0x03] = (Bit8u)(did >> 8);
+  pci_conf[0x08] = rev;
+  pci_conf[0x09] = (Bit8u)(classc & 0xff);
+  pci_conf[0x0a] = (Bit8u)((classc >> 8) & 0xff);
+  pci_conf[0x0b] = (Bit8u)((classc >> 16) & 0xff);
+  pci_conf[0x0e] = headt;
+}
+
 void bx_pci_device_stub_c::register_pci_state(bx_list_c *list)
 {
   char name[6];

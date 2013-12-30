@@ -100,8 +100,8 @@ public:
 
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len) {}
 
+  void init_pci_conf(Bit16u vid, Bit16u did, Bit8u rev, Bit32u classc, Bit8u headt);
   void register_pci_state(bx_list_c *list);
-
   void load_pci_rom(const char *path);
 
 protected:

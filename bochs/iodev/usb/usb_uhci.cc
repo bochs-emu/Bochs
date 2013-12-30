@@ -174,9 +174,9 @@ void bx_usb_uhci_c::init(void)
   DEV_register_pci_handlers(this, &BX_UHCI_THIS hub.devfunc, BX_PLUGIN_USB_UHCI,
                             "Experimental USB UHCI");
 
-  for (i=0; i<256; i++) {
-    BX_UHCI_THIS pci_conf[i] = 0x0;
-  }
+  // initialize readonly registers
+  init_pci_conf(0x8086, 0x7020, 0x01, 0x0c0300, 0x00);
+  BX_UHCI_THIS pci_conf[0x3d] = BX_PCI_INTD;
 
   BX_UHCI_THIS pci_base_address[4] = 0x0;
 
@@ -212,21 +212,13 @@ void bx_usb_uhci_c::reset(unsigned type)
       unsigned      addr;
       unsigned char val;
     } reset_vals[] = {
-      { 0x00, 0x86 }, { 0x01, 0x80 }, // 0x8086 = vendor
-      { 0x02, 0x20 }, { 0x03, 0x70 }, // 0x7020 = device
       { 0x04, 0x05 }, { 0x05, 0x00 }, // command_io
       { 0x06, 0x80 }, { 0x07, 0x02 }, // status
-      { 0x08, 0x01 },                 // revision number
-      { 0x09, 0x00 },                 // interface
-      { 0x0a, 0x03 },                 // class_sub  USB Host Controller
-      { 0x0b, 0x0c },                 // class_base Serial Bus Controller
-      { 0x0D, 0x20 },                 // bus latency
-      { 0x0e, 0x00 },                 // header_type_generic
+      { 0x0d, 0x20 },                 // bus latency
       // address space 0x20 - 0x23
       { 0x20, 0x01 }, { 0x21, 0x00 },
       { 0x22, 0x00 }, { 0x23, 0x00 },
       { 0x3c, 0x00 },                 // IRQ
-      { 0x3d, BX_PCI_INTD },          // INT
       { 0x60, 0x10 },                 // USB revision 1.0
       { 0x6a, 0x01 },                 // USB clock
       { 0xc1, 0x20 }                  // PIRQ enable

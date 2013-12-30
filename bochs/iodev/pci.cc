@@ -76,19 +76,11 @@ void bx_pci_bridge_c::init(void)
   BX_PCI_THIS chipset = SIM->get_param_enum(BXPN_PCI_CHIPSET)->get();
   DEV_register_pci_handlers(this, &devfunc, BX_PLUGIN_PCI, csname[BX_PCI_THIS chipset]);
 
-  for (i=0; i<256; i++)
-    BX_PCI_THIS pci_conf[i] = 0x0;
-  // readonly registers
-  BX_PCI_THIS pci_conf[0x00] = 0x86;
-  BX_PCI_THIS pci_conf[0x01] = 0x80;
-  BX_PCI_THIS pci_conf[0x0b] = 0x06;
+  // initialize readonly registers
   if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
-    BX_PCI_THIS pci_conf[0x02] = 0x37;
-    BX_PCI_THIS pci_conf[0x03] = 0x12;
+    init_pci_conf(0x8086, 0x1237, 0x00, 0x060000, 0x00);
   } else {
-    BX_PCI_THIS pci_conf[0x02] = 0x22;
-    BX_PCI_THIS pci_conf[0x03] = 0x01;
-    BX_PCI_THIS pci_conf[0x08] = 0x02;
+    init_pci_conf(0x8086, 0x0122, 0x02, 0x060000, 0x00);
   }
 
   // DRAM module setup

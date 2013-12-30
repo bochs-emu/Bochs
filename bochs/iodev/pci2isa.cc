@@ -88,27 +88,17 @@ void bx_piix3_c::init(void)
   DEV_register_ioread_handler(this, read_handler, 0x04D1, "PIIX3 PCI-to-ISA bridge", 1);
   DEV_register_ioread_handler(this, read_handler, 0x0CF9, "PIIX3 PCI-to-ISA bridge", 1);
 
-  for (i=0; i<256; i++)
-    BX_P2I_THIS pci_conf[i] = 0x0;
   for (i=0; i<16; i++)
     BX_P2I_THIS s.irq_registry[i] = 0x0;
   for (i=0; i<16; i++)
     BX_P2I_THIS s.irq_level[i] = 0x0;
-  // readonly registers
-  BX_P2I_THIS pci_conf[0x00] = 0x86;
-  BX_P2I_THIS pci_conf[0x01] = 0x80;
+  // initialize readonly registers
   if (BX_P2I_THIS s.chipset == BX_PCI_CHIPSET_I440FX) {
-    BX_P2I_THIS pci_conf[0x02] = 0x00;
-    BX_P2I_THIS pci_conf[0x03] = 0x70;
+    init_pci_conf(0x8086, 0x7000, 0x00, 0x060100, 0x80);
   } else {
-    BX_P2I_THIS pci_conf[0x02] = 0x2e;
-    BX_P2I_THIS pci_conf[0x03] = 0x12;
-    BX_P2I_THIS pci_conf[0x08] = 0x01;
+    init_pci_conf(0x8086, 0x122e, 0x01, 0x060100, 0x80);
   }
   BX_P2I_THIS pci_conf[0x04] = 0x07;
-  BX_P2I_THIS pci_conf[0x0a] = 0x01;
-  BX_P2I_THIS pci_conf[0x0b] = 0x06;
-  BX_P2I_THIS pci_conf[0x0e] = 0x80;
   // irq routing registers
   BX_P2I_THIS pci_conf[0x60] = 0x80;
   BX_P2I_THIS pci_conf[0x61] = 0x80;

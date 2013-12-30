@@ -181,8 +181,10 @@ void bx_usb_xhci_c::init(void)
   DEV_register_pci_handlers(this, &BX_XHCI_THIS hub.devfunc, BX_PLUGIN_USB_XHCI,
                             "Experimental USB xHCI");
 
-  for (i=0; i<256; i++)
-    BX_XHCI_THIS pci_conf[i] = 0x0;
+  // initialize readonly registers
+  // TODO: Change the VendorID and DeviceID to something else ????
+  init_pci_conf(0x1033, 0x0194, 0x03, 0x0c0330, 0x00);
+  BX_XHCI_THIS pci_conf[0x3d] = BX_PCI_INTD;
 
   BX_XHCI_THIS pci_base_address[0] = 0x0;
 
@@ -223,17 +225,10 @@ void bx_usb_xhci_c::reset(unsigned type)
       unsigned      addr;
       unsigned char val;
     } reset_vals[] = {
-      { 0x00, 0x33 }, { 0x01, 0x10 }, // 0x1033 = vendor  // TODO: Change the VendorID and DeviceID to something else ????
-      { 0x02, 0x94 }, { 0x03, 0x01 }, // 0x0194 = device
       { 0x04, 0x06 }, { 0x05, 0x01 }, // command_io
       { 0x06, 0x10 }, { 0x07, 0x00 }, // status (has caps list)
-      { 0x08, 0x03 },                 // revision number = 0x03
-      { 0x09, 0x30 },                 // interface
-      { 0x0A, 0x03 },                 // class_sub  USB Host Controller
-      { 0x0B, 0x0C },                 // class_base Serial Bus Controller
-      { 0x0C, 0x10 },                 // cache line size
-      { 0x0D, 0x00 },                 // bus latency
-      { 0x0E, 0x00 },                 // header_type_generic
+      { 0x0c, 0x10 },                 // cache line size
+      { 0x0d, 0x00 },                 // bus latency
 
       // address space 0x10 - 0x13
       { 0x10, 0x04 }, { 0x11, 0x00 }, //
@@ -245,7 +240,6 @@ void bx_usb_xhci_c::reset(unsigned type)
       { 0x34, 0x50 },                 // offset of capabilities list within configuration space
 
       { 0x3C, 0x0A },                 // IRQ
-      { 0x3D, BX_PCI_INTD },          // INT
       { 0x3E, 0x00 },                 // minimum time bus master needs PCI bus ownership, in 250ns units
       { 0x3F, 0x00 },                 // maximum latency, in 250ns units (bus masters only) (read-only)
 

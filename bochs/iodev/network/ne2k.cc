@@ -194,18 +194,10 @@ void bx_ne2k_c::init(void)
     DEV_register_pci_handlers(this, &BX_NE2K_THIS s.devfunc,
         BX_PLUGIN_NE2K, devname);
 
-    for (unsigned i=0; i<256; i++)
-      BX_NE2K_THIS pci_conf[i] = 0x0;
-    // readonly registers
-    BX_NE2K_THIS pci_conf[0x00] = 0xec;
-    BX_NE2K_THIS pci_conf[0x01] = 0x10;
-    BX_NE2K_THIS pci_conf[0x02] = 0x29;
-    BX_NE2K_THIS pci_conf[0x03] = 0x80;
+    // initialize readonly registers
+    init_pci_conf(0x10ec, 0x8029, 0x00, 0x020000, 0x00);
     BX_NE2K_THIS pci_conf[0x04] = 0x01;
     BX_NE2K_THIS pci_conf[0x07] = 0x02;
-    BX_NE2K_THIS pci_conf[0x0a] = 0x00;
-    BX_NE2K_THIS pci_conf[0x0b] = 0x02;
-    BX_NE2K_THIS pci_conf[0x0e] = 0x00;
     BX_NE2K_THIS pci_conf[0x10] = 0x01;
     BX_NE2K_THIS pci_conf[0x3d] = BX_PCI_INTA;
     BX_NE2K_THIS s.base_address = 0x0;

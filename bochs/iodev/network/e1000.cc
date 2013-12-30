@@ -455,9 +455,10 @@ void bx_e1000_c::init(void)
   DEV_register_pci_handlers(this, &BX_E1000_THIS s.devfunc, BX_PLUGIN_E1000,
                             "Experimental Intel(R) Gigabit Ethernet");
 
-  for (unsigned i=0; i<256; i++) {
-    BX_E1000_THIS pci_conf[i] = 0x0;
-  }
+  // initialize readonly registers
+  init_pci_conf(0x8086, 0x100e, 0x03, 0x020000, 0x00);
+  BX_E1000_THIS pci_conf[0x3d] = BX_PCI_INTA;
+
   BX_E1000_THIS pci_base_address[0] = 0;
   BX_E1000_THIS pci_base_address[1] = 0;
   BX_E1000_THIS pci_rom_address = 0;
@@ -488,15 +489,8 @@ void bx_e1000_c::reset(unsigned type)
     unsigned      addr;
     unsigned char val;
   } reset_vals[] = {
-    { 0x00, 0x86 }, { 0x01, 0x80 },
-    { 0x02, 0x0e }, { 0x03, 0x10 },
     { 0x04, 0x03 }, { 0x05, 0x00 }, // command io / memory
     { 0x06, 0x00 }, { 0x07, 0x00 }, // status
-    { 0x08, 0x03 },                 // revision number
-    { 0x09, 0x00 },                 // interface
-    { 0x0a, 0x00 },                 // class_sub
-    { 0x0b, 0x02 },                 // class_base Network Controller
-    { 0x0e, 0x00 },                 // header type generic
     // address space 0x10 - 0x13
     { 0x10, 0x00 }, { 0x11, 0x00 },
     { 0x12, 0x00 }, { 0x13, 0x00 },
@@ -504,8 +498,6 @@ void bx_e1000_c::reset(unsigned type)
     { 0x14, 0x01 }, { 0x15, 0x00 },
     { 0x16, 0x00 }, { 0x17, 0x00 },
     { 0x3c, 0x00 },                 // IRQ
-    { 0x3d, BX_PCI_INTA },          // INT
-
   };
   for (i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
       BX_E1000_THIS pci_conf[reset_vals[i].addr] = reset_vals[i].val;

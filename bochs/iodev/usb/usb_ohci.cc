@@ -183,8 +183,8 @@ void bx_usb_ohci_c::init(void)
   DEV_register_pci_handlers(this, &BX_OHCI_THIS hub.devfunc, BX_PLUGIN_USB_OHCI,
                             "Experimental USB OHCI");
 
-  for (i=0; i<256; i++)
-    BX_OHCI_THIS pci_conf[i] = 0x0;
+  // initialize readonly registers
+  init_pci_conf(0x11c1, 0x5803, 0x11, 0x0c0310, 0x00);
 
   BX_OHCI_THIS pci_base_address[0] = 0x0;
   BX_OHCI_THIS hub.ohci_done_count = 7;
@@ -225,16 +225,9 @@ void bx_usb_ohci_c::reset(unsigned type)
       unsigned      addr;
       unsigned char val;
     } reset_vals[] = {
-      { 0x00, 0xC1 }, { 0x01, 0x11 }, // 0x11C1 = vendor
-      { 0x02, 0x03 }, { 0x03, 0x58 }, // 0x5803 = device
       { 0x04, 0x06 }, { 0x05, 0x00 }, // command_io
       { 0x06, 0x10 }, { 0x07, 0x02 }, // status (bit 4 = 1, has capabilities list.)
-      { 0x08, 0x11 },                 // revision number
-      { 0x09, 0x10 },                 // interface
-      { 0x0a, 0x03 },                 // class_sub  USB Host Controller
-      { 0x0b, 0x0c },                 // class_base Serial Bus Controller
-      { 0x0D, 0x40 },                 // bus latency
-      { 0x0e, 0x00 },                 // header_type_generic
+      { 0x0d, 0x40 },                 // bus latency
 
       // address space 0x10 - 0x13
       { 0x10, 0x00 }, { 0x11, 0x50 }, //

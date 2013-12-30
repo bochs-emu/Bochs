@@ -151,9 +151,9 @@ void bx_pcipnic_c::init(void)
   DEV_register_pci_handlers(this, &BX_PNIC_THIS s.devfunc, BX_PLUGIN_PCIPNIC,
                             "Experimental PCI Pseudo NIC");
 
-  for (unsigned i=0; i<256; i++) {
-    BX_PNIC_THIS pci_conf[i] = 0x0;
-  }
+  // initialize readonly registers
+  init_pci_conf(PNIC_PCI_VENDOR, PNIC_PCI_DEVICE, 0x01, 0x020000, 0x00);
+  BX_PNIC_THIS pci_conf[0x3d] = BX_PCI_INTA;
 
   BX_PNIC_THIS s.statusbar_id = bx_gui->register_statusitem("PNIC", 1);
 
@@ -178,23 +178,13 @@ void bx_pcipnic_c::reset(unsigned type)
     unsigned      addr;
     unsigned char val;
   } reset_vals[] = {
-    { 0x00, PNIC_PCI_VENDOR & 0xff },
-    { 0x01, PNIC_PCI_VENDOR >> 8 },
-    { 0x02, PNIC_PCI_DEVICE & 0xff },
-    { 0x03, PNIC_PCI_DEVICE >> 8 },
     { 0x04, 0x01 }, { 0x05, 0x00 }, // command_io
     { 0x06, 0x00 }, { 0x07, 0x00 }, // status
-    { 0x08, 0x01 },                 // revision number
-    { 0x09, 0x00 },                 // interface
-    { 0x0a, 0x00 },                 // class_sub
-    { 0x0b, 0x02 },                 // class_base Network Controller
-    { 0x0D, 0x20 },                 // bus latency
-    { 0x0e, 0x00 },                 // header_type_generic
+    { 0x0d, 0x20 },                 // bus latency
     // address space 0x20 - 0x23
     { 0x20, 0x01 }, { 0x21, 0x00 },
     { 0x22, 0x00 }, { 0x23, 0x00 },
     { 0x3c, 0x00, },                // IRQ
-    { 0x3d, BX_PCI_INTA },          // INT
     { 0x6a, 0x01 },                 // PNIC clock
     { 0xc1, 0x20 }                  // PIRQ enable
 

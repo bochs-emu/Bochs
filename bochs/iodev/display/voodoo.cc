@@ -186,11 +186,6 @@ void bx_voodoo_c::init(void)
   DEV_register_pci_handlers(this, &BX_VOODOO_THIS s.devfunc, BX_PLUGIN_VOODOO,
                             "Experimental 3dfx Voodoo Graphics (SST-1/2)");
 
-  for (unsigned i=0; i<256; i++) {
-    BX_VOODOO_THIS pci_conf[i] = 0x0;
-  }
-  BX_VOODOO_THIS pci_base_address[0] = 0;
-
   if (BX_VOODOO_THIS s.mode_change_timer_id == BX_NULL_TIMER_HANDLE) {
     BX_VOODOO_THIS s.mode_change_timer_id = bx_virt_timer.register_timer(this, mode_change_timer_handler,
        1000, 0, 0, "voodoo_mode_change");
@@ -204,15 +199,14 @@ void bx_voodoo_c::init(void)
   v = new voodoo_state;
   Bit8u model = (Bit8u)SIM->get_param_enum("model", base)->get();
   if (model == VOODOO_2) {
-    BX_VOODOO_THIS pci_conf[0x02] = 0x02;
-    BX_VOODOO_THIS pci_conf[0x08] = 0x02;
-    BX_VOODOO_THIS pci_conf[0x0a] = 0x80;
-    BX_VOODOO_THIS pci_conf[0x0b] = 0x03;
+    init_pci_conf(0x121a, 0x0002, 0x02, 0x038000, 0x00);
     BX_VOODOO_THIS pci_conf[0x10] = 0x08;
   } else {
-    BX_VOODOO_THIS pci_conf[0x02] = 0x01;
-    BX_VOODOO_THIS pci_conf[0x08] = 0x01;
+    init_pci_conf(0x121a, 0x0001, 0x01, 0x000000, 0x00);
   }
+  BX_VOODOO_THIS pci_conf[0x3d] = BX_PCI_INTA;
+  BX_VOODOO_THIS pci_base_address[0] = 0;
+
   voodoo_init(model);
 
   BX_INFO(("Voodoo initialized"));
@@ -226,16 +220,12 @@ void bx_voodoo_c::reset(unsigned type)
     unsigned      addr;
     unsigned char val;
   } reset_vals[] = {
-    { 0x00, 0x1a }, { 0x01, 0x12 },
     { 0x04, 0x00 }, { 0x05, 0x00 }, // command io / memory
     { 0x06, 0x00 }, { 0x07, 0x00 }, // status
-    { 0x09, 0x00 },                 // interface
-    { 0x0e, 0x00 },                 // header type generic
     // address space 0x10 - 0x13
     { 0x11, 0x00 },
     { 0x12, 0x00 }, { 0x13, 0x00 },
     { 0x3c, 0x00 },                 // IRQ
-    { 0x3d, BX_PCI_INTA },          // INT
     // initEnable
     { 0x40, 0x00 }, { 0x41, 0x00 },
     { 0x42, 0x00 }, { 0x43, 0x00 },

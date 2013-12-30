@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2012  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //  PCI VGA dummy adapter Copyright (C) 2002,2003  Mike Nordell
 //
 //  This library is free software; you can redistribute it and/or
@@ -155,31 +155,16 @@ void bx_vga_c::init_vga_extension(void)
   }
 #if BX_SUPPORT_PCI
   Bit8u devfunc = 0x00;
-  unsigned i;
 
   if (BX_VGA_THIS pci_enabled) {
     DEV_register_pci_handlers(this, &devfunc, "pcivga", "Experimental PCI VGA");
-    for (i = 0; i < 256; i++) {
-      BX_VGA_THIS pci_conf[i] = 0x0;
-    }
 
-    // readonly registers
-    static const struct init_vals_t {
-      unsigned      addr;
-      unsigned char val;
-    } init_vals[] = {
-      // Note that the values for vendor and device id are selected at random!
-      // There might actually be "real" values for "experimental" vendor and
-      // device that should be used!
-      { 0x00, 0x34 }, { 0x01, 0x12 }, // 0x1234 - experimental vendor
-      { 0x02, 0x11 }, { 0x03, 0x11 }, // 0x1111 - experimental device
-      { 0x0a, 0x00 },                 // class_sub  VGA controller
-      { 0x0b, 0x03 },                 // class_base display
-      { 0x0e, 0x00 }                  // header_type_generic
-    };
-    for (i = 0; i < sizeof(init_vals) / sizeof(*init_vals); ++i) {
-      BX_VGA_THIS pci_conf[init_vals[i].addr] = init_vals[i].val;
-    }
+    // initialize readonly registers
+    // Note that the values for vendor and device id are selected at random!
+    // There might actually be "real" values for "experimental" vendor and
+    // device that should be used!
+    init_pci_conf(0x1234, 0x1111, 0x00, 0x030000, 0x00);
+
     if (BX_VGA_THIS vbe_present) {
       BX_VGA_THIS pci_conf[0x10] = 0x08;
       BX_VGA_THIS pci_base_address[0] = 0;

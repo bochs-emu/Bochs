@@ -218,9 +218,10 @@ void bx_es1370_c::init(void)
   DEV_register_pci_handlers(this, &BX_ES1370_THIS s.devfunc, BX_PLUGIN_ES1370,
                             "Experimental ES1370 soundcard");
 
-  for (unsigned i=0; i<256; i++) {
-    BX_ES1370_THIS pci_conf[i] = 0x0;
-  }
+  // initialize readonly registers
+  init_pci_conf(0x1274, 0x5000, 0x00, 0x040100, 0x00);
+  BX_ES1370_THIS pci_conf[0x3d] = BX_PCI_INTA;
+
   BX_ES1370_THIS pci_base_address[0] = 0;
 
   BX_ES1370_THIS soundmod = DEV_sound_get_module();
@@ -265,22 +266,14 @@ void bx_es1370_c::reset(unsigned type)
     unsigned      addr;
     unsigned char val;
   } reset_vals[] = {
-    { 0x00, 0x74 }, { 0x01, 0x12 },
-    { 0x02, 0x00 }, { 0x03, 0x50 },
-    { 0x04, 0x05 }, { 0x05, 0x00 },	// command_io
-    { 0x06, 0x00 }, { 0x07, 0x04 },	// status
-    { 0x08, 0x00 },                 // revision number
-    { 0x09, 0x00 },                 // interface
-    { 0x0a, 0x01 },                 // class_sub
-    { 0x0b, 0x04 },                 // class_base Multimedia Audio Device
-    { 0x0e, 0x00 },                 // header type generic
+    { 0x04, 0x05 }, { 0x05, 0x00 }, // command_io
+    { 0x06, 0x00 }, { 0x07, 0x04 }, // status
     // address space 0x10 - 0x13
     { 0x10, 0x01 }, { 0x11, 0x00 },
     { 0x12, 0x00 }, { 0x13, 0x00 },
     { 0x2c, 0x42 }, { 0x2d, 0x49 }, // subsystem vendor
     { 0x2e, 0x4c }, { 0x2f, 0x4c }, // subsystem id
     { 0x3c, 0x00 },                 // IRQ
-    { 0x3d, BX_PCI_INTA },          // INT
     { 0x3e, 0x0c },                 // min_gnt
     { 0x3f, 0x80 },                 // max_lat
 
