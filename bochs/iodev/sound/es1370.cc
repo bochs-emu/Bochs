@@ -182,7 +182,7 @@ void libes1370_LTX_plugin_fini(void)
 
 bx_es1370_c::bx_es1370_c()
 {
-  put("es1370", "ES1370");
+  put("ES1370");
   memset(&s, 0, sizeof(bx_es1370_t));
   s.dac1_timer_index = BX_NULL_TIMER_HANDLE;
   s.dac2_timer_index = BX_NULL_TIMER_HANDLE;

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2012  The Bochs Project
+//  Copyright (C) 2002-2013  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -122,7 +122,7 @@ void bx_io_redirect_entry_t::register_state(bx_param_c *parent)
 bx_ioapic_c::bx_ioapic_c(): enabled(0), base_addr(BX_IOAPIC_BASE_ADDR)
 {
   set_id(BX_IOAPIC_DEFAULT_ID);
-  put("ioapic", "IOAPIC");
+  put("IOAPIC");
 }
 
 bx_ioapic_c::~bx_ioapic_c()

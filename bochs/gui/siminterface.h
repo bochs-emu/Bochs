@@ -173,6 +173,8 @@ typedef enum {
   N_ACT
 } bx_log_actions;
 
+#define BX_NULL_PREFIX  "[      ]"
+
 // normally all action choices are available for all event types. The exclude
 // expression allows some choices to be eliminated if they don't make any
 // sense.  For example, it would be stupid to ignore a panic.

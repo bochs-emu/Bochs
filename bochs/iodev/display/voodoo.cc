@@ -153,7 +153,7 @@ void libvoodoo_LTX_plugin_fini(void)
 
 bx_voodoo_c::bx_voodoo_c()
 {
-  put("voodoo", "VOODOO");
+  put("VOODOO");
   s.mode_change_timer_id = BX_NULL_TIMER_HANDLE;
   s.update_timer_id = BX_NULL_TIMER_HANDLE;
   v = NULL;

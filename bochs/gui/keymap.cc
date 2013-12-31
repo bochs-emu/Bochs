@@ -80,7 +80,7 @@ bx_keymap_c bx_keymap;
 
 bx_keymap_c::bx_keymap_c(void)
 {
-    put("keymap", "KEYMAP");
+    put("KEYMAP");
 
     keymapCount = 0;
     keymapTable = (BXKeyEntry *)NULL;

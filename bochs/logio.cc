@@ -322,15 +322,18 @@ void logfunctions::setio(iofunc_t *i)
 
 void logfunctions::put(const char *p)
 {
-  const char *n = p;
-  put(n, p);
+  char *n = strdup(p);
+
+  for (unsigned i=0; i<strlen(p); i++)
+    n[i] = tolower(p[i]);
+
+  put((const char*)n, p);
 }
 
 void logfunctions::put(const char *n, const char *p)
 {
-  char *tmpbuf=strdup("[      ]");  // if we ever have more than 32 chars,
-                                    // we need to rethink this
-
+  char *tmpbuf=strdup(BX_NULL_PREFIX); // if we ever have more than 32 chars,
+                                       // we need to rethink this
   if (tmpbuf == NULL)
     return;                         // allocation not successful
 
