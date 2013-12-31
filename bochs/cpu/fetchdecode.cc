@@ -1685,7 +1685,7 @@ modrm_done:
     }
 #endif
 
-    ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, b2, sse_prefix, os_32, vex_w);
+    ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, b2, sse_prefix, os_32, i->getVL(), vex_w);
   }
   else {
     // Opcode does not require a MODRM byte.
@@ -1989,7 +1989,7 @@ decode_done:
   return(0);
 }
 
-Bit16u BX_CPU_C::WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &attr, unsigned modrm, unsigned sse_prefix, unsigned osize, bx_bool vex_w)
+Bit16u BX_CPU_C::WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &attr, unsigned modrm, unsigned sse_prefix, unsigned osize, unsigned vex_vl, bx_bool vex_w)
 {
   // Parse mod-nnn-rm and related bytes
   unsigned mod_mem = (modrm & 0xc0) != 0xc0;
@@ -2027,6 +2027,15 @@ Bit16u BX_CPU_C::WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &a
 #if BX_SUPPORT_AVX
       case BxSplitMod11B:
         OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[mod_mem]);
+        break;
+#endif
+#if BX_SUPPORT_EVEX
+      case BxSplitVexVL:
+        if (vex_vl > BX_VLMAX) {
+          attr = 0;
+          return BX_IA_ERROR;
+        }
+        OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[vex_vl]);
         break;
 #endif
       case BxOSizeGrp:

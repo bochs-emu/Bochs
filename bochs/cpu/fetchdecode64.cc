@@ -2133,7 +2133,7 @@ modrm_done:
     }
 #endif
 
-    ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, b2, sse_prefix, offset >> 9, vex_w);
+    ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, b2, sse_prefix, offset >> 9, i->getVL(), vex_w);
   }
   else {
     // Opcode does not require a MODRM byte.
