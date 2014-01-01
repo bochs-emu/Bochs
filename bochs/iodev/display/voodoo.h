@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012  The Bochs Project
+//  Copyright (C) 2012-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -36,6 +36,7 @@ typedef struct {
     bx_bool override_on;
     bx_bool screen_update_pending;
   } vdraw;
+  double clock;
   int mode_change_timer_id;
   int update_timer_id;
   Bit8u devfunc;

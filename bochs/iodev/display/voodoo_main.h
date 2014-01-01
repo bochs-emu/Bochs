@@ -52,10 +52,10 @@ enum
 };
 
 
-#define STD_VOODOO_1_CLOCK      50000000
-#define STD_VOODOO_2_CLOCK      90000000
-#define STD_VOODOO_BANSHEE_CLOCK  90000000
-#define STD_VOODOO_3_CLOCK      132000000
+#define STD_VOODOO_1_CLOCK       50000000.0
+#define STD_VOODOO_2_CLOCK       90000000.0
+#define STD_VOODOO_BANSHEE_CLOCK 90000000.0
+#define STD_VOODOO_3_CLOCK      132000000.0
 
 
 /***************************************************************************

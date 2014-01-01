@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2013  The Bochs Project
+//  Copyright (C) 2012-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -77,8 +77,8 @@ bx_voodoo_c* theVoodooDevice = NULL;
 
 #include "voodoo_types.h"
 #include "voodoo_data.h"
-voodoo_state *v;
 #include "voodoo_main.h"
+voodoo_state *v;
 #include "voodoo_func.h"
 
 // builtin configuration handling functions
@@ -201,8 +201,10 @@ void bx_voodoo_c::init(void)
   if (model == VOODOO_2) {
     init_pci_conf(0x121a, 0x0002, 0x02, 0x038000, 0x00);
     BX_VOODOO_THIS pci_conf[0x10] = 0x08;
+    BX_VOODOO_THIS s.clock = STD_VOODOO_1_CLOCK;
   } else {
     init_pci_conf(0x121a, 0x0001, 0x01, 0x000000, 0x00);
+    BX_VOODOO_THIS s.clock = STD_VOODOO_2_CLOCK;
   }
   BX_VOODOO_THIS pci_conf[0x3d] = BX_PCI_INTA;
   BX_VOODOO_THIS pci_base_address[0] = 0;
@@ -444,7 +446,7 @@ void bx_voodoo_c::mode_change_timer_handler(void *this_ptr)
     int htotal = ((v->reg[hSync].u >> 16) & 0x3ff) + 1 + (v->reg[hSync].u & 0xff) + 1;
     int vtotal = ((v->reg[vSync].u >> 16) & 0xfff) + (v->reg[vSync].u & 0xfff);
     int vsync = ((v->reg[vSync].u >> 16) & 0xfff);
-    double hfreq = 50000000.0 / htotal; // Voodoo1 50 MHz
+    double hfreq = BX_VOODOO_THIS s.clock / htotal; // Voodoo1 50 MHz / Voodoo2 90 MHz
     if (((v->reg[fbiInit1].u >> 20) & 3) == 1) { // VCLK div 2
       hfreq /= 2;
     }
