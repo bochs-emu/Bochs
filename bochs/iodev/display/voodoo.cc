@@ -195,6 +195,9 @@ void bx_voodoo_c::init(void)
        50000, 1, 0, "voodoo_update");
   }
   BX_VOODOO_THIS s.vdraw.clock_enabled = 1;
+  BX_VOODOO_THIS s.vdraw.output_on = 0;
+  BX_VOODOO_THIS s.vdraw.override_on = 0;
+  BX_VOODOO_THIS s.vdraw.screen_update_pending = 0;
 
   v = new voodoo_state;
   Bit8u model = (Bit8u)SIM->get_param_enum("model", base)->get();
@@ -211,7 +214,8 @@ void bx_voodoo_c::init(void)
 
   voodoo_init(model);
 
-  BX_INFO(("Voodoo initialized"));
+  BX_INFO(("3dfx Voodoo Graphics adapter (model=%s) initialized",
+           SIM->get_param_enum("model", base)->get_selected()));
 }
 
 void bx_voodoo_c::reset(unsigned type)
@@ -242,6 +246,7 @@ void bx_voodoo_c::reset(unsigned type)
   for (i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
       BX_VOODOO_THIS pci_conf[reset_vals[i].addr] = reset_vals[i].val;
   }
+  v->pci.init_enable = 0x00;
 
   // Deassert IRQ
   set_irq_level(0);
@@ -644,6 +649,8 @@ void bx_voodoo_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
         break;
       case 0x40:
       case 0x41:
+      case 0x42:
+      case 0x43:
         v->pci.init_enable &= ~(0xff << (i*8));
         v->pci.init_enable |= (value8 << (i*8));
         break;

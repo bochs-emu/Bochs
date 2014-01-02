@@ -1884,9 +1884,8 @@ void register_w(Bit32u offset, Bit32u data)
     /* fbiInit0 can only be written if initEnable says we can -- Voodoo/Voodoo2 only */
     case fbiInit0:
       poly_wait(v->poly, v->regnames[regnum]);
-      Voodoo_Output_Enable(data&1);
-      if (v->type <= VOODOO_2 && (chips & 1) && INITEN_ENABLE_HW_INIT(v->pci.init_enable))
-      {
+      if (v->type <= VOODOO_2 && (chips & 1) && INITEN_ENABLE_HW_INIT(v->pci.init_enable)) {
+        Voodoo_Output_Enable(data & 1);
         v->reg[fbiInit0].u = data;
         if (FBIINIT0_GRAPHICS_RESET(data))
           soft_reset(v);
@@ -2172,9 +2171,8 @@ Bit32s texture_w(Bit32u offset, Bit32u data)
   return 0;
 }
 
- Bit32u lfb_w(Bit32u offset, Bit32u data, Bit32u mem_mask)
+Bit32u lfb_w(Bit32u offset, Bit32u data, Bit32u mem_mask)
 {
-  BX_DEBUG(("write LFB offset 0x%x value 0x%08x", offset, data));
   Bit16u *dest, *depth;
   Bit32u destmax, depthmax;
 //  Bit32u mem_mask=0xffffffff;
@@ -2183,6 +2181,8 @@ Bit32s texture_w(Bit32u offset, Bit32u data)
   int sr[2], sg[2], sb[2], sa[2], sw[2];
   int x, y, scry, mask;
   int pix, destbuf;
+
+  BX_DEBUG(("write LFB offset 0x%x value 0x%08x", offset, data));
 
   /* statistics */
   v->stats.lfb_writes++;
@@ -2648,7 +2648,6 @@ Bit32u register_r(Bit32u offset)
 
 Bit32u lfb_r(Bit32u offset)
 {
-  BX_DEBUG(("Voodoo:read LFB offset 0x%x", offset));
   Bit16u *buffer;
   Bit32u bufmax;
   Bit32u bufoffs;
@@ -2656,6 +2655,8 @@ Bit32u lfb_r(Bit32u offset)
   bool forcefront=false;
   int x, y, scry;
   Bit32u destbuf;
+
+  BX_DEBUG(("read LFB offset 0x%x", offset));
 
   /* statistics */
   v->stats.lfb_reads++;
@@ -2850,7 +2851,6 @@ void voodoo_init(Bit8u _type)
     v->regaccess = voodoo_register_access;
   }
   v->regnames = voodoo_reg_name;
-  v->pci.init_enable = (1<<2) | 1;
   v->chipmask = 0x01 | 0x02 | 0x04 | 0x08;
   memset(v->dac.reg, 0, sizeof(v->dac.reg));
   v->dac.read_result = 0;
