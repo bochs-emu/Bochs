@@ -2,8 +2,24 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2013  The Bochs Project
+//  Copyright (C) 2002-2014  The Bochs Project
 //
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
+//
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
+//
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+//
+/////////////////////////////////////////////////////////////////
+
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
@@ -58,11 +74,11 @@ wxSize normalTextSize (180, -1);  // width=200, height=default
 //    message text field
 //    don't-ask checkbox
 //    buttonSizer:
-//	continue button
-//	die button
-//	dumpcore button
-//	debugger button
-//	help button
+//      continue button
+//      die button
+//      dumpcore button
+//      debugger button
+//      help button
 //
 
 // all events go to OnEvent method
@@ -212,11 +228,16 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
 
   // logfileSizer contents
   text = new wxStaticText(this, -1, ADVLOG_OPTS_LOGFILE);
-  logfileSizer->Add(text);
+  logfileSizer->Add(text, 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
   logfile = new wxTextCtrl(this, -1, wxT(""), wxDefaultPosition, longTextSize);
-  logfileSizer->Add(logfile);
+  logfileSizer->Add(logfile, 0, wxALL | wxALIGN_CENTER_VERTICAL);
   wxButton *btn = new wxButton(this, ID_Browse, BTNLABEL_BROWSE);
   logfileSizer->Add(btn, 0, wxALL, 5);
+  if (runtime) {
+    text->Enable(false);
+    logfile->Enable(false);
+    btn->Enable(false);
+  }
 
   // to get the scrollWin geometry right, first build everything on a wxPanel,
   // with gridSizer as the main sizer.
@@ -238,7 +259,8 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
     if (strcmp(SIM->get_logfn_name(dev), "?")) {
       action[dev] = new wxChoice* [ADVLOG_OPTS_N_TYPES];
       // name of device in first column
-      gridSizer->Add(new wxStaticText(scrollPanel, -1, wxString(SIM->get_logfn_name(dev), wxConvUTF8)));
+      gridSizer->Add(new wxStaticText(scrollPanel, -1, wxString(SIM->get_logfn_name(dev), wxConvUTF8)),
+                     0, wxALL | wxALIGN_CENTER_VERTICAL);
       // wxChoice in every other column
       for (type=0; type < typemax; type++) {
         action[dev][type] = makeLogOptionChoiceBox(scrollPanel, -1, type);
@@ -281,6 +303,8 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
   buttonSizer->Add(btn, 0, wxALL, 5);
   btn = new wxButton(this, wxID_OK, BTNLABEL_OK);
   buttonSizer->Add(btn, 0, wxALL, 5);
+
+  runtime = 0;
 }
 
 AdvancedLogOptionsDialog::~AdvancedLogOptionsDialog()
@@ -319,7 +343,8 @@ void AdvancedLogOptionsDialog::CopyParamToGui()
   }
 }
 
-void AdvancedLogOptionsDialog::CopyGuiToParam() {
+void AdvancedLogOptionsDialog::CopyGuiToParam()
+{
   char buf[1024];
   safeWxStrcpy(buf, GetLogfile(), sizeof(buf));
   bx_param_string_c *logfile = SIM->get_param_string(BXPN_LOG_FILENAME);
@@ -334,7 +359,8 @@ void AdvancedLogOptionsDialog::CopyGuiToParam() {
   }
 }
 
-void AdvancedLogOptionsDialog::SetAction(int dev, int evtype, int act) {
+void AdvancedLogOptionsDialog::SetAction(int dev, int evtype, int act)
+{
   if (action[dev] == NULL) return;
   // find the choice whose client data matches "act".
   int *ptr;
@@ -354,7 +380,8 @@ void AdvancedLogOptionsDialog::SetAction(int dev, int evtype, int act) {
   wxLogDebug(wxT("warning: SetAction type=%d act=%d not found"), evtype, act);
 }
 
-int AdvancedLogOptionsDialog::GetAction(int dev, int evtype) {
+int AdvancedLogOptionsDialog::GetAction(int dev, int evtype)
+{
   if (action[dev] == NULL) return LOG_OPTS_NO_CHANGE;
   int sel = action[dev][evtype]->GetSelection();
   int *ptrToChoice = (int*)action[dev][evtype]->GetClientData(sel);
@@ -373,10 +400,10 @@ void AdvancedLogOptionsDialog::OnEvent(wxCommandEvent& event)
       int lev, nlev = SIM->get_max_log_level();
       // copy default settings to every device
       for (lev=0; lev<nlev; lev++) {
-	int action = SIM->get_default_log_action(lev);
-	int dev, ndev = SIM->get_n_log_modules();
-	for (dev=0; dev<ndev; dev++)
-	  SetAction(dev, lev, action);
+        int action = SIM->get_default_log_action(lev);
+        int dev, ndev = SIM->get_n_log_modules();
+        for (dev=0; dev<ndev; dev++)
+          SetAction(dev, lev, action);
       }
       break;
       }
@@ -681,7 +708,7 @@ void ParamDialog::AddParam(
   if (!prompt) prompt = pstr->param->get_name();
   const char *description = pstr->param->get_description();
   wxASSERT(prompt != NULL);
-#define ADD_LABEL(x) sizer->Add(pstr->label = new wxStaticText(context->parent, -1, wxString(x, wxConvUTF8)), 0, wxALIGN_RIGHT|wxALL, 3)
+#define ADD_LABEL(x) sizer->Add(pstr->label = new wxStaticText(context->parent, -1, wxString(x, wxConvUTF8)), 0, wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL|wxALL, 3)
   switch (type) {
     case BXT_PARAM_BOOL:
       {
@@ -1301,7 +1328,7 @@ LogOptionsDialog::LogOptionsDialog(
   // gridSizer contents
   gridSizer->AddGrowableCol(1);
   for (int evtype=0; evtype<LOG_OPTS_N_TYPES; evtype++) {
-    gridSizer->Add(new wxStaticText(this, -1, names[evtype]), 0, wxALL, 5);
+    gridSizer->Add(new wxStaticText(this, -1, names[evtype]), 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     action[evtype] = makeLogOptionChoiceBox(this, -1, evtype, true);
     gridSizer->Add(action[evtype], 1, wxALL|wxGROW|wxADJUST_MINSIZE, 5);
   }

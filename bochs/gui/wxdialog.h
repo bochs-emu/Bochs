@@ -2,8 +2,24 @@
 // $Id$
 ////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2013  The Bochs Project
+//  Copyright (C) 2002-2014  The Bochs Project
 //
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
+//
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
+//
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+//
+/////////////////////////////////////////////////////////////////
+
 // wxWidgets dialogs for Bochs
 
 #include <wx/spinctrl.h>
@@ -146,6 +162,7 @@ private:
   wxButton *applyDefault;
   // 2d array of wxChoice pointers. Each wxChoice* is action[dev][type].
   wxChoice*  **action;
+  bool runtime;
 public:
   AdvancedLogOptionsDialog(wxWindow* parent, wxWindowID id);
   ~AdvancedLogOptionsDialog();
@@ -157,6 +174,7 @@ public:
   void CopyGuiToParam();
   void SetAction(int dev, int evtype, int act);
   int GetAction(int dev, int evtype);
+  void SetRuntimeFlag(bool val) { runtime = val; }
 DECLARE_EVENT_TABLE()
 };
 
@@ -310,7 +328,7 @@ class LogOptionsDialog : public ParamDialog
 private:
 #define LOG_OPTS_TITLE wxT("Configure Log Events")
 #define LOG_OPTS_PROMPT wxT("How should Bochs respond to each type of event?")
-#define LOG_OPTS_TYPE_NAMES { wxT("Debug events: "), wxT("Info events: "), wxT("Error events: "), wxT("Panic events: ") }
+#define LOG_OPTS_TYPE_NAMES { wxT("Debug events"), wxT("Info events"), wxT("Error events"), wxT("Panic events") }
 #define LOG_OPTS_N_TYPES 4
 #define LOG_OPTS_CHOICES { wxT("ignore"), wxT("log"), wxT("ask user"), wxT("end simulation"), wxT("no change") }
 #define LOG_OPTS_N_CHOICES_NORMAL 4
