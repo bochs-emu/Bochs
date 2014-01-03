@@ -74,7 +74,7 @@ plugins: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 libhdimage.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libhdimage.a
 	@MAKELIB@ $(NONPLUGIN_OBJS)
-	@RANLIB@ libhdimage.a
+	$(RANLIB) libhdimage.a
 
 # standard compile rule for C++ files
 .@CPP_SUFFIX@.o:

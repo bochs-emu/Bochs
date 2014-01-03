@@ -122,6 +122,8 @@ if test "$NO_LT" != 1; then
   dnl Configure the ltdl library.  This must go after AC_PROG_LIBTOOL or
   dnl else it disables shared libraries somehow.
   AC_LIB_LTDL
+else
+  RANLIB="echo"
 fi
 
 AC_PATH_PROG(PKGCONFIG, pkg-config, not_found)
@@ -443,8 +445,6 @@ if test "$bx_plugins" = 1; then
       PLUGIN_VAR="ltdl.o"
       PLUGIN_LIB="ltdl.o"
     fi
-  else
-    RANLIB="echo"
   fi
   PLUGIN_TARGET=bochs_plugins
   INSTALL_PLUGINS_VAR=install_libtool_plugins

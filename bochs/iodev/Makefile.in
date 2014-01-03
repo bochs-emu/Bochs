@@ -95,7 +95,7 @@ plugins: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 libiodev.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libiodev.a
 	@MAKELIB@ $(NONPLUGIN_OBJS)
-	@RANLIB@ libiodev.a
+	$(RANLIB) libiodev.a
 
 # standard compile rule for C++ files
 .@CPP_SUFFIX@.o:

@@ -99,7 +99,7 @@ plugins: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 libgui.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libgui.a
 	@MAKELIB@ $(NONPLUGIN_OBJS)
-	@RANLIB@ libgui.a
+	$(RANLIB) libgui.a
 
 # standard compile rule for C++ files
 .@CPP_SUFFIX@.o:

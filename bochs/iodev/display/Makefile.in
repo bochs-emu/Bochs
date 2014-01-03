@@ -71,7 +71,7 @@ plugins: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 libdisplay.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libdisplay.a
 	@MAKELIB@ $(NONPLUGIN_OBJS)
-	@RANLIB@ libdisplay.a
+	$(RANLIB) libdisplay.a
 
 # standard compile rule for C++ files
 .@CPP_SUFFIX@.o:

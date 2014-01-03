@@ -71,7 +71,7 @@ plugins: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 libnetwork.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libnetwork.a
 	@MAKELIB@ $(NONPLUGIN_OBJS)
-	@RANLIB@ libnetwork.a
+	$(RANLIB) libnetwork.a
 
 # standard compile rule for C++ files
 .@CPP_SUFFIX@.o:

@@ -73,7 +73,7 @@ plugins: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 libusb.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libusb.a
 	@MAKELIB@ $(NONPLUGIN_OBJS)
-	@RANLIB@ libusb.a
+	$(RANLIB) libusb.a
 
 # standard compile rule for C++ files
 .@CPP_SUFFIX@.o:

@@ -72,7 +72,7 @@ plugins: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 libsound.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libsound.a
 	@MAKELIB@ $(NONPLUGIN_OBJS)
-	@RANLIB@ libsound.a
+	$(RANLIB) libsound.a
 
 # standard compile rule for C++ files
 .@CPP_SUFFIX@.o:
