@@ -204,10 +204,10 @@ void bx_voodoo_c::init(void)
   if (model == VOODOO_2) {
     init_pci_conf(0x121a, 0x0002, 0x02, 0x038000, 0x00);
     BX_VOODOO_THIS pci_conf[0x10] = 0x08;
-    BX_VOODOO_THIS s.clock = STD_VOODOO_1_CLOCK;
-  } else {
-    init_pci_conf(0x121a, 0x0001, 0x01, 0x000000, 0x00);
     BX_VOODOO_THIS s.clock = STD_VOODOO_2_CLOCK;
+  } else {
+    init_pci_conf(0x121a, 0x0001, 0x02, 0x000000, 0x00);
+    BX_VOODOO_THIS s.clock = STD_VOODOO_1_CLOCK;
   }
   BX_VOODOO_THIS pci_conf[0x3d] = BX_PCI_INTA;
   BX_VOODOO_THIS pci_base_address[0] = 0;

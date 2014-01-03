@@ -1900,6 +1900,9 @@ void register_w(Bit32u offset, Bit32u data)
     case fbiInit1:
     case fbiInit2:
     case fbiInit4:
+    case fbiInit5:
+    case fbiInit6:
+    case fbiInit7:
       poly_wait(v->poly, v->regnames[regnum]);
 
       if (v->type <= VOODOO_2 && (chips & 1) && INITEN_ENABLE_HW_INIT(v->pci.init_enable))
@@ -2378,7 +2381,7 @@ Bit32u lfb_w(Bit32u offset, Bit32u data, Bit32u mem_mask)
 
   /* compute X,Y */
   x = (offset << 0) & ((1 << v->fbi.lfb_stride) - 1);
-  y = (offset >> v->fbi.lfb_stride) & ((1 << v->fbi.lfb_stride) - 1);
+  y = (offset >> v->fbi.lfb_stride) & 0x7ff;
 
   /* adjust the mask based on which half of the data is written */
   if (!ACCESSING_BITS_0_15)
@@ -2663,7 +2666,7 @@ Bit32u lfb_r(Bit32u offset)
 
   /* compute X,Y */
   x = (offset << 1) & 0x3fe;
-  y = (offset >> 9) & 0x3ff;
+  y = (offset >> 9) & 0x7ff;
 
   /* select the target buffer */
   destbuf = (v->type >= VOODOO_BANSHEE) ? (!forcefront) : LFBMODE_READ_BUFFER_SELECT(v->reg[lfbMode].u);
