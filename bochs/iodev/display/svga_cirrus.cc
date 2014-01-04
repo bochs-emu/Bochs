@@ -5,7 +5,7 @@
 //  Copyright (c) 2004 Makoto Suzuki (suzu)
 //                     Volker Ruppert (vruppert)
 //                     Robin Kay (komadori)
-//  Copyright (C) 2004-2013  The Bochs Project
+//  Copyright (C) 2004-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -2382,12 +2382,10 @@ void bx_svga_cirrus_c::svga_init_pcihandlers(void)
     PCI_CLASS_HEADERTYPE_00h);
   BX_CIRRUS_THIS pci_conf[0x04] = (PCI_COMMAND_IOACCESS | PCI_COMMAND_MEMACCESS);
 
-  WriteHostDWordToLittleEndian(
-    &BX_CIRRUS_THIS pci_conf[0x10],
-    (PCI_MAP_MEM | PCI_MAP_MEMFLAGS_32BIT | PCI_MAP_MEMFLAGS_CACHEABLE));
-  WriteHostDWordToLittleEndian(
-    &BX_CIRRUS_THIS pci_conf[0x14],
-    (PCI_MAP_MEM | PCI_MAP_MEMFLAGS_32BIT));
+  BX_CIRRUS_THIS pci_conf[0x10] =
+    (PCI_MAP_MEM | PCI_MAP_MEMFLAGS_32BIT | PCI_MAP_MEMFLAGS_CACHEABLE);
+  BX_CIRRUS_THIS pci_conf[0x14] =
+    (PCI_MAP_MEM | PCI_MAP_MEMFLAGS_32BIT);
 
   BX_CIRRUS_THIS pci_base_address[0] = 0;
   BX_CIRRUS_THIS pci_base_address[1] = 0;
@@ -2530,18 +2528,19 @@ void bx_svga_cirrus_c::svga_bitblt()
   Bit32u dstaddr;
   Bit32u srcaddr;
   Bit32u offset;
+  Bit8u *cregs = BX_CIRRUS_THIS control.reg;
 
-  ReadHostWordFromLittleEndian(&BX_CIRRUS_THIS control.reg[0x20],tmp16);
-  BX_CIRRUS_THIS bitblt.bltwidth = ((int)tmp16 & (int)0x1fff) + 1;
-  ReadHostWordFromLittleEndian(&BX_CIRRUS_THIS control.reg[0x22],tmp16);
-  BX_CIRRUS_THIS bitblt.bltheight = ((int)tmp16 & (int)0x07ff) + 1;
-  ReadHostWordFromLittleEndian(&BX_CIRRUS_THIS control.reg[0x24],tmp16);
-  BX_CIRRUS_THIS bitblt.dstpitch = (int)tmp16 & (int)0x1fff;
-  ReadHostWordFromLittleEndian(&BX_CIRRUS_THIS control.reg[0x26],tmp16);
-  BX_CIRRUS_THIS bitblt.srcpitch = (int)tmp16 & (int)0x1fff;
-  ReadHostDWordFromLittleEndian(&BX_CIRRUS_THIS control.reg[0x28],tmp32);
+  ReadHostWordFromLittleEndian(&cregs[0x20], tmp16);
+  BX_CIRRUS_THIS bitblt.bltwidth = ((int)(tmp16 & 0x1fff)) + 1;
+  ReadHostWordFromLittleEndian(&cregs[0x22], tmp16);
+  BX_CIRRUS_THIS bitblt.bltheight = ((int)(tmp16 & 0x07ff)) + 1;
+  ReadHostWordFromLittleEndian(&cregs[0x24], tmp16);
+  BX_CIRRUS_THIS bitblt.dstpitch = (int)(tmp16 & 0x1fff);
+  ReadHostWordFromLittleEndian(&cregs[0x26], tmp16);
+  BX_CIRRUS_THIS bitblt.srcpitch = (int)(tmp16 & 0x1fff);
+  ReadHostDWordFromLittleEndian(&cregs[0x28], tmp32);
   dstaddr = tmp32 & BX_CIRRUS_THIS memsize_mask;
-  ReadHostDWordFromLittleEndian(&BX_CIRRUS_THIS control.reg[0x2c],tmp32);
+  ReadHostDWordFromLittleEndian(&cregs[0x2c], tmp32);
   srcaddr = tmp32 & BX_CIRRUS_THIS memsize_mask;
   BX_CIRRUS_THIS bitblt.srcaddr = srcaddr;
   BX_CIRRUS_THIS bitblt.bltmode = BX_CIRRUS_THIS control.reg[0x30];
