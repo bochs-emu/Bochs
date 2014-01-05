@@ -715,7 +715,7 @@ static const char *const voodoo_reg_name[] =
   "nccTable1.3",  "nccTable1.4",  "nccTable1.5",  "nccTable1.6",
   "nccTable1.7",  "nccTable1.8",  "nccTable1.9",  "nccTable1.A",
   /* 0x380 */
-  "nccTable1.B"
+  "nccTable1.B",  "reserved384",  "reserved388",  "reserved38c"
 };
 
 

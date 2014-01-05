@@ -325,7 +325,7 @@ void bx_voodoo_c::register_state(void)
   new bx_shadow_data_c(fbi, "clut", (Bit8u*)v->fbi.clut, sizeof(v->fbi.clut));
   new bx_shadow_bool_c(fbi, "clut_dirty", &v->fbi.clut_dirty);
   bx_list_c *tmu = new bx_list_c(vstate, "tmu", "textures");
-  for (i = 0; i < 2; i++) {
+  for (i = 0; i < MAX_TMU; i++) {
     sprintf(name, "%d", i);
     bx_list_c *num = new bx_list_c(tmu, name, "");
     new bx_shadow_data_c(num, "ram", v->tmu[i].ram, (4 << 20));

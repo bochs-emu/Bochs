@@ -1207,29 +1207,12 @@ void swap_buffers(voodoo_state *v)
     swapbuffer - execute the 'swapbuffer'
     command
 -------------------------------------------------*/
-//#include "vga.h"
-bool dump_lfb=false;
-bool dump_tmu=false;
 Bit32s swapbuffer(voodoo_state *v, Bit32u data)
 {
   /* set the don't swap value for Voodoo 2 */
   v->fbi.vblank_swap_pending = 1;
   v->fbi.vblank_swap = (data >> 1) & 0xff;
   v->fbi.vblank_dont_swap = (data >> 9) & 1;
-
-  if (dump_lfb) {
-    FILE *f=fopen("e:/lfb.raw","wb");
-    fwrite(v->fbi.ram,4<<20,1,f);
-    fclose(f);
-  }
-  if (dump_tmu) {
-    FILE*f=fopen("e:/tmu0.raw","wb");
-    fwrite(v->tmu[0].ram,4<<20,1,f);
-    fclose(f);
-    f=fopen("e:/tmu1.raw","wb");
-    fwrite(v->tmu[1].ram,4<<20,1,f);
-    fclose(f);
-  }
 
   /* if we're not syncing to the retrace, process the command immediately */
 //  if (!(data & 1))
@@ -2066,7 +2049,7 @@ Bit32s texture_w(Bit32u offset, Bit32u data)
   v->stats.tex_writes++;
 
   /* point to the right TMU */
-  if (!(v->chipmask & (2 << tmunum)))
+  if (!(v->chipmask & (2 << tmunum)) || (tmunum >= MAX_TMU))
     return 0;
   t = &v->tmu[tmunum];
 
