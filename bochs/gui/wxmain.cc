@@ -1252,13 +1252,12 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
     case ID_Toolbar_Copy: which = BX_TOOLBAR_COPY; break;
     case ID_Toolbar_Paste: which = BX_TOOLBAR_PASTE; break;
     case ID_Toolbar_Snapshot: which = BX_TOOLBAR_SNAPSHOT; break;
-//  case ID_Toolbar_Config: which = BX_TOOLBAR_CONFIG; break;
-    case ID_Toolbar_Mouse_en: which = BX_TOOLBAR_MOUSE_EN; break;
+    case ID_Toolbar_Mouse_en: thePanel->ToggleMouse(true); break;
     case ID_Toolbar_User: which = BX_TOOLBAR_USER; break;
     default:
       wxLogError(wxT("unknown toolbar id %d"), id);
   }
-  if (num_events < MAX_EVENTS) {
+  if ((which != BX_TOOLBAR_UNDEFINED) && (num_events < MAX_EVENTS)) {
     event_queue[num_events].type = BX_ASYNC_EVT_TOOLBAR;
     event_queue[num_events].u.toolbar.button = which;
     num_events++;

@@ -1053,17 +1053,12 @@ void bx_wx_gui_c::handle_events(void)
       switch(event_queue[i].type) {
         case BX_ASYNC_EVT_TOOLBAR:
           switch (event_queue[i].u.toolbar.button) {
-            case BX_TOOLBAR_FLOPPYA: floppyA_handler(); break;
-            case BX_TOOLBAR_FLOPPYB: floppyB_handler(); break;
-            case BX_TOOLBAR_CDROM1: cdrom1_handler(); break;
             case BX_TOOLBAR_RESET: reset_handler(); break;
             case BX_TOOLBAR_POWER: quit_sim = 1; break;
             case BX_TOOLBAR_SAVE_RESTORE: save_restore_handler(); break;
             case BX_TOOLBAR_COPY: copy_handler(); break;
             case BX_TOOLBAR_PASTE: paste_handler(); break;
             case BX_TOOLBAR_SNAPSHOT: snapshot_handler(); break;
-//          case BX_TOOLBAR_CONFIG: config_handler(); break;
-            case BX_TOOLBAR_MOUSE_EN: thePanel->ToggleMouse(true); break;
             case BX_TOOLBAR_USER: userbutton_handler(); break;
             default:
               wxLogDebug (wxT ("unknown toolbar id %d"), event_queue[i].u.toolbar.button);
