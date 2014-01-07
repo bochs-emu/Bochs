@@ -1397,6 +1397,37 @@ void recompute_video_memory(voodoo_state *v)
 void dacdata_w(dac_state *d, Bit8u regnum, Bit8u data)
 {
   d->reg[regnum] = data;
+
+  /* switch off the DAC register requested */
+  switch (regnum) {
+    case 4: // PLLWMA
+    case 7: // PLLRMA
+      if (data == 0x0e) {
+        d->data_size = 1;
+      } else {
+        d->data_size = 2;
+      }
+      break;
+    case 5: // PLLDATA
+      switch (d->reg[4]) { // PLLWMA
+        case 0x00:
+          if (d->data_size == 2) {
+            d->clk0_m = data;
+          } else if (d->data_size == 1) {
+            d->clk0_n = data & 0x1f;
+            d->clk0_p = data >> 5;
+          }
+          break;
+        case 0x0e:
+          if ((d->data_size == 1) && ((data & 0x21) == 0x21)) {
+            d->clk0_freq = (Bit32u)((14318.0 * (d->clk0_m + 2)) / ((1 << d->clk0_p) * (d->clk0_n + 2)));
+            Voodoo_update_timing();
+          }
+          break;
+      }
+      d->data_size--;
+      break;
+  }
 }
 
 
@@ -1405,16 +1436,22 @@ void dacdata_r(dac_state *d, Bit8u regnum)
   Bit8u result = 0xff;
 
   /* switch off the DAC register requested */
-  switch (regnum)
-  {
-    case 5:
-      /* this is just to make startup happy */
-      switch (d->reg[7])
-      {
+  switch (regnum) {
+    case 5: // PLLDATA
+      switch (d->reg[7]) { // PLLRMA
+        case 0x00:
+          if (d->data_size == 2) {
+            result = d->clk0_m;
+          } else if (d->data_size == 1) {
+            result = d->clk0_n | (d->clk0_p << 5);
+          }
+          break;
+        /* this is just to make startup happy */
         case 0x01:  result = 0x55; break;
         case 0x07:  result = 0x71; break;
         case 0x0b:  result = 0x79; break;
       }
+      d->data_size--;
       break;
 
     default:
@@ -1846,7 +1883,7 @@ void register_w(Bit32u offset, Bit32u data)
 #endif
 
           /* configure the new framebuffer info */
-          v->fbi.width = hvis;
+          v->fbi.width = hvis + 1;
           v->fbi.height = vvis;
           v->fbi.xoffs = hbp;
           v->fbi.yoffs = vbp;
@@ -2840,6 +2877,9 @@ void voodoo_init(Bit8u _type)
   v->chipmask = 0x01 | 0x02 | 0x04 | 0x08;
   memset(v->dac.reg, 0, sizeof(v->dac.reg));
   v->dac.read_result = 0;
+  v->dac.clk0_m = 0x37;
+  v->dac.clk0_n = 0x02;
+  v->dac.clk0_p = 0x03;
 
   /* create a table of precomputed 1/n and log2(n) values */
   /* n ranges from 1.0000 to 2.0000 */

@@ -36,7 +36,6 @@ typedef struct {
     bx_bool override_on;
     bx_bool screen_update_pending;
   } vdraw;
-  double clock;
   int mode_change_timer_id;
   int update_timer_id;
   Bit8u devfunc;
@@ -62,6 +61,7 @@ public:
   static bx_bool get_retrace(void);
   static void output_enable(bx_bool enabled);
   static void update_screen_start(void);
+  static bx_bool update_timing(void);
 
 private:
   bx_voodoo_t s;

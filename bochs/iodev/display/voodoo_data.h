@@ -1635,6 +1635,11 @@ struct _dac_state
 {
   Bit8u reg[8];       /* 8 registers */
   Bit8u read_result;  /* pending read result */
+  Bit8u data_size;
+  Bit8u clk0_m;
+  Bit8u clk0_n;
+  Bit8u clk0_p;
+  Bit32u clk0_freq;
 };
 
 
