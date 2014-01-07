@@ -205,7 +205,7 @@ bochs@EXE@: @IODEV_LIB_VAR@ @DISPLAY_LIB_VAR@ @HDIMAGE_LIB_VAR@ @USB_LIB_VAR@ @N
 		@GDBSTUB_VAR@ @FPU_VAR@
 	$(DLLTOOL) --dllname bochs.exe --def bochs.def --output-lib dllexports.a
 	$(DLLTOOL) --dllname bochs.exe --output-exp bochs.exp --def bochs.def
-	$(CXX) -o bochs.exe $(CXXFLAGS) $(LDFLAGS) -export-dynamic \
+	$(CXX) -o bochs.exe $(CXXFLAGS) $(LDFLAGS) \
 	    $(BX_OBJS) bochs.exp $(SIMX86_OBJS) \
 		@IODEV_LIB_VAR@ @DISPLAY_LIB_VAR@ @HDIMAGE_LIB_VAR@ @USB_LIB_VAR@ @NETWORK_LIB_VAR@ @SOUND_LIB_VAR@ \
 		cpu/libcpu.a cpu/cpudb/libcpudb.a memory/libmemory.a gui/libgui.a \
