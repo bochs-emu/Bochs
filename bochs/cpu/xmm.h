@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2013 Stanislav Shwartsman
+//   Copyright (c) 2003-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -221,6 +221,11 @@ typedef BxPackedZmmRegister BxPackedAvxRegister;
 typedef BxPackedYmmRegister BxPackedAvxRegister;
 #endif
 #endif
+
+#define  BYTE_ELEMENTS(vlen) (16 * (vlen))
+#define  WORD_ELEMENTS(vlen)  (8 * (vlen))
+#define DWORD_ELEMENTS(vlen)  (4 * (vlen))
+#define QWORD_ELEMENTS(vlen)  (2 * (vlen))
 
 /* ************ */
 /* XMM REGISTER */

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013 Stanislav Shwartsman
+//   Copyright (c) 2013-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -27,12 +27,12 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #if BX_SUPPORT_AVX
-void BX_CPU_C::avx_masked_load32(bxInstruction_c *i, bx_address eaddr, BxPackedAvxRegister *op, unsigned mask)
+void BX_CPU_C::avx_masked_load32(bxInstruction_c *i, bx_address eaddr, BxPackedAvxRegister *op, Bit32u mask)
 {
   unsigned len = i->getVL();
 
   if (i->as64L()) {
-    for (unsigned n=0; n < (4*len); n++) {
+    for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
        if (mask & (1<<n)) {
           if (! IsCanonical(get_laddr64(i->seg(), eaddr + 4*n)))
              exception(int_number(i->seg()), 0);
@@ -45,7 +45,7 @@ void BX_CPU_C::avx_masked_load32(bxInstruction_c *i, bx_address eaddr, BxPackedA
   BX_CPU_THIS_PTR alignment_check_mask = 0;
 #endif
 
-  for (int n=4*len-1; n >= 0; n--) {
+  for (int n=DWORD_ELEMENTS(len)-1; n >= 0; n--) {
     if (mask & (1<<n))
        op->vmm32u(n) = read_virtual_dword(i->seg(), eaddr + 4*n);
     else
@@ -57,12 +57,12 @@ void BX_CPU_C::avx_masked_load32(bxInstruction_c *i, bx_address eaddr, BxPackedA
 #endif
 }
 
-void BX_CPU_C::avx_masked_load64(bxInstruction_c *i, bx_address eaddr, BxPackedAvxRegister *op, unsigned mask)
+void BX_CPU_C::avx_masked_load64(bxInstruction_c *i, bx_address eaddr, BxPackedAvxRegister *op, Bit32u mask)
 {
   unsigned len = i->getVL();
 
   if (i->as64L()) {
-    for (unsigned n=0; n < (2*len); n++) {
+    for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
        if (mask & (1<<n)) {
           if (! IsCanonical(get_laddr64(i->seg(), eaddr + 8*n)))
              exception(int_number(i->seg()), 0);
@@ -75,7 +75,7 @@ void BX_CPU_C::avx_masked_load64(bxInstruction_c *i, bx_address eaddr, BxPackedA
   BX_CPU_THIS_PTR alignment_check_mask = 0;
 #endif
 
-  for (int n=2*len-1; n >= 0; n--) {
+  for (int n=QWORD_ELEMENTS(len)-1; n >= 0; n--) {
     if (mask & (1<<n))
        op->vmm64u(n) = read_virtual_qword(i->seg(), eaddr + 8*n);
     else
@@ -87,13 +87,85 @@ void BX_CPU_C::avx_masked_load64(bxInstruction_c *i, bx_address eaddr, BxPackedA
 #endif
 }
 
-void BX_CPU_C::avx_masked_store32(bxInstruction_c *i, bx_address eaddr, const BxPackedAvxRegister *op, unsigned mask)
+void BX_CPU_C::avx_masked_store8(bxInstruction_c *i, bx_address eaddr, const BxPackedAvxRegister *op, Bit64u mask)
 {
   unsigned len = i->getVL();
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
-    for (unsigned n=0; n < (4*len); n++) {
+    for (unsigned n=0; n < BYTE_ELEMENTS(len); n++) {
+      if (mask & (BX_CONST64(1)<<n)) {
+        if (! IsCanonical(get_laddr64(i->seg(), eaddr + n)))
+           exception(int_number(i->seg()), 0);
+      }
+    }
+  }
+#endif
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
+  // see if you can successfully write all the elements first
+  for (int n=BYTE_ELEMENTS(len)-1; n >= 0; n--) {
+    if (mask & (BX_CONST64(1)<<n))
+       read_RMW_virtual_byte(i->seg(), eaddr + n);
+  }
+
+  for (unsigned n=0; n < BYTE_ELEMENTS(len); n++) {
+    if (mask & (BX_CONST64(1)<<n))
+       write_virtual_byte(i->seg(), eaddr + n, op->vmmubyte(n));
+  }
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
+}
+
+void BX_CPU_C::avx_masked_store16(bxInstruction_c *i, bx_address eaddr, const BxPackedAvxRegister *op, Bit32u mask)
+{
+  unsigned len = i->getVL();
+
+#if BX_SUPPORT_X86_64
+  if (i->as64L()) {
+    for (unsigned n=0; n < WORD_ELEMENTS(len); n++) {
+      if (mask & (1<<n)) {
+        if (! IsCanonical(get_laddr64(i->seg(), eaddr + 2*n)))
+           exception(int_number(i->seg()), 0);
+      }
+    }
+  }
+#endif
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
+  BX_CPU_THIS_PTR alignment_check_mask = 0;
+#endif
+
+  // see if you can successfully write all the elements first
+  for (int n=WORD_ELEMENTS(len)-1; n >= 0; n--) {
+    if (mask & (1<<n))
+       read_RMW_virtual_word(i->seg(), eaddr + 2*n);
+  }
+
+  for (unsigned n=0; n < WORD_ELEMENTS(len); n++) {
+    if (mask & (1<<n))
+       write_virtual_word(i->seg(), eaddr + 2*n, op->vmm16u(n));
+  }
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
+#endif
+}
+
+void BX_CPU_C::avx_masked_store32(bxInstruction_c *i, bx_address eaddr, const BxPackedAvxRegister *op, Bit32u mask)
+{
+  unsigned len = i->getVL();
+
+#if BX_SUPPORT_X86_64
+  if (i->as64L()) {
+    for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
       if (mask & (1<<n)) {
         if (! IsCanonical(get_laddr64(i->seg(), eaddr + 4*n)))
            exception(int_number(i->seg()), 0);
@@ -107,13 +179,13 @@ void BX_CPU_C::avx_masked_store32(bxInstruction_c *i, bx_address eaddr, const Bx
   BX_CPU_THIS_PTR alignment_check_mask = 0;
 #endif
 
-  // see you can successfully write all the elements first
-  for (int n=4*len-1; n >= 0; n--) {
+  // see if you can successfully write all the elements first
+  for (int n=DWORD_ELEMENTS(len)-1; n >= 0; n--) {
     if (mask & (1<<n))
        read_RMW_virtual_dword(i->seg(), eaddr + 4*n);
   }
 
-  for (unsigned n=0; n < (4*len); n++) {
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
     if (mask & (1<<n))
        write_virtual_dword(i->seg(), eaddr + 4*n, op->vmm32u(n));
   }
@@ -123,13 +195,13 @@ void BX_CPU_C::avx_masked_store32(bxInstruction_c *i, bx_address eaddr, const Bx
 #endif
 }
 
-void BX_CPU_C::avx_masked_store64(bxInstruction_c *i, bx_address eaddr, const BxPackedAvxRegister *op, unsigned mask)
+void BX_CPU_C::avx_masked_store64(bxInstruction_c *i, bx_address eaddr, const BxPackedAvxRegister *op, Bit32u mask)
 {
   unsigned len = i->getVL();
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
-    for (unsigned n=0; n < (2*len); n++) {
+    for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
       if (mask & (1<<n)) {
         if (! IsCanonical(get_laddr64(i->seg(), eaddr + 8*n)))
            exception(int_number(i->seg()), 0);
@@ -143,13 +215,13 @@ void BX_CPU_C::avx_masked_store64(bxInstruction_c *i, bx_address eaddr, const Bx
   BX_CPU_THIS_PTR alignment_check_mask = 0;
 #endif
 
-  // see you can successfully write all the elements first
-  for (int n=2*len-1; n >= 0; n--) {
+  // see if you can successfully write all the elements first
+  for (int n=QWORD_ELEMENTS(len)-1; n >= 0; n--) {
     if (mask & (1<<n))
        read_RMW_virtual_qword(i->seg(), eaddr + 8*n);
   }
 
-  for (unsigned n=0; n < (2*len); n++) {
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
     if (mask & (1<<n))
        write_virtual_qword(i->seg(), eaddr + 8*n, op->vmm64u(n));
   }

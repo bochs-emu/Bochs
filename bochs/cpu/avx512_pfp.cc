@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013 Stanislav Shwartsman
+//   Copyright (c) 2013-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -280,7 +280,7 @@ extern float64_compare_method avx_compare64[32];
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPS_MASK_KGwHpsWpsIbR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned num_elements = 4 * i->getVL();
+  unsigned num_elements = DWORD_ELEMENTS(i->getVL());
 
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   Bit32u result = 0;
@@ -305,7 +305,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPS_MASK_KGwHpsWpsIbR(bxInstruc
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPD_MASK_KGbHpdWpdIbR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned num_elements = 2 * i->getVL();
+  unsigned num_elements = QWORD_ELEMENTS(i->getVL());
 
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   Bit32u result = 0;
@@ -427,7 +427,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTUSI2SD_VsdEqR(bxInstruction_c 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTUDQ2PS_VpsWdqR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
-  unsigned len = i->getVL(), num_elements = 4*len;
+  unsigned len = i->getVL(), num_elements = DWORD_ELEMENTS(len);
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
@@ -445,7 +445,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTUDQ2PS_VpsWdqR(bxInstruction_c
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTUDQ2PS_MASK_VpsWdqR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
-  unsigned len = i->getVL(), num_elements = 4*len;
+  unsigned len = i->getVL(), num_elements = DWORD_ELEMENTS(len);
 
   Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
 
@@ -479,7 +479,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTUDQ2PD_VpdWdqR(bxInstruction_c
 {
   BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
   BxPackedAvxRegister result;
-  unsigned len = i->getVL(), num_elements = 2*len;
+  unsigned len = i->getVL(), num_elements = QWORD_ELEMENTS(len);
 
   for (unsigned n=0; n < num_elements; n++) {
     result.vmm64u(n) = uint32_to_float64(op.ymm32u(n));
@@ -493,7 +493,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTUDQ2PD_MASK_VpdWdqR(bxInstruct
 {
   BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
   BxPackedAvxRegister result;
-  unsigned len = i->getVL(), num_elements = 2*len;
+  unsigned len = i->getVL(), num_elements = QWORD_ELEMENTS(len);
 
   Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask());
 
@@ -531,7 +531,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PD_MASK_VpdWpsR(bxInstructi
   mxcsr_to_softfloat_status_word(status, MXCSR);
   softfloat_status_word_rc_override(status, i);
 
-  for (unsigned n=0, tmp_mask = mask; n < (2*len); n++, tmp_mask >>= 1) {
+  for (unsigned n=0, tmp_mask = mask; n < QWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
      if (tmp_mask & 0x1)
        result.vmm64u(n) = float32_to_float64(op.ymm32u(n), status);
      else
@@ -826,7 +826,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMPS_VpsHpsWpsIbR(bxInstruc
   mxcsr_to_softfloat_status_word(status, MXCSR);
   softfloat_status_word_rc_override(status, i);
 
-  for (unsigned n=0; n < 4*len; n++) {
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
     op1.vmm32u(n) = float32_fixupimm(op1.vmm32u(n), op2.vmm32u(n), i->Ib(), status);
   }
 
@@ -846,7 +846,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMPS_MASK_VpsHpsWpsIbR(bxIn
   mxcsr_to_softfloat_status_word(status, MXCSR);
   softfloat_status_word_rc_override(status, i);
 
-  for (unsigned n=0, tmp_mask = mask; n < 4*len; n++, tmp_mask >>= 1) {
+  for (unsigned n=0, tmp_mask = mask; n < DWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1)
       op1.vmm32u(n) = float32_fixupimm(op1.vmm32u(n), op2.vmm32u(n), i->Ib(), status);
     else
@@ -877,7 +877,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMPD_VpdHpdWpdIbR(bxInstruc
   mxcsr_to_softfloat_status_word(status, MXCSR);
   softfloat_status_word_rc_override(status, i);
 
-  for (unsigned n=0; n < 2*len; n++) {
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
     op1.vmm64u(n) = float64_fixupimm(op1.vmm64u(n), (Bit32u) op2.vmm64u(n), i->Ib(), status);
   }
 
@@ -897,7 +897,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMPD_MASK_VpdHpdWpdIbR(bxIn
   mxcsr_to_softfloat_status_word(status, MXCSR);
   softfloat_status_word_rc_override(status, i);
 
-  for (unsigned n=0, tmp_mask = mask; n < 2*len; n++, tmp_mask >>= 1) {
+  for (unsigned n=0, tmp_mask = mask; n < QWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1)
       op1.vmm64u(n) = float64_fixupimm(op1.vmm64u(n), (Bit32u) op2.vmm64u(n), i->Ib(), status);
     else

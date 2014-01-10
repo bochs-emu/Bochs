@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -4462,10 +4462,12 @@ public: // for now...
 #endif
 
 #if BX_SUPPORT_AVX
-  BX_SMF void avx_masked_load32(bxInstruction_c *i, bx_address eaddr, BxPackedAvxRegister *dst, unsigned mask);
-  BX_SMF void avx_masked_load64(bxInstruction_c *i, bx_address eaddr, BxPackedAvxRegister *dst, unsigned mask);
-  BX_SMF void avx_masked_store32(bxInstruction_c *i, bx_address eaddr, const BxPackedAvxRegister *op, unsigned mask);
-  BX_SMF void avx_masked_store64(bxInstruction_c *i, bx_address eaddr, const BxPackedAvxRegister *op, unsigned mask);
+  BX_SMF void avx_masked_load32(bxInstruction_c *i, bx_address eaddr, BxPackedAvxRegister *dst, Bit32u mask);
+  BX_SMF void avx_masked_load64(bxInstruction_c *i, bx_address eaddr, BxPackedAvxRegister *dst, Bit32u mask);
+  BX_SMF void avx_masked_store8(bxInstruction_c *i, bx_address eaddr, const BxPackedAvxRegister *op, Bit64u mask);
+  BX_SMF void avx_masked_store16(bxInstruction_c *i, bx_address eaddr, const BxPackedAvxRegister *op, Bit32u mask);
+  BX_SMF void avx_masked_store32(bxInstruction_c *i, bx_address eaddr, const BxPackedAvxRegister *op, Bit32u mask);
+  BX_SMF void avx_masked_store64(bxInstruction_c *i, bx_address eaddr, const BxPackedAvxRegister *op, Bit32u mask);
 #endif
 
 #if BX_SUPPORT_EVEX

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013 Stanislav Shwartsman
+//   Copyright (c) 2013-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -568,7 +568,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVDDUP_MASK_VpdWpdR(bxInstructio
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   unsigned len = i->getVL();
 
-  for (unsigned n=0; n < (2*len); n+=2) {
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n+=2) {
     op.vmm64u(n+1) = op.vmm64u(n);
   }
 
@@ -582,7 +582,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSLDUP_MASK_VpsWpsR(bxInstructi
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   unsigned len = i->getVL();
 
-  for (unsigned n=0; n < (4*len); n+=2) {
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n+=2) {
     op.vmm32u(n+1) = op.vmm32u(n);
   }
 
@@ -596,7 +596,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSHDUP_MASK_VpsWpsR(bxInstructi
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   unsigned len = i->getVL();
 
-  for (unsigned n=0; n < (4*len); n+=2) {
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n+=2) {
     op.vmm32u(n) = op.vmm32u(n+1);
   }
 
@@ -794,7 +794,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPTERNLOGD_VdqHdqWdqIbR(bxInstruct
                       op2 = BX_READ_AVX_REG(i->src1()),
                       op3 = BX_READ_AVX_REG(i->src2());
 
-  unsigned len = i->getVL(), num_elements = 4 * len;
+  unsigned len = i->getVL(), num_elements = DWORD_ELEMENTS(len);
   Bit8u imm8 = i->Ib();
 
   for (unsigned n=0; n < num_elements; n++) {
@@ -811,7 +811,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPTERNLOGD_MASK_VdqHdqWdqIbR(bxIns
                       op2 = BX_READ_AVX_REG(i->src1()),
                       op3 = BX_READ_AVX_REG(i->src2());
 
-  unsigned len = i->getVL(), num_elements = 4 * len;
+  unsigned len = i->getVL(), num_elements = DWORD_ELEMENTS(len);
   Bit8u imm8 = i->Ib();
 
   Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
@@ -833,7 +833,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPTERNLOGQ_VdqHdqWdqIbR(bxInstruct
                       op2 = BX_READ_AVX_REG(i->src1()),
                       op3 = BX_READ_AVX_REG(i->src2());
 
-  unsigned len = i->getVL(), num_elements = 2 * len;
+  unsigned len = i->getVL(), num_elements = QWORD_ELEMENTS(len);
   Bit8u imm8 = i->Ib();
 
   for (unsigned n=0; n < num_elements; n++) {
@@ -850,7 +850,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPTERNLOGQ_MASK_VdqHdqWdqIbR(bxIns
                       op2 = BX_READ_AVX_REG(i->src1()),
                       op3 = BX_READ_AVX_REG(i->src2());
 
-  unsigned len = i->getVL(), num_elements = 2 * len;
+  unsigned len = i->getVL(), num_elements = QWORD_ELEMENTS(len);
   Bit8u imm8 = i->Ib();
 
   Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask());

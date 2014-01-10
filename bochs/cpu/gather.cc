@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2013 Stanislav Shwartsman
+//   Copyright (c) 2011-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -62,7 +62,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_VpsHps(bxInstruction_c 
   //     128 bit => 4
   //     256 bit => 8
 
-  unsigned n, num_elements = 4 * i->getVL();
+  unsigned n, num_elements = DWORD_ELEMENTS(i->getVL());
 
   for (n=0; n < num_elements; n++) {
     if (mask->ymm32u(n) & 0x80000000)
@@ -113,7 +113,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c 
   //     256 bit => 4
 
   BxPackedYmmRegister *mask = &BX_YMM_REG(i->src2()), *dest = &BX_YMM_REG(i->dst());
-  unsigned n, num_elements = 2 * i->getVL();
+  unsigned n, num_elements = QWORD_ELEMENTS(i->getVL());
 
   for (n=0; n < num_elements; n++) {
     if (mask->ymm32u(n) & 0x80000000)
@@ -164,7 +164,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_VpdHpd(bxInstruction_c 
   //     256 bit => 4
 
   BxPackedYmmRegister *mask = &BX_YMM_REG(i->src2()), *dest = &BX_YMM_REG(i->dst());
-  unsigned n, num_elements = 2 * i->getVL();
+  unsigned n, num_elements = QWORD_ELEMENTS(i->getVL());
 
   for (n=0; n < num_elements; n++) {
     if (mask->ymm64u(n) & BX_CONST64(0x8000000000000000))
@@ -215,7 +215,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_VpdHpd(bxInstruction_c 
   //     256 bit => 4
 
   BxPackedYmmRegister *mask = &BX_YMM_REG(i->src2()), *dest = &BX_YMM_REG(i->dst());
-  unsigned n, num_elements = 2 * i->getVL();
+  unsigned n, num_elements = QWORD_ELEMENTS(i->getVL());
 
   for (n=0; n < num_elements; n++) {
     if (mask->ymm64u(n) & BX_CONST64(0x8000000000000000))
@@ -434,7 +434,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERDPS_MASK_VSibVps(bxInstruc
   //     256 bit => 8
   //     512 bit => 16
 
-  unsigned n, num_elements = 4 * i->getVL();
+  unsigned n, num_elements = DWORD_ELEMENTS(i->getVL());
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
   unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
@@ -469,7 +469,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERQPS_MASK_VSibVps(bxInstruc
   //     256 bit => 4
   //     512 bit => 8
 
-  unsigned n, num_elements = 2 * i->getVL();
+  unsigned n, num_elements = QWORD_ELEMENTS(i->getVL());
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
   unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
@@ -504,7 +504,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERDPD_MASK_VSibVpd(bxInstruc
   //     256 bit => 4
   //     512 bit => 8
 
-  unsigned n, num_elements = 2 * i->getVL();
+  unsigned n, num_elements = QWORD_ELEMENTS(i->getVL());
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
   unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
@@ -539,7 +539,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERQPD_MASK_VSibVpd(bxInstruc
   //     256 bit => 4
   //     512 bit => 8
 
-  unsigned n, num_elements = 2 * i->getVL();
+  unsigned n, num_elements = QWORD_ELEMENTS(i->getVL());
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
   unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;

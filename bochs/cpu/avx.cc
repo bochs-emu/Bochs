@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2013 Stanislav Shwartsman
+//   Copyright (c) 2011-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -192,7 +192,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVDDUP_VpdWpdR(bxInstruction_c *
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   unsigned len = i->getVL();
 
-  for (unsigned n=0; n < (2*len); n+=2) {
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n+=2) {
     op.vmm64u(n+1) = op.vmm64u(n);
   }
 
@@ -207,7 +207,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSLDUP_VpsWpsR(bxInstruction_c 
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   unsigned len = i->getVL();
 
-  for (unsigned n=0; n < (4*len); n+=2) {
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n+=2) {
     op.vmm32u(n+1) = op.vmm32u(n);
   }
 
@@ -222,7 +222,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSHDUP_VpsWpsR(bxInstruction_c 
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   unsigned len = i->getVL();
 
-  for (unsigned n=0; n < (4*len); n+=2) {
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n+=2) {
     op.vmm32u(n) = op.vmm32u(n+1);
   }
 
@@ -374,7 +374,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPTEST_VdqWdqR(bxInstruction_c *i)
 
   unsigned result = EFlagsZFMask | EFlagsCFMask;
 
-  for (unsigned n=0; n < (2*len); n++) {
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
     if ((op2.ymm64u(n) &  op1.ymm64u(n)) != 0) result &= ~EFlagsZFMask;
     if ((op2.ymm64u(n) & ~op1.ymm64u(n)) != 0) result &= ~EFlagsCFMask;
   }
