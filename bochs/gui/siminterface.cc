@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2013  The Bochs Project
+//  Copyright (C) 2002-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -74,6 +74,7 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   int exit_code;
   unsigned param_id;
   bx_bool bx_debug_gui;
+  bx_bool bx_log_viewer;
   bx_bool wxsel;
 public:
   bx_real_sim_c();
@@ -119,7 +120,10 @@ public:
   virtual void set_notify_callback(bxevent_handler func, void *arg);
   virtual void get_notify_callback(bxevent_handler *func, void **arg);
   virtual BxEvent* sim_to_ci_event(BxEvent *event);
-  virtual int log_msg(const char *prefix, int level, const char *msg);
+  virtual int log_ask(const char *prefix, int level, const char *msg);
+  virtual void log_msg(const char *prefix, int level, const char *msg);
+  virtual void set_log_viewer(bx_bool val) { bx_log_viewer = val; }
+  virtual bx_bool has_log_viewer() const { return bx_log_viewer; }
   virtual int ask_param(bx_param_c *param);
   virtual int ask_param(const char *pname);
   // ask the user for a pathname
@@ -150,8 +154,8 @@ public:
   virtual bx_bool is_pci_device(const char *name);
 #if BX_DEBUGGER
   virtual void debug_break();
-  virtual void debug_interpret_cmd (char *cmd);
-  virtual char *debug_get_next_command ();
+  virtual void debug_interpret_cmd(char *cmd);
+  virtual char *debug_get_next_command();
   virtual void debug_puts(const char *cmd);
 #endif
   virtual void register_configuration_interface (
@@ -331,6 +335,7 @@ bx_real_sim_c::bx_real_sim_c()
   ci_callback_data = NULL;
   is_sim_thread_func = NULL;
   bx_debug_gui = 0;
+  bx_log_viewer = 0;
   wxsel = 0;
 
   enabled = 1;
@@ -538,7 +543,7 @@ BxEvent *bx_real_sim_c::sim_to_ci_event(BxEvent *event)
 }
 
 // returns 0 for continue, 1 for alwayscontinue, 2 for die.
-int bx_real_sim_c::log_msg(const char *prefix, int level, const char *msg)
+int bx_real_sim_c::log_ask(const char *prefix, int level, const char *msg)
 {
   BxEvent be;
   be.type = BX_SYNC_EVT_LOG_ASK;
@@ -548,8 +553,21 @@ int bx_real_sim_c::log_msg(const char *prefix, int level, const char *msg)
   // default return value in case something goes wrong.
   be.retcode = BX_LOG_NOTIFY_FAILED;
   // calling notify
-  sim_to_ci_event (&be);
+  sim_to_ci_event(&be);
   return be.retcode;
+}
+
+void bx_real_sim_c::log_msg(const char *prefix, int level, const char *msg)
+{
+  if (SIM->has_log_viewer()) {
+    // send message to the log viewer
+    BxEvent *event = new BxEvent();
+    event->type = BX_ASYNC_EVT_LOG_MSG;
+    event->u.logmsg.prefix = strdup(prefix);
+    event->u.logmsg.level = level;
+    event->u.logmsg.msg = strdup(msg);
+    sim_to_ci_event(event);
+  }
 }
 
 // Called by simulator whenever it needs the user to choose a new value

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -177,6 +177,8 @@ void iofunctions::set_log_prefix(const char* prefix)
 void iofunctions::out(int level, const char *prefix, const char *fmt, va_list ap)
 {
   char c = ' ', *s;
+  char tmpstr[80], msgpfx[80], msg[1024];
+
   assert(magic==MAGIC_LOGNUM);
   assert(this != NULL);
   assert(logfd != NULL);
@@ -190,6 +192,7 @@ void iofunctions::out(int level, const char *prefix, const char *fmt, va_list ap
   }
 
   s = logprefix;
+  msgpfx[0] = 0;
   while (*s) {
     switch (*s) {
       case '%':
@@ -197,40 +200,44 @@ void iofunctions::out(int level, const char *prefix, const char *fmt, va_list ap
         else break;
         switch(*s) {
           case 'd':
-            fprintf(logfd, "%s", prefix==NULL?"":prefix);
+            sprintf(tmpstr, "%s", prefix==NULL?"":prefix);
             break;
           case 't':
-            fprintf(logfd, FMT_TICK, bx_pc_system.time_ticks());
+            sprintf(tmpstr, FMT_TICK, bx_pc_system.time_ticks());
             break;
           case 'i':
 #if BX_SUPPORT_SMP == 0
-            fprintf(logfd, "%08x", BX_CPU(0)->get_eip());
+            sprintf(tmpstr, "%08x", BX_CPU(0)->get_eip());
 #endif
             break;
           case 'e':
-            fprintf(logfd, "%c", c);
+            sprintf(tmpstr, "%c", c);
             break;
           case '%':
-            fprintf(logfd,"%%");
+            sprintf(tmpstr,"%%");
             break;
           default:
-            fprintf(logfd,"%%%c",*s);
+            sprintf(tmpstr,"%%%c",*s);
         }
         break;
-      default :
-        fprintf(logfd,"%c",*s);
+      default:
+        sprintf(tmpstr,"%c",*s);
     }
+    strcat(msgpfx, tmpstr);
     s++;
   }
 
-  fprintf(logfd," ");
+  fprintf(logfd,"%s ", msgpfx);
 
   if(level==LOGLEV_PANIC)
     fprintf(logfd, ">>PANIC<< ");
 
-  vfprintf(logfd, fmt, ap);
-  fprintf(logfd, "\n");
+  vsnprintf(msg, sizeof(msg), fmt, ap);
+  fprintf(logfd, "%s\n", msg);
   fflush(logfd);
+  if (SIM->has_log_viewer()) {
+    SIM->log_msg(msgpfx, level, msg);
+  }
 }
 
 iofunctions::iofunctions(FILE *fs)
@@ -458,7 +465,7 @@ void logfunctions::ask(int level, const char *prefix, const char *fmt, va_list a
 
   // ensure the text screen is showing
   SIM->set_display_mode(DISP_MODE_CONFIG);
-  int val = SIM->log_msg(prefix, level, buf1);
+  int val = SIM->log_ask(prefix, level, buf1);
   switch(val)
   {
     case BX_LOG_ASK_CHOICE_CONTINUE:

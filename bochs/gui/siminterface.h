@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -371,7 +371,7 @@ typedef struct {
 // some kind of "flow control" since the simulator will be able to produce
 // new events much faster than the gui can accept them.
 
-// Event type: BX_ASYNC_EVT_LOG_MSG   (unused)
+// Event type: BX_ASYNC_EVT_LOG_MSG
 //
 // Asynchronous event from the simulator to the CI.  When a BX_PANIC,
 // BX_ERROR, BX_INFO, or BX_DEBUG is found in the simulator code, this
@@ -694,7 +694,12 @@ public:
 
   // called from simulator when it hits serious errors, to ask if the user
   // wants to continue or not
-  virtual int log_msg(const char *prefix, int level, const char *msg) {return -1;}
+  virtual int log_ask(const char *prefix, int level, const char *msg) {return -1;}
+  // called from simulator when writing a message to log file
+  virtual void log_msg(const char *prefix, int level, const char *msg) {}
+  // set this to 1 if the gui has a log viewer
+  virtual void set_log_viewer(bx_bool val) {}
+  virtual bx_bool has_log_viewer() const {return 0;}
 
   // tell the CI to ask the user for the value of a parameter.
   virtual int ask_param(bx_param_c *param) {return -1;}
