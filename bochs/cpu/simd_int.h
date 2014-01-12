@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2013 Stanislav Shwartsman
+//   Copyright (c) 2011-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -490,66 +490,130 @@ BX_CPP_INLINE Bit32u xmm_pmovmskq(const BxPackedXmmRegister *op)
 
 // blend
 
-BX_CPP_INLINE void xmm_pblendb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, unsigned mask)
+BX_CPP_INLINE void xmm_pblendb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, Bit32u mask)
 {
   for (unsigned n=0; n < 16; n++, mask >>= 1) {
     if (mask & 0x1) op1->xmmubyte(n) = op2->xmmubyte(n);
   }
 }
 
-#if BX_SUPPORT_EVEX
-BX_CPP_INLINE void xmm_zero_pblendb(BxPackedXmmRegister *dst, const BxPackedXmmRegister *op, unsigned mask)
+BX_CPP_INLINE void xmm_zero_pblendb(BxPackedXmmRegister *dst, const BxPackedXmmRegister *op, Bit32u mask)
 {
   for (unsigned n=0; n < 16; n++, mask >>= 1) {
     dst->xmmubyte(n) = (mask & 0x1) ? op->xmmubyte(n) : 0;
   }
 }
+
+#if BX_SUPPORT_EVEX
+BX_CPP_INLINE void simd_pblendb(BxPackedAvxRegister *op1, const BxPackedAvxRegister *op2, Bit64u mask, unsigned len)
+{
+  for (unsigned n=0; n < len; n++) {
+    if (mask & 0x1) op1->vmmubyte(n) = op2->vmmubyte(n);
+    mask >>= 1;
+  }
+}
+
+BX_CPP_INLINE void simd_zero_pblendb(BxPackedAvxRegister *dst, const BxPackedAvxRegister *op, Bit64u mask, unsigned len)
+{
+  for (unsigned n=0; n < len; n++) {
+    dst->vmmubyte(n) = (mask & 0x1) ? op->vmmubyte(n) : 0;
+    mask >>= 1;
+  }
+}
 #endif
 
-BX_CPP_INLINE void xmm_pblendw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, unsigned mask)
+BX_CPP_INLINE void xmm_pblendw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, Bit32u mask)
 {
   for (unsigned n=0; n < 8; n++, mask >>= 1) {
     if (mask & 0x1) op1->xmm16u(n) = op2->xmm16u(n);
   }
 }
 
-#if BX_SUPPORT_EVEX
-BX_CPP_INLINE void xmm_zero_pblendw(BxPackedXmmRegister *dst, const BxPackedXmmRegister *op, unsigned mask)
+BX_CPP_INLINE void xmm_zero_pblendw(BxPackedXmmRegister *dst, const BxPackedXmmRegister *op, Bit32u mask)
 {
   for (unsigned n=0; n < 8; n++, mask >>= 1) {
     dst->xmm16u(n) = (mask & 0x1) ? op->xmm16u(n) : 0;
   }
 }
+
+#if BX_SUPPORT_EVEX
+BX_CPP_INLINE void simd_pblendw(BxPackedAvxRegister *op1, const BxPackedAvxRegister *op2, Bit32u mask, unsigned len)
+{
+  for (unsigned n=0; n < len; n++) {
+    if (mask & 0x1) op1->vmm16u(n) = op2->vmm16u(n);
+    mask >>= 1;
+  }
+}
+
+BX_CPP_INLINE void simd_zero_pblendw(BxPackedAvxRegister *dst, const BxPackedAvxRegister *op, Bit32u mask, unsigned len)
+{
+  for (unsigned n=0; n < len; n++) {
+    dst->vmm16u(n) = (mask & 0x1) ? op->vmm16u(n) : 0;
+    mask >>= 1;
+  }
+}
 #endif
 
-BX_CPP_INLINE void xmm_blendps(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, unsigned mask)
+BX_CPP_INLINE void xmm_blendps(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, Bit32u mask)
 {
   for (unsigned n=0; n < 4; n++, mask >>= 1) {
     if (mask & 0x1) op1->xmm32u(n) = op2->xmm32u(n);
   }
 }
 
-#if BX_SUPPORT_EVEX
-BX_CPP_INLINE void xmm_zero_blendps(BxPackedXmmRegister *dst, const BxPackedXmmRegister *op, unsigned mask)
+BX_CPP_INLINE void xmm_zero_blendps(BxPackedXmmRegister *dst, const BxPackedXmmRegister *op, Bit32u mask)
 {
   for (unsigned n=0; n < 4; n++, mask >>= 1) {
     dst->xmm32u(n) = (mask & 0x1) ? op->xmm32u(n) : 0;
   }
 }
+
+#if BX_SUPPORT_EVEX
+BX_CPP_INLINE void simd_blendps(BxPackedAvxRegister *op1, const BxPackedAvxRegister *op2, Bit32u mask, unsigned len)
+{
+  for (unsigned n=0; n < len; n++) {
+    if (mask & 0x1) op1->vmm32u(n) = op2->vmm32u(n);
+    mask >>= 1;
+  }
+}
+
+BX_CPP_INLINE void simd_zero_blendps(BxPackedAvxRegister *dst, const BxPackedAvxRegister *op, Bit32u mask, unsigned len)
+{
+  for (unsigned n=0; n < len; n++) {
+    dst->vmm32u(n) = (mask & 0x1) ? op->vmm32u(n) : 0;
+    mask >>= 1;
+  }
+}
 #endif
 
-BX_CPP_INLINE void xmm_blendpd(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, unsigned mask)
+BX_CPP_INLINE void xmm_blendpd(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, Bit32u mask)
 {
   for (unsigned n=0; n < 2; n++, mask >>= 1) {
     if (mask & 0x1) op1->xmm64u(n) = op2->xmm64u(n);
   }
 }
 
-#if BX_SUPPORT_EVEX
-BX_CPP_INLINE void xmm_zero_blendpd(BxPackedXmmRegister *dst, const BxPackedXmmRegister *op, unsigned mask)
+BX_CPP_INLINE void xmm_zero_blendpd(BxPackedXmmRegister *dst, const BxPackedXmmRegister *op, Bit32u mask)
 {
   for (unsigned n=0; n < 2; n++, mask >>= 1) {
     dst->xmm64u(n) = (mask & 0x1) ? op->xmm64u(n) : 0;
+  }
+}
+
+#if BX_SUPPORT_EVEX
+BX_CPP_INLINE void simd_blendpd(BxPackedAvxRegister *op1, const BxPackedAvxRegister *op2, Bit32u mask, unsigned len)
+{
+  for (unsigned n=0; n < len; n++) {
+    if (mask & 0x1) op1->vmm64u(n) = op2->vmm64u(n);
+    mask >>= 1;
+  }
+}
+
+BX_CPP_INLINE void simd_zero_blendpd(BxPackedAvxRegister *dst, const BxPackedAvxRegister *op, Bit32u mask, unsigned len)
+{
+  for (unsigned n=0; n < len; n++) {
+    dst->vmm64u(n) = (mask & 0x1) ? op->vmm64u(n) : 0;
+    mask >>= 1;
   }
 }
 #endif
@@ -558,6 +622,13 @@ BX_CPP_INLINE void xmm_pblendvb(BxPackedXmmRegister *op1, const BxPackedXmmRegis
 {
   for(unsigned n=0; n<16; n++) {
     if (mask->xmmsbyte(n) < 0) op1->xmmubyte(n) = op2->xmmubyte(n);
+  }
+}
+
+BX_CPP_INLINE void xmm_pblendvw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, const BxPackedXmmRegister *mask)
+{
+  for(unsigned n=0; n<8; n++) {
+    if (mask->xmm16s(n) < 0) op1->xmm16u(n) = op2->xmm16u(n);
   }
 }
 
@@ -921,28 +992,28 @@ BX_CPP_INLINE void xmm_pbroadcastq(BxPackedXmmRegister *op, Bit64u val_64)
 }
 
 #if BX_SUPPORT_EVEX
-BX_CPP_INLINE void simd_pbroadcastb(BxPackedZmmRegister *op, Bit8u val_8, unsigned len)
+BX_CPP_INLINE void simd_pbroadcastb(BxPackedAvxRegister *op, Bit8u val_8, unsigned len)
 {
   for(unsigned n=0; n < len; n++) {
     op->vmmubyte(n) = val_8;
   }
 }
 
-BX_CPP_INLINE void simd_pbroadcastw(BxPackedZmmRegister *op, Bit16u val_16, unsigned len)
+BX_CPP_INLINE void simd_pbroadcastw(BxPackedAvxRegister *op, Bit16u val_16, unsigned len)
 {
   for(unsigned n=0; n < len; n++) {
     op->vmm16u(n) = val_16;
   }
 }
 
-BX_CPP_INLINE void simd_pbroadcastd(BxPackedZmmRegister *op, Bit32u val_32, unsigned len)
+BX_CPP_INLINE void simd_pbroadcastd(BxPackedAvxRegister *op, Bit32u val_32, unsigned len)
 {
   for(unsigned n=0; n < len; n++) {
     op->vmm32u(n) = val_32;
   }
 }
 
-BX_CPP_INLINE void simd_pbroadcastq(BxPackedZmmRegister *op, Bit64u val_64, unsigned len)
+BX_CPP_INLINE void simd_pbroadcastq(BxPackedAvxRegister *op, Bit64u val_64, unsigned len)
 {
   for(unsigned n=0; n < len; n++) {
     op->vmm64u(n) = val_64;

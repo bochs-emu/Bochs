@@ -549,4 +549,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSS_MASK_VssHpsWssR(bxInstructi
   BX_NEXT_INSTR(i);
 }
 
+///////////////////////////////////////
+// masked store with down conversion //
+///////////////////////////////////////
+
 #endif
