@@ -29,9 +29,7 @@ class MyFrame;
 class MyPanel;
 class SimThread;
 class ParamDialog;
-#if BX_DEBUGGER
-class DebugLogDialog;
-#endif
+class LogViewDialog;
 
 //hack alert; yuck; FIXME
 extern MyFrame *theFrame;
@@ -85,7 +83,6 @@ enum
   ID_Toolbar_Copy,
   ID_Toolbar_Paste,
   ID_Toolbar_Snapshot,
-/*ID_Toolbar_Config,*/
   ID_Toolbar_Mouse_en,
   ID_Toolbar_User,
   ID_Toolbar_SaveRestore,
@@ -187,7 +184,7 @@ public:
   bx_bool SimThreadControl(bx_bool resume);
   void OnKillSim(wxCommandEvent& event);
   void OnSim2CIEvent(wxCommandEvent& event);
-  void OnLogMsg(BxEvent *logMsgEvent);
+  void OnLogAsk(BxEvent *be);
   void OnEditPluginCtrl(wxCommandEvent& event);
   void OnEditCPU(wxCommandEvent& event);
   void OnEditCPUID(wxCommandEvent& event);
@@ -203,6 +200,7 @@ public:
   void OnEditOther(wxCommandEvent& event);
   void OnLogPrefs(wxCommandEvent& event);
   void OnLogPrefsDevice(wxCommandEvent& event);
+  void OnLogView(wxCommandEvent& event);
   void OnEditATA(wxCommandEvent& event);
   void editFloppyConfig(int drive);
   void editFirstCdrom();
@@ -227,6 +225,7 @@ private:
   wxMenu *menuLog;
   wxMenu *menuHelp;
   wxToolBar *bxToolBar;
+  LogViewDialog *showLogView;
 public:
 
 DECLARE_EVENT_TABLE()

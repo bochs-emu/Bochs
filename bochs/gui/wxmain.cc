@@ -288,8 +288,8 @@ BxEvent *MyApp::DefaultCallback(void *thisptr, BxEvent *event)
         fprintf(stderr, "%s\n", (const char *)text.mb_str(wxConvUTF8));
       } else {
         wxMessageBox(text, wxT("Error"), wxOK | wxICON_ERROR);
-        // maybe I can make OnLogMsg display something that looks appropriate.
-        // theFrame->OnLogMsg(event);
+        // maybe I can make OnLogAsk display something that looks appropriate.
+        // theFrame->OnLogAsk(event);
       }
       event->retcode = BX_LOG_ASK_CHOICE_DIE;
       // There is only one thread at this point.  if I choose DIE here, it will
@@ -350,6 +350,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_Other, MyFrame::OnEditOther)
   EVT_MENU(ID_Log_Prefs, MyFrame::OnLogPrefs)
   EVT_MENU(ID_Log_PrefsDevice, MyFrame::OnLogPrefsDevice)
+  EVT_MENU(ID_Log_View, MyFrame::OnLogView)
   // toolbar events
   EVT_TOOL(ID_Edit_FD_0, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Edit_FD_1, MyFrame::OnToolbarClick)
@@ -360,7 +361,6 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_TOOL(ID_Toolbar_Copy, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_Paste, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_Snapshot, MyFrame::OnToolbarClick)
-/*EVT_TOOL(ID_Toolbar_Config, MyFrame::OnToolbarClick)*/
   EVT_TOOL(ID_Toolbar_Mouse_en, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_User, MyFrame::OnToolbarClick)
 END_EVENT_TABLE()
@@ -481,8 +481,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuBar->Append(menuHelp, wxT("&Help"));
   SetMenuBar(menuBar);
 
-  // disable things that don't work yet
-  menuLog->Enable(ID_Log_View, FALSE);  // not implemented
   // enable ATA channels in menu
   menuEdit->Enable(ID_Edit_ATA1, BX_MAX_ATA_CHANNEL > 1);
   menuEdit->Enable(ID_Edit_ATA2, BX_MAX_ATA_CHANNEL > 2);
@@ -514,9 +512,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   BX_ADD_TOOL(ID_Toolbar_Copy, copy_xpm, wxT("Copy to clipboard"));
   BX_ADD_TOOL(ID_Toolbar_Paste, paste_xpm, wxT("Paste from clipboard"));
   BX_ADD_TOOL(ID_Toolbar_Snapshot, snapshot_xpm, wxT("Save screen snapshot"));
-  // Omit config button because the whole wxWidgets interface is like
-  // one really big config button.
-  //BX_ADD_TOOL(ID_Toolbar_Config, configbutton_xpm, "Runtime Configuration");
   BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_xpm, wxT("Enable mouse capture\nThere is also a shortcut for this: a CTRL key + the middle mouse button."));
   BX_ADD_TOOL(ID_Toolbar_User, userbutton_xpm, wxT("Keyboard shortcut"));
 
@@ -531,11 +526,16 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   sz->Add(panel, 0, wxGROW);
   SetAutoLayout(TRUE);
   SetSizer(sz);
+
+  // create modeless logfile viewer
+  showLogView = new LogViewDialog(this, -1);
+  showLogView->Init();
 }
 
 MyFrame::~MyFrame()
 {
   delete panel;
+  delete showLogView;
   wxLogDebug(wxT("MyFrame destructor"));
   theFrame = NULL;
 }
@@ -782,6 +782,12 @@ void MyFrame::OnLogPrefsDevice(wxCommandEvent& WXUNUSED(event))
   AdvancedLogOptionsDialog dlg(this, -1);
   dlg.SetRuntimeFlag(sim_thread != NULL);
   dlg.ShowModal();
+}
+
+void MyFrame::OnLogView(wxCommandEvent& WXUNUSED(event))
+{
+  wxASSERT(showLogView != NULL);
+  showLogView->Show(true);
 }
 
 void MyFrame::OnQuit(wxCommandEvent& event)
@@ -1112,9 +1118,14 @@ void MyFrame::OnSim2CIEvent(wxCommandEvent& event)
     sim_thread->SendSyncResponse(be);
     wxLogDebug(wxT("after SendSyncResponse"));
     break;
-  case BX_SYNC_EVT_LOG_ASK:
   case BX_ASYNC_EVT_LOG_MSG:
-    OnLogMsg(be);
+    showLogView->AppendText(be->u.logmsg.level, wxString(be->u.logmsg.prefix, wxConvUTF8),
+                            wxString(be->u.logmsg.msg, wxConvUTF8));
+    free((void*)be->u.logmsg.prefix);
+    free((void*)be->u.logmsg.msg);
+    break;
+  case BX_SYNC_EVT_LOG_ASK:
+    OnLogAsk(be);
     break;
   case BX_ASYNC_EVT_QUIT_SIM:
     wxMessageBox(wxT("Bochs simulation has stopped."), wxT("Bochs Stopped"),
@@ -1133,16 +1144,13 @@ void MyFrame::OnSim2CIEvent(wxCommandEvent& event)
     delete be;
 }
 
-void MyFrame::OnLogMsg(BxEvent *be)
+void MyFrame::OnLogAsk(BxEvent *be)
 {
   wxLogDebug(wxT("log msg: level=%d, prefix='%s', msg='%s'"),
       be->u.logmsg.level,
       be->u.logmsg.prefix,
       be->u.logmsg.msg);
-  if (be->type == BX_ASYNC_EVT_LOG_MSG)
-    return;  // we don't have any place to display log messages
-  else
-    wxASSERT(be->type == BX_SYNC_EVT_LOG_ASK);
+  wxASSERT(be->type == BX_SYNC_EVT_LOG_ASK);
   wxString levelName(SIM->get_log_level_name(be->u.logmsg.level), wxConvUTF8);
   LogMsgAskDialog dlg(this, -1, levelName);  // panic, error, etc.
 #if !BX_DEBUGGER && !BX_GDBSTUB
@@ -1161,9 +1169,9 @@ void MyFrame::OnLogMsg(BxEvent *be)
   wxLogDebug(wxT("you chose %d"), n);
   // This can be called from two different contexts:
   // 1) before sim_thread starts, the default application callback can
-  //    call OnLogMsg to display messages.
+  //    call OnLogAsk to display messages.
   // 2) after the sim_thread starts, the sim_thread callback can call
-  //    OnLogMsg to display messages
+  //    OnLogAsk to display messages
   if (sim_thread)
     sim_thread->SendSyncResponse(be);  // only for case #2
 }

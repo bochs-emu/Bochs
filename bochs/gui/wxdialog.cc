@@ -547,6 +547,109 @@ void PluginControlDialog::ShowHelp()
   wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this);
 }
 
+//////////////////////////////////////////////////////////////////////
+// LogViewDialog implementation
+//////////////////////////////////////////////////////////////////////
+
+// all events go to OnEvent method
+BEGIN_EVENT_TABLE(LogViewDialog, wxDialog)
+  EVT_BUTTON(-1, LogViewDialog::OnEvent)
+END_EVENT_TABLE()
+
+LogViewDialog::LogViewDialog(
+    wxWindow* parent,
+    wxWindowID id)
+  : wxDialog(parent, id, wxT(""), wxDefaultPosition, wxDefaultSize,
+    wxDEFAULT_DIALOG_STYLE)
+{
+  lengthMax = LOG_VIEW_DEFAULT_LENGTH_MAX;
+  lengthTolerance = LOG_VIEW_DEFAULT_TOLERANCE;
+  SetTitle(wxT("Bochs Log Viewer"));
+  mainSizer = new wxBoxSizer(wxVERTICAL);
+  logSizer = new wxBoxSizer(wxHORIZONTAL);
+  buttonSizer = new wxBoxSizer(wxHORIZONTAL);
+  mainSizer->Add(logSizer, 0, wxALIGN_CENTER);
+  mainSizer->Add(buttonSizer, 0, wxALIGN_CENTER);
+  log = new wxTextCtrl(this, -1, "",
+      wxDefaultPosition, wxSize(575, 300),
+      wxTE_MULTILINE | wxTE_RICH | wxTE_READONLY);
+  wxFont font(8, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
+  wxTextAttr attr;
+  attr.SetFont(font);
+  log->SetDefaultStyle(attr);
+  logSizer->Add(log, 1, wxALL|wxGROW, 10);
+  // buttonSizer contents
+  wxButton *btn = new wxButton(this, wxID_OK, BTNLABEL_CLOSE);
+  buttonSizer->Add(btn, 0, wxALL, 5);
+}
+
+void LogViewDialog::Init()
+{
+  SetSizer(mainSizer);
+  mainSizer->Fit(this);
+  wxSize size = mainSizer->GetMinSize();
+  int margin = 5;
+  SetSizeHints(size.GetWidth() + margin, size.GetHeight() + margin);
+  Center();
+}
+
+bool LogViewDialog::Show(bool val)
+{
+  SIM->set_log_viewer(val);
+  if (val) wxDialog::Raise();
+  return wxDialog::Show(val);
+}
+
+void LogViewDialog::CheckLogLength()
+{
+  // truncate the text control periodically to avoid a 
+  // serious memory leak.
+  wxString str = log->GetValue();
+  Bit32u len = str.Length();
+  if (len > lengthMax + lengthTolerance) {
+    // Truncate the string.  Start from length - lengthMax, search 
+    // forward until we find the first \n.
+    for (Bit32u i = len - lengthMax; i<len-1; i++) {
+      if (str.GetChar(i) == '\n') {
+        // remove the \n and everything before it.
+        log->Remove(0, i+1);
+        return;
+      }
+    }
+    // no newline found?!
+    log->Remove(0, len - lengthMax);
+  }
+}
+
+void LogViewDialog::AppendText(int level, wxString prefix, wxString msg)
+{
+  if ((level == LOGLEV_ERROR) || (level == LOGLEV_PANIC)) {
+    log->SetDefaultStyle(wxTextAttr(*wxRED));
+  } else {
+    log->SetDefaultStyle(wxTextAttr(*wxBLACK));
+  }
+  log->AppendText(prefix);
+  log->AppendText(wxT(" "));
+  log->AppendText(msg);
+  log->AppendText(wxT("\n"));
+  int n = log->GetLastPosition();
+  if (n>0) n--;
+  log->ShowPosition(n);
+  CheckLogLength();
+}
+
+void LogViewDialog::OnEvent(wxCommandEvent& event)
+{
+  int id = event.GetId();
+  switch (id) {
+    case wxID_OK:
+      Show(false);
+      break;
+    default:
+      event.Skip();
+  }
+}
+
 /////////////////////////////////////////////////////////////////
 // ParamDialog
 /////////////////////////////////////////////////////////////////

@@ -33,6 +33,7 @@
 #define BTNLABEL_HELP wxT("Help")
 #define BTNLABEL_CANCEL wxT("Cancel")
 #define BTNLABEL_OK wxT("Ok")
+#define BTNLABEL_CLOSE wxT("Close")
 #define BTNLABEL_CREATE_IMG wxT("Create Image")
 #define BTNLABEL_BROWSE wxT("<--Browse")
 
@@ -195,6 +196,29 @@ public:
   ~PluginControlDialog() {}
   void OnEvent(wxCommandEvent& event);
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
+DECLARE_EVENT_TABLE()
+};
+
+////////////////////////////////////////////////////////////////////////////
+// LogViewDialog
+////////////////////////////////////////////////////////////////////////////
+class LogViewDialog: public wxDialog
+{
+private:
+  wxBoxSizer *mainSizer, *logSizer, *buttonSizer;
+  wxTextCtrl *log;
+  Bit32u lengthMax;
+  Bit32u lengthTolerance;
+#define LOG_VIEW_DEFAULT_LENGTH_MAX (400*80)
+#define LOG_VIEW_DEFAULT_TOLERANCE (200*80)
+  void CheckLogLength();
+public:
+  LogViewDialog(wxWindow* parent, wxWindowID id);
+  ~LogViewDialog() {}
+  void Init();
+  bool Show(bool val);
+  void AppendText(int level, wxString prefix, wxString msg);
+  void OnEvent(wxCommandEvent& event);
 DECLARE_EVENT_TABLE()
 };
 
