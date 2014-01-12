@@ -549,6 +549,45 @@ BX_CPP_INLINE Bit8s BX_CPP_AttrRegparmN(1) SaturateWordSToByteS(Bit16s value)
 }
 
 /*
+ * SaturateQwordSToByteS converts a signed 32-bit value to a signed
+ * 8-bit value. If the signed 32-bit value is less than -128, it is
+ * represented by the saturated value -128 (0x80). If it is greater 
+ * than 127, it is represented by the saturated value 127 (0x7F).
+*/
+BX_CPP_INLINE Bit8s BX_CPP_AttrRegparmN(1) SaturateDwordSToByteS(Bit32s value)
+{
+  if(value < -128) return -128;
+  if(value >  127) return  127;
+  return (Bit8s) value;
+}
+
+/*
+ * SaturateQwordSToByteS converts a signed 64-bit value to a signed
+ * 8-bit value. If the signed 64-bit value is less than -128, it is
+ * represented by the saturated value -128 (0x80). If it is greater 
+ * than 127, it is represented by the saturated value 127 (0x7F).
+*/
+BX_CPP_INLINE Bit8s BX_CPP_AttrRegparmN(1) SaturateQwordSToByteS(Bit64s value)
+{
+  if(value < -128) return -128;
+  if(value >  127) return  127;
+  return (Bit8s) value;
+}
+
+/*
+ * SaturateQwordSToWordS  converts  a  signed  64-bit  value  to a signed
+ * 16-bit  value.  If  the signed 64-bit value is less than -32768, it is
+ * represented  by  the saturated value -32768 (0x8000). If it is greater
+ * than 32767, it is represented by the saturated value 32767 (0x7FFF).
+*/
+BX_CPP_INLINE Bit16s BX_CPP_AttrRegparmN(1) SaturateQwordSToWordS(Bit64s value)
+{
+  if(value < -32768) return -32768;
+  if(value >  32767) return  32767;
+  return (Bit16s) value;
+}
+
+/*
  * SaturateDwordSToWordS  converts  a  signed  32-bit  value  to a signed
  * 16-bit  value.  If  the signed 32-bit value is less than -32768, it is
  * represented  by  the saturated value -32768 (0x8000). If it is greater
@@ -571,14 +610,14 @@ BX_CPP_INLINE Bit16s BX_CPP_AttrRegparmN(1) SaturateDwordSToWordS(Bit32s value)
 BX_CPP_INLINE Bit32s BX_CPP_AttrRegparmN(1) SaturateQwordSToDwordS(Bit64s value)
 {
   if(value < BX_CONST64(-2147483648)) return BX_CONST64(-2147483648);
-  if(value > 2147483647) return 2147483647;
+  if(value >  2147483647) return  2147483647;
   return (Bit32s) value;
 }
 
 /*
  * SaturateWordSToByteU  converts  a  signed  16-bit value to an unsigned
  * 8-bit  value.  If  the  signed  16-bit  value  is less than zero it is
- * represented  by  the saturated value zero (0x00).If it is greater than
+ * represented  by the saturated value zero (0x00). If it is greater than
  * 255 it is represented by the saturated value 255 (0xFF).
 */
 BX_CPP_INLINE Bit8u BX_CPP_AttrRegparmN(1) SaturateWordSToByteU(Bit16s value)
@@ -608,9 +647,75 @@ BX_CPP_INLINE Bit16u BX_CPP_AttrRegparmN(1) SaturateDwordSToWordU(Bit32s value)
  * than  4294967295, it is represented  by the  saturated value 4294967295
  * (0xFFFFFFFF).
 */
-BX_CPP_INLINE Bit32u BX_CPP_AttrRegparmN(1) SaturateDwordSToWordU(Bit64s value)
+BX_CPP_INLINE Bit32u BX_CPP_AttrRegparmN(1) SaturateQwordSToDwordU(Bit64s value)
 {
   if(value < 0) return 0;
+  if(value > BX_CONST64(4294967295)) return BX_CONST64(4294967295);
+  return (Bit32u) value;
+}
+
+/*
+ * SaturateWordUToByteU converts an unsigned  16-bit value to unsigned
+ * 8-bit value. If the unsigned 16-bit value is greater than 255, it is
+ * represented by the saturated value 255 (0xFF).
+*/
+BX_CPP_INLINE Bit8u BX_CPP_AttrRegparmN(1) SaturateWordUToByteU(Bit16u value)
+{
+  if(value > 255) return 255;
+  return (Bit8u) value;
+}
+
+/*
+ * SaturateDWordUToByteU converts an unsigned  32-bit value to unsigned
+ * 8-bit value. If the unsigned 32-bit value is greater than 255, it is
+ * represented by the saturated value 255 (0xFF).
+*/
+BX_CPP_INLINE Bit8u BX_CPP_AttrRegparmN(1) SaturateDwordUToByteU(Bit32u value)
+{
+  if(value > 255) return 255;
+  return (Bit8u) value;
+}
+
+/*
+ * SaturateQWordUToByteU converts an unsigned  64-bit value to unsigned
+ * 8-bit value. If the unsigned 64-bit value is greater than 255, it is
+ * represented by the saturated value 255 (0xFF).
+*/
+BX_CPP_INLINE Bit8u BX_CPP_AttrRegparmN(1) SaturateQwordUToByteU(Bit64u value)
+{
+  if(value > 255) return 255;
+  return (Bit8u) value;
+}
+
+/*
+ * SaturateQwordUToWordU converts an unsigned 64-bit value to unsigned
+ * 16-bit value. If the unsigned 64-bit value is greater than 65535,
+ * it is represented by the saturated value 65535 (0xFFFF).
+*/
+BX_CPP_INLINE Bit16u BX_CPP_AttrRegparmN(1) SaturateQwordUToWordU(Bit64u value)
+{
+  if(value > 65535) return 65535;
+  return (Bit16u) value;
+}
+
+/*
+ * SaturateDwordUToWordU converts an unsigned 32-bit value to unsigned
+ * 16-bit value. If the unsigned 32-bit value is greater than 65535,
+ * it is represented by the saturated value 65535 (0xFFFF).
+*/
+BX_CPP_INLINE Bit16u BX_CPP_AttrRegparmN(1) SaturateDwordUToWordU(Bit32u value)
+{
+  if(value > 65535) return 65535;
+  return (Bit16u) value;
+}
+
+/*
+ * SaturateQwordUToDwordU converts  an unsigned 64-bit value to unsigned
+ * 32-bit value. If the unsigned 64-bit value is greater than 4294967295,
+ * it is represented by the saturated value 4294967295 (0xFFFFFFFF).
+*/
+BX_CPP_INLINE Bit32u BX_CPP_AttrRegparmN(1) SaturateQwordUToDwordU(Bit64u value)
+{
   if(value > BX_CONST64(4294967295)) return BX_CONST64(4294967295);
   return (Bit32u) value;
 }
