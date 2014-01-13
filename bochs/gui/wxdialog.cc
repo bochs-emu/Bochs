@@ -621,17 +621,14 @@ void LogViewDialog::CheckLogLength()
   }
 }
 
-void LogViewDialog::AppendText(int level, wxString prefix, wxString msg)
+void LogViewDialog::AppendText(int level, wxString msg)
 {
   if ((level == LOGLEV_ERROR) || (level == LOGLEV_PANIC)) {
     log->SetDefaultStyle(wxTextAttr(*wxRED));
   } else {
     log->SetDefaultStyle(wxTextAttr(*wxBLACK));
   }
-  log->AppendText(prefix);
-  log->AppendText(wxT(" "));
   log->AppendText(msg);
-  log->AppendText(wxT("\n"));
   int n = log->GetLastPosition();
   if (n>0) n--;
   log->ShowPosition(n);

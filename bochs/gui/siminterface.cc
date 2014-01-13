@@ -561,11 +561,13 @@ void bx_real_sim_c::log_msg(const char *prefix, int level, const char *msg)
 {
   if (SIM->has_log_viewer()) {
     // send message to the log viewer
+    char *logmsg = (char*)malloc(strlen(prefix) + strlen(msg) + 4);
+    sprintf(logmsg, "%s %s\n", prefix, msg);
     BxEvent *event = new BxEvent();
     event->type = BX_ASYNC_EVT_LOG_MSG;
-    event->u.logmsg.prefix = strdup(prefix);
+    event->u.logmsg.prefix = NULL;
     event->u.logmsg.level = level;
-    event->u.logmsg.msg = strdup(msg);
+    event->u.logmsg.msg = logmsg;
     sim_to_ci_event(event);
   }
 }

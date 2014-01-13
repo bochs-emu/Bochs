@@ -1119,9 +1119,7 @@ void MyFrame::OnSim2CIEvent(wxCommandEvent& event)
     wxLogDebug(wxT("after SendSyncResponse"));
     break;
   case BX_ASYNC_EVT_LOG_MSG:
-    showLogView->AppendText(be->u.logmsg.level, wxString(be->u.logmsg.prefix, wxConvUTF8),
-                            wxString(be->u.logmsg.msg, wxConvUTF8));
-    free((void*)be->u.logmsg.prefix);
+    showLogView->AppendText(be->u.logmsg.level, wxString(be->u.logmsg.msg, wxConvUTF8));
     free((void*)be->u.logmsg.msg);
     break;
   case BX_SYNC_EVT_LOG_ASK:

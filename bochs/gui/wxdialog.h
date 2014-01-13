@@ -217,7 +217,7 @@ public:
   ~LogViewDialog() {}
   void Init();
   bool Show(bool val);
-  void AppendText(int level, wxString prefix, wxString msg);
+  void AppendText(int level, wxString msg);
   void OnEvent(wxCommandEvent& event);
 DECLARE_EVENT_TABLE()
 };
