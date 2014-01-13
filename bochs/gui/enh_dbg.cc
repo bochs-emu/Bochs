@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2013  The Bochs Project
+//  Copyright (C) 2008-2014  The Bochs Project
 
 #include "config.h"
 
@@ -76,6 +76,7 @@ bx_bool ignoreNxtT = TRUE;      // Do not show "Next at t=" output lines
 bx_bool ignSSDisasm = TRUE;     // Do not show extra disassembly line at each break
 int UprCase = 0;                // 1 = convert all Asm, Register names, Register values to uppercase
 int DumpInAsciiMode = 3;        // bit 1 = show ASCII in dumps, bit 2 = show hex, value=0 is illegal
+bx_bool LogView = 0;            // Send log to output window
 
 bx_bool isLittleEndian = TRUE;
 int DefaultAsmLines = 512;      // default # of asm lines disassembled and "cached"
@@ -3382,6 +3383,12 @@ void ActivateMenuItem (int cmd)
             ResizeColmns = TRUE;        // column widths are font dependent
             if (NewFont() != FALSE)
                 VSizeChange();
+            break;
+
+        case CMD_LOGVIEW: // Toggle sending log to output window
+            LogView ^= 1;
+            SIM->set_log_viewer(LogView);
+            break;
     }
 }
 
@@ -3417,6 +3424,12 @@ BxEvent *enh_dbg_notify_callback(void *unused, BxEvent *event)
     case BX_ASYNC_EVT_DBG_MSG:
       {
         ParseIDText(event->u.logmsg.msg);
+        return event;
+      }
+    case BX_ASYNC_EVT_LOG_MSG:
+      if (LogView) {
+        ParseIDText(event->u.logmsg.msg);
+        free((void*)event->u.logmsg.msg);
         return event;
       }
     default:

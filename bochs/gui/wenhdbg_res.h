@@ -8,6 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
+//  Copyright (C) 2008-2014  The Bochs Project
 
 #ifndef BX_ENH_DBG_RES_H
 #define BX_ENH_DBG_RES_H
@@ -62,7 +63,9 @@
 #define CMD_DREG    148
 #define CMD_TREG    149
 
-#define CMD_ABOUT   150
+#define CMD_LOGVIEW 150
+
+#define CMD_ABOUT   151
 
 // The CMD_WS popup menuID's must be strictly "contiguous" and in-order
 #define CMD_WS_1    160

@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2013  The Bochs Project
+//  Copyright (C) 2008-2014  The Bochs Project
 
 #include "config.h"
 
@@ -65,8 +65,8 @@ void ActivateMenuItem (int LW);
 void SetMemLine (int L);
 void MakeBL(TreeParent *tp, bx_param_c *p);
 
-#define NUM_CHKS    24  // slight overestimate of # of Optmenu items with checkmarks
-#define WSChkIdx    19  // "checkmark index" of the first "wordsize" menu item
+#define NUM_CHKS    25  // slight overestimate of # of Optmenu items with checkmarks
+#define WSChkIdx    20  // "checkmark index" of the first "wordsize" menu item
 
 // reverse mapping from command indexes to menu item widgets
 GtkWidget *Cmd2MI[CMD_IDX_HI - CMD_IDX_LO + 1];
@@ -144,6 +144,7 @@ GtkWidget *sep4;
 GtkWidget *sep5;
 GtkWidget *sep6;
 GtkWidget *sep7;
+GtkWidget *sep10;
 
 GtkWidget *sep8;        // separators around the ListViews
 GtkWidget *sep9;
@@ -336,6 +337,7 @@ void InitMenus()
     ChkMIs[XMM_R] = gtk_check_menu_item_new_with_label("Show SSE Registers\t\tCtrl+F4");
     ChkMIs[D_REG] = gtk_check_menu_item_new_with_label("Show Debug Registers\t\tShift+F4");
 //  ChkMIs[T_REG] = gtk_check_menu_item_new_with_label("Show Test Registers");
+    ChkMIs[LOG_VIEW] = gtk_check_menu_item_new_with_label("Show log in output window");
     ChkMIs[WSChkIdx] = gtk_check_menu_item_new_with_label("1 byte\t\tAlt+1");
     ChkMIs[WSChkIdx+1] = gtk_check_menu_item_new_with_label("2 bytes\t\tAlt+2");
     ChkMIs[WSChkIdx+2] = gtk_check_menu_item_new_with_label("4 bytes\t\tAlt+4");
@@ -352,6 +354,7 @@ void InitMenus()
     sep5 = gtk_separator_menu_item_new();
     sep6 = gtk_separator_menu_item_new();
     sep7 = gtk_separator_menu_item_new();
+    sep10 = gtk_separator_menu_item_new();
 
     // insert all the menu items into each menu
     gtk_menu_shell_append(GTK_MENU_SHELL(CmdMenu), ContMI);
@@ -405,6 +408,8 @@ void InitMenus()
     gtk_menu_shell_append(GTK_MENU_SHELL(OptMenu), ChkMIs[XMM_R]);
     gtk_menu_shell_append(GTK_MENU_SHELL(OptMenu), ChkMIs[D_REG]);
 //  gtk_menu_shell_append(GTK_MENU_SHELL(OptMenu), ChkMIs[T_REG]);
+    gtk_menu_shell_append(GTK_MENU_SHELL(OptMenu), sep10);
+    gtk_menu_shell_append(GTK_MENU_SHELL(OptMenu), ChkMIs[LOG_VIEW]);
     gtk_menu_shell_append(GTK_MENU_SHELL(HelpMenu), AboutMI);
 
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(WrdSizeMI), WSmenu);        // set up popup menu
@@ -432,6 +437,7 @@ void InitMenus()
     gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(ChkMIs[IGN_SA]), ignSSDisasm);
     gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(ChkMIs[IGN_NT]), ignoreNxtT);
     gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(ChkMIs[R_CLR]), SeeRegColors);
+    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(ChkMIs[LOG_VIEW]), LogView);
     gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(ChkMIs[WSChkIdx]), TRUE);
     if (DumpInAsciiMode == 0)       // prevent an illegal value
         DumpInAsciiMode = 3;
@@ -1747,6 +1753,7 @@ void AttachSignals()
     Cmd2MI[CMD_DREG - CMD_IDX_LO + 1] = ChkMIs[D_REG];
 //  g_signal_connect (G_OBJECT(ChkMIs[T_REG]), "activate", GTK_SIGNAL_FUNC(nbCmd_cb), (gpointer) CMD_TREG);
 //  Cmd2MI[CMD_TREG - CMD_IDX_LO + 1] = ChkMIs[T_REG];
+    g_signal_connect (G_OBJECT(ChkMIs[CHK_CMD_LOGVIEW]), "activate", GTK_SIGNAL_FUNC(nbCmd_cb), (gpointer) CMD_LOGVIEW);
 
     g_signal_connect (G_OBJECT(AboutMI), "activate", GTK_SIGNAL_FUNC(nbCmd_cb), (gpointer) CMD_ABOUT);
 

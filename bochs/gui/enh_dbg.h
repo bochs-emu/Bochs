@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2013  The Bochs Project
+//  Copyright (C) 2008-2014  The Bochs Project
 
 
 #ifndef BX_ENH_DBG_DEF_H
@@ -87,6 +87,7 @@ extern bx_bool vgaw_refresh;
 #define CHK_CMD_IGNNT   CMD_IGNNT
 #define CHK_CMD_RCLR    CMD_RCLR
 #define CHK_CMD_EREG    CMD_EREG
+#define CHK_CMD_LOGVIEW CMD_LOGVIEW
 
 #else // GTK+
 
@@ -110,6 +111,7 @@ extern bx_bool vgaw_refresh;
 #define XMM_R       16
 #define D_REG       17
 //#define T_REG     18
+#define LOG_VIEW    19
 
 #define CHK_CMD_MODEB   MODE_BRK
 #define CHK_CMD_ONECPU  ONE_CPU
@@ -123,6 +125,7 @@ extern bx_bool vgaw_refresh;
 #define CHK_CMD_IGNNT   IGN_NT
 #define CHK_CMD_RCLR    R_CLR
 #define CHK_CMD_EREG    E_REG
+#define CHK_CMD_LOGVIEW LOG_VIEW
 
 #endif
 
@@ -165,6 +168,7 @@ extern bx_bool ignoreNxtT;      // Do not show "Next at t=" output lines
 extern bx_bool ignSSDisasm;     // Do not show extra disassembly line at each break
 extern int UprCase;             // 1 = convert all Asm, Register names, Register values to uppercase
 extern int DumpInAsciiMode;     // bit 1 = show ASCII in dumps, bit 2 = show hex, value=0 is illegal
+extern bx_bool LogView;         // Send log to output window
 
 extern bx_bool isLittleEndian;
 

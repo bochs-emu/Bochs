@@ -67,6 +67,8 @@ MENU_1 MENU
         MENUITEM "Show SSE Registers\tCtrl+F4",CMD_XMMR
         MENUITEM "Show Debug Registers\tShift+F4",CMD_DREG
         MENUITEM "Show Test Registers",CMD_TREG
+        MENUITEM SEPARATOR
+        MENUITEM "Show log in output window",CMD_LOGVIEW
         END
     POPUP "&Help"
         BEGIN
