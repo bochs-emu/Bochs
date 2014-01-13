@@ -3388,6 +3388,7 @@ void ActivateMenuItem (int cmd)
         case CMD_LOGVIEW: // Toggle sending log to output window
             LogView ^= 1;
             SIM->set_log_viewer(LogView);
+            SetMenuCheckmark((int)LogView, CHK_CMD_LOGVIEW);
             break;
     }
 }
