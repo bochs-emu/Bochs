@@ -468,7 +468,8 @@ bx_bool bx_voodoo_c::update_timing(void)
   }
   double vfreq = hfreq / (double)vtotal;
   BX_VOODOO_THIS s.vdraw.vtotal_usec = (unsigned)(1000000.0 / vfreq);
-  BX_VOODOO_THIS s.vdraw.vsync_usec = vsync * (unsigned)(1000000.0 / hfreq);
+  BX_VOODOO_THIS s.vdraw.htotal_usec = (unsigned)(1000000.0 / hfreq);
+  BX_VOODOO_THIS s.vdraw.vsync_usec = vsync * BX_VOODOO_THIS s.vdraw.htotal_usec;
   if ((BX_VOODOO_THIS s.vdraw.width != v->fbi.width) ||
       (BX_VOODOO_THIS s.vdraw.height != v->fbi.height)) {
     BX_VOODOO_THIS s.vdraw.width = v->fbi.width;
@@ -581,11 +582,14 @@ void bx_voodoo_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
   v->fbi.video_changed = 1;
 }
 
-bx_bool bx_voodoo_c::get_retrace(void)
+Bit16u bx_voodoo_c::get_retrace(void)
 {
   Bit64u time_in_frame = bx_pc_system.time_usec()  - BX_VOODOO_THIS s.vdraw.frame_start;
-  if (time_in_frame > BX_VOODOO_THIS s.vdraw.vsync_usec) return 1;
-  else return 0;
+  if (time_in_frame > BX_VOODOO_THIS s.vdraw.vsync_usec) {
+    return 0;
+  } else {
+    return (BX_VOODOO_THIS s.vdraw.vsync_usec - time_in_frame) / BX_VOODOO_THIS s.vdraw.htotal_usec;
+  }
 }
 
 void bx_voodoo_c::output_enable(bx_bool enabled)

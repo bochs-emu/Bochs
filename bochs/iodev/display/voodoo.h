@@ -28,6 +28,7 @@ typedef struct {
   struct {
     Bit32u width;
     Bit32u height;
+    Bit64u htotal_usec;
     Bit64u vtotal_usec;
     Bit64u vsync_usec;
     Bit64u frame_start;
@@ -58,7 +59,7 @@ public:
   virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
   virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
-  static bx_bool get_retrace(void);
+  static Bit16u get_retrace(void);
   static void output_enable(bx_bool enabled);
   static void update_screen_start(void);
   static bx_bool update_timing(void);
