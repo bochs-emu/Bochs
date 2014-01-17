@@ -5,7 +5,7 @@
 // ES1370 soundcard support (ported from QEMU)
 //
 // Copyright (c) 2005  Vassili Karpov (malc)
-// Copyright (C) 2011-2013  The Bochs Project
+// Copyright (C) 2011-2014  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -235,11 +235,13 @@ void bx_es1370_c::init(void)
     BX_ES1370_THIS s.dac1_timer_index = bx_pc_system.register_timer
       (BX_ES1370_THIS_PTR, es1370_timer_handler, 1, 1, 0, "es1370.dac1");
     // DAC1 timer: inactive, continuous, frequency variable
+    bx_pc_system.setTimerParam(BX_ES1370_THIS s.dac1_timer_index, 0);
   }
   if (BX_ES1370_THIS s.dac2_timer_index == BX_NULL_TIMER_HANDLE) {
     BX_ES1370_THIS s.dac2_timer_index = bx_pc_system.register_timer
       (BX_ES1370_THIS_PTR, es1370_timer_handler, 1, 1, 0, "es1370.dac2");
     // DAC2 timer: inactive, continuous, frequency variable
+    bx_pc_system.setTimerParam(BX_ES1370_THIS s.dac2_timer_index, 1);
   }
 
   // init runtime parameters
@@ -576,11 +578,8 @@ void bx_es1370_c::es1370_timer_handler(void *this_ptr)
 
 void bx_es1370_c::es1370_timer(void)
 {
-  int timer_id;
-  unsigned i;
-
-  timer_id = bx_pc_system.triggeredTimerID();
-  i = (timer_id == BX_ES1370_THIS s.dac1_timer_index) ? 0 : 1;
+  int timer_id = bx_pc_system.triggeredTimerID();
+  unsigned i = bx_pc_system.triggeredTimerParam();
   run_channel(i, timer_id, BX_ES1370_THIS s.dac_packet_size[i]);
 }
 

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -296,6 +296,7 @@ int bx_pc_system_c::register_timer_ticks(void* this_ptr, bx_timer_handler_t func
   timer[i].this_ptr   = this_ptr;
   strncpy(timer[i].id, id, BxMaxTimerIDLen);
   timer[i].id[BxMaxTimerIDLen-1] = 0; // Null terminate if not already.
+  timer[i].param      = 0;
 
   if (active) {
     if (ticks < Bit64u(currCountdown)) {
@@ -562,4 +563,13 @@ bx_bool bx_pc_system_c::unregisterTimer(unsigned timerIndex)
   if (timerIndex == (numTimers-1)) numTimers--;
 
   return(1); // OK
+}
+
+bx_bool bx_pc_system_c::setTimerParam(unsigned timerIndex, Bit8u param)
+{
+#if BX_TIMER_DEBUG
+  if (timerIndex >= numTimers)
+    BX_PANIC(("setTimerParam: timer %u OOB", timerIndex));
+#endif
+  timer[timerIndex].param = param;
 }

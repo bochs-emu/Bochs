@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -279,17 +279,20 @@ bx_serial_c::init(void)
         BX_SER_THIS s[i].tx_timer_index =
           bx_pc_system.register_timer(this, tx_timer_handler, 0,
                                       0,0, "serial.tx"); // one-shot, inactive
+          bx_pc_system.setTimerParam(BX_SER_THIS s[i].tx_timer_index, i);
       }
 
       if (BX_SER_THIS s[i].rx_timer_index == BX_NULL_TIMER_HANDLE) {
         BX_SER_THIS s[i].rx_timer_index =
           bx_pc_system.register_timer(this, rx_timer_handler, 0,
                                       0,0, "serial.rx"); // one-shot, inactive
+          bx_pc_system.setTimerParam(BX_SER_THIS s[i].rx_timer_index, i);
       }
       if (BX_SER_THIS s[i].fifo_timer_index == BX_NULL_TIMER_HANDLE) {
         BX_SER_THIS s[i].fifo_timer_index =
           bx_pc_system.register_timer(this, fifo_timer_handler, 0,
                                       0,0, "serial.fifo"); // one-shot, inactive
+          bx_pc_system.setTimerParam(BX_SER_THIS s[i].fifo_timer_index, i);
       }
       BX_SER_THIS s[i].rx_pollstate = BX_SER_RXIDLE;
 
@@ -1384,20 +1387,8 @@ void bx_serial_c::tx_timer_handler(void *this_ptr)
 void bx_serial_c::tx_timer(void)
 {
   bx_bool gen_int = 0;
-  Bit8u port = 0;
-  int timer_id;
+  Bit8u port = bx_pc_system.triggeredTimerParam();
   char pname[20];
-
-  timer_id = bx_pc_system.triggeredTimerID();
-  if (timer_id == BX_SER_THIS s[0].tx_timer_index) {
-    port = 0;
-  } else if (timer_id == BX_SER_THIS s[1].tx_timer_index) {
-    port = 1;
-  } else if (timer_id == BX_SER_THIS s[2].tx_timer_index) {
-    port = 2;
-  } else if (timer_id == BX_SER_THIS s[3].tx_timer_index) {
-    port = 3;
-  }
 
   if (BX_SER_THIS s[port].modem_cntl.local_loopback) {
     rx_fifo_enq(port, BX_SER_THIS s[port].tsrbuffer);
@@ -1499,20 +1490,8 @@ void bx_serial_c::rx_timer(void)
   struct timeval tval;
   fd_set fds;
 #endif
-  Bit8u port = 0;
-  int timer_id;
+  Bit8u port = bx_pc_system.triggeredTimerParam();
   bx_bool data_ready = 0;
-
-  timer_id = bx_pc_system.triggeredTimerID();
-  if (timer_id == BX_SER_THIS s[0].rx_timer_index) {
-    port = 0;
-  } else if (timer_id == BX_SER_THIS s[1].rx_timer_index) {
-    port = 1;
-  } else if (timer_id == BX_SER_THIS s[2].rx_timer_index) {
-    port = 2;
-  } else if (timer_id == BX_SER_THIS s[3].rx_timer_index) {
-    port = 3;
-  }
 
   int bdrate = BX_SER_THIS s[port].baudrate / (BX_SER_THIS s[port].line_cntl.wordlen_sel + 5);
   unsigned char chbuf = 0;
@@ -1659,19 +1638,8 @@ void bx_serial_c::fifo_timer_handler(void *this_ptr)
 
 void bx_serial_c::fifo_timer(void)
 {
-  Bit8u port = 0;
-  int timer_id;
+  Bit8u port = bx_pc_system.triggeredTimerParam();
 
-  timer_id = bx_pc_system.triggeredTimerID();
-  if (timer_id == BX_SER_THIS s[0].fifo_timer_index) {
-    port = 0;
-  } else if (timer_id == BX_SER_THIS s[1].fifo_timer_index) {
-    port = 1;
-  } else if (timer_id == BX_SER_THIS s[2].fifo_timer_index) {
-    port = 2;
-  } else if (timer_id == BX_SER_THIS s[3].fifo_timer_index) {
-    port = 3;
-  }
   BX_SER_THIS s[port].line_status.rxdata_ready = 1;
   raise_interrupt(port, BX_SER_INT_FIFO);
 }

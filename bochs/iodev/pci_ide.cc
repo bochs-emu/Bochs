@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2012  The Bochs Project
+//  Copyright (C) 2004-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -87,6 +87,7 @@ void bx_pci_ide_c::init(void)
     if (BX_PIDE_THIS s.bmdma[i].timer_index == BX_NULL_TIMER_HANDLE) {
       BX_PIDE_THIS s.bmdma[i].timer_index =
         DEV_register_timer(this, timer_handler, 1000, 0,0, "PIIX3 BM-DMA timer");
+        bx_pc_system.setTimerParam(BX_PIDE_THIS s.bmdma[i].timer_index, i);
     }
   }
 
@@ -229,20 +230,14 @@ void bx_pci_ide_c::timer_handler(void *this_ptr)
 
 void bx_pci_ide_c::timer()
 {
-  int timer_id, count;
-  Bit8u channel;
+  int count;
   Bit32u size, sector_size;
   struct {
     Bit32u addr;
     Bit32u size;
   } prd;
 
-  timer_id = bx_pc_system.triggeredTimerID();
-  if (timer_id == BX_PIDE_THIS s.bmdma[0].timer_index) {
-    channel = 0;
-  } else {
-    channel = 1;
-  }
+  Bit8u channel = bx_pc_system.triggeredTimerParam();
   if (((BX_PIDE_THIS s.bmdma[channel].status & 0x01) == 0) ||
       (BX_PIDE_THIS s.bmdma[channel].prd_current == 0)) {
     return;
