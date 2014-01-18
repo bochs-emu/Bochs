@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -248,6 +248,7 @@ private:
       int statusbar_id;
       Bit8u device_num; // for ATAPI identify & inquiry
       bx_bool status_changed;
+      int seek_timer_index;
     } drives[2];
     unsigned drive_select;
 
@@ -257,7 +258,6 @@ private:
 
   } channels[BX_MAX_ATA_CHANNEL];
 
-  int seek_timer_index;
   Bit8u cdrom_count;
   bx_bool pci_enabled;
 };

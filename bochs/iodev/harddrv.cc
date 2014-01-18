@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -126,9 +126,9 @@ bx_hard_drive_c::bx_hard_drive_c()
     for (Bit8u device=0; device<2; device ++) {
       channels[channel].drives[device].hdimage =  NULL;
       channels[channel].drives[device].cdrom.cd =  NULL;
+      channels[channel].drives[device].seek_timer_index = BX_NULL_TIMER_HANDLE;
     }
   }
-  seek_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
 bx_hard_drive_c::~bx_hard_drive_c()
@@ -264,7 +264,7 @@ void bx_hard_drive_c::init(void)
       BX_CONTROLLER(channel,device).udma_mode           = 0;
 
       // If not present
-      BX_HD_THIS channels[channel].drives[device].device_type           = IDE_NONE;
+      BX_HD_THIS channels[channel].drives[device].device_type  = IDE_NONE;
       BX_HD_THIS channels[channel].drives[device].statusbar_id = -1;
       BX_HD_THIS channels[channel].drives[device].identify_set = 0;
       if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_NONE) continue;
@@ -403,6 +403,15 @@ void bx_hard_drive_c::init(void)
         } else {
           BX_INFO(("Media not present in CD-ROM drive"));
           BX_HD_THIS channels[channel].drives[device].cdrom.ready = 0;
+        }
+      }
+      if (SIM->get_param_enum("type", base)->get() != BX_ATA_DEVICE_NONE) {
+        // register timer for HD/CD seek emulation
+        if (BX_DRIVE(channel,device).seek_timer_index == BX_NULL_TIMER_HANDLE) {
+          BX_DRIVE(channel,device).seek_timer_index =
+            DEV_register_timer(this, seek_timer_handler, 1000, 0, 0, "HD/CD seek");
+            bx_pc_system.setTimerParam(BX_DRIVE(channel,device).seek_timer_index,
+                                       (channel << 1) | device);
         }
       }
     }
@@ -544,13 +553,6 @@ void bx_hard_drive_c::init(void)
              SIM->get_param_bool(BXPN_FLOPPYSIGCHECK)->get() ? "dis" : "en"));
   }
 
-  // register timer for HD/CD seek emulation
-  if (BX_HD_THIS seek_timer_index == BX_NULL_TIMER_HANDLE) {
-    BX_HD_THIS seek_timer_index =
-      DEV_register_timer(this, seek_timer_handler, 100000, 0,0, "HD/CD seek");
-    // TODO !!!
-  }
-
   BX_HD_THIS pci_enabled = SIM->get_param_bool(BXPN_PCI_ENABLED)->get();
 
   // register handler for correct cdrom parameter handling after runtime config
@@ -632,9 +634,37 @@ void bx_hard_drive_c::seek_timer_handler(void *this_ptr)
 
 void bx_hard_drive_c::seek_timer()
 {
-  for (unsigned channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
-    for (unsigned device=0; device<2; device++) {
-      // TODO: seek emulation
+  Bit8u param = bx_pc_system.triggeredTimerParam();
+  Bit8u channel = param >> 1;
+  Bit8u device = param & 1;
+  controller_t *controller = &BX_CONTROLLER(channel, device);
+  if (BX_DRIVE_IS_HD(channel, device)) {
+    switch (controller->current_command) {
+      case 0x24: // READ SECTORS EXT
+      case 0x29: // READ MULTIPLE EXT
+      case 0x20: // READ SECTORS, with retries
+      case 0x21: // READ SECTORS, without retries
+      case 0xC4: // READ MULTIPLE SECTORS
+        controller->error_register = 0;
+        controller->status.busy  = 0;
+        controller->status.drive_ready = 1;
+        controller->status.seek_complete = 1;
+        controller->status.drq   = 1;
+        controller->status.corrected_data = 0;
+        controller->buffer_index = 0;
+        raise_interrupt(channel);
+        break;
+      default:
+        BX_ERROR(("seek_timer(): command not implemented yet"));
+    }
+  } else {
+    switch (BX_DRIVE(channel, device).atapi.command) {
+      case 0x28: // read (10)
+      case 0xa8: // read (12)
+        ready_to_send_atapi(channel);
+        break;
+      default:
+        BX_ERROR(("seek_timer(): ATAPI command not implemented yet"));
     }
   }
 }
@@ -1676,7 +1706,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                                           transfer_length * 2048, 1);
                   BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks = transfer_length;
                   BX_SELECTED_DRIVE(channel).cdrom.next_lba = lba;
-                  ready_to_send_atapi(channel);
+                  bx_pc_system.activate_timer(
+                    BX_DRIVE(channel,BX_SLAVE_SELECTED(channel)).seek_timer_index, 80000, 0);
                 }
                 break;
 
@@ -1938,13 +1969,14 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           if (ide_read_sector(channel, controller->buffer,
                                   controller->buffer_size)) {
             controller->error_register = 0;
-            controller->status.busy  = 0;
+            controller->status.busy  = 1;
             controller->status.drive_ready = 1;
-            controller->status.seek_complete = 1;
-            controller->status.drq   = 1;
+            controller->status.seek_complete = 0;
+            controller->status.drq   = 0;
             controller->status.corrected_data = 0;
             controller->buffer_index = 0;
-            raise_interrupt(channel);
+            bx_pc_system.activate_timer(
+              BX_DRIVE(channel,BX_SLAVE_SELECTED(channel)).seek_timer_index, 5000, 0);
           }
           break;
 
@@ -2977,12 +3009,6 @@ void bx_hard_drive_c::init_send_atapi_command(Bit8u channel, Bit8u command, int 
   if (alloc_length == 0)
     alloc_length = controller->byte_count;
 
-  controller->interrupt_reason.i_o = 1;
-  controller->interrupt_reason.c_d = 0;
-  controller->status.busy = 0;
-  controller->status.drq = 1;
-  controller->status.err = 0;
-
   // no bytes transfered yet
   if (lazy)
     controller->buffer_index = controller->buffer_size;
@@ -3062,6 +3088,14 @@ void bx_hard_drive_c::init_mode_sense_single(Bit8u channel, const void* src, int
   void BX_CPP_AttrRegparmN(1)
 bx_hard_drive_c::ready_to_send_atapi(Bit8u channel)
 {
+  controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
+
+  controller->interrupt_reason.i_o = 1;
+  controller->interrupt_reason.c_d = 0;
+  controller->status.busy = 0;
+  controller->status.drq = 1;
+  controller->status.err = 0;
+
   if (!BX_SELECTED_CONTROLLER(channel).packet_dma) {
     raise_interrupt(channel);
   }
