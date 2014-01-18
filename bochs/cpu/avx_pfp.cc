@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2013 Stanislav Shwartsman
+//   Copyright (c) 2011-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -270,7 +270,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRTPS_VpsWpsR(bxInstruction_c *
   BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
   unsigned len = i->getVL();
 
-  for (unsigned n=0; n < (4*len); n++)
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++)
     op.ymm32u(n) = approximate_rsqrt(op.ymm32u(n));
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), op, len);
@@ -297,7 +297,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCPPS_VpsWpsR(bxInstruction_c *i)
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   unsigned len = i->getVL();
 
-  for (unsigned n=0; n < (4*len); n++)
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++)
     op.vmm32u(n) = approximate_rcp(op.vmm32u(n));
 
   BX_WRITE_AVX_REGZ(i->dst(), op, len);
@@ -483,8 +483,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PD_VpdWpsR(bxInstruction_c 
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
 
-  for (unsigned n=0; n < (2*len); n++) {
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
      result.ymm64u(n) = float32_to_float64(op.xmm32u(n), status);
   }
 
@@ -500,14 +501,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2PS_VpsWpdR(bxInstruction_c 
 {
   BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
   BxPackedXmmRegister result;
+  unsigned len = i->getVL();
 
   result.xmm64u(1) = 0; /* clear upper part of the result for case of VL128 */
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  unsigned len = i->getVL();
+  softfloat_status_word_rc_override(status, i);
 
-  for (unsigned n=0; n < (2*len); n++) {
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
     result.xmm32u(n) = float64_to_float32(op.ymm64u(n), status);
   }
 
@@ -525,6 +527,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSS2SD_VsdWssR(bxInstruction_c 
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
   op1.xmm64u(0) = float32_to_float64(op2, status);
   check_exceptionsSSE(get_exception_flags(status));
 
@@ -541,6 +544,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSD2SS_VssWsdR(bxInstruction_c 
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
   op1.xmm32u(0) = float64_to_float32(op2, status);
   check_exceptionsSSE(get_exception_flags(status));
 
@@ -557,8 +561,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTDQ2PS_VpsWdqR(bxInstruction_c 
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
 
-  for (unsigned n=0; n < (4*len); n++) {
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
     op.ymm32u(n) = int32_to_float32(op.ymm32u(n), status);
   }
 
@@ -577,8 +582,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2DQ_VdqWpsR(bxInstruction_c 
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
 
-  for (unsigned n=0; n < (4*len); n++) {
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
     op.ymm32u(n) = float32_to_int32(op.ymm32u(n), status);
   }
 
@@ -597,8 +603,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTPS2DQ_VdqWpsR(bxInstruction_c
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
 
-  for (unsigned n=0; n < (4*len); n++) {
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
     op.ymm32u(n) = float32_to_int32_round_to_zero(op.ymm32u(n), status);
   }
 
@@ -1019,7 +1026,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPS_VpsHpsWpsIbR(bxInstruction_
   mxcsr_to_softfloat_status_word(status, MXCSR);
   int ib = i->Ib() & 0x1F;
 
-  for (unsigned n=0; n < (4*len); n++) {
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
     op1.ymm32u(n) = avx_compare32[ib](op1.ymm32u(n), op2.ymm32u(n), status) ? 0xFFFFFFFF : 0;
   }
 
@@ -1039,7 +1046,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPD_VpdHpdWpdIbR(bxInstruction_
   mxcsr_to_softfloat_status_word(status, MXCSR);
   int ib = i->Ib() & 0x1F;
 
-  for (unsigned n=0; n < (2*len); n++) {
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
     op1.ymm64u(n) = avx_compare64[ib](op1.ymm64u(n), op2.ymm64u(n), status) ?
        BX_CONST64(0xFFFFFFFFFFFFFFFF) : 0;
   }
@@ -1141,14 +1148,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTPD2DQ_VqWpdR(bxInstruction_c 
 {
   BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
   BxPackedXmmRegister result;
+  unsigned len = i->getVL();
 
   result.xmm64u(1) = 0; /* clear upper part of the result for case of VL128 */
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  unsigned len = i->getVL();
+  softfloat_status_word_rc_override(status, i);
 
-  for (unsigned n=0; n < (2*len); n++) {
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
     result.xmm32u(n) = float64_to_int32_round_to_zero(op.ymm64u(n), status);
   }
 
@@ -1163,14 +1171,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2DQ_VqWpdR(bxInstruction_c *
 {
   BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
   BxPackedXmmRegister result;
+  unsigned len = i->getVL();
 
   result.xmm64u(1) = 0; /* clear upper part of the result for case of VL128 */
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  unsigned len = i->getVL();
+  softfloat_status_word_rc_override(status, i);
 
-  for (unsigned n=0; n < (2*len); n++) {
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
     result.xmm32u(n) = float64_to_int32(op.ymm64u(n), status);
   }
 
@@ -1187,7 +1196,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTDQ2PD_VpdWqR(bxInstruction_c *
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
   unsigned len = i->getVL();
 
-  for (unsigned n=0; n < (2*len); n++) {
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
      result.ymm64u(n) = int32_to_float64(op.xmm32u(n));
   }
 
@@ -1204,7 +1213,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VTESTPS_VpsWpsR(bxInstruction_c *i
 
   unsigned result = EFlagsZFMask | EFlagsCFMask;
 
-  for (unsigned n=0; n < (2*len); n++) {
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
     if ((op2.ymm64u(n) &  op1.ymm64u(n) & BX_CONST64(0x8000000080000000)) != 0)
       result &= ~EFlagsZFMask;
 
@@ -1225,7 +1234,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VTESTPD_VpdWpdR(bxInstruction_c *i
 
   unsigned result = EFlagsZFMask | EFlagsCFMask;
 
-  for (unsigned n=0; n < (2*len); n++) {
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
     if ((op2.ymm64u(n) &  op1.ymm64u(n) & BX_CONST64(0x8000000000000000)) != 0)
       result &= ~EFlagsZFMask;
 
@@ -1255,7 +1264,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDPS_VpsWpsIbR(bxInstruction_c
   if (control & 0x8)
     status.float_suppress_exception |= float_flag_inexact;
 
-  for(unsigned n=0; n < (4*len); n++) {
+  for(unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
     op.ymm32u(n) = float32_round_to_int(op.ymm32u(n), status);
   }
 
@@ -1283,7 +1292,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDPD_VpdWpdIbR(bxInstruction_c
   if (control & 0x8)
     status.float_suppress_exception |= float_flag_inexact;
 
-  for(unsigned n=0; n < (2*len); n++) {
+  for(unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
     op.ymm64u(n) = float64_round_to_int(op.ymm64u(n), status);
   }
 
@@ -1401,7 +1410,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPH2PS_VpsWpsR(bxInstruction_c 
   // no denormal exception is reported on MXCSR
   status.float_suppress_exception = float_flag_denormal;
 
-  for (unsigned n=0; n < (4*len); n++) {
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
      result.ymm32u(n) = float16_to_float32(op.xmm16u(n), status);
   }
 
@@ -1431,7 +1440,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PH_WpsVpsIb(bxInstruction_c
   if ((control & 0x4) == 0)
     status.float_rounding_mode = control & 0x3;
 
-  for (unsigned n=0; n < (4*len); n++) {
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
     result.xmm16u(n) = float32_to_float16(op.ymm32u(n), status);
   }
 

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2013 Stanislav Shwartsman
+//   Copyright (c) 2011-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -614,7 +614,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZPS_VpsWpsR(bxInstruction_c *i
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
-  for (unsigned n=0; n < (4*len); n++) {
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
     op.ymm32u(n) = float32_frc(op.ymm32u(n), status);
   }
 
@@ -632,7 +632,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZPD_VpdWpdR(bxInstruction_c *i
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
-  for (unsigned n=0; n < (2*len); n++) {
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
     op.ymm64u(n) = float64_frc(op.ymm64u(n), status);
   }
 

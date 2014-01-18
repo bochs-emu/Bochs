@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013 Stanislav Shwartsman
+//   Copyright (c) 2013-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -245,6 +245,20 @@ static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f59_Mask[4] = {
   /* 66 */ { BxVexW1, BX_IA_V512_VMULPD_VpdHpdWpd_Kmask },
   /* F3 */ { BxVexW0, BX_IA_V512_VMULSS_VssHpsWss_Kmask },
   /* F2 */ { BxVexW1, BX_IA_V512_VMULSD_VsdHpdWsd_Kmask }
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f5a[4] = {
+  /* -- */ { BxVexW0, BX_IA_V512_VCVTPS2PD_VpdWps },
+  /* 66 */ { BxVexW1, BX_IA_V512_VCVTPD2PS_VpsWpd },
+  /* F3 */ { BxVexW0, BX_IA_V512_VCVTSS2SD_VsdWss },
+  /* F2 */ { BxVexW1, BX_IA_V512_VCVTSD2SS_VssWsd }
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f5a_Mask[4] = {
+  /* -- */ { BxVexW0, BX_IA_V512_VCVTPS2PD_VpdWps_Kmask },
+  /* 66 */ { BxVexW1, BX_IA_V512_VCVTPD2PS_VpsWpd_Kmask },
+  /* F3 */ { BxVexW0, BX_IA_V512_VCVTSS2SD_VsdWss_Kmask },
+  /* F2 */ { BxVexW1, BX_IA_V512_VCVTSD2SS_VssWsd_Kmask }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f5c[4] = {
@@ -636,8 +650,8 @@ static const BxOpcodeInfo_t BxOpcodeTableEVEX[256*3*2] = {
   /* 58    */ { BxPrefixSSE4, BX_IA_ERROR, BxOpcodeGroupEVEX_0f58_Mask },
   /* 59 k0 */ { BxPrefixSSE4, BX_IA_ERROR, BxOpcodeGroupEVEX_0f59 },
   /* 59    */ { BxPrefixSSE4, BX_IA_ERROR, BxOpcodeGroupEVEX_0f59_Mask },
-  /* 5A k0 */ { 0, BX_IA_ERROR },
-  /* 5A    */ { 0, BX_IA_ERROR },
+  /* 5A k0 */ { BxPrefixSSE4, BX_IA_ERROR, BxOpcodeGroupEVEX_0f5a },
+  /* 5A    */ { BxPrefixSSE4, BX_IA_ERROR, BxOpcodeGroupEVEX_0f5a_Mask },
   /* 5B k0 */ { 0, BX_IA_ERROR },
   /* 5B    */ { 0, BX_IA_ERROR },
   /* 5C k0 */ { BxPrefixSSE4, BX_IA_ERROR, BxOpcodeGroupEVEX_0f5c },

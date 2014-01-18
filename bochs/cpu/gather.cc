@@ -271,7 +271,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_MASK_VpsVSib(bxInstruct
   //     256 bit => 8
   //     512 bit => 16
 
-  unsigned n, len = i->getVL(), num_elements = 4 * len;
+  unsigned n, len = i->getVL(), num_elements = DWORD_ELEMENTS(len);
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
   unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
@@ -312,7 +312,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_MASK_VpsVSib(bxInstruct
   BxPackedAvxRegister *dest = &BX_AVX_REG(i->dst());
   Bit64u opmask = BX_READ_OPMASK(i->opmask()), mask;
 
-  unsigned n, len = i->getVL(), num_elements = 2 * len;
+  unsigned n, len = i->getVL(), num_elements = QWORD_ELEMENTS(len);
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
   unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
@@ -357,7 +357,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_MASK_VpdVSib(bxInstruct
   BxPackedAvxRegister *dest = &BX_AVX_REG(i->dst());
   Bit64u opmask = BX_READ_OPMASK(i->opmask()), mask;
 
-  unsigned n, len = i->getVL(), num_elements = 2 * len;
+  unsigned n, len = i->getVL(), num_elements = QWORD_ELEMENTS(len);
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
   unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
@@ -398,7 +398,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_MASK_VpdVSib(bxInstruct
   BxPackedAvxRegister *dest = &BX_AVX_REG(i->dst());
   Bit64u opmask = BX_READ_OPMASK(i->opmask()), mask;
 
-  unsigned n, len = i->getVL(), num_elements = 2 * len;
+  unsigned n, len = i->getVL(), num_elements = QWORD_ELEMENTS(len);
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
   unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;

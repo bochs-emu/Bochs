@@ -3240,6 +3240,11 @@ public: // for now...
   BX_SMF BX_INSF_TYPE VCVTUDQ2PD_VpdWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VCVTUDQ2PD_MASK_VpdWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+  BX_SMF BX_INSF_TYPE VCVTPD2PS_MASK_VpsWpdR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VCVTPS2PD_MASK_VpdWpsR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VCVTSS2SD_MASK_VsdWssR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VCVTSD2SS_MASK_VssWsdR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+
   BX_SMF BX_INSF_TYPE VPADDD_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPSUBD_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPANDD_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
