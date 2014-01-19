@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -277,6 +277,7 @@ public:
   virtual bx_bool bmdma_present(void) {
     return 0;
   }
+  virtual void bmdma_start_transfer(Bit8u channel) {}
   virtual void bmdma_set_irq(Bit8u channel) {}
 };
 

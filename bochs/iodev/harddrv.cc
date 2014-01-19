@@ -654,17 +654,30 @@ void bx_hard_drive_c::seek_timer()
         controller->buffer_index = 0;
         raise_interrupt(channel);
         break;
+      case 0x25: // READ DMA EXT
+      case 0xC8: // READ DMA
+        controller->error_register = 0;
+        controller->status.busy  = 0;
+        controller->status.drive_ready = 1;
+        controller->status.seek_complete = 1;
+        controller->status.drq   = 1;
+        controller->status.corrected_data = 0;
+        DEV_ide_bmdma_start_transfer(channel);
+        break;
       default:
-        BX_ERROR(("seek_timer(): command not implemented yet"));
+        BX_ERROR(("seek_timer(): ATA command 0x%02x not supported",
+                  controller->current_command));
     }
   } else {
     switch (BX_DRIVE(channel, device).atapi.command) {
       case 0x28: // read (10)
       case 0xa8: // read (12)
+      case 0xbe: // read cd
         ready_to_send_atapi(channel);
         break;
       default:
-        BX_ERROR(("seek_timer(): ATAPI command not implemented yet"));
+        BX_ERROR(("seek_timer(): ATAPI command 0x%02x not supported",
+                  BX_DRIVE(channel, device).atapi.command));
     }
   }
 }
@@ -1587,7 +1600,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                                                 transfer_length * controller->buffer_size, 1);
                         BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks = transfer_length;
                         BX_SELECTED_DRIVE(channel).cdrom.next_lba = lba;
-                        ready_to_send_atapi(channel);
+                        bx_pc_system.activate_timer(
+                          BX_DRIVE(channel,BX_SLAVE_SELECTED(channel)).seek_timer_index, 80000, 0);
                         break;
                       default:
                         BX_ERROR(("Read CD: unknown format"));
@@ -2349,10 +2363,17 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xC8: // READ DMA
           if (BX_SELECTED_IS_HD(channel) && BX_HD_THIS bmdma_present()) {
             lba48_transform(controller, lba48);
-            controller->status.drive_ready = 1;
-            controller->status.seek_complete = 1;
-            controller->status.drq   = 1;
             controller->current_command = value;
+            controller->error_register = 0;
+            controller->status.busy  = 1;
+            controller->status.drive_ready = 1;
+            controller->status.seek_complete = 0;
+            controller->status.drq   = 0;
+            controller->status.corrected_data = 0;
+            bx_pc_system.activate_timer(
+              BX_DRIVE(channel,BX_SLAVE_SELECTED(channel)).seek_timer_index, 5000, 0);
+
+            DEV_ide_bmdma_start_transfer(channel);
           } else {
             BX_ERROR(("write cmd 0x%02x (READ DMA) not supported", value));
             command_aborted(channel, value);
@@ -3105,7 +3126,9 @@ bx_hard_drive_c::ready_to_send_atapi(Bit8u channel)
   controller->status.drq = 1;
   controller->status.err = 0;
 
-  if (!BX_SELECTED_CONTROLLER(channel).packet_dma) {
+  if (BX_SELECTED_CONTROLLER(channel).packet_dma) {
+    DEV_ide_bmdma_start_transfer(channel);
+  } else {
     raise_interrupt(channel);
   }
 }
@@ -3263,7 +3286,7 @@ bx_bool bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u 
     }
   } else {
     BX_ERROR(("DMA read not active"));
-    command_aborted (channel, controller->current_command);
+    command_aborted(channel, controller->current_command);
     return 0;
   }
   return 1;

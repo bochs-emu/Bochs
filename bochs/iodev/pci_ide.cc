@@ -127,6 +127,7 @@ void bx_pci_ide_c::reset(unsigned type)
     BX_PIDE_THIS s.bmdma[i].prd_current = 0;
     BX_PIDE_THIS s.bmdma[i].buffer_top = BX_PIDE_THIS s.bmdma[i].buffer;
     BX_PIDE_THIS s.bmdma[i].buffer_idx = BX_PIDE_THIS s.bmdma[i].buffer;
+    BX_PIDE_THIS s.bmdma[i].data_ready = 0;
   }
 }
 
@@ -154,6 +155,7 @@ void bx_pci_ide_c::register_state(void)
        BX_PIDE_THIS param_save_handler, BX_PIDE_THIS param_restore_handler);
     BXRS_PARAM_SPECIAL32(ctrl, buffer_idx,
        BX_PIDE_THIS param_save_handler, BX_PIDE_THIS param_restore_handler);
+    BXRS_PARAM_BOOL(ctrl, data_ready, BX_PIDE_THIS s.bmdma[i].data_ready);
   }
 }
 
@@ -215,6 +217,13 @@ bx_bool bx_pci_ide_c::bmdma_present(void)
   return (BX_PIDE_THIS pci_base_address[4] > 0);
 }
 
+void bx_pci_ide_c::bmdma_start_transfer(Bit8u channel)
+{
+  if (channel < 2) {
+    BX_PIDE_THIS s.bmdma[channel].data_ready = 1;
+  }
+}
+
 void bx_pci_ide_c::bmdma_set_irq(Bit8u channel)
 {
   if (channel < 2) {
@@ -240,6 +249,11 @@ void bx_pci_ide_c::timer()
   Bit8u channel = bx_pc_system.triggeredTimerParam();
   if (((BX_PIDE_THIS s.bmdma[channel].status & 0x01) == 0) ||
       (BX_PIDE_THIS s.bmdma[channel].prd_current == 0)) {
+    return;
+  }
+  if (BX_PIDE_THIS s.bmdma[channel].cmd_rwcon &&
+      !BX_PIDE_THIS s.bmdma[channel].data_ready) {
+    bx_pc_system.activate_timer(BX_PIDE_THIS s.bmdma[channel].timer_index, 1000, 0);
     return;
   }
   DEV_MEM_READ_PHYSICAL(BX_PIDE_THIS s.bmdma[channel].prd_current, 4, (Bit8u *)&prd.addr);
@@ -385,6 +399,7 @@ void bx_pci_ide_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_PIDE_THIS s.bmdma[channel].prd_current = BX_PIDE_THIS s.bmdma[channel].dtpr;
         BX_PIDE_THIS s.bmdma[channel].buffer_top = BX_PIDE_THIS s.bmdma[channel].buffer;
         BX_PIDE_THIS s.bmdma[channel].buffer_idx = BX_PIDE_THIS s.bmdma[channel].buffer;
+        BX_PIDE_THIS s.bmdma[channel].data_ready = 0;
         bx_pc_system.activate_timer(BX_PIDE_THIS s.bmdma[channel].timer_index, 1000, 0);
       } else if (!(value & 0x01) && BX_PIDE_THIS s.bmdma[channel].cmd_ssbm) {
         BX_PIDE_THIS s.bmdma[channel].cmd_ssbm = 0;

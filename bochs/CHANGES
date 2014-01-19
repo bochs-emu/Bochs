@@ -1,4 +1,4 @@
-Changes after 2.6.2 (updated Dec 16, 2013):
+Changes after 2.6.2 (updated Jan 19, 2014):
 
 - CPU
   - Bugfixes for CPU emulation correctness (critical fixes for VMX, TBM/BMI and RDRAND instructions)
@@ -13,9 +13,11 @@ Changes after 2.6.2 (updated Dec 16, 2013):
   - Added disam for Bochs internal instruction representation, especially useful for instrumentation
   - Updated definition of instrumentation callbacks, see description in
     instrumentation.txt / Fixed instrumentation examples
+  - added capability to use the gui debugger output window as a log viewer
 
 - General
   - Increased max. device log prefix size to 6 and added / modified prefixes
+  - plugin version now uses the native DLL handling code for all Windows ports
 
 - Configure and compile
   - configure and compilation fixes for Cygwin and Visual Studio environment
@@ -32,10 +34,11 @@ Changes after 2.6.2 (updated Dec 16, 2013):
   - Added bochsrc option for the Voodoo Graphics emulation (experimental)
 
 - I/O Devices
+  - Hard drive / CD-ROM
+    - seek delay implemented for ATA/ATAPI read commands
+    - portable ISO image file access now available on all platforms
   - Networking
     - slirp/vnet: all supported TFTP extension options implemented now
-  - CDROM
-    - portable ISO image file access now available on all platforms
   - Sound
     - SB16 / ES1370: added volume control support for wave output
     - ES1370: added 'wavemode' support similar to the SB16
@@ -53,6 +56,7 @@ Changes after 2.6.2 (updated Dec 16, 2013):
   - RFB: set maximum resolution to 1280x1024 (same as vncsrv)
   - RFB: don't wait for client connection on startup if timeout is set to 0
   - Added mouse wheel support to the rfb, vncsrv and wx guis
+  - wx: added viewer window for the Bochs log output
 
 - Tools
   - bximage utility rewritten in C++ for image creation, conversion, resize

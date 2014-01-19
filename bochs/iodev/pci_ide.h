@@ -38,6 +38,7 @@ public:
   virtual void init(void);
   virtual void reset(unsigned type);
   virtual bx_bool bmdma_present(void);
+  virtual void bmdma_start_transfer(Bit8u channel);
   virtual void bmdma_set_irq(Bit8u channel);
   virtual void register_state(void);
   virtual void after_restore_state(void);
@@ -68,6 +69,7 @@ private:
       Bit8u *buffer;
       Bit8u *buffer_top;
       Bit8u *buffer_idx;
+      bx_bool data_ready;
     } bmdma[2];
   } s;
 
