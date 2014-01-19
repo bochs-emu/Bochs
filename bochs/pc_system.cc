@@ -565,7 +565,7 @@ bx_bool bx_pc_system_c::unregisterTimer(unsigned timerIndex)
   return(1); // OK
 }
 
-bx_bool bx_pc_system_c::setTimerParam(unsigned timerIndex, Bit8u param)
+void bx_pc_system_c::setTimerParam(unsigned timerIndex, Bit8u param)
 {
 #if BX_TIMER_DEBUG
   if (timerIndex >= numTimers)

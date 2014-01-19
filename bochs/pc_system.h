@@ -92,7 +92,7 @@ public:
   int    register_timer(void *this_ptr, bx_timer_handler_t, Bit32u useconds,
                          bx_bool continuous, bx_bool active, const char *id);
   bx_bool unregisterTimer(unsigned timerID);
-  bx_bool setTimerParam(unsigned timerID, Bit8u param);
+  void   setTimerParam(unsigned timerID, Bit8u param);
   void   start_timers(void);
   void   activate_timer(unsigned timer_index, Bit32u useconds, bx_bool continuous);
   void   deactivate_timer(unsigned timer_index);
