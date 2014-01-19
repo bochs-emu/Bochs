@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2013 Stanislav Shwartsman
+//   Copyright (c) 2003-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -277,8 +277,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPS2PI_PqWps(bxInstruction_c *i
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
-  MMXUD0(op) = float32_to_int32_round_to_zero(MMXUD0(op), status);
-  MMXUD1(op) = float32_to_int32_round_to_zero(MMXUD1(op), status);
+  MMXSD0(op) = float32_to_int32_round_to_zero(MMXUD0(op), status);
+  MMXSD1(op) = float32_to_int32_round_to_zero(MMXUD1(op), status);
 
   prepareFPU2MMX(); /* cause FPU2MMX state transition */
   check_exceptionsSSE(get_exception_flags(status));
@@ -319,8 +319,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPD2PI_PqWpd(bxInstruction_c *i
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
-  MMXUD0(result) = float64_to_int32_round_to_zero(op.xmm64u(0), status);
-  MMXUD1(result) = float64_to_int32_round_to_zero(op.xmm64u(1), status);
+  MMXSD0(result) = float64_to_int32_round_to_zero(op.xmm64u(0), status);
+  MMXSD1(result) = float64_to_int32_round_to_zero(op.xmm64u(1), status);
 
   prepareFPU2MMX(); /* cause FPU2MMX state transition */
   check_exceptionsSSE(get_exception_flags(status));
@@ -344,11 +344,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSD2SI_GdWsdR(bxInstruction_c *
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
   softfloat_status_word_rc_override(status, i);
-
-  Bit32u result = float64_to_int32_round_to_zero(op, status);
-
+  Bit32s result = float64_to_int32_round_to_zero(op, status);
   check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_32BIT_REGZ(i->dst(), result);
+
+  BX_WRITE_32BIT_REGZ(i->dst(), (Bit32u) result);
 #endif
 
   BX_NEXT_INSTR(i);
@@ -362,12 +361,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSD2SI_GqWsdR(bxInstruction_c *
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
   softfloat_status_word_rc_override(status, i);
-
-  Bit64u result = float64_to_int64_round_to_zero(op, status);
-
+  Bit64s result = float64_to_int64_round_to_zero(op, status);
   check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_64BIT_REG(i->dst(), result);
 
+  BX_WRITE_64BIT_REG(i->dst(), (Bit64u) result);
   BX_NEXT_INSTR(i);
 }
 #endif
@@ -386,11 +383,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSS2SI_GdWssR(bxInstruction_c *
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
   softfloat_status_word_rc_override(status, i);
-
-  Bit32u result = float32_to_int32_round_to_zero(op, status);
-
+  Bit32s result = float32_to_int32_round_to_zero(op, status);
   check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_32BIT_REGZ(i->dst(), result);
+
+  BX_WRITE_32BIT_REGZ(i->dst(), (Bit32u) result);
 #endif
 
   BX_NEXT_INSTR(i);
@@ -404,12 +400,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSS2SI_GqWssR(bxInstruction_c *
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
   softfloat_status_word_rc_override(status, i);
-
-  Bit64u result = float32_to_int64_round_to_zero(op, status);
-
+  Bit64s result = float32_to_int64_round_to_zero(op, status);
   check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_64BIT_REG(i->dst(), result);
 
+  BX_WRITE_64BIT_REG(i->dst(), (Bit64u) result);
   BX_NEXT_INSTR(i);
 }
 #endif
@@ -442,8 +436,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPS2PI_PqWps(bxInstruction_c *i)
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
-  MMXUD0(op) = float32_to_int32(MMXUD0(op), status);
-  MMXUD1(op) = float32_to_int32(MMXUD1(op), status);
+  MMXSD0(op) = float32_to_int32(MMXUD0(op), status);
+  MMXSD1(op) = float32_to_int32(MMXUD1(op), status);
 
   prepareFPU2MMX(); /* cause FPU2MMX state transition */
   check_exceptionsSSE(get_exception_flags(status));
@@ -487,8 +481,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2PI_PqWpd(bxInstruction_c *i)
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
-  MMXUD0(result) = float64_to_int32(op.xmm64u(0), status);
-  MMXUD1(result) = float64_to_int32(op.xmm64u(1), status);
+  MMXSD0(result) = float64_to_int32(op.xmm64u(0), status);
+  MMXSD1(result) = float64_to_int32(op.xmm64u(1), status);
 
   prepareFPU2MMX(); /* cause FPU2MMX state transition */
   check_exceptionsSSE(get_exception_flags(status));
@@ -513,11 +507,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSD2SI_GdWsdR(bxInstruction_c *i
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
   softfloat_status_word_rc_override(status, i);
-
-  Bit32u result = float64_to_int32(op, status);
-
+  Bit32s result = float64_to_int32(op, status);
   check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_32BIT_REGZ(i->dst(), result);
+
+  BX_WRITE_32BIT_REGZ(i->dst(), (Bit32u) result);
 #endif
 
   BX_NEXT_INSTR(i);
@@ -531,12 +524,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSD2SI_GqWsdR(bxInstruction_c *i
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
   softfloat_status_word_rc_override(status, i);
-
-  Bit64u result = float64_to_int64(op, status);
-
+  Bit64s result = float64_to_int64(op, status);
   check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_64BIT_REG(i->dst(), result);
 
+  BX_WRITE_64BIT_REG(i->dst(), (Bit64u) result);
   BX_NEXT_INSTR(i);
 }
 #endif
@@ -556,11 +547,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSS2SI_GdWssR(bxInstruction_c *i
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
   softfloat_status_word_rc_override(status, i);
-
-  Bit32u result = float32_to_int32(op, status);
-
+  Bit32s result = float32_to_int32(op, status);
   check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_32BIT_REGZ(i->dst(), result);
+
+  BX_WRITE_32BIT_REGZ(i->dst(), (Bit32u) result);
 #endif
 
   BX_NEXT_INSTR(i);
@@ -574,12 +564,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSS2SI_GqWssR(bxInstruction_c *i
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
   softfloat_status_word_rc_override(status, i);
-
-  Bit64u result = float32_to_int64(op, status);
-
+  Bit64s result = float32_to_int64(op, status);
   check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_64BIT_REG(i->dst(), result);
 
+  BX_WRITE_64BIT_REG(i->dst(), (Bit64u) result);
   BX_NEXT_INSTR(i);
 }
 #endif
@@ -721,10 +709,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPS2DQ_VdqWpsR(bxInstruction_c *
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
-  op.xmm32u(0) = float32_to_int32(op.xmm32u(0), status);
-  op.xmm32u(1) = float32_to_int32(op.xmm32u(1), status);
-  op.xmm32u(2) = float32_to_int32(op.xmm32u(2), status);
-  op.xmm32u(3) = float32_to_int32(op.xmm32u(3), status);
+  op.xmm32s(0) = float32_to_int32(op.xmm32u(0), status);
+  op.xmm32s(1) = float32_to_int32(op.xmm32u(1), status);
+  op.xmm32s(2) = float32_to_int32(op.xmm32u(2), status);
+  op.xmm32s(3) = float32_to_int32(op.xmm32u(3), status);
 
   check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG(i->dst(), op);
@@ -747,10 +735,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPS2DQ_VdqWpsR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
-  op.xmm32u(0) = float32_to_int32_round_to_zero(op.xmm32u(0), status);
-  op.xmm32u(1) = float32_to_int32_round_to_zero(op.xmm32u(1), status);
-  op.xmm32u(2) = float32_to_int32_round_to_zero(op.xmm32u(2), status);
-  op.xmm32u(3) = float32_to_int32_round_to_zero(op.xmm32u(3), status);
+  op.xmm32s(0) = float32_to_int32_round_to_zero(op.xmm32u(0), status);
+  op.xmm32s(1) = float32_to_int32_round_to_zero(op.xmm32u(1), status);
+  op.xmm32s(2) = float32_to_int32_round_to_zero(op.xmm32u(2), status);
+  op.xmm32s(3) = float32_to_int32_round_to_zero(op.xmm32u(3), status);
 
   check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG(i->dst(), op);
@@ -773,8 +761,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPD2DQ_VqWpdR(bxInstruction_c *
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
-  op.xmm32u(0) = float64_to_int32_round_to_zero(op.xmm64u(0), status);
-  op.xmm32u(1) = float64_to_int32_round_to_zero(op.xmm64u(1), status);
+  op.xmm32s(0) = float64_to_int32_round_to_zero(op.xmm64u(0), status);
+  op.xmm32s(1) = float64_to_int32_round_to_zero(op.xmm64u(1), status);
   op.xmm64u(1) = 0;
 
   check_exceptionsSSE(get_exception_flags(status));
@@ -799,8 +787,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2DQ_VqWpdR(bxInstruction_c *i
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
-  op.xmm32u(0) = float64_to_int32(op.xmm64u(0), status);
-  op.xmm32u(1) = float64_to_int32(op.xmm64u(1), status);
+  op.xmm32s(0) = float64_to_int32(op.xmm64u(0), status);
+  op.xmm32s(1) = float64_to_int32(op.xmm64u(1), status);
   op.xmm64u(1) = 0;
 
   check_exceptionsSSE(get_exception_flags(status));
