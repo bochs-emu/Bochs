@@ -445,7 +445,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2UDQ_VdqWpsR(bxInstruction_c
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2UDQ_MASK_VdqWpsR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
-  unsigned len = i->getVL(), num_elements = DWORD_ELEMENTS(len);
+  unsigned len = i->getVL();
 
   Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
 
@@ -453,7 +453,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2UDQ_MASK_VdqWpsR(bxInstruct
   mxcsr_to_softfloat_status_word(status, MXCSR);
   softfloat_status_word_rc_override(status, i);
 
-  for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
+  for (unsigned n=0, mask = 0x1; n < DWORD_ELEMENTS(len); n++, mask <<= 1) {
     if (opmask & mask)
       op.vmm32u(n) = float32_to_uint32(op.vmm32u(n), status);
     else
@@ -476,7 +476,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2UDQ_MASK_VdqWpsR(bxInstruct
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2UDQ_VdqWpdR(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result = BX_READ_AVX_REG(i->dst());
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
   unsigned len = i->getVL();
 
   float_status_t status;
@@ -609,7 +609,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTUDQ2PS_VpsWdqR(bxInstruction_c
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTUDQ2PS_MASK_VpsWdqR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
-  unsigned len = i->getVL(), num_elements = DWORD_ELEMENTS(len);
+  unsigned len = i->getVL();
 
   Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
 
@@ -617,7 +617,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTUDQ2PS_MASK_VpsWdqR(bxInstruct
   mxcsr_to_softfloat_status_word(status, MXCSR);
   softfloat_status_word_rc_override(status, i);
 
-  for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
+  for (unsigned n=0, mask = 0x1; n < DWORD_ELEMENTS(len); n++, mask <<= 1) {
     if (opmask & mask)
       op.vmm32u(n) = uint32_to_float32(op.vmm32u(n), status);
     else
@@ -642,9 +642,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTUDQ2PD_VpdWdqR(bxInstruction_c
 {
   BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
   BxPackedAvxRegister result;
-  unsigned len = i->getVL(), num_elements = QWORD_ELEMENTS(len);
+  unsigned len = i->getVL();
 
-  for (unsigned n=0; n < num_elements; n++) {
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
     result.vmm64u(n) = uint32_to_float64(op.ymm32u(n));
   }
 
@@ -656,11 +656,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTUDQ2PD_MASK_VpdWdqR(bxInstruct
 {
   BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
   BxPackedAvxRegister result;
-  unsigned len = i->getVL(), num_elements = QWORD_ELEMENTS(len);
+  unsigned len = i->getVL();
 
   Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask());
 
-  for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
+  for (unsigned n=0, mask = 0x1; n < QWORD_ELEMENTS(len); n++, mask <<= 1) {
     if (opmask & mask)
       result.vmm64u(n) = uint32_to_float64(op.ymm32u(n));
     else
