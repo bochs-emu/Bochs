@@ -1699,7 +1699,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     break;
                   }
 */
-                  BX_DEBUG(("cdrom: READ (%d) LBA=%d LEN=%d", atapi_command==0x28?10:12, lba, transfer_length));
+                  BX_DEBUG(("cdrom: READ (%d) LBA=%d LEN=%d DMA=%d", atapi_command==0x28?10:12,
+                            lba, transfer_length, controller->packet_dma));
 
                   // handle command
                   init_send_atapi_command(channel, atapi_command, transfer_length * 2048,
@@ -2648,8 +2649,11 @@ void bx_hard_drive_c::identify_ATAPI_drive(Bit8u channel)
   for (i = 54; i <= 62; i++)
     BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
 
-  // copied from CFA540A
-  BX_SELECTED_DRIVE(channel).id_drive[63] = 0x0103; // variable (DMA stuff)
+  if (BX_HD_THIS bmdma_present()) {
+    BX_SELECTED_DRIVE(channel).id_drive[63] = 0x07 | (BX_SELECTED_CONTROLLER(channel).mdma_mode << 8);
+  } else {
+    BX_SELECTED_DRIVE(channel).id_drive[63] = 0x0;
+  }
   BX_SELECTED_DRIVE(channel).id_drive[64] = 0x0001; // PIO
   BX_SELECTED_DRIVE(channel).id_drive[65] = 0x00b4;
   BX_SELECTED_DRIVE(channel).id_drive[66] = 0x00b4;
@@ -3008,6 +3012,11 @@ void bx_hard_drive_c::init_send_atapi_command(Bit8u channel, Bit8u command, int 
     BX_PANIC(("Allocation length < 0"));
   if (alloc_length == 0)
     alloc_length = controller->byte_count;
+
+  controller->status.busy = 1;
+  controller->status.drive_ready = 1;
+  controller->status.drq = 0;
+  controller->status.err = 0;
 
   // no bytes transfered yet
   if (lazy)
