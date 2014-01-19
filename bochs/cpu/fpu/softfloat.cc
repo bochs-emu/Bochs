@@ -488,12 +488,8 @@ Bit64u float32_to_uint64(float32 a, float_status_t &status)
 
 Bit32u float32_to_uint32(float32 a, float_status_t &status)
 {
-    Bit64s val_64 = float32_to_int64(a, status);
+    Bit64u val_64 = float32_to_uint64(a, status);
 
-    if (val_64 < 0) {
-        status.float_exception_flags = float_flag_invalid; // throw away other flags
-        return 0;
-    }
     if (val_64 > 0xffffffff) {
         status.float_exception_flags = float_flag_invalid; // throw away other flags
         return uint32_indefinite;
@@ -1376,12 +1372,8 @@ Bit64s float64_to_int64_round_to_zero(float64 a, float_status_t &status)
 
 Bit32u float64_to_uint32(float64 a, float_status_t &status)
 {
-    Bit64s val_64 = float64_to_int64(a, status);
+    Bit64u val_64 = float64_to_uint64(a, status);
 
-    if (val_64 < 0) {
-        status.float_exception_flags = float_flag_invalid; // throw away other flags
-        return 0;
-    }
     if (val_64 > 0xffffffff) {
         status.float_exception_flags = float_flag_invalid; // throw away other flags
         return uint32_indefinite;
