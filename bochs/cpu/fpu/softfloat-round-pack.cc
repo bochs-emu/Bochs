@@ -175,7 +175,7 @@ Bit64u roundAndPackUint64(Bit64u absZ0, Bit64u absZ1, float_status_t &status)
         ++absZ0;
         if (absZ0 == 0) {
             float_raise(status, float_flag_invalid);
-            return BX_CONST64(0xFFFFFFFFFFFFFFFF);
+            return uint64_indefinite;
         }
         absZ0 &= ~(((Bit64u)(absZ1<<1) == 0) & roundNearestEven);
     }

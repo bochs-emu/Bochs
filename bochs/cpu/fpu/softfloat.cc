@@ -277,26 +277,16 @@ Bit32u float32_to_uint32_round_to_zero(float32 a, float_status_t &status)
     aSign = extractFloat32Sign(a);
     int shiftCount = aExp - 0x9E;
 
-    if (get_denormals_are_zeros(status)) {
-        if (aExp == 0) aSig = 0;
-    }
-
-    if (aSign) {
-        if (aExp) {
-            float_raise(status, float_flag_invalid);
-        } else if (aSig) { /* negative denormalized */
-            float_raise(status, float_flag_inexact);
-        }
-        return 0;
-    }
-    if (0 < shiftCount) {
-        float_raise(status, float_flag_invalid);
-        return uint32_indefinite;
-    }
-    else if (aExp <= 0x7E) {
+    if (aExp <= 0x7E) {
+        if (get_denormals_are_zeros(status) && aExp == 0) aSig = 0;
         if (aExp | aSig) float_raise(status, float_flag_inexact);
         return 0;
     }
+    else if (0 < shiftCount || aSign) {
+        float_raise(status, float_flag_invalid);
+        return uint32_indefinite;
+    }
+
     aSig = (aSig | 0x800000)<<8;
     Bit32u z = aSig >> (-shiftCount);
     if (aSig << (shiftCount & 31)) {
@@ -399,26 +389,16 @@ Bit64u float32_to_uint64_round_to_zero(float32 a, float_status_t &status)
     aSign = extractFloat32Sign(a);
     int shiftCount = aExp - 0xBE;
 
-    if (get_denormals_are_zeros(status)) {
-        if (aExp == 0) aSig = 0;
-    }
-
-    if (aSign) {
-        if (aExp) {
-            float_raise(status, float_flag_invalid);
-        } else if (aSig) { /* negative denormalized */
-            float_raise(status, float_flag_inexact);
-        }
-        return 0;
-    }
-    if (0 < shiftCount) {
-        float_raise(status, float_flag_invalid);
-        return uint64_indefinite;
-    }
-    else if (aExp <= 0x7E) {
+    if (aExp <= 0x7E) {
+        if (get_denormals_are_zeros(status) && aExp == 0) aSig = 0;
         if (aExp | aSig) float_raise(status, float_flag_inexact);
         return 0;
     }
+    else if (0 < shiftCount || aSign) {
+        float_raise(status, float_flag_invalid);
+        return uint64_indefinite;
+    }
+
     aSig64 = aSig | 0x00800000;
     aSig64 <<= 40;
     Bit64u z = aSig64>>(-shiftCount);
@@ -454,13 +434,14 @@ Bit64u float32_to_uint64(float32 a, float_status_t &status)
     }
 
     if (aSign) {
-        if (aExp) {
+        if (aExp > 0x7E) {
             float_raise(status, float_flag_invalid);
-        } else if (aSig) { /* negative denormalized */
-            float_raise(status, float_flag_inexact);
+            return uint64_indefinite;
         }
+        if (aExp | aSig) float_raise(status, float_flag_inexact);
         return 0;
     }
+
     shiftCount = 0xBE - aExp;
     if (aExp) {
         aSig |= 0x00800000;
@@ -1407,13 +1388,14 @@ Bit64u float64_to_uint64(float64 a, float_status_t &status)
     }
 
     if (aSign) {
-        if (aExp) {
+        if (aExp > 0x3FE) {
             float_raise(status, float_flag_invalid);
-        } else if (aSig) { /* negative denormalized */
-            float_raise(status, float_flag_inexact);
+            return uint64_indefinite;
         }
+        if (aExp | aSig) float_raise(status, float_flag_inexact);
         return 0;
     }
+
     if (aExp) {
         aSig |= BX_CONST64(0x0010000000000000);
     }
