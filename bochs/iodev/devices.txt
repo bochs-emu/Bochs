@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 
-MOTHER BOARD (i440FX Support)                                   devices.cc
+MOTHER BOARD (i440FX support)                                   devices.cc
   |
   +---- 82441FX (PMC) and 82442 (DBX) emulation                 pci.cc
   |
@@ -40,7 +40,7 @@ Attached devices
   |
   +---- PS/2 Keyboard and Mouse                                 keyboard.cc, scancodes.cc
   |
-  +---- Bus Mouse (not complete)                                busmouse.cc
+  +---- Bus Mouse (MS InPort)                                   busmouse.cc
   |
   +---- Hard Drive + ATA controller                             harddrv.cc
   |        |
@@ -64,10 +64,14 @@ Attached devices
   |                                   +---- Mac OSX             hdimage/cdrom_osx.cc
   |                                   +---- Linux and others    hdimage/cdrom_misc.cc
   |
-  +---- Graphics (VGA core)                                     vgacore.cc
+  +---- Graphics                                                display/
   |        |
-  |        +---- VGA adapter with VBE and PCI VGA support       vga.cc
-  |        +---- Cirrus Logic PCI/ISA CLGD5446 SVGA adapter     svga_cirrus.cc
+  |        +---- VGA core                                       vgacore.cc
+  |        |      |
+  |        |      +- VGA adapter with VBE and PCI VGA support   vga.cc
+  |        |      +- Cirrus Logic PCI/ISA CLGD5446 SVGA adapter svga_cirrus.cc
+  |        |
+  |        +---- 3dfx Voodoo Graphics adapter (SST-1/2)         voodoo.cc
   |
   +---- Network support                                         network/
   |        |
@@ -98,7 +102,13 @@ Attached devices
   |        +---- Sound modules
   |                      |
   |                      +---- Dummy / Control Module           soundmod.cc
-  |                      +---- Host specific Modules            soundlnx.cc, soundosx.cc, soundwin.cc
+  |                      +---- Library specific Module          soundsdl.cc
+  |                      +---- Host specific Modules
+  |                                   |
+  |                                   +---- FreeBSD / Linux     soundlnx.cc
+  |                                   +---- Linux               soundalsa.cc
+  |                                   +---- Mac OSX             soundosx.cc
+  |                                   +---- Windows             soundwin.cc
   |
   +---- USB support                                             usb/
            |
