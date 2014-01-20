@@ -433,13 +433,9 @@ Bit64u float32_to_uint64(float32 a, float_status_t &status)
         if (aExp == 0) aSig = 0;
     }
 
-    if (aSign) {
-        if (aExp > 0x7E) {
-            float_raise(status, float_flag_invalid);
-            return uint64_indefinite;
-        }
-        if (aExp | aSig) float_raise(status, float_flag_inexact);
-        return 0;
+    if ((aSign) && (aExp > 0x7E)) {
+        float_raise(status, float_flag_invalid);
+        return uint64_indefinite;
     }
 
     shiftCount = 0xBE - aExp;
@@ -454,7 +450,7 @@ Bit64u float32_to_uint64(float32 a, float_status_t &status)
     aSig64 = aSig;
     aSig64 <<= 40;
     shift64ExtraRightJamming(aSig64, 0, shiftCount, &aSig64, &aSigExtra);
-    return roundAndPackUint64(aSig64, aSigExtra, status);
+    return roundAndPackUint64(aSign, aSig64, aSigExtra, status);
 }
 
 /*----------------------------------------------------------------------------
@@ -1387,13 +1383,9 @@ Bit64u float64_to_uint64(float64 a, float_status_t &status)
         if (aExp == 0) aSig = 0;
     }
 
-    if (aSign) {
-        if (aExp > 0x3FE) {
-            float_raise(status, float_flag_invalid);
-            return uint64_indefinite;
-        }
-        if (aExp | aSig) float_raise(status, float_flag_inexact);
-        return 0;
+    if (aSign && (aExp > 0x3FE)) {
+        float_raise(status, float_flag_invalid);
+        return uint64_indefinite;
     }
 
     if (aExp) {
@@ -1402,9 +1394,7 @@ Bit64u float64_to_uint64(float64 a, float_status_t &status)
     shiftCount = 0x433 - aExp;
     if (shiftCount <= 0) {
         if (0x43E < aExp) {
-            if ((aSig != BX_CONST64(0x0010000000000000)) || (aExp == 0x7FF)) {
-                float_raise(status, float_flag_invalid);
-            }
+            float_raise(status, float_flag_invalid);
             return uint64_indefinite;
         }
         aSigExtra = 0;
@@ -1413,7 +1403,7 @@ Bit64u float64_to_uint64(float64 a, float_status_t &status)
         shift64ExtraRightJamming(aSig, 0, shiftCount, &aSig, &aSigExtra);
     }
 
-    return roundAndPackUint64(aSig, aSigExtra, status);
+    return roundAndPackUint64(aSign, aSig, aSigExtra, status);
 }
 
 /*----------------------------------------------------------------------------

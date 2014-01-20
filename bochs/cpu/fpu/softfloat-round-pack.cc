@@ -154,21 +154,24 @@ Bit64s roundAndPackInt64(int zSign, Bit64u absZ0, Bit64u absZ1, float_status_t &
 | and returns the properly rounded 64-bit unsigned integer corresponding to the
 | input.  Ordinarily, the fixed-point input is simply rounded to an integer,
 | with the inexact exception raised if the input cannot be represented exactly
-| as an integer.  However, if the fixed-point input is too large, the invalid
+| as an integer. However, if the fixed-point input is too large, the invalid
 | exception is raised and the largest unsigned integer is returned.
 *----------------------------------------------------------------------------*/
 
-Bit64u roundAndPackUint64(Bit64u absZ0, Bit64u absZ1, float_status_t &status)
+Bit64u roundAndPackUint64(int zSign, Bit64u absZ0, Bit64u absZ1, float_status_t &status)
 {
     int roundingMode = get_float_rounding_mode(status);
     int roundNearestEven = (roundingMode == float_round_nearest_even);
     int increment = ((Bit64s) absZ1 < 0);
-
     if (!roundNearestEven) {
         if (roundingMode == float_round_to_zero) {
             increment = 0;
-        } else {
-            increment = (roundingMode == float_round_up) && absZ1;
+        } else if (absZ1) {
+            if (zSign) {
+                increment = (roundingMode == float_round_down) && absZ1;
+            } else {
+                increment = (roundingMode == float_round_up) && absZ1;
+            }
         }
     }
     if (increment) {
@@ -177,13 +180,18 @@ Bit64u roundAndPackUint64(Bit64u absZ0, Bit64u absZ1, float_status_t &status)
             float_raise(status, float_flag_invalid);
             return uint64_indefinite;
         }
-        absZ0 &= ~(((Bit64u)(absZ1<<1) == 0) & roundNearestEven);
+        absZ0 &= ~(((Bit64u) (absZ1<<1) == 0) & roundNearestEven);
     }
-    Bit64u z = absZ0;
+
+    if (zSign && absZ0) {
+        float_raise(status, float_flag_invalid);
+        return uint64_indefinite;
+    }
+
     if (absZ1) {
         float_raise(status, float_flag_inexact);
     }
-    return z;
+    return absZ0;
 }
 
 #ifdef FLOAT16
