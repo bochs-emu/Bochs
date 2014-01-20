@@ -509,7 +509,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2PS_VpsWpdR(bxInstruction_c 
     BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), result.vmm128(0));
   }
   else {
-    BX_WRITE_AVX_REGZ(i->dst(), result, len-1); // write half vector
+    BX_WRITE_AVX_REGZ(i->dst(), result, len >> 1); // write half vector
   }
 
   BX_NEXT_INSTR(i);
@@ -1157,7 +1157,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTPD2DQ_VqWpdR(bxInstruction_c 
     BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), result.vmm128(0));
   }
   else {
-    BX_WRITE_AVX_REGZ(i->dst(), result, len-1); // write half vector
+    BX_WRITE_AVX_REGZ(i->dst(), result, len >> 1); // write half vector
   }
 
   BX_NEXT_INSTR(i);
@@ -1184,7 +1184,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2DQ_VqWpdR(bxInstruction_c *
     BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), result.vmm128(0));
   }
   else {
-    BX_WRITE_AVX_REGZ(i->dst(), result, len-1); // write half vector
+    BX_WRITE_AVX_REGZ(i->dst(), result, len >> 1); // write half vector
   }
 
   BX_NEXT_INSTR(i);
