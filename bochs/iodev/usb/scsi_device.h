@@ -9,7 +9,7 @@
 //
 //  Written by Paul Brook
 //
-//  Copyright (C) 2007-2013  The Bochs Project
+//  Copyright (C) 2007-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -84,7 +84,7 @@ public:
   int scsi_write_data(Bit32u tag);
   Bit8u* scsi_get_buf(Bit32u tag);
   const char *get_serial_number() {return drive_serial_str;}
-  void set_inserted(bx_bool value) {inserted = value;}
+  void set_inserted(bx_bool value);
   bx_bool get_inserted() {return inserted;}
 
 protected:

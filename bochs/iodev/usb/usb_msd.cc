@@ -6,7 +6,7 @@
 //
 //  Copyright (c) 2006 CodeSourcery.
 //  Written by Paul Brook
-//  Copyright (C) 2009-2013  The Bochs Project
+//  Copyright (C) 2009-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -180,7 +180,7 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
       "Status",
       "CD-ROM media status (inserted / ejected)",
       media_status_names,
-      BX_EJECTED,
+      BX_INSERTED,
       BX_EJECTED);
     status->set_handler(cd_param_handler);
     status->set_ask_format("Is the device inserted or ejected? [%s] ");
@@ -232,13 +232,12 @@ bx_bool usb_msd_device_c::init()
     sprintf(s.info_txt, "USB HD: path='%s', mode='%s'", s.fname, hdimage_mode_names[s.image_mode]);
   } else if (d.type == USB_DEV_TYPE_CDROM) {
     s.cdrom = DEV_hdimage_init_cdrom(s.fname);
-    if (!s.cdrom->insert_cdrom()) {
-      BX_ERROR(("could not open cdrom image file '%s'", s.fname));
-      return 0;
+    s.scsi_dev = new scsi_device_t(s.cdrom, 0, usb_msd_command_complete, (void*)this);
+    if (set_inserted(1)) {
+      sprintf(s.info_txt, "USB CD: path='%s'", s.fname);
     } else {
-      s.scsi_dev = new scsi_device_t(s.cdrom, 0, usb_msd_command_complete, (void*)this);
+      sprintf(s.info_txt, "USB CD: media not present");
     }
-    sprintf(s.info_txt, "USB CD: path='%s'", s.fname);
   }
   s.scsi_dev->register_state(s.sr_list, "scsidev");
   s.mode = USB_MSDM_CBW;
@@ -649,20 +648,21 @@ void usb_msd_device_c::cancel_packet(USBPacket *p)
   s.scsi_len = 0;
 }
 
-void usb_msd_device_c::set_inserted(bx_bool value)
+bx_bool usb_msd_device_c::set_inserted(bx_bool value)
 {
   const char *path;
 
   if (value) {
     path = SIM->get_param_string("path", s.config)->getptr();
     if (!s.cdrom->insert_cdrom(path)) {
-      SIM->get_param_bool("status", s.config)->set(0);
-      return;
+      SIM->get_param_enum("status", s.config)->set(BX_EJECTED);
+      return 0;
     }
   } else {
     s.cdrom->eject_cdrom();
   }
   s.scsi_dev->set_inserted(value);
+  return value;
 }
 
 bx_bool usb_msd_device_c::get_inserted()
@@ -689,7 +689,7 @@ const char *usb_msd_device_c::cd_param_string_handler(bx_param_string_c *param, 
           param->set("none");
         }
       } else {
-        SIM->get_param_bool("status", param->get_parent())->set(0);
+        SIM->get_param_enum("status", param->get_parent())->set(BX_EJECTED);
       }
     } else {
       BX_PANIC(("cd_param_string_handler: cdrom not found"));

@@ -9,7 +9,7 @@
 //
 //  Written by Paul Brook
 //
-//  Copyright (C) 2007-2013  The Bochs Project
+//  Copyright (C) 2007-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -78,8 +78,8 @@ scsi_device_t::scsi_device_t(cdrom_base_c *_cdrom, int _tcq,
   dev = _dev;
   cluster_size = 4;
   locked = 0;
-  inserted = 1;
-  max_lba = cdrom->capacity() - 1;
+  inserted = 0;
+  max_lba = 0;
   sprintf(drive_serial_str, "%d", serial_number++);
 
   put("SCSICD");
@@ -643,13 +643,13 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
       // The normal LEN field for this command is zero
       memset(outbuf, 0, 8);
       if (type == SCSIDEV_TYPE_CDROM) {
-        nb_sectors = cdrom->capacity();
+        nb_sectors = max_lba;
       } else {
         nb_sectors = hdimage->hd_size / 512;
+        nb_sectors--;
       }
       /* Returned value is the address of the last sector.  */
       if (nb_sectors) {
-        nb_sectors--;
         outbuf[0] = (Bit8u)((nb_sectors >> 24) & 0xff);
         outbuf[1] = (Bit8u)((nb_sectors >> 16) & 0xff);
         outbuf[2] = (Bit8u)((nb_sectors >> 8) & 0xff);
@@ -693,6 +693,8 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
         int start_track, format, msf, toclen = 0;
 
         if (type == SCSIDEV_TYPE_CDROM) {
+          if (!inserted)
+            goto notready;
           msf = buf[1] & 2;
           format = buf[2] & 0xf;
           start_track = buf[6];
@@ -754,9 +756,10 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
 
       // Current/Max Cap Header
       if (type == SCSIDEV_TYPE_CDROM) {
-        nb_sectors = cdrom->capacity();
+        nb_sectors = max_lba;
       } else {
         nb_sectors = (hdimage->hd_size / 512);
+        nb_sectors--;
       }
       /* Returned value is the address of the last sector.  */
       outbuf[4] = (Bit8u)((nb_sectors >> 24) & 0xff);
@@ -791,6 +794,16 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
     if (!r->sector_count)
       r->sector_count = (Bit32u) -1;
     return len;
+  }
+}
+
+void scsi_device_t::set_inserted(bx_bool value)
+{
+  inserted = value;
+  if (inserted) {
+    max_lba = cdrom->capacity() - 1;
+  } else {
+    max_lba = 0;
   }
 }
 

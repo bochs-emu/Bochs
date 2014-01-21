@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2013  The Bochs Project
+//  Copyright (C) 2002-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -69,11 +69,11 @@ bx_bool cdrom_base_c::insert_cdrom(const char *dev)
 
   // Load CD-ROM. Returns 0 if CD is not ready.
   if (dev != NULL) path = strdup(dev);
-  BX_INFO(("load cdrom with path=%s", path));
+  BX_INFO(("load cdrom with path='%s'", path));
   // all platforms except win32
   fd = open(path, O_RDONLY);
   if (fd < 0) {
-    BX_ERROR(("open cd failed for %s: %s", path, strerror(errno)));
+    BX_ERROR(("open cd failed for '%s': %s", path, strerror(errno)));
     return 0;
   }
   // do fstat to determine if it's a file or a device, then set using_file.
