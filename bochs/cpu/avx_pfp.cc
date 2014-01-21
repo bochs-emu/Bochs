@@ -560,7 +560,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTDQ2PS_VpsWdqR(bxInstruction_c 
   softfloat_status_word_rc_override(status, i);
 
   for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
-    op.vmm32u(n) = int32_to_float32(op.vmm32u(n), status);
+    op.vmm32u(n) = int32_to_float32(op.vmm32s(n), status);
   }
 
   check_exceptionsSSE(get_exception_flags(status));
@@ -1198,7 +1198,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTDQ2PD_VpdWqR(bxInstruction_c *
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
-     result.vmm64u(n) = int32_to_float64(op.ymm32u(n));
+     result.vmm64u(n) = int32_to_float64(op.ymm32s(n));
   }
 
   BX_WRITE_AVX_REGZ(i->dst(), result, len);

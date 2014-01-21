@@ -106,8 +106,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PS_VpsQqR(bxInstruction_c *i
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
-  MMXUD0(op) = int32_to_float32(MMXUD0(op), status);
-  MMXUD1(op) = int32_to_float32(MMXUD1(op), status);
+  MMXUD0(op) = int32_to_float32(MMXSD0(op), status);
+  MMXUD1(op) = int32_to_float32(MMXSD1(op), status);
 
   prepareFPU2MMX(); /* cause FPU2MMX state transition */
   check_exceptionsSSE(get_exception_flags(status));
@@ -129,8 +129,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PS_VpsQqM(bxInstruction_c *i
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
-  MMXUD0(op) = int32_to_float32(MMXUD0(op), status);
-  MMXUD1(op) = int32_to_float32(MMXUD1(op), status);
+  MMXUD0(op) = int32_to_float32(MMXSD0(op), status);
+  MMXUD1(op) = int32_to_float32(MMXSD1(op), status);
 
   check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_LO_QWORD(i->dst(), MMXUQ(op));
@@ -155,8 +155,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQqR(bxInstruction_c *i
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->src());
 
-  result.xmm64u(0) = int32_to_float64(MMXUD0(op));
-  result.xmm64u(1) = int32_to_float64(MMXUD1(op));
+  result.xmm64u(0) = int32_to_float64(MMXSD0(op));
+  result.xmm64u(1) = int32_to_float64(MMXSD1(op));
 
   BX_WRITE_XMM_REG(i->dst(), result);
 #endif
@@ -174,8 +174,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQqM(bxInstruction_c *i
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
 
-  result.xmm64u(0) = int32_to_float64(MMXUD0(op));
-  result.xmm64u(1) = int32_to_float64(MMXUD1(op));
+  result.xmm64u(0) = int32_to_float64(MMXSD0(op));
+  result.xmm64u(1) = int32_to_float64(MMXSD1(op));
 
   BX_WRITE_XMM_REG(i->dst(), result);
 #endif
@@ -682,10 +682,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTDQ2PS_VpsWdqR(bxInstruction_c *
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
-  op.xmm32u(0) = int32_to_float32(op.xmm32u(0), status);
-  op.xmm32u(1) = int32_to_float32(op.xmm32u(1), status);
-  op.xmm32u(2) = int32_to_float32(op.xmm32u(2), status);
-  op.xmm32u(3) = int32_to_float32(op.xmm32u(3), status);
+  op.xmm32u(0) = int32_to_float32(op.xmm32s(0), status);
+  op.xmm32u(1) = int32_to_float32(op.xmm32s(1), status);
+  op.xmm32u(2) = int32_to_float32(op.xmm32s(2), status);
+  op.xmm32u(3) = int32_to_float32(op.xmm32s(3), status);
 
   check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG(i->dst(), op);
@@ -812,8 +812,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTDQ2PD_VpdWqR(bxInstruction_c *i
   // use MMX register as 64-bit value with convinient accessors
   MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->src());
 
-  result.xmm64u(0) = int32_to_float64(MMXUD0(op));
-  result.xmm64u(1) = int32_to_float64(MMXUD1(op));
+  result.xmm64u(0) = int32_to_float64(MMXSD0(op));
+  result.xmm64u(1) = int32_to_float64(MMXSD1(op));
 
   BX_WRITE_XMM_REG(i->dst(), result);
 #endif

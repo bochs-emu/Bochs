@@ -142,6 +142,7 @@ OBJS64 = \
 	avx512.o \
 	avx512_move.o \
 	avx512_pfp.o \
+	avx512_cvt.o \
 	avx512_fma.o \
 	avx512_mask16.o \
 	vapic.o
@@ -276,6 +277,13 @@ avx512.o: avx512.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
  instr.h ia_opcodes.h lazy_flags.h icache.h apic.h i387.h fpu/softfloat.h \
  fpu/tag_w.h fpu/status_w.h fpu/control_w.h xmm.h vmx.h svm.h stack.h \
  simd_int.h simd_compare.h
+avx512_cvt.o: avx512_cvt.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h cpu.h cpuid.h crregs.h \
+ descriptor.h instr.h ia_opcodes.h lazy_flags.h icache.h apic.h i387.h \
+ fpu/softfloat.h fpu/tag_w.h fpu/status_w.h fpu/control_w.h xmm.h vmx.h \
+ svm.h stack.h simd_int.h
 avx512_fma.o: avx512_fma.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
