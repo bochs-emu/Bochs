@@ -1137,7 +1137,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSUBPS_VpsHpsWpsR(bxInstruction
 }
 
 /* Opcode: VEX.66.0F.E6 (VEX.W ignore, VEX.VVV #UD) */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTPD2DQ_VqWpdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTPD2DQ_VdqWpdR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
   unsigned len = i->getVL();
@@ -1164,7 +1164,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTPD2DQ_VqWpdR(bxInstruction_c 
 }
 
 /* Opcode: VEX.F2.0F.E6 (VEX.W ignore, VEX.VVV #UD) */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2DQ_VqWpdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2DQ_VdqWpdR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
   unsigned len = i->getVL();
@@ -1191,7 +1191,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2DQ_VqWpdR(bxInstruction_c *
 }
 
 /* Opcode: VEX.F3.0F.E6 (VEX.W ignore, VEX.VVV #UD) */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTDQ2PD_VpdWqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTDQ2PD_VpdWdqR(bxInstruction_c *i)
 {
   BxPackedAvxRegister result;
   BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());

@@ -264,15 +264,15 @@ static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f5a_Mask[4] = {
 static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f5b[4] = {
   /* -- */ { BxVexW0, BX_IA_V512_VCVTDQ2PS_VpsWdq },
   /* 66 */ { BxVexW0, BX_IA_V512_VCVTPS2DQ_VdqWps },
-  /* F3 */ { 0, BX_IA_ERROR },
-  /* F2 */ { BxVexW0, BX_IA_V512_VCVTTPS2DQ_VdqWps }
+  /* F3 */ { BxVexW0, BX_IA_V512_VCVTTPS2DQ_VdqWps },
+  /* F2 */ { 0, BX_IA_ERROR }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f5b_Mask[4] = {
   /* -- */ { BxVexW0, BX_IA_V512_VCVTDQ2PS_VpsWdq_Kmask },
   /* 66 */ { BxVexW0, BX_IA_V512_VCVTPS2DQ_VdqWps_Kmask },
-  /* F3 */ { 0, BX_IA_ERROR },
-  /* F2 */ { BxVexW0, BX_IA_V512_VCVTTPS2DQ_VdqWps_Kmask }
+  /* F3 */ { BxVexW0, BX_IA_V512_VCVTTPS2DQ_VdqWps_Kmask },
+  /* F2 */ { 0, BX_IA_ERROR }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f5c[4] = {
@@ -401,6 +401,18 @@ static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0fc6[2] = {
 static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0fc6_Mask[2] = {
   /* -- */ { BxVexW0 | BxImmediate_Ib, BX_IA_V512_VSHUFPS_VpsHpsWpsIb_Kmask },
   /* 66 */ { BxVexW1 | BxImmediate_Ib, BX_IA_V512_VSHUFPD_VpdHpdWpdIb_Kmask }
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0fe6[3] = {
+  /* 66 */ { BxVexW1, BX_IA_V512_VCVTTPD2DQ_VdqWpd },
+  /* F3 */ { BxVexW0, BX_IA_V512_VCVTDQ2PD_VpdWdq },
+  /* F2 */ { BxVexW1, BX_IA_V512_VCVTPD2DQ_VdqWpd }
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0fe6_Mask[3] = {
+  /* 66 */ { BxVexW1, BX_IA_V512_VCVTTPD2DQ_VdqWpd_Kmask },
+  /* F3 */ { BxVexW0, BX_IA_V512_VCVTDQ2PD_VpdWdq_Kmask },
+  /* F2 */ { BxVexW1, BX_IA_V512_VCVTPD2DQ_VdqWpd_Kmask }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f3814[3] = {
@@ -951,8 +963,8 @@ static const BxOpcodeInfo_t BxOpcodeTableEVEX[256*3*2] = {
   /* E4    */ { 0, BX_IA_ERROR },
   /* E5 k0 */ { 0, BX_IA_ERROR },
   /* E5    */ { 0, BX_IA_ERROR },
-  /* E6 k0 */ { 0, BX_IA_ERROR },
-  /* E6    */ { 0, BX_IA_ERROR },
+  /* E6 k0 */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupEVEX_0fe6 },
+  /* E6    */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupEVEX_0fe6_Mask },
   /* E7 k0 */ { BxVexW0 | BxPrefixSSE66, BX_IA_V512_VMOVNTDQ_MdqVdq },
   /* E7    */ { 0, BX_IA_ERROR }, // #UD
   /* E8 k0 */ { 0, BX_IA_ERROR },

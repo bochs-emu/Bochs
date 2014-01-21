@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2013 Stanislav Shwartsman
+//   Copyright (c) 2011-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -333,9 +333,9 @@ static const BxOpcodeInfo_t BxOpcodeGroupAVX_0fd0[3] = {
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupAVX_0fe6[3] = {
-  /* 66 */ { 0, BX_IA_VCVTTPD2DQ_VqWpd },
-  /* F3 */ { 0, BX_IA_VCVTDQ2PD_VpdWq },
-  /* F2 */ { 0, BX_IA_VCVTPD2DQ_VqWpd }
+  /* 66 */ { 0, BX_IA_VCVTTPD2DQ_VdqWpd },
+  /* F3 */ { 0, BX_IA_VCVTDQ2PD_VpdWdq },
+  /* F2 */ { 0, BX_IA_VCVTPD2DQ_VdqWpd }
 };
 
 /* ******** */
