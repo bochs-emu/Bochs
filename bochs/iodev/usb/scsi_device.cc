@@ -208,8 +208,8 @@ void scsi_device_t::scsi_read_complete(void *req, int ret)
 
 void scsi_device_t::scsi_read_data(Bit32u tag)
 {
-  Bit32u n;
-  int ret;
+  Bit32u i, n;
+  int ret = 0;
 
   SCSIRequest *r = scsi_find_request(tag);
   if (!r) {
@@ -235,7 +235,11 @@ void scsi_device_t::scsi_read_data(Bit32u tag)
     n = SCSI_DMA_BUF_SIZE / (512 * cluster_size);
   r->buf_len = n * 512 * cluster_size;
   if (type == SCSIDEV_TYPE_CDROM) {
-    if (!cdrom->read_block(r->dma_buf, (Bit32u)r->sector, 2048)) {
+    i = 0;
+    do {
+      ret = (int)cdrom->read_block(r->dma_buf + (i * 2048), (Bit32u)(r->sector + i), 2048);
+    } while ((++i < n) && (ret == 1));
+    if (ret == 0) {
       scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
     } else {
       scsi_read_complete((void*)r, 0);
