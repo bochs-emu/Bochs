@@ -583,14 +583,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMD_VdqHdqWdqR(bxInstruction_c 
   BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1());
   BxPackedYmmRegister op2 = BX_READ_YMM_REG(i->src2()), result;
 
-  result.ymm32u(0) = op2.ymm32u(op1.ymm32u(0) & 0x7);
-  result.ymm32u(1) = op2.ymm32u(op1.ymm32u(1) & 0x7);
-  result.ymm32u(2) = op2.ymm32u(op1.ymm32u(2) & 0x7);
-  result.ymm32u(3) = op2.ymm32u(op1.ymm32u(3) & 0x7);
-  result.ymm32u(4) = op2.ymm32u(op1.ymm32u(4) & 0x7);
-  result.ymm32u(5) = op2.ymm32u(op1.ymm32u(5) & 0x7);
-  result.ymm32u(6) = op2.ymm32u(op1.ymm32u(6) & 0x7);
-  result.ymm32u(7) = op2.ymm32u(op1.ymm32u(7) & 0x7);
+  for (unsigned n=0;n < 8;n++)
+    result.ymm32u(n) = op2.ymm32u(op1.ymm32u(n) & 0x7);
 
   BX_WRITE_YMM_REGZ(i->dst(), result);
 
@@ -599,16 +593,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMD_VdqHdqWdqR(bxInstruction_c 
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMQ_VdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op2 = BX_READ_YMM_REG(i->src()), result;
-  Bit8u control = i->Ib();
+  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src()), result;
 
-  result.ymm64u(0) = op2.ymm64u((control)      & 0x3);
-  result.ymm64u(1) = op2.ymm64u((control >> 2) & 0x3);
-  result.ymm64u(2) = op2.ymm64u((control >> 4) & 0x3);
-  result.ymm64u(3) = op2.ymm64u((control >> 6) & 0x3);
+  ymm_vpermq(&result, &op, i->Ib());
 
   BX_WRITE_YMM_REGZ(i->dst(), result);
-
   BX_NEXT_INSTR(i);
 }
 

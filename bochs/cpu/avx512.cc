@@ -519,6 +519,26 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSHUFF64x2_MASK_VpdHpdWpdIbR(bxIns
   BX_NEXT_INSTR(i);
 }
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMQ_MASK_VdqWdqIbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
+  Bit8u control = i->Ib();
+  unsigned len = i->getVL();
+
+  ymm_vpermq(&result.vmm256(0), &op.vmm256(0), control);
+  if (len == BX_VL512)
+    ymm_vpermq(&result.vmm256(1), &op.vmm256(1), control);
+
+  if (i->opmask()) {
+    avx512_write_regq_masked(i, &result, len, BX_READ_8BIT_OPMASK(i->opmask()));
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), result, len);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VINSERTF32x4_MASK_VpsHpsWpsIbR(bxInstruction_c *i)
 {
   unsigned len = i->getVL();
