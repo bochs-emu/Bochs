@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2013  The Bochs Project
+//  Copyright (C) 2002-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -86,7 +86,7 @@ device_image_t* bx_hdimage_ctl_c::init_image(Bit8u image_mode, Bit64u disk_size,
   switch (image_mode) {
 
     case BX_HDIMAGE_MODE_FLAT:
-      hdimage = new default_image_t();
+      hdimage = new flat_image_t();
       break;
 
     case BX_HDIMAGE_MODE_CONCAT:
@@ -253,7 +253,7 @@ int hdimage_detect_image_mode(const char *pathname)
     result = BX_HDIMAGE_MODE_GROWING;
   } else if (vpc_image_t::check_format(fd, image_size) >= HDIMAGE_FORMAT_OK) {
     result = BX_HDIMAGE_MODE_VPC;
-  } else if (default_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
+  } else if (flat_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
     result = BX_HDIMAGE_MODE_FLAT;
   }
   ::close(fd);
@@ -460,9 +460,9 @@ void device_image_t::register_state(bx_list_c *parent)
 }
 #endif
 
-/*** default_image_t function definitions ***/
+/*** flat_image_t function definitions ***/
 
-int default_image_t::open(const char* _pathname, int flags)
+int flat_image_t::open(const char* _pathname, int flags)
 {
   pathname = _pathname;
   if ((fd = hdimage_open_file(pathname, flags, &hd_size, &mtime)) < 0) {
@@ -474,29 +474,29 @@ int default_image_t::open(const char* _pathname, int flags)
   return fd;
 }
 
-void default_image_t::close()
+void flat_image_t::close()
 {
   if (fd > -1) {
     ::close(fd);
   }
 }
 
-Bit64s default_image_t::lseek(Bit64s offset, int whence)
+Bit64s flat_image_t::lseek(Bit64s offset, int whence)
 {
   return (Bit64s)::lseek(fd, (off_t)offset, whence);
 }
 
-ssize_t default_image_t::read(void* buf, size_t count)
+ssize_t flat_image_t::read(void* buf, size_t count)
 {
   return ::read(fd, (char*) buf, count);
 }
 
-ssize_t default_image_t::write(const void* buf, size_t count)
+ssize_t flat_image_t::write(const void* buf, size_t count)
 {
   return ::write(fd, (char*) buf, count);
 }
 
-int default_image_t::check_format(int fd, Bit64u imgsize)
+int flat_image_t::check_format(int fd, Bit64u imgsize)
 {
   char buffer[512];
 
@@ -510,12 +510,12 @@ int default_image_t::check_format(int fd, Bit64u imgsize)
 }
 
 #ifndef BXIMAGE
-bx_bool default_image_t::save_state(const char *backup_fname)
+bx_bool flat_image_t::save_state(const char *backup_fname)
 {
   return hdimage_backup_file(fd, backup_fname);
 }
 
-void default_image_t::restore_state(const char *backup_fname)
+void flat_image_t::restore_state(const char *backup_fname)
 {
   close();
   if (!hdimage_copy_file(backup_fname, pathname)) {
@@ -623,6 +623,7 @@ Bit64s concat_image_t::lseek(Bit64s offset, int whence)
   if ((offset % 512) != 0)
     BX_PANIC(("lseek HD with offset not multiple of 512"));
   BX_DEBUG(("concat_image_t.lseek(%d)", whence));
+  total_offset = offset;
   // is this offset in this disk image?
   if (offset < thismin) {
     // no, look at previous images
@@ -662,24 +663,58 @@ Bit64s concat_image_t::lseek(Bit64s offset, int whence)
 
 ssize_t concat_image_t::read(void* buf, size_t count)
 {
+  size_t count1;
+  ssize_t ret = -1;
+  char *buf1 = (char*)buf;
+
   BX_DEBUG(("concat_image_t.read %ld bytes", (long)count));
   // notice if anyone does sequential read or write without seek in between.
   // This can be supported pretty easily, but needs additional checks for
   // end of a partial image.
   if (!seek_was_last_op)
     BX_PANIC(("no seek before read"));
-  return ::read(fd, (char*) buf, count);
+  if ((Bit64s)(total_offset + count - 1) <= thismax) {
+    return ::read(fd, buf1, count);
+  } else {
+    count1 = thismax - total_offset + 1;
+    ret = ::read(fd, buf1, count1);
+    if (ret >= 0) {
+      buf1 += count1;
+      ret = lseek(thismax + 1, SEEK_SET);
+      if (ret >= 0) {
+        ret = ::read(fd, buf1, count - count1);
+      }
+    }
+  }
+  return (ret < 0) ? ret : count;
 }
 
 ssize_t concat_image_t::write(const void* buf, size_t count)
 {
+  size_t count1;
+  ssize_t ret = -1;
+  char *buf1 = (char*)buf;
+
   BX_DEBUG(("concat_image_t.write %ld bytes", (long)count));
   // notice if anyone does sequential read or write without seek in between.
   // This can be supported pretty easily, but needs additional checks for
   // end of a partial image.
   if (!seek_was_last_op)
     BX_PANIC(("no seek before write"));
-  return ::write(fd, (char*) buf, count);
+  if ((Bit64s)(total_offset + count - 1) <= thismax) {
+    return ::write(fd, buf1, count);
+  } else {
+    count1 = thismax - total_offset + 1;
+    ret = ::write(fd, buf1, count1);
+    if (ret >= 0) {
+      buf1 += count1;
+      ret = lseek(thismax + 1, SEEK_SET);
+      if (ret >= 0) {
+        ret = ::write(fd, buf1, count - count1);
+      }
+    }
+  }
+  return (ret < 0) ? ret : count;
 }
 
 #ifndef BXIMAGE

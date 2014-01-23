@@ -357,7 +357,7 @@ device_image_t* init_image(Bit8u image_mode)
   switch (image_mode) {
 
     case BX_HDIMAGE_MODE_FLAT:
-      hdimage = new default_image_t();
+      hdimage = new flat_image_t();
       break;
 
     case BX_HDIMAGE_MODE_CONCAT:

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2005-2013  The Bochs Project
+//  Copyright (C) 2005-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -213,7 +213,7 @@ class device_image_t
 };
 
 // FLAT MODE
-class default_image_t : public device_image_t
+class flat_image_t : public device_image_t
 {
   public:
       // Open an image with specific flags. Returns non-negative if successful.
@@ -298,6 +298,7 @@ class concat_image_t : public device_image_t
       int index;  // index into table
       int fd;     // fd to use for reads and writes
       Bit64s thismin, thismax; // byte offset boundary of this image
+      Bit64s total_offset;     // current byte offset
       const char *pathname0;
 };
 
