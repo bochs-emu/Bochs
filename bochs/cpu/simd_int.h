@@ -414,6 +414,7 @@ BX_CPP_INLINE void xmm_permil2pd(BxPackedXmmRegister *r, const BxPackedXmmRegist
   }
 }
 
+#if BX_SUPPORT_AVX
 BX_CPP_INLINE void ymm_vpermq(BxPackedYmmRegister *r, const BxPackedYmmRegister *op, Bit8u control)
 {
   r->ymm64u(0) = op->ymm64u((control)      & 0x3);
@@ -421,6 +422,7 @@ BX_CPP_INLINE void ymm_vpermq(BxPackedYmmRegister *r, const BxPackedYmmRegister 
   r->ymm64u(2) = op->ymm64u((control >> 4) & 0x3);
   r->ymm64u(3) = op->ymm64u((control >> 6) & 0x3);
 }
+#endif
 
 // sign
 
