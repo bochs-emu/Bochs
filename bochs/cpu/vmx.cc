@@ -2425,7 +2425,7 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
   if (reason >= VMX_VMEXIT_LAST_REASON)
     BX_PANIC(("PANIC: broken VMEXIT reason %d", reason));
   else
-    BX_ERROR(("VMEXIT reason = %d (%s) qualification=0x" FMT_LL "x", reason, VMX_vmexit_reason_name[reason], qualification));
+    BX_DEBUG(("VMEXIT reason = %d (%s) qualification=0x" FMT_LL "x", reason, VMX_vmexit_reason_name[reason], qualification));
 
   if (reason != VMX_VMEXIT_EXCEPTION_NMI && reason != VMX_VMEXIT_EXTERNAL_INTERRUPT) {
     VMwrite32(VMCS_32BIT_VMEXIT_INTERRUPTION_INFO, 0);
