@@ -587,7 +587,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMD_VdqHdqWdqR(bxInstruction_c 
     result.ymm32u(n) = op2.ymm32u(op1.ymm32u(n) & 0x7);
 
   BX_WRITE_YMM_REGZ(i->dst(), result);
-
   BX_NEXT_INSTR(i);
 }
 
