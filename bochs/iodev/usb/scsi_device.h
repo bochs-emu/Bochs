@@ -45,6 +45,7 @@ enum scsi_reason {
 
 #define SENSE_NO_SENSE        0
 #define SENSE_NOT_READY       2
+#define SENSE_MEDIUM_ERROR    3
 #define SENSE_HARDWARE_ERROR  4
 #define SENSE_ILLEGAL_REQUEST 5
 
@@ -86,6 +87,8 @@ public:
   const char *get_serial_number() {return drive_serial_str;}
   void set_inserted(bx_bool value);
   bx_bool get_inserted() {return inserted;}
+  static void seek_timer_handler(void *);
+  void seek_timer(void);
 
 protected:
   SCSIRequest* scsi_new_request(Bit32u tag);
@@ -106,6 +109,7 @@ private:
   bx_bool locked;
   bx_bool inserted;
   char drive_serial_str[21];
+  int seek_timer_index;
 };
 
 #endif

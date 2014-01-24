@@ -61,6 +61,8 @@ scsi_device_t::scsi_device_t(device_image_t *_hdimage, int _tcq,
   inserted = 1;
   max_lba = (hdimage->hd_size / 512) - 1;
   sprintf(drive_serial_str, "%d", serial_number++);
+  seek_timer_index =
+    DEV_register_timer(this, seek_timer_handler, 1000, 0, 0, "USB HD seek");
 
   put("SCSIHD");
 }
@@ -81,6 +83,8 @@ scsi_device_t::scsi_device_t(cdrom_base_c *_cdrom, int _tcq,
   inserted = 0;
   max_lba = 0;
   sprintf(drive_serial_str, "%d", serial_number++);
+  seek_timer_index =
+    DEV_register_timer(this, seek_timer_handler, 1000, 0, 0, "USB CD seek");
 
   put("SCSICD");
 }
@@ -106,6 +110,8 @@ scsi_device_t::~scsi_device_t(void)
     }
     free_requests = NULL;
   }
+  bx_pc_system.deactivate_timer(seek_timer_index);
+  bx_pc_system.unregisterTimer(seek_timer_index);
 }
 
 void scsi_device_t::register_state(bx_list_c *parent, const char *name)
@@ -214,8 +220,6 @@ void scsi_device_t::scsi_read_data(Bit32u tag)
   SCSIRequest *r = scsi_find_request(tag);
   if (!r) {
     BX_ERROR(("bad read tag 0x%x", tag));
-    // ??? This is the wrong error.
-    scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
     return;
   }
   if (r->sector_count == (Bit32u)-1) {
@@ -240,7 +244,7 @@ void scsi_device_t::scsi_read_data(Bit32u tag)
       ret = (int)cdrom->read_block(r->dma_buf + (i * 2048), (Bit32u)(r->sector + i), 2048);
     } while ((++i < n) && (ret == 1));
     if (ret == 0) {
-      scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
+      scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_MEDIUM_ERROR);
     } else {
       scsi_read_complete((void*)r, 0);
     }
@@ -296,7 +300,6 @@ int scsi_device_t::scsi_write_data(Bit32u tag)
   r = scsi_find_request(tag);
   if (!r) {
     BX_ERROR(("bad write tag 0x%x", tag));
-    scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
     return 1;
   }
   if (type == SCSIDEV_TYPE_DISK) {
@@ -809,6 +812,17 @@ void scsi_device_t::set_inserted(bx_bool value)
   } else {
     max_lba = 0;
   }
+}
+
+void scsi_device_t::seek_timer_handler(void *this_ptr)
+{
+  scsi_device_t *class_ptr = (scsi_device_t *) this_ptr;
+  class_ptr->seek_timer();
+}
+
+void scsi_device_t::seek_timer()
+{
+  // TODO
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
