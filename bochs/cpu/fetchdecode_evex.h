@@ -1533,8 +1533,8 @@ static const BxOpcodeInfo_t BxOpcodeTableEVEX[256*3*2] = {
   // 256 entries for EVEX-encoded 0x0F 0x3A opcodes
   /* 00 k0 */ { BxVexW1 | BxVexL1 | BxPrefixSSE66 | BxImmediate_Ib, BX_IA_V512_VPERMQ_VdqWdqIb_Kmask },
   /* 00    */ { BxVexW1 | BxVexL1 | BxPrefixSSE66 | BxImmediate_Ib, BX_IA_V512_VPERMQ_VdqWdqIb_Kmask },
-  /* 01 k0 */ { 0, BX_IA_ERROR },
-  /* 01    */ { 0, BX_IA_ERROR },
+  /* 01 k0 */ { BxVexW1 | BxVexL1 | BxPrefixSSE66 | BxImmediate_Ib, BX_IA_V512_VPERMPD_VpdWpdIb_Kmask },
+  /* 01    */ { BxVexW1 | BxVexL1 | BxPrefixSSE66 | BxImmediate_Ib, BX_IA_V512_VPERMPD_VpdWpdIb_Kmask },
   /* 02 k0 */ { 0, BX_IA_ERROR },
   /* 02    */ { 0, BX_IA_ERROR },
   /* 03 k0 */ { 0, BX_IA_ERROR },
