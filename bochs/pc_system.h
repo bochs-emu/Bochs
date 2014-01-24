@@ -53,7 +53,7 @@ private:
                                //   has to be stored as well.
 #define BxMaxTimerIDLen 32
     char id[BxMaxTimerIDLen];  // String ID of timer.
-    Bit8u param;               // Device-specific value assigned to timer (optional)
+    Bit32u param;              // Device-specific value assigned to timer (optional)
   } timer[BX_MAX_TIMERS];
 
   unsigned   numTimers;  // Number of currently allocated timers.
@@ -92,14 +92,14 @@ public:
   int    register_timer(void *this_ptr, bx_timer_handler_t, Bit32u useconds,
                          bx_bool continuous, bx_bool active, const char *id);
   bx_bool unregisterTimer(unsigned timerID);
-  void   setTimerParam(unsigned timerID, Bit8u param);
+  void   setTimerParam(unsigned timerID, Bit32u param);
   void   start_timers(void);
   void   activate_timer(unsigned timer_index, Bit32u useconds, bx_bool continuous);
   void   deactivate_timer(unsigned timer_index);
   unsigned triggeredTimerID(void) {
     return triggeredTimer;
   }
-  Bit8u triggeredTimerParam(void) {
+  Bit32u triggeredTimerParam(void) {
     return timer[triggeredTimer].param;
   }
   static BX_CPP_INLINE void tick1(void) {
