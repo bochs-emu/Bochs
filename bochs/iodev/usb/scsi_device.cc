@@ -254,7 +254,7 @@ void scsi_device_t::scsi_read_data(Bit32u tag)
       BX_ERROR(("could not lseek() hard drive image file"));
       scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
     }
-    ret = hdimage->read((bx_ptr_t)r->dma_buf, r->buf_len);
+    ret = (int)hdimage->read((bx_ptr_t)r->dma_buf, r->buf_len);
     if (ret < r->buf_len) {
       BX_ERROR(("could not read() hard drive image file"));
       scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
@@ -310,7 +310,7 @@ int scsi_device_t::scsi_write_data(Bit32u tag)
         BX_ERROR(("could not lseek() hard drive image file"));
         scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
       }
-      ret = hdimage->write((bx_ptr_t)r->dma_buf, r->buf_len);
+      ret = (int)hdimage->write((bx_ptr_t)r->dma_buf, r->buf_len);
       r->sector += n;
       r->sector_count -= n;
       if (ret < r->buf_len) {

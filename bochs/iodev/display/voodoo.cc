@@ -588,7 +588,7 @@ Bit16u bx_voodoo_c::get_retrace(void)
   if (time_in_frame > BX_VOODOO_THIS s.vdraw.vsync_usec) {
     return 0;
   } else {
-    return (BX_VOODOO_THIS s.vdraw.vsync_usec - time_in_frame) / BX_VOODOO_THIS s.vdraw.htotal_usec;
+    return (Bit16u)((BX_VOODOO_THIS s.vdraw.vsync_usec - time_in_frame) / BX_VOODOO_THIS s.vdraw.htotal_usec + 1);
   }
 }
 

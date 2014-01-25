@@ -676,7 +676,7 @@ ssize_t concat_image_t::read(void* buf, size_t count)
   if ((Bit64s)(total_offset + count - 1) <= thismax) {
     return ::read(fd, buf1, count);
   } else {
-    count1 = thismax - total_offset + 1;
+    count1 = (size_t)(thismax - total_offset + 1);
     ret = ::read(fd, buf1, count1);
     if (ret >= 0) {
       buf1 += count1;
@@ -704,7 +704,7 @@ ssize_t concat_image_t::write(const void* buf, size_t count)
   if ((Bit64s)(total_offset + count - 1) <= thismax) {
     return ::write(fd, buf1, count);
   } else {
-    count1 = thismax - total_offset + 1;
+    count1 = (size_t)(thismax - total_offset + 1);
     ret = ::write(fd, buf1, count1);
     if (ret >= 0) {
       buf1 += count1;
@@ -1048,7 +1048,7 @@ ssize_t sparse_image_t::read(void* buf, size_t count)
 
     BX_ASSERT (can_read != 0);
 
-    size_t was_read = read_page_fragment(position_virtual_page, position_page_offset, can_read, buf);
+    size_t was_read = (size_t)read_page_fragment(position_virtual_page, position_page_offset, can_read, buf);
 
     if (was_read != can_read) {
       BX_PANIC(("could not read from sparse disk"));

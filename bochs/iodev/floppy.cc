@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2013  The Bochs Project
+//  Copyright (C) 2002-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1113,7 +1113,7 @@ void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
 
   if (direction == FROM_FLOPPY) {
     if (BX_FD_THIS s.media[drive].vvfat_floppy) {
-      ret = BX_FD_THIS s.media[drive].vvfat->read(buffer, bytes);
+      ret = (int)BX_FD_THIS s.media[drive].vvfat->read(buffer, bytes);
 #if BX_WITH_MACOS
     } else if (!strcmp(SIM->get_param_string(pname)->getptr(), SuperDrive))
       ret = fd_read((char *) buffer, offset, bytes);
@@ -1134,7 +1134,7 @@ void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
   } else { // TO_FLOPPY
     BX_ASSERT (!BX_FD_THIS s.media[drive].write_protected);
     if (BX_FD_THIS s.media[drive].vvfat_floppy) {
-      ret = BX_FD_THIS s.media[drive].vvfat->write(buffer, bytes);
+      ret = (int)BX_FD_THIS s.media[drive].vvfat->write(buffer, bytes);
 #if BX_WITH_MACOS
     } else if (!strcmp(SIM->get_param_string(pname)->getptr(), SuperDrive))
       ret = fd_write((char *) buffer, offset, bytes);
