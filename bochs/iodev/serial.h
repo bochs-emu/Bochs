@@ -106,10 +106,10 @@ typedef struct {
   Bit8u tx_fifo_end;
 
   int  baudrate;
-  int  tx_timer_index;
+  Bit32u databyte_usec;
 
-  int  rx_pollstate;
   int  rx_timer_index;
+  int  tx_timer_index;
   int  fifo_timer_index;
 
   int io_mode;

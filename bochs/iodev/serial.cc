@@ -294,7 +294,6 @@ bx_serial_c::init(void)
                                       0,0, "serial.fifo"); // one-shot, inactive
           bx_pc_system.setTimerParam(BX_SER_THIS s[i].fifo_timer_index, i);
       }
-      BX_SER_THIS s[i].rx_pollstate = BX_SER_RXIDLE;
 
       /* int enable: b0000 0000 */
       BX_SER_THIS s[i].int_enable.rxdata_enable = 0;
@@ -353,6 +352,7 @@ bx_serial_c::init(void)
       BX_SER_THIS s[i].divisor_msb = 0;  /* divisor-msb register */
 
       BX_SER_THIS s[i].baudrate = 115200;
+      BX_SER_THIS s[i].databyte_usec = 87;
 
       for (unsigned addr = ports[i]; addr < (unsigned)(ports[i] + 8); addr++) {
         BX_DEBUG(("com%d initialize register for read/write: 0x%04x", i + 1, addr));
@@ -593,7 +593,7 @@ void bx_serial_c::register_state(void)
     new bx_shadow_num_c(port, "rx_fifo_end", &BX_SER_THIS s[i].rx_fifo_end);
     new bx_shadow_num_c(port, "tx_fifo_end", &BX_SER_THIS s[i].tx_fifo_end);
     new bx_shadow_num_c(port, "baudrate", &BX_SER_THIS s[i].baudrate);
-    new bx_shadow_num_c(port, "rx_pollstate", &BX_SER_THIS s[i].rx_pollstate);
+    new bx_shadow_num_c(port, "databyte_usec", &BX_SER_THIS s[i].databyte_usec);
     new bx_shadow_num_c(port, "rxbuffer", &BX_SER_THIS s[i].rxbuffer, BASE_HEX);
     new bx_shadow_num_c(port, "thrbuffer", &BX_SER_THIS s[i].thrbuffer, BASE_HEX);
     bx_list_c *int_en = new bx_list_c(port, "int_enable");
@@ -953,6 +953,8 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
   Bit8u p_mode;
 #endif
   Bit8u port = 0;
+  int new_baudrate;
+  bx_bool restart_timer = 0;
 
   if (io_len == 2) {
     BX_SER_THIS write_handler(theSerialDevice, address, (value & 0xff), 1);
@@ -983,19 +985,14 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case BX_SER_THR: /* transmit buffer, or divisor latch LSB if DLAB set */
       if (BX_SER_THIS s[port].line_cntl.dlab) {
         BX_SER_THIS s[port].divisor_lsb = value;
-
-        if ((value != 0) || (BX_SER_THIS s[port].divisor_msb != 0)) {
-          BX_SER_THIS s[port].baudrate = (int) (BX_PC_CLOCK_XTL /
-                                         (16 * ((BX_SER_THIS s[port].divisor_msb << 8) |
-                                         BX_SER_THIS s[port].divisor_lsb)));
-        }
       } else {
         Bit8u bitmask = 0xff >> (3 - BX_SER_THIS s[port].line_cntl.wordlen_sel);
+        value &= bitmask;
         if (BX_SER_THIS s[port].line_status.thr_empty) {
           if (BX_SER_THIS s[port].fifo_cntl.enable) {
-            BX_SER_THIS s[port].tx_fifo[BX_SER_THIS s[port].tx_fifo_end++] = value & bitmask;
+            BX_SER_THIS s[port].tx_fifo[BX_SER_THIS s[port].tx_fifo_end++] = value;
           } else {
-            BX_SER_THIS s[port].thrbuffer = value & bitmask;
+            BX_SER_THIS s[port].thrbuffer = value;
           }
           BX_SER_THIS s[port].line_status.thr_empty = 0;
           if (BX_SER_THIS s[port].line_status.tsr_empty) {
@@ -1010,8 +1007,7 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_SER_THIS s[port].line_status.tsr_empty = 0;
             raise_interrupt(port, BX_SER_INT_TXHOLD);
             bx_pc_system.activate_timer(BX_SER_THIS s[port].tx_timer_index,
-                                        (int) (1000000.0 / BX_SER_THIS s[port].baudrate *
-                                        (BX_SER_THIS s[port].line_cntl.wordlen_sel + 5)),
+                                        BX_SER_THIS s[port].databyte_usec,
                                         0); /* not continuous */
           } else {
             BX_SER_THIS s[port].tx_interrupt = 0;
@@ -1020,7 +1016,7 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
         } else {
           if (BX_SER_THIS s[port].fifo_cntl.enable) {
             if (BX_SER_THIS s[port].tx_fifo_end < 16) {
-              BX_SER_THIS s[port].tx_fifo[BX_SER_THIS s[port].tx_fifo_end++] = value & bitmask;
+              BX_SER_THIS s[port].tx_fifo[BX_SER_THIS s[port].tx_fifo_end++] = value;
             } else {
               BX_ERROR(("com%d: transmit FIFO overflow", port+1));
             }
@@ -1034,12 +1030,6 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case BX_SER_IER: /* interrupt enable register, or div. latch MSB */
       if (BX_SER_THIS s[port].line_cntl.dlab) {
         BX_SER_THIS s[port].divisor_msb = value;
-
-        if ((value != 0) || (BX_SER_THIS s[port].divisor_lsb != 0)) {
-          BX_SER_THIS s[port].baudrate = (int) (BX_PC_CLOCK_XTL /
-                                         (16 * ((BX_SER_THIS s[port].divisor_msb << 8) |
-                                         BX_SER_THIS s[port].divisor_lsb)));
-        }
       } else {
         if (new_b3 != BX_SER_THIS s[port].int_enable.modstat_enable) {
           BX_SER_THIS s[port].int_enable.modstat_enable  = new_b3;
@@ -1155,7 +1145,6 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
         }
       }
 #endif // USE_RAW_SERIAL
-      BX_SER_THIS s[port].line_cntl.wordlen_sel = new_wordlen;
       /* These are ignored, but set them up so they can be read back */
       BX_SER_THIS s[port].line_cntl.stopbits = new_b2;
       BX_SER_THIS s[port].line_cntl.parity_enable = new_b3;
@@ -1168,26 +1157,39 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_SER_THIS s[port].line_status.framing_error = 1;
         rx_fifo_enq(port, 0x00);
       }
-      /* used when doing future writes */
       if (!new_b7 && BX_SER_THIS s[port].line_cntl.dlab) {
-        // Start the receive polling process if not already started
-        // and there is a valid baudrate.
-        if (BX_SER_THIS s[port].rx_pollstate == BX_SER_RXIDLE &&
-            BX_SER_THIS s[port].baudrate != 0) {
-          BX_SER_THIS s[port].rx_pollstate = BX_SER_RXPOLL;
-          bx_pc_system.activate_timer(BX_SER_THIS s[port].rx_timer_index,
-                                      (int) (1000000.0 / BX_SER_THIS s[port].baudrate *
-                                      (BX_SER_THIS s[port].line_cntl.wordlen_sel + 5)),
-                                      0); /* not continuous */
-        }
+        if ((BX_SER_THIS s[port].divisor_lsb | BX_SER_THIS s[port].divisor_msb) != 0) {
+          new_baudrate = (int)(BX_PC_CLOCK_XTL /
+                               (16 * ((BX_SER_THIS s[port].divisor_msb << 8) |
+                               BX_SER_THIS s[port].divisor_lsb)));
+          if (new_baudrate != BX_SER_THIS s[port].baudrate) {
+            BX_SER_THIS s[port].baudrate = new_baudrate;
+            restart_timer = 1;
+            BX_DEBUG(("com%d: baud rate set to %d", port+1, BX_SER_THIS s[port].baudrate));
 #if USE_RAW_SERIAL
-        if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
-          BX_SER_THIS s[port].raw->set_baudrate(BX_SER_THIS s[port].baudrate);
+            if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
+              BX_SER_THIS s[port].raw->set_baudrate(BX_SER_THIS s[port].baudrate);
+            }
+#endif
+          }
+        } else {
+          BX_ERROR(("com%d: ignoring invalid baud rate divisor", port+1));
         }
-#endif // USE_RAW_SERIAL
-        BX_DEBUG(("com%d: baud rate set - %d", port+1, BX_SER_THIS s[port].baudrate));
       }
       BX_SER_THIS s[port].line_cntl.dlab = new_b7;
+      if (new_wordlen != BX_SER_THIS s[port].line_cntl.wordlen_sel) {
+        BX_SER_THIS s[port].line_cntl.wordlen_sel = new_wordlen;
+        restart_timer = 1;
+      }
+      if (restart_timer) {
+        // Start the receive polling process if not already started
+        // and there is a valid baudrate.
+        BX_SER_THIS s[port].databyte_usec = (Bit32u)(1000000.0 / BX_SER_THIS s[port].baudrate *
+                                                     (BX_SER_THIS s[port].line_cntl.wordlen_sel + 7));
+        bx_pc_system.activate_timer(BX_SER_THIS s[port].rx_timer_index,
+                                    BX_SER_THIS s[port].databyte_usec,
+                                    0); /* not continuous */
+      }
       break;
 
     case BX_SER_MCR: /* MODEM control register */
@@ -1276,6 +1278,7 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
       } else {
         if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_MOUSE) {
           if (BX_SER_THIS detect_mouse == 2) {
+            BX_DEBUG(("com%d: mouse detection mode", port+1));
             if ((BX_SER_THIS mouse_type == BX_MOUSE_TYPE_SERIAL) ||
                 (BX_SER_THIS mouse_type == BX_MOUSE_TYPE_SERIAL_MSYS)) {
               BX_SER_THIS mouse_internal_buffer.head = 0;
@@ -1360,8 +1363,7 @@ void bx_serial_c::rx_fifo_enq(Bit8u port, Bit8u data)
         raise_interrupt(port, BX_SER_INT_RXDATA);
       } else {
         bx_pc_system.activate_timer(BX_SER_THIS s[port].fifo_timer_index,
-                                    (int) (1000000.0 / BX_SER_THIS s[port].baudrate *
-                                    (BX_SER_THIS s[port].line_cntl.wordlen_sel + 5) * 16),
+                                    BX_SER_THIS s[port].databyte_usec * 3,
                                     0); /* not continuous */
       }
     }
@@ -1387,7 +1389,7 @@ void bx_serial_c::tx_timer_handler(void *this_ptr)
 void bx_serial_c::tx_timer(void)
 {
   bx_bool gen_int = 0;
-  Bit8u port = bx_pc_system.triggeredTimerParam();
+  Bit8u port = (Bit8u)bx_pc_system.triggeredTimerParam();
   char pname[20];
 
   if (BX_SER_THIS s[port].modem_cntl.local_loopback) {
@@ -1471,8 +1473,7 @@ void bx_serial_c::tx_timer(void)
       raise_interrupt(port, BX_SER_INT_TXHOLD);
     }
     bx_pc_system.activate_timer(BX_SER_THIS s[port].tx_timer_index,
-                                (int) (1000000.0 / BX_SER_THIS s[port].baudrate *
-                                (BX_SER_THIS s[port].line_cntl.wordlen_sel + 5)),
+                                BX_SER_THIS s[port].databyte_usec,
                                 0); /* not continuous */
   }
 }
@@ -1490,10 +1491,9 @@ void bx_serial_c::rx_timer(void)
   struct timeval tval;
   fd_set fds;
 #endif
-  Bit8u port = bx_pc_system.triggeredTimerParam();
+  Bit8u port = (Bit8u)bx_pc_system.triggeredTimerParam();
   bx_bool data_ready = 0;
-
-  int bdrate = BX_SER_THIS s[port].baudrate / (BX_SER_THIS s[port].line_cntl.wordlen_sel + 5);
+  int db_usec = BX_SER_THIS s[port].databyte_usec;
   unsigned char chbuf = 0;
 
   if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_TERM) {
@@ -1616,17 +1616,17 @@ void bx_serial_c::rx_timer(void)
       }
     } else {
       if (!BX_SER_THIS s[port].fifo_cntl.enable) {
-        bdrate = (int) (1000000.0 / 100000); // Poll frequency is 100ms
+        db_usec = 100000; // Poll frequency is 100ms
       }
     }
   } else {
     // Poll at 4x baud rate to see if the next-char can
     // be read
-    bdrate *= 4;
+    db_usec *= 4;
   }
 
   bx_pc_system.activate_timer(BX_SER_THIS s[port].rx_timer_index,
-                              (int) (1000000.0 / bdrate), 0); /* not continuous */
+                              db_usec, 0); /* not continuous */
 }
 
 void bx_serial_c::fifo_timer_handler(void *this_ptr)
@@ -1638,7 +1638,7 @@ void bx_serial_c::fifo_timer_handler(void *this_ptr)
 
 void bx_serial_c::fifo_timer(void)
 {
-  Bit8u port = bx_pc_system.triggeredTimerParam();
+  Bit8u port = (Bit8u)bx_pc_system.triggeredTimerParam();
 
   BX_SER_THIS s[port].line_status.rxdata_ready = 1;
   raise_interrupt(port, BX_SER_INT_FIFO);
