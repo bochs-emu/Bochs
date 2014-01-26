@@ -1365,13 +1365,12 @@ AC_SUBST(INSTRUMENT_DIR)
 AC_SUBST(INSTRUMENT_VAR)
 
 dnl // serial mode 'socket' needs wsock32.dll in non-plugin mode
-dnl // but don't use it with cygwin
 if test "$bx_plugins" = 0; then
   case $target in
     *-pc-windows*)
       DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS wsock32.lib"
       ;;
-    *-mingw32*)
+    *-mingw32* | *-cygwin*)
       DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwsock32"
       ;;
   esac
