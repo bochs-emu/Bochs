@@ -269,7 +269,9 @@ public:
 #else
   BX_CPP_INLINE unsigned os64L(void) const { return 0; }
 #endif
-
+  BX_CPP_INLINE unsigned osize(void) const {
+    return (metaInfo.metaInfo1 >> 2) & 0x3;
+  }
 
   BX_CPP_INLINE unsigned as32L(void) const {
     return metaInfo.metaInfo1 & 0x1;

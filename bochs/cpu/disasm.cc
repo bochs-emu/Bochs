@@ -436,3 +436,28 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
 
   return disbufptr;
 }
+
+char* BX_CPU_C::disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip)
+{
+  Bit32u fetchModeMask = BX_FETCH_MODE_SSE_OK |
+                         BX_FETCH_MODE_AVX_OK |
+                         BX_FETCH_MODE_OPMASK_OK |
+                         BX_FETCH_MODE_EVEX_OK;
+
+  if (is_64) fetchModeMask |= BX_FETCH_MODE_IS64_MASK;
+  else if (is_32) fetchModeMask |= BX_FETCH_MODE_IS32_MASK;
+
+  int ret;
+
+  if (is_64)
+    ret = fetchDecode64(opcode, fetchModeMask, i, 16);
+  else
+    ret = fetchDecode32(opcode, fetchModeMask, i, 16);
+
+  if (ret < 0)
+    sprintf(disbufptr, "decode failed");
+  else
+    ::disasm(disbufptr, i, cs_base, rip);
+
+  return disbufptr;
+}

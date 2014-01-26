@@ -1967,25 +1967,13 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
       BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS),
       BX_CPU(which_cpu)->guard_found.eip, bx_disasm_ibuf, bx_disasm_tbuf);
 #else
-    extern char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_address rip);
+//  extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip);
 
-    Bit32u fetchModeMask = BX_CPU(which_cpu)->fetchModeMask | BX_FETCH_MODE_SSE_OK |
-                                                              BX_FETCH_MODE_AVX_OK |
-                                                              BX_FETCH_MODE_OPMASK_OK |
-                                                              BX_FETCH_MODE_EVEX_OK;
-    int ret;
     bxInstruction_c i;
-
-#if BX_SUPPORT_X86_64
-    if (BX_CPU(which_cpu)->cpu_mode == BX_MODE_LONG_64)
-      ret = BX_CPU(which_cpu)->fetchDecode64(bx_disasm_ibuf, fetchModeMask, &i, 16);
-    else
-#endif
-      ret = BX_CPU(which_cpu)->fetchDecode32(bx_disasm_ibuf, fetchModeMask, &i, 16);
-    if (ret < 0)
-      sprintf(bx_disasm_tbuf, "decode failed");
-    else
-      disasm(bx_disasm_tbuf, &i, BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS), BX_CPU(which_cpu)->guard_found.eip);
+    BX_CPU(which_cpu)->disasm(bx_disasm_ibuf, IS_CODE_32(BX_CPU(which_cpu)->guard_found.code_32_64),
+        IS_CODE_64(BX_CPU(which_cpu)->guard_found.code_32_64), 
+        bx_disasm_tbuf, &i,
+        BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS), BX_CPU(which_cpu)->guard_found.eip);
 
     unsigned ilen = i.ilen();
 #endif

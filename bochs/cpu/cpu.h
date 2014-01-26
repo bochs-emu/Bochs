@@ -35,7 +35,6 @@
 // NULL now has to fit in 3 bits.
 #define BX_SEG_REG_NULL  7
 #define BX_NULL_SEG_REG(seg) ((seg) == BX_SEG_REG_NULL)
-// <TAG-DEFINES-DECODE-END>
 
 #define BX_16BIT_REG_AX 0
 #define BX_16BIT_REG_CX 1
@@ -85,6 +84,7 @@
 
 #define BX_TMP_REGISTER  (BX_GENERAL_REGISTERS+1)
 #define BX_NIL_REGISTER  (BX_GENERAL_REGISTERS+2)
+// <TAG-DEFINES-DECODE-END>
 
 #if defined(NEED_CPU_REG_SHORTCUTS)
 
@@ -4056,6 +4056,8 @@ public: // for now...
 #endif
   BX_SMF void boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *);
   BX_SMF Bit16u WalkOpcodeTables(const BxOpcodeInfo_t *op, Bit16u &attr, unsigned modrm, unsigned sse_prefix, unsigned osize, unsigned vex_vl, bx_bool vex_w);
+  BX_SMF char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base = 0, bx_address rip = 0);
+
   BX_SMF bxICacheEntry_c *serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_address pAddr);
   BX_SMF bxICacheEntry_c* getICacheEntry(void);
   BX_SMF bx_bool mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr);
