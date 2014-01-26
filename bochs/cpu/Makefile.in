@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2013 The Bochs Project
+# Copyright (C) 2001-2014 The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -130,23 +130,26 @@ OBJS64 = \
 	shift64.o \
 	bit64.o \
 	stack64.o \
+	bmi64.o \
+	vapic.o
+
+# Objects which are only used for AVX / EVEX code
+AVX_OBJS = \
 	avx.o \
 	avx_pfp.o \
 	avx_cvt.o \
 	avx_fma.o \
 	avx2.o \
-	gather.o \
-	bmi64.o \
-	tbm32.o \
-	tbm64.o \
-	xop.o \
 	avx512.o \
 	avx512_move.o \
 	avx512_pfp.o \
 	avx512_cvt.o \
 	avx512_fma.o \
 	avx512_mask16.o \
-	vapic.o
+	gather.o \
+	tbm32.o \
+	tbm64.o \
+	xop.o
 
 BX_INCLUDES = ../bochs.h ../config.h
 
@@ -157,14 +160,16 @@ all: libcpu.a
 	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS) @CXXFP@$< @OFP@$@
 
 
-libcpu.a: $(OBJS) @OBJS64@ 
+libcpu.a: $(OBJS) @OBJS64@ @AVX_OBJS@ 
 	@RMCOMMAND@ libcpu.a
-	@MAKELIB@ $(OBJS) @OBJS64@
+	@MAKELIB@ $(OBJS) @OBJS64@ @AVX_OBJS@
 	$(RANLIB) libcpu.a
 
 $(OBJS): $(BX_INCLUDES)
 
 $(OBJS64): $(BX_INCLUDES)
+
+$(AVX_OBJS): $(BX_INCLUDES)
 
 clean:
 	@RMCOMMAND@ *.o
