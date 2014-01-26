@@ -251,6 +251,9 @@ bx_serial_c::init(void)
   BX_SER_THIS mouse_internal_buffer.head = 0;
   BX_SER_THIS mouse_delayed_dx = 0;
   BX_SER_THIS mouse_delayed_dy = 0;
+  BX_SER_THIS mouse_delayed_dz = 0;
+  BX_SER_THIS mouse_buttons = 0;
+  BX_SER_THIS mouse_update = 0;
   /*
    * Put the UART registers into their RESET state
    */
@@ -658,6 +661,8 @@ void bx_serial_c::register_state(void)
   new bx_shadow_num_c(list, "mouse_delayed_dx", &BX_SER_THIS mouse_delayed_dx);
   new bx_shadow_num_c(list, "mouse_delayed_dy", &BX_SER_THIS mouse_delayed_dy);
   new bx_shadow_num_c(list, "mouse_delayed_dz", &BX_SER_THIS mouse_delayed_dz);
+  new bx_shadow_num_c(list, "mouse_buttons", &BX_SER_THIS mouse_buttons);
+  new bx_shadow_bool_c(list, "mouse_update", &BX_SER_THIS mouse_update);
   bx_list_c *mousebuf = new bx_list_c(list, "mouse_internal_buffer");
   new bx_shadow_num_c(mousebuf, "num_elements", &BX_SER_THIS mouse_internal_buffer.num_elements);
   bx_list_c *buffer = new bx_list_c(mousebuf, "buffer");
@@ -1589,6 +1594,9 @@ void bx_serial_c::rx_timer(void)
 #endif
         break;
       case BX_SER_MODE_MOUSE:
+        if (BX_SER_THIS mouse_update && (BX_SER_THIS mouse_internal_buffer.num_elements == 0)) {
+          BX_SER_THIS update_mouse_data();
+        }
         if (BX_SER_THIS mouse_internal_buffer.num_elements > 0) {
           chbuf = BX_SER_THIS mouse_internal_buffer.buffer[BX_SER_THIS mouse_internal_buffer.head];
           BX_SER_THIS mouse_internal_buffer.head = (BX_SER_THIS mouse_internal_buffer.head + 1) %
@@ -1651,9 +1659,6 @@ void bx_serial_c::mouse_enq_static(void *dev, int delta_x, int delta_y, int delt
 
 void bx_serial_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy)
 {
-  Bit8u b1, b2, b3, mouse_data[5];
-  int bytes, tail;
-
   if (BX_SER_THIS mouse_port == -1) {
     BX_ERROR(("mouse not connected to a serial port"));
     return;
@@ -1669,18 +1674,24 @@ void bx_serial_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned butt
   if ((delta_y < -1) || (delta_y > 1))
     delta_y /= 2;
 
-  if(delta_x>127) delta_x=127;
-  if(delta_y>127) delta_y=127;
-  if(delta_x<-128) delta_x=-128;
-  if(delta_y<-128) delta_y=-128;
+  if (delta_x > 127) delta_x = 127;
+  if (delta_y > 127) delta_y = 127;
+  if (delta_x < -128) delta_x = -128;
+  if (delta_y < -128) delta_y = -128;
 
-  BX_SER_THIS mouse_delayed_dx+=delta_x;
-  BX_SER_THIS mouse_delayed_dy-=delta_y;
-  BX_SER_THIS mouse_delayed_dz =delta_z;
+  BX_SER_THIS mouse_delayed_dx += delta_x;
+  BX_SER_THIS mouse_delayed_dy -= delta_y;
+  BX_SER_THIS mouse_delayed_dz = delta_z;
+  BX_SER_THIS mouse_buttons = button_state;
+  BX_SER_THIS mouse_update = 1;
+}
 
-  if ((BX_SER_THIS mouse_internal_buffer.num_elements + 4) >= BX_MOUSE_BUFF_SIZE) {
-    return; /* buffer doesn't have the space */
-  }
+void bx_serial_c::update_mouse_data()
+{
+  int delta_x, delta_y;
+  Bit8u b1, b2, b3, button_state, mouse_data[5];
+  int bytes, tail;
+
 
   if (BX_SER_THIS mouse_delayed_dx > 127) {
     delta_x = 127;
@@ -1702,11 +1713,12 @@ void bx_serial_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned butt
     delta_y = BX_SER_THIS mouse_delayed_dy;
     BX_SER_THIS mouse_delayed_dy = 0;
   }
+  button_state = BX_SER_THIS mouse_buttons;
 
   if (BX_SER_THIS mouse_type != BX_MOUSE_TYPE_SERIAL_MSYS) {
     b1 = (Bit8u) delta_x;
     b2 = (Bit8u) delta_y;
-    b3 = (Bit8u) -((Bit8s) delta_z);
+    b3 = (Bit8u) -((Bit8s) BX_SER_THIS mouse_delayed_dz);
     mouse_data[0] = 0x40 | ((b1 & 0xc0) >> 6) | ((b2 & 0xc0) >> 4);
     mouse_data[0] |= ((button_state & 0x01) << 5) | ((button_state & 0x02) << 3);
     mouse_data[1] = b1 & 0x3f;
@@ -1734,4 +1746,5 @@ void bx_serial_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned butt
     BX_SER_THIS mouse_internal_buffer.buffer[tail] = mouse_data[i];
     BX_SER_THIS mouse_internal_buffer.num_elements++;
   }
+  BX_SER_THIS mouse_update = 0;
 }

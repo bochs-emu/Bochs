@@ -217,6 +217,8 @@ private:
   int   mouse_delayed_dx;
   int   mouse_delayed_dy;
   int   mouse_delayed_dz;
+  Bit8u mouse_buttons;
+  bx_bool mouse_update;
   struct {
     int     num_elements;
     Bit8u   buffer[BX_MOUSE_BUFF_SIZE];
@@ -239,6 +241,7 @@ private:
 
   static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
   void mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
+  void update_mouse_data(void);
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
