@@ -320,7 +320,7 @@ invalid:
     }
 
     // handle tiny argument
-    if (aExp < EXP_BIAS-70)
+    if (aExp < FLOATX80_EXP_BIAS-70)
     {
         // first order approximation, return (a*b)/ln(2)
         Bit32s zExp = aExp + FLOAT_LN2INV_EXP - 0x3FFE;

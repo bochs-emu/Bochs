@@ -658,4 +658,40 @@ BX_CPP_INLINE void xmm_sqrtpd_mask(BxPackedXmmRegister *op, float_status_t &stat
   }
 }
 
+// getexp
+
+BX_CPP_INLINE void xmm_getexpps(BxPackedXmmRegister *op, float_status_t &status)
+{
+  for (unsigned n=0; n < 4; n++) {
+    op->xmm32u(n) = float32_getexp(op->xmm32u(n), status);
+  }
+}
+
+BX_CPP_INLINE void xmm_getexpps_mask(BxPackedXmmRegister *op, float_status_t &status, Bit32u mask)
+{
+  for (unsigned n=0; n < 4; n++, mask >>= 1) {
+    if (mask & 0x1)
+      op->xmm32u(n) = float32_getexp(op->xmm32u(n), status);
+    else
+      op->xmm32u(n) = 0;
+  }
+}
+
+BX_CPP_INLINE void xmm_getexppd(BxPackedXmmRegister *op, float_status_t &status)
+{
+  for (unsigned n=0; n < 2; n++) {
+    op->xmm64u(n) = float64_getexp(op->xmm64u(n), status);
+  }
+}
+
+BX_CPP_INLINE void xmm_getexppd_mask(BxPackedXmmRegister *op, float_status_t &status, Bit32u mask)
+{
+  for (unsigned n=0; n < 2; n++, mask >>= 1) {
+    if (mask & 0x1)
+      op->xmm64u(n) = float64_getexp(op->xmm64u(n), status);
+    else
+      op->xmm64u(n) = 0;
+  }
+}
+
 #endif

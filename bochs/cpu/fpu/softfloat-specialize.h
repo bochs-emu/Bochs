@@ -197,6 +197,8 @@ const float32 float32_default_nan   = 0xffc00000;
 #define float32_exp extractFloat32Exp
 #define float32_sign extractFloat32Sign
 
+#define FLOAT32_EXP_BIAS 0x7F
+
 /*----------------------------------------------------------------------------
 | Returns the fraction bits of the single-precision floating-point value `a'.
 *----------------------------------------------------------------------------*/
@@ -348,6 +350,8 @@ const float64 float64_default_nan = BX_CONST64(0xFFF8000000000000);
 #define float64_exp extractFloat64Exp
 #define float64_sign extractFloat64Sign
 
+#define FLOAT64_EXP_BIAS 0x3FF
+
 /*----------------------------------------------------------------------------
 | Returns the fraction bits of the double-precision floating-point value `a'.
 *----------------------------------------------------------------------------*/
@@ -492,7 +496,7 @@ BX_CPP_INLINE float64 propagateFloat64NaN(float64 a, float_status_t &status)
 #define floatx80_exp extractFloatx80Exp
 #define floatx80_sign extractFloatx80Sign
 
-#define EXP_BIAS 0x3FFF
+#define FLOATX80_EXP_BIAS 0x3FFF
 
 /*----------------------------------------------------------------------------
 | Returns the fraction bits of the extended double-precision floating-point

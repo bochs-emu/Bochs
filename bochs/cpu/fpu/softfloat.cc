@@ -619,6 +619,35 @@ float32 float32_frc(float32 a, float_status_t &status)
 }
 
 /*----------------------------------------------------------------------------
+| Extracts the exponent portion of single-precision floating-point value 'a',
+| and returns the result as a single-precision floating-point value
+| representing unbiased integer exponent. The operation is performed according
+| to the IEC/IEEE Standard for Binary Floating-Point Arithmetic.
+*----------------------------------------------------------------------------*/
+
+float32 float32_getexp(float32 a, float_status_t &status)
+{
+    Bit16s aExp = extractFloat32Exp(a);
+    Bit32u aSig = extractFloat32Frac(a);
+
+    if (aExp == 0xFF) {
+        if (aSig) return propagateFloat32NaN(a, status);
+        return packFloat32(0, aExp, aSig);
+    }
+
+    if (aExp == 0) {
+        if (get_denormals_are_zeros(status)) aSig = 0;
+        if (aSig == 0)
+            return float32_negative_inf;
+
+        float_raise(status, float_flag_denormal);
+        normalizeFloat32Subnormal(aSig, &aExp, &aSig);
+    }
+
+    return int32_to_float32(aExp - 0x7F, status);
+}
+
+/*----------------------------------------------------------------------------
 | Returns the result of adding the absolute values of the single-precision
 | floating-point values `a' and `b'.  If `zSign' is 1, the sum is negated
 | before being returned.  `zSign' is ignored if the result is a NaN.
@@ -1558,6 +1587,35 @@ float64 float64_frc(float64 a, float_status_t &status)
        return packFloat64(roundingMode == float_round_down, 0, 0);
 
     return normalizeRoundAndPackFloat64(aSign, aExp, aSig, status);
+}
+
+/*----------------------------------------------------------------------------
+| Extracts the exponent portion of double-precision floating-point value 'a',
+| and returns the result as a double-precision floating-point value
+| representing unbiased integer exponent. The operation is performed according
+| to the IEC/IEEE Standard for Binary Floating-Point Arithmetic.
+*----------------------------------------------------------------------------*/
+
+float64 float64_getexp(float64 a, float_status_t &status)
+{
+    Bit16s aExp = extractFloat64Exp(a);
+    Bit64u aSig = extractFloat64Frac(a);
+
+    if (aExp == 0x7FF) {
+        if (aSig) return propagateFloat64NaN(a, status);
+        return packFloat64(0, aExp, aSig);
+    }
+
+    if (aExp == 0) {
+        if (get_denormals_are_zeros(status)) aSig = 0;
+        if (aSig == 0)
+            return float64_negative_inf;
+
+        float_raise(status, float_flag_denormal);
+        normalizeFloat64Subnormal(aSig, &aExp, &aSig);
+    }
+
+    return int32_to_float64(aExp - 0x3FF);
 }
 
 /*----------------------------------------------------------------------------

@@ -271,7 +271,7 @@ int fsincos(floatx80 a, floatx80 *sin_a, floatx80 *cos_a, float_status_t &status
     }
 
     zSign = aSign;
-    zExp = EXP_BIAS;
+    zExp = FLOATX80_EXP_BIAS;
     expDiff = aExp - zExp;
 
     /* argument is out-of-range */
@@ -386,7 +386,7 @@ int ftan(floatx80 &a, float_status_t &status)
     }
 
     zSign = aSign;
-    zExp = EXP_BIAS;
+    zExp = FLOATX80_EXP_BIAS;
     expDiff = aExp - zExp;
 
     /* argument is out-of-range */

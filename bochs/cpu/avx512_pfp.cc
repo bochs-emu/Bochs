@@ -730,4 +730,108 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMPD_MASK_VpdHpdWpdIbR(bxIn
   BX_NEXT_INSTR(i);
 }
 
+// getexp
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETEXPPS_MASK_VpsWpsR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  Bit32u mask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
+  unsigned len = i->getVL();
+
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
+
+  for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 4)
+    xmm_getexpps_mask(&op.vmm128(n), status, tmp_mask);
+
+  check_exceptionsSSE(get_exception_flags(status));
+
+  if (! i->isZeroMasking()) {
+    for (unsigned n=0; n < len; n++, mask >>= 4)
+      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), mask);
+    BX_CLEAR_AVX_REGZ(i->dst(), len);
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), op, len);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETEXPPD_MASK_VpdWpdR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  Bit32u mask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
+  unsigned len = i->getVL();
+
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
+
+  for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 2)
+    xmm_getexppd_mask(&op.vmm128(n), status, tmp_mask);
+
+  check_exceptionsSSE(get_exception_flags(status));
+
+  if (! i->isZeroMasking()) {
+    for (unsigned n=0; n < len; n++, mask >>= 2)
+      xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), mask);
+    BX_CLEAR_AVX_REGZ(i->dst(), len);
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), op, len);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETEXPSS_MASK_VssHpsWssR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+
+  if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
+    float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());
+
+    float_status_t status;
+    mxcsr_to_softfloat_status_word(status, MXCSR);
+    softfloat_status_word_rc_override(status, i);
+    op1.xmm32u(0) = float32_getexp(op2, status);
+    check_exceptionsSSE(get_exception_flags(status));
+  }
+  else {
+    if (i->isZeroMasking())
+      op1.xmm32u(0) = 0;
+    else
+      op1.xmm32u(0) = BX_READ_XMM_REG_LO_DWORD(i->dst());
+  }
+
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETEXPSD_MASK_VsdHpdWsdR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+
+  if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
+    float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());
+
+    float_status_t status;
+    mxcsr_to_softfloat_status_word(status, MXCSR);
+    softfloat_status_word_rc_override(status, i);
+    op1.xmm64u(0) = float64_getexp(op2, status);
+    check_exceptionsSSE(get_exception_flags(status));
+  }
+  else {
+    if (i->isZeroMasking())
+      op1.xmm64u(0) = 0;
+    else
+      op1.xmm64u(0) = BX_READ_XMM_REG_LO_QWORD(i->dst());
+  }
+
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
+  BX_NEXT_INSTR(i);
+}
+
 #endif

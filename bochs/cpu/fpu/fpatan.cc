@@ -237,7 +237,7 @@ return_PI_or_ZERO:
 
     Bit32s xExp = extractFloat128Exp(x);
 
-    if (xExp <= EXP_BIAS-40)
+    if (xExp <= FLOATX80_EXP_BIAS-40)
         goto approximation_completed;
 
     if (x.hi >= BX_CONST64(0x3ffe800000000000))        // 3/4 < x < 1
