@@ -515,14 +515,24 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
   }
 
   if (EDX != 0 || (EAX & ~BX_CPU_THIS_PTR xcr0_suppmask) != 0 || (EAX & BX_XCR0_FPU_MASK) == 0) {
-    BX_ERROR(("XSETBV: Attempting to change reserved bits!"));
+    BX_ERROR(("XSETBV: Attempt to change reserved bits"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
 #if BX_SUPPORT_AVX
   if ((EAX & (BX_XCR0_YMM_MASK | BX_XCR0_SSE_MASK)) == BX_XCR0_YMM_MASK) {
-    BX_ERROR(("XSETBV: Attempting to enable AVX without SSE!"));
+    BX_ERROR(("XSETBV: Attempt to enable AVX without SSE"));
     exception(BX_GP_EXCEPTION, 0);
+  }
+#endif
+
+#if BX_SUPPORT_EVEX
+  if (EAX & (BX_XCR0_OPMASK_MASK | BX_XCR0_ZMM_HI256_MASK | BX_XCR0_HI_ZMM_MASK)) {
+    Bit32u avx512_state_mask = (BX_XCR0_FPU_MASK | BX_XCR0_SSE_MASK | BX_XCR0_YMM_MASK | BX_XCR0_OPMASK_MASK | BX_XCR0_ZMM_HI256_MASK | BX_XCR0_HI_ZMM_MASK);
+    if ((EAX & avx512_state_mask) != avx512_state_mask) {
+      BX_ERROR(("XSETBV: Illegal attempt to enable AVX-512 state"));
+      exception(BX_GP_EXCEPTION, 0);
+    }
   }
 #endif
 

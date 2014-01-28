@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2010-2013 Stanislav Shwartsman
+//   Copyright (c) 2010-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -128,6 +128,9 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_ISA_RDSEED                (BX_CONST64(1) << 43)  /* RDSEED instruction */
 #define BX_ISA_SHA                   (BX_CONST64(1) << 44)  /* SHA instruction */
 #define BX_ISA_AVX512                (BX_CONST64(1) << 45)  /* AVX-512 instruction */
+#define BX_ISA_AVX512_CD             (BX_CONST64(1) << 46)  /* AVX-512 Conflict Detection instruction */
+#define BX_ISA_AVX512_PF             (BX_CONST64(1) << 47)  /* AVX-512 Sparse Prefetch instruction */
+#define BX_ISA_AVX512_ER             (BX_CONST64(1) << 48)  /* AVX-512 Exponential/Reciprocal instruction */
 
 // cpuid non-ISA features
 #define BX_CPU_DEBUG_EXTENSIONS      (1 <<  0)              /* Debug Extensions support */

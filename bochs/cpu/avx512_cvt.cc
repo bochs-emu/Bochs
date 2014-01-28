@@ -60,6 +60,34 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSS2USI_GqWssR(bxInstruction_c 
   BX_NEXT_INSTR(i);
 }
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTSS2USI_GdWssR(bxInstruction_c *i)
+{
+  float32 op = BX_READ_XMM_REG_LO_DWORD(i->src());
+
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
+  Bit32u result = float32_to_uint32_round_to_zero(op, status);
+  check_exceptionsSSE(get_exception_flags(status));
+
+  BX_WRITE_32BIT_REGZ(i->dst(), result);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTSS2USI_GqWssR(bxInstruction_c *i)
+{
+  float32 op = BX_READ_XMM_REG_LO_DWORD(i->src());
+
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
+  Bit64u result = float32_to_uint64_round_to_zero(op, status);
+  check_exceptionsSSE(get_exception_flags(status));
+
+  BX_WRITE_64BIT_REG(i->dst(), result);
+  BX_NEXT_INSTR(i);
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSD2USI_GdWsdR(bxInstruction_c *i)
 {
   float64 op = BX_READ_XMM_REG_LO_QWORD(i->src());
@@ -82,6 +110,34 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSD2USI_GqWsdR(bxInstruction_c 
   mxcsr_to_softfloat_status_word(status, MXCSR);
   softfloat_status_word_rc_override(status, i);
   Bit64u result = float64_to_uint64(op, status);
+  check_exceptionsSSE(get_exception_flags(status));
+
+  BX_WRITE_64BIT_REG(i->dst(), result);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTSD2USI_GdWsdR(bxInstruction_c *i)
+{
+  float64 op = BX_READ_XMM_REG_LO_QWORD(i->src());
+
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
+  Bit32u result = float64_to_uint32_round_to_zero(op, status);
+  check_exceptionsSSE(get_exception_flags(status));
+
+  BX_WRITE_32BIT_REGZ(i->dst(), result);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTSD2USI_GqWsdR(bxInstruction_c *i)
+{
+  float64 op = BX_READ_XMM_REG_LO_QWORD(i->src());
+
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
+  Bit64u result = float64_to_uint64_round_to_zero(op, status);
   check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_64BIT_REG(i->dst(), result);
@@ -228,6 +284,7 @@ AVX512_CVT64_TO_32(VCVTPD2PS_MASK_VpsWpdR, float64_to_float32)
 AVX512_CVT64_TO_32(VCVTPD2DQ_MASK_VdqWpdR, float64_to_int32)
 AVX512_CVT64_TO_32(VCVTTPD2DQ_MASK_VdqWpdR, float64_to_int32_round_to_zero)
 AVX512_CVT64_TO_32(VCVTPD2UDQ_MASK_VdqWpdR, float64_to_uint32)
+AVX512_CVT64_TO_32(VCVTTPD2UDQ_MASK_VdqWpdR, float64_to_uint32_round_to_zero)
 
 #define AVX512_CVT32_TO_32(HANDLER, func)                                                   \
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)               \
@@ -265,6 +322,7 @@ AVX512_CVT64_TO_32(VCVTPD2UDQ_MASK_VdqWpdR, float64_to_uint32)
 AVX512_CVT32_TO_32(VCVTPS2DQ_MASK_VdqWpsR, float32_to_int32)
 AVX512_CVT32_TO_32(VCVTTPS2DQ_MASK_VdqWpsR, float32_to_int32_round_to_zero)
 AVX512_CVT32_TO_32(VCVTPS2UDQ_MASK_VdqWpsR, float32_to_uint32)
+AVX512_CVT32_TO_32(VCVTTPS2UDQ_MASK_VdqWpsR, float32_to_uint32_round_to_zero)
 AVX512_CVT32_TO_32(VCVTDQ2PS_MASK_VpsWdqR, int32_to_float32)
 AVX512_CVT32_TO_32(VCVTUDQ2PS_MASK_VpsWdqR, uint32_to_float32)
 
@@ -287,6 +345,25 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2UDQ_VdqWpsR(bxInstruction_c
   BX_NEXT_INSTR(i);
 }
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTPS2UDQ_VdqWpsR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  unsigned len = i->getVL();
+
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
+
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
+    op.vmm32u(n) = float32_to_uint32_round_to_zero(op.vmm32u(n), status);
+  }
+
+  check_exceptionsSSE(get_exception_flags(status));
+  BX_WRITE_AVX_REGZ(i->dst(), op, len);
+
+  BX_NEXT_INSTR(i);
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2UDQ_VdqWpdR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
@@ -298,6 +375,32 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2UDQ_VdqWpdR(bxInstruction_c
 
   for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
     result.vmm32u(n) = float64_to_uint32(op.vmm64u(n), status);
+  }
+
+  check_exceptionsSSE(get_exception_flags(status));
+
+  if (len == BX_VL128) {
+    result.vmm64u(1) = 0;
+    BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), result.vmm128(0));
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), result, len >> 1); // write half vector
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTPD2UDQ_VdqWpdR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
+  unsigned len = i->getVL();
+
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
+
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
+    result.vmm32u(n) = float64_to_uint32_round_to_zero(op.vmm64u(n), status);
   }
 
   check_exceptionsSSE(get_exception_flags(status));
