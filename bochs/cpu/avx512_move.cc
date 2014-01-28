@@ -568,6 +568,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQB_MASK_WdqVdqM(bxInstruction
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   avx_masked_store8(i, eaddr, &dst, opmask);
+
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQB_WdqVdqR(bxInstruction_c *i)
@@ -586,6 +588,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQB_WdqVdqR(bxInstruction_c *i
   if (len != BX_VL512) dst.xmm32u(1) = 0;
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQB_MASK_WdqVdqR(bxInstruction_c *i)
@@ -609,6 +612,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQB_MASK_WdqVdqR(bxInstruction
   if (len != BX_VL512) dst.xmm32u(1) = 0;
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQB_MASK_WdqVdqM(bxInstruction_c *i)
@@ -625,6 +629,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQB_MASK_WdqVdqM(bxInstructio
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   avx_masked_store8(i, eaddr, &dst, opmask);
+
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQB_WdqVdqR(bxInstruction_c *i)
@@ -643,6 +649,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQB_WdqVdqR(bxInstruction_c *
   if (len != BX_VL512) dst.xmm32u(1) = 0;
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQB_MASK_WdqVdqR(bxInstruction_c *i)
@@ -666,6 +673,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQB_MASK_WdqVdqR(bxInstructio
   if (len != BX_VL512) dst.xmm32u(1) = 0;
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQB_MASK_WdqVdqM(bxInstruction_c *i)
@@ -682,6 +690,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQB_MASK_WdqVdqM(bxInstructi
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   avx_masked_store8(i, eaddr, &dst, opmask);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQB_WdqVdqR(bxInstruction_c *i)
@@ -700,6 +709,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQB_WdqVdqR(bxInstruction_c 
   if (len != BX_VL512) dst.xmm32u(1) = 0;
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQB_MASK_WdqVdqR(bxInstruction_c *i)
@@ -723,6 +733,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQB_MASK_WdqVdqR(bxInstructi
   if (len != BX_VL512) dst.xmm32u(1) = 0;
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 // double-word to byte
@@ -740,6 +751,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVDB_MASK_WdqVdqM(bxInstruction
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   avx_masked_store8(i, eaddr, &dst, opmask);
+
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVDB_WdqVdqR(bxInstruction_c *i)
@@ -756,6 +769,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVDB_WdqVdqR(bxInstruction_c *i
   if (len != BX_VL512) dst.xmm64u(1) = 0;
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVDB_MASK_WdqVdqR(bxInstruction_c *i)
@@ -777,6 +791,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVDB_MASK_WdqVdqR(bxInstruction
   if (len != BX_VL512) dst.xmm64u(1) = 0;
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSDB_MASK_WdqVdqM(bxInstruction_c *i)
@@ -793,6 +808,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSDB_MASK_WdqVdqM(bxInstructio
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   avx_masked_store8(i, eaddr, &dst, opmask);
+
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSDB_WdqVdqR(bxInstruction_c *i)
@@ -809,6 +826,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSDB_WdqVdqR(bxInstruction_c *
   if (len != BX_VL512) dst.xmm64u(1) = 0;
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSDB_MASK_WdqVdqR(bxInstruction_c *i)
@@ -830,6 +848,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSDB_MASK_WdqVdqR(bxInstructio
   if (len != BX_VL512) dst.xmm64u(1) = 0;
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSDB_MASK_WdqVdqM(bxInstruction_c *i)
@@ -846,6 +865,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSDB_MASK_WdqVdqM(bxInstructi
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   avx_masked_store8(i, eaddr, &dst, opmask);
+
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSDB_WdqVdqR(bxInstruction_c *i)
@@ -862,6 +883,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSDB_WdqVdqR(bxInstruction_c 
   if (len != BX_VL512) dst.xmm64u(1) = 0;
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSDB_MASK_WdqVdqR(bxInstruction_c *i)
@@ -883,6 +905,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSDB_MASK_WdqVdqR(bxInstructi
   if (len != BX_VL512) dst.xmm64u(1) = 0;
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 // double-word to word
@@ -900,6 +923,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVDW_MASK_WdqVdqM(bxInstruction
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   avx_masked_store16(i, eaddr, &dst, opmask);
+
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVDW_WdqVdqR(bxInstruction_c *i)
@@ -916,6 +941,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVDW_WdqVdqR(bxInstruction_c *i
   if (len != BX_VL512) dst.ymm128(1).clear();
 
   BX_WRITE_YMM_REGZ(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVDW_MASK_WdqVdqR(bxInstruction_c *i)
@@ -937,6 +963,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVDW_MASK_WdqVdqR(bxInstruction
   if (len != BX_VL512) dst.ymm128(1).clear();
 
   BX_WRITE_YMM_REGZ(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSDW_MASK_WdqVdqM(bxInstruction_c *i)
@@ -953,6 +980,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSDW_MASK_WdqVdqM(bxInstructio
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   avx_masked_store16(i, eaddr, &dst, opmask);
+
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSDW_WdqVdqR(bxInstruction_c *i)
@@ -969,6 +998,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSDW_WdqVdqR(bxInstruction_c *
   if (len != BX_VL512) dst.ymm128(1).clear();
 
   BX_WRITE_YMM_REGZ(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSDW_MASK_WdqVdqR(bxInstruction_c *i)
@@ -990,6 +1020,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSDW_MASK_WdqVdqR(bxInstructio
   if (len != BX_VL512) dst.ymm128(1).clear();
 
   BX_WRITE_YMM_REGZ(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSDW_MASK_WdqVdqM(bxInstruction_c *i)
@@ -1006,6 +1037,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSDW_MASK_WdqVdqM(bxInstructi
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   avx_masked_store16(i, eaddr, &dst, opmask);
+
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSDW_WdqVdqR(bxInstruction_c *i)
@@ -1022,6 +1055,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSDW_WdqVdqR(bxInstruction_c 
   if (len != BX_VL512) dst.ymm128(1).clear();
 
   BX_WRITE_YMM_REGZ(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSDW_MASK_WdqVdqR(bxInstruction_c *i)
@@ -1043,6 +1077,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSDW_MASK_WdqVdqR(bxInstructi
   if (len != BX_VL512) dst.ymm128(1).clear();
 
   BX_WRITE_YMM_REGZ(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 // quad-word to word
@@ -1060,6 +1095,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQW_MASK_WdqVdqM(bxInstruction
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   avx_masked_store16(i, eaddr, &dst, opmask);
+
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQW_WdqVdqR(bxInstruction_c *i)
@@ -1076,6 +1113,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQW_WdqVdqR(bxInstruction_c *i
   if (len != BX_VL512) dst.xmm64u(1) = 0;
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQW_MASK_WdqVdqR(bxInstruction_c *i)
@@ -1097,6 +1135,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQW_MASK_WdqVdqR(bxInstruction
   if (len != BX_VL512) dst.xmm64u(1) = 0;
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQW_MASK_WdqVdqM(bxInstruction_c *i)
@@ -1113,6 +1152,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQW_MASK_WdqVdqM(bxInstructio
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   avx_masked_store16(i, eaddr, &dst, opmask);
+
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQW_WdqVdqR(bxInstruction_c *i)
@@ -1129,6 +1170,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQW_WdqVdqR(bxInstruction_c *
   if (len != BX_VL512) dst.xmm64u(1) = 0;
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQW_MASK_WdqVdqR(bxInstruction_c *i)
@@ -1150,6 +1192,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQW_MASK_WdqVdqR(bxInstructio
   if (len != BX_VL512) dst.xmm64u(1) = 0;
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQW_MASK_WdqVdqM(bxInstruction_c *i)
@@ -1166,6 +1209,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQW_MASK_WdqVdqM(bxInstructi
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   avx_masked_store16(i, eaddr, &dst, opmask);
+
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQW_WdqVdqR(bxInstruction_c *i)
@@ -1182,6 +1227,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQW_WdqVdqR(bxInstruction_c 
   if (len != BX_VL512) dst.xmm64u(1) = 0;
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQW_MASK_WdqVdqR(bxInstruction_c *i)
@@ -1203,6 +1249,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQW_MASK_WdqVdqR(bxInstructi
   if (len != BX_VL512) dst.xmm64u(1) = 0;
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 // quad-word to double-word
@@ -1220,6 +1267,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQD_MASK_WdqVdqM(bxInstruction
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   avx_masked_store32(i, eaddr, &dst, opmask);
+
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQD_WdqVdqR(bxInstruction_c *i)
@@ -1236,6 +1285,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQD_WdqVdqR(bxInstruction_c *i
   if (len != BX_VL512) dst.ymm128(1).clear();
 
   BX_WRITE_YMM_REGZ(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQD_MASK_WdqVdqR(bxInstruction_c *i)
@@ -1257,6 +1307,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQD_MASK_WdqVdqR(bxInstruction
   if (len != BX_VL512) dst.ymm128(1).clear();
 
   BX_WRITE_YMM_REGZ(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQD_MASK_WdqVdqM(bxInstruction_c *i)
@@ -1273,6 +1324,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQD_MASK_WdqVdqM(bxInstructio
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   avx_masked_store32(i, eaddr, &dst, opmask);
+
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQD_WdqVdqR(bxInstruction_c *i)
@@ -1289,6 +1342,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQD_WdqVdqR(bxInstruction_c *
   if (len != BX_VL512) dst.ymm128(1).clear();
 
   BX_WRITE_YMM_REGZ(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQD_MASK_WdqVdqR(bxInstruction_c *i)
@@ -1310,6 +1364,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQD_MASK_WdqVdqR(bxInstructio
   if (len != BX_VL512) dst.ymm128(1).clear();
 
   BX_WRITE_YMM_REGZ(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQD_MASK_WdqVdqM(bxInstruction_c *i)
@@ -1326,6 +1381,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQD_MASK_WdqVdqM(bxInstructi
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   avx_masked_store32(i, eaddr, &dst, opmask);
+
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQD_WdqVdqR(bxInstruction_c *i)
@@ -1342,6 +1399,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQD_WdqVdqR(bxInstruction_c 
   if (len != BX_VL512) dst.ymm128(1).clear();
 
   BX_WRITE_YMM_REGZ(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQD_MASK_WdqVdqR(bxInstruction_c *i)
@@ -1363,6 +1421,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQD_MASK_WdqVdqR(bxInstructi
   if (len != BX_VL512) dst.ymm128(1).clear();
 
   BX_WRITE_YMM_REGZ(i->dst(), dst);
+  BX_NEXT_INSTR(i);
 }
 
 #endif
