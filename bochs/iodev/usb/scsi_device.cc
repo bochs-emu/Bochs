@@ -45,6 +45,37 @@
 static SCSIRequest *free_requests = NULL;
 static Bit32u serial_number = 12345678;
 
+Bit64s scsireq_save_handler(void *class_ptr, bx_param_c *param)
+{
+  char fname[BX_PATHNAME_LEN];
+  char path[BX_PATHNAME_LEN];
+
+  param->get_param_path(fname, BX_PATHNAME_LEN);
+  if (!strncmp(fname, "bochs.", 6)) {
+    strcpy(fname, fname+6);
+  }
+  if (SIM->get_param_string(BXPN_RESTORE_PATH)->isempty()) {
+    return 0;
+  }
+  sprintf(path, "%s/%s", SIM->get_param_string(BXPN_RESTORE_PATH)->getptr(), fname);
+  return ((scsi_device_t*)class_ptr)->save_requests(path);
+}
+
+void scsireq_restore_handler(void *class_ptr, bx_param_c *param, Bit64s value)
+{
+  char fname[BX_PATHNAME_LEN];
+  char path[BX_PATHNAME_LEN];
+
+  if (value != 0) {
+    param->get_param_path(fname, BX_PATHNAME_LEN);
+    if (!strncmp(fname, "bochs.", 6)) {
+      strcpy(fname, fname+6);
+    }
+    sprintf(path, "%s/%s", SIM->get_param_string(BXPN_RESTORE_PATH)->getptr(), fname);
+    ((scsi_device_t*)class_ptr)->restore_requests(path);
+  }
+}
+
 scsi_device_t::scsi_device_t(device_image_t *_hdimage, int _tcq,
                            scsi_completionfn _completion, void *_dev)
 {
@@ -97,6 +128,7 @@ scsi_device_t::~scsi_device_t(void)
     r = requests;
     while (r != NULL) {
       next = r->next;
+      delete [] r->dma_buf;
       delete r;
       r = next;
     }
@@ -105,6 +137,7 @@ scsi_device_t::~scsi_device_t(void)
     r = free_requests;
     while (r != NULL) {
       next = r->next;
+      delete [] r->dma_buf;
       delete r;
       r = next;
     }
@@ -118,8 +151,11 @@ void scsi_device_t::register_state(bx_list_c *parent, const char *name)
 {
   bx_list_c *list = new bx_list_c(parent, name, "");
   new bx_shadow_num_c(list, "sense", &sense);
-  // TODO: save/restore for SCSI requests
+  bx_param_bool_c *requests = new bx_param_bool_c(list, "requests", NULL, NULL, 0);
+  requests->set_sr_handlers(this, scsireq_save_handler, scsireq_restore_handler);
 }
+
+// SCSI request handling
 
 SCSIRequest* scsi_device_t::scsi_new_request(Bit32u tag)
 {
@@ -130,8 +166,8 @@ SCSIRequest* scsi_device_t::scsi_new_request(Bit32u tag)
     free_requests = r->next;
   } else {
     r = new SCSIRequest;
+    r->dma_buf = new Bit8u[SCSI_DMA_BUF_SIZE];
   }
-  r->dev = this;
   r->tag = tag;
   r->sector_count = 0;
   r->buf_len = 0;
@@ -177,6 +213,51 @@ SCSIRequest* scsi_device_t::scsi_find_request(Bit32u tag)
   }
   return r;
 }
+
+bx_bool scsi_device_t::save_requests(const char *path)
+{
+  char tmppath[BX_PATHNAME_LEN];
+
+  if (requests != NULL) {
+    FILE *fp1 = fopen(path, "w");
+    if (fp1 != NULL) {
+      SCSIRequest *r = requests;
+      Bit32u i = 0;
+      while (r != NULL) {
+        fprintf(fp1, "%u = {\n", i);
+        fprintf(fp1, "  tag = %u\n", r->tag);
+        fprintf(fp1, "  sector = "FMT_LL"u\n", r->sector);
+        fprintf(fp1, "  sector_count = %u\n", r->sector_count);
+        fprintf(fp1, "  buf_len = %d\n", r->buf_len);
+        fprintf(fp1, "  status = %u\n", r->status);
+        fprintf(fp1, "}\n");
+        if (r->buf_len > 0) {
+          sprintf(tmppath, "%s.%u", path, i);
+          FILE *fp2 = fopen(tmppath, "wb");
+          if (fp2 != NULL) {
+            fwrite(r->dma_buf, 1, (size_t)r->buf_len, fp2);
+          }
+          fclose(fp2);
+        }
+        r = r->next;
+        i++;
+      }
+      fclose(fp1);
+      return 1;
+    } else {
+      return 0;
+    }
+  } else {
+    return 0;
+  }
+}
+
+void scsi_device_t::restore_requests(const char *path)
+{
+  // TODO: restore SCSI requests
+}
+
+// SCSI command implementation
 
 void scsi_device_t::scsi_command_complete(SCSIRequest *r, int status, int _sense)
 {

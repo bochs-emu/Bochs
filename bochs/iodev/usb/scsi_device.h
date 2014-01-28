@@ -30,7 +30,6 @@
 
 typedef void (*scsi_completionfn)(void *opaque, int reason, Bit32u tag,
                                   Bit32u arg);
-class scsi_device_t;
 class cdrom_base_c;
 
 enum scsidev_type {
@@ -56,12 +55,11 @@ enum scsi_reason {
 #define SCSI_MAX_INQUIRY_LEN 256
 
 typedef struct SCSIRequest {
-  scsi_device_t *dev;
   Bit32u tag;
   Bit64u sector;
   Bit32u sector_count;
   int buf_len;
-  Bit8u dma_buf[SCSI_DMA_BUF_SIZE];
+  Bit8u *dma_buf;
   Bit32u status;
   struct SCSIRequest *next;
 } SCSIRequest;
@@ -89,6 +87,8 @@ public:
   bx_bool get_inserted() {return inserted;}
   static void seek_timer_handler(void *);
   void seek_timer(void);
+  bx_bool save_requests(const char *path);
+  void restore_requests(const char *path);
 
 protected:
   SCSIRequest* scsi_new_request(Bit32u tag);
