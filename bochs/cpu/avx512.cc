@@ -529,7 +529,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VALIGND_MASK_VdqHdqWdqIbR(bxInstru
 
   for (unsigned n=0; n <= elements_mask; n++) {
     unsigned index = (shift + n) & elements_mask;
-    result.vmm32u(n) = ((n + shift) <= elements_mask) ? op1.vmm32u(index) : op2.vmm32u(index);
+    result.vmm32u(n) = ((n + shift) <= elements_mask) ? op2.vmm32u(index) : op1.vmm32u(index);
   }
 
   if (i->opmask()) {
@@ -550,7 +550,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VALIGNQ_MASK_VdqHdqWdqIbR(bxInstru
 
   for (unsigned n=0; n <= elements_mask; n++) {
     unsigned index = (shift + n) & elements_mask;
-    result.vmm64u(n) = ((n + shift) <= elements_mask) ? op1.vmm64u(index) : op2.vmm64u(index);
+    result.vmm64u(n) = ((n + shift) <= elements_mask) ? op2.vmm64u(index) : op1.vmm64u(index);
   }
 
   if (i->opmask()) {
