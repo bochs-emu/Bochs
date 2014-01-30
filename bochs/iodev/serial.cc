@@ -1299,6 +1299,9 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
               BX_SER_THIS mouse_internal_buffer.buffer[4] = '\0';
               BX_SER_THIS mouse_internal_buffer.buffer[5] = '\0';
             }
+            bx_pc_system.activate_timer(BX_SER_THIS s[port].rx_timer_index,
+                                        BX_SER_THIS s[port].databyte_usec,
+                                        0); /* not continuous */
             BX_SER_THIS detect_mouse = 0;
           }
         }
