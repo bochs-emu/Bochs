@@ -151,6 +151,7 @@ void scsi_device_t::register_state(bx_list_c *parent, const char *name)
 {
   bx_list_c *list = new bx_list_c(parent, name, "");
   new bx_shadow_num_c(list, "sense", &sense);
+  new bx_shadow_bool_c(list, "locked", &locked);
   bx_param_bool_c *requests = new bx_param_bool_c(list, "requests", NULL, NULL, 0);
   requests->set_sr_handlers(this, scsireq_save_handler, scsireq_restore_handler);
 }
@@ -217,23 +218,24 @@ SCSIRequest* scsi_device_t::scsi_find_request(Bit32u tag)
 bx_bool scsi_device_t::save_requests(const char *path)
 {
   char tmppath[BX_PATHNAME_LEN];
+  FILE *fp, *fp2;
 
   if (requests != NULL) {
-    FILE *fp1 = fopen(path, "w");
-    if (fp1 != NULL) {
+    fp = fopen(path, "w");
+    if (fp != NULL) {
       SCSIRequest *r = requests;
       Bit32u i = 0;
       while (r != NULL) {
-        fprintf(fp1, "%u = {\n", i);
-        fprintf(fp1, "  tag = %u\n", r->tag);
-        fprintf(fp1, "  sector = "FMT_LL"u\n", r->sector);
-        fprintf(fp1, "  sector_count = %u\n", r->sector_count);
-        fprintf(fp1, "  buf_len = %d\n", r->buf_len);
-        fprintf(fp1, "  status = %u\n", r->status);
-        fprintf(fp1, "}\n");
+        fprintf(fp, "%u = {\n", i);
+        fprintf(fp, "  tag = %u\n", r->tag);
+        fprintf(fp, "  sector = "FMT_LL"u\n", r->sector);
+        fprintf(fp, "  sector_count = %u\n", r->sector_count);
+        fprintf(fp, "  buf_len = %d\n", r->buf_len);
+        fprintf(fp, "  status = %u\n", r->status);
+        fprintf(fp, "}\n");
         if (r->buf_len > 0) {
           sprintf(tmppath, "%s.%u", path, i);
-          FILE *fp2 = fopen(tmppath, "wb");
+          fp2 = fopen(tmppath, "wb");
           if (fp2 != NULL) {
             fwrite(r->dma_buf, 1, (size_t)r->buf_len, fp2);
           }
@@ -242,7 +244,7 @@ bx_bool scsi_device_t::save_requests(const char *path)
         r = r->next;
         i++;
       }
-      fclose(fp1);
+      fclose(fp);
       return 1;
     } else {
       return 0;
@@ -254,7 +256,92 @@ bx_bool scsi_device_t::save_requests(const char *path)
 
 void scsi_device_t::restore_requests(const char *path)
 {
-  // TODO: restore SCSI requests
+  char line[512], pname[16], tmppath[BX_PATHNAME_LEN];
+  char *ret, *ptr;
+  FILE *fp, *fp2;
+  int i, reqid = -1;
+  Bit64s value;
+  Bit32u tag = 0;
+  SCSIRequest *r = NULL;
+  bx_bool rrq_error = 0;
+
+  fp = fopen(path, "r");
+  if (fp != NULL) {
+    do {
+      ret = fgets(line, sizeof(line)-1, fp);
+      line[sizeof(line) - 1] = '\0';
+      int len = strlen(line);
+      if ((len > 0) && (line[len-1] < ' '))
+        line[len-1] = '\0';
+      i = 0;
+      if ((ret != NULL) && strlen(line) > 0) {
+        ptr = strtok(line, " ");
+        while (ptr) {
+          if (i == 0) {
+            if (!strcmp(ptr, "}")) {
+              if (r != NULL) {
+                if (r->buf_len > 0) {
+                  sprintf(tmppath, "%s.%u", path, reqid);
+                  fp2 = fopen(tmppath, "wb");
+                  if (fp2 != NULL) {
+                    fread(r->dma_buf, 1, (size_t)r->buf_len, fp2);
+                  }
+                  fclose(fp2);
+                }
+              }
+              reqid = -1;
+              r = NULL;
+              tag = 0;
+              break;
+            } else if (reqid < 0) {
+              reqid = (int)strtol(ptr, NULL, 10);
+              break;
+            } else {
+              strcpy(pname, ptr);
+            }
+          } else if (i == 2) {
+            if (reqid >= 0) {
+              if (!strcmp(pname, "tag")) {
+                if (tag == 0) {
+                  tag = (Bit32u)strtoul(ptr, NULL, 10);
+                  r = scsi_new_request(tag);
+                  if (r == NULL) {
+                    BX_ERROR(("restore_requests(): cannot create request"));
+                    rrq_error = 1;
+                  }
+                } else {
+                  BX_ERROR(("restore_requests(): data format error"));
+                  rrq_error = 1;
+                }
+              } else {
+                value = (Bit64s)strtoll(ptr, NULL, 10);
+                if (!strcmp(pname, "sector")) {
+                  r->sector = (Bit64u)value;
+                } else if (!strcmp(pname, "sector_count")) {
+                  r->sector_count = (Bit32u)value;
+                } else if (!strcmp(pname, "buf_len")) {
+                  r->buf_len = (int)value;
+                } else if (!strcmp(pname, "status")) {
+                  r->status = (Bit32u)value;
+                } else {
+                  BX_ERROR(("restore_requests(): data format error"));
+                  rrq_error = 1;
+                }
+              }
+            } else {
+              BX_ERROR(("restore_requests(): data format error"));
+              rrq_error = 1;
+            }
+          }
+          i++;
+          ptr = strtok(NULL, " ");
+        }
+      }
+    } while (!feof(fp) && !rrq_error);
+    fclose(fp);
+  } else {
+    BX_ERROR(("restore_requests(): error in file open"));
+  }
 }
 
 // SCSI command implementation
