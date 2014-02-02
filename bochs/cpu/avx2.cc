@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2013 Stanislav Shwartsman
+//   Copyright (c) 2011-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -361,207 +361,159 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTQ_VdqWqR(bxInstruction_
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXBW256_VdqWdqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXBW_VdqWdqR(bxInstruction_c *i)
+{
+  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
+  BxPackedAvxRegister result;
+  unsigned len = i->getVL();
+
+  for (unsigned n=0; n < WORD_ELEMENTS(len); n++)
+    result.vmm16s(n) = (Bit16s) op.ymmsbyte(n);
+
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXBD_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
-  BxPackedYmmRegister result;
+  BxPackedAvxRegister result;
+  unsigned len = i->getVL();
 
-  for (int n=0; n<16; n++)
-    result.ymm16u(n) = (Bit8s) op.xmmsbyte(n);
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++)
+    result.vmm32s(n) = (Bit32s) op.xmmsbyte(n);
 
-  BX_WRITE_YMM_REGZ(i->dst(), result);
-
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXBD256_VdqWqR(bxInstruction_c *i)
-{
-  BxPackedYmmRegister result;
-  BxPackedMmxRegister op;
-
-  // use MMX register as 64-bit value with convinient accessors
-  MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->src());
-
-  result.ymm32u(0) = (Bit8s) MMXSB0(op);
-  result.ymm32u(1) = (Bit8s) MMXSB1(op);
-  result.ymm32u(2) = (Bit8s) MMXSB2(op);
-  result.ymm32u(3) = (Bit8s) MMXSB3(op);
-  result.ymm32u(4) = (Bit8s) MMXSB4(op);
-  result.ymm32u(5) = (Bit8s) MMXSB5(op);
-  result.ymm32u(6) = (Bit8s) MMXSB6(op);
-  result.ymm32u(7) = (Bit8s) MMXSB7(op);
-
-  BX_WRITE_YMM_REGZ(i->dst(), result);
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXBQ256_VdqWdR(bxInstruction_c *i)
-{
-  BxPackedYmmRegister result;
-  Bit32u val32 = BX_READ_XMM_REG_LO_DWORD(i->src());
-
-  result.ymm64u(0) = (Bit8s) (val32 & 0xFF);
-  result.ymm64u(1) = (Bit8s) ((val32 >> 8) & 0xFF);
-  result.ymm64u(2) = (Bit8s) ((val32 >> 16) & 0xFF);
-  result.ymm64u(3) = (Bit8s) (val32 >> 24);
-
-  BX_WRITE_YMM_REGZ(i->dst(), result);
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXWD256_VdqWdqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXBQ_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
-  BxPackedYmmRegister result;
+  BxPackedAvxRegister result;
+  unsigned len = i->getVL();
 
-  result.ymm32u(0) = op.xmm16s(0);
-  result.ymm32u(1) = op.xmm16s(1);
-  result.ymm32u(2) = op.xmm16s(2);
-  result.ymm32u(3) = op.xmm16s(3);
-  result.ymm32u(4) = op.xmm16s(4);
-  result.ymm32u(5) = op.xmm16s(5);
-  result.ymm32u(6) = op.xmm16s(6);
-  result.ymm32u(7) = op.xmm16s(7);
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++)
+    result.vmm64s(n) = (Bit64s) op.xmmsbyte(n);
 
-  BX_WRITE_YMM_REGZ(i->dst(), result);
-
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXWQ256_VdqWqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXWD_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister result;
-  BxPackedMmxRegister op;
+  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
+  BxPackedAvxRegister result;
+  unsigned len = i->getVL();
 
-  // use MMX register as 64-bit value with convinient accessors
-  MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->src());
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++)
+    result.vmm32s(n) = (Bit32s) op.ymm16s(n);
 
-  result.ymm64u(0) = MMXSW0(op);
-  result.ymm64u(1) = MMXSW1(op);
-  result.ymm64u(2) = MMXSW2(op);
-  result.ymm64u(3) = MMXSW3(op);
-
-  BX_WRITE_YMM_REGZ(i->dst(), result);
-
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXDQ256_VdqWdqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXWQ_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
-  BxPackedYmmRegister result;
+  BxPackedAvxRegister result;
+  unsigned len = i->getVL();
 
-  result.ymm64u(0) = op.xmm32s(0);
-  result.ymm64u(1) = op.xmm32s(1);
-  result.ymm64u(2) = op.xmm32s(2);
-  result.ymm64u(3) = op.xmm32s(3);
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++)
+    result.vmm64s(n) = (Bit64s) op.xmm16s(n);
 
-  BX_WRITE_YMM_REGZ(i->dst(), result);
-
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXBW256_VdqWdqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSXDQ_VdqWdqR(bxInstruction_c *i)
+{
+  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
+  BxPackedAvxRegister result;
+  unsigned len = i->getVL();
+
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++)
+    result.vmm64s(n) = (Bit64s) op.ymm32s(n);
+
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXBW_VdqWdqR(bxInstruction_c *i)
+{
+  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
+  BxPackedAvxRegister result;
+  unsigned len = i->getVL();
+
+  for (unsigned n=0; n < WORD_ELEMENTS(len); n++)
+    result.vmm16u(n) = (Bit16u) op.ymmubyte(n);
+
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXBD_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
-  BxPackedYmmRegister result;
+  BxPackedAvxRegister result;
+  unsigned len = i->getVL();
 
-  for (int n=0; n<16; n++)
-    result.ymm16u(n) = op.xmmubyte(n);
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++)
+    result.vmm32u(n) = (Bit32u) op.xmmubyte(n);
 
-  BX_WRITE_YMM_REGZ(i->dst(), result);
-
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXBD256_VdqWqR(bxInstruction_c *i)
-{
-  BxPackedYmmRegister result;
-  BxPackedMmxRegister op;
-
-  // use MMX register as 64-bit value with convinient accessors
-  MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->src());
-
-  result.ymm32u(0) = MMXUB0(op);
-  result.ymm32u(1) = MMXUB1(op);
-  result.ymm32u(2) = MMXUB2(op);
-  result.ymm32u(3) = MMXUB3(op);
-  result.ymm32u(4) = MMXUB4(op);
-  result.ymm32u(5) = MMXUB5(op);
-  result.ymm32u(6) = MMXUB6(op);
-  result.ymm32u(7) = MMXUB7(op);
-
-  BX_WRITE_YMM_REGZ(i->dst(), result);
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXBQ256_VdqWdR(bxInstruction_c *i)
-{
-  BxPackedYmmRegister result;
-  Bit32u val32 = BX_READ_XMM_REG_LO_DWORD(i->src());
-
-  result.ymm64u(0) = (Bit8u) (val32 & 0xFF);
-  result.ymm64u(1) = (Bit8u) ((val32 >> 8) & 0xFF);
-  result.ymm64u(2) = (Bit8u) ((val32 >> 16) & 0xFF);
-  result.ymm64u(3) = (Bit8u) (val32 >> 24);
-
-  BX_WRITE_YMM_REGZ(i->dst(), result);
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXWD256_VdqWdqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXBQ_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
-  BxPackedYmmRegister result;
+  BxPackedAvxRegister result;
+  unsigned len = i->getVL();
 
-  result.ymm32u(0) = op.xmm16u(0);
-  result.ymm32u(1) = op.xmm16u(1);
-  result.ymm32u(2) = op.xmm16u(2);
-  result.ymm32u(3) = op.xmm16u(3);
-  result.ymm32u(4) = op.xmm16u(4);
-  result.ymm32u(5) = op.xmm16u(5);
-  result.ymm32u(6) = op.xmm16u(6);
-  result.ymm32u(7) = op.xmm16u(7);
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++)
+    result.vmm64u(n) = (Bit64u) op.xmmubyte(n);
 
-  BX_WRITE_YMM_REGZ(i->dst(), result);
-
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXWQ256_VdqWqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXWD_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister result;
-  BxPackedMmxRegister op;
+  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
+  BxPackedAvxRegister result;
+  unsigned len = i->getVL();
 
-  // use MMX register as 64-bit value with convinient accessors
-  MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->src());
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++)
+    result.vmm32u(n) = (Bit32u) op.ymm16u(n);
 
-  result.ymm64u(0) = MMXUW0(op);
-  result.ymm64u(1) = MMXUW1(op);
-  result.ymm64u(2) = MMXUW2(op);
-  result.ymm64u(3) = MMXUW3(op);
-
-  BX_WRITE_YMM_REGZ(i->dst(), result);
-
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXDQ256_VdqWdqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXWQ_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
-  BxPackedYmmRegister result;
+  BxPackedAvxRegister result;
+  unsigned len = i->getVL();
 
-  result.ymm64u(0) = op.xmm32u(0);
-  result.ymm64u(1) = op.xmm32u(1);
-  result.ymm64u(2) = op.xmm32u(2);
-  result.ymm64u(3) = op.xmm32u(3);
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++)
+    result.vmm64u(n) = (Bit64u) op.xmm16u(n);
 
-  BX_WRITE_YMM_REGZ(i->dst(), result);
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
+  BX_NEXT_INSTR(i);
+}
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVZXDQ_VdqWdqR(bxInstruction_c *i)
+{
+  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
+  BxPackedAvxRegister result;
+  unsigned len = i->getVL();
+
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++)
+    result.vmm64u(n) = (Bit64u) op.ymm32u(n);
+
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
   BX_NEXT_INSTR(i);
 }
 

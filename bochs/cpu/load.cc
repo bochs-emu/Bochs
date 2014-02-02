@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2013 Stanislav Shwartsman
+//   Copyright (c) 2008-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -165,6 +165,57 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Half_Vector(bxInstruction_c *
     else {
       Bit64u val_64 = read_virtual_qword(i->seg(), eaddr);
       BX_WRITE_XMM_REG_LO_QWORD(BX_VECTOR_TMP_REGISTER, val_64);
+    }
+  }
+
+  BX_CPU_CALL_METHOD(i->execute2(), (i));
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Quarter_Vector(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  unsigned vl = i->getVL();
+
+#if BX_SUPPORT_EVEX
+  if (vl == BX_VL512) {
+    read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_VECTOR_TMP_REGISTER));
+  }
+  else
+#endif
+  {
+    if (vl == BX_VL256) {
+      Bit64u val_64 = read_virtual_qword(i->seg(), eaddr);
+      BX_WRITE_XMM_REG_LO_QWORD(BX_VECTOR_TMP_REGISTER, val_64);
+    }
+    else {
+      Bit32u val_32 = read_virtual_dword(i->seg(), eaddr);
+      BX_WRITE_XMM_REG_LO_DWORD(BX_VECTOR_TMP_REGISTER, val_32);
+    }
+  }
+
+  BX_CPU_CALL_METHOD(i->execute2(), (i));
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Oct_Vector(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  unsigned vl = i->getVL();
+
+#if BX_SUPPORT_EVEX
+  if (vl == BX_VL512) {
+    Bit64u val_64 = read_virtual_qword(i->seg(), eaddr);
+    BX_WRITE_XMM_REG_LO_QWORD(BX_VECTOR_TMP_REGISTER, val_64);
+  }
+  else
+#endif
+  {
+    if (vl == BX_VL256) {
+      Bit32u val_32 = read_virtual_dword(i->seg(), eaddr);
+      BX_WRITE_XMM_REG_LO_DWORD(BX_VECTOR_TMP_REGISTER, val_32);
+    }
+    else {
+      Bit16u val_16 = read_virtual_word(i->seg(), eaddr);
+      BX_WRITE_XMM_REG_LO_WORD(BX_VECTOR_TMP_REGISTER, val_16);
     }
   }
 

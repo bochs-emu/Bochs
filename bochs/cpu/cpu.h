@@ -2133,6 +2133,8 @@ public: // for now...
 #if BX_SUPPORT_AVX
   BX_SMF BX_INSF_TYPE LOAD_Vector(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE LOAD_Half_Vector(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE LOAD_Quarter_Vector(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE LOAD_Oct_Vector(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 #if BX_SUPPORT_EVEX
   BX_SMF BX_INSF_TYPE LOAD_BROADCAST_VectorD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3002,18 +3004,19 @@ public: // for now...
   BX_SMF BX_INSF_TYPE VPSLLDQ_UdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPALIGNR_VdqHdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF BX_INSF_TYPE VPMOVSXBW256_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VPMOVSXBD256_VdqWqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VPMOVSXBQ256_VdqWdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VPMOVSXWD256_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VPMOVSXWQ256_VdqWqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VPMOVSXDQ256_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VPMOVZXBW256_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VPMOVZXBD256_VdqWqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VPMOVZXBQ256_VdqWdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VPMOVZXWD256_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VPMOVZXWQ256_VdqWqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VPMOVZXDQ256_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPMOVSXBW_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPMOVSXBD_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPMOVSXBQ_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPMOVSXWD_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPMOVSXWQ_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPMOVSXDQ_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF BX_INSF_TYPE VPMOVZXBW_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPMOVZXBD_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPMOVZXBQ_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPMOVZXWD_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPMOVZXWQ_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPMOVZXDQ_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF BX_INSF_TYPE VPERMD_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPERMQ_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3545,6 +3548,18 @@ public: // for now...
   BX_SMF BX_INSF_TYPE VPMOVSDW_MASK_WdqVdqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPMOVSQW_MASK_WdqVdqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPMOVSQD_MASK_WdqVdqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF BX_INSF_TYPE VPMOVSXBD_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPMOVSXBQ_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPMOVSXWD_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPMOVSXWQ_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPMOVSXDQ_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF BX_INSF_TYPE VPMOVZXBD_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPMOVZXBQ_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPMOVZXWD_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPMOVZXWQ_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPMOVZXDQ_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
   BX_SMF BX_INSF_TYPE LZCNT_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
