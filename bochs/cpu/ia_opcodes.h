@@ -1360,7 +1360,7 @@ bx_define_opcode(BX_IA_TEST_EqId, &BX_CPU_C::TEST_EqIdM, &BX_CPU_C::TEST_EqIdR, 
 bx_define_opcode(BX_IA_CMP_EqId, &BX_CPU_C::CMP_EqIdM, &BX_CPU_C::CMP_EqIdR, 0, OP_Eq, OP_sId, OP_NONE, OP_NONE, 0)
 
 bx_define_opcode(BX_IA_XCHG_EqGq, &BX_CPU_C::XCHG_EqGqM, &BX_CPU_C::XCHG_EqGqR, 0, OP_Eq, OP_Gq, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_LEA_GqM, &BX_CPU_C::LEA_GqM, &BX_CPU_C::BxError, 0, OP_Gq, OP_Mq, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_LEA_GqM, &BX_CPU_C::LEA_GqM, &BX_CPU_C::BxError, 0, OP_Gq, OP_M, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MOV_Op64_GdEd, &BX_CPU_C::MOV64_GdEdM, &BX_CPU_C::MOV_GdEdR, 0, OP_Gd, OP_Ed, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MOV_Op64_EdGd, &BX_CPU_C::MOV64_EdGdM, &BX_CPU_C::MOV_GdEdR, 0, OP_Ed, OP_Gd, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MOV_GqEq, &BX_CPU_C::MOV_GqEqM, &BX_CPU_C::MOV_GqEqR, 0, OP_Gq, OP_Eq, OP_NONE, OP_NONE, 0)

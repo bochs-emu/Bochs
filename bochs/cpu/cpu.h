@@ -435,6 +435,9 @@ struct BxExceptionInfo {
 
 #define BX_MSR_TSC_DEADLINE        0x6E0
 
+/* Intel MPX supervisor bound configuration register */
+#define BX_MSR_BNDCFGS             0xd90
+
 #define BX_MSR_MAX_INDEX          0x1000
 
 enum {

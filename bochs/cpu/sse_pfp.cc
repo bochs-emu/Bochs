@@ -31,6 +31,7 @@
 #include "fpu/softfloat-compare.h"
 
 #include "simd_pfp.h"
+#include "simd_int.h"
 
 void BX_CPU_C::check_exceptionsSSE(int exceptions_flags)
 {
@@ -1833,32 +1834,28 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPS_VpsWpsIbR(bxInstruction_c *i)
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
+  // op1: [A, B, C, D]
+  // op2: [E, F, G, H]
+
+  // after multiplication: op1 = [EA, BF, CG, DH]
   xmm_mulps_mask(&op1, &op2, status, mask >> 4);
-
-  float32 tmp1 = float32_add(op1.xmm32u(0), op1.xmm32u(1), status);
-  float32 tmp2 = float32_add(op1.xmm32u(2), op1.xmm32u(3), status);
-
-  op1.clear();
-
-#ifdef BX_DPPS_DPPD_NAN_MATCHING_HARDWARE
-  float32 r1 = float32_add(tmp1, tmp2, status);
-  float32 r2 = float32_add(tmp2, tmp1, status);
-
-  if (mask & 0x01) op1.xmm32u(0) = r1;
-  if (mask & 0x02) op1.xmm32u(1) = r1;
-  if (mask & 0x04) op1.xmm32u(2) = r2;
-  if (mask & 0x08) op1.xmm32u(3) = r2;
-#else
-  float32 r  = float32_add(tmp1, tmp2, status);
-
-  if (mask & 0x01) op1.xmm32u(0) = r;
-  if (mask & 0x02) op1.xmm32u(1) = r;
-  if (mask & 0x04) op1.xmm32u(2) = r;
-  if (mask & 0x08) op1.xmm32u(3) = r;
-#endif
-
   check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG(i->dst(), op1);
+
+  // shuffle op2 = [BF, AE, DH, CG]
+  xmm_shufps(&op2, &op1, &op1, 0xb1);
+
+  // op2 = [(BF+AE), (AE+BF), (DH+CG), (CG+DH)]
+  xmm_addps(&op2, &op1, status);
+  check_exceptionsSSE(get_exception_flags(status));
+
+  // shuffle op1 = [(DH+CG), (CG+DH), (BF+AE), (AE+BF)]
+  xmm_shufpd(&op1, &op2, &op2, 0x1);
+
+  // op2 = [(BF+AE)+(DH+CG), (AE+BF)+(CG+DH), (DH+CG)+(BF+AE), (CG+DH)+(AE+BF)]
+  xmm_addps_mask(&op2, &op1, status, mask);
+  check_exceptionsSSE(get_exception_flags(status));
+
+  BX_WRITE_XMM_REG(i->dst(), op2);
 
   BX_NEXT_INSTR(i);
 }
@@ -1877,22 +1874,21 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPD_VpdHpdWpdIbR(bxInstruction_c 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
 
+  // op1: [A, B]
+  // op2: [C, D]
+
+  // after multiplication: op1 = [AC, BD]
   xmm_mulpd_mask(&op1, &op2, status, mask >> 4);
-
-  op2.clear();
-
-#ifdef BX_DPPS_DPPD_NAN_MATCHING_HARDWARE
-  if (mask & 0x01) op2.xmm64u(0) = float64_add(op1.xmm64u(0), op1.xmm64u(1), status);
-  if (mask & 0x02) op2.xmm64u(1) = float64_add(op1.xmm64u(1), op1.xmm64u(0), status);
-#else
-  float64 result = float64_add(op1.xmm64u(0), op1.xmm64u(1), status);
-
-  if (mask & 0x01) op2.xmm64u(0) = result;
-  if (mask & 0x02) op2.xmm64u(1) = result;
-#endif
-
   check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REGZ(i->dst(), op2, i->getVL());
+
+  // shuffle op2 = [BD, AC]
+  xmm_shufpd(&op2, &op1, &op1, 0x1);
+
+  // op1 = [AC+BD, BD+AC]
+  xmm_addpd_mask(&op1, &op2, status, mask);
+  check_exceptionsSSE(get_exception_flags(status));
+
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
 
   BX_NEXT_INSTR(i);
 }

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013 Stanislav Shwartsman
+//   Copyright (c) 2013-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //                     	
 //  This library is free software; you can redistribute it and/or
@@ -99,7 +99,8 @@ enum {
   BX_KMASK_REG = 0xA,
   BX_SEGREG = 0xB,
   BX_CREG = 0xC,
-  BX_DREG = 0xD
+  BX_DREG = 0xD,
+  BX_BOUNDS_REG = 0xE
 };
 
 enum {

@@ -35,6 +35,7 @@ extern float32 approximate_rcp(float32 op);
 
 #include "fpu/softfloat-compare.h"
 #include "simd_pfp.h"
+#include "simd_int.h"
 
 void BX_CPU_C::print_state_AVX(void)
 {
@@ -1095,32 +1096,28 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDPPS_VpsHpsWpsIbR(bxInstruction_c
 
   for (unsigned n=0; n < len; n++) {
 
+    // op1: [A, B, C, D]
+    // op2: [E, F, G, H]
+
+    // after multiplication: op1 = [AE, BF, CG, DH]
     xmm_mulps_mask(&op1.ymm128(n), &op2.ymm128(n), status, mask >> 4);
 
-    float32 tmp1 = float32_add(op1.ymm32u(n*4+0), op1.ymm32u(n*4+1), status);
-    float32 tmp2 = float32_add(op1.ymm32u(n*4+2), op1.ymm32u(n*4+3), status);
+    // shuffle op2 = [BF, AE, DH, CG]
+    xmm_shufps(&op2.ymm128(n), &op1.ymm128(n), &op1.ymm128(n), 0xb1);
 
-#ifdef BX_DPPS_DPPD_NAN_MATCHING_HARDWARE
-    float32 r1 = float32_add(tmp1, tmp2, status);
-    float32 r2 = float32_add(tmp2, tmp1, status);
+    // op2 = [(BF+AE), (AE+BF), (DH+CG), (CG+DH)]
+    xmm_addps(&op2.ymm128(n), &op1.ymm128(n), status);
 
-    op1.ymm32u(n*4+0) = (mask & 0x01) ? r1 : 0;
-    op1.ymm32u(n*4+1) = (mask & 0x02) ? r1 : 0;
-    op1.ymm32u(n*4+2) = (mask & 0x04) ? r2 : 0;
-    op1.ymm32u(n*4+3) = (mask & 0x08) ? r2 : 0;
-#else
-    float32 r  = float32_add(tmp1, tmp2, status);
+    // shuffle op1 = [(DH+CG), (CG+DH), (BF+AE), (AE+BF)]
+    xmm_shufpd(&op1.ymm128(n), &op2.ymm128(n), &op2.ymm128(n), 0x1);
 
-    op1.ymm32u(n*4+0) = (mask & 0x01) ? r : 0;
-    op1.ymm32u(n*4+1) = (mask & 0x02) ? r : 0;
-    op1.ymm32u(n*4+2) = (mask & 0x04) ? r : 0;
-    op1.ymm32u(n*4+3) = (mask & 0x08) ? r : 0;
-#endif
+    // op2 = [(BF+AE)+(DH+CG), (AE+BF)+(CG+DH), (DH+CG)+(BF+AE), (CG+DH)+(AE+BF)]
+    xmm_addps_mask(&op2.ymm128(n), &op1.ymm128(n), status, mask);
   }
 
   check_exceptionsSSE(get_exception_flags(status));
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op1, len);
+  BX_WRITE_YMM_REGZ_VLEN(i->dst(), op2, len);
 
   BX_NEXT_INSTR(i);
 }
