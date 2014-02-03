@@ -698,7 +698,7 @@ float32 float32_getmant(float32 a, float_status_t &status, int sign_ctrl, int in
         aExp = 0x7E;
         break;
     case 0x3: // interval [3/4,3/2)
-        aExp = 0x7F - (a >> 22) & 0x1;
+        aExp = 0x7F - (aSig >> 22) & 0x1;
         break;
     }
 
@@ -1807,7 +1807,7 @@ float64 float64_getmant(float64 a, float_status_t &status, int sign_ctrl, int in
         aExp = 0x3FE;
         break;
     case 0x3: // interval [3/4,3/2)
-        aExp = 0x3FF - (a >> 51) & 0x1;
+        aExp = 0x3FF - (aSig >> 51) & 0x1;
         break;
     }
 

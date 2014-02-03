@@ -843,8 +843,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTSS_MASK_VssHpsWssIbR(bxIns
   if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
     float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());
 
-    bool sign_ctrl = (i->Ib() >> 2) & 0x3;
-    bool interv = i->Ib() & 0x3;
+    int sign_ctrl = (i->Ib() >> 2) & 0x3;
+    int interv = i->Ib() & 0x3;
 
     float_status_t status;
     mxcsr_to_softfloat_status_word(status, MXCSR);
@@ -870,8 +870,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTSD_MASK_VsdHpdWsdIbR(bxIns
   if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
     float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());
 
-    bool sign_ctrl = (i->Ib() >> 2) & 0x3;
-    bool interv = i->Ib() & 0x3;
+    int sign_ctrl = (i->Ib() >> 2) & 0x3;
+    int interv = i->Ib() & 0x3;
 
     float_status_t status;
     mxcsr_to_softfloat_status_word(status, MXCSR);
@@ -900,8 +900,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTPS_MASK_VpsWpsIbR(bxInstru
   mxcsr_to_softfloat_status_word(status, MXCSR);
   softfloat_status_word_rc_override(status, i);
 
-  bool sign_ctrl = (i->Ib() >> 2) & 0x3;
-  bool interv = i->Ib() & 0x3;
+  int sign_ctrl = (i->Ib() >> 2) & 0x3;
+  int interv = i->Ib() & 0x3;
 
   for (unsigned n=0, mask = 0x1; n < DWORD_ELEMENTS(len); n++, mask <<= 1) {
     if (opmask & mask)
@@ -934,8 +934,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTPD_MASK_VpdWpdIbR(bxInstru
   mxcsr_to_softfloat_status_word(status, MXCSR);
   softfloat_status_word_rc_override(status, i);
 
-  bool sign_ctrl = (i->Ib() >> 2) & 0x3;
-  bool interv = i->Ib() & 0x3;
+  int sign_ctrl = (i->Ib() >> 2) & 0x3;
+  int interv = i->Ib() & 0x3;
 
   for (unsigned n=0, mask = 0x1; n < QWORD_ELEMENTS(len); n++, mask <<= 1) {
     if (opmask & mask)
