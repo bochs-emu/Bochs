@@ -645,6 +645,67 @@ float32 float32_getexp(float32 a, float_status_t &status)
 }
 
 /*----------------------------------------------------------------------------
+| Extracts the mantissa of single-precision floating-point value 'a' and
+| returns the result as a single-precision floating-point after applying
+| the mantissa interval normalization and sign control. The operation is
+| performed according to the IEC/IEEE Standard for Binary Floating-Point
+| Arithmetic.
+*----------------------------------------------------------------------------*/
+
+float32 float32_getmant(float32 a, float_status_t &status, int sign_ctrl, int interv)
+{
+    Bit16s aExp = extractFloat32Exp(a);
+    Bit32u aSig = extractFloat32Frac(a);
+    int aSign = extractFloat32Sign(a);
+
+    if (aExp == 0xFF) {
+        if (aSig) return propagateFloat32NaN(a, status);
+        if (aSign) {
+            if (sign_ctrl & 0x2) {
+                float_raise(status, float_flag_invalid);
+                return float32_default_nan;
+            }
+        }
+        return packFloat32(~sign_ctrl & aSign, 0x7F, 0);
+    }
+
+    if (aExp == 0) {
+        if (get_denormals_are_zeros(status)) aSig = 0;
+        if (aSig == 0) {
+            return packFloat32(~sign_ctrl & aSign, 0x7F, 0);
+        }
+
+        float_raise(status, float_flag_denormal);
+        normalizeFloat32Subnormal(aSig, &aExp, &aSig);
+    }
+
+    if (aSign) {
+        if (sign_ctrl & 0x2) {
+            float_raise(status, float_flag_invalid);
+            return float32_default_nan;
+        }
+    }
+
+    switch(interv) {
+    case 0x0: // interval [1,2)
+        aExp = 0x7F;
+        break;
+    case 0x1: // interval [1/2,2)
+        aExp -= 0x7F;
+        aExp  = 0x7F - (aExp & 0x1);
+        break;
+    case 0x2: // interval [1/2,1)
+        aExp = 0x7E;
+        break;
+    case 0x3: // interval [3/4,3/2)
+        aExp = 0x7F - (a >> 22) & 0x1;
+        break;
+    }
+
+    return packFloat32(~sign_ctrl & aSign, aExp, aSig);
+}
+
+/*----------------------------------------------------------------------------
 | Returns the result of adding the absolute values of the single-precision
 | floating-point values `a' and `b'.  If `zSign' is 1, the sum is negated
 | before being returned.  `zSign' is ignored if the result is a NaN.
@@ -1690,6 +1751,67 @@ float64 float64_getexp(float64 a, float_status_t &status)
     }
 
     return int32_to_float64(aExp - 0x3FF);
+}
+
+/*----------------------------------------------------------------------------
+| Extracts the mantissa of double-precision floating-point value 'a' and
+| returns the result as a double-precision floating-point after applying
+| the mantissa interval normalization and sign control. The operation is
+| performed according to the IEC/IEEE Standard for Binary Floating-Point
+| Arithmetic.
+*----------------------------------------------------------------------------*/
+
+float64 float64_getmant(float64 a, float_status_t &status, int sign_ctrl, int interv)
+{
+    Bit16s aExp = extractFloat64Exp(a);
+    Bit64u aSig = extractFloat64Frac(a);
+    int aSign = extractFloat64Sign(a);
+
+    if (aExp == 0x7FF) {
+        if (aSig) return propagateFloat64NaN(a, status);
+        if (aSign) {
+            if (sign_ctrl & 0x2) {
+                float_raise(status, float_flag_invalid);
+                return float64_default_nan;
+            }
+        }
+        return packFloat64(~sign_ctrl & aSign, 0x3FF, 0);
+    }
+
+    if (aExp == 0) {
+        if (get_denormals_are_zeros(status)) aSig = 0;
+        if (aSig == 0) {
+            return packFloat64(~sign_ctrl & aSign, 0x3FF, 0);
+        }
+
+        float_raise(status, float_flag_denormal);
+        normalizeFloat64Subnormal(aSig, &aExp, &aSig);
+    }
+
+    if (aSign) {
+        if (sign_ctrl & 0x2) {
+            float_raise(status, float_flag_invalid);
+            return float64_default_nan;
+        }
+    }
+
+    switch(interv) {
+    case 0x0: // interval [1,2)
+        aExp = 0x3FF;
+        break;
+    case 0x1: // interval [1/2,2)
+        aExp -= 0x3FF;
+        aExp  = 0x3FF - (aExp & 0x1);
+        break;
+    case 0x2: // interval [1/2,1)
+        aExp = 0x3FE;
+        break;
+    case 0x3: // interval [3/4,3/2)
+        aExp = 0x3FF - (a >> 51) & 0x1;
+        break;
+    }
+
+    return packFloat64(~sign_ctrl & aSign, aExp, aSig);
 }
 
 /*----------------------------------------------------------------------------
