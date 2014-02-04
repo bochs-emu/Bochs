@@ -422,6 +422,18 @@ static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0fe6_Mask[3] = {
   /* F2 */ { BxVexW1, BX_IA_V512_VCVTPD2DQ_VdqWpd_Kmask }
 };
 
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f3813[3] = {
+  /* 66 */ { BxVexW0, BX_IA_V512_VCVTPH2PS_VpsWps },
+  /* F3 */ { BxVexW0, BX_IA_V512_VPMOVUSDW_WdqVdq },
+  /* F2 */ { 0, BX_IA_ERROR }
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f3813_Mask[3] = {
+  /* 66 */ { BxVexW0, BX_IA_V512_VCVTPH2PS_VpsWps_Kmask },
+  /* F3 */ { BxVexW0, BX_IA_V512_VPMOVUSDW_WdqVdq_Kmask },
+  /* F2 */ { 0, BX_IA_ERROR }
+};
+
 static const BxOpcodeInfo_t BxOpcodeGroupEVEX_0f3814[3] = {
   /* 66 */ { BxAliasVexW, BX_IA_V512_VPRORVD_VdqHdqWdq },
   /* F3 */ { BxVexW0, BX_IA_V512_VPMOVUSQW_WdqVdq },
@@ -1182,8 +1194,8 @@ static const BxOpcodeInfo_t BxOpcodeTableEVEX[256*3*2] = {
   /* 11    */ { BxVexW0 | BxPrefixSSEF3, BX_IA_V512_VPMOVUSDB_WdqVdq_Kmask },
   /* 12 k0 */ { BxVexW0 | BxPrefixSSEF3, BX_IA_V512_VPMOVUSQB_WdqVdq },
   /* 12    */ { BxVexW0 | BxPrefixSSEF3, BX_IA_V512_VPMOVUSQB_WdqVdq_Kmask },
-  /* 13 k0 */ { BxVexW0 | BxPrefixSSEF3, BX_IA_V512_VPMOVUSDW_WdqVdq },
-  /* 13    */ { BxVexW0 | BxPrefixSSEF3, BX_IA_V512_VPMOVUSDW_WdqVdq_Kmask },
+  /* 13 k0 */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupEVEX_0f3813 },
+  /* 13    */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupEVEX_0f3813_Mask },
   /* 14 k0 */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupEVEX_0f3814 },
   /* 14    */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupEVEX_0f3814_Mask },
   /* 15 k0 */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupEVEX_0f3815 },

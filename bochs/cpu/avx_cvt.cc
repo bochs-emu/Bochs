@@ -305,8 +305,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTDQ2PD_VpdWdqR(bxInstruction_c 
 /* Opcode: VEX.66.0F.3A.13 (VEX.W=0) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPH2PS_VpsWpsR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister result;
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
+  BxPackedAvxRegister result;
+  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
   unsigned len = i->getVL();
 
   float_status_t status;
@@ -316,13 +316,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPH2PS_VpsWpsR(bxInstruction_c 
   status.float_suppress_exception = float_flag_denormal;
 
   for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
-     result.ymm32u(n) = float16_to_float32(op.xmm16u(n), status);
+     result.vmm32u(n) = float16_to_float32(op.ymm16u(n), status);
   }
 
   check_exceptionsSSE(get_exception_flags(status));
 
-  BX_WRITE_YMM_REGZ_VLEN(i->dst(), result, len);
-
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
   BX_NEXT_INSTR(i);
 }
 

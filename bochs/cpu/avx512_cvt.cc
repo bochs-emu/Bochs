@@ -535,4 +535,39 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTDQ2PD_MASK_VpdWdqR(bxInstructi
   BX_NEXT_INSTR(i);
 }
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPH2PS_MASK_VpsWpsR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister result;
+  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
+  unsigned len = i->getVL();
+
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+  status.denormals_are_zeros = 0; // ignore MXCSR.DAZ
+  // no denormal exception is reported on MXCSR
+  status.float_suppress_exception = float_flag_denormal;
+
+  Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
+
+  for (unsigned n=0, mask = 0x1; n < DWORD_ELEMENTS(len); n++, mask <<= 1) {
+    if (opmask & mask)
+      result.vmm32u(n) = float16_to_float32(op.ymm16u(n), status);
+    else
+      result.vmm32u(n) = 0;
+  }
+
+  check_exceptionsSSE(get_exception_flags(status));
+
+  if (! i->isZeroMasking()) {
+    for (unsigned n=0; n < len; n++, opmask >>= 4)
+      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &result.vmm128(n), opmask);
+    BX_CLEAR_AVX_REGZ(i->dst(), len);
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), result, len);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 #endif

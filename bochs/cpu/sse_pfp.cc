@@ -1728,15 +1728,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPS_VpsWpsIbR(bxInstruction_c 
   // override MXCSR rounding mode with control coming from imm8
   if ((control & 0x4) == 0)
     status.float_rounding_mode = control & 0x3;
+  // ignore precision exception result
+  if (control & 0x8)
+    status.float_suppress_exception |= float_flag_inexact;
 
   op.xmm32u(0) = float32_round_to_int(op.xmm32u(0), status);
   op.xmm32u(1) = float32_round_to_int(op.xmm32u(1), status);
   op.xmm32u(2) = float32_round_to_int(op.xmm32u(2), status);
   op.xmm32u(3) = float32_round_to_int(op.xmm32u(3), status);
-
-  // ignore precision exception result
-  if (control & 0x8)
-    status.float_exception_flags &= ~float_flag_inexact;
 
   check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG(i->dst(), op);
@@ -1756,13 +1755,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPD_VpdWpdIbR(bxInstruction_c 
   // override MXCSR rounding mode with control coming from imm8
   if ((control & 0x4) == 0)
     status.float_rounding_mode = control & 0x3;
+  // ignore precision exception result
+  if (control & 0x8)
+    status.float_suppress_exception |= float_flag_inexact;
 
   op.xmm64u(0) = float64_round_to_int(op.xmm64u(0), status);
   op.xmm64u(1) = float64_round_to_int(op.xmm64u(1), status);
-
-  // ignore precision exception result
-  if (control & 0x8)
-    status.float_exception_flags &= ~float_flag_inexact;
 
   check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG(i->dst(), op);
@@ -1782,12 +1780,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSS_VssWssIbR(bxInstruction_c 
   // override MXCSR rounding mode with control coming from imm8
   if ((control & 0x4) == 0)
     status.float_rounding_mode = control & 0x3;
-
-  op = float32_round_to_int(op, status);
-
   // ignore precision exception result
   if (control & 0x8)
-    status.float_exception_flags &= ~float_flag_inexact;
+    status.float_suppress_exception |= float_flag_inexact;
+
+  op = float32_round_to_int(op, status);
 
   check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op);
@@ -1807,12 +1804,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSD_VsdWsdIbR(bxInstruction_c 
   // override MXCSR rounding mode with control coming from imm8
   if ((control & 0x4) == 0)
     status.float_rounding_mode = control & 0x3;
-
-  op = float64_round_to_int(op, status);
-
   // ignore precision exception result
   if (control & 0x8)
-    status.float_exception_flags &= ~float_flag_inexact;
+    status.float_suppress_exception |= float_flag_inexact;
+
+  op = float64_round_to_int(op, status);
 
   check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op);
