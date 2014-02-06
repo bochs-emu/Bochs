@@ -88,6 +88,9 @@
 #define IA_AVX512_CD        (BX_CONST64(1) << 46)  /* AVX-512 Conflict Detection instruction */
 #define IA_AVX512_PF        (BX_CONST64(1) << 47)  /* AVX-512 Sparse Prefetch instruction */
 #define IA_AVX512_ER        (BX_CONST64(1) << 48)  /* AVX-512 Exponential/Reciprocal instruction */
+#define IA_CLFLUSHOPT       (BX_CONST64(1) << 49)  /* CLFLUSHOPT instruction */
+#define IA_XSAVEC           (BX_CONST64(1) << 50)  /* XSAVEC instruction */
+#define IA_XSAVES           (BX_CONST64(1) << 51)  /* XSAVES instruction */
 
 /* general purpose bit register */
 enum {

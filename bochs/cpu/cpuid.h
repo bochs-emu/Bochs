@@ -131,6 +131,9 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_ISA_AVX512_CD             (BX_CONST64(1) << 46)  /* AVX-512 Conflict Detection instruction */
 #define BX_ISA_AVX512_PF             (BX_CONST64(1) << 47)  /* AVX-512 Sparse Prefetch instruction */
 #define BX_ISA_AVX512_ER             (BX_CONST64(1) << 48)  /* AVX-512 Exponential/Reciprocal instruction */
+#define BX_ISA_CLFLUSHOPT            (BX_CONST64(1) << 49)  /* CLFLUSHOPT instruction */
+#define BX_ISA_XSAVEC                (BX_CONST64(1) << 50)  /* XSAVEC instruction */
+#define BX_ISA_XSAVES                (BX_CONST64(1) << 51)  /* XSAVES instruction */
 
 // cpuid non-ISA features
 #define BX_CPU_DEBUG_EXTENSIONS      (1 <<  0)              /* Debug Extensions support */
@@ -262,7 +265,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 // [8:8]   TM2: Thermal Monitor 2
 // [9:9]   SSSE3: SSSE3 Instructions
 // [10:10] CNXT-ID: L1 context ID
-// [11:11] reserved
+// [11:11] IA32_DEBUG_INTERFACE MSR for silicon debug support
 // [12:12] FMA Instructions support
 // [13:13] CMPXCHG16B: CMPXCHG16B instruction support
 // [14:14] xTPR update control
@@ -295,7 +298,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT_THERMAL_MONITOR2        (1 <<  8)
 #define BX_CPUID_EXT_SSSE3                   (1 <<  9)
 #define BX_CPUID_EXT_CNXT_ID                 (1 << 10)
-#define BX_CPUID_EXT_RESERVED11              (1 << 11)
+#define BX_CPUID_EXT_DEBUG_INTERFACE         (1 << 11)
 #define BX_CPUID_EXT_FMA                     (1 << 12)
 #define BX_CPUID_EXT_CMPXCHG16B              (1 << 13)
 #define BX_CPUID_EXT_xTPR                    (1 << 14)
@@ -332,16 +335,18 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [9:9]    Support for Enhanced REP MOVSB/STOSB
 //   [10:10]  Support for INVPCID instruction
 //   [11:11]  RTM: Restricted Transactional Memory
-//   [12:12]  Supports Quality of Service (QoS) capability
+//   [12:12]  Supports Platform Quality of Service Monitoring (PQM) capability
 //   [13:13]  Deprecates FPU CS and FPU DS values
 //   [14:14]  Intel Memory Protection Extensions
-//   [15:15]  reserved
+//   [15:15]  Supports Platform Quality of Service Enforcement (PQE) capability
 //   [16:16]  AVX512F instructions support
 //   [17:17]  reserved
 //   [18:18]  RDSEED instruction support
 //   [19:19]  ADCX/ADOX instructions support
 //   [20:20]  SMAP: Supervisor Mode Access Prevention
-//   [24:21]  reserved
+//   [22:21]  reserved
+//   [23:23]  CLFLUSHOPT instruction
+//   [24:24]  reserved
 //   [25:25]  Intel Processor Trace
 //   [26:26]  AVX512PF instructions support
 //   [27:27]  AVX512ER instructions support
@@ -361,10 +366,10 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT3_ENCHANCED_REP_STRINGS  (1 <<  9)
 #define BX_CPUID_EXT3_INVPCID                (1 << 10)
 #define BX_CPUID_EXT3_RTM                    (1 << 11)
-#define BX_CPUID_EXT3_QOS                    (1 << 12)
+#define BX_CPUID_EXT3_QOS_MONITORING         (1 << 12)
 #define BX_CPUID_EXT3_DEPRECATE_FCS_FDS      (1 << 13)
-#define BX_CPUID_EXT3_MEMORY_PROTECTION_EXT  (1 << 14)
-#define BX_CPUID_EXT3_RESERVED15             (1 << 15)
+#define BX_CPUID_EXT3_MPX                    (1 << 14)
+#define BX_CPUID_EXT3_QOS_ENFORCEMENT        (1 << 15)
 #define BX_CPUID_EXT3_AVX512F                (1 << 16)
 #define BX_CPUID_EXT3_RESERVED17             (1 << 17)
 #define BX_CPUID_EXT3_RDSEED                 (1 << 18)
@@ -372,7 +377,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT3_SMAP                   (1 << 20)
 #define BX_CPUID_EXT3_RESERVED21             (1 << 21)
 #define BX_CPUID_EXT3_RESERVED22             (1 << 22)
-#define BX_CPUID_EXT3_RESERVED23             (1 << 23)
+#define BX_CPUID_EXT3_CLFLUSHOPT             (1 << 23)
 #define BX_CPUID_EXT3_RESERVED24             (1 << 24)
 #define BX_CPUID_EXT3_PROCESSOR_TRACE        (1 << 25)
 #define BX_CPUID_EXT3_AVX512PF               (1 << 26)
@@ -381,6 +386,14 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT3_SHA                    (1 << 29)
 #define BX_CPUID_EXT3_RESERVED30             (1 << 30)
 #define BX_CPUID_EXT3_RESERVED31             (1 << 31)
+
+// CPUID defines - EXT4 features CPUID[0x00000007].ECX
+// -----------------------------
+
+//   [0:0]    PREFETCHWT1 instruction support
+//  [31:1]    reserved
+
+#define BX_CPUID_EXT4_PREFETCHWT1            (1 <<  0)
 
 
 // CPUID defines - STD2 features CPUID[0x80000001].EDX

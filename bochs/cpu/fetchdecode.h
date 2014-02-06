@@ -974,6 +974,11 @@ static const BxOpcodeInfo_t BxOpcodeInfoG14R[8] = {
 /* Group 15 */
 /* ******** */
 
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_CLFLUSH[2] = {
+  /* -- */ { 0, BX_IA_CLFLUSH },
+  /* 66 */ { 0, BX_IA_CLFLUSHOPT }
+};
+
 static const BxOpcodeInfo_t BxOpcodeInfoG15[8*2] = {
   /* /r form */
   /* 0 */ { 0, BX_IA_ERROR },
@@ -993,7 +998,7 @@ static const BxOpcodeInfo_t BxOpcodeInfoG15[8*2] = {
   /* 4 */ { BxPrefixSSE, BX_IA_XSAVE,    BxOpcodeGroupSSE_ERR },
   /* 5 */ { BxPrefixSSE, BX_IA_XRSTOR,   BxOpcodeGroupSSE_ERR },
   /* 6 */ { BxPrefixSSE, BX_IA_XSAVEOPT, BxOpcodeGroupSSE_ERR },
-  /* 7 */ { BxPrefixSSE, BX_IA_CLFLUSH,  BxOpcodeGroupSSE_ERR }
+  /* 7 */ { BxPrefixSSE2, BX_IA_ERROR,  BxOpcodeGroupSSE_CLFLUSH }
 };
 
 #if BX_SUPPORT_X86_64
@@ -1016,7 +1021,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G15d[8*2] = {
   /* 4 */ { BxPrefixSSE, BX_IA_XSAVE,    BxOpcodeGroupSSE_ERR },
   /* 5 */ { BxPrefixSSE, BX_IA_XRSTOR,   BxOpcodeGroupSSE_ERR },
   /* 6 */ { BxPrefixSSE, BX_IA_XSAVEOPT, BxOpcodeGroupSSE_ERR },
-  /* 7 */ { BxPrefixSSE, BX_IA_CLFLUSH,  BxOpcodeGroupSSE_ERR }
+  /* 7 */ { BxPrefixSSE2, BX_IA_ERROR,  BxOpcodeGroupSSE_CLFLUSH }
 };
 
 static const BxOpcodeInfo_t BxOpcodeInfo64G15q[8*2] = {
@@ -1038,7 +1043,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G15q[8*2] = {
   /* 4 */ { BxPrefixSSE, BX_IA_XSAVE,    BxOpcodeGroupSSE_ERR },
   /* 5 */ { BxPrefixSSE, BX_IA_XRSTOR,   BxOpcodeGroupSSE_ERR },
   /* 6 */ { BxPrefixSSE, BX_IA_XSAVEOPT, BxOpcodeGroupSSE_ERR },
-  /* 7 */ { BxPrefixSSE, BX_IA_CLFLUSH,  BxOpcodeGroupSSE_ERR }
+  /* 7 */ { BxPrefixSSE2, BX_IA_ERROR,  BxOpcodeGroupSSE_CLFLUSH }
 };
 #endif
 

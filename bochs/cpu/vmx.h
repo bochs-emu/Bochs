@@ -132,6 +132,9 @@ enum VMX_vmexit_reason {
    VMX_VMEXIT_VMFUNC = 59,
    VMX_VMEXIT_RESERVED60 = 60,
    VMX_VMEXIT_RDSEED = 61,
+   VMX_VMEXIT_RESERVED62 = 62,
+   VMX_VMEXIT_XSAVES = 63,
+   VMX_VMEXIT_XRSTORS = 64,
    VMX_VMEXIT_LAST_REASON
 };
 
@@ -254,6 +257,8 @@ enum VMFunctions {
 #define VMCS_64BIT_CONTROL_VMWRITE_BITMAP_ADDR_HI          0x00002029
 #define VMCS_64BIT_CONTROL_VE_EXCEPTION_INFO_ADDR          0x0000202A /* #VE Exception */
 #define VMCS_64BIT_CONTROL_VE_EXCEPTION_INFO_ADDR_HI       0x0000202B
+#define VMCS_64BIT_CONTROL_XSS_EXITING_BITMAP              0x0000202C /* XSAVES */
+#define VMCS_64BIT_CONTROL_XSS_EXITING_BITMAP_HI           0x0000202D
 
 /* VMCS 64-bit read only data fields */
 /* binary 0010_01xx_xxxx_xxx0 */
@@ -628,6 +633,7 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL3_VMCS_SHADOWING            (1 << 14) /* VMCS Shadowing */
 #define VMX_VM_EXEC_CTRL3_RDSEED_VMEXIT             (1 << 16)
 #define VMX_VM_EXEC_CTRL3_EPT_VIOLATION_EXCEPTION   (1 << 18) /* #VE Exception */
+#define VMX_VM_EXEC_CTRL3_XSAVES_XRSTORS            (1 << 20) /* XSAVES */
 
 #define VMX_VM_EXEC_CTRL3_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl2_supported_bits)
