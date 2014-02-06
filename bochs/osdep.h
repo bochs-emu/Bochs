@@ -94,6 +94,7 @@ extern "C" {
 #define strrev _strrev
 #define stricmp _stricmp
 #define getch _getch
+#define strtoll _strtoi64
 #define strtoull _strtoui64
 #endif
 
