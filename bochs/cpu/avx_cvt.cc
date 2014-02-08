@@ -129,8 +129,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2PS_VpsWpdR(bxInstruction_c 
   check_exceptionsSSE(get_exception_flags(status));
 
   if (len == BX_VL128) {
-    result.vmm64u(1) = 0;
-    BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), result.vmm128(0));
+    BX_WRITE_XMM_REG_LO_QWORD_CLEAR_HIGH(i->dst(), result.vmm64u(0));
   }
   else {
     BX_WRITE_AVX_REGZ(i->dst(), result, len >> 1); // write half vector
@@ -250,8 +249,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTPD2DQ_VdqWpdR(bxInstruction_c
   check_exceptionsSSE(get_exception_flags(status));
 
   if (len == BX_VL128) {
-    result.vmm64u(1) = 0;
-    BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), result.vmm128(0));
+    BX_WRITE_XMM_REG_LO_QWORD_CLEAR_HIGH(i->dst(), result.vmm64u(0));
   }
   else {
     BX_WRITE_AVX_REGZ(i->dst(), result, len >> 1); // write half vector
@@ -277,8 +275,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2DQ_VdqWpdR(bxInstruction_c 
   check_exceptionsSSE(get_exception_flags(status));
 
   if (len == BX_VL128) {
-    result.vmm64u(1) = 0;
-    BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), result.vmm128(0));
+    BX_WRITE_XMM_REG_LO_QWORD_CLEAR_HIGH(i->dst(), result.vmm64u(0));
   }
   else {
     BX_WRITE_AVX_REGZ(i->dst(), result, len >> 1); // write half vector
@@ -328,10 +325,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPH2PS_VpsWpsR(bxInstruction_c 
 /* Opcode: VEX.66.0F.3A.1D (VEX.W=0) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PH_WpsVpsIb(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
-  BxPackedXmmRegister result;
-
-  result.xmm64u(1) = 0; /* clear upper part of the result for case of VL128 */
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
@@ -345,21 +339,33 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PH_WpsVpsIb(bxInstruction_c
     status.float_rounding_mode = control & 0x3;
 
   for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
-    result.xmm16u(n) = float32_to_float16(op.ymm32u(n), status);
+    result.vmm16u(n) = float32_to_float16(op.vmm32u(n), status);
   }
 
   check_exceptionsSSE(get_exception_flags(status));
 
   if (i->modC0()) {
-    BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), result);
+    if (len == BX_VL128) {
+      BX_WRITE_XMM_REG_LO_QWORD_CLEAR_HIGH(i->dst(), result.vmm64u(0));
+    }
+    else {
+      BX_WRITE_AVX_REGZ(i->dst(), result, len >> 1); // write half vector
+    }
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-    if (len == BX_VL256)
-      write_virtual_xmmword(i->seg(), eaddr, &result);
+#if BX_SUPPORT_EVEX
+    if (len == BX_VL512)
+      write_virtual_ymmword(i->seg(), eaddr, &result.vmm256(0));
     else
-      write_virtual_qword(i->seg(), eaddr, result.xmm64u(0));
+#endif
+    {
+      if (len == BX_VL256)
+        write_virtual_xmmword(i->seg(), eaddr, &result.vmm128(0));
+      else
+        write_virtual_qword(i->seg(), eaddr, result.vmm64u(0));
+    }
   }
 
   BX_NEXT_INSTR(i);

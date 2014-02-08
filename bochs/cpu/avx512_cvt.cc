@@ -270,8 +270,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSS2SD_MASK_VsdWssR(bxInstructi
     check_exceptionsSSE(get_exception_flags(status));                                       \
                                                                                             \
     if (len == BX_VL128) {                                                                  \
-      result.vmm64u(1) = 0;                                                                 \
-      BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), result.vmm128(0));                              \
+      BX_WRITE_XMM_REG_LO_QWORD_CLEAR_HIGH(i->dst(), result.vmm64u(0));                     \
     }                                                                                       \
     else {                                                                                  \
       BX_WRITE_AVX_REGZ(i->dst(), result, len >> 1); /* write half vector */                \
@@ -380,8 +379,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2UDQ_VdqWpdR(bxInstruction_c
   check_exceptionsSSE(get_exception_flags(status));
 
   if (len == BX_VL128) {
-    result.vmm64u(1) = 0;
-    BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), result.vmm128(0));
+    BX_WRITE_XMM_REG_LO_QWORD_CLEAR_HIGH(i->dst(), result.vmm64u(0));
   }
   else {
     BX_WRITE_AVX_REGZ(i->dst(), result, len >> 1); // write half vector
@@ -406,8 +404,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTPD2UDQ_VdqWpdR(bxInstruction_
   check_exceptionsSSE(get_exception_flags(status));
 
   if (len == BX_VL128) {
-    result.vmm64u(1) = 0;
-    BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), result.vmm128(0));
+    BX_WRITE_XMM_REG_LO_QWORD_CLEAR_HIGH(i->dst(), result.vmm64u(0));
   }
   else {
     BX_WRITE_AVX_REGZ(i->dst(), result, len >> 1); // write half vector

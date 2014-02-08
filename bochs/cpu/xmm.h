@@ -341,6 +341,10 @@ typedef BxPackedYmmRegister BxPackedAvxRegister;
 #define BX_WRITE_XMM_REG_CLEAR_HIGH(index, reg) \
     { BX_XMM_REG(index) = (reg); BX_CLEAR_AVX_HIGH128(index); }
 
+#define BX_WRITE_XMM_REG_LO_QWORD_CLEAR_HIGH(index, reg64) \
+    { BX_CPU_THIS_PTR vmm[index].vmm64u(0) = (reg64); \
+      BX_CPU_THIS_PTR vmm[index].vmm64u(1) = 0; BX_CLEAR_AVX_HIGH128(index); }
+
 #else /* BX_SUPPORT_AVX */
 
 /* write XMM register while clearing upper part of AVX register */
