@@ -1,4 +1,4 @@
-Changes after 2.6.2 (updated Jan 19, 2014):
+Changes after 2.6.2 (updated Feb 09, 2014):
 
 - CPU
   - Bugfixes for CPU emulation correctness (critical fixes for VMX, TBM/BMI and RDRAND instructions)
@@ -35,7 +35,7 @@ Changes after 2.6.2 (updated Jan 19, 2014):
 
 - I/O Devices
   - Hard drive / CD-ROM
-    - seek delay implemented for ATA/ATAPI read commands
+    - seek latency implemented for ATA/ATAPI read commands
     - portable ISO image file access now available on all platforms
   - Networking
     - slirp/vnet: all supported TFTP extension options implemented now

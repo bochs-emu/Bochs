@@ -393,7 +393,8 @@ void bx_hard_drive_c::init(void)
             BX_INFO(("Media present in CD-ROM drive"));
             BX_HD_THIS channels[channel].drives[device].cdrom.ready = 1;
             Bit32u capacity = BX_HD_THIS channels[channel].drives[device].cdrom.cd->capacity();
-            BX_HD_THIS channels[channel].drives[device].cdrom.capacity = capacity;
+            BX_HD_THIS channels[channel].drives[device].cdrom.max_lba = capacity - 1;
+            BX_HD_THIS channels[channel].drives[device].cdrom.next_lba = capacity - 1;
             BX_INFO(("Capacity is %d sectors (%.2f MB)", capacity, (float)capacity / 512.0));
           } else {
             BX_INFO(("Could not locate CD-ROM, continuing with media not present"));
@@ -1557,7 +1558,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                   init_send_atapi_command(channel, atapi_command, 8, 8);
 
                   if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
-                    Bit32u capacity = BX_SELECTED_DRIVE(channel).cdrom.capacity - 1;
+                    Bit32u capacity = BX_SELECTED_DRIVE(channel).cdrom.max_lba;
                     controller->buffer[0] = (capacity >> 24) & 0xff;
                     controller->buffer[1] = (capacity >> 16) & 0xff;
                     controller->buffer[2] = (capacity >> 8) & 0xff;
@@ -1595,13 +1596,18 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                       case 0xf8:
                         controller->buffer_size = 2352;
                       case 0x10:
-                        init_send_atapi_command(channel, atapi_command,
-                                                transfer_length * controller->buffer_size,
-                                                transfer_length * controller->buffer_size, 1);
-                        BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks = transfer_length;
-                        BX_SELECTED_DRIVE(channel).cdrom.next_lba = lba;
-                        bx_pc_system.activate_timer(
-                          BX_DRIVE(channel,BX_SLAVE_SELECTED(channel)).seek_timer_index, 80000, 0);
+                        {
+                          init_send_atapi_command(channel, atapi_command,
+                                                  transfer_length * controller->buffer_size,
+                                                  transfer_length * controller->buffer_size, 1);
+                          BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks = transfer_length;
+                          Bit32u last_lba = BX_SELECTED_DRIVE(channel).cdrom.next_lba;
+                          Bit32u max_lba = BX_SELECTED_DRIVE(channel).cdrom.max_lba;
+                          float seek_time = 80000.0 * (float)abs(lba - last_lba + 1) / (max_lba + 1);
+                          BX_SELECTED_DRIVE(channel).cdrom.next_lba = lba;
+                          bx_pc_system.activate_timer(
+                            BX_SELECTED_DRIVE(channel).seek_timer_index, (Bit32u)seek_time, 0);
+                        }
                         break;
                       default:
                         BX_ERROR(("Read CD: unknown format"));
@@ -1684,15 +1690,15 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     raise_interrupt(channel);
                     break;
                   }
-                  if (lba > BX_SELECTED_DRIVE(channel).cdrom.capacity) {
+                  if (lba > BX_SELECTED_DRIVE(channel).cdrom.max_lba) {
                     atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_LOGICAL_BLOCK_OOR, 1);
                     raise_interrupt(channel);
                     break;
                   }
 
                   // Ben: see comment below
-                  if (lba + transfer_length > BX_SELECTED_DRIVE(channel).cdrom.capacity) {
-                    transfer_length = (BX_SELECTED_DRIVE(channel).cdrom.capacity - lba);
+                  if ((lba + transfer_length - 1) > BX_SELECTED_DRIVE(channel).cdrom.max_lba) {
+                    transfer_length = (BX_SELECTED_DRIVE(channel).cdrom.max_lba - lba + 1);
                   }
                   if (transfer_length <= 0) {
                     atapi_cmd_nop(controller);
@@ -1707,7 +1713,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
         some sort of flag/error/bitrep stating so.  I haven't read the atapi specs enough to know
         what needs to be done though.
 
-                  if (lba + transfer_length > BX_SELECTED_DRIVE(channel).cdrom.capacity) {
+                  if ((lba + transfer_length - 1) > BX_SELECTED_DRIVE(channel).cdrom.max_lba) {
                     atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_LOGICAL_BLOCK_OOR, 1);
                     raise_interrupt(channel);
                     break;
@@ -1720,9 +1726,12 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                   init_send_atapi_command(channel, atapi_command, transfer_length * 2048,
                                           transfer_length * 2048, 1);
                   BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks = transfer_length;
+                  Bit32u last_lba = BX_SELECTED_DRIVE(channel).cdrom.next_lba;
+                  Bit32u max_lba = BX_SELECTED_DRIVE(channel).cdrom.max_lba;
+                  float seek_time = 80000.0 * (float)abs(lba - last_lba + 1) / (max_lba + 1);
                   BX_SELECTED_DRIVE(channel).cdrom.next_lba = lba;
                   bx_pc_system.activate_timer(
-                    BX_DRIVE(channel,BX_SLAVE_SELECTED(channel)).seek_timer_index, 80000, 0);
+                    BX_SELECTED_DRIVE(channel).seek_timer_index, (Bit32u)seek_time, 0);
                 }
                 break;
 
@@ -1735,7 +1744,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     break;
                   }
 
-                  if (lba > BX_SELECTED_DRIVE(channel).cdrom.capacity) {
+                  if (lba > BX_SELECTED_DRIVE(channel).cdrom.max_lba) {
                     atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_LOGICAL_BLOCK_OOR, 1);
                     raise_interrupt(channel);
                     break;
@@ -1991,7 +2000,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             controller->status.corrected_data = 0;
             controller->buffer_index = 0;
             bx_pc_system.activate_timer(
-              BX_DRIVE(channel,BX_SLAVE_SELECTED(channel)).seek_timer_index, 5000, 0);
+              BX_SELECTED_DRIVE(channel).seek_timer_index, 5000, 0);
           }
           break;
 
@@ -2371,7 +2380,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             controller->status.drq   = 0;
             controller->status.corrected_data = 0;
             bx_pc_system.activate_timer(
-              BX_DRIVE(channel,BX_SLAVE_SELECTED(channel)).seek_timer_index, 5000, 0);
+              BX_SELECTED_DRIVE(channel).seek_timer_index, 5000, 0);
 
             DEV_ide_bmdma_start_transfer(channel);
           } else {
@@ -3216,7 +3225,8 @@ bx_bool bx_hard_drive_c::set_cd_media_status(Bit32u handle, bx_bool status)
       BX_INFO(("Media present in CD-ROM drive"));
       BX_HD_THIS channels[channel].drives[device].cdrom.ready = 1;
       Bit32u capacity = BX_HD_THIS channels[channel].drives[device].cdrom.cd->capacity();
-      BX_HD_THIS channels[channel].drives[device].cdrom.capacity = capacity;
+      BX_HD_THIS channels[channel].drives[device].cdrom.max_lba = capacity - 1;
+      BX_HD_THIS channels[channel].drives[device].cdrom.next_lba = capacity - 1;
       BX_INFO(("Capacity is %d sectors (%.2f MB)", capacity, (float)capacity / 512.0));
       SIM->get_param_enum("status", base)->set(BX_INSERTED);
       BX_SELECTED_DRIVE(channel).sense.sense_key = SENSE_UNIT_ATTENTION;

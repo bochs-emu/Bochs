@@ -133,8 +133,8 @@ struct cdrom_t
   bx_bool ready;
   bx_bool locked;
   cdrom_base_c *cd;
-  Bit32u capacity;
-  int next_lba;
+  Bit32u max_lba;
+  Bit32u next_lba;
   int remaining_blocks;
   struct currentStruct {
     error_recovery_t error_recovery;
