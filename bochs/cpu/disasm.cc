@@ -236,20 +236,21 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
     unsigned src = (unsigned) BxOpcodesTable[ia_opcode].src[n];
     unsigned src_type = src >> 3;
     unsigned src_index = src & 0x7;
-    if (! src_type && src != BX_SRC_RM) continue;
+    if (! src_type && src != BX_SRC_RM && src != BX_SRC_EVEX_RM) continue;
     if (srcs_used++ > 0)
       disbufptr = dis_sprintf(disbufptr, ", ");
 
-    if (! i->modC0() && (src_index == BX_SRC_RM || src_index == BX_SRC_VSIB)) {
+    if (! i->modC0() && (src_index == BX_SRC_RM || src_index == BX_SRC_EVEX_RM || src_index == BX_SRC_VSIB)) {
       disbufptr = resolve_memref(disbufptr, i, src_index);
 #if BX_SUPPORT_EVEX
       // EVEX.z is ignored for memory destination forms
-      if (n == 0 && src_type == BX_VMM_REG && i->opmask()) {
+      if (n == 0 && (src_index == BX_SRC_EVEX_RM || src_type == BX_VMM_REG) && i->opmask()) {
         disbufptr = dis_sprintf(disbufptr, "{k%d}", i->opmask());
       }
 #endif
     }
     else {
+      if (src_index == BX_SRC_EVEX_RM) src_type = BX_VMM_REG; 
       unsigned srcreg = i->getSrcReg(n);
       if (src_type < 0x10) {
         switch(src_type) {

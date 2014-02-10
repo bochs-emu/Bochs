@@ -1710,7 +1710,7 @@ BX_CPU_C::fetchDecode64(const Bit8u *iptr, Bit32u fetchModeMask, bxInstruction_c
 #endif
 
 #if BX_SUPPORT_EVEX
-  unsigned evex_v = 0;
+  unsigned evex_v = 0, displ8 = 0;
 #endif
 
   i->ResolveModrm = 0;
@@ -2103,6 +2103,9 @@ fetch_b1:
       if (remain != 0) {
         // 8 sign extended to 32
         i->modRMForm.displ32u = (Bit8s) *iptr++;
+#if BX_SUPPORT_EVEX
+        displ8 = 1;
+#endif
         remain--;
       }
       else {
@@ -2320,8 +2323,25 @@ modrm_done:
       }
       else {
         i->setSrcReg(n, (type == BX_VMM_REG) ? BX_VECTOR_TMP_REGISTER : BX_TMP_REGISTER);
+#if BX_SUPPORT_EVEX
+        if (b1 == 0x62 && displ8) {
+          if (type == BX_GPR32) i->modRMForm.displ32u *= 4;
+          else if (type == BX_GPR64) i->modRMForm.displ32u *= 8;
+        }
+#endif
       }
       break;
+#if BX_SUPPORT_EVEX
+    case BX_SRC_EVEX_RM:
+      if (! mod_mem) {
+        i->setSrcReg(n, rm);
+      }
+      else {
+        i->setSrcReg(n, BX_VECTOR_TMP_REGISTER);
+        if (displ8) i->modRMForm.displ32u *= evex_displ8_compression(i, ia_opcode, type, vex_w);
+      }
+      break;
+#endif
 #if BX_SUPPORT_AVX
     case BX_SRC_VVV:
       i->setSrcReg(n, vvv);
@@ -2344,6 +2364,7 @@ modrm_done:
       }
 #if BX_SUPPORT_EVEX
       i->setSibIndex(i->sibIndex() | evex_v);
+      if (displ8) i->modRMForm.displ32u *= 4 << vex_w;
 #endif
       break;
 #endif

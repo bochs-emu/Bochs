@@ -4114,6 +4114,9 @@ public: // for now...
   BX_SMF int fetchDecode64(const Bit8u *fetchPtr, Bit32u fetchModeMask, bxInstruction_c *i, unsigned remainingInPage) BX_CPP_AttrRegparmN(3);
 #endif
   BX_SMF void boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *);
+#if BX_SUPPORT_EVEX
+  BX_SMF unsigned evex_displ8_compression(bxInstruction_c *i, unsigned ia_opcode, unsigned type, unsigned vex_w);
+#endif
   BX_SMF Bit16u WalkOpcodeTables(const BxOpcodeInfo_t *op, Bit16u &attr, unsigned modrm, unsigned sse_prefix, unsigned osize, unsigned vex_vl, bx_bool vex_w);
   BX_SMF char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base = 0, bx_address rip = 0);
 
