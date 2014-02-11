@@ -2040,7 +2040,7 @@ unsigned BX_CPU_C::evex_displ8_compression(bxInstruction_c *i, unsigned ia_opcod
 
   switch (type) {
   case BX_VMM_FULL_VECTOR:
-    if (i->getEvexb()) {
+    if (i->getEvexb()) { // broadcast
        return (4 << vex_w);
     }
     else {
@@ -2051,7 +2051,7 @@ unsigned BX_CPU_C::evex_displ8_compression(bxInstruction_c *i, unsigned ia_opcod
     return (4 << vex_w);
 
   case BX_VMM_HALF_VECTOR:
-    if (i->getEvexb()) {
+    if (i->getEvexb()) { // broadcast
        return (4 << vex_w);
     }
     else {
@@ -2059,11 +2059,11 @@ unsigned BX_CPU_C::evex_displ8_compression(bxInstruction_c *i, unsigned ia_opcod
     }
 
   case BX_VMM_QUARTER_VECTOR:
-    BX_ASSERT(i->getEvexb());
+    BX_ASSERT(! i->getEvexb());
     return (4 * len);
 
   case BX_VMM_OCT_VECTOR:
-    BX_ASSERT(i->getEvexb());
+    BX_ASSERT(! i->getEvexb());
     return (2 * len);
 
   case BX_VMM_VEC128:
