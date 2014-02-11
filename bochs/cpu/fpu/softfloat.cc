@@ -138,6 +138,7 @@ float64 int64_to_float64(Bit64s a, float_status_t &status)
 float32 uint32_to_float32(Bit32u a, float_status_t &status)
 {
     if (a == 0) return 0;
+    if (a & 0x80000000) return normalizeRoundAndPackFloat32(0, 0x9D, a >> 1, status);
     return normalizeRoundAndPackFloat32(0, 0x9C, a, status);
 }
 
@@ -1373,7 +1374,7 @@ Bit32u float64_to_uint32_round_to_zero(float64 a, float_status_t &status)
     if ((aSig<<shiftCount) != savedASig) {
         float_raise(status, float_flag_inexact);
     }
-    return aSig;
+    return (Bit32u) aSig;
 }
 
 /*----------------------------------------------------------------------------
