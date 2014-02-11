@@ -347,7 +347,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_MASK_Half_VectorD(b
   unsigned len = i->getVL();
 
   Bit32u opmask = (i->opmask() != 0) ? BX_READ_16BIT_OPMASK(i->opmask()) : 0xffff;
-  opmask &= DWORD_ELEMENTS(len) / 2 - 1;
+  opmask &= (1 << (DWORD_ELEMENTS(len) - 1)) - 1;
 
   if (opmask == 0) {
     BX_CPU_CALL_METHOD(i->execute2(), (i)); // for now let execute method to deal with zero/merge masking semantics
