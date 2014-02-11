@@ -3823,6 +3823,17 @@ void bx_dbg_set_rip_value(bx_address value)
     BX_CPU(dbg_cpu)->dbg_set_eip(value);
 }
 
+Bit64u bx_dbg_get_opmask_value(unsigned reg)
+{
+#if BX_SUPPORT_EVEX
+  if (reg < 8)
+    return BX_CPU(dbg_cpu)->get_opmask(reg);
+#endif
+
+  dbg_printf("Unknown OPMASK register k%d !!!\n", reg);
+  return 0;
+}
+
 Bit16u bx_dbg_get_selector_value(unsigned int seg_no)
 {
   bx_dbg_sreg_t sreg;

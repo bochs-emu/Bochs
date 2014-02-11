@@ -4801,6 +4801,10 @@ public: // for now...
   BX_SMF BX_CPP_INLINE Bit64u get_reg64(unsigned reg);
   BX_SMF BX_CPP_INLINE void   set_reg64(unsigned reg, Bit64u val);
 #endif
+#if BX_SUPPORT_EVEX
+  BX_SMF BX_CPP_INLINE Bit64u get_opmask(unsigned reg);
+  BX_SMF BX_CPP_INLINE void set_opmask(unsigned reg, Bit64u val);
+#endif
 
 #if BX_CPU_LEVEL >= 6
   BX_SMF BX_CPP_INLINE unsigned get_cr8();
@@ -5217,6 +5221,20 @@ BX_CPP_INLINE void BX_CPU_C::set_reg64(unsigned reg, Bit64u val)
 {
    assert(reg < BX_GENERAL_REGISTERS);
    BX_CPU_THIS_PTR gen_reg[reg].rrx = val;
+}
+#endif
+
+#if BX_SUPPORT_EVEX
+BX_CPP_INLINE Bit64u BX_CPU_C::get_opmask(unsigned reg)
+{
+   assert(reg < 8);
+   return (BX_CPU_THIS_PTR opmask[reg].rrx);
+}
+
+BX_CPP_INLINE void BX_CPU_C::set_opmask(unsigned reg, Bit64u val)
+{
+   assert(reg < 8);
+   BX_CPU_THIS_PTR opmask[reg].rrx = val;
 }
 #endif
 

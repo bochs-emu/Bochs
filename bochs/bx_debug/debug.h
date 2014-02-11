@@ -173,6 +173,17 @@ typedef enum {
 
 #endif
 
+typedef enum {
+  BX_DBG_REG_MASK_K0,
+  BX_DBG_REG_MASK_K1,
+  BX_DBG_REG_MASK_K2,
+  BX_DBG_REG_MASK_K3,
+  BX_DBG_REG_MASK_K4,
+  BX_DBG_REG_MASK_K5,
+  BX_DBG_REG_MASK_K6,
+  BX_DBG_REG_MASK_K7
+} OpmaskRegs;
+
 typedef enum
 {
   bkRegular,
@@ -214,6 +225,7 @@ Bit8u bx_dbg_get_reg8h_value(unsigned reg);
 Bit16u bx_dbg_get_reg16_value(unsigned reg);
 Bit32u bx_dbg_get_reg32_value(unsigned reg);
 Bit64u bx_dbg_get_reg64_value(unsigned reg);
+Bit64u bx_dbg_get_opmask_value(unsigned reg);
 void bx_dbg_set_reg8l_value(unsigned reg, Bit8u value);
 void bx_dbg_set_reg8h_value(unsigned reg, Bit8u value);
 void bx_dbg_set_reg16_value(unsigned reg, Bit16u value);

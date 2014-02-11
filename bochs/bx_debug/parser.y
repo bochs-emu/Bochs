@@ -33,6 +33,7 @@
 %token <uval> BX_TOKEN_DS
 %token <uval> BX_TOKEN_FS
 %token <uval> BX_TOKEN_GS
+%token <uval> BX_TOKEN_OPMASK_REG
 %token <uval> BX_TOKEN_FLAGS
 %token <bval> BX_TOKEN_ON
 %token <bval> BX_TOKEN_OFF
@@ -1195,11 +1196,11 @@ help_command:
      | BX_TOKEN_HELP BX_TOKEN_CALC '\n'
        {
          dbg_printf("calc|? <expr> - calculate a expression and display the result.\n");
-         dbg_printf("    'expr' can reference any general-purpose and segment\n");
+         dbg_printf("    'expr' can reference any general-purpose, opmask and segment\n");
          dbg_printf("    registers, use any arithmetic and logic operations, and\n");
          dbg_printf("    also the special ':' operator which computes the linear\n");
-         dbg_printf("    address for a segment:offset (in real and v86 mode) or\n");
-         dbg_printf("    of a selector:offset (in protected mode) pair.\n");
+         dbg_printf("    address of a segment:offset (in real and v86 mode) or of\n");
+         dbg_printf("    a selector:offset (in protected mode) pair.\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_HELP '\n'
@@ -1228,6 +1229,7 @@ BX_TOKEN_NONSEG_REG:
    | BX_TOKEN_16B_REG
    | BX_TOKEN_32B_REG
    | BX_TOKEN_64B_REG
+   | BX_TOKEN_OPMASK_REG
    { $$=$1; }
 ;
 
@@ -1240,6 +1242,7 @@ vexpression:
    | BX_TOKEN_16B_REG                { $$ = bx_dbg_get_reg16_value($1); }
    | BX_TOKEN_32B_REG                { $$ = bx_dbg_get_reg32_value($1); }
    | BX_TOKEN_64B_REG                { $$ = bx_dbg_get_reg64_value($1); }
+   | BX_TOKEN_OPMASK_REG             { $$ = bx_dbg_get_opmask_value($1); }
    | BX_TOKEN_SEGREG                 { $$ = bx_dbg_get_selector_value($1); }
    | BX_TOKEN_REG_IP                 { $$ = bx_dbg_get_ip (); }
    | BX_TOKEN_REG_EIP                { $$ = bx_dbg_get_eip(); }
@@ -1268,6 +1271,7 @@ expression:
    | BX_TOKEN_16B_REG                { $$ = bx_dbg_get_reg16_value($1); }
    | BX_TOKEN_32B_REG                { $$ = bx_dbg_get_reg32_value($1); }
    | BX_TOKEN_64B_REG                { $$ = bx_dbg_get_reg64_value($1); }
+   | BX_TOKEN_OPMASK_REG             { $$ = bx_dbg_get_opmask_value($1); }
    | BX_TOKEN_SEGREG                 { $$ = bx_dbg_get_selector_value($1); }
    | BX_TOKEN_REG_IP                 { $$ = bx_dbg_get_ip (); }
    | BX_TOKEN_REG_EIP                { $$ = bx_dbg_get_eip(); }

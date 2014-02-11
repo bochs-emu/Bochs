@@ -43,6 +43,14 @@ static unsigned lex_input_size = 0;
      { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GENERIC); }
 #endif
 
+#if BX_SUPPORT_EVEX
+  #define EVEX_OPMASK_REG(reg) \
+     { bxlval.uval = reg; return(BX_TOKEN_OPMASK_REG); }
+#else
+  #define EVEX_OPMASK_REG(reg) \
+     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GENERIC); }
+#endif
+
 %}
 
 %x EXAMINE
@@ -218,6 +226,7 @@ ss              { bxlval.uval = BX_DBG_SREG_SS; return(BX_TOKEN_SS); }
 ds              { bxlval.uval = BX_DBG_SREG_DS; return(BX_TOKEN_DS); }
 fs              { bxlval.uval = BX_DBG_SREG_FS; return(BX_TOKEN_FS); }
 gs              { bxlval.uval = BX_DBG_SREG_GS; return(BX_TOKEN_GS); }
+k[0-7]          { EVEX_OPMASK_REG(bxtext[1] - '0'); }
 flags|eflags    { bxlval.uval = 0; return (BX_TOKEN_FLAGS); }
 h|help          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_HELP); }
 \?              |
