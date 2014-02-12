@@ -491,8 +491,9 @@ float64 float32_to_float64(float32 a, float_status_t &status)
         return packFloat64(aSign, 0x7FF, 0);
     }
     if (aExp == 0) {
-        if (get_denormals_are_zeros(status)) aSig = 0;
-        if (aSig == 0) return packFloat64(aSign, 0, 0);
+        if (aSig == 0 || get_denormals_are_zeros(status))
+            return packFloat64(aSign, 0, 0);
+
         float_raise(status, float_flag_denormal);
         normalizeFloat32Subnormal(aSig, &aExp, &aSig);
         --aExp;
@@ -586,10 +587,8 @@ float32 float32_frc(float32 a, float_status_t &status)
 
     if (aExp < 0x7F) {
         if (aExp == 0) {
-            if (get_denormals_are_zeros(status)) aSig = 0;
-            if (aSig == 0) {
+            if (aSig == 0 || get_denormals_are_zeros(status))
                 return packFloat32(roundingMode == float_round_down, 0, 0);
-            }
 
             float_raise(status, float_flag_denormal);
             if (! float_exception_masked(status, float_flag_underflow))
@@ -634,8 +633,7 @@ float32 float32_getexp(float32 a, float_status_t &status)
     }
 
     if (aExp == 0) {
-        if (get_denormals_are_zeros(status)) aSig = 0;
-        if (aSig == 0)
+        if (aSig == 0 || get_denormals_are_zeros(status))
             return float32_negative_inf;
 
         float_raise(status, float_flag_denormal);
@@ -670,14 +668,8 @@ float32 float32_getmant(float32 a, float_status_t &status, int sign_ctrl, int in
         return packFloat32(~sign_ctrl & aSign, 0x7F, 0);
     }
 
-    if (aExp == 0) {
-        if (get_denormals_are_zeros(status)) aSig = 0;
-        if (aSig == 0) {
-            return packFloat32(~sign_ctrl & aSign, 0x7F, 0);
-        }
-
-        float_raise(status, float_flag_denormal);
-        normalizeFloat32Subnormal(aSig, &aExp, &aSig);
+    if (aExp == 0 && (aSig == 0 || get_denormals_are_zeros(status))) {
+        return packFloat32(~sign_ctrl & aSign, 0x7F, 0);
     }
 
     if (aSign) {
@@ -685,6 +677,11 @@ float32 float32_getmant(float32 a, float_status_t &status, int sign_ctrl, int in
             float_raise(status, float_flag_invalid);
             return float32_default_nan;
         }
+    }
+
+    if (aExp == 0) {
+        float_raise(status, float_flag_denormal);
+        normalizeFloat32Subnormal(aSig, &aExp, &aSig);
     }
 
     switch(interv) {
@@ -1593,8 +1590,8 @@ float32 float64_to_float32(float64 a, float_status_t &status)
         return packFloat32(aSign, 0xFF, 0);
     }
     if (aExp == 0) {
-        if (get_denormals_are_zeros(status)) aSig = 0;
-        if (aSig == 0) return packFloat32(aSign, 0, 0);
+        if (aSig == 0 || get_denormals_are_zeros(status))
+            return packFloat32(aSign, 0, 0);
         float_raise(status, float_flag_denormal);
     }
     aSig = shift64RightJamming(aSig, 22);
@@ -1695,10 +1692,8 @@ float64 float64_frc(float64 a, float_status_t &status)
 
     if (aExp < 0x3FF) {
         if (aExp == 0) {
-            if (get_denormals_are_zeros(status)) aSig = 0;
-            if (aSig == 0) {
+            if (aSig == 0 || get_denormals_are_zeros(status))
                 return packFloat64(roundingMode == float_round_down, 0, 0);
-            }
 
             float_raise(status, float_flag_denormal);
             if (! float_exception_masked(status, float_flag_underflow))
@@ -1743,8 +1738,7 @@ float64 float64_getexp(float64 a, float_status_t &status)
     }
 
     if (aExp == 0) {
-        if (get_denormals_are_zeros(status)) aSig = 0;
-        if (aSig == 0)
+        if (aSig == 0 || get_denormals_are_zeros(status))
             return float64_negative_inf;
 
         float_raise(status, float_flag_denormal);
@@ -1779,14 +1773,8 @@ float64 float64_getmant(float64 a, float_status_t &status, int sign_ctrl, int in
         return packFloat64(~sign_ctrl & aSign, 0x3FF, 0);
     }
 
-    if (aExp == 0) {
-        if (get_denormals_are_zeros(status)) aSig = 0;
-        if (aSig == 0) {
-            return packFloat64(~sign_ctrl & aSign, 0x3FF, 0);
-        }
-
-        float_raise(status, float_flag_denormal);
-        normalizeFloat64Subnormal(aSig, &aExp, &aSig);
+    if (aExp == 0 && (aSig == 0 || get_denormals_are_zeros(status))) {
+        return packFloat64(~sign_ctrl & aSign, 0x3FF, 0);
     }
 
     if (aSign) {
@@ -1794,6 +1782,11 @@ float64 float64_getmant(float64 a, float_status_t &status, int sign_ctrl, int in
             float_raise(status, float_flag_invalid);
             return float64_default_nan;
         }
+    }
+
+    if (aExp == 0) {
+        float_raise(status, float_flag_denormal);
+        normalizeFloat64Subnormal(aSig, &aExp, &aSig);
     }
 
     switch(interv) {
