@@ -134,6 +134,7 @@ struct cdrom_t
   bx_bool locked;
   cdrom_base_c *cd;
   Bit32u max_lba;
+  Bit32u curr_lba;
   Bit32u next_lba;
   int remaining_blocks;
   struct currentStruct {
@@ -220,6 +221,7 @@ private:
   BX_HD_SMF bx_bool ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u buffer_size);
   BX_HD_SMF bx_bool ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u buffer_size);
   BX_HD_SMF void lba48_transform(controller_t *controller, bx_bool lba48);
+  BX_HD_SMF void start_seek(Bit8u channel);
 
   static Bit64s cdrom_status_handler(bx_param_c *param, int set, Bit64s val);
   static const char* cdrom_path_handler(bx_param_string_c *param, int set,

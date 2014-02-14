@@ -394,7 +394,7 @@ void bx_hard_drive_c::init(void)
             BX_HD_THIS channels[channel].drives[device].cdrom.ready = 1;
             Bit32u capacity = BX_HD_THIS channels[channel].drives[device].cdrom.cd->capacity();
             BX_HD_THIS channels[channel].drives[device].cdrom.max_lba = capacity - 1;
-            BX_HD_THIS channels[channel].drives[device].cdrom.next_lba = capacity - 1;
+            BX_HD_THIS channels[channel].drives[device].cdrom.curr_lba = capacity - 1;
             BX_INFO(("Capacity is %d sectors (%.2f MB)", capacity, (float)capacity / 512.0));
           } else {
             BX_INFO(("Could not locate CD-ROM, continuing with media not present"));
@@ -572,7 +572,7 @@ void bx_hard_drive_c::register_state(void)
 {
   unsigned i, j;
   char cname[4], dname[8];
-  bx_list_c *chan, *drive, *status;
+  bx_list_c *cdrom, *chan, *drive, *status;
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "hard_drive", "Hard Drive State");
   for (i=0; i<BX_MAX_ATA_CHANNEL; i++) {
@@ -584,6 +584,13 @@ void bx_hard_drive_c::register_state(void)
         drive = new bx_list_c(chan, dname);
         if (channels[i].drives[j].hdimage != NULL) {
           channels[i].drives[j].hdimage->register_state(drive);
+        }
+        if (BX_DRIVE_IS_CD(i, j)) {
+          cdrom = new bx_list_c(drive, "cdrom");
+          new bx_shadow_bool_c(cdrom, "locked", &BX_HD_THIS channels[i].drives[j].cdrom.locked);
+          new bx_shadow_num_c(cdrom, "curr_lba", &BX_HD_THIS channels[i].drives[j].cdrom.curr_lba);
+          new bx_shadow_num_c(cdrom, "next_lba", &BX_HD_THIS channels[i].drives[j].cdrom.next_lba);
+          new bx_shadow_num_c(cdrom, "remaining_blocks", &BX_HD_THIS channels[i].drives[j].cdrom.remaining_blocks);
         }
         new bx_shadow_data_c(drive, "buffer", BX_CONTROLLER(i, j).buffer, MAX_MULTIPLE_SECTORS * 512);
         status = new bx_list_c(drive, "status");
@@ -620,7 +627,6 @@ void bx_hard_drive_c::register_state(void)
         new bx_shadow_num_c(drive, "hob_lcyl", &BX_CONTROLLER(i, j).hob.lcyl, BASE_HEX);
         new bx_shadow_num_c(drive, "hob_hcyl", &BX_CONTROLLER(i, j).hob.hcyl, BASE_HEX);
         new bx_shadow_num_c(drive, "num_sectors", &BX_CONTROLLER(i, j).num_sectors, BASE_HEX);
-        new bx_shadow_bool_c(drive, "cdrom_locked", &BX_HD_THIS channels[i].drives[j].cdrom.locked);
       }
     }
     new bx_shadow_num_c(chan, "drive_select", &BX_HD_THIS channels[i].drive_select);
@@ -914,6 +920,7 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
                   BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks--;
 
                   if (!BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks) {
+                    BX_SELECTED_DRIVE(channel).cdrom.curr_lba = BX_SELECTED_DRIVE(channel).cdrom.next_lba;
                     BX_DEBUG(("CDROM: last READ block loaded"));
                   } else {
                     BX_DEBUG(("CDROM: READ block loaded (%d remaining)",
@@ -1601,12 +1608,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                                                   transfer_length * controller->buffer_size,
                                                   transfer_length * controller->buffer_size, 1);
                           BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks = transfer_length;
-                          Bit32u last_lba = BX_SELECTED_DRIVE(channel).cdrom.next_lba;
-                          Bit32u max_lba = BX_SELECTED_DRIVE(channel).cdrom.max_lba;
-                          float seek_time = 80000.0 * (float)abs(lba - last_lba + 1) / (max_lba + 1);
                           BX_SELECTED_DRIVE(channel).cdrom.next_lba = lba;
-                          bx_pc_system.activate_timer(
-                            BX_SELECTED_DRIVE(channel).seek_timer_index, (Bit32u)seek_time, 0);
+                          start_seek(channel);
                         }
                         break;
                       default:
@@ -1726,12 +1729,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                   init_send_atapi_command(channel, atapi_command, transfer_length * 2048,
                                           transfer_length * 2048, 1);
                   BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks = transfer_length;
-                  Bit32u last_lba = BX_SELECTED_DRIVE(channel).cdrom.next_lba;
-                  Bit32u max_lba = BX_SELECTED_DRIVE(channel).cdrom.max_lba;
-                  float seek_time = 80000.0 * (float)abs(lba - last_lba + 1) / (max_lba + 1);
                   BX_SELECTED_DRIVE(channel).cdrom.next_lba = lba;
-                  bx_pc_system.activate_timer(
-                    BX_SELECTED_DRIVE(channel).seek_timer_index, (Bit32u)seek_time, 0);
+                  start_seek(channel);
                 }
                 break;
 
@@ -1999,8 +1998,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             controller->status.drq   = 0;
             controller->status.corrected_data = 0;
             controller->buffer_index = 0;
-            bx_pc_system.activate_timer(
-              BX_SELECTED_DRIVE(channel).seek_timer_index, 5000, 0);
+            start_seek(channel);
           }
           break;
 
@@ -2379,9 +2377,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             controller->status.seek_complete = 0;
             controller->status.drq   = 0;
             controller->status.corrected_data = 0;
-            bx_pc_system.activate_timer(
-              BX_SELECTED_DRIVE(channel).seek_timer_index, 5000, 0);
-
+            start_seek(channel);
             DEV_ide_bmdma_start_transfer(channel);
           } else {
             BX_ERROR(("write cmd 0x%02x (READ DMA) not supported", value));
@@ -3226,7 +3222,7 @@ bx_bool bx_hard_drive_c::set_cd_media_status(Bit32u handle, bx_bool status)
       BX_HD_THIS channels[channel].drives[device].cdrom.ready = 1;
       Bit32u capacity = BX_HD_THIS channels[channel].drives[device].cdrom.cd->capacity();
       BX_HD_THIS channels[channel].drives[device].cdrom.max_lba = capacity - 1;
-      BX_HD_THIS channels[channel].drives[device].cdrom.next_lba = capacity - 1;
+      BX_HD_THIS channels[channel].drives[device].cdrom.curr_lba = capacity - 1;
       BX_INFO(("Capacity is %d sectors (%.2f MB)", capacity, (float)capacity / 512.0));
       SIM->get_param_enum("status", base)->set(BX_INSERTED);
       BX_SELECTED_DRIVE(channel).sense.sense_key = SENSE_UNIT_ATTENTION;
@@ -3284,6 +3280,9 @@ bx_bool bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u 
           }
           BX_SELECTED_DRIVE(channel).cdrom.next_lba++;
           BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks--;
+          if (!BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks) {
+            BX_SELECTED_DRIVE(channel).cdrom.curr_lba = BX_SELECTED_DRIVE(channel).cdrom.next_lba;
+          }
           break;
         default:
           memcpy(buffer, controller->buffer, *sector_size);
@@ -3443,6 +3442,25 @@ void bx_hard_drive_c::lba48_transform(controller_t *controller, bx_bool lba48)
       controller->num_sectors = (controller->hob.nsector << 8) |
                                  controller->sector_count;
   }
+}
+
+void bx_hard_drive_c::start_seek(Bit8u channel)
+{
+  float fSeekTime;
+  Bit32u seek_time, new_pos, prev_pos, max_pos;
+
+  if (BX_SELECTED_IS_CD(channel)) {
+    max_pos = BX_SELECTED_DRIVE(channel).cdrom.max_lba;
+    prev_pos = BX_SELECTED_DRIVE(channel).cdrom.curr_lba;
+    new_pos = BX_SELECTED_DRIVE(channel).cdrom.next_lba;
+    fSeekTime = 80000.0 * (float)abs(new_pos - prev_pos + 1) / (max_pos + 1);
+  } else {
+    // TODO: make HD seek latency variable
+    fSeekTime = 5000.0;
+  }
+  seek_time = (fSeekTime > 10.0) ? (Bit32u)fSeekTime : 10;
+  bx_pc_system.activate_timer(
+    BX_SELECTED_DRIVE(channel).seek_timer_index, seek_time, 0);
 }
 
 error_recovery_t::error_recovery_t()
