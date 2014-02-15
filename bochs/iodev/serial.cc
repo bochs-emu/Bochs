@@ -38,7 +38,7 @@
 #define closesocket(s)    close(s)
 typedef int SOCKET;
 #else
-#include <winsock.h>
+#include <winsock2.h>
 #define BX_SER_WIN32
 #endif
 

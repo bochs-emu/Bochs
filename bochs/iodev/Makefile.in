@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2013  The Bochs Project
+# Copyright (C) 2001-2014  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -139,7 +139,7 @@ bx_gameport.dll: gameport.o
 	$(CXX) $(CXXFLAGS) -shared -o bx_gameport.dll gameport.o $(WIN32_DLL_IMPORT_LIBRARY) -lwinmm
 
 bx_serial.dll: serial.o serial_raw.o
-	$(CXX) $(CXXFLAGS) -shared -o bx_serial.dll serial.o serial_raw.o $(WIN32_DLL_IMPORT_LIBRARY) -lwsock32
+	$(CXX) $(CXXFLAGS) -shared -o bx_serial.dll serial.o serial_raw.o $(WIN32_DLL_IMPORT_LIBRARY) -lws2_32
 
 ##### end DLL section
 

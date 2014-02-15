@@ -346,7 +346,7 @@ if test "$with_all_libs" = yes; then
     can_compile_rfb=1
     case $target in
       *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32*)
-	AC_CHECK_HEADER([winsock.h], [], [ can_compile_rfb=0 ])
+	AC_CHECK_HEADER([winsock2.h], [], [ can_compile_rfb=0 ])
 	AC_CHECK_HEADER([process.h], [], [ can_compile_rfb=0 ])
         ;;
       *)
@@ -1364,14 +1364,14 @@ AC_ARG_ENABLE(instrumentation,
 AC_SUBST(INSTRUMENT_DIR)
 AC_SUBST(INSTRUMENT_VAR)
 
-dnl // serial mode 'socket' needs wsock32.dll in non-plugin mode
+dnl // serial mode 'socket' needs ws2_32.dll in non-plugin mode
 if test "$bx_plugins" = 0; then
   case $target in
     *-pc-windows*)
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS wsock32.lib"
+      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS ws2_32.lib"
       ;;
     *-mingw32* | *-cygwin*)
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwsock32"
+      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lws2_32"
       ;;
   esac
 fi
@@ -2553,11 +2553,11 @@ if test "$with_rfb" = yes; then
   # we need the socket function
   case $target in
     *-pc-windows* | *-pc-winnt*)
-      RFB_LIBS="$RFB_LIBS wsock32.lib"
+      RFB_LIBS="$RFB_LIBS ws2_32.lib"
       have_socket=yes
       ;;
     *-mingw32*)
-      RFB_LIBS="$RFB_LIBS -lwsock32"
+      RFB_LIBS="$RFB_LIBS -lws2_32"
       have_socket=yes
       ;;
     *-cygwin*)

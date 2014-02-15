@@ -7,7 +7,7 @@
 //    Donald Becker
 //    http://www.psyon.org
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -72,7 +72,7 @@ IMPLEMENT_GUI_PLUGIN_CODE(rfb)
 
 #if defined(WIN32) && !defined(__CYGWIN__)
 
-#include <winsock.h>
+#include <winsock2.h>
 #include <process.h>
 #define BX_RFB_WIN32
 

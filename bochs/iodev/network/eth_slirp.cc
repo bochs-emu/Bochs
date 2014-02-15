@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2011  Heikki Lindholm
-//  Copyright (C) 2011-2013  The Bochs Project
+//  Copyright (C) 2011-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -39,7 +39,7 @@
 #if !defined(WIN32) || defined(__CYGWIN__)
 #include <arpa/inet.h> /* ntohs, htons */
 #else
-#include <winsock.h>
+#include <winsock2.h>
 #endif
 
 #define LOG_THIS netdev->

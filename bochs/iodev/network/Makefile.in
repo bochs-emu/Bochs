@@ -1,4 +1,4 @@
-# Copyright (C) 2012  The Bochs Project
+# Copyright (C) 2012-2014  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -94,7 +94,7 @@ bx_%.dll: %.o
 
 # special link rules for plugins that require more than one object file
 bx_netmod.dll: netmod.o $(NETLOW_OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o bx_netmod.dll netmod.o $(NETLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) -lwsock32
+	$(CXX) $(CXXFLAGS) -shared -o bx_netmod.dll netmod.o $(NETLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) -lws2_32
 
 ##### end DLL section
 

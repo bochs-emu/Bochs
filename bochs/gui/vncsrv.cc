@@ -7,7 +7,7 @@
 //    Donald Becker
 //    http://www.psyon.org
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -86,7 +86,7 @@ IMPLEMENT_GUI_PLUGIN_CODE(vncsrv)
 
 #ifdef WIN32
 
-#include <winsock.h>
+#include <winsock2.h>
 #include <process.h>
 
 #undef LOCK
