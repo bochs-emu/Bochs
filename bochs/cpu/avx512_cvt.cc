@@ -567,4 +567,71 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPH2PS_MASK_VpsWpsR(bxInstructi
   BX_NEXT_INSTR(i);
 }
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PH_MASK_WpsVpsIbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), dst = BX_READ_AVX_REG(i->dst());
+
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+  unsigned len = i->getVL();
+
+  Bit8u control = i->Ib();
+
+  status.flush_underflow_to_zero = 0; // ignore MXCSR.FUZ
+  // override MXCSR rounding mode with control coming from imm8
+  if ((control & 0x4) == 0)
+    status.float_rounding_mode = control & 0x3;
+
+  Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
+
+  for (unsigned n=0, mask = 0x1; n < DWORD_ELEMENTS(len); n++, mask <<= 1) {
+    if (opmask & mask)
+      dst.vmm16u(n) = float32_to_float16(op.vmm32u(n), status);
+    else if (i->isZeroMasking())
+      dst.vmm16u(n) = 0;
+  }
+
+  check_exceptionsSSE(get_exception_flags(status));
+
+  if (len == BX_VL128) {
+    BX_WRITE_XMM_REG_LO_QWORD_CLEAR_HIGH(i->dst(), dst.vmm64u(0));
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), dst, len >> 1); // write half vector
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PH_MASK_WpsVpsIbM(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
+
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+  unsigned len = i->getVL();
+
+  Bit8u control = i->Ib();
+
+  status.flush_underflow_to_zero = 0; // ignore MXCSR.FUZ
+  // override MXCSR rounding mode with control coming from imm8
+  if ((control & 0x4) == 0)
+    status.float_rounding_mode = control & 0x3;
+
+  Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
+  opmask &= (1 << DWORD_ELEMENTS(len)) - 1;
+
+  for (unsigned n=0, mask = 0x1; n < DWORD_ELEMENTS(len); n++, mask <<= 1) {
+    if (opmask & mask)
+      result.vmm16u(n) = float32_to_float16(op.vmm32u(n), status);
+  }
+
+  check_exceptionsSSE(get_exception_flags(status));
+
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  avx_masked_store16(i, eaddr, &result, opmask);
+
+  BX_NEXT_INSTR(i);
+}
+
 #endif
