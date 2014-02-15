@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2013  The Bochs Project
+//  Copyright (C) 2008-2014  The Bochs Project
 
 #include "config.h"
 
@@ -24,8 +24,8 @@
 // to use the "A" functions instead of the "W" functions. That is, strcpyA(), sprintfA(), etc.
 // This will require setting macros for the non-os-specific code, too.
 
-#include <windows.h>
 #include <commctrl.h>
+#include <commdlg.h>
 
 #ifdef _WIN64
 #define DWL_MSGRESULT DWLP_MSGRESULT

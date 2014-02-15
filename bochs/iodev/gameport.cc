@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2003-2009  The Bochs Project
+//  Copyright (C) 2003-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -40,6 +40,7 @@
 
 #elif defined(WIN32)
 
+#include <mmsystem.h>
 #ifndef JOY_BUTTON1
 #define JOY_BUTTON1 1
 #define JOY_BUTTON2 2

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -38,6 +38,7 @@ extern "C" {
 // In a win32 compile (including cygwin), windows.h is required for several
 // files in gui and iodev.  It is important to include it here in a header
 // file so that WIN32-specific data types can be used in fields of classes.
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 
