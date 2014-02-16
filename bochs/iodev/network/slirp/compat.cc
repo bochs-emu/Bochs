@@ -41,7 +41,7 @@ void pstrcpy(char *buf, int buf_size, const char *str)
     *q = '\0';
 }
 
-void socket_set_nonblock(int fd)
+void qemu_set_nonblock(int fd)
 {
 #ifdef WIN32
     unsigned long opt = 1;

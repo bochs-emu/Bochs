@@ -352,7 +352,7 @@ icmp_error(struct mbuf *msrc, u_char type, u_char code, int minsize,
 
   ip->ip_ttl = MAXTTL;
   ip->ip_p = IPPROTO_ICMP;
-  ip->ip_dst = ip->ip_src;    /* ip adresses */
+  ip->ip_dst = ip->ip_src;    /* ip addresses */
   ip->ip_src = m->slirp->vhost_addr;
 
   (void ) ip_output((struct socket *)NULL, m);
@@ -427,7 +427,7 @@ void icmp_receive(struct socket *so)
     icp = mtod(m, struct icmp *);
 
     id = icp->icmp_id;
-    len = recv(so->s, (char*)icp, m->m_len, 0);
+    len = qemu_recv(so->s, icp, m->m_len, 0);
     icp->icmp_id = id;
 
     m->m_data -= hlen;

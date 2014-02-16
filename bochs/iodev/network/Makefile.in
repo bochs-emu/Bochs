@@ -115,7 +115,7 @@ bx_%.dll: %.o
 
 # special link rules for plugins that require more than one object file
 bx_netmod.dll: netmod.o $(NETLOW_OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o bx_netmod.dll netmod.o $(NETLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) -lws2_32
+	$(CXX) $(CXXFLAGS) -shared -o bx_netmod.dll netmod.o $(NETLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) -lws2_32 -liphlpapi
 
 ##### end DLL section
 

@@ -528,7 +528,7 @@ void slirp_select_poll(fd_set *readfds, fd_set *writefds, fd_set *xfds,
 	 	 	 */
 #ifdef PROBE_CONN
 			if (so->so_state & SS_ISFCONNECTING) {
-			  ret = recv(so->s, (char *)&ret, 0,0);
+			  ret = qemu_recv(so->s, &ret, 0, 0);
 
 			  if (ret < 0) {
 			    /* XXX */
@@ -818,12 +818,12 @@ int slirp_add_exec(Slirp *slirp, int do_pty, const void *args,
 
 ssize_t slirp_send(struct socket *so, const void *buf, size_t len, int flags)
 {
-	if (so->s == -1 && so->extra) {
-		BX_ERROR(("slirp_send(): so->extra not supported"));
-		return len;
-	}
+    if (so->s == -1 && so->extra) {
+        BX_ERROR(("slirp_send(): so->extra not supported"));
+        return len;
+    }
 
-	return send(so->s, (const char*)buf, len, flags);
+    return send(so->s, (const char*)buf, len, flags);
 }
 
 static struct socket *
@@ -843,18 +843,20 @@ slirp_find_ctl_socket(Slirp *slirp, struct in_addr guest_addr, int guest_port)
 size_t slirp_socket_can_recv(Slirp *slirp, struct in_addr guest_addr,
                              int guest_port)
 {
-	struct iovec iov[2];
-	struct socket *so;
+    struct iovec iov[2];
+    struct socket *so;
 
-	so = slirp_find_ctl_socket(slirp, guest_addr, guest_port);
+    so = slirp_find_ctl_socket(slirp, guest_addr, guest_port);
 
-	if (!so || so->so_state & SS_NOFDREF)
-		return 0;
+    if (!so || so->so_state & SS_NOFDREF) {
+        return 0;
+    }
 
-	if (!CONN_CANFRCV(so) || so->so_snd.sb_cc >= (so->so_snd.sb_datalen/2))
-		return 0;
+    if (!CONN_CANFRCV(so) || so->so_snd.sb_cc >= (so->so_snd.sb_datalen/2)) {
+        return 0;
+    }
 
-	return sopreprbuf(so, iov, NULL);
+    return sopreprbuf(so, iov, NULL);
 }
 
 void slirp_socket_recv(Slirp *slirp, struct in_addr guest_addr, int guest_port,

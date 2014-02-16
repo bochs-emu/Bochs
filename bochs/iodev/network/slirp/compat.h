@@ -121,8 +121,11 @@ struct iovec {
 void pstrcpy(char *buf, int buf_size, const char *str);
 int qemu_socket(int domain, int type, int protocol);
 #ifdef WIN32
+#define qemu_recv(a,b,c,d) recv(a,(char*)b,c,d)
 int inet_aton(const char *cp, struct in_addr *ia);
+#else
+#define qemu_recv(a,b,c,d) recv(a,b,c,d)
 #endif
-void socket_set_nonblock(int fd);
+void qemu_set_nonblock(int fd);
 
 #endif
