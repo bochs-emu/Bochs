@@ -847,6 +847,7 @@ typedef
 #define BX_NETMOD_TUNTAP  0
 #define BX_NETMOD_VDE     0
 #define BX_NETMOD_SLIRP   0
+#define BX_NETMOD_SLIRP_NEW 0
 
 // Soundcard and gameport support
 #define BX_SUPPORT_SB16     0
