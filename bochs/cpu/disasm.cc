@@ -450,9 +450,11 @@ char* BX_CPU_C::disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbuf
 
   int ret;
 
+#if BX_SUPPORT_X86_64
   if (is_64)
     ret = fetchDecode64(opcode, fetchModeMask, i, 16);
   else
+#endif
     ret = fetchDecode32(opcode, fetchModeMask, i, 16);
 
   if (ret < 0)
