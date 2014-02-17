@@ -960,4 +960,116 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTPD_MASK_VpdWpdIbR(bxInstru
   BX_NEXT_INSTR(i);
 }
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALEPS_MASK_VpsWpsIbR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALEPD_MASK_VpdWpdIbR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALESS_MASK_VssHpsWssIbR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALESD_MASK_VsdHpdWsdIbR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCALEFPS_MASK_VpsWpsR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCALEFPD_MASK_VpdWpdR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCALEFSS_MASK_VssHpsWssR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCALEFSD_MASK_VsdHpdWsdR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCP14PS_MASK_VpsWpsR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCP14PD_MASK_VpdWpdR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCP14SS_MASK_VssHpsWssR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCP14SD_MASK_VsdHpdWsdR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRT14PS_MASK_VpsWpsR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRT14PD_MASK_VpdWpdR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRT14SS_MASK_VssHpsWssR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRT14SD_MASK_VsdHpdWsdR(bxInstruction_c *i)
+{
+  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
+
+  BX_NEXT_INSTR(i);
+}
+
 #endif
