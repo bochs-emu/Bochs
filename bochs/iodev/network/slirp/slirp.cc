@@ -28,6 +28,8 @@
 
 /* host loopback address */
 struct in_addr loopback_addr;
+/* host loopback network mask */
+unsigned long loopback_mask;
 
 /* emulated hosts use the MAC addr 52:55:IP:IP:IP:IP */
 static const uint8_t special_ethaddr[ETH_ALEN] = {
@@ -40,14 +42,17 @@ static const uint8_t zero_ethaddr[ETH_ALEN] = { 0, 0, 0, 0, 0, 0 };
 fd_set *global_readfds, *global_writefds, *global_xfds;
 
 Bit64u curtime;
-static Bit64u time_fasttimo, last_slowtimo;
-static int do_slowtimo;
 
 static QTAILQ_HEAD(slirp_instances, Slirp) slirp_instances =
     QTAILQ_HEAD_INITIALIZER(slirp_instances);
 
 static struct in_addr dns_addr;
 static u_int dns_addr_time;
+
+#define TIMEOUT_FAST 2  /* milliseconds */
+#define TIMEOUT_SLOW 499  /* milliseconds */
+/* for the aging of certain requests like DNS */
+#define TIMEOUT_DEFAULT 1000  /* milliseconds */
 
 #ifdef WIN32
 
@@ -61,7 +66,7 @@ int get_dns_addr(struct in_addr *pdns_addr)
     IP_ADDR_STRING *pIPAddr;
     struct in_addr tmp_addr;
 
-    if (dns_addr.s_addr != 0 && (curtime - dns_addr_time) < 1000) {
+    if (dns_addr.s_addr != 0 && (curtime - dns_addr_time) < TIMEOUT_DEFAULT) {
         *pdns_addr = dns_addr;
         return 0;
     }
@@ -119,7 +124,7 @@ int get_dns_addr(struct in_addr *pdns_addr)
 
     if (dns_addr.s_addr != 0) {
         struct stat old_stat;
-        if ((curtime - dns_addr_time) < 1000) {
+        if ((curtime - dns_addr_time) < TIMEOUT_DEFAULT) {
             *pdns_addr = dns_addr;
             return 0;
         }
@@ -194,6 +199,7 @@ static void slirp_init_once(void)
 #endif
 
     loopback_addr.s_addr = htonl(INADDR_LOOPBACK);
+    loopback_mask = htonl(IN_CLASSA_NET);
 }
 
 Slirp *slirp_init(int restricted, struct in_addr vnetwork,
@@ -254,15 +260,34 @@ void slirp_cleanup(Slirp *slirp)
 #define CONN_CANFRCV(so) (((so)->so_state & (SS_FCANTRCVMORE|SS_ISFCONNECTED)) == SS_ISFCONNECTED)
 #define UPD_NFDS(x) if (nfds < (x)) nfds = (x)
 
-void slirp_update_timeout(uint32_t *timeout)
+static void slirp_update_timeout(uint32_t *timeout)
 {
-    if (!QTAILQ_EMPTY(&slirp_instances)) {
-        *timeout = MIN(1000, *timeout);
+    Slirp *slirp;
+    uint32_t t;
+
+    if (*timeout <= TIMEOUT_FAST) {
+        return;
     }
+
+    t = MIN(1000, *timeout);
+
+    /* If we have tcp timeout with slirp, then we will fill @timeout with
+     * more precise value.
+     */
+    QTAILQ_FOREACH(slirp, &slirp_instances, entry) {
+        if (slirp->time_fasttimo) {
+            *timeout = TIMEOUT_FAST;
+            return;
+        }
+        if (slirp->do_slowtimo) {
+            t = MIN(TIMEOUT_SLOW, t);
+        }
+    }
+    *timeout = t;
 }
 
-void slirp_select_fill(int *pnfds,
-                       fd_set *readfds, fd_set *writefds, fd_set *xfds)
+void slirp_select_fill(int *pnfds, fd_set *readfds, fd_set *writefds,
+                       fd_set *xfds, uint32_t *timeout)
 {
     Slirp *slirp;
     struct socket *so, *so_next;
@@ -278,135 +303,138 @@ void slirp_select_fill(int *pnfds,
     global_xfds = NULL;
 
     nfds = *pnfds;
-	/*
-	 * First, TCP sockets
-	 */
-	do_slowtimo = 0;
+    /*
+     * First, TCP sockets
+     */
 
-	QTAILQ_FOREACH(slirp, &slirp_instances, entry) {
-		/*
-		 * *_slowtimo needs calling if there are IP fragments
-		 * in the fragment queue, or there are TCP connections active
-		 */
-		do_slowtimo |= ((slirp->tcb.so_next != &slirp->tcb) ||
-		    (&slirp->ipq.ip_link != slirp->ipq.ip_link.next));
+    QTAILQ_FOREACH(slirp, &slirp_instances, entry) {
+        /*
+         * *_slowtimo needs calling if there are IP fragments
+         * in the fragment queue, or there are TCP connections active
+         */
+        slirp->do_slowtimo = ((slirp->tcb.so_next != &slirp->tcb) ||
+                (&slirp->ipq.ip_link != slirp->ipq.ip_link.next));
 
-		for (so = slirp->tcb.so_next; so != &slirp->tcb;
-		     so = so_next) {
-			so_next = so->so_next;
+        for (so = slirp->tcb.so_next; so != &slirp->tcb;
+                so = so_next) {
+            so_next = so->so_next;
 
-			/*
-			 * See if we need a tcp_fasttimo
-			 */
-			if (time_fasttimo == 0 && so->so_tcpcb->t_flags & TF_DELACK)
-			   time_fasttimo = curtime; /* Flag when we want a fasttimo */
+            /*
+             * See if we need a tcp_fasttimo
+             */
+            if (slirp->time_fasttimo == 0 &&
+                so->so_tcpcb->t_flags & TF_DELACK) {
+                slirp->time_fasttimo = curtime; /* Flag when want a fasttimo */
+            }
 
-			/*
-			 * NOFDREF can include still connecting to local-host,
-			 * newly socreated() sockets etc. Don't want to select these.
-	 		 */
-			if (so->so_state & SS_NOFDREF || so->s == -1)
-			   continue;
+            /*
+             * NOFDREF can include still connecting to local-host,
+             * newly socreated() sockets etc. Don't want to select these.
+             */
+            if (so->so_state & SS_NOFDREF || so->s == -1) {
+                continue;
+            }
 
-			/*
-			 * Set for reading sockets which are accepting
-			 */
-			if (so->so_state & SS_FACCEPTCONN) {
-                                FD_SET(so->s, readfds);
-				UPD_NFDS(so->s);
-				continue;
-			}
+            /*
+             * Set for reading sockets which are accepting
+             */
+            if (so->so_state & SS_FACCEPTCONN) {
+                FD_SET(so->s, readfds);
+                UPD_NFDS(so->s);
+                continue;
+            }
 
-			/*
-			 * Set for writing sockets which are connecting
-			 */
-			if (so->so_state & SS_ISFCONNECTING) {
-				FD_SET(so->s, writefds);
-				UPD_NFDS(so->s);
-				continue;
-			}
+            /*
+             * Set for writing sockets which are connecting
+             */
+            if (so->so_state & SS_ISFCONNECTING) {
+                FD_SET(so->s, writefds);
+                UPD_NFDS(so->s);
+                continue;
+            }
 
-			/*
-			 * Set for writing if we are connected, can send more, and
-			 * we have something to send
-			 */
-			if (CONN_CANFSEND(so) && so->so_rcv.sb_cc) {
-				FD_SET(so->s, writefds);
-				UPD_NFDS(so->s);
-			}
+            /*
+             * Set for writing if we are connected, can send more, and
+             * we have something to send
+             */
+            if (CONN_CANFSEND(so) && so->so_rcv.sb_cc) {
+                FD_SET(so->s, writefds);
+                UPD_NFDS(so->s);
+            }
 
-			/*
-			 * Set for reading (and urgent data) if we are connected, can
-			 * receive more, and we have room for it XXX /2 ?
-			 */
-			if (CONN_CANFRCV(so) && (so->so_snd.sb_cc < (so->so_snd.sb_datalen/2))) {
-				FD_SET(so->s, readfds);
-				FD_SET(so->s, xfds);
-				UPD_NFDS(so->s);
-			}
-		}
+            /*
+             * Set for reading (and urgent data) if we are connected, can
+             * receive more, and we have room for it XXX /2 ?
+             */
+            if (CONN_CANFRCV(so) &&
+                (so->so_snd.sb_cc < (so->so_snd.sb_datalen/2))) {
+                FD_SET(so->s, readfds);
+                FD_SET(so->s, xfds);
+                UPD_NFDS(so->s);
+            }
+        }
 
-		/*
-		 * UDP sockets
-		 */
-		for (so = slirp->udb.so_next; so != &slirp->udb;
-		     so = so_next) {
-			so_next = so->so_next;
+        /*
+         * UDP sockets
+         */
+        for (so = slirp->udb.so_next; so != &slirp->udb;
+                so = so_next) {
+            so_next = so->so_next;
 
-			/*
-			 * See if it's timed out
-			 */
-			if (so->so_expire) {
-				if (so->so_expire <= curtime) {
-					udp_detach(so);
-					continue;
-				} else
-					do_slowtimo = 1; /* Let socket expire */
-			}
-
-			/*
-			 * When UDP packets are received from over the
-			 * link, they're sendto()'d straight away, so
-			 * no need for setting for writing
-			 * Limit the number of packets queued by this session
-			 * to 4.  Note that even though we try and limit this
-			 * to 4 packets, the session could have more queued
-			 * if the packets needed to be fragmented
-			 * (XXX <= 4 ?)
-			 */
-			if ((so->so_state & SS_ISFCONNECTED) && so->so_queued <= 4) {
-				FD_SET(so->s, readfds);
-				UPD_NFDS(so->s);
-			}
-		}
-
-                /*
-                 * ICMP sockets
-                 */
-                for (so = slirp->icmp.so_next; so != &slirp->icmp;
-                     so = so_next) {
-                    so_next = so->so_next;
-
-                    /*
-                     * See if it's timed out
-                     */
-                    if (so->so_expire) {
-                        if (so->so_expire <= curtime) {
-                            icmp_detach(so);
-                            continue;
-                        } else {
-                            do_slowtimo = 1; /* Let socket expire */
-                        }
-                    }
-
-                    if (so->so_state & SS_ISFCONNECTED) {
-                        FD_SET(so->s, readfds);
-                        UPD_NFDS(so->s);
-                    }
+            /*
+             * See if it's timed out
+             */
+            if (so->so_expire) {
+                if (so->so_expire <= curtime) {
+                    udp_detach(so);
+                    continue;
+                } else {
+                    slirp->do_slowtimo = true; /* Let socket expire */
                 }
-	}
+            }
 
-        *pnfds = nfds;
+            /*
+             * When UDP packets are received from over the
+             * link, they're sendto()'d straight away, so
+             * no need for setting for writing
+             * Limit the number of packets queued by this session
+             * to 4.  Note that even though we try and limit this
+             * to 4 packets, the session could have more queued
+             * if the packets needed to be fragmented
+             * (XXX <= 4 ?)
+             */
+            if ((so->so_state & SS_ISFCONNECTED) && so->so_queued <= 4) {
+                FD_SET(so->s, readfds);
+                UPD_NFDS(so->s);
+            }
+        }
+
+        /*
+         * ICMP sockets
+         */
+        for (so = slirp->icmp.so_next; so != &slirp->icmp;
+                so = so_next) {
+            so_next = so->so_next;
+
+            /*
+             * See if it's timed out
+             */
+            if (so->so_expire) {
+                if (so->so_expire <= curtime) {
+                    icmp_detach(so);
+                    continue;
+                } else {
+                    slirp->do_slowtimo = true; /* Let socket expire */
+                }
+            }
+            if (so->so_state & SS_ISFCONNECTED) {
+                FD_SET(so->s, readfds);
+                UPD_NFDS(so->s);
+            }
+        }
+    }
+    slirp_update_timeout(timeout);
+    *pnfds = nfds;
 }
 
 void slirp_select_poll(fd_set *readfds, fd_set *writefds, fd_set *xfds,
@@ -427,177 +455,186 @@ void slirp_select_poll(fd_set *readfds, fd_set *writefds, fd_set *xfds,
     curtime = bx_pc_system.time_usec() / 1000;
 
     QTAILQ_FOREACH(slirp, &slirp_instances, entry) {
-	/*
-	 * See if anything has timed out
-	 */
-		if (time_fasttimo && ((curtime - time_fasttimo) >= 2)) {
-			tcp_fasttimo(slirp);
-			time_fasttimo = 0;
-		}
-		if (do_slowtimo && ((curtime - last_slowtimo) >= 499)) {
-			ip_slowtimo(slirp);
-			tcp_slowtimo(slirp);
-			last_slowtimo = curtime;
-		}
+        /*
+         * See if anything has timed out
+         */
+        if (slirp->time_fasttimo &&
+            ((curtime - slirp->time_fasttimo) >= TIMEOUT_FAST)) {
+            tcp_fasttimo(slirp);
+            slirp->time_fasttimo = 0;
+        }
+        if (slirp->do_slowtimo &&
+            ((curtime - slirp->last_slowtimo) >= TIMEOUT_SLOW)) {
+            ip_slowtimo(slirp);
+            tcp_slowtimo(slirp);
+            slirp->last_slowtimo = curtime;
+        }
 
-	/*
-	 * Check sockets
-	 */
-	if (!select_error) {
-		/*
-		 * Check TCP sockets
-		 */
-		for (so = slirp->tcb.so_next; so != &slirp->tcb;
-		     so = so_next) {
-			so_next = so->so_next;
-
-			/*
-			 * FD_ISSET is meaningless on these sockets
-			 * (and they can crash the program)
-			 */
-			if (so->so_state & SS_NOFDREF || so->s == -1)
-			   continue;
-
-			/*
-			 * Check for URG data
-			 * This will soread as well, so no need to
-			 * test for readfds below if this succeeds
-			 */
-			if (FD_ISSET(so->s, xfds))
-			   sorecvoob(so);
-			/*
-			 * Check sockets for reading
-			 */
-			else if (FD_ISSET(so->s, readfds)) {
-				/*
-				 * Check for incoming connections
-				 */
-				if (so->so_state & SS_FACCEPTCONN) {
-					tcp_connect(so);
-					continue;
-				} /* else */
-				ret = soread(so);
-
-				/* Output it if we read something */
-				if (ret > 0)
-				   tcp_output(sototcpcb(so));
-			}
-
-			/*
-			 * Check sockets for writing
-			 */
-			if (FD_ISSET(so->s, writefds)) {
-			  /*
-			   * Check for non-blocking, still-connecting sockets
-			   */
-			  if (so->so_state & SS_ISFCONNECTING) {
-			    /* Connected */
-			    so->so_state &= ~SS_ISFCONNECTING;
-
-			    ret = send(so->s, (const char*) &ret, 0, 0);
-			    if (ret < 0) {
-			      /* XXXXX Must fix, zero bytes is a NOP */
-			      if (errno == EAGAIN || errno == EWOULDBLOCK ||
-				  errno == EINPROGRESS || errno == ENOTCONN)
-				continue;
-
-			      /* else failed */
-			      so->so_state &= SS_PERSISTENT_MASK;
-			      so->so_state |= SS_NOFDREF;
-			    }
-			    /* else so->so_state &= ~SS_ISFCONNECTING; */
-
-			    /*
-			     * Continue tcp_input
-			     */
-			    tcp_input((struct mbuf *)NULL, sizeof(struct ip), so);
-			    /* continue; */
-			  } else
-			    ret = sowrite(so);
-			  /*
-			   * XXXXX If we wrote something (a lot), there
-			   * could be a need for a window update.
-			   * In the worst case, the remote will send
-			   * a window probe to get things going again
-			   */
-			}
-
-			/*
-			 * Probe a still-connecting, non-blocking socket
-			 * to check if it's still alive
-	 	 	 */
-#ifdef PROBE_CONN
-			if (so->so_state & SS_ISFCONNECTING) {
-			  ret = qemu_recv(so->s, &ret, 0, 0);
-
-			  if (ret < 0) {
-			    /* XXX */
-			    if (errno == EAGAIN || errno == EWOULDBLOCK ||
-				errno == EINPROGRESS || errno == ENOTCONN)
-			      continue; /* Still connecting, continue */
-
-			    /* else failed */
-			    so->so_state &= SS_PERSISTENT_MASK;
-			    so->so_state |= SS_NOFDREF;
-
-			    /* tcp_input will take care of it */
-			  } else {
-			    ret = send(so->s, (const char*)&ret, 0,0);
-			    if (ret < 0) {
-			      /* XXX */
-			      if (errno == EAGAIN || errno == EWOULDBLOCK ||
-				  errno == EINPROGRESS || errno == ENOTCONN)
-				continue;
-			      /* else failed */
-			      so->so_state &= SS_PERSISTENT_MASK;
-			      so->so_state |= SS_NOFDREF;
-			    } else
-			      so->so_state &= ~SS_ISFCONNECTING;
-
-			  }
-			  tcp_input((struct mbuf *)NULL, sizeof(struct ip),so);
-			} /* SS_ISFCONNECTING */
-#endif
-		}
-
-		/*
-		 * Now UDP sockets.
-		 * Incoming packets are sent straight away, they're not buffered.
-		 * Incoming UDP data isn't buffered either.
-		 */
-		for (so = slirp->udb.so_next; so != &slirp->udb;
-		     so = so_next) {
-			so_next = so->so_next;
-
-			if (so->s != -1 && FD_ISSET(so->s, readfds)) {
-                            sorecvfrom(so);
-                        }
-		}
+        /*
+         * Check sockets
+         */
+        if (!select_error) {
+            /*
+             * Check TCP sockets
+             */
+            for (so = slirp->tcb.so_next; so != &slirp->tcb;
+                    so = so_next) {
+                so_next = so->so_next;
 
                 /*
-                 * Check incoming ICMP relies.
+                 * FD_ISSET is meaningless on these sockets
+                 * (and they can crash the program)
                  */
-                for (so = slirp->icmp.so_next; so != &slirp->icmp;
-                     so = so_next) {
-                     so_next = so->so_next;
+                if (so->so_state & SS_NOFDREF || so->s == -1) {
+                    continue;
+                }
+                /*
+                 * Check for URG data
+                 * This will soread as well, so no need to
+                 * test for readfds below if this succeeds
+                 */
+                if (FD_ISSET(so->s, xfds)) {
+                    sorecvoob(so);
+                }
+                /*
+                 * Check sockets for reading
+                 */
+                else if (FD_ISSET(so->s, readfds)) {
+                    /*
+                     * Check for incoming connections
+                     */
+                    if (so->so_state & SS_FACCEPTCONN) {
+                        tcp_connect(so);
+                        continue;
+                    } /* else */
+                    ret = soread(so);
+
+                    /* Output it if we read something */
+                    if (ret > 0) {
+                        tcp_output(sototcpcb(so));
+                    }
+                }
+
+                /*
+                 * Check sockets for writing
+                 */
+                if (FD_ISSET(so->s, writefds)) {
+                    /*
+                     * Check for non-blocking, still-connecting sockets
+                     */
+                    if (so->so_state & SS_ISFCONNECTING) {
+                        /* Connected */
+                        so->so_state &= ~SS_ISFCONNECTING;
+
+                        ret = send(so->s, (const char*) &ret, 0, 0);
+                        if (ret < 0) {
+                            /* XXXXX Must fix, zero bytes is a NOP */
+                            if (errno == EAGAIN || errno == EWOULDBLOCK ||
+                                errno == EINPROGRESS || errno == ENOTCONN) {
+                                continue;
+                            }
+
+                            /* else failed */
+                            so->so_state &= SS_PERSISTENT_MASK;
+                            so->so_state |= SS_NOFDREF;
+                        }
+                        /* else so->so_state &= ~SS_ISFCONNECTING; */
+
+                        /*
+                         * Continue tcp_input
+                         */
+                        tcp_input((struct mbuf *)NULL, sizeof(struct ip), so);
+                        /* continue; */
+                    } else {
+                        ret = sowrite(so);
+                    }
+                    /*
+                     * XXXXX If we wrote something (a lot), there
+                     * could be a need for a window update.
+                     * In the worst case, the remote will send
+                     * a window probe to get things going again
+                     */
+                }
+
+                /*
+                 * Probe a still-connecting, non-blocking socket
+                 * to check if it's still alive
+                 */
+#ifdef PROBE_CONN
+                if (so->so_state & SS_ISFCONNECTING) {
+                    ret = qemu_recv(so->s, &ret, 0, 0);
+
+                    if (ret < 0) {
+                        /* XXX */
+                        if (errno == EAGAIN || errno == EWOULDBLOCK ||
+                            errno == EINPROGRESS || errno == ENOTCONN) {
+                            continue; /* Still connecting, continue */
+                        }
+
+                        /* else failed */
+                        so->so_state &= SS_PERSISTENT_MASK;
+                        so->so_state |= SS_NOFDREF;
+
+                        /* tcp_input will take care of it */
+                    } else {
+                        ret = send(so->s, (const char*)&ret, 0, 0);
+                        if (ret < 0) {
+                            /* XXX */
+                            if (errno == EAGAIN || errno == EWOULDBLOCK ||
+                                errno == EINPROGRESS || errno == ENOTCONN) {
+                                continue;
+                            }
+                            /* else failed */
+                            so->so_state &= SS_PERSISTENT_MASK;
+                            so->so_state |= SS_NOFDREF;
+                        } else {
+                            so->so_state &= ~SS_ISFCONNECTING;
+                        }
+
+                    }
+                    tcp_input((struct mbuf *)NULL, sizeof(struct ip), so);
+                } /* SS_ISFCONNECTING */
+#endif
+            }
+
+            /*
+             * Now UDP sockets.
+             * Incoming packets are sent straight away, they're not buffered.
+             * Incoming UDP data isn't buffered either.
+             */
+            for (so = slirp->udb.so_next; so != &slirp->udb;
+                    so = so_next) {
+                so_next = so->so_next;
+
+                if (so->s != -1 && FD_ISSET(so->s, readfds)) {
+                    sorecvfrom(so);
+                }
+            }
+
+            /*
+             * Check incoming ICMP relies.
+             */
+            for (so = slirp->icmp.so_next; so != &slirp->icmp;
+                    so = so_next) {
+                    so_next = so->so_next;
 
                     if (so->s != -1 && FD_ISSET(so->s, readfds)) {
                         icmp_receive(so);
                     }
-                }
-	}
+            }
+        }
 
         if_start(slirp);
     }
 
-	/* clear global file descriptor sets.
-	 * these reside on the stack in vl.c
-	 * so they're unusable if we're not in
-	 * slirp_select_fill or slirp_select_poll.
-	 */
-	 global_readfds = NULL;
-	 global_writefds = NULL;
-	 global_xfds = NULL;
+    /* clear global file descriptor sets.
+     * these reside on the stack in vl.c
+     * so they're unusable if we're not in
+     * slirp_select_fill or slirp_select_poll.
+     */
+     global_readfds = NULL;
+     global_writefds = NULL;
+     global_xfds = NULL;
 }
 
 static void arp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)

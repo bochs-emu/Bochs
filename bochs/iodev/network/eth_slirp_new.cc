@@ -137,10 +137,9 @@ void bx_slirp_new_pktmover_c::rx_timer_handler(void *this_ptr)
   FD_ZERO(&rfds);
   FD_ZERO(&wfds);
   FD_ZERO(&xfds);
-  slirp_update_timeout(&timeout);
-  slirp_select_fill(&nfds, &rfds, &wfds, &xfds);
+  slirp_select_fill(&nfds, &rfds, &wfds, &xfds, &timeout);
   tv.tv_sec = 0;
-  tv.tv_usec = timeout;
+  tv.tv_usec = 0;
   ret = select(nfds + 1, &rfds, &wfds, &xfds, &tv);
   slirp_select_poll(&rfds, &wfds, &xfds, (ret < 0));
 }

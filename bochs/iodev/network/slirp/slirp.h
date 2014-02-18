@@ -209,6 +209,9 @@ bool arp_table_search(Slirp *slirp, uint32_t ip_addr,
 
 struct Slirp {
     QTAILQ_ENTRY(Slirp) entry;
+    u_int time_fasttimo;
+    u_int last_slowtimo;
+    bool do_slowtimo;
 
     /* virtual network configuration */
     struct in_addr vnetwork_addr;
@@ -221,7 +224,6 @@ struct Slirp {
     char client_hostname[33];
 
     int restricted;
-    struct timeval tt;
     struct ex_list *exec_list;
 
     /* mbuf states */
