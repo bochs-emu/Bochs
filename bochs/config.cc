@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2013  The Bochs Project
+//  Copyright (C) 2002-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -3432,7 +3432,7 @@ int bx_write_configuration(const char *rc, int overwrite)
   bx_write_log_options(fp, (bx_list_c*) SIM->get_param("log"));
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_KEYBOARD), NULL, 0);
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_MOUSE), NULL, 0);
-  bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_SOUNDLOW), NULL, 0);
+  bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_SOUNDLOW),"sound", 0);
   SIM->save_addon_options(fp);
   fclose(fp);
   return 0;
