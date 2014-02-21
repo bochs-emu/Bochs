@@ -671,6 +671,18 @@ void bx_hard_drive_c::seek_timer()
         controller->status.corrected_data = 0;
         DEV_ide_bmdma_start_transfer(channel);
         break;
+      case 0x70: // SEEK
+        controller->error_register = 0;
+        controller->status.busy  = 0;
+        controller->status.drive_ready = 1;
+        controller->status.seek_complete = 1;
+        controller->status.drq   = 0;
+        controller->status.corrected_data = 0;
+        controller->buffer_index = 0;
+        BX_DEBUG(("ata%d-%d: SEEK completed (IRQ %sabled)", channel,
+          BX_SLAVE_SELECTED(channel), controller->control.disable_irq?"dis":"en"));
+        raise_interrupt(channel);
+        break;
       default:
         BX_ERROR(("seek_timer(): ATA command 0x%02x not supported",
                   controller->current_command));
@@ -681,6 +693,10 @@ void bx_hard_drive_c::seek_timer()
       case 0xa8: // read (12)
       case 0xbe: // read cd
         ready_to_send_atapi(channel);
+        break;
+      case 0x2b: // seek
+        atapi_cmd_nop(controller);
+        raise_interrupt(channel);
         break;
       default:
         BX_ERROR(("seek_timer(): ATAPI command 0x%02x not supported",
@@ -1749,8 +1765,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     break;
                   }
                   BX_SELECTED_DRIVE(channel).cdrom.cd->seek(lba);
-                  atapi_cmd_nop(controller);
-                  raise_interrupt(channel);
+                  start_seek(channel);
                 }
                 break;
 
@@ -2349,16 +2364,14 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
               command_aborted(channel, value);
               break;
             }
+            controller->current_command = value;
             controller->error_register = 0;
-            controller->status.busy  = 0;
+            controller->status.busy  = 1;
             controller->status.drive_ready = 1;
-            controller->status.seek_complete = 1;
+            controller->status.seek_complete = 0;
             controller->status.drq   = 0;
             controller->status.corrected_data = 0;
-            controller->buffer_index = 0;
-            BX_DEBUG(("ata%d-%d: SEEK completed (IRQ %sabled)", channel,
-              BX_SLAVE_SELECTED(channel), controller->control.disable_irq?"dis":"en"));
-            raise_interrupt(channel);
+            start_seek(channel);
           } else {
             BX_INFO(("write cmd 0x70 (SEEK) not supported for non-disk"));
             command_aborted(channel, 0x70);
@@ -2378,7 +2391,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             controller->status.drq   = 0;
             controller->status.corrected_data = 0;
             start_seek(channel);
-            DEV_ide_bmdma_start_transfer(channel);
           } else {
             BX_ERROR(("write cmd 0x%02x (READ DMA) not supported", value));
             command_aborted(channel, value);
