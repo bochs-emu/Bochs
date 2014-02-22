@@ -4905,6 +4905,33 @@ public: // for now...
   BX_SMF void print_state_AVX(void);
 #endif
 
+#if BX_SUPPORT_AVX
+  BX_SMF void xsave_ymm_state(bxInstruction_c *i, bx_address offset);
+#if BX_SUPPORT_EVEX
+  BX_SMF void xsave_opmask_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xsave_zmm_hi256_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xsave_hi_zmm_state(bxInstruction_c *i, bx_address offset);
+#endif
+#endif
+
+#if BX_SUPPORT_AVX
+  BX_SMF void xrstor_ymm_state(bxInstruction_c *i, bx_address offset);
+#if BX_SUPPORT_EVEX
+  BX_SMF void xrstor_opmask_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xrstor_zmm_hi256_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xrstor_hi_zmm_state(bxInstruction_c *i, bx_address offset);
+#endif
+#endif
+
+#if BX_SUPPORT_AVX
+  BX_SMF void xrstor_init_ymm_state(void);
+#if BX_SUPPORT_EVEX
+  BX_SMF void xrstor_init_opmask_state(void);
+  BX_SMF void xrstor_init_zmm_hi256_state(void);
+  BX_SMF void xrstor_init_hi_zmm_state(void);
+#endif
+#endif
+
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_SMF bx_bool    is_monitor(bx_phy_address addr, unsigned len);
   BX_SMF void    check_monitor(bx_phy_address addr, unsigned len);
