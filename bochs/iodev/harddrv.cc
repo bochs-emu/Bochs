@@ -1765,7 +1765,9 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     break;
                   }
                   BX_SELECTED_DRIVE(channel).cdrom.cd->seek(lba);
-                  start_seek(channel);
+//                  start_seek(channel);
+                  atapi_cmd_nop(controller);
+                  raise_interrupt(channel);
                 }
                 break;
 
@@ -3466,9 +3468,8 @@ void bx_hard_drive_c::start_seek(Bit8u channel)
     max_pos = BX_SELECTED_DRIVE(channel).cdrom.max_lba;
     prev_pos = BX_SELECTED_DRIVE(channel).cdrom.curr_lba;
     new_pos = BX_SELECTED_DRIVE(channel).cdrom.next_lba;
-    fSeekTime = 80000.0 * (double)(abs((int)(new_pos - prev_pos + 1)) / (max_pos + 1));
+    fSeekTime = 80000.0 * (double)abs((int)(new_pos - prev_pos + 1)) / (max_pos + 1);
   } else {
-    max_pos = (BX_SELECTED_DRIVE(channel).hdimage->hd_size / 512) - 1;
     // TODO: make HD seek latency variable
     fSeekTime = 5000.0;
   }
