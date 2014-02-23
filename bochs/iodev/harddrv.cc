@@ -341,6 +341,9 @@ void bx_hard_drive_c::init(void)
             BX_INFO(("ata%d-%d: extra data outside of CHS address range", channel, device));
           }
         }
+        BX_HD_THIS channels[channel].drives[device].curr_lsector = 0;
+        BX_HD_THIS channels[channel].drives[device].next_lsector = 0;
+        BX_HD_THIS channels[channel].drives[device].last_lsector = BX_HD_THIS channels[channel].drives[device].hdimage->hd_size / 512;
       } else if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_CDROM) {
         bx_list_c *cdrom_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_CDROM);
         sprintf(pname, "cdrom%d", BX_HD_THIS cdrom_count + 1);
@@ -591,6 +594,10 @@ void bx_hard_drive_c::register_state(void)
           new bx_shadow_num_c(cdrom, "curr_lba", &BX_HD_THIS channels[i].drives[j].cdrom.curr_lba);
           new bx_shadow_num_c(cdrom, "next_lba", &BX_HD_THIS channels[i].drives[j].cdrom.next_lba);
           new bx_shadow_num_c(cdrom, "remaining_blocks", &BX_HD_THIS channels[i].drives[j].cdrom.remaining_blocks);
+        } else {
+          new bx_shadow_num_c(drive, "curr_lsector", &BX_HD_THIS channels[i].drives[j].curr_lsector);
+          new bx_shadow_num_c(drive, "last_lsector", &BX_HD_THIS channels[i].drives[j].last_lsector);
+          new bx_shadow_num_c(drive, "next_lsector", &BX_HD_THIS channels[i].drives[j].next_lsector);
         }
         new bx_shadow_data_c(drive, "buffer", BX_CONTROLLER(i, j).buffer, MAX_MULTIPLE_SECTORS * 512);
         status = new bx_list_c(drive, "status");
@@ -672,6 +679,7 @@ void bx_hard_drive_c::seek_timer()
         DEV_ide_bmdma_start_transfer(channel);
         break;
       case 0x70: // SEEK
+        BX_SELECTED_DRIVE(channel).last_lsector = BX_SELECTED_DRIVE(channel).next_lsector;
         controller->error_register = 0;
         controller->status.busy  = 0;
         controller->status.drive_ready = 1;
@@ -693,10 +701,6 @@ void bx_hard_drive_c::seek_timer()
       case 0xa8: // read (12)
       case 0xbe: // read cd
         ready_to_send_atapi(channel);
-        break;
-      case 0x2b: // seek
-        atapi_cmd_nop(controller);
-        raise_interrupt(channel);
         break;
       default:
         BX_ERROR(("seek_timer(): ATAPI command 0x%02x not supported",
@@ -863,6 +867,7 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 
             if (controller->num_sectors==0) {
               controller->status.drq = 0;
+              BX_SELECTED_DRIVE(channel).last_lsector = BX_SELECTED_DRIVE(channel).curr_lsector;
             } else { /* read next one into controller buffer */
               controller->status.drq = 1;
               controller->status.seek_complete = 1;
@@ -1242,6 +1247,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                 controller->status.drq = 0;
                 controller->status.err = 0;
                 controller->status.corrected_data = 0;
+                BX_SELECTED_DRIVE(channel).last_lsector = BX_SELECTED_DRIVE(channel).curr_lsector;
               }
               raise_interrupt(channel);
             }
@@ -1765,9 +1771,9 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     break;
                   }
                   BX_SELECTED_DRIVE(channel).cdrom.cd->seek(lba);
-//                  start_seek(channel);
                   atapi_cmd_nop(controller);
                   raise_interrupt(channel);
+                  // TODO: DSC bit must be cleared here and set after completion
                 }
                 break;
 
@@ -2004,6 +2010,11 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           } else {
             controller->buffer_size = 512;
           }
+          if (!calculate_logical_address(channel, &logical_sector)) {
+            command_aborted(channel, value);
+            break;
+          }
+          BX_SELECTED_DRIVE(channel).next_lsector = logical_sector;
           controller->current_command = value;
 
           if (ide_read_sector(channel, controller->buffer,
@@ -2052,6 +2063,11 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           } else {
             controller->buffer_size = 512;
           }
+          if (!calculate_logical_address(channel, &logical_sector)) {
+            command_aborted(channel, value);
+            break;
+          }
+          BX_SELECTED_DRIVE(channel).next_lsector = logical_sector;
           controller->current_command = value;
 
           // implicit seek done :^)
@@ -2362,10 +2378,10 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           if (BX_SELECTED_IS_HD(channel)) {
             BX_DEBUG(("write cmd 0x70 (SEEK) executing"));
             if (!calculate_logical_address(channel, &logical_sector)) {
-              BX_ERROR(("initial seek to sector %lu out of bounds, aborting", (unsigned long)logical_sector));
               command_aborted(channel, value);
               break;
             }
+            BX_SELECTED_DRIVE(channel).next_lsector = logical_sector;
             controller->current_command = value;
             controller->error_register = 0;
             controller->status.busy  = 1;
@@ -2385,6 +2401,11 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xC8: // READ DMA
           if (BX_SELECTED_IS_HD(channel) && BX_HD_THIS bmdma_present()) {
             lba48_transform(controller, lba48);
+            if (!calculate_logical_address(channel, &logical_sector)) {
+              command_aborted(channel, value);
+              break;
+            }
+            BX_SELECTED_DRIVE(channel).next_lsector = logical_sector;
             controller->current_command = value;
             controller->error_register = 0;
             controller->status.busy  = 1;
@@ -2404,6 +2425,11 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xCA: // WRITE DMA
           if (BX_SELECTED_IS_HD(channel) && BX_HD_THIS bmdma_present()) {
             lba48_transform(controller, lba48);
+            if (!calculate_logical_address(channel, &logical_sector)) {
+              command_aborted(channel, value);
+              break;
+            }
+            BX_SELECTED_DRIVE(channel).next_lsector = logical_sector;
             controller->status.drive_ready = 1;
             controller->status.seek_complete = 1;
             controller->status.drq   = 1;
@@ -2593,7 +2619,7 @@ bx_hard_drive_c::calculate_logical_address(Bit8u channel, Bit64s *sector)
 
   Bit64s sector_count = BX_SELECTED_DRIVE(channel).hdimage->hd_size / 512;
   if (logical_sector >= sector_count) {
-    BX_ERROR (("calc_log_addr: out of bounds ("FMT_LL"d/"FMT_LL"d)", logical_sector, sector_count));
+    BX_ERROR (("logical address out of bounds ("FMT_LL"d/"FMT_LL"d) - aborting command", logical_sector, sector_count));
     return 0;
   }
   *sector = logical_sector;
@@ -2622,6 +2648,7 @@ bx_hard_drive_c::increment_address(Bit8u channel, Bit64s *sector)
       controller->cylinder_no = (Bit16u)((logical_sector >> 8) & 0xffff);
       controller->sector_no = (Bit8u)((logical_sector) & 0xff);
     }
+    *sector = logical_sector;
   } else {
     controller->sector_no++;
     if (controller->sector_no > BX_SELECTED_DRIVE(channel).hdimage->spt) {
@@ -2630,8 +2657,9 @@ bx_hard_drive_c::increment_address(Bit8u channel, Bit64s *sector)
       if (controller->head_no >= BX_SELECTED_DRIVE(channel).hdimage->heads) {
         controller->head_no = 0;
         controller->cylinder_no++;
-        if (controller->cylinder_no >= BX_SELECTED_DRIVE(channel).hdimage->cylinders)
+        if (controller->cylinder_no >= BX_SELECTED_DRIVE(channel).hdimage->cylinders) {
           controller->cylinder_no = BX_SELECTED_DRIVE(channel).hdimage->cylinders - 1;
+        }
       }
     }
   }
@@ -3347,6 +3375,7 @@ void bx_hard_drive_c::bmdma_complete(Bit8u channel)
     controller->status.write_fault = 0;
     controller->status.seek_complete = 1;
     controller->status.corrected_data = 0;
+    BX_SELECTED_DRIVE(channel).last_lsector = BX_SELECTED_DRIVE(channel).curr_lsector;
   }
   raise_interrupt(channel);
 }
@@ -3379,7 +3408,6 @@ bx_bool bx_hard_drive_c::ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u bu
   Bit8u *bufptr = buffer;
   do {
     if (!calculate_logical_address(channel, &logical_sector)) {
-      BX_ERROR(("ide_read_sector() reached invalid sector %lu, aborting", (unsigned long)logical_sector));
       command_aborted(channel, controller->current_command);
       return 0;
     }
@@ -3398,6 +3426,7 @@ bx_bool bx_hard_drive_c::ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u bu
       return 0;
     }
     increment_address(channel, &logical_sector);
+    BX_SELECTED_DRIVE(channel).curr_lsector = logical_sector;
     bufptr += 512;
   } while (--sector_count > 0);
 
@@ -3415,7 +3444,6 @@ bx_bool bx_hard_drive_c::ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u b
   Bit8u *bufptr = buffer;
   do {
     if (!calculate_logical_address(channel, &logical_sector)) {
-      BX_ERROR(("ide_write_sector() reached invalid sector %lu, aborting", (unsigned long)logical_sector));
       command_aborted(channel, controller->current_command);
       return 0;
     }
@@ -3434,6 +3462,7 @@ bx_bool bx_hard_drive_c::ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u b
       return 0;
     }
     increment_address(channel, &logical_sector);
+    BX_SELECTED_DRIVE(channel).curr_lsector = logical_sector;
     bufptr += 512;
   } while (--sector_count > 0);
 
@@ -3462,17 +3491,20 @@ void bx_hard_drive_c::start_seek(Bit8u channel)
 {
   Bit64s new_pos, prev_pos, max_pos;
   Bit32u seek_time;
-  double fSeekTime;
+  double fSeekBase, fSeekTime;
 
   if (BX_SELECTED_IS_CD(channel)) {
     max_pos = BX_SELECTED_DRIVE(channel).cdrom.max_lba;
     prev_pos = BX_SELECTED_DRIVE(channel).cdrom.curr_lba;
     new_pos = BX_SELECTED_DRIVE(channel).cdrom.next_lba;
-    fSeekTime = 80000.0 * (double)abs((int)(new_pos - prev_pos + 1)) / (max_pos + 1);
+    fSeekBase = 80000.0;
   } else {
-    // TODO: make HD seek latency variable
-    fSeekTime = 5000.0;
+    max_pos = (BX_SELECTED_DRIVE(channel).hdimage->hd_size / 512) - 1;
+    prev_pos = BX_SELECTED_DRIVE(channel).last_lsector;
+    new_pos = BX_SELECTED_DRIVE(channel).next_lsector;
+    fSeekBase = 5000.0;
   }
+  fSeekTime = fSeekBase * (double)abs((int)(new_pos - prev_pos + 1)) / (max_pos + 1);
   seek_time = (fSeekTime > 10.0) ? (Bit32u)fSeekTime : 10;
   bx_pc_system.activate_timer(
     BX_SELECTED_DRIVE(channel).seek_timer_index, seek_time, 0);

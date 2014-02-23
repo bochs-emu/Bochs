@@ -232,7 +232,6 @@ private:
   // and an array of two drive structs
   struct channel_t {
     struct drive_t {
-      device_image_t* hdimage;
       device_type_t device_type;
       // 512 byte buffer for ID drive command
       // These words are stored in native word endian format, as
@@ -245,6 +244,11 @@ private:
       cdrom_t cdrom;
       sense_info_t sense;
       atapi_t atapi;
+
+      device_image_t* hdimage;
+      Bit64s curr_lsector;
+      Bit64s last_lsector;
+      Bit64s next_lsector;
 
       Bit8u model_no[41];
       int statusbar_id;
