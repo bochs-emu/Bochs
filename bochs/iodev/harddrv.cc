@@ -3458,15 +3458,17 @@ void bx_hard_drive_c::lba48_transform(controller_t *controller, bx_bool lba48)
 
 void bx_hard_drive_c::start_seek(Bit8u channel)
 {
-  float fSeekTime;
-  Bit32u seek_time, new_pos, prev_pos, max_pos;
+  Bit64s new_pos, prev_pos, max_pos;
+  Bit32u seek_time;
+  double fSeekTime;
 
   if (BX_SELECTED_IS_CD(channel)) {
     max_pos = BX_SELECTED_DRIVE(channel).cdrom.max_lba;
     prev_pos = BX_SELECTED_DRIVE(channel).cdrom.curr_lba;
     new_pos = BX_SELECTED_DRIVE(channel).cdrom.next_lba;
-    fSeekTime = 80000.0 * (float)abs(new_pos - prev_pos + 1) / (max_pos + 1);
+    fSeekTime = 80000.0 * (double)(abs((int)(new_pos - prev_pos + 1)) / (max_pos + 1));
   } else {
+    max_pos = (BX_SELECTED_DRIVE(channel).hdimage->hd_size / 512) - 1;
     // TODO: make HD seek latency variable
     fSeekTime = 5000.0;
   }
