@@ -22326,6 +22326,9 @@ if test "$networking" = yes; then
       can_compile_slirp_new=1
       DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -liphlpapi"
       ;;
+    *-pc-windows* | *-pc-winnt*)
+      can_compile_slirp_new=0
+      ;;
     *)
       ac_fn_c_check_header_mongrel "$LINENO" "netinet/in.h" "ac_cv_header_netinet_in_h" "$ac_includes_default"
 if test "x$ac_cv_header_netinet_in_h" = xyes; then :
