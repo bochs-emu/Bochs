@@ -575,7 +575,7 @@ void bx_hard_drive_c::register_state(void)
 {
   unsigned i, j;
   char cname[4], dname[8];
-  bx_list_c *cdrom, *chan, *drive, *status;
+  bx_list_c *atapi, *cdrom, *chan, *drive, *status;
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "hard_drive", "Hard Drive State");
   for (i=0; i<BX_MAX_ATA_CHANNEL; i++) {
@@ -594,6 +594,10 @@ void bx_hard_drive_c::register_state(void)
           new bx_shadow_num_c(cdrom, "curr_lba", &BX_HD_THIS channels[i].drives[j].cdrom.curr_lba);
           new bx_shadow_num_c(cdrom, "next_lba", &BX_HD_THIS channels[i].drives[j].cdrom.next_lba);
           new bx_shadow_num_c(cdrom, "remaining_blocks", &BX_HD_THIS channels[i].drives[j].cdrom.remaining_blocks);
+          atapi = new bx_list_c(drive, "atapi");
+          new bx_shadow_num_c(atapi, "command", &BX_HD_THIS channels[i].drives[j].atapi.command, BASE_HEX);
+          new bx_shadow_num_c(atapi, "drq_bytes", &BX_HD_THIS channels[i].drives[j].atapi.drq_bytes);
+          new bx_shadow_num_c(atapi, "total_bytes_remaining", &BX_HD_THIS channels[i].drives[j].atapi.total_bytes_remaining);
         } else {
           new bx_shadow_num_c(drive, "curr_lsector", &BX_HD_THIS channels[i].drives[j].curr_lsector);
           new bx_shadow_num_c(drive, "last_lsector", &BX_HD_THIS channels[i].drives[j].last_lsector);
@@ -1771,6 +1775,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     break;
                   }
                   BX_SELECTED_DRIVE(channel).cdrom.cd->seek(lba);
+                  BX_SELECTED_DRIVE(channel).cdrom.curr_lba = lba;
                   atapi_cmd_nop(controller);
                   raise_interrupt(channel);
                   // TODO: DSC bit must be cleared here and set after completion
