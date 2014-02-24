@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2012 Stanislav Shwartsman
+//   Copyright (c) 2003-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -323,7 +323,8 @@ float32 approximate_rcp(float32 op)
    * Using precalculated 2048-entry table.
    */
 
-  exp = 253 - exp;
+  exp = 2 * FLOAT32_EXP_BIAS - 1 - exp;
+
   /* check for underflow */
   if (exp <= 0)
       return packFloat32(sign, 0x00, 0);
