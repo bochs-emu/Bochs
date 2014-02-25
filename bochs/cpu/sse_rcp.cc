@@ -295,21 +295,20 @@ float32 approximate_rcp(float32 op)
   float_class_t op_class = float32_class(op);
   int sign = float32_sign(op);
 
-  switch(op_class)
-  {
+  switch(op_class) {
     case float_zero:
     case float_denormal:
-        return packFloat32(sign, 0xFF, 0);
+      return packFloat32(sign, 0xFF, 0);
 
     case float_negative_inf:
     case float_positive_inf:
-        return packFloat32(sign, 0x00, 0);
+      return packFloat32(sign, 0, 0);
 
     case float_NaN:
-        return convert_to_QNaN(op);
+      return convert_to_QNaN(op);
 
     case float_normalized:
-        break;
+      break;
   }
 
   Bit32u fraction = float32_fraction(op);
@@ -327,7 +326,7 @@ float32 approximate_rcp(float32 op)
 
   /* check for underflow */
   if (exp <= 0)
-      return packFloat32(sign, 0x00, 0);
+      return packFloat32(sign, 0, 0);
 
   return packFloat32(sign, exp, (Bit32u)(rcp_table[fraction >> 12]) << 8);
 }
@@ -373,8 +372,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPSS_VssWssR(bxInstruction_c *i)
 
 #if BX_CPU_LEVEL >= 6
 
-Bit16u rsqrt_table0[1024] =
-{
+static const Bit16u rsqrt_table0[1024] = {
     0x34f8, 0x34e0, 0x34d0, 0x34b8, 0x34a0, 0x3488, 0x3470, 0x3460,
     0x3448, 0x3430, 0x3418, 0x3400, 0x33f0, 0x33d8, 0x33c0, 0x33a8,
     0x3398, 0x3380, 0x3368, 0x3350, 0x3338, 0x3328, 0x3310, 0x32f8,
@@ -505,8 +503,7 @@ Bit16u rsqrt_table0[1024] =
     0x0040, 0x0038, 0x0030, 0x0028, 0x0020, 0x0018, 0x0010, 0x0008
 };
 
-Bit16u rsqrt_table1[1024] =
-{
+static const Bit16u rsqrt_table1[1024] = {
     0x7ff0, 0x7fd0, 0x7fb0, 0x7f90, 0x7f70, 0x7f50, 0x7f30, 0x7f10,
     0x7ef0, 0x7ed0, 0x7eb0, 0x7e90, 0x7e70, 0x7e58, 0x7e38, 0x7e18,
     0x7df8, 0x7dd8, 0x7db8, 0x7d98, 0x7d78, 0x7d58, 0x7d38, 0x7d20,
@@ -637,34 +634,32 @@ Bit16u rsqrt_table1[1024] =
     0x3558, 0x3550, 0x3540, 0x3538, 0x3530, 0x3520, 0x3518, 0x3508
 };
 
-
 // approximate reciprocal sqrt of scalar single precision FP
 float32 approximate_rsqrt(float32 op)
 {
   float_class_t op_class = float32_class(op);
   int sign = float32_sign(op);
 
-  switch(op_class)
-  {
+  switch(op_class) {
     case float_zero:
     case float_denormal:
-        return packFloat32(sign, 0xFF, 0);
+      return packFloat32(sign, 0xFF, 0);
 
     case float_positive_inf:
-        return 0;
+      return 0;
 
     case float_negative_inf:
-        return float32_default_nan;
+      return float32_default_nan;
 
     case float_NaN:
-        return convert_to_QNaN(op);
+      return convert_to_QNaN(op);
 
     case float_normalized:
-        break;
+      break;
   };
 
   if (sign == 1)
-  	return float32_default_nan;
+    return float32_default_nan;
 
   Bit32u fraction = float32_fraction(op);
   Bit16s exp = float32_exp(op);
@@ -677,14 +672,11 @@ float32 approximate_rsqrt(float32 op)
    * Using two precalculated 1024-entry tables.
    */
 
-  Bit16u *rsqrt_table = (exp & 1) ? rsqrt_table1 : rsqrt_table0;
+  const Bit16u *rsqrt_table = (exp & 1) ? rsqrt_table1 : rsqrt_table0;
 
-  exp = 126 - ((exp - 127) >> 1);
-  /* check for underflow */
-  if (exp <= 0)
-      return packFloat32(sign, 0x00, 0);
+  exp = 0x7E - ((exp - 0x7F) >> 1);
 
-  return packFloat32(sign, exp, (Bit32u)(rsqrt_table[fraction >> 13]) << 8);
+  return packFloat32(0, exp, (Bit32u)(rsqrt_table[fraction >> 13]) << 8);
 }
 
 #endif

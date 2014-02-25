@@ -8273,8 +8273,7 @@ float32 approximate_rcp14(float32 op, const float_status_t &status)
   Bit32u fraction = float32_fraction(op);
   Bit16s exp = float32_exp(op);
 
-  switch(op_class)
-  {
+  switch(op_class) {
     case float_zero:
         return packFloat32(sign, 0xFF, 0);
 
@@ -8325,8 +8324,7 @@ float64 approximate_rcp14(float64 op, const float_status_t &status)
   Bit64u fraction = float64_fraction(op);
   Bit16s exp = float64_exp(op);
 
-  switch(op_class)
-  {
+  switch(op_class) {
     case float_zero:
         return packFloat64(sign, 0x7FF, 0);
 
@@ -8471,34 +8469,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCP14SD_MASK_VsdHpdWsdR(bxInstruc
   }
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRT14PS_MASK_VpsWpsR(bxInstruction_c *i)
-{
-  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRT14PD_MASK_VpdWpdR(bxInstruction_c *i)
-{
-  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRT14SS_MASK_VssHpsWssR(bxInstruction_c *i)
-{
-  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRT14SD_MASK_VsdHpdWsdR(bxInstruction_c *i)
-{
-  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
-
   BX_NEXT_INSTR(i);
 }
 
