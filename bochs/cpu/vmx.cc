@@ -77,14 +77,14 @@ static const char *VMX_vmexit_reason_name[] =
   "WRMSR",
   "VMEntry failure due to invalid guest state",
   "VMEntry failure due to MSR loading",
-  "Reserved",
+  "Reserved35",
   "MWAIT",
   "MTF (Monitor Trap Flag)",
-  "Reserved",
+  "Reserved38",
   "MONITOR",
   "PAUSE",
   "VMEntry failure due to machine check",
-  "Reserved",
+  "Reserved42",
   "TPR Below Threshold",
   "APIC Access",
   "Virtualized EOI",
@@ -102,8 +102,11 @@ static const char *VMX_vmexit_reason_name[] =
   "RDRAND",
   "INVPCID",
   "VMFUNC",
-  "Reserved",
+  "Reserved60",
   "RDSEED"
+  "Reserved62",
+  "XSAVES",
+  "XRSTORS"
 };
 
 ////////////////////////////////////////////////////////////
