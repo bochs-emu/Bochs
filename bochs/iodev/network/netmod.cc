@@ -128,7 +128,7 @@ extern class bx_vde_locator_c bx_vde_match;
 extern class bx_slirp_locator_c bx_slirp_match;
 #endif
 #if BX_NETMOD_SLIRP_NEW
-extern class bx_slirp_locator_c bx_slirp_new_match;
+extern class bx_slirp_new_locator_c bx_slirp_new_match;
 #endif
 extern class bx_vnet_locator_c bx_vnet_match;
 

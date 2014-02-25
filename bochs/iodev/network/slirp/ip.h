@@ -65,6 +65,10 @@ typedef uint32_t n_long;                 /* long as received from the net */
  */
 #define	IPVERSION	4
 
+#if defined(_MSC_VER)
+#pragma pack(push, 1)
+#endif
+
 /*
  * Structure of an internet header, naked of options.
  */
@@ -245,5 +249,9 @@ struct ipoption {
 	struct	in_addr ipopt_dst;	/* first-hop dst if source routed */
 	int8_t	ipopt_list[MAX_IPOPTLEN];	/* options proper */
 } GCC_ATTRIBUTE((packed));
+
+#if defined(_MSC_VER)
+#pragma pack(pop)
+#endif
 
 #endif

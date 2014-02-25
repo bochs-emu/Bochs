@@ -179,6 +179,10 @@ struct ethhdr {
     unsigned short h_proto;            /* packet type ID field */
 };
 
+#if defined(_MSC_VER)
+#pragma pack(push, 1)
+#endif
+
 struct arphdr {
     unsigned short ar_hrd;      /* format of hardware address */
     unsigned short ar_pro;      /* format of protocol address */
@@ -194,6 +198,10 @@ struct arphdr {
     unsigned char ar_tha[ETH_ALEN]; /* target hardware address */
     uint32_t      ar_tip;           /* target IP address       */
 } GCC_ATTRIBUTE((packed));
+
+#if defined(_MSC_VER)
+#pragma pack(pop)
+#endif
 
 #define ARP_TABLE_SIZE 16
 
@@ -349,8 +357,10 @@ struct tcpcb *tcp_drop(struct tcpcb *tp, int err);
 #define MAX_MRU 16384
 #endif
 
-#ifndef _WIN32
+#ifndef min
 #define min(x,y) ((x) < (y) ? (x) : (y))
+#endif
+#ifndef max
 #define max(x,y) ((x) > (y) ? (x) : (y))
 #endif
 
