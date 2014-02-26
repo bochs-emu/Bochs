@@ -536,9 +536,9 @@ float32 float32_round_to_int(float32 a, float_status_t &status)
             }
             break;
          case float_round_down:
-            return aSign ? 0xBF800000 : 0;
+            return aSign ? float32_negative_one : 0;
          case float_round_up:
-            return aSign ? 0x80000000 : 0x3F800000;
+            return aSign ? float32_negative_zero : float32_positive_one;
         }
         return packFloat32(aSign, 0, 0);
     }
@@ -1640,10 +1640,9 @@ float64 float64_round_to_int(float64 a, float_status_t &status)
             }
             break;
          case float_round_down:
-            return aSign ? BX_CONST64(0xBFF0000000000000) : 0;
+            return aSign ? float64_negative_one : 0;
          case float_round_up:
-            return
-              aSign ? BX_CONST64(0x8000000000000000) : BX_CONST64(0x3FF0000000000000);
+            return aSign ? float64_negative_zero : float64_positive_one;
         }
         return packFloat64(aSign, 0, 0);
     }
