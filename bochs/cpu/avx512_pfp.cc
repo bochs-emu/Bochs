@@ -960,33 +960,159 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTPD_MASK_VpdWpdIbR(bxInstru
   BX_NEXT_INSTR(i);
 }
 
+// rndscale
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALEPS_MASK_VpsWpsIbR(bxInstruction_c *i)
 {
-  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  Bit32u opmask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
+  unsigned len = i->getVL();
 
-  BX_NEXT_INSTR(i);
-}
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALEPD_MASK_VpdWpdIbR(bxInstruction_c *i)
-{
-  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
+  Bit8u control = i->Ib(), scale = control >> 4;
+
+  // override MXCSR rounding mode with control coming from imm8
+  if ((control & 0x4) == 0)
+    status.float_rounding_mode = control & 0x3;
+  // ignore precision exception result
+  if (control & 0x8)
+    status.float_suppress_exception |= float_flag_inexact;
+
+  for (unsigned n=0, mask = 0x1; n < DWORD_ELEMENTS(len); n++, mask <<= 1) {
+    if (opmask & mask)
+      op.vmm32u(n) = float32_round_to_int(op.vmm32u(n), scale, status);
+    else
+      op.vmm32u(n) = 0;
+  }
+
+  check_exceptionsSSE(get_exception_flags(status));
+
+  if (! i->isZeroMasking()) {
+    for (unsigned n=0; n < len; n++, opmask >>= 4)
+      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), opmask);
+    BX_CLEAR_AVX_REGZ(i->dst(), len);
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), op, len);
+  }
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALESS_MASK_VssHpsWssIbR(bxInstruction_c *i)
 {
-  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+
+  if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
+    float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());
+
+    Bit8u control = i->Ib(), scale = control >> 4;
+
+    float_status_t status;
+    mxcsr_to_softfloat_status_word(status, MXCSR);
+    softfloat_status_word_rc_override(status, i);
+
+    // override MXCSR rounding mode with control coming from imm8
+    if ((control & 0x4) == 0)
+      status.float_rounding_mode = control & 0x3;
+    // ignore precision exception result
+    if (control & 0x8)
+      status.float_suppress_exception |= float_flag_inexact;
+
+    op1.xmm32u(0) = float32_round_to_int(op2, scale, status);
+
+    check_exceptionsSSE(get_exception_flags(status));
+  }
+  else {
+    if (i->isZeroMasking())
+      op1.xmm32u(0) = 0;
+    else
+      op1.xmm32u(0) = BX_READ_XMM_REG_LO_DWORD(i->dst());
+  }
+
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALEPD_MASK_VpdWpdIbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
+  unsigned len = i->getVL();
+
+  float_status_t status;
+  mxcsr_to_softfloat_status_word(status, MXCSR);
+  softfloat_status_word_rc_override(status, i);
+
+  Bit8u control = i->Ib(), scale = control >> 4;
+
+  // override MXCSR rounding mode with control coming from imm8
+  if ((control & 0x4) == 0)
+    status.float_rounding_mode = control & 0x3;
+  // ignore precision exception result
+  if (control & 0x8)
+    status.float_suppress_exception |= float_flag_inexact;
+
+  for (unsigned n=0, mask = 0x1; n < QWORD_ELEMENTS(len); n++, mask <<= 1) {
+    if (opmask & mask)
+      op.vmm64u(n) = float64_round_to_int(op.vmm64u(n), scale, status);
+    else
+      op.vmm64u(n) = 0;
+  }
+
+  check_exceptionsSSE(get_exception_flags(status));
+
+  if (! i->isZeroMasking()) {
+    for (unsigned n=0; n < len; n++, opmask >>= 2)
+      xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), opmask);
+    BX_CLEAR_AVX_REGZ(i->dst(), len);
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), op, len);
+  }
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALESD_MASK_VsdHpdWsdIbR(bxInstruction_c *i)
 {
-  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
 
+  if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
+    float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());
+
+    Bit8u control = i->Ib(), scale = control >> 4;
+
+    float_status_t status;
+    mxcsr_to_softfloat_status_word(status, MXCSR);
+    softfloat_status_word_rc_override(status, i);
+
+    // override MXCSR rounding mode with control coming from imm8
+    if ((control & 0x4) == 0)
+      status.float_rounding_mode = control & 0x3;
+    // ignore precision exception result
+    if (control & 0x8)
+      status.float_suppress_exception |= float_flag_inexact;
+
+    op1.xmm64u(0) = float64_round_to_int(op2, scale, status);
+
+    check_exceptionsSSE(get_exception_flags(status));
+  }
+  else {
+    if (i->isZeroMasking())
+      op1.xmm64u(0) = 0;
+    else
+      op1.xmm64u(0) = BX_READ_XMM_REG_LO_QWORD(i->dst());
+  }
+
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
   BX_NEXT_INSTR(i);
 }
+
+// scale
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCALEFPS_MASK_VpsWpsR(bxInstruction_c *i)
 {
@@ -995,14 +1121,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCALEFPS_MASK_VpsWpsR(bxInstructi
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCALEFPD_MASK_VpdWpdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCALEFSS_MASK_VssHpsWssR(bxInstruction_c *i)
 {
   BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
 
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCALEFSS_MASK_VssHpsWssR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCALEFPD_MASK_VpdWpdR(bxInstruction_c *i)
 {
   BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
 

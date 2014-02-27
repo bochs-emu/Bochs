@@ -508,16 +508,20 @@ float64 float32_to_float64(float32 a, float_status_t &status)
 | Floating-Point Arithmetic.
 *----------------------------------------------------------------------------*/
 
-float32 float32_round_to_int(float32 a, float_status_t &status)
+float32 float32_round_to_int(float32 a, Bit8u scale, float_status_t &status)
 {
     Bit32u lastBitMask, roundBitsMask;
     int roundingMode = get_float_rounding_mode(status);
-
     Bit16s aExp = extractFloat32Exp(a);
+    scale &= 0xf;
+
+    if ((aExp == 0xFF) && extractFloat32Frac(a)) {
+        return propagateFloat32NaN(a, status);
+    }
+
+    aExp += scale; // scale the exponent
+
     if (0x96 <= aExp) {
-        if ((aExp == 0xFF) && extractFloat32Frac(a)) {
-            return propagateFloat32NaN(a, status);
-        }
         return a;
     }
 
@@ -532,16 +536,17 @@ float32 float32_round_to_int(float32 a, float_status_t &status)
         switch (roundingMode) {
          case float_round_nearest_even:
             if ((aExp == 0x7E) && extractFloat32Frac(a)) {
-                return packFloat32(aSign, 0x7F, 0);
+                return packFloat32(aSign, 0x7F - scale, 0);
             }
             break;
          case float_round_down:
-            return aSign ? float32_negative_one : 0;
+            return aSign ? packFloat32(1, 0x7F - scale, 0) : float32_positive_zero;
          case float_round_up:
-            return aSign ? float32_negative_zero : float32_positive_one;
+            return aSign ? float32_negative_zero : packFloat32(0, 0x7F - scale, 0);
         }
         return packFloat32(aSign, 0, 0);
     }
+
     lastBitMask = 1;
     lastBitMask <<= 0x96 - aExp;
     roundBitsMask = lastBitMask - 1;
@@ -1610,18 +1615,20 @@ float32 float64_to_float32(float64 a, float_status_t &status)
 | Floating-Point Arithmetic.
 *----------------------------------------------------------------------------*/
 
-float64 float64_round_to_int(float64 a, float_status_t &status)
+float64 float64_round_to_int(float64 a, Bit8u scale, float_status_t &status)
 {
-    Bit16s aExp;
     Bit64u lastBitMask, roundBitsMask;
     int roundingMode = get_float_rounding_mode(status);
-    float64 z;
+    Bit16s aExp = extractFloat64Exp(a);
+    scale &= 0xf;
 
-    aExp = extractFloat64Exp(a);
+    if ((aExp == 0x7FF) && extractFloat64Frac(a)) {
+        return propagateFloat64NaN(a, status);
+    }
+
+    aExp += scale; // scale the exponent
+
     if (0x433 <= aExp) {
-        if ((aExp == 0x7FF) && extractFloat64Frac(a)) {
-            return propagateFloat64NaN(a, status);
-        }
         return a;
     }
 
@@ -1636,20 +1643,21 @@ float64 float64_round_to_int(float64 a, float_status_t &status)
         switch (roundingMode) {
          case float_round_nearest_even:
             if ((aExp == 0x3FE) && extractFloat64Frac(a)) {
-              return packFloat64(aSign, 0x3FF, 0);
+              return packFloat64(aSign, 0x3FF - scale, 0);
             }
             break;
          case float_round_down:
-            return aSign ? float64_negative_one : 0;
+            return aSign ? packFloat64(1, 0x3FF - scale, 0) : float64_positive_zero;
          case float_round_up:
-            return aSign ? float64_negative_zero : float64_positive_one;
+            return aSign ? float64_negative_zero : packFloat64(0, 0x3FF - scale, 0);
         }
         return packFloat64(aSign, 0, 0);
     }
+
     lastBitMask = 1;
     lastBitMask <<= 0x433 - aExp;
     roundBitsMask = lastBitMask - 1;
-    z = a;
+    float64 z = a;
     if (roundingMode == float_round_nearest_even) {
         z += lastBitMask>>1;
         if ((z & roundBitsMask) == 0) z &= ~lastBitMask;

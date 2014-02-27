@@ -256,6 +256,7 @@ float64 float32_to_float64(float32, float_status_t &status);
 | Software IEC/IEEE single-precision operations.
 *----------------------------------------------------------------------------*/
 float32 float32_round_to_int(float32, float_status_t &status);
+float32 float32_round_to_int(float32, Bit8u scale, float_status_t &status);
 float32 float32_add(float32, float32, float_status_t &status);
 float32 float32_sub(float32, float32, float_status_t &status);
 float32 float32_mul(float32, float32, float_status_t &status);
@@ -263,6 +264,11 @@ float32 float32_div(float32, float32, float_status_t &status);
 float32 float32_sqrt(float32, float_status_t &status);
 float32 float32_frc(float32, float_status_t &status);
 float32 float32_muladd(float32, float32, float32, int flags, float_status_t &status);
+
+BX_CPP_INLINE float32 float32_round_to_int(float32 a, float_status_t &status)
+{
+  return float32_round_to_int(a, 0, status);
+}
 
 BX_CPP_INLINE float32 float32_fmadd(float32 a, float32 b, float32 c, float_status_t &status)
 {
@@ -315,6 +321,7 @@ float32 float64_to_float32(float64, float_status_t &status);
 | Software IEC/IEEE double-precision operations.
 *----------------------------------------------------------------------------*/
 float64 float64_round_to_int(float64, float_status_t &status);
+float64 float64_round_to_int(float64, Bit8u scale, float_status_t &status);
 float64 float64_add(float64, float64, float_status_t &status);
 float64 float64_sub(float64, float64, float_status_t &status);
 float64 float64_mul(float64, float64, float_status_t &status);
@@ -322,6 +329,11 @@ float64 float64_div(float64, float64, float_status_t &status);
 float64 float64_sqrt(float64, float_status_t &status);
 float64 float64_frc(float64, float_status_t &status);
 float64 float64_muladd(float64, float64, float64, int flags, float_status_t &status);
+
+BX_CPP_INLINE float64 float64_round_to_int(float64 a, float_status_t &status)
+{
+  return float64_round_to_int(a, 0, status);
+}
 
 BX_CPP_INLINE float64 float64_fmadd(float64 a, float64 b, float64 c, float_status_t &status)
 {
