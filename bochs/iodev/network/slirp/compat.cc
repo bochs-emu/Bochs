@@ -1,7 +1,7 @@
 /*
  * QEMU compatibility functions
  *
- * Copyright (c) 2004 Fabrice Bellard
+ * Copyright (c) 2003 Fabrice Bellard
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -66,7 +66,29 @@ int inet_aton(const char *cp, struct in_addr *ia)
   return 1;
 }
 #endif
- 
+
+int socket_set_fast_reuse(int fd)
+{
+#ifndef WIN32
+    int val = 1, ret;
+
+    ret = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR,
+                     (const char *)&val, sizeof(val));
+
+    assert(ret == 0);
+
+    return ret;
+#else
+    return 0;
+#endif
+}
+
+int socket_set_nodelay(int fd)
+{
+    int v = 1;
+    return qemu_setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &v, sizeof(v));
+}
+
 void qemu_set_cloexec(int fd)
 {
 #ifndef WIN32

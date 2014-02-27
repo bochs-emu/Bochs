@@ -41,6 +41,8 @@
 #include "slirp.h"
 #include "ip_icmp.h"
 
+#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+
 static uint8_t udp_tos(struct socket *so);
 
 void
@@ -81,7 +83,7 @@ udp_input(register struct mbuf *m, int iphlen)
 	 * but we don't yet have a way to check the checksum
 	 * with options still present.
 	 */
-	if(iphlen > (int)sizeof(struct ip)) {
+	if ((size_t)iphlen > sizeof(struct ip)) {
 		ip_stripoptions(m, (struct mbuf *)0);
 		iphlen = sizeof(struct ip);
 	}
@@ -354,7 +356,7 @@ udp_listen(Slirp *slirp, uint32_t haddr, u_int hport, uint32_t laddr,
 {
 	struct sockaddr_in addr;
 	struct socket *so;
-	socklen_t addrlen = sizeof(struct sockaddr_in), opt = 1;
+	socklen_t addrlen = sizeof(struct sockaddr_in);
 
 	so = socreate(slirp);
 	if (!so) {
@@ -372,7 +374,7 @@ udp_listen(Slirp *slirp, uint32_t haddr, u_int hport, uint32_t laddr,
 		udp_detach(so);
 		return NULL;
 	}
-	setsockopt(so->s,SOL_SOCKET,SO_REUSEADDR,(char *)&opt,sizeof(int));
+	socket_set_fast_reuse(so->s);
 
 	getsockname(so->s,(struct sockaddr *)&addr,&addrlen);
 	so->so_fport = addr.sin_port;
@@ -392,3 +394,5 @@ udp_listen(Slirp *slirp, uint32_t haddr, u_int hport, uint32_t laddr,
 
 	return so;
 }
+
+#endif

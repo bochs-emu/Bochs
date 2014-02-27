@@ -8,6 +8,8 @@
 #include "slirp.h"
 #include "libslirp.h"
 
+#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+
 #ifdef DEBUG
 int slirp_debug = DBG_CALL|DBG_MISC|DBG_ERROR;
 #endif
@@ -211,10 +213,9 @@ fork_exec(struct socket *so, const char *ex, int do_pty)
                     so->s = accept(s, (struct sockaddr *)&addr, &addrlen);
                 } while (so->s < 0 && errno == EINTR);
                 closesocket(s);
+                socket_set_fast_reuse(so->s);
                 opt = 1;
-                setsockopt(so->s, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(int));
-                opt = 1;
-                setsockopt(so->s, SOL_SOCKET, SO_OOBINLINE, (char *)&opt, sizeof(int));
+                qemu_setsockopt(so->s, SOL_SOCKET, SO_OOBINLINE, &opt, sizeof(int));
 		qemu_set_nonblock(so->s);
 
 		/* Append the telnet options now */
@@ -242,17 +243,4 @@ strdup(str)
 }
 #endif
 
-void
-u_sleep(int usec)
-{
-	struct timeval t;
-	fd_set fdset;
-
-	FD_ZERO(&fdset);
-
-	t.tv_sec = 0;
-	t.tv_usec = usec * 1000;
-
-	select(0, &fdset, &fdset, &fdset, &t);
-}
-
+#endif

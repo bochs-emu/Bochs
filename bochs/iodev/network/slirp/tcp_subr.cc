@@ -40,6 +40,8 @@
 
 #include "slirp.h"
 
+#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+
 /* patchable/settable parameters for tcp */
 /* Don't do rfc1323 performance enhancements */
 #define TCP_DO_RFC1323 0
@@ -337,10 +339,9 @@ int tcp_fconnect(struct socket *so)
     struct sockaddr_in addr;
 
     qemu_set_nonblock(s);
+    socket_set_fast_reuse(s);
     opt = 1;
-    setsockopt(s,SOL_SOCKET,SO_REUSEADDR,(char *)&opt, sizeof(opt));
-    opt = 1;
-    setsockopt(s,SOL_SOCKET,SO_OOBINLINE,(char *)&opt, sizeof(opt));
+    qemu_setsockopt(s, SOL_SOCKET, SO_OOBINLINE, &opt, sizeof(opt));
 
     addr.sin_family = AF_INET;
     if ((so->so_faddr.s_addr & slirp->vnetwork_mask.s_addr) ==
@@ -426,12 +427,10 @@ void tcp_connect(struct socket *inso)
         return;
     }
     qemu_set_nonblock(s);
+    socket_set_fast_reuse(s);
     opt = 1;
-    setsockopt(s,SOL_SOCKET,SO_REUSEADDR,(char *)&opt, sizeof(int));
-    opt = 1;
-    setsockopt(s,SOL_SOCKET,SO_OOBINLINE,(char *)&opt, sizeof(int));
-    opt = 1;
-    setsockopt(s,IPPROTO_TCP,TCP_NODELAY,(char *)&opt, sizeof(int));
+    qemu_setsockopt(s, SOL_SOCKET, SO_OOBINLINE, &opt, sizeof(int));
+    socket_set_nodelay(s);
 
     so->so_fport = addr.sin_port;
     so->so_faddr = addr.sin_addr;
@@ -927,3 +926,5 @@ int tcp_ctl(struct socket *so)
     sb->sb_wptr += sb->sb_cc;
     return 0;
 }
+
+#endif

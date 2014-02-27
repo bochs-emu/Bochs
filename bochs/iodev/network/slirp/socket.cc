@@ -7,6 +7,9 @@
 
 #include "slirp.h"
 #include "ip_icmp.h"
+
+#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+
 #ifdef __sun__
 #include <sys/filio.h>
 #endif
@@ -86,7 +89,7 @@ size_t sopreprbuf(struct socket *so, struct iovec *iov, int *np)
 	int n, lss, total;
 	struct sbuf *sb = &so->so_snd;
 	int len = sb->sb_datalen - sb->sb_cc;
-	int mss = so->so_tcpcb->t_maxseg;
+	u_short mss = so->so_tcpcb->t_maxseg;
 
 	DEBUG_CALL("sopreprbuf");
 	DEBUG_ARG("so = %lx", (long )so);
@@ -102,7 +105,7 @@ size_t sopreprbuf(struct socket *so, struct iovec *iov, int *np)
 		/* Should never succeed, but... */
 		if ((int)iov[0].iov_len > len)
 		   iov[0].iov_len = len;
-		if ((int)iov[0].iov_len > mss)
+		if (iov[0].iov_len > mss)
 		   iov[0].iov_len -= iov[0].iov_len%mss;
 		n = 1;
 	} else {
@@ -129,7 +132,7 @@ size_t sopreprbuf(struct socket *so, struct iovec *iov, int *np)
 			} else
 				n = 2;
 		} else {
-			if ((int)iov[0].iov_len > mss)
+			if (iov[0].iov_len > mss)
 			   iov[0].iov_len -= iov[0].iov_len%mss;
 			n = 1;
 		}
@@ -148,9 +151,9 @@ size_t sopreprbuf(struct socket *so, struct iovec *iov, int *np)
 int
 soread(struct socket *so)
 {
-	int n, nn;
+	int n = 0, nn;
 	struct sbuf *sb = &so->so_snd;
-	struct iovec iov[2];
+	struct iovec iov[2] = {NULL, 0};
 
 	DEBUG_CALL("soread");
 	DEBUG_ARG("so = %lx", (long )so);
@@ -210,7 +213,7 @@ int soreadbuf(struct socket *so, const char *buf, int size)
 {
     int n, nn, copy = size;
 	struct sbuf *sb = &so->so_snd;
-	struct iovec iov[2];
+	struct iovec iov[2] = {NULL, 0};
 
 	DEBUG_CALL("soreadbuf");
 	DEBUG_ARG("so = %lx", (long )so);
@@ -625,7 +628,7 @@ tcp_listen(Slirp *slirp, uint32_t haddr, u_int hport, uint32_t laddr,
 	addr.sin_port = hport;
 
 	if (((s = qemu_socket(AF_INET,SOCK_STREAM,0)) < 0) ||
-	    (setsockopt(s,SOL_SOCKET,SO_REUSEADDR,(char *)&opt,sizeof(int)) < 0) ||
+	    (socket_set_fast_reuse(s) < 0) ||
 	    (bind(s,(struct sockaddr *)&addr, sizeof(addr)) < 0) ||
 	    (listen(s,1) < 0)) {
 		int tmperrno = errno; /* Don't clobber the real reason we failed */
@@ -640,7 +643,7 @@ tcp_listen(Slirp *slirp, uint32_t haddr, u_int hport, uint32_t laddr,
 #endif
 		return NULL;
 	}
-	setsockopt(s,SOL_SOCKET,SO_OOBINLINE,(char *)&opt,sizeof(int));
+	qemu_setsockopt(s, SOL_SOCKET, SO_OOBINLINE, &opt, sizeof(int));
 
 	getsockname(s,(struct sockaddr *)&addr,&addrlen);
 	so->so_fport = addr.sin_port;
@@ -725,3 +728,5 @@ sofwdrain(struct socket *so)
 	else
 		sofcantsendmore(so);
 }
+
+#endif

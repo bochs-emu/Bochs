@@ -24,6 +24,8 @@
 #include "iodev.h"
 #include "slirp.h"
 
+#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+
 #define LOG_THIS genlog->
 
 /* host loopback address */
@@ -916,3 +918,5 @@ void slirp_socket_recv(Slirp *slirp, struct in_addr guest_addr, int guest_port,
     if (ret > 0)
         tcp_output(sototcpcb(so));
 }
+
+#endif
