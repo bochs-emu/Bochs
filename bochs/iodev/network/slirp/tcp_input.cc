@@ -41,6 +41,8 @@
 #include "slirp.h"
 #include "ip_icmp.h"
 
+#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+
 #define	TCPREXMTTHRESH 3
 
 #define TCP_PAWS_IDLE	(24 * 24 * 60 * 60 * PR_SLOWHZ)
@@ -1488,3 +1490,5 @@ tcp_mss(struct tcpcb *tp, u_int offer)
 
 	return mss;
 }
+
+#endif

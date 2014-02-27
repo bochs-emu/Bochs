@@ -40,6 +40,8 @@
 
 #include "slirp.h"
 
+#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+
 static const u_char  tcp_outflags[TCP_NSTATES] = {
 	TH_RST|TH_ACK, 0,      TH_SYN,        TH_SYN|TH_ACK,
 	TH_ACK,        TH_ACK, TH_FIN|TH_ACK, TH_FIN|TH_ACK,
@@ -491,3 +493,5 @@ tcp_setpersist(struct tcpcb *tp)
 	if (tp->t_rxtshift < TCP_MAXRXTSHIFT)
 		tp->t_rxtshift++;
 }
+
+#endif

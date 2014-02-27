@@ -17,6 +17,8 @@
 
 #include "slirp.h"
 
+#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+
 #define MBUF_THRESH 30
 
 /*
@@ -239,3 +241,5 @@ dtom(Slirp *slirp, void *dat)
 
 	return (struct mbuf *)0;
 }
+
+#endif

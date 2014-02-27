@@ -32,6 +32,8 @@
 
 #include "slirp.h"
 
+#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+
 /*
  * Checksum routine for Internet Protocol family headers (Portable Version).
  *
@@ -137,3 +139,5 @@ cont:
 	REDUCE;
 	return (~sum & 0xffff);
 }
+
+#endif

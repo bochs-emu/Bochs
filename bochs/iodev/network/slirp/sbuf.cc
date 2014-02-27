@@ -7,6 +7,8 @@
 
 #include "slirp.h"
 
+#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+
 static void sbappendsb(struct sbuf *sb, struct mbuf *m);
 
 void
@@ -184,3 +186,5 @@ sbcopy(struct sbuf *sb, int off, int len, char *to)
 		   memcpy(to+off,sb->sb_data,len);
 	}
 }
+
+#endif

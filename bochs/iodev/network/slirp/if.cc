@@ -8,6 +8,8 @@
 #include "iodev.h"
 #include "slirp.h"
 
+#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+
 static void
 ifs_insque(struct mbuf *ifm, struct mbuf *ifmhead)
 {
@@ -240,3 +242,5 @@ void if_start(Slirp *slirp)
 
     slirp->if_start_busy = false;
 }
+
+#endif

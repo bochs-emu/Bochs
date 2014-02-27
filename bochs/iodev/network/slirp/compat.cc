@@ -24,6 +24,8 @@
 
 #include "slirp.h"
 
+#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+
 void pstrcpy(char *buf, int buf_size, const char *str)
 {
     int c;
@@ -94,3 +96,5 @@ int qemu_socket(int domain, int type, int protocol)
 
     return ret;
 }
+
+#endif

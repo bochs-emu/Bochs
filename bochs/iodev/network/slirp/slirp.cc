@@ -206,7 +206,8 @@ Slirp *slirp_init(int restricted, struct in_addr vnetwork,
                   struct in_addr vnetmask, struct in_addr vhost,
                   const char *vhostname, const char *tftp_path,
                   const char *bootfile, struct in_addr vdhcp_start,
-                  struct in_addr vnameserver, void *opaque)
+                  struct in_addr vnameserver, const char **vdnssearch,
+                  void *opaque)
 {
     Slirp *slirp = (Slirp*)malloc(sizeof(Slirp));
     memset(slirp, 0, sizeof(Slirp));
@@ -236,6 +237,10 @@ Slirp *slirp_init(int restricted, struct in_addr vnetwork,
     }
     slirp->vdhcp_startaddr = vdhcp_start;
     slirp->vnameserver_addr = vnameserver;
+
+    if (vdnssearch) {
+        translate_dnssearch(slirp, vdnssearch);
+    }
 
     slirp->opaque = opaque;
 
@@ -427,6 +432,7 @@ void slirp_select_fill(int *pnfds, fd_set *readfds, fd_set *writefds,
                     slirp->do_slowtimo = true; /* Let socket expire */
                 }
             }
+
             if (so->so_state & SS_ISFCONNECTED) {
                 FD_SET(so->s, readfds);
                 UPD_NFDS(so->s);

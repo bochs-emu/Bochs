@@ -56,6 +56,7 @@ SLIRP_OBJS = \
 	slirp/bootp.o \
 	slirp/cksum.o \
 	slirp/compat.o \
+	slirp/dnssearch.o \
 	slirp/if.o \
 	slirp/ip_icmp.o \
 	slirp/ip_input.o \
@@ -231,11 +232,16 @@ slirp/arp_table.o: slirp/arp_table.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
  slirp/ip.h slirp/tcp.h slirp/tcp_var.h slirp/tcpip.h slirp/tcp_timer.h \
  slirp/udp.h slirp/ip_icmp.h slirp/mbuf.h slirp/sbuf.h slirp/socket.h \
  slirp/if.h slirp/main.h slirp/misc.h slirp/bootp.h slirp/tftp.h
-slirp/bootp.o: slirp/bootp.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slirp_config.h \
- slirp/debug.h slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h \
- slirp/tcp_var.h slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h \
- slirp/ip_icmp.h slirp/mbuf.h slirp/sbuf.h slirp/socket.h slirp/if.h \
- slirp/main.h slirp/misc.h slirp/bootp.h slirp/tftp.h
+slirp/bootp.o: slirp/bootp.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
+ ../../param_names.h slirp/slirp.h slirp/slirp_config.h slirp/debug.h \
+ slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h \
+ slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h slirp/ip_icmp.h slirp/mbuf.h \
+ slirp/sbuf.h slirp/socket.h slirp/if.h slirp/main.h slirp/misc.h \
+ slirp/bootp.h slirp/tftp.h
 slirp/cksum.o: slirp/cksum.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slirp_config.h \
  slirp/debug.h slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h \
  slirp/tcp_var.h slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h \
@@ -246,16 +252,26 @@ slirp/compat.o: slirp/compat.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
  slirp/ip.h slirp/tcp.h slirp/tcp_var.h slirp/tcpip.h slirp/tcp_timer.h \
  slirp/udp.h slirp/ip_icmp.h slirp/mbuf.h slirp/sbuf.h slirp/socket.h \
  slirp/if.h slirp/main.h slirp/misc.h slirp/bootp.h slirp/tftp.h
-slirp/if.o: slirp/if.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slirp_config.h \
- slirp/debug.h slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h \
- slirp/tcp_var.h slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h \
- slirp/ip_icmp.h slirp/mbuf.h slirp/sbuf.h slirp/socket.h slirp/if.h \
- slirp/main.h slirp/misc.h slirp/bootp.h slirp/tftp.h ../iodev.h \
- ../../bochs.h ../../config.h ../../osdep.h ../../bx_debug/debug.h \
- ../../osdep.h ../../gui/siminterface.h ../../cpudb.h \
- ../../gui/paramtree.h ../../memory/memory.h ../../pc_system.h \
- ../../gui/gui.h ../../instrument/stubs/instrument.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h
+slirp/dnssearch.o: slirp/dnssearch.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
+ ../../param_names.h slirp/slirp.h slirp/slirp_config.h slirp/debug.h \
+ slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h \
+ slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h slirp/ip_icmp.h slirp/mbuf.h \
+ slirp/sbuf.h slirp/socket.h slirp/if.h slirp/main.h slirp/misc.h \
+ slirp/bootp.h slirp/tftp.h
+slirp/if.o: slirp/if.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
+ ../../param_names.h slirp/slirp.h slirp/slirp_config.h slirp/debug.h \
+ slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h \
+ slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h slirp/ip_icmp.h slirp/mbuf.h \
+ slirp/sbuf.h slirp/socket.h slirp/if.h slirp/main.h slirp/misc.h \
+ slirp/bootp.h slirp/tftp.h
 slirp/ip_icmp.o: slirp/ip_icmp.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
  slirp/slirp_config.h slirp/debug.h slirp/libslirp.h slirp/compat.h \
  slirp/ip.h slirp/tcp.h slirp/tcp_var.h slirp/tcpip.h slirp/tcp_timer.h \
@@ -286,16 +302,16 @@ slirp/sbuf.o: slirp/sbuf.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slirp_c
  slirp/tcp_var.h slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h \
  slirp/ip_icmp.h slirp/mbuf.h slirp/sbuf.h slirp/socket.h slirp/if.h \
  slirp/main.h slirp/misc.h slirp/bootp.h slirp/tftp.h
-slirp/slirp.o: slirp/slirp.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slirp_config.h \
- slirp/debug.h slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h \
- slirp/tcp_var.h slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h \
- slirp/ip_icmp.h slirp/mbuf.h slirp/sbuf.h slirp/socket.h slirp/if.h \
- slirp/main.h slirp/misc.h slirp/bootp.h slirp/tftp.h ../iodev.h \
- ../../bochs.h ../../config.h ../../osdep.h ../../bx_debug/debug.h \
- ../../osdep.h ../../gui/siminterface.h ../../cpudb.h \
- ../../gui/paramtree.h ../../memory/memory.h ../../pc_system.h \
- ../../gui/gui.h ../../instrument/stubs/instrument.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h
+slirp/slirp.o: slirp/slirp.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
+ ../../param_names.h slirp/slirp.h slirp/slirp_config.h slirp/debug.h \
+ slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h \
+ slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h slirp/ip_icmp.h slirp/mbuf.h \
+ slirp/sbuf.h slirp/socket.h slirp/if.h slirp/main.h slirp/misc.h \
+ slirp/bootp.h slirp/tftp.h
 slirp/socket.o: slirp/socket.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
  slirp/slirp_config.h slirp/debug.h slirp/libslirp.h slirp/compat.h \
  slirp/ip.h slirp/tcp.h slirp/tcp_var.h slirp/tcpip.h slirp/tcp_timer.h \
@@ -424,11 +440,16 @@ slirp/arp_table.lo: slirp/arp_table.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
  slirp/ip.h slirp/tcp.h slirp/tcp_var.h slirp/tcpip.h slirp/tcp_timer.h \
  slirp/udp.h slirp/ip_icmp.h slirp/mbuf.h slirp/sbuf.h slirp/socket.h \
  slirp/if.h slirp/main.h slirp/misc.h slirp/bootp.h slirp/tftp.h
-slirp/bootp.lo: slirp/bootp.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slirp_config.h \
- slirp/debug.h slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h \
- slirp/tcp_var.h slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h \
- slirp/ip_icmp.h slirp/mbuf.h slirp/sbuf.h slirp/socket.h slirp/if.h \
- slirp/main.h slirp/misc.h slirp/bootp.h slirp/tftp.h
+slirp/bootp.lo: slirp/bootp.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
+ ../../param_names.h slirp/slirp.h slirp/slirp_config.h slirp/debug.h \
+ slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h \
+ slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h slirp/ip_icmp.h slirp/mbuf.h \
+ slirp/sbuf.h slirp/socket.h slirp/if.h slirp/main.h slirp/misc.h \
+ slirp/bootp.h slirp/tftp.h
 slirp/cksum.lo: slirp/cksum.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slirp_config.h \
  slirp/debug.h slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h \
  slirp/tcp_var.h slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h \
@@ -439,16 +460,26 @@ slirp/compat.lo: slirp/compat.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
  slirp/ip.h slirp/tcp.h slirp/tcp_var.h slirp/tcpip.h slirp/tcp_timer.h \
  slirp/udp.h slirp/ip_icmp.h slirp/mbuf.h slirp/sbuf.h slirp/socket.h \
  slirp/if.h slirp/main.h slirp/misc.h slirp/bootp.h slirp/tftp.h
-slirp/if.lo: slirp/if.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slirp_config.h \
- slirp/debug.h slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h \
- slirp/tcp_var.h slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h \
- slirp/ip_icmp.h slirp/mbuf.h slirp/sbuf.h slirp/socket.h slirp/if.h \
- slirp/main.h slirp/misc.h slirp/bootp.h slirp/tftp.h ../iodev.h \
- ../../bochs.h ../../config.h ../../osdep.h ../../bx_debug/debug.h \
- ../../osdep.h ../../gui/siminterface.h ../../cpudb.h \
- ../../gui/paramtree.h ../../memory/memory.h ../../pc_system.h \
- ../../gui/gui.h ../../instrument/stubs/instrument.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h
+slirp/dnssearch.lo: slirp/dnssearch.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
+ ../../param_names.h slirp/slirp.h slirp/slirp_config.h slirp/debug.h \
+ slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h \
+ slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h slirp/ip_icmp.h slirp/mbuf.h \
+ slirp/sbuf.h slirp/socket.h slirp/if.h slirp/main.h slirp/misc.h \
+ slirp/bootp.h slirp/tftp.h
+slirp/if.lo: slirp/if.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
+ ../../param_names.h slirp/slirp.h slirp/slirp_config.h slirp/debug.h \
+ slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h \
+ slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h slirp/ip_icmp.h slirp/mbuf.h \
+ slirp/sbuf.h slirp/socket.h slirp/if.h slirp/main.h slirp/misc.h \
+ slirp/bootp.h slirp/tftp.h
 slirp/ip_icmp.lo: slirp/ip_icmp.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
  slirp/slirp_config.h slirp/debug.h slirp/libslirp.h slirp/compat.h \
  slirp/ip.h slirp/tcp.h slirp/tcp_var.h slirp/tcpip.h slirp/tcp_timer.h \
@@ -479,16 +510,16 @@ slirp/sbuf.lo: slirp/sbuf.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slirp_
  slirp/tcp_var.h slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h \
  slirp/ip_icmp.h slirp/mbuf.h slirp/sbuf.h slirp/socket.h slirp/if.h \
  slirp/main.h slirp/misc.h slirp/bootp.h slirp/tftp.h
-slirp/slirp.lo: slirp/slirp.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slirp_config.h \
- slirp/debug.h slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h \
- slirp/tcp_var.h slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h \
- slirp/ip_icmp.h slirp/mbuf.h slirp/sbuf.h slirp/socket.h slirp/if.h \
- slirp/main.h slirp/misc.h slirp/bootp.h slirp/tftp.h ../iodev.h \
- ../../bochs.h ../../config.h ../../osdep.h ../../bx_debug/debug.h \
- ../../osdep.h ../../gui/siminterface.h ../../cpudb.h \
- ../../gui/paramtree.h ../../memory/memory.h ../../pc_system.h \
- ../../gui/gui.h ../../instrument/stubs/instrument.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h
+slirp/slirp.lo: slirp/slirp.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
+ ../../param_names.h slirp/slirp.h slirp/slirp_config.h slirp/debug.h \
+ slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h \
+ slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h slirp/ip_icmp.h slirp/mbuf.h \
+ slirp/sbuf.h slirp/socket.h slirp/if.h slirp/main.h slirp/misc.h \
+ slirp/bootp.h slirp/tftp.h
 slirp/socket.lo: slirp/socket.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
  slirp/slirp_config.h slirp/debug.h slirp/libslirp.h slirp/compat.h \
  slirp/ip.h slirp/tcp.h slirp/tcp_var.h slirp/tcpip.h slirp/tcp_timer.h \

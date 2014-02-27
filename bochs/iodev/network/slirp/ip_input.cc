@@ -41,6 +41,8 @@
 #include "slirp.h"
 #include "ip_icmp.h"
 
+#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+
 static struct ip *ip_reass(Slirp *slirp, struct ip *ip, struct ipq *fp);
 static void ip_freef(Slirp *slirp, struct ipq *fp);
 static void ip_enq(register struct ipasfrag *p,
@@ -210,7 +212,6 @@ void ip_input(struct mbuf *m)
 	return;
 bad:
 	m_free(m);
-	return;
 }
 
 #define iptofrag(P) ((struct ipasfrag *)(((char*)(P)) - sizeof(struct qlink)))
@@ -664,3 +665,5 @@ ip_stripoptions(register struct mbuf *m, struct mbuf *mopt)
 
 	ip->ip_hl = sizeof(struct ip) >> 2;
 }
+
+#endif

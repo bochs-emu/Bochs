@@ -12,7 +12,8 @@ Slirp *slirp_init(int restricted, struct in_addr vnetwork,
                   struct in_addr vnetmask, struct in_addr vhost,
                   const char *vhostname, const char *tftp_path,
                   const char *bootfile, struct in_addr vdhcp_start,
-                  struct in_addr vnameserver, void *opaque);
+                  struct in_addr vnameserver, const char **vdnssearch,
+                  void *opaque);
 void slirp_cleanup(Slirp *slirp);
 
 void slirp_select_fill(int *pnfds, fd_set *readfds, fd_set *writefds,

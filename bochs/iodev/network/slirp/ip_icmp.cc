@@ -33,6 +33,8 @@
 #include "slirp.h"
 #include "ip_icmp.h"
 
+#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+
 /* The message sent when emulating PING */
 /* Be nice and tell them it's just a pseudo-ping packet */
 static const char icmp_ping_msg[] = "This is a pseudo-PING packet used by Slirp to emulate ICMP ECHO-REQUEST packets.\n";
@@ -448,3 +450,5 @@ void icmp_receive(struct socket *so)
     }
     icmp_detach(so);
 }
+
+#endif

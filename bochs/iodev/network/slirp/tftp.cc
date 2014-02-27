@@ -24,6 +24,8 @@
 
 #include "slirp.h"
 
+#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+
 static inline int tftp_session_in_use(struct tftp_session *spt)
 {
     return (spt->slirp != NULL);
@@ -439,3 +441,5 @@ void tftp_input(struct mbuf *m)
     break;
   }
 }
+
+#endif

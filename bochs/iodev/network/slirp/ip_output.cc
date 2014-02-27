@@ -40,6 +40,8 @@
 
 #include "slirp.h"
 
+#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+
 /* Number of packets queued before we start sending
  * (to prevent allocing too many mbufs) */
 #define IF_THRESH 10
@@ -170,3 +172,5 @@ bad:
 	m_free(m0);
 	goto done;
 }
+
+#endif

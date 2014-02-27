@@ -117,7 +117,7 @@ bx_slirp_new_pktmover_c::bx_slirp_new_pktmover_c(const char *netif,
   host.s_addr = htonl(0x0a000202); /* 10.0.2.2 */
   dhcp.s_addr = htonl(0x0a00020f); /* 10.0.2.15 */
   dns.s_addr  = htonl(0x0a000203); /* 10.0.2.3 */
-  slirp = slirp_init(0, net, mask, host, NULL, netif, NULL, dhcp, dns, this);
+  slirp = slirp_init(0, net, mask, host, NULL, netif, NULL, dhcp, dns, NULL, this);
 
   bx_slirp_instances++;
 }

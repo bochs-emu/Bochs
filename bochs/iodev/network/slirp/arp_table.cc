@@ -24,6 +24,8 @@
 
 #include "slirp.h"
 
+#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+
 void arp_table_add(Slirp *slirp, uint32_t ip_addr, uint8_t ethaddr[ETH_ALEN])
 {
     const uint32_t broadcast_addr =
@@ -95,3 +97,5 @@ bool arp_table_search(Slirp *slirp, uint32_t ip_addr,
 
     return 0;
 }
+
+#endif
