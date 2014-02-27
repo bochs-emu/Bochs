@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -340,6 +340,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EwIbR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+#include "scalar_arith.h"
+
 /* F3 0F B8 */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GwEwR(bxInstruction_c *i)
 {
@@ -363,12 +365,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GwEwR(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::TZCNT_GwEwR(bxInstruction_c *i)
 {
   Bit16u op1_16 = BX_READ_16BIT_REG(i->src());
-  Bit16u mask = 0x1, result_16 = 0;
-
-  while ((op1_16 & mask) == 0 && mask) {
-    mask <<= 1;
-    result_16++;
-  }
+  Bit16u result_16 = (Bit16u) tzcntw(op1_16);
 
   set_CF(! op1_16);
   set_ZF(! result_16);
@@ -382,12 +379,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::TZCNT_GwEwR(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LZCNT_GwEwR(bxInstruction_c *i)
 {
   Bit16u op1_16 = BX_READ_16BIT_REG(i->src());
-  Bit16u mask = 0x8000, result_16 = 0;
-
-  while ((op1_16 & mask) == 0 && mask) {
-    mask >>= 1;
-    result_16++;
-  }
+  Bit16u result_16 = (Bit16u) lzcntw(op1_16);
 
   set_CF(! op1_16);
   set_ZF(! result_16);

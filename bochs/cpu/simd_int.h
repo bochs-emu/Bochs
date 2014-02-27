@@ -1069,6 +1069,32 @@ BX_CPP_INLINE void xmm_mpsadbw(BxPackedXmmRegister *r, const BxPackedXmmRegister
   }
 }
 
+// conflict
+
+#if BX_SUPPORT_EVEX
+
+BX_CPP_INLINE Bit32u simd_pconflictd(const BxPackedAvxRegister *op, int index)
+{
+  Bit32u result = 0;
+  // compare index element with all previous elements
+  for (int i=0; i<index-1; i++) {
+    if (op->vmm32u(index) == op->vmm32u(i)) result |= (1 << i);
+  }
+  return result;
+}
+
+BX_CPP_INLINE Bit32u simd_pconflictq(const BxPackedAvxRegister *op, int index)
+{
+  Bit32u result = 0;
+  // compare index element with all previous elements
+  for (int i=0; i<index-1; i++) {
+    if (op->vmm64u(index) == op->vmm64u(i)) result |= (1 << i);
+  }
+  return result;
+}
+
+#endif
+
 // bitwise select
 
 BX_CPP_INLINE void xmm_pselect(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, const BxPackedXmmRegister *op3)

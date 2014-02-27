@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -345,6 +345,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EdIbR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+#include "scalar_arith.h"
+
 /* F3 0F B8 */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GdEdR(bxInstruction_c *i)
 {
@@ -368,12 +370,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GdEdR(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::TZCNT_GdEdR(bxInstruction_c *i)
 {
   Bit32u op1_32 = BX_READ_32BIT_REG(i->src());
-  Bit32u mask = 0x1, result_32 = 0;
-
-  while ((op1_32 & mask) == 0 && mask) {
-    mask <<= 1;
-    result_32++;
-  }
+  Bit32u result_32 = tzcntd(op1_32);
 
   set_CF(! op1_32);
   set_ZF(! result_32);
@@ -387,12 +384,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::TZCNT_GdEdR(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LZCNT_GdEdR(bxInstruction_c *i)
 {
   Bit32u op1_32 = BX_READ_32BIT_REG(i->src());
-  Bit32u mask = 0x80000000, result_32 = 0;
-
-  while ((op1_32 & mask) == 0 && mask) {
-    mask >>= 1;
-    result_32++;
-  }
+  Bit32u result_32 = lzcntd(op1_32);
 
   set_CF(! op1_32);
   set_ZF(! result_32);

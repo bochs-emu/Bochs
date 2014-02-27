@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -349,6 +349,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EqIbR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+#include "scalar_arith.h"
+
 /* F3 0F B8 */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GqEqR(bxInstruction_c *i)
 {
@@ -372,12 +374,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GqEqR(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::TZCNT_GqEqR(bxInstruction_c *i)
 {
   Bit64u op1_64 = BX_READ_64BIT_REG(i->src());
-  Bit64u mask = 0x1, result_64 = 0;
-
-  while ((op1_64 & mask) == 0 && mask) {
-    mask <<= 1;
-    result_64++;
-  }
+  Bit64u result_64 = tzcntq(op1_64);
 
   set_CF(! op1_64);
   set_ZF(! result_64);
@@ -390,13 +387,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::TZCNT_GqEqR(bxInstruction_c *i)
 /* F3 0F BD */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LZCNT_GqEqR(bxInstruction_c *i)
 {
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->src()), result_64 = 0;
-  Bit64u mask = BX_CONST64(0x8000000000000000);
-
-  while ((op1_64 & mask) == 0 && mask) {
-    mask >>= 1;
-    result_64++;
-  }
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->src());
+  Bit64u result_64 = lzcntq(op1_64);
 
   set_CF(! op1_64);
   set_ZF(! result_64);
