@@ -43,7 +43,7 @@ static const uint8_t zero_ethaddr[ETH_ALEN] = { 0, 0, 0, 0, 0, 0 };
 /* XXX: suppress those select globals */
 fd_set *global_readfds, *global_writefds, *global_xfds;
 
-Bit64u curtime;
+u_int curtime;
 
 static QTAILQ_HEAD(slirp_instances, Slirp) slirp_instances =
     QTAILQ_HEAD_INITIALIZER(slirp_instances);
@@ -460,7 +460,7 @@ void slirp_select_poll(fd_set *readfds, fd_set *writefds, fd_set *xfds,
     global_writefds = writefds;
     global_xfds = xfds;
 
-    curtime = bx_pc_system.time_usec() / 1000;
+    curtime = (u_int)(bx_pc_system.time_usec() / 1000);
 
     QTAILQ_FOREACH(slirp, &slirp_instances, entry) {
         /*

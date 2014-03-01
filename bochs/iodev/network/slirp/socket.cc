@@ -302,7 +302,7 @@ sosendoob(struct socket *so)
 
 	if (sb->sb_rptr < sb->sb_wptr) {
 		/* We can send it directly */
-		n = slirp_send(so, sb->sb_rptr, so->so_urgc, (MSG_OOB)); /* |MSG_DONTWAIT)); */
+		n = (int)slirp_send(so, sb->sb_rptr, so->so_urgc, (MSG_OOB)); /* |MSG_DONTWAIT)); */
 		so->so_urgc -= n;
 
 		DEBUG_MISC((dfd, " --- sent %d bytes urgent data, %d urgent bytes left\n", n, so->so_urgc));
@@ -323,7 +323,7 @@ sosendoob(struct socket *so)
 			so->so_urgc -= n;
 			len += n;
 		}
-		n = slirp_send(so, buff, len, (MSG_OOB)); /* |MSG_DONTWAIT)); */
+		n = (int)slirp_send(so, buff, len, (MSG_OOB)); /* |MSG_DONTWAIT)); */
 #ifdef DEBUG
 		if (n != len)
 		   DEBUG_ERROR((dfd, "Didn't send all data urgently XXXXX\n"));
@@ -392,7 +392,7 @@ sowrite(struct socket *so)
 
 	DEBUG_MISC((dfd, "  ... wrote nn = %d bytes\n", nn));
 #else
-	nn = slirp_send(so, iov[0].iov_base, iov[0].iov_len,0);
+	nn = (int)slirp_send(so, iov[0].iov_base, iov[0].iov_len,0);
 #endif
 	/* This should never happen, but people tell me it does *shrug* */
 	if (nn < 0 && (errno == EAGAIN || errno == EINTR))
@@ -409,7 +409,7 @@ sowrite(struct socket *so)
 #ifndef HAVE_READV
 	if (n == 2 && nn == (int)iov[0].iov_len) {
             int ret;
-            ret = slirp_send(so, iov[1].iov_base, iov[1].iov_len,0);
+            ret = (int)slirp_send(so, iov[1].iov_base, iov[1].iov_len,0);
             if (ret > 0)
                 nn += ret;
         }

@@ -100,7 +100,7 @@ sbappend(struct socket *so, struct mbuf *m)
 	 * ottherwise it'll arrive out of order, and hence corrupt
 	 */
 	if (!so->so_rcv.sb_cc)
-	   ret = slirp_send(so, m->m_data, m->m_len, 0);
+	   ret = (int)slirp_send(so, m->m_data, m->m_len, 0);
 
 	if (ret <= 0) {
 		/*
