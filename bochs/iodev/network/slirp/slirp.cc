@@ -31,7 +31,7 @@
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
 
-#define LOG_THIS genlog->
+#define LOG_THIS ((logfunctions*)slirp->logfn)->
 
 /* host loopback address */
 struct in_addr loopback_addr;
@@ -214,7 +214,7 @@ Slirp *slirp_init(int restricted, struct in_addr vnetwork,
                   const char *vhostname, const char *tftp_path,
                   const char *bootfile, struct in_addr vdhcp_start,
                   struct in_addr vnameserver, const char **vdnssearch,
-                  void *opaque)
+                  void *opaque, void *logfn)
 {
     Slirp *slirp = (Slirp*)malloc(sizeof(Slirp));
     memset(slirp, 0, sizeof(Slirp));
@@ -250,6 +250,7 @@ Slirp *slirp_init(int restricted, struct in_addr vnetwork,
     }
 
     slirp->opaque = opaque;
+    slirp->logfn = logfn;
 
     QTAILQ_INSERT_TAIL(&slirp_instances, slirp, entry);
 
@@ -869,6 +870,7 @@ int slirp_add_exec(Slirp *slirp, int do_pty, const void *args,
 ssize_t slirp_send(struct socket *so, const void *buf, size_t len, int flags)
 {
     if (so->s == -1 && so->extra) {
+        Slirp *slirp = so->slirp;
         BX_ERROR(("slirp_send(): so->extra not supported"));
         return len;
     }
@@ -922,6 +924,11 @@ void slirp_socket_recv(Slirp *slirp, struct in_addr guest_addr, int guest_port,
 
     if (ret > 0)
         tcp_output(sototcpcb(so));
+}
+
+void slirp_warning(Slirp *slirp, const char *msg)
+{
+    BX_ERROR((msg));
 }
 
 #endif

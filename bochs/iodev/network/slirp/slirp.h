@@ -279,6 +279,7 @@ struct Slirp {
     ArpTable arp_table;
 
     void *opaque;
+    void *logfn;
 };
 
 extern Slirp *slirp_instance;
@@ -304,6 +305,8 @@ void if_start(struct ttys *);
 #ifndef HAVE_GETHOSTID
  long gethostid(void);
 #endif
+
+void slirp_warning(Slirp *, const char *);
 
 #ifndef _WIN32
 #include <netdb.h>

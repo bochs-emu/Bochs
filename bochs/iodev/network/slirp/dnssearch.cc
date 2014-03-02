@@ -25,17 +25,12 @@
  * THE SOFTWARE.
  */
 
-#define BX_PLUGGABLE
-
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "iodev.h"
 #include "slirp.h"
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
-
-#define LOG_THIS genlog->
 
 static const uint8_t RFC3397_OPT_DOMAIN_SEARCH = 119;
 static const uint8_t MAX_OPT_LEN = 255;
@@ -124,13 +119,14 @@ static void domain_fixup_order(CompactDomain *cd, size_t n)
     }
 }
 
-static void domain_mklabels(CompactDomain *cd, const char *input)
+static void domain_mklabels(Slirp *s, CompactDomain *cd, const char *input)
 {
     uint8_t *len_marker = cd->labels;
     uint8_t *output = len_marker; /* pre-incremented */
     const char *in = input;
     char cur_chr;
     size_t len = 0;
+    char msg[80];
 
     if (cd->len == 0) {
         goto fail;
@@ -162,7 +158,8 @@ static void domain_mklabels(CompactDomain *cd, const char *input)
     return;
 
 fail:
-    BX_ERROR(("failed to parse domain name '%s'\n", input));
+    sprintf(msg, "failed to parse domain name '%s'\n", input);
+    slirp_warning(s, msg);
     cd->len = 0;
 }
 
@@ -279,7 +276,7 @@ int translate_dnssearch(Slirp *s, const char **names)
     outptr = result;
     for (i = 0; i < num_domains; i++) {
         domains[i].labels = outptr;
-        domain_mklabels(domains + i, names[i]);
+        domain_mklabels(s, domains + i, names[i]);
         outptr += domains[i].len;
     }
 

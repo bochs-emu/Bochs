@@ -25,14 +25,9 @@
  * THE SOFTWARE.
  */
 
-#define BX_PLUGGABLE
-
-#include "iodev.h"
 #include "slirp.h"
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
-
-#define LOG_THIS genlog->
 
 /* XXX: only DHCP is supported */
 
@@ -303,7 +298,7 @@ static void bootp_reply(Slirp *slirp, const struct bootp_t *bp)
             size_t spaceleft = sizeof(rbp->bp_vend) - (q - rbp->bp_vend);
             val = slirp->vdnssearch_len;
             if (val + 1 > (int)spaceleft) {
-                BX_ERROR(("DHCP packet size exceeded, omitting domain-search option."));
+                slirp_warning(slirp, "DHCP packet size exceeded, omitting domain-search option.");
             } else {
                 memcpy(q, slirp->vdnssearch, val);
                 q += val;
