@@ -899,9 +899,11 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR in_smm_vmx = BX_CPU_THIS_PTR in_smm_vmx_guest = 0;
   BX_CPU_THIS_PTR vmcsptr = BX_CPU_THIS_PTR vmxonptr = BX_INVALID_VMCSPTR;
   BX_CPU_THIS_PTR vmcshostptr = 0;
-  /* enable VMX, should be done in BIOS instead */
-  BX_CPU_THIS_PTR msr.ia32_feature_ctrl =
-    /*BX_IA32_FEATURE_CONTROL_LOCK_BIT | */BX_IA32_FEATURE_CONTROL_VMX_ENABLE_BIT;
+  if (source == BX_RESET_HARDWARE) {
+    /* enable VMX, should be done in BIOS instead */
+    BX_CPU_THIS_PTR msr.ia32_feature_ctrl =
+      /*BX_IA32_FEATURE_CONTROL_LOCK_BIT | */BX_IA32_FEATURE_CONTROL_VMX_ENABLE_BIT;
+  }
 #endif
 
 #if BX_SUPPORT_SVM

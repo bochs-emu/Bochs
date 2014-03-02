@@ -106,4 +106,39 @@ BX_CPP_INLINE unsigned lzcntq(Bit64u val_64)
   return count;
 }
 
+// popcnt
+
+BX_CPP_INLINE unsigned popcntw(Bit16u val_16)
+{
+  unsigned count = 0;
+  while (val_16 != 0) {
+    val_16 &= (val_16-1);
+    count++;
+  }
+
+  return count;
+}
+
+BX_CPP_INLINE unsigned popcntd(Bit32u val_32)
+{
+  unsigned count = 0;
+  while (val_32 != 0) {
+    val_32 &= (val_32-1);
+    count++;
+  }
+
+  return count;
+}
+
+BX_CPP_INLINE unsigned popcntq(Bit64u val_64)
+{
+  unsigned count = 0;
+  while (val_64 != 0) {
+    val_64 &= (val_64-1);
+    count++;
+  }
+
+  return count;
+}
+
 #endif

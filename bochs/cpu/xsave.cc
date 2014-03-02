@@ -40,6 +40,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   bx_address laddr = get_laddr(i->seg(), eaddr);
 
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+  if (BX_CPU_THIS_PTR alignment_check()) {
+    if (laddr & 0x3) {
+      BX_ERROR(("XSAVE: access not aligned to 4-byte cause model specific #AC(0)"));
+      exception(BX_AC_EXCEPTION, 0);
+    }
+  }
+#endif
+
   if (laddr & 0x3f) {
     BX_ERROR(("XSAVE: access not aligned to 64-byte"));
     exception(BX_GP_EXCEPTION, 0);
@@ -198,6 +207,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   bx_address laddr = get_laddr(i->seg(), eaddr);
+
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+  if (BX_CPU_THIS_PTR alignment_check()) {
+    if (laddr & 0x3) {
+      BX_ERROR(("XRSTOR: access not aligned to 4-byte cause model specific #AC(0)"));
+      exception(BX_AC_EXCEPTION, 0);
+    }
+  }
+#endif
 
   if (laddr & 0x3f) {
     BX_ERROR(("XRSTOR: access not aligned to 64-byte"));

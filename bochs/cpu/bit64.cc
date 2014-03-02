@@ -26,6 +26,8 @@
 
 #if BX_SUPPORT_X86_64
 
+#include "scalar_arith.h"
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GqEqR(bxInstruction_c *i)
 {
   Bit64u op2_64 = BX_READ_64BIT_REG(i->src());
@@ -34,12 +36,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GqEqR(bxInstruction_c *i)
     assert_ZF(); /* op1_64 undefined */
   }
   else {
-    Bit64u op1_64 = 0;
-    while ((op2_64 & 0x01) == 0) {
-      op1_64++;
-      op2_64 >>= 1;
-    }
-
+    Bit64u op1_64 = tzcntq(op2_64);
     SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
     clear_ZF();
 
@@ -349,23 +346,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EqIbR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-#include "scalar_arith.h"
-
 /* F3 0F B8 */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GqEqR(bxInstruction_c *i)
 {
-  Bit64u op2_64 = BX_READ_64BIT_REG(i->src());
+  Bit32u op_32 = popcntq(BX_READ_64BIT_REG(i->src()));
 
-  Bit64u op1_64 = 0;
-  while (op2_64 != 0) {
-    op2_64 &= (op2_64-1);
-    op1_64++;
-  }
-
-  Bit32u flags = op1_64 ? 0 : EFlagsZFMask;
+  Bit32u flags = op_32 ? 0 : EFlagsZFMask;
   setEFlagsOSZAPC(flags);
 
-  BX_WRITE_64BIT_REG(i->dst(), op1_64);
+  BX_WRITE_32BIT_REGZ(i->dst(), op_32);
 
   BX_NEXT_INSTR(i);
 }
