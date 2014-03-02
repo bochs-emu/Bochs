@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2012 Stanislav Shwartsman
+//   Copyright (c) 2011-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -32,20 +32,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BEXTR_GqEqIdR(bxInstruction_c *i)
   Bit16u control = (Bit16u) i->Id();
   unsigned start = control & 0xff;
   unsigned len   = control >> 8;
-  Bit64u op1_64 = 0;
-  
-  if (start < 64 && len > 0) {
-    op1_64 = BX_READ_64BIT_REG(i->src());
-    op1_64 >>= start;
 
-    if (len < 64) {
-      Bit64u extract_mask = (BX_CONST64(1) << len) - 1;
-      op1_64 &= extract_mask;
-    }
-  }
-
+  Bit64u op1_64 = bextrq(BX_READ_64BIT_REG(i->src()), start, len);
   SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
-
   BX_WRITE_64BIT_REG(i->dst(), op1_64);
 
   BX_NEXT_INSTR(i);

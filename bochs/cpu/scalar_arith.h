@@ -141,4 +141,38 @@ BX_CPP_INLINE unsigned popcntq(Bit64u val_64)
   return count;
 }
 
+// bit extract
+
+BX_CPP_INLINE Bit32u bextrd(Bit32u val_32, unsigned start, unsigned len)
+{
+  Bit32u result = 0;
+
+  if (start < 32 && len > 0) {
+    result = val_32 >> start;
+
+    if (len < 32) {
+      Bit32u extract_mask = (1 << len) - 1;
+      result &= extract_mask;
+    }
+  }
+
+  return result;
+}
+
+BX_CPP_INLINE Bit64u bextrq(Bit64u val_64, unsigned start, unsigned len)
+{
+  Bit64u result = 0;
+
+  if (start < 64 && len > 0) {
+    result = val_64 >> start;
+
+    if (len < 64) {
+      Bit64u extract_mask = (BX_CONST64(1) << len) - 1;
+      result &= extract_mask;
+    }
+  }
+
+  return result;
+}
+
 #endif
