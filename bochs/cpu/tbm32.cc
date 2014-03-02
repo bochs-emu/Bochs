@@ -27,6 +27,8 @@
 
 #if BX_SUPPORT_AVX
 
+#include "scalar_arith.h"
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BEXTR_GdEdIdR(bxInstruction_c *i)
 {
   Bit16u control = (Bit16u) i->Id();
