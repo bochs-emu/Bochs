@@ -25,6 +25,8 @@
  * THE SOFTWARE.
  */
 
+#define BX_PLUGGABLE
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>

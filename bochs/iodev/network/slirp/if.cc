@@ -8,6 +8,8 @@
  * terms and conditions of the copyright.
  */
 
+#define BX_PLUGGABLE
+
 #include "iodev.h"
 #include "slirp.h"
 

@@ -25,6 +25,8 @@
  * THE SOFTWARE.
  */
 
+#define BX_PLUGGABLE
+
 #include "iodev.h"
 #include "slirp.h"
 
