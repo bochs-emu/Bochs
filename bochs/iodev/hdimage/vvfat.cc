@@ -1138,6 +1138,10 @@ void vvfat_image_t::set_file_attributes(void)
         if (fpath[strlen(fpath) - 1] == 34) {
           fpath[strlen(fpath) - 1] = '\0';
         }
+        if (strncmp(fpath, vvfat_path, strlen(vvfat_path))) {
+          strcpy(path, fpath);
+          sprintf(fpath, "%s/%s", vvfat_path, path);
+        }
         mapping_t* mapping = find_mapping_for_path(fpath);
         if (mapping != NULL) {
           direntry_t* entry = (direntry_t*)array_get(&directory, mapping->dir_index);
@@ -1566,6 +1570,7 @@ void vvfat_image_t::parse_directory(const char *path, Bit32u start_cluster)
   char filename[BX_PATHNAME_LEN];
   char full_path[BX_PATHNAME_LEN];
   char attr_txt[4];
+  const char *rel_path;
   mapping_t *mapping;
 
   csize = sectors_per_cluster * 0x200;
@@ -1604,7 +1609,12 @@ void vvfat_image_t::parse_directory(const char *path, Bit32u start_cluster)
           if (newentry->attributes & 0x04) strcpy(attr_txt, "S");
           if (newentry->attributes & 0x02) strcat(attr_txt, "H");
           if (newentry->attributes & 0x01) strcat(attr_txt, "R");
-          fprintf(vvfat_attr_fd, "\"%s\":%s\n", full_path, attr_txt);
+          if (!strncmp(full_path, vvfat_path, strlen(vvfat_path))) {
+            rel_path = (const char*)(full_path + strlen(vvfat_path) + 1);
+          } else {
+            rel_path = (const char*)full_path;
+          }
+          fprintf(vvfat_attr_fd, "\"%s\":%s\n", rel_path, attr_txt);
         }
       }
       fstart = dtoh16(newentry->begin) | (dtoh16(newentry->begin_hi) << 16);
