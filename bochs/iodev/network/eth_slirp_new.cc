@@ -52,8 +52,11 @@ private:
   Slirp *slirp;
   unsigned netdev_speed;
 
-  bx_bool parse_slirp_conf(const char *conf, int *, char *, struct in_addr *, struct in_addr *,
-                           struct in_addr *, struct in_addr *, struct in_addr *);
+  int restricted;
+  struct in_addr net, mask, host, dhcp, dns;
+  char *bootfile, *hostname;
+
+  bx_bool parse_slirp_conf(const char *conf);
   static void rx_timer_handler(void *);
 };
 
@@ -72,12 +75,16 @@ protected:
 bx_slirp_new_pktmover_c::bx_slirp_new_pktmover_c()
 {
   slirp = NULL;
+  bootfile = NULL;
+  hostname = NULL;
 }
 
 bx_slirp_new_pktmover_c::~bx_slirp_new_pktmover_c()
 {
   if (slirp != NULL) {
     slirp_cleanup(slirp);
+    if (bootfile != NULL) free(bootfile);
+    if (hostname != NULL) free(hostname);
     if (--bx_slirp_instances == 0) {
       bx_pc_system.deactivate_timer(rx_timer_index);
 #ifndef WIN32
@@ -87,10 +94,7 @@ bx_slirp_new_pktmover_c::~bx_slirp_new_pktmover_c()
   }
 }
 
-bx_bool bx_slirp_new_pktmover_c::parse_slirp_conf(const char *conf, int *restricted,
-                                                  char *hostname, struct in_addr *net,
-                                                  struct in_addr *mask, struct in_addr *host,
-                                                  struct in_addr *dhcp, struct in_addr *dns)
+bx_bool bx_slirp_new_pktmover_c::parse_slirp_conf(const char *conf)
 {
   FILE *fd = NULL;
   char line[512];
@@ -123,36 +127,46 @@ bx_bool bx_slirp_new_pktmover_c::parse_slirp_conf(const char *conf, int *restric
         } else {
           continue;
         }
-        int len = strlen(param);
-        while ((len > 0) && (param[len-1] == ' ')) {
-          param[--len] = 0;
+        int len1 = strlen(param);
+        int len2 = strlen(val);
+        while ((len1 > 0) && (param[len1-1] == ' ')) {
+          param[--len1] = 0;
         }
+        if ((len1 == 0) || (len2 == 0)) continue;
         if (!strcmp(param, "restricted")) {
-          *restricted = atoi(val);
+          restricted = atoi(val);
         } else if (!strcmp(param, "hostname")) {
-          if (strlen(val) < 33) {
+          if (len2 < 33) {
+            hostname = (char*)malloc(len2+1);
             strcpy(hostname, val);
           } else {
             BX_ERROR(("slirp: wrong format for 'hostname'"));
           }
+        } else if (!strcmp(param, "bootfile")) {
+          if (len2 < 128) {
+            bootfile = (char*)malloc(len2+1);
+            strcpy(bootfile, val);
+          } else {
+            BX_ERROR(("slirp: wrong format for 'bootfile'"));
+          }
         } else if (!strcmp(param, "net")) {
-          if (!inet_aton(val, net)) {
+          if (!inet_aton(val, &net)) {
             BX_ERROR(("slirp: wrong format for 'net'"));
           }
         } else if (!strcmp(param, "mask")) {
-          if (!inet_aton(val, mask)) {
+          if (!inet_aton(val, &mask)) {
             BX_ERROR(("slirp: wrong format for 'mask'"));
           }
         } else if (!strcmp(param, "host")) {
-          if (!inet_aton(val, host)) {
+          if (!inet_aton(val, &host)) {
             BX_ERROR(("slirp: wrong format for 'host'"));
           }
         } else if (!strcmp(param, "dhcp")) {
-          if (!inet_aton(val, dhcp)) {
+          if (!inet_aton(val, &dhcp)) {
             BX_ERROR(("slirp: wrong format for 'dhcp'"));
           }
         } else if (!strcmp(param, "dns")) {
-          if (!inet_aton(val, dns)) {
+          if (!inet_aton(val, &dns)) {
             BX_ERROR(("slirp: wrong format for 'dns'"));
           }
         } else {
@@ -172,10 +186,8 @@ bx_slirp_new_pktmover_c::bx_slirp_new_pktmover_c(const char *netif,
                                                  bx_devmodel_c *dev,
                                                  const char *script)
 {
-  struct in_addr net, mask, host, dhcp, dns;
-  int restricted = 0;
   logfunctions *slirplog;
-  char hostname[33], prefix[10];
+  char bootfile[128], hostname[33], prefix[10];
 
   this->netdev = dev;
   BX_INFO(("slirp_new network driver"));
@@ -200,16 +212,16 @@ bx_slirp_new_pktmover_c::bx_slirp_new_pktmover_c(const char *netif,
   host.s_addr = htonl(0x0a000202); /* 10.0.2.2 */
   dhcp.s_addr = htonl(0x0a00020f); /* 10.0.2.15 */
   dns.s_addr  = htonl(0x0a000203); /* 10.0.2.3 */
-  hostname[0] = 0;
+  restricted = 0;
   if (strlen(script) > 0) {
-    if (!parse_slirp_conf(script, &restricted, hostname, &net, &mask, &host, &dhcp, &dns)) {
+    if (!parse_slirp_conf(script)) {
       BX_ERROR(("reading slirp config failed"));
     }
   }
   slirplog = new logfunctions();
   sprintf(prefix, "SLIRP%d", bx_slirp_instances);
   slirplog->put(prefix);
-  slirp = slirp_init(restricted, net, mask, host, hostname, netif, NULL, dhcp, dns,
+  slirp = slirp_init(restricted, net, mask, host, hostname, netif, bootfile, dhcp, dns,
                      NULL, this, slirplog);
 
   bx_slirp_instances++;

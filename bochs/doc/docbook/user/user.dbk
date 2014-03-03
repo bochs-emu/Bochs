@@ -4414,6 +4414,7 @@ ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="c:/temp"
 ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
 ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=/dev/net/tun0, script=./tunconfig
 ne2k: mac=fe:fd:00:00:00:01, ethmod=slirp, script=/usr/local/bin/slirp, bootrom=ne2k_pci.rom
+ne2k: mac=b0:c4:20:00:00:01, ethmod=slirp_new, script=slirp.conf
 
 IOADDR, IRQ: You probably won't need to change ioaddr and irq, unless there
 are IRQ conflicts. These parameters are ignored if the NE2000 is assigned to
@@ -4537,8 +4538,19 @@ version where this module was added.
     overwrite files.
     </entry>
     <entry>Yes, for TFTP</entry>
-    <entry>Yes</entry>
+    <entry>Yes, for Slirp binary</entry>
     <entry>2.5</entry>
+  </row>
+  <row>
+    <entry>slirp_new</entry>
+    <entry>Built-in Slirp support with DHCP / TFTP servers. Adds user mode
+    networking to Bochs. The "script" parameter can be used to set up an
+    alternative configuration. The TFTP server uses the 'ethdev' value for
+    the root directory and currently operates in read-only mode.
+    </entry>
+    <entry>Yes, for TFTP</entry>
+    <entry>Yes, for Slirp config</entry>
+    <entry>2.6.2.svn</entry>
   </row>
   <row>
     <entry>win32</entry>

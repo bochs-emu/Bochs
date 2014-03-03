@@ -984,6 +984,7 @@ speaker: enabled=1, mode=sound
 # ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vde, ethdev="/tmp/vde.ctl"
 # ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="c:/temp"
 # ne2k: mac=b0:c4:20:00:00:01, ethmod=slirp, script=/usr/local/bin/slirp, bootrom=ne2k_pci.rom
+# ne2k: mac=b0:c4:20:00:00:01, ethmod=slirp_new, script=slirp.conf
 
 #=======================================================================
 # pcipnic: Bochs/Etherboot pseudo-NIC
@@ -1007,7 +1008,7 @@ speaker: enabled=1, mode=sound
 # The E1000 accepts the same syntax (for mac, ethmod, ethdev, script, bootrom)
 # and supports the same networking modules as the NE2000 adapter.
 #=======================================================================
-#e1000: enabled=1, mac=52:54:00:12:34:56, ethmod=slirp, script=/usr/local/bin/slirp
+#e1000: enabled=1, mac=52:54:00:12:34:56, ethmod=slirp_new, script=slirp.conf
 
 #=======================================================================
 # USB_UHCI:
