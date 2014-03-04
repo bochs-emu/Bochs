@@ -957,7 +957,8 @@ speaker: enabled=1, mode=sound
 # this script to configure this network interface, or enable masquerading.
 # This is mainly useful for the tun/tap devices that only exist during
 # Bochs execution. The network interface name is supplied to the script
-# as first parameter.
+# as first parameter. The 'slirp_new' module uses this parameter
+# to specify a config file for setting up an alternative configuration.
 #
 # BOOTROM: The bootrom value is optional, and is the name of the ROM image
 # to load. Note that this feature is only implemented for the PCI version of

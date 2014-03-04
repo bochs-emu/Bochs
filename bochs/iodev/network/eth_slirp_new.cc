@@ -133,39 +133,39 @@ bx_bool bx_slirp_new_pktmover_c::parse_slirp_conf(const char *conf)
           param[--len1] = 0;
         }
         if ((len1 == 0) || (len2 == 0)) continue;
-        if (!strcmp(param, "restricted")) {
+        if (!stricmp(param, "restricted")) {
           restricted = atoi(val);
-        } else if (!strcmp(param, "hostname")) {
+        } else if (!stricmp(param, "hostname")) {
           if (len2 < 33) {
             hostname = (char*)malloc(len2+1);
             strcpy(hostname, val);
           } else {
             BX_ERROR(("slirp: wrong format for 'hostname'"));
           }
-        } else if (!strcmp(param, "bootfile")) {
+        } else if (!stricmp(param, "bootfile")) {
           if (len2 < 128) {
             bootfile = (char*)malloc(len2+1);
             strcpy(bootfile, val);
           } else {
             BX_ERROR(("slirp: wrong format for 'bootfile'"));
           }
-        } else if (!strcmp(param, "net")) {
+        } else if (!stricmp(param, "net")) {
           if (!inet_aton(val, &net)) {
             BX_ERROR(("slirp: wrong format for 'net'"));
           }
-        } else if (!strcmp(param, "mask")) {
+        } else if (!stricmp(param, "mask")) {
           if (!inet_aton(val, &mask)) {
             BX_ERROR(("slirp: wrong format for 'mask'"));
           }
-        } else if (!strcmp(param, "host")) {
+        } else if (!stricmp(param, "host")) {
           if (!inet_aton(val, &host)) {
             BX_ERROR(("slirp: wrong format for 'host'"));
           }
-        } else if (!strcmp(param, "dhcp")) {
+        } else if (!stricmp(param, "dhcpstart")) {
           if (!inet_aton(val, &dhcp)) {
-            BX_ERROR(("slirp: wrong format for 'dhcp'"));
+            BX_ERROR(("slirp: wrong format for 'dhcpstart'"));
           }
-        } else if (!strcmp(param, "dns")) {
+        } else if (!stricmp(param, "dns")) {
           if (!inet_aton(val, &dns)) {
             BX_ERROR(("slirp: wrong format for 'dns'"));
           }

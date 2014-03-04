@@ -1,4 +1,4 @@
-Changes after 2.6.2 (updated Feb 09, 2014):
+Changes after 2.6.2 (updated Mar 04, 2014):
 
 - CPU
   - Bugfixes for CPU emulation correctness (critical fixes for VMX, TBM/BMI and RDRAND instructions)
@@ -39,6 +39,7 @@ Changes after 2.6.2 (updated Feb 09, 2014):
     - portable ISO image file access now available on all platforms
   - Networking
     - slirp/vnet: all supported TFTP extension options implemented now
+    - added built-in slirp (user-mode networking) support (ported from Qemu)
   - Sound
     - SB16 / ES1370: added volume control support for wave output
     - ES1370: added 'wavemode' support similar to the SB16
