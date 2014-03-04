@@ -146,16 +146,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   /////////////////////////////////////////////////////////////////////////////
   if ((features_save_enable_mask & BX_XCR0_SSE_MASK) != 0)
   {
-    /* store XMM register file */
-    for(index=0; index < 16; index++)
-    {
-      // save XMM8-XMM15 only in 64-bit mode
-      if (index < 8 || long64_mode()) {
-        write_virtual_xmmword(i->seg(),
-           (eaddr+index*16+XSAVE_SSE_STATE_OFFSET) & asize_mask, (Bit8u *)(&BX_READ_XMM_REG(index)));
-      }
-    }
-
+    xsave_sse_state(i, eaddr+XSAVE_SSE_STATE_OFFSET);
     header1 |= BX_XCR0_SSE_MASK;
   }
 
@@ -341,25 +332,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   /////////////////////////////////////////////////////////////////////////////
   if ((features_load_enable_mask & BX_XCR0_SSE_MASK) != 0)
   {
-    if (header1 & BX_XCR0_SSE_MASK) {
-      // load SSE state from XSAVE area
-      for(index=0; index < 16; index++)
-      {
-         // restore XMM8-XMM15 only in 64-bit mode
-         if (index < 8 || long64_mode()) {
-           read_virtual_xmmword(i->seg(),
-               (eaddr+index*16+XSAVE_SSE_STATE_OFFSET) & asize_mask, (Bit8u *)(&BX_READ_XMM_REG(index)));
-         }
-      }
-    }
-    else {
-       // initialize SSE with reset values
-       for(index=0; index < 16; index++) {
-         // set XMM8-XMM15 only in 64-bit mode
-         if (index < 8 || long64_mode())
-           BX_CLEAR_XMM_REG(index);
-       }
-    }
+    if (header1 & BX_XCR0_SSE_MASK)
+      xrstor_sse_state(i, eaddr+XSAVE_SSE_STATE_OFFSET);
+    else
+      xrstor_init_sse_state();
   }
 
 #if BX_SUPPORT_AVX
@@ -405,6 +381,45 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 #endif
 
   BX_NEXT_INSTR(i);
+}
+
+// SSE state management //
+
+#if BX_CPU_LEVEL >= 6
+
+void BX_CPU_C::xsave_sse_state(bxInstruction_c *i, bx_address offset)
+{
+  bx_address asize_mask = i->asize_mask();
+
+  /* store XMM register file */
+  for(unsigned index=0; index < 16; index++) {
+    // save XMM8-XMM15 only in 64-bit mode
+    if (index < 8 || long64_mode()) {
+      write_virtual_xmmword(i->seg(), (offset + index*16) & asize_mask, (Bit8u *)(&BX_READ_XMM_REG(index)));
+    }
+  }
+}
+
+void BX_CPU_C::xrstor_sse_state(bxInstruction_c *i, bx_address offset)
+{
+  bx_address asize_mask = i->asize_mask();
+
+  // load SSE state from XSAVE area
+  for(unsigned index=0; index < 16; index++) {
+    // restore XMM8-XMM15 only in 64-bit mode
+    if (index < 8 || long64_mode()) {
+      read_virtual_xmmword(i->seg(), (offset+index*16) & asize_mask, (Bit8u *)(&BX_READ_XMM_REG(index)));
+    }
+  }
+}
+
+void BX_CPU_C::xrstor_init_sse_state(void)
+{
+  // initialize SSE with reset values
+  for(unsigned index=0; index < 16; index++) {
+    // set XMM8-XMM15 only in 64-bit mode
+    if (index < 8 || long64_mode()) BX_CLEAR_XMM_REG(index);
+  }
 }
 
 #if BX_SUPPORT_AVX
@@ -540,7 +555,9 @@ void BX_CPU_C::xrstor_init_hi_zmm_state(void)
 }
 #endif // BX_SUPPORT_EVEX
 
-#endif
+#endif // BX_SUPPORT_AVX
+
+#endif // BX_CPU_LEVEL >= 6
 
 /* 0F 01 D0 */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XGETBV(bxInstruction_c *i)
