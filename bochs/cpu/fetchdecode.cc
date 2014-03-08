@@ -1910,8 +1910,8 @@ modrm_done:
         else
           i->modRMForm.displ16u *= 4 << vex_w;
       }
-      // zero masking is not allowed for memory destination
-      if (n == 0 && i->isZeroMasking()) {
+      // zero masking is not allowed for gather/scatter
+      if (i->isZeroMasking()) {
         ia_opcode = BX_IA_ERROR;
       }
       break;

@@ -2367,10 +2367,8 @@ modrm_done:
 #if BX_SUPPORT_EVEX
       i->setSibIndex(i->sibIndex() | evex_v);
       if (displ8) i->modRMForm.displ32u *= 4 << vex_w;
-      // zero masking is not allowed for memory destination
-      if (n == 0 && i->isZeroMasking()) {
-        ia_opcode = BX_IA_ERROR;
-      }
+      // zero masking is not allowed for gather/scatter
+      if (i->isZeroMasking()) ia_opcode = BX_IA_ERROR;
 #endif
       break;
 #endif
