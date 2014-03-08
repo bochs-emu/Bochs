@@ -54,7 +54,7 @@ private:
 
   int restricted;
   struct in_addr net, mask, host, dhcp, dns;
-  char *bootfile, *hostname;
+  char *bootfile, *hostname, *dnssearch[2];
 
   bx_bool parse_slirp_conf(const char *conf);
   static void rx_timer_handler(void *);
@@ -77,6 +77,8 @@ bx_slirp_new_pktmover_c::bx_slirp_new_pktmover_c()
   slirp = NULL;
   bootfile = NULL;
   hostname = NULL;
+  dnssearch[0] = NULL;
+  dnssearch[1] = NULL;
 }
 
 bx_slirp_new_pktmover_c::~bx_slirp_new_pktmover_c()
@@ -148,6 +150,13 @@ bx_bool bx_slirp_new_pktmover_c::parse_slirp_conf(const char *conf)
             strcpy(bootfile, val);
           } else {
             BX_ERROR(("slirp: wrong format for 'bootfile'"));
+          }
+        } else if (!stricmp(param, "dnssearch")) {
+          if (len2 < 512) {
+            dnssearch[0] = (char*)malloc(len2+1);
+            strcpy(dnssearch[0], val);
+          } else {
+            BX_ERROR(("slirp: wrong format for 'dnssearch'"));
           }
         } else if (!stricmp(param, "net")) {
           if (!inet_aton(val, &net)) {
@@ -222,7 +231,7 @@ bx_slirp_new_pktmover_c::bx_slirp_new_pktmover_c(const char *netif,
   sprintf(prefix, "SLIRP%d", bx_slirp_instances);
   slirplog->put(prefix);
   slirp = slirp_init(restricted, net, mask, host, hostname, netif, bootfile, dhcp, dns,
-                     NULL, this, slirplog);
+                     (const char**)dnssearch, this, slirplog);
 
   bx_slirp_instances++;
 }
