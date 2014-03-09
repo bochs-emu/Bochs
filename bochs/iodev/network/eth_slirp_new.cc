@@ -54,7 +54,7 @@ private:
 
   int restricted;
   struct in_addr net, mask, host, dhcp, dns;
-  char *bootfile, *hostname, *dnssearch[2];
+  char *bootfile, *hostname, **dnssearch;
 
   bx_bool parse_slirp_conf(const char *conf);
   static void rx_timer_handler(void *);
@@ -77,8 +77,7 @@ bx_slirp_new_pktmover_c::bx_slirp_new_pktmover_c()
   slirp = NULL;
   bootfile = NULL;
   hostname = NULL;
-  dnssearch[0] = NULL;
-  dnssearch[1] = NULL;
+  dnssearch = NULL;
 }
 
 bx_slirp_new_pktmover_c::~bx_slirp_new_pktmover_c()
@@ -87,6 +86,13 @@ bx_slirp_new_pktmover_c::~bx_slirp_new_pktmover_c()
     slirp_cleanup(slirp);
     if (bootfile != NULL) free(bootfile);
     if (hostname != NULL) free(hostname);
+    if (dnssearch != NULL) {
+      size_t i = 0;
+      while (dnssearch[i] != NULL) {
+        free(dnssearch[i++]);
+      }
+      free(dnssearch);
+    }
     if (--bx_slirp_instances == 0) {
       bx_pc_system.deactivate_timer(rx_timer_index);
 #ifndef WIN32
@@ -96,12 +102,28 @@ bx_slirp_new_pktmover_c::~bx_slirp_new_pktmover_c()
   }
 }
 
+static size_t strip_whitespace(char *s)
+{
+  size_t ptr = 0;
+  char *tmp = (char*)malloc(strlen(s)+1);
+  strcpy(tmp, s);
+  while (s[ptr] == ' ') ptr++;
+  if (ptr > 0) strcpy(s, tmp+ptr);
+  free(tmp);
+  ptr = strlen(s);
+  while ((ptr > 0) && (s[ptr-1] == ' ')) {
+    s[--ptr] = 0;
+  }
+  return ptr;
+}
+
 bx_bool bx_slirp_new_pktmover_c::parse_slirp_conf(const char *conf)
 {
   FILE *fd = NULL;
   char line[512];
-  char *ret, *param, *val;
+  char *ret, *param, *val, *tmp;
   bx_bool format_checked = 0;
+  unsigned i, count;
 
   fd = fopen(conf, "r");
   if (fd == NULL) return 0;
@@ -125,15 +147,12 @@ bx_bool bx_slirp_new_pktmover_c::parse_slirp_conf(const char *conf)
         if (line[0] == '#') continue;
         param = strtok(line, "=");
         if (param != NULL) {
-          val = strtok(NULL, " ");
+          val = strtok(NULL, "");
         } else {
           continue;
         }
-        int len1 = strlen(param);
-        int len2 = strlen(val);
-        while ((len1 > 0) && (param[len1-1] == ' ')) {
-          param[--len1] = 0;
-        }
+        size_t len1 = strip_whitespace(param);
+        size_t len2 = strip_whitespace(val);
         if ((len1 == 0) || (len2 == 0)) continue;
         if (!stricmp(param, "restricted")) {
           restricted = atoi(val);
@@ -152,9 +171,22 @@ bx_bool bx_slirp_new_pktmover_c::parse_slirp_conf(const char *conf)
             BX_ERROR(("slirp: wrong format for 'bootfile'"));
           }
         } else if (!stricmp(param, "dnssearch")) {
-          if (len2 < 512) {
-            dnssearch[0] = (char*)malloc(len2+1);
-            strcpy(dnssearch[0], val);
+          if (len2 < 256) {
+            count = 1;
+            for (i = 0; i < len2; i++) {
+              if (val[i] == ',') count++;
+            }
+            dnssearch = (char**)malloc((count + 1) * sizeof(char*));
+            i = 0;
+            tmp = strtok(val, ",");
+            while (tmp != NULL) {
+              len2 = strip_whitespace(tmp);
+              dnssearch[i] = (char*)malloc(len2+1);
+              strcpy(dnssearch[i], tmp);
+              i++;
+              tmp = strtok(NULL, ",");
+            }
+            dnssearch[i] = NULL;
           } else {
             BX_ERROR(("slirp: wrong format for 'dnssearch'"));
           }
