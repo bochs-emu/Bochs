@@ -232,7 +232,7 @@ float_class_t floatx80_class(floatx80 a)
        if (((Bit64u) (aSig<< 1)) == 0)
            return (aSign) ? float_negative_inf : float_positive_inf;
 
-       return (aSig & BX_CONST64(0xC000000000000000)) ? float_QNaN : float_SNaN;
+       return (aSig & BX_CONST64(0x4000000000000000)) ? float_QNaN : float_SNaN;
    }
 
    return float_normalized;
@@ -311,9 +311,7 @@ int floatx80_compare_quiet(floatx80 a, floatx80 b, float_status_t &status)
 
     if (aClass == float_SNaN || bClass == float_SNaN)
     {
-        if (floatx80_is_unsupported(a) || floatx80_is_unsupported(b))
-            float_raise(status, float_flag_invalid);
-
+        /* unsupported reported as SNaN */
         float_raise(status, float_flag_invalid);
         return float_relation_unordered;
     }
