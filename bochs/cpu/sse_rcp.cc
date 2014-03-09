@@ -304,7 +304,8 @@ float32 approximate_rcp(float32 op)
     case float_positive_inf:
       return packFloat32(sign, 0, 0);
 
-    case float_NaN:
+    case float_SNaN:
+    case float_QNaN:
       return convert_to_QNaN(op);
 
     case float_normalized:
@@ -651,7 +652,8 @@ float32 approximate_rsqrt(float32 op)
     case float_negative_inf:
       return float32_default_nan;
 
-    case float_NaN:
+    case float_SNaN:
+    case float_QNaN:
       return convert_to_QNaN(op);
 
     case float_normalized:

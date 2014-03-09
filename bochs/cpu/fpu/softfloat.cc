@@ -709,6 +709,66 @@ float32 float32_getmant(float32 a, float_status_t &status, int sign_ctrl, int in
 }
 
 /*----------------------------------------------------------------------------
+| Return the result of a floating point scale of the single-precision floating
+| point value `a' by multiplying it by 2 power of the single-precision
+| floating point value 'b' converted to integral value. If the result cannot
+| be represented in single precision, then the proper overflow response (for
+| positive scaling operand), or the proper underflow response (for negative
+| scaling operand) is issued. The operation is performed according to the
+| IEC/IEEE Standard for Binary Floating-Point Arithmetic.
+*----------------------------------------------------------------------------*/
+
+float32 float32_scalef(float32 a, float32 b, float_status_t &status)
+{
+    Bit32u aSig = extractFloat32Frac(a);
+    Bit16s aExp = extractFloat32Exp(a);
+    int aSign = extractFloat32Sign(a);
+    Bit32u bSig = extractFloat32Frac(b);
+    Bit16s bExp = extractFloat32Exp(b);
+    int bSign = extractFloat32Sign(b);
+
+    if (get_denormals_are_zeros(status)) {
+        if (aExp == 0) aSig = 0;
+        if (bExp == 0) bSig = 0;
+    }
+
+    if (bExp == 0xFF) {
+        if (bSig) return propagateFloat32NaN(a, b, status);
+    }
+
+    if (aExp == 0xFF) {
+        if (aSig) {
+            int aIsSignalingNaN = (aSig & 0x00400000) == 0;
+            if (aIsSignalingNaN || bExp != 0xFF || bSig)
+                return propagateFloat32NaN(a, b, status);
+
+            return bSign ? 0 : float32_positive_inf;
+        }
+
+        if (bExp == 0xFF && bSign) {
+            float_raise(status, float_flag_invalid);
+            return float32_default_nan;
+        }
+        return a;
+    }
+
+    if ((aExp | aSig) == 0) {
+        if (bExp == 0xFF && ! bSign) {
+            float_raise(status, float_flag_invalid);
+            return float32_default_nan;
+        }
+        return a;
+    }
+
+    if (bExp == 0xFF) {
+        if (bSign) return packFloat32(aSign, 0, 0);
+        return packFloat32(aSign, 0xFF, 0);
+    }
+
+    return 0;  // fixme
+}
+
+/*----------------------------------------------------------------------------
 | Returns the result of adding the absolute values of the single-precision
 | floating-point values `a' and `b'.  If `zSign' is 1, the sum is negated
 | before being returned.  `zSign' is ignored if the result is a NaN.
@@ -1136,7 +1196,7 @@ float32 float32_sqrt(float32 a, float_status_t &status)
 }
 
 /*----------------------------------------------------------------------------
-| Determine single-precision floating-point number class
+| Determine single-precision floating-point number class.
 *----------------------------------------------------------------------------*/
 
 float_class_t float32_class(float32 a)
@@ -1149,7 +1209,7 @@ float_class_t float32_class(float32 a)
        if (aSig == 0)
            return (aSign) ? float_negative_inf : float_positive_inf;
 
-       return float_NaN;
+       return (aSig & 0x00400000) ? float_QNaN : float_SNaN;
    }
 
    if(aExp == 0) {
@@ -1178,13 +1238,13 @@ int float32_compare(float32 a, float32 b, float_status_t &status)
     float_class_t aClass = float32_class(a);
     float_class_t bClass = float32_class(b);
 
-    if (aClass == float_NaN || bClass == float_NaN) {
+    if (aClass == float_SNaN || aClass == float_QNaN || bClass == float_SNaN || bClass == float_QNaN)
+    {
         float_raise(status, float_flag_invalid);
         return float_relation_unordered;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal)
-    {
+    if (aClass == float_denormal || bClass == float_denormal) {
         float_raise(status, float_flag_denormal);
     }
 
@@ -1218,17 +1278,16 @@ int float32_compare_quiet(float32 a, float32 b, float_status_t &status)
     float_class_t aClass = float32_class(a);
     float_class_t bClass = float32_class(b);
 
-    if (aClass == float_NaN || bClass == float_NaN)
-    {
-        if (float32_is_signaling_nan(a) || float32_is_signaling_nan(b))
-        {
-            float_raise(status, float_flag_invalid);
-        }
+    if (aClass == float_SNaN || bClass == float_SNaN) {
+        float_raise(status, float_flag_invalid);
         return float_relation_unordered;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal)
-    {
+    if (aClass == float_QNaN || bClass == float_QNaN) {
+        return float_relation_unordered;
+    }
+
+    if (aClass == float_denormal || bClass == float_denormal) {
         float_raise(status, float_flag_denormal);
     }
 
@@ -1816,6 +1875,66 @@ float64 float64_getmant(float64 a, float_status_t &status, int sign_ctrl, int in
 }
 
 /*----------------------------------------------------------------------------
+| Return the result of a floating point scale of the double-precision floating
+| point value `a' by multiplying it by 2 power of the double-precision
+| floating point value 'b' converted to integral value. If the result cannot
+| be represented in double precision, then the proper overflow response (for
+| positive scaling operand), or the proper underflow response (for negative
+| scaling operand) is issued. The operation is performed according to the
+| IEC/IEEE Standard for Binary Floating-Point Arithmetic.
+*----------------------------------------------------------------------------*/
+
+float64 float64_scalef(float64 a, float64 b, float_status_t &status)
+{
+    Bit64u aSig = extractFloat64Frac(a);
+    Bit16s aExp = extractFloat64Exp(a);
+    int aSign = extractFloat64Sign(a);
+    Bit64u bSig = extractFloat64Frac(b);
+    Bit16s bExp = extractFloat64Exp(b);
+    int bSign = extractFloat64Sign(b);
+
+    if (get_denormals_are_zeros(status)) {
+        if (aExp == 0) aSig = 0;
+        if (bExp == 0) bSig = 0;
+    }
+
+    if (bExp == 0x7FF) {
+        if (bSig) return propagateFloat64NaN(a, b, status);
+    }
+
+    if (aExp == 0x7FF) {
+        if (aSig) {
+            int aIsSignalingNaN = (aSig & BX_CONST64(0x0008000000000000)) == 0;
+            if (aIsSignalingNaN || bExp != 0x7FF || bSig)
+                return propagateFloat64NaN(a, b, status);
+
+            return bSign ? 0 : float64_positive_inf;
+        }
+
+        if (bExp == 0x7FF && bSign) {
+            float_raise(status, float_flag_invalid);
+            return float64_default_nan;
+        }
+        return a;
+    }
+
+    if ((aExp | aSig) == 0) {
+        if (bExp == 0x7FF && ! bSign) {
+            float_raise(status, float_flag_invalid);
+            return float64_default_nan;
+        }
+        return a;
+    }
+
+    if (bExp == 0x7FF) {
+        if (bSign) return packFloat64(aSign, 0, 0);
+        return packFloat64(aSign, 0x7FF, 0);
+    }
+
+    return 0;  // fixme
+}
+
+/*----------------------------------------------------------------------------
 | Returns the result of adding the absolute values of the double-precision
 | floating-point values `a' and `b'.  If `zSign' is 1, the sum is negated
 | before being returned.  `zSign' is ignored if the result is a NaN.
@@ -2258,7 +2377,7 @@ float_class_t float64_class(float64 a)
        if (aSig == 0)
            return (aSign) ? float_negative_inf : float_positive_inf;
 
-       return float_NaN;
+       return (aSig & BX_CONST64(0x0008000000000000)) ? float_QNaN : float_SNaN;
    }
 
    if(aExp == 0) {
@@ -2288,13 +2407,13 @@ int float64_compare(float64 a, float64 b, float_status_t &status)
     float_class_t aClass = float64_class(a);
     float_class_t bClass = float64_class(b);
 
-    if (aClass == float_NaN || bClass == float_NaN) {
+    if (aClass == float_SNaN || aClass == float_QNaN || bClass == float_SNaN || bClass == float_QNaN)
+    {
         float_raise(status, float_flag_invalid);
         return float_relation_unordered;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal)
-    {
+    if (aClass == float_denormal || bClass == float_denormal) {
         float_raise(status, float_flag_denormal);
     }
 
@@ -2328,17 +2447,16 @@ int float64_compare_quiet(float64 a, float64 b, float_status_t &status)
     float_class_t aClass = float64_class(a);
     float_class_t bClass = float64_class(b);
 
-    if (aClass == float_NaN || bClass == float_NaN)
-    {
-        if (float64_is_signaling_nan(a) || float64_is_signaling_nan(b))
-        {
-            float_raise(status, float_flag_invalid);
-        }
+    if (aClass == float_SNaN || bClass == float_SNaN) {
+        float_raise(status, float_flag_invalid);
         return float_relation_unordered;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal)
-    {
+    if (aClass == float_QNaN || bClass == float_QNaN) {
+        return float_relation_unordered;
+    }
+
+    if (aClass == float_denormal || bClass == float_denormal) {
         float_raise(status, float_flag_denormal);
     }
 

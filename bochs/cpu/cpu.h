@@ -3261,8 +3261,8 @@ public: // for now...
   BX_SMF BX_INSF_TYPE VRNDSCALESS_MASK_VssHpsWssIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VRNDSCALESD_MASK_VsdHpdWsdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF BX_INSF_TYPE VSCALEFPS_MASK_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VSCALEFPD_MASK_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VSCALEFPS_MASK_VpsHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VSCALEFPD_MASK_VpdHpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VSCALEFSS_MASK_VssHpsWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VSCALEFSD_MASK_VsdHpdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 

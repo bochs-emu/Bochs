@@ -54,7 +54,8 @@ typedef Bit64u float64;
 *----------------------------------------------------------------------------*/
 typedef enum {
     float_zero,
-    float_NaN,
+    float_SNaN,
+    float_QNaN,
     float_negative_inf,
     float_positive_inf,
     float_denormal,
@@ -264,6 +265,7 @@ float32 float32_div(float32, float32, float_status_t &status);
 float32 float32_sqrt(float32, float_status_t &status);
 float32 float32_frc(float32, float_status_t &status);
 float32 float32_muladd(float32, float32, float32, int flags, float_status_t &status);
+float32 float32_scalef(float32, float32, float_status_t &status);
 
 BX_CPP_INLINE float32 float32_round_to_int(float32 a, float_status_t &status)
 {
@@ -329,6 +331,7 @@ float64 float64_div(float64, float64, float_status_t &status);
 float64 float64_sqrt(float64, float_status_t &status);
 float64 float64_frc(float64, float_status_t &status);
 float64 float64_muladd(float64, float64, float64, int flags, float_status_t &status);
+float64 float64_scalef(float64, float64, float_status_t &status);
 
 BX_CPP_INLINE float64 float64_round_to_int(float64 a, float_status_t &status)
 {

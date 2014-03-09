@@ -1250,8 +1250,8 @@ static const BxOpcodeInfo_t BxOpcodeTableEVEX[256*3*2] = {
   /* 2A    */ { 0, BX_IA_ERROR }, // #UD
   /* 2B k0 */ { 0, BX_IA_ERROR },
   /* 2B    */ { 0, BX_IA_ERROR },
-  /* 2C k0 */ { BxAliasVexW | BxPrefixSSE66, BX_IA_V512_VSCALEFPS_VpsWps_Kmask },
-  /* 2C    */ { BxAliasVexW | BxPrefixSSE66, BX_IA_V512_VSCALEFPS_VpsWps_Kmask },
+  /* 2C k0 */ { BxAliasVexW | BxPrefixSSE66, BX_IA_V512_VSCALEFPS_VpsHpsWps_Kmask },
+  /* 2C    */ { BxAliasVexW | BxPrefixSSE66, BX_IA_V512_VSCALEFPS_VpsHpsWps_Kmask },
   /* 2D k0 */ { BxAliasVexW | BxPrefixSSE66, BX_IA_V512_VSCALEFSS_VssHpsWss_Kmask },
   /* 2D    */ { BxAliasVexW | BxPrefixSSE66, BX_IA_V512_VSCALEFSS_VssHpsWss_Kmask },
   /* 2E k0 */ { 0, BX_IA_ERROR },

@@ -69,6 +69,7 @@ EVEX_OP_PACKED_SINGLE(VMULPS_MASK_VpsHpsWpsR, xmm_mulps_mask)
 EVEX_OP_PACKED_SINGLE(VDIVPS_MASK_VpsHpsWpsR, xmm_divps_mask)
 EVEX_OP_PACKED_SINGLE(VMAXPS_MASK_VpsHpsWpsR, xmm_maxps_mask)
 EVEX_OP_PACKED_SINGLE(VMINPS_MASK_VpsHpsWpsR, xmm_minps_mask)
+EVEX_OP_PACKED_SINGLE(VSCALEFPS_MASK_VpsHpsWpsR, xmm_scalefps_mask)
 
 #define EVEX_OP_PACKED_DOUBLE(HANDLER, func)                                                \
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)               \
@@ -105,6 +106,7 @@ EVEX_OP_PACKED_DOUBLE(VMULPD_MASK_VpdHpdWpdR, xmm_mulpd_mask)
 EVEX_OP_PACKED_DOUBLE(VDIVPD_MASK_VpdHpdWpdR, xmm_divpd_mask)
 EVEX_OP_PACKED_DOUBLE(VMAXPD_MASK_VpdHpdWpdR, xmm_maxpd_mask)
 EVEX_OP_PACKED_DOUBLE(VMINPD_MASK_VpdHpdWpdR, xmm_minpd_mask)
+EVEX_OP_PACKED_DOUBLE(VSCALEFPD_MASK_VpdHpdWpdR, xmm_scalefpd_mask)
 
 #define EVEX_OP_SCALAR_SINGLE(HANDLER, func)                                                \
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)               \
@@ -137,6 +139,7 @@ EVEX_OP_SCALAR_SINGLE(VMULSS_MASK_VssHpsWssR, float32_mul)
 EVEX_OP_SCALAR_SINGLE(VDIVSS_MASK_VssHpsWssR, float32_div)
 EVEX_OP_SCALAR_SINGLE(VMINSS_MASK_VssHpsWssR, float32_min)
 EVEX_OP_SCALAR_SINGLE(VMAXSS_MASK_VssHpsWssR, float32_max)
+EVEX_OP_SCALAR_SINGLE(VSCALEFSS_MASK_VssHpsWssR, float32_scalef)
 
 #define EVEX_OP_SCALAR_DOUBLE(HANDLER, func)                                                \
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)               \
@@ -169,6 +172,7 @@ EVEX_OP_SCALAR_DOUBLE(VMULSD_MASK_VsdHpdWsdR, float64_mul)
 EVEX_OP_SCALAR_DOUBLE(VDIVSD_MASK_VsdHpdWsdR, float64_div)
 EVEX_OP_SCALAR_DOUBLE(VMINSD_MASK_VsdHpdWsdR, float64_min)
 EVEX_OP_SCALAR_DOUBLE(VMAXSD_MASK_VsdHpdWsdR, float64_max)
+EVEX_OP_SCALAR_SINGLE(VSCALEFSD_MASK_VsdHpdWsdR, float64_scalef)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTPS_MASK_VpsWpsR(bxInstruction_c *i)
 {
@@ -416,14 +420,13 @@ float32 float32_fixupimm(float32 dst, float32 op1, Bit32u op2, unsigned imm8, fl
       ie_fault_mask = 0x80;
       break;
 
-    case float_NaN:
-      if (float32_is_signaling_nan(tmp_op1)) {
-        token = BX_FIXUPIMM_SNAN_TOKEN;
-        ie_fault_mask = 0x10;
-      }
-      else {
-        token = BX_FIXUPIMM_QNAN_TOKEN;
-      }
+    case float_SNaN:
+      token = BX_FIXUPIMM_SNAN_TOKEN;
+      ie_fault_mask = 0x10;
+      break;
+
+    case float_QNaN:
+      token = BX_FIXUPIMM_QNAN_TOKEN;
       break;
 
     case float_denormal:
@@ -512,14 +515,13 @@ float64 float64_fixupimm(float64 dst, float64 op1, Bit32u op2, unsigned imm8, fl
       ie_fault_mask = 0x80;
       break;
 
-    case float_NaN:
-      if (float64_is_signaling_nan(tmp_op1)) {
-        token = BX_FIXUPIMM_SNAN_TOKEN;
-        ie_fault_mask = 0x10;
-      }
-      else {
-        token = BX_FIXUPIMM_QNAN_TOKEN;
-      }
+    case float_SNaN:
+      token = BX_FIXUPIMM_SNAN_TOKEN;
+      ie_fault_mask = 0x10;
+      break;
+
+    case float_QNaN:
+      token = BX_FIXUPIMM_QNAN_TOKEN;
       break;
 
     case float_denormal:
@@ -1109,36 +1111,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALESD_MASK_VsdHpdWsdIbR(bxIn
   }
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-  BX_NEXT_INSTR(i);
-}
-
-// scale
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCALEFPS_MASK_VpsWpsR(bxInstruction_c *i)
-{
-  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCALEFSS_MASK_VssHpsWssR(bxInstruction_c *i)
-{
-  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCALEFPD_MASK_VpdWpdR(bxInstruction_c *i)
-{
-  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCALEFSD_MASK_VsdHpdWsdR(bxInstruction_c *i)
-{
-  BX_PANIC(("%s: AVX-512 instruction still not implemented", i->getIaOpcodeNameShort()));
-
   BX_NEXT_INSTR(i);
 }
 

@@ -54,7 +54,7 @@ float_class_t float16_class(float16 a)
        if (aSig == 0)
            return (aSign) ? float_negative_inf : float_positive_inf;
 
-       return float_NaN;
+       return (aSig & 0x200) ? float_QNaN : float_SNaN;
    }
 
    if(aExp == 0) {

@@ -529,7 +529,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXAM(bxInstruction_c *i)
            setcc(FPU_SW_C3|FPU_SW_C1);
            break;
 
-        case float_NaN:
+        case float_SNaN:
+        case float_QNaN:
            // unsupported handled as NaNs
            if (floatx80_is_unsupported(reg)) {
                setcc(FPU_SW_C1);

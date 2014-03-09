@@ -8257,7 +8257,8 @@ float32 approximate_rsqrt14(float32 op, bx_bool daz)
     case float_negative_inf:
       return float32_default_nan;
 
-    case float_NaN:
+    case float_SNaN:
+    case float_QNaN:
       return convert_to_QNaN(op);
 
     case float_denormal:
@@ -8307,7 +8308,8 @@ float64 approximate_rsqrt14(float64 op, bx_bool daz)
     case float_negative_inf:
       return float64_default_nan;
 
-    case float_NaN:
+    case float_SNaN:
+    case float_QNaN:
       return convert_to_QNaN(op);
 
     case float_denormal:

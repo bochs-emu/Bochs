@@ -8281,7 +8281,8 @@ float32 approximate_rcp14(float32 op, const float_status_t &status)
     case float_positive_inf:
         return packFloat32(sign, 0, 0);
 
-    case float_NaN:
+    case float_SNaN:
+    case float_QNaN:
         return convert_to_QNaN(op);
 
     // the rcp14 handle denormals properly
@@ -8332,7 +8333,8 @@ float64 approximate_rcp14(float64 op, const float_status_t &status)
     case float_positive_inf:
         return packFloat64(sign, 0, 0);
 
-    case float_NaN:
+    case float_SNaN:
+    case float_QNaN:
         return convert_to_QNaN(op);
 
     // the rcp14 handle denormals properly

@@ -694,4 +694,40 @@ BX_CPP_INLINE void xmm_getexppd_mask(BxPackedXmmRegister *op, float_status_t &st
   }
 }
 
+// scalef
+
+BX_CPP_INLINE void xmm_scalefps(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, float_status_t &status)
+{
+  for (unsigned n=0;n<4;n++) {
+    op1->xmm32u(n) = float32_scalef(op1->xmm32u(n), op2->xmm32u(n), status);
+  }
+}
+
+BX_CPP_INLINE void xmm_scalefps_mask(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, float_status_t &status, Bit32u mask)
+{
+  for (unsigned n=0; n < 4; n++, mask >>= 1) {
+    if (mask & 0x1)
+      op1->xmm32u(n) = float32_scalef(op1->xmm32u(n), op2->xmm32u(n), status);
+    else
+      op1->xmm32u(n) = 0;
+  }
+}
+
+BX_CPP_INLINE void xmm_scalefpd(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, float_status_t &status)
+{
+  for (unsigned n=0;n<2;n++) {
+    op1->xmm64u(n) = float64_scalef(op1->xmm64u(n), op2->xmm64u(n), status);
+  }
+}
+
+BX_CPP_INLINE void xmm_scalefpd_mask(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, float_status_t &status, Bit32u mask)
+{
+  for (unsigned n=0; n < 2; n++, mask >>= 1) {
+    if (mask & 0x1)
+      op1->xmm64u(n) = float64_scalef(op1->xmm64u(n), op2->xmm64u(n), status);
+    else
+      op1->xmm64u(n) = 0;
+  }
+}
+
 #endif

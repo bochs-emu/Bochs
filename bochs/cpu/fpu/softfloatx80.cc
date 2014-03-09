@@ -224,7 +224,7 @@ float_class_t floatx80_class(floatx80 a)
 
    /* valid numbers have the MS bit set */
    if (!(aSig & BX_CONST64(0x8000000000000000)))
-       return float_NaN; /* report unsupported as NaNs */
+       return float_SNaN; /* report unsupported as SNaNs */
 
    if(aExp == 0x7fff) {
        int aSign = extractFloatx80Sign(a);
@@ -232,7 +232,7 @@ float_class_t floatx80_class(floatx80 a)
        if (((Bit64u) (aSig<< 1)) == 0)
            return (aSign) ? float_negative_inf : float_positive_inf;
 
-       return float_NaN;
+       return (aSig & BX_CONST64(0xC000000000000000)) ? float_QNaN : float_SNaN;
    }
 
    return float_normalized;
@@ -251,14 +251,13 @@ int floatx80_compare(floatx80 a, floatx80 b, float_status_t &status)
     float_class_t aClass = floatx80_class(a);
     float_class_t bClass = floatx80_class(b);
 
-    if (aClass == float_NaN || bClass == float_NaN)
+    if (aClass == float_SNaN || aClass == float_QNaN || bClass == float_SNaN || bClass == float_QNaN)
     {
         float_raise(status, float_flag_invalid);
         return float_relation_unordered;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal)
-    {
+    if (aClass == float_denormal || bClass == float_denormal) {
         float_raise(status, float_flag_denormal);
     }
 
@@ -310,19 +309,20 @@ int floatx80_compare_quiet(floatx80 a, floatx80 b, float_status_t &status)
     float_class_t aClass = floatx80_class(a);
     float_class_t bClass = floatx80_class(b);
 
-    if (aClass == float_NaN || bClass == float_NaN)
+    if (aClass == float_SNaN || bClass == float_SNaN)
     {
         if (floatx80_is_unsupported(a) || floatx80_is_unsupported(b))
             float_raise(status, float_flag_invalid);
 
-        if (floatx80_is_signaling_nan(a) || floatx80_is_signaling_nan(b))
-            float_raise(status, float_flag_invalid);
-
+        float_raise(status, float_flag_invalid);
         return float_relation_unordered;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal)
-    {
+    if (aClass == float_QNaN || bClass == float_QNaN) {
+        return float_relation_unordered;
+    }
+
+    if (aClass == float_denormal || bClass == float_denormal) {
         float_raise(status, float_flag_denormal);
     }
 

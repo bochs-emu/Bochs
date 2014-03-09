@@ -536,7 +536,7 @@ void BX_CPU_C::print_state_FPU(void)
     "32", "RES", "64", "80"
   };
   static const char* fp_class[] = {
-    "ZERO", "xNAN", "-INF", "+INF", "DENORMAL", "NORMAL"
+    "ZERO", "SNAN", "QNAN", "-INF", "+INF", "DENORMAL", "NORMAL"
   };
 
   Bit32u reg;
@@ -601,7 +601,7 @@ void BX_CPU_C::print_state_FPU(void)
           i==tos?"=>":"  ", i, (i-tos)&7,
           "v0se"[tag],
           fp.exp & 0xffff, GET32H(fp.fraction), GET32L(fp.fraction),
-          f, (f_class == float_NaN) ? (floatx80_is_signaling_nan(fp) ? "SNAN" : "QNAN") : fp_class[f_class]);
+          f, fp_class[f_class]);
   }
 }
 
