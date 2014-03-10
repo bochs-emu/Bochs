@@ -6884,9 +6884,10 @@ Some of the other options in this group is probably also needed,
 
 <section>
         <title>Configure Bochs to use the tuntap interface</title>
-        <para>Make sure Bochs has ne2000 support. If you have to recompile Bochs,
-                <option>--enable-ne2000</option> when running <command>./configure</command>
-                (see <xref linkend="compiling">)
+        <para>Make sure Bochs has one of the network adapters enabled. If you
+        have to recompile Bochs, use <option>--enable-ne2000</option> or
+        <option>--enable-e1000</option> when running <command>./configure</command>
+        (see <xref linkend="compiling">)
         </para>
         <para>edit your <replaceable>.bochsrc</replaceable> configuration file and add something like :
                 <screen>  ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01,

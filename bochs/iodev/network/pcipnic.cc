@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd. (http://www.fensystems.co.uk/)
-//  Copyright (C) 2003-2013  The Bochs Project
+//  Copyright (C) 2003-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -63,6 +63,10 @@ Bit32s pnic_options_parser(const char *context, int num_params, char *params[])
     bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_PNIC);
     if (!SIM->get_param_bool("enabled", base)->get()) {
       SIM->get_param_enum("ethmod", base)->set_by_name("null");
+    }
+    if (!SIM->get_param_string("mac", base)->isempty()) {
+      // MAC address is already initialized
+      valid |= 0x04;
     }
     for (int i = 1; i < num_params; i++) {
       ret = SIM->parse_nic_params(context, params[i], base);

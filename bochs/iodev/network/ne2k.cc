@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -89,6 +89,10 @@ Bit32s ne2k_options_parser(const char *context, int num_params, char *params[])
     }
     if (SIM->is_pci_device(BX_PLUGIN_NE2K)) {
       valid |= 0x03;
+    }
+    if (!SIM->get_param_string("mac", base)->isempty()) {
+      // MAC address is already initialized
+      valid |= 0x04;
     }
     for (int i = 1; i < num_params; i++) {
       if (!strncmp(params[i], "ioaddr=", 7)) {

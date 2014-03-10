@@ -811,7 +811,11 @@ void bx_param_string_c::set_initial_val(const char *buf)
 
 bx_bool bx_param_string_c::isempty()
 {
-  return ((strlen(val) == 0) || !strcmp(val, "none"));
+  if (options & RAW_BYTES) {
+    return (memcmp(val, initial_val, maxsize) == 0);
+  } else {
+    return ((strlen(val) == 0) || !strcmp(val, "none"));
+  }
 }
 
 int bx_param_string_c::sprint(char *buf, int len, bx_bool dquotes)
