@@ -247,7 +247,6 @@ private:
 
       device_image_t* hdimage;
       Bit64s curr_lsector;
-      Bit64s last_lsector;
       Bit64s next_lsector;
 
       Bit8u model_no[41];
