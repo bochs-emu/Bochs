@@ -213,8 +213,7 @@ Bit32s float32_to_int32(float32 a, float_status_t &status)
         if (get_denormals_are_zeros(status)) aSig = 0;
     }
     int shiftCount = 0xAF - aExp;
-    Bit64u aSig64 = aSig;
-    aSig64 <<= 32;
+    Bit64u aSig64 = Bit64u(aSig) << 32;
     if (0 < shiftCount) aSig64 = shift64RightJamming(aSig64, shiftCount);
     return roundAndPackInt32(aSign, aSig64, status);
 }
@@ -760,12 +759,19 @@ float32 float32_scalef(float32 a, float32 b, float_status_t &status)
         return a;
     }
 
+    if ((bExp | bSig) == 0) return a;
+
     if (bExp == 0xFF) {
         if (bSign) return packFloat32(aSign, 0, 0);
         return packFloat32(aSign, 0xFF, 0);
     }
 
-    return 0;  // fixme
+    if (bExp > FLOAT32_EXP_BIAS + 16) {
+        // handle obvious overflow/underflow result
+        return roundAndPackFloat32(aSign, bSign ? -0x7F : 0xFF, aSig, status);
+    }
+
+    return 0xdeadbeef;  // fixme
 }
 
 /*----------------------------------------------------------------------------
@@ -1926,12 +1932,19 @@ float64 float64_scalef(float64 a, float64 b, float_status_t &status)
         return a;
     }
 
+    if ((bExp | bSig) == 0) return a;
+
     if (bExp == 0x7FF) {
         if (bSign) return packFloat64(aSign, 0, 0);
         return packFloat64(aSign, 0x7FF, 0);
     }
 
-    return 0;  // fixme
+    if (bExp > FLOAT64_EXP_BIAS + 16) {
+        // handle obvious overflow/underflow result
+        return roundAndPackFloat64(aSign, bSign ? -0x3FF : 0x7FF, aSig, status);
+    }
+
+    return BX_CONST64(0xdeadbeefdeadbeef);  // fixme
 }
 
 /*----------------------------------------------------------------------------
