@@ -1,11 +1,12 @@
-Changes after 2.6.2 (updated Mar 04, 2014):
+Changes after 2.6.2 (updated Mar 15, 2014):
 
 - CPU
   - Bugfixes for CPU emulation correctness (critical fixes for VMX, TBM/BMI and RDRAND instructions)
   - Implemented FCS/FDS Deprecation CPU feature
   - Implemented SHA instructions emulation
-  - Implemented AVX-512 instructions emulation (work in progress)
+  - Implemented AVX-512 instructions emulation
   ! CPUDB: Added Intel(R) Core(TM) i7-4770 CPU (Haswell) configuration to CPUDB
+  ! CPUDB: Added AMD A8-5600K APU (Trinity) configuration to CPUDB
   - Replace 'SSE' and 'AVX' .bochsrc option with single 'SIMD' option which controls presence
     of all CPU SIMD extensions from SSE to AVX-512
 

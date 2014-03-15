@@ -152,8 +152,7 @@ Bit64u zambezi_t::get_isa_extensions_bitmask(void) const
 #if BX_SUPPORT_SVM
          BX_ISA_SVM |
 #endif
-         BX_ISA_XOP |
-         BX_ISA_TBM;
+         BX_ISA_XOP;
 }
 
 Bit32u zambezi_t::get_cpu_extensions_bitmask(void) const
@@ -686,8 +685,7 @@ void zambezi_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
   // * [10:10] Pause filter support
   //   [11:11] Reserved
   // * [12:12] Pause filter threshold support
-  //   [31:13] Reserved
-
+  //   [13:13] Advanced Virtual Interrupt Controller
   leaf->edx = get_svm_extensions_bitmask();
 }
 

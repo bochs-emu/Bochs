@@ -47,13 +47,14 @@ CPUDB_OBJS = pentium_mmx.o \
              phenomx3_8650_toliman.o \
              core_duo_t2400_yonah.o \
              core2_penryn_t9600.o \
+             atom_n270.o \
              corei5_lynnfield_750.o \
              corei5_arrandale_m520.o \
-             zambezi.o \
              corei7_sandy_bridge_2600K.o \
              corei7_ivy_bridge_3770K.o \
              corei7_haswell_4770.o \
-             atom_n270.o
+             zambezi.o \
+             trinity_apu.o
 
 BX_INCLUDES = ../../bochs.h ../../config.h
 
@@ -227,7 +228,16 @@ zambezi.o: zambezi.@CPP_SUFFIX@ ../../bochs.h \
  ../../gui/gui.h ../../instrument/stubs/instrument.h ../cpu.h ../cpuid.h \
  ../crregs.h ../descriptor.h ../instr.h ../ia_opcodes.h ../lazy_flags.h \
  ../icache.h ../apic.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
- ../fpu/status_w.h ../fpu/control_w.h ../xmm.h phenomx3_8650_toliman.h \
+ ../fpu/status_w.h ../fpu/control_w.h ../xmm.h zambezi.h \
+ ../../cpu/cpuid.h
+trinity_apu.o: trinity_apu.@CPP_SUFFIX@ ../../bochs.h \
+ ../../config.h ../../osdep.h ../../bx_debug/debug.h ../../config.h \
+ ../../osdep.h ../../gui/siminterface.h ../../cpudb.h \
+ ../../gui/paramtree.h ../../memory/memory.h ../../pc_system.h \
+ ../../gui/gui.h ../../instrument/stubs/instrument.h ../cpu.h ../cpuid.h \
+ ../crregs.h ../descriptor.h ../instr.h ../ia_opcodes.h ../lazy_flags.h \
+ ../icache.h ../apic.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
+ ../fpu/status_w.h ../fpu/control_w.h ../xmm.h trinity_apu.h \
  ../../cpu/cpuid.h
 phenomx3_8650_toliman.o: phenomx3_8650_toliman.@CPP_SUFFIX@ ../../bochs.h \
  ../../config.h ../../osdep.h ../../bx_debug/debug.h ../../config.h \
