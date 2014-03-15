@@ -664,8 +664,8 @@ void corei7_ivy_bridge_3770k_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpu
     leaf->eax = cpu->xcr0_suppmask;
     leaf->ebx = 512+64;
     if (cpu->xcr0.get_YMM())
-      leaf->ebx += 256;
-    leaf->ecx = 512+64+256 /* AVX */;
+      leaf->ebx = XSAVE_YMM_STATE_OFFSET + XSAVE_YMM_STATE_LEN;
+    leaf->ecx = XSAVE_YMM_STATE_OFFSET + XSAVE_YMM_STATE_LEN;
     leaf->edx = 0;
     return;
 
@@ -676,8 +676,8 @@ void corei7_ivy_bridge_3770k_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpu
     leaf->edx = 0;
     return;
 
-  case 2: // AVX leaf
-    leaf->eax = 256;
+  case 2: // YMM leaf
+    leaf->eax = XSAVE_YMM_STATE_LEN;
     leaf->ebx = XSAVE_YMM_STATE_OFFSET;
     leaf->ecx = 0;
     leaf->edx = 0;

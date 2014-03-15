@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2013 Stanislav Shwartsman
+//   Copyright (c) 2011-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -96,6 +96,8 @@ bx_generic_cpuid_t::bx_generic_cpuid_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 
 void bx_generic_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
+  static char *brand_string = (char *)SIM->get_param_string(BXPN_BRAND_STRING)->getptr();
+
   static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
   if (cpuid_limit_winnt)
     if (function > 2 && function < 0x80000000) function = 2;
@@ -118,7 +120,7 @@ void bx_generic_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
   case 0x80000002:
   case 0x80000003:
   case 0x80000004:
-    get_ext_cpuid_brand_string_leaf(function, leaf);
+    get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
     return;
   case 0x80000005:
     get_ext_cpuid_leaf_5(leaf);
@@ -435,16 +437,35 @@ void bx_generic_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_func
       // ECX - Maximum size (in bytes) required by CPU supported features
       // EDX - valid bits of XCR0 (upper part)
       leaf->eax = cpu->xcr0_suppmask;
+
       leaf->ebx = 512+64;
 #if BX_SUPPORT_AVX
       if (cpu->xcr0.get_YMM())
-        leaf->ebx += 256;
+        leaf->ebx = XSAVE_YMM_STATE_OFFSET + XSAVE_YMM_STATE_LEN;
 #endif
+#if BX_SUPPORT_EVEX
+      if (cpu->xcr0.get_OPMASK())
+        leaf->ebx = XSAVE_OPMASK_STATE_OFFSET + XSAVE_OPMASK_STATE_LEN;
+      if (cpu->xcr0.get_ZMM_HI256())
+        leaf->ebx = XSAVE_ZMM_HI256_STATE_OFFSET + XSAVE_ZMM_HI256_STATE_LEN;
+      if (cpu->xcr0.get_HI_ZMM())
+        leaf->ebx = XSAVE_HI_ZMM_STATE_OFFSET + XSAVE_HI_ZMM_STATE_LEN;
+#endif
+
       leaf->ecx = 512+64;
 #if BX_SUPPORT_AVX
       if (cpu->xcr0_suppmask & BX_XCR0_YMM_MASK)
-        leaf->ecx += 256;
+        leaf->ecx = XSAVE_YMM_STATE_OFFSET + XSAVE_YMM_STATE_LEN;
 #endif
+#if BX_SUPPORT_EVEX
+      if (cpu->xcr0_suppmask & BX_XCR0_OPMASK_MASK)
+        leaf->ecx = XSAVE_OPMASK_STATE_OFFSET + XSAVE_OPMASK_STATE_LEN;
+      if (cpu->xcr0_suppmask & BX_XCR0_ZMM_HI256_MASK)
+        leaf->ecx = XSAVE_ZMM_HI256_STATE_OFFSET + XSAVE_ZMM_HI256_STATE_LEN;
+      if (cpu->xcr0_suppmask & BX_XCR0_HI_ZMM_MASK)
+        leaf->ecx = XSAVE_HI_ZMM_STATE_OFFSET + XSAVE_HI_ZMM_STATE_LEN;
+#endif
+
       leaf->edx = 0;
       break;
 
@@ -456,10 +477,37 @@ void bx_generic_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_func
       break;
 
 #if BX_SUPPORT_AVX
-    case 2: // AVX leaf
+    case 2: // YMM leaf
       if (cpu->xcr0_suppmask & BX_XCR0_YMM_MASK) {
-        leaf->eax = 256;
+        leaf->eax = XSAVE_YMM_STATE_LEN;
         leaf->ebx = XSAVE_YMM_STATE_OFFSET;
+        leaf->ecx = 0;
+        leaf->edx = 0;
+      }
+      break;
+#endif
+
+#if BX_SUPPORT_EVEX
+    case 5: // OPMASK leaf
+      if (cpu->xcr0_suppmask & BX_XCR0_OPMASK_MASK) {
+        leaf->eax = XSAVE_OPMASK_STATE_LEN;
+        leaf->ebx = XSAVE_OPMASK_STATE_OFFSET;
+        leaf->ecx = 0;
+        leaf->edx = 0;
+      }
+      break;
+    case 6: // ZMM Hi256 leaf
+      if (cpu->xcr0_suppmask & BX_XCR0_ZMM_HI256_MASK) {
+        leaf->eax = XSAVE_ZMM_HI256_STATE_LEN;
+        leaf->ebx = XSAVE_ZMM_HI256_STATE_OFFSET;
+        leaf->ecx = 0;
+        leaf->edx = 0;
+      }
+      break;
+    case 7: // HI_ZMM leaf
+      if (cpu->xcr0_suppmask & BX_XCR0_HI_ZMM_MASK) {
+        leaf->eax = XSAVE_HI_ZMM_STATE_LEN;
+        leaf->ebx = XSAVE_HI_ZMM_STATE_OFFSET;
         leaf->ecx = 0;
         leaf->edx = 0;
       }
@@ -547,41 +595,6 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000002 //
 // leaf 0x80000003 //
 // leaf 0x80000004 //
-void bx_generic_cpuid_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const
-{
-  // CPUID function 0x800000002-0x800000004 - Processor Name String Identifier
-  static Bit8u *brand_string = (Bit8u *)SIM->get_param_string(BXPN_BRAND_STRING)->getptr();
-
-  switch(function) {
-  case 0x80000002:
-    memcpy(&(leaf->eax), brand_string     , 4);
-    memcpy(&(leaf->ebx), brand_string +  4, 4);
-    memcpy(&(leaf->ecx), brand_string +  8, 4);
-    memcpy(&(leaf->edx), brand_string + 12, 4);
-    break;
-  case 0x80000003:
-    memcpy(&(leaf->eax), brand_string + 16, 4);
-    memcpy(&(leaf->ebx), brand_string + 20, 4);
-    memcpy(&(leaf->ecx), brand_string + 24, 4);
-    memcpy(&(leaf->edx), brand_string + 28, 4);
-    break;
-  case 0x80000004:
-    memcpy(&(leaf->eax), brand_string + 32, 4);
-    memcpy(&(leaf->ebx), brand_string + 36, 4);
-    memcpy(&(leaf->ecx), brand_string + 40, 4);
-    memcpy(&(leaf->edx), brand_string + 44, 4);
-    break;
-  default:
-    break;
-  }
-
-#ifdef BX_BIG_ENDIAN
-  leaf->eax = bx_bswap32(leaf->eax);
-  leaf->ebx = bx_bswap32(leaf->ebx);
-  leaf->ecx = bx_bswap32(leaf->ecx);
-  leaf->edx = bx_bswap32(leaf->edx);
-#endif
-}
 
 // leaf 0x80000005 //
 void bx_generic_cpuid_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const

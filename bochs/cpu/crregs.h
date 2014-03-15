@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2007-2013 Stanislav Shwartsman
+//   Copyright (c) 2007-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -230,6 +230,12 @@ struct bx_efer_t {
 #endif
 
 #if BX_CPU_LEVEL >= 6
+
+#define XSAVE_SSE_STATE_LEN           (256)
+#define XSAVE_YMM_STATE_LEN           (256)
+#define XSAVE_OPMASK_STATE_LEN         (64)
+#define XSAVE_ZMM_HI256_STATE_LEN     (512)
+#define XSAVE_HI_ZMM_STATE_LEN       (1024)
 
 #define XSAVE_SSE_STATE_OFFSET        (160)
 #define XSAVE_YMM_STATE_OFFSET        (576)

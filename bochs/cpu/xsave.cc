@@ -219,7 +219,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   Bit64u header2 = read_virtual_qword(i->seg(), (eaddr + 520) & asize_mask);
   Bit64u header3 = read_virtual_qword(i->seg(), (eaddr + 528) & asize_mask);
 
-  if ((~BX_CPU_THIS_PTR xcr0.get32() & header1) != 0) {
+  if ((~BX_CPU_THIS_PTR xcr0.get32() & header1) != 0 || GET32H(header1) != 0) {
     BX_ERROR(("XRSTOR: Broken header state"));
     exception(BX_GP_EXCEPTION, 0);
   }
