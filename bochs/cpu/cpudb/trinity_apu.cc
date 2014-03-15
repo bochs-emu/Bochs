@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2012-2014 Stanislav Shwartsman
+//   Copyright (c) 2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -24,16 +24,16 @@
 #include "bochs.h"
 #include "cpu.h"
 #include "param_names.h"
-#include "zambezi.h"
+#include "trinity_apu.h"
 
 #define LOG_THIS cpu->
 
 #if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
 
-zambezi_t::zambezi_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
+trinity_apu_t::trinity_apu_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
   if (! BX_SUPPORT_X86_64)
-    BX_PANIC(("You must enable x86-64 for AMD FX-4100 (Zambezi) configuration"));
+    BX_PANIC(("You must enable x86-64 for AMD A8-5600K APU (Trinity) configuration"));
 
   BX_INFO(("WARNING: Light Weight Profiling (LWP) support is not implemented !"));
 
@@ -44,7 +44,7 @@ zambezi_t::zambezi_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
     BX_INFO(("WARNING: MONITOR/MWAIT support is not compiled in !"));
 }
 
-void zambezi_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void trinity_apu_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
   if (cpuid_limit_winnt)
@@ -111,6 +111,9 @@ void zambezi_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_functi
   case 0x00000006:
     get_std_cpuid_leaf_6(leaf);
     return;
+  case 0x00000007:
+    get_std_cpuid_leaf_7(subfunction, leaf);
+    return;
   case 0x0000000D:
     get_std_cpuid_xsave_leaf(subfunction, leaf);
     return;
@@ -120,7 +123,7 @@ void zambezi_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_functi
   }
 }
 
-Bit64u zambezi_t::get_isa_extensions_bitmask(void) const
+Bit64u trinity_apu_t::get_isa_extensions_bitmask(void) const
 {
   return BX_ISA_X87 |
          BX_ISA_486 |
@@ -146,16 +149,20 @@ Bit64u zambezi_t::get_isa_extensions_bitmask(void) const
          BX_ISA_XSAVE |
          BX_ISA_AES_PCLMULQDQ |
          BX_ISA_AVX |
+         BX_ISA_AVX_F16C |
+         BX_ISA_AVX_FMA |
          BX_ISA_SSE4A |
          BX_ISA_LZCNT |
          BX_ISA_FMA4 |
 #if BX_SUPPORT_SVM
          BX_ISA_SVM |
 #endif
-         BX_ISA_XOP;
+         BX_ISA_XOP |
+         BX_ISA_TBM |
+         BX_ISA_BMI1;
 }
 
-Bit32u zambezi_t::get_cpu_extensions_bitmask(void) const
+Bit32u trinity_apu_t::get_cpu_extensions_bitmask(void) const
 {
   return BX_CPU_DEBUG_EXTENSIONS |
          BX_CPU_VME |
@@ -176,7 +183,7 @@ Bit32u zambezi_t::get_cpu_extensions_bitmask(void) const
 }
 
 #if BX_SUPPORT_SVM
-Bit32u zambezi_t::get_svm_extensions_bitmask(void) const
+Bit32u trinity_apu_t::get_svm_extensions_bitmask(void) const
 {
   return BX_CPUID_SVM_NESTED_PAGING |
          BX_CPUID_SVM_LBR_VIRTUALIZATION |
@@ -192,7 +199,7 @@ Bit32u zambezi_t::get_svm_extensions_bitmask(void) const
 #endif
 
 // leaf 0x00000000 //
-void zambezi_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
+void trinity_apu_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   static const char* vendor_string = "AuthenticAMD";
 
@@ -220,7 +227,7 @@ void zambezi_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 }
 
 // leaf 0x00000001 //
-void zambezi_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
+void trinity_apu_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information
   //   [3:0]   Stepping ID
@@ -229,7 +236,7 @@ void zambezi_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
   //   [19:16] Extended Model
   //   [27:20] Extended Family
-  leaf->eax = 0x00600F12;
+  leaf->eax = 0x00610F01;
 
   // EBX:
   //   [7:0]   Brand ID
@@ -257,7 +264,7 @@ void zambezi_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [9:9]   SSSE3: SSSE3 Instructions
   //   [10:10] CNXT-ID: L1 context ID
   //   [11:11] reserved
-  //   [12:12] FMA Instructions support
+  // * [12:12] FMA Instructions support
   // * [13:13] CMPXCHG16B: CMPXCHG16B instruction support
   //   [14:14] xTPR update control
   //   [15:15] PDCM - Perfon and Debug Capability MSR
@@ -283,13 +290,15 @@ void zambezi_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
               BX_CPUID_EXT_MONITOR_MWAIT |
 #endif
               BX_CPUID_EXT_SSSE3 |
+              BX_CPUID_EXT_FMA |
               BX_CPUID_EXT_CMPXCHG16B |
               BX_CPUID_EXT_SSE4_1 |
               BX_CPUID_EXT_SSE4_2 |
               BX_CPUID_EXT_POPCNT |
               BX_CPUID_EXT_AES |
               BX_CPUID_EXT_XSAVE |
-              BX_CPUID_EXT_AVX;
+              BX_CPUID_EXT_AVX |
+              BX_CPUID_EXT_AVX_F16C;
   if (cpu->cr4.get_OSXSAVE())
     leaf->ecx |= BX_CPUID_EXT_OSXSAVE;
 
@@ -359,7 +368,7 @@ void zambezi_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 #if BX_SUPPORT_MONITOR_MWAIT
 
 // leaf 0x00000005 //
-void zambezi_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
+void trinity_apu_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000005 - MONITOR/MWAIT Leaf
 
@@ -385,7 +394,7 @@ void zambezi_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
 #endif
 
 // leaf 0x00000006 //
-void zambezi_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf) const
+void trinity_apu_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000006 - Thermal and Power Management Leaf
   leaf->eax = 0x00000000;
@@ -394,8 +403,46 @@ void zambezi_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf) const
   leaf->edx = 0x00000000;
 }
 
+// leaf 0x00000007 //
+void trinity_apu_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const
+{
+  switch(subfunction) {
+  case 0:
+    leaf->eax = 0; /* report max sub-leaf that supported in leaf 7 */
+
+    //   [0:0]   FS/GS BASE access instructions
+    //   [1:1]   Support for IA32_TSC_ADJUST MSR
+    //   [2:2]   reserved
+    // * [3:3]   BMI1: Advanced Bit Manipulation Extensions
+    //   [4:4]   HLE: Hardware Lock Elision
+    //   [5:5]   AVX2
+    //   [6:6]   reserved
+    //   [7:7]   SMEP: Supervisor Mode Execution Protection
+    //   [8:8]   BMI2: Advanced Bit Manipulation Extensions
+    //   [9:9]   Support for Enhanced REP MOVSB/STOSB
+    //   [10:10] Support for INVPCID instruction
+    //   [11:11] RTM: Restricted Transactional Memory
+    //   [12:12] Supports Quality of Service (QoS) capability
+    //   [13:13] Deprecates FPU CS and FPU DS values
+    //   [17:14] reserved
+    //   [18:18] RDSEED instruction support
+    //   [19:19] ADCX/ADOX instructions support
+    //   [20:20] SMAP: Supervisor Mode Access Prevention
+    //   [31:21] reserved
+    leaf->ebx = BX_CPUID_EXT3_BMI1;
+    leaf->ecx = 0;
+    leaf->edx = 0;
+    break;
+  default:
+    leaf->eax = 0;
+    leaf->ebx = 0;
+    leaf->ecx = 0;
+    leaf->edx = 0;
+  }
+}
+
 // leaf 0x0000000D //
-void zambezi_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
+void trinity_apu_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   switch(subfunction) {
   case 0:
@@ -436,7 +483,7 @@ void zambezi_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *l
 }
 
 // leaf 0x80000000 //
-void zambezi_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
+void trinity_apu_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   static const char* vendor_string = "AuthenticAMD";
 
@@ -456,7 +503,7 @@ void zambezi_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
 }
 
 // leaf 0x80000001 //
-void zambezi_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
+void trinity_apu_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information (same as 0x00000001.EAX)
   leaf->eax = 0x00600f12;
@@ -465,7 +512,7 @@ void zambezi_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   //  [15:00]  Brand ID
   //  [27:16]  Reserved
   //  [31:28]  Package Type
-  leaf->ebx = 0x10000000;
+  leaf->ebx = 0x20000000;
 
   // ECX:
   // * [0:0]   LAHF/SAHF instructions support in 64-bit mode
@@ -480,16 +527,16 @@ void zambezi_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [9:9]   OSVW: OS visible workarounds (AMD)
   // * [10:10] IBS: Instruction based sampling
   // * [11:11] XOP: Extended Operations Support and XOP Prefix
-  // ! [12:12] SKINIT support
+  // * [12:12] SKINIT support
   // * [13:13] WDT: Watchdog timer support
   //   [14:14] Reserved
-  // ! [15:15] LWP: Light weight profiling
+  // * [15:15] LWP: Light weight profiling
   // * [16:16] FMA4: Four-operand FMA instructions support
-  //   [17:17] Reserved
+  // * [17:17] Reserved
   //   [18:18] Reserved
   // * [19:19] NodeId: Indicates support for NodeId MSR (0xc001100c)
   //   [20:20] Reserved
-  //   [21:21] TBM: trailing bit manipulation instructions support
+  // * [21:21] TBM: trailing bit manipulation instructions support
   // * [22:22] Topology extensions support
   // * [23:23] PerfCtrExtCore: core perf counter extensions support
   // * [24:24] PerfCtrExtNB: NB perf counter extensions support
@@ -509,9 +556,12 @@ void zambezi_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
               BX_CPUID_EXT2_OSVW |
               BX_CPUID_EXT2_IBS |
               BX_CPUID_EXT2_XOP |
+           /* BX_CPUID_EXT2_SKINIT | */ // not implemented
               BX_CPUID_EXT2_WDT |
+           /* BX_CPUID_EXT2_LWP | */    // not implemented
               BX_CPUID_EXT2_FMA4 |
               BX_CPUID_EXT2_NODEID |
+              BX_CPUID_EXT2_TBM |
               BX_CPUID_EXT2_TOPOLOGY_EXTENSIONS |
               BX_CPUID_EXT2_PERFCTR_EXT_CORE |
               BX_CPUID_EXT2_PERFCTR_EXT_NB;
@@ -585,11 +635,10 @@ void zambezi_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000002 //
 // leaf 0x80000003 //
 // leaf 0x80000004 //
-void zambezi_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const
+void trinity_apu_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const
 {
   // CPUID function 0x80000002-0x80000004 - Processor Name String Identifier
-  static const char* brand_string = "AMD FX(tm)-4100 Quad-Core Processor            ";
-
+  static const char* brand_string = "AMD A8-5600K APU with Radeon(tm) HD Graphics   ";
   switch(function) {
   case 0x80000002:
     memcpy(&(leaf->eax), brand_string     , 4);
@@ -622,41 +671,47 @@ void zambezi_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_
 }
 
 // leaf 0x80000005 //
-void zambezi_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
+void trinity_apu_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000005 - L1 Cache and TLB Identifiers
-  leaf->eax = 0xff20ff18;
-  leaf->ebx = 0xff20ff30;
+  leaf->eax = 0xFF40FF18;
+  leaf->ebx = 0xFF40FF30;
   leaf->ecx = 0x10040140;
   leaf->edx = 0x40020140;
 }
 
 // leaf 0x80000006 //
-void zambezi_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
+void trinity_apu_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
-  leaf->eax = 0x64000000;
+  leaf->eax = 0x64006400;
   leaf->ebx = 0x64004200;
   leaf->ecx = 0x08008140;
-  leaf->edx = 0x0040c140;
+  leaf->edx = 0x00000000;
 }
 
 // leaf 0x80000007 //
-void zambezi_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
+void trinity_apu_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000007 - Advanced Power Management
   leaf->eax = 0;
   leaf->ebx = 0;
   leaf->ecx = 0;
-  leaf->edx = 0x000003d9;
+  leaf->edx = 0x000007D9;
 }
 
 // leaf 0x80000008 //
-void zambezi_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
+void trinity_apu_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
 {
   // virtual & phys address size in low 2 bytes.
   leaf->eax = BX_PHY_ADDRESS_WIDTH | (BX_LIN_ADDRESS_WIDTH << 8);
   leaf->ebx = 0;
+
+  // [17..16] Performance time-stamp counter size.
+  // [15..12] APIC ID size, Zero value indicates that legacy methods must be
+  //          used to derive the maximum number of cores.
+  //  [11..8] (reserved)
+  //   [7..0] Number of physical cores - 1.
   leaf->ecx = ncores - 1;
   leaf->edx = 0;
 }
@@ -666,7 +721,7 @@ void zambezi_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
 #if BX_SUPPORT_SVM
 
 // leaf 0x8000000A : SVM //
-void zambezi_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
+void trinity_apu_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
 {
   leaf->eax = 0x01; /* SVM revision ID */
   leaf->ebx = 0x40; /* number of ASIDs */
@@ -693,16 +748,16 @@ void zambezi_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
 
 // leaf 0x8000000B - 0x80000018: Reserved //
 
-void zambezi_t::get_ext_cpuid_leaf_19(cpuid_function_t *leaf) const
+void trinity_apu_t::get_ext_cpuid_leaf_19(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000019 - 1G Page TLB Identifiers
-  leaf->eax = 0xF020F018;
-  leaf->ebx = 0x64000000;
+  leaf->eax = 0xF040F018;
+  leaf->ebx = 0x64006400;
   leaf->ecx = 0;
   leaf->edx = 0;
 }
 
-void zambezi_t::get_ext_cpuid_leaf_1A(cpuid_function_t *leaf) const
+void trinity_apu_t::get_ext_cpuid_leaf_1A(cpuid_function_t *leaf) const
 {
   // CPUID function 0x80000001A - Performance Optimization Identifiers
   leaf->eax = 0x00000003;
@@ -711,7 +766,7 @@ void zambezi_t::get_ext_cpuid_leaf_1A(cpuid_function_t *leaf) const
   leaf->edx = 0;
 }
 
-void zambezi_t::get_ext_cpuid_leaf_1B(cpuid_function_t *leaf) const
+void trinity_apu_t::get_ext_cpuid_leaf_1B(cpuid_function_t *leaf) const
 {
   // CPUID function 0x80000001B - Instruction Based Sampling Identifiers
   leaf->eax = 0xFF;
@@ -722,7 +777,7 @@ void zambezi_t::get_ext_cpuid_leaf_1B(cpuid_function_t *leaf) const
   BX_INFO(("WARNING: Instruction Based Sampling is not implemented"));
 }
 
-void zambezi_t::get_ext_cpuid_leaf_1C(cpuid_function_t *leaf) const
+void trinity_apu_t::get_ext_cpuid_leaf_1C(cpuid_function_t *leaf) const
 {
   // CPUID function 0x80000001C - Lightweight Profiling Capabilities (not implemented)
   leaf->eax = 0;
@@ -731,7 +786,7 @@ void zambezi_t::get_ext_cpuid_leaf_1C(cpuid_function_t *leaf) const
   leaf->edx = 0;
 }
 
-void zambezi_t::get_ext_cpuid_leaf_1D(Bit32u subfunction, cpuid_function_t *leaf) const
+void trinity_apu_t::get_ext_cpuid_leaf_1D(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   // CPUID function 0x80000001D - Cache Properties
   switch(subfunction) {
@@ -753,12 +808,6 @@ void zambezi_t::get_ext_cpuid_leaf_1D(Bit32u subfunction, cpuid_function_t *leaf
     leaf->ecx = 0x000007FF;
     leaf->edx = 0x00000001;
     return;
-  case 3:
-    leaf->eax = 0x0000C163;
-    leaf->ebx = 0x0FC0003F;
-    leaf->ecx = 0x000007FF;
-    leaf->edx = 0x00000001;
-    return;
   default:
     leaf->eax = 0;
     leaf->ebx = 0;
@@ -768,7 +817,7 @@ void zambezi_t::get_ext_cpuid_leaf_1D(Bit32u subfunction, cpuid_function_t *leaf
   }
 }
 
-void zambezi_t::get_ext_cpuid_leaf_1E(cpuid_function_t *leaf) const
+void trinity_apu_t::get_ext_cpuid_leaf_1E(cpuid_function_t *leaf) const
 {
   // CPUID function 0x80000001E - Topology Extensions
   leaf->eax = 0;
@@ -777,7 +826,7 @@ void zambezi_t::get_ext_cpuid_leaf_1E(cpuid_function_t *leaf) const
   leaf->edx = 0;
 }
 
-void zambezi_t::dump_cpuid(void) const
+void trinity_apu_t::dump_cpuid(void) const
 {
   struct cpuid_function_t leaf;
   unsigned n;
@@ -793,6 +842,6 @@ void zambezi_t::dump_cpuid(void) const
   }
 }
 
-bx_cpuid_t *create_zambezi_cpuid(BX_CPU_C *cpu) { return new zambezi_t(cpu); }
+bx_cpuid_t *create_trinity_apu_cpuid(BX_CPU_C *cpu) { return new trinity_apu_t(cpu); }
 
 #endif
