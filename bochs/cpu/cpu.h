@@ -4931,6 +4931,8 @@ public: // for now...
 #endif
 #endif
 
+  BX_SMF Bit32u get_xinuse_vector(Bit32u requested_feature_bitmap);
+
   BX_SMF void xsave_x87_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xsave_sse_state(bxInstruction_c *i, bx_address offset);
 #if BX_SUPPORT_AVX

@@ -32,7 +32,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareXSAVE();
 
-  BX_DEBUG(("XSAVE: save processor state XCR0=0x%08x", BX_CPU_THIS_PTR xcr0.get32()));
+  BX_DEBUG(("%s: save processor state XCR0=0x%08x", i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR xcr0.get32()));
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   bx_address laddr = get_laddr(i->seg(), eaddr);
@@ -40,14 +40,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
   if (BX_CPU_THIS_PTR alignment_check()) {
     if (laddr & 0x3) {
-      BX_ERROR(("XSAVE: access not aligned to 4-byte cause model specific #AC(0)"));
+      BX_ERROR(("%s: access not aligned to 4-byte cause model specific #AC(0)", i->getIaOpcodeNameShort()));
       exception(BX_AC_EXCEPTION, 0);
     }
   }
 #endif
 
   if (laddr & 0x3f) {
-    BX_ERROR(("XSAVE: access not aligned to 64-byte"));
+    BX_ERROR(("%s: access not aligned to 64-byte", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -60,12 +60,17 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   Bit64u xstate_bv = read_virtual_qword(i->seg(), (eaddr + 512) & asize_mask);
 
   Bit32u requested_feature_bitmap = BX_CPU_THIS_PTR xcr0.get32() & EAX;
+  Bit32u xinuse = get_xinuse_vector(requested_feature_bitmap);
+
+  bx_bool xsaveopt = (i->getIaOpcode() == BX_IA_XSAVEOPT);
 
   /////////////////////////////////////////////////////////////////////////////
   if ((requested_feature_bitmap & BX_XCR0_FPU_MASK) != 0)
   {
-    xsave_x87_state(i, eaddr);
-    if (xsave_x87_state_xinuse())
+    if (! xsaveopt || (xinuse & BX_XCR0_FPU_MASK) != 0)
+      xsave_x87_state(i, eaddr);
+
+    if (xinuse & BX_XCR0_FPU_MASK)
       xstate_bv |=  BX_XCR0_FPU_MASK;
     else
       xstate_bv &= ~BX_XCR0_FPU_MASK;
@@ -82,8 +87,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   /////////////////////////////////////////////////////////////////////////////
   if ((requested_feature_bitmap & BX_XCR0_SSE_MASK) != 0)
   {
-    xsave_sse_state(i, eaddr+XSAVE_SSE_STATE_OFFSET);
-    if (xsave_sse_state_xinuse())
+    if (! xsaveopt || (xinuse & BX_XCR0_SSE_MASK) != 0)
+      xsave_sse_state(i, eaddr+XSAVE_SSE_STATE_OFFSET);
+
+    if (xinuse & BX_XCR0_SSE_MASK)
       xstate_bv |=  BX_XCR0_SSE_MASK;
     else
       xstate_bv &= ~BX_XCR0_SSE_MASK;
@@ -92,8 +99,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 #if BX_SUPPORT_AVX
   if ((requested_feature_bitmap & BX_XCR0_YMM_MASK) != 0)
   {
-    xsave_ymm_state(i, eaddr+XSAVE_YMM_STATE_OFFSET);
-    if (xsave_ymm_state_xinuse())
+    if (! xsaveopt || (xinuse & BX_XCR0_YMM_MASK) != 0)
+      xsave_ymm_state(i, eaddr+XSAVE_YMM_STATE_OFFSET);
+
+    if (xinuse & BX_XCR0_YMM_MASK)
       xstate_bv |=  BX_XCR0_YMM_MASK;
     else
       xstate_bv &= ~BX_XCR0_YMM_MASK;
@@ -103,8 +112,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 #if BX_SUPPORT_EVEX
   if ((requested_feature_bitmap & BX_XCR0_OPMASK_MASK) != 0)
   {
-    xsave_opmask_state(i, eaddr+XSAVE_OPMASK_STATE_OFFSET);
-    if (xsave_opmask_state_xinuse())
+    if (! xsaveopt || (xinuse & BX_XCR0_OPMASK_MASK) != 0)
+      xsave_opmask_state(i, eaddr+XSAVE_OPMASK_STATE_OFFSET);
+
+    if (xinuse & BX_XCR0_OPMASK_MASK)
       xstate_bv |=  BX_XCR0_OPMASK_MASK;
     else
       xstate_bv &= ~BX_XCR0_OPMASK_MASK;
@@ -112,8 +123,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 
   if ((requested_feature_bitmap & BX_XCR0_ZMM_HI256_MASK) != 0)
   {
-    xsave_zmm_hi256_state(i, eaddr+XSAVE_ZMM_HI256_STATE_OFFSET);
-    if (xsave_zmm_hi256_state_xinuse())
+    if (! xsaveopt || (xinuse & BX_XCR0_ZMM_HI256_MASK) != 0)
+      xsave_zmm_hi256_state(i, eaddr+XSAVE_ZMM_HI256_STATE_OFFSET);
+
+    if (xinuse & BX_XCR0_ZMM_HI256_MASK)
       xstate_bv |=  BX_XCR0_ZMM_HI256_MASK;
     else
       xstate_bv &= ~BX_XCR0_ZMM_HI256_MASK;
@@ -121,9 +134,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 
   if ((requested_feature_bitmap & BX_XCR0_HI_ZMM_MASK) != 0)
   {
-    xsave_hi_zmm_state(i, eaddr+XSAVE_HI_ZMM_STATE_OFFSET);
-    if (xsave_hi_zmm_state_xinuse())
-      xstate_bv |= BX_XCR0_HI_ZMM_MASK;
+    if (! xsaveopt || (xinuse & BX_XCR0_HI_ZMM_MASK) != 0)
+      xsave_hi_zmm_state(i, eaddr+XSAVE_HI_ZMM_STATE_OFFSET);
+
+    if (xinuse & BX_XCR0_HI_ZMM_MASK)
+      xstate_bv |=  BX_XCR0_HI_ZMM_MASK;
     else
       xstate_bv &= ~BX_XCR0_HI_ZMM_MASK;
   }
@@ -665,6 +680,42 @@ bx_bool BX_CPU_C::xsave_hi_zmm_state_xinuse(void)
 
 #endif // BX_SUPPORT_AVX
 
+Bit32u BX_CPU_C::get_xinuse_vector(Bit32u requested_feature_bitmap)
+{
+  Bit32u xinuse = 0;
+
+  if (requested_feature_bitmap & BX_XCR0_FPU_MASK) {
+    if (xsave_x87_state_xinuse()) 
+      xinuse |= BX_XCR0_FPU_MASK;
+  }
+  if (requested_feature_bitmap & BX_XCR0_SSE_MASK) {
+    if (xsave_sse_state_xinuse() || BX_MXCSR_REGISTER != MXCSR_RESET)
+      xinuse |= BX_XCR0_SSE_MASK;
+  }
+#if BX_SUPPORT_AVX
+  if (requested_feature_bitmap & BX_XCR0_YMM_MASK) {
+    if (xsave_ymm_state_xinuse()) 
+      xinuse |= BX_XCR0_YMM_MASK;
+  }
+#if BX_SUPPORT_EVEX
+  if (requested_feature_bitmap & BX_XCR0_OPMASK_MASK) {
+    if (xsave_opmask_state_xinuse()) 
+      xinuse |= BX_XCR0_OPMASK_MASK;
+  }
+  if (requested_feature_bitmap & BX_XCR0_ZMM_HI256_MASK) {
+    if (xsave_zmm_hi256_state_xinuse()) 
+      xinuse |= BX_XCR0_ZMM_HI256_MASK;
+  }
+  if (requested_feature_bitmap & BX_XCR0_HI_ZMM_MASK) {
+    if (xsave_hi_zmm_state_xinuse()) 
+      xinuse |= BX_XCR0_HI_ZMM_MASK;
+  }
+#endif
+#endif
+
+  return xinuse;
+}
+
 #endif // BX_CPU_LEVEL >= 6
 
 /* 0F 01 D0 */
@@ -681,27 +732,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XGETBV(bxInstruction_c *i)
 
   if (ECX != 0) {
     if (ECX == 1 && BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVEC)) {
-      // Returns the state-component bitmap XINUSE. If XINUSE[i]=0, state component [i] is in
-      // its initial configuration.
-      Bit32u xinuse = 0;
-      if (xsave_x87_state_xinuse()) 
-        xinuse |= BX_XCR0_FPU_MASK;
-      if (xsave_sse_state_xinuse())
-        xinuse |= BX_XCR0_SSE_MASK;
-#if BX_SUPPORT_AVX
-      if (xsave_ymm_state_xinuse())
-        xinuse |= BX_XCR0_YMM_MASK;
-#if BX_SUPPORT_EVEX
-      if (xsave_opmask_state_xinuse())
-        xinuse |= BX_XCR0_OPMASK_MASK;
-      if (xsave_zmm_hi256_state_xinuse())
-        xinuse |= BX_XCR0_ZMM_HI256_MASK;
-      if (xsave_hi_zmm_state_xinuse())
-        xinuse |= BX_XCR0_HI_ZMM_MASK;
-#endif
-#endif
+      // Executing XGETBV with ECX = 1 returns in EDX:EAX the logical-AND of XCR0
+      // and the current value of the XINUSE state-component bitmap.
+      // If XINUSE[i]=0, state component [i] is in its initial configuration.
       RDX = 0;
-      RAX = xinuse;
+      RAX = get_xinuse_vector(BX_CPU_THIS_PTR xcr0.get32());
     }
     else {
       BX_ERROR(("XGETBV: Invalid XCR%d register", ECX));
