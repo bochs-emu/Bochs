@@ -4920,6 +4920,18 @@ public: // for now...
 #endif
 
 #if BX_CPU_LEVEL >= 6
+  BX_SMF bx_bool xsave_x87_state_xinuse(void);
+  BX_SMF bx_bool xsave_sse_state_xinuse(void);
+#if BX_SUPPORT_AVX
+  BX_SMF bx_bool xsave_ymm_state_xinuse(void);
+#if BX_SUPPORT_EVEX
+  BX_SMF bx_bool xsave_opmask_state_xinuse(void);
+  BX_SMF bx_bool xsave_zmm_hi256_state_xinuse(void);
+  BX_SMF bx_bool xsave_hi_zmm_state_xinuse(void);
+#endif
+#endif
+
+  BX_SMF void xsave_x87_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xsave_sse_state(bxInstruction_c *i, bx_address offset);
 #if BX_SUPPORT_AVX
   BX_SMF void xsave_ymm_state(bxInstruction_c *i, bx_address offset);
@@ -4930,6 +4942,7 @@ public: // for now...
 #endif
 #endif
 
+  BX_SMF void xrstor_x87_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_sse_state(bxInstruction_c *i, bx_address offset);
 #if BX_SUPPORT_AVX
   BX_SMF void xrstor_ymm_state(bxInstruction_c *i, bx_address offset);
@@ -4940,6 +4953,7 @@ public: // for now...
 #endif
 #endif
 
+  BX_SMF void xrstor_init_x87_state(void);
   BX_SMF void xrstor_init_sse_state(void);
 #if BX_SUPPORT_AVX
   BX_SMF void xrstor_init_ymm_state(void);

@@ -470,7 +470,15 @@ void bx_generic_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_func
       break;
 
     case 1:
-      leaf->eax = BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVEOPT);
+      // EAX[0] - support for the XSAVEOPT instruction
+      // EAX[1] - support for compaction extensions to the XSAVE feature set
+      // EAX[2] - support for execution of XGETBV with ECX = 1
+      // EAX[3] - support for XSAVES, XRSTORS, and the IA32_XSS MSR
+      leaf->eax = 0;
+      if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVEOPT))
+        leaf->eax |= 0x1;
+      if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVEC))
+        leaf->eax |= (1<<1) | (1<<2);
       leaf->ebx = 0;
       leaf->ecx = 0;
       leaf->edx = 0;

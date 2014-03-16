@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2013 Stanislav Shwartsman
+//   Copyright (c) 2008-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -30,9 +30,6 @@
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  unsigned index;
-  BxPackedXmmRegister xmm;
-
   BX_CPU_THIS_PTR prepareXSAVE();
 
   BX_DEBUG(("XSAVE: save processor state XCR0=0x%08x", BX_CPU_THIS_PTR xcr0.get32()));
@@ -60,79 +57,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   // We will go feature-by-feature and not run over all XCR0 bits
   //
 
-  Bit64u header1 = read_virtual_qword(i->seg(), (eaddr + 512) & asize_mask);
+  Bit64u xstate_bv = read_virtual_qword(i->seg(), (eaddr + 512) & asize_mask);
 
   Bit32u features_save_enable_mask = BX_CPU_THIS_PTR xcr0.get32() & EAX;
 
   /////////////////////////////////////////////////////////////////////////////
   if ((features_save_enable_mask & BX_XCR0_FPU_MASK) != 0)
   {
-    xmm.xmm16u(0) = BX_CPU_THIS_PTR the_i387.get_control_word();
-    xmm.xmm16u(1) = BX_CPU_THIS_PTR the_i387.get_status_word();
-    xmm.xmm16u(2) = pack_FPU_TW(BX_CPU_THIS_PTR the_i387.get_tag_word());
-
-    /* x87 FPU Opcode (16 bits) */
-    /* The lower 11 bits contain the FPU opcode, upper 5 bits are reserved */
-    xmm.xmm16u(3) = BX_CPU_THIS_PTR the_i387.foo;
-
-    /*
-     * x87 FPU IP Offset (32/64 bits)
-     * The contents of this field differ depending on the current
-     * addressing mode (16/32/64 bit) when the FXSAVE instruction was executed:
-     *   + 64-bit mode - 64-bit IP offset
-     *   + 32-bit mode - 32-bit IP offset
-     *   + 16-bit mode - low 16 bits are IP offset; high 16 bits are reserved.
-     * x87 CS FPU IP Selector
-     *   + 16 bit, in 16/32 bit mode only
-     */
-#if BX_SUPPORT_X86_64
-    if (i->os64L()) {
-      xmm.xmm64u(1) = (BX_CPU_THIS_PTR the_i387.fip);
-    }
-    else
-#endif
-    {
-      xmm.xmm32u(2) = (Bit32u)(BX_CPU_THIS_PTR the_i387.fip);
-      xmm.xmm32u(3) = x87_get_FCS();
-    }
-
-    write_virtual_xmmword(i->seg(), eaddr, (Bit8u *) &xmm);
-
-    /*
-     * x87 FPU Instruction Operand (Data) Pointer Offset (32/64 bits)
-     * The contents of this field differ depending on the current
-     * addressing mode (16/32 bit) when the FXSAVE instruction was executed:
-     *   + 64-bit mode - 64-bit offset
-     *   + 32-bit mode - 32-bit offset
-     *   + 16-bit mode - low 16 bits are offset; high 16 bits are reserved.
-     * x87 DS FPU Instruction Operand (Data) Pointer Selector
-     *   + 16 bit, in 16/32 bit mode only
-     */
-#if BX_SUPPORT_X86_64
-    if (i->os64L()) {
-      write_virtual_qword(i->seg(), (eaddr + 16) & asize_mask, BX_CPU_THIS_PTR the_i387.fdp);
-    }
-    else
-#endif
-    {
-      write_virtual_dword(i->seg(), (eaddr + 16) & asize_mask, (Bit32u) BX_CPU_THIS_PTR the_i387.fdp);
-      write_virtual_dword(i->seg(), (eaddr + 20) & asize_mask, x87_get_FDS());
-    }
-    /* do not touch MXCSR state */
-
-    /* store i387 register file */
-    for(index=0; index < 8; index++)
-    {
-      const floatx80 &fp = BX_READ_FPU_REG(index);
-
-      xmm.xmm64u(0) = fp.fraction;
-      xmm.xmm64u(1) = 0;
-      xmm.xmm16u(4) = fp.exp;
-
-      write_virtual_xmmword(i->seg(), (eaddr+index*16+32) & asize_mask, (Bit8u *) &xmm);
-    }
-
-    header1 |= BX_XCR0_FPU_MASK;
+    xsave_sse_state(i, eaddr);
+    xstate_bv |= BX_XCR0_FPU_MASK;
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -147,14 +80,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   if ((features_save_enable_mask & BX_XCR0_SSE_MASK) != 0)
   {
     xsave_sse_state(i, eaddr+XSAVE_SSE_STATE_OFFSET);
-    header1 |= BX_XCR0_SSE_MASK;
+    xstate_bv |= BX_XCR0_SSE_MASK;
   }
 
 #if BX_SUPPORT_AVX
   if ((features_save_enable_mask & BX_XCR0_YMM_MASK) != 0)
   {
     xsave_ymm_state(i, eaddr+XSAVE_YMM_STATE_OFFSET);
-    header1 |= BX_XCR0_YMM_MASK;
+    xstate_bv |= BX_XCR0_YMM_MASK;
   }
 #endif
 
@@ -162,24 +95,24 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   if ((features_save_enable_mask & BX_XCR0_OPMASK_MASK) != 0)
   {
     xsave_opmask_state(i, eaddr+XSAVE_OPMASK_STATE_OFFSET);
-    header1 |= BX_XCR0_OPMASK_MASK;
+    xstate_bv |= BX_XCR0_OPMASK_MASK;
   }
 
   if ((features_save_enable_mask & BX_XCR0_ZMM_HI256_MASK) != 0)
   {
     xsave_zmm_hi256_state(i, eaddr+XSAVE_ZMM_HI256_STATE_OFFSET);
-    header1 |= BX_XCR0_ZMM_HI256_MASK;
+    xstate_bv |= BX_XCR0_ZMM_HI256_MASK;
   }
 
   if ((features_save_enable_mask & BX_XCR0_HI_ZMM_MASK) != 0)
   {
     xsave_hi_zmm_state(i, eaddr+XSAVE_HI_ZMM_STATE_OFFSET);
-    header1 |= BX_XCR0_HI_ZMM_MASK;
+    xstate_bv |= BX_XCR0_HI_ZMM_MASK;
   }
 #endif
 
   // always update header to 'dirty' state
-  write_virtual_qword(i->seg(), (eaddr + 512) & asize_mask, header1);
+  write_virtual_qword(i->seg(), (eaddr + 512) & asize_mask, xstate_bv);
 #endif
 
   BX_NEXT_INSTR(i);
@@ -189,9 +122,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  unsigned index;
-  BxPackedXmmRegister xmm;
-
   BX_CPU_THIS_PTR prepareXSAVE();
 
   BX_DEBUG(("XRSTOR: restore processor state XCR0=0x%08x", BX_CPU_THIS_PTR xcr0.get32()));
@@ -215,12 +145,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 
   bx_address asize_mask = i->asize_mask();
 
-  Bit64u header1 = read_virtual_qword(i->seg(), (eaddr + 512) & asize_mask);
+  Bit64u xstate_bv = read_virtual_qword(i->seg(), (eaddr + 512) & asize_mask);
   Bit64u header2 = read_virtual_qword(i->seg(), (eaddr + 520) & asize_mask);
   Bit64u header3 = read_virtual_qword(i->seg(), (eaddr + 528) & asize_mask);
 
-  if ((~BX_CPU_THIS_PTR xcr0.get32() & header1) != 0 || GET32H(header1) != 0) {
-    BX_ERROR(("XRSTOR: Broken header state"));
+  if ((~BX_CPU_THIS_PTR xcr0.get32() & xstate_bv) != 0 || GET32H(xstate_bv) != 0) {
+    BX_ERROR(("XRSTOR: Invalid xsave_bv state"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -238,86 +168,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   /////////////////////////////////////////////////////////////////////////////
   if ((features_load_enable_mask & BX_XCR0_FPU_MASK) != 0)
   {
-    if (header1 & BX_XCR0_FPU_MASK) {
-      // load FPU state from XSAVE area
-      read_virtual_xmmword(i->seg(), eaddr, (Bit8u *) &xmm);
-
-      BX_CPU_THIS_PTR the_i387.cwd =  xmm.xmm16u(0);
-      BX_CPU_THIS_PTR the_i387.swd =  xmm.xmm16u(1);
-      BX_CPU_THIS_PTR the_i387.tos = (xmm.xmm16u(1) >> 11) & 0x07;
-
-      /* always set bit 6 as '1 */
-      BX_CPU_THIS_PTR the_i387.cwd =
-         (BX_CPU_THIS_PTR the_i387.cwd & ~FPU_CW_Reserved_Bits) | 0x0040;
-
-      /* Restore x87 FPU Opcode */
-      /* The lower 11 bits contain the FPU opcode, upper 5 bits are reserved */
-      BX_CPU_THIS_PTR the_i387.foo = xmm.xmm16u(3) & 0x7FF;
-
-      /* Restore x87 FPU IP */
-#if BX_SUPPORT_X86_64
-      if (i->os64L()) {
-        BX_CPU_THIS_PTR the_i387.fip = xmm.xmm64u(1);
-        BX_CPU_THIS_PTR the_i387.fcs = 0;
-      }
-      else
-#endif
-      {
-        BX_CPU_THIS_PTR the_i387.fip = xmm.xmm32u(2);
-        BX_CPU_THIS_PTR the_i387.fcs = xmm.xmm16u(6);
-      }
-
-      Bit32u tag_byte = xmm.xmmubyte(4);
-
-      /* Restore x87 FPU DP */
-      read_virtual_xmmword(i->seg(), (eaddr + 16) & asize_mask, (Bit8u *) &xmm);
-
-#if BX_SUPPORT_X86_64
-      if (i->os64L()) {
-        BX_CPU_THIS_PTR the_i387.fdp = xmm.xmm64u(0);
-        BX_CPU_THIS_PTR the_i387.fds = 0;
-      }
-      else
-#endif
-      {
-        BX_CPU_THIS_PTR the_i387.fdp = xmm.xmm32u(0);
-        BX_CPU_THIS_PTR the_i387.fds = xmm.xmm16u(2);
-      }
-
-      /* load i387 register file */
-      for(index=0; index < 8; index++)
-      {
-        floatx80 reg;
-        reg.fraction = read_virtual_qword(i->seg(), (eaddr+index*16+32) & asize_mask);
-        reg.exp      = read_virtual_word (i->seg(), (eaddr+index*16+40) & asize_mask);
-
-        // update tag only if it is not empty
-        BX_WRITE_FPU_REGISTER_AND_TAG(reg,
-              IS_TAG_EMPTY(index) ? FPU_Tag_Empty : FPU_tagof(reg), index);
-      }
-
-      /* Restore floating point tag word - see desription for FXRSTOR instruction */
-      BX_CPU_THIS_PTR the_i387.twd = unpack_FPU_TW(tag_byte);
-
-      /* check for unmasked exceptions */
-      if (FPU_PARTIAL_STATUS & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask) {
-        /* set the B and ES bits in the status-word */
-        FPU_PARTIAL_STATUS |= FPU_SW_Summary | FPU_SW_Backward;
-      }
-      else {
-        /* clear the B and ES bits in the status-word */
-        FPU_PARTIAL_STATUS &= ~(FPU_SW_Summary | FPU_SW_Backward);
-      }
-    }
-    else {
-      // initialize FPU with reset values
-      BX_CPU_THIS_PTR the_i387.init();
-
-      for (index=0;index<8;index++) {
-        static floatx80 reg = { 0, 0 };
-        BX_FPU_REG(index) = reg;
-      }
-    }
+    if (xstate_bv & BX_XCR0_FPU_MASK)
+      xrstor_x87_state(i, eaddr);
+    else
+      xrstor_init_x87_state();
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -332,7 +186,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   /////////////////////////////////////////////////////////////////////////////
   if ((features_load_enable_mask & BX_XCR0_SSE_MASK) != 0)
   {
-    if (header1 & BX_XCR0_SSE_MASK)
+    if (xstate_bv & BX_XCR0_SSE_MASK)
       xrstor_sse_state(i, eaddr+XSAVE_SSE_STATE_OFFSET);
     else
       xrstor_init_sse_state();
@@ -342,7 +196,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   /////////////////////////////////////////////////////////////////////////////
   if ((features_load_enable_mask & BX_XCR0_YMM_MASK) != 0)
   {
-    if (header1 & BX_XCR0_YMM_MASK)
+    if (xstate_bv & BX_XCR0_YMM_MASK)
       xrstor_ymm_state(i, eaddr+XSAVE_YMM_STATE_OFFSET);
     else
       xrstor_init_ymm_state();
@@ -353,7 +207,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   /////////////////////////////////////////////////////////////////////////////
   if ((features_load_enable_mask & BX_XCR0_OPMASK_MASK) != 0)
   {
-    if (header1 & BX_XCR0_OPMASK_MASK)
+    if (xstate_bv & BX_XCR0_OPMASK_MASK)
       xrstor_opmask_state(i, eaddr+XSAVE_OPMASK_STATE_OFFSET);
     else
       xrstor_init_opmask_state();
@@ -362,7 +216,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   /////////////////////////////////////////////////////////////////////////////
   if ((features_load_enable_mask & BX_XCR0_ZMM_HI256_MASK) != 0)
   {
-    if (header1 & BX_XCR0_ZMM_HI256_MASK)
+    if (xstate_bv & BX_XCR0_ZMM_HI256_MASK)
       xrstor_zmm_hi256_state(i, eaddr+XSAVE_ZMM_HI256_STATE_OFFSET);
     else
       xrstor_init_zmm_hi256_state();
@@ -371,7 +225,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   /////////////////////////////////////////////////////////////////////////////
   if ((features_load_enable_mask & BX_XCR0_HI_ZMM_MASK) != 0)
   {
-    if (header1 & BX_XCR0_HI_ZMM_MASK)
+    if (xstate_bv & BX_XCR0_HI_ZMM_MASK)
       xrstor_hi_zmm_state(i, eaddr+XSAVE_HI_ZMM_STATE_OFFSET);
     else
       xrstor_init_hi_zmm_state();
@@ -383,9 +237,186 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-// SSE state management //
-
 #if BX_CPU_LEVEL >= 6
+
+// x87 state management //
+
+void BX_CPU_C::xsave_x87_state(bxInstruction_c *i, bx_address offset)
+{
+  BxPackedXmmRegister xmm;
+  bx_address asize_mask = i->asize_mask();
+
+  xmm.xmm16u(0) = BX_CPU_THIS_PTR the_i387.get_control_word();
+  xmm.xmm16u(1) = BX_CPU_THIS_PTR the_i387.get_status_word();
+  xmm.xmm16u(2) = pack_FPU_TW(BX_CPU_THIS_PTR the_i387.get_tag_word());
+
+  /* x87 FPU Opcode (16 bits) */
+  /* The lower 11 bits contain the FPU opcode, upper 5 bits are reserved */
+  xmm.xmm16u(3) = BX_CPU_THIS_PTR the_i387.foo;
+
+  /*
+   * x87 FPU IP Offset (32/64 bits)
+   * The contents of this field differ depending on the current
+   * addressing mode (16/32/64 bit) when the FXSAVE instruction was executed:
+   *   + 64-bit mode - 64-bit IP offset
+   *   + 32-bit mode - 32-bit IP offset
+   *   + 16-bit mode - low 16 bits are IP offset; high 16 bits are reserved.
+   * x87 CS FPU IP Selector
+   *   + 16 bit, in 16/32 bit mode only
+   */
+#if BX_SUPPORT_X86_64
+  if (i->os64L()) {
+    xmm.xmm64u(1) = (BX_CPU_THIS_PTR the_i387.fip);
+  }
+  else
+#endif
+  {
+    xmm.xmm32u(2) = (Bit32u)(BX_CPU_THIS_PTR the_i387.fip);
+    xmm.xmm32u(3) = x87_get_FCS();
+  }
+
+  write_virtual_xmmword(i->seg(), offset, (Bit8u *) &xmm);
+
+  /*
+   * x87 FPU Instruction Operand (Data) Pointer Offset (32/64 bits)
+   * The contents of this field differ depending on the current
+   * addressing mode (16/32 bit) when the FXSAVE instruction was executed:
+   *   + 64-bit mode - 64-bit offset
+   *   + 32-bit mode - 32-bit offset
+   *   + 16-bit mode - low 16 bits are offset; high 16 bits are reserved.
+   * x87 DS FPU Instruction Operand (Data) Pointer Selector
+   *   + 16 bit, in 16/32 bit mode only
+   */
+#if BX_SUPPORT_X86_64
+  if (i->os64L()) {
+    write_virtual_qword(i->seg(), (offset + 16) & asize_mask, BX_CPU_THIS_PTR the_i387.fdp);
+  }
+  else
+#endif
+  {
+    write_virtual_dword(i->seg(), (offset + 16) & asize_mask, (Bit32u) BX_CPU_THIS_PTR the_i387.fdp);
+    write_virtual_dword(i->seg(), (offset + 20) & asize_mask, x87_get_FDS());
+  }
+  /* do not touch MXCSR state */
+
+  /* store i387 register file */
+  for(unsigned index=0; index < 8; index++)
+  {
+    const floatx80 &fp = BX_READ_FPU_REG(index);
+
+    xmm.xmm64u(0) = fp.fraction;
+    xmm.xmm64u(1) = 0;
+    xmm.xmm16u(4) = fp.exp;
+
+    write_virtual_xmmword(i->seg(), (offset+index*16+32) & asize_mask, (Bit8u *) &xmm);
+  }
+}
+
+void BX_CPU_C::xrstor_x87_state(bxInstruction_c *i, bx_address offset)
+{
+  BxPackedXmmRegister xmm;
+  bx_address asize_mask = i->asize_mask();
+
+  // load FPU state from XSAVE area
+  read_virtual_xmmword(i->seg(), offset, (Bit8u *) &xmm);
+
+  BX_CPU_THIS_PTR the_i387.cwd =  xmm.xmm16u(0);
+  BX_CPU_THIS_PTR the_i387.swd =  xmm.xmm16u(1);
+  BX_CPU_THIS_PTR the_i387.tos = (xmm.xmm16u(1) >> 11) & 0x07;
+
+  /* always set bit 6 as '1 */
+  BX_CPU_THIS_PTR the_i387.cwd =
+    (BX_CPU_THIS_PTR the_i387.cwd & ~FPU_CW_Reserved_Bits) | 0x0040;
+
+  /* Restore x87 FPU Opcode */
+  /* The lower 11 bits contain the FPU opcode, upper 5 bits are reserved */
+  BX_CPU_THIS_PTR the_i387.foo = xmm.xmm16u(3) & 0x7FF;
+
+  /* Restore x87 FPU IP */
+#if BX_SUPPORT_X86_64
+  if (i->os64L()) {
+    BX_CPU_THIS_PTR the_i387.fip = xmm.xmm64u(1);
+    BX_CPU_THIS_PTR the_i387.fcs = 0;
+  }
+  else
+#endif
+  {
+    BX_CPU_THIS_PTR the_i387.fip = xmm.xmm32u(2);
+    BX_CPU_THIS_PTR the_i387.fcs = xmm.xmm16u(6);
+  }
+
+  Bit32u tag_byte = xmm.xmmubyte(4);
+
+  /* Restore x87 FPU DP */
+  read_virtual_xmmword(i->seg(), (offset + 16) & asize_mask, (Bit8u *) &xmm);
+
+#if BX_SUPPORT_X86_64
+  if (i->os64L()) {
+    BX_CPU_THIS_PTR the_i387.fdp = xmm.xmm64u(0);
+    BX_CPU_THIS_PTR the_i387.fds = 0;
+  }
+  else
+#endif
+  {
+    BX_CPU_THIS_PTR the_i387.fdp = xmm.xmm32u(0);
+    BX_CPU_THIS_PTR the_i387.fds = xmm.xmm16u(2);
+  }
+
+  /* load i387 register file */
+  for(unsigned index=0; index < 8; index++)
+  {
+    floatx80 reg;
+    reg.fraction = read_virtual_qword(i->seg(), (offset+index*16+32) & asize_mask);
+    reg.exp      = read_virtual_word (i->seg(), (offset+index*16+40) & asize_mask);
+
+    // update tag only if it is not empty
+    BX_WRITE_FPU_REGISTER_AND_TAG(reg,
+              IS_TAG_EMPTY(index) ? FPU_Tag_Empty : FPU_tagof(reg), index);
+  }
+
+  /* Restore floating point tag word - see desription for FXRSTOR instruction */
+  BX_CPU_THIS_PTR the_i387.twd = unpack_FPU_TW(tag_byte);
+
+  /* check for unmasked exceptions */
+  if (FPU_PARTIAL_STATUS & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask) {
+    /* set the B and ES bits in the status-word */
+    FPU_PARTIAL_STATUS |= FPU_SW_Summary | FPU_SW_Backward;
+  }
+  else {
+    /* clear the B and ES bits in the status-word */
+    FPU_PARTIAL_STATUS &= ~(FPU_SW_Summary | FPU_SW_Backward);
+  }
+}
+
+void BX_CPU_C::xrstor_init_x87_state(void)
+{
+  // initialize FPU with reset values
+  BX_CPU_THIS_PTR the_i387.init();
+
+  for (unsigned index=0;index<8;index++) {
+    static floatx80 reg = { 0, 0 };
+    BX_FPU_REG(index) = reg;
+  }
+}
+
+bx_bool BX_CPU_C::xsave_x87_state_xinuse(void)
+{
+  if (BX_CPU_THIS_PTR the_i387.get_control_word() != 0x037F ||
+      BX_CPU_THIS_PTR the_i387.get_status_word() != 0 ||
+      BX_CPU_THIS_PTR the_i387.get_tag_word() != 0xFFFF ||
+      BX_CPU_THIS_PTR the_i387.foo != 0 ||
+      BX_CPU_THIS_PTR the_i387.fip != 0 || BX_CPU_THIS_PTR the_i387.fcs != 0 ||
+      BX_CPU_THIS_PTR the_i387.fdp != 0 || BX_CPU_THIS_PTR the_i387.fds != 0) return BX_TRUE;
+
+  for (unsigned index=0;index<8;index++) {
+    floatx80 reg = BX_FPU_REG(index);
+    if (reg.exp != 0 || reg.fraction != 0) return BX_TRUE;
+  }
+
+  return BX_FALSE;
+}
+
+// SSE state management //
 
 void BX_CPU_C::xsave_sse_state(bxInstruction_c *i, bx_address offset)
 {
@@ -420,6 +451,19 @@ void BX_CPU_C::xrstor_init_sse_state(void)
     // set XMM8-XMM15 only in 64-bit mode
     if (index < 8 || long64_mode()) BX_CLEAR_XMM_REG(index);
   }
+}
+
+bx_bool BX_CPU_C::xsave_sse_state_xinuse(void)
+{
+  for(unsigned index=0; index < 16; index++) {
+    // set XMM8-XMM15 only in 64-bit mode
+    if (index < 8 || long64_mode()) {
+      const BxPackedXmmRegister *reg = &BX_XMM_REG(index);
+      if (reg->xmm64u(0) | reg->xmm64u(1)) return BX_TRUE;
+    }
+  }
+
+  return BX_FALSE;
 }
 
 #if BX_SUPPORT_AVX
@@ -461,6 +505,19 @@ void BX_CPU_C::xrstor_init_ymm_state(void)
   }
 }
 
+bx_bool BX_CPU_C::xsave_ymm_state_xinuse(void)
+{
+  for(unsigned index=0; index < 16; index++) {
+    // set YMM8-YMM15 only in 64-bit mode
+    if (index < 8 || long64_mode()) {
+      const BxPackedXmmRegister *reg = &BX_READ_AVX_REG_LANE(index, 1);
+      if (reg->xmm64u(0) | reg->xmm64u(1)) return BX_TRUE;
+    }
+  }
+
+  return BX_FALSE;
+}
+
 #if BX_SUPPORT_EVEX
 
 // Opmask state management //
@@ -494,6 +551,15 @@ void BX_CPU_C::xrstor_init_opmask_state(void)
   }
 }
 
+bx_bool BX_CPU_C::xsave_opmask_state_xinuse(void)
+{
+  for(unsigned index=0; index < 8; index++) {
+    if (BX_READ_OPMASK(index)) return BX_TRUE;
+  }
+
+  return BX_FALSE;
+}
+
 // ZMM_HI256 (upper part of zmm0..zmm15 registers) state management //
 
 void BX_CPU_C::xsave_zmm_hi256_state(bxInstruction_c *i, bx_address offset)
@@ -522,6 +588,18 @@ void BX_CPU_C::xrstor_init_zmm_hi256_state(void)
   for(unsigned index=0; index < 16; index++) {
     BX_CLEAR_AVX_HIGH256(index);
   }
+}
+
+bx_bool BX_CPU_C::xsave_zmm_hi256_state_xinuse(void)
+{
+  for(unsigned index=0; index < 16; index++) {
+    for (unsigned n=2; n < 4; n++) {
+      const BxPackedXmmRegister *reg = &BX_READ_AVX_REG_LANE(index, n);
+      if (reg->xmm64u(0) | reg->xmm64u(1)) return BX_TRUE;
+    }
+  }
+
+  return BX_FALSE;
 }
 
 // HI_ZMM (zmm15..zmm31) state management //
@@ -553,6 +631,18 @@ void BX_CPU_C::xrstor_init_hi_zmm_state(void)
     BX_CLEAR_AVX_REG(index);
   }
 }
+
+bx_bool BX_CPU_C::xsave_hi_zmm_state_xinuse(void)
+{
+  for(unsigned index=16; index < 32; index++) {
+    for (unsigned n=0; n < 4; n++) {
+      const BxPackedXmmRegister *reg = &BX_READ_AVX_REG_LANE(index, n);
+      if (reg->xmm64u(0) | reg->xmm64u(1)) return BX_TRUE;
+    }
+  }
+
+  return BX_FALSE;
+}
 #endif // BX_SUPPORT_EVEX
 
 #endif // BX_SUPPORT_AVX
@@ -570,13 +660,40 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XGETBV(bxInstruction_c *i)
 
   // For now hardcoded handle only XCR0 register, it should take a few
   // years until extension will be required
-  if (ECX != 0) {
-    BX_ERROR(("XGETBV: Invalid XCR register %d", ECX));
-    exception(BX_GP_EXCEPTION, 0);
-  }
 
-  RDX = 0;
-  RAX = BX_CPU_THIS_PTR xcr0.get32();
+  if (ECX != 0) {
+    if (ECX == 1 && BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVEC)) {
+      // Returns the state-component bitmap XINUSE. If XINUSE[i]=0, state component [i] is in
+      // its initial configuration.
+      Bit32u xinuse = 0;
+      if (xsave_x87_state_xinuse()) 
+        xinuse |= BX_XCR0_FPU_MASK;
+      if (xsave_sse_state_xinuse())
+        xinuse |= BX_XCR0_SSE_MASK;
+#if BX_SUPPORT_AVX
+      if (xsave_ymm_state_xinuse())
+        xinuse |= BX_XCR0_YMM_MASK;
+#if BX_SUPPORT_EVEX
+      if (xsave_opmask_state_xinuse())
+        xinuse |= BX_XCR0_OPMASK_MASK;
+      if (xsave_zmm_hi256_state_xinuse())
+        xinuse |= BX_XCR0_ZMM_HI256_MASK;
+      if (xsave_hi_zmm_state_xinuse())
+        xinuse |= BX_XCR0_HI_ZMM_MASK;
+#endif
+#endif
+      RDX = 0;
+      RAX = xinuse;
+    }
+    else {
+      BX_ERROR(("XGETBV: Invalid XCR%d register", ECX));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+  }
+  else {
+    RDX = 0;
+    RAX = BX_CPU_THIS_PTR xcr0.get32();
+  }
 #endif
 
   BX_NEXT_INSTR(i);
@@ -612,7 +729,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
   // For now hardcoded handle only XCR0 register, it should take a few
   // years until extension will be required
   if (ECX != 0) {
-    BX_ERROR(("XSETBV: Invalid XCR register %d", ECX));
+    BX_ERROR(("XSETBV: Invalid XCR%d register", ECX));
     exception(BX_GP_EXCEPTION, 0);
   }
 
