@@ -1,13 +1,13 @@
 #!/bin/sh
 #
 # These are the steps I typically use to configure and compile Bochs
-# on a Win32 system with cygwin (v.20.1)
+# on a Win32 system with Cygwin (v1.7.28) or MinGW/MSYS.
 #
 
 CC="gcc"
 CXX="g++"
-CFLAGS="-O3 -Wall -Wno-format -mno-cygwin"
-#CFLAGS="-O3 -Wall -Wno-format -mno-ms-bitfields" # for GCC 4.7+
+#CFLAGS="-O3 -Wall -Wno-format -mno-cygwin" # for GCC versions < 4.7
+CFLAGS="-O3 -Wall -Wno-format -mno-ms-bitfields"
 CXXFLAGS="$CFLAGS"
 
 export CC

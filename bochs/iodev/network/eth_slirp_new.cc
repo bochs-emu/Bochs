@@ -231,6 +231,9 @@ bx_slirp_new_pktmover_c::bx_slirp_new_pktmover_c(const char *netif,
   char bootfile[128], hostname[33], prefix[10];
 
   this->netdev = dev;
+  if (sizeof(struct arphdr) != 28) {
+    BX_PANIC(("system error: invalid ARP header structure size"));
+  }
   BX_INFO(("slirp_new network driver"));
 
   this->rxh   = rxh;
