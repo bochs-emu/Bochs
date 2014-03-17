@@ -406,6 +406,11 @@ typedef BxPackedYmmRegister BxPackedAvxRegister;
 
 #endif
 
+BX_CPP_INLINE int is_clear(const BxPackedXmmRegister *r)
+{
+  return (r->xmm64u(0) | r->xmm64u(1)) == 0;
+}
+
 #if BX_SUPPORT_EVEX
 // implement SAE and EVEX encoded rounding control
 BX_CPP_INLINE void softfloat_status_word_rc_override(float_status_t &status, bxInstruction_c *i)

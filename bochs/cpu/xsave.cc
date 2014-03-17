@@ -682,7 +682,7 @@ bx_bool BX_CPU_C::xsave_sse_state_xinuse(void)
     // set XMM8-XMM15 only in 64-bit mode
     if (index < 8 || long64_mode()) {
       const BxPackedXmmRegister *reg = &BX_XMM_REG(index);
-      if (reg->xmm64u(0) | reg->xmm64u(1)) return BX_TRUE;
+      if (! is_clear(reg)) return BX_TRUE;
     }
   }
 
@@ -714,7 +714,7 @@ void BX_CPU_C::xrstor_ymm_state(bxInstruction_c *i, bx_address offset)
   for(unsigned index=0; index < 16; index++) {
     // restore YMM8-YMM15 only in 64-bit mode
     if (index < 8 || long64_mode()) {
-       read_virtual_xmmword(i->seg(), (offset + index*16) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG_LANE(index, 1)));
+      read_virtual_xmmword(i->seg(), (offset + index*16) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG_LANE(index, 1)));
     }
   }
 }
@@ -734,7 +734,7 @@ bx_bool BX_CPU_C::xsave_ymm_state_xinuse(void)
     // set YMM8-YMM15 only in 64-bit mode
     if (index < 8 || long64_mode()) {
       const BxPackedXmmRegister *reg = &BX_READ_AVX_REG_LANE(index, 1);
-      if (reg->xmm64u(0) | reg->xmm64u(1)) return BX_TRUE;
+      if (! is_clear(reg)) return BX_TRUE;
     }
   }
 
@@ -801,7 +801,7 @@ void BX_CPU_C::xrstor_zmm_hi256_state(bxInstruction_c *i, bx_address offset)
 
   // load upper part of ZMM registers from XSAVE area
   for(unsigned index=0; index < 16; index++) {
-     read_virtual_ymmword(i->seg(), (offset+index*32) & asize_mask, (Bit8u *)(&BX_READ_ZMM_REG_HI(index)));
+    read_virtual_ymmword(i->seg(), (offset+index*32) & asize_mask, (Bit8u *)(&BX_READ_ZMM_REG_HI(index)));
   }
 }
 
@@ -818,7 +818,7 @@ bx_bool BX_CPU_C::xsave_zmm_hi256_state_xinuse(void)
   for(unsigned index=0; index < 16; index++) {
     for (unsigned n=2; n < 4; n++) {
       const BxPackedXmmRegister *reg = &BX_READ_AVX_REG_LANE(index, n);
-      if (reg->xmm64u(0) | reg->xmm64u(1)) return BX_TRUE;
+      if (! is_clear(reg)) return BX_TRUE;
     }
   }
 
@@ -843,7 +843,7 @@ void BX_CPU_C::xrstor_hi_zmm_state(bxInstruction_c *i, bx_address offset)
 
   // load high ZMM state from XSAVE area
   for(unsigned index=0; index < 16; index++) {
-     read_virtual_zmmword(i->seg(), (offset+index*64) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG(index+16)));
+    read_virtual_zmmword(i->seg(), (offset+index*64) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG(index+16)));
   }
 }
 
@@ -860,7 +860,7 @@ bx_bool BX_CPU_C::xsave_hi_zmm_state_xinuse(void)
   for(unsigned index=16; index < 32; index++) {
     for (unsigned n=0; n < 4; n++) {
       const BxPackedXmmRegister *reg = &BX_READ_AVX_REG_LANE(index, n);
-      if (reg->xmm64u(0) | reg->xmm64u(1)) return BX_TRUE;
+      if (! is_clear(reg)) return BX_TRUE;
     }
   }
 
