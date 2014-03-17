@@ -495,7 +495,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG9M[8] = {
   /* 1 */ { 0, &Ia_cmpxchg8b_Mq },
   /* 2 */ { 0, &Ia_Invalid },
   /* 3 */ { 0, &Ia_Invalid },
-  /* 4 */ { 0, &Ia_Invalid },
+  /* 4 */ { 0, &Ia_xsavec },
   /* 5 */ { 0, &Ia_Invalid },
   /* 6 */ { GRPSSE(G9VMX6) },
   /* 7 */ { GRPSSENONE(Ia_vmptrst_Mq) }
@@ -506,7 +506,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG9Mq[8] = {
   /* 1 */ { 0, &Ia_cmpxchg16b_Mdq },
   /* 2 */ { 0, &Ia_Invalid },
   /* 3 */ { 0, &Ia_Invalid },
-  /* 4 */ { 0, &Ia_Invalid },
+  /* 4 */ { 0, &Ia_xsavec },
   /* 5 */ { 0, &Ia_Invalid },
   /* 6 */ { GRPSSE(G9VMX6) },
   /* 7 */ { GRPSSENONE(Ia_vmptrst_Mq) }

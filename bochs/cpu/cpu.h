@@ -2713,6 +2713,7 @@ public: // for now...
 
   /* XSAVE/XRSTOR extensions */
   BX_SMF BX_INSF_TYPE XSAVE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE XSAVEC(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE XRSTOR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE XGETBV(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE XSETBV(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

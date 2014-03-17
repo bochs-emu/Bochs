@@ -1,9 +1,10 @@
 Changes after 2.6.2 (updated Mar 15, 2014):
 
 - CPU
-  - Bugfixes for CPU emulation correctness (critical fixes for VMX, TBM/BMI and RDRAND instructions)
+  - Bugfixes for CPU emulation correctness (critical fixes for XSAVE, VMX, TBM/BMI and RDRAND instructions)
   - Implemented FCS/FDS Deprecation CPU feature
   - Implemented SHA instructions emulation
+  - Implemented XSAVEC instruction emulation and XINUSE optimization in the XSAVEOPT instruction
   - Implemented AVX-512 instructions emulation
   ! CPUDB: Added Intel(R) Core(TM) i7-4770 CPU (Haswell) configuration to CPUDB
   ! CPUDB: Added AMD A8-5600K APU (Trinity) configuration to CPUDB

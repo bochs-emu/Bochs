@@ -26,6 +26,8 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#define XSAVEC_COMPACTION_ENABLED BX_CONST64(0x8000000000000000)
+
 /* 0F AE /4 */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 {
@@ -79,9 +81,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   /////////////////////////////////////////////////////////////////////////////
   if ((requested_feature_bitmap & (BX_XCR0_SSE_MASK | BX_XCR0_YMM_MASK)) != 0)
   {
-    // store MXCSR
-    write_virtual_dword(i->seg(), (eaddr + 24) & asize_mask, BX_MXCSR_REGISTER);
-    write_virtual_dword(i->seg(), (eaddr + 28) & asize_mask, MXCSR_MASK);
+    // store MXCSR - write cannot cause any boundary cross because XSAVE image is 64-byte aligned
+    write_virtual_dword(i->seg(), eaddr + 24, BX_MXCSR_REGISTER);
+    write_virtual_dword(i->seg(), eaddr + 28, MXCSR_MASK);
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -151,6 +153,106 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+/* 0F C7 /4 */
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
+{
+#if BX_CPU_LEVEL >= 6
+  BX_CPU_THIS_PTR prepareXSAVE();
+
+  BX_DEBUG(("%s: save processor state XCR0=0x%08x", i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR xcr0.get32()));
+
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address laddr = get_laddr(i->seg(), eaddr);
+
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+  if (BX_CPU_THIS_PTR alignment_check()) {
+    if (laddr & 0x3) {
+      BX_ERROR(("%s: access not aligned to 4-byte cause model specific #AC(0)", i->getIaOpcodeNameShort()));
+      exception(BX_AC_EXCEPTION, 0);
+    }
+  }
+#endif
+
+  if (laddr & 0x3f) {
+    BX_ERROR(("%s: access not aligned to 64-byte", i->getIaOpcodeNameShort()));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  //
+  // We will go feature-by-feature and not run over all XCR0 bits
+  //
+
+  Bit32u requested_feature_bitmap = BX_CPU_THIS_PTR xcr0.get32() & EAX;
+  Bit32u xinuse = get_xinuse_vector(requested_feature_bitmap);
+  Bit64u xstate_bv = requested_feature_bitmap & xinuse;
+  Bit64u xcomp_bv = requested_feature_bitmap | XSAVEC_COMPACTION_ENABLED;
+
+  if ((requested_feature_bitmap & BX_XCR0_FPU_MASK) != 0)
+  {
+    if (xinuse & BX_XCR0_FPU_MASK) {
+      xsave_x87_state(i, eaddr);
+    }
+  }
+
+  if ((requested_feature_bitmap & BX_XCR0_SSE_MASK) != 0)
+  {
+    // write cannot cause any boundary cross because XSAVE image is 64-byte aligned
+    write_virtual_dword(i->seg(), eaddr + 24, BX_MXCSR_REGISTER);
+    write_virtual_dword(i->seg(), eaddr + 28, MXCSR_MASK);
+
+    if (xinuse & BX_XCR0_SSE_MASK) {
+      xsave_sse_state(i, eaddr+XSAVE_SSE_STATE_OFFSET);
+    }
+  }
+
+  Bit32u offset = XSAVE_YMM_STATE_OFFSET;
+
+#if BX_SUPPORT_AVX
+  if ((requested_feature_bitmap & BX_XCR0_YMM_MASK) != 0)
+  {
+    if (xinuse & BX_XCR0_YMM_MASK)
+      xsave_ymm_state(i, eaddr+offset);
+
+    offset += XSAVE_YMM_STATE_LEN;
+  }
+#endif
+
+#if BX_SUPPORT_EVEX
+  if ((requested_feature_bitmap & BX_XCR0_OPMASK_MASK) != 0)
+  {
+    if (xinuse & BX_XCR0_OPMASK_MASK)
+      xsave_opmask_state(i, eaddr+offset);
+
+    offset += XSAVE_OPMASK_STATE_LEN;
+  }
+
+  if ((requested_feature_bitmap & BX_XCR0_ZMM_HI256_MASK) != 0)
+  {
+    if (xinuse & BX_XCR0_ZMM_HI256_MASK)
+      xsave_zmm_hi256_state(i, eaddr+offset);
+
+    offset += XSAVE_ZMM_HI256_STATE_LEN;
+  }
+
+  if ((requested_feature_bitmap & BX_XCR0_HI_ZMM_MASK) != 0)
+  {
+    if (xinuse & BX_XCR0_HI_ZMM_MASK)
+      xsave_hi_zmm_state(i, eaddr+offset);
+
+    offset += XSAVE_HI_ZMM_STATE_LEN;
+  }
+#endif
+
+  bx_address asize_mask = i->asize_mask();
+
+  // always update header to 'dirty' state
+  write_virtual_qword(i->seg(), (eaddr + 512) & asize_mask, xstate_bv);
+  write_virtual_qword(i->seg(), (eaddr + 520) & asize_mask, xcomp_bv);
+#endif
+
+  BX_NEXT_INSTR(i);
+}
+
 /* 0F AE /5 */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 {
@@ -179,17 +281,50 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   bx_address asize_mask = i->asize_mask();
 
   Bit64u xstate_bv = read_virtual_qword(i->seg(), (eaddr + 512) & asize_mask);
-  Bit64u header2 = read_virtual_qword(i->seg(), (eaddr + 520) & asize_mask);
+  Bit64u xcomp_bv = read_virtual_qword(i->seg(), (eaddr + 520) & asize_mask);
   Bit64u header3 = read_virtual_qword(i->seg(), (eaddr + 528) & asize_mask);
 
-  if ((~BX_CPU_THIS_PTR xcr0.get32() & xstate_bv) != 0 || GET32H(xstate_bv) != 0) {
-    BX_ERROR(("XRSTOR: Invalid xsave_bv state"));
+  if (header3 != 0) {
+    BX_ERROR(("XRSTOR: Reserved header state is not '0"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  if (header2 != 0 || header3 != 0) {
-    BX_ERROR(("XRSTOR: Reserved header state is not '0"));
-    exception(BX_GP_EXCEPTION, 0);
+  bx_bool compaction = (xcomp_bv & XSAVEC_COMPACTION_ENABLED) != 0;
+
+  if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVEC) || ! compaction) {
+    if (xcomp_bv != 0) {
+      BX_ERROR(("XRSTOR: Reserved header state is not '0"));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+  }
+
+  if (! compaction) {
+    if ((~BX_CPU_THIS_PTR xcr0.get32() & xstate_bv) != 0 || (GET32H(xstate_bv) << 1) != 0) {
+      BX_ERROR(("XRSTOR: Invalid xsave_bv state"));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+  }
+  else {
+    if ((~BX_CPU_THIS_PTR xcr0.get32() & xcomp_bv) != 0 || (GET32H(xcomp_bv) << 1) != 0) {
+      BX_ERROR(("XRSTOR: Invalid xcomp_bv state"));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+    
+    if (xstate_bv & ~xcomp_bv) {
+      BX_ERROR(("XRSTOR: Invalid xcomp_bv state"));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+
+    Bit64u header4 = read_virtual_qword(i->seg(), (eaddr + 536) & asize_mask);
+    Bit64u header5 = read_virtual_qword(i->seg(), (eaddr + 544) & asize_mask);
+    Bit64u header6 = read_virtual_qword(i->seg(), (eaddr + 552) & asize_mask);
+    Bit64u header7 = read_virtual_qword(i->seg(), (eaddr + 560) & asize_mask);
+    Bit64u header8 = read_virtual_qword(i->seg(), (eaddr + 568) & asize_mask);
+
+    if (header4 | header5 | header6 | header7 | header8) {
+      BX_ERROR(("XRSTOR: Reserved header state is not '0"));
+      exception(BX_GP_EXCEPTION, 0);
+    }
   }
 
   //
@@ -208,9 +343,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  if ((requested_feature_bitmap & (BX_XCR0_SSE_MASK | BX_XCR0_YMM_MASK)) != 0)
+  if ((requested_feature_bitmap & BX_XCR0_SSE_MASK) != 0 || 
+     ((requested_feature_bitmap & BX_XCR0_YMM_MASK) != 0 && ! compaction))
   {
-    Bit32u new_mxcsr = read_virtual_dword(i->seg(), (eaddr + 24) & asize_mask);
+    // read cannot cause any boundary cross because XSAVE image is 64-byte aligned
+    Bit32u new_mxcsr = read_virtual_dword(i->seg(), eaddr + 24);
     if(new_mxcsr & ~MXCSR_MASK)
        exception(BX_GP_EXCEPTION, 0);
     BX_MXCSR_REGISTER = new_mxcsr;
@@ -225,47 +362,99 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
       xrstor_init_sse_state();
   }
 
+  if (compaction) {
+    Bit32u offset = XSAVE_YMM_STATE_OFFSET;
+
 #if BX_SUPPORT_AVX
-  /////////////////////////////////////////////////////////////////////////////
-  if ((requested_feature_bitmap & BX_XCR0_YMM_MASK) != 0)
-  {
-    if (xstate_bv & BX_XCR0_YMM_MASK)
-      xrstor_ymm_state(i, eaddr+XSAVE_YMM_STATE_OFFSET);
-    else
-      xrstor_init_ymm_state();
-  }
+    /////////////////////////////////////////////////////////////////////////////
+    if ((requested_feature_bitmap & BX_XCR0_YMM_MASK) != 0)
+    {
+      if (xstate_bv & BX_XCR0_YMM_MASK)
+        xrstor_ymm_state(i, eaddr+offset);
+      else
+        xrstor_init_ymm_state();
+
+      offset += XSAVE_YMM_STATE_LEN;
+    }
 #endif
 
 #if BX_SUPPORT_EVEX
-  /////////////////////////////////////////////////////////////////////////////
-  if ((requested_feature_bitmap & BX_XCR0_OPMASK_MASK) != 0)
-  {
-    if (xstate_bv & BX_XCR0_OPMASK_MASK)
-      xrstor_opmask_state(i, eaddr+XSAVE_OPMASK_STATE_OFFSET);
-    else
-      xrstor_init_opmask_state();
-  }
+    /////////////////////////////////////////////////////////////////////////////
+    if ((requested_feature_bitmap & BX_XCR0_OPMASK_MASK) != 0)
+    {
+      if (xstate_bv & BX_XCR0_OPMASK_MASK)
+        xrstor_opmask_state(i, eaddr+offset);
+      else
+        xrstor_init_opmask_state();
 
-  /////////////////////////////////////////////////////////////////////////////
-  if ((requested_feature_bitmap & BX_XCR0_ZMM_HI256_MASK) != 0)
-  {
-    if (xstate_bv & BX_XCR0_ZMM_HI256_MASK)
-      xrstor_zmm_hi256_state(i, eaddr+XSAVE_ZMM_HI256_STATE_OFFSET);
-    else
-      xrstor_init_zmm_hi256_state();
-  }
+      offset += XSAVE_OPMASK_STATE_LEN;
+    }
 
-  /////////////////////////////////////////////////////////////////////////////
-  if ((requested_feature_bitmap & BX_XCR0_HI_ZMM_MASK) != 0)
-  {
-    if (xstate_bv & BX_XCR0_HI_ZMM_MASK)
-      xrstor_hi_zmm_state(i, eaddr+XSAVE_HI_ZMM_STATE_OFFSET);
-    else
-      xrstor_init_hi_zmm_state();
+    /////////////////////////////////////////////////////////////////////////////
+    if ((requested_feature_bitmap & BX_XCR0_ZMM_HI256_MASK) != 0)
+    {
+      if (xstate_bv & BX_XCR0_ZMM_HI256_MASK)
+        xrstor_zmm_hi256_state(i, eaddr+offset);
+      else
+        xrstor_init_zmm_hi256_state();
+
+      offset += XSAVE_ZMM_HI256_STATE_LEN;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    if ((requested_feature_bitmap & BX_XCR0_HI_ZMM_MASK) != 0)
+    {
+      if (xstate_bv & BX_XCR0_HI_ZMM_MASK)
+        xrstor_hi_zmm_state(i, eaddr+offset);
+      else
+        xrstor_init_hi_zmm_state();
+
+      offset += XSAVE_HI_ZMM_STATE_LEN;
+    }
+#endif
   }
+  else {
+#if BX_SUPPORT_AVX
+    /////////////////////////////////////////////////////////////////////////////
+    if ((requested_feature_bitmap & BX_XCR0_YMM_MASK) != 0)
+    {
+      if (xstate_bv & BX_XCR0_YMM_MASK)
+        xrstor_ymm_state(i, eaddr+XSAVE_YMM_STATE_OFFSET);
+      else
+        xrstor_init_ymm_state();
+    }
 #endif
 
+#if BX_SUPPORT_EVEX
+    /////////////////////////////////////////////////////////////////////////////
+    if ((requested_feature_bitmap & BX_XCR0_OPMASK_MASK) != 0)
+    {
+      if (xstate_bv & BX_XCR0_OPMASK_MASK)
+        xrstor_opmask_state(i, eaddr+XSAVE_OPMASK_STATE_OFFSET);
+      else
+        xrstor_init_opmask_state();
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    if ((requested_feature_bitmap & BX_XCR0_ZMM_HI256_MASK) != 0)
+    {
+      if (xstate_bv & BX_XCR0_ZMM_HI256_MASK)
+        xrstor_zmm_hi256_state(i, eaddr+XSAVE_ZMM_HI256_STATE_OFFSET);
+      else
+        xrstor_init_zmm_hi256_state();
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    if ((requested_feature_bitmap & BX_XCR0_HI_ZMM_MASK) != 0)
+    {
+      if (xstate_bv & BX_XCR0_HI_ZMM_MASK)
+        xrstor_hi_zmm_state(i, eaddr+XSAVE_HI_ZMM_STATE_OFFSET);
+      else
+        xrstor_init_hi_zmm_state();
+    }
 #endif
+  }
+#endif // BX_CPU_LEVEL >= 6
 
   BX_NEXT_INSTR(i);
 }
@@ -321,14 +510,15 @@ void BX_CPU_C::xsave_x87_state(bxInstruction_c *i, bx_address offset)
    *   + 16 bit, in 16/32 bit mode only
    */
 #if BX_SUPPORT_X86_64
+  // write cannot cause any boundary cross because XSAVE image is 64-byte aligned
   if (i->os64L()) {
-    write_virtual_qword(i->seg(), (offset + 16) & asize_mask, BX_CPU_THIS_PTR the_i387.fdp);
+    write_virtual_qword(i->seg(), offset + 16, BX_CPU_THIS_PTR the_i387.fdp);
   }
   else
 #endif
   {
-    write_virtual_dword(i->seg(), (offset + 16) & asize_mask, (Bit32u) BX_CPU_THIS_PTR the_i387.fdp);
-    write_virtual_dword(i->seg(), (offset + 20) & asize_mask, x87_get_FDS());
+    write_virtual_dword(i->seg(), offset + 16, (Bit32u) BX_CPU_THIS_PTR the_i387.fdp);
+    write_virtual_dword(i->seg(), offset + 20, x87_get_FDS());
   }
   /* do not touch MXCSR state */
 
@@ -380,8 +570,8 @@ void BX_CPU_C::xrstor_x87_state(bxInstruction_c *i, bx_address offset)
 
   Bit32u tag_byte = xmm.xmmubyte(4);
 
-  /* Restore x87 FPU DP */
-  read_virtual_xmmword(i->seg(), (offset + 16) & asize_mask, (Bit8u *) &xmm);
+  /* Restore x87 FPU DP - read cannot cause any boundary cross because XSAVE image is 64-byte aligned */
+  read_virtual_xmmword(i->seg(), offset + 16, (Bit8u *) &xmm);
 
 #if BX_SUPPORT_X86_64
   if (i->os64L()) {

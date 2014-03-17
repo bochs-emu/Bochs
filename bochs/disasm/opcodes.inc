@@ -1898,5 +1898,6 @@ Ia_xorw_Ew_sIb = { "xor", "xorw", Ew, sIbw, XX, XX, 0 },
 Ia_xorw_Gw_Ew = { "xor", "xorw", Gw, Ew, XX, XX, 0 },
 Ia_xrstor = { "xrstor", "xrstor", Mx, XX, XX, XX, IA_XSAVE },
 Ia_xsave = { "xsave", "xsave", Mx, XX, XX, XX, IA_XSAVE },
+Ia_xsavec = { "xsavec", "xsavec", Mx, XX, XX, XX, IA_XSAVEC },
 Ia_xsaveopt = { "xsaveopt", "xsaveopt", Mx, XX, XX, XX, IA_XSAVEOPT },
 Ia_xsetbv = { "xsetbv", "xsetbv", XX, XX, XX, XX, IA_XSAVE };
