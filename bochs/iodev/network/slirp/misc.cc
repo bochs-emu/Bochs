@@ -204,7 +204,7 @@ fork_exec(struct socket *so, const char *ex, int do_pty)
 		exit(1);
 
 	 default:
-//		qemu_add_child_watch(pid);
+		slirp_warning(so->slirp, "qemu_add_child_watch(pid) not implemented");
                 /*
                  * XXX this could block us...
                  * XXX Should set a timer here, and if accept() doesn't

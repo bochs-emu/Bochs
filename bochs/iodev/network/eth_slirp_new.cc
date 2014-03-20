@@ -38,6 +38,12 @@ static unsigned int bx_slirp_instances = 0;
 fd_set rfds, wfds, xfds;
 int nfds;
 
+#ifndef WIN32
+extern int slirp_smb(Slirp *s, char *smb_tmpdir, const char *exported_dir,
+                     struct in_addr vserver_addr);
+void slirp_smb_cleanup(Slirp *s, char *smb_tmpdir);
+#endif
+
 class bx_slirp_new_pktmover_c : public eth_pktmover_c {
 public:
   bx_slirp_new_pktmover_c();
@@ -55,6 +61,9 @@ private:
   int restricted;
   struct in_addr net, mask, host, dhcp, dns;
   char *bootfile, *hostname, **dnssearch;
+#ifndef WIN32
+  char *smb_export, *smb_tmpdir;
+#endif
 
   bx_bool parse_slirp_conf(const char *conf);
   static void rx_timer_handler(void *);
@@ -78,12 +87,23 @@ bx_slirp_new_pktmover_c::bx_slirp_new_pktmover_c()
   bootfile = NULL;
   hostname = NULL;
   dnssearch = NULL;
+#ifndef WIN32
+  smb_export = NULL;
+  smb_tmpdir = NULL;
+#endif
 }
 
 bx_slirp_new_pktmover_c::~bx_slirp_new_pktmover_c()
 {
   if (slirp != NULL) {
     slirp_cleanup(slirp);
+#ifndef WIN32
+    if ((smb_export != NULL) && (smb_tmpdir != NULL)) {
+      slirp_smb_cleanup(slirp, smb_tmpdir);
+      free(smb_tmpdir);
+      free(smb_export);
+    }
+#endif
     if (bootfile != NULL) free(bootfile);
     if (hostname != NULL) free(hostname);
     if (dnssearch != NULL) {
@@ -210,6 +230,15 @@ bx_bool bx_slirp_new_pktmover_c::parse_slirp_conf(const char *conf)
           if (!inet_aton(val, &dns)) {
             BX_ERROR(("slirp: wrong format for 'dns'"));
           }
+#ifndef WIN32
+        } else if (!stricmp(param, "smb_export")) {
+          if ((len2 < 256) && (val[0] == '/')) {
+            smb_export = (char*)malloc(len2+1);
+            strcpy(smb_export, val);
+          } else {
+            BX_ERROR(("slirp: wrong format for 'smb_export'"));
+          }
+#endif
         } else {
           BX_ERROR(("slirp: unknown option '%s'", line));
         }
@@ -229,6 +258,9 @@ bx_slirp_new_pktmover_c::bx_slirp_new_pktmover_c(const char *netif,
 {
   logfunctions *slirplog;
   char bootfile[128], hostname[33], prefix[10];
+#ifndef _WIN32
+  struct in_addr smbsrv;
+#endif
 
   this->netdev = dev;
   if (sizeof(struct arphdr) != 28) {
@@ -267,7 +299,15 @@ bx_slirp_new_pktmover_c::bx_slirp_new_pktmover_c(const char *netif,
   slirplog->put(prefix);
   slirp = slirp_init(restricted, net, mask, host, hostname, netif, bootfile, dhcp, dns,
                      (const char**)dnssearch, this, slirplog);
-
+#ifndef WIN32
+  smbsrv.s_addr = 0;
+  if (smb_export != NULL) {
+    smb_tmpdir = (char*)malloc(128);
+    if (slirp_smb(slirp, smb_tmpdir, smb_export, smbsrv) < 0) {
+      BX_ERROR(("failed to initialize SMB support"));
+    }
+  }
+#endif
   bx_slirp_instances++;
 }
 
