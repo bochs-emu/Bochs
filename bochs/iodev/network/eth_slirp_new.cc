@@ -63,6 +63,7 @@ private:
   char *bootfile, *hostname, **dnssearch;
 #ifndef WIN32
   char *smb_export, *smb_tmpdir;
+  struct in_addr smb_srv;
 #endif
 
   bx_bool parse_slirp_conf(const char *conf);
@@ -238,6 +239,10 @@ bx_bool bx_slirp_new_pktmover_c::parse_slirp_conf(const char *conf)
           } else {
             BX_ERROR(("slirp: wrong format for 'smb_export'"));
           }
+        } else if (!stricmp(param, "smb_srv")) {
+          if (!inet_aton(val, &smb_srv)) {
+            BX_ERROR(("slirp: wrong format for 'smb_srv'"));
+          }
 #endif
         } else {
           BX_ERROR(("slirp: unknown option '%s'", line));
@@ -258,9 +263,6 @@ bx_slirp_new_pktmover_c::bx_slirp_new_pktmover_c(const char *netif,
 {
   logfunctions *slirplog;
   char bootfile[128], hostname[33], prefix[10];
-#ifndef _WIN32
-  struct in_addr smbsrv;
-#endif
 
   this->netdev = dev;
   if (sizeof(struct arphdr) != 28) {
@@ -288,8 +290,11 @@ bx_slirp_new_pktmover_c::bx_slirp_new_pktmover_c(const char *netif,
   host.s_addr = htonl(0x0a000202); /* 10.0.2.2 */
   dhcp.s_addr = htonl(0x0a00020f); /* 10.0.2.15 */
   dns.s_addr  = htonl(0x0a000203); /* 10.0.2.3 */
+#ifndef WIN32
+  smb_srv.s_addr = 0;
+#endif
   restricted = 0;
-  if (strlen(script) > 0) {
+  if ((strlen(script) > 0) && (strcmp(script, "none"))) {
     if (!parse_slirp_conf(script)) {
       BX_ERROR(("reading slirp config failed"));
     }
@@ -300,10 +305,9 @@ bx_slirp_new_pktmover_c::bx_slirp_new_pktmover_c(const char *netif,
   slirp = slirp_init(restricted, net, mask, host, hostname, netif, bootfile, dhcp, dns,
                      (const char**)dnssearch, this, slirplog);
 #ifndef WIN32
-  smbsrv.s_addr = 0;
   if (smb_export != NULL) {
     smb_tmpdir = (char*)malloc(128);
-    if (slirp_smb(slirp, smb_tmpdir, smb_export, smbsrv) < 0) {
+    if (slirp_smb(slirp, smb_tmpdir, smb_export, smb_srv) < 0) {
       BX_ERROR(("failed to initialize SMB support"));
     }
   }
