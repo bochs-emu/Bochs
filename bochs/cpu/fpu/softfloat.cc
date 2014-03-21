@@ -766,12 +766,39 @@ float32 float32_scalef(float32 a, float32 b, float_status_t &status)
         return packFloat32(aSign, 0xFF, 0);
     }
 
-    if (bExp > FLOAT32_EXP_BIAS + 16) {
+    if (bExp >= 0x8E) {
         // handle obvious overflow/underflow result
         return roundAndPackFloat32(aSign, bSign ? -0x7F : 0xFF, aSig, status);
     }
 
-    return 0xdeadbeef;  // fixme
+    int scale = 0;
+
+    if (bExp <= 0x7E) {
+        scale = -bSign;
+    }
+    else {
+        int shiftCount = bExp - 0x9E;
+        bSig = (bSig | 0x800000)<<8;
+        scale = bSig>>(-shiftCount);
+
+        if (bSign) {
+            if ((Bit32u) (bSig<<(shiftCount & 31))) scale++;
+            scale = -scale;
+        }
+
+        if (scale >  0x200) scale =  0x200;
+        if (scale < -0x200) scale = -0x200;
+    }
+
+    if (aExp != 0) {
+        aSig |= 0x00800000;
+    } else {
+        aExp++;
+    }
+
+    aExp += scale - 1;
+    aSig <<= 7;
+    return normalizeRoundAndPackFloat32(aSign, aExp, aSig, status);
 }
 
 /*----------------------------------------------------------------------------
@@ -1939,12 +1966,40 @@ float64 float64_scalef(float64 a, float64 b, float_status_t &status)
         return packFloat64(aSign, 0x7FF, 0);
     }
 
-    if (bExp > FLOAT64_EXP_BIAS + 16) {
+    if (0x40F <= bExp) {
         // handle obvious overflow/underflow result
         return roundAndPackFloat64(aSign, bSign ? -0x3FF : 0x7FF, aSig, status);
     }
 
-    return BX_CONST64(0xdeadbeefdeadbeef);  // fixme
+    int scale = 0;
+
+    if (bExp < 0x3FF) {
+        scale = -bSign;
+    }
+    else {
+        bSig |= BX_CONST64(0x0010000000000000);
+        int shiftCount = 0x433 - bExp;
+        Bit64u savedBSig = bSig;
+        bSig >>= shiftCount;
+        scale = (Bit32s) bSig;
+        if (bSign) {
+            if ((bSig<<shiftCount) != savedBSig) scale++;
+            scale = -scale;
+        }
+
+        if (scale >  0x1000) scale =  0x1000;
+        if (scale < -0x1000) scale = -0x1000;
+    }
+
+    if (aExp != 0) {
+        aSig |= BX_CONST64(0x0010000000000000);
+    } else {
+        aExp++;
+    }
+
+    aExp += scale - 1;
+    aSig <<= 10;
+    return normalizeRoundAndPackFloat64(aSign, aExp, aSig, status);
 }
 
 /*----------------------------------------------------------------------------
