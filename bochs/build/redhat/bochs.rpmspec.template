@@ -63,6 +63,7 @@ including Linux, DOS, Windows 9X/NT/2000/XP or Windows 7.
 	/usr/bin/bochs-dlx
 	/usr/bin/bxcommit
 	/usr/bin/bximage
+	/usr/bin/bximage_old
 	/usr/share/bochs/*
 	/usr/share/doc/*
 	%{_mandir}/*
