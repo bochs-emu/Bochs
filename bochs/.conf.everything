@@ -35,6 +35,7 @@
   --enable-sb16 \
   --enable-es1370 \
   --enable-gameport \
+  --enable-busmouse \
   --enable-iodebug \
   --enable-large-ramfile \
   --enable-gdb-stub \

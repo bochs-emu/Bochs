@@ -1,5 +1,5 @@
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -632,35 +632,6 @@ typedef
 // enable BX_ASSERT checks
 #define BX_ASSERT_ENABLE 0
 
-// limited i440FX PCI support
-#define BX_SUPPORT_PCI 0
-
-// CLGD54XX emulation
-#define BX_SUPPORT_CLGD54XX 0
-
-// Experimental 3dfx Voodoo (SST-1/2) emulation
-#define BX_SUPPORT_VOODOO 0
-
-// Experimental host PCI device mapping
-#define BX_SUPPORT_PCIDEV 0
-
-#if (BX_SUPPORT_PCIDEV && !BX_SUPPORT_PCI)
-  #error To enable PCI host device mapping, you must also enable PCI
-#endif
-
-// USB host controllers
-#define BX_SUPPORT_USB_UHCI 0
-#define BX_SUPPORT_USB_OHCI 0
-#define BX_SUPPORT_USB_XHCI 0
-#define BX_SUPPORT_PCIUSB (BX_SUPPORT_USB_UHCI || BX_SUPPORT_USB_OHCI || BX_SUPPORT_USB_XHCI)
-
-#if (BX_SUPPORT_PCIUSB && !BX_SUPPORT_PCI)
-  #error To enable USB, you must also enable PCI
-#endif
-
-// Experimental bus mouse support
-#define BX_SUPPORT_BUSMOUSE 0
-
 #define BX_SUPPORT_ALIGNMENT_CHECK 0
 #define BX_SUPPORT_FPU 0
 #define BX_SUPPORT_3DNOW 0
@@ -809,6 +780,35 @@ typedef
 // These are the debug facilities offered by the x86 architecture,
 // not the optional built-in debugger.
 #define BX_X86_DEBUGGER 0
+
+// limited i440FX PCI support
+#define BX_SUPPORT_PCI 0
+
+// Experimental host PCI device mapping
+#define BX_SUPPORT_PCIDEV 0
+
+#if (BX_SUPPORT_PCIDEV && !BX_SUPPORT_PCI)
+  #error To enable PCI host device mapping, you must also enable PCI
+#endif
+
+// CLGD54XX emulation
+#define BX_SUPPORT_CLGD54XX 0
+
+// Experimental 3dfx Voodoo (SST-1/2) emulation
+#define BX_SUPPORT_VOODOO 0
+
+// USB host controllers
+#define BX_SUPPORT_USB_UHCI 0
+#define BX_SUPPORT_USB_OHCI 0
+#define BX_SUPPORT_USB_XHCI 0
+#define BX_SUPPORT_PCIUSB (BX_SUPPORT_USB_UHCI || BX_SUPPORT_USB_OHCI || BX_SUPPORT_USB_XHCI)
+
+#if (BX_SUPPORT_PCIUSB && !BX_SUPPORT_PCI)
+  #error To enable USB, you must also enable PCI
+#endif
+
+// Experimental bus mouse support
+#define BX_SUPPORT_BUSMOUSE 0
 
 #define BX_SUPPORT_CDROM 0
 

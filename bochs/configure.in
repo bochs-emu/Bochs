@@ -631,337 +631,6 @@ AC_ARG_ENABLE(large-ramfile,
   )
 AC_SUBST(BX_LARGE_RAMFILE)
 
-networking=no
-NETDEV_OBJS=''
-AC_MSG_CHECKING(for NE2000 support)
-AC_ARG_ENABLE(ne2000,
-  AS_HELP_STRING([--enable-ne2000], [enable NE2000 support (no)]),
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_NE2K, 1)
-    NETDEV_OBJS='ne2k.o'
-    networking=yes
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_NE2K, 0)
-   fi],
-  [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_NE2K, 0)
-    ]
-  )
-
-AC_MSG_CHECKING(for i440FX PCI support)
-AC_ARG_ENABLE(pci,
-  AS_HELP_STRING([--enable-pci], [enable i440FX PCI support (yes)]),
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_PCI, 1)
-    pci=1
-    PCI_OBJ='pci.o pci2isa.o pci_ide.o acpi.o'
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_PCI, 0)
-    pci=0
-    PCI_OBJ=''
-   fi],
-  [
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_PCI, 1)
-    pci=1
-    PCI_OBJ='pci.o pci2isa.o pci_ide.o acpi.o'
-    ]
-  )
-AC_SUBST(PCI_OBJ)
-
-#
-# PCI host device support
-#
-AC_MSG_CHECKING(for PCI host device mapping support)
-AC_ARG_ENABLE(pcidev,
-  AS_HELP_STRING([--enable-pcidev], [enable PCI host device mapping support (no - linux host only)]),
-  [
-    if test "$enableval" = "yes"; then
-      AC_MSG_RESULT(yes)
-      if test "$pci" != "1"; then
-        AC_MSG_ERROR([PCI host device mapping requires PCI support])
-      fi
-      case "$target" in
-        *-linux*)
-          AC_MSG_NOTICE([Linux detected as host for PCI host device mapping])
-          linux_version=`uname -r`
-          case "$linux_version" in
-            2.4*)
-              PCIDEV_MODULE_MAKE_ALL="all-kernel24"
-              KERNEL_MODULE_SUFFIX="o"
-              ;;
-            2.6*|3.*)
-              PCIDEV_MODULE_MAKE_ALL="all-kernel26"
-              KERNEL_MODULE_SUFFIX="ko"
-              ;;
-            *)
-              AC_MSG_ERROR([Linux kernel 2.4, 2.6 or 3.x is required for PCI host device mapping])
-              ;;
-          esac
-          KERNELDIR="/lib/modules/$linux_version/build"
-          LSMOD="lsmod"
-          INSMOD="insmod"
-          RMMOD="rmmod"
-          DEPMOD="depmod"
-          CLEAN_PCIDEV_VAR=clean_pcidev
-          AC_SUBST(KERNELDIR)
-          AC_SUBST(LSMOD)
-          AC_SUBST(INSMOD)
-          AC_SUBST(RMMOD)
-          AC_SUBST(DEPMOD)
-          AC_SUBST(PCIDEV_MODULE_MAKE_ALL)
-          AC_SUBST(KERNEL_MODULE_SUFFIX)
-          AC_SUBST(CLEAN_PCIDEV_VAR)
-        ;;
-        *)
-          AC_MSG_ERROR([PCI host device mapping requires Linux as host])
-        ;;
-      esac
-      AC_DEFINE(BX_SUPPORT_PCIDEV, 1)
-      PCI_OBJ="$PCI_OBJ pcidev.o"
-    else
-      AC_MSG_RESULT(no)
-      AC_DEFINE(BX_SUPPORT_PCIDEV, 0)
-    fi
-  ],
-  [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_PCIDEV, 0)
-  ]
-)
-
-use_usb=0
-USBHC_OBJS=''
-AC_MSG_CHECKING(for USB UHCI support)
-AC_ARG_ENABLE(usb,
-  AS_HELP_STRING([--enable-usb], [enable USB UHCI support (no)]),
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_USB_UHCI, 1)
-    USBHC_OBJS="usb_uhci.o"
-    use_usb=1
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_USB_UHCI, 0)
-   fi],
-  [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_USB_UHCI, 0)
-    ]
-  )
-
-AC_MSG_CHECKING(for USB OHCI support)
-AC_ARG_ENABLE(usb-ohci,
-  AS_HELP_STRING([--enable-usb-ohci], [enable USB OHCI support (no)]),
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_USB_OHCI, 1)
-    USBHC_OBJS="$USBHC_OBJS usb_ohci.o"
-    use_usb=1
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_USB_OHCI, 0)
-   fi],
-  [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_USB_OHCI, 0)
-    ]
-  )
-
-AC_MSG_CHECKING(for experimental USB xHCI support)
-AC_ARG_ENABLE(usb-xhci,
-  AS_HELP_STRING([--enable-usb-xhci], [enable experimental USB xHCI support (no - incomplete)]),
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_USB_XHCI, 1)
-    USBHC_OBJS="$USBHC_OBJS usb_xhci.o"
-    use_usb=1
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_USB_XHCI, 0)
-   fi],
-  [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_USB_XHCI, 0)
-    ]
-  )
-
-if test "$use_usb" = 1; then
-  if test "$pci" != "1"; then
-    AC_MSG_ERROR([USB requires PCI support])
-  fi
-  USBCORE_OBJ="usb_common.o"
-  USBDEV_OBJS="usb_hid.o usb_hub.o usb_msd.o usb_printer.o"
-  SCSI_OBJS="scsi_device.o"
-  AC_SUBST(USBHC_OBJS)
-  AC_SUBST(USBCORE_OBJ)
-  AC_SUBST(USBDEV_OBJS)
-  AC_SUBST(SCSI_OBJS)
-  if test "$bx_plugins" = 0; then
-    USB_LIB_VAR='iodev/usb/libusb.a'
-    AC_SUBST(USB_LIB_VAR)
-  fi
-fi
-
-AC_MSG_CHECKING(for PCI pseudo NIC support)
-AC_ARG_ENABLE(pnic,
-  AS_HELP_STRING([--enable-pnic], [enable PCI pseudo NIC support (no)]),
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_PCIPNIC, 1)
-    NETDEV_OBJS="$NETDEV_OBJS pcipnic.o"
-    networking=yes
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_PCIPNIC, 0)
-   fi],
-  [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_PCIPNIC, 0)
-    ]
-  )
-
-AC_MSG_CHECKING(for Intel(R) Gigabit Ethernet support)
-AC_ARG_ENABLE(e1000,
-  AS_HELP_STRING([--enable-e1000], [enable Intel(R) Gigabit Ethernet support (no)]),
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    if test "$pci" != "1"; then
-      AC_MSG_ERROR([E1000 network adapter requires PCI support])
-    fi
-    AC_DEFINE(BX_SUPPORT_E1000, 1)
-    NETDEV_OBJS="$NETDEV_OBJS e1000.o"
-    networking=yes
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_E1000, 0)
-   fi],
-  [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_E1000, 0)
-    ]
-  )
-
-NETLOW_OBJS=''
-if test "$networking" = yes; then
-  NETLOW_OBJS='eth_null.o eth_vnet.o'
-  ethernet_modules='null vnet'
-  can_compile_slirp_new=0
-  case "$target" in
-    *-cygwin* | *-mingw32*)
-      can_compile_slirp_new=1
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -liphlpapi"
-      ;;
-    *-pc-windows* | *-pc-winnt*)
-      can_compile_slirp_new=1
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS iphlpapi.lib"
-      ;;
-    *)
-      AC_CHECK_HEADER([netinet/in.h], [ can_compile_slirp_new=1 ], [])
-      ;;
-  esac
-  if test $can_compile_slirp_new = 1; then
-    NETLOW_OBJS="$NETLOW_OBJS eth_slirp_new.o \$(SLIRP_OBJS)"
-    ethernet_modules="$ethernet_modules slirp_new"
-    AC_DEFINE(BX_NETMOD_SLIRP_NEW, 1)
-  fi
-  if test "$MSVC_TARGET" != 1; then
-    AC_CHECK_HEADER(net/bpf.h, [
-        NETLOW_OBJS="$NETLOW_OBJS eth_fbsd.o"
-        ethernet_modules="$ethernet_modules fbsd"
-        AC_DEFINE(BX_NETMOD_FBSD, 1)
-      ])
-    AC_CHECK_HEADER(netpacket/packet.h, [
-        NETLOW_OBJS="$NETLOW_OBJS eth_linux.o"
-        ethernet_modules="$ethernet_modules linux"
-        AC_DEFINE(BX_NETMOD_LINUX, 1)
-      ])
-    AC_CHECK_FUNCS(fork, have_fork=1)
-    AC_CHECK_FUNCS(execlp, have_execlp=1)
-    AC_CHECK_FUNCS(socketpair, have_socketpair=1)
-    if test x"$have_fork" = x1 -a x"$have_execlp" = x1 -a x"$have_socketpair" = x1; then
-      NETLOW_OBJS="$NETLOW_OBJS eth_slirp.o"
-      ethernet_modules="$ethernet_modules slirp"
-      AC_DEFINE(BX_NETMOD_SLIRP, 1)
-    fi
-  fi
-  case "$target" in
-    *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32*)
-    NETLOW_OBJS="$NETLOW_OBJS eth_win32.o"
-    ethernet_modules="$ethernet_modules win32"
-    AC_DEFINE(BX_NETMOD_WIN32, 1)
-    ;;
-    *-macosx* | *-darwin*)
-    NETLOW_OBJS="$NETLOW_OBJS eth_tuntap.o"
-    ethernet_modules="$ethernet_modules tuntap"
-    AC_DEFINE(BX_NETMOD_TUNTAP, 1)
-    ;;
-    *)
-    AC_CHECK_HEADER(net/if.h, [
-        use_ethertap=yes
-        AC_DEFINE(BX_HAVE_NET_IF_H, 1)
-      ], [],
-      [
-      #include <sys/types.h>
-      #include <sys/socket.h>
-    ])
-    AC_CHECK_HEADER(linux/netlink.h, [
-        use_ethertap=yes
-      ], [],
-      [
-      #include <asm/types.h>
-      #include <sys/socket.h>
-    ])
-
-    if test "$use_ethertap" = yes; then
-      NETLOW_OBJS="$NETLOW_OBJS eth_tap.o eth_vde.o"
-      ethernet_modules="$ethernet_modules tap vde"
-      AC_DEFINE(BX_NETMOD_TAP, 1)
-      AC_DEFINE(BX_NETMOD_VDE, 1)
-    fi
-
-    AC_CHECK_HEADER(net/if_tun.h, [
-        use_tuntap=yes
-      ], [],
-      [
-      #include <sys/types.h>
-      #include <sys/socket.h>
-      #include <net/if.h>
-    ])
-    AC_CHECK_HEADER(linux/if_tun.h, [
-        use_tuntap=yes
-      ], [],
-      [
-      #include <asm/types.h>
-      #include <sys/socket.h>
-    ])
-    if test "$use_tuntap" = yes; then
-      NETLOW_OBJS="$NETLOW_OBJS eth_tuntap.o"
-      ethernet_modules="$ethernet_modules tuntap"
-      AC_DEFINE(BX_NETMOD_TUNTAP, 1)
-    fi
-
-    ;;
-  esac
-  if test "$bx_plugins" = 0; then
-    NETWORK_LIB_VAR='iodev/network/libnetwork.a'
-    AC_SUBST(NETWORK_LIB_VAR)
-  fi
-  AC_DEFINE(BX_NETWORKING, 1)
-  AC_MSG_CHECKING(for ethernet modules)
-  AC_MSG_RESULT($ethernet_modules)
-else
-  AC_DEFINE(BX_NETWORKING, 0)
-fi
-
-AC_SUBST(NETDEV_OBJS)
-AC_SUBST(NETLOW_OBJS)
-
 AC_MSG_CHECKING(for repeated IO and mem copy speedups)
 AC_ARG_ENABLE(repeat-speedups,
   AS_HELP_STRING([--enable-repeat-speedups], [support repeated IO and mem copy speedups (no)]),
@@ -1383,18 +1052,6 @@ AC_ARG_ENABLE(instrumentation,
 AC_SUBST(INSTRUMENT_DIR)
 AC_SUBST(INSTRUMENT_VAR)
 
-dnl // serial mode 'socket' needs ws2_32.dll in non-plugin mode
-if test "$bx_plugins" = 0; then
-  case $target in
-    *-pc-windows*)
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS ws2_32.lib"
-      ;;
-    *-mingw32* | *-cygwin*)
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lws2_32"
-      ;;
-  esac
-fi
-
 AC_MSG_CHECKING(enable logging)
 AC_ARG_ENABLE(logging,
   AS_HELP_STRING([--enable-logging], [enable logging (yes)]),
@@ -1431,61 +1088,6 @@ AC_ARG_ENABLE(assert-checks,
     fi
     ]
   )
-
-AC_MSG_CHECKING(for raw serial support)
-AC_ARG_ENABLE(raw-serial,
-  AS_HELP_STRING([--enable-raw-serial], [use raw serial port access (no - incomplete)]),
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(USE_RAW_SERIAL, 1)
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(USE_RAW_SERIAL, 0)
-   fi],
-  [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(USE_RAW_SERIAL, 0)
-    ]
-  )
-
-DISPLAY_OBJS=''
-AC_MSG_CHECKING(for CLGD54XX emulation)
-AC_ARG_ENABLE(clgd54xx,
-  AS_HELP_STRING([--enable-clgd54xx], [enable CLGD54XX emulation (no)]),
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_CLGD54XX, 1)
-    DISPLAY_OBJS="svga_cirrus.o"
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_CLGD54XX, 0)
-   fi],
-  [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_CLGD54XX, 0)
-    ]
-  )
-
-AC_MSG_CHECKING(for 3dfx Voodoo Graphics emulation)
-AC_ARG_ENABLE(voodoo,
-  AS_HELP_STRING([--enable-voodoo], [enable 3dfx Voodoo Graphics emulation (no)]),
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    if test "$pci" != "1"; then
-      AC_MSG_ERROR([3dfx Voodoo Graphics emulation requires PCI support])
-    fi
-    AC_DEFINE(BX_SUPPORT_VOODOO, 1)
-    DISPLAY_OBJS="$DISPLAY_OBJS voodoo.o"
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_VOODOO, 0)
-   fi],
-  [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_VOODOO, 0)
-    ]
-  )
-AC_SUBST(DISPLAY_OBJS)
 
 support_fpu=1
 AC_MSG_CHECKING(for FPU emulation)
@@ -1707,6 +1309,404 @@ AC_ARG_ENABLE(x86-debugger,
     ]
   )
 
+dnl devices configuration section
+
+AC_MSG_CHECKING(for i440FX PCI support)
+AC_ARG_ENABLE(pci,
+  AS_HELP_STRING([--enable-pci], [enable i440FX PCI support (yes)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_PCI, 1)
+    pci=1
+    PCI_OBJS='pci.o pci2isa.o pci_ide.o acpi.o'
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_PCI, 0)
+    pci=0
+    PCI_OBJS=''
+   fi],
+  [
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_PCI, 1)
+    pci=1
+    PCI_OBJS='pci.o pci2isa.o pci_ide.o acpi.o'
+    ]
+  )
+AC_SUBST(PCI_OBJS)
+
+
+AC_MSG_CHECKING(for PCI host device mapping support)
+AC_ARG_ENABLE(pcidev,
+  AS_HELP_STRING([--enable-pcidev], [enable PCI host device mapping support (no - linux host only)]),
+  [
+    if test "$enableval" = "yes"; then
+      AC_MSG_RESULT(yes)
+      if test "$pci" != "1"; then
+        AC_MSG_ERROR([PCI host device mapping requires PCI support])
+      fi
+      case "$target" in
+        *-linux*)
+          AC_MSG_NOTICE([Linux detected as host for PCI host device mapping])
+          linux_version=`uname -r`
+          case "$linux_version" in
+            2.4*)
+              PCIDEV_MODULE_MAKE_ALL="all-kernel24"
+              KERNEL_MODULE_SUFFIX="o"
+              ;;
+            2.6*|3.*)
+              PCIDEV_MODULE_MAKE_ALL="all-kernel26"
+              KERNEL_MODULE_SUFFIX="ko"
+              ;;
+            *)
+              AC_MSG_ERROR([Linux kernel 2.4, 2.6 or 3.x is required for PCI host device mapping])
+              ;;
+          esac
+          KERNELDIR="/lib/modules/$linux_version/build"
+          LSMOD="lsmod"
+          INSMOD="insmod"
+          RMMOD="rmmod"
+          DEPMOD="depmod"
+          CLEAN_PCIDEV_VAR=clean_pcidev
+          AC_SUBST(KERNELDIR)
+          AC_SUBST(LSMOD)
+          AC_SUBST(INSMOD)
+          AC_SUBST(RMMOD)
+          AC_SUBST(DEPMOD)
+          AC_SUBST(PCIDEV_MODULE_MAKE_ALL)
+          AC_SUBST(KERNEL_MODULE_SUFFIX)
+          AC_SUBST(CLEAN_PCIDEV_VAR)
+        ;;
+        *)
+          AC_MSG_ERROR([PCI host device mapping requires Linux as host])
+        ;;
+      esac
+      AC_DEFINE(BX_SUPPORT_PCIDEV, 1)
+      PCI_OBJS="$PCI_OBJS pcidev.o"
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_SUPPORT_PCIDEV, 0)
+    fi
+  ],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_PCIDEV, 0)
+  ]
+)
+
+use_usb=0
+USBHC_OBJS=''
+AC_MSG_CHECKING(for USB UHCI support)
+AC_ARG_ENABLE(usb,
+  AS_HELP_STRING([--enable-usb], [enable USB UHCI support (no)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_USB_UHCI, 1)
+    USBHC_OBJS="usb_uhci.o"
+    use_usb=1
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_USB_UHCI, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_USB_UHCI, 0)
+    ]
+  )
+
+AC_MSG_CHECKING(for USB OHCI support)
+AC_ARG_ENABLE(usb-ohci,
+  AS_HELP_STRING([--enable-usb-ohci], [enable USB OHCI support (no)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_USB_OHCI, 1)
+    USBHC_OBJS="$USBHC_OBJS usb_ohci.o"
+    use_usb=1
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_USB_OHCI, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_USB_OHCI, 0)
+    ]
+  )
+
+AC_MSG_CHECKING(for experimental USB xHCI support)
+AC_ARG_ENABLE(usb-xhci,
+  AS_HELP_STRING([--enable-usb-xhci], [enable experimental USB xHCI support (no - incomplete)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_USB_XHCI, 1)
+    USBHC_OBJS="$USBHC_OBJS usb_xhci.o"
+    use_usb=1
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_USB_XHCI, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_USB_XHCI, 0)
+    ]
+  )
+
+if test "$use_usb" = 1; then
+  if test "$pci" != "1"; then
+    AC_MSG_ERROR([USB requires PCI support])
+  fi
+  USBCORE_OBJ="usb_common.o"
+  USBDEV_OBJS="usb_hid.o usb_hub.o usb_msd.o usb_printer.o"
+  SCSI_OBJS="scsi_device.o"
+  AC_SUBST(USBHC_OBJS)
+  AC_SUBST(USBCORE_OBJ)
+  AC_SUBST(USBDEV_OBJS)
+  AC_SUBST(SCSI_OBJS)
+  if test "$bx_plugins" = 0; then
+    USB_LIB_VAR='iodev/usb/libusb.a'
+    AC_SUBST(USB_LIB_VAR)
+  fi
+fi
+
+networking=no
+NETDEV_OBJS=''
+AC_MSG_CHECKING(for NE2000 support)
+AC_ARG_ENABLE(ne2000,
+  AS_HELP_STRING([--enable-ne2000], [enable NE2000 support (no)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_NE2K, 1)
+    NETDEV_OBJS='ne2k.o'
+    networking=yes
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_NE2K, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_NE2K, 0)
+    ]
+  )
+
+AC_MSG_CHECKING(for PCI pseudo NIC support)
+AC_ARG_ENABLE(pnic,
+  AS_HELP_STRING([--enable-pnic], [enable PCI pseudo NIC support (no)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_PCIPNIC, 1)
+    NETDEV_OBJS="$NETDEV_OBJS pcipnic.o"
+    networking=yes
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_PCIPNIC, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_PCIPNIC, 0)
+    ]
+  )
+
+AC_MSG_CHECKING(for Intel(R) Gigabit Ethernet support)
+AC_ARG_ENABLE(e1000,
+  AS_HELP_STRING([--enable-e1000], [enable Intel(R) Gigabit Ethernet support (no)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    if test "$pci" != "1"; then
+      AC_MSG_ERROR([E1000 network adapter requires PCI support])
+    fi
+    AC_DEFINE(BX_SUPPORT_E1000, 1)
+    NETDEV_OBJS="$NETDEV_OBJS e1000.o"
+    networking=yes
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_E1000, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_E1000, 0)
+    ]
+  )
+
+NETLOW_OBJS=''
+if test "$networking" = yes; then
+  NETLOW_OBJS='eth_null.o eth_vnet.o'
+  ethernet_modules='null vnet'
+  can_compile_slirp_new=0
+  case "$target" in
+    *-cygwin* | *-mingw32*)
+      can_compile_slirp_new=1
+      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -liphlpapi"
+      ;;
+    *-pc-windows* | *-pc-winnt*)
+      can_compile_slirp_new=1
+      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS iphlpapi.lib"
+      ;;
+    *)
+      AC_CHECK_HEADER([netinet/in.h], [ can_compile_slirp_new=1 ], [])
+      ;;
+  esac
+  if test $can_compile_slirp_new = 1; then
+    NETLOW_OBJS="$NETLOW_OBJS eth_slirp_new.o \$(SLIRP_OBJS)"
+    ethernet_modules="$ethernet_modules slirp_new"
+    AC_DEFINE(BX_NETMOD_SLIRP_NEW, 1)
+  fi
+  if test "$MSVC_TARGET" != 1; then
+    AC_CHECK_HEADER(net/bpf.h, [
+        NETLOW_OBJS="$NETLOW_OBJS eth_fbsd.o"
+        ethernet_modules="$ethernet_modules fbsd"
+        AC_DEFINE(BX_NETMOD_FBSD, 1)
+      ])
+    AC_CHECK_HEADER(netpacket/packet.h, [
+        NETLOW_OBJS="$NETLOW_OBJS eth_linux.o"
+        ethernet_modules="$ethernet_modules linux"
+        AC_DEFINE(BX_NETMOD_LINUX, 1)
+      ])
+    AC_CHECK_FUNCS(fork, have_fork=1)
+    AC_CHECK_FUNCS(execlp, have_execlp=1)
+    AC_CHECK_FUNCS(socketpair, have_socketpair=1)
+    if test x"$have_fork" = x1 -a x"$have_execlp" = x1 -a x"$have_socketpair" = x1; then
+      NETLOW_OBJS="$NETLOW_OBJS eth_slirp.o"
+      ethernet_modules="$ethernet_modules slirp"
+      AC_DEFINE(BX_NETMOD_SLIRP, 1)
+    fi
+  fi
+  case "$target" in
+    *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32*)
+    NETLOW_OBJS="$NETLOW_OBJS eth_win32.o"
+    ethernet_modules="$ethernet_modules win32"
+    AC_DEFINE(BX_NETMOD_WIN32, 1)
+    ;;
+    *-macosx* | *-darwin*)
+    NETLOW_OBJS="$NETLOW_OBJS eth_tuntap.o"
+    ethernet_modules="$ethernet_modules tuntap"
+    AC_DEFINE(BX_NETMOD_TUNTAP, 1)
+    ;;
+    *)
+    AC_CHECK_HEADER(net/if.h, [
+        use_ethertap=yes
+        AC_DEFINE(BX_HAVE_NET_IF_H, 1)
+      ], [],
+      [
+      #include <sys/types.h>
+      #include <sys/socket.h>
+    ])
+    AC_CHECK_HEADER(linux/netlink.h, [
+        use_ethertap=yes
+      ], [],
+      [
+      #include <asm/types.h>
+      #include <sys/socket.h>
+    ])
+
+    if test "$use_ethertap" = yes; then
+      NETLOW_OBJS="$NETLOW_OBJS eth_tap.o eth_vde.o"
+      ethernet_modules="$ethernet_modules tap vde"
+      AC_DEFINE(BX_NETMOD_TAP, 1)
+      AC_DEFINE(BX_NETMOD_VDE, 1)
+    fi
+
+    AC_CHECK_HEADER(net/if_tun.h, [
+        use_tuntap=yes
+      ], [],
+      [
+      #include <sys/types.h>
+      #include <sys/socket.h>
+      #include <net/if.h>
+    ])
+    AC_CHECK_HEADER(linux/if_tun.h, [
+        use_tuntap=yes
+      ], [],
+      [
+      #include <asm/types.h>
+      #include <sys/socket.h>
+    ])
+    if test "$use_tuntap" = yes; then
+      NETLOW_OBJS="$NETLOW_OBJS eth_tuntap.o"
+      ethernet_modules="$ethernet_modules tuntap"
+      AC_DEFINE(BX_NETMOD_TUNTAP, 1)
+    fi
+
+    ;;
+  esac
+  if test "$bx_plugins" = 0; then
+    NETWORK_LIB_VAR='iodev/network/libnetwork.a'
+    AC_SUBST(NETWORK_LIB_VAR)
+  fi
+  AC_DEFINE(BX_NETWORKING, 1)
+  AC_MSG_CHECKING(for ethernet modules)
+  AC_MSG_RESULT($ethernet_modules)
+else
+  AC_DEFINE(BX_NETWORKING, 0)
+fi
+
+AC_SUBST(NETDEV_OBJS)
+AC_SUBST(NETLOW_OBJS)
+
+dnl // serial mode 'socket' needs ws2_32.dll in non-plugin mode
+if test "$bx_plugins" = 0; then
+  case $target in
+    *-pc-windows*)
+      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS ws2_32.lib"
+      ;;
+    *-mingw32* | *-cygwin*)
+      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lws2_32"
+      ;;
+  esac
+fi
+
+AC_MSG_CHECKING(for raw serial support)
+AC_ARG_ENABLE(raw-serial,
+  AS_HELP_STRING([--enable-raw-serial], [use raw serial port access (no - incomplete)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(USE_RAW_SERIAL, 1)
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(USE_RAW_SERIAL, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(USE_RAW_SERIAL, 0)
+    ]
+  )
+
+DISPLAY_OBJS=''
+AC_MSG_CHECKING(for CLGD54XX emulation)
+AC_ARG_ENABLE(clgd54xx,
+  AS_HELP_STRING([--enable-clgd54xx], [enable CLGD54XX emulation (no)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_CLGD54XX, 1)
+    DISPLAY_OBJS="svga_cirrus.o"
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_CLGD54XX, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_CLGD54XX, 0)
+    ]
+  )
+
+AC_MSG_CHECKING(for 3dfx Voodoo Graphics emulation)
+AC_ARG_ENABLE(voodoo,
+  AS_HELP_STRING([--enable-voodoo], [enable 3dfx Voodoo Graphics emulation (no)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    if test "$pci" != "1"; then
+      AC_MSG_ERROR([3dfx Voodoo Graphics emulation requires PCI support])
+    fi
+    AC_DEFINE(BX_SUPPORT_VOODOO, 1)
+    DISPLAY_OBJS="$DISPLAY_OBJS voodoo.o"
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_VOODOO, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_VOODOO, 0)
+    ]
+  )
+AC_SUBST(DISPLAY_OBJS)
+
 AC_MSG_CHECKING(for lowlevel CDROM support)
 AC_ARG_ENABLE(cdrom,
   AS_HELP_STRING([--enable-cdrom], [lowlevel CDROM support (yes)]),
@@ -1913,6 +1913,25 @@ AC_ARG_ENABLE(gameport,
     fi]
   )
 AC_SUBST(GAME_OBJS)
+
+
+BUSM_OBJS=''
+AC_MSG_CHECKING(for Busmouse support)
+AC_ARG_ENABLE(busmouse,
+  AS_HELP_STRING([--enable-busmouse], [enable Busmouse support (InPort)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_BUSMOUSE, 1)
+    BUSM_OBJS='busmouse.o'
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_BUSMOUSE, 0)
+   fi],
+  [
+    AC_DEFINE(BX_SUPPORT_BUSMOUSE, 0)
+    AC_MSG_RESULT(no)]
+  )
+AC_SUBST(BUSM_OBJS)
 
 
 AC_PATH_PROG(DOCBOOK2HTML, docbook2html, not_found)

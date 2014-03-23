@@ -74,9 +74,9 @@ OBJS_THAT_CAN_BE_PLUGINS = \
   unmapped.o \
   extfpuirq.o \
   speaker.o \
-  busmouse.o \
   ioapic.o \
-  @PCI_OBJ@ \
+  @BUSM_OBJS@ \
+  @PCI_OBJS@ \
   @GAME_OBJS@ \
   @IODEBUG_OBJS@
 

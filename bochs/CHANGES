@@ -1,4 +1,4 @@
-Changes after 2.6.2 (updated Mar 15, 2014):
+Changes after 2.6.2 (updated Mar 23, 2014):
 
 - CPU
   - Bugfixes for CPU emulation correctness (critical fixes for XSAVE, VMX, TBM/BMI and RDRAND instructions)
@@ -50,6 +50,7 @@ Changes after 2.6.2 (updated Mar 15, 2014):
     - Serial mouse detection fixes
   - Busmouse
     - Non-functional device rewritten to make it work in DOS and Win95
+      (use --enable-busmouse to configure and "mouse: type=bus" at runtime)
 
 - ROM BIOS
   - PS/2 mouse function: allow setting mouse packet size to 4 for wheel support
