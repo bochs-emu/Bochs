@@ -2064,6 +2064,9 @@ undoable_image_t::~undoable_image_t()
 int undoable_image_t::open(const char* pathname, int flags)
 {
   UNUSED(flags);
+  if (access(pathname, F_OK) < 0) {
+    BX_PANIC(("r/o disk image doesn't exist"));
+  }
   int mode = hdimage_detect_image_mode(pathname);
   if (mode == BX_HDIMAGE_MODE_UNKNOWN) {
     BX_PANIC(("r/o disk image mode not detected"));
@@ -2201,6 +2204,9 @@ int volatile_image_t::open(const char* pathname, int flags)
   Bit32u timestamp;
 
   UNUSED(flags);
+  if (access(pathname, F_OK) < 0) {
+    BX_PANIC(("r/o disk image doesn't exist"));
+  }
   int mode = hdimage_detect_image_mode(pathname);
   if (mode == BX_HDIMAGE_MODE_UNKNOWN) {
     BX_PANIC(("r/o disk image mode not detected"));

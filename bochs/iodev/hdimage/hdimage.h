@@ -21,6 +21,11 @@
 #ifndef BX_HDIMAGE_H
 #define BX_HDIMAGE_H
 
+// required for access() checks
+#ifndef F_OK
+#define F_OK 0
+#endif
+
 // hdimage capabilities
 #define HDIMAGE_READONLY      1
 #define HDIMAGE_HAS_GEOMETRY  2

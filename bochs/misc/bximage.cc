@@ -2,8 +2,8 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2013       Volker Ruppert
 //  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2013-2014  Volker Ruppert
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -775,6 +775,9 @@ void convert_image(int newimgmode, Bit64u newsize)
 #endif
     }
   }
+  if (access(bx_filename_1, F_OK) < 0) {
+    fatal("source disk image doesn't exist");
+  }
   if (mode == -1) {
     mode = hdimage_detect_image_mode(bx_filename_1);
   }
@@ -841,6 +844,9 @@ void commit_redolog()
   int ret;
 
   printf("\n");
+  if (access(bx_filename_1, F_OK) < 0) {
+    fatal("base disk image doesn't exist");
+  }
   int mode = hdimage_detect_image_mode(bx_filename_1);
   if (mode == BX_HDIMAGE_MODE_UNKNOWN)
     fatal("base disk image mode not detected");
