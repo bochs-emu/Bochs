@@ -196,7 +196,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  write_virtual_xmmword_aligned(i->seg(), eaddr, (Bit8u *) &xmm);
+  write_virtual_xmmword_aligned(i->seg(), eaddr, &xmm);
 
   bx_address asize_mask = i->asize_mask();
 
@@ -231,7 +231,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
     xmm.xmm32u(3) = 0;
   }
 
-  write_virtual_xmmword(i->seg(), (eaddr + 16) & asize_mask, (Bit8u *) &xmm);
+  write_virtual_xmmword(i->seg(), (eaddr + 16) & asize_mask, &xmm);
 
   /* store i387 register file */
   for(index=0; index < 8; index++)
@@ -242,7 +242,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
     xmm.xmm64u(1) = 0;
     xmm.xmm16u(4) = fp.exp;
 
-    write_virtual_xmmword(i->seg(), (eaddr+index*16+32) & asize_mask, (Bit8u *) &xmm);
+    write_virtual_xmmword(i->seg(), (eaddr+index*16+32) & asize_mask, &xmm);
   }
 
 #if BX_SUPPORT_X86_64
@@ -259,7 +259,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
       // save XMM8-XMM15 only in 64-bit mode
       if (index < 8 || long64_mode()) {
          write_virtual_xmmword(i->seg(),
-             (eaddr+index*16+160) & asize_mask, (Bit8u *)(&BX_READ_XMM_REG(index)));
+             (eaddr+index*16+160) & asize_mask, &BX_READ_XMM_REG(index));
       }
     }
   }
@@ -284,7 +284,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  read_virtual_xmmword_aligned(i->seg(), eaddr, (Bit8u *) &xmm);
+  read_virtual_xmmword_aligned(i->seg(), eaddr, &xmm);
 
   bx_address asize_mask = i->asize_mask();
 
@@ -316,7 +316,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   Bit32u tag_byte = xmm.xmmubyte(4);
 
   /* Restore x87 FPU DP */
-  read_virtual_xmmword(i->seg(), (eaddr + 16) & asize_mask, (Bit8u *) &xmm);
+  read_virtual_xmmword(i->seg(), (eaddr + 16) & asize_mask, &xmm);
 
 #if BX_SUPPORT_X86_64
   if (i->os64L()) {
@@ -379,7 +379,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
       // restore XMM8-XMM15 only in 64-bit mode
       if (index < 8 || long64_mode()) {
          read_virtual_xmmword(i->seg(),
-             (eaddr+index*16+160) & asize_mask, (Bit8u *)(&BX_READ_XMM_REG(index)));
+             (eaddr+index*16+160) & asize_mask, &BX_READ_XMM_REG(index));
 
       }
     }

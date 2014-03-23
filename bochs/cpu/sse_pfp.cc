@@ -312,9 +312,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPD2PI_PqWpd(bxInstruction_c *i
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
     if (BX_CPU_THIS_PTR mxcsr.get_MM())
-      read_virtual_xmmword(i->seg(), eaddr, (Bit8u *) &op);
+      read_virtual_xmmword(i->seg(), eaddr, &op);
     else
-      read_virtual_xmmword_aligned(i->seg(), eaddr, (Bit8u *) &op);
+      read_virtual_xmmword_aligned(i->seg(), eaddr, &op);
   }
 
   float_status_t status;
@@ -473,10 +473,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2PI_PqWpd(bxInstruction_c *i)
 
 #if BX_SUPPORT_MISALIGNED_SSE
     if (BX_CPU_THIS_PTR mxcsr.get_MM())
-      read_virtual_xmmword(i->seg(), eaddr, (Bit8u *) &op);
+      read_virtual_xmmword(i->seg(), eaddr, &op);
     else
 #endif
-      read_virtual_xmmword_aligned(i->seg(), eaddr, (Bit8u *) &op);
+      read_virtual_xmmword_aligned(i->seg(), eaddr, &op);
   }
 
   float_status_t status;

@@ -392,7 +392,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF128_VdqMdq(bxInstructio
   unsigned len = i->getVL();
   
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  read_virtual_xmmword(i->seg(), eaddr, (Bit8u*) &src);
+  read_virtual_xmmword(i->seg(), eaddr, &src);
 
   for (unsigned n=0; n < len; n++) {
     dst.vmm128(n) = src;

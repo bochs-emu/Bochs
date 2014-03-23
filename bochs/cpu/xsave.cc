@@ -497,7 +497,7 @@ void BX_CPU_C::xsave_x87_state(bxInstruction_c *i, bx_address offset)
     xmm.xmm32u(3) = x87_get_FCS();
   }
 
-  write_virtual_xmmword(i->seg(), offset, (Bit8u *) &xmm);
+  write_virtual_xmmword(i->seg(), offset, &xmm);
 
   /*
    * x87 FPU Instruction Operand (Data) Pointer Offset (32/64 bits)
@@ -531,7 +531,7 @@ void BX_CPU_C::xsave_x87_state(bxInstruction_c *i, bx_address offset)
     xmm.xmm64u(1) = 0;
     xmm.xmm16u(4) = fp.exp;
 
-    write_virtual_xmmword(i->seg(), (offset+index*16+32) & asize_mask, (Bit8u *) &xmm);
+    write_virtual_xmmword(i->seg(), (offset+index*16+32) & asize_mask, &xmm);
   }
 }
 
@@ -541,7 +541,7 @@ void BX_CPU_C::xrstor_x87_state(bxInstruction_c *i, bx_address offset)
   bx_address asize_mask = i->asize_mask();
 
   // load FPU state from XSAVE area
-  read_virtual_xmmword(i->seg(), offset, (Bit8u *) &xmm);
+  read_virtual_xmmword(i->seg(), offset, &xmm);
 
   BX_CPU_THIS_PTR the_i387.cwd =  xmm.xmm16u(0);
   BX_CPU_THIS_PTR the_i387.swd =  xmm.xmm16u(1);
@@ -571,7 +571,7 @@ void BX_CPU_C::xrstor_x87_state(bxInstruction_c *i, bx_address offset)
   Bit32u tag_byte = xmm.xmmubyte(4);
 
   /* Restore x87 FPU DP - read cannot cause any boundary cross because XSAVE image is 64-byte aligned */
-  read_virtual_xmmword(i->seg(), offset + 16, (Bit8u *) &xmm);
+  read_virtual_xmmword(i->seg(), offset + 16, &xmm);
 
 #if BX_SUPPORT_X86_64
   if (i->os64L()) {
@@ -649,7 +649,7 @@ void BX_CPU_C::xsave_sse_state(bxInstruction_c *i, bx_address offset)
   for(unsigned index=0; index < 16; index++) {
     // save XMM8-XMM15 only in 64-bit mode
     if (index < 8 || long64_mode()) {
-      write_virtual_xmmword(i->seg(), (offset + index*16) & asize_mask, (Bit8u *)(&BX_READ_XMM_REG(index)));
+      write_virtual_xmmword(i->seg(), (offset + index*16) & asize_mask, &BX_READ_XMM_REG(index));
     }
   }
 }
@@ -662,7 +662,7 @@ void BX_CPU_C::xrstor_sse_state(bxInstruction_c *i, bx_address offset)
   for(unsigned index=0; index < 16; index++) {
     // restore XMM8-XMM15 only in 64-bit mode
     if (index < 8 || long64_mode()) {
-      read_virtual_xmmword(i->seg(), (offset+index*16) & asize_mask, (Bit8u *)(&BX_READ_XMM_REG(index)));
+      read_virtual_xmmword(i->seg(), (offset+index*16) & asize_mask, &BX_READ_XMM_REG(index));
     }
   }
 }
@@ -701,7 +701,7 @@ void BX_CPU_C::xsave_ymm_state(bxInstruction_c *i, bx_address offset)
   for(unsigned index=0; index < 16; index++) {
     // save YMM8-YMM15 only in 64-bit mode
     if (index < 8 || long64_mode()) {
-      write_virtual_xmmword(i->seg(), (offset + index*16) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG_LANE(index, 1)));
+      write_virtual_xmmword(i->seg(), (offset + index*16) & asize_mask, &BX_READ_AVX_REG_LANE(index, 1));
     }
   }
 }
@@ -714,7 +714,7 @@ void BX_CPU_C::xrstor_ymm_state(bxInstruction_c *i, bx_address offset)
   for(unsigned index=0; index < 16; index++) {
     // restore YMM8-YMM15 only in 64-bit mode
     if (index < 8 || long64_mode()) {
-      read_virtual_xmmword(i->seg(), (offset + index*16) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG_LANE(index, 1)));
+      read_virtual_xmmword(i->seg(), (offset + index*16) & asize_mask, &BX_READ_AVX_REG_LANE(index, 1));
     }
   }
 }
@@ -791,7 +791,7 @@ void BX_CPU_C::xsave_zmm_hi256_state(bxInstruction_c *i, bx_address offset)
 
   // save upper part of ZMM registers to XSAVE area
   for(unsigned index=0; index < 16; index++) {
-    write_virtual_ymmword(i->seg(), (offset+index*32) & asize_mask, (Bit8u *)(&BX_READ_ZMM_REG_HI(index)));
+    write_virtual_ymmword(i->seg(), (offset+index*32) & asize_mask, &BX_READ_ZMM_REG_HI(index));
   }
 }
 
@@ -801,7 +801,7 @@ void BX_CPU_C::xrstor_zmm_hi256_state(bxInstruction_c *i, bx_address offset)
 
   // load upper part of ZMM registers from XSAVE area
   for(unsigned index=0; index < 16; index++) {
-    read_virtual_ymmword(i->seg(), (offset+index*32) & asize_mask, (Bit8u *)(&BX_READ_ZMM_REG_HI(index)));
+    read_virtual_ymmword(i->seg(), (offset+index*32) & asize_mask, &BX_READ_ZMM_REG_HI(index));
   }
 }
 
@@ -833,7 +833,7 @@ void BX_CPU_C::xsave_hi_zmm_state(bxInstruction_c *i, bx_address offset)
 
   // save high ZMM state to XSAVE area
   for(unsigned index=0; index < 16; index++) {
-    write_virtual_zmmword(i->seg(), (offset+index*64) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG(index+16)));
+    write_virtual_zmmword(i->seg(), (offset+index*64) & asize_mask, &BX_READ_AVX_REG(index+16));
   }
 }
 
@@ -843,7 +843,7 @@ void BX_CPU_C::xrstor_hi_zmm_state(bxInstruction_c *i, bx_address offset)
 
   // load high ZMM state from XSAVE area
   for(unsigned index=0; index < 16; index++) {
-    read_virtual_zmmword(i->seg(), (offset+index*64) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG(index+16)));
+    read_virtual_zmmword(i->seg(), (offset+index*64) & asize_mask, &BX_READ_AVX_REG(index+16));
   }
 }
 

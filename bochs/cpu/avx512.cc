@@ -982,7 +982,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF32x4_MASK_VpsMps(bxInst
   Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
   if (opmask != 0) {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    read_virtual_xmmword(i->seg(), eaddr, (Bit8u*) &src);
+    read_virtual_xmmword(i->seg(), eaddr, &src);
 
     for (unsigned n=0; n < len; n++) {
       dst.vmm128(n) = src;
@@ -1015,7 +1015,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF64x4_VpdMpd(bxInstructi
 #endif
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  read_virtual_ymmword(i->seg(), eaddr, (Bit8u*) &src);
+  read_virtual_ymmword(i->seg(), eaddr, &src);
 
   dst.vmm256(0) = src;
   dst.vmm256(1) = src;
@@ -1040,7 +1040,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF64x4_MASK_VpdMpd(bxInst
   Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask());
   if (opmask != 0) {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    read_virtual_ymmword(i->seg(), eaddr, (Bit8u*) &src);
+    read_virtual_ymmword(i->seg(), eaddr, &src);
 
     dst.vmm256(0) = src;
     dst.vmm256(1) = src;
