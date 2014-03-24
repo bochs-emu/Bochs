@@ -91,9 +91,9 @@ static int tftp_session_find(Slirp *slirp, struct tftp_t *tp)
 
     if (tftp_session_in_use(spt)) {
       if (!memcmp(&spt->client_ip, &tp->ip.ip_src, sizeof(spt->client_ip))) {
-	if (spt->client_port == tp->udp.uh_sport) {
-	  return k;
-	}
+        if (spt->client_port == tp->udp.uh_sport) {
+          return k;
+        }
       }
     }
   }
@@ -135,7 +135,7 @@ static int tftp_send_oack(struct tftp_session *spt,
     m = m_get(spt->slirp);
 
     if (!m)
-	return -1;
+        return -1;
 
     memset(m->m_data, 0, m->m_size);
 
@@ -158,6 +158,40 @@ static int tftp_send_oack(struct tftp_session *spt,
     daddr.sin_port = spt->client_port;
 
     m->m_len = sizeof(struct tftp_t) - 514 + n -
+        sizeof(struct ip) - sizeof(struct udphdr);
+    udp_output2(NULL, m, &saddr, &daddr, IPTOS_LOWDELAY);
+
+    return 0;
+}
+
+static int tftp_send_ack(struct tftp_session *spt,
+                          struct tftp_t *recv_tp)
+{
+    struct sockaddr_in saddr, daddr;
+    struct mbuf *m;
+    struct tftp_t *tp;
+
+    m = m_get(spt->slirp);
+
+    if (!m)
+        return -1;
+
+    memset(m->m_data, 0, m->m_size);
+
+    m->m_data += IF_MAXLINKHDR;
+    tp = (tftp_t*)m->m_data;
+    m->m_data += sizeof(struct udpiphdr);
+
+    tp->tp_op = htons(TFTP_ACK);
+    tp->x.tp_data.tp_block_nr = htons(spt->block_nr & 0xffff);
+
+    saddr.sin_addr = recv_tp->ip.ip_dst;
+    saddr.sin_port = recv_tp->udp.uh_dport;
+
+    daddr.sin_addr = spt->client_ip;
+    daddr.sin_port = spt->client_port;
+
+    m->m_len = sizeof(struct tftp_t) - 514 + 2 -
         sizeof(struct ip) - sizeof(struct udphdr);
     udp_output2(NULL, m, &saddr, &daddr, IPTOS_LOWDELAY);
 
@@ -282,6 +316,7 @@ static void tftp_handle_rrq(Slirp *slirp, struct tftp_t *tp, int pktlen)
   }
 
   spt = &slirp->tftp_sessions[s];
+  spt->write = 0;
 
   /* unspecifed prefix means service disabled */
   if (!slirp->tftp_prefix) {
@@ -352,25 +387,25 @@ static void tftp_handle_rrq(Slirp *slirp, struct tftp_t *tp, int pktlen)
       k += strlen(key) + 1;
 
       if (k >= pktlen) {
-	  tftp_send_error(spt, 2, "Access violation", tp);
-	  return;
+          tftp_send_error(spt, 2, "Access violation", tp);
+          return;
       }
 
       value = &tp->x.tp_buf[k];
       k += strlen(value) + 1;
 
       if (strcasecmp(key, "tsize") == 0) {
-	  int tsize = atoi(value);
-	  struct stat stat_p;
+          int tsize = atoi(value);
+          struct stat stat_p;
 
-	  if (tsize == 0) {
-	      if (stat(spt->filename, &stat_p) == 0)
-		  tsize = stat_p.st_size;
-	      else {
-		  tftp_send_error(spt, 1, "File not found", tp);
-		  return;
-	      }
-	  }
+          if (tsize == 0) {
+              if (stat(spt->filename, &stat_p) == 0)
+                  tsize = stat_p.st_size;
+              else {
+                  tftp_send_error(spt, 1, "File not found", tp);
+                  return;
+              }
+          }
 
           option_name[nb_options] = "tsize";
           option_value[nb_options] = tsize;
@@ -398,6 +433,191 @@ static void tftp_handle_rrq(Slirp *slirp, struct tftp_t *tp, int pktlen)
 
   spt->block_nr = 0;
   tftp_send_next_block(spt, tp);
+}
+
+static void tftp_handle_wrq(Slirp *slirp, struct tftp_t *tp, int pktlen)
+{
+  struct tftp_session *spt;
+  int s, k, fd;
+  size_t prefix_len;
+  char *req_fname;
+  const char *option_name[2];
+  uint32_t option_value[2];
+  unsigned nb_options = 0;
+
+  /* check if a session already exists and if so terminate it */
+  s = tftp_session_find(slirp, tp);
+  if (s >= 0) {
+    tftp_session_terminate(&slirp->tftp_sessions[s]);
+  }
+
+  s = tftp_session_allocate(slirp, tp);
+
+  if (s < 0) {
+    return;
+  }
+
+  spt = &slirp->tftp_sessions[s];
+  spt->write = 1;
+
+  /* unspecifed prefix means service disabled */
+  if (!slirp->tftp_prefix) {
+      tftp_send_error(spt, 2, "Access violation", tp);
+      return;
+  }
+
+  /* skip header fields */
+  k = 0;
+  pktlen -= offsetof(struct tftp_t, x.tp_buf);
+
+  /* prepend tftp_prefix */
+  prefix_len = strlen(slirp->tftp_prefix);
+  spt->filename = (char*)malloc(prefix_len + TFTP_FILENAME_MAX + 2);
+  memcpy(spt->filename, slirp->tftp_prefix, prefix_len);
+  spt->filename[prefix_len] = '/';
+
+  /* get name */
+  req_fname = spt->filename + prefix_len + 1;
+
+  while (1) {
+    if (k >= TFTP_FILENAME_MAX || k >= pktlen) {
+      tftp_send_error(spt, 2, "Access violation", tp);
+      return;
+    }
+    req_fname[k] = tp->x.tp_buf[k];
+    if (req_fname[k++] == '\0') {
+      break;
+    }
+  }
+
+  /* check mode */
+  if ((pktlen - k) < 6) {
+    tftp_send_error(spt, 2, "Access violation", tp);
+    return;
+  }
+
+  if (strcasecmp(&tp->x.tp_buf[k], "octet") != 0) {
+      tftp_send_error(spt, 4, "Unsupported transfer mode", tp);
+      return;
+  }
+
+  k += 6; /* skipping octet */
+
+  /* do sanity checks on the filename */
+  if (!strncmp(req_fname, "../", 3) ||
+      req_fname[strlen(req_fname) - 1] == '/' ||
+      strstr(req_fname, "/../")) {
+      tftp_send_error(spt, 2, "Access violation", tp);
+      return;
+  }
+
+  /* check if the file exists */
+  fd = open(spt->filename, O_RDONLY | O_BINARY);
+  if (fd >= 0) {
+      close(fd);
+      tftp_send_error(spt, 6, "File exists", tp);
+      return;
+  }
+  /* create new file */
+  spt->fd = open(spt->filename, O_CREAT | O_WRONLY
+#ifdef O_BINARY
+    | O_BINARY
+#endif
+    , S_IWUSR | S_IRUSR | S_IRGRP | S_IWGRP);
+  if (spt->fd < 0) {
+      tftp_send_error(spt, 2, "Access violation", tp);
+      return;
+  }
+
+  if (tp->x.tp_buf[pktlen - 1] != 0) {
+      tftp_send_error(spt, 2, "Access violation", tp);
+      return;
+  }
+
+  while (k < pktlen && nb_options < ARRAY_SIZE(option_name)) {
+      const char *key, *value;
+
+      key = &tp->x.tp_buf[k];
+      k += strlen(key) + 1;
+
+      if (k >= pktlen) {
+          tftp_send_error(spt, 2, "Access violation", tp);
+          return;
+      }
+
+      value = &tp->x.tp_buf[k];
+      k += strlen(value) + 1;
+
+      if (strcasecmp(key, "tsize") == 0) {
+          int tsize = atoi(value);
+          struct stat stat_p;
+
+          if (tsize == 0) {
+              if (stat(spt->filename, &stat_p) == 0)
+                  tsize = stat_p.st_size;
+              else {
+                  tftp_send_error(spt, 1, "File not found", tp);
+                  return;
+              }
+          }
+
+          option_name[nb_options] = "tsize";
+          option_value[nb_options] = tsize;
+          nb_options++;
+      } else if (strcasecmp(key, "blksize") == 0) {
+          int blksize = atoi(value);
+
+          /* If blksize option is bigger than what we will
+           * emit, accept the option with our packet size.
+           * Otherwise, simply do as we didn't see the option.
+           */
+          if (blksize >= 512) {
+              option_name[nb_options] = "blksize";
+              option_value[nb_options] = 512;
+              nb_options++;
+          }
+      }
+  }
+
+  spt->block_nr = 0;
+  if (nb_options > 0) {
+      assert(nb_options <= ARRAY_SIZE(option_name));
+      tftp_send_oack(spt, option_name, option_value, nb_options, tp);
+  } else {
+      tftp_send_ack(spt, tp);
+  }
+}
+
+static void tftp_handle_data(Slirp *slirp, struct tftp_t *tp, int pktlen)
+{
+  struct tftp_session *spt;
+  int s, nobytes;
+
+  s = tftp_session_find(slirp, tp);
+
+  if (s < 0) {
+    return;
+  }
+  spt = &slirp->tftp_sessions[s];
+
+  if (spt->write == 1) {
+    spt->block_nr = ntohs(tp->x.tp_data.tp_block_nr);
+    nobytes = pktlen - offsetof(struct tftp_t, x.tp_data.tp_buf);
+    if (nobytes <= 512) {
+      lseek(spt->fd, (spt->block_nr - 1) * 512, SEEK_SET);
+      write(spt->fd, tp->x.tp_data.tp_buf, nobytes);
+      tftp_send_ack(spt, tp);
+      if (nobytes == 512) {
+        tftp_session_update(spt);
+      } else {
+        tftp_session_terminate(spt);
+      }
+    } else {
+      tftp_send_error(spt, 2, "Access violation", tp);
+    }
+  } else {
+    tftp_send_error(spt, 2, "Access violation", tp);
+  }
 }
 
 static void tftp_handle_ack(Slirp *slirp, struct tftp_t *tp, int pktlen)
@@ -430,18 +650,26 @@ void tftp_input(struct mbuf *m)
 {
   struct tftp_t *tp = (struct tftp_t *)m->m_data;
 
-  switch(ntohs(tp->tp_op)) {
-  case TFTP_RRQ:
-    tftp_handle_rrq(m->slirp, tp, m->m_len);
-    break;
+  switch (ntohs(tp->tp_op)) {
+    case TFTP_RRQ:
+      tftp_handle_rrq(m->slirp, tp, m->m_len);
+      break;
 
-  case TFTP_ACK:
-    tftp_handle_ack(m->slirp, tp, m->m_len);
-    break;
+    case TFTP_WRQ:
+      tftp_handle_wrq(m->slirp, tp, m->m_len);
+      break;
 
-  case TFTP_ERROR:
-    tftp_handle_error(m->slirp, tp, m->m_len);
-    break;
+    case TFTP_DATA:
+      tftp_handle_data(m->slirp, tp, m->m_len);
+      break;
+
+    case TFTP_ACK:
+      tftp_handle_ack(m->slirp, tp, m->m_len);
+      break;
+
+    case TFTP_ERROR:
+      tftp_handle_error(m->slirp, tp, m->m_len);
+      break;
   }
 }
 
