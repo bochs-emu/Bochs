@@ -523,7 +523,11 @@ static void tftp_handle_wrq(Slirp *slirp, struct tftp_t *tp, int pktlen)
 #ifdef O_BINARY
     | O_BINARY
 #endif
-    , S_IWUSR | S_IRUSR | S_IRGRP | S_IWGRP);
+    , S_IWUSR | S_IRUSR
+#ifndef WIN32
+    | S_IRGRP | S_IWGRP
+#endif
+    );
   if (spt->fd < 0) {
       tftp_send_error(spt, 2, "Access violation", tp);
       return;
