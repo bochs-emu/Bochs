@@ -152,7 +152,7 @@ static void bootp_reply(Slirp *slirp, const struct bootp_t *bp)
     struct mbuf *m;
     struct bootp_t *rbp;
     struct sockaddr_in saddr, daddr;
-    struct in_addr preq_addr;
+    struct in_addr preq_addr, bcast_addr;
     int dhcp_msg_type, val;
     uint8_t *q;
     uint8_t client_ethaddr[ETH_ALEN];
@@ -258,6 +258,8 @@ static void bootp_reply(Slirp *slirp, const struct bootp_t *bp)
             snprintf((char *)rbp->bp_file, sizeof(rbp->bp_file), "%s",
                      slirp->bootp_filename);
 
+        strcpy((char *)rbp->bp_sname, "slirp");
+
         *q++ = RFC2132_SRV_ID;
         *q++ = 4;
         memcpy(q, &saddr.sin_addr, 4);
@@ -266,6 +268,12 @@ static void bootp_reply(Slirp *slirp, const struct bootp_t *bp)
         *q++ = RFC1533_NETMASK;
         *q++ = 4;
         memcpy(q, &slirp->vnetwork_mask, 4);
+        q += 4;
+
+        *q++ = RFC1533_INTBROADCAST;
+        *q++ = 4;
+        bcast_addr.s_addr = slirp->vhost_addr.s_addr | ~slirp->vnetwork_mask.s_addr;
+        memcpy(q, &bcast_addr, 4);
         q += 4;
 
         if (!slirp->restricted) {
