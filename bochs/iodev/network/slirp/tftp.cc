@@ -77,7 +77,7 @@ static void tftp_session_terminate(struct tftp_session *spt)
     spt->slirp = NULL;
 }
 
-static int tftp_session_allocate(Slirp *slirp, struct tftp_t *tp)
+static tftp_session *tftp_session_allocate(Slirp *slirp, struct tftp_t *tp)
 {
   struct tftp_session *spt;
   int k;
@@ -95,7 +95,7 @@ static int tftp_session_allocate(Slirp *slirp, struct tftp_t *tp)
     }
   }
 
-  return -1;
+  return NULL;
 
  found:
   memset(spt, 0, sizeof(*spt));
@@ -103,16 +103,17 @@ static int tftp_session_allocate(Slirp *slirp, struct tftp_t *tp)
   spt->fd = -1;
   spt->client_port = tp->udp.uh_sport;
   spt->slirp = slirp;
+  spt->write = (ntohs(tp->tp_op) == TFTP_WRQ);
   spt->options = 0;
   spt->blksize_val = TFTP_DEFAULT_BLKSIZE;
   spt->timeout_val = TFTP_DEFAULT_TIMEOUT;
 
   tftp_session_update(spt);
 
-  return k;
+  return spt;
 }
 
-static int tftp_session_find(Slirp *slirp, struct tftp_t *tp)
+static tftp_session *tftp_session_find(Slirp *slirp, struct tftp_t *tp)
 {
   struct tftp_session *spt;
   int k;
@@ -123,13 +124,13 @@ static int tftp_session_find(Slirp *slirp, struct tftp_t *tp)
     if (tftp_session_in_use(spt)) {
       if (!memcmp(&spt->client_ip, &tp->ip.ip_src, sizeof(spt->client_ip))) {
         if (spt->client_port == tp->udp.uh_sport) {
-          return k;
+          return spt;
         }
       }
     }
   }
 
-  return -1;
+  return NULL;
 }
 
 static int tftp_read_data(struct tftp_session *spt, uint32_t block_nr,
@@ -379,26 +380,22 @@ static void tftp_parse_options(struct tftp_session *spt, struct tftp_t *tp, int 
 static void tftp_handle_rrq(Slirp *slirp, struct tftp_t *tp, int pktlen)
 {
   struct tftp_session *spt;
-  int s, k;
+  int k;
   size_t prefix_len;
   char *req_fname;
 
   /* check if a session already exists and if so terminate it */
-  s = tftp_session_find(slirp, tp);
-  if (s >= 0) {
-    tftp_session_terminate(&slirp->tftp_sessions[s]);
+  spt = tftp_session_find(slirp, tp);
+  if (spt != NULL) {
+    tftp_session_terminate(spt);
   }
 
-  s = tftp_session_allocate(slirp, tp);
-
-  if (s < 0) {
+  spt = tftp_session_allocate(slirp, tp);
+  if (spt == NULL) {
     return;
   }
 
-  spt = &slirp->tftp_sessions[s];
-  spt->write = 0;
-
-  /* unspecifed prefix means service disabled */
+  /* unspecified prefix means service disabled */
   if (!slirp->tftp_prefix) {
       tftp_send_error(spt, 2, "Access violation", tp);
       return;
@@ -474,26 +471,22 @@ static void tftp_handle_rrq(Slirp *slirp, struct tftp_t *tp, int pktlen)
 static void tftp_handle_wrq(Slirp *slirp, struct tftp_t *tp, int pktlen)
 {
   struct tftp_session *spt;
-  int s, k, fd;
+  int k, fd;
   size_t prefix_len;
   char *req_fname;
 
   /* check if a session already exists and if so terminate it */
-  s = tftp_session_find(slirp, tp);
-  if (s >= 0) {
-    tftp_session_terminate(&slirp->tftp_sessions[s]);
+  spt = tftp_session_find(slirp, tp);
+  if (spt != NULL) {
+    tftp_session_terminate(spt);
   }
 
-  s = tftp_session_allocate(slirp, tp);
-
-  if (s < 0) {
+  spt = tftp_session_allocate(slirp, tp);
+  if (spt == NULL) {
     return;
   }
 
-  spt = &slirp->tftp_sessions[s];
-  spt->write = 1;
-
-  /* unspecifed prefix means service disabled */
+  /* unspecified prefix means service disabled */
   if (!slirp->tftp_prefix) {
       tftp_send_error(spt, 2, "Access violation", tp);
       return;
@@ -571,14 +564,12 @@ static void tftp_handle_wrq(Slirp *slirp, struct tftp_t *tp, int pktlen)
 static void tftp_handle_data(Slirp *slirp, struct tftp_t *tp, int pktlen)
 {
   struct tftp_session *spt;
-  int s, nobytes;
+  int nobytes;
 
-  s = tftp_session_find(slirp, tp);
-
-  if (s < 0) {
+  spt = tftp_session_find(slirp, tp);
+  if (spt == NULL) {
     return;
   }
-  spt = &slirp->tftp_sessions[s];
 
   if (spt->write == 1) {
     spt->block_nr = ntohs(tp->x.tp_data.tp_block_nr);
@@ -602,28 +593,24 @@ static void tftp_handle_data(Slirp *slirp, struct tftp_t *tp, int pktlen)
 
 static void tftp_handle_ack(Slirp *slirp, struct tftp_t *tp, int pktlen)
 {
-  int s;
+  struct tftp_session *spt;
 
-  s = tftp_session_find(slirp, tp);
-
-  if (s < 0) {
+  spt = tftp_session_find(slirp, tp);
+  if (spt == NULL) {
     return;
   }
-
-  tftp_send_next_block(&slirp->tftp_sessions[s], tp);
+  tftp_send_next_block(spt, tp);
 }
 
 static void tftp_handle_error(Slirp *slirp, struct tftp_t *tp, int pktlen)
 {
-  int s;
+  struct tftp_session *spt;
 
-  s = tftp_session_find(slirp, tp);
-
-  if (s < 0) {
+  spt = tftp_session_find(slirp, tp);
+  if (spt == NULL) {
     return;
   }
-
-  tftp_session_terminate(&slirp->tftp_sessions[s]);
+  tftp_session_terminate(spt);
 }
 
 void tftp_input(struct mbuf *m)
