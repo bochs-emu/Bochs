@@ -18,14 +18,15 @@ typedef Bit16u uint16_t;
 typedef Bit32u uint32_t;
 typedef Bit64u uint64_t;
 typedef Bit64s ssize_t;
+#ifndef BX_OSDEP_H
 #define snprintf   _snprintf
 #define strdup     _strdup
 #define open       _open
 #define close      _close
-#ifndef BX_OSDEP_H
 #define lseek      _lseek
-#endif
 #define read       _read
+#define write      _write
+#endif
 #define strcasecmp _stricmp
 #endif
 

@@ -473,7 +473,7 @@ sorecvfrom(struct socket *so)
 	} else {                            	/* A "normal" UDP packet */
 	  struct mbuf *m;
           int len;
-#ifdef _WIN32
+#ifdef WIN32
           unsigned long n;
 #else
           int n;
@@ -493,7 +493,7 @@ sorecvfrom(struct socket *so)
 	  /* if (so->so_fport != htons(53)) { */
 	  ioctlsocket(so->s, FIONREAD, &n);
 
-	  if (n > len) {
+	  if ((int)n > len) {
 	    n = (m->m_data - m->m_dat) + m->m_len + n + 1;
 	    m_inc(m, n);
 	    len = M_FREEROOM(m);
