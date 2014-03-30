@@ -2,7 +2,8 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 /*
- * A simple TFTP server (ported from Qemu) with some additions
+ * A simple TFTP server (ported from Qemu)
+ * Bochs additions: write support, 'blksize' and 'timeout' options
  *
  * Copyright (c) 2004 Magnus Damm <damm@opensource.se>
  *
