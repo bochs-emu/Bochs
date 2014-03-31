@@ -40,8 +40,7 @@ typedef struct {
     struct in_addr req_addr;
     uint8_t *params;
     uint8_t params_len;
-    uint8_t *hostname;
-    uint8_t hostname_len;
+    char *hostname;
     uint32_t lease_time;
 } dhcp_options_t;
 
@@ -112,6 +111,7 @@ static BOOTPClient *find_addr(Slirp *slirp, struct in_addr *paddr,
 static void dhcp_decode(Slirp *slirp, const struct bootp_t *bp, dhcp_options_t *opts)
 {
     const uint8_t *p, *p_end;
+    uint16_t defsize, maxsize;
     int len, tag;
     char msg[80];
 
@@ -161,14 +161,24 @@ static void dhcp_decode(Slirp *slirp, const struct bootp_t *bp, dhcp_options_t *
                 break;
               case RFC1533_HOSTNAME:
                 if (len >= 1) {
-                    opts->hostname = (uint8_t*)malloc(len);
+                    opts->hostname = (char*)malloc(len + 1);
                     memcpy(opts->hostname, p, len);
-                    opts->hostname_len = len;
+                    opts->hostname[len] = 0;
                 }
                 break;
               case RFC2132_LEASE_TIME:
                 if (len == 4) {
                     memcpy(&opts->lease_time, p, len);
+                }
+                break;
+              case RFC2132_MAX_SIZE:
+                if (len == 2) {
+                    memcpy(&maxsize, p, len);
+                    defsize = sizeof(struct bootp_t) - sizeof(struct ip) - sizeof(struct udphdr);
+                    if (ntohs(maxsize) < defsize) {
+                        sprintf(msg, "DHCP server: RFB2132_MAX_SIZE=%u not supported yet", ntohs(maxsize));
+                        slirp_warning(slirp, msg);
+                    }
                 }
                 break;
               default:
@@ -198,6 +208,7 @@ static void bootp_reply(Slirp *slirp, const struct bootp_t *bp)
     uint8_t dhcp_def_params[8];
     bx_bool dhcp_def_params_valid = 0;
     dhcp_options_t dhcp_opts;
+    size_t spaceleft;
     char msg[80];
 
     /* extract exact DHCP msg type */
@@ -247,7 +258,7 @@ static void bootp_reply(Slirp *slirp, const struct bootp_t *bp)
         dhcp_def_params[0] = RFC2132_LEASE_TIME;
         dhcp_def_params[1] = RFC2132_SRV_ID;
         dhcp_def_params_len = 2;
-        if (*slirp->client_hostname || (dhcp_opts.hostname_len > 0)) {
+        if (*slirp->client_hostname || (dhcp_opts.hostname != NULL)) {
             dhcp_def_params[dhcp_def_params_len++] = RFC1533_HOSTNAME;
         }
         dhcp_def_params_valid = 1;
@@ -321,6 +332,8 @@ static void bootp_reply(Slirp *slirp, const struct bootp_t *bp)
         plen = dhcp_opts.params_len;
         while (1) {
             while (plen-- > 0) {
+                spaceleft = sizeof(rbp->bp_vend) - (q - rbp->bp_vend);
+                if (spaceleft < 6) break;
                 switch (*pp++) {
                     case RFC1533_NETMASK:
                         *q++ = RFC1533_NETMASK;
@@ -345,19 +358,25 @@ static void bootp_reply(Slirp *slirp, const struct bootp_t *bp)
                         }
                         break;
                     case RFC1533_HOSTNAME:
-                        if (*slirp->client_hostname || (dhcp_opts.hostname_len > 0)) {
+                        val = 0;
+                        if (*slirp->client_hostname) {
+                            val = strlen(slirp->client_hostname);
+                        } else if (dhcp_opts.hostname != NULL) {
+                            val = strlen(dhcp_opts.hostname);
+                        }
+                        if ((val > 0) && (spaceleft >= (size_t)(val + 2))) {
                             *q++ = RFC1533_HOSTNAME;
+                            *q++ = val;
                             if (*slirp->client_hostname) {
-                                val = strlen(slirp->client_hostname);
-                                *q++ = val;
                                 memcpy(q, slirp->client_hostname, val);
                             } else {
-                                val = dhcp_opts.hostname_len;
-                                *q++ = val;
                                 memcpy(q, dhcp_opts.hostname, val);
                             }
                             q += val;
-                            dhcp_opts.hostname_len = 0;
+                        }
+                        if (dhcp_opts.hostname != NULL) {
+                            free(dhcp_opts.hostname);
+                            dhcp_opts.hostname = NULL;
                         }
                         break;
                     case RFC1533_INTBROADCAST:
@@ -413,7 +432,7 @@ static void bootp_reply(Slirp *slirp, const struct bootp_t *bp)
         }
 
         if (slirp->vdnssearch) {
-            size_t spaceleft = sizeof(rbp->bp_vend) - (q - rbp->bp_vend);
+            spaceleft = sizeof(rbp->bp_vend) - (q - rbp->bp_vend);
             val = slirp->vdnssearch_len;
             if (val + 1 > (int)spaceleft) {
                 slirp_warning(slirp, "DHCP packet size exceeded, omitting domain-search option.");
@@ -441,7 +460,6 @@ static void bootp_reply(Slirp *slirp, const struct bootp_t *bp)
     daddr.sin_addr.s_addr = 0xffffffffu;
 
     if (dhcp_opts.params != NULL) free(dhcp_opts.params);
-    if (dhcp_opts.hostname != NULL) free(dhcp_opts.hostname);
 
     m->m_len = sizeof(struct bootp_t) -
         sizeof(struct ip) - sizeof(struct udphdr);

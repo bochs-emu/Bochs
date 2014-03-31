@@ -262,7 +262,7 @@ bx_slirp_new_pktmover_c::bx_slirp_new_pktmover_c(const char *netif,
                                                  const char *script)
 {
   logfunctions *slirplog;
-  char bootfile[128], hostname[33], prefix[10];
+  char prefix[10];
 
   this->netdev = dev;
   if (sizeof(struct arphdr) != 28) {
