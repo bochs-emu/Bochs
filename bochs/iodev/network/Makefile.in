@@ -164,12 +164,6 @@ eth_null.o: eth_null.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
-eth_slirp.o: eth_slirp.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
- ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../param_names.h netmod.h
 eth_slirp_new.o: eth_slirp_new.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
@@ -357,12 +351,6 @@ eth_linux.lo: eth_linux.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
 eth_null.lo: eth_null.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
- ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../param_names.h netmod.h
-eth_slirp.lo: eth_slirp.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
  ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \

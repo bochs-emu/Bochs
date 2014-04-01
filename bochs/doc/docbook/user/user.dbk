@@ -4413,8 +4413,7 @@ ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vde, ethdev="/tmp/vde.c
 ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="c:/temp"
 ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
 ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=/dev/net/tun0, script=./tunconfig
-ne2k: mac=fe:fd:00:00:00:01, ethmod=slirp, script=/usr/local/bin/slirp, bootrom=ne2k_pci.rom
-ne2k: mac=b0:c4:20:00:00:01, ethmod=slirp_new, script=slirp.conf
+ne2k: mac=b0:c4:20:00:00:01, ethmod=slirp_new, script=slirp.conf, bootrom=ne2k_pci.rom
 
 IOADDR, IRQ: You probably won't need to change ioaddr and irq, unless there
 are IRQ conflicts. These parameters are ignored if the NE2000 is assigned to
@@ -4529,24 +4528,11 @@ version where this module was added.
     <entry>2.2</entry>
   </row>
   <row>
-    <entry>slirp</entry>
-    <entry>Ethernet backend for Slirp with builtin DHCP / TFTP servers. Adds user mode
-    networking to Bochs using Slirp. Only tested with the most recent Slirp
-    version with Debian patches applied. The fullbolt Slirp version should be
-    used for maximum speed. The "script" parameter should point to the Slirp binary.
-    The TFTP server uses the 'ethdev' value for the root directory and doesn't
-    overwrite files.
-    </entry>
-    <entry>Yes, for TFTP</entry>
-    <entry>Yes, for Slirp binary</entry>
-    <entry>2.5</entry>
-  </row>
-  <row>
     <entry>slirp_new</entry>
     <entry>Built-in Slirp support with DHCP / TFTP servers. Adds user mode
-    networking to Bochs. The "script" parameter can be used to set up an
+    networking to Bochs. The 'script' parameter can be used to set up an
     alternative configuration. The TFTP server uses the 'ethdev' value for
-    the root directory and currently operates in read-only mode.
+    the root directory and doesn't overwrite files.
     </entry>
     <entry>Yes, for TFTP</entry>
     <entry>Yes, for Slirp config</entry>
@@ -4582,7 +4568,7 @@ NE2000 adapter.
 <para>
 Example:
 <screen>
-  e1000: enabled=1, mac=52:54:00:12:34:56, ethmod=slirp, script=/usr/local/bin/slirp
+  e1000: enabled=1, mac=52:54:00:12:34:56, ethmod=slirp_new, script=slirp.conf
 </screen>
 To support the Intel(R) 82540EM Gigabit Ethernet adapter, Bochs must be compiled
 with the <option>--enable-e1000</option> configure option. It accepts the same syntax

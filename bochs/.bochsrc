@@ -985,8 +985,7 @@ speaker: enabled=1, mode=sound
 # ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=null, ethdev=eth0
 # ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vde, ethdev="/tmp/vde.ctl"
 # ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="c:/temp"
-# ne2k: mac=b0:c4:20:00:00:01, ethmod=slirp, script=/usr/local/bin/slirp, bootrom=ne2k_pci.rom
-# ne2k: mac=b0:c4:20:00:00:01, ethmod=slirp_new, script=slirp.conf
+# ne2k: mac=b0:c4:20:00:00:01, ethmod=slirp_new, script=slirp.conf, bootrom=ne2k_pci.rom
 
 #=======================================================================
 # pcipnic: Bochs/Etherboot pseudo-NIC
