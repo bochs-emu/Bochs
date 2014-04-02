@@ -35,7 +35,7 @@
 
 #include "slirp.h"
 
-#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+#if BX_NETWORKING && BX_NETMOD_SLIRP
 
 static struct tcpcb *tcp_timers(register struct tcpcb *tp, int timer);
 

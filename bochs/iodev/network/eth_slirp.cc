@@ -19,14 +19,14 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 //
 
-// eth_slirp_new.cc  - Bochs port of Qemu's slirp implementation
+// eth_slirp.cc  - Bochs port of Qemu's slirp implementation
 
 #define BX_PLUGGABLE
 
 #include "iodev.h"
 #include "netmod.h"
 
-#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+#if BX_NETWORKING && BX_NETMOD_SLIRP
 
 #include "slirp/slirp.h"
 #include "slirp/libslirp.h"
@@ -44,13 +44,13 @@ extern int slirp_smb(Slirp *s, char *smb_tmpdir, const char *exported_dir,
 void slirp_smb_cleanup(Slirp *s, char *smb_tmpdir);
 #endif
 
-class bx_slirp_new_pktmover_c : public eth_pktmover_c {
+class bx_slirp_pktmover_c : public eth_pktmover_c {
 public:
-  bx_slirp_new_pktmover_c();
-  bx_slirp_new_pktmover_c(const char *netif, const char *macaddr,
-                         eth_rx_handler_t rxh, eth_rx_status_t rxstat,
-                         bx_devmodel_c *dev, const char *script);
-  virtual ~bx_slirp_new_pktmover_c();
+  bx_slirp_pktmover_c();
+  bx_slirp_pktmover_c(const char *netif, const char *macaddr,
+                      eth_rx_handler_t rxh, eth_rx_status_t rxstat,
+                      bx_devmodel_c *dev, const char *script);
+  virtual ~bx_slirp_pktmover_c();
   void sendpkt(void *buf, unsigned io_len);
   void receive(void *pkt, unsigned pkt_len);
   int can_receive(void);
@@ -70,19 +70,19 @@ private:
   static void rx_timer_handler(void *);
 };
 
-class bx_slirp_new_locator_c : public eth_locator_c {
+class bx_slirp_locator_c : public eth_locator_c {
 public:
-  bx_slirp_new_locator_c(void) : eth_locator_c("slirp_new") {}
+  bx_slirp_locator_c(void) : eth_locator_c("slirp") {}
 protected:
   eth_pktmover_c *allocate(const char *netif, const char *macaddr,
                            eth_rx_handler_t rxh, eth_rx_status_t rxstat,
                            bx_devmodel_c *dev, const char *script) {
-    return (new bx_slirp_new_pktmover_c(netif, macaddr, rxh, rxstat, dev, script));
+    return (new bx_slirp_pktmover_c(netif, macaddr, rxh, rxstat, dev, script));
   }
-} bx_slirp_new_match;
+} bx_slirp_match;
 
 
-bx_slirp_new_pktmover_c::bx_slirp_new_pktmover_c()
+bx_slirp_pktmover_c::bx_slirp_pktmover_c()
 {
   slirp = NULL;
   bootfile = NULL;
@@ -94,7 +94,7 @@ bx_slirp_new_pktmover_c::bx_slirp_new_pktmover_c()
 #endif
 }
 
-bx_slirp_new_pktmover_c::~bx_slirp_new_pktmover_c()
+bx_slirp_pktmover_c::~bx_slirp_pktmover_c()
 {
   if (slirp != NULL) {
     slirp_cleanup(slirp);
@@ -138,7 +138,7 @@ static size_t strip_whitespace(char *s)
   return ptr;
 }
 
-bx_bool bx_slirp_new_pktmover_c::parse_slirp_conf(const char *conf)
+bx_bool bx_slirp_pktmover_c::parse_slirp_conf(const char *conf)
 {
   FILE *fd = NULL;
   char line[512];
@@ -254,12 +254,12 @@ bx_bool bx_slirp_new_pktmover_c::parse_slirp_conf(const char *conf)
   return 1;
 }
 
-bx_slirp_new_pktmover_c::bx_slirp_new_pktmover_c(const char *netif,
-                                                 const char *macaddr,
-                                                 eth_rx_handler_t rxh,
-                                                 eth_rx_status_t rxstat,
-                                                 bx_devmodel_c *dev,
-                                                 const char *script)
+bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
+                                         const char *macaddr,
+                                         eth_rx_handler_t rxh,
+                                         eth_rx_status_t rxstat,
+                                         bx_devmodel_c *dev,
+                                         const char *script)
 {
   logfunctions *slirplog;
   char prefix[10];
@@ -268,7 +268,7 @@ bx_slirp_new_pktmover_c::bx_slirp_new_pktmover_c(const char *netif,
   if (sizeof(struct arphdr) != 28) {
     BX_PANIC(("system error: invalid ARP header structure size"));
   }
-  BX_INFO(("slirp_new network driver"));
+  BX_INFO(("slirp network driver"));
 
   this->rxh   = rxh;
   this->rxstat = rxstat;
@@ -278,7 +278,7 @@ bx_slirp_new_pktmover_c::bx_slirp_new_pktmover_c(const char *netif,
   if (bx_slirp_instances == 0) {
     rx_timer_index =
       bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
-                                1, 1, "eth_slirp_new");
+                                1, 1, "eth_slirp");
 #ifndef WIN32
     signal(SIGPIPE, SIG_IGN);
 #endif
@@ -315,12 +315,12 @@ bx_slirp_new_pktmover_c::bx_slirp_new_pktmover_c(const char *netif,
   bx_slirp_instances++;
 }
 
-void bx_slirp_new_pktmover_c::sendpkt(void *buf, unsigned io_len)
+void bx_slirp_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
   slirp_input(slirp, (Bit8u*)buf, io_len);
 }
 
-void bx_slirp_new_pktmover_c::rx_timer_handler(void *this_ptr)
+void bx_slirp_pktmover_c::rx_timer_handler(void *this_ptr)
 {
   Bit32u timeout = 0;
   int ret;
@@ -339,22 +339,22 @@ void bx_slirp_new_pktmover_c::rx_timer_handler(void *this_ptr)
 
 int slirp_can_output(void *this_ptr)
 {
-  bx_slirp_new_pktmover_c *class_ptr = (bx_slirp_new_pktmover_c *)this_ptr;
+  bx_slirp_pktmover_c *class_ptr = (bx_slirp_pktmover_c *)this_ptr;
   return class_ptr->can_receive();
 }
 
-int bx_slirp_new_pktmover_c::can_receive()
+int bx_slirp_pktmover_c::can_receive()
 {
   return ((this->rxstat(this->netdev) & BX_NETDEV_RXREADY) != 0);
 }
 
 void slirp_output(void *this_ptr, const Bit8u *pkt, int pkt_len)
 {
-  bx_slirp_new_pktmover_c *class_ptr = (bx_slirp_new_pktmover_c *)this_ptr;
+  bx_slirp_pktmover_c *class_ptr = (bx_slirp_pktmover_c *)this_ptr;
   class_ptr->receive((void*)pkt, pkt_len);
 }
 
-void bx_slirp_new_pktmover_c::receive(void *pkt, unsigned pkt_len)
+void bx_slirp_pktmover_c::receive(void *pkt, unsigned pkt_len)
 {
   if (this->rxstat(this->netdev) & BX_NETDEV_RXREADY) {
     if (pkt_len < 60) pkt_len = 60;
@@ -364,4 +364,4 @@ void bx_slirp_new_pktmover_c::receive(void *pkt, unsigned pkt_len)
   }
 }
 
-#endif /* if BX_NETWORKING && BX_NETMOD_SLIRP_NEW */
+#endif /* if BX_NETWORKING && BX_NETMOD_SLIRP */

@@ -43,7 +43,7 @@
 
 #include "slirp.h"
 
-#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+#if BX_NETWORKING && BX_NETMOD_SLIRP
 
 /* Number of packets queued before we start sending
  * (to prevent allocing too many mbufs) */

@@ -27,7 +27,7 @@
 
 #include "slirp.h"
 
-#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+#if BX_NETWORKING && BX_NETMOD_SLIRP
 
 void arp_table_add(Slirp *slirp, uint32_t ip_addr, uint8_t ethaddr[ETH_ALEN])
 {

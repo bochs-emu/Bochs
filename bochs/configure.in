@@ -1529,24 +1529,24 @@ NETLOW_OBJS=''
 if test "$networking" = yes; then
   NETLOW_OBJS='eth_null.o eth_vnet.o'
   ethernet_modules='null vnet'
-  can_compile_slirp_new=0
+  can_compile_slirp=0
   case "$target" in
     *-cygwin* | *-mingw32*)
-      can_compile_slirp_new=1
+      can_compile_slirp=1
       DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -liphlpapi"
       ;;
     *-pc-windows* | *-pc-winnt*)
-      can_compile_slirp_new=1
+      can_compile_slirp=1
       DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS iphlpapi.lib"
       ;;
     *)
-      AC_CHECK_HEADER([netinet/in.h], [ can_compile_slirp_new=1 ], [])
+      AC_CHECK_HEADER([netinet/in.h], [ can_compile_slirp=1 ], [])
       ;;
   esac
-  if test $can_compile_slirp_new = 1; then
-    NETLOW_OBJS="$NETLOW_OBJS eth_slirp_new.o \$(SLIRP_OBJS)"
-    ethernet_modules="$ethernet_modules slirp_new"
-    AC_DEFINE(BX_NETMOD_SLIRP_NEW, 1)
+  if test $can_compile_slirp = 1; then
+    NETLOW_OBJS="$NETLOW_OBJS eth_slirp.o \$(SLIRP_OBJS)"
+    ethernet_modules="$ethernet_modules slirp"
+    AC_DEFINE(BX_NETMOD_SLIRP, 1)
   fi
   if test "$MSVC_TARGET" != 1; then
     AC_CHECK_HEADER(net/bpf.h, [

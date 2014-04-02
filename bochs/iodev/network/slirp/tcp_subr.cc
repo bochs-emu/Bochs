@@ -43,7 +43,7 @@
 
 #include "slirp.h"
 
-#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+#if BX_NETWORKING && BX_NETMOD_SLIRP
 
 /* patchable/settable parameters for tcp */
 /* Don't do rfc1323 performance enhancements */

@@ -29,7 +29,7 @@
 #include "iodev.h"
 #include "slirp.h"
 
-#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+#if BX_NETWORKING && BX_NETMOD_SLIRP
 
 #define LOG_THIS ((logfunctions*)slirp->logfn)->
 

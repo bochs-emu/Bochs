@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "01 Apr 2014" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "02 Apr 2014" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -1058,7 +1058,7 @@ to access physical ethernet interface. Current implemented values include
  - win32     : ethernet on win32
  - tap       : ethernet through a linux tap interface
  - tuntap    : ethernet through a linux tuntap interface
- - slirp_new : built-in Slirp support with DHCP / TFTP servers
+ - slirp     : built-in Slirp support with DHCP / TFTP servers
 
 If you don't want to make connections to any physical networks,
 you can use the following 'ethmod's to simulate a virtual network.
@@ -1083,8 +1083,8 @@ is executed after bochs initialize the network interface. You can use
 this script to configure this network interface, or enable masquerading.
 This is mainly useful for the tun/tap devices that only exist during
 Bochs execution. The network interface name is supplied to the script
-as first parameter. The 'slirp_new' module uses this parameter
-to specify a config file for setting up an alternative configuration.
+as first parameter. The 'slirp' module uses this parameter to specify
+a config file for setting up an alternative configuration.
 
 BOOTROM:
 The bootrom value is optional, and is the name of the ROM image
@@ -1099,7 +1099,7 @@ Examples:
   ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=/dev/net/tun0, script=./tunconfig
   ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vde, ethdev="/tmp/vde.ctl"
   ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="c:/temp"
-  ne2k: mac=b0:c4:20:00:00:01, ethmod=slirp_new, script=slirp.conf, bootrom=ne2k_pci.rom
+  ne2k: mac=b0:c4:20:00:00:01, ethmod=slirp, script=slirp.conf, bootrom=ne2k_pci.rom
 
 .TP
 .I "pcipnic:"
@@ -1119,7 +1119,7 @@ with the --eanble-e1000 configure option. The E1000 accepts the same syntax
 modules as the NE2000 adapter.
 
 Example:
-  e1000: enabled=1, mac=52:54:00:12:34:56, ethmod=slirp_new, script=slirp.conf
+  e1000: enabled=1, mac=52:54:00:12:34:56, ethmod=slirp, script=slirp.conf
 
 .TP
 .I "usb_uhci:"

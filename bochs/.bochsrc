@@ -958,8 +958,8 @@ speaker: enabled=1, mode=sound
 # this script to configure this network interface, or enable masquerading.
 # This is mainly useful for the tun/tap devices that only exist during
 # Bochs execution. The network interface name is supplied to the script
-# as first parameter. The 'slirp_new' module uses this parameter
-# to specify a config file for setting up an alternative configuration.
+# as first parameter. The 'slirp' module uses this parameter to specify
+# a config file for setting up an alternative configuration.
 #
 # BOOTROM: The bootrom value is optional, and is the name of the ROM image
 # to load. Note that this feature is only implemented for the PCI version of
@@ -985,7 +985,7 @@ speaker: enabled=1, mode=sound
 # ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=null, ethdev=eth0
 # ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vde, ethdev="/tmp/vde.ctl"
 # ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="c:/temp"
-# ne2k: mac=b0:c4:20:00:00:01, ethmod=slirp_new, script=slirp.conf, bootrom=ne2k_pci.rom
+# ne2k: mac=b0:c4:20:00:00:01, ethmod=slirp, script=slirp.conf, bootrom=ne2k_pci.rom
 
 #=======================================================================
 # pcipnic: Bochs/Etherboot pseudo-NIC
@@ -1009,7 +1009,7 @@ speaker: enabled=1, mode=sound
 # The E1000 accepts the same syntax (for mac, ethmod, ethdev, script, bootrom)
 # and supports the same networking modules as the NE2000 adapter.
 #=======================================================================
-#e1000: enabled=1, mac=52:54:00:12:34:56, ethmod=slirp_new, script=slirp.conf
+#e1000: enabled=1, mac=52:54:00:12:34:56, ethmod=slirp, script=slirp.conf
 
 #=======================================================================
 # USB_UHCI:

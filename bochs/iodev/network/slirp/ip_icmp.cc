@@ -36,7 +36,7 @@
 #include "slirp.h"
 #include "ip_icmp.h"
 
-#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+#if BX_NETWORKING && BX_NETMOD_SLIRP
 
 /* The message sent when emulating PING */
 /* Be nice and tell them it's just a pseudo-ping packet */

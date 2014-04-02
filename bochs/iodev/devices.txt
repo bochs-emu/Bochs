@@ -90,7 +90,7 @@ Attached devices
   |                      +---- TUN/TAP Interface                eth_tuntap.cc
   |                      +---- VDE Interface                    eth_vde.cc
   |                      +---- virtual Ethernet locator         eth_vnet.cc
-  |                      +---- builtin Slirp support            eth_slirp_new.cc, slirp/*
+  |                      +---- builtin Slirp support            eth_slirp.cc, slirp/*
   |
   +---- Sound support                                           sound/
   |        |

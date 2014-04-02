@@ -30,7 +30,7 @@
 #include <stdio.h>
 #include "slirp.h"
 
-#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+#if BX_NETWORKING && BX_NETMOD_SLIRP
 
 static const uint8_t RFC3397_OPT_DOMAIN_SEARCH = 119;
 static const uint8_t MAX_OPT_LEN = 255;

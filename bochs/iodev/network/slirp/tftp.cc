@@ -28,7 +28,7 @@
 
 #include "slirp.h"
 
-#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+#if BX_NETWORKING && BX_NETMOD_SLIRP
 
 // Missing defines for open (copied from osdep.h)
 #ifndef S_IRUSR

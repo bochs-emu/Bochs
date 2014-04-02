@@ -44,7 +44,7 @@
 #include "slirp.h"
 #include "ip_icmp.h"
 
-#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+#if BX_NETWORKING && BX_NETMOD_SLIRP
 
 static uint8_t udp_tos(struct socket *so);
 

@@ -27,7 +27,7 @@
 
 #include "slirp.h"
 
-#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+#if BX_NETWORKING && BX_NETMOD_SLIRP
 
 void pstrcpy(char *buf, int buf_size, const char *str)
 {

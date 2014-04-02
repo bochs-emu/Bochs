@@ -124,8 +124,8 @@ extern class bx_tuntap_locator_c bx_tuntap_match;
 #if BX_NETMOD_VDE
 extern class bx_vde_locator_c bx_vde_match;
 #endif
-#if BX_NETMOD_SLIRP_NEW
-extern class bx_slirp_new_locator_c bx_slirp_new_match;
+#if BX_NETMOD_SLIRP
+extern class bx_slirp_locator_c bx_slirp_match;
 #endif
 extern class bx_vnet_locator_c bx_vnet_match;
 
@@ -174,10 +174,10 @@ eth_locator_c::create(const char *type, const char *netif,
       ptr = (eth_locator_c *) &bx_vde_match;
   }
 #endif
-#if BX_NETMOD_SLIRP_NEW
+#if BX_NETMOD_SLIRP
   {
-    if (!strcmp(type, "slirp_new"))
-      ptr = (eth_locator_c *) &bx_slirp_new_match;
+    if (!strcmp(type, "slirp"))
+      ptr = (eth_locator_c *) &bx_slirp_match;
   }
 #endif
 #if BX_NETMOD_TAP

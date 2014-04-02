@@ -10,7 +10,7 @@
 
 #include "slirp.h"
 
-#if BX_NETWORKING && BX_NETMOD_SLIRP_NEW
+#if BX_NETWORKING && BX_NETMOD_SLIRP
 
 static void sbappendsb(struct sbuf *sb, struct mbuf *m);
 

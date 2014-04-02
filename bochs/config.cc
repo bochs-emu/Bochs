@@ -160,8 +160,8 @@ void bx_init_std_nic_options(const char *name, bx_list_c *menu)
 #if BX_NETMOD_VDE
     "vde",
 #endif
-#if BX_NETMOD_SLIRP_NEW
-    "slirp_new",
+#if BX_NETMOD_SLIRP
+    "slirp",
 #endif
     "vnet",
     NULL
