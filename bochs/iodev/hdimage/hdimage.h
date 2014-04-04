@@ -193,7 +193,7 @@ class device_image_t
       virtual Bit32u get_capabilities();
 
       // Get modification time in FAT format
-      Bit32u get_timestamp();
+      virtual Bit32u get_timestamp();
 
       // Check image format
       static int check_format(int fd, Bit64u imgsize) {return HDIMAGE_NO_SIGNATURE;}
@@ -494,6 +494,9 @@ class growing_image_t : public device_image_t
       // Write count bytes from buf. Return the number of bytes
       // written (count).
       ssize_t write(const void* buf, size_t count);
+
+      // Get modification time in FAT format
+      virtual Bit32u get_timestamp();
 
       // Check image format
       static int check_format(int fd, Bit64u imgsize);

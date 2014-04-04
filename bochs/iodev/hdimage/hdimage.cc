@@ -1976,6 +1976,11 @@ ssize_t growing_image_t::write(const void* buf, size_t count)
   return (ret < 0) ? ret : count;
 }
 
+Bit32u growing_image_t::get_timestamp()
+{
+  return redolog->get_timestamp();
+}
+
 int growing_image_t::check_format(int fd, Bit64u imgsize)
 {
   return redolog_t::check_format(fd, REDOLOG_SUBTYPE_GROWING);
