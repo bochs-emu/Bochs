@@ -46,7 +46,6 @@ void slirp_smb_cleanup(Slirp *s, char *smb_tmpdir);
 
 class bx_slirp_pktmover_c : public eth_pktmover_c {
 public:
-  bx_slirp_pktmover_c();
   bx_slirp_pktmover_c(const char *netif, const char *macaddr,
                       eth_rx_handler_t rxh, eth_rx_status_t rxstat,
                       bx_devmodel_c *dev, const char *script);
@@ -81,18 +80,6 @@ protected:
   }
 } bx_slirp_match;
 
-
-bx_slirp_pktmover_c::bx_slirp_pktmover_c()
-{
-  slirp = NULL;
-  bootfile = NULL;
-  hostname = NULL;
-  dnssearch = NULL;
-#ifndef WIN32
-  smb_export = NULL;
-  smb_tmpdir = NULL;
-#endif
-}
 
 bx_slirp_pktmover_c::~bx_slirp_pktmover_c()
 {
@@ -264,6 +251,23 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
   logfunctions *slirplog;
   char prefix[10];
 
+  restricted = 0;
+  slirp = NULL;
+  hostname = NULL;
+  bootfile = NULL;
+  dnssearch = NULL;
+  /* default settings according to historic slirp */
+  net.s_addr  = htonl(0x0a000200); /* 10.0.2.0 */
+  mask.s_addr = htonl(0xffffff00); /* 255.255.255.0 */
+  host.s_addr = htonl(0x0a000202); /* 10.0.2.2 */
+  dhcp.s_addr = htonl(0x0a00020f); /* 10.0.2.15 */
+  dns.s_addr  = htonl(0x0a000203); /* 10.0.2.3 */
+#ifndef WIN32
+  smb_export = NULL;
+  smb_tmpdir = NULL;
+  smb_srv.s_addr = 0;
+#endif
+
   this->netdev = dev;
   if (sizeof(struct arphdr) != 28) {
     BX_PANIC(("system error: invalid ARP header structure size"));
@@ -284,16 +288,6 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
 #endif
   }
 
-  /* default settings according to historic slirp */
-  net.s_addr  = htonl(0x0a000200); /* 10.0.2.0 */
-  mask.s_addr = htonl(0xffffff00); /* 255.255.255.0 */
-  host.s_addr = htonl(0x0a000202); /* 10.0.2.2 */
-  dhcp.s_addr = htonl(0x0a00020f); /* 10.0.2.15 */
-  dns.s_addr  = htonl(0x0a000203); /* 10.0.2.3 */
-#ifndef WIN32
-  smb_srv.s_addr = 0;
-#endif
-  restricted = 0;
   if ((strlen(script) > 0) && (strcmp(script, "none"))) {
     if (!parse_slirp_conf(script)) {
       BX_ERROR(("reading slirp config failed"));
