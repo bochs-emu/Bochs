@@ -90,7 +90,13 @@ PLUGIN_OBJS = @IODEV_PLUGIN_OBJS@
 
 all: libiodev.a
 
-plugins: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
+plugins: @PLUGIN_TARGET_2@
+
+plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
+
+plugins_msvc:
+	@echo ERROR: MSVC nmake plugins not yet supported
+	@exit 1
 
 libiodev.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libiodev.a

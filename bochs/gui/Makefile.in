@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2013  The Bochs Project
+# Copyright (C) 2001-2014  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -94,7 +94,13 @@ PLUGIN_OBJS = @GUI_PLUGIN_OBJS@
 
 all: libgui.a
 
-plugins: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
+plugins: @PLUGIN_TARGET_2@
+
+plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
+
+plugins_msvc:
+	@echo ERROR: MSVC nmake plugins not yet supported
+	@exit 1
 
 libgui.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libgui.a

@@ -447,6 +447,7 @@ if test "$bx_plugins" = 1; then
     fi
   fi
   PLUGIN_TARGET=bochs_plugins
+  PLUGIN_TARGET_2=plugins_gcc
   INSTALL_PLUGINS_VAR=install_libtool_plugins
   NONPLUGIN_GUI_LINK_OPTS=''
 else
@@ -2533,6 +2534,7 @@ case $target in
       PLUGIN_LIBNAME_TRANSFORMATION='%.o=bx_%.dll'
       INSTALL_PLUGINS_VAR=install_dll_plugins
       LIBS="$LIBS advapi32.lib comctl32.lib comdlg32.lib gdi32.lib shell32.lib user32.lib"
+      PLUGIN_TARGET_2=plugins_msvc
     else
       if test "$with_win32" != yes; then
         LIBS="$LIBS comctl32.lib"
@@ -2915,6 +2917,7 @@ AC_SUBST(IODEV_EXT_PLUGIN_OBJS)
 AC_SUBST(PLUGIN_VAR)
 AC_SUBST(PLUGIN_LIB)
 AC_SUBST(PLUGIN_TARGET)
+AC_SUBST(PLUGIN_TARGET_2)
 AC_SUBST(INSTALL_PLUGINS_VAR)
 
 AC_PATH_PROG(GZIP, gzip)

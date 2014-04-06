@@ -88,7 +88,13 @@ PLUGIN_OBJS = @IODEV_EXT_PLUGIN_OBJS@
 
 all: libnetwork.a
 
-plugins: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
+plugins: @PLUGIN_TARGET_2@
+
+plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
+
+plugins_msvc:
+	@echo ERROR: MSVC nmake plugins not yet supported
+	@exit 1
 
 libnetwork.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libnetwork.a
