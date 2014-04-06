@@ -335,6 +335,7 @@ void logfunctions::put(const char *p)
     n[i] = tolower(p[i]);
 
   put((const char*)n, p);
+  free(n);
 }
 
 void logfunctions::put(const char *n, const char *p)

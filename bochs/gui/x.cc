@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -2032,6 +2032,7 @@ void bx_x_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
     SizeID original_size_id = XRRConfigCurrentConfiguration(conf, &original_rotation);
     *xres = xrrs[original_size_id].width;
     *yres = xrrs[original_size_id].height;
+    free(conf);
   }
   else {
     int screen = DefaultScreen(dpy);
