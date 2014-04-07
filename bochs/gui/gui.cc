@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2013  The Bochs Project
+//  Copyright (C) 2002-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -21,6 +21,7 @@
 
 #include <signal.h>
 #include "iodev.h"
+#include "virt_timer.h"
 #include "keymap.h"
 #include "gui/bitmaps/floppya.h"
 #include "gui/bitmaps/floppyb.h"
@@ -260,7 +261,8 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
   // register timer for status bar LEDs
   if (BX_GUI_THIS led_timer_index == BX_NULL_TIMER_HANDLE) {
     BX_GUI_THIS led_timer_index =
-      DEV_register_timer(this, led_timer_handler, 100000, 1, 1, "status bar LEDs");
+      bx_virt_timer.register_timer(this, led_timer_handler, 100000, 1, 1,
+                                   "status bar LEDs");
   }
 }
 
