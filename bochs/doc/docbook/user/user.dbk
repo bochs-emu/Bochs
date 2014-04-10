@@ -4530,9 +4530,10 @@ version where this module was added.
   <row>
     <entry>slirp</entry>
     <entry>Built-in Slirp support with DHCP / TFTP servers. Adds user mode
-    networking to Bochs. The 'script' parameter can be used to set up an
-    alternative configuration. The TFTP server uses the 'ethdev' value for
-    the root directory and doesn't overwrite files.
+    networking to Bochs - see <link linkend="using-slirp">Using the 'slirp'
+    networking module</link>. The 'script' parameter can be used to set up
+    an alternative IP configuration or additional features. The TFTP server
+    uses the 'ethdev' value for the root directory and doesn't overwrite files.
     </entry>
     <entry>Yes, for TFTP</entry>
     <entry>Yes, for Slirp config</entry>
@@ -6963,6 +6964,56 @@ Some of the other options in this group is probably also needed,
         </note>
         </para>
 </section> <!-- Set up the host to masquerade the guest network accesses -->
+</section>
+
+<section id="using-slirp"><title>Using the 'slirp' networking module</title>
+<para>
+Slirp is a software program that emulates a PPP, SLIP, or CSLIP connection to
+the Internet via a shell account. The original version has been written by
+Danny Gasparovski in 1995. It has been integrated in QEMU to provide user mode
+networking. Now a port of the QEMU Slirp implementation is available in Bochs.
+</para>
+<para>
+Features and limitations:
+<itemizedlist>
+<listitem><para>Access to the internet and host network services without root/Administrator
+privileges or additional libraries.</para></listitem>
+<listitem><para>Builtin DHCP and TFTP servers</para></listitem>
+<listitem><para>Optional SMB support on Linux</para></listitem>
+<listitem><para>ICMP traffic (ping) from guest to the host's network or the internet
+not supported</para></listitem>
+<listitem><para>guest not yet accessible from the host or external network</para></listitem>
+</itemizedlist>
+</para>
+<para>
+If no config file is specified with "script" parameter in the network device setup,
+Bochs uses this "classic" Slirp configuration:
+<table><title>Default Slirp setup</title>
+<tgroup cols="2" align="left" colsep="1" rowsep="1">
+<tbody>
+  <row>
+    <entry>DHCP, TFTP servers and gateway</entry>
+    <entry>10.0.2.2</entry>
+  </row>
+  <row>
+    <entry>DNS server</entry>
+    <entry>10.0.2.3</entry>
+  </row>
+  <row>
+    <entry>SMB server (optional)</entry>
+    <entry>10.0.2.4</entry>
+  </row>
+  <row>
+    <entry>Guest address (from DHCP)</entry>
+    <entry>10.0.2.15</entry>
+  </row>
+</tbody>
+</tgroup>
+</table>
+</para>
+<para>
+&FIXME; TODO: config file options (<filename>slirp.conf</filename>)
+</para>
 </section>
 
 <section id="internal-debugger">

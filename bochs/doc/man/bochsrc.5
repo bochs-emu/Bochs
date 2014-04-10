@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "02 Apr 2014" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "10 Apr 2014" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -1084,7 +1084,8 @@ this script to configure this network interface, or enable masquerading.
 This is mainly useful for the tun/tap devices that only exist during
 Bochs execution. The network interface name is supplied to the script
 as first parameter. The 'slirp' module uses this parameter to specify
-a config file for setting up an alternative configuration.
+a config file for setting up an alternative IP configuration or additional
+features.
 
 BOOTROM:
 The bootrom value is optional, and is the name of the ROM image
