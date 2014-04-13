@@ -5,7 +5,7 @@ Changes after 2.6.2 (updated Apr  1, 2014):
   - Implemented FCS/FDS Deprecation CPU feature
   - Implemented SHA instructions emulation
   - Implemented XSAVEC instruction emulation and XINUSE optimization in the XSAVEOPT instruction
-  - Implemented AVX-512 instructions emulation
+  - Implemented AVX-512 instructions emulation (experimental)
   ! CPUDB: Added Intel(R) Core(TM) i7-4770 CPU (Haswell) configuration to CPUDB
   ! CPUDB: Added AMD A8-5600K APU (Trinity) configuration to CPUDB
   - Replace 'SSE' and 'AVX' .bochsrc option with single 'SIMD' option which controls presence
@@ -50,7 +50,7 @@ Changes after 2.6.2 (updated Apr  1, 2014):
   - Serial
     - Serial mouse detection fixes
   - Busmouse
-    - Non-functional device rewritten to make it work in DOS and Win95
+    - Non-functional device rewritten to make it work in DOS and Win95 guests
       (use --enable-busmouse to configure and "mouse: type=bus" at runtime)
 
 - ROM BIOS
