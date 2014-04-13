@@ -128,7 +128,6 @@ typedef struct {
   const Bit8u *default_guest_ipv4addr;
   Bit8u guest_ipv4addr[4];
   Bit8u dns_ipv4addr[4];
-  int max_guest_ipv4addr;
 } dhcp_cfg_t;
 
 static const Bit8u broadcast_macaddr[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
@@ -165,7 +164,6 @@ BX_CPP_INLINE void put_net4(Bit8u *buf,Bit32u data)
 }
 
 Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len);
-int process_arp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t *dhcp);
 int process_dhcp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t *dhcp);
 int process_tftp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit16u req_tid, Bit8u *reply, const char *tftp_rootdir);
 

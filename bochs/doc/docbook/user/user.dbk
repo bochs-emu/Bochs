@@ -6986,33 +6986,86 @@ not supported</para></listitem>
 </itemizedlist>
 </para>
 <para>
-If no config file is specified with "script" parameter in the network device setup,
-Bochs uses this "classic" Slirp configuration:
-<table><title>Default Slirp setup</title>
-<tgroup cols="2" align="left" colsep="1" rowsep="1">
+This example shows how to use the 'slirp' module with the NE2000 adapter. The line
+is very similar for the E1000 or PCI Pseudo NIC.
+<screen>
+ne2k: mac=52:54:00:12:34:56, ethmod=slirp, ethdev=/home/volker/tests/bochs, script=""
+</screen>
+The "ethdev" value specifies the TFTP root directory. All other options for Slirp must
+be set in a config file specified with "script" parameter. If no config file is set up,
+Bochs uses this "classic" Slirp configuration shown in the "Default" column below.
+</para>
+<para>
+An example for a Slirp config file can be found in the Bochs sources
+(<filename>misc/slirp.conf</filename>).
+<table><title>Slirp config file options</title>
+<tgroup cols="3" align="left" colsep="1" rowsep="1">
+<thead>
+  <row>
+    <entry>Option</entry>
+    <entry>Description</entry>
+    <entry>Default value</entry>
+  </row>
+</thead>
 <tbody>
   <row>
-    <entry>DHCP, TFTP servers and gateway</entry>
+    <entry>restricted</entry>
+    <entry>if set to 1, only built-in services are available</entry>
+    <entry>0</entry>
+  </row>
+  <row>
+    <entry>net</entry>
+    <entry>base IP address of the virtual network</entry>
+    <entry>10.0.2.0</entry>
+  </row>
+  <row>
+    <entry>mask</entry>
+    <entry>netmask of the virtual network</entry>
+    <entry>255.255.255.0</entry>
+  </row>
+  <row>
+    <entry>host</entry>
+    <entry>IP address of the DHCP and TFTP server</entry>
     <entry>10.0.2.2</entry>
   </row>
   <row>
-    <entry>DNS server</entry>
+    <entry>hostname</entry>
+    <entry>DHCP client hostname</entry>
+    <entry>undefined</entry>
+  </row>
+  <row>
+    <entry>dhcpstart</entry>
+    <entry>start address of DHCP pool</entry>
+    <entry>10.0.2.15</entry>
+  </row>
+  <row>
+    <entry>dns</entry>
+    <entry>IP address of the virtual DNS server</entry>
     <entry>10.0.2.3</entry>
   </row>
   <row>
-    <entry>SMB server (optional)</entry>
-    <entry>10.0.2.4</entry>
+    <entry>bootfile</entry>
+    <entry>boot filename returned by DHCP</entry>
+    <entry>undefined</entry>
   </row>
   <row>
-    <entry>Guest address (from DHCP)</entry>
-    <entry>10.0.2.15</entry>
+    <entry>dnssearch</entry>
+    <entry>comma-separated list of DNS suffixes to search (DHCP extension)</entry>
+    <entry>undefined</entry>
+  </row>
+  <row>
+    <entry>smb_export</entry>
+    <entry>absolute path to the shared folder (non-Windows SMB support)</entry>
+    <entry>undefined</entry>
+  </row>
+  <row>
+    <entry>smb_srv</entry>
+    <entry>alternative IP address of the SMB server</entry>
+    <entry>10.0.2.4</entry>
   </row>
 </tbody>
 </tgroup>
 </table>
-</para>
-<para>
-&FIXME; TODO: config file options (<filename>slirp.conf</filename>)
 </para>
 </section>
 
