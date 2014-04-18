@@ -6982,7 +6982,7 @@ privileges or additional libraries.</para></listitem>
 <listitem><para>Optional SMB support on Linux</para></listitem>
 <listitem><para>ICMP traffic (ping) from guest to the host's network or the internet
 not supported</para></listitem>
-<listitem><para>guest not yet accessible from the host or external network</para></listitem>
+<listitem><para>guest access from the host or external network disabled by default</para></listitem>
 </itemizedlist>
 </para>
 <para>
@@ -6995,9 +6995,10 @@ The "ethdev" value specifies the TFTP root directory. All other options for Slir
 be set in a config file specified with "script" parameter. If no config file is set up,
 Bochs uses this "classic" Slirp configuration shown in the "Default" column below.
 </para>
+<section><title>Advanced Slirp setup with config file</title>
 <para>
-An example for a Slirp config file can be found in the Bochs sources
-(<filename>misc/slirp.conf</filename>).
+An example for a Slirp config file can be found in the Bochs sources and in
+binary packages (<filename>misc/slirp.conf</filename>).
 <table><title>Slirp config file options</title>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
@@ -7063,10 +7064,34 @@ An example for a Slirp config file can be found in the Bochs sources
     <entry>alternative IP address of the SMB server</entry>
     <entry>10.0.2.4</entry>
   </row>
+  <row>
+    <entry>hostfwd</entry>
+    <entry>map guest port to host port for host-to-guest access
+    (see below for details)</entry>
+    <entry>undefined</entry>
+  </row>
 </tbody>
 </tgroup>
 </table>
 </para>
+</section>
+<section><title>Access to guest services from the host</title>
+<para>
+With the config file option "hostfwd" you can map guest ports to ports on the host
+system. This is the format of the directive:
+<screen>
+  hostfwd = protocol:hostaddr:hostport-guestaddr:guestport
+</screen>
+The host and guest IP addresses are optional. This example shows how to access
+the guest SSH server using the host port 12345.
+<screen>
+  hostfwd = tcp::12345-:22
+</screen>
+</para>
+<note><title>Limitation</title>
+<para>Currently only port redirection is supported per slirp instance.</para>
+</note>
+</section>
 </section>
 
 <section id="internal-debugger">
