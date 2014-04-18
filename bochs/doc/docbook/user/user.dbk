@@ -7080,17 +7080,14 @@ binary packages (<filename>misc/slirp.conf</filename>).
 With the config file option "hostfwd" you can map guest ports to ports on the host
 system. This is the format of the directive:
 <screen>
-  hostfwd = protocol:hostaddr:hostport-guestaddr:guestport
+  hostfwd = <emphasis>protocol:hostaddr:hostport-guestaddr:guestport</emphasis>
 </screen>
 The host and guest IP addresses are optional. This example shows how to access
 the guest SSH server using the host port 12345.
 <screen>
   hostfwd = tcp::12345-:22
 </screen>
-</para>
-<note><title>Limitation</title>
-<para>Currently only port redirection is supported per slirp instance.</para>
-</note>
+Up to 5 port redirection rules are supported per slirp instance.</para>
 </section>
 </section>
 

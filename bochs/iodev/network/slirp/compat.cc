@@ -268,14 +268,16 @@ static int get_str_sep(char *buf, int buf_size, const char **pp, int sep)
 
 int slirp_hostfwd(Slirp *s, const char *redir_str, int legacy_format)
 {
-    struct in_addr host_addr = { .s_addr = INADDR_ANY };
-    struct in_addr guest_addr = { .s_addr = 0 };
+    struct in_addr host_addr;
+    struct in_addr guest_addr;
     int host_port, guest_port;
     const char *p;
     char buf[256], error_msg[256];
     int is_udp;
     char *end;
 
+    host_addr.s_addr = INADDR_ANY;
+    guest_addr.s_addr = 0;
     p = redir_str;
     if (!p || get_str_sep(buf, sizeof(buf), &p, ':') < 0) {
         goto fail_syntax;

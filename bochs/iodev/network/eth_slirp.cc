@@ -33,6 +33,8 @@
 
 #define LOG_THIS netdev->
 
+#define MAX_HOSTFWD 5
+
 static int rx_timer_index = BX_NULL_TIMER_HANDLE;
 static unsigned int bx_slirp_instances = 0;
 fd_set rfds, wfds, xfds;
@@ -61,7 +63,8 @@ private:
   int restricted;
   struct in_addr net, mask, host, dhcp, dns;
   char *bootfile, *hostname, **dnssearch;
-  char *hostfwd;
+  char *hostfwd[MAX_HOSTFWD];
+  int n_hostfwd;
 #ifndef WIN32
   char *smb_export, *smb_tmpdir;
   struct in_addr smb_srv;
@@ -103,7 +106,9 @@ bx_slirp_pktmover_c::~bx_slirp_pktmover_c()
       }
       free(dnssearch);
     }
-    if (hostfwd != NULL) free(hostfwd);
+    while (n_hostfwd > 0) {
+      free(hostfwd[--n_hostfwd]);
+    }
     if (--bx_slirp_instances == 0) {
       bx_pc_system.deactivate_timer(rx_timer_index);
 #ifndef WIN32
@@ -236,8 +241,13 @@ bx_bool bx_slirp_pktmover_c::parse_slirp_conf(const char *conf)
 #endif
         } else if (!stricmp(param, "hostfwd")) {
           if (len2 < 256) {
-            hostfwd = (char*)malloc(len2+1);
-            strcpy(hostfwd, val);
+            if (n_hostfwd < MAX_HOSTFWD) {
+              hostfwd[n_hostfwd] = (char*)malloc(len2+1);
+              strcpy(hostfwd[n_hostfwd], val);
+              n_hostfwd++;
+            } else {
+              BX_ERROR(("slirp: too many 'hostfwd' rules"));
+            }
           } else {
             BX_ERROR(("slirp: wrong format for 'hostfwd'"));
           }
@@ -266,7 +276,7 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
   hostname = NULL;
   bootfile = NULL;
   dnssearch = NULL;
-  hostfwd = NULL;
+  n_hostfwd = 0;
   /* default settings according to historic slirp */
   net.s_addr  = htonl(0x0a000200); /* 10.0.2.0 */
   mask.s_addr = htonl(0xffffff00); /* 255.255.255.0 */
@@ -309,8 +319,10 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
   slirplog->put(prefix);
   slirp = slirp_init(restricted, net, mask, host, hostname, netif, bootfile, dhcp, dns,
                      (const char**)dnssearch, this, slirplog);
-  if (hostfwd != NULL) {
-    slirp_hostfwd(slirp, hostfwd, 0);
+  if (n_hostfwd > 0) {
+    for (int i = 0; i < n_hostfwd; i++) {
+      slirp_hostfwd(slirp, hostfwd[i], 0);
+    }
   }
 #ifndef WIN32
   if (smb_export != NULL) {
