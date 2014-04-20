@@ -2024,7 +2024,8 @@ void bx_dbg_print_guard_results(void)
 #if (BX_DBG_MAX_VIR_BPOINTS > 0)
     else if (found & BX_DBG_GUARD_IADDR_VIR) {
       i = BX_CPU(cpu)->guard_found.iaddr_index;
-      dbg_printf("(%u) Breakpoint %u, in ");
+      dbg_printf("(%u) Breakpoint %u, in ", cpu,
+            bx_guard.iaddr.vir[i].bpoint_id);
       dbg_print_guard_found(BX_CPU(dbg_cpu)->get_cpu_mode(),
             BX_CPU(cpu)->guard_found.cs, BX_CPU(cpu)->guard_found.eip,
             BX_CPU(cpu)->guard_found.laddr);
