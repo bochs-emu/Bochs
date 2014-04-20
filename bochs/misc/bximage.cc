@@ -1234,8 +1234,8 @@ int main(int argc, char *argv[])
           Bit64u cyl = (Bit64u)(hdsize/16.0/63.0/512.0);
           if (cyl >= (1 << BX_MAX_CYL_BITS))
             fatal("ERROR: number of cylinders out of range !\n");
-          printf("\nCreating hard disk image '%s' with CHS=%ld/%d/%d\n", bx_filename_1,
-                 cyl, heads, spt);
+          printf("\nCreating hard disk image '%s' with CHS="FMT_LL"d/%d/%d\n",
+                 bx_filename_1, cyl, heads, spt);
           hdsize = cyl * heads * spt * 512;
           create_hard_disk_image(bx_filename_1, imgmode, hdsize);
         }
@@ -1300,10 +1300,11 @@ int main(int argc, char *argv[])
         } else {
           if (hdimage->get_capabilities() & HDIMAGE_AUTO_GEOMETRY) {
             Bit64u cyl = (Bit64u)(hdimage->hd_size/16.0/63.0/512.0);
-            printf("geometry = %ld/16/63 (%ld MB)\n\n", cyl, hdimage->hd_size >> 20);
-          } else {
-            printf("geometry = %d/%d/%d (%ld MB)\n\n", hdimage->cylinders, hdimage->heads, hdimage->spt,
+            printf("geometry = "FMT_LL"d/16/63 ("FMT_LL"d MB)\n\n", cyl,
                    hdimage->hd_size >> 20);
+          } else {
+            printf("geometry = %d/%d/%d ("FMT_LL"d MB)\n\n", hdimage->cylinders,
+                   hdimage->heads, hdimage->spt, hdimage->hd_size >> 20);
           }
           hdimage->close();
         }
