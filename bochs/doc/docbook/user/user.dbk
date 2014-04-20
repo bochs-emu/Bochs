@@ -1813,10 +1813,6 @@ Once the program has been built, the next step is typically to run
 other required files into a public place so that all users can use it.
 By default the files are copied to some directories in /usr/local. The following
 tables shows the directories and their contents.
-<footnote><para>
-&FIXME;
-    make install_dlx option
-</para></footnote>
 </para>
 <table><title>Installed files</title>
   <tgroup cols="2" align="left" colsep="1" rowsep="1">
@@ -1848,6 +1844,19 @@ tables shows the directories and their contents.
   </tbody>
   </tgroup>
 </table>
+</section>
+
+<section><title>Installing the DLX Linux demo</title>
+<para>
+To download and install the DLX Linux demo distributed with Bochs binary release
+packages, use these two <command>make</command> commands:
+<screen>
+  make unpack_dlx
+  make install_dlx
+</screen>
+The package will be downloaded from the Bochs website and installed at same
+location as the files of the Bochs base system.
+</para>
 </section>
 
 </section>  <!-- end of Compiling:Unix section -->
@@ -8502,20 +8511,6 @@ Only vmware versions 3 and 4 disk image files are supported.
     After a run, the redolog will still be present, so the changes
     are still visible the next time you run Bochs with this disk image.
 </para>
-<para>
-    After a run, the redolog can be committed (merged)
-    to the base image with the bximage utility.
-</para>
-<para>
-    After a run, the redolog can be rollbacked (discarded)
-    by simply deleting the redolog file.
-</para>
-<note>
-<para>
-    In this mode, the base file is always open in read-only mode,
-    so it can safely be stored on a read-only medium (for example on a cdrom).
-</para>
-</note>
 </section>
 <section><title>image creation</title>
 <para>
@@ -8534,8 +8529,8 @@ The growing redolog is created automatically if needed.
 </section>
 <section><title>external tools</title>
 <para>
-    See <xref linkend="harddisk-mode-flat-tools"> for tools
-    to access the flat disk image content.
+    To access the flat disk image content,
+    see <xref linkend="harddisk-mode-flat-tools"> for available tools.
 </para>
 <note>
 <para>
@@ -8550,12 +8545,14 @@ The growing redolog is created automatically if needed.
 </para>
 <section><title>Commit</title>
 <para>
-&FIXME; to be completed
+    After a run, the redolog can be committed (merged)
+    to the base image with the bximage utility.
 </para>
 </section>
 <section><title>Rollback</title>
 <para>
-&FIXME; to be completed
+    After a run, the redolog can be rollbacked (discarded)
+    by simply deleting the redolog file.
 </para>
 </section>
 <section><title>Common Base</title>
@@ -8565,7 +8562,10 @@ The growing redolog is created automatically if needed.
 </section>
 <section><title>Harddisk Image on a Read-Only Medium</title>
 <para>
-&FIXME; to be completed
+    In the 'undoable' mode, the base file is always opened in read-only mode,
+    so it can safely be stored on a read-only medium (for example on a cdrom).
+    In that case it is recommended to specify the redolog file with the
+    "journal" option.
 </para>
 </section>
 </section>
@@ -8665,12 +8665,6 @@ before writing new data. If no disk space is available, a panic will occur.
     After a run, the redolog is not any more present, so the changes
     are discarded.
 </para>
-<note>
-<para>
-    In this mode, the base file is always open in read-only mode,
-    so it can safely be stored on a read-only medium (for example on a cdrom).
-</para>
-</note>
 </section>
 <section><title>image creation</title>
 <para>
@@ -8711,7 +8705,10 @@ The growing redolog is created automatically.
 </section>
 <section><title>Harddisk Image on a Read-Only Medium</title>
 <para>
-&FIXME; to be completed
+    In the 'volatile' mode, the base file is always opened in read-only mode,
+    so it can safely be stored on a read-only medium (for example on a cdrom).
+    In that case it is recommended to specify the redolog file with the
+    "journal" option.
 </para>
 </section>
 </section>
