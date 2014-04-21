@@ -47,10 +47,15 @@ RANLIB = @RANLIB@
 PLUGIN_PATH=@libdir@
 top_builddir    = ..
 LIBTOOL=@LIBTOOL@
-WIN32_DLL_IMPORT_LIBRARY=../dllexports.a
+WIN32_DLL_IMPORT_LIBRARY=../@WIN32_DLL_IMPORT_LIB@
 
 BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS = $(MCH_CFLAGS)
+
+GAME_LINK_OPTS = -lwinmm
+GAME_LINK_OPTS_VCPP = winmm.lib
+SER_LINK_OPTS = -lws2_32
+SER_LINK_OPTS_VCPP = user32.lib ws2_32.lib
 
 PCIDEV_CXXFLAGS = -I$(srcdir)/../host/linux/pcidev
 
@@ -94,8 +99,8 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc:
-	@echo ERROR: MSVC nmake plugins not yet supported
+plugins_msvc: bx_keyboard.dll bx_pit.dll bx_gameport.dll bx_serial.dll
+	@echo ERROR: MSVC nmake plugin support not yet complete
 	@exit 1
 
 libiodev.a: $(NONPLUGIN_OBJS)
@@ -136,16 +141,16 @@ bx_%.dll: %.o
 
 # special link rules for plugins that require more than one object file
 bx_keyboard.dll: keyboard.o scancodes.o
-	$(CXX) $(CXXFLAGS) -shared -o bx_keyboard.dll keyboard.o scancodes.o $(WIN32_DLL_IMPORT_LIBRARY)
+	@LINK_DLL@ keyboard.o scancodes.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_pit.dll: pit82c54.o pit.o
-	$(CXX) $(CXXFLAGS) -shared -o bx_pit.dll pit82c54.o pit.o $(WIN32_DLL_IMPORT_LIBRARY)
+	@LINK_DLL@ pit82c54.o pit.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_gameport.dll: gameport.o
-	$(CXX) $(CXXFLAGS) -shared -o bx_gameport.dll gameport.o $(WIN32_DLL_IMPORT_LIBRARY) -lwinmm
+	@LINK_DLL@ gameport.o $(WIN32_DLL_IMPORT_LIBRARY) $(GAME_LINK_OPTS@LINK_VAR@)
 
 bx_serial.dll: serial.o serial_raw.o
-	$(CXX) $(CXXFLAGS) -shared -o bx_serial.dll serial.o serial_raw.o $(WIN32_DLL_IMPORT_LIBRARY) -lws2_32
+	@LINK_DLL@ serial.o serial_raw.o $(WIN32_DLL_IMPORT_LIBRARY) $(SER_LINK_OPTS@LINK_VAR@)
 
 ##### end DLL section
 

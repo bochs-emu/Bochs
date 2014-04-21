@@ -52,6 +52,9 @@ WIN32_DLL_IMPORT_LIBRARY=../../@WIN32_DLL_IMPORT_LIB@
 CDROM_OBJS = @CDROM_OBJS@
 HDIMAGE_EXTRA_OBJS = vmware3.o vmware4.o vpc-img.o vvfat.o
 
+HDIMAGE_LINK_OPTS =
+HDIMAGE_LINK_OPTS_VCPP = user32.lib
+
 BX_INCDIRS = -I.. -I../.. -I$(srcdir)/.. -I$(srcdir)/../.. -I../../@INSTRUMENT_DIR@ -I$(srcdir)/../../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS = $(MCH_CFLAGS)
 
@@ -99,7 +102,7 @@ bx_%.dll: %.o
 
 # special link rules for plugins that require more than one object file
 bx_hdimage.dll: hdimage.o $(HDIMAGE_EXTRA_OBJS) $(CDROM_OBJS)
-	@LINK_DLL@ hdimage.o $(HDIMAGE_EXTRA_OBJS) $(CDROM_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) $(LIBS)
+	@LINK_DLL@ hdimage.o $(HDIMAGE_EXTRA_OBJS) $(CDROM_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) $(HDIMAGE_LINK_OPTS@LINK_VAR@)
 
 ##### end DLL section
 

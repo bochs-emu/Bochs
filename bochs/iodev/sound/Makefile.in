@@ -47,9 +47,12 @@ RANLIB = @RANLIB@
 PLUGIN_PATH=@libdir@
 top_builddir    = ../..
 LIBTOOL=@LIBTOOL@
-WIN32_DLL_IMPORT_LIBRARY=../../dllexports.a
+WIN32_DLL_IMPORT_LIBRARY=../../@WIN32_DLL_IMPORT_LIB@
 
 SOUNDLOW_OBJS = @SOUNDLOW_OBJS@
+
+SOUNDMOD_LINK_OPTS = -lwinmm
+SOUNDMOD_LINK_OPTS_VCPP = winmm.lib
 
 BX_INCDIRS = -I.. -I../.. -I$(srcdir)/.. -I$(srcdir)/../.. -I../../@INSTRUMENT_DIR@ -I$(srcdir)/../../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS = $(MCH_CFLAGS)
@@ -71,8 +74,8 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc:
-	@echo ERROR: MSVC nmake plugins not yet supported
+plugins_msvc: bx_soundmod.dll
+	@echo ERROR: MSVC nmake plugin support not yet complete
 	@exit 1
 
 libsound.a: $(NONPLUGIN_OBJS)
@@ -101,7 +104,7 @@ bx_%.dll: %.o
 
 # special link rules for plugins that require more than one object file
 bx_soundmod.dll: soundmod.o $(SOUNDLOW_OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o bx_soundmod.dll soundmod.o $(SOUNDLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) -lwinmm
+	@LINK_DLL@ soundmod.o $(SOUNDLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) $(SOUNDMOD_LINK_OPTS@LINK_VAR@)
 
 ##### end DLL section
 

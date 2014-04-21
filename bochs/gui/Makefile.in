@@ -48,7 +48,7 @@ RANLIB = @RANLIB@
 PLUGIN_PATH=@libdir@
 top_builddir    = ..
 LIBTOOL=@LIBTOOL@
-WIN32_DLL_IMPORT_LIBRARY=../dllexports.a
+WIN32_DLL_IMPORT_LIBRARY=../@WIN32_DLL_IMPORT_LIB@
 BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 
 GUI_OBJS_X11  = x.o

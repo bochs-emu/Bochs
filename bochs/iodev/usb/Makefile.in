@@ -47,7 +47,7 @@ RANLIB = @RANLIB@
 PLUGIN_PATH=@libdir@
 top_builddir    = ../..
 LIBTOOL=@LIBTOOL@
-WIN32_DLL_IMPORT_LIBRARY=../../dllexports.a
+WIN32_DLL_IMPORT_LIBRARY=../../@WIN32_DLL_IMPORT_LIB@
 
 USBDEV_OBJS = @USBDEV_OBJS@
 SCSI_OBJS = @SCSI_OBJS@
@@ -72,8 +72,8 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc:
-	@echo ERROR: MSVC nmake plugins not yet supported
+plugins_msvc: bx_usb_common.dll
+	@echo ERROR: MSVC nmake plugin support not yet complete
 	@exit 1
 
 libusb.a: $(NONPLUGIN_OBJS)
@@ -102,7 +102,7 @@ bx_%.dll: %.o
 
 # special link rules for plugins that require more than one object file
 bx_usb_common.dll: usb_common.o $(USBDEV_OBJS) scsi_device.o
-	$(CXX) $(CXXFLAGS) -shared -o bx_usb_common.dll usb_common.o $(USBDEV_OBJS) scsi_device.o $(WIN32_DLL_IMPORT_LIBRARY)
+	@LINK_DLL@ usb_common.o $(USBDEV_OBJS) scsi_device.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 ##### end DLL section
 

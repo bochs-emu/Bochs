@@ -47,9 +47,12 @@ RANLIB = @RANLIB@
 PLUGIN_PATH=@libdir@
 top_builddir    = ../..
 LIBTOOL=@LIBTOOL@
-WIN32_DLL_IMPORT_LIBRARY=../../dllexports.a
+WIN32_DLL_IMPORT_LIBRARY=../../@WIN32_DLL_IMPORT_LIB@
 
 NETLOW_OBJS = @NETLOW_OBJS@
+
+NETMOD_LINK_OPTS = -lws2_32 -liphlpapi
+NETMOD_LINK_OPTS_VCPP = ws2_32.lib iphlpapi.lib
 
 SLIRP_OBJS = \
 	slirp/arp_table.o \
@@ -92,8 +95,8 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc:
-	@echo ERROR: MSVC nmake plugins not yet supported
+plugins_msvc: bx_netmod.dll
+	@echo ERROR: MSVC nmake plugin support not yet complete
 	@exit 1
 
 libnetwork.a: $(NONPLUGIN_OBJS)
@@ -122,7 +125,7 @@ bx_%.dll: %.o
 
 # special link rules for plugins that require more than one object file
 bx_netmod.dll: netmod.o $(NETLOW_OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o bx_netmod.dll netmod.o $(NETLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) -lws2_32 -liphlpapi
+	@LINK_DLL@ netmod.o $(NETLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) $(NETMOD_LINK_OPTS@LINK_VAR@)
 
 ##### end DLL section
 

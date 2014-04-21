@@ -47,7 +47,7 @@ RANLIB = @RANLIB@
 PLUGIN_PATH=@libdir@
 top_builddir    = ../..
 LIBTOOL=@LIBTOOL@
-WIN32_DLL_IMPORT_LIBRARY=../../dllexports.a
+WIN32_DLL_IMPORT_LIBRARY=../../@WIN32_DLL_IMPORT_LIB@
 
 DISPLAY_OBJS = @DISPLAY_OBJS@
 
@@ -70,8 +70,8 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc:
-	@echo ERROR: MSVC nmake plugins not yet supported
+plugins_msvc: bx_vga.dll bx_svga_cirrus.dll
+	@echo ERROR: MSVC nmake plugin support not yet complete
 	@exit 1
 
 libdisplay.a: $(NONPLUGIN_OBJS)
@@ -103,10 +103,10 @@ bx_%.dll: %.o
 
 # special link rules for plugins that require more than one object file
 bx_vga.dll: vga.o vgacore.o
-	$(CXX) $(CXXFLAGS) -shared -o bx_vga.dll vga.o vgacore.o $(WIN32_DLL_IMPORT_LIBRARY)
+	@LINK_DLL@ vga.o vgacore.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_svga_cirrus.dll: svga_cirrus.o vgacore.o
-	$(CXX) $(CXXFLAGS) -shared -o bx_svga_cirrus.dll svga_cirrus.o vgacore.o $(WIN32_DLL_IMPORT_LIBRARY)
+	@LINK_DLL@ svga_cirrus.o vgacore.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 ##### end DLL section
 

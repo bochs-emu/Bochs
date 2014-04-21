@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------
 Patch name: patch.example-user-plugin
 Author:     Volker Ruppert
-Updated:    14 Apr 2012
+Updated:    21 Apr 2014
 Status:     Demo
 
 Detailed description:
@@ -21,7 +21,7 @@ Detailed description:
 Patch was created with:
   diff -u
 Apply patch to what version:
-  svn revision 11138 (April 14, 2012)
+  svn revision 12288 (April 21, 2014)
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
@@ -43,7 +43,7 @@ diff -urN ../bochs/user-plugin/Makefile.in ./user-plugin/Makefile.in
 --- ../bochs/user-plugin/Makefile.in	1970-01-01 01:00:00.000000000 +0100
 +++ ./user-plugin/Makefile.in	2012-04-14 16:18:03.046503743 +0200
 @@ -0,0 +1,108 @@
-+# Copyright (C) 2009-2012  Volker Ruppert
++# Copyright (C) 2009-2014  Volker Ruppert
 +#
 +# This library is free software; you can redistribute it and/or
 +# modify it under the terms of the GNU Lesser General Public
@@ -93,7 +93,7 @@ diff -urN ../bochs/user-plugin/Makefile.in ./user-plugin/Makefile.in
 +PLUGIN_PATH=@libdir@
 +top_builddir    = ..
 +LIBTOOL=@LIBTOOL@
-+WIN32_DLL_IMPORT_LIBRARY=../dllexports.a
++WIN32_DLL_IMPORT_LIBRARY=../@WIN32_DLL_IMPORT_LIB@
 +
 +BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 +
