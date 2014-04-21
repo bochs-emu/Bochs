@@ -200,6 +200,7 @@ else
   AC_DEFINE(BX_HAVE_FSEEK64, 0)
   AC_DEFINE(BX_HAVE_FSEEKO64, 0)
   AC_DEFINE(BX_HAVE_SSIZE_T, 0)
+  AC_DEFINE(BX_HAVE_SETENV, 0)
 fi
 AC_CHECK_FUNCS(sleep, AC_DEFINE(BX_HAVE_SLEEP))
 AC_CHECK_FUNCS(nanosleep, AC_DEFINE(BX_HAVE_NANOSLEEP))
@@ -2444,6 +2445,8 @@ case "$target" in
     C_OPT="/Ox"   # optimize for speed
     if test "$bx_plugins" = 1; then
       CFLAGS="/nologo /MD /W3 /EHs-c- /DNDEBUG /DWIN32 /D_WINDOWS /D_CRT_SECURE_NO_WARNINGS $C_OPT"
+      WIN32_DLL_IMPORT_LIB="bochs.lib"
+      LINK_DLL="link /dll /nologo /subsystem:console /incremental:no /out:\$@"
     else
       CFLAGS="/nologo /MT /W3 /EHs-c- /DNDEBUG /DWIN32 /D_WINDOWS /D_CRT_SECURE_NO_WARNINGS $C_OPT"
     fi
@@ -2488,12 +2491,20 @@ case "$target" in
     if test "$networking" = yes; then
       OPTIONAL_TARGET="$OPTIONAL_TARGET niclist.exe"
     fi
+    if test "$bx_plugins" = 1; then
+      WIN32_DLL_IMPORT_LIB="dllexports.a"
+      LINK_DLL="\$(CXX) \$(CXXFLAGS) -shared -o \$@"
+    fi
     AC_DEFINE(BX_HAVE_SELECT, 1)
     ;;
   *-pc-mingw*)
     BXIMAGE_LINK_OPTS="-luser32"
     if test "$networking" = yes; then
       OPTIONAL_TARGET="$OPTIONAL_TARGET niclist"
+    fi
+    if test "$bx_plugins" = 1; then
+      WIN32_DLL_IMPORT_LIB="dllexports.a"
+      LINK_DLL="\$(CXX) \$(CXXFLAGS) -shared -o \$@"
     fi
     AC_DEFINE(BX_HAVE_SELECT, 1)
     ;;
@@ -2895,6 +2906,7 @@ AC_SUBST(MAKELIB)
 AC_SUBST(RMCOMMAND)
 AC_SUBST(LINK)
 AC_SUBST(LINK_CONSOLE)
+AC_SUBST(LINK_DLL)
 AC_SUBST(EXE)
 AC_SUBST(PRIMARY_TARGET)
 AC_SUBST(OPTIONAL_TARGET)
@@ -2918,6 +2930,7 @@ AC_SUBST(PLUGIN_VAR)
 AC_SUBST(PLUGIN_LIB)
 AC_SUBST(PLUGIN_TARGET)
 AC_SUBST(PLUGIN_TARGET_2)
+AC_SUBST(WIN32_DLL_IMPORT_LIB)
 AC_SUBST(INSTALL_PLUGINS_VAR)
 
 AC_PATH_PROG(GZIP, gzip)

@@ -47,9 +47,10 @@ RANLIB = @RANLIB@
 PLUGIN_PATH=@libdir@
 top_builddir    = ../..
 LIBTOOL=@LIBTOOL@
-WIN32_DLL_IMPORT_LIBRARY=../../dllexports.a
+WIN32_DLL_IMPORT_LIBRARY=../../@WIN32_DLL_IMPORT_LIB@
 
 CDROM_OBJS = @CDROM_OBJS@
+HDIMAGE_EXTRA_OBJS = vmware3.o vmware4.o vpc-img.o vvfat.o
 
 BX_INCDIRS = -I.. -I../.. -I$(srcdir)/.. -I$(srcdir)/../.. -I../../@INSTRUMENT_DIR@ -I$(srcdir)/../../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS = $(MCH_CFLAGS)
@@ -58,10 +59,7 @@ OBJS_THAT_CAN_BE_PLUGINS = \
   hdimage.o
 
 OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
-  vmware3.o \
-  vmware4.o \
-  vvfat.o \
-  vpc-img.o \
+  $(HDIMAGE_EXTRA_OBJS) \
   $(CDROM_OBJS)
 
 NONPLUGIN_OBJS = @IODEV_EXT_NON_PLUGIN_OBJS@
@@ -73,9 +71,7 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc:
-	@echo ERROR: MSVC nmake plugins not yet supported
-	@exit 1
+plugins_msvc: bx_hdimage.dll
 
 libhdimage.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libhdimage.a
@@ -102,8 +98,8 @@ bx_%.dll: %.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)
 
 # special link rules for plugins that require more than one object file
-bx_hdimage.dll: hdimage.o vmware3.o vmware4.o vvfat.o vpc-img.o $(CDROM_OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o bx_hdimage.dll hdimage.o vmware3.o vmware4.o vvfat.o vpc-img.o $(CDROM_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
+bx_hdimage.dll: hdimage.o $(HDIMAGE_EXTRA_OBJS) $(CDROM_OBJS)
+	@LINK_DLL@ hdimage.o $(HDIMAGE_EXTRA_OBJS) $(CDROM_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) $(LIBS)
 
 ##### end DLL section
 
