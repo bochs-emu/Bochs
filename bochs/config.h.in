@@ -607,11 +607,27 @@ typedef
                           __attribute__ ((format (printf, formatArg, firstArg)))
 #define BX_CPP_AttrNoReturn() __attribute__ ((noreturn))
 
+#ifndef likely
+#define likely(x)      __builtin_expect(!!(x), 1)
+#endif
+
+#ifndef unlikely
+#define unlikely(x)    __builtin_expect(!!(x), 0)
+#endif
+
 #else
 
 #define BX_CPP_AlignN(n) /* Not supported. */
 #define BX_CPP_AttrPrintf(formatArg, firstArg)  /* Not supported. */
 #define BX_CPP_AttrNoReturn() /* Not supported. */
+
+#ifndef likely
+#define likely(x)      (x)
+#endif
+
+#ifndef unlikely
+#define unlikely(x)    (x)
+#endif
 
 #endif
 
