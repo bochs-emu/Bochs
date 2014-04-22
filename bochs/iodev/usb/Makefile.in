@@ -107,7 +107,7 @@ bx_usb_common.dll: usb_common.o $(USBDEV_OBJS) scsi_device.o
 ##### end DLL section
 
 clean:
-	@RMCOMMAND@ -rf .libs *.lo *.o *.la *.a *.dll
+	@RMCOMMAND@ -rf .libs *.lo *.o *.la *.a *.dll *.exp *.lib
 
 dist-clean: clean
 	@RMCOMMAND@ Makefile

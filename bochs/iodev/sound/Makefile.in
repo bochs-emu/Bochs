@@ -109,7 +109,7 @@ bx_soundmod.dll: soundmod.o $(SOUNDLOW_OBJS)
 ##### end DLL section
 
 clean:
-	@RMCOMMAND@ -rf .libs *.lo *.o *.la *.a *.dll
+	@RMCOMMAND@ -rf .libs *.lo *.o *.la *.a *.dll *.exp *.lib
 
 dist-clean: clean
 	@RMCOMMAND@ Makefile

@@ -111,7 +111,7 @@ bx_svga_cirrus.dll: svga_cirrus.o vgacore.o
 ##### end DLL section
 
 clean:
-	@RMCOMMAND@ -rf .libs *.lo *.o *.la *.a *.dll
+	@RMCOMMAND@ -rf .libs *.lo *.o *.la *.a *.dll *.exp *.lib
 
 dist-clean: clean
 	@RMCOMMAND@ Makefile

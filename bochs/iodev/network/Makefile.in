@@ -130,7 +130,7 @@ bx_netmod.dll: netmod.o $(NETLOW_OBJS)
 ##### end DLL section
 
 clean:
-	@RMCOMMAND@ -rf .libs slirp/.libs *.lo slirp/*.lo *.o slirp/*.o *.la *.a *.dll
+	@RMCOMMAND@ -rf .libs slirp@SLASH@.libs *.lo slirp@SLASH@*.lo *.o slirp@SLASH@*.o *.la *.a *.dll *.exp *.lib
 
 dist-clean: clean
 	@RMCOMMAND@ Makefile
