@@ -128,8 +128,8 @@ void* bx_soundmod_ctl_c::get_module()
 pthread_t thread;
 #endif
 Bit8u *beep_buffer;
-int beep_bytes, beep_bufsize;
-bx_bool beep_active = 0;
+unsigned int beep_bytes, beep_bufsize;
+Bit8u beep_control = 0;
 
 #ifdef WIN32
 DWORD WINAPI beep_thread(LPVOID indata)
@@ -138,12 +138,13 @@ void beep_thread(void *indata)
 #endif
 {
   Bit8u level;
-  int i, j, ret;
+  unsigned int i, j;
+  int ret;
 
   bx_sound_lowlevel_c *soundmod = (bx_sound_lowlevel_c*)indata;
   level = 0x40;
   i = 0;
-  while (beep_bytes > 0) {
+  while (beep_control == 2) {
     j = 0;
     do {
       beep_buffer[j++] = level;
@@ -163,7 +164,7 @@ void beep_thread(void *indata)
   }
   soundmod->stopwaveplayback();
   free(beep_buffer);
-  beep_active = 0;
+  beep_control = 0;
 #ifdef WIN32
   return 0;
 #else
@@ -175,14 +176,14 @@ bx_bool bx_soundmod_ctl_c::beep_on(float frequency)
 {
   if (soundmod != NULL) {
     BX_DEBUG(("Beep ON (frequency=%.2f)",frequency));
-    if (beep_active) {
+    if (beep_control > 0) {
       beep_off();
     }
     soundmod->startwaveplayback(44100, 8, 0, 0);
     beep_bytes = (int)(44100.0 / frequency / 2);
     beep_bufsize = 4410;
     beep_buffer = (Bit8u*)malloc(beep_bufsize);
-    beep_active = 1;
+    beep_control = 2;
 #ifdef WIN32
     DWORD threadID;
     CreateThread(NULL, 0, beep_thread, soundmod, 0, &threadID);
@@ -198,10 +199,10 @@ bx_bool bx_soundmod_ctl_c::beep_off()
 {
   if (soundmod != NULL) {
     BX_DEBUG(("Beep OFF"));
-    if (beep_active) {
-      beep_bytes = 0;
+    if (beep_control > 0) {
+      beep_control = 1;
 #ifdef WIN32
-      while (beep_active) Sleep(1);
+      while (beep_control > 0) Sleep(1);
 #else
       pthread_join(thread, NULL);
 #endif
