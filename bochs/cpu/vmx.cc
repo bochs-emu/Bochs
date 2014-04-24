@@ -426,6 +426,7 @@ bx_bool BX_CPU_C::is_eptptr_valid(Bit64u eptptr)
   Bit32u walk_length = (eptptr >> 3) & 7;
   if (walk_length != 3) return 0;
 
+  // [6]   EPT A/D Enable
   if (! BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_ACCESS_DIRTY)) {
     if (eptptr & 0x40) {
       BX_ERROR(("is_eptptr_valid: EPTPTR A/D enabled when not supported by CPU"));
@@ -433,7 +434,7 @@ bx_bool BX_CPU_C::is_eptptr_valid(Bit64u eptptr)
     }
   }
 
-#define BX_EPTPTR_RESERVED_BITS 0xf80 /* bits 11:5 are reserved */
+#define BX_EPTPTR_RESERVED_BITS 0xf80 /* bits 11:7 are reserved */
   if (eptptr & BX_EPTPTR_RESERVED_BITS) {
     BX_ERROR(("is_eptptr_valid: EPTPTR reserved bits set"));
     return 0;
