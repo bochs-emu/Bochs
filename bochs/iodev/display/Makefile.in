@@ -70,9 +70,7 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc: bx_vga.dll bx_svga_cirrus.dll
-	@echo ERROR: MSVC nmake plugin support not yet complete
-	@exit 1
+plugins_msvc: bx_vga.dll bx_svga_cirrus.dll bx_voodoo.dll
 
 libdisplay.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libdisplay.a
@@ -107,6 +105,9 @@ bx_vga.dll: vga.o vgacore.o
 
 bx_svga_cirrus.dll: svga_cirrus.o vgacore.o
 	@LINK_DLL@ svga_cirrus.o vgacore.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_voodoo.dll: voodoo.o
+	@LINK_DLL@ voodoo.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 ##### end DLL section
 
