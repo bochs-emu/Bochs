@@ -96,11 +96,11 @@ libbx_%.la: %.lo
 libbx_usb_common.la: usb_common.lo $(USBDEV_OBJS:.o=.lo) scsi_device.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module usb_common.lo $(USBDEV_OBJS:.o=.lo) scsi_device.lo -o libbx_usb_common.la -rpath $(PLUGIN_PATH)
 
-#### building DLLs for win32  (tested on cygwin only)
+#### building DLLs for win32 (Cygwin and MinGW/MSYS)
 bx_%.dll: %.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)
 
-# special link rules for plugins that require more than one object file
+# special link rules for plugins with Cygwin, MinGW/MSYS and MSVC nmake
 bx_usb_common.dll: usb_common.o $(USBDEV_OBJS) scsi_device.o
 	@LINK_DLL@ usb_common.o $(USBDEV_OBJS) scsi_device.o $(WIN32_DLL_IMPORT_LIBRARY)
 

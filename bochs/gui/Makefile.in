@@ -72,12 +72,12 @@ X_PRE_LIBS = @X_PRE_LIBS@
 GUI_LINK_OPTS_X = $(X_LIBS) $(X_PRE_LIBS)
 GUI_LINK_OPTS_SDL = `sdl-config --cflags --libs`
 GUI_LINK_OPTS_SVGA =  -lvga -lvgagl
-GUI_LINK_OPTS_RFB = @RFB_LIBS@
+RFB_LINK_OPTS = @RFB_LIBS@
+RFB_LINK_OPTS_VCPP = user32.lib @RFB_LIBS@
 GUI_LINK_OPTS_VNCSRV = @GUI_LINK_OPTS_VNCSRV@
 GUI_LINK_OPTS_AMIGAOS =
-GUI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lcomdlg32 -lcomctl32
-GUI_LINK_OPTS_WIN32_VCPP = user32.lib gdi32.lib winmm.lib \
-  comdlg32.lib comctl32.lib
+WIN32_LINK_OPTS = -luser32 -lgdi32 -lcomdlg32 -lcomctl32
+WIN32_LINK_OPTS_VCPP = user32.lib gdi32.lib winmm.lib comdlg32.lib comctl32.lib
 GUI_LINK_OPTS_MACOS =
 GUI_LINK_OPTS_CARBON = -framework Carbon
 GUI_LINK_OPTS_NOGUI =
@@ -98,9 +98,7 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc:
-	@echo ERROR: MSVC nmake plugins not yet supported
-	@exit 1
+plugins_msvc: bx_nogui.dll bx_rfb.dll bx_win32.dll
 
 libgui.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libgui.a
@@ -155,9 +153,9 @@ libbx_term.la: term.lo
 libbx_wx.la: $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo)
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo) -o libbx_wx.la -rpath $(PLUGIN_PATH)  $(GUI_LINK_OPTS_WX)
 
-#### building DLLs for win32  (tested on cygwin only)
+#### building DLLs for win32 (Cygwin and MinGW/MSYS)
 bx_%.dll: %.o
-	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)  $(GUI_LINK_OPTS_WIN32)
+	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)  $(WIN32_LINK_OPTS)
 
 bx_wx.dll: $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT)
 	$(CXX) $(CXXFLAGS) -shared -o bx_wx.dll $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT) $(WIN32_DLL_IMPORT_LIBRARY) `wx-config --libs` -luser32 -lgdi32 -lcomdlg32 -lcomctl32
@@ -165,18 +163,23 @@ bx_wx.dll: $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT)
 bx_sdl.dll: $(GUI_OBJS_SDL)
 	$(CXX) $(CXXFLAGS) -shared -o bx_sdl.dll $(GUI_OBJS_SDL) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_SDL)
 
-bx_rfb.dll: $(GUI_OBJS_RFB)
-	$(CXX) $(CXXFLAGS) -shared -o bx_rfb.dll $(GUI_OBJS_RFB) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_RFB)
-
 bx_vncsrv.dll: $(GUI_OBJS_VNCSRV)
 	$(CXX) $(CXXFLAGS) -shared -o bx_vncsrv.dll $(GUI_OBJS_VNCSRV) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_VNCSRV)
 
-# no need to build DLLs for x.o
+# special link rules for plugins with Cygwin, MinGW/MSYS and MSVC nmake
+bx_nogui.dll: $(GUI_OBJS_NOGUI)
+	@LINK_DLL@ $(GUI_OBJS_NOGUI) $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_rfb.dll: $(GUI_OBJS_RFB)
+	@LINK_DLL@ $(GUI_OBJS_RFB) $(WIN32_DLL_IMPORT_LIBRARY) $(RFB_LINK_OPTS@LINK_VAR@)
+
+bx_win32.dll: $(GUI_OBJS_WIN32)
+	@LINK_DLL@ $(GUI_OBJS_WIN32) $(WIN32_DLL_IMPORT_LIBRARY) $(WIN32_LINK_OPTS@LINK_VAR@)
 
 ##### end DLL section
 
 clean:
-	@RMCOMMAND@ -rf .libs *.la *.a *.lo *.o *.dll
+	@RMCOMMAND@ -rf .libs *.la *.a *.lo *.o *.dll *.exp *.lib
 
 dist-clean: clean
 	@RMCOMMAND@ Makefile

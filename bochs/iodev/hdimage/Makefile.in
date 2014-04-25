@@ -96,11 +96,11 @@ libbx_%.la: %.lo
 libbx_hdimage.la: hdimage.lo vmware3.lo vmware4.lo vvfat.lo vpc-img.lo $(CDROM_OBJS:.o=.lo)
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module hdimage.lo vmware3.lo vmware4.lo vvfat.lo vpc-img.lo $(CDROM_OBJS:.o=.lo) -o libbx_hdimage.la -rpath $(PLUGIN_PATH)
 
-#### building DLLs for win32  (tested on cygwin only)
+#### building DLLs for win32 (Cygwin and MinGW/MSYS)
 bx_%.dll: %.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)
 
-# special link rules for plugins that require more than one object file
+# special link rules for plugins with Cygwin, MinGW/MSYS and MSVC nmake
 bx_hdimage.dll: hdimage.o $(HDIMAGE_EXTRA_OBJS) $(CDROM_OBJS)
 	@LINK_DLL@ hdimage.o $(HDIMAGE_EXTRA_OBJS) $(CDROM_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) $(HDIMAGE_LINK_OPTS@LINK_VAR@)
 

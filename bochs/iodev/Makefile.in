@@ -137,11 +137,11 @@ libbx_pit.la: pit82c54.lo pit.lo
 libbx_serial.la: serial.lo serial_raw.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module serial.lo serial_raw.lo -o libbx_serial.la -rpath $(PLUGIN_PATH)
 
-#### building DLLs for win32  (tested on cygwin only)
+#### building DLLs for win32 (Cygwin and MinGW/MSYS)
 bx_%.dll: %.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)
 
-# special link rules for plugins that require more than one object file
+# special link rules for plugins with Cygwin, MinGW/MSYS and MSVC nmake
 bx_keyboard.dll: keyboard.o scancodes.o
 	@LINK_DLL@ keyboard.o scancodes.o $(WIN32_DLL_IMPORT_LIBRARY)
 
