@@ -95,9 +95,7 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc: bx_netmod.dll
-	@echo ERROR: MSVC nmake plugin support not yet complete
-	@exit 1
+plugins_msvc: bx_netmod.dll bx_ne2k.dll bx_e1000.dll
 
 libnetwork.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libnetwork.a
@@ -126,6 +124,12 @@ bx_%.dll: %.o
 # special link rules for plugins with Cygwin, MinGW/MSYS and MSVC nmake
 bx_netmod.dll: netmod.o $(NETLOW_OBJS)
 	@LINK_DLL@ netmod.o $(NETLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) $(NETMOD_LINK_OPTS@LINK_VAR@)
+
+bx_e1000.dll: e1000.o
+	@LINK_DLL@ e1000.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_ne2k.dll: ne2k.o
+	@LINK_DLL@ ne2k.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 ##### end DLL section
 

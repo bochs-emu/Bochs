@@ -74,9 +74,7 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc: bx_soundmod.dll
-	@echo ERROR: MSVC nmake plugin support not yet complete
-	@exit 1
+plugins_msvc: bx_soundmod.dll bx_sb16.dll bx_es1370.dll
 
 libsound.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libsound.a
@@ -105,6 +103,12 @@ bx_%.dll: %.o
 # special link rules for plugins with Cygwin, MinGW/MSYS and MSVC nmake
 bx_soundmod.dll: soundmod.o $(SOUNDLOW_OBJS)
 	@LINK_DLL@ soundmod.o $(SOUNDLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) $(SOUNDMOD_LINK_OPTS@LINK_VAR@)
+
+bx_es1370.dll: es1370.o
+	@LINK_DLL@ es1370.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_sb16.dll: sb16.o
+	@LINK_DLL@ sb16.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 ##### end DLL section
 

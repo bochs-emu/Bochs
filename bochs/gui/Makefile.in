@@ -72,12 +72,12 @@ X_PRE_LIBS = @X_PRE_LIBS@
 GUI_LINK_OPTS_X = $(X_LIBS) $(X_PRE_LIBS)
 GUI_LINK_OPTS_SDL = `sdl-config --cflags --libs`
 GUI_LINK_OPTS_SVGA =  -lvga -lvgagl
-RFB_LINK_OPTS = @RFB_LIBS@
-RFB_LINK_OPTS_VCPP = user32.lib @RFB_LIBS@
+GUI_LINK_OPTS_RFB = @RFB_LIBS@
+GUI_LINK_OPTS_RFB_VCPP = user32.lib @RFB_LIBS@
 GUI_LINK_OPTS_VNCSRV = @GUI_LINK_OPTS_VNCSRV@
 GUI_LINK_OPTS_AMIGAOS =
-WIN32_LINK_OPTS = -luser32 -lgdi32 -lcomdlg32 -lcomctl32
-WIN32_LINK_OPTS_VCPP = user32.lib gdi32.lib winmm.lib comdlg32.lib comctl32.lib
+GUI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lcomdlg32 -lcomctl32
+GUI_LINK_OPTS_WIN32_VCPP = user32.lib gdi32.lib winmm.lib comdlg32.lib comctl32.lib
 GUI_LINK_OPTS_MACOS =
 GUI_LINK_OPTS_CARBON = -framework Carbon
 GUI_LINK_OPTS_NOGUI =
@@ -155,7 +155,7 @@ libbx_wx.la: $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo)
 
 #### building DLLs for win32 (Cygwin and MinGW/MSYS)
 bx_%.dll: %.o
-	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)  $(WIN32_LINK_OPTS)
+	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)  $(GUI_LINK_OPTS_WIN32)
 
 bx_wx.dll: $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT)
 	$(CXX) $(CXXFLAGS) -shared -o bx_wx.dll $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT) $(WIN32_DLL_IMPORT_LIBRARY) `wx-config --libs` -luser32 -lgdi32 -lcomdlg32 -lcomctl32
@@ -171,10 +171,10 @@ bx_nogui.dll: $(GUI_OBJS_NOGUI)
 	@LINK_DLL@ $(GUI_OBJS_NOGUI) $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_rfb.dll: $(GUI_OBJS_RFB)
-	@LINK_DLL@ $(GUI_OBJS_RFB) $(WIN32_DLL_IMPORT_LIBRARY) $(RFB_LINK_OPTS@LINK_VAR@)
+	@LINK_DLL@ $(GUI_OBJS_RFB) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_RFB@LINK_VAR@)
 
 bx_win32.dll: $(GUI_OBJS_WIN32)
-	@LINK_DLL@ $(GUI_OBJS_WIN32) $(WIN32_DLL_IMPORT_LIBRARY) $(WIN32_LINK_OPTS@LINK_VAR@)
+	@LINK_DLL@ $(GUI_OBJS_WIN32) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_WIN32@LINK_VAR@)
 
 ##### end DLL section
 

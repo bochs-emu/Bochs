@@ -72,9 +72,7 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc: bx_usb_common.dll
-	@echo ERROR: MSVC nmake plugin support not yet complete
-	@exit 1
+plugins_msvc: bx_usb_common.dll bx_usb_uhci.dll bx_usb_ohci.dll bx_usb_xhci.dll
 
 libusb.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libusb.a
@@ -103,6 +101,15 @@ bx_%.dll: %.o
 # special link rules for plugins with Cygwin, MinGW/MSYS and MSVC nmake
 bx_usb_common.dll: usb_common.o $(USBDEV_OBJS) scsi_device.o
 	@LINK_DLL@ usb_common.o $(USBDEV_OBJS) scsi_device.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_usb_uhci.dll: usb_uhci.o
+	@LINK_DLL@ usb_uhci.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_usb_ohci.dll: usb_ohci.o
+	@LINK_DLL@ usb_ohci.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_usb_xhci.dll: usb_xhci.o
+	@LINK_DLL@ usb_xhci.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 ##### end DLL section
 
