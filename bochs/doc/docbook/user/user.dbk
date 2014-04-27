@@ -139,11 +139,10 @@ active project of the week at SourceForge.
 
 <section id="who-uses-bochs"><title>Who uses Bochs?</title>
 <para> It is hard to estimate how many people have tried Bochs or use it on a
-regular basis, but a few statistics give an indication.  The <link
-linkend="bochs-developers">bochs-developers mailing list</link>, which is the
-primary source of news on bugs and releases, has over 400 subscribers.  The
-latest version has been downloaded over 150,000 times from SourceForge, not
-counting any mirror website or SVN users.
+regular basis, but a few statistics give an indication.  The &devlist;,
+which is the primary source of news on bugs and releases, has over 400
+subscribers. The latest version has been downloaded over 150,000 times
+from SourceForge, not counting any mirror website or SVN users.
 </para>
 
 <para>
@@ -708,11 +707,10 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
      Who maintains Bochs now?
      </para></question>
      <answer><para>
-      With Kevin's help, in April 2001, the members of the bochs-developers
-      mailing list set up a new official Bochs site hosted by <ulink
-      url="http://sourcefourge.net">Source Forge</ulink>. The admins on this
-      project are Greg Alexander, Don Becker, Christophe Bothamy, Bryce
-      Denney, Volker Ruppert and Stanislav Shwartsman.
+      With Kevin's help, in April 2001, the members of the &devlist;
+      set up a new official Bochs site hosted by <ulink url="http://sourcefourge.net">Source Forge</ulink>.
+      The admins on this project are Greg Alexander, Don Becker, Christophe Bothamy,
+      Bryce Denney, Volker Ruppert and Stanislav Shwartsman.
      </para></answer>
   </qandaentry>
 
@@ -1985,7 +1983,7 @@ In Bochs 1.3 and before, the X11 GUI was always the default.
     <row>
       <entry>--with-term</entry>
       <entry>Use text-only gui with curses library.  Almost certainly
-      won't work right with the debugger or the control panel.
+      won't work right with the debugger or the textconfig interface.
       </entry>
     </row>
     <row>
@@ -2879,27 +2877,55 @@ them as a normal user.
 
 
 <section><title>Compile Problems</title>
+
+<section><title>The configure script failed</title>
 <para>
-&FIXME;
+The <command>configure</command> script can fail for various reasons. If the error
+message on the shell doesn't give enough information, it is recommended to review
+the output file <filename>config.log</filename> to find out what exactly
+happened. The following issues can be fixed by modifying the configure options used:
+<itemizedlist>
+  <listitem><para>deprecated option (option from previous Bochs version not needed /
+  supported anymore)</para></listitem>
+  <listitem><para>mutually exclusive option (e.g <option>--enable-debugger</option> and <option>--enable-gdbstub</option>)</para></listitem>
+  <listitem><para>dependent option (e.g. USB support requires PCI support)</para></listitem>
+  <listitem><para>incomplete option (e.g. <option>--enable-cpu-level</option> requires an argument)</para></listitem>
+  <listitem><para>development package for library not installed (e.g. for <option>--with-wx</option>)</para></listitem>
+</itemizedlist>
+If the configure issue cannot be fixed by option changes and / or installing
+development packages / tools it should be reported in the &devlist; or the SF bug
+tracker for the Bochs project.
+</para>
+</section>
+
+<section><title>Make / compilation failure</title>
+<para>
+The <command>make</command> utility itself can only fail if the specified target
+is not supported by the environment or simply doesn't exist. In most cases the programs
+called from <command>make</command> are causing the failure (e.g. compiler / linker).
 </para>
 <para>
+In some cases it might be useful to rebuild Bochs completely by calling
+<command>make dist-clean</command> and running the <command>configure</command>
+script once again. These steps are recommended if the development sources from
+SVN are used and one of the files of the build system (e.g. <filename>Makefile</filename>
+or <filename>config.h.in</filename>) have been changed.
+</para>
+<para>
+&FIXME;
 <screen>
-what if configure fails?
-- tar up config.* and send to bochs-developers
-- report the problem with a source forge bug report.
-
 what if make fails?
-- try make dist-clean, and run configure and make again
 - use configure options to disable options.  For example, if errors in
 fpu/fpu.cc, you could try --disable-fpu.
 - search for the error on the Bochs website (bug reports, patches)
 - if familiar with C++, many minor problems can be corrected
 - move to more stable code.  if it's SVN, see if a release version will
-  compile.  Report problem to bochs-developers.
+  compile.  Report problem to the &devlist;.
 - report the problem with a source forge bug report.
 </screen>
 
 </para>
+</section>
 </section>
 </section> <!-- end of Compiling Bochs -->
 </chapter>
@@ -4190,8 +4216,8 @@ The safest action for panics is "fatal" or "ask".  If you are getting lots of
 panics and get tired of telling it to continue each time, you can try
 action=report instead.  If you allow Bochs to continue after a panic, don't
 be surprised if you get strange behavior or crashes after a panic occurs.
-Please report panic messages to the bochs-developers mailing list unless it is
-just a configuration problem like "could not find hard drive image."
+Please report panic messages to the &devlist; unless it is just a configuration
+problem like "could not find hard drive image."
 </para>
 </tip>
 </section>
@@ -6380,7 +6406,7 @@ to / from guest partition from a GNU/Linux host.
 
 <section> <title>Winimage</title>
 <para>
-Someone on the bochs-developers list mentioned that they use a program
+Someone on the &devlist; mentioned that they use a program
 called WinImage, from <ulink url="http://www.winimage.com">www.winimage.com</ulink>
 to read and write disk images (floppy and hard disk).  Winimage is a
 commercial product with a 30-day trial.
