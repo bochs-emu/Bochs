@@ -2908,22 +2908,48 @@ called from <command>make</command> are causing the failure (e.g. compiler / lin
 In some cases it might be useful to rebuild Bochs completely by calling
 <command>make dist-clean</command> and running the <command>configure</command>
 script once again. These steps are recommended if the development sources from
-SVN are used and one of the files of the build system (e.g. <filename>Makefile</filename>
-or <filename>config.h.in</filename>) have been changed.
+SVN are used and one of the build system files (e.g. <filename>Makefile</filename>
+or <filename>config.h.in</filename>) has been changed.
 </para>
 <para>
-&FIXME;
-<screen>
-what if make fails?
-- use configure options to disable options.  For example, if errors in
-fpu/fpu.cc, you could try --disable-fpu.
-- search for the error on the Bochs website (bug reports, patches)
-- if familiar with C++, many minor problems can be corrected
-- move to more stable code.  if it's SVN, see if a release version will
-  compile.  Report problem to the &devlist;.
-- report the problem with a source forge bug report.
-</screen>
+Sometimes it is possible to isolate the failing piece of code by disabling one or
+more configure options. For example, if the compilation fails somewhere in the cpu/avx*
+files, it might help to configure without <option>--enable-avx</option>. The same
+could be done with other Bochs facilities controlled by configure options.
+</para>
+</section>
 
+<section><title>Runtime issues with self-compiled Bochs</title>
+<para>
+After a successful compilation the self-compiled Bochs can fail if at least one
+library is not installed properly. This can happen if the library consists of a
+development and a runtime package and the second one is missing. Another problem
+can appear on build environments like Cygwin and MinGW/MSYS. Applications built
+there are usually designed to be run inside of the environment. When starting
+them from the Windows shell, it may cause errors like "missing <filename>cygwin1.dll</filename>"
+or similar. In that case, the missing DLL must be copied from e.g. the Cygwin folder
+to the location of the compiled EXE file.
+</para>
+</section>
+
+<section><title>Reporting errors related to the build process</title>
+<para>
+When reporting errors while building Boche to the &devlist; or the SF bug tracker
+for the Bochs project, this information is required to fix the issue.
+<itemizedlist>
+  <listitem><para>host platorm / build environment</para></listitem>
+  <listitem><para>Bochs release version or SVN revision</para></listitem>
+  <listitem><para>configure options used</para></listitem>
+  <listitem><para>full error message</para></listitem>
+  <listitem><para>config.log output if configure failure</para></listitem>
+  <listitem><para>source file name and line number if compile error</para></listitem>
+</itemizedlist>
+</para>
+<para>
+Before reporting us the issue, make sure that a similar one hasn't been already
+reported or someone created a patch to fix it. If you are familiar with C++
+and you can write some code to fix your problem, you can post it in the &devlist;
+or submit the patch in SF patch tracker for Bochs.
 </para>
 </section>
 </section>
@@ -5016,6 +5042,27 @@ your country specific X11 symbols in <filename>X11/keysymdef.h</filename>.
 
 <chapter id="using-bochs"><title>Using Bochs</title>
 <para>
+After starting Bochs either from the command prompt or the OS shell, the following
+steps are done before the simulation is running.
+<orderedlist>
+<listitem><para>parse <link linkend="commandline">command line</link> (except bochsrc options)</para></listitem>
+<listitem><para>load selected config file (<link linkend="bochsrc">bochsrc</link>) or <link linkend="search-order">search</link> for the default one</para></listitem>
+<listitem><para>parse remaining command line options (<link linkend="bochsrc">bochsrc</link> syntax)</para></listitem>
+<listitem><para>initialize configuration interface</para></listitem>
+<listitem><para>enter <link linkend="textconfig">start menu</link> / dialog (unless quick start mode is enabled)</para></listitem>
+<listitem><para>initialize all parts of the simulator</para></listitem>
+<listitem><para>enter <link linkend="internal-debugger">debugger</link> prompt / dialog (if present)</para></listitem>
+<listitem><para>enter the simulation loop</para></listitem>
+</orderedlist>
+</para>
+<para>
+During simulation, Bochs usually generates more or less log output. By default it
+is sent to the console, otherwise to the specified log file. Under certain conditions
+Bochs can cause a <link linkend="logevent-panic">panic</link> and usually asks the user what to do. To quit the simulation,
+the "power" button in the Bochs headerbar should be used, unless the guest OS has
+the capability to turn off the computer (APM or ACPI).
+</para>
+<para>
 &FIXME;
 <screen>
 - using plugins?
@@ -5558,7 +5605,7 @@ The command line can have any number of commands. However, if none are given,
     </screen>
   </para>
 
-  <section>
+  <section id="logevent-panic">
     <title>Bochs panics! What can I do?</title>
     <para>
       Bochs does a very good job in emulating an x86 compatible computer, however,
