@@ -1194,11 +1194,16 @@ void bx_dbg_info_registers_command(int which_regs_mask)
   else
 #endif
   {
+#if BX_SUPPORT_AVX
     if (which_regs_mask & BX_INFO_YMM_REGS) {
       bx_dbg_print_avx_state(BX_VL256);
     }
-    else if (which_regs_mask & BX_INFO_SSE_REGS) {
-      bx_dbg_print_sse_state();
+    else
+#endif
+    {
+      if (which_regs_mask & BX_INFO_SSE_REGS) {
+        bx_dbg_print_sse_state();
+      }
     }
   }
 }

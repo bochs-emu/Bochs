@@ -403,14 +403,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* DE /w */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDE },
   /* DF /w */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDF },
 #else
-  /* D8 /w */ { 0, BX_IA_FPU_ESC },
-  /* D9 /w */ { 0, BX_IA_FPU_ESC },
-  /* DA /w */ { 0, BX_IA_FPU_ESC },
-  /* DB /w */ { 0, BX_IA_FPU_ESC },
-  /* DC /w */ { 0, BX_IA_FPU_ESC },
-  /* DD /w */ { 0, BX_IA_FPU_ESC },
-  /* DE /w */ { 0, BX_IA_FPU_ESC },
-  /* DF /w */ { 0, BX_IA_FPU_ESC },
+  /* D8 /w */ { 0, BX_IA_FPUESC },
+  /* D9 /w */ { 0, BX_IA_FPUESC },
+  /* DA /w */ { 0, BX_IA_FPUESC },
+  /* DB /w */ { 0, BX_IA_FPUESC },
+  /* DC /w */ { 0, BX_IA_FPUESC },
+  /* DD /w */ { 0, BX_IA_FPUESC },
+  /* DE /w */ { 0, BX_IA_FPUESC },
+  /* DF /w */ { 0, BX_IA_FPUESC },
 #endif
   /* E0 /w */ { BxImmediate_BrOff8, BX_IA_LOOPNE_Op16_Jb },
   /* E1 /w */ { BxImmediate_BrOff8, BX_IA_LOOPE_Op16_Jb },
@@ -948,14 +948,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* DE /d */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDE },
   /* DF /d */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDF },
 #else
-  /* D8 /d */ { 0, BX_IA_FPU_ESC },
-  /* D9 /d */ { 0, BX_IA_FPU_ESC },
-  /* DA /d */ { 0, BX_IA_FPU_ESC },
-  /* DB /d */ { 0, BX_IA_FPU_ESC },
-  /* DC /d */ { 0, BX_IA_FPU_ESC },
-  /* DD /d */ { 0, BX_IA_FPU_ESC },
-  /* DE /d */ { 0, BX_IA_FPU_ESC },
-  /* DF /d */ { 0, BX_IA_FPU_ESC },
+  /* D8 /d */ { 0, BX_IA_FPUESC },
+  /* D9 /d */ { 0, BX_IA_FPUESC },
+  /* DA /d */ { 0, BX_IA_FPUESC },
+  /* DB /d */ { 0, BX_IA_FPUESC },
+  /* DC /d */ { 0, BX_IA_FPUESC },
+  /* DD /d */ { 0, BX_IA_FPUESC },
+  /* DE /d */ { 0, BX_IA_FPUESC },
+  /* DF /d */ { 0, BX_IA_FPUESC },
 #endif
   /* E0 /d */ { BxImmediate_BrOff8, BX_IA_LOOPNE_Op32_Jb },
   /* E1 /d */ { BxImmediate_BrOff8, BX_IA_LOOPE_Op32_Jb },
@@ -1862,7 +1862,11 @@ modrm_done:
         i->setSrcReg(n, rm);
       }
       else {
-        i->setSrcReg(n, (type == BX_VMM_REG) ? BX_VECTOR_TMP_REGISTER : BX_TMP_REGISTER);
+        unsigned tmpreg = BX_TMP_REGISTER;
+#if BX_SUPPORT_FPU
+        if (type == BX_VMM_REG) tmpreg = BX_VECTOR_TMP_REGISTER;
+#endif
+        i->setSrcReg(n, tmpreg);
 #if BX_SUPPORT_EVEX
         if (b1 == 0x62 && type == BX_GPR32 && displ8) {
           if (i->as32L())

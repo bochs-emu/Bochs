@@ -98,9 +98,11 @@ char *resolve_sib_scale(char *disbufptr, const bxInstruction_c *i, const char *r
 {
   unsigned sib_index = i->sibIndex(), sib_scale = i->sibScale();
 
+#if BX_SUPPORT_AVX
   if (src_index == BX_SRC_VSIB)
     disbufptr = dis_sprintf(disbufptr, "%s%d", intel_vector_reg_name[i->getVL() - 1], sib_index);
   else
+#endif
     disbufptr = dis_sprintf(disbufptr, "%s", regname[sib_index]);
 
   if (sib_scale)
