@@ -1879,21 +1879,33 @@ static int parse_line_unformatted(const char *context, char *line)
           *pv = 0;
           if (strlen(varname)<1 || !(value = getenv(varname))) {
             if ((value = get_builtin_variable(varname))) {
+              if ((string_i + strlen(value)) < 512) {
+                // append value to the string
+                for (pv=(char *)value; *pv; pv++)
+                    string[string_i++] = *pv;
+              } else {
+                BX_PANIC(("parse_line_unformatted(): out of memory"));
+              }
+            } else {
+              BX_PANIC(("could not look up environment variable '%s'", varname));
+            }
+          } else {
+            if ((string_i + strlen(value)) < 512) {
               // append value to the string
               for (pv=(char *)value; *pv; pv++)
                   string[string_i++] = *pv;
             } else {
-              BX_PANIC (("could not look up environment variable '%s'", varname));
+              BX_PANIC(("parse_line_unformatted(): out of memory"));
             }
-          } else {
-            // append value to the string
-            for (pv=(char *)value; *pv; pv++)
-                string[string_i++] = *pv;
           }
         }
 #endif
         if (!isspace(ptr[i]) || inquotes) {
-          string[string_i++] = ptr[i];
+          if (string_i < 511) {
+            string[string_i++] = ptr[i];
+          } else {
+            BX_PANIC(("parse_line_unformatted(): out of memory"));
+          }
         }
       }
     }
