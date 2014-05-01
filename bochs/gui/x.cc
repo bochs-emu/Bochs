@@ -2460,7 +2460,7 @@ int x11_ask_dialog(BxEvent *event)
   int level, cpos;
   int retcode = -1;
   int control = num_ctrls - 1;
-  char name[16], device[16], message[512];
+  char name[16], device[18], message[512];
 
   level = event->u.logmsg.level;
   strcpy(name, SIM->get_log_level_name(level));

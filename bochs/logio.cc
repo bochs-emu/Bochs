@@ -478,11 +478,10 @@ void logfunctions::ask(int level, const char *prefix, const char *fmt, va_list a
     case BX_LOG_ASK_CHOICE_DIE:
     case BX_LOG_NOTIFY_FAILED:
       bx_user_quit = (val==BX_LOG_ASK_CHOICE_DIE)?1:0;
-      in_ask_already = 0;  // because fatal will longjmp out
-      fatal(prefix, buf1, ap, 1);
-      // should never get here
-      BX_PANIC(("in ask(), fatal() should never return!"));
-      break;
+      // fatal() quits the simulation in the calling method
+      setonoff(level, ACT_FATAL);
+      in_ask_already = 0;
+      return;
     case BX_LOG_ASK_CHOICE_DUMP_CORE:
       fprintf(stderr, "User chose to dump core...\n");
 #if BX_HAVE_ABORT
