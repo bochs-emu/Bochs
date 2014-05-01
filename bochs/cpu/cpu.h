@@ -4162,7 +4162,7 @@ public: // for now...
   BX_SMF bxICacheEntry_c *serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_address pAddr);
   BX_SMF bxICacheEntry_c* getICacheEntry(void);
   BX_SMF bx_bool mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr);
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS && BX_ENABLE_TRACE_LINKING
   BX_SMF BX_INSF_TYPE linkTrace(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 #endif
   BX_SMF void prefetch(void);

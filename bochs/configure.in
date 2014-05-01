@@ -681,6 +681,22 @@ AC_ARG_ENABLE(handlers-chaining,
     ]
   )
 
+AC_MSG_CHECKING(for trace linking speedups support)
+AC_ARG_ENABLE(trace-linking,
+  AS_HELP_STRING([--enable-trace-linking], [enable trace linking speedups support (no)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    enable_trace_linking=1
+   else
+    AC_MSG_RESULT(no)
+    enable_trace_linking=0
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    enable_trace_linking=0
+    ]
+  )
+
 AC_MSG_CHECKING(support for configurable MSR registers)
 AC_ARG_ENABLE(configurable-msrs,
   AS_HELP_STRING([--enable-configurable-msrs], [support for configurable MSR registers (yes if cpu level >= 5)]),
@@ -919,6 +935,7 @@ if test "$speedups_all" = 1; then
   speedup_repeat=1
   speedup_fastcall=1
   speedup_handlers_chaining=1
+  enable_trace_linking=1
 fi
 
 if test "$speedup_repeat" = 1; then
@@ -949,6 +966,11 @@ else
   AC_DEFINE(BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS, 0)
 fi
 
+if test "$enable_trace_linking" = 1; then
+  AC_DEFINE(BX_ENABLE_TRACE_LINKING, 1)
+else
+  AC_DEFINE(BX_ENABLE_TRACE_LINKING, 0)
+fi
 
 READLINE_LIB=""
 rl_without_curses_ok=no

@@ -57,6 +57,10 @@ typedef void BX_INSF_TYPE;
   return;                                              \
 }
 
+#if BX_ENABLE_TRACE_LINKING == 0
+#define linkTrace(i)
+#endif
+
 #define BX_LINK_TRACE(i) {                             \
   BX_COMMIT_INSTRUCTION(i);                            \
   linkTrace(i);                                        \
@@ -413,7 +417,7 @@ public:
     metaInfo.metaInfo1 |= (1<<4);
   }
 
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS && BX_ENABLE_TRACE_LINKING
   BX_CPP_INLINE bxInstruction_c* getNextTrace(Bit32u currTraceLinkTimeStamp) {
     if (currTraceLinkTimeStamp > modRMForm.Id2) handlers.next = NULL;
     return handlers.next;

@@ -236,7 +236,7 @@ bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
   return entry;
 }
 
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS && BX_ENABLE_TRACE_LINKING
 
 // The function is called after taken branch instructions and tries to link the branch to the next trace
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::linkTrace(bxInstruction_c *i)

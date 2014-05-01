@@ -8,8 +8,14 @@ Changes after 2.6.2 (updated Apr  1, 2014):
   - Implemented AVX-512 instructions emulation (experimental)
   ! CPUDB: Added Intel(R) Core(TM) i7-4770 CPU (Haswell) configuration to CPUDB
   ! CPUDB: Added AMD A8-5600K APU (Trinity) configuration to CPUDB
+
   - Replace 'SSE' and 'AVX' .bochsrc option with single 'SIMD' option which controls presence
     of all CPU SIMD extensions from SSE to AVX-512
+
+  - Extra 5-10% emulation speedup with new trace linking optimization. The optimization
+    is enabled by default when configuring with --enable-all-optimizations option,
+    to disable trace linking optimization configure with --disable-trace-linking.
+    The optimization require to compile Bochs with at least -O2 optimization level on gcc.
 
 - Bochs Debugger and Instrumentation
   - Added disam for Bochs internal instruction representation, especially useful for instrumentation
