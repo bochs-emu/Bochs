@@ -377,11 +377,17 @@ void logfunctions::info(const char *fmt, ...)
 
   va_start(ap, fmt);
   logio->out(LOGLEV_INFO, prefix, fmt, ap);
-  if (onoff[LOGLEV_INFO] == ACT_ASK)
-    ask(LOGLEV_INFO, prefix, fmt, ap);
-  if (onoff[LOGLEV_INFO] == ACT_FATAL)
-    fatal(prefix, fmt, ap, 1);
   va_end(ap);
+
+  if (onoff[LOGLEV_INFO] == ACT_ASK) {
+    va_start(ap, fmt);
+    ask(LOGLEV_INFO, prefix, fmt, ap);
+    va_end(ap);
+  }
+  if (onoff[LOGLEV_INFO] == ACT_FATAL) {
+    va_start(ap, fmt);
+    fatal(prefix, fmt, ap, 1);
+  }
 }
 
 void logfunctions::error(const char *fmt, ...)
@@ -394,11 +400,17 @@ void logfunctions::error(const char *fmt, ...)
 
   va_start(ap, fmt);
   logio->out(LOGLEV_ERROR, prefix, fmt, ap);
-  if (onoff[LOGLEV_ERROR] == ACT_ASK)
-    ask(LOGLEV_ERROR, prefix, fmt, ap);
-  if (onoff[LOGLEV_ERROR] == ACT_FATAL)
-    fatal(prefix, fmt, ap, 1);
   va_end(ap);
+
+  if (onoff[LOGLEV_ERROR] == ACT_ASK) {
+    va_start(ap, fmt);
+    ask(LOGLEV_ERROR, prefix, fmt, ap);
+    va_end(ap);
+  }
+  if (onoff[LOGLEV_ERROR] == ACT_FATAL) {
+    va_start(ap, fmt);
+    fatal(prefix, fmt, ap, 1);
+  }
 }
 
 void logfunctions::panic(const char *fmt, ...)
@@ -407,22 +419,22 @@ void logfunctions::panic(const char *fmt, ...)
 
   assert(logio != NULL);
 
-  // Special case for panics since they are so important.  Always print
+  // Special case for panics since they are so important. Always print
   // the panic to the log, no matter what the log action says.
-  //if(!onoff[LOGLEV_PANIC]) return;
 
   va_start(ap, fmt);
   logio->out(LOGLEV_PANIC, prefix, fmt, ap);
-
-  // This fixes a funny bug on linuxppc where va_list is no pointer but a struct
   va_end(ap);
-  va_start(ap, fmt);
 
-  if (onoff[LOGLEV_PANIC] == ACT_ASK)
+  if (onoff[LOGLEV_PANIC] == ACT_ASK) {
+    va_start(ap, fmt);
     ask(LOGLEV_PANIC, prefix, fmt, ap);
-  if (onoff[LOGLEV_PANIC] == ACT_FATAL)
+    va_end(ap);
+  }
+  if (onoff[LOGLEV_PANIC] == ACT_FATAL) {
+    va_start(ap, fmt);
     fatal(prefix, fmt, ap, 1);
-  va_end(ap);
+  }
 }
 
 void logfunctions::ldebug(const char *fmt, ...)
@@ -435,11 +447,9 @@ void logfunctions::ldebug(const char *fmt, ...)
 
   va_start(ap, fmt);
   logio->out(LOGLEV_DEBUG, prefix, fmt, ap);
-  if (onoff[LOGLEV_DEBUG] == ACT_ASK)
-    ask(LOGLEV_DEBUG, prefix, fmt, ap);
-  if (onoff[LOGLEV_DEBUG] == ACT_FATAL)
-    fatal(prefix, fmt, ap, 1);
   va_end(ap);
+
+  // the actions ask() and fatal() are not supported here
 }
 
 void logfunctions::ask(int level, const char *prefix, const char *fmt, va_list ap)
@@ -566,6 +576,7 @@ void logfunctions::fatal(const char *prefix, const char *fmt, va_list ap, int ex
   if (!SIM->is_wx_selected()) {
     // store prefix and message in 'exit_msg' before unloading device plugins
     vsnprintf(tmpbuf, sizeof(tmpbuf), fmt, ap);
+    va_end(ap);
     sprintf(exit_msg, "%s %s", prefix, tmpbuf);
   }
 #if !BX_DEBUGGER
