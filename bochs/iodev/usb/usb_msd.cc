@@ -184,10 +184,10 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
       BX_EJECTED);
     status->set_handler(cd_param_handler);
     status->set_ask_format("Is the device inserted or ejected? [%s] ");
-#if BX_WITH_WX
-    bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
-    usb->add(s.config);
-#endif
+    if (SIM->is_wx_selected()) {
+      bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
+      usb->add(s.config);
+    }
   }
 
   put("usb_msd", "USBMSD");
@@ -201,10 +201,10 @@ usb_msd_device_c::~usb_msd_device_c(void)
     delete s.hdimage;
   } else if (s.cdrom != NULL) {
     delete s.cdrom;
-#if BX_WITH_WX
-    bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
-    usb->remove(s.config->get_name());
-#endif
+    if (SIM->is_wx_selected()) {
+      bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
+      usb->remove(s.config->get_name());
+    }
     bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
     usb_rt->remove(s.config->get_name());
   }

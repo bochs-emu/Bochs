@@ -205,10 +205,10 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
     device->set_handler(hub_param_handler);
     new bx_param_string_c(port, "options", "Options", "", "", BX_PATHNAME_LEN);
   }
-#if BX_WITH_WX
-  bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
-  usb->add(hub.config);
-#endif
+  if (SIM->is_wx_selected()) {
+    bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
+    usb->add(hub.config);
+  }
 
   put("usb_hub", "USBHUB");
 }
@@ -218,10 +218,10 @@ usb_hub_device_c::~usb_hub_device_c(void)
   for (int i=0; i<hub.n_ports; i++) {
     remove_device(i);
   }
-#if BX_WITH_WX
-  bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
-  usb->remove(hub.config->get_name());
-#endif
+  if (SIM->is_wx_selected()) {
+    bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
+    usb->remove(hub.config->get_name());
+  }
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   usb_rt->remove(hub.config->get_name());
 }

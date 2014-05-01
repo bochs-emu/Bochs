@@ -561,14 +561,14 @@ static void carbonFatalDialog(const char *error, const char *exposition)
 
 void logfunctions::fatal(const char *prefix, const char *fmt, va_list ap, int exit_status)
 {
-#if !BX_WITH_WX
-  // store prefix and message in 'exit_msg' before unloading device plugins
   char tmpbuf[1024];
   char exit_msg[1024];
 
-  vsprintf(tmpbuf, fmt, ap);
-  sprintf(exit_msg, "%s %s", prefix, tmpbuf);
-#endif
+  if (!SIM->is_wx_selected()) {
+    // store prefix and message in 'exit_msg' before unloading device plugins
+    vsnprintf(tmpbuf, sizeof(tmpbuf), fmt, ap);
+    sprintf(exit_msg, "%s %s", prefix, tmpbuf);
+  }
 #if !BX_DEBUGGER
   bx_atexit();
 #endif
@@ -583,13 +583,13 @@ void logfunctions::fatal(const char *prefix, const char *fmt, va_list ap, int ex
       "For more information, try running Bochs within Terminal by clicking on \"bochs.scpt\".");
   }
 #endif
-#if !BX_WITH_WX
-  static const char *divider = "========================================================================";
-  fprintf(stderr, "%s\n", divider);
-  fprintf(stderr, "Bochs is exiting with the following message:\n");
-  fprintf(stderr, "%s", exit_msg);
-  fprintf(stderr, "\n%s\n", divider);
-#endif
+  if (!SIM->is_wx_selected()) {
+    static const char *divider = "========================================================================";
+    fprintf(stderr, "%s\n", divider);
+    fprintf(stderr, "Bochs is exiting with the following message:\n");
+    fprintf(stderr, "%s", exit_msg);
+    fprintf(stderr, "\n%s\n", divider);
+  }
 #if !BX_DEBUGGER
   BX_EXIT(exit_status);
 #else
