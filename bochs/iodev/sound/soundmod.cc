@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011-2013  The Bochs Project
+//  Copyright (C) 2011-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -179,7 +179,9 @@ bx_bool bx_soundmod_ctl_c::beep_on(float frequency)
     if (beep_control > 0) {
       beep_off();
     }
-    soundmod->startwaveplayback(44100, 8, 0, 0);
+    if (soundmod->startwaveplayback(44100, 8, 0, 0) == BX_SOUNDLOW_ERR) {
+      return 0;
+    }
     beep_bytes = (int)(44100.0 / frequency / 2);
     beep_bufsize = 4410;
     beep_buffer = (Bit8u*)malloc(beep_bufsize);

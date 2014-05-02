@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2013  The Bochs Project
+//  Copyright (C) 2013-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -322,6 +322,11 @@ int bx_sound_alsa_c::alsa_pcm_write()
 
 int bx_sound_alsa_c::sendwavepacket(int length, Bit8u data[])
 {
+  if (!alsa_pcm[0].handle) {
+      // Alert indicating that caller is probably erroneous
+      BX_ERROR(("sendwavepacket(): pcm is not open"));
+      return BX_SOUNDLOW_ERR;
+  }
   if ((alsa_pcm[0].audio_bufsize+length) <= BX_SOUND_LINUX_BUFSIZE) {
     memcpy(audio_buffer[0]+alsa_pcm[0].audio_bufsize, data, length);
     alsa_pcm[0].audio_bufsize += length;
@@ -338,7 +343,7 @@ int bx_sound_alsa_c::sendwavepacket(int length, Bit8u data[])
 
 int bx_sound_alsa_c::stopwaveplayback()
 {
-  if (alsa_pcm[0].audio_bufsize > 0) {
+  if (alsa_pcm[0].handle && alsa_pcm[0].audio_bufsize > 0) {
     if (alsa_pcm[0].audio_bufsize < alsa_pcm[0].alsa_bufsize) {
       memset(audio_buffer[0]+alsa_pcm[0].audio_bufsize, 0, alsa_pcm[0].alsa_bufsize-alsa_pcm[0].audio_bufsize);
       alsa_pcm[0].audio_bufsize = alsa_pcm[0].alsa_bufsize;
