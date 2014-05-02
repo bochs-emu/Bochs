@@ -58,6 +58,7 @@ SER_LINK_OPTS = -lws2_32
 SER_LINK_OPTS_VCPP = user32.lib ws2_32.lib
 FDC_LINK_OPTS =
 FDC_LINK_OPTS_VCPP = user32.lib
+IODEV_DLL_TARGETS =@IODEV_DLL_TARGETS@
 
 PCIDEV_CXXFLAGS = -I$(srcdir)/../host/linux/pcidev
 
@@ -101,9 +102,7 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc: bx_keyboard.dll bx_pit.dll bx_gameport.dll bx_serial.dll bx_floppy.dll
-	@echo ERROR: MSVC nmake plugin support not yet complete
-	@exit 1
+plugins_msvc: $(IODEV_DLL_TARGETS) bx_keyboard.dll bx_pit.dll bx_gameport.dll bx_serial.dll bx_floppy.dll
 
 libiodev.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libiodev.a
@@ -156,6 +155,8 @@ bx_serial.dll: serial.o serial_raw.o
 
 bx_floppy.dll: floppy.o
 	@LINK_DLL@ floppy.o $(WIN32_DLL_IMPORT_LIBRARY) $(FDC_LINK_OPTS@LINK_VAR@)
+
+@EXTRA_DLL_TARGET@
 
 ##### end DLL section
 

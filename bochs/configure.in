@@ -2467,9 +2467,6 @@ case "$target" in
     C_OPT="/Ox"   # optimize for speed
     if test "$bx_plugins" = 1; then
       CFLAGS="/nologo /MD /W3 /EHs-c- /DNDEBUG /DWIN32 /D_WINDOWS /D_CRT_SECURE_NO_WARNINGS $C_OPT"
-      WIN32_DLL_IMPORT_LIB="bochs.lib"
-      LINK_DLL="link /dll /nologo /subsystem:console /incremental:no /out:\$@"
-      LINK_VAR="_VCPP"
     else
       CFLAGS="/nologo /MT /W3 /EHs-c- /DNDEBUG /DWIN32 /D_WINDOWS /D_CRT_SECURE_NO_WARNINGS $C_OPT"
     fi
@@ -2514,20 +2511,12 @@ case "$target" in
     if test "$networking" = yes; then
       OPTIONAL_TARGET="$OPTIONAL_TARGET niclist.exe"
     fi
-    if test "$bx_plugins" = 1; then
-      WIN32_DLL_IMPORT_LIB="dllexports.a"
-      LINK_DLL="\$(CXX) \$(CXXFLAGS) -shared -o \$@"
-    fi
     AC_DEFINE(BX_HAVE_SELECT, 1)
     ;;
   *-pc-mingw*)
     BXIMAGE_LINK_OPTS="-luser32"
     if test "$networking" = yes; then
       OPTIONAL_TARGET="$OPTIONAL_TARGET niclist"
-    fi
-    if test "$bx_plugins" = 1; then
-      WIN32_DLL_IMPORT_LIB="dllexports.a"
-      LINK_DLL="\$(CXX) \$(CXXFLAGS) -shared -o \$@"
     fi
     AC_DEFINE(BX_HAVE_SELECT, 1)
     ;;
@@ -2567,8 +2556,21 @@ case $target in
       PLUGIN_VAR=""
       PLUGIN_LIBNAME_TRANSFORMATION='%.o=bx_%.dll'
       INSTALL_PLUGINS_VAR=install_dll_plugins
+      WIN32_DLL_IMPORT_LIB="bochs.lib"
+      LINK_DLL="link /dll /nologo /subsystem:console /incremental:no /out:\$@"
       LIBS="$LIBS advapi32.lib comctl32.lib comdlg32.lib gdi32.lib shell32.lib user32.lib"
       PLUGIN_TARGET_2=plugins_msvc
+      LINK_VAR="_VCPP"
+      EXTRA_DLL_TARGET="!INCLUDE makeincl.vc"
+      echo -e "# DLL PLUGIN TEST\n" > iodev/makeincl.vc
+      IODEV_DLL_TARGETS=""
+      DLL_LIST="acpi biosdev busmouse cmos dma extfpuirq harddrv ioapic iodebug parallel pci pci2isa pci_ide pic speaker unmapped"
+      for i in $DLL_LIST
+      do
+        echo -e "bx_$i.dll: $i.o" >> iodev/makeincl.vc
+        echo -e "\tlink /dll /nologo /subsystem:console /incremental:no /out:\$@ $i.o \$(WIN32_DLL_IMPORT_LIBRARY)\n" >> iodev/makeincl.vc
+        IODEV_DLL_TARGETS="$IODEV_DLL_TARGETS bx_$i.dll"
+      done
     else
       if test "$with_win32" != yes; then
         LIBS="$LIBS comctl32.lib"
@@ -2583,6 +2585,8 @@ case $target in
       PRIMARY_TARGET=".win32_dll_plugin_target"
       PLUGIN_LIBNAME_TRANSFORMATION='%.o=bx_%.dll'
       INSTALL_PLUGINS_VAR=install_dll_plugins
+      WIN32_DLL_IMPORT_LIB="dllexports.a"
+      LINK_DLL="\$(CXX) \$(CXXFLAGS) -shared -o \$@"
     else
       if test "$with_win32" != yes; then
         LIBS="$LIBS -lcomctl32"
@@ -2954,6 +2958,8 @@ AC_SUBST(PLUGIN_VAR)
 AC_SUBST(PLUGIN_LIB)
 AC_SUBST(PLUGIN_TARGET)
 AC_SUBST(PLUGIN_TARGET_2)
+AC_SUBST(IODEV_DLL_TARGETS)
+AC_SUBST(EXTRA_DLL_TARGET)
 AC_SUBST(WIN32_DLL_IMPORT_LIB)
 AC_SUBST(INSTALL_PLUGINS_VAR)
 
