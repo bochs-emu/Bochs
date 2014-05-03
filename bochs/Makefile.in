@@ -191,6 +191,7 @@ bochs@EXE@: @IODEV_LIB_VAR@ @DISPLAY_LIB_VAR@ @HDIMAGE_LIB_VAR@ @USB_LIB_VAR@ @N
 		$(READLINE_LIB) \
 		$(EXTRA_LINK_OPTS) \
 		$(LIBS)
+	@MANIFEST_LINE@
 
 # Special make target for cygwin/mingw using dlltool instead of
 # libtool.  This creates a .DEF file, and exports file, an import library,
@@ -541,7 +542,7 @@ clean:
 	@RMCOMMAND@ niclist.exe
 	@RMCOMMAND@ bochs.out
 	@RMCOMMAND@ bochsout.txt
-	@RMCOMMAND@ bochs.exp
+	@RMCOMMAND@ *.exp *.lib *.exe.manifest
 	@RMCOMMAND@ bochs.def
 	@RMCOMMAND@ bochs.scpt
 	@RMCOMMAND@ -rf bochs.app

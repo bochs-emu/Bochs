@@ -533,7 +533,8 @@ currently work with.
     <entry>Plugins</entry>
     <entry>Yes</entry>
     <entry>Compiling gui and devices as plugins is supported on Linux, MacOS X,
-    Solaris, Cygwin, MinGW/MSYS and VS2008Ex (workspace provided).</entry>
+    Solaris, Cygwin, MinGW/MSYS, MSVC nmake and the VS2008Ex IDE (workspace provided).
+    </entry>
   </row>
   <row>
     <entry>PIC</entry>
@@ -2230,7 +2231,7 @@ to explicitly turn it off.
       <entry>--enable-voodoo</entry>
       <entry>no</entry>
       <entry>Enable experimental 3dfx Voodoo Graphics emulation. Currently only
-      the Voodoo1 model can be emulated.
+      the Voodoo1 model is known to work (Voodoo2 is under construction).
       </entry>
     </row>
     <row>

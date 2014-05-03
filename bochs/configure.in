@@ -2561,16 +2561,23 @@ case $target in
       LIBS="$LIBS advapi32.lib comctl32.lib comdlg32.lib gdi32.lib shell32.lib user32.lib"
       PLUGIN_TARGET_2=plugins_msvc
       LINK_VAR="_VCPP"
-      EXTRA_DLL_TARGET="!INCLUDE makeincl.vc"
+      EXT_IODEV_DLL_RULES="!INCLUDE makeincl.vc"
       echo -e "# DLL PLUGIN TEST\n" > iodev/makeincl.vc
       IODEV_DLL_TARGETS=""
-      DLL_LIST="acpi biosdev busmouse cmos dma extfpuirq harddrv ioapic iodebug parallel pci pci2isa pci_ide pic speaker unmapped"
+      DLL_LIST="biosdev busmouse cmos dma extfpuirq harddrv ioapic parallel pic speaker unmapped"
+      if test "$pci" = "1"; then
+        DLL_LIST="$DLL_LIST acpi pci pci2isa pci_ide"
+      fi
+      if test "$bx_debugger" = 1; then
+        DLL_LIST="$DLL_LIST iodebug"
+      fi
       for i in $DLL_LIST
       do
         echo -e "bx_$i.dll: $i.o" >> iodev/makeincl.vc
         echo -e "\tlink /dll /nologo /subsystem:console /incremental:no /out:\$@ $i.o \$(WIN32_DLL_IMPORT_LIBRARY)\n" >> iodev/makeincl.vc
         IODEV_DLL_TARGETS="$IODEV_DLL_TARGETS bx_$i.dll"
       done
+      MANIFEST_LINE="mt -manifest bochs.exe.manifest build\win32\bochs.manifest -outputresource:bochs.exe;1"
     else
       if test "$with_win32" != yes; then
         LIBS="$LIBS comctl32.lib"
@@ -2959,8 +2966,9 @@ AC_SUBST(PLUGIN_LIB)
 AC_SUBST(PLUGIN_TARGET)
 AC_SUBST(PLUGIN_TARGET_2)
 AC_SUBST(IODEV_DLL_TARGETS)
-AC_SUBST(EXTRA_DLL_TARGET)
+AC_SUBST(EXT_IODEV_DLL_RULES)
 AC_SUBST(WIN32_DLL_IMPORT_LIB)
+AC_SUBST(MANIFEST_LINE)
 AC_SUBST(INSTALL_PLUGINS_VAR)
 
 AC_PATH_PROG(GZIP, gzip)

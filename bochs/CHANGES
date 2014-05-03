@@ -1,4 +1,4 @@
-Changes after 2.6.2 (updated Apr  1, 2014):
+Changes after 2.6.2 (updated May  3, 2014):
 
 - CPU
   - Bugfixes for CPU emulation correctness (critical fixes for XSAVE, VMX, TBM/BMI and RDRAND instructions)
@@ -31,6 +31,7 @@ Changes after 2.6.2 (updated Apr  1, 2014):
   - configure and compilation fixes for Cygwin and Visual Studio environment
   - configure option --enable-cdrom now only controls the presence of
     platform-specific code for device access
+  - building plugin version with MSVC nmake now supported
 
 - Config interface
   - Added global sound control option for the driver and wave input/output

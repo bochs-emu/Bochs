@@ -179,7 +179,7 @@ bx_win32.dll: $(GUI_OBJS_WIN32)
 ##### end DLL section
 
 clean:
-	@RMCOMMAND@ -rf .libs *.la *.a *.lo *.o *.dll *.exp *.lib
+	@RMCOMMAND@ -rf .libs *.la *.a *.lo *.o *.dll *.exp *.lib *.dll.manifest
 
 dist-clean: clean
 	@RMCOMMAND@ Makefile
