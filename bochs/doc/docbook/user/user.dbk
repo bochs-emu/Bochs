@@ -4220,7 +4220,6 @@ A panic can be a configuration problem (like a misspelled bochsrc line) or an
 emulation problem (like an unsupported video mode).
 </para>
 
-
 <para>
 The debug, info, error, and panic lines in the bochsrc control what Bochs will
 do when it encounters each type of event.  The allowed actions are: fatal
@@ -5057,23 +5056,24 @@ steps are done before the simulation is running.
 </para>
 <para>
 During simulation, Bochs usually generates more or less log output. By default it
-is sent to the console, otherwise to the specified log file. Under certain conditions
-Bochs can cause a <link linkend="logevent-panic">panic</link> and usually asks the user what to do. To quit the simulation,
-the "power" button in the Bochs headerbar should be used, unless the guest OS has
-the capability to turn off the computer (APM or ACPI).
+is sent to the console, otherwise to the specified <link linkend="bochsopt-log">log file</link>.
+The amount of output can be controlled with the <link linkend="bochsopt-debug-info-error-panic">log options</link>
+in bochsrc, the start menu and the runtime configuration.
 </para>
 <para>
-&FIXME;
-<screen>
-- using plugins?
-- Resources for users
-testing status page: tells what has been tried and who got it working
-search on bochs web site
-SourceForge
-  - look for bug reports
-  - how to report problems (present as FIXME request in chapter 6 as well)
-  - How to make feature requests?
-</screen>
+Under certain conditions Bochs can cause a <link linkend="logevent-panic">panic</link>
+and usually asks the user what to do. If such a panic happens during startup, it is
+mostly a configuration or permission problem and we recommend to quit Bochs and to
+review the bochsrc options used.
+</para>
+<para>
+To quit the simulation, the "power" button in the Bochs <link linkend="headerbar">headerbar</link>
+should be used, unless the guest OS has the capability to turn off the computer (APM or ACPI).
+</para>
+<para>
+If a Bochs runtime issue cannot be fixed by configuration changes and it has not yet
+been reported in the &devlist; or the SF trackers for Bochs, it should be reported in
+the mailing list or the SF bug tracker for the Bochs project.
 </para>
 
 <section id="commandline"><title>Command line arguments</title>
@@ -5197,6 +5197,10 @@ It consists of these three parts:
 <listitem><para>the runtime configuration</para></listitem>
 </itemizedlist>
 </para>
+<para>
+On Win32 (without wxWidgets) the default configuration interface 'win32config' is
+very similar, but it presents gui dialogs instead of text menus.
+</para>
 <section><title>The start menu</title>
 <para>
 If you start Bochs without the quickstart argument (-q), the Bochs configuration
@@ -5252,8 +5256,8 @@ behavoiur of Bochs at runtime if you click on one of these buttons:
 <listitem>
 <para>cdrom button</para>
 <para>
-  Here you can toggle the status of the cdrom media (inserted/ejected). CD-ROM drives
-  can be set up using <link linkend="bochsopt-ata-master-slave">ata(0-3)-master/-slave option</link>.
+  Here you can toggle the media status of the first CD-ROM drive (inserted/ejected).
+  CD-ROM drives can be set up using <link linkend="bochsopt-ata-master-slave">ata(0-3)-master/-slave option</link>.
   On some platforms this button brings a up a small dialog box for changing the
   CD-ROM image.
 </para>
@@ -5634,7 +5638,7 @@ The command line can have any number of commands. However, if none are given,
     </para>
     <para>
       Some of the device names reported in the panic message are abbreviations,
-      since the length of the 'prefix' is limited to 5 characters. The
+      since the length of the 'prefix' is limited to 6 characters. The
       <link linkend="logopts-by-device">log function module table</link> may help
       you finding out the name of the device that caused the panic. It also gives
       you a short description of the module.
