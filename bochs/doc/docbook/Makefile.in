@@ -27,16 +27,13 @@ EXTRAS=index.html images
 # complete list of what to install
 INSTALL_LIST=$(SECTIONS) $(EXTRAS)
 
-# ssh to this server to install the docs
-REMOTE_HOST=shell.sf.net
+# scp to this server (only upload supported)
+REMOTE_HOST=web.sf.net
 
 # path of preexisting install on the remote server.  Each section
 # will go into a subdirectory of $REMOTE_PATH, as in
 # $REMOTE_PATH/user.
-REMOTE_PATH=/home/groups/b/bo/bochs/htdocs/doc/docbook
-
-# -x means don't try to forward X authorization, it won't work for SF
-SSH=ssh -x
+REMOTE_PATH=htdocs/doc/docbook
 
 all: $(SECTION_HTML)
 
@@ -74,15 +71,15 @@ test_sfuser:
 	  echo Your Source Forge username is $${SFUSER}.
 	@echo 'If this is not correct, set the environment variable $$SFUSER.'
 
-# Install the stuff on the remote server using ssh.  It will assume that your
+# Upload the stuff to the remote server using scp.  It will assume that your
 # local username is the same as your Source Forge username, unless you define
-# an environment variable SFUSER.
-webinst: $(TARGZ)
+# an environment variable SFUSER. Unpacking must be done with the
+# interactive shell (see developer doc).
+upload_docs: $(TARGZ)
 	# copy to remote
-	@echo Installing documentation on $(REMOTE_PATH)
+	@echo Uploading documentation to $(REMOTE_PATH)
 	if test "$$SFUSER" = ""; then SFUSER=`whoami`; export SFUSER; fi; \
-	  scp $(TARGZ) $${SFUSER}@$(REMOTE_HOST):$(REMOTE_PATH); \
-	  $(SSH) $${SFUSER}@$(REMOTE_HOST) "cd $(REMOTE_PATH) && umask 002 && gunzip -c $(TARGZ) | tar xvf -"
+	  scp $(TARGZ) $${SFUSER},bochs@$(REMOTE_HOST):$(REMOTE_PATH);
 
 # Download rendered docs in a TAR file from the Bochs web site using wget.
 # This is useful for getting documentation onto platforms that don't have
