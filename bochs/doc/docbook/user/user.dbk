@@ -3181,9 +3181,6 @@ These plugins are also supported, but they are usually loaded directly with
 their bochsrc option: 'e1000', 'es1370', 'ne2k', 'pcidev', 'pcipnic', 'sb16',
 'usb_ohci', 'usb_uhci' and 'usb_xhci'.
 </para>
-<para>
-This plugin currently must be loaded with plugin_ctrl: 'voodoo'.
-</para>
 </section>
 
 <section id="bochsopt-configinterface"><title>config_interface</title>
@@ -3714,6 +3711,19 @@ to be as close to the number of emulated instructions-per-second your
 workstation can do, for this to be accurate. If the realtime sync is
 enabled with the <link linkend="bochsopt-clock">clock option</link>, the value
 is based on the real time. This parameter can be changed at runtime.
+</para>
+</section>
+
+<section>
+<title>voodoo</title>
+<para>
+Example:
+<screen>
+  voodoo: enabled=1, model=voodoo1
+</screen>
+This defines the Voodoo Graphics emulation (experimental). Currently
+supported models are 'voodoo1' and 'voodoo2'. The Voodoo2 support is
+not yet complete.
 </para>
 </section>
 
@@ -5272,9 +5282,14 @@ behavoiur of Bochs at runtime if you click on one of these buttons:
   the CTRL key and the third (middle) mouse button. See the <link linkend="bochsopt-mouse">mouse option</link>
   parameter 'toggle' for other methods to toggle the mouse capture.
 </para>
-<para>&FIXME; Support for 2 button mouse to toggle the capture mode not yet complete.
-  Some display libraries still don't support changing the mouse capture at runtime,
-  but it is already supported on RFB, SDL, VNCSRV, Win32, wxWidgets and X11.</para>
+<note><para>
+  Changing the mouse capture at runtime is not supported by all display libraries,
+  but it is already present on RFB, SDL, VNCSRV, Win32, wxWidgets and X11.
+</para></note>
+<note><para>
+  Support for 2 button mouse to toggle the capture mode not yet complete - using
+  another toggle method is recommended in that case.
+</para></note>
 </listitem>
 <listitem>
 <para>user button</para>
@@ -5653,7 +5668,12 @@ The command line can have any number of commands. However, if none are given,
       disable the mouse inside of Bochs at run-time.
     </para>
     <para>
-      &FIXME; Mouse behavior
+      The mouse cursor movement speed mostly doesn't match the real movement. This
+      is caused by the variable emulation speed (from the user's point of view)
+      and the relative mouse position data that standard PS/2, serial or USB mice
+      are generating. The alternative is the USB tablet emulation that generates
+      absolute mouse position data. We recommend to use it with the display
+      libraries 'rfb' and 'vncsrv'.
     </para>
   </section>
 
@@ -6448,9 +6468,11 @@ instructions specific to Bochs, we can add it right here.
 
 <section id="bochs-linux-disktools"><title>Bochs GNU/Linux DiskTools</title>
 <para>
-&FIXME;
-Bochs tools are external tools developed by ..., and useful to copy
-to / from guest partition from a GNU/Linux host.
+Bochs-Tools are a collection of scripts and programs to be used together
+with Bochs developed by Bernhard Bablok. Main goal was to provide a more
+Unix-like interface to the emulator and to enable access to Bochs disk-images
+from outside of Bochs. The latest version is available at
+<ulink url="http://www.bablokb.de/bochs-tools">www.bablokb.de/bochs-tools</ulink>.
 </para>
 </section>
 
@@ -6492,8 +6514,8 @@ Ben Lunt wrote a set of utilities for Dos/Win32 to manipulate flat disk images.
 </para>
 <para>
 You can find it at
-<ulink url="http://www.frontiernet.net/~fys/mtools.htm">
-http://www.frontiernet.net/~fys/mtools.htm</ulink>
+<ulink url="http://www.fysnet.net/mtools.htm">
+http://www.fysnet.net/mtools.htm</ulink>
 </para>
 <para>
 These utilities includes :
@@ -7042,8 +7064,7 @@ Some of the other options in this group is probably also needed,
         </note>
         <note><para> The iptables package must be installed. </para> </note>
         And voila... The host should forward the packets of the guest to the rest of your network.
-        You could even have acces to the internet...
-        &FIXME; add nice screenshot
+        You could even have access to the internet...
         <note>
         <para>
         You may need to load other modules if you want to use other fancy protocols (ftp,etc...)
@@ -8515,7 +8536,7 @@ No external tool support Sparse disk images yet.
 </section>
 </section>
 
-<section><title>vmware3/vmware4</title>
+<section><title>vmware3 / vmware4</title>
 <para>
 </para>
 <section><title>description</title>
@@ -8538,7 +8559,8 @@ must point to the vmware3/4 disk image.
 </section>
 <section><title>external tools</title>
 <para>
-&FIXME; give a look at vmware3/4 tools : disk image creation, etc.
+&FIXME; In addition to the utilities provided by VMware Inc. some other freeware
+tools are available.
 </para>
 </section>
 <section><title>typical use</title>
@@ -8618,38 +8640,34 @@ The growing redolog is created automatically if needed.
 </note>
 </section>
 <section><title>typical use</title>
-<para>
-&FIXME; to be completed
-</para>
-<section><title>Commit</title>
+<itemizedlist>
+<listitem><para><command>Commit</command></para>
 <para>
     After a run, the redolog can be committed (merged)
     to the base image with the bximage utility.
-</para>
-</section>
-<section><title>Rollback</title>
+</para></listitem>
+<listitem><para><command>Rollback</command></para>
 <para>
     After a run, the redolog can be rollbacked (discarded)
     by simply deleting the redolog file.
-</para>
-</section>
-<section><title>Common Base</title>
+</para></listitem>
+<listitem><para><command>Common Base</command></para>
 <para>
-&FIXME; to be completed
-</para>
-</section>
-<section><title>Harddisk Image on a Read-Only Medium</title>
+    One base disk image with a guest OS installed can be used to install
+    different software as described above for the "sparse" disk image mode.
+</para></listitem>
+<listitem><para><command>Harddisk Image on a Read-Only Medium</command></para>
 <para>
     In the 'undoable' mode, the base file is always opened in read-only mode,
     so it can safely be stored on a read-only medium (for example on a cdrom).
     In that case it is recommended to specify the redolog file with the
     "journal" option.
-</para>
-</section>
+</para></listitem>
+</itemizedlist>
 </section>
 <section><title>limitations</title>
 <para>
-&FIXME; to be completed
+    The "undoable" disk depends on the limitations of base disk image used.
 </para>
 </section>
 </section>
@@ -8701,7 +8719,8 @@ before writing new data. If no disk space is available, a panic will occur.
 </section>
 <section><title>limitations</title>
 <para>
-&FIXME; to be completed
+    The size of the virtual disk is currently limited to 8 TB, but the maximum size
+    of the image file depends on host OS limitations.
 </para>
 </section>
 </section>
@@ -8768,31 +8787,27 @@ The growing redolog is created automatically.
 </para>
 </section>
 <section><title>typical use</title>
+<itemizedlist>
+<listitem><para><command>Repeatable simulations</command></para>
 <para>
-&FIXME; can be completed
-</para>
-<section><title>Repeatable simulations</title>
+    &FIXME; to be completed
+</para></listitem>
+<listitem><para><command>Multiple Bochs instances</command></para>
 <para>
-&FIXME; to be completed
-</para>
-</section>
-<section><title>Multiple Bochs instances</title>
-<para>
-&FIXME; to be completed
-</para>
-</section>
-<section><title>Harddisk Image on a Read-Only Medium</title>
+    &FIXME; to be completed
+</para></listitem>
+<listitem><para><command>Harddisk Image on a Read-Only Medium</command></para>
 <para>
     In the 'volatile' mode, the base file is always opened in read-only mode,
     so it can safely be stored on a read-only medium (for example on a cdrom).
     In that case it is recommended to specify the redolog file with the
     "journal" option.
-</para>
-</section>
+</para></listitem>
+</itemizedlist>
 </section>
 <section><title>limitations</title>
 <para>
-&FIXME; to be completed
+    The "volatile" disk depends on the limitations of base disk image used.
 </para>
 </section>
 </section>

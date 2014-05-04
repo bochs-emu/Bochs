@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "10 Apr 2014" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "04 May 2014" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -53,9 +53,7 @@ These plugins will be loaded by default (if present): 'biosdev', 'extfpuirq',
 
 These plugins are also supported, but they are usually loaded directly with
 their bochsrc option: 'e1000', 'es1370', 'ne2k', 'pcidev', 'pcipnic', 'sb16',
-\&'usb_ohci', 'usb_uhci' and 'usb_xhci'.
-
-This plugin currently must be loaded with plugin_ctrl: 'voodoo'.
+\&'usb_ohci', 'usb_uhci', 'usb_xhci' and 'voodoo'.
 
 Example:
   plugin_ctrl: unmapped=0, e1000=1 # unload 'unmapped' and load 'e1000'
@@ -464,6 +462,15 @@ This parameter can be changed at runtime.
 Examples:
   vga: extension=cirrus, update_freq=10
   vga: extension=vbe
+
+.TP
+.I "voodoo:"
+This defines the Voodoo Graphics emulation (experimental). Currently
+supported models are 'voodoo1' and 'voodoo2'. The Voodoo2 support is
+not yet complete.
+
+Example:
+  voodoo: enabled=1, model=voodoo1
 
 .TP
 .I "keyboard:"
