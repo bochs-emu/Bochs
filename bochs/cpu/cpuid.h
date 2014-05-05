@@ -476,10 +476,11 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 // [22:22] Topology extensions support
 // [23:23] PerfCtrExtCore: core performance counter extensions support
 // [24:24] PerfCtrExtNB: NB performance counter extensions support
-// [25:25] Streaming performance monitor architecture.
+// [25:25] reserved
 // [26:26] Data breakpoint extension. Indicates support for MSR 0xC0011027 and MSRs 0xC001101[B:9].
 // [27:27] Performance time-stamp counter. Indicates support for MSR 0xC0010280.
-// [31:28] reserved
+// [28:28] PerfCtrExtL2I: L2I performance counter extensions support.
+// [31:29] reserved
 
 #define BX_CPUID_EXT2_LAHF_SAHF              (1 <<  0)
 #define BX_CPUID_EXT2_CMP_LEGACY             (1 <<  1)
@@ -506,9 +507,10 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT2_TOPOLOGY_EXTENSIONS    (1 << 22)
 #define BX_CPUID_EXT2_PERFCTR_EXT_CORE       (1 << 23)
 #define BX_CPUID_EXT2_PERFCTR_EXT_NB         (1 << 24)
-#define BX_CPUID_EXT2_STREAMING_PERFMON      (1 << 25)
+#define BX_CPUID_EXT2_RESERVED25             (1 << 25)
 #define BX_CPUID_EXT2_DATA_BREAKPOINT_EXT    (1 << 26)
 #define BX_CPUID_EXT2_PERF_TSC               (1 << 27)
+#define BX_CPUID_EXT2_PERFCTR_EXT_L2I        (1 << 28)
 
 // CPUID defines - SVM features CPUID[0x8000000A].EDX
 // ----------------------------
