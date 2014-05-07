@@ -3326,6 +3326,16 @@ Example:
 </screen>
 This defines the parameters of the cpu inside Bochs:
 </para>
+<para><command>model</command></para>
+<para>
+Selects CPU configuration to emulate from pre-defined list of all
+supported configurations. When this option is used and the value
+is different from 'bx_generic', the parameters of the CPUID option
+have no effect anymore. See the bochsrc sample for supported values.
+</para>
+<para>
+&FIXME; Add separate section for the cpu configuration.
+</para>
 <para><command>count</command></para>
 <para>
 Set the number of processors:cores per processor:threads per core when Bochs

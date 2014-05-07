@@ -94,8 +94,9 @@
 #
 #  MODEL:
 #    Selects CPU configuration to emulate from pre-defined list of all
-#    supported configurations. When this option is used, the CPUID option
-#    has no effect anymore.
+#    supported configurations. When this option is used and the value
+#    is different from 'bx_generic', the parameters of the CPUID option
+#    have no effect anymore.
 #
 #  CPU configurations that can be selected:
 # -----------------------------------------------------------------

@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "04 May 2014" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "07 May 2014" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -123,6 +123,13 @@ Examples:
 .TP
 .I "cpu:"
 This defines cpu-related parameters inside Bochs:
+
+model:
+
+Selects CPU configuration to emulate from pre-defined list of all
+supported configurations. When this option is used and the value
+is different from 'bx_generic', the parameters of the CPUID option
+have no effect anymore. See the bochsrc sample for supported values.
 
 count:
 
