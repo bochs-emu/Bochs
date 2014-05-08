@@ -107,19 +107,19 @@
 #  p4_willamette              Intel(R) Pentium(R) 4 (Willamette)
 #  core_duo_t2400_yonah       Intel(R) Core(TM) Duo CPU T2400 (Yonah)
 #  atom_n270                  Intel(R) Atom(TM) CPU N270
+#  p4_prescott_celeron_336    Intel(R) Celeron(R) 336 (Prescott)
 #  athlon64_clawhammer        AMD Athlon(tm) 64 Processor 2800+ (Clawhammer)
 #  athlon64_venice            AMD Athlon(tm) 64 Processor 3000+ (Venice)
 #  turion64_tyler             AMD Turion(tm) 64 X2 Mobile TL-60 (Tyler)
 #  phenom_8650_toliman        AMD Phenom X3 8650 (Toliman)
-#  p4_prescott_celeron_336    Intel(R) Celeron(R) 336 (Prescott)
 #  core2_penryn_t9600         Intel Mobile Core 2 Duo T9600 (Penryn)
 #  corei5_lynnfield_750       Intel(R) Core(TM) i5   750 (Lynnfield)
 #  corei5_arrandale_m520      Intel(R) Core(TM) i5 M 520 (Arrandale)
+#  zambezi                    AMD FX(tm)-4100 Quad-Core Processor (Zambezi)
+#  trinity_apu                AMD A8-5600K APU (Trinity)
 #  corei7_sandy_bridge_2600k  Intel(R) Core(TM) i7-2600K (Sandy Bridge)
 #  corei7_ivy_bridge_3770k    Intel(R) Core(TM) i7-3770K CPU (Ivy Bridge)
 #  corei7_haswell_4770        Intel(R) Core(TM) i7-4770 CPU (Haswell)
-#  zambezi                    AMD FX(tm)-4100 Quad-Core Processor (Zambezi)
-#  trinity_apu                AMD A8-5600K APU (Trinity)
 #
 #  COUNT:
 #    Set the number of processors:cores per processor:threads per core when

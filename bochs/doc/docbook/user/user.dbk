@@ -3330,11 +3330,8 @@ This defines the parameters of the cpu inside Bochs:
 <para>
 Selects CPU configuration to emulate from pre-defined list of all
 supported configurations. When this option is used and the value
-is different from 'bx_generic', the parameters of the CPUID option
-have no effect anymore. See the bochsrc sample for supported values.
-</para>
-<para>
-&FIXME; Add separate section for the cpu configuration.
+is different from 'bx_generic', the parameters of the <link linkend="bochsopt-cpuid">CPUID</link>
+option have no effect anymore. See the <xref linkend="cpu-models"> for supported values.
 </para>
 <para><command>count</command></para>
 <para>
@@ -3417,13 +3414,15 @@ speed.</para></footnote>.
 </table>
 </section>
 
-<section><title>cpuid</title>
+<section id="bochsopt-cpuid"><title>cpuid</title>
 <para>
 Example:
 <screen>
   cpuid: level=6, mmx=1, sep=1, sse=sse4_2, apic=xapic, aes=1, movbe=1, xsave=1
 </screen>
-This defines features and functionality supported by Bochs emulated CPU:
+This defines features and functionality supported by Bochs emulated CPU. These settings
+are only valid and configurable if the <link linkend="cpu-models">cpu model</link> is
+set to the default value 'bx_generic'.
 </para>
 <para><command>level</command></para>
 <para>
@@ -5385,6 +5384,136 @@ a specific device, you can change the log options for this device only to get
 more information (e.g. report debug messages).
 </para>
 </section>
+</section>
+
+<section id="cpu-models"><title>Pre-defined CPU models</title>
+<para>
+If Bochs is compiled with cpu level 5 or higher the CPUID opcode is supported
+and it can return some information about the cpu model and it's features.
+The following table shows all available CPU models with a short description.
+The amount of choices depends on the CPU features enabled at compile time (3rd column).
+Note that the cpu model selection as well as the <link linkend="bochsopt-cpuid">cpuid</link>
+option does not affect the hardware emulation, but the return values of the
+CPUID opcode.
+</para>
+<table><title>Bochs CPU models</title>
+<tgroup cols="3" align="left" colsep="1" rowsep="1">
+<thead>
+  <row>
+    <entry>Value</entry>
+    <entry>Description</entry>
+    <entry>Required Features</entry>
+  </row>
+</thead>
+<tbody>
+  <row>
+    <entry>bx_generic</entry>
+    <entry>Default Bochs CPU configured with <link linkend="bochsopt-cpuid">CPUID</link> option</entry>
+    <entry>cpu level 5</entry>
+  </row>
+  <row>
+    <entry>pentium_mmx</entry>
+    <entry>Intel Pentium MMX</entry>
+    <entry>cpu level 5</entry>
+  </row>
+  <row>
+    <entry>amd_k6_2_chomper</entry>
+    <entry>AMD-K6(tm) 3D processor (Chomper)</entry>
+    <entry>cpu level 5</entry>
+  </row>
+  <row>
+    <entry>p2_klamath</entry>
+    <entry>Intel Pentium II (Klamath)</entry>
+    <entry>cpu level 6</entry>
+  </row>
+  <row>
+    <entry>p3_katmai</entry>
+    <entry>Intel Pentium III (Katmai)</entry>
+    <entry>cpu level 6</entry>
+  </row>
+  <row>
+    <entry>p4_willamette</entry>
+    <entry>Intel(R) Pentium(R) 4 (Willamette)</entry>
+    <entry>cpu level 6</entry>
+  </row>
+  <row>
+    <entry>core_duo_t2400_yonah</entry>
+    <entry>Intel(R) Core(TM) Duo CPU T2400 (Yonah)</entry>
+    <entry>cpu level 6</entry>
+  </row>
+  <row>
+    <entry>atom_n270</entry>
+    <entry>Intel(R) Atom(TM) CPU N270</entry>
+    <entry>cpu level 6</entry>
+  </row>
+  <row>
+    <entry>p4_prescott_celeron_336</entry>
+    <entry>Intel(R) Celeron(R) 336 (Prescott)</entry>
+    <entry>cpu level 6, x86-64</entry>
+  </row>
+  <row>
+    <entry>athlon64_clawhammer</entry>
+    <entry>AMD Athlon(tm) 64 Processor 2800+ (Clawhammer)</entry>
+    <entry>cpu level 6, x86-64</entry>
+  </row>
+  <row>
+    <entry>athlon64_venice</entry>
+    <entry>AMD Athlon(tm) 64 Processor 3000+ (Venice)</entry>
+    <entry>cpu level 6, x86-64</entry>
+  </row>
+  <row>
+    <entry>turion64_tyler</entry>
+    <entry>AMD Turion(tm) 64 X2 Mobile TL-60 (Tyler)</entry>
+    <entry>cpu level 6, x86-64</entry>
+  </row>
+  <row>
+    <entry>phenom_8650_toliman</entry>
+    <entry>AMD Phenom X3 8650 (Toliman)</entry>
+    <entry>cpu level 6, x86-64</entry>
+  </row>
+  <row>
+    <entry>core2_penryn_t9600</entry>
+    <entry>Intel Mobile Core 2 Duo T9600 (Penryn)</entry>
+    <entry>cpu level 6, x86-64</entry>
+  </row>
+  <row>
+    <entry>corei5_lynnfield_750</entry>
+    <entry>Intel(R) Core(TM) i5   750 (Lynnfield)</entry>
+    <entry>cpu level 6, x86-64</entry>
+  </row>
+  <row>
+    <entry>corei5_arrandale_m520</entry>
+    <entry>Intel(R) Core(TM) i5 M 520 (Arrandale)</entry>
+    <entry>cpu level 6, x86-64</entry>
+  </row>
+  <row>
+    <entry>zambezi</entry>
+    <entry>AMD FX(tm)-4100 Quad-Core Processor (Zambezi)</entry>
+    <entry>cpu level 6, x86-64, avx</entry>
+  </row>
+  <row>
+    <entry>trinity_apu</entry>
+    <entry>AMD A8-5600K APU (Trinity)</entry>
+    <entry>cpu level 6, x86-64, avx</entry>
+  </row>
+  <row>
+    <entry>corei7_sandy_bridge_2600k</entry>
+    <entry>Intel(R) Core(TM) i7-2600K (Sandy Bridge)</entry>
+    <entry>cpu level 6, x86-64, avx</entry>
+  </row>
+  <row>
+    <entry>corei7_ivy_bridge_3770k</entry>
+    <entry>Intel(R) Core(TM) i7-3770K CPU (Ivy Bridge)</entry>
+    <entry>cpu level 6, x86-64, avx</entry>
+  </row>
+  <row>
+    <entry>corei7_haswell_4770</entry>
+    <entry>Intel(R) Core(TM) i7-4770 CPU (Haswell)</entry>
+    <entry>cpu level 6, x86-64, avx</entry>
+  </row>
+</tbody>
+</tgroup>
+</table>
 </section>
 
 <section id="using-save-restore"><title>Save and restore simulation</title>
