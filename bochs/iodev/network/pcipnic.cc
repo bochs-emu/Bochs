@@ -137,7 +137,7 @@ bx_pcipnic_c::~bx_pcipnic_c()
 void bx_pcipnic_c::init(void)
 {
   bx_list_c *base;
-  const char *bootrom;
+  bx_param_string_c *bootrom;
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_PNIC);
@@ -166,9 +166,9 @@ void bx_pcipnic_c::init(void)
 
   BX_PNIC_THIS pci_base_address[4] = 0;
   BX_PNIC_THIS pci_rom_address = 0;
-  bootrom = SIM->get_param_string("bootrom", base)->getptr();
-  if ((strlen(bootrom) > 0) && (strcmp(bootrom, "none"))) {
-    BX_PNIC_THIS load_pci_rom(bootrom);
+  bootrom = SIM->get_param_string("bootrom", base);
+  if (!bootrom->isempty()) {
+    BX_PNIC_THIS load_pci_rom(bootrom->getptr());
   }
 
   BX_INFO(("PCI Pseudo NIC initialized"));

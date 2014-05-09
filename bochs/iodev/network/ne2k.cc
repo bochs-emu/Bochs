@@ -174,7 +174,7 @@ void bx_ne2k_c::init(void)
 {
   char devname[16];
   Bit8u macaddr[6];
-  const char *bootrom;
+  bx_param_string_c *bootrom;
 
   BX_DEBUG(("Init $Id$"));
 
@@ -206,9 +206,9 @@ void bx_ne2k_c::init(void)
     BX_NE2K_THIS pci_conf[0x3d] = BX_PCI_INTA;
     BX_NE2K_THIS s.base_address = 0x0;
     BX_NE2K_THIS pci_rom_address = 0;
-    bootrom = SIM->get_param_string("bootrom", base)->getptr();
-    if ((strlen(bootrom) > 0) && (strcmp(bootrom, "none"))) {
-      BX_NE2K_THIS load_pci_rom(bootrom);
+    bootrom = SIM->get_param_string("bootrom", base);
+    if (!bootrom->isempty()) {
+      BX_NE2K_THIS load_pci_rom(bootrom->getptr());
     }
   }
 #endif
@@ -246,8 +246,8 @@ void bx_ne2k_c::init(void)
                                  BX_NE2K_THIS s.base_address + 0x1F,
                                  devname, 1);
 
-    bootrom = SIM->get_param_string("bootrom", base)->getptr();
-    if (strlen(bootrom) > 0) {
+    bootrom = SIM->get_param_string("bootrom", base);
+    if (!bootrom->isempty()) {
       BX_PANIC(("%s: boot ROM support not present yet", devname));
     }
 
