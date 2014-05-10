@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------
 Patch name: patch.example-user-plugin
 Author:     Volker Ruppert
-Updated:    21 Apr 2014
+Updated:    10 May 2014
 Status:     Demo
 
 Detailed description:
@@ -14,14 +14,14 @@ Detailed description:
   demo it is used to specify the reset value.
   For user plugin support Bochs must be configured with plugins enabled.
   Compiling with plugin support is known to work on Linux and Windows
-  (Cygwin or MinGW/MSYS). Bochs supports loading of up to 16 different
-  user plugins when starting up. Loading / removing plugins at runtime
-  is not yet supported.
+  (Cygwin, MinGW/MSYS and MSVC nmake). Bochs supports loading of up to
+  16 different user plugins when starting up. Loading / removing plugins
+  at runtime is not yet supported.
 
 Patch was created with:
   diff -u
 Apply patch to what version:
-  svn revision 12288 (April 21, 2014)
+  svn revision 12321 (May 10, 2014)
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
@@ -31,18 +31,18 @@ Instructions:
   make install
 ----------------------------------------------------------------------
 diff -urN ../bochs/configure.in ./configure.in
---- ../bochs/configure.in	2012-04-11 18:53:04.078087998 +0200
-+++ ./configure.in	2012-04-14 16:18:03.046503743 +0200
-@@ -2787,4 +2787,4 @@
- 	 doc/docbook/Makefile build/linux/bochs-dlx \
- 	 bxversion.h bxversion.rc build/macosx/Info.plist \
+--- ../bochs/configure.in	2014-05-03 12:58:15.019241391 +0200
++++ ./configure.in	2014-05-10 09:02:22.875225895 +0200
+@@ -2981,4 +2981,4 @@
+ 	 ${INSTRUMENT_DIR}/Makefile misc/Makefile doc/docbook/Makefile \
+ 	 build/linux/bochs-dlx bxversion.h bxversion.rc build/macosx/Info.plist \
  	 build/win32/nsis/Makefile build/win32/nsis/bochs.nsi \
 -	 host/linux/pcidev/Makefile)
 +	 host/linux/pcidev/Makefile user-plugin/Makefile)
 diff -urN ../bochs/user-plugin/Makefile.in ./user-plugin/Makefile.in
 --- ../bochs/user-plugin/Makefile.in	1970-01-01 01:00:00.000000000 +0100
-+++ ./user-plugin/Makefile.in	2012-04-14 16:18:03.046503743 +0200
-@@ -0,0 +1,108 @@
++++ ./user-plugin/Makefile.in	2014-05-10 09:10:19.461987931 +0200
+@@ -0,0 +1,112 @@
 +# Copyright (C) 2009-2014  Volker Ruppert
 +#
 +# This library is free software; you can redistribute it and/or
@@ -99,7 +99,11 @@ diff -urN ../bochs/user-plugin/Makefile.in ./user-plugin/Makefile.in
 +
 +PLUGIN_OBJS = testdev.o
 +
-+plugins: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
++plugins: @PLUGIN_TARGET_2@
++
++plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
++
++plugins_msvc: bx_testdev.dll
 +
 +install: @INSTALL_PLUGINS_VAR@
 +
@@ -121,12 +125,12 @@ diff -urN ../bochs/user-plugin/Makefile.in ./user-plugin/Makefile.in
 +libbx_%.la: %.lo
 +	$(LIBTOOL) --mode=link $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
 +
-+#### building DLLs for win32  (tested on cygwin only)
-+bx_%.dll: %.o
-+	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)
++# special link rules for plugins with Cygwin, MinGW/MSYS and MSVC nmake
++bx_testdev.dll: testdev.o
++	@LINK_DLL@ testdev.o $(WIN32_DLL_IMPORT_LIBRARY)
 +
 +clean:
-+	@RMCOMMAND@ -rf .libs *.lo *.o *.la *.a *.dll
++	@RMCOMMAND@ -rf .libs *.lo *.o *.la *.a *.dll *.exp *.lib *.dll.manifest
 +
 +dist-clean: clean
 +	@RMCOMMAND@ Makefile
@@ -144,18 +148,18 @@ diff -urN ../bochs/user-plugin/Makefile.in ./user-plugin/Makefile.in
 +testdev.o: testdev.@CPP_SUFFIX@ ../iodev/iodev.h ../bochs.h ../config.h ../osdep.h \
 +  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
 +  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
-+  ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
++  ../extplugin.h ../ltdl-bochs.h ../gui/gui.h ../gui/textconfig.h \
 +  ../gui/keymap.h ../instrument/stubs/instrument.h testdev.h
 +testdev.lo: testdev.@CPP_SUFFIX@ ../iodev/iodev.h ../bochs.h ../config.h ../osdep.h \
 +  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
 +  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
-+  ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
++  ../extplugin.h ../ltdl-bochs.h ../gui/gui.h ../gui/textconfig.h \
 +  ../gui/keymap.h ../instrument/stubs/instrument.h testdev.h
 diff -urN ../bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
 --- ../bochs/user-plugin/testdev.cc	1970-01-01 01:00:00.000000000 +0100
-+++ ./user-plugin/testdev.cc	2012-04-14 16:30:28.849027414 +0200
-@@ -0,0 +1,118 @@
-+// Copyright (C) 2009-2012  Volker Ruppert
++++ ./user-plugin/testdev.cc	2014-05-10 10:01:44.771282429 +0200
+@@ -0,0 +1,123 @@
++// Copyright (C) 2009-2014  Volker Ruppert
 +//
 +// This library is free software; you can redistribute it and/or
 +// modify it under the terms of the GNU Lesser General Public
@@ -187,13 +191,22 @@ diff -urN ../bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
 +
 +// builtin configuration handling functions
 +
++void testdev_init_options(void)
++{
++  bx_param_c *root_param = SIM->get_param("user");
++  bx_list_c *menu = new bx_list_c(root_param, "testdev", "Test Device");
++  menu->set_options(bx_list_c::SHOW_PARENT);
++  new bx_param_num_c(menu, "test", "Test Parameter", "", 0, BX_MAX_BIT32U, 0);
++}
++
 +Bit32s testdev_options_parser(const char *context, int num_params, char *params[])
 +{
 +  if (!strcmp(params[0], "testdev")) {
-+    if (!strncmp(params[1], "test=", 5)) {
-+      SIM->get_param_num("user.testdev.test")->set(atoi(&params[1][5]));
-+    } else {
-+      BX_PANIC(("%s: testdev: unknown parameter '%s'", context, params[1]));
++    bx_list_c *base = (bx_list_c*) SIM->get_param("user.testdev");
++    for (int i = 1; i < num_params; i++) {
++      if (SIM->parse_param_from_list(context, params[i], base) < 0) {
++        BX_ERROR(("%s: unknown parameter for testdev ignored.", context));
++      }
 +    }
 +  } else {
 +    BX_PANIC(("%s: unknown directive '%s'", context, params[0]));
@@ -203,8 +216,7 @@ diff -urN ../bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
 +
 +Bit32s testdev_options_save(FILE *fp)
 +{
-+  fprintf(fp, "testdev: test=%d\n", SIM->get_param_num("user.testdev.test")->get());
-+  return 0;
++  return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param("user.testdev"), NULL, 0);
 +}
 +
 +// device plugin entry points
@@ -214,10 +226,7 @@ diff -urN ../bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
 +  theTestDevice = new bx_testdev_c();
 +  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theTestDevice, "testdev");
 +  // add new configuration parameter for the config interface
-+  bx_param_c *root_param = SIM->get_param("user");
-+  bx_list_c *menu = new bx_list_c(root_param, "testdev", "Test Device");
-+  menu->set_options(bx_list_c::SHOW_PARENT);
-+  new bx_param_num_c(menu, "test", "Test Parameter", "", 0, BX_MAX_BIT32U, 0);
++  testdev_init_options();
 +  // register user-defined option for bochsrc and command line
 +  SIM->register_addon_option("testdev", testdev_options_parser, testdev_options_save);
 +  return(0); // Success
@@ -275,9 +284,9 @@ diff -urN ../bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
 +}
 diff -urN ../bochs/user-plugin/testdev.h ./user-plugin/testdev.h
 --- ../bochs/user-plugin/testdev.h	1970-01-01 01:00:00.000000000 +0100
-+++ ./user-plugin/testdev.h	2012-04-14 16:19:30.538406315 +0200
++++ ./user-plugin/testdev.h	2014-05-10 09:27:23.575831428 +0200
 @@ -0,0 +1,40 @@
-+// Copyright (C) 2009-2012  Volker Ruppert
++// Copyright (C) 2009-2014  Volker Ruppert
 +//
 +// This library is free software; you can redistribute it and/or
 +// modify it under the terms of the GNU Lesser General Public
