@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -39,6 +39,7 @@ public:
   virtual void init(void);
   virtual void reset(unsigned type);
   virtual void register_state(void);
+  virtual void after_restore_state(void);
 #if BX_DEBUGGER
   virtual void debug_dump(int argc, char **argv);
 #endif

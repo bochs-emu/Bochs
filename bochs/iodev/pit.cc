@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -167,6 +167,15 @@ void bx_pit_c::register_state(void)
   new bx_shadow_num_c(list, "total_usec", &BX_PIT_THIS s.total_usec);
   bx_list_c *counter = new bx_list_c(list, "counter");
   BX_PIT_THIS s.timer.register_state(counter);
+}
+
+void bx_pit_c::after_restore_state(void)
+{
+  if (BX_PIT_THIS s.speaker_active) {
+    Bit32u value32 = BX_PIT_THIS get_timer(2);
+    if (value32 == 0) value32 = 0x10000;
+    DEV_speaker_beep_on((float)(1193180.0 / value32));
+  }
 }
 
 void bx_pit_c::timer_handler(void *this_ptr)
