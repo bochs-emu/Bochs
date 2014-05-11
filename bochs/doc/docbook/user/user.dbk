@@ -2759,7 +2759,7 @@ client connected.
 
 <section id="compile-vncsrv"><title>Compiling with the VNCSRV interface</title>
 <para>
-  The <ulink url="http://libvncserver.sourceforge.net/">LibVNCServer</ulink> is
+  The <ulink url="http://libvnc.github.io/">LibVNCServer</ulink> is
   a cross-platform library that allows to implement VNC server functionality easily.
   On platforms supported by LibVNCServer Bochs can be compiled with support for
   it this way:
@@ -5755,15 +5755,6 @@ The command line can have any number of commands. However, if none are given,
 
 <chapter id="common-problems">
   <title>Common problems and what to do about them (Troubleshooting)</title>
-  <para>
-    &FIXME;
-    <screen>
-      How to report a panic to the bug tracker?
-      Keyboard mapping problems
-      [...]
-    </screen>
-  </para>
-
   <section id="logevent-panic">
     <title>Bochs panics! What can I do?</title>
     <para>
@@ -5832,7 +5823,42 @@ The command line can have any number of commands. However, if none are given,
   </section>
 </chapter>
 
-<chapter id="mailinglist">
+<chapter id="feedback-support">
+<title>Feedback and Support</title>
+<section id="sf-project-page">
+<title>The Bochs project on SourceForge</title>
+<para>
+The <ulink url="http://sourceforge.net/projects/bochs">Bochs project page</ulink>
+on SourceForge provides these features:
+<itemizedlist>
+<listitem><para>
+Project summary page with screenshots and download statistics
+</para></listitem>
+<listitem><para>
+Download area for Bochs release packages and disk images
+</para></listitem>
+<listitem><para>
+<link linkend="mailinglist">Mailing list</link> archives
+</para></listitem>
+<listitem><para>
+Source code browser
+</para></listitem>
+<listitem><para>
+Tickets section (bug reports, patches, feature requests etc.)
+</para></listitem>
+<listitem><para>
+Discussion boards (e.g. "Help" and "Open Discussion")
+</para></listitem>
+<listitem><para>
+Project news page (used for release announcements)
+</para></listitem>
+</itemizedlist>
+</para>
+<para>
+&FIXME; Requirements for bug reports, patches and feature requests should be added here.
+</para>
+</section>
+<section id="mailinglist">
 <title>Mailing Lists</title>
 <para>
 The Bochs community uses three mailing lists to communicate, called
@@ -5972,6 +5998,7 @@ write to bochs-announce-request or bochs-developers-request.  Don't forget the
 "-request" part or your subscribe message will go to 300+ people.
 </para> </listitem>
 </itemizedlist>
+</section>
 
 </section>
 </chapter>
