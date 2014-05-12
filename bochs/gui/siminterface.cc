@@ -1014,8 +1014,8 @@ void bx_real_sim_c::cleanup_save_restore()
 bx_bool bx_real_sim_c::save_state(const char *checkpoint_path)
 {
   char sr_file[BX_PATHNAME_LEN];
-  char prefix[8];
-  int i, dev, ndev = SIM->get_n_log_modules();
+  char devname[20];
+  int dev, ndev = SIM->get_n_log_modules();
   int type, ntype = SIM->get_max_log_level();
 
   get_param_string(BXPN_RESTORE_PATH)->set(checkpoint_path);
@@ -1026,13 +1026,9 @@ bx_bool bx_real_sim_c::save_state(const char *checkpoint_path)
   FILE *fp = fopen(sr_file, "w");
   if (fp != NULL) {
     for (dev=0; dev<ndev; dev++) {
-      strcpy(prefix, get_prefix(dev));
-      strcpy(prefix, prefix+1);
-      prefix[strlen(prefix) - 1] = 0;
-      i = strlen(prefix) - 1;
-      while ((i >= 0) && (prefix[i] == ' ')) prefix[i--] = 0;
-      if (strlen(prefix) > 0) {
-        fprintf(fp, "%s: ", prefix);
+      strcpy(devname, get_logfn_name(dev));
+      if ((strlen(devname) > 0) && (strcmp(devname, "?"))) {
+        fprintf(fp, "%s: ", devname);
         for (type=0; type<ntype; type++) {
           if (type > 0) fprintf(fp, ", ");
           fprintf(fp, "%s=%s", get_log_level_name(type), get_action_name(get_log_action(dev, type)));
@@ -1071,10 +1067,9 @@ bx_bool bx_real_sim_c::restore_config()
 bx_bool bx_real_sim_c::restore_logopts()
 {
   char logopts[BX_PATHNAME_LEN];
-  char line[512], string[512], prefix[8];
+  char line[512], string[512], devname[20];
   char *ret, *ptr;
-  int d, i, j, dev = 0, type = 0, action = 0;
-  int ndev = SIM->get_n_log_modules();
+  int i, j, p, dev = 0, type = 0, action = 0;
   FILE *fp;
 
   sprintf(logopts, "%s/logopts", get_param_string(BXPN_RESTORE_PATH)->getptr());
@@ -1091,17 +1086,13 @@ bx_bool bx_real_sim_c::restore_logopts()
       if ((ret != NULL) && strlen(line)) {
         ptr = strtok(line, ":");
         while (ptr) {
-          strcpy(string, ptr);
-          while (isspace(string[0])) strcpy(string, string+1);
+          p = 0;
+          while (isspace(ptr[p])) p++;
+          strcpy(string, ptr+p);
           while (isspace(string[strlen(string)-1])) string[strlen(string)-1] = 0;
           if (i == 0) {
-            sprintf(prefix, "[%-5s]", string);
-            dev = -1;
-            for (d = 0; d < ndev; d++) {
-              if (!strcmp(prefix, get_prefix(d))) {
-                dev = d;
-              }
-            }
+            strcpy(devname, string);
+            dev = get_logfn_id(devname);
           } else if (dev >= 0) {
             j = 6;
             if (!strncmp(string, "DEBUG=", 6)) {
@@ -1126,7 +1117,7 @@ bx_bool bx_real_sim_c::restore_logopts()
             set_log_action(dev, type, action);
           } else {
             if (i == 1) {
-              BX_ERROR(("restore_logopts(): log module '%s' not found", prefix));
+              BX_ERROR(("restore_logopts(): log module '%s' not found", devname));
             }
           }
           i++;
