@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010-2013  The Bochs Project
+//  Copyright (C) 2010-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -540,9 +540,9 @@ Bit64s bx_shadow_bool_c::get64()
 void bx_shadow_bool_c::set(Bit64s newval)
 {
   // only change the bitnum bit
-  Bit64s tmp = (newval&1) << bitnum;
-  *(val.pbool) &= ~tmp;
-  *(val.pbool) |= tmp;
+  Bit64s mask = 1 << bitnum;
+  *(val.pbool) &= ~mask;
+  *(val.pbool) |= ((newval & 1) << bitnum);
   if (handler) {
     // the handler can override the new value and/or perform some side effect
     (*handler)(this, 1, newval&1);

@@ -1241,7 +1241,7 @@ bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path,
                   base = (bx_list_c*)param;
                   break;
                 default:
-                  BX_ERROR(("restore_sr_param(): unknown parameter type"));
+                  BX_ERROR(("restore_bochs_param(): unknown parameter type"));
               }
             }
           }
