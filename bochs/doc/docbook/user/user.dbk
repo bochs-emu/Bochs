@@ -5388,13 +5388,12 @@ more information (e.g. report debug messages).
 
 <section id="cpu-models"><title>Pre-defined CPU models</title>
 <para>
-If Bochs is compiled with cpu level 5 or higher the CPUID opcode is supported
-and it can return some information about the cpu model and it's features.
-The following table shows all available CPU models with a short description.
-The amount of choices depends on the CPU features enabled at compile time (3rd column).
-Note that the cpu model selection as well as the <link linkend="bochsopt-cpuid">cpuid</link>
-option does not affect the hardware emulation, but the return values of the
-CPUID opcode.
+If Bochs is compiled with cpu level 5 or higher the CPUID opcode is supported,
+it can return some information about the cpu model and it's features. When using
+a pre-defined CPU model in Bochs the features reported by CPUID are set up
+according to the model's specification. The following table shows all available
+CPU models with a short description. The amount of choices depends on the CPU
+features enabled at compile time (3rd column).
 </para>
 <table><title>Bochs CPU models</title>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
