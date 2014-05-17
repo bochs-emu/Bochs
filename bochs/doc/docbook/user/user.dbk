@@ -2894,8 +2894,8 @@ happened. The following issues can be fixed by modifying the configure options u
   <listitem><para>development package for library not installed (e.g. for <option>--with-wx</option>)</para></listitem>
 </itemizedlist>
 If the configure issue cannot be fixed by option changes and / or installing
-development packages / tools it should be reported in the &devlist; or the SF bug
-tracker for the Bochs project.
+development packages / tools it should be reported in the &devlist; or the <link linkend="sf-trackers">SF bug
+tracker</link> for the Bochs project.
 </para>
 </section>
 
@@ -2933,26 +2933,6 @@ to the location of the compiled EXE file.
 </para>
 </section>
 
-<section><title>Reporting errors related to the build process</title>
-<para>
-When reporting errors while building Boche to the &devlist; or the SF bug tracker
-for the Bochs project, this information is required to fix the issue.
-<itemizedlist>
-  <listitem><para>host platorm / build environment</para></listitem>
-  <listitem><para>Bochs release version or SVN revision</para></listitem>
-  <listitem><para>configure options used</para></listitem>
-  <listitem><para>full error message</para></listitem>
-  <listitem><para>config.log output if configure failure</para></listitem>
-  <listitem><para>source file name and line number if compile error</para></listitem>
-</itemizedlist>
-</para>
-<para>
-Before reporting us the issue, make sure that a similar one hasn't been already
-reported or someone created a patch to fix it. If you are familiar with C++
-and you can write some code to fix your problem, you can post it in the &devlist;
-or submit the patch in SF patch tracker for Bochs.
-</para>
-</section>
 </section>
 </section> <!-- end of Compiling Bochs -->
 </chapter>
@@ -5093,7 +5073,7 @@ should be used, unless the guest OS has the capability to turn off the computer 
 <para>
 If a Bochs runtime issue cannot be fixed by configuration changes and it has not yet
 been reported in the &devlist; or the SF trackers for Bochs, it should be reported in
-the mailing list or the SF bug tracker for the Bochs project.
+the mailing list or the <link linkend="sf-trackers">SF bug tracker</link> for the Bochs project.
 </para>
 
 <section id="commandline"><title>Command line arguments</title>
@@ -5388,9 +5368,9 @@ more information (e.g. report debug messages).
 
 <section id="cpu-models"><title>Pre-defined CPU models</title>
 <para>
-If Bochs is compiled with cpu level 5 or higher the CPUID opcode is supported,
-it can return some information about the cpu model and it's features. When using
-a pre-defined CPU model in Bochs the features reported by CPUID are set up
+If Bochs is compiled with cpu level 5 or higher the CPUID opcode is supported
+and it can return some information about the cpu model and it's features. When
+using a pre-defined CPU model in Bochs the features reported by CPUID are set up
 according to the model's specification. The following table shows all available
 CPU models with a short description. The amount of choices depends on the CPU
 features enabled at compile time (3rd column).
@@ -5853,9 +5833,57 @@ Project news page (used for release announcements)
 </para></listitem>
 </itemizedlist>
 </para>
+<section id="sf-trackers">
+<title>SourceForge tickets section (bug and patch trackers)</title>
 <para>
-&FIXME; Requirements for bug reports, patches and feature requests should be added here.
+There are some requirements when submitting bug reports, patches and feature
+requests for Bochs to make it easier to reproduce bugs and test patches.
 </para>
+<section><title>Reporting errors from Bochs compilation</title>
+<para>
+When reporting errors while building Bochs to the &devlist; or the SF bug
+tracker for the Bochs project, this information is required to fix the issue:
+<itemizedlist>
+  <listitem><para>host platorm / build environment</para></listitem>
+  <listitem><para>Bochs release version or SVN revision</para></listitem>
+  <listitem><para>configure options used</para></listitem>
+  <listitem><para>full error message</para></listitem>
+  <listitem><para>config.log output if configure failure</para></listitem>
+  <listitem><para>source file name and line number if compile error</para></listitem>
+</itemizedlist>
+</para>
+<para>
+Before reporting us the issue, make sure that a similar one hasn't been already
+reported or someone created a patch to fix it. If you are familiar with C++
+and you can write some code to fix your problem, you can post it in the &devlist;
+or submit the patch in SF patch tracker for Bochs.
+</para>
+</section>
+<section><title>Reporting Bochs runtime issues</title>
+<para>
+If Bochs does not work properly (e.g. panic, segfault, malfunction of emulated device)
+we need some information to find out what's going on:
+<itemizedlist>
+  <listitem><para>Bochs version used (version number if binary release / SVN revision
+  if self-compiled)</para></listitem>
+  <listitem><para>host platorm / build environment (if self-compiled)</para></listitem>
+  <listitem><para>bochsrc options used</para></listitem>
+  <listitem><para>error message (if panic or program termination)</para></listitem>
+  <listitem><para>log file output (related section only if too big)</para></listitem>
+</itemizedlist>
+</para>
+</section>
+<section><title>Submitting a patch for Bochs</title>
+<para>
+Patches for Bochs should be provided in the "unified diff" format. In addition
+to the patch file and a detailed description this information is required:
+<itemizedlist>
+  <listitem><para>patch applies to Bochs release version / SVN revision</para></listitem>
+  <listitem><para>test case (if required)</para></listitem>
+</itemizedlist>
+</para>
+</section>
+</section>
 </section>
 <section id="mailinglist">
 <title>Mailing Lists</title>
@@ -7717,7 +7745,6 @@ Related links
 <para>
 &FIXME; add links
 <itemizedlist>
-<listitem> <para> Cosimulation </para> </listitem>
 <listitem> <para> Instrumentation </para> </listitem>
 </itemizedlist>
 </para>

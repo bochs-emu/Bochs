@@ -149,12 +149,6 @@ svnnotify --repos-path $1 --revision $2 -O -C -d -e 98304 -t bochs-cvs@lists.sou
 
 </section> <!--end of "Using SVN write access" -->
 
-      <section id="trackers"><title>SourceForge bug, feature, and patch trackers</title>
-         <para>
-          &FIXME;
-         </para>
-      </section>
-
 <section id="other"><title>Ideas for other sections</title>
 <para>
 <screen>
@@ -2606,12 +2600,6 @@ with non-interesting ones.</para></listitem>
 </itemizedlist>
 </para>
 </section>
-      <section id="patches"><title>patches:</title>
-      <para>
-      &FIXME;
-      how to make, where to submit, what happens then?
-      </para>
-      </section>
 <section id="svn-release"><title>Building a Bochs release</title>
 <section><title>Preparing source files and SVN</title>
 <para>
