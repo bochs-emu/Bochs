@@ -499,8 +499,8 @@ The table below shows the additional parameter types for save/restore.
 </row>
 <row>
 <entry>bx_shadow_bool_c</entry>
-<entry>This parameter type stores a pointer to a boolean variable (using bit #0
-of a numerical one).</entry>
+<entry>This parameter type stores a pointer to a boolean variable (bit #0 only) or
+a numerical one (only one selected bit).</entry>
 </row>
 <row>
 <entry>bx_shadow_data_c</entry>
@@ -2382,27 +2382,7 @@ as an example.
 
 </chapter>
 
-<chapter id="debugger"><title>Debugger</title>
-      <section><title>compile with debugger support</title>
-      <para>
-      &FIXME;
-      </para>
-      </section>
-      <section id="debugger-get-started"><title>get started in debugger</title>
-      <para>
-      &FIXME;
-      </para>
-      </section>
-      <section id="debugger-commands"><title>command reference</title>
-      <para>
-      &FIXME;
-      </para>
-      </section>
-      <section id="debugger-techniques"><title>techniques</title>
-      <para>
-      &FIXME;
-      </para>
-      </section>
+<chapter id="debugger-advanced"><title>Advanced debugger usage</title>
 <section id="iodebug"><title>I/O Interface to Bochs Debugger</title>
 <para>
 This device was added by Dave Poirier (eks@void-core.2y.net).
@@ -2567,6 +2547,16 @@ start:
 </screen>
 </para>
 </section>
+</section>
+<section id="instrumentation"><title>The instrumentation feature</title>
+<para>
+&FIXME; Not written yet.
+</para>
+</section>
+<section id="debugger-internals"><title>Bochs debugger internals</title>
+<para>
+&FIXME; Not written yet (take stuff from bxdebugger.html).
+</para>
 </section>
 </chapter>
 

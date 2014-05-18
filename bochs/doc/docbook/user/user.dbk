@@ -5882,6 +5882,11 @@ to the patch file and a detailed description this information is required:
   <listitem><para>test case (if required)</para></listitem>
 </itemizedlist>
 </para>
+<para>
+When you are are interested in writing a patch to fix bugs or add new features,
+you should have a look at the <ulink url="../development/about-the-code.html">developer documentation</ulink>.
+For some parts of the Bochs code we have already written some basic information.
+</para>
 </section>
 </section>
 </section>
@@ -7743,10 +7748,8 @@ The symbol file consists of zero or more lines of the format <screen>"%x %s"</sc
 Related links
 </title>
 <para>
-&FIXME; add links
-<itemizedlist>
-<listitem> <para> Instrumentation </para> </listitem>
-</itemizedlist>
+&FIXME; For information on advanced debugger usage see the <ulink url="../development/debugger-advanced.html">developer documentation</ulink>
+(under construction).
 </para>
 </section>
 </section><!-- end: Using Bochs internal debugger -->
