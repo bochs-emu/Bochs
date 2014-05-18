@@ -730,7 +730,7 @@ void resize_main_window()
   RECT R;
   int toolbar_y = 0;
   int statusbar_y = 0;
-  unsigned long mainStyle;
+  unsigned long mainStyle, simExStyle;
 
   if (IsWindowVisible(hwndTB)) {
     toolbarVisible = TRUE;
@@ -753,14 +753,18 @@ void resize_main_window()
         "Going fullscreen",
         MB_APPLMODAL);
       queryFullScreen = TRUE;
+      enq_key_event(0x38, BX_KEY_RELEASED); // send lost ALT keyup event
     }
     // hide toolbar and status bars to get some additional space
     ShowWindow(hwndTB, SW_HIDE);
     ShowWindow(hwndSB, SW_HIDE);
-    // hide title bar
+    // hide title bar and border
     mainStyle = GetWindowLong(stInfo.mainWnd, GWL_STYLE);
-    mainStyle &= ~(WS_CAPTION | WS_BORDER);
+    mainStyle &= ~WS_CAPTION;
     SetWindowLong(stInfo.mainWnd, GWL_STYLE, mainStyle);
+    simExStyle = GetWindowLong(stInfo.simWnd, GWL_EXSTYLE);
+    simExStyle &= ~WS_EX_CLIENTEDGE;
+    SetWindowLong(stInfo.simWnd, GWL_EXSTYLE, simExStyle);
     // maybe need to adjust stInfo.simWnd here also?
     saveParent = SetParent(stInfo.mainWnd, desktopWindow);
     if (saveParent) {
@@ -776,8 +780,11 @@ void resize_main_window()
     }
     // put back the title bar, border, etc...
     mainStyle = GetWindowLong(stInfo.mainWnd, GWL_STYLE);
-    mainStyle |= WS_CAPTION | WS_BORDER;
+    mainStyle |= WS_CAPTION;
     SetWindowLong(stInfo.mainWnd, GWL_STYLE, mainStyle);
+    simExStyle = GetWindowLong(stInfo.simWnd, GWL_EXSTYLE);
+    simExStyle |= WS_EX_CLIENTEDGE;
+    SetWindowLong(stInfo.simWnd, GWL_EXSTYLE, simExStyle);
     if (toolbarVisible) ShowWindow(hwndTB, SW_SHOW);
     if (statusVisible) ShowWindow(hwndSB, SW_SHOW);
     SetRect(&R, 0, 0, stretched_x, stretched_y);
