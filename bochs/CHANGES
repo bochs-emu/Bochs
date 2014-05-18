@@ -1,4 +1,4 @@
-Changes after 2.6.2 (updated May  3, 2014):
+Changes after 2.6.2 (updated May 18, 2014):
 
 - CPU
   - Bugfixes for CPU emulation correctness (critical fixes for XSAVE, VMX, TBM/BMI and RDRAND instructions)
@@ -26,6 +26,7 @@ Changes after 2.6.2 (updated May  3, 2014):
 - General
   - Increased max. device log prefix size to 6 and added / modified prefixes
   - plugin version now uses the native DLL handling code for all Windows ports
+  - critical bugfixes in save/restore functionality
 
 - Configure and compile
   - configure and compilation fixes for Cygwin and Visual Studio environment
