@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2013  The Bochs Project
+//  Copyright (C) 2002-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -117,6 +117,8 @@ static RECT desktop;
 static BOOL queryFullScreen = FALSE;
 static int desktop_x, desktop_y;
 static BOOL toolbarVisible, statusVisible;
+static BOOL fullscreenToggle;
+static BOOL fullscreenMode;
 
 // Text mode screen stuff
 static unsigned prev_cursor_x = 0;
@@ -602,6 +604,8 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   desktop_x = desktop.right - desktop.left;
   desktop_y = desktop.bottom - desktop.top;
   hotKeyReceiver = stInfo.simWnd;
+  fullscreenToggle = FALSE;
+  fullscreenMode = FALSE;
   BX_INFO(("Desktop Window dimensions: %d x %d", desktop_x, desktop_y));
 
   static RGBQUAD black_quad={ 0, 0, 0, 0};
@@ -734,14 +738,9 @@ void resize_main_window()
 
   if (IsWindowVisible(hwndTB)) {
     toolbarVisible = TRUE;
-    GetWindowRect(hwndTB, &R);
-    toolbar_y = R.bottom - R.top;
   }
-
   if (IsWindowVisible(hwndSB)) {
     statusVisible = TRUE;
-    GetWindowRect(hwndSB, &R);
-    statusbar_y = R.bottom - R.top;
   }
 
   // stretched_x and stretched_y were set in dimension_update()
@@ -772,6 +771,8 @@ void resize_main_window()
       SetWindowPos(stInfo.mainWnd, HWND_TOPMOST, desktop.left, desktop.top,
        desktop.right, desktop.bottom, SWP_SHOWWINDOW);
     }
+    fullscreenToggle = FALSE;
+    fullscreenMode = TRUE;
   } else {
     if (saveParent) {
       BX_DEBUG(("Restoring parent window"));
@@ -785,8 +786,16 @@ void resize_main_window()
     simExStyle = GetWindowLong(stInfo.simWnd, GWL_EXSTYLE);
     simExStyle |= WS_EX_CLIENTEDGE;
     SetWindowLong(stInfo.simWnd, GWL_EXSTYLE, simExStyle);
-    if (toolbarVisible) ShowWindow(hwndTB, SW_SHOW);
-    if (statusVisible) ShowWindow(hwndSB, SW_SHOW);
+    if (toolbarVisible) {
+      ShowWindow(hwndTB, SW_SHOW);
+      GetWindowRect(hwndTB, &R);
+      toolbar_y = R.bottom - R.top;
+    }
+    if (statusVisible) {
+      ShowWindow(hwndSB, SW_SHOW);
+      GetWindowRect(hwndSB, &R);
+      statusbar_y = R.bottom - R.top;
+    }
     SetRect(&R, 0, 0, stretched_x, stretched_y);
     DWORD style = GetWindowLong(stInfo.simWnd, GWL_STYLE);
     DWORD exstyle = GetWindowLong(stInfo.simWnd, GWL_EXSTYLE);
@@ -796,6 +805,8 @@ void resize_main_window()
     SetWindowPos(stInfo.mainWnd, HWND_TOP, 0, 0, R.right - R.left,
                R.bottom - R.top + toolbar_y + statusbar_y,
                SWP_NOMOVE | SWP_NOZORDER);
+    fullscreenToggle = FALSE;
+    fullscreenMode = FALSE;
   }
   fix_size = FALSE;
 }
@@ -1260,13 +1271,14 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     // see http://msdn2.microsoft.com/en-us/library/ms646267.aspx
     if ((wParam == VK_RETURN) &&
         ((HIWORD(lParam) & BX_SYSKEY) == (KF_ALTDOWN | KF_UP))) {
+      fullscreenToggle = TRUE;
       if (!saveParent) {
         BX_INFO(("entering fullscreen mode"));
         theGui->dimension_update(desktop_x, desktop_y,
                                  0, 0, current_bpp);
       } else {
         BX_INFO(("leaving fullscreen mode"));
-        theGui->dimension_update(dimension_x, desktop_y - 1,
+        theGui->dimension_update(dimension_x, dimension_y,
                                0, 0, current_bpp);
       }
     } else {
@@ -1290,13 +1302,14 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     // see http://msdn2.microsoft.com/en-us/library/ms646267.aspx
     if (wParam == VK_RETURN) {
       if ((HIWORD(lParam) & BX_SYSKEY) == KF_ALTDOWN) {
+        fullscreenToggle = TRUE;
         if (!saveParent) {
           BX_INFO(("entering fullscreen mode"));
           theGui->dimension_update(desktop_x, desktop_y,
                                    0, 0, current_bpp);
         } else {
           BX_INFO(("leaving fullscreen mode"));
-          theGui->dimension_update(dimension_x, desktop_y - 1,
+          theGui->dimension_update(dimension_x, dimension_y,
                                    0, 0, current_bpp);
         }
       }
@@ -1862,22 +1875,27 @@ void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
 void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
-  guest_textmode = (fheight > 0);
-  guest_xres = x;
-  guest_yres = y;
-  if (guest_textmode) {
-    text_cols = x / fwidth;
-    text_rows = y / fheight;
-    xChar = fwidth;
-    yChar = fheight;
+  if (!fullscreenToggle) {
+    guest_textmode = (fheight > 0);
+    guest_xres = x;
+    guest_yres = y;
+    if (guest_textmode) {
+      text_cols = x / fwidth;
+      text_rows = y / fheight;
+      xChar = fwidth;
+      yChar = fheight;
+    }
+
+    if ((x == dimension_x) && (y == dimension_y) && (bpp == current_bpp))
+      return;
+    dimension_x = x;
+    dimension_y = y;
   }
 
-  if (x == dimension_x && y == dimension_y && bpp == current_bpp)
-    return;
-  dimension_x = x;
-  dimension_y = y;
-  stretched_x = dimension_x;
-  stretched_y = dimension_y;
+  if (!fullscreenMode || fullscreenToggle) {
+    stretched_x = x;
+    stretched_y = y;
+  }
   stretch_factor = 1;
   if (guest_textmode && (stretched_x<400)) {
     stretched_x *= 2;
@@ -1913,9 +1931,11 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
 
   BX_INFO(("dimension update x=%d y=%d fontheight=%d fontwidth=%d bpp=%d", x, y, fheight, fwidth, bpp));
 
-  host_xres = x;
-  host_yres = y;
-  host_bpp = bpp;
+  if (!fullscreenToggle) {
+    host_xres = x;
+    host_yres = y;
+    host_bpp = bpp;
+  }
 }
 
 
