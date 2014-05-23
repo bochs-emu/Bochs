@@ -117,7 +117,6 @@ static RECT desktop;
 static BOOL queryFullScreen = FALSE;
 static int desktop_x, desktop_y;
 static BOOL toolbarVisible, statusVisible;
-static BOOL fullscreenToggle;
 static BOOL fullscreenMode;
 
 // Text mode screen stuff
@@ -604,7 +603,6 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   desktop_x = desktop.right - desktop.left;
   desktop_y = desktop.bottom - desktop.top;
   hotKeyReceiver = stInfo.simWnd;
-  fullscreenToggle = FALSE;
   fullscreenMode = FALSE;
   BX_INFO(("Desktop Window dimensions: %d x %d", desktop_x, desktop_y));
 
@@ -765,9 +763,10 @@ void set_fullscreen_mode(BOOL enable)
       SetWindowPos(stInfo.mainWnd, HWND_TOPMOST, desktop.left, desktop.top,
        desktop.right, desktop.bottom, SWP_SHOWWINDOW);
     }
-    fullscreenToggle = FALSE;
     fullscreenMode = TRUE;
   } else {
+    stretched_x = dimension_x;
+    stretched_y = dimension_y;
     if (saveParent) {
       BX_DEBUG(("Restoring parent window"));
       SetParent(stInfo.mainWnd, saveParent);
@@ -780,12 +779,11 @@ void set_fullscreen_mode(BOOL enable)
     simExStyle = GetWindowLong(stInfo.simWnd, GWL_EXSTYLE);
     simExStyle |= WS_EX_CLIENTEDGE;
     SetWindowLong(stInfo.simWnd, GWL_EXSTYLE, simExStyle);
-    fullscreenToggle = FALSE;
     fullscreenMode = FALSE;
   }
 }
 
-void resize_main_window()
+void resize_main_window(BOOL disable_fullscreen)
 {
   RECT R;
   int toolbar_y = 0;
@@ -798,23 +796,26 @@ void resize_main_window()
     statusVisible = TRUE;
   }
 
-  // stretched_x and stretched_y were set in dimension_update()
-  // if we need to do any additional resizing, do it now
-  if ((desktop_y > 0) && (stretched_y >= (unsigned)desktop_y)) {
+  if ((desktop_y > 0) && (dimension_y >= (unsigned)desktop_y)) {
     set_fullscreen_mode(true);
   } else {
-    if (fullscreenMode) {
+    if (fullscreenMode && disable_fullscreen) {
       set_fullscreen_mode(false);
     }
-    if (toolbarVisible) {
-      ShowWindow(hwndTB, SW_SHOW);
-      GetWindowRect(hwndTB, &R);
-      toolbar_y = R.bottom - R.top;
+    if (stretch_factor > 1) {
+      stretched_x *= stretch_factor;
     }
-    if (statusVisible) {
-      ShowWindow(hwndSB, SW_SHOW);
-      GetWindowRect(hwndSB, &R);
-      statusbar_y = R.bottom - R.top;
+    if (!fullscreenMode) {
+      if (toolbarVisible) {
+        ShowWindow(hwndTB, SW_SHOW);
+        GetWindowRect(hwndTB, &R);
+        toolbar_y = R.bottom - R.top;
+      }
+      if (statusVisible) {
+        ShowWindow(hwndSB, SW_SHOW);
+        GetWindowRect(hwndSB, &R);
+        statusbar_y = R.bottom - R.top;
+      }
     }
     SetRect(&R, 0, 0, stretched_x, stretched_y);
     DWORD style = GetWindowLong(stInfo.simWnd, GWL_STYLE);
@@ -823,10 +824,9 @@ void resize_main_window()
     style = GetWindowLong(stInfo.mainWnd, GWL_STYLE);
     AdjustWindowRect(&R, style, FALSE);
     SetWindowPos(stInfo.mainWnd, HWND_TOP, 0, 0, R.right - R.left,
-               R.bottom - R.top + toolbar_y + statusbar_y,
-               SWP_NOMOVE | SWP_NOZORDER);
+                 R.bottom - R.top + toolbar_y + statusbar_y,
+                 SWP_NOMOVE | SWP_NOZORDER);
   }
-  fix_size = FALSE;
 }
 
 // This thread controls the GUI window.
@@ -952,7 +952,7 @@ DWORD WINAPI UIThread(LPVOID)
     ReleaseDC(stInfo.simWnd, hdc);
 
     if (MemoryBitmap && MemoryDC) {
-      resize_main_window();
+      resize_main_window(FALSE);
       ShowWindow(stInfo.mainWnd, SW_SHOW);
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
       if (gui_debug) {
@@ -1147,6 +1147,7 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     }
     if (fix_size) {
       set_fullscreen_mode(TRUE);
+      fix_size = FALSE;
     }
     return 0;
 
@@ -1289,14 +1290,12 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     // see http://msdn2.microsoft.com/en-us/library/ms646267.aspx
     if ((wParam == VK_RETURN) &&
         ((HIWORD(lParam) & BX_SYSKEY) == (KF_ALTDOWN | KF_UP))) {
-      fullscreenToggle = TRUE;
       if (!saveParent) {
         BX_INFO(("entering fullscreen mode"));
         set_fullscreen_mode(TRUE);
       } else {
         BX_INFO(("leaving fullscreen mode"));
-        theGui->dimension_update(dimension_x, dimension_y,
-                               yChar, xChar, current_bpp);
+        resize_main_window(TRUE);
       }
     } else {
       if (wParam == VK_CONTROL) {
@@ -1319,14 +1318,12 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     // see http://msdn2.microsoft.com/en-us/library/ms646267.aspx
     if (wParam == VK_RETURN) {
       if ((HIWORD(lParam) & BX_SYSKEY) == KF_ALTDOWN) {
-        fullscreenToggle = TRUE;
         if (!saveParent) {
           BX_INFO(("entering fullscreen mode"));
           set_fullscreen_mode(TRUE);
         } else {
           BX_INFO(("leaving fullscreen mode"));
-          theGui->dimension_update(dimension_x, dimension_y,
-                                   yChar, xChar, current_bpp);
+          resize_main_window(TRUE);
         }
       }
     }
@@ -1901,22 +1898,17 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
     text_rows = y / fheight;
   }
 
-  if (!fullscreenToggle) {
-    if ((x == dimension_x) && (y == dimension_y) && (bpp == current_bpp))
-      return;
-    dimension_x = x;
-    dimension_y = y;
-  }
+  if ((x == dimension_x) && (y == dimension_y) && (bpp == current_bpp))
+    return;
+  dimension_x = x;
+  dimension_y = y;
 
-  if (!fullscreenMode || fullscreenToggle) {
+  if (!fullscreenMode) {
     stretched_x = x;
     stretched_y = y;
   }
   stretch_factor = 1;
   if (guest_textmode && (x < 400)) {
-    if (!fullscreenMode || fullscreenToggle) {
-      stretched_x *= 2;
-    }
     stretch_factor = 2;
   }
 
@@ -1945,15 +1937,13 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
   }
   current_bpp = guest_bpp = bpp;
 
-  resize_main_window();
+  resize_main_window(FALSE);
 
   BX_INFO(("dimension update x=%d y=%d fontheight=%d fontwidth=%d bpp=%d", x, y, fheight, fwidth, bpp));
 
-  if (!fullscreenToggle) {
-    host_xres = x;
-    host_yres = y;
-    host_bpp = bpp;
-  }
+  host_xres = x;
+  host_yres = y;
+  host_bpp = bpp;
 }
 
 
@@ -2063,7 +2053,7 @@ void bx_win32_gui_c::show_headerbar(void)
   if (!IsWindowVisible(hwndTB)) {
     SendMessage(hwndTB, TB_AUTOSIZE, 0, 0);
     ShowWindow(hwndTB, SW_SHOW);
-    resize_main_window();
+    resize_main_window(FALSE);
     bx_gui->set_tooltip(bx_gui->get_mouse_headerbar_id(), szMouseTooltip);
   }
 }
