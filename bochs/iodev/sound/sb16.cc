@@ -1247,10 +1247,10 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
   DSP.dma.chunkcount = 0;
 
   Bit32u sampledatarate = (Bit32u) DSP.dma.samplerate * (Bit32u) DSP.dma.bps;
-  if ((DSP.dma.bits == 16) && (BX_SB16_DMAH != 0)) {
-    DSP.dma.count = (DSP.dma.blocklength + 1) * (DSP.dma.bps / 2) - 1;
+  if (DSP.dma.bits == 8 || (DSP.dma.bits == 16 && BX_SB16_DMAH != 0)) {
+    DSP.dma.count = DSP.dma.blocklength;
   } else {
-    DSP.dma.count = (DSP.dma.blocklength + 1) * DSP.dma.bps - 1;
+    DSP.dma.count = ((DSP.dma.blocklength + 1) << 1) - 1;
   }
   DSP.dma.timer = BX_SB16_THIS dmatimer * BX_DMA_BUFFER_SIZE / sampledatarate;
 
@@ -1517,10 +1517,10 @@ void bx_sb16_c::dsp_dmadone()
   // if auto-DMA, reinitialize
   if (DSP.dma.mode == 2)
   {
-      if ((DSP.dma.bits == 16) && (BX_SB16_DMAH != 0)) {
-        DSP.dma.count = (DSP.dma.blocklength + 1) * (DSP.dma.bps / 2) - 1;
+      if (DSP.dma.bits == 8 || (DSP.dma.bits == 16 && BX_SB16_DMAH != 0)) {
+        DSP.dma.count = DSP.dma.blocklength;
       } else {
-        DSP.dma.count = (DSP.dma.blocklength + 1) * DSP.dma.bps - 1;
+        DSP.dma.count = ((DSP.dma.blocklength + 1) << 1) - 1;
       }
       writelog(WAVELOG(4), "auto-DMA reinitializing to length %d", DSP.dma.count);
   }
