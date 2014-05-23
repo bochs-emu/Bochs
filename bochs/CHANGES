@@ -1,4 +1,7 @@
-Changes after 2.6.2 (updated May 18, 2014):
+Changes in 2.6.5 (not yet released - updated May 23, 2014):
+
+Brief summary :
+  TODO
 
 - CPU
   - Bugfixes for CPU emulation correctness (critical fixes for XSAVE, VMX, TBM/BMI and RDRAND instructions)
@@ -53,6 +56,7 @@ Changes after 2.6.2 (updated May 18, 2014):
     - slirp/vnet: all supported TFTP extension options implemented now
   - Sound
     - SB16 / ES1370: added volume control support for wave output
+    - SB16: fixed audio distortion when playing stereo wave files
     - ES1370: added 'wavemode' support similar to the SB16
     - soundwin: added capability to specify the ID of the MIDI device to use
   - Serial
@@ -70,6 +74,7 @@ Changes after 2.6.2 (updated May 18, 2014):
   - RFB: don't wait for client connection on startup if timeout is set to 0
   - Added mouse wheel support to the rfb, vncsrv and wx guis
   - wx: added viewer window for the Bochs log output
+  - win32: fixes and improvements for the fullscreen mode
 
 - Tools
   - bximage utility rewritten in C++ for image creation, conversion, resize
