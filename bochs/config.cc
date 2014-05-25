@@ -2305,6 +2305,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     if (num_params == 3) {
       if (!strncmp(params[2], "options=", 8)) {
         SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->set(&params[2][8]);
+      } else {
+        PARSE_ERR(("%s: display_library directive malformed", context));
       }
     }
   } else if ((!strcmp(params[0], "floppya")) ||
