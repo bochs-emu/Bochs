@@ -1,7 +1,14 @@
-Changes in 2.6.5 (not yet released - updated May 23, 2014):
+Changes in 2.6.5 (not yet released - updated May 26, 2014):
 
 Brief summary :
-  TODO
+- TODO: cpu, debugger, ...
+- Gui debugger output window now can be used as a log viewer
+- Added built-in slirp (user-mode networking) support (ported from Qemu)
+- Added global sound config option and volume control support to the devices
+- Added new experimental gui 'vncsrv" using the LibVNCServer library
+- Rewrite of the bximage utility in C++ for image creation, conversion and resize
+
+Detailed change log :
 
 - CPU
   - Bugfixes for CPU emulation correctness (critical fixes for XSAVE, VMX, TBM/BMI and RDRAND instructions)
@@ -42,7 +49,7 @@ Brief summary :
   - Added new bochsrc option to control the speaker output mode
   - Added support to specify the initial time for 'clock' option in ctime(3) string format
   - Added support for the LTDL_LIBRARY_PATH variable with MSVC plugins
-  - All SB16 / ES1370 are now changable at runtime
+  - All SB16 / ES1370 options are now changable at runtime
   - textconfig: added menu item for saving configuration at runtime
   - Added bochsrc option for the Voodoo Graphics emulation (experimental)
 
