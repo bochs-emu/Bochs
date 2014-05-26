@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2013  The Bochs Project
+//  Copyright (C) 2002-2014  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -202,7 +202,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   PLUG_load_plugin(dma, PLUGTYPE_CORE);
   PLUG_load_plugin(pic, PLUGTYPE_CORE);
   PLUG_load_plugin(pit, PLUGTYPE_CORE);
-  PLUG_load_plugin(floppy, PLUGTYPE_CORE);
   vga_ext = SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr();
   if (!strcmp(vga_ext, "cirrus")) {
 #if BX_SUPPORT_CLGD54XX
@@ -213,6 +212,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   } else {
     PLUG_load_plugin(vga, PLUGTYPE_CORE);
   }
+  PLUG_load_plugin(floppy, PLUGTYPE_CORE);
 
 #if BX_SUPPORT_APIC
   PLUG_load_plugin(ioapic, PLUGTYPE_STANDARD);

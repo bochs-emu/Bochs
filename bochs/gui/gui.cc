@@ -177,31 +177,20 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
                           BX_SAVE_RESTORE_BMAP_X, BX_SAVE_RESTORE_BMAP_Y);
 
   // Add the initial bitmaps to the headerbar, and enable callback routine, for use
-  // when that bitmap is clicked on
+  // when that bitmap is clicked on. The floppy and cdrom devices are not
+  // initialized yet. so we just set the bitmaps to ejected for now.
 
   // Floppy A:
-  BX_GUI_THIS floppyA_status = (SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->get() == BX_INSERTED);
-  if (BX_GUI_THIS floppyA_status)
-    BX_GUI_THIS floppyA_hbar_id = headerbar_bitmap(BX_GUI_THIS floppyA_bmap_id,
-                          BX_GRAVITY_LEFT, floppyA_handler);
-  else
-    BX_GUI_THIS floppyA_hbar_id = headerbar_bitmap(BX_GUI_THIS floppyA_eject_bmap_id,
+  BX_GUI_THIS floppyA_hbar_id = headerbar_bitmap(BX_GUI_THIS floppyA_eject_bmap_id,
                           BX_GRAVITY_LEFT, floppyA_handler);
   BX_GUI_THIS set_tooltip(BX_GUI_THIS floppyA_hbar_id, "Change floppy A: media");
 
   // Floppy B:
-  BX_GUI_THIS floppyB_status = (SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->get() == BX_INSERTED);
-  if (BX_GUI_THIS floppyB_status)
-    BX_GUI_THIS floppyB_hbar_id = headerbar_bitmap(BX_GUI_THIS floppyB_bmap_id,
-                          BX_GRAVITY_LEFT, floppyB_handler);
-  else
-    BX_GUI_THIS floppyB_hbar_id = headerbar_bitmap(BX_GUI_THIS floppyB_eject_bmap_id,
+  BX_GUI_THIS floppyB_hbar_id = headerbar_bitmap(BX_GUI_THIS floppyB_eject_bmap_id,
                           BX_GRAVITY_LEFT, floppyB_handler);
   BX_GUI_THIS set_tooltip(BX_GUI_THIS floppyB_hbar_id, "Change floppy B: media");
 
-  // CDROM,
-  // the harddrive object is not initialised yet,
-  // so we just set the bitmap to ejected for now
+  // First CD-ROM
   BX_GUI_THIS cdrom1_hbar_id = headerbar_bitmap(BX_GUI_THIS cdrom1_eject_bmap_id,
                           BX_GRAVITY_LEFT, cdrom1_handler);
   BX_GUI_THIS set_tooltip(BX_GUI_THIS cdrom1_hbar_id, "Change first CDROM media");
