@@ -680,10 +680,27 @@ The <emphasis>put()</emphasis> methods are used to set up the log module prefix 
 that appears in the log file and the log module name that appears in the config
 interface. If the name is not specified, the prefix is used instead.
 </para></listitem>
+<listitem><para>
+The <emphasis>setio()</emphasis> method sets up the <emphasis>iofunctions</emphasis>
+class for the log file output. This method is only used by the <emphasis>logfunctions</emphasis>
+constructors.
+</para></listitem>
+<listitem><para>
+The <emphasis>getonoff()</emphasis> and <emphasis>setonoff()</emphasis> methods
+are used by the config interface to display and change the log actions for a
+Bochs facility.
+</para></listitem>
+<listitem><para>
+The <emphasis>get_default_action()</emphasis> and <emphasis>set_default_action()</emphasis>
+methods are also used by the config interface to set up the default action for a
+log level.
+</para></listitem>
+<listitem><para>
+The <emphasis>get_name()</emphasis> and <emphasis>getprefix()</emphasis> methods return
+the strings set up with the <emphasis>put()</emphasis> method. The config interface
+is also using them to build the menu / dialog to set up the log functions.
+</para></listitem>
 </itemizedlist>
-</para>
-<para>
-&FIXME; To be continued.
 </para>
 </section>
 </section>
@@ -1495,7 +1512,6 @@ site.
 </section>
 
 <section><title>int stopwaveplayback()</title>
-
 <para>
 This function is called at the end of a wave data transfer. It should do the following:
 </para>
@@ -1509,9 +1525,9 @@ and it's not going to be opened soon. Which is almost impossible to tell.
 </section>
 
 <section><title>int closewaveoutput()</title>
-
 <para>
-This function is called just before Bochs exits. It should do the following:
+This function is called just before the Bochs simulation quits. It should do
+the following:
 </para>
 
 <itemizedlist>
@@ -1566,7 +1582,10 @@ Store the device name so that the device can be opened in <emphasis>startwaverec
 
 <para>
 In addition to this the record handler value should be stored and the record timer
-should be registered.
+should be registered. This is the definition of record handler callback function:
+<screen>
+typedef Bit32u (*sound_record_handler_t)(void *arg, Bit32u len);
+</screen>
 </para>
 
 <para>
@@ -1608,9 +1627,27 @@ sound output and it takes the same argument list. It should set up the input dev
 for recording, calculate the size of the recording packet for 0.1 second and start
 the record timer.
 </para>
+</section>
 
+<section>
+<title>int getwavepacket(int length, Bit8u data[])</title>
 <para>
-&FIXME; To be completed.
+This method is called from the record handler method of the sound emulation device
+to retrieve the recorded wave data packet.
+</para>
+</section>
+
+<section><title>int stopwaverecord()</title>
+<para>
+This function is called to stop the wave recording. It deactivates the timer that
+calls the method to perform the recording.
+</para>
+</section>
+
+<section><title>int closewaveinput()</title>
+<para>
+This function is called just before the Bochs simulation quits. It is very
+similar to the <emphasis>closewaveoutput()</emphasis> method.
 </para>
 </section>
 
@@ -2688,7 +2725,7 @@ cd doc/docbook; touch */*.html
 </screen>
 Do make install_win32 into /tmp or someplace:
 <screen>
-make install_win32 prefix=/tmp/bochs-2.5
+make install_win32 INSTDIR=/tmp/bochs-2.5
 </screen>
 This copies all the files into /tmp/bochs-2.5 and then creates a
 binary ZIP at /tmp/bochs-2.5.zip. Rename that bochs-2.5.win32-bin.zip.
