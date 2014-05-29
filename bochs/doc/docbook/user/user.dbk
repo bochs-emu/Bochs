@@ -4597,7 +4597,7 @@ version where this module was added.
     </entry>
     <entry>Yes, for TFTP</entry>
     <entry>Yes, for Slirp config</entry>
-    <entry>2.6.2.svn</entry>
+    <entry>2.6.5</entry>
   </row>
   <row>
     <entry>win32</entry>

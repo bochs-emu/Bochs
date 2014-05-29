@@ -518,14 +518,14 @@ saved in a separate file and the text file uses the file name as the value.</ent
 </para>
 <para>
 It is also possible to use the bx_param_num_c object with parameter save/restore
-handlers. With this special way several device settings can be save to and restored
+handlers. With this special way several device settings can be saved to and restored
 from one single parameter. The disk image state is also handled this way (see below).
 </para>
 <para>
 All devices can uses these two save/restore specific methods:
 <itemizedlist>
 <listitem><para>register_state() is called after the device init() to register the device members for save/restore</para></listitem>
-<listitem><para>after_restore_state() is an optional method to do things directly after restore (e.g. force a display update)</para></listitem>
+<listitem><para>after_restore_state() is an optional method to do things directly after restore (e.g. vga: force a display update)</para></listitem>
 </itemizedlist>
 </para>
 <para>
@@ -705,11 +705,82 @@ is also using them to build the menu / dialog to set up the log functions.
 </section>
 </section>
 
-      <section id="timers"><title>timers</title>
-      <para>
-      &FIXME;
-      </para>
-      </section>
+<section id="timers"><title>Internal timers</title>
+<para>
+The Bochs internal timers are required to provide timer features in the device
+emulation and for the interaction between simulator and gui. They are implemented
+in the <emphasis>bx_pc_system_c</emphasis> class and driven by the cpu. When
+programming a timer the interval is specified in useconds and the timer code
+translates the value to cpu ticks using the <ulink url="../user/bochsrc.html#BOCHSOPT-CPU-IPS">IPS</ulink>
+value. In the original implementation the cpu object calls a timer method to increment
+the "tick time" by one after completing one instruction. Now it is also possible
+to execute a number of cpu instructions and finally update the timer subsystem
+with this number. Timers can be added / removed and activated / deactivated at
+runtime and they can operate in "periodic" or "one-shot" mode. Here are some
+examples for timers in the devices and gui code:
+<itemizedlist>
+<listitem><para>the PIT (i82C54) system timer at 18.2 Hz</para></listitem>
+<listitem><para>the CMOS RTC one-second-timer</para></listitem>
+<listitem><para>the display update timer (set up with "vga: update_freq=X")</para></listitem>
+<listitem><para>the devices timer (polls keyboard/mouse events from the gui every 1 msecond)</para></listitem>
+<listitem><para>the LED auto-off timer (indicating data transfer for min 0.5 seconds)</para></listitem>
+</itemizedlist>
+</para>
+<para>
+These are the public timer-related methods implemented in the <emphasis>bx_pc_system_c</emphasis>
+class:
+<screen>
+  void   initialize(Bit32u ips);
+  int    register_timer(void *this_ptr, bx_timer_handler_t, Bit32u useconds,
+                         bx_bool continuous, bx_bool active, const char *id);
+  bx_bool unregisterTimer(unsigned timerID);
+  void   setTimerParam(unsigned timerID, Bit32u param);
+  void   start_timers(void);
+  void   activate_timer(unsigned timer_index, Bit32u useconds, bx_bool continuous);
+  void   deactivate_timer(unsigned timer_index);
+  unsigned triggeredTimerID(void) {
+    return triggeredTimer;
+  }
+  Bit32u triggeredTimerParam(void) {
+    return timer[triggeredTimer].param;
+  }
+  static BX_CPP_INLINE void tick1(void) {
+    if (--bx_pc_system.currCountdown == 0) {
+      bx_pc_system.countdownEvent();
+    }
+  }
+  static BX_CPP_INLINE void tickn(Bit32u n) {
+    while (n >= bx_pc_system.currCountdown) {
+      n -= bx_pc_system.currCountdown;
+      bx_pc_system.currCountdown = 0;
+      bx_pc_system.countdownEvent();
+      // bx_pc_system.currCountdown is adjusted to new value by countdownevent().
+    }
+    // 'n' is not (or no longer) >= the countdown size.  We can just decrement
+    // the remaining requested ticks and continue.
+    bx_pc_system.currCountdown -= n;
+  }
+
+  int register_timer_ticks(void* this_ptr, bx_timer_handler_t, Bit64u ticks,
+                           bx_bool continuous, bx_bool active, const char *id);
+  void activate_timer_ticks(unsigned index, Bit64u instructions,
+                            bx_bool continuous);
+  Bit64u time_usec();
+  Bit64u time_usec_sequential();
+  static BX_CPP_INLINE Bit64u time_ticks() {
+    return bx_pc_system.ticksTotal +
+      Bit64u(bx_pc_system.currCountdownPeriod - bx_pc_system.currCountdown);
+  }
+
+  static BX_CPP_INLINE Bit32u  getNumCpuTicksLeftNextEvent(void) {
+    return bx_pc_system.currCountdown;
+  }
+</screen>
+</para>
+<para>
+&FIXME; To be continued
+</para>
+</section>
 
 <section id="cmos-map"><title>Bochs's CMOS map</title>
 <para>
