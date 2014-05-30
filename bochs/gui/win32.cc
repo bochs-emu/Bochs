@@ -166,7 +166,7 @@ bx_bool SB_ActiveW[BX_MAX_STATUSITEMS];
 // Misc stuff
 static unsigned dimension_x, dimension_y, current_bpp;
 static unsigned stretched_x, stretched_y;
-static unsigned stretch_factor=1;
+static unsigned stretch_factor_x, stretch_factor_y;
 static BOOL fix_size = FALSE;
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
 static BOOL gui_debug = FALSE;
@@ -674,7 +674,8 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   current_bpp = 8;
   stretched_x = dimension_x;
   stretched_y = dimension_y;
-  stretch_factor = 1;
+  stretch_factor_x = 1;
+  stretch_factor_y = 1;
 
   for(unsigned c=0; c<256; c++) vgafont[c] = NULL;
   create_vga_font();
@@ -802,8 +803,11 @@ void resize_main_window(BOOL disable_fullscreen)
     if (fullscreenMode && disable_fullscreen) {
       set_fullscreen_mode(false);
     }
-    if (stretch_factor > 1) {
-      stretched_x *= stretch_factor;
+    if (stretch_factor_x > 1) {
+      stretched_x *= stretch_factor_x;
+    }
+    if (stretch_factor_y > 1) {
+      stretched_y *= stretch_factor_y;
     }
     if (!fullscreenMode) {
       if (toolbarVisible) {
@@ -1158,7 +1162,7 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     hdcMem = CreateCompatibleDC (hdc);
     SelectObject (hdcMem, MemoryBitmap);
 
-    if (stretch_factor == 1) {
+    if ((stretch_factor_x == 1) && (stretch_factor_y == 1)) {
       BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top,
              ps.rcPaint.right - ps.rcPaint.left + 1,
              ps.rcPaint.bottom - ps.rcPaint.top + 1, hdcMem,
@@ -1167,9 +1171,9 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       StretchBlt(hdc, ps.rcPaint.left, ps.rcPaint.top,
                  ps.rcPaint.right - ps.rcPaint.left + 1,
                  ps.rcPaint.bottom - ps.rcPaint.top + 1, hdcMem,
-                 ps.rcPaint.left/stretch_factor, ps.rcPaint.top,
-                 (ps.rcPaint.right - ps.rcPaint.left+1)/stretch_factor,
-                 (ps.rcPaint.bottom - ps.rcPaint.top+1), SRCCOPY);
+                 ps.rcPaint.left/stretch_factor_x, ps.rcPaint.top/stretch_factor_y,
+                 (ps.rcPaint.right - ps.rcPaint.left+1)/stretch_factor_x,
+                 (ps.rcPaint.bottom - ps.rcPaint.top+1)/stretch_factor_y, SRCCOPY);
     }
     DeleteDC (hdcMem);
     EndPaint (hwnd, &ps);
@@ -1903,13 +1907,20 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
   dimension_x = x;
   dimension_y = y;
 
+  if ((desktop_y > 0) && (((int)x > desktop_x) | ((int)y > desktop_y))) {
+    BX_ERROR(("dimension_update(): resolution of out of desktop bounds - screen only partly visible"));
+  }
   if (!fullscreenMode) {
     stretched_x = x;
     stretched_y = y;
   }
-  stretch_factor = 1;
+  stretch_factor_x = 1;
+  stretch_factor_y = 1;
   if (guest_textmode && (x < 400)) {
-    stretch_factor = 2;
+    stretch_factor_x = 2;
+  } else if (x < 400) {
+    stretch_factor_x = 2;
+    stretch_factor_y = 2;
   }
 
   bitmap_info->bmiHeader.biBitCount = bpp;
@@ -2185,8 +2196,10 @@ void DrawBitmap(HDC hdc, HBITMAP hBitmap, int xStart, int yStart, int width,
 
 void updateUpdated(int x1, int y1, int x2, int y2)
 {
-  x1*=stretch_factor;
-  x2*=stretch_factor;
+  x1 *= stretch_factor_x;
+  y1 *= stretch_factor_y;
+  x2 *= stretch_factor_x;
+  y2 *= stretch_factor_y;
   if (!updated_area_valid) {
     updated_area.left = x1 ;
     updated_area.top = y1 ;
