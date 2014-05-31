@@ -399,7 +399,7 @@ install_win32: download_dlx dl_docbook
 	cp -p $(srcdir)/gui/keymaps/*.map $(INSTDIR)/keymaps
 	cat $(DLXLINUX_TAR) | (cd $(INSTDIR) && tar xzvf -)
 	echo '..\bochs -q' > $(INSTDIR)/dlxlinux/run.bat
-	dlxrc=$(INSTDIR)/dlxlinux/bochsrc.txt; mv $$dlxrc $$dlxrc.orig && sed < $$dlxrc.orig 's/\/usr\/local\/bochs\/latest/../' > $$dlxrc && rm -f $$dlxrc.orig
+	dlxrc=$(INSTDIR)/dlxlinux/bochsrc; mv $$dlxrc.txt $$dlxrc.orig && sed < $$dlxrc.orig 's/$$BXSHARE/../' > $$dlxrc.bxrc && rm -f $$dlxrc.orig
 	mv $(INSTDIR)/README $(INSTDIR)/README.orig
 	cat $(srcdir)/build/win32/README.win32-binary $(INSTDIR)/README.orig > $(INSTDIR)/README
 	rm -f $(INSTDIR)/README.orig

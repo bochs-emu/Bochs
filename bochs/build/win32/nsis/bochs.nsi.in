@@ -97,6 +97,7 @@ Section "Bochs Program (required)" SecCore
 
   File "${SRCDIR}\*.exe"
   File "${SRCDIR}\*.txt"
+  File "${SRCDIR}\slirp.conf"
   File "*.ico"
 
   ; Install keymaps
@@ -117,15 +118,15 @@ SectionEnd
 Section "Documentation in HTML" SecDocs
   SectionIn 1 2 
   SetOutPath "$INSTDIR\docs"
-  File "${SRCDIR}\share\doc\bochs\index.html"
+  File "${SRCDIR}\docs\index.html"
   SetOutPath "$INSTDIR\docs\user"
-  File "${SRCDIR}\share\doc\bochs\user\*"
+  File "${SRCDIR}\docs\user\*"
   SetOutPath "$INSTDIR\docs\development"
-  File "${SRCDIR}\share\doc\bochs\development\*"
+  File "${SRCDIR}\docs\development\*"
   SetOutPath "$INSTDIR\docs\documentation"
-  File "${SRCDIR}\share\doc\bochs\documentation\*"
+  File "${SRCDIR}\docs\documentation\*"
   SetOutPath "$INSTDIR\docs\images"
-  File "${SRCDIR}\share\doc\bochs\images\*"
+  File "${SRCDIR}\docs\images\*"
 SectionEnd
 
 Section "DLX Linux Demo" SecDLX
@@ -279,6 +280,7 @@ Section "Uninstall"
 
   Delete "$INSTDIR\*.exe"
   Delete "$INSTDIR\*.txt"
+  Delete "$INSTDIR\slirp.conf"
   Delete "$INSTDIR\*.ico"
   Delete "$INSTDIR\keymaps\*"
   Delete "$INSTDIR\BIOS-bochs-*"

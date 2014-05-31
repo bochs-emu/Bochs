@@ -2243,7 +2243,7 @@ bx_bool is_deprecated_option(const char *oldparam, const char **newparam)
     return 1;
 #if BX_SUPPORT_PCIPNIC
   } else if (!strcmp(oldparam, "pnic")) {
-    // replaced v2.6 / removed v2.6.2.svn
+    // replaced v2.6 / removed v2.6.5
     *newparam = "pcipnic";
     return 1;
 #endif
