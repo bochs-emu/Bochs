@@ -706,6 +706,7 @@ is also using them to build the menu / dialog to set up the log functions.
 </section>
 
 <section id="timers"><title>Internal timers</title>
+<section><title>Overview</title>
 <para>
 The Bochs internal timers are required to provide timer features in the device
 emulation and for the interaction between simulator and gui. They are implemented
@@ -713,10 +714,10 @@ in the <emphasis>bx_pc_system_c</emphasis> class and driven by the cpu. When
 programming a timer the interval is specified in useconds and the timer code
 translates the value to cpu ticks using the <ulink url="../user/bochsrc.html#BOCHSOPT-CPU-IPS">IPS</ulink>
 value. In the original implementation the cpu object calls a timer method to increment
-the "tick time" by one after completing one instruction. Now it is also possible
-to execute a number of cpu instructions and finally update the timer subsystem
-with this number. Timers can be added / removed and activated / deactivated at
-runtime and they can operate in "periodic" or "one-shot" mode. Here are some
+the system time by one tick after completing one instruction. If a timer has
+expired, the related timer handler function is called. Now it is also possible
+to execute a number of cpu instructions, finally update the timer subsystem
+with this number and possibly call several timer handlers. Here are some
 examples for timers in the devices and gui code:
 <itemizedlist>
 <listitem><para>the PIT (i82C54) system timer at 18.2 Hz</para></listitem>
@@ -724,10 +725,62 @@ examples for timers in the devices and gui code:
 <listitem><para>the display update timer (set up with "vga: update_freq=X")</para></listitem>
 <listitem><para>the devices timer (polls keyboard/mouse events from the gui every 1 msecond)</para></listitem>
 <listitem><para>the LED auto-off timer (indicating data transfer for min 0.5 seconds)</para></listitem>
+<listitem><para>the synchronization timers are also based on the standard timers</para></listitem>
 </itemizedlist>
 </para>
 <para>
-These are the public timer-related methods implemented in the <emphasis>bx_pc_system_c</emphasis>
+These are the capabilities of the Bochs internal timers:
+<itemizedlist>
+<listitem><para>register / unregister at runtime</para></listitem>
+<listitem><para>activate / deactivate at runtime</para></listitem>
+<listitem><para>timer period changeable</para></listitem>
+<listitem><para>one-shot or continuous mode</para></listitem>
+</itemizedlist>
+</para>
+</section>
+<section><title>Timer definitions, members and methods</title>
+<para>
+Here are the timer-related definitions and members in <filename>pc_system.h</filename>:
+<screen>
+#define BX_MAX_TIMERS 64
+#define BX_NULL_TIMER_HANDLE 10000
+
+typedef void (*bx_timer_handler_t)(void *);
+
+  struct {
+    bx_bool inUse;      // Timer slot is in-use (currently registered).
+    Bit64u  period;     // Timer periodocity in cpu ticks.
+    Bit64u  timeToFire; // Time to fire next (in absolute ticks).
+    bx_bool active;     // 0=inactive, 1=active.
+    bx_bool continuous; // 0=one-shot timer, 1=continuous periodicity.
+    bx_timer_handler_t funct;  // A callback function for when the
+                               //   timer fires.
+    void *this_ptr;            // The this-> pointer for C++ callbacks
+                               //   has to be stored as well.
+#define BxMaxTimerIDLen 32
+    char id[BxMaxTimerIDLen];  // String ID of timer.
+    Bit32u param;              // Device-specific value assigned to timer (optional)
+  } timer[BX_MAX_TIMERS];
+
+  unsigned   numTimers;  // Number of currently allocated timers.
+  unsigned   triggeredTimer;  // ID of the actually triggered timer.
+  Bit32u     currCountdown; // Current countdown ticks value (decrements to 0).
+  Bit32u     currCountdownPeriod; // Length of current countdown period.
+  Bit64u     ticksTotal; // Num ticks total since start of emulator execution.
+  Bit64u     lastTimeUsec; // Last sequentially read time in usec.
+  Bit64u     usecSinceLast; // Number of useconds claimed since then.
+
+  // A special null timer is always inserted in the timer[0] slot.  This
+  // make sure that at least one timer is always active, and that the
+  // duration is always less than a maximum 32-bit integer, so a 32-bit
+  // counter can be used for the current countdown.
+  static const Bit64u NullTimerInterval;
+  static void nullTimer(void* this_ptr);
+</screen>
+</para>
+<para>
+These are the public timer-related methods for timer control, driving the timers
+with the cpu and retrieving the internal time implemented in the <emphasis>bx_pc_system_c</emphasis>
 class:
 <screen>
   void   initialize(Bit32u ips);
@@ -778,8 +831,16 @@ class:
 </screen>
 </para>
 <para>
+This private method is called when the function handles the clock ticks finds
+that an event has occurred:
+<screen>
+  void   countdownEvent(void);
+</screen>
+</para>
+<para>
 &FIXME; To be continued
 </para>
+</section>
 </section>
 
 <section id="cmos-map"><title>Bochs's CMOS map</title>

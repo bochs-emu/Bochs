@@ -1,7 +1,10 @@
-Changes in 2.6.5 (not yet released - updated May 26, 2014):
+Changes in 2.6.5 (not yet released - updated May 31, 2014):
 
 Brief summary :
-- TODO: cpu, debugger, ...
+- CPU: extra 5-10% emulation speedup with new trace linking optimization
+- CPU: implemented new instructions (e.g. AVX-512, SHA, XSAVEC)
+- CPUDB: added 2 new CPU models
+- Bugfixes for CPU emulation correctness (including some critical ones)
 - Gui debugger output window now can be used as a log viewer
 - Added built-in slirp (user-mode networking) support (ported from Qemu)
 - Added global sound config option and volume control support to the devices
@@ -49,7 +52,7 @@ Detailed change log :
   - Added new bochsrc option to control the speaker output mode
   - Added support to specify the initial time for 'clock' option in ctime(3) string format
   - Added support for the LTDL_LIBRARY_PATH variable with MSVC plugins
-  - All SB16 / ES1370 options are now changable at runtime
+  - All SB16 / ES1370 options are now changeable at runtime
   - textconfig: added menu item for saving configuration at runtime
   - Added bochsrc option for the Voodoo Graphics emulation (experimental)
 
