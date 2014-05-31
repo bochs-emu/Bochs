@@ -82,14 +82,20 @@ The source code is based on information taken from :
 
 Feedback
 --------
-Please report any bugs, comments, patches for this VGA Bios to info@vruppert.de
+Please report any bugs, comments, patches for this VGA Bios
+on savannah pages at: http://savannah.nongnu.org/projects/vgabios/
 You can find the latest release at : http://www.nongnu.org/vgabios/
 For any information on bochs, visit the website http://bochs.sourceforge.net/
-For any information on qemu, visit the website http://fabrice.bellard.free.fr/qemu/
+For any information on Qemu, visit the website http://wiki.qemu.org/
 
 
 History
 -------
+vgabios-CVS : May 31 2014
+  - Volker
+    - README: update feedback address and Qemu link
+    - ensure PCIR is aligned to 4 bytes (patch by David Woodhouse)
+
 vgabios-0.7a : Oct 30 2011
   - Volker
     . added HDTV resolutions (patch by Tristan Schmelcher)
