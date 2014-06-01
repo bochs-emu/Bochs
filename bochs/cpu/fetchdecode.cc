@@ -1841,7 +1841,7 @@ modrm_done:
 
 #if BX_SUPPORT_3DNOW
   if(b1 == 0x10f)
-    ia_opcode = Bx3DNowOpcode[i->modRMForm.Ib];
+    ia_opcode = Bx3DNowOpcode[i->modRMForm.Ib[0]];
 #endif
 
   // assign sources
