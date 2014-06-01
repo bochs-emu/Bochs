@@ -1,4 +1,4 @@
-Changes in 2.6.5 (not yet released - updated May 31, 2014):
+Changes in 2.6.5 (June 1, 2014):
 
 Brief summary :
 - CPU: extra 5-10% emulation speedup with new trace linking optimization
