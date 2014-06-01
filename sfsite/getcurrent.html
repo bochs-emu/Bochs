@@ -7,7 +7,48 @@
  <!--content starts here-->
  <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.6.2</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.6.5</font><BR><BR>
+
+About a year after the bugfix release 2.6.2 we have a new intermediate (bugfix+)
+release. Here a brief summary of changes :
+
+<ul>
+<li>CPU: extra 5-10% emulation speedup with new trace linking optimization
+<li>CPU: implemented new instructions (e.g. AVX-512, SHA, XSAVEC)
+<li>CPUDB: added 2 new CPU models
+<li>Bugfixes for CPU emulation correctness (including some critical ones)
+<li>Gui debugger output window now can be used as a log viewer
+<li>Added built-in slirp (user-mode networking) support (ported from Qemu)
+<li>Added global sound config option and volume control support to the devices
+<li>Added new experimental gui 'vncsrv" using the LibVNCServer library
+<li>Rewrite of the bximage utility in C++ for image creation, conversion and resize
+</ul>
+
+The binary packages for Linux and Windows are built with these featues :
+<ul>
+<li> x86-64 emulation with all optimizations enabled
+<li> devices:
+ <ul>
+ <li> chipset: PCI (i430FX / i440FX), ACPI
+ <li> video: Bochs VBE, Cirrus SVGA and Voodoo1
+ <li> sound: SB16 (ISA) and ES1370 (PCI)
+ <li> network: NE2000 (ISA/PCI) and E1000 (PCI)
+ <li> USB: OHCI, UHCI, xHCI and 7 pluggable device types
+ </ul>
+<li> Display libraries:
+ <ul>
+ <li> Linux: nogui, rfb, sdl, term, vncsrv, wx, x
+ <li> Windows: nogui, rfb, win32
+ </ul>
+</ul>
+
+<a href="http://svn.code.sf.net/p/bochs/code/tags/REL_2_6_5_FINAL/bochs/CHANGES">
+Details on what has changed since version 2.6.2
+</a>
+
+<BR/><BR/>
+
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.6.2</font><BR><BR>
 
 Bochs 2.6.2 is a bugfix release. Here is the list of changes :
 
@@ -35,97 +76,10 @@ Bochs 2.6.2 is a bugfix release. Here is the list of changes :
   </ul>
 </ul>
 
-The binary packages for Linux and Windows are built with these featues :
-<ul>
-<li> x86-64 emulation with all optimizations enabled
-<li> devices:
- <ul>
- <li> chipset: PCI (i430FX / i440FX), ACPI
- <li> video: Bochs VBE, Cirrus SVGA and Voodoo1
- <li> sound: SB16 (ISA) and ES1370 (PCI)
- <li> network: NE2000 (ISA/PCI) and E1000 (PCI)
- <li> USB: OHCI, UHCI, xHCI and 7 pluggable device types
- </ul>
-<li> Display libraries:
- <ul>
- <li> Linux: nogui, rfb, sdl, term, wx, x
- <li> Windows: nogui, rfb, win32
- </ul>
-</ul>
+<BR>
 
 <a href="http://svn.code.sf.net/p/bochs/code/tags/REL_2_6_2_FINAL/bochs/CHANGES">
 Details on what has changed since version 2.6.1
-</a>
-
-<BR/><BR/>
-
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.6.1</font><BR><BR>
-
-About seven months after release 2.6 we have a new intermediate (bugfix+) release.
-Here is the summary of changes :
-
-<ul>
-<li>CPU / CPUDB
-  <ul>
-  <li>Bochs is fully aligned with rev45 of the of Intel(R) Architecture Manual.
-    <ul>
-    <li>Implemented Supervisor Mode Access Protection (SMAP) support
-    <li>Implemented VMX APIC Registers Virtualization and VMX Virtual Interrupt Delivery
-    <li>Implemented VMCS Shadowing and #VE exception secondary VMEXIT controls emulation
-    <li>Implemented RDRAND and RDSEED instructions
-    </ul>
-  <li>CPUDB: Added AMD FX-4100 (Zambezi) configuration to CPUDB
-  <li>Bugfixes for CPU emulation correctness (critical fixes for SVM and AVX2 emulation)
-  </ul>
-
-<li>Bochs Debugger and Instrumentation
-  <ul>
-  <li>Use Enhanced GUI Debugger instead of old-style wx debugger with wx gui.
-    The old-style wx debugger support was deprecated and removed from the source code.
-  </ul>
-
-<li>I/O Devices
-  <ul>
-  <li>Implemented 3dfx Voodoo Graphics card emulation based on DOSBox patch, to enable
-    configure with --enable-voodoo option.
-  <li>Hard drive / HD image
-    <ul>
-    <li>Added full save restore support for most of the disk image formats
-    <li>undoable / volatile mode: added support of other types of r/o base images
-    <li>DLL HD support rewritten and enabled for WIN32 host
-    </ul>
-  <li>PCI chipset
-    <ul>
-    <li>Implemented i430FX chipset emulation
-    <li>USB UHCI always enabled in the i440FX case
-    </ul>
-  </ul>
-
-<li>Config interface
-  <ul>
-  <li>Configure option --enable-misaligned-sse moved to runtime option in .bochsrc. The old
-    option is deprecated and should not be used anymore.
-  <li>moved 'user_shortcut' bochsrc option to the 'keyboard' option
-  <li>save log options per device to bochsrc
-  <li>win32: implemented scrollable dialog items for large parameter lists
-  </ul>
-
-<li>GUI and display libraries
-  <ul>
-  <li>Graphics snapshot feature rewritten to support all kinds of graphics modes
-  <li>wx: starting a second simulation without closing Bochs now almost possible
-  </ul>
-
-<li>Tools
-  <ul>
-  <li>bxcommit: added support for converting flat to growing mode images
-  </ul>
-</ul>
-
-<BR>
-
-<a href="http://svn.code.sf.net/p/bochs/code/tags/REL_2_6_1_FINAL/bochs/CHANGES">
-Details on what has changed since version 2.6
 </a>
 
  <BR><BR>
