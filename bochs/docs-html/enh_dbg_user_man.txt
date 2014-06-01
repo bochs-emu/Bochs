@@ -1,0 +1,163 @@
+User tips: (ver 1.2)
+
+The main user features available from the menus should be fairly obvious
+to anyone who has used bochs -- but here are a few quick explanations, anyway.
+These explanations include a few keyboard and mouse shortcuts that you might
+not find through experimentation.
+
+Terminology:
+The Bochs guys call this GUI debugger interface the CI, to distinguish it
+for themselves from the "VGA window" that shows the display of the simulated
+computer. I will call this debugger GUI interface the "frontend". It's not
+much better of a term, but oh well.
+
+The text debugger interface that you are all familiar with is called the
+Bochs Internal Debugger ("ID" for short).
+
+The frontend is organized around 3 main "list-view" windows:
+
+The Register window:
+Typically, all the various registers are grouped by color. If you don't like the
+colors, they can be turned off, or modified at compile time. There are options
+to show or hide most register "groups", so that you can focus more strictly on
+the registers you are interested in (probably just the GP registers).
+
+Notes:
+Yes, the XMM display shows hex in the "decimal" column -- there is more
+room there. Deal with it.
+
+** Doubleclicking a register attempts to change its value. Bochs may not
+allow you to change most registers. In future versions, more registers may
+be modifiable.
+
+The Disassembly window:
+Disassembly output that is autoloaded, or generated from the menu, ends up
+here. If the frontend cannot detect the "current instruction" in the list,
+when it reaches the next instruction -- then it will autoload a new list.
+Having a big list will reduce the number of autoloads, and allows you to see
+more. The list can contain up to 2048 lines. However, if you load more than
+1000 lines, you are more likely to see performance problems.
+
+Note: There are two kinds of emulated memory in bochs: Linear and Physical.
+Emulated Linear memory is mapped onto Physical memory by x86 virtual memory
+methods (paging and segmentation). If paging and segmenataion are "off", or
+"identity mapped", then both "types" of memory mean the same thing. But they
+still work a little differently. With the Internal Debugger, you can set
+breakpoints to either kind of memory, separately. Normally, you would use
+the "b" command to set breakpoints in physical mem, and "lb" to set breakpoints
+in linear mem. This frontend ONLY displays linear breakpoints. It does not
+bother trying to figure out the linear->phsical reverse mapping to show
+physical breakpoints. (There are also "virtual" breakpoints that are also
+not shown.) All the types of breakpoints still WORK, it is just that you
+will not see them marked on the screen.
+
+It will be obvious to you that the current instruction is marked in green,
+unless it is on a breakpoint, when it turns blue. Breakpoints are red, of
+course.
+
+** You must click a line in the window, before you can use frontend commands
+to set or clear a linear breakpoint on it.
+** You can doubleclick (which saves steps) to set or clear a linear breakpoint.
+
+The MemDump window:
+
+As of this version, the MemDump window isn't much more than a display of the
+contents of memory. In later versions, hopefully it will be expanded into a
+fairly fully-featured hexeditor. You can dump either phyical mem, or linear
+mem. There are breakpoint-like things (that work with physical memory only,
+currently), called "watchpoints". A physical memory address can cause a break
+in the simulation if it is read, or written.
+
+The frontend again does NOT try to calculate out the linear -> physical mapping
+in any attempt to display the physical watchpoints while viewing linear mem.
+
+You must click a hex byte (on a physical mem dump that shows bytes), in order to
+set or clear a read and/or write watchpoint on that byte. Read watchpoints are
+green (on black), write watchpoints are red, watchpoints that are both write
+and read are blue. There is a hardcoded limit in bochs of 16 of each type of
+watchpoint.
+
+The MemDump window loads/shows 4K of memory at a time.
+
+** PageUp/Down scrolls the display up or down through mem, 2K at a time.
+** Doubleclicking a line of memory allows you to change the byte values.
+(Works on both linear and physical mem dumps.)
+** Doubleclicking with the Shift key down sets write watchpoints.
+** Doubleclicking with Alt sets read watchpoints.
+** You need to click once on the memory window before you can use its "Find"
+function. The Find function is pretty limited in scope, currently. It can
+only find bytes (or strings of bytes) within each 16byte "line".
+
+
+Other windows:
+
+The Output window shows anything that the Bochs Internal Debugger tries to send
+to you. The window is scrollable, but only keeps a limited history of output (10K).
+The ID is always spamming you with "Next at t=" and disassembly lines, that would
+tend to fill up the Output window with garbage -- so there are options to ignore
+either of these types of output.
+
+The Input window is for sending user commands directly into the Bochs Internal
+Debugger -- bypassing the frontend. Results will appear in the Output Window.
+The Input window has a history feature for commands, using the Up and Down arrows --
+it remembers 64 commands, 80 bytes each. No matter where you click on the frontend,
+you can always type directly into the Input box without clicking on it.
+
+When the Input window is invisible, you should still be able to type into it --
+after taking into account the bug listed at the bottom of this file.
+
+** Hitting Enter on a blank line will cause a Singlestep.
+
+The Param Tree:
+
+The bochs param_tree shows the internal state of most of bochs. It will be
+expanded in the future to show even more. You can see the detailed state of
+all cpu registers -- including the "hidden" parts (look in the "bochs" branch).
+Or see the current state of most of the emulated hardware.
+
+The Stack window:
+
+The MemDump windows do not automatically refresh -- except for the Stack
+window. If you leave the stack window active, it will update as the stack
+changes. If you want to update the other MemDump windows with fresh data,
+hit Refresh.
+
+The Breakpoint/Watchpoint window:
+
+Doubleclicking will delete a breakpoint or watchpoint.
+
+The Command Button row:
+
+Just a (hopefully) convenient way of using the mouse, instead of the keyboard.
+If you don't like them, or they take up too much space, you can turn them off.
+
+The CPU Button row:
+
+This only shows up when you are running a multi-cpu simulation. Click on the
+CPU that you want to view. All CPUs are always stepped together, and they all
+stop the first time one hits some sort of breakpoint.
+
+Docking/Resizing
+
+If you grab one of the two vertical "bars" between the lists, you can horizontally
+resize the lists. The cursor will change, but there will be no animation.
+
+If you grab the middle of one of the lists, and drag it on top of one of the
+other lists, you can reorder the positions of the lists on the screen. The
+cursor will change, but there will be no animation. You can set an alternate
+"docking order" at compile time, also, if you have a permanent preference.
+(See the top of the wenhdbg_h.h file, for compile-time customization.)
+
+Additional Notes:
+
+If you have a really big GDT or Paging display in the MemDump window, and you
+select a different display, it may take several seconds to delete the big display
+before it can switch.
+
+Uppercase text tends to seem a little annoying, but it really is a lot easier to
+read, especially on a proportional font. If you change to a fixed font, then you
+may want to switch the display to lowercase.
+
+KDE Users: The gtk-qt-engine drawing functions of Ver 0.71 (or anything earlier
+than 1.0?) draw all text as black, instead of in the correct foreground colors.
+Fix: Upgrade to 1.1.

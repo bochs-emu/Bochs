@@ -1,0 +1,38 @@
+#!/bin/sh
+
+# this sets up the compile for MacOS X
+#
+# To support plugins on macosx, you must have "dlcompat" installed.  You can
+# get dlcompat by installing the fink package "dlcompat-devel".  On the SF
+# compile farm, dlcompat is in /sw/include and /sw/lib, so we have added
+# those paths to the environment variables.
+
+set echo
+CFLAGS="-pipe -O3 -I/sw/include -fomit-frame-pointer -finline-functions -falign-loops=16 -falign-jumps=16 -falign-functions=16 -falign-labels=16 -falign-loops-max-skip=15 -falign-jumps-max-skip=15 -fprefetch-loop-arrays $CFLAGS"
+CPATH="/sw/include"
+CPPFLAGS=""
+CXXFLAGS="$CFLAGS"
+LDFLAGS="-L/sw/lib"
+
+export CFLAGS
+export CPATH
+export CPPFLAGS
+export CXXFLAGS
+export LDFLAGS
+
+./configure --enable-sb16 \
+	    --enable-ne2000 \
+	    --enable-all-optimizations \
+            --enable-cpu-level=6 \
+            --enable-x86-64 \
+            --enable-vmx=2 \
+            --enable-pci \
+            --enable-clgd54xx \
+            --enable-voodoo \
+            --enable-usb \
+            --enable-usb-ohci \
+            --enable-usb-xhci \
+            --enable-es1370 \
+            --enable-e1000 \
+	    --enable-plugins \
+	    ${CONFIGURE_ARGS}
