@@ -395,6 +395,7 @@ install_win32: download_dlx dl_docbook
 	cp $(srcdir)/misc/sb16/sb16ctrl.example $(INSTDIR)/sb16ctrl.txt
 	cp -p $(srcdir)/misc/sb16/sb16ctrl.exe $(INSTDIR)
 	cp $(srcdir)/.bochsrc $(INSTDIR)/bochsrc-sample.txt
+	cp $(srcdir)/TESTFORM.txt $(INSTDIR)
 	-mkdir $(INSTDIR)/keymaps
 	cp -p $(srcdir)/gui/keymaps/*.map $(INSTDIR)/keymaps
 	cat $(DLXLINUX_TAR) | (cd $(INSTDIR) && tar xzvf -)

@@ -16,7 +16,7 @@ Should we accept donations ? What could we do with the money ?
 - bounties for somebody write optimized win9x/NT/XFree/linux/*BSD
   drivers for our vga/net/ide cards
 - other ?
-Status in Bochs 2.5:
+Status in Bochs 2.6.5:
 No decisions about this yet.
 
 1. Speed
@@ -85,14 +85,15 @@ infrastructure, but the new code is untested yet.
 For SVGA emulation we have Bochs VBE and the Cirrus adapter. We should have
 a look at the voodoo3 (specs http://v3tv.sourceforge.net/docs.php).
 Status:
-Voodoo1 emulation has been added in Bochs 2.6.1. Other models are not supported
-yet and the performance is still low.
+Voodoo1 emulation has been added in Bochs 2.6.1, initial Voodoo2 support is
+present in Bochs 2.6.5, but the performance is still low.
 
 6. Random thoughts on disk emulation improvements :
 6.1 support more disk image types
 6.2 compressed disk image support
 Status:
-VPC disk image support has been added in Bochs 2.6..
+VPC disk image support has been added in Bochs 2.6. The bximage utility has been
+rewritten in C++ for image creation, conversion and resize in Bochs 2.6.5.
 
 7. net
 7.1 bootable ethernet rom ?
@@ -106,9 +107,8 @@ find a working bochsrc file and an up-to-date README with step-by-step
 instructions on getting this working.
 Status:
 The pnic device is present in SVN, but the status is unknown. PCI boot ROM support
-has been added for Bochs 2.6. User mode networking currently requires the 'slirp'
-program and it is not possible on all platforms. The slirp core should be added
-to the Bochs sources.
+has been added for Bochs 2.6. Built-in 'slirp' support for user mode networking
+has been added in Bochs 2.6.5.
 
 8. Bios
 8.1 add "jump table placeholder" and log missing function calls in the bios.
