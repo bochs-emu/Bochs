@@ -359,7 +359,7 @@ memory: guest=512, host=256
 # The start address is optional, since it can be calculated from image size.
 #=======================================================================
 romimage: file=$BXSHARE/BIOS-bochs-latest 
-#romimage: file=bios/seabios-1.6.3.bin
+#romimage: file=$BXSHARE/bios.bin-1.7.5 # http://www.seabios.org/SeaBIOS
 #romimage: file=mybios.bin, address=0xfff80000 # 512k at memory top
 
 #=======================================================================
