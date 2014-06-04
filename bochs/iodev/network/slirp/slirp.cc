@@ -110,7 +110,7 @@ int get_dns_addr(struct in_addr *pdns_addr)
     return 0;
 }
 
-static void winsock_cleanup(void)
+static void CDECL winsock_cleanup(void)
 {
 #ifndef __CYGWIN__
     WSACleanup();

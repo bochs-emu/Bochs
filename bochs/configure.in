@@ -2464,7 +2464,7 @@ case "$target" in
     CC="cl"
     CXX="$CC"
     #C_OPT="/Zi"   # for debugging
-    C_OPT="/Ox"   # optimize for speed
+    C_OPT="/O2 /Gr"   # optimize for speed, using fastcall everywhere
     if test "$bx_plugins" = 1; then
       CFLAGS="/nologo /MD /W3 /EHs-c- /DNDEBUG /DWIN32 /D_WINDOWS /D_CRT_SECURE_NO_WARNINGS $C_OPT"
     else
