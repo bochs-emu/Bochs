@@ -28,7 +28,7 @@
 
 #define LOG_THIS cpu->
 
-#if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
+#if BX_SUPPORT_X86_64
 
 corei7_sandy_bridge_2600k_t::corei7_sandy_bridge_2600k_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
@@ -143,7 +143,9 @@ Bit64u corei7_sandy_bridge_2600k_t::get_isa_extensions_bitmask(void) const
          BX_ISA_XSAVE |
          BX_ISA_XSAVEOPT |
          BX_ISA_AES_PCLMULQDQ |
+#if BX_SUPPORT_AVX
          BX_ISA_AVX |
+#endif
          BX_ISA_CMPXCHG16B |
          BX_ISA_LM_LAHF_SAHF;
 }
@@ -317,8 +319,10 @@ void corei7_sandy_bridge_2600k_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) c
               BX_CPUID_EXT_POPCNT |
               BX_CPUID_EXT_TSC_DEADLINE |
               BX_CPUID_EXT_AES |
-              BX_CPUID_EXT_XSAVE |
-              BX_CPUID_EXT_AVX;
+              BX_CPUID_EXT_XSAVE;
+#if BX_SUPPORT_AVX
+  leaf->ecx |= BX_CPUID_EXT_AVX;
+#endif
   if (cpu->cr4.get_OSXSAVE())
     leaf->ecx |= BX_CPUID_EXT_OSXSAVE;
 
@@ -613,10 +617,18 @@ void corei7_sandy_bridge_2600k_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, c
     // ECX - Maximum size (in bytes) required by CPU supported features
     // EDX - valid bits of XCR0 (upper part)
     leaf->eax = cpu->xcr0_suppmask;
+
     leaf->ebx = 512+64;
+#if BX_SUPPORT_AVX
     if (cpu->xcr0.get_YMM())
       leaf->ebx = XSAVE_YMM_STATE_OFFSET + XSAVE_YMM_STATE_LEN;
+#endif
+
+    leaf->ecx = 512+64;
+#if BX_SUPPORT_AVX
     leaf->ecx = XSAVE_YMM_STATE_OFFSET + XSAVE_YMM_STATE_LEN;
+#endif
+
     leaf->edx = 0;
     return;
 
@@ -627,12 +639,14 @@ void corei7_sandy_bridge_2600k_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, c
     leaf->edx = 0;
     return;
 
+#if BX_SUPPORT_AVX
   case 2: // YMM leaf
     leaf->eax = XSAVE_YMM_STATE_LEN;
     leaf->ebx = XSAVE_YMM_STATE_OFFSET;
     leaf->ecx = 0;
     leaf->edx = 0;
     return;
+#endif
 
   default:
     break;
