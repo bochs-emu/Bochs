@@ -1362,6 +1362,7 @@ DLX Linux screenshot.
 
 <row><entry>BIOS-bochs-latest </entry> <entry> default ROM BIOS image for Bochs </entry> </row>
 <row><entry>BIOS-bochs-legacy </entry> <entry> ROM BIOS image without 32-bit init code </entry> </row>
+<row><entry>bios.bin-1.7.5 </entry> <entry> SeaBIOS ROM image </entry> </row>
 <row><entry>bochs.exe </entry> <entry> the main Bochs executable </entry> </row>
 <row><entry>bochs.ico </entry> <entry> the Bochs icon (used for links in start menu and on the desktop) </entry> </row>
 <row><entry>bochsdbg.exe </entry> <entry> the main Bochs executable with debugger enabled </entry> </row>
@@ -1378,6 +1379,7 @@ DLX Linux screenshot.
 <row><entry>penguin.ico </entry> <entry> the Linux logo (used for the DLX link in start menu) </entry> </row>
 <row><entry>sb16ctrl.exe </entry> <entry> tool to control sb16 in Bochs </entry> </row>
 <row><entry>sb16ctrl.txt </entry> <entry> examples of sb16ctrl commands </entry> </row>
+<row><entry>SeaBIOS-README.txt </entry> <entry> README for SeaBIOS ROM image </entry> </row>
 <row><entry>VGABIOS-elpin-2.40 </entry> <entry> VGA BIOS image for Bochs </entry> </row>
 <row><entry>VGABIOS-elpin-LICENSE.txt </entry> <entry> license for VGA BIOS </entry> </row>
 <row><entry>VGABIOS-lgpl-latest </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
@@ -1560,6 +1562,8 @@ description of each one.
 <row><entry>/usr/share/doc/bochs/index.html</entry> <entry> a local copy of all Bochs documentation ( <ulink url="http://bochs.sourceforge.net/doc/docbook/index.html">Online copy</ulink> )</entry> </row>
 <row><entry>/usr/share/bochs/BIOS-bochs-latest </entry> <entry> default ROM BIOS image for Bochs </entry> </row>
 <row><entry>/usr/share/bochs/BIOS-bochs-legacy </entry> <entry> ROM BIOS image without 32-bit init code </entry> </row>
+<row><entry>/usr/share/bochs/bios.bin-1.7.5 </entry> <entry> SeaBIOS ROM image </entry> </row>
+<row><entry>/usr/share/bochs/SeaBIOS-README </entry> <entry> README for SeaBIOS ROM image </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-elpin-2.40 </entry> <entry> VGA BIOS image for Bochs </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-elpin-LICENSE </entry> <entry> license for VGA BIOS </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-latest </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
@@ -3037,6 +3041,7 @@ system BIOS and VGA BIOS images.
 <tbody>
 <row><entry>BIOS-bochs-latest </entry> <entry> default ROM BIOS image for Bochs </entry> </row>
 <row><entry>BIOS-bochs-legacy </entry> <entry> ROM BIOS image without 32-bit init code </entry> </row>
+<row><entry>bios.bin-1.7.5 </entry> <entry> SeaBIOS ROM image </entry> </row>
 <row><entry>VGABIOS-elpin-2.40 </entry> <entry> legacy VGA BIOS image for Bochs </entry> </row>
 <row><entry>VGABIOS-lgpl-latest </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
 <row><entry>VGABIOS-lgpl-latest-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with debug output to the logfile </entry> </row>
