@@ -16,6 +16,14 @@
 #error Niclist will only work on WIN32 platforms.
 #endif
 
+#ifndef CDECL
+#if defined(_MSC_VER)
+  #define CDECL __cdecl
+#else
+  #define CDECL
+#endif
+#endif
+
 #include <windows.h>
 #include <stdio.h>
 #ifdef __CYGWIN__
@@ -47,8 +55,11 @@ typedef struct {
 NIC_INFO_NT niNT[MAX_ADAPTERS];
 NIC_INFO_9X ni9X[MAX_ADAPTERS];
 
-BOOLEAN (*PacketGetAdapterNames)(PTSTR, PULONG) = NULL;
-PCHAR   (*PacketGetVersion)() = NULL;
+typedef BOOLEAN (CDECL *PGetAdapterNames)(PTSTR, PULONG);
+typedef PCHAR   (CDECL *PGetVersion)();
+
+PGetAdapterNames PacketGetAdapterNames = NULL;
+PGetVersion      PacketGetVersion = NULL;
 
 void myexit (int code)
 {
@@ -78,8 +89,8 @@ int CDECL main(int argc, char **argv)
     if(hPacket)
     {
         // Now look up the address
-        PacketGetAdapterNames = (BOOLEAN (*)(PTSTR, PULONG))GetProcAddress(hPacket, "PacketGetAdapterNames");
-        PacketGetVersion = (PCHAR (*)())GetProcAddress(hPacket, "PacketGetVersion");
+        PacketGetAdapterNames = (PGetAdapterNames)GetProcAddress(hPacket, "PacketGetAdapterNames");
+        PacketGetVersion = (PGetVersion)GetProcAddress(hPacket, "PacketGetVersion");
     }
     else {
         printf("Could not load WinPCap driver!\n");
