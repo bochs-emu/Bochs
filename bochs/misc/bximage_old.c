@@ -20,6 +20,14 @@
 
 /* Create empty hard disk or floppy disk images for bochs. */
 
+#ifndef CDECL
+#if defined(_MSC_VER)
+  #define CDECL __cdecl
+#else
+  #define CDECL
+#endif
+#endif
+
 #ifdef WIN32
 #ifndef __CYGWIN__
 #  include <conio.h>

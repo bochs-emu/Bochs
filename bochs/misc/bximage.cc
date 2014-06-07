@@ -1090,7 +1090,7 @@ int get_image_mode_and_hdsize(const char *filename, int *hdsize_megs)
   return imgmode;
 }
 
-int main(int argc, char *argv[])
+int CDECL main(int argc, char *argv[])
 {
   char bochsrc_line[256], prompt[80], tmpfname[512];
   int imgmode = 0;
