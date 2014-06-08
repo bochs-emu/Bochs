@@ -130,7 +130,7 @@ Bit32s voodoo_options_save(FILE *fp)
 
 // device plugin entry points
 
-int libvoodoo_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libvoodoo_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theVoodooDevice = new bx_voodoo_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVoodooDevice, BX_PLUGIN_VOODOO);
@@ -141,7 +141,7 @@ int libvoodoo_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, cha
   return 0; // Success
 }
 
-void libvoodoo_LTX_plugin_fini(void)
+void CDECL libvoodoo_LTX_plugin_fini(void)
 {
   SIM->unregister_addon_option("voodoo");
   bx_list_c *menu = (bx_list_c*)SIM->get_param("display");

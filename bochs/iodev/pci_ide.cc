@@ -40,7 +40,7 @@ bx_pci_ide_c *thePciIdeController = NULL;
 
 const Bit8u bmdma_iomask[16] = {1, 0, 1, 0, 4, 0, 0, 0, 1, 0, 1, 0, 4, 0, 0, 0};
 
-int libpci_ide_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libpci_ide_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   thePciIdeController = new bx_pci_ide_c();
   bx_devices.pluginPciIdeController = thePciIdeController;
@@ -48,7 +48,7 @@ int libpci_ide_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, ch
   return(0); // Success
 }
 
-void libpci_ide_LTX_plugin_fini(void)
+void CDECL libpci_ide_LTX_plugin_fini(void)
 {
   delete thePciIdeController;
 }

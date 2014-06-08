@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2013  The Bochs Project
+//  Copyright (C) 2002-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -56,7 +56,7 @@
 
 bx_keyb_c *theKeyboard = NULL;
 
-int libkeyboard_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libkeyboard_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   // Create one instance of the keyboard device object.
   theKeyboard = new bx_keyb_c();
@@ -68,7 +68,7 @@ int libkeyboard_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, c
   return 0; // Success
 }
 
-void libkeyboard_LTX_plugin_fini(void)
+void CDECL libkeyboard_LTX_plugin_fini(void)
 {
   delete theKeyboard;
 }

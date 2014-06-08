@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009       Benjamin D Lunt (fys at frontiernet net)
-//                2009-2013  The Bochs Project
+//                2009-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -107,7 +107,7 @@ Bit32s usb_ohci_options_save(FILE *fp)
 
 // device plugin entry points
 
-int libusb_ohci_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libusb_ohci_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theUSB_OHCI = new bx_usb_ohci_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUSB_OHCI, BX_PLUGIN_USB_OHCI);
@@ -118,7 +118,7 @@ int libusb_ohci_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, c
   return 0; // Success
 }
 
-void libusb_ohci_LTX_plugin_fini(void)
+void CDECL libusb_ohci_LTX_plugin_fini(void)
 {
   SIM->unregister_addon_option("usb_ohci");
   bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.usb");

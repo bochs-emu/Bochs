@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -102,7 +102,7 @@ Bit32s parport_options_save(FILE *fp)
 
 // device plugin entry points
 
-int libparallel_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libparallel_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theParallelDevice = new bx_parallel_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theParallelDevice, BX_PLUGIN_PARALLEL);
@@ -114,7 +114,7 @@ int libparallel_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, c
   return 0; // Success
 }
 
-void libparallel_LTX_plugin_fini(void)
+void CDECL libparallel_LTX_plugin_fini(void)
 {
   char port[10];
 

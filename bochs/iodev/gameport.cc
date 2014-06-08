@@ -55,7 +55,7 @@ UINT STDCALL joyGetPos(UINT, LPJOYINFO);
 
 bx_gameport_c *theGameport = NULL;
 
-int libgameport_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libgameport_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theGameport = new bx_gameport_c();
   bx_devices.pluginGameport = theGameport;
@@ -63,7 +63,7 @@ int libgameport_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, c
   return(0); // Success
 }
 
-void libgameport_LTX_plugin_fini(void)
+void CDECL libgameport_LTX_plugin_fini(void)
 {
   bx_devices.pluginGameport = &bx_devices.stubGameport;
   delete theGameport;

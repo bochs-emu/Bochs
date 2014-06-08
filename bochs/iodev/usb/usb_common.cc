@@ -46,7 +46,7 @@
 
 bx_usb_devctl_c* theUsbDevCtl = NULL;
 
-int libusb_common_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libusb_common_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   if (type == PLUGTYPE_CORE) {
     theUsbDevCtl = new bx_usb_devctl_c;
@@ -57,7 +57,7 @@ int libusb_common_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc,
   }
 }
 
-void libusb_common_LTX_plugin_fini(void)
+void CDECL libusb_common_LTX_plugin_fini(void)
 {
   delete theUsbDevCtl;
 }

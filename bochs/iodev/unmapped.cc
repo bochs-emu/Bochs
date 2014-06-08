@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -31,14 +31,14 @@
 
 bx_unmapped_c *theUnmappedDevice = NULL;
 
-int libunmapped_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libunmapped_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theUnmappedDevice = new bx_unmapped_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUnmappedDevice, BX_PLUGIN_UNMAPPED);
   return(0); // Success
 }
 
-void libunmapped_LTX_plugin_fini(void)
+void CDECL libunmapped_LTX_plugin_fini(void)
 {
   delete theUnmappedDevice;
 }

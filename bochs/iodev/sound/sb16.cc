@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -152,7 +152,7 @@ Bit32s sb16_options_save(FILE *fp)
 
 // device plugin entry points
 
-int libsb16_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libsb16_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theSB16Device = new bx_sb16_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSB16Device, BX_PLUGIN_SB16);
@@ -163,7 +163,7 @@ int libsb16_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char 
   return(0); // Success
 }
 
-void libsb16_LTX_plugin_fini(void)
+void CDECL libsb16_LTX_plugin_fini(void)
 {
   delete theSB16Device;
   SIM->unregister_addon_option("sb16");

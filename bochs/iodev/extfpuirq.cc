@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -34,14 +34,14 @@
 
 bx_extfpuirq_c *theExternalFpuIrq = NULL;
 
-int libextfpuirq_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libextfpuirq_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theExternalFpuIrq = new bx_extfpuirq_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theExternalFpuIrq, BX_PLUGIN_EXTFPUIRQ);
   return(0); // Success
 }
 
-void libextfpuirq_LTX_plugin_fini(void)
+void CDECL libextfpuirq_LTX_plugin_fini(void)
 {
   delete theExternalFpuIrq;
 }

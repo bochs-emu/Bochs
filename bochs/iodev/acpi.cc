@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2006-2013  Volker Ruppert
+//  Copyright (C) 2006-2014  Volker Ruppert
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -66,7 +66,7 @@ const Bit8u acpi_sm_iomask[16] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 2, 0, 0, 0
 
 extern void apic_bus_deliver_smi(void);
 
-int libacpi_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libacpi_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theACPIController = new bx_acpi_ctrl_c();
   bx_devices.pluginACPIController = theACPIController;
@@ -74,7 +74,7 @@ int libacpi_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char 
   return 0; // Success
 }
 
-void libacpi_LTX_plugin_fini(void)
+void CDECL libacpi_LTX_plugin_fini(void)
 {
   bx_devices.pluginACPIController = &bx_devices.stubACPIController;
   delete theACPIController;

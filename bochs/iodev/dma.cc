@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -37,7 +37,7 @@
 
 bx_dma_c *theDmaDevice = NULL;
 
-int libdma_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libdma_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   if (type == PLUGTYPE_CORE) {
     theDmaDevice = new bx_dma_c ();
@@ -49,7 +49,7 @@ int libdma_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *
   }
 }
 
-void libdma_LTX_plugin_fini(void)
+void CDECL libdma_LTX_plugin_fini(void)
 {
   delete theDmaDevice;
 }

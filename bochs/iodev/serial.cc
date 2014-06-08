@@ -30,6 +30,8 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
+#include "iodev.h"
+
 #if !defined(WIN32) || defined(__CYGWIN__)
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -42,7 +44,6 @@ typedef int SOCKET;
 #define BX_SER_WIN32
 #endif
 
-#include "iodev.h"
 #include "serial.h"
 
 #if defined(WIN32) && !defined(FILE_FLAG_FIRST_PIPE_INSTANCE)
@@ -146,7 +147,7 @@ Bit32s serial_options_save(FILE *fp)
 
 // device plugin entry points
 
-int libserial_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libserial_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theSerialDevice = new bx_serial_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSerialDevice, BX_PLUGIN_SERIAL);
@@ -160,7 +161,7 @@ int libserial_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, cha
   return 0; // Success
 }
 
-void libserial_LTX_plugin_fini(void)
+void CDECL libserial_LTX_plugin_fini(void)
 {
   char port[6];
 

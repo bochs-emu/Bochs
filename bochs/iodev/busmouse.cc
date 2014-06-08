@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2013  The Bochs Project
+//  Copyright (C) 2004-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -47,7 +47,7 @@ bx_busm_c *theBusMouse = NULL;
 #define BUSM_CTRL_READ_Y       0x02
 #define BUSM_CTRL_COMMAND      0x07
 
-int libbusmouse_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libbusmouse_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   // Create one instance of the busmouse device object.
   theBusMouse = new bx_busm_c();
@@ -56,7 +56,7 @@ int libbusmouse_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, c
   return 0; // Success
 }
 
-void libbusmouse_LTX_plugin_fini(void)
+void CDECL libbusmouse_LTX_plugin_fini(void)
 {
   delete theBusMouse;
 }

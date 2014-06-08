@@ -35,8 +35,8 @@ enum plugintype_t {
 
 #define MAX_ARGC 10
 
-typedef int (*plugin_init_t)(struct _plugin_t *plugin, plugintype_t type, int argc, char *argv[]);
-typedef void (*plugin_fini_t)(void);
+typedef int (CDECL *plugin_init_t)(struct _plugin_t *plugin, plugintype_t type, int argc, char *argv[]);
+typedef void (CDECL *plugin_fini_t)(void);
 
 typedef struct _plugin_t
 {

@@ -47,7 +47,7 @@
 
 bx_soundmod_ctl_c* theSoundModCtl = NULL;
 
-int libsoundmod_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libsoundmod_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   if (type == PLUGTYPE_CORE) {
     theSoundModCtl = new bx_soundmod_ctl_c;
@@ -58,7 +58,7 @@ int libsoundmod_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, c
   }
 }
 
-void libsoundmod_LTX_plugin_fini(void)
+void CDECL libsoundmod_LTX_plugin_fini(void)
 {
   delete theSoundModCtl;
 }

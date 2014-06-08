@@ -159,7 +159,7 @@ Bit32s es1370_options_save(FILE *fp)
 
 // device plugin entry points
 
-int libes1370_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libes1370_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theES1370Device = new bx_es1370_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theES1370Device, BX_PLUGIN_ES1370);
@@ -170,7 +170,7 @@ int libes1370_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, cha
   return 0; // Success
 }
 
-void libes1370_LTX_plugin_fini(void)
+void CDECL libes1370_LTX_plugin_fini(void)
 {
   SIM->unregister_addon_option("es1370");
   bx_list_c *menu = (bx_list_c*)SIM->get_param("sound");

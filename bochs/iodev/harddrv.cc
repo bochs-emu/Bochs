@@ -106,7 +106,7 @@ BX_CPP_INLINE Bit32u read_32bit(const Bit8u* buf)
 
 bx_hard_drive_c *theHardDrive = NULL;
 
-int libharddrv_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libharddrv_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theHardDrive = new bx_hard_drive_c();
   bx_devices.pluginHardDrive = theHardDrive;
@@ -114,7 +114,7 @@ int libharddrv_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, ch
   return(0); // Success
 }
 
-void libharddrv_LTX_plugin_fini(void)
+void CDECL libharddrv_LTX_plugin_fini(void)
 {
   delete theHardDrive;
 }

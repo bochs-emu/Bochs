@@ -343,7 +343,7 @@ Bit32s e1000_options_save(FILE *fp)
 
 // device plugin entry points
 
-int libe1000_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libe1000_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theE1000Device = new bx_e1000_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theE1000Device, BX_PLUGIN_E1000);
@@ -354,7 +354,7 @@ int libe1000_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char
   return 0; // Success
 }
 
-void libe1000_LTX_plugin_fini(void)
+void CDECL libe1000_LTX_plugin_fini(void)
 {
   SIM->unregister_addon_option("e1000");
   bx_list_c *menu = (bx_list_c*)SIM->get_param("network");

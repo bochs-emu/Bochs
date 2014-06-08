@@ -57,7 +57,7 @@
 
 bx_hdimage_ctl_c* theHDImageCtl = NULL;
 
-int libhdimage_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libhdimage_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   if (type == PLUGTYPE_CORE) {
     theHDImageCtl = new bx_hdimage_ctl_c;
@@ -68,7 +68,7 @@ int libhdimage_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, ch
   }
 }
 
-void libhdimage_LTX_plugin_fini(void)
+void CDECL libhdimage_LTX_plugin_fini(void)
 {
   delete theHDImageCtl;
 }

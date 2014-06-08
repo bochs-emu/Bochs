@@ -45,7 +45,7 @@
 
 bx_netmod_ctl_c* theNetModCtl = NULL;
 
-int libnetmod_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libnetmod_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   if (type == PLUGTYPE_CORE) {
     theNetModCtl = new bx_netmod_ctl_c;
@@ -56,7 +56,7 @@ int libnetmod_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, cha
   }
 }
 
-void libnetmod_LTX_plugin_fini(void)
+void CDECL libnetmod_LTX_plugin_fini(void)
 {
   delete theNetModCtl;
 }
