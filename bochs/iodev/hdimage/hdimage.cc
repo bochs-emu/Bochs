@@ -1323,24 +1323,29 @@ void sparse_image_t::restore_state(const char *backup_fname)
 
 /*** dll_image_t function definitions ***/
 
-HINSTANCE hlib_vdisk = NULL;
+typedef int  (CDECL *vdisk_open_t)  (const char *path, int flags);
+typedef BOOL (CDECL *vdisk_read_t)  (int vunit, LONGLONG blk, void *buf);
+typedef BOOL (CDECL *vdisk_write_t) (int vunit, LONGLONG blk, const void *buf);
+typedef void (CDECL *vdisk_close_t) (int vunit);
+typedef LONGLONG (CDECL *vdisk_get_size_t) (int vunit);
 
-int  (*vdisk_open)  (const char *path, int flags);
-BOOL (*vdisk_read)  (int vunit, LONGLONG blk, void *buf);
-BOOL (*vdisk_write) (int vunit, LONGLONG blk, const void *buf);
-void (*vdisk_close) (int vunit);
-LONGLONG (*vdisk_get_size) (int vunit);
+HINSTANCE hlib_vdisk = NULL;
+vdisk_open_t vdisk_open = NULL;
+vdisk_read_t vdisk_read = NULL;
+vdisk_write_t vdisk_write = NULL;
+vdisk_close_t vdisk_close = NULL;
+vdisk_get_size_t vdisk_get_size = NULL;
 
 dll_image_t::dll_image_t()
 {
   if (hlib_vdisk == NULL) {
     hlib_vdisk = LoadLibrary("vdisk.dll");
     if (hlib_vdisk != NULL) {
-      vdisk_open =  (int (*)(const char *,int))          GetProcAddress(hlib_vdisk,"vdisk_open");
-      vdisk_read =  (BOOL (*)(int,LONGLONG,void*))       GetProcAddress(hlib_vdisk,"vdisk_read");
-      vdisk_write = (BOOL (*)(int,LONGLONG,const void*)) GetProcAddress(hlib_vdisk,"vdisk_write");
-      vdisk_close = (void (*)(int))                      GetProcAddress(hlib_vdisk,"vdisk_close");
-      vdisk_get_size = (LONGLONG (*)(int))               GetProcAddress(hlib_vdisk,"vdisk_get_size");
+      vdisk_open =  (vdisk_open_t)        GetProcAddress(hlib_vdisk,"vdisk_open");
+      vdisk_read =  (vdisk_read_t)        GetProcAddress(hlib_vdisk,"vdisk_read");
+      vdisk_write = (vdisk_write_t)       GetProcAddress(hlib_vdisk,"vdisk_write");
+      vdisk_close = (vdisk_close_t)       GetProcAddress(hlib_vdisk,"vdisk_close");
+      vdisk_get_size = (vdisk_get_size_t) GetProcAddress(hlib_vdisk,"vdisk_get_size");
       if ((vdisk_open == NULL) || (vdisk_read == NULL) || (vdisk_write == NULL) ||
           (vdisk_close == NULL) || (vdisk_get_size == NULL)) {
         FreeLibrary(hlib_vdisk);
