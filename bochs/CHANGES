@@ -1,3 +1,17 @@
+Changes in 2.6.6 (not yet released):
+
+- CPU / CPUDB
+  - allow sandy bridge configuration even when AVX is not compiled in
+
+- Configure and compile
+  - fixed compilation error when 3dnow support is enabled
+  - speedup Visual Studio build by almost 20% by adding /Gr compiler option
+
+- Misc
+  - fixed minimizing win32 gui window and resolution change while minimized
+  - added compiled SeaBIOS 1.7.5 image into Bochs tree along with Bochs BIOS images
+
+-------------------------------------------------------------------------
 Changes in 2.6.5 (June 1, 2014):
 
 Brief summary :
