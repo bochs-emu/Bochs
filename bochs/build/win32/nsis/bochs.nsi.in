@@ -113,6 +113,8 @@ Section "ROM Images (required)" SecROMs
 
   File "${SRCDIR}\BIOS-bochs-*"
   File "${SRCDIR}\VGABIOS-*"
+  File "${SRCDIR}\bios.bin-*"
+  File "${SRCDIR}\SeaBIOS-README.txt"
 SectionEnd
 
 Section "Documentation in HTML" SecDocs
@@ -285,6 +287,8 @@ Section "Uninstall"
   Delete "$INSTDIR\keymaps\*"
   Delete "$INSTDIR\BIOS-bochs-*"
   Delete "$INSTDIR\VGABIOS-*"
+  Delete "$INSTDIR\bios.bin-*"
+  Delete "$INSTDIR\SeaBIOS-README.txt"
   Delete "$INSTDIR\dlxlinux\*"
   Delete "$INSTDIR\docs\index.html"
   Delete "$INSTDIR\docs\user\*"
