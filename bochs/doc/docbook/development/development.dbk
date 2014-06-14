@@ -831,11 +831,36 @@ class:
 </screen>
 </para>
 <para>
-This private method is called when the function handles the clock ticks finds
+This private method is called when the function handling the clock ticks finds
 that an event has occurred:
 <screen>
   void   countdownEvent(void);
 </screen>
+</para>
+</section>
+<section><title>Detailed functional description</title>
+<para>
+The Bochs timer implementation requires at least one timer to be active. That's why
+there is a so-called <function>nullTimer</function> to make it work. It is
+initialized in the constructor on the first timer slot with the highest possible
+timer interval and it's handler is an empty function.
+</para>
+<para>
+The most important variables of the timer subsystem are initialized on startup
+with the <function>nullTimer</function> values and updated after each timer
+modification (register / unregister / activate / deactivate / processing
+handler).
+<itemizedlist>
+<listitem><para><emphasis>ticksTotal</emphasis>: number of ticks total from emulator
+startup to the last update of timer subsystem</para></listitem>
+<listitem><para><emphasis>currCountdownPeriod</emphasis>: length of the period
+from <emphasis>ticksTotal</emphasis> to the next timer event</para></listitem>
+<listitem><para><emphasis>currCountdown</emphasis>: number of ticks remaining
+until the next timer event occurs</para></listitem>
+</itemizedlist>
+The number if ticks since emulator startup are calculated with the formula
+<emphasis>ticksTotal + currCountdownPeriod - currCountdown</emphasis> and
+returned with the <function>time_ticks()</function> method.
 </para>
 <para>
 &FIXME; To be continued

@@ -10,6 +10,7 @@ Changes in 2.6.6 (not yet released):
 - Misc
   - fixed minimizing win32 gui window and resolution change while minimized
   - added compiled SeaBIOS 1.7.5 image into Bochs tree along with Bochs BIOS images
+  - documentation fixes and updates
 
 -------------------------------------------------------------------------
 Changes in 2.6.5 (June 1, 2014):
