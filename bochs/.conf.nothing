@@ -1,0 +1,20 @@
+#!/bin/sh
+#
+# These are the steps I typically use to configure and compile Bochs
+# on a Win32 system with cygwin (v.20.1)
+#
+
+CC="gcc"
+CXX="g++"
+CFLAGS="-O3 -Wall -Wno-format"
+CXXFLAGS="$CFLAGS"
+
+export CC
+export CXX
+export CFLAGS
+export CXXFLAGS
+
+./configure --enable-cpu-level=3 \
+            --disable-fpu \
+            --disable-pci \
+            --with-nogui

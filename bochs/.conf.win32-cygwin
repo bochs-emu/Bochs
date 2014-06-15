@@ -1,0 +1,33 @@
+#!/bin/sh
+#
+# These are the steps I typically use to configure and compile Bochs
+# on a Win32 system with Cygwin (v1.7.28) or MinGW/MSYS.
+#
+
+CC="gcc"
+CXX="g++"
+#CFLAGS="-O3 -Wall -Wno-format -mno-cygwin" # for GCC versions < 4.7
+CFLAGS="-O3 -Wall -Wno-format -mno-ms-bitfields"
+CXXFLAGS="$CFLAGS"
+
+export CC
+export CXX
+export CFLAGS
+export CXXFLAGS
+
+./configure --enable-sb16 \
+            --enable-ne2000 \
+            --enable-all-optimizations \
+            --enable-cpu-level=6 \
+            --enable-x86-64 \
+            --enable-vmx=2 \
+            --enable-pci \
+            --enable-clgd54xx \
+            --enable-voodoo \
+            --enable-usb \
+            --enable-usb-ohci \
+            --enable-usb-xhci \
+            --enable-es1370 \
+            --enable-e1000 \
+            --enable-show-ips \
+            --with-win32 --with-rfb --with-nogui

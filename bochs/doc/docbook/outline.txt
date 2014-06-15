@@ -1,0 +1,164 @@
+--- Bryce Denney <bryce@tlw.com> wrote:
+> Hi Michael,
+>
+> I added some flesh to the skeleton.  I tried to keep things in approximately
+> the order that brand new user might need the information.  It goes through
+> the process of:
+>
+> 1. Is this thing worth looking at?
+> 2. Ok, but will I be able to do X,Y,Z?
+> 3. Fine, I'll download it.  What should I download
+> and how do you install?
+> 4. Let's see something work soon, right now, or I'm
+> going to erase the
+> whole thing.  (Dlxlinux)
+> 5. Now how do you change the settings, try a
+> different disk image, make a
+> disk, etc.  Who do I ask for help?
+>
+> If they get to #5, they are a bochs user.  And
+> eventually...
+>
+> 6. Hey, I added USB support to talk to my scanner,
+> anybody want to try it?
+>
+>
+
+
+Here's the outline that the docbooks are organized by, basically.
+
+Title Pages
+Contents
+Bochs Users Guide
+  Introduction to Bochs
+    What is Bochs?
+      portable x86 emulator, etc.
+    Who uses Bochs?
+      run more than one operating system without rebooting
+      OS developers use Bochs to system software without endangering
+	their development machine or rebooting.
+      students use Bochs to learn about how PC hardware works
+      hardware designers use bochs to help test new hardware
+    Will it work for me?
+      platforms supported (brief list)
+      speed issues.  if speed is top priority, maybe look elsewhere
+    Licensing
+  FAQ
+  Installation
+    How to get it
+      pointer to SF web site
+      most stable version: latest release. binaries and source available
+      latest version
+	by using CVS software
+	by downloading CVS snapshot
+    Installing a Binary
+      For Windows, unzip into some directory.  Look for DOC-win32.html
+	for more instructions.  Quick start: find dlxlinux/start.bat and
+	double click
+      For Unix, rpm -i bochs-<VERSION>.rpm.
+	Look for /usr/local/bochs/latest/DOC-linux.html, man pages for
+	bochs.  Quick start: run bochs-dlx  (in /usr/local/bin)
+    Compiling from source
+      Unix
+	Run configure to make the Makefiles
+	List of configure arguments
+	Option of using .conf.* scripts
+	What to report if configure fails: Tar up config.* and send to
+	  bochs-testing@tlw.com
+	Make
+	What to try if make fails: turn off configure options,
+	  look at SF bugs and patches section to see if it's a known
+	  problem, try to fix it yourself, if using CVS version try
+	  a release source file instead, fix it yourself
+	Make install, what it installs and where
+	  /usr/local/bochs/$VERSION/*
+	  /usr/local/bin/bochs (and bximage)
+	  /usr/man/man1/bochs*.1 (and bximage.1)
+	  make install_dlx option
+	How to build an RPM in Linux
+      Instructions for win32 VC++
+	Getting the makefiles
+	  Download them from web site in a zip, install them on top
+	    of the source directory
+	  Run configure on a unix box, copy the Makefiles and config.h
+	    to your windows machine
+	  RUN CONFIGURE IN BOCHS!  This would be awesome.
+	  Cygwin?
+	Building it with NMAKE
+	Installation? Maybe download an existing windows binary package
+	  and drop in your new binary.  There is no make install, though
+	  this may be added some day.
+      Instructions for cygwin?
+	I have no idea.
+  Setup
+    What does Bochs need?
+      bochsrc, BIOS, VGABIOS, VGA font, disk images.
+      table of bochsrc options and what they do
+      BIOS/VGABIOS, what do they do?
+      VGA font, how to install it
+      disk images
+	where to find one pre-made
+	make a blank one with bximage
+	grab one from a real hard disk
+  Using Bochs
+    Resources for users
+      bochs-developers mailing list, archive
+      testing status page: tells what has been tried and who got it working
+      SourceForge
+	look for bug reports
+	how to report problems, make feature requests
+    Common problems and what to do about them
+      What's a panic?  How to report it to bug tracker, how to make
+	it non-fatal.
+      Mouse behavior, enabling and disabling
+      Keyboard mapping problems
+      [...]
+    Tips and Techniques
+      Mount disk image in loopback
+      Using two hard disks
+      [...]
+    Guest operating systems
+      Notes for different OSes
+	Linux
+	  What disk images are available.
+	  Installing from scratch.
+	  What works
+	  Known problems
+	OpenBSD
+	FreeBSD
+	FreeDOS
+	DOS
+	Windows *
+	[...]
+Bochs Developers Guide
+  Resources for developers
+    All the resources for users
+    CVS
+      how to browse on web interface
+      anonymous CVS (read only)
+      write access CVS (must be officially a developer)
+      how to make a patch using CVS
+    SourceForge bug, feature, and patch trackers
+  About the code
+    cpu directory does this, iodev does that, gui does that
+    configure script, makefiles, header files
+    log functions: what is a panic, what is an error, etc.
+    objects that do all the work (cpu, mem)
+    timers
+  Debugger
+    compile with debugger support
+    get started in debugger
+    command reference
+    techniques
+  Coding
+    coding conventions
+    patches: how to make, where to submit, what
+happens then?
+    life cycle of a CVS release
+Documentation
+  Layout
+  Docbook Basics
+  Conventions
+  Rendering
+Glossary
+Index

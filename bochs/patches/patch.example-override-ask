@@ -1,0 +1,115 @@
+----------------------------------------------------------------------
+Patch name: patch.example-override-ask
+Author: Bryce Denney
+Date: Mon Sep 23 13:00:53 EDT 2002
+Status: Demo
+
+Detailed description:
+This patch shows how to create your own siminterface callback function.
+It is not intended to be checked in anytime, only to serve as an example
+of how to use the siminterface.
+
+Patch updated for current SVN. (Volker Ruppert, Apr 15, 2012)
+
+Patch was created with:
+  diff -u
+Apply patch to what version:
+  svn checked out on DATE
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+diff -urN ../bochs/config.h.in ./config.h.in
+--- ../bochs/config.h.in	2012-01-26 17:34:41.603286662 +0100
++++ ./config.h.in	2012-04-15 14:29:36.529504219 +0200
+@@ -858,6 +858,9 @@
+ // I/O Interface to debugger
+ #define BX_SUPPORT_IODEBUG 0
+ 
++// Override ask dialog (demo)
++#define BX_OVERRIDE_ASK_EXAMPLE 1
++
+ #ifdef WIN32
+ #define BX_FLOPPY0_NAME "Floppy Disk A:"
+ #define BX_FLOPPY1_NAME "Floppy Disk B:"
+diff -urN ../bochs/gui/textconfig.cc ./gui/textconfig.cc
+--- ../bochs/gui/textconfig.cc	2012-04-06 15:15:28.094038820 +0200
++++ ./gui/textconfig.cc	2012-04-15 14:31:30.538122593 +0200
+@@ -1075,6 +1075,10 @@
+   {
+     case CI_START:
+       bx_config_interface_init();
++#if BX_OVERRIDE_ASK_EXAMPLE
++      extern void override_ask_init();
++      override_ask_init();
++#endif
+       if (SIM->get_param_enum(BXPN_BOCHS_START)->get() == BX_QUICK_START)
+ 	bx_config_interface(BX_CI_START_SIMULATION);
+       else {
+diff -urN ../bochs/Makefile.in ./Makefile.in
+--- ../bochs/Makefile.in	2012-04-11 18:52:41.715215121 +0200
++++ ./Makefile.in	2012-04-15 14:29:36.530504215 +0200
+@@ -141,6 +141,7 @@
+ 	osdep.o \
+ 	plugin.o \
+ 	crc.o \
++	overrideask.o \
+ 	@EXTRA_BX_OBJS@
+ 
+ EXTERN_ENVIRONMENT_OBJS = \
+diff -urN ../bochs/overrideask.cc ./overrideask.cc
+--- ../bochs/overrideask.cc	1970-01-01 01:00:00.000000000 +0100
++++ ./overrideask.cc	2012-04-15 14:29:36.531504211 +0200
+@@ -0,0 +1,52 @@
++#include <stdio.h>
++#include <assert.h>
++#include "config.h"
++#include "osdep.h"
++#include "gui/siminterface.h"
++
++bxevent_handler old_callback = NULL;
++void *old_callback_arg = NULL;
++
++BxEvent *
++override_ask_callback (void *unused, BxEvent *event)
++{
++  int n;
++  int level;
++  fprintf (stderr, "override_ask_callback\n");
++  event->retcode = -1;
++  switch (event->type)
++  {
++    case BX_SYNC_EVT_LOG_ASK:
++      level = event->u.logmsg.level;
++      fprintf (stderr, "============ override_ask_callback was called ==========================\n");
++      fprintf (stderr, "Event type: %s\n", SIM->get_log_level_name (level));
++      fprintf (stderr, "Device: %s\n", event->u.logmsg.prefix);
++      fprintf (stderr, "Message: %s\n\n", event->u.logmsg.msg);
++      // note: 4 only available if BX_DEBUGGER=1. ideally, don't show it
++      fprintf (stderr, "What should I do? (0=continue, 1=alwayscont, 2=die, 3=abort, 4=debug) ");
++      while (scanf ("%d", &n) != 1 || (n<0 && n>4)) {
++	fprintf (stderr, "Enter 0-4 only.\n");
++      }
++      event->retcode = n;
++      fprintf (stderr, "============ override_ask_callback is done =============================\n");
++      return event;
++    case BX_SYNC_EVT_TICK: // called periodically by siminterface.
++    case BX_SYNC_EVT_ASK_PARAM: // called if simulator needs to know value of a param.
++    case BX_ASYNC_EVT_REFRESH: // called when some bx_param_c parameters have changed.
++      // fall into default case
++  default:
++    return (*old_callback)(old_callback_arg, event);
++  }
++}
++
++// called from textconfig.cc
++void override_ask_init ()
++{
++  fprintf (stderr, "override_ask_init");
++  // this should be called after the configuration interface has had a
++  // chance to install its own callback.  Otherwise, overrideask will not
++  // override anything.
++  SIM->get_notify_callback (&old_callback, &old_callback_arg);
++  assert (old_callback != NULL);
++  SIM->set_notify_callback (override_ask_callback, NULL);
++}
