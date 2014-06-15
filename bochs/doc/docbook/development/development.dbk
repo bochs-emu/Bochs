@@ -2834,7 +2834,7 @@ Now you can start building packages with the sources from the created release ta
 </para>
 </section>
 
-<section><title>Anonymous SVN checkout and platform-dependent sources</title>
+<section><title>Anonymous SVN checkout and platform-independent sources</title>
 <para>
 An anonymous SVN checkout from the release tag is the base for all official
 release packages. Do this checkout from the release tag and specify a not yet

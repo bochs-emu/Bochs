@@ -1,4 +1,4 @@
-Changes in 2.6.6 (not yet released):
+Changes in 2.6.6 (June 15, 2014):
 
 - CPU / CPUDB
   - allow sandy bridge configuration even when AVX is not compiled in
