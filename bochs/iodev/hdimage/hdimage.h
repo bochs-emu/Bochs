@@ -138,8 +138,6 @@
 #define dtoh64(val) htod64(val)
 #endif
 
-#ifndef HDIMAGE_HEADERS_ONLY
-
 class device_image_t;
 class redolog_t;
 
@@ -600,7 +598,5 @@ public:
   virtual cdrom_base_c *init_cdrom(const char *dev);
 };
 #endif // BXIMAGE
-
-#endif // HDIMAGE_HEADERS_ONLY
 
 #endif
