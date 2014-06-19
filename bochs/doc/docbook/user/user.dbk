@@ -1372,9 +1372,7 @@ DLX Linux screenshot.
 <row><entry>bochs.ico </entry> <entry> the Bochs icon (used for links in start menu and on the desktop) </entry> </row>
 <row><entry>bochsdbg.exe </entry> <entry> the main Bochs executable with debugger enabled </entry> </row>
 <row><entry>bochsrc-sample.txt </entry> <entry> sample Bochs configuration file </entry> </row>
-<row><entry>bxcommit.exe </entry> <entry> legacy tool for committing redologs to flat disk images </entry> </row>
 <row><entry>bximage.exe </entry> <entry> tool for manipulating disk images </entry> </row>
-<row><entry>bximage_old.exe </entry> <entry> legacy tool for creating disk images </entry> </row>
 <row><entry>CHANGES.txt </entry> <entry> what has changed between versions </entry> </row>
 <row><entry>COPYING.txt </entry> <entry> copy of the LGPL license </entry> </row>
 <row><entry>LICENSE.txt </entry> <entry> Bochs license information </entry> </row>
@@ -1463,7 +1461,7 @@ anyway, but if it is missing important pieces it may not run properly.
 
 <para>
 The Bochs RPM installs five new commands and associated manual pages: bochs,
-bochs-dlx, bximage, bximage_old and bxcommit.  First, let's try out the
+bochs-dlx and bximage.  First, let's try out the
 DLX Linux demo by typing <command>bochs-dlx</command>.
 
 <screen>
@@ -1558,11 +1556,9 @@ description of each one.
 <row><entry>/usr/share/doc/bochs/TODO</entry> <entry> the TODO file from the source distribution. </entry> </row>
 <row><entry>/usr/bin/bochs </entry> <entry> the main Bochs executable </entry> </row>
 <row><entry>/usr/bin/bximage </entry> <entry> tool for manipulating disk images </entry> </row>
-<row><entry>/usr/bin/bximage_old </entry> <entry> legacy tool for making new disk images </entry> </row>
-<row><entry>/usr/bin/bxcommit </entry> <entry> legacy tool for committing redologs to flat disk images </entry> </row>
 <row><entry>/usr/lib/bochs/plugins/* </entry> <entry> device and gui plugins for Bochs (plugin version only) </entry> </row>
 <row><entry>/usr/share/doc/bochs/bochsrc-sample.txt</entry> <entry> sample Bochs configuration file </entry> </row>
-<row><entry>/usr/share/man/man1/* </entry> <entry> man pages for bochs, bochs-dlx, bximage, bximage_old and bxcommit</entry> </row>
+<row><entry>/usr/share/man/man1/* </entry> <entry> man pages for bochs, bochs-dlx and bximage</entry> </row>
 <row><entry>/usr/share/man/man5/* </entry> <entry> man page for bochsrc </entry> </row>
 <row><entry>/usr/share/doc/bochs/index.html</entry> <entry> a local copy of all Bochs documentation ( <ulink url="http://bochs.sourceforge.net/doc/docbook/index.html">Online copy</ulink> )</entry> </row>
 <row><entry>/usr/share/bochs/BIOS-bochs-latest </entry> <entry> default ROM BIOS image for Bochs </entry> </row>
@@ -1832,7 +1828,7 @@ tables shows the directories and their contents.
   <tbody>
     <row>
       <entry>bin</entry>
-      <entry>binary executables (bochs, bxcommit, bximage, bximage_old)</entry>
+      <entry>binary executables (bochs, bximage)</entry>
     </row>
     <row>
       <entry>lib/bochs/plugins</entry>
@@ -2593,8 +2589,7 @@ find the workspace file called <filename>bochs.sln</filename> in the folder
 "vs2008" and load it in VC++. Choose <command>Project:Set Active Project</command>
 and be sure that "bochs" is selected. Then choose <command>Build:Build bochs.exe</command>.
 This will build all the required libraries (iodev, cpu, etc.) and the auxiliary
-programs <filename>bximage.exe</filename>, <filename>bximage_old.exe</filename>,
-<filename>bxcommit.exe</filename> and <filename>niclist.exe</filename>.
+programs <filename>bximage.exe</filename> and <filename>niclist.exe</filename>.
 </para>
 
 <para>
@@ -9299,9 +9294,7 @@ The type of the base image is auto-detected. The name of the redolog
 file only needs to be specified if it is not based on the base image.
 If you have enabled the backup switch, backups of the original base and
 redolog files will still be created with their original name plus the
-suffix ".orig". The legacy tool to commit redologs into flat files is
-still supported, so please see <xref linkend="using-bxcommit"> for
-details.
+suffix ".orig".
 </para>
 </section>
 <section><title>Disk image info</title>
@@ -9314,65 +9307,6 @@ returning the geometry, the cylinders are calculated based on 16 heads
 and 63 sectors per track.
 </para>
 </section>
-</section>
-
-<section id="using-bxcommit"><title>Using the bxcommit tool</title>
-<para>
-This legacy tool has been designed to commit redologs into flat images.
-</para>
-<para>
-It supports committing 'undoable' redologs to 'flat' or 'growing' base images
-and 'growing' to 'flat' image conversion (and vice versa). Committing / converting
-other disk image types is supported by the new bximage utility (<xref linkend="using-bximage">).
-</para>
-<para>
-This tool is completely interactive if no command line arguments are used.
-Then bxcommit asks for the operation mode, the flat image name, the redolog name,
-and whether to remove the source file after the commit or conversion is done.
-It can be switched to a non-interactive mode if all required parameters are
-given in the command line.
-<screen>
-bxcommit [options] [flat filename] [redolog filename]
-
-Supported options:
-  -mode=commit-undoable  commit undoable redolog to flat file
-  -mode=growing-to-flat  create flat disk image from growing disk image
-  -mode=flat-to-growing  create growing disk image from flat disk image
-  -d               delete redolog file after commit
-  -q               quiet mode (don't prompt for user input)
-  --help           display this help and exit
-
-The first filename parameter specifies the name of the base image that will be
-created or modified. The second one specifies the name of the redolog.
-</screen>
-</para>
-<para>
-Session example :
-<screen>
-$ ./bxcommit
-========================================================================
-                               bxcommit
-           Growing / Undoable Disk Image Commit Tool for Bochs
-========================================================================
-
-1. Commit 'undoable' redolog to 'flat' or 'growing' mode base image
-2. Create 'flat' disk image from 'growing' disk image
-3. Create 'growing' disk image from 'flat' disk image
-
-0. Quit
-
-Please choose one [0] 1
-
-What is the flat image name?
-[c.img] myfile.img
-
-What is the redolog name?
-[myfile.img.redolog] toapply.redolog
-
-Should the redolog been removed afterwards?
-[yes]
-</screen>
-</para>
 </section>
 
 </chapter>

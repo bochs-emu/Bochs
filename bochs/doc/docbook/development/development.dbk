@@ -262,7 +262,7 @@ For the configuration interface there are also some different implementations: t
 <row><entry>iodev/sound</entry><entry>sound devices and lowlevel modules</entry></row>
 <row><entry>iodev/usb</entry><entry>USB HCs and pluggable devices</entry></row>
 <row><entry>memory</entry><entry>memory management and ROM loader</entry></row>
-<row><entry>misc</entry><entry>useful utilities (e.g. bximage, bxcommit, niclist)</entry></row>
+<row><entry>misc</entry><entry>useful utilities (e.g. bximage, niclist)</entry></row>
 <row><entry>misc/sb16</entry><entry>tool to control the SB16 emulation from the guest side</entry></row>
 <row><entry>patches</entry><entry>pending patches</entry></row>
 </tbody>
