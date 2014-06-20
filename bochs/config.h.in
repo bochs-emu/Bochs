@@ -294,6 +294,14 @@
 // for wxWidgets only.
 #define BX_USE_TEXTCONFIG 1
 
+// BX_USE_WIN32CONFIG should be set to 1 on WIN32 for the guis
+// "win32" and "sdl" only.
+#if BX_USE_TEXTCONFIG && defined(WIN32) && (BX_WITH_WIN32 || BX_WITH_SDL)
+  #define BX_USE_WIN32CONFIG 1
+#else
+  #define BX_USE_WIN32CONFIG 0
+#endif
+
 // A certain functions must NOT be fastcall even if compiled with fastcall
 // option, and those are callbacks from Windows which are defined either 
 // as cdecl or stdcall. The entry point main() also has to remain cdecl.

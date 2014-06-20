@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@
 #include "bxversion.h"
 #include "param_names.h"
 #include "gui/textconfig.h"
-#if BX_USE_TEXTCONFIG && defined(WIN32) && (BX_WITH_WIN32 || BX_WITH_SDL)
+#if BX_USE_WIN32CONFIG
 #include "gui/win32dialog.h"
 #endif
 #include "cpu/cpu.h"
@@ -261,7 +261,7 @@ int bxmain(void)
 #endif
     }
     else if (!strcmp(ci_name, "win32config")) {
-#if BX_USE_TEXTCONFIG && defined(WIN32) && (BX_WITH_WIN32 || BX_WITH_SDL)
+#if BX_USE_WIN32CONFIG
       init_win32_config_interface();
 #else
       BX_PANIC(("configuration interface 'win32config' not present"));

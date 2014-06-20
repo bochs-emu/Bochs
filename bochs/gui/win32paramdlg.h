@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009  Volker Ruppert
+//  Copyright (C) 2009-2014  Volker Ruppert
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
 
 #include "config.h"
 
-#if BX_USE_TEXTCONFIG && defined(WIN32)
+#if BX_USE_WIN32CONFIG
 
 int AskFilename(HWND hwnd, bx_param_filename_c *param, char *buffer);
 INT_PTR win32ParamDialog(HWND parent, const char *menu);

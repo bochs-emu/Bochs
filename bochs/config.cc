@@ -287,7 +287,7 @@ void bx_init_options()
 
  // config interface option, set in bochsrc or command line
   static const char *config_interface_list[] = {
-#ifdef WIN32
+#if BX_USE_WIN32CONFIG
     "win32config",
 #endif
 #if BX_USE_TEXTCONFIG

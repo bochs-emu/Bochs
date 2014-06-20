@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2013  Volker Ruppert
+//  Copyright (C) 2009-2014  Volker Ruppert
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -20,7 +20,7 @@
 
 #include "win32dialog.h"
 
-#if BX_USE_TEXTCONFIG && defined(WIN32) && (BX_WITH_WIN32 || BX_WITH_SDL)
+#if BX_USE_WIN32CONFIG
 
 #include "bochs.h"
 #include "win32res.h"
@@ -1232,4 +1232,4 @@ INT_PTR win32FloppyParamDialog(HWND parent, const char *menu)
   return ret;
 }
 
-#endif // BX_USE_TEXTCONFIG && defined(WIN32)
+#endif // BX_USE_WIN32CONFIG
