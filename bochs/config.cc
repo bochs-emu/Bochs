@@ -890,6 +890,9 @@ void bx_init_options()
 #if BX_WITH_SDL
     "sdl",
 #endif
+#if BX_WITH_SDL2
+    "sdl2",
+#endif
 #if BX_WITH_SVGA
     "svga",
 #endif

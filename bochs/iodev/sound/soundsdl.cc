@@ -24,13 +24,11 @@
 #include "soundmod.h"
 #include "soundsdl.h"
 
-#if BX_WITH_SDL && BX_SUPPORT_SOUNDLOW
+#if (BX_WITH_SDL || BX_WITH_SDL2) && BX_SUPPORT_SOUNDLOW
 
 #define LOG_THIS
 
-#if BX_WITH_SDL
 #include <SDL.h>
-#endif
 
 #define BX_SOUND_SDL_BUFSIZE  BX_SOUNDLOW_WAVEPACKETSIZE * 8
 
@@ -174,4 +172,4 @@ int bx_sound_sdl_c::closewaveoutput()
   return BX_SOUNDLOW_OK;
 }
 
-#endif  // BX_WITH_SDL
+#endif  // BX_WITH_SDL || BX_WITH_SDL2

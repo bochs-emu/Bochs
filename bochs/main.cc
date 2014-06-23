@@ -32,7 +32,7 @@
 #include <locale.h>
 #endif
 
-#if BX_WITH_SDL
+#if BX_WITH_SDL || BX_WITH_SDL2
 // since SDL redefines main() to SDL_main(), we must include SDL.h so that the
 // C language prototype is found.  Otherwise SDL_main() will get its name
 // mangled and not match what the SDL library is expecting.
@@ -897,6 +897,10 @@ bx_bool load_and_init_display_lib(void)
 #if BX_WITH_SDL
   if (!strcmp(gui_name, "sdl"))
     PLUG_load_plugin (sdl, PLUGTYPE_OPTIONAL);
+#endif
+#if BX_WITH_SDL2
+  if (!strcmp(gui_name, "sdl2"))
+    PLUG_load_plugin (sdl2, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_SVGA
   if (!strcmp(gui_name, "svga"))

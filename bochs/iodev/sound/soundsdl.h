@@ -21,7 +21,7 @@
 // Lowlevel sound output support for SDL written by Volker Ruppert
 
 
-#if BX_WITH_SDL
+#if BX_WITH_SDL || BX_WITH_SDL2
 
 #include "bochs.h"
 
@@ -43,4 +43,4 @@ private:
   bx_bool WaveOpen;
 };
 
-#endif  // BX_WITH_SDL
+#endif  // BX_WITH_SDL || BX_WITH_SDL2

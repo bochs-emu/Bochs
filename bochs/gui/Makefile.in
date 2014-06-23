@@ -53,6 +53,7 @@ BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMEN
 
 GUI_OBJS_X11  = x.o
 GUI_OBJS_SDL = sdl.o
+GUI_OBJS_SDL2 = sdl2.o
 GUI_OBJS_SVGA = svga.o
 GUI_OBJS_WIN32 = win32.o
 GUI_OBJS_MACOS = macintosh.o
@@ -71,6 +72,7 @@ X_LIBS = @X_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
 GUI_LINK_OPTS_X = $(X_LIBS) $(X_PRE_LIBS)
 GUI_LINK_OPTS_SDL = @GUI_LINK_OPTS_SDL@
+GUI_LINK_OPTS_SDL2 = @GUI_LINK_OPTS_SDL2@
 GUI_LINK_OPTS_SVGA =  -lvga -lvgagl
 GUI_LINK_OPTS_RFB = @RFB_LIBS@
 GUI_LINK_OPTS_RFB_VCPP = user32.lib @RFB_LIBS@
@@ -122,6 +124,9 @@ libbx_x.la: x.lo
 libbx_sdl.la: sdl.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_SDL)
 
+libbx_sdl2.la: sdl2.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_SDL2)
+
 libbx_svga.la: svga.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_SVGA)
 
@@ -162,6 +167,9 @@ bx_wx.dll: $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT)
 
 bx_sdl.dll: $(GUI_OBJS_SDL)
 	$(CXX) $(CXXFLAGS) -shared -o bx_sdl.dll $(GUI_OBJS_SDL) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_SDL)
+
+bx_sdl2.dll: $(GUI_OBJS_SDL2)
+	$(CXX) $(CXXFLAGS) -shared -o bx_sdl2.dll $(GUI_OBJS_SDL2) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_SDL2)
 
 bx_vncsrv.dll: $(GUI_OBJS_VNCSRV)
 	$(CXX) $(CXXFLAGS) -shared -o bx_vncsrv.dll $(GUI_OBJS_VNCSRV) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_VNCSRV)
