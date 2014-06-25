@@ -1063,12 +1063,12 @@ public: // for now...
   // vmm0-vmmN: up to 32 vector registers
   // vtmp: temp register
 #if BX_SUPPORT_EVEX
-  bx_zmm_reg_t vmm[BX_XMM_REGISTERS+1];
+  bx_zmm_reg_t vmm[BX_XMM_REGISTERS+1] BX_CPP_AlignN(64);
 #else
 #if BX_SUPPORT_AVX
-  bx_ymm_reg_t vmm[BX_XMM_REGISTERS+1];
+  bx_ymm_reg_t vmm[BX_XMM_REGISTERS+1] BX_CPP_AlignN(32);
 #else
-  bx_xmm_reg_t vmm[BX_XMM_REGISTERS+1];
+  bx_xmm_reg_t vmm[BX_XMM_REGISTERS+1] BX_CPP_AlignN(16);
 #endif
 #endif
 
