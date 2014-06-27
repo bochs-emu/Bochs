@@ -87,8 +87,9 @@ fi
 AC_MSG_CHECKING(for standard CFLAGS on this platform)
 AC_MSG_RESULT($ADD_FLAGS)
 
-dnl // make sure X Windows is default if no other chosen
+dnl // make sure the default gui is enabled if no other chosen
 if (test "$with_sdl" != yes) && \
+   (test "$with_sdl2" != yes) && \
    (test "$with_svga" != yes) && \
    (test "$with_x11" != yes) && \
    (test "$with_win32" != yes) && \
@@ -393,6 +394,10 @@ if test "$with_all_libs" = yes; then
     with_nogui=yes
   fi
 fi    # end of if $with_all_libs = yes
+
+if test "$with_sdl" = yes -a "$with_sdl2" = yes; then
+  AC_MSG_ERROR([[--with-sdl and --with-sdl2 are mutually exclusive]])
+fi
 
 AC_MSG_CHECKING(for idle hack)
 AC_ARG_ENABLE(idle-hack,
@@ -1882,6 +1887,15 @@ if test "$soundcard_present" = 1; then
     if test "$soundlow_default" = "dummy"; then
       soundlow_default="sdl"
     fi
+  elif test "$with_sdl2" = yes; then
+    SOUNDLOW_OBJS="$SOUNDLOW_OBJS soundsdl.o"
+    if test "$bx_plugins" = 1; then
+      SOUND_LINK_OPTS="$SOUND_LINK_OPTS `sdl2-config --libs`"
+    fi
+    soundlow_drivers="$soundlow_drivers sdl"
+    if test "$soundlow_default" = "dummy"; then
+      soundlow_default="sdl"
+    fi
   fi
   if test "$bx_plugins" = 0; then
     SOUND_LIB_VAR='iodev/sound/libsound.a'
@@ -2039,6 +2053,10 @@ AC_ARG_WITH(amigaos,
 
 AC_ARG_WITH(sdl,
   [  --with-sdl                        use SDL libraries],
+  )
+
+AC_ARG_WITH(sdl2,
+  [  --with-sdl2                       use SDL2 libraries],
   )
 
 AC_ARG_WITH(svga,
@@ -2208,6 +2226,35 @@ if test "$with_sdl" = yes; then
   GUI_CXXFLAGS="$GUI_CXXFLAGS $SDL_CFLAGS"
   GUI_LINK_OPTS_SDL="`sdl-config --libs`"
   GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_SDL)"
+  # The enhanced X debugger depends on GTK2
+  if test "$gui_debugger" = 1 -a "$DEFAULT_GUI" != win32; then
+    needs_gtk2=1
+  fi
+  if test "$with_win32" != yes -a "$with_wx" != yes; then
+    case $target in
+      *-pc-windows*)
+         RC_CMD="rc /fo"
+         EXTRA_BX_OBJS="$EXTRA_BX_OBJS win32res.o"
+         ;;
+      *-cygwin* | *-mingw32*)
+         RC_CMD="windres -I. -o "
+         EXTRA_BX_OBJS="$EXTRA_BX_OBJS win32res.o"
+         ;;
+    esac
+  fi
+fi
+
+if test "$with_sdl2" = yes; then
+  display_libs="$display_libs sdl2"
+  AC_DEFINE(BX_WITH_SDL2, 1)
+  SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_SDL2)"
+  # GUI_*FLAGS are added to the compilation of every bochs file, not just
+  # the files in gui/*.cc.
+  SDL2_CFLAGS=`sdl2-config --cflags`
+  GUI_CFLAGS="$GUI_CFLAGS $SDL2_CFLAGS"
+  GUI_CXXFLAGS="$GUI_CXXFLAGS $SDL2_CFLAGS"
+  GUI_LINK_OPTS_SDL2="`sdl2-config --libs`"
+  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_SDL2)"
   # The enhanced X debugger depends on GTK2
   if test "$gui_debugger" = 1 -a "$DEFAULT_GUI" != win32; then
     needs_gtk2=1
@@ -2928,6 +2975,7 @@ AC_SUBST(INSTALL_LIST_FOR_PLATFORM)
 AC_SUBST(RFB_LIBS)
 AC_SUBST(GUI_LINK_OPTS_VNCSRV)
 AC_SUBST(GUI_LINK_OPTS_SDL)
+AC_SUBST(GUI_LINK_OPTS_SDL2)
 AC_SUBST(GUI_OBJS)
 AC_SUBST(DEVICE_LINK_OPTS)
 AC_SUBST(GUI_LINK_OPTS)
