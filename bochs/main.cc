@@ -385,7 +385,7 @@ int split_string_into_argv(char *string, int *argc_out, char **argv, int max_arg
 }
 #endif /* if defined(__WXMSW__) */
 
-#if defined(__WXMSW__) || (BX_WITH_SDL && defined(WIN32))
+#if defined(__WXMSW__) || ((BX_WITH_SDL || BX_WITH_SDL2) && defined(WIN32))
 // The RedirectIOToConsole() function is copied from an article called "Adding
 // Console I/O to a Win32 GUI App" in Windows Developer Journal, December 1997.
 // It creates a console window.
@@ -423,7 +423,7 @@ int RedirectIOToConsole()
   setvbuf(stderr, NULL, _IONBF, 0);
   return 1;
 }
-#endif  /* if defined(__WXMSW__) || (BX_WITH_SDL && defined(WIN32)) */
+#endif  /* if defined(__WXMSW__) || ((BX_WITH_SDL || BX_WITH_SDL2) && defined(WIN32)) */
 
 #if defined(__WXMSW__)
 // only used for wxWidgets/win32.
@@ -482,7 +482,7 @@ int CDECL main(int argc, char *argv[])
   if (bx_noconsole) {
     FreeConsole();
   } else {
-#if BX_WITH_SDL
+#if BX_WITH_SDL || BX_WITH_SDL2
     // if SDL/win32, try to create a console window.
     if (!RedirectIOToConsole()) {
       return 1;

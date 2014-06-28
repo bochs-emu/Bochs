@@ -339,7 +339,7 @@ static Bit32u sdl_sym_to_bx_key(SDL_Keycode sym)
 
 #if BX_SHOW_IPS
 #if defined(__MINGW32__) || defined(_MSC_VER)
-Uint32 SDLCALL sdlTimer(Uint32 interval)
+Uint32 sdlTimer(Uint32 interval, void *param)
 {
   bx_show_ips_handler();
   return interval;
@@ -471,7 +471,7 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     dialog_caps = BX_GUI_DLG_ALL;
   }
 #if BX_SHOW_IPS
-  SDL_SetTimer(1000, sdlTimer);
+  SDL_AddTimer(1000, sdlTimer, NULL);
 #endif
 #endif
 }

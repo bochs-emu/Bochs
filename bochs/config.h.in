@@ -297,7 +297,7 @@
 
 // BX_USE_WIN32CONFIG should be set to 1 on WIN32 for the guis
 // "win32" and "sdl" only.
-#if BX_USE_TEXTCONFIG && defined(WIN32) && (BX_WITH_WIN32 || BX_WITH_SDL)
+#if BX_USE_TEXTCONFIG && defined(WIN32) && (BX_WITH_WIN32 || BX_WITH_SDL || BX_WITH_SDL2)
   #define BX_USE_WIN32CONFIG 1
 #else
   #define BX_USE_WIN32CONFIG 0
