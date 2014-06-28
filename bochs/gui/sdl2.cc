@@ -27,6 +27,7 @@
 
 #include "bochs.h"
 #include "param_names.h"
+#include "keymap.h"
 #include "iodev.h"
 #if BX_WITH_SDL2
 
@@ -71,6 +72,7 @@ const Uint32 status_led_red = 0x00ff4000;
 
 static unsigned prev_cursor_x=0;
 static unsigned prev_cursor_y=0;
+static Bit32u convertStringToSDLKey(const char *string);
 
 #define MAX_SDL_BITMAPS 32
 struct bitmaps {
@@ -365,14 +367,13 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
   int i, j;
   Uint32 flags;
+  unsigned icon_id;
 #ifdef WIN32
   bx_bool gui_ci;
 
   gui_ci = !strcmp(SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE)->get_selected(), "win32config");
 #endif
   put("SDL2");
-
-  UNUSED(bochs_icon_bits);
 
   headerbar_height = headerbar_y;
 
@@ -400,6 +401,11 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     return;
   }
   atexit(SDL_Quit);
+
+  // load keymap for sdl
+  if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
+    bx_keymap.loadKeymap(convertStringToSDLKey);
+  }
 
   // parse sdl specific options
   if (argc > 1) {
@@ -454,6 +460,10 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     BX_HEADERBAR_BG_RED,
     BX_HEADERBAR_BG_GREEN,
     BX_HEADERBAR_BG_BLUE);
+
+
+  icon_id = create_bitmap(bochs_icon_bits, bochs_icon_width, bochs_icon_height);
+  SDL_SetWindowIcon(window, sdl_bitmaps[icon_id]->surface);
 
   new_gfx_api = 1;
 #ifdef WIN32
@@ -804,7 +814,7 @@ void bx_sdl2_gui_c::handle_events(void)
         if (sdl_grab) {
           wheel_status = sdl_event.wheel.y;
           if (sdl_mouse_mode_absxy) {
-            DEV_mouse_motion(old_mousex, old_mousey, wheel_status, old_mousebuttons, 0);
+            DEV_mouse_motion(old_mousex, old_mousey, wheel_status, old_mousebuttons, 1);
           } else {
             DEV_mouse_motion(0, 0, wheel_status, old_mousebuttons, 0);
           }
@@ -830,13 +840,23 @@ void bx_sdl2_gui_c::handle_events(void)
         if (sdl_nokeyrepeat && sdl_event.key.repeat) {
           break;
         }
-        key_event = sdl_sym_to_bx_key(sdl_event.key.keysym.sym);
-        BX_DEBUG(("keypress scancode=%d, sym=%d, bx_key = %d", sdl_event.key.keysym.scancode, sdl_event.key.keysym.sym, key_event));
-        if (key_event == BX_KEY_UNHANDLED) break;
-        DEV_kbd_gen_scancode( key_event);
-        if ((key_event == BX_KEY_NUM_LOCK) || (key_event == BX_KEY_CAPS_LOCK)) {
-          DEV_kbd_gen_scancode(key_event | BX_KEY_RELEASED);
+        // convert sym->bochs code
+        if (!SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
+          key_event = sdl_sym_to_bx_key(sdl_event.key.keysym.sym);
+          BX_DEBUG(("keypress scancode=%d, sym=%d, bx_key = %d", sdl_event.key.keysym.scancode, sdl_event.key.keysym.sym, key_event));
+        } else {
+          /* use mapping */
+          BXKeyEntry *entry = bx_keymap.findHostKey(sdl_event.key.keysym.sym);
+          if (!entry) {
+            BX_ERROR(("host key %d (0x%x) not mapped!",
+                      (unsigned) sdl_event.key.keysym.sym,
+                      (unsigned)sdl_event.key.keysym.sym));
+            break;
+          }
+          key_event = entry->baseKey;
         }
+        if (key_event == BX_KEY_UNHANDLED) break;
+        DEV_kbd_gen_scancode(key_event);
         break;
 
       case SDL_KEYUP:
@@ -852,11 +872,21 @@ void bx_sdl2_gui_c::handle_events(void)
           mouse_toggle_check(BX_MT_KEY_F12, 0);
         }
 
-        key_event = sdl_sym_to_bx_key (sdl_event.key.keysym.sym);
-        if (key_event == BX_KEY_UNHANDLED) break;
-        if ((key_event == BX_KEY_NUM_LOCK) || (key_event == BX_KEY_CAPS_LOCK)) {
-          DEV_kbd_gen_scancode(key_event);
+        // convert sym->bochs code
+        if (!SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
+          key_event = sdl_sym_to_bx_key(sdl_event.key.keysym.sym);
+        } else {
+          /* use mapping */
+          BXKeyEntry *entry = bx_keymap.findHostKey(sdl_event.key.keysym.sym);
+          if (!entry) {
+            BX_ERROR(("host key %d (0x%x) not mapped!",
+                      (unsigned) sdl_event.key.keysym.sym,
+                      (unsigned) sdl_event.key.keysym.sym));
+            break;
+          }
+          key_event = entry->baseKey;
         }
+        if (key_event == BX_KEY_UNHANDLED) break;
         DEV_kbd_gen_scancode(key_event | BX_KEY_RELEASED);
         break;
 
@@ -1249,5 +1279,36 @@ void bx_sdl2_gui_c::show_ips(Bit32u ips_count)
   }
 }
 #endif
+
+/// key mapping for SDL
+typedef struct {
+  const char *name;
+  Bit32u value;
+} keyTableEntry;
+
+#define DEF_SDL_KEY(key) \
+  { #key, key },
+
+keyTableEntry keytable[] = {
+  // this include provides all the entries.
+#include "sdlkeys.h"
+  // one final entry to mark the end
+  { NULL, 0 }
+};
+
+// function to convert key names into SDLKey values.
+// This first try will be horribly inefficient, but it only has
+// to be done while loading a keymap.  Once the simulation starts,
+// this function won't be called.
+static Bit32u convertStringToSDLKey (const char *string)
+{
+  keyTableEntry *ptr;
+  for (ptr = &keytable[0]; ptr->name != NULL; ptr++) {
+    //BX_DEBUG (("comparing string '%s' to SDL key '%s'", string, ptr->name));
+    if (!strcmp(string, ptr->name))
+      return ptr->value;
+  }
+  return BX_KEYMAP_UNKNOWN;
+}
 
 #endif /* if BX_WITH_SDL2 */
