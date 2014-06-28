@@ -87,7 +87,7 @@ static struct {
 
 unsigned bx_headerbar_entries = 0;
 
-SDL_Window *window;
+static SDL_Window *window;
 SDL_Surface *sdl_screen = NULL;
 int sdl_grab;
 unsigned res_x, res_y;
@@ -108,6 +108,7 @@ int old_mousex=0, new_mousex=0;
 int old_mousey=0, new_mousey=0;
 bx_bool just_warped = 0;
 bx_bool sdl_mouse_mode_absxy = 0;
+bx_bool sdl_nokeyrepeat = 0;
 bitmaps *sdl_bitmaps[MAX_SDL_BITMAPS];
 int n_sdl_bitmaps = 0;
 int statusbar_height = 18;
@@ -403,7 +404,9 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   // parse sdl specific options
   if (argc > 1) {
     for (i = 1; i < argc; i++) {
-      if (0) {
+      if (!strcmp(argv[i], "nokeyrepeat")) {
+        BX_INFO(("disabled host keyboard repeat"));
+        sdl_nokeyrepeat = 1;
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
       } else if (!strcmp(argv[i], "gui_debug")) {
         SIM->set_debug_gui(1);
@@ -798,7 +801,14 @@ void bx_sdl2_gui_c::handle_events(void)
         break;
 
       case SDL_MOUSEWHEEL:
-        // TODO
+        if (sdl_grab) {
+          wheel_status = sdl_event.wheel.y;
+          if (sdl_mouse_mode_absxy) {
+            DEV_mouse_motion(old_mousex, old_mousey, wheel_status, old_mousebuttons, 0);
+          } else {
+            DEV_mouse_motion(0, 0, wheel_status, old_mousebuttons, 0);
+          }
+        }
         break;
 
       case SDL_KEYDOWN:
@@ -817,7 +827,10 @@ void bx_sdl2_gui_c::handle_events(void)
           toggle_mouse_enable();
         }
 
-        key_event = sdl_sym_to_bx_key (sdl_event.key.keysym.sym);
+        if (sdl_nokeyrepeat && sdl_event.key.repeat) {
+          break;
+        }
+        key_event = sdl_sym_to_bx_key(sdl_event.key.keysym.sym);
         BX_DEBUG(("keypress scancode=%d, sym=%d, bx_key = %d", sdl_event.key.keysym.scancode, sdl_event.key.keysym.sym, key_event));
         if (key_event == BX_KEY_UNHANDLED) break;
         DEV_kbd_gen_scancode( key_event);
