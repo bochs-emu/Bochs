@@ -119,9 +119,15 @@ static unsigned statusitem_pos[12] = {
 };
 static bx_bool statusitem_active[12];
 #if BX_SHOW_IPS
+SDL_TimerID timer_id;
 static bx_bool sdl_hide_ips = 0;
 static bx_bool sdl_ips_update = 0;
 static char sdl_ips_text[20];
+#endif
+#ifndef WIN32
+BxEvent *sdl2_notify_callback(void *unused, BxEvent *event);
+static bxevent_handler old_callback = NULL;
+static void *old_callback_arg = NULL;
 #endif
 
 
@@ -402,6 +408,13 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   }
   atexit(SDL_Quit);
 
+#ifndef WIN32
+  // redirect notify callback to SDL2 specific code
+  SIM->get_notify_callback(&old_callback, &old_callback_arg);
+  assert(old_callback != NULL);
+  SIM->set_notify_callback(sdl2_notify_callback, NULL);
+#endif
+
   // load keymap for sdl
   if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
     bx_keymap.loadKeymap(convertStringToSDLKey);
@@ -461,7 +474,6 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     BX_HEADERBAR_BG_GREEN,
     BX_HEADERBAR_BG_BLUE);
 
-
   icon_id = create_bitmap(bochs_icon_bits, bochs_icon_width, bochs_icon_height);
   SDL_SetWindowIcon(window, sdl_bitmaps[icon_id]->surface);
 
@@ -471,7 +483,7 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     dialog_caps = BX_GUI_DLG_ALL;
   }
 #if BX_SHOW_IPS
-  SDL_AddTimer(1000, sdlTimer, NULL);
+  timer_id = SDL_AddTimer(1000, sdlTimer, NULL);
 #endif
 #endif
 }
@@ -1280,7 +1292,8 @@ void bx_sdl2_gui_c::show_ips(Bit32u ips_count)
 }
 #endif
 
-/// key mapping for SDL
+/// key mapping code for SDL2
+
 typedef struct {
   const char *name;
   Bit32u value;
@@ -1310,5 +1323,66 @@ static Bit32u convertStringToSDLKey (const char *string)
   }
   return BX_KEYMAP_UNKNOWN;
 }
+
+// SDL2 ask dialog
+
+#ifndef WIN32
+int sdl2_ask_dialog(BxEvent *event)
+{
+  SDL_MessageBoxData msgboxdata;
+  SDL_MessageBoxButtonData buttondata[4];
+  int level, retcode;
+#if BX_DEBUGGER || BX_GDBSTUB
+  int defbtn = 3;
+#else
+  int defbtn = 2;
+#endif
+  char message[512];
+
+  level = event->u.logmsg.level;
+  sprintf(message, "%s %s", event->u.logmsg.prefix, event->u.logmsg.msg);
+  msgboxdata.flags = SDL_MESSAGEBOX_ERROR;
+  msgboxdata.window = window;
+  msgboxdata.title = SIM->get_log_level_name(level);
+  msgboxdata.message = message;
+  msgboxdata.numbuttons = defbtn + 1;
+  msgboxdata.buttons = buttondata;
+  msgboxdata.colorScheme = NULL;
+  buttondata[0].flags = 0;
+  buttondata[0].buttonid = BX_LOG_ASK_CHOICE_CONTINUE;
+  buttondata[0].text = "Continue";
+  buttondata[1].flags = 0;
+  buttondata[1].buttonid = BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS;
+  buttondata[1].text = "Alwayscont";
+#if BX_DEBUGGER || BX_GDBSTUB
+  buttondata[2].flags = 0;
+  buttondata[2].buttonid = BX_LOG_ASK_CHOICE_ENTER_DEBUG;
+  buttondata[2].text = "Debugger";
+#endif
+  buttondata[defbtn].flags = SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT;
+  buttondata[defbtn].buttonid = BX_LOG_ASK_CHOICE_DIE;
+  buttondata[defbtn].text = "Quit";
+  if (SDL_ShowMessageBox(&msgboxdata, &retcode) < 0) {
+    return -1;
+  } else {
+    return retcode;
+  }
+}
+
+BxEvent *sdl2_notify_callback(void *unused, BxEvent *event)
+{
+  switch (event->type) {
+    case BX_SYNC_EVT_LOG_ASK:
+      event->retcode = sdl2_ask_dialog(event);
+      return event;
+    case BX_SYNC_EVT_ASK_PARAM:
+    case BX_SYNC_EVT_TICK: // called periodically by siminterface.
+    case BX_ASYNC_EVT_REFRESH: // called when some bx_param_c parameters have changed.
+      // fall into default case
+    default:
+      return (*old_callback)(old_callback_arg, event);
+  }
+}
+#endif
 
 #endif /* if BX_WITH_SDL2 */
