@@ -52,7 +52,7 @@
 
 #include "icon_bochs.h"
 #include "font/vga.bitmap.h"
-#if (BX_WITH_SDL || BX_WITH_RFB) && !BX_PLUGINS
+#if (BX_WITH_SDL || BX_WITH_SDL2 || BX_WITH_RFB) && !BX_PLUGINS
 extern unsigned char sdl_font8x8[256][8];
 #else
 #include "sdl.h" // 8x8 font for status text
