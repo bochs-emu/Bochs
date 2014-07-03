@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2005-2010  The Bochs Project
+//  Copyright (C) 2005-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -288,7 +288,7 @@ BX_CPU_C::system_read_byte(bx_address laddr)
   }
 #endif
 
-  access_read_linear(laddr, 1, 0, BX_READ, (void *) &data);
+  access_read_linear(laddr, 1, 0, BX_READ, 0x0, (void *) &data);
   return data;
 }
 
@@ -313,14 +313,7 @@ BX_CPU_C::system_read_word(bx_address laddr)
     }
   }
 
-#if BX_SUPPORT_X86_64
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("system_read_word(): canonical failure"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-#endif
-
-  if (access_read_linear(laddr, 2, 0, BX_READ, (void *) &data) < 0)
+  if (access_read_linear(laddr, 2, 0, BX_READ, 0x0, (void *) &data) < 0)
     exception(BX_GP_EXCEPTION, 0);
 
   return data;
@@ -347,14 +340,7 @@ BX_CPU_C::system_read_dword(bx_address laddr)
     }
   }
 
-#if BX_SUPPORT_X86_64
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("system_read_dword(): canonical failure"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-#endif
-
-  if (access_read_linear(laddr, 4, 0, BX_READ, (void *) &data) < 0)
+  if (access_read_linear(laddr, 4, 0, BX_READ, 0x0, (void *) &data) < 0)
     exception(BX_GP_EXCEPTION, 0);
 
   return data;
@@ -381,14 +367,7 @@ BX_CPU_C::system_read_qword(bx_address laddr)
     }
   }
 
-#if BX_SUPPORT_X86_64
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("system_read_qword(): canonical failure"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-#endif
-
-  if (access_read_linear(laddr, 8, 0, BX_READ, (void *) &data) < 0)
+  if (access_read_linear(laddr, 8, 0, BX_READ, 0x0, (void *) &data) < 0)
     exception(BX_GP_EXCEPTION, 0);
 
   return data;
@@ -415,14 +394,7 @@ BX_CPU_C::system_write_byte(bx_address laddr, Bit8u data)
     }
   }
 
-#if BX_SUPPORT_X86_64
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("system_write_byte(): canonical failure"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-#endif
-
-  access_write_linear(laddr, 1, 0, (void *) &data);
+  access_write_linear(laddr, 1, 0, 0x0, (void *) &data);
 }
 
   void BX_CPP_AttrRegparmN(2)
@@ -446,14 +418,7 @@ BX_CPU_C::system_write_word(bx_address laddr, Bit16u data)
     }
   }
 
-#if BX_SUPPORT_X86_64
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("system_write_word(): canonical failure"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-#endif
-
-  if (access_write_linear(laddr, 2, 0, (void *) &data) < 0)
+  if (access_write_linear(laddr, 2, 0, 0x0, (void *) &data) < 0)
     exception(BX_GP_EXCEPTION, 0);
 }
 
@@ -478,14 +443,7 @@ BX_CPU_C::system_write_dword(bx_address laddr, Bit32u data)
     }
   }
 
-#if BX_SUPPORT_X86_64
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("system_write_dword(): canonical failure"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-#endif
-
-  if (access_write_linear(laddr, 4, 0, (void *) &data) < 0)
+  if (access_write_linear(laddr, 4, 0, 0x0, (void *) &data) < 0)
     exception(BX_GP_EXCEPTION, 0);
 }
 

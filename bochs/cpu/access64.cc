@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2013 Stanislav Shwartsman
+//   Copyright (c) 2008-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -52,12 +52,7 @@ BX_CPU_C::write_virtual_byte_64(unsigned s, Bit64u offset, Bit8u data)
     }
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("write_virtual_byte_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-  access_write_linear(laddr, 1, CPL, (void *) &data);
+  access_write_linear(laddr, 1, CPL, 0x0, (void *) &data);
 }
 
   void BX_CPP_AttrRegparmN(3)
@@ -88,21 +83,7 @@ BX_CPU_C::write_virtual_word_64(unsigned s, Bit64u offset, Bit16u data)
     }
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("write_virtual_word_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  if (BX_CPU_THIS_PTR alignment_check()) {
-    if (laddr & 1) {
-      BX_ERROR(("write_virtual_word_64(): #AC misaligned access"));
-      exception(BX_AC_EXCEPTION, 0);
-    }
-  }
-#endif
-
-  if (access_write_linear(laddr, 2, CPL, (void *) &data) < 0)
+  if (access_write_linear(laddr, 2, CPL, 0x1, (void *) &data) < 0)
     exception(int_number(s), 0);
 }
 
@@ -139,16 +120,7 @@ BX_CPU_C::write_virtual_dword_64(unsigned s, Bit64u offset, Bit32u data)
     exception(int_number(s), 0);
   }
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  if (BX_CPU_THIS_PTR alignment_check()) {
-    if (laddr & 3) {
-      BX_ERROR(("write_virtual_dword_64(): #AC misaligned access"));
-      exception(BX_AC_EXCEPTION, 0);
-    }
-  }
-#endif
-
-  if (access_write_linear(laddr, 4, CPL, (void *) &data) < 0)
+  if (access_write_linear(laddr, 4, CPL, 0x3, (void *) &data) < 0)
     exception(int_number(s), 0);
 }
 
@@ -185,16 +157,7 @@ BX_CPU_C::write_virtual_qword_64(unsigned s, Bit64u offset, Bit64u data)
     exception(int_number(s), 0);
   }
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  if (BX_CPU_THIS_PTR alignment_check()) {
-    if (laddr & 7) {
-      BX_ERROR(("write_virtual_qword_64(): #AC misaligned access"));
-      exception(BX_AC_EXCEPTION, 0);
-    }
-  }
-#endif
-
-  if (access_write_linear(laddr, 8, CPL, (void *) &data) < 0)
+  if (access_write_linear(laddr, 8, CPL, 0x7, (void *) &data) < 0)
     exception(int_number(s), 0);
 }
 
@@ -223,12 +186,7 @@ BX_CPU_C::write_virtual_xmmword_64(unsigned s, Bit64u offset, const BxPackedXmmR
     }
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("write_virtual_xmmword_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-  if (access_write_linear(laddr, 16, CPL, (void *) data) < 0)
+  if (access_write_linear(laddr, 16, CPL, 0x0, (void *) data) < 0)
     exception(int_number(s), 0);
 }
 
@@ -262,12 +220,7 @@ BX_CPU_C::write_virtual_xmmword_aligned_64(unsigned s, Bit64u offset, const BxPa
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("write_virtual_xmmword_aligned_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-  access_write_linear(laddr, 16, CPL, (void *) data);
+  access_write_linear(laddr, 16, CPL, 0x0, (void *) data);
 }
 
 #if BX_SUPPORT_AVX
@@ -297,12 +250,7 @@ void BX_CPU_C::write_virtual_ymmword_64(unsigned s, Bit64u offset, const BxPacke
     }
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("write_virtual_ymmword_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-  if (access_write_linear(laddr, 32, CPL, (void *) data) < 0)
+  if (access_write_linear(laddr, 32, CPL, 0x0, (void *) data) < 0)
     exception(int_number(s), 0);
 }
 
@@ -336,12 +284,7 @@ void BX_CPU_C::write_virtual_ymmword_aligned_64(unsigned s, Bit64u offset, const
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("write_virtual_ymmword_aligned_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-  access_write_linear(laddr, 32, CPL, (void *) data);
+  access_write_linear(laddr, 32, CPL, 0x0, (void *) data);
 }
 
 #endif
@@ -373,12 +316,7 @@ void BX_CPU_C::write_virtual_zmmword_64(unsigned s, Bit64u offset, const BxPacke
     }
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("write_virtual_zmmword_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-  if (access_write_linear(laddr, 64, CPL, (void *) data) < 0)
+  if (access_write_linear(laddr, 64, CPL, 0x0, (void *) data) < 0)
     exception(int_number(s), 0);
 }
 
@@ -412,12 +350,7 @@ void BX_CPU_C::write_virtual_zmmword_aligned_64(unsigned s, Bit64u offset, const
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("write_virtual_zmmword_aligned_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-  access_write_linear(laddr, 64, CPL, (void *) data);
+  access_write_linear(laddr, 64, CPL, 0x0, (void *) data);
 }
 
 #endif
@@ -445,12 +378,7 @@ BX_CPU_C::read_virtual_byte_64(unsigned s, Bit64u offset)
     }
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("read_virtual_byte_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-  access_read_linear(laddr, 1, CPL, BX_READ, (void *) &data);
+  access_read_linear(laddr, 1, CPL, BX_READ, 0x0, (void *) &data);
   return data;
 }
 
@@ -481,21 +409,7 @@ BX_CPU_C::read_virtual_word_64(unsigned s, Bit64u offset)
     }
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("read_virtual_word_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  if (BX_CPU_THIS_PTR alignment_check()) {
-    if (laddr & 1) {
-      BX_ERROR(("read_virtual_word_64(): #AC misaligned access"));
-      exception(BX_AC_EXCEPTION, 0);
-    }
-  }
-#endif
-
-  if (access_read_linear(laddr, 2, CPL, BX_READ, (void *) &data) < 0)
+  if (access_read_linear(laddr, 2, CPL, BX_READ, 0x1, (void *) &data) < 0)
     exception(int_number(s), 0);
 
   return data;
@@ -528,21 +442,7 @@ BX_CPU_C::read_virtual_dword_64(unsigned s, Bit64u offset)
     }
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("read_virtual_dword_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  if (BX_CPU_THIS_PTR alignment_check()) {
-    if (laddr & 3) {
-      BX_ERROR(("read_virtual_dword_64(): #AC misaligned access"));
-      exception(BX_AC_EXCEPTION, 0);
-    }
-  }
-#endif
-
-  if (access_read_linear(laddr, 4, CPL, BX_READ, (void *) &data) < 0)
+  if (access_read_linear(laddr, 4, CPL, BX_READ, 0x3, (void *) &data) < 0)
     exception(int_number(s), 0);
 
   return data;
@@ -575,21 +475,7 @@ BX_CPU_C::read_virtual_qword_64(unsigned s, Bit64u offset)
     }
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("read_virtual_qword_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  if (BX_CPU_THIS_PTR alignment_check()) {
-    if (laddr & 7) {
-      BX_ERROR(("read_virtual_qword_64(): #AC misaligned access"));
-      exception(BX_AC_EXCEPTION, 0);
-    }
-  }
-#endif
-
-  if (access_read_linear(laddr, 8, CPL, BX_READ, (void *) &data) < 0)
+  if (access_read_linear(laddr, 8, CPL, BX_READ, 0x7, (void *) &data) < 0)
     exception(int_number(s), 0);
 
   return data;
@@ -618,12 +504,7 @@ BX_CPU_C::read_virtual_xmmword_64(unsigned s, Bit64u offset, BxPackedXmmRegister
     }
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("read_virtual_xmmword_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-  if (access_read_linear(laddr, 16, CPL, BX_READ, (void *) data) < 0)
+  if (access_read_linear(laddr, 16, CPL, BX_READ, 0x0, (void *) data) < 0)
     exception(int_number(s), 0);
 }
 
@@ -655,12 +536,7 @@ BX_CPU_C::read_virtual_xmmword_aligned_64(unsigned s, Bit64u offset, BxPackedXmm
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("read_virtual_xmmword_aligned_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-  access_read_linear(laddr, 16, CPL, BX_READ, (void *) data);
+  access_read_linear(laddr, 16, CPL, BX_READ, 0x0, (void *) data);
 }
 
 #if BX_SUPPORT_AVX
@@ -688,12 +564,7 @@ void BX_CPU_C::read_virtual_ymmword_64(unsigned s, Bit64u offset, BxPackedYmmReg
     }
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("read_virtual_ymmword_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-  if (access_read_linear(laddr, 32, CPL, BX_READ, (void *) data) < 0)
+  if (access_read_linear(laddr, 32, CPL, BX_READ, 0x0, (void *) data) < 0)
     exception(int_number(s), 0);
 }
 
@@ -725,12 +596,7 @@ void BX_CPU_C::read_virtual_ymmword_aligned_64(unsigned s, Bit64u offset, BxPack
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("read_virtual_ymmword_aligned_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-  access_read_linear(laddr, 32, CPL, BX_READ, (void *) data);
+  access_read_linear(laddr, 32, CPL, BX_READ, 0x0, (void *) data);
 }
 
 #endif
@@ -760,12 +626,7 @@ void BX_CPU_C::read_virtual_zmmword_64(unsigned s, Bit64u offset, BxPackedZmmReg
     }
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("read_virtual_ymmword_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-  if (access_read_linear(laddr, 64, CPL, BX_READ, (void *) data) < 0)
+  if (access_read_linear(laddr, 64, CPL, BX_READ, 0x0, (void *) data) < 0)
     exception(int_number(s), 0);
 }
 
@@ -797,12 +658,7 @@ void BX_CPU_C::read_virtual_zmmword_aligned_64(unsigned s, Bit64u offset, BxPack
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("read_virtual_zmmword_aligned_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-  access_read_linear(laddr, 64, CPL, BX_READ, (void *) data);
+  access_read_linear(laddr, 64, CPL, BX_READ, 0x0, (void *) data);
 }
 
 #endif
@@ -839,12 +695,7 @@ BX_CPU_C::read_RMW_virtual_byte_64(unsigned s, Bit64u offset)
     }
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("read_RMW_virtual_byte_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-  access_read_linear(laddr, 1, CPL, BX_RW, (void *) &data);
+  access_read_linear(laddr, 1, CPL, BX_RW, 0x0, (void *) &data);
   return data;
 }
 
@@ -879,21 +730,7 @@ BX_CPU_C::read_RMW_virtual_word_64(unsigned s, Bit64u offset)
     }
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("read_RMW_virtual_word_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  if (BX_CPU_THIS_PTR alignment_check()) {
-    if (laddr & 1) {
-      BX_ERROR(("read_RMW_virtual_word_64(): #AC misaligned access"));
-      exception(BX_AC_EXCEPTION, 0);
-    }
-  }
-#endif
-
-  if (access_read_linear(laddr, 2, CPL, BX_RW, (void *) &data) < 0)
+  if (access_read_linear(laddr, 2, CPL, BX_RW, 0x1, (void *) &data) < 0)
     exception(int_number(s), 0);
 
   return data;
@@ -930,21 +767,7 @@ BX_CPU_C::read_RMW_virtual_dword_64(unsigned s, Bit64u offset)
     }
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("read_RMW_virtual_dword_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  if (BX_CPU_THIS_PTR alignment_check()) {
-    if (laddr & 3) {
-      BX_ERROR(("read_RMW_virtual_dword_64(): #AC misaligned access"));
-      exception(BX_AC_EXCEPTION, 0);
-    }
-  }
-#endif
-
-  if (access_read_linear(laddr, 4, CPL, BX_RW, (void *) &data) < 0)
+  if (access_read_linear(laddr, 4, CPL, BX_RW, 0x3, (void *) &data) < 0)
     exception(int_number(s), 0);
 
   return data;
@@ -981,21 +804,7 @@ BX_CPU_C::read_RMW_virtual_qword_64(unsigned s, Bit64u offset)
     }
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("read_RMW_virtual_qword_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  if (BX_CPU_THIS_PTR alignment_check()) {
-    if (laddr & 7) {
-      BX_ERROR(("read_RMW_virtual_qword_64(): #AC misaligned access"));
-      exception(BX_AC_EXCEPTION, 0);
-    }
-  }
-#endif
-
-  if (access_read_linear(laddr, 8, CPL, BX_RW, (void *) &data) < 0)
+  if (access_read_linear(laddr, 8, CPL, BX_RW, 0x7, (void *) &data) < 0)
     exception(int_number(s), 0);
 
   return data;
@@ -1033,13 +842,8 @@ void BX_CPU_C::read_RMW_virtual_dqword_aligned_64(unsigned s, Bit64u offset, Bit
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("read_RMW_virtual_dqword_aligned_64(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
-  access_read_linear(laddr,     8, CPL, BX_RW, (void *) lo);
-  access_read_linear(laddr + 8, 8, CPL, BX_RW, (void *) hi);
+  access_read_linear(laddr,     8, CPL, BX_RW, 0x0, (void *) lo);
+  access_read_linear(laddr + 8, 8, CPL, BX_RW, 0x0, (void *) hi);
 }
 
 void BX_CPU_C::write_RMW_virtual_dqword(Bit64u hi, Bit64u lo)
@@ -1083,21 +887,7 @@ void BX_CPU_C::write_new_stack_word_64(Bit64u laddr, unsigned curr_pl, Bit16u da
     }
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("write_new_stack_word_64(): canonical failure"));
-    exception(BX_SS_EXCEPTION, 0);
-  }
-
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  if (BX_CPU_THIS_PTR alignment_check() && user) {
-    if (laddr & 1) {
-      BX_ERROR(("write_new_stack_word_64(): #AC misaligned access"));
-      exception(BX_AC_EXCEPTION, 0);
-    }
-  }
-#endif
-
-  if (access_write_linear(laddr, 2, curr_pl, (void *) &data) < 0)
+  if (access_write_linear(laddr, 2, curr_pl, 0x1, (void *) &data) < 0)
     exception(BX_SS_EXCEPTION, 0);
 }
 
@@ -1126,21 +916,7 @@ void BX_CPU_C::write_new_stack_dword_64(Bit64u laddr, unsigned curr_pl, Bit32u d
     }
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("write_new_stack_dword_64(): canonical failure"));
-    exception(BX_SS_EXCEPTION, 0);
-  }
-
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  if (BX_CPU_THIS_PTR alignment_check() && user) {
-    if (laddr & 3) {
-      BX_ERROR(("write_new_stack_dword_64(): #AC misaligned access"));
-      exception(BX_AC_EXCEPTION, 0);
-    }
-  }
-#endif
-
-  if (access_write_linear(laddr, 4, curr_pl, (void *) &data) < 0)
+  if (access_write_linear(laddr, 4, curr_pl, 0x3, (void *) &data) < 0)
     exception(BX_SS_EXCEPTION, 0);
 }
 
@@ -1169,21 +945,7 @@ void BX_CPU_C::write_new_stack_qword_64(Bit64u laddr, unsigned curr_pl, Bit64u d
     }
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("write_new_stack_qword_64(): canonical failure"));
-    exception(BX_SS_EXCEPTION, 0);
-  }
-
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  if (BX_CPU_THIS_PTR alignment_check() && user) {
-    if (laddr & 7) {
-      BX_ERROR(("write_new_stack_qword_64(): #AC misaligned access"));
-      exception(BX_AC_EXCEPTION, 0);
-    }
-  }
-#endif
-
-  if (access_write_linear(laddr, 8, curr_pl, (void *) &data) < 0)
+  if (access_write_linear(laddr, 8, curr_pl, 0x7, (void *) &data) < 0)
     exception(BX_SS_EXCEPTION, 0);
 }
 

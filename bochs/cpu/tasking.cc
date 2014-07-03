@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -222,9 +222,9 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   if (source == BX_TASK_FROM_JUMP || source == BX_TASK_FROM_IRET) {
     // Bit is cleared
     Bit32u laddr = (Bit32u) BX_CPU_THIS_PTR gdtr.base + (BX_CPU_THIS_PTR tr.selector.index<<3) + 4;
-    access_read_linear(laddr, 4, 0, BX_RW, &temp32);
+    access_read_linear(laddr, 4, 0, BX_RW, 0x0, &temp32);
     temp32 &= ~0x200;
-    access_write_linear(laddr, 4, 0, &temp32);
+    access_write_linear(laddr, 4, 0, 0x0, &temp32);
   }
 
   // STEP 4: If the task switch was initiated with an IRET instruction,
@@ -391,9 +391,9 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   {
     // set the new task's busy bit
     Bit32u laddr = (Bit32u)(BX_CPU_THIS_PTR gdtr.base) + (tss_selector->index<<3) + 4;
-    access_read_linear(laddr, 4, 0, BX_RW, &dword2);
+    access_read_linear(laddr, 4, 0, BX_RW, 0x0, &dword2);
     dword2 |= 0x200;
-    access_write_linear(laddr, 4, 0, &dword2);
+    access_write_linear(laddr, 4, 0, 0x0, &dword2);
   }
 
   //

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2013 Stanislav Shwartsman
+//   Copyright (c) 2008-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -55,7 +55,7 @@ accessOK:
           return;
         }
       }
-      access_write_linear(laddr, 1, CPL, (void *) &data);
+      access_write_linear(laddr, 1, CPL, 0x0, (void *) &data);
       return;
     }
     else {
@@ -103,16 +103,7 @@ accessOK:
         }
       }
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-      if (BX_CPU_THIS_PTR alignment_check()) {
-        if (laddr & 1) {
-          BX_ERROR(("write_virtual_word_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0);
-        }
-      }
-#endif
-
-      access_write_linear(laddr, 2, CPL, (void *) &data);
+      access_write_linear(laddr, 2, CPL, 0x1, (void *) &data);
       return;
     }
     else {
@@ -160,16 +151,7 @@ accessOK:
         }
       }
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-      if (BX_CPU_THIS_PTR alignment_check()) {
-        if (laddr & 3) {
-          BX_ERROR(("write_virtual_dword_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0);
-        }
-      }
-#endif
-
-      access_write_linear(laddr, 4, CPL, (void *) &data);
+      access_write_linear(laddr, 4, CPL, 0x3, (void *) &data);
       return;
     }
     else {
@@ -217,16 +199,7 @@ accessOK:
         }
       }
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-      if (BX_CPU_THIS_PTR alignment_check()) {
-        if (laddr & 7) {
-          BX_ERROR(("write_virtual_qword_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0);
-        }
-      }
-#endif
-
-      access_write_linear(laddr, 8, CPL, (void *) &data);
+      access_write_linear(laddr, 8, CPL, 0x7, (void *) &data);
       return;
     }
     else {
@@ -273,7 +246,7 @@ accessOK:
         }
       }
 
-      access_write_linear(laddr, 16, CPL, (void *) data);
+      access_write_linear(laddr, 16, CPL, 0x0, (void *) data);
       return;
     }
     else {
@@ -323,7 +296,7 @@ accessOK:
           return;
         }
       }
-      access_write_linear(laddr, 16, CPL, (void *) data);
+      access_write_linear(laddr, 16, CPL, 0x0, (void *) data);
       return;
     }
     else {
@@ -370,7 +343,7 @@ accessOK:
         }
       }
 
-      access_write_linear(laddr, 32, CPL, (void *) data);
+      access_write_linear(laddr, 32, CPL, 0x0, (void *) data);
       return;
     }
     else {
@@ -420,7 +393,7 @@ accessOK:
           return;
         }
       }
-      access_write_linear(laddr, 32, CPL, (void *) data);
+      access_write_linear(laddr, 32, CPL, 0x0, (void *) data);
       return;
     }
     else {
@@ -469,7 +442,7 @@ accessOK:
         }
       }
 
-      access_write_linear(laddr, 64, CPL, (void *) data);
+      access_write_linear(laddr, 64, CPL, 0x0, (void *) data);
       return;
     }
     else {
@@ -519,7 +492,7 @@ accessOK:
           return;
         }
       }
-      access_write_linear(laddr, 64, CPL, (void *) data);
+      access_write_linear(laddr, 64, CPL, 0x0, (void *) data);
       return;
     }
     else {
@@ -566,7 +539,7 @@ accessOK:
           return data;
         }
       }
-      access_read_linear(laddr, 1, CPL, BX_READ, (void *) &data);
+      access_read_linear(laddr, 1, CPL, BX_READ, 0, (void *) &data);
       return data;
     }
     else {
@@ -613,16 +586,7 @@ accessOK:
         }
       }
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-      if (BX_CPU_THIS_PTR alignment_check()) {
-        if (laddr & 1) {
-          BX_ERROR(("read_virtual_word_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0);
-        }
-      }
-#endif
-
-      access_read_linear(laddr, 2, CPL, BX_READ, (void *) &data);
+      access_read_linear(laddr, 2, CPL, BX_READ, 0x1, (void *) &data);
       return data;
     }
     else {
@@ -669,16 +633,7 @@ accessOK:
         }
       }
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-      if (BX_CPU_THIS_PTR alignment_check()) {
-        if (laddr & 3) {
-          BX_ERROR(("read_virtual_dword_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0);
-        }
-      }
-#endif
-
-      access_read_linear(laddr, 4, CPL, BX_READ, (void *) &data);
+      access_read_linear(laddr, 4, CPL, BX_READ, 0x3, (void *) &data);
       return data;
     }
     else {
@@ -725,16 +680,7 @@ accessOK:
         }
       }
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-      if (BX_CPU_THIS_PTR alignment_check()) {
-        if (laddr & 7) {
-          BX_ERROR(("read_virtual_qword_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0);
-        }
-      }
-#endif
-
-      access_read_linear(laddr, 8, CPL, BX_READ, (void *) &data);
+      access_read_linear(laddr, 8, CPL, BX_READ, 0x7, (void *) &data);
       return data;
     }
     else {
@@ -778,7 +724,7 @@ accessOK:
           return;
         }
       }
-      access_read_linear(laddr, 16, CPL, BX_READ, (void *) data);
+      access_read_linear(laddr, 16, CPL, BX_READ, 0x0, (void *) data);
       return;
     }
     else {
@@ -826,7 +772,7 @@ accessOK:
           return;
         }
       }
-      access_read_linear(laddr, 16, CPL, BX_READ, (void *) data);
+      access_read_linear(laddr, 16, CPL, BX_READ, 0x0, (void *) data);
       return;
     }
     else {
@@ -870,7 +816,7 @@ accessOK:
           return;
         }
       }
-      access_read_linear(laddr, 32, CPL, BX_READ, (void *) data);
+      access_read_linear(laddr, 32, CPL, BX_READ, 0x0, (void *) data);
       return;
     }
     else {
@@ -918,7 +864,7 @@ accessOK:
           return;
         }
       }
-      access_read_linear(laddr, 32, CPL, BX_READ, (void *) data);
+      access_read_linear(laddr, 32, CPL, BX_READ, 0x0, (void *) data);
       return;
     }
     else {
@@ -964,7 +910,7 @@ accessOK:
           return;
         }
       }
-      access_read_linear(laddr, 64, CPL, BX_READ, (void *) data);
+      access_read_linear(laddr, 64, CPL, BX_READ, 0x0, (void *) data);
       return;
     }
     else {
@@ -1012,7 +958,7 @@ accessOK:
           return;
         }
       }
-      access_read_linear(laddr, 64, CPL, BX_READ, (void *) data);
+      access_read_linear(laddr, 64, CPL, BX_READ, 0x0, (void *) data);
       return;
     }
     else {
@@ -1067,7 +1013,7 @@ accessOK:
           return data;
         }
       }
-      access_read_linear(laddr, 1, CPL, BX_RW, (void *) &data);
+      access_read_linear(laddr, 1, CPL, BX_RW, 0x0, (void *) &data);
       return data;
     }
     else {
@@ -1118,16 +1064,7 @@ accessOK:
         }
       }
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-      if (BX_CPU_THIS_PTR alignment_check()) {
-        if (laddr & 1) {
-          BX_ERROR(("read_RMW_virtual_word_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0);
-        }
-      }
-#endif
-
-      access_read_linear(laddr, 2, CPL, BX_RW, (void *) &data);
+      access_read_linear(laddr, 2, CPL, BX_RW, 0x1, (void *) &data);
       return data;
     }
     else {
@@ -1178,16 +1115,7 @@ accessOK:
         }
       }
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-      if (BX_CPU_THIS_PTR alignment_check()) {
-        if (laddr & 3) {
-          BX_ERROR(("read_RMW_virtual_dword_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0);
-        }
-      }
-#endif
-
-      access_read_linear(laddr, 4, CPL, BX_RW, (void *) &data);
+      access_read_linear(laddr, 4, CPL, BX_RW, 0x3, (void *) &data);
       return data;
     }
     else {
@@ -1238,16 +1166,7 @@ accessOK:
         }
       }
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-      if (BX_CPU_THIS_PTR alignment_check()) {
-        if (laddr & 7) {
-          BX_ERROR(("read_RMW_virtual_qword_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0);
-        }
-      }
-#endif
-
-      access_read_linear(laddr, 8, CPL, BX_RW, (void *) &data);
+      access_read_linear(laddr, 8, CPL, BX_RW, 0x7, (void *) &data);
       return data;
     }
     else {
@@ -1441,16 +1360,7 @@ accessOK:
         }
       }
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-      if (BX_CPU_THIS_PTR alignment_check() && user) {
-        if (laddr & 1) {
-          BX_ERROR(("write_new_stack_word_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0);
-        }
-      }
-#endif
-
-      access_write_linear(laddr, 2, curr_pl, (void *) &data);
+      access_write_linear(laddr, 2, curr_pl, 0x1, (void *) &data);
       return;
     }
     else {
@@ -1499,16 +1409,7 @@ accessOK:
         }
       }
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-      if (BX_CPU_THIS_PTR alignment_check() && user) {
-        if (laddr & 3) {
-          BX_ERROR(("write_new_stack_dword_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0);
-        }
-      }
-#endif
-
-      access_write_linear(laddr, 4, curr_pl, (void *) &data);
+      access_write_linear(laddr, 4, curr_pl, 0x3, (void *) &data);
       return;
     }
     else {
@@ -1557,16 +1458,7 @@ accessOK:
         }
       }
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-      if (BX_CPU_THIS_PTR alignment_check() && user) {
-        if (laddr & 7) {
-          BX_ERROR(("write_new_stack_qword_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0);
-        }
-      }
-#endif
-
-      access_write_linear(laddr, 8, curr_pl, (void *) &data);
+      access_write_linear(laddr, 8, curr_pl, 0x7, (void *) &data);
       return;
     }
     else {

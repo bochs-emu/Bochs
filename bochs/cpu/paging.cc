@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1901,11 +1901,27 @@ page_fault:
 }
 #endif
 
-int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_pl, void *data)
+int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_pl, Bit32u ac_mask, void *data)
 {
   Bit32u pageOffset = PAGE_OFFSET(laddr);
 
   bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
+
+#if BX_SUPPORT_X86_64
+  if (! IsCanonical(laddr)) {
+    BX_ERROR(("access_write_linear(): canonical failure"));
+    return -1;
+  }
+#endif
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  if (BX_CPU_THIS_PTR alignment_check() && (curr_pl == 3)) {
+    if (pageOffset & ac_mask) {
+      BX_ERROR(("access_write_linear(): #AC misaligned access"));
+      exception(BX_AC_EXCEPTION, 0);
+    }
+  }
+#endif
 
   /* check for reference across multiple pages */
   if ((pageOffset + len) <= 4096) {
@@ -1976,11 +1992,27 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
   return 0;
 }
 
-int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned xlate_rw, void *data)
+int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned xlate_rw, Bit32u ac_mask, void *data)
 {
   BX_ASSERT(xlate_rw == BX_READ || xlate_rw == BX_RW);
 
   Bit32u pageOffset = PAGE_OFFSET(laddr);
+
+#if BX_SUPPORT_X86_64
+  if (! IsCanonical(laddr)) {
+    BX_ERROR(("access_read_linear(): canonical failure"));
+    return -1;
+  }
+#endif
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  if (BX_CPU_THIS_PTR alignment_check() && (curr_pl == 3)) {
+    if (pageOffset & ac_mask) {
+      BX_ERROR(("access_read_linear(): #AC misaligned access"));
+      exception(BX_AC_EXCEPTION, 0);
+    }
+  }
+#endif
 
   bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
 
