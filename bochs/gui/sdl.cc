@@ -74,7 +74,7 @@ const Uint32 status_led_red = 0x00ff4000;
 
 static unsigned prev_cursor_x=0;
 static unsigned prev_cursor_y=0;
-static Bit32u convertStringToSDLKey (const char *string);
+static Bit32u convertStringToSDLKey(const char *string);
 
 #define MAX_SDL_BITMAPS 32
 struct bitmaps {
@@ -154,7 +154,7 @@ static void sdl_set_status_text(int element, const char *text, bx_bool active, b
   int x, xleft, xsize;
 
   statusitem_active[element] = active;
-  if(!sdl_screen) return;
+  if (!sdl_screen) return;
   disp = sdl_screen->pitch/4;
   xleft = statusitem_pos[element] + 2;
   xsize = statusitem_pos[element+1] - xleft - 1;
@@ -521,7 +521,7 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   sdl_screen = NULL;
   sdl_fullscreen_toggle = 0;
-  dimension_update(640,480);
+  dimension_update(640, 480);
 
   SDL_EnableKeyRepeat(250, 50);
   SDL_WM_SetCaption(BOCHS_WINDOW_NAME, "Bochs");
@@ -623,7 +623,7 @@ void bx_sdl_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   }
   if (sdl_screen) {
     disp = sdl_screen->pitch/4;
-    buf_row = (Uint32 *)sdl_screen->pixels + headerbar_height*disp;
+    buf_row = (Uint32 *)sdl_screen->pixels + headerbar_height * disp;
   } else {
     disp = sdl_fullscreen->pitch/4;
     buf_row = (Uint32 *)sdl_fullscreen->pixels + sdl_fullscreen->offset/4;
@@ -785,17 +785,14 @@ void bx_sdl_gui_c::graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y)
 {
   Uint32 *buf, disp;
   Uint32 *buf_row;
-  int i,j;
+  int i, j;
 
-  if(sdl_screen)
-  {
+  if (sdl_screen) {
     disp = sdl_screen->pitch/4;
-    buf = (Uint32 *)sdl_screen->pixels + (headerbar_height+y)*disp + x;
-  }
-  else
-  {
+    buf = (Uint32 *)sdl_screen->pixels + (headerbar_height + y) * disp + x;
+  } else {
     disp = sdl_fullscreen->pitch/4;
-    buf = (Uint32 *)sdl_fullscreen->pixels + y*disp + x + sdl_fullscreen->offset/4;
+    buf = (Uint32 *)sdl_fullscreen->pixels + y * disp + x + sdl_fullscreen->offset/4;
   }
 
   i = y_tilesize;
@@ -855,14 +852,17 @@ void bx_sdl_gui_c::handle_events(void)
         new_mousebuttons = ((sdl_event.motion.state & 0x01)|((sdl_event.motion.state>>1)&0x02)
                             |((sdl_event.motion.state<<1)&0x04));
         if (sdl_mouse_mode_absxy) {
-          if ((sdl_event.motion.y >= headerbar_height) && (sdl_event.motion.y < (res_y + headerbar_height))) {
-            dx = sdl_event.motion.x * 0x7fff / res_x;
+          dx = sdl_event.motion.x * 0x7fff / res_x;
+          if (sdl_fullscreen_toggle) {
+            dy = sdl_event.motion.y * 0x7fff / res_y;
+            DEV_mouse_motion(dx, dy, 0, new_mousebuttons, 1);
+          } else if ((sdl_event.motion.y >= headerbar_height) && (sdl_event.motion.y < (res_y + headerbar_height))) {
             dy = (sdl_event.motion.y - headerbar_height) * 0x7fff / res_y;
-            DEV_mouse_motion(dx, dy, wheel_status, new_mousebuttons, 1);
+            DEV_mouse_motion(dx, dy, 0, new_mousebuttons, 1);
           }
         } else {
-          DEV_mouse_motion(sdl_event.motion.xrel, -sdl_event.motion.yrel,
-                           wheel_status,  new_mousebuttons, 0);
+          DEV_mouse_motion(sdl_event.motion.xrel, -sdl_event.motion.yrel, 0,
+                           new_mousebuttons, 0);
         }
         old_mousebuttons = new_mousebuttons;
         old_mousex = (int)(sdl_event.motion.x);
@@ -889,7 +889,7 @@ void bx_sdl_gui_c::handle_events(void)
             toggle_mouse_enable();
           }
           break;
-        } else if (sdl_event.button.y < headerbar_height) {
+        } else if (!sdl_fullscreen_toggle && (sdl_event.button.y < headerbar_height)) {
           headerbar_click(sdl_event.button.x);
           break;
         }
@@ -916,13 +916,13 @@ void bx_sdl_gui_c::handle_events(void)
           (mouse_state & 0x01)    |
           ((mouse_state>>1)&0x02) |
           ((mouse_state<<1)&0x04);
-        // filter out middle button if not fullscreen
-        if(sdl_fullscreen_toggle == 0)
-          new_mousebuttons &= 0x07;
         // send motion information
         if (sdl_mouse_mode_absxy) {
-          if ((new_mousey >= headerbar_height) && (new_mousey < (int)(res_y + headerbar_height))) {
-            dx = new_mousex * 0x7fff / res_x;
+          dx = new_mousex * 0x7fff / res_x;
+          if (sdl_fullscreen_toggle) {
+            dy = new_mousey * 0x7fff / res_y;
+            DEV_mouse_motion(dx, dy, wheel_status, new_mousebuttons, 1);
+          } else if ((new_mousey >= headerbar_height) && (new_mousey < (int)(res_y + headerbar_height))) {
             dy = (new_mousey - headerbar_height) * 0x7fff / res_y;
             DEV_mouse_motion(dx, dy, wheel_status, new_mousebuttons, 1);
           }
@@ -957,10 +957,11 @@ void bx_sdl_gui_c::handle_events(void)
         // Window/Fullscreen toggle-check
         if (sdl_event.key.keysym.sym == SDLK_SCROLLOCK) {
           sdl_fullscreen_toggle = ~sdl_fullscreen_toggle;
-          if(sdl_fullscreen_toggle == 0)
+          if (sdl_fullscreen_toggle == 0) {
             switch_to_windowed();
-          else
+          } else {
             switch_to_fullscreen();
+          }
           bx_gui->show_headerbar();
           bx_gui->flush();
           break;
@@ -969,11 +970,11 @@ void bx_sdl_gui_c::handle_events(void)
         // convert sym->bochs code
         if (sdl_event.key.keysym.sym > SDLK_LAST) break;
         if (!SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
-          key_event = sdl_sym_to_bx_key (sdl_event.key.keysym.sym);
+          key_event = sdl_sym_to_bx_key(sdl_event.key.keysym.sym);
           BX_DEBUG(("keypress scancode=%d, sym=%d, bx_key = %d", sdl_event.key.keysym.scancode, sdl_event.key.keysym.sym, key_event));
         } else {
           /* use mapping */
-          BXKeyEntry *entry = bx_keymap.findHostKey (sdl_event.key.keysym.sym);
+          BXKeyEntry *entry = bx_keymap.findHostKey(sdl_event.key.keysym.sym);
           if (!entry) {
             BX_ERROR(("host key %d (0x%x) not mapped!",
                       (unsigned) sdl_event.key.keysym.sym,
@@ -1008,14 +1009,14 @@ void bx_sdl_gui_c::handle_events(void)
         {
           // convert sym->bochs code
           if (!SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
-            key_event = sdl_sym_to_bx_key (sdl_event.key.keysym.sym);
+            key_event = sdl_sym_to_bx_key(sdl_event.key.keysym.sym);
           } else {
             /* use mapping */
-            BXKeyEntry *entry = bx_keymap.findHostKey (sdl_event.key.keysym.sym);
+            BXKeyEntry *entry = bx_keymap.findHostKey(sdl_event.key.keysym.sym);
             if (!entry) {
               BX_ERROR(("host key %d (0x%x) not mapped!",
-                    (unsigned) sdl_event.key.keysym.sym,
-                    (unsigned) sdl_event.key.keysym.sym));
+                        (unsigned) sdl_event.key.keysym.sym,
+                        (unsigned) sdl_event.key.keysym.sym));
               break;
             }
             key_event = entry->baseKey;
@@ -1059,11 +1060,11 @@ void bx_sdl_gui_c::clear_screen(void)
   Uint32 disp;
 
   if (sdl_screen) {
-    color = SDL_MapRGB(sdl_screen->format, 0,0,0);
+    color = SDL_MapRGB(sdl_screen->format, 0, 0, 0);
     disp = sdl_screen->pitch/4;
-    buf = (Uint32 *)sdl_screen->pixels + headerbar_height*disp;
+    buf = (Uint32 *)sdl_screen->pixels + headerbar_height * disp;
   } else if (sdl_fullscreen) {
-    color = SDL_MapRGB(sdl_fullscreen->format, 0,0, 0);
+    color = SDL_MapRGB(sdl_fullscreen->format, 0, 0, 0);
     disp = sdl_fullscreen->pitch/4;
     buf = (Uint32 *)sdl_fullscreen->pixels + sdl_fullscreen->offset/4;
   }
@@ -1152,6 +1153,9 @@ void bx_sdl_gui_c::dimension_update(unsigned x, unsigned y,
   half_res_x = x/2;
   half_res_y = y/2;
   bx_gui->show_headerbar();
+  host_xres = x;
+  host_yres = y;
+  host_bpp = 32;
 }
 
 
@@ -1261,8 +1265,8 @@ void bx_sdl_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
   SDL_Rect hb_dst;
   unsigned old_id;
-  if (!sdl_screen) return;
 
+  if (!sdl_screen) return;
   old_id = hb_entry[hbar_id].bmp_id;
   hb_dst = sdl_bitmaps[old_id]->dst;
   sdl_bitmaps[old_id]->dst.x = -1;
@@ -1448,12 +1452,12 @@ Bit8u *bx_sdl_gui_c::graphics_tile_get(unsigned x0, unsigned y0, unsigned *w, un
 
   if (sdl_screen) {
     return (Bit8u *)sdl_screen->pixels +
-           sdl_screen->pitch*(headerbar_height+y0) +
-           sdl_screen->format->BytesPerPixel*x0;
+           sdl_screen->pitch * (headerbar_height + y0) +
+           sdl_screen->format->BytesPerPixel * x0;
   } else {
     return (Bit8u *)sdl_fullscreen->pixels + sdl_fullscreen->offset +
-           sdl_fullscreen->pitch*(y0) +
-           sdl_fullscreen->format->BytesPerPixel*x0;
+           sdl_fullscreen->pitch * y0 +
+           sdl_fullscreen->format->BytesPerPixel * x0;
   }
 }
 
@@ -1512,7 +1516,8 @@ void bx_sdl_gui_c::show_ips(Bit32u ips_count)
 }
 #endif
 
-/// key mapping for SDL
+/// key mapping code for SDL
+
 typedef struct {
   const char *name;
   Bit32u value;

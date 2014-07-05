@@ -355,11 +355,17 @@ void switch_to_windowed(void)
   sdl_fullscreen = NULL;
   bx_gui->show_headerbar();
   DEV_vga_redraw_area(0, 0, res_x, res_y);
+  if (sdl_grab) {
+    bx_gui->toggle_mouse_enable();
+  }
 }
 
 
 void switch_to_fullscreen(void)
 {
+  if (!sdl_grab) {
+    bx_gui->toggle_mouse_enable();
+  }
   SDL_SetWindowSize(window, res_x, res_y);
   SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
   sdl_fullscreen = SDL_GetWindowSurface(window);
@@ -761,7 +767,6 @@ void bx_sdl2_gui_c::handle_events(void)
   bx_bool mouse_toggle = 0;
 
   while (SDL_PollEvent(&sdl_event)) {
-    wheel_status = 0;
     switch (sdl_event.type) {
       case SDL_WINDOWEVENT:
         if (sdl_event.window.event == SDL_WINDOWEVENT_EXPOSED) {
@@ -784,14 +789,17 @@ void bx_sdl2_gui_c::handle_events(void)
         new_mousebuttons = ((sdl_event.motion.state & 0x01)|((sdl_event.motion.state>>1)&0x02)
                             |((sdl_event.motion.state<<1)&0x04));
         if (sdl_mouse_mode_absxy) {
-          if ((sdl_event.motion.y >= headerbar_height) && (sdl_event.motion.y < ((int)res_y + headerbar_height))) {
-            dx = sdl_event.motion.x * 0x7fff / res_x;
+          dx = sdl_event.motion.x * 0x7fff / res_x;
+          if (sdl_fullscreen_toggle) {
+            dy = sdl_event.motion.y * 0x7fff / res_y;
+            DEV_mouse_motion(dx, dy, 0, new_mousebuttons, 1);
+          } else if ((sdl_event.motion.y >= headerbar_height) && (sdl_event.motion.y < ((int)res_y + headerbar_height))) {
             dy = (sdl_event.motion.y - headerbar_height) * 0x7fff / res_y;
-            DEV_mouse_motion(dx, dy, wheel_status, new_mousebuttons, 1);
+            DEV_mouse_motion(dx, dy, 0, new_mousebuttons, 1);
           }
         } else {
-          DEV_mouse_motion(sdl_event.motion.xrel, -sdl_event.motion.yrel,
-                           wheel_status,  new_mousebuttons, 0);
+          DEV_mouse_motion(sdl_event.motion.xrel, -sdl_event.motion.yrel, 0,
+                           new_mousebuttons, 0);
         }
         old_mousebuttons = new_mousebuttons;
         old_mousex = (int)(sdl_event.motion.x);
@@ -804,7 +812,8 @@ void bx_sdl2_gui_c::handle_events(void)
 
       case SDL_MOUSEBUTTONDOWN:
         // mouse capture toggle-check
-        if (sdl_event.button.button == SDL_BUTTON_MIDDLE) {
+        if ((sdl_event.button.button == SDL_BUTTON_MIDDLE)
+            && (sdl_fullscreen_toggle == 0)) {
           if (mouse_toggle_check(BX_MT_MBUTTON, 1)) {
             if (sdl_grab == 0) {
               SDL_ShowCursor(0);
@@ -822,7 +831,8 @@ void bx_sdl2_gui_c::handle_events(void)
           break;
         }
       case SDL_MOUSEBUTTONUP:
-        if (sdl_event.button.button == SDL_BUTTON_MIDDLE) {
+        if ((sdl_event.button.button == SDL_BUTTON_MIDDLE)
+            && (sdl_fullscreen_toggle == 0)) {
           mouse_toggle_check(BX_MT_MBUTTON, 0);
         }
         // figure out mouse state
@@ -834,18 +844,19 @@ void bx_sdl2_gui_c::handle_events(void)
           (mouse_state & 0x01)    |
           ((mouse_state>>1)&0x02) |
           ((mouse_state<<1)&0x04);
-        // filter out middle button if not fullscreen
-        new_mousebuttons &= 0x07;
         // send motion information
         if (sdl_mouse_mode_absxy) {
-          if ((new_mousey >= headerbar_height) && (new_mousey < (int)(res_y + headerbar_height))) {
-            dx = new_mousex * 0x7fff / res_x;
+          dx = new_mousex * 0x7fff / res_x;
+          if (sdl_fullscreen_toggle) {
+            dy = new_mousey * 0x7fff / res_y;
+            DEV_mouse_motion(dx, dy, 0, new_mousebuttons, 1);
+          } else if ((new_mousey >= headerbar_height) && (new_mousey < (int)(res_y + headerbar_height))) {
             dy = (new_mousey - headerbar_height) * 0x7fff / res_y;
-            DEV_mouse_motion(dx, dy, wheel_status, new_mousebuttons, 1);
+            DEV_mouse_motion(dx, dy, 0, new_mousebuttons, 1);
           }
         } else {
           DEV_mouse_motion(new_mousex - old_mousex, -(new_mousey - old_mousey),
-                           wheel_status, new_mousebuttons, 0);
+                           0, new_mousebuttons, 0);
         }
         // mark current state to diff with next packet
         old_mousebuttons = new_mousebuttons;
@@ -866,18 +877,20 @@ void bx_sdl2_gui_c::handle_events(void)
 
       case SDL_KEYDOWN:
         // mouse capture toggle-check
-        if ((sdl_event.key.keysym.sym == SDLK_LCTRL) ||
-            (sdl_event.key.keysym.sym == SDLK_RCTRL)) {
-          mouse_toggle = mouse_toggle_check(BX_MT_KEY_CTRL, 1);
-        } else if (sdl_event.key.keysym.sym == SDLK_LALT) {
-          mouse_toggle = mouse_toggle_check(BX_MT_KEY_ALT, 1);
-        } else if (sdl_event.key.keysym.sym == SDLK_F10) {
-          mouse_toggle = mouse_toggle_check(BX_MT_KEY_F10, 1);
-        } else if (sdl_event.key.keysym.sym == SDLK_F12) {
-          mouse_toggle = mouse_toggle_check(BX_MT_KEY_F12, 1);
-        }
-        if (mouse_toggle) {
-          toggle_mouse_enable();
+        if (sdl_fullscreen_toggle == 0) {
+          if ((sdl_event.key.keysym.sym == SDLK_LCTRL) ||
+              (sdl_event.key.keysym.sym == SDLK_RCTRL)) {
+            mouse_toggle = mouse_toggle_check(BX_MT_KEY_CTRL, 1);
+          } else if (sdl_event.key.keysym.sym == SDLK_LALT) {
+            mouse_toggle = mouse_toggle_check(BX_MT_KEY_ALT, 1);
+          } else if (sdl_event.key.keysym.sym == SDLK_F10) {
+            mouse_toggle = mouse_toggle_check(BX_MT_KEY_F10, 1);
+          } else if (sdl_event.key.keysym.sym == SDLK_F12) {
+            mouse_toggle = mouse_toggle_check(BX_MT_KEY_F12, 1);
+          }
+          if (mouse_toggle) {
+            toggle_mouse_enable();
+          }
         }
 
         // Window/Fullscreen toggle-check
@@ -904,7 +917,7 @@ void bx_sdl2_gui_c::handle_events(void)
           if (!entry) {
             BX_ERROR(("host key %d (0x%x) not mapped!",
                       (unsigned) sdl_event.key.keysym.sym,
-                      (unsigned)sdl_event.key.keysym.sym));
+                      (unsigned) sdl_event.key.keysym.sym));
             break;
           }
           key_event = entry->baseKey;
@@ -1036,15 +1049,15 @@ void bx_sdl2_gui_c::dimension_update(unsigned x, unsigned y,
     SDL_SetWindowSize(window, x, y + headerbar_height + statusbar_height);
     sdl_screen = SDL_GetWindowSurface(window);
     headerbar_fg = SDL_MapRGB(
-      sdl_screen->format,
-      BX_HEADERBAR_FG_RED,
-      BX_HEADERBAR_FG_GREEN,
-      BX_HEADERBAR_FG_BLUE);
+        sdl_screen->format,
+        BX_HEADERBAR_FG_RED,
+        BX_HEADERBAR_FG_GREEN,
+        BX_HEADERBAR_FG_BLUE);
     headerbar_bg = SDL_MapRGB(
-      sdl_screen->format,
-      BX_HEADERBAR_BG_RED,
-      BX_HEADERBAR_BG_GREEN,
-      BX_HEADERBAR_BG_BLUE);
+        sdl_screen->format,
+        BX_HEADERBAR_BG_RED,
+        BX_HEADERBAR_BG_GREEN,
+        BX_HEADERBAR_BG_BLUE);
   } else {
     SDL_SetWindowSize(window, x, y);
     sdl_fullscreen = SDL_GetWindowSurface(window);
@@ -1255,16 +1268,12 @@ void bx_sdl2_gui_c::show_headerbar(void)
 
 int bx_sdl2_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
-  UNUSED(bytes);
-  UNUSED(nbytes);
   return 0;
 }
 
 
 int bx_sdl2_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
-  UNUSED(text_snapshot);
-  UNUSED(len);
   return 0;
 }
 
@@ -1342,8 +1351,8 @@ Bit8u *bx_sdl2_gui_c::graphics_tile_get(unsigned x0, unsigned y0, unsigned *w, u
 
   if (sdl_screen) {
     return (Bit8u *)sdl_screen->pixels +
-           sdl_screen->pitch*(headerbar_height+y0) +
-           sdl_screen->format->BytesPerPixel*x0;
+           sdl_screen->pitch * (headerbar_height + y0) +
+           sdl_screen->format->BytesPerPixel * x0;
   } else {
     return (Bit8u *)sdl_fullscreen->pixels +
            sdl_fullscreen->pitch * y0 +
