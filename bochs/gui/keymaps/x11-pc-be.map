@@ -1,5 +1,5 @@
 # Bochs Keymap file
-# $Id: x11-pc-be.map,v 1.2 2003-07-29 13:31:11 bdenney Exp $
+# $Id$
 # Target: PC(x86) keyboard, BE keymap
 # Author: Wouter Verhelst,
 # based on FR keymap by Christophe Bothamy, Bryce Denney
