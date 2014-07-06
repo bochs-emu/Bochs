@@ -157,7 +157,7 @@ static char ipsText[20];
 #define SIZE_OF_SB_ELEMENT        40
 #define SIZE_OF_SB_MOUSE_MESSAGE 170
 #define SIZE_OF_SB_IPS_MESSAGE    90
-long SB_Edges[BX_MAX_STATUSITEMS+BX_SB_MAX_TEXT_ELEMENTS+1];
+Bit32s SB_Edges[BX_MAX_STATUSITEMS+BX_SB_MAX_TEXT_ELEMENTS+1];
 char SB_Text[BX_MAX_STATUSITEMS][10];
 unsigned SB_Text_Elements;
 bx_bool SB_Active[BX_MAX_STATUSITEMS];
