@@ -46,7 +46,7 @@ bx_gui_c *bx_gui = NULL;
 #define LOG_THIS BX_GUI_THIS
 
 #define BX_KEY_UNKNOWN 0x7fffffff
-#define N_USER_KEYS 37
+#define N_USER_KEYS 38
 
 typedef struct {
   const char *key;
@@ -91,7 +91,8 @@ static user_key_t user_keys[N_USER_KEYS] =
   { "up",    BX_KEY_UP },
   { "win",   BX_KEY_WIN_L },
   { "print", BX_KEY_PRINT },
-  { "power", BX_KEY_POWER_POWER }
+  { "power", BX_KEY_POWER_POWER },
+  { "scrlck", BX_KEY_SCRL_LOCK }
 };
 
 bx_gui_c::bx_gui_c(void): disp_mode(DISP_MODE_SIM)
@@ -660,6 +661,7 @@ void bx_gui_c::userbutton_handler(void)
 {
   Bit32u shortcut[4];
   Bit32u symbol;
+  bx_param_string_c *sparam;
   char user_shortcut[512];
   char *ptr;
   int i, len = 0, ret = 1;
@@ -667,22 +669,28 @@ void bx_gui_c::userbutton_handler(void)
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_USER) {
     ret = SIM->ask_param(BXPN_USER_SHORTCUT);
   }
-  strcpy(user_shortcut, SIM->get_param_string(BXPN_USER_SHORTCUT)->getptr());
-  if ((ret > 0) && user_shortcut[0] && (strcmp(user_shortcut, "none"))) {
+  sparam = SIM->get_param_string(BXPN_USER_SHORTCUT);
+  if ((ret > 0) && !sparam->isempty()) {
+    strcpy(user_shortcut, sparam->getptr());
     ptr = strtok(user_shortcut, "-");
-    if ((strcmp(ptr, SIM->get_param_string(BXPN_USER_SHORTCUT)->getptr())) ||
-        (strlen(SIM->get_param_string(BXPN_USER_SHORTCUT)->getptr()) < 6)) {
+    if ((strcmp(ptr, sparam->getptr())) ||
+        (strlen(sparam->getptr()) < 7)) {
       while (ptr) {
         symbol = get_user_key(ptr);
         if (symbol == BX_KEY_UNKNOWN) {
-          BX_ERROR(("Unknown shortcut %s ignored", ptr));
+          BX_ERROR(("Unknown shortcut '%s' ignored", ptr));
           return;
         }
-        shortcut[len++] = symbol;
-        ptr = strtok(NULL, "-");
+        if (len < 3) {
+          shortcut[len++] = symbol;
+          ptr = strtok(NULL, "-");
+        } else {
+          BX_ERROR(("Ignoring extra key symbol '%s'", ptr));
+          break;
+        }
       }
     } else {
-      BX_ERROR(("Unknown shortcut %s ignored", user_shortcut));
+      BX_ERROR(("Unknown shortcut '%s' ignored", user_shortcut));
       return;
     }
     i = 0;

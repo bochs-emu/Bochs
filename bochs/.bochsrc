@@ -54,7 +54,8 @@
 #   carbon         use Carbon library (for MacOS X)
 #   macintosh      use MacOS pre-10
 #   amigaos        use native AmigaOS libraries
-#   sdl            use SDL library, cross platform
+#   sdl            use SDL 1.2.x library, cross platform
+#   sdl2           use SDL 2.x library, cross platform
 #   svga           use SVGALIB library for Linux, allows graphics without X11
 #   term           text only, uses curses/ncurses library, cross platform
 #   rfb            provides an interface to AT&T's VNC viewer, cross platform
@@ -69,9 +70,11 @@
 # Some display libraries now support specific options to control their
 # behaviour. These options are supported by more than one display library:
 #
-# "gui_debug"   - use GTK debugger gui (sdl, x) / Win32 debugger gui (sdl, win32)
-# "hideIPS"     - disable IPS output in status bar (rfb, sdl, vncsrv, win32, wx, x)
-# "nokeyrepeat" - turn off host keyboard repeat (sdl, win32, x)
+# "gui_debug"   - use GTK debugger gui (sdl, sdl2, x) / Win32 debugger gui (sdl,
+#                 sdl2, win32)
+# "hideIPS"     - disable IPS output in status bar (rfb, sdl, sdl2, vncsrv,
+#                 win32, wx, x)
+# "nokeyrepeat" - turn off host keyboard repeat (sdl, sdl2, win32, x)
 # "timeout"     - time (in seconds) to wait for client (rfb, vncsrv)
 #
 # See the examples below for other currently supported options.
@@ -82,6 +85,7 @@
 #display_library: nogui
 #display_library: rfb
 #display_library: sdl, options="fullscreen" # startup in fullscreen mode
+#display_library: sdl2, options="fullscreen" # startup in fullscreen mode
 #display_library: term
 #display_library: vncsrv
 #display_library: win32
@@ -459,7 +463,8 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 #     Valid key names:
 #     "alt", "bksl", "bksp", "ctrl", "del", "down", "end", "enter", "esc",
 #     "f1", ... "f12", "home", "ins", "left", "menu", "minus", "pgdwn", "pgup",
-#     "plus", "right", "shift", "space", "tab", "up", "win", "print" and "power".
+#     "plus", "power", "print", "right", "scrlck", "shift", "space", "tab", "up"
+#     and "win".
 
 # Examples:
 #   keyboard: type=mf, serial_delay=200, paste_delay=100000

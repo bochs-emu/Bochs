@@ -610,7 +610,7 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
         tried first in Unix and then ported to the others; see
         <xref linkend="compiling"> for compile instructions.
       </entry>
-      <entry>x, sdl, wx, term, rfb, vncsrv</entry>
+      <entry>x, sdl, sdl2, wx, term, rfb, vncsrv</entry>
     </row>
 
     <row>
@@ -621,7 +621,7 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
         see <xref linkend="compiling-win32"> for compile instructions,
         or Cygwin, see <xref linkend="compile-cygwin">.
       </entry>
-      <entry>win32, sdl, wx, rfb</entry>
+      <entry>win32, sdl, sdl2, wx, rfb</entry>
     </row>
 
     <row>
@@ -631,7 +631,7 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
         Jeremy Parsons (Br'fin) has been maintaining the MacOS X port since
         March 2002; see <xref linkend="compile-macosx"> for compile instructions.
       </entry>
-      <entry>carbon, x, rfb, sdl</entry>
+      <entry>carbon, x, rfb, sdl, sdl2</entry>
     </row>
 
     <row>
@@ -1575,7 +1575,7 @@ description of each one.
 <row><entry>/usr/bin/bochs-dlx </entry> <entry> run this script to try out DLX Linux inside Bochs!</entry> </row>
 <row><entry>/usr/share/bochs/dlxlinux/ </entry> <entry> directory containing DLX linux sample disk image and configuration files</entry> </row>
 <row><entry>/usr/share/bochs/dlxlinux/readme.txt</entry> <entry> description of DLX linux</entry> </row>
-<row><entry>/usr/share/bochs/keymaps/*.map </entry> <entry>keymap tables for X11 and SDL </entry> </row>
+<row><entry>/usr/share/bochs/keymaps/*.map </entry> <entry>keymap tables for X11, SDL and SDL2 </entry> </row>
 </tbody>
 </tgroup>
 </table>
@@ -1989,7 +1989,11 @@ In Bochs 1.3 and before, the X11 GUI was always the default.
     </row>
     <row>
       <entry>--with-sdl</entry>
-      <entry>Enable support for the SDL GUI interface; see <xref linkend="compile-sdl">.</entry>
+      <entry>Enable support for the SDL 1.2.x GUI interface; see <xref linkend="compile-sdl">.</entry>
+    </row>
+    <row>
+      <entry>--with-sdl2</entry>
+      <entry>Enable support for the SDL 2.x GUI interface; see <xref linkend="compile-sdl">.</entry>
     </row>
     <row>
       <entry>--with-term</entry>
@@ -3230,14 +3234,15 @@ Examples:
 Some display libraries now support specific options to control their
 behaviour. These options are supported by more than one display library:
 <screen>
-  "gui_debug"   - use GTK debugger gui (sdl, x) / Win32 debugger gui (sdl, win32)
-  "hideIPS"     - disable IPS output in status bar (rfb, sdl, vncsrv, win32, wx, x)
-  "nokeyrepeat" - turn off host keyboard repeat (sdl, win32, x)
+  "gui_debug"   - use GTK debugger gui (sdl, x) / Win32 debugger gui (sdl, sdl2, win32)
+  "hideIPS"     - disable IPS output in status bar (rfb, sdl, sdl2, vncsrv, win32, wx, x)
+  "nokeyrepeat" - turn off host keyboard repeat (sdl, sdl2, win32, x)
   "timeout"     - time (in seconds) to wait for client (rfb, vncsrv)
 </screen>
 See the examples below for other currently supported options.
 <screen>
   display_library: sdl, options="fullscreen"  # startup in fullscreen mode
+  display_library: sdl2, options="fullscreen"  # startup in fullscreen mode
 </screen>
 </para>
 
@@ -3273,7 +3278,12 @@ See the examples below for other currently supported options.
 </row>
 <row>
   <entry>sdl</entry>
-  <entry>use SDL library, cross platform,
+  <entry>use SDL 1.2.x library, cross platform,
+    details in <xref linkend="compile-sdl"></entry>
+</row>
+<row>
+  <entry>sdl2</entry>
+  <entry>use SDL 2.x library, cross platform,
     details in <xref linkend="compile-sdl"></entry>
 </row>
 <row>
@@ -3782,8 +3792,9 @@ Valid key names:
 </para>
 <para>
 "alt", "bksl", "bksp", "ctrl", "del", "down", "end", "enter", "esc",
-"f1", ... "f12", "home", "ins", "left", "menu", "minus", "pgdwn", "pgup", "plus",
-"right", "shift", "space", "tab", "up", "win", "print" and "power".
+"f1", ... "f12", "home", "ins", "left", "menu", "minus", "pgdwn", "pgup",
+"plus", "power", "print", "right", "scrlck", "shift", "space", "tab", "up"
+and "win".
 </para>
 </section>
 
@@ -5283,7 +5294,7 @@ behavoiur of Bochs at runtime if you click on one of these buttons:
 </para>
 <note><para>
   Changing the mouse capture at runtime is not supported by all display libraries,
-  but it is already present on RFB, SDL, VNCSRV, Win32, wxWidgets and X11.
+  but it is already present on RFB, SDL, SDL2, VNCSRV, Win32, wxWidgets and X11.
 </para></note>
 <note><para>
   Support for 2 button mouse to toggle the capture mode not yet complete - using
@@ -5578,7 +5589,7 @@ drivers and their features.
   </row>
   <row>
     <entry>sdl</entry>
-    <entry>for wave output on platforms supported by SDL</entry>
+    <entry>for wave output on platforms supported by SDL (1.2.x or 2.x)</entry>
     <entry>No</entry>
     <entry>No</entry>
   </row>
@@ -6295,7 +6306,12 @@ simulation is starting.
     <row>
       <entry>SDL</entry>
       <entry>SDL</entry>
-      <entry>SDL gui</entry>
+      <entry>SDL 1.2.x gui</entry>
+    </row>
+    <row>
+      <entry>SDL2</entry>
+      <entry>SDL2</entry>
+      <entry>SDL 2.x gui</entry>
     </row>
     <row>
       <entry>serial</entry>

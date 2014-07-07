@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "19 Jun 2014" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "7 Jul 2014" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -93,7 +93,8 @@ The choices are:
   carbon      Carbon library (for MacOS X)
   macintosh   MacOS pre-10
   amigaos     native AmigaOS libraries
-  sdl         SDL library, cross platform
+  sdl         SDL 1.2.x library, cross platform
+  sdl2        SDL 2.x library, cross platform
   term        text only, uses curses/ncurses library, cross platform
   rfb         provides an interface to AT&T's VNC viewer, cross platform
   vncsrv      use LibVNCServer for extended RFB(VNC) support
@@ -108,9 +109,9 @@ the "wx" display library.
 Some display libraries now support specific options to control their
 behaviour. These options are supported by more than one display library:
 
-  "gui_debug"   - use GTK debugger gui (sdl, x)
-  "hideIPS"     - disable IPS output in status bar (rfb, sdl, vncsrv, wx, x)
-  "nokeyrepeat" - turn off host keyboard repeat (sdl, x)
+  "gui_debug"   - use GTK debugger gui (sdl, sdl2, x)
+  "hideIPS"     - disable IPS output in status bar (rfb, sdl, sdl2, vncsrv, wx, x)
+  "nokeyrepeat" - turn off host keyboard repeat (sdl, sdl2, x)
   "timeout"     - time (in seconds) to wait for client (rfb, vncsrv)
 
 See the examples below for other currently supported options.
@@ -118,6 +119,7 @@ See the examples below for other currently supported options.
 Examples:
   display_library: x
   display_library: sdl, options="fullscreen"  # startup in fullscreen mode
+  display_library: sdl2, options="fullscreen"  # startup in fullscreen mode
 
 
 .TP
@@ -521,8 +523,9 @@ button in the header bar. The shortcut string is a combination of maximum
 Valid key names:
 
 "alt", "bksl", "bksp", "ctrl", "del", "down", "end", "enter", "esc",
-"f1", ... "f12", "home", "ins", "left", "menu", "minus", "pgdwn", "pgup", "plus",
-"right", "shift", "space", "tab", "up", "win", "print" and "power".
+"f1", ... "f12", "home", "ins", "left", "menu", "minus", "pgdwn", "pgup",
+"plus", "power", "print", "right", "scrlck", "shift", "space", "tab", "up"
+and "win".
 
 Examples:
   keyboard: type=mf, serial_delay=200, paste_delay=100000
