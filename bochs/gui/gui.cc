@@ -241,6 +241,10 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
                           BX_GRAVITY_RIGHT, userbutton_handler);
   BX_GUI_THIS set_tooltip(BX_GUI_THIS user_hbar_id, "Send keyboard shortcut");
 
+  if (!parse_user_shortcut(SIM->get_param_string(BXPN_USER_SHORTCUT)->getptr())) {
+    SIM->get_param_string(BXPN_USER_SHORTCUT)->set("none");
+  }
+
   BX_GUI_THIS charmap_updated = 0;
 
   if (!BX_GUI_THIS new_gfx_api && (BX_GUI_THIS framebuffer == NULL)) {
@@ -657,49 +661,50 @@ Bit32u get_user_key(char *key)
   return BX_KEY_UNKNOWN;
 }
 
+bx_bool bx_gui_c::parse_user_shortcut(const char *val)
+{
+  char *ptr, shortcut_tmp[512];
+  Bit32u symbol;
+
+  user_shortcut_len = 0;
+  if ((strlen(val) == 0) || !strcmp(val, "none")) {
+    return 1;
+  } else {
+    strcpy(shortcut_tmp, val);
+    ptr = strtok(shortcut_tmp, "-");
+    while (ptr) {
+      symbol = get_user_key(ptr);
+      if (symbol == BX_KEY_UNKNOWN) {
+        BX_ERROR(("Unknown key symbol '%s' ignored", ptr));
+        return 0;
+      }
+      if (user_shortcut_len < 3) {
+        user_shortcut[user_shortcut_len++] = symbol;
+        ptr = strtok(NULL, "-");
+      } else {
+        BX_ERROR(("Ignoring extra key symbol '%s'", ptr));
+        break;
+      }
+    }
+    return 1;
+  }
+}
+
 void bx_gui_c::userbutton_handler(void)
 {
-  Bit32u shortcut[4];
-  Bit32u symbol;
-  bx_param_string_c *sparam;
-  char user_shortcut[512];
-  char *ptr;
-  int i, len = 0, ret = 1;
+  int i, ret = 1;
 
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_USER) {
     ret = SIM->ask_param(BXPN_USER_SHORTCUT);
   }
-  sparam = SIM->get_param_string(BXPN_USER_SHORTCUT);
-  if ((ret > 0) && !sparam->isempty()) {
-    strcpy(user_shortcut, sparam->getptr());
-    ptr = strtok(user_shortcut, "-");
-    if ((strcmp(ptr, sparam->getptr())) ||
-        (strlen(sparam->getptr()) < 7)) {
-      while (ptr) {
-        symbol = get_user_key(ptr);
-        if (symbol == BX_KEY_UNKNOWN) {
-          BX_ERROR(("Unknown shortcut '%s' ignored", ptr));
-          return;
-        }
-        if (len < 3) {
-          shortcut[len++] = symbol;
-          ptr = strtok(NULL, "-");
-        } else {
-          BX_ERROR(("Ignoring extra key symbol '%s'", ptr));
-          break;
-        }
-      }
-    } else {
-      BX_ERROR(("Unknown shortcut '%s' ignored", user_shortcut));
-      return;
-    }
+  if ((ret > 0) && (BX_GUI_THIS user_shortcut_len > 0)) {
     i = 0;
-    while (i < len) {
-      DEV_kbd_gen_scancode(shortcut[i++]);
+    while (i < BX_GUI_THIS user_shortcut_len) {
+      DEV_kbd_gen_scancode(BX_GUI_THIS user_shortcut[i++]);
     }
     i--;
     while (i >= 0) {
-      DEV_kbd_gen_scancode(shortcut[i--] | BX_KEY_RELEASED);
+      DEV_kbd_gen_scancode(BX_GUI_THIS user_shortcut[i--] | BX_KEY_RELEASED);
     }
   }
 }

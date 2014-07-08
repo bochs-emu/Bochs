@@ -156,6 +156,7 @@ public:
   static void toggle_mouse_enable(void);
   bx_bool mouse_toggle_check(Bit32u key, bx_bool pressed);
   const char* get_toggle_info(void);
+  bx_bool parse_user_shortcut(const char *val);
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
   void init_debug_dialog(void);
   void close_debug_dialog(void);
@@ -244,6 +245,9 @@ protected:
   Bit8u toggle_method;
   Bit32u toggle_keystate;
   char mouse_toggle_text[20];
+  // userbutton shortcut
+  Bit32u user_shortcut[4];
+  int user_shortcut_len;
   // gui dialog capabilities
   Bit32u dialog_caps;
 };

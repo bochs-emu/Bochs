@@ -633,8 +633,8 @@ public:
   bx_simulator_interface_c() {}
   virtual ~bx_simulator_interface_c() {}
   virtual void set_quit_context(jmp_buf *context) {}
-  virtual int get_init_done() { return -1; }
-  virtual int set_init_done(int n) {return -1;}
+  virtual int get_init_done() { return 0; }
+  virtual int set_init_done(int n) {return 0;}
   virtual void reset_all_param() {}
   // new param methods
   virtual bx_param_c *get_param(const char *pname, bx_param_c *base=NULL) {return NULL;}
@@ -644,15 +644,15 @@ public:
   virtual bx_param_enum_c *get_param_enum(const char *pname, bx_param_c *base=NULL) {return NULL;}
   virtual unsigned gen_param_id() {return 0;}
   virtual int get_n_log_modules() {return -1;}
-  virtual const char *get_logfn_name(int mod) {return 0;}
+  virtual const char *get_logfn_name(int mod) {return NULL;}
   virtual int get_logfn_id(const char *name) {return -1;}
-  virtual const char *get_prefix(int mod) {return 0;}
+  virtual const char *get_prefix(int mod) {return NULL;}
   virtual int get_log_action(int mod, int level) {return -1;}
   virtual void set_log_action(int mod, int level, int action) {}
   virtual int get_default_log_action(int level) {return -1;}
   virtual void set_default_log_action(int level, int action) {}
-  virtual const char *get_action_name(int action) {return 0;}
-  virtual const char *get_log_level_name(int level) {return 0;}
+  virtual const char *get_action_name(int action) {return NULL;}
+  virtual const char *get_log_level_name(int level) {return NULL;}
   virtual int get_max_log_level() {return -1;}
 
   // exiting is somewhat complicated!  The preferred way to exit bochs is

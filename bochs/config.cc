@@ -119,8 +119,12 @@ const char *bx_param_string_handler(bx_param_string_c *param, int set,
 
   param->get_param_path(pname, BX_PATHNAME_LEN);
   if (!strcmp(pname, BXPN_SCREENMODE)) {
-    if (set==1) {
+    if (set == 1) {
       BX_INFO(("Screen mode changed to %s", val));
+    }
+  } else if (!strcmp(pname, BXPN_USER_SHORTCUT)) {
+    if ((set == 1) && (SIM->get_init_done())) {
+      bx_gui->parse_user_shortcut(val);
     }
 #if BX_PLUGINS
   } else if (!strncmp(pname, "misc.user_plugin", 16)) {
@@ -1002,11 +1006,12 @@ void bx_init_options()
   deplist->add(keymap);
   use_kbd_mapping->set_dependent_list(deplist);
 
-  new bx_param_string_c(keyboard,
+  bx_param_string_c *user_shortcut = new bx_param_string_c(keyboard,
       "user_shortcut",
       "Userbutton shortcut",
       "Defines the keyboard shortcut to be sent when you press the 'user' button in the headerbar.",
       "none", 20);
+  user_shortcut->set_handler(bx_param_string_handler);
 
   static const char *mouse_type_list[] = {
     "none",
