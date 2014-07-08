@@ -2244,6 +2244,14 @@ bx_bool is_deprecated_option(const char *oldparam, const char **newparam)
     // replaced v2.5 / removed v2.6.1
     *newparam = "vga";
     return 1;
+  } else if ((!strcmp(oldparam, "keyboard_serial_delay")) ||
+             (!strcmp(oldparam, "keyboard_paste_delay")) ||
+             (!strcmp(oldparam, "keyboard_type")) ||
+             (!strcmp(oldparam, "keyboard_mapping")) ||
+             (!strcmp(oldparam, "keyboardmapping"))) {
+    // replaced v2.6 / removed v2.6.6 SVN
+    *newparam = "keyboard";
+    return 1;
 #if BX_SUPPORT_PCIPNIC
   } else if (!strcmp(oldparam, "pnic")) {
     // replaced v2.6 / removed v2.6.5
@@ -2976,47 +2984,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       }
       SIM->get_param_string(BXPN_LOAD32BITOS_INITRD)->set(&params[4][7]);
     }
-  } else if (!strcmp(params[0], "keyboard_serial_delay")) {
-    // handled by 'keyboard' option since Bochs 2.6
-    if (num_params != 2) {
-      PARSE_ERR(("%s: keyboard_serial_delay directive: wrong # args.", context));
-    }
-    SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->set(atol(params[1]));
-    if (SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->get() < 5) {
-      PARSE_ERR (("%s: keyboard_serial_delay not big enough!", context));
-    }
-    PARSE_WARN(("%s: 'keyboard_serial_delay' will be replaced by new 'keyboard' option.", context));
-  } else if (!strcmp(params[0], "keyboard_paste_delay")) {
-    // handled by 'keyboard' option since Bochs 2.6
-    if (num_params != 2) {
-      PARSE_ERR(("%s: keyboard_paste_delay directive: wrong # args.", context));
-    }
-    SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set(atol(params[1]));
-    if (SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->get() < 1000) {
-      PARSE_ERR (("%s: keyboard_paste_delay not big enough!", context));
-    }
-    PARSE_WARN(("%s: 'keyboard_paste_delay' will be replaced by new 'keyboard' option.", context));
-  } else if (!strcmp(params[0], "keyboard_type")) {
-    // handled by 'keyboard' option since Bochs 2.6
-    if (num_params != 2) {
-      PARSE_ERR(("%s: keyboard_type directive: wrong # args.", context));
-    }
-    if (!SIM->get_param_enum(BXPN_KBD_TYPE)->set_by_name(params[1])) {
-      PARSE_ERR(("%s: keyboard_type directive: wrong arg '%s'.", context,params[1]));
-    }
-    PARSE_WARN(("%s: 'keyboard_type' will be replaced by new 'keyboard' option.", context));
-  } else if (!strcmp(params[0], "keyboard_mapping")
-         ||!strcmp(params[0], "keyboardmapping")) {
-    // handled by 'keyboard' option since Bochs 2.6
-    for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "enabled=", 8)) {
-        SIM->get_param_bool(BXPN_KBD_USEMAPPING)->set(atol(&params[i][8]));
-      }
-      else if (!strncmp(params[i], "map=", 4)) {
-        SIM->get_param_string(BXPN_KBD_KEYMAP)->set(&params[i][4]);
-      }
-    }
-    PARSE_WARN(("%s: '%s' will be replaced by new 'keyboard' option.", context, params[0]));
   } else if (!strcmp(params[0], "user_shortcut")) {
     // handled by 'keyboard' option since Bochs 2.6.1
     if (num_params != 2) {
