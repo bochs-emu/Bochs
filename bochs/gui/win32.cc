@@ -44,7 +44,7 @@
 
 class bx_win32_gui_c : public bx_gui_c {
 public:
-  bx_win32_gui_c(void) {}
+  bx_win32_gui_c(void);
   DECLARE_GUI_VIRTUAL_METHODS();
   virtual void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
@@ -576,6 +576,16 @@ void terminateEmul(int reason)
 }
 
 
+bx_win32_gui_c::bx_win32_gui_c()
+{
+  // prepare for possible fullscreen mode
+  desktopWindow = GetDesktopWindow();
+  GetWindowRect(desktopWindow, &desktop);
+  desktop_x = desktop.right - desktop.left;
+  desktop_y = desktop.bottom - desktop.top;
+}
+
+
 // ::SPECIFIC_INIT()
 //
 // Called from gui.cc, once upon program startup, to allow for the
@@ -597,11 +607,6 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   gui_ci = !strcmp(SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE)->get_selected(), "win32config");
   put("WINGUI");
 
-  // prepare for possible fullscreen mode
-  desktopWindow = GetDesktopWindow();
-  GetWindowRect(desktopWindow, &desktop);
-  desktop_x = desktop.right - desktop.left;
-  desktop_y = desktop.bottom - desktop.top;
   hotKeyReceiver = stInfo.simWnd;
   fullscreenMode = FALSE;
   BX_INFO(("Desktop Window dimensions: %d x %d", desktop_x, desktop_y));
