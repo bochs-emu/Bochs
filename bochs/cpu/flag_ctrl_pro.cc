@@ -139,6 +139,7 @@ void BX_CPU_C::handleInterruptMaskChange(void)
      // if 'External-interrupt exiting' control is set, the value of EFLAGS.IF
      // doesn't affect interrupt blocking
      mask_event(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING | BX_EVENT_PENDING_VMX_VIRTUAL_INTR);
+     unmask_event(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR);
      return;
   }
 #endif
