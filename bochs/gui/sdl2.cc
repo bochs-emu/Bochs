@@ -43,7 +43,7 @@
 
 class bx_sdl2_gui_c : public bx_gui_c {
 public:
-  bx_sdl2_gui_c() {}
+  bx_sdl2_gui_c();
   DECLARE_GUI_VIRTUAL_METHODS()
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
   virtual void set_display_mode(disp_mode_t newmode);
@@ -400,10 +400,30 @@ DWORD WINAPI DebugGuiThread(LPVOID)
 #endif
 
 
+bx_sdl2_gui_c::bx_sdl2_gui_c()
+{
+  Uint32 flags;
+
+  put("SDL2");
+  flags = SDL_INIT_VIDEO;
+#if BX_SHOW_IPS
+#if  defined(__MINGW32__) || defined(_MSC_VER)
+  flags |= SDL_INIT_TIMER;
+#endif
+#endif
+  if (SDL_Init(flags) < 0) {
+    setonoff(LOGLEV_PANIC, ACT_FATAL);
+    panic("Unable to initialize SDL2 libraries");
+    return;
+  }
+  atexit(SDL_Quit);
+  SDL_GetDisplayMode(0, 0, &sdl_maxres);
+  info("maximum host resolution: x=%d y=%d\n", sdl_maxres.w, sdl_maxres.h);
+}
+
 void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
   int i, j;
-  Uint32 flags;
   unsigned icon_id;
 #ifdef WIN32
   bx_bool gui_ci;
@@ -421,21 +441,6 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   for(i=0;i<256;i++)
     for(j=0;j<8;j++)
       menufont[i][j] = sdl_font8x8[i][j];
-
-  flags = SDL_INIT_VIDEO;
-#if BX_SHOW_IPS
-#if  defined(__MINGW32__) || defined(_MSC_VER)
-  flags |= SDL_INIT_TIMER;
-#endif
-#endif
-  if (SDL_Init(flags) < 0) {
-    LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
-    BX_PANIC(("Unable to initialize SDL2 libraries"));
-    return;
-  }
-  atexit(SDL_Quit);
-  SDL_GetDisplayMode(0, 0, &sdl_maxres);
-  BX_INFO(("maximum host resolution: x=%d y=%d", sdl_maxres.w, sdl_maxres.h));
 
   window = SDL_CreateWindow(
     BOCHS_WINDOW_NAME,
