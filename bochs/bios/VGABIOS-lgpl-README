@@ -91,10 +91,11 @@ For any information on Qemu, visit the website http://wiki.qemu.org/
 
 History
 -------
-vgabios-CVS : May 31 2014
+vgabios-CVS : Jul 08 2014
   - Volker
-    - README: update feedback address and Qemu link
+    - fixed building VBE modes list (check maximum y resolution)
     - ensure PCIR is aligned to 4 bytes (patch by David Woodhouse)
+    - README: update feedback address and Qemu link
 
 vgabios-0.7a : Oct 30 2011
   - Volker
