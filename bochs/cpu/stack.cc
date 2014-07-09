@@ -51,7 +51,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::stackPrefetch(bx_address offset, unsigned 
   else
 #endif
   {
-    laddr = get_laddr32(BX_SEG_REG_SS, offset);
+    laddr = get_laddr32(BX_SEG_REG_SS, (Bit32u) offset);
     pageOffset = PAGE_OFFSET(laddr);
     if (pageOffset + len >= 4096) // don't care for page split accesses
       return;

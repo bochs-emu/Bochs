@@ -32,7 +32,7 @@
 //
 
 #if BX_SUPPORT_REPEAT_SPEEDUPS
-Bit32u BX_CPU_C::FastRepINSW(bxInstruction_c *i, bx_address dstOff, Bit16u port, Bit32u wordCount)
+Bit32u BX_CPU_C::FastRepINSW(bxInstruction_c *i, Bit32u dstOff, Bit16u port, Bit32u wordCount)
 {
   Bit32u wordsFitDst;
   signed int pointerDelta;
@@ -105,7 +105,7 @@ Bit32u BX_CPU_C::FastRepINSW(bxInstruction_c *i, bx_address dstOff, Bit16u port,
   return 0;
 }
 
-Bit32u BX_CPU_C::FastRepOUTSW(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff, Bit16u port, Bit32u wordCount)
+Bit32u BX_CPU_C::FastRepOUTSW(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff, Bit16u port, Bit32u wordCount)
 {
   Bit32u wordsFitSrc;
   signed int pointerDelta;

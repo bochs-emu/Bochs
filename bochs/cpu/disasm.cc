@@ -353,7 +353,7 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
         case BX_IMM_BrOff32:
           disbufptr = dis_sprintf(disbufptr, ".%+d", (Bit32s) i->Id());
           if (cs_base != BX_JUMP_TARGET_NOT_REQ) {
-            Bit32u target = rip + i->ilen() + (Bit32s) i->Id();
+            Bit32u target = (Bit32u)(rip + i->ilen() + (Bit32s) i->Id());
             disbufptr = dis_sprintf(disbufptr, " (0x%08x)", (Bit32u) (cs_base + target));
           }
           break;

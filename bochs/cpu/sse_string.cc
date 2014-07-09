@@ -29,7 +29,7 @@
 #if BX_CPU_LEVEL >= 6
 
 // Compare all pairs of Ai, Bj according to imm8 control
-static void compare_strings(Bit8u BoolRes[16][16], BxPackedXmmRegister op1, BxPackedXmmRegister op2, Bit8u imm)
+static void compare_strings(Bit8u BoolRes[16][16], const BxPackedXmmRegister &op1, const BxPackedXmmRegister &op2, Bit8u imm)
 {
   unsigned i, j;
   unsigned aggregation_operation = (imm >> 2) & 3;
@@ -147,7 +147,7 @@ static unsigned find_eos64(Bit64s reg64, Bit8u imm)
 }
 #endif
 
-static unsigned find_eos(BxPackedXmmRegister op, Bit8u imm)
+static unsigned find_eos(const BxPackedXmmRegister &op, Bit8u imm)
 {
   unsigned i = 0;
 
