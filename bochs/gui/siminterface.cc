@@ -1302,7 +1302,7 @@ bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_
           fprintf(fp, node->get_format(), value);
         } else {
           if ((Bit64u)((bx_param_num_c*)node)->get_max() > BX_MAX_BIT32U) {
-            fprintf(fp, "0x"FMT_LL"x", (Bit64u) value);
+            fprintf(fp, "0x" FMT_LL "x", (Bit64u) value);
           } else {
             fprintf(fp, "0x%x", (Bit32u) value);
           }

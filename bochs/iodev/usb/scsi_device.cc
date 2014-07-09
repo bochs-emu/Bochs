@@ -228,7 +228,7 @@ bx_bool scsi_device_t::save_requests(const char *path)
       while (r != NULL) {
         fprintf(fp, "%u = {\n", i);
         fprintf(fp, "  tag = %u\n", r->tag);
-        fprintf(fp, "  sector = "FMT_LL"u\n", r->sector);
+        fprintf(fp, "  sector = " FMT_LL "u\n", r->sector);
         fprintf(fp, "  sector_count = %u\n", r->sector_count);
         fprintf(fp, "  buf_len = %d\n", r->buf_len);
         fprintf(fp, "  status = %u\n", r->status);
