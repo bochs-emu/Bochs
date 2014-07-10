@@ -44,11 +44,12 @@
 
 class bx_sdl_gui_c : public bx_gui_c {
 public:
-  bx_sdl_gui_c() {}
+  bx_sdl_gui_c();
   DECLARE_GUI_VIRTUAL_METHODS()
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
   virtual void set_display_mode(disp_mode_t newmode);
   virtual void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
+  virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
   virtual void set_mouse_mode_absxy(bx_bool mode);
 #if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
@@ -92,6 +93,7 @@ static struct {
 unsigned bx_headerbar_entries = 0;
 
 SDL_Surface *sdl_screen, *sdl_fullscreen;
+SDL_Rect sdl_maxres;
 int sdl_fullscreen_toggle;
 int sdl_grab;
 unsigned res_x, res_y;
@@ -470,16 +472,58 @@ DWORD WINAPI DebugGuiThread(LPVOID)
 #endif
 
 
+bx_sdl_gui_c::bx_sdl_gui_c()
+{
+  Uint32 flags;
+  SDL_Rect **modes;
+
+  put("SDL");
+
+#ifdef __MORPHOS__
+  if (!(PowerSDLBase=OpenLibrary("powersdl.library",0)))
+  {
+    setonoff(LOGLEVEL_PANIC, ACT_FATAL);
+    panic("Unable to open SDL libraries");
+    return;
+  }
+#endif
+
+  flags = SDL_INIT_VIDEO;
+#if BX_SHOW_IPS
+#if  defined(__MINGW32__) || defined(_MSC_VER)
+  flags |= SDL_INIT_TIMER;
+#endif
+#endif
+  if (SDL_Init(flags) < 0) {
+    setonoff(LOGLEV_PANIC, ACT_FATAL);
+    panic("Unable to initialize SDL libraries");
+    return;
+  }
+#ifdef __MORPHOS__
+  atexit(bx_sdl_morphos_exit);
+#else
+  atexit(SDL_Quit);
+#endif
+
+  modes = SDL_ListModes(NULL, SDL_FULLSCREEN|SDL_HWSURFACE);
+  if (modes == NULL) {
+    panic("No video modes available");
+    return;
+  }
+  sdl_maxres.w = modes[0]->w;
+  sdl_maxres.h = modes[0]->h;
+  info("maximum host resolution: x=%d y=%d\n", sdl_maxres.w, sdl_maxres.h);
+}
+
+
 void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
   int i, j;
-  Uint32 flags;
 #ifdef WIN32
   bx_bool gui_ci;
 
   gui_ci = !strcmp(SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE)->get_selected(), "win32config");
 #endif
-  put("SDL");
 
   UNUSED(bochs_icon_bits);
 
@@ -492,32 +536,6 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   for(i=0;i<256;i++)
     for(j=0;j<8;j++)
       menufont[i][j] = sdl_font8x8[i][j];
-
-  #ifdef __MORPHOS__
-  if (!(PowerSDLBase=OpenLibrary("powersdl.library",0)))
-  {
-    LOG_THIS setonoff(LOGLEVEL_PANIC, ACT_FATAL);
-    BX_PANIC(("Unable to open SDL libraries"));
-    return;
-  }
-  #endif
-
-  flags = SDL_INIT_VIDEO;
-#if BX_SHOW_IPS
-#if  defined(__MINGW32__) || defined(_MSC_VER)
-  flags |= SDL_INIT_TIMER;
-#endif
-#endif
-  if (SDL_Init(flags) < 0) {
-    LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
-    BX_PANIC(("Unable to initialize SDL libraries"));
-    return;
-  }
-  #ifdef __MORPHOS__
-  atexit(bx_sdl_morphos_exit);
-  #else
-  atexit(SDL_Quit);
-  #endif
 
   sdl_screen = NULL;
   sdl_fullscreen_toggle = 0;
@@ -1114,6 +1132,10 @@ void bx_sdl_gui_c::dimension_update(unsigned x, unsigned y,
   }
 
   if ((x == res_x) && (y == res_y)) return;
+  if (((int)x > sdl_maxres.w) || ((int)y > sdl_maxres.h)) {
+    BX_PANIC(("dimension_update(): resolution of out of display bounds"));
+    return;
+  }
 
   if (sdl_screen) {
     SDL_FreeSurface(sdl_screen);
@@ -1496,6 +1518,14 @@ void bx_sdl_gui_c::set_display_mode(disp_mode_t newmode)
 void bx_sdl_gui_c::statusbar_setitem_specific(int element, bx_bool active, bx_bool w)
 {
   sdl_set_status_text(element+1, statusitem[element].text, active, w);
+}
+
+
+void bx_sdl_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
+{
+  *xres = sdl_maxres.w;
+  *yres = sdl_maxres.h;
+  *bpp = 32;
 }
 
 
