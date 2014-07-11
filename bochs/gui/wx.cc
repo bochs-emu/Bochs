@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2013  The Bochs Project
+//  Copyright (C) 2002-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -51,6 +51,7 @@
 #endif
 #include <wx/image.h>
 #include <wx/clipbrd.h>
+#include <wx/display.h>
 
 //#include "gui/icon_bochs.h"
 #include "osdep.h"
@@ -65,10 +66,11 @@
 //////////////////////////////////////////////////////////////
 class bx_wx_gui_c : public bx_gui_c {
 public:
-  bx_wx_gui_c (void) {}
+  bx_wx_gui_c(void) {}
   DECLARE_GUI_VIRTUAL_METHODS()
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
-  void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
+  virtual void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
+  virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
   virtual void set_mouse_mode_absxy(bx_bool mode);
 #if BX_SHOW_IPS
   void show_ips(Bit32u ips_count);
@@ -79,8 +81,9 @@ public:
 // plugin code
 static bx_wx_gui_c *theGui = NULL;
 
-void MyPanel::OnPluginInit () {
-  theGui = new bx_wx_gui_c ();
+void MyPanel::OnPluginInit()
+{
+  theGui = new bx_wx_gui_c();
   bx_gui = theGui;
 }
 
@@ -92,6 +95,7 @@ void MyPanel::OnPluginInit () {
 // The bits to be displayed on the VGA screen are stored in wxScreen.
 // wxScreen is an array (size=width*height*3) of RGB values.  Each
 // pixel is represented by three bytes, one for red, green, and blue.
+static wxRect wx_maxres;
 static char *wxScreen = NULL;
 wxCriticalSection wxScreen_lock;
 static long wxScreenX = 0;
@@ -151,7 +155,7 @@ MyPanel::MyPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSi
   thePanel = this;
 }
 
-MyPanel::~MyPanel ()
+MyPanel::~MyPanel()
 {
   delete blankCursor;
   thePanel = NULL;
@@ -322,7 +326,7 @@ void MyPanel::OnMouse(wxMouseEvent& event)
   // will move the cursor to (mouseSavedX, mouseSavedY).
 }
 
-void MyPanel::MyRefresh ()
+void MyPanel::MyRefresh()
 {
   IFDBG_VGA (wxLogDebug (wxT ("set needRefresh=true")));
   needRefresh = true;
@@ -952,8 +956,11 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
   int b,i,j;
   unsigned char fc, vc;
+  wxDisplay display;
 
   put("WX");
+  wx_maxres = display.GetGeometry();
+  info("Current display dimensions %d x %d", wx_maxres.GetWidth(), wx_maxres.GetHeight());
   if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
     BX_INFO(("private_colormap option ignored."));
   }
@@ -1582,6 +1589,10 @@ void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, uns
     text_cols = x / wxFontX;
     text_rows = y / wxFontY;
   }
+  if (((int)x > wx_maxres.GetWidth()) || ((int)y > wx_maxres.GetHeight())) {
+    BX_PANIC(("dimension_update(): resolution of out of display bounds"));
+    return;
+  }
   wxScreenX = x;
   wxScreenY = y;
   wxScreen = (char *)realloc(wxScreen, wxScreenX * wxScreenY * 3);
@@ -1741,6 +1752,16 @@ int bx_wx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
   }
   wxMutexGuiLeave();
   return ret;
+}
+
+void bx_wx_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
+{
+  wxDisplay display;
+
+  wx_maxres = display.GetGeometry();
+  *xres = wx_maxres.GetWidth();
+  *yres = wx_maxres.GetHeight();
+  *bpp = 32;
 }
 
 void bx_wx_gui_c::set_mouse_mode_absxy(bx_bool mode)
