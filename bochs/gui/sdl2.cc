@@ -161,6 +161,7 @@ static void sdl_set_status_text(int element, const char *text, bx_bool active, b
   int rowsleft = statusbar_height - 2;
   int colsleft, textlen;
   int x, xleft, xsize;
+  SDL_Rect item;
 
   statusitem_active[element] = active;
   if (!sdl_screen) return;
@@ -213,7 +214,11 @@ static void sdl_set_status_text(int element, const char *text, bx_bool active, b
     buf = buf_row + 8;
     x++;
   } while (--textlen);
-  SDL_UpdateWindowSurface(window);
+  item.x = xleft;
+  item.y = res_y + headerbar_height + 1;
+  item.w = xsize;
+  item.h = statusbar_height - 2;
+  SDL_UpdateWindowSurfaceRects(window, &item, 1);
 }
 
 
@@ -988,30 +993,24 @@ void bx_sdl2_gui_c::flush(void)
 
 void bx_sdl2_gui_c::clear_screen(void)
 {
-  int i = res_y, j;
-  Uint32 color;
-  Uint32 *buf, *buf_row;
-  Uint32 disp;
+  SDL_Rect rect;
 
   if (sdl_screen) {
-    color = SDL_MapRGB(sdl_screen->format, 0, 0, 0);
-    disp = sdl_screen->pitch/4;
-    buf = (Uint32 *)sdl_screen->pixels + headerbar_height * disp;
+    rect.x = 0;
+    rect.y = headerbar_height;
+    rect.w = res_x;
+    rect.h = res_y;
+    SDL_FillRect(sdl_screen, &rect, SDL_MapRGB(sdl_screen->format, 0, 0, 0));
   } else if (sdl_fullscreen) {
-    color = SDL_MapRGB(sdl_fullscreen->format, 0, 0, 0);
-    disp = sdl_fullscreen->pitch/4;
-    buf = (Uint32 *)sdl_fullscreen->pixels;
+    rect.x = 0;
+    rect.y = 0;
+    rect.w = res_x;
+    rect.h = res_y;
+    SDL_FillRect(sdl_fullscreen, &rect, SDL_MapRGB(sdl_fullscreen->format, 0, 0, 0));
   }
   else return;
 
-  do {
-    buf_row = buf;
-    j = res_x;
-    while (j--) *buf++ = color;
-    buf = buf_row + disp;
-  } while (--i);
-
-  SDL_UpdateWindowSurface(window);
+  SDL_UpdateWindowSurfaceRects(window, &rect, 1);
 }
 
 
@@ -1065,6 +1064,7 @@ void bx_sdl2_gui_c::dimension_update(unsigned x, unsigned y,
         BX_HEADERBAR_BG_BLUE);
   } else {
     SDL_SetWindowSize(window, x, y);
+    // BUG: SDL2 does not update the surface here
     sdl_fullscreen = SDL_GetWindowSurface(window);
   }
 
@@ -1200,7 +1200,7 @@ void bx_sdl2_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
         &sdl_bitmaps[bmap_id]->src,
         sdl_screen,
         &hb_dst);
-    SDL_UpdateWindowSurface(window);
+    SDL_UpdateWindowSurfaceRects(window, &hb_dst, 1);
   }
 }
 
@@ -1214,21 +1214,18 @@ void bx_sdl2_gui_c::show_headerbar(void)
   int colsleft, sb_item;
   int bitmapscount = bx_headerbar_entries;
   unsigned current_bmp, pos_x;
-  SDL_Rect hb_dst;
+  SDL_Rect hb_dst, hb_rect;
 
   if (!sdl_screen) return;
   disp = sdl_screen->pitch/4;
   buf = (Uint32 *)sdl_screen->pixels;
 
   // draw headerbar background
-  do {
-    colsleft = res_x;
-    buf_row = buf;
-    do {
-      *buf++ = headerbar_bg;
-    } while (--colsleft);
-    buf = buf_row + disp;
-  } while (--rowsleft);
+  hb_rect.x = 0;
+  hb_rect.y = 0;
+  hb_rect.w = res_x;
+  hb_rect.h = headerbar_height;
+  SDL_FillRect(sdl_screen, &hb_rect, headerbar_bg);
 
   // go thru the bitmaps and display the active ones
   while (bitmapscount--) {
@@ -1264,7 +1261,7 @@ void bx_sdl2_gui_c::show_headerbar(void)
     } while (--colsleft);
     buf = buf_row + disp;
   } while (--rowsleft);
-  SDL_UpdateWindowSurface(window);
+  SDL_UpdateWindowSurfaceRects(window, &hb_rect, 1);
   for (unsigned i=0; i<statusitem_count; i++) {
     sdl_set_status_text(i+1, statusitem[i].text, statusitem_active[i+1]);
   }
