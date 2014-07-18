@@ -718,7 +718,7 @@ static const BxOpcodeInfo_t BxOpcodeInfoEVEX_G14R[8] = {
   /* 0 */ { 0, BX_IA_ERROR },
   /* 1 */ { 0, BX_IA_ERROR },
   /* 2 */ { BxImmediate_Ib | BxPrefixSSE66 | BxVexW1, BX_IA_V512_VPSRLQ_UdqIb },
-  /* 3 */ { BxImmediate_Ib | BxPrefixSSE66, BX_IA_V128_VPSRLDQ_UdqIb },
+  /* 3 */ { BxImmediate_Ib | BxPrefixSSE66, BX_IA_V512_VPSRLDQ_UdqIb },
   /* 4 */ { 0, BX_IA_ERROR },
   /* 5 */ { 0, BX_IA_ERROR },
   /* 6 */ { BxImmediate_Ib | BxPrefixSSE66 | BxVexW1, BX_IA_V512_VPSLLQ_UdqIb },
