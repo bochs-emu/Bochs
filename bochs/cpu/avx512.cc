@@ -646,6 +646,32 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPABSQ_MASK_VdqWdqR(bxInstruction_
 
 // shuffle and permute
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPSHUFHW_MASK_VdqWdqIbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
+  Bit8u order = i->Ib();
+  unsigned len = i->getVL();
+
+  for (unsigned n=0; n < len; n++)
+    xmm_pshufhw(&result.vmm128(n), &op.vmm128(n), order);
+
+  avx512_write_regw_masked(i, &result, len, BX_READ_32BIT_OPMASK(i->opmask()));
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPSHUFLW_MASK_VdqWdqIbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
+  Bit8u order = i->Ib();
+  unsigned len = i->getVL();
+
+  for (unsigned n=0; n < len; n++)
+    xmm_pshuflw(&result.vmm128(n), &op.vmm128(n), order);
+
+  avx512_write_regw_masked(i, &result, len, BX_READ_32BIT_OPMASK(i->opmask()));
+  BX_NEXT_INSTR(i);
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPSHUFB_MASK_VdqHdqWdqR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
