@@ -236,7 +236,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPSHUFHW_VdqWdqIbR(bxInstruction_c
     xmm_pshufhw(&result.vmm128(n), &op.vmm128(n), order);
 
   BX_WRITE_AVX_REGZ(i->dst(), result, len);
-
   BX_NEXT_INSTR(i);
 }
 
@@ -250,7 +249,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPSHUFLW_VdqWdqIbR(bxInstruction_c
     xmm_pshuflw(&result.vmm128(n), &op.vmm128(n), order);
 
   BX_WRITE_AVX_REGZ(i->dst(), result, len);
-
   BX_NEXT_INSTR(i);
 }
 
@@ -264,7 +262,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPSHUFB_VdqHdqWdqR(bxInstruction_c
     xmm_pshufb(&result.vmm128(n), &op1.vmm128(n), &op2.vmm128(n));
 
   BX_WRITE_AVX_REGZ(i->dst(), result, len);
-
   BX_NEXT_INSTR(i);
 }
 
@@ -282,7 +279,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPSADBW_VdqHdqWdqIbR(bxInstructio
   }
 
   BX_WRITE_AVX_REGZ(i->dst(), result, len);
-
   BX_NEXT_INSTR(i);
 }
 
@@ -297,7 +293,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBLENDW_VdqHdqWdqIbR(bxInstructio
     xmm_pblendw(&op1.vmm128(n), &op2.vmm128(n), mask);
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
   BX_NEXT_INSTR(i);
 }
 
@@ -312,7 +307,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTB_VdqWbR(bxInstruction_
     xmm_pbroadcastb(&op.vmm128(n), val_8);
 
   BX_WRITE_AVX_REGZ(i->dst(), op, len);
-
   BX_NEXT_INSTR(i);
 }
 
@@ -327,7 +321,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTW_VdqWwR(bxInstruction_
     xmm_pbroadcastw(&op.vmm128(n), val_16);
 
   BX_WRITE_AVX_REGZ(i->dst(), op, len);
-
   BX_NEXT_INSTR(i);
 }
 
@@ -342,7 +335,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTD_VdqWdR(bxInstruction_
     xmm_pbroadcastd(&op.vmm128(n), val_32);
 
   BX_WRITE_AVX_REGZ(i->dst(), op, len);
-
   BX_NEXT_INSTR(i);
 }
 
@@ -357,7 +349,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTQ_VdqWqR(bxInstruction_
     xmm_pbroadcastq(&op.vmm128(n), val_64);
 
   BX_WRITE_AVX_REGZ(i->dst(), op, len);
-
   BX_NEXT_INSTR(i);
 }
 

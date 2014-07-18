@@ -940,7 +940,7 @@ BX_CPP_INLINE void xmm_pmuludq(BxPackedXmmRegister *op1, const BxPackedXmmRegist
 BX_CPP_INLINE void xmm_pmulhrsw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<8; n++) {
-    op1->xmm16u(n) = (((op1->xmm16s(n) * op2->xmm16s(n)) >> 14) + 1) >> 1;
+    op1->xmm16u(n) = (((Bit32s(op1->xmm16s(n)) * Bit32s(op2->xmm16s(n))) >> 14) + 1) >> 1;
   }
 }
 

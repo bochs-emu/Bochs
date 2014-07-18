@@ -286,7 +286,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPS_MASK_KGwHpsWpsIbR(bxInstruc
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
   unsigned num_elements = DWORD_ELEMENTS(i->getVL());
 
-  Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
+  Bit32u opmask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   Bit32u result = 0;
 
   float_status_t status;
@@ -729,6 +729,98 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMPD_MASK_VpdHpdWpdIbR(bxIn
   }
   else {
     BX_WRITE_AVX_REGZ(i->dst(), op1, len);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+// fpclass
+
+static int fpclass(float_class_t op_class, int sign, int selector)
+{
+  return ((op_class == float_QNaN) && (selector & 0x01) != 0) || // QNaN
+         ((op_class == float_zero) && ! sign && (selector & 0x02) != 0) || // positive zero
+         ((op_class == float_zero) && sign && (selector & 0x04) != 0) || // negative zero
+         ((op_class == float_positive_inf) && (selector & 0x08) != 0) || // positive inf
+         ((op_class == float_negative_inf) && (selector & 0x10) != 0) || // negative inf
+         ((op_class == float_denormal) && (selector & 0x20) != 0) || // negative inf
+         ((op_class == float_denormal || op_class == float_normalized) && sign && (selector & 0x40) != 0) || // negative finite
+         ((op_class == float_SNaN) && (selector & 0x80) != 0); // SNaN
+}
+
+static BX_CPP_INLINE int float32_fpclass(float32 op, int selector, int daz)
+{
+  if (daz) 
+    op = float32_denormal_to_zero(op);
+
+  return fpclass(float32_class(op), float32_sign(op), selector);
+}
+
+static BX_CPP_INLINE int float64_fpclass(float64 op, int selector, int daz)
+{
+  if (daz) 
+    op = float64_denormal_to_zero(op);
+
+  return fpclass(float64_class(op), float64_sign(op), selector);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFPCLASSPS_MASK_KGwWpsIbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  unsigned num_elements = DWORD_ELEMENTS(i->getVL());
+
+  Bit32u opmask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
+  Bit32u result = 0;
+  int selector = i->Ib(), daz = MXCSR.get_DAZ();
+
+  for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
+    if (opmask & mask) {
+      if (float32_fpclass(op.vmm32u(n), selector, daz)) result |= mask;
+    }
+  }
+
+  BX_WRITE_OPMASK(i->dst(), result);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFPCLASSPD_MASK_KGbWpdIbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  unsigned num_elements = QWORD_ELEMENTS(i->getVL());
+
+  Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
+  Bit32u result = 0;
+  int selector = i->Ib(), daz = MXCSR.get_DAZ();
+
+  for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
+    if (opmask & mask) {
+      if (float64_fpclass(op.vmm32u(n), selector, daz)) result |= mask;
+    }
+  }
+
+  BX_WRITE_OPMASK(i->dst(), result);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFPCLASSSS_MASK_KGbWssIbR(bxInstruction_c *i)
+{
+  if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
+    BX_WRITE_OPMASK(i->dst(), float32_fpclass(BX_READ_XMM_REG_LO_DWORD(i->src()), i->Ib(), MXCSR.get_DAZ()));
+  }
+  else {
+    BX_WRITE_OPMASK(i->dst(), 0);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFPCLASSSD_MASK_KGbWsdIbR(bxInstruction_c *i)
+{
+  if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
+    BX_WRITE_OPMASK(i->dst(), float64_fpclass(BX_READ_XMM_REG_LO_QWORD(i->src()), i->Ib(), MXCSR.get_DAZ()));
+  }
+  else {
+    BX_WRITE_OPMASK(i->dst(), 0);
   }
 
   BX_NEXT_INSTR(i);

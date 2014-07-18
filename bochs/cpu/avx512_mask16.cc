@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013 Stanislav Shwartsman
+//   Copyright (c) 2013-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -28,6 +28,16 @@
 
 #if BX_SUPPORT_AVX
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KADDW_KGwKHwKEwR(bxInstruction_c *i)
+{
+#if BX_SUPPORT_EVEX
+  Bit16u opmask = BX_READ_16BIT_OPMASK(i->src1()) + BX_READ_16BIT_OPMASK(i->src2());
+  BX_WRITE_OPMASK(i->dst(), opmask);
+#endif
+
+  BX_NEXT_INSTR(i);
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KANDW_KGwKHwKEwR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
@@ -52,9 +62,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVW_KGwKEwM(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
   Bit16u opmask = read_virtual_word(i->seg(), eaddr);
-
   BX_WRITE_OPMASK(i->dst(), opmask);
 #endif
 
@@ -189,6 +197,23 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KXORW_KGwKHwKEwR(bxInstruction_c *
 #if BX_SUPPORT_EVEX
   Bit16u opmask = BX_READ_16BIT_OPMASK(i->src1()) ^ BX_READ_16BIT_OPMASK(i->src2());
   BX_WRITE_OPMASK(i->dst(), opmask);
+#endif
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KTESTW_KGwKEwR(bxInstruction_c *i)
+{
+#if BX_SUPPORT_EVEX
+  Bit16u op1 = BX_READ_16BIT_OPMASK(i->src1()), op2 = BX_READ_16BIT_OPMASK(i->src2());
+  unsigned flags = 0;
+
+  if ((op1 & op2) == 0)
+    flags |= EFlagsZFMask;
+  if ((~op1 & op2) == 0)
+    flags |= EFlagsCFMask;
+
+  setEFlagsOSZAPC(flags);
 #endif
 
   BX_NEXT_INSTR(i);

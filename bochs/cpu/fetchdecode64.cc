@@ -2325,7 +2325,8 @@ modrm_done:
         i->setSrcReg(n, (type == BX_VMM_REG) ? BX_VECTOR_TMP_REGISTER : BX_TMP_REGISTER);
 #if BX_SUPPORT_EVEX
         if (b1 == 0x62 && displ8) {
-          if (type == BX_GPR32) i->modRMForm.displ32u *= 4;
+          if (type == BX_GPR16) i->modRMForm.displ32u *= 2;
+          else if (type == BX_GPR32) i->modRMForm.displ32u *= 4;
           else if (type == BX_GPR64) i->modRMForm.displ32u *= 8;
         }
 #endif

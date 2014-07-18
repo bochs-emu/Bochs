@@ -1868,11 +1868,15 @@ modrm_done:
 #endif
         i->setSrcReg(n, tmpreg);
 #if BX_SUPPORT_EVEX
-        if (b1 == 0x62 && type == BX_GPR32 && displ8) {
+        if (b1 == 0x62 && displ8) {
+          int displ_mult = 1;
+          if (type == BX_GPR16) displ_mult = 2;
+          else if (type == BX_GPR32) displ_mult = 4;
+
           if (i->as32L())
-            i->modRMForm.displ32u *= 4;
+            i->modRMForm.displ32u *= displ_mult;
           else
-            i->modRMForm.displ16u *= 4;
+            i->modRMForm.displ16u *= displ_mult;
         }
 #endif
       }
@@ -2056,6 +2060,12 @@ unsigned BX_CPU_C::evex_displ8_compression(bxInstruction_c *i, unsigned ia_opcod
     else {
        return (16 * len);
     }
+
+  case BX_VMM_SCALAR_BYTE:
+    return 1;
+
+  case BX_VMM_SCALAR_WORD:
+    return 2;
 
   case BX_VMM_SCALAR:
     return (4 << vex_w);

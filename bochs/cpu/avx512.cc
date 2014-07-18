@@ -35,6 +35,28 @@
 
 typedef Bit32u (*avx512_compare_method)(const BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2);
 
+static avx512_compare_method avx512_compare8[8] = {
+  xmm_pcmpeqb_mask,     // equal
+  xmm_pcmpltb_mask,     // less than
+  xmm_pcmpleb_mask,     // less or equal than
+  xmm_pcmpfalse_mask,   // false
+  xmm_pcmpneb_mask,     // not equal
+  xmm_pcmpgeb_mask,     // not less than => greater or equal than
+  xmm_pcmpgtb_mask,     // not less or equal than => greater than
+  xmm_pcmptrueb_mask    // true
+};
+
+static avx512_compare_method avx512_compare16[8] = {
+  xmm_pcmpeqw_mask,     // equal
+  xmm_pcmpltw_mask,     // less than
+  xmm_pcmplew_mask,     // less or equal than
+  xmm_pcmpfalse_mask,   // false
+  xmm_pcmpnew_mask,     // not equal
+  xmm_pcmpgew_mask,     // not less than => greater or equal than
+  xmm_pcmpgtw_mask,     // not less or equal than => greater than
+  xmm_pcmptruew_mask    // true
+};
+
 static avx512_compare_method avx512_compare32[8] = {
   xmm_pcmpeqd_mask,     // equal
   xmm_pcmpltd_mask,     // less than
@@ -55,6 +77,28 @@ static avx512_compare_method avx512_compare64[8] = {
   xmm_pcmpgeq_mask,     // not less than => greater or equal than
   xmm_pcmpgtq_mask,     // not less or equal than => greater than
   xmm_pcmptrueq_mask    // true
+};
+
+static avx512_compare_method avx512_compare8u[8] = {
+  xmm_pcmpeqb_mask,     // equal
+  xmm_pcmpltub_mask,    // less than
+  xmm_pcmpleub_mask,    // less or equal than
+  xmm_pcmpfalse_mask,   // false
+  xmm_pcmpneb_mask,     // not equal
+  xmm_pcmpgeub_mask,    // not less than => greater or equal than
+  xmm_pcmpgtub_mask,    // not less or equal than => greater than
+  xmm_pcmptrueb_mask    // true
+};
+
+static avx512_compare_method avx512_compare16u[8] = {
+  xmm_pcmpeqw_mask,     // equal
+  xmm_pcmpltuw_mask,    // less than
+  xmm_pcmpleuw_mask,    // less or equal than
+  xmm_pcmpfalse_mask,   // false
+  xmm_pcmpnew_mask,     // not equal
+  xmm_pcmpgeuw_mask,    // not less than => greater or equal than
+  xmm_pcmpgtuw_mask,    // not less or equal than => greater than
+  xmm_pcmptruew_mask    // true
 };
 
 static avx512_compare_method avx512_compare32u[8] = {
@@ -78,6 +122,82 @@ static avx512_compare_method avx512_compare64u[8] = {
   xmm_pcmpgtuq_mask,    // not less or equal than => greater than
   xmm_pcmptrueq_mask    // true
 };
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPB_MASK_KGqHdqWdqIbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
+  unsigned len = i->getVL();
+  unsigned ib = i->Ib() & 7;
+
+  Bit64u result = 0;
+  for (int n=len-1; n >= 0; n--) {
+    result <<= 16;
+    result |= avx512_compare8[ib](&op1.vmm128(n), &op2.vmm128(n));
+  }
+
+  if (i->opmask())
+    result &= BX_READ_OPMASK(i->opmask());
+
+  BX_WRITE_OPMASK(i->dst(), result);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPUB_MASK_KGqHdqWdqIbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
+  unsigned len = i->getVL();
+  unsigned ib = i->Ib() & 7;
+
+  Bit64u result = 0;
+  for (int n=len-1; n >= 0; n--) {
+    result <<= 16;
+    result |= avx512_compare8u[ib](&op1.vmm128(n), &op2.vmm128(n));
+  }
+
+  if (i->opmask())
+    result &= BX_READ_OPMASK(i->opmask());
+
+  BX_WRITE_OPMASK(i->dst(), result);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPW_MASK_KGdHdqWdqIbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
+  unsigned len = i->getVL();
+  unsigned ib = i->Ib() & 7;
+
+  Bit32u result = 0;
+  for (int n=len-1; n >= 0; n--) {
+    result <<= 8;
+    result |= avx512_compare16[ib](&op1.vmm128(n), &op2.vmm128(n));
+  }
+
+  if (i->opmask())
+    result &= (Bit32u) BX_READ_32BIT_OPMASK(i->opmask());
+
+  BX_WRITE_OPMASK(i->dst(), result);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPUW_MASK_KGdHdqWdqIbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
+  unsigned len = i->getVL();
+  unsigned ib = i->Ib() & 7;
+
+  Bit32u result = 0;
+  for (int n=len-1; n >= 0; n--) {
+    result <<= 8;
+    result |= avx512_compare16u[ib](&op1.vmm128(n), &op2.vmm128(n));
+  }
+
+  if (i->opmask())
+    result &= (Bit32u) BX_READ_32BIT_OPMASK(i->opmask());
+
+  BX_WRITE_OPMASK(i->dst(), result);
+  BX_NEXT_INSTR(i);
+}
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPD_MASK_KGwHdqWdqIbR(bxInstruction_c *i)
 {
@@ -156,6 +276,56 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPUQ_MASK_KGbHdqWdqIbR(bxInstru
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
+
+#define AVX512_COMPARE_BYTE_EL(HANDLER, func)                                               \
+  /* AVX-512 compare instruction with two src operands working on BYTE elements */          \
+  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)              \
+  {                                                                                         \
+    BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
+    unsigned len = i->getVL();                                                              \
+                                                                                            \
+    Bit64u result = 0;                                                                      \
+    for (int n=len-1; n >= 0; n--) {                                                        \
+      result <<= 16;                                                                        \
+      result |= (func)(&op1.vmm128(n), &op2.vmm128(n));                                     \
+    }                                                                                       \
+                                                                                            \
+    if (i->opmask())                                                                        \
+      result &= BX_READ_OPMASK(i->opmask());                                                \
+                                                                                            \
+    BX_WRITE_OPMASK(i->dst(), result);                                                      \
+    BX_NEXT_INSTR(i);                                                                       \
+  }
+
+AVX512_COMPARE_BYTE_EL(VPCMPGTB_MASK_KGqHdqWdqR, xmm_pcmpgtd_mask)
+AVX512_COMPARE_BYTE_EL(VPCMPEQB_MASK_KGqHdqWdqR, xmm_pcmpeqd_mask)
+AVX512_COMPARE_BYTE_EL(VPTESTMB_MASK_KGqHdqWdqR, xmm_ptestmb_mask)
+AVX512_COMPARE_BYTE_EL(VPTESTNMB_MASK_KGqHdqWdqR, xmm_ptestnmb_mask)
+
+#define AVX512_COMPARE_WORD_EL(HANDLER, func)                                               \
+  /* AVX-512 compare instruction with two src operands working on WORD elements */          \
+  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)              \
+  {                                                                                         \
+    BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
+    unsigned len = i->getVL();                                                              \
+                                                                                            \
+    Bit32u result = 0;                                                                      \
+    for (int n=len-1; n >= 0; n--) {                                                        \
+      result <<= 8;                                                                         \
+      result |= (func)(&op1.vmm128(n), &op2.vmm128(n));                                     \
+    }                                                                                       \
+                                                                                            \
+    if (i->opmask())                                                                        \
+      result &= (Bit32u) BX_READ_32BIT_OPMASK(i->opmask());                                 \
+                                                                                            \
+    BX_WRITE_OPMASK(i->dst(), result);                                                      \
+    BX_NEXT_INSTR(i);                                                                       \
+  }
+
+AVX512_COMPARE_WORD_EL(VPCMPGTW_MASK_KGdHdqWdqR, xmm_pcmpgtd_mask)
+AVX512_COMPARE_WORD_EL(VPCMPEQW_MASK_KGdHdqWdqR, xmm_pcmpeqd_mask)
+AVX512_COMPARE_WORD_EL(VPTESTMW_MASK_KGdHdqWdqR, xmm_ptestmw_mask)
+AVX512_COMPARE_WORD_EL(VPTESTNMW_MASK_KGdHdqWdqR, xmm_ptestnmw_mask)
 
 #define AVX512_COMPARE_DWORD_EL(HANDLER, func)                                              \
   /* AVX-512 compare instruction with two src operands working on DWORD elements */         \
@@ -242,6 +412,72 @@ AVX512_2OP_DWORD_EL(VPSRLVD_MASK_VdqHdqWdqR, xmm_psrlvd)
 AVX512_2OP_DWORD_EL(VPSLLVD_MASK_VdqHdqWdqR, xmm_psllvd)
 AVX512_2OP_DWORD_EL(VPRORVD_MASK_VdqHdqWdqR, xmm_prorvd)
 AVX512_2OP_DWORD_EL(VPROLVD_MASK_VdqHdqWdqR, xmm_prolvd)
+AVX512_2OP_DWORD_EL(VPMADDWD_MASK_VdqHdqWdqR, xmm_pmaddwd)
+
+#define AVX512_2OP_WORD_EL(HANDLER, func)                                                   \
+  /* AVX-512 instruction with two src operands working on WORD elements */                  \
+  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)              \
+  {                                                                                         \
+    BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
+    unsigned len = i->getVL();                                                              \
+                                                                                            \
+    for (unsigned n=0; n < len; n++)                                                        \
+      (func)(&op1.vmm128(n), &op2.vmm128(n));                                               \
+                                                                                            \
+    avx512_write_regw_masked(i, &op1, len, BX_READ_32BIT_OPMASK(i->opmask()));              \
+                                                                                            \
+    BX_NEXT_INSTR(i);                                                                       \
+  }
+
+AVX512_2OP_WORD_EL(VPADDW_MASK_VdqHdqWdqR, xmm_paddw)
+AVX512_2OP_WORD_EL(VPADDSW_MASK_VdqHdqWdqR, xmm_paddsw)
+AVX512_2OP_WORD_EL(VPADDUSW_MASK_VdqHdqWdqR, xmm_paddusw)
+AVX512_2OP_WORD_EL(VPSUBW_MASK_VdqHdqWdqR, xmm_psubw)
+AVX512_2OP_WORD_EL(VPSUBSW_MASK_VdqHdqWdqR, xmm_psubsw)
+AVX512_2OP_WORD_EL(VPSUBUSW_MASK_VdqHdqWdqR, xmm_psubusw)
+AVX512_2OP_WORD_EL(VPMINSW_MASK_VdqHdqWdqR, xmm_pminsw)
+AVX512_2OP_WORD_EL(VPMAXSW_MASK_VdqHdqWdqR, xmm_pmaxsw)
+AVX512_2OP_WORD_EL(VPMAXUW_MASK_VdqHdqWdqR, xmm_pmaxuw)
+AVX512_2OP_WORD_EL(VPMADDUBSW_MASK_VdqHdqWdqR, xmm_pmaddubsw)
+AVX512_2OP_WORD_EL(VPAVGW_MASK_VdqHdqWdqR, xmm_pavgw)
+AVX512_2OP_WORD_EL(VPMULLW_MASK_VdqHdqWdqR, xmm_pmullw)
+AVX512_2OP_WORD_EL(VPMULHW_MASK_VdqHdqWdqR, xmm_pmulhw)
+AVX512_2OP_WORD_EL(VPMULHUW_MASK_VdqHdqWdqR, xmm_pmulhuw)
+AVX512_2OP_WORD_EL(VPMULHRSW_MASK_VdqHdqWdqR, xmm_pmulhrsw)
+AVX512_2OP_WORD_EL(VPACKSSDW_MASK_VdqHdqWdqR, xmm_packssdw)
+AVX512_2OP_WORD_EL(VPACKUSDW_MASK_VdqHdqWdqR, xmm_packusdw)
+AVX512_2OP_WORD_EL(VPUNPCKLWD_MASK_VdqHdqWdqR, xmm_punpcklwd)
+AVX512_2OP_WORD_EL(VPUNPCKHWD_MASK_VdqHdqWdqR, xmm_punpckhwd)
+
+#define AVX512_2OP_BYTE_EL(HANDLER, func)                                                   \
+  /* AVX-512 instruction with two src operands working on BYTE elements */                  \
+  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)              \
+  {                                                                                         \
+    BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
+    unsigned len = i->getVL();                                                              \
+                                                                                            \
+    for (unsigned n=0; n < len; n++)                                                        \
+      (func)(&op1.vmm128(n), &op2.vmm128(n));                                               \
+                                                                                            \
+    avx512_write_regb_masked(i, &op1, len, BX_READ_OPMASK(i->opmask()));                    \
+                                                                                            \
+    BX_NEXT_INSTR(i);                                                                       \
+  }
+
+AVX512_2OP_BYTE_EL(VPADDB_MASK_VdqHdqWdqR, xmm_paddb)
+AVX512_2OP_BYTE_EL(VPADDSB_MASK_VdqHdqWdqR, xmm_paddsb)
+AVX512_2OP_BYTE_EL(VPADDUSB_MASK_VdqHdqWdqR, xmm_paddusb)
+AVX512_2OP_BYTE_EL(VPSUBB_MASK_VdqHdqWdqR, xmm_psubb)
+AVX512_2OP_BYTE_EL(VPSUBSB_MASK_VdqHdqWdqR, xmm_psubsb)
+AVX512_2OP_BYTE_EL(VPSUBUSB_MASK_VdqHdqWdqR, xmm_psubusb)
+AVX512_2OP_BYTE_EL(VPMINUB_MASK_VdqHdqWdqR, xmm_pminub)
+AVX512_2OP_BYTE_EL(VPMAXUB_MASK_VdqHdqWdqR, xmm_pmaxub)
+AVX512_2OP_BYTE_EL(VPMAXSB_MASK_VdqHdqWdqR, xmm_pmaxsb)
+AVX512_2OP_BYTE_EL(VPAVGB_MASK_VdqHdqWdqR, xmm_pavgb)
+AVX512_2OP_BYTE_EL(VPACKSSWB_MASK_VdqHdqWdqR, xmm_packsswb)
+AVX512_2OP_BYTE_EL(VPACKUSWB_MASK_VdqHdqWdqR, xmm_packuswb)
+AVX512_2OP_BYTE_EL(VPUNPCKLBW_MASK_VdqHdqWdqR, xmm_punpcklbw)
+AVX512_2OP_BYTE_EL(VPUNPCKHBW_MASK_VdqHdqWdqR, xmm_punpckhbw)
 
 #define AVX512_2OP_QWORD_EL(HANDLER, func)                                                  \
   /* AVX-512 instruction with two src operands working on QWORD elements */                 \
@@ -360,6 +596,30 @@ AVX512_PSHIFT_IMM_QWORD_EL(VPROLQ_MASK_UdqIb, xmm_prolq);
 
 // absolute value
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPABSB_MASK_VdqWdqR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  unsigned len = i->getVL();
+
+  for (unsigned n=0; n < len; n++)
+    xmm_pabsb(&op.vmm128(n));
+
+  avx512_write_regb_masked(i, &op, len, BX_READ_OPMASK(i->opmask()));
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPABSW_MASK_VdqWdqR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  unsigned len = i->getVL();
+
+  for (unsigned n=0; n < len; n++)
+    xmm_pabsw(&op.vmm128(n));
+
+  avx512_write_regw_masked(i, &op, len, BX_READ_32BIT_OPMASK(i->opmask()));
+  BX_NEXT_INSTR(i);
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPABSD_MASK_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
@@ -385,6 +645,19 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPABSQ_MASK_VdqWdqR(bxInstruction_
 }
 
 // shuffle and permute
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPSHUFB_MASK_VdqHdqWdqR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2()), result;
+  unsigned len = i->getVL();
+
+  for (unsigned n=0; n < len; n++)
+    xmm_pshufb(&result.vmm128(n), &op1.vmm128(n), &op2.vmm128(n));
+
+  avx512_write_regb_masked(i, &result, len, BX_READ_OPMASK(i->opmask()));
+  BX_NEXT_INSTR(i);
+}
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSHUFPS_MASK_VpsHpsWpsIbR(bxInstruction_c *i)
 {
@@ -733,6 +1006,46 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VINSERTF32x4_MASK_VpsHpsWpsIbR(bxI
   BX_NEXT_INSTR(i);
 }
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VINSERTF64x2_MASK_VpdHpdWpdIbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  unsigned len = i->getVL();
+  unsigned offset = i->Ib() & (len-1);
+  
+  op1.vmm128(offset) = BX_READ_XMM_REG(i->src2());
+
+  if (i->opmask()) {
+    avx512_write_regq_masked(i, &op1, len, BX_READ_8BIT_OPMASK(i->opmask()));
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), op1, len);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VINSERTF32x8_MASK_VpsHpsWpsIbR(bxInstruction_c *i)
+{
+  unsigned len = i->getVL();
+  if (len != BX_VL512) {
+    BX_ERROR(("%s: vector length must be 512 bit", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+
+  op1.vmm256(i->Ib() & 0x1) = BX_READ_YMM_REG(i->src2());
+
+  if (i->opmask()) {
+    avx512_write_regd_masked(i, &op1, len, BX_READ_16BIT_OPMASK(i->opmask()));
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), op1, len);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VINSERTF64x4_MASK_VpdHpdWpdIbR(bxInstruction_c *i)
 {
   unsigned len = i->getVL();
@@ -908,8 +1221,29 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSHDUP_MASK_VpsWpsR(bxInstructi
   BX_NEXT_INSTR(i);
 }
 
-
 // broadcast
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTB_MASK_VdqWbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op;
+  unsigned len = i->getVL();
+
+  simd_pbroadcastb(&op, BX_READ_XMM_REG_LO_BYTE(i->src()), len * 16);
+  avx512_write_regb_masked(i, &op, len, BX_READ_OPMASK(i->opmask()));
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTW_MASK_VdqWwR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op;
+  unsigned len = i->getVL();
+
+  simd_pbroadcastw(&op, BX_READ_XMM_REG_LO_WORD(i->src()), len * 8);
+  avx512_write_regw_masked(i, &op, len, BX_READ_32BIT_OPMASK(i->opmask()));
+
+  BX_NEXT_INSTR(i);
+}
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTD_MASK_VdqWdR(bxInstruction_c *i)
 {
@@ -933,6 +1267,26 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTQ_MASK_VdqWqR(bxInstruc
   BX_NEXT_INSTR(i);
 }
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTB_VdqEbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op;
+  unsigned len = i->getVL();
+
+  simd_pbroadcastb(&op, BX_READ_8BIT_REGL(i->src()), len * 16);
+  BX_WRITE_AVX_REGZ(i->dst(), op, len);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTW_VdqEwR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op;
+  unsigned len = i->getVL();
+
+  simd_pbroadcastw(&op, BX_READ_16BIT_REG(i->src()), len * 8);
+  BX_WRITE_AVX_REGZ(i->dst(), op, len);
+  BX_NEXT_INSTR(i);
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTD_VdqEdR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op;
@@ -950,6 +1304,26 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTQ_VdqEqR(bxInstruction_
 
   simd_pbroadcastq(&op, BX_READ_64BIT_REG(i->src()), len * 2);
   BX_WRITE_AVX_REGZ(i->dst(), op, len);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTB_MASK_VdqEbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op;
+  unsigned len = i->getVL();
+
+  simd_pbroadcastb(&op, BX_READ_8BIT_REGL(i->src()), len * 16);
+  avx512_write_regb_masked(i, &op, len, BX_READ_OPMASK(i->opmask()));
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTW_MASK_VdqEwR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op;
+  unsigned len = i->getVL();
+
+  simd_pbroadcastw(&op, BX_READ_16BIT_REG(i->src()), len * 8);
+  avx512_write_regw_masked(i, &op, len, BX_READ_32BIT_OPMASK(i->opmask()));
   BX_NEXT_INSTR(i);
 }
 
@@ -989,6 +1363,35 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF32x4_MASK_VpsMps(bxInst
     }
 
     avx512_write_regd_masked(i, &dst, len, opmask);
+  }
+  else {
+    if (i->isZeroMasking()) {
+      BX_CLEAR_AVX_REG(i->dst());
+    }
+    else {
+      BX_CLEAR_AVX_REGZ(i->dst(), len);
+    }
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF64x2_MASK_VpdMpd(bxInstruction_c *i)
+{
+  BxPackedAvxRegister dst;
+  BxPackedXmmRegister src;
+  unsigned len = i->getVL();
+
+  Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask());
+  if (opmask != 0) {
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    read_virtual_xmmword(i->seg(), eaddr, &src);
+
+    for (unsigned n=0; n < len; n++) {
+      dst.vmm128(n) = src;
+    }
+
+    avx512_write_regq_masked(i, &dst, len, opmask);
   }
   else {
     if (i->isZeroMasking()) {
@@ -1046,6 +1449,36 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF64x4_MASK_VpdMpd(bxInst
     dst.vmm256(1) = src;
 
     avx512_write_regq_masked(i, &dst, BX_VL512, opmask);
+  }
+  else {
+    if (i->isZeroMasking())
+      BX_CLEAR_AVX_REG(i->dst());
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF32x8_MASK_VpsMps(bxInstruction_c *i)
+{
+  BxPackedAvxRegister dst;
+  BxPackedYmmRegister src;
+
+#if BX_SUPPORT_EVEX
+  if (i->getVL() != BX_VL512) {
+    BX_ERROR(("%s: must have 512-bit vector length", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
+  Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
+  if (opmask != 0) {
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    read_virtual_ymmword(i->seg(), eaddr, &src);
+
+    dst.vmm256(0) = src;
+    dst.vmm256(1) = src;
+
+    avx512_write_regd_masked(i, &dst, BX_VL512, opmask);
   }
   else {
     if (i->isZeroMasking())
@@ -1170,6 +1603,46 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPTERNLOGQ_MASK_VdqHdqWdqIbR(bxIns
 }
 
 // blend
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBLENDMB_MASK_VdqHdqWdqR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
+  unsigned len = i->getVL();
+
+  Bit64u opmask = (i->opmask() != 0) ? BX_READ_OPMASK(i->opmask()) : BX_CONST64(0xffffffffffffffff);
+
+  if (i->isZeroMasking()) {
+    for (unsigned n=0; n < len; n++, opmask >>= 16)
+      xmm_zero_pblendb(&op1.vmm128(n), &op2.vmm128(n), opmask);
+  }
+  else {
+    for (unsigned n=0; n < len; n++, opmask >>= 16)
+      xmm_pblendb(&op1.vmm128(n), &op2.vmm128(n), opmask);
+  }
+
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBLENDMW_MASK_VdqHdqWdqR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
+  unsigned len = i->getVL();
+
+  Bit32u opmask = (i->opmask() != 0) ? BX_READ_32BIT_OPMASK(i->opmask()) : 0xffffffff;
+
+  if (i->isZeroMasking()) {
+    for (unsigned n=0; n < len; n++, opmask >>= 8)
+      xmm_zero_pblendw(&op1.vmm128(n), &op2.vmm128(n), opmask);
+  }
+  else {
+    for (unsigned n=0; n < len; n++, opmask >>= 8)
+      xmm_pblendw(&op1.vmm128(n), &op2.vmm128(n), opmask);
+  }
+
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
+  BX_NEXT_INSTR(i);
+}
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBLENDMPS_MASK_VpsHpsWpsR(bxInstruction_c *i)
 {

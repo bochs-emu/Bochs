@@ -165,9 +165,11 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_ISA_AVX512_CD             (BX_CONST64(1) << 46)  /* AVX-512 Conflict Detection instruction */
 #define BX_ISA_AVX512_PF             (BX_CONST64(1) << 47)  /* AVX-512 Sparse Prefetch instruction */
 #define BX_ISA_AVX512_ER             (BX_CONST64(1) << 48)  /* AVX-512 Exponential/Reciprocal instruction */
-#define BX_ISA_CLFLUSHOPT            (BX_CONST64(1) << 49)  /* CLFLUSHOPT instruction */
-#define BX_ISA_XSAVEC                (BX_CONST64(1) << 50)  /* XSAVEC instruction */
-#define BX_ISA_XSAVES                (BX_CONST64(1) << 51)  /* XSAVES instruction */
+#define BX_ISA_AVX512_DQ             (BX_CONST64(1) << 49)  /* AVX-512DQ instruction */
+#define BX_ISA_AVX512_BW             (BX_CONST64(1) << 50)  /* AVX-512 Byte/Word instruction */
+#define BX_ISA_CLFLUSHOPT            (BX_CONST64(1) << 51)  /* CLFLUSHOPT instruction */
+#define BX_ISA_XSAVEC                (BX_CONST64(1) << 52)  /* XSAVEC instruction */
+#define BX_ISA_XSAVES                (BX_CONST64(1) << 53)  /* XSAVES instruction */
 
 // cpuid non-ISA features
 #define BX_CPU_DEBUG_EXTENSIONS      (1 <<  0)              /* Debug Extensions support */
@@ -374,7 +376,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [14:14]  Intel Memory Protection Extensions
 //   [15:15]  Supports Platform Quality of Service Enforcement (PQE) capability
 //   [16:16]  AVX512F instructions support
-//   [17:17]  reserved
+//   [17:17]  AVX512DQ instructions support
 //   [18:18]  RDSEED instruction support
 //   [19:19]  ADCX/ADOX instructions support
 //   [20:20]  SMAP: Supervisor Mode Access Prevention
@@ -386,7 +388,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [27:27]  AVX512ER instructions support
 //   [28:28]  AVX512CD instructions support
 //   [29:29]  SHA instructions support
-//   [31:30]  reserved
+//   [30:30]  AVX512BW instructions support
+//   [31:31]  AVX512VL variable vector length support
 
 #define BX_CPUID_EXT3_FSGSBASE               (1 <<  0)
 #define BX_CPUID_EXT3_TSC_ADJUST             (1 <<  1)
@@ -405,7 +408,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT3_MPX                    (1 << 14)
 #define BX_CPUID_EXT3_QOS_ENFORCEMENT        (1 << 15)
 #define BX_CPUID_EXT3_AVX512F                (1 << 16)
-#define BX_CPUID_EXT3_RESERVED17             (1 << 17)
+#define BX_CPUID_EXT3_AVX512DQ               (1 << 17)
 #define BX_CPUID_EXT3_RDSEED                 (1 << 18)
 #define BX_CPUID_EXT3_ADX                    (1 << 19)
 #define BX_CPUID_EXT3_SMAP                   (1 << 20)
@@ -418,8 +421,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT3_AVX512ER               (1 << 27)
 #define BX_CPUID_EXT3_AVX512CD               (1 << 28)
 #define BX_CPUID_EXT3_SHA                    (1 << 29)
-#define BX_CPUID_EXT3_RESERVED30             (1 << 30)
-#define BX_CPUID_EXT3_RESERVED31             (1 << 31)
+#define BX_CPUID_EXT3_AVX512BW               (1 << 30)
+#define BX_CPUID_EXT3_AVX512VL               (1 << 31)
 
 // CPUID defines - EXT4 features CPUID[0x00000007].ECX
 // -----------------------------
