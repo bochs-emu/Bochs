@@ -190,6 +190,8 @@ float32 uint64_to_float32(Bit64u a, float_status_t &status)
 float64 uint64_to_float64(Bit64u a, float_status_t &status)
 {
     if (a == 0) return 0;
+    if (a & BX_CONST64(0x8000000000000000))
+        return normalizeRoundAndPackFloat64(0, 0x43D, a >> 1, status);
     return normalizeRoundAndPackFloat64(0, 0x43C, a, status);
 }
 
