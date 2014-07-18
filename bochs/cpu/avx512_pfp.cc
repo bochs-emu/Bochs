@@ -794,7 +794,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFPCLASSPD_MASK_KGbWpdIbR(bxInstru
 
   for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
     if (opmask & mask) {
-      if (float64_fpclass(op.vmm32u(n), selector, daz)) result |= mask;
+      if (float64_fpclass(op.vmm64u(n), selector, daz)) result |= mask;
     }
   }
 
