@@ -856,6 +856,29 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMQ_MASK_VdqWdqIbR(bxInstructio
   BX_NEXT_INSTR(i);
 }
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMT2W_MASK_VdqHdqWdqR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
+  BxPackedAvxRegister dst = BX_READ_AVX_REG(i->dst()), result;
+  unsigned len = i->getVL(), elements = WORD_ELEMENTS(len);
+  unsigned shuffle_control_mask = elements - 1;
+
+  for (unsigned n=0; n < elements; n++) {
+    unsigned shuffle_control = (unsigned) (op1.vmm16u(n) & shuffle_control_mask);
+    result.vmm16u(n) = (op1.vmm16u(n) & elements) ? op2.vmm16u(shuffle_control) : dst.vmm16u(shuffle_control);
+  }
+
+  if (i->opmask()) {
+    avx512_write_regw_masked(i, &result, len, BX_READ_32BIT_OPMASK(i->opmask()));
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), result, len);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMT2PS_MASK_VpsHpsWpsR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
@@ -902,6 +925,29 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMT2PD_MASK_VpdHpdWpdR(bxInstru
   BX_NEXT_INSTR(i);
 }
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMI2W_MASK_VdqHdqWdqR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
+  BxPackedAvxRegister dst = BX_READ_AVX_REG(i->dst()), result;
+  unsigned len = i->getVL(), elements = WORD_ELEMENTS(len);
+  unsigned shuffle_control_mask = elements - 1;
+
+  for (unsigned n=0; n < elements; n++) {
+    unsigned shuffle_control = (unsigned) (dst.vmm16u(n) & shuffle_control_mask);
+    result.vmm16u(n) = (dst.vmm16u(n) & elements) ? op2.vmm16u(shuffle_control) : op1.vmm16u(shuffle_control);
+  }
+
+  if (i->opmask()) {
+    avx512_write_regw_masked(i, &result, len, BX_READ_32BIT_OPMASK(i->opmask()));
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), result, len);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMI2PS_MASK_VpsHpsWpsR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
@@ -940,6 +986,26 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMI2PD_MASK_VpdHpdWpdR(bxInstru
 
   if (i->opmask()) {
     avx512_write_regq_masked(i, &result, len, BX_READ_8BIT_OPMASK(i->opmask()));
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), result, len);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMW_MASK_VdqHdqWdqR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2()), result;
+  unsigned len = i->getVL(), elements = WORD_ELEMENTS(len);
+  unsigned shuffle_control_mask = elements - 1;
+
+  for (unsigned n=0;n < elements;n++)
+    result.vmm16u(n) = op2.vmm16u(op1.vmm16u(n) & shuffle_control_mask);
+
+  if (i->opmask()) {
+    avx512_write_regw_masked(i, &result, len, BX_READ_32BIT_OPMASK(i->opmask()));
   }
   else {
     BX_WRITE_AVX_REGZ(i->dst(), result, len);
