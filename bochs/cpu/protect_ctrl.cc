@@ -570,7 +570,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
   /* mark as busy */
   if (!(dword2 & 0x0200)) {
     dword2 |= 0x0200; /* set busy bit */
-    access_write_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 4, 4, 0, 0x0, &dword2);
+    system_write_dword(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 4, dword2);
   }
 
   BX_NEXT_INSTR(i);

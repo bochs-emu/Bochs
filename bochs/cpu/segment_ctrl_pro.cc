@@ -512,10 +512,10 @@ BX_CPU_C::touch_segment(bx_selector_t *selector, bx_descriptor_t *descriptor)
     descriptor->type |= 1;
 
     if (selector->ti == 0) { /* GDT */
-       access_write_linear(BX_CPU_THIS_PTR gdtr.base + selector->index*8 + 5, 1, 0, 0x0, &AR_byte);
+      system_write_byte(BX_CPU_THIS_PTR gdtr.base + selector->index*8 + 5, AR_byte);
     }
     else { /* LDT */
-       access_write_linear(BX_CPU_THIS_PTR ldtr.cache.u.segment.base + selector->index*8 + 5, 1, 0, 0x0, &AR_byte);
+      system_write_byte(BX_CPU_THIS_PTR ldtr.cache.u.segment.base + selector->index*8 + 5, AR_byte);
     }
   }
 }
