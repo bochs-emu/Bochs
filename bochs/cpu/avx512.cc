@@ -571,6 +571,25 @@ AVX512_PSHIFT_QWORD_EL(VPSRLQ_MASK_VdqHdqWdqR, xmm_psrlq);
 AVX512_PSHIFT_QWORD_EL(VPSRAQ_MASK_VdqHdqWdqR, xmm_psraq);
 AVX512_PSHIFT_QWORD_EL(VPSLLQ_MASK_VdqHdqWdqR, xmm_psllq);
 
+#define AVX512_PSHIFT_IMM_WORD_EL(HANDLER, func)                              \
+  /* AVX packed shift with imm8 instruction */                                \
+  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
+  {                                                                           \
+    BxPackedAvxRegister op  = BX_READ_AVX_REG(i->src());                      \
+    unsigned len = i->getVL();                                                \
+                                                                              \
+    for (unsigned n=0; n < len; n++)                                          \
+      (func)(&op.vmm128(n), i->Ib());                                         \
+                                                                              \
+    avx512_write_regw_masked(i, &op, len, BX_READ_32BIT_OPMASK(i->opmask())); \
+                                                                              \
+    BX_NEXT_INSTR(i);                                                         \
+  }
+
+AVX512_PSHIFT_IMM_WORD_EL(VPSRLW_MASK_UdqIb, xmm_psrlw);
+AVX512_PSHIFT_IMM_WORD_EL(VPSRAW_MASK_UdqIb, xmm_psraw);
+AVX512_PSHIFT_IMM_WORD_EL(VPSLLW_MASK_UdqIb, xmm_psllw);
+
 #define AVX512_PSHIFT_IMM_DWORD_EL(HANDLER, func)                             \
   /* AVX packed shift with imm8 instruction */                                \
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
