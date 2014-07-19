@@ -514,6 +514,25 @@ AVX512_2OP_QWORD_EL(VPSLLVQ_MASK_VdqHdqWdqR, xmm_psllvq)
 AVX512_2OP_QWORD_EL(VPRORVQ_MASK_VdqHdqWdqR, xmm_prorvq)
 AVX512_2OP_QWORD_EL(VPROLVQ_MASK_VdqHdqWdqR, xmm_prolvq)
 
+#define AVX512_PSHIFT_WORD_EL(HANDLER, func)                                  \
+  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
+  {                                                                           \
+    BxPackedAvxRegister op  = BX_READ_AVX_REG(i->src1());                     \
+    Bit64u count = BX_READ_XMM_REG_LO_QWORD(i->src2());                       \
+    unsigned len = i->getVL();                                                \
+                                                                              \
+    for (unsigned n=0; n < len; n++)                                          \
+      (func)(&op.vmm128(n), count);                                           \
+                                                                              \
+    avx512_write_regw_masked(i, &op, len, BX_READ_32BIT_OPMASK(i->opmask())); \
+                                                                              \
+    BX_NEXT_INSTR(i);                                                         \
+  }
+
+AVX512_PSHIFT_WORD_EL(VPSRLW_MASK_VdqHdqWdqR, xmm_psrlw);
+AVX512_PSHIFT_WORD_EL(VPSRAW_MASK_VdqHdqWdqR, xmm_psraw);
+AVX512_PSHIFT_WORD_EL(VPSLLW_MASK_VdqHdqWdqR, xmm_psllw);
+
 #define AVX512_PSHIFT_DWORD_EL(HANDLER, func)                                 \
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
   {                                                                           \
@@ -1369,36 +1388,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTB_VdqEbR(bxInstruction_
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTW_VdqEwR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op;
-  unsigned len = i->getVL();
-
-  simd_pbroadcastw(&op, BX_READ_16BIT_REG(i->src()), len * 8);
-  BX_WRITE_AVX_REGZ(i->dst(), op, len);
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTD_VdqEdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op;
-  unsigned len = i->getVL();
-
-  simd_pbroadcastd(&op, BX_READ_32BIT_REG(i->src()), len * 4);
-  BX_WRITE_AVX_REGZ(i->dst(), op, len);
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTQ_VdqEqR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op;
-  unsigned len = i->getVL();
-
-  simd_pbroadcastq(&op, BX_READ_64BIT_REG(i->src()), len * 2);
-  BX_WRITE_AVX_REGZ(i->dst(), op, len);
-  BX_NEXT_INSTR(i);
-}
-
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTB_MASK_VdqEbR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op;
@@ -1406,6 +1395,16 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTB_MASK_VdqEbR(bxInstruc
 
   simd_pbroadcastb(&op, BX_READ_8BIT_REGL(i->src()), len * 16);
   avx512_write_regb_masked(i, &op, len, BX_READ_OPMASK(i->opmask()));
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTW_VdqEwR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op;
+  unsigned len = i->getVL();
+
+  simd_pbroadcastw(&op, BX_READ_16BIT_REG(i->src()), len * 8);
+  BX_WRITE_AVX_REGZ(i->dst(), op, len);
   BX_NEXT_INSTR(i);
 }
 
@@ -1419,6 +1418,16 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTW_MASK_VdqEwR(bxInstruc
   BX_NEXT_INSTR(i);
 }
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTD_VdqEdR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op;
+  unsigned len = i->getVL();
+
+  simd_pbroadcastd(&op, BX_READ_32BIT_REG(i->src()), len * 4);
+  BX_WRITE_AVX_REGZ(i->dst(), op, len);
+  BX_NEXT_INSTR(i);
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTD_MASK_VdqEdR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op;
@@ -1426,6 +1435,16 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTD_MASK_VdqEdR(bxInstruc
 
   simd_pbroadcastd(&op, BX_READ_32BIT_REG(i->src()), len * 4);
   avx512_write_regd_masked(i, &op, len, BX_READ_16BIT_OPMASK(i->opmask()));
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTQ_VdqEqR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op;
+  unsigned len = i->getVL();
+
+  simd_pbroadcastq(&op, BX_READ_64BIT_REG(i->src()), len * 2);
+  BX_WRITE_AVX_REGZ(i->dst(), op, len);
   BX_NEXT_INSTR(i);
 }
 
