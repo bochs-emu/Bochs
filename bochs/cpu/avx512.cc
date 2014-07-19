@@ -1378,6 +1378,17 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTQ_MASK_VdqWqR(bxInstruc
   BX_NEXT_INSTR(i);
 }
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF32x2_MASK_VpsWqR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op;
+  unsigned len = i->getVL();
+
+  simd_pbroadcastq(&op, BX_READ_XMM_REG_LO_QWORD(i->src()), len * 2);
+  avx512_write_regd_masked(i, &op, len, BX_READ_16BIT_OPMASK(i->opmask()));
+
+  BX_NEXT_INSTR(i);
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTB_VdqEbR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op;
