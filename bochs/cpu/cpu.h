@@ -3657,18 +3657,22 @@ public: // for now...
 
   BX_SMF BX_INSF_TYPE VINSERTF32x4_MASK_VpsHpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VINSERTF64x2_MASK_VpdHpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VINSERTF32x8_MASK_VpsHpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VINSERTF64x4_VpdHpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VINSERTF64x4_MASK_VpdHpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VINSERTF32x8_MASK_VpsHpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF BX_INSF_TYPE VEXTRACTF32x4_WpsVpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VEXTRACTF32x4_MASK_WpsVpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VEXTRACTF64x4_WpdVpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VEXTRACTF64x4_MASK_WpdVpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
-  BX_SMF BX_INSF_TYPE VEXTRACTF32x4_WpsVpsIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VEXTRACTF32x4_MASK_WpsVpsIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF BX_INSF_TYPE VEXTRACTF64x4_WpdVpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VEXTRACTF64x4_WpdVpdIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VEXTRACTF64x4_MASK_WpdVpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VEXTRACTF64x4_MASK_WpdVpdIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF BX_INSF_TYPE VEXTRACTF32x8_MASK_WpsVpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VEXTRACTF32x8_MASK_WpsVpsIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VEXTRACTF64x2_MASK_WpdVpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VEXTRACTF64x2_MASK_WpdVpdIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF BX_INSF_TYPE VPBROADCASTB_MASK_VdqWbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPBROADCASTW_MASK_VdqWwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

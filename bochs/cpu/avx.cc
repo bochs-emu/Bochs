@@ -488,32 +488,32 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBLENDVB_VdqHdqWdqIbR(bxInstructi
 /* Opcode: VEX.66.0F.3A 18 (VEX.W=0) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VINSERTF128_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1());
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src1());
+  unsigned len = i->getVL();
+  unsigned offset = i->Ib() & (len-1);
+  
+  op.vmm128(offset) = BX_READ_XMM_REG(i->src2());
 
-  op1.ymm128(i->Ib() & 0x1) = BX_READ_XMM_REG(i->src2());
-
-  BX_WRITE_YMM_REGZ(i->dst(), op1);
-
+  BX_WRITE_AVX_REGZ(i->dst(), op, len);
   BX_NEXT_INSTR(i);
 }
 
 /* Opcode: VEX.66.0F.3A 19 (VEX.W=0, VEX.VVV #UD) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF128_WdqVdqIbM(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
+  unsigned len = i->getVL(), offset = i->Ib() & (len - 1);
+  BxPackedXmmRegister op = BX_READ_AVX_REG_LANE(i->src(), offset);
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  write_virtual_xmmword(i->seg(), eaddr, &(op.ymm128(i->Ib() & 1)));
+  write_virtual_xmmword(i->seg(), eaddr, &op);
 
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF128_WdqVdqIbR(bxInstruction_c *i)
 {
-  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
-
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op.ymm128(i->Ib() & 1));
-
+  unsigned len = i->getVL(), offset = i->Ib() & (len - 1);
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), BX_READ_AVX_REG_LANE(i->src(), offset));
   BX_NEXT_INSTR(i);
 }
 
