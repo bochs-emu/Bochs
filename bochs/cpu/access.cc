@@ -281,14 +281,9 @@ BX_CPU_C::system_read_byte(bx_address laddr)
     }
   }
 
-#if BX_SUPPORT_X86_64
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("system_read_byte(): canonical failure"));
+  if (access_read_linear(laddr, 1, 0, BX_READ, 0x0, (void *) &data) < 0)
     exception(BX_GP_EXCEPTION, 0);
-  }
-#endif
 
-  access_read_linear(laddr, 1, 0, BX_READ, 0x0, (void *) &data);
   return data;
 }
 
@@ -394,7 +389,8 @@ BX_CPU_C::system_write_byte(bx_address laddr, Bit8u data)
     }
   }
 
-  access_write_linear(laddr, 1, 0, 0x0, (void *) &data);
+  if (access_write_linear(laddr, 1, 0, 0x0, (void *) &data) < 0)
+    exception(BX_GP_EXCEPTION, 0);
 }
 
   void BX_CPP_AttrRegparmN(2)

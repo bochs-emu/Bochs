@@ -52,7 +52,8 @@ BX_CPU_C::write_virtual_byte_64(unsigned s, Bit64u offset, Bit8u data)
     }
   }
 
-  access_write_linear(laddr, 1, CPL, 0x0, (void *) &data);
+  if (access_write_linear(laddr, 1, CPL, 0x0, (void *) &data) < 0)
+    exception(int_number(s), 0);
 }
 
   void BX_CPP_AttrRegparmN(3)
@@ -220,7 +221,8 @@ BX_CPU_C::write_virtual_xmmword_aligned_64(unsigned s, Bit64u offset, const BxPa
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  access_write_linear(laddr, 16, CPL, 0x0, (void *) data);
+  if (access_write_linear(laddr, 16, CPL, 0x0, (void *) data) < 0)
+    exception(int_number(s), 0);
 }
 
 #if BX_SUPPORT_AVX
@@ -284,7 +286,8 @@ void BX_CPU_C::write_virtual_ymmword_aligned_64(unsigned s, Bit64u offset, const
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  access_write_linear(laddr, 32, CPL, 0x0, (void *) data);
+  if (access_write_linear(laddr, 32, CPL, 0x0, (void *) data) < 0)
+    exception(int_number(s), 0);
 }
 
 #endif
@@ -350,7 +353,8 @@ void BX_CPU_C::write_virtual_zmmword_aligned_64(unsigned s, Bit64u offset, const
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  access_write_linear(laddr, 64, CPL, 0x0, (void *) data);
+  if (access_write_linear(laddr, 64, CPL, 0x0, (void *) data) < 0)
+    exception(int_number(s), 0);
 }
 
 #endif
@@ -378,7 +382,9 @@ BX_CPU_C::read_virtual_byte_64(unsigned s, Bit64u offset)
     }
   }
 
-  access_read_linear(laddr, 1, CPL, BX_READ, 0x0, (void *) &data);
+  if (access_read_linear(laddr, 1, CPL, BX_READ, 0x0, (void *) &data) < 0)
+    exception(int_number(s), 0);
+
   return data;
 }
 
@@ -536,7 +542,8 @@ BX_CPU_C::read_virtual_xmmword_aligned_64(unsigned s, Bit64u offset, BxPackedXmm
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  access_read_linear(laddr, 16, CPL, BX_READ, 0x0, (void *) data);
+  if (access_read_linear(laddr, 16, CPL, BX_READ, 0x0, (void *) data) < 0)
+    exception(int_number(s), 0);
 }
 
 #if BX_SUPPORT_AVX
@@ -596,7 +603,8 @@ void BX_CPU_C::read_virtual_ymmword_aligned_64(unsigned s, Bit64u offset, BxPack
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  access_read_linear(laddr, 32, CPL, BX_READ, 0x0, (void *) data);
+  if (access_read_linear(laddr, 32, CPL, BX_READ, 0x0, (void *) data) < 0)
+    exception(int_number(s), 0);
 }
 
 #endif
@@ -658,7 +666,8 @@ void BX_CPU_C::read_virtual_zmmword_aligned_64(unsigned s, Bit64u offset, BxPack
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  access_read_linear(laddr, 64, CPL, BX_READ, 0x0, (void *) data);
+  if (access_read_linear(laddr, 64, CPL, BX_READ, 0x0, (void *) data) < 0)
+    exception(int_number(s), 0);
 }
 
 #endif
@@ -695,7 +704,9 @@ BX_CPU_C::read_RMW_virtual_byte_64(unsigned s, Bit64u offset)
     }
   }
 
-  access_read_linear(laddr, 1, CPL, BX_RW, 0x0, (void *) &data);
+  if (access_read_linear(laddr, 1, CPL, BX_RW, 0x0, (void *) &data) < 0)
+    exception(int_number(s), 0);
+
   return data;
 }
 
@@ -842,7 +853,10 @@ void BX_CPU_C::read_RMW_virtual_dqword_aligned_64(unsigned s, Bit64u offset, Bit
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  access_read_linear(laddr,     8, CPL, BX_RW, 0x0, (void *) lo);
+  if (access_read_linear(laddr, 8, CPL, BX_RW, 0x0, (void *) lo) < 0)
+    exception(int_number(s), 0);
+
+  // the access is always aligned and canonical
   access_read_linear(laddr + 8, 8, CPL, BX_RW, 0x0, (void *) hi);
 }
 
