@@ -124,6 +124,7 @@ AVX_2OP(VPUNPCKLWD_VdqHdqWdqR, xmm_punpcklwd)
 AVX_2OP(VPUNPCKHBW_VdqHdqWdqR, xmm_punpckhbw)
 AVX_2OP(VPUNPCKHWD_VdqHdqWdqR, xmm_punpckhwd)
 
+AVX_2OP(VPMULLQ_VdqHdqWdqR, xmm_pmullq)
 AVX_2OP(VPMULLD_VdqHdqWdqR, xmm_pmulld)
 AVX_2OP(VPMULLW_VdqHdqWdqR, xmm_pmullw)
 AVX_2OP(VPMULHW_VdqHdqWdqR, xmm_pmulhw)

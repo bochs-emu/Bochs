@@ -896,8 +896,7 @@ BX_CPP_INLINE void xmm_pavgw(BxPackedXmmRegister *op1, const BxPackedXmmRegister
 BX_CPP_INLINE void xmm_pmullw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<8; n++) {
-    Bit32u product = Bit32u(op1->xmm16u(n)) * Bit32u(op2->xmm16u(n));
-    op1->xmm16u(n) = product & 0xffff;
+    op1->xmm16s(n) *= op2->xmm16s(n);
   }
 }
 
@@ -920,8 +919,14 @@ BX_CPP_INLINE void xmm_pmulhuw(BxPackedXmmRegister *op1, const BxPackedXmmRegist
 BX_CPP_INLINE void xmm_pmulld(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for(unsigned n=0; n<4; n++) {
-    Bit64s product = Bit64s(op1->xmm32s(n)) * Bit64s(op2->xmm32s(n));
-    op1->xmm32u(n) = (Bit32u)(product & 0xffffffff);
+    op1->xmm32s(n) *= op2->xmm32s(n);
+  }
+}
+
+BX_CPP_INLINE void xmm_pmullq(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for(unsigned n=0; n<2; n++) {
+    op1->xmm64s(n) *= op2->xmm64s(n);
   }
 }
 

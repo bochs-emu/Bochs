@@ -379,6 +379,42 @@ AVX512_COMPARE_QWORD_EL(VPTESTNMQ_MASK_KGbHdqWdqR, xmm_ptestnmq_mask)
 
 // compute, shift and rotate
 
+#define AVX512_2OP_QWORD_EL(HANDLER, func)                                                  \
+  /* AVX-512 instruction with two src operands working on QWORD elements */                 \
+  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)              \
+  {                                                                                         \
+    BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
+    unsigned len = i->getVL();                                                              \
+                                                                                            \
+    for (unsigned n=0; n < len; n++)                                                        \
+      (func)(&op1.vmm128(n), &op2.vmm128(n));                                               \
+                                                                                            \
+    avx512_write_regq_masked(i, &op1, len, BX_READ_8BIT_OPMASK(i->opmask()));               \
+                                                                                            \
+    BX_NEXT_INSTR(i);                                                                       \
+  }
+
+AVX512_2OP_QWORD_EL(VPMULLQ_MASK_VdqHdqWdqR, xmm_pmullq)
+AVX512_2OP_QWORD_EL(VPADDQ_MASK_VdqHdqWdqR, xmm_paddq)
+AVX512_2OP_QWORD_EL(VPSUBQ_MASK_VdqHdqWdqR, xmm_psubq)
+AVX512_2OP_QWORD_EL(VPANDQ_MASK_VdqHdqWdqR, xmm_andps)
+AVX512_2OP_QWORD_EL(VPANDNQ_MASK_VdqHdqWdqR, xmm_andnps)
+AVX512_2OP_QWORD_EL(VPORQ_MASK_VdqHdqWdqR, xmm_orps)
+AVX512_2OP_QWORD_EL(VPXORQ_MASK_VdqHdqWdqR, xmm_xorps)
+AVX512_2OP_QWORD_EL(VPMAXSQ_MASK_VdqHdqWdqR, xmm_pmaxsq)
+AVX512_2OP_QWORD_EL(VPMAXUQ_MASK_VdqHdqWdqR, xmm_pmaxuq)
+AVX512_2OP_QWORD_EL(VPMINSQ_MASK_VdqHdqWdqR, xmm_pminsq)
+AVX512_2OP_QWORD_EL(VPMINUQ_MASK_VdqHdqWdqR, xmm_pminuq)
+AVX512_2OP_QWORD_EL(VUNPCKLPD_MASK_VpdHpdWpdR, xmm_unpcklpd)
+AVX512_2OP_QWORD_EL(VUNPCKHPD_MASK_VpdHpdWpdR, xmm_unpckhpd)
+AVX512_2OP_QWORD_EL(VPMULDQ_MASK_VdqHdqWdqR, xmm_pmuldq)
+AVX512_2OP_QWORD_EL(VPMULUDQ_MASK_VdqHdqWdqR, xmm_pmuludq)
+AVX512_2OP_QWORD_EL(VPSRAVQ_MASK_VdqHdqWdqR, xmm_psravq)
+AVX512_2OP_QWORD_EL(VPSRLVQ_MASK_VdqHdqWdqR, xmm_psrlvq)
+AVX512_2OP_QWORD_EL(VPSLLVQ_MASK_VdqHdqWdqR, xmm_psllvq)
+AVX512_2OP_QWORD_EL(VPRORVQ_MASK_VdqHdqWdqR, xmm_prorvq)
+AVX512_2OP_QWORD_EL(VPROLVQ_MASK_VdqHdqWdqR, xmm_prolvq)
+
 #define AVX512_2OP_DWORD_EL(HANDLER, func)                                                  \
   /* AVX-512 instruction with two src operands working on DWORD elements */                 \
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)              \
@@ -478,41 +514,6 @@ AVX512_2OP_BYTE_EL(VPACKSSWB_MASK_VdqHdqWdqR, xmm_packsswb)
 AVX512_2OP_BYTE_EL(VPACKUSWB_MASK_VdqHdqWdqR, xmm_packuswb)
 AVX512_2OP_BYTE_EL(VPUNPCKLBW_MASK_VdqHdqWdqR, xmm_punpcklbw)
 AVX512_2OP_BYTE_EL(VPUNPCKHBW_MASK_VdqHdqWdqR, xmm_punpckhbw)
-
-#define AVX512_2OP_QWORD_EL(HANDLER, func)                                                  \
-  /* AVX-512 instruction with two src operands working on QWORD elements */                 \
-  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)              \
-  {                                                                                         \
-    BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
-    unsigned len = i->getVL();                                                              \
-                                                                                            \
-    for (unsigned n=0; n < len; n++)                                                        \
-      (func)(&op1.vmm128(n), &op2.vmm128(n));                                               \
-                                                                                            \
-    avx512_write_regq_masked(i, &op1, len, BX_READ_8BIT_OPMASK(i->opmask()));               \
-                                                                                            \
-    BX_NEXT_INSTR(i);                                                                       \
-  }
-
-AVX512_2OP_QWORD_EL(VPADDQ_MASK_VdqHdqWdqR, xmm_paddq)
-AVX512_2OP_QWORD_EL(VPSUBQ_MASK_VdqHdqWdqR, xmm_psubq)
-AVX512_2OP_QWORD_EL(VPANDQ_MASK_VdqHdqWdqR, xmm_andps)
-AVX512_2OP_QWORD_EL(VPANDNQ_MASK_VdqHdqWdqR, xmm_andnps)
-AVX512_2OP_QWORD_EL(VPORQ_MASK_VdqHdqWdqR, xmm_orps)
-AVX512_2OP_QWORD_EL(VPXORQ_MASK_VdqHdqWdqR, xmm_xorps)
-AVX512_2OP_QWORD_EL(VPMAXSQ_MASK_VdqHdqWdqR, xmm_pmaxsq)
-AVX512_2OP_QWORD_EL(VPMAXUQ_MASK_VdqHdqWdqR, xmm_pmaxuq)
-AVX512_2OP_QWORD_EL(VPMINSQ_MASK_VdqHdqWdqR, xmm_pminsq)
-AVX512_2OP_QWORD_EL(VPMINUQ_MASK_VdqHdqWdqR, xmm_pminuq)
-AVX512_2OP_QWORD_EL(VUNPCKLPD_MASK_VpdHpdWpdR, xmm_unpcklpd)
-AVX512_2OP_QWORD_EL(VUNPCKHPD_MASK_VpdHpdWpdR, xmm_unpckhpd)
-AVX512_2OP_QWORD_EL(VPMULDQ_MASK_VdqHdqWdqR, xmm_pmuldq)
-AVX512_2OP_QWORD_EL(VPMULUDQ_MASK_VdqHdqWdqR, xmm_pmuludq)
-AVX512_2OP_QWORD_EL(VPSRAVQ_MASK_VdqHdqWdqR, xmm_psravq)
-AVX512_2OP_QWORD_EL(VPSRLVQ_MASK_VdqHdqWdqR, xmm_psrlvq)
-AVX512_2OP_QWORD_EL(VPSLLVQ_MASK_VdqHdqWdqR, xmm_psllvq)
-AVX512_2OP_QWORD_EL(VPRORVQ_MASK_VdqHdqWdqR, xmm_prorvq)
-AVX512_2OP_QWORD_EL(VPROLVQ_MASK_VdqHdqWdqR, xmm_prolvq)
 
 #define AVX512_PSHIFT_WORD_EL(HANDLER, func)                                  \
   BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
