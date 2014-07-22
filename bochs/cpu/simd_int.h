@@ -454,7 +454,7 @@ BX_CPP_INLINE void xmm_psignd(BxPackedXmmRegister *op1, const BxPackedXmmRegiste
 
 BX_CPP_INLINE Bit32u xmm_pmovmskb(const BxPackedXmmRegister *op)
 {
-  unsigned mask = 0;
+  Bit32u mask = 0;
 
   if(op->xmmsbyte(0x0) < 0) mask |= 0x0001;
   if(op->xmmsbyte(0x1) < 0) mask |= 0x0002;
@@ -476,9 +476,25 @@ BX_CPP_INLINE Bit32u xmm_pmovmskb(const BxPackedXmmRegister *op)
   return mask;
 }
 
+BX_CPP_INLINE Bit32u xmm_pmovmskw(const BxPackedXmmRegister *op)
+{
+  Bit32u mask = 0;
+
+  if(op->xmm16s(0) < 0) mask |= 0x01;
+  if(op->xmm16s(1) < 0) mask |= 0x02;
+  if(op->xmm16s(2) < 0) mask |= 0x04;
+  if(op->xmm16s(3) < 0) mask |= 0x08;
+  if(op->xmm16s(4) < 0) mask |= 0x10;
+  if(op->xmm16s(5) < 0) mask |= 0x20;
+  if(op->xmm16s(6) < 0) mask |= 0x40;
+  if(op->xmm16s(7) < 0) mask |= 0x80;
+
+  return mask;
+}
+
 BX_CPP_INLINE Bit32u xmm_pmovmskd(const BxPackedXmmRegister *op)
 {
-  unsigned mask = 0;
+  Bit32u mask = 0;
 
   if(op->xmm32s(0) < 0) mask |= 0x1;
   if(op->xmm32s(1) < 0) mask |= 0x2;
@@ -490,12 +506,40 @@ BX_CPP_INLINE Bit32u xmm_pmovmskd(const BxPackedXmmRegister *op)
 
 BX_CPP_INLINE Bit32u xmm_pmovmskq(const BxPackedXmmRegister *op)
 {
-  unsigned mask = 0;
+  Bit32u mask = 0;
 
   if(op->xmm32s(1) < 0) mask |= 0x1;
   if(op->xmm32s(3) < 0) mask |= 0x2;
 
   return mask;
+}
+
+BX_CPP_INLINE void xmm_pmovm2b(BxPackedXmmRegister *dst, Bit32u mask)
+{
+  for (unsigned n=0; n < 16; n++, mask >>= 1) {
+    dst->xmmsbyte(n) = - (mask & 0x1);
+  }
+}
+
+BX_CPP_INLINE void xmm_pmovm2w(BxPackedXmmRegister *dst, Bit32u mask)
+{
+  for (unsigned n=0; n < 8; n++, mask >>= 1) {
+    dst->xmm16s(n) = - (mask & 0x1);
+  }
+}
+
+BX_CPP_INLINE void xmm_pmovm2d(BxPackedXmmRegister *dst, Bit32u mask)
+{
+  for (unsigned n=0; n < 4; n++, mask >>= 1) {
+    dst->xmm32s(n) = - (mask & 0x1);
+  }
+}
+
+BX_CPP_INLINE void xmm_pmovm2q(BxPackedXmmRegister *dst, Bit32u mask)
+{
+  for (unsigned n=0; n < 2; n++, mask >>= 1) {
+    dst->xmm64s(n) = - (mask & 0x1);
+  }
 }
 
 // blend
