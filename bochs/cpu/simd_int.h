@@ -537,9 +537,8 @@ BX_CPP_INLINE void xmm_pmovm2d(BxPackedXmmRegister *dst, Bit32u mask)
 
 BX_CPP_INLINE void xmm_pmovm2q(BxPackedXmmRegister *dst, Bit32u mask)
 {
-  for (unsigned n=0; n < 2; n++, mask >>= 1) {
-    dst->xmm64s(n) = - (mask & 0x1);
-  }
+  dst->xmm64s(0) = (mask & 0x1) ? (Bit64s) -1 : 0;
+  dst->xmm64s(1) = (mask & 0x2) ? (Bit64s) -1 : 0;
 }
 
 // blend
