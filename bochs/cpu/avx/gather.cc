@@ -65,7 +65,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_VpsHps(bxInstruction_c 
   unsigned n, num_elements = DWORD_ELEMENTS(i->getVL());
 
   for (n=0; n < num_elements; n++) {
-    if (mask->ymm32u(n) & 0x80000000)
+    if (mask->ymm32s(n) < 0)
       mask->ymm32u(n) = 0xffffffff;
     else
       mask->ymm32u(n) = 0;
@@ -116,7 +116,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c 
   unsigned n, num_elements = QWORD_ELEMENTS(i->getVL());
 
   for (n=0; n < num_elements; n++) {
-    if (mask->ymm32u(n) & 0x80000000)
+    if (mask->ymm32s(n) < 0)
       mask->ymm32u(n) = 0xffffffff;
     else
       mask->ymm32u(n) = 0;
@@ -167,7 +167,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_VpdHpd(bxInstruction_c 
   unsigned n, num_elements = QWORD_ELEMENTS(i->getVL());
 
   for (n=0; n < num_elements; n++) {
-    if (mask->ymm64u(n) & BX_CONST64(0x8000000000000000))
+    if (mask->ymm64s(n) < 0)
       mask->ymm64u(n) = BX_CONST64(0xffffffffffffffff);
     else
       mask->ymm64u(n) = 0;
@@ -218,7 +218,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_VpdHpd(bxInstruction_c 
   unsigned n, num_elements = QWORD_ELEMENTS(i->getVL());
 
   for (n=0; n < num_elements; n++) {
-    if (mask->ymm64u(n) & BX_CONST64(0x8000000000000000))
+    if (mask->ymm64s(n) < 0)
       mask->ymm64u(n) = BX_CONST64(0xffffffffffffffff);
     else
       mask->ymm64u(n) = 0;

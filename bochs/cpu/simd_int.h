@@ -1154,6 +1154,17 @@ BX_CPP_INLINE void xmm_pselect(BxPackedXmmRegister *op1, const BxPackedXmmRegist
 
 // shift
 
+BX_CPP_INLINE void xmm_psravw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for (unsigned n=0; n < 8; n++) {
+    unsigned shift = op2->xmm16u(n);
+    if(shift > 15)
+      op1->xmm16u(n) = (op1->xmm16s(n) < 0) ? 0xffff : 0;
+    else    
+      op1->xmm16u(n) = (Bit16u)(op1->xmm16s(n) >> shift);
+  }
+}
+
 BX_CPP_INLINE void xmm_psravd(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for (unsigned n=0; n < 4; n++) {
@@ -1176,6 +1187,17 @@ BX_CPP_INLINE void xmm_psravq(BxPackedXmmRegister *op1, const BxPackedXmmRegiste
   }
 }
 
+BX_CPP_INLINE void xmm_psllvw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for (unsigned n=0; n < 8; n++) {
+    unsigned shift = op2->xmm16u(n);
+    if(shift > 15)
+      op1->xmm16u(n) = 0;
+    else    
+      op1->xmm16u(n) <<= shift;
+  }
+}
+
 BX_CPP_INLINE void xmm_psllvd(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
   for (unsigned n=0; n < 4; n++) {
@@ -1195,6 +1217,17 @@ BX_CPP_INLINE void xmm_psllvq(BxPackedXmmRegister *op1, const BxPackedXmmRegiste
       op1->xmm64u(n) = 0;
     else    
       op1->xmm64u(n) <<= shift;
+  }
+}
+
+BX_CPP_INLINE void xmm_psrlvw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for (unsigned n=0; n < 8; n++) {
+    unsigned shift = op2->xmm16u(n);
+    if(shift > 15)
+      op1->xmm16u(n) = 0;
+    else    
+      op1->xmm16u(n) >>= shift;
   }
 }
 

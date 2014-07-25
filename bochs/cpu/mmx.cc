@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2002-2013 Stanislav Shwartsman
+//   Copyright (c) 2002-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1748,10 +1748,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_PqQq(bxInstruction_c *i)
   }
 
   if(MMXUQ(op2) > 15) {
-    MMXUW0(op1) = (MMXUW0(op1) & 0x8000) ? 0xffff : 0;
-    MMXUW1(op1) = (MMXUW1(op1) & 0x8000) ? 0xffff : 0;
-    MMXUW2(op1) = (MMXUW2(op1) & 0x8000) ? 0xffff : 0;
-    MMXUW3(op1) = (MMXUW3(op1) & 0x8000) ? 0xffff : 0;
+    MMXUW0(op1) = (MMXSW0(op1) < 0) ? 0xffff : 0;
+    MMXUW1(op1) = (MMXSW1(op1) < 0) ? 0xffff : 0;
+    MMXUW2(op1) = (MMXSW2(op1) < 0) ? 0xffff : 0;
+    MMXUW3(op1) = (MMXSW3(op1) < 0) ? 0xffff : 0;
   }
   else {
     Bit8u shift = MMXUB0(op2);
@@ -1793,8 +1793,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_PqQq(bxInstruction_c *i)
   }
 
   if(MMXUQ(op2) > 31) {
-    MMXUD0(op1) = (MMXUD0(op1) & 0x80000000) ? 0xffffffff : 0;
-    MMXUD1(op1) = (MMXUD1(op1) & 0x80000000) ? 0xffffffff : 0;
+    MMXUD0(op1) = (MMXSD0(op1) < 0) ? 0xffffffff : 0;
+    MMXUD1(op1) = (MMXSD1(op1) < 0) ? 0xffffffff : 0;
   }
   else {
     Bit8u shift = MMXUB0(op2);
@@ -2664,10 +2664,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_NqIb(bxInstruction_c *i)
   }
 
   if(shift > 15) {
-    MMXUW0(op) = (MMXUW0(op) & 0x8000) ? 0xffff : 0;
-    MMXUW1(op) = (MMXUW1(op) & 0x8000) ? 0xffff : 0;
-    MMXUW2(op) = (MMXUW2(op) & 0x8000) ? 0xffff : 0;
-    MMXUW3(op) = (MMXUW3(op) & 0x8000) ? 0xffff : 0;
+    MMXUW0(op) = (MMXSW0(op) < 0) ? 0xffff : 0;
+    MMXUW1(op) = (MMXSW1(op) < 0) ? 0xffff : 0;
+    MMXUW2(op) = (MMXSW2(op) < 0) ? 0xffff : 0;
+    MMXUW3(op) = (MMXSW3(op) < 0) ? 0xffff : 0;
   }
   else {
     MMXUW0(op) = (Bit16u)(MMXSW0(op) >> shift);
@@ -2745,8 +2745,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_NqIb(bxInstruction_c *i)
   }
 
   if(shift > 31) {
-    MMXUD0(op) = (MMXUD0(op) & 0x80000000) ? 0xffffffff : 0;
-    MMXUD1(op) = (MMXUD1(op) & 0x80000000) ? 0xffffffff : 0;
+    MMXUD0(op) = (MMXSD0(op) < 0) ? 0xffffffff : 0;
+    MMXUD1(op) = (MMXSD1(op) < 0) ? 0xffffffff : 0;
   }
   else {
     MMXUD0(op) = (Bit32u)(MMXSD0(op) >> shift);

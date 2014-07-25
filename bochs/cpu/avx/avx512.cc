@@ -485,6 +485,9 @@ AVX512_2OP_WORD_EL(VPACKSSDW_MASK_VdqHdqWdqR, xmm_packssdw)
 AVX512_2OP_WORD_EL(VPACKUSDW_MASK_VdqHdqWdqR, xmm_packusdw)
 AVX512_2OP_WORD_EL(VPUNPCKLWD_MASK_VdqHdqWdqR, xmm_punpcklwd)
 AVX512_2OP_WORD_EL(VPUNPCKHWD_MASK_VdqHdqWdqR, xmm_punpckhwd)
+AVX512_2OP_WORD_EL(VPSRAVW_MASK_VdqHdqWdqR, xmm_psravw)
+AVX512_2OP_WORD_EL(VPSRLVW_MASK_VdqHdqWdqR, xmm_psrlvw)
+AVX512_2OP_WORD_EL(VPSLLVW_MASK_VdqHdqWdqR, xmm_psllvw)
 
 #define AVX512_2OP_BYTE_EL(HANDLER, func)                                                   \
   /* AVX-512 instruction with two src operands working on BYTE elements */                  \
