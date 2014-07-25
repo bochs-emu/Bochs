@@ -155,6 +155,7 @@ DEBUGGER_LIB   = bx_debug/libdebug.a
 DISASM_LIB     = disasm/libdisasm.a
 INSTRUMENT_LIB = @INSTRUMENT_DIR@/libinstrument.a
 FPU_LIB        = cpu/fpu/libfpu.a
+AVX_LIB        = cpu/avx/libavx.a
 READLINE_LIB   = @READLINE_LIB@
 EXTRA_LINK_OPTS = @EXTRA_LINK_OPTS@
 
@@ -176,12 +177,12 @@ all: @PRIMARY_TARGET@ @PLUGIN_TARGET@ bximage@EXE@ @OPTIONAL_TARGET@ @BUILD_DOCB
 @EXTERNAL_DEPENDENCY@
 
 bochs@EXE@: @IODEV_LIB_VAR@ @DISPLAY_LIB_VAR@ @HDIMAGE_LIB_VAR@ @USB_LIB_VAR@ @NETWORK_LIB_VAR@ @SOUND_LIB_VAR@ \
-		@DEBUGGER_VAR@ cpu/libcpu.a cpu/cpudb/libcpudb.a memory/libmemory.a \
+		@DEBUGGER_VAR@ cpu/libcpu.a @AVX_LIB_VAR@ cpu/cpudb/libcpudb.a memory/libmemory.a \
 		gui/libgui.a @DISASM_VAR@ @INSTRUMENT_VAR@ $(BX_OBJS) \
 		$(SIMX86_OBJS) @FPU_VAR@ @GDBSTUB_VAR@ @PLUGIN_VAR@
 	@LINK@ @EXPORT_DYNAMIC@ $(BX_OBJS) $(SIMX86_OBJS) \
 		@IODEV_LIB_VAR@ @DISPLAY_LIB_VAR@ @HDIMAGE_LIB_VAR@ @USB_LIB_VAR@ @NETWORK_LIB_VAR@ @SOUND_LIB_VAR@ \
-		@DEBUGGER_VAR@ cpu/libcpu.a cpu/cpudb/libcpudb.a \
+		@DEBUGGER_VAR@ cpu/libcpu.a @AVX_LIB_VAR@ cpu/cpudb/libcpudb.a \
 		 memory/libmemory.a gui/libgui.a \
 		@DISASM_VAR@ @INSTRUMENT_VAR@ @PLUGIN_LIB@ \
 		@GDBSTUB_VAR@ @FPU_VAR@ \
@@ -198,13 +199,13 @@ bochs@EXE@: @IODEV_LIB_VAR@ @DISPLAY_LIB_VAR@ @HDIMAGE_LIB_VAR@ @USB_LIB_VAR@ @N
 # libtool.  This creates a .DEF file, and exports file, an import library,
 # and then links bochs.exe with the exports file.
 .win32_dll_plugin_target: @IODEV_LIB_VAR@ @DISPLAY_LIB_VAR@ @HDIMAGE_LIB_VAR@ @USB_LIB_VAR@ @NETWORK_LIB_VAR@ \
-		@SOUND_LIB_VAR@ @DEBUGGER_VAR@ cpu/libcpu.a cpu/cpudb/libcpudb.a \
+		@SOUND_LIB_VAR@ @DEBUGGER_VAR@ cpu/libcpu.a @AVX_LIB_VAR@ cpu/cpudb/libcpudb.a \
 		memory/libmemory.a gui/libgui.a @DISASM_VAR@ @INSTRUMENT_VAR@ \
 		$(BX_OBJS) $(SIMX86_OBJS) @FPU_VAR@ @GDBSTUB_VAR@ @PLUGIN_VAR@
 	$(DLLTOOL) --export-all-symbols --output-def bochs.def \
 		$(BX_OBJS) $(SIMX86_OBJS) \
 		@IODEV_LIB_VAR@ @DISPLAY_LIB_VAR@ @HDIMAGE_LIB_VAR@ @USB_LIB_VAR@ @NETWORK_LIB_VAR@ @SOUND_LIB_VAR@ \
-		cpu/libcpu.a cpu/cpudb/libcpudb.a memory/libmemory.a gui/libgui.a \
+		cpu/libcpu.a @AVX_LIB_VAR@ cpu/cpudb/libcpudb.a memory/libmemory.a gui/libgui.a \
 		@DEBUGGER_VAR@ @DISASM_VAR@ @INSTRUMENT_VAR@ @PLUGIN_VAR@ \
 		@GDBSTUB_VAR@ @FPU_VAR@
 	$(DLLTOOL) --dllname bochs.exe --def bochs.def --output-lib dllexports.a
@@ -212,7 +213,7 @@ bochs@EXE@: @IODEV_LIB_VAR@ @DISPLAY_LIB_VAR@ @HDIMAGE_LIB_VAR@ @USB_LIB_VAR@ @N
 	$(CXX) -o bochs.exe $(CXXFLAGS) $(LDFLAGS) \
 	    $(BX_OBJS) bochs.exp $(SIMX86_OBJS) \
 		@IODEV_LIB_VAR@ @DISPLAY_LIB_VAR@ @HDIMAGE_LIB_VAR@ @USB_LIB_VAR@ @NETWORK_LIB_VAR@ @SOUND_LIB_VAR@ \
-		cpu/libcpu.a cpu/cpudb/libcpudb.a memory/libmemory.a gui/libgui.a \
+		cpu/libcpu.a @AVX_LIB_VAR@ cpu/cpudb/libcpudb.a memory/libmemory.a gui/libgui.a \
 		@DEBUGGER_VAR@ @DISASM_VAR@ @INSTRUMENT_VAR@ @PLUGIN_LIB@ \
 		@GDBSTUB_VAR@ @FPU_VAR@ \
 		$(GUI_LINK_OPTS) \
@@ -320,6 +321,11 @@ cpu/libcpu.a::
 	cd cpu @COMMAND_SEPARATOR@
 	$(MAKE) $(MDEFINES) libcpu.a
 	@CD_UP_ONE@
+
+cpu/avx/libavx.a::
+	cd cpu/avx @COMMAND_SEPARATOR@
+	$(MAKE) $(MDEFINES) libavx.a
+	@CD_UP_TWO@
 
 cpu/cpudb/libcpudb.a::
 	cd cpu/cpudb @COMMAND_SEPARATOR@
@@ -574,6 +580,9 @@ all-clean: clean @CLEAN_DOCBOOK_VAR@ @CLEAN_PCIDEV_VAR@
 	cd cpu @COMMAND_SEPARATOR@
 	$(MAKE) clean
 	@CD_UP_ONE@
+	cd cpu/avx @COMMAND_SEPARATOR@
+	$(MAKE) clean
+	@CD_UP_TWO@
 	cd cpu/cpudb @COMMAND_SEPARATOR@
 	$(MAKE) clean
 	@CD_UP_TWO@
@@ -624,6 +633,9 @@ dist-clean: local-dist-clean
 	cd cpu @COMMAND_SEPARATOR@
 	$(MAKE) dist-clean
 	@CD_UP_ONE@
+	cd cpu/avx @COMMAND_SEPARATOR@
+	$(MAKE) dist-clean
+	@CD_UP_TWO@
 	cd cpu/cpudb @COMMAND_SEPARATOR@
 	$(MAKE) dist-clean
 	@CD_UP_TWO@

@@ -1281,12 +1281,13 @@ AC_ARG_ENABLE(monitor_mwait,
   )
 
 support_avx=0
+AVX_LIB_VAR=''
 AC_MSG_CHECKING(for AVX instructions support)
 AC_ARG_ENABLE(avx,
   AS_HELP_STRING([--enable-avx], [support for AVX instructions (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    AVX_OBJS='$(AVX_OBJS)'
+    AVX_LIB_VAR='$(AVX_LIB)'
     AC_DEFINE(BX_SUPPORT_AVX, 1)
     support_avx=1
    elif test "$enableval" = no; then
@@ -1299,7 +1300,7 @@ AC_ARG_ENABLE(avx,
     AC_DEFINE(BX_SUPPORT_AVX, 0)
   ]
   )
-AC_SUBST(AVX_OBJS)
+AC_SUBST(AVX_LIB_VAR)
 
 if test "$support_avx" -gt 0 -a "$use_x86_64" = 0; then
   AC_MSG_ERROR([for AVX support x86-64 emulation must be compiled in!])
@@ -3033,9 +3034,9 @@ AC_PATH_PROG(TAR, tar)
 
 AC_OUTPUT(Makefile iodev/Makefile iodev/display/Makefile iodev/hdimage/Makefile \
 	 iodev/usb/Makefile iodev/network/Makefile iodev/sound/Makefile \
-	 bx_debug/Makefile bios/Makefile cpu/Makefile cpu/cpudb/Makefile \
-	 cpu/fpu/Makefile memory/Makefile gui/Makefile disasm/Makefile \
-	 ${INSTRUMENT_DIR}/Makefile misc/Makefile doc/docbook/Makefile \
-	 build/linux/bochs-dlx bxversion.h bxversion.rc build/macosx/Info.plist \
-	 build/win32/nsis/Makefile build/win32/nsis/bochs.nsi \
-	 host/linux/pcidev/Makefile)
+	 bx_debug/Makefile bios/Makefile cpu/Makefile cpu/avx/Makefile \
+	 cpu/cpudb/Makefile cpu/fpu/Makefile memory/Makefile gui/Makefile \
+	 disasm/Makefile ${INSTRUMENT_DIR}/Makefile misc/Makefile \
+	 doc/docbook/Makefile build/linux/bochs-dlx bxversion.h bxversion.rc \
+	 build/macosx/Info.plist build/win32/nsis/Makefile \
+	 build/win32/nsis/bochs.nsi host/linux/pcidev/Makefile)
