@@ -811,19 +811,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMILPD_MASK_VpdWpdIbR(bxInstruc
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSHUFF32x4_MASK_VpsHpsWpsIbR(bxInstruction_c *i)
 {
-  unsigned len = i->getVL();
-  if (len != BX_VL512) {
-    BX_ERROR(("%s: vector length must be 512 bit", i->getIaOpcodeNameShort()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()), result;
+  unsigned len = i->getVL();
   Bit8u order = i->Ib();
 
-  result.vmm128(0) = op1.vmm128(order & 0x3);
-  result.vmm128(1) = op1.vmm128((order>>2) & 0x3);
-  result.vmm128(2) = op2.vmm128((order>>4) & 0x3);
-  result.vmm128(3) = op2.vmm128((order>>6) & 0x3);
+  if (len == BX_VL256) {
+    result.vmm128(0) = op1.vmm128(order & 0x1);
+    result.vmm128(1) = op2.vmm128((order>>1) & 0x1);
+  }
+  else {
+    result.vmm128(0) = op1.vmm128(order & 0x3);
+    result.vmm128(1) = op1.vmm128((order>>2) & 0x3);
+    result.vmm128(2) = op2.vmm128((order>>4) & 0x3);
+    result.vmm128(3) = op2.vmm128((order>>6) & 0x3);
+  }
 
   if (i->opmask()) {
     avx512_write_regd_masked(i, &result, len, BX_READ_16BIT_OPMASK(i->opmask()));
@@ -837,19 +838,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSHUFF32x4_MASK_VpsHpsWpsIbR(bxIns
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSHUFF64x2_MASK_VpdHpdWpdIbR(bxInstruction_c *i)
 {
-  unsigned len = i->getVL();
-  if (len != BX_VL512) {
-    BX_ERROR(("%s: vector length must be 512 bit", i->getIaOpcodeNameShort()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()), result;
+  unsigned len = i->getVL();
   Bit8u order = i->Ib();
 
-  result.vmm128(0) = op1.vmm128(order & 0x3);
-  result.vmm128(1) = op1.vmm128((order>>2) & 0x3);
-  result.vmm128(2) = op2.vmm128((order>>4) & 0x3);
-  result.vmm128(3) = op2.vmm128((order>>6) & 0x3);
+  if (len == BX_VL256) {
+    result.vmm128(0) = op1.vmm128(order & 0x1);
+    result.vmm128(1) = op2.vmm128((order>>1) & 0x1);
+  }
+  else {
+    result.vmm128(0) = op1.vmm128(order & 0x3);
+    result.vmm128(1) = op1.vmm128((order>>2) & 0x3);
+    result.vmm128(2) = op2.vmm128((order>>4) & 0x3);
+    result.vmm128(3) = op2.vmm128((order>>6) & 0x3);
+  }
 
   if (i->opmask()) {
     avx512_write_regq_masked(i, &result, len, BX_READ_8BIT_OPMASK(i->opmask()));
