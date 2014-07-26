@@ -866,6 +866,19 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSHUFF64x2_MASK_VpdHpdWpdIbR(bxIns
   BX_NEXT_INSTR(i);
 }
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPALIGNR_MASK_VdqHdqWdqIbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
+  unsigned len = i->getVL();
+
+  for (unsigned n=0; n<len; n++)
+    xmm_palignr(&op2.vmm128(n), &op1.vmm128(n), i->Ib());
+
+  avx512_write_regb_masked(i, &op2, len, BX_READ_OPMASK(i->opmask()));
+
+  BX_NEXT_INSTR(i);
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VALIGND_MASK_VdqHdqWdqIbR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()), result;
