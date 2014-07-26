@@ -161,7 +161,7 @@ bx_floppy.dll: floppy.o
 ##### end DLL section
 
 clean:
-	@RMCOMMAND@ -rf .libs *.lo *.o *.la *.a *.dll *.exp *.lib *.dll.manifest
+	@RMCOMMAND@ -rf .libs *.lo *.o *.la *.a *.dll *.exp *.lib
 
 dist-clean: clean
 	@RMCOMMAND@ Makefile makeincl.vc

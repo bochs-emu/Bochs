@@ -114,7 +114,7 @@ bx_usb_xhci.dll: usb_xhci.o
 ##### end DLL section
 
 clean:
-	@RMCOMMAND@ -rf .libs *.lo *.o *.la *.a *.dll *.exp *.lib *.dll.manifest
+	@RMCOMMAND@ -rf .libs *.lo *.o *.la *.a *.dll *.exp *.lib
 
 dist-clean: clean
 	@RMCOMMAND@ Makefile

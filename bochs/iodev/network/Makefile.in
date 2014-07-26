@@ -134,7 +134,7 @@ bx_ne2k.dll: ne2k.o
 ##### end DLL section
 
 clean:
-	@RMCOMMAND@ -rf .libs slirp@SLASH@.libs *.lo slirp@SLASH@*.lo *.o slirp@SLASH@*.o *.la *.a *.dll *.exp *.lib *.dll.manifest
+	@RMCOMMAND@ -rf .libs slirp@SLASH@.libs *.lo slirp@SLASH@*.lo *.o slirp@SLASH@*.o *.la *.a *.dll *.exp *.lib
 
 dist-clean: clean
 	@RMCOMMAND@ Makefile
