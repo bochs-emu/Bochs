@@ -374,7 +374,7 @@ currently work with.
     <entry>GUI Debugger</entry>
     <entry>Yes</entry>
     <entry>Chourdakis Michael and Bruce Ewing contributed very powerful GUI frontend for Bochs internal debugger.
-    GUI debugger frontend is supported for Win32 and GTK hosts.
+    GUI debugger frontend is supported for Win32 and GTK2 hosts.
     </entry>
   </row>
   <row>
@@ -2901,7 +2901,7 @@ happened. The following issues can be fixed by modifying the configure options u
 <itemizedlist>
   <listitem><para>deprecated option (option from previous Bochs version not needed /
   supported anymore)</para></listitem>
-  <listitem><para>mutually exclusive option (e.g <option>--enable-debugger</option> and <option>--enable-gdbstub</option>)</para></listitem>
+  <listitem><para>mutually exclusive option (e.g. <option>--enable-debugger</option> and <option>--enable-gdb-stub</option>)</para></listitem>
   <listitem><para>dependent option (e.g. USB support requires PCI support)</para></listitem>
   <listitem><para>incomplete option (e.g. <option>--enable-cpu-level</option> requires an argument)</para></listitem>
   <listitem><para>development package for library not installed (e.g. for <option>--with-wx</option>)</para></listitem>
@@ -7427,21 +7427,18 @@ Up to 5 port redirection rules are supported per slirp instance.</para>
 <title>Using Bochs internal debugger</title>
 
 <para>
-Note, if you are looking for a graphical front-end for the
-bochs debugger, you may want to check out
-<ulink url="http://bfe.sourceforge.net/">BFE</ulink>. This is a
-package written by a Bochs user which can interface with
-the text based Bochs debugger.  No linking is necessary.
-It's not part of Bochs, but you may find it useful.
-</para>
-
-<para>
 You can now conditionally compile in a GDB like command line debugger, that
 allows you to set breakpoints, step through instructions, and other
 useful functions.  If there isn't a command for something you believe
 is generally useful for the debugger, let me know and I'll implement
 it if possible.
 </para>
+
+<note><para>
+This section describes how to enable and use the Bochs command line debugger.
+For it's builtin graphical front-end please see the <link linkend="debugger-gui">debugger gui</link>
+section how to enable it.
+</para></note>
 
 <para>
 To use the debugger, you must configure Bochs with the
@@ -7766,6 +7763,36 @@ The symbol file consists of zero or more lines of the format <screen>"%x %s"</sc
   show dbg-all  - turn on all show flags
   show dbg-none - turn off all show flags
 </screen>
+</para>
+</section>
+
+<section id="debugger-gui">
+<title>
+The Bochs debugger gui
+</title>
+<para>
+The graphical front-end for the Bochs command line debugger
+is available for Windows and GTK2 hosts.
+</para>
+<para>
+To use the gui debugger, you must configure Bochs with the
+default debugger switches and the <option>--enable-debugger-gui</option> flag.
+For example:
+<screen>
+  ./configure --enable-debugger --enable-disasm --enable-debugger-gui
+</screen>
+</para>
+<para>
+At runtime you need to add the value <option>gui_debug</option> to the
+<link linkend="bochsopt-displaylibrary">display_library</link> options parameter
+in order to use the gui instead of the command line debugger. This example shows how to
+use it with the 'x' gui:
+<screen>
+display_library: x, options="gui_debug"
+</screen>
+</para>
+<para>
+&FIXME; List the features here.
 </para>
 </section>
 
