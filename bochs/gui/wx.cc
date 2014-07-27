@@ -216,11 +216,11 @@ void MyPanel::ToggleMouse(bool fromToolbar)
     // only show this help if you click on the toolbar.  If they already
     // know the shortcut, don't annoy them with the message.
     wxString msg;
-    msg.Printf(
+    msg.Printf(wxT(
       "You have enabled the mouse in Bochs, so now your mouse actions will\n"
       "be sent into the simulator.  The usual mouse cursor will be trapped\n"
       "inside the Bochs window until you press %s\n"
-      "to turn mouse capture off.", theGui->get_toggle_info());
+      "to turn mouse capture off."), theGui->get_toggle_info());
     wxMessageBox(msg, wxT("Mouse Capture Enabled"), wxOK | wxICON_INFORMATION);
     first_enable = false;
   }
@@ -1035,7 +1035,8 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 #endif
 
   wxString msg;
-  msg.Printf("Enable mouse capture\nThere is also a shortcut for this: %s.", theGui->get_toggle_info());
+  msg.Printf(wxT("Enable mouse capture\nThere is also a shortcut for this: %s."),
+             theGui->get_toggle_info());
   theFrame->SetToolBarHelp(ID_Toolbar_Mouse_en, msg);
 
   num_events = 0;
