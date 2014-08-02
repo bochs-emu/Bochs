@@ -1186,11 +1186,15 @@ help_command:
          dbg_printf("show <command> - toggles show symbolic info (calls to begin with)\n");
          dbg_printf("show - shows current show mode\n");
          dbg_printf("show mode - show, when processor switch mode\n");
-         dbg_printf("show int - show, when interrupt is happens\n");
+         dbg_printf("show int - show, when an interrupt happens\n");
+         dbg_printf("show softint - show, when software interrupt happens\n");
+         dbg_printf("show extint - show, when external interrupt happens\n");
          dbg_printf("show call - show, when call is happens\n");
-         dbg_printf("show off - toggles off symbolic info\n");
-         dbg_printf("show dbg_all - turn on all show flags\n");
-         dbg_printf("show dbg_none - turn off all show flags\n");
+         dbg_printf("show iret - show, when iret is happens\n");
+         dbg_printf("show all - turns on all symbolic info\n");
+         dbg_printf("show off - turns off symbolic info\n");
+         dbg_printf("show dbg_all - turn on all bx_dbg flags\n");
+         dbg_printf("show dbg_none - turn off all bx_dbg flags\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_CALC '\n'

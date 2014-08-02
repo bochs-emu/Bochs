@@ -1538,6 +1538,9 @@ void bx_dbg_show_command(const char* arg)
         dbg_show_mask |= BX_DBG_SHOW_CALLRET;
         dbg_printf("show calls/returns: ON\n");
       }
+    } else if(!strcmp(arg,"all")) {
+      dbg_show_mask = ~0x0;
+      dbg_printf("Enable all show flags\n");
     } else if(!strcmp(arg,"off")) {
       dbg_show_mask = 0x0;
       dbg_printf("Disable all show flags\n");
@@ -1555,7 +1558,7 @@ void bx_dbg_show_command(const char* arg)
       SIM->refresh_vga();
       return;
     } else {
-      dbg_printf("Unrecognized arg: %s (only 'mode', 'int', 'softint', 'extint', 'iret', 'call', 'off', 'dbg-all' and 'dbg-none' are valid)\n", arg);
+      dbg_printf("Unrecognized arg: %s (only 'mode', 'int', 'softint', 'extint', 'iret', 'call', 'all', 'off', 'dbg_all' and 'dbg_none' are valid)\n", arg);
       return;
     }
   }
