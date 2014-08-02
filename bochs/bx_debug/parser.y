@@ -252,6 +252,11 @@ show_command:
           bx_dbg_show_command($2);
           free($1); free($2);
       }
+    | BX_TOKEN_SHOW BX_TOKEN_ALL '\n'
+      {
+          bx_dbg_show_command("all");
+          free($1);
+      }
     | BX_TOKEN_SHOW BX_TOKEN_OFF '\n'
       {
           bx_dbg_show_command("off");
