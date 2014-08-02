@@ -1541,12 +1541,12 @@ void bx_dbg_show_command(const char* arg)
     } else if(!strcmp(arg,"off")) {
       dbg_show_mask = 0x0;
       dbg_printf("Disable all show flags\n");
-    } else if(!strcmp(arg,"dbg-all")) {
+    } else if(!strcmp(arg,"dbg_all")) {
       bx_dbg.interrupts = 1;
       bx_dbg.exceptions = 1;
       dbg_printf("Turned ON all bx_dbg flags\n");
       return;
-    } else if(!strcmp(arg,"dbg-none")) {
+    } else if(!strcmp(arg,"dbg_none")) {
       bx_dbg.interrupts = 0;
       bx_dbg.exceptions = 0;
       dbg_printf("Turned OFF all bx_dbg flags\n");

@@ -1189,8 +1189,8 @@ help_command:
          dbg_printf("show int - show, when interrupt is happens\n");
          dbg_printf("show call - show, when call is happens\n");
          dbg_printf("show off - toggles off symbolic info\n");
-         dbg_printf("show dbg-all - turn on all show flags\n");
-         dbg_printf("show dbg-none - turn off all show flags\n");
+         dbg_printf("show dbg_all - turn on all show flags\n");
+         dbg_printf("show dbg_none - turn off all show flags\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_CALC '\n'
