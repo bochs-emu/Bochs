@@ -1263,47 +1263,7 @@ float_class_t float32_class(float32 a)
 | value `b', or 'float_relation_unordered' otherwise.
 *----------------------------------------------------------------------------*/
 
-int float32_compare(float32 a, float32 b, float_status_t &status)
-{
-    if (get_denormals_are_zeros(status)) {
-        a = float32_denormal_to_zero(a);
-        b = float32_denormal_to_zero(b);
-    }
-
-    float_class_t aClass = float32_class(a);
-    float_class_t bClass = float32_class(b);
-
-    if (aClass == float_SNaN || aClass == float_QNaN || bClass == float_SNaN || bClass == float_QNaN)
-    {
-        float_raise(status, float_flag_invalid);
-        return float_relation_unordered;
-    }
-
-    if (aClass == float_denormal || bClass == float_denormal) {
-        float_raise(status, float_flag_denormal);
-    }
-
-    if ((a == b) || ((Bit32u) ((a | b)<<1) == 0)) return float_relation_equal;
-
-    int aSign = extractFloat32Sign(a);
-    int bSign = extractFloat32Sign(b);
-    if (aSign != bSign)
-        return (aSign) ? float_relation_less : float_relation_greater;
-
-    if (aSign ^ (a < b)) return float_relation_less;
-    return float_relation_greater;
-}
-
-/*----------------------------------------------------------------------------
-| Compare  between  two  double  precision  floating  point  numbers. Returns
-| 'float_relation_equal'  if the operands are equal, 'float_relation_less' if
-| the    value    'a'   is   less   than   the   corresponding   value   `b',
-| 'float_relation_greater' if the value 'a' is greater than the corresponding
-| value `b', or 'float_relation_unordered' otherwise. Quiet NaNs do not cause
-| an exception.
-*----------------------------------------------------------------------------*/
-
-int float32_compare_quiet(float32 a, float32 b, float_status_t &status)
+int float32_compare(float32 a, float32 b, int quiet, float_status_t &status)
 {
     if (get_denormals_are_zeros(status)) {
         a = float32_denormal_to_zero(a);
@@ -1319,6 +1279,7 @@ int float32_compare_quiet(float32 a, float32 b, float_status_t &status)
     }
 
     if (aClass == float_QNaN || bClass == float_QNaN) {
+        if (! quiet) float_raise(status, float_flag_invalid);
         return float_relation_unordered;
     }
 
@@ -2467,47 +2428,7 @@ float_class_t float64_class(float64 a)
 | value `b', or 'float_relation_unordered' otherwise.
 *----------------------------------------------------------------------------*/
 
-int float64_compare(float64 a, float64 b, float_status_t &status)
-{
-    if (get_denormals_are_zeros(status)) {
-        a = float64_denormal_to_zero(a);
-        b = float64_denormal_to_zero(b);
-    }
-
-    float_class_t aClass = float64_class(a);
-    float_class_t bClass = float64_class(b);
-
-    if (aClass == float_SNaN || aClass == float_QNaN || bClass == float_SNaN || bClass == float_QNaN)
-    {
-        float_raise(status, float_flag_invalid);
-        return float_relation_unordered;
-    }
-
-    if (aClass == float_denormal || bClass == float_denormal) {
-        float_raise(status, float_flag_denormal);
-    }
-
-    if ((a == b) || ((Bit64u) ((a | b)<<1) == 0)) return float_relation_equal;
-
-    int aSign = extractFloat64Sign(a);
-    int bSign = extractFloat64Sign(b);
-    if (aSign != bSign)
-        return (aSign) ? float_relation_less : float_relation_greater;
-
-    if (aSign ^ (a < b)) return float_relation_less;
-    return float_relation_greater;
-}
-
-/*----------------------------------------------------------------------------
-| Compare  between  two  double  precision  floating  point  numbers. Returns
-| 'float_relation_equal'  if the operands are equal, 'float_relation_less' if
-| the    value    'a'   is   less   than   the   corresponding   value   `b',
-| 'float_relation_greater' if the value 'a' is greater than the corresponding
-| value `b', or 'float_relation_unordered' otherwise. Quiet NaNs do not cause
-| an exception.
-*----------------------------------------------------------------------------*/
-
-int float64_compare_quiet(float64 a, float64 b, float_status_t &status)
+int float64_compare(float64 a, float64 b, int quiet, float_status_t &status)
 {
     if (get_denormals_are_zeros(status)) {
         a = float64_denormal_to_zero(a);
@@ -2523,6 +2444,7 @@ int float64_compare_quiet(float64 a, float64 b, float_status_t &status)
     }
 
     if (aClass == float_QNaN || bClass == float_QNaN) {
+        if (! quiet) float_raise(status, float_flag_invalid);
         return float_relation_unordered;
     }
 

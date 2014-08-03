@@ -63,8 +63,17 @@ int ftan(floatx80 &a, float_status_t &status);
 | Software IEC/IEEE extended double-precision compare.
 *----------------------------------------------------------------------------*/
 
-int floatx80_compare(floatx80, floatx80, float_status_t &status);
-int floatx80_compare_quiet(floatx80, floatx80, float_status_t &status);
+int floatx80_compare(floatx80, floatx80, int quiet, float_status_t &status);
+
+BX_CPP_INLINE int floatx80_compare(floatx80 a, floatx80 b, float_status_t &status)
+{
+    return floatx80_compare(a, b, 0, status);
+}
+
+BX_CPP_INLINE int floatx80_compare_quiet(floatx80 a, floatx80 b, float_status_t &status)
+{
+    return floatx80_compare(a, b, 1, status);
+}
 
 /*-----------------------------------------------------------------------------
 | Calculates the absolute value of the extended double-precision floating-point
