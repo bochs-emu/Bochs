@@ -1350,11 +1350,14 @@ float32 float32_minmax(float32 a, float32 b, int is_max, int is_abs, float_statu
         return propagateFloat32NaN(a, b, status);
     }
 
-    int aSign = 0, bSign = 0;
-    if (! is_abs) {
-        aSign = extractFloat32Sign(a);
-        bSign = extractFloat32Sign(b);
+    float32 tmp_a = a, tmp_b = b;
+    if (is_abs) {
+        tmp_a &= ~0x80000000; // clear the sign bit
+        tmp_b &= ~0x80000000;
     }
+
+    int aSign = extractFloat32Sign(tmp_a);
+    int bSign = extractFloat32Sign(tmp_b);
 
     if (float32_is_denormal(a) || float32_is_denormal(b))
         float_raise(status, float_flag_denormal);
@@ -1367,9 +1370,9 @@ float32 float32_minmax(float32 a, float32 b, int is_max, int is_abs, float_statu
         }
     } else {
         if (! is_max) {
-            return (aSign ^ (a < b)) ? a : b;
+            return (aSign ^ (tmp_a < tmp_b)) ? a : b;
         } else {
-            return (aSign ^ (a < b)) ? b : a;
+            return (aSign ^ (tmp_a < tmp_b)) ? b : a;
         }
     }
 }
@@ -2559,11 +2562,14 @@ float64 float64_minmax(float64 a, float64 b, int is_max, int is_abs, float_statu
         return propagateFloat64NaN(a, b, status);
     }
 
-    int aSign = 0, bSign = 0;
-    if (! is_abs) {
-        aSign = extractFloat64Sign(a);
-        bSign = extractFloat64Sign(b);
+    float64 tmp_a = a, tmp_b = b;
+    if (is_abs) {
+        tmp_a &= ~BX_CONST64(0x8000000000000000); // clear the sign bit
+        tmp_b &= ~BX_CONST64(0x8000000000000000);
     }
+
+    int aSign = extractFloat64Sign(tmp_a);
+    int bSign = extractFloat64Sign(tmp_b);
 
     if (float64_is_denormal(a) || float64_is_denormal(b))
         float_raise(status, float_flag_denormal);
@@ -2576,9 +2582,9 @@ float64 float64_minmax(float64 a, float64 b, int is_max, int is_abs, float_statu
         }
     } else {
         if (! is_max) {
-            return (aSign ^ (a < b)) ? a : b;
+            return (aSign ^ (tmp_a < tmp_b)) ? a : b;
         } else {
-            return (aSign ^ (a < b)) ? b : a;
+            return (aSign ^ (tmp_a < tmp_b)) ? b : a;
         }
     }
 }
