@@ -1334,7 +1334,7 @@ float32 float32_max(float32 a, float32 b, float_status_t &status)
 | Standard for Binary Floating-Point Arithmetic.
 *----------------------------------------------------------------------------*/
 
-float32 float32_minmax(float32 a, float32 b, int is_min, int is_abs, float_status_t &status)
+float32 float32_minmax(float32 a, float32 b, int is_max, int is_abs, float_status_t &status)
 {
     if (get_denormals_are_zeros(status)) {
         a = float32_denormal_to_zero(a);
@@ -1360,13 +1360,13 @@ float32 float32_minmax(float32 a, float32 b, int is_min, int is_abs, float_statu
         float_raise(status, float_flag_denormal);
 
     if (aSign != bSign) {
-        if (is_min) {
+        if (! is_max) {
             return aSign ? a : b;
         } else {
             return aSign ? b : a;
         }
     } else {
-        if (is_min) {
+        if (! is_max) {
             return (aSign ^ (a < b)) ? a : b;
         } else {
             return (aSign ^ (a < b)) ? b : a;
@@ -2543,7 +2543,7 @@ float64 float64_max(float64 a, float64 b, float_status_t &status)
 | Standard for Binary Floating-Point Arithmetic.
 *----------------------------------------------------------------------------*/
 
-float64 float64_minmax(float64 a, float64 b, int is_min, int is_abs, float_status_t &status)
+float64 float64_minmax(float64 a, float64 b, int is_max, int is_abs, float_status_t &status)
 {
     if (get_denormals_are_zeros(status)) {
         a = float64_denormal_to_zero(a);
@@ -2569,13 +2569,13 @@ float64 float64_minmax(float64 a, float64 b, int is_min, int is_abs, float_statu
         float_raise(status, float_flag_denormal);
 
     if (aSign != bSign) {
-        if (is_min) {
+        if (! is_max) {
             return aSign ? a : b;
         } else {
             return aSign ? b : a;
         }
     } else {
-        if (is_min) {
+        if (! is_max) {
             return (aSign ^ (a < b)) ? a : b;
         } else {
             return (aSign ^ (a < b)) ? b : a;
