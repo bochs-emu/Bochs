@@ -1112,14 +1112,27 @@ BX_CPP_INLINE Bit16u sad_quadruple(const BxPackedXmmRegister *op1, const BxPacke
   return r;
 }
 
-BX_CPP_INLINE void xmm_mpsadbw(BxPackedXmmRegister *r, const BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, Bit8u offset)
+BX_CPP_INLINE void xmm_mpsadbw(BxPackedXmmRegister *r, const BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, Bit8u control)
 {
-  unsigned src_offset = (offset & 0x3) * 4;
-  unsigned dst_offset = ((offset >> 2) & 0x1) * 4;
+  unsigned src_offset = (control & 0x3) * 4;
+  unsigned dst_offset = ((control >> 2) & 0x1) * 4;
 
   for (unsigned j=0; j < 8; j++) {
     r->xmm16u(j) = sad_quadruple(op1, op2, dst_offset + j, src_offset);
   }
+}
+
+BX_CPP_INLINE void xmm_dbpsadbw(BxPackedXmmRegister *r, const BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  // assuming shuffle of op2 was done outside
+  r->xmm16u(0) = sad_quadruple(op1, op2,  0,  0);
+  r->xmm16u(1) = sad_quadruple(op1, op2,  0,  1);
+  r->xmm16u(2) = sad_quadruple(op1, op2,  4,  2);
+  r->xmm16u(3) = sad_quadruple(op1, op2,  4,  3);
+  r->xmm16u(4) = sad_quadruple(op1, op2,  8,  8);
+  r->xmm16u(5) = sad_quadruple(op1, op2,  8,  9);
+  r->xmm16u(6) = sad_quadruple(op1, op2, 12, 10);
+  r->xmm16u(7) = sad_quadruple(op1, op2, 12, 11);
 }
 
 // conflict

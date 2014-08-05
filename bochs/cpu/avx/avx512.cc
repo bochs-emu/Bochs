@@ -2109,4 +2109,24 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQ2M_KGbWdqR(bxInstruction_c *
   BX_NEXT_INSTR(i);
 }
 
+// sad (sum of absolute differences)
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDBPSADBW_MASK_VdqHdqWdqIbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()), dst;
+
+  Bit32u opmask = i->opmask() ? BX_READ_32BIT_OPMASK(i->opmask()) : (Bit32u) -1;
+  unsigned len = i->getVL();
+
+  for (unsigned n=0; n < len; n++) {
+    BxPackedXmmRegister tmp;
+    xmm_shufps(&tmp, &op2.vmm128(n), &op2.vmm128(n), i->Ib());
+    xmm_dbpsadbw(&dst.vmm128(n), &op1.vmm128(n), &tmp);
+  }
+
+  avx512_write_regw_masked(i, &dst, len, opmask);
+
+  BX_NEXT_INSTR(i);
+}
+
 #endif
