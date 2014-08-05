@@ -1111,7 +1111,7 @@ BX_CPP_INLINE void xmm_mpsadbw(BxPackedXmmRegister *r, const BxPackedXmmRegister
       Bit8u temp1 = op1->xmmubyte(j + k + dst_offset);
       Bit8u temp2 = op2->xmmubyte(    k + src_offset);
 
-      r->xmm16u(j) = abs(temp1 - temp2);
+      r->xmm16u(j) += abs(temp1 - temp2);
     }
   }
 }
