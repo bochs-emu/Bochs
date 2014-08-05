@@ -1083,16 +1083,17 @@ BX_CPP_INLINE void simd_pbroadcastq(BxPackedAvxRegister *op, Bit64u val_64, unsi
 
 BX_CPP_INLINE void xmm_psadbw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
 {
-  unsigned temp1 = 0, temp2 = 0, n;
+  unsigned temp = 0;
+  for (unsigned n=0; n < 8; n++)
+    temp += abs(op1->xmmubyte(n) - op2->xmmubyte(n));
 
-  for (n=0; n < 8; n++)
-    temp1 += abs(op1->xmmubyte(n) - op2->xmmubyte(n));
+  op1->xmm64u(0) = Bit64u(temp);
 
-  for (; n < 16; n++)
-    temp2 += abs(op1->xmmubyte(n) - op2->xmmubyte(n));
+  temp = 0;
+  for (unsigned n=8; n < 16; n++)
+    temp += abs(op1->xmmubyte(n) - op2->xmmubyte(n));
 
-  op1->xmm64u(0) = Bit64u(temp1);
-  op1->xmm64u(1) = Bit64u(temp2);
+  op1->xmm64u(1) = Bit64u(temp);
 }
 
 // multiple sum of absolute differences (MSAD)
@@ -1100,7 +1101,7 @@ BX_CPP_INLINE void xmm_psadbw(BxPackedXmmRegister *op1, const BxPackedXmmRegiste
 BX_CPP_INLINE void xmm_mpsadbw(BxPackedXmmRegister *r, const BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, Bit8u offset)
 {
   unsigned src_offset = (offset & 0x3) * 4;
-  unsigned dst_offset = ((offset >> 2) & 1) * 4;
+  unsigned dst_offset = ((offset >> 2) & 0x1) * 4;
 
   for (unsigned j=0; j < 8; j++)
   {
@@ -1109,10 +1110,8 @@ BX_CPP_INLINE void xmm_mpsadbw(BxPackedXmmRegister *r, const BxPackedXmmRegister
     for (unsigned k=0; k < 4; k++) {
       Bit8u temp1 = op1->xmmubyte(j + k + dst_offset);
       Bit8u temp2 = op2->xmmubyte(    k + src_offset);
-      if (temp1 > temp2)
-        r->xmm16u(j) += (temp1 - temp2);
-      else
-        r->xmm16u(j) += (temp2 - temp1);
+
+      r->xmm16u(j) = abs(temp1 - temp2);
     }
   }
 }
