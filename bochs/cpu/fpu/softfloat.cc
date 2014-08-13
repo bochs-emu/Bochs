@@ -753,12 +753,15 @@ float32 float32_scalef(float32 a, float32 b, float_status_t &status)
         return a;
     }
 
-    if ((aExp | aSig) == 0) {
-        if (bExp == 0xFF && ! bSign) {
-            float_raise(status, float_flag_invalid);
-            return float32_default_nan;
+    if (aExp == 0) {
+        if (aSig == 0) {
+            if (bExp == 0xFF && ! bSign) {
+                float_raise(status, float_flag_invalid);
+                return float32_default_nan;
+            }
+            return a;
         }
-        return a;
+        float_raise(status, float_flag_denormal);
     }
 
     if ((bExp | bSig) == 0) return a;
@@ -776,6 +779,8 @@ float32 float32_scalef(float32 a, float32 b, float_status_t &status)
     int scale = 0;
 
     if (bExp <= 0x7E) {
+        if (bExp == 0)
+            float_raise(status, float_flag_denormal);
         scale = -bSign;
     }
     else {
@@ -1343,8 +1348,12 @@ float32 float32_minmax(float32 a, float32 b, int is_max, int is_abs, float_statu
 
     if (float32_is_nan(a) || float32_is_nan(b)) {
         if (! float32_is_signaling_nan(a) && ! float32_is_nan(b)) {
+            if (float32_is_denormal(b))
+                float_raise(status, float_flag_denormal);
             return b;
         } else if (! float32_is_signaling_nan(b) && ! float32_is_nan(a)) {
+            if (float32_is_denormal(a))
+                float_raise(status, float_flag_denormal);
             return a;
         }
         return propagateFloat32NaN(a, b, status);
@@ -1961,12 +1970,15 @@ float64 float64_scalef(float64 a, float64 b, float_status_t &status)
         return a;
     }
 
-    if ((aExp | aSig) == 0) {
-        if (bExp == 0x7FF && ! bSign) {
-            float_raise(status, float_flag_invalid);
-            return float64_default_nan;
+    if (aExp == 0) {
+        if (aSig == 0) {
+            if (bExp == 0x7FF && ! bSign) {
+                float_raise(status, float_flag_invalid);
+                return float64_default_nan;
+            }
+            return a;
         }
-        return a;
+        float_raise(status, float_flag_denormal);
     }
 
     if ((bExp | bSig) == 0) return a;
@@ -1984,6 +1996,8 @@ float64 float64_scalef(float64 a, float64 b, float_status_t &status)
     int scale = 0;
 
     if (bExp < 0x3FF) {
+        if (bExp == 0)
+            float_raise(status, float_flag_denormal);
         scale = -bSign;
     }
     else {
@@ -2555,8 +2569,12 @@ float64 float64_minmax(float64 a, float64 b, int is_max, int is_abs, float_statu
 
     if (float64_is_nan(a) || float64_is_nan(b)) {
         if (! float64_is_signaling_nan(a) && ! float64_is_nan(b)) {
+            if (float64_is_denormal(b))
+                float_raise(status, float_flag_denormal);
             return b;
         } else if (! float64_is_signaling_nan(b) && ! float64_is_nan(a)) {
+            if (float64_is_denormal(a))
+                float_raise(status, float_flag_denormal);
             return a;
         }
         return propagateFloat64NaN(a, b, status);

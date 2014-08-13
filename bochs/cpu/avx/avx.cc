@@ -33,7 +33,7 @@
 /* VZEROUPPER: VEX.128.0F.77 (VEX.W ignore, VEX.VVV #UD) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VZEROUPPER(bxInstruction_c *i)
 {
-  for(unsigned index=0; index < BX_XMM_REGISTERS; index++)
+  for(unsigned index=0; index < 16; index++) // clear only 16 registers even if AVX-512 is present
   {
     if (index < 8 || long64_mode())
       BX_CLEAR_AVX_HIGH128(index);
@@ -45,7 +45,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VZEROUPPER(bxInstruction_c *i)
 /* VZEROALL: VEX.256.0F.77 (VEX.W ignore, VEX.VVV #UD) */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VZEROALL(bxInstruction_c *i)
 {
-  for(unsigned index=0; index < BX_XMM_REGISTERS; index++)
+  for(unsigned index=0; index < 16; index++) // clear only 16 registers even if AVX-512 is present
   {
     if (index < 8 || long64_mode())
       BX_CLEAR_AVX_REG(index);

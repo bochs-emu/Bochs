@@ -297,8 +297,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPUQ_MASK_KGbHdqWdqIbR(bxInstru
     BX_NEXT_INSTR(i);                                                                       \
   }
 
-AVX512_COMPARE_BYTE_EL(VPCMPGTB_MASK_KGqHdqWdqR, xmm_pcmpgtd_mask)
-AVX512_COMPARE_BYTE_EL(VPCMPEQB_MASK_KGqHdqWdqR, xmm_pcmpeqd_mask)
+AVX512_COMPARE_BYTE_EL(VPCMPGTB_MASK_KGqHdqWdqR, xmm_pcmpgtb_mask)
+AVX512_COMPARE_BYTE_EL(VPCMPEQB_MASK_KGqHdqWdqR, xmm_pcmpeqb_mask)
 AVX512_COMPARE_BYTE_EL(VPTESTMB_MASK_KGqHdqWdqR, xmm_ptestmb_mask)
 AVX512_COMPARE_BYTE_EL(VPTESTNMB_MASK_KGqHdqWdqR, xmm_ptestnmb_mask)
 
@@ -322,8 +322,8 @@ AVX512_COMPARE_BYTE_EL(VPTESTNMB_MASK_KGqHdqWdqR, xmm_ptestnmb_mask)
     BX_NEXT_INSTR(i);                                                                       \
   }
 
-AVX512_COMPARE_WORD_EL(VPCMPGTW_MASK_KGdHdqWdqR, xmm_pcmpgtd_mask)
-AVX512_COMPARE_WORD_EL(VPCMPEQW_MASK_KGdHdqWdqR, xmm_pcmpeqd_mask)
+AVX512_COMPARE_WORD_EL(VPCMPGTW_MASK_KGdHdqWdqR, xmm_pcmpgtw_mask)
+AVX512_COMPARE_WORD_EL(VPCMPEQW_MASK_KGdHdqWdqR, xmm_pcmpeqw_mask)
 AVX512_COMPARE_WORD_EL(VPTESTMW_MASK_KGdHdqWdqR, xmm_ptestmw_mask)
 AVX512_COMPARE_WORD_EL(VPTESTNMW_MASK_KGdHdqWdqR, xmm_ptestnmw_mask)
 
