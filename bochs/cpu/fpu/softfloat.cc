@@ -1347,11 +1347,18 @@ float32 float32_minmax(float32 a, float32 b, int is_max, int is_abs, float_statu
     }
 
     if (float32_is_nan(a) || float32_is_nan(b)) {
-        if (! float32_is_signaling_nan(a) && ! float32_is_nan(b)) {
+        if (float32_is_signaling_nan(a)) {
+            return propagateFloat32NaN(a, status);
+        }
+        if (float32_is_signaling_nan(b) ) {
+            return propagateFloat32NaN(b, status);
+        }
+        if (! float32_is_nan(b)) {
             if (float32_is_denormal(b))
                 float_raise(status, float_flag_denormal);
             return b;
-        } else if (! float32_is_signaling_nan(b) && ! float32_is_nan(a)) {
+        }
+        if (! float32_is_nan(a)) {
             if (float32_is_denormal(a))
                 float_raise(status, float_flag_denormal);
             return a;
@@ -2568,11 +2575,18 @@ float64 float64_minmax(float64 a, float64 b, int is_max, int is_abs, float_statu
     }
 
     if (float64_is_nan(a) || float64_is_nan(b)) {
-        if (! float64_is_signaling_nan(a) && ! float64_is_nan(b)) {
+        if (float64_is_signaling_nan(a)) {
+            return propagateFloat64NaN(a, status);
+        }
+        if (float64_is_signaling_nan(b)) {
+            return propagateFloat64NaN(b, status);
+        }
+        if (! float64_is_nan(b)) {
             if (float64_is_denormal(b))
                 float_raise(status, float_flag_denormal);
             return b;
-        } else if (! float64_is_signaling_nan(b) && ! float64_is_nan(a)) {
+        }
+        if (! float64_is_nan(a)) {
             if (float64_is_denormal(a))
                 float_raise(status, float_flag_denormal);
             return a;
