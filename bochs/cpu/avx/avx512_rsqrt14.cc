@@ -8265,6 +8265,8 @@ float32 approximate_rsqrt14(float32 op, bx_bool daz)
       if (daz) return packFloat32(sign, 0xFF, 0);
         
       normalizeFloat32Subnormal(fraction, &exp, &fraction);
+
+      fraction &= 0x7fffff;
       // fall through
 
     case float_normalized:
@@ -8316,6 +8318,8 @@ float64 approximate_rsqrt14(float64 op, bx_bool daz)
       if (daz) return packFloat64(sign, 0x7FF, 0);
         
       normalizeFloat64Subnormal(fraction, &exp, &fraction);
+
+      fraction &= BX_CONST64(0xfffffffffffff);
       // fall through
 
     case float_normalized:

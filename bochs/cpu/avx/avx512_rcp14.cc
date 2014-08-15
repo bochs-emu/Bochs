@@ -8275,26 +8275,28 @@ float32 approximate_rcp14(float32 op, const float_status_t &status)
 
   switch(op_class) {
     case float_zero:
-        return packFloat32(sign, 0xFF, 0);
+      return packFloat32(sign, 0xFF, 0);
 
     case float_negative_inf:
     case float_positive_inf:
-        return packFloat32(sign, 0, 0);
+      return packFloat32(sign, 0, 0);
 
     case float_SNaN:
     case float_QNaN:
-        return convert_to_QNaN(op);
+      return convert_to_QNaN(op);
 
     // the rcp14 handle denormals properly
     case float_denormal:
-        if (get_denormals_are_zeros(status))
-          return packFloat32(sign, 0xFF, 0);
+      if (get_denormals_are_zeros(status))
+        return packFloat32(sign, 0xFF, 0);
         
-        normalizeFloat32Subnormal(fraction, &exp, &fraction);
-        // fall through
+      normalizeFloat32Subnormal(fraction, &exp, &fraction);
+
+      fraction &= 0x7fffff;
+      // fall through
 
     case float_normalized:
-        break;
+      break;
   }
 
   fraction = rcp14_table_lookup(fraction, FLOAT32_EXP_BIAS, &exp) << 7;
@@ -8327,26 +8329,28 @@ float64 approximate_rcp14(float64 op, const float_status_t &status)
 
   switch(op_class) {
     case float_zero:
-        return packFloat64(sign, 0x7FF, 0);
+      return packFloat64(sign, 0x7FF, 0);
 
     case float_negative_inf:
     case float_positive_inf:
-        return packFloat64(sign, 0, 0);
+      return packFloat64(sign, 0, 0);
 
     case float_SNaN:
     case float_QNaN:
-        return convert_to_QNaN(op);
+      return convert_to_QNaN(op);
 
     // the rcp14 handle denormals properly
     case float_denormal:
-        if (get_denormals_are_zeros(status))
-          return packFloat64(sign, 0x7FF, 0);
+      if (get_denormals_are_zeros(status))
+        return packFloat64(sign, 0x7FF, 0);
         
-        normalizeFloat64Subnormal(fraction, &exp, &fraction);
-        // fall through
+      normalizeFloat64Subnormal(fraction, &exp, &fraction);
+
+      fraction &= BX_CONST64(0xfffffffffffff);
+      // fall through
 
     case float_normalized:
-        break;
+      break;
   }
 
   // Compute the single precision 23-bit mantissa from the 52-bit double
