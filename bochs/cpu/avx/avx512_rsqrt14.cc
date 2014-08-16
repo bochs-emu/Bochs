@@ -8287,8 +8287,12 @@ float32 approximate_rsqrt14(float32 op, bx_bool daz)
   const Bit16u *rsqrt_table = (exp & 1) ? rsqrt14_table1 : rsqrt14_table0;
 
   exp = 0x7E - ((exp - 0x7F) >> 1);
+  if (fraction)
+    fraction = rsqrt_table[fraction >> 8];
+  else
+    exp++;
 
-  return packFloat32(0, exp, (Bit32u)(rsqrt_table[fraction >> 8]) << 7);
+  return packFloat32(0, exp, fraction << 7);
 }
 
 // approximate 14-bit sqrt reciprocal of scalar double precision FP
@@ -8337,8 +8341,12 @@ float64 approximate_rsqrt14(float64 op, bx_bool daz)
   const Bit16u *rsqrt_table = (exp & 1) ? rsqrt14_table1 : rsqrt14_table0;
 
   exp = 0x3FE - ((exp - 0x3FF) >> 1);
+  if (fraction)
+    fraction = rsqrt_table[(Bit32u)fraction >> 8];
+  else
+    exp++;
 
-  return packFloat64(0, exp, (Bit64u)(rsqrt_table[fraction >> 8]) << 36);
+  return packFloat64(0, exp, fraction << 36);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRT14PS_MASK_VpsWpsR(bxInstruction_c *i)
