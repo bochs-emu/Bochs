@@ -1301,6 +1301,12 @@ void bx_sdl2_gui_c::exit(void)
     SDL_FreeSurface(sdl_bitmaps[n_sdl_bitmaps-1]->surface);
     n_sdl_bitmaps--;
   }
+
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+  if (SIM->has_debug_gui()) {
+    close_debug_dialog();
+  }
+#endif
 }
 
 // New graphics API methods

@@ -1846,6 +1846,12 @@ void bx_x_gui_c::exit(void)
   if (mouse_captured)
     enable_cursor();
 
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+  if (SIM->has_debug_gui()) {
+    close_debug_dialog();
+  }
+#endif
+
   if (bx_x_display)
     XCloseDisplay(bx_x_display);
 

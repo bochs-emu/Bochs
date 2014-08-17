@@ -3444,12 +3444,14 @@ void InitDebugDialog()
   SIM->get_notify_callback(&old_callback, &old_callback_arg);
   assert (old_callback != NULL);
   SIM->set_notify_callback(enh_dbg_notify_callback, NULL);
+  // TODO: read enhanced debugger config here
   DoAllInit();    // non-os-specific init stuff
   OSInit();
 }
 
 void CloseDebugDialog()
 {
+  // TODO: write enhanced debugger config here
   SIM->set_notify_callback(old_callback, old_callback_arg);
   CloseDialog();
 }

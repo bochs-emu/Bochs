@@ -1413,15 +1413,20 @@ void bx_sdl_gui_c::mouse_enabled_changed_specific (bx_bool val)
 
 void bx_sdl_gui_c::exit(void)
 {
-  if(sdl_screen)
+  if (sdl_screen)
     SDL_FreeSurface(sdl_screen);
-  if(sdl_fullscreen)
+  if (sdl_fullscreen)
     SDL_FreeSurface(sdl_fullscreen);
-  while(n_sdl_bitmaps)
-  {
+  while (n_sdl_bitmaps) {
     SDL_FreeSurface(sdl_bitmaps[n_sdl_bitmaps-1]->surface);
     n_sdl_bitmaps--;
   }
+
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+  if (SIM->has_debug_gui()) {
+    close_debug_dialog();
+  }
+#endif
 }
 
 // New graphics API methods

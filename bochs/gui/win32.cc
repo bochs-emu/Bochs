@@ -2113,6 +2113,12 @@ void bx_win32_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 // exit from the native GUI mechanism.
 void bx_win32_gui_c::exit(void)
 {
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+  if (SIM->has_debug_gui()) {
+    close_debug_dialog();
+  }
+#endif
+
   // kill thread first...
   PostMessage(stInfo.mainWnd, WM_CLOSE, 0, 0);
 
