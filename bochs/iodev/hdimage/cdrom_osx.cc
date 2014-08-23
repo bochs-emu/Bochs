@@ -348,7 +348,7 @@ bx_bool cdrom_osx_c::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_tr
 
   // This is a hack and works okay if there's one rom track only
   if (using_file || (format != 0)) {
-    return cdrom_base::read_toc(buf, length, msf, start_track, format);
+    return cdrom_base_c::read_toc(buf, length, msf, start_track, format);
   }
   // all these implementations below are the platform-dependent code required
   // to read the TOC from a physical cdrom.
@@ -444,7 +444,7 @@ Bit32u cdrom_osx_c::capacity()
 
   size_t toc_entries = (toc->length - 2) / sizeof(struct _CDTOC_Desc);
 
-  BX_DEBUG(("reading %d toc entries\n", toc_entries));
+  BX_DEBUG(("reading %d toc entries\n", (int)toc_entries));
 
   int start_sector = -1;
   int data_track = -1;
@@ -454,7 +454,7 @@ Bit32u cdrom_osx_c::capacity()
   // on how you look at it).  The difference in the sector numbers
   // is returned as the sized of the data track.
   for (int i=toc_entries - 1; i>=0; i--) {
-    BX_DEBUG(("session %d ctl_adr %d tno %d point %d lba %d z %d p lba %d\n",
+    BX_DEBUG(("session %d ctl_adr %d tno %d point %d lba %ld z %d p lba %ld\n",
              (int)toc->trackdesc[i].session,
              (int)toc->trackdesc[i].ctrl_adr,
              (int)toc->trackdesc[i].tno,
