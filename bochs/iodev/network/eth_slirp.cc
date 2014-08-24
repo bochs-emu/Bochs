@@ -139,6 +139,7 @@ bx_bool bx_slirp_pktmover_c::parse_slirp_conf(const char *conf)
   char line[512];
   char *ret, *param, *val, *tmp;
   bx_bool format_checked = 0;
+  size_t len1 = 0, len2;
   unsigned i, count;
 
   fd = fopen(conf, "r");
@@ -163,12 +164,16 @@ bx_bool bx_slirp_pktmover_c::parse_slirp_conf(const char *conf)
         if (line[0] == '#') continue;
         param = strtok(line, "=");
         if (param != NULL) {
+          len1 = strip_whitespace(param);
           val = strtok(NULL, "");
+          if (val == NULL) {
+            fprintf(stderr, "slirp config: missing value for parameter '%s'\n", param);
+            continue;
+          }
         } else {
           continue;
         }
-        size_t len1 = strip_whitespace(param);
-        size_t len2 = strip_whitespace(val);
+        len2 = strip_whitespace(val);
         if ((len1 == 0) || (len2 == 0)) continue;
         if (!stricmp(param, "restricted")) {
           restricted = atoi(val);

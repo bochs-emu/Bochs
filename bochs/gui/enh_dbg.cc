@@ -3438,20 +3438,112 @@ BxEvent *enh_dbg_notify_callback(void *unused, BxEvent *event)
   }
 }
 
+static size_t strip_whitespace(char *s)
+{
+  size_t ptr = 0;
+  char *tmp = (char*)malloc(strlen(s)+1);
+  strcpy(tmp, s);
+  while (s[ptr] == ' ') ptr++;
+  if (ptr > 0) strcpy(s, tmp+ptr);
+  free(tmp);
+  ptr = strlen(s);
+  while ((ptr > 0) && (s[ptr-1] == ' ')) {
+    s[--ptr] = 0;
+  }
+  return ptr;
+}
+
+void ReadSettings()
+{
+  FILE *fd = NULL;
+  char line[512];
+  char *ret, *param, *val;
+  bx_bool format_checked = 0;
+  size_t len1 = 0, len2;
+  int i;
+
+  fd = fopen("bx_enh_dbg.ini", "r");
+  if (fd == NULL) return;
+  do {
+    ret = fgets(line, sizeof(line)-1, fd);
+    line[sizeof(line) - 1] = '\0';
+    size_t len = strlen(line);
+    if ((len>0) && (line[len-1] < ' '))
+      line[len-1] = '\0';
+    if ((ret != NULL) && (strlen(line) > 0)) {
+      if (!format_checked) {
+        if (!strncmp(line, "# bx_enh_dbg_ini", 16)) {
+          format_checked = 1;
+        } else {
+          fprintf(stderr, "bx_enh_dbg.ini: wrong file format\n");
+          fclose(fd);
+          return;
+        }
+      } else {
+        if (line[0] == '#') continue;
+        param = strtok(line, "=");
+        if (param != NULL) {
+          len1 = strip_whitespace(param);
+          val = strtok(NULL, "");
+          if (val == NULL) {
+            fprintf(stderr, "bx_enh_dbg.ini: missing value for parameter '%s'\n", param);
+            continue;
+          }
+        } else {
+          continue;
+        }
+        len2 = strip_whitespace(val);
+        if ((len1 == 0) || (len2 == 0)) continue;
+        if ((len1 == 9) && !strncmp(param, "SeeReg[", 7) && (param[8] == ']')) {
+          if ((param[7] < '0') || (param[7] > '7')) {
+            fprintf(stderr, "bx_enh_dbg.ini: invalid index for option SeeReg[x]\n");
+            continue;
+          }
+          i = atoi(&param[7]);
+          if (strcmp(val, "TRUE") && strcmp(val, "FALSE")) {
+            fprintf(stderr, "bx_enh_dbg.ini: invalid value for option SeeReg[x]\n");
+            continue;
+          }
+          SeeReg[i] = !strcmp(val, "TRUE");
+          // TODO: add more options
+        } else {
+          fprintf(stderr, "bx_enh_dbg.ini: unknown option '%s'\n", line);
+        }
+      }
+    }
+  } while (!feof(fd));
+  fclose(fd);
+}
+
+void WriteSettings()
+{
+  FILE *fd = NULL;
+  int i;
+
+  fd = fopen("bx_enh_dbg.ini", "w");
+  if (fd == NULL) return;
+  fprintf(fd, "# bx_enh_dbg_ini\n");
+  for (i = 0; i < 8; i++) {
+    fprintf(fd, "SeeReg[%d] = %s\n", i, SeeReg[i] ? "TRUE" : "FALSE");
+  }
+  // TODO: add more options
+  fclose(fd);
+}
+
 void InitDebugDialog()
 {
   // redirect notify callback to the debugger specific code
   SIM->get_notify_callback(&old_callback, &old_callback_arg);
   assert (old_callback != NULL);
   SIM->set_notify_callback(enh_dbg_notify_callback, NULL);
-  // TODO: read enhanced debugger config here
+  ReadSettings();
   DoAllInit();    // non-os-specific init stuff
   OSInit();
 }
 
 void CloseDebugDialog()
 {
-  // TODO: write enhanced debugger config here
+  WriteSettings();
   SIM->set_notify_callback(old_callback, old_callback_arg);
   CloseDialog();
 }
