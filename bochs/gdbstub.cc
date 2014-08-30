@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2012  The Bochs Project Team
+//  Copyright (C) 2002-2014  The Bochs Project Team
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -33,6 +33,7 @@
 #include <arpa/inet.h>
 #include <signal.h>
 #include <netdb.h>
+#define closesocket(s)    close(s)
 #endif
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -241,7 +242,7 @@ static Bit32u registers[NUMREGS];
 #endif
 
 #define MAX_BREAKPOINTS (255)
-static unsigned breakpoints[MAX_BREAKPOINTS] = {0,};
+static Bit64u breakpoints[MAX_BREAKPOINTS] = {0,};
 static unsigned nr_breakpoints = 0;
 
 static int stub_trace_flag = 0;
@@ -258,11 +259,12 @@ int bx_gdbstub_check(unsigned int eip)
 {
   unsigned int i;
   unsigned char ch;
-  long arg;
   int r;
 #if defined(__CYGWIN__) || defined(__MINGW32__) || defined(_MSC_VER)
   fd_set fds;
   struct timeval tv = {0, 0};
+#else
+  long arg;
 #endif
 
   if (bx_enter_gdbstub)
@@ -276,12 +278,7 @@ int bx_gdbstub_check(unsigned int eip)
 
   if ((instr_count % 500) == 0)
   {
-#if !defined(__CYGWIN__) && !defined(__MINGW32__) && !defined(_MSC_VER)
-    arg = fcntl(socket_fd, F_GETFL);
-    fcntl(socket_fd, F_SETFL, arg | O_NONBLOCK);
-    r = recv(socket_fd, &ch, 1, 0);
-    fcntl(socket_fd, F_SETFL, arg);
-#else
+#if defined(__CYGWIN__) || defined(__MINGW32__) || defined(_MSC_VER)
     FD_ZERO(&fds);
     FD_SET(socket_fd, &fds);
     r = select(socket_fd + 1, &fds, NULL, NULL, &tv);
@@ -289,6 +286,11 @@ int bx_gdbstub_check(unsigned int eip)
     {
       r = recv(socket_fd, (char *)&ch, 1, 0);
     }
+#else
+    arg = fcntl(socket_fd, F_GETFL);
+    fcntl(socket_fd, F_SETFL, arg | O_NONBLOCK);
+    r = recv(socket_fd, &ch, 1, 0);
+    fcntl(socket_fd, F_SETFL, arg);
 #endif
     if (r == 1)
     {
@@ -317,7 +319,7 @@ int bx_gdbstub_check(unsigned int eip)
   return GDBSTUB_STOP_NO_REASON;
 }
 
-static int remove_breakpoint(unsigned addr, int len)
+static int remove_breakpoint(Bit64u addr, int len)
 {
   if (len != 1)
   {
@@ -328,7 +330,7 @@ static int remove_breakpoint(unsigned addr, int len)
   {
     if (breakpoints[i] == addr)
     {
-      BX_INFO(("Removing breakpoint at %x", addr));
+      BX_INFO(("Removing breakpoint at "FMT_ADDRX64, addr));
       breakpoints[i] = 0;
       return(1);
     }
@@ -336,11 +338,11 @@ static int remove_breakpoint(unsigned addr, int len)
   return(0);
 }
 
-static void insert_breakpoint(unsigned addr)
+static void insert_breakpoint(Bit64u addr)
 {
   unsigned int i;
 
-  BX_INFO(("setting breakpoint at %x", addr));
+  BX_INFO(("Setting breakpoint at "FMT_ADDRX64, addr));
 
   for (i = 0; i < (unsigned)MAX_BREAKPOINTS; i++)
   {
