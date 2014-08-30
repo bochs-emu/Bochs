@@ -167,7 +167,7 @@ bx_bool bx_slirp_pktmover_c::parse_slirp_conf(const char *conf)
           len1 = strip_whitespace(param);
           val = strtok(NULL, "");
           if (val == NULL) {
-            fprintf(stderr, "slirp config: missing value for parameter '%s'\n", param);
+            BX_ERROR(("slirp config: missing value for parameter '%s'", param));
             continue;
           }
         } else {

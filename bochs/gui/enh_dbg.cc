@@ -3500,13 +3500,21 @@ void ReadSettings()
             continue;
           }
           i = atoi(&param[7]);
-          if (strcmp(val, "TRUE") && strcmp(val, "FALSE")) {
-            fprintf(stderr, "bx_enh_dbg.ini: invalid value for option SeeReg[x]\n");
-            continue;
-          }
           SeeReg[i] = !strcmp(val, "TRUE");
-          // TODO: add more options
+        } else if (!strcmp(param, "ShowIOWindows")) {
+          ShowIOWindows = !strcmp(val, "TRUE");
+        } else if (!strcmp(param, "ShowButtons")) {
+          ShowButtons = !strcmp(val, "TRUE");
+        } else if (!strcmp(param, "SeeRegColors")) {
+          SeeRegColors = !strcmp(val, "TRUE");
+        } else if (!strcmp(param, "ignoreNxtT")) {
+          ignoreNxtT = !strcmp(val, "TRUE");
+        } else if (!strcmp(param, "ignSSDisasm")) {
+          ignSSDisasm = !strcmp(val, "TRUE");
+        } else if (!strcmp(param, "UprCase")) {
+          UprCase = atoi(val);
         } else {
+          // TODO: add more settings
           fprintf(stderr, "bx_enh_dbg.ini: unknown option '%s'\n", line);
         }
       }
@@ -3526,7 +3534,13 @@ void WriteSettings()
   for (i = 0; i < 8; i++) {
     fprintf(fd, "SeeReg[%d] = %s\n", i, SeeReg[i] ? "TRUE" : "FALSE");
   }
-  // TODO: add more options
+  fprintf(fd, "ShowIOWindows = %s\n", ShowIOWindows ? "TRUE" : "FALSE");
+  fprintf(fd, "ShowButtons = %s\n", ShowButtons ? "TRUE" : "FALSE");
+  fprintf(fd, "SeeRegColors = %s\n", SeeRegColors ? "TRUE" : "FALSE");
+  fprintf(fd, "ignoreNxtT = %s\n", ignoreNxtT ? "TRUE" : "FALSE");
+  fprintf(fd, "ignSSDisasm = %s\n", ignSSDisasm ? "TRUE" : "FALSE");
+  fprintf(fd, "UprCase = %d\n", UprCase);
+  // TODO: add more settings
   fclose(fd);
 }
 
