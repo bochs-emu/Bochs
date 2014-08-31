@@ -2422,7 +2422,7 @@ if test "$with_wx" = yes; then
       fi
       ;;
   esac
-  # The enhanced X debugger depends on GTK2 (unused yet, but fixes link failure)
+  # The enhanced X debugger depends on GTK2
   if test "$gui_debugger" = 1 -a "$DEFAULT_GUI" != win32; then
     needs_gtk2=1
   fi
@@ -2596,9 +2596,9 @@ AC_SUBST(CXXFLAGS_CONSOLE)
 ENH_DBG_OBJS=""
 if test "$gui_debugger" = 1; then
   if test "$needs_gtk2" = 1; then
-     ENH_DBG_OBJS="gtk_enh_dbg_osdep.o"
+     ENH_DBG_OBJS="enh_dbg.o gtk_enh_dbg_osdep.o"
   elif test "$DEFAULT_GUI" = win32 -o "$with_win32" = yes; then
-     ENH_DBG_OBJS="win32_enh_dbg_osdep.o"
+     ENH_DBG_OBJS="enh_dbg.o win32_enh_dbg_osdep.o"
   fi
 fi
 AC_SUBST(ENH_DBG_OBJS)
