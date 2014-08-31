@@ -44,6 +44,9 @@ bx_cpuid_t::bx_cpuid_t(BX_CPU_C *_cpu): cpu(_cpu)
   ncores = 1;
   nprocessors = 1;
 #endif
+
+  for (unsigned n=0; n < BX_ISA_EXTENSIONS_ARRAY_SIZE; n++)
+    ia_extensions_bitmask[n] = 0;
 }
 
 #if BX_CPU_LEVEL >= 4
