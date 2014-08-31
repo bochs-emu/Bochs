@@ -76,6 +76,7 @@ bx_bool ignoreNxtT = TRUE;      // Do not show "Next at t=" output lines
 bx_bool ignSSDisasm = TRUE;     // Do not show extra disassembly line at each break
 int UprCase = 0;                // 1 = convert all Asm, Register names, Register values to uppercase
 int DumpInAsciiMode = 3;        // bit 1 = show ASCII in dumps, bit 2 = show hex, value=0 is illegal
+int DumpWSIndex = 0;            // word size index for memory dump
 bx_bool LogView = 0;            // Send log to output window
 
 bx_bool isLittleEndian = TRUE;
@@ -2375,6 +2376,7 @@ void doNewWSize(int i)
     if (j != i)
     {
         ToggleWSchecks(i, j);
+        DumpWSIndex = i;
         DumpAlign = 1<<i;
         if (DViewMode == VIEW_MEMDUMP && DumpInitted != FALSE)
         {
@@ -3501,6 +3503,8 @@ void ReadSettings()
           }
           i = atoi(&param[7]);
           SeeReg[i] = !strcmp(val, "TRUE");
+        } else if (!strcmp(param, "SingleCPU")) {
+          SingleCPU = !strcmp(val, "TRUE");
         } else if (!strcmp(param, "ShowIOWindows")) {
           ShowIOWindows = !strcmp(val, "TRUE");
         } else if (!strcmp(param, "ShowButtons")) {
@@ -3513,6 +3517,14 @@ void ReadSettings()
           ignSSDisasm = !strcmp(val, "TRUE");
         } else if (!strcmp(param, "UprCase")) {
           UprCase = atoi(val);
+        } else if (!strcmp(param, "DumpInAsciiMode")) {
+          DumpInAsciiMode = atoi(val);
+        } else if (!strcmp(param, "isLittleEndian")) {
+          isLittleEndian = !strcmp(val, "TRUE");
+        } else if (!strcmp(param, "DumpWSIndex")) {
+          DumpWSIndex = atoi(val);
+          DumpAlign = (1 << DumpWSIndex);
+          PrevDAD = 0;
         } else {
           // TODO: add more settings
           fprintf(stderr, "bx_enh_dbg.ini: unknown option '%s'\n", line);
@@ -3534,12 +3546,16 @@ void WriteSettings()
   for (i = 0; i < 8; i++) {
     fprintf(fd, "SeeReg[%d] = %s\n", i, SeeReg[i] ? "TRUE" : "FALSE");
   }
+  fprintf(fd, "SingleCPU = %s\n", SingleCPU ? "TRUE" : "FALSE");
   fprintf(fd, "ShowIOWindows = %s\n", ShowIOWindows ? "TRUE" : "FALSE");
   fprintf(fd, "ShowButtons = %s\n", ShowButtons ? "TRUE" : "FALSE");
   fprintf(fd, "SeeRegColors = %s\n", SeeRegColors ? "TRUE" : "FALSE");
   fprintf(fd, "ignoreNxtT = %s\n", ignoreNxtT ? "TRUE" : "FALSE");
   fprintf(fd, "ignSSDisasm = %s\n", ignSSDisasm ? "TRUE" : "FALSE");
   fprintf(fd, "UprCase = %d\n", UprCase);
+  fprintf(fd, "DumpInAsciiMode = %d\n", DumpInAsciiMode);
+  fprintf(fd, "isLittleEndian = %s\n", isLittleEndian ? "TRUE" : "FALSE");
+  fprintf(fd, "DumpWSIndex = %d\n", DumpWSIndex);
   // TODO: add more settings
   fclose(fd);
 }

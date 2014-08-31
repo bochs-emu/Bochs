@@ -438,7 +438,7 @@ void InitMenus()
     gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(ChkMIs[IGN_NT]), ignoreNxtT);
     gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(ChkMIs[R_CLR]), SeeRegColors);
     gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(ChkMIs[LOG_VIEW]), LogView);
-    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(ChkMIs[WSChkIdx]), TRUE);
+    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(ChkMIs[WSChkIdx+DumpWSIndex]), TRUE);
     if (DumpInAsciiMode == 0)       // prevent an illegal value
         DumpInAsciiMode = 3;
     // I don't know why, but the next 2 "set_active" commands blow up if moved into SpecialInit

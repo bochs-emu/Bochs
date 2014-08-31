@@ -634,7 +634,7 @@ void SpecialInit()
         CheckMenuItem (hOptMenu, CMD_IOWIN, MF_CHECKED);
 
     HMENU wsMenu = GetSubMenu (hOptMenu, WS_POPUP_IDX);
-    CheckMenuItem (wsMenu, CMD_WS_1, MF_CHECKED);
+    CheckMenuItem (wsMenu, CMD_WS_1+DumpWSIndex, MF_CHECKED);
     EnableMenuItem (hOptMenu, CMD_TREG, MF_GRAYED);     // not currently supported by bochs
     EnableMenuItem (hViewMenu, CMD_PAGEV, MF_GRAYED);
 #if BX_SUPPORT_FPU == 0
