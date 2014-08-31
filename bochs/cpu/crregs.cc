@@ -1148,20 +1148,20 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   //   [0]     VME: Virtual-8086 Mode Extensions R/W
 
   /* VME */
-  if (bx_cpuid_support_vme())
+  if (is_cpu_extension_supported(BX_ISA_VME))
     allowMask |= BX_CR4_VME_MASK | BX_CR4_PVI_MASK;
 
-  if (bx_cpuid_support_tsc())
+  if (is_cpu_extension_supported(BX_ISA_PENTIUM))
     allowMask |= BX_CR4_TSD_MASK;
 
-  if (bx_cpuid_support_debug_extensions())
+  if (is_cpu_extension_supported(BX_ISA_DEBUG_EXTENSIONS))
     allowMask |= BX_CR4_DE_MASK;
 
-  if (bx_cpuid_support_pse())
+  if (is_cpu_extension_supported(BX_ISA_PSE))
     allowMask |= BX_CR4_PSE_MASK;
 
 #if BX_CPU_LEVEL >= 6
-  if (bx_cpuid_support_pae())
+  if (is_cpu_extension_supported(BX_ISA_PAE))
     allowMask |= BX_CR4_PAE_MASK;
 #endif
 
@@ -1169,43 +1169,43 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   allowMask |= BX_CR4_MCE_MASK;
 
 #if BX_CPU_LEVEL >= 6
-  if (bx_cpuid_support_pge())
+  if (is_cpu_extension_supported(BX_ISA_PGE))
     allowMask |= BX_CR4_PGE_MASK;
 
   allowMask |= BX_CR4_PCE_MASK;
 
   /* OSFXSR */
-  if (bx_cpuid_support_fxsave_fxrstor())
+  if (is_cpu_extension_supported(BX_ISA_SSE))
     allowMask |= BX_CR4_OSFXSR_MASK;
 
   /* OSXMMEXCPT */
-  if (bx_cpuid_support_sse())
+  if (is_cpu_extension_supported(BX_ISA_SSE))
     allowMask |= BX_CR4_OSXMMEXCPT_MASK;
 
 #if BX_SUPPORT_VMX
-  if (bx_cpuid_support_vmx())
+  if (is_cpu_extension_supported(BX_ISA_VMX))
     allowMask |= BX_CR4_VMXE_MASK;
 #endif
 
-  if (bx_cpuid_support_smx())
+  if (is_cpu_extension_supported(BX_ISA_SMX))
     allowMask |= BX_CR4_SMXE_MASK;
 
 #if BX_SUPPORT_X86_64
-  if (bx_cpuid_support_pcid())
+  if (is_cpu_extension_supported(BX_ISA_PCID))
     allowMask |= BX_CR4_PCIDE_MASK;
 
-  if (bx_cpuid_support_fsgsbase())
+  if (is_cpu_extension_supported(BX_ISA_FSGSBASE))
     allowMask |= BX_CR4_FSGSBASE_MASK;
 #endif
 
   /* OSXSAVE */
-  if (bx_cpuid_support_xsave())
+  if (is_cpu_extension_supported(BX_ISA_XSAVE))
     allowMask |= BX_CR4_OSXSAVE_MASK;
 
-  if (bx_cpuid_support_smep())
+  if (is_cpu_extension_supported(BX_ISA_SMEP))
     allowMask |= BX_CR4_SMEP_MASK;
 
-  if (bx_cpuid_support_smap())
+  if (is_cpu_extension_supported(BX_ISA_SMAP))
     allowMask |= BX_CR4_SMAP_MASK;
 #endif
 

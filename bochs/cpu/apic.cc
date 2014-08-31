@@ -340,7 +340,7 @@ Bit32u bx_local_apic_c::read_aligned(bx_phy_address addr)
   BX_DEBUG(("LAPIC read from register 0x%04x", apic_reg));
 
 #if BX_CPU_LEVEL >= 6
-  if (apic_reg >= 0x400 && !cpu->bx_cpuid_support_xapic_extensions())
+  if (apic_reg >= 0x400 && !cpu->is_cpu_extension_supported(BX_ISA_XAPIC_EXT))
     apic_reg = 0xffffffff; // choose some obviosly invalid register if extended xapic is not supported
 #endif
 
@@ -494,7 +494,7 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
   BX_DEBUG(("LAPIC write 0x%08x to register 0x%04x", value, apic_reg));
 
 #if BX_CPU_LEVEL >= 6
-  if (apic_reg >= 0x400 && !cpu->bx_cpuid_support_xapic_extensions())
+  if (apic_reg >= 0x400 && !cpu->is_cpu_extension_supported(BX_ISA_XAPIC_EXT))
     apic_reg = 0xffffffff; // choose some obviosly invalid register if extended xapic is not supported
 #endif
   
@@ -625,7 +625,7 @@ void bx_local_apic_c::set_lvt_entry(unsigned apic_reg, Bit32u value)
   unsigned lvt_entry = (apic_reg - BX_LAPIC_LVT_TIMER) >> 4;
 #if BX_CPU_LEVEL >= 6
   if (apic_reg == BX_LAPIC_LVT_TIMER) {
-    if (! cpu->bx_cpuid_support_tsc_deadline()) {
+    if (! cpu->is_cpu_extension_supported(BX_ISA_TSC_DEADLINE)) {
       value &= ~0x40000; // cannot enable TSC-Deadline when not supported
     }
     else {
@@ -1365,7 +1365,7 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
   }
 
 #if BX_CPU_LEVEL >= 6
-  if (cpu->bx_cpuid_support_xapic_extensions()) {
+  if (cpu->is_cpu_extension_supported(BX_ISA_XAPIC_EXT)) {
     BXRS_HEX_PARAM_SIMPLE(lapic, xapic_ext);
     bx_list_c *IER = new bx_list_c(lapic, "ier");
     for (i=0; i<BX_LAPIC_MAX_INTS; i++) {

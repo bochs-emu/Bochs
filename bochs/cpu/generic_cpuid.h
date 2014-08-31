@@ -36,8 +36,6 @@ public:
   // return CPU name
   virtual const char *get_name(void) const { return "bochs"; }
 
-  virtual Bit64u get_isa_extensions_bitmask(void) const { return isa_extensions_bitmask; }
-  virtual Bit32u get_cpu_extensions_bitmask(void) const { return cpu_extensions_bitmask; }
 #if BX_SUPPORT_VMX
   virtual Bit32u get_vmx_extensions_bitmask(void) const { return vmx_extensions_bitmask; }
 #endif
@@ -50,7 +48,6 @@ public:
   virtual void dump_cpuid(void) const;
 
 private:
-  void init_isa_extensions_bitmask(void);
   void init_cpu_extensions_bitmask(void);
 #if BX_SUPPORT_VMX
   void init_vmx_extensions_bitmask(void);
@@ -59,8 +56,6 @@ private:
   void init_svm_extensions_bitmask(void);
 #endif
 
-  Bit64u isa_extensions_bitmask;
-  Bit32u cpu_extensions_bitmask;
 #if BX_SUPPORT_VMX
   Bit32u vmx_extensions_bitmask;
 #endif

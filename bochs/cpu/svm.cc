@@ -1204,7 +1204,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPGA(bxInstruction_c *i)
 #if BX_SUPPORT_SVM
 void BX_CPU_C::register_svm_state(bx_param_c *parent)
 {
-  if (! bx_cpuid_support_svm()) return;
+  if (! is_cpu_extension_supported(BX_ISA_SVM)) return;
 
   // register SVM state for save/restore param tree
   bx_list_c *svm = new bx_list_c(parent, "SVM");

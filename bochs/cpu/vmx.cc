@@ -2029,7 +2029,7 @@ Bit32u BX_CPU_C::LoadMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
       return msr;
 #endif
 
-    if (bx_cpuid_support_x2apic()) {
+    if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
       if ((index & 0xfffff800) == 0x800) // X2APIC range
         return msr;
     }
@@ -2056,7 +2056,7 @@ Bit32u BX_CPU_C::StoreMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
 
     Bit32u index = GET32L(msr_lo);
 
-    if (bx_cpuid_support_x2apic()) {
+    if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
       if ((index & 0xfffff800) == 0x800) // X2APIC range
         return msr;
     }
@@ -3650,7 +3650,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::GETSEC(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
 void BX_CPU_C::register_vmx_state(bx_param_c *parent)
 {
-  if (! bx_cpuid_support_vmx()) return;
+  if (! is_cpu_extension_supported(BX_ISA_VMX)) return;
 
   // register VMX state for save/restore param tree
   bx_list_c *vmx = new bx_list_c(parent, "VMX");

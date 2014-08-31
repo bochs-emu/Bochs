@@ -149,7 +149,7 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
 
 #if BX_SUPPORT_X86_64
     case VMCS_32BIT_CONTROL_TPR_THRESHOLD:
-      if (bx_cpuid_support_x86_64())
+      if (is_cpu_extension_supported(BX_ISA_LONG_MODE))
         return BX_SUPPORT_VMX_EXTENSION(BX_VMX_TPR_SHADOW);
       else
         return 0;
@@ -235,7 +235,7 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
 #if BX_SUPPORT_X86_64
     case VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR:
     case VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR_HI:
-      if (bx_cpuid_support_x86_64())
+      if (is_cpu_extension_supported(BX_ISA_LONG_MODE))
         return BX_SUPPORT_VMX_EXTENSION(BX_VMX_TPR_SHADOW);
       else
         return 0;
@@ -664,7 +664,7 @@ void BX_CPU_C::init_vmx_capabilities(void)
 
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT)) {
     cap->vmx_ept_vpid_cap_supported_bits = BX_CONST64(0x06114141);
-    if (bx_cpuid_support_1g_paging())
+    if (is_cpu_extension_supported(BX_ISA_1G_PAGES))
       cap->vmx_ept_vpid_cap_supported_bits |= (1 << 17);
     if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_ACCESS_DIRTY))
       cap->vmx_ept_vpid_cap_supported_bits |= (1 << 21);

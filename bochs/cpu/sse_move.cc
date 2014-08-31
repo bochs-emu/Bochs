@@ -222,7 +222,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
     xmm.xmm32u(1) = x87_get_FDS();
   }
 
-  if (bx_cpuid_support_sse()) {
+  if (is_cpu_extension_supported(BX_ISA_SSE)) {
     xmm.xmm32u(2) = BX_MXCSR_REGISTER;
     xmm.xmm32u(3) = MXCSR_MASK;
   }
@@ -251,7 +251,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
   }
 #endif
 
-  if(BX_CPU_THIS_PTR cr4.get_OSFXSR() && bx_cpuid_support_sse())
+  if(BX_CPU_THIS_PTR cr4.get_OSFXSR() && is_cpu_extension_supported(BX_ISA_SSE))
   {
     /* store XMM register file */
     for(index=0; index < 16; index++)
@@ -330,7 +330,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.fds = xmm.xmm16u(2);
   }
 
-  if(/* BX_CPU_THIS_PTR cr4.get_OSFXSR() && */ bx_cpuid_support_sse())
+  if(/* BX_CPU_THIS_PTR cr4.get_OSFXSR() && */ is_cpu_extension_supported(BX_ISA_SSE))
   {
     Bit32u new_mxcsr = xmm.xmm32u(2);
     if(new_mxcsr & ~MXCSR_MASK)
@@ -371,7 +371,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
   /* If the OSFXSR bit in CR4 is not set, the FXRSTOR instruction does
      not restore the states of the XMM and MXCSR registers. */
-  if(BX_CPU_THIS_PTR cr4.get_OSFXSR() && bx_cpuid_support_sse())
+  if(BX_CPU_THIS_PTR cr4.get_OSFXSR() && is_cpu_extension_supported(BX_ISA_SSE))
   {
     /* load XMM register file */
     for(index=0; index < 16; index++)

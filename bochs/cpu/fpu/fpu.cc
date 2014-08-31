@@ -77,7 +77,7 @@ void BX_CPU_C::FPU_check_pending_exceptions(void)
 
 Bit16u BX_CPU_C::x87_get_FCS(void)
 {
-  if (bx_cpuid_support_fcs_fds_deprecation())
+  if (is_cpu_extension_supported(BX_ISA_FCS_FDS_DEPRECATION))
     return 0;
   else
     return BX_CPU_THIS_PTR the_i387.fcs;
@@ -85,7 +85,7 @@ Bit16u BX_CPU_C::x87_get_FCS(void)
 
 Bit16u BX_CPU_C::x87_get_FDS(void)
 {
-  if (bx_cpuid_support_fcs_fds_deprecation())
+  if (is_cpu_extension_supported(BX_ISA_FCS_FDS_DEPRECATION))
     return 0;
   else
     return BX_CPU_THIS_PTR the_i387.fds;

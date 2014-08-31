@@ -810,7 +810,7 @@ typedef struct bx_VMCS
 
 #define VMX_MSR_VMX_BASIC_LO (BX_CPU_THIS_PTR cpuid->get_vmcs_revision_id())
 #define VMX_MSR_VMX_BASIC_HI \
-     (VMX_VMCS_AREA_SIZE | ((!bx_cpuid_support_x86_64()) << 16) | \
+     (VMX_VMCS_AREA_SIZE | ((!is_cpu_extension_supported(BX_ISA_LONG_MODE)) << 16) | \
      (BX_MEMTYPE_WB << 18) | (1<<22)) | ((BX_SUPPORT_VMX >= 2) ? (1<<23) : 0)
 
 #define VMX_MSR_VMX_BASIC \

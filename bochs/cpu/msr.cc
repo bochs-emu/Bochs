@@ -32,7 +32,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
   Bit64u val64 = 0;
 
 #if BX_CPU_LEVEL >= 6
-  if (bx_cpuid_support_x2apic()) {
+  if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
     if (index >= 0x800 && index <= 0xBFF) {
       if (BX_CPU_THIS_PTR msr.apicbase & 0x400)  // X2APIC mode
         return BX_CPU_THIS_PTR lapic.read_x2apic(index, msr);
@@ -46,7 +46,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_SYSENTER_CS:
-      if (! bx_cpuid_support_sep()) {
+      if (! is_cpu_extension_supported(BX_ISA_SYSENTER_SYSEXIT)) {
         BX_ERROR(("RDMSR MSR_SYSENTER_CS: SYSENTER/SYSEXIT feature not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
@@ -54,7 +54,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
     case BX_MSR_SYSENTER_ESP:
-      if (! bx_cpuid_support_sep()) {
+      if (! is_cpu_extension_supported(BX_ISA_SYSENTER_SYSEXIT)) {
         BX_ERROR(("RDMSR MSR_SYSENTER_ESP: SYSENTER/SYSEXIT feature not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
@@ -62,7 +62,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
     case BX_MSR_SYSENTER_EIP:
-      if (! bx_cpuid_support_sep()) {
+      if (! is_cpu_extension_supported(BX_ISA_SYSENTER_SYSEXIT)) {
         BX_ERROR(("RDMSR MSR_SYSENTER_EIP: SYSENTER/SYSEXIT feature not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
@@ -72,7 +72,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_MTRRCAP:   // read only MSR
-      if (! bx_cpuid_support_mtrr()) {
+      if (! is_cpu_extension_supported(BX_ISA_MTRR)) {
         BX_ERROR(("RDMSR MSR_MTRRCAP: MTRR is not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
@@ -95,7 +95,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_MTRRPHYSMASK6:
     case BX_MSR_MTRRPHYSBASE7:
     case BX_MSR_MTRRPHYSMASK7:
-      if (! bx_cpuid_support_mtrr()) {
+      if (! is_cpu_extension_supported(BX_ISA_MTRR)) {
         BX_ERROR(("RDMSR: MTRR is not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
@@ -103,7 +103,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
     case BX_MSR_MTRRFIX64K_00000:
-      if (! bx_cpuid_support_mtrr()) {
+      if (! is_cpu_extension_supported(BX_ISA_MTRR)) {
         BX_ERROR(("RDMSR: MTRR is not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
@@ -111,7 +111,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
     case BX_MSR_MTRRFIX16K_80000:
     case BX_MSR_MTRRFIX16K_A0000:
-      if (! bx_cpuid_support_mtrr()) {
+      if (! is_cpu_extension_supported(BX_ISA_MTRR)) {
         BX_ERROR(("RDMSR: MTRR is not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
@@ -126,7 +126,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_MTRRFIX4K_E8000:
     case BX_MSR_MTRRFIX4K_F0000:
     case BX_MSR_MTRRFIX4K_F8000:
-      if (! bx_cpuid_support_mtrr()) {
+      if (! is_cpu_extension_supported(BX_ISA_MTRR)) {
         BX_ERROR(("RDMSR: MTRR is not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
@@ -134,7 +134,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
     case BX_MSR_MTRR_DEFTYPE:
-      if (! bx_cpuid_support_mtrr()) {
+      if (! is_cpu_extension_supported(BX_ISA_MTRR)) {
         BX_ERROR(("RDMSR MSR_MTRR_DEFTYPE: MTRR is not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
@@ -142,7 +142,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
     case BX_MSR_PAT:
-      if (! bx_cpuid_support_pat()) {
+      if (! is_cpu_extension_supported(BX_ISA_PAT)) {
         BX_ERROR(("RDMSR BX_MSR_PAT: PAT is not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
@@ -163,7 +163,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_TSC_DEADLINE:
-      if (! bx_cpuid_support_tsc_deadline()) {
+      if (! is_cpu_extension_supported(BX_ISA_TSC_DEADLINE)) {
         BX_ERROR(("RDMSR BX_MSR_TSC_DEADLINE: TSC-Deadline not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
@@ -257,7 +257,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
 #if BX_SUPPORT_SVM
     case BX_SVM_HSAVE_PA_MSR:
-      if (! bx_cpuid_support_svm()) {
+      if (! is_cpu_extension_supported(BX_ISA_SVM)) {
         BX_ERROR(("RDMSR SVM_HSAVE_PA_MSR: SVM support not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
@@ -275,7 +275,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
 #if BX_SUPPORT_X86_64
     case BX_MSR_LSTAR:
-      if (! bx_cpuid_support_x86_64()) {
+      if (! is_cpu_extension_supported(BX_ISA_LONG_MODE)) {
         BX_ERROR(("RDMSR MSR_LSTAR: long mode support not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
@@ -283,7 +283,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
     case BX_MSR_CSTAR:
-      if (! bx_cpuid_support_x86_64()) {
+      if (! is_cpu_extension_supported(BX_ISA_LONG_MODE)) {
         BX_ERROR(("RDMSR MSR_CSTAR: long mode support not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
@@ -291,7 +291,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
     case BX_MSR_FMASK:
-      if (! bx_cpuid_support_x86_64()) {
+      if (! is_cpu_extension_supported(BX_ISA_LONG_MODE)) {
         BX_ERROR(("RDMSR MSR_FMASK: long mode support not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
@@ -299,7 +299,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
     case BX_MSR_FSBASE:
-      if (! bx_cpuid_support_x86_64()) {
+      if (! is_cpu_extension_supported(BX_ISA_LONG_MODE)) {
         BX_ERROR(("RDMSR MSR_FSBASE: long mode support not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
@@ -307,7 +307,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
     case BX_MSR_GSBASE:
-      if (! bx_cpuid_support_x86_64()) {
+      if (! is_cpu_extension_supported(BX_ISA_LONG_MODE)) {
         BX_ERROR(("RDMSR MSR_GSBASE: long mode support not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
@@ -315,7 +315,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
     case BX_MSR_KERNELGSBASE:
-      if (! bx_cpuid_support_x86_64()) {
+      if (! is_cpu_extension_supported(BX_ISA_LONG_MODE)) {
         BX_ERROR(("RDMSR MSR_KERNELGSBASE: long mode support not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
@@ -323,7 +323,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
     case BX_MSR_TSC_AUX:
-      if (! bx_cpuid_support_rdtscp()) {
+      if (! is_cpu_extension_supported(BX_ISA_RDTSCP)) {
         BX_ERROR(("RDMSR MSR_TSC_AUX: RTDSCP feature not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
@@ -481,7 +481,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
   BX_DEBUG(("WRMSR: write %08x:%08x to MSR %x", val32_hi, val32_lo, index));
 
 #if BX_CPU_LEVEL >= 6
-  if (bx_cpuid_support_x2apic()) {
+  if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
     if (index >= 0x800 && index <= 0xBFF) {
       if (BX_CPU_THIS_PTR msr.apicbase & 0x400)  // X2APIC mode
         return BX_CPU_THIS_PTR lapic.write_x2apic(index, val32_hi, val32_lo);
@@ -495,7 +495,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_SYSENTER_CS:
-      if (! bx_cpuid_support_sep()) {
+      if (! is_cpu_extension_supported(BX_ISA_SYSENTER_SYSEXIT)) {
         BX_ERROR(("WRMSR MSR_SYSENTER_CS: SYSENTER/SYSEXIT feature not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
@@ -503,7 +503,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_SYSENTER_ESP:
-      if (! bx_cpuid_support_sep()) {
+      if (! is_cpu_extension_supported(BX_ISA_SYSENTER_SYSEXIT)) {
         BX_ERROR(("WRMSR MSR_SYSENTER_ESP: SYSENTER/SYSEXIT feature not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
@@ -517,7 +517,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_SYSENTER_EIP:
-      if (! bx_cpuid_support_sep()) {
+      if (! is_cpu_extension_supported(BX_ISA_SYSENTER_SYSEXIT)) {
         BX_ERROR(("WRMSR MSR_SYSENTER_EIP: SYSENTER/SYSEXIT feature not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
@@ -533,7 +533,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_MTRRCAP:
-      if (! bx_cpuid_support_mtrr()) {
+      if (! is_cpu_extension_supported(BX_ISA_MTRR)) {
         BX_ERROR(("WRMSR MSR_MTRRCAP: MTRR is not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
@@ -548,7 +548,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_MTRRPHYSBASE5:
     case BX_MSR_MTRRPHYSBASE6:
     case BX_MSR_MTRRPHYSBASE7:
-      if (! bx_cpuid_support_mtrr()) {
+      if (! is_cpu_extension_supported(BX_ISA_MTRR)) {
         BX_ERROR(("WRMSR: MTRR is not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
@@ -571,7 +571,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_MTRRPHYSMASK5:
     case BX_MSR_MTRRPHYSMASK6:
     case BX_MSR_MTRRPHYSMASK7:
-      if (! bx_cpuid_support_mtrr()) {
+      if (! is_cpu_extension_supported(BX_ISA_MTRR)) {
         BX_ERROR(("WRMSR: MTRR is not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
@@ -588,7 +588,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_MTRRFIX64K_00000:
-      if (! bx_cpuid_support_mtrr()) {
+      if (! is_cpu_extension_supported(BX_ISA_MTRR)) {
         BX_ERROR(("WRMSR: MTRR is not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
@@ -601,7 +601,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
     case BX_MSR_MTRRFIX16K_80000:
     case BX_MSR_MTRRFIX16K_A0000:
-      if (! bx_cpuid_support_mtrr()) {
+      if (! is_cpu_extension_supported(BX_ISA_MTRR)) {
         BX_ERROR(("WRMSR: MTRR is not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
@@ -620,7 +620,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_MTRRFIX4K_E8000:
     case BX_MSR_MTRRFIX4K_F0000:
     case BX_MSR_MTRRFIX4K_F8000:
-      if (! bx_cpuid_support_mtrr()) {
+      if (! is_cpu_extension_supported(BX_ISA_MTRR)) {
         BX_ERROR(("WRMSR: MTRR is not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
@@ -632,7 +632,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_MTRR_DEFTYPE:
-      if (! bx_cpuid_support_mtrr()) {
+      if (! is_cpu_extension_supported(BX_ISA_MTRR)) {
         BX_ERROR(("WRMSR MSR_MTRR_DEFTYPE: MTRR is not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
@@ -648,7 +648,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_PAT:
-      if (! bx_cpuid_support_pat()) {
+      if (! is_cpu_extension_supported(BX_ISA_PAT)) {
         BX_ERROR(("WRMSR BX_MSR_PAT: PAT is not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
@@ -674,7 +674,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_TSC_DEADLINE:
-      if (! bx_cpuid_support_tsc_deadline()) {
+      if (! is_cpu_extension_supported(BX_ISA_TSC_DEADLINE)) {
         BX_ERROR(("WRMSR BX_MSR_TSC_DEADLINE: TSC-Deadline not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
@@ -722,7 +722,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
 #if BX_SUPPORT_SVM
     case BX_SVM_HSAVE_PA_MSR:
-      if (! bx_cpuid_support_svm()) {
+      if (! is_cpu_extension_supported(BX_ISA_SVM)) {
         BX_ERROR(("WRMSR SVM_HSAVE_PA_MSR: SVM support not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
@@ -747,7 +747,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
 #if BX_SUPPORT_X86_64
     case BX_MSR_LSTAR:
-      if (! bx_cpuid_support_x86_64()) {
+      if (! is_cpu_extension_supported(BX_ISA_LONG_MODE)) {
         BX_ERROR(("WRMSR MSR_LSTAR: long mode support not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
@@ -759,7 +759,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_CSTAR:
-      if (! bx_cpuid_support_x86_64()) {
+      if (! is_cpu_extension_supported(BX_ISA_LONG_MODE)) {
         BX_ERROR(("WRMSR MSR_CSTAR: long mode support not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
@@ -771,7 +771,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_FMASK:
-      if (! bx_cpuid_support_x86_64()) {
+      if (! is_cpu_extension_supported(BX_ISA_LONG_MODE)) {
         BX_ERROR(("WRMSR MSR_FMASK: long mode support not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
@@ -779,7 +779,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_FSBASE:
-      if (! bx_cpuid_support_x86_64()) {
+      if (! is_cpu_extension_supported(BX_ISA_LONG_MODE)) {
         BX_ERROR(("WRMSR MSR_FSBASE: long mode support not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
@@ -791,7 +791,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_GSBASE:
-      if (! bx_cpuid_support_x86_64()) {
+      if (! is_cpu_extension_supported(BX_ISA_LONG_MODE)) {
         BX_ERROR(("WRMSR MSR_GSBASE: long mode support not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
@@ -803,7 +803,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_KERNELGSBASE:
-      if (! bx_cpuid_support_x86_64()) {
+      if (! is_cpu_extension_supported(BX_ISA_LONG_MODE)) {
         BX_ERROR(("WRMSR MSR_KERNELGSBASE: long mode support not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
@@ -815,7 +815,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_TSC_AUX:
-      if (! bx_cpuid_support_rdtscp()) {
+      if (! is_cpu_extension_supported(BX_ISA_RDTSCP)) {
         BX_ERROR(("WRMSR MSR_TSC_AUX: RTDSCP feature not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
@@ -872,7 +872,7 @@ bx_bool BX_CPU_C::relocate_apic(Bit64u val_64)
    * [M:63]  Reserved
    */
 
-#define BX_MSR_APICBASE_RESERVED_BITS (0x2ff | (bx_cpuid_support_x2apic() ? 0 : 0x400))
+#define BX_MSR_APICBASE_RESERVED_BITS (0x2ff | (is_cpu_extension_supported(BX_ISA_X2APIC) ? 0 : 0x400))
 
   if (BX_CPU_THIS_PTR msr.apicbase & 0x800) {
     Bit32u val32_hi = GET32H(val_64), val32_lo = GET32L(val_64);
@@ -887,7 +887,7 @@ bx_bool BX_CPU_C::relocate_apic(Bit64u val_64)
     }
 
 #if BX_CPU_LEVEL >= 6
-    if (bx_cpuid_support_x2apic()) {
+    if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
       unsigned apic_state = (BX_CPU_THIS_PTR msr.apicbase >> 10) & 3;
       unsigned new_state = (val32_lo >> 10) & 3;
 

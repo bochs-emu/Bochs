@@ -727,7 +727,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
     if (leaf == BX_LEVEL_PTE) break;
 
     if (curr_entry & 0x80) {
-      if (leaf > (BX_LEVEL_PDE + !!bx_cpuid_support_1g_paging())) {
+      if (leaf > (BX_LEVEL_PDE + !!is_cpu_extension_supported(BX_ISA_1G_PAGES))) {
         BX_DEBUG(("PAE %s: PS bit set !", bx_paging_level[leaf]));
         page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, user, rw);
       }
@@ -1310,7 +1310,7 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
     if (leaf == BX_LEVEL_PTE) break;
 
     if (curr_entry & 0x80) {
-      if (leaf > (BX_LEVEL_PDE + !!bx_cpuid_support_1g_paging())) {
+      if (leaf > (BX_LEVEL_PDE + !!is_cpu_extension_supported(BX_ISA_1G_PAGES))) {
         BX_DEBUG(("Nested PAE Walk %s: PS bit set !", bx_paging_level[leaf]));
         nested_page_fault(ERROR_RESERVED | ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
       }
@@ -1587,7 +1587,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
     if (leaf == BX_LEVEL_PTE) break;
 
     if (curr_entry & 0x80) {
-      if (leaf > (BX_LEVEL_PDE + !!bx_cpuid_support_1g_paging())) {
+      if (leaf > (BX_LEVEL_PDE + !!is_cpu_extension_supported(BX_ISA_1G_PAGES))) {
         BX_DEBUG(("EPT %s: PS bit set !", bx_paging_level[leaf]));
         vmexit_reason = VMX_VMEXIT_EPT_MISCONFIGURATION;
         break;
@@ -1756,7 +1756,7 @@ bx_bool BX_CPU_C::dbg_translate_guest_physical(bx_phy_address guest_paddr, bx_ph
     if (level == BX_LEVEL_PTE) break;
 
     if (pte & 0x80) {
-       if (level > (BX_LEVEL_PDE + !!bx_cpuid_support_1g_paging()))
+       if (level > (BX_LEVEL_PDE + !!is_cpu_extension_supported(BX_ISA_1G_PAGES)))
          return 0;
 
         pt_address &= BX_CONST64(0x000fffffffffe000);
@@ -1839,7 +1839,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx
           pt_address &= BX_CONST64(0x000fffffffffe000);
           if (pt_address & offset_mask)
             goto page_fault;
-          if (bx_cpuid_support_1g_paging() && level == BX_LEVEL_PDPTE) break;
+          if (is_cpu_extension_supported(BX_ISA_1G_PAGES) && level == BX_LEVEL_PDPTE) break;
           if (level == BX_LEVEL_PDE) break;
           goto page_fault;
         }
