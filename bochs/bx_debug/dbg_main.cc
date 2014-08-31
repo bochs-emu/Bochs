@@ -835,9 +835,7 @@ void bx_dbg_print_mxcsr_state(void)
 void bx_dbg_print_sse_state(void)
 {
 #if BX_CPU_LEVEL >= 6
-  Bit64u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get64();
-
-  if ((isa_extensions_bitmask & BX_ISA_SSE) != 0) {
+  if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_SSE)) {
     bx_dbg_print_mxcsr_state();
 
     char param_name[20];
@@ -860,15 +858,14 @@ void bx_dbg_print_sse_state(void)
 void bx_dbg_print_avx_state(unsigned vlen)
 {
 #if BX_SUPPORT_AVX
-  Bit64u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get64();
   char param_name[20];
 
-  if ((isa_extensions_bitmask & BX_ISA_AVX) != 0) {
+  if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_AVX)) {
     bx_dbg_print_mxcsr_state();
 
     unsigned num_regs = 16;
 #if BX_SUPPORT_EVEX
-    if ((isa_extensions_bitmask & BX_ISA_AVX512) != 0)
+    if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_AVX512))
       num_regs = BX_XMM_REGISTERS;
     else
       vlen = BX_VL256;
@@ -894,7 +891,7 @@ void bx_dbg_print_avx_state(unsigned vlen)
   }
 
 #if BX_SUPPORT_EVEX
-  if ((isa_extensions_bitmask & BX_ISA_AVX512) != 0) {
+  if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_AVX512)) {
     for(unsigned i=0;i<8;i++) {
       sprintf(param_name, "OPMASK.k%d", i);
       Bit64u opmask = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
@@ -907,9 +904,7 @@ void bx_dbg_print_avx_state(unsigned vlen)
 void bx_dbg_print_mmx_state(void)
 {
 #if BX_CPU_LEVEL >= 5
-  Bit64u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get64();
-
-  if ((isa_extensions_bitmask & BX_ISA_MMX) != 0) {
+  if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_MMX)) {
     char param_name[20];
     for(unsigned i=0;i<8;i++) {
       sprintf(param_name, "FPU.st%d.fraction", i);
