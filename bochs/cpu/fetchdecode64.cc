@@ -2164,7 +2164,7 @@ modrm_done:
   if (lock) { // lock prefix invalid opcode
     // lock prefix not allowed or destination operand is not memory
     if (!mod_mem || !(attr & BxLockable)) {
-      if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_ALT_MOV_CR8) && 
+      if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_ALT_MOV_CR8) && 
          (ia_opcode == BX_IA_MOV_CR0Rq || ia_opcode == BX_IA_MOV_RqCR0)) {
         nnn = 8; // extend CR0 -> CR8
       }

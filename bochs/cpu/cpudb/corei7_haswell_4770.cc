@@ -43,7 +43,69 @@ corei7_haswell_4770_t::corei7_haswell_4770_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 
   BX_INFO(("WARNING: RDRAND would not produce true random numbers !"));
 
-  BX_INFO(("NOTE: HLE/RTM is not supported by Bochs yet !"));
+  static Bit8u supported_extensions[] = {
+      BX_ISA_X87,
+      BX_ISA_486,
+      BX_ISA_PENTIUM,
+      BX_ISA_P6,
+      BX_ISA_MMX,
+      BX_ISA_SYSENTER_SYSEXIT,
+      BX_ISA_CLFLUSH,
+      BX_ISA_DEBUG_EXTENSIONS,
+      BX_ISA_VME,
+      BX_ISA_PSE,
+      BX_ISA_PAE,
+      BX_ISA_PGE,
+#if BX_PHY_ADDRESS_LONG
+      BX_ISA_PSE36,
+#endif
+      BX_ISA_MTRR,
+      BX_ISA_PAT,
+      BX_ISA_XAPIC,
+      BX_ISA_X2APIC,
+      BX_ISA_LONG_MODE,
+      BX_ISA_LM_LAHF_SAHF,
+      BX_ISA_CMPXCHG16B,
+      BX_ISA_NX,
+      BX_ISA_1G_PAGES,
+      BX_ISA_PCID,
+      BX_ISA_TSC_DEADLINE,
+      BX_ISA_SSE,
+      BX_ISA_SSE2,
+      BX_ISA_SSE3,
+      BX_ISA_SSSE3,
+      BX_ISA_SSE4_1,
+      BX_ISA_SSE4_2,
+      BX_ISA_POPCNT,
+#if BX_SUPPORT_MONITOR_MWAIT
+      BX_ISA_MONITOR_MWAIT,
+#endif
+#if BX_SUPPORT_VMX >= 2
+      BX_ISA_VMX,
+#endif
+   /* BX_ISA_SMX, */
+      BX_ISA_RDTSCP,
+      BX_ISA_XSAVE,
+      BX_ISA_XSAVEOPT,
+      BX_ISA_AES_PCLMULQDQ,
+      BX_ISA_MOVBE,
+      BX_ISA_AVX,
+      BX_ISA_AVX_F16C,
+      BX_ISA_AVX2,
+      BX_ISA_AVX_FMA,
+      BX_ISA_LZCNT,
+      BX_ISA_BMI1,
+      BX_ISA_BMI2,
+      BX_ISA_FSGSBASE,
+      BX_ISA_INVPCID,
+      BX_ISA_SMEP,
+      BX_ISA_RDRAND,
+      BX_ISA_TSC_DEADLINE,
+      BX_ISA_FCS_FDS_DEPRECATION,
+      BX_ISA_EXTENSION_LAST
+  };
+
+  register_cpu_extensions(supported_extensions);
 }
 
 void corei7_haswell_4770_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -120,69 +182,6 @@ void corei7_haswell_4770_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, 
     get_std_cpuid_xsave_leaf(subfunction, leaf);
     return;
   }
-}
-
-Bit64u corei7_haswell_4770_t::get_isa_extensions_bitmask(void) const
-{
-  return BX_ISA_X87 |
-         BX_ISA_486 |
-         BX_ISA_PENTIUM |
-         BX_ISA_P6 |
-         BX_ISA_MMX |
-         BX_ISA_SYSENTER_SYSEXIT |
-         BX_ISA_CLFLUSH |
-         BX_ISA_SSE |
-         BX_ISA_SSE2 |
-         BX_ISA_SSE3 |
-         BX_ISA_SSSE3 |
-         BX_ISA_SSE4_1 |
-         BX_ISA_SSE4_2 |
-         BX_ISA_POPCNT |
-#if BX_SUPPORT_MONITOR_MWAIT
-         BX_ISA_MONITOR_MWAIT |
-#endif
-#if BX_SUPPORT_VMX >= 2
-         BX_ISA_VMX |
-#endif
-      /* BX_ISA_SMX | */
-         BX_ISA_RDTSCP |
-         BX_ISA_XSAVE |
-         BX_ISA_XSAVEOPT |
-         BX_ISA_AES_PCLMULQDQ |
-         BX_ISA_MOVBE |
-         BX_ISA_FSGSBASE |
-         BX_ISA_INVPCID |
-         BX_ISA_AVX |
-         BX_ISA_AVX_F16C |
-         BX_ISA_AVX2 |
-         BX_ISA_AVX_FMA |
-         BX_ISA_LZCNT |
-         BX_ISA_BMI1 |
-         BX_ISA_BMI2 |
-         BX_ISA_RDRAND |
-         BX_ISA_CMPXCHG16B |
-         BX_ISA_LM_LAHF_SAHF;
-}
-
-Bit32u corei7_haswell_4770_t::get_cpu_extensions_bitmask(void) const
-{
-  return BX_CPU_DEBUG_EXTENSIONS |
-         BX_CPU_VME |
-         BX_CPU_PSE |
-         BX_CPU_PAE |
-         BX_CPU_PGE |
-         BX_CPU_PSE36 |
-         BX_CPU_MTRR |
-         BX_CPU_PAT |
-         BX_CPU_XAPIC |
-         BX_CPU_X2APIC |
-         BX_CPU_LONG_MODE |
-         BX_CPU_NX |
-         BX_CPU_1G_PAGES |
-         BX_CPU_PCID |
-         BX_CPU_SMEP |
-         BX_CPU_TSC_DEADLINE |
-         BX_CPU_FCS_FDS_DEPRECATION;
 }
 
 #if BX_SUPPORT_VMX >= 2

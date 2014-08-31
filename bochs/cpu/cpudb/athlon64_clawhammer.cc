@@ -35,6 +35,37 @@ athlon64_clawhammer_t::athlon64_clawhammer_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
     BX_PANIC(("You must enable x86-64 for Athlon64 configuration"));
 
   BX_INFO(("WARNING: 3DNow! is not implemented yet !"));
+
+  static Bit8u supported_extensions[] = {
+      BX_ISA_X87,
+      BX_ISA_486,
+      BX_ISA_PENTIUM,
+      BX_ISA_MMX,
+      BX_ISA_3DNOW,
+      BX_ISA_SYSCALL_SYSRET_LEGACY,
+      BX_ISA_SYSENTER_SYSEXIT,
+      BX_ISA_P6,
+      BX_ISA_SSE,
+      BX_ISA_SSE2,
+      BX_ISA_CLFLUSH,
+      BX_ISA_DEBUG_EXTENSIONS,
+      BX_ISA_VME,
+      BX_ISA_PSE,
+      BX_ISA_PAE,
+      BX_ISA_PGE,
+#if BX_PHY_ADDRESS_LONG
+      BX_ISA_PSE36,
+#endif
+      BX_ISA_MTRR,
+      BX_ISA_PAT,
+      BX_ISA_XAPIC,
+      BX_ISA_LONG_MODE,
+      BX_ISA_LM_LAHF_SAHF,
+      BX_ISA_NX,
+      BX_ISA_EXTENSION_LAST
+  };
+
+  register_cpu_extensions(supported_extensions);
 }
 
 void athlon64_clawhammer_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -78,37 +109,6 @@ void athlon64_clawhammer_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, 
     get_reserved_leaf(leaf);
     return;
   }
-}
-
-Bit64u athlon64_clawhammer_t::get_isa_extensions_bitmask(void) const
-{
-  return BX_ISA_X87 |
-         BX_ISA_486 |
-         BX_ISA_PENTIUM |
-         BX_ISA_P6 |
-         BX_ISA_MMX |
-         BX_ISA_3DNOW |
-         BX_ISA_SYSCALL_SYSRET_LEGACY |
-         BX_ISA_SYSENTER_SYSEXIT |
-         BX_ISA_CLFLUSH |
-         BX_ISA_SSE |
-         BX_ISA_SSE2 |
-         BX_ISA_LM_LAHF_SAHF;
-}
-
-Bit32u athlon64_clawhammer_t::get_cpu_extensions_bitmask(void) const
-{
-  return BX_CPU_DEBUG_EXTENSIONS |
-         BX_CPU_VME |
-         BX_CPU_PSE |
-         BX_CPU_PAE |
-         BX_CPU_PGE |
-         BX_CPU_PSE36 |
-         BX_CPU_MTRR |
-         BX_CPU_PAT |
-         BX_CPU_XAPIC |
-         BX_CPU_LONG_MODE |
-         BX_CPU_NX;
 }
 
 // leaf 0x00000000 //

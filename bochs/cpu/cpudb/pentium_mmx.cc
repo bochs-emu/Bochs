@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011 Stanislav Shwartsman
+//   Copyright (c) 2011-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -33,6 +33,22 @@ pentium_mmx_t::pentium_mmx_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
   if (BX_CPU_LEVEL < 5)
     BX_PANIC(("Pentium MMX should be compiled with BX_CPU_LEVEL=5 or higher"));
+
+  static Bit8u supported_extensions[] = {
+      BX_ISA_X87,
+      BX_ISA_486,
+      BX_ISA_PENTIUM,
+      BX_ISA_MMX,
+      BX_ISA_DEBUG_EXTENSIONS,
+      BX_ISA_VME,
+#if BX_PHY_ADDRESS_LONG
+      BX_ISA_PSE36,
+#endif
+      BX_ISA_PSE,
+      BX_ISA_EXTENSION_LAST
+  };
+
+  register_cpu_extensions(supported_extensions);
 }
 
 void pentium_mmx_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -46,24 +62,6 @@ void pentium_mmx_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fu
     get_std_cpuid_leaf_1(leaf);
     return;
   }
-}
-
-Bit64u pentium_mmx_t::get_isa_extensions_bitmask(void) const
-{
-  return BX_ISA_X87 |
-         BX_ISA_486 |
-         BX_ISA_PENTIUM |
-         BX_ISA_MMX;
-}
-
-Bit32u pentium_mmx_t::get_cpu_extensions_bitmask(void) const
-{
-  return BX_CPU_DEBUG_EXTENSIONS |
-         BX_CPU_VME |
-#if BX_PHY_ADDRESS_LONG
-         BX_CPU_PSE36 |
-#endif
-         BX_CPU_PSE;
 }
 
 // leaf 0x00000000 //

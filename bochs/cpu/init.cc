@@ -45,8 +45,12 @@ BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
   sprintf(logname, "cpu%x", bx_cpuid);
   put(logname, name);
 
-  isa_extensions_bitmask = BX_SUPPORT_FPU ? BX_ISA_X87 : 0;
-  cpu_extensions_bitmask = 0;
+  for (unsigned n=0;n<BX_ISA_EXTENSIONS_ARRAY_SIZE;n++)
+    ia_extensions_bitmask[n] = 0;
+
+  if (BX_SUPPORT_FPU)
+    ia_extensions_bitmask[0] = (1 << BX_ISA_X87);
+
 #if BX_SUPPORT_VMX
   vmx_extensions_bitmask = 0;
 #endif
@@ -94,8 +98,8 @@ void BX_CPU_C::initialize(void)
   if (! BX_CPU_THIS_PTR cpuid)
     BX_PANIC(("Failed to create CPUID module !"));
 
-  BX_CPU_THIS_PTR isa_extensions_bitmask = cpuid->get_isa_extensions_bitmask();
-  BX_CPU_THIS_PTR cpu_extensions_bitmask = cpuid->get_cpu_extensions_bitmask();
+  cpuid->get_cpu_extensions(BX_CPU_THIS_PTR ia_extensions_bitmask);
+
 #if BX_SUPPORT_VMX
   BX_CPU_THIS_PTR vmx_extensions_bitmask = cpuid->get_vmx_extensions_bitmask();
 #endif
@@ -129,21 +133,25 @@ void BX_CPU_C::initialize(void)
 // save/restore functionality
 void BX_CPU_C::register_state(void)
 {
+  char name[128]; // to fit long enough name
   unsigned n;
-  char name[10];
 
   sprintf(name, "cpu%d", BX_CPU_ID);
 
   bx_list_c *cpu = new bx_list_c(SIM->get_bochs_root(), name, name);
 
-  BXRS_HEX_PARAM_SIMPLE(cpu, isa_extensions_bitmask);
-  BXRS_HEX_PARAM_SIMPLE(cpu, cpu_extensions_bitmask);
+  for (n=0;n<BX_ISA_EXTENSIONS_ARRAY_SIZE;n++) {
+    sprintf(name, "ia_extensions_bitmask_%d", n);
+    new bx_shadow_num_c(cpu, name, &ia_extensions_bitmask[n], BASE_HEX);
+  }
+
 #if BX_SUPPORT_VMX
   BXRS_HEX_PARAM_SIMPLE(cpu, vmx_extensions_bitmask);
 #endif
 #if BX_SUPPORT_SVM
   BXRS_HEX_PARAM_SIMPLE(cpu, svm_extensions_bitmask);
 #endif
+
   BXRS_DEC_PARAM_SIMPLE(cpu, cpu_mode);
   BXRS_HEX_PARAM_SIMPLE(cpu, activity_state);
   BXRS_HEX_PARAM_SIMPLE(cpu, inhibit_mask);
@@ -151,6 +159,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_SIMPLE(cpu, debug_trap);
   BXRS_DEC_PARAM_SIMPLE(cpu, icount);
   BXRS_DEC_PARAM_SIMPLE(cpu, icount_last_sync);
+
 #if BX_SUPPORT_X86_64
   BXRS_HEX_PARAM_SIMPLE(cpu, RAX);
   BXRS_HEX_PARAM_SIMPLE(cpu, RBX);
@@ -182,6 +191,7 @@ void BX_CPU_C::register_state(void)
 #endif
   BXRS_PARAM_SPECIAL32(cpu, EFLAGS,
          param_save_handler, param_restore_handler);
+
 #if BX_CPU_LEVEL >= 3
   BXRS_HEX_PARAM_FIELD(cpu, DR0, dr[0]);
   BXRS_HEX_PARAM_FIELD(cpu, DR1, dr[1]);
@@ -190,23 +200,27 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(cpu, DR6, dr6.val32);
   BXRS_HEX_PARAM_FIELD(cpu, DR7, dr7.val32);
 #endif
+
   BXRS_HEX_PARAM_FIELD(cpu, CR0, cr0.val32);
   BXRS_HEX_PARAM_FIELD(cpu, CR2, cr2);
   BXRS_HEX_PARAM_FIELD(cpu, CR3, cr3);
 #if BX_CPU_LEVEL >= 5
   BXRS_HEX_PARAM_FIELD(cpu, CR4, cr4.val32);
 #endif
+
 #if BX_CPU_LEVEL >= 6
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVE)) {
     BXRS_HEX_PARAM_FIELD(cpu, XCR0, xcr0.val32);
   }
 #endif
+
 #if BX_CPU_LEVEL >= 5
   BXRS_HEX_PARAM_FIELD(cpu, tsc_last_reset, tsc_last_reset);
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
   BXRS_HEX_PARAM_FIELD(cpu, tsc_offset, tsc_offset);
 #endif
 #endif
+
   for(n=0; n<6; n++) {
     bx_segment_reg_t *segment = &BX_CPU_THIS_PTR sregs[n];
     bx_list_c *sreg = new bx_list_c(cpu, strseg(segment));
@@ -280,7 +294,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(MSR, EFER, efer.val32);
   BXRS_HEX_PARAM_FIELD(MSR,  star, msr.star);
 #if BX_SUPPORT_X86_64
-  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_LONG_MODE)) {
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LONG_MODE)) {
     BXRS_HEX_PARAM_FIELD(MSR, lstar, msr.lstar);
     BXRS_HEX_PARAM_FIELD(MSR, cstar, msr.cstar);
     BXRS_HEX_PARAM_FIELD(MSR, fmask, msr.fmask);
@@ -760,21 +774,21 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR msr.apicbase |= 0x900;
   BX_CPU_THIS_PTR lapic.set_base(BX_CPU_THIS_PTR msr.apicbase);
 #if BX_CPU_LEVEL >= 6
-  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_XAPIC_EXT))
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XAPIC_EXT))
     BX_CPU_THIS_PTR lapic.enable_xapic_extensions();
 #endif
 #endif
 
   BX_CPU_THIS_PTR efer.set32(0);
   BX_CPU_THIS_PTR efer_suppmask = 0;
-  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_NX))
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_NX))
     BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_NXE_MASK;
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SYSCALL_SYSRET_LEGACY))
     BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_SCE_MASK;
 #if BX_SUPPORT_X86_64
-  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_LONG_MODE)) {
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LONG_MODE)) {
     BX_CPU_THIS_PTR efer_suppmask |= (BX_EFER_SCE_MASK | BX_EFER_LME_MASK | BX_EFER_LMA_MASK);
-    if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_FFXSR))
+    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FFXSR))
       BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_FFXSR_MASK;
     if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM))
       BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_SVME_MASK;
@@ -783,7 +797,7 @@ void BX_CPU_C::reset(unsigned source)
 
   BX_CPU_THIS_PTR msr.star = 0;
 #if BX_SUPPORT_X86_64
-  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_LONG_MODE)) {
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LONG_MODE)) {
     BX_CPU_THIS_PTR msr.lstar = 0;
     BX_CPU_THIS_PTR msr.cstar = 0;
     BX_CPU_THIS_PTR msr.fmask = 0x00020200;
@@ -889,7 +903,7 @@ void BX_CPU_C::reset(unsigned source)
     BX_CPU_THIS_PTR mxcsr_mask = 0x0000ffbf;
     if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE2))
       BX_CPU_THIS_PTR mxcsr_mask |= MXCSR_DAZ;
-    if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_MISALIGNED_SSE))
+    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MISALIGNED_SSE))
       BX_CPU_THIS_PTR mxcsr_mask |= MXCSR_MISALIGNED_EXCEPTION_MASK;
   }
 #endif

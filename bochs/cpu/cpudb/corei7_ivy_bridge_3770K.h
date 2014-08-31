@@ -36,8 +36,6 @@ public:
   // return CPU name
   virtual const char *get_name(void) const { return "corei7_ivy_bridge_3770k"; }
 
-  virtual Bit64u get_isa_extensions_bitmask(void) const;
-  virtual Bit32u get_cpu_extensions_bitmask(void) const;
 #if BX_SUPPORT_VMX >= 2
   virtual Bit32u get_vmx_extensions_bitmask(void) const;
 #endif

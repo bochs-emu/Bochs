@@ -29,6 +29,35 @@
 
 #if BX_CPU_LEVEL >= 6
 
+p4_willamette_t::p4_willamette_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
+{
+  static Bit8u supported_extensions[] = {
+      BX_ISA_X87,
+      BX_ISA_486,
+      BX_ISA_PENTIUM,
+      BX_ISA_MMX,
+      BX_ISA_P6,
+      BX_ISA_SYSENTER_SYSEXIT,
+      BX_ISA_SSE,
+      BX_ISA_SSE2,
+      BX_ISA_CLFLUSH,
+      BX_ISA_DEBUG_EXTENSIONS,
+      BX_ISA_VME,
+      BX_ISA_PSE,
+      BX_ISA_PAE,
+      BX_ISA_PGE,
+#if BX_PHY_ADDRESS_LONG
+      BX_ISA_PSE36,
+#endif
+      BX_ISA_MTRR,
+      BX_ISA_PAT,
+      BX_ISA_XAPIC,
+      BX_ISA_EXTENSION_LAST
+  };
+
+  register_cpu_extensions(supported_extensions);
+}
+
 void p4_willamette_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   // CPUID function 0x80000002-0x80000004 - Processor Name String Identifier
@@ -57,34 +86,6 @@ void p4_willamette_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_
     get_std_cpuid_leaf_2(leaf);
     return;
   }
-}
-
-Bit64u p4_willamette_t::get_isa_extensions_bitmask(void) const
-{
-  return BX_ISA_X87 |
-         BX_ISA_486 |
-         BX_ISA_PENTIUM |
-         BX_ISA_P6 |
-         BX_ISA_MMX |
-         BX_ISA_SYSENTER_SYSEXIT |
-         BX_ISA_CLFLUSH |
-         BX_ISA_SSE |
-         BX_ISA_SSE2;
-}
-
-Bit32u p4_willamette_t::get_cpu_extensions_bitmask(void) const
-{
-  return BX_CPU_DEBUG_EXTENSIONS |
-         BX_CPU_VME |
-         BX_CPU_PSE |
-         BX_CPU_PAE |
-         BX_CPU_PGE |
-#if BX_PHY_ADDRESS_LONG
-         BX_CPU_PSE36 |
-#endif
-         BX_CPU_MTRR |
-         BX_CPU_PAT |
-         BX_CPU_XAPIC;
 }
 
 // leaf 0x00000000 //

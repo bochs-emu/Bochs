@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011 Stanislav Shwartsman
+//   Copyright (c) 2011-2014 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -30,14 +30,11 @@
 
 class p2_klamath_t : public bx_cpuid_t {
 public:
-  p2_klamath_t(BX_CPU_C *cpu): bx_cpuid_t(cpu) {}
+  p2_klamath_t(BX_CPU_C *cpu);
   virtual ~p2_klamath_t() {}
 
   // return CPU name
   virtual const char *get_name(void) const { return "p2_klamath"; }
-
-  virtual Bit64u get_isa_extensions_bitmask(void) const;
-  virtual Bit32u get_cpu_extensions_bitmask(void) const;
 
   virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 

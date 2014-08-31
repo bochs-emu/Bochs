@@ -1717,7 +1717,7 @@ modrm_done:
     // lock prefix not allowed or destination operand is not memory
     if (!mod_mem || !(attr & BxLockable)) {
 #if BX_CPU_LEVEL >= 6
-      if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_ALT_MOV_CR8) && 
+      if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_ALT_MOV_CR8) && 
          (ia_opcode == BX_IA_MOV_CR0Rd || ia_opcode == BX_IA_MOV_RdCR0)) {
         nnn = 8; // extend CR0 -> CR8
       }
@@ -2222,8 +2222,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BxError(bxInstruction_c *i)
 #endif
   }
   else {
-    BX_DEBUG(("%s: instruction not supported - signalling #UD (features bitmask: 0x%08x)",
-      get_bx_opcode_name(ia_opcode), BX_CPU_THIS_PTR isa_extensions_bitmask));
+    BX_DEBUG(("%s: instruction not supported - signalling #UD", get_bx_opcode_name(ia_opcode)));
+    for (unsigned n=0; n<BX_ISA_EXTENSIONS_ARRAY_SIZE; n++)
+      BX_DEBUG(("ia_extensions_bitmask[%d]: %08x", n, BX_CPU_THIS_PTR ia_extensions_bitmask[n]));
   }
 
   exception(BX_UD_EXCEPTION, 0);
@@ -2245,25 +2246,43 @@ const char *get_bx_opcode_name(Bit16u ia_opcode)
 
 void BX_CPU_C::init_FetchDecodeTables(void)
 {
-  static Bit64u BxOpcodeFeatures[BX_IA_LAST] =
+  static Bit8u BxOpcodeFeatures[BX_IA_LAST] =
   {
 #define bx_define_opcode(a, b, c, d, s1, s2, s3, s4, e) d,
 #include "ia_opcodes.h"
   };
 #undef  bx_define_opcode
 
-  Bit64u features = BX_CPU_THIS_PTR isa_extensions_bitmask;
 #if BX_CPU_LEVEL > 3
-  if (! features)
+  if (! BX_CPU_THIS_PTR ia_extensions_bitmask[0])
     BX_PANIC(("init_FetchDecodeTables: CPU features bitmask is empty !"));
 #endif
 
   if (BX_IA_LAST > 0xfff)
     BX_PANIC(("init_FetchDecodeTables: too many opcodes defined !"));
-  
+
   for (unsigned n=0; n < BX_IA_LAST; n++) {
-    Bit64u ia_opcode_features = BxOpcodeFeatures[n];
-    if (ia_opcode_features && (ia_opcode_features & features) == 0) {
+
+    switch(n) {
+      // special case: these opcodes also supported if 3DNOW! Extensions are supported
+      case BX_IA_PSHUFW_PqQqIb:
+      case BX_IA_PINSRW_PqEwIb:
+      case BX_IA_PEXTRW_GdNqIb:
+      case BX_IA_PMOVMSKB_GdNq:
+      case BX_IA_PMINUB_PqQq:
+      case BX_IA_PMAXUB_PqQq:
+      case BX_IA_PMULHUW_PqQq:
+      case BX_IA_MOVNTQ_MqPq:
+      case BX_IA_PMINSW_PqQq:
+      case BX_IA_PSADBW_PqQq:
+      case BX_IA_MASKMOVQ_PqNq:
+        if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_3DNOW)) continue;
+
+      default: break;
+    }
+
+    unsigned ia_opcode_feature = BxOpcodeFeatures[n];
+    if (! BX_CPUID_SUPPORT_ISA_EXTENSION(ia_opcode_feature)) {
       BxOpcodesTable[n].execute1 = &BX_CPU_C::BxError;
       BxOpcodesTable[n].execute2 = &BX_CPU_C::BxError;
       // won't allow this new #UD opcode to check prepare_SSE and similar

@@ -36,8 +36,6 @@ public:
   // return CPU name
   virtual const char *get_name(void) const { return "phenom_8650_toliman"; }
 
-  virtual Bit64u get_isa_extensions_bitmask(void) const;
-  virtual Bit32u get_cpu_extensions_bitmask(void) const;
 #if BX_SUPPORT_SVM
   virtual Bit32u get_svm_extensions_bitmask(void) const;
 #endif

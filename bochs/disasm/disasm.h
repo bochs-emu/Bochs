@@ -39,60 +39,85 @@
 }
 
 /* Instruction set attributes (duplicated in cpu.h) */
-#define IA_X87              (BX_CONST64(1) << 0)   /* FPU (X87) instruction */
-#define IA_486              (BX_CONST64(1) << 1)   /* 486 new instruction */
-#define IA_PENTIUM          (BX_CONST64(1) << 2)   /* Pentium new instruction */
-#define IA_P6               (BX_CONST64(1) << 3)   /* P6 new instruction */
-#define IA_MMX              (BX_CONST64(1) << 4)   /* MMX instruction */
-#define IA_3DNOW            (BX_CONST64(1) << 5)   /* 3DNow! instruction (AMD) */
-#define IA_SYSCALL_SYSRET   (BX_CONST64(1) << 6)   /* SYSCALL/SYSRET in legacy mode (AMD) */
-#define IA_SYSENTER_SYSEXIT (BX_CONST64(1) << 7)   /* SYSENTER/SYSEXIT instruction */
-#define IA_CLFLUSH          (BX_CONST64(1) << 8)   /* CLFLUSH instruction */
-#define IA_SSE              (BX_CONST64(1) << 9)   /* SSE  instruction */
-#define IA_SSE2             (BX_CONST64(1) << 10)  /* SSE2 instruction */
-#define IA_SSE3             (BX_CONST64(1) << 11)  /* SSE3 instruction */
-#define IA_SSSE3            (BX_CONST64(1) << 12)  /* SSSE3 instruction */
-#define IA_SSE4_1           (BX_CONST64(1) << 13)  /* SSE4_1 instruction */
-#define IA_SSE4_2           (BX_CONST64(1) << 14)  /* SSE4_2 instruction */
-#define IA_POPCNT           (BX_CONST64(1) << 15)  /* POPCNT instruction */
-#define IA_MONITOR_MWAIT    (BX_CONST64(1) << 16)  /* MONITOR/MWAIT instruction */
-#define IA_VMX              (BX_CONST64(1) << 17)  /* VMX instruction */
-#define IA_SMX              (BX_CONST64(1) << 18)  /* SMX instruction */
-#define IA_LM_LAHF_SAHF     (BX_CONST64(1) << 19)  /* Long Mode LAHF/SAHF instruction */
-#define IA_CMPXCHG16B       (BX_CONST64(1) << 20)  /* CMPXCHG16B instruction */
-#define IA_RDTSCP           (BX_CONST64(1) << 21)  /* RDTSCP instruction */
-#define IA_XSAVE            (BX_CONST64(1) << 22)  /* XSAVE/XRSTOR extensions instruction */
-#define IA_XSAVEOPT         (BX_CONST64(1) << 23)  /* XSAVEOPT instruction */
-#define IA_AES_PCLMULQDQ    (BX_CONST64(1) << 24)  /* AES+PCLMULQDQ instruction */
-#define IA_MOVBE            (BX_CONST64(1) << 25)  /* MOVBE Intel Atom(R) instruction */
-#define IA_FSGSBASE         (BX_CONST64(1) << 26)  /* FS/GS BASE access instruction */
-#define IA_INVPCID          (BX_CONST64(1) << 27)  /* INVPCID instruction */
-#define IA_AVX              (BX_CONST64(1) << 28)  /* AVX instruction */
-#define IA_AVX2             (BX_CONST64(1) << 29)  /* AVX2 instruction */
-#define IA_AVX_F16C         (BX_CONST64(1) << 30)  /* AVX F16 convert instruction */
-#define IA_AVX_FMA          (BX_CONST64(1) << 31)  /* AVX FMA instruction */
-#define IA_SSE4A            (BX_CONST64(1) << 32)  /* SSE4A instruction (AMD) */
-#define IA_LZCNT            (BX_CONST64(1) << 33)  /* LZCNT instruction */
-#define IA_BMI1             (BX_CONST64(1) << 34)  /* BMI1 instruction */
-#define IA_BMI2             (BX_CONST64(1) << 35)  /* BMI2 instruction */
-#define IA_FMA4             (BX_CONST64(1) << 36)  /* FMA4 instruction (AMD) */
-#define IA_XOP              (BX_CONST64(1) << 37)  /* XOP instruction (AMD) */
-#define IA_TBM              (BX_CONST64(1) << 38)  /* TBM instruction (AMD) */
-#define IA_SVM              (BX_CONST64(1) << 39)  /* SVM instruction (AMD) */
-#define IA_RDRAND           (BX_CONST64(1) << 40)  /* RDRAND instruction */
-#define IA_ADX              (BX_CONST64(1) << 41)  /* ADCX/ADOX instruction */
-#define IA_SMAP             (BX_CONST64(1) << 42)  /* SMAP support */
-#define IA_RDSEED           (BX_CONST64(1) << 43)  /* RDSEED instruction */
-#define IA_SHA              (BX_CONST64(1) << 44)  /* SHA instruction */
-#define IA_AVX512           (BX_CONST64(1) << 45)  /* AVX-512 instruction */
-#define IA_AVX512_CD        (BX_CONST64(1) << 46)  /* AVX-512 Conflict Detection instruction */
-#define IA_AVX512_PF        (BX_CONST64(1) << 47)  /* AVX-512 Sparse Prefetch instruction */
-#define IA_AVX512_ER        (BX_CONST64(1) << 48)  /* AVX-512 Exponential/Reciprocal instruction */
-#define IA_AVX512_DQ        (BX_CONST64(1) << 49)  /* AVX-512DQ instruction */
-#define IA_AVX512_BW        (BX_CONST64(1) << 50)  /* AVX-512 Byte/Word instruction */
-#define IA_CLFLUSHOPT       (BX_CONST64(1) << 51)  /* CLFLUSHOPT instruction */
-#define IA_XSAVEC           (BX_CONST64(1) << 52)  /* XSAVEC instruction */
-#define IA_XSAVES           (BX_CONST64(1) << 53)  /* XSAVES instruction */
+enum {
+  IA_X87 = 0,                 /* FPU (X87) instruction */
+  IA_486,                     /* 486 new instruction */
+  IA_PENTIUM,                 /* Pentium new instruction */
+  IA_P6,                      /* P6 new instruction */
+  IA_MMX,                     /* MMX instruction */
+  IA_3DNOW,                   /* 3DNow! instruction (AMD) */
+  IA_DEBUG_EXTENSIONS,        /* Debug Extensions support */
+  IA_VME,                     /* VME support */
+  IA_PSE,                     /* PSE support */
+  IA_PAE,                     /* PAE support */
+  IA_PGE,                     /* Global Pages support */
+  IA_PSE36,                   /* PSE-36 support */
+  IA_MTRR,                    /* MTRR support */
+  IA_PAT,                     /* PAT support */
+  IA_SYSCALL_SYSRET_LEGACY,   /* SYSCALL/SYSRET in legacy mode (AMD) */
+  IA_SYSENTER_SYSEXIT,        /* SYSENTER/SYSEXIT instruction */
+  IA_CLFLUSH,                 /* CLFLUSH instruction */
+  IA_CLFLUSHOPT,              /* CLFLUSHOPT instruction */
+  IA_SSE,                     /* SSE  instruction */
+  IA_SSE2,                    /* SSE2 instruction */
+  IA_SSE3,                    /* SSE3 instruction */
+  IA_SSSE3,                   /* SSSE3 instruction */
+  IA_SSE4_1,                  /* SSE4_1 instruction */
+  IA_SSE4_2,                  /* SSE4_2 instruction */
+  IA_POPCNT,                  /* POPCNT instruction */
+  IA_MONITOR_MWAIT,           /* MONITOR/MWAIT instruction */
+  IA_VMX,                     /* VMX instruction */
+  IA_SMX,                     /* SMX instruction */
+  IA_LONG_MODE,               /* Long Mode (x86-64) support */
+  IA_LM_LAHF_SAHF,            /* Long Mode LAHF/SAHF instruction */
+  IA_NX,                      /* No-Execute support */
+  IA_1G_PAGES,                /* 1Gb pages support */
+  IA_CMPXCHG16B,              /* CMPXCHG16B instruction */
+  IA_RDTSCP,                  /* RDTSCP instruction */
+  IA_FFXSR,                   /* EFER.FFXSR support */
+  IA_XSAVE,                   /* XSAVE/XRSTOR extensions instruction */
+  IA_XSAVEOPT,                /* XSAVEOPT instruction */
+  IA_XSAVEC,                  /* XSAVEC instruction */
+  IA_XSAVES,                  /* XSAVES instruction */
+  IA_AES_PCLMULQDQ,           /* AES+PCLMULQDQ instruction */
+  IA_MOVBE,                   /* MOVBE instruction */
+  IA_FSGSBASE,                /* FS/GS BASE access instruction */
+  IA_INVPCID,                 /* INVPCID instruction */
+  IA_AVX,                     /* AVX instruction */
+  IA_AVX2,                    /* AVX2 instruction */
+  IA_AVX_F16C,                /* AVX F16 convert instruction */
+  IA_AVX_FMA,                 /* AVX FMA instruction */
+  IA_ALT_MOV_CR8,             /* LOCK CR0 access CR8 (AMD) */
+  IA_SSE4A,                   /* SSE4A instruction (AMD) */
+  IA_MISALIGNED_SSE,          /* Misaligned SSE (AMD) */
+  IA_LZCNT,                   /* LZCNT instruction */
+  IA_BMI1,                    /* BMI1 instruction */
+  IA_BMI2,                    /* BMI2 instruction */
+  IA_FMA4,                    /* FMA4 instruction (AMD) */
+  IA_XOP,                     /* XOP instruction (AMD) */
+  IA_TBM,                     /* TBM instruction (AMD) */
+  IA_SVM,                     /* SVM instruction (AMD) */
+  IA_RDRAND,                  /* RDRAND instruction */
+  IA_ADX,                     /* ADCX/ADOX instruction */
+  IA_SMAP,                    /* SMAP support */
+  IA_RDSEED,                  /* RDSEED instruction */
+  IA_SHA,                     /* SHA instruction */
+  IA_AVX512,                  /* AVX-512 instruction */
+  IA_AVX512_CD,               /* AVX-512 Conflict Detection instruction */
+  IA_AVX512_PF,               /* AVX-512 Sparse Prefetch instruction */
+  IA_AVX512_ER,               /* AVX-512 Exponential/Reciprocal instruction */
+  IA_AVX512_DQ,               /* AVX-512DQ instruction */
+  IA_AVX512_BW,               /* AVX-512 Byte/Word instruction */
+  IA_AVX512_VL,               /* AVX-512 Vector Length extensions */
+  IA_XAPIC,                   /* XAPIC support */
+  IA_X2APIC,                  /* X2APIC support */
+  IA_XAPIC_EXT,               /* XAPIC Extensions support */
+  IA_PCID,                    /* PCID pages support */
+  IA_SMEP,                    /* SMEP support */
+  IA_TSC_DEADLINE,            /* TSC-Deadline */
+  IA_FCS_FDS_DEPRECATION,     /* FCS/FDS Deprecation */
+  IA_EXTENSION_LAST
+};                            
 
 /* general purpose bit register */
 enum {
@@ -132,7 +157,7 @@ struct BxDisasmOpcodeInfo_t
     BxDisasmPtr_t Operand2;
     BxDisasmPtr_t Operand3;
     BxDisasmPtr_t Operand4;
-    Bit64u Feature;
+    Bit8u Feature;
 };
 
 struct BxDisasmOpcodeTable_t

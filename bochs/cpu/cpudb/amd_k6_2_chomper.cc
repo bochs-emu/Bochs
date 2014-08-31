@@ -35,6 +35,24 @@ amd_k6_2_chomper_t::amd_k6_2_chomper_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
     BX_PANIC(("AMD K6-2 configuration should be compiled with BX_CPU_LEVEL=5 or higher"));
 
   BX_INFO(("WARNING: 3DNow! is not implemented yet !"));
+
+  static Bit8u supported_extensions[] = {
+      BX_ISA_X87,
+      BX_ISA_486,
+      BX_ISA_PENTIUM,
+      BX_ISA_MMX,
+      BX_ISA_SYSCALL_SYSRET_LEGACY,
+      BX_ISA_3DNOW,
+      BX_ISA_DEBUG_EXTENSIONS,
+      BX_ISA_VME,
+#if BX_PHY_ADDRESS_LONG
+      BX_ISA_PSE36,
+#endif
+      BX_ISA_PSE,
+      BX_ISA_EXTENSION_LAST
+  };
+
+  register_cpu_extensions(supported_extensions);
 }
 
 void amd_k6_2_chomper_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -69,26 +87,6 @@ void amd_k6_2_chomper_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
     get_reserved_leaf(leaf);
     return;
   }
-}
-
-Bit64u amd_k6_2_chomper_t::get_isa_extensions_bitmask(void) const
-{
-  return BX_ISA_X87 |
-         BX_ISA_486 |
-         BX_ISA_PENTIUM |
-         BX_ISA_MMX |
-         BX_ISA_SYSCALL_SYSRET_LEGACY |
-         BX_ISA_3DNOW;
-}
-
-Bit32u amd_k6_2_chomper_t::get_cpu_extensions_bitmask(void) const
-{
-  return BX_CPU_DEBUG_EXTENSIONS |
-         BX_CPU_VME |
-#if BX_PHY_ADDRESS_LONG
-         BX_CPU_PSE36 |
-#endif
-         BX_CPU_PSE;
 }
 
 // leaf 0x00000000 //

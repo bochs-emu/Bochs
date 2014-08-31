@@ -938,8 +938,11 @@ public: // for now...
   bx_cpuid_t *cpuid;
 #endif
 
-  Bit64u isa_extensions_bitmask;
-  Bit32u cpu_extensions_bitmask;
+  Bit32u ia_extensions_bitmask[BX_ISA_EXTENSIONS_ARRAY_SIZE];
+
+#define BX_CPUID_SUPPORT_ISA_EXTENSION(feature) \
+   (BX_CPU_THIS_PTR ia_extensions_bitmask[feature/32] & (1<<(feature%32)))
+
 #if BX_SUPPORT_VMX
   Bit32u vmx_extensions_bitmask;
 #endif
@@ -947,17 +950,11 @@ public: // for now...
   Bit32u svm_extensions_bitmask;
 #endif
 
-#define BX_CPUID_SUPPORT_ISA_EXTENSION(feature) \
-   (BX_CPU_THIS_PTR isa_extensions_bitmask & (feature))
+#define BX_SUPPORT_VMX_EXTENSION(feature_mask) \
+   (BX_CPU_THIS_PTR vmx_extensions_bitmask & (feature_mask))
 
-#define BX_CPUID_SUPPORT_CPU_EXTENSION(feature) \
-   (BX_CPU_THIS_PTR cpu_extensions_bitmask & (feature))
-
-#define BX_SUPPORT_VMX_EXTENSION(feature) \
-   (BX_CPU_THIS_PTR vmx_extensions_bitmask & (feature))
-
-#define BX_SUPPORT_SVM_EXTENSION(feature) \
-   (BX_CPU_THIS_PTR svm_extensions_bitmask & (feature))
+#define BX_SUPPORT_SVM_EXTENSION(feature_mask) \
+   (BX_CPU_THIS_PTR svm_extensions_bitmask & (feature_mask))
 
   // General register set
   // rax: accumulator
@@ -5026,7 +5023,6 @@ public: // for now...
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_pse(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_pat(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_mtrr(void);
-  BX_SMF BX_CPP_INLINE int bx_cpuid_support_mmx(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_sse(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_sep(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_fxsave_fxrstor(void);
@@ -5620,33 +5616,33 @@ BX_CPP_INLINE bx_bool BX_CPU_C::alignment_check(void)
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_svm(void)
 {
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_SVM) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_smx(void)
 {
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_SMX) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SMX) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_vmx(void)
 {
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_VMX) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_VMX) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_xsave(void)
 {
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_XSAVE) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVE) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_x2apic(void)
 {
-  return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_X2APIC) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_X2APIC) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pcid(void)
 {
 #if BX_SUPPORT_X86_64
-  return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_PCID) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PCID) != 0;
 #else
   return 0;
 #endif
@@ -5655,7 +5651,7 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pcid(void)
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_fsgsbase(void)
 {
 #if BX_SUPPORT_X86_64
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_FSGSBASE) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FSGSBASE) != 0;
 #else
   return 0;
 #endif
@@ -5663,83 +5659,78 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_fsgsbase(void)
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_fcs_fds_deprecation(void)
 {
-  return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_FCS_FDS_DEPRECATION) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FCS_FDS_DEPRECATION) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_smap(void)
 {
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_SMAP) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SMAP) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_smep(void)
 {
-  return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_SMEP) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SMEP) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_vme(void)
 {
-  return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_VME) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_VME) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_tsc(void)
 {
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_PENTIUM) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PENTIUM) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_debug_extensions(void)
 {
-  return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_DEBUG_EXTENSIONS) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_DEBUG_EXTENSIONS) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pse(void)
 {
-  return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_PSE) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PSE) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pat(void)
 {
-  return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_PAT) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PAT) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_mtrr(void)
 {
-  return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_MTRR) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MTRR) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pae(void)
 {
-  return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_PAE) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PAE) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pge(void)
 {
-  return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_PGE) != 0;
-}
-
-BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_mmx(void)
-{
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_MMX) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PGE) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_sse(void)
 {
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_SSE) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_sep(void)
 {
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_SYSENTER_SYSEXIT) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SYSENTER_SYSEXIT) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_fxsave_fxrstor(void)
 {
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_SSE) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_x86_64(void)
 {
 #if BX_SUPPORT_X86_64
-  return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_LONG_MODE) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LONG_MODE) != 0;
 #else
   return 0;
 #endif
@@ -5748,7 +5739,7 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_x86_64(void)
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_1g_paging(void)
 {
 #if BX_SUPPORT_X86_64
-  return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_1G_PAGES) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_1G_PAGES) != 0;
 #else
   return 0;
 #endif
@@ -5757,7 +5748,7 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_1g_paging(void)
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_rdtscp(void)
 {
 #if BX_SUPPORT_X86_64
-  return (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_ISA_RDTSCP) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_RDTSCP) != 0;
 #else
   return 0;
 #endif
@@ -5765,12 +5756,12 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_rdtscp(void)
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_tsc_deadline(void)
 {
-  return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_TSC_DEADLINE) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_TSC_DEADLINE) != 0;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_xapic_extensions(void)
 {
-  return (BX_CPU_THIS_PTR cpu_extensions_bitmask & BX_CPU_XAPIC_EXT) != 0;
+  return BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XAPIC_EXT) != 0;
 }
 
 IMPLEMENT_EFLAG_ACCESSOR   (ID,  21)

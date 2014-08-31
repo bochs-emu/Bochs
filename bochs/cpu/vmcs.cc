@@ -483,7 +483,7 @@ void BX_CPU_C::init_vmx_capabilities(void)
 #if BX_SUPPORT_X86_64
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_TPR_SHADOW)) {
     cap->vmx_proc_vmexec_ctrl_supported_bits |= VMX_VM_EXEC_CTRL2_TPR_SHADOW;
-    if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_LONG_MODE))
+    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LONG_MODE))
       cap->vmx_proc_vmexec_ctrl_supported_bits |=
           VMX_VM_EXEC_CTRL2_CR8_WRITE_VMEXIT | VMX_VM_EXEC_CTRL2_CR8_READ_VMEXIT;
   }
@@ -594,7 +594,7 @@ void BX_CPU_C::init_vmx_capabilities(void)
       VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT | VMX_VMEXIT_CTRL1_SAVE_DBG_CTRLS;
 
 #if BX_SUPPORT_X86_64
-  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_LONG_MODE))
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LONG_MODE))
     cap->vmx_vmexit_ctrl_supported_bits |= VMX_VMEXIT_CTRL1_HOST_ADDR_SPACE_SIZE;
 #endif
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_PERF_GLOBAL_CTRL))
@@ -630,7 +630,7 @@ void BX_CPU_C::init_vmx_capabilities(void)
                                          VMX_VMENTRY_CTRL1_DEACTIVATE_DUAL_MONITOR_TREATMENT;
 
 #if BX_SUPPORT_X86_64
-  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_LONG_MODE))
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LONG_MODE))
     cap->vmx_vmentry_ctrl_supported_bits |= VMX_VMENTRY_CTRL1_X86_64_GUEST;
 #endif
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_PERF_GLOBAL_CTRL))
