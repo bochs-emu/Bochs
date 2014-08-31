@@ -1042,8 +1042,7 @@ void bx_dbg_info_control_regs_command(void)
     (cr4 & (1<<1))  ? "PVI" : "pvi",
     (cr4 & (1<<0))  ? "VME" : "vme");
 #if BX_SUPPORT_X86_64
-  Bit64u cpu_extensions_bitmask = SIM->get_param_num("cpu_extensions_bitmask", dbg_cpu_list)->get();
-  if ((cpu_extensions_bitmask & BX_CPU_LONG_MODE) != 0) {
+  if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_LONG_MODE)) {
     dbg_printf("CR8: 0x%x\n", BX_CPU(dbg_cpu)->get_cr8());
   }
 #endif
@@ -1056,8 +1055,7 @@ void bx_dbg_info_control_regs_command(void)
     (efer & (1<<0))  ? "SCE" : "sce");
 #endif
 #if BX_CPU_LEVEL >= 6
-  Bit64u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get64();
-  if ((isa_extensions_bitmask & BX_ISA_XSAVE) != 0) {
+  if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_XSAVE)) {
     Bit32u xcr0 = SIM->get_param_num("XCR0", dbg_cpu_list)->get();
     dbg_printf("XCR0=0x%08x: %s %s %s %s %s %s %s %s\n", xcr0,
       (xcr0 & (1<<7)) ? "HI_ZMM" : "hi_zmm",

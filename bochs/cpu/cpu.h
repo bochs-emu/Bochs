@@ -5013,6 +5013,11 @@ public: // for now...
   BX_SMF BX_CPP_INLINE Bit8u get_apic_id(void) { return BX_CPU_THIS_PTR bx_cpuid; }
 #endif
 
+  BX_CPP_INLINE bx_bool is_cpu_extension_supported(unsigned extension) const {
+    assert(extension < BX_ISA_EXTENSION_LAST);
+    return ia_extensions_bitmask[extension / 32] & (1 << (extension % 32));
+  }
+
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_x86_64(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_debug_extensions(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_1g_paging(void);

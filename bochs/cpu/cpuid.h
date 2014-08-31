@@ -131,6 +131,7 @@ public:
   }
 
   BX_CPP_INLINE bx_bool is_cpu_extension_supported(unsigned extension) const {
+    assert(extension < BX_ISA_EXTENSION_LAST);
     return ia_extensions_bitmask[extension / 32] & (1 << (extension % 32));
   }
 
@@ -166,30 +167,30 @@ protected:
   Bit32u ia_extensions_bitmask[BX_ISA_EXTENSIONS_ARRAY_SIZE];
 
   BX_CPP_INLINE void enable_cpu_extension(unsigned extension) {
-     assert(extension < BX_ISA_EXTENSION_LAST);
-     ia_extensions_bitmask[extension / 32] |=  (1 << (extension % 32));
+    assert(extension < BX_ISA_EXTENSION_LAST);
+    ia_extensions_bitmask[extension / 32] |=  (1 << (extension % 32));
   }
 
   BX_CPP_INLINE void disable_cpu_extension(unsigned extension) {
-     assert(extension < BX_ISA_EXTENSION_LAST);
-     ia_extensions_bitmask[extension / 32] &= ~(1 << (extension % 32));
+    assert(extension < BX_ISA_EXTENSION_LAST);
+    ia_extensions_bitmask[extension / 32] &= ~(1 << (extension % 32));
   }
 
   BX_CPP_INLINE void register_cpu_extensions(Bit8u *extensions)
   {
-     while(1) {
-       unsigned cpu_extension = *extensions++;
-       if (cpu_extension == BX_ISA_EXTENSION_LAST) break;
-       enable_cpu_extension(cpu_extension);
-     }
+    while(1) {
+      unsigned cpu_extension = *extensions++;
+      if (cpu_extension == BX_ISA_EXTENSION_LAST) break;
+      enable_cpu_extension(cpu_extension);
+    }
   }
 
   BX_CPP_INLINE void get_reserved_leaf(cpuid_function_t *leaf) const
   {
-     leaf->eax = 0;
-     leaf->ebx = 0;
-     leaf->ecx = 0;
-     leaf->edx = 0;
+    leaf->eax = 0;
+    leaf->ebx = 0;
+    leaf->ecx = 0;
+    leaf->edx = 0;
   }
 
   BX_CPP_INLINE void get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32u function, cpuid_function_t *leaf) const
