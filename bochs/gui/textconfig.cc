@@ -752,11 +752,12 @@ ask:
     return event;
   case BX_ASYNC_EVT_REFRESH:
   case BX_ASYNC_EVT_DBG_MSG:
+  case BX_ASYNC_EVT_LOG_MSG:
     // The text mode interface does not use these events, so just ignore
     // them.
     return event;
   default:
-    fprintf(stderr, "Control panel: notify callback called with event type %04x\n", event->type);
+    fprintf(stderr, "textconfig: notify callback called with event type %04x\n", event->type);
     return event;
   }
   assert(0); // switch statement should return

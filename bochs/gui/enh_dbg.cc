@@ -3521,12 +3521,14 @@ void ReadSettings()
           DumpInAsciiMode = atoi(val);
         } else if (!strcmp(param, "isLittleEndian")) {
           isLittleEndian = !strcmp(val, "TRUE");
+        } else if (!strcmp(param, "DefaultAsmLines")) {
+          DefaultAsmLines = atoi(val);
         } else if (!strcmp(param, "DumpWSIndex")) {
           DumpWSIndex = atoi(val);
           DumpAlign = (1 << DumpWSIndex);
           PrevDAD = 0;
         } else {
-          // TODO: add more settings
+          // TODO: add platform-specific settings
           fprintf(stderr, "bx_enh_dbg.ini: unknown option '%s'\n", line);
         }
       }
@@ -3555,8 +3557,9 @@ void WriteSettings()
   fprintf(fd, "UprCase = %d\n", UprCase);
   fprintf(fd, "DumpInAsciiMode = %d\n", DumpInAsciiMode);
   fprintf(fd, "isLittleEndian = %s\n", isLittleEndian ? "TRUE" : "FALSE");
+  fprintf(fd, "DefaultAsmLines = %d\n", DefaultAsmLines);
   fprintf(fd, "DumpWSIndex = %d\n", DumpWSIndex);
-  // TODO: add more settings
+  // TODO: add platform-specific settings
   fclose(fd);
 }
 
@@ -3574,6 +3577,7 @@ void InitDebugDialog()
 void CloseDebugDialog()
 {
   WriteSettings();
+  SIM->set_log_viewer(0);
   SIM->set_notify_callback(old_callback, old_callback_arg);
   CloseDialog();
 }
