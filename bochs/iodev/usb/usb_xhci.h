@@ -2,8 +2,8 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010       Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2011-2012  The Bochs Project
+//  Copyright (C) 2010-2014  Benjamin D Lunt (fys [at] fysnet [dot] net)
+//                2011-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -44,9 +44,9 @@
 #define IO_SPACE_SIZE     8192
 
 #define OPS_REGS_OFFSET   0x20
-// Change this to 0.95, 0.96, or 1.00, according to the desired effects (LINK chain bit, etc)
-#define VERSION_MAJOR        0
-#define VERSION_MINOR     0x96
+// Change this to 0.95, 0.96, 1.00, 1.10, according to the desired effects (LINK chain bit, etc)
+#define VERSION_MAJOR     0x01
+#define VERSION_MINOR     0x10
 
 // HCSPARAMS1
 #define INTERRUPTERS         8
@@ -63,18 +63,31 @@
 #define U1_DEVICE_EXIT_LAT   0
 #define U2_DEVICE_EXIT_LAT   0
 
-// HCCPARAMS
+// HCCPARAMS1
 #define ADDR_CAP_64              1
 #define BW_NEGOTIATION           1
 #define CONTEXT_SIZE            32  // Size of the CONTEXT blocks (32 or 64)
 #define PORT_POWER_CTRL          1
 #define PORT_INDICATORS          0
 #define LIGHT_HC_RESET           0  // Do we support the Light HC Reset function
-#define FORCED_STOPPED           0  // version 0.96 and below only (MUST BE 1 in v1.00+)
+#define LAT_TOL_MSGING_CAP       0  // Latency Tolerance Messaging Capability (v1.10)
+#define NO_SSD_SUPPORT           0  // No Secondary SID Support (v1.10)
+#define FORCED_STOPPED           1  // version 0.96 and below only (MUST BE 1 in v1.00+)
 #define SEC_DOMAIN_BAND          1  // version 0.96 and below only (MUST BE 1 in v1.00+)
+#define STOPPED_EDTLA            0
+#define CONT_FRAME_ID            0
 #define MAX_PSA_SIZE          0x04
 #define EXT_CAPS_OFFSET      0x500
   #define EXT_CAPS_SIZE         48
+
+// HCCPARAMS2 (v1.10+)
+#define U3_ENTRY_CAP             0
+#define CONFIG_EP_CMND_CAP       0
+#define FORCE_SAVE_CONTEXT_CAP   0
+#define COMPLNC_TRANS_CAP        0
+#define LARGE_ESIT_PAYLOAD_CAP   0
+#define CONFIG_INFO_CAP          0
+
 
 #define XHCI_PAGE_SIZE           1  // Page size operational register value
 
@@ -83,7 +96,9 @@
 #define DOORBELL_OFFSET   0x800
 /************************************************************************************************/
 
-#if (((VERSION_MAJOR == 0) && ((VERSION_MINOR != 0x95) && (VERSION_MINOR != 0x96))) || ((VERSION_MAJOR == 1) && (VERSION_MINOR != 0x00)))
+#if ((VERSION_MAJOR > 1) ||                                                              \
+    ((VERSION_MAJOR == 0) && ((VERSION_MINOR != 0x95) && (VERSION_MINOR != 0x96))) ||    \
+    ((VERSION_MAJOR == 1) && ((VERSION_MINOR != 0x00) && (VERSION_MINOR != 0x10))))
 #  error "Unknown Controller Version number specified."
 #endif
 
@@ -105,6 +120,14 @@
 
 #if ((SEC_DOMAIN_BAND == 0) && (VERSION_MAJOR > 0))
 #  error "SEC_DOMAIN_BAND must be 1 in version 1.0 and above"
+#endif
+
+#if ((LAT_TOL_MSGING_CAP == 1) && ((VERSION_MAJOR < 1) || (VERSION_MINOR < 0)))
+#  error "LAT_TOL_MSGING_CAP must be used with in version 1.1 and above"
+#endif
+
+#if ((NO_SSD_SUPPORT == 1) && ((VERSION_MAJOR < 1) || (VERSION_MINOR < 0)))
+#  error "NO_SSD_SUPPORT must be used with in version 1.1 and above"
 #endif
 
 // Each controller supports its own number of ports.  We must adhere to that for now.
@@ -289,14 +312,21 @@ typedef struct {
     Bit32u HcSParams1;
     Bit32u HcSParams2;
     Bit32u HcSParams3;
-    Bit32u HcCParams;
+    Bit32u HcCParams1;
+#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 1))
+    Bit32u HcCParams2;
+#endif
     Bit32u DBOFF;
     Bit32u RTSOFF;
   } cap_regs;
 
   struct XHCI_OP_REGS {
     struct {
-      Bit32u  RsvdP1;            // 20 bit reserved and preserved      = 0x000000       RW
+      Bit32u  RsvdP1;            // 18/20 bit reserved and preserved   = 0x000000       RW
+#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
+      bx_bool cme;               //  1 bit Max Exit Latecy to Large    = 0b             RW
+      bx_bool spe;               //  1 bit Generate Short Packet Comp  = 0b             RW
+#endif
       bx_bool eu3s;              //  1 bit Enable U3 MFINDEX Stop      = 0b             RW
       bx_bool ewe;               //  1 bit Enable Wrap Event           = 0b             RW
       bx_bool crs;               //  1 bit Controller Restore State    = 0b             RW
@@ -358,7 +388,11 @@ typedef struct {
       Bit8u   RsvdZ;             //  6 bit reserved and zero'd         = 000000b        RW
     } HcDCBAAP;
     struct {
-      Bit32u  RsvdP;             // 24 bit reserved and preserved      = 0x000000       RW
+      Bit32u  RsvdP;             // 22/24 bit reserved and preserved   = 0x000000       RW
+#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
+      bx_bool u3e;               //  1 bit U3 Entry Enable             = 0              RW
+      bx_bool cie;               //  1 bit Config Info Enable          = 0              RW
+#endif
       Bit8u   MaxSlotsEn;        //  8 bit Max Device Slots Enabled    = 0x00           RW
     } HcConfig;
   } op_regs;

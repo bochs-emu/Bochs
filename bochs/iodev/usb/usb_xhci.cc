@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010-2011  Benjamin D Lunt (fys [at] fysnet [dot] net)
+//  Copyright (C) 2010-2014  Benjamin D Lunt (fys [at] fysnet [dot] net)
 //                2011-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
@@ -248,7 +248,7 @@ void bx_usb_xhci_c::reset(unsigned type)
       { 0x51, 0x00 },                 //  Pointer to next item (0x00 = no more)
       { 0x52, 0x03 }, { 0x53, 0x48 }, //  Capabilities:  version = 1.2, self powered, PME# asserted from D0 & D3
       { 0x54, 0x08 }, { 0x55, 0x00 }, //        Status:  Bit 3 = no soft reset
-      { 0x60, 0x30 },                 //
+      { 0x60, 0x30 },                 //  Supports USB Spec version 3.0
       { 0x61, 0x20 }                  //
     };
 
@@ -269,30 +269,46 @@ void bx_usb_xhci_c::reset_hc()
   BX_XHCI_THIS hub.cap_regs.HcCapLength  = (VERSION_MAJOR << 24) | (VERSION_MINOR << 16) | OPS_REGS_OFFSET;
   BX_XHCI_THIS hub.cap_regs.HcSParams1   = (USB_XHCI_PORTS << 24) | (INTERRUPTERS << 8) | MAX_SLOTS;
   BX_XHCI_THIS hub.cap_regs.HcSParams2   = 
-    // MAX_SCRATCH_PADS 4:0 in bits 31:27 (v1.00) and bits 9:5 in bits 21:25 (v1.01)
+    // MAX_SCRATCH_PADS 4:0 in bits 31:27 (v1.00) and bits 9:5 in bits 21:25 (v1.01+)
     ((MAX_SCRATCH_PADS >> 5) << 21) | ((MAX_SCRATCH_PADS & 0x1F) << 27) |
     ((SCATCH_PAD_RESTORE == 1) << 26) | (MAX_SEG_TBL_SZ_EXP << 4) | ISO_SECH_THRESHOLD;
   BX_XHCI_THIS hub.cap_regs.HcSParams3   = (U2_DEVICE_EXIT_LAT << 16) | U1_DEVICE_EXIT_LAT;
-  BX_XHCI_THIS hub.cap_regs.HcCParams    = 
+  BX_XHCI_THIS hub.cap_regs.HcCParams1   = 
     ((EXT_CAPS_OFFSET >> 2) << 16) | (MAX_PSA_SIZE << 12) | (SEC_DOMAIN_BAND << 9) | (FORCED_STOPPED << 8) | 
     (LIGHT_HC_RESET << 5) | 
     (PORT_INDICATORS << 4) | (PORT_POWER_CTRL << 3) | ((CONTEXT_SIZE >> 6) << 2) | 
     (BW_NEGOTIATION << 1) | ADDR_CAP_64;
   BX_XHCI_THIS hub.cap_regs.DBOFF        = DOORBELL_OFFSET;  // at offset DOORBELL_OFFSET from base
   BX_XHCI_THIS hub.cap_regs.RTSOFF       = RUNTIME_OFFSET;   // at offset RUNTIME_OFFSET from base
-
+#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
+  BX_XHCI_THIS hub.cap_regs.HcCParams2   = 
+    (CONFIG_INFO_CAP << 5) | (LARGE_ESIT_PAYLOAD_CAP << 4) | (COMPLNC_TRANS_CAP << 3) |
+    (FORCE_SAVE_CONTEXT_CAP << 2) | (CONFIG_EP_CMND_CAP << 1) | U3_ENTRY_CAP;
+#endif
+  
   BX_DEBUG((" CAPLENGTH: 0x%02X", BX_XHCI_THIS hub.cap_regs.HcCapLength & 0xFF));
   BX_DEBUG(("HC VERSION: %X.%02X", ((BX_XHCI_THIS hub.cap_regs.HcCapLength & 0xFF000000) >> 24), 
     ((BX_XHCI_THIS hub.cap_regs.HcCapLength & 0x00FF0000) >> 16)));
   BX_DEBUG(("HCSPARAMS1: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcSParams1));
   BX_DEBUG(("HCSPARAMS2: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcSParams2));
   BX_DEBUG(("HCSPARAMS3: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcSParams3));
-  BX_DEBUG((" HCCPARAMS: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcCParams));
+#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
+  BX_DEBUG(("HCCPARAMS1: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcCParams1));
+#else
+  BX_DEBUG(("HCCPARAMS: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcCParams1));
+#endif
   BX_DEBUG(("     DBOFF: 0x%08X", BX_XHCI_THIS hub.cap_regs.DBOFF));
   BX_DEBUG(("    RTSOFF: 0x%08X", BX_XHCI_THIS hub.cap_regs.RTSOFF));
+#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
+  BX_DEBUG(("HCCPARAMS2: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcCParams2));
+#endif
 
   // Command
   BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP1 = 0;
+#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
+  BX_XHCI_THIS hub.op_regs.HcCommand.cme    = 0;
+  BX_XHCI_THIS hub.op_regs.HcCommand.spe   = 0;
+#endif
   BX_XHCI_THIS hub.op_regs.HcCommand.eu3s   = 0;
   BX_XHCI_THIS hub.op_regs.HcCommand.ewe    = 0;
   BX_XHCI_THIS hub.op_regs.HcCommand.crs    = 0;
@@ -353,6 +369,10 @@ void bx_usb_xhci_c::reset_hc()
 
   // Config
   BX_XHCI_THIS hub.op_regs.HcConfig.RsvdP      = 0;
+#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
+  BX_XHCI_THIS hub.op_regs.HcConfig.u3e = 0;
+  BX_XHCI_THIS hub.op_regs.HcConfig.cie = 0;
+#endif
   BX_XHCI_THIS hub.op_regs.HcConfig.MaxSlotsEn = 0;
 
   // Ports[x]
@@ -497,12 +517,17 @@ void bx_usb_xhci_c::register_state(void)
   new bx_shadow_num_c(reg_grp, "HcSParams1", &BX_XHCI_THIS hub.cap_regs.HcSParams1, BASE_HEX);
   new bx_shadow_num_c(reg_grp, "HcSParams2", &BX_XHCI_THIS hub.cap_regs.HcSParams2, BASE_HEX);
   new bx_shadow_num_c(reg_grp, "HcSParams3", &BX_XHCI_THIS hub.cap_regs.HcSParams3, BASE_HEX);
-  new bx_shadow_num_c(reg_grp, "HcCParams", &BX_XHCI_THIS hub.cap_regs.HcCParams, BASE_HEX);
+  new bx_shadow_num_c(reg_grp, "HcCParams1", &BX_XHCI_THIS hub.cap_regs.HcCParams1, BASE_HEX);
   new bx_shadow_num_c(reg_grp, "DBOFF", &BX_XHCI_THIS hub.cap_regs.DBOFF, BASE_HEX);
   new bx_shadow_num_c(reg_grp, "RTSOFF", &BX_XHCI_THIS hub.cap_regs.RTSOFF, BASE_HEX);
+  new bx_shadow_num_c(reg_grp, "HcCParams2", &BX_XHCI_THIS hub.cap_regs.HcCParams2, BASE_HEX);
 
   reg_grp = new bx_list_c(hub, "op_regs");
   reg = new bx_list_c(reg_grp, "HcCommand");
+#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
+  new bx_shadow_bool_c(reg, "cme", &BX_XHCI_THIS hub.op_regs.HcCommand.cme);
+  new bx_shadow_bool_c(reg, "spe", &BX_XHCI_THIS hub.op_regs.HcCommand.spe);
+#endif
   new bx_shadow_bool_c(reg, "eu3s", &BX_XHCI_THIS hub.op_regs.HcCommand.eu3s);
   new bx_shadow_bool_c(reg, "ewe", &BX_XHCI_THIS hub.op_regs.HcCommand.ewe);
   new bx_shadow_bool_c(reg, "crs", &BX_XHCI_THIS hub.op_regs.HcCommand.crs);
@@ -548,6 +573,10 @@ void bx_usb_xhci_c::register_state(void)
   new bx_shadow_bool_c(reg, "rcs", &BX_XHCI_THIS hub.op_regs.HcCrcr.rcs);
   new bx_shadow_num_c(reg_grp, "HcDCBAAP", &BX_XHCI_THIS hub.op_regs.HcDCBAAP.dcbaap, BASE_HEX);
   new bx_shadow_num_c(reg_grp, "HcConfig_MaxSlotsEn", &BX_XHCI_THIS hub.op_regs.HcConfig.MaxSlotsEn, BASE_HEX);
+#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
+  new bx_shadow_num_c(reg_grp, "HcConfig_u3e", &BX_XHCI_THIS hub.op_regs.HcConfig.u3e, BASE_HEX);
+  new bx_shadow_num_c(reg_grp, "HcConfig_cie", &BX_XHCI_THIS hub.op_regs.HcConfig.cie, BASE_HEX);
+#endif
 
   reg_grp = new bx_list_c(hub, "runtime_regs");
   new bx_shadow_num_c(reg_grp, "mfindex", &BX_XHCI_THIS hub.runtime_regs.mfindex.index, BASE_HEX);
@@ -705,8 +734,8 @@ bx_bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
       case 0x0C: // HCSPARAMS3
         val = BX_XHCI_THIS hub.cap_regs.HcSParams3;
         break;
-      case 0x10: // HCCPARAMS
-        val = BX_XHCI_THIS hub.cap_regs.HcCParams;
+      case 0x10: // HCCPARAMS1
+        val = BX_XHCI_THIS hub.cap_regs.HcCParams1;
         break;
       case 0x14: // DBOFF
         val = BX_XHCI_THIS hub.cap_regs.DBOFF;
@@ -714,9 +743,15 @@ bx_bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
       case 0x18: // RTSOFF
         val = BX_XHCI_THIS hub.cap_regs.RTSOFF;
         break;
+#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
+      case 0x1C: // HCCPARAMS2
+        val = BX_XHCI_THIS hub.cap_regs.HcCParams2;
+        break;
+#else
       case 0x1C: // reserved
         val = 0;
         break;
+#endif
     }
   } else
 
@@ -724,7 +759,13 @@ bx_bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
   if ((offset >= OPS_REGS_OFFSET) && (offset < (OPS_REGS_OFFSET + 0x40))) {
     switch (offset - OPS_REGS_OFFSET) {
       case 0x00: // Command
+#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
+        val =   (BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP1       << 14)
+              | (BX_XHCI_THIS hub.op_regs.HcCommand.cme      ? 1 << 13 : 0)
+              | (BX_XHCI_THIS hub.op_regs.HcCommand.spe      ? 1 << 12 : 0)
+#else
         val =   (BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP1       << 12)
+#endif
               | (BX_XHCI_THIS hub.op_regs.HcCommand.eu3s     ? 1 << 11 : 0)
               | (BX_XHCI_THIS hub.op_regs.HcCommand.ewe      ? 1 << 10 : 0)
               | 0    // BX_XHCI_THIS hub.op_regs.HcCommand.crs
@@ -803,7 +844,13 @@ bx_bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
 #endif  // ADDR_CAP_64
         break;
       case 0x38: // Config
+#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
+        val =   (BX_XHCI_THIS hub.op_regs.HcConfig.RsvdP         << 10)
+              | (BX_XHCI_THIS hub.op_regs.HcConfig.cie           <<  8)
+              | (BX_XHCI_THIS hub.op_regs.HcConfig.u3e           <<  9)
+#else
         val =   (BX_XHCI_THIS hub.op_regs.HcConfig.RsvdP         <<  8)
+#endif
               | (BX_XHCI_THIS hub.op_regs.HcConfig.MaxSlotsEn    <<  0);
         break;
     }
@@ -1025,10 +1072,10 @@ bx_bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *da
       case 0x04: // HCSPARAMS1
       case 0x08: // HCSPARAMS2
       case 0x0C: // HCSPARAMS3
-      case 0x10: // HCCPARAMS
+      case 0x10: // HCCPARAMS1
       case 0x14: // DBOFF
       case 0x18: // TRSOFF
-      case 0x1C: // reserved
+      case 0x1C: // reserved/HCCPARAMS2
         BX_ERROR(("Write to Read Only Host Capability Register (0x%08X)", offset));
         break;
     }
@@ -1039,9 +1086,17 @@ bx_bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *da
     switch (offset - OPS_REGS_OFFSET) {
       case 0x00: // Command
         temp = BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP1;
+#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
+        BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP1 = (value >> 14);
+        if (temp != BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP1)
+          BX_ERROR(("bits 31:14 in command register were not preserved"));
+        BX_XHCI_THIS hub.op_regs.HcCommand.cme    = (value & (1 << 13)) ? 1 : 0;
+        BX_XHCI_THIS hub.op_regs.HcCommand.spe    = (value & (1 << 12)) ? 1 : 0;
+#else
         BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP1 = (value >> 12);
         if (temp != BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP1)
           BX_ERROR(("bits 31:12 in command register were not preserved"));
+#endif
         BX_XHCI_THIS hub.op_regs.HcCommand.eu3s   = (value & (1 << 11)) ? 1 : 0;
         BX_XHCI_THIS hub.op_regs.HcCommand.ewe    = (value & (1 << 10)) ? 1 : 0;
         if (value & (1 <<  9)) {
@@ -1202,9 +1257,17 @@ bx_bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *da
 
       case 0x38: // Config
         temp = BX_XHCI_THIS hub.op_regs.HcConfig.RsvdP;
+#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
+        BX_XHCI_THIS hub.op_regs.HcConfig.RsvdP = (value >> 10);
+        if (temp != BX_XHCI_THIS hub.op_regs.HcConfig.RsvdP)
+          BX_ERROR(("bits 31:10 in Config Register were not preserved"));
+        BX_XHCI_THIS hub.op_regs.HcConfig.cie =  (value & (1 << 9)) ? 1 : 0;
+        BX_XHCI_THIS hub.op_regs.HcConfig.u3e =  (value & (1 << 8)) ? 1 : 0;
+#else
         BX_XHCI_THIS hub.op_regs.HcConfig.RsvdP = (value >> 8);
         if (temp != BX_XHCI_THIS hub.op_regs.HcConfig.RsvdP)
           BX_ERROR(("bits 31:8 in Config Register were not preserved"));
+#endif
         BX_XHCI_THIS hub.op_regs.HcConfig.MaxSlotsEn = (value & 0xFF);
         break;
     }
@@ -2670,10 +2733,17 @@ void bx_usb_xhci_c::dump_xhci_core(const int slots, const int eps)
   BX_INFO(("HCSPARAMS1: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcSParams1));
   BX_INFO(("HCSPARAMS2: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcSParams2));
   BX_INFO(("HCSPARAMS3: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcSParams3));
-  BX_INFO((" HCCPARAMS: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcCParams));
+#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
+  BX_INFO(("HCCPARAMS1: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcCParams1));
+#else
+  BX_INFO(("HCCPARAMS: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcCParams1));
+#endif
   BX_INFO(("     DBOFF: 0x%08X", BX_XHCI_THIS hub.cap_regs.DBOFF));
   BX_INFO(("    RTSOFF: 0x%08X", BX_XHCI_THIS hub.cap_regs.RTSOFF));
-
+#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
+  BX_INFO(("HCCPARAMS2: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcCParams2));
+#endif
+  
   // dump the operational registers
   BX_XHCI_THIS read_handler(addr + 0x20, 4, &dword, NULL);
   BX_INFO((" USB_COMMAND: 0x%08X", dword));
