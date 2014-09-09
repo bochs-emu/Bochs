@@ -3044,7 +3044,7 @@ system BIOS and VGA BIOS images.
 </thead>
 <tbody>
 <row><entry>BIOS-bochs-latest </entry> <entry> default ROM BIOS image for Bochs </entry> </row>
-<row><entry>BIOS-bochs-legacy </entry> <entry> ROM BIOS image without 32-bit init code </entry> </row>
+<row><entry>BIOS-bochs-legacy </entry> <entry> ROM BIOS image without 32-bit init code (for i386 and ISA graphics card emulation) </entry> </row>
 <row><entry>bios.bin-1.7.5 </entry> <entry> SeaBIOS ROM image </entry> </row>
 <row><entry>VGABIOS-elpin-2.40 </entry> <entry> legacy VGA BIOS image for Bochs </entry> </row>
 <row><entry>VGABIOS-lgpl-latest </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
