@@ -853,11 +853,12 @@ void BX_CPU_C::read_RMW_virtual_dqword_aligned_64(unsigned s, Bit64u offset, Bit
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  if (access_read_linear(laddr, 8, CPL, BX_RW, 0x0, (void *) lo) < 0)
-    exception(int_number(s), 0);
+  BxPackedXmmRegister data;
+  data.xmm64u(0) = *lo;
+  data.xmm64u(1) = *hi;
 
-  // the access is always aligned and canonical
-  access_read_linear(laddr + 8, 8, CPL, BX_RW, 0x0, (void *) hi);
+  if (access_read_linear(laddr, 16, CPL, BX_RW, 0x0, (void *) &data) < 0)
+    exception(int_number(s), 0);
 }
 
 void BX_CPU_C::write_RMW_virtual_dqword(Bit64u hi, Bit64u lo)
