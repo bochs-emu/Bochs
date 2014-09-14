@@ -3527,8 +3527,9 @@ void ReadSettings()
           DumpWSIndex = atoi(val);
           DumpAlign = (1 << DumpWSIndex);
           PrevDAD = 0;
-        } else {
-          // TODO: add platform-specific settings
+        } else if (!strcmp(param, "DockOrder")) {
+          DockOrder = strtoul(val, NULL, 16);
+        } else if (!ParseOSSettings(param, val)) {
           fprintf(stderr, "bx_enh_dbg.ini: unknown option '%s'\n", line);
         }
       }
@@ -3559,7 +3560,8 @@ void WriteSettings()
   fprintf(fd, "isLittleEndian = %s\n", isLittleEndian ? "TRUE" : "FALSE");
   fprintf(fd, "DefaultAsmLines = %d\n", DefaultAsmLines);
   fprintf(fd, "DumpWSIndex = %d\n", DumpWSIndex);
-  // TODO: add platform-specific settings
+  fprintf(fd, "DockOrder = 0x%03x\n", DockOrder);
+  WriteOSSettings(fd);
   fclose(fd);
 }
 

@@ -1876,4 +1876,15 @@ void MakeBL(HTREEITEM *h_P, bx_param_c *p)
     }
 }
 
+bx_bool ParseOSSettings(const char *param, const char *value)
+{
+  // TODO: handle win32-specific settings here
+  return 0;
+}
+
+void WriteOSSettings(FILE *fd)
+{
+  // TODO: handle win32-specific settings here
+}
+
 #endif
