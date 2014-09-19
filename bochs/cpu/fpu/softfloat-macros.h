@@ -382,7 +382,7 @@ BX_CPP_INLINE void shift128Right(Bit64u a0, Bit64u a1, int count, Bit64u *z0Ptr,
         z0 = a0>>count;
     }
     else {
-        z1 = (count < 64) ? (a0>>(count & 63)) : 0;
+        z1 = (count < 128) ? (a0>>(count & 63)) : 0;
         z0 = 0;
     }
     *z1Ptr = z1;
