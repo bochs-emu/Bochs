@@ -6,7 +6,7 @@
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (C) 2009       Benjamin D Lunt (fys at frontiernet net)
-//               2009-2013  The Bochs Project
+//               2009-2014  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -86,20 +86,23 @@
 #define EndpointOutRequest \
    ((USB_DIR_OUT|USB_TYPE_STANDARD|USB_RECIP_ENDPOINT)<<8)
 
-#define USB_REQ_GET_STATUS		0x00
-#define USB_REQ_CLEAR_FEATURE		0x01
-#define USB_REQ_SET_FEATURE		0x03
-#define USB_REQ_SET_ADDRESS		0x05
-#define USB_REQ_GET_DESCRIPTOR		0x06
-#define USB_REQ_SET_DESCRIPTOR		0x07
-#define USB_REQ_GET_CONFIGURATION	0x08
-#define USB_REQ_SET_CONFIGURATION	0x09
-#define USB_REQ_GET_INTERFACE		0x0A
-#define USB_REQ_SET_INTERFACE		0x0B
-#define USB_REQ_SYNCH_FRAME		0x0C
+#define USB_REQ_GET_STATUS        0x00
+#define USB_REQ_CLEAR_FEATURE     0x01
+#define USB_REQ_SET_FEATURE       0x03
+#define USB_REQ_SET_ADDRESS       0x05
+#define USB_REQ_GET_DESCRIPTOR    0x06
+#define USB_REQ_SET_DESCRIPTOR    0x07
+#define USB_REQ_GET_CONFIGURATION 0x08
+#define USB_REQ_SET_CONFIGURATION 0x09
+#define USB_REQ_GET_INTERFACE     0x0A
+#define USB_REQ_SET_INTERFACE     0x0B
+#define USB_REQ_SYNCH_FRAME       0x0C
+#define USB_REQ_SET_SEL           0x30
 
-#define USB_DEVICE_SELF_POWERED		0
-#define USB_DEVICE_REMOTE_WAKEUP	1
+#define USB_DEVICE_SELF_POWERED    0
+#define USB_DEVICE_REMOTE_WAKEUP   1
+#define USB_DEVICE_U1_ENABLE      48
+#define USB_DEVICE_U2_ENABLE      49
 
 // USB 1.1
 #define USB_DT_DEVICE			0x01
@@ -111,6 +114,8 @@
 #define USB_DT_DEVICE_QUALIFIER         0x06
 #define USB_DT_OTHER_SPEED_CONFIG       0x07
 #define USB_DT_INTERFACE_POWER          0x08
+// USB 3.0
+#define USB_DT_BIN_DEV_OBJ_STORE        0x0F
 
 class usb_device_c;
 
@@ -169,7 +174,6 @@ public:
   int get_speed() {return d.speed;}
   void set_speed(int speed) {d.speed = speed;}
   Bit8u get_address() {return d.addr;}
-  int get_max_packet_size() {return d.max_packet_size;}
 
   void usb_send_msg(int msg);
 
@@ -190,7 +194,6 @@ protected:
     int setup_state;
     int setup_len;
     int setup_index;
-    int max_packet_size;
     bx_bool stall;
   } d;
 

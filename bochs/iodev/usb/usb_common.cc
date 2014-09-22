@@ -144,7 +144,7 @@ void bx_usb_devctl_c::parse_port_options(usb_device_c *device, bx_list_c *portco
   const char *raw_options;
   char *options;
   unsigned i, string_i;
-  int optc, speed = USB_SPEED_LOW;
+  int optc, speed = USB_SPEED_LOW;  // assume LOW speed device if parameter not given.
   char *opts[16];
   char *ptr;
   char string[512];

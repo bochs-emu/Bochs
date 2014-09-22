@@ -4665,7 +4665,8 @@ Examples:
 <screen>
   usb_uhci: enabled=1, port1=mouse, port2=disk:usbstick.img
   usb_uhci: enabled=1, port1=hub:7, port2=disk:growing:usbdisk.img
-  usb_uhci: enabled=1, port2=disk:undoable:usbdisk.img, options1=journal:redo.log
+  usb_uhci: enabled=1, port2=disk:undoable:usbdisk.img, options2=journal:redo.log
+  usb_uhci: enabled=1, port2=disk:vvfat:vvfat, options2=speed:full
   usb_uhci: enabled=1, port1=printer:printdata.bin, port2=cdrom:image.iso
 </screen>
 This option controls the presence of the USB root hub which is a part of the
@@ -4679,8 +4680,10 @@ to the hub (currently supported: 'mouse', 'tablet', 'keypad', 'disk', 'cdrom',
 <para>
 The options<replaceable>X</replaceable> parameter can be used to assign specific
 options to the device connected to the corresponding USB port. Currently this
-feature is only used to set the speed reported by device and by the 'disk'
-device to specify an alternative redolog file of some image modes.
+feature is used to set the speed reported by device ('low', 'full', 'high' or
+'super'). The availabe speed choices depend on both HC and device. For the USB
+'disk' device the optionsX parameter can be used to specify an alternative
+redolog file (journal) of some image modes.
 </para>
 <para>
 If you connect the mouse or tablet to one of the ports, Bochs forwards the
@@ -4722,9 +4725,9 @@ Example:
   usb_ohci: enabled=1, port1=printer:printdata.bin
 </screen>
 This option controls the presence of the USB OHCI host controller with a
-2-port hub. The portX option accepts the same device types with the same
+2-port hub. The portX parameter accepts the same device types with the same
 syntax as the UHCI controller (see the <link linkend="bochsopt-usb-uhci">usb_uhci option</link>).
-</para>
+The optionsX parameter is also available on OHCI.</para>
 </section>
 
 <section id="bochsopt-usb-xhci"><title>usb_xhci</title>
@@ -4734,9 +4737,9 @@ Example:
   usb_xhci: enabled=1
 </screen>
 This option controls the presence of the experimental USB xHCI host controller
-with a 4-port hub. The portX option accepts the same device types with the same
+with a 4-port hub. The portX parameter accepts the same device types with the same
 syntax as the UHCI controller (see the <link linkend="bochsopt-usb-uhci">usb_uhci option</link>).
-</para>
+The optionsX parameter is also available on xHCI.</para>
 </section>
 
 <section><title>pcidev</title>

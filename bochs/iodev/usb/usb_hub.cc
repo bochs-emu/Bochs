@@ -5,7 +5,7 @@
 // USB hub emulation support (ported from QEMU)
 //
 // Copyright (C) 2005       Fabrice Bellard
-// Copyright (C) 2009-2013  The Bochs Project
+// Copyright (C) 2009-2014  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -177,7 +177,6 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
   d.type = USB_DEV_TYPE_HUB;
   d.maxspeed = USB_SPEED_FULL;
   d.speed = d.maxspeed;
-  // TODO: d.max_packet_size = ???
   strcpy(d.devname, "Bochs USB HUB");
   d.connected = 1;
   memset((void*)&hub, 0, sizeof(hub));

@@ -2003,8 +2003,18 @@ void bx_usb_xhci_c::process_command_ring(void)
                     // it should remain the mps for the device attached.
                     if (i == 1) {
                       int port_num = BX_XHCI_THIS hub.slots[slot].slot_context.rh_port_num - 1;
-                      BX_XHCI_THIS hub.slots[slot].ep_context[i].ep_context.max_packet_size = 
-                        BX_XHCI_THIS hub.usb_port[port_num].device->get_max_packet_size();
+                      switch (BX_XHCI_THIS hub.usb_port[port_num].device->get_speed()) {
+                        case USB_SPEED_LOW:
+                          BX_XHCI_THIS hub.slots[slot].ep_context[i].ep_context.max_packet_size = 8;
+                          break;
+                        case USB_SPEED_FULL:
+                        case USB_SPEED_HIGH:
+                          BX_XHCI_THIS hub.slots[slot].ep_context[i].ep_context.max_packet_size = 64;
+                          break;
+                        case USB_SPEED_SUPER:
+                          BX_XHCI_THIS hub.slots[slot].ep_context[i].ep_context.max_packet_size = 512;
+                          break;
+                      }
                     } else
                       BX_XHCI_THIS hub.slots[slot].ep_context[i].ep_context.max_packet_size = ep_context.max_packet_size;
 

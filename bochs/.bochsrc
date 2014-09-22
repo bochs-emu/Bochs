@@ -1028,9 +1028,11 @@ speaker: enabled=1, mode=sound
 # 'hub' and 'printer').
 #
 # The optionsX parameter can be used to assign specific options to the device
-# connected to the corresponding USB port. Currently this feature is only used
-# to set the speed reported by device and by the 'disk' device to specify
-# an alternative redolog file of some image modes.
+# connected to the corresponding USB port. Currently this feature is used to
+# set the speed reported by device ('low', 'full', 'high' or 'super'). The
+# availabe speed choices depend on both HC and device. For the USB 'disk' device
+# the optionsX parameter can be used to specify an alternative redolog file
+# (journal) of some image modes.
 #
 # If you connect the mouse or tablet to one of the ports, Bochs forwards the
 # mouse movement data to the USB device instead of the selected mouse type.
@@ -1058,14 +1060,16 @@ speaker: enabled=1, mode=sound
 #usb_uhci: enabled=1
 #usb_uhci: enabled=1, port1=mouse, port2=disk:usbstick.img
 #usb_uhci: enabled=1, port1=hub:7, port2=disk:growing:usbdisk.img
-#usb_uhci: enabled=1, port2=disk:undoable:usbdisk.img, options1=journal:redo.log
+#usb_uhci: enabled=1, port2=disk:undoable:usbdisk.img, options2=journal:redo.log
+#usb_uhci: enabled=1, port2=disk:vvfat:vvfat, options2=speed:full
 #usb_uhci: enabled=1, port1=printer:printdata.bin, port2=cdrom:image.iso
 
 #=======================================================================
 # USB_OHCI:
 # This option controls the presence of the USB OHCI host controller with a
-# 2-port hub. The portX option accepts the same device types with the same
-# syntax as the UHCI controller (see above).
+# 2-port hub. The portX parameter accepts the same device types with the same
+# syntax as the UHCI controller (see above). The optionsX parameter is also
+# available on OHCI.
 #=======================================================================
 #usb_ohci: enabled=1
 #usb_ohci: enabled=1, port1=printer:usbprinter.bin
@@ -1073,8 +1077,9 @@ speaker: enabled=1, mode=sound
 #=======================================================================
 # USB_XHCI:
 # This option controls the presence of the experimental USB xHCI host controller
-# with a 4-port hub. The portX option accepts the same device types with the
-# same syntax as the UHCI controller (see above).
+# with a 4-port hub. The portX paramter accepts the same device types with the
+# same syntax as the UHCI controller (see above). The optionsX parameter is
+# also available on xHCI.
 #=======================================================================
 #usb_xhci: enabled=1
 

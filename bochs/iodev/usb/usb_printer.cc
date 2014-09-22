@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009       Benjamin D Lunt (fys at frontiernet net)
-//                2009-2012  The Bochs Project
+//                2009-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -115,7 +115,6 @@ usb_printer_device_c::usb_printer_device_c(usbdev_type type, const char *filenam
   d.type = type;
   d.maxspeed = USB_SPEED_FULL;
   d.speed = d.maxspeed;
-  // TODO: d.max_packet_size = ???
   memset((void*)&s, 0, sizeof(s));
   strcpy(d.devname, "USB Printer");
   s.fname = filename;

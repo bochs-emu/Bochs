@@ -1480,8 +1480,21 @@ void bx_usb_ohci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
   if (device != NULL) {
     if (device->get_type() == type) {
       if (connected) {
-        BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.lsda =
-          (device->get_speed() == USB_SPEED_LOW);
+        switch (device->get_speed()) {
+          case USB_SPEED_LOW:
+            BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.lsda = 1;
+            break;
+          case USB_SPEED_FULL:
+            BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.lsda = 0;
+            break;
+          case USB_SPEED_HIGH:
+          case USB_SPEED_SUPER:
+            BX_PANIC(("HC supports 'low' or 'full' speed devices only."));
+            device->set_speed(USB_SPEED_FULL);
+            break;
+          default:
+            BX_ERROR(("device->get_speed() returned invalid speed value"));
+        }
         BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.ccs = 1;
         if (!device->get_connected()) {
           if (!device->init()) {

@@ -28,7 +28,7 @@
      It has been a challenge, but I have learned a lot.
    - 31 July 2006:
      I now have a Beagle USB Protocol Analyzer from Total Phase for my research.
-     (http://www.totalphase.com/products/beagle/usb/)
+     (http://www.totalphase.com/products/beagle-usb12/)
      With this device, I plan on doing a lot of research and development to get this
      code to a state where it is actually very useful.  I plan on adding support
      of many "plug-in" type modules so that you can simply add a plug-in for your
@@ -1099,14 +1099,35 @@ void bx_usb_uhci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_l
     BX_DEBUG(("write PCI register 0x%02x value 0x%08x", address, value));
 }
 
+const char *usb_speed[4] = {
+  "low",
+  "full",
+  "high",
+  "super"
+};
+
 void bx_usb_uhci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected)
 {
   usb_device_c *device = BX_UHCI_THIS hub.usb_port[port].device;
   if (device != NULL) {
     if (device->get_type() == type) {
       if (connected) {
-        BX_UHCI_THIS hub.usb_port[port].low_speed =
-          (device->get_speed() == USB_SPEED_LOW);
+        BX_INFO(("port #%d: speed = %s", port+1, usb_speed[device->get_speed()]));
+        switch (device->get_speed()) {
+          case USB_SPEED_LOW:
+            BX_UHCI_THIS hub.usb_port[port].low_speed = 1;
+            break;
+          case USB_SPEED_FULL:
+            BX_UHCI_THIS hub.usb_port[port].low_speed = 0;
+            break;
+          case USB_SPEED_HIGH:
+          case USB_SPEED_SUPER:
+            BX_PANIC(("HC supports 'low' or 'full' speed devices only."));
+            device->set_speed(USB_SPEED_FULL);
+            break;
+          default:
+            BX_ERROR(("device->get_speed() returned invalid speed value"));
+        }
         if (BX_UHCI_THIS hub.usb_port[port].low_speed) {
           BX_UHCI_THIS hub.usb_port[port].line_dminus = 1;  //  dminus=1 & dplus=0 = low speed  (at idle time)
           BX_UHCI_THIS hub.usb_port[port].line_dplus = 0;   //  dminus=0 & dplus=1 = high speed (at idle time)
