@@ -327,6 +327,7 @@ bx_bool usb_msd_device_c::init()
 {
   if (d.type == USB_DEV_TYPE_DISK) {
     s.hdimage = DEV_hdimage_init_image(s.image_mode, 0, s.journal);
+    s.hdimage->cylinders = 0;
     if (s.hdimage->open(s.fname) < 0) {
       BX_ERROR(("could not open hard drive image file '%s'", s.fname));
       return 0;
