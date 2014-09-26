@@ -2197,17 +2197,49 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDBPSADBW_MASK_VdqHdqWdqIbR(bxInst
 
 // multishift (VBMI)
 
+BX_CPP_INLINE Bit64u pmultishiftqb_scalar(Bit64u val_64, Bit64u control)
+{
+  // use MMX register as 64-bit value with convinient accessors
+  BxPackedMmxRegister result;
+
+  for (unsigned n=0; n < 8; n++, control >>= 8) {
+    unsigned ctrl = (control & 0x3f);
+    Bit64u tmp = val_64;
+    if (ctrl != 0)
+        tmp = (val_64 << (64 - ctrl)) | (val_64 >> ctrl);
+    result.mmxubyte(n) = tmp & 0xff;
+  }
+
+  return MMXUQ(result);
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMULTISHIFTQB_VdqHdqWdqR(bxInstruction_c *i)
 {
-  BX_PANIC(("%s: instruction still not implemented", i->getIaOpcodeNameShort()));
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
+  unsigned len = i->getVL();
 
+  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
+    op1.vmm64u(n) = pmultishiftqb_scalar(op2.vmm64u(n), op1.vmm64u(n));
+  }
+
+  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMULTISHIFTQB_MASK_VdqHdqWdqR(bxInstruction_c *i)
 {
-  BX_PANIC(("%s: instruction still not implemented", i->getIaOpcodeNameShort()));
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()), dst = BX_READ_AVX_REG(i->dst());
+  Bit32u mask = BX_READ_8BIT_OPMASK(i->opmask());
+  unsigned len = i->getVL();
 
+  for (unsigned n=0, tmp_mask = mask; n < QWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
+    if (tmp_mask & 0x1)
+      dst.vmm64u(n) = pmultishiftqb_scalar(op2.vmm64u(n), op1.vmm64u(n));
+    else if (i->isZeroMasking())
+      dst.vmm64u(n) = 0;
+  }
+
+  BX_WRITE_AVX_REGZ(i->dst(), dst, len);
   BX_NEXT_INSTR(i);
 }
 
