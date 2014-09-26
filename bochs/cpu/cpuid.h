@@ -101,6 +101,8 @@ enum {
   BX_ISA_AVX512_DQ,               /* AVX-512DQ instruction */
   BX_ISA_AVX512_BW,               /* AVX-512 Byte/Word instruction */
   BX_ISA_AVX512_VL,               /* AVX-512 Vector Length extensions */
+  BX_ISA_AVX512_VBMI,             /* AVX-512 Vector Bit Manipulation Instructions */
+  BX_ISA_AVX512_IFMA52,           /* AVX-512 IFMA52 Instructions */
   BX_ISA_XAPIC,                   /* XAPIC support */
   BX_ISA_X2APIC,                  /* X2APIC support */
   BX_ISA_XAPIC_EXT,               /* XAPIC Extensions support */
@@ -416,7 +418,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [18:18]  RDSEED instruction support
 //   [19:19]  ADCX/ADOX instructions support
 //   [20:20]  SMAP: Supervisor Mode Access Prevention
-//   [22:21]  reserved
+//   [22:21]  AVX512IFMA52 instructions support
 //   [23:23]  CLFLUSHOPT instruction
 //   [24:24]  reserved
 //   [25:25]  Intel Processor Trace
@@ -448,7 +450,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT3_RDSEED                 (1 << 18)
 #define BX_CPUID_EXT3_ADX                    (1 << 19)
 #define BX_CPUID_EXT3_SMAP                   (1 << 20)
-#define BX_CPUID_EXT3_RESERVED21             (1 << 21)
+#define BX_CPUID_EXT3_AVX512IFMA52           (1 << 21)
 #define BX_CPUID_EXT3_RESERVED22             (1 << 22)
 #define BX_CPUID_EXT3_CLFLUSHOPT             (1 << 23)
 #define BX_CPUID_EXT3_RESERVED24             (1 << 24)
@@ -464,9 +466,11 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 // -----------------------------
 
 //   [0:0]    PREFETCHWT1 instruction support
-//  [31:1]    reserved
+//   [1:1]    AVX512 VBMI instructions support
+//  [31:2]    reserved
 
 #define BX_CPUID_EXT4_PREFETCHWT1            (1 <<  0)
+#define BX_CPUID_EXT4_AVX512VBMI             (1 <<  1)
 
 
 // CPUID defines - STD2 features CPUID[0x80000001].EDX

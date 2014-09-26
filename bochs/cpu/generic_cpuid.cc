@@ -768,6 +768,14 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
   static unsigned simd_enabled = SIM->get_param_enum(BXPN_CPUID_SIMD)->get();
   // determine SSE in runtime
   switch (simd_enabled) {
+#if BX_SUPPORT_EVEX
+    case BX_CPUID_SUPPORT_AVX512:
+      enable_cpu_extension(BX_ISA_AVX512);
+      enable_cpu_extension(BX_ISA_AVX512_VL);
+      enable_cpu_extension(BX_ISA_AVX512_BW);
+      enable_cpu_extension(BX_ISA_AVX512_DQ);
+      enable_cpu_extension(BX_ISA_AVX512_CD);
+#endif
 #if BX_SUPPORT_AVX
     case BX_CPUID_SUPPORT_AVX2:
       enable_cpu_extension(BX_ISA_AVX2);

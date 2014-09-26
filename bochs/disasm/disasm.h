@@ -109,6 +109,8 @@ enum {
   IA_AVX512_DQ,               /* AVX-512DQ instruction */
   IA_AVX512_BW,               /* AVX-512 Byte/Word instruction */
   IA_AVX512_VL,               /* AVX-512 Vector Length extensions */
+  IA_AVX512_VBMI,             /* AVX-512 Vector Bit Manipulation Instructions */
+  IA_AVX512_IFMA52,           /* AVX-512 IFMA52 Instructions */
   IA_XAPIC,                   /* XAPIC support */
   IA_X2APIC,                  /* X2APIC support */
   IA_XAPIC_EXT,               /* XAPIC Extensions support */
