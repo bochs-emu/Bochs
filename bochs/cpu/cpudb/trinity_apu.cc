@@ -99,6 +99,8 @@ trinity_apu_t::trinity_apu_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
       BX_ISA_XAPIC_EXT,
       BX_ISA_EXTENSION_LAST
   };
+
+  register_cpu_extensions(supported_extensions);
 }
 
 void trinity_apu_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
