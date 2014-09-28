@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "22 Sep 2014" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "28 Sep 2014" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -1192,7 +1192,8 @@ Example:
 This option controls the presence of the experimental USB xHCI host controller
 with a 4-port hub. The portX parameter accepts the same device types with the
 same syntax as the UHCI controller (see above). The optionsX parameter is also
-available on xHCI.
+available on xHCI. NOTE: port 1 and 2 are USB3 and only support super-speed
+devices, but port 3 and 4 are USB2 and support speed settings low, full and high.
 
 Example:
   usb_xhci: enabled=1

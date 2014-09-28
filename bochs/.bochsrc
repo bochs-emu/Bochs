@@ -1079,7 +1079,9 @@ speaker: enabled=1, mode=sound
 # This option controls the presence of the experimental USB xHCI host controller
 # with a 4-port hub. The portX paramter accepts the same device types with the
 # same syntax as the UHCI controller (see above). The optionsX parameter is
-# also available on xHCI.
+# also available on xHCI. NOTE: port 1 and 2 are USB3 and only support
+# super-speed devices, but port 3 and 4 are USB2 and support speed settings
+# low, full and high.
 #=======================================================================
 #usb_xhci: enabled=1
 
