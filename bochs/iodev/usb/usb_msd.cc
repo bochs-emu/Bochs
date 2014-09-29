@@ -266,6 +266,7 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
       s.fname = filename+strlen(ptr1)+1;
     }
     s.journal[0] = 0;
+    s.size = 0;
   } else if (d.type == USB_DEV_TYPE_CDROM) {
     strcpy(d.devname, "BOCHS USB CDROM");
     s.fname = filename;
@@ -316,9 +317,34 @@ usb_msd_device_c::~usb_msd_device_c(void)
 
 bx_bool usb_msd_device_c::set_option(const char *option)
 {
+  char *suffix;
+
   if (!strncmp(option, "journal:", 8)) {
-    strcpy(s.journal, option+8);
-    return 1;
+    if (d.type == USB_DEV_TYPE_DISK) {
+      strcpy(s.journal, option+8);
+      return 1;
+    } else {
+      BX_ERROR(("Option 'journal' is only valid for USB disks"));
+    }
+  } else if (!strncmp(option, "size:", 5)) {
+    if ((d.type == USB_DEV_TYPE_DISK) && (s.image_mode == BX_HDIMAGE_MODE_VVFAT)) {
+      s.size = (int)strtol(option+5, &suffix, 10);
+      if (!strcmp(suffix, "G")) {
+        s.size <<= 10;
+      } else if (strcmp(suffix, "M")) {
+        BX_ERROR(("Unknown VVFAT disk size suffix '%s' - using default", suffix));
+        s.size = 0;
+        return 0;
+      }
+      if ((s.size < 128) || (s.size >= 131072)) {
+        BX_ERROR(("Invalid VVFAT disk size value - using default"));
+        s.size = 0;
+        return 0;
+      }
+      return 1;
+    } else {
+      BX_ERROR(("Option 'size' is only valid for USB VVFAT disks"));
+    }
   }
   return 0;
 }
@@ -327,7 +353,12 @@ bx_bool usb_msd_device_c::init()
 {
   if (d.type == USB_DEV_TYPE_DISK) {
     s.hdimage = DEV_hdimage_init_image(s.image_mode, 0, s.journal);
-    s.hdimage->cylinders = 0;
+    if (s.image_mode == BX_HDIMAGE_MODE_VVFAT) {
+      Bit64u hdsize = ((Bit64u)s.size) << 20;
+      s.hdimage->cylinders = (Bit64u)(hdsize/16.0/63.0/512.0);
+      s.hdimage->heads = 16;
+      s.hdimage->spt = 63;
+    }
     if (s.hdimage->open(s.fname) < 0) {
       BX_ERROR(("could not open hard drive image file '%s'", s.fname));
       return 0;

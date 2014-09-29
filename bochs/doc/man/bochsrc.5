@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "28 Sep 2014" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "29 Sep 2014" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -1146,13 +1146,6 @@ of the i440FX PCI chipset. With the portX option you can connect devices
 to the hub (currently supported: 'mouse', 'tablet', 'keypad', 'disk', 'cdrom',
 'hub' and 'printer').
 
-The optionsX parameter can be used to assign specific options to the device
-connected to the corresponding USB port. Currently this feature is used to
-set the speed reported by device ('low', 'full', 'high' or 'super'). The
-availabe speed choices depend on both HC and device. For the USB 'disk' device
-the optionsX parameter can be used to specify an alternative redolog file
-(journal) of some image modes.
-
 If you connect the mouse or tablet to one of the ports, Bochs forwards the
 mouse movement data to the USB device instead of the selected mouse type.
 When connecting the keypad to one of the ports, Bochs forwards the input of
@@ -1170,6 +1163,15 @@ The device 'printer' emulates the HP Deskjet 920C printer. The PCL data is
 sent to a file specified in bochsrc.txt. The current code appends the PCL
 code to the file if the file already existed. It would probably be nice to
 overwrite the file instead, asking user first.
+
+The optionsX parameter can be used to assign specific options to the device
+connected to the corresponding USB port. Currently this feature is used to
+set the speed reported by device ('low', 'full', 'high' or 'super'). The
+availabe speed choices depend on both HC and device. For the USB 'disk' device
+the optionsX parameter can be used to specify an alternative redolog file
+(journal) of some image modes. For 'vvfat' mode USB disks the optionsX
+parameter can be used to specify the disk size (range 128M ... 128G). If the
+size is not specified, it defaults to 504M.
 
 Example:
   usb_uhci: enabled=1, port1=mouse, port2=disk:usbstick.img

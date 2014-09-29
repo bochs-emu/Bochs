@@ -73,7 +73,8 @@ private:
     const char *fname;
     bx_list_c *config;
     char info_txt[BX_PATHNAME_LEN];
-    char journal[BX_PATHNAME_LEN];
+    char journal[BX_PATHNAME_LEN]; // undoable / volatile disk only
+    int size; // VVFAT disk only
   } s;
 
   static const char *cd_param_string_handler(bx_param_string_c *param, int set,
