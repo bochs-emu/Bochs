@@ -854,11 +854,11 @@ void BX_CPU_C::read_RMW_virtual_dqword_aligned_64(unsigned s, Bit64u offset, Bit
   }
 
   BxPackedXmmRegister data;
-  data.xmm64u(0) = *lo;
-  data.xmm64u(1) = *hi;
-
   if (access_read_linear(laddr, 16, CPL, BX_RW, 0x0, (void *) &data) < 0)
     exception(int_number(s), 0);
+
+  *lo = data.xmm64u(0);
+  *hi = data.xmm64u(1);
 }
 
 void BX_CPU_C::write_RMW_virtual_dqword(Bit64u hi, Bit64u lo)
