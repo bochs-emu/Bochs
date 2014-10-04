@@ -174,18 +174,31 @@ char      cMacAddr[6];
 char      NetDev[512];
 BOOL      IsNT = FALSE;
 
-LPADAPTER (*PacketOpenAdapter)     (LPTSTR);
-VOID      (*PacketCloseAdapter)    (LPADAPTER);
-BOOLEAN   (*PacketSetHwFilter)     (LPADAPTER, ULONG);
-BOOLEAN   (*PacketSetBpf)          (LPADAPTER, struct bpf_program *);
-BOOLEAN   (*PacketGetAdapterNames) (PTSTR, PULONG);
-BOOLEAN   (*PacketSendPacket)      (LPADAPTER, LPPACKET, BOOLEAN);
-BOOLEAN   (*PacketReceivePacket)   (LPADAPTER, LPPACKET, BOOLEAN);
-BOOLEAN   (*PacketSetBuff)         (LPADAPTER, int);
-BOOLEAN   (*PacketSetReadTimeout)  (LPADAPTER, int);
-LPPACKET  (*PacketAllocatePacket)  (void);
-VOID      (*PacketInitPacket)      (LPPACKET, PVOID, UINT);
-VOID      (*PacketFreePacket)      (LPPACKET);
+typedef LPADAPTER (CDECL *POpenAdapter)     (LPTSTR);
+typedef VOID      (CDECL *PCloseAdapter)    (LPADAPTER);
+typedef BOOLEAN   (CDECL *PSetHwFilter)     (LPADAPTER, ULONG);
+typedef BOOLEAN   (CDECL *PSetBpf)          (LPADAPTER, struct bpf_program *);
+typedef BOOLEAN   (CDECL *PGetAdapterNames) (PTSTR, PULONG);
+typedef BOOLEAN   (CDECL *PSendPacket)      (LPADAPTER, LPPACKET, BOOLEAN);
+typedef BOOLEAN   (CDECL *PReceivePacket)   (LPADAPTER, LPPACKET, BOOLEAN);
+typedef BOOLEAN   (CDECL *PSetBuff)         (LPADAPTER, int);
+typedef BOOLEAN   (CDECL *PSetReadTimeout)  (LPADAPTER, int);
+typedef LPPACKET  (CDECL *PAllocatePacket)  (void);
+typedef VOID      (CDECL *PInitPacket)      (LPPACKET, PVOID, UINT);
+typedef VOID      (CDECL *PFreePacket)      (LPPACKET);
+
+POpenAdapter     PacketOpenAdapter;
+PCloseAdapter    PacketCloseAdapter;
+PSetHwFilter     PacketSetHwFilter;
+PSetBpf          PacketSetBpf;
+PGetAdapterNames PacketGetAdapterNames;
+PSendPacket      PacketSendPacket;
+PReceivePacket   PacketReceivePacket;
+PSetBuff         PacketSetBuff;
+PSetReadTimeout  PacketSetReadTimeout;
+PAllocatePacket  PacketAllocatePacket;
+PInitPacket      PacketInitPacket;
+PFreePacket      PacketFreePacket;
 
 // template filter for a unicast mac address and all
 // multicast/broadcast frames
@@ -257,18 +270,18 @@ bx_win32_pktmover_c::bx_win32_pktmover_c(
   hPacket = LoadLibrary("PACKET.DLL");
   memcpy(cMacAddr, macaddr, 6);
   if (hPacket) {
-    PacketOpenAdapter     = (LPADAPTER (*)(LPTSTR))                          GetProcAddress(hPacket, "PacketOpenAdapter");
-    PacketCloseAdapter    = (VOID      (*)(LPADAPTER))                       GetProcAddress(hPacket, "PacketCloseAdapter");
-    PacketSetHwFilter     = (BOOLEAN   (*)(LPADAPTER, ULONG))                GetProcAddress(hPacket, "PacketSetHwFilter");
-    PacketSetBpf          = (BOOLEAN   (*)(LPADAPTER, struct bpf_program *)) GetProcAddress(hPacket, "PacketSetBpf");
-    PacketGetAdapterNames = (BOOLEAN   (*)(PTSTR, PULONG))                   GetProcAddress(hPacket, "PacketGetAdapterNames");
-    PacketSendPacket      = (BOOLEAN   (*)(LPADAPTER, LPPACKET, BOOLEAN))    GetProcAddress(hPacket, "PacketSendPacket");
-    PacketReceivePacket   = (BOOLEAN   (*)(LPADAPTER, LPPACKET, BOOLEAN))    GetProcAddress(hPacket, "PacketReceivePacket");
-    PacketSetBuff         = (BOOLEAN   (*)(LPADAPTER, int))                  GetProcAddress(hPacket, "PacketSetBuff");
-    PacketSetReadTimeout  = (BOOLEAN   (*)(LPADAPTER, int))                  GetProcAddress(hPacket, "PacketSetReadTimeout");
-    PacketAllocatePacket  = (LPPACKET  (*)(void))                            GetProcAddress(hPacket, "PacketAllocatePacket");
-    PacketInitPacket      = (VOID      (*)(LPPACKET, PVOID, UINT))           GetProcAddress(hPacket, "PacketInitPacket");
-    PacketFreePacket      = (VOID      (*)(LPPACKET))                        GetProcAddress(hPacket, "PacketFreePacket");
+    PacketOpenAdapter     = (POpenAdapter)     GetProcAddress(hPacket, "PacketOpenAdapter");
+    PacketCloseAdapter    = (PCloseAdapter)    GetProcAddress(hPacket, "PacketCloseAdapter");
+    PacketSetHwFilter     = (PSetHwFilter)     GetProcAddress(hPacket, "PacketSetHwFilter");
+    PacketSetBpf          = (PSetBpf)          GetProcAddress(hPacket, "PacketSetBpf");
+    PacketGetAdapterNames = (PGetAdapterNames) GetProcAddress(hPacket, "PacketGetAdapterNames");
+    PacketSendPacket      = (PSendPacket)      GetProcAddress(hPacket, "PacketSendPacket");
+    PacketReceivePacket   = (PReceivePacket)   GetProcAddress(hPacket, "PacketReceivePacket");
+    PacketSetBuff         = (PSetBuff)         GetProcAddress(hPacket, "PacketSetBuff");
+    PacketSetReadTimeout  = (PSetReadTimeout)  GetProcAddress(hPacket, "PacketSetReadTimeout");
+    PacketAllocatePacket  = (PAllocatePacket)  GetProcAddress(hPacket, "PacketAllocatePacket");
+    PacketInitPacket      = (PInitPacket)      GetProcAddress(hPacket, "PacketInitPacket");
+    PacketFreePacket      = (PFreePacket)      GetProcAddress(hPacket, "PacketFreePacket");
   } else {
     BX_PANIC(("Could not load WPCap Drivers for ethernet support!"));
   }
