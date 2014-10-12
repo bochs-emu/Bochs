@@ -160,17 +160,17 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error
     RSP_for_cpl_x &= BX_CONST64(0xfffffffffffffff0);
 
     // push old stack long pointer onto new stack
-    write_new_stack_qword_64(RSP_for_cpl_x -  8, cs_descriptor.dpl, old_SS);
-    write_new_stack_qword_64(RSP_for_cpl_x - 16, cs_descriptor.dpl, old_RSP);
-    write_new_stack_qword_64(RSP_for_cpl_x - 24, cs_descriptor.dpl, read_eflags());
+    write_new_stack_qword(RSP_for_cpl_x -  8, cs_descriptor.dpl, old_SS);
+    write_new_stack_qword(RSP_for_cpl_x - 16, cs_descriptor.dpl, old_RSP);
+    write_new_stack_qword(RSP_for_cpl_x - 24, cs_descriptor.dpl, read_eflags());
     // push long pointer to return address onto new stack
-    write_new_stack_qword_64(RSP_for_cpl_x - 32, cs_descriptor.dpl, old_CS);
-    write_new_stack_qword_64(RSP_for_cpl_x - 40, cs_descriptor.dpl, old_RIP);
+    write_new_stack_qword(RSP_for_cpl_x - 32, cs_descriptor.dpl, old_CS);
+    write_new_stack_qword(RSP_for_cpl_x - 40, cs_descriptor.dpl, old_RIP);
     RSP_for_cpl_x -= 40;
 
     if (push_error) {
       RSP_for_cpl_x -= 8;
-      write_new_stack_qword_64(RSP_for_cpl_x, cs_descriptor.dpl, error_code);
+      write_new_stack_qword(RSP_for_cpl_x, cs_descriptor.dpl, error_code);
     }
 
     // load CS:RIP (guaranteed to be in 64 bit mode)
@@ -201,17 +201,17 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error
     // push flags onto stack
     // push current CS selector onto stack
     // push return offset onto stack
-    write_new_stack_qword_64(RSP_for_cpl_x - 8,  cs_descriptor.dpl, old_SS);
-    write_new_stack_qword_64(RSP_for_cpl_x - 16, cs_descriptor.dpl, old_RSP);
-    write_new_stack_qword_64(RSP_for_cpl_x - 24, cs_descriptor.dpl, read_eflags());
+    write_new_stack_qword(RSP_for_cpl_x - 8,  cs_descriptor.dpl, old_SS);
+    write_new_stack_qword(RSP_for_cpl_x - 16, cs_descriptor.dpl, old_RSP);
+    write_new_stack_qword(RSP_for_cpl_x - 24, cs_descriptor.dpl, read_eflags());
     // push long pointer to return address onto new stack
-    write_new_stack_qword_64(RSP_for_cpl_x - 32, cs_descriptor.dpl, old_CS);
-    write_new_stack_qword_64(RSP_for_cpl_x - 40, cs_descriptor.dpl, old_RIP);
+    write_new_stack_qword(RSP_for_cpl_x - 32, cs_descriptor.dpl, old_CS);
+    write_new_stack_qword(RSP_for_cpl_x - 40, cs_descriptor.dpl, old_RIP);
     RSP_for_cpl_x -= 40;
 
     if (push_error) {
       RSP_for_cpl_x -= 8;
-      write_new_stack_qword_64(RSP_for_cpl_x, cs_descriptor.dpl, error_code);
+      write_new_stack_qword(RSP_for_cpl_x, cs_descriptor.dpl, error_code);
     }
 
     // set the RPL field of CS to CPL
@@ -465,24 +465,24 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
         if (is_v8086_mode)
         {
           if (gate_descriptor.type>=14) { // 386 int/trap gate
-            write_new_stack_dword_32(&new_stack, temp_ESP-4,  cs_descriptor.dpl,
+            write_new_stack_dword(&new_stack, temp_ESP-4,  cs_descriptor.dpl,
                 BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
-            write_new_stack_dword_32(&new_stack, temp_ESP-8,  cs_descriptor.dpl,
+            write_new_stack_dword(&new_stack, temp_ESP-8,  cs_descriptor.dpl,
                 BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
-            write_new_stack_dword_32(&new_stack, temp_ESP-12, cs_descriptor.dpl,
+            write_new_stack_dword(&new_stack, temp_ESP-12, cs_descriptor.dpl,
                 BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
-            write_new_stack_dword_32(&new_stack, temp_ESP-16, cs_descriptor.dpl,
+            write_new_stack_dword(&new_stack, temp_ESP-16, cs_descriptor.dpl,
                 BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
             temp_ESP -= 16;
           }
           else {
-            write_new_stack_word_32(&new_stack, temp_ESP-2, cs_descriptor.dpl,
+            write_new_stack_word(&new_stack, temp_ESP-2, cs_descriptor.dpl,
                 BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
-            write_new_stack_word_32(&new_stack, temp_ESP-4, cs_descriptor.dpl,
+            write_new_stack_word(&new_stack, temp_ESP-4, cs_descriptor.dpl,
                 BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
-            write_new_stack_word_32(&new_stack, temp_ESP-6, cs_descriptor.dpl,
+            write_new_stack_word(&new_stack, temp_ESP-6, cs_descriptor.dpl,
                 BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
-            write_new_stack_word_32(&new_stack, temp_ESP-8, cs_descriptor.dpl,
+            write_new_stack_word(&new_stack, temp_ESP-8, cs_descriptor.dpl,
                 BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
             temp_ESP -= 8;
           }
@@ -490,30 +490,30 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
 
         if (gate_descriptor.type>=14) { // 386 int/trap gate
           // push long pointer to old stack onto new stack
-          write_new_stack_dword_32(&new_stack, temp_ESP-4,  cs_descriptor.dpl, old_SS);
-          write_new_stack_dword_32(&new_stack, temp_ESP-8,  cs_descriptor.dpl, old_ESP);
-          write_new_stack_dword_32(&new_stack, temp_ESP-12, cs_descriptor.dpl, read_eflags());
-          write_new_stack_dword_32(&new_stack, temp_ESP-16, cs_descriptor.dpl, old_CS);
-          write_new_stack_dword_32(&new_stack, temp_ESP-20, cs_descriptor.dpl, old_EIP);
+          write_new_stack_dword(&new_stack, temp_ESP-4,  cs_descriptor.dpl, old_SS);
+          write_new_stack_dword(&new_stack, temp_ESP-8,  cs_descriptor.dpl, old_ESP);
+          write_new_stack_dword(&new_stack, temp_ESP-12, cs_descriptor.dpl, read_eflags());
+          write_new_stack_dword(&new_stack, temp_ESP-16, cs_descriptor.dpl, old_CS);
+          write_new_stack_dword(&new_stack, temp_ESP-20, cs_descriptor.dpl, old_EIP);
           temp_ESP -= 20;
 
           if (push_error) {
             temp_ESP -= 4;
-            write_new_stack_dword_32(&new_stack, temp_ESP, cs_descriptor.dpl, error_code);
+            write_new_stack_dword(&new_stack, temp_ESP, cs_descriptor.dpl, error_code);
           }
         }
         else {                          // 286 int/trap gate
           // push long pointer to old stack onto new stack
-          write_new_stack_word_32(&new_stack, temp_ESP-2,  cs_descriptor.dpl, old_SS);
-          write_new_stack_word_32(&new_stack, temp_ESP-4,  cs_descriptor.dpl, (Bit16u) old_ESP);
-          write_new_stack_word_32(&new_stack, temp_ESP-6,  cs_descriptor.dpl, (Bit16u) read_eflags());
-          write_new_stack_word_32(&new_stack, temp_ESP-8,  cs_descriptor.dpl, old_CS);
-          write_new_stack_word_32(&new_stack, temp_ESP-10, cs_descriptor.dpl, (Bit16u) old_EIP);
+          write_new_stack_word(&new_stack, temp_ESP-2,  cs_descriptor.dpl, old_SS);
+          write_new_stack_word(&new_stack, temp_ESP-4,  cs_descriptor.dpl, (Bit16u) old_ESP);
+          write_new_stack_word(&new_stack, temp_ESP-6,  cs_descriptor.dpl, (Bit16u) read_eflags());
+          write_new_stack_word(&new_stack, temp_ESP-8,  cs_descriptor.dpl, old_CS);
+          write_new_stack_word(&new_stack, temp_ESP-10, cs_descriptor.dpl, (Bit16u) old_EIP);
           temp_ESP -= 10;
 
           if (push_error) {
             temp_ESP -= 2;
-            write_new_stack_word_32(&new_stack, temp_ESP, cs_descriptor.dpl, error_code);
+            write_new_stack_word(&new_stack, temp_ESP, cs_descriptor.dpl, error_code);
           }
         }
 
@@ -525,24 +525,24 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
         if (is_v8086_mode)
         {
           if (gate_descriptor.type>=14) { // 386 int/trap gate
-            write_new_stack_dword_32(&new_stack, (Bit16u)(temp_SP-4),  cs_descriptor.dpl,
+            write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-4),  cs_descriptor.dpl,
                 BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
-            write_new_stack_dword_32(&new_stack, (Bit16u)(temp_SP-8),  cs_descriptor.dpl,
+            write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-8),  cs_descriptor.dpl,
                 BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
-            write_new_stack_dword_32(&new_stack, (Bit16u)(temp_SP-12), cs_descriptor.dpl,
+            write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-12), cs_descriptor.dpl,
                 BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
-            write_new_stack_dword_32(&new_stack, (Bit16u)(temp_SP-16), cs_descriptor.dpl,
+            write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-16), cs_descriptor.dpl,
                 BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
             temp_SP -= 16;
           }
           else {
-            write_new_stack_word_32(&new_stack, (Bit16u)(temp_SP-2), cs_descriptor.dpl,
+            write_new_stack_word(&new_stack, (Bit16u)(temp_SP-2), cs_descriptor.dpl,
                 BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
-            write_new_stack_word_32(&new_stack, (Bit16u)(temp_SP-4), cs_descriptor.dpl,
+            write_new_stack_word(&new_stack, (Bit16u)(temp_SP-4), cs_descriptor.dpl,
                 BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
-            write_new_stack_word_32(&new_stack, (Bit16u)(temp_SP-6), cs_descriptor.dpl,
+            write_new_stack_word(&new_stack, (Bit16u)(temp_SP-6), cs_descriptor.dpl,
                 BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
-            write_new_stack_word_32(&new_stack, (Bit16u)(temp_SP-8), cs_descriptor.dpl,
+            write_new_stack_word(&new_stack, (Bit16u)(temp_SP-8), cs_descriptor.dpl,
                 BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
             temp_SP -= 8;
           }
@@ -550,30 +550,30 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
 
         if (gate_descriptor.type>=14) { // 386 int/trap gate
           // push long pointer to old stack onto new stack
-          write_new_stack_dword_32(&new_stack, (Bit16u)(temp_SP-4),  cs_descriptor.dpl, old_SS);
-          write_new_stack_dword_32(&new_stack, (Bit16u)(temp_SP-8),  cs_descriptor.dpl, old_ESP);
-          write_new_stack_dword_32(&new_stack, (Bit16u)(temp_SP-12), cs_descriptor.dpl, read_eflags());
-          write_new_stack_dword_32(&new_stack, (Bit16u)(temp_SP-16), cs_descriptor.dpl, old_CS);
-          write_new_stack_dword_32(&new_stack, (Bit16u)(temp_SP-20), cs_descriptor.dpl, old_EIP);
+          write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-4),  cs_descriptor.dpl, old_SS);
+          write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-8),  cs_descriptor.dpl, old_ESP);
+          write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-12), cs_descriptor.dpl, read_eflags());
+          write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-16), cs_descriptor.dpl, old_CS);
+          write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-20), cs_descriptor.dpl, old_EIP);
           temp_SP -= 20;
 
           if (push_error) {
             temp_SP -= 4;
-            write_new_stack_dword_32(&new_stack, temp_SP, cs_descriptor.dpl, error_code);
+            write_new_stack_dword(&new_stack, temp_SP, cs_descriptor.dpl, error_code);
           }
         }
         else {                          // 286 int/trap gate
           // push long pointer to old stack onto new stack
-          write_new_stack_word_32(&new_stack, (Bit16u)(temp_SP-2),  cs_descriptor.dpl, old_SS);
-          write_new_stack_word_32(&new_stack, (Bit16u)(temp_SP-4),  cs_descriptor.dpl, (Bit16u) old_ESP);
-          write_new_stack_word_32(&new_stack, (Bit16u)(temp_SP-6),  cs_descriptor.dpl, (Bit16u) read_eflags());
-          write_new_stack_word_32(&new_stack, (Bit16u)(temp_SP-8),  cs_descriptor.dpl, old_CS);
-          write_new_stack_word_32(&new_stack, (Bit16u)(temp_SP-10), cs_descriptor.dpl, (Bit16u) old_EIP);
+          write_new_stack_word(&new_stack, (Bit16u)(temp_SP-2),  cs_descriptor.dpl, old_SS);
+          write_new_stack_word(&new_stack, (Bit16u)(temp_SP-4),  cs_descriptor.dpl, (Bit16u) old_ESP);
+          write_new_stack_word(&new_stack, (Bit16u)(temp_SP-6),  cs_descriptor.dpl, (Bit16u) read_eflags());
+          write_new_stack_word(&new_stack, (Bit16u)(temp_SP-8),  cs_descriptor.dpl, old_CS);
+          write_new_stack_word(&new_stack, (Bit16u)(temp_SP-10), cs_descriptor.dpl, (Bit16u) old_EIP);
           temp_SP -= 10;
 
           if (push_error) {
             temp_SP -= 2;
-            write_new_stack_word_32(&new_stack, temp_SP, cs_descriptor.dpl, error_code);
+            write_new_stack_word(&new_stack, temp_SP, cs_descriptor.dpl, error_code);
           }
         }
 

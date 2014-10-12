@@ -97,7 +97,6 @@ void BX_CPU_C::cpu_loop(void)
 
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
     for(;;) {
-
       // want to allow changing of the instruction inside instrumentation callback
       BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
       RIP += i->ilen();

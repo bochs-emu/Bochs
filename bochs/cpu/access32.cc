@@ -1328,8 +1328,95 @@ BX_CPU_C::write_RMW_virtual_qword(Bit64u val64)
 // correctness but not performance critical.
 //
 
-// assuming the write happens in legacy mode
-void BX_CPU_C::write_new_stack_word_32(bx_segment_reg_t *seg, Bit32u offset, unsigned curr_pl, Bit16u data)
+void BX_CPU_C::write_new_stack_word(Bit64u laddr, unsigned curr_pl, Bit16u data)
+{
+  bx_bool user = (curr_pl == 3);
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+  Bit64u lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
+#else
+  Bit64u lpf = LPFOf(laddr);
+#endif    
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    // See if the TLB entry privilege level allows us write access
+    // from this CPL.
+    if (tlbEntry->accessBits & (0x04 << user)) {
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
+      BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, pAddr, 2, curr_pl, BX_WRITE, (Bit8u*) &data);
+      Bit16u *hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
+      pageWriteStampTable.decWriteStamp(pAddr, 2);
+      WriteHostWordToLittleEndian(hostAddr, data);
+      return;
+    }
+  }
+
+  if (access_write_linear(laddr, 2, curr_pl, 0x1, (void *) &data) < 0)
+    exception(BX_SS_EXCEPTION, 0);
+}
+
+void BX_CPU_C::write_new_stack_dword(Bit64u laddr, unsigned curr_pl, Bit32u data)
+{
+  bx_bool user = (curr_pl == 3);
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+  Bit64u lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
+#else
+  Bit64u lpf = LPFOf(laddr);
+#endif    
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    // See if the TLB entry privilege level allows us write access
+    // from this CPL.
+    if (tlbEntry->accessBits & (0x04 << user)) {
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
+      BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, pAddr, 4, curr_pl, BX_WRITE, (Bit8u*) &data);
+      Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
+      pageWriteStampTable.decWriteStamp(pAddr, 4);
+      WriteHostDWordToLittleEndian(hostAddr, data);
+      return;
+    }
+  }
+
+  if (access_write_linear(laddr, 4, curr_pl, 0x3, (void *) &data) < 0)
+    exception(BX_SS_EXCEPTION, 0);
+}
+
+void BX_CPU_C::write_new_stack_qword(Bit64u laddr, unsigned curr_pl, Bit64u data)
+{
+  bx_bool user = (curr_pl == 3);
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+  Bit64u lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
+#else
+  Bit64u lpf = LPFOf(laddr);
+#endif    
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    // See if the TLB entry privilege level allows us write access
+    // from this CPL.
+    if (tlbEntry->accessBits & (0x04 << user)) {
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
+      BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, pAddr, 8, curr_pl, BX_WRITE, (Bit8u*) &data);
+      Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
+      pageWriteStampTable.decWriteStamp(pAddr, 8);
+      WriteHostQWordToLittleEndian(hostAddr, data);
+      return;
+    }
+  }
+
+  if (access_write_linear(laddr, 8, curr_pl, 0x7, (void *) &data) < 0)
+    exception(BX_SS_EXCEPTION, 0);
+}
+
+// assuming the write happens in 32-bit mode
+void BX_CPU_C::write_new_stack_word(bx_segment_reg_t *seg, Bit32u offset, unsigned curr_pl, Bit16u data)
 {
   Bit32u laddr;
 
@@ -1337,48 +1424,22 @@ void BX_CPU_C::write_new_stack_word_32(bx_segment_reg_t *seg, Bit32u offset, uns
     if (offset < seg->cache.u.segment.limit_scaled) {
 accessOK:
       laddr = (Bit32u)(seg->cache.u.segment.base) + offset;
-      bx_bool user = (curr_pl == 3);
-      unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
-#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-      Bit32u lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
-#else
-      Bit32u lpf = LPFOf(laddr);
-#endif    
-      bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
-      if (tlbEntry->lpf == lpf) {
-        // See if the TLB entry privilege level allows us write access
-        // from this CPL.
-        if (tlbEntry->accessBits & (0x04 << user)) {
-          bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-          Bit32u pageOffset = PAGE_OFFSET(laddr);
-          bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
-          BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, pAddr, 2, curr_pl, BX_WRITE, (Bit8u*) &data);
-          Bit16u *hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
-          pageWriteStampTable.decWriteStamp(pAddr, 2);
-          WriteHostWordToLittleEndian(hostAddr, data);
-          return;
-        }
-      }
-
-      access_write_linear(laddr, 2, curr_pl, 0x1, (void *) &data);
+      write_new_stack_word(laddr, curr_pl, data);
       return;
-    }
-    else {
-      BX_ERROR(("write_new_stack_word_32(): segment limit violation"));
-      exception(BX_SS_EXCEPTION, 
-         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
     }
   }
 
   // add error code when segment violation occurs when pushing into new stack
-  if (!write_virtual_checks(seg, offset, 2))
+  if (!write_virtual_checks(seg, offset, 2)) {
+    BX_ERROR(("write_new_stack_word(): segment limit violation"));
     exception(BX_SS_EXCEPTION, 
          seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
+  }
   goto accessOK;
 }
 
-// assuming the write happens in legacy mode
-void BX_CPU_C::write_new_stack_dword_32(bx_segment_reg_t *seg, Bit32u offset, unsigned curr_pl, Bit32u data)
+// assuming the write happens in 32-bit mode
+void BX_CPU_C::write_new_stack_dword(bx_segment_reg_t *seg, Bit32u offset, unsigned curr_pl, Bit32u data)
 {
   Bit32u laddr;
 
@@ -1386,48 +1447,22 @@ void BX_CPU_C::write_new_stack_dword_32(bx_segment_reg_t *seg, Bit32u offset, un
     if (offset < (seg->cache.u.segment.limit_scaled-2)) {
 accessOK:
       laddr = (Bit32u)(seg->cache.u.segment.base) + offset;
-      bx_bool user = (curr_pl == 3);
-      unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
-#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-      Bit32u lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
-#else
-      Bit32u lpf = LPFOf(laddr);
-#endif    
-      bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
-      if (tlbEntry->lpf == lpf) {
-        // See if the TLB entry privilege level allows us write access
-        // from this CPL.
-        if (tlbEntry->accessBits & (0x04 << user)) {
-          bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-          Bit32u pageOffset = PAGE_OFFSET(laddr);
-          bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
-          BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, pAddr, 4, curr_pl, BX_WRITE, (Bit8u*) &data);
-          Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
-          pageWriteStampTable.decWriteStamp(pAddr, 4);
-          WriteHostDWordToLittleEndian(hostAddr, data);
-          return;
-        }
-      }
-
-      access_write_linear(laddr, 4, curr_pl, 0x3, (void *) &data);
+      write_new_stack_dword(laddr, curr_pl, data);
       return;
-    }
-    else {
-      BX_ERROR(("write_new_stack_dword_32(): segment limit violation"));
-      exception(BX_SS_EXCEPTION, 
-         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
     }
   }
 
   // add error code when segment violation occurs when pushing into new stack
-  if (!write_virtual_checks(seg, offset, 4))
+  if (!write_virtual_checks(seg, offset, 4)) {
+    BX_ERROR(("write_new_stack_dword(): segment limit violation"));
     exception(BX_SS_EXCEPTION, 
          seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
+  }
   goto accessOK;
 }
 
-// assuming the write happens in legacy mode
-void BX_CPU_C::write_new_stack_qword_32(bx_segment_reg_t *seg, Bit32u offset, unsigned curr_pl, Bit64u data)
+// assuming the write happens in 32-bit mode
+void BX_CPU_C::write_new_stack_qword(bx_segment_reg_t *seg, Bit32u offset, unsigned curr_pl, Bit64u data)
 {
   Bit32u laddr;
 
@@ -1435,42 +1470,16 @@ void BX_CPU_C::write_new_stack_qword_32(bx_segment_reg_t *seg, Bit32u offset, un
     if (offset <= (seg->cache.u.segment.limit_scaled-7)) {
 accessOK:
       laddr = (Bit32u)(seg->cache.u.segment.base) + offset;
-      bx_bool user = (curr_pl == 3);
-      unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
-#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-      Bit32u lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
-#else
-      Bit32u lpf = LPFOf(laddr);
-#endif    
-      bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
-      if (tlbEntry->lpf == lpf) {
-        // See if the TLB entry privilege level allows us write access
-        // from this CPL.
-        if (tlbEntry->accessBits & (0x04 << user)) {
-          bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-          Bit32u pageOffset = PAGE_OFFSET(laddr);
-          bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
-          BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, pAddr, 8, curr_pl, BX_WRITE, (Bit8u*) &data);
-          Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
-          pageWriteStampTable.decWriteStamp(pAddr, 8);
-          WriteHostQWordToLittleEndian(hostAddr, data);
-          return;
-        }
-      }
-
-      access_write_linear(laddr, 8, curr_pl, 0x7, (void *) &data);
+      write_new_stack_dword(laddr, curr_pl, data);
       return;
-    }
-    else {
-      BX_ERROR(("write_new_stack_qword_32(): segment limit violation"));
-      exception(BX_SS_EXCEPTION, 
-         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
     }
   }
 
   // add error code when segment violation occurs when pushing into new stack
-  if (!write_virtual_checks(seg, offset, 8))
+  if (!write_virtual_checks(seg, offset, 8)) {
+    BX_ERROR(("write_new_stack_qword(): segment limit violation"));
     exception(BX_SS_EXCEPTION, 
         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
+  }
   goto accessOK;
 }

@@ -60,21 +60,21 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
       Bit64u temp_rsp = RSP; 
       // moving to long mode, push return address onto 64-bit stack
       if (i->os64L()) {
-        write_new_stack_qword_64(temp_rsp -  8, cs_descriptor.dpl,
+        write_new_stack_qword(temp_rsp -  8, cs_descriptor.dpl,
              BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-        write_new_stack_qword_64(temp_rsp - 16, cs_descriptor.dpl, RIP);
+        write_new_stack_qword(temp_rsp - 16, cs_descriptor.dpl, RIP);
         temp_rsp -= 16;
       }
       else if (i->os32L()) {
-        write_new_stack_dword_64(temp_rsp - 4, cs_descriptor.dpl,
+        write_new_stack_dword(temp_rsp - 4, cs_descriptor.dpl,
              BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-        write_new_stack_dword_64(temp_rsp - 8, cs_descriptor.dpl, EIP);
+        write_new_stack_dword(temp_rsp - 8, cs_descriptor.dpl, EIP);
         temp_rsp -= 8;
       }
       else {
-        write_new_stack_word_64(temp_rsp - 2, cs_descriptor.dpl,
+        write_new_stack_word(temp_rsp - 2, cs_descriptor.dpl,
              BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-        write_new_stack_word_64(temp_rsp - 4, cs_descriptor.dpl, IP);
+        write_new_stack_word(temp_rsp - 4, cs_descriptor.dpl, IP);
         temp_rsp -= 4;
       }
 
@@ -98,28 +98,28 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
 #if BX_SUPPORT_X86_64
       if (i->os64L()) {
-        write_new_stack_qword_32(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS],
+        write_new_stack_qword(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS],
              temp_RSP -  8, cs_descriptor.dpl,
              BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-        write_new_stack_qword_32(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS],
+        write_new_stack_qword(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS],
              temp_RSP - 16, cs_descriptor.dpl, RIP);
         temp_RSP -= 16;
       }
       else
 #endif
       if (i->os32L()) {
-        write_new_stack_dword_32(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS],
+        write_new_stack_dword(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS],
              temp_RSP - 4, cs_descriptor.dpl,
              BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-        write_new_stack_dword_32(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS],
+        write_new_stack_dword(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS],
              temp_RSP - 8, cs_descriptor.dpl, EIP);
         temp_RSP -= 8;
       }
       else {
-        write_new_stack_word_32(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS],
+        write_new_stack_word(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS],
              temp_RSP - 2, cs_descriptor.dpl,
              BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-        write_new_stack_word_32(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS],
+        write_new_stack_word(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS],
              temp_RSP - 4, cs_descriptor.dpl, IP);
         temp_RSP -= 4;
       }
@@ -347,33 +347,33 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
 
       // push pointer of old stack onto new stack
       if (gate_descriptor->type==BX_386_CALL_GATE) {
-        write_new_stack_dword_32(&new_stack, temp_ESP-4, cs_descriptor.dpl, return_SS);
-        write_new_stack_dword_32(&new_stack, temp_ESP-8, cs_descriptor.dpl, return_ESP);
+        write_new_stack_dword(&new_stack, temp_ESP-4, cs_descriptor.dpl, return_SS);
+        write_new_stack_dword(&new_stack, temp_ESP-8, cs_descriptor.dpl, return_ESP);
         temp_ESP -= 8;
 
         for (unsigned n=param_count; n>0; n--) {
           temp_ESP -= 4;
           Bit32u param = stack_read_dword(return_ESP + (n-1)*4);
-          write_new_stack_dword_32(&new_stack, temp_ESP, cs_descriptor.dpl, param);
+          write_new_stack_dword(&new_stack, temp_ESP, cs_descriptor.dpl, param);
         }
         // push return address onto new stack
-        write_new_stack_dword_32(&new_stack, temp_ESP-4, cs_descriptor.dpl, return_CS);
-        write_new_stack_dword_32(&new_stack, temp_ESP-8, cs_descriptor.dpl, return_EIP);
+        write_new_stack_dword(&new_stack, temp_ESP-4, cs_descriptor.dpl, return_CS);
+        write_new_stack_dword(&new_stack, temp_ESP-8, cs_descriptor.dpl, return_EIP);
         temp_ESP -= 8;
       }
       else {
-        write_new_stack_word_32(&new_stack, temp_ESP-2, cs_descriptor.dpl, return_SS);
-        write_new_stack_word_32(&new_stack, temp_ESP-4, cs_descriptor.dpl, (Bit16u) return_ESP);
+        write_new_stack_word(&new_stack, temp_ESP-2, cs_descriptor.dpl, return_SS);
+        write_new_stack_word(&new_stack, temp_ESP-4, cs_descriptor.dpl, (Bit16u) return_ESP);
         temp_ESP -= 4;
 
         for (unsigned n=param_count; n>0; n--) {
           temp_ESP -= 2;
           Bit16u param = stack_read_word(return_ESP + (n-1)*2);
-          write_new_stack_word_32(&new_stack, temp_ESP, cs_descriptor.dpl, param);
+          write_new_stack_word(&new_stack, temp_ESP, cs_descriptor.dpl, param);
         }
         // push return address onto new stack
-        write_new_stack_word_32(&new_stack, temp_ESP-2, cs_descriptor.dpl, return_CS);
-        write_new_stack_word_32(&new_stack, temp_ESP-4, cs_descriptor.dpl, (Bit16u) return_EIP);
+        write_new_stack_word(&new_stack, temp_ESP-2, cs_descriptor.dpl, return_CS);
+        write_new_stack_word(&new_stack, temp_ESP-4, cs_descriptor.dpl, (Bit16u) return_EIP);
         temp_ESP -= 4;
       }
 
@@ -384,33 +384,33 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
 
       // push pointer of old stack onto new stack
       if (gate_descriptor->type==BX_386_CALL_GATE) {
-        write_new_stack_dword_32(&new_stack, (Bit16u)(temp_SP-4), cs_descriptor.dpl, return_SS);
-        write_new_stack_dword_32(&new_stack, (Bit16u)(temp_SP-8), cs_descriptor.dpl, return_ESP);
+        write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-4), cs_descriptor.dpl, return_SS);
+        write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-8), cs_descriptor.dpl, return_ESP);
         temp_SP -= 8;
 
         for (unsigned n=param_count; n>0; n--) {
           temp_SP -= 4;
           Bit32u param = stack_read_dword(return_ESP + (n-1)*4);
-          write_new_stack_dword_32(&new_stack, temp_SP, cs_descriptor.dpl, param);
+          write_new_stack_dword(&new_stack, temp_SP, cs_descriptor.dpl, param);
         }
         // push return address onto new stack
-        write_new_stack_dword_32(&new_stack, (Bit16u)(temp_SP-4), cs_descriptor.dpl, return_CS);
-        write_new_stack_dword_32(&new_stack, (Bit16u)(temp_SP-8), cs_descriptor.dpl, return_EIP);
+        write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-4), cs_descriptor.dpl, return_CS);
+        write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-8), cs_descriptor.dpl, return_EIP);
         temp_SP -= 8;
       }
       else {
-        write_new_stack_word_32(&new_stack, (Bit16u)(temp_SP-2), cs_descriptor.dpl, return_SS);
-        write_new_stack_word_32(&new_stack, (Bit16u)(temp_SP-4), cs_descriptor.dpl, (Bit16u) return_ESP);
+        write_new_stack_word(&new_stack, (Bit16u)(temp_SP-2), cs_descriptor.dpl, return_SS);
+        write_new_stack_word(&new_stack, (Bit16u)(temp_SP-4), cs_descriptor.dpl, (Bit16u) return_ESP);
         temp_SP -= 4;
 
         for (unsigned n=param_count; n>0; n--) {
           temp_SP -= 2;
           Bit16u param = stack_read_word(return_ESP + (n-1)*2);
-          write_new_stack_word_32(&new_stack, temp_SP, cs_descriptor.dpl, param);
+          write_new_stack_word(&new_stack, temp_SP, cs_descriptor.dpl, param);
         }
         // push return address onto new stack
-        write_new_stack_word_32(&new_stack, (Bit16u)(temp_SP-2), cs_descriptor.dpl, return_CS);
-        write_new_stack_word_32(&new_stack, (Bit16u)(temp_SP-4), cs_descriptor.dpl, (Bit16u) return_EIP);
+        write_new_stack_word(&new_stack, (Bit16u)(temp_SP-2), cs_descriptor.dpl, return_CS);
+        write_new_stack_word(&new_stack, (Bit16u)(temp_SP-4), cs_descriptor.dpl, (Bit16u) return_EIP);
         temp_SP -= 4;
       }
 
@@ -527,11 +527,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
     Bit64u old_RSP = RSP;
 
     // push old stack long pointer onto new stack
-    write_new_stack_qword_64(RSP_for_cpl_x -  8, cs_descriptor.dpl, old_SS);
-    write_new_stack_qword_64(RSP_for_cpl_x - 16, cs_descriptor.dpl, old_RSP);
+    write_new_stack_qword(RSP_for_cpl_x -  8, cs_descriptor.dpl, old_SS);
+    write_new_stack_qword(RSP_for_cpl_x - 16, cs_descriptor.dpl, old_RSP);
     // push long pointer to return address onto new stack
-    write_new_stack_qword_64(RSP_for_cpl_x - 24, cs_descriptor.dpl, old_CS);
-    write_new_stack_qword_64(RSP_for_cpl_x - 32, cs_descriptor.dpl, old_RIP);
+    write_new_stack_qword(RSP_for_cpl_x - 24, cs_descriptor.dpl, old_CS);
+    write_new_stack_qword(RSP_for_cpl_x - 32, cs_descriptor.dpl, old_RIP);
     RSP_for_cpl_x -= 32;
 
     // load CS:RIP (guaranteed to be in 64 bit mode)
@@ -547,8 +547,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
     BX_DEBUG(("CALL GATE TO SAME PRIVILEGE"));
 
     // push to 64-bit stack, switch to long64 guaranteed
-    write_new_stack_qword_64(RSP -  8, CPL, old_CS);
-    write_new_stack_qword_64(RSP - 16, CPL, old_RIP);
+    write_new_stack_qword(RSP -  8, CPL, old_CS);
+    write_new_stack_qword(RSP - 16, CPL, old_RIP);
 
     // load CS:RIP (guaranteed to be in 64 bit mode)
     branch_far64(&cs_selector, &cs_descriptor, new_RIP, CPL);
