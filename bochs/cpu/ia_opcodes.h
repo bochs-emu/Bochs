@@ -605,8 +605,8 @@ bx_define_opcode(BX_IA_VERW_Ew, &BX_CPU_C::VERW_Ew, &BX_CPU_C::VERW_Ew, 0, OP_NO
 bx_define_opcode(BX_IA_XCHG_EbGb, &BX_CPU_C::XCHG_EbGbM, &BX_CPU_C::XCHG_EbGbR, 0, OP_Eb, OP_Gb, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_XCHG_EwGw, &BX_CPU_C::XCHG_EwGwM, &BX_CPU_C::XCHG_EwGwR, 0, OP_Ew, OP_Gw, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_XCHG_EdGd, &BX_CPU_C::XCHG_EdGdM, &BX_CPU_C::XCHG_EdGdR, 0, OP_Ed, OP_Gd, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_XCHG_RXAX, NULL, &BX_CPU_C::XCHG_RXAX, 0, OP_Ew, OP_AXReg, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_XCHG_ERXEAX, NULL, &BX_CPU_C::XCHG_ERXEAX, 0, OP_Ed, OP_EAXReg, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_XCHG_RXAX, NULL, &BX_CPU_C::XCHG_EwGwR, 0, OP_Ew, OP_AXReg, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_XCHG_ERXEAX, NULL, &BX_CPU_C::XCHG_EdGdR, 0, OP_Ed, OP_EAXReg, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_XLAT, NULL, &BX_CPU_C::XLAT, 0, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 
 bx_define_opcode(BX_IA_SYSENTER, NULL, &BX_CPU_C::SYSENTER, BX_ISA_SYSENTER_SYSEXIT, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
@@ -1363,6 +1363,7 @@ bx_define_opcode(BX_IA_TEST_EqId, &BX_CPU_C::TEST_EqIdM, &BX_CPU_C::TEST_EqIdR, 
 bx_define_opcode(BX_IA_CMP_EqId, &BX_CPU_C::CMP_EqIdM, &BX_CPU_C::CMP_EqIdR, 0, OP_Eq, OP_sId, OP_NONE, OP_NONE, 0)
 
 bx_define_opcode(BX_IA_XCHG_EqGq, &BX_CPU_C::XCHG_EqGqM, &BX_CPU_C::XCHG_EqGqR, 0, OP_Eq, OP_Gq, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_XCHG_RRXRAX, NULL, &BX_CPU_C::XCHG_EqGqR, 0, OP_Eq, OP_RAXReg, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_LEA_GqM, &BX_CPU_C::LEA_GqM, &BX_CPU_C::BxError, 0, OP_Gq, OP_M, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MOV_Op64_GdEd, &BX_CPU_C::MOV64_GdEdM, &BX_CPU_C::MOV_GdEdR, 0, OP_Gd, OP_Ed, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MOV_Op64_EdGd, &BX_CPU_C::MOV64_EdGdM, &BX_CPU_C::MOV_GdEdR, 0, OP_Ed, OP_Gd, OP_NONE, OP_NONE, 0)
@@ -1510,7 +1511,6 @@ bx_define_opcode(BX_IA_LIDT_Op64_Ms, &BX_CPU_C::LIDT64_Ms, &BX_CPU_C::BxError, 0
 // IDT/GDT/LDTR/TR access - keep NNN for VMX
 
 bx_define_opcode(BX_IA_MOV_RRXIq, NULL, &BX_CPU_C::MOV_RRXIq, 0, OP_Eq, OP_Iq, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_XCHG_RRXRAX, NULL, &BX_CPU_C::XCHG_RRXRAX, 0, OP_Eq, OP_RAXReg, OP_NONE, OP_NONE, 0)
 
 bx_define_opcode(BX_IA_LSS_GqMp, &BX_CPU_C::LSS_GqMp, &BX_CPU_C::BxError, 0, OP_Gq, OP_Mp, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_LFS_GqMp, &BX_CPU_C::LFS_GqMp, &BX_CPU_C::BxError, 0, OP_Gq, OP_Mp, OP_NONE, OP_NONE, 0)
