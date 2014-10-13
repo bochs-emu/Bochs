@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,6 @@
 
 // should be adjusted if want to support more SMP processors
 #define BX_MAX_VIRTUAL_TIMERS (32)
-#define BX_NULL_VIRTUAL_TIMER_HANDLE 10000
 
 #define BX_MAX_VIRTUAL_TIME (0x7fffffff)
 
