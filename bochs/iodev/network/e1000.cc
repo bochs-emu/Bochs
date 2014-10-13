@@ -1068,7 +1068,7 @@ void bx_e1000_c::xmit_seg()
     BX_DEBUG(("frames %d size %d ipcss %d", frames, tp->size, css));
     if (tp->ip) { // IPv4
       put_net2(tp->data+css+2, tp->size - css);
-      put_net2(tp->data+css+4, get_net2(tp->data+css+4+frames));
+      put_net2(tp->data+css+4, get_net2(tp->data+css+4)+frames);
     } else // IPv6
       put_net2(tp->data+css+4, tp->size - css);
     css = tp->tucss;
@@ -1077,7 +1077,7 @@ void bx_e1000_c::xmit_seg()
     if (tp->tcp) {
       sofar = frames * tp->mss;
       put_net4(tp->data+css+4, // seq
-               get_net4(tp->data+css+4+sofar));
+               get_net4(tp->data+css+4)+sofar);
       if (tp->paylen - sofar > tp->mss)
         tp->data[css + 13] &= ~9; // PSH, FIN
     } else // UDP
