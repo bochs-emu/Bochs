@@ -340,7 +340,7 @@ void bx_init_options()
       "set benchmark mode",
       0, BX_MAX_BIT32U, 0);
 
-  // benchmarking mode, set by command line arg
+  // dump statistics, set by command line arg
   new bx_param_num_c(menu,
       "dumpstats",
       "dumpstats mode",
