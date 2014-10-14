@@ -1104,6 +1104,22 @@ AC_ARG_ENABLE(logging,
     ]
   )
 
+AC_MSG_CHECKING(enable statistics collection)
+AC_ARG_ENABLE(stats,
+  AS_HELP_STRING([--enable-stats], [enable statistics collection (yes)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_ENABLE_STATISTICS, 1)
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_ENABLE_STATISTICS, 0)
+   fi],
+  [
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_ENABLE_STATISTICS, 1)
+    ]
+  )
+
 AC_MSG_CHECKING(enable assert checks)
 AC_ARG_ENABLE(assert-checks,
   AS_HELP_STRING([--enable-assert-checks], [enable BX_ASSERT checks (yes, if debugger is on)]),

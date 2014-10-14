@@ -340,46 +340,13 @@ static const Bit8u priv_check[BX_PRIV_CHECK_SIZE] =
 #define TLB_SysExecuteOK  (0x10)
 #define TLB_UserExecuteOK (0x20)
 
-// === TLB Instrumentation section ==============================
-
-// Note: this is an approximation of what Peter Tattam had.
-
-#define InstrumentTLB 0
-
-#if InstrumentTLB
-static unsigned tlbLookups=0;
-static unsigned tlbMisses=0;
-static unsigned tlbGlobalFlushes=0;
-static unsigned tlbNonGlobalFlushes=0;
-
-#define InstrTLB_StatsMask 0xfffff
-
-#define InstrTLB_Stats() {\
-  if ((tlbLookups & InstrTLB_StatsMask) == 0) { \
-    BX_INFO(("TLB lookup:%8d miss:%8d %6.2f%% flush:%8d %6.2f%%", \
-          tlbLookups, \
-          tlbMisses, \
-          tlbMisses * 100.0 / tlbLookups, \
-          (tlbGlobalFlushes+tlbNonGlobalFlushes), \
-          (tlbGlobalFlushes+tlbNonGlobalFlushes) * 100.0 / tlbLookups \
-          )); \
-    tlbLookups = tlbMisses = tlbGlobalFlushes = tlbNonGlobalFlushes = 0; \
-    } \
-  }
-#define InstrTLB_Increment(v) (v)++
-
-#else
-#define InstrTLB_Stats()
-#define InstrTLB_Increment(v)
-#endif
+#include "cpustats.h"
 
 // ==============================================================
 
 void BX_CPU_C::TLB_flush(void)
 {
-#if InstrumentTLB
-  InstrTLB_Increment(tlbGlobalFlushes);
-#endif
+  INC_TLBFLUSH_STAT(tlbGlobalFlushes);
 
   invalidate_prefetch_q();
 
@@ -404,9 +371,7 @@ void BX_CPU_C::TLB_flush(void)
 #if BX_CPU_LEVEL >= 6
 void BX_CPU_C::TLB_flushNonGlobal(void)
 {
-#if InstrumentTLB
-  InstrTLB_Increment(tlbNonGlobalFlushes);
-#endif
+  INC_TLBFLUSH_STAT(tlbNonGlobalFlushes);
 
   invalidate_prefetch_q();
 
@@ -1129,8 +1094,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
   unsigned isWrite = rw & 1; // write or r-m-w
   unsigned isExecute = (rw == BX_EXECUTE);
 
-  InstrTLB_Increment(tlbLookups);
-  InstrTLB_Stats();
+  INC_TLB_STAT(tlbLookups);
 
   bx_address lpf = LPFOf(laddr);
 
@@ -1148,7 +1112,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
     // generate an exception if one is warranted.
   }
 
-  InstrTLB_Increment(tlbMisses);
+  INC_TLB_STAT(tlbMisses);
 
   if(BX_CPU_THIS_PTR cr0.get_PG())
   {

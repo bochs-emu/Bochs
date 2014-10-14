@@ -12,6 +12,7 @@ general
   config_interface
   start_mode
   benchmark
+  dumpstats
   restore
   restore_path
   debug_running

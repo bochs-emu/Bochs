@@ -927,6 +927,7 @@ struct monitor_addr_t {
 
 struct BX_SMM_State;
 struct BxOpcodeInfo_t;
+struct bx_cpu_statistics;
 
 class BOCHSAPI BX_CPU_C : public logfunctions {
 
@@ -1244,6 +1245,9 @@ public: // for now...
   unsigned alignment_check_mask;
 #endif
 
+  // statistics
+  bx_cpu_statistics *stats;
+
 #if BX_DEBUGGER
   bx_phy_address watchpoint;
   Bit8u break_point;
@@ -1472,6 +1476,7 @@ public: // for now...
  ~BX_CPU_C();
 
   void initialize(void);
+  void init_statistics(void);
   void after_restore_state(void);
   void register_state(void);
   static Bit64s param_save_handler(void *devptr, bx_param_c *param);

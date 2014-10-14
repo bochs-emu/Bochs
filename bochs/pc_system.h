@@ -137,6 +137,9 @@ public:
   static void timebp_handler(void* this_ptr);
 #endif
   static void benchmarkTimer(void* this_ptr);
+#if BX_ENABLE_STATISTICS
+  static void dumpStatsTimer(void* this_ptr);
+#endif
 
   // ===========================
   // Non-timer oriented features

@@ -340,6 +340,13 @@ void bx_init_options()
       "set benchmark mode",
       0, BX_MAX_BIT32U, 0);
 
+  // benchmarking mode, set by command line arg
+  new bx_param_num_c(menu,
+      "dumpstats",
+      "dumpstats mode",
+      "dump statistics period",
+      0, BX_MAX_BIT32U, 0);
+
   // subtree for setting up log actions by device in bochsrc
   bx_list_c *logfn = new bx_list_c(menu, "logfn", "Logfunctions");
   new bx_list_c(logfn, "debug", "");

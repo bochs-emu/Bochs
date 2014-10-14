@@ -185,6 +185,13 @@ public:
   virtual Bit32s  parse_addon_option(const char *context, int num_params, char *params []);
   virtual Bit32s  save_addon_options(FILE *fp);
 
+  // statistics
+  virtual void init_statistics();
+  virtual void cleanup_statistics();
+  virtual bx_list_c *get_statistics_root() {
+    return (bx_list_c*)get_param("statistics", NULL);
+  }
+
   // save/restore support
   virtual void init_save_restore();
   virtual void cleanup_save_restore();
@@ -993,6 +1000,22 @@ Bit32s bx_real_sim_c::save_addon_options(FILE *fp)
     }
   }
   return 0;
+}
+
+void bx_real_sim_c::init_statistics()
+{
+  if (get_statistics_root() == NULL) {
+    new bx_list_c(root_param, "statistics", "statistics");
+  }
+}
+
+void bx_real_sim_c::cleanup_statistics()
+{
+  bx_list_c *list;
+
+  if ((list = get_statistics_root()) != NULL) {
+    list->clear();
+  }
 }
 
 void bx_real_sim_c::init_save_restore()

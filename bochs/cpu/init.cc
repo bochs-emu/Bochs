@@ -26,6 +26,7 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #include "param_names.h"
+#include "cpustats.h"
 
 #include <stdlib.h>
 
@@ -57,6 +58,8 @@ BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
 #if BX_SUPPORT_SVM
   svm_extensions_bitmask = 0;
 #endif
+
+  stats = NULL;
 
   srand(time(NULL)); // initialize random generator for RDRAND/RDSEED
 }
@@ -127,6 +130,43 @@ void BX_CPU_C::initialize(void)
 
 #if BX_SUPPORT_VMX
   init_VMCS();
+#endif
+
+  init_statistics();
+}
+
+// statistics
+void BX_CPU_C::init_statistics(void)
+{
+#if InstrumentCPU
+  stats = new bx_cpu_statistics;
+
+  bx_list_c *cpu = new bx_list_c(SIM->get_statistics_root(), get_name(), get_name());
+
+#if InstrumentICACHE
+  new bx_shadow_num_c(cpu, "iCacheLookups", &stats->iCacheLookups);
+  new bx_shadow_num_c(cpu, "iCachePrefetch", &stats->iCachePrefetch);
+  new bx_shadow_num_c(cpu, "iCacheMisses", &stats->iCacheMisses);
+#endif
+
+#if InstrumentTLB
+  new bx_shadow_num_c(cpu, "tlbLookups", &stats->tlbLookups);
+  new bx_shadow_num_c(cpu, "tlbMisses", &stats->tlbMisses);
+#endif
+
+#if InstrumentTLBFlush
+  new bx_shadow_num_c(cpu, "tlbGlobalFlushes", &stats->tlbGlobalFlushes);
+  new bx_shadow_num_c(cpu, "tlbNonGlobalFlushes", &stats->tlbNonGlobalFlushes);
+#endif
+
+#if InstrumentStackPrefetch
+  new bx_shadow_num_c(cpu, "stackPrefetch", &stats->stackPrefetch);
+#endif
+
+#if InstrumentSMC
+  new bx_shadow_num_c(cpu, "smc", &stats->smc);
+#endif
+
 #endif
 }
 
@@ -559,6 +599,10 @@ BX_CPU_C::~BX_CPU_C()
 {
 #if BX_CPU_LEVEL >= 4
   delete cpuid;
+#endif
+
+#if InstrumentCPU
+  delete stats;
 #endif
 
   BX_INSTR_EXIT(BX_CPU_ID);

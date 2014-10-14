@@ -758,12 +758,19 @@ public:
   // interfaces to use.
   virtual void set_display_mode(disp_mode_t newmode) {}
   virtual bx_bool test_for_text_console() {return 1;}
+
   // add-on config option support
   virtual bx_bool register_addon_option(const char *keyword, addon_option_parser_t parser, addon_option_save_t save_func) {return 0;}
   virtual bx_bool unregister_addon_option(const char *keyword) {return 0;}
   virtual bx_bool is_addon_option(const char *keyword) {return 0;}
   virtual Bit32s parse_addon_option(const char *context, int num_params, char *params []) {return -1;}
   virtual Bit32s save_addon_options(FILE *fp) {return -1;}
+
+  // statistics
+  virtual void init_statistics() {}
+  virtual void cleanup_statistics() {}
+  virtual bx_list_c *get_statistics_root() {return NULL;}
+ 
   // save/restore support
   virtual void init_save_restore() {}
   virtual void cleanup_save_restore() {}
@@ -773,6 +780,7 @@ public:
   virtual bx_bool restore_hardware() {return 0;}
   virtual bx_list_c *get_bochs_root() {return NULL;}
   virtual bx_bool restore_bochs_param(bx_list_c *root, const char *sr_path, const char *restore_name) { return 0; }
+
   // special config parameter and options functions for plugins
   virtual bx_bool opt_plugin_ctrl(const char *plugname, bx_bool load) {return 0;}
   virtual void init_std_nic_options(const char *name, bx_list_c *menu) {}

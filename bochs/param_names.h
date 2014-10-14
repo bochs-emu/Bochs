@@ -29,6 +29,7 @@
 #define BXPN_SEL_CONFIG_INTERFACE        "general.config_interface"
 #define BXPN_BOCHS_START                 "general.start_mode"
 #define BXPN_BOCHS_BENCHMARK             "general.benchmark"
+#define BXPN_DUMP_STATS                  "general.dumpstats"
 #define BXPN_RESTORE_FLAG                "general.restore"
 #define BXPN_RESTORE_PATH                "general.restore_path"
 #define BXPN_DEBUG_RUNNING               "general.debug_running"

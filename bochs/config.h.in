@@ -657,6 +657,9 @@ typedef
 // enable BX_ASSERT checks
 #define BX_ASSERT_ENABLE 0
 
+// enable statistics collection
+#define BX_ENABLE_STATISTICS 0
+
 #define BX_SUPPORT_ALIGNMENT_CHECK 0
 #define BX_SUPPORT_FPU 0
 #define BX_SUPPORT_3DNOW 0

@@ -26,10 +26,14 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#include "cpustats.h"
+
 void BX_CPP_AttrRegparmN(2) BX_CPU_C::stackPrefetch(bx_address offset, unsigned len)
 {
   bx_address laddr;
   unsigned pageOffset;
+
+  INC_STACK_PREFETCH_STAT(stackPrefetch);
 
   BX_CPU_THIS_PTR espHostPtr = 0; // initialize with NULL pointer
   BX_CPU_THIS_PTR espPageWindowSize = 0;

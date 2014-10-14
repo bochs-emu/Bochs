@@ -24,28 +24,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#define InstrumentICACHE 0
-
-#if InstrumentICACHE
-static unsigned iCacheLookups=0;
-static unsigned iCacheMisses=0;
-
-#define InstrICache_StatsMask 0xffffff
-
-#define InstrICache_Stats() {\
-  if ((iCacheLookups & InstrICache_StatsMask) == 0) { \
-    BX_INFO(("ICACHE lookups: %u, misses: %u, hit rate = %6.2f%% ", \
-          iCacheLookups, \
-          iCacheMisses,  \
-          (iCacheLookups-iCacheMisses) * 100.0f / iCacheLookups)); \
-    iCacheLookups = iCacheMisses = 0; \
-  } \
-}
-#define InstrICache_Increment(v) (v)++
-#else
-#define InstrICache_Stats()
-#define InstrICache_Increment(v)
-#endif
+#include "cpustats.h"
 
 void BX_CPU_C::cpu_loop(void)
 {
@@ -218,8 +197,7 @@ bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
     eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
   }
 
-  InstrICache_Increment(iCacheLookups);
-  InstrICache_Stats();
+  INC_ICACHE_STAT(iCacheLookups);
 
   bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrFetchPage + eipBiased;
   bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache.find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
@@ -228,7 +206,7 @@ bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
   {
     // iCache miss. No validated instruction with matching fetch parameters
     // is in the iCache.
-    InstrICache_Increment(iCacheMisses);
+    INC_ICACHE_STAT(iCacheMisses);
     entry = serveICacheMiss(entry, (Bit32u) eipBiased, pAddr);
   }
 
@@ -268,8 +246,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::linkTrace(bxInstruction_c *i)
     eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
   }
 
-  InstrICache_Increment(iCacheLookups);
-  InstrICache_Stats();
+  INC_ICACHE_STAT(iCacheLookups);
 
   bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrFetchPage + eipBiased;
   bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache.find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
@@ -533,6 +510,8 @@ void BX_CPU_C::prefetch(void)
 {
   bx_address laddr;
   unsigned pageOffset;
+
+  INC_ICACHE_STAT(iCachePrefetch);
 
 #if BX_SUPPORT_X86_64
   if (long64_mode()) {

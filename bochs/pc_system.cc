@@ -417,6 +417,15 @@ void bx_pc_system_c::benchmarkTimer(void* this_ptr)
   bx_user_quit = 1;
 }
 
+#if BX_ENABLE_STATISTICS
+void bx_pc_system_c::dumpStatsTimer(void* this_ptr)
+{
+  printf("=== statistics dump " FMT_LL "u ===\n", bx_pc_system.time_ticks());
+  print_statistics_tree(SIM->get_statistics_root());
+  fflush(stdout);
+}
+#endif
+
 #if BX_DEBUGGER
 void bx_pc_system_c::timebp_handler(void* this_ptr)
 {
