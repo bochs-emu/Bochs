@@ -223,11 +223,22 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::linkTrace(bxInstruction_c *i)
     return;
 #endif
 
-  if (BX_CPU_THIS_PTR async_event) return;
+#define BX_HANDLERS_CHAINING_MAX_DEPTH 1000
+
+  // do not allow extreme trace link depth / avoid host stack overflow
+  // (could happen with badly compiled instruction handlers)
+  static Bit32u linkDepth = 0;
+
+  if (BX_CPU_THIS_PTR async_event || ++linkDepth > BX_HANDLERS_CHAINING_MAX_DEPTH) {
+    linkDepth = 0;
+    return;
+  }
 
   Bit32u delta = (Bit32u) (BX_CPU_THIS_PTR icount - BX_CPU_THIS_PTR icount_last_sync);
-  if(delta >= bx_pc_system.getNumCpuTicksLeftNextEvent())
+  if(delta >= bx_pc_system.getNumCpuTicksLeftNextEvent()) {
+    linkDepth = 0;
     return;
+  }
 
   bxInstruction_c *next = i->getNextTrace(BX_CPU_THIS_PTR iCache.traceLinkTimeStamp);
   if (next) {
