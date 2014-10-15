@@ -1,3 +1,41 @@
+Changes in 2.6.7 (not yet released):
+
+- CPU / CPUDB
+  - Implemented AVX-512BW/AVX-512DQ/AVX-512VL extensions emulation.
+  - implemented AVX512-IFMA532 instructions emulation.
+  - implemented AVX512-VBMI instructions emulation.
+  - Bugfixes for CPU emulation correctness (critical fixes for AVX-512, CMPXCHG16B and VMX)
+  - Fixed Bochs segmentation fault crash with Handlers Chaining Speedups enabled when
+    compiling with gcc, especially with low optimization levels.
+  - Reverted removal of reporting Architectural Perfmon support in pre-defined CPUID modules.
+    Windows 8 and Windows 10 require Performance Monitoring to be reported to boot.
+    To workaround possible Windows 7 64-bit installation issues: use bx_generic CPUID module,
+    which doesn't report Performance Monitoring in CPUID.
+
+- GUI and display libraries
+  - Added native SDL2 GUI support to Bochs. To enable configure with --with-sdl2.
+  - Added new user shortcut "scrlck" (SDL/SDL2 using "Scroll Lock" for fullscreen toggle).
+  - Write enhanced gui debugger settings to file on exit and restore on initialization.
+
+- I/O Devices
+  - USB
+    - Updated xHCI model to match the latest spec version 1.10 (patch by Ben Lunt)
+    - Added USB port specific option 'size' for VVFAT disks (range 128M ... 128G).
+      If the size is not specified or invalid, it defaults to 504M.
+  - Hard drive / HD image
+    - Fixed crash when using a "fixed" type VPC image.
+
+- ROM BIOS
+  - Fixed int74_function() for 4-byte (wheel mouse) packets.
+
+- LGPL'd VGABIOS updated from CVS (fixed building VBE modes list)
+
+- Misc
+  - Visual Studio workspace files updated to VS2013Ex format.
+  - Documentation fixes and updates.
+  - bximage/bxcommit: removed old obsolete versions of bximage and bxcommit tools.
+
+-------------------------------------------------------------------------
 Changes in 2.6.6 (June 15, 2014):
 
 - CPU / CPUDB

@@ -349,6 +349,8 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
   leaf->ebx = 0;
   leaf->ecx = 0;
   leaf->edx = 0;
+
+  BX_INFO(("WARNING: Architectural Performance Monitoring is not implemented"));
 }
 
 BX_CPP_INLINE static Bit32u ilog2(Bit32u x)
