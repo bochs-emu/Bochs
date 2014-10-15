@@ -436,8 +436,20 @@ struct BxExceptionInfo {
 #if BX_SUPPORT_PERFMON
   #define BX_MSR_PMC0              0x0c1  /* PERFCTR0 */
   #define BX_MSR_PMC1              0x0c2  /* PERFCTR1 */
+  #define BX_MSR_PMC2              0x0c3
+  #define BX_MSR_PMC3              0x0c4
+  #define BX_MSR_PMC4              0x0c5
+  #define BX_MSR_PMC5              0x0c6
+  #define BX_MSR_PMC6              0x0c7
+  #define BX_MSR_PMC7              0x0c8
   #define BX_MSR_PERFEVTSEL0       0x186
   #define BX_MSR_PERFEVTSEL1       0x187
+  #define BX_MSR_PERFEVTSEL2       0x188
+  #define BX_MSR_PERFEVTSEL3       0x189
+  #define BX_MSR_PERFEVTSEL4       0x18a
+  #define BX_MSR_PERFEVTSEL5       0x18b 
+  #define BX_MSR_PERFEVTSEL6       0x18c
+  #define BX_MSR_PERFEVTSEL7       0x18d
   #define BX_MSR_PERF_FIXED_CTR0   0x309  /* Fixed Performance Counter 0 (R/W): Counts Instr_Retired.Any */
   #define BX_MSR_PERF_FIXED_CTR1   0x30a  /* Fixed Performance Counter 1 (R/W): Counts CPU_CLK_Unhalted.Core */
   #define BX_MSR_PERF_FIXED_CTR2   0x30b  /* Fixed Performance Counter 2 (R/W): Counts CPU_CLK_Unhalted.Ref */
