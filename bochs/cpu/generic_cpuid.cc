@@ -33,22 +33,6 @@
 #define BX_CPUID_SUPPORT_ISA_EXTENSION(feature) \
    (this->is_cpu_extension_supported(feature))
 
-bx_cpuid_t::bx_cpuid_t(BX_CPU_C *_cpu): cpu(_cpu)
-{
-#if BX_SUPPORT_SMP
-  nthreads = SIM->get_param_num(BXPN_CPU_NTHREADS)->get();
-  ncores = SIM->get_param_num(BXPN_CPU_NCORES)->get();
-  nprocessors = SIM->get_param_num(BXPN_CPU_NPROCESSORS)->get();
-#else
-  nthreads = 1;
-  ncores = 1;
-  nprocessors = 1;
-#endif
-
-  for (unsigned n=0; n < BX_ISA_EXTENSIONS_ARRAY_SIZE; n++)
-    ia_extensions_bitmask[n] = 0;
-}
-
 #if BX_CPU_LEVEL >= 4
 
 bx_generic_cpuid_t::bx_generic_cpuid_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
@@ -336,6 +320,31 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function
 void bx_generic_cpuid_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 {
   // CPUID function 0x0000000A - Architectural Performance Monitoring Leaf
+
+  // EAX:
+  //   [7:0] Version ID of architectural performance monitoring
+  //  [15:8] Number of general-purpose performance monitoring counters per logical processor
+  // [23:16] Bit width of general-purpose, performance monitoring counter
+  // [31:24] Length of EBX bit vector to enumerate architectural performance
+  //         monitoring events.
+
+  // EBX:
+  //     [0] Core cycle event not available if 1
+  //     [1] Instruction retired event not available if 1
+  //     [2] Reference cycles event not available if 1
+  //     [3] Last-level cache reference event not available if 1
+  //     [4] Last-level cache misses event not available if 1
+  //     [5] Branch instruction retired event not available if 1
+  //     [6] Branch mispredict retired event not available if 1
+  //  [31:7] reserved
+
+  // ECX: reserved
+
+  // EDX:
+  //   [4:0] Number of fixed performance counters (if Version ID > 1)
+  //  [12:5] Bit width of fixed-function performance counters (if Version ID > 1)
+  // [31:13] reserved
+
   leaf->eax = 0;
   leaf->ebx = 0;
   leaf->ecx = 0;

@@ -481,18 +481,7 @@ void turion64_tyler_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
 
 void turion64_tyler_t::dump_cpuid(void) const
 {
-  struct cpuid_function_t leaf;
-  unsigned n;
-
-  for (n=0; n<=1; n++) {
-    get_cpuid_leaf(n, 0x00000000, &leaf);
-    BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
-  }
-
-  for (n=0x80000000; n<=0x80000018; n++) {
-    get_cpuid_leaf(n, 0x00000000, &leaf);
-    BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
-  }
+  bx_cpuid_t::dump_cpuid(0x1, 0x18);
 }
 
 bx_cpuid_t *create_turion64_tyler_cpuid(BX_CPU_C *cpu) { return new turion64_tyler_t(cpu); }

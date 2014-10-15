@@ -289,19 +289,9 @@ void amd_k6_2_chomper_t::get_cpuid_hidden_level(cpuid_function_t *leaf) const
 
 void amd_k6_2_chomper_t::dump_cpuid(void) const
 {
+  bx_cpuid_t::dump_cpuid(0x1, 0x5);
+
   struct cpuid_function_t leaf;
-  unsigned n;
-
-  for (n=0; n<=1; n++) {
-    get_cpuid_leaf(n, 0x00000000, &leaf);
-    BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
-  }
-
-  for (n=0x80000000; n<=0x80000005; n++) {
-    get_cpuid_leaf(n, 0x00000000, &leaf);
-    BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
-  }
-
   get_cpuid_leaf(0x8fffffff, 0x00000000, &leaf);
   BX_INFO(("CPUID[0x8fffffff]: %08x %08x %08x %08x", leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
 }

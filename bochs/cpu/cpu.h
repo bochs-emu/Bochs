@@ -433,6 +433,18 @@ struct BxExceptionInfo {
   #define BX_MSR_MTRR_DEFTYPE      0x2ff
 #endif
 
+#if BX_SUPPORT_PERFMON
+  #define BX_MSR_PMC0              0x0c1  /* PERFCTR0 */
+  #define BX_MSR_PMC1              0x0c2  /* PERFCTR1 */
+  #define BX_MSR_PERFEVTSEL0       0x186
+  #define BX_MSR_PERFEVTSEL1       0x187
+  #define BX_MSR_PERF_FIXED_CTR0   0x309  /* Fixed Performance Counter 0 (R/W): Counts Instr_Retired.Any */
+  #define BX_MSR_PERF_FIXED_CTR1   0x30a  /* Fixed Performance Counter 1 (R/W): Counts CPU_CLK_Unhalted.Core */
+  #define BX_MSR_PERF_FIXED_CTR2   0x30b  /* Fixed Performance Counter 2 (R/W): Counts CPU_CLK_Unhalted.Ref */
+  #define BX_MSR_FIXED_CTR_CTRL    0x38d  /* Fixed Performance Counter Control (R/W) */
+  #define BX_MSR_PERF_GLOBAL_CTRL  0x38f  /* Global Performance Counter Control */
+#endif
+
 #define BX_MSR_TSC_DEADLINE        0x6E0
 
 /* Intel MPX supervisor bound configuration register */

@@ -26,7 +26,7 @@
 
 #if BX_CPU_LEVEL >= 4
 
-#include "cpu/cpuid.h"
+#include "cpuid.h"
 
 class bx_generic_cpuid_t : public bx_cpuid_t {
 public:

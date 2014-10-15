@@ -1296,6 +1296,28 @@ AC_ARG_ENABLE(monitor_mwait,
   ]
   )
 
+AC_MSG_CHECKING(for limited hardware performance monitoring emulation support (experimental))
+AC_ARG_ENABLE(perfmon,
+  AS_HELP_STRING([--enable-perfmon], [support for limiteed hardware performance monitoring emulation (yes, if cpu level > 5 - experimental)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_PERFMON, 1)
+   elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_PERFMON, 0)
+   fi
+   ],
+  [
+    if test "$bx_cpu_level" -gt 5; then
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(BX_SUPPORT_PERFMON, 1)
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_SUPPORT_PERFMON, 0)
+    fi
+  ]
+  )
+
 support_avx=0
 AVX_LIB_VAR=''
 AC_MSG_CHECKING(for AVX instructions support)

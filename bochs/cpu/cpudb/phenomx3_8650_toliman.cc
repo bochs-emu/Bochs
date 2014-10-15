@@ -583,18 +583,7 @@ void phenom_8650_toliman_t::get_ext_cpuid_leaf_1A(cpuid_function_t *leaf) const
 
 void phenom_8650_toliman_t::dump_cpuid(void) const
 {
-  struct cpuid_function_t leaf;
-  unsigned n;
-
-  for (n=0; n <= (BX_SUPPORT_MONITOR_MWAIT ? 0x5 : 0x1); n++) {
-    get_cpuid_leaf(n, 0x00000000, &leaf);
-    BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
-  }
-
-  for (n=0x80000000; n<=0x8000001A; n++) {
-    get_cpuid_leaf(n, 0x00000000, &leaf);
-    BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
-  }
+  bx_cpuid_t::dump_cpuid(BX_SUPPORT_MONITOR_MWAIT ? 0x5 : 0x1, 0x1A);
 }
 
 bx_cpuid_t *create_phenom_8650_toliman_cpuid(BX_CPU_C *cpu) { return new phenom_8650_toliman_t(cpu); }

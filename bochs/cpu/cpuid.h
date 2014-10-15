@@ -228,6 +228,8 @@ protected:
 #endif
   }
 
+  void dump_cpuid(unsigned max_std_leaf, unsigned max_ext_leaf) const;
+
 };
 
 typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
