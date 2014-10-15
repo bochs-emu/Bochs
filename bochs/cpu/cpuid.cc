@@ -44,6 +44,80 @@ bx_cpuid_t::bx_cpuid_t(BX_CPU_C *_cpu): cpu(_cpu)
     ia_extensions_bitmask[n] = 0;
 }
 
+BX_CPP_INLINE static Bit32u ilog2(Bit32u x)
+{
+  Bit32u count = 0;
+  while(x>>=1) count++;
+  return count;
+}
+
+// leaf 0x0000000B //
+void bx_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
+{
+  // CPUID function 0x0000000B - Extended Topology Leaf
+  leaf->eax = 0;
+  leaf->ebx = 0;
+  leaf->ecx = subfunction;
+  leaf->edx = cpu->get_apic_id();
+
+#if BX_SUPPORT_SMP
+  switch(subfunction) {
+  case 0:
+     if (nthreads > 1) {
+        leaf->eax = ilog2(nthreads-1)+1;
+        leaf->ebx = nthreads;
+        leaf->ecx |= (1<<8);
+     }
+     else if (ncores > 1) {
+        leaf->eax = ilog2(ncores-1)+1;
+        leaf->ebx = ncores;
+        leaf->ecx |= (2<<8);
+     }
+     else if (nprocessors > 1) {
+        leaf->eax = ilog2(nprocessors-1)+1;
+        leaf->ebx = nprocessors;
+     }
+     else {
+        leaf->eax = 1;
+        leaf->ebx = 1; // number of logical CPUs at this level
+     }
+     break;
+
+  case 1:
+     if (nthreads > 1) {
+        if (ncores > 1) {
+           leaf->eax = ilog2(ncores-1)+1;
+           leaf->ebx = ncores;
+           leaf->ecx |= (2<<8);
+        }
+        else if (nprocessors > 1) {
+           leaf->eax = ilog2(nprocessors-1)+1;
+           leaf->ebx = nprocessors;
+        }
+     }
+     else if (ncores > 1) {
+        if (nprocessors > 1) {
+           leaf->eax = ilog2(nprocessors-1)+1;
+           leaf->ebx = nprocessors;
+        }
+     }
+     break;
+
+  case 2:
+     if (nthreads > 1) {
+        if (nprocessors > 1) {
+           leaf->eax = ilog2(nprocessors-1)+1;
+           leaf->ebx = nprocessors;
+        }
+     }
+     break;
+
+  default:
+     break;
+  }
+#endif
+}
+
 void bx_cpuid_t::dump_cpuid(unsigned max_std_leaf, unsigned max_ext_leaf) const
 {
   struct cpuid_function_t leaf;
@@ -61,3 +135,4 @@ void bx_cpuid_t::dump_cpuid(unsigned max_std_leaf, unsigned max_ext_leaf) const
     BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
   }
 }
+

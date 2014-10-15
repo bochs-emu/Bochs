@@ -195,6 +195,8 @@ protected:
     leaf->edx = 0;
   }
 
+  void get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
+
   BX_CPP_INLINE void get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32u function, cpuid_function_t *leaf) const
   {
     switch(function) {
