@@ -12,7 +12,6 @@
   --enable-disasm \
   --enable-debugger-gui \
   --enable-fpu \
-  --enable-misaligned-sse \
   --enable-alignment-check \
   --enable-3dnow \
   --enable-monitor-mwait \
