@@ -674,7 +674,7 @@ typedef
 #endif
 
 #if BX_SUPPORT_VMX >= 2 && BX_SUPPORT_X86_64 == 0
-  #error "VMXx2 require x86-64 support"
+  #error "VMX=2 require x86-64 support"
 #endif
 
 #if BX_SUPPORT_AVX && BX_SUPPORT_X86_64 == 0
