@@ -19,7 +19,7 @@ Changes in 2.6.7 (not yet released):
 
 - I/O Devices
   - USB
-    - Updated xHCI model to match the latest spec version 1.10 (patch by Ben Lunt)
+    - xHCI model now emulates a NEC/Renesas uPD720202 device (patch by Ben Lunt).
     - Added USB port specific option 'size' for VVFAT disks (range 128M ... 128G).
       If the size is not specified or invalid, it defaults to 504M.
   - Hard drive / HD image
@@ -32,8 +32,8 @@ Changes in 2.6.7 (not yet released):
 
 - Misc
   - Visual Studio workspace files updated to VS2013Ex format.
+  - bximage_old/bxcommit: removed old obsolete image manipulation tools.
   - Documentation fixes and updates.
-  - bximage/bxcommit: removed old obsolete versions of bximage and bxcommit tools.
 
 -------------------------------------------------------------------------
 Changes in 2.6.6 (June 15, 2014):
