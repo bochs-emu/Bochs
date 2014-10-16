@@ -1328,7 +1328,7 @@ BX_CPU_C::write_RMW_virtual_qword(Bit64u val64)
 // correctness but not performance critical.
 //
 
-void BX_CPU_C::write_new_stack_word(Bit64u laddr, unsigned curr_pl, Bit16u data)
+void BX_CPU_C::write_new_stack_word(bx_address laddr, unsigned curr_pl, Bit16u data)
 {
   bx_bool user = (curr_pl == 3);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
@@ -1357,7 +1357,7 @@ void BX_CPU_C::write_new_stack_word(Bit64u laddr, unsigned curr_pl, Bit16u data)
     exception(BX_SS_EXCEPTION, 0);
 }
 
-void BX_CPU_C::write_new_stack_dword(Bit64u laddr, unsigned curr_pl, Bit32u data)
+void BX_CPU_C::write_new_stack_dword(bx_address laddr, unsigned curr_pl, Bit32u data)
 {
   bx_bool user = (curr_pl == 3);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
@@ -1386,7 +1386,7 @@ void BX_CPU_C::write_new_stack_dword(Bit64u laddr, unsigned curr_pl, Bit32u data
     exception(BX_SS_EXCEPTION, 0);
 }
 
-void BX_CPU_C::write_new_stack_qword(Bit64u laddr, unsigned curr_pl, Bit64u data)
+void BX_CPU_C::write_new_stack_qword(bx_address laddr, unsigned curr_pl, Bit64u data)
 {
   bx_bool user = (curr_pl == 3);
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
