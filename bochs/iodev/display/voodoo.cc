@@ -188,11 +188,11 @@ void bx_voodoo_c::init(void)
 
   if (BX_VOODOO_THIS s.mode_change_timer_id == BX_NULL_TIMER_HANDLE) {
     BX_VOODOO_THIS s.mode_change_timer_id = bx_virt_timer.register_timer(this, mode_change_timer_handler,
-       1000, 0, 0, "voodoo_mode_change");
+       1000, 0, 0, 0, "voodoo_mode_change");
   }
   if (BX_VOODOO_THIS s.update_timer_id == BX_NULL_TIMER_HANDLE) {
     BX_VOODOO_THIS s.update_timer_id = bx_virt_timer.register_timer(this, update_timer_handler,
-       50000, 1, 0, "voodoo_update");
+       50000, 1, 0, 1, "voodoo_update");
   }
   BX_VOODOO_THIS s.vdraw.clock_enabled = 1;
   BX_VOODOO_THIS s.vdraw.output_on = 0;

@@ -255,7 +255,7 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
   // register timer for status bar LEDs
   if (BX_GUI_THIS led_timer_index == BX_NULL_TIMER_HANDLE) {
     BX_GUI_THIS led_timer_index =
-      bx_virt_timer.register_timer(this, led_timer_handler, 100000, 1, 1,
+      bx_virt_timer.register_timer(this, led_timer_handler, 100000, 1, 1, 1,
                                    "status bar LEDs");
   }
 }

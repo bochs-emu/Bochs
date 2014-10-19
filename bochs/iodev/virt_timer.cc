@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -127,18 +127,18 @@ void bx_virt_timer_c::nullTimer(void* this_ptr)
   UNUSED(this_ptr);
 }
 
-void bx_virt_timer_c::periodic(Bit64u time_passed)
+void bx_virt_timer_c::periodic(Bit64u time_passed, bx_bool mode)
 {
   //Assert that we haven't skipped any events.
-  BX_ASSERT (time_passed <= timers_next_event_time);
+  BX_ASSERT (time_passed <= s[mode].timers_next_event_time);
   BX_ASSERT(!in_timer_handler);
 
   //Update time variables.
-  timers_next_event_time -= time_passed;
-  current_timers_time += time_passed;
+  s[mode].timers_next_event_time -= time_passed;
+  s[mode].current_timers_time += time_passed;
 
   //If no events are occurring, just pass the time and we're done.
-  if (time_passed < timers_next_event_time) return;
+  if (time_passed < s[mode].timers_next_event_time) return;
 
   //Starting timer handler calls.
   in_timer_handler = 1;
@@ -146,9 +146,10 @@ void bx_virt_timer_c::periodic(Bit64u time_passed)
   unsigned i;
   for (i=0;i<numTimers;i++) {
     if (timer[i].inUse && timer[i].active) {
+      if (timer[i].realtime != mode) continue;
       //Assert that we haven't skipped any timers.
-      BX_ASSERT(current_timers_time <= timer[i].timeToFire);
-      if (timer[i].timeToFire == current_timers_time) {
+      BX_ASSERT(s[mode].current_timers_time <= timer[i].timeToFire);
+      if (timer[i].timeToFire == s[mode].current_timers_time) {
         if (timer[i].continuous) {
           timer[i].timeToFire += timer[i].period;
         } else {
@@ -164,57 +165,58 @@ void bx_virt_timer_c::periodic(Bit64u time_passed)
   in_timer_handler = 0;
   //Use a second FOR loop so that a timer function call can
   //  change the behavior of another timer.
-  //timers_next_event_time normally contains a cycle count, not a cycle time.
+  //s[mode].timers_next_event_time normally contains a cycle count, not a cycle time.
   //  here we use it as a temporary variable that IS a cycle time,
   //  but then convert it back to a cycle count afterwards.
-  timers_next_event_time = current_timers_time + BX_MAX_VIRTUAL_TIME;
+  s[mode].timers_next_event_time = s[mode].current_timers_time + BX_MAX_VIRTUAL_TIME;
   for (i=0;i<numTimers;i++) {
-    if (timer[i].inUse && timer[i].active && ((timer[i].timeToFire)<timers_next_event_time)) {
-      timers_next_event_time = timer[i].timeToFire;
+    if (timer[i].inUse && timer[i].active && (timer[i].realtime == mode) &&
+        ((timer[i].timeToFire)<s[mode].timers_next_event_time)) {
+      s[mode].timers_next_event_time = timer[i].timeToFire;
     }
   }
-  timers_next_event_time -= current_timers_time;
-  next_event_time_update();
+  s[mode].timers_next_event_time -= s[mode].current_timers_time;
+  next_event_time_update(mode);
   //FIXME
 }
 
 
 //Get the current virtual time.
 //  This may return the same value on subsequent calls.
-Bit64u bx_virt_timer_c::time_usec()
+Bit64u bx_virt_timer_c::time_usec(bx_bool mode)
 {
   //Update the time here only if we're not in a timer handler.
   //If we're in a timer handler we're up-to-date, and otherwise
   // this prevents call stack loops.
   if (!in_timer_handler) {
-    timer_handler();
+    timer_handler(mode);
   }
-  return current_timers_time;
+  return s[mode].current_timers_time;
 }
 
 //Get the current virtual time.
 //  This will return a monotonically increasing value.
 // MUST NOT be called from within a timer interrupt.
-Bit64u bx_virt_timer_c::time_usec_sequential(void)
+Bit64u bx_virt_timer_c::time_usec_sequential(bx_bool mode)
 {
   //Can't prevent call stack loops here, so this
   // MUST NOT be called from within a timer handler.
-  BX_ASSERT(timers_next_event_time>0);
+  BX_ASSERT(s[mode].timers_next_event_time>0);
   BX_ASSERT(!in_timer_handler);
 
-  if (last_sequential_time >= current_timers_time) {
-    periodic(1);
-    last_sequential_time = current_timers_time;
+  if (s[mode].last_sequential_time >= s[mode].current_timers_time) {
+    periodic(1, mode);
+    s[mode].last_sequential_time = s[mode].current_timers_time;
   }
-  return current_timers_time;
+  return s[mode].current_timers_time;
 }
 
 
 //Register a timer handler to go off after a given interval.
 //Register a timer handler to go off with a periodic interval.
 int bx_virt_timer_c::register_timer(void *this_ptr, bx_timer_handler_t handler,
-                                    Bit32u useconds,
-                                    bx_bool continuous, bx_bool active,
+                                    Bit32u useconds, bx_bool continuous,
+                                    bx_bool active, bx_bool realtime,
                                     const char *id)
 {
   //We don't like starting with a zero period timer.
@@ -233,17 +235,23 @@ int bx_virt_timer_c::register_timer(void *this_ptr, bx_timer_handler_t handler,
 
   timer[i].inUse = 1;
   timer[i].period = useconds;
-  timer[i].timeToFire = current_timers_time + (Bit64u)useconds;
+  timer[i].timeToFire = s[realtime].current_timers_time + (Bit64u)useconds;
   timer[i].active = active;
+  timer[i].realtime = realtime;
   timer[i].continuous = continuous;
   timer[i].funct = handler;
   timer[i].this_ptr = this_ptr;
   strncpy(timer[i].id, id, BxMaxTimerIDLen);
   timer[i].id[BxMaxTimerIDLen-1]=0; //I like null terminated strings.
 
-  if (useconds < timers_next_event_time) {
-    timers_next_event_time = useconds;
-    next_event_time_update();
+  if (realtime) {
+    BX_DEBUG(("Timer #%d ('%s') using realtime synchronisation mode", i, timer[i].id));
+  } else {
+    BX_DEBUG(("Timer #%d ('%s') using standard mode", i, timer[i].id));
+  }
+  if (useconds < s[realtime].timers_next_event_time) {
+    s[realtime].timers_next_event_time = useconds;
+    next_event_time_update(realtime);
     //FIXME
   }
   return i;
@@ -279,14 +287,15 @@ void bx_virt_timer_c::activate_timer(unsigned timer_index, Bit32u useconds,
   BX_ASSERT(timer[timer_index].inUse);
   BX_ASSERT(useconds>0);
 
+  bx_bool realtime = timer[timer_index].realtime;
   timer[timer_index].period = useconds;
-  timer[timer_index].timeToFire = current_timers_time + (Bit64u)useconds;
+  timer[timer_index].timeToFire = s[realtime].current_timers_time + (Bit64u)useconds;
   timer[timer_index].active = 1;
   timer[timer_index].continuous = continuous;
 
-  if (useconds < timers_next_event_time) {
-    timers_next_event_time = useconds;
-    next_event_time_update();
+  if (useconds < s[realtime].timers_next_event_time) {
+    s[realtime].timers_next_event_time = useconds;
+    next_event_time_update(realtime);
     //FIXME
   }
 }
@@ -300,27 +309,27 @@ void bx_virt_timer_c::deactivate_timer(unsigned timer_index)
   timer[timer_index].active = 0;
 }
 
-void bx_virt_timer_c::advance_virtual_time(Bit64u time_passed)
+void bx_virt_timer_c::advance_virtual_time(Bit64u time_passed, bx_bool mode)
 {
-  BX_ASSERT(time_passed <= virtual_next_event_time);
+  BX_ASSERT(time_passed <= s[mode].virtual_next_event_time);
 
-  current_virtual_time += time_passed;
-  virtual_next_event_time -= time_passed;
+  s[mode].current_virtual_time += time_passed;
+  s[mode].virtual_next_event_time -= time_passed;
 
-  if (current_virtual_time > current_timers_time) {
-    periodic(current_virtual_time - current_timers_time);
+  if (s[mode].current_virtual_time > s[mode].current_timers_time) {
+    periodic(s[mode].current_virtual_time - s[mode].current_timers_time, mode);
   }
 }
 
 //Called when next_event_time changes.
-void bx_virt_timer_c::next_event_time_update(void)
+void bx_virt_timer_c::next_event_time_update(bx_bool mode)
 {
-  virtual_next_event_time = timers_next_event_time + current_timers_time - current_virtual_time;
+  s[mode].virtual_next_event_time = s[mode].timers_next_event_time + s[mode].current_timers_time - s[mode].current_virtual_time;
   if (init_done) {
-    bx_pc_system.deactivate_timer(system_timer_id);
-    BX_ASSERT(virtual_next_event_time);
-    bx_pc_system.activate_timer(system_timer_id,
-                                (Bit32u)BX_MIN(0x7FFFFFFF,BX_MAX(1,TICKS_TO_USEC(virtual_next_event_time))),
+    bx_pc_system.deactivate_timer(s[mode].system_timer_id);
+    BX_ASSERT(s[mode].virtual_next_event_time);
+    bx_pc_system.activate_timer(s[mode].system_timer_id,
+                                (Bit32u)BX_MIN(0x7FFFFFFF,BX_MAX(1,TICKS_TO_USEC(s[mode].virtual_next_event_time))),
                                 0);
   }
 }
@@ -328,35 +337,29 @@ void bx_virt_timer_c::next_event_time_update(void)
 void bx_virt_timer_c::setup(void)
 {
   numTimers = 0;
-  current_timers_time = 0;
-  timers_next_event_time = BX_MAX_VIRTUAL_TIME;
-  last_sequential_time = 0;
   in_timer_handler = 0;
-  virtual_next_event_time = BX_MAX_VIRTUAL_TIME;
-  current_virtual_time = 0;
-
+  for (unsigned i = 0; i < 2; i++) {
+    s[i].current_timers_time = 0;
+    s[i].timers_next_event_time = BX_MAX_VIRTUAL_TIME;
+    s[i].last_sequential_time = 0;
+    s[i].virtual_next_event_time = BX_MAX_VIRTUAL_TIME;
+    s[i].current_virtual_time = 0;
+  }
   init_done = 0;
 }
 
 void bx_virt_timer_c::init(void)
 {
-  if ((SIM->get_param_enum(BXPN_CLOCK_SYNC)->get()!=BX_CLOCK_SYNC_REALTIME) &&
-      (SIM->get_param_enum(BXPN_CLOCK_SYNC)->get()!=BX_CLOCK_SYNC_BOTH))
-    virtual_timers_realtime = 0;
-  else
-    virtual_timers_realtime = 1;
-
-  if (virtual_timers_realtime) {
-    BX_INFO(("using 'realtime pit' synchronization method"));
-  }
-
   // Local copy of IPS value to avoid reading it frequently in timer handler
   ips = SIM->get_param_num(BXPN_IPS)->get();
 
-  register_timer(this, nullTimer, (Bit32u)NullTimerInterval, 1, 1, "Null Timer");
+  register_timer(this, nullTimer, (Bit32u)NullTimerInterval, 1, 1, 0, "Null Timer #1");
+  register_timer(this, nullTimer, (Bit32u)NullTimerInterval, 1, 1, 1, "Null Timer #2");
 
-  system_timer_id = bx_pc_system.register_timer(this, pc_system_timer_handler,
-                                                (Bit32u)virtual_next_event_time, 0, 1, "Virtual Timer");
+  s[0].system_timer_id = bx_pc_system.register_timer(this, pc_system_timer_handler_0,
+                                                (Bit32u)s[0].virtual_next_event_time, 0, 1, "Virtual Timer #0");
+  s[1].system_timer_id = bx_pc_system.register_timer(this, pc_system_timer_handler_1,
+                                                (Bit32u)s[1].virtual_next_event_time, 0, 1, "Virtual Timer #1");
 
   //Real time variables:
 #if BX_HAVE_REALTIME_USEC
@@ -381,10 +384,12 @@ void bx_virt_timer_c::init(void)
 
 void bx_virt_timer_c::register_state(void)
 {
+  unsigned i;
+  char name[4];
+
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "virt_timer", "Virtual Timer State");
   bx_list_c *vtimers = new bx_list_c(list, "timer");
-  for (unsigned i = 0; i < numTimers; i++) {
-    char name[4];
+  for (i = 0; i < numTimers; i++) {
     sprintf(name, "%d", i);
     bx_list_c *bxtimer = new bx_list_c(vtimers, name);
     BXRS_PARAM_BOOL(bxtimer, inUse, timer[i].inUse);
@@ -392,12 +397,18 @@ void bx_virt_timer_c::register_state(void)
     BXRS_DEC_PARAM_FIELD(bxtimer, timeToFire, timer[i].timeToFire);
     BXRS_PARAM_BOOL(bxtimer, active, timer[i].active);
     BXRS_PARAM_BOOL(bxtimer, continuous, timer[i].continuous);
+    BXRS_PARAM_BOOL(bxtimer, realtime, timer[i].realtime);
   }
-  BXRS_DEC_PARAM_SIMPLE(list, current_timers_time);
-  BXRS_DEC_PARAM_SIMPLE(list, timers_next_event_time);
-  BXRS_DEC_PARAM_SIMPLE(list, last_sequential_time);
-  BXRS_DEC_PARAM_SIMPLE(list, virtual_next_event_time);
-  BXRS_DEC_PARAM_SIMPLE(list, current_virtual_time);
+  bx_list_c *sys = new bx_list_c(list, "s");
+  for (i = 0; i < 2; i++) {
+    sprintf(name, "%d", i);
+    bx_list_c *snum = new bx_list_c(sys, name);
+    BXRS_DEC_PARAM_FIELD(snum, current_timers_time, s[i].current_timers_time);
+    BXRS_DEC_PARAM_FIELD(snum, timers_next_event_time, s[i].timers_next_event_time);
+    BXRS_DEC_PARAM_FIELD(snum, last_sequential_time, s[i].last_sequential_time);
+    BXRS_DEC_PARAM_FIELD(snum, virtual_next_event_time, s[i].virtual_next_event_time);
+    BXRS_DEC_PARAM_FIELD(snum, current_virtual_time, s[i].current_virtual_time);
+  }
   BXRS_DEC_PARAM_SIMPLE(list, last_real_time);
   BXRS_DEC_PARAM_SIMPLE(list, total_real_usec);
   BXRS_DEC_PARAM_SIMPLE(list, last_realtime_delta);
@@ -409,25 +420,24 @@ void bx_virt_timer_c::register_state(void)
   BXRS_DEC_PARAM_SIMPLE(list, total_ticks);
   BXRS_DEC_PARAM_SIMPLE(list, last_realtime_ticks);
   BXRS_DEC_PARAM_SIMPLE(list, ticks_per_second);
-
 }
 
-void bx_virt_timer_c::timer_handler(void)
+void bx_virt_timer_c::timer_handler(bx_bool mode)
 {
-  if (!virtual_timers_realtime) {
+  if (!mode) {
     Bit64u temp_final_time = bx_pc_system.time_usec();
-    temp_final_time -= current_virtual_time;
+    temp_final_time -= s[0].current_virtual_time;
     while (temp_final_time) {
-      if ((temp_final_time)>(virtual_next_event_time)) {
-        temp_final_time -= virtual_next_event_time;
-        advance_virtual_time(virtual_next_event_time);
+      if ((temp_final_time)>(s[0].virtual_next_event_time)) {
+        temp_final_time -= s[0].virtual_next_event_time;
+        advance_virtual_time(s[0].virtual_next_event_time, 0);
       } else {
-        advance_virtual_time(temp_final_time);
+        advance_virtual_time(temp_final_time, 0);
         temp_final_time -= temp_final_time;
       }
     }
-    bx_pc_system.activate_timer(system_timer_id,
-                                (Bit32u)BX_MIN(0x7FFFFFFF,(virtual_next_event_time>2)?(virtual_next_event_time-2):1),
+    bx_pc_system.activate_timer(s[0].system_timer_id,
+                                (Bit32u)BX_MIN(0x7FFFFFFF,(s[0].virtual_next_event_time>2)?(s[0].virtual_next_event_time-2):1),
                                 0);
     return;
   }
@@ -465,9 +475,9 @@ void bx_virt_timer_c::timer_handler(void)
       //This keeps us from having too few instructions between ticks.
       ticks_delta = system_time_delta * USEC_PER_SECOND / MIN_USEC_PER_SECOND;
     }
-    if (ticks_delta > virtual_next_event_time) {
+    if (ticks_delta > s[1].virtual_next_event_time) {
       //This keeps us from missing ticks.
-      ticks_delta = virtual_next_event_time;
+      ticks_delta = s[1].virtual_next_event_time;
     }
 
     if (ticks_delta) {
@@ -510,26 +520,29 @@ void bx_virt_timer_c::timer_handler(void)
     BX_ASSERT(0);
 #endif
 #if BX_HAVE_REALTIME_USEC
-    advance_virtual_time(ticks_delta);
+    advance_virtual_time(ticks_delta, 1);
 #endif
   }
 
   last_usec=last_usec + usec_delta;
-  bx_pc_system.deactivate_timer(system_timer_id);
-  BX_ASSERT(virtual_next_event_time);
-  bx_pc_system.activate_timer(system_timer_id,
-                              (Bit32u)BX_MIN(0x7FFFFFFF,BX_MAX(1,TICKS_TO_USEC(virtual_next_event_time))),
+  bx_pc_system.deactivate_timer(s[1].system_timer_id);
+  BX_ASSERT(s[1].virtual_next_event_time);
+  bx_pc_system.activate_timer(s[1].system_timer_id,
+                              (Bit32u)BX_MIN(0x7FFFFFFF,BX_MAX(1,TICKS_TO_USEC(s[1].virtual_next_event_time))),
                               0);
 }
 
-void bx_virt_timer_c::pc_system_timer_handler(void* this_ptr)
+void bx_virt_timer_c::pc_system_timer_handler_0(void* this_ptr)
 {
-  ((bx_virt_timer_c *)this_ptr)->timer_handler();
+  ((bx_virt_timer_c *)this_ptr)->timer_handler(0);
+}
+
+void bx_virt_timer_c::pc_system_timer_handler_1(void* this_ptr)
+{
+  ((bx_virt_timer_c *)this_ptr)->timer_handler(1);
 }
 
 void bx_virt_timer_c::set_realtime_delay()
 {
-  if (virtual_timers_realtime) {
-    real_time_delay = GET_VIRT_REALTIME64_USEC() - last_real_time;
-  }
+  real_time_delay = GET_VIRT_REALTIME64_USEC() - last_real_time;
 }

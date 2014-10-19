@@ -36,6 +36,7 @@ private:
     Bit64u  timeToFire; // Time to fire next (in virtual useconds).
     bx_bool active;     // 0=inactive, 1=active.
     bx_bool continuous; // 0=one-shot timer, 1=continuous periodicity.
+    bx_bool realtime;   // 0=standard timer, 1=use realtime mode
     bx_timer_handler_t funct;  // A callback function for when the
                                //   timer fires.
                                //   This function MUST return.
@@ -46,16 +47,25 @@ private:
 
   unsigned   numTimers;  // Number of currently allocated timers.
 
-  //Variables for the timer subsystem:
-  Bit64u current_timers_time;
-  Bit64u timers_next_event_time;
+  struct {
+    //Variables for the timer subsystem:
+    Bit64u current_timers_time;
+    Bit64u timers_next_event_time;
+    Bit64u last_sequential_time;
 
-  Bit64u last_sequential_time;
+    //Variables for the time sync subsystem:
+    Bit64u virtual_next_event_time;
+    Bit64u current_virtual_time;
+
+    int system_timer_id;
+  } s[2];
+
   bx_bool in_timer_handler;
 
-  //Variables for the time sync subsystem:
-  Bit64u virtual_next_event_time;
-  Bit64u current_virtual_time;
+  // Local copy of IPS value
+  Bit64u ips;
+
+  bx_bool init_done;
 
   //Real time variables:
   Bit64u last_real_time;
@@ -73,16 +83,6 @@ private:
   Bit64u last_realtime_ticks;
   Bit64u ticks_per_second;
 
-  // Local copy of IPS value
-  Bit64u ips;
-
-  bx_bool init_done;
-
-  int system_timer_id;
-
-  //Whether or not to use realtime virtual timers.
-  bx_bool virtual_timers_realtime;
-
   // A special null timer is always inserted in the timer[0] slot.  This
   // make sure that at least one timer is always active, and that the
   // duration is always less than a maximum 32-bit integer, so a 32-bit
@@ -91,14 +91,14 @@ private:
   static void nullTimer(void* this_ptr);
 
   //Step the given number of cycles, optionally calling any timer handlers.
-  void periodic(Bit64u time_passed);
+  void periodic(Bit64u time_passed, bx_bool mode);
 
   //Called when next_event_time changes.
-  void next_event_time_update(void);
+  void next_event_time_update(bx_bool mode);
 
   //Called to advance the virtual time.
   // calls periodic as needed.
-  void advance_virtual_time(Bit64u time_passed);
+  void advance_virtual_time(Bit64u time_passed, bx_bool mode);
 
 public:
 
@@ -107,18 +107,18 @@ public:
 
   //Get the current virtual time.
   //  This may return the same value on subsequent calls.
-  Bit64u time_usec(void);
+  Bit64u time_usec(bx_bool mode);
 
   //Get the current virtual time.
   //  This will return a monotonically increasing value.
   // MUST NOT be called from within a timer handler.
-  Bit64u time_usec_sequential(void);
+  Bit64u time_usec_sequential(bx_bool mode);
 
   //Register a timer handler to go off after a given interval.
   //Register a timer handler to go off with a periodic interval.
   int  register_timer(void *this_ptr, bx_timer_handler_t handler,
-                         Bit32u useconds,
-                         bx_bool continuous, bx_bool active, const char *id);
+                         Bit32u useconds, bx_bool continuous,
+                         bx_bool active, bx_bool realtime, const char *id);
 
   //unregister a previously registered timer.
   bx_bool unregisterTimer(unsigned timerID);
@@ -133,11 +133,12 @@ public:
   void deactivate_timer(unsigned timer_index);
 
 
-  //Timer handler passed to pc_system
-  static void pc_system_timer_handler(void* this_ptr);
+  //Timer handlers passed to pc_system
+  static void pc_system_timer_handler_0(void* this_ptr);
+  static void pc_system_timer_handler_1(void* this_ptr);
 
   //The real timer handler.
-  void timer_handler();
+  void timer_handler(bx_bool mode);
 
   //Initialization step #1 in constructor and for cleanup
   void setup(void);

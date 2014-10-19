@@ -63,6 +63,8 @@ private:
     int     timer_handle[3];
   } s;
 
+  bx_bool is_realtime;
+
   static void timer_handler(void *this_ptr);
   BX_PIT_SMF void handle_timer();
   BX_PIT_SMF bx_bool periodic(Bit32u usec_delta);

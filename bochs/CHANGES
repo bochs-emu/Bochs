@@ -13,6 +13,8 @@ Changes in 2.6.7 (not yet released):
     which doesn't report Performance Monitoring in CPUID.
 
 - GUI and display libraries
+  - The VGA update timer and the status LED timer now always use the realtime mode
+    independent from the 'clock' option setting.
   - Added native SDL2 GUI support to Bochs. To enable configure with --with-sdl2.
   - Added new user shortcut "scrlck" (SDL/SDL2 using "Scroll Lock" for fullscreen toggle).
   - Write enhanced gui debugger settings to file on exit and restore on initialization.

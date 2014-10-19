@@ -3714,12 +3714,9 @@ and 'cirrus' for Cirrus SVGA support (needs
 <filename>VGABIOS-lgpl-latest-cirrus</filename> as VGA BIOS).
 </para>
 <para>
-The VGA update frequency is based on the emulated clock and the default
-value is 5. Keep in mind that you must tweak the 'cpu: ips=N' directive
-to be as close to the number of emulated instructions-per-second your
-workstation can do, for this to be accurate. If the realtime sync is
-enabled with the <link linkend="bochsopt-clock">clock option</link>, the value
-is based on the real time. This parameter can be changed at runtime.
+The VGA update frequency specifies the number of display updates per second.
+The update timer now uses the realtime engine and the default value is 5.
+This parameter can be changed at runtime.
 </para>
 </section>
 

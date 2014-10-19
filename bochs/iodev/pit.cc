@@ -97,6 +97,10 @@ bx_pit_c::~bx_pit_c()
 
 void bx_pit_c::init(void)
 {
+  int clock_mode = SIM->get_param_enum(BXPN_CLOCK_SYNC)->get();
+  BX_PIT_THIS is_realtime = (clock_mode == BX_CLOCK_SYNC_REALTIME) ||
+      (clock_mode == BX_CLOCK_SYNC_BOTH);
+
   DEV_register_irq(0, "8254 PIT");
   DEV_register_ioread_handler(this, read_handler, 0x0040, "8254 PIT", 1);
   DEV_register_ioread_handler(this, read_handler, 0x0041, "8254 PIT", 1);
@@ -118,10 +122,14 @@ void bx_pit_c::init(void)
   BX_PIT_THIS s.timer.init();
   BX_PIT_THIS s.timer.set_OUT_handler(0, irq_handler);
 
-  Bit64u my_time_usec = bx_virt_timer.time_usec();
+  Bit64u my_time_usec = bx_virt_timer.time_usec(BX_PIT_THIS is_realtime);
 
   if (BX_PIT_THIS s.timer_handle[0] == BX_NULL_TIMER_HANDLE) {
-    BX_PIT_THIS s.timer_handle[0] = bx_virt_timer.register_timer(this, timer_handler, (unsigned) 100 , 1, 1, "pit");
+    BX_PIT_THIS s.timer_handle[0] = bx_virt_timer.register_timer(this, timer_handler,
+                                                                 (unsigned) 100 , 1, 1, BX_PIT_THIS is_realtime, "pit");
+    if (BX_PIT_THIS is_realtime) {
+      BX_INFO(("PIT using realtime synchronisation method"));
+    }
   }
   BX_DEBUG(("RESETting timer."));
   bx_virt_timer.deactivate_timer(BX_PIT_THIS s.timer_handle[0]);
@@ -186,7 +194,7 @@ void bx_pit_c::timer_handler(void *this_ptr)
 
 void bx_pit_c::handle_timer()
 {
-  Bit64u my_time_usec = bx_virt_timer.time_usec();
+  Bit64u my_time_usec = bx_virt_timer.time_usec(BX_PIT_THIS is_realtime);
   Bit64u time_passed = my_time_usec-BX_PIT_THIS s.last_usec;
   Bit32u time_passed32 = (Bit32u)time_passed;
 
@@ -251,7 +259,7 @@ Bit32u bx_pit_c::read(Bit32u address, unsigned io_len)
 
     case 0x61:
       /* AT, port 61h */
-      refresh_clock_div2 = (bx_bool)((bx_virt_timer.time_usec() / 15) & 1);
+      refresh_clock_div2 = (bx_bool)((bx_virt_timer.time_usec(BX_PIT_THIS is_realtime) / 15) & 1);
       value = (BX_PIT_THIS s.timer.read_OUT(2)  << 5) |
               (refresh_clock_div2               << 4) |
               (BX_PIT_THIS s.speaker_data_on    << 1) |
@@ -282,7 +290,7 @@ void bx_pit_c::write(Bit32u address, Bit32u dvalue, unsigned io_len)
   UNUSED(this_ptr);
 #endif  // !BX_USE_PIT_SMF
   Bit8u   value;
-  Bit64u my_time_usec = bx_virt_timer.time_usec();
+  Bit64u my_time_usec = bx_virt_timer.time_usec(BX_PIT_THIS is_realtime);
   Bit64u time_passed = my_time_usec-BX_PIT_THIS s.last_usec;
   Bit32u value32, time_passed32 = (Bit32u)time_passed;
   bx_bool new_speaker_active;
