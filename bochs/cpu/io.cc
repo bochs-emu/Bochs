@@ -509,7 +509,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSB32_DXXb(bxInstruction_c *i)
 // 64-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSB64_DXXb(bxInstruction_c *i)
 {
-  Bit8u value8 = read_virtual_byte_64(i->seg(), RSI);
+  Bit8u value8 = read_linear_byte(i->seg(), get_laddr64(i->seg(), RSI));
   BX_OUTP(DX, value8, 1);
 
   if (BX_CPU_THIS_PTR get_DF())
@@ -600,7 +600,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSW32_DXXw(bxInstruction_c *i)
 // 16-bit operand size, 64-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSW64_DXXw(bxInstruction_c *i)
 {
-  Bit16u value16 = read_virtual_word_64(i->seg(), RSI);
+  Bit16u value16 = read_linear_word(i->seg(), get_laddr64(i->seg(), RSI));
   BX_OUTP(DX, value16, 2);
 
   if (BX_CPU_THIS_PTR get_DF())
@@ -664,7 +664,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSD32_DXXd(bxInstruction_c *i)
 // 32-bit operand size, 64-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSD64_DXXd(bxInstruction_c *i)
 {
-  Bit32u value32 = read_virtual_dword_64(i->seg(), RSI);
+  Bit32u value32 = read_linear_dword(i->seg(), get_laddr64(i->seg(), RSI));
   BX_OUTP(DX, value32, 4);
 
   if (BX_CPU_THIS_PTR get_DF())

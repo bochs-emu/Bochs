@@ -85,7 +85,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XLAT(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
-    AL = read_virtual_byte_64(i->seg(), RBX + AL);
+    AL = read_linear_byte(i->seg(), get_laddr64(i->seg(), RBX + AL));
   }
   else
 #endif

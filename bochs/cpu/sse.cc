@@ -344,7 +344,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRD_EdVdqIbM(bxInstruction_c *i
   if (i->os64L())  /* 64 bit operand size mode */
   {
      Bit64u result = op.xmm64u(i->Ib() & 1);
-     write_virtual_qword_64(i->seg(), eaddr, result);
+     write_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr), result);
   }
   else
 #endif
@@ -363,7 +363,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRQ_EqVdqIbM(bxInstruction_c *i
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
   Bit64u result = op.xmm64u(i->Ib() & 1);
-  write_virtual_qword_64(i->seg(), eaddr, result);
+  write_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr), result);
 
   BX_NEXT_INSTR(i);
 }
@@ -468,7 +468,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRD_VdqHdqEdIbM(bxInstruction_c
 
 #if BX_SUPPORT_X86_64
   if (i->os64L()) {  /* 64 bit operand size mode */
-    Bit64u op2 = read_virtual_qword_64(i->seg(), eaddr);
+    Bit64u op2 = read_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
     op1.xmm64u(i->Ib() & 1) = op2;
   }
   else

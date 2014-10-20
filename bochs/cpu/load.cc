@@ -51,7 +51,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ed(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Eq(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  TMP64 = read_virtual_qword_64(i->seg(), eaddr);
+  TMP64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 }
 #endif

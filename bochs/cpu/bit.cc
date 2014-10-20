@@ -334,7 +334,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GwMw(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit16u val16 = read_virtual_word(i->seg(), eaddr);
-  
   BX_WRITE_16BIT_REG(i->dst(), bx_bswap16(val16));
 
   BX_NEXT_INSTR(i);
@@ -343,7 +342,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GwMw(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_MwGw(bxInstruction_c *i)
 {
   Bit16u val16 = BX_READ_16BIT_REG(i->src());
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   write_virtual_word(i->seg(), eaddr, bx_bswap16(val16));
 
@@ -354,7 +352,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GdMd(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit32u val32 = read_virtual_dword(i->seg(), eaddr);
-  
   BX_WRITE_32BIT_REGZ(i->dst(), bx_bswap32(val32));
 
   BX_NEXT_INSTR(i);
@@ -363,7 +360,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GdMd(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_MdGd(bxInstruction_c *i)
 {
   Bit32u val32 = BX_READ_32BIT_REG(i->src());
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   write_virtual_dword(i->seg(), eaddr, bx_bswap32(val32));
 
@@ -376,7 +372,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GqMq(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit64u val64 = read_virtual_qword(i->seg(), eaddr);
-  
   BX_WRITE_64BIT_REG(i->dst(), bx_bswap64(val64));
 
   BX_NEXT_INSTR(i);
@@ -385,9 +380,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GqMq(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_MqGq(bxInstruction_c *i)
 {
   Bit64u val64 = BX_READ_64BIT_REG(i->src());
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  write_virtual_qword_64(i->seg(), eaddr, bx_bswap64(val64));
+  write_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr), bx_bswap64(val64));
 
   BX_NEXT_INSTR(i);
 }

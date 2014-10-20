@@ -164,8 +164,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  Bit64u op1_64 = read_virtual_qword_64(i->seg(), eaddr);
-  Bit16u cs_raw = read_virtual_word_64(i->seg(), (eaddr+8) & i->asize_mask());
+  Bit64u op1_64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
+  Bit16u cs_raw = read_linear_word(i->seg(), get_laddr64(i->seg(), (eaddr+8) & i->asize_mask()));
 
   BX_ASSERT(protected_mode());
 
@@ -409,8 +409,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit64u op1_64 = read_virtual_qword_64(i->seg(), eaddr);
-  Bit16u cs_raw = read_virtual_word_64(i->seg(), (eaddr+8) & i->asize_mask());
+  Bit64u op1_64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
+  Bit16u cs_raw = read_linear_word(i->seg(), get_laddr64(i->seg(), (eaddr+8) & i->asize_mask()));
 
   BX_ASSERT(protected_mode());
 

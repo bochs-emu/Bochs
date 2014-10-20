@@ -889,8 +889,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  write_virtual_word_64(i->seg(), eaddr, limit_16);
-  write_virtual_qword_64(i->seg(), (eaddr+2) & i->asize_mask(), base_64);
+  write_linear_word(i->seg(), get_laddr64(i->seg(), eaddr), limit_16);
+  write_linear_qword(i->seg(), get_laddr64(i->seg(), (eaddr+2) & i->asize_mask()), base_64);
 
   BX_NEXT_INSTR(i);
 }
@@ -916,8 +916,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  write_virtual_word_64(i->seg(), eaddr, limit_16);
-  write_virtual_qword_64(i->seg(), (eaddr+2) & i->asize_mask(), base_64);
+  write_linear_word(i->seg(), get_laddr64(i->seg(), eaddr), limit_16);
+  write_linear_qword(i->seg(), get_laddr64(i->seg(), (eaddr+2) & i->asize_mask()), base_64);
 
   BX_NEXT_INSTR(i);
 }
@@ -945,12 +945,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit64u base_64 = read_virtual_qword_64(i->seg(), (eaddr + 2) & i->asize_mask());
+  Bit64u base_64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), (eaddr + 2) & i->asize_mask()));
   if (! IsCanonical(base_64)) {
     BX_ERROR(("LGDT64_Ms: loaded base64 address is not in canonical form!"));
     exception(BX_GP_EXCEPTION, 0);
   }
-  Bit16u limit_16 = read_virtual_word_64(i->seg(), eaddr);
+  Bit16u limit_16 = read_linear_word(i->seg(), get_laddr64(i->seg(), eaddr));
 
   BX_CPU_THIS_PTR gdtr.limit = limit_16;
   BX_CPU_THIS_PTR gdtr.base = base_64;
@@ -981,12 +981,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit64u base_64 = read_virtual_qword_64(i->seg(), (eaddr + 2) & i->asize_mask());
+  Bit64u base_64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), (eaddr + 2) & i->asize_mask()));
   if (! IsCanonical(base_64)) {
     BX_ERROR(("LIDT64_Ms: loaded base64 address is not in canonical form!"));
     exception(BX_GP_EXCEPTION, 0);
   }
-  Bit16u limit_16 = read_virtual_word_64(i->seg(), eaddr);
+  Bit16u limit_16 = read_linear_word(i->seg(), get_laddr64(i->seg(), eaddr));
 
   BX_CPU_THIS_PTR idtr.limit = limit_16;
   BX_CPU_THIS_PTR idtr.base = base_64;

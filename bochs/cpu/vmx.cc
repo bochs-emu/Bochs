@@ -3189,7 +3189,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD_EqGq(bxInstruction_c *i)
   }
   else {
      Bit64u eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-     write_virtual_qword_64(i->seg(), eaddr, field_64);
+     write_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr), field_64);
   }
  
   VMsucceed();
@@ -3305,7 +3305,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE_GqEq(bxInstruction_c *i)
   }
   else {
      Bit64u eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-     val_64 = read_virtual_qword_64(i->seg(), eaddr);
+     val_64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
   }
 
   if (BX_READ_64BIT_REG_HIGH(i->dst())) {

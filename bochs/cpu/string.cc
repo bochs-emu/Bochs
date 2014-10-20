@@ -568,8 +568,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB64_YbXb(bxInstruction_c *i)
   Bit64u rsi = RSI;
   Bit64u rdi = RDI;
 
-  temp8 = read_virtual_byte_64(i->seg(), rsi);
-  write_virtual_byte_64(BX_SEG_REG_ES, rdi, temp8);
+  temp8 = read_linear_byte(i->seg(), get_laddr64(i->seg(), rsi));
+  write_linear_byte(BX_SEG_REG_ES, rdi, temp8);
 
   if (BX_CPU_THIS_PTR get_DF()) {
     /* decrement RSI, RDI */
@@ -645,8 +645,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSW64_YwXw(bxInstruction_c *i)
   Bit64u rsi = RSI;
   Bit64u rdi = RDI;
 
-  temp16 = read_virtual_word_64(i->seg(), rsi);
-  write_virtual_word_64(BX_SEG_REG_ES, rdi, temp16);
+  temp16 = read_linear_word(i->seg(), get_laddr64(i->seg(), rsi));
+  write_linear_word(BX_SEG_REG_ES, rdi, temp16);
 
   if (BX_CPU_THIS_PTR get_DF()) {
     rsi -= 2;
@@ -752,8 +752,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD64_YdXd(bxInstruction_c *i)
   Bit64u rsi = RSI;
   Bit64u rdi = RDI;
 
-  temp32 = read_virtual_dword_64(i->seg(), rsi);
-  write_virtual_dword_64(BX_SEG_REG_ES, rdi, temp32);
+  temp32 = read_linear_dword(i->seg(), get_laddr64(i->seg(), rsi));
+  write_linear_dword(BX_SEG_REG_ES, rdi, temp32);
 
   if (BX_CPU_THIS_PTR get_DF()) {
     rsi -= 4;
@@ -776,8 +776,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSQ32_YqXq(bxInstruction_c *i)
   Bit32u esi = ESI;
   Bit32u edi = EDI;
 
-  temp64 = read_virtual_qword_64(i->seg(), esi);
-  write_virtual_qword_64(BX_SEG_REG_ES, edi, temp64);
+  temp64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), esi));
+  write_linear_qword(BX_SEG_REG_ES, edi, temp64);
 
   if (BX_CPU_THIS_PTR get_DF()) {
     esi -= 8;
@@ -801,8 +801,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSQ64_YqXq(bxInstruction_c *i)
   Bit64u rsi = RSI;
   Bit64u rdi = RDI;
 
-  temp64 = read_virtual_qword_64(i->seg(), rsi);
-  write_virtual_qword_64(BX_SEG_REG_ES, rdi, temp64);
+  temp64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), rsi));
+  write_linear_qword(BX_SEG_REG_ES, rdi, temp64);
 
   if (BX_CPU_THIS_PTR get_DF()) {
     rsi -= 8;
@@ -969,8 +969,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSB64_XbYb(bxInstruction_c *i)
   Bit64u rsi = RSI;
   Bit64u rdi = RDI;
 
-  op1_8 = read_virtual_byte_64(i->seg(), rsi);
-  op2_8 = read_virtual_byte_64(BX_SEG_REG_ES, rdi);
+  op1_8 = read_linear_byte(i->seg(), get_laddr64(i->seg(), rsi));
+  op2_8 = read_linear_byte(BX_SEG_REG_ES, rdi);
 
   diff_8 = op1_8 - op2_8;
 
@@ -1056,8 +1056,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSW64_XwYw(bxInstruction_c *i)
   Bit64u rsi = RSI;
   Bit64u rdi = RDI;
 
-  op1_16 = read_virtual_word_64(i->seg(), rsi);
-  op2_16 = read_virtual_word_64(BX_SEG_REG_ES, rdi);
+  op1_16 = read_linear_word(i->seg(), get_laddr64(i->seg(), rsi));
+  op2_16 = read_linear_word(BX_SEG_REG_ES, rdi);
 
   diff_16 = op1_16 - op2_16;
 
@@ -1144,8 +1144,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSD64_XdYd(bxInstruction_c *i)
   Bit64u rsi = RSI;
   Bit64u rdi = RDI;
 
-  op1_32 = read_virtual_dword_64(i->seg(), rsi);
-  op2_32 = read_virtual_dword_64(BX_SEG_REG_ES, rdi);
+  op1_32 = read_linear_dword(i->seg(), get_laddr64(i->seg(), rsi));
+  op2_32 = read_linear_dword(BX_SEG_REG_ES, rdi);
 
   diff_32 = op1_32 - op2_32;
 
@@ -1172,8 +1172,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSQ32_XqYq(bxInstruction_c *i)
   Bit32u esi = ESI;
   Bit32u edi = EDI;
 
-  op1_64 = read_virtual_qword_64(i->seg(), esi);
-  op2_64 = read_virtual_qword_64(BX_SEG_REG_ES, edi);
+  op1_64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), esi));
+  op2_64 = read_linear_qword(BX_SEG_REG_ES, edi);
 
   diff_64 = op1_64 - op2_64;
 
@@ -1201,8 +1201,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSQ64_XqYq(bxInstruction_c *i)
   Bit64u rsi = RSI;
   Bit64u rdi = RDI;
 
-  op1_64 = read_virtual_qword_64(i->seg(), rsi);
-  op2_64 = read_virtual_qword_64(BX_SEG_REG_ES, rdi);
+  op1_64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), rsi));
+  op2_64 = read_linear_qword(BX_SEG_REG_ES, rdi);
 
   diff_64 = op1_64 - op2_64;
 
@@ -1357,7 +1357,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASB64_ALYb(bxInstruction_c *i)
 
   Bit64u rdi = RDI;
 
-  op2_8 = read_virtual_byte_64(BX_SEG_REG_ES, rdi);
+  op2_8 = read_virtual_byte(BX_SEG_REG_ES, rdi);
 
   diff_8 = op1_8 - op2_8;
 
@@ -1427,7 +1427,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASW64_AXYw(bxInstruction_c *i)
 
   Bit64u rdi = RDI;
 
-  op2_16 = read_virtual_word_64(BX_SEG_REG_ES, rdi);
+  op2_16 = read_virtual_word(BX_SEG_REG_ES, rdi);
 
   diff_16 = op1_16 - op2_16;
 
@@ -1498,7 +1498,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASD64_EAXYd(bxInstruction_c *i)
 
   Bit64u rdi = RDI;
 
-  op2_32 = read_virtual_dword_64(BX_SEG_REG_ES, rdi);
+  op2_32 = read_virtual_dword(BX_SEG_REG_ES, rdi);
 
   diff_32 = op1_32 - op2_32;
 
@@ -1521,7 +1521,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASQ32_RAXYq(bxInstruction_c *i)
 
   Bit32u edi = EDI;
 
-  op2_64 = read_virtual_qword_64(BX_SEG_REG_ES, edi);
+  op2_64 = read_virtual_qword(BX_SEG_REG_ES, edi);
 
   diff_64 = op1_64 - op2_64;
 
@@ -1545,7 +1545,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASQ64_RAXYq(bxInstruction_c *i)
 
   Bit64u rdi = RDI;
 
-  op2_64 = read_virtual_qword_64(BX_SEG_REG_ES, rdi);
+  op2_64 = read_virtual_qword(BX_SEG_REG_ES, rdi);
 
   diff_64 = op1_64 - op2_64;
 
@@ -1710,7 +1710,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSB64_YbAL(bxInstruction_c *i)
 {
   Bit64u rdi = RDI;
 
-  write_virtual_byte_64(BX_SEG_REG_ES, rdi, AL);
+  write_linear_byte(BX_SEG_REG_ES, rdi, AL);
 
   if (BX_CPU_THIS_PTR get_DF()) {
     rdi--;
@@ -1764,7 +1764,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSW64_YwAX(bxInstruction_c *i)
 {
   Bit64u rdi = RDI;
 
-  write_virtual_word_64(BX_SEG_REG_ES, rdi, AX);
+  write_linear_word(BX_SEG_REG_ES, rdi, AX);
 
   if (BX_CPU_THIS_PTR get_DF()) {
     rdi -= 2;
@@ -1819,7 +1819,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSD64_YdEAX(bxInstruction_c *i)
 {
   Bit64u rdi = RDI;
 
-  write_virtual_dword_64(BX_SEG_REG_ES, rdi, EAX);
+  write_linear_dword(BX_SEG_REG_ES, rdi, EAX);
 
   if (BX_CPU_THIS_PTR get_DF()) {
     rdi -= 4;
@@ -1836,7 +1836,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSQ32_YqRAX(bxInstruction_c *i)
 {
   Bit32u edi = EDI;
 
-  write_virtual_qword_64(BX_SEG_REG_ES, edi, RAX);
+  write_linear_qword(BX_SEG_REG_ES, edi, RAX);
 
   if (BX_CPU_THIS_PTR get_DF()) {
     edi -= 8;
@@ -1854,7 +1854,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSQ64_YqRAX(bxInstruction_c *i)
 {
   Bit64u rdi = RDI;
 
-  write_virtual_qword_64(BX_SEG_REG_ES, rdi, RAX);
+  write_linear_qword(BX_SEG_REG_ES, rdi, RAX);
 
   if (BX_CPU_THIS_PTR get_DF()) {
     rdi -= 8;
@@ -1986,7 +1986,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LODSB64_ALXb(bxInstruction_c *i)
 {
   Bit64u rsi = RSI;
 
-  AL = read_virtual_byte_64(i->seg(), rsi);
+  AL = read_linear_byte(i->seg(), get_laddr64(i->seg(), rsi));
 
   if (BX_CPU_THIS_PTR get_DF()) {
     rsi--;
@@ -2040,7 +2040,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LODSW64_AXXw(bxInstruction_c *i)
 {
   Bit64u rsi = RSI;
 
-  AX = read_virtual_word_64(i->seg(), rsi);
+  AX = read_linear_word(i->seg(), get_laddr64(i->seg(), rsi));
 
   if (BX_CPU_THIS_PTR get_DF()) {
     rsi -= 2;
@@ -2095,7 +2095,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LODSD64_EAXXd(bxInstruction_c *i)
 {
   Bit64u rsi = RSI;
 
-  RAX = read_virtual_dword_64(i->seg(), rsi);
+  RAX = read_linear_dword(i->seg(), get_laddr64(i->seg(), rsi));
 
   if (BX_CPU_THIS_PTR get_DF()) {
     rsi -= 4;
@@ -2112,7 +2112,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LODSQ32_RAXXq(bxInstruction_c *i)
 {
   Bit32u esi = ESI;
 
-  RAX = read_virtual_qword_64(i->seg(), esi);
+  RAX = read_linear_qword(i->seg(), get_laddr64(i->seg(), esi));
 
   if (BX_CPU_THIS_PTR get_DF()) {
     esi -= 8;
@@ -2130,7 +2130,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LODSQ64_RAXXq(bxInstruction_c *i)
 {
   Bit64u rsi = RSI;
 
-  RAX = read_virtual_qword_64(i->seg(), rsi);
+  RAX = read_linear_qword(i->seg(), get_laddr64(i->seg(), rsi));
 
   if (BX_CPU_THIS_PTR get_DF()) {
     rsi -= 8;
