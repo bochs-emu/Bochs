@@ -797,7 +797,7 @@ BX_CPU_C::read_RMW_virtual_qword_64(unsigned s, Bit64u laddr)
   return data;
 }
 
-void BX_CPU_C::read_RMW_virtual_dqword_aligned_64(unsigned s, Bit64u laddr, Bit64u *hi, Bit64u *lo)
+void BX_CPU_C::read_RMW_linear_dqword_aligned_64(unsigned s, Bit64u laddr, Bit64u *hi, Bit64u *lo)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
 
@@ -836,7 +836,7 @@ void BX_CPU_C::read_RMW_virtual_dqword_aligned_64(unsigned s, Bit64u laddr, Bit6
   *hi = data.xmm64u(1);
 }
 
-void BX_CPU_C::write_RMW_virtual_dqword(Bit64u hi, Bit64u lo)
+void BX_CPU_C::write_RMW_linear_dqword(Bit64u hi, Bit64u lo)
 {
   write_RMW_virtual_qword(lo);
 

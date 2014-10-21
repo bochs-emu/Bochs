@@ -4525,8 +4525,8 @@ public: // for now...
   BX_SMF Bit32u read_RMW_virtual_dword_64(unsigned seg, Bit64u laddr) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit64u read_RMW_virtual_qword_64(unsigned seg, Bit64u laddr) BX_CPP_AttrRegparmN(2);
 
-  BX_SMF void read_RMW_virtual_dqword_aligned_64(unsigned seg, Bit64u laddr, Bit64u *hi, Bit64u *lo);
-  BX_SMF void write_RMW_virtual_dqword(Bit64u hi, Bit64u lo);
+  BX_SMF void read_RMW_linear_dqword_aligned_64(unsigned seg, Bit64u laddr, Bit64u *hi, Bit64u *lo);
+  BX_SMF void write_RMW_linear_dqword(Bit64u hi, Bit64u lo);
 #endif
 
   // write of word/dword to new stack could happen only in legacy mode

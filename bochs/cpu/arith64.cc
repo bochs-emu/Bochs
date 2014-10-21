@@ -599,18 +599,18 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG16B(bxInstruction_c *i)
   Bit64u op1_64_lo, op1_64_hi, diff;
 
   // check write permission for following write
-  read_RMW_virtual_dqword_aligned_64(i->seg(), get_laddr64(i->seg(), eaddr), &op1_64_hi, &op1_64_lo);
+  read_RMW_linear_dqword_aligned_64(i->seg(), get_laddr64(i->seg(), eaddr), &op1_64_hi, &op1_64_lo);
 
   diff  = RAX - op1_64_lo;
   diff |= RDX - op1_64_hi;
 
   if (diff == 0) {  // if accumulator == dest
-    write_RMW_virtual_dqword(RCX, RBX);
+    write_RMW_linear_dqword(RCX, RBX);
     assert_ZF();
   }
   else {
     clear_ZF();
-    write_RMW_virtual_dqword(op1_64_hi, op1_64_lo);
+    write_RMW_linear_dqword(op1_64_hi, op1_64_lo);
     // accumulator <-- dest
     RAX = op1_64_lo;
     RDX = op1_64_hi;
