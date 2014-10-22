@@ -542,7 +542,7 @@ void atom_n270_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 void atom_n270_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
 {
   // virtual & phys address size in low 2 bytes.
-  leaf->eax = BX_PHY_ADDRESS_WIDTH | (BX_LIN_ADDRESS_WIDTH << 8); // physical address should be 32-bit, no PSE-36
+  leaf->eax = BX_PHY_ADDRESS_WIDTH | (32 << 8); // physical address should be 32-bit, no PSE-36
   leaf->ebx = 0;
   leaf->ecx = 0; // Reserved, undefined
   leaf->edx = 0;
