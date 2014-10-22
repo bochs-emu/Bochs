@@ -1336,6 +1336,10 @@ public: // for now...
     set_PF(1 & ((flags32) >> 2));
     set_CF(1 & ((flags32) >> 0));
   }
+
+  BX_SMF BX_CPP_INLINE void clearEFlagsOSZAPC(void) {
+    SET_FLAGS_OSZAPC_LOGIC_32(1);
+  }
  
   BX_SMF BX_CPP_INLINE void SET_FLAGS_OxxxxC(Bit32u new_of, Bit32u new_cf) {
     Bit32u temp_po = new_of ^ new_cf;
@@ -1432,7 +1436,9 @@ public: // for now...
     return ((BX_CPU_THIS_PTR oszapc.auxbits >> LF_BIT_AF) & 1);
   }
 
-  BX_SMF BX_CPP_INLINE bx_bool get_AF(void) { return getB_AF(); }
+  BX_SMF BX_CPP_INLINE bx_bool get_AF(void) {
+    return (BX_CPU_THIS_PTR oszapc.auxbits & LF_MASK_AF);
+  }
 
   BX_SMF BX_CPP_INLINE void set_AF(bx_bool val) {
     BX_CPU_THIS_PTR oszapc.auxbits &= ~(LF_MASK_AF);

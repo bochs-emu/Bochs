@@ -41,15 +41,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDRAND_Ew(bxInstruction_c *i)
 
   Bit16u val_16 = 0;
 
+  clearEFlagsOSZAPC();
+
   if (HW_RANDOM_GENERATOR_READY) {
     val_16 |= rand() & 0xff;  // hack using std C rand() function
     val_16 <<= 8;
     val_16 |= rand() & 0xff;
 
-    setEFlagsOSZAPC(EFlagsCFMask);
-  }
-  else { 
-    setEFlagsOSZAPC(0);
+    assert_CF();
   }
 
   BX_WRITE_16BIT_REG(i->dst(), val_16);
@@ -69,6 +68,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDRAND_Ed(bxInstruction_c *i)
 
   Bit32u val_32 = 0;
 
+  clearEFlagsOSZAPC();
+
   if (HW_RANDOM_GENERATOR_READY) {
     val_32 |= rand() & 0xff;  // hack using std C rand() function
     val_32 <<= 8;
@@ -78,10 +79,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDRAND_Ed(bxInstruction_c *i)
     val_32 <<= 8;
     val_32 |= rand() & 0xff;
 
-    setEFlagsOSZAPC(EFlagsCFMask);
-  }
-  else { 
-    setEFlagsOSZAPC(0);
+    assert_CF();
   }
 
   BX_WRITE_32BIT_REGZ(i->dst(), val_32);
@@ -102,6 +100,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDRAND_Eq(bxInstruction_c *i)
 
   Bit64u val_64 = 0;
 
+  clearEFlagsOSZAPC();
+
   if (HW_RANDOM_GENERATOR_READY) {
     val_64 |= rand() & 0xff;  // hack using std C rand() function
     val_64 <<= 8;
@@ -119,10 +119,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDRAND_Eq(bxInstruction_c *i)
     val_64 <<= 8;
     val_64 |= rand() & 0xff;
 
-    setEFlagsOSZAPC(EFlagsCFMask);
-  }
-  else { 
-    setEFlagsOSZAPC(0);
+    assert_CF();
   }
 
   BX_WRITE_64BIT_REG(i->dst(), val_64);
@@ -143,15 +140,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDSEED_Ew(bxInstruction_c *i)
 
   Bit16u val_16 = 0;
 
+  clearEFlagsOSZAPC();
+
   if (HW_RANDOM_GENERATOR_READY) {
     val_16 |= rand() & 0xff;  // hack using std C rand() function
     val_16 <<= 8;
     val_16 |= rand() & 0xff;
 
-    setEFlagsOSZAPC(EFlagsCFMask);
-  }
-  else { 
-    setEFlagsOSZAPC(0);
+    assert_CF();
   }
 
   BX_WRITE_16BIT_REG(i->dst(), val_16);
@@ -171,6 +167,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDSEED_Ed(bxInstruction_c *i)
 
   Bit32u val_32 = 0;
 
+  clearEFlagsOSZAPC();
+
   if (HW_RANDOM_GENERATOR_READY) {
     val_32 |= rand() & 0xff;  // hack using std C rand() function
     val_32 <<= 8;
@@ -180,10 +178,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDSEED_Ed(bxInstruction_c *i)
     val_32 <<= 8;
     val_32 |= rand() & 0xff;
 
-    setEFlagsOSZAPC(EFlagsCFMask);
-  }
-  else { 
-    setEFlagsOSZAPC(0);
+    assert_CF();
   }
 
   BX_WRITE_32BIT_REGZ(i->dst(), val_32);
@@ -204,6 +199,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDSEED_Eq(bxInstruction_c *i)
 
   Bit64u val_64 = 0;
 
+  clearEFlagsOSZAPC();
+
   if (HW_RANDOM_GENERATOR_READY) {
     val_64 |= rand() & 0xff;  // hack using std C rand() function
     val_64 <<= 8;
@@ -221,10 +218,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDSEED_Eq(bxInstruction_c *i)
     val_64 <<= 8;
     val_64 |= rand() & 0xff;
 
-    setEFlagsOSZAPC(EFlagsCFMask);
-  }
-  else { 
-    setEFlagsOSZAPC(0);
+    assert_CF();
   }
 
   BX_WRITE_64BIT_REG(i->dst(), val_64);

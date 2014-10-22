@@ -379,12 +379,14 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMwrite64_Shadow(unsigned encoding, Bit64u
 
 BX_CPP_INLINE void BX_CPU_C::VMfail(Bit32u error_code)
 {
+  clearEFlagsOSZAPC();
+
   if ((BX_CPU_THIS_PTR vmcsptr != BX_INVALID_VMCSPTR)) { // executed only if there is a current VMCS
-     setEFlagsOSZAPC(EFlagsZFMask);
+     assert_ZF();
      VMwrite32(VMCS_32BIT_INSTRUCTION_ERROR, error_code);
   }
   else {
-     setEFlagsOSZAPC(EFlagsCFMask);
+     assert_CF();
   }
 }
 
@@ -2390,7 +2392,7 @@ void BX_CPU_C::VMexitLoadHostState(void)
   // set flags directly, avoid setEFlags side effects
   BX_CPU_THIS_PTR eflags = 0x2; // Bit1 is always set
   // Update lazy flags state
-  setEFlagsOSZAPC(0);
+  clearEFlagsOSZAPC();
 
   BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
 

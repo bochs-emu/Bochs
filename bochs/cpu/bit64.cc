@@ -351,8 +351,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GqEqR(bxInstruction_c *i)
 {
   Bit32u op_32 = popcntq(BX_READ_64BIT_REG(i->src()));
 
-  Bit32u flags = op_32 ? 0 : EFlagsZFMask;
-  setEFlagsOSZAPC(flags);
+  clearEFlagsOSZAPC();
+  if (! op_32) assert_ZF();
 
   BX_WRITE_32BIT_REGZ(i->dst(), op_32);
 
