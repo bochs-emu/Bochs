@@ -130,13 +130,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KORTESTB_KGbKEbR(bxInstruction_c *
 {
 #if BX_SUPPORT_EVEX
   Bit8u tmp = BX_READ_8BIT_OPMASK(i->src1()) | BX_READ_8BIT_OPMASK(i->src2());
-  unsigned flags = 0;
+  clearEFlagsOSZAPC();
   if (tmp == 0)
-    flags |= EFlagsZFMask;
+    assert_ZF();
   else if (tmp == 0xff)
-    flags |= EFlagsCFMask;
-
-  setEFlagsOSZAPC(flags);
+    assert_CF();
 #endif
 
   BX_NEXT_INSTR(i);
@@ -194,14 +192,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KTESTB_KGbKEbR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
   Bit8u op1 = BX_READ_8BIT_OPMASK(i->src1()), op2 = BX_READ_8BIT_OPMASK(i->src2());
-  unsigned flags = 0;
-
+  clearEFlagsOSZAPC();
   if ((op1 & op2) == 0)
-    flags |= EFlagsZFMask;
+    assert_ZF();
   if ((~op1 & op2) == 0)
-    flags |= EFlagsCFMask;
-
-  setEFlagsOSZAPC(flags);
+    assert_CF();
 #endif
 
   BX_NEXT_INSTR(i);

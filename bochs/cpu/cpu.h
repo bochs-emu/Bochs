@@ -1370,17 +1370,14 @@ public: // for now...
 
   BX_SMF BX_CPP_INLINE void assert_ZF(void) {
     // merge the sign bit into the Sign Delta
-
     BX_CPU_THIS_PTR oszapc.auxbits ^=
       (((BX_CPU_THIS_PTR oszapc.result >> BX_LF_SIGN_BIT) & 1) << LF_BIT_SD);
 
     // merge the parity bits into the Parity Delta Byte
-
     Bit32u temp_pdb = (255 & BX_CPU_THIS_PTR oszapc.result);
     BX_CPU_THIS_PTR oszapc.auxbits ^= (temp_pdb << LF_BIT_PDB);
 
     // now zero the .result value
-
     BX_CPU_THIS_PTR oszapc.result = 0;
   }
 
@@ -1459,7 +1456,7 @@ public: // for now...
   }
 
   BX_SMF BX_CPP_INLINE bx_bool get_CF(void) {
-    return BX_CPU_THIS_PTR oszapc.auxbits & (1U << LF_BIT_CF);
+    return (BX_CPU_THIS_PTR oszapc.auxbits & LF_MASK_CF);
   }
 
   BX_SMF BX_CPP_INLINE void set_CF(bx_bool val) {
@@ -5240,7 +5237,7 @@ public: // for now...
   BX_SMF void vmwrite_shadow(unsigned encoding, Bit64u val_64) BX_CPP_AttrRegparmN(2);
 #endif
 
-  BX_SMF BX_CPP_INLINE void VMsucceed(void) { setEFlagsOSZAPC(0); }
+  BX_SMF BX_CPP_INLINE void VMsucceed(void) { clearEFlagsOSZAPC(); }
   BX_SMF BX_CPP_INLINE void VMfailInvalid(void) { setEFlagsOSZAPC(EFlagsCFMask); }
   BX_SMF void VMfail(Bit32u error_code);
   BX_SMF void VMabort(VMX_vmabort_code error_code);

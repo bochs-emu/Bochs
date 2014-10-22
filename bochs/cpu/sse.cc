@@ -208,15 +208,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BLENDVPD_VpdWpdR(bxInstruction_c *
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PTEST_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
-  unsigned result = 0;
+
+  clearEFlagsOSZAPC();
 
   if ((op2.xmm64u(0) &  op1.xmm64u(0)) == 0 &&
-      (op2.xmm64u(1) &  op1.xmm64u(1)) == 0) result |= EFlagsZFMask;
+      (op2.xmm64u(1) &  op1.xmm64u(1)) == 0) assert_ZF();
 
   if ((op2.xmm64u(0) & ~op1.xmm64u(0)) == 0 &&
-      (op2.xmm64u(1) & ~op1.xmm64u(1)) == 0) result |= EFlagsCFMask;
-
-  setEFlagsOSZAPC(result);
+      (op2.xmm64u(1) & ~op1.xmm64u(1)) == 0) assert_CF();
 
   BX_NEXT_INSTR(i);
 }
