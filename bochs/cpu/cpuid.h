@@ -422,7 +422,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [18:18]  RDSEED instruction support
 //   [19:19]  ADCX/ADOX instructions support
 //   [20:20]  SMAP: Supervisor Mode Access Prevention
-//   [22:21]  AVX512IFMA52 instructions support
+//   [21:21]  AVX512IFMA52 instructions support
+//   [22:22]  reserved
 //   [23:23]  CLFLUSHOPT instruction
 //   [24:24]  reserved
 //   [25:25]  Intel Processor Trace
