@@ -111,6 +111,7 @@ HWND hCPUt[BX_MAX_SMP_THREADS_SUPPORTED];   // "tabs" for the individual CPUs
 HFONT CustomFont[4];
 HFONT DefFont;
 LOGFONT mylf;
+UINT fontInit = 0;
 HMENU hOptMenu;     // "Options" popup menu (needed to set check marks)
 HMENU hViewMenu;    // "View" popup menu (needed to gray entries)
 HMENU hCmdMenu;     // "Command" popup menu (needed to gray entries)
@@ -1212,14 +1213,12 @@ void MakeTreeChild (HTREEITEM *h_P, int ChildCount, HTREEITEM *h_TC)
 
 bx_bool NewFont()
 {
-    LOGFONT lf;
     if (AtBreak == FALSE)
         return FALSE;
-    GetObject(DefFont,sizeof(lf),&lf);
     CHOOSEFONT cF = {0};
     cF.lStructSize = sizeof(cF);
     cF.hwndOwner = hY;
-    cF.lpLogFont = &lf;
+    cF.lpLogFont = &mylf;
     cF.Flags = CF_SCREENFONTS | CF_EFFECTS | CF_INITTOLOGFONTSTRUCT;
     if (ChooseFont(&cF) == FALSE)
         return FALSE;
@@ -1230,20 +1229,20 @@ bx_bool NewFont()
     ShowWindow(hS_S,SW_HIDE);
     ShowWindow(hE_I,SW_HIDE);
     if (*CustomFont != DefFont)             // destroy all variations of the prev. font
-        DeleteObject (*CustomFont);
-    DeleteObject (CustomFont[1]);
-    DeleteObject (CustomFont[2]);
-    DeleteObject (CustomFont[3]);
-    *CustomFont = CreateFontIndirect(&lf);
+        DeleteObject(*CustomFont);
+    DeleteObject(CustomFont[1]);
+    DeleteObject(CustomFont[2]);
+    DeleteObject(CustomFont[3]);
+    *CustomFont = CreateFontIndirect(&mylf);
     // create a bold version of the deffont
-    lf.lfWeight = FW_BOLD;
-    CustomFont[1] = CreateFontIndirect (&lf);
+    mylf.lfWeight = FW_BOLD;
+    CustomFont[1] = CreateFontIndirect(&mylf);
     // create a bold + italic version of the deffont
-    lf.lfItalic = 1;
-    CustomFont[3] = CreateFontIndirect (&lf);
+    mylf.lfItalic = 1;
+    CustomFont[3] = CreateFontIndirect(&mylf);
     // create an italic version of the deffont (turn off bold)
-    lf.lfWeight = FW_NORMAL;
-    CustomFont[2] = CreateFontIndirect (&lf);
+    mylf.lfWeight = FW_NORMAL;
+    CustomFont[2] = CreateFontIndirect(&mylf);
 
     CallWindowProc(wListView,hL[REG_WND],WM_SETFONT,(WPARAM)*CustomFont,MAKELPARAM(TRUE,0));
     CallWindowProc(wListView,hL[ASM_WND],WM_SETFONT,(WPARAM)*CustomFont,MAKELPARAM(TRUE,0));
@@ -1802,30 +1801,33 @@ bx_bool OSInit()
     CurXSize = 0;
     CurYSize = 0;
     HMENU hTopMenu = LoadMenu(GetModuleHandle(0),"MENU_1");     // build the menus from the resource
-    hOptMenu = GetSubMenu (hTopMenu, 2);                // need the main menu handles
-    hViewMenu = GetSubMenu (hTopMenu, 1);
-    hCmdMenu = GetSubMenu (hTopMenu, 0);
+    hOptMenu = GetSubMenu(hTopMenu, 2);                // need the main menu handles
+    hViewMenu = GetSubMenu(hTopMenu, 1);
+    hCmdMenu = GetSubMenu(hTopMenu, 0);
     hY = CreateWindowEx(0,"bochs_dbg_x","Bochs Enhanced Debugger",
         WS_OVERLAPPEDWINDOW | WS_VISIBLE,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,
         0,hTopMenu,GetModuleHandle(0),0);
     if (hY == NULL)
         return FALSE;
-    HDC hdc = GetDC (hY);
     *CustomFont = DefFont;  // create the deffont with modded attributes (bold, italic)
-    memset(&mylf, 0, sizeof(LOGFONT));
-    GetTextFace(hdc, LF_FULLFACESIZE, mylf.lfFaceName); // (constant is max length of a fontname)
-    GetTextMetrics (hdc, &tm);
-    ReleaseDC (hY, hdc);
-    mylf.lfHeight = -(tm.tmHeight);     // request a TOTAL font height of tmHeight
+    if (!fontInit) {
+      HDC hdc = GetDC(hY);
+      memset(&mylf, 0, sizeof(LOGFONT));
+      mylf.lfWeight = FW_NORMAL;
+      GetTextFace(hdc, LF_FULLFACESIZE, mylf.lfFaceName); // (constant is max length of a fontname)
+      GetTextMetrics(hdc, &tm);
+      ReleaseDC(hY, hdc);
+      mylf.lfHeight = -(tm.tmHeight);     // request a TOTAL font height of tmHeight
+    }
     // create a bold version of the deffont
     mylf.lfWeight = FW_BOLD;
-    CustomFont[1] = CreateFontIndirect (&mylf);
+    CustomFont[1] = CreateFontIndirect(&mylf);
     // create a bold + italic version of the deffont
     mylf.lfItalic = 1;
-    CustomFont[3] = CreateFontIndirect (&mylf);
+    CustomFont[3] = CreateFontIndirect(&mylf);
     // create an italic version of the deffont (turn off bold)
     mylf.lfWeight = FW_NORMAL;
-    CustomFont[2] = CreateFontIndirect (&mylf);
+    CustomFont[2] = CreateFontIndirect(&mylf);
     return TRUE;
 }
 
@@ -1878,13 +1880,26 @@ void MakeBL(HTREEITEM *h_P, bx_param_c *p)
 
 bx_bool ParseOSSettings(const char *param, const char *value)
 {
-  // TODO: handle win32-specific settings here
+  if (!strcmp(param, "FontName")) {
+    memset(&mylf, 0, sizeof(LOGFONT));
+    mylf.lfWeight = FW_NORMAL;
+    strcpy(mylf.lfFaceName, value);
+    fontInit |= 1;
+    return 1;
+  } else if (!strcmp(param, "FontSize")) {
+    mylf.lfHeight = atoi(value);
+    fontInit |= 2;
+    return 1;
+  }
+  // TODO: handle more win32-specific settings here
   return 0;
 }
 
 void WriteOSSettings(FILE *fd)
 {
-  // TODO: handle win32-specific settings here
+  fprintf(fd, "FontName = %s\n", mylf.lfFaceName);
+  fprintf(fd, "FontSize = %d\n", mylf.lfHeight);
+  // TODO: handle more win32-specific settings here
 }
 
 #endif
