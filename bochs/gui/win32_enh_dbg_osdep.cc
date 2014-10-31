@@ -112,6 +112,8 @@ HFONT CustomFont[4];
 HFONT DefFont;
 LOGFONT mylf;
 UINT fontInit = 0;
+RECT rY = {0};
+BOOL windowInit = FALSE;
 HMENU hOptMenu;     // "Options" popup menu (needed to set check marks)
 HMENU hViewMenu;    // "View" popup menu (needed to gray entries)
 HMENU hCmdMenu;     // "Command" popup menu (needed to gray entries)
@@ -1745,6 +1747,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
         }
         case WM_CLOSE:
         {
+            GetWindowRect(hY, &rY);
             bx_user_quit = 1;
             SIM->debug_break();
             KillTimer(hh,2);
@@ -1809,6 +1812,9 @@ bx_bool OSInit()
         0,hTopMenu,GetModuleHandle(0),0);
     if (hY == NULL)
         return FALSE;
+    if (windowInit) {
+      MoveWindow(hY, rY.left, rY.top, rY.right-rY.left, rY.bottom-rY.top, TRUE);
+    }
     *CustomFont = DefFont;  // create the deffont with modded attributes (bold, italic)
     if (!fontInit) {
       HDC hdc = GetDC(hY);
@@ -1880,6 +1886,8 @@ void MakeBL(HTREEITEM *h_P, bx_param_c *p)
 
 bx_bool ParseOSSettings(const char *param, const char *value)
 {
+  char *val2, *ptr;
+
   if (!strcmp(param, "FontName")) {
     memset(&mylf, 0, sizeof(LOGFONT));
     mylf.lfWeight = FW_NORMAL;
@@ -1890,6 +1898,19 @@ bx_bool ParseOSSettings(const char *param, const char *value)
     mylf.lfHeight = atoi(value);
     fontInit |= 2;
     return 1;
+  } else if (!strcmp(param, "MainWindow")) {
+    val2 = strdup(value);
+    ptr = strtok(val2, ",");
+    rY.left = atoi(ptr);
+    ptr = strtok(NULL, ",");
+    rY.top = atoi(ptr);
+    ptr = strtok(NULL, ",");
+    rY.right = atoi(ptr);
+    ptr = strtok(NULL, "\n");
+    rY.bottom = atoi(ptr);
+    windowInit = TRUE;
+    free(val2);
+    return 1;
   }
   // TODO: handle more win32-specific settings here
   return 0;
@@ -1899,6 +1920,10 @@ void WriteOSSettings(FILE *fd)
 {
   fprintf(fd, "FontName = %s\n", mylf.lfFaceName);
   fprintf(fd, "FontSize = %d\n", mylf.lfHeight);
+  if (hY != NULL) {
+    GetWindowRect(hY, &rY);
+  }
+  fprintf(fd, "MainWindow = %d, %d, %d, %d\n", rY.left, rY.top, rY.right, rY.bottom);
   // TODO: handle more win32-specific settings here
 }
 
