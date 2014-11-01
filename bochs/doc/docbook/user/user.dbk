@@ -1993,7 +1993,7 @@ In Bochs 1.3 and before, the X11 GUI was always the default.
     </row>
     <row>
       <entry>--with-sdl2</entry>
-      <entry>Enable support for the SDL 2.x GUI interface; see <xref linkend="compile-sdl">.</entry>
+      <entry>Enable support for the SDL 2.x GUI interface; see <xref linkend="compile-sdl2">.</entry>
     </row>
     <row>
       <entry>--with-term</entry>
@@ -2836,6 +2836,18 @@ Compiling with MSVC <command>nmake</command> is not supported yet.
 </para>
 </section><!-- end compile-sdl -->
 
+<section id="compile-sdl2"><title>Compiling with the SDL version 2 interface</title>
+<para>
+The SDL library version 2 is now also supported by Bochs. For some basic information
+about SDL, see <xref linkend="compile-sdl">. The configure option to enable SDL2
+support is <option>--with-sdl</option> and the configuration script is called
+<command>sdl2-config</command>. Note that the Bochs guis for SDL version 1.2.x
+and 2.x are mutually exclusive. The legacy SDL gui support will be removed someday.
+When using the gui library autodetection (<option>--with-all-libs</option>) the
+configure script probes for SDL version 2 first.
+</para>
+</section><!-- end compile-sdl2 -->
+
 <section id="compile-wx">
 <title>Compiling with the wxWidgets interface</title>
 <para>
@@ -3284,7 +3296,7 @@ See the examples below for other currently supported options.
 <row>
   <entry>sdl2</entry>
   <entry>use SDL 2.x library, cross platform,
-    details in <xref linkend="compile-sdl"></entry>
+    details in <xref linkend="compile-sdl2"></entry>
 </row>
 <row>
   <entry>svga</entry>
@@ -7796,7 +7808,17 @@ display_library: x, options="gui_debug"
 </screen>
 </para>
 <para>
+The gui debugger consists of a gui window with a menu bar, a button bar and some
+child windows that show the cpu registers, disassembler output, memory dump and
+the internal debugger output. A command prompt for entering debugger commands is
+also available.
+</para>
+<para>
 &FIXME; List the features here.
+</para>
+<para>
+Most of the gui debugger settings are now saved to an INI file on exit and
+restored at the next run.
 </para>
 </section>
 
