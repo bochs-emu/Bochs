@@ -847,7 +847,6 @@ AC_ARG_ENABLE(debugger-gui,
   AS_HELP_STRING([--enable-debugger-gui], [compile in support for Bochs internal debugger GUI (yes, if debugger is on)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_DEBUGGER_GUI, 1)
     gui_debugger=1
    else
     AC_MSG_RESULT(no)
@@ -857,7 +856,6 @@ AC_ARG_ENABLE(debugger-gui,
   [
     if test "$bx_debugger" = 1; then
       AC_MSG_RESULT(yes)
-      AC_DEFINE(BX_DEBUGGER_GUI, 1)
       gui_debugger=1
     else
       AC_MSG_RESULT(no)
@@ -2634,9 +2632,13 @@ AC_SUBST(CXXFLAGS_CONSOLE)
 ENH_DBG_OBJS=""
 if test "$gui_debugger" = 1; then
   if test "$needs_gtk2" = 1; then
-     ENH_DBG_OBJS="enh_dbg.o gtk_enh_dbg_osdep.o"
+    ENH_DBG_OBJS="enh_dbg.o gtk_enh_dbg_osdep.o"
+    AC_DEFINE(BX_DEBUGGER_GUI, 1)
   elif test "$DEFAULT_GUI" = win32 -o "$with_win32" = yes; then
-     ENH_DBG_OBJS="enh_dbg.o win32_enh_dbg_osdep.o"
+    ENH_DBG_OBJS="enh_dbg.o win32_enh_dbg_osdep.o"
+    AC_DEFINE(BX_DEBUGGER_GUI, 1)
+  else
+    AC_MSG_WARN([The Bochs debugger gui cannot be compiled here, disabling it])
   fi
 fi
 AC_SUBST(ENH_DBG_OBJS)
