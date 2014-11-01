@@ -44,6 +44,8 @@ bx_cpuid_t::bx_cpuid_t(BX_CPU_C *_cpu): cpu(_cpu)
     ia_extensions_bitmask[n] = 0;
 }
 
+#if BX_SUPPORT_APIC
+
 BX_CPP_INLINE static Bit32u ilog2(Bit32u x)
 {
   Bit32u count = 0;
@@ -117,6 +119,8 @@ void bx_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_
   }
 #endif
 }
+
+#endif
 
 void bx_cpuid_t::dump_cpuid(unsigned max_std_leaf, unsigned max_ext_leaf) const
 {
