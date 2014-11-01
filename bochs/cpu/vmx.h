@@ -135,6 +135,7 @@ enum VMX_vmexit_reason {
    VMX_VMEXIT_RESERVED62 = 62,
    VMX_VMEXIT_XSAVES = 63,
    VMX_VMEXIT_XRSTORS = 64,
+   VMX_VMEXIT_PCOMMIT = 65,
    VMX_VMEXIT_LAST_REASON
 };
 
@@ -634,6 +635,7 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL3_RDSEED_VMEXIT             (1 << 16)
 #define VMX_VM_EXEC_CTRL3_EPT_VIOLATION_EXCEPTION   (1 << 18) /* #VE Exception */
 #define VMX_VM_EXEC_CTRL3_XSAVES_XRSTORS            (1 << 20) /* XSAVES */
+#define VMX_VM_EXEC_CTRL3_PCOMMIT_EXITING           (1 << 21) /* PCOMMIT */
 
 #define VMX_VM_EXEC_CTRL3_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl2_supported_bits)

@@ -58,6 +58,7 @@ enum {
   IA_SYSENTER_SYSEXIT,        /* SYSENTER/SYSEXIT instruction */
   IA_CLFLUSH,                 /* CLFLUSH instruction */
   IA_CLFLUSHOPT,              /* CLFLUSHOPT instruction */
+  IA_CLWB,                    /* CLWB instruction */
   IA_SSE,                     /* SSE  instruction */
   IA_SSE2,                    /* SSE2 instruction */
   IA_SSE3,                    /* SSE3 instruction */

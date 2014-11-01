@@ -50,6 +50,7 @@ enum {
   BX_ISA_SYSENTER_SYSEXIT,        /* SYSENTER/SYSEXIT instruction */
   BX_ISA_CLFLUSH,                 /* CLFLUSH instruction */
   BX_ISA_CLFLUSHOPT,              /* CLFLUSHOPT instruction */
+  BX_ISA_CLWB,                    /* CLWB instruction */
   BX_ISA_SSE,                     /* SSE  instruction */
   BX_ISA_SSE2,                    /* SSE2 instruction */
   BX_ISA_SSE3,                    /* SSE3 instruction */
@@ -425,9 +426,9 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [19:19]  ADCX/ADOX instructions support
 //   [20:20]  SMAP: Supervisor Mode Access Prevention
 //   [21:21]  AVX512IFMA52 instructions support
-//   [22:22]  reserved
+//   [22:22]  PCOMMIT instruction
 //   [23:23]  CLFLUSHOPT instruction
-//   [24:24]  reserved
+//   [24:24]  CLWB instruction
 //   [25:25]  Intel Processor Trace
 //   [26:26]  AVX512PF instructions support
 //   [27:27]  AVX512ER instructions support
@@ -458,9 +459,9 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT3_ADX                    (1 << 19)
 #define BX_CPUID_EXT3_SMAP                   (1 << 20)
 #define BX_CPUID_EXT3_AVX512IFMA52           (1 << 21)
-#define BX_CPUID_EXT3_RESERVED22             (1 << 22)
+#define BX_CPUID_EXT3_PCOMMIT                (1 << 22)
 #define BX_CPUID_EXT3_CLFLUSHOPT             (1 << 23)
-#define BX_CPUID_EXT3_RESERVED24             (1 << 24)
+#define BX_CPUID_EXT3_CLWB                   (1 << 24)
 #define BX_CPUID_EXT3_PROCESSOR_TRACE        (1 << 25)
 #define BX_CPUID_EXT3_AVX512PF               (1 << 26)
 #define BX_CPUID_EXT3_AVX512ER               (1 << 27)
