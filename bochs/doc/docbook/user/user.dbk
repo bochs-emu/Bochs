@@ -2845,7 +2845,7 @@ Compiling with MSVC <command>nmake</command> is not supported yet.
 <para>
 The SDL library version 2 is now also supported by Bochs. For some basic information
 about SDL, see <xref linkend="compile-sdl">. The configure option to enable SDL2
-support is <option>--with-sdl</option> and the configuration script is called
+support is <option>--with-sdl2</option> and the configuration script is called
 <command>sdl2-config</command>. Note that the Bochs guis for SDL version 1.2.x
 and 2.x are mutually exclusive. The legacy SDL gui support will be removed someday.
 When using the gui library autodetection (<option>--with-all-libs</option>) the

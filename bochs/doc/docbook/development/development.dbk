@@ -2884,11 +2884,17 @@ the Build:Set Active Project Configuration is set the way you want it.
 For releases I use "Win32 Release".
 </para>
 <para>
-To create "bochsdbg.exe" with Bochs debugger support, manually change two
-lines in config.h to turn on the debugger.
+To create "bochsdbg.exe" with Bochs debugger support, manually change these
+lines in config.h to turn on the debugger and the enhanced debugger gui.
 <screen>
 #define BX_DEBUGGER 1
 #define BX_DISASM 1
+#define BX_DEBUGGER_GUI 1
+</screen>
+One of the optimization features must be turned off, since it is currently
+not compatible with the debugger.
+<screen>
+#define BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS 0
 </screen>
 VC++ will rebuild Bochs with debugger and overwrite bochs.exe.  To avoid
 trashing the non-debug version, move it out of the way while the debugger
@@ -2909,7 +2915,7 @@ source tree:
 </screen>
 This downloads and unpacks both the DLX Linux demo and the HTML docs from the
 Bochs website, copies all the files into <emphasis>./build/win32/nsis/bochs-2.5</emphasis>
-and then creates a binary ZIP in the NSIS folder. Rename that bochs-2.5.win32-bin.zip.
+and then creates a binary ZIP file in the NSIS folder.
 </para>
 <para>
 Now make the NSIS installer package (the current script is known to work with NSIS 2.44)
