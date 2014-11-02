@@ -1,4 +1,4 @@
-Changes in 2.6.7 (not yet released):
+Changes in 2.6.7 (November 2, 2014):
 
 - CPU / CPUDB
   - Implemented AVX-512BW/AVX-512DQ/AVX-512VL extensions emulation.
