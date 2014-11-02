@@ -1130,6 +1130,11 @@ The <replaceable>tagname</replaceable> tells which release you want, and it can 
     </thead>
     <tbody>
       <row>
+        <entry>2.6.7 (bugfix)</entry>
+        <entry>REL_2_6_7_FINAL</entry>
+        <entry>12531</entry>
+      </row>
+      <row>
         <entry>2.6.6 (bugfix)</entry>
         <entry>REL_2_6_6_FINAL</entry>
         <entry>12375</entry>

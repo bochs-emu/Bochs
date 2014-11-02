@@ -1042,6 +1042,7 @@ void bx_generic_cpuid_t::init_vmx_extensions_bitmask(void)
   if (vmx_enabled) {
     features_bitmask |= BX_VMX_VIRTUAL_NMI;
 
+#if BX_SUPPORT_X86_64
     static bx_bool x86_64_enabled = SIM->get_param_bool(BXPN_CPUID_X86_64)->get();
     if (x86_64_enabled) {
       features_bitmask |= BX_VMX_TPR_SHADOW |
@@ -1070,8 +1071,9 @@ void bx_generic_cpuid_t::init_vmx_extensions_bitmask(void)
       }
 #endif
     }
+#endif
   }
-  
+
   this->vmx_extensions_bitmask = features_bitmask;
 }
 #endif
