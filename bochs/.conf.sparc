@@ -1,0 +1,30 @@
+#!/bin/sh
+
+#
+# These are the steps I typically use to configure and compile Bochs.
+#
+
+# superSPARC w/ Solaris 2.x
+set echo
+CC="gcc"
+CXX="g++"
+#CFLAGS="-Wall -O2 -mv8 -msupersparc -mno-epilogue"
+CFLAGS="-Wall -O2 -mv8 -msupersparc"
+#CFLAGS="-Wall -O2 -g"
+CXXFLAGS="$CFLAGS"
+
+
+export CC
+export CXX
+export CFLAGS
+export CXXFLAGS
+
+./configure --enable-ne2000 \
+	    --enable-all-optimizations \
+            --enable-cpu-level=6 \
+            --enable-x86-64 \
+            --enable-pci \
+	    --enable-clgd54xx \
+	    --enable-usb 
+
+unset echo

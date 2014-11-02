@@ -1,0 +1,308 @@
+$Id$
+
+Starting from Bochs 2.3 the parameters are organized in a tree structure
+instead of a huge flat list. The parameter tree was required for implementing
+the save/restore feature, and it gives access to the device state from within
+the debugger.
+-Volker
+
+Current organization of parameters in the tree
+
+general
+  config_interface
+  start_mode
+  benchmark
+  dumpstats
+  restore
+  restore_path
+  debug_running
+
+cpu
+  n_processors
+  n_cores
+  n_threads
+  model
+  ips
+  quantum
+  reset_on_triple_fault
+  msrs
+  cpuid_limit_winnt
+  mwait_is_nop
+
+cpuid
+  level
+  family
+  model
+  stepping
+  vendor_string
+  brand_string
+  mmx
+  sep
+  simd
+  sse4a
+  misaligned_sse
+  avx_f16c
+  avx_fma
+  aes
+  sha
+  movbe
+  adx
+  xsave
+  xsaveopt
+  svm
+  vmx
+  bmi
+  xop
+  fma4
+  tbm
+  apic
+  x86_64
+  1g_pages
+  pcid
+  fsgsbase
+  smep
+  smap
+  mwait
+
+memory
+  standard
+    ram
+      size
+    rom
+      path
+      address
+    vgarom
+      path
+  optrom
+    0
+      path
+      addr
+    1
+      path
+      addr
+    2
+      path
+      addr
+    3
+      path
+      addr
+  optram
+    0
+      path
+      addr
+    1
+      path
+      addr
+    2
+      path
+      addr
+    3
+      path
+      addr
+
+clock_cmos
+  clock_sync
+  time0
+  cmosimage
+    enabled
+    path
+    rtc_init
+
+pci
+  i440fx_support
+  slot
+    1
+    2
+    3
+    4
+    5
+  pcidev
+    vendor
+    device
+
+display
+  display_library
+  displaylib_options
+  private_colormap
+  fullscreen
+  screenmode
+  vga_extension
+  vga_update_interval
+  voodoo
+    enabled
+    model
+
+keyboard_mouse
+  keyboard
+    type
+    serial_delay
+    paste_delay
+    use_mapping
+    keymap
+    user_shortcut
+  mouse
+    type
+    enabled
+
+boot_params
+  boot_drive1
+  boot_drive2
+  boot_drive3
+  floppy_sig_check
+  load32bitos
+    which
+    path
+    iolog
+    initrd
+
+floppy
+  0
+    devtype
+    path
+    type
+    readonly
+    status
+  1
+    devtype
+    path
+    type
+    readonly
+    status
+
+ata
+  0
+    resources
+      enabled
+      ioaddr1
+      ioaddr2
+      irq
+    master
+      type
+      path
+      mode
+      journal
+      cylinders
+      heads
+      spt
+      status
+      model
+      biosdetect
+      translation
+    slave
+      (same options as master)
+  1
+    (same options as ata.0)
+  2
+    (same options as ata.0)
+  3
+    (same options as ata.0)
+
+ports
+  serial
+    1
+      enabled
+      mode
+      dev
+    2
+      (same options as ports.serial.1)
+    3
+      (same options as ports.serial.1)
+    4
+      (same options as ports.serial.1)
+  parallel
+    1
+      enabled
+      outfile
+    2
+      (same options as ports.parallel.1)
+  usb
+    uhci
+      enabled
+      port1
+        device
+        options
+      port2
+        device
+        options
+    ohci
+      (same options as ports.usb.uhci)
+    xhci
+      (same options as ports.usb.uhci)
+
+network
+  ne2k
+    enabled
+    ioaddr
+    irq
+    macaddr
+    ethmod
+    ethdev
+    script
+    bootrom
+  pnic
+    enabled
+    macaddr
+    ethmod
+    ethdev
+    script
+    bootrom
+
+  e1000
+    enabled
+    macaddr
+    ethmod
+    ethdev
+    script
+    bootrom
+
+sound
+  lowlevel
+    driver
+    waveout
+    wavein
+  speaker
+    enabled
+    mode
+  sb16
+    enabled
+    midi
+    wave
+    log
+    midimode
+    wavemode
+    loglevel
+    dmatimer
+  es1370
+    enabled
+    wavemode
+    wavefile
+
+misc
+  port_e9_hack
+  gdbstub
+    port
+    text_base
+    data_base
+    bss_base
+  user_plugin
+    1 ... 8
+
+log
+  filename
+  prefix
+  debugger_filename
+
+menu
+  disk
+  disk_win32
+  memory
+  runtime
+    cdrom
+    usb
+    misc
+
+bochs
+  (subtree containing Bochs state)
+
+user
+  (subtree for user-defined options)

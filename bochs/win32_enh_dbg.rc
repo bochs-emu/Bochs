@@ -1,0 +1,88 @@
+#include <windows.h>
+#include "gui/wenhdbg_res.h"
+
+MENU_1 MENU
+    BEGIN
+    POPUP "&Command"
+        BEGIN
+        MENUITEM "Continue [c]\tF5",CMD_CONT
+        MENUITEM "Step [s]\tF11",CMD_STEP1
+        MENUITEM "Step #...\tF9",CMD_STEPN
+        MENUITEM "Break\tCtrl+C",CMD_BREAK
+        MENUITEM SEPARATOR
+        MENUITEM "Breakpoint (ASM selected)\tF6",CMD_BRKPT
+        MENUITEM "Watch Write (PhysDump selected)\tF6",CMD_WPTWR
+        MENUITEM "Watch Read (PhysDump selected)\tCtrl+F6",CMD_WPTRD
+        MENUITEM SEPARATOR
+        MENUITEM "Find...\tCtrl+F",CMD_FIND
+        MENUITEM "Refresh Screen\tF4",CMD_RFRSH
+        END
+    POPUP "&View"
+        BEGIN
+        MENUITEM "Physical Dump...\tCtrl+F7",CMD_PHYDMP
+        MENUITEM "Linear Dump...\tF7",CMD_LINDMP
+        MENUITEM "Stack\tF2",CMD_STACK
+        MENUITEM "GDT\tCtrl+F2",CMD_GDTV
+        MENUITEM "IDT\tShift+F2",CMD_IDTV
+        MENUITEM "Page Table\tAlt+F2",CMD_PAGEV
+        MENUITEM "Current MemDump\tEsc",CMD_CMEM
+        MENUITEM SEPARATOR
+        MENUITEM "Bochs param_tree\tCtrl+F3",CMD_PTREE
+        MENUITEM "Disassemble...\tCtrl+D",CMD_DISASM
+        END
+
+    POPUP "&Options"
+        BEGIN
+        MENUITEM "Break on CPU mode change\tShift+F6",CMD_MODEB
+        MENUITEM "Default disassembled lines ...",CMD_DADEF
+        MENUITEM "Toggle Intel/ATT syntax\tF3",CMD_ATTI
+        MENUITEM SEPARATOR
+        MENUITEM "Font...",CMD_FONT
+        MENUITEM "Text in UPPERCASE",CMD_UCASE
+        MENUITEM "Show Input/Output Windows",CMD_IOWIN
+        MENUITEM "Show Buttons",CMD_SBTN
+        MENUITEM SEPARATOR
+        MENUITEM "MemDump in Hex\tAlt+F7",CMD_MHEX
+        MENUITEM "MemDump in ASCII\tShift+F7",CMD_MASCII
+        MENUITEM "LittleEndian",CMD_LEND
+        POPUP "Dump 'Wordsize'"
+            BEGIN
+            MENUITEM "1 byte\tAlt+1",CMD_WS_1
+            MENUITEM "2 bytes\tAlt+2",CMD_WS_2
+            MENUITEM "4 bytes\tAlt+4",CMD_WS_4
+            MENUITEM "8 bytes\tAlt+8",CMD_WS_8
+            MENUITEM "16 bytes\tAlt+6 ",CMD_WS16
+            END
+        MENUITEM SEPARATOR
+        MENUITEM "Ignore extra ASM lines",CMD_IGNSA
+        MENUITEM "Ignore 'Next at t='",CMD_IGNNT
+        MENUITEM SEPARATOR
+        MENUITEM "Colorize Register Types",CMD_RCLR
+// the next 8 MUST be in strict menuID order
+        MENUITEM "Show 32bit Registers",CMD_EREG
+        MENUITEM "Show Segment Registers",CMD_SREG
+        MENUITEM "Show System Registers",CMD_SYSR
+        MENUITEM "Show Control Registers",CMD_CREG
+        MENUITEM "Show MMX/FPU Registers\tAlt+F3",CMD_FPUR
+        MENUITEM "Show SSE Registers\tCtrl+F4",CMD_XMMR
+        MENUITEM "Show Debug Registers\tShift+F4",CMD_DREG
+        MENUITEM "Show Test Registers",CMD_TREG
+        MENUITEM SEPARATOR
+        MENUITEM "Show log in output window",CMD_LOGVIEW
+        END
+    POPUP "&Help"
+        BEGIN
+        MENUITEM "About...",CMD_ABOUT
+        END
+    END
+
+DIALOG_AT DIALOGEX 0, 0, 365, 62
+STYLE DS_ABSALIGN | DS_MODALFRAME | DS_3DLOOK | DS_CENTER | 0x200L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
+FONT 8, "Tahoma", 400, 0
+BEGIN
+ CONTROL "", 101, "static", SS_CENTER | WS_CHILD | WS_VISIBLE, 10, 9, 284, 26
+ CONTROL "", 102, "edit", ES_AUTOHSCROLL | ES_LEFT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 10, 41, 285, 15
+ CONTROL "OK", IDOK, "BUTTON", BS_PUSHBUTTON | BS_CENTER | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 303, 22, 50, 14
+ CONTROL "Cancel", IDCANCEL, "BUTTON", BS_PUSHBUTTON | BS_CENTER | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 303, 41, 50, 14
+END
+

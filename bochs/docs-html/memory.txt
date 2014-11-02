@@ -1,0 +1,114 @@
+Memory access handling explanation
+by Brendan Trotter:
+
+For  the  local  APIC/s,  any  read  or  write to a CPU's own local APIC is
+handled  internally  and  does  not go to the bus. If the read/write misses
+this  area then the read/write does go to the bus (where other CPU's ignore
+it).
+
+This  means if 2 CPUs have different local APIC addresses and one CPU tries
+to  write  to the area used by the second CPU's local APIC, then it will go
+to the bus and will not access the second CPU's local APIC.
+This applies in all cases (e.g. hyper-threading and dual core work the same).
+
+For  I/O  APICs, the device is on the bus and should override anything that
+is  "underneath"  it.  For  example,  if  you  relocate  the  I/O  APIC  to
+0x00000000,  then  a  read  or  write  to  this area will not reach the RAM
+underneath.  In  a  similar way, if someone maps a PCI device to 0xFEC00000
+(or  somewhere  that  overlaps the I/O APIC) then a write to this area will
+not reach the PCI device.
+
+This  leads to something like the following for accesses originating from a
+CPU:
+
+if (address_is_within_this_CPUs_local_APIC_area)
+	do_local_APIC_access();
+else if (address_is_within_an_I/O_APIC_area)
+	do_I/O_APIC_access();
+else if (address_is_within_a_PCI_device_area)
+	do_PCI_access();
+else if (address_is_within_RAM_area)
+	do_RAM_access();
+else printf("Bogus address!\n");
+
+For an accesses originating from a PCI device (e.g. PCI bus masters), there
+is no access to any CPUs local APIC. It'd go like:
+
+if (address_is_within_an_I/O_APIC_area)
+	do_I/O_APIC_access();
+else if (address_is_within_a_PCI_device_area)
+	do_PCI_access();
+else if (address_is_within_RAM_area)
+	do_RAM_access();
+else printf("Bogus address from PCI device!\n");
+
+In  both  cases  it  is  complicated  by  the configuration of the PCI host
+controller/s and any "PCI to PCI" bridges.  Fortunately this can be ignored
+by  Bochs as it doesn't support PCI bridges (except for the host controller
+itself  which  can  handle all accesses). Bochs may need to worry about the
+"PCI  to  LPC"  bridge  though.  For  example, even though a PCI device can
+read/write  to  the  I/O  APIC,  an ISA device behind the PCI to LPC bridge
+can't. This means for an ISA bus master you'd have something like:
+
+if (address_is_within_a_PCI_device_area)
+	do_PCI_access();
+else if (address_is_within_RAM_area)
+	do_RAM_access();
+else printf("Bogus address from PCI device!\n");
+
+This  complicates  things  for the ISA DMA controllers, which should not be
+able  to  read/write to the I/O APIC - for e.g. if the I/O APIC base is set
+to  0x00000000,  then  an ISA DMA transfer that writes to 0x00000000 should
+write to RAM not the I/O APIC (a PCI bus master would write to the I/O APIC
+in the same situation).
+
+I'm  not  convinced  modelling  real  hardware  100% correctly is necessary
+though  -  it  would only matter for very rare situations (e.g. when the OS
+stuffs  things  up  badly).  A normal OS will not stuff things up like this
+(i.e.  a  normal  OS won't map the I/O APIC to an area that overlaps RAM or
+anything  else).  For  OS  developers  (who  might  stuff  things up), it'd
+probably  be  better to panic anyway - e.g. "BX_PANIC: I/O APIC base set to
+an address that overlaps RAM or a memory mapped device".
+
+In  general,  the  CPU  has  an "address bus" which consists of data lines,
+address  lines  and  2  others  lines. One of these other lines is the "I/O
+select"  line  -  if you do "mov [0x000000AA],al" and then do "out 0xAA,al"
+you'd  get almost the same thing on the CPUs bus (the only difference would
+be the state of the "I/O select" line). When the CPU does an access that is
+intended for I/O port space it just asserts the "I/O select" line.
+
+The second line is for SMM which works just like the I/O select line.
+
+When  the  CPU accesses a memory location normally the "SMM select" line is
+not asserted and normal memory is accessed. When the CPU is in SMM mode the
+"SMM  select" line is asserted for memory accesses. This means that the CPU
+can  use  3  completely seperate address spaces (one for normal memory, one
+for  I/O  space  and another for SMRAM). How the chipset treats these lines
+depends  on  what  the  CPU is used for - for example, these lines could be
+ignored  so  that  all types of accesses are the same (which means I/O port
+instructions  would  access  memory locations from 0x00000000 to 0x0000FFFF
+and  there'd  be no seperate SMRAM area). For "PC compatible" computers the
+"I/O  select" line does select a completely seperate address space, but the
+"SMM  select" line does not. Instead, the chipset uses it to disable access
+to the video display memory (and enable access to the RAM underneath).
+
+Fortunately,  access  to  the SMRAM area is also controlled by the chipset,
+such  that  the  CPU can access SMRAM regardless of whether it asserts it's
+"SMM select" line or not. As mentioned in my previous email, for the I440FX
+chipset  it's called the System Management RAM Control Register (or SMRCR),
+and is in the PCI host controller's PCI configuration space at offset 0x72.
+
+Returning  to  what  I  wrote  earlier,  this  leads  to something like the
+following for accesses originating from a CPU:
+
+if (address_is_within_this_CPUs_local_APIC_area)
+	do_local_APIC_access();
+else if ((CPU_is_in_SMM_mode || chipset_SMRCR_enabled) && address_is_within_SMM_area)
+	do_SMM_access();
+else if (address_is_within_an_I/O_APIC_area)
+	do_I/O_APIC_access();
+else if (address_is_within_a_PCI_device_area)
+	do_PCI_access();
+else if (address_is_within_RAM_area)
+	do_RAM_access();
+else printf("Bogus address!\n");
