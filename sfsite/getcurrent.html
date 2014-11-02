@@ -7,26 +7,24 @@
  <!--content starts here-->
  <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.6.6</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.6.7</font><BR><BR>
 
-Bochs 2.6.6 is a bugfix release. Here is the list of changes :
+Bochs 2.6.7 is an intermediate (bugfix+) release. Here is the summary of changes :
 
 <ul>
-<li>CPU / CPUDB
-  <ul>
-  <li>Allow sandy bridge configuration even when AVX is not compiled in
-  </ul>
-<li>Configure and compile
-  <ul>
-  <li>Fixed compilation error when 3dnow support is enabled
-  <li>Speedup Visual Studio build by almost 20% by adding /Gr compiler option
-  </ul>
-<li>Misc
-  <ul>
-  <li>Fixed minimizing win32 gui window and resolution change while minimized
-  <li>Added compiled SeaBIOS 1.7.5 image into Bochs tree along with Bochs BIOS images
-  <li>Documentation fixes and updates
-  </ul>
+<li>CPU: implemented AVX-512BW/AVX-512DQ/AVX-512VL extensions emulation.
+<li>CPU: implemented AVX512-IFMA532 instructions emulation.
+<li>CPU: implemented AVX512-VBMI instructions emulation.
+<li>Bugfixes for CPU emulation correctness
+<li>The VGA update timer and the status LED timer now always use the
+realtime mode independent from the 'clock' option setting.
+<li>Added native SDL2 GUI support to Bochs. To enable configure with --with-sdl2.
+<li>Write enhanced gui debugger settings to file on exit and restore on
+initialization.
+<li>USB xHCI model now emulates a NEC/Renesas uPD720202 device
+<li>ROM BIOS: fixed int74_function() for 4-byte (wheel mouse) packets.
+<li>LGPL'd VGABIOS updated from CVS (fixed building VBE modes list)
+<li>Visual Studio workspace files updated to VS2013Ex format.
 </ul>
 
 The binary packages for Linux and Windows are built with these featues :
@@ -53,27 +51,32 @@ Details on what has changed since version 2.6.5
 
 <BR/><BR/>
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.6.5</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.6.6</font><BR><BR>
 
-About a year after the bugfix release 2.6.2 we have a new intermediate (bugfix+)
-release. Here a brief summary of changes :
+Bochs 2.6.6 is a bugfix release. Here is the list of changes :
 
 <ul>
-<li>CPU: extra 5-10% emulation speedup with new trace linking optimization
-<li>CPU: implemented new instructions (e.g. AVX-512, SHA, XSAVEC)
-<li>CPUDB: added 2 new CPU models
-<li>Bugfixes for CPU emulation correctness (including some critical ones)
-<li>Gui debugger output window now can be used as a log viewer
-<li>Added built-in slirp (user-mode networking) support (ported from Qemu)
-<li>Added global sound config option and volume control support to the devices
-<li>Added new experimental gui 'vncsrv" using the LibVNCServer library
-<li>Rewrite of the bximage utility in C++ for image creation, conversion and resize
+<li>CPU / CPUDB
+  <ul>
+  <li>Allow sandy bridge configuration even when AVX is not compiled in
+  </ul>
+<li>Configure and compile
+  <ul>
+  <li>Fixed compilation error when 3dnow support is enabled
+  <li>Speedup Visual Studio build by almost 20% by adding /Gr compiler option
+  </ul>
+<li>Misc
+  <ul>
+  <li>Fixed minimizing win32 gui window and resolution change while minimized
+  <li>Added compiled SeaBIOS 1.7.5 image into Bochs tree along with Bochs BIOS images
+  <li>Documentation fixes and updates
+  </ul>
 </ul>
 
 <BR>
 
-<a href="http://svn.code.sf.net/p/bochs/code/tags/REL_2_6_5_FINAL/bochs/CHANGES">
-Details on what has changed since version 2.6.2
+<a href="http://svn.code.sf.net/p/bochs/code/tags/REL_2_6_6_FINAL/bochs/CHANGES">
+Details on what has changed since version 2.6.5
 </a>
 
  <BR><BR>
@@ -81,7 +84,7 @@ Details on what has changed since version 2.6.2
 The latest release of Bochs is available in these file formats :<BR>
 <ul>
 <li> Win32 binary NSIS installer package (EXE)
-<li> Win32 binary with x86-64 CPU + SMP support (ZIP) - Bochs installation is required
+<li> Win32 binary with P4 CPU + SMP support (ZIP) - Bochs installation is required
 <li> Win64 binary - Bochs installation is required
 <li> Linux binary RPM (32 / 64 bit)
 <li> Platform independant source package (TAR.GZ)
