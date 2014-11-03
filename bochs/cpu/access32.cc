@@ -1470,7 +1470,7 @@ void BX_CPU_C::write_new_stack_qword(bx_segment_reg_t *seg, Bit32u offset, unsig
     if (offset <= (seg->cache.u.segment.limit_scaled-7)) {
 accessOK:
       laddr = (Bit32u)(seg->cache.u.segment.base) + offset;
-      write_new_stack_dword(laddr, curr_pl, data);
+      write_new_stack_qword(laddr, curr_pl, data);
       return;
     }
   }
