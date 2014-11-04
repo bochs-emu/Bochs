@@ -1815,8 +1815,8 @@ bx_bool OSInit()
     if (windowInit) {
       MoveWindow(hY, rY.left, rY.top, rY.right-rY.left, rY.bottom-rY.top, TRUE);
     }
-    *CustomFont = DefFont;  // create the deffont with modded attributes (bold, italic)
     if (!fontInit) {
+      *CustomFont = DefFont;  // create the deffont with modded attributes (bold, italic)
       HDC hdc = GetDC(hY);
       memset(&mylf, 0, sizeof(LOGFONT));
       mylf.lfWeight = FW_NORMAL;
@@ -1824,6 +1824,8 @@ bx_bool OSInit()
       GetTextMetrics(hdc, &tm);
       ReleaseDC(hY, hdc);
       mylf.lfHeight = -(tm.tmHeight);     // request a TOTAL font height of tmHeight
+    } else {
+      *CustomFont = CreateFontIndirect(&mylf);
     }
     // create a bold version of the deffont
     mylf.lfWeight = FW_BOLD;
@@ -1834,6 +1836,13 @@ bx_bool OSInit()
     // create an italic version of the deffont (turn off bold)
     mylf.lfWeight = FW_NORMAL;
     CustomFont[2] = CreateFontIndirect(&mylf);
+    if (fontInit) {
+      CallWindowProc(wListView,hL[REG_WND],WM_SETFONT,(WPARAM)*CustomFont,MAKELPARAM(TRUE,0));
+      CallWindowProc(wListView,hL[ASM_WND],WM_SETFONT,(WPARAM)*CustomFont,MAKELPARAM(TRUE,0));
+      CallWindowProc(wListView,hL[DUMP_WND],WM_SETFONT,(WPARAM)*CustomFont,MAKELPARAM(TRUE,0));
+      CallWindowProc(*wEdit,hE_I,WM_SETFONT,(WPARAM)*CustomFont,MAKELPARAM(TRUE,0));
+      SendMessage(hS_S,WM_SETFONT,(WPARAM)*CustomFont,MAKELPARAM(TRUE,0));
+    }
     return TRUE;
 }
 
