@@ -597,7 +597,7 @@ void BX_CPU_C::print_state_FPU(void)
     f *= fp.fraction*scale_factor;
 #endif
     float_class_t f_class = floatx80_class(fp);
-    fprintf(stderr, "%sFP%d ST%d(%c):        raw 0x%04x:%08lx%08lx (%.10f) (%s)\n",
+    fprintf(stderr, "%sFP%d ST%d(%c):        raw 0x%04x:%08x%08x (%.10f) (%s)\n",
           i==tos?"=>":"  ", i, (i-tos)&7,
           "v0se"[tag],
           fp.exp & 0xffff, GET32H(fp.fraction), GET32L(fp.fraction),
