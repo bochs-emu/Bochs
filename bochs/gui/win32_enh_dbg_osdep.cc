@@ -1921,7 +1921,6 @@ bx_bool ParseOSSettings(const char *param, const char *value)
     free(val2);
     return 1;
   }
-  // TODO: handle more win32-specific settings here
   return 0;
 }
 
@@ -1933,7 +1932,6 @@ void WriteOSSettings(FILE *fd)
     GetWindowRect(hY, &rY);
   }
   fprintf(fd, "MainWindow = %d, %d, %d, %d\n", rY.left, rY.top, rY.right, rY.bottom);
-  // TODO: handle more win32-specific settings here
 }
 
 #endif

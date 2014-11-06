@@ -3529,6 +3529,13 @@ void ReadSettings()
           PrevDAD = 0;
         } else if (!strcmp(param, "DockOrder")) {
           DockOrder = strtoul(val, NULL, 16);
+        } else if ((len1 == 15) && !strncmp(param, "ListWidthPix[", 13) && (param[14] == ']')) {
+          if ((param[13] < '0') || (param[13] > '2')) {
+            fprintf(stderr, "bx_enh_dbg.ini: invalid index for option SeeReg[x]\n");
+            continue;
+          }
+          i = atoi(&param[13]);
+          ListWidthPix[i] = atoi(val);
         } else if (!ParseOSSettings(param, val)) {
           fprintf(stderr, "bx_enh_dbg.ini: unknown option '%s'\n", line);
         }
@@ -3561,6 +3568,9 @@ void WriteSettings()
   fprintf(fd, "DefaultAsmLines = %d\n", DefaultAsmLines);
   fprintf(fd, "DumpWSIndex = %d\n", DumpWSIndex);
   fprintf(fd, "DockOrder = 0x%03x\n", DockOrder);
+  for (i = 0; i < 3; i++) {
+    fprintf(fd, "ListWidthPix[%d] = %d\n", i, ListWidthPix[i]);
+  }
   WriteOSSettings(fd);
   fclose(fd);
 }
