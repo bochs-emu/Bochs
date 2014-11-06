@@ -1222,6 +1222,7 @@ bx_bool NewFont()
     cF.hwndOwner = hY;
     cF.lpLogFont = &mylf;
     cF.Flags = CF_SCREENFONTS | CF_EFFECTS | CF_INITTOLOGFONTSTRUCT;
+    mylf.lfItalic = 0;
     if (ChooseFont(&cF) == FALSE)
         return FALSE;
 
@@ -1813,7 +1814,11 @@ bx_bool OSInit()
     if (hY == NULL)
         return FALSE;
     if (windowInit) {
-      MoveWindow(hY, rY.left, rY.top, rY.right-rY.left, rY.bottom-rY.top, TRUE);
+      if ((rY.left >= 0) && (rY.top >= 0)) {
+        MoveWindow(hY, rY.left, rY.top, rY.right-rY.left, rY.bottom-rY.top, TRUE);
+      } else {
+        ShowWindow(hY, SW_MAXIMIZE);
+      }
     }
     if (!fontInit) {
       *CustomFont = DefFont;  // create the deffont with modded attributes (bold, italic)
