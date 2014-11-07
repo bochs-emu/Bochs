@@ -493,6 +493,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
   switch(index) {
 
+#if BX_SUPPORT_PERFMON
     case BX_MSR_PERFEVTSEL0:
     case BX_MSR_PERFEVTSEL1:
     case BX_MSR_PERFEVTSEL2:
@@ -503,6 +504,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_PERFEVTSEL7:
       BX_INFO(("WRMSR: write into IA32_PERFEVTSEL%d MSR: %08x:%08x", index - BX_MSR_PERFEVTSEL0, val32_hi, val32_lo));
       return handle_unknown_wrmsr(index, val_64);
+#endif
 
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_SYSENTER_CS:
