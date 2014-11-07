@@ -165,6 +165,9 @@ GtkWidget *OText;       // Multiline, wrapping, Output Text Window
 GtkWidget *PTree;       // bochs param_tree TreeView
 GtkWidget *LV[3];       // Register, ASM, MemDump / ListViews (TreeViews)
 
+gint win_x = -1, win_y = -1, win_w, win_h;
+bx_bool window_init = 0;
+
 // HIHI put all these colors in an array, and use #defines for them
 // need a "medium gray" color for inactive lists
 const GdkColor mgray = RGB(200,200,200);
@@ -1349,15 +1352,17 @@ void Close_cb(GtkWidget *widget, gpointer data)
     treestore = (GtkTreeStore *) gtk_tree_view_get_model( GTK_TREE_VIEW(PTree) );
     gtk_tree_store_clear(GTK_TREE_STORE(treestore));
 
+    gtk_window_get_position(GTK_WINDOW(window), &win_x, &win_y);
+    gtk_window_get_size(GTK_WINDOW(window), &win_w, &win_h);
     bx_user_quit = 1;
     SIM->debug_break();
     // holding one extra reference to both ScrlWin[2] widgets
     // but I "sank" PTree myself, so it is my understanding that I need to "destroy" it myself
-    gtk_widget_destroy (PTree);
-    gtk_widget_unref (PTree);
-    gtk_widget_unref (LV[2]);
-    gdk_cursor_unref (SizeCurs);
-    gdk_cursor_unref (DockCurs);
+    gtk_widget_destroy(PTree);
+    gtk_widget_unref(PTree);
+    gtk_widget_unref(LV[2]);
+    gdk_cursor_unref(SizeCurs);
+    gdk_cursor_unref(DockCurs);
 
     if (!SIM->is_wx_selected()) {
       gtk_main_quit();
@@ -2149,7 +2154,12 @@ bx_bool OSInit()
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "Bochs Enhanced Debugger");
     gtk_window_set_default_size(GTK_WINDOW(window), 500, 500);
-    gtk_window_maximize(GTK_WINDOW(window));
+    if (!window_init || ((win_x < 0) && (win_y < 0))) {
+      gtk_window_maximize(GTK_WINDOW(window));
+    } else {
+      gtk_window_resize(GTK_WINDOW(window), win_w, win_h);
+      gtk_window_move(GTK_WINDOW(window), win_x, win_y);
+    }
 
     MainVbox = gtk_vbox_new(FALSE, 0);      // vbox that contains EVERYTHING
 
@@ -2402,13 +2412,34 @@ void MakeBL(TreeParent *h_P, bx_param_c *p)
 
 bx_bool ParseOSSettings(const char *param, const char *value)
 {
-  // TODO: handle GTK-specific settings here
+  char *val2, *ptr;
+
+  if (!strcmp(param, "MainWindow")) {
+    val2 = strdup(value);
+    ptr = strtok(val2, ",");
+    win_x = atoi(ptr);
+    ptr = strtok(NULL, ",");
+    win_y = atoi(ptr);
+    ptr = strtok(NULL, ",");
+    win_w = atoi(ptr);
+    ptr = strtok(NULL, "\n");
+    win_h = atoi(ptr);
+    window_init = 1;
+    free(val2);
+    return 1;
+  }
+  // TODO: handle more GTK-specific settings here
   return 0;
 }
 
 void WriteOSSettings(FILE *fd)
 {
-  // TODO: handle GTK-specific settings here
+  if (window != NULL) {
+    gtk_window_get_position(GTK_WINDOW(window), &win_x, &win_y);
+    gtk_window_get_size(GTK_WINDOW(window), &win_w, &win_h);
+  }
+  fprintf(fd, "MainWindow = %d, %d, %d, %d\n", win_x, win_y, win_w, win_h);
+  // TODO: handle more GTK-specific settings here
 }
 
 #endif
