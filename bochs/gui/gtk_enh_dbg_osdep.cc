@@ -165,8 +165,11 @@ GtkWidget *OText;       // Multiline, wrapping, Output Text Window
 GtkWidget *PTree;       // bochs param_tree TreeView
 GtkWidget *LV[3];       // Register, ASM, MemDump / ListViews (TreeViews)
 
+// GTK-specific settings
 gint win_x = -1, win_y = -1, win_w, win_h;
 bx_bool window_init = 0;
+char fontname[80];
+bx_bool font_init = 0;
 
 // HIHI put all these colors in an array, and use #defines for them
 // need a "medium gray" color for inactive lists
@@ -1077,37 +1080,43 @@ void MakeTreeChild (TreeParent *h_P, int ChildCount, TreeParent *h_TC)
     gtk_tree_store_set(GTK_TREE_STORE(treestore), h_TC, 0, tmpcb, -1);  // and put a name (+ data) on it
 }
 
+void update_font()
+{
+  int i, width;
+
+  g_object_set(G_OBJECT(LV_Rend[0]), "font", fontname, NULL);
+  g_object_set(G_OBJECT(LV_Rend[1]), "font", fontname, NULL);
+  g_object_set(G_OBJECT(LV_Rend[2]), "font", fontname, NULL);
+  // calculate a new value for OneCharWide
+  PangoLayout * layout = gtk_widget_create_pango_layout(LV[0], "M");
+  PangoFontDescription * fontdesc;
+  g_object_get(G_OBJECT(LV_Rend[0]), "font-desc", &fontdesc, NULL); 
+  pango_layout_set_font_description(layout, fontdesc); 
+  pango_layout_get_pixel_size(layout, &width, &i);
+  pango_font_description_free(fontdesc);
+  g_object_unref(layout);
+  OneCharWide = width;        // The "width" I'm getting is about half what I expect
+//OneCharWide = width >> 1;   // pretend that an average char width is half an "M"
+  if (OneCharWide > 12) OneCharWide = 12;
+}
+
 bx_bool NewFont()
 {
     char *ofn;
     if (AtBreak == FALSE)
         return FALSE;
     // need to know the current font, to highlight it
-    g_object_get( G_OBJECT( LV_Rend[0] ), "font", &ofn, NULL );
-    GtkWidget *widget = gtk_font_selection_dialog_new ("Choose primary font");
-    gtk_font_selection_dialog_set_font_name (GTK_FONT_SELECTION_DIALOG(widget), ofn);
-    if (gtk_dialog_run (GTK_DIALOG (widget)) == GTK_RESPONSE_OK)
-    {
-        int i, width;
-        char *fontname = gtk_font_selection_dialog_get_font_name(GTK_FONT_SELECTION_DIALOG(widget));
-        g_object_set( G_OBJECT( LV_Rend[0] ), "font", fontname, NULL );
-        g_object_set( G_OBJECT( LV_Rend[1] ), "font", fontname, NULL );
-        g_object_set( G_OBJECT( LV_Rend[2] ), "font", fontname, NULL );
-        g_free (fontname);
-        // calculate a new value for OneCharWide
-        PangoLayout * layout = gtk_widget_create_pango_layout (LV[0], "M");
-        PangoFontDescription * fontdesc;
-        g_object_get( G_OBJECT( LV_Rend[0] ), "font-desc", &fontdesc, NULL ); 
-        pango_layout_set_font_description (layout, fontdesc); 
-        pango_layout_get_pixel_size (layout, &width, &i);
-        pango_font_description_free (fontdesc);
-        g_object_unref (layout);
-        OneCharWide = width;        // The "width" I'm getting is about half what I expect
-//      OneCharWide = width >> 1;   // pretend that an average char width is half an "M"
-        if (OneCharWide > 12) OneCharWide = 12;
+    g_object_get(G_OBJECT(LV_Rend[0]), "font", &ofn, NULL);
+    GtkWidget *widget = gtk_font_selection_dialog_new("Choose primary font");
+    gtk_font_selection_dialog_set_font_name(GTK_FONT_SELECTION_DIALOG(widget), ofn);
+    if (gtk_dialog_run(GTK_DIALOG (widget)) == GTK_RESPONSE_OK) {
+        char *nfn = gtk_font_selection_dialog_get_font_name(GTK_FONT_SELECTION_DIALOG(widget));
+        strncpy(fontname, nfn, 80);
+        g_free(nfn);
+        update_font();
     }
-    g_free (ofn);
-    gtk_widget_destroy (widget);
+    g_free(ofn);
+    gtk_widget_destroy(widget);
 
     return TRUE;
 }
@@ -2329,6 +2338,14 @@ bx_bool OSInit()
     gdk_cursor_ref (SizeCurs);
     gdk_cursor_ref (DockCurs);
 
+    if (!font_init) {
+      char *fn;
+      g_object_get(G_OBJECT(LV_Rend[0]), "font", &fn, NULL);
+      strncpy(fontname, fn, 80);
+    } else {
+      update_font();
+    }
+
     // the OneCharWide pixel value is used to limit docking and resizing movements
     int width;
     PangoLayout * layout = gtk_widget_create_pango_layout (LV[0], "M");
@@ -2414,7 +2431,11 @@ bx_bool ParseOSSettings(const char *param, const char *value)
 {
   char *val2, *ptr;
 
-  if (!strcmp(param, "MainWindow")) {
+  if (!strcmp(param, "FontName")) {
+    strncpy(fontname, value, 80);
+    font_init = 1;
+    return 1;
+  } else if (!strcmp(param, "MainWindow")) {
     val2 = strdup(value);
     ptr = strtok(val2, ",");
     win_x = atoi(ptr);
@@ -2428,7 +2449,6 @@ bx_bool ParseOSSettings(const char *param, const char *value)
     free(val2);
     return 1;
   }
-  // TODO: handle more GTK-specific settings here
   return 0;
 }
 
@@ -2439,7 +2459,7 @@ void WriteOSSettings(FILE *fd)
     gtk_window_get_size(GTK_WINDOW(window), &win_w, &win_h);
   }
   fprintf(fd, "MainWindow = %d, %d, %d, %d\n", win_x, win_y, win_w, win_h);
-  // TODO: handle more GTK-specific settings here
+  fprintf(fd, "FontName = %s\n", fontname);
 }
 
 #endif
