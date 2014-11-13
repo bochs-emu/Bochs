@@ -417,24 +417,14 @@ install_bin::
 
 install_libtool_plugins::
 	for i in $(DESTDIR)$(plugdir); do mkdir -p $$i && test -d $$i && test -w $$i; done
-	list=`cd gui && echo *.la`; for i in $$list; do $(LIBTOOL) --mode=install install gui/$$i $(DESTDIR)$(plugdir); done
-	list=`cd iodev && echo *.la`; for i in $$list; do $(LIBTOOL) --mode=install install iodev/$$i $(DESTDIR)$(plugdir); done
-	list=`cd iodev/display && echo *.la`; for i in $$list; do $(LIBTOOL) --mode=install install iodev/display/$$i $(DESTDIR)$(plugdir); done
-	list=`cd iodev/hdimage && echo *.la`; for i in $$list; do $(LIBTOOL) --mode=install install iodev/hdimage/$$i $(DESTDIR)$(plugdir); done
-	list=`cd iodev/usb && echo *.la`; for i in $$list; do $(LIBTOOL) --mode=install install iodev/usb/$$i $(DESTDIR)$(plugdir); done
-	list=`cd iodev/network && echo *.la`; for i in $$list; do $(LIBTOOL) --mode=install install iodev/network/$$i $(DESTDIR)$(plugdir); done
-	list=`cd iodev/sound && echo *.la`; for i in $$list; do $(LIBTOOL) --mode=install install iodev/sound/$$i $(DESTDIR)$(plugdir); done
+	for i in gui iodev; do \
+		find $$i -type f -name '*.la' -exec $(LIBTOOL) --mode=install install '{}' $(DESTDIR)$(plugdir) ';'; done
 	$(LIBTOOL) --finish $(DESTDIR)$(plugdir)
 
 install_dll_plugins::
 	for i in $(DESTDIR)$(plugdir); do mkdir -p $$i && test -d $$i && test -w $$i; done
-	list=`cd gui && echo *.dll`; for i in $$list; do cp gui/$$i $(DESTDIR)$(plugdir); done
-	list=`cd iodev && echo *.dll`; for i in $$list; do cp iodev/$$i $(DESTDIR)$(plugdir); done
-	list=`cd iodev/display && echo *.dll`; for i in $$list; do cp iodev/display/$$i $(DESTDIR)$(plugdir); done
-	list=`cd iodev/hdimage && echo *.dll`; for i in $$list; do cp iodev/hdimage/$$i $(DESTDIR)$(plugdir); done
-	list=`cd iodev/usb && echo *.dll`; for i in $$list; do cp iodev/usb/$$i $(DESTDIR)$(plugdir); done
-	list=`cd iodev/network && echo *.dll`; for i in $$list; do cp iodev/network/$$i $(DESTDIR)$(plugdir); done
-	list=`cd iodev/sound && echo *.dll`; for i in $$list; do cp iodev/sound/$$i $(DESTDIR)$(plugdir); done
+	for i in gui iodev; do \
+		find $$i -type f -name '*.dll' -exec cp '{}' $(DESTDIR)$(plugdir) ';'; done
 
 install_share::
 	for i in $(DESTDIR)$(sharedir);	do mkdir -p $$i && test -d $$i && test -w $$i; done
