@@ -39,7 +39,7 @@
 #ifndef WIN32
 #include <pthread.h>
 #endif
-#if BX_WITH_SDL
+#if BX_WITH_SDL || BX_WITH_SDL2
 #include <SDL.h>
 #endif
 
@@ -88,7 +88,7 @@ void bx_soundmod_ctl_c::init()
   } else if (!strcmp(driver, "alsa")) {
     soundmod = new bx_sound_alsa_c();
 #endif
-#if BX_WITH_SDL
+#if BX_WITH_SDL || BX_WITH_SDL2
   } else if (!strcmp(driver, "sdl")) {
     soundmod = new bx_sound_sdl_c();
 #endif
@@ -157,7 +157,7 @@ void beep_thread(void *indata)
       Sleep(100);
 #endif
     } else if (soundmod->get_type() == BX_SOUNDLOW_SDL) {
-#if BX_WITH_SDL
+#if BX_WITH_SDL || BX_WITH_SDL2
       SDL_Delay(100);
 #endif
     }
