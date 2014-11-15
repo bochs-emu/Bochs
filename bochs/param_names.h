@@ -116,6 +116,7 @@
 #define BXPN_SCREENMODE                  "display.screenmode"
 #define BXPN_VGA_EXTENSION               "display.vga_extension"
 #define BXPN_VGA_UPDATE_FREQUENCY        "display.vga_update_frequency"
+#define BXPN_VGA_REALTIME                "display.vga_realtime"
 #define BXPN_VOODOO                      "display.voodoo"
 #define BXPN_KEYBOARD                    "keyboard_mouse.keyboard"
 #define BXPN_KBD_TYPE                    "keyboard_mouse.keyboard.type"

@@ -409,10 +409,17 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 #     The VGA update timer now uses the realtime engine and the default
 #     value is 5. This parameter can be changed at runtime.
 #
+#   REALTIME
+#     If set to 1, the VGA timer is based on realtime, otherwise it is based
+#     on the ips setting. If the host is slow (low ips, update_freq) and the
+#     guest uses HLT appropriately, setting this to 0 and "clock: sync=none"
+#     may improve the responsiveness of the guest GUI when the guest is
+#     otherwise idle. The default value is 1.
+#
 # Examples:
 #   vga: extension=cirrus, update_freq=10
 #=======================================================================
-#vga: extension=vbe, update_freq=5
+#vga: extension=vbe, update_freq=5, realtime=1
 
 #=======================================================================
 # VOODOO:

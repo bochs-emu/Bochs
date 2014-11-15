@@ -957,6 +957,12 @@ void bx_init_options()
   screenmode->set_handler(bx_param_string_handler);
 #endif
 
+  new bx_param_bool_c(display,
+      "vga_realtime",
+      "VGA timer realtime",
+      "If enabled, the VGA timer is based on realtime",
+      1);
+
   bx_param_num_c *vga_update_freq = new bx_param_num_c(display,
       "vga_update_frequency",
       "VGA Update Frequency",
@@ -2720,6 +2726,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_string(BXPN_VGA_EXTENSION)->set(&params[i][10]);
       } else if (!strncmp(params[i], "update_freq=", 12)) {
         SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY)->set(atol(&params[i][12]));
+      } else if (!strncmp(params[i], "realtime=", 9)) {
+        SIM->get_param_bool(BXPN_VGA_REALTIME)->set(atol(&params[i][9]));
       } else {
         PARSE_ERR(("%s: vga directive malformed.", context));
       }
@@ -3377,9 +3385,10 @@ int bx_write_configuration(const char *rc, int overwrite)
     }
   }
   fprintf(fp, "\n");
-  fprintf(fp, "vga: extension=%s, update_freq=%u\n",
+  fprintf(fp, "vga: extension=%s, update_freq=%u, realtime=%u\n",
     SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(),
-    SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY)->get());
+    SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY)->get(),
+    SIM->get_param_bool(BXPN_VGA_REALTIME)->get());
 #if BX_SUPPORT_SMP
   fprintf(fp, "cpu: count=%u:%u:%u, ips=%u, quantum=%d, ",
     SIM->get_param_num(BXPN_CPU_NPROCESSORS)->get(), SIM->get_param_num(BXPN_CPU_NCORES)->get(),

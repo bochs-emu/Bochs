@@ -3717,7 +3717,7 @@ in the simulation, that can be retrieved by the boot loader
 <para>
 Examples:
 <screen>
-  vga: extension=cirrus, update_freq=10
+  vga: extension=cirrus, update_freq=10, realtime=1
   vga: extension=vbe
 </screen>
 This defines parameters related to the VGA display
@@ -3732,8 +3732,15 @@ and 'cirrus' for Cirrus SVGA support (needs
 </para>
 <para>
 The VGA update frequency specifies the number of display updates per second.
-The update timer now uses the realtime engine and the default value is 5.
-This parameter can be changed at runtime.
+This parameter can be changed at runtime. The default value is 5.
+</para>
+<para>
+The 'realtime' option specifies the operation mode of the VGA update timer.
+If set to 1, the VGA timer is based on realtime, otherwise it is based on the
+ips setting. If the host is slow (low ips, update_freq) and the guest uses HLT
+appropriately, setting this to 0 and "clock: sync=none" may improve the
+responsiveness of the guest GUI when the guest is otherwise idle. The default
+value is 1.
 </para>
 </section>
 

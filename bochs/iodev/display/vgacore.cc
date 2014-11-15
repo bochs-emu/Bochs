@@ -259,12 +259,13 @@ void bx_vgacore_c::init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t 
 
 void bx_vgacore_c::init_systemtimer(bx_timer_handler_t f_timer, param_event_handler f_param)
 {
+  const bx_bool realtime = SIM->get_param_bool(BXPN_VGA_REALTIME)->get();
   bx_param_num_c *vga_update_freq = SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY);
   BX_VGA_THIS update_interval = (Bit32u)(1000000 / vga_update_freq->get());
-  BX_INFO(("interval=%u", BX_VGA_THIS update_interval));
+  BX_INFO(("interval=%u, mode=%s", BX_VGA_THIS update_interval, realtime ? "realtime":"standard"));
   if (BX_VGA_THIS timer_id == BX_NULL_TIMER_HANDLE) {
     BX_VGA_THIS timer_id = bx_virt_timer.register_timer(this, f_timer,
-       BX_VGA_THIS update_interval, 1, 1, 1, "vga");
+       BX_VGA_THIS update_interval, 1, 1, realtime, "vga");
     vga_update_freq->set_handler(f_param);
   }
   // VGA text mode cursor blink frequency 1.875 Hz

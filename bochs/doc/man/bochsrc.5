@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "19 Oct 2014" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "15 Nov 2014" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -461,12 +461,20 @@ values are 'vbe' for Bochs VBE and 'cirrus' for Cirrus SVGA support.
 
 update_freq:
 
-This parameter specifies the number of display updates per second.
-The VGA update timer now uses the realtime engine and the default
-value is 5. This parameter can be changed at runtime.
+Specifies the number of display updates per second.
+This parameter can be changed at runtime. The default value is 5.
+
+realtime:
+
+If set to 1, the VGA timer is based on realtime, otherwise it is based on the
+ips setting. If the host is slow (low ips, update_freq) and the guest uses HLT
+appropriately, setting this to 0 and "clock: sync=none" may improve the
+responsiveness of the guest GUI when the guest is otherwise idle. The default
+value is 1.
 
 Examples:
-  vga: extension=cirrus, update_freq=10
+  vga: extension=none, update_freq=10, realtime=0
+  vga: extension=cirrus, update_freq=30
   vga: extension=vbe
 
 .TP
