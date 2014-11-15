@@ -1468,7 +1468,7 @@ void bx_dbg_tlb_lookup(bx_lin_address laddr)
   Bit32u index = BX_TLB_INDEX_OF(laddr, 0);
   char cpu_param_name[16];
   sprintf(cpu_param_name, "TLB.entry%d", index);
-  bx_dbg_show_param_command(cpu_param_name);
+  bx_dbg_show_param_command(cpu_param_name, 0);
 }
 
 unsigned dbg_show_mask = 0;
@@ -1575,17 +1575,17 @@ void bx_dbg_show_command(const char* arg)
   }
 }
 
-void bx_dbg_show_param_command(const char *param)
+void bx_dbg_show_param_command(const char *param, bx_bool xml)
 {
   dbg_printf("show param name: <%s>\n", param);
   bx_param_c *node = SIM->get_param(param, SIM->get_bochs_root());
   if (node) {
-    print_tree(node, 0);
+    print_tree(node, 0, xml);
   }
   else {
     node = SIM->get_param(param, dbg_cpu_list);
     if (node)
-      print_tree(node, 0);
+      print_tree(node, 0, xml);
     else
       dbg_printf("can't find param <%s> in global or default CPU tree\n", param);
   }
