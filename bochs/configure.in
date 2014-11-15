@@ -2481,11 +2481,16 @@ if test "$display_libs" = ""; then
 fi
 
 # some display libraries and the enhanced debugger may depend on the GTK+ software package
+bx_have_gtk2=0
 if test "$needs_gtk2" = 1; then
   # pkg-config is required to set TOOLKIT_CXXFLAGS and LIBS
   if test "$PKGCONFIG" != not_found; then
-    TOOLKIT_CXXFLAGS="`pkg-config --cflags gtk+-2.0`"
-    LIBS="$LIBS `pkg-config --libs gtk+-2.0`"
+    pkg-config --exists gtk+-2.0
+    if test x$? = x0; then
+      TOOLKIT_CXXFLAGS="`pkg-config --cflags gtk+-2.0`"
+      LIBS="$LIBS `pkg-config --libs gtk+-2.0`"
+      bx_have_gtk2=1
+    fi
   else
     echo "ERROR: pkg-config was not found, or unable to access the gtk+-2.0 package."
     echo "Install pkg-config and the gtk+ development package,"
@@ -2631,7 +2636,7 @@ AC_SUBST(CXXFLAGS_CONSOLE)
 
 ENH_DBG_OBJS=""
 if test "$gui_debugger" = 1; then
-  if test "$needs_gtk2" = 1; then
+  if test "$bx_have_gtk2" = 1; then
     ENH_DBG_OBJS="enh_dbg.o gtk_enh_dbg_osdep.o"
     AC_DEFINE(BX_DEBUGGER_GUI, 1)
   elif test "$DEFAULT_GUI" = win32 -o "$with_win32" = yes; then
