@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2013  The Bochs Project
+//  Copyright (C) 2012-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -162,6 +162,9 @@ int bx_sound_sdl_c::sendwavepacket(int length, Bit8u data[])
 
 int bx_sound_sdl_c::stopwaveplayback()
 {
+  while (audio_buffer.optr != audio_buffer.iptr) {
+    SDL_Delay(1);
+  }
   SDL_CloseAudio();
   return BX_SOUNDLOW_OK;
 }

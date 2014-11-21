@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -24,8 +24,6 @@
 // for Linux using OSS. The current version also supports OSS on FreeBSD.
 
 #if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
-
-#define BX_SOUND_LINUX_BUFSIZE   BX_SOUNDLOW_WAVEPACKETSIZE * 2
 
 class bx_sound_linux_c : public bx_sound_lowlevel_c {
 public:
@@ -63,7 +61,6 @@ private:
     int oldfreq, oldbits, oldformat;
     bx_bool oldstereo;
   } wave_ch[2];
-  Bit8u audio_buffer[2][BX_SOUND_LINUX_BUFSIZE];
 };
 
 #endif

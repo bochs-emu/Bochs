@@ -327,7 +327,7 @@ int bx_sound_alsa_c::sendwavepacket(int length, Bit8u data[])
       BX_ERROR(("sendwavepacket(): pcm is not open"));
       return BX_SOUNDLOW_ERR;
   }
-  if ((alsa_pcm[0].audio_bufsize+length) <= BX_SOUND_LINUX_BUFSIZE) {
+  if ((alsa_pcm[0].audio_bufsize+length) <= BX_SOUND_ALSA_BUFSIZE) {
     memcpy(audio_buffer[0]+alsa_pcm[0].audio_bufsize, data, length);
     alsa_pcm[0].audio_bufsize += length;
   } else {

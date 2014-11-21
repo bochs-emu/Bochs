@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2013  The Bochs Project
+//  Copyright (C) 2013-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
 
 #if BX_HAVE_ALSASOUND
 
-#define BX_SOUND_LINUX_BUFSIZE   BX_SOUNDLOW_WAVEPACKETSIZE * 2
+#define BX_SOUND_ALSA_BUFSIZE   BX_SOUNDLOW_WAVEPACKETSIZE * 2
 
 #define ALSA_PCM_NEW_HW_PARAMS_API
 #include <alsa/asoundlib.h>
@@ -76,7 +76,7 @@ private:
     int oldfreq, oldbits, oldformat;
     bx_bool oldstereo;
   } wave_ch[2];
-  Bit8u audio_buffer[2][BX_SOUND_LINUX_BUFSIZE];
+  Bit8u audio_buffer[2][BX_SOUND_ALSA_BUFSIZE];
 };
 
 #endif
