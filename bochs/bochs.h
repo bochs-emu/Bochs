@@ -270,7 +270,7 @@ typedef class BOCHSAPI logfunctions
 public:
   logfunctions(void);
   logfunctions(class iofunctions *);
- ~logfunctions(void);
+  virtual ~logfunctions(void);
 
   void info(const char *fmt, ...)   BX_CPP_AttrPrintf(2, 3);
   void error(const char *fmt, ...)  BX_CPP_AttrPrintf(2, 3);

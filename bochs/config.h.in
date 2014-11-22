@@ -885,15 +885,15 @@ typedef
 #define BX_SUPPORT_SOUNDLOW 0
 
 #if BX_SUPPORT_SOUNDLOW
-// Determines which sound lowlevel class is to be used as the default.
+// Determines which sound lowlevel driver is to be used as the default.
 // Currently the following are available:
-//    bx_sound_alsa_c       Output for Linux with ALSA PCM and sequencer interface
-//    bx_sound_linux_c      Output for Linux, to /dev/dsp and /dev/midi00
-//    bx_sound_windows_c    Output for Windows midi and wave mappers
-//    bx_sound_osx_c        Output for MacOSX midi and wave device
-//    bx_sound_sdl_c        Wave output with SDL
-//    bx_sound_lowlevel_c   Dummy functions, no output
-#define BX_SOUND_LOWLEVEL_C bx_sound_lowlevel_c
+//    alsa   Output for Linux with ALSA PCM and sequencer interface
+//    oss    Output for Linux, to /dev/dsp and /dev/midi00
+//    win    Output for Windows midi and wave mappers
+//    osx    Output for MacOSX midi and wave device
+//    sdl    Wave output with SDL/SDL2
+//    dummy  Dummy functions, no output
+#define BX_SOUND_LOWLEVEL_NAME "dummy"
 // Use ALSA sound interface on Linux
 #define BX_HAVE_ALSASOUND  0
 #endif

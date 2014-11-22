@@ -79,11 +79,17 @@ bx_soundmod_ctl_c::~bx_soundmod_ctl_c()
 
 void bx_soundmod_ctl_c::init()
 {
+  static const char default_name[] = BX_SOUND_LOWLEVEL_NAME;
   const char *driver = SIM->get_param_string(BXPN_SOUND_DRIVER)->getptr();
   const char *waveout = SIM->get_param_string(BXPN_SOUND_WAVEOUT)->getptr();
   const char *wavein = SIM->get_param_string(BXPN_SOUND_WAVEIN)->getptr();
-  if (!strcmp(driver, "default")) {
-    soundmod = new BX_SOUND_LOWLEVEL_C();
+
+  if (strcmp(driver, "default") == 0) {
+    driver = default_name;
+  }
+
+  if (strcmp(driver, "dummy") == 0) {
+    soundmod = new bx_sound_lowlevel_c();
 #if BX_HAVE_ALSASOUND
   } else if (!strcmp(driver, "alsa")) {
     soundmod = new bx_sound_alsa_c();
@@ -104,8 +110,6 @@ void bx_soundmod_ctl_c::init()
   } else if (!strcmp(driver, "win")) {
     soundmod = new bx_sound_windows_c();
 #endif
-  } else if (!strcmp(driver, "dummy")) {
-    soundmod = new bx_sound_lowlevel_c();
   } else {
     BX_PANIC(("unknown lowlevel sound driver '%s'", driver));
     return;

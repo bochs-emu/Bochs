@@ -1877,14 +1877,12 @@ if test "$soundcard_present" = 1; then
   case "$target" in
     *-linux* | *-freebsd*)
       SOUNDLOW_OBJS='soundlnx.o'
-      AC_DEFINE(BX_SOUND_LOWLEVEL_C, bx_sound_linux_c)
       soundlow_drivers="oss"
       soundlow_default="oss"
       bx_have_alsa=0
       AC_CHECK_HEADER([alsa/asoundlib.h], [bx_have_alsa=1])
       if test "$bx_have_alsa" = 1; then
         SOUNDLOW_OBJS="$SOUNDLOW_OBJS soundalsa.o"
-        AC_DEFINE(BX_SOUND_LOWLEVEL_C, bx_sound_alsa_c)
         soundlow_default="alsa"
         soundlow_drivers="alsa $soundlow_drivers"
         AC_DEFINE(BX_HAVE_ALSASOUND, 1)
@@ -1897,28 +1895,24 @@ if test "$soundcard_present" = 1; then
       ;;
     *-pc-windows*)
       SOUNDLOW_OBJS='soundwin.o'
-      AC_DEFINE(BX_SOUND_LOWLEVEL_C, bx_sound_windows_c)
       DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS winmm.lib"
       soundlow_drivers="win"
       soundlow_default="win"
       ;;
     *-cygwin* | *-mingw32*)
       SOUNDLOW_OBJS='soundwin.o'
-      AC_DEFINE(BX_SOUND_LOWLEVEL_C, bx_sound_windows_c)
       DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
       soundlow_drivers="win"
       soundlow_default="win"
       ;;
     *-macosx* | *-macos* | *-apple-darwin*)
       SOUNDLOW_OBJS='soundosx.o'
-      AC_DEFINE(BX_SOUND_LOWLEVEL_C, bx_sound_osx_c)
       DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -framework CoreServices -framework AudioUnit -framework AudioToolbox"
       soundlow_drivers="osx"
       soundlow_default="osx"
       ;;
     *)
       SOUNDLOW_OBJS=''
-      AC_DEFINE(BX_SOUND_LOWLEVEL_C, bx_sound_lowlevel_c)
       soundlow_default="dummy"
       ;;
   esac
@@ -1949,6 +1943,7 @@ if test "$soundcard_present" = 1; then
   AC_MSG_RESULT($soundlow_drivers)
   AC_MSG_CHECKING(for default sound lowlevel module)
   AC_MSG_RESULT($soundlow_default)
+  AC_DEFINE_UNQUOTED(BX_SOUND_LOWLEVEL_NAME, "$soundlow_default")
 else
   AC_DEFINE(BX_SUPPORT_SOUNDLOW, 0)
 fi
