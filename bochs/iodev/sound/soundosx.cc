@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2013  The Bochs Project
+//  Copyright (C) 2004-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -25,7 +25,7 @@
 #endif
 
 #include "iodev.h"
-#include "soundmod.h"
+#include "soundlow.h"
 #include "soundosx.h"
 
 #if defined(macintosh) && BX_SUPPORT_SOUNDLOW

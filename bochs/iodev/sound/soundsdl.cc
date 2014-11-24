@@ -21,7 +21,7 @@
 // Lowlevel sound output support for SDL written by Volker Ruppert
 
 #include "iodev.h"
-#include "soundmod.h"
+#include "soundlow.h"
 #include "soundsdl.h"
 
 #if (BX_WITH_SDL || BX_WITH_SDL2) && BX_SUPPORT_SOUNDLOW

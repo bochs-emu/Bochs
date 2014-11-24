@@ -22,7 +22,7 @@
 // ALSA PCM input/output and MIDI output support written by Volker Ruppert
 
 #include "iodev.h"
-#include "soundmod.h"
+#include "soundlow.h"
 #include "soundalsa.h"
 
 #if BX_HAVE_ALSASOUND && BX_SUPPORT_SOUNDLOW

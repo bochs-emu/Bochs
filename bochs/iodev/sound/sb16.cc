@@ -32,7 +32,7 @@
 #if BX_SUPPORT_SB16
 
 #include "sb16.h"
-#include "soundmod.h"
+#include "soundlow.h"
 
 #include <math.h>
 

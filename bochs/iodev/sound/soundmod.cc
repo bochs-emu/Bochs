@@ -30,6 +30,7 @@
 #if BX_SUPPORT_SOUNDLOW
 
 #include "soundmod.h"
+#include "soundlow.h"
 #include "soundlnx.h"
 #include "soundosx.h"
 #include "soundwin.h"
@@ -319,141 +320,6 @@ void bx_soundmod_ctl_c::pcm_apply_volume(Bit32u datalen, Bit8u data[], Bit16u vo
       channel ^= 1;
     }
   }
-}
-
-// The dummy sound lowlevel functions. They don't do anything.
-bx_sound_lowlevel_c::bx_sound_lowlevel_c()
-{
-  put("soundlow", "SNDLOW");
-  record_timer_index = BX_NULL_TIMER_HANDLE;
-}
-
-bx_sound_lowlevel_c::~bx_sound_lowlevel_c()
-{
-}
-
-int bx_sound_lowlevel_c::waveready()
-{
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::midiready()
-{
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::openmidioutput(const char *mididev)
-{
-  UNUSED(mididev);
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
-{
-  UNUSED(delta);
-  UNUSED(command);
-  UNUSED(length);
-  UNUSED(data);
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::closemidioutput()
-{
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::openwaveoutput(const char *wavedev)
-{
-  UNUSED(wavedev);
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::startwaveplayback(int frequency, int bits, bx_bool stereo, int format)
-{
-  UNUSED(frequency);
-  UNUSED(bits);
-  UNUSED(stereo);
-  UNUSED(format);
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::sendwavepacket(int length, Bit8u data[])
-{
-  UNUSED(length);
-  UNUSED(data);
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::stopwaveplayback()
-{
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::closewaveoutput()
-{
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::openwaveinput(const char *wavedev, sound_record_handler_t rh)
-{
-  UNUSED(wavedev);
-  record_handler = rh;
-  if (rh != NULL) {
-    record_timer_index = bx_pc_system.register_timer(this, record_timer_handler, 1, 1, 0, "soundmod");
-    // record timer: inactive, continuous, frequency variable
-  }
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::startwaverecord(int frequency, int bits, bx_bool stereo, int format)
-{
-  Bit64u timer_val;
-  Bit8u shift = 0;
-
-  UNUSED(format);
-  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
-    if (bits == 16) shift++;
-    if (stereo) shift++;
-    record_packet_size = (frequency / 10) << shift; // 0.1 sec
-    if (record_packet_size > BX_SOUNDLOW_WAVEPACKETSIZE) {
-      record_packet_size = BX_SOUNDLOW_WAVEPACKETSIZE;
-    }
-    timer_val = (Bit64u)record_packet_size * 1000000 / (frequency << shift);
-    bx_pc_system.activate_timer(record_timer_index, (Bit32u)timer_val, 1);
-  }
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::getwavepacket(int length, Bit8u data[])
-{
-  memset(data, 0, length);
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::stopwaverecord()
-{
-  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
-    bx_pc_system.deactivate_timer(record_timer_index);
-  }
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::closewaveinput()
-{
-  stopwaverecord();
-  return BX_SOUNDLOW_OK;
-}
-
-void bx_sound_lowlevel_c::record_timer_handler(void *this_ptr)
-{
-  bx_sound_lowlevel_c *class_ptr = (bx_sound_lowlevel_c *) this_ptr;
-
-  class_ptr->record_timer();
-}
-
-void bx_sound_lowlevel_c::record_timer(void)
-{
-  record_handler(this, record_packet_size);
 }
 
 #endif

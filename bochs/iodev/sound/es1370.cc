@@ -36,7 +36,7 @@
 
 #include "pci.h"
 #include "es1370.h"
-#include "soundmod.h"
+#include "soundlow.h"
 
 #include <math.h>
 
