@@ -188,6 +188,12 @@ protected:
     }
   }
 
+#if BX_SUPPORT_APIC
+  void get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
+#endif
+
+  void get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32u function, cpuid_function_t *leaf) const;
+
   BX_CPP_INLINE void get_reserved_leaf(cpuid_function_t *leaf) const
   {
     leaf->eax = 0;
@@ -196,45 +202,7 @@ protected:
     leaf->edx = 0;
   }
 
-#if BX_SUPPORT_APIC
-  void get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
-#endif
-
-  BX_CPP_INLINE void get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32u function, cpuid_function_t *leaf) const
-  {
-    switch(function) {
-    case 0x80000002:
-      memcpy(&(leaf->eax), brand_string     , 4);
-      memcpy(&(leaf->ebx), brand_string +  4, 4);
-      memcpy(&(leaf->ecx), brand_string +  8, 4);
-      memcpy(&(leaf->edx), brand_string + 12, 4);
-      break;
-    case 0x80000003:
-      memcpy(&(leaf->eax), brand_string + 16, 4);
-      memcpy(&(leaf->ebx), brand_string + 20, 4);
-      memcpy(&(leaf->ecx), brand_string + 24, 4);
-      memcpy(&(leaf->edx), brand_string + 28, 4);
-      break;
-    case 0x80000004:
-      memcpy(&(leaf->eax), brand_string + 32, 4);
-      memcpy(&(leaf->ebx), brand_string + 36, 4);
-      memcpy(&(leaf->ecx), brand_string + 40, 4);
-      memcpy(&(leaf->edx), brand_string + 44, 4);
-      break;
-    default:
-      break;
-    }
-
-#ifdef BX_BIG_ENDIAN
-    leaf->eax = bx_bswap32(leaf->eax);
-    leaf->ebx = bx_bswap32(leaf->ebx);
-    leaf->ecx = bx_bswap32(leaf->ecx);
-    leaf->edx = bx_bswap32(leaf->edx);
-#endif
-  }
-
   void dump_cpuid(unsigned max_std_leaf, unsigned max_ext_leaf) const;
-
 };
 
 typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);

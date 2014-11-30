@@ -203,23 +203,29 @@ void print_tree(bx_param_c *node, int level, bx_bool xml)
   switch (node->get_type()) {
     case BXT_PARAM_NUM:
       if (((bx_param_num_c*)node)->get_base() == BASE_DEC) {
-        dbg_printf("" FMT_LL "d (number)", ((bx_param_num_c*)node)->get64());
+        dbg_printf("" FMT_LL "d", ((bx_param_num_c*)node)->get64());
+        if (! xml) dbg_printf(" (number)");
       } else {
-        dbg_printf("0x" FMT_LL "x (hex number)", ((bx_param_num_c*)node)->get64());
+        dbg_printf("0x" FMT_LL "x", ((bx_param_num_c*)node)->get64());
+        if (! xml) dbg_printf(" (hex number)");
       }
       break;
     case BXT_PARAM_BOOL:
-      dbg_printf("%s (boolean)", ((bx_param_bool_c*)node)->get()?"true":"false");
+      dbg_printf("%s", ((bx_param_bool_c*)node)->get()?"true":"false");
+      if (! xml) dbg_printf(" (boolean)");
       break;
     case BXT_PARAM_ENUM:
-      dbg_printf("'%s' (enum)", ((bx_param_enum_c*)node)->get_selected());
+      dbg_printf("'%s'", ((bx_param_enum_c*)node)->get_selected());
+      if (! xml) dbg_printf(" (enum)");
       break;
     case BXT_PARAM_STRING:
       ((bx_param_string_c*)node)->sprint(tmpstr, BX_PATHNAME_LEN, 0);
       if (((bx_param_string_c*)node)->get_options() & bx_param_string_c::RAW_BYTES) {
-        dbg_printf("'%s' (raw byte string)", tmpstr);
+        dbg_printf("'%s'", tmpstr);
+        if (! xml) dbg_printf(" (raw byte string)");
       } else {
-        dbg_printf("'%s' (string)", tmpstr);
+        dbg_printf("'%s'", tmpstr);
+        if (! xml) dbg_printf(" (string)");
       }
       break;
     case BXT_LIST:
@@ -236,7 +242,7 @@ void print_tree(bx_param_c *node, int level, bx_bool xml)
         break;
       }
     case BXT_PARAM_DATA:
-      dbg_printf("'size=%d' (binary data)", ((bx_shadow_data_c*)node)->get_size());
+      dbg_printf("'binary data size=%d'", ((bx_shadow_data_c*)node)->get_size());
       break;
     default:
       dbg_printf("(unknown parameter type)");
