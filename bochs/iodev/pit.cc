@@ -148,7 +148,7 @@ void bx_pit_c::init(void)
 
   BX_DEBUG(("finished init"));
 
-  BX_DEBUG(("s.last_usec="FMT_LL"d",BX_PIT_THIS s.last_usec));
+  BX_DEBUG(("s.last_usec=" FMT_LL "d",BX_PIT_THIS s.last_usec));
   BX_DEBUG(("s.timer_id=%d",BX_PIT_THIS s.timer_handle[0]));
   BX_DEBUG(("s.timer.get_next_event_time=%d", BX_PIT_THIS s.timer.get_next_event_time()));
   BX_DEBUG(("s.last_next_event_time=%d", BX_PIT_THIS s.last_next_event_time));
@@ -216,7 +216,7 @@ void bx_pit_c::handle_timer()
     }
     BX_PIT_THIS s.last_next_event_time = BX_PIT_THIS s.timer.get_next_event_time();
   }
-  BX_DEBUG(("s.last_usec="FMT_LL"d", BX_PIT_THIS s.last_usec));
+  BX_DEBUG(("s.last_usec=" FMT_LL "d", BX_PIT_THIS s.last_usec));
   BX_DEBUG(("s.timer_id=%d", BX_PIT_THIS s.timer_handle[0]));
   BX_DEBUG(("s.timer.get_next_event_time=%x", BX_PIT_THIS s.timer.get_next_event_time()));
   BX_DEBUG(("s.last_next_event_time=%d", BX_PIT_THIS s.last_next_event_time));
@@ -358,7 +358,7 @@ void bx_pit_c::write(Bit32u address, Bit32u dvalue, unsigned io_len)
     }
     BX_PIT_THIS s.last_next_event_time = BX_PIT_THIS s.timer.get_next_event_time();
   }
-  BX_DEBUG(("s.last_usec="FMT_LL"d", BX_PIT_THIS s.last_usec));
+  BX_DEBUG(("s.last_usec=" FMT_LL "d", BX_PIT_THIS s.last_usec));
   BX_DEBUG(("s.timer_id=%d", BX_PIT_THIS s.timer_handle[0]));
   BX_DEBUG(("s.timer.get_next_event_time=%x", BX_PIT_THIS s.timer.get_next_event_time()));
   BX_DEBUG(("s.last_next_event_time=%d", BX_PIT_THIS s.last_next_event_time));

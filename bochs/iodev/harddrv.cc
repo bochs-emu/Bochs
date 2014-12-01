@@ -2624,7 +2624,7 @@ bx_hard_drive_c::calculate_logical_address(Bit8u channel, Bit64s *sector)
 
   Bit64s sector_count = BX_SELECTED_DRIVE(channel).hdimage->hd_size / 512;
   if (logical_sector >= sector_count) {
-    BX_ERROR (("logical address out of bounds ("FMT_LL"d/"FMT_LL"d) - aborting command", logical_sector, sector_count));
+    BX_ERROR (("logical address out of bounds (" FMT_LL "d/" FMT_LL "d) - aborting command", logical_sector, sector_count));
     return 0;
   }
   *sector = logical_sector;

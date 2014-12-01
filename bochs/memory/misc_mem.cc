@@ -158,12 +158,12 @@ void BX_MEM_C::read_block(Bit32u block)
   const Bit64u block_address = ((Bit64u)block)*BX_MEM_BLOCK_LEN;
 
   if (fseeko64(BX_MEM_THIS overflow_file, block_address, SEEK_SET))
-    BX_PANIC(("FATAL ERROR: Could not seek to 0x"FMT_LL"x in memory overflow file!", block_address));
+    BX_PANIC(("FATAL ERROR: Could not seek to 0x" FMT_LL "x in memory overflow file!", block_address));
 
   // We could legitimately get an EOF condition if we are reading the last bit of memory.ram
   if ((fread(BX_MEM_THIS blocks[block], BX_MEM_BLOCK_LEN, 1, BX_MEM_THIS overflow_file) != 1) && 
       (!feof(BX_MEM_THIS overflow_file))) 
-    BX_PANIC(("FATAL ERROR: Could not read from 0x"FMT_LL"x in memory overflow file!", block_address)); 
+    BX_PANIC(("FATAL ERROR: Could not read from 0x" FMT_LL "x in memory overflow file!", block_address)); 
 }
 #endif
 
