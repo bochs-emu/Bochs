@@ -570,7 +570,7 @@ LogViewDialog::LogViewDialog(
   buttonSizer = new wxBoxSizer(wxHORIZONTAL);
   mainSizer->Add(logSizer, 0, wxALIGN_CENTER);
   mainSizer->Add(buttonSizer, 0, wxALIGN_CENTER);
-  log = new wxTextCtrl(this, -1, "",
+  log = new wxTextCtrl(this, -1, wxT(""),
       wxDefaultPosition, wxSize(575, 300),
       wxTE_MULTILINE | wxTE_RICH | wxTE_READONLY);
   wxFont font(8, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
