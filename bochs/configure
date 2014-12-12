@@ -1717,8 +1717,8 @@ Optional Features:
   --enable-repeat-speedups
                           support repeated IO and mem copy speedups (no)
   --enable-fast-function-calls
-                          support for fast function calls (no - gcc on x86
-                          only)
+                          support for fast function calls (no - gcc on x86 and
+                          MSVC nmake only)
   --enable-handlers-chaining
                           support handlers-chaining emulation speedups (no)
   --enable-trace-linking  enable trace linking speedups support (no)
@@ -22091,8 +22091,8 @@ $as_echo "no" >&6; }
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for gcc fast function calls optimization" >&5
-$as_echo_n "checking for gcc fast function calls optimization... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for gcc / MSVC nmake fast function calls optimization" >&5
+$as_echo_n "checking for gcc / MSVC nmake fast function calls optimization... " >&6; }
 # Check whether --enable-fast-function-calls was given.
 if test "${enable_fast_function_calls+set}" = set; then :
   enableval=$enable_fast_function_calls; if test "$enableval" = yes; then
@@ -24872,7 +24872,11 @@ case "$target" in
     CC="cl"
     CXX="$CC"
     #C_OPT="/Zi"   # for debugging
-    C_OPT="/O2 /Gr"   # optimize for speed, using fastcall everywhere
+    if test "$speedup_fastcall" = 1; then
+      C_OPT="/O2 /Gr"   # optimize for speed, using fastcall everywhere
+    else
+      C_OPT="/O2"   # optimize for speed, no fastcall
+    fi
     if test "$bx_plugins" = 1; then
       CFLAGS="/nologo /MD /W3 /EHs-c- /DNDEBUG /DWIN32 /D_WINDOWS /D_CRT_SECURE_NO_WARNINGS $C_OPT"
     else

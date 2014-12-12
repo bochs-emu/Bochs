@@ -661,9 +661,9 @@ AC_ARG_ENABLE(repeat-speedups,
     ]
   )
 
-AC_MSG_CHECKING(for gcc fast function calls optimization)
+AC_MSG_CHECKING(for gcc / MSVC nmake fast function calls optimization)
 AC_ARG_ENABLE(fast-function-calls,
-  AS_HELP_STRING([--enable-fast-function-calls], [support for fast function calls (no - gcc on x86 only)]),
+  AS_HELP_STRING([--enable-fast-function-calls], [support for fast function calls (no - gcc on x86 and MSVC nmake only)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     speedup_fastcall=1
@@ -2556,7 +2556,11 @@ case "$target" in
     CC="cl"
     CXX="$CC"
     #C_OPT="/Zi"   # for debugging
-    C_OPT="/O2 /Gr"   # optimize for speed, using fastcall everywhere
+    if test "$speedup_fastcall" = 1; then
+      C_OPT="/O2 /Gr"   # optimize for speed, using fastcall everywhere
+    else
+      C_OPT="/O2"   # optimize for speed, no fastcall
+    fi
     if test "$bx_plugins" = 1; then
       CFLAGS="/nologo /MD /W3 /EHs-c- /DNDEBUG /DWIN32 /D_WINDOWS /D_CRT_SECURE_NO_WARNINGS $C_OPT"
     else
