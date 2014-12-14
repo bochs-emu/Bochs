@@ -310,7 +310,7 @@ int bx_sound_alsa_c::alsa_pcm_write()
       BX_ERROR(("ALSA: short write, write %d frames", ret));
     }
     alsa_pcm[0].audio_bufsize -= alsa_pcm[0].alsa_bufsize;
-    memcpy(audio_buffer[0], audio_buffer[0]+alsa_pcm[0].alsa_bufsize, alsa_pcm[0].audio_bufsize);
+    memmove(audio_buffer[0], audio_buffer[0]+alsa_pcm[0].alsa_bufsize, alsa_pcm[0].audio_bufsize);
   }
   if ((alsa_pcm[0].audio_bufsize == 0) && (alsa_pcm[0].buffer != NULL)) {
     free(alsa_pcm[0].buffer);

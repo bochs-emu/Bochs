@@ -1328,7 +1328,7 @@ Bit32u bx_sb16_c::dsp_adc_handler(Bit32u buflen)
 
   len = DSP.dma.chunkcount - DSP.dma.chunkindex;
   if (len > 0) {
-    memcpy(DSP.dma.chunk, DSP.dma.chunk+DSP.dma.chunkindex, len);
+    memmove(DSP.dma.chunk, DSP.dma.chunk+DSP.dma.chunkindex, len);
     DSP.dma.chunkcount = len;
   }
   DSP.dma.chunkindex = 0;
