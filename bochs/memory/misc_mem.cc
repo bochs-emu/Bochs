@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  I/O memory handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -860,6 +860,13 @@ BX_MEM_C::unregisterMemoryHandlers(void *param, bx_phy_address begin_addr, bx_ph
   bx_bool ret = 1;
   BX_INFO(("Memory access handlers unregistered: 0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX, begin_addr, end_addr));
   for (Bit32u page_idx = (Bit32u)(begin_addr >> 20); page_idx <= (Bit32u)(end_addr >> 20); page_idx++) {
+    Bit16u bitmap = 0xffff;
+    if (begin_addr > (page_idx << 20)) {
+      bitmap &= (0xffff << ((begin_addr >> 16) & 0xf));
+    }
+    if (end_addr < ((page_idx + 1) << 20)) {
+      bitmap &= (0xffff >> (0x0f - ((end_addr >> 16) & 0xf)));
+    }
     struct memory_handler_struct *memory_handler = BX_MEM_THIS memory_handlers[page_idx];
     struct memory_handler_struct *prev = NULL;
     while (memory_handler &&
@@ -867,6 +874,7 @@ BX_MEM_C::unregisterMemoryHandlers(void *param, bx_phy_address begin_addr, bx_ph
          memory_handler->begin != begin_addr &&
          memory_handler->end != end_addr)
     {
+      memory_handler->bitmap &= ~bitmap;
       prev = memory_handler;
       memory_handler = memory_handler->next;
     }
