@@ -814,7 +814,7 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
           if (controller->buffer_index >= controller->buffer_size)
             BX_PANIC(("IO read(0x%04x): buffer_index >= %d", address, controller->buffer_size));
 
-#if BX_SupportRepeatSpeedups
+#if BX_SUPPORT_REPEAT_SPEEDUPS
           if (DEV_bulk_io_quantum_requested()) {
             unsigned transferLen, quantumsMax;
             quantumsMax = (controller->buffer_size - controller->buffer_index) / io_len;
@@ -1188,7 +1188,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           if (controller->buffer_index >= controller->buffer_size)
             BX_PANIC(("IO write(0x%04x): buffer_index >= %d", address, controller->buffer_size));
 
-#if BX_SupportRepeatSpeedups
+#if BX_SUPPORT_REPEAT_SPEEDUPS
           if (DEV_bulk_io_quantum_requested()) {
             unsigned transferLen, quantumsMax;
             quantumsMax = (controller->buffer_size - controller->buffer_index) / io_len;
