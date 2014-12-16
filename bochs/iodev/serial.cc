@@ -780,7 +780,7 @@ Bit32u bx_serial_c::read(Bit32u address, unsigned io_len)
         if (BX_SER_THIS s[port].fifo_cntl.enable) {
           val = BX_SER_THIS s[port].rx_fifo[0];
           if (BX_SER_THIS s[port].rx_fifo_end > 0) {
-            memcpy(&BX_SER_THIS s[port].rx_fifo[0], &BX_SER_THIS s[port].rx_fifo[1], 15);
+            memmove(&BX_SER_THIS s[port].rx_fifo[0], &BX_SER_THIS s[port].rx_fifo[1], 15);
             BX_SER_THIS s[port].rx_fifo_end--;
           }
           if (BX_SER_THIS s[port].rx_fifo_end == 0) {
@@ -1004,7 +1004,7 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
           if (BX_SER_THIS s[port].line_status.tsr_empty) {
             if (BX_SER_THIS s[port].fifo_cntl.enable) {
               BX_SER_THIS s[port].tsrbuffer = BX_SER_THIS s[port].tx_fifo[0];
-              memcpy(&BX_SER_THIS s[port].tx_fifo[0], &BX_SER_THIS s[port].tx_fifo[1], 15);
+              memmove(&BX_SER_THIS s[port].tx_fifo[0], &BX_SER_THIS s[port].tx_fifo[1], 15);
               BX_SER_THIS s[port].line_status.thr_empty = (--BX_SER_THIS s[port].tx_fifo_end == 0);
             } else {
               BX_SER_THIS s[port].tsrbuffer = BX_SER_THIS s[port].thrbuffer;
@@ -1469,7 +1469,7 @@ void bx_serial_c::tx_timer(void)
   if (BX_SER_THIS s[port].fifo_cntl.enable && (BX_SER_THIS s[port].tx_fifo_end > 0)) {
     BX_SER_THIS s[port].tsrbuffer = BX_SER_THIS s[port].tx_fifo[0];
     BX_SER_THIS s[port].line_status.tsr_empty = 0;
-    memcpy(&BX_SER_THIS s[port].tx_fifo[0], &BX_SER_THIS s[port].tx_fifo[1], 15);
+    memmove(&BX_SER_THIS s[port].tx_fifo[0], &BX_SER_THIS s[port].tx_fifo[1], 15);
     gen_int = (--BX_SER_THIS s[port].tx_fifo_end == 0);
   } else if (!BX_SER_THIS s[port].line_status.thr_empty) {
     BX_SER_THIS s[port].tsrbuffer = BX_SER_THIS s[port].thrbuffer;
