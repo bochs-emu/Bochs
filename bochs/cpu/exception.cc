@@ -77,7 +77,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error
     exception(BX_GP_EXCEPTION, vector*8 + 2);
   }
 
-  // if software interrupt, then gate descripor DPL must be >= CPL,
+  // if software interrupt, then gate descriptor DPL must be >= CPL,
   // else #GP(vector * 8 + 2 + EXT)
   if (soft_int && gate_descriptor.dpl < CPL)
   {
@@ -281,7 +281,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
     exception(BX_GP_EXCEPTION, vector*8 + 2);
   }
 
-  // if software interrupt, then gate descripor DPL must be >= CPL,
+  // if software interrupt, then gate descriptor DPL must be >= CPL,
   // else #GP(vector * 8 + 2 + EXT)
   if (soft_int && gate_descriptor.dpl < CPL) {
     BX_ERROR(("interrupt(): soft_int && (gate.dpl < CPL)"));
@@ -741,7 +741,7 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
   {
     RSP_SPECULATIVE;
 
-    // software interrupt can be redirefcted in v8086 mode
+    // software interrupt can be redirected in v8086 mode
     if (type != BX_SOFTWARE_INTERRUPT || !v8086_mode() || !v86_redirect_interrupt(vector))
     {
       if(real_mode()) {
@@ -874,7 +874,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
       VMexit_TripleFault();
 #endif
 #if BX_DEBUGGER
-      // trap into debugger (similar as done when PANIC occured)
+      // trap into debugger (the same as when a PANIC occurs)
       bx_debug_break();
 #endif
       if (SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get()) {
