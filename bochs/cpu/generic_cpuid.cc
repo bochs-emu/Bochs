@@ -1535,7 +1535,13 @@ Bit32u bx_generic_cpuid_t::get_ext3_cpuid_features(void) const
 
 void bx_generic_cpuid_t::dump_cpuid(void) const
 {
-  bx_cpuid_t::dump_cpuid(max_std_leaf, max_ext_leaf-0x80000000);
+  bx_cpuid_t::dump_cpuid(max_std_leaf,
+#if BX_CPU_LEVEL <= 5
+    0
+#else
+    max_ext_leaf-0x80000000
+#endif
+  );
 }
 
 bx_cpuid_t *create_bx_generic_cpuid(BX_CPU_C *cpu) { return new bx_generic_cpuid_t(cpu); }
