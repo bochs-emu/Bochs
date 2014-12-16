@@ -374,12 +374,48 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   XSetWindowAttributes win_attr;
   unsigned long plane_masks_return[1];
   XColor color;
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+  bx_bool x11_with_debug_gui = 0;
+#endif
 
   put("XGUI");
 
   bx_headerbar_y = headerbar_y;
 
   progname = argv[0];
+
+  // parse x11 specific options
+  if (argc > 1) {
+    for (i = 1; i < argc; i++) {
+      if (!strcmp(argv[i], "nokeyrepeat")) {
+        BX_INFO(("disabled host keyboard repeat"));
+        x11_nokeyrepeat = 1;
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+      } else if (!strcmp(argv[i], "gui_debug")) {
+        x11_with_debug_gui = 1;
+#endif
+#if BX_SHOW_IPS
+      } else if (!strcmp(argv[i], "hideIPS")) {
+        BX_INFO(("hide IPS display in status bar"));
+        x11_hide_ips = 1;
+#endif
+      } else {
+        BX_PANIC(("Unknown x11 option '%s'", argv[i]));
+      }
+    }
+  }
+
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+  if (x11_with_debug_gui) {
+    // This is only necessary when GTK+ and Xlib are sharing the same
+    // connection. XInitThreads() must finish before any calls to GTK+
+    // or Xlib are made.
+    if (XInitThreads() == 0) {
+      BX_PANIC(("trying to run Bochs with the GTK+ "
+                "debugger on a non-threading X11."));
+    }
+  }
+#endif
 
   /* connect to X server */
   if ((bx_x_display=XOpenDisplay(display_name)) == NULL)
@@ -647,27 +683,13 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     bx_keymap.loadKeymap(convertStringToXKeysym);
   }
 
-  // parse x11 specific options
-  if (argc > 1) {
-    for (i = 1; i < argc; i++) {
-      if (!strcmp(argv[i], "nokeyrepeat")) {
-        BX_INFO(("disabled host keyboard repeat"));
-        x11_nokeyrepeat = 1;
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
-      } else if (!strcmp(argv[i], "gui_debug")) {
-        SIM->set_debug_gui(1);
-        init_debug_dialog();
-#endif
-#if BX_SHOW_IPS
-      } else if (!strcmp(argv[i], "hideIPS")) {
-        BX_INFO(("hide IPS display in status bar"));
-        x11_hide_ips = 1;
-#endif
-      } else {
-        BX_PANIC(("Unknown x11 option '%s'", argv[i]));
-      }
-    }
+  // initialize debugger gui
+  if (x11_with_debug_gui) {
+    SIM->set_debug_gui(1);
+    init_debug_dialog();
   }
+#endif
 
   new_gfx_api = 1;
   dialog_caps |= (BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT | BX_GUI_DLG_CDROM);
