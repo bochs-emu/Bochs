@@ -330,7 +330,7 @@ static int remove_breakpoint(Bit64u addr, int len)
   {
     if (breakpoints[i] == addr)
     {
-      BX_INFO(("Removing breakpoint at "FMT_ADDRX64, addr));
+      BX_INFO(("Removing breakpoint at " FMT_ADDRX64, addr));
       breakpoints[i] = 0;
       return(1);
     }
@@ -342,7 +342,7 @@ static void insert_breakpoint(Bit64u addr)
 {
   unsigned int i;
 
-  BX_INFO(("Setting breakpoint at "FMT_ADDRX64, addr));
+  BX_INFO(("Setting breakpoint at " FMT_ADDRX64, addr));
 
   for (i = 0; i < (unsigned)MAX_BREAKPOINTS; i++)
   {
@@ -576,7 +576,7 @@ static void debug_loop(void)
 
         addr = strtoull(&buffer[1], &ebuf, 16);
         len = strtoul(ebuf + 1, NULL, 16);
-        BX_INFO(("addr "FMT_ADDRX64" len %x", addr, len));
+        BX_INFO(("addr " FMT_ADDRX64 " len %x", addr, len));
 
         access_linear(addr, len, BX_READ, mem);
         mem2hex(mem, obuf, len);
@@ -597,7 +597,7 @@ static void debug_loop(void)
         ++ebuf;
         value = read_little_endian_hex(ebuf);
 
-        BX_INFO(("reg %d set to "FMT_ADDRX64, reg, value));
+        BX_INFO(("reg %d set to " FMT_ADDRX64, reg, value));
 #if BX_SUPPORT_X86_64 == 0
         switch (reg)
         {

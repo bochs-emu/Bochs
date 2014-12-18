@@ -493,7 +493,7 @@ void bx_virt_timer_c::timer_handler(bx_bool mode)
         printf("useconds: " FMT_LL "u, ", temp1);
         printf("expect ticks: " FMT_LL "u, ", temp2);
         printf("ticks: " FMT_LL "u, ", temp3);
-        printf("diff: "FMT_LL "u\n", temp4);
+        printf("diff: " FMT_LL "u\n", temp4);
       }
 #  endif
 

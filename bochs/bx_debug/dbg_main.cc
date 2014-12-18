@@ -1094,11 +1094,11 @@ void bx_dbg_info_segment_regs_command(void)
       (unsigned) sreg.des_l, (unsigned) sreg.valid);
 
   BX_CPU(dbg_cpu)->dbg_get_gdtr(&global_sreg);
-  dbg_printf("gdtr:base=0x"FMT_ADDRX", limit=0x%x\n",
+  dbg_printf("gdtr:base=0x" FMT_ADDRX ", limit=0x%x\n",
       global_sreg.base, (unsigned) global_sreg.limit);
 
   BX_CPU(dbg_cpu)->dbg_get_idtr(&global_sreg);
-  dbg_printf("idtr:base=0x"FMT_ADDRX", limit=0x%x\n",
+  dbg_printf("idtr:base=0x" FMT_ADDRX ", limit=0x%x\n",
       global_sreg.base, (unsigned) global_sreg.limit);
 }
 
@@ -1732,18 +1732,18 @@ void bx_dbg_print_watchpoints(void)
   // print watch point info
   for (i = 0; i < num_read_watchpoints; i++) {
     if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), read_watchpoint[i].addr, 2, buf))
-      dbg_printf("rd 0x"FMT_PHY_ADDRX" len=%d\t\t(%04x)\n",
+      dbg_printf("rd 0x" FMT_PHY_ADDRX " len=%d\t\t(%04x)\n",
           read_watchpoint[i].addr, read_watchpoint[i].len, (int)buf[0] | ((int)buf[1] << 8));
     else
-      dbg_printf("rd 0x"FMT_PHY_ADDRX" len=%d\t\t(read error)\n",
+      dbg_printf("rd 0x" FMT_PHY_ADDRX " len=%d\t\t(read error)\n",
           read_watchpoint[i].addr, read_watchpoint[i].len);
   }
   for (i = 0; i < num_write_watchpoints; i++) {
     if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), write_watchpoint[i].addr, 2, buf))
-      dbg_printf("wr 0x"FMT_PHY_ADDRX" len=%d\t\t(%04x)\n",
+      dbg_printf("wr 0x" FMT_PHY_ADDRX " len=%d\t\t(%04x)\n",
           write_watchpoint[i].addr, write_watchpoint[i].len, (int)buf[0] | ((int)buf[1] << 8));
     else
-      dbg_printf("rd 0x"FMT_PHY_ADDRX" len=%d\t\t(read error)\n",
+      dbg_printf("rd 0x" FMT_PHY_ADDRX " len=%d\t\t(read error)\n",
           write_watchpoint[i].addr, write_watchpoint[i].len);
   }
 }
@@ -1992,7 +1992,7 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
       dbg_printf("(%u) ", which_cpu);
 
     if (BX_CPU(which_cpu)->protected_mode()) {
-      dbg_printf("[0x"FMT_PHY_ADDRX"] %04x:" FMT_ADDRX " (%s): ",
+      dbg_printf("[0x" FMT_PHY_ADDRX "] %04x:" FMT_ADDRX " (%s): ",
         phy, BX_CPU(which_cpu)->guard_found.cs,
         BX_CPU(which_cpu)->guard_found.eip,
         bx_dbg_symbolic_address(BX_CPU(which_cpu)->cr3 >> 12,
@@ -2000,7 +2000,7 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
            BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS)));
     }
     else { // Real & V86 mode
-      dbg_printf("[0x"FMT_PHY_ADDRX"] %04x:%04x (%s): ",
+      dbg_printf("[0x" FMT_PHY_ADDRX "] %04x:%04x (%s): ",
         phy, BX_CPU(which_cpu)->guard_found.cs,
         (unsigned) BX_CPU(which_cpu)->guard_found.eip,
         bx_dbg_symbolic_address(0,
@@ -2393,7 +2393,7 @@ void bx_dbg_info_bpoints_command(void)
     dbg_printf("pbreakpoint    ");
     dbg_printf("keep ");
     dbg_printf(bx_guard.iaddr.phy[i].enabled?"y   ":"n   ");
-    dbg_printf("0x"FMT_PHY_ADDRX"\n", bx_guard.iaddr.phy[i].addr);
+    dbg_printf("0x" FMT_PHY_ADDRX "\n", bx_guard.iaddr.phy[i].addr);
   }
 #endif
 }
@@ -3158,7 +3158,7 @@ void bx_dbg_print_descriptor64(Bit32u lo1, Bit32u hi1, Bit32u lo2, Bit32u hi2)
         break;
       default:
         // task, int, trap, or call gate.
-        dbg_printf("target=0x%04x:"FMT_ADDRX", DPL=%d", segment, offset, dpl);
+        dbg_printf("target=0x%04x:" FMT_ADDRX ", DPL=%d", segment, offset, dpl);
         break;
       }
     }
@@ -3667,7 +3667,7 @@ void bx_dbg_dump_table(void)
     return;
   }
 
-  printf("cr3: 0x"FMT_PHY_ADDRX"\n", (bx_phy_address)BX_CPU(dbg_cpu)->cr3);
+  printf("cr3: 0x" FMT_PHY_ADDRX "\n", (bx_phy_address)BX_CPU(dbg_cpu)->cr3);
 
   lin = 0;
   phy = 0;
@@ -3679,14 +3679,14 @@ void bx_dbg_dump_table(void)
     if(valid) {
       if((lin - start_lin) != (phy - start_phy)) {
         if(start_lin != 1)
-          dbg_printf("0x%08x-0x%08x -> 0x"FMT_PHY_ADDRX"-0x"FMT_PHY_ADDRX"\n",
+          dbg_printf("0x%08x-0x%08x -> 0x" FMT_PHY_ADDRX "-0x" FMT_PHY_ADDRX "\n",
             start_lin, lin - 1, start_phy, start_phy + (lin-1-start_lin));
         start_lin = lin;
         start_phy = phy;
       }
     } else {
       if(start_lin != 1)
-        dbg_printf("0x%08x-0x%08x -> 0x"FMT_PHY_ADDRX"-0x"FMT_PHY_ADDRX"\n",
+        dbg_printf("0x%08x-0x%08x -> 0x" FMT_PHY_ADDRX "-0x" FMT_PHY_ADDRX "\n",
           start_lin, lin - 1, start_phy, start_phy + (lin-1-start_lin));
       start_lin = 1;
       start_phy = 2;
@@ -3696,7 +3696,7 @@ void bx_dbg_dump_table(void)
     lin += 0x1000;
   }
   if(start_lin != 1)
-    dbg_printf("0x%08x-0x%08x -> 0x"FMT_PHY_ADDRX"-0x"FMT_PHY_ADDRX"\n",
+    dbg_printf("0x%08x-0x%08x -> 0x" FMT_PHY_ADDRX "-0x" FMT_PHY_ADDRX "\n",
          start_lin, 0xffffffff, start_phy, start_phy + (0xffffffff-start_lin));
 }
 

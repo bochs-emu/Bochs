@@ -408,7 +408,7 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
 
   invalidate_stack_cache();
 
-  BX_DEBUG(("TLB_invlpg(0x"FMT_ADDRX"): invalidate TLB entry", laddr));
+  BX_DEBUG(("TLB_invlpg(0x" FMT_ADDRX "): invalidate TLB entry", laddr));
 
 #if BX_CPU_LEVEL >= 5
   if (BX_CPU_THIS_PTR TLB.split_large)
