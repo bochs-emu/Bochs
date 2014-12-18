@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2000-2013  The Bochs Project
+//  Copyright (C) 2000-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -50,6 +50,9 @@ public:
 // declare one instance of the gui object and call macro to insert the
 // plugin code
 static bx_term_gui_c *theGui = NULL;
+#if BX_DEBUGGER
+static int scr_fd = -1;
+#endif
 IMPLEMENT_GUI_PLUGIN_CODE(term)
 
 #define LOG_THIS theGui->
@@ -180,12 +183,27 @@ void bx_term_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   // the ask menu causes trouble
   io->set_log_action(LOGLEV_PANIC, ACT_FATAL);
+#if !BX_DEBUGGER
   // logfile should be different from stderr, otherwise terminal mode
   // really ends up having fun
   if (!strcmp(SIM->get_param_string(BXPN_LOG_FILENAME)->getptr(), "-"))
     BX_PANIC(("cannot log to stderr in term mode"));
-
+#else
+  FILE *old_stdin = stdin;
+  FILE *old_stdout = stdout;
+  scr_fd = open("/dev/ptmx",O_RDWR);
+  if(scr_fd > 0){
+    stdin = stdout = fdopen(scr_fd,"wr");
+    grantpt(scr_fd);
+    unlockpt(scr_fd);
+    fprintf(stderr, "\nBochs connected to screen \"%s\"\n",ptsname(scr_fd));
+  }
+#endif
   initscr();
+#if BX_DEBUGGER
+  stdin = old_stdin;
+  stdout = old_stdout;
+#endif
   start_color();
   cbreak();
   curs_set(2);
@@ -775,6 +793,10 @@ void bx_term_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 void bx_term_gui_c::exit(void)
 {
   if (!initialized) return;
+#if BX_DEBUGGER
+  if(scr_fd > 0)
+    close(scr_fd);
+#endif
   clear();
   flush();
   endwin();
