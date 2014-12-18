@@ -825,14 +825,6 @@ struct BxExceptionInfo exceptions_info[BX_CPU_HANDLED_EXCEPTIONS] = {
 // error_code: if exception generates and error, push this error code
 void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
 {
-  BX_INSTR_EXCEPTION(BX_CPU_ID, vector, error_code);
-
-#if BX_DEBUGGER
-  bx_dbg_exception(BX_CPU_ID, vector, error_code);
-#endif
-
-  BX_DEBUG(("exception(0x%02x): error_code=%04x", vector, error_code));
-
   unsigned exception_type = 0;
   unsigned exception_class = BX_EXCEPTION_CLASS_FAULT;
   bx_bool push_error = 0;
@@ -846,10 +838,22 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
      BX_PANIC(("exception(%u): bad vector", vector));
   }
 
+  /* Excluding page faults and double faults, error_code may not have the
+   * least significant bit set correctly. This correction is applied first
+   * to make the change transparent to any instrumentation.
+   */
   if (vector != BX_PF_EXCEPTION && vector != BX_DF_EXCEPTION) {
     // Page faults have different format
     error_code = (error_code & 0xfffe) | BX_CPU_THIS_PTR EXT;
   }
+
+  BX_INSTR_EXCEPTION(BX_CPU_ID, vector, error_code);
+
+#if BX_DEBUGGER
+  bx_dbg_exception(BX_CPU_ID, vector, error_code);
+#endif
+
+  BX_DEBUG(("exception(0x%02x): error_code=%04x", vector, error_code));
 
 #if BX_SUPPORT_VMX
   VMexit_Event(BX_HARDWARE_EXCEPTION, vector, error_code, push_error);
