@@ -631,7 +631,7 @@ bx_bool bx_e1000_c::mem_read_handler(bx_phy_address addr, unsigned len,
                                      void *data, void *param)
 {
   Bit32u *data_ptr = (Bit32u*) data;
-  Bit8u  *data8_ptr;
+  Bit8u  *data8_ptr = (Bit8u*) data;
   Bit32u offset, value = 0;
   Bit16u index;
 
@@ -727,14 +727,16 @@ bx_bool bx_e1000_c::mem_read_handler(bx_phy_address addr, unsigned len,
           BX_DEBUG(("mem read from offset 0x%08x returns 0", offset));
         }
     }
+    BX_DEBUG(("val =  0x%08x", value));
+    *data_ptr = value;
   } else if ((len == 1) && (offset == E1000_STATUS)) {
     BX_DEBUG(("mem read from offset 0x%08x with len 1 -", offset));
     value = BX_E1000_THIS s.mac_reg[index] & 0xff;
+    BX_DEBUG(("val =  0x%02x", (Bit8u)value));
+    *data8_ptr = (Bit8u)value;
   } else {
     BX_DEBUG(("mem read from offset 0x%08x with len %d not implemented", offset, len));
   }
-  BX_DEBUG(("val =  0x%08x", value));
-  *data_ptr = value;
   return 1;
 }
 
