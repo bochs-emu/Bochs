@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2013  The Bochs Project
+//  Copyright (C) 2004-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -71,6 +71,7 @@ serial_raw::serial_raw(const char *devname)
       SetCommMask(hCOM, EV_BREAK | EV_CTS | EV_DSR | EV_ERR | EV_RING | EV_RLSD | EV_RXCHAR);
       memset(&rx_ovl, 0, sizeof(OVERLAPPED));
       rx_ovl.hEvent = CreateEvent(NULL,TRUE,FALSE,"receive");
+      InitializeCriticalSection(&serialCS);
       hRawSerialThread = CreateThread(NULL, 0, RawSerialThread, this, 0, &threadID);
 #endif
     } else {
@@ -96,6 +97,7 @@ serial_raw::~serial_raw(void)
     thread_quit = TRUE;
     SetCommMask(hCOM, 0);
     while (thread_active) Sleep(10);
+    DeleteCriticalSection(&serialCS);
     CloseHandle(thread_ovl.hEvent);
     CloseHandle(rx_ovl.hEvent);
     CloseHandle(hRawSerialThread);
@@ -292,11 +294,17 @@ int serial_raw::receive()
     if (DCBchanged) {
       setup_port();
     }
+#ifdef WIN32_RECEIVE_RAW
+    EnterCriticalSection(&serialCS);
+#endif
     data = rxdata_buffer[0];
     if (rxdata_count > 0) {
-      memcpy(&rxdata_buffer[0], &rxdata_buffer[1], sizeof(Bit16s)*(RX_BUFSIZE-1));
+      memmove(&rxdata_buffer[0], &rxdata_buffer[1], sizeof(Bit16s)*(RX_BUFSIZE-1));
       rxdata_count--;
     }
+#ifdef WIN32_RECEIVE_RAW
+    LeaveCriticalSection(&serialCS);
+#endif
     if (data < 0) {
       switch (data) {
         case RAW_EVENT_CTS_ON:
@@ -360,13 +368,17 @@ void serial_raw::serial_thread()
   while (!thread_quit) {
     if ((rxdata_count == 0) && (thread_rxdata_count > 0)) {
       if (thread_rxdata_count > RX_BUFSIZE) {
+        EnterCriticalSection(&serialCS);
         memcpy(&rxdata_buffer[0], &thread_rxdata_buffer[0], sizeof(Bit16s)*RX_BUFSIZE);
-        memcpy(&thread_rxdata_buffer[0], &thread_rxdata_buffer[RX_BUFSIZE], sizeof(Bit16s)*(thread_rxdata_count-RX_BUFSIZE));
         rxdata_count = RX_BUFSIZE;
+        LeaveCriticalSection(&serialCS);
+        memmove(&thread_rxdata_buffer[0], &thread_rxdata_buffer[RX_BUFSIZE], sizeof(Bit16s)*(thread_rxdata_count-RX_BUFSIZE));
         thread_rxdata_count -= RX_BUFSIZE;
       } else {
+        EnterCriticalSection(&serialCS);
         memcpy(&rxdata_buffer[0], &thread_rxdata_buffer[0], sizeof(Bit16s)*thread_rxdata_count);
         rxdata_count = thread_rxdata_count;
+        LeaveCriticalSection(&serialCS);
         thread_rxdata_count = 0;
       }
     }
@@ -399,13 +411,17 @@ void serial_raw::serial_thread()
           }
           if ((rxdata_count == 0) && (thread_rxdata_count > 0)) {
             if (thread_rxdata_count > RX_BUFSIZE) {
+              EnterCriticalSection(&serialCS);
               memcpy(&rxdata_buffer[0], &thread_rxdata_buffer[0], sizeof(Bit16s)*RX_BUFSIZE);
-              memcpy(&thread_rxdata_buffer[0], &thread_rxdata_buffer[RX_BUFSIZE], sizeof(Bit16s)*(thread_rxdata_count-RX_BUFSIZE));
               rxdata_count = RX_BUFSIZE;
+              LeaveCriticalSection(&serialCS);
+              memmove(&thread_rxdata_buffer[0], &thread_rxdata_buffer[RX_BUFSIZE], sizeof(Bit16s)*(thread_rxdata_count-RX_BUFSIZE));
               thread_rxdata_count -= RX_BUFSIZE;
             } else {
+              EnterCriticalSection(&serialCS);
               memcpy(&rxdata_buffer[0], &thread_rxdata_buffer[0], sizeof(Bit16s)*thread_rxdata_count);
               rxdata_count = thread_rxdata_count;
+              LeaveCriticalSection(&serialCS);
               thread_rxdata_count = 0;
             }
           }
