@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -96,6 +96,8 @@ extern "C" {
 #define getch _getch
 #define strtoll _strtoi64
 #define strtoull _strtoui64
+#define isatty _isatty
+#define fileno _fileno
 #endif
 
 #else   /* __MINGW32__ defined */

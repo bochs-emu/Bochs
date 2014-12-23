@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -282,7 +282,7 @@ int bx_dbg_symbol_command(const char* filename, bx_bool global, Bit32u offset)
   // The file format should be
   // address symbol (example '00002afe _StartLoseNT')
 
-  Bit32u context_id = (global) ? 0 : (BX_CPU(dbg_cpu)->cr3) >> 12;
+  Bit32u context_id = (global) ? 0 : ((Bit32u)BX_CPU(dbg_cpu)->cr3) >> 12;
 
   context_t* cntx = context_t::get_context(context_id);
 

@@ -2561,10 +2561,15 @@ case "$target" in
     else
       C_OPT="/O2"   # optimize for speed, no fastcall
     fi
-    if test "$bx_plugins" = 1; then
-      CFLAGS="/nologo /MD /W3 /EHs-c- /DNDEBUG /DWIN32 /D_WINDOWS /D_CRT_SECURE_NO_WARNINGS $C_OPT"
+    if test "$bx_debugger" = 1; then
+      C_OPT="$C_OPT /EHsc"
     else
-      CFLAGS="/nologo /MT /W3 /EHs-c- /DNDEBUG /DWIN32 /D_WINDOWS /D_CRT_SECURE_NO_WARNINGS $C_OPT"
+      C_OPT="$C_OPT /EHs-c-"
+    fi
+    if test "$bx_plugins" = 1; then
+      CFLAGS="/nologo /MD /W3 /DNDEBUG /DWIN32 /D_WINDOWS /D_CRT_SECURE_NO_WARNINGS $C_OPT"
+    else
+      CFLAGS="/nologo /MT /W3 /DNDEBUG /DWIN32 /D_WINDOWS /D_CRT_SECURE_NO_WARNINGS $C_OPT"
     fi
     CXXFLAGS="$CFLAGS"
     DASH="/"
