@@ -840,8 +840,8 @@ bx_bool MyPanel::fillBxKeyEvent(wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool rele
     case WXK_ALT:                  bx_key = BX_KEY_ALT_L;        break;
     case WXK_MENU:                 bx_key = BX_KEY_MENU;         break;
     case WXK_PAUSE:                bx_key = BX_KEY_PAUSE;        break;
-    case WXK_PRIOR:                bx_key = BX_KEY_PAGE_UP;      break;
-    case WXK_NEXT:                 bx_key = BX_KEY_PAGE_DOWN;    break;
+    case WXK_PAGEUP:               bx_key = BX_KEY_PAGE_UP;      break;
+    case WXK_PAGEDOWN:             bx_key = BX_KEY_PAGE_DOWN;    break;
     case WXK_END:                  bx_key = BX_KEY_END;          break;
     case WXK_HOME:                 bx_key = BX_KEY_HOME;         break;
     case WXK_LEFT:                 bx_key = BX_KEY_LEFT;         break;
@@ -885,14 +885,8 @@ bx_bool MyPanel::fillBxKeyEvent(wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool rele
     case WXK_NUMPAD_UP:            bx_key = BX_KEY_KP_UP;        break;
     case WXK_NUMPAD_RIGHT:         bx_key = BX_KEY_KP_RIGHT;     break;
     case WXK_NUMPAD_DOWN:          bx_key = BX_KEY_KP_DOWN;      break;
-    case WXK_NUMPAD_PRIOR:         bx_key = BX_KEY_KP_PAGE_UP;   break;
-#if WXK_NUMPAD_PAGEUP != WXK_NUMPAD_PRIOR
     case WXK_NUMPAD_PAGEUP:        bx_key = BX_KEY_KP_PAGE_UP;   break;
-#endif
-    case WXK_NUMPAD_NEXT:          bx_key = BX_KEY_KP_PAGE_DOWN; break;
-#if WXK_NUMPAD_PAGEDOWN != WXK_NUMPAD_NEXT
     case WXK_NUMPAD_PAGEDOWN:      bx_key = BX_KEY_KP_PAGE_DOWN; break;
-#endif
     case WXK_NUMPAD_END:           bx_key = BX_KEY_KP_END;       break;
     case WXK_NUMPAD_BEGIN:         bx_key = BX_KEY_KP_HOME;      break;
     case WXK_NUMPAD_INSERT:        bx_key = BX_KEY_KP_INSERT;    break;

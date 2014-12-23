@@ -522,7 +522,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   panel = new MyPanel(this, -1, wxDefaultPosition, wxDefaultSize, wxNO_BORDER);
   panel->SetBackgroundColour(wxColour(0,0,0));
   panel->SetFocus();
-  wxGridSizer *sz = new wxGridSizer(1, 1);
+  wxGridSizer *sz = new wxGridSizer(0, 1, 1, 0);
   sz->Add(panel, 0, wxGROW);
   SetAutoLayout(TRUE);
   SetSizer(sz);
@@ -550,7 +550,7 @@ void MyFrame::OnConfigNew(wxCommandEvent& WXUNUSED(event))
 void MyFrame::OnConfigRead(wxCommandEvent& WXUNUSED(event))
 {
   char bochsrc[512];
-  long style = wxOPEN;
+  long style = wxFD_OPEN;
   wxFileDialog *fdialog = new wxFileDialog(this, wxT("Read configuration"), wxT(""), wxT(""), wxT("*.*"), style);
   if (fdialog->ShowModal() == wxID_OK) {
     strncpy(bochsrc, fdialog->GetPath().mb_str(wxConvUTF8), sizeof(bochsrc));
@@ -563,7 +563,7 @@ void MyFrame::OnConfigRead(wxCommandEvent& WXUNUSED(event))
 void MyFrame::OnConfigSave(wxCommandEvent& WXUNUSED(event))
 {
   char bochsrc[512];
-  long style = wxSAVE | wxOVERWRITE_PROMPT;
+  long style = wxFD_SAVE | wxFD_OVERWRITE_PROMPT;
   wxFileDialog *fdialog = new wxFileDialog(this, wxT("Save configuration"), wxT(""), wxT(""), wxT("*.*"), style);
   if (fdialog->ShowModal() == wxID_OK) {
     strncpy(bochsrc, fdialog->GetPath().mb_str(wxConvUTF8), sizeof(bochsrc));
@@ -1033,7 +1033,7 @@ int MyFrame::HandleAskParamString(bx_param_string_c *param)
   } else if (n_opt & param->IS_FILENAME) {
     // use file open dialog
     long style =
-      (n_opt & param->SAVE_FILE_DIALOG) ? wxSAVE|wxOVERWRITE_PROMPT : wxOPEN;
+      (n_opt & param->SAVE_FILE_DIALOG) ? wxFD_SAVE|wxFD_OVERWRITE_PROMPT : wxFD_OPEN;
     wxFileDialog *fdialog = new wxFileDialog(this, wxString(msg, wxConvUTF8), wxT(""), wxString(param->getptr(), wxConvUTF8), wxT("*.*"), style);
     if (fdialog->ShowModal() == wxID_OK)
       strncpy(newval, fdialog->GetPath().mb_str(wxConvUTF8), sizeof(newval));

@@ -53,7 +53,7 @@ void SetTextCtrl(wxTextCtrl *text, const char *format, int val);
 int GetTextCtrlInt(wxTextCtrl *text, bool *valid = NULL, bool complain=false, wxString complaint = wxT("Invalid integer!"));
 bool BrowseTextCtrl(wxTextCtrl *text,
     wxString prompt= wxT("Choose a file"),
-    long style=wxOPEN);
+    long style=wxFD_OPEN);
 wxChoice *makeLogOptionChoiceBox(wxWindow *parent, wxWindowID id, int evtype, bool includeNoChange = false);
 
 ////////////////////////////////////////////////////////////////////
