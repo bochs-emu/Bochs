@@ -33,6 +33,10 @@ typedef char *caddr_t;
 #endif
 
 #include <sys/types.h>
+#if defined(__OpenBSD__)
+#include <stdint.h>
+#include <sys/wait.h>
+#endif
 #ifdef HAVE_SYS_BITYPES_H
 # include <sys/bitypes.h>
 #endif
