@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2014  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -47,6 +47,7 @@ public:
   // override stubs from bx_keyb_stub_c
   virtual void gen_scancode(Bit32u key);
   virtual void paste_bytes(Bit8u *data, Bit32s length);
+  virtual void release_keys(void);
   virtual void register_state(void);
   virtual void after_restore_state(void);
 
@@ -229,6 +230,7 @@ private:
   void   timer(void);
   int    timer_handle;
   int    statusbar_id[3];
+  bx_bool bxkey_state[BX_KEY_NBKEYS];
 };
 
 #endif  // #ifndef _PCKEY_H

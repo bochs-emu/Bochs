@@ -207,6 +207,10 @@ void bx_keyb_c::init(void)
     DEV_register_default_mouse(this, mouse_enq_static, mouse_enabled_changed_static);
   }
 
+  for (i = 0; i < BX_KEY_NBKEYS; i++) {
+    bxkey_state[i] = 0;
+  }
+
   // init runtime parameter
   SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set_handler(kbd_param_handler);
   SIM->get_param_num(BXPN_MOUSE_ENABLED)->set_handler(kbd_param_handler);
@@ -216,6 +220,10 @@ void bx_keyb_c::reset(unsigned type)
 {
   if (BX_KEY_THIS pastebuf != NULL) {
     BX_KEY_THIS stop_paste = 1;
+  }
+  release_keys();
+  for (int i = 0; i < BX_KEY_NBKEYS; i++) {
+    bxkey_state[i] = 0;
   }
 }
 
@@ -772,6 +780,16 @@ void bx_keyb_c::paste_bytes(Bit8u *bytes, Bit32s length)
   BX_KEY_THIS service_paste_buf();
 }
 
+void bx_keyb_c::release_keys()
+{
+  for (int i = 0; i < BX_KEY_NBKEYS; i++) {
+    if (bxkey_state[i]) {
+      BX_KEY_THIS gen_scancode(i | BX_KEY_RELEASED);
+      bxkey_state[i] = 0;
+    }
+  }
+}
+
 void bx_keyb_c::gen_scancode(Bit32u key)
 {
   unsigned char *scancode;
@@ -783,6 +801,7 @@ void bx_keyb_c::gen_scancode(Bit32u key)
   }
 
   BX_DEBUG(("gen_scancode(): %s %s", bx_keymap.getBXKeyName(key), (key >> 31)?"released":"pressed"));
+  bxkey_state[key & 0xff] = ((key & BX_KEY_RELEASED) == 0);
 
   if (!BX_KEY_THIS s.kbd_controller.scancodes_translate)
     BX_DEBUG(("keyboard: gen_scancode with scancode_translate cleared"));

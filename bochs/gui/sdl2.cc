@@ -782,6 +782,9 @@ void bx_sdl2_gui_c::handle_events(void)
         if (sdl_event.window.event == SDL_WINDOWEVENT_EXPOSED) {
           SDL_UpdateWindowSurface(window);
         }
+        if (sdl_event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
+          DEV_kbd_release_keys();;
+        }
         break;
 
       case SDL_MOUSEMOTION:

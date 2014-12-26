@@ -583,7 +583,7 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   /* Select event types wanted */
   XSelectInput(bx_x_display, win, ExposureMask | KeyPressMask | KeyReleaseMask |
       ButtonPressMask | ButtonReleaseMask | StructureNotifyMask | PointerMotionMask |
-      EnterWindowMask | LeaveWindowMask);
+      EnterWindowMask | LeaveWindowMask | FocusChangeMask);
 
   /* Create default Graphics Context */
   gc               = XCreateGC(bx_x_display, win, valuemask, &values);
@@ -982,6 +982,10 @@ void bx_x_gui_c::handle_events(void)
        * requests before window mapped
        */
       //retval = 1;
+      break;
+
+    case FocusIn:
+      DEV_kbd_release_keys();
       break;
 
     case ClientMessage:

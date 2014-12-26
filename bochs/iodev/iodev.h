@@ -131,6 +131,9 @@ public:
   virtual void paste_bytes(Bit8u *data, Bit32s length) {
     STUBFUNC(keyboard, paste_bytes);
   }
+  virtual void release_keys(void) {
+    STUBFUNC(keyboard, release_keys);
+  }
 };
 
 class BOCHSAPI bx_hard_drive_stub_c : public bx_devmodel_c {
