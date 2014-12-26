@@ -11243,6 +11243,10 @@ int09_handler:
   mov  ah, #0x4f     ;; allow for keyboard intercept
   stc
   int  #0x15
+  push bp
+  mov  bp, sp
+  mov  [bp + 0x10], al
+  pop  bp
   jnc  int09_done
 #endif
 
