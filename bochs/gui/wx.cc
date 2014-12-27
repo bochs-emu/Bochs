@@ -141,7 +141,7 @@ BEGIN_EVENT_TABLE(MyPanel, wxPanel)
   EVT_TIMER(-1, MyPanel::OnTimer)
   EVT_PAINT(MyPanel::OnPaint)
   EVT_MOUSE_EVENTS(MyPanel::OnMouse)
-  EVT_SET_FOCUS(MyPanel::OnSetFocus)
+  EVT_KILL_FOCUS(MyPanel::OnKillFocus)
 END_EVENT_TABLE()
 
 MyPanel::MyPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
@@ -327,7 +327,7 @@ void MyPanel::OnMouse(wxMouseEvent& event)
   // will move the cursor to (mouseSavedX, mouseSavedY).
 }
 
-void MyPanel::OnSetFocus(wxFocusEvent& event)
+void MyPanel::OnKillFocus(wxFocusEvent& event)
 {
   // Send the request to release all keys as a key event
   wxCriticalSectionLocker lock(event_thread_lock);

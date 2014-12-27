@@ -77,6 +77,7 @@ IMPLEMENT_GUI_PLUGIN_CODE(win32)
 #define MOUSE_PRESSED       0x20000000
 #define HEADERBAR_CLICKED   0x08000000
 #define MOUSE_MOTION        0x22000000
+#define FOCUS_CHANGED       0x44000000
 #define BX_SYSKEY           (KF_UP|KF_REPEAT|KF_ALTDOWN)
 void enq_key_event(Bit32u, Bit32u);
 void enq_mouse_event(void);
@@ -1039,6 +1040,10 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     SetFocus(stInfo.simWnd);
     return 0;
 
+  case WM_KILLFOCUS:
+    enq_key_event(0, FOCUS_CHANGED);
+    return 0;
+
   case WM_CLOSE:
     SendMessage(stInfo.simWnd, WM_CLOSE, 0, 0);
     break;
@@ -1350,8 +1355,15 @@ void enq_key_event(Bit32u key, Bit32u press_release)
   static BOOL shift_pressed_l = FALSE;
   static BOOL shift_pressed_r = FALSE;
 
-  // Windows generates multiple keypresses when holding down these keys
-  if (press_release == BX_KEY_PRESSED) {
+  if (press_release == FOCUS_CHANGED) {
+    alt_pressed_l = FALSE;
+    alt_pressed_r = FALSE;
+    ctrl_pressed_l = FALSE;
+    ctrl_pressed_r = FALSE;
+    shift_pressed_l = FALSE;
+    shift_pressed_r = FALSE;
+  } else if (press_release == BX_KEY_PRESSED) {
+    // Windows generates multiple keypresses when holding down these keys
     switch (key) {
       case 0x1d:
         if (ctrl_pressed_l)
@@ -1486,14 +1498,17 @@ void bx_win32_gui_c::handle_events(void)
   // Handle keyboard and mouse clicks
   EnterCriticalSection(&stInfo.keyCS);
   while (head != tail) {
-    QueueEvent* queue_event=deq_key_event();
-    if (! queue_event)
+    QueueEvent* queue_event = deq_key_event();
+    if (!queue_event)
       break;
     key = queue_event->key_event;
-    if (key==MOUSE_MOTION)
+    if (key == MOUSE_MOTION)
     {
       DEV_mouse_motion(queue_event->mouse_x, queue_event->mouse_y,
                        queue_event->mouse_z, queue_event->mouse_button_state, win32MouseModeAbsXY);
+    }
+    else if (key == FOCUS_CHANGED) {
+      DEV_kbd_release_keys();
     }
     // Check for mouse buttons first
     else if (key & MOUSE_PRESSED) {

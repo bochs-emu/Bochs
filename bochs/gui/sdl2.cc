@@ -423,7 +423,7 @@ bx_sdl2_gui_c::bx_sdl2_gui_c()
   }
   atexit(SDL_Quit);
   SDL_GetDisplayMode(0, 0, &sdl_maxres);
-  info("maximum host resolution: x=%d y=%d\n", sdl_maxres.w, sdl_maxres.h);
+  info("maximum host resolution: x=%d y=%d", sdl_maxres.w, sdl_maxres.h);
 }
 
 void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
@@ -782,8 +782,8 @@ void bx_sdl2_gui_c::handle_events(void)
         if (sdl_event.window.event == SDL_WINDOWEVENT_EXPOSED) {
           SDL_UpdateWindowSurface(window);
         }
-        if (sdl_event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
-          DEV_kbd_release_keys();;
+        if (sdl_event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
+          DEV_kbd_release_keys();
         }
         break;
 

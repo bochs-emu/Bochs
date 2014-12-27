@@ -984,7 +984,7 @@ void bx_x_gui_c::handle_events(void)
       //retval = 1;
       break;
 
-    case FocusIn:
+    case FocusOut:
       DEV_kbd_release_keys();
       break;
 
