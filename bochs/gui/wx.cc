@@ -141,6 +141,7 @@ BEGIN_EVENT_TABLE(MyPanel, wxPanel)
   EVT_TIMER(-1, MyPanel::OnTimer)
   EVT_PAINT(MyPanel::OnPaint)
   EVT_MOUSE_EVENTS(MyPanel::OnMouse)
+  EVT_SET_FOCUS(MyPanel::OnSetFocus)
 END_EVENT_TABLE()
 
 MyPanel::MyPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
@@ -326,18 +327,30 @@ void MyPanel::OnMouse(wxMouseEvent& event)
   // will move the cursor to (mouseSavedX, mouseSavedY).
 }
 
+void MyPanel::OnSetFocus(wxFocusEvent& event)
+{
+  // Send the request to release all keys as a key event
+  wxCriticalSectionLocker lock(event_thread_lock);
+  if (num_events < MAX_EVENTS) {
+    event_queue[num_events].type = BX_ASYNC_EVT_KEY;
+    event_queue[num_events].u.key.bx_key = BX_KEY_NBKEYS | BX_KEY_RELEASED;
+    event_queue[num_events].u.key.raw_scancode = false;
+    num_events++;
+  }
+}
+
 void MyPanel::MyRefresh()
 {
-  IFDBG_VGA (wxLogDebug (wxT ("set needRefresh=true")));
+  IFDBG_VGA(wxLogDebug(wxT("set needRefresh=true")));
   needRefresh = true;
 }
 
 void MyPanel::OnKeyDown(wxKeyEvent& event)
 {
   wxCriticalSectionLocker lock(event_thread_lock);
-  if(num_events < MAX_EVENTS) {
+  if (num_events < MAX_EVENTS) {
     event_queue[num_events].type = BX_ASYNC_EVT_KEY;
-    fillBxKeyEvent (event, event_queue[num_events].u.key, false);
+    fillBxKeyEvent(event, event_queue[num_events].u.key, false);
     num_events++;
   }
 }
@@ -346,9 +359,9 @@ void MyPanel::OnKeyDown(wxKeyEvent& event)
 void MyPanel::OnKeyUp(wxKeyEvent& event)
 {
   wxCriticalSectionLocker lock(event_thread_lock);
-  if(num_events < MAX_EVENTS) {
+  if (num_events < MAX_EVENTS) {
     event_queue[num_events].type = BX_ASYNC_EVT_KEY;
-    fillBxKeyEvent (event, event_queue[num_events].u.key, true);
+    fillBxKeyEvent(event, event_queue[num_events].u.key, true);
     num_events++;
   }
 }
@@ -1135,9 +1148,14 @@ void bx_wx_gui_c::handle_events(void)
             }
             if (released) bx_key |= BX_KEY_RELEASED;
           }
-          // event contains BX_KEY_* codes: use gen_scancode
-          IFDBG_KEY (wxLogDebug (wxT ("sending key event 0x%02x", bx_key)));
-          DEV_kbd_gen_scancode(bx_key);
+          if ((bx_key & 0xff) < BX_KEY_NBKEYS) {
+            // event contains BX_KEY_* codes: use gen_scancode
+            IFDBG_KEY(wxLogDebug(wxT("sending key event 0x%02x", bx_key)));
+            DEV_kbd_gen_scancode(bx_key);
+          } else {
+            // value BX_KEY_NBKEYS forces sending release for all pressed keys
+            DEV_kbd_release_keys();
+          }
           break;
         case BX_ASYNC_EVT_MOUSE:
           DEV_mouse_motion(

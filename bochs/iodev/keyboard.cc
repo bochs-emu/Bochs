@@ -221,10 +221,7 @@ void bx_keyb_c::reset(unsigned type)
   if (BX_KEY_THIS pastebuf != NULL) {
     BX_KEY_THIS stop_paste = 1;
   }
-  release_keys();
-  for (int i = 0; i < BX_KEY_NBKEYS; i++) {
-    bxkey_state[i] = 0;
-  }
+  BX_KEY_THIS release_keys();
 }
 
 void bx_keyb_c::register_state(void)

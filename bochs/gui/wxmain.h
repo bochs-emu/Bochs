@@ -152,6 +152,7 @@ public:
   void OnTimer(wxTimerEvent& event);
   void OnPaint(wxPaintEvent& event);
   void OnMouse(wxMouseEvent& event);
+  void OnSetFocus(wxFocusEvent& event);
   void MyRefresh();
   static void OnPluginInit();
   void ToggleMouse(bool fromToolbar);
