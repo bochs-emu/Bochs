@@ -1495,7 +1495,7 @@ AC_ARG_ENABLE(usb-ohci,
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_USB_OHCI, 1)
     USBHC_OBJS="$USBHC_OBJS usb_ohci.o"
-    USBHC_DLL_TARGETS="$USBHC_DLL_TARGETS bx_usb_uhci.dll"
+    USBHC_DLL_TARGETS="$USBHC_DLL_TARGETS bx_usb_ohci.dll"
     use_usb=1
    else
     AC_MSG_RESULT(no)
@@ -1875,7 +1875,7 @@ AC_ARG_ENABLE(es1370,
     if test "$pci" != "1"; then
       AC_MSG_ERROR([ES1370 soundcard requires PCI support])
     fi
-    SOUNDHW_OBJS="$SOUNDCARD_OBJS es1370.o"
+    SOUNDHW_OBJS="$SOUNDHW_OBJS es1370.o"
     SOUNDHW_DLL_TARGETS="$SOUNDHW_DLL_TARGETS bx_es1370.dll"
     soundcard_present=1
     AC_DEFINE(BX_SUPPORT_ES1370, 1)

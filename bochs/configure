@@ -23372,7 +23372,7 @@ $as_echo "yes" >&6; }
     $as_echo "#define BX_SUPPORT_USB_OHCI 1" >>confdefs.h
 
     USBHC_OBJS="$USBHC_OBJS usb_ohci.o"
-    USBHC_DLL_TARGETS="$USBHC_DLL_TARGETS bx_usb_uhci.dll"
+    USBHC_DLL_TARGETS="$USBHC_DLL_TARGETS bx_usb_ohci.dll"
     use_usb=1
    else
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
@@ -23905,7 +23905,7 @@ $as_echo "yes" >&6; }
     if test "$pci" != "1"; then
       as_fn_error $? "ES1370 soundcard requires PCI support" "$LINENO" 5
     fi
-    SOUNDHW_OBJS="$SOUNDCARD_OBJS es1370.o"
+    SOUNDHW_OBJS="$SOUNDHW_OBJS es1370.o"
     SOUNDHW_DLL_TARGETS="$SOUNDHW_DLL_TARGETS bx_es1370.dll"
     soundcard_present=1
     $as_echo "#define BX_SUPPORT_ES1370 1" >>confdefs.h
