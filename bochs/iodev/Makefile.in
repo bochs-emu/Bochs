@@ -58,7 +58,7 @@ SER_LINK_OPTS = -lws2_32
 SER_LINK_OPTS_VCPP = user32.lib ws2_32.lib
 FDC_LINK_OPTS =
 FDC_LINK_OPTS_VCPP = user32.lib
-IODEV_DLL_TARGETS =@IODEV_DLL_TARGETS@
+IODEV_DLL_TARGETS = @IODEV_DLL_TARGETS@
 
 PCIDEV_CXXFLAGS = -I$(srcdir)/../host/linux/pcidev
 
@@ -156,7 +156,7 @@ bx_serial.dll: serial.o serial_raw.o
 bx_floppy.dll: floppy.o
 	@LINK_DLL@ floppy.o $(WIN32_DLL_IMPORT_LIBRARY) $(FDC_LINK_OPTS@LINK_VAR@)
 
-@EXT_IODEV_DLL_RULES@
+@EXT_MSVC_DLL_RULES@
 
 ##### end DLL section
 

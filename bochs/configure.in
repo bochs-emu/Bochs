@@ -1468,6 +1468,7 @@ AC_ARG_ENABLE(pcidev,
 
 use_usb=0
 USBHC_OBJS=''
+USBHC_DLL_TARGETS=''
 AC_MSG_CHECKING(for USB UHCI support)
 AC_ARG_ENABLE(usb,
   AS_HELP_STRING([--enable-usb], [enable USB UHCI support (no)]),
@@ -1475,6 +1476,7 @@ AC_ARG_ENABLE(usb,
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_USB_UHCI, 1)
     USBHC_OBJS="usb_uhci.o"
+    USBHC_DLL_TARGETS="bx_usb_uhci.dll"
     use_usb=1
    else
     AC_MSG_RESULT(no)
@@ -1493,6 +1495,7 @@ AC_ARG_ENABLE(usb-ohci,
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_USB_OHCI, 1)
     USBHC_OBJS="$USBHC_OBJS usb_ohci.o"
+    USBHC_DLL_TARGETS="$USBHC_DLL_TARGETS bx_usb_uhci.dll"
     use_usb=1
    else
     AC_MSG_RESULT(no)
@@ -1511,6 +1514,7 @@ AC_ARG_ENABLE(usb-xhci,
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_USB_XHCI, 1)
     USBHC_OBJS="$USBHC_OBJS usb_xhci.o"
+    USBHC_DLL_TARGETS="$USBHC_DLL_TARGETS bx_usb_xhci.dll"
     use_usb=1
    else
     AC_MSG_RESULT(no)
@@ -1529,18 +1533,21 @@ if test "$use_usb" = 1; then
   USBCORE_OBJ="usb_common.o"
   USBDEV_OBJS="usb_hid.o usb_hub.o usb_msd.o usb_printer.o"
   SCSI_OBJS="scsi_device.o"
-  AC_SUBST(USBHC_OBJS)
-  AC_SUBST(USBCORE_OBJ)
-  AC_SUBST(USBDEV_OBJS)
-  AC_SUBST(SCSI_OBJS)
   if test "$bx_plugins" = 0; then
     USB_LIB_VAR='iodev/usb/libusb.a'
     AC_SUBST(USB_LIB_VAR)
   fi
 fi
+AC_SUBST(USBHC_OBJS)
+AC_SUBST(USBCORE_OBJ)
+AC_SUBST(USBDEV_OBJS)
+AC_SUBST(SCSI_OBJS)
+AC_SUBST(USBHC_DLL_TARGETS)
+
 
 networking=no
 NETDEV_OBJS=''
+NETDEV_DLL_TARGETS=''
 AC_MSG_CHECKING(for NE2000 support)
 AC_ARG_ENABLE(ne2000,
   AS_HELP_STRING([--enable-ne2000], [enable NE2000 support (no)]),
@@ -1548,6 +1555,7 @@ AC_ARG_ENABLE(ne2000,
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_NE2K, 1)
     NETDEV_OBJS='ne2k.o'
+    NETDEV_DLL_TARGETS="bx_ne2k.dll"
     networking=yes
    else
     AC_MSG_RESULT(no)
@@ -1566,6 +1574,7 @@ AC_ARG_ENABLE(pnic,
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_PCIPNIC, 1)
     NETDEV_OBJS="$NETDEV_OBJS pcipnic.o"
+    NETDEV_DLL_TARGETS="$NETDEV_DLL_TARGETS bx_pcipnic.dll"
     networking=yes
    else
     AC_MSG_RESULT(no)
@@ -1587,6 +1596,7 @@ AC_ARG_ENABLE(e1000,
     fi
     AC_DEFINE(BX_SUPPORT_E1000, 1)
     NETDEV_OBJS="$NETDEV_OBJS e1000.o"
+    NETDEV_DLL_TARGETS="$NETDEV_DLL_TARGETS bx_e1000.dll"
     networking=yes
    else
     AC_MSG_RESULT(no)
@@ -1701,9 +1711,10 @@ if test "$networking" = yes; then
 else
   AC_DEFINE(BX_NETWORKING, 0)
 fi
-
 AC_SUBST(NETDEV_OBJS)
 AC_SUBST(NETLOW_OBJS)
+AC_SUBST(NETDEV_DLL_TARGETS)
+
 
 dnl // serial mode 'socket' needs ws2_32.dll in non-plugin mode
 if test "$bx_plugins" = 0; then
@@ -1734,6 +1745,7 @@ AC_ARG_ENABLE(raw-serial,
   )
 
 DISPLAY_OBJS=''
+DISPLAY_DLL_TARGETS=''
 AC_MSG_CHECKING(for CLGD54XX emulation)
 AC_ARG_ENABLE(clgd54xx,
   AS_HELP_STRING([--enable-clgd54xx], [enable CLGD54XX emulation (no)]),
@@ -1741,6 +1753,7 @@ AC_ARG_ENABLE(clgd54xx,
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_CLGD54XX, 1)
     DISPLAY_OBJS="svga_cirrus.o"
+    DISPLAY_DLL_TARGETS="bx_svga_cirrus.dll"
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_CLGD54XX, 0)
@@ -1761,6 +1774,7 @@ AC_ARG_ENABLE(voodoo,
     fi
     AC_DEFINE(BX_SUPPORT_VOODOO, 1)
     DISPLAY_OBJS="$DISPLAY_OBJS voodoo.o"
+    DISPLAY_DLL_TARGETS="$DISPLAY_DLL_TARGETS bx_voodoo.dll"
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_VOODOO, 0)
@@ -1771,6 +1785,8 @@ AC_ARG_ENABLE(voodoo,
     ]
   )
 AC_SUBST(DISPLAY_OBJS)
+AC_SUBST(DISPLAY_DLL_TARGETS)
+
 
 AC_MSG_CHECKING(for lowlevel CDROM support)
 AC_ARG_ENABLE(cdrom,
@@ -1821,7 +1837,8 @@ fi
 AC_SUBST(CDROM_OBJS)
 
 
-SOUNDCARD_OBJS=''
+SOUNDHW_OBJS=''
+SOUNDHW_DLL_TARGETS=''
 SOUNDLOW_OBJS=''
 GAME_OBJS=''
 soundlow_drivers=''
@@ -1832,8 +1849,9 @@ AC_MSG_CHECKING(for Sound Blaster 16 support)
 AC_ARG_ENABLE(sb16,
   AS_HELP_STRING([--enable-sb16], [Sound Blaster 16 Support (no)]),
   [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-     SOUNDCARD_OBJS='sb16.o'
+     AC_MSG_RESULT(yes)
+     SOUNDHW_OBJS='sb16.o'
+     SOUNDHW_DLL_TARGETS="bx_sb16.dll"
      soundcard_present=1
      AC_DEFINE(BX_SUPPORT_SB16, 1)
      GAME_OBJS='gameport.o'
@@ -1857,7 +1875,8 @@ AC_ARG_ENABLE(es1370,
     if test "$pci" != "1"; then
       AC_MSG_ERROR([ES1370 soundcard requires PCI support])
     fi
-    SOUNDCARD_OBJS="$SOUNDCARD_OBJS es1370.o"
+    SOUNDHW_OBJS="$SOUNDCARD_OBJS es1370.o"
+    SOUNDHW_DLL_TARGETS="$SOUNDHW_DLL_TARGETS bx_es1370.dll"
     soundcard_present=1
     AC_DEFINE(BX_SUPPORT_ES1370, 1)
     GAME_OBJS='gameport.o'
@@ -1947,10 +1966,10 @@ if test "$soundcard_present" = 1; then
 else
   AC_DEFINE(BX_SUPPORT_SOUNDLOW, 0)
 fi
-
-AC_SUBST(SOUNDCARD_OBJS)
+AC_SUBST(SOUNDHW_OBJS)
 AC_SUBST(SOUNDLOW_OBJS)
 AC_SUBST(SOUND_LINK_OPTS)
+AC_SUBST(SOUNDHW_DLL_TARGETS)
 
 
 AC_MSG_CHECKING(for standard PC gameport support)
@@ -1985,6 +2004,7 @@ AC_SUBST(GAME_OBJS)
 
 
 BUSM_OBJS=''
+bx_busmouse=0
 AC_MSG_CHECKING(for Busmouse support)
 AC_ARG_ENABLE(busmouse,
   AS_HELP_STRING([--enable-busmouse], [enable Busmouse support (InPort)]),
@@ -1992,6 +2012,7 @@ AC_ARG_ENABLE(busmouse,
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_BUSMOUSE, 1)
     BUSM_OBJS='busmouse.o'
+    bx_busmouse=1
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_BUSMOUSE, 0)
@@ -2197,6 +2218,7 @@ AC_MSG_CHECKING(for default gui on this platform)
 AC_MSG_RESULT($DEFAULT_GUI)
 
 display_libs=""
+GUI_DLL_TARGETS=""
 
 # the $with_* variable tells the gui library to use, but does NOT necessarily
 # indicate the platform.  Settings that depend on the platform should be
@@ -2256,6 +2278,7 @@ AC_SUBST(X_LIBS)
 
 if test "$with_sdl" = yes; then
   display_libs="$display_libs sdl"
+  GUI_DLL_TARGETS="$GUI_DLL_TARGETS bx_sdl.dll"
   AC_DEFINE(BX_WITH_SDL, 1)
   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_SDL)"
   # GUI_*FLAGS are added to the compilation of every bochs file, not just
@@ -2285,6 +2308,7 @@ fi
 
 if test "$with_sdl2" = yes; then
   display_libs="$display_libs sdl2"
+  GUI_DLL_TARGETS="$GUI_DLL_TARGETS bx_sdl2.dll"
   AC_DEFINE(BX_WITH_SDL2, 1)
   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_SDL2)"
   # GUI_*FLAGS are added to the compilation of every bochs file, not just
@@ -2325,6 +2349,7 @@ fi
 
 if test "$with_rfb" = yes; then
   display_libs="$display_libs rfb"
+  GUI_DLL_TARGETS="$GUI_DLL_TARGETS bx_rfb.dll"
   AC_DEFINE(BX_WITH_RFB, 1)
   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_RFB)"
   GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_RFB)"
@@ -2357,6 +2382,7 @@ fi
 
 if test "$with_win32" = yes; then
   display_libs="$display_libs win32"
+  GUI_DLL_TARGETS="$GUI_DLL_TARGETS bx_win32.dll"
   AC_DEFINE(BX_WITH_WIN32, 1)
   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_WIN32)"
   case $target in
@@ -2461,6 +2487,7 @@ fi
 
 if test "$with_nogui" = yes; then
   display_libs="$display_libs nogui"
+  GUI_DLL_TARGETS="$GUI_DLL_TARGETS bx_nogui.dll"
   AC_DEFINE(BX_WITH_NOGUI, 1)
   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_NOGUI)"
 fi
@@ -2666,17 +2693,20 @@ case $target in
       LIBS="$LIBS advapi32.lib comctl32.lib comdlg32.lib gdi32.lib shell32.lib user32.lib"
       PLUGIN_TARGET_2=plugins_msvc
       LINK_VAR="_VCPP"
-      EXT_IODEV_DLL_RULES="!INCLUDE makeincl.vc"
+      EXT_MSVC_DLL_RULES="!INCLUDE makeincl.vc"
       echo -e "# DLL PLUGIN TEST\n" > iodev/makeincl.vc
       IODEV_DLL_TARGETS=""
-      DLL_LIST="biosdev busmouse cmos dma extfpuirq harddrv ioapic parallel pic speaker unmapped"
+      IODEV_DLL_LIST="biosdev cmos dma extfpuirq harddrv ioapic parallel pic speaker unmapped"
       if test "$pci" = "1"; then
-        DLL_LIST="$DLL_LIST acpi pci pci2isa pci_ide"
+        IODEV_DLL_LIST="$IODEV_DLL_LIST acpi pci pci2isa pci_ide"
       fi
       if test "$bx_debugger" = 1; then
-        DLL_LIST="$DLL_LIST iodebug"
+        IODEV_DLL_LIST="$IODEV_DLL_LIST iodebug"
       fi
-      for i in $DLL_LIST
+      if test "$bx_busmouse" = 1; then
+        IODEV_DLL_LIST="$IODEV_DLL_LIST busmouse"
+      fi
+      for i in $IODEV_DLL_LIST
       do
         echo -e "bx_$i.dll: $i.o" >> iodev/makeincl.vc
         echo -e "\tlink /dll /nologo /subsystem:console /incremental:no /out:\$@ $i.o \$(WIN32_DLL_IMPORT_LIBRARY)\n" >> iodev/makeincl.vc
@@ -3074,8 +3104,9 @@ AC_SUBST(PLUGIN_VAR)
 AC_SUBST(PLUGIN_LIB)
 AC_SUBST(PLUGIN_TARGET)
 AC_SUBST(PLUGIN_TARGET_2)
+AC_SUBST(EXT_MSVC_DLL_RULES)
+AC_SUBST(GUI_DLL_TARGETS)
 AC_SUBST(IODEV_DLL_TARGETS)
-AC_SUBST(EXT_IODEV_DLL_RULES)
 AC_SUBST(WIN32_DLL_IMPORT_LIB)
 AC_SUBST(INSTALL_PLUGINS_VAR)
 

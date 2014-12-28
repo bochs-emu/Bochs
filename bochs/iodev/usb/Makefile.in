@@ -65,6 +65,7 @@ OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
 
 NONPLUGIN_OBJS = @IODEV_EXT_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @IODEV_EXT_PLUGIN_OBJS@
+USBHC_DLL_TARGETS = @USBHC_DLL_TARGETS@
 
 all: libusb.a
 
@@ -72,7 +73,7 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc: bx_usb_common.dll bx_usb_uhci.dll bx_usb_ohci.dll bx_usb_xhci.dll
+plugins_msvc: bx_usb_common.dll $(USBHC_DLL_TARGETS)
 
 libusb.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libusb.a

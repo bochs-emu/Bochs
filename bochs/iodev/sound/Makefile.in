@@ -58,7 +58,7 @@ BX_INCDIRS = -I.. -I../.. -I$(srcdir)/.. -I$(srcdir)/../.. -I../../@INSTRUMENT_D
 LOCAL_CXXFLAGS = $(MCH_CFLAGS)
 
 OBJS_THAT_CAN_BE_PLUGINS = \
-  @SOUNDCARD_OBJS@ \
+  @SOUNDHW_OBJS@ \
   soundmod.o
 
 OBJS_THAT_SUPPORT_OTHER_PLUGINS = $(SOUNDLOW_OBJS)
@@ -66,6 +66,7 @@ OBJS_THAT_SUPPORT_OTHER_PLUGINS = $(SOUNDLOW_OBJS)
 NONPLUGIN_OBJS = @IODEV_EXT_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @IODEV_EXT_PLUGIN_OBJS@
 SOUND_LINK_OPTS = @SOUND_LINK_OPTS@
+SOUNDHW_DLL_TARGETS = @SOUNDHW_DLL_TARGETS@
 
 all: libsound.a
 
@@ -73,7 +74,7 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc: bx_soundmod.dll bx_sb16.dll bx_es1370.dll
+plugins_msvc: bx_soundmod.dll $(SOUNDHW_DLL_TARGETS)
 
 libsound.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libsound.a

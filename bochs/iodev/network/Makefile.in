@@ -88,6 +88,7 @@ OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
 
 NONPLUGIN_OBJS = @IODEV_EXT_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @IODEV_EXT_PLUGIN_OBJS@
+NETDEV_DLL_TARGETS = @NETDEV_DLL_TARGETS@
 
 all: libnetwork.a
 
@@ -95,7 +96,7 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc: bx_netmod.dll bx_ne2k.dll bx_e1000.dll
+plugins_msvc: bx_netmod.dll $(NETDEV_DLL_TARGETS)
 
 libnetwork.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libnetwork.a

@@ -63,6 +63,7 @@ OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
 
 NONPLUGIN_OBJS = @IODEV_EXT_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @IODEV_EXT_PLUGIN_OBJS@
+DISPLAY_DLL_TARGETS = @DISPLAY_DLL_TARGETS@
 
 all: libdisplay.a
 
@@ -70,7 +71,7 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc: bx_vga.dll bx_svga_cirrus.dll bx_voodoo.dll
+plugins_msvc: bx_vga.dll $(DISPLAY_DLL_TARGETS)
 
 libdisplay.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libdisplay.a

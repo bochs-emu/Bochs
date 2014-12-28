@@ -65,6 +65,8 @@ GUI_OBJS_VNCSRV = vncsrv.o
 GUI_OBJS_AMIGAOS = amigaos.o
 GUI_OBJS_WX = wx.o
 GUI_OBJS_WX_SUPPORT = wxmain.o wxdialog.o
+
+GUI_DLL_TARGETS = @GUI_DLL_TARGETS@
 OBJS_THAT_CANNOT_BE_PLUGINS = keymap.o gui.o siminterface.o paramtree.o textconfig.o @ENH_DBG_OBJS@ @DIALOG_OBJS@
 OBJS_THAT_CAN_BE_PLUGINS = @GUI_OBJS@
 
@@ -100,7 +102,7 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc: bx_nogui.dll bx_rfb.dll bx_win32.dll
+plugins_msvc: $(GUI_DLL_TARGETS)
 
 libgui.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libgui.a
