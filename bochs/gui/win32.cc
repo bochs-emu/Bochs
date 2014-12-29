@@ -523,6 +523,10 @@ static void resetDelta()
 
 static void cursorWarped()
 {
+  POINT pt = { 0, 0 };
+
+  ClientToScreen(stInfo.simWnd, &pt);
+  SetCursorPos(pt.x + stretched_x/2, pt.y + stretched_y/2);
   EnterCriticalSection(&stInfo.mouseCS);
   EnterCriticalSection(&stInfo.keyCS);
   enq_mouse_event();
@@ -951,9 +955,6 @@ DWORD WINAPI UIThread(LPVOID)
     SetFocus(stInfo.simWnd);
 
     ShowCursor(!mouseCaptureMode);
-    POINT pt = { 0, 0 };
-    ClientToScreen(stInfo.simWnd, &pt);
-    SetCursorPos(pt.x + stretched_x/2, pt.y + stretched_y/2);
     cursorWarped();
 
     hdc = GetDC(stInfo.simWnd);
@@ -1113,8 +1114,6 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
 void SetMouseCapture()
 {
-  POINT pt = {0, 0};
-
   if (mouseToggleReq) {
     mouseCaptureMode = mouseCaptureNew;
     mouseToggleReq = FALSE;
@@ -1123,8 +1122,6 @@ void SetMouseCapture()
   }
   ShowCursor(!mouseCaptureMode);
   ShowCursor(!mouseCaptureMode);   // somehow one didn't do the trick (win98)
-  ClientToScreen(stInfo.simWnd, &pt);
-  SetCursorPos(pt.x + stretched_x/2, pt.y + stretched_y/2);
   cursorWarped();
   if (mouseCaptureMode)
     SetStatusText(0, szMouseDisable, TRUE);
@@ -1136,14 +1133,13 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
   HDC hdc, hdcMem;
   PAINTSTRUCT ps;
-  POINT pt;
   bx_bool mouse_toggle = 0;
   static BOOL mouseModeChange = FALSE;
 
   switch (iMsg) {
 
   case WM_CREATE:
-    SetTimer (hwnd, 1, 330, NULL);
+    SetTimer(hwnd, 1, 250, NULL);
     return 0;
 
   case WM_TIMER:
@@ -1151,12 +1147,7 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       SetMouseCapture();
     }
     // If mouse escaped, bring it back
-    if (mouseCaptureMode && !win32MouseModeAbsXY)
-    {
-      pt.x = 0;
-      pt.y = 0;
-      ClientToScreen(hwnd, &pt);
-      SetCursorPos(pt.x + stretched_x/2, pt.y + stretched_y/2);
+    if (mouseCaptureMode && !win32MouseModeAbsXY) {
       cursorWarped();
     }
     return 0;
