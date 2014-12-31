@@ -582,3 +582,11 @@ void bx_pc_system_c::setTimerParam(unsigned timerIndex, Bit32u param)
 #endif
   timer[timerIndex].param = param;
 }
+
+void bx_pc_system_c::isa_bus_delay(void)
+{
+  // Emulate 8 MHz ISA bus speed
+  if (m_ips > 4.0) {
+    tickn((Bit32u)(m_ips * 2.0));
+  }
+}

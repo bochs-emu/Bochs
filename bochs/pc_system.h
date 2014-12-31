@@ -140,6 +140,7 @@ public:
 #if BX_ENABLE_STATISTICS
   static void dumpStatsTimer(void* this_ptr);
 #endif
+  void isa_bus_delay(void);
 
   // ===========================
   // Non-timer oriented features

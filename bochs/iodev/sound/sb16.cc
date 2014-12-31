@@ -2428,7 +2428,7 @@ void bx_sb16_c::opl_timerevent()
       } else {
         mask = 0x3ff;
       }
-      if (((OPL.timer[i]++) & mask) == 0) { // overflow occured, set flags accordingly
+      if (((++OPL.timer[i]) & mask) == 0) { // overflow occured, set flags accordingly
         OPL.timer[i] = OPL.timerinit[i];      // reset the counter
         if ((OPL.tmask[i/2] >> (6 - (i % 2))) == 0) { // set flags only if unmasked
           writelog(MIDILOG(5), "OPL Timer Interrupt: Chip %d, Timer %d", i/2, 1 << (i % 2));
@@ -3372,8 +3372,9 @@ Bit32u bx_sb16_c::read(Bit32u address, unsigned io_len)
   UNUSED(this_ptr);
 #endif  // !BX_USE_SB16_SMF
 
-  switch (address)
-  {
+  bx_pc_system.isa_bus_delay();
+
+  switch (address) {
     // 2x0: FM Music Status Port
     // 2x8 and 388 are aliases
     case BX_SB16_IO + 0x00:
@@ -3488,8 +3489,9 @@ void bx_sb16_c::write(Bit32u address, Bit32u value, unsigned io_len)
   UNUSED(this_ptr);
 #endif  // !BX_USE_SB16_SMF
 
-  switch (address)
-  {
+  bx_pc_system.isa_bus_delay();
+
+  switch (address) {
     // 2x0: FM Music Register Port
     // 2x8 and 388 are aliases
     case BX_SB16_IO + 0x00:
