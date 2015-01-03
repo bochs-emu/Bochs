@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -740,20 +740,19 @@ void bx_x_gui_c::statusbar_setitem_specific(int element, bx_bool active, bx_bool
 // In all those cases, setting the parameter value will get you here.
 void bx_x_gui_c::mouse_enabled_changed_specific(bx_bool val)
 {
+  if (val != mouse_captured) {
+    BX_INFO(("Mouse capture %s", val ? "on":"off"));
+    sprintf(bx_status_info_text, "%s %sables mouse", get_toggle_info(), val ? "dis":"en");
+    set_status_text(0, bx_status_info_text, 0);
+  }
   mouse_captured = val;
   if (val) {
-    BX_INFO(("Mouse capture on"));
-    sprintf(bx_status_info_text, "%s disables mouse", get_toggle_info());
-    set_status_text(0, bx_status_info_text, 0);
     mouse_enable_x = current_x;
     mouse_enable_y = current_y;
     disable_cursor();
     // Move the cursor to a 'safe' place
     warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
   } else {
-    BX_INFO(("Mouse capture off"));
-    sprintf(bx_status_info_text, "%s enables mouse", get_toggle_info());
-    set_status_text(0, bx_status_info_text, 0);
     enable_cursor();
     warp_cursor(mouse_enable_x-current_x, mouse_enable_y-current_y);
   }
