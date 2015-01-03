@@ -514,8 +514,7 @@ void create_sparse_image(const char *filename, Bit64u size)
 
   Bit8u *padding = new Bit8u[padtopagesize];
   memset(padding, 0, padtopagesize);
-  if (padding == NULL)
-    fatal("ERROR: The disk image is not complete - could not create padding!");
+
   if (bx_write_image(fd, sizesofar, padding, padtopagesize) != padtopagesize) {
     close(fd);
     fatal("ERROR: The disk image is not complete - could not write padding!");

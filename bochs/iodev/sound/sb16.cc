@@ -3721,9 +3721,13 @@ bx_bool bx_sb16_buffer::puts(const char *data, ...)
   while (string[index] != 0)
   {
     if (put((Bit8u) string[index]) == 0)
-       return 0;  // buffer full
+    {
+      free(string);
+      return 0;  // buffer full
+    }
     index++;
   }
+  free(string);
   return 1;
 }
 

@@ -65,6 +65,7 @@ void bx_load32bitOSimagehack(void)
       }
       if (feof(fp)) break;
     }
+    fclose(fp);
   } //if iolog file to load
 
   // Invoke proper hack depending on which OS image we're loading

@@ -798,6 +798,7 @@ int tftp_send_data(Bit8u *buffer, unsigned block_nr, tftp_session_t *s)
   }
 
   if (fseek(fp, (block_nr - 1) * s->blksize_val, SEEK_SET) < 0) {
+    fclose(fp);
     return tftp_send_error(buffer, 3, "Block not seekable", s);
   }
 
@@ -991,6 +992,7 @@ int process_tftp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bi
               return tftp_send_error(reply, 2, "Access violation", s);
             }
             if (fseek(fp, (block_nr - 1) * TFTP_BUFFER_SIZE, SEEK_SET) < 0) {
+              fclose(fp);
               return tftp_send_error(reply, 3, "Block not seekable", s);
             }
             fwrite(reply, 1, tftp_len, fp);

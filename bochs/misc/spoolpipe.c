@@ -50,8 +50,8 @@
 
 int infd, outfd;
 
-unsigned int delay = 60;  // default delay, in seconds
-unsigned int count_down = 0;
+int delay = 60;  // default delay, in seconds
+int count_down = 0;
 
 char buffer[BUF_SIZE];
 ssize_t readcnt, writecnt;

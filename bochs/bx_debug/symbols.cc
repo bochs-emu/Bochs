@@ -316,6 +316,7 @@ int bx_dbg_symbol_command(const char* filename, bx_bool global, Bit32u offset)
         dbg_printf("%s:%d: missing symbol name\n", file.name, line_num);
       else
         dbg_printf("%s:%d: syntax error near '%s'\n", file.name, line_num, sym_name);
+      fclose(fp);
       return -1;
     }
     ++sym_name;
@@ -333,6 +334,7 @@ int bx_dbg_symbol_command(const char* filename, bx_bool global, Bit32u offset)
     }
     ++line_num;
   }
+  fclose(fp);
   return 0;
 }
 

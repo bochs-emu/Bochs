@@ -360,7 +360,7 @@ memmove (dest, src, size)
 	dest[i] = src[i];
       }
   else if (dest > src)
-    for (i = size -1; i >= 0; --i)
+    for (i = size -1; i < size; --i)
       {
 	dest[i] = src[i];
       }
