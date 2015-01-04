@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011-2014  The Bochs Project
+//  Copyright (C) 2011-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -38,6 +38,7 @@
 #define BX_SOUNDLOW_ALSA    5
 
 typedef Bit32u (*sound_record_handler_t)(void *arg, Bit32u len);
+typedef Bit32u (*waveout_callback_t)(void *arg, Bit16u rate, Bit8u *buffer, Bit32u len);
 
 // The class with the input/output functions
 class bx_sound_lowlevel_c : public logfunctions {
@@ -76,6 +77,8 @@ public:
 
   static void record_timer_handler(void *);
   void record_timer(void);
+
+  virtual bx_bool set_waveout_callback(void *, waveout_callback_t wocb) {return 0;}
 protected:
   int record_timer_index;
   int record_packet_size;

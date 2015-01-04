@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2014  The Bochs Project
+//  Copyright (C) 2012-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -43,6 +43,7 @@ bx_sound_sdl_c::bx_sound_sdl_c()
     :bx_sound_lowlevel_c()
 {
   WaveOpen = 0;
+  wo_cb = NULL;
   if (SDL_InitSubSystem(SDL_INIT_AUDIO)) {
     BX_PANIC(("Initialization of sound lowlevel module 'sdl' failed"));
   } else {
@@ -58,12 +59,31 @@ bx_sound_sdl_c::~bx_sound_sdl_c()
 
 int bx_sound_sdl_c::openwaveoutput(const char *wavedev)
 {
-  WaveOpen = 1;
   return BX_SOUNDLOW_OK;
 }
 
-void sdl_callback(void *unused, Bit8u *stream, int len)
+Bit32u bx_sound_sdl_c::get_wave_data(Bit8u *stream, int len)
 {
+  if (wo_cb == NULL) {
+    return 0;
+  }
+  Bit8u *tmpbuffer = (Bit8u*)malloc(len);
+  memset(tmpbuffer, 0, len);
+  Bit32u len2 = wo_cb(dev, 44100, tmpbuffer, len);
+  if (len2 > 0) {
+    SDL_MixAudio(stream, tmpbuffer, len2, SDL_MIX_MAXVOLUME);
+  }
+  free(tmpbuffer);
+  return len2;
+}
+
+void sdl_callback(void *thisptr, Bit8u *stream, int len)
+{
+  memset(stream, 0, len);
+  // FIXME: mix wave data
+  if (((bx_sound_sdl_c*)thisptr)->get_wave_data(stream, len) > 0) {
+    return;
+  }
   int amount = audio_buffer.iptr - audio_buffer.optr;
   if (amount < 0) {
     amount += BX_SOUND_SDL_BUFSIZE;
@@ -107,13 +127,20 @@ int bx_sound_sdl_c::startwaveplayback(int frequency, int bits, bx_bool stereo, i
   fmt.channels = stereo + 1;
   fmt.samples = frequency / 10;
   fmt.callback = sdl_callback;
-  fmt.userdata = NULL;
+  fmt.userdata = this;
+  if (WaveOpen) {
+    SDL_CloseAudio();
+  }
   if (SDL_OpenAudio(&fmt, NULL) < 0) {
     BX_PANIC(("SDL_OpenAudio() failed"));
+    WaveOpen = 0;
     return BX_SOUNDLOW_ERR;
+  } else {
+    WaveOpen = 1;
   }
   audio_buffer.iptr = 0;
   audio_buffer.optr = 0;
+  SDL_PauseAudio(0);
   return BX_SOUNDLOW_OK;
 }
 
@@ -166,13 +193,20 @@ int bx_sound_sdl_c::stopwaveplayback()
     SDL_Delay(1);
   }
   SDL_CloseAudio();
+  WaveOpen = 0;
   return BX_SOUNDLOW_OK;
 }
 
 int bx_sound_sdl_c::closewaveoutput()
 {
-  WaveOpen = 0;
   return BX_SOUNDLOW_OK;
+}
+
+bx_bool bx_sound_sdl_c::set_waveout_callback(void *arg, waveout_callback_t wocb)
+{
+  dev = arg;
+  wo_cb = wocb;
+  return 1;
 }
 
 #endif  // BX_WITH_SDL || BX_WITH_SDL2

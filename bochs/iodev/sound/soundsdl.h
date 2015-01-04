@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012  The Bochs Project
+//  Copyright (C) 2012-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -39,8 +39,13 @@ public:
   virtual int    sendwavepacket(int length, Bit8u data[]);
   virtual int    stopwaveplayback();
   virtual int    closewaveoutput();
+
+  virtual bx_bool set_waveout_callback(void *, waveout_callback_t wocb);
+  Bit32u get_wave_data(Bit8u *stream, int len);
 private:
   bx_bool WaveOpen;
+  void *dev;
+  waveout_callback_t wo_cb;
 };
 
 #endif  // BX_WITH_SDL || BX_WITH_SDL2

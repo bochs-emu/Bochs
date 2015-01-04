@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -599,5 +599,20 @@ BX_CPP_INLINE Bit64u bx_bswap64(Bit64u val64)
     (* (Bit32u *)(hostAddrDst)) = (* (Bit32u *)(hostAddrSrc));
 #define CopyHostQWordLittleEndian(hostAddrDst,  hostAddrSrc) \
     (* (Bit64u *)(hostAddrDst)) = (* (Bit64u *)(hostAddrSrc));
+
+// multithreading support
+#ifdef WIN32
+#define BX_LOCK(mutex) EnterCriticalSection(&(mutex))
+#define BX_UNLOCK(mutex) LeaveCriticalSection(&(mutex))
+#define BX_MUTEX(mutex) CRITICAL_SECTION (mutex)
+#define BX_INIT_MUTEX(mutex)  InitializeCriticalSection(&(mutex))
+#define BX_FINI_MUTEX(mutex) DeleteCriticalSection(&(mutex))
+#else
+#define BX_LOCK(mutex) pthread_mutex_lock(&(mutex));
+#define BX_UNLOCK(mutex) pthread_mutex_unlock(&(mutex));
+#define BX_MUTEX(mutex) pthread_mutex_t (mutex)
+#define BX_INIT_MUTEX(mutex) pthread_mutex_init(&(mutex),NULL)
+#define BX_FINI_MUTEX(mutex) pthread_mutex_destroy(&(mutex))
+#endif
 
 #endif  /* BX_BOCHS_H */

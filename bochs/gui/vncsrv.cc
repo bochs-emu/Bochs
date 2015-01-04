@@ -7,7 +7,7 @@
 //    Donald Becker
 //    http://www.psyon.org
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -89,17 +89,6 @@ IMPLEMENT_GUI_PLUGIN_CODE(vncsrv)
 #include <winsock2.h>
 #include <process.h>
 
-#undef LOCK
-#undef UNLOCK
-#undef MUTEX
-#undef INIT_MUTEX
-#undef TINI_MUTEX
-#define LOCK(mutex) EnterCriticalSection(&(mutex))
-#define UNLOCK(mutex) LeaveCriticalSection(&(mutex))
-#define MUTEX(mutex) CRITICAL_SECTION (mutex)
-#define INIT_MUTEX(mutex)  InitializeCriticalSection(&(mutex))
-#define TINI_MUTEX(mutex) DeleteCriticalSection(&(mutex))
-
 #else
 
 #include <sys/socket.h>
@@ -153,7 +142,7 @@ static struct _rfbKeyboardEvent {
     int z;
 } rfbKeyboardEvent[MAX_KEY_EVENTS];
 static unsigned long rfbKeyboardEvents = 0;
-static MUTEX(bKeyboardInUse);
+static BX_MUTEX(bKeyboardInUse);
 
 // Misc Stuff
 
@@ -325,7 +314,7 @@ void bx_vncsrv_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   rfbInitServer(screen);
 
   client_connected = 0;
-  INIT_MUTEX(bKeyboardInUse);
+  BX_INIT_MUTEX(bKeyboardInUse);
   vncStartThread();
 
 #ifdef WIN32
@@ -376,7 +365,7 @@ void bx_vncsrv_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
 void bx_vncsrv_gui_c::handle_events(void)
 {
-  LOCK(bKeyboardInUse);
+  BX_LOCK(bKeyboardInUse);
 
   if (rfbKeyboardEvents > 0) {
     for (unsigned i = 0; i < rfbKeyboardEvents; i++) {
@@ -388,7 +377,7 @@ void bx_vncsrv_gui_c::handle_events(void)
     }
     rfbKeyboardEvents = 0;
   }
-  UNLOCK(bKeyboardInUse);
+  BX_UNLOCK(bKeyboardInUse);
 
 #if BX_SHOW_IPS
   if (rfbIPSupdate) {
@@ -810,7 +799,7 @@ void bx_vncsrv_gui_c::exit(void)
   while (!rfbServerDown) {
     usleep(10000); //10ms
   }
-  TINI_MUTEX(bKeyboardInUse);
+  BX_FINI_MUTEX(bKeyboardInUse);
 
   for (i = 0; i < rfbBitmapCount; i++) {
     free(rfbBitmaps[i].bmap);
@@ -1424,14 +1413,14 @@ void dokey(rfbBool down, rfbKeySym key, rfbClientPtr cl)
   if (mouse_toggle) {
     bx_gui->toggle_mouse_enable();
   } else {
-    LOCK(bKeyboardInUse);
+    BX_LOCK(bKeyboardInUse);
     if (rfbKeyboardEvents >= MAX_KEY_EVENTS)
         return;
     rfbKeyboardEvent[rfbKeyboardEvents].type = KEYBOARD;
     rfbKeyboardEvent[rfbKeyboardEvents].key = key;
     rfbKeyboardEvent[rfbKeyboardEvents].down = down;
     rfbKeyboardEvents++;
-    UNLOCK(bKeyboardInUse);
+    BX_UNLOCK(bKeyboardInUse);
   }
 }
 
@@ -1442,7 +1431,7 @@ void doptr(int buttonMask, int x, int y, rfbClientPtr cl)
   if (bx_gui->mouse_toggle_check(BX_MT_MBUTTON, (buttonMask & 0x02) > 0)) {
     bx_gui->toggle_mouse_enable();
   } else {
-    LOCK(bKeyboardInUse);
+    BX_LOCK(bKeyboardInUse);
     if (rfbKeyboardEvents >= MAX_KEY_EVENTS)
         return;
     rfbKeyboardEvent[rfbKeyboardEvents].type = MOUSE;
@@ -1461,7 +1450,7 @@ void doptr(int buttonMask, int x, int y, rfbClientPtr cl)
       wheel_status = buttonMask & 0x18;
     }
     rfbKeyboardEvents++;
-    UNLOCK(bKeyboardInUse);
+    BX_UNLOCK(bKeyboardInUse);
   }
 }
 

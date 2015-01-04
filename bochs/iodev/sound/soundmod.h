@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011-2014  The Bochs Project
+//  Copyright (C) 2011-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -36,6 +36,12 @@ public:
                                Bit8u header[], Bit32u datalen, Bit8u data[]);
   virtual void pcm_apply_volume(Bit32u datalen, Bit8u data[], Bit16u volume,
                                 Bit8u bits, bx_bool stereo, bx_bool issigned);
+  Bit32u beep_generator(Bit16u rate, Bit8u *buffer, Bit32u len);
 private:
   bx_sound_lowlevel_c *soundmod;
+  bx_bool use_new_sound_api;
+  bx_bool beep_active;
+  Bit8u beep_level;
+  Bit16u beep_samples, beep_pos;
+  float beep_cur_freq;
 };
