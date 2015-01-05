@@ -24,6 +24,7 @@
 #if BX_WITH_SDL || BX_WITH_SDL2
 
 #include "bochs.h"
+#include <SDL_audio.h>
 
 class bx_sound_sdl_c : public bx_sound_lowlevel_c {
 public:
@@ -40,12 +41,13 @@ public:
   virtual int    stopwaveplayback();
   virtual int    closewaveoutput();
 
-  virtual bx_bool set_waveout_callback(void *, waveout_callback_t wocb);
+  virtual bx_bool set_wavedata_callback(void *, get_wavedata_cb_t wd_cb);
   Bit32u get_wave_data(Bit8u *stream, int len);
 private:
   bx_bool WaveOpen;
+  SDL_AudioSpec fmt;
   void *dev;
-  waveout_callback_t wo_cb;
+  get_wavedata_cb_t get_wavedata_cb;
 };
 
 #endif  // BX_WITH_SDL || BX_WITH_SDL2

@@ -130,7 +130,7 @@ void bx_soundmod_ctl_c::init()
     BX_PANIC(("Could not open wave output device"));
   } else {
     beep_active = 0;
-    use_new_sound_api = soundmod->set_waveout_callback(theSoundModCtl, beep_callback);
+    use_new_sound_api = soundmod->set_wavedata_callback(theSoundModCtl, beep_callback);
     beep_cur_freq = 0.0;
     beep_level = 0x40;
     beep_bufsize = 4410;
@@ -150,10 +150,14 @@ void* bx_soundmod_ctl_c::get_module()
 Bit32u  bx_soundmod_ctl_c::beep_generator(Bit16u rate, Bit8u *buffer, Bit32u len)
 {
   Bit32u j = 0;
+  Bit16u beep_samples;
 
   if (!beep_active) {
     return 0;
   }
+  BX_LOCK(beep_mutex);
+  beep_samples = (Bit32u)((float)rate / beep_cur_freq / 2);
+  BX_UNLOCK(beep_mutex);
   do {
     buffer[j++] = 0;
     buffer[j++] = beep_level;
@@ -163,6 +167,7 @@ Bit32u  bx_soundmod_ctl_c::beep_generator(Bit16u rate, Bit8u *buffer, Bit32u len
     if ((++beep_pos % beep_samples) == 0) {
       beep_level ^= 0x80;
       beep_pos = 0;
+      beep_samples = (Bit32u)((float)rate / beep_cur_freq / 2);
     }
     BX_UNLOCK(beep_mutex);
   } while (j < len);
@@ -198,10 +203,6 @@ void beep_thread(void *indata)
 #ifdef WIN32
       Sleep(25);
 #endif
-    } else if (soundmod->get_type() == BX_SOUNDLOW_SDL) {
-#if BX_WITH_SDL || BX_WITH_SDL2
-      SDL_Delay(25);
-#endif
     }
   }
   soundmod->stopwaveplayback();
@@ -220,7 +221,6 @@ bx_bool bx_soundmod_ctl_c::beep_on(float frequency)
     if (frequency != beep_cur_freq) {
       BX_LOCK(beep_mutex);
       beep_cur_freq = frequency;
-      beep_samples = (Bit32u)(44100.0 / beep_cur_freq / 2);
       beep_active = 1;
       BX_UNLOCK(beep_mutex);
     }
@@ -249,6 +249,7 @@ bx_bool bx_soundmod_ctl_c::beep_off()
   if (soundmod != NULL) {
     BX_DEBUG(("Beep OFF"));
     beep_active = 0;
+    beep_cur_freq = 0.0;
     if (use_new_sound_api) {
       return 1;
     } else {

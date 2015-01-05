@@ -42,6 +42,6 @@ private:
   bx_bool use_new_sound_api;
   bx_bool beep_active;
   Bit8u beep_level;
-  Bit16u beep_samples, beep_pos;
+  Bit16u beep_pos;
   float beep_cur_freq;
 };

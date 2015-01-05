@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -573,8 +573,7 @@ void bx_sb16_c::dsp_dmatimer(void *this_ptr)
 
   if ((BX_SB16_THIS wavemode != 1) ||
        ((This->dsp.dma.chunkindex + 1 < BX_SOUNDLOW_WAVEPACKETSIZE) &&
-        (This->dsp.dma.count > 0)) ||
-       (BX_SB16_OUTPUT->waveready() == BX_SOUNDLOW_OK)) {
+        (This->dsp.dma.count > 0))) {
     if (((This->dsp.dma.output == 0) && (This->dsp.dma.chunkcount > 0)) ||
         (This->dsp.dma.output == 1)) {
       if ((DSP.dma.bits == 8) || (BX_SB16_DMAH == 0)) {
