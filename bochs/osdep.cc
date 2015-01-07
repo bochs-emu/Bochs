@@ -192,7 +192,7 @@ int main (int argc, char **argv)
   Bit64s ll;
   while (1) {
     printf ("Enter a long int: ");
-    gets (buf);
+    fgets (buf, sizeof(buf), stdin);
     l = strtoul (buf, &endbuf, 10);
     printf ("As a long, %ld\n", l);
     printf ("Endbuf is at buf[%d]\n", endbuf-buf);

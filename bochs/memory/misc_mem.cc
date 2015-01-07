@@ -399,9 +399,11 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
   ret = fstat(fd, &stat_buf);
   if (ret) {
     if (type < 2) {
+      close(fd);
       BX_PANIC(("ROM: couldn't stat ROM image file '%s'.", path));
     }
     else {
+      close(fd);
       BX_ERROR(("ROM: couldn't stat ROM image file '%s'.", path));
     }
     return;
@@ -522,6 +524,7 @@ void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress, Bit8u type)
   }
   ret = fstat(fd, &stat_buf);
   if (ret) {
+    close(fd);
     BX_PANIC(("RAM: couldn't stat RAM image file '%s'.", path));
     return;
   }

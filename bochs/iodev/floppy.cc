@@ -1115,7 +1115,7 @@ void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
     if (BX_FD_THIS s.media[drive].vvfat_floppy) {
       ret = (int)BX_FD_THIS s.media[drive].vvfat->read(buffer, bytes);
 #if BX_WITH_MACOS
-    } else if (!strcmp(SIM->get_param_string(pname)->getptr(), SuperDrive))
+    } else if (!strcmp(SIM->get_param_string(pname)->getptr(), SuperDrive)) {
       ret = fd_read((char *) buffer, offset, bytes);
 #endif
     } else {
@@ -1136,7 +1136,7 @@ void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
     if (BX_FD_THIS s.media[drive].vvfat_floppy) {
       ret = (int)BX_FD_THIS s.media[drive].vvfat->write(buffer, bytes);
 #if BX_WITH_MACOS
-    } else if (!strcmp(SIM->get_param_string(pname)->getptr(), SuperDrive))
+    } else if (!strcmp(SIM->get_param_string(pname)->getptr(), SuperDrive)) {
       ret = fd_write((char *) buffer, offset, bytes);
 #endif
     } else {

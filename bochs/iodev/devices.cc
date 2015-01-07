@@ -1185,6 +1185,7 @@ void bx_pci_device_stub_c::load_pci_rom(const char *path)
   }
   ret = fstat(fd, &stat_buf);
   if (ret) {
+    close(fd);
     BX_PANIC(("couldn't stat PCI ROM image file '%s'.", path));
     return;
   }

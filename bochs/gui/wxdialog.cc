@@ -511,6 +511,7 @@ void PluginControlDialog::OnEvent(wxCommandEvent& event)
       {
         wxString tmpname(plugname->GetValue());
         strncpy(buf, tmpname.mb_str(wxConvUTF8), sizeof(buf));
+        buf[sizeof(buf) - 1] = '\0';
         if (SIM->opt_plugin_ctrl(buf, 1)) {
           tmpname.Printf(wxT("Plugin '%s' loaded"), buf);
           wxMessageBox(tmpname, wxT("Plugin Control"), wxOK | wxICON_INFORMATION, this);
@@ -523,6 +524,7 @@ void PluginControlDialog::OnEvent(wxCommandEvent& event)
         int i = pluglist->GetSelection();
         wxString tmpname = pluglist->GetString(i);
         strncpy(buf, tmpname.mb_str(wxConvUTF8), sizeof(buf));
+        buf[sizeof(buf) - 1] = '\0';
         if (SIM->opt_plugin_ctrl(buf, 0)) {
           tmpname.Printf(wxT("Plugin '%s' unloaded"), buf);
           wxMessageBox(tmpname, wxT("Plugin Control"), wxOK | wxICON_INFORMATION, this);
@@ -1377,6 +1379,7 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
           int cap = pstrMedia->u.choice->GetSelection();
           char name[1024];
           strncpy(name, pstrPath->u.text->GetValue().mb_str(wxConvUTF8), sizeof(name));
+          name[sizeof(name) - 1] = '\0';
           if ((floppy_type_n_sectors[cap] > 0) && (strlen(name) > 0) && (strcmp(name, "none"))) {
             if (CreateImage(0, floppy_type_n_sectors[cap], name)) {
               wxString msg(wxT("Created a "));
@@ -1528,6 +1531,7 @@ int GetTextCtrlInt(wxTextCtrl *ctrl,
   wxString tmp(ctrl->GetValue());
   char buf[1024];
   strncpy(buf, tmp.mb_str(wxConvUTF8), sizeof(buf));
+  buf[sizeof(buf)-1] = '\0';
   int n = strtol(buf, NULL, 0);
   if (n != LONG_MIN && n != LONG_MAX) {
     if (valid) *valid = true;

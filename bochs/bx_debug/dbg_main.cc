@@ -323,6 +323,7 @@ reparse:
     {
         if ((*tmp_buf_prev != '\n') && (*tmp_buf_prev != 0)) {
           strncpy(tmp_buf, tmp_buf_prev, sizeof(tmp_buf_prev));
+          tmp_buf[sizeof(tmp_buf) - 1] = '\0';
           goto reparse;
         }
     }
@@ -379,6 +380,7 @@ void bx_get_command(void)
     charptr_ret = SIM->debug_get_next_command();
     if (charptr_ret) {
       strncpy(tmp_buf, charptr_ret, sizeof(tmp_buf));
+      tmp_buf[sizeof(tmp_buf) - 2] = '\0';
       strcat(tmp_buf, "\n");
       // The returned string was allocated in wxmain.cc by "new char[]".
       // Free it with delete[].
@@ -395,7 +397,8 @@ void bx_get_command(void)
     // beware, returns NULL on end of file
     if (charptr_ret && strlen(charptr_ret) > 0) {
       add_history(charptr_ret);
-      strcpy(tmp_buf, charptr_ret);
+      strncpy(tmp_buf, charptr_ret, sizeof(tmp_buf));
+      tmp_buf[sizeof(tmp_buf) - 2] = '\0';
       strcat(tmp_buf, "\n");
       free(charptr_ret);
       charptr_ret = &tmp_buf[0];
@@ -468,6 +471,7 @@ int bx_nest_infile(char *path)
   }
 
   if ((bx_infile_stack_index+1) >= BX_INFILE_DEPTH) {
+    fclose(tmp_fp);
     dbg_printf("%s: source files nested too deeply\n", argv0);
     return(0);
   }

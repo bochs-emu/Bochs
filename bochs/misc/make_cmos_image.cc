@@ -43,7 +43,7 @@ unsigned char cmos[] = {
   0x00, 0x48, 0x2b, 0x03, 0x03, 0x03, 0x04, 0xce,
   0x00, 0x3c, 0x19, 0xff, 0xff, 0xf0, 0x00, 0xf0,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x7b
-  };
+};
 
 #else
 unsigned char cmos[] = {
@@ -64,7 +64,7 @@ unsigned char cmos[] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // 70
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-  };
+};
 #endif
 
   int
@@ -75,23 +75,26 @@ main(int argc, char *argv[])
   if (argc != 2) {
     fprintf(stderr, "usage: %s pathname\n", argv[0]);
     exit(1);
-    }
+  }
 
   fd = open(argv[1], O_WRONLY | O_CREAT
 #ifdef O_BINARY
-                                    | O_BINARY
+                              | O_BINARY
 #endif
-           , S_IRUSR | S_IWUSR
-           );
+           , S_IRUSR | S_IWUSR);
   if (fd < 0) {
     perror("trying to open cmos image file to write.\n");
     exit(1);
-    }
+  }
 
   ret = write(fd, cmos, sizeof(cmos));
   if (ret != sizeof(cmos)) {
     perror("write() did not write all CMOS data.\n");
+    close(fd);
     exit(1);
-    }
+  }
+
+  close(fd);
   printf("CMOS data successfuly written to file '%s'.\n", argv[1]);
+  return 0;
 }

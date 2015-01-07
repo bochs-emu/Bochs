@@ -260,7 +260,7 @@ void bx_speaker_c::beep_off()
       DWORD threadID;
       beep_info.msec = (DWORD)((bx_pc_system.time_usec() - usec_start) / 1000);
       beep_info.frequency = (DWORD)beep_frequency;
-      CreateThread(NULL, 0, BeepThread, NULL, 0, &threadID);
+      CloseHandle(CreateThread(NULL, 0, BeepThread, NULL, 0, &threadID));
 #endif
     }
   } else if (output_mode == BX_SPK_MODE_GUI) {

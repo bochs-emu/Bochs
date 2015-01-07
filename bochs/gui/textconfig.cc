@@ -631,6 +631,7 @@ int bx_write_rc(char *rc)
       strcpy(oldrc, "none");
   } else {
     strncpy(oldrc, rc, CI_PATH_LENGTH);
+    oldrc[sizeof(oldrc) - 1] = '\0';
   }
   while (1) {
     if (ask_string("Save configuration to what file?  To cancel, type 'none'.\n[%s] ", oldrc, newrc) < 0) return -1;

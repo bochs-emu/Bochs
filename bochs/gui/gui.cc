@@ -509,6 +509,7 @@ void bx_gui_c::snapshot_handler(void)
       BX_INFO(("GFX snapshot: %u x %u x %u bpp (%u bytes)", BX_GUI_THIS guest_xres,
                BX_GUI_THIS guest_yres, BX_GUI_THIS guest_bpp, ilen));
     } else {
+      close(fd);
       BX_ERROR(("snapshot button failed: cannot allocate memory"));
       return;
     }
