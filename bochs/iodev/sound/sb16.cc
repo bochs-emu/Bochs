@@ -40,6 +40,8 @@
 
 bx_sb16_c *theSB16Device = NULL;
 
+Bit32u fmopl_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
+
 // builtin configuration handling functions
 
 void sb16_init_options(void)
@@ -211,6 +213,7 @@ bx_sb16_c::~bx_sb16_c(void)
 {
   closemidioutput();
 
+  soundmod->unregister_wave_callback(fmopl_callback_id);
   if (DSP.inputinit != 0) {
     BX_SB16_OUTPUT->closewaveinput();
   }
@@ -365,6 +368,7 @@ void bx_sb16_c::init(void)
       (BX_SB16_THISP, opl_timer, 80, 1, 0, "sb16.opl");
     // opl timer: inactive, continuous, frequency 80us
   }
+  BX_SB16_THIS fmopl_callback_id = soundmod->register_wave_callback(BX_SB16_THISP, fmopl_callback);
 
   writelog(MIDILOG(4), "Timers initialized, midi %d, dma %d, opl %d",
           MPU.timer_handle, DSP.timer_handle, OPL.timer_handle);
@@ -3024,6 +3028,17 @@ void bx_sb16_c::opl_keyonoff(int channel, bx_bool onoff)
 void bx_sb16_c::opl_midichannelinit(int channel)
 {
   UNUSED(channel);
+}
+
+Bit32u bx_sb16_c::fmopl_generator(Bit16u rate, Bit8u *buffer, Bit32u len)
+{
+  // TODO
+  return 0;
+}
+
+Bit32u fmopl_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
+{
+  return ((bx_sb16_c*)dev)->fmopl_generator(rate, buffer, len);
 }
 
 /* Handlers for the midi commands/midi file output */

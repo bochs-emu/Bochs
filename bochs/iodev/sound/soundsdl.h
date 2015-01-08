@@ -41,13 +41,17 @@ public:
   virtual int    stopwaveplayback();
   virtual int    closewaveoutput();
 
-  virtual bx_bool set_wavedata_callback(void *, get_wavedata_cb_t wd_cb);
+  virtual int register_wave_callback(void *, get_wave_cb_t wd_cb);
+  virtual void unregister_wave_callback(int callback_id);
   Bit32u get_wave_data(Bit8u *stream, int len);
 private:
   bx_bool WaveOpen;
   SDL_AudioSpec fmt;
-  void *dev;
-  get_wavedata_cb_t get_wavedata_cb;
+  int cb_count;
+  struct {
+    void *device;
+    get_wave_cb_t cb;
+  } get_wave[BX_MAX_WAVE_CALLBACKS];
 };
 
 #endif  // BX_WITH_SDL || BX_WITH_SDL2

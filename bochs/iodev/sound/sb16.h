@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -190,6 +190,8 @@ public:
   static void runtime_config_handler(void *);
   void runtime_config(void);
 
+  BX_SB16_SMF Bit32u fmopl_generator(Bit16u rate, Bit8u *buffer, Bit32u len);
+
 private:
 
   int midimode, wavemode, loglevel;
@@ -201,6 +203,7 @@ private:
   int currentdma8;
   int currentdma16;
   Bit16u wave_vol;
+  bx_bool fmopl_callback_id;
 
   // the MPU 401 relevant variables
   struct bx_sb16_mpu_struct {

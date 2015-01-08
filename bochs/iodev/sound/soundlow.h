@@ -37,8 +37,10 @@
 #define BX_SOUNDLOW_SDL     4
 #define BX_SOUNDLOW_ALSA    5
 
+#define BX_MAX_WAVE_CALLBACKS 2
+
 typedef Bit32u (*sound_record_handler_t)(void *arg, Bit32u len);
-typedef Bit32u (*get_wavedata_cb_t)(void *arg, Bit16u rate, Bit8u *buffer, Bit32u len);
+typedef Bit32u (*get_wave_cb_t)(void *arg, Bit16u rate, Bit8u *buffer, Bit32u len);
 
 // The class with the input/output functions
 class bx_sound_lowlevel_c : public logfunctions {
@@ -78,7 +80,8 @@ public:
   static void record_timer_handler(void *);
   void record_timer(void);
 
-  virtual bx_bool set_wavedata_callback(void *, get_wavedata_cb_t wd_cb) {return 0;}
+  virtual int register_wave_callback(void *, get_wave_cb_t wd_cb) {return -1;}
+  virtual void unregister_wave_callback(int callback_id) {}
 protected:
   int record_timer_index;
   int record_packet_size;

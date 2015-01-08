@@ -43,7 +43,7 @@ bx_sound_sdl_c::bx_sound_sdl_c()
     :bx_sound_lowlevel_c()
 {
   WaveOpen = 0;
-  get_wavedata_cb = NULL;
+  cb_count = 0;
   if (SDL_InitSubSystem(SDL_INIT_AUDIO)) {
     BX_PANIC(("Initialization of sound lowlevel module 'sdl' failed"));
   } else {
@@ -64,14 +64,19 @@ int bx_sound_sdl_c::openwaveoutput(const char *wavedev)
 
 Bit32u bx_sound_sdl_c::get_wave_data(Bit8u *stream, int len)
 {
-  if (get_wavedata_cb == NULL) {
-    return 0;
-  }
+  Bit32u len2 = 0;
+
   Bit8u *tmpbuffer = (Bit8u*)malloc(len);
-  memset(tmpbuffer, 0, len);
-  Bit32u len2 = get_wavedata_cb(dev, fmt.freq, tmpbuffer, len);
-  if (len2 > 0) {
-    SDL_MixAudio(stream, tmpbuffer, len2, SDL_MIX_MAXVOLUME);
+  for (int i = 0; i < cb_count; i++) {
+    if (get_wave[i].cb != NULL) {
+      memset(tmpbuffer, 0, len);
+      len2 = get_wave[i].cb(get_wave[i].device, fmt.freq, tmpbuffer, len);
+      if (len2 > 0) {
+        SDL_MixAudio(stream, tmpbuffer, len2, SDL_MIX_MAXVOLUME);
+        // FIXME: mix wave data
+        break;
+      }
+    }
   }
   free(tmpbuffer);
   return len2;
@@ -188,24 +193,33 @@ int bx_sound_sdl_c::sendwavepacket(int length, Bit8u data[])
 
 int bx_sound_sdl_c::stopwaveplayback()
 {
-  while (audio_buffer.optr != audio_buffer.iptr) {
-    SDL_Delay(1);
-  }
-  SDL_CloseAudio();
-  WaveOpen = 0;
   return BX_SOUNDLOW_OK;
 }
 
 int bx_sound_sdl_c::closewaveoutput()
 {
+  WaveOpen = 0;
+  SDL_CloseAudio();
   return BX_SOUNDLOW_OK;
 }
 
-bx_bool bx_sound_sdl_c::set_wavedata_callback(void *arg, get_wavedata_cb_t wd_cb)
+int bx_sound_sdl_c::register_wave_callback(void *arg, get_wave_cb_t wd_cb)
 {
-  dev = arg;
-  get_wavedata_cb = wd_cb;
-  return 1;
+  if (cb_count < BX_MAX_WAVE_CALLBACKS) {
+    get_wave[cb_count].device = arg;
+    get_wave[cb_count].cb = wd_cb;
+    cb_count++;
+  }
+  return cb_count;
+}
+
+void bx_sound_sdl_c::unregister_wave_callback(int callback_id)
+{
+  SDL_LockAudio();
+  if ((callback_id >= 0) && (callback_id < BX_MAX_WAVE_CALLBACKS)) {
+    get_wave[callback_id].cb = NULL;
+  }
+  SDL_UnlockAudio();
 }
 
 #endif  // BX_WITH_SDL || BX_WITH_SDL2
