@@ -213,7 +213,9 @@ bx_sb16_c::~bx_sb16_c(void)
 {
   closemidioutput();
 
-  soundmod->unregister_wave_callback(fmopl_callback_id);
+  if (soundmod != NULL) {
+    soundmod->unregister_wave_callback(fmopl_callback_id);
+  }
   if (DSP.inputinit != 0) {
     BX_SB16_OUTPUT->closewaveinput();
   }
