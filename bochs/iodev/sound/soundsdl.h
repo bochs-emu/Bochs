@@ -37,13 +37,13 @@ public:
 
   virtual int    openwaveoutput(const char *wavedev);
   virtual int    startwaveplayback(int frequency, int bits, bx_bool stereo, int format);
-  virtual int    sendwavepacket(int length, Bit8u data[]);
+  virtual int    sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *param);
   virtual int    stopwaveplayback();
   virtual int    closewaveoutput();
 
   virtual int register_wave_callback(void *, get_wave_cb_t wd_cb);
   virtual void unregister_wave_callback(int callback_id);
-  Bit32u get_wave_data(Bit8u *stream, int len);
+  void get_wave_data(Bit8u *stream, int len);
 private:
   bx_bool WaveOpen;
   SDL_AudioSpec fmt;
@@ -52,6 +52,7 @@ private:
     void *device;
     get_wave_cb_t cb;
   } get_wave[BX_MAX_WAVE_CALLBACKS];
+  int pcm_callback_id;
 };
 
 #endif  // BX_WITH_SDL || BX_WITH_SDL2

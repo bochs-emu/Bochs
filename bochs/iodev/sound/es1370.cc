@@ -5,7 +5,7 @@
 // ES1370 soundcard support (ported from QEMU)
 //
 // Copyright (c) 2005  Vassili Karpov (malc)
-// Copyright (C) 2011-2014  The Bochs Project
+// Copyright (C) 2011-2015  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -757,17 +757,7 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
           }
         } else {
           if ((BX_ES1370_THIS s.dac_nr_active == -1) && BX_ES1370_THIS s.dac_outputinit) {
-            if (BX_ES1370_THIS wavemode == 1) {
-              ret = BX_ES1370_THIS soundmod->startwaveplayback(new_freq, (new_fmt >> 1) ? 16 : 8, (new_fmt & 1), (new_fmt >> 1));
-              if (ret != BX_SOUNDLOW_OK) {
-                BX_ES1370_THIS soundmod->closewaveoutput();
-                BX_ES1370_THIS s.dac_outputinit = 0;
-                BX_ERROR(("could not start wave playback"));
-              } else {
-                BX_ES1370_THIS s.dac_nr_active = i;
-              }
-            } else if ((BX_ES1370_THIS wavemode == 2) ||
-                       (BX_ES1370_THIS wavemode == 3)) {
+            if ((BX_ES1370_THIS wavemode == 2) || (BX_ES1370_THIS wavemode == 3)) {
               bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370);
               bx_param_string_c *waveparam = SIM->get_param_string("wavefile", base);
               if ((BX_ES1370_THIS wavefile == NULL) && (!waveparam->isempty())) {
@@ -815,40 +805,39 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
 
 void bx_es1370_c::sendwavepacket(unsigned channel, Bit32u buflen, Bit8u *buffer)
 {
-  Bit8u bits, format;
-  Bit16u samplerate;
-  bx_bool stereo, issigned;
+  bx_pcm_param_t param;
+  Bit8u format;
 
+  if (channel == DAC1_CHANNEL) {
+    param.samplerate = dac1_freq[(BX_ES1370_THIS s.ctl >> 12) & 3];
+  } else {
+    param.samplerate = 1411200 / (((BX_ES1370_THIS s.ctl >> 16) & 0x1fff) + 2);
+  }
   format = (BX_ES1370_THIS s.sctl >> (channel << 1)) & 3;
-  bits = (format >> 1) ? 16 : 8;
-  stereo = format & 1;
-  issigned = (format >> 1) & 1;
+  param.bits = (format >> 1) ? 16 : 8;
+  param.channels = (format & 1) + 1;
+  param.format = (format >> 1) & 1;
 
   // apply wave volume
   if (BX_ES1370_THIS s.wave_vol != 0xffff) {
     DEV_soundmod_pcm_apply_volume(buflen, buffer, BX_ES1370_THIS s.wave_vol,
-                                  bits, stereo, issigned);
+                                  param.bits, param.channels == 2, param.format);
   }
 
   switch (BX_ES1370_THIS wavemode) {
     case 1:
       if (BX_ES1370_THIS s.dac_outputinit) {
-        BX_ES1370_THIS soundmod->sendwavepacket(buflen, buffer);
+        BX_ES1370_THIS soundmod->sendwavepacket(buflen, buffer, &param);
       }
       break;
     case 3:
       fwrite(buffer, 1, buflen, BX_ES1370_THIS wavefile);
       break;
     case 2:
-      if (channel == DAC1_CHANNEL) {
-        samplerate = dac1_freq[(BX_ES1370_THIS s.ctl >> 12) & 3];
-      } else {
-        samplerate = 1411200 / (((BX_ES1370_THIS s.ctl >> 16) & 0x1fff) + 2);
-      }
       Bit8u temparray[12] =
-       { (Bit8u)(samplerate & 0xff), (Bit8u)(samplerate >> 8), 0, 0,
-         bits, (Bit8u)(stereo + 1), 0, 0, 0, 0, 0, 0 };
-      if (issigned)
+       { (Bit8u)(param.samplerate & 0xff), (Bit8u)(param.samplerate >> 8), 0, 0,
+         param.bits, param.channels, 0, 0, 0, 0, 0, 0 };
+      if (param.format & 1)
          temparray[6] = 4;
 
       DEV_soundmod_VOC_write_block(BX_ES1370_THIS wavefile, 9, 12, temparray, buflen, buffer);

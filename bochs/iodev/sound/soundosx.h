@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2011  The Bochs Project
+//  Copyright (C) 2004-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -52,7 +52,7 @@ public:
 
     virtual int    openwaveoutput(const char *wavedev);
     virtual int    startwaveplayback(int frequency, int bits, bx_bool stereo, int format);
-    virtual int    sendwavepacket(int length, Bit8u data[]);
+    virtual int    sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *param);
     virtual int    stopwaveplayback();
     virtual int    closewaveoutput();
 #ifdef BX_SOUND_OSX_use_converter

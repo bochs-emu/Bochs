@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -191,8 +191,13 @@ int bx_sound_linux_c::startwaveplayback(int frequency, int bits, bx_bool stereo,
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_linux_c::sendwavepacket(int length, Bit8u data[])
+int bx_sound_linux_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *param)
 {
+  if (memcmp(param, &pcm_param, sizeof(bx_pcm_param_t)) != 0) {
+    startwaveplayback(param->samplerate, param->bits, param->channels == 2,
+                      param->format);
+    pcm_param = *param;
+  }
   if (wave_fd[0] == -1) {
     return BX_SOUNDLOW_ERR;
   }

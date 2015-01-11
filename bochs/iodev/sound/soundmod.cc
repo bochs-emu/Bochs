@@ -51,6 +51,7 @@ bx_soundmod_ctl_c* theSoundModCtl = NULL;
 Bit8u *beep_buffer;
 unsigned int beep_bufsize;
 BX_MUTEX(beep_mutex);
+bx_pcm_param_t beep_param;
 
 Bit32u beep_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
 
@@ -136,9 +137,13 @@ void bx_soundmod_ctl_c::init()
     beep_bufsize = 4410;
     beep_buffer = (Bit8u*)malloc(beep_bufsize);
     BX_INIT_MUTEX(beep_mutex);
-    if (beep_callback_id >= 0) {
-      soundmod->startwaveplayback(44100, 16, 1, 1);
+    if (beep_callback_id < 0) {
+      beep_param.samplerate = 44100;
+      beep_param.bits = 16;
+      beep_param.channels = 2;
+      beep_param.format = 1;
     }
+    soundmod->startwaveplayback(44100, 16, 1, 1);
   }
 }
 
@@ -198,7 +203,7 @@ void beep_thread(void *indata)
   bx_sound_lowlevel_c *soundmod = (bx_sound_lowlevel_c*)indata;
   while (beep_control == 2) {
     theSoundModCtl->beep_generator(44100, beep_buffer, beep_bufsize);
-    ret = soundmod->sendwavepacket(beep_bufsize, beep_buffer);
+    ret = soundmod->sendwavepacket(beep_bufsize, beep_buffer, &beep_param);
     if (ret == BX_SOUNDLOW_ERR) break;
     if (soundmod->get_type() == BX_SOUNDLOW_WIN) {
 #ifdef WIN32
@@ -227,9 +232,6 @@ bx_bool bx_soundmod_ctl_c::beep_on(float frequency)
     }
     if (beep_callback_id < 0) {
       if (beep_control != 2) {
-        if (soundmod->startwaveplayback(44100, 16, 1, 1) == BX_SOUNDLOW_ERR) {
-          return 0;
-        }
         beep_control = 2;
 #ifdef WIN32
         CreateThread(NULL, 0, beep_thread, soundmod, 0, &threadID);

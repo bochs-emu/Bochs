@@ -31,8 +31,9 @@
 
 #if BX_SUPPORT_SB16
 
-#include "sb16.h"
 #include "soundlow.h"
+#include "sb16.h"
+//#include "opl.h"
 
 #include <math.h>
 
@@ -327,6 +328,7 @@ void bx_sb16_c::init(void)
   OPL.mode = fminit;
   OPL.timer_running = 0;
   opl_entermode(single);
+  //adlib_init(44100);
 
   // csp
   memset(&BX_SB16_THIS csp_reg[0], 0, sizeof(BX_SB16_THIS csp_reg));
@@ -437,21 +439,20 @@ void bx_sb16_c::register_state(void)
   new bx_shadow_num_c(dsp, "testreg", &DSP.testreg, BASE_HEX);
   bx_list_c *dma = new bx_list_c(dsp, "dma");
   new bx_shadow_num_c(dma, "mode", &DSP.dma.mode);
-  new bx_shadow_num_c(dma, "bits", &DSP.dma.bits);
+  new bx_shadow_num_c(dma, "bits", &DSP.dma.param.bits);
   new bx_shadow_num_c(dma, "bps", &DSP.dma.bps);
-  new bx_shadow_num_c(dma, "format", &DSP.dma.format);
+  new bx_shadow_num_c(dma, "format", &DSP.dma.param.format);
   new bx_shadow_num_c(dma, "timer", &DSP.dma.timer);
   new bx_shadow_bool_c(dma, "fifo", &DSP.dma.fifo);
   new bx_shadow_bool_c(dma, "output", &DSP.dma.output);
-  new bx_shadow_bool_c(dma, "stereo", &DSP.dma.stereo);
-  new bx_shadow_bool_c(dma, "issigned", &DSP.dma.issigned);
+  new bx_shadow_num_c(dma, "channels", &DSP.dma.param.channels);
   new bx_shadow_bool_c(dma, "highspeed", &DSP.dma.highspeed);
   new bx_shadow_num_c(dma, "count", &DSP.dma.count);
   new bx_shadow_num_c(dma, "chunkindex", &DSP.dma.chunkindex);
   new bx_shadow_num_c(dma, "chunkcount", &DSP.dma.chunkcount);
   new bx_shadow_num_c(dma, "timeconstant", &DSP.dma.timeconstant);
   new bx_shadow_num_c(dma, "blocklength", &DSP.dma.blocklength);
-  new bx_shadow_num_c(dma, "samplerate", &DSP.dma.samplerate);
+  new bx_shadow_num_c(dma, "samplerate", &DSP.dma.param.samplerate);
   new bx_shadow_bool_c(dsp, "outputinit", &DSP.outputinit);
   new bx_shadow_bool_c(dsp, "inputinit", &DSP.inputinit);
   new bx_shadow_data_c(list, "chunk", DSP.dma.chunk, BX_SOUNDLOW_WAVEPACKETSIZE);
@@ -582,7 +583,7 @@ void bx_sb16_c::dsp_dmatimer(void *this_ptr)
         (This->dsp.dma.count > 0))) {
     if (((This->dsp.dma.output == 0) && (This->dsp.dma.chunkcount > 0)) ||
         (This->dsp.dma.output == 1)) {
-      if ((DSP.dma.bits == 8) || (BX_SB16_DMAH == 0)) {
+      if ((DSP.dma.param.bits == 8) || (BX_SB16_DMAH == 0)) {
         DEV_dma_set_drq(BX_SB16_DMAL, 1);
       } else {
         DEV_dma_set_drq(BX_SB16_DMAH, 1);
@@ -652,8 +653,7 @@ void bx_sb16_c::dsp_reset(Bit32u value)
       DSP.dma.mode = 0;
       DSP.dma.fifo = 0;
       DSP.dma.output = 0;
-      DSP.dma.stereo = 0;
-      DSP.dma.issigned = 0;
+      DSP.dma.param.channels = 1;
       DSP.dma.count = 0;
       DSP.dma.highspeed = 0;
       DSP.dma.chunkindex = 0;
@@ -914,7 +914,7 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
          // 1: timeconstant
          DSP.datain.get(&value8);
          DSP.dma.timeconstant = value8 <<  8;
-         DSP.dma.samplerate = (Bit32u) 256000000L / ((Bit32u) 65536L - (Bit32u) DSP.dma.timeconstant);
+         DSP.dma.param.samplerate = (Bit32u) 256000000L / ((Bit32u) 65536L - (Bit32u) DSP.dma.timeconstant);
            break;
 
          // set samplerate for input
@@ -924,8 +924,8 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
          // set samplerate for output
        case 0x42:
          // 1,2: hi(frq) lo(frq)
-         DSP.datain.getw1(&(DSP.dma.samplerate));
-         DSP.dma.timeconstant = 65536 - (Bit32u) 256000000 / (Bit32u) DSP.dma.samplerate;
+         DSP.datain.getw1(&(DSP.dma.param.samplerate));
+         DSP.dma.timeconstant = 65536 - (Bit32u) 256000000 / (Bit32u) DSP.dma.param.samplerate;
          break;
 
          // set block length
@@ -1206,6 +1206,7 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
 {
   int ret;
   bx_list_c *base;
+  bx_bool issigned;
 
   // command: 8bit, 16bit, in/out, single/auto, fifo
   // mode: mono/stereo, signed/unsigned
@@ -1222,37 +1223,37 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
 
   if ((command >> 4) == 0xb)  // 0xb? = 16 bit DMA
   {
-    DSP.dma.bits = 16;
+    DSP.dma.param.bits = 16;
     DSP.dma.bps = 2;
   }
   else                        // 0xc? = 8 bit DMA
   {
-    DSP.dma.bits = 8;
+    DSP.dma.param.bits = 8;
     DSP.dma.bps = 1;
   }
 
   // Prevent division by zero in some instances
-  if (DSP.dma.samplerate == 0)
-    DSP.dma.samplerate= 10752;
+  if (DSP.dma.param.samplerate == 0)
+    DSP.dma.param.samplerate = 10752;
   command &= 0x0f;
   DSP.dma.output = 1 - (command >> 3);       // 1=output, 0=input
   DSP.dma.mode = 1 + ((command >> 2) & 1);  // 0=none, 1=normal, 2=auto
   DSP.dma.fifo = (command >> 1) & 1;         // ? not sure what this is
 
-  DSP.dma.stereo = (mode >> 5) & 1;
+  DSP.dma.param.channels = ((mode >> 5) & 1) + 1;
 
-  if (DSP.dma.stereo != 0)
+  if (DSP.dma.param.channels == 2)
     DSP.dma.bps *= 2;
 
   DSP.dma.blocklength = length;
-  DSP.dma.issigned = (mode >> 4) & 1;
+  issigned = (mode >> 4) & 1;
   DSP.dma.highspeed = (comp >> 4) & 1;
 
   DSP.dma.chunkindex = 0;
   DSP.dma.chunkcount = 0;
 
-  Bit32u sampledatarate = (Bit32u) DSP.dma.samplerate * (Bit32u) DSP.dma.bps;
-  if (DSP.dma.bits == 8 || (DSP.dma.bits == 16 && BX_SB16_DMAH != 0)) {
+  Bit32u sampledatarate = (Bit32u) DSP.dma.param.samplerate * (Bit32u) DSP.dma.bps;
+  if (DSP.dma.param.bits == 8 || (DSP.dma.param.bits == 16 && BX_SB16_DMAH != 0)) {
     DSP.dma.count = DSP.dma.blocklength;
   } else {
     DSP.dma.count = ((DSP.dma.blocklength + 1) << 1) - 1;
@@ -1260,27 +1261,19 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
   DSP.dma.timer = BX_SB16_THIS dmatimer * BX_DMA_BUFFER_SIZE / sampledatarate;
 
   writelog(WAVELOG(5), "DMA is %db, %dHz, %s, %s, mode %d, %s, %s, %d bps, %d usec/DMA",
-           DSP.dma.bits, DSP.dma.samplerate, (DSP.dma.stereo != 0)?"stereo":"mono",
+           DSP.dma.param.bits, DSP.dma.param.samplerate,
+           (DSP.dma.param.channels == 2)?"stereo":"mono",
            (DSP.dma.output == 1)?"output":"input", DSP.dma.mode,
-           (DSP.dma.issigned == 1)?"signed":"unsigned",
+           (issigned == 1)?"signed":"unsigned",
            (DSP.dma.highspeed == 1)?"highspeed":"normal speed",
            sampledatarate, DSP.dma.timer);
 
-  DSP.dma.format = DSP.dma.issigned | ((comp & 7) << 1) | ((comp & 8) << 4);
+  DSP.dma.param.format = issigned | ((comp & 7) << 1) | ((comp & 8) << 4);
 
   // write the output to the device/file
   base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
   if (DSP.dma.output == 1) {
-    if (BX_SB16_THIS wavemode == 1) {
-      if (DSP.outputinit == 1) {
-        ret = BX_SB16_OUTPUT->startwaveplayback(DSP.dma.samplerate, DSP.dma.bits, DSP.dma.stereo, DSP.dma.format);
-        if (ret != BX_SOUNDLOW_OK) {
-          BX_SB16_THIS wavemode = 0;
-          writelog(WAVELOG(2), "Error: Could not start wave playback.");
-        }
-      }
-    } else if ((BX_SB16_THIS wavemode == 2) ||
-               (BX_SB16_THIS wavemode == 3)) {
+    if ((BX_SB16_THIS wavemode == 2) || (BX_SB16_THIS wavemode == 3)) {
       bx_param_string_c *waveparam = SIM->get_param_string("wave", base);
       if ((WAVEDATA == NULL) && (!waveparam->isempty())) {
         WAVEDATA = fopen(waveparam->getptr(), "wb");
@@ -1308,7 +1301,10 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
       }
     }
     if (DSP.inputinit == 1) {
-      ret = BX_SB16_OUTPUT->startwaverecord(DSP.dma.samplerate, DSP.dma.bits, DSP.dma.stereo, DSP.dma.format);
+      ret = BX_SB16_OUTPUT->startwaverecord(DSP.dma.param.samplerate,
+                                            DSP.dma.param.bits,
+                                            DSP.dma.param.channels == 2,
+                                            DSP.dma.param.format);
       if (ret != BX_SOUNDLOW_OK) {
         BX_SB16_THIS wavemode = 0;
         writelog(WAVELOG(2), "Error: Could not start wave record.");
@@ -1433,21 +1429,21 @@ void bx_sb16_c::dsp_sendwavepacket()
   // apply wave volume
   if (BX_SB16_THIS wave_vol != 0xffff) {
     DEV_soundmod_pcm_apply_volume(DSP.dma.chunkindex, DSP.dma.chunk, BX_SB16_THIS wave_vol,
-                                  DSP.dma.bits, DSP.dma.stereo, DSP.dma.format & 1);
+                                  DSP.dma.param.bits, DSP.dma.param.channels == 2, DSP.dma.param.format & 1);
   }
 
   switch (BX_SB16_THIS wavemode) {
     case 1:
-      BX_SB16_OUTPUT->sendwavepacket(DSP.dma.chunkindex, DSP.dma.chunk);
+      BX_SB16_OUTPUT->sendwavepacket(DSP.dma.chunkindex, DSP.dma.chunk, &DSP.dma.param);
       break;
     case 3:
       fwrite(DSP.dma.chunk, 1, DSP.dma.chunkindex, WAVEDATA);
       break;
     case 2:
       Bit8u temparray[12] =
-       { (Bit8u)(DSP.dma.samplerate & 0xff), (Bit8u)(DSP.dma.samplerate >> 8), 0, 0,
-         (Bit8u)DSP.dma.bits, (Bit8u)(DSP.dma.stereo + 1), 0, 0, 0, 0, 0, 0 };
-      switch ((DSP.dma.format >> 1) & 7) {
+       { (Bit8u)(DSP.dma.param.samplerate & 0xff), (Bit8u)(DSP.dma.param.samplerate >> 8), 0, 0,
+         (Bit8u)DSP.dma.param.bits, DSP.dma.param.channels, 0, 0, 0, 0, 0, 0 };
+      switch ((DSP.dma.param.format >> 1) & 7) {
        case 2:
          temparray[6] = 3;
          break;
@@ -1458,7 +1454,7 @@ void bx_sb16_c::dsp_sendwavepacket()
          temparray[6] = 1;
          break;
       }
-      if (DSP.dma.bits == 16)
+      if (DSP.dma.param.bits == 16)
          temparray[6] = 4;
 
       DEV_soundmod_VOC_write_block(WAVEDATA, 9, 12, temparray, DSP.dma.chunkindex, DSP.dma.chunk);
@@ -1511,7 +1507,7 @@ void bx_sb16_c::dsp_dmadone()
   }
 
   // generate the appropriate IRQ
-  if (DSP.dma.bits == 8)
+  if (DSP.dma.param.bits == 8)
     MIXER.reg[0x82] |= 1;
   else
     MIXER.reg[0x82] |= 2;
@@ -1522,7 +1518,7 @@ void bx_sb16_c::dsp_dmadone()
   // if auto-DMA, reinitialize
   if (DSP.dma.mode == 2)
   {
-      if (DSP.dma.bits == 8 || (DSP.dma.bits == 16 && BX_SB16_DMAH != 0)) {
+      if (DSP.dma.param.bits == 8 || (DSP.dma.param.bits == 16 && BX_SB16_DMAH != 0)) {
         DSP.dma.count = DSP.dma.blocklength;
       } else {
         DSP.dma.count = ((DSP.dma.blocklength + 1) << 1) - 1;
@@ -2454,13 +2450,6 @@ Bit32u bx_sb16_c::opl_status(int chipid)
   return status;
 }
 
-// set the register index for one of the OPL2's or the
-// base or advanced register index for the OPL3
-void bx_sb16_c::opl_index(Bit32u value, int chipid)
-{
-  OPL.index[chipid] = value;
-}
-
 // write to the data port
 void bx_sb16_c::opl_data(Bit32u value, int chipid)
 {
@@ -2997,33 +2986,35 @@ void bx_sb16_c::opl_keyonoff(int channel, bx_bool onoff)
 
   OPL.chan[channel].midion = onoff;
 
-  // check if we have a midi channel, otherwise allocate one if possible
-  if (OPL.chan[channel].midichan == 0xff) {
-    for (i=0; i<16; i++)
-      if (((OPL.midichannels >> i) & 1) != 0) {
-        OPL.chan[channel].midichan = i;
-        OPL.midichannels &= ~(1 << i); // mark channel as used
-        OPL.chan[channel].needprogch = 1;
-      }
-    if (OPL.chan[channel].midichan == 0xff)
-      return;
+  if (BX_SB16_THIS fmopl_callback_id < 0) {
+    // check if we have a midi channel, otherwise allocate one if possible
+    if (OPL.chan[channel].midichan == 0xff) {
+      for (i=0; i<16; i++)
+        if (((OPL.midichannels >> i) & 1) != 0) {
+          OPL.chan[channel].midichan = i;
+          OPL.midichannels &= ~(1 << i); // mark channel as used
+          OPL.chan[channel].needprogch = 1;
+        }
+      if (OPL.chan[channel].midichan == 0xff)
+        return;
+    }
+
+    if (OPL.chan[channel].needprogch != 0)
+      opl_midichannelinit(channel);
+
+    commandbytes[0] = OPL.chan[channel].midichan;
+    commandbytes[1] = OPL.chan[channel].midinote;
+    commandbytes[2] = 0;
+
+    if (onoff == 0) {
+      commandbytes[0] |= 0x80;  // turn it off
+    } else {
+      commandbytes[0] |= 0x90;  // turn it on
+      commandbytes[2] = OPL.chan[channel].midivol;
+    }
+
+    writemidicommand(commandbytes[0], 2, & (commandbytes[1]));
   }
-
-  if (OPL.chan[channel].needprogch != 0)
-    opl_midichannelinit(channel);
-
-  commandbytes[0] = OPL.chan[channel].midichan;
-  commandbytes[1] = OPL.chan[channel].midinote;
-  commandbytes[2] = 0;
-
-  if (onoff == 0) {
-    commandbytes[0] |= 0x80;  // turn it off
-  } else {
-    commandbytes[0] |= 0x90;  // turn it on
-    commandbytes[2] = OPL.chan[channel].midivol;
-  }
-
-  writemidicommand(commandbytes[0], 2, & (commandbytes[1]));
 }
 
 // setup a midi channel
@@ -3034,8 +3025,8 @@ void bx_sb16_c::opl_midichannelinit(int channel)
 
 Bit32u bx_sb16_c::fmopl_generator(Bit16u rate, Bit8u *buffer, Bit32u len)
 {
-  // TODO
-  return 0;
+  bx_bool ret = 0; //adlib_getsample((Bit16s*)buffer, len / 4);
+  return ret ? len : 0;
 }
 
 Bit32u fmopl_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
@@ -3513,7 +3504,8 @@ void bx_sb16_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case BX_SB16_IO + 0x00:
     case BX_SB16_IO + 0x08:
     case BX_SB16_IOADLIB + 0x00:
-      opl_index(value, 0);
+      OPL.index[0] = value;
+      //adlib_write_index(address, value);
       return;
 
     // 2x1: FM Music Data Port
@@ -3522,6 +3514,7 @@ void bx_sb16_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case BX_SB16_IO + 0x09:
     case BX_SB16_IOADLIB + 0x01:
       opl_data(value, 0);
+      //adlib_write(opl_index, value);
       return;
 
     // 2x2: Advanced FM Music Register Port
@@ -3529,7 +3522,8 @@ void bx_sb16_c::write(Bit32u address, Bit32u value, unsigned io_len)
     // 38a is an alias
     case BX_SB16_IO + 0x02:
     case BX_SB16_IOADLIB + 0x02:
-      opl_index(value, 1);
+      OPL.index[1] = value;
+      //adlib_write_index(address, value);
       return;
 
     // 2x3: Advanced FM Music Data Port
@@ -3538,6 +3532,7 @@ void bx_sb16_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case BX_SB16_IO + 0x03:
     case BX_SB16_IOADLIB + 0x03:
       opl_data(value, 1);
+      //adlib_write(opl_index, value);
       return;
 
     // 2x4: Mixer Register Port

@@ -203,7 +203,7 @@ private:
   int currentdma8;
   int currentdma16;
   Bit16u wave_vol;
-  bx_bool fmopl_callback_id;
+  int fmopl_callback_id;
 
   // the MPU 401 relevant variables
   struct bx_sb16_mpu_struct {
@@ -238,14 +238,15 @@ private:
       // issigned= 0: unsigned data, 1: signed data
       // highspeed= 0: normal mode, 1: highspeed mode (only SBPro)
       // timer= so many us between data bytes
-      int mode, bits, bps, format, timer;
-      bx_bool fifo, output, stereo, issigned, highspeed;
+      int mode, bps, timer;
+      bx_bool fifo, output, highspeed;
+      bx_pcm_param_t param;
       Bit16u count;     // bytes remaining in this transfer
       Bit8u *chunk;     // buffers up to BX_SOUNDLOW_WAVEPACKETSIZE bytes
       int chunkindex;   // index into the buffer
       int chunkcount;   // for input: size of the recorded input
       Bit16u timeconstant;
-      Bit16u blocklength, samplerate;
+      Bit16u blocklength;
     } dma;
     int timer_handle;   // handle for the DMA timer
     bx_bool outputinit; // have the lowlevel output been initialized
@@ -341,7 +342,6 @@ private:
       /* The FM emulation part */
   BX_SB16_SMF void   opl_entermode(bx_sb16_fm_mode newmode);
   BX_SB16_SMF Bit32u opl_status(int chipid);
-  BX_SB16_SMF void   opl_index(Bit32u value, int chipid);
   BX_SB16_SMF void   opl_data(Bit32u value, int chipid);
   static void   opl_timer(void *);
   BX_SB16_SMF void   opl_timerevent(void);

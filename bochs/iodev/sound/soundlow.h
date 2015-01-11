@@ -37,7 +37,14 @@
 #define BX_SOUNDLOW_SDL     4
 #define BX_SOUNDLOW_ALSA    5
 
-#define BX_MAX_WAVE_CALLBACKS 2
+#define BX_MAX_WAVE_CALLBACKS 3
+
+typedef struct {
+  Bit16u samplerate;
+  Bit8u  channels;
+  Bit8u  bits;
+  Bit8u  format;
+} bx_pcm_param_t;
 
 typedef Bit32u (*sound_record_handler_t)(void *arg, Bit32u len);
 typedef Bit32u (*get_wave_cb_t)(void *arg, Bit16u rate, Bit8u *buffer, Bit32u len);
@@ -67,7 +74,7 @@ public:
 
   virtual int openwaveoutput(const char *wavedev);
   virtual int startwaveplayback(int frequency, int bits, bx_bool stereo, int format);
-  virtual int sendwavepacket(int length, Bit8u data[]);
+  virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *param);
   virtual int stopwaveplayback();
   virtual int closewaveoutput();
 
@@ -83,6 +90,7 @@ public:
   virtual int register_wave_callback(void *, get_wave_cb_t wd_cb) {return -1;}
   virtual void unregister_wave_callback(int callback_id) {}
 protected:
+  bx_pcm_param_t pcm_param;
   int record_timer_index;
   int record_packet_size;
   sound_record_handler_t record_handler;
