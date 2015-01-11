@@ -871,6 +871,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
+  BX_INSTR_FAR_BRANCH_ORIGIN();
+
   BX_CPU_THIS_PTR clear_VM();       // do this just like the book says to do
   BX_CPU_THIS_PTR clear_IF();
   BX_CPU_THIS_PTR clear_RF();
@@ -945,6 +947,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
   }
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSENTER,
+                      FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 #endif
 
@@ -964,6 +967,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
   }
 
   invalidate_prefetch_q();
+
+  BX_INSTR_FAR_BRANCH_ORIGIN();
 
 #if BX_SUPPORT_X86_64
   if (i->os64L()) {
@@ -1044,6 +1049,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
 #endif
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSEXIT,
+                      FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 #endif
 
@@ -1062,6 +1068,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
   }
 
   invalidate_prefetch_q();
+
+  BX_INSTR_FAR_BRANCH_ORIGIN();
 
 #if BX_SUPPORT_X86_64
   if (long_mode())
@@ -1174,6 +1182,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
   }
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSCALL,
+                      FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 #endif
 
@@ -1197,6 +1206,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
   }
 
   invalidate_prefetch_q();
+
+  BX_INSTR_FAR_BRANCH_ORIGIN();
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
@@ -1305,6 +1316,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
   RIP = temp_RIP;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSRET,
+                      FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 #endif
 

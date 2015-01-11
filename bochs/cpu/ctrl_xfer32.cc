@@ -45,6 +45,42 @@ BX_CPP_INLINE void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near32(Bit32u new_EIP
 #endif
 }
 
+void BX_CPU_C::call_far32(bxInstruction_c *i, Bit16u cs_raw, Bit32u disp32)
+{
+  BX_INSTR_FAR_BRANCH_ORIGIN();
+
+  invalidate_prefetch_q();
+
+#if BX_DEBUGGER
+  BX_CPU_THIS_PTR show_flag |= Flag_call;
+#endif
+
+  RSP_SPECULATIVE;
+
+  if (protected_mode()) {
+    call_protected(i, cs_raw, disp32);
+  }
+  else {
+    // CS.LIMIT can't change when in real/v8086 mode
+    if (disp32 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
+      BX_ERROR(("%s: instruction pointer not within code segment limits", i->getIaOpcodeNameShort()));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+
+    push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
+    push_32(EIP);
+
+    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
+    EIP = disp32;
+  }
+
+  RSP_COMMIT;
+
+  BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL,
+                      FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear32_Iw(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
@@ -105,6 +141,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
 {
   invalidate_prefetch_q();
 
+  BX_INSTR_FAR_BRANCH_ORIGIN();
+
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
@@ -142,7 +180,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
 done:
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
+                      FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 
   BX_NEXT_TRACE(i);
 }
@@ -173,42 +212,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL32_Ap(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
-  Bit16u cs_raw;
-  Bit32u disp32;
+  Bit16u cs_raw = i->Iw2();
+  Bit32u disp32 = i->Id();
 
-  invalidate_prefetch_q();
-
-#if BX_DEBUGGER
-  BX_CPU_THIS_PTR show_flag |= Flag_call;
-#endif
-
-  disp32 = i->Id();
-  cs_raw = i->Iw2();
-
-  RSP_SPECULATIVE;
-
-  if (protected_mode()) {
-    call_protected(i, cs_raw, disp32);
-    goto done;
-  }
-
-  // CS.LIMIT can't change when in real/v8086 mode
-  if (disp32 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-    BX_ERROR(("%s: instruction pointer not within code segment limits", i->getIaOpcodeNameShort()));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
-  push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-  push_32(EIP);
-
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  EIP = disp32;
-
-done:
-  RSP_COMMIT;
-
-  BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
+  call_far32(i, cs_raw, disp32);
 
   BX_NEXT_TRACE(i);
 }
@@ -237,45 +244,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EdR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL32_Ep(bxInstruction_c *i)
 {
-  Bit16u cs_raw;
-  Bit32u op1_32;
-
-  invalidate_prefetch_q();
-
-#if BX_DEBUGGER
-  BX_CPU_THIS_PTR show_flag |= Flag_call;
-#endif
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  /* pointer, segment address pair */
-  op1_32 = read_virtual_dword(i->seg(), eaddr);
-  cs_raw = read_virtual_word (i->seg(), (eaddr+4) & i->asize_mask());
+  Bit32u op1_32 = read_virtual_dword(i->seg(), eaddr);
+  Bit16u cs_raw = read_virtual_word (i->seg(), (eaddr+4) & i->asize_mask());
 
-  RSP_SPECULATIVE;
-
-  if (protected_mode()) {
-    call_protected(i, cs_raw, op1_32);
-    goto done;
-  }
-
-  // CS.LIMIT can't change when in real/v8086 mode
-  if (op1_32 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-    BX_ERROR(("%s: instruction pointer not within code segment limits", i->getIaOpcodeNameShort()));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
-  push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-  push_32(EIP);
-
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  EIP = op1_32;
-
-done:
-  RSP_COMMIT;
-
-  BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL_INDIRECT,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
+  call_far32(i, cs_raw, op1_32);
 
   BX_NEXT_TRACE(i);
 }
@@ -506,6 +480,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_Ap(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
+  BX_INSTR_FAR_BRANCH_ORIGIN();
+
   if (i->os32L()) {
     disp32 = i->Id();
   }
@@ -531,7 +507,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_Ap(bxInstruction_c *i)
 
 done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
+                      FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 
   BX_NEXT_TRACE(i);
 }
@@ -552,6 +529,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
   Bit32u op1_32;
 
   invalidate_prefetch_q();
+
+  BX_INSTR_FAR_BRANCH_ORIGIN();
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
@@ -576,7 +555,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
 
 done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP_INDIRECT,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
+                      FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 
   BX_NEXT_TRACE(i);
 }
@@ -586,6 +566,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET32(bxInstruction_c *i)
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
   invalidate_prefetch_q();
+
+  BX_INSTR_FAR_BRANCH_ORIGIN();
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
@@ -645,6 +627,7 @@ done:
 #endif
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_IRET,
+                      FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 
   BX_NEXT_TRACE(i);

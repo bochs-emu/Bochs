@@ -62,6 +62,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GdMa(bxInstruction_c *i)
 // is useful for an ICE system
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT1(bxInstruction_c *i)
 {
+  BX_INSTR_FAR_BRANCH_ORIGIN();
+
 #if BX_SUPPORT_VMX
   VMexit_Event(BX_PRIVILEGED_SOFTWARE_INTERRUPT, 1, 0, 0);
 #endif
@@ -82,14 +84,16 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT1(bxInstruction_c *i)
   interrupt(1, BX_PRIVILEGED_SOFTWARE_INTERRUPT, 0, 0);
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
-                      EIP);
+                      FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 
   BX_NEXT_TRACE(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT3(bxInstruction_c *i)
 {
+  BX_INSTR_FAR_BRANCH_ORIGIN();
+
   // INT 3 is not IOPL sensitive
 
 #if BX_SUPPORT_VMX
@@ -108,8 +112,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT3(bxInstruction_c *i)
   interrupt(3, BX_SOFTWARE_EXCEPTION, 0, 0);
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
-                      EIP);
+                      FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 
   BX_NEXT_TRACE(i);
 }
@@ -118,6 +122,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT3(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
 {
   Bit8u vector = i->Ib();
+
+  BX_INSTR_FAR_BRANCH_ORIGIN();
 
 #if BX_SUPPORT_VMX
   VMexit_Event(BX_SOFTWARE_INTERRUPT, vector, 0, 0);
@@ -143,8 +149,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
   interrupt(vector, BX_SOFTWARE_INTERRUPT, 0, 0);
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
-                      EIP);
+                      FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 
   BX_NEXT_TRACE(i);
 }
@@ -152,6 +158,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INTO(bxInstruction_c *i)
 {
   if (get_OF()) {
+    BX_INSTR_FAR_BRANCH_ORIGIN();
 
 #if BX_SUPPORT_VMX
     VMexit_Event(BX_SOFTWARE_EXCEPTION, 4, 0, 0);
@@ -169,8 +176,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INTO(bxInstruction_c *i)
     interrupt(4, BX_SOFTWARE_EXCEPTION, 0, 0);
 
     BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
-                        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
-                        EIP);
+                        FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,
+                        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
   }
 
   BX_NEXT_TRACE(i);

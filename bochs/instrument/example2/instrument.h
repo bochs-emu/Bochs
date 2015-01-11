@@ -57,7 +57,7 @@ void bx_instr_before_execution(unsigned cpu, bxInstruction_c *i);
 #define BX_INSTR_CNEAR_BRANCH_TAKEN(cpu_id, branch_eip, new_eip)
 #define BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(cpu_id, branch_eip)
 #define BX_INSTR_UCNEAR_BRANCH(cpu_id, what, branch_eip, new_eip)
-#define BX_INSTR_FAR_BRANCH(cpu_id, what, new_cs, new_eip)
+#define BX_INSTR_FAR_BRANCH(cpu_id, what, prev_cs, prev_rip, new_cs, new_eip)
 
 /* decoding completed */
 #define BX_INSTR_OPCODE(cpu_id, i, opcode, len, is32, is64)
@@ -120,7 +120,7 @@ void bx_instr_before_execution(unsigned cpu, bxInstruction_c *i);
 #define BX_INSTR_CNEAR_BRANCH_TAKEN(cpu_id, branch_eip, new_eip)
 #define BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(cpu_id, branch_eip)
 #define BX_INSTR_UCNEAR_BRANCH(cpu_id, what, branch_eip, new_eip)
-#define BX_INSTR_FAR_BRANCH(cpu_id, what, new_cs, new_eip)
+#define BX_INSTR_FAR_BRANCH(cpu_id, what, prev_cs, prev_rip, new_cs, new_eip)
 
 /* decoding completed */
 #define BX_INSTR_OPCODE(cpu_id, i, opcode, len, is32, is64)

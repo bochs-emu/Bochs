@@ -1285,6 +1285,28 @@ public: // for now...
   bx_guard_found_t guard_found;
 #endif
 
+#if BX_INSTRUMENTATION
+  // store far branch CS:EIP pair for instrumentation purposes
+  // unfortunatelly prev_rip CPU field cannot be used as is because it
+  // could be overwritten by task switch which could happen as result
+  // of the far branch
+  struct {
+    Bit16u prev_cs;
+    bx_address prev_rip;
+  } far_branch;
+
+#define FAR_BRANCH_PREV_CS (BX_CPU_THIS_PTR far_branch.prev_cs)
+#define FAR_BRANCH_PREV_RIP (BX_CPU_THIS_PTR far_branch.prev_rip)
+
+#define BX_INSTR_FAR_BRANCH_ORIGIN() { \
+  BX_CPU_THIS_PTR far_branch.prev_cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value; \
+  BX_CPU_THIS_PTR far_branch.prev_rip = PREV_RIP; \
+}
+
+#else
+#define BX_INSTR_FAR_BRANCH_ORIGIN()
+#endif
+
   // for paging
   struct {
     bx_TLB_entry entry[BX_TLB_SIZE] BX_CPP_AlignN(16);
@@ -4945,6 +4967,8 @@ public: // for now...
   BX_SMF bx_bool relocate_apic(Bit64u val_64);
 #endif
 
+  BX_SMF void call_far16(bxInstruction_c *i, Bit16u cs_raw, Bit16u disp16);
+  BX_SMF void call_far32(bxInstruction_c *i, Bit16u cs_raw, Bit32u disp32);
   BX_SMF void task_gate(bxInstruction_c *i, bx_selector_t *selector, bx_descriptor_t *gate_descriptor, unsigned source);
   BX_SMF void jump_protected(bxInstruction_c *i, Bit16u cs, bx_address disp) BX_CPP_AttrRegparmN(3);
   BX_SMF void jmp_call_gate(bx_selector_t *selector, bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(2);

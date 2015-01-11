@@ -172,7 +172,7 @@ void bx_instr_ucnear_branch(unsigned cpu, unsigned what, bx_address branch_eip, 
   branch_taken(cpu, new_eip);
 }
 
-void bx_instr_far_branch(unsigned cpu, unsigned what, Bit16u new_cs, bx_address new_eip)
+void bx_instr_far_branch(unsigned cpu, unsigned what, Bit16u prev_cs, bx_address prev_eip, Bit16u new_cs, bx_address new_eip)
 {
   branch_taken(cpu, new_eip);
 }
