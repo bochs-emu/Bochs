@@ -73,8 +73,6 @@ Bit32u bx_sound_sdl_c::get_wave_data(Bit8u *stream, int len)
       len2 = get_wave[i].cb(get_wave[i].device, fmt.freq, tmpbuffer, len);
       if (len2 > 0) {
         SDL_MixAudio(stream, tmpbuffer, len2, SDL_MIX_MAXVOLUME);
-        // FIXME: mix wave data
-        break;
       }
     }
   }
@@ -85,10 +83,7 @@ Bit32u bx_sound_sdl_c::get_wave_data(Bit8u *stream, int len)
 void sdl_callback(void *thisptr, Bit8u *stream, int len)
 {
   memset(stream, 0, len);
-  // FIXME: mix wave data
-  if (((bx_sound_sdl_c*)thisptr)->get_wave_data(stream, len) > 0) {
-    return;
-  }
+  ((bx_sound_sdl_c*)thisptr)->get_wave_data(stream, len);
   int amount = audio_buffer.iptr - audio_buffer.optr;
   if (amount < 0) {
     amount += BX_SOUND_SDL_BUFSIZE;
@@ -103,7 +98,7 @@ void sdl_callback(void *thisptr, Bit8u *stream, int len)
   } else {
     SDL_MixAudio(stream, &audio_buffer.data[audio_buffer.optr], tmplen, SDL_MIX_MAXVOLUME);
     amount -= tmplen;
-    SDL_MixAudio(stream, &audio_buffer.data[0], amount, SDL_MIX_MAXVOLUME);
+    SDL_MixAudio(stream+tmplen, &audio_buffer.data[0], amount, SDL_MIX_MAXVOLUME);
     audio_buffer.optr = amount;
   }
 }
