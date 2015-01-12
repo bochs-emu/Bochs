@@ -33,7 +33,7 @@
 
 #include "soundlow.h"
 #include "sb16.h"
-//#include "opl.h"
+#include "opl.h"
 
 #include <math.h>
 
@@ -328,7 +328,7 @@ void bx_sb16_c::init(void)
   OPL.mode = fminit;
   OPL.timer_running = 0;
   opl_entermode(single);
-  //adlib_init(44100);
+  adlib_init(44100);
 
   // csp
   memset(&BX_SB16_THIS csp_reg[0], 0, sizeof(BX_SB16_THIS csp_reg));
@@ -3025,7 +3025,7 @@ void bx_sb16_c::opl_midichannelinit(int channel)
 
 Bit32u bx_sb16_c::fmopl_generator(Bit16u rate, Bit8u *buffer, Bit32u len)
 {
-  bx_bool ret = 0; //adlib_getsample((Bit16s*)buffer, len / 4);
+  bx_bool ret = adlib_getsample((Bit16s*)buffer, len / 4);
   return ret ? len : 0;
 }
 
@@ -3505,7 +3505,7 @@ void bx_sb16_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case BX_SB16_IO + 0x08:
     case BX_SB16_IOADLIB + 0x00:
       OPL.index[0] = value;
-      //adlib_write_index(address, value);
+      adlib_write_index(address, value);
       return;
 
     // 2x1: FM Music Data Port
@@ -3514,7 +3514,7 @@ void bx_sb16_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case BX_SB16_IO + 0x09:
     case BX_SB16_IOADLIB + 0x01:
       opl_data(value, 0);
-      //adlib_write(opl_index, value);
+      adlib_write(opl_index, value);
       return;
 
     // 2x2: Advanced FM Music Register Port
@@ -3523,7 +3523,7 @@ void bx_sb16_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case BX_SB16_IO + 0x02:
     case BX_SB16_IOADLIB + 0x02:
       OPL.index[1] = value;
-      //adlib_write_index(address, value);
+      adlib_write_index(address, value);
       return;
 
     // 2x3: Advanced FM Music Data Port
@@ -3532,7 +3532,7 @@ void bx_sb16_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case BX_SB16_IO + 0x03:
     case BX_SB16_IOADLIB + 0x03:
       opl_data(value, 1);
-      //adlib_write(opl_index, value);
+      adlib_write(opl_index, value);
       return;
 
     // 2x4: Mixer Register Port
