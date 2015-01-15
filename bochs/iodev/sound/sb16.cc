@@ -325,9 +325,15 @@ void bx_sb16_c::init(void)
   mixer_writedata(0x00);
 
   // reset the FM emulation
-  OPL.mode = fminit;
   OPL.timer_running = 0;
-  opl_entermode(single);
+  for (i=0; i<2; i++) {
+    OPL.tmask[i] = 0;
+    OPL.tflag[i] = 0;
+  }
+  for (i=0; i<4; i++) {
+    OPL.timer[i] = 0;
+    OPL.timerinit[i] = 0;
+  }
   adlib_init(44100);
 
   // csp
@@ -409,9 +415,9 @@ void bx_sb16_c::reset(unsigned type)
 
 void bx_sb16_c::register_state(void)
 {
-  unsigned i, j;
+  unsigned i;
   char name[8];
-  bx_list_c *chip, *ins_map, *item, *patch;
+  bx_list_c *chip, *ins_map, *patch;
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "sb16", "SB16 State");
   bx_list_c *mpu = new bx_list_c(list, "mpu");
@@ -462,56 +468,17 @@ void bx_sb16_c::register_state(void)
     new bx_shadow_num_c(csp, name, &BX_SB16_THIS csp_reg[i], BASE_HEX);
   }
   bx_list_c *opl = new bx_list_c(list, "opl");
-  new bx_shadow_num_c(opl, "mode", (Bit8u*)&OPL.mode);
   new bx_shadow_num_c(opl, "timer_running", &OPL.timer_running);
-  new bx_shadow_num_c(opl, "midichannels", &OPL.midichannels);
-  new bx_shadow_num_c(opl, "drumchannel", &OPL.drumchannel);
   for (i=0; i<2; i++) {
     sprintf(name, "chip%d", i+1);
     chip = new bx_list_c(opl, name);
     new bx_shadow_num_c(chip, "index", &OPL.index[i]);
-    new bx_shadow_num_c(chip, "wsenable", &OPL.wsenable[i]);
     new bx_shadow_num_c(chip, "timer1", &OPL.timer[i*2]);
     new bx_shadow_num_c(chip, "timer2", &OPL.timer[i*2+1]);
     new bx_shadow_num_c(chip, "timerinit1", &OPL.timerinit[i*2]);
     new bx_shadow_num_c(chip, "timerinit2", &OPL.timerinit[i*2+1]);
     new bx_shadow_num_c(chip, "tmask", &OPL.tmask[i]);
     new bx_shadow_num_c(chip, "tflag", &OPL.tflag[i]);
-    new bx_shadow_num_c(chip, "percmode", &OPL.percmode[i]);
-    new bx_shadow_num_c(chip, "cyhhnote", &OPL.cyhhnote[i]);
-    new bx_shadow_num_c(chip, "cyhhon", &OPL.cyhhon[i]);
-  }
-  bx_list_c *oper = new bx_list_c(opl, "oper");
-  for (i=0; i<BX_SB16_FM_NOP; i++) {
-    sprintf(name, "%d", i);
-    item = new bx_list_c(oper, name);
-    for (j=0; j<BX_SB16_FM_OPB; j++) {
-      sprintf(name, "%d", j);
-      new bx_shadow_num_c(item, name, &OPL.oper[i][j]);
-    }
-  }
-  bx_list_c *chan = new bx_list_c(opl, "chan");
-  for (i=0; i<BX_SB16_FM_NCH; i++) {
-    sprintf(name, "%d", i);
-    item = new bx_list_c(chan, name);
-    new bx_shadow_num_c(item, "nop", &OPL.chan[i].nop);
-    new bx_shadow_num_c(item, "ncarr", &OPL.chan[i].ncarr);
-    new bx_shadow_num_c(item, "opnum1", &OPL.chan[i].opnum[0]);
-    new bx_shadow_num_c(item, "opnum2", &OPL.chan[i].opnum[1]);
-    new bx_shadow_num_c(item, "opnum3", &OPL.chan[i].opnum[2]);
-    new bx_shadow_num_c(item, "opnum4", &OPL.chan[i].opnum[3]);
-    new bx_shadow_num_c(item, "freq", &OPL.chan[i].freq);
-    new bx_shadow_num_c(item, "afreq", &OPL.chan[i].afreq);
-    new bx_shadow_num_c(item, "midichan", &OPL.chan[i].midichan);
-    new bx_shadow_bool_c(item, "needprogch", &OPL.chan[i].needprogch);
-    new bx_shadow_num_c(item, "midinote", &OPL.chan[i].midinote);
-    new bx_shadow_bool_c(item, "midion", &OPL.chan[i].midion);
-    new bx_shadow_num_c(item, "midibend", &OPL.chan[i].midibend);
-    new bx_shadow_num_c(item, "outputlevel1", &OPL.chan[i].outputlevel[0]);
-    new bx_shadow_num_c(item, "outputlevel2", &OPL.chan[i].outputlevel[1]);
-    new bx_shadow_num_c(item, "outputlevel3", &OPL.chan[i].outputlevel[2]);
-    new bx_shadow_num_c(item, "outputlevel4", &OPL.chan[i].outputlevel[3]);
-    new bx_shadow_num_c(item, "midivol", &OPL.chan[i].midivol);
   }
   new bx_shadow_num_c(list, "mixer_regindex", &MIXER.regindex, BASE_HEX);
   bx_list_c *mixer = new bx_list_c(list, "mixer_reg");
@@ -532,6 +499,7 @@ void bx_sb16_c::register_state(void)
     new bx_shadow_num_c(ins_map, "newbanklsb", &EMUL.remaplist[i].newbanklsb);
     new bx_shadow_num_c(ins_map, "newprogch", &EMUL.remaplist[i].newprogch);
   }
+  adlib_register_state(list);
 }
 
 void bx_sb16_c::after_restore_state(void)
@@ -2268,17 +2236,8 @@ void bx_sb16_c::emul_write(Bit32u value)
                             BX_SB16_IO, BX_SB16_IRQ, BX_SB16_DMAL,
                             BX_SB16_DMAH, 6, BX_SB16_IOMPU, BX_SB16_IOADLIB);
              break;
-           case 5:
-             EMUL.datain.puts("Current OPL2/3 mode: %s",
-                            // ok, I admit that this is a bit ugly...
-                            (OPL.mode == single)?"single OPL2 (OPL3 disabled)\n":
-                            (OPL.mode == adlib)?"single OPL2 (no OPL3)\n":
-                            (OPL.mode == dual)?"double OPL2\n":
-                            (OPL.mode == opl3)?"OPL3\n":
-                            "unknown");
-             break;
            default:
-             EMUL.datain.puts("no info. Only slots 0..5 have values.\n");
+             EMUL.datain.puts("no info. Only slots 0..4 have values.\n");
              break;
          }
          break;
@@ -2300,9 +2259,7 @@ void bx_sb16_c::emul_write(Bit32u value)
         writelog(4, "Force UART mode = %d", MPU.forceuartmode);
         break;
       case 9: // enter specific OPL2/3 mode
-        EMUL.dataout.get(&value8);
-        writelog(4, "Entering OPL2/3 mode %d", value8);
-        opl_entermode((bx_sb16_fm_mode) value8);
+        // this feature has been removed
         break;
       case 10: // check emulator present
         EMUL.datain.put(0x55);
@@ -2317,105 +2274,6 @@ void bx_sb16_c::emul_write(Bit32u value)
 }
 
 // and finally the OPL (FM emulation) part
-
-// select a new operational mode for the FM part
-// this also serves as reset for the OPL chip
-void bx_sb16_c::opl_entermode(bx_sb16_fm_mode newmode)
-{
-  int i, j;
-
-  // do nothing if the mode is unchanged
-  if (OPL.mode == newmode)
-    return;
-
-  // if the old mode was 0, and the new mode is 3, then
-  // no reset is necessary, just set the flag
-  if ((OPL.mode == single) && (newmode == opl3))
-  {
-      writelog(MIDILOG(4), "OPL3 mode enabled");
-      OPL.mode = newmode;
-      return;
-  }
-
-  writelog(MIDILOG(4), "Switching to OPL mode %d from %d", newmode, OPL.mode);
-
-  for (i=0; i<BX_SB16_FM_NCH; i++)
-    opl_keyonoff(i, 0);
-
-  OPL.mode = newmode;
-
-  if (OPL.timer_running != 0)
-  {
-      bx_pc_system.deactivate_timer(OPL.timer_handle);
-      OPL.timer_running = 0;
-  }
-
-  OPL.drumchannel = 10;
-
-  OPL.midichannels = 0xffff;    // all channels but the drum channel available
-  OPL.midichannels &= ~(1 << OPL.drumchannel);
-
-  for (i=0; i<2; i++) {
-      OPL.wsenable[i] = 0;
-      OPL.tmask[i] = 0;
-      OPL.tflag[i] = 0;
-      OPL.percmode[i] = 0;
-  }
-
-  for (i=0; i<4; i++) {
-      OPL.timer[i] = 0;
-      OPL.timerinit[i] = 0;
-  }
-
-  // initialize the operators
-  for (i=0; i<BX_SB16_FM_NOP; i++)
-    for (j=0; j<BX_SB16_FM_OPB; j++)
-      OPL.oper[i][j] = 0;
-
-  // TESTING for array bounds - compiler should bark if too high
-  OPL.oper[BX_SB16_FM_NOP-1][BX_SB16_FM_OPB-1] = 0;
-
-  // initialize the channels
-
-  // first zero all values
-  for (i=0; i<BX_SB16_FM_NCH; i++)
-  {
-      OPL.chan[i].nop = 0;
-      for (j=0; j<4; j++) {
-         OPL.chan[i].opnum[j] = 0;
-         OPL.chan[i].outputlevel[j] = 0;
-      }
-      OPL.chan[i].freq = 0;
-      OPL.chan[i].afreq = 0;
-      OPL.chan[i].midichan = 0xff;
-      OPL.chan[i].needprogch = 0;
-      OPL.chan[i].midion = 0;
-      OPL.chan[i].midinote = 0;
-      OPL.chan[i].midibend = 0;
-      OPL.chan[i].midivol = 0;
-  }
-
-  // assign the operators
-  for (i=0; i<BX_SB16_FM_NCH; i++)
-  {
-      OPL.chan[i].nop = 2;
-      // who invented this absolutely insane operator grouping??
-      // it's like this: (ch 9...17 as 0...8 but higher operators)
-      // ch:   0   1   2   3   4   5   6   7   8
-      // op1:  0   1   2   6   7   8  12  13  14
-      // op2:  3   4   5   9  10  11  15  16  17
-      OPL.chan[i].opnum[0] = i + ((int) (i / 3)) * 3;
-      OPL.chan[i].opnum[1] = OPL.chan[i].opnum[0] + 3;
-  }
-
-  // assign 4-op operators to the appropriate channels
-  // note- they are not used unless .nop == 4
-  for (i=0; i<6; i++) {
-      j = i + (i /3) * 6;
-      OPL.chan[j].opnum[2] = OPL.chan[j + 3].opnum[0];
-      OPL.chan[j].opnum[3] = OPL.chan[j + 3].opnum[1];
-  }
-}
 
 // this is called whenever one of the timer elapses
 void bx_sb16_c::opl_timerevent()
@@ -2454,78 +2312,11 @@ Bit32u bx_sb16_c::opl_status(int chipid)
 void bx_sb16_c::opl_data(Bit32u value, int chipid)
 {
   int index = OPL.index[chipid];
-  int opernum = -1;      // OPL3 operator number; 0..35
-  int channum = -1;      // OPL3 channel number; 0..17
-  int subopnum = -1;     // channel operator; 0..nop-1
 
   writelog(MIDILOG(4), "Write to OPL(%d) register %02x: %02x",
            chipid, index, value);
 
-  // first find out operator and/or channel numbers
-  // case 0x20 ... 0x95:  includes too many ports, but that is harmless
-  // case 0xe0 ... 0xf5:
-  if (((index>=0x20) && (index<=0x95)) ||
-      ((index>=0xe0) && (index<=0xf5))) {
-      // operator access
-      // find the operator number. 0..17 on chip 1, 18..35 on chip 2
-
-      // note, the numbers are not continuous (again...), so we need
-      // this rather weird calculation
-      opernum = index & 0x07;
-      if (opernum > 5)   // invalid register, has no operator associated
-      {
-         opernum = -1;
-         goto break_here;
-      }
-
-      opernum += ((index & 0x18) >> 3) * 6;
-      if (opernum > 17)     // Operators 18+ have to be accessed on other address set
-      {
-         opernum = -1;
-         goto break_here;
-      }
-
-      if (chipid == 1)
-         opernum += BX_SB16_FM_NOP / 2;
-
-      // find out the channel number, and which of the channel's operators this is
-      channum = opernum % 3 + ((int) (opernum / 6)) * 3;
-      subopnum = 0;
-
-      if ((opernum % 6) > 2) // second operator
-         subopnum = 1;
-
-      // if (channel - 3) is in a four-operator mode, that is really
-      // what this operator belongs to
-      if (channum >= 3) {
-         if (OPL.chan[channum - 3].nop == 4)
-         {
-           channum -= 3;
-           subopnum += 2;
-         }
-      }
-      writelog(MIDILOG(5), "Is Channel %d, Oper %d, Subop %d",
-              channum, opernum, subopnum);
-  }
-  else if ((index>=0xa0) && (index<=0xc8)) {
-      // channel access
-      channum = index & 0x0f;
-      if (OPL.chan[channum].nop == 0)
-         channum = -1; // the channel is disabled
-      writelog(MIDILOG(5), "Is channel %d", channum);
-  }
-
-break_here:
-
-  switch (index & 0xff)
-  {
-    // WSEnable and Test Register
-    case 0x01:
-      OPL.wsenable[chipid] = (value >> 5) & 1;
-      if ((value & 0x1f) != 0)
-        writelog(MIDILOG(3), "Warning: Test Register set to %02x", value & 0x1f);
-      break;
-
+  switch (index & 0xff) {
     // the two timer counts
     case 0x02:
       OPL.timerinit[chipid * 2] = OPL.timer[chipid * 2] = value;
@@ -2534,306 +2325,20 @@ break_here:
       OPL.timerinit[chipid * 2 + 1] = OPL.timer[chipid * 2 + 1] = (value << 2);
       break;
 
-    // if OPL2: timer masks
-    // if OPL3: 4-operator modes
+    // the timer masks
     case 0x04:
-      if ((chipid == 0) || (OPL.mode == dual))
+      if (chipid == 0) {
         opl_settimermask(value, chipid);
-      else
-        opl_set4opmode(value & 0x3f);
-      break;
-
-    // only OPL3: OPL3 enable
-    case 0x05:
-      if (chipid == 1)
-      {
-         if ((value & 1) != 0)
-           opl_entermode(opl3);
-         else
-           opl_entermode(single);
       }
       break;
-
-    // Composite Sine Wave and Note-sel (ignored)
-    case 0x08:
-      if (value != 0)
-        writelog(MIDILOG(3),
-                "Warning: write of %02x to CSW/Note-sel ignored", value);
-      break;
-
-    // most importantly the percussion part
-    case 0xbd:
-      opl_setpercussion(value, chipid);
-      break;
-
-    // the operator registers
-    // case 0x20 ... 0x35:
-    case 0x20:
-    case 0x21:
-    case 0x22:
-    case 0x23:
-    case 0x24:
-    case 0x25:
-    case 0x26:
-    case 0x27:
-    case 0x28:
-    case 0x29:
-    case 0x2a:
-    case 0x2b:
-    case 0x2c:
-    case 0x2d:
-    case 0x2e:
-    case 0x2f:
-    case 0x30:
-    case 0x31:
-    case 0x32:
-    case 0x33:
-    case 0x34:
-    case 0x35:
-    // case 0x60 ... 0x75:
-    case 0x60:
-    case 0x61:
-    case 0x62:
-    case 0x63:
-    case 0x64:
-    case 0x65:
-    case 0x66:
-    case 0x67:
-    case 0x68:
-    case 0x69:
-    case 0x6a:
-    case 0x6b:
-    case 0x6c:
-    case 0x6d:
-    case 0x6e:
-    case 0x6f:
-    case 0x70:
-    case 0x71:
-    case 0x72:
-    case 0x73:
-    case 0x74:
-    case 0x75:
-    // case 0x80 ... 0x95:
-    case 0x80:
-    case 0x81:
-    case 0x82:
-    case 0x83:
-    case 0x84:
-    case 0x85:
-    case 0x86:
-    case 0x87:
-    case 0x88:
-    case 0x89:
-    case 0x8a:
-    case 0x8b:
-    case 0x8c:
-    case 0x8d:
-    case 0x8e:
-    case 0x8f:
-    case 0x90:
-    case 0x91:
-    case 0x92:
-    case 0x93:
-    case 0x94:
-    case 0x95:
-      if (opernum != -1)
-      {
-         opl_changeop(channum, opernum, (index / 0x20) - 1, value);
-         break;
-      }
-      // else let default: catch it
-
-    // case 0x40 ... 0x55:
-    case 0x40:
-    case 0x41:
-    case 0x42:
-    case 0x43:
-    case 0x44:
-    case 0x45:
-    case 0x46:
-    case 0x47:
-    case 0x48:
-    case 0x49:
-    case 0x4a:
-    case 0x4b:
-    case 0x4c:
-    case 0x4d:
-    case 0x4e:
-    case 0x4f:
-    case 0x50:
-    case 0x51:
-    case 0x52:
-    case 0x53:
-    case 0x54:
-    case 0x55:
-      if (opernum != -1)
-      {
-         opl_changeop(channum, opernum, 1, value & 0xc0);
-         if (subopnum != -1)
-           opl_setvolume(channum, subopnum, value & 0x3f);
-         break;
-      }
-      // else let default: catch it
-
-    // case 0xe0 ... 0xf5:
-    case 0xe0:
-    case 0xe1:
-    case 0xe2:
-    case 0xe3:
-    case 0xe4:
-    case 0xe5:
-    case 0xe6:
-    case 0xe7:
-    case 0xe8:
-    case 0xe9:
-    case 0xea:
-    case 0xeb:
-    case 0xec:
-    case 0xed:
-    case 0xee:
-    case 0xef:
-    case 0xf0:
-    case 0xf1:
-    case 0xf2:
-    case 0xf3:
-    case 0xf4:
-    case 0xf5:
-      if (opernum != -1)
-      {
-         opl_changeop(channum, opernum, 5, value & 0x07);
-         break;
-      }
-      // else let default: catch it
-
-    // and the channel registers
-    // case 0xa0 ... 0xa8:
-    case 0xa0:
-    case 0xa1:
-    case 0xa2:
-    case 0xa3:
-    case 0xa4:
-    case 0xa5:
-    case 0xa6:
-    case 0xa7:
-    case 0xa8:
-      if (channum != -1)
-      {
-         if (value != (Bit32u)(OPL.chan[channum].freq & 0xff)) {
-           OPL.chan[channum].freq &= 0xff00;
-           OPL.chan[channum].freq |= value;
-           opl_setfreq(channum);
-         }
-         break;
-      }
-      // else let default: catch it
-
-    // case 0xb0 ... 0xb8:
-    case 0xb0:
-    case 0xb1:
-    case 0xb2:
-    case 0xb3:
-    case 0xb4:
-    case 0xb5:
-    case 0xb6:
-    case 0xb7:
-    case 0xb8:
-      if (channum != -1)
-      {
-         if ((value & 0x1f) != ((Bit32u)(OPL.chan[channum].freq >> 8) & 0x1f)) {
-           OPL.chan[channum].freq &= 0x00ff;
-           OPL.chan[channum].freq |= (value & 0x1f) << 8;
-           opl_setfreq(channum);
-         }
-         opl_keyonoff(channum, (value >> 5) & 1);
-         break;
-      }
-      // else let default: catch it
-
-
-      // this is a channel access, but it belongs to the instrument
-      // definition, so put it into value [4] of the channel's first operator
-    // case 0xc0 ... 0xc8:
-    case 0xc0:
-    case 0xc1:
-    case 0xc2:
-    case 0xc3:
-    case 0xc4:
-    case 0xc5:
-    case 0xc6:
-    case 0xc7:
-    case 0xc8:
-      if (channum != -1)
-      {
-         int needchange = 0;
-         if ((OPL.oper[OPL.chan[channum].opnum[0]][4] & 1) != (int)(value & 1))
-           needchange = 1;
-
-         opl_changeop(channum, OPL.chan[channum].opnum[0], 4, value & 0x3f);
-
-         if (needchange == 1)
-           opl_setmodulation(channum);
-         break;
-      }
-      // else let default: catch it
-
-    default:
-      writelog(MIDILOG(3), "Attempt to write %02x to unknown OPL(%d) register %02x",
-              value, chipid, index);
-      break;
-  }
-}
-
-// change a value of an operator
-void bx_sb16_c::opl_changeop(int channum, int opernum, int byte, int value)
-{
-  if (OPL.oper[opernum][byte] != value) {
-      OPL.oper[opernum][byte] = value;
-      OPL.chan[channum].needprogch = 1;
-  }
-}
-
-// called for a write to the 4-operator mode register
-void bx_sb16_c::opl_set4opmode(int new4opmode)
-{
-  int i, channel1, channel2;
-
-  writelog(MIDILOG(4), "Switching to 4-op mode %02x", new4opmode);
-
-  // every bit switches a 4-op channel-pairing on or off
-  // 4-op mode is two channels combined into the first one
-  for (i = 0; i<6; i++)
-  {
-      channel1 = i + (i / 3) * 6;
-      channel2 = channel1 + 3;
-
-      if (((new4opmode >> i) & 1) != 0)
-      {   // enable 4-op mode
-         opl_keyonoff(channel1, 0);
-         opl_keyonoff(channel2, 0);
-
-         OPL.chan[channel1].nop = 4;
-         OPL.chan[channel2].nop = 0;
-
-         OPL.chan[channel1].needprogch = 1;
-      }
-      else
-      {   // disable 4-op mode
-         opl_keyonoff(channel1, 0);
-
-         OPL.chan[channel1].nop = 2;
-         OPL.chan[channel2].nop = 2;
-
-         OPL.chan[channel1].needprogch = 1;
-         OPL.chan[channel2].needprogch = 1;
-      }
   }
 }
 
 // called for a write to port 4 of either chip
 void bx_sb16_c::opl_settimermask(int value, int chipid)
 {
-  if ((value & 0x80) != 0)     // reset IRQ and timer flags
-  {                           // all other bits ignored!
+  if ((value & 0x80) != 0) {  // reset IRQ and timer flags
+                              // all other bits ignored!
       writelog(MIDILOG(5), "IRQ Reset called");
       OPL.tflag[chipid] = 0;
       return;
@@ -2844,183 +2349,17 @@ void bx_sb16_c::opl_settimermask(int value, int chipid)
            chipid, OPL.tmask[chipid]);
 
   // do we have to activate or deactivate the timer?
-  if (((value & 0x03) != 0) ^ (OPL.timer_running != 0))
-  {
-    if ((value & 0x03) != 0)    // yes, it's different. Start or stop?
-    {
+  if (((value & 0x03) != 0) ^ (OPL.timer_running != 0)) {
+    if ((value & 0x03) != 0) {  // yes, it's different. Start or stop?
        writelog(MIDILOG(5), "Starting timers");
        bx_pc_system.activate_timer(OPL.timer_handle, 80, 1);
        OPL.timer_running = 1;
-    }
-    else
-    {
+    } else {
        writelog(MIDILOG(5), "Stopping timers");
        bx_pc_system.deactivate_timer(OPL.timer_handle);
        OPL.timer_running = 0;
     }
   }
-}
-
-// called when the modulation mode of a channel changes
-void bx_sb16_c::opl_setmodulation(int channel)
-{
-  int opernum = OPL.chan[channel].opnum[0];
-
-  if ((OPL.chan[channel].nop == 0) &&
-      (channel >= 3) &&
-      (OPL.chan[channel].nop == 4)) channel -= 3;
-
-  if (OPL.chan[channel].nop == 2)
-  {
-      OPL.chan[channel].ncarr = (OPL.oper[opernum][4] & 1) + 1;
-      OPL.chan[channel].needprogch = 1;
-  }
-  else if (OPL.chan[channel].nop == 4)
-  {
-      int opernum2 = OPL.chan[channel].opnum[2];
-      int modmode = (OPL.oper[opernum][4] & 1) |
-                   ((OPL.oper[opernum2][4] & 1) >> 1);
-      OPL.chan[channel].ncarr = modmode + 1 - (modmode / 2);
-      OPL.chan[channel].needprogch = 1;
-  }
-}
-
-// called for a write to register 0xbd, the percussion register
-void bx_sb16_c::opl_setpercussion(Bit8u value, int chipid)
-{
-  UNUSED(value);
-  UNUSED(chipid);
-}
-
-// called when a channel volume changes
-// opnum is which of the channel's operators had the change, not
-// the actual operator number. Thus, it's from 0..3.
-void bx_sb16_c::opl_setvolume(int channel, int opnum, int outlevel)
-{
-  UNUSED(opnum);
-  UNUSED(outlevel);
-
-  OPL.chan[channel].midivol = 127;
-}
-
-
-// called when a frequency change is complete, to find out the
-// corresponding midi key and pitch bender values
-void bx_sb16_c::opl_setfreq(int channel)
-{
-  int block,fnum;
-
-  // definition:
-  // low-byte of freq:  8 bit F-Number, LSB's
-  // high-byte of freq: [2 reserved][KEY-ON][3 block][2 F-Number MSB's]
-  // [KEY-ON] is ignored by this function
-  //
-  // the definition of the F-number is
-  // F-Number = Frequency * 2**(20-block) / (49716 Hz)
-  //
-  // Thus, the frequency can be calculated as
-  // Frequency = F-Number / 2**(20-block) * 49716 Hz
-  //
-  // (But remember that afreq is in 10^-3 Hz!)
-  //
-
-  fnum = OPL.chan[channel].freq & 0x3ff;
-  block = (OPL.chan[channel].freq >> 10) & 0x07;
-
-  writelog(MIDILOG(5), "F-Num is %d, block is %d", fnum, block);
-
-  Bit32u realfreq;
-  const Bit32u freqbase = 49716000; // const is better than #define if type is important
-
-  // this is a bit messy to preserve accuracy as much as possible,
-  // otherwise we might either lose precision, or the higher bits.
-  realfreq = ((freqbase >> 4) * fnum) >> (16 - block);
-
-  OPL.chan[channel].afreq = realfreq;
-
-  // now find out what MIDI key this corresponds to, and with what
-  // pitch bender value... (the latter not implemented yet)
-  int octave=0;          // 0: Octave from 523.2511 Hz; pos=higher, neg=lower
-  int keynum=0;          // 0=C; 1=C#; 2=D; ...; 11=B
-
-  if (realfreq > 8175) {    // 8.175 is smallest possible frequency
-    const Bit32u freqC = 523251;    // Midi note 72; "C": 523.251 Hz
-    Bit32u keyfreq;           // Frequency scaled to the octave from freqC to 2*freqC
-
-    if (realfreq > freqC) {
-      while ((realfreq >> (++octave)) > freqC);
-      keyfreq = realfreq >> (--octave);
-    } else {
-      while ((realfreq << (++octave)) < freqC);
-      keyfreq = realfreq << octave;
-      octave = -octave;
-    }
-
-    // this is a reasonable approximation for keyfreq /= 1.059463
-    // (that value is 2**(1/12), which is the difference between two keys)
-    while ((keyfreq -= ((keyfreq * 1000) / 17817)) > freqC)
-      keynum++;
-  } else {
-    octave = -6;
-    keynum = 0;
-  }
-
-  OPL.chan[channel].midinote = (octave + 6) * 12 + keynum;
-
-  writelog(MIDILOG(5), "New frequency %.3f is key %d in octave %d; midi note %d",
-           (float) realfreq/1000.0, keynum, octave, OPL.chan[channel].midinote);
-}
-
-// called when a note is possibly turned on or off
-void bx_sb16_c::opl_keyonoff(int channel, bx_bool onoff)
-{
-  int i;
-  Bit8u commandbytes[3];
-
-  if (OPL.mode == fminit)
-    return;
-
-  // first check if there really is a change in the state
-  if (onoff == OPL.chan[channel].midion)
-    return;
-
-  OPL.chan[channel].midion = onoff;
-
-  if (BX_SB16_THIS fmopl_callback_id < 0) {
-    // check if we have a midi channel, otherwise allocate one if possible
-    if (OPL.chan[channel].midichan == 0xff) {
-      for (i=0; i<16; i++)
-        if (((OPL.midichannels >> i) & 1) != 0) {
-          OPL.chan[channel].midichan = i;
-          OPL.midichannels &= ~(1 << i); // mark channel as used
-          OPL.chan[channel].needprogch = 1;
-        }
-      if (OPL.chan[channel].midichan == 0xff)
-        return;
-    }
-
-    if (OPL.chan[channel].needprogch != 0)
-      opl_midichannelinit(channel);
-
-    commandbytes[0] = OPL.chan[channel].midichan;
-    commandbytes[1] = OPL.chan[channel].midinote;
-    commandbytes[2] = 0;
-
-    if (onoff == 0) {
-      commandbytes[0] |= 0x80;  // turn it off
-    } else {
-      commandbytes[0] |= 0x90;  // turn it on
-      commandbytes[2] = OPL.chan[channel].midivol;
-    }
-
-    writemidicommand(commandbytes[0], 2, & (commandbytes[1]));
-  }
-}
-
-// setup a midi channel
-void bx_sb16_c::opl_midichannelinit(int channel)
-{
-  UNUSED(channel);
 }
 
 Bit32u bx_sb16_c::fmopl_generator(Bit16u rate, Bit8u *buffer, Bit32u len)

@@ -1502,4 +1502,20 @@ bx_bool adlib_getsample(Bit16s* sndptr, Bits numsamples)
   return opl_active;
 }
 
+void adlib_register_state(bx_list_c *parent)
+{
+  char regnum[8];
+
+  bx_list_c *adlib = new bx_list_c(parent, "adlib");
+  new bx_shadow_num_c(adlib, "opl_index", &opl_index, BASE_HEX);
+#if defined(OPLTYPE_IS_OPL3)
+  bx_list_c *regs = new bx_list_c(adlib, "regs");
+  for (int i = 0; i < 512; i++) {
+    sprintf(regnum, "0x%03x", i);
+    new bx_shadow_num_c(regs, regnum, &adlibreg[i], BASE_HEX);
+  }
+#endif
+  // TODO: add internal settings
+}
+
 #endif

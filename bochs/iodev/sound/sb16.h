@@ -79,49 +79,6 @@ struct bx_sb16_ins_map {
   Bit8u newbankmsb, newbanklsb, newprogch;
 };
 
-// One operator of the FM emulation
-#define BX_SB16_FM_NOP       36 // OPL3 has 36 operators
-#define BX_SB16_FM_OPB       6  // one operator has 6 bytes
-typedef Bit8u bx_sb16_fm_operator[BX_SB16_FM_OPB];
-   /* Explanation of the values:
-      (note [xx] is one bit for xx; [5 xx] is five bits for xx,
-      all bits listed MSB to LSB)
-
-      [0] = [Tremolo][Vibrato][Sustain][KSR][4 Frequency Multiply]
-      [1] = [2 Key Scale Level][6 Output Level for modulators, reserved for others]
-      [2] = [4 Attack Rate][4 Decay Rate]
-      [3] = [4 Sustain Level][4 Release Rate]
-      [4] = [2 reserved][Right][Left][3 Feedback Factor][SynthType]
-      [5] = [5 reserved][3 Waveform Select]
-
-      Frequency and Output Level are really properties of the channel,
-      so they get stored there. However, Output Level of the modulator
-      in FM synthesis varies the instrument.
-
-      [4] is only set for the first operator, and zeroed for the others.
-
-      All reserved bits are zeroed.
-   */
-
-// One channel (1 to 4 operators)
-#define BX_SB16_FM_NCH         18      // OPL3 has at most 18 channels
-
-typedef struct {
-  int nop;          // number of operators used: 0=disabled, 1=percussion, 2 or 4=melodic
-  int ncarr;        // how many carriers this channel has (1..3)
-  int opnum[4];     // operator numbers
-  Bit16u freq;      // frequency (in a special code)
-  Bit32u afreq;     // actual frequency in milli-Hertz (10^-3 Hz)
-  Bit8u midichan;   // assigned midi channel
-  bx_bool needprogch;  // has the instrument changed
-  Bit8u midinote;   // currently playing midi note
-  bx_bool midion;     // is the note on
-  Bit16u midibend;  // current value of the pitch bender
-  Bit8u outputlevel[4];// 6-bit output level attenuations
-  Bit8u midivol;    // current midi volume (velocity)
-} bx_sb16_fm_channel;
-
-
 // This is the class for the input and
 // output FIFO buffers of the SB16
 
@@ -256,33 +213,17 @@ private:
   // the ASP/CSP registers
   Bit8u csp_reg[256];
 
-  enum bx_sb16_fm_mode {single, adlib, dual, opl3, fminit};
-
   // the variables common to all FM emulations
   struct bx_sb16_opl_struct;
   friend struct bx_sb16_opl_struct;
   struct bx_sb16_opl_struct {
-    bx_sb16_fm_mode mode;
-    // modes: single: one OPL2 (OPL3 disabled),
-    //        adlib:  one OPL2 (no OPL3),
-    //        dual:   two seperate OPL2
-    //        opl3:   one OPL3 (enabled)
-
     int timer_handle;
     int timer_running;
-    Bit16u midichannels;          // bitmask: unused midichannels
-    int drumchannel;              // midi channel for percussion (10)
     int index[2];                 // index register for the two chips
-    int wsenable[2];              // wave form select enable
     Bit16u timer[4];              // two timers on each chip
     Bit16u timerinit[4];          // initial timer counts
     int tmask[2];                 // the timer masking byte for both chips
     int tflag[2];                 // shows if the timer overflow has occured
-    int percmode[2];              // percussion mode enabled
-    int cyhhnote[2];              // cymbal and high hat midi notes
-    int cyhhon[2];                // cymbal and high hat notes on
-    bx_sb16_fm_operator oper[BX_SB16_FM_NOP];
-    bx_sb16_fm_channel chan[BX_SB16_FM_NCH];
   } opl;
 
   struct bx_sb16_mixer_struct {
@@ -340,20 +281,11 @@ private:
   BX_SB16_SMF void   emul_write(Bit32u value);       // write emulator port
 
       /* The FM emulation part */
-  BX_SB16_SMF void   opl_entermode(bx_sb16_fm_mode newmode);
   BX_SB16_SMF Bit32u opl_status(int chipid);
   BX_SB16_SMF void   opl_data(Bit32u value, int chipid);
+  BX_SB16_SMF void   opl_settimermask(int value, int chipid);
   static void   opl_timer(void *);
   BX_SB16_SMF void   opl_timerevent(void);
-  BX_SB16_SMF void   opl_changeop(int channum, int opernum, int byte, int value);
-  BX_SB16_SMF void   opl_settimermask(int value, int chipid);
-  BX_SB16_SMF void   opl_set4opmode(int new4opmode);
-  BX_SB16_SMF void   opl_setmodulation(int channel);
-  BX_SB16_SMF void   opl_setpercussion(Bit8u value, int chipid);
-  BX_SB16_SMF void   opl_setvolume(int channel, int opnum, int outlevel);
-  BX_SB16_SMF void   opl_setfreq(int channel);
-  BX_SB16_SMF void   opl_keyonoff(int channel, bx_bool onoff);
-  BX_SB16_SMF void   opl_midichannelinit(int channel);
 
       /* several high level sound handlers */
   BX_SB16_SMF int    currentdeltatime();

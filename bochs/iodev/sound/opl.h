@@ -206,6 +206,8 @@ bx_bool adlib_getsample(Bit16s* sndptr, Bits numsamples);
 Bitu adlib_reg_read(Bitu port);
 void adlib_write_index(Bitu port, Bit8u val);
 
+void adlib_register_state(bx_list_c *parent);
+
 extern Bit32u opl_index;
 
 #endif
