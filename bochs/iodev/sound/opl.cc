@@ -1,3 +1,6 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id$
+/////////////////////////////////////////////////////////////////////////
 /*
  *  Copyright (C) 2002-2013  The DOSBox Team
  *  Copyright (C) 2015       The Bochs Project
@@ -39,7 +42,7 @@
 
 #if BX_SUPPORT_SB16
 
-Bit32u opl_index;
+Bit16u opl_index;
 
 static fltype recipsamp;            // inverse of sampling rate
 static Bit16s wavtable[WAVEPREC*3]; // wave form table
@@ -1504,18 +1507,53 @@ bx_bool adlib_getsample(Bit16s* sndptr, Bits numsamples)
 
 void adlib_register_state(bx_list_c *parent)
 {
-  char regnum[8];
+  int i;
+  char numstr[8];
 
   bx_list_c *adlib = new bx_list_c(parent, "adlib");
   new bx_shadow_num_c(adlib, "opl_index", &opl_index, BASE_HEX);
 #if defined(OPLTYPE_IS_OPL3)
   bx_list_c *regs = new bx_list_c(adlib, "regs");
-  for (int i = 0; i < 512; i++) {
-    sprintf(regnum, "0x%03x", i);
-    new bx_shadow_num_c(regs, regnum, &adlibreg[i], BASE_HEX);
+  for (i = 0; i < 512; i++) {
+    sprintf(numstr, "0x%03x", i);
+    new bx_shadow_num_c(regs, numstr, &adlibreg[i], BASE_HEX);
+  }
+  bx_list_c *wavesel = new bx_list_c(adlib, "wave_sel");
+  for (i = 0; i < 44; i++) {
+    sprintf(numstr, "%d", i);
+    new bx_shadow_num_c(wavesel, numstr, &wave_sel[i]);
   }
 #endif
-  // TODO: add internal settings
+  new bx_shadow_num_c(adlib, "vibtab_pos", &vibtab_pos);
+  new bx_shadow_num_c(adlib, "tremtab_pos", &tremtab_pos);
+  bx_list_c *ops = new bx_list_c(adlib, "op");
+  for (i = 0; i < MAXOPERATORS; i++) {
+    sprintf(numstr, "%d", i);
+    bx_list_c *opX = new bx_list_c(ops, numstr);
+    new bx_shadow_num_c(opX, "cval", &op[i].cval);
+    new bx_shadow_num_c(opX, "lastcval", &op[i].lastcval);
+    new bx_shadow_num_c(opX, "tcount", &op[i].tcount);
+    new bx_shadow_num_c(opX, "wfpos", &op[i].wfpos);
+    new bx_shadow_num_c(opX, "tinc", &op[i].tinc);
+    new bx_shadow_num_c(opX, "mfbi", &op[i].mfbi);
+    new bx_shadow_num_c(opX, "op_state", &op[i].op_state);
+    new bx_shadow_num_c(opX, "toff", &op[i].toff);
+    new bx_shadow_num_c(opX, "freq_high", &op[i].freq_high);
+    new bx_shadow_num_c(opX, "cur_wmask", &op[i].cur_wmask);
+    new bx_shadow_num_c(opX, "act_state", &op[i].act_state);
+    new bx_shadow_bool_c(opX, "sys_keep", &op[i].sus_keep);
+    new bx_shadow_bool_c(opX, "vibrato", &op[i].vibrato);
+    new bx_shadow_bool_c(opX, "tremolo", &op[i].tremolo);
+    new bx_shadow_num_c(opX, "generator_pos", &op[i].generator_pos);
+    new bx_shadow_num_c(opX, "step_skip_pos_a", &op[i].step_skip_pos_a);
+#if defined(OPLTYPE_IS_OPL3)
+    new bx_shadow_bool_c(opX, "is_4op", &op[i].is_4op);
+    new bx_shadow_bool_c(opX, "is_4op_attached", &op[i].is_4op_attached);
+    new bx_shadow_num_c(opX, "left_pan", &op[i].left_pan);
+    new bx_shadow_num_c(opX, "right_pan", &op[i].right_pan);
+#endif
+    // TODO: add more internal settings (other variable types)
+  }
 }
 
 #endif

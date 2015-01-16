@@ -1,3 +1,6 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id$
+/////////////////////////////////////////////////////////////////////////
 /*
  *  Copyright (C) 2002-2013  The DOSBox Team
  *  Copyright (C) 2015       The Bochs Project
@@ -127,33 +130,33 @@ typedef int8_t    Bit8s;
      channel.
 */
 typedef struct operator_struct {
-  Bit32s cval, lastcval;      // current output/last output (used for feedback)
+  Bit32s cval, lastcval;   // current output/last output (used for feedback)
   Bit32u tcount, wfpos, tinc;    // time (position in waveform) and time increment
-  fltype amp, step_amp;      // and amplification (envelope)
-  fltype vol;            // volume
-  fltype sustain_level;      // sustain level
-  Bit32s mfbi;          // feedback amount
-  fltype a0, a1, a2, a3;      // attack rate function coefficients
+  fltype amp, step_amp;    // and amplification (envelope)
+  fltype vol;              // volume
+  fltype sustain_level;    // sustain level
+  Bit32s mfbi;             // feedback amount
+  fltype a0, a1, a2, a3;   // attack rate function coefficients
   fltype decaymul, releasemul;  // decay/release rate functions
-  Bit32u op_state;        // current state of operator (attack/decay/sustain/release/off)
+  Bit32u op_state;         // current state of operator (attack/decay/sustain/release/off)
   Bit32u toff;
   Bit32s freq_high;        // highest three bits of the frequency, used for vibrato calculations
-  Bit16s* cur_wform;        // start of selected waveform
+  Bit16s* cur_wform;       // start of selected waveform
   Bit32u cur_wmask;        // mask for selected waveform
   Bit32u act_state;        // activity state (regular, percussion)
-  bool sus_keep;          // keep sustain level when decay finished
-  bool vibrato,tremolo;      // vibrato/tremolo enable bits
+  bx_bool sus_keep;        // keep sustain level when decay finished
+  bx_bool vibrato,tremolo; // vibrato/tremolo enable bits
 
   // variables used to provide non-continuous envelopes
-  Bit32u generator_pos;      // for non-standard sample rates we need to determine how many samples have passed
-  Bits cur_env_step;        // current (standardized) sample position
+  Bit32u generator_pos;    // for non-standard sample rates we need to determine how many samples have passed
+  Bits cur_env_step;       // current (standardized) sample position
   Bits env_step_a,env_step_d,env_step_r;  // number of std samples of one step (for attack/decay/release mode)
-  Bit8u step_skip_pos_a;      // position of 8-cyclic step skipping (always 2^x to check against mask)
-  Bits env_step_skip_a;      // bitmask that determines if a step is skipped (respective bit is zero then)
+  Bit8u step_skip_pos_a;   // position of 8-cyclic step skipping (always 2^x to check against mask)
+  Bits env_step_skip_a;    // bitmask that determines if a step is skipped (respective bit is zero then)
 
 #if defined(OPLTYPE_IS_OPL3)
-  bool is_4op,is_4op_attached;  // base of a 4op channel/part of a 4op channel
-  Bit32s left_pan,right_pan;    // opl3 stereo panning amount
+  bx_bool is_4op,is_4op_attached; // base of a 4op channel/part of a 4op channel
+  Bit32s left_pan,right_pan;      // opl3 stereo panning amount
 #endif
 } op_type;
 
@@ -208,6 +211,6 @@ void adlib_write_index(Bitu port, Bit8u val);
 
 void adlib_register_state(bx_list_c *parent);
 
-extern Bit32u opl_index;
+extern Bit16u opl_index;
 
 #endif
