@@ -7,7 +7,7 @@
 //    Donald Becker
 //    http://www.psyon.org
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -884,11 +884,7 @@ bool StopWinsock()
 }
 #endif
 
-#ifdef WIN32
-DWORD WINAPI rfbServerThreadInit(LPVOID)
-#else
-void CDECL rfbServerThreadInit(void *indata)
-#endif
+BX_THREAD_FUNC(rfbServerThreadInit, indata)
 {
     SOCKET             sServer;
     SOCKET             sClient;
@@ -957,22 +953,14 @@ end_of_thread:
 #ifdef BX_RFB_WIN32
     StopWinsock();
 #endif
-#ifdef WIN32
-    return 0;
-#else
-    return;
-#endif
+  BX_THREAD_EXIT;
 }
 
 void rfbStartThread()
 {
-#ifdef WIN32
-  DWORD threadID;
-  CreateThread(NULL, 0, rfbServerThreadInit, NULL, 0, &threadID);
-#else
-  pthread_t thread;
-  pthread_create(&thread, NULL, (void *(*)(void *))&rfbServerThreadInit, NULL);
-#endif
+  BX_THREAD_ID(threadID);
+
+  BX_THREAD_CREATE(rfbServerThreadInit, NULL, threadID);
 }
 
 void HandleRfbClient(SOCKET sClient)

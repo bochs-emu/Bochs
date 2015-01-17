@@ -602,17 +602,28 @@ BX_CPP_INLINE Bit64u bx_bswap64(Bit64u val64)
 
 // multithreading support
 #ifdef WIN32
+#define BX_THREAD_ID(id) DWORD (id)
+#define BX_THREAD_FUNC(name,arg) DWORD WINAPI name(LPVOID arg)
+#define BX_THREAD_EXIT return 0
+#define BX_THREAD_CREATE(name,arg,id) CreateThread(NULL, 0, name, arg, 0, &(id))
 #define BX_LOCK(mutex) EnterCriticalSection(&(mutex))
 #define BX_UNLOCK(mutex) LeaveCriticalSection(&(mutex))
 #define BX_MUTEX(mutex) CRITICAL_SECTION (mutex)
 #define BX_INIT_MUTEX(mutex)  InitializeCriticalSection(&(mutex))
 #define BX_FINI_MUTEX(mutex) DeleteCriticalSection(&(mutex))
+#define BX_MSLEEP(val) msleep(val)
 #else
+#define BX_THREAD_ID(id) pthread_t (id)
+#define BX_THREAD_FUNC(name,arg) void name(void* arg)
+#define BX_THREAD_EXIT pthread_exit(NULL)
+#define BX_THREAD_CREATE(name,arg,id) \
+    pthread_create(&(id), NULL, (void *(*)(void *))&(name), arg)
 #define BX_LOCK(mutex) pthread_mutex_lock(&(mutex));
 #define BX_UNLOCK(mutex) pthread_mutex_unlock(&(mutex));
 #define BX_MUTEX(mutex) pthread_mutex_t (mutex)
 #define BX_INIT_MUTEX(mutex) pthread_mutex_init(&(mutex),NULL)
 #define BX_FINI_MUTEX(mutex) pthread_mutex_destroy(&(mutex))
+#define BX_MSLEEP(val) usleep(val*1000)
 #endif
 
 #endif  /* BX_BOCHS_H */

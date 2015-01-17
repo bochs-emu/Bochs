@@ -893,7 +893,7 @@ void bx_vncsrv_gui_c::show_ips(Bit32u ips_count)
 
 // VNCSRV specific functions
 
-void CDECL vncServerThreadInit(void *indata)
+BX_THREAD_FUNC(vncServerThreadInit, indata)
 {
   /* this is the blocking event loop, i.e. it never returns */
   /* 40000 are the microseconds to wait on select(), i.e. 0.04 seconds*/
@@ -904,17 +904,14 @@ void CDECL vncServerThreadInit(void *indata)
 
   rfbServerDown = true;
 
-  return;
+  BX_THREAD_EXIT;
 }
 
 void vncStartThread()
 {
-#ifdef WIN32
-    _beginthread(vncServerThreadInit, 0, NULL);
-#else
-    pthread_t thread;
-    pthread_create(&thread, NULL, (void *(*)(void *))&vncServerThreadInit, NULL);
-#endif
+  BX_THREAD_ID(threadID);
+
+  BX_THREAD_CREATE(vncServerThreadInit, NULL, threadID);
 }
 
 void DrawBitmap(int x, int y, int width, int height, char *bmap,
