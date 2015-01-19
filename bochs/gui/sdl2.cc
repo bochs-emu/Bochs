@@ -1511,13 +1511,47 @@ int sdl2_ask_dialog(BxEvent *event)
   }
 }
 
+int sdl2_yesno_dialog(bx_param_bool_c *bparam)
+{
+  SDL_MessageBoxData msgboxdata;
+  SDL_MessageBoxButtonData buttondata[2];
+  int retcode;
+
+  msgboxdata.flags = SDL_MESSAGEBOX_ERROR;
+  msgboxdata.window = window;
+  msgboxdata.title = bparam->get_label();
+  msgboxdata.message = bparam->get_description();
+  msgboxdata.numbuttons = 2;
+  msgboxdata.buttons = buttondata;
+  msgboxdata.colorScheme = NULL;
+  buttondata[0].flags = 0;
+  buttondata[0].buttonid = 1;
+  buttondata[0].text = "Yes";
+  buttondata[1].flags = SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT;
+  buttondata[1].buttonid = 0;
+  buttondata[1].text = "No";
+  if (SDL_ShowMessageBox(&msgboxdata, &retcode) < 0) {
+    return -1;
+  } else {
+    bparam->set(retcode);
+    return retcode;
+  }
+}
+
 BxEvent *sdl2_notify_callback(void *unused, BxEvent *event)
 {
+  bx_param_c *param;
+
   switch (event->type) {
     case BX_SYNC_EVT_LOG_ASK:
       event->retcode = sdl2_ask_dialog(event);
       return event;
     case BX_SYNC_EVT_ASK_PARAM:
+      param = event->u.param.param;
+      if (param->get_type() == BXT_PARAM_BOOL) {
+        event->retcode = sdl2_yesno_dialog((bx_param_bool_c*)param);
+        return event;
+      }
     case BX_SYNC_EVT_TICK: // called periodically by siminterface.
     case BX_ASYNC_EVT_REFRESH: // called when some bx_param_c parameters have changed.
       // fall into default case
