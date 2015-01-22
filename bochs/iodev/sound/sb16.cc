@@ -2364,7 +2364,7 @@ void bx_sb16_c::opl_settimermask(int value, int chipid)
 
 Bit32u bx_sb16_c::fmopl_generator(Bit16u rate, Bit8u *buffer, Bit32u len)
 {
-  bx_bool ret = adlib_getsample((Bit16s*)buffer, len / 4);
+  bx_bool ret = adlib_getsample(rate, (Bit16s*)buffer, len / 4);
   return ret ? len : 0;
 }
 

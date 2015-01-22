@@ -20,10 +20,9 @@
 
 // Common code for sound lowlevel modules
 
-// this is the size of a sound packet used for sending and receiving
-// it should not be too large to avoid lag, and not too
-// small to avoid unnecessary overhead.
-#define BX_SOUNDLOW_WAVEPACKETSIZE  8192
+// This is the maximum size of a wave data packet.
+// It should be large enough for 0.1 seconds of playback or recording.
+#define BX_SOUNDLOW_WAVEPACKETSIZE  19200
 
 // Definitions for the output functions
 #define BX_SOUNDLOW_OK   0

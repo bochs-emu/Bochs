@@ -991,7 +991,7 @@ static void OPL_INLINE clipit16(Bit32s ival, Bit16s* outval)
   opl_active = 1;
 #endif
 
-bx_bool adlib_getsample(Bit16s* sndptr, Bits numsamples)
+bx_bool adlib_getsample(Bit16u rate, Bit16s* sndptr, Bits numsamples)
 {
   Bits i, endsamples;
   op_type* cptr;
@@ -1008,6 +1008,10 @@ bx_bool adlib_getsample(Bit16s* sndptr, Bits numsamples)
   Bit32s trem_lut[BLOCKBUF_SIZE];
 
   Bits samples_to_process = numsamples;
+
+  if (rate != (Bit16u)int_samplerate) {
+    adlib_init(rate);
+  }
 
   for (Bits cursmp=0; cursmp<samples_to_process; cursmp+=endsamples) {
     endsamples = samples_to_process-cursmp;

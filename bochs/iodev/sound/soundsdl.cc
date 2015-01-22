@@ -157,35 +157,83 @@ int bx_sound_sdl_c::waveready()
   return BX_SOUNDLOW_OK;
 }
 
+void bx_sound_sdl_c::convert_wavedata(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param)
+{
+  int i, j;
+  Bit8u xor_val;
+
+  xor_val = (param->format & 1) ? 0x00 : 0x80;
+  if (param->bits == 16) {
+    if ((param->format & 1) && (param->channels == 2)) {
+      memcpy(dst, src, dstsize);
+    } else if (param->channels == 2) {
+      j = 0;
+      for (i = 0; i < srcsize; i+=2) {
+        dst[j++] = src[i];
+        dst[j++] = src[i+1] ^ xor_val;
+      }
+    } else {
+      j = 0;
+      for (i = 0; i < srcsize; i+=2) {
+        dst[j++] = src[i];
+        dst[j++] = src[i+1] ^ xor_val;
+        dst[j++] = src[i];
+        dst[j++] = src[i+1] ^ xor_val;
+      }
+    }
+  } else {
+    if (param->channels == 2) {
+      j = 0;
+      for (i = 0; i < srcsize; i++) {
+        dst[j++] = 0;
+        dst[j++] = src[i] ^ xor_val;
+      }
+    } else {
+      j = 0;
+      for (i = 0; i < srcsize; i++) {
+        dst[j++] = 0;
+        dst[j++] = src[i] ^ xor_val;
+        dst[j++] = 0;
+        dst[j++] = src[i] ^ xor_val;
+      }
+    }
+  }
+}
+
 int bx_sound_sdl_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *param)
 {
   int ret = BX_SOUNDLOW_OK;
   int tmpsize;
-  int size;
+  int bsize, len2, ssize = 1;
 
   if (memcmp(param, &pcm_param, sizeof(bx_pcm_param_t)) != 0) {
-    startwaveplayback(param->samplerate, param->bits, param->channels == 2,
-                      param->format);
+    startwaveplayback(param->samplerate, 16, 1, 1);
     pcm_param = *param;
   }
+  len2 = length;
+  if (param->bits == 8) ssize = 2;
+  if (param->channels == 1) ssize *= 2;
+  len2 = length * ssize;
   SDL_LockAudio();
   if (WaveOpen) {
-    size = audio_buffer.optr - audio_buffer.iptr;
-    if (size <= 0) {
-      size += BX_SOUND_SDL_BUFSIZE;
+    bsize = audio_buffer.optr - audio_buffer.iptr;
+    if (bsize <= 0) {
+      bsize += BX_SOUND_SDL_BUFSIZE;
     }
-    if (size < length) {
-      BX_ERROR(("SDL: audio buffer overflow: l=%d s=%d", length, size));
-      ret = BX_SOUNDLOW_ERR;
-    } else {
-      if ((audio_buffer.iptr + length) > BX_SOUND_SDL_BUFSIZE) {
+    if (bsize < len2) {
+      BX_ERROR(("SDL: audio buffer overflow: l=%d s=%d", len2, bsize));
+      len2 = (bsize > ssize) ? bsize - ssize : 0;
+    }
+    if (len2 > 0) {
+      if ((audio_buffer.iptr + len2) > BX_SOUND_SDL_BUFSIZE) {
         tmpsize = BX_SOUND_SDL_BUFSIZE - audio_buffer.iptr;
-        memcpy(audio_buffer.data+audio_buffer.iptr, data, tmpsize);
-        memcpy(audio_buffer.data, data+tmpsize, length-tmpsize);
-        audio_buffer.iptr = length-tmpsize;
+        len2 -= tmpsize;
+        convert_wavedata(data, tmpsize/ssize, audio_buffer.data+audio_buffer.iptr, tmpsize, param);
+        convert_wavedata(data+tmpsize/ssize, len2/ssize, audio_buffer.data, len2, param);
+        audio_buffer.iptr = len2;
       } else {
-        memcpy(audio_buffer.data+audio_buffer.iptr, data, length);
-        audio_buffer.iptr += length;
+        convert_wavedata(data, length, audio_buffer.data+audio_buffer.iptr, len2, param);
+        audio_buffer.iptr += len2;
       }
     }
   } else {

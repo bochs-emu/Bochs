@@ -204,7 +204,7 @@ static Bit32u generator_add; // should be a chip parameter
 // general functions
 void adlib_init(Bit32u samplerate);
 void adlib_write(Bitu idx, Bit8u val);
-bx_bool adlib_getsample(Bit16s* sndptr, Bits numsamples);
+bx_bool adlib_getsample(Bit16u rate, Bit16s* sndptr, Bits numsamples);
 
 Bitu adlib_reg_read(Bitu port);
 void adlib_write_index(Bitu port, Bit8u val);
