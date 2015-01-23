@@ -37,6 +37,7 @@ bx_sound_lowlevel_c::bx_sound_lowlevel_c()
 {
   put("soundlow", "SNDLOW");
   record_timer_index = BX_NULL_TIMER_HANDLE;
+  cb_count = 0;
 }
 
 bx_sound_lowlevel_c::~bx_sound_lowlevel_c()

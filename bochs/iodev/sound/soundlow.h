@@ -90,6 +90,11 @@ public:
   virtual void unregister_wave_callback(int callback_id) {}
 protected:
   bx_pcm_param_t pcm_param;
+  int cb_count;
+  struct {
+    void *device;
+    get_wave_cb_t cb;
+  } get_wave[BX_MAX_WAVE_CALLBACKS];
   int record_timer_index;
   int record_packet_size;
   sound_record_handler_t record_handler;

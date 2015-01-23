@@ -33,12 +33,9 @@ public:
 
   virtual int get_type() {return BX_SOUNDLOW_SDL;}
 
-  virtual int    waveready();
-
   virtual int    openwaveoutput(const char *wavedev);
   virtual int    startwaveplayback(int frequency, int bits, bx_bool stereo, int format);
-  virtual int    sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *param);
-  virtual int    stopwaveplayback();
+  virtual int    sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
   virtual int    closewaveoutput();
 
   virtual int register_wave_callback(void *, get_wave_cb_t wd_cb);
@@ -48,12 +45,8 @@ private:
   void convert_wavedata(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param);
   bx_bool WaveOpen;
   SDL_AudioSpec fmt;
-  int cb_count;
-  struct {
-    void *device;
-    get_wave_cb_t cb;
-  } get_wave[BX_MAX_WAVE_CALLBACKS];
   int pcm_callback_id;
+  int cvt_mult;
 };
 
 #endif  // BX_WITH_SDL || BX_WITH_SDL2
