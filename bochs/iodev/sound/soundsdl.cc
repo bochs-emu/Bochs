@@ -151,49 +151,6 @@ int bx_sound_sdl_c::startwaveplayback(int frequency, int bits, bx_bool stereo, i
   return BX_SOUNDLOW_OK;
 }
 
-void bx_sound_sdl_c::convert_wavedata(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param)
-{
-  int i, j;
-  Bit8u xor_val;
-
-  xor_val = (param->format & 1) ? 0x00 : 0x80;
-  if (param->bits == 16) {
-    if ((param->format & 1) && (param->channels == 2)) {
-      memcpy(dst, src, dstsize);
-    } else if (param->channels == 2) {
-      j = 0;
-      for (i = 0; i < srcsize; i+=2) {
-        dst[j++] = src[i];
-        dst[j++] = src[i+1] ^ xor_val;
-      }
-    } else {
-      j = 0;
-      for (i = 0; i < srcsize; i+=2) {
-        dst[j++] = src[i];
-        dst[j++] = src[i+1] ^ xor_val;
-        dst[j++] = src[i];
-        dst[j++] = src[i+1] ^ xor_val;
-      }
-    }
-  } else {
-    if (param->channels == 2) {
-      j = 0;
-      for (i = 0; i < srcsize; i++) {
-        dst[j++] = 0;
-        dst[j++] = src[i] ^ xor_val;
-      }
-    } else {
-      j = 0;
-      for (i = 0; i < srcsize; i++) {
-        dst[j++] = 0;
-        dst[j++] = src[i] ^ xor_val;
-        dst[j++] = 0;
-        dst[j++] = src[i] ^ xor_val;
-      }
-    }
-  }
-}
-
 int bx_sound_sdl_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param)
 {
   int ret = BX_SOUNDLOW_OK;

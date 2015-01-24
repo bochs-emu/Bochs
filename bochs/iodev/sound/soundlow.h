@@ -89,12 +89,17 @@ public:
   virtual int register_wave_callback(void *, get_wave_cb_t wd_cb) {return -1;}
   virtual void unregister_wave_callback(int callback_id) {}
 protected:
+  void convert_wavedata(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param);
+
   bx_pcm_param_t pcm_param;
+  int cvt_mult;
+
   int cb_count;
   struct {
     void *device;
     get_wave_cb_t cb;
   } get_wave[BX_MAX_WAVE_CALLBACKS];
+
   int record_timer_index;
   int record_packet_size;
   sound_record_handler_t record_handler;

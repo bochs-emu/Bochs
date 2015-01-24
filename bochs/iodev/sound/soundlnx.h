@@ -41,7 +41,7 @@ public:
 
   virtual int openwaveoutput(const char *wavedev);
   virtual int startwaveplayback(int frequency, int bits, bx_bool stereo, int format);
-  virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *param);
+  virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
   virtual int stopwaveplayback();
   virtual int closewaveoutput();
 

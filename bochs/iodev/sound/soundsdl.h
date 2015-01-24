@@ -42,11 +42,9 @@ public:
   virtual void unregister_wave_callback(int callback_id);
   void get_wave_data(Bit8u *stream, int len);
 private:
-  void convert_wavedata(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param);
   bx_bool WaveOpen;
   SDL_AudioSpec fmt;
   int pcm_callback_id;
-  int cvt_mult;
 };
 
 #endif  // BX_WITH_SDL || BX_WITH_SDL2

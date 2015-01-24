@@ -320,24 +320,30 @@ int bx_sound_alsa_c::alsa_pcm_write()
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_alsa_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *param)
+int bx_sound_alsa_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param)
 {
-  if (memcmp(param, &pcm_param, sizeof(bx_pcm_param_t)) != 0) {
-    startwaveplayback(param->samplerate, param->bits, param->channels == 2,
-                      param->format);
-    pcm_param = *param;
+  int len2;
+
+  if (memcmp(src_param, &pcm_param, sizeof(bx_pcm_param_t)) != 0) {
+    startwaveplayback(src_param->samplerate, 16, 1, 1);
+    pcm_param = *src_param;
+    cvt_mult = 1;
+    if (src_param->bits == 8) cvt_mult = 2;
+    if (src_param->channels == 1) cvt_mult *= 2;
   }
+  len2 = length * cvt_mult;
   if (!alsa_pcm[0].handle) {
       // Alert indicating that caller is probably erroneous
       BX_ERROR(("sendwavepacket(): pcm is not open"));
       return BX_SOUNDLOW_ERR;
   }
-  if ((alsa_pcm[0].audio_bufsize+length) <= BX_SOUND_ALSA_BUFSIZE) {
-    memcpy(audio_buffer[0]+alsa_pcm[0].audio_bufsize, data, length);
-    alsa_pcm[0].audio_bufsize += length;
-  } else {
+  if ((alsa_pcm[0].audio_bufsize+len2) > BX_SOUND_ALSA_BUFSIZE) {
+    len2 = BX_SOUND_ALSA_BUFSIZE - alsa_pcm[0].audio_bufsize;
     BX_ERROR(("ALSA: audio buffer overflow"));
-    return BX_SOUNDLOW_ERR;
+  }
+  if (len2 > 0) {
+    convert_wavedata(data, length, audio_buffer[0]+alsa_pcm[0].audio_bufsize, len2, src_param);
+    alsa_pcm[0].audio_bufsize += len2;
   }
   if (alsa_pcm[0].audio_bufsize < alsa_pcm[0].alsa_bufsize) {
     return BX_SOUNDLOW_OK;

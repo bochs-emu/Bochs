@@ -191,18 +191,26 @@ int bx_sound_linux_c::startwaveplayback(int frequency, int bits, bx_bool stereo,
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_linux_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *param)
+int bx_sound_linux_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param)
 {
-  if (memcmp(param, &pcm_param, sizeof(bx_pcm_param_t)) != 0) {
-    startwaveplayback(param->samplerate, param->bits, param->channels == 2,
-                      param->format);
-    pcm_param = *param;
+  int len2;
+  Bit8u *tmpbuffer;
+
+  if (memcmp(src_param, &pcm_param, sizeof(bx_pcm_param_t)) != 0) {
+    startwaveplayback(src_param->samplerate, 16, 1, 1);
+    pcm_param = *src_param;
+    cvt_mult = 1;
+    if (src_param->bits == 8) cvt_mult = 2;
+    if (src_param->channels == 1) cvt_mult *= 2;
   }
   if (wave_fd[0] == -1) {
     return BX_SOUNDLOW_ERR;
   }
-
-  int ret = write(wave_fd[0], data, length);
+  len2 = length * cvt_mult;
+  tmpbuffer = (Bit8u*)malloc(len2);
+  convert_wavedata(data, length, tmpbuffer, len2, src_param);
+  int ret = write(wave_fd[0], tmpbuffer, len2);
+  free(tmpbuffer);
   if (ret == length) {
     return BX_SOUNDLOW_OK;
   } else {
