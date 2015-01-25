@@ -199,7 +199,7 @@ void bx_iodebug_c::mem_write(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, v
     }
     bx_guard.interrupt_requested=1;
 #else
-    fprintf(stderr, "IODEBUG write to monitored memory area: %2i\t", area);
+    fprintf(stderr, "IODEBUG write to monitored memory area: %2u\t", area);
 
     if (cpu != NULL)
       fprintf(stderr, "by EIP:\t\t" FMT_ADDRX "\n\t", cpu->get_instruction_pointer());
@@ -262,7 +262,7 @@ void bx_iodebug_c::mem_read(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, vo
     }
     bx_guard.interrupt_requested=1;
 #else
-    fprintf(stderr, "IODEBUG read at monitored memory area: %2i\t", area);
+    fprintf(stderr, "IODEBUG read at monitored memory area: %2u\t", area);
 
     if (cpu != NULL)
       fprintf(stderr, "by EIP:\t\t" FMT_ADDRX "\n\t", cpu->get_instruction_pointer());

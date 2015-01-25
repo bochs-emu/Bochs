@@ -401,7 +401,10 @@ bx_bool hdimage_copy_file(const char *src, const char *dst)
     | O_BINARY
 #endif
     , S_IWUSR | S_IRUSR | S_IRGRP | S_IWGRP);
-  if (fd2 < 0) return 0;
+  if (fd2 < 0) {
+    ::close(fd1);
+    return 0;
+  }
   offset = 0;
   size = 0x20000;
   buf = (char*)malloc(size);

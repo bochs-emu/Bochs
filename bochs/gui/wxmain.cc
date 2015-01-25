@@ -857,15 +857,15 @@ void MyFrame::simStatusChanged(StatusChange change, bx_bool popupNotify) {
 
   // only enabled ATA channels with a cdrom connected are available at runtime
   for (unsigned i=0; i<BX_MAX_ATA_CHANNEL; i++) {
-    sprintf(ata_name, "ata.%d.resources", i);
+    sprintf(ata_name, "ata.%u.resources", i);
     base = (bx_list_c*) SIM->get_param(ata_name);
     if (!SIM->get_param_bool("enabled", base)->get()) {
       menuEdit->Enable(ID_Edit_ATA0+i, canConfigure);
     } else {
-      sprintf(ata_name, "ata.%d.master", i);
+      sprintf(ata_name, "ata.%u.master", i);
       base = (bx_list_c*) SIM->get_param(ata_name);
       if (SIM->get_param_enum("type", base)->get() != BX_ATA_DEVICE_CDROM) {
-        sprintf(ata_name, "ata.%d.slave", i);
+        sprintf(ata_name, "ata.%u.slave", i);
         base = (bx_list_c*) SIM->get_param(ata_name);
         if (SIM->get_param_enum("type", base)->get() != BX_ATA_DEVICE_CDROM) {
           menuEdit->Enable(ID_Edit_ATA0+i, canConfigure);

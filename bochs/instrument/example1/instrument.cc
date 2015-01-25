@@ -41,7 +41,7 @@ void bx_instr_initialize(unsigned cpu)
 
   icpu[cpu].set_cpu_id(cpu);
 
-  fprintf(stderr, "Initialize cpu %d\n", cpu);
+  fprintf(stderr, "Initialize cpu %u\n", cpu);
 }
 
 void bxInstrumentation::bx_instr_reset(unsigned type)

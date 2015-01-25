@@ -201,14 +201,14 @@ void bx_dma_c::register_state(void)
   char name[6];
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "dma", "DMA State");
   for (i=0; i<2; i++) {
-    sprintf(name, "%d", i);
+    sprintf(name, "%u", i);
     bx_list_c *ctrl = new bx_list_c(list, name);
     BXRS_PARAM_BOOL(ctrl, flip_flop, BX_DMA_THIS s[i].flip_flop);
     BXRS_HEX_PARAM_FIELD(ctrl, status_reg, BX_DMA_THIS s[i].status_reg);
     BXRS_HEX_PARAM_FIELD(ctrl, command_reg, BX_DMA_THIS s[i].command_reg);
     BXRS_PARAM_BOOL(ctrl, ctrl_disabled, BX_DMA_THIS s[i].ctrl_disabled);
     for (c=0; c<4; c++) {
-      sprintf(name, "%d", c);
+      sprintf(name, "%u", c);
       bx_list_c *chan = new bx_list_c(ctrl, name);
       BXRS_PARAM_BOOL(chan, DRQ, BX_DMA_THIS s[i].DRQ[c]);
       BXRS_PARAM_BOOL(chan, DACK, BX_DMA_THIS s[i].DACK[c]);

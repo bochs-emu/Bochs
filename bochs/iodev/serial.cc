@@ -583,7 +583,7 @@ void bx_serial_c::register_state(void)
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "serial", "Serial Port State");
   for (i=0; i<BX_N_SERIAL_PORTS; i++) {
-    sprintf(name, "%d", i);
+    sprintf(name, "%u", i);
     port = new bx_list_c(list, name);
     new bx_shadow_bool_c(port, "ls_interrupt", &BX_SER_THIS s[i].ls_interrupt);
     new bx_shadow_bool_c(port, "ms_interrupt", &BX_SER_THIS s[i].ms_interrupt);

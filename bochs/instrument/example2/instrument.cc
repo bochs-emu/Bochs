@@ -47,7 +47,7 @@ void bx_instr_initialize(unsigned cpu)
 
   ia_stats[cpu].active = 0;
 
-  fprintf(stderr, "Initialize cpu %d instrumentation module\n", cpu);
+  fprintf(stderr, "Initialize cpu %u instrumentation module\n", cpu);
 }
 
 void bx_instr_reset(unsigned cpu, unsigned type)
@@ -85,7 +85,7 @@ void bx_instr_before_execution(unsigned cpu, bxInstruction_c *i)
     ia_stats[cpu].total_cnt++;
 
     if (ia_stats[cpu].total_cnt > IA_CNT_DUMP_THRESHOLD) {
-      printf("Dump IA stats for CPU %d\n", cpu);
+      printf("Dump IA stats for CPU %u\n", cpu);
       printf("----------------------------------------------------------\n");
       printf("Interrupts: %d, Exceptions: %d\n", ia_stats[cpu].interrupts, ia_stats[cpu].exceptions);
       while(1) {

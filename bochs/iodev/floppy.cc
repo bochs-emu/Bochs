@@ -343,7 +343,7 @@ void bx_floppy_ctrl_c::register_state(void)
   new bx_shadow_num_c(list, "data_rate", &BX_FD_THIS s.data_rate);
   bx_list_c *command = new bx_list_c(list, "command");
   for (i=0; i<10; i++) {
-    sprintf(name, "%d", i);
+    sprintf(name, "%u", i);
     new bx_shadow_num_c(command, name, &BX_FD_THIS s.command[i], BASE_HEX);
   }
   new bx_shadow_num_c(list, "command_index", &BX_FD_THIS s.command_index);
@@ -357,7 +357,7 @@ void bx_floppy_ctrl_c::register_state(void)
   new bx_shadow_num_c(list, "format_fillbyte", &BX_FD_THIS s.format_fillbyte, BASE_HEX);
   bx_list_c *result = new bx_list_c(list, "result");
   for (i=0; i<10; i++) {
-    sprintf(name, "%d", i);
+    sprintf(name, "%u", i);
     new bx_shadow_num_c(result, name, &BX_FD_THIS s.result[i], BASE_HEX);
   }
   new bx_shadow_num_c(list, "result_index", &BX_FD_THIS s.result_index);
@@ -380,7 +380,7 @@ void bx_floppy_ctrl_c::register_state(void)
   new bx_shadow_num_c(list, "perp_mode", &BX_FD_THIS s.perp_mode);
   new bx_shadow_data_c(list, "buffer", BX_FD_THIS s.floppy_buffer, 512);
   for (i=0; i<4; i++) {
-    sprintf(name, "drive%d", i);
+    sprintf(name, "drive%u", i);
     drive = new bx_list_c(list, name);
     new bx_shadow_num_c(drive, "cylinder", &BX_FD_THIS s.cylinder[i]);
     new bx_shadow_num_c(drive, "head", &BX_FD_THIS s.head[i]);
@@ -417,7 +417,7 @@ void bx_floppy_ctrl_c::runtime_config(void)
 
   for (drive=0; drive<2; drive++) {
     if (BX_FD_THIS s.media[drive].status_changed) {
-      sprintf(pname, "floppy.%d.status", drive);
+      sprintf(pname, "floppy.%u.status", drive);
       status = (SIM->get_param_enum(pname)->get() == BX_INSERTED);
       if (BX_FD_THIS s.media_present[drive]) {
         BX_FD_THIS set_media_status(drive, 0);

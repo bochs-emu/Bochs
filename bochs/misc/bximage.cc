@@ -1222,7 +1222,7 @@ int CDECL main(int argc, char *argv[])
         image_overwrite_check(bx_filename_1);
         if (bx_hdimage == 0) {
           sprintf(bochsrc_line, "floppya: image=\"%s\", status=inserted", bx_filename_1);
-          printf("\nCreating floppy image '%s' with %d sectors\n", bx_filename_1, fdsize_sectors[bx_fdsize_idx]);
+          printf("\nCreating floppy image '%s' with %u sectors\n", bx_filename_1, fdsize_sectors[bx_fdsize_idx]);
           create_flat_image(bx_filename_1, fdsize_sectors[bx_fdsize_idx] * 512);
         } else {
           int heads = 16, spt = 63;

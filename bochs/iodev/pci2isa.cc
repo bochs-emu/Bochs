@@ -168,12 +168,12 @@ void bx_piix3_c::register_state(void)
 
   bx_list_c *irqr = new bx_list_c(list, "irq_registry");
   for (i=0; i<16; i++) {
-    sprintf(name, "%d", i);
+    sprintf(name, "%u", i);
     new bx_shadow_num_c(irqr, name, &BX_P2I_THIS s.irq_registry[i]);
   }
   bx_list_c *irql = new bx_list_c(list, "irq_level");
   for (i=0; i<16; i++) {
-    sprintf(name, "%d", i);
+    sprintf(name, "%u", i);
     new bx_shadow_num_c(irql, name, &BX_P2I_THIS s.irq_level[i]);
   }
 }

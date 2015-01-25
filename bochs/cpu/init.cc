@@ -181,7 +181,7 @@ void BX_CPU_C::register_state(void)
   bx_list_c *cpu = new bx_list_c(SIM->get_bochs_root(), name, name);
 
   for (n=0;n<BX_ISA_EXTENSIONS_ARRAY_SIZE;n++) {
-    sprintf(name, "ia_extensions_bitmask_%d", n);
+    sprintf(name, "ia_extensions_bitmask_%u", n);
     new bx_shadow_num_c(cpu, name, &ia_extensions_bitmask[n], BASE_HEX);
   }
 
@@ -470,7 +470,7 @@ void BX_CPU_C::register_state(void)
   BXRS_PARAM_BOOL(tlb, split_large, TLB.split_large);
 #endif
   for (n=0; n<BX_TLB_SIZE; n++) {
-    sprintf(name, "entry%d", n);
+    sprintf(name, "entry%u", n);
     bx_list_c *tlb_entry = new bx_list_c(tlb, name);
     BXRS_HEX_PARAM_FIELD(tlb_entry, lpf, TLB.entry[n].lpf);
     BXRS_HEX_PARAM_FIELD(tlb_entry, lpf_mask, TLB.entry[n].lpf_mask);

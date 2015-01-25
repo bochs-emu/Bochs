@@ -211,7 +211,7 @@ void pit_82C54::register_state(bx_param_c *parent)
   char name[4];
 
   for (unsigned i=0; i<3; i++) {
-    sprintf(name, "%d", i);
+    sprintf(name, "%u", i);
     bx_list_c *tim = new bx_list_c(parent, name);
     new bx_shadow_bool_c(tim, "GATE", &counter[i].GATE);
     new bx_shadow_bool_c(tim, "OUTpin", &counter[i].OUTpin);

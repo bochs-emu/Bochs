@@ -234,7 +234,7 @@ void bx_pc_system_c::register_state(void)
   bx_list_c *timers = new bx_list_c(list, "timer");
   for (unsigned i = 0; i < numTimers; i++) {
     char name[4];
-    sprintf(name, "%d", i);
+    sprintf(name, "%u", i);
     bx_list_c *bxtimer = new bx_list_c(timers, name);
     BXRS_PARAM_BOOL(bxtimer, inUse, timer[i].inUse);
     BXRS_DEC_PARAM_FIELD(bxtimer, period, timer[i].period);

@@ -373,7 +373,7 @@ void bx_get_command(void)
 
   char prompt[256];
   if (bx_infile_stack_index == 0) {
-    sprintf(prompt, "<bochs:%d> ", bx_infile_stack[bx_infile_stack_index].lineno);
+    sprintf(prompt, "<bochs:%u> ", bx_infile_stack[bx_infile_stack_index].lineno);
   }
   if (SIM->has_debug_gui() && bx_infile_stack_index == 0) {
     // wait for gui debugger to send another debugger command
@@ -878,9 +878,9 @@ void bx_dbg_print_avx_state(unsigned vlen)
     for(unsigned i=0;i<num_regs;i++) {
       dbg_printf("VMM[%02u]: ", i);
       for (int j=vlen-1;j >= 0; j--) {
-        sprintf(param_name, "SSE.xmm%02d_%d", i, j*2+1);
+        sprintf(param_name, "SSE.xmm%02u_%d", i, j*2+1);
         Bit64u hi = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
-        sprintf(param_name, "SSE.xmm%02d_%d", i, j*2);
+        sprintf(param_name, "SSE.xmm%02u_%d", i, j*2);
         Bit64u lo = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
         dbg_printf("%08x_%08x_%08x_%08x", GET32H(hi), GET32L(hi), GET32H(lo), GET32L(lo));
         if (j!=0) dbg_printf("_");
@@ -897,7 +897,7 @@ void bx_dbg_print_avx_state(unsigned vlen)
 #if BX_SUPPORT_EVEX
   if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_AVX512)) {
     for(unsigned i=0;i<8;i++) {
-      sprintf(param_name, "OPMASK.k%d", i);
+      sprintf(param_name, "OPMASK.k%u", i);
       Bit64u opmask = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
       dbg_printf("K%d: %08x_%08x\n", i, GET32H(opmask), GET32L(opmask));
     }

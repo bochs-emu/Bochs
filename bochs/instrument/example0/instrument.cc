@@ -69,7 +69,7 @@ void bx_instr_initialize(unsigned cpu)
   if (instruction == NULL)
       instruction = new struct instruction_t[BX_SMP_PROCESSORS];
 
-  fprintf(stderr, "Initialize cpu %d\n", cpu);
+  fprintf(stderr, "Initialize cpu %u\n", cpu);
 }
 
 void bx_instr_reset(unsigned cpu, unsigned type)
@@ -88,8 +88,8 @@ void bx_print_instruction(unsigned cpu, const instruction_t *i)
   if(length != 0)
   {
     fprintf(stderr, "----------------------------------------------------------\n");
-    fprintf(stderr, "CPU %d: %s\n", cpu, disasm_tbuf);
-    fprintf(stderr, "LEN %d\tBYTES: ", length);
+    fprintf(stderr, "CPU %u: %s\n", cpu, disasm_tbuf);
+    fprintf(stderr, "LEN %u\tBYTES: ", length);
     for(n=0;n < length;n++) fprintf(stderr, "%02x", i->opcode[n]);
     if(i->is_branch)
     {

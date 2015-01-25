@@ -211,10 +211,10 @@ void bx_parallel_c::register_state(void)
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "parallel", "Parallel Port State");
   for (i=0; i<BX_N_PARALLEL_PORTS; i++) {
-    sprintf(pname, "ports.parallel.%d", i+1);
+    sprintf(pname, "ports.parallel.%u", i+1);
     base = (bx_list_c*) SIM->get_param(pname);
     if (SIM->get_param_bool("enabled", base)->get()) {
-      sprintf(name, "%d", i);
+      sprintf(name, "%u", i);
       port = new bx_list_c(list, name);
       new bx_shadow_num_c(port, "data", &BX_PAR_THIS s[i].data, BASE_HEX);
       new bx_shadow_bool_c(port, "slct", &BX_PAR_THIS s[i].STATUS.slct);

@@ -838,12 +838,12 @@ int tftp_send_optack(Bit8u *buffer, tftp_session_t *s)
   }
   if (s->options & TFTP_OPTION_BLKSIZE) {
     *p++='b'; *p++='l'; *p++='k'; *p++='s'; *p++='i'; *p++='z'; *p++='e'; *p++='\0';
-    sprintf((char *)p, "%d", s->blksize_val);
+    sprintf((char *)p, "%u", s->blksize_val);
     p += strlen((const char *)p) + 1;
   }
   if (s->options & TFTP_OPTION_TIMEOUT) {
     *p++='t'; *p++='i'; *p++='m'; *p++='e'; *p++='o'; *p++='u'; *p++='t'; *p++='\0';
-    sprintf((char *)p, "%d", s->timeout_val);
+    sprintf((char *)p, "%u", s->timeout_val);
     p += strlen((const char *)p) + 1;
   }
   tftp_update_timestamp(s);
