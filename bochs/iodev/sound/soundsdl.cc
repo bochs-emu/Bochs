@@ -30,14 +30,87 @@
 
 #include <SDL.h>
 
-#define BX_SOUND_SDL_BUFSIZE  BX_SOUNDLOW_WAVEPACKETSIZE * 16
+// audio buffer code
 
-static struct {
-  int iptr;
-  int optr;
-  Bit8u data[BX_SOUND_SDL_BUFSIZE];
-} audio_buffer;
+typedef struct _audio_buffer_t
+{
+  Bit32u size, pos;
+  Bit8u *data;
+  struct _audio_buffer_t *next;
+} audio_buffer_t;
 
+static audio_buffer_t *audio_buffers = NULL;
+
+audio_buffer_t* new_audio_buffer(Bit32u size)
+{
+  audio_buffer_t *newbuffer = new audio_buffer_t;
+  newbuffer->data = new Bit8u[size];
+  newbuffer->size = size;
+  newbuffer->pos = 0;
+  newbuffer->next = NULL;
+
+  if (audio_buffers == NULL) {
+    audio_buffers = newbuffer;
+  } else {
+    audio_buffer_t *temp = audio_buffers;
+
+    while (temp->next)
+      temp = temp->next;
+
+    temp->next = newbuffer;
+  }
+  return newbuffer;
+}
+
+audio_buffer_t* get_current_buffer()
+{
+  return audio_buffers;
+}
+
+void delete_audio_buffer()
+{
+  audio_buffer_t *tmpbuffer = audio_buffers;
+  audio_buffers = tmpbuffer->next;
+  delete [] tmpbuffer->data;
+  delete tmpbuffer;
+}
+
+// callback functions
+
+Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
+{
+  Bit32u copied = 0;
+  UNUSED(dev);
+  UNUSED(rate);
+
+  while (len > 0) {
+    audio_buffer_t *curbuffer = get_current_buffer();
+    if (curbuffer == NULL)
+      break;
+    Bit32u tmplen = curbuffer->size - curbuffer->pos;
+    if (tmplen > len) {
+      tmplen = len;
+    }
+    if (tmplen > 0) {
+      memcpy(buffer+copied, curbuffer->data+curbuffer->pos, tmplen);
+      curbuffer->pos += tmplen;
+      copied += tmplen;
+      len -= tmplen;
+    }
+    if (curbuffer->pos >= curbuffer->size) {
+      delete_audio_buffer();
+    }
+  }
+  return copied;
+}
+
+void sdl_callback(void *thisptr, Bit8u *stream, int len)
+{
+  memset(stream, 0, len);
+  ((bx_sound_sdl_c*)thisptr)->get_wave_data(stream, len);
+}
+
+// bx_sound_sdl_c class implemenzation
 
 bx_sound_sdl_c::bx_sound_sdl_c()
     :bx_sound_lowlevel_c()
@@ -57,56 +130,9 @@ bx_sound_sdl_c::~bx_sound_sdl_c()
   SDL_QuitSubSystem(SDL_INIT_AUDIO);
 }
 
-
 int bx_sound_sdl_c::openwaveoutput(const char *wavedev)
 {
   return BX_SOUNDLOW_OK;
-}
-
-Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
-{
-  UNUSED(dev);
-  UNUSED(rate);
-  int amount = audio_buffer.iptr - audio_buffer.optr;
-  if (amount < 0) {
-    amount += BX_SOUND_SDL_BUFSIZE;
-  }
-  if (amount > (int)len) {
-    amount = len;
-  }
-  int tmplen = BX_SOUND_SDL_BUFSIZE - audio_buffer.optr;
-  if (amount <= tmplen) {
-    memcpy(buffer, &audio_buffer.data[audio_buffer.optr], amount);
-    audio_buffer.optr += amount;
-  } else {
-    memcpy(buffer, &audio_buffer.data[audio_buffer.optr], tmplen);
-    memcpy(buffer+tmplen, &audio_buffer.data[0], amount-tmplen);
-    audio_buffer.optr = amount-tmplen;
-  }
-  return amount;
-}
-
-void bx_sound_sdl_c::get_wave_data(Bit8u *stream, int len)
-{
-  Bit32u len2 = 0;
-
-  Bit8u *tmpbuffer = (Bit8u*)malloc(len);
-  for (int i = 0; i < cb_count; i++) {
-    if (get_wave[i].cb != NULL) {
-      memset(tmpbuffer, 0, len);
-      len2 = get_wave[i].cb(get_wave[i].device, fmt.freq, tmpbuffer, len);
-      if (len2 > 0) {
-        SDL_MixAudio(stream, tmpbuffer, len2, SDL_MIX_MAXVOLUME);
-      }
-    }
-  }
-  free(tmpbuffer);
-}
-
-void sdl_callback(void *thisptr, Bit8u *stream, int len)
-{
-  memset(stream, 0, len);
-  ((bx_sound_sdl_c*)thisptr)->get_wave_data(stream, len);
 }
 
 int bx_sound_sdl_c::startwaveplayback(int frequency, int bits, bx_bool stereo, int format)
@@ -145,8 +171,6 @@ int bx_sound_sdl_c::startwaveplayback(int frequency, int bits, bx_bool stereo, i
   } else {
     WaveOpen = 1;
   }
-  audio_buffer.iptr = 0;
-  audio_buffer.optr = 0;
   SDL_PauseAudio(0);
   return BX_SOUNDLOW_OK;
 }
@@ -154,8 +178,7 @@ int bx_sound_sdl_c::startwaveplayback(int frequency, int bits, bx_bool stereo, i
 int bx_sound_sdl_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param)
 {
   int ret = BX_SOUNDLOW_OK;
-  int tmpsize;
-  int bufsize, len2;
+  int len2;
 
   if (memcmp(src_param, &pcm_param, sizeof(bx_pcm_param_t)) != 0) {
     startwaveplayback(src_param->samplerate, 16, 1, 1);
@@ -166,26 +189,8 @@ int bx_sound_sdl_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src
   len2 = length * cvt_mult;
   SDL_LockAudio();
   if (WaveOpen) {
-    bufsize = audio_buffer.optr - audio_buffer.iptr;
-    if (bufsize <= 0) {
-      bufsize += BX_SOUND_SDL_BUFSIZE;
-    }
-    if (bufsize < len2) {
-      BX_ERROR(("SDL: audio buffer overflow: l=%d s=%d", len2, bufsize));
-      len2 = (bufsize > cvt_mult) ? bufsize - cvt_mult : 0;
-    }
-    if (len2 > 0) {
-      if ((audio_buffer.iptr + len2) > BX_SOUND_SDL_BUFSIZE) {
-        tmpsize = BX_SOUND_SDL_BUFSIZE - audio_buffer.iptr;
-        len2 -= tmpsize;
-        convert_pcm_data(data, tmpsize/cvt_mult, audio_buffer.data+audio_buffer.iptr, tmpsize, src_param);
-        convert_pcm_data(data+tmpsize/cvt_mult, len2/cvt_mult, audio_buffer.data, len2, src_param);
-        audio_buffer.iptr = len2;
-      } else {
-        convert_pcm_data(data, length, audio_buffer.data+audio_buffer.iptr, len2, src_param);
-        audio_buffer.iptr += len2;
-      }
-    }
+    audio_buffer_t *newbuffer = new_audio_buffer(len2);
+    convert_pcm_data(data, length, newbuffer->data, len2, src_param);
   } else {
     BX_ERROR(("SDL: audio not open"));
     ret = BX_SOUNDLOW_ERR;
@@ -199,6 +204,23 @@ int bx_sound_sdl_c::closewaveoutput()
   WaveOpen = 0;
   SDL_CloseAudio();
   return BX_SOUNDLOW_OK;
+}
+
+void bx_sound_sdl_c::get_wave_data(Bit8u *stream, int len)
+{
+  Bit32u len2 = 0;
+
+  Bit8u *tmpbuffer = (Bit8u*)malloc(len);
+  for (int i = 0; i < cb_count; i++) {
+    if (get_wave[i].cb != NULL) {
+      memset(tmpbuffer, 0, len);
+      len2 = get_wave[i].cb(get_wave[i].device, fmt.freq, tmpbuffer, len);
+      if (len2 > 0) {
+        SDL_MixAudio(stream, tmpbuffer, len2, SDL_MIX_MAXVOLUME);
+      }
+    }
+  }
+  free(tmpbuffer);
 }
 
 int bx_sound_sdl_c::register_wave_callback(void *arg, get_wave_cb_t wd_cb)
