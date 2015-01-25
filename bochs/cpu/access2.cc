@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2014 Stanislav Shwartsman
+//   Copyright (c) 2008-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -26,13 +26,9 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_SUPPORT_X86_64
-
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_linear_byte(unsigned s, Bit64u laddr, Bit8u data)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   Bit64u lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -58,8 +54,6 @@ BX_CPU_C::write_linear_byte(unsigned s, Bit64u laddr, Bit8u data)
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_linear_word(unsigned s, Bit64u laddr, Bit16u data)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
   Bit64u lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -89,8 +83,6 @@ BX_CPU_C::write_linear_word(unsigned s, Bit64u laddr, Bit16u data)
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_linear_dword(unsigned s, Bit64u laddr, Bit32u data)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
   Bit64u lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -125,8 +117,6 @@ BX_CPU_C::write_linear_dword(unsigned s, Bit64u laddr, Bit32u data)
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_linear_qword(unsigned s, Bit64u laddr, Bit64u data)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
   Bit64u lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -161,8 +151,6 @@ BX_CPU_C::write_linear_qword(unsigned s, Bit64u laddr, Bit64u data)
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_linear_xmmword(unsigned s, Bit64u laddr, const BxPackedXmmRegister *data)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
   Bit64u lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -189,8 +177,6 @@ BX_CPU_C::write_linear_xmmword(unsigned s, Bit64u laddr, const BxPackedXmmRegist
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_linear_xmmword_aligned(unsigned s, Bit64u laddr, const BxPackedXmmRegister *data)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   Bit64u lpf = AlignedAccessLPFOf(laddr, 15);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -220,11 +206,8 @@ BX_CPU_C::write_linear_xmmword_aligned(unsigned s, Bit64u laddr, const BxPackedX
 }
 
 #if BX_SUPPORT_AVX
-
 void BX_CPU_C::write_linear_ymmword(unsigned s, Bit64u laddr, const BxPackedYmmRegister *data)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 31);
   Bit64u lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -251,8 +234,6 @@ void BX_CPU_C::write_linear_ymmword(unsigned s, Bit64u laddr, const BxPackedYmmR
 
 void BX_CPU_C::write_linear_ymmword_aligned(unsigned s, Bit64u laddr, const BxPackedYmmRegister *data)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   Bit64u lpf = AlignedAccessLPFOf(laddr, 31);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -281,15 +262,11 @@ void BX_CPU_C::write_linear_ymmword_aligned(unsigned s, Bit64u laddr, const BxPa
   if (access_write_linear(laddr, 32, CPL, 0x0, (void *) data) < 0)
     exception(int_number(s), 0);
 }
-
 #endif
 
 #if BX_SUPPORT_EVEX
-
 void BX_CPU_C::write_linear_zmmword(unsigned s, Bit64u laddr, const BxPackedZmmRegister *data)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 63);
   Bit64u lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -316,8 +293,6 @@ void BX_CPU_C::write_linear_zmmword(unsigned s, Bit64u laddr, const BxPackedZmmR
 
 void BX_CPU_C::write_linear_zmmword_aligned(unsigned s, Bit64u laddr, const BxPackedZmmRegister *data)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   Bit64u lpf = AlignedAccessLPFOf(laddr, 63);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -346,13 +321,11 @@ void BX_CPU_C::write_linear_zmmword_aligned(unsigned s, Bit64u laddr, const BxPa
   if (access_write_linear(laddr, 64, CPL, 0x0, (void *) data) < 0)
     exception(int_number(s), 0);
 }
-
 #endif
 
   Bit8u BX_CPP_AttrRegparmN(2)
 BX_CPU_C::read_linear_byte(unsigned s, Bit64u laddr)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
   Bit8u data;
 
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
@@ -380,7 +353,6 @@ BX_CPU_C::read_linear_byte(unsigned s, Bit64u laddr)
   Bit16u BX_CPP_AttrRegparmN(2)
 BX_CPU_C::read_linear_word(unsigned s, Bit64u laddr)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
   Bit16u data;
 
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
@@ -412,7 +384,6 @@ BX_CPU_C::read_linear_word(unsigned s, Bit64u laddr)
   Bit32u BX_CPP_AttrRegparmN(2)
 BX_CPU_C::read_linear_dword(unsigned s, Bit64u laddr)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
   Bit32u data;
 
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
@@ -444,7 +415,6 @@ BX_CPU_C::read_linear_dword(unsigned s, Bit64u laddr)
   Bit64u BX_CPP_AttrRegparmN(2)
 BX_CPU_C::read_linear_qword(unsigned s, Bit64u laddr)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
   Bit64u data;
 
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
@@ -476,8 +446,6 @@ BX_CPU_C::read_linear_qword(unsigned s, Bit64u laddr)
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_linear_xmmword(unsigned s, Bit64u laddr, BxPackedXmmRegister *data)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
   Bit64u lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -502,8 +470,6 @@ BX_CPU_C::read_linear_xmmword(unsigned s, Bit64u laddr, BxPackedXmmRegister *dat
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_linear_xmmword_aligned(unsigned s, Bit64u laddr, BxPackedXmmRegister *data)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   Bit64u lpf = AlignedAccessLPFOf(laddr, 15);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -531,11 +497,8 @@ BX_CPU_C::read_linear_xmmword_aligned(unsigned s, Bit64u laddr, BxPackedXmmRegis
 }
 
 #if BX_SUPPORT_AVX
-
 void BX_CPU_C::read_linear_ymmword(unsigned s, Bit64u laddr, BxPackedYmmRegister *data)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 31);
   Bit64u lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -560,8 +523,6 @@ void BX_CPU_C::read_linear_ymmword(unsigned s, Bit64u laddr, BxPackedYmmRegister
 
 void BX_CPU_C::read_linear_ymmword_aligned(unsigned s, Bit64u laddr, BxPackedYmmRegister *data)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   Bit64u lpf = AlignedAccessLPFOf(laddr, 31);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -588,15 +549,11 @@ void BX_CPU_C::read_linear_ymmword_aligned(unsigned s, Bit64u laddr, BxPackedYmm
   if (access_read_linear(laddr, 32, CPL, BX_READ, 0x0, (void *) data) < 0)
     exception(int_number(s), 0);
 }
-
 #endif
 
 #if BX_SUPPORT_EVEX
-
 void BX_CPU_C::read_linear_zmmword(unsigned s, Bit64u laddr, BxPackedZmmRegister *data)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 63);
   Bit64u lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -621,8 +578,6 @@ void BX_CPU_C::read_linear_zmmword(unsigned s, Bit64u laddr, BxPackedZmmRegister
 
 void BX_CPU_C::read_linear_zmmword_aligned(unsigned s, Bit64u laddr, BxPackedZmmRegister *data)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   Bit64u lpf = AlignedAccessLPFOf(laddr, 63);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -649,7 +604,6 @@ void BX_CPU_C::read_linear_zmmword_aligned(unsigned s, Bit64u laddr, BxPackedZmm
   if (access_read_linear(laddr, 64, CPL, BX_READ, 0x0, (void *) data) < 0)
     exception(int_number(s), 0);
 }
-
 #endif
 
 //////////////////////////////////////////////////////////////
@@ -658,13 +612,11 @@ void BX_CPU_C::read_linear_zmmword_aligned(unsigned s, Bit64u laddr, BxPackedZmm
 //////////////////////////////////////////////////////////////
 
   Bit8u BX_CPP_AttrRegparmN(2)
-BX_CPU_C::read_RMW_virtual_byte_64(unsigned s, Bit64u laddr)
+BX_CPU_C::read_RMW_linear_byte(unsigned s, bx_address laddr)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
   Bit8u data;
-
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
-  Bit64u lpf = LPFOf(laddr);
+  bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access
@@ -690,16 +642,14 @@ BX_CPU_C::read_RMW_virtual_byte_64(unsigned s, Bit64u laddr)
 }
 
   Bit16u BX_CPP_AttrRegparmN(2)
-BX_CPU_C::read_RMW_virtual_word_64(unsigned s, Bit64u laddr)
+BX_CPU_C::read_RMW_linear_word(unsigned s, bx_address laddr)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
   Bit16u data;
-
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  Bit64u lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
+  bx_address lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
-  Bit64u lpf = LPFOf(laddr);
+  bx_address lpf = LPFOf(laddr);
 #endif    
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
   if (tlbEntry->lpf == lpf) {
@@ -726,16 +676,14 @@ BX_CPU_C::read_RMW_virtual_word_64(unsigned s, Bit64u laddr)
 }
 
   Bit32u BX_CPP_AttrRegparmN(2)
-BX_CPU_C::read_RMW_virtual_dword_64(unsigned s, Bit64u laddr)
+BX_CPU_C::read_RMW_linear_dword(unsigned s, bx_address laddr)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
   Bit32u data;
-
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  Bit64u lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
+  bx_address lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
-  Bit64u lpf = LPFOf(laddr);
+  bx_address lpf = LPFOf(laddr);
 #endif    
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
   if (tlbEntry->lpf == lpf) {
@@ -762,16 +710,14 @@ BX_CPU_C::read_RMW_virtual_dword_64(unsigned s, Bit64u laddr)
 }
 
   Bit64u BX_CPP_AttrRegparmN(2)
-BX_CPU_C::read_RMW_virtual_qword_64(unsigned s, Bit64u laddr)
+BX_CPU_C::read_RMW_linear_qword(unsigned s, bx_address laddr)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
   Bit64u data;
-
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  Bit64u lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
+  bx_address lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
-  Bit64u lpf = LPFOf(laddr);
+  bx_address lpf = LPFOf(laddr);
 #endif    
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
   if (tlbEntry->lpf == lpf) {
@@ -797,10 +743,153 @@ BX_CPU_C::read_RMW_virtual_qword_64(unsigned s, Bit64u laddr)
   return data;
 }
 
+  void BX_CPP_AttrRegparmN(1)
+BX_CPU_C::write_RMW_linear_byte(Bit8u val8)
+{
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID,
+    BX_CPU_THIS_PTR address_xlation.paddress1, 1, BX_WRITE, 0, (Bit8u*) &val8);
+
+  if (BX_CPU_THIS_PTR address_xlation.pages > 2) {
+    // Pages > 2 means it stores a host address for direct access.
+    Bit8u *hostAddr = (Bit8u *) BX_CPU_THIS_PTR address_xlation.pages;
+    *hostAddr = val8;
+  }
+  else {
+    // address_xlation.pages must be 1
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress1, 1, &val8);
+  }
+}
+
+  void BX_CPP_AttrRegparmN(1)
+BX_CPU_C::write_RMW_linear_word(Bit16u val16)
+{
+  if (BX_CPU_THIS_PTR address_xlation.pages > 2) {
+    // Pages > 2 means it stores a host address for direct access.
+    Bit16u *hostAddr = (Bit16u *) BX_CPU_THIS_PTR address_xlation.pages;
+    WriteHostWordToLittleEndian(hostAddr, val16);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID,
+        BX_CPU_THIS_PTR address_xlation.paddress1, 2, BX_WRITE, 0, (Bit8u*) &val16);
+  }
+  else if (BX_CPU_THIS_PTR address_xlation.pages == 1) {
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress1, 2, &val16);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID,
+        BX_CPU_THIS_PTR address_xlation.paddress1, 2, BX_WRITE, 0, (Bit8u*) &val16);
+  }
+  else {
+#ifdef BX_LITTLE_ENDIAN
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress1, 1, &val16);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID,
+        BX_CPU_THIS_PTR address_xlation.paddress1, 1, BX_WRITE, 0,  (Bit8u*) &val16);
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress2, 1, ((Bit8u *) &val16) + 1);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID,
+        BX_CPU_THIS_PTR address_xlation.paddress2, 1, BX_WRITE, 0, ((Bit8u*) &val16)+1);
+#else
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress1, 1, ((Bit8u *) &val16) + 1);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID,
+        BX_CPU_THIS_PTR address_xlation.paddress1, 1, BX_WRITE, 0, ((Bit8u*) &val16)+1);
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress2, 1, &val16);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID,
+        BX_CPU_THIS_PTR address_xlation.paddress2, 1, BX_WRITE, 0,  (Bit8u*) &val16);
+#endif
+  }
+}
+
+  void BX_CPP_AttrRegparmN(1)
+BX_CPU_C::write_RMW_linear_dword(Bit32u val32)
+{
+  if (BX_CPU_THIS_PTR address_xlation.pages > 2) {
+    // Pages > 2 means it stores a host address for direct access.
+    Bit32u *hostAddr = (Bit32u *) BX_CPU_THIS_PTR address_xlation.pages;
+    WriteHostDWordToLittleEndian(hostAddr, val32);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID,
+        BX_CPU_THIS_PTR address_xlation.paddress1, 4, BX_WRITE, 0, (Bit8u*) &val32);
+  }
+  else if (BX_CPU_THIS_PTR address_xlation.pages == 1) {
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress1, 4, &val32);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID,
+        BX_CPU_THIS_PTR address_xlation.paddress1, 4, BX_WRITE, 0, (Bit8u*) &val32);
+  }
+  else {
+#ifdef BX_LITTLE_ENDIAN
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1, &val32);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID,
+        BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1, BX_WRITE, 0, (Bit8u*) &val32);
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2,
+        ((Bit8u *) &val32) + BX_CPU_THIS_PTR address_xlation.len1);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID,
+        BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2, BX_WRITE, 0,
+        ((Bit8u *) &val32) + BX_CPU_THIS_PTR address_xlation.len1);
+#else
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1,
+        ((Bit8u *) &val32) + (4 - BX_CPU_THIS_PTR address_xlation.len1));
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID,
+        BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1, BX_WRITE, 0,
+        ((Bit8u *) &val32) + (4 - BX_CPU_THIS_PTR address_xlation.len1));
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2, &val32);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID,
+        BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2, BX_WRITE, 0, (Bit8u*) &val32);
+#endif
+  }
+}
+
+  void BX_CPP_AttrRegparmN(1)
+BX_CPU_C::write_RMW_linear_qword(Bit64u val64)
+{
+  if (BX_CPU_THIS_PTR address_xlation.pages > 2) {
+    // Pages > 2 means it stores a host address for direct access.
+    Bit64u *hostAddr = (Bit64u *) BX_CPU_THIS_PTR address_xlation.pages;
+    WriteHostQWordToLittleEndian(hostAddr, val64);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID,
+        BX_CPU_THIS_PTR address_xlation.paddress1, 8, BX_WRITE, 0, (Bit8u*) &val64);
+  }
+  else if (BX_CPU_THIS_PTR address_xlation.pages == 1) {
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress1, 8, &val64);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID,
+        BX_CPU_THIS_PTR address_xlation.paddress1, 8, BX_WRITE, 0, (Bit8u*) &val64);
+  }
+  else {
+#ifdef BX_LITTLE_ENDIAN
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1, &val64);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID,
+        BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1, BX_WRITE, 0, (Bit8u*) &val64);
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2,
+        ((Bit8u *) &val64) + BX_CPU_THIS_PTR address_xlation.len1);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID,
+        BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2, BX_WRITE, 0,
+        ((Bit8u *) &val64) + BX_CPU_THIS_PTR address_xlation.len1);
+#else
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1,
+        ((Bit8u *) &val64) + (8 - BX_CPU_THIS_PTR address_xlation.len1));
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID,
+        BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1, BX_WRITE, 0,
+        ((Bit8u *) &val64) + (8 - BX_CPU_THIS_PTR address_xlation.len1));
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2, &val64);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID,
+        BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2, BX_WRITE, 0, (Bit8u*) &val64);
+#endif
+  }
+}
+
+#if BX_SUPPORT_X86_64
+
 void BX_CPU_C::read_RMW_linear_dqword_aligned_64(unsigned s, Bit64u laddr, Bit64u *hi, Bit64u *lo)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   Bit64u lpf = AlignedAccessLPFOf(laddr, 15);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -838,7 +927,7 @@ void BX_CPU_C::read_RMW_linear_dqword_aligned_64(unsigned s, Bit64u laddr, Bit64
 
 void BX_CPU_C::write_RMW_linear_dqword(Bit64u hi, Bit64u lo)
 {
-  write_RMW_virtual_qword(lo);
+  write_RMW_linear_qword(lo);
 
   BX_CPU_THIS_PTR address_xlation.paddress1 += 8;
   if (BX_CPU_THIS_PTR address_xlation.pages > 2) {
@@ -849,7 +938,168 @@ void BX_CPU_C::write_RMW_linear_dqword(Bit64u hi, Bit64u lo)
     BX_ASSERT(BX_CPU_THIS_PTR address_xlation.pages == 1);
   }
   
-  write_RMW_virtual_qword(hi);
+  write_RMW_linear_qword(hi);
 }
 
 #endif
+
+//
+// Write data to new stack, these methods are required for emulation
+// correctness but not performance critical.
+//
+
+void BX_CPU_C::write_new_stack_word(bx_address laddr, unsigned curr_pl, Bit16u data)
+{
+  bx_bool user = (curr_pl == 3);
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+  Bit64u lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
+#else
+  Bit64u lpf = LPFOf(laddr);
+#endif    
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    // See if the TLB entry privilege level allows us write access
+    // from this CPL.
+    if (tlbEntry->accessBits & (0x04 << user)) {
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
+      BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, pAddr, 2, curr_pl, BX_WRITE, (Bit8u*) &data);
+      Bit16u *hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
+      pageWriteStampTable.decWriteStamp(pAddr, 2);
+      WriteHostWordToLittleEndian(hostAddr, data);
+      return;
+    }
+  }
+
+  if (access_write_linear(laddr, 2, curr_pl, 0x1, (void *) &data) < 0)
+    exception(BX_SS_EXCEPTION, 0);
+}
+
+void BX_CPU_C::write_new_stack_dword(bx_address laddr, unsigned curr_pl, Bit32u data)
+{
+  bx_bool user = (curr_pl == 3);
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+  Bit64u lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
+#else
+  Bit64u lpf = LPFOf(laddr);
+#endif    
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    // See if the TLB entry privilege level allows us write access
+    // from this CPL.
+    if (tlbEntry->accessBits & (0x04 << user)) {
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
+      BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, pAddr, 4, curr_pl, BX_WRITE, (Bit8u*) &data);
+      Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
+      pageWriteStampTable.decWriteStamp(pAddr, 4);
+      WriteHostDWordToLittleEndian(hostAddr, data);
+      return;
+    }
+  }
+
+  if (access_write_linear(laddr, 4, curr_pl, 0x3, (void *) &data) < 0)
+    exception(BX_SS_EXCEPTION, 0);
+}
+
+void BX_CPU_C::write_new_stack_qword(bx_address laddr, unsigned curr_pl, Bit64u data)
+{
+  bx_bool user = (curr_pl == 3);
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+  Bit64u lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
+#else
+  Bit64u lpf = LPFOf(laddr);
+#endif    
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    // See if the TLB entry privilege level allows us write access
+    // from this CPL.
+    if (tlbEntry->accessBits & (0x04 << user)) {
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
+      BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, pAddr, 8, curr_pl, BX_WRITE, (Bit8u*) &data);
+      Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
+      pageWriteStampTable.decWriteStamp(pAddr, 8);
+      WriteHostQWordToLittleEndian(hostAddr, data);
+      return;
+    }
+  }
+
+  if (access_write_linear(laddr, 8, curr_pl, 0x7, (void *) &data) < 0)
+    exception(BX_SS_EXCEPTION, 0);
+}
+
+// assuming the write happens in 32-bit mode
+void BX_CPU_C::write_new_stack_word(bx_segment_reg_t *seg, Bit32u offset, unsigned curr_pl, Bit16u data)
+{
+  Bit32u laddr;
+
+  if (seg->cache.valid & SegAccessWOK) {
+    if (offset < seg->cache.u.segment.limit_scaled) {
+accessOK:
+      laddr = (Bit32u)(seg->cache.u.segment.base) + offset;
+      write_new_stack_word(laddr, curr_pl, data);
+      return;
+    }
+  }
+
+  // add error code when segment violation occurs when pushing into new stack
+  if (!write_virtual_checks(seg, offset, 2)) {
+    BX_ERROR(("write_new_stack_word(): segment limit violation"));
+    exception(BX_SS_EXCEPTION, 
+         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
+  }
+  goto accessOK;
+}
+
+// assuming the write happens in 32-bit mode
+void BX_CPU_C::write_new_stack_dword(bx_segment_reg_t *seg, Bit32u offset, unsigned curr_pl, Bit32u data)
+{
+  Bit32u laddr;
+
+  if (seg->cache.valid & SegAccessWOK) {
+    if (offset < (seg->cache.u.segment.limit_scaled-2)) {
+accessOK:
+      laddr = (Bit32u)(seg->cache.u.segment.base) + offset;
+      write_new_stack_dword(laddr, curr_pl, data);
+      return;
+    }
+  }
+
+  // add error code when segment violation occurs when pushing into new stack
+  if (!write_virtual_checks(seg, offset, 4)) {
+    BX_ERROR(("write_new_stack_dword(): segment limit violation"));
+    exception(BX_SS_EXCEPTION, 
+         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
+  }
+  goto accessOK;
+}
+
+// assuming the write happens in 32-bit mode
+void BX_CPU_C::write_new_stack_qword(bx_segment_reg_t *seg, Bit32u offset, unsigned curr_pl, Bit64u data)
+{
+  Bit32u laddr;
+
+  if (seg->cache.valid & SegAccessWOK) {
+    if (offset <= (seg->cache.u.segment.limit_scaled-7)) {
+accessOK:
+      laddr = (Bit32u)(seg->cache.u.segment.base) + offset;
+      write_new_stack_qword(laddr, curr_pl, data);
+      return;
+    }
+  }
+
+  // add error code when segment violation occurs when pushing into new stack
+  if (!write_virtual_checks(seg, offset, 8)) {
+    BX_ERROR(("write_new_stack_qword(): segment limit violation"));
+    exception(BX_SS_EXCEPTION, 
+        seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
+  }
+  goto accessOK;
+}
