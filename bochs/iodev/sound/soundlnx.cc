@@ -199,16 +199,15 @@ int bx_sound_linux_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *s
   if (memcmp(src_param, &pcm_param, sizeof(bx_pcm_param_t)) != 0) {
     startwaveplayback(src_param->samplerate, 16, 1, 1);
     pcm_param = *src_param;
-    cvt_mult = 1;
-    if (src_param->bits == 8) cvt_mult = 2;
-    if (src_param->channels == 1) cvt_mult *= 2;
+    cvt_mult = (src_param->bits == 8) ? 2 : 1;
+    if (src_param->channels == 1) cvt_mult <<= 1;
   }
   if (wave_fd[0] == -1) {
     return BX_SOUNDLOW_ERR;
   }
   len2 = length * cvt_mult;
   tmpbuffer = (Bit8u*)malloc(len2);
-  convert_wavedata(data, length, tmpbuffer, len2, src_param);
+  convert_pcm_data(data, length, tmpbuffer, len2, src_param);
   int ret = write(wave_fd[0], tmpbuffer, len2);
   free(tmpbuffer);
   if (ret == length) {

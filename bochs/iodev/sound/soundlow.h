@@ -89,7 +89,7 @@ public:
   virtual int register_wave_callback(void *, get_wave_cb_t wd_cb) {return -1;}
   virtual void unregister_wave_callback(int callback_id) {}
 protected:
-  void convert_wavedata(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param);
+  void convert_pcm_data(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param);
 
   bx_pcm_param_t pcm_param;
   int cvt_mult;

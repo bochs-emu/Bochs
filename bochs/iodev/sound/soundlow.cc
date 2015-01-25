@@ -89,7 +89,7 @@ int bx_sound_lowlevel_c::startwaveplayback(int frequency, int bits, bx_bool ster
   return BX_SOUNDLOW_OK;
 }
 
-void bx_sound_lowlevel_c::convert_wavedata(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param)
+void bx_sound_lowlevel_c::convert_pcm_data(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param)
 {
   int i, j;
   Bit8u xor_val;

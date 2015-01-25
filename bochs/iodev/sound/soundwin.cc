@@ -381,8 +381,9 @@ int bx_sound_windows_c::startwaveplayback(int frequency, int bits, bx_bool stere
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_windows_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *param)
+int bx_sound_windows_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param)
 {
+  int len2;
 #ifdef usewaveOut
   int bufnum;
 #endif
@@ -392,17 +393,19 @@ int bx_sound_windows_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t 
 
   BX_DEBUG(("sendwavepacket(%d, %p)", length, data));
 
-  if (memcmp(param, &pcm_param, sizeof(bx_pcm_param_t)) != 0) {
-    startwaveplayback(param->samplerate, param->bits, param->channels == 2,
-                      param->format);
-    pcm_param = *param;
+  if (memcmp(src_param, &pcm_param, sizeof(bx_pcm_param_t)) != 0) {
+    startwaveplayback(src_param->samplerate, 16, 1, 1);
+    pcm_param = *src_param;
+    cvt_mult = (src_param->bits == 8) ? 2 : 1;
+    if (src_param->channels == 1) cvt_mult <<= 1;
   }
+  len2 = length * cvt_mult;
 
 #ifdef usewaveOut
   bufnum = head;
 
-  memcpy(WaveData[bufnum], data, length);
-  this->length[bufnum] = length;
+  convert_pcm_data(data, length, (Bit8u*)WaveData[bufnum], len2, src_param);
+  this->length[bufnum] = len2;
 
   // select next buffer to write to
   bufnum++;
@@ -431,10 +434,10 @@ int bx_sound_windows_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t 
 #ifdef usesndPlaySnd
   LPWAVEFILEHEADER header = (LPWAVEFILEHEADER) WaveData[0];
 
-  header->length = length + 36;
-  header->chnk2len = length;
+  header->length = len2 + 36;
+  header->chnk2len = len2;
 
-  memcpy(&(header->data), data, length);
+  convert_wavedata(data, length, (Bit8u*)&(header->data), len2, src_param);
 
   ret = sndPlaySoundA((LPCSTR) header, SND_SYNC | SND_MEMORY);
   if (ret != 0)

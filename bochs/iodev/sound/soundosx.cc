@@ -418,30 +418,33 @@ int bx_sound_osx_c::waveready()
     }
 }
 
-int bx_sound_osx_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *param)
+int bx_sound_osx_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param)
 {
+  int len2;
 #ifdef BX_SOUND_OSX_use_quicktime
   SndCommand mySndCommand;
 #endif
 
   BX_DEBUG(("sendwavepacket(%d, %p), head=%u", length, data, head));
 
-  if (memcmp(param, &pcm_param, sizeof(bx_pcm_param_t)) != 0) {
-    startwaveplayback(param->samplerate, param->bits, param->channels == 2,
-                      param->format);
-    pcm_param = *param;
+  if (memcmp(src_param, &pcm_param, sizeof(bx_pcm_param_t)) != 0) {
+    startwaveplayback(src_param->samplerate, 16, 1, 1);
+    pcm_param = *src_param;
+    cvt_mult = (src_param->bits == 8) ? 2 : 1;
+    if (src_param->channels == 1) cvt_mult <<= 1;
   }
+  len2 = length * cvt_mult;
 
-    // sanity check
-    if ((!WaveOpen) || (head - tail >= BX_SOUND_OSX_NBUF))
-        return BX_SOUNDLOW_ERR;
+  // sanity check
+  if ((!WaveOpen) || (head - tail >= BX_SOUND_OSX_NBUF))
+    return BX_SOUNDLOW_ERR;
 
-    // find next available buffer
-    int n = head++ % BX_SOUND_OSX_NBUF;
+  // find next available buffer
+  int n = head++ % BX_SOUND_OSX_NBUF;
 
-    // put data in buffer
-    memcpy(WaveData[n], data, length);
-    WaveLength[n] = length;
+  // put data in buffer
+  convert_pcm_data(data, length, (Bit8u*)WaveData[n], len2, src_param);
+  WaveLength[n] = len2;
 
 #ifdef BX_SOUND_OSX_use_quicktime
     memcpy(&WaveHeader[n], &WaveInfo, sizeof(WaveInfo));

@@ -327,9 +327,8 @@ int bx_sound_alsa_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *sr
   if (memcmp(src_param, &pcm_param, sizeof(bx_pcm_param_t)) != 0) {
     startwaveplayback(src_param->samplerate, 16, 1, 1);
     pcm_param = *src_param;
-    cvt_mult = 1;
-    if (src_param->bits == 8) cvt_mult = 2;
-    if (src_param->channels == 1) cvt_mult *= 2;
+    cvt_mult = (src_param->bits == 8) ? 2 : 1;
+    if (src_param->channels == 1) cvt_mult <<= 1;
   }
   len2 = length * cvt_mult;
   if (!alsa_pcm[0].handle) {
@@ -342,7 +341,7 @@ int bx_sound_alsa_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *sr
     BX_ERROR(("ALSA: audio buffer overflow"));
   }
   if (len2 > 0) {
-    convert_wavedata(data, length, audio_buffer[0]+alsa_pcm[0].audio_bufsize, len2, src_param);
+    convert_pcm_data(data, length, audio_buffer[0]+alsa_pcm[0].audio_bufsize, len2, src_param);
     alsa_pcm[0].audio_bufsize += len2;
   }
   if (alsa_pcm[0].audio_bufsize < alsa_pcm[0].alsa_bufsize) {
