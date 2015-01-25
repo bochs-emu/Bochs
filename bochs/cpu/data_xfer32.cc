@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -201,7 +201,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EdGdM(bxInstruction_c *i)
 
   Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src());
-  write_RMW_virtual_dword(op2_32);
+  write_RMW_linear_dword(op2_32);
   BX_WRITE_32BIT_REGZ(i->src(), op1_32);
 
   BX_NEXT_INSTR(i);

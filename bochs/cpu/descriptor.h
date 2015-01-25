@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2007-2009 Stanislav Shwartsman
+//   Copyright (c) 2007-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -53,13 +53,13 @@ typedef struct { /* bx_selector_t */
 typedef struct
 {
 
-// do not go above 4 bits !
 #define SegValidCache  (0x01)
 #define SegAccessROK   (0x02)
 #define SegAccessWOK   (0x04)
-
-  unsigned valid;        // Holds above values, Or'd together.  Used to
-                         // hold only 0 or 1.
+#define SegAccessROK4G (0x08)
+#define SegAccessWOK4G (0x10)
+  unsigned valid;        // Holds above values, Or'd together. Used to
+                         // hold only 0 or 1 once.
 
   bx_bool p;             /* present */
   Bit8u   dpl;           /* descriptor privilege level 0..3 */

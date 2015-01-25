@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -33,7 +33,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EbGbM(bxInstruction_c *i)
   op1 = read_RMW_virtual_byte(i->seg(), eaddr);
   op2 = BX_READ_8BIT_REGx(i->src(), i->extend8bitL());
   op1 ^= op2;
-  write_RMW_virtual_byte(op1);
+  write_RMW_linear_byte(op1);
 
   SET_FLAGS_OSZAPC_LOGIC_8(op1);
 
@@ -78,7 +78,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EbIbM(bxInstruction_c *i)
 
   op1 = read_RMW_virtual_byte(i->seg(), eaddr);
   op1 ^= op2;
-  write_RMW_virtual_byte(op1);
+  write_RMW_linear_byte(op1);
 
   SET_FLAGS_OSZAPC_LOGIC_8(op1);
 
@@ -106,7 +106,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EbIbM(bxInstruction_c *i)
 
   op1 = read_RMW_virtual_byte(i->seg(), eaddr);
   op1 |= op2;
-  write_RMW_virtual_byte(op1);
+  write_RMW_linear_byte(op1);
 
   SET_FLAGS_OSZAPC_LOGIC_8(op1);
 
@@ -132,7 +132,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::NOT_EbM(bxInstruction_c *i)
 
   Bit8u op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
   op1_8 = ~op1_8;
-  write_RMW_virtual_byte(op1_8);
+  write_RMW_linear_byte(op1_8);
 
   BX_NEXT_INSTR(i);
 }
@@ -155,7 +155,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EbGbM(bxInstruction_c *i)
   op1 = read_RMW_virtual_byte(i->seg(), eaddr);
   op2 = BX_READ_8BIT_REGx(i->src(), i->extend8bitL());
   op1 |= op2;
-  write_RMW_virtual_byte(op1);
+  write_RMW_linear_byte(op1);
 
   SET_FLAGS_OSZAPC_LOGIC_8(op1);
 
@@ -201,7 +201,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EbGbM(bxInstruction_c *i)
   op1 = read_RMW_virtual_byte(i->seg(), eaddr);
   op2 = BX_READ_8BIT_REGx(i->src(), i->extend8bitL());
   op1 &= op2;
-  write_RMW_virtual_byte(op1);
+  write_RMW_linear_byte(op1);
 
   SET_FLAGS_OSZAPC_LOGIC_8(op1);
 
@@ -246,7 +246,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EbIbM(bxInstruction_c *i)
 
   op1 = read_RMW_virtual_byte(i->seg(), eaddr);
   op1 &= op2;
-  write_RMW_virtual_byte(op1);
+  write_RMW_linear_byte(op1);
 
   SET_FLAGS_OSZAPC_LOGIC_8(op1);
 

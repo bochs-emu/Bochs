@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -52,7 +52,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
       BX_WRITE_16BIT_REG(i->dst(), op1_16);
     }
     else {
-      write_RMW_virtual_word(op1_16);
+      write_RMW_linear_word(op1_16);
     }
     assert_ZF();
   }
@@ -452,7 +452,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR ldtr.selector = selector;
   BX_CPU_THIS_PTR ldtr.cache = descriptor;
-  BX_CPU_THIS_PTR ldtr.cache.valid = 1;
+  BX_CPU_THIS_PTR ldtr.cache.valid = SegValidCache;
 
   BX_NEXT_INSTR(i);
 }
@@ -561,7 +561,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR tr.selector = selector;
   BX_CPU_THIS_PTR tr.cache    = descriptor;
-  BX_CPU_THIS_PTR tr.cache.valid = 1;
+  BX_CPU_THIS_PTR tr.cache.valid = SegValidCache;
   // tr.cache.type should not have busy bit, or it would not get
   // through the conditions above.
   BX_ASSERT((BX_CPU_THIS_PTR tr.cache.type & 2) == 0);

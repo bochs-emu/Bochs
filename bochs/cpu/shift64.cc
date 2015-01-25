@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -49,7 +49,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EqGqM(bxInstruction_c *i)
 
     result_64 = (op1_64 << count) | (op2_64 >> (64 - count));
 
-    write_RMW_virtual_qword(result_64);
+    write_RMW_linear_qword(result_64);
 
     SET_FLAGS_OSZAPC_LOGIC_64(result_64);
 
@@ -115,7 +115,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EqGqM(bxInstruction_c *i)
 
     result_64 = (op2_64 << (64 - count)) | (op1_64 >> count);
 
-    write_RMW_virtual_qword(result_64);
+    write_RMW_linear_qword(result_64);
 
     SET_FLAGS_OSZAPC_LOGIC_64(result_64);
 
@@ -176,7 +176,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EqM(bxInstruction_c *i)
   if (count) {
     Bit64u result_64 = (op1_64 << count) | (op1_64 >> (64 - count));
 
-    write_RMW_virtual_qword(result_64);
+    write_RMW_linear_qword(result_64);
 
     unsigned bit0  = (result_64 & 0x1);
     unsigned bit63 = (result_64 >> 63);
@@ -230,7 +230,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EqM(bxInstruction_c *i)
   if (count) {
     Bit64u result_64 = (op1_64 >> count) | (op1_64 << (64 - count));
 
-    write_RMW_virtual_qword(result_64);
+    write_RMW_linear_qword(result_64);
 
     unsigned bit63 = (result_64 >> 63) & 1;
     unsigned bit62 = (result_64 >> 62) & 1;
@@ -295,7 +295,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EqM(bxInstruction_c *i)
                 (op1_64 >> (65 - count));
   }
 
-  write_RMW_virtual_qword(result_64);
+  write_RMW_linear_qword(result_64);
 
   cf = (op1_64 >> (64 - count)) & 0x1;
   of = cf ^ (result_64 >> 63); // of = cf ^ result63
@@ -369,7 +369,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EqM(bxInstruction_c *i)
                 (op1_64 << (65 - count));
   }
 
-  write_RMW_virtual_qword(result_64);
+  write_RMW_linear_qword(result_64);
 
   cf = (op1_64 >> (count - 1)) & 0x1;
   of = ((result_64 << 1) ^ result_64) >> 63;
@@ -436,7 +436,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EqM(bxInstruction_c *i)
     unsigned cf = (op1_64 >> (64 - count)) & 0x1;
     unsigned of = cf ^ (result_64 >> 63);
 
-    write_RMW_virtual_qword(result_64);
+    write_RMW_linear_qword(result_64);
 
     SET_FLAGS_OSZAPC_LOGIC_64(result_64);
     SET_FLAGS_OxxxxC(of, cf);
@@ -491,7 +491,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EqM(bxInstruction_c *i)
   if (count) {
     Bit64u result_64 = (op1_64 >> count);
 
-    write_RMW_virtual_qword(result_64);
+    write_RMW_linear_qword(result_64);
 
     unsigned cf = (op1_64 >> (count - 1)) & 0x1;
     // note, that of == result63 if count == 1 and
@@ -552,7 +552,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EqM(bxInstruction_c *i)
     /* count < 64, since only lower 6 bits used */
     Bit64u result_64 = ((Bit64s) op1_64) >> count;
 
-    write_RMW_virtual_qword(result_64);
+    write_RMW_linear_qword(result_64);
 
     SET_FLAGS_OSZAPC_LOGIC_64(result_64);
     unsigned cf = (op1_64 >> (count - 1)) & 1;

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -208,7 +208,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EwGwM(bxInstruction_c *i)
   op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
   op2_16 = BX_READ_16BIT_REG(i->src());
 
-  write_RMW_virtual_word(op2_16);
+  write_RMW_linear_word(op2_16);
   BX_WRITE_16BIT_REG(i->src(), op1_16);
 
   BX_NEXT_INSTR(i);

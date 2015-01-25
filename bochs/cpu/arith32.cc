@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -51,7 +51,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EdGdM(bxInstruction_c *i)
   op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
   op2_32 = BX_READ_32BIT_REG(i->src());
   sum_32 = op1_32 + op2_32;
-  write_RMW_virtual_dword(sum_32);
+  write_RMW_linear_dword(sum_32);
 
   SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32);
 
@@ -101,7 +101,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EdGdM(bxInstruction_c *i)
   op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
   op2_32 = BX_READ_32BIT_REG(i->src());
   sum_32 = op1_32 + op2_32 + temp_CF;
-  write_RMW_virtual_dword(sum_32);
+  write_RMW_linear_dword(sum_32);
 
   SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32);
 
@@ -153,7 +153,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EdGdM(bxInstruction_c *i)
   op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
   op2_32 = BX_READ_32BIT_REG(i->src());
   diff_32 = op1_32 - (op2_32 + temp_CF);
-  write_RMW_virtual_dword(diff_32);
+  write_RMW_linear_dword(diff_32);
 
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 
@@ -204,7 +204,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EdIdM(bxInstruction_c *i)
 
   op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
   diff_32 = op1_32 - (op2_32 + temp_CF);
-  write_RMW_virtual_dword(diff_32);
+  write_RMW_linear_dword(diff_32);
 
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 
@@ -235,7 +235,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EdGdM(bxInstruction_c *i)
   op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
   op2_32 = BX_READ_32BIT_REG(i->src());
   diff_32 = op1_32 - op2_32;
-  write_RMW_virtual_dword(diff_32);
+  write_RMW_linear_dword(diff_32);
 
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 
@@ -352,7 +352,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XADD_EdGdM(bxInstruction_c *i)
   op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
   op2_32 = BX_READ_32BIT_REG(i->src());
   sum_32 = op1_32 + op2_32;
-  write_RMW_virtual_dword(sum_32);
+  write_RMW_linear_dword(sum_32);
 
   /* and write destination into source */
   BX_WRITE_32BIT_REGZ(i->src(), op1_32);
@@ -397,7 +397,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EdIdM(bxInstruction_c *i)
   op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
   op2_32 = i->Id();
   sum_32 = op1_32 + op2_32;
-  write_RMW_virtual_dword(sum_32);
+  write_RMW_linear_dword(sum_32);
 
   SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32);
 
@@ -429,7 +429,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EdIdM(bxInstruction_c *i)
 
   op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
   sum_32 = op1_32 + op2_32 + temp_CF;
-  write_RMW_virtual_dword(sum_32);
+  write_RMW_linear_dword(sum_32);
 
   SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32);
 
@@ -459,7 +459,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EdIdM(bxInstruction_c *i)
 
   op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
   diff_32 = op1_32 - op2_32;
-  write_RMW_virtual_dword(diff_32);
+  write_RMW_linear_dword(diff_32);
 
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 
@@ -513,7 +513,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EdM(bxInstruction_c *i)
 
   Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
   op1_32 = - (Bit32s)(op1_32);
-  write_RMW_virtual_dword(op1_32);
+  write_RMW_linear_dword(op1_32);
 
   SET_FLAGS_OSZAPC_SUB_32(0, 0 - op1_32, op1_32);
 
@@ -537,7 +537,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_EdM(bxInstruction_c *i)
 
   Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
   op1_32++;
-  write_RMW_virtual_dword(op1_32);
+  write_RMW_linear_dword(op1_32);
 
   SET_FLAGS_OSZAP_ADD_32(op1_32 - 1, 0, op1_32);
 
@@ -550,7 +550,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_EdM(bxInstruction_c *i)
 
   Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
   op1_32--;
-  write_RMW_virtual_dword(op1_32);
+  write_RMW_linear_dword(op1_32);
 
   SET_FLAGS_OSZAP_SUB_32(op1_32 + 1, 0, op1_32);
 
@@ -567,11 +567,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EdGdM(bxInstruction_c *i)
 
   if (diff_32 == 0) {  // if accumulator == dest
     // dest <-- src
-    write_RMW_virtual_dword(BX_READ_32BIT_REG(i->src()));
+    write_RMW_linear_dword(BX_READ_32BIT_REG(i->src()));
   }
   else {
     // accumulator <-- dest
-    write_RMW_virtual_dword(op1_32);
+    write_RMW_linear_dword(op1_32);
     RAX = op1_32;
   }
 
@@ -607,12 +607,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG8B(bxInstruction_c *i)
   if (op1_64 == op2_64) {  // if accumulator == dest
     // dest <-- src (ECX:EBX)
     op2_64 = ((Bit64u) ECX << 32) | EBX;
-    write_RMW_virtual_qword(op2_64);
+    write_RMW_linear_qword(op2_64);
     assert_ZF();
   }
   else {
     // accumulator <-- dest
-    write_RMW_virtual_qword(op1_64);
+    write_RMW_linear_qword(op1_64);
     RAX = GET32L(op1_64);
     RDX = GET32H(op1_64);
     clear_ZF();

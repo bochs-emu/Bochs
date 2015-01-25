@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -726,7 +726,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR ldtr.selector.ti    = 0;
   BX_CPU_THIS_PTR ldtr.selector.rpl   = 0;
 
-  BX_CPU_THIS_PTR ldtr.cache.valid    = 1; /* valid */
+  BX_CPU_THIS_PTR ldtr.cache.valid    = SegValidCache; /* valid */
   BX_CPU_THIS_PTR ldtr.cache.p        = 1; /* present */
   BX_CPU_THIS_PTR ldtr.cache.dpl      = 0; /* field not used */
   BX_CPU_THIS_PTR ldtr.cache.segment  = 0; /* system segment */
@@ -742,7 +742,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR tr.selector.ti    = 0;
   BX_CPU_THIS_PTR tr.selector.rpl   = 0;
 
-  BX_CPU_THIS_PTR tr.cache.valid    = 1; /* valid */
+  BX_CPU_THIS_PTR tr.cache.valid    = SegValidCache; /* valid */
   BX_CPU_THIS_PTR tr.cache.p        = 1; /* present */
   BX_CPU_THIS_PTR tr.cache.dpl      = 0; /* field not used */
   BX_CPU_THIS_PTR tr.cache.segment  = 0; /* system segment */

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -106,7 +106,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EbGbM(bxInstruction_c *i)
   Bit8u op1 = read_RMW_virtual_byte(i->seg(), eaddr);
   Bit8u op2 = BX_READ_8BIT_REGx(i->src(), i->extend8bitL());
 
-  write_RMW_virtual_byte(op2);
+  write_RMW_linear_byte(op2);
   BX_WRITE_8BIT_REGx(i->src(), i->extend8bitL(), op1);
 
   BX_NEXT_INSTR(i);

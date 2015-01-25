@@ -79,6 +79,32 @@ void BX_CPU_C::call_far16(bxInstruction_c *i, Bit16u cs_raw, Bit16u disp16)
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 }
 
+void BX_CPU_C::jmp_far16(bxInstruction_c *i, Bit16u cs_raw, Bit16u disp16)
+{
+  BX_INSTR_FAR_BRANCH_ORIGIN();
+
+  invalidate_prefetch_q();
+
+  // jump_protected doesn't affect RSP so it is RSP safe
+  if (protected_mode()) {
+    jump_protected(i, cs_raw, disp16);
+  }
+  else {
+    // CS.LIMIT can't change when in real/v8086 mode
+    if (disp16 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
+      BX_ERROR(("%s: instruction pointer not within code segment limits", i->getIaOpcodeNameShort()));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+
+    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
+    EIP = disp16;
+  }
+
+  BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP_INDIRECT,
+                      FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16_Iw(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
@@ -485,38 +511,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EwR(bxInstruction_c *i)
 /* Far indirect jump */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP16_Ep(bxInstruction_c *i)
 {
-  Bit16u cs_raw;
-  Bit16u op1_16;
-
-  BX_INSTR_FAR_BRANCH_ORIGIN();
-
-  invalidate_prefetch_q();
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_16 = read_virtual_word(i->seg(), eaddr);
-  cs_raw = read_virtual_word(i->seg(), (eaddr+2) & i->asize_mask());
+  Bit16u op1_16 = read_virtual_word(i->seg(), eaddr);
+  Bit16u cs_raw = read_virtual_word(i->seg(), (eaddr+2) & i->asize_mask());
 
-  // jump_protected doesn't affect RSP so it is RSP safe
-  if (protected_mode()) {
-    jump_protected(i, cs_raw, op1_16);
-    goto done;
-  }
-
-  // CS.LIMIT can't change when in real/v8086 mode
-  if (op1_16 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-    BX_ERROR(("%s: instruction pointer not within code segment limits", i->getIaOpcodeNameShort()));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  EIP = op1_16;
-
-done:
-
-  BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP_INDIRECT,
-                      FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
+  jmp_far16(i, cs_raw, op1_16);
 
   BX_NEXT_TRACE(i);
 }

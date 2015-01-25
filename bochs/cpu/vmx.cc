@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009-2014 Stanislav Shwartsman
+//   Copyright (c) 2009-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -2296,7 +2296,7 @@ void BX_CPU_C::VMexitLoadHostState(void)
   parse_selector(host_state->segreg_selector[BX_SEG_REG_CS],
                &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid    = SegValidCache | SegAccessROK | SegAccessWOK;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid    = SegValidCache | SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p        = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl      = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment  = 1;  /* data/code segment */
@@ -2360,7 +2360,7 @@ void BX_CPU_C::VMexitLoadHostState(void)
   // TR selector loaded from VMCS
   parse_selector(host_state->tr_selector, &BX_CPU_THIS_PTR tr.selector);
 
-  BX_CPU_THIS_PTR tr.cache.valid    = 1; /* valid */
+  BX_CPU_THIS_PTR tr.cache.valid    = SegValidCache; /* valid */
   BX_CPU_THIS_PTR tr.cache.p        = 1; /* present */
   BX_CPU_THIS_PTR tr.cache.dpl      = 0; /* field not used */
   BX_CPU_THIS_PTR tr.cache.segment  = 0; /* system segment */

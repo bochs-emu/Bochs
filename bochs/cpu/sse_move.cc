@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2014 Stanislav Shwartsman
+//   Copyright (c) 2003-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -644,7 +644,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c 
   }
 
   // and write result back to the memory
-  write_RMW_virtual_qword(temp.xmm64u(1));
+  write_RMW_linear_qword(temp.xmm64u(1));
   // write permissions already checked by read_RMW_virtual_qword_64
   write_virtual_qword(i->seg(), rdi, temp.xmm64u(0));
 #endif

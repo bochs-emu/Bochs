@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2014 Stanislav Shwartsman
+//   Copyright (c) 2011-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -469,7 +469,7 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   {
     // real or vm8086 mode: make all segments valid
     for (n=0;n < 4; n++) {
-      guest.sregs[n].cache.valid = 1;
+      guest.sregs[n].cache.valid = SegValidCache;
     }
 
     if (! guest.cr0.get_PE() && guest.cr0.get_PG()) {

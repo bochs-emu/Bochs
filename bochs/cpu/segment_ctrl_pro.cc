@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -89,7 +89,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       /* load SS with selector, load SS cache with descriptor */
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector    = ss_selector;
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache       = descriptor;
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid = 1;
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid = SegValidCache;
 
       invalidate_stack_cache();
 
@@ -150,7 +150,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       /* load segment register-cache with descriptor */
       seg->selector    = selector;
       seg->cache       = descriptor;
-      seg->cache.valid = 1;
+      seg->cache.valid = SegValidCache;
 
       return;
     }
@@ -177,7 +177,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 
   seg->selector.value = new_value;
   seg->selector.rpl = real_mode() ? 0 : 3;
-  seg->cache.valid = 1;
+  seg->cache.valid = SegValidCache;
   seg->cache.u.segment.base = new_value << 4;
   seg->cache.segment = 1; /* regular segment */
   seg->cache.p = 1; /* present */
@@ -532,7 +532,7 @@ BX_CPU_C::load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector = *selector;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache = *descriptor;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl = cpl;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid = SegValidCache;
 
   invalidate_stack_cache();
 }

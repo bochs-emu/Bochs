@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2005-2014  The Bochs Project
+//  Copyright (C) 2005-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -87,6 +87,10 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
         // limit check in other functions, and we don't want the value to roll.
         // Only normal segments (not expand down) are handled this way.
         seg->cache.valid |= SegAccessROK | SegAccessWOK;
+
+        if (seg->cache.u.segment.limit_scaled == 0xffffffff) {
+          seg->cache.valid |= SegAccessROK4G | SegAccessWOK4G;
+        }
       }
       break;
 
@@ -142,6 +146,10 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
         // Mark cache as being OK type for succeeding reads. See notes for
         // write checks; similar code.
         seg->cache.valid |= SegAccessROK;
+
+        if (seg->cache.u.segment.limit_scaled == 0xffffffff) {
+          seg->cache.valid |= SegAccessROK4G;
+        }
       }
       break;
 
@@ -204,6 +212,10 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned 
         // Mark cache as being OK type for succeeding reads. See notes for
         // write checks; similar code.
         seg->cache.valid |= SegAccessROK;
+
+        if (seg->cache.u.segment.limit_scaled == 0xffffffff) {
+          seg->cache.valid |= SegAccessROK4G;
+        }
       }
       break;
 

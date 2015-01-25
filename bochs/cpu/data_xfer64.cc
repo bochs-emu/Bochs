@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -296,7 +296,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EqGqM(bxInstruction_c *i)
   Bit64u op1_64 = read_RMW_virtual_qword_64(i->seg(), get_laddr64(i->seg(), eaddr));
   Bit64u op2_64 = BX_READ_64BIT_REG(i->src());
 
-  write_RMW_virtual_qword(op2_64);
+  write_RMW_linear_qword(op2_64);
   BX_WRITE_64BIT_REG(i->src(), op1_64);
 
   BX_NEXT_INSTR(i);

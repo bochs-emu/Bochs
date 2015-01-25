@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -125,7 +125,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EqGqM(bxInstruction_c *i)
   op1_64 = read_RMW_virtual_qword_64(i->seg(), get_laddr64(i->seg(), op1_addr));
   bit_i = (op1_64 >> index) & 0x01;
   op1_64 |= (((Bit64u) 1) << index);
-  write_RMW_virtual_qword(op1_64);
+  write_RMW_linear_qword(op1_64);
 
   set_CF(bit_i);
 
@@ -168,7 +168,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EqGqM(bxInstruction_c *i)
   bx_bool temp_cf = (op1_64 >> index) & 0x01;
   op1_64 &= ~(((Bit64u) 1) << index);
   /* now write back to destination */
-  write_RMW_virtual_qword(op1_64);
+  write_RMW_linear_qword(op1_64);
 
   set_CF(temp_cf);
 
@@ -212,7 +212,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EqGqM(bxInstruction_c *i)
   op1_64 ^= (((Bit64u) 1) << index);  /* toggle bit */
   set_CF(temp_CF);
 
-  write_RMW_virtual_qword(op1_64);
+  write_RMW_linear_qword(op1_64);
 
   BX_NEXT_INSTR(i);
 }
@@ -265,7 +265,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EqIbM(bxInstruction_c *i)
   Bit64u op1_64 = read_RMW_virtual_qword_64(i->seg(), get_laddr64(i->seg(), eaddr));
   bx_bool temp_CF = (op1_64 >> op2_8) & 0x01;
   op1_64 |= (((Bit64u) 1) << op2_8);
-  write_RMW_virtual_qword(op1_64);
+  write_RMW_linear_qword(op1_64);
 
   set_CF(temp_CF);
 
@@ -295,7 +295,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EqIbM(bxInstruction_c *i)
   Bit64u op1_64 = read_RMW_virtual_qword_64(i->seg(), get_laddr64(i->seg(), eaddr));
   bx_bool temp_CF = (op1_64 >> op2_8) & 0x01;
   op1_64 ^= (((Bit64u) 1) << op2_8);  /* toggle bit */
-  write_RMW_virtual_qword(op1_64);
+  write_RMW_linear_qword(op1_64);
 
   set_CF(temp_CF);
 
@@ -325,7 +325,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EqIbM(bxInstruction_c *i)
   Bit64u op1_64 = read_RMW_virtual_qword_64(i->seg(), get_laddr64(i->seg(), eaddr));
   bx_bool temp_CF = (op1_64 >> op2_8) & 0x01;
   op1_64 &= ~(((Bit64u) 1) << op2_8);
-  write_RMW_virtual_qword(op1_64);
+  write_RMW_linear_qword(op1_64);
 
   set_CF(temp_CF);
 

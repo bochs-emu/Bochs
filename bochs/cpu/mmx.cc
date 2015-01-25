@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2002-2014 Stanislav Shwartsman
+//   Copyright (c) 2002-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -2400,7 +2400,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVQ_PqNq(bxInstruction_c *i)
   if(MMXUB6(mask) & 0x80) MMXUB6(tmp) = MMXUB6(op);
   if(MMXUB7(mask) & 0x80) MMXUB7(tmp) = MMXUB7(op);
 
-  write_RMW_virtual_qword(MMXUQ(tmp));
+  write_RMW_linear_qword(MMXUQ(tmp));
 #endif
 
   BX_NEXT_INSTR(i);

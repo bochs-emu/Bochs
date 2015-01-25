@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -35,7 +35,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EqGqM(bxInstruction_c *i)
   op1_64 = read_RMW_virtual_qword_64(i->seg(), get_laddr64(i->seg(), eaddr));
   op2_64 = BX_READ_64BIT_REG(i->src());
   op1_64 ^= op2_64;
-  write_RMW_virtual_qword(op1_64);
+  write_RMW_linear_qword(op1_64);
 
   SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
 
@@ -82,7 +82,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EqIdM(bxInstruction_c *i)
 
   op1_64 = read_RMW_virtual_qword_64(i->seg(), get_laddr64(i->seg(), eaddr));
   op1_64 ^= op2_64;
-  write_RMW_virtual_qword(op1_64);
+  write_RMW_linear_qword(op1_64);
 
   SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
 
@@ -110,7 +110,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EqIdM(bxInstruction_c *i)
 
   op1_64 = read_RMW_virtual_qword_64(i->seg(), get_laddr64(i->seg(), eaddr));
   op1_64 |= op2_64;
-  write_RMW_virtual_qword(op1_64);
+  write_RMW_linear_qword(op1_64);
 
   SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
 
@@ -136,7 +136,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::NOT_EqM(bxInstruction_c *i)
 
   Bit64u op1_64 = read_RMW_virtual_qword_64(i->seg(), get_laddr64(i->seg(), eaddr));
   op1_64 = ~op1_64;
-  write_RMW_virtual_qword(op1_64);
+  write_RMW_linear_qword(op1_64);
 
   BX_NEXT_INSTR(i);
 }
@@ -159,7 +159,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EqGqM(bxInstruction_c *i)
   op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
   op2_64 = BX_READ_64BIT_REG(i->src());
   op1_64 |= op2_64;
-  write_RMW_virtual_qword(op1_64);
+  write_RMW_linear_qword(op1_64);
 
   SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
 
@@ -207,7 +207,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EqGqM(bxInstruction_c *i)
   op1_64 = read_RMW_virtual_qword_64(i->seg(), get_laddr64(i->seg(), eaddr));
   op2_64 = BX_READ_64BIT_REG(i->src());
   op1_64 &= op2_64;
-  write_RMW_virtual_qword(op1_64);
+  write_RMW_linear_qword(op1_64);
 
   SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
 
@@ -254,7 +254,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EqIdM(bxInstruction_c *i)
 
   op1_64 = read_RMW_virtual_qword_64(i->seg(), get_laddr64(i->seg(), eaddr));
   op1_64 &= op2_64;
-  write_RMW_virtual_qword(op1_64);
+  write_RMW_linear_qword(op1_64);
 
   SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
 

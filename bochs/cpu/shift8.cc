@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -88,7 +88,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EbM(bxInstruction_c *i)
 
     Bit8u result_8 = (op1_8 << count) | (op1_8 >> (8 - count));
 
-    write_RMW_virtual_byte(result_8);
+    write_RMW_linear_byte(result_8);
 
     /* set eflags:
      * ROL count affects the following flags: C, O
@@ -168,7 +168,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EbM(bxInstruction_c *i)
 
     Bit8u result_8 = (op1_8 >> count) | (op1_8 << (8 - count));
 
-    write_RMW_virtual_byte(result_8);
+    write_RMW_linear_byte(result_8);
 
     /* set eflags:
      * ROR count affects the following flags: C, O
@@ -247,7 +247,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EbM(bxInstruction_c *i)
                (op1_8 >> (9 - count));
   }
 
-  write_RMW_virtual_byte(result_8);
+  write_RMW_linear_byte(result_8);
 
   cf = (op1_8 >> (8 - count)) & 0x01;
   of = cf ^ (result_8 >> 7);  // of = cf ^ result7
@@ -304,7 +304,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EbM(bxInstruction_c *i)
     Bit8u result_8 = (op1_8 >> count) | (getB_CF() << (8 - count)) |
                      (op1_8 << (9 - count));
 
-    write_RMW_virtual_byte(result_8);
+    write_RMW_linear_byte(result_8);
 
     cf = (op1_8 >> (count - 1)) & 0x1;
     of = (((result_8 << 1) ^ result_8) >> 7) & 0x1; // of = result6 ^ result7
@@ -380,7 +380,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EbM(bxInstruction_c *i)
     result_8 = 0;
   }
 
-  write_RMW_virtual_byte(result_8);
+  write_RMW_linear_byte(result_8);
 
   SET_FLAGS_OSZAPC_LOGIC_8(result_8);
   SET_FLAGS_OxxxxC(of, cf);
@@ -434,7 +434,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EbM(bxInstruction_c *i)
   if (count) {
     Bit8u result_8 = (op1_8 >> count);
 
-    write_RMW_virtual_byte(result_8);
+    write_RMW_linear_byte(result_8);
 
     unsigned cf = (op1_8 >> (count - 1)) & 0x1;
     // note, that of == result7 if count == 1 and
@@ -492,7 +492,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EbM(bxInstruction_c *i)
   if (count) {
     Bit8u result_8 = ((Bit8s) op1_8) >> count;
 
-    write_RMW_virtual_byte(result_8);
+    write_RMW_linear_byte(result_8);
 
     unsigned cf = (((Bit8s) op1_8) >> (count - 1)) & 0x1;
 
