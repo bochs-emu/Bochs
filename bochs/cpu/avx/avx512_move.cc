@@ -32,9 +32,10 @@ void BX_CPU_C::avx_masked_load8(bxInstruction_c *i, bx_address eaddr, BxPackedAv
   unsigned len = i->getVL();
 
   if (i->as64L()) {
+    Bit64u laddr = get_laddr64(i->seg(), eaddr);
     for (unsigned n=0; n < BYTE_ELEMENTS(len); n++) {
        if (mask & (BX_CONST64(1)<<n)) {
-          if (! IsCanonical(get_laddr64(i->seg(), eaddr + n)))
+          if (! IsCanonical(laddr + n))
              exception(int_number(i->seg()), 0);
        }
     }
@@ -53,9 +54,10 @@ void BX_CPU_C::avx_masked_load16(bxInstruction_c *i, bx_address eaddr, BxPackedA
   unsigned len = i->getVL();
 
   if (i->as64L()) {
+    Bit64u laddr = get_laddr64(i->seg(), eaddr);
     for (unsigned n=0; n < WORD_ELEMENTS(len); n++) {
        if (mask & (1<<n)) {
-          if (! IsCanonical(get_laddr64(i->seg(), eaddr + 2*n)))
+          if (! IsCanonical(laddr + 2*n))
              exception(int_number(i->seg()), 0);
        }
     }
@@ -83,9 +85,10 @@ void BX_CPU_C::avx_masked_load32(bxInstruction_c *i, bx_address eaddr, BxPackedA
   unsigned len = i->getVL();
 
   if (i->as64L()) {
+    Bit64u laddr = get_laddr64(i->seg(), eaddr);
     for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
        if (mask & (1<<n)) {
-          if (! IsCanonical(get_laddr64(i->seg(), eaddr + 4*n)))
+          if (! IsCanonical(laddr + 4*n))
              exception(int_number(i->seg()), 0);
        }
     }
@@ -113,9 +116,10 @@ void BX_CPU_C::avx_masked_load64(bxInstruction_c *i, bx_address eaddr, BxPackedA
   unsigned len = i->getVL();
 
   if (i->as64L()) {
+    Bit64u laddr = get_laddr64(i->seg(), eaddr);
     for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
        if (mask & (1<<n)) {
-          if (! IsCanonical(get_laddr64(i->seg(), eaddr + 8*n)))
+          if (! IsCanonical(laddr + 8*n))
              exception(int_number(i->seg()), 0);
        }
     }
@@ -144,9 +148,10 @@ void BX_CPU_C::avx_masked_store8(bxInstruction_c *i, bx_address eaddr, const BxP
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
+    Bit64u laddr = get_laddr64(i->seg(), eaddr);
     for (unsigned n=0; n < BYTE_ELEMENTS(len); n++) {
       if (mask & (BX_CONST64(1)<<n)) {
-        if (! IsCanonical(get_laddr64(i->seg(), eaddr + n)))
+        if (! IsCanonical(laddr + n))
            exception(int_number(i->seg()), 0);
       }
     }
@@ -171,9 +176,10 @@ void BX_CPU_C::avx_masked_store16(bxInstruction_c *i, bx_address eaddr, const Bx
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
+    Bit64u laddr = get_laddr64(i->seg(), eaddr);
     for (unsigned n=0; n < WORD_ELEMENTS(len); n++) {
       if (mask & (1<<n)) {
-        if (! IsCanonical(get_laddr64(i->seg(), eaddr + 2*n)))
+        if (! IsCanonical(laddr + 2*n))
            exception(int_number(i->seg()), 0);
       }
     }
@@ -207,9 +213,10 @@ void BX_CPU_C::avx_masked_store32(bxInstruction_c *i, bx_address eaddr, const Bx
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
+    Bit64u laddr = get_laddr64(i->seg(), eaddr);
     for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
       if (mask & (1<<n)) {
-        if (! IsCanonical(get_laddr64(i->seg(), eaddr + 4*n)))
+        if (! IsCanonical(laddr + 4*n))
            exception(int_number(i->seg()), 0);
       }
     }
@@ -243,9 +250,10 @@ void BX_CPU_C::avx_masked_store64(bxInstruction_c *i, bx_address eaddr, const Bx
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
+    Bit64u laddr = get_laddr64(i->seg(), eaddr);
     for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
       if (mask & (1<<n)) {
-        if (! IsCanonical(get_laddr64(i->seg(), eaddr + 8*n)))
+        if (! IsCanonical(laddr + 8*n))
            exception(int_number(i->seg()), 0);
       }
     }

@@ -109,7 +109,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
       if (offset <= seg->cache.u.segment.limit_scaled ||
            offset > upper_limit || (upper_limit - offset) < length)
       {
-        BX_ERROR(("write_virtual_checks(): write beyond limit, r/w ED"));
+        BX_ERROR(("write_virtual_checks(): write beyond limit, r/w expand down"));
         return 0;
       }
       break;
@@ -148,8 +148,6 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
   switch (seg->cache.type) {
     case 0: case 1: /* read only */
     case 2: case 3: /* read/write */
-    case 10: case 11: /* execute/read */
-    case 14: case 15: /* execute/read-only, conforming */
       if (offset > (seg->cache.u.segment.limit_scaled - length)
           || length > seg->cache.u.segment.limit_scaled)
       {
@@ -167,6 +165,22 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
       }
       break;
 
+    case 10: case 11: /* execute/read */
+    case 14: case 15: /* execute/read-only, conforming */
+      if (offset > (seg->cache.u.segment.limit_scaled - length)
+          || length > seg->cache.u.segment.limit_scaled)
+      {
+        BX_ERROR(("read_virtual_checks(): read beyond limit"));
+        return 0;
+      }
+
+      if (seg->cache.u.segment.limit_scaled >= (BX_MAX_MEM_ACCESS_LENGTH-1)) {
+        // Mark cache as being OK type for succeeding reads. See notes for
+        // write checks; similar code.
+        seg->cache.valid |= SegAccessROK;
+      }
+      break;
+
     case 4: case 5: /* read only, expand down */
     case 6: case 7: /* read/write, expand down */
       if (seg->cache.u.segment.d_b)
@@ -176,7 +190,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
       if (offset <= seg->cache.u.segment.limit_scaled ||
            offset > upper_limit || (upper_limit - offset) < length)
       {
-        BX_ERROR(("read_virtual_checks(): read beyond limit ED"));
+        BX_ERROR(("read_virtual_checks(): read beyond limit expand down"));
         return 0;
       }
       break;
@@ -252,7 +266,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned 
       if (offset <= seg->cache.u.segment.limit_scaled ||
            offset > upper_limit || (upper_limit - offset) < length)
       {
-        BX_ERROR(("execute_virtual_checks(): read beyond limit ED"));
+        BX_ERROR(("execute_virtual_checks(): read beyond limit expand down"));
         return 0;
       }
       break;
