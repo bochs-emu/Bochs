@@ -4463,8 +4463,8 @@ public: // for now...
     BX_CPU_THIS_PTR espPageWindowSize = 0;
   }
 
-  BX_SMF bx_bool write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len) BX_CPP_AttrRegparmN(3);
-  BX_SMF bx_bool read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len) BX_CPP_AttrRegparmN(3);
+  BX_SMF bx_bool write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len, bx_bool align = BX_FALSE) BX_CPP_AttrRegparmN(4);
+  BX_SMF bx_bool read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len, bx_bool align = BX_FALSE) BX_CPP_AttrRegparmN(4);
   BX_SMF bx_bool execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len) BX_CPP_AttrRegparmN(3);
 
   BX_SMF Bit8u read_linear_byte(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
@@ -4998,9 +4998,13 @@ public: // for now...
 
   BX_SMF bx_address agen_read(unsigned seg, bx_address offset, unsigned len);
   BX_SMF Bit32u agen_read32(unsigned seg, Bit32u offset, unsigned len);
+  BX_SMF bx_address agen_read_aligned(unsigned seg, bx_address offset, unsigned len);
+  BX_SMF Bit32u agen_read_aligned32(unsigned seg, Bit32u offset, unsigned len);
 
   BX_SMF bx_address agen_write(unsigned seg, bx_address offset, unsigned len);
   BX_SMF Bit32u agen_write32(unsigned seg, Bit32u offset, unsigned len);
+  BX_SMF bx_address agen_write_aligned(unsigned seg, bx_address offset, unsigned len);
+  BX_SMF Bit32u agen_write_aligned32(unsigned seg, Bit32u offset, unsigned len);
 
   DECLARE_EFLAG_ACCESSOR   (ID,  21)
   DECLARE_EFLAG_ACCESSOR   (VIP, 20)
@@ -5388,12 +5392,29 @@ BX_CPP_INLINE Bit32u BX_CPU_C::agen_read32(unsigned s, Bit32u offset, unsigned l
     if (offset <= (seg->cache.u.segment.limit_scaled-len+1)) {
       return get_laddr32(s, offset);
     }
-//  else {
-//    exception(int_number(s), 0);
-//  }
   }
 
   if (!read_virtual_checks(seg, offset, len))
+    exception(int_number(s), 0);
+
+  return get_laddr32(s, offset);
+}
+
+BX_CPP_INLINE Bit32u BX_CPU_C::agen_read_aligned32(unsigned s, Bit32u offset, unsigned len)
+{
+  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
+
+  if (seg->cache.valid & SegAccessROK4G) {
+    return get_laddr32(s, offset);
+  }
+
+  if (seg->cache.valid & SegAccessROK) {
+    if (offset <= (seg->cache.u.segment.limit_scaled-len+1)) {
+      return get_laddr32(s, offset);
+    }
+  }
+
+  if (!read_virtual_checks(seg, offset, len, true /* aligned */))
     exception(int_number(s), 0);
 
   return get_laddr32(s, offset);
@@ -5411,12 +5432,29 @@ BX_CPP_INLINE Bit32u BX_CPU_C::agen_write32(unsigned s, Bit32u offset, unsigned 
     if (offset <= (seg->cache.u.segment.limit_scaled-len+1)) {
       return get_laddr32(s, offset);
     }
-//  else {
-//    exception(int_number(s), 0);
-//  }
   }
 
   if (!write_virtual_checks(seg, offset, len))
+    exception(int_number(s), 0);
+
+  return get_laddr32(s, offset);
+}
+
+BX_CPP_INLINE Bit32u BX_CPU_C::agen_write_aligned32(unsigned s, Bit32u offset, unsigned len)
+{
+  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
+
+  if (seg->cache.valid & SegAccessWOK4G) {
+    return get_laddr32(s, offset);
+  }
+
+  if (seg->cache.valid & SegAccessWOK) {
+    if (offset <= (seg->cache.u.segment.limit_scaled-len+1)) {
+      return get_laddr32(s, offset);
+    }
+  }
+
+  if (!write_virtual_checks(seg, offset, len, true /* aligned */))
     exception(int_number(s), 0);
 
   return get_laddr32(s, offset);
@@ -5432,6 +5470,16 @@ BX_CPP_INLINE bx_address BX_CPU_C::agen_read(unsigned s, bx_address offset, unsi
   return agen_read32(s, offset, len);
 }
 
+BX_CPP_INLINE bx_address BX_CPU_C::agen_read_aligned(unsigned s, bx_address offset, unsigned len)
+{
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    return get_laddr64(s, offset);
+  }
+#endif
+  return agen_read_aligned32(s, offset, len);
+}
+
 BX_CPP_INLINE bx_address BX_CPU_C::agen_write(unsigned s, bx_address offset, unsigned len)
 {
 #if BX_SUPPORT_X86_64
@@ -5440,6 +5488,16 @@ BX_CPP_INLINE bx_address BX_CPU_C::agen_write(unsigned s, bx_address offset, uns
   }
 #endif
   return agen_write32(s, offset, len);
+}
+
+BX_CPP_INLINE bx_address BX_CPU_C::agen_write_aligned(unsigned s, bx_address offset, unsigned len)
+{
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    return get_laddr64(s, offset);
+  }
+#endif
+  return agen_write_aligned32(s, offset, len);
 }
 
 #include "access.h"

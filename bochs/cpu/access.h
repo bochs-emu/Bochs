@@ -64,7 +64,7 @@ BX_CPU_C::write_virtual_xmmword_32(unsigned s, Bit32u offset, const BxPackedXmmR
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_xmmword_aligned_32(unsigned s, Bit32u offset, const BxPackedXmmRegister *data)
 {
-  Bit32u laddr = agen_write32(s, offset, 16);
+  Bit32u laddr = agen_write_aligned32(s, offset, 16);
   write_linear_xmmword_aligned(s, laddr, data);
 }
 
@@ -80,7 +80,7 @@ BX_CPU_C::write_virtual_ymmword_32(unsigned s, Bit32u offset, const BxPackedYmmR
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_ymmword_aligned_32(unsigned s, Bit32u offset, const BxPackedYmmRegister *data)
 {
-  Bit32u laddr = agen_write32(s, offset, 32);
+  Bit32u laddr = agen_write_aligned32(s, offset, 32);
   write_linear_ymmword_aligned(s, laddr, data);
 }
 
@@ -98,7 +98,7 @@ BX_CPU_C::write_virtual_zmmword_32(unsigned s, Bit32u offset, const BxPackedZmmR
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_zmmword_aligned_32(unsigned s, Bit32u offset, const BxPackedZmmRegister *data)
 {
-  Bit32u laddr = agen_write32(s, offset, 64);
+  Bit32u laddr = agen_write_aligned32(s, offset, 64);
   write_linear_zmmword_aligned(s, laddr, data);
 }
 
@@ -146,7 +146,7 @@ BX_CPU_C::read_virtual_xmmword_32(unsigned s, Bit32u offset, BxPackedXmmRegister
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_virtual_xmmword_aligned_32(unsigned s, Bit32u offset, BxPackedXmmRegister *data)
 {
-  Bit32u laddr = agen_read32(s, offset, 16);
+  Bit32u laddr = agen_read_aligned32(s, offset, 16);
   read_linear_xmmword_aligned(s, laddr, data);
 }
 
@@ -162,7 +162,7 @@ BX_CPU_C::read_virtual_ymmword_32(unsigned s, Bit32u offset, BxPackedYmmRegister
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_virtual_ymmword_aligned_32(unsigned s, Bit32u offset, BxPackedYmmRegister *data)
 {
-  Bit32u laddr = agen_read32(s, offset, 32);
+  Bit32u laddr = agen_read_aligned32(s, offset, 32);
   read_linear_ymmword_aligned(s, laddr, data);
 }
 
@@ -180,7 +180,7 @@ BX_CPU_C::read_virtual_zmmword_32(unsigned s, Bit32u offset, BxPackedZmmRegister
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_virtual_zmmword_aligned_32(unsigned s, Bit32u offset, BxPackedZmmRegister *data)
 {
-  Bit32u laddr = agen_read32(s, offset, 64);
+  Bit32u laddr = agen_read_aligned32(s, offset, 64);
   read_linear_zmmword_aligned(s, laddr, data);
 }
 
@@ -388,7 +388,7 @@ BX_CPU_C::write_virtual_xmmword(unsigned s, bx_address offset, const BxPackedXmm
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_xmmword_aligned(unsigned s, bx_address offset, const BxPackedXmmRegister *data)
 {
-  bx_address laddr = agen_write(s, offset, 16);
+  bx_address laddr = agen_write_aligned(s, offset, 16);
   write_linear_xmmword_aligned(s, laddr, data);
 }
 
@@ -404,7 +404,7 @@ BX_CPU_C::write_virtual_ymmword(unsigned s, bx_address offset, const BxPackedYmm
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_ymmword_aligned(unsigned s, bx_address offset, const BxPackedYmmRegister *data)
 {
-  bx_address laddr = agen_write(s, offset, 32);
+  bx_address laddr = agen_write_aligned(s, offset, 32);
   write_linear_ymmword_aligned(s, laddr, data);
 }
 
@@ -422,7 +422,7 @@ BX_CPU_C::write_virtual_zmmword(unsigned s, bx_address offset, const BxPackedZmm
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_zmmword_aligned(unsigned s, bx_address offset, const BxPackedZmmRegister *data)
 {
-  bx_address laddr = agen_write(s, offset, 64);
+  bx_address laddr = agen_write_aligned(s, offset, 64);
   write_linear_zmmword_aligned(s, laddr, data);
 }
 
@@ -470,7 +470,7 @@ BX_CPU_C::read_virtual_xmmword(unsigned s, bx_address offset, BxPackedXmmRegiste
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_virtual_xmmword_aligned(unsigned s, bx_address offset, BxPackedXmmRegister *data)
 {
-  bx_address laddr = agen_read(s, offset, 16);
+  bx_address laddr = agen_read_aligned(s, offset, 16);
   read_linear_xmmword_aligned(s, laddr, data);
 }
 
@@ -486,7 +486,7 @@ BX_CPU_C::read_virtual_ymmword(unsigned s, bx_address offset, BxPackedYmmRegiste
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_virtual_ymmword_aligned(unsigned s, bx_address offset, BxPackedYmmRegister *data)
 {
-  bx_address laddr = agen_read(s, offset, 32);
+  bx_address laddr = agen_read_aligned(s, offset, 32);
   read_linear_ymmword_aligned(s, laddr, data);
 }
 
@@ -504,7 +504,7 @@ BX_CPU_C::read_virtual_zmmword(unsigned s, bx_address offset, BxPackedZmmRegiste
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_virtual_zmmword_aligned(unsigned s, bx_address offset, BxPackedZmmRegister *data)
 {
-  bx_address laddr = agen_read(s, offset, 64);
+  bx_address laddr = agen_read_aligned(s, offset, 64);
   read_linear_zmmword_aligned(s, laddr, data);
 }
 

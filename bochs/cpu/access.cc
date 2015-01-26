@@ -44,10 +44,19 @@ bx_address bx_asize_mask[] = {
   #endif
 #endif
 
-  bx_bool BX_CPP_AttrRegparmN(3)
-BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length)
+  bx_bool BX_CPP_AttrRegparmN(4)
+BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length, bx_bool align)
 {
   Bit32u upper_limit;
+
+  length--;
+
+  if (align) {
+    if (offset & length) {
+      BX_DEBUG(("read_virtual_checks(): #GP misaligned access"));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+  }
 
   if (seg->cache.valid==0) {
     BX_DEBUG(("write_virtual_checks(): segment descriptor not valid"));
@@ -58,8 +67,6 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
     BX_ERROR(("write_virtual_checks(): segment not present"));
     return 0;
   }
-
-  length--;
 
   switch (seg->cache.type) {
     case 0: case 1:   // read only
@@ -114,10 +121,19 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
   return 1;
 }
 
-  bx_bool BX_CPP_AttrRegparmN(3)
-BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length)
+  bx_bool BX_CPP_AttrRegparmN(4)
+BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length, bx_bool align)
 {
   Bit32u upper_limit;
+
+  length--;
+
+  if (align) {
+    if (offset & length) {
+      BX_DEBUG(("read_virtual_checks(): #GP misaligned access"));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+  }
 
   if (seg->cache.valid==0) {
     BX_DEBUG(("read_virtual_checks(): segment descriptor not valid"));
@@ -128,8 +144,6 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
     BX_ERROR(("read_virtual_checks(): segment not present"));
     return 0;
   }
-
-  length--;
 
   switch (seg->cache.type) {
     case 0: case 1: /* read only */
