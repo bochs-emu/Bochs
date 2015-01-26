@@ -38,6 +38,7 @@ bx_sound_lowlevel_c::bx_sound_lowlevel_c()
   put("soundlow", "SNDLOW");
   record_timer_index = BX_NULL_TIMER_HANDLE;
   cb_count = 0;
+  emu_pcm_param.samplerate = 0;
 }
 
 bx_sound_lowlevel_c::~bx_sound_lowlevel_c()
@@ -132,12 +133,11 @@ void bx_sound_lowlevel_c::convert_pcm_data(Bit8u *src, int srcsize, Bit8u *dst, 
   }
 }
 
-int bx_sound_lowlevel_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *param)
+int bx_sound_lowlevel_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param)
 {
-  if (memcmp(param, &pcm_param, sizeof(bx_pcm_param_t)) != 0) {
-    startwaveplayback(param->samplerate, param->bits, param->channels == 2,
-                      param->format);
-    pcm_param = *param;
+  if (memcmp(src_param, &emu_pcm_param, sizeof(bx_pcm_param_t)) != 0) {
+    startwaveplayback(src_param->samplerate, 16, 1, 1);
+    emu_pcm_param = *src_param;
   }
   UNUSED(length);
   UNUSED(data);

@@ -40,10 +40,12 @@
 
 typedef struct {
   Bit16u samplerate;
-  Bit8u  channels;
   Bit8u  bits;
+  Bit8u  channels;
   Bit8u  format;
 } bx_pcm_param_t;
+
+const bx_pcm_param_t default_pcm_param = {44100, 16, 2, 1};
 
 typedef Bit32u (*sound_record_handler_t)(void *arg, Bit32u len);
 typedef Bit32u (*get_wave_cb_t)(void *arg, Bit16u rate, Bit8u *buffer, Bit32u len);
@@ -73,7 +75,7 @@ public:
 
   virtual int openwaveoutput(const char *wavedev);
   virtual int startwaveplayback(int frequency, int bits, bx_bool stereo, int format);
-  virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *param);
+  virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
   virtual int stopwaveplayback();
   virtual int closewaveoutput();
 
@@ -91,7 +93,7 @@ public:
 protected:
   void convert_pcm_data(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param);
 
-  bx_pcm_param_t pcm_param;
+  bx_pcm_param_t emu_pcm_param, real_pcm_param;
   int cvt_mult;
 
   int cb_count;

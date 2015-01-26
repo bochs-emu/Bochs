@@ -132,22 +132,25 @@ bx_sound_sdl_c::~bx_sound_sdl_c()
 
 int bx_sound_sdl_c::openwaveoutput(const char *wavedev)
 {
+  real_pcm_param = default_pcm_param;
+  set_pcm_params(real_pcm_param);
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_sdl_c::startwaveplayback(int frequency, int bits, bx_bool stereo, int format)
+int bx_sound_sdl_c::set_pcm_params(bx_pcm_param_t param)
 {
-  int signeddata = format & 1;
+  int signeddata = param.format & 1;
 
-  BX_DEBUG(("startwaveplayback(%d, %d, %d, %x)", frequency, bits, stereo, format));
-  fmt.freq = frequency;
+  BX_DEBUG(("set_pcm_params(): %u, %u, %u, %02x", param.samplerate, param.bits,
+            param.channels, param.format));
+  fmt.freq = param.samplerate;
 
-  if (bits == 16) {
+  if (param.bits == 16) {
     if (signeddata == 1)
       fmt.format = AUDIO_S16;
     else
       fmt.format = AUDIO_U16;
-  } else if (bits == 8) {
+  } else if (param.bits == 8) {
     if (signeddata == 1)
       fmt.format = AUDIO_S8;
     else
@@ -155,8 +158,8 @@ int bx_sound_sdl_c::startwaveplayback(int frequency, int bits, bx_bool stereo, i
   } else
     return BX_SOUNDLOW_ERR;
 
-  fmt.channels = stereo + 1;
-  fmt.samples = frequency / 10;
+  fmt.channels = param.channels;
+  fmt.samples = fmt.freq / 10;
   fmt.callback = sdl_callback;
   fmt.userdata = this;
   if (WaveOpen) {
@@ -180,11 +183,14 @@ int bx_sound_sdl_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src
   int ret = BX_SOUNDLOW_OK;
   int len2;
 
-  if (memcmp(src_param, &pcm_param, sizeof(bx_pcm_param_t)) != 0) {
-    startwaveplayback(src_param->samplerate, 16, 1, 1);
-    pcm_param = *src_param;
+  if (memcmp(src_param, &emu_pcm_param, sizeof(bx_pcm_param_t)) != 0) {
+    emu_pcm_param = *src_param;
     cvt_mult = (src_param->bits == 8) ? 2 : 1;
     if (src_param->channels == 1) cvt_mult <<= 1;
+    if (src_param->samplerate != real_pcm_param.samplerate) {
+      real_pcm_param.samplerate = src_param->samplerate;
+      set_pcm_params(real_pcm_param);
+    }
   }
   len2 = length * cvt_mult;
   SDL_LockAudio();

@@ -88,10 +88,10 @@ bx_soundmod_ctl_c::~bx_soundmod_ctl_c()
     while (beep_control >= 0) {
       BX_MSLEEP(1);
     }
+    free(beep_buffer);
   } else {
     soundmod->unregister_wave_callback(beep_callback_id);
   }
-  free(beep_buffer);
   if (soundmod != NULL) {
     soundmod->closewaveoutput();
   }
@@ -143,12 +143,12 @@ void bx_soundmod_ctl_c::init()
     BX_PANIC(("Could not open wave output device"));
   } else {
     beep_active = 0;
-    beep_callback_id = soundmod->register_wave_callback(theSoundModCtl, beep_callback);
     beep_cur_freq = 0.0;
-    beep_bufsize = 4410;
-    beep_buffer = (Bit8u*)malloc(beep_bufsize);
     BX_INIT_MUTEX(beep_mutex);
+    beep_callback_id = soundmod->register_wave_callback(theSoundModCtl, beep_callback);
     if (beep_callback_id < 0) {
+      beep_bufsize = 4410;
+      beep_buffer = (Bit8u*)malloc(beep_bufsize);
       beep_param.samplerate = 44100;
       beep_param.bits = 16;
       beep_param.channels = 2;

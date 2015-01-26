@@ -393,9 +393,9 @@ int bx_sound_windows_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t 
 
   BX_DEBUG(("sendwavepacket(%d, %p)", length, data));
 
-  if (memcmp(src_param, &pcm_param, sizeof(bx_pcm_param_t)) != 0) {
+  if (memcmp(src_param, &emu_pcm_param, sizeof(bx_pcm_param_t)) != 0) {
     startwaveplayback(src_param->samplerate, 16, 1, 1);
-    pcm_param = *src_param;
+    emu_pcm_param = *src_param;
     cvt_mult = (src_param->bits == 8) ? 2 : 1;
     if (src_param->channels == 1) cvt_mult <<= 1;
   }
