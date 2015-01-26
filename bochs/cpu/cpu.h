@@ -4629,7 +4629,7 @@ public: // for now...
   BX_SMF void write_RMW_linear_qword(Bit64u val64) BX_CPP_AttrRegparmN(1);
 
 #if BX_SUPPORT_X86_64
-  BX_SMF void read_RMW_linear_dqword_aligned_64(unsigned seg, Bit64u laddr, Bit64u *hi, Bit64u *lo);
+  BX_SMF void read_RMW_linear_dqword_aligned_64(unsigned seg, bx_address laddr, Bit64u *hi, Bit64u *lo);
   BX_SMF void write_RMW_linear_dqword(Bit64u hi, Bit64u lo);
 #endif
 

@@ -27,7 +27,7 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::write_linear_byte(unsigned s, Bit64u laddr, Bit8u data)
+BX_CPU_C::write_linear_byte(unsigned s, bx_address laddr, Bit8u data)
 {
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   Bit64u lpf = LPFOf(laddr);
@@ -52,7 +52,7 @@ BX_CPU_C::write_linear_byte(unsigned s, Bit64u laddr, Bit8u data)
 }
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::write_linear_word(unsigned s, Bit64u laddr, Bit16u data)
+BX_CPU_C::write_linear_word(unsigned s, bx_address laddr, Bit16u data)
 {
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
@@ -81,7 +81,7 @@ BX_CPU_C::write_linear_word(unsigned s, Bit64u laddr, Bit16u data)
 }
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::write_linear_dword(unsigned s, Bit64u laddr, Bit32u data)
+BX_CPU_C::write_linear_dword(unsigned s, bx_address laddr, Bit32u data)
 {
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
@@ -115,7 +115,7 @@ BX_CPU_C::write_linear_dword(unsigned s, Bit64u laddr, Bit32u data)
 }
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::write_linear_qword(unsigned s, Bit64u laddr, Bit64u data)
+BX_CPU_C::write_linear_qword(unsigned s, bx_address laddr, Bit64u data)
 {
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
@@ -149,7 +149,7 @@ BX_CPU_C::write_linear_qword(unsigned s, Bit64u laddr, Bit64u data)
 }
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::write_linear_xmmword(unsigned s, Bit64u laddr, const BxPackedXmmRegister *data)
+BX_CPU_C::write_linear_xmmword(unsigned s, bx_address laddr, const BxPackedXmmRegister *data)
 {
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
   Bit64u lpf = LPFOf(laddr);
@@ -175,7 +175,7 @@ BX_CPU_C::write_linear_xmmword(unsigned s, Bit64u laddr, const BxPackedXmmRegist
 }
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::write_linear_xmmword_aligned(unsigned s, Bit64u laddr, const BxPackedXmmRegister *data)
+BX_CPU_C::write_linear_xmmword_aligned(unsigned s, bx_address laddr, const BxPackedXmmRegister *data)
 {
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   Bit64u lpf = AlignedAccessLPFOf(laddr, 15);
@@ -206,7 +206,7 @@ BX_CPU_C::write_linear_xmmword_aligned(unsigned s, Bit64u laddr, const BxPackedX
 }
 
 #if BX_SUPPORT_AVX
-void BX_CPU_C::write_linear_ymmword(unsigned s, Bit64u laddr, const BxPackedYmmRegister *data)
+void BX_CPU_C::write_linear_ymmword(unsigned s, bx_address laddr, const BxPackedYmmRegister *data)
 {
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 31);
   Bit64u lpf = LPFOf(laddr);
@@ -232,7 +232,7 @@ void BX_CPU_C::write_linear_ymmword(unsigned s, Bit64u laddr, const BxPackedYmmR
     exception(int_number(s), 0);
 }
 
-void BX_CPU_C::write_linear_ymmword_aligned(unsigned s, Bit64u laddr, const BxPackedYmmRegister *data)
+void BX_CPU_C::write_linear_ymmword_aligned(unsigned s, bx_address laddr, const BxPackedYmmRegister *data)
 {
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   Bit64u lpf = AlignedAccessLPFOf(laddr, 31);
@@ -265,7 +265,7 @@ void BX_CPU_C::write_linear_ymmword_aligned(unsigned s, Bit64u laddr, const BxPa
 #endif
 
 #if BX_SUPPORT_EVEX
-void BX_CPU_C::write_linear_zmmword(unsigned s, Bit64u laddr, const BxPackedZmmRegister *data)
+void BX_CPU_C::write_linear_zmmword(unsigned s, bx_address laddr, const BxPackedZmmRegister *data)
 {
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 63);
   Bit64u lpf = LPFOf(laddr);
@@ -291,7 +291,7 @@ void BX_CPU_C::write_linear_zmmword(unsigned s, Bit64u laddr, const BxPackedZmmR
     exception(int_number(s), 0);
 }
 
-void BX_CPU_C::write_linear_zmmword_aligned(unsigned s, Bit64u laddr, const BxPackedZmmRegister *data)
+void BX_CPU_C::write_linear_zmmword_aligned(unsigned s, bx_address laddr, const BxPackedZmmRegister *data)
 {
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   Bit64u lpf = AlignedAccessLPFOf(laddr, 63);
@@ -324,7 +324,7 @@ void BX_CPU_C::write_linear_zmmword_aligned(unsigned s, Bit64u laddr, const BxPa
 #endif
 
   Bit8u BX_CPP_AttrRegparmN(2)
-BX_CPU_C::read_linear_byte(unsigned s, Bit64u laddr)
+BX_CPU_C::read_linear_byte(unsigned s, bx_address laddr)
 {
   Bit8u data;
 
@@ -351,7 +351,7 @@ BX_CPU_C::read_linear_byte(unsigned s, Bit64u laddr)
 }
 
   Bit16u BX_CPP_AttrRegparmN(2)
-BX_CPU_C::read_linear_word(unsigned s, Bit64u laddr)
+BX_CPU_C::read_linear_word(unsigned s, bx_address laddr)
 {
   Bit16u data;
 
@@ -382,7 +382,7 @@ BX_CPU_C::read_linear_word(unsigned s, Bit64u laddr)
 }
 
   Bit32u BX_CPP_AttrRegparmN(2)
-BX_CPU_C::read_linear_dword(unsigned s, Bit64u laddr)
+BX_CPU_C::read_linear_dword(unsigned s, bx_address laddr)
 {
   Bit32u data;
 
@@ -413,7 +413,7 @@ BX_CPU_C::read_linear_dword(unsigned s, Bit64u laddr)
 }
 
   Bit64u BX_CPP_AttrRegparmN(2)
-BX_CPU_C::read_linear_qword(unsigned s, Bit64u laddr)
+BX_CPU_C::read_linear_qword(unsigned s, bx_address laddr)
 {
   Bit64u data;
 
@@ -444,7 +444,7 @@ BX_CPU_C::read_linear_qword(unsigned s, Bit64u laddr)
 }
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::read_linear_xmmword(unsigned s, Bit64u laddr, BxPackedXmmRegister *data)
+BX_CPU_C::read_linear_xmmword(unsigned s, bx_address laddr, BxPackedXmmRegister *data)
 {
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
   Bit64u lpf = LPFOf(laddr);
@@ -468,7 +468,7 @@ BX_CPU_C::read_linear_xmmword(unsigned s, Bit64u laddr, BxPackedXmmRegister *dat
 }
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::read_linear_xmmword_aligned(unsigned s, Bit64u laddr, BxPackedXmmRegister *data)
+BX_CPU_C::read_linear_xmmword_aligned(unsigned s, bx_address laddr, BxPackedXmmRegister *data)
 {
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   Bit64u lpf = AlignedAccessLPFOf(laddr, 15);
@@ -497,7 +497,7 @@ BX_CPU_C::read_linear_xmmword_aligned(unsigned s, Bit64u laddr, BxPackedXmmRegis
 }
 
 #if BX_SUPPORT_AVX
-void BX_CPU_C::read_linear_ymmword(unsigned s, Bit64u laddr, BxPackedYmmRegister *data)
+void BX_CPU_C::read_linear_ymmword(unsigned s, bx_address laddr, BxPackedYmmRegister *data)
 {
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 31);
   Bit64u lpf = LPFOf(laddr);
@@ -521,7 +521,7 @@ void BX_CPU_C::read_linear_ymmword(unsigned s, Bit64u laddr, BxPackedYmmRegister
     exception(int_number(s), 0);
 }
 
-void BX_CPU_C::read_linear_ymmword_aligned(unsigned s, Bit64u laddr, BxPackedYmmRegister *data)
+void BX_CPU_C::read_linear_ymmword_aligned(unsigned s, bx_address laddr, BxPackedYmmRegister *data)
 {
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   Bit64u lpf = AlignedAccessLPFOf(laddr, 31);
@@ -552,7 +552,7 @@ void BX_CPU_C::read_linear_ymmword_aligned(unsigned s, Bit64u laddr, BxPackedYmm
 #endif
 
 #if BX_SUPPORT_EVEX
-void BX_CPU_C::read_linear_zmmword(unsigned s, Bit64u laddr, BxPackedZmmRegister *data)
+void BX_CPU_C::read_linear_zmmword(unsigned s, bx_address laddr, BxPackedZmmRegister *data)
 {
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 63);
   Bit64u lpf = LPFOf(laddr);
@@ -576,7 +576,7 @@ void BX_CPU_C::read_linear_zmmword(unsigned s, Bit64u laddr, BxPackedZmmRegister
     exception(int_number(s), 0);
 }
 
-void BX_CPU_C::read_linear_zmmword_aligned(unsigned s, Bit64u laddr, BxPackedZmmRegister *data)
+void BX_CPU_C::read_linear_zmmword_aligned(unsigned s, bx_address laddr, BxPackedZmmRegister *data)
 {
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   Bit64u lpf = AlignedAccessLPFOf(laddr, 63);
@@ -888,7 +888,7 @@ BX_CPU_C::write_RMW_linear_qword(Bit64u val64)
 
 #if BX_SUPPORT_X86_64
 
-void BX_CPU_C::read_RMW_linear_dqword_aligned_64(unsigned s, Bit64u laddr, Bit64u *hi, Bit64u *lo)
+void BX_CPU_C::read_RMW_linear_dqword_aligned_64(unsigned s, bx_address laddr, Bit64u *hi, Bit64u *lo)
 {
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   Bit64u lpf = AlignedAccessLPFOf(laddr, 15);
