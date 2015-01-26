@@ -32,7 +32,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EqGqM(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), get_laddr64(i->seg(), eaddr));
+  op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
   op2_64 = BX_READ_64BIT_REG(i->src());
   op1_64 ^= op2_64;
   write_RMW_linear_qword(op1_64);
@@ -80,7 +80,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EqIdM(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), get_laddr64(i->seg(), eaddr));
+  op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
   op1_64 ^= op2_64;
   write_RMW_linear_qword(op1_64);
 
@@ -108,7 +108,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EqIdM(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), get_laddr64(i->seg(), eaddr));
+  op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
   op1_64 |= op2_64;
   write_RMW_linear_qword(op1_64);
 
@@ -134,7 +134,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::NOT_EqM(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit64u op1_64 = read_RMW_virtual_qword_64(i->seg(), get_laddr64(i->seg(), eaddr));
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
   op1_64 = ~op1_64;
   write_RMW_linear_qword(op1_64);
 
@@ -156,7 +156,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EqGqM(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
+  op1_64 = read_RMW_linear_qword(i->seg(), eaddr);
   op2_64 = BX_READ_64BIT_REG(i->src());
   op1_64 |= op2_64;
   write_RMW_linear_qword(op1_64);
@@ -204,7 +204,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EqGqM(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), get_laddr64(i->seg(), eaddr));
+  op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
   op2_64 = BX_READ_64BIT_REG(i->src());
   op1_64 &= op2_64;
   write_RMW_linear_qword(op1_64);
@@ -252,7 +252,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EqIdM(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), get_laddr64(i->seg(), eaddr));
+  op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
   op1_64 &= op2_64;
   write_RMW_linear_qword(op1_64);
 

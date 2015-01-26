@@ -4535,38 +4535,6 @@ public: // for now...
 #endif
 #endif
 
-#if BX_SUPPORT_X86_64
-  BX_SMF Bit8u read_virtual_byte_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit16u read_virtual_word_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit32u read_virtual_dword_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit64u read_virtual_qword_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF void read_virtual_xmmword_64(unsigned seg, Bit64u off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void read_virtual_xmmword_aligned_64(unsigned seg, Bit64u off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
-#if BX_SUPPORT_AVX
-  BX_SMF void read_virtual_ymmword_64(unsigned seg, Bit64u offset, BxPackedYmmRegister *data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void read_virtual_ymmword_aligned_64(unsigned seg, Bit64u offset, BxPackedYmmRegister *data) BX_CPP_AttrRegparmN(3);
-#endif
-#if BX_SUPPORT_EVEX
-  BX_SMF void read_virtual_zmmword_64(unsigned seg, Bit64u offset, BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void read_virtual_zmmword_aligned_64(unsigned seg, Bit64u offset, BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
-#endif
-
-  BX_SMF void write_virtual_byte_64(unsigned seg, Bit64u offset, Bit8u data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void write_virtual_word_64(unsigned seg, Bit64u offset, Bit16u data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void write_virtual_dword_64(unsigned seg, Bit64u offset, Bit32u data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void write_virtual_qword_64(unsigned seg, Bit64u offset, Bit64u data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void write_virtual_xmmword_64(unsigned seg, Bit64u offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void write_virtual_xmmword_aligned_64(unsigned seg, Bit64u offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
-#if BX_SUPPORT_AVX
-  BX_SMF void write_virtual_ymmword_64(unsigned seg, Bit64u offset, const BxPackedYmmRegister *data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void write_virtual_ymmword_aligned_64(unsigned seg, Bit64u offset, const BxPackedYmmRegister *data) BX_CPP_AttrRegparmN(3);
-#endif
-#if BX_SUPPORT_EVEX
-  BX_SMF void write_virtual_zmmword_64(unsigned seg, Bit64u offset, const BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void write_virtual_zmmword_aligned_64(unsigned seg, Bit64u offset, const BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
-#endif
-#endif
-
   BX_SMF Bit8u read_virtual_byte(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit16u read_virtual_word(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit32u read_virtual_dword(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
@@ -4610,13 +4578,6 @@ public: // for now...
   BX_SMF Bit16u read_RMW_virtual_word_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit32u read_RMW_virtual_dword_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit64u read_RMW_virtual_qword_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
-
-#if BX_SUPPORT_X86_64
-  BX_SMF Bit8u read_RMW_virtual_byte_64(unsigned seg, Bit64u laddr) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit16u read_RMW_virtual_word_64(unsigned seg, Bit64u laddr) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit32u read_RMW_virtual_dword_64(unsigned seg, Bit64u laddr) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit64u read_RMW_virtual_qword_64(unsigned seg, Bit64u laddr) BX_CPP_AttrRegparmN(2);
-#endif
 
   BX_SMF Bit8u read_RMW_virtual_byte(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit16u read_RMW_virtual_word(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);

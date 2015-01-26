@@ -251,7 +251,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB32_YbDX(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB64_YbDX(bxInstruction_c *i)
 {
   // trigger any segment or page faults before reading from IO port
-  Bit8u value8 = read_RMW_virtual_byte_64(BX_SEG_REG_ES, RDI);
+  Bit8u value8 = read_RMW_linear_byte(BX_SEG_REG_ES, RDI);
 
   value8 = BX_INP(DX, 1);
 
@@ -362,7 +362,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW32_YwDX(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW64_YwDX(bxInstruction_c *i)
 {
   // trigger any segment or page faults before reading from IO port
-  Bit16u value16 = read_RMW_virtual_word_64(BX_SEG_REG_ES, RDI);
+  Bit16u value16 = read_RMW_linear_word(BX_SEG_REG_ES, RDI);
 
   value16 = BX_INP(DX, 2);
 
@@ -438,7 +438,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD32_YdDX(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD64_YdDX(bxInstruction_c *i)
 {
   // trigger any segment or page faults before reading from IO port
-  Bit32u value32 = read_RMW_virtual_dword_64(BX_SEG_REG_ES, RDI);
+  Bit32u value32 = read_RMW_linear_dword(BX_SEG_REG_ES, RDI);
 
   value32 = BX_INP(DX, 4);
 

@@ -105,11 +105,6 @@ BX_CPU_C::write_linear_dword(unsigned s, bx_address laddr, Bit32u data)
     }
   }
 
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("write_linear_dword(): canonical failure"));
-    exception(int_number(s), 0);
-  }
-
   if (access_write_linear(laddr, 4, CPL, 0x3, (void *) &data) < 0)
     exception(int_number(s), 0);
 }
@@ -137,11 +132,6 @@ BX_CPU_C::write_linear_qword(unsigned s, bx_address laddr, Bit64u data)
       WriteHostQWordToLittleEndian(hostAddr, data);
       return;
     }
-  }
-
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("write_linear_qword(): canonical failure"));
-    exception(int_number(s), 0);
   }
 
   if (access_write_linear(laddr, 8, CPL, 0x7, (void *) &data) < 0)
