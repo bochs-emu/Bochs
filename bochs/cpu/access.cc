@@ -53,7 +53,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
 
   if (align) {
     if (offset & length) {
-      BX_DEBUG(("read_virtual_checks(): #GP misaligned access"));
+      BX_DEBUG(("write_virtual_checks(): #GP misaligned access"));
       exception(BX_GP_EXCEPTION, 0);
     }
   }
