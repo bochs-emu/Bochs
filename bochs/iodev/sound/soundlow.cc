@@ -94,6 +94,8 @@ void bx_sound_lowlevel_c::convert_pcm_data(Bit8u *src, int srcsize, Bit8u *dst, 
 {
   int i, j;
   Bit8u xor_val;
+  Bit16s value16s;
+  Bit8u volumes[2], channel = 0;
 
   xor_val = (param->format & 1) ? 0x00 : 0x80;
   if (param->bits == 16) {
@@ -129,6 +131,17 @@ void bx_sound_lowlevel_c::convert_pcm_data(Bit8u *src, int srcsize, Bit8u *dst, 
         dst[j++] = 0;
         dst[j++] = src[i] ^ xor_val;
       }
+    }
+  }
+  if (param->volume != 0xffff) {
+    volumes[0] = (Bit8u)(param->volume & 0xff);
+    volumes[1] = (Bit8u)(param->volume >> 8);
+    for (i = 0; i < dstsize; i+=2) {
+      value16s = (Bit16s)(dst[i] | (dst[i+1] << 8));
+      value16s = (Bit16s)((Bit32s)value16s * volumes[channel] / 256);
+      dst[i] = (Bit8u)(value16s & 0xff);
+      dst[i+1] = (Bit8u)(value16s >> 8);
+      channel ^= 1;
     }
   }
 }

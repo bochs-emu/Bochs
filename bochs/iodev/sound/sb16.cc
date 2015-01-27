@@ -445,13 +445,10 @@ void bx_sb16_c::register_state(void)
   new bx_shadow_num_c(dsp, "testreg", &DSP.testreg, BASE_HEX);
   bx_list_c *dma = new bx_list_c(dsp, "dma");
   new bx_shadow_num_c(dma, "mode", &DSP.dma.mode);
-  new bx_shadow_num_c(dma, "bits", &DSP.dma.param.bits);
   new bx_shadow_num_c(dma, "bps", &DSP.dma.bps);
-  new bx_shadow_num_c(dma, "format", &DSP.dma.param.format);
   new bx_shadow_num_c(dma, "timer", &DSP.dma.timer);
   new bx_shadow_bool_c(dma, "fifo", &DSP.dma.fifo);
   new bx_shadow_bool_c(dma, "output", &DSP.dma.output);
-  new bx_shadow_num_c(dma, "channels", &DSP.dma.param.channels);
   new bx_shadow_bool_c(dma, "highspeed", &DSP.dma.highspeed);
   new bx_shadow_num_c(dma, "count", &DSP.dma.count);
   new bx_shadow_num_c(dma, "chunkindex", &DSP.dma.chunkindex);
@@ -459,6 +456,10 @@ void bx_sb16_c::register_state(void)
   new bx_shadow_num_c(dma, "timeconstant", &DSP.dma.timeconstant);
   new bx_shadow_num_c(dma, "blocklength", &DSP.dma.blocklength);
   new bx_shadow_num_c(dma, "samplerate", &DSP.dma.param.samplerate);
+  new bx_shadow_num_c(dma, "bits", &DSP.dma.param.bits);
+  new bx_shadow_num_c(dma, "channels", &DSP.dma.param.channels);
+  new bx_shadow_num_c(dma, "format", &DSP.dma.param.format);
+  new bx_shadow_num_c(dma, "volume", &DSP.dma.param.volume);
   new bx_shadow_bool_c(dsp, "outputinit", &DSP.outputinit);
   new bx_shadow_bool_c(dsp, "inputinit", &DSP.inputinit);
   new bx_shadow_data_c(list, "chunk", DSP.dma.chunk, BX_SOUNDLOW_WAVEPACKETSIZE);
@@ -1394,12 +1395,6 @@ void bx_sb16_c::dsp_sendwavepacket()
   if (DSP.dma.chunkindex == 0)
     return;
 
-  // apply wave volume
-  if (BX_SB16_THIS wave_vol != 0xffff) {
-    DEV_soundmod_pcm_apply_volume(DSP.dma.chunkindex, DSP.dma.chunk, BX_SB16_THIS wave_vol,
-                                  DSP.dma.param.bits, DSP.dma.param.channels == 2, DSP.dma.param.format & 1);
-  }
-
   switch (BX_SB16_THIS wavemode) {
     case 1:
       BX_SB16_OUTPUT->sendwavepacket(DSP.dma.chunkindex, DSP.dma.chunk, &DSP.dma.param);
@@ -1747,11 +1742,11 @@ void bx_sb16_c::mixer_writedata(Bit32u value)
     master_vol = (MIXER.reg[0x30] >> 3);
     dac_vol = (MIXER.reg[0x32] >> 3);
     tmp_vol = (float)master_vol/31.0f*pow(10.0f, (float)(31-dac_vol)*-0.065f);
-    BX_SB16_THIS wave_vol = (Bit8u)(255 * tmp_vol);
+    DSP.dma.param.volume = (Bit8u)(255 * tmp_vol);
     master_vol = (MIXER.reg[0x31] >> 3);
     dac_vol = (MIXER.reg[0x33] >> 3);
     tmp_vol = (float)master_vol/31.0f*pow(10.0f, (float)(31-dac_vol)*-0.065f);
-    BX_SB16_THIS wave_vol |= ((Bit8u)(255 * tmp_vol) << 8);
+    DSP.dma.param.volume |= ((Bit8u)(255 * tmp_vol) << 8);
   }
 
   writelog(BOTHLOG(4), "mixer register %02x set to %02x",

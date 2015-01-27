@@ -34,8 +34,6 @@ public:
   virtual void VOC_init_file(FILE *stream);
   virtual void VOC_write_block(FILE *stream, int block, Bit32u headerlen,
                                Bit8u header[], Bit32u datalen, Bit8u data[]);
-  virtual void pcm_apply_volume(Bit32u datalen, Bit8u data[], Bit16u volume,
-                                Bit8u bits, bx_bool stereo, bx_bool issigned);
   Bit32u beep_generator(Bit16u rate, Bit8u *buffer, Bit32u len);
 private:
   bx_sound_lowlevel_c *soundmod;

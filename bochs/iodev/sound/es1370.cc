@@ -329,6 +329,7 @@ void bx_es1370_c::register_state(void)
     new bx_shadow_num_c(codec_regs, pname, &BX_ES1370_THIS s.codec_reg[i], BASE_HEX);
   }
   BXRS_HEX_PARAM_FIELD(list, sctl, BX_ES1370_THIS s.sctl);
+  BXRS_HEX_PARAM_FIELD(list, wave_vol, BX_ES1370_THIS s.wave_vol);
 
   register_pci_state(list);
 }
@@ -817,12 +818,7 @@ void bx_es1370_c::sendwavepacket(unsigned channel, Bit32u buflen, Bit8u *buffer)
   param.bits = (format >> 1) ? 16 : 8;
   param.channels = (format & 1) + 1;
   param.format = (format >> 1) & 1;
-
-  // apply wave volume
-  if (BX_ES1370_THIS s.wave_vol != 0xffff) {
-    DEV_soundmod_pcm_apply_volume(buflen, buffer, BX_ES1370_THIS s.wave_vol,
-                                  param.bits, param.channels == 2, param.format);
-  }
+  param.volume = BX_ES1370_THIS s.wave_vol;
 
   switch (BX_ES1370_THIS wavemode) {
     case 1:

@@ -159,7 +159,6 @@ private:
   int currentirq;
   int currentdma8;
   int currentdma16;
-  Bit16u wave_vol;
   int fmopl_callback_id;
 
   // the MPU 401 relevant variables

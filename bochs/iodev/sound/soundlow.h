@@ -43,6 +43,7 @@ typedef struct {
   Bit8u  bits;
   Bit8u  channels;
   Bit8u  format;
+  Bit16u volume;
 } bx_pcm_param_t;
 
 const bx_pcm_param_t default_pcm_param = {44100, 16, 2, 1};
