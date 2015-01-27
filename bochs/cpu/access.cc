@@ -95,7 +95,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
         // Only normal segments (not expand down) are handled this way.
         seg->cache.valid |= SegAccessROK | SegAccessWOK;
 
-        if (seg->cache.u.segment.limit_scaled == 0xffffffff) {
+        if (seg->cache.u.segment.limit_scaled == 0xffffffff && seg->cache.u.segment.base == 0) {
           seg->cache.valid |= SegAccessROK4G | SegAccessWOK4G;
         }
       }
@@ -159,7 +159,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
         // write checks; similar code.
         seg->cache.valid |= SegAccessROK;
 
-        if (seg->cache.u.segment.limit_scaled == 0xffffffff) {
+        if (seg->cache.u.segment.limit_scaled == 0xffffffff && seg->cache.u.segment.base == 0) {
           seg->cache.valid |= SegAccessROK4G;
         }
       }
@@ -241,7 +241,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned 
         // write checks; similar code.
         seg->cache.valid |= SegAccessROK;
 
-        if (seg->cache.u.segment.limit_scaled == 0xffffffff) {
+        if (seg->cache.u.segment.limit_scaled == 0xffffffff && seg->cache.u.segment.base == 0) {
           seg->cache.valid |= SegAccessROK4G;
         }
       }
