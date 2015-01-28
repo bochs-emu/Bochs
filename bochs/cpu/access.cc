@@ -52,7 +52,8 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
   length--;
 
   if (align) {
-    if (offset & length) {
+    Bit32u laddr = seg->cache.u.segment.base + offset;
+    if (laddr & length) {
       BX_DEBUG(("write_virtual_checks(): #GP misaligned access"));
       exception(BX_GP_EXCEPTION, 0);
     }
@@ -129,7 +130,8 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
   length--;
 
   if (align) {
-    if (offset & length) {
+    Bit32u laddr = seg->cache.u.segment.base + offset;
+    if (laddr & length) {
       BX_DEBUG(("read_virtual_checks(): #GP misaligned access"));
       exception(BX_GP_EXCEPTION, 0);
     }
