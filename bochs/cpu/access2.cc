@@ -138,6 +138,8 @@ BX_CPU_C::write_linear_qword(unsigned s, bx_address laddr, Bit64u data)
     exception(int_number(s), 0);
 }
 
+#if BX_CPU_LEVEL >= 6
+
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_linear_xmmword(unsigned s, bx_address laddr, const BxPackedXmmRegister *data)
 {
@@ -313,6 +315,8 @@ void BX_CPU_C::write_linear_zmmword_aligned(unsigned s, bx_address laddr, const 
 }
 #endif
 
+#endif
+
   Bit8u BX_CPP_AttrRegparmN(2)
 BX_CPU_C::read_linear_byte(unsigned s, bx_address laddr)
 {
@@ -432,6 +436,8 @@ BX_CPU_C::read_linear_qword(unsigned s, bx_address laddr)
 
   return data;
 }
+
+#if BX_CPU_LEVEL >= 6
 
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_linear_xmmword(unsigned s, bx_address laddr, BxPackedXmmRegister *data)
@@ -594,6 +600,8 @@ void BX_CPU_C::read_linear_zmmword_aligned(unsigned s, bx_address laddr, BxPacke
   if (access_read_linear(laddr, 64, CPL, BX_READ, 0x0, (void *) data) < 0)
     exception(int_number(s), 0);
 }
+#endif
+
 #endif
 
 //////////////////////////////////////////////////////////////
