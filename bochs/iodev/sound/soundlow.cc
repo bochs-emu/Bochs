@@ -31,18 +31,126 @@
 
 #include "soundlow.h"
 
+#ifndef WIN32
+#include <pthread.h>
+#endif
+
+// audio buffer support
+
+static audio_buffer_t *audio_buffers = NULL;
+
+audio_buffer_t* new_audio_buffer(Bit32u size)
+{
+  audio_buffer_t *newbuffer = new audio_buffer_t;
+  newbuffer->data = new Bit8u[size];
+  newbuffer->size = size;
+  newbuffer->pos = 0;
+  newbuffer->next = NULL;
+
+  if (audio_buffers == NULL) {
+    audio_buffers = newbuffer;
+  } else {
+    audio_buffer_t *temp = audio_buffers;
+
+    while (temp->next)
+      temp = temp->next;
+
+    temp->next = newbuffer;
+  }
+  return newbuffer;
+}
+
+audio_buffer_t* get_current_buffer()
+{
+  return audio_buffers;
+}
+
+void delete_audio_buffer()
+{
+  audio_buffer_t *tmpbuffer = audio_buffers;
+  audio_buffers = tmpbuffer->next;
+  delete [] tmpbuffer->data;
+  delete tmpbuffer;
+}
+
+// audio buffer callback function
+
+Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
+{
+  Bit32u copied = 0;
+  UNUSED(dev);
+  UNUSED(rate);
+
+  while (len > 0) {
+    audio_buffer_t *curbuffer = get_current_buffer();
+    if (curbuffer == NULL)
+      break;
+    Bit32u tmplen = curbuffer->size - curbuffer->pos;
+    if (tmplen > len) {
+      tmplen = len;
+    }
+    if (tmplen > 0) {
+      memcpy(buffer+copied, curbuffer->data+curbuffer->pos, tmplen);
+      curbuffer->pos += tmplen;
+      copied += tmplen;
+      len -= tmplen;
+    }
+    if (curbuffer->pos >= curbuffer->size) {
+      delete_audio_buffer();
+    }
+  }
+  return copied;
+}
+
+// mixer thread support
+
+static int mixer_control;
+
+BX_THREAD_FUNC(mixer_thread, indata)
+{
+  bx_sound_lowlevel_c *soundmod = (bx_sound_lowlevel_c*)indata;
+  mixer_control = 1;
+  while (mixer_control > 0) {
+    if (!soundmod->mixer_common()) {
+      BX_MSLEEP(25);
+    }
+  }
+  mixer_control = -1;
+  BX_THREAD_EXIT;
+}
 
 // The dummy sound lowlevel functions. They don't do anything.
+
 bx_sound_lowlevel_c::bx_sound_lowlevel_c()
 {
   put("soundlow", "SNDLOW");
   record_timer_index = BX_NULL_TIMER_HANDLE;
   cb_count = 0;
   emu_pcm_param.samplerate = 0;
+  mixer_control = 0;
 }
 
 bx_sound_lowlevel_c::~bx_sound_lowlevel_c()
 {
+  if (mixer_control > 0) {
+    mixer_control = 0;
+    while (mixer_control >= 0) {
+      BX_MSLEEP(1);
+    }
+  }
+}
+
+void bx_sound_lowlevel_c::start_mixer_thread()
+{
+  BX_THREAD_ID(threadID);
+
+  BX_THREAD_CREATE(mixer_thread, this, threadID);
+}
+
+bx_bool bx_sound_lowlevel_c::mixer_common()
+{
+  // TODO
+  return 0;
 }
 
 int bx_sound_lowlevel_c::waveready()

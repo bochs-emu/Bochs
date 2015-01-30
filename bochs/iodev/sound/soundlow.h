@@ -51,6 +51,21 @@ const bx_pcm_param_t default_pcm_param = {44100, 16, 2, 1};
 typedef Bit32u (*sound_record_handler_t)(void *arg, Bit32u len);
 typedef Bit32u (*get_wave_cb_t)(void *arg, Bit16u rate, Bit8u *buffer, Bit32u len);
 
+// audio buffer support
+
+typedef struct _audio_buffer_t
+{
+  Bit32u size, pos;
+  Bit8u *data;
+  struct _audio_buffer_t *next;
+} audio_buffer_t;
+
+audio_buffer_t* new_audio_buffer(Bit32u size);
+audio_buffer_t* get_current_buffer();
+void delete_audio_buffer();
+
+Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
+
 // The class with the input/output functions
 class bx_sound_lowlevel_c : public logfunctions {
 public:
@@ -91,8 +106,11 @@ public:
 
   virtual int register_wave_callback(void *, get_wave_cb_t wd_cb) {return -1;}
   virtual void unregister_wave_callback(int callback_id) {}
+
+  virtual bx_bool mixer_common(void);
 protected:
   void convert_pcm_data(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param);
+  void start_mixer_thread(void);
 
   bx_pcm_param_t emu_pcm_param, real_pcm_param;
   int cvt_mult;
