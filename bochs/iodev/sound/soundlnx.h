@@ -32,17 +32,14 @@ public:
 
   virtual int get_type() {return BX_SOUNDLOW_LINUX;}
 
-  virtual int waveready();
-  virtual int midiready();
-
   virtual int openmidioutput(const char *mididev);
+  virtual int midiready();
   virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
   virtual int closemidioutput();
 
   virtual int openwaveoutput(const char *wavedev);
-  virtual int startwaveplayback(int frequency, int bits, bx_bool stereo, int format);
+  virtual int set_pcm_params(bx_pcm_param_t param);
   virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
-  virtual int stopwaveplayback();
   virtual int closewaveoutput();
 
   virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
@@ -55,7 +52,6 @@ public:
   void record_timer(void);
 private:
   FILE *midi;
-  char *wave_device[2];
   int  wave_fd[2];
   struct {
     int oldfreq, oldbits, oldformat;

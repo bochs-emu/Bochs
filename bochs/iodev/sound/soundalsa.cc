@@ -45,12 +45,6 @@ bx_sound_alsa_c::~bx_sound_alsa_c()
   // nothing for now
 }
 
-
-int bx_sound_alsa_c::waveready()
-{
-  return BX_SOUNDLOW_OK;
-}
-
 int bx_sound_alsa_c::midiready()
 {
   return BX_SOUNDLOW_OK;
@@ -207,6 +201,8 @@ int bx_sound_alsa_c::closemidioutput()
 
 int bx_sound_alsa_c::openwaveoutput(const char *wavedev)
 {
+  real_pcm_param = default_pcm_param;
+  set_pcm_params(real_pcm_param);
   return BX_SOUNDLOW_OK;
 }
 
@@ -283,9 +279,9 @@ int bx_sound_alsa_c::alsa_pcm_open(bx_bool mode, int frequency, int bits, bx_boo
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_alsa_c::startwaveplayback(int frequency, int bits, bx_bool stereo, int format)
+int bx_sound_alsa_c::set_pcm_params(bx_pcm_param_t param)
 {
-  return alsa_pcm_open(0, frequency, bits, stereo, format);
+  return alsa_pcm_open(0, param.samplerate, param.bits, param.channels == 2, param.format);
 }
 
 int bx_sound_alsa_c::alsa_pcm_write()
@@ -325,10 +321,13 @@ int bx_sound_alsa_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *sr
   int len2;
 
   if (memcmp(src_param, &emu_pcm_param, sizeof(bx_pcm_param_t)) != 0) {
-    startwaveplayback(src_param->samplerate, 16, 1, 1);
     emu_pcm_param = *src_param;
     cvt_mult = (src_param->bits == 8) ? 2 : 1;
     if (src_param->channels == 1) cvt_mult <<= 1;
+    if (src_param->samplerate != real_pcm_param.samplerate) {
+      real_pcm_param.samplerate = src_param->samplerate;
+      set_pcm_params(real_pcm_param);
+    }
   }
   len2 = length * cvt_mult;
   if (!alsa_pcm[0].handle) {

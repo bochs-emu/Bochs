@@ -186,6 +186,14 @@ int bx_sound_lowlevel_c::closemidioutput()
 int bx_sound_lowlevel_c::openwaveoutput(const char *wavedev)
 {
   UNUSED(wavedev);
+  real_pcm_param = default_pcm_param;
+  set_pcm_params(real_pcm_param);
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_sound_lowlevel_c::set_pcm_params(bx_pcm_param_t param)
+{
+  UNUSED(param);
   return BX_SOUNDLOW_OK;
 }
 
@@ -257,8 +265,11 @@ void bx_sound_lowlevel_c::convert_pcm_data(Bit8u *src, int srcsize, Bit8u *dst, 
 int bx_sound_lowlevel_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param)
 {
   if (memcmp(src_param, &emu_pcm_param, sizeof(bx_pcm_param_t)) != 0) {
-    startwaveplayback(src_param->samplerate, 16, 1, 1);
     emu_pcm_param = *src_param;
+    if (src_param->samplerate != real_pcm_param.samplerate) {
+      real_pcm_param.samplerate = src_param->samplerate;
+      set_pcm_params(real_pcm_param);
+    }
   }
   UNUSED(length);
   UNUSED(data);
