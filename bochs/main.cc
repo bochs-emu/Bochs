@@ -846,6 +846,9 @@ int bx_init_main(int argc, char *argv[])
         BX_PLUGIN_PATH));
     setenv("LTDL_LIBRARY_PATH", BX_PLUGIN_PATH, 1);
   }
+#endif
+#endif  /* if BX_PLUGINS */
+#if BX_HAVE_GETENV && BX_HAVE_SETENV
   if (getenv("BXSHARE") != NULL) {
     BX_INFO (("BXSHARE is set to '%s'", getenv("BXSHARE")));
   } else {
@@ -856,7 +859,6 @@ int bx_init_main(int argc, char *argv[])
 #else
   // we don't have getenv or setenv.  Do nothing.
 #endif
-#endif  /* if BX_PLUGINS */
 
   // initialize plugin system. This must happen before we attempt to
   // load any modules.
