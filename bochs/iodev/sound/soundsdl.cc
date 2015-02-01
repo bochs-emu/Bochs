@@ -60,7 +60,6 @@ bx_sound_sdl_c::~bx_sound_sdl_c()
 
 int bx_sound_sdl_c::openwaveoutput(const char *wavedev)
 {
-  real_pcm_param = default_pcm_param;
   set_pcm_params(real_pcm_param);
   return BX_SOUNDLOW_OK;
 }

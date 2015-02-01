@@ -287,54 +287,42 @@ OSStatus bx_sound_osx_c::core_audio_resume() {
 }
 #endif
 
-int bx_sound_osx_c::startwaveplayback(int frequency, int bits, bx_bool stereo, int format)
+int bx_sound_osx_c::set_pcm_params(bx_pcm_param_t param)
 {
 #ifdef BX_SOUND_OSX_use_converter
-    static int oldfreq, oldbits, oldformat;
-    static bx_bool oldstereo;
     AudioStreamBasicDescription srcFormat, dstFormat;
     UInt32 formatSize = sizeof(AudioStreamBasicDescription);
     OSStatus err;
 #endif
 
-    BX_DEBUG(("startwaveplayback(%d, %d, %d, %x)", frequency, bits, stereo, format));
+  BX_DEBUG(("set_pcm_params(): %u, %u, %u, %02x", param.samplerate, param.bits,
+            param.channels, param.format));
 
 #ifdef BX_SOUND_OSX_use_quicktime
     WaveInfo.samplePtr = NULL;
-    WaveInfo.numChannels = stereo ? 2 : 1;
-    WaveInfo.sampleRate = frequency << 16;  // sampleRate is a 16.16 fixed-point value
+    WaveInfo.numChannels = param.channels;
+    WaveInfo.sampleRate = param.samplerate << 16;  // sampleRate is a 16.16 fixed-point value
     WaveInfo.loopStart = 0;
     WaveInfo.loopEnd = 0;
     WaveInfo.encode = extSH;  // WaveInfo has type ExtSoundHeader
     WaveInfo.baseFrequency = 1;  // not sure what means. It's only a Uint8.
     WaveInfo.numFrames = 0;
-    //WaveInfo.AIFFSampleRate = frequency;  // frequency as float80
+    //WaveInfo.AIFFSampleRate = param.samplerate;  // frequency as float80
     WaveInfo.markerChunk = NULL;
 
     WaveInfo.instrumentChunks = NULL;
     WaveInfo.AESRecording = NULL;
-    WaveInfo.sampleSize = bits * WaveInfo.numChannels;
+    WaveInfo.sampleSize = param.bits * WaveInfo.numChannels;
 #endif
 
 #ifdef BX_SOUND_OSX_use_converter
-    if ((frequency == oldfreq) &&
-        (bits == oldbits) &&
-        (stereo == oldstereo) &&
-        (format == oldformat))
-      return BX_SOUNDLOW_OK;    // nothing to do
-
-    oldfreq = frequency;
-    oldbits = bits;
-    oldstereo = stereo;
-    oldformat = format;
-
     // update the source audio format
-    UInt32 bytes = bits / 8;
-    UInt32 channels = stereo ? 2 : 1;
-    srcFormat.mSampleRate = (Float64) frequency;
+    UInt32 bytes = param.bits / 8;
+    UInt32 channels = param.channels;
+    srcFormat.mSampleRate = (Float64) param.samplerate;
     srcFormat.mFormatID = kAudioFormatLinearPCM;
     srcFormat.mFormatFlags = kLinearPCMFormatFlagIsPacked;
-    if (format & 1) srcFormat.mFormatFlags |= kLinearPCMFormatFlagIsSignedInteger;
+    if (param.format & 1) srcFormat.mFormatFlags |= kLinearPCMFormatFlagIsSignedInteger;
     srcFormat.mBytesPerPacket = channels * bytes;
     srcFormat.mFramesPerPacket = 1;
     srcFormat.mBytesPerFrame = channels * bytes;
@@ -344,18 +332,18 @@ int bx_sound_osx_c::startwaveplayback(int frequency, int bits, bx_bool stereo, i
     if (WavePlaying) {
       err = AudioOutputUnitStop (WaveOutputUnit);
       if (err)
-        BX_ERROR(("Core Audio: startwaveplayback(): AudioOutputUnitStop (err=%X)\n", (unsigned int)err)); 
+        BX_ERROR(("Core Audio: set_pcm_params(): AudioOutputUnitStop (err=%X)\n", (unsigned int)err)); 
     }
     if (WaveConverter) {
       err = AudioConverterDispose (WaveConverter);
       if (err)
-        BX_ERROR(("Core Audio: startwaveplayback(): AudioConverterDispose (err=%X)\n", (unsigned int)err)); 
+        BX_ERROR(("Core Audio: set_pcm_params(): AudioConverterDispose (err=%X)\n", (unsigned int)err)); 
     }
 
     err = AudioUnitGetProperty (WaveOutputUnit, kAudioUnitProperty_StreamFormat,
         kAudioUnitScope_Output, 0, &dstFormat, &formatSize);
     if (err) {
-      BX_ERROR(("Core Audio: startwaveplayback(): AudioUnitGetProperty (err=%X)\n", (unsigned int)err)); 
+      BX_ERROR(("Core Audio: set_pcm_params(): AudioUnitGetProperty (err=%X)\n", (unsigned int)err)); 
       return BX_SOUNDLOW_ERR;
     }
 
@@ -366,14 +354,14 @@ int bx_sound_osx_c::startwaveplayback(int frequency, int bits, bx_bool stereo, i
     err = AudioUnitSetProperty (WaveOutputUnit, kAudioUnitProperty_StreamFormat,
         kAudioUnitScope_Input, 0, &dstFormat, sizeof(dstFormat));
     if (err) {
-      BX_ERROR(("Core Audio: startwaveplayback(): AudioUnitSetProperty (err=%X)\n", (unsigned int)err)); 
+      BX_ERROR(("Core Audio: set_pcm_params(): AudioUnitSetProperty (err=%X)\n", (unsigned int)err)); 
       return BX_SOUNDLOW_ERR;
     }
 #endif
 
     err = AudioConverterNew (&srcFormat, &dstFormat, &WaveConverter);
     if (err) {
-      BX_ERROR(("Core Audio: startwaveplayback(): AudioConverterNew (err=%X)\n", (unsigned int)err)); 
+      BX_ERROR(("Core Audio: set_pcm_params(): AudioConverterNew (err=%X)\n", (unsigned int)err)); 
       return BX_SOUNDLOW_ERR;
     }
 
@@ -384,7 +372,7 @@ int bx_sound_osx_c::startwaveplayback(int frequency, int bits, bx_bool stereo, i
                             kAudioConverterChannelMap, 
                             sizeof(map), (void*) map);
         if (err) {
-          BX_ERROR(("Core Audio: startwaveplayback(): AudioConverterSetProperty (err=%X)\n", (unsigned int)err)); 
+          BX_ERROR(("Core Audio: set_pcm_params(): AudioConverterSetProperty (err=%X)\n", (unsigned int)err)); 
           return BX_SOUNDLOW_ERR;
         }
     }
@@ -428,10 +416,13 @@ int bx_sound_osx_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src
   BX_DEBUG(("sendwavepacket(%d, %p), head=%u", length, data, head));
 
   if (memcmp(src_param, &emu_pcm_param, sizeof(bx_pcm_param_t)) != 0) {
-    startwaveplayback(src_param->samplerate, 16, 1, 1);
     emu_pcm_param = *src_param;
     cvt_mult = (src_param->bits == 8) ? 2 : 1;
     if (src_param->channels == 1) cvt_mult <<= 1;
+    if (src_param->samplerate != real_pcm_param.samplerate) {
+      real_pcm_param.samplerate = src_param->samplerate;
+      set_pcm_params(real_pcm_param);
+    }
   }
   len2 = length * cvt_mult;
 

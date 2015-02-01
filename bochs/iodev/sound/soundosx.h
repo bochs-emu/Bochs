@@ -38,25 +38,24 @@
 
 class bx_sound_osx_c : public bx_sound_lowlevel_c {
 public:
-    bx_sound_osx_c();
-    virtual ~bx_sound_osx_c();
+  bx_sound_osx_c();
+  virtual ~bx_sound_osx_c();
 
-    virtual int get_type() {return BX_SOUNDLOW_OSX;}
+  virtual int get_type() {return BX_SOUNDLOW_OSX;}
 
-    virtual int    waveready();
-    virtual int    midiready();
+  virtual int    openmidioutput(const char *mididev);
+  virtual int    midiready();
+  virtual int    sendmidicommand(int delta, int command, int length, Bit8u data[]);
+  virtual int    closemidioutput();
 
-    virtual int    openmidioutput(const char *mididev);
-    virtual int    sendmidicommand(int delta, int command, int length, Bit8u data[]);
-    virtual int    closemidioutput();
-
-    virtual int    openwaveoutput(const char *wavedev);
-    virtual int    startwaveplayback(int frequency, int bits, bx_bool stereo, int format);
-    virtual int    sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
-    virtual int    stopwaveplayback();
-    virtual int    closewaveoutput();
+  virtual int openwaveoutput(const char *wavedev);
+  virtual int waveready();
+  virtual int set_pcm_params(bx_pcm_param_t param);
+  virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
+  virtual int stopwaveplayback();
+  virtual int closewaveoutput();
 #ifdef BX_SOUND_OSX_use_converter
-    void nextbuffer(int *outDataSize, void **outData);
+  void nextbuffer(int *outDataSize, void **outData);
 #endif
 
   virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);

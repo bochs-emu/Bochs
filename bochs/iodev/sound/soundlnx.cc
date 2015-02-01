@@ -100,7 +100,6 @@ int bx_sound_linux_c::openwaveoutput(const char *wavedev)
       BX_INFO(("OSS: opened output device %s", wavedev));
     }
   }
-  real_pcm_param = default_pcm_param;
   set_pcm_params(real_pcm_param);
   return BX_SOUNDLOW_OK;
 }

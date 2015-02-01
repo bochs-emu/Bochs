@@ -214,6 +214,7 @@ int bx_sound_windows_c::openwaveoutput(const char *wavedev)
   needreopen = 0;
 #endif
 
+  set_pcm_params(real_pcm_param);
   return BX_SOUNDLOW_OK;
 }
 
@@ -340,29 +341,30 @@ int bx_sound_windows_c::playnextbuffer()
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_windows_c::startwaveplayback(int frequency, int bits, bx_bool stereo, int format)
+int bx_sound_windows_c::set_pcm_params(bx_pcm_param_t param)
 {
-  BX_DEBUG(("startwaveplayback(%d, %d, %d, %x)", frequency, bits, stereo, format));
+  BX_DEBUG(("set_pcm_params(): %u, %u, %u, %02x", param.samplerate, param.bits,
+            param.channels, param.format));
 
 #ifdef usewaveOut
   // check if any of the properties have changed
-  if ((WaveInfo[0].frequency != frequency) ||
-      (WaveInfo[0].bits != bits) ||
-      (WaveInfo[0].stereo != stereo) ||
-      (WaveInfo[0].format != format))
+  if ((WaveInfo[0].frequency != param.samplerate) ||
+      (WaveInfo[0].bits != param.bits) ||
+      (WaveInfo[0].stereo != (param.channels == 2)) ||
+      (WaveInfo[0].format != param.format))
   {
     needreopen = 1;
 
     // store the current settings to be used by sendwavepacket()
-    WaveInfo[0].frequency = frequency;
-    WaveInfo[0].bits = bits;
-    WaveInfo[0].stereo = stereo;
-    WaveInfo[0].format = format;
+    WaveInfo[0].frequency = param.samplerate;
+    WaveInfo[0].bits = param.bits;
+    WaveInfo[0].stereo = (param.channels == 2);
+    WaveInfo[0].format = param.format;
   }
 #endif
 
 #ifdef usesndPlaySnd
-  int bps = (bits / 8) * (stereo + 1);
+  int bps = (param.bits / 8) * param.channels;
   LPWAVEFILEHEADER header = (LPWAVEFILEHEADER) WaveData[0];
 
   memcpy(header->RIFF, "RIFF", 4);
@@ -370,11 +372,11 @@ int bx_sound_windows_c::startwaveplayback(int frequency, int bits, bx_bool stere
   memcpy(header->chnk, "fmt ", 4);
   header->chnklen = 16;
   header->waveformat.wf.wFormatTag = WAVE_FORMAT_PCM;
-  header->waveformat.wf.nChannels = stereo + 1;
-  header->waveformat.wf.nSamplesPerSec = frequency;
-  header->waveformat.wf.nAvgBytesPerSec = frequency * bps;
+  header->waveformat.wf.nChannels = param.channels;
+  header->waveformat.wf.nSamplesPerSec = param.samplerate;
+  header->waveformat.wf.nAvgBytesPerSec = param.samplerate * bps;
   header->waveformat.wf.nBlockAlign = bps;
-  header->waveformat.wBitsPerSample = bits;
+  header->waveformat.wBitsPerSample = param.bits;
   memcpy(header->chnk2, "data", 4);
 #endif
 
@@ -394,10 +396,13 @@ int bx_sound_windows_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t 
   BX_DEBUG(("sendwavepacket(%d, %p)", length, data));
 
   if (memcmp(src_param, &emu_pcm_param, sizeof(bx_pcm_param_t)) != 0) {
-    startwaveplayback(src_param->samplerate, 16, 1, 1);
     emu_pcm_param = *src_param;
     cvt_mult = (src_param->bits == 8) ? 2 : 1;
     if (src_param->channels == 1) cvt_mult <<= 1;
+    if (src_param->samplerate != real_pcm_param.samplerate) {
+      real_pcm_param.samplerate = src_param->samplerate;
+      set_pcm_params(real_pcm_param);
+    }
   }
   len2 = length * cvt_mult;
 

@@ -155,7 +155,6 @@ void bx_soundmod_ctl_c::init()
       beep_param.format = 1;
       BX_THREAD_CREATE(beep_thread, soundmod, threadID);
     }
-    soundmod->startwaveplayback(44100, 16, 1, 1);
   }
 }
 

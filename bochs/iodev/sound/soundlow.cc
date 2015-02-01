@@ -125,8 +125,9 @@ bx_sound_lowlevel_c::bx_sound_lowlevel_c()
 {
   put("soundlow", "SNDLOW");
   record_timer_index = BX_NULL_TIMER_HANDLE;
+  real_pcm_param = default_pcm_param;
+  emu_pcm_param = default_pcm_param;
   cb_count = 0;
-  emu_pcm_param.samplerate = 0;
   mixer_control = 0;
 }
 
@@ -186,7 +187,6 @@ int bx_sound_lowlevel_c::closemidioutput()
 int bx_sound_lowlevel_c::openwaveoutput(const char *wavedev)
 {
   UNUSED(wavedev);
-  real_pcm_param = default_pcm_param;
   set_pcm_params(real_pcm_param);
   return BX_SOUNDLOW_OK;
 }
@@ -194,15 +194,6 @@ int bx_sound_lowlevel_c::openwaveoutput(const char *wavedev)
 int bx_sound_lowlevel_c::set_pcm_params(bx_pcm_param_t param)
 {
   UNUSED(param);
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::startwaveplayback(int frequency, int bits, bx_bool stereo, int format)
-{
-  UNUSED(frequency);
-  UNUSED(bits);
-  UNUSED(stereo);
-  UNUSED(format);
   return BX_SOUNDLOW_OK;
 }
 
