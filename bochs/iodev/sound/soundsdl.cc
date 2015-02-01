@@ -35,7 +35,7 @@
 void sdl_callback(void *thisptr, Bit8u *stream, int len)
 {
   memset(stream, 0, len);
-  ((bx_sound_sdl_c*)thisptr)->get_wave_data(stream, len);
+  ((bx_sound_sdl_c*)thisptr)->mixer_common(stream, len);
 }
 
 // bx_sound_sdl_c class implemenzation
@@ -44,7 +44,6 @@ bx_sound_sdl_c::bx_sound_sdl_c()
     :bx_sound_lowlevel_c()
 {
   WaveOpen = 0;
-  pcm_callback_id = -1;
   if (SDL_InitSubSystem(SDL_INIT_AUDIO)) {
     BX_PANIC(("Initialization of sound lowlevel module 'sdl' failed"));
   } else {
@@ -54,7 +53,6 @@ bx_sound_sdl_c::bx_sound_sdl_c()
 
 bx_sound_sdl_c::~bx_sound_sdl_c()
 {
-  unregister_wave_callback(pcm_callback_id);
   SDL_QuitSubSystem(SDL_INIT_AUDIO);
 }
 
@@ -139,7 +137,7 @@ int bx_sound_sdl_c::closewaveoutput()
   return BX_SOUNDLOW_OK;
 }
 
-void bx_sound_sdl_c::get_wave_data(Bit8u *stream, int len)
+bx_bool bx_sound_sdl_c::mixer_common(Bit8u *buffer, int len)
 {
   Bit32u len2 = 0;
 
@@ -149,11 +147,12 @@ void bx_sound_sdl_c::get_wave_data(Bit8u *stream, int len)
       memset(tmpbuffer, 0, len);
       len2 = get_wave[i].cb(get_wave[i].device, fmt.freq, tmpbuffer, len);
       if (len2 > 0) {
-        SDL_MixAudio(stream, tmpbuffer, len2, SDL_MIX_MAXVOLUME);
+        SDL_MixAudio(buffer, tmpbuffer, len2, SDL_MIX_MAXVOLUME);
       }
     }
   }
   free(tmpbuffer);
+  return 1;
 }
 
 int bx_sound_sdl_c::register_wave_callback(void *arg, get_wave_cb_t wd_cb)

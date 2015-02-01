@@ -40,11 +40,10 @@ public:
 
   virtual int register_wave_callback(void *, get_wave_cb_t wd_cb);
   virtual void unregister_wave_callback(int callback_id);
-  void get_wave_data(Bit8u *stream, int len);
+  virtual bx_bool mixer_common(Bit8u *buffer, int len);
 private:
   bx_bool WaveOpen;
   SDL_AudioSpec fmt;
-  int pcm_callback_id;
 };
 
 #endif  // BX_WITH_SDL || BX_WITH_SDL2

@@ -66,6 +66,8 @@ void delete_audio_buffer();
 
 Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
 
+extern BX_MUTEX(mixer_mutex);
+
 // The class with the input/output functions
 class bx_sound_lowlevel_c : public logfunctions {
 public:
@@ -92,6 +94,8 @@ public:
   virtual int openwaveoutput(const char *wavedev);
   virtual int set_pcm_params(bx_pcm_param_t param);
   virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
+  virtual int get_waveout_packetsize();
+  virtual int waveout(int length, Bit8u data[]);
   virtual int stopwaveplayback();
   virtual int closewaveoutput();
 
@@ -107,7 +111,7 @@ public:
   virtual int register_wave_callback(void *, get_wave_cb_t wd_cb) {return -1;}
   virtual void unregister_wave_callback(int callback_id) {}
 
-  virtual bx_bool mixer_common(void);
+  virtual bx_bool mixer_common(Bit8u *buffer, int len);
 protected:
   void convert_pcm_data(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param);
   void start_mixer_thread(void);
@@ -120,6 +124,7 @@ protected:
     void *device;
     get_wave_cb_t cb;
   } get_wave[BX_MAX_WAVE_CALLBACKS];
+  int pcm_callback_id;
 
   int record_timer_index;
   int record_packet_size;
