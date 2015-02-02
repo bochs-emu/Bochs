@@ -116,6 +116,7 @@ BX_THREAD_FUNC(mixer_thread, indata)
   mixer_control = 1;
   while (mixer_control > 0) {
     len = soundmod->get_waveout_packetsize();
+    memset(mixbuffer, 0, len);
     if (soundmod->mixer_common(mixbuffer, len)) {
       soundmod->waveout(len, mixbuffer);
     } else {
@@ -161,7 +162,10 @@ void bx_sound_lowlevel_c::start_mixer_thread()
 
 bx_bool bx_sound_lowlevel_c::mixer_common(Bit8u *buffer, int len)
 {
-  Bit32u len2 = 0;
+  Bit32u count, len2 = 0, len3 = 0;
+  Bit16s src1, src2, dst_val;
+  Bit32s tmp_val;
+  Bit8u *src, *dst;
 
   Bit8u *tmpbuffer = new Bit8u[len];
   BX_LOCK(mixer_mutex);
@@ -170,15 +174,31 @@ bx_bool bx_sound_lowlevel_c::mixer_common(Bit8u *buffer, int len)
       memset(tmpbuffer, 0, len);
       len2 = get_wave[i].cb(get_wave[i].device, real_pcm_param.samplerate, tmpbuffer, len);
       if (len2 > 0) {
-        // TODO: mix wave data
-        memcpy(buffer, tmpbuffer, len2);
-        break;
+        src = tmpbuffer;
+        dst = buffer;
+        count = len / 2;
+        while (count--) {
+          src1 = (src[0] | (src[1] << 8));
+          src2 = (dst[0] | (dst[1] << 8));
+          tmp_val = (Bit32s)src1 + (Bit32s)src2;
+          if (tmp_val > BX_MAX_BIT16S) {
+            tmp_val = BX_MAX_BIT16S;
+          } else if (tmp_val < BX_MIN_BIT16S) {
+            tmp_val = BX_MIN_BIT16S;
+          }
+          dst_val = (Bit16s)tmp_val;
+          dst[0] = dst_val & 0xff;
+          dst[1] = (Bit8u)(dst_val >> 8);
+          src += 2;
+          dst += 2;
+        }
+        if (len3 < len2) len3 = len2;
       }
     }
   }
   BX_UNLOCK(mixer_mutex);
   delete [] tmpbuffer;
-  return (len2 > 0);
+  return (len3 > 0);
 }
 
 int bx_sound_lowlevel_c::waveready()
