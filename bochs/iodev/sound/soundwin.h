@@ -25,10 +25,6 @@
 
 #include <mmsystem.h>
 
-// uncomment one of the following two #defines
-//#define usesndPlaySnd
-#define usewaveOut
-
 #define BX_SOUND_WINDOWS_MAXSYSEXLEN  256    // maximum supported length of a sysex message
 
 #define BX_SOUND_WINDOWS_NBUF   64  // number of buffers for the output, must be power of 2 and >= 4
@@ -171,17 +167,14 @@ public:
 
   virtual int get_type() {return BX_SOUNDLOW_WIN;}
 
-  virtual int    waveready();
-  virtual int    midiready();
-
-  virtual int    openmidioutput(const char *mididev);
-  virtual int    sendmidicommand(int delta, int command, int length, Bit8u data[]);
-  virtual int    closemidioutput();
+  virtual int openmidioutput(const char *mididev);
+  virtual int midiready();
+  virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
+  virtual int closemidioutput();
 
   virtual int openwaveoutput(const char *wavedev);
   virtual int set_pcm_params(bx_pcm_param_t param);
-  virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
-  virtual int stopwaveplayback();
+  virtual int waveout(int length, Bit8u data[]);
   virtual int closewaveoutput();
 
   virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
@@ -193,6 +186,8 @@ public:
   static void record_timer_handler(void *);
   void record_timer(void);
 
+  virtual int register_wave_callback(void *, get_wave_cb_t wd_cb);
+  virtual void unregister_wave_callback(int callback_id);
 private:
   struct bx_sound_waveinfo_struct {
     int frequency;
@@ -214,26 +209,19 @@ private:
   HANDLE DataHandle;          // returned by GlobalAlloc()
   Bit8u *DataPointer;         // returned by GlobalLock()
 
-  LPWAVEHDR WaveHeader[BX_SOUND_WINDOWS_NBUF];
-  LPSTR WaveData[BX_SOUND_WINDOWS_NBUF];
+  LPWAVEHDR WaveOutHdr;
   LPWAVEHDR WaveInHdr;
   LPSTR WaveInData;
   bx_bool recording;
-  int length[BX_SOUND_WINDOWS_NBUF];                // length of the data in the buffer
-  int needreopen;                                   // if the format has changed
-  int head,tailfull,tailplay;       // These are for three states of the buffers: empty, full, played
   bx_sound_waveinfo_struct WaveInfo[2];             // format for the next buffer to be played
-  int iswaveready;
 
   // and the midi buffer for the SYSEX messages
   LPMIDIHDR MidiHeader;
   LPSTR MidiData;
   int ismidiready;
 
-  int playnextbuffer();
   int recordnextpacket();
   void checkmidiready();
-  void checkwaveready();
 };
 
 #endif  // defined(WIN32)

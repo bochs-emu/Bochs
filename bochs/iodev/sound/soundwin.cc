@@ -42,7 +42,6 @@ bx_sound_windows_c::bx_sound_windows_c()
   WaveInOpen = 0;
 
   ismidiready = 1;
-  iswaveready = 1;
 
   // size is the total size of the midi header and buffer and the
   // BX_SOUND_WINDOWS_NBUF wave header and buffers, all aligned
@@ -67,11 +66,7 @@ bx_sound_windows_c::bx_sound_windows_c()
   MidiHeader = (LPMIDIHDR) NEWBUFFER(sizeof(MIDIHDR));
   MidiData = (LPSTR) NEWBUFFER(BX_SOUND_WINDOWS_MAXSYSEXLEN);
 
-  for (int bufnum=0; bufnum<BX_SOUND_WINDOWS_NBUF; bufnum++)
-  {
-      WaveHeader[bufnum] = (LPWAVEHDR) NEWBUFFER(sizeof(WAVEHDR));
-      WaveData[bufnum] = (LPSTR) NEWBUFFER(BX_SOUNDLOW_WAVEPACKETSIZE+64);
-  }
+  WaveOutHdr = (LPWAVEHDR) NEWBUFFER(sizeof(WAVEHDR));
   WaveInHdr = (LPWAVEHDR) NEWBUFFER(sizeof(WAVEHDR));
   WaveInData = (LPSTR) NEWBUFFER(BX_SOUNDLOW_WAVEPACKETSIZE+64);
 
@@ -91,16 +86,6 @@ bx_sound_windows_c::~bx_sound_windows_c()
   GlobalFree(DataHandle);
 }
 
-int bx_sound_windows_c::waveready()
-{
-  if (iswaveready == 0)
-    checkwaveready();
-
-  if (iswaveready == 1)
-    return BX_SOUNDLOW_OK;
-  else
-    return BX_SOUNDLOW_ERR;
-}
 int bx_sound_windows_c::midiready()
 {
   if (ismidiready == 0)
@@ -202,74 +187,48 @@ int bx_sound_windows_c::openwaveoutput(const char *wavedev)
 
   BX_DEBUG(("openwaveoutput(%s)", wavedev));
 
-#ifdef usewaveOut
   WaveDevice = (UINT) WAVEMAPPER;
 
-  for (int i=0; i<BX_SOUND_WINDOWS_NBUF; i++)
-    WaveHeader[i]->dwFlags = WHDR_DONE;
-
-  head = 0;
-  tailfull = 0;
-  tailplay = 0;
-  needreopen = 0;
-#endif
-
   set_pcm_params(real_pcm_param);
+  pcm_callback_id = register_wave_callback(this, pcm_callback);
+  BX_INIT_MUTEX(mixer_mutex);
+  start_mixer_thread();
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_windows_c::playnextbuffer()
+int bx_sound_windows_c::set_pcm_params(bx_pcm_param_t param)
 {
   UINT ret;
   PCMWAVEFORMAT waveformat;
-  int bufnum;
 
-  // if the format is different, we have to reopen the device,
-  // so reset it first
-  if (needreopen != 0)
-    if (WaveOutOpen != 0)
-      ret = waveOutReset(hWaveOut);
+  BX_DEBUG(("set_pcm_params(): %u, %u, %u, %02x", param.samplerate, param.bits,
+            param.channels, param.format));
+  if (WaveOutOpen != 0) {
+    ret = waveOutReset(hWaveOut);
+    ret = waveOutClose(hWaveOut);
+    WaveOutOpen = 0;
+  }
 
-  // clean up the buffers and mark if output is ready
-  checkwaveready();
+  // try three times to find a suitable format
+  for (int tries = 0; tries < 3; tries++) {
+    int frequency = real_pcm_param.samplerate;
+    bx_bool stereo = real_pcm_param.channels == 2;
+    int bits = real_pcm_param.bits;
+    int bps = (bits / 8) * (stereo + 1);
 
-  // do we have to play anything?
-  if (tailplay == head)
-    return BX_SOUNDLOW_OK;
+    waveformat.wf.wFormatTag = WAVE_FORMAT_PCM;
+    waveformat.wf.nChannels = stereo + 1;
+    waveformat.wf.nSamplesPerSec = frequency;
+    waveformat.wf.nAvgBytesPerSec = frequency * bps;
+    waveformat.wf.nBlockAlign = bps;
+    waveformat.wBitsPerSample = bits;
 
-  // if the format is different, we have to close and reopen the device
-  // or, just open the device if it's not open yet
-  if ((needreopen != 0) || (WaveOutOpen == 0))
-  {
-    if (WaveOutOpen != 0)
-    {
-      ret = waveOutClose(hWaveOut);
-      WaveOutOpen = 0;
-    }
-
-    // try three times to find a suitable format
-    for (int tries = 0; tries < 3; tries++)
-    {
-      int frequency = WaveInfo[0].frequency;
-      bx_bool stereo = WaveInfo[0].stereo;
-      int bits = WaveInfo[0].bits;
-//    int format = WaveInfo[0].format;
-      int bps = (bits / 8) * (stereo + 1);
-
-      waveformat.wf.wFormatTag = WAVE_FORMAT_PCM;
-      waveformat.wf.nChannels = stereo + 1;
-      waveformat.wf.nSamplesPerSec = frequency;
-      waveformat.wf.nAvgBytesPerSec = frequency * bps;
-      waveformat.wf.nBlockAlign = bps;
-      waveformat.wBitsPerSample = bits;
-
-      ret = waveOutOpen(&(hWaveOut), WaveDevice, (LPWAVEFORMATEX)&(waveformat.wf), 0, 0, CALLBACK_NULL);
-      if (ret != 0)
-      {
-        char errormsg[4*MAXERRORLENGTH+1];
-        waveOutGetErrorTextA(ret, errormsg, 4*MAXERRORLENGTH+1);
-        BX_DEBUG(("waveOutOpen: %s", errormsg));
-        switch (tries) {
+    ret = waveOutOpen(&(hWaveOut), WaveDevice, (LPWAVEFORMATEX)&(waveformat.wf), 0, 0, CALLBACK_NULL);
+    if (ret != 0) {
+      char errormsg[4*MAXERRORLENGTH+1];
+      waveOutGetErrorTextA(ret, errormsg, 4*MAXERRORLENGTH+1);
+      BX_DEBUG(("waveOutOpen: %s", errormsg));
+      switch (tries) {
         case 0:        // maybe try a different frequency
           if (frequency < 15600)
             frequency = 11025;
@@ -293,180 +252,46 @@ int bx_sound_windows_c::playnextbuffer()
         case 2:        // nope, doesn't work
           BX_ERROR(("Couldn't open wave output device (error = %d)!", ret));
           return BX_SOUNDLOW_ERR;
-        }
-
-        BX_DEBUG(("The format was: wFormatTag=%d, nChannels=%d, nSamplesPerSec=%d,",
-             waveformat.wf.wFormatTag, waveformat.wf.nChannels, waveformat.wf.nSamplesPerSec));
-        BX_DEBUG(("                nAvgBytesPerSec=%d, nBlockAlign=%d, wBitsPerSample=%d",
-             waveformat.wf.nAvgBytesPerSec, waveformat.wf.nBlockAlign, waveformat.wBitsPerSample));
       }
-      else
-      {
-        WaveOutOpen = 1;
-        needreopen = 0;
-        break;
-      }
-    }
-  }
 
-  for (bufnum=tailplay; bufnum != head;
-       bufnum++, bufnum &= BX_SOUND_WINDOWS_NMASK, tailplay=bufnum)
-  {
-    BX_DEBUG(("Playing buffer %d", bufnum));
-
-    // prepare the wave header
-    WaveHeader[bufnum]->lpData = WaveData[bufnum];
-    WaveHeader[bufnum]->dwBufferLength = length[bufnum];
-    WaveHeader[bufnum]->dwBytesRecorded = length[bufnum];
-    WaveHeader[bufnum]->dwUser = 0;
-    WaveHeader[bufnum]->dwFlags = 0;
-    WaveHeader[bufnum]->dwLoops = 1;
-
-    ret = waveOutPrepareHeader(hWaveOut, WaveHeader[bufnum], sizeof(*WaveHeader[bufnum]));
-    if (ret != 0)
-    {
-      BX_ERROR(("waveOutPrepareHeader(): error = %d", ret));
-      return BX_SOUNDLOW_ERR;
-    }
-
-    ret = waveOutWrite(hWaveOut, WaveHeader[bufnum], sizeof(*WaveHeader[bufnum]));
-    if (ret != 0)
-    {
-      char errormsg[4*MAXERRORLENGTH+1];
-      waveOutGetErrorTextA(ret, errormsg, 4*MAXERRORLENGTH+1);
-      BX_ERROR(("waveOutWrite(): %s", errormsg));
+      BX_DEBUG(("The format was: wFormatTag=%d, nChannels=%d, nSamplesPerSec=%d,",
+                waveformat.wf.wFormatTag, waveformat.wf.nChannels, waveformat.wf.nSamplesPerSec));
+      BX_DEBUG(("                nAvgBytesPerSec=%d, nBlockAlign=%d, wBitsPerSample=%d",
+                waveformat.wf.nAvgBytesPerSec, waveformat.wf.nBlockAlign, waveformat.wBitsPerSample));
+    } else {
+      WaveOutOpen = 1;
+      break;
     }
   }
 
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_windows_c::set_pcm_params(bx_pcm_param_t param)
+int bx_sound_windows_c::waveout(int length, Bit8u data[])
 {
-  BX_DEBUG(("set_pcm_params(): %u, %u, %u, %02x", param.samplerate, param.bits,
-            param.channels, param.format));
-
-#ifdef usewaveOut
-  // check if any of the properties have changed
-  if ((WaveInfo[0].frequency != param.samplerate) ||
-      (WaveInfo[0].bits != param.bits) ||
-      (WaveInfo[0].stereo != (param.channels == 2)) ||
-      (WaveInfo[0].format != param.format))
-  {
-    needreopen = 1;
-
-    // store the current settings to be used by sendwavepacket()
-    WaveInfo[0].frequency = param.samplerate;
-    WaveInfo[0].bits = param.bits;
-    WaveInfo[0].stereo = (param.channels == 2);
-    WaveInfo[0].format = param.format;
-  }
-#endif
-
-#ifdef usesndPlaySnd
-  int bps = (param.bits / 8) * param.channels;
-  LPWAVEFILEHEADER header = (LPWAVEFILEHEADER) WaveData[0];
-
-  memcpy(header->RIFF, "RIFF", 4);
-  memcpy(header->TYPE, "WAVE", 4);
-  memcpy(header->chnk, "fmt ", 4);
-  header->chnklen = 16;
-  header->waveformat.wf.wFormatTag = WAVE_FORMAT_PCM;
-  header->waveformat.wf.nChannels = param.channels;
-  header->waveformat.wf.nSamplesPerSec = param.samplerate;
-  header->waveformat.wf.nAvgBytesPerSec = param.samplerate * bps;
-  header->waveformat.wf.nBlockAlign = bps;
-  header->waveformat.wBitsPerSample = param.bits;
-  memcpy(header->chnk2, "data", 4);
-#endif
-
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_windows_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param)
-{
-  int len2;
-#ifdef usewaveOut
-  int bufnum;
-#endif
-#ifdef usesndPlaySnd
   UINT ret;
-#endif
 
-  BX_DEBUG(("sendwavepacket(%d, %p)", length, data));
+  // prepare the wave header
+  WaveOutHdr->lpData = (LPSTR)data;
+  WaveOutHdr->dwBufferLength = length;
+  WaveOutHdr->dwBytesRecorded = length;
+  WaveOutHdr->dwUser = 0;
+  WaveOutHdr->dwFlags = 0;
+  WaveOutHdr->dwLoops = 1;
 
-  if (memcmp(src_param, &emu_pcm_param, sizeof(bx_pcm_param_t)) != 0) {
-    emu_pcm_param = *src_param;
-    cvt_mult = (src_param->bits == 8) ? 2 : 1;
-    if (src_param->channels == 1) cvt_mult <<= 1;
-    if (src_param->samplerate != real_pcm_param.samplerate) {
-      real_pcm_param.samplerate = src_param->samplerate;
-      set_pcm_params(real_pcm_param);
-    }
-  }
-  len2 = length * cvt_mult;
-
-#ifdef usewaveOut
-  bufnum = head;
-
-  convert_pcm_data(data, length, (Bit8u*)WaveData[bufnum], len2, src_param);
-  this->length[bufnum] = len2;
-
-  // select next buffer to write to
-  bufnum++;
-  bufnum &= BX_SOUND_WINDOWS_NMASK;
-
-  if (((bufnum + 1) & BX_SOUND_WINDOWS_NMASK) == tailfull)
-  { // this should not actually happen!
-    BX_ERROR(("Output buffer overflow! Not played. Iswaveready was %d", iswaveready));
-    iswaveready = 0;          // stop the output for a while
+  ret = waveOutPrepareHeader(hWaveOut, WaveOutHdr, sizeof(*WaveOutHdr));
+  if (ret != 0) {
+    BX_ERROR(("waveOutPrepareHeader(): error = %d", ret));
     return BX_SOUNDLOW_ERR;
   }
 
-  head = bufnum;
-
-  // check if more buffers are available, otherwise stall the emulator
-  if (((bufnum + 2) & BX_SOUND_WINDOWS_NMASK) == tailfull)
-  {
-    BX_DEBUG(("Buffer status: Head %d, TailFull %d, TailPlay %d. Stall.",
-                head, tailfull, tailplay));
-    iswaveready = 0;
+  ret = waveOutWrite(hWaveOut, WaveOutHdr, sizeof(*WaveOutHdr));
+  if (ret != 0) {
+    char errormsg[4*MAXERRORLENGTH+1];
+    waveOutGetErrorTextA(ret, errormsg, 4*MAXERRORLENGTH+1);
+    BX_ERROR(("waveOutWrite(): %s", errormsg));
   }
-
-  playnextbuffer();
-#endif
-
-#ifdef usesndPlaySnd
-  LPWAVEFILEHEADER header = (LPWAVEFILEHEADER) WaveData[0];
-
-  header->length = len2 + 36;
-  header->chnk2len = len2;
-
-  convert_wavedata(data, length, (Bit8u*)&(header->data), len2, src_param);
-
-  ret = sndPlaySoundA((LPCSTR) header, SND_SYNC | SND_MEMORY);
-  if (ret != 0)
-  {
-    BX_DEBUG(("sndPlaySoundA: %d", ret));
-  }
-#endif
-
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_windows_c::stopwaveplayback()
-{
-  BX_DEBUG(("stopwaveplayback()"));
-
-#ifdef usewaveOut
-  // this is handled by checkwaveready() when closing
-#endif
-
-#ifdef usesndPlaySnd
-  sndPlaySoundA(NULL, SND_ASYNC | SND_MEMORY);
-
-  WaveOpen = 0;
-#endif
+  Sleep(100);
 
   return BX_SOUNDLOW_OK;
 }
@@ -475,22 +300,10 @@ int bx_sound_windows_c::closewaveoutput()
 {
   BX_DEBUG(("closewaveoutput"));
 
-#ifdef usewaveOut
-  if (WaveOutOpen == 1)
-  {
+  if (WaveOutOpen == 1) {
     waveOutReset(hWaveOut);
-
-    // let checkwaveready() clean up the buffers
-    checkwaveready();
-
     waveOutClose(hWaveOut);
-
-    head = 0;
-    tailfull = 0;
-    tailplay = 0;
-    needreopen = 0;
   }
-#endif
 
   return BX_SOUNDLOW_OK;
 }
@@ -502,30 +315,6 @@ void bx_sound_windows_c::checkmidiready()
     BX_DEBUG(("SYSEX message done, midi ready again"));
     midiOutUnprepareHeader(MidiOut, MidiHeader, sizeof(*MidiHeader));
     ismidiready = 1;
-  }
-}
-
-void bx_sound_windows_c::checkwaveready()
-{
-  int bufnum;
-
-  // clean up all finished buffers and mark them as available
-  for (bufnum=tailfull; (bufnum != tailplay) &&
-       ((WaveHeader[bufnum]->dwFlags & WHDR_DONE) != 0);
-           bufnum++, bufnum &= BX_SOUND_WINDOWS_NMASK)
-  {
-    BX_DEBUG(("Buffer %d done.", bufnum));
-    waveOutUnprepareHeader(hWaveOut, WaveHeader[bufnum], sizeof(*WaveHeader[bufnum]));
-  }
-
-  tailfull = bufnum;
-
-  // enable gathering data if a buffer is available
-  if (((head + 2) & BX_SOUND_WINDOWS_NMASK) != tailfull)
-  {
-    BX_DEBUG(("Buffer status: Head %d, TailFull %d, TailPlay %d. Ready.",
-             head, tailfull, tailplay));
-    iswaveready = 1;
   }
 }
 
@@ -662,6 +451,26 @@ void bx_sound_windows_c::record_timer_handler(void *this_ptr)
 void bx_sound_windows_c::record_timer(void)
 {
   record_handler(this, record_packet_size);
+}
+
+int bx_sound_windows_c::register_wave_callback(void *arg, get_wave_cb_t wd_cb)
+{
+  if (cb_count < BX_MAX_WAVE_CALLBACKS) {
+    get_wave[cb_count].device = arg;
+    get_wave[cb_count].cb = wd_cb;
+    return cb_count++;
+  }
+  return -1;
+}
+
+void bx_sound_windows_c::unregister_wave_callback(int callback_id)
+{
+  BX_LOCK(mixer_mutex);
+  if ((callback_id >= 0) && (callback_id < BX_MAX_WAVE_CALLBACKS)) {
+    get_wave[callback_id].device = NULL;
+    get_wave[callback_id].cb = NULL;
+  }
+  BX_UNLOCK(mixer_mutex);
 }
 
 #endif // defined(WIN32)
