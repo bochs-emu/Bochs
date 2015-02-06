@@ -30,7 +30,7 @@
 
 // Lowlvel sound modules
 #define BX_SOUNDLOW_DUMMY   0
-#define BX_SOUNDLOW_LINUX   1
+#define BX_SOUNDLOW_OSS     1
 #define BX_SOUNDLOW_OSX     2
 #define BX_SOUNDLOW_WIN     3
 #define BX_SOUNDLOW_SDL     4

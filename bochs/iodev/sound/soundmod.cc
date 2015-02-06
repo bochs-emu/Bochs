@@ -121,7 +121,7 @@ void bx_soundmod_ctl_c::init()
 #endif
 #if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
   } else if (!strcmp(driver, "oss")) {
-    soundmod = new bx_sound_linux_c();
+    soundmod = new bx_sound_oss_c();
 #endif
 #if defined(macintosh)
   } else if (!strcmp(driver, "osx")) {

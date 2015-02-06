@@ -28,13 +28,17 @@
 
 #if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)) && BX_SUPPORT_SOUNDLOW
 
+#ifndef WIN32
+#include <pthread.h>
+#endif
+
 #define LOG_THIS
 
 #include <errno.h>
 #include <sys/ioctl.h>
 #include <sys/soundcard.h>
 
-bx_sound_linux_c::bx_sound_linux_c()
+bx_sound_oss_c::bx_sound_oss_c()
   :bx_sound_lowlevel_c()
 {
   midi = NULL;
@@ -43,17 +47,17 @@ bx_sound_linux_c::bx_sound_linux_c()
   BX_INFO(("Sound lowlevel module 'oss' initialized"));
 }
 
-bx_sound_linux_c::~bx_sound_linux_c()
+bx_sound_oss_c::~bx_sound_oss_c()
 {
   // nothing for now
 }
 
-int bx_sound_linux_c::midiready()
+int bx_sound_oss_c::midiready()
 {
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_linux_c::openmidioutput(const char *mididev)
+int bx_sound_oss_c::openmidioutput(const char *mididev)
 {
   if ((mididev == NULL) || (strlen(mididev) < 1))
     return BX_SOUNDLOW_ERR;
@@ -70,7 +74,7 @@ int bx_sound_linux_c::openmidioutput(const char *mididev)
 }
 
 
-int bx_sound_linux_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
+int bx_sound_oss_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
 {
   UNUSED(delta);
 
@@ -82,7 +86,7 @@ int bx_sound_linux_c::sendmidicommand(int delta, int command, int length, Bit8u 
 }
 
 
-int bx_sound_linux_c::closemidioutput()
+int bx_sound_oss_c::closemidioutput()
 {
   fclose(midi);
 
@@ -90,7 +94,7 @@ int bx_sound_linux_c::closemidioutput()
 }
 
 
-int bx_sound_linux_c::openwaveoutput(const char *wavedev)
+int bx_sound_oss_c::openwaveoutput(const char *wavedev)
 {
   if (wave_fd[0] == -1) {
     wave_fd[0] = open(wavedev, O_WRONLY);
@@ -101,10 +105,13 @@ int bx_sound_linux_c::openwaveoutput(const char *wavedev)
     }
   }
   set_pcm_params(real_pcm_param);
+  pcm_callback_id = register_wave_callback(this, pcm_callback);
+  BX_INIT_MUTEX(mixer_mutex);
+  start_mixer_thread();
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_linux_c::set_pcm_params(bx_pcm_param_t param)
+int bx_sound_oss_c::set_pcm_params(bx_pcm_param_t param)
 {
   int fmt, ret;
   int frequency = param.samplerate;
@@ -167,37 +174,24 @@ int bx_sound_linux_c::set_pcm_params(bx_pcm_param_t param)
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_linux_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param)
+int bx_sound_oss_c::waveout(int length, Bit8u data[])
 {
-  int len2;
-  Bit8u *tmpbuffer;
+  int odelay, delay;
 
-  if (memcmp(src_param, &emu_pcm_param, sizeof(bx_pcm_param_t)) != 0) {
-    emu_pcm_param = *src_param;
-    cvt_mult = (src_param->bits == 8) ? 2 : 1;
-    if (src_param->channels == 1) cvt_mult <<= 1;
-    if (src_param->samplerate != real_pcm_param.samplerate) {
-      real_pcm_param.samplerate = src_param->samplerate;
-      set_pcm_params(real_pcm_param);
-    }
-  }
   if (wave_fd[0] == -1) {
     return BX_SOUNDLOW_ERR;
   }
-  len2 = length * cvt_mult;
-  tmpbuffer = (Bit8u*)malloc(len2);
-  convert_pcm_data(data, length, tmpbuffer, len2, src_param);
-  int ret = write(wave_fd[0], tmpbuffer, len2);
-  free(tmpbuffer);
-  if (ret == length) {
+  if (write(wave_fd[0], data, length) == length) {
+    ioctl(wave_fd[0], SNDCTL_DSP_GETODELAY, &odelay);
+    delay = odelay * 1000 / (real_pcm_param.samplerate * 4);
+    BX_MSLEEP(delay);
     return BX_SOUNDLOW_OK;
   } else {
-    BX_ERROR(("OSS: write error"));
     return BX_SOUNDLOW_ERR;
   }
 }
 
-int bx_sound_linux_c::closewaveoutput()
+int bx_sound_oss_c::closewaveoutput()
 {
   if (wave_fd[0] != -1) {
     close(wave_fd[0]);
@@ -206,7 +200,7 @@ int bx_sound_linux_c::closewaveoutput()
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_linux_c::openwaveinput(const char *wavedev, sound_record_handler_t rh)
+int bx_sound_oss_c::openwaveinput(const char *wavedev, sound_record_handler_t rh)
 {
   record_handler = rh;
   if (rh != NULL) {
@@ -224,7 +218,7 @@ int bx_sound_linux_c::openwaveinput(const char *wavedev, sound_record_handler_t 
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_linux_c::startwaverecord(int frequency, int bits, bx_bool stereo, int format)
+int bx_sound_oss_c::startwaverecord(int frequency, int bits, bx_bool stereo, int format)
 {
   Bit64u timer_val;
   Bit8u shift = 0;
@@ -297,7 +291,7 @@ int bx_sound_linux_c::startwaverecord(int frequency, int bits, bx_bool stereo, i
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_linux_c::getwavepacket(int length, Bit8u data[])
+int bx_sound_oss_c::getwavepacket(int length, Bit8u data[])
 {
   int ret;
 
@@ -311,7 +305,7 @@ int bx_sound_linux_c::getwavepacket(int length, Bit8u data[])
   }
 }
 
-int bx_sound_linux_c::stopwaverecord()
+int bx_sound_oss_c::stopwaverecord()
 {
   if (record_timer_index != BX_NULL_TIMER_HANDLE) {
     bx_pc_system.deactivate_timer(record_timer_index);
@@ -319,7 +313,7 @@ int bx_sound_linux_c::stopwaverecord()
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_linux_c::closewaveinput()
+int bx_sound_oss_c::closewaveinput()
 {
   stopwaverecord();
 
@@ -330,16 +324,36 @@ int bx_sound_linux_c::closewaveinput()
   return BX_SOUNDLOW_OK;
 }
 
-void bx_sound_linux_c::record_timer_handler(void *this_ptr)
+void bx_sound_oss_c::record_timer_handler(void *this_ptr)
 {
-  bx_sound_linux_c *class_ptr = (bx_sound_linux_c *) this_ptr;
+  bx_sound_oss_c *class_ptr = (bx_sound_oss_c *) this_ptr;
 
   class_ptr->record_timer();
 }
 
-void bx_sound_linux_c::record_timer(void)
+void bx_sound_oss_c::record_timer(void)
 {
   record_handler(this, record_packet_size);
+}
+
+int bx_sound_oss_c::register_wave_callback(void *arg, get_wave_cb_t wd_cb)
+{
+  if (cb_count < BX_MAX_WAVE_CALLBACKS) {
+    get_wave[cb_count].device = arg;
+    get_wave[cb_count].cb = wd_cb;
+    return cb_count++;
+  }
+  return -1;
+}
+
+void bx_sound_oss_c::unregister_wave_callback(int callback_id)
+{
+  BX_LOCK(mixer_mutex);
+  if ((callback_id >= 0) && (callback_id < BX_MAX_WAVE_CALLBACKS)) {
+    get_wave[callback_id].device = NULL;
+    get_wave[callback_id].cb = NULL;
+  }
+  BX_UNLOCK(mixer_mutex);
 }
 
 #endif

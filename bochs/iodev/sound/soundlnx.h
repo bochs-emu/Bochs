@@ -25,12 +25,12 @@
 
 #if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
 
-class bx_sound_linux_c : public bx_sound_lowlevel_c {
+class bx_sound_oss_c : public bx_sound_lowlevel_c {
 public:
-  bx_sound_linux_c();
-  virtual ~bx_sound_linux_c();
+  bx_sound_oss_c();
+  virtual ~bx_sound_oss_c();
 
-  virtual int get_type() {return BX_SOUNDLOW_LINUX;}
+  virtual int get_type() {return BX_SOUNDLOW_OSS;}
 
   virtual int openmidioutput(const char *mididev);
   virtual int midiready();
@@ -39,7 +39,7 @@ public:
 
   virtual int openwaveoutput(const char *wavedev);
   virtual int set_pcm_params(bx_pcm_param_t param);
-  virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
+  virtual int waveout(int length, Bit8u data[]);
   virtual int closewaveoutput();
 
   virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
@@ -50,6 +50,9 @@ public:
 
   static void record_timer_handler(void *);
   void record_timer(void);
+
+  virtual int register_wave_callback(void *, get_wave_cb_t wd_cb);
+  virtual void unregister_wave_callback(int callback_id);
 private:
   FILE *midi;
   int  wave_fd[2];
