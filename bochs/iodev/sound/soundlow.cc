@@ -128,7 +128,8 @@ BX_THREAD_FUNC(mixer_thread, indata)
   BX_THREAD_EXIT;
 }
 
-// The dummy sound lowlevel functions. They don't do anything.
+// The base class of the  sound lowlevel support.
+// The dummy output methods don't do anything.
 
 bx_sound_lowlevel_c::bx_sound_lowlevel_c()
 {
@@ -153,67 +154,14 @@ bx_sound_lowlevel_c::~bx_sound_lowlevel_c()
   BX_FINI_MUTEX(mixer_mutex);
 }
 
-void bx_sound_lowlevel_c::start_mixer_thread()
+int bx_sound_lowlevel_c::openmidioutput(const char *mididev)
 {
-  BX_THREAD_ID(threadID);
-
-  BX_THREAD_CREATE(mixer_thread, this, threadID);
-}
-
-bx_bool bx_sound_lowlevel_c::mixer_common(Bit8u *buffer, int len)
-{
-  Bit32u count, len2 = 0, len3 = 0;
-  Bit16s src1, src2, dst_val;
-  Bit32s tmp_val;
-  Bit8u *src, *dst;
-
-  Bit8u *tmpbuffer = new Bit8u[len];
-  BX_LOCK(mixer_mutex);
-  for (int i = 0; i < cb_count; i++) {
-    if (get_wave[i].cb != NULL) {
-      memset(tmpbuffer, 0, len);
-      len2 = get_wave[i].cb(get_wave[i].device, real_pcm_param.samplerate, tmpbuffer, len);
-      if (len2 > 0) {
-        src = tmpbuffer;
-        dst = buffer;
-        count = len / 2;
-        while (count--) {
-          src1 = (src[0] | (src[1] << 8));
-          src2 = (dst[0] | (dst[1] << 8));
-          tmp_val = (Bit32s)src1 + (Bit32s)src2;
-          if (tmp_val > BX_MAX_BIT16S) {
-            tmp_val = BX_MAX_BIT16S;
-          } else if (tmp_val < BX_MIN_BIT16S) {
-            tmp_val = BX_MIN_BIT16S;
-          }
-          dst_val = (Bit16s)tmp_val;
-          dst[0] = dst_val & 0xff;
-          dst[1] = (Bit8u)(dst_val >> 8);
-          src += 2;
-          dst += 2;
-        }
-        if (len3 < len2) len3 = len2;
-      }
-    }
-  }
-  BX_UNLOCK(mixer_mutex);
-  delete [] tmpbuffer;
-  return (len3 > 0);
-}
-
-int bx_sound_lowlevel_c::waveready()
-{
+  UNUSED(mididev);
   return BX_SOUNDLOW_OK;
 }
 
 int bx_sound_lowlevel_c::midiready()
 {
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::openmidioutput(const char *mididev)
-{
-  UNUSED(mididev);
   return BX_SOUNDLOW_OK;
 }
 
@@ -231,10 +179,17 @@ int bx_sound_lowlevel_c::closemidioutput()
   return BX_SOUNDLOW_OK;
 }
 
+// wave playback support
+
 int bx_sound_lowlevel_c::openwaveoutput(const char *wavedev)
 {
   UNUSED(wavedev);
   set_pcm_params(real_pcm_param);
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_sound_lowlevel_c::waveready()
+{
   return BX_SOUNDLOW_OK;
 }
 
@@ -342,6 +297,68 @@ int bx_sound_lowlevel_c::closewaveoutput()
 {
   return BX_SOUNDLOW_OK;
 }
+
+// mixer thread related methods
+
+void bx_sound_lowlevel_c::start_mixer_thread()
+{
+  BX_THREAD_ID(threadID);
+
+  BX_THREAD_CREATE(mixer_thread, this, threadID);
+}
+
+bx_bool bx_sound_lowlevel_c::mixer_common(Bit8u *buffer, int len)
+{
+  Bit32u count, len2 = 0, len3 = 0;
+  Bit16s src1, src2, dst_val;
+  Bit32s tmp_val;
+  Bit8u *src, *dst;
+
+  Bit8u *tmpbuffer = new Bit8u[len];
+  BX_LOCK(mixer_mutex);
+  for (int i = 0; i < cb_count; i++) {
+    if (get_wave[i].cb != NULL) {
+      memset(tmpbuffer, 0, len);
+      len2 = get_wave[i].cb(get_wave[i].device, real_pcm_param.samplerate, tmpbuffer, len);
+      if (len2 > 0) {
+        src = tmpbuffer;
+        dst = buffer;
+        count = len / 2;
+        while (count--) {
+          src1 = (src[0] | (src[1] << 8));
+          src2 = (dst[0] | (dst[1] << 8));
+          tmp_val = (Bit32s)src1 + (Bit32s)src2;
+          if (tmp_val > BX_MAX_BIT16S) {
+            tmp_val = BX_MAX_BIT16S;
+          } else if (tmp_val < BX_MIN_BIT16S) {
+            tmp_val = BX_MIN_BIT16S;
+          }
+          dst_val = (Bit16s)tmp_val;
+          dst[0] = dst_val & 0xff;
+          dst[1] = (Bit8u)(dst_val >> 8);
+          src += 2;
+          dst += 2;
+        }
+        if (len3 < len2) len3 = len2;
+      }
+    }
+  }
+  BX_UNLOCK(mixer_mutex);
+  delete [] tmpbuffer;
+  return (len3 > 0);
+}
+
+void bx_sound_lowlevel_c::unregister_wave_callback(int callback_id)
+{
+  BX_LOCK(mixer_mutex);
+  if ((callback_id >= 0) && (callback_id < BX_MAX_WAVE_CALLBACKS)) {
+    get_wave[callback_id].device = NULL;
+    get_wave[callback_id].cb = NULL;
+  }
+  BX_UNLOCK(mixer_mutex);
+}
+
+// wave recording support (dummy driver returns silence
 
 int bx_sound_lowlevel_c::openwaveinput(const char *wavedev, sound_record_handler_t rh)
 {

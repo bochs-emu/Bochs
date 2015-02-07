@@ -346,14 +346,4 @@ int bx_sound_oss_c::register_wave_callback(void *arg, get_wave_cb_t wd_cb)
   return -1;
 }
 
-void bx_sound_oss_c::unregister_wave_callback(int callback_id)
-{
-  BX_LOCK(mixer_mutex);
-  if ((callback_id >= 0) && (callback_id < BX_MAX_WAVE_CALLBACKS)) {
-    get_wave[callback_id].device = NULL;
-    get_wave[callback_id].cb = NULL;
-  }
-  BX_UNLOCK(mixer_mutex);
-}
-
 #endif

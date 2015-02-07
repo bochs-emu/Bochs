@@ -84,14 +84,13 @@ public:
 
   virtual int get_type() {return BX_SOUNDLOW_DUMMY;}
 
-  virtual int waveready();
-  virtual int midiready();
-
   virtual int openmidioutput(const char *mididev);
+  virtual int midiready();
   virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
   virtual int closemidioutput();
 
   virtual int openwaveoutput(const char *wavedev);
+  virtual int waveready();
   virtual int set_pcm_params(bx_pcm_param_t param);
   virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
   virtual int get_waveout_packetsize();
@@ -109,7 +108,7 @@ public:
   void record_timer(void);
 
   virtual int register_wave_callback(void *, get_wave_cb_t wd_cb) {return -1;}
-  virtual void unregister_wave_callback(int callback_id) {}
+  virtual void unregister_wave_callback(int callback_id);
 
   virtual bx_bool mixer_common(Bit8u *buffer, int len);
 protected:
