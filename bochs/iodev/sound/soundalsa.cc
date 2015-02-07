@@ -27,6 +27,10 @@
 
 #if BX_HAVE_ALSASOUND && BX_SUPPORT_SOUNDLOW
 
+#ifndef WIN32
+#include <pthread.h>
+#endif
+
 #define LOG_THIS
 
 bx_sound_alsa_c::bx_sound_alsa_c()
@@ -202,6 +206,9 @@ int bx_sound_alsa_c::closemidioutput()
 int bx_sound_alsa_c::openwaveoutput(const char *wavedev)
 {
   set_pcm_params(real_pcm_param);
+  pcm_callback_id = register_wave_callback(this, pcm_callback);
+  BX_INIT_MUTEX(mixer_mutex);
+  start_mixer_thread();
   return BX_SOUNDLOW_OK;
 }
 
@@ -216,7 +223,7 @@ int bx_sound_alsa_c::alsa_pcm_open(bx_bool mode, int frequency, int bits, bx_boo
   alsa_pcm[mode].audio_bufsize = 0;
 
   if (alsa_pcm[mode].handle == NULL) {
-    ret = snd_pcm_open(&alsa_pcm[mode].handle, "default", mode ? SND_PCM_STREAM_CAPTURE : SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK);
+    ret = snd_pcm_open(&alsa_pcm[mode].handle, "default", mode ? SND_PCM_STREAM_CAPTURE : SND_PCM_STREAM_PLAYBACK, 0);
     if (ret < 0) {
       return BX_SOUNDLOW_ERR;
     }
@@ -226,16 +233,18 @@ int bx_sound_alsa_c::alsa_pcm_open(bx_bool mode, int frequency, int bits, bx_boo
   snd_pcm_hw_params_any(alsa_pcm[mode].handle, params);
   snd_pcm_hw_params_set_access(alsa_pcm[mode].handle, params, SND_PCM_ACCESS_RW_INTERLEAVED);
 
-  if ((frequency == wave_ch[mode].oldfreq) &&
-      (bits == wave_ch[mode].oldbits) &&
-      (stereo == wave_ch[mode].oldstereo) &&
-      (format == wave_ch[mode].oldformat))
-    return BX_SOUNDLOW_OK; // nothing to do
+  if (mode == 1) {
+    if ((frequency == wavein_param.samplerate) &&
+        (bits == wavein_param.bits) &&
+        (stereo == (wavein_param.channels == 2)) &&
+        (format == wavein_param.format))
+      return BX_SOUNDLOW_OK; // nothing to do
 
-  wave_ch[mode].oldfreq = frequency;
-  wave_ch[mode].oldbits = bits;
-  wave_ch[mode].oldstereo = stereo;
-  wave_ch[mode].oldformat = format;
+    wavein_param.samplerate = frequency;
+    wavein_param.bits = bits;
+    wavein_param.channels = stereo + 1;
+    wavein_param.format = format;
+  }
 
   freq = (unsigned int)frequency;
 
@@ -283,82 +292,26 @@ int bx_sound_alsa_c::set_pcm_params(bx_pcm_param_t param)
   return alsa_pcm_open(0, param.samplerate, param.bits, param.channels == 2, param.format);
 }
 
-int bx_sound_alsa_c::alsa_pcm_write()
+int bx_sound_alsa_c::get_waveout_packetsize()
 {
-  int ret;
-
-  if (alsa_pcm[0].buffer == NULL) {
-    alsa_pcm[0].buffer = (char *)malloc(alsa_pcm[0].alsa_bufsize);
-  }
-  while (alsa_pcm[0].audio_bufsize >= alsa_pcm[0].alsa_bufsize) {
-    memcpy(alsa_pcm[0].buffer, audio_buffer[0], alsa_pcm[0].alsa_bufsize);
-    ret = snd_pcm_writei(alsa_pcm[0].handle, alsa_pcm[0].buffer, alsa_pcm[0].frames);
-    if (ret == -EAGAIN)
-      continue;
-    if (ret == -EPIPE) {
-      /* EPIPE means underrun */
-      BX_ERROR(("ALSA: underrun occurred"));
-      snd_pcm_prepare(alsa_pcm[0].handle);
-    } else if (ret < 0) {
-      BX_ERROR(("ALSA: error from writei: %s", snd_strerror(ret)));
-    }  else if (ret != (int)alsa_pcm[0].frames) {
-      BX_ERROR(("ALSA: short write, write %d frames", ret));
-    }
-    alsa_pcm[0].audio_bufsize -= alsa_pcm[0].alsa_bufsize;
-    memmove(audio_buffer[0], audio_buffer[0]+alsa_pcm[0].alsa_bufsize, alsa_pcm[0].audio_bufsize);
-  }
-  if ((alsa_pcm[0].audio_bufsize == 0) && (alsa_pcm[0].buffer != NULL)) {
-    free(alsa_pcm[0].buffer);
-    alsa_pcm[0].buffer = NULL;
-  }
-
-  return BX_SOUNDLOW_OK;
+  return alsa_pcm[0].alsa_bufsize;
 }
 
-int bx_sound_alsa_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param)
+int bx_sound_alsa_c::waveout(int length, Bit8u data[])
 {
-  int len2;
-
-  if (memcmp(src_param, &emu_pcm_param, sizeof(bx_pcm_param_t)) != 0) {
-    emu_pcm_param = *src_param;
-    cvt_mult = (src_param->bits == 8) ? 2 : 1;
-    if (src_param->channels == 1) cvt_mult <<= 1;
-    if (src_param->samplerate != real_pcm_param.samplerate) {
-      real_pcm_param.samplerate = src_param->samplerate;
-      set_pcm_params(real_pcm_param);
-    }
+  if (!alsa_pcm[0].handle || (length > alsa_pcm[0].alsa_bufsize)) {
+    return BX_SOUNDLOW_ERR;
   }
-  len2 = length * cvt_mult;
-  if (!alsa_pcm[0].handle) {
-      // Alert indicating that caller is probably erroneous
-      BX_ERROR(("sendwavepacket(): pcm is not open"));
-      return BX_SOUNDLOW_ERR;
+  int ret = snd_pcm_writei(alsa_pcm[0].handle, data, alsa_pcm[0].frames);
+  if (ret == -EPIPE) {
+    /* EPIPE means underrun */
+    BX_ERROR(("ALSA: underrun occurred"));
+    snd_pcm_prepare(alsa_pcm[0].handle);
+  } else if (ret < 0) {
+    BX_ERROR(("ALSA: error from writei: %s", snd_strerror(ret)));
+  }  else if (ret != (int)alsa_pcm[0].frames) {
+    BX_ERROR(("ALSA: short write, write %d frames", ret));
   }
-  if ((alsa_pcm[0].audio_bufsize+len2) > BX_SOUND_ALSA_BUFSIZE) {
-    len2 = BX_SOUND_ALSA_BUFSIZE - alsa_pcm[0].audio_bufsize;
-    BX_ERROR(("ALSA: audio buffer overflow"));
-  }
-  if (len2 > 0) {
-    convert_pcm_data(data, length, audio_buffer[0]+alsa_pcm[0].audio_bufsize, len2, src_param);
-    alsa_pcm[0].audio_bufsize += len2;
-  }
-  if (alsa_pcm[0].audio_bufsize < alsa_pcm[0].alsa_bufsize) {
-    return BX_SOUNDLOW_OK;
-  } else {
-    return alsa_pcm_write();
-  }
-}
-
-int bx_sound_alsa_c::stopwaveplayback()
-{
-  if (alsa_pcm[0].handle && alsa_pcm[0].audio_bufsize > 0) {
-    if (alsa_pcm[0].audio_bufsize < alsa_pcm[0].alsa_bufsize) {
-      memset(audio_buffer[0]+alsa_pcm[0].audio_bufsize, 0, alsa_pcm[0].alsa_bufsize-alsa_pcm[0].audio_bufsize);
-      alsa_pcm[0].audio_bufsize = alsa_pcm[0].alsa_bufsize;
-    }
-    alsa_pcm_write();
-  }
-
   return BX_SOUNDLOW_OK;
 }
 
@@ -369,7 +322,6 @@ int bx_sound_alsa_c::closewaveoutput()
     snd_pcm_close(alsa_pcm[0].handle);
     alsa_pcm[0].handle = NULL;
   }
-
   return BX_SOUNDLOW_OK;
 }
 
@@ -380,6 +332,7 @@ int bx_sound_alsa_c::openwaveinput(const char *wavedev, sound_record_handler_t r
     record_timer_index = bx_pc_system.register_timer(this, record_timer_handler, 1, 1, 0, "soundlnx");
     // record timer: inactive, continuous, frequency variable
   }
+  wavein_param.samplerate = 0;
 
   return BX_SOUNDLOW_OK;
 }
@@ -422,10 +375,10 @@ int bx_sound_alsa_c::getwavepacket(int length, Bit8u data[])
     } else if (ret != (int)alsa_pcm[1].frames) {
       BX_ERROR(("short read, read %d frames", ret));
     }
-    memcpy(audio_buffer[1]+alsa_pcm[1].audio_bufsize, alsa_pcm[1].buffer, alsa_pcm[1].alsa_bufsize);
+    memcpy(audio_buffer+alsa_pcm[1].audio_bufsize, alsa_pcm[1].buffer, alsa_pcm[1].alsa_bufsize);
     alsa_pcm[1].audio_bufsize += alsa_pcm[1].alsa_bufsize;
   }
-  memcpy(data, audio_buffer[1], length);
+  memcpy(data, audio_buffer, length);
   alsa_pcm[1].audio_bufsize -= length;
   if ((alsa_pcm[1].audio_bufsize <= 0) && (alsa_pcm[1].buffer != NULL)) {
     free(alsa_pcm[1].buffer);
@@ -468,6 +421,16 @@ void bx_sound_alsa_c::record_timer_handler(void *this_ptr)
 void bx_sound_alsa_c::record_timer(void)
 {
   record_handler(this, record_packet_size);
+}
+
+int bx_sound_alsa_c::register_wave_callback(void *arg, get_wave_cb_t wd_cb)
+{
+  if (cb_count < BX_MAX_WAVE_CALLBACKS) {
+    get_wave[cb_count].device = arg;
+    get_wave[cb_count].cb = wd_cb;
+    return cb_count++;
+  }
+  return -1;
 }
 
 #endif
