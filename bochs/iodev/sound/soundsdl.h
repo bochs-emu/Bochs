@@ -38,7 +38,6 @@ public:
   virtual int    sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
   virtual int    closewaveoutput();
 
-  virtual int register_wave_callback(void *, get_wave_cb_t wd_cb);
   virtual void unregister_wave_callback(int callback_id);
   virtual bx_bool mixer_common(Bit8u *buffer, int len);
 private:

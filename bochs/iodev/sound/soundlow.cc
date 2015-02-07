@@ -188,11 +188,6 @@ int bx_sound_lowlevel_c::openwaveoutput(const char *wavedev)
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_lowlevel_c::waveready()
-{
-  return BX_SOUNDLOW_OK;
-}
-
 int bx_sound_lowlevel_c::set_pcm_params(bx_pcm_param_t param)
 {
   UNUSED(param);
@@ -288,11 +283,6 @@ int bx_sound_lowlevel_c::waveout(int length, Bit8u data[])
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_lowlevel_c::stopwaveplayback()
-{
-  return BX_SOUNDLOW_OK;
-}
-
 int bx_sound_lowlevel_c::closewaveoutput()
 {
   return BX_SOUNDLOW_OK;
@@ -346,6 +336,16 @@ bx_bool bx_sound_lowlevel_c::mixer_common(Bit8u *buffer, int len)
   BX_UNLOCK(mixer_mutex);
   delete [] tmpbuffer;
   return (len3 > 0);
+}
+
+int bx_sound_lowlevel_c::register_wave_callback(void *arg, get_wave_cb_t wd_cb)
+{
+  if (cb_count < BX_MAX_WAVE_CALLBACKS) {
+    get_wave[cb_count].device = arg;
+    get_wave[cb_count].cb = wd_cb;
+    return cb_count++;
+  }
+  return -1;
 }
 
 void bx_sound_lowlevel_c::unregister_wave_callback(int callback_id)

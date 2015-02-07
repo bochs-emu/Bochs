@@ -790,9 +790,6 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
           }
         } else {
           if (((int)i == BX_ES1370_THIS s.dac_nr_active) && BX_ES1370_THIS s.dac_outputinit) {
-            if (BX_ES1370_THIS wavemode == 1) {
-              BX_ES1370_THIS soundmod->stopwaveplayback();
-            }
             BX_ES1370_THIS s.dac_nr_active = -1;
           }
           bx_pc_system.deactivate_timer(timer_id);

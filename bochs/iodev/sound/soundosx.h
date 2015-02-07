@@ -49,10 +49,8 @@ public:
   virtual int    closemidioutput();
 
   virtual int openwaveoutput(const char *wavedev);
-  virtual int waveready();
   virtual int set_pcm_params(bx_pcm_param_t param);
-  virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
-  virtual int stopwaveplayback();
+  virtual int waveout(int length, Bit8u data[]);
   virtual int closewaveoutput();
 #ifdef BX_SOUND_OSX_use_converter
   void nextbuffer(int *outDataSize, void **outData);

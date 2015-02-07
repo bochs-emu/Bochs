@@ -245,12 +245,17 @@ int bx_sound_osx_c::openwaveoutput(const char *wavedev)
     } 
 #endif
 
-    WaveOpen = 1;
-    return BX_SOUNDLOW_OK;
+  set_pcm_params(real_pcm_param);
+  pcm_callback_id = register_wave_callback(this, pcm_callback);
+  BX_INIT_MUTEX(mixer_mutex);
+  start_mixer_thread();
+  WaveOpen = 1;
+  return BX_SOUNDLOW_OK;
 }
 
 #ifdef BX_SOUND_OSX_use_converter
-OSStatus bx_sound_osx_c::core_audio_pause() {
+OSStatus bx_sound_osx_c::core_audio_pause()
+{
   OSStatus err = noErr;
 
   if (WaveOutputUnit) {
@@ -264,7 +269,8 @@ OSStatus bx_sound_osx_c::core_audio_pause() {
   return err;
 }
 
-OSStatus bx_sound_osx_c::core_audio_resume() {
+OSStatus bx_sound_osx_c::core_audio_resume()
+{
   OSStatus err = noErr;
 
   if (WaveConverter) {
@@ -386,45 +392,13 @@ int bx_sound_osx_c::set_pcm_params(bx_pcm_param_t param)
     return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_osx_c::waveready()
+int bx_sound_osx_c::waveout(int length, Bit8u data[])
 {
-    // HACK: the -4 is to keep from overwriting buffers that
-    // have been sent, but possibly not yet played. There
-    // should be a better way of doing this.
-    if (WaveOpen && (head - tail < BX_SOUND_OSX_NBUF-4)) {
-        return BX_SOUNDLOW_OK;
-    }
-    else {
-#ifdef BX_SOUND_OSX_use_converter
-        // If buffer is full, make sure sound is playing
-        if (!WavePlaying) {
-          if (core_audio_resume() != noErr)
-            return BX_SOUNDLOW_ERR;
-        }
-#endif
-        return BX_SOUNDLOW_ERR;
-    }
-}
-
-int bx_sound_osx_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param)
-{
-  int len2;
 #ifdef BX_SOUND_OSX_use_quicktime
   SndCommand mySndCommand;
 #endif
 
-  BX_DEBUG(("sendwavepacket(%d, %p), head=%u", length, data, head));
-
-  if (memcmp(src_param, &emu_pcm_param, sizeof(bx_pcm_param_t)) != 0) {
-    emu_pcm_param = *src_param;
-    cvt_mult = (src_param->bits == 8) ? 2 : 1;
-    if (src_param->channels == 1) cvt_mult <<= 1;
-    if (src_param->samplerate != real_pcm_param.samplerate) {
-      real_pcm_param.samplerate = src_param->samplerate;
-      set_pcm_params(real_pcm_param);
-    }
-  }
-  len2 = length * cvt_mult;
+  BX_DEBUG(("waveout(%d, %p), head=%u", length, data, head));
 
   // sanity check
   if ((!WaveOpen) || (head - tail >= BX_SOUND_OSX_NBUF))
@@ -434,8 +408,8 @@ int bx_sound_osx_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src
   int n = head++ % BX_SOUND_OSX_NBUF;
 
   // put data in buffer
-  convert_pcm_data(data, length, (Bit8u*)WaveData[n], len2, src_param);
-  WaveLength[n] = len2;
+  memcpy(WaveData[n], data, length);
+  WaveLength[n] = length;
 
 #ifdef BX_SOUND_OSX_use_quicktime
     memcpy(&WaveHeader[n], &WaveInfo, sizeof(WaveInfo));
@@ -464,11 +438,6 @@ int bx_sound_osx_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src
     SndDoCommand(WaveChannel, &mySndCommand, TRUE);
 #endif
 
-    return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_osx_c::stopwaveplayback()
-{
     return BX_SOUNDLOW_OK;
 }
 

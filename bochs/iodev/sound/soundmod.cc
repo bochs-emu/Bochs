@@ -48,15 +48,9 @@
 
 bx_soundmod_ctl_c* theSoundModCtl = NULL;
 
-BX_THREAD_ID(threadID);
 BX_MUTEX(beep_mutex);
-static int beep_control;
-Bit8u *beep_buffer;
-unsigned int beep_bufsize;
-bx_pcm_param_t beep_param;
 
 Bit32u beep_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
-BX_THREAD_FUNC(beep_thread, indata);
 
 int CDECL libsoundmod_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
@@ -83,13 +77,7 @@ bx_soundmod_ctl_c::bx_soundmod_ctl_c()
 bx_soundmod_ctl_c::~bx_soundmod_ctl_c()
 {
   beep_active = 0;
-  if (beep_callback_id < 0) {
-    beep_control = 0;
-    while (beep_control >= 0) {
-      BX_MSLEEP(1);
-    }
-    free(beep_buffer);
-  } else {
+  if (beep_callback_id >= 0) {
     soundmod->unregister_wave_callback(beep_callback_id);
   }
   if (soundmod != NULL) {
@@ -146,15 +134,6 @@ void bx_soundmod_ctl_c::init()
     beep_cur_freq = 0.0;
     BX_INIT_MUTEX(beep_mutex);
     beep_callback_id = soundmod->register_wave_callback(theSoundModCtl, beep_callback);
-    if (beep_callback_id < 0) {
-      beep_bufsize = 4410;
-      beep_buffer = (Bit8u*)malloc(beep_bufsize);
-      beep_param.samplerate = 44100;
-      beep_param.bits = 16;
-      beep_param.channels = 2;
-      beep_param.format = 1;
-      BX_THREAD_CREATE(beep_thread, soundmod, threadID);
-    }
   }
 }
 
@@ -194,29 +173,6 @@ Bit32u  bx_soundmod_ctl_c::beep_generator(Bit16u rate, Bit8u *buffer, Bit32u len
 Bit32u beep_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
 {
   return ((bx_soundmod_ctl_c*)dev)->beep_generator(rate, buffer, len);
-}
-
-BX_THREAD_FUNC(beep_thread, indata)
-{
-  Bit32u len = 0;
-
-  bx_sound_lowlevel_c *soundmod = (bx_sound_lowlevel_c*)indata;
-  beep_control = 1;
-  while (beep_control > 0) {
-    len = theSoundModCtl->beep_generator(44100, beep_buffer, beep_bufsize);
-    if (len > 0) {
-      soundmod->sendwavepacket(beep_bufsize, beep_buffer, &beep_param);
-      if (soundmod->get_type() == BX_SOUNDLOW_WIN) {
-        BX_MSLEEP(25);
-      } else {
-        BX_MSLEEP(1);
-      }
-    } else {
-      BX_MSLEEP(25);
-    }
-  }
-  beep_control = -1;
-  BX_THREAD_EXIT;
 }
 
 bx_bool bx_soundmod_ctl_c::beep_on(float frequency)

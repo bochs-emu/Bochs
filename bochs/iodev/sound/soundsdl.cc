@@ -155,16 +155,6 @@ bx_bool bx_sound_sdl_c::mixer_common(Bit8u *buffer, int len)
   return 1;
 }
 
-int bx_sound_sdl_c::register_wave_callback(void *arg, get_wave_cb_t wd_cb)
-{
-  if (cb_count < BX_MAX_WAVE_CALLBACKS) {
-    get_wave[cb_count].device = arg;
-    get_wave[cb_count].cb = wd_cb;
-    return cb_count++;
-  }
-  return -1;
-}
-
 void bx_sound_sdl_c::unregister_wave_callback(int callback_id)
 {
   SDL_LockAudio();

@@ -185,8 +185,6 @@ public:
 
   static void record_timer_handler(void *);
   void record_timer(void);
-
-  virtual int register_wave_callback(void *, get_wave_cb_t wd_cb);
 private:
   struct bx_sound_waveinfo_struct {
     int frequency;

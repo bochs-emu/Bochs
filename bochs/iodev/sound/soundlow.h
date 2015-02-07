@@ -90,12 +90,10 @@ public:
   virtual int closemidioutput();
 
   virtual int openwaveoutput(const char *wavedev);
-  virtual int waveready();
   virtual int set_pcm_params(bx_pcm_param_t param);
   virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
   virtual int get_waveout_packetsize();
   virtual int waveout(int length, Bit8u data[]);
-  virtual int stopwaveplayback();
   virtual int closewaveoutput();
 
   virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
@@ -107,7 +105,7 @@ public:
   static void record_timer_handler(void *);
   void record_timer(void);
 
-  virtual int register_wave_callback(void *, get_wave_cb_t wd_cb) {return -1;}
+  virtual int register_wave_callback(void *, get_wave_cb_t wd_cb);
   virtual void unregister_wave_callback(int callback_id);
 
   virtual bx_bool mixer_common(Bit8u *buffer, int len);

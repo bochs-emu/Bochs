@@ -423,14 +423,4 @@ void bx_sound_alsa_c::record_timer(void)
   record_handler(this, record_packet_size);
 }
 
-int bx_sound_alsa_c::register_wave_callback(void *arg, get_wave_cb_t wd_cb)
-{
-  if (cb_count < BX_MAX_WAVE_CALLBACKS) {
-    get_wave[cb_count].device = arg;
-    get_wave[cb_count].cb = wd_cb;
-    return cb_count++;
-  }
-  return -1;
-}
-
 #endif

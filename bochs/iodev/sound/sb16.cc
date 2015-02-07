@@ -1458,9 +1458,7 @@ void bx_sb16_c::dsp_dmadone()
   if ((DSP.dma.output == 1) && (DSP.dma.mode != 2)) {
     dsp_sendwavepacket();  // flush the output
 
-    if (BX_SB16_THIS wavemode == 1) {
-      BX_SB16_OUTPUT->stopwaveplayback();
-    } else if (BX_SB16_THIS wavemode != 0) {
+    if (BX_SB16_THIS wavemode > 1) {
       fflush(WAVEDATA);
     }
   } else if ((DSP.dma.output == 0) && (DSP.dma.mode != 2)) {

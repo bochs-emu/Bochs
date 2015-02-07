@@ -54,8 +54,6 @@ public:
 
   static void record_timer_handler(void *);
   void record_timer(void);
-
-  virtual int register_wave_callback(void *, get_wave_cb_t wd_cb);
 private:
   int alsa_seq_open(const char *alsadev);
   int alsa_seq_output(int delta, int command, int length, Bit8u data[]);
