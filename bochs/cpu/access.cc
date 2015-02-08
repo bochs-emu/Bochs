@@ -80,6 +80,11 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
       return 0;
 
     case 2: case 3: /* read/write */
+      if (seg->cache.u.segment.limit_scaled == 0xffffffff && seg->cache.u.segment.base == 0) {
+        seg->cache.valid |= SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
+	break;
+      }
+
       if (offset > (seg->cache.u.segment.limit_scaled - length)
           || length > seg->cache.u.segment.limit_scaled)
       {
@@ -95,10 +100,6 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
         // limit check in other functions, and we don't want the value to roll.
         // Only normal segments (not expand down) are handled this way.
         seg->cache.valid |= SegAccessROK | SegAccessWOK;
-
-        if (seg->cache.u.segment.limit_scaled == 0xffffffff && seg->cache.u.segment.base == 0) {
-          seg->cache.valid |= SegAccessROK4G | SegAccessWOK4G;
-        }
       }
       break;
 
@@ -150,32 +151,19 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
   switch (seg->cache.type) {
     case 0: case 1: /* read only */
     case 2: case 3: /* read/write */
-      if (offset > (seg->cache.u.segment.limit_scaled - length)
-          || length > seg->cache.u.segment.limit_scaled)
-      {
-        BX_ERROR(("read_virtual_checks(): read beyond limit"));
-        return 0;
-      }
-      if (seg->cache.u.segment.limit_scaled >= (BX_MAX_MEM_ACCESS_LENGTH-1)) {
-        // Mark cache as being OK type for succeeding reads. See notes for
-        // write checks; similar code.
-        seg->cache.valid |= SegAccessROK;
-
-        if (seg->cache.u.segment.limit_scaled == 0xffffffff && seg->cache.u.segment.base == 0) {
-          seg->cache.valid |= SegAccessROK4G;
-        }
-      }
-      break;
-
     case 10: case 11: /* execute/read */
     case 14: case 15: /* execute/read-only, conforming */
+      if (seg->cache.u.segment.limit_scaled == 0xffffffff && seg->cache.u.segment.base == 0) {
+        seg->cache.valid |= SegAccessROK | SegAccessROK4G;
+	break;
+      }
+
       if (offset > (seg->cache.u.segment.limit_scaled - length)
           || length > seg->cache.u.segment.limit_scaled)
       {
         BX_ERROR(("read_virtual_checks(): read beyond limit"));
         return 0;
       }
-
       if (seg->cache.u.segment.limit_scaled >= (BX_MAX_MEM_ACCESS_LENGTH-1)) {
         // Mark cache as being OK type for succeeding reads. See notes for
         // write checks; similar code.
@@ -232,6 +220,11 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned 
     case 2: case 3: /* read/write */
     case 10: case 11: /* execute/read */
     case 14: case 15: /* execute/read-only, conforming */
+      if (seg->cache.u.segment.limit_scaled == 0xffffffff && seg->cache.u.segment.base == 0) {
+        seg->cache.valid |= SegAccessROK | SegAccessROK4G;
+	break;
+      }
+
       if (offset > (seg->cache.u.segment.limit_scaled - length)
           || length > seg->cache.u.segment.limit_scaled)
       {
@@ -242,10 +235,6 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned 
         // Mark cache as being OK type for succeeding reads. See notes for
         // write checks; similar code.
         seg->cache.valid |= SegAccessROK;
-
-        if (seg->cache.u.segment.limit_scaled == 0xffffffff && seg->cache.u.segment.base == 0) {
-          seg->cache.valid |= SegAccessROK4G;
-        }
       }
       break;
 
