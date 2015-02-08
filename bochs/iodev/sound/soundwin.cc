@@ -44,15 +44,14 @@ bx_sound_windows_c::bx_sound_windows_c()
   ismidiready = 1;
 
   // size is the total size of the midi header and buffer and the
-  // BX_SOUND_WINDOWS_NBUF wave header and buffers, all aligned
-  // on a 16-byte boundary
+  // wave header and buffer, all aligned on a 16-byte boundary
 
 #define ALIGN(size) ((size + 15) & ~15)
 
 #define size   ALIGN(sizeof(MIDIHDR)) \
-             + ALIGN(sizeof(WAVEHDR)) * (BX_SOUND_WINDOWS_NBUF + 1) \
+             + ALIGN(sizeof(WAVEHDR)) * 2 \
              + ALIGN(BX_SOUND_WINDOWS_MAXSYSEXLEN) \
-             + ALIGN(BX_SOUNDLOW_WAVEPACKETSIZE + 64) * (BX_SOUND_WINDOWS_NBUF + 1)
+             + ALIGN(BX_SOUNDLOW_WAVEPACKETSIZE + 64)
 
   DataHandle = GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, size);
   DataPointer = (Bit8u*) GlobalLock(DataHandle);

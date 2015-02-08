@@ -27,9 +27,6 @@
 
 #define BX_SOUND_WINDOWS_MAXSYSEXLEN  256    // maximum supported length of a sysex message
 
-#define BX_SOUND_WINDOWS_NBUF   64  // number of buffers for the output, must be power of 2 and >= 4
-#define BX_SOUND_WINDOWS_NMASK  (BX_SOUND_WINDOWS_NBUF - 1)
-
 #ifndef WAVEMAPPER
 #define WAVEMAPPER -1
 #endif
