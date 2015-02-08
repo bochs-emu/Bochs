@@ -97,7 +97,7 @@ public:
   virtual int closewaveoutput();
 
   virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
-  virtual int startwaverecord(int frequency, int bits, bx_bool stereo, int format);
+  virtual int startwaverecord(bx_pcm_param_t *param);
   virtual int getwavepacket(int length, Bit8u data[]);
   virtual int stopwaverecord();
   virtual int closewaveinput();

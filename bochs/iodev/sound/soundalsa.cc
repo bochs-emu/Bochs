@@ -212,13 +212,13 @@ int bx_sound_alsa_c::openwaveoutput(const char *wavedev)
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_alsa_c::alsa_pcm_open(bx_bool mode, int frequency, int bits, bx_bool stereo, int format)
+int bx_sound_alsa_c::alsa_pcm_open(bx_bool mode, bx_pcm_param_t *param)
 {
   int ret;
   snd_pcm_format_t fmt;
-  snd_pcm_hw_params_t *params;
+  snd_pcm_hw_params_t *hwparams;
   unsigned int size, freq;
-  int dir, signeddata = format & 1;
+  int dir, signeddata = param->format & 1;
 
   alsa_pcm[mode].audio_bufsize = 0;
 
@@ -229,32 +229,26 @@ int bx_sound_alsa_c::alsa_pcm_open(bx_bool mode, int frequency, int bits, bx_boo
     }
     BX_INFO(("ALSA: opened default PCM %s device", mode ? "input":"output"));
   }
-  snd_pcm_hw_params_alloca(&params);
-  snd_pcm_hw_params_any(alsa_pcm[mode].handle, params);
-  snd_pcm_hw_params_set_access(alsa_pcm[mode].handle, params, SND_PCM_ACCESS_RW_INTERLEAVED);
+  snd_pcm_hw_params_alloca(&hwparams);
+  snd_pcm_hw_params_any(alsa_pcm[mode].handle, hwparams);
+  snd_pcm_hw_params_set_access(alsa_pcm[mode].handle, hwparams, SND_PCM_ACCESS_RW_INTERLEAVED);
 
   if (mode == 1) {
-    if ((frequency == wavein_param.samplerate) &&
-        (bits == wavein_param.bits) &&
-        (stereo == (wavein_param.channels == 2)) &&
-        (format == wavein_param.format))
+    if (memcmp(param, &wavein_param, sizeof(bx_pcm_param_t)) == 0) {
       return BX_SOUNDLOW_OK; // nothing to do
-
-    wavein_param.samplerate = frequency;
-    wavein_param.bits = bits;
-    wavein_param.channels = stereo + 1;
-    wavein_param.format = format;
+    }
+    wavein_param = *param;
   }
 
-  freq = (unsigned int)frequency;
+  freq = (unsigned int)param->samplerate;
 
-  if (bits == 16) {
+  if (param->bits == 16) {
     if (signeddata == 1)
       fmt = SND_PCM_FORMAT_S16_LE;
     else
       fmt = SND_PCM_FORMAT_U16_LE;
     size = 2;
-  } else if (bits == 8) {
+  } else if (param->bits == 8) {
     if (signeddata == 1)
       fmt = SND_PCM_FORMAT_S8;
     else
@@ -263,20 +257,20 @@ int bx_sound_alsa_c::alsa_pcm_open(bx_bool mode, int frequency, int bits, bx_boo
   } else
     return BX_SOUNDLOW_ERR;
 
-  if (stereo) size *= 2;
+  if (param->channels == 2) size *= 2;
 
-  snd_pcm_hw_params_set_format(alsa_pcm[mode].handle, params, fmt);
-  snd_pcm_hw_params_set_channels(alsa_pcm[mode].handle, params, (stereo != 0) ? 2 : 1);
-  snd_pcm_hw_params_set_rate_near(alsa_pcm[mode].handle, params, &freq, &dir);
+  snd_pcm_hw_params_set_format(alsa_pcm[mode].handle, hwparams, fmt);
+  snd_pcm_hw_params_set_channels(alsa_pcm[mode].handle, hwparams, param->channels);
+  snd_pcm_hw_params_set_rate_near(alsa_pcm[mode].handle, hwparams, &freq, &dir);
 
   alsa_pcm[mode].frames = 32;
-  snd_pcm_hw_params_set_period_size_near(alsa_pcm[mode].handle, params, &alsa_pcm[mode].frames, &dir);
+  snd_pcm_hw_params_set_period_size_near(alsa_pcm[mode].handle, hwparams, &alsa_pcm[mode].frames, &dir);
 
-  ret = snd_pcm_hw_params(alsa_pcm[mode].handle, params);
+  ret = snd_pcm_hw_params(alsa_pcm[mode].handle, hwparams);
   if (ret < 0) {
     return BX_SOUNDLOW_ERR;
   }
-  snd_pcm_hw_params_get_period_size(params, &alsa_pcm[mode].frames, &dir);
+  snd_pcm_hw_params_get_period_size(hwparams, &alsa_pcm[mode].frames, &dir);
   alsa_pcm[mode].alsa_bufsize = alsa_pcm[mode].frames * size;
   BX_DEBUG(("ALSA: buffer size set to %d", alsa_pcm[mode].alsa_bufsize));
   if (alsa_pcm[mode].buffer != NULL) {
@@ -289,7 +283,7 @@ int bx_sound_alsa_c::alsa_pcm_open(bx_bool mode, int frequency, int bits, bx_boo
 
 int bx_sound_alsa_c::set_pcm_params(bx_pcm_param_t param)
 {
-  return alsa_pcm_open(0, param.samplerate, param.bits, param.channels == 2, param.format);
+  return alsa_pcm_open(0, &param);
 }
 
 int bx_sound_alsa_c::get_waveout_packetsize()
@@ -337,22 +331,22 @@ int bx_sound_alsa_c::openwaveinput(const char *wavedev, sound_record_handler_t r
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_alsa_c::startwaverecord(int frequency, int bits, bx_bool stereo, int format)
+int bx_sound_alsa_c::startwaverecord(bx_pcm_param_t *param)
 {
   Bit64u timer_val;
   Bit8u shift = 0;
 
   if (record_timer_index != BX_NULL_TIMER_HANDLE) {
-    if (bits == 16) shift++;
-    if (stereo) shift++;
-    record_packet_size = (frequency / 10) << shift; // 0.1 sec
+    if (param->bits == 16) shift++;
+    if (param->channels == 2) shift++;
+    record_packet_size = (param->samplerate / 10) << shift; // 0.1 sec
     if (record_packet_size > BX_SOUNDLOW_WAVEPACKETSIZE) {
       record_packet_size = BX_SOUNDLOW_WAVEPACKETSIZE;
     }
-    timer_val = (Bit64u)record_packet_size * 1000000 / (frequency << shift);
+    timer_val = (Bit64u)record_packet_size * 1000000 / (param->samplerate << shift);
     bx_pc_system.activate_timer(record_timer_index, (Bit32u)timer_val, 1);
   }
-  return alsa_pcm_open(1, frequency, bits, stereo, format);
+  return alsa_pcm_open(1, param);
 }
 
 int bx_sound_alsa_c::getwavepacket(int length, Bit8u data[])

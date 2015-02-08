@@ -178,7 +178,7 @@ public:
   virtual int closewaveoutput();
 
   virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
-  virtual int startwaverecord(int frequency, int bits, bx_bool stereo, int format);
+  virtual int startwaverecord(bx_pcm_param_t *param);
   virtual int getwavepacket(int length, Bit8u data[]);
   virtual int stopwaverecord();
   virtual int closewaveinput();
@@ -186,12 +186,7 @@ public:
   static void record_timer_handler(void *);
   void record_timer(void);
 private:
-  struct bx_sound_waveinfo_struct {
-    int frequency;
-    int bits;
-    bx_bool stereo;
-    int format;
-  };
+  bx_pcm_param_t wavein_param;
 
   HMIDIOUT MidiOut;       // Midi output device
   int MidiOpen;           // is it open?
@@ -210,7 +205,6 @@ private:
   LPWAVEHDR WaveInHdr;
   LPSTR WaveInData;
   bx_bool recording;
-  bx_sound_waveinfo_struct WaveInfo[2];             // format for the next buffer to be played
 
   // and the midi buffer for the SYSEX messages
   LPMIDIHDR MidiHeader;

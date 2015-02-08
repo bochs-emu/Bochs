@@ -215,52 +215,53 @@ int bx_sound_oss_c::openwaveinput(const char *wavedev, sound_record_handler_t rh
       BX_INFO(("OSS: opened input device %s", wavedev));
     }
   }
+  wavein_param.samplerate = 0;
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_oss_c::startwaverecord(int frequency, int bits, bx_bool stereo, int format)
+int bx_sound_oss_c::startwaverecord(bx_pcm_param_t *param)
 {
   Bit64u timer_val;
   Bit8u shift = 0;
   int fmt, ret;
-  int signeddata = format & 1;
+  int frequency = param->samplerate;
+  int channels = param->channels;
+  int signeddata = param->format & 1;
 
   if (record_timer_index != BX_NULL_TIMER_HANDLE) {
-    if (bits == 16) shift++;
-    if (stereo) shift++;
-    record_packet_size = (frequency / 10) << shift; // 0.1 sec
+    if (param->bits == 16) shift++;
+    if (param->channels == 2) shift++;
+    record_packet_size = (param->samplerate / 10) << shift; // 0.1 sec
     if (record_packet_size > BX_SOUNDLOW_WAVEPACKETSIZE) {
       record_packet_size = BX_SOUNDLOW_WAVEPACKETSIZE;
     }
-    timer_val = (Bit64u)record_packet_size * 1000000 / (frequency << shift);
+    timer_val = (Bit64u)record_packet_size * 1000000 / (param->samplerate << shift);
     bx_pc_system.activate_timer(record_timer_index, (Bit32u)timer_val, 1);
   }
   if (wave_fd[1] == -1) {
     return BX_SOUNDLOW_ERR;
   } else {
-    if ((frequency == wave_ch[0].oldfreq) &&
-        (bits == wave_ch[0].oldbits) &&
-        (stereo == wave_ch[0].oldstereo) &&
-        (format == wave_ch[0].oldformat))
+    if (memcmp(param, &wavein_param, sizeof(bx_pcm_param_t)) == 0) {
       return BX_SOUNDLOW_OK; // nothing to do
+    }
+    wavein_param = *param;
   }
-  wave_ch[0].oldfreq = frequency;
-  wave_ch[0].oldbits = bits;
-  wave_ch[0].oldstereo = stereo;
-  wave_ch[0].oldformat = format;
 
-  if (bits == 16)
-    if (signeddata == 1)
+  if (param->bits == 16) {
+    if (signeddata == 1) {
       fmt = AFMT_S16_LE;
-    else
+    } else {
       fmt = AFMT_U16_LE;
-  else if (bits == 8)
-    if (signeddata == 1)
+    }
+  } else if (param->bits == 8) {
+    if (signeddata == 1) {
       fmt = AFMT_S8;
-    else
+    } else {
       fmt = AFMT_U8;
-  else
+    }
+  } else {
     return BX_SOUNDLOW_ERR;
+  }
 
       // set frequency etc.
   ret = ioctl(wave_fd[1], SNDCTL_DSP_RESET);
@@ -274,10 +275,10 @@ int bx_sound_oss_c::startwaverecord(int frequency, int bits, bx_bool stereo, int
     return BX_SOUNDLOW_ERR;
   }
 
-  ret = ioctl(wave_fd[1], SNDCTL_DSP_STEREO, &stereo);
+  ret = ioctl(wave_fd[1], SNDCTL_DSP_CHANNELS, &channels);
   if (ret != 0) {
-    BX_ERROR(("ioctl(SNDCTL_DSP_STEREO, %d): %s",
-              stereo, strerror(errno)));
+    BX_ERROR(("ioctl(SNDCTL_DSP_CHANNELS, %d): %s",
+              channels, strerror(errno)));
     return BX_SOUNDLOW_ERR;
   }
 

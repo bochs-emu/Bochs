@@ -327,6 +327,7 @@ int bx_sound_windows_c::openwaveinput(const char *wavedev, sound_record_handler_
     // record timer: inactive, continuous, frequency variable
   }
   recording = 0;
+  wavein_param.samplerate = 0;
   return BX_SOUNDLOW_OK;
 }
 
@@ -357,32 +358,25 @@ int bx_sound_windows_c::recordnextpacket()
   }
 }
 
-int bx_sound_windows_c::startwaverecord(int frequency, int bits, bx_bool stereo, int format)
+int bx_sound_windows_c::startwaverecord(bx_pcm_param_t *param)
 {
   Bit64u timer_val;
   Bit8u shift = 0;
   MMRESULT result;
 
   if (record_timer_index != BX_NULL_TIMER_HANDLE) {
-    if (bits == 16) shift++;
-    if (stereo) shift++;
-    record_packet_size = (frequency / 10) << shift; // 0.1 sec
+    if (param->bits == 16) shift++;
+    if (param->channels == 2) shift++;
+    record_packet_size = (param->samplerate / 10) << shift; // 0.1 sec
     if (record_packet_size > BX_SOUNDLOW_WAVEPACKETSIZE) {
       record_packet_size = BX_SOUNDLOW_WAVEPACKETSIZE;
     }
-    timer_val = (Bit64u)record_packet_size * 1000000 / (frequency << shift);
+    timer_val = (Bit64u)record_packet_size * 1000000 / (param->samplerate << shift);
     bx_pc_system.activate_timer(record_timer_index, (Bit32u)timer_val, 1);
   }
   // check if any of the properties have changed
-  if ((WaveInfo[1].frequency != frequency) ||
-      (WaveInfo[1].bits != bits) ||
-      (WaveInfo[1].stereo != stereo) ||
-      (WaveInfo[1].format != format))
-  {
-    WaveInfo[1].frequency = frequency;
-    WaveInfo[1].bits = bits;
-    WaveInfo[1].stereo = stereo;
-    WaveInfo[1].format = format;
+  if (memcmp(param, &wavein_param, sizeof(bx_pcm_param_t)) != 0) {
+    wavein_param = *param;
 
     if (WaveInOpen) {
       waveInClose(hWaveIn);
@@ -391,11 +385,11 @@ int bx_sound_windows_c::startwaverecord(int frequency, int bits, bx_bool stereo,
     // Specify recording parameters
     WAVEFORMATEX pFormat;
     pFormat.wFormatTag = WAVE_FORMAT_PCM;
-    pFormat.nChannels = 1 << stereo;
-    pFormat.nSamplesPerSec = frequency;
-    pFormat.nAvgBytesPerSec = frequency << shift;
+    pFormat.nChannels = param->channels;
+    pFormat.nSamplesPerSec = param->samplerate;
+    pFormat.nAvgBytesPerSec = param->samplerate << shift;
     pFormat.nBlockAlign = 1 << shift;
-    pFormat.wBitsPerSample = bits;
+    pFormat.wBitsPerSample = param->bits;
     pFormat.cbSize = 0;
     result = waveInOpen(&hWaveIn, WAVEMAPPER, &pFormat, 0L, 0L, WAVE_FORMAT_DIRECT);
     if (result) {

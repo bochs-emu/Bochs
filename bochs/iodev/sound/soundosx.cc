@@ -551,20 +551,19 @@ int bx_sound_osx_c::openwaveinput(const char *wavedev, sound_record_handler_t rh
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_osx_c::startwaverecord(int frequency, int bits, bx_bool stereo, int format)
+int bx_sound_osx_c::startwaverecord(bx_pcm_param_t *param)
 {
   Bit64u timer_val;
   Bit8u shift = 0;
 
-  UNUSED(format);
   if (record_timer_index != BX_NULL_TIMER_HANDLE) {
-    if (bits == 16) shift++;
-    if (stereo) shift++;
-    record_packet_size = (frequency / 10) << shift; // 0.1 sec
+    if (param->bits == 16) shift++;
+    if (param->channels == 2) shift++;
+    record_packet_size = (param->samplerate / 10) << shift; // 0.1 sec
     if (record_packet_size > BX_SOUNDLOW_WAVEPACKETSIZE) {
       record_packet_size = BX_SOUNDLOW_WAVEPACKETSIZE;
     }
-    timer_val = (Bit64u)record_packet_size * 1000000 / (frequency << shift);
+    timer_val = (Bit64u)record_packet_size * 1000000 / (param->samplerate << shift);
     bx_pc_system.activate_timer(record_timer_index, (Bit32u)timer_val, 1);
   }
   // TODO

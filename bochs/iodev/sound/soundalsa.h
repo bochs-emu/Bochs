@@ -47,7 +47,7 @@ public:
   virtual int closewaveoutput();
 
   virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
-  virtual int startwaverecord(int frequency, int bits, bx_bool stereo, int format);
+  virtual int startwaverecord(bx_pcm_param_t *param);
   virtual int getwavepacket(int length, Bit8u data[]);
   virtual int stopwaverecord();
   virtual int closewaveinput();
@@ -57,7 +57,7 @@ public:
 private:
   int alsa_seq_open(const char *alsadev);
   int alsa_seq_output(int delta, int command, int length, Bit8u data[]);
-  int alsa_pcm_open(bx_bool input, int frequency, int bits, bx_bool stereo, int format);
+  int alsa_pcm_open(bx_bool input, bx_pcm_param_t *param);
 
   struct {
     snd_seq_t *handle;

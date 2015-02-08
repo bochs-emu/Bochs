@@ -704,6 +704,7 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
   Bit32u old_freq, new_freq, old_fmt, new_fmt;
   int ret, timer_id;
   Bit64u timer_val;
+  bx_pcm_param_t param;
 
   for (i = 0; i < 3; ++i) {
     chan_t *d = &BX_ES1370_THIS s.chan[i];
@@ -749,7 +750,12 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
                  chan_name[i], new_freq, 1 << (new_fmt & 1), (new_fmt & 2) ? 16 : 8, d->shift));
         if (i == ADC_CHANNEL) {
           if (BX_ES1370_THIS s.adc_inputinit) {
-            ret = BX_ES1370_THIS soundmod->startwaverecord(new_freq, (new_fmt >> 1) ? 16 : 8, (new_fmt & 1), (new_fmt >> 1));
+            memset(&param, 0, sizeof(bx_pcm_param_t));
+            param.samplerate = new_freq;
+            param.bits = (new_fmt >> 1) ? 16 : 8;
+            param.channels = (new_fmt & 1) + 1;
+            param.format = (new_fmt >> 1);
+            ret = BX_ES1370_THIS soundmod->startwaverecord(&param);
             if (ret != BX_SOUNDLOW_OK) {
               BX_ES1370_THIS soundmod->closewaveinput();
               BX_ES1370_THIS s.adc_inputinit = 0;
