@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2012-2014 Stanislav Shwartsman
+//   Copyright (c) 2012-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -170,27 +170,12 @@ void phenom_8650_toliman_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
   // EBX: vendor ID string
   // EDX: vendor ID string
   // ECX: vendor ID string
+  unsigned max_leaf = BX_SUPPORT_MONITOR_MWAIT ? 0x5 : 0x1;
   static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-  if (cpuid_limit_winnt) {
-    leaf->eax = 0x1;
-  }
-  else {
-#if BX_SUPPORT_MONITOR_MWAIT
-    leaf->eax = 0x5;
-#else
-    leaf->eax = 0x1;
-#endif
-  }
+  if (cpuid_limit_winnt)
+    max_leaf = 0x1;
 
-  // CPUID vendor string (e.g. GenuineIntel, AuthenticAMD, CentaurHauls, ...)
-  memcpy(&(leaf->ebx), vendor_string,     4);
-  memcpy(&(leaf->edx), vendor_string + 4, 4);
-  memcpy(&(leaf->ecx), vendor_string + 8, 4);
-#ifdef BX_BIG_ENDIAN
-  leaf->ebx = bx_bswap32(leaf->ebx);
-  leaf->ecx = bx_bswap32(leaf->ecx);
-  leaf->edx = bx_bswap32(leaf->edx);
-#endif
+  get_leaf_0(max_leaf, vendor_string, leaf);
 }
 
 // leaf 0x00000001 //
@@ -352,21 +337,7 @@ void phenom_8650_toliman_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
 // leaf 0x80000000 //
 void phenom_8650_toliman_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
-  static const char* vendor_string = "AuthenticAMD";
-
-  // EAX: highest extended function understood by CPUID
-  // EBX: reserved
-  // EDX: reserved
-  // ECX: reserved
-  leaf->eax = 0x8000001A;
-  memcpy(&(leaf->ebx), vendor_string,     4);
-  memcpy(&(leaf->edx), vendor_string + 4, 4);
-  memcpy(&(leaf->ecx), vendor_string + 8, 4);
-#ifdef BX_BIG_ENDIAN
-  leaf->ebx = bx_bswap32(leaf->ebx);
-  leaf->ecx = bx_bswap32(leaf->ecx);
-  leaf->edx = bx_bswap32(leaf->edx);
-#endif
+  get_leaf_0(0x8000001A, "AuthenticAMD", leaf);
 }
 
 // leaf 0x80000001 //

@@ -1,64 +1,32 @@
-CPU-Z TXT Report
--------------------------------------------------------------------------
+------[ Versions ]------
 
-Binaries
--------------------------------------------------------------------------
+Program Version : EVEREST v4.60.1629 Beta
+BenchDLL Version: 2.4.257.0
 
-CPU-Z version			1.53.1
+------[ CPU Info ]------
 
-Processors
--------------------------------------------------------------------------
+CPU Type           : AMD K6-2, 333 MHz
+CPU Alias          : Chomper, K6 3D, 6k86 3D
+CPU Platform       : Socket 7
+CPU Stepping       : A
+Instruction Set    : x86, MMX, 3DNow!
+CPUID Manufacturer : AuthenticAMD
+CPUID CPU Name     : AMD-K6(tm) 3D processor
+CPUID Revision     : 00000580h
+Platform ID        : CBh  (Socket 7)
 
-Number of processors		1
-Number of threads		1
+------[ Logical CPU #0 ]------
 
-APICs
--------------------------------------------------------------------------
+allcpu: Valid
 
-Processor 0	
-	-- Core 0	
-		-- Thread 0	0
+CPUID 00000000: 00000001-68747541-444D4163-69746E65
+CPUID 00000001: 00000580-00000000-00000000-008001BF
+CPUID 80000000: 80000005-00000000-00000000-00000000
+CPUID 80000001: 00000680-00000000-00000000-808009BF
+CPUID 80000002: 2D444D41-7428364B-3320296D-72702044
+CPUID 80000003: 7365636F-00726F73-00000000-00000000
+CPUID 80000004: 00000000-00000000-00000000-00000000
+CPUID 80000005: 00000000-02800140-20020220-20020220
+CPUID 8FFFFFFF: 4778654E-72656E65-6F697461-444D416E
 
-Processors Information
--------------------------------------------------------------------------
-
-Processor 1			ID = 0
-	Number of cores		1 (max 1)
-	Number of threads	1 (max 1)
-	Name			AMD K6-2
-	Codename		Chomper
-	Specification		AMD-K6(tm) 3D processor
-	Package 		Socket 7 (321)
-	CPUID			5.8.0
-	Extended CPUID		6.8
-	Core Stepping		
-	Technology		0.25 um
-	Core Speed		267.3 MHz
-	Instructions sets	MMX, 3DNow!
-	L1 Data cache		32 KBytes, 2-way set associative, 32-byte line size
-	L1 Instruction cache	32 KBytes, 2-way set associative, 32-byte line size
-	FID/VID Control		no
-
-
-
-Thread dumps
--------------------------------------------------------------------------
-
-CPU Thread 0	
-	APIC ID			0
-	Topology		Processor ID 0, Core ID 0, Thread ID 0
-	Type			02000802h
-	Max CPUID level		00000001h
-	Max CPUID ext. level	80000005h
-	Cache descriptor	Level 1, I, 32 KB, 1 thread(s)
-	Cache descriptor	Level 1, D, 32 KB, 1 thread(s)
-
-	CPUID		 
-	0x00000000		0x00000001	0x68747541	0x444D4163	0x69746E65
-	0x00000001		0x00000580	0x00000000	0x00000000	0x008001BF
-	0x80000000		0x80000005	0x00000000	0x00000000	0x00000000
-	0x80000001		0x00000680	0x00000000	0x00000000	0x808009BF
-	0x80000002		0x2D444D41	0x7428364B	0x3320296D	0x72702044
-	0x80000003		0x7365636F	0x00726F73	0x00000000	0x00000000
-	0x80000004		0x00000000	0x00000000	0x00000000	0x00000000
-	0x80000005		0x00000000	0x02800140	0x20020220	0x20020220
+------[ MSR Registers ]------

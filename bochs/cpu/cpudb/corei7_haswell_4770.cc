@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013-2014 Stanislav Shwartsman
+//   Copyright (c) 2013-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -222,21 +222,12 @@ void corei7_haswell_4770_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
   // EBX: vendor ID string
   // EDX: vendor ID string
   // ECX: vendor ID string
+  unsigned max_leaf = 0xD;
   static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
   if (cpuid_limit_winnt)
-    leaf->eax = 0x2;
-  else
-    leaf->eax = 0xD;
+    max_leaf = 0x2;
 
-  // CPUID vendor string (e.g. GenuineIntel, AuthenticAMD, CentaurHauls, ...)
-  memcpy(&(leaf->ebx), vendor_string,     4);
-  memcpy(&(leaf->edx), vendor_string + 4, 4);
-  memcpy(&(leaf->ecx), vendor_string + 8, 4);
-#ifdef BX_BIG_ENDIAN
-  leaf->ebx = bx_bswap32(leaf->ebx);
-  leaf->ecx = bx_bswap32(leaf->ecx);
-  leaf->edx = bx_bswap32(leaf->edx);
-#endif
+  get_leaf_0(max_leaf, vendor_string, leaf);
 }
 
 // leaf 0x00000001 //
@@ -524,14 +515,14 @@ void corei7_haswell_4770_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_funct
     // * [1:1]   Support for IA32_TSC_ADJUST MSR
     //   [2:2]   reserved
     // * [3:3]   BMI1: Advanced Bit Manipulation Extensions
-    // * [4:4]   HLE: Hardware Lock Elision
+    //   [4:4]   HLE: Hardware Lock Elision
     // * [5:5]   AVX2
     //   [6:6]   reserved
     // * [7:7]   SMEP: Supervisor Mode Execution Protection
     // * [8:8]   BMI2: Advanced Bit Manipulation Extensions
     // * [9:9]   Support for Enhanced REP MOVSB/STOSB
     // * [10:10] Support for INVPCID instruction
-    // * [11:11] RTM: Restricted Transactional Memory
+    //   [11:11] RTM: Restricted Transactional Memory
     //   [12:12] Supports Quality of Service (QoS) capability
     // * [13:13] Deprecates FPU CS and FPU DS values
     //   [17:14] reserved
@@ -542,13 +533,11 @@ void corei7_haswell_4770_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_funct
     leaf->ebx = BX_CPUID_EXT3_FSGSBASE | 
              /* BX_CPUID_EXT3_TSC_ADJUST | */ // not implemented yet
                 BX_CPUID_EXT3_BMI1 | 
-             /* BX_CPUID_EXT3_HLE | */        // not implemented yet
                 BX_CPUID_EXT3_AVX2 |
                 BX_CPUID_EXT3_SMEP | 
                 BX_CPUID_EXT3_BMI2 | 
                 BX_CPUID_EXT3_ENCHANCED_REP_STRINGS |
                 BX_CPUID_EXT3_INVPCID |
-             /* BX_CPUID_EXT3_RTM | */        // not implemented yet
                 BX_CPUID_EXT3_DEPRECATE_FCS_FDS;
     leaf->ecx = 0;
     leaf->edx = 0;
@@ -657,10 +646,7 @@ void corei7_haswell_4770_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
   // EBX: reserved
   // EDX: reserved
   // ECX: reserved
-  leaf->eax = 0x80000008;
-  leaf->ebx = 0;
-  leaf->edx = 0; // Reserved for Intel
-  leaf->ecx = 0;
+  get_leaf_0(0x80000008, NULL, leaf);
 }
 
 // leaf 0x80000001 //

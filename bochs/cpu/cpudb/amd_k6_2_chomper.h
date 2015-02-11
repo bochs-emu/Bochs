@@ -47,8 +47,6 @@ private:
   void get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const;
-
-  void get_cpuid_hidden_level(cpuid_function_t *leaf) const;
 };
 
 extern bx_cpuid_t *create_amd_k6_2_chomper_cpuid(BX_CPU_C *cpu);

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2010-2014 Stanislav Shwartsman
+//   Copyright (c) 2010-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -126,7 +126,7 @@ public:
   virtual ~bx_cpuid_t() {}
 
   // return CPU name
-  virtual const char *get_name(void) const { return NULL; }
+  virtual const char *get_name(void) const = 0;
 
   BX_CPP_INLINE void get_cpu_extensions(Bit32u *extensions) const {
     for (unsigned n=0; n < BX_ISA_EXTENSIONS_ARRAY_SIZE; n++)
@@ -188,11 +188,13 @@ protected:
     }
   }
 
+  void get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_function_t *leaf) const;
+  void get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32u function, cpuid_function_t *leaf) const;
+  void get_cpuid_hidden_level(cpuid_function_t *leaf, const char *magic_string) const;
+
 #if BX_SUPPORT_APIC
   void get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 #endif
-
-  void get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32u function, cpuid_function_t *leaf) const;
 
   BX_CPP_INLINE void get_reserved_leaf(cpuid_function_t *leaf) const
   {
@@ -202,6 +204,7 @@ protected:
     leaf->edx = 0;
   }
 
+  void dump_cpuid_leaf(unsigned function, unsigned subfunction = 0) const;
   void dump_cpuid(unsigned max_std_leaf, unsigned max_ext_leaf) const;
 };
 

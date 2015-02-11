@@ -35,7 +35,8 @@ RANLIB = @RANLIB@
 
 BX_INCDIRS = -I.. -I../.. -I$(srcdir)/.. -I$(srcdir)/../.. -I../../@INSTRUMENT_DIR@ -I$(srcdir)/../../@INSTRUMENT_DIR@
 
-CPUDB_OBJS = pentium_mmx.o \
+CPUDB_OBJS = pentium.o \
+             pentium_mmx.o \
              amd_k6_2_chomper.o  \
              p2_klamath.o \
              p3_katmai.o \
@@ -213,6 +214,14 @@ p4_willamette.o: p4_willamette.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../descriptor.h ../instr.h ../ia_opcodes.h ../lazy_flags.h ../icache.h \
  ../apic.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
  ../fpu/control_w.h ../xmm.h p4_willamette.h ../../cpu/cpuid.h
+pentium.o: pentium.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h ../cpu.h ../access.h ../cpuid.h ../crregs.h \
+ ../descriptor.h ../instr.h ../ia_opcodes.h ../lazy_flags.h ../icache.h \
+ ../apic.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
+ ../fpu/control_w.h ../xmm.h pentium.h
 pentium_mmx.o: pentium_mmx.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \

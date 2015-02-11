@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2014 Stanislav Shwartsman
+//   Copyright (c) 2011-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -184,21 +184,12 @@ void corei5_lynnfield_750_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
   // EBX: vendor ID string
   // EDX: vendor ID string
   // ECX: vendor ID string
+  unsigned max_leaf = 0xB;
   static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
   if (cpuid_limit_winnt)
-    leaf->eax = 0x2;
-  else
-    leaf->eax = 0xB;
+    max_leaf = 0x2;
 
-  // CPUID vendor string (e.g. GenuineIntel, AuthenticAMD, CentaurHauls, ...)
-  memcpy(&(leaf->ebx), vendor_string,     4);
-  memcpy(&(leaf->edx), vendor_string + 4, 4);
-  memcpy(&(leaf->ecx), vendor_string + 8, 4);
-#ifdef BX_BIG_ENDIAN
-  leaf->ebx = bx_bswap32(leaf->ebx);
-  leaf->ecx = bx_bswap32(leaf->ecx);
-  leaf->edx = bx_bswap32(leaf->edx);
-#endif
+  get_leaf_0(max_leaf, vendor_string, leaf);
 }
 
 // leaf 0x00000001 //
@@ -515,10 +506,7 @@ void corei5_lynnfield_750_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
   // EBX: reserved
   // EDX: reserved
   // ECX: reserved
-  leaf->eax = 0x80000008;
-  leaf->ebx = 0;
-  leaf->edx = 0; // Reserved for Intel
-  leaf->ecx = 0;
+  get_leaf_0(0x80000008, NULL, leaf);
 }
 
 // leaf 0x80000001 //

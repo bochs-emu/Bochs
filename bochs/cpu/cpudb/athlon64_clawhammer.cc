@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2014 Stanislav Shwartsman
+//   Copyright (c) 2011-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -71,10 +71,11 @@ athlon64_clawhammer_t::athlon64_clawhammer_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 void athlon64_clawhammer_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "AMD Athlon(tm) 64 Processor 2800+\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+  static const char* magic_string = "IT'S HAMMER TIME";
 
   switch(function) {
   case 0x8FFFFFFF:
-    get_cpuid_hidden_level(leaf);
+    get_cpuid_hidden_level(leaf, magic_string);
     return;
   case 0x80000000:
     get_ext_cpuid_leaf_0(leaf);
@@ -114,23 +115,7 @@ void athlon64_clawhammer_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, 
 // leaf 0x00000000 //
 void athlon64_clawhammer_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
-  static const char* vendor_string = "AuthenticAMD";
-
-  // EAX: highest std function understood by CPUID
-  // EBX: vendor ID string
-  // EDX: vendor ID string
-  // ECX: vendor ID string
-  leaf->eax = 0x1;
-
-  // CPUID vendor string (e.g. GenuineIntel, AuthenticAMD, CentaurHauls, ...)
-  memcpy(&(leaf->ebx), vendor_string,     4);
-  memcpy(&(leaf->edx), vendor_string + 4, 4);
-  memcpy(&(leaf->ecx), vendor_string + 8, 4);
-#ifdef BX_BIG_ENDIAN
-  leaf->ebx = bx_bswap32(leaf->ebx);
-  leaf->ecx = bx_bswap32(leaf->ecx);
-  leaf->edx = bx_bswap32(leaf->edx);
-#endif
+  get_leaf_0(0x1, "AuthenticAMD", leaf);
 }
 
 // leaf 0x00000001 //
@@ -224,21 +209,7 @@ void athlon64_clawhammer_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000000 //
 void athlon64_clawhammer_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
-  static const char* vendor_string = "AuthenticAMD";
-
-  // EAX: highest extended function understood by CPUID
-  // EBX: reserved
-  // EDX: reserved
-  // ECX: reserved
-  leaf->eax = 0x80000018;
-  memcpy(&(leaf->ebx), vendor_string,     4);
-  memcpy(&(leaf->edx), vendor_string + 4, 4);
-  memcpy(&(leaf->ecx), vendor_string + 8, 4);
-#ifdef BX_BIG_ENDIAN
-  leaf->ebx = bx_bswap32(leaf->ebx);
-  leaf->ecx = bx_bswap32(leaf->ecx);
-  leaf->edx = bx_bswap32(leaf->edx);
-#endif
+  get_leaf_0(0x80000018, "AuthenticAMD", leaf);
 }
 
 // leaf 0x80000001 //
@@ -366,31 +337,10 @@ void athlon64_clawhammer_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
 // leaf 0x8000000A             : SVM      //
 // leaf 0x8000000B - 0x80000018: Reserved //
 
-// leaf 0x8FFFFFFF //
-void athlon64_clawhammer_t::get_cpuid_hidden_level(cpuid_function_t *leaf) const
-{
-  static const char* magic_string = "IT'S HAMMER TIME";
-  
-  memcpy(&(leaf->eax), magic_string     , 4);
-  memcpy(&(leaf->ebx), magic_string +  4, 4);
-  memcpy(&(leaf->ecx), magic_string +  8, 4);
-  memcpy(&(leaf->edx), magic_string + 12, 4);
-
-#ifdef BX_BIG_ENDIAN
-  leaf->eax = bx_bswap32(leaf->eax);
-  leaf->ebx = bx_bswap32(leaf->ebx);
-  leaf->ecx = bx_bswap32(leaf->ecx);
-  leaf->edx = bx_bswap32(leaf->edx);
-#endif
-}
-
 void athlon64_clawhammer_t::dump_cpuid(void) const
 {
   bx_cpuid_t::dump_cpuid(0x1, 0x18);
-
-  struct cpuid_function_t leaf;
-  get_cpuid_leaf(0x8fffffff, 0x00000000, &leaf);
-  BX_INFO(("CPUID[0x8fffffff]: %08x %08x %08x %08x", leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
+  dump_cpuid_leaf(0x8fffffff);
 }
 
 bx_cpuid_t *create_athlon64_clawhammer_cpuid(BX_CPU_C *cpu) { return new athlon64_clawhammer_t(cpu); }

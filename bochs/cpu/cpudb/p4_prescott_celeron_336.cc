@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2014 Stanislav Shwartsman
+//   Copyright (c) 2011-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -119,23 +119,7 @@ void p4_prescott_celeron_336_t::get_cpuid_leaf(Bit32u function, Bit32u subfuncti
 // leaf 0x00000000 //
 void p4_prescott_celeron_336_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
-  static const char* vendor_string = "GenuineIntel";
-
-  // EAX: highest std function understood by CPUID
-  // EBX: vendor ID string
-  // EDX: vendor ID string
-  // ECX: vendor ID string
-  leaf->eax = 0x3;
-
-  // CPUID vendor string (e.g. GenuineIntel, AuthenticAMD, CentaurHauls, ...)
-  memcpy(&(leaf->ebx), vendor_string,     4);
-  memcpy(&(leaf->edx), vendor_string + 4, 4);
-  memcpy(&(leaf->ecx), vendor_string + 8, 4);
-#ifdef BX_BIG_ENDIAN
-  leaf->ebx = bx_bswap32(leaf->ebx);
-  leaf->ecx = bx_bswap32(leaf->ecx);
-  leaf->edx = bx_bswap32(leaf->edx);
-#endif
+  get_leaf_0(0x3, "GenuineIntel", leaf);
 }
 
 // leaf 0x00000001 //
@@ -302,10 +286,7 @@ void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) con
   // EBX: reserved
   // EDX: reserved
   // ECX: reserved
-  leaf->eax = 0x80000008;
-  leaf->ebx = 0;
-  leaf->edx = 0; // Reserved for Intel
-  leaf->ecx = 0;
+  get_leaf_0(0x80000008, NULL, leaf);
 }
 
 // leaf 0x80000001 //

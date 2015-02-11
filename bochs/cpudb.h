@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2014 Stanislav Shwartsman
+//   Copyright (c) 2011-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -23,6 +23,7 @@
 
 bx_define_cpudb(bx_generic)
 #if BX_CPU_LEVEL >= 5
+bx_define_cpudb(pentium)
 bx_define_cpudb(pentium_mmx)
 bx_define_cpudb(amd_k6_2_chomper)
 #if BX_CPU_LEVEL >= 6

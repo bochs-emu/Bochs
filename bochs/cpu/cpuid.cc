@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2014 Stanislav Shwartsman
+//   Copyright (c) 2014-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -122,6 +122,32 @@ void bx_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_
 
 #endif
 
+void bx_cpuid_t::get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_function_t *leaf) const
+{
+  // EAX: highest function understood by CPUID
+  // EBX: vendor ID string
+  // EDX: vendor ID string
+  // ECX: vendor ID string
+  leaf->eax = max_leaf;
+
+  if (vendor_string == NULL) {
+    leaf->ebx = 0;
+    leaf->ecx = 0; // Reserved
+    leaf->edx = 0;
+    return;
+  }
+
+  // CPUID vendor string (e.g. GenuineIntel, AuthenticAMD, CentaurHauls, ...)
+  memcpy(&(leaf->ebx), vendor_string,     4);
+  memcpy(&(leaf->edx), vendor_string + 4, 4);
+  memcpy(&(leaf->ecx), vendor_string + 8, 4);
+#ifdef BX_BIG_ENDIAN
+  leaf->ebx = bx_bswap32(leaf->ebx);
+  leaf->ecx = bx_bswap32(leaf->ecx);
+  leaf->edx = bx_bswap32(leaf->edx);
+#endif
+}
+
 void bx_cpuid_t::get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32u function, cpuid_function_t *leaf) const
 {
   switch(function) {
@@ -155,21 +181,38 @@ void bx_cpuid_t::get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32
 #endif
 }
 
-void bx_cpuid_t::dump_cpuid(unsigned max_std_leaf, unsigned max_ext_leaf) const
+void bx_cpuid_t::get_cpuid_hidden_level(cpuid_function_t *leaf, const char *magic_string) const
+{
+  memcpy(&(leaf->eax), magic_string     , 4);
+  memcpy(&(leaf->ebx), magic_string +  4, 4);
+  memcpy(&(leaf->ecx), magic_string +  8, 4);
+  memcpy(&(leaf->edx), magic_string + 12, 4);
+
+#ifdef BX_BIG_ENDIAN
+  leaf->eax = bx_bswap32(leaf->eax);
+  leaf->ebx = bx_bswap32(leaf->ebx);
+  leaf->ecx = bx_bswap32(leaf->ecx);
+  leaf->edx = bx_bswap32(leaf->edx);
+#endif
+}
+
+void bx_cpuid_t::dump_cpuid_leaf(unsigned function, unsigned subfunction) const
 {
   struct cpuid_function_t leaf;
-  unsigned n;
+  get_cpuid_leaf(function, subfunction, &leaf);
+  BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", function, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
+}
 
-  for (n=0; n<=max_std_leaf; n++) {
-    get_cpuid_leaf(n, 0x00000000, &leaf);
-    BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
+void bx_cpuid_t::dump_cpuid(unsigned max_std_leaf, unsigned max_ext_leaf) const
+{
+  for (unsigned std_leaf=0; std_leaf<=max_std_leaf; std_leaf++) {
+    dump_cpuid_leaf(std_leaf);
   }
 
   if (max_ext_leaf == 0) return;
 
-  for (n=0x80000000; n<=(0x8000000 + max_ext_leaf); n++) {
-    get_cpuid_leaf(n, 0x00000000, &leaf);
-    BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", n, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
+  for (unsigned ext_leaf=0x80000000; ext_leaf<=(0x8000000 + max_ext_leaf); ext_leaf++) {
+    dump_cpuid_leaf(ext_leaf);
   }
 }
 

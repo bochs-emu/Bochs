@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2014 Stanislav Shwartsman
+//   Copyright (c) 2011-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -78,7 +78,7 @@ bx_generic_cpuid_t::bx_generic_cpuid_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 
 void bx_generic_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  static char *brand_string = (char *)SIM->get_param_string(BXPN_BRAND_STRING)->getptr();
+  static const char *brand_string = (const char *)SIM->get_param_string(BXPN_BRAND_STRING)->getptr();
 
   static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
   if (cpuid_limit_winnt)
@@ -171,23 +171,18 @@ void bx_generic_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
 // leaf 0x00000000 //
 void bx_generic_cpuid_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
-  static Bit8u *vendor_string = (Bit8u *)SIM->get_param_string(BXPN_VENDOR_STRING)->getptr();
+  static const Bit8u *vendor_string = (const Bit8u *)SIM->get_param_string(BXPN_VENDOR_STRING)->getptr();
 
   // EAX: highest std function understood by CPUID
   // EBX: vendor ID string
   // EDX: vendor ID string
   // ECX: vendor ID string
-  leaf->eax = max_std_leaf;
+  unsigned max_leaf = max_std_leaf;
+  static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
+  if (cpuid_limit_winnt)
+    max_leaf = 0x2;
 
-  // CPUID vendor string (e.g. GenuineIntel, AuthenticAMD, CentaurHauls, ...)
-  memcpy(&(leaf->ebx), vendor_string,     4);
-  memcpy(&(leaf->edx), vendor_string + 4, 4);
-  memcpy(&(leaf->ecx), vendor_string + 8, 4);
-#ifdef BX_BIG_ENDIAN
-  leaf->ebx = bx_bswap32(leaf->ebx);
-  leaf->ecx = bx_bswap32(leaf->ecx);
-  leaf->edx = bx_bswap32(leaf->edx);
-#endif
+  get_leaf_0(max_leaf, (const char *) vendor_string, leaf);
 }
 
 // leaf 0x00000001 //
@@ -463,28 +458,13 @@ void bx_generic_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_func
 // leaf 0x80000000 //
 void bx_generic_cpuid_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
+  static const Bit8u *vendor_string = (const Bit8u *)SIM->get_param_string(BXPN_VENDOR_STRING)->getptr();
+
   // EAX: highest extended function understood by CPUID
   // EBX: vendor ID string
   // EDX: vendor ID string
   // ECX: vendor ID string
-  leaf->eax = max_ext_leaf;
-#if BX_CPU_VENDOR_INTEL
-  leaf->ebx = 0;
-  leaf->edx = 0;          // Reserved for Intel
-  leaf->ecx = 0;
-#else
-  static Bit8u *vendor_string = (Bit8u *)SIM->get_param_string(BXPN_VENDOR_STRING)->getptr();
-
-  memcpy(&(leaf->ebx), vendor_string,     4);
-  memcpy(&(leaf->edx), vendor_string + 4, 4);
-  memcpy(&(leaf->ecx), vendor_string + 8, 4);
-#endif
-
-#ifdef BX_BIG_ENDIAN
-  leaf->ebx = bx_bswap32(leaf->ebx);
-  leaf->ecx = bx_bswap32(leaf->ecx);
-  leaf->edx = bx_bswap32(leaf->edx);
-#endif
+  get_leaf_0(max_ext_leaf, BX_CPU_VENDOR_INTEL ? NULL : (const char *) vendor_string, leaf);
 }
 
 // leaf 0x80000001 //
@@ -1535,13 +1515,7 @@ Bit32u bx_generic_cpuid_t::get_ext3_cpuid_features(void) const
 
 void bx_generic_cpuid_t::dump_cpuid(void) const
 {
-  bx_cpuid_t::dump_cpuid(max_std_leaf,
-#if BX_CPU_LEVEL <= 5
-    0
-#else
-    max_ext_leaf-0x80000000
-#endif
-  );
+  bx_cpuid_t::dump_cpuid(max_std_leaf, (max_ext_leaf > 0x80000000) ? (max_ext_leaf-0x80000000) : 0);
 }
 
 bx_cpuid_t *create_bx_generic_cpuid(BX_CPU_C *cpu) { return new bx_generic_cpuid_t(cpu); }
