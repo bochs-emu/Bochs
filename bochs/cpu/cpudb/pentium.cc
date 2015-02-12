@@ -34,20 +34,15 @@ pentium_t::pentium_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   if (BX_CPU_LEVEL < 5)
     BX_PANIC(("Pentium should be compiled with BX_CPU_LEVEL=5 or higher"));
 
-  static Bit8u supported_extensions[] = {
-      BX_ISA_X87,
-      BX_ISA_486,
-      BX_ISA_PENTIUM,
-      BX_ISA_DEBUG_EXTENSIONS,
-      BX_ISA_VME,
+  enable_cpu_extension(BX_ISA_X87);
+  enable_cpu_extension(BX_ISA_486);
+  enable_cpu_extension(BX_ISA_PENTIUM);
+  enable_cpu_extension(BX_ISA_DEBUG_EXTENSIONS);
+  enable_cpu_extension(BX_ISA_VME);
 #if BX_PHY_ADDRESS_LONG
-      BX_ISA_PSE36,
+  enable_cpu_extension(BX_ISA_PSE36);
 #endif
-      BX_ISA_PSE,
-      BX_ISA_EXTENSION_LAST
-  };
-
-  register_cpu_extensions(supported_extensions);
+  enable_cpu_extension(BX_ISA_PSE);
 }
 
 void pentium_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const

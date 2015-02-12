@@ -179,15 +179,6 @@ protected:
     ia_extensions_bitmask[extension / 32] &= ~(1 << (extension % 32));
   }
 
-  BX_CPP_INLINE void register_cpu_extensions(Bit8u *extensions)
-  {
-    while(1) {
-      unsigned cpu_extension = *extensions++;
-      if (cpu_extension == BX_ISA_EXTENSION_LAST) break;
-      enable_cpu_extension(cpu_extension);
-    }
-  }
-
   void get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_function_t *leaf) const;
   void get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32u function, cpuid_function_t *leaf) const;
   void get_cpuid_hidden_level(cpuid_function_t *leaf, const char *magic_string) const;

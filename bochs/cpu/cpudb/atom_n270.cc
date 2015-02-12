@@ -35,37 +35,32 @@ atom_n270_t::atom_n270_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   if (! BX_SUPPORT_MONITOR_MWAIT)
     BX_INFO(("WARNING: MONITOR/MWAIT support is not compiled in !"));
 
-  static Bit8u supported_extensions[] = {
-      BX_ISA_X87,
-      BX_ISA_486,
-      BX_ISA_PENTIUM,
-      BX_ISA_MMX,
-      BX_ISA_P6,
-      BX_ISA_SYSENTER_SYSEXIT,
-      BX_ISA_SSE,
-      BX_ISA_SSE2,
-      BX_ISA_SSE3,
-      BX_ISA_SSSE3,
+  enable_cpu_extension(BX_ISA_X87);
+  enable_cpu_extension(BX_ISA_486);
+  enable_cpu_extension(BX_ISA_PENTIUM);
+  enable_cpu_extension(BX_ISA_MMX);
+  enable_cpu_extension(BX_ISA_P6);
+  enable_cpu_extension(BX_ISA_SYSENTER_SYSEXIT);
+  enable_cpu_extension(BX_ISA_SSE);
+  enable_cpu_extension(BX_ISA_SSE2);
+  enable_cpu_extension(BX_ISA_SSE3);
+  enable_cpu_extension(BX_ISA_SSSE3);
 #if BX_SUPPORT_MONITOR_MWAIT
-      BX_ISA_MONITOR_MWAIT,
+  enable_cpu_extension(BX_ISA_MONITOR_MWAIT);
 #endif
-      BX_ISA_CLFLUSH,
-      BX_ISA_DEBUG_EXTENSIONS,
-      BX_ISA_VME,
-      BX_ISA_PSE,
-      BX_ISA_PAE,
-      BX_ISA_PGE,
+  enable_cpu_extension(BX_ISA_CLFLUSH);
+  enable_cpu_extension(BX_ISA_DEBUG_EXTENSIONS);
+  enable_cpu_extension(BX_ISA_VME);
+  enable_cpu_extension(BX_ISA_PSE);
+  enable_cpu_extension(BX_ISA_PAE);
+  enable_cpu_extension(BX_ISA_PGE);
 #if BX_PHY_ADDRESS_LONG
-      BX_ISA_PSE36,
+  enable_cpu_extension(BX_ISA_PSE36);
 #endif
-      BX_ISA_MTRR,
-      BX_ISA_PAT,
-      BX_ISA_XAPIC,
-      BX_ISA_MOVBE,
-      BX_ISA_EXTENSION_LAST
-  };
-
-  register_cpu_extensions(supported_extensions);
+  enable_cpu_extension(BX_ISA_MTRR);
+  enable_cpu_extension(BX_ISA_PAT);
+  enable_cpu_extension(BX_ISA_XAPIC);
+  enable_cpu_extension(BX_ISA_MOVBE);
 }
 
 void atom_n270_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
