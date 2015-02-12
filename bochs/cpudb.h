@@ -47,6 +47,7 @@ bx_define_cpudb(zambezi)
 bx_define_cpudb(trinity_apu)
 bx_define_cpudb(corei7_ivy_bridge_3770k)
 bx_define_cpudb(corei7_haswell_4770)
+bx_define_cpudb(broadwell_ult)
 #endif
 #endif
 #endif

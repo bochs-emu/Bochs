@@ -54,6 +54,7 @@ CPUDB_OBJS = pentium.o \
              corei7_sandy_bridge_2600K.o \
              corei7_ivy_bridge_3770K.o \
              corei7_haswell_4770.o \
+             broadwell_ult.o \
              zambezi.o \
              trinity_apu.o
 
@@ -154,6 +155,15 @@ corei5_lynnfield_750.o: corei5_lynnfield_750.@CPP_SUFFIX@ ../../bochs.h \
  ../icache.h ../apic.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../xmm.h ../../param_names.h \
  corei5_lynnfield_750.h ../../cpu/cpuid.h
+broadwell_ult.o: broadwell_ult.@CPP_SUFFIX@ ../../bochs.h \
+ ../../config.h ../../osdep.h ../../bx_debug/debug.h ../../config.h \
+ ../../osdep.h ../../gui/siminterface.h ../../cpudb.h \
+ ../../gui/paramtree.h ../../memory/memory.h ../../pc_system.h \
+ ../../gui/gui.h ../../instrument/stubs/instrument.h ../cpu.h ../access.h ../cpuid.h \
+ ../crregs.h ../descriptor.h ../instr.h ../ia_opcodes.h ../lazy_flags.h \
+ ../icache.h ../apic.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
+ ../fpu/status_w.h ../fpu/control_w.h ../xmm.h ../../param_names.h \
+ broadwell_ult.h
 corei7_haswell_4770.o: corei7_haswell_4770.@CPP_SUFFIX@ ../../bochs.h \
  ../../config.h ../../osdep.h ../../bx_debug/debug.h ../../config.h \
  ../../osdep.h ../../gui/siminterface.h ../../cpudb.h \
