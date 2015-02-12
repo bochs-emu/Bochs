@@ -104,6 +104,7 @@
 #
 #  CPU configurations that can be selected:
 # -----------------------------------------------------------------
+#  pentium                    Intel Pentium (P54C)
 #  pentium_mmx                Intel Pentium MMX
 #  amd_k6_2_chomper           AMD-K6(tm) 3D processor (Chomper)
 #  p2_klamath                 Intel Pentium II (Klamath)
@@ -124,6 +125,7 @@
 #  corei7_sandy_bridge_2600k  Intel(R) Core(TM) i7-2600K (Sandy Bridge)
 #  corei7_ivy_bridge_3770k    Intel(R) Core(TM) i7-3770K CPU (Ivy Bridge)
 #  corei7_haswell_4770        Intel(R) Core(TM) i7-4770 CPU (Haswell)
+#  broadwell_ult              Intel(R) Processor 5Y70 CPU (Broadwell)
 #
 #  COUNT:
 #    Set the number of processors:cores per processor:threads per core when
