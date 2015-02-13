@@ -184,6 +184,7 @@ void CDECL libsb16_LTX_plugin_fini(void)
 #define OPL             BX_SB16_THIS opl
 
 #define BX_SB16_OUTPUT  BX_SB16_THIS soundmod
+#define BX_SB16_WAVEOUT BX_SB16_THIS waveout
 
 // here's a safe way to print out null pointeres
 #define MIGHT_BE_NULL(x)  ((x==NULL)? "(null)" : x)
@@ -202,6 +203,7 @@ bx_sb16_c::bx_sb16_c(void)
   dsp.timer_handle = BX_NULL_TIMER_HANDLE;
   opl.timer_handle = BX_NULL_TIMER_HANDLE;
   soundmod = NULL;
+  waveout = NULL;
   midimode = 0;
   midifile = NULL;
   wavemode = 0;
@@ -214,8 +216,8 @@ bx_sb16_c::~bx_sb16_c(void)
 {
   closemidioutput();
 
-  if (soundmod != NULL) {
-    soundmod->unregister_wave_callback(fmopl_callback_id);
+  if (waveout != NULL) {
+    waveout->unregister_wave_callback(fmopl_callback_id);
   }
   if (DSP.inputinit != 0) {
     BX_SB16_OUTPUT->closewaveinput();
@@ -254,8 +256,11 @@ void bx_sb16_c::init(void)
 
   // always initialize lowlevel driver
   BX_SB16_OUTPUT = DEV_sound_get_module();
-
   if (BX_SB16_OUTPUT == NULL) {
+    BX_PANIC(("Couldn't initialize lowlevel driver"));
+  }
+  BX_SB16_WAVEOUT = soundmod->get_waveout();
+  if (BX_SB16_WAVEOUT == NULL) {
     BX_PANIC(("Couldn't initialize lowlevel driver"));
   }
 
@@ -378,7 +383,7 @@ void bx_sb16_c::init(void)
       (BX_SB16_THISP, opl_timer, 80, 1, 0, "sb16.opl");
     // opl timer: inactive, continuous, frequency 80us
   }
-  BX_SB16_THIS fmopl_callback_id = soundmod->register_wave_callback(BX_SB16_THISP, fmopl_callback);
+  BX_SB16_THIS fmopl_callback_id = waveout->register_wave_callback(BX_SB16_THISP, fmopl_callback);
 
   writelog(MIDILOG(4), "Timers initialized, midi %d, dma %d, opl %d",
           MPU.timer_handle, DSP.timer_handle, OPL.timer_handle);
@@ -1394,7 +1399,7 @@ void bx_sb16_c::dsp_sendwavepacket()
 
   switch (BX_SB16_THIS wavemode) {
     case 1:
-      BX_SB16_OUTPUT->sendwavepacket(DSP.dma.chunkindex, DSP.dma.chunk, &DSP.dma.param);
+      BX_SB16_WAVEOUT->sendwavepacket(DSP.dma.chunkindex, DSP.dma.chunk, &DSP.dma.param);
       break;
     case 3:
       fwrite(DSP.dma.chunk, 1, DSP.dma.chunkindex, WAVEDATA);

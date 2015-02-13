@@ -35,13 +35,13 @@
 void sdl_callback(void *thisptr, Bit8u *stream, int len)
 {
   memset(stream, 0, len);
-  ((bx_sound_sdl_c*)thisptr)->mixer_common(stream, len);
+  ((bx_soundlow_waveout_sdl_c*)thisptr)->mixer_common(stream, len);
 }
 
-// bx_sound_sdl_c class implemenzation
+// bx_soundlow_waveout_sdl_c class implemenzation
 
-bx_sound_sdl_c::bx_sound_sdl_c()
-    :bx_sound_lowlevel_c()
+bx_soundlow_waveout_sdl_c::bx_soundlow_waveout_sdl_c()
+    :bx_soundlow_waveout_c()
 {
   WaveOpen = 0;
   if (SDL_InitSubSystem(SDL_INIT_AUDIO)) {
@@ -51,31 +51,33 @@ bx_sound_sdl_c::bx_sound_sdl_c()
   }
 }
 
-bx_sound_sdl_c::~bx_sound_sdl_c()
+bx_soundlow_waveout_sdl_c::~bx_soundlow_waveout_sdl_c()
 {
+  WaveOpen = 0;
+  SDL_CloseAudio();
   SDL_QuitSubSystem(SDL_INIT_AUDIO);
 }
 
-int bx_sound_sdl_c::openwaveoutput(const char *wavedev)
+int bx_soundlow_waveout_sdl_c::openwaveoutput(const char *wavedev)
 {
-  set_pcm_params(real_pcm_param);
+  set_pcm_params(&real_pcm_param);
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_sdl_c::set_pcm_params(bx_pcm_param_t param)
+int bx_soundlow_waveout_sdl_c::set_pcm_params(bx_pcm_param_t *param)
 {
-  int signeddata = param.format & 1;
+  int signeddata = param->format & 1;
 
-  BX_DEBUG(("set_pcm_params(): %u, %u, %u, %02x", param.samplerate, param.bits,
-            param.channels, param.format));
-  fmt.freq = param.samplerate;
+  BX_DEBUG(("set_pcm_params(): %u, %u, %u, %02x", param->samplerate, param->bits,
+            param->channels, param->format));
+  fmt.freq = param->samplerate;
 
-  if (param.bits == 16) {
+  if (param->bits == 16) {
     if (signeddata == 1)
       fmt.format = AUDIO_S16;
     else
       fmt.format = AUDIO_U16;
-  } else if (param.bits == 8) {
+  } else if (param->bits == 8) {
     if (signeddata == 1)
       fmt.format = AUDIO_S8;
     else
@@ -83,7 +85,7 @@ int bx_sound_sdl_c::set_pcm_params(bx_pcm_param_t param)
   } else
     return BX_SOUNDLOW_ERR;
 
-  fmt.channels = param.channels;
+  fmt.channels = param->channels;
   fmt.samples = fmt.freq / 10;
   fmt.callback = sdl_callback;
   fmt.userdata = this;
@@ -103,7 +105,7 @@ int bx_sound_sdl_c::set_pcm_params(bx_pcm_param_t param)
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_sdl_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param)
+int bx_soundlow_waveout_sdl_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param)
 {
   int ret = BX_SOUNDLOW_OK;
   int len2;
@@ -114,7 +116,7 @@ int bx_sound_sdl_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src
     if (src_param->channels == 1) cvt_mult <<= 1;
     if (src_param->samplerate != real_pcm_param.samplerate) {
       real_pcm_param.samplerate = src_param->samplerate;
-      set_pcm_params(real_pcm_param);
+      set_pcm_params(&real_pcm_param);
     }
   }
   len2 = length * cvt_mult;
@@ -130,14 +132,7 @@ int bx_sound_sdl_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src
   return ret;
 }
 
-int bx_sound_sdl_c::closewaveoutput()
-{
-  WaveOpen = 0;
-  SDL_CloseAudio();
-  return BX_SOUNDLOW_OK;
-}
-
-bx_bool bx_sound_sdl_c::mixer_common(Bit8u *buffer, int len)
+bx_bool bx_soundlow_waveout_sdl_c::mixer_common(Bit8u *buffer, int len)
 {
   Bit32u len2 = 0;
 
@@ -155,7 +150,7 @@ bx_bool bx_sound_sdl_c::mixer_common(Bit8u *buffer, int len)
   return 1;
 }
 
-void bx_sound_sdl_c::unregister_wave_callback(int callback_id)
+void bx_soundlow_waveout_sdl_c::unregister_wave_callback(int callback_id)
 {
   SDL_LockAudio();
   if ((callback_id >= 0) && (callback_id < BX_MAX_WAVE_CALLBACKS)) {
@@ -163,6 +158,22 @@ void bx_sound_sdl_c::unregister_wave_callback(int callback_id)
     get_wave[callback_id].cb = NULL;
   }
   SDL_UnlockAudio();
+}
+
+// bx_sound_sdl_c class implemenzation
+
+bx_sound_sdl_c::bx_sound_sdl_c()
+    :bx_sound_lowlevel_c()
+{
+  // nothing here yet
+}
+
+bx_soundlow_waveout_c* bx_sound_sdl_c::get_waveout()
+{
+  if (waveout == NULL) {
+    waveout = new bx_soundlow_waveout_sdl_c();
+  }
+  return waveout;
 }
 
 #endif  // BX_WITH_SDL || BX_WITH_SDL2

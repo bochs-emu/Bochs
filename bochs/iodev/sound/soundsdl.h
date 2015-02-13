@@ -26,23 +26,30 @@
 #include "bochs.h"
 #include <SDL_audio.h>
 
-class bx_sound_sdl_c : public bx_sound_lowlevel_c {
+// the waveout class
+
+class bx_soundlow_waveout_sdl_c : public bx_soundlow_waveout_c {
 public:
-  bx_sound_sdl_c();
-  virtual ~bx_sound_sdl_c();
+  bx_soundlow_waveout_sdl_c();
+  virtual ~bx_soundlow_waveout_sdl_c();
 
-  virtual int get_type() {return BX_SOUNDLOW_SDL;}
-
-  virtual int    openwaveoutput(const char *wavedev);
-  virtual int    set_pcm_params(bx_pcm_param_t param);
-  virtual int    sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
-  virtual int    closewaveoutput();
+  virtual int openwaveoutput(const char *wavedev);
+  virtual int set_pcm_params(bx_pcm_param_t *param);
+  virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
 
   virtual void unregister_wave_callback(int callback_id);
   virtual bx_bool mixer_common(Bit8u *buffer, int len);
 private:
   bx_bool WaveOpen;
   SDL_AudioSpec fmt;
+};
+
+class bx_sound_sdl_c : public bx_sound_lowlevel_c {
+public:
+  bx_sound_sdl_c();
+  virtual ~bx_sound_sdl_c() {}
+
+  virtual bx_soundlow_waveout_c* get_waveout();
 };
 
 #endif  // BX_WITH_SDL || BX_WITH_SDL2

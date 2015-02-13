@@ -28,14 +28,6 @@
 #define BX_SOUNDLOW_OK   0
 #define BX_SOUNDLOW_ERR  1
 
-// Lowlvel sound modules
-#define BX_SOUNDLOW_DUMMY   0
-#define BX_SOUNDLOW_OSS     1
-#define BX_SOUNDLOW_OSX     2
-#define BX_SOUNDLOW_WIN     3
-#define BX_SOUNDLOW_SDL     4
-#define BX_SOUNDLOW_ALSA    5
-
 #define BX_MAX_WAVE_CALLBACKS 3
 
 typedef struct {
@@ -68,42 +60,18 @@ Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
 
 extern BX_MUTEX(mixer_mutex);
 
-// The class with the input/output functions
-class bx_sound_lowlevel_c : public logfunctions {
+// the waveout class
+
+class bx_soundlow_waveout_c : public logfunctions {
 public:
-
-  /*
-  These functions are the sound lowlevel functions, sending
-  the music or sending/receiving sound to/from the OS specific driver.
-  They are in a different file (soundxxx.cc) because they are
-  non-portable, while everything in the soundcard code is portable
-  */
-
-  bx_sound_lowlevel_c();
-  virtual ~bx_sound_lowlevel_c();
-
-  virtual int get_type() {return BX_SOUNDLOW_DUMMY;}
-
-  virtual int openmidioutput(const char *mididev);
-  virtual int midiready();
-  virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
-  virtual int closemidioutput();
+  bx_soundlow_waveout_c();
+  virtual ~bx_soundlow_waveout_c();
 
   virtual int openwaveoutput(const char *wavedev);
-  virtual int set_pcm_params(bx_pcm_param_t param);
+  virtual int set_pcm_params(bx_pcm_param_t *param);
   virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
-  virtual int get_waveout_packetsize();
-  virtual int waveout(int length, Bit8u data[]);
-  virtual int closewaveoutput();
-
-  virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
-  virtual int startwaverecord(bx_pcm_param_t *param);
-  virtual int getwavepacket(int length, Bit8u data[]);
-  virtual int stopwaverecord();
-  virtual int closewaveinput();
-
-  static void record_timer_handler(void *);
-  void record_timer(void);
+  virtual int get_packetsize();
+  virtual int output(int length, Bit8u data[]);
 
   virtual int register_wave_callback(void *, get_wave_cb_t wd_cb);
   virtual void unregister_wave_callback(int callback_id);
@@ -122,6 +90,39 @@ protected:
     get_wave_cb_t cb;
   } get_wave[BX_MAX_WAVE_CALLBACKS];
   int pcm_callback_id;
+};
+
+// The class with the input/output functions
+class bx_sound_lowlevel_c : public logfunctions {
+public:
+
+  /*
+  These functions are the sound lowlevel functions, sending
+  the music or sending/receiving sound to/from the OS specific driver.
+  They are in a different file (soundxxx.cc) because they are
+  non-portable, while everything in the soundcard code is portable
+  */
+
+  bx_sound_lowlevel_c();
+  virtual ~bx_sound_lowlevel_c();
+
+  virtual bx_soundlow_waveout_c* get_waveout();
+
+  virtual int openmidioutput(const char *mididev);
+  virtual int midiready();
+  virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
+  virtual int closemidioutput();
+
+  virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
+  virtual int startwaverecord(bx_pcm_param_t *param);
+  virtual int getwavepacket(int length, Bit8u data[]);
+  virtual int stopwaverecord();
+  virtual int closewaveinput();
+
+  static void record_timer_handler(void *);
+  void record_timer(void);
+protected:
+  bx_soundlow_waveout_c *waveout;
 
   int record_timer_index;
   int record_packet_size;

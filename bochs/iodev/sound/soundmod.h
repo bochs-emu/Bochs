@@ -21,6 +21,7 @@
 // Common code for sound lowlevel modules
 
 class bx_sound_lowlevel_c;
+class bx_soundlow_waveout_c;
 
 // Pseudo device that loads the lowlevel sound module
 class bx_soundmod_ctl_c : public bx_soundmod_ctl_stub_c {
@@ -37,6 +38,7 @@ public:
   Bit32u beep_generator(Bit16u rate, Bit8u *buffer, Bit32u len);
 private:
   bx_sound_lowlevel_c *soundmod;
+  bx_soundlow_waveout_c *waveout;
   int beep_callback_id;
   bx_bool beep_active;
   float beep_cur_freq;

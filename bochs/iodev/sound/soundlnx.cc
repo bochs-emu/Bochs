@@ -38,23 +38,135 @@
 #include <sys/ioctl.h>
 #include <sys/soundcard.h>
 
+// bx_soundlow_waveout_oss_c class implemenzation
+
+bx_soundlow_waveout_oss_c::bx_soundlow_waveout_oss_c()
+    :bx_soundlow_waveout_c()
+{
+  waveout_fd = -1;
+}
+
+bx_soundlow_waveout_oss_c::~bx_soundlow_waveout_oss_c()
+{
+  if (waveout_fd != -1) {
+    close(waveout_fd);
+    waveout_fd = -1;
+  }
+}
+
+int bx_soundlow_waveout_oss_c::openwaveoutput(const char *wavedev)
+{
+  if (waveout_fd == -1) {
+    waveout_fd = open(wavedev, O_WRONLY);
+    if (waveout_fd == -1) {
+      return BX_SOUNDLOW_ERR;
+    } else {
+      BX_INFO(("OSS: opened output device %s", wavedev));
+    }
+  }
+  set_pcm_params(&real_pcm_param);
+  pcm_callback_id = register_wave_callback(this, pcm_callback);
+  BX_INIT_MUTEX(mixer_mutex);
+  start_mixer_thread();
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_soundlow_waveout_oss_c::set_pcm_params(bx_pcm_param_t *param)
+{
+  int fmt, ret;
+  int frequency = param->samplerate;
+  int channels = param->channels;
+  int signeddata = param->format & 1;
+
+  BX_DEBUG(("set_pcm_params(): %u, %u, %u, %02x", param->samplerate, param->bits,
+            param->channels, param->format));
+
+  if (waveout_fd == -1) {
+    return BX_SOUNDLOW_ERR;
+  }
+  if (param->bits == 16) {
+    if (signeddata == 1) {
+      fmt = AFMT_S16_LE;
+    } else {
+      fmt = AFMT_U16_LE;
+    }
+  } else if (param->bits == 8) {
+    if (signeddata == 1) {
+      fmt = AFMT_S8;
+    } else {
+      fmt = AFMT_U8;
+    }
+  } else {
+    return BX_SOUNDLOW_ERR;
+  }
+  // set frequency etc.
+  ret = ioctl(waveout_fd, SNDCTL_DSP_RESET);
+  if (ret != 0)
+    BX_ERROR(("ioctl(SNDCTL_DSP_RESET): %s", strerror(errno)));
+
+  /*
+  ret = ioctl(waveout_fd], SNDCTL_DSP_SETFRAGMENT, &fragment);
+  if (ret != 0)
+    BX_DEBUG(("ioctl(SNDCTL_DSP_SETFRAGMENT, %d): %s",
+             fragment, strerror(errno)));
+  */
+
+  ret = ioctl(waveout_fd, SNDCTL_DSP_SETFMT, &fmt);
+  if (ret != 0) { // abort if the format is unknown, to avoid playing noise
+    BX_ERROR(("ioctl(SNDCTL_DSP_SETFMT, %d): %s",
+              fmt, strerror(errno)));
+    return BX_SOUNDLOW_ERR;
+  }
+
+  ret = ioctl(waveout_fd, SNDCTL_DSP_CHANNELS, &channels);
+  if (ret != 0)
+    BX_ERROR(("ioctl(SNDCTL_DSP_CHANNELS, %d): %s",
+              channels, strerror(errno)));
+
+  ret = ioctl(waveout_fd, SNDCTL_DSP_SPEED, &frequency);
+  if (ret != 0)
+    BX_ERROR(("ioctl(SNDCTL_DSP_SPEED, %d): %s",
+              frequency, strerror(errno)));
+
+  // ioctl(wave_fd[0], SNDCTL_DSP_GETBLKSIZE, &fragment);
+  // BX_DEBUG(("current output block size is %d", fragment));
+
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_soundlow_waveout_oss_c::output(int length, Bit8u data[])
+{
+  int odelay, delay;
+
+  if (waveout_fd == -1) {
+    return BX_SOUNDLOW_ERR;
+  }
+  if (write(waveout_fd, data, length) == length) {
+    ioctl(waveout_fd, SNDCTL_DSP_GETODELAY, &odelay);
+    delay = odelay * 1000 / (real_pcm_param.samplerate * 4);
+    BX_MSLEEP(delay);
+    return BX_SOUNDLOW_OK;
+  } else {
+    return BX_SOUNDLOW_ERR;
+  }
+}
+
+// bx_sound_oss_c class implemenzation
+
 bx_sound_oss_c::bx_sound_oss_c()
-  :bx_sound_lowlevel_c()
+    :bx_sound_lowlevel_c()
 {
   midi = NULL;
-  wave_fd[0] = -1;
-  wave_fd[1] = -1;
+  wavein_fd = -1;
   BX_INFO(("Sound lowlevel module 'oss' initialized"));
 }
 
-bx_sound_oss_c::~bx_sound_oss_c()
+bx_soundlow_waveout_c* bx_sound_oss_c::get_waveout()
 {
-  // nothing for now
-}
-
-int bx_sound_oss_c::midiready()
-{
-  return BX_SOUNDLOW_OK;
+  if (waveout == NULL) {
+    waveout = new bx_soundlow_waveout_oss_c();
+  }
+  return waveout;
 }
 
 int bx_sound_oss_c::openmidioutput(const char *mididev)
@@ -74,6 +186,11 @@ int bx_sound_oss_c::openmidioutput(const char *mididev)
 }
 
 
+int bx_sound_oss_c::midiready()
+{
+  return BX_SOUNDLOW_OK;
+}
+
 int bx_sound_oss_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
 {
   UNUSED(delta);
@@ -85,118 +202,10 @@ int bx_sound_oss_c::sendmidicommand(int delta, int command, int length, Bit8u da
   return BX_SOUNDLOW_OK;
 }
 
-
 int bx_sound_oss_c::closemidioutput()
 {
   fclose(midi);
 
-  return BX_SOUNDLOW_OK;
-}
-
-
-int bx_sound_oss_c::openwaveoutput(const char *wavedev)
-{
-  if (wave_fd[0] == -1) {
-    wave_fd[0] = open(wavedev, O_WRONLY);
-    if (wave_fd[0] == -1) {
-      return BX_SOUNDLOW_ERR;
-    } else {
-      BX_INFO(("OSS: opened output device %s", wavedev));
-    }
-  }
-  set_pcm_params(real_pcm_param);
-  pcm_callback_id = register_wave_callback(this, pcm_callback);
-  BX_INIT_MUTEX(mixer_mutex);
-  start_mixer_thread();
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_oss_c::set_pcm_params(bx_pcm_param_t param)
-{
-  int fmt, ret;
-  int frequency = param.samplerate;
-  int channels = param.channels;
-  int signeddata = param.format & 1;
-
-  BX_DEBUG(("set_pcm_params(): %u, %u, %u, %02x", param.samplerate, param.bits,
-            param.channels, param.format));
-
-  if (wave_fd[0] == -1) {
-    return BX_SOUNDLOW_ERR;
-  }
-  if (param.bits == 16) {
-    if (signeddata == 1) {
-      fmt = AFMT_S16_LE;
-    } else {
-      fmt = AFMT_U16_LE;
-    }
-  } else if (param.bits == 8) {
-    if (signeddata == 1) {
-      fmt = AFMT_S8;
-    } else {
-      fmt = AFMT_U8;
-    }
-  } else {
-    return BX_SOUNDLOW_ERR;
-  }
-  // set frequency etc.
-  ret = ioctl(wave_fd[0], SNDCTL_DSP_RESET);
-  if (ret != 0)
-    BX_ERROR(("ioctl(SNDCTL_DSP_RESET): %s", strerror(errno)));
-
-  /*
-  ret = ioctl(wave_fd[0], SNDCTL_DSP_SETFRAGMENT, &fragment);
-  if (ret != 0)
-    BX_DEBUG(("ioctl(SNDCTL_DSP_SETFRAGMENT, %d): %s",
-             fragment, strerror(errno)));
-  */
-
-  ret = ioctl(wave_fd[0], SNDCTL_DSP_SETFMT, &fmt);
-  if (ret != 0) { // abort if the format is unknown, to avoid playing noise
-    BX_ERROR(("ioctl(SNDCTL_DSP_SETFMT, %d): %s",
-              fmt, strerror(errno)));
-    return BX_SOUNDLOW_ERR;
-  }
-
-  ret = ioctl(wave_fd[0], SNDCTL_DSP_CHANNELS, &channels);
-  if (ret != 0)
-    BX_ERROR(("ioctl(SNDCTL_DSP_CHANNELS, %d): %s",
-              channels, strerror(errno)));
-
-  ret = ioctl(wave_fd[0], SNDCTL_DSP_SPEED, &frequency);
-  if (ret != 0)
-    BX_ERROR(("ioctl(SNDCTL_DSP_SPEED, %d): %s",
-              frequency, strerror(errno)));
-
-  // ioctl(wave_fd[0], SNDCTL_DSP_GETBLKSIZE, &fragment);
-  // BX_DEBUG(("current output block size is %d", fragment));
-
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_oss_c::waveout(int length, Bit8u data[])
-{
-  int odelay, delay;
-
-  if (wave_fd[0] == -1) {
-    return BX_SOUNDLOW_ERR;
-  }
-  if (write(wave_fd[0], data, length) == length) {
-    ioctl(wave_fd[0], SNDCTL_DSP_GETODELAY, &odelay);
-    delay = odelay * 1000 / (real_pcm_param.samplerate * 4);
-    BX_MSLEEP(delay);
-    return BX_SOUNDLOW_OK;
-  } else {
-    return BX_SOUNDLOW_ERR;
-  }
-}
-
-int bx_sound_oss_c::closewaveoutput()
-{
-  if (wave_fd[0] != -1) {
-    close(wave_fd[0]);
-    wave_fd[0] = -1;
-  }
   return BX_SOUNDLOW_OK;
 }
 
@@ -207,9 +216,9 @@ int bx_sound_oss_c::openwaveinput(const char *wavedev, sound_record_handler_t rh
     record_timer_index = bx_pc_system.register_timer(this, record_timer_handler, 1, 1, 0, "soundlnx");
     // record timer: inactive, continuous, frequency variable
   }
-  if (wave_fd[1] == -1) {
-    wave_fd[1] = open(wavedev, O_RDONLY);
-    if (wave_fd[1] == -1) {
+  if (wavein_fd == -1) {
+    wavein_fd = open(wavedev, O_RDONLY);
+    if (wavein_fd == -1) {
       return BX_SOUNDLOW_ERR;
     } else {
       BX_INFO(("OSS: opened input device %s", wavedev));
@@ -238,7 +247,7 @@ int bx_sound_oss_c::startwaverecord(bx_pcm_param_t *param)
     timer_val = (Bit64u)record_packet_size * 1000000 / (param->samplerate << shift);
     bx_pc_system.activate_timer(record_timer_index, (Bit32u)timer_val, 1);
   }
-  if (wave_fd[1] == -1) {
+  if (wavein_fd == -1) {
     return BX_SOUNDLOW_ERR;
   } else {
     if (memcmp(param, &wavein_param, sizeof(bx_pcm_param_t)) == 0) {
@@ -264,25 +273,25 @@ int bx_sound_oss_c::startwaverecord(bx_pcm_param_t *param)
   }
 
       // set frequency etc.
-  ret = ioctl(wave_fd[1], SNDCTL_DSP_RESET);
+  ret = ioctl(wavein_fd, SNDCTL_DSP_RESET);
   if (ret != 0)
     BX_ERROR(("ioctl(SNDCTL_DSP_RESET): %s", strerror(errno)));
 
-  ret = ioctl(wave_fd[1], SNDCTL_DSP_SETFMT, &fmt);
+  ret = ioctl(wavein_fd, SNDCTL_DSP_SETFMT, &fmt);
   if (ret != 0) {  // abort if the format is unknown, to avoid playing noise
     BX_ERROR(("ioctl(SNDCTL_DSP_SETFMT, %d): %s",
               fmt, strerror(errno)));
     return BX_SOUNDLOW_ERR;
   }
 
-  ret = ioctl(wave_fd[1], SNDCTL_DSP_CHANNELS, &channels);
+  ret = ioctl(wavein_fd, SNDCTL_DSP_CHANNELS, &channels);
   if (ret != 0) {
     BX_ERROR(("ioctl(SNDCTL_DSP_CHANNELS, %d): %s",
               channels, strerror(errno)));
     return BX_SOUNDLOW_ERR;
   }
 
-  ret = ioctl(wave_fd[1], SNDCTL_DSP_SPEED, &frequency);
+  ret = ioctl(wavein_fd, SNDCTL_DSP_SPEED, &frequency);
   if (ret != 0) {
     BX_ERROR(("ioctl(SNDCTL_DSP_SPEED, %d): %s",
               frequency, strerror(errno)));
@@ -296,7 +305,7 @@ int bx_sound_oss_c::getwavepacket(int length, Bit8u data[])
 {
   int ret;
 
-  ret = read(wave_fd[1], data, length);
+  ret = read(wavein_fd, data, length);
 
   if (ret == length) {
     return BX_SOUNDLOW_OK;
@@ -318,9 +327,9 @@ int bx_sound_oss_c::closewaveinput()
 {
   stopwaverecord();
 
-  if (wave_fd[1] != -1) {
-    close(wave_fd[1]);
-    wave_fd[1] = -1;
+  if (wavein_fd != -1) {
+    close(wavein_fd);
+    wavein_fd = -1;
   }
   return BX_SOUNDLOW_OK;
 }

@@ -156,6 +156,7 @@ private:
   Bit32u dmatimer;
   FILE *logfile, *midifile, *wavefile; // the output files or devices
   bx_sound_lowlevel_c *soundmod; // the lowlevel class
+  bx_soundlow_waveout_c *waveout; // waveout support
   int currentirq;
   int currentdma8;
   int currentdma16;

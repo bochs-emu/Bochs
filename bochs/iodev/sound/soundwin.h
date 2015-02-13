@@ -157,22 +157,34 @@ typedef struct {
 
 #endif
 
+class bx_soundlow_waveout_win_c : public bx_soundlow_waveout_c {
+public:
+  bx_soundlow_waveout_win_c();
+  virtual ~bx_soundlow_waveout_win_c();
+
+  virtual int openwaveoutput(const char *wavedev);
+  virtual int set_pcm_params(bx_pcm_param_t *param);
+  virtual int output(int length, Bit8u data[]);
+private:
+  HWAVEOUT hWaveOut;      // Wave output device
+  int WaveOutOpen;        // is it open?
+
+  UINT WaveDevice;        // Wave device ID, for waveOutOpen
+
+  LPWAVEHDR WaveOutHdr;
+};
+
 class bx_sound_windows_c : public bx_sound_lowlevel_c {
 public:
   bx_sound_windows_c();
   virtual ~bx_sound_windows_c();
 
-  virtual int get_type() {return BX_SOUNDLOW_WIN;}
+  virtual bx_soundlow_waveout_c* get_waveout();
 
   virtual int openmidioutput(const char *mididev);
   virtual int midiready();
   virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
   virtual int closemidioutput();
-
-  virtual int openwaveoutput(const char *wavedev);
-  virtual int set_pcm_params(bx_pcm_param_t param);
-  virtual int waveout(int length, Bit8u data[]);
-  virtual int closewaveoutput();
 
   virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
   virtual int startwaverecord(bx_pcm_param_t *param);
@@ -187,18 +199,9 @@ private:
 
   HMIDIOUT MidiOut;       // Midi output device
   int MidiOpen;           // is it open?
-  HWAVEOUT hWaveOut;      // Wave output device
-  int WaveOutOpen;        // is it open?
   HWAVEIN hWaveIn;        // Wave input device
   int WaveInOpen;         // is it open?
 
-  UINT WaveDevice;        // Wave device ID, for waveOutOpen
-
-  // some data for the wave buffers
-  HANDLE DataHandle;          // returned by GlobalAlloc()
-  Bit8u *DataPointer;         // returned by GlobalLock()
-
-  LPWAVEHDR WaveOutHdr;
   LPWAVEHDR WaveInHdr;
   LPSTR WaveInData;
   bx_bool recording;

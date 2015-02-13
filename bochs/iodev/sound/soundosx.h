@@ -36,25 +36,43 @@
 
 #define BX_SOUND_OSX_NBUF     8   // number of buffers for digital output
 
-class bx_sound_osx_c : public bx_sound_lowlevel_c {
+class bx_soundlow_waveout_osx_c : public bx_soundlow_waveout_c {
 public:
-  bx_sound_osx_c();
-  virtual ~bx_sound_osx_c();
-
-  virtual int get_type() {return BX_SOUNDLOW_OSX;}
-
-  virtual int    openmidioutput(const char *mididev);
-  virtual int    midiready();
-  virtual int    sendmidicommand(int delta, int command, int length, Bit8u data[]);
-  virtual int    closemidioutput();
+  bx_soundlow_waveout_osx_c();
+  virtual ~bx_soundlow_waveout_osx_c();
 
   virtual int openwaveoutput(const char *wavedev);
-  virtual int set_pcm_params(bx_pcm_param_t param);
-  virtual int waveout(int length, Bit8u data[]);
-  virtual int closewaveoutput();
+  virtual int set_pcm_params(bx_pcm_param_t *param);
+  virtual int output(int length, Bit8u data[]);
 #ifdef BX_SOUND_OSX_use_converter
   void nextbuffer(int *outDataSize, void **outData);
 #endif
+private:
+  int WaveOpen;
+
+  Bit8u WaveData[BX_SOUND_OSX_NBUF][BX_SOUNDLOW_WAVEPACKETSIZE];
+  int WaveLength[BX_SOUND_OSX_NBUF];
+  int head, tail;  // buffer pointers
+
+#ifdef BX_SOUND_OSX_use_converter
+  int WavePlaying;
+
+  OSStatus core_audio_pause();
+  OSStatus core_audio_resume();
+#endif
+};
+
+class bx_sound_osx_c : public bx_sound_lowlevel_c {
+public:
+  bx_sound_osx_c();
+  virtual ~bx_sound_osx_c() {}
+
+  virtual bx_soundlow_waveout_c* get_waveout();
+
+  virtual int openmidioutput(const char *mididev);
+  virtual int midiready();
+  virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
+  virtual int closemidioutput();
 
   virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
   virtual int startwaverecord(bx_pcm_param_t *param);
@@ -65,19 +83,7 @@ public:
   static void record_timer_handler(void *);
   void record_timer(void);
 private:
-    int MidiOpen;
-    int WaveOpen;
-
-    Bit8u WaveData[BX_SOUND_OSX_NBUF][BX_SOUNDLOW_WAVEPACKETSIZE];
-    int WaveLength[BX_SOUND_OSX_NBUF];
-    int head, tail;  // buffer pointers
-
-#ifdef BX_SOUND_OSX_use_converter
-    int WavePlaying;
-
-    OSStatus core_audio_pause();
-    OSStatus core_audio_resume();
-#endif
+  int MidiOpen;
 };
 
 #endif  // macintosh

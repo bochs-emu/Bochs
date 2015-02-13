@@ -72,25 +72,26 @@ bx_soundmod_ctl_c::bx_soundmod_ctl_c()
 {
   put("soundctl", "SNDCTL");
   soundmod = NULL;
+  waveout = NULL;
 }
 
 bx_soundmod_ctl_c::~bx_soundmod_ctl_c()
 {
   beep_active = 0;
-  if (beep_callback_id >= 0) {
-    soundmod->unregister_wave_callback(beep_callback_id);
-  }
-  if (soundmod != NULL) {
-    soundmod->closewaveoutput();
+  if (waveout != NULL) {
+    if (beep_callback_id >= 0) {
+      waveout->unregister_wave_callback(beep_callback_id);
+    }
   }
   delete soundmod;
 }
 
 void bx_soundmod_ctl_c::init()
 {
+  int ret;
   static const char default_name[] = BX_SOUND_LOWLEVEL_NAME;
   const char *driver = SIM->get_param_string(BXPN_SOUND_DRIVER)->getptr();
-  const char *waveout = SIM->get_param_string(BXPN_SOUND_WAVEOUT)->getptr();
+  const char *pwaveout = SIM->get_param_string(BXPN_SOUND_WAVEOUT)->getptr();
   const char *wavein = SIM->get_param_string(BXPN_SOUND_WAVEIN)->getptr();
 
   if (strcmp(driver, "default") == 0) {
@@ -124,16 +125,21 @@ void bx_soundmod_ctl_c::init()
     return;
   }
   if (!strlen(wavein)) {
-    SIM->get_param_string(BXPN_SOUND_WAVEIN)->set(waveout);
+    SIM->get_param_string(BXPN_SOUND_WAVEIN)->set(pwaveout);
   }
-  int ret = soundmod->openwaveoutput(waveout);
-  if (ret != BX_SOUNDLOW_OK) {
-    BX_PANIC(("Could not open wave output device"));
+  waveout = soundmod->get_waveout();
+  if (waveout != NULL) {
+    ret = waveout->openwaveoutput(pwaveout);
+    if (ret != BX_SOUNDLOW_OK) {
+      BX_PANIC(("Could not open wave output device"));
+    } else {
+      beep_active = 0;
+      beep_cur_freq = 0.0;
+      BX_INIT_MUTEX(beep_mutex);
+      beep_callback_id = waveout->register_wave_callback(theSoundModCtl, beep_callback);
+    }
   } else {
-    beep_active = 0;
-    beep_cur_freq = 0.0;
-    BX_INIT_MUTEX(beep_mutex);
-    beep_callback_id = soundmod->register_wave_callback(theSoundModCtl, beep_callback);
+    BX_PANIC(("no waveout support in sound driver '%s'", driver));
   }
 }
 

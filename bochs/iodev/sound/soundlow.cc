@@ -111,14 +111,14 @@ BX_THREAD_FUNC(mixer_thread, indata)
 {
   int len;
 
-  bx_sound_lowlevel_c *soundmod = (bx_sound_lowlevel_c*)indata;
+  bx_soundlow_waveout_c *waveout = (bx_soundlow_waveout_c*)indata;
   Bit8u *mixbuffer = new Bit8u[BX_SOUNDLOW_WAVEPACKETSIZE];
   mixer_control = 1;
   while (mixer_control > 0) {
-    len = soundmod->get_waveout_packetsize();
+    len = waveout->get_packetsize();
     memset(mixbuffer, 0, len);
-    if (soundmod->mixer_common(mixbuffer, len)) {
-      soundmod->waveout(len, mixbuffer);
+    if (waveout->mixer_common(mixbuffer, len)) {
+      waveout->output(len, mixbuffer);
     } else {
       BX_MSLEEP(25);
     }
@@ -128,21 +128,21 @@ BX_THREAD_FUNC(mixer_thread, indata)
   BX_THREAD_EXIT;
 }
 
-// The base class of the  sound lowlevel support.
+// bx_soundlow_waveout_c class implemenzation
 // The dummy output methods don't do anything.
 
-bx_sound_lowlevel_c::bx_sound_lowlevel_c()
+bx_soundlow_waveout_c::bx_soundlow_waveout_c()
 {
-  put("soundlow", "SNDLOW");
-  record_timer_index = BX_NULL_TIMER_HANDLE;
+  put("waveout", "WAVOUT");
   real_pcm_param = default_pcm_param;
   emu_pcm_param = default_pcm_param;
   cb_count = 0;
   pcm_callback_id = -1;
   mixer_control = 0;
+  set_pcm_params(&real_pcm_param);
 }
 
-bx_sound_lowlevel_c::~bx_sound_lowlevel_c()
+bx_soundlow_waveout_c::~bx_soundlow_waveout_c()
 {
   unregister_wave_callback(pcm_callback_id);
   if (mixer_control > 0) {
@@ -154,47 +154,113 @@ bx_sound_lowlevel_c::~bx_sound_lowlevel_c()
   BX_FINI_MUTEX(mixer_mutex);
 }
 
-int bx_sound_lowlevel_c::openmidioutput(const char *mididev)
-{
-  UNUSED(mididev);
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::midiready()
-{
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
-{
-  UNUSED(delta);
-  UNUSED(command);
-  UNUSED(length);
-  UNUSED(data);
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::closemidioutput()
-{
-  return BX_SOUNDLOW_OK;
-}
-
-// wave playback support
-
-int bx_sound_lowlevel_c::openwaveoutput(const char *wavedev)
+int bx_soundlow_waveout_c::openwaveoutput(const char *wavedev)
 {
   UNUSED(wavedev);
-  set_pcm_params(real_pcm_param);
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_lowlevel_c::set_pcm_params(bx_pcm_param_t param)
+int bx_soundlow_waveout_c::set_pcm_params(bx_pcm_param_t *param)
 {
   UNUSED(param);
   return BX_SOUNDLOW_OK;
 }
 
-void bx_sound_lowlevel_c::convert_pcm_data(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param)
+int bx_soundlow_waveout_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param)
+{
+  int len2;
+
+  if (memcmp(src_param, &emu_pcm_param, sizeof(bx_pcm_param_t)) != 0) {
+    emu_pcm_param = *src_param;
+    cvt_mult = (src_param->bits == 8) ? 2 : 1;
+    if (src_param->channels == 1) cvt_mult <<= 1;
+    if (src_param->samplerate != real_pcm_param.samplerate) {
+      real_pcm_param.samplerate = src_param->samplerate;
+      set_pcm_params(&real_pcm_param);
+    }
+  }
+  len2 = length * cvt_mult;
+  BX_LOCK(mixer_mutex);
+  audio_buffer_t *newbuffer = new_audio_buffer(len2);
+  convert_pcm_data(data, length, newbuffer->data, len2, src_param);
+  BX_UNLOCK(mixer_mutex);
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_soundlow_waveout_c::get_packetsize()
+{
+  return (real_pcm_param.samplerate * 4 / 10);
+}
+
+int bx_soundlow_waveout_c::output(int length, Bit8u data[])
+{
+  UNUSED(length);
+  UNUSED(data);
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_soundlow_waveout_c::register_wave_callback(void *arg, get_wave_cb_t wd_cb)
+{
+  if (cb_count < BX_MAX_WAVE_CALLBACKS) {
+    get_wave[cb_count].device = arg;
+    get_wave[cb_count].cb = wd_cb;
+    return cb_count++;
+  }
+  return -1;
+}
+
+void bx_soundlow_waveout_c::unregister_wave_callback(int callback_id)
+{
+  BX_LOCK(mixer_mutex);
+  if ((callback_id >= 0) && (callback_id < BX_MAX_WAVE_CALLBACKS)) {
+    get_wave[callback_id].device = NULL;
+    get_wave[callback_id].cb = NULL;
+  }
+  BX_UNLOCK(mixer_mutex);
+}
+
+bx_bool bx_soundlow_waveout_c::mixer_common(Bit8u *buffer, int len)
+{
+  Bit32u count, len2 = 0, len3 = 0;
+  Bit16s src1, src2, dst_val;
+  Bit32s tmp_val;
+  Bit8u *src, *dst;
+
+  Bit8u *tmpbuffer = new Bit8u[len];
+  BX_LOCK(mixer_mutex);
+  for (int i = 0; i < cb_count; i++) {
+    if (get_wave[i].cb != NULL) {
+      memset(tmpbuffer, 0, len);
+      len2 = get_wave[i].cb(get_wave[i].device, real_pcm_param.samplerate, tmpbuffer, len);
+      if (len2 > 0) {
+        src = tmpbuffer;
+        dst = buffer;
+        count = len / 2;
+        while (count--) {
+          src1 = (src[0] | (src[1] << 8));
+          src2 = (dst[0] | (dst[1] << 8));
+          tmp_val = (Bit32s)src1 + (Bit32s)src2;
+          if (tmp_val > BX_MAX_BIT16S) {
+            tmp_val = BX_MAX_BIT16S;
+          } else if (tmp_val < BX_MIN_BIT16S) {
+            tmp_val = BX_MIN_BIT16S;
+          }
+          dst_val = (Bit16s)tmp_val;
+          dst[0] = dst_val & 0xff;
+          dst[1] = (Bit8u)(dst_val >> 8);
+          src += 2;
+          dst += 2;
+        }
+        if (len3 < len2) len3 = len2;
+      }
+    }
+  }
+  BX_UNLOCK(mixer_mutex);
+  delete [] tmpbuffer;
+  return (len3 > 0);
+}
+
+void bx_soundlow_waveout_c::convert_pcm_data(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param)
 {
   int i, j;
   Bit8u xor_val;
@@ -250,115 +316,64 @@ void bx_sound_lowlevel_c::convert_pcm_data(Bit8u *src, int srcsize, Bit8u *dst, 
   }
 }
 
-int bx_sound_lowlevel_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param)
-{
-  int len2;
-
-  if (memcmp(src_param, &emu_pcm_param, sizeof(bx_pcm_param_t)) != 0) {
-    emu_pcm_param = *src_param;
-    cvt_mult = (src_param->bits == 8) ? 2 : 1;
-    if (src_param->channels == 1) cvt_mult <<= 1;
-    if (src_param->samplerate != real_pcm_param.samplerate) {
-      real_pcm_param.samplerate = src_param->samplerate;
-      set_pcm_params(real_pcm_param);
-    }
-  }
-  len2 = length * cvt_mult;
-  BX_LOCK(mixer_mutex);
-  audio_buffer_t *newbuffer = new_audio_buffer(len2);
-  convert_pcm_data(data, length, newbuffer->data, len2, src_param);
-  BX_UNLOCK(mixer_mutex);
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::get_waveout_packetsize()
-{
-  return (real_pcm_param.samplerate * 4 / 10);
-}
-
-int bx_sound_lowlevel_c::waveout(int length, Bit8u data[])
-{
-  UNUSED(length);
-  UNUSED(data);
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::closewaveoutput()
-{
-  return BX_SOUNDLOW_OK;
-}
-
-// mixer thread related methods
-
-void bx_sound_lowlevel_c::start_mixer_thread()
+void bx_soundlow_waveout_c::start_mixer_thread()
 {
   BX_THREAD_ID(threadID);
 
   BX_THREAD_CREATE(mixer_thread, this, threadID);
 }
 
-bx_bool bx_sound_lowlevel_c::mixer_common(Bit8u *buffer, int len)
-{
-  Bit32u count, len2 = 0, len3 = 0;
-  Bit16s src1, src2, dst_val;
-  Bit32s tmp_val;
-  Bit8u *src, *dst;
+// bx_sound_lowlevel_c class implemenzation
+// This is the base class of the sound lowlevel support.
 
-  Bit8u *tmpbuffer = new Bit8u[len];
-  BX_LOCK(mixer_mutex);
-  for (int i = 0; i < cb_count; i++) {
-    if (get_wave[i].cb != NULL) {
-      memset(tmpbuffer, 0, len);
-      len2 = get_wave[i].cb(get_wave[i].device, real_pcm_param.samplerate, tmpbuffer, len);
-      if (len2 > 0) {
-        src = tmpbuffer;
-        dst = buffer;
-        count = len / 2;
-        while (count--) {
-          src1 = (src[0] | (src[1] << 8));
-          src2 = (dst[0] | (dst[1] << 8));
-          tmp_val = (Bit32s)src1 + (Bit32s)src2;
-          if (tmp_val > BX_MAX_BIT16S) {
-            tmp_val = BX_MAX_BIT16S;
-          } else if (tmp_val < BX_MIN_BIT16S) {
-            tmp_val = BX_MIN_BIT16S;
-          }
-          dst_val = (Bit16s)tmp_val;
-          dst[0] = dst_val & 0xff;
-          dst[1] = (Bit8u)(dst_val >> 8);
-          src += 2;
-          dst += 2;
-        }
-        if (len3 < len2) len3 = len2;
-      }
-    }
-  }
-  BX_UNLOCK(mixer_mutex);
-  delete [] tmpbuffer;
-  return (len3 > 0);
+bx_sound_lowlevel_c::bx_sound_lowlevel_c()
+{
+  put("soundlow", "SNDLOW");
+  waveout = NULL;
+  record_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
-int bx_sound_lowlevel_c::register_wave_callback(void *arg, get_wave_cb_t wd_cb)
+bx_sound_lowlevel_c::~bx_sound_lowlevel_c()
 {
-  if (cb_count < BX_MAX_WAVE_CALLBACKS) {
-    get_wave[cb_count].device = arg;
-    get_wave[cb_count].cb = wd_cb;
-    return cb_count++;
+  if (waveout != NULL) {
+    delete waveout;
   }
-  return -1;
 }
 
-void bx_sound_lowlevel_c::unregister_wave_callback(int callback_id)
+bx_soundlow_waveout_c* bx_sound_lowlevel_c::get_waveout()
 {
-  BX_LOCK(mixer_mutex);
-  if ((callback_id >= 0) && (callback_id < BX_MAX_WAVE_CALLBACKS)) {
-    get_wave[callback_id].device = NULL;
-    get_wave[callback_id].cb = NULL;
+  if (waveout == NULL) {
+    waveout = new bx_soundlow_waveout_c();
   }
-  BX_UNLOCK(mixer_mutex);
+  return waveout;
 }
 
-// wave recording support (dummy driver returns silence
+int bx_sound_lowlevel_c::openmidioutput(const char *mididev)
+{
+  UNUSED(mididev);
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_sound_lowlevel_c::midiready()
+{
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_sound_lowlevel_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
+{
+  UNUSED(delta);
+  UNUSED(command);
+  UNUSED(length);
+  UNUSED(data);
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_sound_lowlevel_c::closemidioutput()
+{
+  return BX_SOUNDLOW_OK;
+}
+
+// wave recording support (dummy driver returns silence)
 
 int bx_sound_lowlevel_c::openwaveinput(const char *wavedev, sound_record_handler_t rh)
 {

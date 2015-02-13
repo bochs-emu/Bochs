@@ -5,7 +5,7 @@
 // ES1370 soundcard support (ported from QEMU)
 //
 // Copyright (c) 2005  Vassili Karpov (malc)
-// Copyright (C) 2011-2013  The Bochs Project
+// Copyright (C) 2011-2015  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -70,8 +70,9 @@ typedef struct {
 } bx_es1370_t;
 
 
-// forward definition
+// forward definitions
 class bx_sound_lowlevel_c;
+class bx_soundlow_waveout_c;
 
 class bx_es1370_c : public bx_devmodel_c, bx_pci_device_stub_c {
 public:
@@ -117,6 +118,7 @@ private:
 #endif
 
   bx_sound_lowlevel_c *soundmod;
+  bx_soundlow_waveout_c *waveout;
   int wavemode;
   bx_bool wave_changed;
   FILE *wavefile;

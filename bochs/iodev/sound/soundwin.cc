@@ -34,17 +34,8 @@
 
 #define LOG_THIS
 
-bx_sound_windows_c::bx_sound_windows_c()
-  :bx_sound_lowlevel_c()
-{
-  MidiOpen = 0;
-  WaveOutOpen = 0;
-  WaveInOpen = 0;
-
-  ismidiready = 1;
-
-  // size is the total size of the midi header and buffer and the
-  // wave header and buffer, all aligned on a 16-byte boundary
+// size is the total size of the midi header and buffer and the
+// wave header and buffer, all aligned on a 16-byte boundary
 
 #define ALIGN(size) ((size + 15) & ~15)
 
@@ -53,132 +44,45 @@ bx_sound_windows_c::bx_sound_windows_c()
              + ALIGN(BX_SOUND_WINDOWS_MAXSYSEXLEN) \
              + ALIGN(BX_SOUNDLOW_WAVEPACKETSIZE + 64)
 
-  DataHandle = GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, size);
-  DataPointer = (Bit8u*) GlobalLock(DataHandle);
+// some data for the wave buffers
+HANDLE DataHandle;     // returned by GlobalAlloc()
+Bit8u *DataPointer;    // returned by GlobalLock()
 
-  if (DataPointer == NULL)
-    BX_PANIC(("GlobalLock returned NULL-pointer"));
-
-#define NEWBUFFER(size) &(DataPointer[offset]); offset += ALIGN(size)
-
-  unsigned offset = 0;
-  MidiHeader = (LPMIDIHDR) NEWBUFFER(sizeof(MIDIHDR));
-  MidiData = (LPSTR) NEWBUFFER(BX_SOUND_WINDOWS_MAXSYSEXLEN);
-
-  WaveOutHdr = (LPWAVEHDR) NEWBUFFER(sizeof(WAVEHDR));
-  WaveInHdr = (LPWAVEHDR) NEWBUFFER(sizeof(WAVEHDR));
-  WaveInData = (LPSTR) NEWBUFFER(BX_SOUNDLOW_WAVEPACKETSIZE+64);
-
-  if (offset > size)
-    BX_PANIC(("Allocated memory was too small!"));
-
-#undef size
-#undef ALIGN
-#undef NEWBUFFER
-
-  BX_INFO(("Sound lowlevel module 'win' initialized"));
-}
-
-bx_sound_windows_c::~bx_sound_windows_c()
+// helper function
+Bit8u* newbuffer(unsigned blksize)
 {
-  GlobalUnlock(DataHandle);
-  GlobalFree(DataHandle);
-}
+  static unsigned offset = 0;
+  Bit8u *ptr;
 
-int bx_sound_windows_c::midiready()
-{
-  if (ismidiready == 0)
-    checkmidiready();
-
-  if (ismidiready == 1)
-    return BX_SOUNDLOW_OK;
-  else
-    return BX_SOUNDLOW_ERR;
-}
-
-int bx_sound_windows_c::openmidioutput(const char *mididev)
-{
-  UINT deviceid;
-
-  if (strlen(mididev) == 0) {
-    deviceid = (UINT) MIDIMAPPER;
+  ptr = &(DataPointer[offset]);
+  if ((offset + ALIGN(blksize)) > size) {
+    return NULL;
   } else {
-    deviceid = atoi(mididev);
-    if (((deviceid < 0) || (deviceid >= midiOutGetNumDevs())) &&
-        (deviceid != (UINT) MIDIMAPPER)) {
-      BX_ERROR(("MIDI device ID out of range - using default MIDI mapper"));
-      deviceid = (UINT) MIDIMAPPER;
-    }
+    offset += ALIGN(blksize);
+    return ptr;
   }
-
-  MidiOpen = 0;
-
-  UINT ret = midiOutOpen(&MidiOut, deviceid, 0, 0, CALLBACK_NULL);
-  if (ret == 0)
-    MidiOpen = 1;
-
-  BX_DEBUG(("midiOutOpen() = %d, MidiOpen: %d", ret, MidiOpen));
-
-  return (MidiOpen == 1) ? BX_SOUNDLOW_OK : BX_SOUNDLOW_ERR;
 }
 
-int bx_sound_windows_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
+// bx_soundlow_waveout_win_c class implemenzation
+
+bx_soundlow_waveout_win_c::bx_soundlow_waveout_win_c()
+    :bx_soundlow_waveout_c()
 {
-  UINT ret;
-
-  if (MidiOpen != 1)
-    return BX_SOUNDLOW_ERR;
-
-  if ((command == 0xf0) || (command == 0xf7) || (length > 3))
-  {
-    BX_DEBUG(("SYSEX started, length %d", length));
-    ismidiready = 0;   // until the buffer is done
-    memcpy(MidiData, data, length);
-    MidiHeader->lpData = MidiData;
-    MidiHeader->dwBufferLength = BX_SOUND_WINDOWS_MAXSYSEXLEN;
-    MidiHeader->dwBytesRecorded = 0;
-    MidiHeader->dwUser = 0;
-    MidiHeader->dwFlags = 0;
-    ret = midiOutPrepareHeader(MidiOut, MidiHeader, sizeof(*MidiHeader));
-    if (ret != 0)
-      BX_ERROR(("midiOutPrepareHeader(): error = %d", ret));
-    ret = midiOutLongMsg(MidiOut, MidiHeader, sizeof(*MidiHeader));
-    if (ret != 0)
-      BX_ERROR(("midiOutLongMsg(): error = %d", ret));
-  }
-  else
-  {
-    DWORD msg = command;
-
-    for (int i = 0; i<length; i++)
-      msg |= (data[i] << (8 * (i + 1)));
-
-    ret = midiOutShortMsg(MidiOut, msg);
-    BX_DEBUG(("midiOutShortMsg(%x) = %d", msg, ret));
-  }
-
-  return (ret == 0) ? BX_SOUNDLOW_OK : BX_SOUNDLOW_ERR;
+  WaveOutOpen = 0;
+  WaveOutHdr = (LPWAVEHDR) newbuffer(sizeof(WAVEHDR));
+  if (WaveOutHdr == NULL)
+    BX_PANIC(("Allocated memory was too small!"));
 }
 
-int bx_sound_windows_c::closemidioutput()
+bx_soundlow_waveout_win_c::~bx_soundlow_waveout_win_c()
 {
-  UINT ret;
-
-  if (MidiOpen != 1)
-    return BX_SOUNDLOW_ERR;
-
-  ret = midiOutReset(MidiOut);
-  if (ismidiready == 0)
-    checkmidiready();   // to clear any pending SYSEX
-
-  ret = midiOutClose(MidiOut);
-  BX_DEBUG(("midiOutClose() = %d", ret));
-  MidiOpen = 0;
-
-  return (ret == 0) ? BX_SOUNDLOW_OK : BX_SOUNDLOW_ERR;
+  if (WaveOutOpen == 1) {
+    waveOutReset(hWaveOut);
+    waveOutClose(hWaveOut);
+  }
 }
 
-int bx_sound_windows_c::openwaveoutput(const char *wavedev)
+int bx_soundlow_waveout_win_c::openwaveoutput(const char *wavedev)
 {
   // could make the output device selectable,
   // but currently only the wave mapper is supported
@@ -188,20 +92,20 @@ int bx_sound_windows_c::openwaveoutput(const char *wavedev)
 
   WaveDevice = (UINT) WAVEMAPPER;
 
-  set_pcm_params(real_pcm_param);
+  set_pcm_params(&real_pcm_param);
   pcm_callback_id = register_wave_callback(this, pcm_callback);
   BX_INIT_MUTEX(mixer_mutex);
   start_mixer_thread();
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_windows_c::set_pcm_params(bx_pcm_param_t param)
+int bx_soundlow_waveout_win_c::set_pcm_params(bx_pcm_param_t *param)
 {
   UINT ret;
   PCMWAVEFORMAT waveformat;
 
-  BX_DEBUG(("set_pcm_params(): %u, %u, %u, %02x", param.samplerate, param.bits,
-            param.channels, param.format));
+  BX_DEBUG(("set_pcm_params(): %u, %u, %u, %02x", param->samplerate, param->bits,
+            param->channels, param->format));
   if (WaveOutOpen != 0) {
     ret = waveOutReset(hWaveOut);
     ret = waveOutClose(hWaveOut);
@@ -266,7 +170,7 @@ int bx_sound_windows_c::set_pcm_params(bx_pcm_param_t param)
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_windows_c::waveout(int length, Bit8u data[])
+int bx_soundlow_waveout_win_c::output(int length, Bit8u data[])
 {
   UINT ret;
 
@@ -295,16 +199,143 @@ int bx_sound_windows_c::waveout(int length, Bit8u data[])
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_windows_c::closewaveoutput()
-{
-  BX_DEBUG(("closewaveoutput"));
+// bx_sound_windows_c class implemenzation
 
-  if (WaveOutOpen == 1) {
-    waveOutReset(hWaveOut);
-    waveOutClose(hWaveOut);
+bx_sound_windows_c::bx_sound_windows_c()
+  :bx_sound_lowlevel_c()
+{
+  MidiOpen = 0;
+  WaveInOpen = 0;
+
+  ismidiready = 1;
+
+  DataHandle = GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, size);
+  DataPointer = (Bit8u*) GlobalLock(DataHandle);
+
+  if (DataPointer == NULL)
+    BX_PANIC(("GlobalLock returned NULL-pointer"));
+
+  unsigned offset = 0;
+  MidiHeader = (LPMIDIHDR) newbuffer(sizeof(MIDIHDR));
+  MidiData = (LPSTR) newbuffer(BX_SOUND_WINDOWS_MAXSYSEXLEN);
+
+  WaveInHdr = (LPWAVEHDR) newbuffer(sizeof(WAVEHDR));
+  WaveInData = (LPSTR) newbuffer(BX_SOUNDLOW_WAVEPACKETSIZE+64);
+
+  if (WaveInData == NULL)
+    BX_PANIC(("Allocated memory was too small!"));
+
+#undef size
+#undef ALIGN
+
+  BX_INFO(("Sound lowlevel module 'win' initialized"));
+}
+
+bx_soundlow_waveout_c* bx_sound_windows_c::get_waveout()
+{
+  if (waveout == NULL) {
+    waveout = new bx_soundlow_waveout_win_c();
+  }
+  return waveout;
+}
+
+bx_sound_windows_c::~bx_sound_windows_c()
+{
+  GlobalUnlock(DataHandle);
+  GlobalFree(DataHandle);
+}
+
+int bx_sound_windows_c::openmidioutput(const char *mididev)
+{
+  UINT deviceid;
+
+  if (strlen(mididev) == 0) {
+    deviceid = (UINT) MIDIMAPPER;
+  } else {
+    deviceid = atoi(mididev);
+    if (((deviceid < 0) || (deviceid >= midiOutGetNumDevs())) &&
+        (deviceid != (UINT) MIDIMAPPER)) {
+      BX_ERROR(("MIDI device ID out of range - using default MIDI mapper"));
+      deviceid = (UINT) MIDIMAPPER;
+    }
   }
 
-  return BX_SOUNDLOW_OK;
+  MidiOpen = 0;
+
+  UINT ret = midiOutOpen(&MidiOut, deviceid, 0, 0, CALLBACK_NULL);
+  if (ret == 0)
+    MidiOpen = 1;
+
+  BX_DEBUG(("midiOutOpen() = %d, MidiOpen: %d", ret, MidiOpen));
+
+  return (MidiOpen == 1) ? BX_SOUNDLOW_OK : BX_SOUNDLOW_ERR;
+}
+
+int bx_sound_windows_c::midiready()
+{
+  if (ismidiready == 0)
+    checkmidiready();
+
+  if (ismidiready == 1)
+    return BX_SOUNDLOW_OK;
+  else
+    return BX_SOUNDLOW_ERR;
+}
+
+int bx_sound_windows_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
+{
+  UINT ret;
+
+  if (MidiOpen != 1)
+    return BX_SOUNDLOW_ERR;
+
+  if ((command == 0xf0) || (command == 0xf7) || (length > 3))
+  {
+    BX_DEBUG(("SYSEX started, length %d", length));
+    ismidiready = 0;   // until the buffer is done
+    memcpy(MidiData, data, length);
+    MidiHeader->lpData = MidiData;
+    MidiHeader->dwBufferLength = BX_SOUND_WINDOWS_MAXSYSEXLEN;
+    MidiHeader->dwBytesRecorded = 0;
+    MidiHeader->dwUser = 0;
+    MidiHeader->dwFlags = 0;
+    ret = midiOutPrepareHeader(MidiOut, MidiHeader, sizeof(*MidiHeader));
+    if (ret != 0)
+      BX_ERROR(("midiOutPrepareHeader(): error = %d", ret));
+    ret = midiOutLongMsg(MidiOut, MidiHeader, sizeof(*MidiHeader));
+    if (ret != 0)
+      BX_ERROR(("midiOutLongMsg(): error = %d", ret));
+  }
+  else
+  {
+    DWORD msg = command;
+
+    for (int i = 0; i<length; i++)
+      msg |= (data[i] << (8 * (i + 1)));
+
+    ret = midiOutShortMsg(MidiOut, msg);
+    BX_DEBUG(("midiOutShortMsg(%x) = %d", msg, ret));
+  }
+
+  return (ret == 0) ? BX_SOUNDLOW_OK : BX_SOUNDLOW_ERR;
+}
+
+int bx_sound_windows_c::closemidioutput()
+{
+  UINT ret;
+
+  if (MidiOpen != 1)
+    return BX_SOUNDLOW_ERR;
+
+  ret = midiOutReset(MidiOut);
+  if (ismidiready == 0)
+    checkmidiready();   // to clear any pending SYSEX
+
+  ret = midiOutClose(MidiOut);
+  BX_DEBUG(("midiOutClose() = %d", ret));
+  MidiOpen = 0;
+
+  return (ret == 0) ? BX_SOUNDLOW_OK : BX_SOUNDLOW_ERR;
 }
 
 void bx_sound_windows_c::checkmidiready()

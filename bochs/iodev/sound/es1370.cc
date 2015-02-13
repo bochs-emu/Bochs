@@ -187,6 +187,7 @@ bx_es1370_c::bx_es1370_c()
   s.dac1_timer_index = BX_NULL_TIMER_HANDLE;
   s.dac2_timer_index = BX_NULL_TIMER_HANDLE;
   soundmod = NULL;
+  waveout = NULL;
   wavefile = NULL;
 }
 
@@ -225,6 +226,7 @@ void bx_es1370_c::init(void)
   BX_ES1370_THIS pci_base_address[0] = 0;
 
   BX_ES1370_THIS soundmod = DEV_sound_get_module();
+  BX_ES1370_THIS waveout = soundmod->get_waveout();
   BX_ES1370_THIS s.dac_outputinit = 1;
   BX_ES1370_THIS s.adc_inputinit = 0;
   BX_ES1370_THIS s.dac_nr_active = -1;
@@ -826,7 +828,7 @@ void bx_es1370_c::sendwavepacket(unsigned channel, Bit32u buflen, Bit8u *buffer)
   switch (BX_ES1370_THIS wavemode) {
     case 1:
       if (BX_ES1370_THIS s.dac_outputinit) {
-        BX_ES1370_THIS soundmod->sendwavepacket(buflen, buffer, &param);
+        BX_ES1370_THIS waveout->sendwavepacket(buflen, buffer, &param);
       }
       break;
     case 3:
