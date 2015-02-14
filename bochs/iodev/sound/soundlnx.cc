@@ -151,65 +151,23 @@ int bx_soundlow_waveout_oss_c::output(int length, Bit8u data[])
   }
 }
 
-// bx_sound_oss_c class implemenzation
+// bx_soundlow_wavein_oss_c class implemenzation
 
-bx_sound_oss_c::bx_sound_oss_c()
-    :bx_sound_lowlevel_c()
+bx_soundlow_wavein_oss_c::bx_soundlow_wavein_oss_c()
+    :bx_soundlow_wavein_c()
 {
-  midi = NULL;
   wavein_fd = -1;
-  BX_INFO(("Sound lowlevel module 'oss' initialized"));
 }
 
-bx_soundlow_waveout_c* bx_sound_oss_c::get_waveout()
+bx_soundlow_wavein_oss_c::~bx_soundlow_wavein_oss_c()
 {
-  if (waveout == NULL) {
-    waveout = new bx_soundlow_waveout_oss_c();
+  if (wavein_fd != -1) {
+    close(wavein_fd);
+    wavein_fd = -1;
   }
-  return waveout;
 }
 
-int bx_sound_oss_c::openmidioutput(const char *mididev)
-{
-  if ((mididev == NULL) || (strlen(mididev) < 1))
-    return BX_SOUNDLOW_ERR;
-
-  midi = fopen(mididev,"w");
-
-  if (midi == NULL) {
-    BX_ERROR(("Couldn't open midi output device %s: %s",
-             mididev, strerror(errno)));
-    return BX_SOUNDLOW_ERR;
-  }
-
-  return BX_SOUNDLOW_OK;
-}
-
-
-int bx_sound_oss_c::midiready()
-{
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_oss_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
-{
-  UNUSED(delta);
-
-  fputc(command, midi);
-  fwrite(data, 1, length, midi);
-  fflush(midi);       // to start playing immediately
-
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_oss_c::closemidioutput()
-{
-  fclose(midi);
-
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_oss_c::openwaveinput(const char *wavedev, sound_record_handler_t rh)
+int bx_soundlow_wavein_oss_c::openwaveinput(const char *wavedev, sound_record_handler_t rh)
 {
   record_handler = rh;
   if (rh != NULL) {
@@ -228,7 +186,7 @@ int bx_sound_oss_c::openwaveinput(const char *wavedev, sound_record_handler_t rh
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_oss_c::startwaverecord(bx_pcm_param_t *param)
+int bx_soundlow_wavein_oss_c::startwaverecord(bx_pcm_param_t *param)
 {
   Bit64u timer_val;
   Bit8u shift = 0;
@@ -301,7 +259,7 @@ int bx_sound_oss_c::startwaverecord(bx_pcm_param_t *param)
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_oss_c::getwavepacket(int length, Bit8u data[])
+int bx_soundlow_wavein_oss_c::getwavepacket(int length, Bit8u data[])
 {
   int ret;
 
@@ -315,7 +273,7 @@ int bx_sound_oss_c::getwavepacket(int length, Bit8u data[])
   }
 }
 
-int bx_sound_oss_c::stopwaverecord()
+int bx_soundlow_wavein_oss_c::stopwaverecord()
 {
   if (record_timer_index != BX_NULL_TIMER_HANDLE) {
     bx_pc_system.deactivate_timer(record_timer_index);
@@ -323,27 +281,81 @@ int bx_sound_oss_c::stopwaverecord()
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_oss_c::closewaveinput()
+void bx_soundlow_wavein_oss_c::record_timer_handler(void *this_ptr)
 {
-  stopwaverecord();
-
-  if (wavein_fd != -1) {
-    close(wavein_fd);
-    wavein_fd = -1;
-  }
-  return BX_SOUNDLOW_OK;
-}
-
-void bx_sound_oss_c::record_timer_handler(void *this_ptr)
-{
-  bx_sound_oss_c *class_ptr = (bx_sound_oss_c *) this_ptr;
+  bx_soundlow_wavein_oss_c *class_ptr = (bx_soundlow_wavein_oss_c *) this_ptr;
 
   class_ptr->record_timer();
 }
 
-void bx_sound_oss_c::record_timer(void)
+void bx_soundlow_wavein_oss_c::record_timer(void)
 {
   record_handler(this, record_packet_size);
+}
+
+// bx_sound_oss_c class implemenzation
+
+bx_sound_oss_c::bx_sound_oss_c()
+    :bx_sound_lowlevel_c()
+{
+  midi = NULL;
+  BX_INFO(("Sound lowlevel module 'oss' initialized"));
+}
+
+bx_soundlow_waveout_c* bx_sound_oss_c::get_waveout()
+{
+  if (waveout == NULL) {
+    waveout = new bx_soundlow_waveout_oss_c();
+  }
+  return waveout;
+}
+
+bx_soundlow_wavein_c* bx_sound_oss_c::get_wavein()
+{
+  if (wavein == NULL) {
+    wavein = new bx_soundlow_wavein_oss_c();
+  }
+  return wavein;
+}
+
+int bx_sound_oss_c::openmidioutput(const char *mididev)
+{
+  if ((mididev == NULL) || (strlen(mididev) < 1))
+    return BX_SOUNDLOW_ERR;
+
+  midi = fopen(mididev,"w");
+
+  if (midi == NULL) {
+    BX_ERROR(("Couldn't open midi output device %s: %s",
+             mididev, strerror(errno)));
+    return BX_SOUNDLOW_ERR;
+  }
+
+  return BX_SOUNDLOW_OK;
+}
+
+
+int bx_sound_oss_c::midiready()
+{
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_sound_oss_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
+{
+  UNUSED(delta);
+
+  fputc(command, midi);
+  fwrite(data, 1, length, midi);
+  fflush(midi);       // to start playing immediately
+
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_sound_oss_c::closemidioutput()
+{
+  fclose(midi);
+
+  return BX_SOUNDLOW_OK;
 }
 
 #endif

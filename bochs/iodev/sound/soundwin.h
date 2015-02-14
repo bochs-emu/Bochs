@@ -174,31 +174,21 @@ private:
   LPWAVEHDR WaveOutHdr;
 };
 
-class bx_sound_windows_c : public bx_sound_lowlevel_c {
+class bx_soundlow_wavein_win_c : public bx_soundlow_wavein_c {
 public:
-  bx_sound_windows_c();
-  virtual ~bx_sound_windows_c();
-
-  virtual bx_soundlow_waveout_c* get_waveout();
-
-  virtual int openmidioutput(const char *mididev);
-  virtual int midiready();
-  virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
-  virtual int closemidioutput();
+  bx_soundlow_wavein_win_c();
+  virtual ~bx_soundlow_wavein_win_c();
 
   virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
   virtual int startwaverecord(bx_pcm_param_t *param);
   virtual int getwavepacket(int length, Bit8u data[]);
   virtual int stopwaverecord();
-  virtual int closewaveinput();
 
   static void record_timer_handler(void *);
   void record_timer(void);
 private:
   bx_pcm_param_t wavein_param;
 
-  HMIDIOUT MidiOut;       // Midi output device
-  int MidiOpen;           // is it open?
   HWAVEIN hWaveIn;        // Wave input device
   int WaveInOpen;         // is it open?
 
@@ -206,12 +196,31 @@ private:
   LPSTR WaveInData;
   bx_bool recording;
 
+  int recordnextpacket();
+};
+
+class bx_sound_windows_c : public bx_sound_lowlevel_c {
+public:
+  bx_sound_windows_c();
+  virtual ~bx_sound_windows_c();
+
+  virtual bx_soundlow_waveout_c* get_waveout();
+  virtual bx_soundlow_wavein_c* get_wavein();
+
+  virtual int openmidioutput(const char *mididev);
+  virtual int midiready();
+  virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
+  virtual int closemidioutput();
+
+private:
+  HMIDIOUT MidiOut;       // Midi output device
+  int MidiOpen;           // is it open?
+
   // and the midi buffer for the SYSEX messages
   LPMIDIHDR MidiHeader;
   LPSTR MidiData;
   int ismidiready;
 
-  int recordnextpacket();
   void checkmidiready();
 };
 

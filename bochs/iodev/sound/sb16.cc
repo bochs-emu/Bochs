@@ -185,6 +185,7 @@ void CDECL libsb16_LTX_plugin_fini(void)
 
 #define BX_SB16_OUTPUT  BX_SB16_THIS soundmod
 #define BX_SB16_WAVEOUT BX_SB16_THIS waveout
+#define BX_SB16_WAVEIN  BX_SB16_THIS wavein
 
 // here's a safe way to print out null pointeres
 #define MIGHT_BE_NULL(x)  ((x==NULL)? "(null)" : x)
@@ -204,6 +205,7 @@ bx_sb16_c::bx_sb16_c(void)
   opl.timer_handle = BX_NULL_TIMER_HANDLE;
   soundmod = NULL;
   waveout = NULL;
+  wavein = NULL;
   midimode = 0;
   midifile = NULL;
   wavemode = 0;
@@ -218,9 +220,6 @@ bx_sb16_c::~bx_sb16_c(void)
 
   if (waveout != NULL) {
     waveout->unregister_wave_callback(fmopl_callback_id);
-  }
-  if (DSP.inputinit != 0) {
-    BX_SB16_OUTPUT->closewaveinput();
   }
   closewaveoutput();
 
@@ -261,7 +260,11 @@ void bx_sb16_c::init(void)
   }
   BX_SB16_WAVEOUT = soundmod->get_waveout();
   if (BX_SB16_WAVEOUT == NULL) {
-    BX_PANIC(("Couldn't initialize lowlevel driver"));
+    BX_PANIC(("Couldn't initialize lowlevel driver (waveout)"));
+  }
+  BX_SB16_WAVEIN = soundmod->get_wavein();
+  if (BX_SB16_WAVEIN == NULL) {
+    BX_PANIC(("Couldn't initialize lowlevel driver (wavein)"));
   }
 
   DSP.dma.chunk = new Bit8u[BX_SOUNDLOW_WAVEPACKETSIZE];
@@ -1266,7 +1269,7 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
     }
   } else {
     if (DSP.inputinit == 0) {
-      ret = BX_SB16_OUTPUT->openwaveinput(SIM->get_param_string(BXPN_SOUND_WAVEIN)->getptr(), sb16_adc_handler);
+      ret = BX_SB16_WAVEIN->openwaveinput(SIM->get_param_string(BXPN_SOUND_WAVEIN)->getptr(), sb16_adc_handler);
       if (ret != BX_SOUNDLOW_OK) {
         BX_SB16_THIS wavemode = 0;
         writelog(WAVELOG(2), "Error: Could not open wave input device.");
@@ -1275,7 +1278,7 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
       }
     }
     if (DSP.inputinit == 1) {
-      ret = BX_SB16_OUTPUT->startwaverecord(&DSP.dma.param);
+      ret = BX_SB16_WAVEIN->startwaverecord(&DSP.dma.param);
       if (ret != BX_SOUNDLOW_OK) {
         BX_SB16_THIS wavemode = 0;
         writelog(WAVELOG(2), "Error: Could not start wave record.");
@@ -1312,7 +1315,7 @@ Bit32u bx_sb16_c::dsp_adc_handler(Bit32u buflen)
     DSP.dma.chunkcount += buflen;
     len = 0;
   }
-  BX_SB16_OUTPUT->getwavepacket(DSP.dma.chunkcount, DSP.dma.chunk);
+  BX_SB16_WAVEIN->getwavepacket(DSP.dma.chunkcount, DSP.dma.chunk);
   return len;
 }
 
@@ -1465,7 +1468,7 @@ void bx_sb16_c::dsp_dmadone()
     }
   } else if ((DSP.dma.output == 0) && (DSP.dma.mode != 2)) {
     if (BX_SB16_THIS wavemode == 1) {
-      BX_SB16_OUTPUT->stopwaverecord();
+      BX_SB16_WAVEIN->stopwaverecord();
     }
   }
 

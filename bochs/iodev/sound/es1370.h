@@ -73,6 +73,7 @@ typedef struct {
 // forward definitions
 class bx_sound_lowlevel_c;
 class bx_soundlow_waveout_c;
+class bx_soundlow_wavein_c;
 
 class bx_es1370_c : public bx_devmodel_c, bx_pci_device_stub_c {
 public:
@@ -119,6 +120,7 @@ private:
 
   bx_sound_lowlevel_c *soundmod;
   bx_soundlow_waveout_c *waveout;
+  bx_soundlow_wavein_c *wavein;
   int wavemode;
   bx_bool wave_changed;
   FILE *wavefile;

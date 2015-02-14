@@ -323,6 +323,75 @@ void bx_soundlow_waveout_c::start_mixer_thread()
   BX_THREAD_CREATE(mixer_thread, this, threadID);
 }
 
+// bx_soundlow_wavein_c class implemenzation
+// The dummy input method returns silence.
+
+bx_soundlow_wavein_c::bx_soundlow_wavein_c()
+{
+  put("wavein", "WAVEIN");
+  record_timer_index = BX_NULL_TIMER_HANDLE;
+}
+
+bx_soundlow_wavein_c::~bx_soundlow_wavein_c()
+{
+  stopwaverecord();
+}
+
+int bx_soundlow_wavein_c::openwaveinput(const char *wavedev, sound_record_handler_t rh)
+{
+  UNUSED(wavedev);
+  record_handler = rh;
+  if (rh != NULL) {
+    record_timer_index = bx_pc_system.register_timer(this, record_timer_handler, 1, 1, 0, "wavein");
+    // record timer: inactive, continuous, frequency variable
+  }
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_soundlow_wavein_c::startwaverecord(bx_pcm_param_t *param)
+{
+  Bit64u timer_val;
+  Bit8u shift = 0;
+
+  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
+    if (param->bits == 16) shift++;
+    if (param->channels == 2) shift++;
+    record_packet_size = (param->samplerate / 10) << shift; // 0.1 sec
+    if (record_packet_size > BX_SOUNDLOW_WAVEPACKETSIZE) {
+      record_packet_size = BX_SOUNDLOW_WAVEPACKETSIZE;
+    }
+    timer_val = (Bit64u)record_packet_size * 1000000 / (param->samplerate << shift);
+    bx_pc_system.activate_timer(record_timer_index, (Bit32u)timer_val, 1);
+  }
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_soundlow_wavein_c::getwavepacket(int length, Bit8u data[])
+{
+  memset(data, 0, length);
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_soundlow_wavein_c::stopwaverecord()
+{
+  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
+    bx_pc_system.deactivate_timer(record_timer_index);
+  }
+  return BX_SOUNDLOW_OK;
+}
+
+void bx_soundlow_wavein_c::record_timer_handler(void *this_ptr)
+{
+  bx_soundlow_wavein_c *class_ptr = (bx_soundlow_wavein_c *) this_ptr;
+
+  class_ptr->record_timer();
+}
+
+void bx_soundlow_wavein_c::record_timer(void)
+{
+  record_handler(this, record_packet_size);
+}
+
 // bx_sound_lowlevel_c class implemenzation
 // This is the base class of the sound lowlevel support.
 
@@ -330,13 +399,16 @@ bx_sound_lowlevel_c::bx_sound_lowlevel_c()
 {
   put("soundlow", "SNDLOW");
   waveout = NULL;
-  record_timer_index = BX_NULL_TIMER_HANDLE;
+  wavein = NULL;
 }
 
 bx_sound_lowlevel_c::~bx_sound_lowlevel_c()
 {
   if (waveout != NULL) {
     delete waveout;
+  }
+  if (wavein != NULL) {
+    delete wavein;
   }
 }
 
@@ -346,6 +418,14 @@ bx_soundlow_waveout_c* bx_sound_lowlevel_c::get_waveout()
     waveout = new bx_soundlow_waveout_c();
   }
   return waveout;
+}
+
+bx_soundlow_wavein_c* bx_sound_lowlevel_c::get_wavein()
+{
+  if (wavein == NULL) {
+    wavein = new bx_soundlow_wavein_c();
+  }
+  return wavein;
 }
 
 int bx_sound_lowlevel_c::openmidioutput(const char *mididev)
@@ -371,69 +451,6 @@ int bx_sound_lowlevel_c::sendmidicommand(int delta, int command, int length, Bit
 int bx_sound_lowlevel_c::closemidioutput()
 {
   return BX_SOUNDLOW_OK;
-}
-
-// wave recording support (dummy driver returns silence)
-
-int bx_sound_lowlevel_c::openwaveinput(const char *wavedev, sound_record_handler_t rh)
-{
-  UNUSED(wavedev);
-  record_handler = rh;
-  if (rh != NULL) {
-    record_timer_index = bx_pc_system.register_timer(this, record_timer_handler, 1, 1, 0, "soundmod");
-    // record timer: inactive, continuous, frequency variable
-  }
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::startwaverecord(bx_pcm_param_t *param)
-{
-  Bit64u timer_val;
-  Bit8u shift = 0;
-
-  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
-    if (param->bits == 16) shift++;
-    if (param->channels == 2) shift++;
-    record_packet_size = (param->samplerate / 10) << shift; // 0.1 sec
-    if (record_packet_size > BX_SOUNDLOW_WAVEPACKETSIZE) {
-      record_packet_size = BX_SOUNDLOW_WAVEPACKETSIZE;
-    }
-    timer_val = (Bit64u)record_packet_size * 1000000 / (param->samplerate << shift);
-    bx_pc_system.activate_timer(record_timer_index, (Bit32u)timer_val, 1);
-  }
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::getwavepacket(int length, Bit8u data[])
-{
-  memset(data, 0, length);
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::stopwaverecord()
-{
-  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
-    bx_pc_system.deactivate_timer(record_timer_index);
-  }
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::closewaveinput()
-{
-  stopwaverecord();
-  return BX_SOUNDLOW_OK;
-}
-
-void bx_sound_lowlevel_c::record_timer_handler(void *this_ptr)
-{
-  bx_sound_lowlevel_c *class_ptr = (bx_sound_lowlevel_c *) this_ptr;
-
-  class_ptr->record_timer();
-}
-
-void bx_sound_lowlevel_c::record_timer(void)
-{
-  record_handler(this, record_packet_size);
 }
 
 #endif

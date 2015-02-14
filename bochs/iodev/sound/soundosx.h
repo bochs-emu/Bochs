@@ -74,14 +74,6 @@ public:
   virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
   virtual int closemidioutput();
 
-  virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
-  virtual int startwaverecord(bx_pcm_param_t *param);
-  virtual int getwavepacket(int length, Bit8u data[]);
-  virtual int stopwaverecord();
-  virtual int closewaveinput();
-
-  static void record_timer_handler(void *);
-  void record_timer(void);
 private:
   int MidiOpen;
 };

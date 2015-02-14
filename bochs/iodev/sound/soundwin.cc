@@ -199,13 +199,151 @@ int bx_soundlow_waveout_win_c::output(int length, Bit8u data[])
   return BX_SOUNDLOW_OK;
 }
 
+// bx_soundlow_wavein_win_c class implemenzation
+
+bx_soundlow_wavein_win_c::bx_soundlow_wavein_win_c()
+    :bx_soundlow_wavein_c()
+{
+  WaveInOpen = 0;
+  WaveInHdr = (LPWAVEHDR) newbuffer(sizeof(WAVEHDR));
+  WaveInData = (LPSTR) newbuffer(BX_SOUNDLOW_WAVEPACKETSIZE+64);
+  if (WaveInData == NULL)
+    BX_PANIC(("Allocated memory was too small!"));
+}
+
+bx_soundlow_wavein_win_c::~bx_soundlow_wavein_win_c()
+{
+  if (WaveInOpen == 1) {
+    waveInClose(hWaveIn);
+  }
+}
+
+int bx_soundlow_wavein_win_c::openwaveinput(const char *wavedev, sound_record_handler_t rh)
+{
+  UNUSED(wavedev);
+  record_handler = rh;
+  if (rh != NULL) {
+    record_timer_index = bx_pc_system.register_timer(this, record_timer_handler, 1, 1, 0, "soundwin");
+    // record timer: inactive, continuous, frequency variable
+  }
+  recording = 0;
+  wavein_param.samplerate = 0;
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_soundlow_wavein_win_c::recordnextpacket()
+{
+  MMRESULT result;
+
+  WaveInHdr->lpData = (LPSTR)WaveInData;
+  WaveInHdr->dwBufferLength = record_packet_size;
+  WaveInHdr->dwBytesRecorded = 0;
+  WaveInHdr->dwUser = 0L;
+  WaveInHdr->dwFlags = 0L;
+  WaveInHdr->dwLoops = 0L;
+  waveInPrepareHeader(hWaveIn, WaveInHdr, sizeof(WAVEHDR));
+  result = waveInAddBuffer(hWaveIn, WaveInHdr, sizeof(WAVEHDR));
+  if (result) {
+    BX_ERROR(("Couldn't add buffer for recording (error = %d)", result));
+    return BX_SOUNDLOW_ERR;
+  } else {
+    result = waveInStart(hWaveIn);
+    if (result) {
+      BX_ERROR(("Couldn't start recording (error = %d)", result));
+      return BX_SOUNDLOW_ERR;
+    } else {
+      recording = 1;
+      return BX_SOUNDLOW_OK;
+    }
+  }
+}
+
+int bx_soundlow_wavein_win_c::startwaverecord(bx_pcm_param_t *param)
+{
+  Bit64u timer_val;
+  Bit8u shift = 0;
+  MMRESULT result;
+
+  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
+    if (param->bits == 16) shift++;
+    if (param->channels == 2) shift++;
+    record_packet_size = (param->samplerate / 10) << shift; // 0.1 sec
+    if (record_packet_size > BX_SOUNDLOW_WAVEPACKETSIZE) {
+      record_packet_size = BX_SOUNDLOW_WAVEPACKETSIZE;
+    }
+    timer_val = (Bit64u)record_packet_size * 1000000 / (param->samplerate << shift);
+    bx_pc_system.activate_timer(record_timer_index, (Bit32u)timer_val, 1);
+  }
+  // check if any of the properties have changed
+  if (memcmp(param, &wavein_param, sizeof(bx_pcm_param_t)) != 0) {
+    wavein_param = *param;
+
+    if (WaveInOpen) {
+      waveInClose(hWaveIn);
+    }
+
+    // Specify recording parameters
+    WAVEFORMATEX pFormat;
+    pFormat.wFormatTag = WAVE_FORMAT_PCM;
+    pFormat.nChannels = param->channels;
+    pFormat.nSamplesPerSec = param->samplerate;
+    pFormat.nAvgBytesPerSec = param->samplerate << shift;
+    pFormat.nBlockAlign = 1 << shift;
+    pFormat.wBitsPerSample = param->bits;
+    pFormat.cbSize = 0;
+    result = waveInOpen(&hWaveIn, WAVEMAPPER, &pFormat, 0L, 0L, WAVE_FORMAT_DIRECT);
+    if (result) {
+      BX_ERROR(("Couldn't open wave device for recording (error = %d)", result));
+      return BX_SOUNDLOW_ERR;
+    } else {
+      WaveInOpen = 1;
+    }
+  }
+  return recordnextpacket();
+}
+
+int bx_soundlow_wavein_win_c::getwavepacket(int length, Bit8u data[])
+{
+  if (WaveInOpen && recording) {
+    do {} while (waveInUnprepareHeader(hWaveIn, WaveInHdr, sizeof(WAVEHDR)) == WAVERR_STILLPLAYING);
+    memcpy(data, WaveInData, length);
+    return recordnextpacket();
+  } else {
+    memset(data, 0, length);
+    return BX_SOUNDLOW_OK;
+  }
+}
+
+int bx_soundlow_wavein_win_c::stopwaverecord()
+{
+  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
+    bx_pc_system.deactivate_timer(record_timer_index);
+  }
+  if (WaveInOpen && recording) {
+    do {} while (waveInUnprepareHeader(hWaveIn, WaveInHdr, sizeof(WAVEHDR)) == WAVERR_STILLPLAYING);
+    recording = 0;
+  }
+  return BX_SOUNDLOW_OK;
+}
+
+void bx_soundlow_wavein_win_c::record_timer_handler(void *this_ptr)
+{
+  bx_soundlow_wavein_win_c *class_ptr = (bx_soundlow_wavein_win_c *) this_ptr;
+
+  class_ptr->record_timer();
+}
+
+void bx_soundlow_wavein_win_c::record_timer(void)
+{
+  record_handler(this, record_packet_size);
+}
+
 // bx_sound_windows_c class implemenzation
 
 bx_sound_windows_c::bx_sound_windows_c()
   :bx_sound_lowlevel_c()
 {
   MidiOpen = 0;
-  WaveInOpen = 0;
 
   ismidiready = 1;
 
@@ -215,20 +353,22 @@ bx_sound_windows_c::bx_sound_windows_c()
   if (DataPointer == NULL)
     BX_PANIC(("GlobalLock returned NULL-pointer"));
 
-  unsigned offset = 0;
   MidiHeader = (LPMIDIHDR) newbuffer(sizeof(MIDIHDR));
   MidiData = (LPSTR) newbuffer(BX_SOUND_WINDOWS_MAXSYSEXLEN);
 
-  WaveInHdr = (LPWAVEHDR) newbuffer(sizeof(WAVEHDR));
-  WaveInData = (LPSTR) newbuffer(BX_SOUNDLOW_WAVEPACKETSIZE+64);
-
-  if (WaveInData == NULL)
+  if (MidiData == NULL)
     BX_PANIC(("Allocated memory was too small!"));
 
 #undef size
 #undef ALIGN
 
   BX_INFO(("Sound lowlevel module 'win' initialized"));
+}
+
+bx_sound_windows_c::~bx_sound_windows_c()
+{
+  GlobalUnlock(DataHandle);
+  GlobalFree(DataHandle);
 }
 
 bx_soundlow_waveout_c* bx_sound_windows_c::get_waveout()
@@ -239,10 +379,12 @@ bx_soundlow_waveout_c* bx_sound_windows_c::get_waveout()
   return waveout;
 }
 
-bx_sound_windows_c::~bx_sound_windows_c()
+bx_soundlow_wavein_c* bx_sound_windows_c::get_wavein()
 {
-  GlobalUnlock(DataHandle);
-  GlobalFree(DataHandle);
+  if (wavein == NULL) {
+    wavein = new bx_soundlow_wavein_win_c();
+  }
+  return wavein;
 }
 
 int bx_sound_windows_c::openmidioutput(const char *mididev)
@@ -346,135 +488,6 @@ void bx_sound_windows_c::checkmidiready()
     midiOutUnprepareHeader(MidiOut, MidiHeader, sizeof(*MidiHeader));
     ismidiready = 1;
   }
-}
-
-int bx_sound_windows_c::openwaveinput(const char *wavedev, sound_record_handler_t rh)
-{
-  UNUSED(wavedev);
-  record_handler = rh;
-  if (rh != NULL) {
-    record_timer_index = bx_pc_system.register_timer(this, record_timer_handler, 1, 1, 0, "soundwin");
-    // record timer: inactive, continuous, frequency variable
-  }
-  recording = 0;
-  wavein_param.samplerate = 0;
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_windows_c::recordnextpacket()
-{
-  MMRESULT result;
-
-  WaveInHdr->lpData = (LPSTR)WaveInData;
-  WaveInHdr->dwBufferLength = record_packet_size;
-  WaveInHdr->dwBytesRecorded = 0;
-  WaveInHdr->dwUser = 0L;
-  WaveInHdr->dwFlags = 0L;
-  WaveInHdr->dwLoops = 0L;
-  waveInPrepareHeader(hWaveIn, WaveInHdr, sizeof(WAVEHDR));
-  result = waveInAddBuffer(hWaveIn, WaveInHdr, sizeof(WAVEHDR));
-  if (result) {
-    BX_ERROR(("Couldn't add buffer for recording (error = %d)", result));
-    return BX_SOUNDLOW_ERR;
-  } else {
-    result = waveInStart(hWaveIn);
-    if (result) {
-      BX_ERROR(("Couldn't start recording (error = %d)", result));
-      return BX_SOUNDLOW_ERR;
-    } else {
-      recording = 1;
-      return BX_SOUNDLOW_OK;
-    }
-  }
-}
-
-int bx_sound_windows_c::startwaverecord(bx_pcm_param_t *param)
-{
-  Bit64u timer_val;
-  Bit8u shift = 0;
-  MMRESULT result;
-
-  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
-    if (param->bits == 16) shift++;
-    if (param->channels == 2) shift++;
-    record_packet_size = (param->samplerate / 10) << shift; // 0.1 sec
-    if (record_packet_size > BX_SOUNDLOW_WAVEPACKETSIZE) {
-      record_packet_size = BX_SOUNDLOW_WAVEPACKETSIZE;
-    }
-    timer_val = (Bit64u)record_packet_size * 1000000 / (param->samplerate << shift);
-    bx_pc_system.activate_timer(record_timer_index, (Bit32u)timer_val, 1);
-  }
-  // check if any of the properties have changed
-  if (memcmp(param, &wavein_param, sizeof(bx_pcm_param_t)) != 0) {
-    wavein_param = *param;
-
-    if (WaveInOpen) {
-      waveInClose(hWaveIn);
-    }
-
-    // Specify recording parameters
-    WAVEFORMATEX pFormat;
-    pFormat.wFormatTag = WAVE_FORMAT_PCM;
-    pFormat.nChannels = param->channels;
-    pFormat.nSamplesPerSec = param->samplerate;
-    pFormat.nAvgBytesPerSec = param->samplerate << shift;
-    pFormat.nBlockAlign = 1 << shift;
-    pFormat.wBitsPerSample = param->bits;
-    pFormat.cbSize = 0;
-    result = waveInOpen(&hWaveIn, WAVEMAPPER, &pFormat, 0L, 0L, WAVE_FORMAT_DIRECT);
-    if (result) {
-      BX_ERROR(("Couldn't open wave device for recording (error = %d)", result));
-      return BX_SOUNDLOW_ERR;
-    } else {
-      WaveInOpen = 1;
-    }
-  }
-  return recordnextpacket();
-}
-
-int bx_sound_windows_c::getwavepacket(int length, Bit8u data[])
-{
-  if (WaveInOpen && recording) {
-    do {} while (waveInUnprepareHeader(hWaveIn, WaveInHdr, sizeof(WAVEHDR)) == WAVERR_STILLPLAYING);
-    memcpy(data, WaveInData, length);
-    return recordnextpacket();
-  } else {
-    memset(data, 0, length);
-    return BX_SOUNDLOW_OK;
-  }
-}
-
-int bx_sound_windows_c::stopwaverecord()
-{
-  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
-    bx_pc_system.deactivate_timer(record_timer_index);
-  }
-  if (WaveInOpen && recording) {
-    do {} while (waveInUnprepareHeader(hWaveIn, WaveInHdr, sizeof(WAVEHDR)) == WAVERR_STILLPLAYING);
-    recording = 0;
-  }
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_windows_c::closewaveinput()
-{
-  stopwaverecord();
-  if (WaveInOpen) {
-    waveInClose(hWaveIn);
-  }
-  return BX_SOUNDLOW_OK;
-}
-
-void bx_sound_windows_c::record_timer_handler(void *this_ptr)
-{
-  bx_sound_windows_c *class_ptr = (bx_sound_windows_c *) this_ptr;
-
-  class_ptr->record_timer();
-}
-
-void bx_sound_windows_c::record_timer(void)
-{
-  record_handler(this, record_packet_size);
 }
 
 #endif // defined(WIN32)

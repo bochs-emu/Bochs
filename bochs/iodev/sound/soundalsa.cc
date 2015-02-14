@@ -154,14 +154,121 @@ int bx_soundlow_waveout_alsa_c::output(int length, Bit8u data[])
   return BX_SOUNDLOW_OK;
 }
 
+// bx_soundlow_wavein_alsa_c class implemenzation
+
+bx_soundlow_wavein_alsa_c::bx_soundlow_wavein_alsa_c()
+    :bx_soundlow_wavein_c()
+{
+  alsa_wavein.handle = NULL;
+  alsa_wavein.buffer = NULL;
+}
+
+bx_soundlow_wavein_alsa_c::~bx_soundlow_wavein_alsa_c()
+{
+  if (alsa_wavein.handle != NULL) {
+    snd_pcm_drain(alsa_wavein.handle);
+    snd_pcm_close(alsa_wavein.handle);
+    alsa_wavein.handle = NULL;
+  }
+}
+
+int bx_soundlow_wavein_alsa_c::openwaveinput(const char *wavedev, sound_record_handler_t rh)
+{
+  record_handler = rh;
+  if (rh != NULL) {
+    record_timer_index = bx_pc_system.register_timer(this, record_timer_handler, 1, 1, 0, "wavein");
+    // record timer: inactive, continuous, frequency variable
+  }
+  wavein_param.samplerate = 0;
+
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_soundlow_wavein_alsa_c::startwaverecord(bx_pcm_param_t *param)
+{
+  Bit64u timer_val;
+  Bit8u shift = 0;
+
+  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
+    if (param->bits == 16) shift++;
+    if (param->channels == 2) shift++;
+    record_packet_size = (param->samplerate / 10) << shift; // 0.1 sec
+    if (record_packet_size > BX_SOUNDLOW_WAVEPACKETSIZE) {
+      record_packet_size = BX_SOUNDLOW_WAVEPACKETSIZE;
+    }
+    timer_val = (Bit64u)record_packet_size * 1000000 / (param->samplerate << shift);
+    bx_pc_system.activate_timer(record_timer_index, (Bit32u)timer_val, 1);
+  }
+  if (memcmp(param, &wavein_param, sizeof(bx_pcm_param_t)) == 0) {
+    return BX_SOUNDLOW_OK;
+  } else {
+    wavein_param = *param;
+    return alsa_pcm_open(1, &alsa_wavein, param, this);
+  }
+}
+
+int bx_soundlow_wavein_alsa_c::getwavepacket(int length, Bit8u data[])
+{
+  int ret;
+
+  if (alsa_wavein.buffer == NULL) {
+    alsa_wavein.buffer = (char *)malloc(alsa_wavein.alsa_bufsize);
+  }
+  while (alsa_wavein.audio_bufsize < length) {
+    ret = snd_pcm_readi(alsa_wavein.handle, alsa_wavein.buffer, alsa_wavein.frames);
+    if (ret == -EAGAIN)
+      continue;
+    if (ret == -EPIPE) {
+      /* EPIPE means overrun */
+      BX_ERROR(("overrun occurred"));
+      snd_pcm_prepare(alsa_wavein.handle);
+    } else if (ret < 0) {
+      BX_ERROR(("error from read: %s", snd_strerror(ret)));
+    } else if (ret != (int)alsa_wavein.frames) {
+      BX_ERROR(("short read, read %d frames", ret));
+    }
+    memcpy(audio_buffer+alsa_wavein.audio_bufsize, alsa_wavein.buffer, alsa_wavein.alsa_bufsize);
+    alsa_wavein.audio_bufsize += alsa_wavein.alsa_bufsize;
+  }
+  memcpy(data, audio_buffer, length);
+  alsa_wavein.audio_bufsize -= length;
+  if ((alsa_wavein.audio_bufsize <= 0) && (alsa_wavein.buffer != NULL)) {
+    free(alsa_wavein.buffer);
+    alsa_wavein.buffer = NULL;
+  }
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_soundlow_wavein_alsa_c::stopwaverecord()
+{
+  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
+    bx_pc_system.deactivate_timer(record_timer_index);
+  }
+  if (alsa_wavein.handle != NULL) {
+    snd_pcm_drain(alsa_wavein.handle);
+  }
+
+  return BX_SOUNDLOW_OK;
+}
+
+void bx_soundlow_wavein_alsa_c::record_timer_handler(void *this_ptr)
+{
+  bx_soundlow_wavein_alsa_c *class_ptr = (bx_soundlow_wavein_alsa_c *) this_ptr;
+
+  class_ptr->record_timer();
+}
+
+void bx_soundlow_wavein_alsa_c::record_timer(void)
+{
+  record_handler(this, record_packet_size);
+}
+
 // bx_sound_alsa_c class implemenzation
 
 bx_sound_alsa_c::bx_sound_alsa_c()
     :bx_sound_lowlevel_c()
 {
   alsa_seq.handle = NULL;
-  alsa_wavein.handle = NULL;
-  alsa_wavein.buffer = NULL;
   BX_INFO(("Sound lowlevel module 'alsa' initialized"));
 }
 
@@ -171,6 +278,14 @@ bx_soundlow_waveout_c* bx_sound_alsa_c::get_waveout()
     waveout = new bx_soundlow_waveout_alsa_c();
   }
   return waveout;
+}
+
+bx_soundlow_wavein_c* bx_sound_alsa_c::get_wavein()
+{
+  if (wavein == NULL) {
+    wavein = new bx_soundlow_wavein_alsa_c();
+  }
+  return wavein;
 }
 
 int bx_sound_alsa_c::alsa_seq_open(const char *alsadev)
@@ -322,109 +437,6 @@ int bx_sound_alsa_c::closemidioutput()
   }
 
   return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_alsa_c::openwaveinput(const char *wavedev, sound_record_handler_t rh)
-{
-  record_handler = rh;
-  if (rh != NULL) {
-    record_timer_index = bx_pc_system.register_timer(this, record_timer_handler, 1, 1, 0, "soundlnx");
-    // record timer: inactive, continuous, frequency variable
-  }
-  wavein_param.samplerate = 0;
-
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_alsa_c::startwaverecord(bx_pcm_param_t *param)
-{
-  Bit64u timer_val;
-  Bit8u shift = 0;
-
-  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
-    if (param->bits == 16) shift++;
-    if (param->channels == 2) shift++;
-    record_packet_size = (param->samplerate / 10) << shift; // 0.1 sec
-    if (record_packet_size > BX_SOUNDLOW_WAVEPACKETSIZE) {
-      record_packet_size = BX_SOUNDLOW_WAVEPACKETSIZE;
-    }
-    timer_val = (Bit64u)record_packet_size * 1000000 / (param->samplerate << shift);
-    bx_pc_system.activate_timer(record_timer_index, (Bit32u)timer_val, 1);
-  }
-  if (memcmp(param, &wavein_param, sizeof(bx_pcm_param_t)) == 0) {
-    return BX_SOUNDLOW_OK;
-  } else {
-    wavein_param = *param;
-    return alsa_pcm_open(1, &alsa_wavein, param, this);
-  }
-}
-
-int bx_sound_alsa_c::getwavepacket(int length, Bit8u data[])
-{
-  int ret;
-
-  if (alsa_wavein.buffer == NULL) {
-    alsa_wavein.buffer = (char *)malloc(alsa_wavein.alsa_bufsize);
-  }
-  while (alsa_wavein.audio_bufsize < length) {
-    ret = snd_pcm_readi(alsa_wavein.handle, alsa_wavein.buffer, alsa_wavein.frames);
-    if (ret == -EAGAIN)
-      continue;
-    if (ret == -EPIPE) {
-      /* EPIPE means overrun */
-      BX_ERROR(("overrun occurred"));
-      snd_pcm_prepare(alsa_wavein.handle);
-    } else if (ret < 0) {
-      BX_ERROR(("error from read: %s", snd_strerror(ret)));
-    } else if (ret != (int)alsa_wavein.frames) {
-      BX_ERROR(("short read, read %d frames", ret));
-    }
-    memcpy(audio_buffer+alsa_wavein.audio_bufsize, alsa_wavein.buffer, alsa_wavein.alsa_bufsize);
-    alsa_wavein.audio_bufsize += alsa_wavein.alsa_bufsize;
-  }
-  memcpy(data, audio_buffer, length);
-  alsa_wavein.audio_bufsize -= length;
-  if ((alsa_wavein.audio_bufsize <= 0) && (alsa_wavein.buffer != NULL)) {
-    free(alsa_wavein.buffer);
-    alsa_wavein.buffer = NULL;
-  }
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_alsa_c::stopwaverecord()
-{
-  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
-    bx_pc_system.deactivate_timer(record_timer_index);
-  }
-  if (alsa_wavein.handle != NULL) {
-    snd_pcm_drain(alsa_wavein.handle);
-  }
-
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_alsa_c::closewaveinput()
-{
-  stopwaverecord();
-  if (alsa_wavein.handle != NULL) {
-    snd_pcm_drain(alsa_wavein.handle);
-    snd_pcm_close(alsa_wavein.handle);
-    alsa_wavein.handle = NULL;
-  }
-
-  return BX_SOUNDLOW_OK;
-}
-
-void bx_sound_alsa_c::record_timer_handler(void *this_ptr)
-{
-  bx_sound_alsa_c *class_ptr = (bx_sound_alsa_c *) this_ptr;
-
-  class_ptr->record_timer();
-}
-
-void bx_sound_alsa_c::record_timer(void)
-{
-  record_handler(this, record_packet_size);
 }
 
 #endif

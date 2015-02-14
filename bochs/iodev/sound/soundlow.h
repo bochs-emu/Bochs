@@ -92,6 +92,26 @@ protected:
   int pcm_callback_id;
 };
 
+// the wavein class
+
+class bx_soundlow_wavein_c : public logfunctions {
+public:
+  bx_soundlow_wavein_c();
+  virtual ~bx_soundlow_wavein_c();
+
+  virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
+  virtual int startwaverecord(bx_pcm_param_t *param);
+  virtual int getwavepacket(int length, Bit8u data[]);
+  virtual int stopwaverecord();
+
+  static void record_timer_handler(void *);
+  void record_timer(void);
+protected:
+  int record_timer_index;
+  int record_packet_size;
+  sound_record_handler_t record_handler;
+};
+
 // The class with the input/output functions
 class bx_sound_lowlevel_c : public logfunctions {
 public:
@@ -107,24 +127,14 @@ public:
   virtual ~bx_sound_lowlevel_c();
 
   virtual bx_soundlow_waveout_c* get_waveout();
+  virtual bx_soundlow_wavein_c* get_wavein();
 
   virtual int openmidioutput(const char *mididev);
   virtual int midiready();
   virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
   virtual int closemidioutput();
 
-  virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
-  virtual int startwaverecord(bx_pcm_param_t *param);
-  virtual int getwavepacket(int length, Bit8u data[]);
-  virtual int stopwaverecord();
-  virtual int closewaveinput();
-
-  static void record_timer_handler(void *);
-  void record_timer(void);
 protected:
   bx_soundlow_waveout_c *waveout;
-
-  int record_timer_index;
-  int record_packet_size;
-  sound_record_handler_t record_handler;
+  bx_soundlow_wavein_c *wavein;
 };

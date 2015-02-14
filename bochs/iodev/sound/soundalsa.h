@@ -48,26 +48,37 @@ private:
   alsa_pcm_t alsa_waveout;
 };
 
+class bx_soundlow_wavein_alsa_c : public bx_soundlow_wavein_c {
+public:
+  bx_soundlow_wavein_alsa_c();
+  virtual ~bx_soundlow_wavein_alsa_c();
+
+  virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
+  virtual int startwaverecord(bx_pcm_param_t *param);
+  virtual int getwavepacket(int length, Bit8u data[]);
+  virtual int stopwaverecord();
+
+  static void record_timer_handler(void *);
+  void record_timer(void);
+private:
+  alsa_pcm_t alsa_wavein;
+  bx_pcm_param_t wavein_param;
+  Bit8u audio_buffer[BX_SOUND_ALSA_BUFSIZE];
+};
+
 class bx_sound_alsa_c : public bx_sound_lowlevel_c {
 public:
   bx_sound_alsa_c();
   virtual ~bx_sound_alsa_c() {}
 
   virtual bx_soundlow_waveout_c* get_waveout();
+  virtual bx_soundlow_wavein_c* get_wavein();
 
   virtual int openmidioutput(const char *mididev);
   virtual int midiready();
   virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
   virtual int closemidioutput();
 
-  virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
-  virtual int startwaverecord(bx_pcm_param_t *param);
-  virtual int getwavepacket(int length, Bit8u data[]);
-  virtual int stopwaverecord();
-  virtual int closewaveinput();
-
-  static void record_timer_handler(void *);
-  void record_timer(void);
 private:
   int alsa_seq_open(const char *alsadev);
   int alsa_seq_output(int delta, int command, int length, Bit8u data[]);
@@ -76,9 +87,6 @@ private:
     snd_seq_t *handle;
     int source_port;
   } alsa_seq;
-  alsa_pcm_t alsa_wavein;
-  bx_pcm_param_t wavein_param;
-  Bit8u audio_buffer[BX_SOUND_ALSA_BUFSIZE];
 };
 
 #endif

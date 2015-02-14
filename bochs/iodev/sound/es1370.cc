@@ -188,14 +188,12 @@ bx_es1370_c::bx_es1370_c()
   s.dac2_timer_index = BX_NULL_TIMER_HANDLE;
   soundmod = NULL;
   waveout = NULL;
+  wavein = NULL;
   wavefile = NULL;
 }
 
 bx_es1370_c::~bx_es1370_c()
 {
-  if (s.adc_inputinit) {
-    soundmod->closewaveinput();
-  }
   closewaveoutput();
 
   SIM->get_bochs_root()->remove("es1370");
@@ -227,6 +225,7 @@ void bx_es1370_c::init(void)
 
   BX_ES1370_THIS soundmod = DEV_sound_get_module();
   BX_ES1370_THIS waveout = soundmod->get_waveout();
+  BX_ES1370_THIS wavein = soundmod->get_wavein();
   BX_ES1370_THIS s.dac_outputinit = 1;
   BX_ES1370_THIS s.adc_inputinit = 0;
   BX_ES1370_THIS s.dac_nr_active = -1;
@@ -597,7 +596,7 @@ void bx_es1370_c::run_channel(unsigned chan, int timer_id, Bit32u buflen)
 
   if (!(BX_ES1370_THIS s.ctl & ctl_ch_en[chan]) || (BX_ES1370_THIS s.sctl & sctl_ch_pause[chan])) {
     if (chan == ADC_CHANNEL) {
-      BX_ES1370_THIS soundmod->stopwaverecord();
+      BX_ES1370_THIS wavein->stopwaverecord();
     } else {
       bx_pc_system.deactivate_timer(timer_id);
     }
@@ -615,7 +614,7 @@ void bx_es1370_c::run_channel(unsigned chan, int timer_id, Bit32u buflen)
   addr += (cnt << 2) + d->leftover;
 
   if (chan == ADC_CHANNEL) {
-    BX_ES1370_THIS soundmod->getwavepacket(temp, tmpbuf);
+    BX_ES1370_THIS wavein->getwavepacket(temp, tmpbuf);
     DEV_MEM_WRITE_PHYSICAL_DMA(addr, temp, tmpbuf);
     transfered = temp;
   } else {
@@ -727,7 +726,7 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
       if (new_freq) {
         if (i == ADC_CHANNEL) {
           if (!BX_ES1370_THIS s.adc_inputinit) {
-            ret = BX_ES1370_THIS soundmod->openwaveinput(SIM->get_param_string(BXPN_SOUND_WAVEIN)->getptr(),
+            ret = BX_ES1370_THIS wavein->openwaveinput(SIM->get_param_string(BXPN_SOUND_WAVEIN)->getptr(),
                                                          es1370_adc_handler);
             if (ret != BX_SOUNDLOW_OK) {
               BX_ERROR(("could not open wave input device"));
@@ -757,9 +756,8 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
             param.bits = (new_fmt >> 1) ? 16 : 8;
             param.channels = (new_fmt & 1) + 1;
             param.format = (new_fmt >> 1);
-            ret = BX_ES1370_THIS soundmod->startwaverecord(&param);
+            ret = BX_ES1370_THIS wavein->startwaverecord(&param);
             if (ret != BX_SOUNDLOW_OK) {
-              BX_ES1370_THIS soundmod->closewaveinput();
               BX_ES1370_THIS s.adc_inputinit = 0;
               BX_ERROR(("could not start wave record"));
             }
@@ -794,7 +792,7 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
       } else {
         if (i == ADC_CHANNEL) {
           if (BX_ES1370_THIS s.adc_inputinit) {
-            BX_ES1370_THIS soundmod->stopwaverecord();
+            BX_ES1370_THIS wavein->stopwaverecord();
           }
         } else {
           if (((int)i == BX_ES1370_THIS s.dac_nr_active) && BX_ES1370_THIS s.dac_outputinit) {
