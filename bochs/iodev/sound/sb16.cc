@@ -186,6 +186,7 @@ void CDECL libsb16_LTX_plugin_fini(void)
 #define BX_SB16_OUTPUT  BX_SB16_THIS soundmod
 #define BX_SB16_WAVEOUT BX_SB16_THIS waveout
 #define BX_SB16_WAVEIN  BX_SB16_THIS wavein
+#define BX_SB16_MIDIOUT BX_SB16_THIS midiout
 
 // here's a safe way to print out null pointeres
 #define MIGHT_BE_NULL(x)  ((x==NULL)? "(null)" : x)
@@ -265,6 +266,10 @@ void bx_sb16_c::init(void)
   BX_SB16_WAVEIN = soundmod->get_wavein();
   if (BX_SB16_WAVEIN == NULL) {
     BX_PANIC(("Couldn't initialize lowlevel driver (wavein)"));
+  }
+  BX_SB16_MIDIOUT = soundmod->get_midiout();
+  if (BX_SB16_MIDIOUT == NULL) {
+    BX_PANIC(("Couldn't initialize lowlevel driver (midiout)"));
   }
 
   DSP.dma.chunk = new Bit8u[BX_SOUNDLOW_WAVEPACKETSIZE];
@@ -1887,7 +1892,7 @@ Bit32u bx_sb16_c::mpu_status()
 
   if ((MPU.datain.full() == 1) ||
        ((BX_SB16_THIS midimode == 1) &&
-        (BX_SB16_OUTPUT->midiready() == BX_SOUNDLOW_ERR)))
+        (BX_SB16_MIDIOUT->midiready() == BX_SOUNDLOW_ERR)))
     result |= 0x40;       // output not ready
   if (MPU.dataout.empty() == 1)
     result |= 0x80;       // no input available
@@ -2424,7 +2429,7 @@ void bx_sb16_c::writemidicommand(int command, int length, Bit8u data[])
   if (BX_SB16_THIS midimode == 1) {
     if (MPU.outputinit != 1) {
       writelog(MIDILOG(4), "Initializing Midi output.");
-      if (BX_SB16_OUTPUT->openmidioutput(midiparam->getptr()) == BX_SOUNDLOW_OK)
+      if (BX_SB16_MIDIOUT->openmidioutput(midiparam->getptr()) == BX_SOUNDLOW_OK)
         MPU.outputinit = 1;
       else
         MPU.outputinit = 0;
@@ -2434,7 +2439,7 @@ void bx_sb16_c::writemidicommand(int command, int length, Bit8u data[])
         return;
       }
     }
-    BX_SB16_OUTPUT->sendmidicommand(deltatime, command, length, data);
+    BX_SB16_MIDIOUT->sendmidicommand(deltatime, command, length, data);
     return;
   } else if ((BX_SB16_THIS midimode == 2) ||
              (BX_SB16_THIS midimode == 3)) {
@@ -2659,7 +2664,6 @@ void bx_sb16_c::closemidioutput()
   switch (BX_SB16_THIS midimode) {
     case 1:
       if (MPU.outputinit != 0) {
-        BX_SB16_OUTPUT->closemidioutput();
         MPU.outputinit = 0;
       }
       break;

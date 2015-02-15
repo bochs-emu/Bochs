@@ -392,6 +392,38 @@ void bx_soundlow_wavein_c::record_timer(void)
   record_handler(this, record_packet_size);
 }
 
+// bx_soundlow_midiout_c class implemenzation
+// The dummy output methods don't do anything.
+
+bx_soundlow_midiout_c::bx_soundlow_midiout_c()
+{
+  put("midiout", "MIDI");
+}
+
+bx_soundlow_midiout_c::~bx_soundlow_midiout_c()
+{
+}
+
+int bx_soundlow_midiout_c::openmidioutput(const char *mididev)
+{
+  UNUSED(mididev);
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_soundlow_midiout_c::midiready()
+{
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_soundlow_midiout_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
+{
+  UNUSED(delta);
+  UNUSED(command);
+  UNUSED(length);
+  UNUSED(data);
+  return BX_SOUNDLOW_OK;
+}
+
 // bx_sound_lowlevel_c class implemenzation
 // This is the base class of the sound lowlevel support.
 
@@ -400,6 +432,7 @@ bx_sound_lowlevel_c::bx_sound_lowlevel_c()
   put("soundlow", "SNDLOW");
   waveout = NULL;
   wavein = NULL;
+  midiout = NULL;
 }
 
 bx_sound_lowlevel_c::~bx_sound_lowlevel_c()
@@ -409,6 +442,9 @@ bx_sound_lowlevel_c::~bx_sound_lowlevel_c()
   }
   if (wavein != NULL) {
     delete wavein;
+  }
+  if (midiout != NULL) {
+    delete midiout;
   }
 }
 
@@ -428,29 +464,12 @@ bx_soundlow_wavein_c* bx_sound_lowlevel_c::get_wavein()
   return wavein;
 }
 
-int bx_sound_lowlevel_c::openmidioutput(const char *mididev)
+bx_soundlow_midiout_c* bx_sound_lowlevel_c::get_midiout()
 {
-  UNUSED(mididev);
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::midiready()
-{
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
-{
-  UNUSED(delta);
-  UNUSED(command);
-  UNUSED(length);
-  UNUSED(data);
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_lowlevel_c::closemidioutput()
-{
-  return BX_SOUNDLOW_OK;
+  if (midiout == NULL) {
+    midiout = new bx_soundlow_midiout_c();
+  }
+  return midiout;
 }
 
 #endif

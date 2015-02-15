@@ -54,6 +54,19 @@ private:
   bx_pcm_param_t wavein_param;
 };
 
+class bx_soundlow_midiout_oss_c : public bx_soundlow_midiout_c {
+public:
+  bx_soundlow_midiout_oss_c();
+  virtual ~bx_soundlow_midiout_oss_c();
+
+  virtual int openmidioutput(const char *mididev);
+  virtual int midiready();
+  virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
+
+private:
+  FILE *midi;
+};
+
 class bx_sound_oss_c : public bx_sound_lowlevel_c {
 public:
   bx_sound_oss_c();
@@ -61,14 +74,7 @@ public:
 
   virtual bx_soundlow_waveout_c* get_waveout();
   virtual bx_soundlow_wavein_c* get_wavein();
-
-  virtual int openmidioutput(const char *mididev);
-  virtual int midiready();
-  virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
-  virtual int closemidioutput();
-
-private:
-  FILE *midi;
+  virtual bx_soundlow_midiout_c* get_midiout();
 };
 
 #endif

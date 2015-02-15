@@ -155,9 +155,10 @@ private:
   bx_bool midi_changed, wave_changed;
   Bit32u dmatimer;
   FILE *logfile, *midifile, *wavefile; // the output files or devices
-  bx_sound_lowlevel_c *soundmod; // the lowlevel class
+  bx_sound_lowlevel_c  *soundmod; // the lowlevel class
   bx_soundlow_waveout_c *waveout; // waveout support
-  bx_soundlow_wavein_c *wavein; // wavein support
+  bx_soundlow_wavein_c  *wavein;  // wavein support
+  bx_soundlow_midiout_c *midiout; // midiout support
   int currentirq;
   int currentdma8;
   int currentdma16;

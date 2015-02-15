@@ -263,32 +263,22 @@ void bx_soundlow_wavein_alsa_c::record_timer(void)
   record_handler(this, record_packet_size);
 }
 
-// bx_sound_alsa_c class implemenzation
+// bx_soundlow_midiout_alsa_c class implemenzation
 
-bx_sound_alsa_c::bx_sound_alsa_c()
-    :bx_sound_lowlevel_c()
+bx_soundlow_midiout_alsa_c::bx_soundlow_midiout_alsa_c()
+    :bx_soundlow_midiout_c()
 {
   alsa_seq.handle = NULL;
-  BX_INFO(("Sound lowlevel module 'alsa' initialized"));
 }
 
-bx_soundlow_waveout_c* bx_sound_alsa_c::get_waveout()
+bx_soundlow_midiout_alsa_c::~bx_soundlow_midiout_alsa_c()
 {
-  if (waveout == NULL) {
-    waveout = new bx_soundlow_waveout_alsa_c();
+  if (alsa_seq.handle != NULL) {
+    snd_seq_close(alsa_seq.handle);
   }
-  return waveout;
 }
 
-bx_soundlow_wavein_c* bx_sound_alsa_c::get_wavein()
-{
-  if (wavein == NULL) {
-    wavein = new bx_soundlow_wavein_alsa_c();
-  }
-  return wavein;
-}
-
-int bx_sound_alsa_c::alsa_seq_open(const char *alsadev)
+int bx_soundlow_midiout_alsa_c::alsa_seq_open(const char *alsadev)
 {
   char *mididev, *ptr;
   int client, port, ret = 0;
@@ -341,7 +331,7 @@ int bx_sound_alsa_c::alsa_seq_open(const char *alsadev)
   }
 }
 
-int bx_sound_alsa_c::openmidioutput(const char *mididev)
+int bx_soundlow_midiout_alsa_c::openmidioutput(const char *mididev)
 {
   if ((mididev == NULL) || (strlen(mididev) < 1))
     return BX_SOUNDLOW_ERR;
@@ -349,12 +339,7 @@ int bx_sound_alsa_c::openmidioutput(const char *mididev)
   return alsa_seq_open(mididev);
 }
 
-int bx_sound_alsa_c::midiready()
-{
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_alsa_c::alsa_seq_output(int delta, int command, int length, Bit8u data[])
+int bx_soundlow_midiout_alsa_c::alsa_seq_output(int delta, int command, int length, Bit8u data[])
 {
   int cmd, chan, value;
   snd_seq_event_t ev;
@@ -421,7 +406,7 @@ int bx_sound_alsa_c::alsa_seq_output(int delta, int command, int length, Bit8u d
   return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_alsa_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
+int bx_soundlow_midiout_alsa_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
 {
   if (alsa_seq.handle != NULL) {
     return alsa_seq_output(delta, command, length, data);
@@ -430,13 +415,36 @@ int bx_sound_alsa_c::sendmidicommand(int delta, int command, int length, Bit8u d
   return BX_SOUNDLOW_ERR;
 }
 
-int bx_sound_alsa_c::closemidioutput()
-{
-  if (alsa_seq.handle != NULL) {
-    snd_seq_close(alsa_seq.handle);
-  }
+// bx_sound_alsa_c class implemenzation
 
-  return BX_SOUNDLOW_OK;
+bx_sound_alsa_c::bx_sound_alsa_c()
+    :bx_sound_lowlevel_c()
+{
+  BX_INFO(("Sound lowlevel module 'alsa' initialized"));
+}
+
+bx_soundlow_waveout_c* bx_sound_alsa_c::get_waveout()
+{
+  if (waveout == NULL) {
+    waveout = new bx_soundlow_waveout_alsa_c();
+  }
+  return waveout;
+}
+
+bx_soundlow_wavein_c* bx_sound_alsa_c::get_wavein()
+{
+  if (wavein == NULL) {
+    wavein = new bx_soundlow_wavein_alsa_c();
+  }
+  return wavein;
+}
+
+bx_soundlow_midiout_c* bx_sound_alsa_c::get_midiout()
+{
+  if (midiout == NULL) {
+    midiout = new bx_soundlow_midiout_alsa_c();
+  }
+  return midiout;
 }
 
 #endif

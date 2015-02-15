@@ -112,29 +112,31 @@ protected:
   sound_record_handler_t record_handler;
 };
 
-// The class with the input/output functions
+// the midiout class
+
+class bx_soundlow_midiout_c : public logfunctions {
+public:
+  bx_soundlow_midiout_c();
+  virtual ~bx_soundlow_midiout_c();
+
+  virtual int openmidioutput(const char *mididev);
+  virtual int midiready();
+  virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
+};
+
+// the lowlevel sound driver class returns pointers to the child objects
+
 class bx_sound_lowlevel_c : public logfunctions {
 public:
-
-  /*
-  These functions are the sound lowlevel functions, sending
-  the music or sending/receiving sound to/from the OS specific driver.
-  They are in a different file (soundxxx.cc) because they are
-  non-portable, while everything in the soundcard code is portable
-  */
-
   bx_sound_lowlevel_c();
   virtual ~bx_sound_lowlevel_c();
 
   virtual bx_soundlow_waveout_c* get_waveout();
   virtual bx_soundlow_wavein_c* get_wavein();
-
-  virtual int openmidioutput(const char *mididev);
-  virtual int midiready();
-  virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
-  virtual int closemidioutput();
+  virtual bx_soundlow_midiout_c* get_midiout();
 
 protected:
   bx_soundlow_waveout_c *waveout;
   bx_soundlow_wavein_c *wavein;
+  bx_soundlow_midiout_c *midiout;
 };

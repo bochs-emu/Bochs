@@ -199,18 +199,14 @@ private:
   int recordnextpacket();
 };
 
-class bx_sound_windows_c : public bx_sound_lowlevel_c {
+class bx_soundlow_midiout_win_c : public bx_soundlow_midiout_c {
 public:
-  bx_sound_windows_c();
-  virtual ~bx_sound_windows_c();
-
-  virtual bx_soundlow_waveout_c* get_waveout();
-  virtual bx_soundlow_wavein_c* get_wavein();
+  bx_soundlow_midiout_win_c();
+  virtual ~bx_soundlow_midiout_win_c();
 
   virtual int openmidioutput(const char *mididev);
   virtual int midiready();
   virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
-  virtual int closemidioutput();
 
 private:
   HMIDIOUT MidiOut;       // Midi output device
@@ -222,6 +218,16 @@ private:
   int ismidiready;
 
   void checkmidiready();
+};
+
+class bx_sound_windows_c : public bx_sound_lowlevel_c {
+public:
+  bx_sound_windows_c();
+  virtual ~bx_sound_windows_c();
+
+  virtual bx_soundlow_waveout_c* get_waveout();
+  virtual bx_soundlow_wavein_c* get_wavein();
+  virtual bx_soundlow_midiout_c* get_midiout();
 };
 
 #endif  // defined(WIN32)

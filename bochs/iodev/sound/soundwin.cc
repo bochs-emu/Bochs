@@ -338,56 +338,33 @@ void bx_soundlow_wavein_win_c::record_timer(void)
   record_handler(this, record_packet_size);
 }
 
-// bx_sound_windows_c class implemenzation
+// bx_soundlow_midiout_win_c class implemenzation
 
-bx_sound_windows_c::bx_sound_windows_c()
-  :bx_sound_lowlevel_c()
+bx_soundlow_midiout_win_c::bx_soundlow_midiout_win_c()
+    :bx_soundlow_midiout_c()
 {
   MidiOpen = 0;
-
   ismidiready = 1;
-
-  DataHandle = GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, size);
-  DataPointer = (Bit8u*) GlobalLock(DataHandle);
-
-  if (DataPointer == NULL)
-    BX_PANIC(("GlobalLock returned NULL-pointer"));
-
   MidiHeader = (LPMIDIHDR) newbuffer(sizeof(MIDIHDR));
   MidiData = (LPSTR) newbuffer(BX_SOUND_WINDOWS_MAXSYSEXLEN);
-
   if (MidiData == NULL)
     BX_PANIC(("Allocated memory was too small!"));
-
-#undef size
-#undef ALIGN
-
-  BX_INFO(("Sound lowlevel module 'win' initialized"));
 }
 
-bx_sound_windows_c::~bx_sound_windows_c()
+bx_soundlow_midiout_win_c::~bx_soundlow_midiout_win_c()
 {
-  GlobalUnlock(DataHandle);
-  GlobalFree(DataHandle);
-}
+  UINT ret;
 
-bx_soundlow_waveout_c* bx_sound_windows_c::get_waveout()
-{
-  if (waveout == NULL) {
-    waveout = new bx_soundlow_waveout_win_c();
+  if (MidiOpen == 1) {
+    ret = midiOutReset(MidiOut);
+    if (ismidiready == 0)
+      checkmidiready();   // to clear any pending SYSEX
+    ret = midiOutClose(MidiOut);
+    BX_DEBUG(("midiOutClose() = %d", ret));
   }
-  return waveout;
 }
 
-bx_soundlow_wavein_c* bx_sound_windows_c::get_wavein()
-{
-  if (wavein == NULL) {
-    wavein = new bx_soundlow_wavein_win_c();
-  }
-  return wavein;
-}
-
-int bx_sound_windows_c::openmidioutput(const char *mididev)
+int bx_soundlow_midiout_win_c::openmidioutput(const char *mididev)
 {
   UINT deviceid;
 
@@ -401,7 +378,6 @@ int bx_sound_windows_c::openmidioutput(const char *mididev)
       deviceid = (UINT) MIDIMAPPER;
     }
   }
-
   MidiOpen = 0;
 
   UINT ret = midiOutOpen(&MidiOut, deviceid, 0, 0, CALLBACK_NULL);
@@ -413,7 +389,7 @@ int bx_sound_windows_c::openmidioutput(const char *mididev)
   return (MidiOpen == 1) ? BX_SOUNDLOW_OK : BX_SOUNDLOW_ERR;
 }
 
-int bx_sound_windows_c::midiready()
+int bx_soundlow_midiout_win_c::midiready()
 {
   if (ismidiready == 0)
     checkmidiready();
@@ -424,7 +400,7 @@ int bx_sound_windows_c::midiready()
     return BX_SOUNDLOW_ERR;
 }
 
-int bx_sound_windows_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
+int bx_soundlow_midiout_win_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
 {
   UINT ret;
 
@@ -462,32 +438,60 @@ int bx_sound_windows_c::sendmidicommand(int delta, int command, int length, Bit8
   return (ret == 0) ? BX_SOUNDLOW_OK : BX_SOUNDLOW_ERR;
 }
 
-int bx_sound_windows_c::closemidioutput()
+void bx_soundlow_midiout_win_c::checkmidiready()
 {
-  UINT ret;
-
-  if (MidiOpen != 1)
-    return BX_SOUNDLOW_ERR;
-
-  ret = midiOutReset(MidiOut);
-  if (ismidiready == 0)
-    checkmidiready();   // to clear any pending SYSEX
-
-  ret = midiOutClose(MidiOut);
-  BX_DEBUG(("midiOutClose() = %d", ret));
-  MidiOpen = 0;
-
-  return (ret == 0) ? BX_SOUNDLOW_OK : BX_SOUNDLOW_ERR;
-}
-
-void bx_sound_windows_c::checkmidiready()
-{
-  if ((MidiHeader->dwFlags & MHDR_DONE) != 0)
-  {
+  if ((MidiHeader->dwFlags & MHDR_DONE) != 0) {
     BX_DEBUG(("SYSEX message done, midi ready again"));
     midiOutUnprepareHeader(MidiOut, MidiHeader, sizeof(*MidiHeader));
     ismidiready = 1;
   }
+}
+
+// bx_sound_windows_c class implemenzation
+
+bx_sound_windows_c::bx_sound_windows_c()
+  :bx_sound_lowlevel_c()
+{
+  DataHandle = GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, size);
+  DataPointer = (Bit8u*) GlobalLock(DataHandle);
+
+  if (DataPointer == NULL)
+    BX_PANIC(("GlobalLock returned NULL-pointer"));
+
+#undef size
+#undef ALIGN
+
+  BX_INFO(("Sound lowlevel module 'win' initialized"));
+}
+
+bx_sound_windows_c::~bx_sound_windows_c()
+{
+  GlobalUnlock(DataHandle);
+  GlobalFree(DataHandle);
+}
+
+bx_soundlow_waveout_c* bx_sound_windows_c::get_waveout()
+{
+  if (waveout == NULL) {
+    waveout = new bx_soundlow_waveout_win_c();
+  }
+  return waveout;
+}
+
+bx_soundlow_wavein_c* bx_sound_windows_c::get_wavein()
+{
+  if (wavein == NULL) {
+    wavein = new bx_soundlow_wavein_win_c();
+  }
+  return wavein;
+}
+
+bx_soundlow_midiout_c* bx_sound_windows_c::get_midiout()
+{
+  if (midiout == NULL) {
+    midiout = new bx_soundlow_midiout_win_c();
+  }
+  return midiout;
 }
 
 #endif // defined(WIN32)

@@ -66,18 +66,13 @@ private:
   Bit8u audio_buffer[BX_SOUND_ALSA_BUFSIZE];
 };
 
-class bx_sound_alsa_c : public bx_sound_lowlevel_c {
+class bx_soundlow_midiout_alsa_c : public bx_soundlow_midiout_c {
 public:
-  bx_sound_alsa_c();
-  virtual ~bx_sound_alsa_c() {}
-
-  virtual bx_soundlow_waveout_c* get_waveout();
-  virtual bx_soundlow_wavein_c* get_wavein();
+  bx_soundlow_midiout_alsa_c();
+  virtual ~bx_soundlow_midiout_alsa_c();
 
   virtual int openmidioutput(const char *mididev);
-  virtual int midiready();
   virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
-  virtual int closemidioutput();
 
 private:
   int alsa_seq_open(const char *alsadev);
@@ -87,6 +82,16 @@ private:
     snd_seq_t *handle;
     int source_port;
   } alsa_seq;
+};
+
+class bx_sound_alsa_c : public bx_sound_lowlevel_c {
+public:
+  bx_sound_alsa_c();
+  virtual ~bx_sound_alsa_c() {}
+
+  virtual bx_soundlow_waveout_c* get_waveout();
+  virtual bx_soundlow_wavein_c* get_wavein();
+  virtual bx_soundlow_midiout_c* get_midiout();
 };
 
 #endif

@@ -451,24 +451,24 @@ void bx_soundlow_waveout_osx_c::nextbuffer (int *outDataSize, void **outData)
 }
 #endif
 
-// bx_sound_osx_c class implemenzation
+// bx_soundlow_midiout_osx_c class implemenzation
 
-bx_sound_osx_c::bx_sound_osx_c()
-    :bx_sound_lowlevel_c()
+bx_soundlow_midiout_osx_c::bx_soundlow_midiout_osx_c()
+    :bx_soundlow_midiout_c()
 {
   MidiOpen = 0;
-  BX_INFO(("Sound lowlevel module 'osx' initialized"));
 }
 
-bx_soundlow_waveout_c* bx_sound_osx_c::get_waveout()
+bx_soundlow_midiout_osx_c::~bx_soundlow_midiout_osx_c()
 {
-  if (waveout == NULL) {
-    waveout = new bx_soundlow_waveout_osx_c();
-  }
-  return waveout;
+    MidiOpen = 0;
+#ifdef BX_SOUND_OSX_use_converter
+    AUGraphStop(MidiGraph);
+    AUGraphClose(MidiGraph);
+#endif
 }
 
-int bx_sound_osx_c::openmidioutput(const char *mididev)
+int bx_soundlow_midiout_osx_c::openmidioutput(const char *mididev)
 {
 #ifdef BX_SOUND_OSX_use_converter
     ComponentDescription description;
@@ -515,12 +515,7 @@ int bx_sound_osx_c::openmidioutput(const char *mididev)
     return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_osx_c::midiready()
-{
-    return BX_SOUNDLOW_OK;
-}
-
-int bx_sound_osx_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
+int bx_soundlow_midiout_osx_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
 {
     BX_DEBUG(("sendmidicommand(%i,%02x,%i)", delta, command, length));
     if (!MidiOpen) return BX_SOUNDLOW_ERR;
@@ -538,15 +533,28 @@ int bx_sound_osx_c::sendmidicommand(int delta, int command, int length, Bit8u da
     return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_osx_c::closemidioutput()
+// bx_sound_osx_c class implemenzation
+
+bx_sound_osx_c::bx_sound_osx_c()
+    :bx_sound_lowlevel_c()
 {
-    BX_DEBUG(("closemidioutput()"));
-    MidiOpen = 0;
-#ifdef BX_SOUND_OSX_use_converter
-    AUGraphStop (MidiGraph);
-    AUGraphClose (MidiGraph);
-#endif
-    return BX_SOUNDLOW_OK;
+  BX_INFO(("Sound lowlevel module 'osx' initialized"));
+}
+
+bx_soundlow_waveout_c* bx_sound_osx_c::get_waveout()
+{
+  if (waveout == NULL) {
+    waveout = new bx_soundlow_waveout_osx_c();
+  }
+  return waveout;
+}
+
+bx_soundlow_midiout_c* bx_sound_osx_c::get_midiout()
+{
+  if (midiout == NULL) {
+    midiout = new bx_soundlow_midiout_osx_c();
+  }
+  return midiout;
 }
 
 #endif  // defined(macintosh)

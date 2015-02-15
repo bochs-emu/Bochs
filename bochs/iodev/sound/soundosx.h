@@ -62,20 +62,25 @@ private:
 #endif
 };
 
+class bx_soundlow_midiout_osx_c : public bx_soundlow_midiout_c {
+public:
+  bx_soundlow_midiout_osx_c();
+  virtual ~bx_soundlow_midiout_osx_c();
+
+  virtual int openmidioutput(const char *mididev);
+  virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
+
+private:
+  int MidiOpen;
+};
+
 class bx_sound_osx_c : public bx_sound_lowlevel_c {
 public:
   bx_sound_osx_c();
   virtual ~bx_sound_osx_c() {}
 
   virtual bx_soundlow_waveout_c* get_waveout();
-
-  virtual int openmidioutput(const char *mididev);
-  virtual int midiready();
-  virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
-  virtual int closemidioutput();
-
-private:
-  int MidiOpen;
+  virtual bx_soundlow_midiout_c* get_midiout();
 };
 
 #endif  // macintosh
