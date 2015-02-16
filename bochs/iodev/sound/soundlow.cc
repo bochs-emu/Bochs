@@ -179,11 +179,13 @@ int bx_soundlow_waveout_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param
       set_pcm_params(&real_pcm_param);
     }
   }
-  len2 = length * cvt_mult;
-  BX_LOCK(mixer_mutex);
-  audio_buffer_t *newbuffer = new_audio_buffer(len2);
-  convert_pcm_data(data, length, newbuffer->data, len2, src_param);
-  BX_UNLOCK(mixer_mutex);
+  if (pcm_callback_id >= 0) {
+    len2 = length * cvt_mult;
+    BX_LOCK(mixer_mutex);
+    audio_buffer_t *newbuffer = new_audio_buffer(len2);
+    convert_pcm_data(data, length, newbuffer->data, len2, src_param);
+    BX_UNLOCK(mixer_mutex);
+  }
   return BX_SOUNDLOW_OK;
 }
 
