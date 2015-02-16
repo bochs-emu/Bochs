@@ -257,8 +257,6 @@ extern "C" {
 ///////// Sound module macros
 #define DEV_sound_get_module() \
   ((bx_sound_lowlevel_c*)bx_devices.pluginSoundModCtl->get_module())
-#define DEV_soundmod_beep_on(a) bx_devices.pluginSoundModCtl->beep_on(a)
-#define DEV_soundmod_beep_off() bx_devices.pluginSoundModCtl->beep_off()
 #define DEV_soundmod_VOC_init_file(a) \
   (bx_devices.pluginSoundModCtl->VOC_init_file(a))
 #define DEV_soundmod_VOC_write_block(a,b,c,d,e,f) \

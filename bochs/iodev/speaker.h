@@ -2,7 +2,8 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright 2003 by David N. Welton <davidw@dedasys.com>.
+//  Copyright (C) 2003       David N. Welton <davidw@dedasys.com>.
+//  Copyright (C) 2003-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -28,6 +29,8 @@
 #ifndef BX_PC_SPEAKER_H
 #define BX_PC_SPEAKER_H
 
+class bx_soundlow_waveout_c;
+
 class bx_speaker_c : public bx_speaker_stub_c {
 public:
     bx_speaker_c();
@@ -38,9 +41,11 @@ public:
 
     void beep_on(float frequency);
     void beep_off();
+#if BX_SUPPORT_SOUNDLOW
+    Bit32u beep_generator(Bit16u rate, Bit8u *buffer, Bit32u len);
+#endif
 private:
     float beep_frequency;  // 0 : beep is off
-    bx_bool outputinit;
     unsigned output_mode;
 #ifdef __linux__
     /* Do we have access?  If not, just skip everything else. */
@@ -48,6 +53,11 @@ private:
     const static unsigned int clock_tick_rate = 1193180;
 #elif defined(WIN32)
     Bit64u usec_start;
+#endif
+#if BX_SUPPORT_SOUNDLOW
+  bx_soundlow_waveout_c *waveout;
+  int beep_callback_id;
+  bx_bool beep_active;
 #endif
 };
 

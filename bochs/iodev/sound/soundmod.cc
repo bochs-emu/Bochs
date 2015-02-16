@@ -37,9 +37,6 @@
 #include "soundsdl.h"
 #include "soundalsa.h"
 
-#ifndef WIN32
-#include <pthread.h>
-#endif
 #if BX_WITH_SDL || BX_WITH_SDL2
 #include <SDL.h>
 #endif
@@ -47,10 +44,6 @@
 #define LOG_THIS theSoundModCtl->
 
 bx_soundmod_ctl_c* theSoundModCtl = NULL;
-
-BX_MUTEX(beep_mutex);
-
-Bit32u beep_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
 
 int CDECL libsoundmod_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
@@ -77,12 +70,6 @@ bx_soundmod_ctl_c::bx_soundmod_ctl_c()
 
 bx_soundmod_ctl_c::~bx_soundmod_ctl_c()
 {
-  beep_active = 0;
-  if (waveout != NULL) {
-    if (beep_callback_id >= 0) {
-      waveout->unregister_wave_callback(beep_callback_id);
-    }
-  }
   delete soundmod;
 }
 
@@ -132,11 +119,6 @@ void bx_soundmod_ctl_c::init()
     ret = waveout->openwaveoutput(pwaveout);
     if (ret != BX_SOUNDLOW_OK) {
       BX_PANIC(("Could not open wave output device"));
-    } else {
-      beep_active = 0;
-      beep_cur_freq = 0.0;
-      BX_INIT_MUTEX(beep_mutex);
-      beep_callback_id = waveout->register_wave_callback(theSoundModCtl, beep_callback);
     }
   } else {
     BX_PANIC(("no waveout support in sound driver '%s'", driver));
@@ -146,67 +128,6 @@ void bx_soundmod_ctl_c::init()
 void* bx_soundmod_ctl_c::get_module()
 {
   return soundmod;
-}
-
-Bit32u  bx_soundmod_ctl_c::beep_generator(Bit16u rate, Bit8u *buffer, Bit32u len)
-{
-  Bit32u j = 0;
-  Bit16u beep_samples;
-  static Bit8u beep_level = 0x40;
-  static Bit16u beep_pos = 0;
-
-  BX_LOCK(beep_mutex);
-  if (!beep_active) {
-    BX_UNLOCK(beep_mutex);
-    return 0;
-  }
-  beep_samples = (Bit32u)((float)rate / beep_cur_freq / 2);
-  do {
-    buffer[j++] = 0;
-    buffer[j++] = beep_level;
-    buffer[j++] = 0;
-    buffer[j++] = beep_level;
-    if ((++beep_pos % beep_samples) == 0) {
-      beep_level ^= 0x80;
-      beep_pos = 0;
-      beep_samples = (Bit32u)((float)rate / beep_cur_freq / 2);
-    }
-  } while (j < len);
-  BX_UNLOCK(beep_mutex);
-  return len;
-}
-
-Bit32u beep_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
-{
-  return ((bx_soundmod_ctl_c*)dev)->beep_generator(rate, buffer, len);
-}
-
-bx_bool bx_soundmod_ctl_c::beep_on(float frequency)
-{
-  if (soundmod != NULL) {
-    BX_DEBUG(("Beep ON (frequency=%.2f)",frequency));
-    if (frequency != beep_cur_freq) {
-      BX_LOCK(beep_mutex);
-      beep_cur_freq = frequency;
-      beep_active = 1;
-      BX_UNLOCK(beep_mutex);
-    }
-    return 1;
-  }
-  return 0;
-}
-
-bx_bool bx_soundmod_ctl_c::beep_off()
-{
-  if (soundmod != NULL) {
-    BX_DEBUG(("Beep OFF"));
-    BX_LOCK(beep_mutex);
-    beep_active = 0;
-    beep_cur_freq = 0.0;
-    BX_UNLOCK(beep_mutex);
-    return 1;
-  }
-  return 0;
 }
 
 /* Handlers for the VOC file output */

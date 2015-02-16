@@ -30,16 +30,10 @@ public:
   virtual ~bx_soundmod_ctl_c();
   virtual void init(void);
   virtual void* get_module();
-  virtual bx_bool beep_on(float frequency);
-  virtual bx_bool beep_off();
   virtual void VOC_init_file(FILE *stream);
   virtual void VOC_write_block(FILE *stream, int block, Bit32u headerlen,
                                Bit8u header[], Bit32u datalen, Bit8u data[]);
-  Bit32u beep_generator(Bit16u rate, Bit8u *buffer, Bit32u len);
 private:
   bx_sound_lowlevel_c *soundmod;
   bx_soundlow_waveout_c *waveout;
-  int beep_callback_id;
-  bx_bool beep_active;
-  float beep_cur_freq;
 };
