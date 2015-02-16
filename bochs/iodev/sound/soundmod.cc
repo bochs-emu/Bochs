@@ -36,6 +36,7 @@
 #include "soundwin.h"
 #include "soundsdl.h"
 #include "soundalsa.h"
+#include "soundfile.h"
 
 #if BX_WITH_SDL || BX_WITH_SDL2
 #include <SDL.h>
@@ -87,6 +88,8 @@ void bx_soundmod_ctl_c::init()
 
   if (strcmp(driver, "dummy") == 0) {
     soundmod = new bx_sound_lowlevel_c();
+  } else if (!strcmp(driver, "file")) {
+    soundmod = new bx_sound_file_c();
 #if BX_HAVE_ALSASOUND
   } else if (!strcmp(driver, "alsa")) {
     soundmod = new bx_sound_alsa_c();
