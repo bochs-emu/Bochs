@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2013  The Bochs Project
+//  Copyright (C) 2009-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -177,6 +177,7 @@
 #define BXPN_SOUND_DRIVER                "sound.lowlevel.driver"
 #define BXPN_SOUND_WAVEOUT               "sound.lowlevel.waveout"
 #define BXPN_SOUND_WAVEIN                "sound.lowlevel.wavein"
+#define BXPN_SOUND_MIDIOUT               "sound.lowlevel.midiout"
 #define BXPN_SOUND_SPEAKER               "sound.speaker"
 #define BXPN_SOUND_SB16                  "sound.sb16"
 #define BXPN_SOUND_ES1370                "sound.es1370"

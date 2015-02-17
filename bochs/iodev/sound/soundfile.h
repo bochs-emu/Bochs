@@ -32,7 +32,12 @@ public:
   virtual int set_pcm_params(bx_pcm_param_t *param);
   virtual int output(int length, Bit8u data[]);
 private:
+  void initvocfile();
+  void initwavfile();
+  void write_32bit(Bit32u pos, Bit32u value);
+
   FILE *wavefile;
+  unsigned type;
 };
 
 class bx_soundlow_midiout_file_c : public bx_soundlow_midiout_c {
@@ -47,6 +52,7 @@ private:
   void writedeltatime(Bit32u deltatime);
 
   FILE *midifile;
+  unsigned type;
 };
 
 class bx_sound_file_c : public bx_sound_lowlevel_c {

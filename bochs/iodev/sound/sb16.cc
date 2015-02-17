@@ -285,7 +285,7 @@ void bx_sb16_c::init(void)
     BX_SB16_THIS wavemode = 0;
   }
 
-  BX_INFO(("midi=%d,%s  wave=%d,%s  log=%d,%s  dmatimer=%d",
+  BX_INFO(("midi=%d,'%s'  wave=%d,'%s'  log=%d,'%s'  dmatimer=%d",
     BX_SB16_THIS midimode, MIGHT_BE_NULL(SIM->get_param_string("midi", base)->getptr()),
     BX_SB16_THIS wavemode, MIGHT_BE_NULL(SIM->get_param_string("wave", base)->getptr()),
     BX_SB16_THIS loglevel, MIGHT_BE_NULL(SIM->get_param_string("log", base)->getptr()),
@@ -2419,17 +2419,14 @@ void bx_sb16_c::initmidifile()
 
 void bx_sb16_c::writemidicommand(int command, int length, Bit8u data[])
 {
-  bx_list_c *base;
   /* We need to determine the time elapsed since the last MIDI command */
   int deltatime = currentdeltatime();
 
   /* Initialize output device if necessary and not done yet */
-  base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
-  bx_param_string_c *midiparam = SIM->get_param_string("midi", base);
   if (BX_SB16_THIS midimode == 1) {
     if (MPU.outputinit != 1) {
       writelog(MIDILOG(4), "Initializing Midi output.");
-      if (BX_SB16_MIDIOUT->openmidioutput(midiparam->getptr()) == BX_SOUNDLOW_OK)
+      if (BX_SB16_MIDIOUT->openmidioutput(SIM->get_param_string(BXPN_SOUND_MIDIOUT)->getptr()) == BX_SOUNDLOW_OK)
         MPU.outputinit = 1;
       else
         MPU.outputinit = 0;
@@ -2443,6 +2440,8 @@ void bx_sb16_c::writemidicommand(int command, int length, Bit8u data[])
     return;
   } else if ((BX_SB16_THIS midimode == 2) ||
              (BX_SB16_THIS midimode == 3)) {
+    bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
+    bx_param_string_c *midiparam = SIM->get_param_string("midi", base);
     if ((MIDIDATA == NULL) && (!midiparam->isempty())) {
       MIDIDATA = fopen(midiparam->getptr(),"wb");
       if (MIDIDATA == NULL) {

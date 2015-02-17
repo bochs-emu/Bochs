@@ -869,14 +869,15 @@ parport1: enabled=1, file="parport.out"
 
 #=======================================================================
 # SOUND:
-# This defines the lowlevel sound driver and the wave (PCM) input and
-# output devices to be used by sound emulation devices. Possible values
-# for the driver parameter are 'default', 'dummy' (no input/output),
-# 'alsa' (if present) and 'sdl' (if present). For some drivers the wave
-# devices must be specified. If the 'wavein' parameter is not set, Bochs
-# uses the 'waveout' device for input, too.
+# This defines the lowlevel sound driver and the wave (PCM) input / output
+# devices and the MIDI output device to be used by sound emulation devices.
+# Possible values for the driver parameter are 'default' (platform default),
+# 'file' (output sent to files), 'dummy' (no input/output) and the
+# platform-dependant drivers 'alsa', 'oss', 'osx', 'sdl' and 'win'.
+# For some drivers the device names must be specified. If the 'wavein'
+parameter is not set, Bochs uses the 'waveout' device for input, too.
 #=======================================================================
-sound: driver=default, waveout=/dev/dsp. wavein=
+sound: driver=default, waveout=/dev/dsp. wavein=, midiout=
 
 #=======================================================================
 # SPEAKER:
@@ -903,14 +904,13 @@ speaker: enabled=1, mode=sound
 #      2=SMF file output, including headers
 #      3=output the midi data stream to the file (no midi headers and no
 #        delta times, just command and data bytes)
-# midi: The filename is where the midi data is sent. This can be a
-#       device or just a file if you want to record the midi data.
+# midi: This is the file where the midi output is stored (midimode 2 or 3).
 # wavemode:
 #      0=no data
 #      1=output to device (system dependent. wave denotes the device driver)
 #      2=VOC file output, incl. headers
 #      3=output the raw wave stream to the file
-# wave: This is the file where the wave output is stored (wavemode 2 or 3)
+# wave: This is the file where the wave output is stored (wavemode 2 or 3).
 # loglevel:
 #      0=no log
 #      1=resource changes, midi program and bank changes
