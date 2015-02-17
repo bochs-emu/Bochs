@@ -461,11 +461,7 @@ bx_soundlow_midiout_osx_c::bx_soundlow_midiout_osx_c()
 
 bx_soundlow_midiout_osx_c::~bx_soundlow_midiout_osx_c()
 {
-    MidiOpen = 0;
-#ifdef BX_SOUND_OSX_use_converter
-    AUGraphStop(MidiGraph);
-    AUGraphClose(MidiGraph);
-#endif
+  closemidioutput();
 }
 
 int bx_soundlow_midiout_osx_c::openmidioutput(const char *mididev)
@@ -531,6 +527,16 @@ int bx_soundlow_midiout_osx_c::sendmidicommand(int delta, int command, int lengt
     }
 #endif
     return BX_SOUNDLOW_OK;
+}
+
+int bx_soundlow_midiout_osx_c::closemidioutput()
+{
+  MidiOpen = 0;
+#ifdef BX_SOUND_OSX_use_converter
+  AUGraphStop(MidiGraph);
+  AUGraphClose(MidiGraph);
+#endif
+  return BX_SOUNDLOW_OK;
 }
 
 // bx_sound_osx_c class implemenzation

@@ -186,7 +186,6 @@ bx_es1370_c::bx_es1370_c()
   memset(&s, 0, sizeof(bx_es1370_t));
   s.dac1_timer_index = BX_NULL_TIMER_HANDLE;
   s.dac2_timer_index = BX_NULL_TIMER_HANDLE;
-  soundmod = NULL;
   waveout = NULL;
   wavein = NULL;
   wavefile = NULL;
@@ -223,9 +222,8 @@ void bx_es1370_c::init(void)
 
   BX_ES1370_THIS pci_base_address[0] = 0;
 
-  BX_ES1370_THIS soundmod = DEV_sound_get_module();
-  BX_ES1370_THIS waveout = soundmod->get_waveout();
-  BX_ES1370_THIS wavein = soundmod->get_wavein();
+  BX_ES1370_THIS waveout = DEV_sound_get_waveout("default");
+  BX_ES1370_THIS wavein = DEV_sound_get_wavein("default");
   BX_ES1370_THIS s.dac_outputinit = 1;
   BX_ES1370_THIS s.adc_inputinit = 0;
   BX_ES1370_THIS s.dac_nr_active = -1;

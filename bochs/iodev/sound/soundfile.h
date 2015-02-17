@@ -31,6 +31,7 @@ public:
   virtual int openwaveoutput(const char *wavedev);
   virtual int set_pcm_params(bx_pcm_param_t *param);
   virtual int output(int length, Bit8u data[]);
+
 private:
   void initvocfile();
   void initwavfile();
@@ -47,6 +48,7 @@ public:
 
   virtual int openmidioutput(const char *mididev);
   virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
+  virtual int closemidioutput();
 
 private:
   void writedeltatime(Bit32u deltatime);

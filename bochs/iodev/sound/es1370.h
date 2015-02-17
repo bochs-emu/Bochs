@@ -71,7 +71,6 @@ typedef struct {
 
 
 // forward definitions
-class bx_sound_lowlevel_c;
 class bx_soundlow_waveout_c;
 class bx_soundlow_wavein_c;
 
@@ -118,7 +117,6 @@ private:
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
 
-  bx_sound_lowlevel_c *soundmod;
   bx_soundlow_waveout_c *waveout;
   bx_soundlow_wavein_c *wavein;
   int wavemode;

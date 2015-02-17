@@ -353,15 +353,7 @@ bx_soundlow_midiout_win_c::bx_soundlow_midiout_win_c()
 
 bx_soundlow_midiout_win_c::~bx_soundlow_midiout_win_c()
 {
-  UINT ret;
-
-  if (MidiOpen == 1) {
-    ret = midiOutReset(MidiOut);
-    if (ismidiready == 0)
-      checkmidiready();   // to clear any pending SYSEX
-    ret = midiOutClose(MidiOut);
-    BX_DEBUG(("midiOutClose() = %d", ret));
-  }
+  closemidioutput();
 }
 
 int bx_soundlow_midiout_win_c::openmidioutput(const char *mididev)
@@ -436,6 +428,20 @@ int bx_soundlow_midiout_win_c::sendmidicommand(int delta, int command, int lengt
   }
 
   return (ret == 0) ? BX_SOUNDLOW_OK : BX_SOUNDLOW_ERR;
+}
+
+int bx_soundlow_midiout_win_c::closemidioutput()
+{
+  UINT ret;
+
+  if (MidiOpen == 1) {
+    ret = midiOutReset(MidiOut);
+    if (ismidiready == 0)
+      checkmidiready();   // to clear any pending SYSEX
+    ret = midiOutClose(MidiOut);
+    BX_DEBUG(("midiOutClose() = %d", ret));
+  }
+  return BX_SOUNDLOW_OK;
 }
 
 void bx_soundlow_midiout_win_c::checkmidiready()

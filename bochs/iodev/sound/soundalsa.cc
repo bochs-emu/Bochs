@@ -273,9 +273,7 @@ bx_soundlow_midiout_alsa_c::bx_soundlow_midiout_alsa_c()
 
 bx_soundlow_midiout_alsa_c::~bx_soundlow_midiout_alsa_c()
 {
-  if (alsa_seq.handle != NULL) {
-    snd_seq_close(alsa_seq.handle);
-  }
+  closemidioutput();
 }
 
 int bx_soundlow_midiout_alsa_c::alsa_seq_open(const char *alsadev)
@@ -413,6 +411,15 @@ int bx_soundlow_midiout_alsa_c::sendmidicommand(int delta, int command, int leng
   }
 
   return BX_SOUNDLOW_ERR;
+}
+
+int bx_soundlow_midiout_alsa_c::closemidioutput()
+{
+  if (alsa_seq.handle != NULL) {
+    snd_seq_close(alsa_seq.handle);
+    alsa_seq.handle = NULL;
+  }
+  return BX_SOUNDLOW_OK;
 }
 
 // bx_sound_alsa_c class implemenzation

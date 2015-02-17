@@ -73,6 +73,7 @@ public:
 
   virtual int openmidioutput(const char *mididev);
   virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
+  virtual int closemidioutput();
 
 private:
   int alsa_seq_open(const char *alsadev);

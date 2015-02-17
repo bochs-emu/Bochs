@@ -426,6 +426,11 @@ int bx_soundlow_midiout_c::sendmidicommand(int delta, int command, int length, B
   return BX_SOUNDLOW_OK;
 }
 
+int bx_soundlow_midiout_c::closemidioutput()
+{
+  return BX_SOUNDLOW_OK;
+}
+
 // bx_sound_lowlevel_c class implemenzation
 // This is the base class of the sound lowlevel support.
 

@@ -175,7 +175,6 @@ void CDECL libsb16_LTX_plugin_fini(void)
 
 // some shortcuts to save typing
 #define LOGFILE         BX_SB16_THIS logfile
-#define MIDIDATA        BX_SB16_THIS midifile
 #define WAVEDATA        BX_SB16_THIS wavefile
 #define MPU             BX_SB16_THIS mpu401
 #define DSP             BX_SB16_THIS dsp
@@ -183,13 +182,19 @@ void CDECL libsb16_LTX_plugin_fini(void)
 #define EMUL            BX_SB16_THIS emuldata
 #define OPL             BX_SB16_THIS opl
 
-#define BX_SB16_OUTPUT  BX_SB16_THIS soundmod
 #define BX_SB16_WAVEOUT BX_SB16_THIS waveout
 #define BX_SB16_WAVEIN  BX_SB16_THIS wavein
 #define BX_SB16_MIDIOUT BX_SB16_THIS midiout
 
 // here's a safe way to print out null pointeres
 #define MIGHT_BE_NULL(x)  ((x==NULL)? "(null)" : x)
+
+const char *sb16_midi_drv[4] = {
+  "dummy",
+  "default",
+  "file",
+  "file",
+};
 
 // the device object
 
@@ -204,11 +209,10 @@ bx_sb16_c::bx_sb16_c(void)
   mpu401.timer_handle = BX_NULL_TIMER_HANDLE;
   dsp.timer_handle = BX_NULL_TIMER_HANDLE;
   opl.timer_handle = BX_NULL_TIMER_HANDLE;
-  soundmod = NULL;
   waveout = NULL;
   wavein = NULL;
+  midiout = NULL;
   midimode = 0;
-  midifile = NULL;
   wavemode = 0;
   wavefile = NULL;
   loglevel = 0;
@@ -255,21 +259,19 @@ void bx_sb16_c::init(void)
   BX_SB16_THIS loglevel = SIM->get_param_num("loglevel", base)->get();
 
   // always initialize lowlevel driver
-  BX_SB16_OUTPUT = DEV_sound_get_module();
-  if (BX_SB16_OUTPUT == NULL) {
-    BX_PANIC(("Couldn't initialize lowlevel driver"));
-  }
-  BX_SB16_WAVEOUT = soundmod->get_waveout();
+  BX_SB16_WAVEOUT = DEV_sound_get_waveout("default");
   if (BX_SB16_WAVEOUT == NULL) {
-    BX_PANIC(("Couldn't initialize lowlevel driver (waveout)"));
+    BX_PANIC(("Couldn't initialize waveout driver"));
   }
-  BX_SB16_WAVEIN = soundmod->get_wavein();
+  BX_SB16_WAVEIN = DEV_sound_get_wavein("default");
   if (BX_SB16_WAVEIN == NULL) {
-    BX_PANIC(("Couldn't initialize lowlevel driver (wavein)"));
+    BX_PANIC(("Couldn't initialize wavein driver"));
   }
-  BX_SB16_MIDIOUT = soundmod->get_midiout();
-  if (BX_SB16_MIDIOUT == NULL) {
-    BX_PANIC(("Couldn't initialize lowlevel driver (midiout)"));
+  if ((BX_SB16_THIS midimode >= 0) && (BX_SB16_THIS midimode <= 3)) {
+    BX_SB16_MIDIOUT = DEV_sound_get_midiout(sb16_midi_drv[BX_SB16_THIS midimode]);
+    if (BX_SB16_MIDIOUT == NULL) {
+      BX_PANIC(("Couldn't initialize midiout driver"));
+    }
   }
 
   DSP.dma.chunk = new Bit8u[BX_SOUNDLOW_WAVEPACKETSIZE];
@@ -438,7 +440,6 @@ void bx_sb16_c::register_state(void)
   new bx_shadow_bool_c(mpu, "irqpending", &MPU.irqpending);
   new bx_shadow_bool_c(mpu, "forceuartmode", &MPU.forceuartmode);
   new bx_shadow_bool_c(mpu, "singlecommand", &MPU.singlecommand);
-  new bx_shadow_bool_c(mpu, "outputinit", &MPU.outputinit);
   new bx_shadow_num_c(mpu, "current_timer", &MPU.current_timer);
   new bx_shadow_num_c(mpu, "last_delta_time", &MPU.last_delta_time);
   bx_list_c *patchtbl = new bx_list_c(mpu, "patchtable");
@@ -530,9 +531,17 @@ void bx_sb16_c::runtime_config_handler(void *this_ptr)
 void bx_sb16_c::runtime_config(void)
 {
   bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
-  if (BX_SB16_THIS midi_changed) {
+  if (BX_SB16_THIS midi_changed != 0) {
     BX_SB16_THIS closemidioutput();
-    BX_SB16_THIS midimode = SIM->get_param_num("midimode", base)->get();
+    if (BX_SB16_THIS midi_changed & 1) {
+      BX_SB16_THIS midimode = SIM->get_param_num("midimode", base)->get();
+      if ((BX_SB16_THIS midimode >= 0) && (BX_SB16_THIS midimode <= 3)) {
+        BX_SB16_MIDIOUT = DEV_sound_get_midiout(sb16_midi_drv[BX_SB16_THIS midimode]);
+        if (BX_SB16_MIDIOUT == NULL) {
+          BX_PANIC(("Couldn't initialize midiout driver"));
+        }
+      }
+    }
     // writemidicommand() re-opens the output device / file on demand
     BX_SB16_THIS midi_changed = 0;
   }
@@ -2378,55 +2387,26 @@ Bit32u fmopl_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
 
 /* Handlers for the midi commands/midi file output */
 
-// Write the header of the midi file. Track length is 0x7fffffff
-// until we know how long it's really going to be
-
-void bx_sb16_c::initmidifile()
-{
-  struct {
-    Bit8u chunk[4];
-    Bit32u chunklen;  // all values in BIG Endian!
-    Bit16u smftype;
-    Bit16u tracknum;
-    Bit16u timecode;  // 0x80 + deltatimesperquarter << 8
-  } midiheader =
-#ifdef BX_LITTLE_ENDIAN
-      { "MTh", 0x06000000, 0, 0x0100, 0x8001 };
-#else
-      { "MTh", 6, 0, 1, 0x180 };
-#endif
-  midiheader.chunk[3] = 'd';
-
-  struct {
-    Bit8u chunk[4];
-    Bit32u chunklen;
-    Bit8u data[15];
-  } trackheader =
-#ifdef BX_LITTLE_ENDIAN
-      { "MTr", 0xffffff7f,
-#else
-      { "MTr", 0x7fffffff,
-#endif
-       { 0x00,0xff,0x51,3,0x07,0xa1,0x20,    // set tempo 120 (0x7a120 us per quarter)
-         0x00,0xff,0x58,4,4,2,0x18,0x08 }};  // time sig 4/4
-  trackheader.chunk[3] = 'k';
-
-  fwrite(&midiheader, 1, 14, MIDIDATA);
-  fwrite(&trackheader, 1, 23, MIDIDATA);
-}
-
 // write the midi command to the midi file
 
 void bx_sb16_c::writemidicommand(int command, int length, Bit8u data[])
 {
+  bx_param_string_c *midiparam;
+
   /* We need to determine the time elapsed since the last MIDI command */
   int deltatime = currentdeltatime();
 
-  /* Initialize output device if necessary and not done yet */
-  if (BX_SB16_THIS midimode == 1) {
+  /* Initialize output device/file if necessary and not done yet */
+  if (BX_SB16_THIS midimode > 0) {
     if (MPU.outputinit != 1) {
       writelog(MIDILOG(4), "Initializing Midi output.");
-      if (BX_SB16_MIDIOUT->openmidioutput(SIM->get_param_string(BXPN_SOUND_MIDIOUT)->getptr()) == BX_SOUNDLOW_OK)
+      if (BX_SB16_THIS midimode == 1) {
+        midiparam = SIM->get_param_string(BXPN_SOUND_MIDIOUT);
+      } else {
+        bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
+        midiparam = SIM->get_param_string("midi", base);
+      }
+      if (BX_SB16_MIDIOUT->openmidioutput(midiparam->getptr()) == BX_SOUNDLOW_OK)
         MPU.outputinit = 1;
       else
         MPU.outputinit = 0;
@@ -2437,35 +2417,7 @@ void bx_sb16_c::writemidicommand(int command, int length, Bit8u data[])
       }
     }
     BX_SB16_MIDIOUT->sendmidicommand(deltatime, command, length, data);
-    return;
-  } else if ((BX_SB16_THIS midimode == 2) ||
-             (BX_SB16_THIS midimode == 3)) {
-    bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
-    bx_param_string_c *midiparam = SIM->get_param_string("midi", base);
-    if ((MIDIDATA == NULL) && (!midiparam->isempty())) {
-      MIDIDATA = fopen(midiparam->getptr(),"wb");
-      if (MIDIDATA == NULL) {
-        writelog (MIDILOG(2), "Error opening file %s. Midimode disabled.",
-          midiparam->getptr());
-        BX_SB16_THIS midimode = 0;
-      } else if (BX_SB16_THIS midimode == 2) {
-        initmidifile();
-      }
-    }
   }
-
-  if (BX_SB16_THIS midimode < 2)
-    return;
-
-  if (BX_SB16_THIS midimode == 2)
-    writedeltatime(deltatime);
-
-  fputc(command, MIDIDATA);
-  if ((command == 0xf0) ||
-      (command == 0xf7))    // write event length for sysex/meta events
-    writedeltatime(length);
-
-  fwrite(data, 1, length, MIDIDATA);
 }
 
 // determine how many delta times have passed since
@@ -2594,86 +2546,13 @@ void bx_sb16_c::midiremapprogram(int channel)
   }
 }
 
-// convert a number into a delta time coded value
-int bx_sb16_c::converttodeltatime(Bit32u deltatime, Bit8u value[4])
-{
-  int i, count;
-  Bit8u outbytes[4];
-
-  count = 0;
-
-  if (deltatime <= 0)
-  {
-      count = 1;
-      value[0] = 0;
-  }
-  else
-  {
-      while ((deltatime > 0) && (count < 4))   // split into parts
-      {                                        // of seven bits
-         outbytes[count++] = deltatime & 0x7f;
-         deltatime >>= 7;
-      }
-      for (i=0; i<count; i++)                      // reverse order and
-         value[i] = outbytes[count - i - 1] | 0x80; // set eighth bit on
-      value[count - 1] &= 0x7f;                    // all but last byte
-  }
-  return count;
-}
-
-// write a delta time coded value to the midi file
-void bx_sb16_c::writedeltatime(Bit32u deltatime)
-{
-  Bit8u outbytes[4];
-
-  int count = converttodeltatime(deltatime, outbytes);
-
-  for (int i=0; i<count; i++)
-    fputc(outbytes[i], MIDIDATA);
-}
-
-
-// close the midi file, and set the track length accordingly
-
-void bx_sb16_c::finishmidifile()
-{
-  struct {
-    Bit8u delta, statusbyte, metaevent, length;
-  } metatrackend = { 0, 0xff, 0x2f, 0 };
-
-   // Meta event track end (0xff 0x2f 0x00) plus leading delta time
-  fwrite(&metatrackend, 1, sizeof(metatrackend), MIDIDATA);
-
-  Bit32u tracklen = ftell(MIDIDATA);
-  if (tracklen < 0)
-    BX_PANIC (("ftell failed in finishmidifile"));
-  if (tracklen < 22)
-    BX_PANIC (("finishmidifile with track length too short"));
-  tracklen -= 22;    // subtract the midi file and track header
-  fseek(MIDIDATA, 22 - 4, SEEK_SET);
-  // value has to be in big endian
-#ifdef BX_LITTLE_ENDIAN
-  tracklen = bx_bswap32(tracklen);
-#endif
-  fwrite(&tracklen, 4, 1, MIDIDATA);
-}
-
 void bx_sb16_c::closemidioutput()
 {
-  switch (BX_SB16_THIS midimode) {
-    case 1:
-      if (MPU.outputinit != 0) {
-        MPU.outputinit = 0;
-      }
-      break;
-    case 2:
-      if (MIDIDATA != NULL)
-        finishmidifile();
-    case 3:
-      if (MIDIDATA != NULL)
-        fclose(MIDIDATA);
-      MIDIDATA = NULL;
-      break;
+  if (BX_SB16_THIS midimode > 0) {
+    if (MPU.outputinit != 0) {
+      BX_SB16_MIDIOUT->closemidioutput();
+      MPU.outputinit = 0;
+    }
   }
 }
 
@@ -3238,7 +3117,7 @@ Bit64s bx_sb16_c::sb16_param_handler(bx_param_c *param, int set, Bit64s val)
       BX_SB16_THIS loglevel = (int)val;
     } else if (!strcmp(pname, "midimode")) {
       if (val != BX_SB16_THIS midimode) {
-        BX_SB16_THIS midi_changed = 1;
+        BX_SB16_THIS midi_changed |= 1;
       }
     } else if (!strcmp(pname, "wavemode")) {
       if (val != BX_SB16_THIS wavemode) {
@@ -3260,7 +3139,7 @@ const char* bx_sb16_c::sb16_param_string_handler(bx_param_string_c *param, int s
     if (!strcmp(pname, "wave")) {
       BX_SB16_THIS wave_changed = 1;
     } else if (!strcmp(pname, "midi")) {
-      BX_SB16_THIS midi_changed = 1;
+      BX_SB16_THIS midi_changed |= 2;
     } else if (!strcmp(pname, "log")) {
       if (LOGFILE != NULL) {
         fclose(LOGFILE);

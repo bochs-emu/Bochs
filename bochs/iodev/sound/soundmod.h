@@ -20,6 +20,8 @@
 
 // Common code for sound lowlevel modules
 
+#define BX_MAX_SOUND_DRIVERS 4
+
 class bx_sound_lowlevel_c;
 class bx_soundlow_waveout_c;
 
@@ -29,11 +31,20 @@ public:
   bx_soundmod_ctl_c();
   virtual ~bx_soundmod_ctl_c();
   virtual void init(void);
-  virtual void* get_module();
+  virtual bx_soundlow_waveout_c* get_waveout(const char *driver);
+  virtual bx_soundlow_wavein_c* get_wavein(const char *driver);
+  virtual bx_soundlow_midiout_c* get_midiout(const char *driver);
   virtual void VOC_init_file(FILE *stream);
   virtual void VOC_write_block(FILE *stream, int block, Bit32u headerlen,
                                Bit8u header[], Bit32u datalen, Bit8u data[]);
 private:
-  bx_sound_lowlevel_c *soundmod;
+  bx_sound_lowlevel_c* get_driver(const char *name);
+
+  struct {
+    char name[8];
+    bx_sound_lowlevel_c *module;
+  } soundmod[BX_MAX_SOUND_DRIVERS];
+  unsigned n_sound_drivers;
+
   bx_soundlow_waveout_c *waveout;
 };

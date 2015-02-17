@@ -122,6 +122,7 @@ public:
   virtual int openmidioutput(const char *mididev);
   virtual int midiready();
   virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
+  virtual int closemidioutput();
 };
 
 // the lowlevel sound driver class returns pointers to the child objects

@@ -167,30 +167,7 @@ bx_soundlow_midiout_file_c::bx_soundlow_midiout_file_c()
 
 bx_soundlow_midiout_file_c::~bx_soundlow_midiout_file_c()
 {
-  struct {
-    Bit8u delta, statusbyte, metaevent, length;
-  } metatrackend = { 0, 0xff, 0x2f, 0 };
-
-  if (midifile != NULL) {
-    if (type == BX_SOUNDFILE_MID) {
-      // Meta event track end (0xff 0x2f 0x00) plus leading delta time
-      fwrite(&metatrackend, 1, sizeof(metatrackend), midifile);
-
-      Bit32u tracklen = ftell(midifile);
-      if (tracklen < 0)
-        BX_PANIC (("ftell failed in finishmidifile"));
-      if (tracklen < 22)
-        BX_PANIC (("MIDI track length too short"));
-      tracklen -= 22;    // subtract the midi file and track header
-      fseek(midifile, 22 - 4, SEEK_SET);
-      // value has to be in big endian
-#ifdef BX_LITTLE_ENDIAN
-      tracklen = bx_bswap32(tracklen);
-#endif
-      fwrite(&tracklen, 4, 1, midifile);
-    }
-    fclose(midifile);
-  }
+  closemidioutput();
 }
 
 int bx_soundlow_midiout_file_c::openmidioutput(const char *mididev)
@@ -259,6 +236,36 @@ int bx_soundlow_midiout_file_c::sendmidicommand(int delta, int command, int leng
       writedeltatime(length);
 
     fwrite(data, 1, length, midifile);
+  }
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_soundlow_midiout_file_c::closemidioutput()
+{
+  struct {
+    Bit8u delta, statusbyte, metaevent, length;
+  } metatrackend = { 0, 0xff, 0x2f, 0 };
+
+  if (midifile != NULL) {
+    if (type == BX_SOUNDFILE_MID) {
+      // Meta event track end (0xff 0x2f 0x00) plus leading delta time
+      fwrite(&metatrackend, 1, sizeof(metatrackend), midifile);
+
+      Bit32u tracklen = ftell(midifile);
+      if (tracklen < 0)
+        BX_PANIC (("ftell failed in finishmidifile"));
+      if (tracklen < 22)
+        BX_PANIC (("MIDI track length too short"));
+      tracklen -= 22;    // subtract the midi file and track header
+      fseek(midifile, 22 - 4, SEEK_SET);
+      // value has to be in big endian
+#ifdef BX_LITTLE_ENDIAN
+      tracklen = bx_bswap32(tracklen);
+#endif
+      fwrite(&tracklen, 4, 1, midifile);
+    }
+    fclose(midifile);
+    midifile = NULL;
   }
   return BX_SOUNDLOW_OK;
 }

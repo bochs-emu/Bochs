@@ -178,11 +178,7 @@ void bx_speaker_c::init(void)
   if (!strcmp(mode, "sound")) {
     output_mode = BX_SPK_MODE_SOUND;
 #if BX_SUPPORT_SOUNDLOW
-    bx_sound_lowlevel_c *soundmod = DEV_sound_get_module();
-    if (soundmod == NULL) {
-      BX_PANIC(("Couldn't initialize lowlevel driver"));
-    }
-    waveout = soundmod->get_waveout();
+    waveout = DEV_sound_get_waveout("default");
     if (waveout != NULL) {
       beep_active = 0;
       BX_INIT_MUTEX(beep_mutex);
@@ -190,6 +186,7 @@ void bx_speaker_c::init(void)
       BX_INFO(("Using lowlevel sound support for output"));
     } else {
       BX_ERROR(("Failed to use lowlevel sound support for output"));
+      output_mode = BX_SPK_MODE_NONE;
     }
 #endif
   } else if (!strcmp(mode, "system")) {

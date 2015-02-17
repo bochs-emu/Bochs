@@ -303,7 +303,7 @@ bx_soundlow_midiout_oss_c::bx_soundlow_midiout_oss_c()
 
 bx_soundlow_midiout_oss_c::~bx_soundlow_midiout_oss_c()
 {
-  fclose(midi);
+  closemidioutput();
 }
 
 int bx_soundlow_midiout_oss_c::openmidioutput(const char *mididev)
@@ -323,11 +323,6 @@ int bx_soundlow_midiout_oss_c::openmidioutput(const char *mididev)
 }
 
 
-int bx_soundlow_midiout_oss_c::midiready()
-{
-  return BX_SOUNDLOW_OK;
-}
-
 int bx_soundlow_midiout_oss_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
 {
   UNUSED(delta);
@@ -336,6 +331,15 @@ int bx_soundlow_midiout_oss_c::sendmidicommand(int delta, int command, int lengt
   fwrite(data, 1, length, midi);
   fflush(midi);       // to start playing immediately
 
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_soundlow_midiout_oss_c::closemidioutput()
+{
+  if (midi != NULL) {
+    fclose(midi);
+    midi = NULL;
+  }
   return BX_SOUNDLOW_OK;
 }
 

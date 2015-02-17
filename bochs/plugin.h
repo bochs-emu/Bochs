@@ -255,8 +255,9 @@ extern "C" {
 #define DEV_usb_send_msg(a,b) bx_devices.pluginUsbDevCtl->usb_send_msg((void*)a,b)
 
 ///////// Sound module macros
-#define DEV_sound_get_module() \
-  ((bx_sound_lowlevel_c*)bx_devices.pluginSoundModCtl->get_module())
+#define DEV_sound_get_waveout(a) (bx_devices.pluginSoundModCtl->get_waveout(a))
+#define DEV_sound_get_wavein(a) (bx_devices.pluginSoundModCtl->get_wavein(a))
+#define DEV_sound_get_midiout(a) (bx_devices.pluginSoundModCtl->get_midiout(a))
 #define DEV_soundmod_VOC_init_file(a) \
   (bx_devices.pluginSoundModCtl->VOC_init_file(a))
 #define DEV_soundmod_VOC_write_block(a,b,c,d,e,f) \
