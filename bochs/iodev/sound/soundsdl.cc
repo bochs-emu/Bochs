@@ -54,6 +54,7 @@ bx_soundlow_waveout_sdl_c::bx_soundlow_waveout_sdl_c()
 bx_soundlow_waveout_sdl_c::~bx_soundlow_waveout_sdl_c()
 {
   WaveOpen = 0;
+  mixer_control = 0;
   SDL_CloseAudio();
   SDL_QuitSubSystem(SDL_INIT_AUDIO);
 }
@@ -100,6 +101,7 @@ int bx_soundlow_waveout_sdl_c::set_pcm_params(bx_pcm_param_t *param)
     return BX_SOUNDLOW_ERR;
   } else {
     WaveOpen = 1;
+    mixer_control = 1;
   }
   SDL_PauseAudio(0);
   return BX_SOUNDLOW_OK;

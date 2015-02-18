@@ -49,19 +49,7 @@ bx_soundlow_waveout_file_c::bx_soundlow_waveout_file_c()
 
 bx_soundlow_waveout_file_c::~bx_soundlow_waveout_file_c()
 {
-  if (wavefile != NULL) {
-    if (type == BX_SOUNDFILE_VOC) {
-      fputc(0, wavefile);
-    } else if (type == BX_SOUNDFILE_WAV) {
-      Bit32u tracklen = ftell(wavefile);
-      write_32bit(4, tracklen - 8);
-      write_32bit(24, real_pcm_param.samplerate);
-      write_32bit(28, (Bit32u)real_pcm_param.samplerate * 4);
-      write_32bit(40, tracklen - 44);
-    }
-    fclose(wavefile);
-    wavefile = NULL;
-  }
+  closewaveoutput();
 }
 
 void bx_soundlow_waveout_file_c::initvocfile()
@@ -114,9 +102,11 @@ int bx_soundlow_waveout_file_c::openwaveoutput(const char *wavedev)
     }
   }
   set_pcm_params(&real_pcm_param);
-  pcm_callback_id = register_wave_callback(this, pcm_callback);
-  BX_INIT_MUTEX(mixer_mutex);
-  start_mixer_thread();
+  if (mixer_control != 1) {
+    pcm_callback_id = register_wave_callback(this, pcm_callback);
+    BX_INIT_MUTEX(mixer_mutex);
+    start_mixer_thread();
+  }
   return BX_SOUNDLOW_OK;
 }
 
@@ -151,7 +141,27 @@ int bx_soundlow_waveout_file_c::output(int length, Bit8u data[])
     } else {
       fwrite(data, 1, length, wavefile);
     }
-    BX_MSLEEP(100);
+    if (pcm_callback_id >= 0) {
+      BX_MSLEEP(100);
+    }
+  }
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_soundlow_waveout_file_c::closewaveoutput()
+{
+  if (wavefile != NULL) {
+    if (type == BX_SOUNDFILE_VOC) {
+      fputc(0, wavefile);
+    } else if (type == BX_SOUNDFILE_WAV) {
+      Bit32u tracklen = ftell(wavefile);
+      write_32bit(4, tracklen - 8);
+      write_32bit(24, real_pcm_param.samplerate);
+      write_32bit(28, (Bit32u)real_pcm_param.samplerate * 4);
+      write_32bit(40, tracklen - 44);
+    }
+    fclose(wavefile);
+    wavefile = NULL;
   }
   return BX_SOUNDLOW_OK;
 }

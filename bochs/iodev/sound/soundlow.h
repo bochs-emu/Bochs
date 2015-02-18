@@ -58,6 +58,7 @@ void delete_audio_buffer();
 
 Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
 
+extern int mixer_control;
 extern BX_MUTEX(mixer_mutex);
 
 // the waveout class
@@ -72,6 +73,7 @@ public:
   virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
   virtual int get_packetsize();
   virtual int output(int length, Bit8u data[]);
+  virtual int closewaveoutput();
 
   virtual int register_wave_callback(void *, get_wave_cb_t wd_cb);
   virtual void unregister_wave_callback(int callback_id);

@@ -104,7 +104,7 @@ Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
 
 // mixer thread support
 
-static int mixer_control;
+int mixer_control = 0;
 BX_MUTEX(mixer_mutex);
 
 BX_THREAD_FUNC(mixer_thread, indata)
@@ -138,7 +138,6 @@ bx_soundlow_waveout_c::bx_soundlow_waveout_c()
   emu_pcm_param = default_pcm_param;
   cb_count = 0;
   pcm_callback_id = -1;
-  mixer_control = 0;
   set_pcm_params(&real_pcm_param);
 }
 
@@ -179,12 +178,17 @@ int bx_soundlow_waveout_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param
       set_pcm_params(&real_pcm_param);
     }
   }
+  len2 = length * cvt_mult;
   if (pcm_callback_id >= 0) {
-    len2 = length * cvt_mult;
     BX_LOCK(mixer_mutex);
     audio_buffer_t *newbuffer = new_audio_buffer(len2);
     convert_pcm_data(data, length, newbuffer->data, len2, src_param);
     BX_UNLOCK(mixer_mutex);
+  } else {
+    Bit8u *tmpbuffer = new Bit8u[len2];
+    convert_pcm_data(data, length, tmpbuffer, len2, src_param);
+    output(len2, tmpbuffer);
+    delete [] tmpbuffer;
   }
   return BX_SOUNDLOW_OK;
 }
@@ -198,6 +202,11 @@ int bx_soundlow_waveout_c::output(int length, Bit8u data[])
 {
   UNUSED(length);
   UNUSED(data);
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_soundlow_waveout_c::closewaveoutput()
+{
   return BX_SOUNDLOW_OK;
 }
 

@@ -31,6 +31,7 @@ public:
   virtual int openwaveoutput(const char *wavedev);
   virtual int set_pcm_params(bx_pcm_param_t *param);
   virtual int output(int length, Bit8u data[]);
+  virtual int closewaveoutput();
 
 private:
   void initvocfile();
