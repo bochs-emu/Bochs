@@ -898,18 +898,17 @@ speaker: enabled=1, mode=sound
 # enabled:
 #      This optional property controls the presence of the SB16 emulation.
 #      The emulation is turned on unless this property is used and set to 0.
-# midimode:
-#      0=no data
-#      1=output to device (system dependent. midi denotes the device driver)
-#      2=SMF file output, including headers
-#      3=output the midi data stream to the file (no midi headers and no
-#        delta times, just command and data bytes)
+# midimode: This parameter specifies what to do with the MIDI output.
+#      0 = no output
+#      1 = output to device specified with the sound option (system dependent)
+#      2 = MIDI or raw data output to file (depends on file name extension)
+#      3 = dual output (mode 1 and 2 at the same time)
 # midi: This is the file where the midi output is stored (midimode 2 or 3).
-# wavemode:
-#      0=no data
-#      1=output to device (system dependent. wave denotes the device driver)
-#      2=VOC file output, incl. headers
-#      3=output the raw wave stream to the file
+# wavemode: This parameter specifies what to do with the PCM output.
+#      0 = no output
+#      1 = output to device specified with the sound option (system dependent)
+#      2 = VOC, WAV or raw data output to file (depends on file name extension)
+#      3 = dual output (mode 1 and 2 at the same time)
 # wave: This is the file where the wave output is stored (wavemode 2 or 3).
 # loglevel:
 #      0=no log

@@ -47,7 +47,7 @@ Bit32u fmopl_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
 
 void sb16_init_options(void)
 {
-  static const char *sb16_wavemode_list[] = {
+  static const char *sb16_mode_list[] = {
     "0",
     "1",
     "2",
@@ -63,12 +63,12 @@ void sb16_init_options(void)
     "Enable SB16 emulation",
     "Enables the SB16 emulation",
     1);
-  bx_param_num_c *midimode = new bx_param_num_c(menu,
+  bx_param_enum_c *midimode = new bx_param_enum_c(menu,
     "midimode",
     "Midi mode",
-    "Controls the MIDI output format.",
-    0, 3,
-    0);
+    "Controls the MIDI output switches.",
+    sb16_mode_list,
+    0, 0);
   bx_param_filename_c *midifile = new bx_param_filename_c(menu,
     "midi",
     "MIDI file",
@@ -77,8 +77,8 @@ void sb16_init_options(void)
   bx_param_enum_c *wavemode = new bx_param_enum_c(menu,
     "wavemode",
     "Wave mode",
-    "Controls the wave output format.",
-    sb16_wavemode_list,
+    "Controls the wave output switches.",
+    sb16_mode_list,
     0, 0);
   bx_param_filename_c *wavefile = new bx_param_filename_c(menu,
     "wave",
@@ -104,8 +104,6 @@ void sb16_init_options(void)
     0, BX_MAX_BIT32U,
     0);
 
-  midimode->set_options(midimode->USE_SPIN_CONTROL);
-  loglevel->set_options(loglevel->USE_SPIN_CONTROL);
   bx_list_c *deplist = new bx_list_c(NULL);
   deplist->add(midimode);
   deplist->add(wavemode);
@@ -114,7 +112,9 @@ void sb16_init_options(void)
   enabled->set_dependent_list(deplist);
   deplist = new bx_list_c(NULL);
   deplist->add(midifile);
-  midimode->set_dependent_list(deplist);
+  midimode->set_dependent_list(deplist, 0);
+  midimode->set_dependent_bitmap(2, 0x1);
+  midimode->set_dependent_bitmap(3, 0x1);
   deplist = new bx_list_c(NULL);
   deplist->add(wavefile);
   wavemode->set_dependent_list(deplist, 0);
@@ -123,6 +123,7 @@ void sb16_init_options(void)
   deplist = new bx_list_c(NULL);
   deplist->add(logfile);
   loglevel->set_dependent_list(deplist);
+  loglevel->set_options(loglevel->USE_SPIN_CONTROL);
 }
 
 Bit32s sb16_options_parser(const char *context, int num_params, char *params[])
@@ -175,26 +176,20 @@ void CDECL libsb16_LTX_plugin_fini(void)
 
 // some shortcuts to save typing
 #define LOGFILE         BX_SB16_THIS logfile
-#define WAVEDATA        BX_SB16_THIS wavefile
 #define MPU             BX_SB16_THIS mpu401
 #define DSP             BX_SB16_THIS dsp
 #define MIXER           BX_SB16_THIS mixer
 #define EMUL            BX_SB16_THIS emuldata
 #define OPL             BX_SB16_THIS opl
 
-#define BX_SB16_WAVEOUT BX_SB16_THIS waveout
-#define BX_SB16_WAVEIN  BX_SB16_THIS wavein
-#define BX_SB16_MIDIOUT BX_SB16_THIS midiout
+#define BX_SB16_WAVEOUT1 BX_SB16_THIS waveout[0]
+#define BX_SB16_WAVEOUT2 BX_SB16_THIS waveout[1]
+#define BX_SB16_WAVEIN   BX_SB16_THIS wavein
+#define BX_SB16_MIDIOUT1 BX_SB16_THIS midiout[0]
+#define BX_SB16_MIDIOUT2 BX_SB16_THIS midiout[1]
 
 // here's a safe way to print out null pointeres
 #define MIGHT_BE_NULL(x)  ((x==NULL)? "(null)" : x)
-
-const char *sb16_midi_drv[4] = {
-  "dummy",
-  "default",
-  "file",
-  "file",
-};
 
 // the device object
 
@@ -209,12 +204,13 @@ bx_sb16_c::bx_sb16_c(void)
   mpu401.timer_handle = BX_NULL_TIMER_HANDLE;
   dsp.timer_handle = BX_NULL_TIMER_HANDLE;
   opl.timer_handle = BX_NULL_TIMER_HANDLE;
-  waveout = NULL;
+  waveout[0] = NULL;
+  waveout[1] = NULL;
   wavein = NULL;
-  midiout = NULL;
+  midiout[0] = NULL;
+  midiout[1] = NULL;
   midimode = 0;
   wavemode = 0;
-  wavefile = NULL;
   loglevel = 0;
   logfile = NULL;
 }
@@ -223,8 +219,8 @@ bx_sb16_c::~bx_sb16_c(void)
 {
   closemidioutput();
 
-  if (waveout != NULL) {
-    waveout->unregister_wave_callback(fmopl_callback_id);
+  if (BX_SB16_WAVEOUT1 != NULL) {
+    BX_SB16_WAVEOUT1->unregister_wave_callback(fmopl_callback_id);
   }
   closewaveoutput();
 
@@ -259,25 +255,35 @@ void bx_sb16_c::init(void)
   BX_SB16_THIS loglevel = SIM->get_param_num("loglevel", base)->get();
 
   // always initialize lowlevel driver
-  BX_SB16_WAVEOUT = DEV_sound_get_waveout("default");
-  if (BX_SB16_WAVEOUT == NULL) {
+  BX_SB16_WAVEOUT1 = DEV_sound_get_waveout("default");
+  if (BX_SB16_WAVEOUT1 == NULL) {
     BX_PANIC(("Couldn't initialize waveout driver"));
+  }
+  if (BX_SB16_THIS wavemode & 2) {
+    BX_SB16_WAVEOUT2 = DEV_sound_get_waveout("file");
+    if (BX_SB16_WAVEOUT2 == NULL) {
+      BX_PANIC(("Couldn't initialize wave file driver"));
+    }
   }
   BX_SB16_WAVEIN = DEV_sound_get_wavein("default");
   if (BX_SB16_WAVEIN == NULL) {
     BX_PANIC(("Couldn't initialize wavein driver"));
   }
-  if ((BX_SB16_THIS midimode >= 0) && (BX_SB16_THIS midimode <= 3)) {
-    BX_SB16_MIDIOUT = DEV_sound_get_midiout(sb16_midi_drv[BX_SB16_THIS midimode]);
-    if (BX_SB16_MIDIOUT == NULL) {
-      BX_PANIC(("Couldn't initialize midiout driver"));
+  BX_SB16_MIDIOUT1 = DEV_sound_get_midiout("default");
+  if (BX_SB16_MIDIOUT1 == NULL) {
+    BX_PANIC(("Couldn't initialize midiout driver"));
+  }
+  if (BX_SB16_THIS midimode & 2) {
+    BX_SB16_MIDIOUT2 = DEV_sound_get_midiout("file");
+    if (BX_SB16_MIDIOUT2 == NULL) {
+      BX_PANIC(("Couldn't initialize midi file driver"));
     }
   }
 
   DSP.dma.chunk = new Bit8u[BX_SOUNDLOW_WAVEPACKETSIZE];
   DSP.dma.chunkindex = 0;
 
-  DSP.outputinit = 1;
+  DSP.outputinit = (BX_SB16_THIS wavemode & 1);
   DSP.inputinit = 0;
   MPU.outputinit = 0;
 
@@ -393,7 +399,7 @@ void bx_sb16_c::init(void)
       (BX_SB16_THISP, opl_timer, 80, 1, 0, "sb16.opl");
     // opl timer: inactive, continuous, frequency 80us
   }
-  BX_SB16_THIS fmopl_callback_id = waveout->register_wave_callback(BX_SB16_THISP, fmopl_callback);
+  BX_SB16_THIS fmopl_callback_id = BX_SB16_WAVEOUT1->register_wave_callback(BX_SB16_THISP, fmopl_callback);
 
   writelog(MIDILOG(4), "Timers initialized, midi %d, dma %d, opl %d",
           MPU.timer_handle, DSP.timer_handle, OPL.timer_handle);
@@ -474,8 +480,6 @@ void bx_sb16_c::register_state(void)
   new bx_shadow_num_c(dma, "channels", &DSP.dma.param.channels);
   new bx_shadow_num_c(dma, "format", &DSP.dma.param.format);
   new bx_shadow_num_c(dma, "volume", &DSP.dma.param.volume);
-  new bx_shadow_bool_c(dsp, "outputinit", &DSP.outputinit);
-  new bx_shadow_bool_c(dsp, "inputinit", &DSP.inputinit);
   new bx_shadow_data_c(list, "chunk", DSP.dma.chunk, BX_SOUNDLOW_WAVEPACKETSIZE);
   bx_list_c *csp = new bx_list_c(list, "csp_reg");
   for (i=0; i<256; i++) {
@@ -535,19 +539,30 @@ void bx_sb16_c::runtime_config(void)
     BX_SB16_THIS closemidioutput();
     if (BX_SB16_THIS midi_changed & 1) {
       BX_SB16_THIS midimode = SIM->get_param_num("midimode", base)->get();
-      if ((BX_SB16_THIS midimode >= 0) && (BX_SB16_THIS midimode <= 3)) {
-        BX_SB16_MIDIOUT = DEV_sound_get_midiout(sb16_midi_drv[BX_SB16_THIS midimode]);
-        if (BX_SB16_MIDIOUT == NULL) {
-          BX_PANIC(("Couldn't initialize midiout driver"));
+      if (BX_SB16_THIS midimode & 2) {
+        BX_SB16_MIDIOUT2 = DEV_sound_get_midiout("file");
+        if (BX_SB16_MIDIOUT2 == NULL) {
+          BX_PANIC(("Couldn't initialize midi file driver"));
         }
       }
     }
     // writemidicommand() re-opens the output device / file on demand
     BX_SB16_THIS midi_changed = 0;
   }
-  if (BX_SB16_THIS wave_changed) {
-    BX_SB16_THIS closewaveoutput();
-    BX_SB16_THIS wavemode = SIM->get_param_enum("wavemode", base)->get();
+  if (BX_SB16_THIS wave_changed != 0) {
+    if (BX_SB16_THIS wavemode & 2) {
+      BX_SB16_THIS closewaveoutput();
+    }
+    if (BX_SB16_THIS wave_changed & 1) {
+      BX_SB16_THIS wavemode = SIM->get_param_enum("wavemode", base)->get();
+      DSP.outputinit = (BX_SB16_THIS wavemode & 1);
+      if (BX_SB16_THIS wavemode & 2) {
+        BX_SB16_WAVEOUT2 = DEV_sound_get_waveout("file");
+        if (BX_SB16_WAVEOUT2 == NULL) {
+          BX_PANIC(("Couldn't initialize wave file driver"));
+        }
+      }
+    }
     // dsp_dma() re-opens the output file on demand
     BX_SB16_THIS wave_changed = 0;
   }
@@ -569,9 +584,8 @@ void bx_sb16_c::dsp_dmatimer(void *this_ptr)
   // output buffer and the output functions are not ready yet
   // or if buffer is empty in input mode.
 
-  if ((BX_SB16_THIS wavemode != 1) ||
-       ((This->dsp.dma.chunkindex + 1 < BX_SOUNDLOW_WAVEPACKETSIZE) &&
-        (This->dsp.dma.count > 0))) {
+  if ((This->dsp.dma.chunkindex + 1 < BX_SOUNDLOW_WAVEPACKETSIZE) &&
+        (This->dsp.dma.count > 0)) {
     if (((This->dsp.dma.output == 0) && (This->dsp.dma.chunkcount > 0)) ||
         (This->dsp.dma.output == 1)) {
       if ((DSP.dma.param.bits == 8) || (BX_SB16_DMAH == 0)) {
@@ -969,12 +983,7 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
        case 0x80:
          // 1,2: lo(silence) hi(silence) (len in samples)
          DSP.datain.getw(&length);
-         // only handled for VOC output so far
-         if (BX_SB16_THIS wavemode == 2)
-         {
-            Bit8u temparray[3] = { (Bit8u)(length & 0xff), (Bit8u)(length >> 8), (Bit8u)(DSP.dma.timeconstant >> 8) };
-            DEV_soundmod_VOC_write_block(WAVEDATA, 3, 3, temparray, 0, NULL);
-         }
+         // TODO
          break;
 
           // 8-bit auto DAC DMA, highspeed
@@ -1262,18 +1271,19 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
   DSP.dma.param.format = issigned | ((comp & 7) << 1) | ((comp & 8) << 4);
 
   // write the output to the device/file
-  base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
   if (DSP.dma.output == 1) {
-    if ((BX_SB16_THIS wavemode == 2) || (BX_SB16_THIS wavemode == 3)) {
-      bx_param_string_c *waveparam = SIM->get_param_string("wave", base);
-      if ((WAVEDATA == NULL) && (!waveparam->isempty())) {
-        WAVEDATA = fopen(waveparam->getptr(), "wb");
-        if (WAVEDATA == NULL) {
-          writelog(WAVELOG(2), "Error opening file %s. Wavemode disabled.",
+    if (BX_SB16_THIS wavemode & 2) {
+      if ((DSP.outputinit & 2) == 0) {
+        base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
+        bx_param_string_c *waveparam = SIM->get_param_string("wave", base);
+        if (BX_SB16_WAVEOUT2->openwaveoutput(waveparam->getptr()) == BX_SOUNDLOW_OK)
+          DSP.outputinit |= 2;
+        else
+          DSP.outputinit &= ~2;
+        if (((DSP.outputinit & BX_SB16_THIS wavemode) & 2) == 0) {
+          writelog(WAVELOG(2), "Error opening file %s. Wave file output disabled.",
                    waveparam->getptr());
-          BX_SB16_THIS wavemode = 0;
-        } else if (BX_SB16_THIS wavemode == 2) {
-          DEV_soundmod_VOC_init_file(WAVEDATA);
+          BX_SB16_THIS wavemode = DSP.outputinit;
         }
       }
     }
@@ -1285,7 +1295,6 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
     if (DSP.inputinit == 0) {
       ret = BX_SB16_WAVEIN->openwaveinput(SIM->get_param_string(BXPN_SOUND_WAVEIN)->getptr(), sb16_adc_handler);
       if (ret != BX_SOUNDLOW_OK) {
-        BX_SB16_THIS wavemode = 0;
         writelog(WAVELOG(2), "Error: Could not open wave input device.");
       } else {
         DSP.inputinit = 1;
@@ -1294,7 +1303,6 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
     if (DSP.inputinit == 1) {
       ret = BX_SB16_WAVEIN->startwaverecord(&DSP.dma.param);
       if (ret != BX_SOUNDLOW_OK) {
-        BX_SB16_THIS wavemode = 0;
         writelog(WAVELOG(2), "Error: Could not start wave record.");
       }
     }
@@ -1414,35 +1422,12 @@ void bx_sb16_c::dsp_sendwavepacket()
   if (DSP.dma.chunkindex == 0)
     return;
 
-  switch (BX_SB16_THIS wavemode) {
-    case 1:
-      BX_SB16_WAVEOUT->sendwavepacket(DSP.dma.chunkindex, DSP.dma.chunk, &DSP.dma.param);
-      break;
-    case 3:
-      fwrite(DSP.dma.chunk, 1, DSP.dma.chunkindex, WAVEDATA);
-      break;
-    case 2:
-      Bit8u temparray[12] =
-       { (Bit8u)(DSP.dma.param.samplerate & 0xff), (Bit8u)(DSP.dma.param.samplerate >> 8), 0, 0,
-         (Bit8u)DSP.dma.param.bits, DSP.dma.param.channels, 0, 0, 0, 0, 0, 0 };
-      switch ((DSP.dma.param.format >> 1) & 7) {
-       case 2:
-         temparray[6] = 3;
-         break;
-       case 3:
-         temparray[6] = 2;
-         break;
-       case 4:
-         temparray[6] = 1;
-         break;
-      }
-      if (DSP.dma.param.bits == 16)
-         temparray[6] = 4;
-
-      DEV_soundmod_VOC_write_block(WAVEDATA, 9, 12, temparray, DSP.dma.chunkindex, DSP.dma.chunk);
-      break;
+  if (BX_SB16_THIS wavemode & 1) {
+    BX_SB16_WAVEOUT1->sendwavepacket(DSP.dma.chunkindex, DSP.dma.chunk, &DSP.dma.param);
   }
-
+  if (BX_SB16_THIS wavemode & 2) {
+    BX_SB16_WAVEOUT2->sendwavepacket(DSP.dma.chunkindex, DSP.dma.chunk, &DSP.dma.param);
+  }
   DSP.dma.chunkindex = 0;
 }
 
@@ -1476,14 +1461,8 @@ void bx_sb16_c::dsp_dmadone()
 
   if ((DSP.dma.output == 1) && (DSP.dma.mode != 2)) {
     dsp_sendwavepacket();  // flush the output
-
-    if (BX_SB16_THIS wavemode > 1) {
-      fflush(WAVEDATA);
-    }
   } else if ((DSP.dma.output == 0) && (DSP.dma.mode != 2)) {
-    if (BX_SB16_THIS wavemode == 1) {
-      BX_SB16_WAVEIN->stopwaverecord();
-    }
+    BX_SB16_WAVEIN->stopwaverecord();
   }
 
   // generate the appropriate IRQ
@@ -1900,8 +1879,8 @@ Bit32u bx_sb16_c::mpu_status()
   Bit32u result = 0;
 
   if ((MPU.datain.full() == 1) ||
-       ((BX_SB16_THIS midimode == 1) &&
-        (BX_SB16_MIDIOUT->midiready() == BX_SOUNDLOW_ERR)))
+       ((BX_SB16_THIS midimode & 1) &&
+        (BX_SB16_MIDIOUT1->midiready() == BX_SOUNDLOW_ERR)))
     result |= 0x40;       // output not ready
   if (MPU.dataout.empty() == 1)
     result |= 0x80;       // no input available
@@ -2398,25 +2377,35 @@ void bx_sb16_c::writemidicommand(int command, int length, Bit8u data[])
 
   /* Initialize output device/file if necessary and not done yet */
   if (BX_SB16_THIS midimode > 0) {
-    if (MPU.outputinit != 1) {
+    if ((MPU.outputinit & BX_SB16_THIS midimode) != BX_SB16_THIS midimode) {
       writelog(MIDILOG(4), "Initializing Midi output.");
-      if (BX_SB16_THIS midimode == 1) {
+      if (BX_SB16_THIS midimode & 1) {
         midiparam = SIM->get_param_string(BXPN_SOUND_MIDIOUT);
-      } else {
+        if (BX_SB16_MIDIOUT1->openmidioutput(midiparam->getptr()) == BX_SOUNDLOW_OK)
+          MPU.outputinit |= 1;
+        else
+          MPU.outputinit &= ~1;
+      }
+      if (BX_SB16_THIS midimode & 2) {
         bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
         midiparam = SIM->get_param_string("midi", base);
+        if (BX_SB16_MIDIOUT2->openmidioutput(midiparam->getptr()) == BX_SOUNDLOW_OK)
+          MPU.outputinit |= 2;
+        else
+          MPU.outputinit &= ~2;
       }
-      if (BX_SB16_MIDIOUT->openmidioutput(midiparam->getptr()) == BX_SOUNDLOW_OK)
-        MPU.outputinit = 1;
-      else
-        MPU.outputinit = 0;
-      if (MPU.outputinit != 1) {
+      if ((MPU.outputinit & BX_SB16_THIS midimode) != BX_SB16_THIS midimode) {
         writelog(MIDILOG(2), "Error: Couldn't open midi output. Midi disabled.");
-        BX_SB16_THIS midimode = 0;
+        BX_SB16_THIS midimode = MPU.outputinit;
         return;
       }
     }
-    BX_SB16_MIDIOUT->sendmidicommand(deltatime, command, length, data);
+    if (BX_SB16_THIS midimode & 1) {
+      BX_SB16_MIDIOUT1->sendmidicommand(deltatime, command, length, data);
+    }
+    if (BX_SB16_THIS midimode & 2) {
+      BX_SB16_MIDIOUT2->sendmidicommand(deltatime, command, length, data);
+    }
   }
 }
 
@@ -2549,38 +2538,27 @@ void bx_sb16_c::midiremapprogram(int channel)
 void bx_sb16_c::closemidioutput()
 {
   if (BX_SB16_THIS midimode > 0) {
-    if (MPU.outputinit != 0) {
-      BX_SB16_MIDIOUT->closemidioutput();
-      MPU.outputinit = 0;
+    if (MPU.outputinit & 1) {
+      BX_SB16_MIDIOUT1->closemidioutput();
+      MPU.outputinit &= ~1;
+    }
+    if (MPU.outputinit & 2) {
+      BX_SB16_MIDIOUT2->closemidioutput();
+      MPU.outputinit &= ~2;
     }
   }
 }
 
 void bx_sb16_c::closewaveoutput()
 {
-  switch (BX_SB16_THIS wavemode) {
-    case 1:
-      // nothing to do here yet
-      break;
-    case 2:
-      if (WAVEDATA != NULL)
-        finishvocfile();
-    case 3:
-      if (WAVEDATA != NULL)
-        fclose(WAVEDATA);
-      WAVEDATA = NULL;
-      break;
+  if (BX_SB16_THIS wavemode > 0) {
+    if (DSP.outputinit & 2) {
+      BX_SB16_WAVEOUT2->closewaveoutput();
+      DSP.outputinit &= ~2;
+    }
   }
 }
 
-
-/* Handler for the voc file output */
-
-// close the voc file
-void bx_sb16_c::finishvocfile()
-{
-  fputc(0, WAVEDATA);  // blocktype 0: end block
-}
 
 // static IO port read callback handler
 // redirects to non-static class handler to avoid virtual functions
@@ -3121,7 +3099,7 @@ Bit64s bx_sb16_c::sb16_param_handler(bx_param_c *param, int set, Bit64s val)
       }
     } else if (!strcmp(pname, "wavemode")) {
       if (val != BX_SB16_THIS wavemode) {
-        BX_SB16_THIS wave_changed = 1;
+        BX_SB16_THIS wave_changed |= 1;
       }
     } else {
       BX_PANIC(("sb16_param_handler called with unexpected parameter '%s'", pname));
@@ -3137,7 +3115,7 @@ const char* bx_sb16_c::sb16_param_string_handler(bx_param_string_c *param, int s
   if ((set) && (strcmp(val, oldval))) {
     const char *pname = param->get_name();
     if (!strcmp(pname, "wave")) {
-      BX_SB16_THIS wave_changed = 1;
+      BX_SB16_THIS wave_changed |= 2;
     } else if (!strcmp(pname, "midi")) {
       BX_SB16_THIS midi_changed |= 2;
     } else if (!strcmp(pname, "log")) {

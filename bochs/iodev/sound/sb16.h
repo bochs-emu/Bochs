@@ -152,13 +152,12 @@ public:
 private:
 
   int midimode, wavemode, loglevel;
-  bx_bool wave_changed;
-  Bit8u midi_changed;
+  Bit8u midi_changed, wave_changed;
   Bit32u dmatimer;
-  FILE *logfile, *wavefile; // the output files or devices
-  bx_soundlow_waveout_c *waveout; // waveout support
+  FILE *logfile;
+  bx_soundlow_waveout_c *waveout[2]; // waveout support
   bx_soundlow_wavein_c  *wavein;  // wavein support
-  bx_soundlow_midiout_c *midiout; // midiout support
+  bx_soundlow_midiout_c *midiout[2]; // midiout support
   int currentirq;
   int currentdma8;
   int currentdma16;
@@ -175,7 +174,7 @@ private:
 
     int timer_handle, current_timer;           // no. of delta times passed
     Bit32u last_delta_time;                    // timer value at last command
-    bx_bool outputinit;
+    Bit8u outputinit;
   } mpu401;
 
   // the DSP variables
@@ -208,7 +207,7 @@ private:
       Bit16u blocklength;
     } dma;
     int timer_handle;   // handle for the DMA timer
-    bx_bool outputinit; // have the lowlevel output been initialized
+    Bit8u outputinit; // have the lowlevel output been initialized
     bx_bool inputinit;  // have the lowlevel input been initialized
   } dsp;
 
@@ -297,7 +296,6 @@ private:
 
   BX_SB16_SMF void   closemidioutput();         // close midi file / device
   BX_SB16_SMF void   closewaveoutput();         // close wave file
-  BX_SB16_SMF void   finishvocfile();           // close voc file
   BX_SB16_SMF void   create_logfile();
 
       /* The port IO multiplexer functions */
