@@ -34,9 +34,7 @@ public:
   virtual bx_soundlow_waveout_c* get_waveout(const char *driver);
   virtual bx_soundlow_wavein_c* get_wavein(const char *driver);
   virtual bx_soundlow_midiout_c* get_midiout(const char *driver);
-  virtual void VOC_init_file(FILE *stream);
-  virtual void VOC_write_block(FILE *stream, int block, Bit32u headerlen,
-                               Bit8u header[], Bit32u datalen, Bit8u data[]);
+
 private:
   bx_sound_lowlevel_c* get_driver(const char *name);
 

@@ -34,9 +34,12 @@ public:
   virtual int closewaveoutput();
 
 private:
-  void initvocfile();
   void initwavfile();
   void write_32bit(Bit32u pos, Bit32u value);
+
+  void VOC_init_file();
+  void VOC_write_block(int block, Bit32u headerlen, Bit8u header[],
+                       Bit32u datalen, Bit8u data[]);
 
   FILE *wavefile;
   unsigned type;

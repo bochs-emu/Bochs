@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2014  The Bochs Project
+//  Copyright (C) 2002-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -258,10 +258,6 @@ extern "C" {
 #define DEV_sound_get_waveout(a) (bx_devices.pluginSoundModCtl->get_waveout(a))
 #define DEV_sound_get_wavein(a) (bx_devices.pluginSoundModCtl->get_wavein(a))
 #define DEV_sound_get_midiout(a) (bx_devices.pluginSoundModCtl->get_midiout(a))
-#define DEV_soundmod_VOC_init_file(a) \
-  (bx_devices.pluginSoundModCtl->VOC_init_file(a))
-#define DEV_soundmod_VOC_write_block(a,b,c,d,e,f) \
-  (bx_devices.pluginSoundModCtl->VOC_write_block(a,b,c,d,e,f))
 
 ///////// Networking module macro
 #define DEV_net_init_module(a,b,c,d) \

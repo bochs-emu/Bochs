@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -363,9 +363,6 @@ public:
   virtual bx_soundlow_midiout_c* get_midiout(const char *driver) {
     STUBFUNC(soundmod_ctl, get_midiout); return NULL;
   }
-  virtual void VOC_init_file(FILE *stream) {}
-  virtual void VOC_write_block(FILE *stream, int block, Bit32u headerlen,
-                               Bit8u header[], Bit32u datalen, Bit8u data[]) {}
 };
 #endif
 

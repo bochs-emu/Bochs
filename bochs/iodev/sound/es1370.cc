@@ -84,6 +84,10 @@ const Bit8u es1370_iomask[64] = {7, 1, 3, 1, 7, 1, 3, 1, 1, 3, 1, 0, 7, 0, 0, 0,
 #define DAC2_CHANNEL 1
 #define ADC_CHANNEL  2
 
+#define BX_ES1370_WAVEOUT1 BX_ES1370_THIS waveout[0]
+#define BX_ES1370_WAVEOUT2 BX_ES1370_THIS waveout[1]
+#define BX_ES1370_WAVEIN   BX_ES1370_THIS wavein
+
 const char chan_name[3][5] = {"DAC1", "DAC2", "ADC"};
 const Bit16u dac1_freq[4] = {5512, 11025, 22050, 44100};
 const Bit16u ctl_ch_en[3] = {0x0040, 0x0020, 0x0010};
@@ -117,7 +121,7 @@ void es1370_init_options(void)
   bx_param_enum_c *wavemode = new bx_param_enum_c(menu,
     "wavemode",
     "Wave mode",
-    "Controls the wave output format.",
+    "Controls the wave output switches.",
     es1370_wavemode_list,
     0, 0);
   bx_param_filename_c *wavefile = new bx_param_filename_c(menu,
@@ -186,9 +190,9 @@ bx_es1370_c::bx_es1370_c()
   memset(&s, 0, sizeof(bx_es1370_t));
   s.dac1_timer_index = BX_NULL_TIMER_HANDLE;
   s.dac2_timer_index = BX_NULL_TIMER_HANDLE;
-  waveout = NULL;
+  waveout[0] = NULL;
+  waveout[1] = NULL;
   wavein = NULL;
-  wavefile = NULL;
 }
 
 bx_es1370_c::~bx_es1370_c()
@@ -222,13 +226,27 @@ void bx_es1370_c::init(void)
 
   BX_ES1370_THIS pci_base_address[0] = 0;
 
-  BX_ES1370_THIS waveout = DEV_sound_get_waveout("default");
-  BX_ES1370_THIS wavein = DEV_sound_get_wavein("default");
-  BX_ES1370_THIS s.dac_outputinit = 1;
+  BX_ES1370_THIS wavemode = SIM->get_param_enum("wavemode", base)->get();
+
+  // always initialize lowlevel driver
+  BX_ES1370_WAVEOUT1 = DEV_sound_get_waveout("default");
+  if (BX_ES1370_WAVEOUT1 == NULL) {
+    BX_PANIC(("Couldn't initialize waveout driver"));
+  }
+  if (BX_ES1370_THIS wavemode & 2) {
+    BX_ES1370_WAVEOUT2 = DEV_sound_get_waveout("file");
+    if (BX_ES1370_WAVEOUT2 == NULL) {
+      BX_PANIC(("Couldn't initialize wave file driver"));
+    }
+  }
+  BX_ES1370_WAVEIN = DEV_sound_get_wavein("default");
+  if (BX_ES1370_WAVEIN == NULL) {
+    BX_PANIC(("Couldn't initialize wavein driver"));
+  }
+
+  BX_ES1370_THIS s.dac_outputinit = (BX_ES1370_THIS wavemode & 1);
   BX_ES1370_THIS s.adc_inputinit = 0;
   BX_ES1370_THIS s.dac_nr_active = -1;
-
-  BX_ES1370_THIS wavemode = SIM->get_param_enum("wavemode", base)->get();
 
   if (BX_ES1370_THIS s.dac1_timer_index == BX_NULL_TIMER_HANDLE) {
     BX_ES1370_THIS s.dac1_timer_index = bx_pc_system.register_timer
@@ -356,9 +374,20 @@ void bx_es1370_c::runtime_config_handler(void *this_ptr)
 void bx_es1370_c::runtime_config(void)
 {
   bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370);
-  if (BX_ES1370_THIS wave_changed) {
-    BX_ES1370_THIS closewaveoutput();
-    BX_ES1370_THIS wavemode = SIM->get_param_enum("wavemode", base)->get();
+  if (BX_ES1370_THIS wave_changed != 0) {
+    if (BX_ES1370_THIS wavemode & 2) {
+      BX_ES1370_THIS closewaveoutput();
+    }
+    if (BX_ES1370_THIS wave_changed & 1) {
+      BX_ES1370_THIS wavemode = SIM->get_param_enum("wavemode", base)->get();
+      BX_ES1370_THIS s.dac_outputinit = (BX_ES1370_THIS wavemode & 1);
+      if (BX_ES1370_THIS wavemode & 2) {
+        BX_ES1370_WAVEOUT2 = DEV_sound_get_waveout("file");
+        if (BX_ES1370_WAVEOUT2 == NULL) {
+          BX_PANIC(("Couldn't initialize wave file driver"));
+        }
+      }
+    }
     // update_voices() re-opens the output file on demand
     BX_ES1370_THIS wave_changed = 0;
   }
@@ -594,7 +623,7 @@ void bx_es1370_c::run_channel(unsigned chan, int timer_id, Bit32u buflen)
 
   if (!(BX_ES1370_THIS s.ctl & ctl_ch_en[chan]) || (BX_ES1370_THIS s.sctl & sctl_ch_pause[chan])) {
     if (chan == ADC_CHANNEL) {
-      BX_ES1370_THIS wavein->stopwaverecord();
+      BX_ES1370_WAVEIN->stopwaverecord();
     } else {
       bx_pc_system.deactivate_timer(timer_id);
     }
@@ -612,7 +641,7 @@ void bx_es1370_c::run_channel(unsigned chan, int timer_id, Bit32u buflen)
   addr += (cnt << 2) + d->leftover;
 
   if (chan == ADC_CHANNEL) {
-    BX_ES1370_THIS wavein->getwavepacket(temp, tmpbuf);
+    BX_ES1370_WAVEIN->getwavepacket(temp, tmpbuf);
     DEV_MEM_WRITE_PHYSICAL_DMA(addr, temp, tmpbuf);
     transfered = temp;
   } else {
@@ -724,7 +753,7 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
       if (new_freq) {
         if (i == ADC_CHANNEL) {
           if (!BX_ES1370_THIS s.adc_inputinit) {
-            ret = BX_ES1370_THIS wavein->openwaveinput(SIM->get_param_string(BXPN_SOUND_WAVEIN)->getptr(),
+            ret = BX_ES1370_WAVEIN->openwaveinput(SIM->get_param_string(BXPN_SOUND_WAVEIN)->getptr(),
                                                          es1370_adc_handler);
             if (ret != BX_SOUNDLOW_OK) {
               BX_ERROR(("could not open wave input device"));
@@ -754,31 +783,30 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
             param.bits = (new_fmt >> 1) ? 16 : 8;
             param.channels = (new_fmt & 1) + 1;
             param.format = (new_fmt >> 1);
-            ret = BX_ES1370_THIS wavein->startwaverecord(&param);
+            ret = BX_ES1370_WAVEIN->startwaverecord(&param);
             if (ret != BX_SOUNDLOW_OK) {
               BX_ES1370_THIS s.adc_inputinit = 0;
               BX_ERROR(("could not start wave record"));
             }
           }
         } else {
-          if ((BX_ES1370_THIS s.dac_nr_active == -1) && BX_ES1370_THIS s.dac_outputinit) {
-            if ((BX_ES1370_THIS wavemode == 2) || (BX_ES1370_THIS wavemode == 3)) {
-              bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370);
-              bx_param_string_c *waveparam = SIM->get_param_string("wavefile", base);
-              if ((BX_ES1370_THIS wavefile == NULL) && (!waveparam->isempty())) {
-                BX_ES1370_THIS wavefile = fopen(waveparam->getptr(), "wb");
-                if (BX_ES1370_THIS wavefile == NULL) {
+          if (BX_ES1370_THIS s.dac_nr_active == -1) {
+            if (BX_ES1370_THIS wavemode & 2) {
+              if ((BX_ES1370_THIS s.dac_outputinit & 2) == 0) {
+                bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370);
+                bx_param_string_c *waveparam = SIM->get_param_string("wavefile", base);
+                if (BX_ES1370_WAVEOUT2->openwaveoutput(waveparam->getptr()) == BX_SOUNDLOW_OK)
+                  BX_ES1370_THIS s.dac_outputinit |= 2;
+                else
+                  BX_ES1370_THIS s.dac_outputinit &= ~2;
+                if (((BX_ES1370_THIS s.dac_outputinit & BX_ES1370_THIS wavemode) & 2) == 0) {
                   BX_ERROR(("Error opening file '%s' - wave output disabled",
                             waveparam->getptr()));
-                  BX_ES1370_THIS wavemode = 0;
-                } else if (BX_ES1370_THIS wavemode == 2) {
-                  DEV_soundmod_VOC_init_file(BX_ES1370_THIS wavefile);
+                  BX_ES1370_THIS wavemode = BX_ES1370_THIS s.dac_outputinit;
                 }
               }
-              BX_ES1370_THIS s.dac_nr_active = i;
-            } else {
-              BX_ES1370_THIS s.dac_nr_active = i;
             }
+            BX_ES1370_THIS s.dac_nr_active = i;
           }
           BX_ES1370_THIS s.dac_packet_size[i] = (new_freq / 10) << d->shift; // 0.1 sec
           if (BX_ES1370_THIS s.dac_packet_size[i] > BX_SOUNDLOW_WAVEPACKETSIZE) {
@@ -790,12 +818,10 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
       } else {
         if (i == ADC_CHANNEL) {
           if (BX_ES1370_THIS s.adc_inputinit) {
-            BX_ES1370_THIS wavein->stopwaverecord();
+            BX_ES1370_WAVEIN->stopwaverecord();
           }
         } else {
-          if (((int)i == BX_ES1370_THIS s.dac_nr_active) && BX_ES1370_THIS s.dac_outputinit) {
-            BX_ES1370_THIS s.dac_nr_active = -1;
-          }
+          BX_ES1370_THIS s.dac_nr_active = -1;
           bx_pc_system.deactivate_timer(timer_id);
         }
       }
@@ -821,42 +847,21 @@ void bx_es1370_c::sendwavepacket(unsigned channel, Bit32u buflen, Bit8u *buffer)
   param.format = (format >> 1) & 1;
   param.volume = BX_ES1370_THIS s.wave_vol;
 
-  switch (BX_ES1370_THIS wavemode) {
-    case 1:
-      if (BX_ES1370_THIS s.dac_outputinit) {
-        BX_ES1370_THIS waveout->sendwavepacket(buflen, buffer, &param);
-      }
-      break;
-    case 3:
-      fwrite(buffer, 1, buflen, BX_ES1370_THIS wavefile);
-      break;
-    case 2:
-      Bit8u temparray[12] =
-       { (Bit8u)(param.samplerate & 0xff), (Bit8u)(param.samplerate >> 8), 0, 0,
-         param.bits, param.channels, 0, 0, 0, 0, 0, 0 };
-      if (param.format & 1)
-         temparray[6] = 4;
-
-      DEV_soundmod_VOC_write_block(BX_ES1370_THIS wavefile, 9, 12, temparray, buflen, buffer);
-      break;
+  if (BX_ES1370_THIS wavemode & 1) {
+    BX_ES1370_WAVEOUT1->sendwavepacket(buflen, buffer, &param);
+  }
+  if (BX_ES1370_THIS wavemode & 2) {
+    BX_ES1370_WAVEOUT2->sendwavepacket(buflen, buffer, &param);
   }
 }
 
 void bx_es1370_c::closewaveoutput()
 {
-  switch (BX_ES1370_THIS wavemode) {
-    case 1:
-      // nothing to do here yet
-      break;
-    case 2:
-      if (BX_ES1370_THIS wavefile != NULL) {
-        fputc(0, BX_ES1370_THIS wavefile);
-      }
-    case 3:
-      if (BX_ES1370_THIS wavefile != NULL)
-        fclose(BX_ES1370_THIS wavefile);
-      BX_ES1370_THIS wavefile = NULL;
-      break;
+  if (BX_ES1370_THIS wavemode > 0) {
+    if (BX_ES1370_THIS s.dac_outputinit & 2) {
+      BX_ES1370_WAVEOUT2->closewaveoutput();
+      BX_ES1370_THIS s.dac_outputinit &= ~2;
+    }
   }
 }
 
@@ -944,7 +949,7 @@ Bit64s bx_es1370_c::es1370_param_handler(bx_param_c *param, int set, Bit64s val)
     const char *pname = param->get_name();
     if (!strcmp(pname, "wavemode")) {
       if (val != BX_ES1370_THIS wavemode) {
-        BX_ES1370_THIS wave_changed = 1;
+        BX_ES1370_THIS wave_changed |= 1;
       }
     } else {
       BX_PANIC(("es1370_param_handler called with unexpected parameter '%s'", pname));
@@ -960,7 +965,7 @@ const char* bx_es1370_c::es1370_param_string_handler(bx_param_string_c *param, i
   if ((set) && (strcmp(val, oldval))) {
     const char *pname = param->get_name();
     if (!strcmp(pname, "wavefile")) {
-      BX_ES1370_THIS wave_changed = 1;
+      BX_ES1370_THIS wave_changed |= 2;
     } else {
       BX_PANIC(("es1370_param_string_handler called with unexpected parameter '%s'", pname));
     }

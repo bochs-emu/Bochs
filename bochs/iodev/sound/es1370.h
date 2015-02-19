@@ -61,7 +61,7 @@ typedef struct {
 
   int dac1_timer_index;
   int dac2_timer_index;
-  bx_bool dac_outputinit;
+  Bit8u dac_outputinit;
   bx_bool adc_inputinit;
   int dac_nr_active;
   Bit16u dac_packet_size[2];
@@ -117,11 +117,10 @@ private:
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
 
-  bx_soundlow_waveout_c *waveout;
+  bx_soundlow_waveout_c *waveout[2];
   bx_soundlow_wavein_c *wavein;
   int wavemode;
-  bx_bool wave_changed;
-  FILE *wavefile;
+  Bit8u wave_changed;
 };
 
 #endif

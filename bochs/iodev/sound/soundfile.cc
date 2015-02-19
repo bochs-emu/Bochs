@@ -52,11 +52,6 @@ bx_soundlow_waveout_file_c::~bx_soundlow_waveout_file_c()
   closewaveoutput();
 }
 
-void bx_soundlow_waveout_file_c::initvocfile()
-{
-  DEV_soundmod_VOC_init_file(wavefile);
-}
-
 void bx_soundlow_waveout_file_c::initwavfile()
 {
   Bit8u waveheader[44] =
@@ -96,7 +91,7 @@ int bx_soundlow_waveout_file_c::openwaveoutput(const char *wavedev)
     if (wavefile == NULL) {
       BX_ERROR(("Failed to open WAVE output file %s.", wavedev));
     } else if (type == BX_SOUNDFILE_VOC) {
-      initvocfile();
+      VOC_init_file();
     } else if (type == BX_SOUNDFILE_WAV) {
       initwavfile();
     }
@@ -137,7 +132,7 @@ int bx_soundlow_waveout_file_c::output(int length, Bit8u data[])
       if (real_pcm_param.bits == 16)
         temparray[6] = 4;
 
-      DEV_soundmod_VOC_write_block(wavefile, 9, 12, temparray, length, data);
+      VOC_write_block(9, 12, temparray, length, data);
     } else {
       fwrite(data, 1, length, wavefile);
     }
@@ -164,6 +159,61 @@ int bx_soundlow_waveout_file_c::closewaveoutput()
     wavefile = NULL;
   }
   return BX_SOUNDLOW_OK;
+}
+
+/* Handlers for the VOC file output */
+
+// Write the header of the VOC file.
+
+void bx_soundlow_waveout_file_c::VOC_init_file()
+{
+  struct {
+    char id[20];
+    Bit16u headerlen;  // All in LITTLE Endian!
+    Bit16u version;
+    Bit16u chksum;
+  } vocheader =
+    { "Creative Voice File",
+#ifdef BX_LITTLE_ENDIAN
+      0x1a, 0x0114, 0x111f };
+#else
+      0x1a00, 0x1401, 0x1f11 };
+#endif
+
+  vocheader.id[19] = 26;    // Replace string end with 26
+
+  fwrite(&vocheader, 1, sizeof vocheader, wavefile);
+}
+
+// write one block to the VOC file
+void bx_soundlow_waveout_file_c::VOC_write_block(int block, Bit32u headerlen,
+                                Bit8u header[], Bit32u datalen, Bit8u data[])
+{
+  Bit32u i;
+
+  if (block > 9) {
+      BX_ERROR(("VOC Block %d not recognized, ignored.", block));
+      return;
+  }
+
+  fputc(block, wavefile);
+
+  i = headerlen + datalen;
+#ifdef BX_LITTLE_ENDIAN
+  fwrite(&i, 1, 3, wavefile); // write the length in 24-bit little endian
+#else
+  Bit8u lengthbytes[3];
+  lengthbytes[0] = i & 0xff; i >>= 8;
+  lengthbytes[1] = i & 0xff; i >>= 8;
+  lengthbytes[2] = i & 0xff;
+  fwrite(lengthbytes, 1, 3, wavefile);
+#endif
+  BX_DEBUG(("Voc block %d; Headerlen %d; Datalen %d",
+            block, headerlen, datalen));
+  if (headerlen > 0)
+    fwrite(header, 1, headerlen, wavefile);
+  if (datalen > 0)
+    fwrite(data, 1, datalen, wavefile);
 }
 
 // bx_soundlow_midiout_file_c class implemenzation
