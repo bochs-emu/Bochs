@@ -673,7 +673,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
 
   RAX = GET32L(ticks);
   RDX = GET32H(ticks);
-  RCX = MSR_TSC_AUX;
+  RCX = BX_CPU_THIS_PTR msr.tsc_aux;
 
 #endif
 
@@ -1078,10 +1078,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
     R11 = read_eflags() & ~(EFlagsRFMask);
 
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-      temp_RIP = MSR_LSTAR;
+      temp_RIP = BX_CPU_THIS_PTR msr.lstar;
     }
     else {
-      temp_RIP = MSR_CSTAR;
+      temp_RIP = BX_CPU_THIS_PTR msr.cstar;
     }
 
     // set up CS segment, flat, 64-bit DPL=0
@@ -1122,7 +1122,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.l            = 0;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.avl          = 0; /* available for use by system */
 
-    writeEFlags(read_eflags() & ~MSR_FMASK & ~(EFlagsRFMask), EFlagsValidMask);
+    writeEFlags(read_eflags() & ~(BX_CPU_THIS_PTR msr.fmask) & ~(EFlagsRFMask), EFlagsValidMask);
     RIP = temp_RIP;
   }
   else

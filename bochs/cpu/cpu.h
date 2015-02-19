@@ -173,11 +173,7 @@ enum {
 // access to 64 bit MSR registers
 #define MSR_FSBASE  (BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.base)
 #define MSR_GSBASE  (BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.base)
-#define MSR_LSTAR   (BX_CPU_THIS_PTR msr.lstar)
-#define MSR_CSTAR   (BX_CPU_THIS_PTR msr.cstar)
-#define MSR_FMASK   (BX_CPU_THIS_PTR msr.fmask)
 #define MSR_KERNELGSBASE   (BX_CPU_THIS_PTR msr.kernelgsbase)
-#define MSR_TSC_AUX (BX_CPU_THIS_PTR msr.tsc_aux)
 
 #else // simplify merge between 32-bit and 64-bit mode
 
@@ -296,38 +292,46 @@ enum {
 // <TAG-INSTRUMENTATION_COMMON-BEGIN>
 
 // possible types passed to BX_INSTR_TLB_CNTRL()
-#define BX_INSTR_MOV_CR0        10
-#define BX_INSTR_MOV_CR3        11
-#define BX_INSTR_MOV_CR4        12
-#define BX_INSTR_TASK_SWITCH    13
-#define BX_INSTR_CONTEXT_SWITCH 14
-#define BX_INSTR_INVLPG         15
-#define BX_INSTR_INVEPT         16
-#define BX_INSTR_INVVPID        17
-#define BX_INSTR_INVPCID        18
+enum {
+  BX_INSTR_MOV_CR0 = 10,
+  BX_INSTR_MOV_CR3 = 11,
+  BX_INSTR_MOV_CR4 = 12,
+  BX_INSTR_TASK_SWITCH = 13,
+  BX_INSTR_CONTEXT_SWITCH = 14,
+  BX_INSTR_INVLPG = 15,
+  BX_INSTR_INVEPT = 16,
+  BX_INSTR_INVVPID = 17,
+  BX_INSTR_INVPCID = 18
+};
 
 // possible types passed to BX_INSTR_CACHE_CNTRL()
-#define BX_INSTR_INVD           10
-#define BX_INSTR_WBINVD         11
+enum {
+  BX_INSTR_INVD = 10,
+  BX_INSTR_WBINVD = 11
+};
 
 // possible types passed to BX_INSTR_FAR_BRANCH() and BX_INSTR_UCNEAR_BRANCH()
-#define BX_INSTR_IS_JMP            10
-#define BX_INSTR_IS_JMP_INDIRECT   11
-#define BX_INSTR_IS_CALL           12
-#define BX_INSTR_IS_CALL_INDIRECT  13
-#define BX_INSTR_IS_RET            14
-#define BX_INSTR_IS_IRET           15
-#define BX_INSTR_IS_INT            16
-#define BX_INSTR_IS_SYSCALL        17
-#define BX_INSTR_IS_SYSRET         18
-#define BX_INSTR_IS_SYSENTER       19
-#define BX_INSTR_IS_SYSEXIT        20
+enum {
+  BX_INSTR_IS_JMP = 10,
+  BX_INSTR_IS_JMP_INDIRECT = 11,
+  BX_INSTR_IS_CALL = 12,
+  BX_INSTR_IS_CALL_INDIRECT = 13,
+  BX_INSTR_IS_RET = 14,
+  BX_INSTR_IS_IRET = 15,
+  BX_INSTR_IS_INT = 16,
+  BX_INSTR_IS_SYSCALL = 17,
+  BX_INSTR_IS_SYSRET = 18,
+  BX_INSTR_IS_SYSENTER = 19,
+  BX_INSTR_IS_SYSEXIT = 20
+};
 
 // possible types passed to BX_INSTR_PREFETCH_HINT()
-#define BX_INSTR_PREFETCH_NTA   0
-#define BX_INSTR_PREFETCH_T0    1
-#define BX_INSTR_PREFETCH_T1    2
-#define BX_INSTR_PREFETCH_T2    3
+enum {
+  BX_INSTR_PREFETCH_NTA = 0,
+  BX_INSTR_PREFETCH_T0  = 1,
+  BX_INSTR_PREFETCH_T1  = 2,
+  BX_INSTR_PREFETCH_T2  = 3
+};
 
 // <TAG-INSTRUMENTATION_COMMON-END>
 
@@ -461,14 +465,15 @@ struct BxExceptionInfo {
 
 #define BX_MSR_MAX_INDEX          0x1000
 
-enum {
+enum BxMemtype {
   BX_MEMTYPE_UC = 0,
   BX_MEMTYPE_WC,
   BX_MEMTYPE_RESERVED2,
   BX_MEMTYPE_RESERVED3,
   BX_MEMTYPE_WT,
   BX_MEMTYPE_WP,
-  BX_MEMTYPE_WB
+  BX_MEMTYPE_WB,
+  BX_MEMTYPE_UNKNOWN
 };
 
 #if BX_SUPPORT_VMX
@@ -509,11 +514,13 @@ enum {
 #define BX_SVM_SMM_CTL_MSR      0xc0010116
 #define BX_SVM_HSAVE_PA_MSR     0xc0010117
 
-#define BX_MODE_IA32_REAL       0x0   // CR0.PE=0                |
-#define BX_MODE_IA32_V8086      0x1   // CR0.PE=1, EFLAGS.VM=1   | EFER.LMA=0
-#define BX_MODE_IA32_PROTECTED  0x2   // CR0.PE=1, EFLAGS.VM=0   |
-#define BX_MODE_LONG_COMPAT     0x3   // EFER.LMA = 1, CR0.PE=1, CS.L=0
-#define BX_MODE_LONG_64         0x4   // EFER.LMA = 1, CR0.PE=1, CS.L=1
+enum BxCpuMode {
+  BX_MODE_IA32_REAL = 0,        // CR0.PE=0                |
+  BX_MODE_IA32_V8086 = 1,       // CR0.PE=1, EFLAGS.VM=1   | EFER.LMA=0
+  BX_MODE_IA32_PROTECTED = 2,   // CR0.PE=1, EFLAGS.VM=0   |
+  BX_MODE_LONG_COMPAT = 3,      // EFER.LMA = 1, CR0.PE=1, CS.L=0
+  BX_MODE_LONG_64 = 4           // EFER.LMA = 1, CR0.PE=1, CS.L=1
+};
 
 extern const char* cpu_mode_string(unsigned cpu_mode);
 
@@ -568,14 +575,14 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
 #endif
 
 // notify internal debugger/instrumentation about memory access
-#define BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, paddr, size, pl, rw, dataptr) {              \
-  BX_INSTR_LIN_ACCESS(BX_CPU_ID, (laddr), (paddr), (size), (rw));                       \
-  BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, (laddr), (paddr), (size), (pl), (rw), (dataptr)); \
+#define BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, paddr, size, memtype, rw, dataptr) {              \
+  BX_INSTR_LIN_ACCESS(BX_CPU_ID, (laddr), (paddr), (size), (memtype), (rw));                 \
+  BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, (laddr), (paddr), (size), (memtype), (rw), (dataptr)); \
 }
 
-#define BX_NOTIFY_PHY_MEMORY_ACCESS(paddr, size, rw, why, dataptr) {            \
-  BX_INSTR_PHY_ACCESS(BX_CPU_ID, (paddr), (size), (rw));                        \
-  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, (paddr), (size), (rw), (why), (dataptr)); \
+#define BX_NOTIFY_PHY_MEMORY_ACCESS(paddr, size, memtype, rw, why, dataptr) {              \
+  BX_INSTR_PHY_ACCESS(BX_CPU_ID, (paddr), (size), (memtype), (rw));                        \
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, (paddr), (size), (memtype), (rw), (why), (dataptr)); \
 }
 
 // accessors for all eflags in bx_flags_reg_t
@@ -700,23 +707,23 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
     return 3 & (BX_CPU_THIS_PTR eflags >> 12);                  \
   }
 
-#define EFlagsCFMask   (1 <<  0)
-#define EFlagsPFMask   (1 <<  2)
-#define EFlagsAFMask   (1 <<  4)
-#define EFlagsZFMask   (1 <<  6)
-#define EFlagsSFMask   (1 <<  7)
-#define EFlagsTFMask   (1 <<  8)
-#define EFlagsIFMask   (1 <<  9)
-#define EFlagsDFMask   (1 << 10)
-#define EFlagsOFMask   (1 << 11)
-#define EFlagsIOPLMask (3 << 12)
-#define EFlagsNTMask   (1 << 14)
-#define EFlagsRFMask   (1 << 16)
-#define EFlagsVMMask   (1 << 17)
-#define EFlagsACMask   (1 << 18)
-#define EFlagsVIFMask  (1 << 19)
-#define EFlagsVIPMask  (1 << 20)
-#define EFlagsIDMask   (1 << 21)
+const Bit32u EFlagsCFMask   = (1 <<  0);
+const Bit32u EFlagsPFMask   = (1 <<  2);
+const Bit32u EFlagsAFMask   = (1 <<  4);
+const Bit32u EFlagsZFMask   = (1 <<  6);
+const Bit32u EFlagsSFMask   = (1 <<  7);
+const Bit32u EFlagsTFMask   = (1 <<  8);
+const Bit32u EFlagsIFMask   = (1 <<  9);
+const Bit32u EFlagsDFMask   = (1 << 10);
+const Bit32u EFlagsOFMask   = (1 << 11);
+const Bit32u EFlagsIOPLMask = (3 << 12);
+const Bit32u EFlagsNTMask   = (1 << 14);
+const Bit32u EFlagsRFMask   = (1 << 16);
+const Bit32u EFlagsVMMask   = (1 << 17);
+const Bit32u EFlagsACMask   = (1 << 18);
+const Bit32u EFlagsVIFMask  = (1 << 19);
+const Bit32u EFlagsVIPMask  = (1 << 20);
+const Bit32u EFlagsIDMask   = (1 << 21);
 
 #define EFlagsOSZAPCMask \
     (EFlagsCFMask | EFlagsPFMask | EFlagsAFMask | EFlagsZFMask | EFlagsSFMask | EFlagsOFMask)
@@ -724,7 +731,7 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
 #define EFlagsOSZAPMask  \
     (EFlagsPFMask | EFlagsAFMask | EFlagsZFMask | EFlagsSFMask | EFlagsOFMask)
 
-#define EFlagsValidMask  0x003f7fd5	// only supported bits for EFLAGS
+const Bit32u EFlagsValidMask = 0x003f7fd5; // only supported bits for EFLAGS
 
 #if BX_CPU_LEVEL >= 5
 typedef struct
@@ -752,7 +759,7 @@ typedef struct
   bx_address sysenter_eip_msr;
 
   Bit64u mtrrphys[16];
-  Bit64u mtrrfix64k_00000;
+  Bit64u mtrrfix64k;
   Bit64u mtrrfix16k[2];
   Bit64u mtrrfix4k[8];
   Bit16u mtrr_deftype;
@@ -797,6 +804,18 @@ typedef struct {
   bx_hostpageaddr_t hostPageAddr;
   Bit32u accessBits;
   Bit32u lpf_mask;      // linear address mask of the page size
+
+#if BX_SUPPORT_MEMTYPE
+  Bit32u memtype;      // keep it Bit32u for alignment
+#endif
+
+  Bit32u get_memtype() const {
+#if BX_SUPPORT_MEMTYPE
+    return memtype;
+#else
+    return BX_MEMTYPE_UC;
+#endif
+  }
 } bx_TLB_entry;
 
 #if BX_SUPPORT_X86_64
@@ -4700,6 +4719,9 @@ public: // for now...
   BX_SMF bx_phy_address nested_walk_legacy(bx_phy_address guest_paddr, unsigned rw, bx_bool is_page_walk);
   BX_SMF bx_phy_address nested_walk(bx_phy_address guest_paddr, unsigned rw, bx_bool is_page_walk);
 #endif
+#if BX_SUPPORT_MEMTYPE
+  BX_SMF BxMemtype memtype_by_mtrr(bx_phy_address paddr);
+#endif
 
 #if BX_CPU_LEVEL >= 6
   BX_SMF void TLB_flushNonGlobal(void);
@@ -4709,14 +4731,11 @@ public: // for now...
   BX_SMF void inhibit_interrupts(unsigned mask);
   BX_SMF bx_bool interrupts_inhibited(unsigned mask);
   BX_SMF const char *strseg(bx_segment_reg_t *seg);
-  BX_SMF void interrupt(Bit8u vector, unsigned type, bx_bool push_error,
-                 Bit16u error_code);
+  BX_SMF void interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u error_code);
   BX_SMF void real_mode_int(Bit8u vector, bx_bool push_error, Bit16u error_code);
-  BX_SMF void protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error,
-                 Bit16u error_code);
+  BX_SMF void protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error, Bit16u error_code);
 #if BX_SUPPORT_X86_64
-  BX_SMF void long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error,
-                 Bit16u error_code);
+  BX_SMF void long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error, Bit16u error_code);
 #endif
   BX_SMF void exception(unsigned vector, Bit16u error_code)
                   BX_CPP_AttrNoReturn();
@@ -5300,10 +5319,12 @@ BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 }
 
 #if BX_X86_DEBUGGER
-#define BX_HWDebugInstruction   0x00
-#define BX_HWDebugMemW          0x01
-#define BX_HWDebugIO            0x02
-#define BX_HWDebugMemRW         0x03
+enum {
+  BX_HWDebugInstruction = 0x00,
+  BX_HWDebugMemW        = 0x01,
+  BX_HWDebugIO          = 0x02,
+  BX_HWDebugMemRW       = 0x03
+};
 #endif
 
 BX_CPP_INLINE bx_address BX_CPU_C::get_segment_base(unsigned seg)

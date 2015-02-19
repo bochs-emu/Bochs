@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2014 Stanislav Shwartsman
+//   Copyright (c) 2008-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -107,7 +107,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
         BX_ERROR(("RDMSR: MTRR is not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
-      val64 = BX_CPU_THIS_PTR msr.mtrrfix64k_00000;
+      val64 = BX_CPU_THIS_PTR msr.mtrrfix64k;
       break;
     case BX_MSR_MTRRFIX16K_80000:
     case BX_MSR_MTRRFIX16K_A0000:
@@ -279,7 +279,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
         BX_ERROR(("RDMSR MSR_LSTAR: long mode support not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
-      val64 = MSR_LSTAR;
+      val64 = BX_CPU_THIS_PTR msr.lstar;
       break;
 
     case BX_MSR_CSTAR:
@@ -287,7 +287,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
         BX_ERROR(("RDMSR MSR_CSTAR: long mode support not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
-      val64 = MSR_CSTAR;
+      val64 = BX_CPU_THIS_PTR msr.cstar;
       break;
 
     case BX_MSR_FMASK:
@@ -295,7 +295,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
         BX_ERROR(("RDMSR MSR_FMASK: long mode support not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
-      val64 = MSR_FMASK;
+      val64 = BX_CPU_THIS_PTR msr.fmask;
       break;
 
     case BX_MSR_FSBASE:
@@ -327,7 +327,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
         BX_ERROR(("RDMSR MSR_TSC_AUX: RTDSCP feature not enabled !"));
         return handle_unknown_rdmsr(index, msr);
       }
-      val64 = MSR_TSC_AUX;   // 32 bit MSR
+      val64 = BX_CPU_THIS_PTR msr.tsc_aux;   // 32 bit MSR
       break;
 #endif
 
@@ -609,7 +609,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRRFIX64K_00000 !"));
         return 0;
       }
-      BX_CPU_THIS_PTR msr.mtrrfix64k_00000 = val_64;
+      BX_CPU_THIS_PTR msr.mtrrfix64k = val_64;
       break;
 
     case BX_MSR_MTRRFIX16K_80000:
@@ -768,7 +768,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_LSTAR !"));
         return 0;
       }
-      MSR_LSTAR = val_64;
+      BX_CPU_THIS_PTR msr.lstar = val_64;
       break;
 
     case BX_MSR_CSTAR:
@@ -780,7 +780,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_CSTAR !"));
         return 0;
       }
-      MSR_CSTAR = val_64;
+      BX_CPU_THIS_PTR msr.cstar = val_64;
       break;
 
     case BX_MSR_FMASK:
@@ -788,7 +788,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR MSR_FMASK: long mode support not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
-      MSR_FMASK = (Bit32u) val_64;
+      BX_CPU_THIS_PTR msr.fmask = (Bit32u) val_64;
       break;
 
     case BX_MSR_FSBASE:
@@ -832,7 +832,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR MSR_TSC_AUX: RTDSCP feature not enabled !"));
         return handle_unknown_wrmsr(index, val_64);
       }
-      MSR_TSC_AUX = val32_lo;
+      BX_CPU_THIS_PTR msr.tsc_aux = val32_lo;
       break;
 #endif  // #if BX_SUPPORT_X86_64
 

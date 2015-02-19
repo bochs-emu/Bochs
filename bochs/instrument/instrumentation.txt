@@ -209,7 +209,7 @@ instruction execution. In case of repeat instruction the callback will
 be called only once after all repeat iterations. 
 
 
-	void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_address phy, unsigned len, unsigned rw);
+	void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_address phy, unsigned len, unsigned memtype, unsigned rw);
 
 The  callback  is  called  each  time,  when Bochs simulator executes a linear
 memory  access.  Note  that  no  page split accesses will be generated because
@@ -223,7 +223,7 @@ Currently  the  callback is not supported when repeat-speedups optimization is
 enabled.
 
 
-	void bx_instr_phy_access(unsigned cpu, bx_address lin, bx_address phy, unsigned len, unsigned rw);
+	void bx_instr_phy_access(unsigned cpu, bx_address lin, bx_address phy, unsigned len, unsigned memtype, unsigned rw);
 
 The  callback  is called  each  time, when Bochs simulator executes a physical
 memory  access.  Physical  accesses include memory  accesses generated  by the

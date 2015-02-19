@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009-2013 Stanislav Shwartsman
+//   Copyright (c) 2009-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -311,7 +311,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr)
          // check MSR-HI bitmaps
          bx_phy_address pAddr = vm->msr_bitmap_addr + ((msr - BX_VMX_HI_MSR_START) >> 3) + 1024 + ((op == VMX_VMEXIT_RDMSR) ? 0 : 2048);
          access_read_physical(pAddr, 1, &field);
-         BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, BX_READ, BX_MSR_BITMAP_ACCESS, &field);
+         BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, BX_MEMTYPE_UNKNOWN, BX_READ, BX_MSR_BITMAP_ACCESS, &field);
          if (field & (1 << (msr & 7)))
             vmexit = 1;
        }
@@ -322,7 +322,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr)
          // check MSR-LO bitmaps
          bx_phy_address pAddr = vm->msr_bitmap_addr + (msr >> 3) + ((op == VMX_VMEXIT_RDMSR) ? 0 : 2048);
          access_read_physical(pAddr, 1, &field);
-         BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, BX_READ, BX_MSR_BITMAP_ACCESS, &field);
+         BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, BX_MEMTYPE_UNKNOWN, BX_READ, BX_MSR_BITMAP_ACCESS, &field);
          if (field & (1 << (msr & 7)))
             vmexit = 1;
        }
@@ -358,21 +358,21 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
           // special case - the IO access split cross both I/O bitmaps
           pAddr = BX_CPU_THIS_PTR vmcs.io_bitmap_addr[0] + 0xfff;
           access_read_physical(pAddr, 1, &bitmap[0]);
-          BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[0]);
+          BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, BX_MEMTYPE_UNKNOWN, BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[0]);
 
           pAddr = BX_CPU_THIS_PTR vmcs.io_bitmap_addr[1];
           access_read_physical(pAddr, 1, &bitmap[1]);
-          BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[1]);
+          BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, BX_MEMTYPE_UNKNOWN, BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[1]);
         }
         else {
           // access_read_physical cannot read 2 bytes cross 4K boundary :(
           pAddr = BX_CPU_THIS_PTR vmcs.io_bitmap_addr[(port >> 15) & 1] + ((port & 0x7fff) / 8);
           access_read_physical(pAddr, 1, &bitmap[0]);
-          BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[0]);
+          BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, BX_MEMTYPE_UNKNOWN, BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[0]);
 
           pAddr++;
           access_read_physical(pAddr, 1, &bitmap[1]);
-          BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[1]);
+          BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, BX_MEMTYPE_UNKNOWN, BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[1]);
         }
 
         Bit16u combined_bitmap = bitmap[1];
@@ -663,7 +663,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::Vmexit_Vmread(bxInstruction_c *i)
   Bit8u bitmap;
   bx_phy_address pAddr = vm->vmread_bitmap_addr | (encoding >> 3);
   access_read_physical(pAddr, 1, &bitmap);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, BX_READ, BX_VMREAD_BITMAP_ACCESS, &bitmap);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, BX_MEMTYPE_UNKNOWN, BX_READ, BX_VMREAD_BITMAP_ACCESS, &bitmap);
   
   if (bitmap & (1 << (encoding & 7)))
     return BX_TRUE;
@@ -690,7 +690,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::Vmexit_Vmwrite(bxInstruction_c *i)
   Bit8u bitmap;
   bx_phy_address pAddr = vm->vmwrite_bitmap_addr | (encoding >> 3);
   access_read_physical(pAddr, 1, &bitmap);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, BX_READ, BX_VMWRITE_BITMAP_ACCESS, &bitmap);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, BX_MEMTYPE_UNKNOWN, BX_READ, BX_VMWRITE_BITMAP_ACCESS, &bitmap);
   
   if (bitmap & (1 << (encoding & 7)))
     return BX_TRUE;
@@ -713,7 +713,7 @@ void BX_CPU_C::Virtualization_Exception(Bit64u qualification, Bit64u guest_physi
 
   Bit32u magic;
   access_read_physical(vm->ve_info_addr + 4, 4, &magic);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 4, 4, BX_READ, 0, (Bit8u*)(&magic));
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 4, 4, BX_MEMTYPE_UNKNOWN, BX_READ, 0, (Bit8u*)(&magic));
   if (magic != 0) return;
 
   struct ve_info {
@@ -726,22 +726,22 @@ void BX_CPU_C::Virtualization_Exception(Bit64u qualification, Bit64u guest_physi
   } ve_info = { VMX_VMEXIT_EPT_VIOLATION, 0xffffffff, qualification, guest_linear, guest_physical, vm->eptp_index };
 
   access_write_physical(vm->ve_info_addr, 4, &ve_info.reason);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr, 4, BX_WRITE, 0, (Bit8u*)(&ve_info.reason));
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr, 4, BX_MEMTYPE_UNKNOWN, BX_WRITE, 0, (Bit8u*)(&ve_info.reason));
 
   access_write_physical(vm->ve_info_addr + 4, 4, &ve_info.magic);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 4, 4, BX_WRITE, 0, (Bit8u*)(&ve_info.magic));
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 4, 4, BX_MEMTYPE_UNKNOWN, BX_WRITE, 0, (Bit8u*)(&ve_info.magic));
 
   access_write_physical(vm->ve_info_addr + 8, 8, &ve_info.qualification);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 8, 8, BX_WRITE, 0, (Bit8u*)(&ve_info.qualification));
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 8, 8, BX_MEMTYPE_UNKNOWN, BX_WRITE, 0, (Bit8u*)(&ve_info.qualification));
 
   access_write_physical(vm->ve_info_addr + 16, 8, &ve_info.guest_linear_addr);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 16, 8, BX_WRITE, 0, (Bit8u*)(&ve_info.guest_linear_addr));
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 16, 8, BX_MEMTYPE_UNKNOWN, BX_WRITE, 0, (Bit8u*)(&ve_info.guest_linear_addr));
 
   access_write_physical(vm->ve_info_addr + 24, 8, &ve_info.guest_physical_addr);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 24, 8, BX_WRITE, 0, (Bit8u*)(&ve_info.guest_physical_addr));
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 24, 8, BX_MEMTYPE_UNKNOWN, BX_WRITE, 0, (Bit8u*)(&ve_info.guest_physical_addr));
 
   access_write_physical(vm->ve_info_addr + 32, 8, &ve_info.eptp_index);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 32, 8, BX_WRITE, 0, (Bit8u*)(&ve_info.eptp_index));
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 32, 8, BX_MEMTYPE_UNKNOWN, BX_WRITE, 0, (Bit8u*)(&ve_info.eptp_index));
 
   exception(BX_VE_EXCEPTION, 0);
 }

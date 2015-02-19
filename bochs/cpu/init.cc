@@ -363,7 +363,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(MSR, mtrrphysbase7, msr.mtrrphys[14]);
   BXRS_HEX_PARAM_FIELD(MSR, mtrrphysmask7, msr.mtrrphys[15]);
 
-  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix64k_00000, msr.mtrrfix64k_00000);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix64k, msr.mtrrfix64k);
   BXRS_HEX_PARAM_FIELD(MSR, mtrrfix16k_80000, msr.mtrrfix16k[0]);
   BXRS_HEX_PARAM_FIELD(MSR, mtrrfix16k_a0000, msr.mtrrfix16k[1]);
 
@@ -870,7 +870,8 @@ void BX_CPU_C::reset(unsigned source)
     for (n=0; n<16; n++)
       BX_CPU_THIS_PTR msr.mtrrphys[n] = 0;
 
-    BX_CPU_THIS_PTR msr.mtrrfix64k_00000 = 0; // all fix range MTRRs undefined according to manual
+    BX_CPU_THIS_PTR msr.mtrrfix64k = 0; // all fix range MTRRs undefined according to manual
+
     BX_CPU_THIS_PTR msr.mtrrfix16k[0] = 0;
     BX_CPU_THIS_PTR msr.mtrrfix16k[1] = 0;
 

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -678,7 +678,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
     }
 #endif
     access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
+    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, BX_MEMTYPE_UNKNOWN, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
     offset_mask >>= 9;
 
     Bit64u curr_entry = entry[leaf];
@@ -746,7 +746,7 @@ void BX_CPU_C::update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry
     if (!(entry[level] & 0x20)) {
       entry[level] |= 0x20;
       access_write_physical(entry_addr[level], 8, &entry[level]);
-      BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[level], 8, BX_WRITE,
+      BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[level], 8, BX_MEMTYPE_UNKNOWN, BX_WRITE,
             (BX_PTE_ACCESS + level), (Bit8u*)(&entry[level]));
     }
   }
@@ -755,7 +755,7 @@ void BX_CPU_C::update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry
   if (!(entry[leaf] & 0x20) || (write && !(entry[leaf] & 0x40))) {
     entry[leaf] |= (0x20 | (write<<6)); // Update A and possibly D bits
     access_write_physical(entry_addr[leaf], 8, &entry[leaf]);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, BX_WRITE,
+    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, BX_MEMTYPE_UNKNOWN, BX_WRITE,
             (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
   }
 }
@@ -799,7 +799,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
     // read and check PDPTE entries
     bx_phy_address pdpe_entry_addr = (bx_phy_address) (cr3_val | (n << 3));
     access_read_physical(pdpe_entry_addr, 8, &(pdptr[n]));
-    BX_NOTIFY_PHY_MEMORY_ACCESS(pdpe_entry_addr, 8, BX_READ, (BX_PDPTR0_ACCESS + n), (Bit8u*) &(pdptr[n]));
+    BX_NOTIFY_PHY_MEMORY_ACCESS(pdpe_entry_addr, 8, BX_MEMTYPE_UNKNOWN, BX_READ, (BX_PDPTR0_ACCESS + n), (Bit8u*) &(pdptr[n]));
 
     if (pdptr[n] & 0x1) {
        if (pdptr[n] & PAGING_PAE_PDPTE_RESERVED_BITS) return 0;
@@ -839,7 +839,7 @@ bx_phy_address BX_CPU_C::translate_linear_load_PDPTR(bx_address laddr, unsigned 
 
     bx_phy_address pdpe_entry_addr = (bx_phy_address) (cr3_val | (index << 3));
     access_read_physical(pdpe_entry_addr, 8, &pdptr);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(pdpe_entry_addr, 8, BX_READ, (BX_PDPTR0_ACCESS + index), (Bit8u*) &pdptr);
+    BX_NOTIFY_PHY_MEMORY_ACCESS(pdpe_entry_addr, 8, BX_MEMTYPE_UNKNOWN, BX_READ, (BX_PDPTR0_ACCESS + index), (Bit8u*) &pdptr);
 
     if (pdptr & 0x1) {
       if (pdptr & PAGING_PAE_PDPTE_RESERVED_BITS) {
@@ -894,7 +894,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
     }
 #endif
     access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
+    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, BX_MEMTYPE_UNKNOWN, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     Bit64u curr_entry = entry[leaf];
     int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, reserved, rw, &nx_fault);
@@ -996,7 +996,7 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
     }
 #endif
     access_read_physical(entry_addr[leaf], 4, &entry[leaf]);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 4, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
+    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 4, BX_MEMTYPE_UNKNOWN, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     Bit32u curr_entry = entry[leaf];
     if (!(curr_entry & 0x1)) {
@@ -1068,7 +1068,7 @@ void BX_CPU_C::update_access_dirty(bx_phy_address *entry_addr, Bit32u *entry, un
     if (!(entry[BX_LEVEL_PDE] & 0x20)) {
       entry[BX_LEVEL_PDE] |= 0x20;
       access_write_physical(entry_addr[BX_LEVEL_PDE], 4, &entry[BX_LEVEL_PDE]);
-      BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[BX_LEVEL_PDE], 4, BX_WRITE, BX_PDE_ACCESS, (Bit8u*)(&entry[BX_LEVEL_PDE]));
+      BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[BX_LEVEL_PDE], 4, BX_MEMTYPE_UNKNOWN, BX_WRITE, BX_PDE_ACCESS, (Bit8u*)(&entry[BX_LEVEL_PDE]));
     }
   }
 
@@ -1076,7 +1076,7 @@ void BX_CPU_C::update_access_dirty(bx_phy_address *entry_addr, Bit32u *entry, un
   if (!(entry[leaf] & 0x20) || (write && !(entry[leaf] & 0x40))) {
     entry[leaf] |= (0x20 | (write<<6)); // Update A and possibly D bits
     access_write_physical(entry_addr[leaf], 4, &entry[leaf]);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 4, BX_WRITE, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
+    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 4, BX_MEMTYPE_UNKNOWN, BX_WRITE, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
   }
 }
 
@@ -1219,8 +1219,25 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
        tlbEntry->lpf = lpf; // allow direct access with HostPtr
   }
 
+#if BX_SUPPORT_MEMTYPE
+  tlbEntry->memtype = memtype_by_mtrr(tlbEntry->ppf);
+#endif
+
   return paddress;
 }
+
+#if BX_SUPPORT_MEMTYPE
+BxMemtype BX_CPU_C::memtype_by_mtrr(bx_phy_address paddr)
+{
+#if BX_CPU_LEVEL >= 6
+  if (is_cpu_extension_supported(BX_ISA_MTRR)) {
+    //
+  }
+#endif
+
+  return BX_MEMTYPE_UC;
+}
+#endif
 
 #if BX_SUPPORT_SVM
 
@@ -1260,7 +1277,7 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
   for (leaf = BX_LEVEL_PML4;; --leaf) {
     entry_addr[leaf] = ppf + ((guest_paddr >> (9 + 9*leaf)) & 0xff8);
     access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
+    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, BX_MEMTYPE_UNKNOWN, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
     offset_mask >>= 9;
 
     Bit64u curr_entry = entry[leaf];
@@ -1320,7 +1337,7 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
 
   bx_phy_address pdpe_entry_addr = (bx_phy_address) (ncr3 | (index << 3));
   access_read_physical(pdpe_entry_addr, 8, &pdptr);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pdpe_entry_addr, 8, BX_READ, (BX_PDPTR0_ACCESS + index), (Bit8u*) &pdptr);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(pdpe_entry_addr, 8, BX_MEMTYPE_UNKNOWN, BX_READ, (BX_PDPTR0_ACCESS + index), (Bit8u*) &pdptr);
 
   if (! (pdptr & 0x1)) {
     BX_DEBUG(("Nested PAE Walk PDPTE%d entry not present !", index));
@@ -1341,7 +1358,7 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
   for (leaf = BX_LEVEL_PDE;; --leaf) {
     entry_addr[leaf] = ppf + ((guest_paddr >> (9 + 9*leaf)) & 0xff8);
     access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
+    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, BX_MEMTYPE_UNKNOWN, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     Bit64u curr_entry = entry[leaf];
     int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, reserved, rw, &nx_fault);
@@ -1394,7 +1411,7 @@ bx_phy_address BX_CPU_C::nested_walk_legacy(bx_phy_address guest_paddr, unsigned
   for (leaf = BX_LEVEL_PDE;; --leaf) {
     entry_addr[leaf] = ppf + ((guest_paddr >> (10 + 10*leaf)) & 0xffc);
     access_read_physical(entry_addr[leaf], 4, &entry[leaf]);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 4, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
+    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 4, BX_MEMTYPE_UNKNOWN, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     Bit32u curr_entry = entry[leaf];
     if (!(curr_entry & 0x1)) {
@@ -1512,7 +1529,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
   for (leaf = BX_LEVEL_PML4;; --leaf) {
     entry_addr[leaf] = ppf + ((guest_paddr >> (9 + 9*leaf)) & 0xff8);
     access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, BX_READ, (BX_EPT_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
+    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, BX_MEMTYPE_UNKNOWN, BX_READ, (BX_EPT_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     offset_mask >>= 9;
     Bit64u curr_entry = entry[leaf];
@@ -1617,7 +1634,7 @@ void BX_CPU_C::update_ept_access_dirty(bx_phy_address *entry_addr, Bit64u *entry
     if (!(entry[level] & 0x100)) {
       entry[level] |= 0x100;
       access_write_physical(entry_addr[level], 8, &entry[level]);
-      BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[level], 8, BX_WRITE, (BX_EPT_PTE_ACCESS + level), (Bit8u*)(&entry[level]));
+      BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[level], 8, BX_MEMTYPE_UNKNOWN, BX_WRITE, (BX_EPT_PTE_ACCESS + level), (Bit8u*)(&entry[level]));
     }
   }
 
@@ -1625,7 +1642,7 @@ void BX_CPU_C::update_ept_access_dirty(bx_phy_address *entry_addr, Bit64u *entry
   if (!(entry[leaf] & 0x100) || (write && !(entry[leaf] & 0x200))) {
     entry[leaf] |= (0x100 | (write<<9)); // Update A and possibly D bits
     access_write_physical(entry_addr[leaf], 8, &entry[leaf]);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, BX_WRITE, (BX_EPT_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
+    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, BX_MEMTYPE_UNKNOWN, BX_WRITE, (BX_EPT_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
   }
 }
 
@@ -1894,7 +1911,7 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
     BX_CPU_THIS_PTR address_xlation.pages     = 1;
 
     BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1,
-                          len, curr_pl, BX_WRITE, (Bit8u*) data);
+                          len, tlbEntry->get_memtype(), BX_WRITE, (Bit8u*) data);
 
     access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress1, len, data);
 
@@ -1918,30 +1935,32 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
     }
 #endif
 
+    bx_TLB_entry *tlbEntry2 = BX_TLB_ENTRY_OF(laddr2);
+
     BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl == 3), BX_WRITE);
-    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(BX_TLB_ENTRY_OF(laddr2), laddr2, (curr_pl == 3), BX_WRITE);
+    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry2, laddr2, (curr_pl == 3), BX_WRITE);
 
 #ifdef BX_LITTLE_ENDIAN
     BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1,
-        BX_CPU_THIS_PTR address_xlation.len1, curr_pl, 
+        BX_CPU_THIS_PTR address_xlation.len1, tlbEntry->get_memtype(),
         BX_WRITE, (Bit8u*) data);
     access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
         BX_CPU_THIS_PTR address_xlation.len1, data);
     BX_NOTIFY_LIN_MEMORY_ACCESS(laddr2, BX_CPU_THIS_PTR address_xlation.paddress2,
-        BX_CPU_THIS_PTR address_xlation.len2, curr_pl, 
+        BX_CPU_THIS_PTR address_xlation.len2, tlbEntry2->get_memtype(),
         BX_WRITE, ((Bit8u*)data) + BX_CPU_THIS_PTR address_xlation.len1);
     access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
         BX_CPU_THIS_PTR address_xlation.len2,
         ((Bit8u*)data) + BX_CPU_THIS_PTR address_xlation.len1);
 #else // BX_BIG_ENDIAN
     BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1,
-        BX_CPU_THIS_PTR address_xlation.len1, curr_pl, 
+        BX_CPU_THIS_PTR address_xlation.len1, tlbEntry->get_memtype(),
         BX_WRITE, ((Bit8u*)data) + (len - BX_CPU_THIS_PTR address_xlation.len1));
     access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
         BX_CPU_THIS_PTR address_xlation.len1,
         ((Bit8u*)data) + (len - BX_CPU_THIS_PTR address_xlation.len1));
     BX_NOTIFY_LIN_MEMORY_ACCESS(laddr2, BX_CPU_THIS_PTR address_xlation.paddress2,
-        BX_CPU_THIS_PTR address_xlation.len2, curr_pl, 
+        BX_CPU_THIS_PTR address_xlation.len2, tlbEntry2->get_memtype(),
         BX_WRITE, (Bit8u*) data);
     access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
         BX_CPU_THIS_PTR address_xlation.len2, data);
@@ -1986,7 +2005,7 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
     BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl == 3), xlate_rw);
     BX_CPU_THIS_PTR address_xlation.pages     = 1;
     access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress1, len, data);
-    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1, len, curr_pl, xlate_rw, (Bit8u*) data);
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1, len, tlbEntry->get_memtype(), xlate_rw, (Bit8u*) data);
 
 #if BX_X86_DEBUGGER
     hwbreakpoint_match(laddr, len, xlate_rw);
@@ -2007,32 +2026,35 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
       }
     }
 #endif
+
+    bx_TLB_entry *tlbEntry2 = BX_TLB_ENTRY_OF(laddr2);
+
     BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl == 3), xlate_rw);
-    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(BX_TLB_ENTRY_OF(laddr2), laddr2, (curr_pl == 3), xlate_rw);
+    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry2, laddr2, (curr_pl == 3), xlate_rw);
 
 #ifdef BX_LITTLE_ENDIAN
     access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
         BX_CPU_THIS_PTR address_xlation.len1, data);
     BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1,
-        BX_CPU_THIS_PTR address_xlation.len1, curr_pl,
+        BX_CPU_THIS_PTR address_xlation.len1, tlbEntry->get_memtype(),
         xlate_rw, (Bit8u*) data);
     access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
         BX_CPU_THIS_PTR address_xlation.len2,
         ((Bit8u*)data) + BX_CPU_THIS_PTR address_xlation.len1);
     BX_NOTIFY_LIN_MEMORY_ACCESS(laddr2, BX_CPU_THIS_PTR address_xlation.paddress2,
-        BX_CPU_THIS_PTR address_xlation.len2, curr_pl,
+        BX_CPU_THIS_PTR address_xlation.len2, tlbEntry2->get_memtype(),
         xlate_rw, ((Bit8u*)data) + BX_CPU_THIS_PTR address_xlation.len1);
 #else // BX_BIG_ENDIAN
     access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
         BX_CPU_THIS_PTR address_xlation.len1,
         ((Bit8u*)data) + (len - BX_CPU_THIS_PTR address_xlation.len1));
     BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1,
-        BX_CPU_THIS_PTR address_xlation.len1, curr_pl,
+        BX_CPU_THIS_PTR address_xlation.len1, tlbEntry->get_memtype(),
         xlate_rw, ((Bit8u*)data) + (len - BX_CPU_THIS_PTR address_xlation.len1));
     access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
         BX_CPU_THIS_PTR address_xlation.len2, data);
     BX_NOTIFY_LIN_MEMORY_ACCESS(laddr2, BX_CPU_THIS_PTR address_xlation.paddress2,
-        BX_CPU_THIS_PTR address_xlation.len2, curr_pl, 
+        BX_CPU_THIS_PTR address_xlation.len2, tlbEntry2->get_memtype(),
         xlate_rw, (Bit8u*) data);
 #endif
 

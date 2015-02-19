@@ -635,18 +635,17 @@ void bx_dbg_check_memory_watchpoints(unsigned cpu, bx_phy_address phy, unsigned 
   }
 }
 
-void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsigned len, unsigned pl, unsigned rw, Bit8u *data)
+void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsigned len, unsigned memtype, unsigned rw, Bit8u *data)
 {
   bx_dbg_check_memory_watchpoints(cpu, phy, len, rw);
 
   if (! BX_CPU(cpu)->trace_mem)
     return;
 
-  dbg_printf("[CPU%d %s]: LIN 0x" FMT_ADDRX " PHY 0x" FMT_PHY_ADDRX " (len=%d, pl=%d)",
+  dbg_printf("[CPU%d %s]: LIN 0x" FMT_ADDRX " PHY 0x" FMT_PHY_ADDRX " (len=%d)",
      cpu, 
      (rw == BX_WRITE) ? "WR" : "RD",
-     lin, phy,
-     len, pl);
+     lin, phy, len);
 
   if (len == 1) {
      Bit8u val8 = *data;
@@ -698,7 +697,7 @@ void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, 
   dbg_printf("\n");
 }
 
-void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, unsigned rw, unsigned access, Bit8u *data)
+void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, unsigned memtype, unsigned rw, unsigned access, Bit8u *data)
 {
   bx_dbg_check_memory_watchpoints(cpu, phy, len, rw);
 

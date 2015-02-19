@@ -49,7 +49,8 @@ static struct instruction_t {
     bx_address laddr;     // linear address
     bx_phy_address paddr; // physical address
     unsigned rw;          // BX_READ, BX_WRITE or BX_RW
-    unsigned size;        // 1 .. 32
+    unsigned size;        // 1 .. 64
+    unsigned memtype;
   } data_access[MAX_DATA_ACCESSES];
   bx_bool is_branch;
   bx_bool is_taken;
@@ -201,7 +202,7 @@ void bx_instr_hwinterrupt(unsigned cpu, unsigned vector, Bit16u cs, bx_address e
   }
 }
 
-void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsigned len, unsigned rw)
+void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsigned len, unsigned memtype, unsigned rw)
 {
   if(!active || !instruction[cpu].ready) return;
 
@@ -212,6 +213,7 @@ void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsig
     instruction[cpu].data_access[index].paddr = phy;
     instruction[cpu].data_access[index].rw    = rw;
     instruction[cpu].data_access[index].size  = len;
+    instruction[cpu].data_access[index].memtype = memtype;
     instruction[cpu].num_data_accesses++;
     index++;
   }

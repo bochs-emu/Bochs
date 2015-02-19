@@ -171,7 +171,7 @@ void bxInstrumentation::bx_instr_hwinterrupt(unsigned vector, Bit16u cs, bx_addr
   }
 }
 
-void bxInstrumentation::bx_instr_lin_access(bx_address lin, bx_phy_address phy, unsigned len, unsigned rw)
+void bxInstrumentation::bx_instr_lin_access(bx_address lin, bx_phy_address phy, unsigned len, unsigned memtype, unsigned rw)
 {
   if(!active || !ready) return;
 
@@ -180,6 +180,7 @@ void bxInstrumentation::bx_instr_lin_access(bx_address lin, bx_phy_address phy, 
     data_access[num_data_accesses].paddr = phy;
     data_access[num_data_accesses].rw    = rw;
     data_access[num_data_accesses].size  = len;
+    data_access[num_data_accesses].memtype = memtype;
     num_data_accesses++;
   }
 }

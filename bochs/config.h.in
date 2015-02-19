@@ -1,5 +1,5 @@
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -665,6 +665,7 @@ typedef
 #define BX_SUPPORT_3DNOW 0
 #define BX_SUPPORT_MONITOR_MWAIT 0
 #define BX_SUPPORT_PERFMON 0
+#define BX_SUPPORT_MEMTYPE 0
 #define BX_SUPPORT_SVM 0
 #define BX_SUPPORT_VMX 0
 #define BX_SUPPORT_AVX 0

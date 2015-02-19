@@ -19,6 +19,8 @@
   --enable-vmx=2 \
   --enable-avx \
   --enable-evex \
+  --enable-perfmon \
+  --enable-memtype \
   --enable-x86-debugger \
   --enable-a20-pin \
   --enable-instrumentation=instrument/example1 \

@@ -67,7 +67,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
   for(n=0;n<SMM_SAVE_STATE_MAP_SIZE;n++) {
     base -= 4;
     access_read_physical(base, 4, &saved_state[n]);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(base, 4, BX_READ, BX_SMRAM_ACCESS, (Bit8u*)(&saved_state[n]));
+    BX_NOTIFY_PHY_MEMORY_ACCESS(base, 4, BX_MEMTYPE_UNKNOWN, BX_READ, BX_SMRAM_ACCESS, (Bit8u*)(&saved_state[n]));
   }
   BX_CPU_THIS_PTR in_smm = 0;
 
@@ -133,7 +133,7 @@ void BX_CPU_C::enter_system_management_mode(void)
   for(n=0;n<SMM_SAVE_STATE_MAP_SIZE;n++) {
     base -= 4;
     access_write_physical(base, 4, &saved_state[n]);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(base, 4, BX_WRITE, BX_SMRAM_ACCESS, (Bit8u*)(&saved_state[n]));
+    BX_NOTIFY_PHY_MEMORY_ACCESS(base, 4, BX_MEMTYPE_UNKNOWN, BX_WRITE, BX_SMRAM_ACCESS, (Bit8u*)(&saved_state[n]));
   }
 
   BX_CPU_THIS_PTR setEFlags(0x2); // Bit1 is always set

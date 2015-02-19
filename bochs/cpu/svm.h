@@ -225,7 +225,7 @@ enum SVM_intercept_codes {
 #define SVM_GUEST_STAR_MSR                      (0x600)
 #define SVM_GUEST_LSTAR_MSR                     (0x608)
 #define SVM_GUEST_CSTAR_MSR                     (0x610)
-#define SVM_GUEST_SFMASK_MSR                    (0x618)
+#define SVM_GUEST_FMASK_MSR                     (0x618)
 #define SVM_GUEST_KERNEL_GSBASE_MSR             (0x620)
 #define SVM_GUEST_SYSENTER_CS_MSR               (0x628)
 #define SVM_GUEST_SYSENTER_ESP_MSR              (0x630)
