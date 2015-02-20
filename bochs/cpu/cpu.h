@@ -404,6 +404,8 @@ struct BxExceptionInfo {
 #define BX_MSR_LASTBRANCHTOIP      0x1dc
 #define BX_MSR_LASTINTOIP          0x1dd
 
+const unsigned BX_NUM_VARIABLE_RANGE_MTRRS = 8;
+
 #if BX_CPU_LEVEL >= 6
   #define BX_MSR_MTRRCAP           0x0fe
   #define BX_MSR_MTRRPHYSBASE0     0x200
@@ -467,13 +469,14 @@ struct BxExceptionInfo {
 
 enum BxMemtype {
   BX_MEMTYPE_UC = 0,
-  BX_MEMTYPE_WC,
-  BX_MEMTYPE_RESERVED2,
-  BX_MEMTYPE_RESERVED3,
-  BX_MEMTYPE_WT,
-  BX_MEMTYPE_WP,
-  BX_MEMTYPE_WB,
-  BX_MEMTYPE_UNKNOWN
+  BX_MEMTYPE_WC = 1,
+  BX_MEMTYPE_RESERVED2 = 2,
+  BX_MEMTYPE_RESERVED3 = 3,
+  BX_MEMTYPE_WT = 4,
+  BX_MEMTYPE_WP = 5,
+  BX_MEMTYPE_WB = 6,
+  BX_MEMTYPE_UC_WEAK = 7, // PAT only
+  BX_MEMTYPE_INVALID = 8
 };
 
 #if BX_SUPPORT_VMX
@@ -762,7 +765,7 @@ typedef struct
   Bit64u mtrrfix64k;
   Bit64u mtrrfix16k[2];
   Bit64u mtrrfix4k[8];
-  Bit16u mtrr_deftype;
+  Bit32u mtrr_deftype;
   Bit64u pat;
 #endif
 

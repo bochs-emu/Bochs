@@ -67,7 +67,7 @@ Bit32u BX_CPU_C::VMX_Read_Virtual_APIC(unsigned offset)
   Bit32u field32;
   // must avoid recursive call to the function when VMX APIC access page = VMX Virtual Apic Page
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pAddr, 4, (Bit8u*)(&field32));
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 4, BX_MEMTYPE_UNKNOWN, BX_READ, BX_VMX_VAPIC_ACCESS, (Bit8u*)(&field32));
+  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 4, BX_MEMTYPE_INVALID, BX_READ, BX_VMX_VAPIC_ACCESS, (Bit8u*)(&field32));
   return field32;
 }
 
@@ -76,7 +76,7 @@ void BX_CPU_C::VMX_Write_Virtual_APIC(unsigned offset, Bit32u val32)
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr + offset;
   // must avoid recursive call to the function when VMX APIC access page = VMX Virtual Apic Page
   BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pAddr, 4, (Bit8u*)(&val32));
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 4, BX_MEMTYPE_UNKNOWN, BX_WRITE, BX_VMX_VAPIC_ACCESS, (Bit8u*)(&val32));
+  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 4, BX_MEMTYPE_INVALID, BX_WRITE, BX_VMX_VAPIC_ACCESS, (Bit8u*)(&val32));
 }
 
 bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data)
@@ -158,7 +158,7 @@ bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned le
 
   // remap access to virtual apic page
   paddr = BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr + offset;
-  BX_NOTIFY_PHY_MEMORY_ACCESS(paddr, len, BX_MEMTYPE_UNKNOWN, BX_READ, BX_VMX_VAPIC_ACCESS, (Bit8u*) data);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(paddr, len, BX_MEMTYPE_INVALID, BX_READ, BX_VMX_VAPIC_ACCESS, (Bit8u*) data);
   return paddr;
 }
 
@@ -219,7 +219,7 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
       paddr = BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr + offset;
       // must avoid recursive call to the function when VMX APIC access page = VMX Virtual Apic Page
       BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, paddr, len, (Bit8u *) data);
-      BX_NOTIFY_PHY_MEMORY_ACCESS(paddr, len, BX_MEMTYPE_UNKNOWN, BX_WRITE, BX_VMX_VAPIC_ACCESS, (Bit8u *) data);
+      BX_NOTIFY_PHY_MEMORY_ACCESS(paddr, len, BX_MEMTYPE_INVALID, BX_WRITE, BX_VMX_VAPIC_ACCESS, (Bit8u *) data);
       signal_event(BX_EVENT_VMX_VIRTUAL_APIC_WRITE);
       return;
 
