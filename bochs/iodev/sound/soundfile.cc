@@ -95,14 +95,16 @@ int bx_soundlow_waveout_file_c::openwaveoutput(const char *wavedev)
     } else if (type == BX_SOUNDFILE_WAV) {
       initwavfile();
     }
+    set_pcm_params(&real_pcm_param);
+    if (mixer_control != 1) {
+      pcm_callback_id = register_wave_callback(this, pcm_callback);
+      BX_INIT_MUTEX(mixer_mutex);
+      start_mixer_thread();
+    }
+    return BX_SOUNDLOW_OK;
+  } else {
+    return BX_SOUNDLOW_ERR;
   }
-  set_pcm_params(&real_pcm_param);
-  if (mixer_control != 1) {
-    pcm_callback_id = register_wave_callback(this, pcm_callback);
-    BX_INIT_MUTEX(mixer_mutex);
-    start_mixer_thread();
-  }
-  return BX_SOUNDLOW_OK;
 }
 
 int bx_soundlow_waveout_file_c::set_pcm_params(bx_pcm_param_t *param)
@@ -280,8 +282,10 @@ int bx_soundlow_midiout_file_c::openmidioutput(const char *mididev)
       fwrite(&midiheader, 1, 14, midifile);
       fwrite(&trackheader, 1, 23, midifile);
     }
+    return BX_SOUNDLOW_OK;
+  } else {
+    return BX_SOUNDLOW_ERR;
   }
-  return BX_SOUNDLOW_OK;
 }
 
 int bx_soundlow_midiout_file_c::sendmidicommand(int delta, int command, int length, Bit8u data[])

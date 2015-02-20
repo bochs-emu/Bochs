@@ -136,9 +136,6 @@ public:
 
   /* Make writelog available to output functions */
   BX_SB16_SMF void writelog(int loglev, const char *str, ...);
-  // return midimode and wavemode setting (for lowlevel output class)
-  int get_midimode() const {return midimode;}
-  int get_wavemode() const {return wavemode;}
   // runtime options
   static Bit64s sb16_param_handler(bx_param_c *param, int set, Bit64s val);
   static const char* sb16_param_string_handler(bx_param_string_c *param, int set,

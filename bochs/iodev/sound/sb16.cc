@@ -258,6 +258,9 @@ void bx_sb16_c::init(void)
   BX_SB16_WAVEOUT1 = DEV_sound_get_waveout("default");
   if (BX_SB16_WAVEOUT1 == NULL) {
     BX_PANIC(("Couldn't initialize waveout driver"));
+    BX_SB16_THIS wavemode &= ~1;
+  } else {
+    BX_SB16_THIS fmopl_callback_id = BX_SB16_WAVEOUT1->register_wave_callback(BX_SB16_THISP, fmopl_callback);
   }
   if (BX_SB16_THIS wavemode & 2) {
     BX_SB16_WAVEOUT2 = DEV_sound_get_waveout("file");
@@ -399,7 +402,6 @@ void bx_sb16_c::init(void)
       (BX_SB16_THISP, opl_timer, 80, 1, 0, "sb16.opl");
     // opl timer: inactive, continuous, frequency 80us
   }
-  BX_SB16_THIS fmopl_callback_id = BX_SB16_WAVEOUT1->register_wave_callback(BX_SB16_THISP, fmopl_callback);
 
   writelog(MIDILOG(4), "Timers initialized, midi %d, dma %d, opl %d",
           MPU.timer_handle, DSP.timer_handle, OPL.timer_handle);

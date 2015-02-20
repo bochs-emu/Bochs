@@ -66,6 +66,7 @@ bx_soundmod_ctl_c::bx_soundmod_ctl_c()
 {
   put("soundctl", "SNDCTL");
   n_sound_drivers = 0;
+  soundmod[0].module = NULL;
   waveout = NULL;
 }
 
