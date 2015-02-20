@@ -21,6 +21,11 @@
 
 // Support for sound output to files (based on SB16 code)
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 #include "iodev.h"
 #include "soundlow.h"
 #include "soundfile.h"

@@ -875,7 +875,7 @@ parport1: enabled=1, file="parport.out"
 # 'file' (output sent to files), 'dummy' (no input/output) and the
 # platform-dependant drivers 'alsa', 'oss', 'osx', 'sdl' and 'win'.
 # For some drivers the device names must be specified. If the 'wavein'
-parameter is not set, Bochs uses the 'waveout' device for input, too.
+# parameter is not set, Bochs uses the 'waveout' device for input, too.
 #=======================================================================
 sound: driver=default, waveout=/dev/dsp. wavein=, midiout=
 

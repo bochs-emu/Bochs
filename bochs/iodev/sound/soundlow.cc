@@ -143,7 +143,9 @@ bx_soundlow_waveout_c::bx_soundlow_waveout_c()
 
 bx_soundlow_waveout_c::~bx_soundlow_waveout_c()
 {
-  unregister_wave_callback(pcm_callback_id);
+  if (pcm_callback_id >= 0) {
+    unregister_wave_callback(pcm_callback_id);
+  }
   if (mixer_control > 0) {
     mixer_control = 0;
     while (mixer_control >= 0) {
