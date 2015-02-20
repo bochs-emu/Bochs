@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2014  The Bochs Project
+//  Copyright (C) 2002-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -124,8 +124,10 @@ cdrom_win32_c::cdrom_win32_c(const char *dev)
 
 cdrom_win32_c::~cdrom_win32_c(void)
 {
-  if (hFile != INVALID_HANDLE_VALUE)
-    CloseHandle(hFile);
+  if (fd >= 0) {
+    if (hFile != INVALID_HANDLE_VALUE)
+      CloseHandle(hFile);
+  }
 }
 
 bx_bool cdrom_win32_c::insert_cdrom(const char *dev)
