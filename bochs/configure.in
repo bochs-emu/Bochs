@@ -2622,11 +2622,11 @@ case "$target" in
     CFP="/Tc"
     OFP="/Fo"
     MAKE=nmake
-    MAKELIB="lib /nologo /subsystem:console /verbose /out:\$@"
+    MAKELIB="lib /nologo /subsystem:console,\"5.01\" /verbose /out:\$@"
     RMCOMMAND="-del"
     #L_OPT="/debug"    # for debugging
     L_OPT=""           # no debug info
-    LINK="link $L_OPT /nologo /subsystem:console /incremental:no /out:\$@ "
+    LINK="link $L_OPT /nologo /subsystem:console,\"5.01\" /incremental:no /out:\$@ "
     LINK_CONSOLE=$LINK
     EXE=".exe"
     PRIMARY_TARGET="bochs.exe"
@@ -2706,7 +2706,7 @@ case $target in
       PLUGIN_LIBNAME_TRANSFORMATION='%.o=bx_%.dll'
       INSTALL_PLUGINS_VAR=install_dll_plugins
       WIN32_DLL_IMPORT_LIB="bochs.lib"
-      LINK_DLL="link /dll /nologo /subsystem:console /incremental:no /out:\$@"
+      LINK_DLL="link /dll /nologo /subsystem:console,\"5.01\" /incremental:no /out:\$@"
       LIBS="$LIBS advapi32.lib comctl32.lib comdlg32.lib gdi32.lib shell32.lib user32.lib"
       PLUGIN_TARGET_2=plugins_msvc
       LINK_VAR="_VCPP"
@@ -2726,7 +2726,7 @@ case $target in
       for i in $IODEV_DLL_LIST
       do
         echo -e "bx_$i.dll: $i.o" >> iodev/makeincl.vc
-        echo -e "\tlink /dll /nologo /subsystem:console /incremental:no /out:\$@ $i.o \$(WIN32_DLL_IMPORT_LIBRARY)\n" >> iodev/makeincl.vc
+        echo -e "\tlink /dll /nologo /subsystem:console,\"5.01\" /incremental:no /out:\$@ $i.o \$(WIN32_DLL_IMPORT_LIBRARY)\n" >> iodev/makeincl.vc
         IODEV_DLL_TARGETS="$IODEV_DLL_TARGETS bx_$i.dll"
       done
     else
