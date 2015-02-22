@@ -158,7 +158,7 @@ bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned le
 
   // remap access to virtual apic page
   paddr = BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr + offset;
-  BX_NOTIFY_PHY_MEMORY_ACCESS(paddr, len, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_VMX_VAPIC_ACCESS, (Bit8u*) data);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(paddr, len, MEMTYPE(resolve_memtype(paddr)), BX_READ, BX_VMX_VAPIC_ACCESS, (Bit8u*) data);
   return paddr;
 }
 
@@ -219,7 +219,7 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
       paddr = BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr + offset;
       // must avoid recursive call to the function when VMX APIC access page = VMX Virtual Apic Page
       BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, paddr, len, (Bit8u *) data);
-      BX_NOTIFY_PHY_MEMORY_ACCESS(paddr, len, MEMTYPE(resolve_memtype(pAddr)), BX_WRITE, BX_VMX_VAPIC_ACCESS, (Bit8u *) data);
+      BX_NOTIFY_PHY_MEMORY_ACCESS(paddr, len, MEMTYPE(resolve_memtype(paddr)), BX_WRITE, BX_VMX_VAPIC_ACCESS, (Bit8u *) data);
       signal_event(BX_EVENT_VMX_VIRTUAL_APIC_WRITE);
       return;
 
