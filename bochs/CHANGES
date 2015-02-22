@@ -1,5 +1,12 @@
 Changes after 2.6.7 release:
 
+- CPU / CPUDB
+  - Bugfixes for CPU emulation correctness (critical bugfix for x86-64 emulation)
+  - CPUDB: Added Pentium (P54C) configuration to CPUDB
+  - CPUDB: Added Broadwell ULT configuration to CPUDB
+  - Updated definition of instrumentation callbacks, see description in
+    instrumentation.txt / Fixed instrumentation examples
+
 - Configure and compile
   - Configure option --enable-fast-function-calls now also used for MSVC nmake.
   - Some configure fixes for the GTK debugger support.
@@ -121,7 +128,7 @@ Detailed change log :
     The optimization require to compile Bochs with at least -O2 optimization level on gcc.
 
 - Bochs Debugger and Instrumentation
-  - Added disam for Bochs internal instruction representation, especially useful for instrumentation
+  - Added disasm for Bochs internal instruction representation, especially useful for instrumentation
   - Updated definition of instrumentation callbacks, see description in
     instrumentation.txt / Fixed instrumentation examples
   - added capability to use the gui debugger output window as a log viewer
