@@ -1,3 +1,38 @@
+Changes after 2.6.7 release:
+
+- Configure and compile
+  - Configure option --enable-fast-function-calls now also used for MSVC nmake.
+  - Some configure fixes for the GTK debugger support.
+
+- GUI and display libraries
+  - The VGA update timer mode now can be selected with the 'vga' option.
+  - Release all pressed keys when the simwindow gets back the keyboard focus.
+  - Win32 gui: Captured mouse cursor now really trapped in window.
+  - SDL2: Implemented yes/no dialog (e.g. for VVFAT commit).
+  - Some fixes for wxWidgets 3.0 and unicode version compatiblity.
+  - Full save/restore support for enhanced gui debugger settings (window+font).
+  - Added debugger support for the term gui using a pseudo-terminal.
+
+- I/O Devices
+  - Hard drive
+    - Re-enable "bulk I/O" repeat speedups extension.
+  - Sound
+    - SB16: Fixed OPL chip detection by implementing ISA bus delay.
+    - SB16: Ported OPL3 emulation from DOSBox and partly removed legacy code.
+    - Major rewrite of the lowlevel sound code.
+      - Added mixer thread support (required for all modules except 'sdl').
+      - New mixer and SDL mixer are polling data from the PCM output buffers,
+        the PC speaker beep generator and the OPL3 FM generator.
+      - PCM format conversion to 16 bit signed little endian.
+      - Added sound 'file' module for VOC, WAV, MID and raw data output
+        and added dual output support (device+file) in midi/wave mode 3.
+  - Floppy
+    - Fixed "Read ID" command for single-sided media (patch by Ben Lunt).
+
+- ROM BIOS
+  - Fixed keyboard scancode processing after keyboard intercept.
+
+-------------------------------------------------------------------------
 Changes in 2.6.7 (November 2, 2014):
 
 - CPU / CPUDB
