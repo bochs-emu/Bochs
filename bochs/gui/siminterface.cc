@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2014  The Bochs Project
+//  Copyright (C) 2002-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -503,7 +503,28 @@ int floppy_type_n_sectors[] = { -1, 80*2*15, 80*2*18, 80*2*36, 80*2*9, 40*2*9, 4
 const char *media_status_names[] = { "ejected", "inserted", NULL };
 const char *bochs_bootdisk_names[] = { "none", "floppy", "disk","cdrom", "network", NULL };
 
-const char *hdimage_mode_names[] = { 
+const char *sound_driver_names[] = {
+  "dummy",
+#if BX_HAVE_ALSASOUND
+  "alsa",
+#endif
+#if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
+  "oss",
+#endif
+#if defined(macintosh)
+  "osx",
+#endif
+#if BX_WITH_SDL || BX_WITH_SDL2
+  "sdl",
+#endif
+#if defined(WIN32)
+  "win",
+#endif
+  "file",
+  NULL
+};
+
+const char *hdimage_mode_names[] = {
   "flat",
   "concat",
   "external",

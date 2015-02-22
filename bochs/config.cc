@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2014  The Bochs Project
+//  Copyright (C) 2002-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1505,11 +1505,14 @@ void bx_init_options()
   soundlow->set_enabled(BX_SUPPORT_SOUNDLOW);
 
 #if BX_SUPPORT_SOUNDLOW
-  new bx_param_string_c(soundlow,
+  bx_param_enum_c *driver = new bx_param_enum_c(soundlow,
     "driver",
     "Sound driver",
     "This is the lowlevel driver to use for emulated sound devices",
-    "default", BX_PATHNAME_LEN);
+    sound_driver_names,
+    BX_SOUNDDRV_DUMMY,
+    BX_SOUNDDRV_DUMMY);
+  driver->set_by_name(BX_SOUND_LOWLEVEL_NAME);
   new bx_param_filename_c(soundlow,
     "waveout",
     "Wave output device",
@@ -2882,7 +2885,9 @@ static int parse_line_formatted(const char *context, int num_params, char *param
   } else if (!strcmp(params[0], "sound")) {
 #if BX_SUPPORT_SOUNDLOW
     for (i=1; i<num_params; i++) {
-      if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param(BXPN_SOUNDLOW)) < 0) {
+      if (!strcmp(params[i], "driver=default")) {
+        SIM->get_param_enum(BXPN_SOUND_DRIVER)->set_by_name(BX_SOUND_LOWLEVEL_NAME);
+      } else if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param(BXPN_SOUNDLOW)) < 0) {
         BX_ERROR(("%s: unknown parameter for sound ignored.", context));
       }
     }

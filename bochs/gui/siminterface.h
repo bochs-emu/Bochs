@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -593,12 +593,33 @@ enum {
 #define BX_CLOCK_TIME0_LOCAL     1
 #define BX_CLOCK_TIME0_UTC       2
 
+enum {
+  BX_SOUNDDRV_DUMMY,
+#if BX_HAVE_ALSASOUND
+  BX_SOUNDDRV_ALSA,
+#endif
+#if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
+  BX_SOUNDDRV_OSS,
+#endif
+#if defined(macintosh)
+  BX_SOUNDDRV_OSX,
+#endif
+#if BX_WITH_SDL || BX_WITH_SDL2
+  BX_SOUNDDRV_SDL,
+#endif
+#if defined(WIN32)
+  BX_SOUNDDRV_WIN,
+#endif
+  BX_SOUNDDRV_FILE
+};
+
 BOCHSAPI extern const char *floppy_devtype_names[];
 BOCHSAPI extern const char *floppy_type_names[];
 BOCHSAPI extern int floppy_type_n_sectors[];
 BOCHSAPI extern const char *media_status_names[];
 BOCHSAPI extern const char *bochs_bootdisk_names[];
 BOCHSAPI extern const char *hdimage_mode_names[];
+BOCHSAPI extern const char *sound_driver_names[];
 
 ////////////////////////////////////////////////////////////////////
 // base class simulator interface, contains just virtual functions.

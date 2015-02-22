@@ -36,10 +36,10 @@ public:
   virtual bx_soundlow_midiout_c* get_midiout(const char *driver);
 
 private:
-  bx_sound_lowlevel_c* get_driver(const char *name);
+  bx_sound_lowlevel_c* get_driver(int driver_id);
 
   struct {
-    char name[8];
+    int drv_id;
     bx_sound_lowlevel_c *module;
   } soundmod[BX_MAX_SOUND_DRIVERS];
   unsigned n_sound_drivers;
