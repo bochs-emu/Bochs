@@ -635,12 +635,7 @@ void bx_dbg_check_memory_watchpoints(unsigned cpu, bx_phy_address phy, unsigned 
   }
 }
 
-const char *get_memtype_name(unsigned memtype)
-{
-  static const char *mem_type_string[9] = { "UC", "WC", "RESERVED2", "RESERVED3", "WT", "WP", "WB", "RESERVED7", "INVALID" };
-  if (memtype > BX_MEMTYPE_INVALID) memtype = BX_MEMTYPE_INVALID;
-  return mem_type_string[memtype];
-}
+extern const char *get_memtype_name(BxMemtype memtype);
 
 void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsigned len, unsigned memtype, unsigned rw, Bit8u *data)
 {

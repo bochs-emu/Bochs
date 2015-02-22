@@ -905,6 +905,9 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR espPageBias = 0;
   BX_CPU_THIS_PTR espPageWindowSize = 0;
   BX_CPU_THIS_PTR espHostPtr = NULL;
+#if BX_SUPPORT_MEMTYPE
+  BX_CPU_THIS_PTR espPageMemtype = BX_MEMTYPE_UC;
+#endif
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR stop_reason = STOP_NO_REASON;
@@ -957,7 +960,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR in_vmx = BX_CPU_THIS_PTR in_vmx_guest = 0;
   BX_CPU_THIS_PTR in_smm_vmx = BX_CPU_THIS_PTR in_smm_vmx_guest = 0;
   BX_CPU_THIS_PTR vmcsptr = BX_CPU_THIS_PTR vmxonptr = BX_INVALID_VMCSPTR;
-  BX_CPU_THIS_PTR vmcshostptr = 0;
+  set_VMCSPTR(BX_CPU_THIS_PTR vmcsptr);
   if (source == BX_RESET_HARDWARE) {
     /* enable VMX, should be done in BIOS instead */
     BX_CPU_THIS_PTR msr.ia32_feature_ctrl =
@@ -970,6 +973,9 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR svm_gif = 1;
   BX_CPU_THIS_PTR vmcbptr = 0;
   BX_CPU_THIS_PTR vmcbhostptr = 0;
+#if BX_SUPPORT_MEMTYPE
+  BX_CPU_THIS_PTR vmcb_memtype = BX_MEMTYPE_UC;
+#endif
 #endif
 
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM

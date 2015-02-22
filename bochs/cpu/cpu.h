@@ -467,7 +467,7 @@ const unsigned BX_NUM_VARIABLE_RANGE_MTRRS = 8;
 
 #define BX_MSR_MAX_INDEX          0x1000
 
-enum BxMemtype {
+enum {
   BX_MEMTYPE_UC = 0,
   BX_MEMTYPE_WC = 1,
   BX_MEMTYPE_RESERVED2 = 2,
@@ -478,6 +478,15 @@ enum BxMemtype {
   BX_MEMTYPE_UC_WEAK = 7, // PAT only
   BX_MEMTYPE_INVALID = 8
 };
+
+typedef unsigned BxMemtype;
+
+// avoid wasting cycles to determine memory type if not required
+#if BX_SUPPORT_MEMTYPE
+  #define MEMTYPE(memtype) (memtype)
+#else
+  #define MEMTYPE(memtype) (BX_MEMTYPE_UC)
+#endif
 
 #if BX_SUPPORT_VMX
   #define BX_MSR_VMX_BASIC                0x480
@@ -1148,6 +1157,9 @@ public: // for now...
   bx_bool in_smm_vmx_guest;
   Bit64u  vmcsptr;
   bx_hostpageaddr_t vmcshostptr;
+#if BX_SUPPORT_MEMTYPE
+  BxMemtype vmcs_memtype;
+#endif
   Bit64u  vmxonptr;
   
   VMCS_CACHE vmcs;
@@ -1159,6 +1171,9 @@ public: // for now...
   bx_bool svm_gif; /* global interrupt enable flag, when zero all external interrupt disabled */
   bx_phy_address  vmcbptr;
   bx_hostpageaddr_t vmcbhostptr;
+#if BX_SUPPORT_MEMTYPE
+  BxMemtype vmcb_memtype;
+#endif
   VMCB_CACHE vmcb;
 
 // make SVM integration easier
@@ -1283,6 +1298,9 @@ public: // for now...
   Bit32u     espPageWindowSize;
   const Bit8u *espHostPtr;
   bx_phy_address pAddrStackPage; // Guest physical address of current stack page
+#if BX_SUPPORT_MEMTYPE
+  BxMemtype espPageMemtype;
+#endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   unsigned alignment_check_mask;
@@ -1365,6 +1383,10 @@ public: // for now...
                               // is greated than 2 (the maximum possible for
                               // normal cases) it is a native pointer and is used
                               // for a direct write access.
+#if BX_SUPPORT_MEMTYPE
+    BxMemtype memtype1;       // memory type of the page 1
+    BxMemtype memtype2;       // memory type of the page 2
+#endif
   } address_xlation;
 
   BX_SMF void setEFlags(Bit32u val) BX_CPP_AttrRegparmN(1);
@@ -4723,7 +4745,9 @@ public: // for now...
   BX_SMF bx_phy_address nested_walk(bx_phy_address guest_paddr, unsigned rw, bx_bool is_page_walk);
 #endif
 #if BX_SUPPORT_MEMTYPE
-  BX_SMF BxMemtype memtype_by_mtrr(bx_phy_address paddr);
+  BX_SMF BxMemtype memtype_by_mtrr(bx_phy_address paddr) BX_CPP_AttrRegparmN(1);
+  BX_SMF BxMemtype memtype_by_pat(unsigned pat) BX_CPP_AttrRegparmN(1);
+  BX_SMF BxMemtype resolve_memtype(bx_phy_address paddr, BxMemtype pat_memtype = BX_MEMTYPE_WB) BX_CPP_AttrRegparmN(2);
 #endif
 
 #if BX_CPU_LEVEL >= 6

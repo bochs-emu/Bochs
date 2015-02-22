@@ -1220,14 +1220,21 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
   }
 
 #if BX_SUPPORT_MEMTYPE
-  tlbEntry->memtype = memtype_by_mtrr(tlbEntry->ppf);
+  tlbEntry->memtype = resolve_memtype(tlbEntry->ppf);
 #endif
 
   return paddress;
 }
 
 #if BX_SUPPORT_MEMTYPE
-BxMemtype BX_CPU_C::memtype_by_mtrr(bx_phy_address pAddr)
+const char *get_memtype_name(BxMemtype memtype)
+{
+  static const char *mem_type_string[9] = { "UC", "WC", "RESERVED2", "RESERVED3", "WT", "WP", "WB", "UC-", "INVALID" };
+  if (memtype > BX_MEMTYPE_INVALID) memtype = BX_MEMTYPE_INVALID;
+  return mem_type_string[memtype];
+}
+
+BxMemtype BX_CPP_AttrRegparmN(1) BX_CPU_C::memtype_by_mtrr(bx_phy_address pAddr)
 {
 #if BX_CPU_LEVEL >= 6
   if (is_cpu_extension_supported(BX_ISA_MTRR)) {
@@ -1276,7 +1283,7 @@ BxMemtype BX_CPU_C::memtype_by_mtrr(bx_phy_address pAddr)
           if (memtype == -1) {
             memtype = curr_memtype; // first match
           }
-          else if (memtype != curr_memtype) {
+          else if (memtype != (int) curr_memtype) {
             if (curr_memtype == BX_MEMTYPE_WT && memtype == BX_MEMTYPE_WB)
               memtype = BX_MEMTYPE_WT;
             else if (curr_memtype == BX_MEMTYPE_WB && memtype == BX_MEMTYPE_WT)
@@ -1301,6 +1308,43 @@ BxMemtype BX_CPU_C::memtype_by_mtrr(bx_phy_address pAddr)
 
   // return INVALID memory type when MTRRs are not supported
   return BX_MEMTYPE_INVALID;
+}
+
+BxMemtype BX_CPP_AttrRegparmN(1) BX_CPU_C::memtype_by_pat(unsigned pat)
+{
+  return BxMemtype((BX_CPU_THIS_PTR msr.pat >> (pat * 8)) & 0xff);
+}
+
+BxMemtype BX_CPP_AttrRegparmN(2) BX_CPU_C::resolve_memtype(bx_phy_address pAddr, BxMemtype pat_memtype)
+{
+  if (BX_CPU_THIS_PTR cr0.get_CD())
+    return BX_MEMTYPE_UC;
+
+  unsigned mtrr_memtype = memtype_by_mtrr(pAddr);
+  if (mtrr_memtype == BX_MEMTYPE_INVALID) // will result in ignore of MTRR memory type
+    mtrr_memtype = BX_MEMTYPE_WB;
+
+  switch(pat_memtype) {
+    case BX_MEMTYPE_UC:
+    case BX_MEMTYPE_WC:
+      return pat_memtype;
+
+    case BX_MEMTYPE_WT:
+    case BX_MEMTYPE_WP:
+      if (mtrr_memtype == BX_MEMTYPE_WC) return BX_MEMTYPE_UC;
+      return (mtrr_memtype < pat_memtype) ? mtrr_memtype : pat_memtype;
+
+    case BX_MEMTYPE_WB:
+      return (mtrr_memtype < pat_memtype) ? mtrr_memtype : pat_memtype;
+
+    case BX_MEMTYPE_UC_WEAK:
+      return (mtrr_memtype == BX_MEMTYPE_WC) ? BX_MEMTYPE_WC : BX_MEMTYPE_UC;
+
+    default:
+      BX_PANIC(("unexpected PAT memory type: %u", (unsigned) pat_memtype));
+  }
+
+  return BX_MEMTYPE_INVALID; // keep compiler happy
 }
 #endif
 
@@ -1974,6 +2018,9 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
     // Access within single page.
     BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl==3), BX_WRITE);
     BX_CPU_THIS_PTR address_xlation.pages     = 1;
+#if BX_SUPPORT_MEMTYPE
+    BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
+#endif
 
     BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1,
                           len, tlbEntry->get_memtype(), BX_WRITE, (Bit8u*) data);
@@ -2004,6 +2051,10 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
 
     BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl == 3), BX_WRITE);
     BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry2, laddr2, (curr_pl == 3), BX_WRITE);
+#if BX_SUPPORT_MEMTYPE
+    BX_CPU_THIS_PTR address_xlation.memtype1 = tlbEntry->get_memtype();
+    BX_CPU_THIS_PTR address_xlation.memtype2 = tlbEntry2->get_memtype();
+#endif
 
 #ifdef BX_LITTLE_ENDIAN
     BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1,
@@ -2069,6 +2120,9 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
     // Access within single page.
     BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl == 3), xlate_rw);
     BX_CPU_THIS_PTR address_xlation.pages     = 1;
+#if BX_SUPPORT_MEMTYPE
+    BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
+#endif
     access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress1, len, data);
     BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1, len, tlbEntry->get_memtype(), xlate_rw, (Bit8u*) data);
 
@@ -2096,6 +2150,10 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
 
     BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl == 3), xlate_rw);
     BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry2, laddr2, (curr_pl == 3), xlate_rw);
+#if BX_SUPPORT_MEMTYPE
+    BX_CPU_THIS_PTR address_xlation.memtype1 = tlbEntry->get_memtype();
+    BX_CPU_THIS_PTR address_xlation.memtype2 = tlbEntry2->get_memtype();
+#endif
 
 #ifdef BX_LITTLE_ENDIAN
     access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
