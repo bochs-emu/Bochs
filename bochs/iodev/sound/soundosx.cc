@@ -28,7 +28,7 @@
 #include "soundlow.h"
 #include "soundosx.h"
 
-#if defined(macintosh) && BX_SUPPORT_SOUNDLOW
+#if BX_HAVE_SOUND_OSX && BX_SUPPORT_SOUNDLOW
 
 #define LOG_THIS
 

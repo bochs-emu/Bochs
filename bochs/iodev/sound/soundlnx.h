@@ -23,7 +23,7 @@
 // Josef Drexler coded the original version of the lowlevel sound support
 // for Linux using OSS. The current version also supports OSS on FreeBSD.
 
-#if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
+#if BX_HAVE_SOUND_OSS
 
 class bx_soundlow_waveout_oss_c : public bx_soundlow_waveout_c {
 public:

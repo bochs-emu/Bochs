@@ -1915,13 +1915,14 @@ if test "$soundcard_present" = 1; then
       SOUNDLOW_OBJS='soundlnx.o'
       soundlow_drivers="oss"
       soundlow_default="oss"
+      AC_DEFINE(BX_HAVE_SOUND_OSS, 1)
       bx_have_alsa=0
       AC_CHECK_HEADER([alsa/asoundlib.h], [bx_have_alsa=1])
       if test "$bx_have_alsa" = 1; then
         SOUNDLOW_OBJS="$SOUNDLOW_OBJS soundalsa.o"
         soundlow_default="alsa"
         soundlow_drivers="alsa $soundlow_drivers"
-        AC_DEFINE(BX_HAVE_ALSASOUND, 1)
+        AC_DEFINE(BX_HAVE_SOUND_ALSA, 1)
         if test "$bx_plugins" = 1; then
           SOUND_LINK_OPTS="$SOUND_LINK_OPTS -lasound"
         else
@@ -1934,18 +1935,21 @@ if test "$soundcard_present" = 1; then
       DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS winmm.lib"
       soundlow_drivers="win"
       soundlow_default="win"
+      AC_DEFINE(BX_HAVE_SOUND_WIN, 1)
       ;;
     *-cygwin* | *-mingw32*)
       SOUNDLOW_OBJS='soundwin.o'
       DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
       soundlow_drivers="win"
       soundlow_default="win"
+      AC_DEFINE(BX_HAVE_SOUND_WIN, 1)
       ;;
     *-macosx* | *-macos* | *-apple-darwin*)
       SOUNDLOW_OBJS='soundosx.o'
       DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -framework CoreServices -framework AudioUnit -framework AudioToolbox"
       soundlow_drivers="osx"
       soundlow_default="osx"
+      AC_DEFINE(BX_HAVE_SOUND_OSX, 1)
       ;;
     *)
       SOUNDLOW_OBJS=''
@@ -1961,6 +1965,7 @@ if test "$soundcard_present" = 1; then
     if test "$soundlow_default" = "dummy"; then
       soundlow_default="sdl"
     fi
+    AC_DEFINE(BX_HAVE_SOUND_SDL, 1)
   elif test "$with_sdl2" = yes; then
     SOUNDLOW_OBJS="$SOUNDLOW_OBJS soundsdl.o"
     if test "$bx_plugins" = 1; then
@@ -1970,6 +1975,7 @@ if test "$soundcard_present" = 1; then
     if test "$soundlow_default" = "dummy"; then
       soundlow_default="sdl"
     fi
+    AC_DEFINE(BX_HAVE_SOUND_SDL, 1)
   fi
   if test "$bx_plugins" = 0; then
     SOUND_LIB_VAR='iodev/sound/libsound.a'

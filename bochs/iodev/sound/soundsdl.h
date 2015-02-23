@@ -21,7 +21,7 @@
 // Lowlevel sound output support for SDL written by Volker Ruppert
 
 
-#if BX_WITH_SDL || BX_WITH_SDL2
+#if BX_HAVE_SOUND_SDL
 
 #include "bochs.h"
 #include <SDL_audio.h>
@@ -52,4 +52,4 @@ public:
   virtual bx_soundlow_waveout_c* get_waveout();
 };
 
-#endif  // BX_WITH_SDL || BX_WITH_SDL2
+#endif  // BX_HAVE_SOUND_SDL

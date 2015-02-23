@@ -21,7 +21,7 @@
 // This file (SOUNDOSX.H) written and donated by Brian Huffman
 
 
-#ifdef macintosh
+#if BX_HAVE_SOUND_OSX
 
 #include "bochs.h"
 

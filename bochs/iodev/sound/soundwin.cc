@@ -30,7 +30,7 @@
 #include "soundlow.h"
 #include "soundwin.h"
 
-#if defined(WIN32) && BX_SUPPORT_SOUNDLOW
+#if BX_HAVE_SOUND_WIN && BX_SUPPORT_SOUNDLOW
 
 #define LOG_THIS
 
@@ -500,4 +500,4 @@ bx_soundlow_midiout_c* bx_sound_windows_c::get_midiout()
   return midiout;
 }
 
-#endif // defined(WIN32)
+#endif // BX_HAVE_SOUND_WIN

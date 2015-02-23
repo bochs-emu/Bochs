@@ -505,19 +505,19 @@ const char *bochs_bootdisk_names[] = { "none", "floppy", "disk","cdrom", "networ
 
 const char *sound_driver_names[] = {
   "dummy",
-#if BX_HAVE_ALSASOUND
+#if BX_HAVE_SOUND_ALSA
   "alsa",
 #endif
-#if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
+#if BX_HAVE_SOUND_OSS
   "oss",
 #endif
-#if defined(macintosh)
+#if BX_HAVE_SOUND_OSX
   "osx",
 #endif
-#if BX_WITH_SDL || BX_WITH_SDL2
+#if BX_HAVE_SOUND_SDL
   "sdl",
 #endif
-#if defined(WIN32)
+#if BX_HAVE_SOUND_WIN
   "win",
 #endif
   "file",

@@ -24,7 +24,7 @@
 #include "soundlow.h"
 #include "soundsdl.h"
 
-#if (BX_WITH_SDL || BX_WITH_SDL2) && BX_SUPPORT_SOUNDLOW
+#if BX_HAVE_SOUND_SDL && BX_SUPPORT_SOUNDLOW
 
 #define LOG_THIS
 
@@ -178,4 +178,4 @@ bx_soundlow_waveout_c* bx_sound_sdl_c::get_waveout()
   return waveout;
 }
 
-#endif  // BX_WITH_SDL || BX_WITH_SDL2
+#endif  // BX_HAVE_SOUND_SDL

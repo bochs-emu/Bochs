@@ -21,7 +21,7 @@
 
 // This file (SOUNDWIN.H) written and donated by Josef Drexler
 
-#if defined(WIN32)
+#if BX_HAVE_SOUND_WIN
 
 #include <mmsystem.h>
 
@@ -231,4 +231,4 @@ public:
   virtual bx_soundlow_midiout_c* get_midiout();
 };
 
-#endif  // defined(WIN32)
+#endif  // BX_HAVE_SOUND_WIN

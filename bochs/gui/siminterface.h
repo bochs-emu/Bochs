@@ -595,19 +595,19 @@ enum {
 
 enum {
   BX_SOUNDDRV_DUMMY,
-#if BX_HAVE_ALSASOUND
+#if BX_HAVE_SOUND_ALSA
   BX_SOUNDDRV_ALSA,
 #endif
-#if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
+#if BX_HAVE_SOUND_OSS
   BX_SOUNDDRV_OSS,
 #endif
-#if defined(macintosh)
+#if BX_HAVE_SOUND_OSX
   BX_SOUNDDRV_OSX,
 #endif
-#if BX_WITH_SDL || BX_WITH_SDL2
+#if BX_HAVE_SOUND_SDL
   BX_SOUNDDRV_SDL,
 #endif
-#if defined(WIN32)
+#if BX_HAVE_SOUND_WIN
   BX_SOUNDDRV_WIN,
 #endif
   BX_SOUNDDRV_FILE

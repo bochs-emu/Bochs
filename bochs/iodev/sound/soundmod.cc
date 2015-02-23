@@ -118,23 +118,23 @@ bx_sound_lowlevel_c* bx_soundmod_ctl_c::get_driver(int driver_id)
     driver = new bx_sound_lowlevel_c();
   } else if (driver_id == BX_SOUNDDRV_FILE) {
     driver = new bx_sound_file_c();
-#if BX_HAVE_ALSASOUND
+#if BX_HAVE_SOUND_ALSA
   } else if (driver_id == BX_SOUNDDRV_ALSA) {
     driver = new bx_sound_alsa_c();
 #endif
-#if BX_WITH_SDL || BX_WITH_SDL2
+#if BX_HAVE_SOUND_SDL
   } else if (driver_id == BX_SOUNDDRV_SDL) {
     driver = new bx_sound_sdl_c();
 #endif
-#if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
+#if BX_HAVE_SOUND_OSS
   } else if (driver_id == BX_SOUNDDRV_OSS) {
     driver = new bx_sound_oss_c();
 #endif
-#if defined(macintosh)
+#if BX_HAVE_SOUND_OSX
   } else if (driver_id == BX_SOUNDDRV_OSX) {
     driver = new bx_sound_osx_c();
 #endif
-#if defined(WIN32)
+#if BX_HAVE_SOUND_WIN
   } else if (driver_id == BX_SOUNDDRV_WIN) {
     driver = new bx_sound_windows_c();
 #endif

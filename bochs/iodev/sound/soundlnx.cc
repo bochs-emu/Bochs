@@ -26,7 +26,7 @@
 #include "soundlow.h"
 #include "soundlnx.h"
 
-#if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)) && BX_SUPPORT_SOUNDLOW
+#if BX_HAVE_SOUND_OSS && BX_SUPPORT_SOUNDLOW
 
 #ifndef WIN32
 #include <pthread.h>

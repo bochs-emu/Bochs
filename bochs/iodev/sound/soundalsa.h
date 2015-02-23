@@ -21,7 +21,7 @@
 
 // ALSA PCM input/output and MIDI output support written by Volker Ruppert
 
-#if BX_HAVE_ALSASOUND
+#if BX_HAVE_SOUND_ALSA
 
 #define BX_SOUND_ALSA_BUFSIZE   BX_SOUNDLOW_WAVEPACKETSIZE * 2
 
