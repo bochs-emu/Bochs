@@ -5394,7 +5394,7 @@ BX_CPP_INLINE Bit32u BX_CPU_C::agen_read32(unsigned s, Bit32u offset, unsigned l
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
 
   if (seg->cache.valid & SegAccessROK4G) {
-    return get_laddr32(s, offset);
+    return offset;
   }
 
   if (seg->cache.valid & SegAccessROK) {
@@ -5414,7 +5414,7 @@ BX_CPP_INLINE Bit32u BX_CPU_C::agen_read_aligned32(unsigned s, Bit32u offset, un
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
 
   if (seg->cache.valid & SegAccessROK4G) {
-    return get_laddr32(s, offset);
+    return offset;
   }
 
   if (seg->cache.valid & SegAccessROK) {
@@ -5434,7 +5434,7 @@ BX_CPP_INLINE Bit32u BX_CPU_C::agen_write32(unsigned s, Bit32u offset, unsigned 
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
 
   if (seg->cache.valid & SegAccessWOK4G) {
-    return get_laddr32(s, offset);
+    return offset;
   }
 
   if (seg->cache.valid & SegAccessWOK) {
@@ -5454,7 +5454,7 @@ BX_CPP_INLINE Bit32u BX_CPU_C::agen_write_aligned32(unsigned s, Bit32u offset, u
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
 
   if (seg->cache.valid & SegAccessWOK4G) {
-    return get_laddr32(s, offset);
+    return offset;
   }
 
   if (seg->cache.valid & SegAccessWOK) {

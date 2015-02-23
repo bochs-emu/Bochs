@@ -1067,6 +1067,10 @@ void BX_CPU_C::write_new_stack_word(bx_segment_reg_t *seg, Bit32u offset, unsign
 {
   Bit32u laddr;
 
+  if (seg->cache.valid & SegAccessWOK4G) {
+    goto accessOK;
+  }
+
   if (seg->cache.valid & SegAccessWOK) {
     if (offset < seg->cache.u.segment.limit_scaled) {
 accessOK:
@@ -1090,6 +1094,10 @@ void BX_CPU_C::write_new_stack_dword(bx_segment_reg_t *seg, Bit32u offset, unsig
 {
   Bit32u laddr;
 
+  if (seg->cache.valid & SegAccessWOK4G) {
+    goto accessOK;
+  }
+
   if (seg->cache.valid & SegAccessWOK) {
     if (offset < (seg->cache.u.segment.limit_scaled-2)) {
 accessOK:
@@ -1112,6 +1120,10 @@ accessOK:
 void BX_CPU_C::write_new_stack_qword(bx_segment_reg_t *seg, Bit32u offset, unsigned curr_pl, Bit64u data)
 {
   Bit32u laddr;
+
+  if (seg->cache.valid & SegAccessWOK4G) {
+    goto accessOK;
+  }
 
   if (seg->cache.valid & SegAccessWOK) {
     if (offset <= (seg->cache.u.segment.limit_scaled-7)) {

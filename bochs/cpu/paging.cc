@@ -1226,7 +1226,6 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
   return paddress;
 }
 
-#if BX_SUPPORT_MEMTYPE
 const char *get_memtype_name(BxMemtype memtype)
 {
   static const char *mem_type_string[9] = { "UC", "WC", "RESERVED2", "RESERVED3", "WT", "WP", "WB", "UC-", "INVALID" };
@@ -1234,6 +1233,7 @@ const char *get_memtype_name(BxMemtype memtype)
   return mem_type_string[memtype];
 }
 
+#if BX_SUPPORT_MEMTYPE
 BxMemtype BX_CPP_AttrRegparmN(1) BX_CPU_C::memtype_by_mtrr(bx_phy_address pAddr)
 {
 #if BX_CPU_LEVEL >= 6
