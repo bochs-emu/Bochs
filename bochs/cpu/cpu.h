@@ -745,6 +745,10 @@ const Bit32u EFlagsIDMask   = (1 << 21);
 
 const Bit32u EFlagsValidMask = 0x003f7fd5; // only supported bits for EFLAGS
 
+#if BX_SUPPORT_FPU
+#include "i387.h"
+#endif
+
 #if BX_CPU_LEVEL >= 5
 typedef struct
 {
@@ -770,12 +774,12 @@ typedef struct
   bx_address sysenter_esp_msr;
   bx_address sysenter_eip_msr;
 
+  BxPackedRegister pat;
   Bit64u mtrrphys[16];
-  Bit64u mtrrfix64k;
-  Bit64u mtrrfix16k[2];
-  Bit64u mtrrfix4k[8];
+  BxPackedRegister mtrrfix64k;
+  BxPackedRegister mtrrfix16k[2];
+  BxPackedRegister mtrrfix4k[8];
   Bit32u mtrr_deftype;
-  Bit64u pat;
 #endif
 
 #if BX_SUPPORT_VMX
@@ -947,7 +951,6 @@ typedef struct {
 #endif
 
 #if BX_SUPPORT_FPU
-#include "i387.h"
 #include "xmm.h"
 #endif
 

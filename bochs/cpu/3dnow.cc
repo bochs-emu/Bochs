@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2002-2013 Stanislav Shwartsman
+//   Copyright (c) 2002-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -58,7 +58,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FW_PqQq(bxInstruction_c *i)
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
+    op = read_virtual_qword(i->seg(), eaddr);
   }
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
@@ -93,7 +93,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FD_PqQq(bxInstruction_c *i)
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
+    op = read_virtual_qword(i->seg(), eaddr);
   }
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
@@ -135,7 +135,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2ID_PqQq(bxInstruction_c *i)
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
+    op = read_virtual_qword(i->seg(), eaddr);
   }
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
@@ -282,7 +282,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHRW_PqQq(bxInstruction_c *i)
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
+    op2 = read_virtual_qword(i->seg(), eaddr);
   }
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
@@ -319,7 +319,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSWAPD_PqQq(bxInstruction_c *i)
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
+    op = read_virtual_qword(i->seg(), eaddr);
   }
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */

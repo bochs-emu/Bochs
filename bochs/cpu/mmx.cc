@@ -61,11 +61,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFB_PqQq(bxInstruction_c *i)
 
   for(unsigned j=0; j<8; j++)
   {
-    unsigned mask = op2.mmxubyte(j);
+    unsigned mask = op2.ubyte(j);
     if (mask & 0x80)
-      result.mmxubyte(j) = 0;
+      result.ubyte(j) = 0;
     else
-      result.mmxubyte(j) = op1.mmxubyte(mask & 0x7);
+      result.ubyte(j) = op1.ubyte(mask & 0x7);
   }
 
   BX_WRITE_MMX_REG(i->dst(), result);
@@ -179,10 +179,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDUBSW_PqQq(bxInstruction_c *i)
 
   for(unsigned j=0; j<4; j++)
   {
-    Bit32s temp = Bit32s(op1.mmxubyte(j*2+0))*Bit32s(op2.mmxsbyte(j*2)) +
-                  Bit32s(op1.mmxubyte(j*2+1))*Bit32s(op2.mmxsbyte(j*2+1));
+    Bit32s temp = Bit32s(op1.ubyte(j*2+0))*Bit32s(op2.sbyte(j*2)) +
+                  Bit32s(op1.ubyte(j*2+1))*Bit32s(op2.sbyte(j*2+1));
 
-    op1.mmx16s(j) = SaturateDwordSToWordS(temp);
+    op1.s16(j) = SaturateDwordSToWordS(temp);
   }
 
   BX_WRITE_MMX_REG(i->dst(), op1);
@@ -295,8 +295,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGNB_PqQq(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   for(unsigned j=0; j<8; j++) {
-    int sign = (op2.mmxsbyte(j) > 0) - (op2.mmxsbyte(j) < 0);
-    op1.mmxsbyte(j) *= sign;
+    int sign = (op2.sbyte(j) > 0) - (op2.sbyte(j) < 0);
+    op1.sbyte(j) *= sign;
   }
 
   BX_WRITE_MMX_REG(i->dst(), op1);
@@ -324,8 +324,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGNW_PqQq(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   for(unsigned j=0; j<4; j++) {
-    int sign = (op2.mmx16s(j) > 0) - (op2.mmx16s(j) < 0);
-    op1.mmx16s(j) *= sign;
+    int sign = (op2.s16(j) > 0) - (op2.s16(j) < 0);
+    op1.s16(j) *= sign;
   }
 
   BX_WRITE_MMX_REG(i->dst(), op1);
@@ -909,8 +909,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_PqEdR(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareMMX();
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
-  BxPackedMmxRegister op;
-  MMXUQ(op) = (Bit64u) BX_READ_32BIT_REG(i->src());
+  BxPackedMmxRegister op = (Bit64u) BX_READ_32BIT_REG(i->src());
   BX_WRITE_MMX_REG(i->dst(), op);
 #endif
 
@@ -922,10 +921,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_PqEdM(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  MMXUQ(op) = (Bit64u) read_virtual_dword(i->seg(), eaddr);
+  BxPackedMmxRegister op = (Bit64u) read_virtual_dword(i->seg(), eaddr);
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
@@ -942,9 +939,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_PqEqR(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareMMX();
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
-  BxPackedMmxRegister op;
-  MMXUQ(op) = BX_READ_64BIT_REG(i->src());
-
+  BxPackedMmxRegister op = BX_READ_64BIT_REG(i->src());
   BX_WRITE_MMX_REG(i->dst(), op);
 
   BX_NEXT_INSTR(i);
@@ -969,10 +964,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_PqQqM(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
+  BxPackedMmxRegister op = read_virtual_qword(i->seg(), eaddr);
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
@@ -1003,10 +996,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFW_PqQqIb(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
-  MMXUW0(result) = op.mmx16u((order)    & 0x3);
-  MMXUW1(result) = op.mmx16u((order>>2) & 0x3);
-  MMXUW2(result) = op.mmx16u((order>>4) & 0x3);
-  MMXUW3(result) = op.mmx16u((order>>6) & 0x3);
+  MMXUW0(result) = op.u16((order)    & 0x3);
+  MMXUW1(result) = op.u16((order>>2) & 0x3);
+  MMXUW2(result) = op.u16((order>>4) & 0x3);
+  MMXUW3(result) = op.u16((order>>6) & 0x3);
 
   BX_WRITE_MMX_REG(i->dst(), result);
 #endif
@@ -1207,7 +1200,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRW_PqEwIb(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
-  op1.mmx16u(i->Ib() & 0x3) = op2;
+  op1.u16(i->Ib() & 0x3) = op2;
 
   BX_WRITE_MMX_REG(i->dst(), op1);
 #endif
@@ -1223,7 +1216,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRW_GdNqIb(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->src());
-  Bit32u result = (Bit32u) op.mmx16u(i->Ib() & 0x3);
+  Bit32u result = (Bit32u) op.u16(i->Ib() & 0x3);
 
   BX_WRITE_32BIT_REGZ(i->dst(), result);
 #endif

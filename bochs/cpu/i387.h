@@ -178,74 +178,80 @@ BX_CPP_INLINE void i387_t::reset()
   memset(st_space, 0, sizeof(floatx80)*8);
 }
 
-typedef union bx_packed_mmx_reg_t {
-   Bit8s   mmx_sbyte[8];
-   Bit16s  mmx_s16[4];
-   Bit32s  mmx_s32[2];
-   Bit64s  mmx_s64;
-   Bit8u   mmx_ubyte[8];
-   Bit16u  mmx_u16[4];
-   Bit32u  mmx_u32[2];
-   Bit64u  mmx_u64;
-} BxPackedMmxRegister;
+typedef union bx_packed_reg_t {
+   Bit8s   _sbyte[8];
+   Bit16s  _s16[4];
+   Bit32s  _s32[2];
+   Bit64s  _s64;
+   Bit8u   _ubyte[8];
+   Bit16u  _u16[4];
+   Bit32u  _u32[2];
+   Bit64u  _u64;
+public:
+   bx_packed_reg_t() {}
+   bx_packed_reg_t(Bit64u val): _u64(val) {}
+   bx_packed_reg_t(Bit64s val): _s64(val) {}
+} BxPackedRegister;
+
+typedef BxPackedRegister BxPackedMmxRegister;
 
 #ifdef BX_BIG_ENDIAN
-#define mmx64s(i)   mmx_s64
-#define mmx32s(i)   mmx_s32[1 - (i)]
-#define mmx16s(i)   mmx_s16[3 - (i)]
-#define mmxsbyte(i) mmx_sbyte[7 - (i)]
-#define mmxubyte(i) mmx_ubyte[7 - (i)]
-#define mmx16u(i)   mmx_u16[3 - (i)]
-#define mmx32u(i)   mmx_u32[1 - (i)]
-#define mmx64u      mmx_u64
+#define s64      _s64
+#define s32(i)   _s32[1 - (i)]
+#define s16(i)   _s16[3 - (i)]
+#define sbyte(i) _sbyte[7 - (i)]
+#define ubyte(i) _ubyte[7 - (i)]
+#define u16(i)   _u16[3 - (i)]
+#define u32(i)   _u32[1 - (i)]
+#define u64      _u64
 #else
-#define mmx64s(i)   mmx_s64
-#define mmx32s(i)   mmx_s32[(i)]
-#define mmx16s(i)   mmx_s16[(i)]
-#define mmxsbyte(i) mmx_sbyte[(i)]
-#define mmxubyte(i) mmx_ubyte[(i)]
-#define mmx16u(i)   mmx_u16[(i)]
-#define mmx32u(i)   mmx_u32[(i)]
-#define mmx64u      mmx_u64
+#define s64      _s64
+#define s32(i)   _s32[(i)]
+#define s16(i)   _s16[(i)]
+#define sbyte(i) _sbyte[(i)]
+#define ubyte(i) _ubyte[(i)]
+#define u16(i)   _u16[(i)]
+#define u32(i)   _u32[(i)]
+#define u64      _u64
 #endif
 
 /* for compatability with already written code */
-#define MMXSB0(reg) (reg.mmxsbyte(0))
-#define MMXSB1(reg) (reg.mmxsbyte(1))
-#define MMXSB2(reg) (reg.mmxsbyte(2))
-#define MMXSB3(reg) (reg.mmxsbyte(3))
-#define MMXSB4(reg) (reg.mmxsbyte(4))
-#define MMXSB5(reg) (reg.mmxsbyte(5))
-#define MMXSB6(reg) (reg.mmxsbyte(6))
-#define MMXSB7(reg) (reg.mmxsbyte(7))
+#define MMXSB0(reg) (reg.sbyte(0))
+#define MMXSB1(reg) (reg.sbyte(1))
+#define MMXSB2(reg) (reg.sbyte(2))
+#define MMXSB3(reg) (reg.sbyte(3))
+#define MMXSB4(reg) (reg.sbyte(4))
+#define MMXSB5(reg) (reg.sbyte(5))
+#define MMXSB6(reg) (reg.sbyte(6))
+#define MMXSB7(reg) (reg.sbyte(7))
 
-#define MMXSW0(reg) (reg.mmx16s(0))
-#define MMXSW1(reg) (reg.mmx16s(1))
-#define MMXSW2(reg) (reg.mmx16s(2))
-#define MMXSW3(reg) (reg.mmx16s(3))
+#define MMXSW0(reg) (reg.s16(0))
+#define MMXSW1(reg) (reg.s16(1))
+#define MMXSW2(reg) (reg.s16(2))
+#define MMXSW3(reg) (reg.s16(3))
 
-#define MMXSD0(reg) (reg.mmx32s(0))
-#define MMXSD1(reg) (reg.mmx32s(1))
+#define MMXSD0(reg) (reg.s32(0))
+#define MMXSD1(reg) (reg.s32(1))
 
-#define MMXSQ(reg)  (reg.mmx64s)
-#define MMXUQ(reg)  (reg.mmx64u)
+#define MMXSQ(reg)  (reg.s64)
+#define MMXUQ(reg)  (reg.u64)
 
-#define MMXUD0(reg) (reg.mmx32u(0))
-#define MMXUD1(reg) (reg.mmx32u(1))
+#define MMXUD0(reg) (reg.u32(0))
+#define MMXUD1(reg) (reg.u32(1))
 
-#define MMXUW0(reg) (reg.mmx16u(0))
-#define MMXUW1(reg) (reg.mmx16u(1))
-#define MMXUW2(reg) (reg.mmx16u(2))
-#define MMXUW3(reg) (reg.mmx16u(3))
+#define MMXUW0(reg) (reg.u16(0))
+#define MMXUW1(reg) (reg.u16(1))
+#define MMXUW2(reg) (reg.u16(2))
+#define MMXUW3(reg) (reg.u16(3))
 
-#define MMXUB0(reg) (reg.mmxubyte(0))
-#define MMXUB1(reg) (reg.mmxubyte(1))
-#define MMXUB2(reg) (reg.mmxubyte(2))
-#define MMXUB3(reg) (reg.mmxubyte(3))
-#define MMXUB4(reg) (reg.mmxubyte(4))
-#define MMXUB5(reg) (reg.mmxubyte(5))
-#define MMXUB6(reg) (reg.mmxubyte(6))
-#define MMXUB7(reg) (reg.mmxubyte(7))
+#define MMXUB0(reg) (reg.ubyte(0))
+#define MMXUB1(reg) (reg.ubyte(1))
+#define MMXUB2(reg) (reg.ubyte(2))
+#define MMXUB3(reg) (reg.ubyte(3))
+#define MMXUB4(reg) (reg.ubyte(4))
+#define MMXUB5(reg) (reg.ubyte(5))
+#define MMXUB6(reg) (reg.ubyte(6))
+#define MMXUB7(reg) (reg.ubyte(7))
 
 #define BX_MMX_REG(index) (BX_FPU_REG(index).fraction)
 

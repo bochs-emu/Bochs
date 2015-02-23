@@ -107,7 +107,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
         BX_ERROR(("RDMSR: MTRR is not enabled in the cpu model"));
         return handle_unknown_rdmsr(index, msr);
       }
-      val64 = BX_CPU_THIS_PTR msr.mtrrfix64k;
+      val64 = BX_CPU_THIS_PTR msr.mtrrfix64k.u64;
       break;
     case BX_MSR_MTRRFIX16K_80000:
     case BX_MSR_MTRRFIX16K_A0000:
@@ -115,7 +115,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
         BX_ERROR(("RDMSR: MTRR is not enabled in the cpu model"));
         return handle_unknown_rdmsr(index, msr);
       }
-      val64 = BX_CPU_THIS_PTR msr.mtrrfix16k[index - BX_MSR_MTRRFIX16K_80000];
+      val64 = BX_CPU_THIS_PTR msr.mtrrfix16k[index - BX_MSR_MTRRFIX16K_80000].u64;
       break;
 
     case BX_MSR_MTRRFIX4K_C0000:
@@ -130,7 +130,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
         BX_ERROR(("RDMSR: MTRR is not enabled in the cpu model"));
         return handle_unknown_rdmsr(index, msr);
       }
-      val64 = BX_CPU_THIS_PTR msr.mtrrfix4k[index - BX_MSR_MTRRFIX4K_C0000];
+      val64 = BX_CPU_THIS_PTR msr.mtrrfix4k[index - BX_MSR_MTRRFIX4K_C0000].u64;
       break;
 
     case BX_MSR_MTRR_DEFTYPE:
@@ -146,7 +146,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
         BX_ERROR(("RDMSR BX_MSR_PAT: PAT is not enabled in the cpu model"));
         return handle_unknown_rdmsr(index, msr);
       }
-      val64 = BX_CPU_THIS_PTR msr.pat;
+      val64 = BX_CPU_THIS_PTR msr.pat.u64;
       break;
 #endif
 
@@ -441,30 +441,22 @@ BX_CPP_INLINE bx_bool isMemTypeValidPAT(unsigned memtype)
   return (memtype == 0x07) /* UC- */ || isMemTypeValidMTRR(memtype);
 }
 
-bx_bool isValidMSR_PAT(Bit64u pat_msr)
+bx_bool isValidMSR_PAT(Bit64u pat_val)
 {
-  if (! isMemTypeValidPAT(pat_msr & 0xFF) ||
-      ! isMemTypeValidPAT((pat_msr >>  8) & 0xFF) || 
-      ! isMemTypeValidPAT((pat_msr >> 16) & 0xFF) || 
-      ! isMemTypeValidPAT((pat_msr >> 24) & 0xFF) ||
-      ! isMemTypeValidPAT((pat_msr >> 32) & 0xFF) ||
-      ! isMemTypeValidPAT((pat_msr >> 40) & 0xFF) || 
-      ! isMemTypeValidPAT((pat_msr >> 48) & 0xFF) || 
-      ! isMemTypeValidPAT(pat_msr >> 56)) return BX_FALSE;
+  // use packed register as 64-bit value with convinient accessors
+  BxPackedRegister pat_msr = pat_val;
+  for (unsigned i=0; i<8; i++)
+    if (! isMemTypeValidPAT(pat_msr.ubyte(i))) return BX_FALSE;
 
   return BX_TRUE;
 }
 
-bx_bool isValidMSR_FixedMTRR(Bit64u fixed_mtrr_msr)
+bx_bool isValidMSR_FixedMTRR(Bit64u fixed_mtrr_val)
 {
-  if (! isMemTypeValidMTRR(fixed_mtrr_msr & 0xFF) ||
-      ! isMemTypeValidMTRR((fixed_mtrr_msr >>  8) & 0xFF) || 
-      ! isMemTypeValidMTRR((fixed_mtrr_msr >> 16) & 0xFF) || 
-      ! isMemTypeValidMTRR((fixed_mtrr_msr >> 24) & 0xFF) ||
-      ! isMemTypeValidMTRR((fixed_mtrr_msr >> 32) & 0xFF) ||
-      ! isMemTypeValidMTRR((fixed_mtrr_msr >> 40) & 0xFF) || 
-      ! isMemTypeValidMTRR((fixed_mtrr_msr >> 48) & 0xFF) || 
-      ! isMemTypeValidMTRR(fixed_mtrr_msr >> 56)) return BX_FALSE;
+  // use packed register as 64-bit value with convinient accessors
+  BxPackedRegister fixed_mtrr_msr = fixed_mtrr_val;
+  for (unsigned i=0; i<8; i++)
+    if (! isMemTypeValidMTRR(fixed_mtrr_msr.ubyte(i))) return BX_FALSE;
 
   return BX_TRUE;
 }

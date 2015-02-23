@@ -1246,15 +1246,15 @@ BxMemtype BX_CPP_AttrRegparmN(1) BX_CPU_C::memtype_by_mtrr(bx_phy_address pAddr)
       if (pAddr < 0x100000 && (BX_CPU_THIS_PTR msr.mtrr_deftype & BX_MTRR_DEFTYPE_FIXED_MTRR_ENABLE_MASK)) {
         if (pAddr < 0x80000) {
           unsigned index = (pAddr >> 16) & 0x7;
-          return BxMemtype((BX_CPU_THIS_PTR msr.mtrrfix64k >> (index * 8)) & 0xff);
+          return (BxMemtype) BX_CPU_THIS_PTR msr.mtrrfix64k.ubyte(index);
         }
         if (pAddr < 0xc0000) {
           unsigned index = ((pAddr - 0x80000) >> 14) & 0xf;
-          return BxMemtype((BX_CPU_THIS_PTR msr.mtrrfix16k[index >> 3] >> (index & 0x7) * 8) & 0xff);
+          return (BxMemtype) BX_CPU_THIS_PTR msr.mtrrfix16k[index >> 3].ubyte(index & 0x7);
         }
         else {
           unsigned index =  (pAddr - 0xc0000) >> 12;
-          return BxMemtype((BX_CPU_THIS_PTR msr.mtrrfix4k [index >> 3] >> (index & 0x7) * 8) & 0xff);
+          return (BxMemtype) BX_CPU_THIS_PTR msr.mtrrfix4k [index >> 3].ubyte(index & 0x7);
         }
       }
 
@@ -1312,7 +1312,7 @@ BxMemtype BX_CPP_AttrRegparmN(1) BX_CPU_C::memtype_by_mtrr(bx_phy_address pAddr)
 
 BxMemtype BX_CPP_AttrRegparmN(1) BX_CPU_C::memtype_by_pat(unsigned pat)
 {
-  return BxMemtype((BX_CPU_THIS_PTR msr.pat >> (pat * 8)) & 0xff);
+  return (BxMemtype) BX_CPU_THIS_PTR msr.pat.ubyte(pat);
 }
 
 BxMemtype BX_CPP_AttrRegparmN(2) BX_CPU_C::resolve_memtype(bx_phy_address pAddr, BxMemtype pat_memtype)

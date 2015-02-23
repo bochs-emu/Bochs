@@ -762,8 +762,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDQ2Q_PqUdq(bxInstruction_c *i)
   BX_CPU_THIS_PTR FPU_check_pending_exceptions(); /* check floating point status word for a pending FPU exceptions */
   BX_CPU_THIS_PTR prepareFPU2MMX();
 
-  BxPackedMmxRegister mm;
-  MMXUQ(mm) = BX_READ_XMM_REG_LO_QWORD(i->src());
+  BxPackedMmxRegister mm = BX_READ_XMM_REG_LO_QWORD(i->src());
 
   BX_WRITE_MMX_REG(i->dst(), mm);
 #endif
@@ -810,19 +809,18 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVMSKB_GdUdq(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBW_VdqWqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister result;
-  BxPackedMmxRegister op;
 
-  // use MMX register as 64-bit value with convinient accessors
-  MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->src());
+  // use packed register as 64-bit value with convinient accessors
+  BxPackedRegister op = BX_READ_XMM_REG_LO_QWORD(i->src());
 
-  result.xmm16u(0) = MMXSB0(op);
-  result.xmm16u(1) = MMXSB1(op);
-  result.xmm16u(2) = MMXSB2(op);
-  result.xmm16u(3) = MMXSB3(op);
-  result.xmm16u(4) = MMXSB4(op);
-  result.xmm16u(5) = MMXSB5(op);
-  result.xmm16u(6) = MMXSB6(op);
-  result.xmm16u(7) = MMXSB7(op);
+  result.xmm16u(0) = op.sbyte(0);
+  result.xmm16u(1) = op.sbyte(1);
+  result.xmm16u(2) = op.sbyte(2);
+  result.xmm16u(3) = op.sbyte(3);
+  result.xmm16u(4) = op.sbyte(4);
+  result.xmm16u(5) = op.sbyte(5);
+  result.xmm16u(6) = op.sbyte(6);
+  result.xmm16u(7) = op.sbyte(7);
 
   BX_WRITE_XMM_REGZ(i->dst(), result, i->getVL());
 
@@ -863,15 +861,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBQ_VdqWwR(bxInstruction_c *i
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXWD_VdqWqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister result;
-  BxPackedMmxRegister op;
 
-  // use MMX register as 64-bit value with convinient accessors
-  MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->src());
+  // use packed register as 64-bit value with convinient accessors
+  BxPackedRegister op = BX_READ_XMM_REG_LO_QWORD(i->src());
 
-  result.xmm32u(0) = (Bit16s) MMXSW0(op);
-  result.xmm32u(1) = (Bit16s) MMXSW1(op);
-  result.xmm32u(2) = (Bit16s) MMXSW2(op);
-  result.xmm32u(3) = (Bit16s) MMXSW3(op);
+  result.xmm32u(0) = (Bit16s) op.s16(0);
+  result.xmm32u(1) = (Bit16s) op.s16(1);
+  result.xmm32u(2) = (Bit16s) op.s16(2);
+  result.xmm32u(3) = (Bit16s) op.s16(3);
 
   BX_WRITE_XMM_REGZ(i->dst(), result, i->getVL());
 
@@ -910,19 +907,18 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXDQ_VdqWqR(bxInstruction_c *i
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBW_VdqWqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister result;
-  BxPackedMmxRegister op;
 
-  // use MMX register as 64-bit value with convinient accessors
-  MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->src());
+  // use packed register as 64-bit value with convinient accessors
+  BxPackedRegister op = BX_READ_XMM_REG_LO_QWORD(i->src());
 
-  result.xmm16u(0) = MMXUB0(op);
-  result.xmm16u(1) = MMXUB1(op);
-  result.xmm16u(2) = MMXUB2(op);
-  result.xmm16u(3) = MMXUB3(op);
-  result.xmm16u(4) = MMXUB4(op);
-  result.xmm16u(5) = MMXUB5(op);
-  result.xmm16u(6) = MMXUB6(op);
-  result.xmm16u(7) = MMXUB7(op);
+  result.xmm16u(0) = op.ubyte(0);
+  result.xmm16u(1) = op.ubyte(1);
+  result.xmm16u(2) = op.ubyte(2);
+  result.xmm16u(3) = op.ubyte(3);
+  result.xmm16u(4) = op.ubyte(4);
+  result.xmm16u(5) = op.ubyte(5);
+  result.xmm16u(6) = op.ubyte(6);
+  result.xmm16u(7) = op.ubyte(7);
 
   BX_WRITE_XMM_REGZ(i->dst(), result, i->getVL());
 
@@ -963,15 +959,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBQ_VdqWwR(bxInstruction_c *i
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXWD_VdqWqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister result;
-  BxPackedMmxRegister op;
 
-  // use MMX register as 64-bit value with convinient accessors
-  MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->src());
+  // use packed register as 64-bit value with convinient accessors
+  BxPackedRegister op = BX_READ_XMM_REG_LO_QWORD(i->src());
 
-  result.xmm32u(0) = MMXUW0(op);
-  result.xmm32u(1) = MMXUW1(op);
-  result.xmm32u(2) = MMXUW2(op);
-  result.xmm32u(3) = MMXUW3(op);
+  result.xmm32u(0) = op.u16(0);
+  result.xmm32u(1) = op.u16(1);
+  result.xmm32u(2) = op.u16(2);
+  result.xmm32u(3) = op.u16(3);
 
   BX_WRITE_XMM_REGZ(i->dst(), result, i->getVL());
 

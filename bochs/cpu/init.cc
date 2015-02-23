@@ -363,20 +363,20 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(MSR, mtrrphysbase7, msr.mtrrphys[14]);
   BXRS_HEX_PARAM_FIELD(MSR, mtrrphysmask7, msr.mtrrphys[15]);
 
-  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix64k, msr.mtrrfix64k);
-  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix16k_80000, msr.mtrrfix16k[0]);
-  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix16k_a0000, msr.mtrrfix16k[1]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix64k, msr.mtrrfix64k.u64);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix16k_80000, msr.mtrrfix16k[0].u64);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix16k_a0000, msr.mtrrfix16k[1].u64);
 
-  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_c0000, msr.mtrrfix4k[0]);
-  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_c8000, msr.mtrrfix4k[1]);
-  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_d0000, msr.mtrrfix4k[2]);
-  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_d8000, msr.mtrrfix4k[3]);
-  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_e0000, msr.mtrrfix4k[4]);
-  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_e8000, msr.mtrrfix4k[5]);
-  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_f0000, msr.mtrrfix4k[6]);
-  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_f8000, msr.mtrrfix4k[7]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_c0000, msr.mtrrfix4k[0].u64);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_c8000, msr.mtrrfix4k[1].u64);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_d0000, msr.mtrrfix4k[2].u64);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_d8000, msr.mtrrfix4k[3].u64);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_e0000, msr.mtrrfix4k[4].u64);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_e8000, msr.mtrrfix4k[5].u64);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_f0000, msr.mtrrfix4k[6].u64);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_f8000, msr.mtrrfix4k[7].u64);
 
-  BXRS_HEX_PARAM_FIELD(MSR, pat, msr.pat);
+  BXRS_HEX_PARAM_FIELD(MSR, pat, msr.pat.u64);
   BXRS_HEX_PARAM_FIELD(MSR, mtrr_deftype, msr.mtrr_deftype);
 #endif
 #if BX_CONFIGURE_MSRS
@@ -870,13 +870,11 @@ void BX_CPU_C::reset(unsigned source)
     for (n=0; n<16; n++)
       BX_CPU_THIS_PTR msr.mtrrphys[n] = 0;
 
-    BX_CPU_THIS_PTR msr.mtrrfix64k = 0; // all fix range MTRRs undefined according to manual
-
-    BX_CPU_THIS_PTR msr.mtrrfix16k[0] = 0;
-    BX_CPU_THIS_PTR msr.mtrrfix16k[1] = 0;
-
+    BX_CPU_THIS_PTR msr.mtrrfix64k = BX_CONST64(0); // all fix range MTRRs undefined according to manual
+    BX_CPU_THIS_PTR msr.mtrrfix16k[0] = BX_CONST64(0);
+    BX_CPU_THIS_PTR msr.mtrrfix16k[1] = BX_CONST64(0);
     for (n=0; n<8; n++)
-      BX_CPU_THIS_PTR msr.mtrrfix4k[n] = 0;
+      BX_CPU_THIS_PTR msr.mtrrfix4k[n] = BX_CONST64(0);
 
     BX_CPU_THIS_PTR msr.pat = BX_CONST64(0x0007040600070406);
     BX_CPU_THIS_PTR msr.mtrr_deftype = 0;

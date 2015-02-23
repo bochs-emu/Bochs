@@ -2199,15 +2199,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VDBPSADBW_MASK_VdqHdqWdqIbR(bxInst
 
 BX_CPP_INLINE Bit64u pmultishiftqb_scalar(Bit64u val_64, Bit64u control)
 {
-  // use MMX register as 64-bit value with convinient accessors
-  BxPackedMmxRegister result;
+  // use packed register as 64-bit value with convinient accessors
+  BxPackedRegister result;
 
   for (unsigned n=0; n < 8; n++, control >>= 8) {
     unsigned ctrl = (control & 0x3f);
     Bit64u tmp = val_64;
     if (ctrl != 0)
         tmp = (val_64 << (64 - ctrl)) | (val_64 >> ctrl);
-    result.mmxubyte(n) = tmp & 0xff;
+    result.ubyte(n) = tmp & 0xff;
   }
 
   return MMXUQ(result);
