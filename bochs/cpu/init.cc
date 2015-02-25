@@ -870,11 +870,11 @@ void BX_CPU_C::reset(unsigned source)
     for (n=0; n<16; n++)
       BX_CPU_THIS_PTR msr.mtrrphys[n] = 0;
 
-    BX_CPU_THIS_PTR msr.mtrrfix64k = BX_CONST64(0); // all fix range MTRRs undefined according to manual
-    BX_CPU_THIS_PTR msr.mtrrfix16k[0] = BX_CONST64(0);
-    BX_CPU_THIS_PTR msr.mtrrfix16k[1] = BX_CONST64(0);
+    BX_CPU_THIS_PTR msr.mtrrfix64k = (Bit64u) 0; // all fix range MTRRs undefined according to manual
+    BX_CPU_THIS_PTR msr.mtrrfix16k[0] = (Bit64u) 0;
+    BX_CPU_THIS_PTR msr.mtrrfix16k[1] = (Bit64u) 0;
     for (n=0; n<8; n++)
-      BX_CPU_THIS_PTR msr.mtrrfix4k[n] = BX_CONST64(0);
+      BX_CPU_THIS_PTR msr.mtrrfix4k[n] = (Bit64u) 0;
 
     BX_CPU_THIS_PTR msr.pat = BX_CONST64(0x0007040600070406);
     BX_CPU_THIS_PTR msr.mtrr_deftype = 0;
