@@ -876,7 +876,7 @@ void BX_CPU_C::reset(unsigned source)
     for (n=0; n<8; n++)
       BX_CPU_THIS_PTR msr.mtrrfix4k[n] = (Bit64u) 0;
 
-    BX_CPU_THIS_PTR msr.pat = BX_CONST64(0x0007040600070406);
+    BX_CPU_THIS_PTR msr.pat = (Bit64u) BX_CONST64(0x0007040600070406);
     BX_CPU_THIS_PTR msr.mtrr_deftype = 0;
   }
 #endif
