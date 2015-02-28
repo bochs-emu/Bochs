@@ -731,6 +731,8 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
   if (BX_CPU_THIS_PTR cr4.get_PGE())
     combined_access |= (entry[leaf] & 0x100); // G
 
+  combined_access |= (entry[leaf] & 0x98); // PWT, PCD, PAT
+
   // Update A/D bits if needed
   update_access_dirty_PAE(entry_addr, entry, BX_LEVEL_PML4, leaf, isWrite);
 
@@ -941,7 +943,9 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
   }
 
   if (BX_CPU_THIS_PTR cr4.get_PGE())
-    combined_access |= (entry[leaf] & 0x100);     // G
+    combined_access |= (entry[leaf] & 0x100); // G
+
+  combined_access |= (entry[leaf] & 0x98); // PWT, PCD, PAT
 
   // Update A/D bits if needed
   update_access_dirty_PAE(entry_addr, entry, BX_LEVEL_PDE, leaf, isWrite);
@@ -1055,6 +1059,8 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
   if (BX_CPU_THIS_PTR cr4.get_PGE())
     combined_access |= (entry[leaf] & 0x100); // G
 #endif
+
+  combined_access |= (entry[leaf] & 0x98); // PWT, PCD, PAT
 
   update_access_dirty(entry_addr, entry, leaf, isWrite);
 
