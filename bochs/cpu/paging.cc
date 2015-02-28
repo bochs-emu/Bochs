@@ -648,7 +648,7 @@ int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsi
 #if BX_SUPPORT_X86_64
 
 // Translate a linear address to a physical address in long mode
-bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned user, unsigned rw)
+bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lpf_mask, unsigned user, unsigned rw)
 {
   bx_phy_address entry_addr[4];
   bx_phy_address ppf = BX_CPU_THIS_PTR cr3 & BX_CR3_PAGING_MASK;
@@ -658,7 +658,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
 
   Bit64u offset_mask = BX_CONST64(0x0000ffffffffffff);
   lpf_mask = 0xfff;
-  combined_access = 0x06;
+  Bit32u combined_access = 0x06;
 
   Bit64u reserved = PAGING_PAE_RESERVED_BITS;
   if (! BX_CPU_THIS_PTR efer.get_NXE())
@@ -734,7 +734,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
   // Update A/D bits if needed
   update_access_dirty_PAE(entry_addr, entry, BX_LEVEL_PML4, leaf, isWrite);
 
-  return ppf | (laddr & offset_mask);
+  return (ppf | combined_access);
 }
 
 #endif
@@ -863,7 +863,7 @@ bx_phy_address BX_CPU_C::translate_linear_load_PDPTR(bx_address laddr, unsigned 
 }
 
 // Translate a linear address to a physical address in PAE paging mode
-bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned user, unsigned rw)
+bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask, unsigned user, unsigned rw)
 {
   bx_phy_address entry_addr[2];
   Bit64u entry[2];
@@ -871,7 +871,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
   int leaf;
 
   lpf_mask = 0xfff;
-  combined_access = 0x06;
+  Bit32u combined_access = 0x06;
 
   Bit64u reserved = PAGING_LEGACY_PAE_RESERVED_BITS;
   if (! BX_CPU_THIS_PTR efer.get_NXE())
@@ -946,7 +946,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
   // Update A/D bits if needed
   update_access_dirty_PAE(entry_addr, entry, BX_LEVEL_PDE, leaf, isWrite);
 
-  return ppf | (laddr & lpf_mask);
+  return (ppf | combined_access);
 }
 
 #endif
@@ -973,14 +973,14 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
     (((1 << (41-BX_PHY_ADDRESS_WIDTH))-1) << (13 + BX_PHY_ADDRESS_WIDTH - 32))
 
 // Translate a linear address to a physical address in legacy paging mode
-bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned user, unsigned rw)
+bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_mask, unsigned user, unsigned rw)
 {
   bx_phy_address entry_addr[2], ppf = (Bit32u) BX_CPU_THIS_PTR cr3 & BX_CR3_PAGING_MASK;
   Bit32u entry[2];
   int leaf;
 
   lpf_mask = 0xfff;
-  combined_access = 0x06;
+  Bit32u combined_access = 0x06;
 
   for (leaf = BX_LEVEL_PDE;; --leaf) {
     entry_addr[leaf] = ppf + ((laddr >> (10 + 10*leaf)) & 0xffc);
@@ -1058,7 +1058,7 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
 
   update_access_dirty(entry_addr, entry, leaf, isWrite);
 
-  return ppf | (laddr & lpf_mask);
+  return (ppf | combined_access);
 }
 
 void BX_CPU_C::update_access_dirty(bx_phy_address *entry_addr, Bit32u *entry, unsigned leaf, unsigned write)
@@ -1083,8 +1083,8 @@ void BX_CPU_C::update_access_dirty(bx_phy_address *entry_addr, Bit32u *entry, un
 // Translate a linear address to a physical address
 bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address laddr, unsigned user, unsigned rw)
 {
-  Bit32u combined_access = 0x06;
   Bit32u lpf_mask = 0xfff; // 4K pages
+  Bit32u combined_access = 0x06;
 
 #if BX_SUPPORT_X86_64
   if (! long_mode()) laddr &= 0xffffffff;
@@ -1118,17 +1118,22 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
   {
     BX_DEBUG(("page walk for address 0x" FMT_LIN_ADDRX, laddr));
 
+    // translate_linear functions return combined U/S, R/W bits, Global Page bit
+    // and also PWT/PCD/PAT bits in lower 12 bits of the physical address.
 #if BX_CPU_LEVEL >= 6
 #if BX_SUPPORT_X86_64
     if (long_mode())
-      paddress = translate_linear_long_mode(laddr, lpf_mask, combined_access, user, rw);
+      paddress = translate_linear_long_mode(laddr, lpf_mask, user, rw);
     else
 #endif
       if (BX_CPU_THIS_PTR cr4.get_PAE())
-        paddress = translate_linear_PAE(laddr, lpf_mask, combined_access, user, rw);
+        paddress = translate_linear_PAE(laddr, lpf_mask, user, rw);
       else
 #endif 
-        paddress = translate_linear_legacy(laddr, lpf_mask, combined_access, user, rw);
+        paddress = translate_linear_legacy(laddr, lpf_mask, user, rw);
+
+    combined_access = paddress & lpf_mask;
+    paddress = (paddress & ~((Bit64u) lpf_mask)) | (laddr & lpf_mask);
 
 #if BX_CPU_LEVEL >= 5
     if (lpf_mask > 0xfff)
