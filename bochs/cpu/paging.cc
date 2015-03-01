@@ -1840,12 +1840,19 @@ void dbg_print_ept_paging_pte(int level, Bit64u entry)
   else
     dbg_printf("   ");
 
-  dbg_printf(" %s %s %s %s %s\n",
-    (entry & 0x40) ? "IGNORE_PAT" : "ignore_pat",
-    get_memtype_name(BxMemType((entry >> 3) & 0x7)),
+  dbg_printf(" %s %s %s",
     (entry & 0x04) ? "E" : "e",
     (entry & 0x02) ? "W" : "w",
     (entry & 0x01) ? "R" : "r");
+
+  if (level == BX_LEVEL_PTE || (entry & 0x80)) {
+    dbg_printf(" %s %s\n",
+      (entry & 0x40) ? "IGNORE_PAT" : "ignore_pat",
+      get_memtype_name(BxMemtype((entry >> 3) & 0x7)));
+  }
+  else {
+    dbg_printf("\n");
+  }
 }
 #endif
 
