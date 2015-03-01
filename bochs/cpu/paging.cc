@@ -645,6 +645,17 @@ int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsi
   return -1;
 }
 
+#if BX_SUPPORT_MEMTYPE
+// extract PCD, PWT and PAT pat bits from page table entry
+BX_CPP_INLINE Bit32u calculate_pat(Bit32u entry, Bit32u lpf_mask)
+{
+  Bit32u pcd_pwt = (entry >> 3) & 0x3; // PCD, PWT are stored in bits 3 and 4
+  // PAT is stored in bit 12 for large pages and in bit 7 for small pages
+  Bit32u pat = ((lpf_mask < 0x1000) ? (entry >> 7) : (entry >> 12)) & 0x1;
+  return (pcd_pwt | pat << 2);
+}
+#endif
+
 #if BX_SUPPORT_X86_64
 
 // Translate a linear address to a physical address in long mode
@@ -731,7 +742,9 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
   if (BX_CPU_THIS_PTR cr4.get_PGE())
     combined_access |= (entry[leaf] & 0x100); // G
 
-  combined_access |= (entry[leaf] & 0x98); // PWT, PCD, PAT
+#if BX_SUPPORT_MEMTYPE
+  combined_access |= (memtype_by_pat(calculate_pat((Bit32u) entry[leaf], lpf_mask)) << 9);
+#endif
 
   // Update A/D bits if needed
   update_access_dirty_PAE(entry_addr, entry, BX_LEVEL_PML4, leaf, isWrite);
@@ -945,7 +958,9 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
   if (BX_CPU_THIS_PTR cr4.get_PGE())
     combined_access |= (entry[leaf] & 0x100); // G
 
-  combined_access |= (entry[leaf] & 0x98); // PWT, PCD, PAT
+#if BX_SUPPORT_MEMTYPE
+  combined_access |= (memtype_by_pat(calculate_pat((Bit32u) entry[leaf], lpf_mask)) << 9);
+#endif
 
   // Update A/D bits if needed
   update_access_dirty_PAE(entry_addr, entry, BX_LEVEL_PDE, leaf, isWrite);
@@ -1058,9 +1073,12 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
 
   if (BX_CPU_THIS_PTR cr4.get_PGE())
     combined_access |= (entry[leaf] & 0x100); // G
+
+#if BX_SUPPORT_MEMTYPE
+  combined_access |= (memtype_by_pat(calculate_pat(entry[leaf], lpf_mask)) << 9);
 #endif
 
-  combined_access |= (entry[leaf] & 0x98); // PWT, PCD, PAT
+#endif
 
   update_access_dirty(entry_addr, entry, leaf, isWrite);
 
@@ -1089,9 +1107,6 @@ void BX_CPU_C::update_access_dirty(bx_phy_address *entry_addr, Bit32u *entry, un
 // Translate a linear address to a physical address
 bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address laddr, unsigned user, unsigned rw)
 {
-  Bit32u lpf_mask = 0xfff; // 4K pages
-  Bit32u combined_access = 0x06;
-
 #if BX_SUPPORT_X86_64
   if (! long_mode()) laddr &= 0xffffffff;
 #endif
@@ -1120,12 +1135,13 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
 
   INC_TLB_STAT(tlbMisses);
 
+  Bit32u lpf_mask = 0xfff; // 4K pages
+  Bit32u combined_access = 0x06;
+
   if(BX_CPU_THIS_PTR cr0.get_PG())
   {
     BX_DEBUG(("page walk for address 0x" FMT_LIN_ADDRX, laddr));
 
-    // translate_linear functions return combined U/S, R/W bits, Global Page bit
-    // and also PWT/PCD/PAT bits in lower 12 bits of the physical address.
 #if BX_CPU_LEVEL >= 6
 #if BX_SUPPORT_X86_64
     if (long_mode())
@@ -1138,6 +1154,11 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
 #endif 
         paddress = translate_linear_legacy(laddr, lpf_mask, user, rw);
 
+    // translate_linear functions return combined U/S, R/W bits, Global Page bit
+    // and also effective page tables memory type in lower 12 bits of the physical address.
+    // Bit 1 - R/W bit
+    // Bit 2 - U/S bit
+    // Bit 9,10,11 - Effective Memory Table from page tables
     combined_access = paddress & lpf_mask;
     paddress = (paddress & ~((Bit64u) lpf_mask)) | (laddr & lpf_mask);
 
@@ -1149,6 +1170,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
   else {
     // no paging
     paddress = (bx_phy_address) laddr;
+    combined_access |= (BX_MEMTYPE_WB << 9); // act as memory type by paging is WB
   }
 
   // Calculate physical memory address and fill in TLB cache entry
@@ -1231,7 +1253,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
   }
 
 #if BX_SUPPORT_MEMTYPE
-  tlbEntry->memtype = resolve_memtype(tlbEntry->ppf);
+  tlbEntry->memtype = resolve_memtype(tlbEntry->ppf, combined_access >> 9 /* effective page tables memory type */);
 #endif
 
   return paddress;
@@ -1818,7 +1840,9 @@ void dbg_print_ept_paging_pte(int level, Bit64u entry)
   else
     dbg_printf("   ");
 
-  dbg_printf(" %s %s %s\n",
+  dbg_printf(" %s %s %s %s %s\n",
+    (entry & 0x40) ? "IGNORE_PAT" : "ignore_pat",
+    get_memtype_name(BxMemType((entry >> 3) & 0x7)),
     (entry & 0x04) ? "E" : "e",
     (entry & 0x02) ? "W" : "w",
     (entry & 0x01) ? "R" : "r");
