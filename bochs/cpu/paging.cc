@@ -1253,7 +1253,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
   }
 
 #if BX_SUPPORT_MEMTYPE
-  tlbEntry->memtype = resolve_memtype(tlbEntry->ppf, combined_access >> 9 /* effective page tables memory type */);
+  tlbEntry->memtype = resolve_memtype(memtype_by_mtrr(tlbEntry->ppf), combined_access >> 9 /* effective page tables memory type */);
 #endif
 
   return paddress;
@@ -1348,12 +1348,11 @@ BxMemtype BX_CPP_AttrRegparmN(1) BX_CPU_C::memtype_by_pat(unsigned pat)
   return (BxMemtype) BX_CPU_THIS_PTR msr.pat.ubyte(pat);
 }
 
-BxMemtype BX_CPP_AttrRegparmN(2) BX_CPU_C::resolve_memtype(bx_phy_address pAddr, BxMemtype pat_memtype)
+BxMemtype BX_CPP_AttrRegparmN(2) BX_CPU_C::resolve_memtype(BxMemtype mtrr_memtype, BxMemtype pat_memtype)
 {
   if (BX_CPU_THIS_PTR cr0.get_CD())
     return BX_MEMTYPE_UC;
 
-  unsigned mtrr_memtype = memtype_by_mtrr(pAddr);
   if (mtrr_memtype == BX_MEMTYPE_INVALID) // will result in ignore of MTRR memory type
     mtrr_memtype = BX_MEMTYPE_WB;
 
@@ -1368,7 +1367,7 @@ BxMemtype BX_CPP_AttrRegparmN(2) BX_CPU_C::resolve_memtype(bx_phy_address pAddr,
       return (mtrr_memtype < pat_memtype) ? mtrr_memtype : pat_memtype;
 
     case BX_MEMTYPE_WB:
-      return (mtrr_memtype < pat_memtype) ? mtrr_memtype : pat_memtype;
+      return mtrr_memtype;
 
     case BX_MEMTYPE_UC_WEAK:
       return (mtrr_memtype == BX_MEMTYPE_WC) ? BX_MEMTYPE_WC : BX_MEMTYPE_UC;

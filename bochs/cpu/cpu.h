@@ -4750,7 +4750,7 @@ public: // for now...
 #if BX_SUPPORT_MEMTYPE
   BX_SMF BxMemtype memtype_by_mtrr(bx_phy_address paddr) BX_CPP_AttrRegparmN(1);
   BX_SMF BxMemtype memtype_by_pat(unsigned pat) BX_CPP_AttrRegparmN(1);
-  BX_SMF BxMemtype resolve_memtype(bx_phy_address paddr, BxMemtype pat_memtype = BX_MEMTYPE_WB) BX_CPP_AttrRegparmN(2);
+  BX_SMF BxMemtype resolve_memtype(BxMemtype mtrr_memtype, BxMemtype pat_memtype = BX_MEMTYPE_WB) BX_CPP_AttrRegparmN(2);
 #endif
 
 #if BX_CPU_LEVEL >= 6
