@@ -178,7 +178,7 @@ void bx_speaker_c::init(void)
   if (!strcmp(mode, "sound")) {
     output_mode = BX_SPK_MODE_SOUND;
 #if BX_SUPPORT_SOUNDLOW
-    waveout = DEV_sound_get_waveout("default");
+    waveout = DEV_sound_get_waveout(0);
     if (waveout != NULL) {
       beep_active = 0;
       BX_INIT_MUTEX(beep_mutex);

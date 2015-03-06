@@ -229,17 +229,17 @@ void bx_es1370_c::init(void)
   BX_ES1370_THIS wavemode = SIM->get_param_enum("wavemode", base)->get();
 
   // always initialize lowlevel driver
-  BX_ES1370_WAVEOUT1 = DEV_sound_get_waveout("default");
+  BX_ES1370_WAVEOUT1 = DEV_sound_get_waveout(0);
   if (BX_ES1370_WAVEOUT1 == NULL) {
     BX_PANIC(("Couldn't initialize waveout driver"));
   }
   if (BX_ES1370_THIS wavemode & 2) {
-    BX_ES1370_WAVEOUT2 = DEV_sound_get_waveout("file");
+    BX_ES1370_WAVEOUT2 = DEV_sound_get_waveout(1);
     if (BX_ES1370_WAVEOUT2 == NULL) {
       BX_PANIC(("Couldn't initialize wave file driver"));
     }
   }
-  BX_ES1370_WAVEIN = DEV_sound_get_wavein("default");
+  BX_ES1370_WAVEIN = DEV_sound_get_wavein();
   if (BX_ES1370_WAVEIN == NULL) {
     BX_PANIC(("Couldn't initialize wavein driver"));
   }
@@ -382,7 +382,7 @@ void bx_es1370_c::runtime_config(void)
       BX_ES1370_THIS wavemode = SIM->get_param_enum("wavemode", base)->get();
       BX_ES1370_THIS s.dac_outputinit = (BX_ES1370_THIS wavemode & 1);
       if (BX_ES1370_THIS wavemode & 2) {
-        BX_ES1370_WAVEOUT2 = DEV_sound_get_waveout("file");
+        BX_ES1370_WAVEOUT2 = DEV_sound_get_waveout(1);
         if (BX_ES1370_WAVEOUT2 == NULL) {
           BX_PANIC(("Couldn't initialize wave file driver"));
         }

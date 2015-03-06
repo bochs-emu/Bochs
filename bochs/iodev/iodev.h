@@ -354,13 +354,13 @@ public:
 #if BX_SUPPORT_SOUNDLOW
 class BOCHSAPI bx_soundmod_ctl_stub_c : public bx_devmodel_c {
 public:
-  virtual bx_soundlow_waveout_c* get_waveout(const char *driver) {
+  virtual bx_soundlow_waveout_c* get_waveout(bx_bool using_file) {
     STUBFUNC(soundmod_ctl, get_waveout); return NULL;
   }
-  virtual bx_soundlow_wavein_c* get_wavein(const char *driver) {
+  virtual bx_soundlow_wavein_c* get_wavein() {
     STUBFUNC(soundmod_ctl, get_wavein); return NULL;
   }
-  virtual bx_soundlow_midiout_c* get_midiout(const char *driver) {
+  virtual bx_soundlow_midiout_c* get_midiout(bx_bool using_file) {
     STUBFUNC(soundmod_ctl, get_midiout); return NULL;
   }
 };

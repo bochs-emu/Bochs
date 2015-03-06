@@ -31,9 +31,9 @@ public:
   bx_soundmod_ctl_c();
   virtual ~bx_soundmod_ctl_c();
   virtual void init(void);
-  virtual bx_soundlow_waveout_c* get_waveout(const char *driver);
-  virtual bx_soundlow_wavein_c* get_wavein(const char *driver);
-  virtual bx_soundlow_midiout_c* get_midiout(const char *driver);
+  virtual bx_soundlow_waveout_c* get_waveout(bx_bool using_file);
+  virtual bx_soundlow_wavein_c* get_wavein();
+  virtual bx_soundlow_midiout_c* get_midiout(bx_bool using_file);
 
 private:
   bx_sound_lowlevel_c* get_driver(int driver_id);

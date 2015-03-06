@@ -256,7 +256,7 @@ extern "C" {
 
 ///////// Sound module macros
 #define DEV_sound_get_waveout(a) (bx_devices.pluginSoundModCtl->get_waveout(a))
-#define DEV_sound_get_wavein(a) (bx_devices.pluginSoundModCtl->get_wavein(a))
+#define DEV_sound_get_wavein() (bx_devices.pluginSoundModCtl->get_wavein())
 #define DEV_sound_get_midiout(a) (bx_devices.pluginSoundModCtl->get_midiout(a))
 
 ///////// Networking module macro

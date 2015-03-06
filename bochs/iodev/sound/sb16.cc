@@ -255,7 +255,7 @@ void bx_sb16_c::init(void)
   BX_SB16_THIS loglevel = SIM->get_param_num("loglevel", base)->get();
 
   // always initialize lowlevel driver
-  BX_SB16_WAVEOUT1 = DEV_sound_get_waveout("default");
+  BX_SB16_WAVEOUT1 = DEV_sound_get_waveout(0);
   if (BX_SB16_WAVEOUT1 == NULL) {
     BX_PANIC(("Couldn't initialize waveout driver"));
     BX_SB16_THIS wavemode &= ~1;
@@ -263,21 +263,21 @@ void bx_sb16_c::init(void)
     BX_SB16_THIS fmopl_callback_id = BX_SB16_WAVEOUT1->register_wave_callback(BX_SB16_THISP, fmopl_callback);
   }
   if (BX_SB16_THIS wavemode & 2) {
-    BX_SB16_WAVEOUT2 = DEV_sound_get_waveout("file");
+    BX_SB16_WAVEOUT2 = DEV_sound_get_waveout(1);
     if (BX_SB16_WAVEOUT2 == NULL) {
       BX_PANIC(("Couldn't initialize wave file driver"));
     }
   }
-  BX_SB16_WAVEIN = DEV_sound_get_wavein("default");
+  BX_SB16_WAVEIN = DEV_sound_get_wavein();
   if (BX_SB16_WAVEIN == NULL) {
     BX_PANIC(("Couldn't initialize wavein driver"));
   }
-  BX_SB16_MIDIOUT1 = DEV_sound_get_midiout("default");
+  BX_SB16_MIDIOUT1 = DEV_sound_get_midiout(0);
   if (BX_SB16_MIDIOUT1 == NULL) {
     BX_PANIC(("Couldn't initialize midiout driver"));
   }
   if (BX_SB16_THIS midimode & 2) {
-    BX_SB16_MIDIOUT2 = DEV_sound_get_midiout("file");
+    BX_SB16_MIDIOUT2 = DEV_sound_get_midiout(1);
     if (BX_SB16_MIDIOUT2 == NULL) {
       BX_PANIC(("Couldn't initialize midi file driver"));
     }
@@ -542,7 +542,7 @@ void bx_sb16_c::runtime_config(void)
     if (BX_SB16_THIS midi_changed & 1) {
       BX_SB16_THIS midimode = SIM->get_param_num("midimode", base)->get();
       if (BX_SB16_THIS midimode & 2) {
-        BX_SB16_MIDIOUT2 = DEV_sound_get_midiout("file");
+        BX_SB16_MIDIOUT2 = DEV_sound_get_midiout(1);
         if (BX_SB16_MIDIOUT2 == NULL) {
           BX_PANIC(("Couldn't initialize midi file driver"));
         }
@@ -559,7 +559,7 @@ void bx_sb16_c::runtime_config(void)
       BX_SB16_THIS wavemode = SIM->get_param_enum("wavemode", base)->get();
       DSP.outputinit = (BX_SB16_THIS wavemode & 1);
       if (BX_SB16_THIS wavemode & 2) {
-        BX_SB16_WAVEOUT2 = DEV_sound_get_waveout("file");
+        BX_SB16_WAVEOUT2 = DEV_sound_get_waveout(1);
         if (BX_SB16_WAVEOUT2 == NULL) {
           BX_PANIC(("Couldn't initialize wave file driver"));
         }

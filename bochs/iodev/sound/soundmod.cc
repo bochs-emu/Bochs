@@ -79,24 +79,21 @@ bx_soundmod_ctl_c::~bx_soundmod_ctl_c()
 
 void bx_soundmod_ctl_c::init()
 {
-  bx_param_enum_c *driver = SIM->get_param_enum(BXPN_SOUND_DRIVER);
-  int ret;
   const char *pwaveout = SIM->get_param_string(BXPN_SOUND_WAVEOUT)->getptr();
   const char *pwavein = SIM->get_param_string(BXPN_SOUND_WAVEIN)->getptr();
+  int ret;
 
-  if (get_driver(driver->get()) != NULL) {
+  waveout = get_waveout(0);
+  if (waveout != NULL) {
     if (!strlen(pwavein)) {
       SIM->get_param_string(BXPN_SOUND_WAVEIN)->set(pwaveout);
     }
-    waveout = soundmod[0].module->get_waveout();
-    if (waveout != NULL) {
-      ret = waveout->openwaveoutput(pwaveout);
-      if (ret != BX_SOUNDLOW_OK) {
-        BX_PANIC(("Could not open wave output device"));
-      }
-    } else {
-      BX_PANIC(("no waveout support in sound driver '%s'", driver->get_selected());
+    ret = waveout->openwaveoutput(pwaveout);
+    if (ret != BX_SOUNDLOW_OK) {
+      BX_PANIC(("Could not open wave output device"));
     }
+  } else {
+    BX_PANIC(("no waveout support present"));
   }
 }
 
@@ -106,7 +103,7 @@ bx_sound_lowlevel_c* bx_soundmod_ctl_c::get_driver(int driver_id)
   unsigned i;
 
   for (i = 0; i < n_sound_drivers; i++) {
-    if (driver_id == soundmod[i].drv_id)) {
+    if (driver_id == soundmod[i].drv_id) {
       return soundmod[i].module;
     }
   }
@@ -151,13 +148,14 @@ bx_sound_lowlevel_c* bx_soundmod_ctl_c::get_driver(int driver_id)
   return driver;
 }
 
-bx_soundlow_waveout_c* bx_soundmod_ctl_c::get_waveout(const char *driver)
+bx_soundlow_waveout_c* bx_soundmod_ctl_c::get_waveout(bx_bool using_file)
 {
   bx_sound_lowlevel_c *module = NULL;
 
-  if (!strcmp(driver, "default")) {
-    module = soundmod[0].module;
-  } else if (!strcmp(driver, "file")) {
+  if (!using_file) {
+    int driver_id = SIM->get_param_enum(BXPN_SOUND_WAVEOUT_DRV)->get();
+    module = get_driver(driver_id);
+  } else {
     module = get_driver(BX_SOUNDDRV_FILE);
   }
   if (module != NULL) {
@@ -167,13 +165,12 @@ bx_soundlow_waveout_c* bx_soundmod_ctl_c::get_waveout(const char *driver)
   }
 }
 
-bx_soundlow_wavein_c* bx_soundmod_ctl_c::get_wavein(const char *driver)
+bx_soundlow_wavein_c* bx_soundmod_ctl_c::get_wavein()
 {
   bx_sound_lowlevel_c *module = NULL;
 
-  if (!strcmp(driver, "default")) {
-    module = soundmod[0].module;
-  }
+  int driver_id = SIM->get_param_enum(BXPN_SOUND_WAVEIN_DRV)->get();
+  module = get_driver(driver_id);
   if (module != NULL) {
     return module->get_wavein();
   } else {
@@ -181,13 +178,14 @@ bx_soundlow_wavein_c* bx_soundmod_ctl_c::get_wavein(const char *driver)
   }
 }
 
-bx_soundlow_midiout_c* bx_soundmod_ctl_c::get_midiout(const char *driver)
+bx_soundlow_midiout_c* bx_soundmod_ctl_c::get_midiout(bx_bool using_file)
 {
   bx_sound_lowlevel_c *module = NULL;
 
-  if (!strcmp(driver, "default")) {
-    module = soundmod[0].module;
-  } else if (!strcmp(driver, "file")) {
+  if (!using_file) {
+    int driver_id = SIM->get_param_enum(BXPN_SOUND_MIDIOUT_DRV)->get();
+    module = get_driver(driver_id);
+  } else {
     module = get_driver(BX_SOUNDDRV_FILE);
   }
   if (module != NULL) {

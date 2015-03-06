@@ -1506,9 +1506,9 @@ void bx_init_options()
 
 #if BX_SUPPORT_SOUNDLOW
   bx_param_enum_c *driver = new bx_param_enum_c(soundlow,
-    "driver",
-    "Sound driver",
-    "This is the lowlevel driver to use for emulated sound devices",
+    "waveoutdrv",
+    "Waveout driver",
+    "This is the waveout driver to use for emulated sound devices",
     sound_driver_names,
     BX_SOUNDDRV_DUMMY,
     BX_SOUNDDRV_DUMMY);
@@ -1518,11 +1518,27 @@ void bx_init_options()
     "Wave output device",
     "This is the device where the wave output is sent to",
     "", BX_PATHNAME_LEN);
+  driver = new bx_param_enum_c(soundlow,
+    "waveindrv",
+    "Wavein driver",
+    "This is the wavein driver to use for emulated sound devices",
+    sound_driver_names,
+    BX_SOUNDDRV_DUMMY,
+    BX_SOUNDDRV_DUMMY);
+  driver->set_by_name(BX_SOUND_LOWLEVEL_NAME);
   new bx_param_filename_c(soundlow,
     "wavein",
     "Wave input device",
     "This is the device to be used as the wave input source",
     "", BX_PATHNAME_LEN);
+  driver = new bx_param_enum_c(soundlow,
+    "midioutdrv",
+    "Midiout driver",
+    "This is the midiout driver to use for emulated sound devices",
+    sound_driver_names,
+    BX_SOUNDDRV_DUMMY,
+    BX_SOUNDDRV_DUMMY);
+  driver->set_by_name(BX_SOUND_LOWLEVEL_NAME);
   new bx_param_filename_c(soundlow,
     "midiout",
     "MIDI output device",
@@ -2884,9 +2900,18 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
   } else if (!strcmp(params[0], "sound")) {
 #if BX_SUPPORT_SOUNDLOW
+    static const char default_drv[] = BX_SOUND_LOWLEVEL_NAME;
+    const char *driver;
     for (i=1; i<num_params; i++) {
-      if (!strcmp(params[i], "driver=default")) {
-        SIM->get_param_enum(BXPN_SOUND_DRIVER)->set_by_name(BX_SOUND_LOWLEVEL_NAME);
+      if (!strncmp(params[i], "driver=", 7)) {
+        if (!strcmp(&params[i][7], "default")) {
+          driver = default_drv;
+        } else {
+          driver = &params[i][7];
+        }
+        SIM->get_param_enum(BXPN_SOUND_WAVEOUT_DRV)->set_by_name(driver);
+        SIM->get_param_enum(BXPN_SOUND_WAVEIN_DRV)->set_by_name(driver);
+        SIM->get_param_enum(BXPN_SOUND_MIDIOUT_DRV)->set_by_name(driver);
       } else if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param(BXPN_SOUNDLOW)) < 0) {
         BX_ERROR(("%s: unknown parameter for sound ignored.", context));
       }
