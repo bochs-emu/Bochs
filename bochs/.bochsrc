@@ -869,13 +869,39 @@ parport1: enabled=1, file="parport.out"
 
 #=======================================================================
 # SOUND:
-# This defines the lowlevel sound driver and the wave (PCM) input / output
-# devices and the MIDI output device to be used by sound emulation devices.
-# Possible values for the driver parameter are 'default' (platform default),
-# 'file' (output sent to files), 'dummy' (no input/output) and the
-# platform-dependant drivers 'alsa', 'oss', 'osx', 'sdl' and 'win'.
-# For some drivers the device names must be specified. If the 'wavein'
-# parameter is not set, Bochs uses the 'waveout' device for input, too.
+# This defines the lowlevel sound driver(s) for the wave (PCM) input / output
+# and the MIDI output feature and (if necessary) the devices to be used.
+# It can have several of the following properties.
+# All properties are in the format sound: property=value
+#
+# waveoutdrv:
+#      This defines the driver to be used for the waveout feature.
+#      Possible values are 'file' (all wave data sent to file), 'dummy' (no
+#      output) and the platform-dependant drivers 'alsa', 'oss', 'osx', 'sdl'
+#      and 'win'.
+# waveout:
+#      This defines the device to be used for wave output (if necessary) or
+#      the output file for the 'file' driver.
+# waveindrv:
+#      This defines the driver to be used for the wavein feature.
+#      Possible values are 'dummy' (recording silence) and platform-dependent
+#      drivers 'alsa', 'oss' and 'win'.
+# wavein:
+#      This defines the device to be used for wave output (if necessary).
+# midioutdrv:
+#      This defines the driver to be used for the MIDI output feature.
+#      Possible values are 'file' (all MIDI data sent to file), 'dummy' (no
+#      output) and platform-dependent drivers 'alsa', 'oss', 'osx' and 'win'.
+# midiout:
+#      This defines the device to be used for MIDI output (if necessary).
+# driver:
+#      This defines the driver to be used for all sound features with one
+#      property. Possible values are 'default' (platform default) and all
+#      other choices described above. Overriding one or more settings with
+#      the specific driver parameter is possible.
+#
+# Examples for different drivers:
+#   sound: waveoutdrv=sdl, waveindrv=alsa, midioutdrv=dummy
 #=======================================================================
 sound: driver=default, waveout=/dev/dsp. wavein=, midiout=
 
@@ -895,6 +921,7 @@ speaker: enabled=1, mode=sound
 # This defines the SB16 sound emulation. It can have several of the
 # following properties.
 # All properties are in the format sb16: property=value
+#
 # enabled:
 #      This optional property controls the presence of the SB16 emulation.
 #      The emulation is turned on unless this property is used and set to 0.
@@ -923,11 +950,11 @@ speaker: enabled=1, mode=sound
 #      non-continuous sound.  750000 is usually a good value.  This needs a
 #      reasonably correct setting for the IPS parameter of the CPU option.
 #
-# Examples for output devices:
-#   sb16: midimode=1, midi="", wavemode=1, wave=""    # win32
-#   sb16: midimode=1, midi=128:0, wavemode=1, wave="" # Linux with ALSA
+# Examples for output modes:
+#   sb16: midimode=2, midi="output.mid", wavemode=1 # MIDI to file
+#   sb16: midimode=1, wavemode=3, wave="output.wav" # wave to file and device
 #=======================================================================
-#sb16: midimode=1, midi=/dev/midi00, wavemode=1, wave=/dev/dsp, loglevel=2, log=sb16.log, dmatimer=600000
+#sb16: midimode=1, wavemode=1, loglevel=2, log=sb16.log, dmatimer=600000
 
 #=======================================================================
 # ES1370:

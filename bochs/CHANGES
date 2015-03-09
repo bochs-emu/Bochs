@@ -33,6 +33,7 @@ Changes after 2.6.7 release:
       - PCM format conversion to 16 bit signed little endian.
       - Added sound 'file' module for VOC, WAV, MID and raw data output
         and added dual output support (device+file) in midi/wave mode 3.
+      - Added capability to set up the sound driver per service.
   - Floppy
     - Fixed "Read ID" command for single-sided media (patch by Ben Lunt).
 
