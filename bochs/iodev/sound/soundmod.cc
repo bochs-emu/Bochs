@@ -112,7 +112,7 @@ bx_sound_lowlevel_c* bx_soundmod_ctl_c::get_driver(int driver_id)
     return NULL;
   }
   if (driver_id == BX_SOUNDDRV_DUMMY) {
-    driver = new bx_sound_lowlevel_c();
+    driver = new bx_sound_dummy_c();
   } else if (driver_id == BX_SOUNDDRV_FILE) {
     driver = new bx_sound_file_c();
 #if BX_HAVE_SOUND_ALSA
@@ -168,19 +168,27 @@ bx_soundlow_waveout_c* bx_soundmod_ctl_c::get_waveout(bx_bool using_file)
 bx_soundlow_wavein_c* bx_soundmod_ctl_c::get_wavein()
 {
   bx_sound_lowlevel_c *module = NULL;
+  bx_soundlow_wavein_c *wavein = NULL;
 
   int driver_id = SIM->get_param_enum(BXPN_SOUND_WAVEIN_DRV)->get();
   module = get_driver(driver_id);
   if (module != NULL) {
-    return module->get_wavein();
-  } else {
-    return NULL;
+    wavein = module->get_wavein();
+    if (wavein == NULL) {
+      BX_ERROR(("sound service 'wavein' not available - using dummy driver"));
+      module = get_driver(BX_SOUNDDRV_DUMMY);
+      if (module != NULL) {
+        wavein = module->get_wavein();
+      }
+    }
   }
+  return wavein;
 }
 
 bx_soundlow_midiout_c* bx_soundmod_ctl_c::get_midiout(bx_bool using_file)
 {
   bx_sound_lowlevel_c *module = NULL;
+  bx_soundlow_midiout_c *midiout = NULL;
 
   if (!using_file) {
     int driver_id = SIM->get_param_enum(BXPN_SOUND_MIDIOUT_DRV)->get();
@@ -189,10 +197,16 @@ bx_soundlow_midiout_c* bx_soundmod_ctl_c::get_midiout(bx_bool using_file)
     module = get_driver(BX_SOUNDDRV_FILE);
   }
   if (module != NULL) {
-    return module->get_midiout();
-  } else {
-    return NULL;
+    midiout = module->get_midiout();
+    if (midiout == NULL) {
+      BX_ERROR(("sound service 'midiout' not available - using dummy driver"));
+      module = get_driver(BX_SOUNDDRV_DUMMY);
+      if (module != NULL) {
+        midiout = module->get_midiout();
+      }
+    }
   }
+  return midiout;
 }
 
 #endif

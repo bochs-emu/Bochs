@@ -443,7 +443,6 @@ int bx_soundlow_midiout_c::closemidioutput()
 }
 
 // bx_sound_lowlevel_c class implemenzation
-// This is the base class of the sound lowlevel support.
 
 bx_sound_lowlevel_c::bx_sound_lowlevel_c()
 {
@@ -466,7 +465,9 @@ bx_sound_lowlevel_c::~bx_sound_lowlevel_c()
   }
 }
 
-bx_soundlow_waveout_c* bx_sound_lowlevel_c::get_waveout()
+// bx_sound_dummy_c class implemenzation
+
+bx_soundlow_waveout_c* bx_sound_dummy_c::get_waveout()
 {
   if (waveout == NULL) {
     waveout = new bx_soundlow_waveout_c();
@@ -474,7 +475,7 @@ bx_soundlow_waveout_c* bx_sound_lowlevel_c::get_waveout()
   return waveout;
 }
 
-bx_soundlow_wavein_c* bx_sound_lowlevel_c::get_wavein()
+bx_soundlow_wavein_c* bx_sound_dummy_c::get_wavein()
 {
   if (wavein == NULL) {
     wavein = new bx_soundlow_wavein_c();
@@ -482,7 +483,7 @@ bx_soundlow_wavein_c* bx_sound_lowlevel_c::get_wavein()
   return wavein;
 }
 
-bx_soundlow_midiout_c* bx_sound_lowlevel_c::get_midiout()
+bx_soundlow_midiout_c* bx_sound_dummy_c::get_midiout()
 {
   if (midiout == NULL) {
     midiout = new bx_soundlow_midiout_c();

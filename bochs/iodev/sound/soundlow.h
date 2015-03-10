@@ -127,6 +127,7 @@ public:
   virtual int closemidioutput();
 };
 
+// This is the base class of the sound lowlevel support.
 // the lowlevel sound driver class returns pointers to the child objects
 
 class bx_sound_lowlevel_c : public logfunctions {
@@ -134,12 +135,24 @@ public:
   bx_sound_lowlevel_c();
   virtual ~bx_sound_lowlevel_c();
 
-  virtual bx_soundlow_waveout_c* get_waveout();
-  virtual bx_soundlow_wavein_c* get_wavein();
-  virtual bx_soundlow_midiout_c* get_midiout();
+  virtual bx_soundlow_waveout_c* get_waveout() {return NULL;}
+  virtual bx_soundlow_wavein_c* get_wavein() {return NULL;}
+  virtual bx_soundlow_midiout_c* get_midiout() {return NULL;}
 
 protected:
   bx_soundlow_waveout_c *waveout;
   bx_soundlow_wavein_c *wavein;
   bx_soundlow_midiout_c *midiout;
+};
+
+// the dummy sound driver contains stubs for all features
+
+class bx_sound_dummy_c : public bx_sound_lowlevel_c {
+public:
+  bx_sound_dummy_c() {}
+  virtual ~bx_sound_dummy_c() {}
+
+  virtual bx_soundlow_waveout_c* get_waveout();
+  virtual bx_soundlow_wavein_c* get_wavein();
+  virtual bx_soundlow_midiout_c* get_midiout();
 };
