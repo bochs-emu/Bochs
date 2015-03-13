@@ -1539,24 +1539,39 @@ void adlib_register_state(bx_list_c *parent)
     new bx_shadow_num_c(opX, "tcount", &op[i].tcount);
     new bx_shadow_num_c(opX, "wfpos", &op[i].wfpos);
     new bx_shadow_num_c(opX, "tinc", &op[i].tinc);
+    new bx_shadow_num_c(opX, "amp", &op[i].amp);
+    new bx_shadow_num_c(opX, "step_amp", &op[i].step_amp);
+    new bx_shadow_num_c(opX, "vol", &op[i].vol);
+    new bx_shadow_num_c(opX, "sustain_level", &op[i].sustain_level);
     new bx_shadow_num_c(opX, "mfbi", &op[i].mfbi);
+    new bx_shadow_num_c(opX, "a0", &op[i].a0);
+    new bx_shadow_num_c(opX, "a1", &op[i].a1);
+    new bx_shadow_num_c(opX, "a2", &op[i].a2);
+    new bx_shadow_num_c(opX, "a3", &op[i].a3);
+    new bx_shadow_num_c(opX, "decaymul", &op[i].decaymul);
+    new bx_shadow_num_c(opX, "releasemul", &op[i].releasemul);
     new bx_shadow_num_c(opX, "op_state", &op[i].op_state);
     new bx_shadow_num_c(opX, "toff", &op[i].toff);
     new bx_shadow_num_c(opX, "freq_high", &op[i].freq_high);
+    // TODO: cur_wform
     new bx_shadow_num_c(opX, "cur_wmask", &op[i].cur_wmask);
     new bx_shadow_num_c(opX, "act_state", &op[i].act_state);
     new bx_shadow_bool_c(opX, "sys_keep", &op[i].sus_keep);
     new bx_shadow_bool_c(opX, "vibrato", &op[i].vibrato);
     new bx_shadow_bool_c(opX, "tremolo", &op[i].tremolo);
     new bx_shadow_num_c(opX, "generator_pos", &op[i].generator_pos);
+    new bx_shadow_num_c(opX, "cur_env_step", &op[i].cur_env_step);
+    new bx_shadow_num_c(opX, "env_step_a", &op[i].env_step_a);
+    new bx_shadow_num_c(opX, "env_step_d", &op[i].env_step_d);
+    new bx_shadow_num_c(opX, "env_step_r", &op[i].env_step_r);
     new bx_shadow_num_c(opX, "step_skip_pos_a", &op[i].step_skip_pos_a);
+    new bx_shadow_num_c(opX, "env_step_skip_a", &op[i].env_step_skip_a);
 #if defined(OPLTYPE_IS_OPL3)
     new bx_shadow_bool_c(opX, "is_4op", &op[i].is_4op);
     new bx_shadow_bool_c(opX, "is_4op_attached", &op[i].is_4op_attached);
     new bx_shadow_num_c(opX, "left_pan", &op[i].left_pan);
     new bx_shadow_num_c(opX, "right_pan", &op[i].right_pan);
 #endif
-    // TODO: add more internal settings (other variable types)
   }
 }
 

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010-2013  The Bochs Project
+//  Copyright (C) 2010-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -89,6 +89,7 @@ public:
 
 #define BASE_DEC 10
 #define BASE_HEX 16
+#define BASE_DOUBLE 64
 
 class BOCHSAPI bx_param_c : public bx_object_c {
   BOCHSAPI_CYGONLY static const char *default_text_format;
@@ -168,7 +169,8 @@ protected:
     Bit64s *p64bit;  // used by bx_shadow_num_c
     Bit32s *p32bit;  // used by bx_shadow_num_c
     Bit16s *p16bit;  // used by bx_shadow_num_c
-    Bit8s  *p8bit;    // used by bx_shadow_num_c
+    Bit8s  *p8bit;   // used by bx_shadow_num_c
+    double *pdouble; // used by bx_shadow_num_c
     bx_bool *pbool;  // used by bx_shadow_bool_c
   } val;
   param_event_handler handler;
@@ -271,6 +273,9 @@ public:
       int base = BASE_DEC,
       Bit8u highbit = 7,
       Bit8u lowbit = 0);
+  bx_shadow_num_c(bx_param_c *parent,
+      const char *name,
+      double *ptr_to_real_val);
   virtual Bit64s get64();
   virtual void set(Bit64s val);
   virtual void reset();
