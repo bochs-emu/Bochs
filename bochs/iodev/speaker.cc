@@ -47,10 +47,32 @@
 
 bx_speaker_c *theSpeaker= NULL;
 
-#define BX_SPK_MODE_NONE   0
-#define BX_SPK_MODE_SOUND  1
-#define BX_SPK_MODE_SYSTEM 2
-#define BX_SPK_MODE_GUI    3
+#if defined(__linux__) || defined(WIN32)
+#define BX_SYSTEM_SPEAKER
+#endif
+
+enum {
+  BX_SPK_MODE_NONE,
+#if BX_SUPPORT_SOUNDLOW
+  BX_SPK_MODE_SOUND,
+#endif
+#ifdef BX_SYSTEM_SPEAKER
+  BX_SPK_MODE_SYSTEM,
+#endif
+  BX_SPK_MODE_GUI
+};
+
+static const char *speaker_mode_list[] = {
+  "none",
+#if BX_SUPPORT_SOUNDLOW
+  "sound",
+#endif
+#ifdef BX_SYSTEM_SPEAKER
+  "system",
+#endif
+  "gui",
+  NULL
+};
 
 #if BX_SUPPORT_SOUNDLOW
 BX_MUTEX(beep_mutex);
@@ -62,25 +84,14 @@ Bit32u beep_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
 
 void speaker_init_options(void)
 {
-  static const char *speaker_mode_list[] = {
-#if BX_SUPPORT_SOUNDLOW
-    "sound",
-#endif
-#if defined(__linux__) || defined(WIN32)
-    "system",
-#endif
-    "gui",
-    NULL
-  };
-
   bx_list_c *sound = (bx_list_c*)SIM->get_param("sound");
   bx_list_c *menu = new bx_list_c(sound, "speaker", "PC speaker output configuration");
   menu->set_options(menu->SERIES_ASK);
   bx_param_bool_c *enabled = new bx_param_bool_c(menu, "enabled", "Enable speaker output",
       "Enables the PC speaker output", 1);
   bx_param_enum_c *mode = new bx_param_enum_c(menu, "mode", "Speaker output mode",
-      "The mode can be one these: 'sound', 'system' or 'gui'",
-      speaker_mode_list, 0, 0);
+      "The mode can be one these: 'none', 'sound', 'system' or 'gui'",
+      speaker_mode_list, 1, BX_SPK_MODE_NONE);
   mode->set_ask_format("Select speker output mode [%s] ");
   bx_list_c *deplist = new bx_list_c(NULL);
   deplist->add(mode);
@@ -147,17 +158,23 @@ bx_speaker_c::bx_speaker_c()
 bx_speaker_c::~bx_speaker_c()
 {
   beep_off();
-#ifdef __linux__
-  if (consolefd >= 0) {
-    close(consolefd);
-  }
-#endif
+  switch (output_mode) {
 #if BX_SUPPORT_SOUNDLOW
-  beep_active = 0;
-  if (waveout != NULL) {
-    if (beep_callback_id >= 0) {
-      waveout->unregister_wave_callback(beep_callback_id);
-    }
+    case BX_SPK_MODE_SOUND:
+      beep_active = 0;
+      if (waveout != NULL) {
+        if (beep_callback_id >= 0) {
+          waveout->unregister_wave_callback(beep_callback_id);
+        }
+      }
+      break;
+#endif
+#ifdef __linux__
+    case BX_SPK_MODE_SYSTEM:
+      if (consolefd >= 0) {
+        close(consolefd);
+      }
+      break;
   }
 #endif
   BX_DEBUG(("Exit"));
@@ -174,39 +191,41 @@ void bx_speaker_c::init(void)
     ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("sb16"))->set(0);
     return;
   }
-  const char *mode = SIM->get_param_enum("mode", base)->get_selected();
-  if (!strcmp(mode, "sound")) {
-    output_mode = BX_SPK_MODE_SOUND;
+  output_mode = SIM->get_param_enum("mode", base)->get();
+  switch (output_mode) {
 #if BX_SUPPORT_SOUNDLOW
-    waveout = DEV_sound_get_waveout(0);
-    if (waveout != NULL) {
-      beep_active = 0;
-      BX_INIT_MUTEX(beep_mutex);
-      beep_callback_id = waveout->register_wave_callback(theSpeaker, beep_callback);
-      BX_INFO(("Using lowlevel sound support for output"));
-    } else {
-      BX_ERROR(("Failed to use lowlevel sound support for output"));
-      output_mode = BX_SPK_MODE_NONE;
-    }
+    case BX_SPK_MODE_SOUND:
+      waveout = DEV_sound_get_waveout(0);
+      if (waveout != NULL) {
+        beep_active = 0;
+        BX_INIT_MUTEX(beep_mutex);
+        beep_callback_id = waveout->register_wave_callback(theSpeaker, beep_callback);
+        BX_INFO(("Using lowlevel sound support for output"));
+      } else {
+        BX_ERROR(("Failed to use lowlevel sound support for output"));
+        output_mode = BX_SPK_MODE_NONE;
+      }
+      break;
 #endif
-  } else if (!strcmp(mode, "system")) {
-    output_mode = BX_SPK_MODE_SYSTEM;
+#ifdef BX_SYSTEM_SPEAKER
+    case BX_SPK_MODE_SYSTEM:
 #ifdef __linux__
-    consolefd = open("/dev/console", O_WRONLY);
-    if (consolefd != -1) {
-      BX_INFO(("Using /dev/console for output"));
-    } else {
-      BX_ERROR(("Failed to open /dev/console: %s", strerror(errno)));
-      BX_ERROR(("Deactivating beep on console"));
-    }
+      consolefd = open("/dev/console", O_WRONLY);
+      if (consolefd != -1) {
+        BX_INFO(("Using /dev/console for output"));
+      } else {
+        BX_ERROR(("Failed to open /dev/console: %s", strerror(errno)));
+        BX_ERROR(("Deactivating beep on console"));
+        output_mode = BX_SPK_MODE_NONE;
+      }
 #elif defined(WIN32)
-    BX_INFO(("Using system beep for output"));
+      BX_INFO(("Using system beep for output"));
 #endif
-  } else if (!strcmp(mode, "gui")) {
-    output_mode = BX_SPK_MODE_GUI;
-    BX_INFO(("Forwarding beep to gui"));
-  } else {
-    output_mode = BX_SPK_MODE_NONE;
+      break;
+#endif
+    case BX_SPK_MODE_GUI:
+      BX_INFO(("Forwarding beep to gui"));
+      break;
   }
 }
 
@@ -258,27 +277,33 @@ void bx_speaker_c::beep_on(float frequency)
   }
 #endif
 
-  if (output_mode == BX_SPK_MODE_SOUND) {
+  switch (output_mode) {
 #if BX_SUPPORT_SOUNDLOW
-    if ((waveout != NULL) && (frequency != beep_frequency)) {
-      BX_LOCK(beep_mutex);
-      beep_frequency = frequency;
-      beep_active = 1;
-      BX_UNLOCK(beep_mutex);
-    }
+    case BX_SPK_MODE_SOUND:
+      if ((waveout != NULL) && (frequency != beep_frequency)) {
+        BX_LOCK(beep_mutex);
+        beep_frequency = frequency;
+        beep_active = 1;
+        BX_UNLOCK(beep_mutex);
+      }
+      break;
 #endif
-  } else if (output_mode == BX_SPK_MODE_SYSTEM) {
+#ifdef BX_SYSTEM_SPEAKER
+    case BX_SPK_MODE_SYSTEM:
 #ifdef __linux__
-    if (consolefd != -1) {
-      BX_DEBUG(("PC speaker on with frequency %f", frequency));
-      ioctl(consolefd, KIOCSOUND, (int)(clock_tick_rate/frequency));
-    }
+      if (consolefd != -1) {
+        BX_DEBUG(("PC speaker on with frequency %f", frequency));
+        ioctl(consolefd, KIOCSOUND, (int)(clock_tick_rate/frequency));
+      }
 #elif defined(WIN32)
-    usec_start = bx_pc_system.time_usec();
+      usec_start = bx_pc_system.time_usec();
 #endif
-  } else if (output_mode == BX_SPK_MODE_GUI) {
-    // give the gui a chance to signal beep on
-    bx_gui->beep_on(frequency);
+      break;
+#endif
+    case BX_SPK_MODE_GUI:
+      // give the gui a chance to signal beep on
+      bx_gui->beep_on(frequency);
+      break;
   }
   beep_frequency = frequency;
 }
@@ -305,32 +330,38 @@ DWORD WINAPI BeepThread(LPVOID)
 
 void bx_speaker_c::beep_off()
 {
-  if (output_mode == BX_SPK_MODE_SOUND) {
+  switch (output_mode) {
 #if BX_SUPPORT_SOUNDLOW
-    if (waveout != NULL) {
-      BX_LOCK(beep_mutex);
-      beep_active = 0;
-      beep_frequency = 0.0;
-      BX_UNLOCK(beep_mutex);
-    }
-#endif
-  } else if (output_mode == BX_SPK_MODE_SYSTEM) {
-    if (beep_frequency != 0.0) {
-#ifdef __linux__
-      if (consolefd != -1) {
-        ioctl(consolefd, KIOCSOUND, 0);
+    case BX_SPK_MODE_SOUND:
+      if (waveout != NULL) {
+        BX_LOCK(beep_mutex);
+        beep_active = 0;
+        beep_frequency = 0.0;
+        BX_UNLOCK(beep_mutex);
       }
-#elif defined(WIN32)
-      // FIXME: sound should start at beep_on() and end here
-      DWORD threadID;
-      beep_info.msec = (DWORD)((bx_pc_system.time_usec() - usec_start) / 1000);
-      beep_info.frequency = (DWORD)beep_frequency;
-      CloseHandle(CreateThread(NULL, 0, BeepThread, NULL, 0, &threadID));
+      break;
 #endif
-    }
-  } else if (output_mode == BX_SPK_MODE_GUI) {
-    // give the gui a chance to signal beep off
-    bx_gui->beep_off();
+#ifdef BX_SYSTEM_SPEAKER
+    case BX_SPK_MODE_SYSTEM:
+      if (beep_frequency != 0.0) {
+#ifdef __linux__
+        if (consolefd != -1) {
+          ioctl(consolefd, KIOCSOUND, 0);
+        }
+#elif defined(WIN32)
+        // FIXME: sound should start at beep_on() and end here
+        DWORD threadID;
+        beep_info.msec = (DWORD)((bx_pc_system.time_usec() - usec_start) / 1000);
+        beep_info.frequency = (DWORD)beep_frequency;
+        CloseHandle(CreateThread(NULL, 0, BeepThread, NULL, 0, &threadID));
+#endif
+      }
+      break;
+#endif
+    case BX_SPK_MODE_GUI:
+      // give the gui a chance to signal beep off
+      bx_gui->beep_off();
+      break;
   }
   beep_frequency = 0.0;
 }
