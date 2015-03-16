@@ -151,8 +151,8 @@ bx_soundlow_waveout_c::~bx_soundlow_waveout_c()
     while (mixer_control >= 0) {
       BX_MSLEEP(1);
     }
+    BX_FINI_MUTEX(mixer_mutex);
   }
-  BX_FINI_MUTEX(mixer_mutex);
 }
 
 int bx_soundlow_waveout_c::openwaveoutput(const char *wavedev)
@@ -333,6 +333,7 @@ void bx_soundlow_waveout_c::start_mixer_thread()
 {
   BX_THREAD_ID(threadID);
 
+  BX_INIT_MUTEX(mixer_mutex);
   BX_THREAD_CREATE(mixer_thread, this, threadID);
 }
 

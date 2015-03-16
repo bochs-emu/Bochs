@@ -121,7 +121,6 @@ int bx_soundlow_waveout_alsa_c::openwaveoutput(const char *wavedev)
 {
   set_pcm_params(&real_pcm_param);
   pcm_callback_id = register_wave_callback(this, pcm_callback);
-  BX_INIT_MUTEX(mixer_mutex);
   start_mixer_thread();
   return BX_SOUNDLOW_OK;
 }
