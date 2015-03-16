@@ -175,8 +175,8 @@ bx_speaker_c::~bx_speaker_c()
         close(consolefd);
       }
       break;
-  }
 #endif
+  }
   BX_DEBUG(("Exit"));
 }
 
