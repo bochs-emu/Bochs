@@ -34,6 +34,8 @@
 
 #define LOG_THIS
 
+#define SOUNDWIN_PACKETS_PER_SEC 20
+
 // size is the total size of the midi header and buffer and the
 // wave header and buffer, all aligned on a 16-byte boundary
 
@@ -169,6 +171,11 @@ int bx_soundlow_waveout_win_c::set_pcm_params(bx_pcm_param_t *param)
   return BX_SOUNDLOW_OK;
 }
 
+int bx_soundlow_waveout_win_c::get_packetsize()
+{
+  return (real_pcm_param.samplerate * 4 / SOUNDWIN_PACKETS_PER_SEC);
+}
+
 int bx_soundlow_waveout_win_c::output(int length, Bit8u data[])
 {
   UINT ret;
@@ -193,7 +200,7 @@ int bx_soundlow_waveout_win_c::output(int length, Bit8u data[])
     waveOutGetErrorTextA(ret, errormsg, 4*MAXERRORLENGTH+1);
     BX_ERROR(("waveOutWrite(): %s", errormsg));
   }
-  Sleep(100);
+  Sleep(1000 / SOUNDWIN_PACKETS_PER_SEC);
 
   return BX_SOUNDLOW_OK;
 }
