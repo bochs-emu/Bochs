@@ -420,6 +420,7 @@ void change_waveform(Bitu regbase, op_type* op_pt)
   if (regbase>=ARC_SECONDSET) regbase -= (ARC_SECONDSET-22);  // second set starts at 22
 #endif
   // waveform selection
+  op_pt->cur_wvsel = wave_sel[regbase];
   op_pt->cur_wmask = wavemask[wave_sel[regbase]];
   op_pt->cur_wform = &wavtable[waveform[wave_sel[regbase]]];
   // (might need to be adapted to waveform type here...)
@@ -527,6 +528,7 @@ void adlib_init(Bit32u samplerate)
     op[i].tcount = 0;
     op[i].tinc = 0;
     op[i].toff = 0;
+    op[i].cur_wvsel = 0;
     op[i].cur_wmask = wavemask[0];
     op[i].cur_wform = &wavtable[waveform[0]];
     op[i].freq_high = 0;
@@ -1553,8 +1555,7 @@ void adlib_register_state(bx_list_c *parent)
     new bx_shadow_num_c(opX, "op_state", &op[i].op_state);
     new bx_shadow_num_c(opX, "toff", &op[i].toff);
     new bx_shadow_num_c(opX, "freq_high", &op[i].freq_high);
-    // TODO: cur_wform
-    new bx_shadow_num_c(opX, "cur_wmask", &op[i].cur_wmask);
+    new bx_shadow_num_c(opX, "cur_wvsel", &op[i].cur_wvsel);
     new bx_shadow_num_c(opX, "act_state", &op[i].act_state);
     new bx_shadow_bool_c(opX, "sys_keep", &op[i].sus_keep);
     new bx_shadow_bool_c(opX, "vibrato", &op[i].vibrato);
@@ -1572,6 +1573,18 @@ void adlib_register_state(bx_list_c *parent)
     new bx_shadow_num_c(opX, "left_pan", &op[i].left_pan);
     new bx_shadow_num_c(opX, "right_pan", &op[i].right_pan);
 #endif
+  }
+}
+
+void adlib_after_restore_state()
+{
+  int i;
+  Bit8u wvsel;
+
+  for (i = 0; i < MAXOPERATORS; i++) {
+    wvsel = op[i].cur_wvsel;
+    op[i].cur_wmask = wavemask[wvsel];
+    op[i].cur_wform = &wavtable[waveform[wvsel]];
   }
 }
 

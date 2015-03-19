@@ -141,6 +141,7 @@ typedef struct operator_struct {
   Bit32u op_state;         // current state of operator (attack/decay/sustain/release/off)
   Bit32u toff;
   Bit32s freq_high;        // highest three bits of the frequency, used for vibrato calculations
+  Bit8u cur_wvsel;         // register value of selected waveform
   Bit16s* cur_wform;       // start of selected waveform
   Bit32u cur_wmask;        // mask for selected waveform
   Bit32u act_state;        // activity state (regular, percussion)
@@ -210,6 +211,7 @@ Bitu adlib_reg_read(Bitu port);
 void adlib_write_index(Bitu port, Bit8u val);
 
 void adlib_register_state(bx_list_c *parent);
+void adlib_after_restore_state();
 
 extern Bit16u opl_index;
 

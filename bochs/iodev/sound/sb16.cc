@@ -526,6 +526,7 @@ void bx_sb16_c::register_state(void)
 void bx_sb16_c::after_restore_state(void)
 {
   set_irq_dma();
+  adlib_after_restore_state();
 }
 
 void bx_sb16_c::runtime_config_handler(void *this_ptr)
