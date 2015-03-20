@@ -9,7 +9,8 @@
  * Author: Sharvil Nanavati, for Net Integration Technologies, Inc.
  * Contact: snrrrub@yahoo.com
  *
- * Copyright (C) 2003 Net Integration Technologies, Inc.
+ * Copyright (C) 2003       Net Integration Technologies, Inc.
+ * Copyright (C) 2003-2015  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -35,6 +36,7 @@
 #include "config.h"
 #include "misc/bxcompat.h"
 #include "osdep.h"
+#include "misc/bswap.h"
 #else
 #include "iodev.h"
 #endif

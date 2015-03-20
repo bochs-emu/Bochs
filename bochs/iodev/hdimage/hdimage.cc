@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2014  The Bochs Project
+//  Copyright (C) 2002-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -28,6 +28,7 @@
 #include "config.h"
 #include "misc/bxcompat.h"
 #include "osdep.h"
+#include "misc/bswap.h"
 #else
 #include "iodev.h"
 #include "cdrom.h"

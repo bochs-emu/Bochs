@@ -9,8 +9,8 @@
  * Author: Sharvil Nanavati
  * Contact: snrrrub@gmail.com
  *
- * Copyright (C) 2006 Sharvil Nanavati.
- * Copyright (C) 2006-2013  The Bochs Project
+ * Copyright (C) 2006       Sharvil Nanavati.
+ * Copyright (C) 2006-2015  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,6 +36,7 @@
 #include "config.h"
 #include "misc/bxcompat.h"
 #include "osdep.h"
+#include "misc/bswap.h"
 #else
 #include "iodev.h"
 #endif
