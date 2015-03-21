@@ -700,7 +700,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
 #endif
 
 #if BX_SUPPORT_MEMTYPE
-    entry_memtype[leaf] = resolve_memtype(entry_addr[leaf], memtype_by_pat(calculate_pcd_pwt((Bit32u) curr_entry)));
+    entry_memtype[leaf] = resolve_memtype(memtype_by_mtrr(entry_addr[leaf]), memtype_by_pat(calculate_pcd_pwt((Bit32u) curr_entry)));
 #endif
     access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
     BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, entry_memtype[leaf], BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
@@ -927,7 +927,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
 #endif
 
 #if BX_SUPPORT_MEMTYPE
-    entry_memtype[leaf] = resolve_memtype(entry_addr[leaf], memtype_by_pat(calculate_pcd_pwt((Bit32u) curr_entry)));
+    entry_memtype[leaf] = resolve_memtype(memtype_by_mtrr(entry_addr[leaf]), memtype_by_pat(calculate_pcd_pwt((Bit32u) curr_entry)));
 #endif
     access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
     BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, entry_memtype[leaf], BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
@@ -1039,7 +1039,7 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
 #endif
 
 #if BX_SUPPORT_MEMTYPE
-    entry_memtype[leaf] = resolve_memtype(entry_addr[leaf], memtype_by_pat(calculate_pcd_pwt(curr_entry)));
+    entry_memtype[leaf] = resolve_memtype(memtype_by_mtrr(entry_addr[leaf]), memtype_by_pat(calculate_pcd_pwt(curr_entry)));
 #endif
     access_read_physical(entry_addr[leaf], 4, &entry[leaf]);
     BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 4, entry_memtype[leaf], BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
