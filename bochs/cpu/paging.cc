@@ -646,13 +646,19 @@ int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsi
 }
 
 #if BX_SUPPORT_MEMTYPE
+BX_CPP_INLINE Bit32u calculate_pcd_pwt(Bit32u entry)
+{
+  Bit32u pcd_pwt = (entry >> 3) & 0x3; // PCD, PWT are stored in bits 3 and 4
+  return pcd_pwt;
+}
+
 // extract PCD, PWT and PAT pat bits from page table entry
 BX_CPP_INLINE Bit32u calculate_pat(Bit32u entry, Bit32u lpf_mask)
 {
-  Bit32u pcd_pwt = (entry >> 3) & 0x3; // PCD, PWT are stored in bits 3 and 4
+  Bit32u pcd_pwt = calculate_pcd_pwt(entry);
   // PAT is stored in bit 12 for large pages and in bit 7 for small pages
   Bit32u pat = ((lpf_mask < 0x1000) ? (entry >> 7) : (entry >> 12)) & 0x1;
-  return (pcd_pwt | pat << 2);
+  return pcd_pwt | (pat << 2);
 }
 #endif
 
@@ -661,15 +667,19 @@ BX_CPP_INLINE Bit32u calculate_pat(Bit32u entry, Bit32u lpf_mask)
 // Translate a linear address to a physical address in long mode
 bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lpf_mask, unsigned user, unsigned rw)
 {
-  bx_phy_address entry_addr[4];
   bx_phy_address ppf = BX_CPU_THIS_PTR cr3 & BX_CR3_PAGING_MASK;
+
+  bx_phy_address entry_addr[4];
   Bit64u entry[4];
+  BxMemtype entry_memtype[4] = { 0 };
+
   bx_bool nx_fault = 0;
   int leaf;
 
   Bit64u offset_mask = BX_CONST64(0x0000ffffffffffff);
   lpf_mask = 0xfff;
   Bit32u combined_access = 0x06;
+  Bit64u curr_entry = BX_CPU_THIS_PTR cr3;
 
   Bit64u reserved = PAGING_PAE_RESERVED_BITS;
   if (! BX_CPU_THIS_PTR efer.get_NXE())
@@ -688,11 +698,16 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
       entry_addr[leaf] = nested_walk(entry_addr[leaf], BX_RW, 1);
     }
 #endif
+
+#if BX_SUPPORT_MEMTYPE
+    entry_memtype[leaf] = resolve_memtype(entry_addr[leaf], memtype_by_pat(calculate_pcd_pwt((Bit32u) curr_entry)));
+#endif
     access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, BX_MEMTYPE_INVALID, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
+    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, entry_memtype[leaf], BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
+
     offset_mask >>= 9;
 
-    Bit64u curr_entry = entry[leaf];
+    curr_entry = entry[leaf];
     int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, reserved, rw, &nx_fault);
     if (fault >= 0)
       page_fault(fault, laddr, user, rw);
@@ -747,21 +762,21 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
 #endif
 
   // Update A/D bits if needed
-  update_access_dirty_PAE(entry_addr, entry, BX_LEVEL_PML4, leaf, isWrite);
+  update_access_dirty_PAE(entry_addr, entry, entry_memtype, BX_LEVEL_PML4, leaf, isWrite);
 
   return (ppf | combined_access);
 }
 
 #endif
 
-void BX_CPU_C::update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry, unsigned max_level, unsigned leaf, unsigned write)
+void BX_CPU_C::update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry, BxMemtype *entry_memtype, unsigned max_level, unsigned leaf, unsigned write)
 {
   // Update A bit if needed
   for (unsigned level=max_level; level > leaf; level--) {
     if (!(entry[level] & 0x20)) {
       entry[level] |= 0x20;
       access_write_physical(entry_addr[level], 8, &entry[level]);
-      BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[level], 8, BX_MEMTYPE_INVALID, BX_WRITE,
+      BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[level], 8, entry_memtype[level], BX_WRITE,
             (BX_PTE_ACCESS + level), (Bit8u*)(&entry[level]));
     }
   }
@@ -770,7 +785,7 @@ void BX_CPU_C::update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry
   if (!(entry[leaf] & 0x20) || (write && !(entry[leaf] & 0x40))) {
     entry[leaf] |= (0x20 | (write<<6)); // Update A and possibly D bits
     access_write_physical(entry_addr[leaf], 8, &entry[leaf]);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, BX_MEMTYPE_INVALID, BX_WRITE,
+    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, entry_memtype[level], BX_WRITE,
             (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
   }
 }
@@ -882,6 +897,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
 {
   bx_phy_address entry_addr[2];
   Bit64u entry[2];
+  BxMemtype entry_memtype[2] = { 0 };
   bx_bool nx_fault = 0;
   int leaf;
 
@@ -894,6 +910,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
 
   Bit64u pdpte = translate_linear_load_PDPTR(laddr, user, rw);
   bx_phy_address ppf = pdpte & BX_CONST64(0x000ffffffffff000);
+  Bit64u curr_entry = pdpte;
 
   for (leaf = BX_LEVEL_PDE;; --leaf) {
     entry_addr[leaf] = ppf + ((laddr >> (9 + 9*leaf)) & 0xff8);
@@ -908,10 +925,14 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
       entry_addr[leaf] = nested_walk(entry_addr[leaf], BX_RW, 1);
     }
 #endif
-    access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, BX_MEMTYPE_INVALID, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
-    Bit64u curr_entry = entry[leaf];
+#if BX_SUPPORT_MEMTYPE
+    entry_memtype[leaf] = resolve_memtype(entry_addr[leaf], memtype_by_pat(calculate_pcd_pwt((Bit32u) curr_entry)));
+#endif
+    access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
+    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, entry_memtype[leaf], BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
+
+    curr_entry = entry[leaf];
     int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, reserved, rw, &nx_fault);
     if (fault >= 0)
       page_fault(fault, laddr, user, rw);
@@ -963,7 +984,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
 #endif
 
   // Update A/D bits if needed
-  update_access_dirty_PAE(entry_addr, entry, BX_LEVEL_PDE, leaf, isWrite);
+  update_access_dirty_PAE(entry_addr, entry, entry_memtype, BX_LEVEL_PDE, leaf, isWrite);
 
   return (ppf | combined_access);
 }
@@ -996,10 +1017,12 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
 {
   bx_phy_address entry_addr[2], ppf = (Bit32u) BX_CPU_THIS_PTR cr3 & BX_CR3_PAGING_MASK;
   Bit32u entry[2];
+  BxMemtype entry_memtype[2] = { 0 };
   int leaf;
 
   lpf_mask = 0xfff;
   Bit32u combined_access = 0x06;
+  Bit32u curr_entry = (Bit32u) BX_CPU_THIS_PTR cr3;
 
   for (leaf = BX_LEVEL_PDE;; --leaf) {
     entry_addr[leaf] = ppf + ((laddr >> (10 + 10*leaf)) & 0xffc);
@@ -1014,8 +1037,12 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
       entry_addr[leaf] = nested_walk(entry_addr[leaf], BX_RW, 1);
     }
 #endif
+
+#if BX_SUPPORT_MEMTYPE
+    entry_memtype[leaf] = resolve_memtype(entry_addr[leaf], memtype_by_pat(calculate_pcd_pwt(curr_entry)));
+#endif
     access_read_physical(entry_addr[leaf], 4, &entry[leaf]);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 4, BX_MEMTYPE_INVALID, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
+    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 4, entry_memtype[leaf], BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     Bit32u curr_entry = entry[leaf];
     if (!(curr_entry & 0x1)) {
@@ -1080,19 +1107,19 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
 
 #endif
 
-  update_access_dirty(entry_addr, entry, leaf, isWrite);
+  update_access_dirty(entry_addr, entry, entry_memtype, leaf, isWrite);
 
   return (ppf | combined_access);
 }
 
-void BX_CPU_C::update_access_dirty(bx_phy_address *entry_addr, Bit32u *entry, unsigned leaf, unsigned write)
+void BX_CPU_C::update_access_dirty(bx_phy_address *entry_addr, Bit32u *entry, BxMemtype *entry_memtype, unsigned leaf, unsigned write)
 {
   if (leaf == BX_LEVEL_PTE) {
     // Update PDE A bit if needed
     if (!(entry[BX_LEVEL_PDE] & 0x20)) {
       entry[BX_LEVEL_PDE] |= 0x20;
       access_write_physical(entry_addr[BX_LEVEL_PDE], 4, &entry[BX_LEVEL_PDE]);
-      BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[BX_LEVEL_PDE], 4, BX_MEMTYPE_INVALID, BX_WRITE, BX_PDE_ACCESS, (Bit8u*)(&entry[BX_LEVEL_PDE]));
+      BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[BX_LEVEL_PDE], 4, entry_memtype[BX_LEVEL_PDE], BX_WRITE, BX_PDE_ACCESS, (Bit8u*)(&entry[BX_LEVEL_PDE]));
     }
   }
 
@@ -1100,7 +1127,7 @@ void BX_CPU_C::update_access_dirty(bx_phy_address *entry_addr, Bit32u *entry, un
   if (!(entry[leaf] & 0x20) || (write && !(entry[leaf] & 0x40))) {
     entry[leaf] |= (0x20 | (write<<6)); // Update A and possibly D bits
     access_write_physical(entry_addr[leaf], 4, &entry[leaf]);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 4, BX_MEMTYPE_INVALID, BX_WRITE, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
+    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 4, entry_memtype[leaf], BX_WRITE, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
   }
 }
 
