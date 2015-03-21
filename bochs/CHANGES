@@ -2,6 +2,8 @@ Changes after 2.6.7 release:
 
 - CPU / CPUDB
   - Bugfixes for CPU emulation correctness (critical bugfix for x86-64 emulation)
+  - Memory type calculation support for Bochs debugger and instrumentation,
+    to enable configure with --enable-memtype option.
   - CPUDB: Added Pentium (P54C) configuration to CPUDB
   - CPUDB: Added Broadwell ULT configuration to CPUDB
   - Updated definition of instrumentation callbacks, see description in
