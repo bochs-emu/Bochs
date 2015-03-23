@@ -4737,7 +4737,7 @@ public: // for now...
 #endif
 #if BX_SUPPORT_VMX >= 2
   BX_SMF bx_phy_address translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bx_bool guest_laddr_valid, bx_bool is_page_walk, unsigned rw);
-  BX_SMF void update_ept_access_dirty(bx_phy_address *entry_addr, Bit64u *entry, unsigned leaf, unsigned write);
+  BX_SMF void update_ept_access_dirty(bx_phy_address *entry_addr, Bit64u *entry, BxMemtype eptptr_memtype, unsigned leaf, unsigned write);
   BX_SMF bx_bool is_eptptr_valid(Bit64u eptptr);
 #endif
 #if BX_SUPPORT_SVM

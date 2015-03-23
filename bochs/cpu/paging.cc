@@ -1656,6 +1656,8 @@ bx_phy_address BX_CPU_C::nested_walk(bx_phy_address guest_paddr, unsigned rw, bx
 
 #define BX_SUPPRESS_EPT_VIOLATION_EXCEPTION BX_CONST64(0x8000000000000000)
 
+#define BX_VMX_EPT_ACCESS_DIRTY_ENABLED (BX_CPU_THIS_PTR vmcs.eptptr & 0x40)
+
 //                   Format of a EPT Entry
 // -----------------------------------------------------------
 // 00    | Read access
@@ -1664,7 +1666,9 @@ bx_phy_address BX_CPU_C::nested_walk(bx_phy_address guest_paddr, unsigned rw, bx
 // 05-03 | EPT Memory type (for leaf entries, reserved otherwise)
 // 06    | Ignore PAT memory type (for leaf entries, reserved otherwise)
 // 07    | Page Size, must be 1 to indicate a Large Page
-// 11-08 | (ignored)
+// 08    | Accessed bit (if supported, ignored otherwise)
+// 09    | Dirty bit (for leaf entries, if supported, ignored otherwise)
+// 11-10 | (ignored)
 // PA-12 | Physical address
 // 51-PA | Reserved (must be zero)
 // 63-52 | (ignored)
@@ -1678,6 +1682,11 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
   bx_phy_address entry_addr[4], ppf = LPFOf(vm->eptptr);
   Bit64u entry[4];
   int leaf;
+
+#if BX_SUPPORT_MEMTYPE
+  // The MTRRs have no effect on the memory type used for an access to an EPT paging structures.
+  BxMemtype eptptr_memtype = BX_CPU_THIS_PTR cr0.get_CD() ? (BX_MEMTYPE_UC) : BxMemtype(vm->eptptr & 0x7);
+#endif
 
   Bit32u combined_access = 0x7, access_mask = 0;
   Bit64u offset_mask = BX_CONST64(0x0000ffffffffffff);
@@ -1697,7 +1706,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
   for (leaf = BX_LEVEL_PML4;; --leaf) {
     entry_addr[leaf] = ppf + ((guest_paddr >> (9 + 9*leaf)) & 0xff8);
     access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, BX_MEMTYPE_INVALID, BX_READ, (BX_EPT_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
+    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, MEMTYPE(eptptr_memtype), BX_READ, (BX_EPT_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     offset_mask >>= 9;
     Bit64u curr_entry = entry[leaf];
@@ -1787,7 +1796,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
   }
 
   if (BX_VMX_EPT_ACCESS_DIRTY_ENABLED) {
-    update_ept_access_dirty(entry_addr, entry, leaf, rw & 1);
+    update_ept_access_dirty(entry_addr, entry, MEMTYPE(eptptr_memtype), leaf, rw & 1);
   }
 
   Bit32u page_offset = PAGE_OFFSET(guest_paddr);
@@ -1795,14 +1804,14 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
 }
 
 // Access bit 8, Dirty bit 9
-void BX_CPU_C::update_ept_access_dirty(bx_phy_address *entry_addr, Bit64u *entry, unsigned leaf, unsigned write)
+void BX_CPU_C::update_ept_access_dirty(bx_phy_address *entry_addr, Bit64u *entry, BxMemtype eptptr_memtype, unsigned leaf, unsigned write)
 {
   // Update A bit if needed
   for (unsigned level=BX_LEVEL_PML4; level > leaf; level--) {
     if (!(entry[level] & 0x100)) {
       entry[level] |= 0x100;
       access_write_physical(entry_addr[level], 8, &entry[level]);
-      BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[level], 8, BX_MEMTYPE_INVALID, BX_WRITE, (BX_EPT_PTE_ACCESS + level), (Bit8u*)(&entry[level]));
+      BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[level], 8, MEMTYPE(eptptr_memtype), BX_WRITE, (BX_EPT_PTE_ACCESS + level), (Bit8u*)(&entry[level]));
     }
   }
 
@@ -1810,7 +1819,7 @@ void BX_CPU_C::update_ept_access_dirty(bx_phy_address *entry_addr, Bit64u *entry
   if (!(entry[leaf] & 0x100) || (write && !(entry[leaf] & 0x200))) {
     entry[leaf] |= (0x100 | (write<<9)); // Update A and possibly D bits
     access_write_physical(entry_addr[leaf], 8, &entry[leaf]);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, BX_MEMTYPE_INVALID, BX_WRITE, (BX_EPT_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
+    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, MEMTYPE(eptptr_memtype), BX_WRITE, (BX_EPT_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
   }
 }
 
