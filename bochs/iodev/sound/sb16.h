@@ -159,6 +159,7 @@ private:
   int currentdma8;
   int currentdma16;
   int fmopl_callback_id;
+  Bit16u fm_volume;
 
   // the MPU 401 relevant variables
   struct bx_sb16_mpu_struct {
@@ -272,6 +273,7 @@ private:
   BX_SB16_SMF Bit32u mixer_readdata(void);
   BX_SB16_SMF void   mixer_writedata(Bit32u value);
   BX_SB16_SMF void   mixer_writeregister(Bit32u value);
+  BX_SB16_SMF Bit16u calc_output_volume(Bit8u reg1, Bit8u reg2, bx_bool shift);
   BX_SB16_SMF void   set_irq_dma();
 
       /* The emulator ports to change emulator properties */

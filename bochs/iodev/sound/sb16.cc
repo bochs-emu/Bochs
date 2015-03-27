@@ -482,6 +482,7 @@ void bx_sb16_c::register_state(void)
   new bx_shadow_num_c(dma, "channels", &DSP.dma.param.channels);
   new bx_shadow_num_c(dma, "format", &DSP.dma.param.format);
   new bx_shadow_num_c(dma, "volume", &DSP.dma.param.volume);
+  new bx_shadow_num_c(list, "fm_volume", &fm_volume);
   new bx_shadow_data_c(list, "chunk", DSP.dma.chunk, BX_SOUNDLOW_WAVEPACKETSIZE);
   bx_list_c *csp = new bx_list_c(list, "csp_reg");
   for (i=0; i<256; i++) {
@@ -1585,13 +1586,25 @@ Bit16u bx_sb16_c::dma_write16(Bit16u *buffer, Bit16u maxlen)
   return len;
 }
 
+Bit16u bx_sb16_c::calc_output_volume(Bit8u reg1, Bit8u reg2, bx_bool shift)
+{
+  Bit8u vol1, vol2;
+  float tmp_vol;
+  Bit16u result;
+
+  vol1 = (MIXER.reg[reg1] >> 3);
+  vol2 = (MIXER.reg[reg2] >> 3);
+  tmp_vol = (float)vol1/31.0f*pow(10.0f, (float)(31-vol2)*-0.065f);
+  result = (Bit8u)(255 * tmp_vol);
+  if (shift) result <<= 8;
+  return result;
+}
+
 // the mixer, supported type is CT1745 (as in an SB16)
 void bx_sb16_c::mixer_writedata(Bit32u value)
 {
   int i;
-  bx_bool set_wave_vol = 0;
-  Bit8u master_vol, dac_vol;
-  float tmp_vol;
+  bx_bool set_output_vol = 0;
 
   // do some action depending on what register was written
   switch (MIXER.regindex)
@@ -1617,13 +1630,13 @@ void bx_sb16_c::mixer_writedata(Bit32u value)
         MIXER.reg[i] = 0x80;
 
       MIXER.regindex = 0;   // next mixer register read is register 0
-      set_wave_vol = 1;
+      set_output_vol = 1;
       return;
 
     case 0x04: // DAC level
       MIXER.reg[0x32] = (value & 0xf0) | 0x08;
       MIXER.reg[0x33] = ((value & 0x0f) << 4) | 0x08;
-      set_wave_vol = 1;
+      set_output_vol = 1;
       break;
 
     case 0x0a: // microphone level
@@ -1633,12 +1646,13 @@ void bx_sb16_c::mixer_writedata(Bit32u value)
     case 0x22: // master volume
       MIXER.reg[0x30] = (value & 0xf0) | 0x08;
       MIXER.reg[0x31] = ((value & 0x0f) << 4) | 0x08;
-      set_wave_vol = 1;
+      set_output_vol = 1;
       break;
 
     case 0x26: // FM level
       MIXER.reg[0x34] = (value & 0xf0) | 0x08;
       MIXER.reg[0x35] = ((value & 0x0f) << 4) | 0x08;
+      set_output_vol = 1;
       break;
 
     case 0x28: // CD audio level
@@ -1654,35 +1668,37 @@ void bx_sb16_c::mixer_writedata(Bit32u value)
     case 0x30: // master volume left
       MIXER.reg[0x22] &= 0x0f;
       MIXER.reg[0x22] |= (value & 0xf0);
-      set_wave_vol = 1;
+      set_output_vol = 1;
       break;
 
     case 0x31: // master volume right
       MIXER.reg[0x22] &= 0xf0;
       MIXER.reg[0x22] |= (value >> 4);
-      set_wave_vol = 1;
+      set_output_vol = 1;
       break;
 
     case 0x32: // DAC level left
       MIXER.reg[0x04] &= 0x0f;
       MIXER.reg[0x04] |= (value & 0xf0);
-      set_wave_vol = 1;
+      set_output_vol = 1;
       break;
 
     case 0x33: // DAC level right
       MIXER.reg[0x04] &= 0xf0;
       MIXER.reg[0x04] |= (value >> 4);
-      set_wave_vol = 1;
+      set_output_vol = 1;
       break;
 
     case 0x34: // FM level left
       MIXER.reg[0x26] &= 0x0f;
       MIXER.reg[0x26] |= (value & 0xf0);
+      set_output_vol = 1;
       break;
 
     case 0x35: // FM level right
       MIXER.reg[0x26] &= 0xf0;
       MIXER.reg[0x26] |= (value >> 4);
+      set_output_vol = 1;
       break;
 
     case 0x36: // CD audio level left
@@ -1737,15 +1753,11 @@ void bx_sb16_c::mixer_writedata(Bit32u value)
   // store the value
   MIXER.reg[MIXER.regindex] = value;
 
-  if (set_wave_vol) {
-    master_vol = (MIXER.reg[0x30] >> 3);
-    dac_vol = (MIXER.reg[0x32] >> 3);
-    tmp_vol = (float)master_vol/31.0f*pow(10.0f, (float)(31-dac_vol)*-0.065f);
-    DSP.dma.param.volume = (Bit8u)(255 * tmp_vol);
-    master_vol = (MIXER.reg[0x31] >> 3);
-    dac_vol = (MIXER.reg[0x33] >> 3);
-    tmp_vol = (float)master_vol/31.0f*pow(10.0f, (float)(31-dac_vol)*-0.065f);
-    DSP.dma.param.volume |= ((Bit8u)(255 * tmp_vol) << 8);
+  if (set_output_vol) {
+    DSP.dma.param.volume = calc_output_volume(0x30, 0x32, 0);
+    DSP.dma.param.volume |= calc_output_volume(0x31, 0x33, 1);
+    BX_SB16_THIS fm_volume = calc_output_volume(0x30, 0x34, 0);
+    BX_SB16_THIS fm_volume |= calc_output_volume(0x31, 0x35, 1);
   }
 
   writelog(BOTHLOG(4), "mixer register %02x set to %02x",
@@ -2358,7 +2370,7 @@ void bx_sb16_c::opl_settimermask(int value, int chipid)
 
 Bit32u bx_sb16_c::fmopl_generator(Bit16u rate, Bit8u *buffer, Bit32u len)
 {
-  bx_bool ret = adlib_getsample(rate, (Bit16s*)buffer, len / 4);
+  bx_bool ret = adlib_getsample(rate, (Bit16s*)buffer, len / 4, BX_SB16_THIS fm_volume);
   return ret ? len : 0;
 }
 

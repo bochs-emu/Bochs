@@ -993,8 +993,9 @@ static void OPL_INLINE clipit16(Bit32s ival, Bit16s* outval)
   opl_active = 1;
 #endif
 
-bx_bool adlib_getsample(Bit16u rate, Bit16s* sndptr, Bits numsamples)
+bx_bool adlib_getsample(Bit16u rate, Bit16s* sndptr, Bits numsamples, Bit16u volume)
 {
+  // TODO: volume control
   Bits i, endsamples;
   op_type* cptr;
   bx_bool opl_active = 0;
