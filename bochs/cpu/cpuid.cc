@@ -42,6 +42,9 @@ bx_cpuid_t::bx_cpuid_t(BX_CPU_C *_cpu): cpu(_cpu)
 
   for (unsigned n=0; n < BX_ISA_EXTENSIONS_ARRAY_SIZE; n++)
     ia_extensions_bitmask[n] = 0;
+
+  // every cpu supported by Bochs support all 386 and earlier instructions
+  ia_extensions_bitmask[0] = (1 << BX_ISA_386);
 }
 
 #if BX_SUPPORT_APIC

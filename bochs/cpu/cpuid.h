@@ -32,7 +32,8 @@ struct cpuid_function_t {
 };
 
 enum {
-  BX_ISA_X87 = 0,                 /* FPU (X87) instruction */
+  BX_ISA_386 = 0,                 /* 386 or earlier instruction */
+  BX_ISA_X87,                     /* FPU (X87) instruction */
   BX_ISA_486,                     /* 486 new instruction */
   BX_ISA_PENTIUM,                 /* Pentium new instruction */
   BX_ISA_P6,                      /* P6 new instruction */

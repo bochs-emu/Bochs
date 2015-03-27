@@ -49,6 +49,7 @@ BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
   for (unsigned n=0;n<BX_ISA_EXTENSIONS_ARRAY_SIZE;n++)
     ia_extensions_bitmask[n] = 0;
 
+  ia_extensions_bitmask[0] = (1 << BX_ISA_386);
   if (BX_SUPPORT_FPU)
     ia_extensions_bitmask[0] = (1 << BX_ISA_X87);
 
