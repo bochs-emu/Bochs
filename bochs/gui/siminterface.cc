@@ -537,6 +537,7 @@ const char *hdimage_mode_names[] = {
   "volatile",
   "vvfat",
   "vpc",
+  "vbox",
   NULL
 };
 

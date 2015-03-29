@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "15 Nov 2014" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "29 Mar 2015" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -709,7 +709,7 @@ Examples:
 This defines the type and characteristics of all attached ata devices:
    type=       type of attached device [disk|cdrom]
    path=       path of the image
-   mode=       image mode [flat|concat|external|dll|sparse|vmware3|vmware4|undoable|growing|volatile|vpc|vvfat], only valid for disks
+   mode=       image mode [flat|concat|external|dll|sparse|vmware3|vmware4|undoable|growing|volatile|vpc|vbox|vvfat], only valid for disks
    cylinders=  only valid for disks
    heads=      only valid for disks
    spt=        only valid for disks
@@ -746,6 +746,7 @@ The mode option defines how the disk image is handled. Disks can be defined as:
   - growing : growing file
   - volatile : flat file with volatile redolog
   - vpc : fixed / dynamic size VirtualPC image
+  - vbox : fixed / dynamic size Oracle(tm) VM VirtualBox image (VDI version 1.1)
   - vvfat: local directory appears as read-only VFAT disk (with volatile redolog)
 
 The disk translation scheme (implemented in legacy int13 bios functions, and used by

@@ -42,6 +42,7 @@
 #include "vmware4.h"
 #include "vvfat.h"
 #include "vpc-img.h"
+#include "vbox.h"
 
 #if BX_HAVE_SYS_MMAN_H
 #include <sys/mman.h>
@@ -136,6 +137,10 @@ device_image_t* bx_hdimage_ctl_c::init_image(Bit8u image_mode, Bit64u disk_size,
 
     case BX_HDIMAGE_MODE_VPC:
       hdimage = new vpc_image_t();
+      break;
+
+    case BX_HDIMAGE_MODE_VBOX:
+      hdimage = new vbox_image_t();
       break;
 
     default:
@@ -254,6 +259,8 @@ int hdimage_detect_image_mode(const char *pathname)
     result = BX_HDIMAGE_MODE_GROWING;
   } else if (vpc_image_t::check_format(fd, image_size) >= HDIMAGE_FORMAT_OK) {
     result = BX_HDIMAGE_MODE_VPC;
+  } else if (vbox_image_t::check_format(fd, image_size) >= HDIMAGE_FORMAT_OK) {
+    result = BX_HDIMAGE_MODE_VBOX;
   } else if (flat_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
     result = BX_HDIMAGE_MODE_FLAT;
   }

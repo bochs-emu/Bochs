@@ -4047,7 +4047,7 @@ This defines the type and characteristics of all attached ata devices:
 <row>
   <entry> mode  </entry>
   <entry> image type, only valid for disks </entry>
-  <entry> [flat | concat | external | dll | sparse | vmware3 | vmware4 | undoable | growing | volatile | vpc | vvfat ]</entry>
+  <entry> [flat | concat | external | dll | sparse | vmware3 | vmware4 | undoable | growing | volatile | vpc | vbox | vvfat ]</entry>
 </row>
 <row> <entry> cylinders </entry> <entry> only valid for disks </entry> </row>
 <row> <entry> heads </entry> <entry> only valid for disks </entry> </row>
@@ -4149,6 +4149,9 @@ volatile : read-only base file with volatile redolog
 </para></listitem>
 <listitem><para>
 vpc: fixed / dynamic size VirtualPC image
+</para></listitem>
+<listitem><para>
+vbox: fixed / dynamic size Oracle(tm) VM VirtualBox image (VDI version 1.1)
 </para></listitem>
 <listitem><para>
 vvfat: local directory appears as VFAT disk (with volatile redolog / optional commit)
@@ -8553,6 +8556,11 @@ If unspecified, the default "mode" is flat.
  <row> <entry> vpc </entry> <entry> VirtualPC disk support </entry>
        <entry>
        fixed / dynamic size supported
+       </entry>
+ </row>
+ <row> <entry> vbox </entry> <entry> Oracle(tm) VM VirtualBox disk support </entry>
+       <entry>
+       VDI version 1.1 fixed / dynamic size supported
        </entry>
  </row>
  <row> <entry> vvfat </entry> <entry> local directory appears as VFAT disk (with volatile redolog) </entry>

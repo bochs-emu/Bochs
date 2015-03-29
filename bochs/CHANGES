@@ -25,6 +25,7 @@ Changes after 2.6.7 release:
 - I/O Devices
   - Hard drive
     - Re-enable "bulk I/O" repeat speedups extension.
+    - Added Oracle(tm) VM VirtualBox image support (VDI version 1.1)
   - Sound
     - SB16: Fixed OPL chip detection by implementing ISA bus delay.
     - SB16: Ported OPL3 emulation from DOSBox and partly removed legacy code.

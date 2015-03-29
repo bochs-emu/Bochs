@@ -247,8 +247,8 @@ bochs_plugins:
 	$(MAKE) plugins
 	@CD_UP_TWO@
 
-bximage@EXE@: misc/bximage.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc-img.o
-	@LINK_CONSOLE@ $(BXIMAGE_LINK_OPTS) misc/bximage.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc-img.o
+bximage@EXE@: misc/bximage.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc-img.o misc/vbox.o
+	@LINK_CONSOLE@ $(BXIMAGE_LINK_OPTS) misc/bximage.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc-img.o misc/vbox.o
 
 niclist@EXE@: misc/niclist.o
 	@LINK_CONSOLE@ misc/niclist.o
@@ -273,6 +273,10 @@ misc/vmware4.o: $(srcdir)/iodev/hdimage/vmware4.cc $(srcdir)/iodev/hdimage/vmwar
 misc/vpc-img.o: $(srcdir)/iodev/hdimage/vpc-img.cc $(srcdir)/iodev/hdimage/vpc-img.h \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
 	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vpc-img.cc @OFP@$@
+
+misc/vbox.o: $(srcdir)/iodev/hdimage/vbox.cc $(srcdir)/iodev/hdimage/vbox.h \
+  $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
+	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vbox.cc @OFP@$@
 
 # compile with console CFLAGS, not gui CXXFLAGS
 misc/niclist.o: $(srcdir)/misc/niclist.c
