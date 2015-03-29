@@ -53,6 +53,10 @@ bx_soundlow_waveout_sdl_c::bx_soundlow_waveout_sdl_c()
 
 bx_soundlow_waveout_sdl_c::~bx_soundlow_waveout_sdl_c()
 {
+  if (pcm_callback_id >= 0) {
+    unregister_wave_callback(pcm_callback_id);
+    pcm_callback_id = -1;
+  }
   WaveOpen = 0;
   mixer_control = 0;
   SDL_CloseAudio();

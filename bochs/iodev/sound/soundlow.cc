@@ -138,7 +138,6 @@ bx_soundlow_waveout_c::bx_soundlow_waveout_c()
   emu_pcm_param = default_pcm_param;
   cb_count = 0;
   pcm_callback_id = -1;
-  set_pcm_params(&real_pcm_param);
 }
 
 bx_soundlow_waveout_c::~bx_soundlow_waveout_c()
