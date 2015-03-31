@@ -504,10 +504,9 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #endif // !BX_USE_ES1370_SMF
   Bit16u  offset;
   Bit32u shift, mask;
-  Bit8u index, master_vol, dac_vol;
+  Bit8u index;
   bx_bool set_wave_vol = 0;
   unsigned i;
-  float tmp_vol;
 
   BX_DEBUG(("register write to address 0x%04x - value = 0x%08x", address, value));
 
@@ -588,15 +587,24 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
   }
 
   if (set_wave_vol) {
-    master_vol = (0x1f - (BX_ES1370_THIS s.codec_reg[0] & 0x1f));
-    dac_vol = (0x1f - (BX_ES1370_THIS s.codec_reg[2] & 0x1f));
-    tmp_vol = (float)master_vol/31.0f*pow(10.0f, (float)(31-dac_vol)*-0.065f);
-    BX_ES1370_THIS s.wave_vol = (Bit8u)(255 * tmp_vol);
-    master_vol = (0x1f - (BX_ES1370_THIS s.codec_reg[1] & 0x1f));
-    dac_vol = (0x1f - (BX_ES1370_THIS s.codec_reg[3] & 0x1f));
-    tmp_vol = (float)master_vol/31.0f*pow(10.0f, (float)(31-dac_vol)*-0.065f);
-    BX_ES1370_THIS s.wave_vol |= ((Bit8u)(255 * tmp_vol) << 8);
+    BX_ES1370_THIS s.wave_vol = calc_output_volume(0x00, 0x02, 0);
+    BX_ES1370_THIS s.wave_vol |= calc_output_volume(0x01, 0x03, 1);
   }
+}
+
+Bit16u bx_es1370_c::calc_output_volume(Bit8u reg1, Bit8u reg2, bx_bool shift)
+{
+  Bit8u vol1, vol2;
+  float fvol1, fvol2;
+  Bit16u result;
+
+  vol1 = (0x1f - (BX_ES1370_THIS s.codec_reg[reg1] & 0x1f));
+  vol2 = (0x1f - (BX_ES1370_THIS s.codec_reg[reg2] & 0x1f));
+  fvol1 = pow(10.0f, (float)(31-vol1)*-0.065f);
+  fvol2 = pow(10.0f, (float)(31-vol2)*-0.065f);
+  result = (Bit8u)(255 * fvol1 * fvol2);
+  if (shift) result <<= 8;
+  return result;
 }
 
 void bx_es1370_c::es1370_timer_handler(void *this_ptr)

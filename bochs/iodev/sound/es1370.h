@@ -104,6 +104,7 @@ private:
   BX_ES1370_SMF void run_channel(unsigned channel, int timer_id, Bit32u buflen);
   BX_ES1370_SMF void sendwavepacket(unsigned channel, Bit32u buflen, Bit8u *buffer);
   BX_ES1370_SMF void closewaveoutput();
+  BX_ES1370_SMF Bit16u calc_output_volume(Bit8u reg1, Bit8u reg2, bx_bool shift);
 
   static void es1370_timer_handler(void *);
   void es1370_timer(void);
