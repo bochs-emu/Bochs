@@ -65,6 +65,7 @@ typedef struct {
   bx_bool adc_inputinit;
   int dac_nr_active;
   Bit16u dac_packet_size[2];
+  Bit32u dac_timer_val[2];
 
   Bit8u devfunc;
 } bx_es1370_t;
@@ -101,7 +102,7 @@ private:
   BX_ES1370_SMF void update_status(Bit32u new_status);
   BX_ES1370_SMF void check_lower_irq(Bit32u sctl);
   BX_ES1370_SMF void update_voices(Bit32u ctl, Bit32u sctl, bx_bool force);
-  BX_ES1370_SMF void run_channel(unsigned channel, int timer_id, Bit32u buflen);
+  BX_ES1370_SMF Bit32u run_channel(unsigned channel, int timer_id, Bit32u buflen);
   BX_ES1370_SMF void sendwavepacket(unsigned channel, Bit32u buflen, Bit8u *buffer);
   BX_ES1370_SMF void closewaveoutput();
   BX_ES1370_SMF Bit16u calc_output_volume(Bit8u reg1, Bit8u reg2, bx_bool shift);

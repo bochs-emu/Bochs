@@ -617,10 +617,14 @@ void bx_es1370_c::es1370_timer(void)
 {
   int timer_id = bx_pc_system.triggeredTimerID();
   unsigned i = bx_pc_system.triggeredTimerParam();
-  run_channel(i, timer_id, BX_ES1370_THIS s.dac_packet_size[i]);
+  Bit32u ret = run_channel(i, timer_id, BX_ES1370_THIS s.dac_packet_size[i]);
+  if (ret > 0) {
+    Bit64u timer_val = (Bit64u)BX_ES1370_THIS s.dac_timer_val[i] * ret / BX_ES1370_THIS s.dac_packet_size[i];
+    bx_pc_system.activate_timer(timer_id, (Bit32u)timer_val, 1);
+  }
 }
 
-void bx_es1370_c::run_channel(unsigned chan, int timer_id, Bit32u buflen)
+Bit32u bx_es1370_c::run_channel(unsigned chan, int timer_id, Bit32u buflen)
 {
   Bit32u new_status = BX_ES1370_THIS s.status;
   Bit32u addr, sc, csc_bytes, cnt, size, left, transfered, temp;
@@ -635,7 +639,7 @@ void bx_es1370_c::run_channel(unsigned chan, int timer_id, Bit32u buflen)
     } else {
       bx_pc_system.deactivate_timer(timer_id);
     }
-    return;
+    return 0;
   }
 
   addr = d->frame_addr;
@@ -690,6 +694,7 @@ void bx_es1370_c::run_channel(unsigned chan, int timer_id, Bit32u buflen)
   if (new_status != BX_ES1370_THIS s.status) {
     update_status(new_status);
   }
+  return transfered;
 }
 
 Bit32u bx_es1370_c::es1370_adc_handler(void *this_ptr, Bit32u buflen)
@@ -739,7 +744,6 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
   unsigned i;
   Bit32u old_freq, new_freq, old_fmt, new_fmt;
   int ret, timer_id;
-  Bit64u timer_val;
   bx_pcm_param_t param;
 
   for (i = 0; i < 3; ++i) {
@@ -820,8 +824,9 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
           if (BX_ES1370_THIS s.dac_packet_size[i] > BX_SOUNDLOW_WAVEPACKETSIZE) {
             BX_ES1370_THIS s.dac_packet_size[i] = BX_SOUNDLOW_WAVEPACKETSIZE;
           }
-          timer_val = (Bit64u)BX_ES1370_THIS s.dac_packet_size[i] * 1000000 / (new_freq << d->shift);
-          bx_pc_system.activate_timer(timer_id, (Bit32u)timer_val, 1);
+          BX_ES1370_THIS s.dac_timer_val[i] =
+            (Bit32u)((Bit64u)BX_ES1370_THIS s.dac_packet_size[i] * 1000000 / (new_freq << d->shift));
+          bx_pc_system.activate_timer(timer_id, BX_ES1370_THIS s.dac_timer_val[i], 1);
         }
       } else {
         if (i == ADC_CHANNEL) {
