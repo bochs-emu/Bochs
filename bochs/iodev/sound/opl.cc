@@ -956,8 +956,11 @@ void adlib_write_index(Bitu port, Bit8u val)
 #endif
 }
 
-static void OPL_INLINE clipit16(Bit32s ival, Bit16s* outval)
+static void OPL_INLINE clipit16(Bit32s ival, Bit16s* outval, Bit8u vol)
 {
+  if (vol != 0xff) {
+    ival = ival * vol / 255;
+  }
   if (ival<32768) {
     if (ival>-32769) {
       *outval=(Bit16s)ival;
@@ -995,7 +998,7 @@ static void OPL_INLINE clipit16(Bit32s ival, Bit16s* outval)
 
 bx_bool adlib_getsample(Bit16u rate, Bit16s* sndptr, Bits numsamples, Bit16u volume)
 {
-  // TODO: volume control
+  Bit8u lvol, rvol;
   Bits i, endsamples;
   op_type* cptr;
   bx_bool opl_active = 0;
@@ -1010,6 +1013,8 @@ bx_bool adlib_getsample(Bit16u rate, Bit16s* sndptr, Bits numsamples, Bit16u vol
   Bit32s vib_lut[BLOCKBUF_SIZE];
   Bit32s trem_lut[BLOCKBUF_SIZE];
 
+  lvol = (Bit8u)(volume & 0xff);
+  rvol = (Bit8u)(volume >> 8);
   Bits samples_to_process = numsamples;
 
   if (rate != (Bit16u)int_samplerate) {
@@ -1492,20 +1497,20 @@ bx_bool adlib_getsample(Bit16u rate, Bit16s* sndptr, Bits numsamples, Bit16u vol
     if (adlibreg[0x105]&1) {
       // convert to 16bit samples (stereo)
       for (i=0;i<endsamples;i++) {
-        clipit16(outbufl[i],sndptr++);
-        clipit16(outbufr[i],sndptr++);
+        clipit16(outbufl[i], sndptr++, lvol);
+        clipit16(outbufr[i], sndptr++, rvol);
       }
     } else {
       // convert to 16bit samples (mono)
       for (i=0;i<endsamples;i++) {
-        clipit16(outbufl[i],sndptr++);
-        clipit16(outbufl[i],sndptr++);
+        clipit16(outbufl[i], sndptr++, lvol);
+        clipit16(outbufl[i], sndptr++, rvol);
       }
     }
 #else
     // convert to 16bit samples
     for (i=0;i<endsamples;i++)
-      clipit16(outbufl[i],sndptr++);
+      clipit16(outbufl[i], sndptr++, 0xff);
 #endif
 
   }

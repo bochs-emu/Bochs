@@ -320,7 +320,7 @@ void bx_soundlow_waveout_c::convert_pcm_data(Bit8u *src, int srcsize, Bit8u *dst
     volumes[1] = (Bit8u)(param->volume >> 8);
     for (i = 0; i < dstsize; i+=2) {
       value16s = (Bit16s)(dst[i] | (dst[i+1] << 8));
-      value16s = (Bit16s)((Bit32s)value16s * volumes[channel] / 256);
+      value16s = (Bit16s)((Bit32s)value16s * volumes[channel] / 255);
       dst[i] = (Bit8u)(value16s & 0xff);
       dst[i+1] = (Bit8u)(value16s >> 8);
       channel ^= 1;

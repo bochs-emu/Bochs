@@ -1632,7 +1632,7 @@ void bx_sb16_c::mixer_writedata(Bit32u value)
 
       MIXER.regindex = 0;   // next mixer register read is register 0
       set_output_vol = 3;
-      return;
+      break;
 
     case 0x04: // DAC level
       MIXER.reg[0x32] = (value & 0xf0) | 0x08;
@@ -1752,7 +1752,9 @@ void bx_sb16_c::mixer_writedata(Bit32u value)
   }
 
   // store the value
-  MIXER.reg[MIXER.regindex] = value;
+  if (MIXER.regindex != 0) {
+    MIXER.reg[MIXER.regindex] = value;
+  }
 
   if (set_output_vol & 1) {
     DSP.dma.param.volume = calc_output_volume(0x30, 0x32, 0);
