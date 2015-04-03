@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "29 Mar 2015" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "3 Apr 2015" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -933,15 +933,47 @@ Examples:
 
 .TP
 .I "sound:"
-This defines the lowlevel sound driver and the wave (PCM) input and
-output devices to be used by sound emulation devices. Possible values
-for the driver parameter are 'default', 'dummy' (no input/output),
-\&'alsa' (if present) and 'sdl' (if present). For some drivers the wave
-devices must be specified. If the 'wavein' parameter is not set, Bochs
-uses the 'waveout' device for input, too.
+This defines the lowlevel sound driver(s) for the wave (PCM) input / output
+and the MIDI output feature and (if necessary) the devices to be used.
+It can have several of the following properties.
+All properties are in the format sound: property=value
 
-Example:
-  sound: driver=default, waveout=/dev/dsp. wavein=
+waveoutdrv:
+  This defines the driver to be used for the waveout feature.
+  Possible values are 'file' (all wave data sent to file), 'dummy' (no
+  output) and the platform-dependant drivers 'alsa', 'oss', 'osx', 'sdl'
+  and 'win'.
+
+waveout:
+  This defines the device to be used for wave output (if necessary) or
+  the output file for the 'file' driver.
+
+waveindrv:
+  This defines the driver to be used for the wavein feature.
+  Possible values are 'dummy' (recording silence) and platform-dependent
+  drivers 'alsa', 'oss' and 'win'.
+
+wavein:
+  This defines the device to be used for wave output (if necessary).
+
+midioutdrv:
+  This defines the driver to be used for the MIDI output feature.
+  Possible values are 'file' (all MIDI data sent to file), 'dummy' (no
+  output) and platform-dependent drivers 'alsa', 'oss', 'osx' and 'win'.
+
+midiout:
+  This defines the device to be used for MIDI output (if necessary).
+
+driver:
+  This defines the driver to be used for all sound features with one
+  property. Possible values are 'default' (platform default) and all
+  other choices described above. Overriding one or more settings with
+  the specific driver parameter is possible.
+
+Example for one driver (uses platform-default):
+  sound: driver=default, waveout=/dev/dsp
+Example for different drivers:
+  sound: waveoutdrv=sdl, waveindrv=alsa, midioutdrv=dummy
 
 .TP
 .I "speaker:"
@@ -972,30 +1004,29 @@ enabled:
 
 midimode:
 
-  0 = No data should be output.
-  1 = output to device (system dependent - midi
-      denotes the device driver).
-  2 = SMF file output, including headers.
-  3 = Output  the midi  data stream to the file
-      (no  midi headers  and  no delta  times, just
-      command and data bytes).
+  This parameter specifies what to do with the MIDI output.
+
+  0 = no output
+  1 = output to device specified with the sound option (system dependent)
+  2 = MIDI or raw data output to file (depends on file name extension)
+  3 = dual output (mode 1 and 2 at the same time)
 
 midi:
 
-  The  filename is where the midi data is  sent.
-  This can  be  a device  or just a file if  you
-  want to record the midi data.
+  This is the file where the midi output is stored (midimode 2 or 3).
 
 wavemode:
 
-  0=no data
-  1=output to device (system dependent. wave denotes the device driver)
-  2=VOC file output, incl. headers
-  3=output the raw wave stream to the file
+  This parameter specifies what to do with the PCM output.
+
+  0 = no output
+  1 = output to device specified with the sound option (system dependent)
+  2 = VOC, WAV or raw data output to file (depends on file name extension)
+  3 = dual output (mode 1 and 2 at the same time)
 
 wave:
 
-  This is the file where the wave output is stored (wavemode 2 or 3)
+  This is the file where the wave output is stored (wavemode 2 or 3).
 
 log:
 
@@ -1011,7 +1042,7 @@ loglevel:
   5 = All  errors and port  accesses plus a lot
       of extra information.
 
-It is possible to change the loglevel at runtime.
+  It is possible to change the loglevel at runtime.
 
 dmatimer:
 
@@ -1021,20 +1052,9 @@ value.  This  needs  a reasonably  correct   setting  for
 the  IPS  parameter of the CPU option.  It is possible to
 adjust the dmatimer at runtime.
 
-Example for output to OSS:
-  sb16: midimode=1, midi=/dev/midi00,
-  wavemode=1, wave=/dev/dsp, loglevel=2,
-  log=sb16.log, dmatimer=600000
-
-Example for output to ALSA:
-  sb16: midimode=1, midi=128:0,
-  wavemode=1, wave="",
-  log=sb16.log, dmatimer=600000
-
-.B NOTE:
-The  examples are wrapped onto three  lines for
-formatting  reasons, but  it should all be  on
-one line in the actual bochsrc file.
+Examples for output modes:
+  sb16: midimode=2, midi="output.mid", wavemode=1 # MIDI to file
+  sb16: midimode=1, wavemode=3, wave="output.wav" # wave to file and device
 
 .TP
 .I "es1370:"

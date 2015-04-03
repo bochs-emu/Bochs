@@ -901,7 +901,7 @@ parport1: enabled=1, file="parport.out"
 #      other choices described above. Overriding one or more settings with
 #      the specific driver parameter is possible.
 #
-# Examples for different drivers:
+# Example for different drivers:
 #   sound: waveoutdrv=sdl, waveindrv=alsa, midioutdrv=dummy
 #=======================================================================
 sound: driver=default, waveout=/dev/dsp. wavein=, midiout=

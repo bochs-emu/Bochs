@@ -2181,19 +2181,19 @@ to explicitly turn it off.
       <entry>--enable-sb16</entry>
       <entry>no</entry>
       <entry>
-      Enable Sound Blaster emulation. The lowlevel sound interface is autodetected.
-      See section <link linkend="using-sound">Using Sound</link> for supported
-      platforms and more info. This option also enables the standard PC gameport
-      which is a part of the SB16. If you don't want to use it, you might use
-      <option>--disable-gameport</option>.
+      Enable Sound Blaster emulation. The available lowlevel sound interfaces
+      are autodetected. See section <link linkend="using-sound">Using Sound</link>
+      for supported platforms and more info. This option also enables the standard
+      PC gameport which is a part of the SB16. If you don't want to use it, you
+      might use <option>--disable-gameport</option>.
       </entry>
     </row>
     <row>
       <entry>--enable-es1370</entry>
       <entry>no</entry>
       <entry>
-      Enable ES1370 sound emulation. Just like the SB16 option, the lowlevel sound
-      interface is autodetected and the gameport is turned on.
+      Enable ES1370 sound emulation. Just like the SB16 option, the available
+      lowlevel sound interface is autodetected and the gameport is turned on.
       </entry>
     </row>
     <row>
@@ -4371,17 +4371,66 @@ win32 platforms).
 <section id="bochsopt-sound">
 <title>sound</title>
 <para>
-Example:
+Example for one driver (uses platform-default):
 <screen>
-  sound: driver=default, waveout=/dev/dsp. wavein=
+  sound: driver=default, waveout=/dev/dsp
 </screen>
-This defines the lowlevel sound driver and the wave (PCM) input and
-output devices to be used by sound emulation devices. Possible values
-for the driver parameter are 'default', 'dummy' (no input/output),
-'alsa' (if present) and 'sdl' (if present). For some drivers the wave
-devices must be specified. If the 'wavein' parameter is not set, Bochs
-uses the 'waveout' device for input, too. See <xref linkend="using-sound">
-for more information.
+Example for different drivers:
+<screen>
+  sound: waveoutdrv=sdl, waveindrv=alsa, midioutdrv=dummy
+</screen>
+This defines the lowlevel sound driver(s) for the wave (PCM) input / output
+and the MIDI output feature and (if necessary) the devices to be used.
+It can have several of the following properties. All properties are in the
+format sound: property=value.
+
+ <itemizedlist>
+   <listitem><para>
+    <option>waveoutdrv</option>: This defines the driver to be used for the
+    waveout feature. Possible values are 'file' (all wave data sent to file),
+    'dummy' (no output) and the platform-dependant drivers 'alsa', 'oss', 'osx',
+    'sdl' and 'win'.
+   </para></listitem>
+
+   <listitem><para>
+    <option>waveout</option>:
+    This defines the device to be used for wave output (if necessary) or the
+    output file for the 'file' driver.
+   </para></listitem>
+
+   <listitem><para>
+    <option>waveindrv</option>:
+    This defines the driver to be used for the wavein feature.
+    Possible values are 'dummy' (recording silence) and platform-dependent
+    drivers 'alsa', 'oss' and 'win'.
+   </para></listitem>
+
+   <listitem><para>
+    <option>wavein</option>:
+    This defines the device to be used for wave output (if necessary).
+   </para></listitem>
+
+   <listitem><para>
+    <option>midioutdrv</option>:
+    This defines the driver to be used for the MIDI output feature.
+    Possible values are 'file' (all MIDI data sent to file), 'dummy' (no
+    output) and platform-dependent drivers 'alsa', 'oss', 'osx' and 'win'.
+   </para></listitem>
+
+   <listitem><para>
+    <option>midiout</option>:
+    This defines the device to be used for MIDI output (if necessary).
+   </para></listitem>
+
+   <listitem><para>
+    <option>driver</option>:
+    This defines the driver to be used for all sound features with one
+    property. Possible values are 'default' (platform default) and all
+    other choices described above. Overriding one or more settings with
+    the specific driver parameter is possible.
+   </para></listitem>
+ </itemizedlist>
+See <xref linkend="using-sound"> for more information.
 </para>
 </section>
 
@@ -4405,7 +4454,7 @@ gui methods (currently only used by the Carbon gui).
 <para>
 Example:
 <screen>
-  sb16: midimode=1, midi=/dev/midi00, wavemode=1, wave=/dev/dsp,
+  sb16: midimode=2, midi=output.mid, wavemode=3, wave=output.wav
         loglevel=2, log=sb16.log, dmatimer=600000
 </screen>
 <note><para>
@@ -4419,50 +4468,49 @@ are in the usual "property=value" format.
 
  <itemizedlist>
    <listitem><para>
-   enabled: This optional property controls the presence of the SB16 emulation.
+   <option>enabled</option>:
+   This optional property controls the presence of the SB16 emulation.
    The emulation is turned on unless this property is used and set to 0.
    </para></listitem>
 
    <listitem><para>
-   midimode:
+   <option>midimode</option>:
+   This parameter specifies what to do with the MIDI output.
    <screen>
-   0 = No data should be output.
-   1 = output to device (system dependent - midi denotes the device driver).
-   2 = SMF file output, including headers.
-   3 = Output the midi data stream to the file (no midi headers and no
-       delta times, just command and data bytes).
+    0 = no output
+    1 = output to device specified with the sound option (system dependent)
+    2 = MIDI or raw data output to file (depends on file name extension)
+    3 = dual output (mode 1 and 2 at the same time)
    </screen>
    </para></listitem>
 
    <listitem><para>
-   midi: The filename is where the midi data is sent to. This
-   can be a device or just a file if you want to record the midi data.
-   On a Windows host this parameter specifies the ID of the MIDI device
-   to use. If not specified, the default MIDI mapper is used. On a Linux
-   host and with the ALSA driver selected the default sequencer device
-   will be used with the given client and port parameters.
+   <option>midi</option>:
+   This is the file where the midi output is stored (midimode 2 or 3).
    </para></listitem>
 
    <listitem><para>
-   wavemode:
+   <option>wavemode</option>:
+   This parameter specifies what to do with the PCM output.
    <screen>
-   0 = no data
-   1 = output to device (system dependent - wave denotes the device driver).
-   2 = VOC file output, including headers.
-   3 = Output the raw wave stream to the file.
+    0 = no output
+    1 = output to device specified with the sound option (system dependent)
+    2 = VOC, WAV or raw data output to file (depends on file name extension)
+    3 = dual output (mode 1 and 2 at the same time)
    </screen>
    </para></listitem>
 
    <listitem><para>
-   wave: This is the file where the wave output is stored (wavemode 2 or 3).
+   <option>wave</option>:
+   This is the file where the wave output is stored (wavemode 2 or 3).
    </para></listitem>
 
    <listitem><para>
-   log: The file to write the sb16 emulator messages to.
+   <option>log</option>: The file to write the sb16 emulator messages to.
    </para></listitem>
 
    <listitem><para>
-   loglevel:
+   <option>loglevel</option>:
    <screen>
    0 = No log.
    1 = Resource changes, midi program and bank changes.
@@ -4475,7 +4523,8 @@ are in the usual "property=value" format.
    </para></listitem>
 
    <listitem><para>
-   dmatimer: Microseconds per second for a DMA cycle. Make it smaller to fix
+   <option>dmatimer</option>:
+   Microseconds per second for a DMA cycle. Make it smaller to fix
    non-continuous sound. 750000 is usually a good value. This needs a reasonably
    correct setting for the <command>ips</command> parameter of the
    <link linkend="bochsopt-cpu-ips">cpu option</link>. It is possible to adjust the
@@ -5638,6 +5687,7 @@ drivers and their features.
 These special values are also valid for the sound driver:
 <itemizedlist>
 <listitem><para><option>default</option> - select platform-default sound driver.</para></listitem>
+<listitem><para><option>file</option> - wave and MIDI output to file(s)</para></listitem>
 <listitem><para><option>dummy</option> - no output at all</para></listitem>
 </itemizedlist>
 </para>
@@ -5649,8 +5699,9 @@ one.
 </para>
 <para>
 At runtime the lowlevel sound module will be loaded automatically if one of the
-sound devices is enabled in the <filename>bochsrc</filename>. The driver and the
-wave input and output devices must be set up with the <link linkend="bochsopt-sound">sound</link> option.
+sound devices is enabled in the <filename>bochsrc</filename>. The drivers and
+devices for wave input / output and MIDI output must be set up with the
+<link linkend="bochsopt-sound">sound</link> option.
 </para>
 </section>
 <section><title>The PC speaker</title>
