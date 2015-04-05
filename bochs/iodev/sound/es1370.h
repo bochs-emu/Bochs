@@ -58,6 +58,7 @@ typedef struct {
   Bit8u codec_reg[BX_ES1370_CODEC_REGS];
   Bit16u wave_vol;
   Bit32u sctl;
+  Bit8u legacy1B;
 
   int dac1_timer_index;
   int dac2_timer_index;

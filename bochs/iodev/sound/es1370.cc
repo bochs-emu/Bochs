@@ -310,6 +310,7 @@ void bx_es1370_c::reset(unsigned type)
   }
   BX_ES1370_THIS s.wave_vol = 0;
   BX_ES1370_THIS s.sctl = 0;
+  BX_ES1370_THIS s.legacy1B = 0;
   for (i = 0; i < 3; i++) {
     BX_ES1370_THIS s.chan[i].scount = 0;
     BX_ES1370_THIS s.chan[i].leftover = 0;
@@ -346,6 +347,7 @@ void bx_es1370_c::register_state(void)
     new bx_shadow_num_c(codec_regs, pname, &BX_ES1370_THIS s.codec_reg[i], BASE_HEX);
   }
   BXRS_HEX_PARAM_FIELD(list, sctl, BX_ES1370_THIS s.sctl);
+  BXRS_HEX_PARAM_FIELD(list, legacy1B, BX_ES1370_THIS s.legacy1B);
   BXRS_HEX_PARAM_FIELD(list, wave_vol, BX_ES1370_THIS s.wave_vol);
 
   register_pci_state(list);
@@ -431,7 +433,13 @@ Bit32u bx_es1370_c::read(Bit32u address, unsigned io_len)
     case ES1370_UART_DATA:
     case ES1370_UART_STATUS:
     case ES1370_UART_TEST:
-      BX_ERROR(("reading from UART not supported yet"));
+      if (offset == ES1370_UART_DATA) {
+        BX_ERROR(("reading from UART data register not supported yet"));
+      } else if (offset == ES1370_UART_DATA) {
+        BX_ERROR(("reading from UART status register not supported yet"));
+      } else {
+        BX_ERROR(("reading from UART test register not supported yet"));
+      }
       break;
     case ES1370_MEMPAGE:
       val = BX_ES1370_THIS s.mempage;
@@ -476,8 +484,13 @@ Bit32u bx_es1370_c::read(Bit32u address, unsigned io_len)
       val = ~0U;
       break;
     default:
-      val = ~0U; // keep compiler happy
-      BX_ERROR(("unsupported io read from offset=0x%04x!", offset));
+      if (offset == 0x1b) {
+        BX_ERROR(("reading from legacy register 0x1b"));
+        val = BX_ES1370_THIS s.legacy1B;
+      } else {
+        val = ~0U; // keep compiler happy
+        BX_ERROR(("unsupported io read from offset=0x%04x!", offset));
+      }
       break;
   }
 
@@ -528,7 +541,13 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case ES1370_UART_DATA:
     case ES1370_UART_CTL:
     case ES1370_UART_TEST:
-      BX_ERROR(("writing to UART not supported yet"));
+      if (offset == ES1370_UART_DATA) {
+        BX_ERROR(("writing to UART data register not supported yet (value=0x%02x)", value & 0xff));
+      } else if (offset == ES1370_UART_CTL) {
+        BX_ERROR(("writing to UART control register not supported yet (value=0x%02x)", value & 0xff));
+      } else {
+        BX_ERROR(("writing to UART test register not supported yet (value=0x%02x)", value & 0xff));
+      }
       break;
     case ES1370_MEMPAGE:
       BX_ES1370_THIS s.mempage = value & 0x0f;
@@ -553,27 +572,22 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case ES1370_DAC1_SCOUNT:
     case ES1370_DAC2_SCOUNT:
     case ES1370_ADC_SCOUNT:
-      i = (offset - ES1370_DAC1_SCOUNT) / 4;
+      i = (offset - ES1370_DAC1_SCOUNT) >> 2;
       value &= 0xffff;
       BX_ES1370_THIS s.chan[i].scount = value | (value << 16);
       break;
     case ES1370_DAC1_FRAMEADR:
-      BX_ES1370_THIS s.chan[0].frame_addr = value;
-      break;
     case ES1370_DAC2_FRAMEADR:
-      BX_ES1370_THIS s.chan[1].frame_addr = value;
-      break;
     case ES1370_ADC_FRAMEADR:
-      BX_ES1370_THIS s.chan[2].frame_addr = value;
+      i = (offset - ES1370_DAC1_FRAMEADR) >> 2;
+      BX_ES1370_THIS s.chan[i].frame_addr = value;
       break;
     case ES1370_DAC1_FRAMECNT:
-      BX_ES1370_THIS s.chan[0].frame_cnt = value;
-      break;
     case ES1370_DAC2_FRAMECNT:
-      BX_ES1370_THIS s.chan[1].frame_cnt = value;
-      break;
     case ES1370_ADC_FRAMECNT:
-      BX_ES1370_THIS s.chan[2].frame_cnt = value;
+      i = (offset - ES1370_DAC1_FRAMECNT) >> 2;
+      BX_ES1370_THIS s.chan[i].frame_cnt = value;
+      BX_ES1370_THIS s.chan[i].leftover = 0;
       break;
     case ES1370_PHA_FRAMEADR:
       BX_ERROR(("writing to phantom frame address"));
@@ -582,7 +596,13 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_ERROR(("writing to phantom frame count"));
       break;
     default:
-      BX_ERROR(("unsupported io write to offset=0x%04x!", offset));
+      if (offset == 0x1b) {
+        BX_ERROR(("writing to legacy register 0x1b (value = 0x%02x)", value & 0xff));
+        BX_ES1370_THIS s.legacy1B = (Bit8u)(value & 0xff);
+        set_irq_level(BX_ES1370_THIS s.legacy1B & 0x01);
+      } else {
+        BX_ERROR(("unsupported io write to offset=0x%04x!", offset));
+      }
       break;
   }
 
