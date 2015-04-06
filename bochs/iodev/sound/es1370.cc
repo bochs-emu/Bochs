@@ -454,7 +454,7 @@ Bit32u bx_es1370_c::read(Bit32u address, unsigned io_len)
     case ES1370_DAC1_SCOUNT:
     case ES1370_DAC2_SCOUNT:
     case ES1370_ADC_SCOUNT:
-      i = (offset - ES1370_DAC1_SCOUNT) / 4;
+      i = (offset - ES1370_DAC1_SCOUNT) >> 2;
       val = BX_ES1370_THIS s.chan[i].scount >> shift;
       break;
     case ES1370_DAC1_FRAMEADR:
@@ -519,6 +519,7 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
   Bit32u shift, mask;
   Bit8u index;
   bx_bool set_wave_vol = 0;
+  chan_t *d = &BX_ES1370_THIS s.chan[0];
   unsigned i;
 
   BX_DEBUG(("register write to address 0x%04x - value = 0x%08x", address, value));
@@ -576,18 +577,20 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
       value &= 0xffff;
       BX_ES1370_THIS s.chan[i].scount = value | (value << 16);
       break;
-    case ES1370_DAC1_FRAMEADR:
-    case ES1370_DAC2_FRAMEADR:
     case ES1370_ADC_FRAMEADR:
-      i = (offset - ES1370_DAC1_FRAMEADR) >> 2;
-      BX_ES1370_THIS s.chan[i].frame_addr = value;
+      d++;
+    case ES1370_DAC2_FRAMEADR:
+      d++;
+    case ES1370_DAC1_FRAMEADR:
+      d->frame_addr = value;
       break;
-    case ES1370_DAC1_FRAMECNT:
-    case ES1370_DAC2_FRAMECNT:
     case ES1370_ADC_FRAMECNT:
-      i = (offset - ES1370_DAC1_FRAMECNT) >> 2;
-      BX_ES1370_THIS s.chan[i].frame_cnt = value;
-      BX_ES1370_THIS s.chan[i].leftover = 0;
+      d++;
+    case ES1370_DAC2_FRAMECNT:
+      d++;
+    case ES1370_DAC1_FRAMECNT:
+      d->frame_cnt = value;
+      d->leftover = 0;
       break;
     case ES1370_PHA_FRAMEADR:
       BX_ERROR(("writing to phantom frame address"));
