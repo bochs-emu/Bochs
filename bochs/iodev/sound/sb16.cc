@@ -451,7 +451,7 @@ void bx_sb16_c::register_state(void)
   new bx_shadow_num_c(mpu, "current_timer", &MPU.current_timer);
   new bx_shadow_num_c(mpu, "last_delta_time", &MPU.last_delta_time);
   bx_list_c *patchtbl = new bx_list_c(mpu, "patchtable");
-  for (i=0; i<BX_SB16_PATCHTABLESIZE; i++) {
+  for (i=0; i<16; i++) {
     sprintf(name, "0x%02x", i);
     patch = new bx_list_c(patchtbl, name);
     new bx_shadow_num_c(patch, "banklsb", &MPU.banklsb[i]);
@@ -1967,13 +1967,6 @@ void bx_sb16_c::mpu_command(Bit32u value)
           MPU.dataout.reset();
           MPU.datain.reset();
           MPU.midicmd.reset();
-
-          /*
-          if (BX_SB16_IRQ != -1) {
-             MIXER.reg[0x82] |= 4;
-             BX_SB16_THIS devices->pic->trigger_irq(BX_SB16_IRQ);
-          }
-          */
           break;
        case 0xd0:  // d0 and df: prefix for midi command
        case 0xdf:  // like uart mode, but only a single command
@@ -2178,7 +2171,7 @@ void bx_sb16_c::emul_write(Bit32u value)
                // just give a few times to end any commands
          break;
        case 2: // map bank
-         if (EMUL.remaps >= BX_SB16_PATCHTABLESIZE) break;
+         if (EMUL.remaps >= BX_SB16_MAX_REMAPS) break;
          EMUL.dataout.get (& (EMUL.remaplist[EMUL.remaps].oldbankmsb));
          EMUL.dataout.get (& (EMUL.remaplist[EMUL.remaps].oldbanklsb));
          EMUL.remaplist[EMUL.remaps].oldprogch = 0xff;
@@ -2194,7 +2187,7 @@ void bx_sb16_c::emul_write(Bit32u value)
          EMUL.remaps++;
          break;
        case 3: // map program change
-         if (EMUL.remaps >= BX_SB16_PATCHTABLESIZE) break;
+         if (EMUL.remaps >= BX_SB16_MAX_REMAPS) break;
          EMUL.remaplist[EMUL.remaps].oldbankmsb = 0xff;
          EMUL.remaplist[EMUL.remaps].oldbanklsb = 0xff;
          EMUL.dataout.get (& (EMUL.remaplist[EMUL.remaps].oldprogch));
@@ -2208,7 +2201,7 @@ void bx_sb16_c::emul_write(Bit32u value)
          EMUL.remaps++;
          break;
        case 4: // map bank and program change
-         if (EMUL.remaps >= BX_SB16_PATCHTABLESIZE) break;
+         if (EMUL.remaps >= BX_SB16_MAX_REMAPS) break;
          EMUL.dataout.get (& (EMUL.remaplist[EMUL.remaps].oldbankmsb));
          EMUL.dataout.get (& (EMUL.remaplist[EMUL.remaps].oldbanklsb));
          EMUL.dataout.get (& (EMUL.remaplist[EMUL.remaps].oldprogch));
@@ -2497,9 +2490,6 @@ void bx_sb16_c::processmidicommand(bx_bool force)
   if (MPU.singlecommand != 0)
   {
       MPU.singlecommand = 0;
-      // and trigger IRQ?
-      //      MPU.irqpending = 1;
-      //      BX_SB16_THIS devices->pic->trigger_irq(BX_SB16_IRQMPU);
   }
 
   if ((force == 0) && (needremap == 1))

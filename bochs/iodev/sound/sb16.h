@@ -37,8 +37,8 @@
 #define BX_SB16_BUFINL BX_CPP_INLINE
 // BX_CPP_INLINE is defined to the inline keyword for the C++ compiler.
 
-// maximum number of patch translations
-#define BX_SB16_PATCHTABLESIZE 1024
+// maximum number of MIDI remaps
+#define BX_SB16_MAX_REMAPS 256
 
 // the resources. Of these, IRQ and DMA's can be changed via a DSP command
 #define BX_SB16_IO      0x220       // IO base address of DSP, mixer & FM part
@@ -166,9 +166,9 @@ private:
     bx_sb16_buffer datain, dataout, cmd, midicmd;
     bx_bool uartmode, irqpending, forceuartmode, singlecommand;
 
-    int banklsb[BX_SB16_PATCHTABLESIZE];
-    int bankmsb[BX_SB16_PATCHTABLESIZE];   // current patch lists
-    int program[BX_SB16_PATCHTABLESIZE];
+    int banklsb[16];
+    int bankmsb[16];   // current patch lists
+    int program[16];
 
     int timer_handle, current_timer;           // no. of delta times passed
     Bit32u last_delta_time;                    // timer value at last command
@@ -232,7 +232,7 @@ private:
 
   struct bx_sb16_emul_struct {
     bx_sb16_buffer datain, dataout;
-    bx_sb16_ins_map remaplist[256];
+    bx_sb16_ins_map remaplist[BX_SB16_MAX_REMAPS];
     Bit16u remaps;
   } emuldata;
 
