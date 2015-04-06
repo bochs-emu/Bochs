@@ -1030,11 +1030,15 @@ computer, but the emulation appears to be correct. Even a MOD
 player works, although only for lower sampling speeds.
 </para>
 <para>
+The OPL3 chip now also produces output. The source code has been ported from
+DOSBox and the output data is polled from the mixer thread.
+</para>
+<para>
 Also, the MIDI data running through the MPU401 ports can be written
 into a SMF, that is the standard midi file. The wave output
 can be written into a VOC file, which has a format defined by
-Creative Labs. This file format can be converted to WAV by
-sox for example.
+Creative Labs. Output to a WAV file and dual output (device and file
+at the same time) is now also supported.
 </para>
 </section>
 
@@ -1045,17 +1049,19 @@ Output to the host sound system is supported on Windows, Linux, FreeBSD, MacOS 9
 MacOSX and platforms supported by SDL.
 </para>
 <para>
-On Linux, the output goes to any file or device. If you have a wavetable synthesizer,
-midi can go to <filename class="devicefile">/dev/midi00</filename>, otherwise you may need
-a midi interpreter. For example, the midid program from the DosEmu project would work.
-Wave output should go to <filename class="devicefile">/dev/dsp</filename>. These devices
-are assumed to be OSS devices, if they're not some of the ioctl's might fail.
-If ALSA is present on Linux and the sound driver is set to <filename>alsa</filename>,
-Bochs uses it's default PCM output device and MIDI sequencer.
+On Linux using OSS, the output goes to any file or device. If you have a
+wavetable synthesizer, midi can go to <filename class="devicefile">/dev/midi00</filename>,
+otherwise you may need a midi interpreter. For example, the midid program from
+the DosEmu project would work. Wave output should go to <filename class="devicefile">/dev/dsp</filename>.
+These devices are assumed to be OSS devices, if they're not some of the ioctl's
+might fail. If ALSA is present on Linux and the sound driver is set to
+<filename>alsa</filename>, Bochs uses it's default PCM output device and MIDI
+sequencer.
 </para>
 <para>
-On Windows, midi and (wave) output go to the midi mapper and the wave mapper,
-respectively. A future version might have selectable output devices.
+On Windows, midi and wave output go to the midi mapper and the wave mapper,
+respectively. The device ID for the midi is now selectable. A future version
+might also have selectable wave output devices.
 </para>
 <para>
 See the next section for more information about the sound lowlevel interface.
@@ -1079,22 +1085,20 @@ running at the same time.
 </para>
 
 <para>
-BX_SOUND_LOWLEVEL_C is the name of the class used as the "default" sound driver for
-output.  The default value of this setting is the dummy driver with no output. The
-configure script usually changes this value. The following are supported at the
-moment:
+BX_SOUND_LOWLEVEL_NAME is the name of the driver used as the "default" one for
+all features. The default value of this setting is the dummy driver with no output.
+The configure script usually changes this value. The following are supported at
+the moment:
 </para>
 
 <programlisting>
-        bx_sound_linux_c    for output to /dev/dsp and /dev/midi00 on Linux,
-                            FreeBSD and maybe other OSes that use the OSS driver.
-        bx_sound_windows_c  for output to the midi and wave mapper of
-                            Windows 3.1 and higher.
-        bx_sound_alsa_c     for output to the default ALSA PCM device and the
-                            default ALSA sequencer.
-        bx_sound_osx_c      for output on Mac OS 9 and Mac OSX.
-        bx_sound_sdl_c      for wave output on platforms supported by SDL.
-        bx_sound_output_c   for no output at all.
+    alsa   Output for Linux with ALSA PCM and sequencer interface
+    oss    Output for Linux, to /dev/dsp and /dev/midi00
+    osx    Output for MacOSX midi and wave device
+    sdl    Wave output with SDL/SDL2
+    win    Output for Windows midi and wave mappers
+    file   Wave and midi output to file
+    dummy  Dummy functions, no output
 </programlisting>
 
 <para>
@@ -1129,32 +1133,34 @@ output routines to their platform. It gives a short outline what services
 have to be provided.
 </para>
 <para>
-You should also have a look at the exisiting files, <emphasis>SOUNDMOD.CC</emphasis>
-and e.g. <emphasis>SOUNDLNX.CC</emphasis> for Linux or <emphasis>SOUNDWIN.CC</emphasis>
-for Windows and their respective header files to get an idea about how these things
-really work.
+You should also have a look at the exisiting files, <emphasis>SOUNDLOW.CC</emphasis>,
+<emphasis>SOUNDMOD.CC</emphasis> and e.g. <emphasis>SOUNDLNX.CC</emphasis> for Linux
+or <emphasis>SOUNDWIN.CC</emphasis> for Windows and their respective header files
+to get an idea about how these things really work.
 </para>
 
 <section><title>Files</title>
-
 <para>
 The main include file for a lowlevel sound driver is <emphasis>iodev.h</emphasis>.
 It has all definitions for the system-independent functions that a sound driver
-uses. The sound driver also needs to include <emphasis>soundmod.h</emphasis> for
-the definition of the base class <emphasis>bx_sound_output_c</emphasis>.
+uses. The sound driver also needs to include <emphasis>soundlow.h</emphasis> for
+the definitions of the base classes <emphasis>bx_sound_lowlevel_c</emphasis>,
+<emphasis>bx_soundlow_waveout_c</emphasis>, <emphasis>bx_soundlow_wavein_c</emphasis>
+and <emphasis>bx_soundlow_midiout_c</emphasis>.
 </para>
 
 <para>
 Additionally, every output driver will have an include file, which should be
 included on top of <filename>soundmod.cc</filename> to allow the emulator
-to use that driver. A soundcard does not need to include the specific driver
-header.
+to use that driver. The code to initialize the object for the selected drivers
+can be found in that file, so a soundcard emulation does not need to include
+the specific driver headers.
 </para>
 
 <para>
 To actually make the emulator use any specific driver as the default,
-<emphasis>BX_SOUND_LOWLEVEL_C</emphasis> has to be set to the name of the
-respective output class.
+<emphasis>BX_SOUND_LOWLEVEL_NAME</emphasis> has to be set to the name of the
+respective driver.
 </para>
 
 <para>
@@ -1167,91 +1173,152 @@ and to regenerate the configure script,
 </para>
 </section>
 
-<section><title>Classes</title>
+<section><title>Defines and strutures</title>
+<para>
+<screen>
+#define BX_SOUNDLOW_WAVEPACKETSIZE  19200
 
+#define BX_SOUNDLOW_OK   0
+#define BX_SOUNDLOW_ERR  1
+
+typedef struct {
+  Bit16u samplerate;
+  Bit8u  bits;
+  Bit8u  channels;
+  Bit8u  format;
+  Bit16u volume;
+} bx_pcm_param_t;
+
+const bx_pcm_param_t default_pcm_param = {44100, 16, 2, 1};
+</screen>
+</para>
+<para>
+The maximum size of a wave data packet, the return values of the lowlevel
+functions, the structure for the PCM parameters and the default parameter
+set are also important for the sound driver development. They can be found
+in the main include file <emphasis>soundlow.h</emphasis>.
+</para>
+<para>
+All lowlevel sound methods called from the device code have to return either
+<emphasis>BX_SOUNDLOW_OK</emphasis> if the function was successful, or
+<emphasis>BX_SOUNDLOW_ERR</emphasis> if not. If any of the initialization
+functions fail, the device emulation should disable the affected feature.
+</para>
+</section>
+
+<section><title>Classes</title>
 <para>
 The following classes are involved with the sound lowlevel interface:
 </para>
 <itemizedlist>
 <listitem><para>
 <emphasis>bx_soundmod_ctl_c</emphasis> is a pseudo device that is used to
-initialize the sound driver depending on the configuration. In addition to
-this, it has methods for the PC speaker beep generation and the VOC file
-output.
+initialize the sound drivers depending on the configuration.
 </para></listitem>
 
 <listitem><para>
-<emphasis>bx_sound_output_c</emphasis> is the base output class. It has all
-the methods used by the soundcard emulation, but only as stubs and does not
-actually produce any output. These methods are then called by
-the emulator whenever output is necessary.
+<emphasis>bx_sound_lowlevel_c</emphasis> is the base class of the
+lowlevel sound support. It has methods to return pointers to the objects for
+the available services <emphasis>waveout</emphasis>, <emphasis>wavein</emphasis>
+and <emphasis>midiout</emphasis>. The base class returns NULL for all services.
 </para></listitem>
 
 <listitem><para>
-<emphasis>bx_sound_OS_c</emphasis> is derived from
-<emphasis>bx_sound_output_c</emphasis>. It contains the code to generate
-output for the <emphasis>OS</emphasis> operating system.
-It is not necessary to override all the methods defined in the base class, since
-virtual functions are used. The constructor should call the inherited constructor
-as usual, even though the current constructor does not do anything yet.
+<emphasis>bx_sound_dummy_c</emphasis> is derived from <emphasis>bx_sound_lowlevel_c</emphasis>.
+It returns vaild pointers for all services, but the output classes are only
+implemented as stubs and the <emphasis>wavein</emphasis> service returns silence.
+This "dummy" driver is used whenever a OS specific driver does not implement
+all services.
+</para></listitem>
+
+<listitem><para>
+<emphasis>bx_soundlow_waveout_c</emphasis>, <emphasis>bx_soundlow_wavein_c</emphasis>
+and <emphasis>bx_soundlow_midiout_c</emphasis> are the base classes for the
+services provided by the Bochs lowlevel sound support. Some methods are stubs
+and used by the "dummy" sound driver, others are helper methods and used by
+the OS specific implementations derived from these base classes.
+</para></listitem>
+
+<listitem><para>
+<emphasis>bx_sound_OS_c</emphasis> is derived from <emphasis>bx_sound_lowlevel_c</emphasis>.
+It returns vaild pointers for all services it implements for the selected
+<emphasis>OS</emphasis> (operating system / library) or NULL for services it does
+not implement. In the second case the Bochs sound init code falls back to the
+"dummy" driver.
 </para></listitem>
 </itemizedlist>
 </section>
 
-<section><title>The base class <emphasis>bx_sound_output_c</emphasis></title>
+<section><title>The base class <emphasis>bx_sound_lowlevel_c</emphasis></title>
 <para>
 <screen>
 class bx_sound_lowlevel_c : public logfunctions {
 public:
-
   bx_sound_lowlevel_c();
   virtual ~bx_sound_lowlevel_c();
 
-  virtual int get_type() {return BX_SOUNDLOW_DUMMY;}
+  virtual bx_soundlow_waveout_c* get_waveout() {return NULL;}
+  virtual bx_soundlow_wavein_c* get_wavein() {return NULL;}
+  virtual bx_soundlow_midiout_c* get_midiout() {return NULL;}
 
-  virtual int waveready();
-  virtual int midiready();
-
-  virtual int openmidioutput(const char *mididev);
-  virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
-  virtual int closemidioutput();
-
-  virtual int openwaveoutput(const char *wavedev);
-  virtual int startwaveplayback(int frequency, int bits, bx_bool stereo, int format);
-  virtual int sendwavepacket(int length, Bit8u data[]);
-  virtual int stopwaveplayback();
-  virtual int closewaveoutput();
-
-  virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
-  virtual int startwaverecord(int frequency, int bits, bx_bool stereo, int format);
-  virtual int getwavepacket(int length, Bit8u data[]);
-  virtual int stopwaverecord();
-  virtual int closewaveinput();
-
-  static void record_timer_handler(void *);
-  void record_timer(void);
 protected:
-  int record_timer_index;
-  int record_packet_size;
-  sound_record_handler_t record_handler;
+  bx_soundlow_waveout_c *waveout;
+  bx_soundlow_wavein_c *wavein;
+  bx_soundlow_midiout_c *midiout;
 };
 </screen>
+</para>
+<para>
 The base class for sound lowlevel support is derived from the <emphasis>logfunctions</emphasis>
 class to make the Bochs logging capabilities available in the sound driver code.
-It contains the framework for wave input (recording) support. The base class is
-in use if the "dummy" sound driver is selected or in case no platform or library
-specific implementation is available.
+The constructor of this base class only initializes all pointers to NULL and
+the destructor deletes the objects if necessary.
 </para>
 </section>
 
-<section><title>Methods</title>
+<section><title>The <emphasis>waveout</emphasis> base class <emphasis>bx_soundlow_waveout_c</emphasis></title>
 <para>
-The following are the methods that the sound driver class has to override.
-All but constructor and destructor have to return either
-<emphasis>BX_SOUNDLOW_OK</emphasis> <emphasis>(0)</emphasis> if the function
-was successful, or <emphasis>BX_SOUNDLOW_ERR</emphasis> <emphasis>(1)</emphasis>
-if not. If any of the initialization functions fail, output to that device is
-disabled until the emulator is restarted.
+<screen>
+class bx_soundlow_waveout_c : public logfunctions {
+public:
+  bx_soundlow_waveout_c();
+  virtual ~bx_soundlow_waveout_c();
+
+  virtual int openwaveoutput(const char *wavedev);
+  virtual int set_pcm_params(bx_pcm_param_t *param);
+  virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
+  virtual int get_packetsize();
+  virtual int output(int length, Bit8u data[]);
+  virtual int closewaveoutput();
+
+  virtual int register_wave_callback(void *, get_wave_cb_t wd_cb);
+  virtual void unregister_wave_callback(int callback_id);
+
+  virtual bx_bool mixer_common(Bit8u *buffer, int len);
+protected:
+  void convert_pcm_data(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param);
+  void start_mixer_thread(void);
+
+  bx_pcm_param_t emu_pcm_param, real_pcm_param;
+  int cvt_mult;
+
+  int cb_count;
+  struct {
+    void *device;
+    get_wave_cb_t cb;
+  } get_wave[BX_MAX_WAVE_CALLBACKS];
+  int pcm_callback_id;
+};
+</screen>
+</para>
+<para>
+The base class for wave output support is also derived from the
+<emphasis>logfunctions</emphasis> class. In addition to wave output methods
+used from sound devices, it contains everything required for the mixer thread
+feature (register PCM sources, convert data formats, start mixer).
+</para>
+<para>
+&FIXME; ALL SECTIONS BELOW ARE NOT YET UPDATED !
 </para>
 
 <section><title>bx_sound_OS_c()</title>

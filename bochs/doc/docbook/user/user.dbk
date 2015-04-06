@@ -466,10 +466,13 @@ currently work with.
   <row>
     <entry>Sound card</entry>
     <entry>Yes</entry>
-    <entry>Emulates a Sound Blaster 16 card (ISA, no plug&amp;play) or an ES1370 PCI
-    card. On Windows, Linux, FreeBSD, MacOS 9, MacOSX and all platforms supported by
-    SDL, the output can be sent to the host computer's sound system. For the SB16,
-    see the <ulink url="../development/sb16-emulation-basics.html">developer documentation</ulink>
+    <entry>Emulates a Sound Blaster 16 card (ISA, no plug&amp;play) or an
+    ES1370 PCI card. The SB16 emulation provides wave input / output, the OPL3
+    chip, the external MIDI port and volume control for wave and FM. The ES1370
+    provides wave input / output and volume control for it. On Windows, Linux,
+    FreeBSD, MacOS 9, MacOSX and all platforms supported by SDL, the output can
+    be sent to the host computer's sound system. For the SB16, see the
+    <ulink url="../development/sb16-emulation-basics.html">developer documentation</ulink>
     for details.
     </entry>
   </row>
@@ -2193,16 +2196,16 @@ to explicitly turn it off.
       <entry>no</entry>
       <entry>
       Enable ES1370 sound emulation. Just like the SB16 option, the available
-      lowlevel sound interface is autodetected and the gameport is turned on.
+      lowlevel sound interfaces are autodetected and the gameport is turned on.
       </entry>
     </row>
     <row>
       <entry>--enable-gameport</entry>
       <entry>no</entry>
       <entry>
-      Enables the standard PC gameport. This option is only necessary if you want to
-      have a gameport, but no SB16 (see above). The connection to a real joystick is
-      currently supported on Linux and win32 only.
+      Enables the standard PC gameport. This option is only necessary if you want
+      to have a gameport, but no SB16 or ES1370 (see above). The connection to a
+      real joystick is currently supported on Linux and win32 only.
       </entry>
     </row>
     <row>
@@ -3190,7 +3193,7 @@ These plugins will be loaded by default (if present): 'biosdev', 'extfpuirq',
 <para>
 These plugins are also supported, but they are usually loaded directly with
 their bochsrc option: 'e1000', 'es1370', 'ne2k', 'pcidev', 'pcipnic', 'sb16',
-'usb_ohci', 'usb_uhci' and 'usb_xhci'.
+'usb_ohci', 'usb_uhci', 'usb_xhci' and 'voodoo'.
 </para>
 </section>
 
