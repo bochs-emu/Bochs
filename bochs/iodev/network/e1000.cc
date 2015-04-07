@@ -12,7 +12,7 @@
 //  Copyright (c) 2007 Dan Aloni
 //  Copyright (c) 2004 Antony T Curtis
 //
-//  Copyright (C) 2011-2014  The Bochs Project
+//  Copyright (C) 2011-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -457,7 +457,7 @@ void bx_e1000_c::init(void)
 
   BX_E1000_THIS s.devfunc = 0x00;
   DEV_register_pci_handlers(this, &BX_E1000_THIS s.devfunc, BX_PLUGIN_E1000,
-                            "Experimental Intel(R) Gigabit Ethernet");
+                            "Intel(R) Gigabit Ethernet");
 
   // initialize readonly registers
   init_pci_conf(0x8086, 0x100e, 0x03, 0x020000, 0x00);

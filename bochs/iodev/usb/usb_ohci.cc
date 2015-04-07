@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009       Benjamin D Lunt (fys at frontiernet net)
-//                2009-2014  The Bochs Project
+//                2009-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -20,7 +20,7 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 /////////////////////////////////////////////////////////////////////////
 
-// Experimental USB OHCI adapter
+// USB OHCI adapter
 
 // Notes: See usb_uhci.cc
 
@@ -181,7 +181,7 @@ void bx_usb_ohci_c::init(void)
 
   BX_OHCI_THIS hub.devfunc = 0x00;
   DEV_register_pci_handlers(this, &BX_OHCI_THIS hub.devfunc, BX_PLUGIN_USB_OHCI,
-                            "Experimental USB OHCI");
+                            "USB OHCI");
 
   // initialize readonly registers
   init_pci_conf(0x11c1, 0x5803, 0x11, 0x0c0310, 0x00);
