@@ -1318,37 +1318,437 @@ used from sound devices, it contains everything required for the mixer thread
 feature (register PCM sources, convert data formats, start mixer).
 </para>
 <para>
-&FIXME; ALL SECTIONS BELOW ARE NOT YET UPDATED !
-</para>
-
-<section><title>bx_sound_OS_c()</title>
-
-<para>
-The emulator instantiates the class at the initialization of Bochs.
-</para>
-
-<para>
 The constructor should <emphasis>not</emphasis> allocate the output devices.
-This shouldn't be done until the actual output occurs; in either
-<emphasis>openmidioutput()</emphasis> or <emphasis>openwaveoutput()</emphasis>.
-Otherwise it would be impossible to have two copies of Bochs running
-concurrently (if anybody ever wants to do this).
+This should be done in <emphasis>openwaveoutput()</emphasis>.
 </para>
-</section>
-
-<section><title>~bx_sound_OS_c()</title>
 
 <para>
-The instance is destroyed just before Bochs ends.
+&FIXME; ALL SUBSECTIONS BELOW ARE NOT YET UPDATED !
+</para>
+
+<section><title>int openwaveoutput(char *device)</title>
+
+<para>
+<emphasis>openwaveoutput()</emphasis> is called when the sound subsystem
+initializes. It should do the following:
+</para>
+
+<itemizedlist>
+<listitem><para>
+Open the given device, and prepare it for wave output
+</para></listitem>
+</itemizedlist>
+<para>
+<emphasis>or</emphasis>
+</para>
+<itemizedlist>
+<listitem><para>
+Store the device name so that the device can be opened in <emphasis>set_pcm_params()</emphasis>.
+</para></listitem>
+</itemizedlist>
+
+<para>
+<emphasis>openwaveoutput()</emphasis> will only be called once, whereas
+<emphasis>set_pcm_params()</emphasis> is called for every new wave output
+command to the soundcard emulation. If feasible, it could be useful to open
+and/or lock  the output device in <emphasis>set_pcm_params()</emphasis> as
+opposed to <emphasis>openwaveoutput()</emphasis> to ensure that it can be used
+by other applications while Bochs doesn't need it.
+</para>
+
+<para>
+However, many older applications don't use the auto-init DMA
+mode, which means that they start a new DMA transfer for every single
+block of output, which means usually for every 2048 bytes or so.
+Unfortunately there is no way of knowing whether the application will
+restart an expired DMA transfer soon, so that in these cases the
+<emphasis>set_pcm_params</emphasis> function will be called very often, and it
+isn't a good idea to have it reopen the device every time.
+</para>
+
+<para>The buffer when writing to the device should not be overly large.
+Usually about four buffers of 4096 bytes produce best results. Smaller
+buffers could mean too much overhead, while larger buffers contribute
+to the fact that the actual output will always be late when the application
+tries to synchronize it with for example graphics.
+</para>
+
+<para>The parameters are the following: </para>
+
+<itemizedlist>
+<listitem><para>
+<emphasis>device</emphasis> is the wave device selected by the user. It is
+strictly system-dependent. The value is that of the <emphasis>waveout=device</emphasis>
+configuration parameter of the <emphasis>sound</emphasis> bochsrc option.
+</para></listitem>
+</itemizedlist>
+
+<para>
+Note that only one wave output device will be used at any one time.
+<emphasis>device</emphasis> may not have the same value throughout one session,
+but it will be closed before it is changed.
 </para>
 </section>
 
-<section><title>int get_type()</title>
+<section>
+<title>int set_pcm_params(int frequency, int bits, int stereo, int format)</title>
+
 <para>
-Returns.the ID of the sound driver module. The default value is <emphasis>BX_SOUNDLOW_DUMMY</emphasis>.
-New values should be added to the list in <emphasis>soundmod.h</emphasis>.
+This function is called whenever the emulator receives a new wave output command.
+It should do the following:
+</para>
+
+<itemizedlist>
+<listitem><para>
+Open the wave output device, unless <emphasis>openwaveoutput()</emphasis> did that
+already
+</para></listitem>
+
+<listitem><para>
+Prepare the device for data and set the device parameters to those given
+in the function call
+</para></listitem>
+</itemizedlist>
+
+<para>
+The parameters are the following:
+</para>
+
+<itemizedlist>
+<listitem><para>
+<emphasis>frequency</emphasis> is the desired frequency of the
+output. Because of the capabities of the soundcards, it can have any value
+between 5000 and 44,100.
+</para></listitem>
+
+<listitem><para>
+<emphasis>bits</emphasis> is either 8 or 16, denoting the resolution
+of one sample.
+</para></listitem>
+
+<listitem><para>
+<emphasis>stereo</emphasis> is either 1 for stereo output, or 0 for mono output.
+</para></listitem>
+
+<listitem><para>
+<emphasis>format</emphasis> is a bit-coded value (see below).
+</para></listitem>
+</itemizedlist>
+
+<para>
+<table>
+<title>format bits</title>
+<tgroup cols="2">
+<thead>
+<row>
+<entry>Bit number</entry>
+<entry>Meaning</entry>
+</row>
+</thead>
+<tbody>
+<row> <entry> 0 (LSB)  </entry><entry><para> 0: unsigned data </para><para>
+                                            1: signed data </para></entry> </row>
+<row> <entry> 1..6     </entry><entry> Type of codec (see below) </entry> </row>
+<row> <entry> 7        </entry><entry><para> 0: no reference byte </para><para>
+                                             1: with reference byte </para></entry> </row>
+<row> <entry> 8..x     </entry><entry> reserved (0) </entry> </row>
+</tbody>
+</tgroup>
+</table>
+
+<table>
+<title>codecs</title>
+<tgroup cols="2">
+<thead>
+<row>
+<entry>Value</entry>
+<entry>Meaning</entry>
+</row>
+</thead>
+<tbody>
+<row> <entry> 0 </entry><entry> PCM (raw data) </entry> </row>
+<row> <entry> 1 </entry><entry> reserved </entry> </row>
+<row> <entry> 2 </entry><entry> 2-bit ADPCM (Creative Labs format) </entry> </row>
+<row> <entry> 3 </entry><entry> 2.4-bit (3-bit) ADPCM (Creative Labs format) </entry> </row>
+<row> <entry> 4 </entry><entry> 4-bit ADPCM (Creative Labs format) </entry> </row>
+</tbody>
+</tgroup>
+</table>
+</para>
+<para>
+Other codecs are not supported by the SB hardware. In fact, most applications will
+translate their data into raw data, so that in most cases the codec will be zero.
+</para>
+<para>
+The number of bytes per sample can be calculated from this as (bits / 8) * (stereo + 1).
 </para>
 </section>
+
+
+<section>
+<title>int sendwavepacket(int length, Bit8u data[])</title>
+
+<para>
+This function is called whenever a data packet of at most
+<emphasis>BX_SOUNDLOW_WAVEPACKETSIZE</emphasis> is ready at the soundcard
+emulation. It should then do the following:
+</para>
+
+<itemizedlist>
+<listitem><para>
+Send this wave packet to the wave hardware
+</para></listitem>
+</itemizedlist>
+
+<para>
+This function <emphasis>has</emphasis> to be synchronous, meaning that it <emphasis>has</emphasis>
+to return immediately, and <emphasis>not</emphasis> wait until the output is done. Also,
+this function might be called before the previous output is done. If your
+hardware can't append the new output to the old one, you will have to implement
+this yourself, or the output will be very chunky, with as much silence
+between the blocks as the blocks take to play. This is not what you want.
+Instead, <emphasis>waveready()</emphasis> should return <emphasis>BX_SOUND_OUTPUT_ERR</emphasis>
+until the device accepts another block of data.
+</para>
+
+<para>
+Parameters:
+</para>
+
+<itemizedlist>
+<listitem><para>
+<emphasis>length</emphasis> is the number of data bytes in
+the data stream. It will never be larger than <emphasis>BX_SOUNDLOW_WAVEPACKETSIZE</emphasis>.
+</para></listitem>
+
+<listitem><para>
+<emphasis>data</emphasis> is the array of data bytes.
+</para></listitem>
+</itemizedlist>
+
+<para>
+The order of bytes in the data stream is the same as that in the Wave file format:
+
+<table>
+<title>wave output types</title>
+<tgroup cols="2">
+<thead>
+<row>
+<entry>Output type</entry>
+<entry>Sequence of data bytes</entry>
+</row>
+</thead>
+<tbody>
+<row> <entry> 8 bit mono </entry><entry> Sample 1; Sample 2; Sample 3; etc. </entry> </row>
+<row> <entry> 8 bit stereo </entry><entry> Sample 1, Channel 0; Sample 1, Channel 1; Sample 2, Channel 0; Sample 2, Channel 1; etc. </entry> </row>
+<row> <entry> 16 bit mono </entry><entry> Sample 1, LSB; Sample 1, MSB; Sample 2, LSB; Sample 2, MSB; etc. </entry> </row>
+<row> <entry> 16 bit stereo </entry><entry> Sample 1, LSB, Channel 0; Sample 1, MSB, Channel 0; Sample 1, LSB, Channel 1; Sample 1, MSB, Channel 1; etc. </entry> </row>
+</tbody>
+</tgroup>
+</table>
+</para>
+
+<para>
+Typically 8 bit data will be unsigned with values from 0 to 255, and
+16 bit data will be signed with values from -32768 to 32767, although the
+SB16 is not limited to this. For further information on the codecs and
+the use of reference bytes please refer to the Creative Labs Sound Blaster
+Programmer's Manual, which can be downloaded from the Creative Labs web
+site.
+</para>
+</section>
+
+<section><title>int stopwaveplayback()</title>
+<para>
+This function is called at the end of a wave data transfer. It should do the following:
+</para>
+
+<itemizedlist>
+<listitem><para>
+Close the output device if it was opened by <emphasis>set_pcm_params()</emphasis>.
+and it's not going to be opened soon. Which is almost impossible to tell.
+</para></listitem>
+</itemizedlist>
+</section>
+
+<section><title>int closewaveoutput()</title>
+<para>
+This function is called just before the Bochs simulation quits. It should do
+the following:
+</para>
+
+<itemizedlist>
+<listitem><para>
+Close the output device, if this hasn't been done by <emphasis>stopwaveplayback()</emphasis>.
+</para></listitem>
+</itemizedlist>
+
+<para>
+Typically, <emphasis>stopwaveplayback()</emphasis> will be called several times, whenever
+a data transfer is done, where <emphasis>closewaveoutput()</emphasis> will only be called
+once. However, in the future it might be possible that <emphasis>openwaveoutput()</emphasis>
+is called again, for example if the user chose to switch devices while
+Bochs was running. This is not supported at the moment, but might be in
+the future.
+</para>
+</section>
+</section>
+
+<section><title>The <emphasis>wavein</emphasis> base class <emphasis>bx_soundlow_wavein_c</emphasis></title>
+<para>
+<screen>
+class bx_soundlow_wavein_c : public logfunctions {
+public:
+  bx_soundlow_wavein_c();
+  virtual ~bx_soundlow_wavein_c();
+
+  virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
+  virtual int startwaverecord(bx_pcm_param_t *param);
+  virtual int getwavepacket(int length, Bit8u data[]);
+  virtual int stopwaverecord();
+
+  static void record_timer_handler(void *);
+  void record_timer(void);
+protected:
+  int record_timer_index;
+  int record_packet_size;
+  sound_record_handler_t record_handler;
+};
+</screen>
+</para>
+<para>
+The base class for wave input support is also derived from the
+<emphasis>logfunctions</emphasis> class. It contains the framework for wave
+input (recording) support. The base class is used by the "dummy" sound driver
+and returns silence to let the input mechanism of the soundcard emulation work.
+The soundcard emulator object needs to implement a callback function to notifies
+the emulation about available data. This function usually calls the driver method
+to get the wave data packet. The driver objects has a periodic timer with an
+interval of 0.1 emulated seconds that is active during recording. The timer
+handler processes the wave data recorded with platform or library specific
+function and finally notifies the emulator.
+</para>
+<para>
+The constructor of the base class only initializes the timer ID. OS specific
+implementations should initialize other required members here.
+</para>
+<para>
+The destructor of the base class only calls <emphasis>stopwaverecord()</emphasis>.
+OS specific implementations should close the input device here if necessary.
+</para>
+
+<section><title>int openwaveinput(char *device, sound_record_handler_t rh)</title>
+<para>
+<emphasis>openwaveinput()</emphasis> is called when the sound emulation first
+receives a sound recording command. It should do the following:
+</para>
+
+<itemizedlist>
+<listitem><para>
+Open the given device, and prepare it for wave input
+</para></listitem>
+</itemizedlist>
+<para>
+<emphasis>or</emphasis>
+</para>
+<itemizedlist>
+<listitem><para>
+Store the device name so that the device can be opened in <emphasis>startwaverecord()</emphasis>.
+</para></listitem>
+</itemizedlist>
+
+<para>
+In addition to this the record handler value should be stored and the record timer
+should be registered. This is the definition of record handler callback function:
+<screen>
+typedef Bit32u (*sound_record_handler_t)(void *arg, Bit32u len);
+</screen>
+</para>
+
+<para>
+<emphasis>openwaveinput()</emphasis> will only be called once, whereas
+<emphasis>startwaverecord()</emphasis> is called for every new wave input
+command to the soundcard emulation. If feasible, it could be useful to open
+and/or lock  the input device in <emphasis>startwaverecord()</emphasis> as
+opposed to <emphasis>openwaveinput()</emphasis> to ensure that it can be used
+by other applications while Bochs doesn't need it.
+</para>
+
+<para>The parameters are the following: </para>
+
+<itemizedlist>
+<listitem><para>
+<emphasis>device</emphasis> is the wave device selected by the user. It is
+strictly system-dependent. The value is that of the <emphasis>wavein=device</emphasis>
+configuration parameter of the <emphasis>sound</emphasis> bochsrc option.
+</para></listitem>
+<listitem><para>
+<emphasis>rh</emphasis> is a pointer to the record handler method of the sound
+emulation. When sound recording is active, this handler is called periodicly to
+notify the sound emulation about newly available data.
+</para></listitem>
+</itemizedlist>
+
+<para>
+Note that only one wave input device will be used at any one time.
+<emphasis>device</emphasis> may not have the same value throughout one session,
+but it will be closed before it is changed.
+</para>
+</section>
+
+<section>
+<title>int startwaverecord(bx_pcm_param_t *param)</title>
+<para>
+This method receives a pointer to the required PCM parameters (samplerate,
+data format) as the argument and it should set up the input device for recording,
+calculate the size of the recording packet for 0.1 second and start the record
+timer.
+</para>
+</section>
+
+<section>
+<title>int getwavepacket(int length, Bit8u data[])</title>
+<para>
+This method is called from the record handler method of the sound emulation device
+to retrieve the recorded wave data packet.
+</para>
+</section>
+
+<section><title>int stopwaverecord()</title>
+<para>
+This method is called to stop the wave recording. It deactivates the timer that
+calls the method to perform the recording.
+</para>
+</section>
+
+</section>
+
+<section><title>The <emphasis>midiout</emphasis> base class <emphasis>bx_soundlow_midiout_c</emphasis></title>
+<para>
+<screen>
+class bx_soundlow_midiout_c : public logfunctions {
+public:
+  bx_soundlow_midiout_c();
+  virtual ~bx_soundlow_midiout_c();
+
+  virtual int openmidioutput(const char *mididev);
+  virtual int midiready();
+  virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
+  virtual int closemidioutput();
+};
+</screen>
+</para>
+<para>
+The base class for MIDI output support is also derived from the
+<emphasis>logfunctions</emphasis> class.
+</para>
+<para>
+OS specific implementations should initialize required members in the constructor.
+</para>
+<para>
+The destructor of the base class only calls <emphasis>closemidioutput()</emphasis>.
+OS specific implementations should close the input device here if necessary.
+</para>
 
 <section><title>int openmidioutput(char *device)</title>
 
@@ -1456,7 +1856,6 @@ Note, it might be <emphasis>NULL</emphasis> if length==0.
 </itemizedlist>
 </section>
 
-
 <section><title>int closemidioutput()</title>
 
 <para>
@@ -1464,7 +1863,8 @@ Note, it might be <emphasis>NULL</emphasis> if length==0.
 when the
 emulator gets the <emphasis>stop_output</emphasis> command through the emulator port.
 After this, no more output will be necessary until <emphasis>openmidioutput()</emphasis>
-is called again, but <emphasis>midiready()</emphasis> might still be called. It should do the following:
+is called again, but <emphasis>midiready()</emphasis> might still be called. It should
+do the following:
 </para>
 
 <itemizedlist>
@@ -1475,404 +1875,6 @@ Wait for all remaining messages to be completed
 Reset and close the midi output device
 </para></listitem>
 </itemizedlist>
-</section>
-
-
-<section><title>int openwaveoutput(char *device)</title>
-
-<para>
-<emphasis>openwaveoutput()</emphasis> is called when the sound subsystem
-initializes. It should do the following:
-</para>
-
-<itemizedlist>
-<listitem><para>
-Open the given device, and prepare it for wave output
-</para></listitem>
-</itemizedlist>
-<para>
-<emphasis>or</emphasis>
-</para>
-<itemizedlist>
-<listitem><para>
-Store the device name so that the device can be opened in <emphasis>startwaveplayback()</emphasis>.
-</para></listitem>
-</itemizedlist>
-
-<para>
-<emphasis>openwaveoutput()</emphasis> will only be called once, whereas
-<emphasis>startwaveplayback()</emphasis> is called for every new wave output
-command to the soundcard emulation. If feasible, it could be useful to open
-and/or lock  the output device in <emphasis>startwaveplayback()</emphasis> as
-opposed to <emphasis>openwaveoutput()</emphasis> to ensure that it can be used
-by other applications while Bochs doesn't need it.
-</para>
-
-<para>
-However, many older applications don't use the auto-init DMA
-mode, which means that they start a new DMA transfer for every single
-block of output, which means usually for every 2048 bytes or so.
-Unfortunately there is no way of knowing whether the application will
-restart an expired DMA transfer soon, so that in these cases the
-<emphasis>startwaveplayback</emphasis> function will be called very often, and it
-isn't a good idea to have it reopen the device every time.
-</para>
-
-<para>The buffer when writing to the device should not be overly large.
-Usually about four buffers of 4096 bytes produce best results. Smaller
-buffers could mean too much overhead, while larger buffers contribute
-to the fact that the actual output will always be late when the application
-tries to synchronize it with for example graphics.
-</para>
-
-<para>The parameters are the following: </para>
-
-<itemizedlist>
-<listitem><para>
-<emphasis>device</emphasis> is the wave device selected by the user. It is
-strictly system-dependent. The value is that of the <emphasis>waveout=device</emphasis>
-configuration parameter of the <emphasis>sound</emphasis> bochsrc option.
-</para></listitem>
-</itemizedlist>
-
-<para>
-Note that only one wave output device will be used at any one time.
-<emphasis>device</emphasis> may not have the same value throughout one session,
-but it will be closed before it is changed.
-</para>
-</section>
-
-<section>
-<title>int startwaveplayback(int frequency, int bits, int stereo, int format)</title>
-
-<para>
-This function is called whenever the emulator receives a new wave output command.
-It should do the following:
-</para>
-
-<itemizedlist>
-<listitem><para>
-Open the wave output device, unless <emphasis>openwaveoutput()</emphasis> did that
-already
-</para></listitem>
-
-<listitem><para>
-Prepare the device for data and set the device parameters to those given
-in the function call
-</para></listitem>
-</itemizedlist>
-
-<para>
-The parameters are the following:
-</para>
-
-<itemizedlist>
-<listitem><para>
-<emphasis>frequency</emphasis> is the desired frequency of the
-output. Because of the capabities of the soundcards, it can have any value
-between 5000 and 44,100.
-</para></listitem>
-
-<listitem><para>
-<emphasis>bits</emphasis> is either 8 or 16, denoting the resolution
-of one sample.
-</para></listitem>
-
-<listitem><para>
-<emphasis>stereo</emphasis> is either 1 for stereo output, or 0 for mono output.
-</para></listitem>
-
-<listitem><para>
-<emphasis>format</emphasis> is a bit-coded value (see below).
-</para></listitem>
-</itemizedlist>
-
-<para>
-<table>
-<title>format bits</title>
-<tgroup cols="2">
-<thead>
-<row>
-<entry>Bit number</entry>
-<entry>Meaning</entry>
-</row>
-</thead>
-<tbody>
-<row> <entry> 0 (LSB)  </entry><entry><para> 0: unsigned data </para><para>
-                                            1: signed data </para></entry> </row>
-<row> <entry> 1..6     </entry><entry> Type of codec (see below) </entry> </row>
-<row> <entry> 7        </entry><entry><para> 0: no reference byte </para><para>
-                                             1: with reference byte </para></entry> </row>
-<row> <entry> 8..x     </entry><entry> reserved (0) </entry> </row>
-</tbody>
-</tgroup>
-</table>
-
-<table>
-<title>codecs</title>
-<tgroup cols="2">
-<thead>
-<row>
-<entry>Value</entry>
-<entry>Meaning</entry>
-</row>
-</thead>
-<tbody>
-<row> <entry> 0 </entry><entry> PCM (raw data) </entry> </row>
-<row> <entry> 1 </entry><entry> reserved </entry> </row>
-<row> <entry> 2 </entry><entry> 2-bit ADPCM (Creative Labs format) </entry> </row>
-<row> <entry> 3 </entry><entry> 2.4-bit (3-bit) ADPCM (Creative Labs format) </entry> </row>
-<row> <entry> 4 </entry><entry> 4-bit ADPCM (Creative Labs format) </entry> </row>
-</tbody>
-</tgroup>
-</table>
-</para>
-<para>
-Other codecs are not supported by the SB hardware. In fact, most applications will
-translate their data into raw data, so that in most cases the codec will be zero.
-</para>
-<para>
-The number of bytes per sample can be calculated from this as (bits / 8) * (stereo + 1).
-</para>
-</section>
-
-
-<section>
-<title>int waveready()</title>
-
-<para>
-This is called whenever the emulator has another output buffer ready
-and would like to pass it to the output class. This happens every
-<emphasis>BX_SOUNDLOW_WAVEPACKETSIZE</emphasis> bytes, or whenever a DMA transfer
-is done or aborted.
-</para>
-
-<para>
-It should return whether the output device is ready for another buffer
-of <emphasis>BX_SOUNDLOW_WAVEPACKETSIZE</emphasis> bytes.
-If <emphasis>BX_SOUNDLOW_ERR</emphasis>
-is returned, the emulator waits about 1/(frequency * bytes per sample) seconds
-and then asks again. The DMA transfer is stalled during that time, but
-the application keeps running, until the output device becomes ready.
-</para>
-
-<para>
-As opposed to <emphasis>midiready(), waveready()</emphasis> will <emphasis>not</emphasis> be
-called unless the device is open.
-</para>
-</section>
-
-<section>
-<title>int sendwavepacket(int length, Bit8u data[])</title>
-
-<para>
-This function is called whenever a data packet of at most
-<emphasis>BX_SOUNDLOW_WAVEPACKETSIZE</emphasis> is ready at the soundcard
-emulation. It should then do the following:
-</para>
-
-<itemizedlist>
-<listitem><para>
-Send this wave packet to the wave hardware
-</para></listitem>
-</itemizedlist>
-
-<para>
-This function <emphasis>has</emphasis> to be synchronous, meaning that it <emphasis>has</emphasis>
-to return immediately, and <emphasis>not</emphasis> wait until the output is done. Also,
-this function might be called before the previous output is done. If your
-hardware can't append the new output to the old one, you will have to implement
-this yourself, or the output will be very chunky, with as much silence
-between the blocks as the blocks take to play. This is not what you want.
-Instead, <emphasis>waveready()</emphasis> should return <emphasis>BX_SOUND_OUTPUT_ERR</emphasis>
-until the device accepts another block of data.
-</para>
-
-<para>
-Parameters:
-</para>
-
-<itemizedlist>
-<listitem><para>
-<emphasis>length</emphasis> is the number of data bytes in
-the data stream. It will never be larger than <emphasis>BX_SOUNDLOW_WAVEPACKETSIZE</emphasis>.
-</para></listitem>
-
-<listitem><para>
-<emphasis>data</emphasis> is the array of data bytes.
-</para></listitem>
-</itemizedlist>
-
-<para>
-The order of bytes in the data stream is the same as that in the Wave file format:
-
-<table>
-<title>wave output types</title>
-<tgroup cols="2">
-<thead>
-<row>
-<entry>Output type</entry>
-<entry>Sequence of data bytes</entry>
-</row>
-</thead>
-<tbody>
-<row> <entry> 8 bit mono </entry><entry> Sample 1; Sample 2; Sample 3; etc. </entry> </row>
-<row> <entry> 8 bit stereo </entry><entry> Sample 1, Channel 0; Sample 1, Channel 1; Sample 2, Channel 0; Sample 2, Channel 1; etc. </entry> </row>
-<row> <entry> 16 bit mono </entry><entry> Sample 1, LSB; Sample 1, MSB; Sample 2, LSB; Sample 2, MSB; etc. </entry> </row>
-<row> <entry> 16 bit stereo </entry><entry> Sample 1, LSB, Channel 0; Sample 1, MSB, Channel 0; Sample 1, LSB, Channel 1; Sample 1, MSB, Channel 1; etc. </entry> </row>
-</tbody>
-</tgroup>
-</table>
-</para>
-
-<para>
-Typically 8 bit data will be unsigned with values from 0 to 255, and
-16 bit data will be signed with values from -32768 to 32767, although the
-SB16 is not limited to this. For further information on the codecs and
-the use of reference bytes please refer to the Creative Labs Sound Blaster
-Programmer's Manual, which can be downloaded from the Creative Labs web
-site.
-</para>
-</section>
-
-<section><title>int stopwaveplayback()</title>
-<para>
-This function is called at the end of a wave data transfer. It should do the following:
-</para>
-
-<itemizedlist>
-<listitem><para>
-Close the output device if it was opened by <emphasis>startwaveplayback()</emphasis>.
-and it's not going to be opened soon. Which is almost impossible to tell.
-</para></listitem>
-</itemizedlist>
-</section>
-
-<section><title>int closewaveoutput()</title>
-<para>
-This function is called just before the Bochs simulation quits. It should do
-the following:
-</para>
-
-<itemizedlist>
-<listitem><para>
-Close the output device, if this hasn't been done by <emphasis>stopwaveplayback()</emphasis>.
-</para></listitem>
-</itemizedlist>
-
-<para>
-Typically, <emphasis>stopwaveplayback()</emphasis> will be called several times, whenever
-a data transfer is done, where <emphasis>closewaveoutput()</emphasis> will only be called
-once. However, in the future it might be possible that <emphasis>openwaveoutput()</emphasis>
-is called again, for example if the user chose to switch devices while
-Bochs was running. This is not supported at the moment, but might be in
-the future.
-</para>
-</section>
-</section>
-
-<section><title>Methods and members for wave input (recording) support</title>
-<para>
-The wave input feature is relatively new in Bochs. If a lowlevel driver does not
-implement recording, the methods of the base class ("dummy" driver) are used. They
-return silence to let the input mechanism of the soundcard emulation work. The
-soundcard emulator object needs to implement a callback function to notifies
-the emulation about available data. This function usually calls the driver method
-to get the wave data packet. The driver objects has a periodic timer with an
-interval of 0.1 emulated seconds that is active during recording. The timer
-handler processes the wave data recorded with platform or library specific
-function and finally notifies the emulator.
-</para>
-
-<section><title>int openwaveinput(char *device, sound_record_handler_t rh)</title>
-<para>
-<emphasis>openwaveinput()</emphasis> is called when the sound emulation first
-receives a sound recording command. It should do the following:
-</para>
-
-<itemizedlist>
-<listitem><para>
-Open the given device, and prepare it for wave input
-</para></listitem>
-</itemizedlist>
-<para>
-<emphasis>or</emphasis>
-</para>
-<itemizedlist>
-<listitem><para>
-Store the device name so that the device can be opened in <emphasis>startwaverecord()</emphasis>.
-</para></listitem>
-</itemizedlist>
-
-<para>
-In addition to this the record handler value should be stored and the record timer
-should be registered. This is the definition of record handler callback function:
-<screen>
-typedef Bit32u (*sound_record_handler_t)(void *arg, Bit32u len);
-</screen>
-</para>
-
-<para>
-<emphasis>openwaveinput()</emphasis> will only be called once, whereas
-<emphasis>startwaverecord()</emphasis> is called for every new wave input
-command to the soundcard emulation. If feasible, it could be useful to open
-and/or lock  the input device in <emphasis>startwaverecord()</emphasis> as
-opposed to <emphasis>openwaveinput()</emphasis> to ensure that it can be used
-by other applications while Bochs doesn't need it.
-</para>
-
-<para>The parameters are the following: </para>
-
-<itemizedlist>
-<listitem><para>
-<emphasis>device</emphasis> is the wave device selected by the user. It is
-strictly system-dependent. The value is that of the <emphasis>wavein=device</emphasis>
-configuration parameter of the <emphasis>sound</emphasis> bochsrc option.
-</para></listitem>
-<listitem><para>
-<emphasis>rh</emphasis> is a pointer to the record handler method of the sound
-emulation. When sound recording is active, this handler is called periodicly to
-notify the sound emulation about newly available data.
-</para></listitem>
-</itemizedlist>
-
-<para>
-Note that only one wave input device will be used at any one time.
-<emphasis>device</emphasis> may not have the same value throughout one session,
-but it will be closed before it is changed.
-</para>
-</section>
-
-<section>
-<title>int startwaverecord(int frequency, int bits, int stereo, int format)</title>
-<para>
-This method is very similar to the <emphasis>startwaveplayback()</emphasis> method for
-sound output and it takes the same argument list. It should set up the input device
-for recording, calculate the size of the recording packet for 0.1 second and start
-the record timer.
-</para>
-</section>
-
-<section>
-<title>int getwavepacket(int length, Bit8u data[])</title>
-<para>
-This method is called from the record handler method of the sound emulation device
-to retrieve the recorded wave data packet.
-</para>
-</section>
-
-<section><title>int stopwaverecord()</title>
-<para>
-This function is called to stop the wave recording. It deactivates the timer that
-calls the method to perform the recording.
-</para>
-</section>
-
-<section><title>int closewaveinput()</title>
-<para>
-This function is called just before the Bochs simulation quits. It is very
-similar to the <emphasis>closewaveoutput()</emphasis> method.
-</para>
 </section>
 
 </section>
