@@ -47,7 +47,7 @@ bx_es1370_c* theES1370Device = NULL;
 const Bit8u es1370_iomask[64] = {7, 1, 3, 1, 7, 1, 3, 1, 1, 3, 1, 0, 7, 0, 0, 0,
                                  6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
                                  7, 1, 3, 1, 6, 0, 2, 0, 6, 0, 2, 0, 6, 0, 2, 0,
-                                 4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0};
+                                 4, 0, 0, 0, 6, 0, 2, 0, 4, 0, 0, 0, 6, 0, 2, 0};
 
 #define ES1370_CTL            0x00
 #define ES1370_STATUS         0x04
@@ -467,13 +467,13 @@ Bit32u bx_es1370_c::read(Bit32u address, unsigned io_len)
       val = BX_ES1370_THIS s.chan[2].frame_addr;
       break;
     case ES1370_DAC1_FRAMECNT:
-      val = BX_ES1370_THIS s.chan[0].frame_cnt;
+      val = BX_ES1370_THIS s.chan[0].frame_cnt >> shift;
       break;
     case ES1370_DAC2_FRAMECNT:
-      val = BX_ES1370_THIS s.chan[1].frame_cnt;
+      val = BX_ES1370_THIS s.chan[1].frame_cnt >> shift;
       break;
     case ES1370_ADC_FRAMECNT:
-      val = BX_ES1370_THIS s.chan[2].frame_cnt;
+      val = BX_ES1370_THIS s.chan[2].frame_cnt >> shift;
       break;
     case ES1370_PHA_FRAMEADR:
       BX_ERROR(("reading from phantom frame address"));
@@ -589,8 +589,10 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case ES1370_DAC2_FRAMECNT:
       d++;
     case ES1370_DAC1_FRAMECNT:
-      d->frame_cnt = value;
-      d->leftover = 0;
+      if ((offset & 3) == 0) {
+        d->frame_cnt = value;
+        d->leftover = 0;
+      }
       break;
     case ES1370_PHA_FRAMEADR:
       BX_ERROR(("writing to phantom frame address"));
@@ -842,6 +844,9 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
               }
             }
             BX_ES1370_THIS s.dac_nr_active = i;
+          } else {
+            BX_ERROR(("%s: %s already active - dual output not supported yet", chan_name[i],
+                      chan_name[BX_ES1370_THIS s.dac_nr_active]));
           }
           BX_ES1370_THIS s.dac_packet_size[i] = (new_freq / 10) << d->shift; // 0.1 sec
           if (BX_ES1370_THIS s.dac_packet_size[i] > BX_SOUNDLOW_WAVEPACKETSIZE) {
