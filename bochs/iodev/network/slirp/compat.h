@@ -34,16 +34,6 @@ typedef Bit64s ssize_t;
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 #endif
 
-#ifndef container_of
-#ifndef _MSC_VER
-#define container_of(ptr, type, member) ({                      \
-        const typeof(((type *) 0)->member) *__mptr = (ptr);     \
-        (type *) ((char *) __mptr - offsetof(type, member));})
-#else
-#define container_of(ptr, type, member) ((type *)((char *)(ptr) -offsetof(type,member)))
-#endif
-#endif
-
 #ifndef MIN
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #endif

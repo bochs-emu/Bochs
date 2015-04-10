@@ -71,6 +71,12 @@ void ip_cleanup(Slirp *slirp)
     icmp_cleanup(slirp);
 }
 
+static inline struct ipq *container_of_ip_link(void *ptr)
+{
+  return reinterpret_cast<struct ipq*>(static_cast<char*>(ptr) -
+    reinterpret_cast<size_t>(&(static_cast<struct ipq*>(0)->ip_link)));
+}
+
 /*
  * Ip input routine.  Checksum and byte swap header.  If fragmented
  * try to reassemble.  Process options.  Pass to next level.
@@ -156,7 +162,7 @@ void ip_input(struct mbuf *m)
 		 */
 		for (l = (qlink*)slirp->ipq.ip_link.next; l != &slirp->ipq.ip_link;
 		     l = (qlink*)l->next) {
-            fp = container_of(l, struct ipq, ip_link);
+            fp = container_of_ip_link(l);
             if (ip->ip_id == fp->ipq_id &&
                     ip->ip_src.s_addr == fp->ipq_src.s_addr &&
                     ip->ip_dst.s_addr == fp->ipq_dst.s_addr &&
@@ -437,7 +443,7 @@ ip_slowtimo(Slirp *slirp)
 	   return;
 
     while (l != &slirp->ipq.ip_link) {
-        struct ipq *fp = container_of(l, struct ipq, ip_link);
+        struct ipq *fp = container_of_ip_link(l);
         l = (struct qlink*)l->next;
 		if (--fp->ipq_ttl == 0) {
 			ip_freef(slirp, fp);
