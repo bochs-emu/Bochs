@@ -29,6 +29,7 @@ Changes after 2.6.7 release:
   - Sound
     - SB16: Fixed OPL chip detection by implementing ISA bus delay.
     - SB16: Ported OPL3 emulation from DOSBox and partly removed legacy code.
+    - ES1370: Fixed critical bug that made Win9x drivers crash.
     - Major rewrite of the lowlevel sound code.
       - Added mixer thread support (required for all modules except 'sdl').
       - New mixer and SDL mixer are polling data from the PCM output buffers,

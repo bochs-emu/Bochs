@@ -218,7 +218,7 @@ void bx_es1370_c::init(void)
   }
   BX_ES1370_THIS s.devfunc = 0x00;
   DEV_register_pci_handlers(this, &BX_ES1370_THIS s.devfunc, BX_PLUGIN_ES1370,
-                            "Experimental ES1370 soundcard");
+                            "ES1370 soundcard");
 
   // initialize readonly registers
   init_pci_conf(0x1274, 0x5000, 0x00, 0x040100, 0x00);
@@ -487,6 +487,10 @@ Bit32u bx_es1370_c::read(Bit32u address, unsigned io_len)
       if (offset == 0x1b) {
         BX_ERROR(("reading from legacy register 0x1b"));
         val = BX_ES1370_THIS s.legacy1B;
+      } else if (offset >= 0x30) {
+        val = ~0U; // keep compiler happy
+        BX_ERROR(("unsupported read from memory offset=0x%02x!",
+                  (BX_ES1370_THIS s.mempage << 4) | (offset & 0x0f)));
       } else {
         val = ~0U; // keep compiler happy
         BX_ERROR(("unsupported io read from offset=0x%04x!", offset));
@@ -605,6 +609,9 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_ERROR(("writing to legacy register 0x1b (value = 0x%02x)", value & 0xff));
         BX_ES1370_THIS s.legacy1B = (Bit8u)(value & 0xff);
         set_irq_level(BX_ES1370_THIS s.legacy1B & 0x01);
+      } else if (offset >= 0x30) {
+        BX_ERROR(("unsupported write to memory offset=0x%02x!",
+                  (BX_ES1370_THIS s.mempage << 4) | (offset & 0x0f)));
       } else {
         BX_ERROR(("unsupported io write to offset=0x%04x!", offset));
       }
