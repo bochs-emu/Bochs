@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2014  The Bochs Project
+//  Copyright (C) 2002-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1060,7 +1060,7 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
 void bx_wx_gui_c::handle_events(void)
 {
-  bx_bool quit_sim = 0;
+  unsigned tb_button = 0;
   { // critical section start
     wxCriticalSectionLocker lock(event_thread_lock);
     Bit32u bx_key = 0;
@@ -1069,12 +1069,12 @@ void bx_wx_gui_c::handle_events(void)
         case BX_ASYNC_EVT_TOOLBAR:
           switch (event_queue[i].u.toolbar.button) {
             case BX_TOOLBAR_RESET: reset_handler(); break;
-            case BX_TOOLBAR_POWER: quit_sim = 1; break;
-            case BX_TOOLBAR_SAVE_RESTORE: save_restore_handler(); break;
+            case BX_TOOLBAR_POWER: tb_button = 1; break;
+            case BX_TOOLBAR_SAVE_RESTORE: tb_button = 2; break;
             case BX_TOOLBAR_COPY: copy_handler(); break;
             case BX_TOOLBAR_PASTE: paste_handler(); break;
             case BX_TOOLBAR_SNAPSHOT: snapshot_handler(); break;
-            case BX_TOOLBAR_USER: userbutton_handler(); break;
+            case BX_TOOLBAR_USER: tb_button = 3; break;
             default:
               wxLogDebug (wxT ("unknown toolbar id %d"), event_queue[i].u.toolbar.button);
           }
@@ -1167,13 +1167,20 @@ void bx_wx_gui_c::handle_events(void)
         default:
           wxLogError (wxT ("handle_events received unhandled event type %d in queue"), (int)event_queue[i].type);
       }
-      if (quit_sim) break;
+      if (tb_button == 1) break;
     }
     num_events = 0;
   } // critical section end
-  if (quit_sim) {
-    // power_handler() never returns, so it must be placed outside of the critical section
+  // These button handlers must be placed outside of the critical section
+  if (tb_button == 1) {
+    // power_handler() never returns.
     power_handler();
+  } else if (tb_button == 2) {
+    // save_restore_handler() calls a dialog.
+    save_restore_handler();
+  } else if (tb_button == 3) {
+    // userbutton_handler() also calls a dialog.
+    userbutton_handler();
   }
 }
 
