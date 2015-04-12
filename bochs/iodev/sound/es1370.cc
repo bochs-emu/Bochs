@@ -435,10 +435,11 @@ Bit32u bx_es1370_c::read(Bit32u address, unsigned io_len)
     case ES1370_UART_TEST:
       if (offset == ES1370_UART_DATA) {
         BX_ERROR(("reading from UART data register not supported yet"));
-      } else if (offset == ES1370_UART_DATA) {
-        BX_ERROR(("reading from UART status register not supported yet"));
+      } else if (offset == ES1370_UART_STATUS) {
+        BX_INFO(("reading from UART status register"));
+        val = 0x03;
       } else {
-        BX_ERROR(("reading from UART test register not supported yet"));
+        BX_INFO(("reading from UART test register"));
       }
       break;
     case ES1370_MEMPAGE:
