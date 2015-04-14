@@ -1321,92 +1321,103 @@ feature (register PCM sources, convert data formats, start mixer).
 The constructor should <emphasis>not</emphasis> allocate the output devices.
 This should be done in <emphasis>openwaveoutput()</emphasis>.
 </para>
-
 <para>
-&FIXME; ALL SUBSECTIONS BELOW ARE NOT YET UPDATED !
+This table shows the waveout class methods, where are they called from and
+if a platform / library specific implementation is required.
+<table>
+<title>Waveout methods</title>
+<tgroup cols="3">
+<thead>
+<row>
+<entry>Method</entry>
+<entry>Called from</entry>
+<entry>Platform code</entry>
+</row>
+</thead>
+<tbody>
+<row><entry><emphasis>openwaveoutput()</emphasis></entry><entry>Sound init code</entry><entry>Required</entry></row>
+<row><entry><emphasis>set_pcm_params()</emphasis></entry><entry><emphasis>openwaveoutput()</emphasis> and <emphasis>sendwavepacket()</emphasis></entry><entry>Required</entry></row>
+<row><entry><emphasis>sendwavepacket()</emphasis></entry><entry>Sound device emulation</entry><entry>Optional</entry></row>
+<row><entry><emphasis>get_packetsize()</emphasis></entry><entry>Mixer thread</entry><entry>Optional</entry></row>
+<row><entry><emphasis>output()</emphasis></entry><entry>Mixer thread</entry><entry>Required</entry></row>
+<row><entry><emphasis>closewaveoutput()</emphasis></entry><entry>Sound device emulation</entry><entry>Optional</entry></row>
+<row><entry><emphasis>register_wave_callback()</emphasis></entry><entry><emphasis>openwaveoutput()</emphasis> and sound device emulation</entry><entry>Optional</entry></row>
+<row><entry><emphasis>unregister_wave_callback()</emphasis></entry><entry>class destructor and sound device emulation</entry><entry>Optional</entry></row>
+<row><entry><emphasis>mixer_common()</emphasis></entry><entry>Mixer thread</entry><entry>Optional</entry></row>
+<row><entry><emphasis>convert_pcm_data()</emphasis></entry><entry>Internal</entry><entry>No</entry></row>
+<row><entry><emphasis>start_mixer_thread()</emphasis></entry><entry>Internal</entry><entry>No</entry></row>
+</tbody>
+</tgroup>
+</table>
+
 </para>
 
-<section><title>int openwaveoutput(char *device)</title>
+<section><title>int openwaveoutput(const char *wavedev)</title>
 
 <para>
-<emphasis>openwaveoutput()</emphasis> is called when the sound subsystem
+<emphasis>openwaveoutput()</emphasis> is called when the sound output subsystem
 initializes. It should do the following:
 </para>
 
 <itemizedlist>
 <listitem><para>
-Open the given device, and prepare it for wave output
+Set up the default PCM parameters for output.
 </para></listitem>
-</itemizedlist>
-<para>
-<emphasis>or</emphasis>
-</para>
-<itemizedlist>
 <listitem><para>
-Store the device name so that the device can be opened in <emphasis>set_pcm_params()</emphasis>.
+Open the given device, and prepare it for wave output.
+</para></listitem>
+<listitem><para>
+Register the callback function for the PCM buffer queue (<emphasis>sendwavepacket()</emphasis>
+adds the output to the queue and the mixer thread gets it from there).
+</para></listitem>
+<listitem><para>
+Start the mixer thread, unless the sound library has it's own one (e.g. SDL).
 </para></listitem>
 </itemizedlist>
 
 <para>
 <emphasis>openwaveoutput()</emphasis> will only be called once, whereas
-<emphasis>set_pcm_params()</emphasis> is called for every new wave output
-command to the soundcard emulation. If feasible, it could be useful to open
-and/or lock  the output device in <emphasis>set_pcm_params()</emphasis> as
-opposed to <emphasis>openwaveoutput()</emphasis> to ensure that it can be used
-by other applications while Bochs doesn't need it.
+<emphasis>set_pcm_params()</emphasis> is called whenever the PCM samplerate
+has been changed.
 </para>
 
-<para>
-However, many older applications don't use the auto-init DMA
-mode, which means that they start a new DMA transfer for every single
-block of output, which means usually for every 2048 bytes or so.
-Unfortunately there is no way of knowing whether the application will
-restart an expired DMA transfer soon, so that in these cases the
-<emphasis>set_pcm_params</emphasis> function will be called very often, and it
-isn't a good idea to have it reopen the device every time.
-</para>
-
-<para>The buffer when writing to the device should not be overly large.
-Usually about four buffers of 4096 bytes produce best results. Smaller
-buffers could mean too much overhead, while larger buffers contribute
-to the fact that the actual output will always be late when the application
-tries to synchronize it with for example graphics.
-</para>
-
-<para>The parameters are the following: </para>
+<para>The parameters are the following:</para>
 
 <itemizedlist>
 <listitem><para>
-<emphasis>device</emphasis> is the wave device selected by the user. It is
-strictly system-dependent. The value is that of the <emphasis>waveout=device</emphasis>
+<emphasis>wavedev</emphasis> is the wave output device selected by the user.
+It is strictly system-dependent. Some sound libraries currently ignore this
+value and use the default one instead. The value is that of the <emphasis>waveout=device</emphasis>
 configuration parameter of the <emphasis>sound</emphasis> bochsrc option.
 </para></listitem>
 </itemizedlist>
 
 <para>
 Note that only one wave output device will be used at any one time.
-<emphasis>device</emphasis> may not have the same value throughout one session,
+<emphasis>wavedev</emphasis> may not have the same value throughout one session,
 but it will be closed before it is changed.
 </para>
 </section>
 
 <section>
-<title>int set_pcm_params(int frequency, int bits, int stereo, int format)</title>
+<title>int set_pcm_params(bx_pcm_param_t *param)</title>
 
 <para>
-This function is called whenever the emulator receives a new wave output command.
+This function should called from <emphasis>openwaveoutput()</emphasis> to initialize
+the output device with the default parameters and from <emphasis>sendwavepacket()</emphasis>
+whenever the samplerate has been changed in the emulated sound device.
 It should do the following:
 </para>
 
 <itemizedlist>
 <listitem><para>
 Open the wave output device, unless <emphasis>openwaveoutput()</emphasis> did that
-already
+already.
 </para></listitem>
 
 <listitem><para>
 Prepare the device for data and set the device parameters to those given
-in the function call
+in the function call.
 </para></listitem>
 </itemizedlist>
 
@@ -1416,9 +1427,20 @@ The parameters are the following:
 
 <itemizedlist>
 <listitem><para>
-<emphasis>frequency</emphasis> is the desired frequency of the
+<emphasis>param</emphasis> is a pointer to a structure containing the set of
+parameters required to set up a sound device for PCM output.
+</para></listitem>
+</itemizedlist>
+
+<para>
+The members of the structure <emphasis>bx_pcm_param_t</emphasis> are these:
+</para>
+
+<itemizedlist>
+<listitem><para>
+<emphasis>samplerate</emphasis> is the desired frequency of the
 output. Because of the capabities of the soundcards, it can have any value
-between 5000 and 44,100.
+between 5000 and 48,000.
 </para></listitem>
 
 <listitem><para>
@@ -1427,11 +1449,17 @@ of one sample.
 </para></listitem>
 
 <listitem><para>
-<emphasis>stereo</emphasis> is either 1 for stereo output, or 0 for mono output.
+<emphasis>channels</emphasis> is the number of channels (2 for stereo output,
+or 1 for mono output.
 </para></listitem>
 
 <listitem><para>
 <emphasis>format</emphasis> is a bit-coded value (see below).
+</para></listitem>
+
+<listitem><para>
+<emphasis>volume</emphasis> is the output volume to be used by the mixer code.
+The 16 bit value consists of two 8 bit values for each channel.
 </para></listitem>
 </itemizedlist>
 
@@ -1480,13 +1508,13 @@ Other codecs are not supported by the SB hardware. In fact, most applications wi
 translate their data into raw data, so that in most cases the codec will be zero.
 </para>
 <para>
-The number of bytes per sample can be calculated from this as (bits / 8) * (stereo + 1).
+The number of bytes per sample can be calculated from this as (bits / 8) * channels.
 </para>
 </section>
 
 
 <section>
-<title>int sendwavepacket(int length, Bit8u data[])</title>
+<title>int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param)</title>
 
 <para>
 This function is called whenever a data packet of at most
@@ -1496,20 +1524,11 @@ emulation. It should then do the following:
 
 <itemizedlist>
 <listitem><para>
-Send this wave packet to the wave hardware
+Add this wave packet to the waveout buffer chain after converting to 16 bit signed
+little endian. If the samplerate has been changed <emphasis>set_pcm_params()</emphasis>
+should be called to update the sound hardware settings.
 </para></listitem>
 </itemizedlist>
-
-<para>
-This function <emphasis>has</emphasis> to be synchronous, meaning that it <emphasis>has</emphasis>
-to return immediately, and <emphasis>not</emphasis> wait until the output is done. Also,
-this function might be called before the previous output is done. If your
-hardware can't append the new output to the old one, you will have to implement
-this yourself, or the output will be very chunky, with as much silence
-between the blocks as the blocks take to play. This is not what you want.
-Instead, <emphasis>waveready()</emphasis> should return <emphasis>BX_SOUND_OUTPUT_ERR</emphasis>
-until the device accepts another block of data.
-</para>
 
 <para>
 Parameters:
@@ -1523,6 +1542,11 @@ the data stream. It will never be larger than <emphasis>BX_SOUNDLOW_WAVEPACKETSI
 
 <listitem><para>
 <emphasis>data</emphasis> is the array of data bytes.
+</para></listitem>
+
+<listitem><para>
+<emphasis>src_param</emphasis> is a pointer to a structure containing the PCM parameters
+(see above).
 </para></listitem>
 </itemizedlist>
 
@@ -1551,45 +1575,59 @@ The order of bytes in the data stream is the same as that in the Wave file forma
 <para>
 Typically 8 bit data will be unsigned with values from 0 to 255, and
 16 bit data will be signed with values from -32768 to 32767, although the
-SB16 is not limited to this. For further information on the codecs and
-the use of reference bytes please refer to the Creative Labs Sound Blaster
-Programmer's Manual, which can be downloaded from the Creative Labs web
+soundcard emulations are not limited to this.
 site.
 </para>
 </section>
 
-<section><title>int stopwaveplayback()</title>
+<section><title>int get_packetsize()</title>
 <para>
-This function is called at the end of a wave data transfer. It should do the following:
+This function is called from the mixer thread to retrieve the size of a wave data
+packet based on the current samplerate. By default the packet size is big enough
+to send output for 0.1 seconds. If the host sound driver / library uses a different
+value, this value should be returned with this method.
+</para>
+</section>
+
+<section><title>int output(int length, Bit8u data[])</title>
+<para>
+This function is called from the mixer thread to send the mixed PCM output to
+the host sound hardware.
+</para>
+<para>
+Parameters:
 </para>
 
 <itemizedlist>
 <listitem><para>
-Close the output device if it was opened by <emphasis>set_pcm_params()</emphasis>.
-and it's not going to be opened soon. Which is almost impossible to tell.
+<emphasis>length</emphasis> is the number of data bytes in
+the data stream. It will never be larger than the value returned from <emphasis>get_packetsize</emphasis>.
+</para></listitem>
+
+<listitem><para>
+<emphasis>data</emphasis> is the array of data bytes.
 </para></listitem>
 </itemizedlist>
 </section>
 
 <section><title>int closewaveoutput()</title>
 <para>
-This function is called just before the Bochs simulation quits. It should do
-the following:
+This function is currently only called from the soundcard emulation if the "file"
+driver is used. This makes the runtime change of the output file possible.
+By default this method does nothing and the wave output device is closed in the
+destructor of the specific class.
 </para>
+</section>
 
-<itemizedlist>
-<listitem><para>
-Close the output device, if this hasn't been done by <emphasis>stopwaveplayback()</emphasis>.
-</para></listitem>
-</itemizedlist>
-
+<section><title>int register_wave_callback(void *, get_wave_cb_t wd_cb)</title>
 <para>
-Typically, <emphasis>stopwaveplayback()</emphasis> will be called several times, whenever
-a data transfer is done, where <emphasis>closewaveoutput()</emphasis> will only be called
-once. However, in the future it might be possible that <emphasis>openwaveoutput()</emphasis>
-is called again, for example if the user chose to switch devices while
-Bochs was running. This is not supported at the moment, but might be in
-the future.
+This function is called from <emphasis>openwaveoutput()</emphasis> to the register
+the function to retrieve data from the PCM output buffer chain. Other sound emulation
+devices (e.g. OPL3, PC speaker) can register function to poll the data from the
+device emulation.
+</para>
+<para>
+&FIXME; THIS SUBSECTION IS NOT YET COMPLETE !
 </para>
 </section>
 </section>
