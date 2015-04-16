@@ -34,9 +34,9 @@
 #include "iodev.h"
 #if BX_SUPPORT_PCI && BX_SUPPORT_ES1370
 
+#include "soundlow.h"
 #include "pci.h"
 #include "es1370.h"
-#include "soundlow.h"
 
 #include <math.h>
 
@@ -48,6 +48,8 @@ const Bit8u es1370_iomask[64] = {7, 1, 3, 1, 7, 1, 3, 1, 1, 3, 1, 0, 7, 0, 0, 0,
                                  6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
                                  7, 1, 3, 1, 6, 0, 2, 0, 6, 0, 2, 0, 6, 0, 2, 0,
                                  4, 0, 0, 0, 6, 0, 2, 0, 4, 0, 0, 0, 6, 0, 2, 0};
+
+static const Bit8u midi_eventlength[] = { 2, 2, 2, 2, 1, 1, 2, 255};
 
 #define ES1370_CTL            0x00
 #define ES1370_STATUS         0x04
@@ -87,6 +89,8 @@ const Bit8u es1370_iomask[64] = {7, 1, 3, 1, 7, 1, 3, 1, 1, 3, 1, 0, 7, 0, 0, 0,
 #define BX_ES1370_WAVEOUT1 BX_ES1370_THIS waveout[0]
 #define BX_ES1370_WAVEOUT2 BX_ES1370_THIS waveout[1]
 #define BX_ES1370_WAVEIN   BX_ES1370_THIS wavein
+#define BX_ES1370_MIDIOUT1 BX_ES1370_THIS midiout[0]
+#define BX_ES1370_MIDIOUT2 BX_ES1370_THIS midiout[1]
 
 const char chan_name[3][5] = {"DAC1", "DAC2", "ADC"};
 const Bit16u dac1_freq[4] = {5512, 11025, 22050, 44100};
@@ -98,7 +102,7 @@ const Bit16u sctl_loop_sel[3] = {0x2000, 0x4000, 0x8000};
 
 void es1370_init_options(void)
 {
-  static const char *es1370_wavemode_list[] = {
+  static const char *es1370_mode_list[] = {
     "0",
     "1",
     "2",
@@ -118,20 +122,39 @@ void es1370_init_options(void)
     1);
   enabled->set_enabled(BX_SUPPORT_ES1370);
 
+  bx_param_enum_c *midimode = new bx_param_enum_c(menu,
+    "midimode",
+    "Midi mode",
+    "Controls the MIDI output switches.",
+    es1370_mode_list,
+    0, 0);
+  bx_param_filename_c *midifile = new bx_param_filename_c(menu,
+    "midifile",
+    "MIDI file",
+    "The filename is where the MIDI data is sent to in mode 2 or 3.",
+    "", BX_PATHNAME_LEN);
+
   bx_param_enum_c *wavemode = new bx_param_enum_c(menu,
     "wavemode",
     "Wave mode",
     "Controls the wave output switches.",
-    es1370_wavemode_list,
+    es1370_mode_list,
     0, 0);
   bx_param_filename_c *wavefile = new bx_param_filename_c(menu,
     "wavefile",
     "Wave file",
     "This is the file where the wave output is stored",
     "", BX_PATHNAME_LEN);
+
   bx_list_c *deplist = new bx_list_c(NULL);
+  deplist->add(midimode);
   deplist->add(wavemode);
   enabled->set_dependent_list(deplist);
+  deplist = new bx_list_c(NULL);
+  deplist->add(midifile);
+  midimode->set_dependent_list(deplist, 0);
+  midimode->set_dependent_bitmap(2, 0x1);
+  midimode->set_dependent_bitmap(3, 0x1);
   deplist = new bx_list_c(NULL);
   deplist->add(wavefile);
   wavemode->set_dependent_list(deplist, 0);
@@ -190,13 +213,19 @@ bx_es1370_c::bx_es1370_c()
   memset(&s, 0, sizeof(bx_es1370_t));
   s.dac1_timer_index = BX_NULL_TIMER_HANDLE;
   s.dac2_timer_index = BX_NULL_TIMER_HANDLE;
+  s.mpu_timer_index = BX_NULL_TIMER_HANDLE;
   waveout[0] = NULL;
   waveout[1] = NULL;
   wavein = NULL;
+  midiout[0] = NULL;
+  midiout[1] = NULL;
+  wavemode = 0;
+  midimode = 0;
 }
 
 bx_es1370_c::~bx_es1370_c()
 {
+  closemidioutput();
   closewaveoutput();
 
   SIM->get_bochs_root()->remove("es1370");
@@ -227,6 +256,7 @@ void bx_es1370_c::init(void)
   BX_ES1370_THIS pci_base_address[0] = 0;
 
   BX_ES1370_THIS wavemode = SIM->get_param_enum("wavemode", base)->get();
+  BX_ES1370_THIS midimode = SIM->get_param_enum("midimode", base)->get();
 
   // always initialize lowlevel driver
   BX_ES1370_WAVEOUT1 = DEV_sound_get_waveout(0);
@@ -243,10 +273,21 @@ void bx_es1370_c::init(void)
   if (BX_ES1370_WAVEIN == NULL) {
     BX_PANIC(("Couldn't initialize wavein driver"));
   }
+  BX_ES1370_MIDIOUT1 = DEV_sound_get_midiout(0);
+  if (BX_ES1370_MIDIOUT1 == NULL) {
+    BX_PANIC(("Couldn't initialize midiout driver"));
+  }
+  if (BX_ES1370_THIS midimode & 2) {
+    BX_ES1370_MIDIOUT2 = DEV_sound_get_midiout(1);
+    if (BX_ES1370_MIDIOUT2 == NULL) {
+      BX_PANIC(("Couldn't initialize midi file driver"));
+    }
+  }
 
   BX_ES1370_THIS s.dac_outputinit = (BX_ES1370_THIS wavemode & 1);
-  BX_ES1370_THIS s.adc_inputinit = 0;
   BX_ES1370_THIS s.dac_nr_active = -1;
+  BX_ES1370_THIS s.adc_inputinit = 0;
+  BX_ES1370_THIS s.mpu_outputinit = (BX_ES1370_THIS midimode & 1);
 
   if (BX_ES1370_THIS s.dac1_timer_index == BX_NULL_TIMER_HANDLE) {
     BX_ES1370_THIS s.dac1_timer_index = bx_pc_system.register_timer
@@ -260,6 +301,16 @@ void bx_es1370_c::init(void)
     // DAC2 timer: inactive, continuous, frequency variable
     bx_pc_system.setTimerParam(BX_ES1370_THIS s.dac2_timer_index, 1);
   }
+  if (BX_ES1370_THIS s.mpu_timer_index == BX_NULL_TIMER_HANDLE) {
+    BX_ES1370_THIS s.mpu_timer_index = bx_pc_system.register_timer
+      (BX_ES1370_THIS_PTR, mpu_timer_handler, 500000 / 384, 1, 1, "es1370.mpu");
+    // midi timer: active, continuous, 500000 / 384 seconds (384 = delta time, 500000 = sec per beat at 120 bpm. Don't change this!)
+  }
+  BX_ES1370_THIS s.mpu_current_timer = 0;
+  BX_ES1370_THIS s.last_delta_time = 0xffffffff;
+  BX_ES1370_THIS s.midi_command = 0x00;
+  BX_ES1370_THIS s.midicmd_len = 0;
+  BX_ES1370_THIS s.midicmd_index = 0;
 
   // init runtime parameters
   bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
@@ -268,11 +319,16 @@ void bx_es1370_c::init(void)
 
   menu->add(SIM->get_param("wavemode", base));
   menu->add(SIM->get_param("wavefile", base));
+  menu->add(SIM->get_param("midimode", base));
+  menu->add(SIM->get_param("midifile", base));
   SIM->get_param_enum("wavemode", base)->set_handler(es1370_param_handler);
   SIM->get_param_string("wavefile", base)->set_handler(es1370_param_string_handler);
+  SIM->get_param_num("midimode", base)->set_handler(es1370_param_handler);
+  SIM->get_param_string("midifile", base)->set_handler(es1370_param_string_handler);
   // register handler for correct es1370 parameter handling after runtime config
   SIM->register_runtime_config_handler(this, runtime_config_handler);
   BX_ES1370_THIS wave_changed = 0;
+  BX_ES1370_THIS midi_changed = 0;
 
   BX_INFO(("ES1370 initialized"));
 }
@@ -349,6 +405,12 @@ void bx_es1370_c::register_state(void)
   BXRS_HEX_PARAM_FIELD(list, sctl, BX_ES1370_THIS s.sctl);
   BXRS_HEX_PARAM_FIELD(list, legacy1B, BX_ES1370_THIS s.legacy1B);
   BXRS_HEX_PARAM_FIELD(list, wave_vol, BX_ES1370_THIS s.wave_vol);
+  BXRS_DEC_PARAM_FIELD(list, mpu_current_timer, BX_ES1370_THIS s.mpu_current_timer);
+  BXRS_DEC_PARAM_FIELD(list, last_delta_time, BX_ES1370_THIS s.last_delta_time);
+  BXRS_DEC_PARAM_FIELD(list, midi_command, BX_ES1370_THIS s.midi_command);
+  BXRS_DEC_PARAM_FIELD(list, midicmd_len, BX_ES1370_THIS s.midicmd_len);
+  BXRS_DEC_PARAM_FIELD(list, midicmd_index, BX_ES1370_THIS s.midicmd_index);
+  new bx_shadow_data_c(list, "midi_buffer", BX_ES1370_THIS s.midi_buffer, 256);
 
   register_pci_state(list);
 }
@@ -393,6 +455,20 @@ void bx_es1370_c::runtime_config(void)
     // update_voices() re-opens the output file on demand
     BX_ES1370_THIS wave_changed = 0;
   }
+  if (BX_ES1370_THIS midi_changed != 0) {
+    BX_ES1370_THIS closemidioutput();
+    if (BX_ES1370_THIS midi_changed & 1) {
+      BX_ES1370_THIS midimode = SIM->get_param_num("midimode", base)->get();
+      if (BX_ES1370_THIS midimode & 2) {
+        BX_ES1370_MIDIOUT2 = DEV_sound_get_midiout(1);
+        if (BX_ES1370_MIDIOUT2 == NULL) {
+          BX_PANIC(("Couldn't initialize midi file driver"));
+        }
+      }
+    }
+    // writemidicommand() re-opens the output device / file on demand
+    BX_ES1370_THIS midi_changed = 0;
+  }
 }
 
 // static IO port read callback handler
@@ -436,7 +512,7 @@ Bit32u bx_es1370_c::read(Bit32u address, unsigned io_len)
       if (offset == ES1370_UART_DATA) {
         BX_ERROR(("reading from UART data register not supported yet"));
       } else if (offset == ES1370_UART_STATUS) {
-        BX_INFO(("reading from UART status register"));
+        BX_DEBUG(("reading from UART status register"));
         val = 0x03;
       } else {
         BX_INFO(("reading from UART test register"));
@@ -548,7 +624,26 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case ES1370_UART_CTL:
     case ES1370_UART_TEST:
       if (offset == ES1370_UART_DATA) {
-        BX_ERROR(("writing to UART data register not supported yet (value=0x%02x)", value & 0xff));
+        if (value > 0x80) {
+          if (BX_ES1370_THIS s.midi_command != 0x00) {
+            BX_ERROR(("received new MIDI command while another one is pending"));
+          }
+          BX_ES1370_THIS s.midi_command = (Bit8u)value;
+          BX_ES1370_THIS s.midicmd_len = midi_eventlength[(value & 0x70) >> 4];
+          BX_ES1370_THIS s.midicmd_index = 0;
+        } else {
+          if (BX_ES1370_THIS s.midi_command != 0x00) {
+            BX_ES1370_THIS s.midi_buffer[BX_ES1370_THIS s.midicmd_index++] = (Bit8u)value;
+            if (BX_ES1370_THIS s.midicmd_index >= BX_ES1370_THIS s.midicmd_len) {
+              BX_ES1370_THIS writemidicommand(BX_ES1370_THIS s.midi_command,
+                                              BX_ES1370_THIS s.midicmd_len,
+                                              BX_ES1370_THIS s.midi_buffer);
+              BX_ES1370_THIS s.midi_command = 0x00;
+            }
+          } else {
+            BX_ERROR(("ignoring MIDI data without command pending"));
+          }
+        }
       } else if (offset == ES1370_UART_CTL) {
         BX_ERROR(("writing to UART control register not supported yet (value=0x%02x)", value & 0xff));
       } else {
@@ -655,6 +750,11 @@ void bx_es1370_c::es1370_timer(void)
     Bit64u timer_val = (Bit64u)BX_ES1370_THIS s.dac_timer_val[i] * ret / BX_ES1370_THIS s.dac_packet_size[i];
     bx_pc_system.activate_timer(timer_id, (Bit32u)timer_val, 1);
   }
+}
+
+void bx_es1370_c::mpu_timer_handler(void *this_ptr)
+{
+  ((bx_es1370_c *) this_ptr)->s.mpu_current_timer++;
 }
 
 Bit32u bx_es1370_c::run_channel(unsigned chan, int timer_id, Bit32u buflen)
@@ -914,6 +1014,73 @@ void bx_es1370_c::closewaveoutput()
   }
 }
 
+void bx_es1370_c::writemidicommand(int command, int length, Bit8u data[])
+{
+  bx_param_string_c *midiparam;
+
+  int deltatime = currentdeltatime();
+
+  if (BX_ES1370_THIS midimode > 0) {
+    if ((BX_ES1370_THIS s.mpu_outputinit & BX_ES1370_THIS midimode) != BX_ES1370_THIS midimode) {
+      BX_DEBUG(("Initializing Midi output"));
+      if (BX_ES1370_THIS midimode & 1) {
+        midiparam = SIM->get_param_string(BXPN_SOUND_MIDIOUT);
+        if (BX_ES1370_MIDIOUT1->openmidioutput(midiparam->getptr()) == BX_SOUNDLOW_OK)
+          BX_ES1370_THIS s.mpu_outputinit |= 1;
+        else
+          BX_ES1370_THIS s.mpu_outputinit &= ~1;
+      }
+      if (BX_ES1370_THIS midimode & 2) {
+        bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370);
+        midiparam = SIM->get_param_string("midifile", base);
+        if (BX_ES1370_MIDIOUT2->openmidioutput(midiparam->getptr()) == BX_SOUNDLOW_OK)
+          BX_ES1370_THIS s.mpu_outputinit |= 2;
+        else
+          BX_ES1370_THIS s.mpu_outputinit &= ~2;
+      }
+      if ((BX_ES1370_THIS s.mpu_outputinit & BX_ES1370_THIS midimode) != BX_ES1370_THIS midimode) {
+        BX_ERROR(("Couldn't open midi output. Midi disabled"));
+        BX_ES1370_THIS midimode = BX_ES1370_THIS s.mpu_outputinit;
+        return;
+      }
+    }
+    if (BX_ES1370_THIS midimode & 1) {
+      BX_ES1370_MIDIOUT1->sendmidicommand(deltatime, command, length, data);
+    }
+    if (BX_ES1370_THIS midimode & 2) {
+      BX_ES1370_MIDIOUT2->sendmidicommand(deltatime, command, length, data);
+    }
+  }
+}
+
+int bx_es1370_c::currentdeltatime()
+{
+  int deltatime;
+
+  // counting starts at first access
+  if (BX_ES1370_THIS s.last_delta_time == 0xffffffff)
+    BX_ES1370_THIS s.last_delta_time = BX_ES1370_THIS s.mpu_current_timer;
+
+  deltatime = BX_ES1370_THIS s.mpu_current_timer - BX_ES1370_THIS s.last_delta_time;
+  BX_ES1370_THIS s.last_delta_time = BX_ES1370_THIS s.mpu_current_timer;
+
+  return deltatime;
+}
+
+void bx_es1370_c::closemidioutput()
+{
+  if (BX_ES1370_THIS midimode > 0) {
+    if (BX_ES1370_THIS s.mpu_outputinit & 1) {
+      BX_ES1370_MIDIOUT1->closemidioutput();
+      BX_ES1370_THIS s.mpu_outputinit &= ~1;
+    }
+    if (BX_ES1370_THIS s.mpu_outputinit & 2) {
+      BX_ES1370_MIDIOUT2->closemidioutput();
+      BX_ES1370_THIS s.mpu_outputinit &= ~2;
+    }
+  }
+}
+
 // pci configuration space read callback handler
 Bit32u bx_es1370_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
@@ -1000,6 +1167,10 @@ Bit64s bx_es1370_c::es1370_param_handler(bx_param_c *param, int set, Bit64s val)
       if (val != BX_ES1370_THIS wavemode) {
         BX_ES1370_THIS wave_changed |= 1;
       }
+    } else if (!strcmp(pname, "midimode")) {
+      if (val != BX_ES1370_THIS midimode) {
+        BX_ES1370_THIS midi_changed |= 1;
+      }
     } else {
       BX_PANIC(("es1370_param_handler called with unexpected parameter '%s'", pname));
     }
@@ -1015,6 +1186,8 @@ const char* bx_es1370_c::es1370_param_string_handler(bx_param_string_c *param, i
     const char *pname = param->get_name();
     if (!strcmp(pname, "wavefile")) {
       BX_ES1370_THIS wave_changed |= 2;
+    } else if (!strcmp(pname, "midifile")) {
+      BX_ES1370_THIS midi_changed |= 2;
     } else {
       BX_PANIC(("es1370_param_string_handler called with unexpected parameter '%s'", pname));
     }

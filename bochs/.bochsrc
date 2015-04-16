@@ -963,7 +963,9 @@ speaker: enabled=1, mode=sound
 # DAC1+DAC2 output at the same time). The parameter 'enabled' controls the
 # presence of the device. The 'wavemode' parameter can be used to redirect
 # the output to a file (see SB16). The 'wavefile' parameter is similar to the
-# 'wave' parameter of the SB16 soundcard.
+# 'wave' parameter of the SB16 soundcard. The 'midimode' parameter can be used
+# to redirect the MIDI output to a file (see SB16). The 'midifile' parameter
+# is similar to the 'midi' parameter of the SB16 soundcard.
 #
 # Examples:
 #   es1370: enabled=1, wavemode=1                       # use 'sound' parameters

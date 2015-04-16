@@ -63,6 +63,7 @@ void sb16_init_options(void)
     "Enable SB16 emulation",
     "Enables the SB16 emulation",
     1);
+
   bx_param_enum_c *midimode = new bx_param_enum_c(menu,
     "midimode",
     "Midi mode",
@@ -72,8 +73,9 @@ void sb16_init_options(void)
   bx_param_filename_c *midifile = new bx_param_filename_c(menu,
     "midi",
     "MIDI file",
-    "The filename is where the MIDI data is sent. This can be device or just a file.",
+    "The filename is where the MIDI data is sent to in mode 2 or 3.",
     "", BX_PATHNAME_LEN);
+
   bx_param_enum_c *wavemode = new bx_param_enum_c(menu,
     "wavemode",
     "Wave mode",
@@ -209,8 +211,8 @@ bx_sb16_c::bx_sb16_c(void)
   wavein = NULL;
   midiout[0] = NULL;
   midiout[1] = NULL;
-  midimode = 0;
   wavemode = 0;
+  midimode = 0;
   loglevel = 0;
   logfile = NULL;
 }
@@ -249,7 +251,7 @@ void bx_sb16_c::init(void)
     return;
   }
   create_logfile();
-  BX_SB16_THIS midimode = SIM->get_param_num("midimode", base)->get();
+  BX_SB16_THIS midimode = SIM->get_param_enum("midimode", base)->get();
   BX_SB16_THIS wavemode = SIM->get_param_enum("wavemode", base)->get();
   BX_SB16_THIS dmatimer = SIM->get_param_num("dmatimer", base)->get();
   BX_SB16_THIS loglevel = SIM->get_param_num("loglevel", base)->get();
