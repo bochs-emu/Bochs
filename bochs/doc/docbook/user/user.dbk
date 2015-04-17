@@ -469,10 +469,10 @@ currently work with.
     <entry>Emulates a Sound Blaster 16 card (ISA, no plug&amp;play) or an
     ES1370 PCI card. The SB16 emulation provides wave input / output, the OPL3
     chip, the external MIDI port and volume control for wave and FM. The ES1370
-    provides wave input / output and volume control for it. On Windows, Linux,
-    FreeBSD, MacOS 9, MacOSX and all platforms supported by SDL, the output can
-    be sent to the host computer's sound system. For the SB16, see the
-    <ulink url="../development/sb16-emulation-basics.html">developer documentation</ulink>
+    provides wave input / output, the external MIDI port and volume control for
+    wave output. On Windows, Linux, FreeBSD, MacOS 9, MacOSX and all platforms
+    supported by SDL, the output can be sent to the host computer's sound
+    system. For the SB16, see the <ulink url="../development/sb16-emulation-basics.html">developer documentation</ulink>
     for details.
     </entry>
   </row>
@@ -4457,7 +4457,7 @@ gui methods (currently only used by the Carbon gui).
 <para>
 Example:
 <screen>
-  sb16: midimode=2, midi=output.mid, wavemode=3, wave=output.wav
+  sb16: midimode=2, midifile=output.mid, wavemode=3, wavefile=output.wav
         loglevel=2, log=sb16.log, dmatimer=600000
 </screen>
 <note><para>
@@ -4488,7 +4488,7 @@ are in the usual "property=value" format.
    </para></listitem>
 
    <listitem><para>
-   <option>midi</option>:
+   <option>midifile</option>:
    This is the file where the midi output is stored (midimode 2 or 3).
    </para></listitem>
 
@@ -4504,7 +4504,7 @@ are in the usual "property=value" format.
    </para></listitem>
 
    <listitem><para>
-   <option>wave</option>:
+   <option>wavefile</option>:
    This is the file where the wave output is stored (wavemode 2 or 3).
    </para></listitem>
 
@@ -4546,9 +4546,9 @@ Examples:
 </screen>
 This defines the ES1370 sound emulation (recording and playback - except
 DAC1+DAC2 output at the same time). The parameter 'enabled' controls the
-presence of the device. The 'wavemode' parameter can be used to redirect
-the output to a file (see SB16). The 'wavefile' parameter is similar to the
-'wave' parameter of the SB16 soundcard.
+presence of the device. The wave and MIDI output can be sent to device, file
+or both using the parameters 'wavemode', 'wavefile', 'midimode' and
+'midifile'. See the description of these parameters at the SB16 directive.
 </para>
 </section>
 

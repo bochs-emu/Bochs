@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "3 Apr 2015" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "17 Apr 2015" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -1011,7 +1011,7 @@ midimode:
   2 = MIDI or raw data output to file (depends on file name extension)
   3 = dual output (mode 1 and 2 at the same time)
 
-midi:
+midifile:
 
   This is the file where the midi output is stored (midimode 2 or 3).
 
@@ -1024,7 +1024,7 @@ wavemode:
   2 = VOC, WAV or raw data output to file (depends on file name extension)
   3 = dual output (mode 1 and 2 at the same time)
 
-wave:
+wavefile:
 
   This is the file where the wave output is stored (wavemode 2 or 3).
 
@@ -1053,16 +1053,16 @@ the  IPS  parameter of the CPU option.  It is possible to
 adjust the dmatimer at runtime.
 
 Examples for output modes:
-  sb16: midimode=2, midi="output.mid", wavemode=1 # MIDI to file
-  sb16: midimode=1, wavemode=3, wave="output.wav" # wave to file and device
+  sb16: midimode=2, midifile="output.mid", wavemode=1 # MIDI to file
+  sb16: midimode=1, wavemode=3, wavefile="output.wav" # wave to file and device
 
 .TP
 .I "es1370:"
 This defines the ES1370 sound emulation (recording and playback - except
 DAC1+DAC2 output at the same time). The parameter 'enabled' controls the
-presence of the device. The 'wavemode' parameter can be used to redirect
-the output to a file (see SB16). The 'wavefile' parameter is similar to the
-\&'wave' parameter of the SB16 soundcard.
+presence of the device. The wave and MIDI output can be sent to device, file
+or both using the parameters 'wavemode', 'wavefile', 'midimode' and
+\&'midifile'. See the description of these parameters at the SB16 directive.
 
 Example for using 'sound' parameters:
   es1370: enabled=1, wavemode=1

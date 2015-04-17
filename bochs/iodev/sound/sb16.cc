@@ -71,7 +71,7 @@ void sb16_init_options(void)
     sb16_mode_list,
     0, 0);
   bx_param_filename_c *midifile = new bx_param_filename_c(menu,
-    "midi",
+    "midifile",
     "MIDI file",
     "The filename is where the MIDI data is sent to in mode 2 or 3.",
     "", BX_PATHNAME_LEN);
@@ -83,7 +83,7 @@ void sb16_init_options(void)
     sb16_mode_list,
     0, 0);
   bx_param_filename_c *wavefile = new bx_param_filename_c(menu,
-    "wave",
+    "wavefile",
     "Wave file",
     "This is the file where the wave output is stored",
     "", BX_PATHNAME_LEN);
@@ -138,6 +138,10 @@ Bit32s sb16_options_parser(const char *context, int num_params, char *params[])
       if (!strncmp(params[i], "enabled=", 8)) {
         enable = atol(&params[i][8]);
         SIM->get_param_bool("enabled", base)->set(enable);
+      } else if (!strncmp(params[i], "midi=", 5)) {
+        SIM->get_param_string("midifile", base)->set(&params[i][5]);
+      } else if (!strncmp(params[i], "wave=", 5)) {
+        SIM->get_param_string("wavefile", base)->set(&params[i][5]);
       } else if (SIM->parse_param_from_list(context, params[i], base) < 0) {
         BX_ERROR(("%s: unknown parameter for sb16 ignored.", context));
       }
@@ -299,8 +303,8 @@ void bx_sb16_c::init(void)
   }
 
   BX_INFO(("midi=%d,'%s'  wave=%d,'%s'  log=%d,'%s'  dmatimer=%d",
-    BX_SB16_THIS midimode, MIGHT_BE_NULL(SIM->get_param_string("midi", base)->getptr()),
-    BX_SB16_THIS wavemode, MIGHT_BE_NULL(SIM->get_param_string("wave", base)->getptr()),
+    BX_SB16_THIS midimode, MIGHT_BE_NULL(SIM->get_param_string("midifile", base)->getptr()),
+    BX_SB16_THIS wavemode, MIGHT_BE_NULL(SIM->get_param_string("wavefile", base)->getptr()),
     BX_SB16_THIS loglevel, MIGHT_BE_NULL(SIM->get_param_string("log", base)->getptr()),
     BX_SB16_THIS dmatimer));
 
@@ -415,16 +419,16 @@ void bx_sb16_c::init(void)
   menu->set_options(menu->SHOW_PARENT | menu->USE_BOX_TITLE);
 
   menu->add(SIM->get_param("midimode", base));
-  menu->add(SIM->get_param("midi", base));
+  menu->add(SIM->get_param("midifile", base));
   menu->add(SIM->get_param("wavemode", base));
-  menu->add(SIM->get_param("wave", base));
+  menu->add(SIM->get_param("wavefile", base));
   menu->add(SIM->get_param("loglevel", base));
   menu->add(SIM->get_param("log", base));
   menu->add(SIM->get_param("dmatimer", base));
   SIM->get_param_enum("wavemode", base)->set_handler(sb16_param_handler);
-  SIM->get_param_string("wave", base)->set_handler(sb16_param_string_handler);
+  SIM->get_param_string("wavefile", base)->set_handler(sb16_param_string_handler);
   SIM->get_param_num("midimode", base)->set_handler(sb16_param_handler);
-  SIM->get_param_string("midi", base)->set_handler(sb16_param_string_handler);
+  SIM->get_param_string("midifile", base)->set_handler(sb16_param_string_handler);
   SIM->get_param_num("dmatimer", base)->set_handler(sb16_param_handler);
   SIM->get_param_num("loglevel", base)->set_handler(sb16_param_handler);
   SIM->get_param_string("log", base)->set_handler(sb16_param_string_handler);
@@ -1281,7 +1285,7 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
     if (BX_SB16_THIS wavemode & 2) {
       if ((DSP.outputinit & 2) == 0) {
         base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
-        bx_param_string_c *waveparam = SIM->get_param_string("wave", base);
+        bx_param_string_c *waveparam = SIM->get_param_string("wavefile", base);
         if (BX_SB16_WAVEOUT2->openwaveoutput(waveparam->getptr()) == BX_SOUNDLOW_OK)
           DSP.outputinit |= 2;
         else
@@ -2403,7 +2407,7 @@ void bx_sb16_c::writemidicommand(int command, int length, Bit8u data[])
       }
       if (BX_SB16_THIS midimode & 2) {
         bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
-        midiparam = SIM->get_param_string("midi", base);
+        midiparam = SIM->get_param_string("midifile", base);
         if (BX_SB16_MIDIOUT2->openmidioutput(midiparam->getptr()) == BX_SOUNDLOW_OK)
           MPU.outputinit |= 2;
         else
@@ -3126,9 +3130,9 @@ const char* bx_sb16_c::sb16_param_string_handler(bx_param_string_c *param, int s
 {
   if ((set) && (strcmp(val, oldval))) {
     const char *pname = param->get_name();
-    if (!strcmp(pname, "wave")) {
+    if (!strcmp(pname, "wavefile")) {
       BX_SB16_THIS wave_changed |= 2;
-    } else if (!strcmp(pname, "midi")) {
+    } else if (!strcmp(pname, "midifile")) {
       BX_SB16_THIS midi_changed |= 2;
     } else if (!strcmp(pname, "log")) {
       if (LOGFILE != NULL) {

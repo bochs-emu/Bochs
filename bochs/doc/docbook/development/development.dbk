@@ -1630,6 +1630,12 @@ device emulation.
 &FIXME; THIS SUBSECTION IS NOT YET COMPLETE !
 </para>
 </section>
+
+<section><title>void unregister_wave_callback(int callback_id)</title>
+<para>
+&FIXME; THIS SUBSECTION IS NOT WRITTEN YET !
+</para>
+</section>
 </section>
 
 <section><title>The <emphasis>wavein</emphasis> base class <emphasis>bx_soundlow_wavein_c</emphasis></title>
@@ -1806,8 +1812,9 @@ Description of the parameters:
 <itemizedlist>
 
 <listitem><para>
-<emphasis>device</emphasis> is a system-dependent variable.
-It contains the value of the <emphasis>MIDI=device</emphasis> configuration option.
+<emphasis>mididev</emphasis> is a system-dependent variable.
+The value is that of the <emphasis>midiout=device</emphasis>
+configuration parameter of the <emphasis>sound</emphasis> bochsrc option.
 </para></listitem>
 
 <listitem><para>

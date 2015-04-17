@@ -931,13 +931,13 @@ speaker: enabled=1, mode=sound
 #      1 = output to device specified with the sound option (system dependent)
 #      2 = MIDI or raw data output to file (depends on file name extension)
 #      3 = dual output (mode 1 and 2 at the same time)
-# midi: This is the file where the midi output is stored (midimode 2 or 3).
+# midifile: This is the file where the midi output is stored (midimode 2 or 3).
 # wavemode: This parameter specifies what to do with the PCM output.
 #      0 = no output
 #      1 = output to device specified with the sound option (system dependent)
 #      2 = VOC, WAV or raw data output to file (depends on file name extension)
 #      3 = dual output (mode 1 and 2 at the same time)
-# wave: This is the file where the wave output is stored (wavemode 2 or 3).
+# wavefile: This is the file where the wave output is stored (wavemode 2 or 3).
 # loglevel:
 #      0=no log
 #      1=resource changes, midi program and bank changes
@@ -952,8 +952,8 @@ speaker: enabled=1, mode=sound
 #      reasonably correct setting for the IPS parameter of the CPU option.
 #
 # Examples for output modes:
-#   sb16: midimode=2, midi="output.mid", wavemode=1 # MIDI to file
-#   sb16: midimode=1, wavemode=3, wave="output.wav" # wave to file and device
+#   sb16: midimode=2, midifile="output.mid", wavemode=1 # MIDI to file
+#   sb16: midimode=1, wavemode=3, wavefile="output.wav" # wave to file and device
 #=======================================================================
 #sb16: midimode=1, wavemode=1, loglevel=2, log=sb16.log, dmatimer=600000
 
@@ -961,11 +961,9 @@ speaker: enabled=1, mode=sound
 # ES1370:
 # This defines the ES1370 sound emulation (recording and playback - except
 # DAC1+DAC2 output at the same time). The parameter 'enabled' controls the
-# presence of the device. The 'wavemode' parameter can be used to redirect
-# the output to a file (see SB16). The 'wavefile' parameter is similar to the
-# 'wave' parameter of the SB16 soundcard. The 'midimode' parameter can be used
-# to redirect the MIDI output to a file (see SB16). The 'midifile' parameter
-# is similar to the 'midi' parameter of the SB16 soundcard.
+# presence of the device. The wave and MIDI output can be sent to device, file
+# or both using the parameters 'wavemode', 'wavefile', 'midimode' and
+# 'midifile'. See the description of these parameters at the SB16 directive.
 #
 # Examples:
 #   es1370: enabled=1, wavemode=1                       # use 'sound' parameters
