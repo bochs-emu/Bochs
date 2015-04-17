@@ -513,7 +513,7 @@ void bx_sb16_c::register_state(void)
   bx_list_c *emul = new bx_list_c(list, "emul");
   new bx_shadow_num_c(emul, "remaps", &EMUL.remaps);
   bx_list_c *remap = new bx_list_c(emul, "remaplist");
-  for (i=0; i<EMUL.remaps; i++) {
+  for (i=0; i<BX_SB16_MAX_REMAPS; i++) {
     sprintf(name, "0x%02x", i);
     ins_map = new bx_list_c(remap, name);
     new bx_shadow_num_c(ins_map, "oldbankmsb", &EMUL.remaplist[i].oldbankmsb);
