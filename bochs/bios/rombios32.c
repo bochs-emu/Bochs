@@ -3,7 +3,8 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
-//  Copyright (C) 2006 Fabrice Bellard
+//  Copyright (C) 2006       Fabrice Bellard
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1612,8 +1613,12 @@ void acpi_bios_init(void)
             (unsigned long)rsdt, acpi_tables_size);
 
     /* RSDP */
+    // Copying "RSD PTR " must be split in two parts. Otherwise a guest OS
+    // may incorrectly assume it has found the RSDT table within the rombios32
+    // string table.
     memset(rsdp, 0, sizeof(*rsdp));
-    memcpy(rsdp->signature, "RSD PTR ", 8);
+    memcpy(rsdp->signature, "RSD ", 4);
+    memcpy(rsdp->signature+4, "PTR ", 4);
 #ifdef BX_QEMU
     memcpy(rsdp->oem_id, "QEMU  ", 6);
 #else
@@ -2277,7 +2282,11 @@ static uint32_t find_resume_vector(void)
 #endif
 
     for (addr = start; addr < end; addr += 16) {
-        if (!memcmp((void*)addr, "RSD PTR ", 8)) {
+        // The check for "RSD PTR " must be split in two parts. Otherwise a
+        // guest OS may incorrectly assume it has found the RSDT table within
+        // the rombios32 string table.
+        if ((!memcmp((void*)addr, "RSD ", 4)) &&
+            (!memcmp((void*)addr+4, "PTR ", 4))) {
             struct rsdp_descriptor *rsdp = (void*)addr;
             struct rsdt_descriptor_rev1 *rsdt = (void*)rsdp->rsdt_physical_address;
             struct fadt_descriptor_rev1 *fadt = (void*)rsdt->table_offset_entry[0];
