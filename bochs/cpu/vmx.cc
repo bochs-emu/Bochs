@@ -106,7 +106,8 @@ static const char *VMX_vmexit_reason_name[] =
   "RDSEED"
   "Reserved62",
   "XSAVES",
-  "XRSTORS"
+  "XRSTORS",
+  "PCOMMIT"
 };
 
 ////////////////////////////////////////////////////////////
