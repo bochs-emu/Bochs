@@ -1619,21 +1619,58 @@ destructor of the specific class.
 </para>
 </section>
 
-<section><title>int register_wave_callback(void *, get_wave_cb_t wd_cb)</title>
+<section><title>int register_wave_callback(void *arg, get_wave_cb_t wd_cb)</title>
 <para>
-This function is called from <emphasis>openwaveoutput()</emphasis> to the register
-the function to retrieve data from the PCM output buffer chain. Other sound emulation
-devices (e.g. OPL3, PC speaker) can register function to poll the data from the
-device emulation.
+This function is called from <emphasis>openwaveoutput()</emphasis> to register
+the function to retrieve data from the PCM output buffer chain. Other sound
+emulation devices (e.g. OPL3, PC speaker) can register a function to poll the
+data from the device emulation.
 </para>
 <para>
-&FIXME; THIS SUBSECTION IS NOT YET COMPLETE !
+&FIXME; NOT YET COMPLETE !
 </para>
 </section>
 
 <section><title>void unregister_wave_callback(int callback_id)</title>
 <para>
-&FIXME; THIS SUBSECTION IS NOT WRITTEN YET !
+This function is usually called from the destructor of the sound emulation
+device to unregister it's registered function to poll PCM data.
+</para>
+<para>
+&FIXME; NOT YET COMPLETE !
+</para>
+</section>
+
+<section><title>bx_bool mixer_common(Bit8u *buffer, int len)</title>
+<para>
+This is the main wave output mixing function. It is called from the mixer
+thread, it polls the wave data from all registered sources and it mixes the
+data using a simple algorithm (addition and clipping).
+</para>
+<para>
+&FIXME; NOT YET COMPLETE !
+</para>
+</section>
+
+<section><title>void convert_pcm_data(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param)</title>
+<para>
+This function converts the PCM data sent from the sound device emulation to the
+16 bit stereo signed litte endian format. It should be called in <emphasis>sendwavepacket()</emphasis>
+after allocating the output buffer in the buffer queue. Future versions might
+also perform resampling here.
+</para>
+<para>
+&FIXME; NOT YET COMPLETE !
+</para>
+</section>
+
+<section><title>void start_mixer_thread()</title>
+<para>
+This function starts the mixer thread and it should be called in <emphasis>openwaveoutput()</emphasis>
+unless the sound driver / library has it's own way to do this (e.g. SDL).
+</para>
+<para>
+&FIXME; NOT YET COMPLETE !
 </para>
 </section>
 </section>
