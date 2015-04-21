@@ -1429,6 +1429,7 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
 {
   bx_phy_address entry_addr[4];
   Bit64u entry[4];
+  BxMemtype entry_memtype[4] = { BX_MEMTYPE_INVALID };
   bx_bool nx_fault = 0;
   int leaf;
 
@@ -1482,7 +1483,7 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
     nested_page_fault(ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
 
   // Update A/D bits if needed
-  update_access_dirty_PAE(entry_addr, entry, BX_LEVEL_PML4, leaf, isWrite);
+  update_access_dirty_PAE(entry_addr, entry, entry_memtype, BX_LEVEL_PML4, leaf, isWrite);
 
   // Make up the physical page frame address
   return ppf | (bx_phy_address)(guest_paddr & offset_mask);	
@@ -1492,6 +1493,7 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
 {
   bx_phy_address entry_addr[2];
   Bit64u entry[2];
+  BxMemtype entry_memtype[2] = { BX_MEMTYPE_INVALID };
   bx_bool nx_fault = 0;
   int leaf;
 
@@ -1559,7 +1561,7 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
     nested_page_fault(ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
 
   // Update A/D bits if needed
-  update_access_dirty_PAE(entry_addr, entry, BX_LEVEL_PDE, leaf, isWrite);
+  update_access_dirty_PAE(entry_addr, entry, entry_memtype, BX_LEVEL_PDE, leaf, isWrite);
 
   Bit32u page_offset = PAGE_OFFSET(guest_paddr);
   return ppf | page_offset;
@@ -1569,6 +1571,7 @@ bx_phy_address BX_CPU_C::nested_walk_legacy(bx_phy_address guest_paddr, unsigned
 {
   bx_phy_address entry_addr[2];
   Bit32u entry[2];
+  BxMemtype entry_memtype[2] = { BX_MEMTYPE_INVALID };
   int leaf;
 
   SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
@@ -1615,7 +1618,7 @@ bx_phy_address BX_CPU_C::nested_walk_legacy(bx_phy_address guest_paddr, unsigned
   if (!priv_check[priv_index])
     nested_page_fault(ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
 
-  update_access_dirty(entry_addr, entry, leaf, isWrite);
+  update_access_dirty(entry_addr, entry, entry_memtype, leaf, isWrite);
 
   Bit32u page_offset = PAGE_OFFSET(guest_paddr);
   return ppf | page_offset;
