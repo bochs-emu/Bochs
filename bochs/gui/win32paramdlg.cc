@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2014  Volker Ruppert
+//  Copyright (C) 2009-2015  Volker Ruppert
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -546,7 +546,7 @@ HWND CreateInput(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_param_
       wsprintf(buffer, "0x%x", nparam->get());
       hexedit = TRUE;
     } else {
-      wsprintf(buffer, "%d", nparam->get());
+      wsprintf(buffer, "%I64d", nparam->get64());
       style |= ES_NUMBER;
     }
     if (nparam->get_options() & nparam->USE_SPIN_CONTROL) {
@@ -813,7 +813,7 @@ void SetParamList(HWND hDlg, bx_list_c *list)
   bx_param_bool_c *bparam;
   bx_param_string_c *sparam;
   int j;
-  LRESULT val;
+  Bit64s val;
   const char *src;
   char buffer[512], rawbuf[512];
   UINT cid, i, items, lid;
@@ -849,7 +849,8 @@ void SetParamList(HWND hDlg, bx_list_c *list)
               GetWindowText(GetDlgItem(hDlg, ID_PARAM + cid), buffer, 511);
               sscanf(buffer, "%x", &val);
             } else {
-              val = GetDlgItemInt(hDlg, ID_PARAM + cid, NULL, FALSE);
+              GetWindowText(GetDlgItem(hDlg, ID_PARAM + cid), buffer, 511);
+              val = strtoll(buffer, NULL, 10);
             }
             nparam->set(val);
           } else if (param->get_type() == BXT_PARAM_STRING) {
