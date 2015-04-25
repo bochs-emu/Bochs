@@ -1624,53 +1624,107 @@ destructor of the specific class.
 This function is called from <emphasis>openwaveoutput()</emphasis> to register
 the function to retrieve data from the PCM output buffer chain. Other sound
 emulation devices (e.g. OPL3, PC speaker) can register a function to poll the
-data from the device emulation.
+data from the device emulation. The return value is the ID of the registered
+function and it is usually used to unregister the source.
 </para>
 <para>
-&FIXME; NOT YET COMPLETE !
+Parameters:
 </para>
+
+<itemizedlist>
+<listitem><para>
+<emphasis>arg</emphasis> is the pointer to the device emulation object.
+</para></listitem>
+
+<listitem><para>
+<emphasis>wd_cb</emphasis> is the pointer to a static function that returns
+wave data from the device emulation. This function is usually called from the
+<emphasis>mixer_common()</emphasis> method.
+</para></listitem>
+</itemizedlist>
 </section>
 
 <section><title>void unregister_wave_callback(int callback_id)</title>
 <para>
 This function is usually called from the destructor of the sound emulation
-device to unregister it's registered function to poll PCM data.
+device to unregister it's registered function to poll PCM data. If the
+driver / library doesn't use the default mixer thread, a specific implementation
+of this method my be required.
 </para>
 <para>
-&FIXME; NOT YET COMPLETE !
+Parameter:
 </para>
+
+<itemizedlist>
+<listitem><para>
+<emphasis>callback_id</emphasis> is the ID of the function to unregister.
+</para></listitem>
+</itemizedlist>
 </section>
 
 <section><title>bx_bool mixer_common(Bit8u *buffer, int len)</title>
 <para>
 This is the main wave output mixing function. It is called from the mixer
 thread, it polls the wave data from all registered sources and it mixes the
-data using a simple algorithm (addition and clipping).
+data using a simple algorithm (addition and clipping). The return value
+indicates whether or not wave data is available for output.
 </para>
 <para>
-&FIXME; NOT YET COMPLETE !
+Parameters:
 </para>
+
+<itemizedlist>
+<listitem><para>
+<emphasis>buffer</emphasis> is the output buffer for the wave data.
+</para></listitem>
+
+<listitem><para>
+<emphasis>len</emphasis> is the maximum length of the output buffer.
+</para></listitem>
+</itemizedlist>
 </section>
 
 <section><title>void convert_pcm_data(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param)</title>
 <para>
 This function converts the PCM data sent from the sound device emulation to the
-16 bit stereo signed litte endian format. It should be called in <emphasis>sendwavepacket()</emphasis>
+16 bit stereo signed little endian format. It should be called in <emphasis>sendwavepacket()</emphasis>
 after allocating the output buffer in the buffer queue. Future versions might
 also perform resampling here.
 </para>
 <para>
-&FIXME; NOT YET COMPLETE !
+Parameters:
 </para>
+
+<itemizedlist>
+<listitem><para>
+<emphasis>src</emphasis> is the buffer containing data sent from the sound emulation.
+</para></listitem>
+
+<listitem><para>
+<emphasis>srcsize</emphasis> is the amount of wave data to be converted.
+</para></listitem>
+
+<listitem><para>
+<emphasis>dst</emphasis> is the buffer for the converted wave data.
+</para></listitem>
+
+<listitem><para>
+<emphasis>dstsize</emphasis> is the size of the destination buffer.
+</para></listitem>
+
+<listitem><para>
+<emphasis>param</emphasis> is a pointer to the struture containing the format
+parameters of the source data.
+</para></listitem>
+</itemizedlist>
 </section>
 
 <section><title>void start_mixer_thread()</title>
 <para>
 This function starts the mixer thread and it should be called in <emphasis>openwaveoutput()</emphasis>
-unless the sound driver / library has it's own way to do this (e.g. SDL).
-</para>
-<para>
-&FIXME; NOT YET COMPLETE !
+unless the sound driver / library has it's own way to do this (e.g. SDL). This
+function also initializes the mutex required for locking the mixer thread when
+adding data to the buffer chain or unregistering a source.
 </para>
 </section>
 </section>
