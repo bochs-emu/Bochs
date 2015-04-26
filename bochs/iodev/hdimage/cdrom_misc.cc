@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2013  The Bochs Project
+//  Copyright (C) 2002-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -46,6 +46,7 @@ extern "C" {
 extern "C" {
 #include <sys/ioctl.h>
 #include <linux/cdrom.h>
+#include <linux/fs.h>
 // I use the framesize in non OS specific code too
 #define BX_CD_FRAMESIZE CD_FRAMESIZE
 }
@@ -375,41 +376,57 @@ Bit32u cdrom_misc_c::capacity()
   int dtrk = 0;
   struct cdrom_tochdr td;
   struct cdrom_tocentry te;
+  struct stat stat_buf;
+  Bit64u fsize;
 
-  if (fd < 0)
+  if (fd < 0) {
     BX_PANIC(("cdrom: capacity: file not open."));
-
-  if (ioctl(fd, CDROMREADTOCHDR, &td) < 0)
-    BX_PANIC(("cdrom: ioctl(CDROMREADTOCHDR) failed"));
-
-  num_sectors = -1;
-  dtrk_lba = -1;
-
-  for (i = td.cdth_trk0; i <= td.cdth_trk1; i++) {
-    te.cdte_track = i;
-    te.cdte_format = CDROM_LBA;
-    if (ioctl(fd, CDROMREADTOCENTRY, &te) < 0)
-      BX_PANIC(("cdrom: ioctl(CDROMREADTOCENTRY) failed"));
-
-    if (dtrk_lba != -1) {
-      num_sectors = te.cdte_addr.lba - dtrk_lba;
-      break;
-    }
-    if (te.cdte_ctrl & CDROM_DATA_TRACK) {
-      dtrk = i;
-      dtrk_lba = te.cdte_addr.lba;
-    }
+    return 0;
   }
 
-  if (num_sectors < 0) {
-    if (dtrk_lba != -1) {
-      te.cdte_track = CDROM_LEADOUT;
+  if (fstat(fd, &stat_buf)) {
+    BX_PANIC(("fstat() returns error!"));
+  }
+  if (stat_buf.st_rdev) { // Is this a special device file (e.g. /dev/sr0) ?
+    ioctl(fd, BLKGETSIZE64, &fsize);
+  } else {
+    fsize = (Bit64u)stat_buf.st_size;
+  }
+  num_sectors = (Bit32u)(fsize / 2048);
+
+  if (num_sectors <= 0) {
+    if (ioctl(fd, CDROMREADTOCHDR, &td) < 0)
+      BX_PANIC(("cdrom: ioctl(CDROMREADTOCHDR) failed"));
+
+    num_sectors = -1;
+    dtrk_lba = -1;
+
+    for (i = td.cdth_trk0; i <= td.cdth_trk1; i++) {
+      te.cdte_track = i;
       te.cdte_format = CDROM_LBA;
       if (ioctl(fd, CDROMREADTOCENTRY, &te) < 0)
         BX_PANIC(("cdrom: ioctl(CDROMREADTOCENTRY) failed"));
-      num_sectors = te.cdte_addr.lba - dtrk_lba;
-    } else
-      BX_PANIC(("cdrom: no data track found"));
+
+      if (dtrk_lba != -1) {
+        num_sectors = te.cdte_addr.lba - dtrk_lba;
+        break;
+      }
+      if (te.cdte_ctrl & CDROM_DATA_TRACK) {
+        dtrk = i;
+        dtrk_lba = te.cdte_addr.lba;
+      }
+    }
+
+    if (num_sectors < 0) {
+      if (dtrk_lba != -1) {
+        te.cdte_track = CDROM_LEADOUT;
+        te.cdte_format = CDROM_LBA;
+        if (ioctl(fd, CDROMREADTOCENTRY, &te) < 0)
+          BX_PANIC(("cdrom: ioctl(CDROMREADTOCENTRY) failed"));
+        num_sectors = te.cdte_addr.lba - dtrk_lba;
+      } else
+        BX_PANIC(("cdrom: no data track found"));
+    }
   }
 
   BX_INFO(("cdrom: Data track %d, length %d", dtrk, num_sectors));
