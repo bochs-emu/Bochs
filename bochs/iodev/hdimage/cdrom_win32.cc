@@ -160,11 +160,12 @@ bx_bool cdrom_win32_c::insert_cdrom(const char *dev)
   }
   if (!isOldWindows) {
     hFile = CreateFile((char *)&drive, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
-    if (hFile != INVALID_HANDLE_VALUE)
+    if (hFile != INVALID_HANDLE_VALUE) {
       fd = 1;
-    if (!using_file) {
-      DWORD lpBytesReturned;
-      DeviceIoControl(hFile, IOCTL_STORAGE_LOAD_MEDIA, NULL, 0, NULL, 0, &lpBytesReturned, NULL);
+      if (!using_file) {
+        DWORD lpBytesReturned;
+        DeviceIoControl(hFile, IOCTL_STORAGE_LOAD_MEDIA, NULL, 0, NULL, 0, &lpBytesReturned, NULL);
+      }
     }
   }
   if (fd < 0) {
@@ -174,7 +175,8 @@ bx_bool cdrom_win32_c::insert_cdrom(const char *dev)
 
   // I just see if I can read a sector to verify that a
   // CD is in the drive and readable.
-  return read_block(buffer, 0, 2048);
+  fd = (read_block(buffer, 0, 2048)) ? 1 : -1;
+  return (fd == 1);
 }
 
 void cdrom_win32_c::eject_cdrom()
