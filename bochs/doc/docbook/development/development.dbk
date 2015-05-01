@@ -244,6 +244,8 @@ For the configuration interface there are also some different implementations: t
 <row><entry>build</entry><entry>additional stuff required for building Bochs on different platforms</entry></row>
 <row><entry>bx_debug</entry><entry>the builtin Bochs debugger</entry></row>
 <row><entry>cpu</entry><entry>the cpu emulation sources</entry></row>
+<row><entry>cpu/avx</entry><entry>sources for emulating AVX instructions</entry></row>
+<row><entry>cpu/cpudb</entry><entry>sources for emulating different cpu models</entry></row>
 <row><entry>cpu/fpu</entry><entry>the fpu emulation sources</entry></row>
 <row><entry>disasm</entry><entry>the disassembler for the Bochs debugger</entry></row>
 <row><entry>doc/docbook</entry><entry>the Bochs documentation in DocBook format</entry></row>
@@ -310,13 +312,13 @@ Declaration of a class, from iodev/pic.h:
 class bx_pic_c : public bx_pic_stub_c {
 
 public:
-  bx_pic_c(void);
-  ~bx_pic_c(void);
+  bx_pic_c();
+  ~bx_pic_c();
 ...
   BX_PIC_SMF void   service_master_pic(void);
   BX_PIC_SMF void   service_slave_pic(void);
   BX_PIC_SMF void   clear_highest_interrupt(bx_pic_t *pic);
-  };
+};
 </screen>
 <para>
 And iodev/pic.cc:
@@ -324,7 +326,7 @@ And iodev/pic.cc:
 <screen>
 ...
 #define LOG_THIS thePic->
-...
+
 bx_pic_c *thePic = NULL;
 ...
 void bx_pic_c::service_master_pic(void)
@@ -340,6 +342,7 @@ void bx_pic_c::service_master_pic(void)
     return;
   }
 
+  isr = BX_PIC_THIS s.master_pic.isr;
   if (BX_PIC_THIS s.master_pic.special_mask) {
     /* all priorities may be enabled.  check all IRR bits except ones
      * which have corresponding ISR bits set
@@ -348,7 +351,7 @@ void bx_pic_c::service_master_pic(void)
   }
   else { /* normal mode */
     /* Find the highest priority IRQ that is enabled due to current ISR */
-    isr = BX_PIC_THIS s.master_pic.isr;
+    max_irq = highest_priority;
 ...
 }
 ...
@@ -723,9 +726,9 @@ examples for timers in the devices and gui code:
 <listitem><para>the PIT (i82C54) system timer at 18.2 Hz</para></listitem>
 <listitem><para>the CMOS RTC one-second-timer</para></listitem>
 <listitem><para>the display update timer (set up with "vga: update_freq=X")</para></listitem>
-<listitem><para>the devices timer (polls keyboard/mouse events from the gui every 1 msecond)</para></listitem>
+<listitem><para>the devices timer (polls keyboard/mouse events from the gui every 1 emulated msecond)</para></listitem>
 <listitem><para>the LED auto-off timer (indicating data transfer for min 0.5 seconds)</para></listitem>
-<listitem><para>the synchronization timers are also based on the standard timers</para></listitem>
+<listitem><para>the synchronization timers (realtime/slowdown) are also based on the standard timers</para></listitem>
 </itemizedlist>
 </para>
 <para>
@@ -858,9 +861,12 @@ from <emphasis>ticksTotal</emphasis> to the next timer event</para></listitem>
 <listitem><para><emphasis>currCountdown</emphasis>: number of ticks remaining
 until the next timer event occurs</para></listitem>
 </itemizedlist>
-The number if ticks since emulator startup are calculated with the formula
+The number if ticks since emulator startup is calculated with the formula
 <emphasis>ticksTotal + currCountdownPeriod - currCountdown</emphasis> and
-returned with the <function>time_ticks()</function> method.
+returned with the <function>time_ticks()</function> method. The number of
+useconds since emulator startup is returned with the <function>time_usec()</function>
+method computed from the return value of <function>time_ticks()</function> and
+the <ulink url="../user/bochsrc.html#BOCHSOPT-CPU-IPS">IPS</ulink> value.
 </para>
 <para>
 &FIXME; To be continued
