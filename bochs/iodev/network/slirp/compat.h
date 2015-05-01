@@ -2,7 +2,13 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 
-/* Qemu compatibility defines */
+/*
+ * Qemu compatibility defines
+ *
+ * Copyright (c) 2003-2008  Fabrice Bellard
+ * Copyright (C) 2014-2015  The Bochs Project
+ */
+
 #ifndef SLIRP_COMPAT_H
 #define SLIRP_COMPAT_H 1
 
