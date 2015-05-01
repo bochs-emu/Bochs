@@ -1,4 +1,4 @@
-Changes after 2.6.7 release:
+Changes in 2.6.8 (not yet released):
 
 - CPU / CPUDB
   - Bugfixes for CPU emulation correctness (critical bugfix for x86-64 emulation)
@@ -24,12 +24,13 @@ Changes after 2.6.7 release:
 
 - I/O Devices
   - Hard drive
-    - Re-enable "bulk I/O" repeat speedups extension.
     - Added Oracle(tm) VM VirtualBox image support (VDI version 1.1)
+    - Re-enable "bulk I/O" repeat speedups extension.
+    - Some lowlevel cdrom code fixes for Windows and Linux.
   - Sound
     - SB16: Fixed OPL chip detection by implementing ISA bus delay.
     - SB16: Ported OPL3 emulation from DOSBox and partly removed legacy code.
-    - ES1370: Added MIDI output support.
+    - ES1370: Added MIDI UART output support.
     - ES1370: Fixed critical bug that made Win9x drivers crash.
     - Major rewrite of the lowlevel sound code.
       - Added mixer thread support (required for all modules except 'sdl').
@@ -44,6 +45,7 @@ Changes after 2.6.7 release:
 
 - ROM BIOS
   - Fixed keyboard scancode processing after keyboard intercept.
+  - Fixed rombios32 code to avoid incorrect ACPI table detection.
 
 -------------------------------------------------------------------------
 Changes in 2.6.7 (November 2, 2014):
