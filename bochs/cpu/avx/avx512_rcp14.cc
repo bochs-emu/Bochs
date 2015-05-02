@@ -8231,7 +8231,7 @@ static const Bit16u rcp14_table[65536] = {
     0x0003, 0x0003, 0x0002, 0x0002, 0x0001, 0x0001, 0x0000, 0x0000, // 65528
 };
 
-extern void mxcsr_to_softfloat_status_word(float_status_t &status, bx_mxcsr_t mxcsr);
+extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
 
 #include "fpu/softfloat-specialize.h"
 #include "fpu/softfloat-round-pack.h"
@@ -8384,8 +8384,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCP14PS_MASK_VpsWpsR(bxInstructio
   Bit32u mask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   unsigned len = i->getVL();
 
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
+  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
 
   for (unsigned n=0, tmp_mask = mask; n < DWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1)
@@ -8412,8 +8411,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCP14PD_MASK_VpdWpdR(bxInstructio
   Bit32u mask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   unsigned len = i->getVL();
 
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
+  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
 
   for (unsigned n=0, tmp_mask = mask; n < QWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1)
@@ -8441,8 +8439,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCP14SS_MASK_VssHpsWssR(bxInstruc
   if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
     float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());
 
-    float_status_t status;
-    mxcsr_to_softfloat_status_word(status, MXCSR);
+    float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     op1.xmm32u(0) = approximate_rcp14(op2, status);
   }
   else {
@@ -8463,8 +8460,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCP14SD_MASK_VsdHpdWsdR(bxInstruc
   if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
     float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());
 
-    float_status_t status;
-    mxcsr_to_softfloat_status_word(status, MXCSR);
+    float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     op1.xmm64u(0) = approximate_rcp14(op2, status);
   }
   else {

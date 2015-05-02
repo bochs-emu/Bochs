@@ -28,7 +28,7 @@
 
 #if BX_SUPPORT_AVX
 
-extern void mxcsr_to_softfloat_status_word(float_status_t &status, bx_mxcsr_t mxcsr);
+extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
 
 #include "simd_int.h"
 #include "simd_compare.h"
@@ -611,8 +611,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZPS_VpsWpsR(bxInstruction_c *i
   BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
   unsigned len = i->getVL();
 
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
+  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
 
   for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
     op.ymm32u(n) = float32_frc(op.ymm32u(n), status);
@@ -629,8 +628,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZPD_VpdWpdR(bxInstruction_c *i
   BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
   unsigned len = i->getVL();
   
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
+  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
 
   for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
     op.ymm64u(n) = float64_frc(op.ymm64u(n), status);
@@ -648,8 +646,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZSS_VssWssR(bxInstruction_c *i
   float32 op = BX_READ_XMM_REG_LO_DWORD(i->src());
   BxPackedXmmRegister r;
 
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
+  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
 
   r.xmm64u(0) = (Bit64u) float32_frc(op, status);
   r.xmm64u(1) = 0;
@@ -665,8 +662,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZSD_VsdWsdR(bxInstruction_c *i
   float64 op = BX_READ_XMM_REG_LO_QWORD(i->src());
   BxPackedXmmRegister r;
 
-  float_status_t status;
-  mxcsr_to_softfloat_status_word(status, MXCSR);
+  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
 
   r.xmm64u(0) = float64_frc(op, status);
   r.xmm64u(1) = 0;
