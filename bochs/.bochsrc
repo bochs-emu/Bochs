@@ -516,12 +516,12 @@ mouse: enabled=0
 #=======================================================================
 # PCI:
 # This option controls the presence of a PCI chipset in Bochs. Currently it only
-# supports the i440FX chipset. You can also specify the devices connected to
-# PCI slots. Up to 5 slots are available. For these combined PCI/ISA devices
-# assigning to slot is mandatory if you want to emulate the PCI model: cirrus,
-# ne2k and pcivga. These PCI-only devices are also supported, but they are
-# auto-assigned if you don't use the slot configuration: e1000, es1370, pcidev,
-# pcipnic, usb_ohci, usb_xhci and voodoo.
+# supports the i430FX and i440FX chipsets. You can also specify the devices
+# connected to PCI slots. Up to 5 slots are available. For these combined PCI/ISA
+# devices assigning to slot is mandatory if you want to emulate the PCI model:
+# cirrus, ne2k and pcivga. These PCI-only devices are also supported, but they
+# are auto-assigned if you don't use the slot configuration: e1000, es1370,
+# pcidev, pcipnic, usb_ohci, usb_xhci and voodoo.
 #
 # Example:
 #   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k

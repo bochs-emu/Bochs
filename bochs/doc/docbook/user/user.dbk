@@ -131,7 +131,7 @@ The last version of Bochs that he released was 3/25/2000, three days after the
 Mandrake press release.
 -->
 In March 2001, Kevin helped a few developers to move all Bochs activities from
-bochs.com to a new site at bochs.sourceforge.net.  Since then the Bochs project
+bochs.com to a new site at <ulink url="http://bochs.sourceforge.net"></ulink>.  Since then the Bochs project
 has settled into its new home, and around release times has even hit #1 most
 active project of the week at SourceForge.
 </para>
@@ -443,7 +443,7 @@ currently work with.
     <entry>CD-ROM</entry>
     <entry>Yes</entry>
     <entry>Emulates ATAPI-4/IDE CD-ROM.  The CD-ROMs can read from an ISO disk image
-    on any platform. On Windows (9x/ME/NT/2000/XP), Linux, SunOS, FreeBSD,
+    on any platform. On Windows (NT/2000/XP/Vista), Linux, SunOS, FreeBSD,
     NetBSD, OpenBSD, Amiga/MorphOS and MacOSX, Bochs can read from the
     physical CD-ROM drive. The Bochs BIOS supports booting from the first CD-ROM drive.
     </entry>
@@ -453,14 +453,15 @@ currently work with.
     <entry>Yes</entry>
     <entry>Emulates a PS/2 keyboard with North American key mappings. Optional keyboard layout
     remapping files are provided to support localized keyboard in X11 (Belgian, Danish, French,
-    German, Italian, Russian, Slovenian, Spanish, Swedish, U.K.).
+    German, Italian, Russian, Slovenian, Spanish, Swedish, U.K.) and SDL/SDL2
+    (German).
     </entry>
   </row>
   <row>
     <entry>Mouse</entry>
     <entry>Yes</entry>
     <entry>Emulates a serial, PS/2, bus or USB mouse with 3 buttons + optional mouse
-    wheel support.
+    wheel support. There is also an USB tablet emulation available.
     </entry>
   </row>
   <row>
@@ -469,7 +470,7 @@ currently work with.
     <entry>Emulates a Sound Blaster 16 card (ISA, no plug&amp;play) or an
     ES1370 PCI card. The SB16 emulation provides wave input / output, the OPL3
     chip, the external MIDI port and volume control for wave and FM. The ES1370
-    provides wave input / output, the external MIDI port and volume control for
+    provides wave input / output, the MIDI UART port and volume control for
     wave output. On Windows, Linux, FreeBSD, MacOS 9, MacOSX and all platforms
     supported by SDL, the output can be sent to the host computer's sound
     system. For the SB16, see the <ulink url="../development/sb16-emulation-basics.html">developer documentation</ulink>
@@ -536,7 +537,7 @@ currently work with.
     <entry>Plugins</entry>
     <entry>Yes</entry>
     <entry>Compiling gui and devices as plugins is supported on Linux, MacOS X,
-    Solaris, Cygwin, MinGW/MSYS, MSVC nmake and the VS2008Ex IDE (workspace provided).
+    Solaris, Cygwin, MinGW/MSYS, MSVC nmake and the VS2013 IDE (workspace provided).
     </entry>
   </row>
   <row>
@@ -727,7 +728,7 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
      system, it does not reach high emulation speeds. Users who have an x86
      processor and want the highest emulation speeds may want to consider PC
      virtualization software such as Vmware or VirtualBox (free software).
-     Another related project is <ulink url="http://www.nongnu.org/qemu/">QEMU</ulink>.
+     Another related project is <ulink url="http://www.qemu.org/">QEMU</ulink>.
      </para></answer>
   </qandaentry>
 
@@ -2598,7 +2599,7 @@ file.
 <para>
 When you have the Win32 sources transferred to a Windows machine with VC++,
 find the workspace file called <filename>bochs.sln</filename> in the folder
-"vs2008" and load it in VC++. Choose <command>Project:Set Active Project</command>
+"vs2013" and load it in VC++. Choose <command>Project:Set Active Project</command>
 and be sure that "bochs" is selected. Then choose <command>Build:Build bochs.exe</command>.
 This will build all the required libraries (iodev, cpu, etc.) and the auxiliary
 programs <filename>bximage.exe</filename> and <filename>niclist.exe</filename>.
@@ -2606,7 +2607,7 @@ programs <filename>bximage.exe</filename> and <filename>niclist.exe</filename>.
 
 <para>
 Using workspaces is easy and intuitive, but there is one caveat. The workspaces
-come directly out of a ZIP file in <filename>build/win32/vs2008ex-workspace.zip</filename>,
+come directly out of a ZIP file in <filename>build/win32/vs2013ex-workspace.zip</filename>,
 and they are not controlled by the configure script. When you compile with certain
 configure options (e.g. <option>--with-sdl</option>) you need to link with additional
 libraries. For now you must add them to the VC++ workspace by hand. In version 2.0,
@@ -2725,7 +2726,8 @@ Mac developer helps to clean it up.
 <para>
 On MacOS X the default GUI is the Carbon interface, but you can also try other
 Bochs GUIs. Use <option>--with-x11</option> for X windows,
-<option>--with-rfb</option> for VNC/RFB, or <option>--with-sdl</option> for SDL.
+<option>--with-rfb</option> for VNC/RFB, <option>--with-sdl</option> for SDL
+or <option>--with-sdl2</option> for SDL2.
 </para>
 </section><!-- end: Compiling on MacOS X -->
 
@@ -2826,7 +2828,7 @@ possible to connect a Bochs session with a web browser.
 </screen>
 </para>
 <para>
-To compile in Microsoft VS2008Ex, you have to configure on a different system
+To compile in Microsoft VS2013Ex, you have to configure on a different system
 (see <link linkend="compiling-win32">Compiling on Win32 with Microsoft VC++</link>).
 Before running the configure script, you have to add <option>--with-sdl</option>
 to the shortcut script. If you have already configured, you can set <command>BX_WITH_SDL
@@ -3871,10 +3873,10 @@ Examples:
   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k
 </screen>
 This option controls the presence of a PCI chipset in Bochs. Currently it only
-supports the i440FX chipset. You can also specify the devices connected to
-PCI slots. Up to 5 slots are available. For these combined PCI/ISA devices
-assigning to slot is mandatory if you want to emulate the PCI model: cirrus,
-ne2k and pcivga. These PCI-only devices are also supported, but they are
+supports the i430FX and i440FX chipsets. You can also specify the devices
+connected to PCI slots. Up to 5 slots are available. For these combined PCI/ISA
+devices assigning to slot is mandatory if you want to emulate the PCI model:
+cirrus, ne2k and pcivga. These PCI-only devices are also supported, but they are
 auto-assigned if you don't use the slot configuration: e1000, es1370, pcidev,
 pcipnic, usb_ohci and usb_xhci.
 </para>

@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "17 Apr 2015" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "2 May 2015" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -575,10 +575,10 @@ Examples:
 .TP
 .I "pci:"
 This option controls the presence of a PCI chipset in Bochs. Currently it only
-supports the i440FX chipset. You can also specify the devices connected to
-PCI slots. Up to 5 slots are available. For these combined PCI/ISA devices
-assigning to slot is mandatory if you want to emulate the PCI model: cirrus,
-ne2k and pcivga. These PCI-only devices are also supported, but they are
+supports the i430FX and i440FX chipsets. You can also specify the devices
+connected to PCI slots. Up to 5 slots are available. For these combined PCI/ISA
+devices assigning to slot is mandatory if you want to emulate the PCI model:
+cirrus, ne2k and pcivga. These PCI-only devices are also supported, but they are
 auto-assigned if you don't use the slot configuration: e1000, es1370, pcidev,
 pcipnic, usb_ohci and usb_xhci.
 
