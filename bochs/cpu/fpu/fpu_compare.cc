@@ -28,7 +28,7 @@
 
 #if BX_SUPPORT_FPU
 
-extern float_status_t FPU_pre_exception_handling(Bit16u control_word);
+extern float_status_t i387cw_to_softfloat_status_word(Bit16u control_word);
 
 #include "softfloatx80.h"
 
@@ -102,7 +102,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_STi(bxInstruction_c *i)
   }
 
   float_status_t status =
-     FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
+     i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   int rc = floatx80_compare(BX_READ_FPU_REG(0), BX_READ_FPU_REG(i->src()), status);
   setcc(status_word_flags_fpu_compare(rc));
@@ -138,7 +138,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMI_ST0_STj(bxInstruction_c *i)
   }
 
   float_status_t status =
-      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
+      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   int rc = floatx80_compare(BX_READ_FPU_REG(0), BX_READ_FPU_REG(i->src()), status);
   BX_CPU_THIS_PTR write_eflags_fpu_compare(rc);
@@ -174,7 +174,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMI_ST0_STj(bxInstruction_c *i)
   }
 
   float_status_t status =
-      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
+      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   int rc = floatx80_compare_quiet(BX_READ_FPU_REG(0), BX_READ_FPU_REG(i->src()), status);
   BX_CPU_THIS_PTR write_eflags_fpu_compare(rc);
@@ -210,7 +210,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOM_STi(bxInstruction_c *i)
   }
 
   float_status_t status =
-      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
+      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   int rc = floatx80_compare_quiet(BX_READ_FPU_REG(0), BX_READ_FPU_REG(i->src()), status);
   setcc(status_word_flags_fpu_compare(rc));
@@ -252,7 +252,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_SINGLE_REAL(bxInstruction_c *
   }
 
   float_status_t status =
-      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
+      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 a = BX_READ_FPU_REG(0);
 
@@ -302,7 +302,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_DOUBLE_REAL(bxInstruction_c *
   }
 
   float_status_t status =
-      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
+      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 a = BX_READ_FPU_REG(0);
 
@@ -352,7 +352,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_WORD_INTEGER(bxInstruction_c
   }
 
   float_status_t status =
-      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
+      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   int rc = floatx80_compare(BX_READ_FPU_REG(0),
                       int32_to_floatx80((Bit32s)(load_reg)), status);
@@ -395,7 +395,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_DWORD_INTEGER(bxInstruction_
   }
 
   float_status_t status =
-      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
+      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   int rc = floatx80_compare(BX_READ_FPU_REG(0), int32_to_floatx80(load_reg), status);
   setcc(status_word_flags_fpu_compare(rc));
@@ -430,7 +430,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMPP(bxInstruction_c *i)
   }
 
   float_status_t status =
-      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
+      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   int rc = floatx80_compare(BX_READ_FPU_REG(0), BX_READ_FPU_REG(1), status);
   setcc(status_word_flags_fpu_compare(rc));
@@ -463,7 +463,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMPP(bxInstruction_c *i)
   }
 
   float_status_t status =
-      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
+      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   int rc = floatx80_compare_quiet(BX_READ_FPU_REG(0), BX_READ_FPU_REG(1), status);
   setcc(status_word_flags_fpu_compare(rc));
@@ -492,7 +492,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FTST(bxInstruction_c *i)
      extern const floatx80 Const_Z;
 
      float_status_t status =
-        FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
+        i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
      int rc = floatx80_compare(BX_READ_FPU_REG(0), Const_Z, status);
      setcc(status_word_flags_fpu_compare(rc));
