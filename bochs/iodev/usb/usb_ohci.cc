@@ -1188,7 +1188,7 @@ void bx_usb_ohci_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
 bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
 {
   unsigned pid = 0, len = 0, len1, len2;
-  int r, ret = 0;
+  int ilen, r, ret = 0;
   char buf_str[1025], temp_str[17];
 
   // The td->cc field should be 111x if it hasn't been processed yet.
@@ -1215,8 +1215,11 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
     if ((TD_GET_CBP(td) & 0xFFFFF000) != (TD_GET_BE(td) & 0xFFFFF000))
       len = (TD_GET_BE(td) & 0xFFF) + 0x1001 - (TD_GET_CBP(td) & 0xFFF);
     else {
-      len = (TD_GET_BE(td) - TD_GET_CBP(td)) + 1;
-      if (len < 0) len = 0x1001 + len;
+      ilen = ((int)TD_GET_BE(td) - TD_GET_CBP(td)) + 1;
+      if (ilen < 0)
+        len = 0x1001 + len;
+      else
+        len = (unsigned)ilen;
     }
   } else
     len = 0;

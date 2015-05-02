@@ -253,7 +253,7 @@ int bx_soundlow_waveout_osx_c::set_pcm_params(bx_pcm_param_t *param)
     srcFormat.mSampleRate = (Float64) param->samplerate;
     srcFormat.mFormatID = kAudioFormatLinearPCM;
     srcFormat.mFormatFlags = kLinearPCMFormatFlagIsPacked;
-    if (param.format & 1) srcFormat.mFormatFlags |= kLinearPCMFormatFlagIsSignedInteger;
+    if (param->format & 1) srcFormat.mFormatFlags |= kLinearPCMFormatFlagIsSignedInteger;
     srcFormat.mBytesPerPacket = channels * bytes;
     srcFormat.mFramesPerPacket = 1;
     srcFormat.mBytesPerFrame = channels * bytes;

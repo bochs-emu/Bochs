@@ -319,9 +319,10 @@ int bx_soundlow_midiout_file_c::closemidioutput()
       // Meta event track end (0xff 0x2f 0x00) plus leading delta time
       fwrite(&metatrackend, 1, sizeof(metatrackend), midifile);
 
-      Bit32u tracklen = ftell(midifile);
-      if (tracklen < 0)
-        BX_PANIC (("ftell failed in finishmidifile"));
+      int trlen = ftell(midifile);
+      if (trlen < 0)
+        BX_PANIC (("ftell failed in closemidioutput()"));
+      Bit32u tracklen = (Bit32u)trlen;
       if (tracklen < 22)
         BX_PANIC (("MIDI track length too short"));
       tracklen -= 22;    // subtract the midi file and track header
