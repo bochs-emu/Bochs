@@ -7,24 +7,19 @@
  <!--content starts here-->
  <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.6.7</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.6.8</font><BR><BR>
 
-Bochs 2.6.7 is an intermediate (bugfix+) release. Here is the summary of changes :
+Bochs 2.6.8 is an intermediate (bugfix+) release. Here is the summary of changes :
 
 <ul>
-<li>CPU: implemented AVX-512BW/AVX-512DQ/AVX-512VL extensions emulation.
-<li>CPU: implemented AVX512-IFMA532 instructions emulation.
-<li>CPU: implemented AVX512-VBMI instructions emulation.
-<li>Bugfixes for CPU emulation correctness
-<li>The VGA update timer and the status LED timer now always use the
-realtime mode independent from the 'clock' option setting.
-<li>Added native SDL2 GUI support to Bochs. To enable configure with --with-sdl2.
-<li>Write enhanced gui debugger settings to file on exit and restore on
-initialization.
-<li>USB xHCI model now emulates a NEC/Renesas uPD720202 device
-<li>ROM BIOS: fixed int74_function() for 4-byte (wheel mouse) packets.
-<li>LGPL'd VGABIOS updated from CVS (fixed building VBE modes list)
-<li>Visual Studio workspace files updated to VS2013Ex format.
+<li>Bugfixes for CPU emulation correctness (critical bugfix for x86-64 emulation).
+<li>Memory type calculation support for Bochs debugger and instrumentation.
+<li>Added Pentium (P54C) and Broadwell ULT CPU models.
+<li>Full save/restore support for enhanced gui debugger settings.
+<li>Added Oracle(tm) VM VirtualBox image support (VDI version 1.1).
+<li>SB16: Ported OPL3 emulation from DOSBox.
+<li>Major rewrite of the lowlevel sound code (mixer thread, more detailed configuration, WAV file output).
+<li>Bugfixes in the floppy, lowlevel cdrom, rombios, slirp and win32 gui code.
 </ul>
 
 The binary packages for Linux and Windows are built with these featues :
@@ -45,38 +40,36 @@ The binary packages for Linux and Windows are built with these featues :
  </ul>
 </ul>
 
-<a href="http://svn.code.sf.net/p/bochs/code/tags/REL_2_6_7_FINAL/bochs/CHANGES">
-Details on what has changed since version 2.6.6
+<a href="http://svn.code.sf.net/p/bochs/code/tags/REL_2_6_8_FINAL/bochs/CHANGES">
+Details on what has changed since version 2.6.7
 </a>
 
 <BR/><BR/>
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.6.6</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.6.7</font><BR><BR>
 
-Bochs 2.6.6 is a bugfix release. Here is the list of changes :
+Bochs 2.6.7 is an intermediate (bugfix+) release. Here is the summary of changes :
 
 <ul>
-<li>CPU / CPUDB
-  <ul>
-  <li>Allow sandy bridge configuration even when AVX is not compiled in
-  </ul>
-<li>Configure and compile
-  <ul>
-  <li>Fixed compilation error when 3dnow support is enabled
-  <li>Speedup Visual Studio build by almost 20% by adding /Gr compiler option
-  </ul>
-<li>Misc
-  <ul>
-  <li>Fixed minimizing win32 gui window and resolution change while minimized
-  <li>Added compiled SeaBIOS 1.7.5 image into Bochs tree along with Bochs BIOS images
-  <li>Documentation fixes and updates
-  </ul>
+<li>CPU: implemented AVX-512BW/AVX-512DQ/AVX-512VL extensions emulation.
+<li>CPU: implemented AVX512-IFMA532 instructions emulation.
+<li>CPU: implemented AVX512-VBMI instructions emulation.
+<li>Bugfixes for CPU emulation correctness
+<li>The VGA update timer and the status LED timer now always use the
+realtime mode independent from the 'clock' option setting.
+<li>Added native SDL2 GUI support to Bochs. To enable configure with --with-sdl2.
+<li>Write enhanced gui debugger settings to file on exit and restore on
+initialization.
+<li>USB xHCI model now emulates a NEC/Renesas uPD720202 device
+<li>ROM BIOS: fixed int74_function() for 4-byte (wheel mouse) packets.
+<li>LGPL'd VGABIOS updated from CVS (fixed building VBE modes list)
+<li>Visual Studio workspace files updated to VS2013Ex format.
 </ul>
 
 <BR>
 
-<a href="http://svn.code.sf.net/p/bochs/code/tags/REL_2_6_6_FINAL/bochs/CHANGES">
-Details on what has changed since version 2.6.5
+<a href="http://svn.code.sf.net/p/bochs/code/tags/REL_2_6_7_FINAL/bochs/CHANGES">
+Details on what has changed since version 2.6.6
 </a>
 
  <BR><BR>
