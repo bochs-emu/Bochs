@@ -73,7 +73,7 @@ floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float32 b32, int bIsNaN, float_s
     if (aIsSignalingNaN | bIsSignalingNaN)
         float_raise(status, float_flag_invalid);
 
-    // propogate QNaN to SNaN
+    // propagate QNaN to SNaN
     a = propagateFloatx80NaN(a, status);
 
     if (aIsNaN & !bIsNaN) return a;
@@ -122,7 +122,7 @@ floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float64 b64, int bIsNaN, float_s
     if (aIsSignalingNaN | bIsSignalingNaN)
         float_raise(status, float_flag_invalid);
 
-    // propogate QNaN to SNaN
+    // propagate QNaN to SNaN
     a = propagateFloatx80NaN(a, status);
 
     if (aIsNaN & !bIsNaN) return a;
