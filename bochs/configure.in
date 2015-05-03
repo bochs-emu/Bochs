@@ -8,13 +8,13 @@ AC_CONFIG_HEADER(ltdlconf.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
-VERSION="2.6.8"
-VER_STRING="2.6.8"
+VERSION="2.6.8.svn"
+VER_STRING="2.6.8.svn"
 dnl // WIN_VER_STRING format is "a, b, c, d"
 dnl // c should be > 90 for pre-release of next version otherwise patch level
 dnl // d should be 0 for release and 1 for svn version
-WIN_VER_STRING="2, 6, 8, 0"
-REL_STRING="Built from SVN snapshot on May 3, 2015"
+WIN_VER_STRING="2, 6, 8, 1"
+REL_STRING="Built from SVN snapshot after release 2.6.8"
 
 changequote(<<, >>)
 changequote([, ])
@@ -3020,35 +3020,31 @@ ACX_PTHREAD([
 # But on win32 platforms, the pthread library is not needed.
 if test "$cross_configure" = 0; then
   # assuming that the GUI debuggers require pthreads or are for Win32
-  if test "$with_rfb" = yes -o "$with_vncsrv" = yes -o \
-          "$soundcard_present" = 1 -o "$gui_debugger" = 1
-  then
-    if test "$pthread_ok" = yes; then
-      if test "$with_rfb" = yes; then
-        RFB_LIBS="$RFB_LIBS $PTHREAD_LIBS"
-      fi
-      if test "$with_vncsrv" = yes; then
-        GUI_LINK_OPTS_VNCSRV="$GUI_LINK_OPTS_VNCSRV $PTHREAD_LIBS"
-      fi
-      if test "$soundcard_present" = 1; then
-        if test "$bx_plugins" = 1; then
-          SOUND_LINK_OPTS="$SOUND_LINK_OPTS $PTHREAD_LIBS"
-        else
-          DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS $PTHREAD_LIBS"
-        fi
-      fi
-      CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
-      CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
-      CC="$PTHREAD_CC"
-    else
-      case "$target" in
-        *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32*)
-          # pthread not needed for win32 platform
-          ;;
-        *)
-          echo ERROR: the pthread library is required, but could not be found.; exit 1
-      esac
+  if test "$pthread_ok" = yes; then
+    if test "$with_rfb" = yes; then
+      RFB_LIBS="$RFB_LIBS $PTHREAD_LIBS"
     fi
+    if test "$with_vncsrv" = yes; then
+      GUI_LINK_OPTS_VNCSRV="$GUI_LINK_OPTS_VNCSRV $PTHREAD_LIBS"
+    fi
+    if test "$soundcard_present" = 1; then
+      if test "$bx_plugins" = 1; then
+        SOUND_LINK_OPTS="$SOUND_LINK_OPTS $PTHREAD_LIBS"
+      else
+        DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS $PTHREAD_LIBS"
+      fi
+    fi
+    CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+    CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
+    CC="$PTHREAD_CC"
+  else
+    case "$target" in
+      *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32*)
+        # pthread not needed for win32 platform
+        ;;
+      *)
+        echo ERROR: the pthread library is required, but could not be found.; exit 1
+    esac
   fi
 fi
 
