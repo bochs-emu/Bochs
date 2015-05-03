@@ -1,0 +1,328 @@
+----------------------------------------------------------------------
+Patch name: patch.example-user-plugin
+Author:     Volker Ruppert
+Updated:    10 May 2014
+Status:     Demo
+
+Detailed description:
+  This sample code can be used as a framework for writing user plugins.
+  It contains enough code for testing the existing user plugin support
+  in Bochs and creates a device that installs a 32-bit r/w register at
+  i/o address 0x1000.
+  This example also shows how to install and handle user-defined config
+  options for bochsrc, command line and the config interface. In this
+  demo it is used to specify the reset value.
+  For user plugin support Bochs must be configured with plugins enabled.
+  Compiling with plugin support is known to work on Linux and Windows
+  (Cygwin, MinGW/MSYS and MSVC nmake). Bochs supports loading of up to
+  16 different user plugins when starting up. Loading / removing plugins
+  at runtime is not yet supported.
+
+Patch was created with:
+  diff -u
+Apply patch to what version:
+  svn revision 12321 (May 10, 2014)
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+  Regenerate the configure script and compile Bochs as usual
+  cd user-plugin
+  make
+  make install
+----------------------------------------------------------------------
+diff -urN ../bochs/configure.in ./configure.in
+--- ../bochs/configure.in	2014-05-03 12:58:15.019241391 +0200
++++ ./configure.in	2014-05-10 09:02:22.875225895 +0200
+@@ -2981,4 +2981,4 @@
+ 	 ${INSTRUMENT_DIR}/Makefile misc/Makefile doc/docbook/Makefile \
+ 	 build/linux/bochs-dlx bxversion.h bxversion.rc build/macosx/Info.plist \
+ 	 build/win32/nsis/Makefile build/win32/nsis/bochs.nsi \
+-	 host/linux/pcidev/Makefile)
++	 host/linux/pcidev/Makefile user-plugin/Makefile)
+diff -urN ../bochs/user-plugin/Makefile.in ./user-plugin/Makefile.in
+--- ../bochs/user-plugin/Makefile.in	1970-01-01 01:00:00.000000000 +0100
++++ ./user-plugin/Makefile.in	2014-05-10 09:10:19.461987931 +0200
+@@ -0,0 +1,112 @@
++# Copyright (C) 2009-2014  Volker Ruppert
++#
++# This library is free software; you can redistribute it and/or
++# modify it under the terms of the GNU Lesser General Public
++# License as published by the Free Software Foundation; either
++# version 2 of the License, or (at your option) any later version.
++#
++# This library is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++# Lesser General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public
++# License along with this library; if not, write to the Free Software
++# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
++
++# Makefile for the user plugin example of bochs
++
++
++@SUFFIX_LINE@
++
++prefix          = @prefix@
++exec_prefix     = @exec_prefix@
++srcdir          = @srcdir@
++VPATH = @srcdir@
++bindir          = @bindir@
++libdir          = @libdir@
++plugdir         = @libdir@/bochs/plugins
++datarootdir     = @datarootdir@
++mandir          = @mandir@
++man1dir         = $(mandir)/man1
++man5dir         = $(mandir)/man5
++docdir          = $(datarootdir)/doc/bochs
++sharedir        = $(datarootdir)/bochs
++top_builddir    = ..
++top_srcdir      = @top_srcdir@
++
++SHELL = @SHELL@
++
++@SET_MAKE@
++
++CXX = @CXX@
++CXXFLAGS = $(BX_INCDIRS) @CXXFLAGS@ @GUI_CXXFLAGS@
++
++LDFLAGS = @LDFLAGS@
++LIBS = @LIBS@
++RANLIB = @RANLIB@
++PLUGIN_PATH=@libdir@
++top_builddir    = ..
++LIBTOOL=@LIBTOOL@
++WIN32_DLL_IMPORT_LIBRARY=../@WIN32_DLL_IMPORT_LIB@
++
++BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
++
++PLUGIN_OBJS = testdev.o
++
++plugins: @PLUGIN_TARGET_2@
++
++plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
++
++plugins_msvc: bx_testdev.dll
++
++install: @INSTALL_PLUGINS_VAR@
++
++install_libtool_plugins::
++	list=`echo *.la`; for i in $$list; do $(LIBTOOL) --mode=install install $$i $(DESTDIR)$(plugdir); done
++	$(LIBTOOL) --finish $(DESTDIR)$(plugdir)
++
++install_dll_plugins::
++	list=`echo *.dll`; for i in $$list; do cp $$i $(DESTDIR)$(plugdir); done
++
++# standard compile rule for C++ files
++.@CPP_SUFFIX@.o:
++	$(CXX) @DASH@c  $(CXXFLAGS) $(LOCAL_CXXFLAGS) @CXXFP@$< @OFP@$@
++
++##### building plugins with libtool
++%.lo: %.@CPP_SUFFIX@
++	$(LIBTOOL) --mode=compile $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
++
++libbx_%.la: %.lo
++	$(LIBTOOL) --mode=link $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
++
++# special link rules for plugins with Cygwin, MinGW/MSYS and MSVC nmake
++bx_testdev.dll: testdev.o
++	@LINK_DLL@ testdev.o $(WIN32_DLL_IMPORT_LIBRARY)
++
++clean:
++	@RMCOMMAND@ -rf .libs *.lo *.o *.la *.a *.dll *.exp *.lib *.dll.manifest
++
++dist-clean: clean
++	@RMCOMMAND@ Makefile
++
++###########################################
++# dependencies generated by
++#  gcc -MM -I.. -I../instrument/stubs *.cc | sed -e 's/\.cc/.@CPP_SUFFIX@/g'
++#  gcc -MM -I.. -I../instrument/stubs *.cc | \
++#     sed -e 's/\.cc/.@CPP_SUFFIX@/g' -e 's/\.o:/.lo:/g'
++#
++# This means that every source file is listed twice, once with a .o rule
++# and then again with an identical .lo rule.  The .lo rules are used when
++# building plugins.
++###########################################
++testdev.o: testdev.@CPP_SUFFIX@ ../iodev/iodev.h ../bochs.h ../config.h ../osdep.h \
++  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
++  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
++  ../extplugin.h ../ltdl-bochs.h ../gui/gui.h ../gui/textconfig.h \
++  ../gui/keymap.h ../instrument/stubs/instrument.h testdev.h
++testdev.lo: testdev.@CPP_SUFFIX@ ../iodev/iodev.h ../bochs.h ../config.h ../osdep.h \
++  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
++  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
++  ../extplugin.h ../ltdl-bochs.h ../gui/gui.h ../gui/textconfig.h \
++  ../gui/keymap.h ../instrument/stubs/instrument.h testdev.h
+diff -urN ../bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
+--- ../bochs/user-plugin/testdev.cc	1970-01-01 01:00:00.000000000 +0100
++++ ./user-plugin/testdev.cc	2014-05-10 10:01:44.771282429 +0200
+@@ -0,0 +1,123 @@
++// Copyright (C) 2009-2014  Volker Ruppert
++//
++// This library is free software; you can redistribute it and/or
++// modify it under the terms of the GNU Lesser General Public
++// License as published by the Free Software Foundation; either
++// version 2 of the License, or (at your option) any later version.
++//
++// This library is distributed in the hope that it will be useful,
++// but WITHOUT ANY WARRANTY; without even the implied warranty of
++// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++// Lesser General Public License for more details.
++//
++// You should have received a copy of the GNU Lesser General Public
++// License along with this library; if not, write to the Free Software
++// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
++
++// User plugin example (see patch description for details)
++
++// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
++// platforms that require a special tag on exported symbols, BX_PLUGGABLE
++// is used to know when we are exporting symbols and when we are importing.
++#define BX_PLUGGABLE
++
++#include "iodev.h"
++#include "testdev.h"
++
++#define LOG_THIS theTestDevice->
++
++bx_testdev_c *theTestDevice = NULL;
++
++// builtin configuration handling functions
++
++void testdev_init_options(void)
++{
++  bx_param_c *root_param = SIM->get_param("user");
++  bx_list_c *menu = new bx_list_c(root_param, "testdev", "Test Device");
++  menu->set_options(bx_list_c::SHOW_PARENT);
++  new bx_param_num_c(menu, "test", "Test Parameter", "", 0, BX_MAX_BIT32U, 0);
++}
++
++Bit32s testdev_options_parser(const char *context, int num_params, char *params[])
++{
++  if (!strcmp(params[0], "testdev")) {
++    bx_list_c *base = (bx_list_c*) SIM->get_param("user.testdev");
++    for (int i = 1; i < num_params; i++) {
++      if (SIM->parse_param_from_list(context, params[i], base) < 0) {
++        BX_ERROR(("%s: unknown parameter for testdev ignored.", context));
++      }
++    }
++  } else {
++    BX_PANIC(("%s: unknown directive '%s'", context, params[0]));
++  }
++  return 0;
++}
++
++Bit32s testdev_options_save(FILE *fp)
++{
++  return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param("user.testdev"), NULL, 0);
++}
++
++// device plugin entry points
++
++int libuser_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
++{
++  theTestDevice = new bx_testdev_c();
++  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theTestDevice, "testdev");
++  // add new configuration parameter for the config interface
++  testdev_init_options();
++  // register user-defined option for bochsrc and command line
++  SIM->register_addon_option("testdev", testdev_options_parser, testdev_options_save);
++  return(0); // Success
++}
++
++void libuser_LTX_plugin_fini(void)
++{
++  SIM->unregister_addon_option("testdev");
++  bx_list_c *menu = (bx_list_c*)SIM->get_param("user");
++  menu->remove("testdev");
++  delete theTestDevice;
++}
++
++// the device object
++
++bx_testdev_c::bx_testdev_c(void)
++{
++  put("USER");
++}
++
++bx_testdev_c::~bx_testdev_c(void)
++{
++  // nothing here yet
++}
++
++void bx_testdev_c::init(void)
++{
++  DEV_register_ioread_handler(this, read_handler, 0x1000, "Test Device", 4);
++  DEV_register_iowrite_handler(this, write_handler, 0x1000, "Test Device", 4);
++}
++
++void bx_testdev_c::reset(unsigned type)
++{
++  BX_USER_THIS s.reg0 = SIM->get_param_num("user.testdev.test")->get();
++}
++
++void bx_testdev_c::register_state(void)
++{
++  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "testdev", "Test Device");
++  BXRS_HEX_PARAM_FIELD(list, reg0, BX_USER_THIS s.reg0);
++}
++
++Bit32u bx_testdev_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
++{
++  UNUSED(this_ptr);
++
++  return BX_USER_THIS s.reg0;
++}
++
++void bx_testdev_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
++{
++  UNUSED(this_ptr);
++
++  BX_USER_THIS s.reg0 = value;
++}
+diff -urN ../bochs/user-plugin/testdev.h ./user-plugin/testdev.h
+--- ../bochs/user-plugin/testdev.h	1970-01-01 01:00:00.000000000 +0100
++++ ./user-plugin/testdev.h	2014-05-10 09:27:23.575831428 +0200
+@@ -0,0 +1,40 @@
++// Copyright (C) 2009-2014  Volker Ruppert
++//
++// This library is free software; you can redistribute it and/or
++// modify it under the terms of the GNU Lesser General Public
++// License as published by the Free Software Foundation; either
++// version 2 of the License, or (at your option) any later version.
++//
++// This library is distributed in the hope that it will be useful,
++// but WITHOUT ANY WARRANTY; without even the implied warranty of
++// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++// Lesser General Public License for more details.
++//
++// You should have received a copy of the GNU Lesser General Public
++// License along with this library; if not, write to the Free Software
++// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
++
++#ifndef BX_TESTDEV_H
++#define BX_TESTDEV_H
++
++#define BX_USER_THIS theTestDevice->
++
++class bx_testdev_c : public bx_devmodel_c {
++public:
++  bx_testdev_c();
++  virtual ~bx_testdev_c();
++
++  virtual void init(void);
++  virtual void reset(unsigned type);
++  virtual void register_state(void);
++
++private:
++  static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
++  static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
++
++  struct {
++    Bit32u reg0;
++  } s;
++};
++
++#endif

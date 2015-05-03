@@ -1,0 +1,456 @@
+# Copyright (C) 2001-2015  The Bochs Project
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+
+# Makefile for the iodev component of bochs
+
+
+@SUFFIX_LINE@
+
+prefix          = @prefix@
+exec_prefix     = @exec_prefix@
+srcdir          = @srcdir@
+VPATH = @srcdir@
+bindir          = @bindir@
+libdir          = @libdir@
+datarootdir     = @datarootdir@
+mandir          = @mandir@
+man1dir         = $(mandir)/man1
+man5dir         = $(mandir)/man5
+docdir          = $(datarootdir)/doc/bochs
+sharedir        = $(datarootdir)/bochs
+top_builddir    = ..
+top_srcdir      = @top_srcdir@
+
+SHELL = @SHELL@
+
+@SET_MAKE@
+
+CXX = @CXX@
+CXXFLAGS = $(BX_INCDIRS) @CXXFLAGS@ @GUI_CXXFLAGS@
+
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+RANLIB = @RANLIB@
+PLUGIN_PATH=@libdir@
+top_builddir    = ..
+LIBTOOL=@LIBTOOL@
+WIN32_DLL_IMPORT_LIBRARY=../@WIN32_DLL_IMPORT_LIB@
+
+BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
+LOCAL_CXXFLAGS = $(MCH_CFLAGS)
+
+GAME_LINK_OPTS = -lwinmm
+GAME_LINK_OPTS_VCPP = winmm.lib
+SER_LINK_OPTS = -lws2_32
+SER_LINK_OPTS_VCPP = user32.lib ws2_32.lib
+FDC_LINK_OPTS =
+FDC_LINK_OPTS_VCPP = user32.lib
+IODEV_DLL_TARGETS = @IODEV_DLL_TARGETS@
+
+PCIDEV_CXXFLAGS = -I$(srcdir)/../host/linux/pcidev
+
+OBJS_THAT_CANNOT_BE_PLUGINS = \
+  devices.o \
+  virt_timer.o \
+  slowdown_timer.o \
+  $(MCH_OBJS)
+
+OBJS_THAT_CAN_BE_PLUGINS = \
+  pic.o \
+  pit.o \
+  serial.o \
+  parallel.o \
+  floppy.o \
+  keyboard.o \
+  biosdev.o \
+  cmos.o \
+  harddrv.o \
+  dma.o \
+  unmapped.o \
+  extfpuirq.o \
+  speaker.o \
+  ioapic.o \
+  @BUSM_OBJS@ \
+  @PCI_OBJS@ \
+  @GAME_OBJS@ \
+  @IODEBUG_OBJS@
+
+OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
+  pit82c54.o \
+  scancodes.o \
+  serial_raw.o
+
+NONPLUGIN_OBJS = @IODEV_NON_PLUGIN_OBJS@
+PLUGIN_OBJS = @IODEV_PLUGIN_OBJS@
+
+all: libiodev.a
+
+plugins: @PLUGIN_TARGET_2@
+
+plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
+
+plugins_msvc: $(IODEV_DLL_TARGETS) bx_keyboard.dll bx_pit.dll bx_gameport.dll bx_serial.dll bx_floppy.dll
+
+libiodev.a: $(NONPLUGIN_OBJS)
+	@RMCOMMAND@ libiodev.a
+	@MAKELIB@ $(NONPLUGIN_OBJS)
+	$(RANLIB) libiodev.a
+
+# standard compile rule for C++ files
+.@CPP_SUFFIX@.o:
+	$(CXX) @DASH@c  $(CXXFLAGS) $(LOCAL_CXXFLAGS) @CXXFP@$< @OFP@$@
+
+pcidev.o : pcidev.@CPP_SUFFIX@
+	$(CXX) @DASH@c  $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(PCIDEV_CXXFLAGS) @CXXFP@$< @OFP@$@
+
+##### building plugins with libtool
+%.lo: %.@CPP_SUFFIX@
+	$(LIBTOOL) --mode=compile --tag CXX $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
+
+pcidev.lo : pcidev.@CPP_SUFFIX@
+	$(LIBTOOL) --mode=compile --tag CXX $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(PCIDEV_CXXFLAGS) $< -o $@
+
+libbx_%.la: %.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
+
+# special link rules for plugins that require more than one object file
+libbx_keyboard.la: keyboard.lo scancodes.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module keyboard.lo scancodes.lo -o libbx_keyboard.la -rpath $(PLUGIN_PATH)
+
+libbx_pit.la: pit82c54.lo pit.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module pit82c54.lo pit.lo -o libbx_pit.la -rpath $(PLUGIN_PATH)
+
+libbx_serial.la: serial.lo serial_raw.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module serial.lo serial_raw.lo -o libbx_serial.la -rpath $(PLUGIN_PATH)
+
+#### building DLLs for win32 (Cygwin and MinGW/MSYS)
+bx_%.dll: %.o
+	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)
+
+# special link rules for plugins with Cygwin, MinGW/MSYS and MSVC nmake
+bx_keyboard.dll: keyboard.o scancodes.o
+	@LINK_DLL@ keyboard.o scancodes.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_pit.dll: pit82c54.o pit.o
+	@LINK_DLL@ pit82c54.o pit.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_gameport.dll: gameport.o
+	@LINK_DLL@ gameport.o $(WIN32_DLL_IMPORT_LIBRARY) $(GAME_LINK_OPTS@LINK_VAR@)
+
+bx_serial.dll: serial.o serial_raw.o
+	@LINK_DLL@ serial.o serial_raw.o $(WIN32_DLL_IMPORT_LIBRARY) $(SER_LINK_OPTS@LINK_VAR@)
+
+bx_floppy.dll: floppy.o
+	@LINK_DLL@ floppy.o $(WIN32_DLL_IMPORT_LIBRARY) $(FDC_LINK_OPTS@LINK_VAR@)
+
+@EXT_MSVC_DLL_RULES@
+
+##### end DLL section
+
+clean:
+	@RMCOMMAND@ -rf .libs *.lo *.o *.la *.a *.dll *.exp *.lib
+
+dist-clean: clean
+	@RMCOMMAND@ Makefile makeincl.vc
+
+###########################################
+# dependencies generated by
+#  gcc -MM -I.. -I../instrument/stubs *.cc | sed -e 's/\.cc/.@CPP_SUFFIX@/g'
+#  gcc -MM -I.. -I../instrument/stubs *.cc | \
+#     sed -e 's/\.cc/.@CPP_SUFFIX@/g' -e 's/\.o:/.lo:/g'
+#
+# This means that every source file is listed twice, once with a .o rule
+# and then again with an identical .lo rule.  The .lo rules are used when
+# building plugins.
+###########################################
+acpi.o: acpi.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h pci.h acpi.h
+biosdev.o: biosdev.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h biosdev.h
+busmouse.o: busmouse.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h busmouse.h
+cmos.o: cmos.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h cmos.h virt_timer.h
+devices.o: devices.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h ../iodev/virt_timer.h ../iodev/slowdown_timer.h
+dma.o: dma.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h dma.h
+extfpuirq.o: extfpuirq.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h extfpuirq.h
+floppy.o: floppy.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h hdimage/hdimage.h floppy.h
+gameport.o: gameport.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h gameport.h
+harddrv.o: harddrv.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h harddrv.h hdimage/hdimage.h hdimage/cdrom.h
+ioapic.o: ioapic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h ioapic.h
+iodebug.o: iodebug.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h
+keyboard.o: keyboard.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h ../gui/keymap.h keyboard.h scancodes.h
+parallel.o: parallel.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h parallel.h
+pci2isa.o: pci2isa.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h pci.h pci2isa.h
+pci.o: pci.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h pci.h
+pcidev.o: pcidev.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h
+pci_ide.o: pci_ide.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h pci.h pci_ide.h
+pic.o: pic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h pic.h
+pit82c54.o: pit82c54.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h pit82c54.h
+pit.o: pit.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h pit.h pit82c54.h virt_timer.h speaker.h
+scancodes.o: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h scancodes.h
+serial.o: serial.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h serial.h
+serial_raw.o: serial_raw.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h
+slowdown_timer.o: slowdown_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../param_names.h \
+ slowdown_timer.h
+speaker.o: speaker.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h speaker.h sound/soundlow.h sound/soundmod.h
+unmapped.o: unmapped.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h unmapped.h
+virt_timer.o: virt_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../param_names.h \
+ virt_timer.h
+acpi.lo: acpi.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h pci.h acpi.h
+biosdev.lo: biosdev.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h biosdev.h
+busmouse.lo: busmouse.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h busmouse.h
+cmos.lo: cmos.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h cmos.h virt_timer.h
+devices.lo: devices.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h ../iodev/virt_timer.h ../iodev/slowdown_timer.h
+dma.lo: dma.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h dma.h
+extfpuirq.lo: extfpuirq.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h extfpuirq.h
+floppy.lo: floppy.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h hdimage/hdimage.h floppy.h
+gameport.lo: gameport.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h gameport.h
+harddrv.lo: harddrv.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h harddrv.h hdimage/hdimage.h hdimage/cdrom.h
+ioapic.lo: ioapic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h ioapic.h
+iodebug.lo: iodebug.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h
+keyboard.lo: keyboard.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h ../gui/keymap.h keyboard.h scancodes.h
+parallel.lo: parallel.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h parallel.h
+pci2isa.lo: pci2isa.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h pci.h pci2isa.h
+pci.lo: pci.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h pci.h
+pcidev.lo: pcidev.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h
+pci_ide.lo: pci_ide.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h pci.h pci_ide.h
+pic.lo: pic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h pic.h
+pit82c54.lo: pit82c54.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h pit82c54.h
+pit.lo: pit.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h pit.h pit82c54.h virt_timer.h speaker.h
+scancodes.lo: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h scancodes.h
+serial.lo: serial.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h serial.h
+serial_raw.lo: serial_raw.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h
+slowdown_timer.lo: slowdown_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../param_names.h \
+ slowdown_timer.h
+speaker.lo: speaker.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h speaker.h sound/soundlow.h sound/soundmod.h
+unmapped.lo: unmapped.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h unmapped.h
+virt_timer.lo: virt_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../param_names.h \
+ virt_timer.h

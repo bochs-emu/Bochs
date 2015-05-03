@@ -1,0 +1,62 @@
+TODO (know issues in CPU model):
+-------------------------------
+
+[!] The following 3DNow! instructions still not implemented:
+	PF2IW_PqQq
+	PFNACC_PqQq
+	PFPNACC_PqQq
+	PFCMPGE_PqQq
+	PFCMPGT_PqQq
+	PFCMPEQ_PqQq
+	PFMIN_PqQq
+	PFMAX_PqQq
+	PFRCP_PqQq
+	PFRSQRT_PqQq
+	PFSUB_PqQq
+	PFSUBR_PqQq
+	PFADD_PqQq
+	PFACC_PqQq,
+	PFMUL_PqQq
+	PFRCPIT1_PqQq
+	PFRSQIT1_PqQq
+	PFRCPIT2_PqQq
+
+[!] CPUID does not report 3DNow! instruction set
+
+[!] Some of APIC functionality still not implemented, for example
+
+    - LVT pins handling
+    - Filter interrupts according processor priority (PPR)
+
+[!] REP NOP is PAUSE (on P4/XEON)
+
+    When running in SMP mode, this means that we are in a spin loop.
+    This processor should yield to the other one, as we are anyhow waiting
+    for a lock, and any other processor is responsible for this.
+
+[!] 32-bit linear address wrap when executing in legacy mode might be
+    not implemented correctly for system memory accesses (like descriptor
+    tables and etc)
+
+[!] AMD and Intel x86_64 implementations are different.
+    Currently Bochs emulation is according to Intel version.
+    Do we need to support both ?
+
+[!] VMX:
+
+   - Dual-monitor treatment of SMIs and SMM not implemented yet
+   - Posted Interrupts Processing is not implemented yet
+   - MTF is not implemented yet
+
+[!] SVM:
+
+   - Decoding assists, pause filter, VMCB clean are not implemented yet
+   - Advanced Virtual Interrupt Controller (AVIC) not implemented yet
+   - More?
+
+[!] AMD misaligned SSE mode should convert #GP on misaligned SSE access to #AC
+    exception when #AC is enabled
+
+[!] TODO: Convert CPUDB to plugins and search for them in runtime
+
+[!] TODO: Find a way to implement HLE and RTM extensions
