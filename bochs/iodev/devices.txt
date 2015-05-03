@@ -96,12 +96,13 @@ Attached devices
   |        |
   |        +---- Sound devices
   |        |             |
-  |        |             +---- Sound Blaster SB16 (ISA)         sb16.cc
+  |        |             +---- Sound Blaster SB16 (ISA)         sb16.cc, opl.cc
   |        |             +---- ES1370 (PCI)                     es1370.cc
   |        |
-  |        +---- Sound modules
+  |        +---- Sound modules                                  soundlow.cc
   |                      |
-  |                      +---- Dummy / Control Module           soundmod.cc
+  |                      +---- Control Module                   soundmod.cc
+  |                      +---- File Output Module               soundfile.cc
   |                      +---- Library specific Module          soundsdl.cc
   |                      +---- Host specific Modules
   |                                   |

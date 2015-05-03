@@ -1,4 +1,4 @@
-Changes in 2.6.8 (not yet released):
+Changes in 2.6.8 (May 3, 2015):
 
 - CPU / CPUDB
   - Bugfixes for CPU emulation correctness (critical bugfix for x86-64 emulation)

@@ -257,23 +257,28 @@ network
 
 sound
   lowlevel
-    driver
+    waveoutdrv
     waveout
+    waveindrv
     wavein
+    midioutdrv
+    midiout
   speaker
     enabled
     mode
   sb16
     enabled
-    midi
-    wave
-    log
     midimode
+    midifile
     wavemode
+    wavefile
+    log
     loglevel
     dmatimer
   es1370
     enabled
+    midimode
+    midifile
     wavemode
     wavefile
 
