@@ -71,8 +71,6 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBia
 {
   entry = BX_CPU_THIS_PTR iCache.get_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
-  BX_CPU_THIS_PTR iCache.victim_entry(entry, BX_CPU_THIS_PTR fetchModeMask);
-
   BX_CPU_THIS_PTR iCache.alloc_trace(entry);
 
   // Cache miss. We weren't so lucky, but let's be optimistic - try to build 

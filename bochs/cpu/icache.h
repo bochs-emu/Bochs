@@ -145,13 +145,6 @@ public:
   } pageSplitIndex[BX_ICACHE_PAGE_SPLIT_ENTRIES];
   int nextPageSplitIndex;
 
-#define BX_ICACHE_VICTIM_ENTRIES 8 /* must be power of two */
-  struct bxVictimCacheEntry {
-    Bit32u fetchModeMask;
-    bxICacheEntry_c vc_entry;
-  } victimCache[BX_ICACHE_VICTIM_ENTRIES];
-  int nextVictimCacheIndex;
-
 public:
   bxICache_c() { flushICacheEntries(); }
 
@@ -187,27 +180,6 @@ public:
     nextPageSplitIndex = (nextPageSplitIndex+1) & (BX_ICACHE_PAGE_SPLIT_ENTRIES-1);
   }
 
-  BX_CPP_INLINE bxICacheEntry_c *lookup_victim_cache(bx_phy_address pAddr, Bit32u fetchModeMask)
-  {
-    for (int i=0; i < BX_ICACHE_VICTIM_ENTRIES;i++) {
-      bxVictimCacheEntry *e = &victimCache[i];
-      if (e->vc_entry.pAddr == pAddr && e->fetchModeMask == fetchModeMask) {
-        return &e->vc_entry;
-      }
-    }
-
-    return NULL;
-  }
-
-  BX_CPP_INLINE void victim_entry(bxICacheEntry_c *e, Bit32u fetchModeMask)
-  {
-    if (e->pAddr != BX_ICACHE_INVALID_PHY_ADDRESS) {
-      victimCache[nextVictimCacheIndex].fetchModeMask = fetchModeMask;
-      victimCache[nextVictimCacheIndex].vc_entry = *e;
-      nextVictimCacheIndex = (nextVictimCacheIndex+1) & (BX_ICACHE_VICTIM_ENTRIES-1);
-    }
-  }
-
   BX_CPP_INLINE void handleSMC(bx_phy_address pAddr, Bit32u mask);
 
   BX_CPP_INLINE void flushICacheEntries(void);
@@ -219,9 +191,9 @@ public:
 
   BX_CPP_INLINE bxICacheEntry_c* find_entry(bx_phy_address pAddr, unsigned fetchModeMask)
   {
-    bxICacheEntry_c* e = &entry[hash(pAddr, fetchModeMask)];
+    bxICacheEntry_c* e = get_entry(pAddr, fetchModeMask);
     if (e->pAddr != pAddr)
-       e = lookup_victim_cache(pAddr, fetchModeMask);
+       return NULL;
 
     return e;
   }
@@ -240,10 +212,6 @@ BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
   nextPageSplitIndex = 0;
   for (i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++)
     pageSplitIndex[i].ppf = BX_ICACHE_INVALID_PHY_ADDRESS;
-
-  nextVictimCacheIndex = 0;
-  for (i=0;i<BX_ICACHE_VICTIM_ENTRIES;i++)
-    victimCache[i].vc_entry.pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
 
   mpindex = 0;
 
@@ -280,13 +248,6 @@ BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr, Bit32u mask)
           flushSMC(pageSplitIndex[i].e);
         }
       }
-    }
-  }
-
-  for (unsigned i=0;i < BX_ICACHE_VICTIM_ENTRIES; i++) {
-    bxICacheEntry_c *e = &victimCache[i].vc_entry;
-    if (pAddrIndex == bxPageWriteStampTable::hash(e->pAddr) && (e->traceMask & mask) != 0) {
-      flushSMC(e);
     }
   }
 
