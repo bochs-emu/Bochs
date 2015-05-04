@@ -2178,7 +2178,15 @@ int bx_parse_param_from_list(const char *context, const char *input, bx_list_c *
           if ((value[0] == '0') && (value[1] == 'x')) {
             ((bx_param_num_c*)param)->set(strtoul(value, NULL, 16));
           } else {
-            ((bx_param_num_c*)param)->set(strtoul(value, NULL, 10));
+            if (value[strlen(value)-1] == 'K') {
+              ((bx_param_num_c*)param)->set(1000 * strtoul(value, NULL, 10));
+            }
+            else if (value[strlen(value)-1] == 'M') {
+              ((bx_param_num_c*)param)->set(1000000 * strtoul(value, NULL, 10));
+            }
+            else {
+              ((bx_param_num_c*)param)->set(strtoul(value, NULL, 10));
+            }
           }
         }
         break;
