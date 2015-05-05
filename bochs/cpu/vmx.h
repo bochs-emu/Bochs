@@ -132,7 +132,7 @@ enum VMX_vmexit_reason {
    VMX_VMEXIT_VMFUNC = 59,
    VMX_VMEXIT_RESERVED60 = 60,
    VMX_VMEXIT_RDSEED = 61,
-   VMX_VMEXIT_RESERVED62 = 62,
+   VMX_VMEXIT_PML_LOGFULL = 62,
    VMX_VMEXIT_XSAVES = 63,
    VMX_VMEXIT_XRSTORS = 64,
    VMX_VMEXIT_PCOMMIT = 65,
@@ -203,6 +203,7 @@ enum VMFunctions {
 #define VMCS_16BIT_GUEST_LDTR_SELECTOR                     0x0000080C
 #define VMCS_16BIT_GUEST_TR_SELECTOR                       0x0000080E
 #define VMCS_16BIT_GUEST_INTERRUPT_STATUS                  0x00000810 /* Virtual Interrupt Delivery */
+#define VMCS_16BIT_GUEST_PML_INDEX                         0x00000812 /* Page Miss Logging */
 
 /* VMCS 16-bit host-state fields */
 /* binary 0000_11xx_xxxx_xxx0 */
@@ -230,6 +231,8 @@ enum VMFunctions {
 #define VMCS_64BIT_CONTROL_VMENTRY_MSR_LOAD_ADDR_HI        0x0000200B
 #define VMCS_64BIT_CONTROL_EXECUTIVE_VMCS_PTR              0x0000200C
 #define VMCS_64BIT_CONTROL_EXECUTIVE_VMCS_PTR_HI           0x0000200D
+#define VMCS_64BIT_CONTROL_PML_ADDRESS                     0x0000200E /* Page Miss Logging */
+#define VMCS_64BIT_CONTROL_PML_ADDRESS_HI                  0x0000200F
 #define VMCS_64BIT_CONTROL_TSC_OFFSET                      0x00002010
 #define VMCS_64BIT_CONTROL_TSC_OFFSET_HI                   0x00002011
 #define VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR          0x00002012 /* TPR shadow */
@@ -633,6 +636,7 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL3_VMFUNC_ENABLE             (1 << 13) /* VM Functions */
 #define VMX_VM_EXEC_CTRL3_VMCS_SHADOWING            (1 << 14) /* VMCS Shadowing */
 #define VMX_VM_EXEC_CTRL3_RDSEED_VMEXIT             (1 << 16)
+#define VMX_VM_EXEC_CTRL3_PML_ENABLE                (1 << 17) /* Page Miss Logging */
 #define VMX_VM_EXEC_CTRL3_EPT_VIOLATION_EXCEPTION   (1 << 18) /* #VE Exception */
 #define VMX_VM_EXEC_CTRL3_XSAVES_XRSTORS            (1 << 20) /* XSAVES */
 #define VMX_VM_EXEC_CTRL3_PCOMMIT_EXITING           (1 << 21) /* PCOMMIT */
