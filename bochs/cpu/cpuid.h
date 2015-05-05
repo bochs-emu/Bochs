@@ -225,6 +225,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_VMX_POSTED_INSTERRUPTS    (1 << 19)              /* Posted Interrupts support - not implemented yet */
 #define BX_VMX_VMCS_SHADOWING        (1 << 20)              /* VMCS Shadowing */
 #define BX_VMX_EPT_EXCEPTION         (1 << 21)              /* EPT Violation (#VE) exception */
+#define BX_VMX_PML                   (1 << 22)              /* Page Modification Logging - not implemented yet */
 
 // CPUID defines - STD features CPUID[0x00000001].EDX
 // ----------------------------
