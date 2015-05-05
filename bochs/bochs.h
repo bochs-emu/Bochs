@@ -611,7 +611,7 @@ BX_CPP_INLINE Bit64u bx_bswap64(Bit64u val64)
 #define BX_MUTEX(mutex) CRITICAL_SECTION (mutex)
 #define BX_INIT_MUTEX(mutex)  InitializeCriticalSection(&(mutex))
 #define BX_FINI_MUTEX(mutex) DeleteCriticalSection(&(mutex))
-#define BX_MSLEEP(val) msleep(val)
+#define BX_MSLEEP(val) Sleep(val)
 #else
 #define BX_THREAD_ID(id) pthread_t (id)
 #define BX_THREAD_FUNC(name,arg) void name(void* arg)

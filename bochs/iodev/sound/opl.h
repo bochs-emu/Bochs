@@ -38,8 +38,8 @@
   define Bits, Bitu, Bit32s, Bit32u, Bit16s, Bit16u, Bit8s, Bit8u here
 */
 #include <stdint.h>
-typedef uintptr_t Bitu;
-typedef intptr_t  Bits;
+typedef Bit64u    Bitu;
+typedef Bit64s    Bits;
 /*
 typedef uint32_t  Bit32u;
 typedef int32_t   Bit32s;
