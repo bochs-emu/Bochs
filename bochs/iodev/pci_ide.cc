@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2014  The Bochs Project
+//  Copyright (C) 2004-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -399,11 +399,11 @@ void bx_pci_ide_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_PIDE_THIS s.bmdma[channel].prd_current = BX_PIDE_THIS s.bmdma[channel].dtpr;
         BX_PIDE_THIS s.bmdma[channel].buffer_top = BX_PIDE_THIS s.bmdma[channel].buffer;
         BX_PIDE_THIS s.bmdma[channel].buffer_idx = BX_PIDE_THIS s.bmdma[channel].buffer;
-        BX_PIDE_THIS s.bmdma[channel].data_ready = 0;
         bx_pc_system.activate_timer(BX_PIDE_THIS s.bmdma[channel].timer_index, 1000, 0);
       } else if (!(value & 0x01) && BX_PIDE_THIS s.bmdma[channel].cmd_ssbm) {
         BX_PIDE_THIS s.bmdma[channel].cmd_ssbm = 0;
         BX_PIDE_THIS s.bmdma[channel].status &= ~0x01;
+        BX_PIDE_THIS s.bmdma[channel].data_ready = 0;
       }
       break;
     case 0x02:

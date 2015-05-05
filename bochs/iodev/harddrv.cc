@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1411,24 +1411,24 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                           init_mode_sense_single(channel, &controller->buffer[8], 28);
                           controller->buffer[8] = 0x2a;
                           controller->buffer[9] = 0x12;
-                          controller->buffer[10] = 0x00;
+                          controller->buffer[10] = 0x03;
                           controller->buffer[11] = 0x00;
-                          // Multisession, Mode 2 Form 2, Mode 2 Form 1
-                          controller->buffer[12] = 0x70;
+                          // Multisession, Mode 2 Form 2, Mode 2 Form 1, Audio
+                          controller->buffer[12] = 0x71;
                           controller->buffer[13] = (3 << 5);
                           controller->buffer[14] = (unsigned char) (1 |
                             (BX_SELECTED_DRIVE(channel).cdrom.locked ? (1 << 1) : 0) |
                             (1 << 3) |
                             (1 << 5));
                           controller->buffer[15] = 0x00;
-                          controller->buffer[16] = (706 >> 8) & 0xff;
-                          controller->buffer[17] = 706 & 0xff;
+                          controller->buffer[16] = ((16 * 176) >> 8) & 0xff;
+                          controller->buffer[17] = (16 * 176) & 0xff;
                           controller->buffer[18] = 0;
                           controller->buffer[19] = 2;
                           controller->buffer[20] = (512 >> 8) & 0xff;
                           controller->buffer[21] = 512 & 0xff;
-                          controller->buffer[22] = (706 >> 8) & 0xff;
-                          controller->buffer[23] = 706 & 0xff;
+                          controller->buffer[22] = ((16 * 176) >> 8) & 0xff;
+                          controller->buffer[23] = (16 * 176) & 0xff;
                           controller->buffer[24] = 0;
                           controller->buffer[25] = 0;
                           controller->buffer[26] = 0;
@@ -1488,24 +1488,24 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                           init_mode_sense_single(channel, &controller->buffer[8], 28);
                           controller->buffer[8] = 0x2a;
                           controller->buffer[9] = 0x12;
-                          controller->buffer[10] = 0x00;
+                          controller->buffer[10] = 0x03;
                           controller->buffer[11] = 0x00;
-                          // Multisession, Mode 2 Form 2, Mode 2 Form 1
-                          controller->buffer[12] = 0x70;
+                          // Multisession, Mode 2 Form 2, Mode 2 Form 1, Audio
+                          controller->buffer[12] = 0x71;
                           controller->buffer[13] = (3 << 5);
                           controller->buffer[14] = (unsigned char) (1 |
                             (BX_SELECTED_DRIVE(channel).cdrom.locked ? (1 << 1) : 0) |
                             (1 << 3) |
                             (1 << 5));
                           controller->buffer[15] = 0x00;
-                          controller->buffer[16] = (706 >> 8) & 0xff;
-                          controller->buffer[17] = 706 & 0xff;
+                          controller->buffer[16] = ((16 * 176) >> 8) & 0xff;
+                          controller->buffer[17] = (16 * 176) & 0xff;
                           controller->buffer[18] = 0;
                           controller->buffer[19] = 2;
                           controller->buffer[20] = (512 >> 8) & 0xff;
                           controller->buffer[21] = 512 & 0xff;
-                          controller->buffer[22] = (706 >> 8) & 0xff;
-                          controller->buffer[23] = 706 & 0xff;
+                          controller->buffer[22] = ((16 * 176) >> 8) & 0xff;
+                          controller->buffer[23] = (16 * 176) & 0xff;
                           controller->buffer[24] = 0;
                           controller->buffer[25] = 0;
                           controller->buffer[26] = 0;
@@ -1534,13 +1534,10 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                       }
                       break;
 
+                    default:
                     case 0x3: // saved values not implemented
                       atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_SAVING_PARAMETERS_NOT_SUPPORTED, 1);
                       raise_interrupt(channel);
-                      break;
-
-                    default:
-                      BX_PANIC(("Should not get here!"));
                       break;
                   }
                 }
