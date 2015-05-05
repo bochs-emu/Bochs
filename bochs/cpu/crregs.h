@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2007-2014 Stanislav Shwartsman
+//   Copyright (c) 2007-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -106,6 +106,7 @@ struct bx_cr0_t {
 #define BX_CR4_OSXSAVE_MASK    (1 << 18)
 #define BX_CR4_SMEP_MASK       (1 << 20)
 #define BX_CR4_SMAP_MASK       (1 << 21)
+#define BX_CR4_PKE_MASK        (1 << 22)
 
 struct bx_cr4_t {
   Bit32u  val32; // 32bit value of register
@@ -132,13 +133,14 @@ struct bx_cr4_t {
   IMPLEMENT_CRREG_ACCESSORS(OSXSAVE, 18);
   IMPLEMENT_CRREG_ACCESSORS(SMEP, 20);
   IMPLEMENT_CRREG_ACCESSORS(SMAP, 21);
+  IMPLEMENT_CRREG_ACCESSORS(PKE, 22);
 
   BX_CPP_INLINE Bit32u get32() const { return val32; }
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
 };
 
 #define BX_CR4_FLUSH_TLB_MASK \
-   (BX_CR4_PSE_MASK | BX_CR4_PAE_MASK | BX_CR4_PGE_MASK | BX_CR4_PCIDE_MASK | BX_CR4_SMEP_MASK | BX_CR4_SMAP_MASK)
+   (BX_CR4_PSE_MASK | BX_CR4_PAE_MASK | BX_CR4_PGE_MASK | BX_CR4_PCIDE_MASK | BX_CR4_SMEP_MASK | BX_CR4_SMAP_MASK | BX_CR4_PKE_MASK)
 
 #endif  // #if BX_CPU_LEVEL >= 5
 
@@ -254,7 +256,8 @@ struct xcr0_t {
     BX_XCR0_BNDCFG_BIT = 4,
     BX_XCR0_OPMASK_BIT = 5,
     BX_XCR0_ZMM_HI256_BIT = 6,
-    BX_XCR0_HI_ZMM_BIT = 7
+    BX_XCR0_HI_ZMM_BIT = 7,
+    BX_XCR0_PKRU = 9
   };
 
 #define BX_XCR0_FPU_MASK       (1 << xcr0_t::BX_XCR0_FPU_BIT)
@@ -265,6 +268,7 @@ struct xcr0_t {
 #define BX_XCR0_OPMASK_MASK    (1 << xcr0_t::BX_XCR0_OPMASK_BIT)
 #define BX_XCR0_ZMM_HI256_MASK (1 << xcr0_t::BX_XCR0_ZMM_HI256_BIT)
 #define BX_XCR0_HI_ZMM_MASK    (1 << xcr0_t::BX_XCR0_HI_ZMM_BIT)
+#define BX_XCR0_PKRU_MASK      (1 << xcr0_t::BX_XCR0_PKRU_BIT)
 
   IMPLEMENT_CRREG_ACCESSORS(FPU, BX_XCR0_FPU_BIT);
   IMPLEMENT_CRREG_ACCESSORS(SSE, BX_XCR0_SSE_BIT);
@@ -274,6 +278,7 @@ struct xcr0_t {
   IMPLEMENT_CRREG_ACCESSORS(OPMASK, BX_XCR0_OPMASK_BIT);
   IMPLEMENT_CRREG_ACCESSORS(ZMM_HI256, BX_XCR0_ZMM_HI256_BIT);
   IMPLEMENT_CRREG_ACCESSORS(HI_ZMM, BX_XCR0_HI_ZMM_BIT);
+  IMPLEMENT_CRREG_ACCESSORS(PKRU, BX_XCR0_PKRU_BIT);
 
   BX_CPP_INLINE Bit32u get32() const { return val32; }
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }

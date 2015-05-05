@@ -438,11 +438,16 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 
 //   [0:0]    PREFETCHWT1 instruction support
 //   [1:1]    AVX512 VBMI instructions support
-//  [31:2]    reserved
+//   [2:2]    reserved
+//   [3:3]    PKU: Protection keys for user-mode pages.
+//   [4:4]    OSPKE: OS has set CR4.PKE to enable protection keys
+//  [31:5]    reserved
 
 #define BX_CPUID_EXT4_PREFETCHWT1            (1 <<  0)
 #define BX_CPUID_EXT4_AVX512VBMI             (1 <<  1)
-
+#define BX_CPUID_EXT4_RESERVED2              (1 <<  2)
+#define BX_CPUID_EXT4_PKU                    (1 <<  3)
+#define BX_CPUID_EXT4_OSPKE                  (1 <<  4)
 
 // CPUID defines - STD2 features CPUID[0x80000001].EDX
 // -----------------------------
