@@ -257,7 +257,7 @@ struct xcr0_t {
     BX_XCR0_OPMASK_BIT = 5,
     BX_XCR0_ZMM_HI256_BIT = 6,
     BX_XCR0_HI_ZMM_BIT = 7,
-    BX_XCR0_PKRU = 9
+    BX_XCR0_PKRU_BIT = 9
   };
 
 #define BX_XCR0_FPU_MASK       (1 << xcr0_t::BX_XCR0_FPU_BIT)
