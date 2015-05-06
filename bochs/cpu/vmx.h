@@ -675,6 +675,8 @@ typedef struct bx_VMCS
 #if BX_SUPPORT_VMX >= 2
    Bit64u eptptr;
    Bit16u vpid;
+   Bit64u pml_address;
+   Bit16u pml_index;
 #endif
 
 #if BX_SUPPORT_VMX >= 2

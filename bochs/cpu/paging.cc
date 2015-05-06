@@ -1799,6 +1799,11 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
   }
 
   if (BX_VMX_EPT_ACCESS_DIRTY_ENABLED) {
+    // write access and Dirty-bit is not set in the leaf entry
+    unsigned dirty_update = (rw & 1) && !(entry[leaf] & 0x200);
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_PML_ENABLE))
+      vmx_page_modification_logging(guest_paddr, dirty_update);
+
     update_ept_access_dirty(entry_addr, entry, MEMTYPE(eptptr_memtype), leaf, rw & 1);
   }
 

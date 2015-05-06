@@ -116,6 +116,9 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
 #if BX_SUPPORT_VMX >= 2
     case VMCS_16BIT_GUEST_INTERRUPT_STATUS:
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_VINTR_DELIVERY);
+
+    case VMCS_16BIT_GUEST_PML_INDEX:
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_PML);
 #endif
 
     /* VMCS 16-bit host-state fields */
@@ -228,6 +231,14 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_CONTROL_VMENTRY_MSR_LOAD_ADDR_HI:
     case VMCS_64BIT_CONTROL_EXECUTIVE_VMCS_PTR:
     case VMCS_64BIT_CONTROL_EXECUTIVE_VMCS_PTR_HI:
+      return 1;
+
+#if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_CONTROL_PML_ADDRESS:
+    case VMCS_64BIT_CONTROL_PML_ADDRESS_HI:
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_PML);
+#endif
+
     case VMCS_64BIT_CONTROL_TSC_OFFSET:
     case VMCS_64BIT_CONTROL_TSC_OFFSET_HI:
       return 1;
@@ -518,8 +529,11 @@ void BX_CPU_C::init_vmx_capabilities(void)
   //   [14] Enable VMCS Shadowing
   //   [15] Reserved (must be '0)
   //   [16] RDSEED Exiting (require RDSEED instruction support)
-  //   [17] Reserved (must be '0)
+  //   [17] Page Modification Logging Enable
   //   [18] Support for EPT Violation (#VE) exception
+  //   [19] Reserved (must be '0)
+  //   [20] XSAVES Exiting (require XSAVES instruction support - not implemented)
+  //   [21] PCOMMIT Exiting (require PCOMMIT instruction support - not implemented)
 
   cap->vmx_vmexec_ctrl2_supported_bits = 0;
 
@@ -562,6 +576,11 @@ void BX_CPU_C::init_vmx_capabilities(void)
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_RDSEED))
     cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_RDSEED_VMEXIT;
 #if BX_SUPPORT_VMX >= 2
+  if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_PML)) {
+    if (! BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT))
+      BX_PANIC(("VMX PML feature requires EPT support !"));
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_PML_ENABLE;
+  }
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_EXCEPTION)) {
     if (! BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPTP_SWITCHING))
       BX_PANIC(("#VE exception feature requires EPTP switching support !"));

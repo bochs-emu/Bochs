@@ -104,7 +104,7 @@ static const char *VMX_vmexit_reason_name[] =
   "VMFUNC",
   "Reserved60",
   "RDSEED"
-  "Reserved62",
+  "PML Log Full",
   "XSAVES",
   "XRSTORS",
   "PCOMMIT"
@@ -732,7 +732,6 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   }
 
   if (vm->vmfunc_ctrls & VMX_VMFUNC_EPTP_SWITCHING_MASK) {
-
      if ((vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_EPT_ENABLE) == 0) {
        BX_ERROR(("VMFAIL: VMFUNC EPTP-SWITCHING: EPT disabled"));
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
@@ -743,6 +742,20 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
        BX_ERROR(("VMFAIL: VMFUNC EPTP-SWITCHING: eptp list phy addr malformed"));
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
+  }
+
+  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_PML_ENABLE) {
+    if ((vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_EPT_ENABLE) == 0) {
+       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: PML is enabled without EPT"));
+       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
+
+    vm->pml_address = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_PML_ADDRESS);
+    if (! IsValidPageAlignedPhyAddr(vm->pml_address)) {
+       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: PML base phy addr malformed"));
+       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
+    vm->pml_index = VMread16(VMCS_16BIT_GUEST_PML_INDEX);
   }
 #endif
 
@@ -2229,6 +2242,10 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUAL_INT_DELIVERY) {
     VMwrite16(VMCS_16BIT_GUEST_INTERRUPT_STATUS, (((Bit16u) vm->svi) << 8) | vm->rvi);
   }
+
+  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_PML_ENABLE) {
+    VMwrite16(VMCS_16BIT_GUEST_PML_INDEX, vm->pml_index);
+  }
 #endif
 }
 
@@ -3711,6 +3728,8 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
 #if BX_SUPPORT_VMX >= 2
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, eptptr, BX_CPU_THIS_PTR vmcs.eptptr);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vpid, BX_CPU_THIS_PTR vmcs.vpid);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, pml_address, BX_CPU_THIS_PTR vmcs.pml_address);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, pml_index, BX_CPU_THIS_PTR vmcs.pml_index);
 #endif
 #if BX_SUPPORT_VMX >= 2
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, pause_loop_exiting_gap, BX_CPU_THIS_PTR vmcs.ple.pause_loop_exiting_gap);

@@ -748,6 +748,26 @@ void BX_CPU_C::Virtualization_Exception(Bit64u qualification, Bit64u guest_physi
 
   exception(BX_VE_EXCEPTION, 0);
 }
+
+void BX_CPU_C::vmx_page_modification_logging(Bit64u guest_paddr, unsigned dirty_update)
+{
+  VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+
+  if (vm->pml_index >= 512) {
+    Bit32u vmexit_qualification = 0;
+    if (BX_CPU_THIS_PTR nmi_unblocking_iret)
+      vmexit_qualification |= (1 << 12);
+
+    VMexit(VMX_VMEXIT_PML_LOGFULL, vmexit_qualification);
+  }
+
+  if (dirty_update) {
+    Bit64u pAddr = vm->pml_address + 8 * vm->pml_index;
+    access_write_physical(pAddr, 8, &guest_paddr);
+    BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 8, MEMTYPE(resolve_memtype(pAddr)), BX_WRITE, BX_VMX_PML_WRITE, (Bit8u*)(&guest_paddr));
+    vm->pml_index--;
+  }
+}
 #endif
 
 #endif // BX_SUPPORT_VMX

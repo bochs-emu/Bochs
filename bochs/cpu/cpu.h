@@ -358,6 +358,7 @@ enum {
   BX_VMX_LOAD_MSR_ACCESS,
   BX_VMX_STORE_MSR_ACCESS,
   BX_VMX_VAPIC_ACCESS,
+  BX_VMX_PML_WRITE,
   BX_SMRAM_ACCESS
 };
 
@@ -5188,6 +5189,7 @@ public: // for now...
   BX_SMF void VMX_Self_IPI_Virtualization(Bit8u vector);
   BX_SMF void VMX_Evaluate_Pending_Virtual_Interrupts(void);
   BX_SMF void VMX_Deliver_Virtual_Interrupt(void);
+  BX_SMF void vmx_page_modification_logging(Bit64u guest_addr, unsigned dirty_update);
 #endif
 #if BX_SUPPORT_VMX >= 2
   BX_SMF Bit16u VMread16_Shadow(unsigned encoding) BX_CPP_AttrRegparmN(1);
