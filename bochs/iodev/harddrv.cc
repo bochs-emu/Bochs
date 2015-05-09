@@ -35,6 +35,8 @@
 
 #define LOG_THIS theHardDrive->
 
+#define BX_DEBUG_ATAPI(x) (atapilog->ldebug) x
+
 #define INDEX_PULSE_CYCLE 10
 
 #define PACKET_SIZE 12
@@ -105,6 +107,7 @@ BX_CPP_INLINE Bit32u read_32bit(const Bit8u* buf)
 }
 
 bx_hard_drive_c *theHardDrive = NULL;
+logfunctions *atapilog = NULL;
 
 int CDECL libharddrv_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
@@ -122,6 +125,8 @@ void CDECL libharddrv_LTX_plugin_fini(void)
 bx_hard_drive_c::bx_hard_drive_c()
 {
   put("harddrv", "HD");
+  atapilog = new logfunctions();
+  atapilog->put("atapi", "ATAPI");
   for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     for (Bit8u device=0; device<2; device ++) {
       channels[channel].drives[device].hdimage =  NULL;
@@ -154,6 +159,7 @@ bx_hard_drive_c::~bx_hard_drive_c()
     }
   }
   SIM->get_bochs_root()->remove("hard_drive");
+  delete atapilog;
   BX_DEBUG(("Exit"));
 }
 
@@ -1276,8 +1282,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             Bit8u atapi_command = controller->buffer[0];
             controller->buffer_size = 2048;
 
-            BX_DEBUG(("ata%d-%d: ATAPI command 0x%02x started", channel,
-                      BX_SLAVE_SELECTED(channel), atapi_command));
+            BX_DEBUG_ATAPI(("ata%d-%d: ATAPI command 0x%02x started", channel,
+                            BX_SLAVE_SELECTED(channel), atapi_command));
 
             switch (atapi_command) {
               case 0x00: // test unit ready
@@ -1743,8 +1749,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     break;
                   }
 */
-                  BX_DEBUG(("cdrom: READ (%d) LBA=%d LEN=%d DMA=%d", atapi_command==0x28?10:12,
-                            lba, transfer_length, controller->packet_dma));
+                  BX_DEBUG_ATAPI(("cdrom: READ (%d) LBA=%d LEN=%d DMA=%d", atapi_command==0x28?10:12,
+                                  lba, transfer_length, controller->packet_dma));
 
                   // handle command
                   init_send_atapi_command(channel, atapi_command, transfer_length * 2048,
@@ -1848,7 +1854,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
               case 0x4e: // stop play/scan
               case 0x46: // get configuration
               case 0x4a: // get event status notification
-                BX_DEBUG(("ATAPI command 0x%x not implemented yet", atapi_command));
+                BX_DEBUG_ATAPI(("ATAPI command 0x%x not implemented yet", atapi_command));
                 atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_ILLEGAL_OPCODE, 0);
                 raise_interrupt(channel);
                 break;
@@ -2317,7 +2323,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
             controller->status.busy = 0;
           } else {
-            BX_DEBUG(("ATAPI Device Reset on non-cd device"));
+            BX_DEBUG_ATAPI(("ATAPI Device Reset on non-cd device"));
             command_aborted(channel, 0x08);
           }
           break;
@@ -3111,7 +3117,7 @@ void bx_hard_drive_c::atapi_cmd_error(Bit8u channel, sense_t sense_key, asc_t as
   if (show) {
     BX_ERROR(("ata%d-%d: atapi_cmd_error: key=%02x asc=%02x", channel, BX_SLAVE_SELECTED(channel), sense_key, asc));
   } else {
-    BX_DEBUG(("ata%d-%d: atapi_cmd_error: key=%02x asc=%02x", channel, BX_SLAVE_SELECTED(channel), sense_key, asc));
+    BX_DEBUG_ATAPI(("ata%d-%d: atapi_cmd_error: key=%02x asc=%02x", channel, BX_SLAVE_SELECTED(channel), sense_key, asc));
   }
 
   controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
@@ -3235,11 +3241,11 @@ bx_bool bx_hard_drive_c::set_cd_media_status(Bit32u handle, bx_bool status)
 {
   char ata_name[20];
 
-  BX_DEBUG(("set_cd_media_status handle=%d status=%d", handle, status));
   if (handle >= BX_MAX_ATA_CHANNEL*2) return 0;
 
   Bit8u channel = handle / 2;
   Bit8u device  = handle % 2;
+  BX_DEBUG_ATAPI(("ata%d-%d: set_cd_media_status(): status=%d", channel, device, status));
 
   sprintf(ata_name, "ata.%d.%s", channel, (device==0)?"master":"slave");
   bx_list_c *base = (bx_list_c*) SIM->get_param(ata_name);
@@ -3329,7 +3335,13 @@ bx_bool bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u 
           }
           break;
         default:
-          memcpy(buffer, controller->buffer, *sector_size);
+          BX_DEBUG_ATAPI(("ata%d-%d: bmdma_read_sector(): ATAPI cmd = 0x%02x, size = %d",
+                          channel, BX_SLAVE_SELECTED(channel), BX_SELECTED_DRIVE(channel).atapi.command, *sector_size));
+          if (*sector_size > (Bit32u)BX_SELECTED_DRIVE(channel).atapi.total_bytes_remaining) {
+            memcpy(buffer, controller->buffer, BX_SELECTED_DRIVE(channel).atapi.total_bytes_remaining);
+          } else {
+            memcpy(buffer, controller->buffer, *sector_size);
+          }
           break;
       }
     } else {
