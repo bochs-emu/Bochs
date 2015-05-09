@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2000-2014  The Bochs Project
+//  Copyright (C) 2000-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -33,6 +33,8 @@ extern "C" {
 #include <signal.h>
 };
 
+#define BX_DEBUGGER_TERM (BX_DEBUGGER && !defined(__OpenBSD__))
+
 class bx_term_gui_c : public bx_gui_c {
 public:
   bx_term_gui_c(void) {}
@@ -50,7 +52,7 @@ public:
 // declare one instance of the gui object and call macro to insert the
 // plugin code
 static bx_term_gui_c *theGui = NULL;
-#if BX_DEBUGGER
+#if BX_DEBUGGER_TERM
 static int scr_fd = -1;
 #endif
 IMPLEMENT_GUI_PLUGIN_CODE(term)
@@ -183,7 +185,7 @@ void bx_term_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   // the ask menu causes trouble
   io->set_log_action(LOGLEV_PANIC, ACT_FATAL);
-#if !BX_DEBUGGER
+#if !BX_DEBUGGER_TERM
   // logfile should be different from stderr, otherwise terminal mode
   // really ends up having fun
   if (!strcmp(SIM->get_param_string(BXPN_LOG_FILENAME)->getptr(), "-"))
@@ -200,7 +202,7 @@ void bx_term_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   }
 #endif
   initscr();
-#if BX_DEBUGGER
+#if BX_DEBUGGER_TERM
   stdin = old_stdin;
   stdout = old_stdout;
 #endif
@@ -793,7 +795,7 @@ void bx_term_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 void bx_term_gui_c::exit(void)
 {
   if (!initialized) return;
-#if BX_DEBUGGER
+#if BX_DEBUGGER_TERM
   if(scr_fd > 0)
     close(scr_fd);
 #endif
