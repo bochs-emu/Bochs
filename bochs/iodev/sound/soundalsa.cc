@@ -27,10 +27,6 @@
 
 #if BX_HAVE_SOUND_ALSA && BX_SUPPORT_SOUNDLOW
 
-#ifndef WIN32
-#include <pthread.h>
-#endif
-
 #define LOG_THIS log->
 
 // helper function for wavein / waveout

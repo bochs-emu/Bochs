@@ -32,10 +32,6 @@
 
 #if BX_SUPPORT_SOUNDLOW
 
-#ifndef WIN32
-#include <pthread.h>
-#endif
-
 #define BX_SOUNDFILE_RAW 0
 #define BX_SOUNDFILE_VOC 1
 #define BX_SOUNDFILE_WAV 2

@@ -20,6 +20,10 @@
 
 // Common code for sound lowlevel modules
 
+#ifndef WIN32
+#include <pthread.h>
+#endif
+
 // This is the maximum size of a wave data packet.
 // It should be large enough for 0.1 seconds of playback or recording.
 #define BX_SOUNDLOW_WAVEPACKETSIZE  19200

@@ -28,10 +28,6 @@
 
 #if BX_HAVE_SOUND_OSS && BX_SUPPORT_SOUNDLOW
 
-#ifndef WIN32
-#include <pthread.h>
-#endif
-
 #define LOG_THIS
 
 #include <errno.h>

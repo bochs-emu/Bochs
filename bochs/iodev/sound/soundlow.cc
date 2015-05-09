@@ -31,10 +31,6 @@
 
 #include "soundlow.h"
 
-#ifndef WIN32
-#include <pthread.h>
-#endif
-
 // audio buffer support
 
 static audio_buffer_t *audio_buffers = NULL;
