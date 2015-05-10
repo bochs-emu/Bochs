@@ -24,6 +24,10 @@
 #include "cpu/cpu.h"
 #include <assert.h>
 
+#ifndef WIN32
+#include <pthread.h>
+#endif
+
 #if BX_WITH_CARBON
 #include <Carbon/Carbon.h>
 #endif
@@ -31,6 +35,7 @@
 // Just for the iofunctions
 
 static int Allocio=0;
+BX_MUTEX(logio_mutex);
 
 const char* iofunctions::getlevel(int i) const
 {
@@ -64,6 +69,8 @@ void iofunctions::init(void)
   // iofunctions methods must not be called before this magic
   // number is set.
   magic=MAGIC_LOGNUM;
+
+  BX_INIT_MUTEX(logio_mutex);
 
   // sets the default logprefix
   strcpy(logprefix,"%t%e%d");
@@ -183,6 +190,8 @@ void iofunctions::out(int level, const char *prefix, const char *fmt, va_list ap
   assert(this != NULL);
   assert(logfd != NULL);
 
+  BX_LOCK(logio_mutex);
+
   switch (level) {
     case LOGLEV_INFO: c='i'; break;
     case LOGLEV_PANIC: c='p'; break;
@@ -238,6 +247,7 @@ void iofunctions::out(int level, const char *prefix, const char *fmt, va_list ap
   if (SIM->has_log_viewer()) {
     SIM->log_msg(msgpfx, level, msg);
   }
+  BX_UNLOCK(logio_mutex);
 }
 
 iofunctions::iofunctions(FILE *fs)
@@ -265,6 +275,8 @@ iofunctions::iofunctions()
 
 iofunctions::~iofunctions(void)
 {
+  BX_FINI_MUTEX(logio_mutex);
+
   // flush before erasing magic number, or flush does nothing.
   flush();
   magic=0;
