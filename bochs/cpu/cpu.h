@@ -368,26 +368,28 @@ struct BxExceptionInfo {
   bx_bool push_error;
 };
 
-#define BX_DE_EXCEPTION   0 // Divide Error (fault)
-#define BX_DB_EXCEPTION   1 // Debug (fault/trap)
-#define BX_BP_EXCEPTION   3 // Breakpoint (trap)
-#define BX_OF_EXCEPTION   4 // Overflow (trap)
-#define BX_BR_EXCEPTION   5 // BOUND (fault)
-#define BX_UD_EXCEPTION   6
-#define BX_NM_EXCEPTION   7
-#define BX_DF_EXCEPTION   8
-#define BX_TS_EXCEPTION  10
-#define BX_NP_EXCEPTION  11
-#define BX_SS_EXCEPTION  12
-#define BX_GP_EXCEPTION  13
-#define BX_PF_EXCEPTION  14
-#define BX_MF_EXCEPTION  16
-#define BX_AC_EXCEPTION  17
-#define BX_MC_EXCEPTION  18
-#define BX_XM_EXCEPTION  19
-#define BX_VE_EXCEPTION  20
+enum {
+  BX_DE_EXCEPTION =  0, // Divide Error (fault)
+  BX_DB_EXCEPTION =  1, // Debug (fault/trap)
+  BX_BP_EXCEPTION =  3, // Breakpoint (trap)
+  BX_OF_EXCEPTION =  4, // Overflow (trap)
+  BX_BR_EXCEPTION =  5, // BOUND (fault)
+  BX_UD_EXCEPTION =  6,
+  BX_NM_EXCEPTION =  7,
+  BX_DF_EXCEPTION =  8,
+  BX_TS_EXCEPTION = 10,
+  BX_NP_EXCEPTION = 11,
+  BX_SS_EXCEPTION = 12,
+  BX_GP_EXCEPTION = 13,
+  BX_PF_EXCEPTION = 14,
+  BX_MF_EXCEPTION = 16,
+  BX_AC_EXCEPTION = 17,
+  BX_MC_EXCEPTION = 18,
+  BX_XM_EXCEPTION = 19,
+  BX_VE_EXCEPTION = 20
+};
 
-#define BX_CPU_HANDLED_EXCEPTIONS  32
+const unsigned BX_CPU_HANDLED_EXCEPTIONS = 32;
 
 /* MSR registers */
 #define BX_MSR_TSC                 0x010
@@ -545,7 +547,7 @@ extern const char* cpu_mode_string(unsigned cpu_mode);
 
 #define IsValidPageAlignedPhyAddr(addr) (((addr) & (BX_PHY_ADDRESS_RESERVED_BITS | 0xfff)) == 0)
 
-#define CACHE_LINE_SIZE 64
+const Bit32u CACHE_LINE_SIZE = 64;
 
 class BX_CPU_C;
 class BX_MEM_C;
@@ -738,11 +740,11 @@ const Bit32u EFlagsVIFMask  = (1 << 19);
 const Bit32u EFlagsVIPMask  = (1 << 20);
 const Bit32u EFlagsIDMask   = (1 << 21);
 
-#define EFlagsOSZAPCMask \
-    (EFlagsCFMask | EFlagsPFMask | EFlagsAFMask | EFlagsZFMask | EFlagsSFMask | EFlagsOFMask)
+const Bit32u EFlagsOSZAPCMask = \
+    (EFlagsCFMask | EFlagsPFMask | EFlagsAFMask | EFlagsZFMask | EFlagsSFMask | EFlagsOFMask);
 
-#define EFlagsOSZAPMask  \
-    (EFlagsPFMask | EFlagsAFMask | EFlagsZFMask | EFlagsSFMask | EFlagsOFMask)
+const Bit32u EFlagsOSZAPMask = \
+    (EFlagsPFMask | EFlagsAFMask | EFlagsZFMask | EFlagsSFMask | EFlagsOFMask);
 
 const Bit32u EFlagsValidMask = 0x003f7fd5; // only supported bits for EFLAGS
 
