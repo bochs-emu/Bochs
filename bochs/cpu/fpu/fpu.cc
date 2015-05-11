@@ -104,7 +104,7 @@ bx_address BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
        }
     }
 
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
 
     bx_address asize_mask = i->asize_mask();
 
@@ -211,7 +211,7 @@ bx_address BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
 {
     unsigned offset;
 
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
 
     bx_address asize_mask = i->asize_mask();
 
@@ -342,7 +342,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDCW(bxInstruction_c *i)
 {
   prepareFPU(i, CHECK_PENDING_EXCEPTIONS);
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
 
   Bit16u cwd = read_virtual_word(i->seg(), eaddr);
   FPU_CONTROL_WORD = (cwd & ~FPU_CW_Reserved_Bits) | 0x0040; // bit 6 is reserved as '1
@@ -369,7 +369,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTCW(bxInstruction_c *i)
 
   Bit16u cwd = BX_CPU_THIS_PTR the_i387.get_control_word();
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
 
   write_virtual_word(i->seg(), eaddr, cwd);
 
@@ -383,7 +383,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTSW(bxInstruction_c *i)
 
   Bit16u swd = BX_CPU_THIS_PTR the_i387.get_status_word();
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
 
   write_virtual_word(i->seg(), eaddr, swd);
 

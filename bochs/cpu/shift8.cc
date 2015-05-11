@@ -72,7 +72,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EbM(bxInstruction_c *i)
   else
     count = i->Ib();
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   /* pointer, segment address pair */
   Bit8u op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
 
@@ -151,7 +151,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EbM(bxInstruction_c *i)
   else
     count = i->Ib();
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   /* pointer, segment address pair */
   Bit8u op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
 
@@ -229,7 +229,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EbM(bxInstruction_c *i)
   else
     count = i->Ib();
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   /* pointer, segment address pair */
   Bit8u op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
 
@@ -294,7 +294,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EbM(bxInstruction_c *i)
   else
     count = i->Ib();
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   /* pointer, segment address pair */
   Bit8u op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
 
@@ -363,7 +363,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EbM(bxInstruction_c *i)
 
   count &= 0x1f;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   /* pointer, segment address pair */
   Bit8u op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
 
@@ -427,7 +427,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EbM(bxInstruction_c *i)
 
   count &= 0x1f;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   /* pointer, segment address pair */
   Bit8u op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
 
@@ -485,7 +485,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EbM(bxInstruction_c *i)
 
   count &= 0x1f;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   /* pointer, segment address pair */
   Bit8u op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
 

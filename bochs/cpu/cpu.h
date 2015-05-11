@@ -564,7 +564,11 @@ class BX_MEM_C;
 // Since this is different from when SMF=1, encapsulate it in a macro.
 #  define BX_CPU_CALL_METHOD(func, args) \
             (this->*((BxExecutePtr_tR) (func))) args
-#  define BX_CPU_CALL_METHODR(func, args) \
+#  define BX_CPU_RESOLVE_ADDR(func, args) \
+            (this->*((BxResolvePtr_tR) (func))) args
+#  define BX_CPU_RESOLVE_ADDR_64(func, args) \
+            (this->*((BxResolvePtr_tR) (func))) args
+#  define BX_CPU_RESOLVE_ADDR_32(func, args) \
             (this->*((BxResolvePtr_tR) (func))) args
 #  define BX_CPU_CALL_REP_ITERATION(func, args) \
             (this->*((BxRepIterationPtr_tR) (func))) args
@@ -575,7 +579,11 @@ class BX_MEM_C;
 #  define BX_SMF           static
 #  define BX_CPU_CALL_METHOD(func, args) \
             ((BxExecutePtr_tR) (func)) args
-#  define BX_CPU_CALL_METHODR(func, args) \
+#  define BX_CPU_RESOLVE_ADDR(func, args) \
+            ((BxResolvePtr_tR) (func)) args
+#  define BX_CPU_RESOLVE_ADDR_64(func, args) \
+            ((BxResolvePtr_tR) (func)) args
+#  define BX_CPU_RESOLVE_ADDR_32(func, args) \
             ((BxResolvePtr_tR) (func)) args
 #  define BX_CPU_CALL_REP_ITERATION(func, args) \
             ((BxRepIterationPtr_tR) (func)) args

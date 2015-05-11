@@ -61,7 +61,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KANDNW_KGwKHwKEwR(bxInstruction_c 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVW_KGwKEwM(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   Bit16u opmask = read_virtual_word(i->seg(), eaddr);
   BX_WRITE_OPMASK(i->dst(), opmask);
 #endif
@@ -81,7 +81,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVW_KGwKEwR(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVW_KEwKGwM(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   write_virtual_word(i->seg(), eaddr, BX_READ_16BIT_OPMASK(i->src()));
 #endif
 

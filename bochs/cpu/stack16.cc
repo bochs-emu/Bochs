@@ -33,7 +33,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_EwR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_EwM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   Bit16u op1_16 = read_virtual_word(i->seg(), eaddr);
 
   push_16(op1_16);
@@ -84,7 +84,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_EwM(bxInstruction_c *i)
   // Note: there is one little weirdism here.  It is possible to use
   // SP in the modrm addressing. If used, the value of SP after the
   // pop is used to calculate the address.
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
 
   write_virtual_word(i->seg(), eaddr, val16);
 

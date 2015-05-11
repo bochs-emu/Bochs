@@ -56,7 +56,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FW_PqQq(bxInstruction_c *i)
     op = BX_READ_MMX_REG(i->src());
   }
   else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op = read_virtual_qword(i->seg(), eaddr);
   }
@@ -91,7 +91,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FD_PqQq(bxInstruction_c *i)
     op = BX_READ_MMX_REG(i->src());
   }
   else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op = read_virtual_qword(i->seg(), eaddr);
   }
@@ -133,7 +133,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2ID_PqQq(bxInstruction_c *i)
     op = BX_READ_MMX_REG(i->src());
   }
   else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op = read_virtual_qword(i->seg(), eaddr);
   }
@@ -280,7 +280,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHRW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->src());
   }
   else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op2 = read_virtual_qword(i->seg(), eaddr);
   }
@@ -317,7 +317,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSWAPD_PqQq(bxInstruction_c *i)
     op = BX_READ_MMX_REG(i->src());
   }
   else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op = read_virtual_qword(i->seg(), eaddr);
   }

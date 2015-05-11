@@ -341,7 +341,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PH_WpsVpsIb(bxInstruction_c
     }
   }
   else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
 
 #if BX_SUPPORT_EVEX
     if (len == BX_VL512)

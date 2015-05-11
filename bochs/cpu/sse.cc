@@ -275,7 +275,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRB_EbdVdqIbM(bxInstruction_c *
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
   Bit8u result = op.xmmubyte(i->Ib() & 0xF);
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   write_virtual_byte(i->seg(), eaddr, result);
 
   BX_NEXT_INSTR(i);
@@ -295,7 +295,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRW_EwdVdqIbM(bxInstruction_c *
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
   Bit16u result = op.xmm16u(i->Ib() & 7);
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   write_virtual_word(i->seg(), eaddr, result);
 
   BX_NEXT_INSTR(i);
@@ -337,7 +337,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRD_EdVdqIbM(bxInstruction_c *i
 {
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
 
 #if BX_SUPPORT_X86_64
   if (i->os64L())  /* 64 bit operand size mode */
@@ -358,7 +358,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRD_EdVdqIbM(bxInstruction_c *i
 #if BX_SUPPORT_X86_64
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRQ_EqVdqIbM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i->ResolveModrm, (i));
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
   Bit64u result = op.xmm64u(i->Ib() & 1);
@@ -382,7 +382,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::EXTRACTPS_EdVpsIbM(bxInstruction_c
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
   Bit32u result = op.xmm32u(i->Ib() & 3);
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   write_virtual_dword(i->seg(), eaddr, result);
 
   BX_NEXT_INSTR(i);
@@ -403,7 +403,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRB_VdqHdqEbIbM(bxInstruction_c
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
 
   op1.xmmubyte(i->Ib() & 0xF) = read_virtual_byte(i->seg(), eaddr);
 
@@ -424,7 +424,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INSERTPS_VpsHpsWssIb(bxInstruction
     op2 = temp.xmm32u((control >> 6) & 3);
   }
   else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
     op2 = read_virtual_dword(i->seg(), eaddr);
   }
 
@@ -463,7 +463,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRD_VdqHdqEdIbM(bxInstruction_c
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
 
 #if BX_SUPPORT_X86_64
   if (i->os64L()) {  /* 64 bit operand size mode */

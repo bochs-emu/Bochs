@@ -380,7 +380,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_VpdWpdR(bxInstruction
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_MASK_VpsWpsM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   bx_address laddr = get_laddr(i->seg(), eaddr);
 
   unsigned len = i->getVL(), len_in_bytes = 16 * len;
@@ -408,7 +408,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_MASK_VpsWpsM(bxInstruction
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_VpdWpdM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   bx_address laddr = get_laddr(i->seg(), eaddr);
 
   unsigned len = i->getVL(), len_in_bytes = 16 * len;
@@ -436,7 +436,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_VpdWpdM(bxInstruction
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_MASK_WpsVpsM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   bx_address laddr = get_laddr(i->seg(), eaddr);
 
   unsigned len_in_bytes = 16 * i->getVL();
@@ -452,7 +452,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_MASK_WpsVpsM(bxInstruction
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_WpdVpdM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   bx_address laddr = get_laddr(i->seg(), eaddr);
 
   unsigned len_in_bytes = 16 * i->getVL();
@@ -472,7 +472,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_WpdVpdM(bxInstruction
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVDQU8_MASK_VdqWdqM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   unsigned len = i->getVL();
 
   BxPackedAvxRegister reg;
@@ -494,7 +494,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVDQU8_MASK_VdqWdqM(bxInstructio
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVDQU16_MASK_VdqWdqM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   unsigned len = i->getVL();
 
   BxPackedAvxRegister reg;
@@ -516,7 +516,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVDQU16_MASK_VdqWdqM(bxInstructi
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_MASK_VpsWpsM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   unsigned len = i->getVL();
 
   BxPackedAvxRegister reg;
@@ -538,7 +538,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_MASK_VpsWpsM(bxInstruction
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPD_MASK_VpdWpdM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   unsigned len = i->getVL();
 
   BxPackedAvxRegister reg;
@@ -560,28 +560,28 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPD_MASK_VpdWpdM(bxInstruction
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVDQU8_MASK_WdqVdqM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store8(i, eaddr, &BX_READ_AVX_REG(i->src()), BX_READ_OPMASK(i->opmask()));
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVDQU16_MASK_WdqVdqM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store16(i, eaddr, &BX_READ_AVX_REG(i->src()), BX_READ_32BIT_OPMASK(i->opmask()));
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_MASK_WpsVpsM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store32(i, eaddr, &BX_READ_AVX_REG(i->src()), BX_READ_16BIT_OPMASK(i->opmask()));
   BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPD_MASK_WpdVpdM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store64(i, eaddr, &BX_READ_AVX_REG(i->src()), BX_READ_8BIT_OPMASK(i->opmask()));
   BX_NEXT_INSTR(i);
 }
@@ -597,7 +597,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSD_MASK_VsdWsdM(bxInstruction_
   op.xmm64u(1) = 0;
 
   if (BX_SCALAR_ELEMENT_MASK(i->opmask())) {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
     op.xmm64u(0) = read_virtual_qword(i->seg(), eaddr);
   }
   else {
@@ -620,7 +620,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSS_MASK_VssWssM(bxInstruction_
   op.xmm64u(1) = 0;
 
   if (BX_SCALAR_ELEMENT_MASK(i->opmask())) {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
     op.xmm64u(0) = (Bit64u) read_virtual_dword(i->seg(), eaddr);
   }
   else {
@@ -639,7 +639,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSS_MASK_VssWssM(bxInstruction_
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSD_MASK_WsdVsdM(bxInstruction_c *i)
 {
   if (BX_SCALAR_ELEMENT_MASK(i->opmask())) {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
     write_virtual_qword(i->seg(), eaddr, BX_READ_XMM_REG_LO_QWORD(i->src()));
   }
 
@@ -649,7 +649,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSD_MASK_WsdVsdM(bxInstruction_
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSS_MASK_WssVssM(bxInstruction_c *i)
 {
   if (BX_SCALAR_ELEMENT_MASK(i->opmask())) {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
     write_virtual_dword(i->seg(), eaddr, BX_READ_XMM_REG_LO_DWORD(i->src()));
   }
 
@@ -716,7 +716,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQB_MASK_WdqVdqM(bxInstruction
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   opmask &= (1 << QWORD_ELEMENTS(len)) - 1;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store8(i, eaddr, &dst, opmask);
 
   BX_NEXT_INSTR(i);
@@ -777,7 +777,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQB_MASK_WdqVdqM(bxInstructio
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   opmask &= (1 << QWORD_ELEMENTS(len)) - 1;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store8(i, eaddr, &dst, opmask);
 
   BX_NEXT_INSTR(i);
@@ -838,7 +838,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQB_MASK_WdqVdqM(bxInstructi
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   opmask &= (1 << QWORD_ELEMENTS(len)) - 1;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store8(i, eaddr, &dst, opmask);
   BX_NEXT_INSTR(i);
 }
@@ -899,7 +899,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVDB_MASK_WdqVdqM(bxInstruction
   Bit32u opmask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   opmask &= (1 << DWORD_ELEMENTS(len)) - 1;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store8(i, eaddr, &dst, opmask);
 
   BX_NEXT_INSTR(i);
@@ -956,7 +956,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSDB_MASK_WdqVdqM(bxInstructio
   Bit32u opmask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   opmask &= (1 << DWORD_ELEMENTS(len)) - 1;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store8(i, eaddr, &dst, opmask);
 
   BX_NEXT_INSTR(i);
@@ -1013,7 +1013,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSDB_MASK_WdqVdqM(bxInstructi
   Bit32u opmask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   opmask &= (1 << DWORD_ELEMENTS(len)) - 1;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store8(i, eaddr, &dst, opmask);
 
   BX_NEXT_INSTR(i);
@@ -1071,7 +1071,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVWB_MASK_WdqVdqM(bxInstruction
   Bit32u opmask = i->opmask() ? BX_READ_32BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   opmask &= (1 << WORD_ELEMENTS(len)) - 1;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store8(i, eaddr, &dst, opmask);
 
   BX_NEXT_INSTR(i);
@@ -1128,7 +1128,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSWB_MASK_WdqVdqM(bxInstructio
   Bit32u opmask = i->opmask() ? BX_READ_32BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   opmask &= (1 << WORD_ELEMENTS(len)) - 1;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store8(i, eaddr, &dst, opmask);
 
   BX_NEXT_INSTR(i);
@@ -1185,7 +1185,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSWB_MASK_WdqVdqM(bxInstructi
   Bit32u opmask = i->opmask() ? BX_READ_32BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   opmask &= (1 << WORD_ELEMENTS(len)) - 1;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store8(i, eaddr, &dst, opmask);
 
   BX_NEXT_INSTR(i);
@@ -1243,7 +1243,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVDW_MASK_WdqVdqM(bxInstruction
   Bit32u opmask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   opmask &= (1 << DWORD_ELEMENTS(len)) - 1;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store16(i, eaddr, &dst, opmask);
 
   BX_NEXT_INSTR(i);
@@ -1300,7 +1300,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSDW_MASK_WdqVdqM(bxInstructio
   Bit32u opmask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   opmask &= (1 << DWORD_ELEMENTS(len)) - 1;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store16(i, eaddr, &dst, opmask);
 
   BX_NEXT_INSTR(i);
@@ -1357,7 +1357,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSDW_MASK_WdqVdqM(bxInstructi
   Bit32u opmask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   opmask &= (1 << DWORD_ELEMENTS(len)) - 1;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store16(i, eaddr, &dst, opmask);
 
   BX_NEXT_INSTR(i);
@@ -1415,7 +1415,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQW_MASK_WdqVdqM(bxInstruction
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   opmask &= (1 << QWORD_ELEMENTS(len)) - 1;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store16(i, eaddr, &dst, opmask);
 
   BX_NEXT_INSTR(i);
@@ -1472,7 +1472,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQW_MASK_WdqVdqM(bxInstructio
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   opmask &= (1 << QWORD_ELEMENTS(len)) - 1;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store16(i, eaddr, &dst, opmask);
 
   BX_NEXT_INSTR(i);
@@ -1529,7 +1529,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQW_MASK_WdqVdqM(bxInstructi
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   opmask &= (1 << QWORD_ELEMENTS(len)) - 1;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store16(i, eaddr, &dst, opmask);
 
   BX_NEXT_INSTR(i);
@@ -1587,7 +1587,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQD_MASK_WdqVdqM(bxInstruction
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   opmask &= (1 << QWORD_ELEMENTS(len)) - 1;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store32(i, eaddr, &dst, opmask);
 
   BX_NEXT_INSTR(i);
@@ -1644,7 +1644,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQD_MASK_WdqVdqM(bxInstructio
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   opmask &= (1 << QWORD_ELEMENTS(len)) - 1;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store32(i, eaddr, &dst, opmask);
 
   BX_NEXT_INSTR(i);
@@ -1701,7 +1701,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQD_MASK_WdqVdqM(bxInstructi
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   opmask &= (1 << QWORD_ELEMENTS(len)) - 1;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
   avx_masked_store32(i, eaddr, &dst, opmask);
 
   BX_NEXT_INSTR(i);

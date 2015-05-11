@@ -40,7 +40,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_EdM(bxInstruction_c *i)
   // Note: there is one little weirdism here.  It is possible to use
   // ESP in the modrm addressing. If used, the value of ESP after the
   // pop is used to calculate the address.
-  Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit32u eaddr = (Bit32u) BX_CPU_RESOLVE_ADDR_32(i->ResolveModrm, (i));
 
   write_virtual_dword_32(i->seg(), eaddr, val32);
 
@@ -58,7 +58,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_EdR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_EdM(bxInstruction_c *i)
 {
-  Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit32u eaddr = (Bit32u) BX_CPU_RESOLVE_ADDR_32(i->ResolveModrm, (i));
 
   Bit32u op1_32 = read_virtual_dword_32(i->seg(), eaddr);
 
