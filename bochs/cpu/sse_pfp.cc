@@ -202,9 +202,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEdR(bxInstruction_c *i
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEqR(bxInstruction_c *i)
 {
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-
   float64 result = int64_to_float64(BX_READ_64BIT_REG(i->src()), status);
-
   check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_LO_QWORD(i->dst(), result);
 
@@ -223,9 +221,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEdR(bxInstruction_c *i
 {
 #if BX_CPU_LEVEL >= 6
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-
   float32 result = int32_to_float32(BX_READ_32BIT_REG(i->src()), status);
-
   check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_LO_DWORD(i->dst(), result);
 #endif
@@ -886,14 +882,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTPS_VpsWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
-
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-
-  op.xmm32u(0) = float32_sqrt(op.xmm32u(0), status);
-  op.xmm32u(1) = float32_sqrt(op.xmm32u(1), status);
-  op.xmm32u(2) = float32_sqrt(op.xmm32u(2), status);
-  op.xmm32u(3) = float32_sqrt(op.xmm32u(3), status);
-
+  xmm_sqrtps(&op, status);
   check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG(i->dst(), op);
 #endif
@@ -910,12 +900,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTPD_VpdWpdR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
-
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-
-  op.xmm64u(0) = float64_sqrt(op.xmm64u(0), status);
-  op.xmm64u(1) = float64_sqrt(op.xmm64u(1), status);
-
+  xmm_sqrtpd(&op, status);
   check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG(i->dst(), op);
 #endif
