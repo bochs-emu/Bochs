@@ -3049,25 +3049,15 @@ fi
 
 dnl // DEPRECATED configure options - force users to remove them
 
-AC_MSG_CHECKING(for instruction trace cache support (deprecated))
-AC_ARG_ENABLE(trace-cache,
-  AS_HELP_STRING([--enable-trace-cache], [support instruction trace cache (deprecated)]),
-  [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([DEPRECATED - this feature will be enabled in all configurations])
-  ],
-  [
-   AC_MSG_RESULT(no)
-  ])
-
-AC_MSG_CHECKING(for misaligned SSE support (deprecated))
-AC_ARG_ENABLE(misaligned-sse,
-  AS_HELP_STRING([--enable-misaligned-sse], [misaligned SSE support (deprecated)]),
-  [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([DEPRECATED - moved to runtime .bochsrc option])
-  ],
-  [
-   AC_MSG_RESULT(no)
-  ])
+dnl AC_MSG_CHECKING(for misaligned SSE support (deprecated))
+dnl AC_ARG_ENABLE(misaligned-sse,
+dnl   AS_HELP_STRING([--enable-misaligned-sse], [misaligned SSE support (deprecated)]),
+dnl   [AC_MSG_RESULT($enableval)
+dnl    AC_MSG_ERROR([DEPRECATED - moved to runtime .bochsrc option])
+dnl   ],
+dnl   [
+dnl    AC_MSG_RESULT(no)
+dnl   ])
 
 # Create some subdirectories for when you run configure from some other
 # directory.
