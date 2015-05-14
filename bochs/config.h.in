@@ -577,18 +577,7 @@ typedef
 
 #define HAVE_SIGACTION 1
 
-#ifndef __cplusplus
-
-// configure will change the definition of "inline" to the value
-// that the C compiler allows.  It tests the following keywords to
-// see if any is permitted: inline, __inline__, __inline.  If none
-// is permitted, it defines inline to be empty.
-#define inline inline
-
-#endif
-
-// Use BX_CPP_INLINE for all C++ inline functions.  Note that the
-// word "inline" itself may now be redefined by the above #define.
+// Use BX_CPP_INLINE for all C++ inline functions.
 #define BX_CPP_INLINE inline
 
 #ifdef __GNUC__

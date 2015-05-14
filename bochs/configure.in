@@ -133,7 +133,6 @@ if test "$PKGCONFIG" = not_found; then
 fi
 
 AC_C_BIGENDIAN
-AC_C_INLINE
 AC_CHECK_SIZEOF(unsigned char)
 AC_CHECK_SIZEOF(unsigned short)
 AC_CHECK_SIZEOF(unsigned int)
@@ -2647,7 +2646,7 @@ case "$target" in
     CD_UP_THREE="cd ..\..\.."
     have_gettimeofday=0  # even though it may exist in build environment
     AC_DEFINE(BX_64BIT_CONSTANTS_USE_LL, 0)
-    AC_DEFINE(inline, __forceinline)
+    AC_DEFINE(BX_CPP_INLINE, __forceinline)
     AC_DEFINE(BX_NO_ATTRIBUTES, 1)
     AC_DEFINE(HAVE_LIBREADLINE, 0)
     AC_DEFINE(HAVE_READLINE_HISTORY_H, 0)
