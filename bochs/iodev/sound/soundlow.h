@@ -56,10 +56,19 @@ typedef struct _audio_buffer_t
   struct _audio_buffer_t *next;
 } audio_buffer_t;
 
-audio_buffer_t* new_audio_buffer(Bit32u size);
-audio_buffer_t* get_current_buffer();
-void delete_audio_buffer();
+class bx_audio_buffer_c {
+public:
+  bx_audio_buffer_c(void);
+  ~bx_audio_buffer_c();
 
+  audio_buffer_t *new_buffer(Bit32u size);
+  audio_buffer_t *get_buffer();
+  void delete_buffer();
+private:
+  audio_buffer_t *root;
+};
+
+extern bx_audio_buffer_c *audio_buffers;
 Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
 
 extern int mixer_control;

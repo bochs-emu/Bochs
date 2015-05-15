@@ -33,9 +33,21 @@
 
 // audio buffer support
 
-static audio_buffer_t *audio_buffers = NULL;
+bx_audio_buffer_c *audio_buffers;
 
-audio_buffer_t* new_audio_buffer(Bit32u size)
+bx_audio_buffer_c::bx_audio_buffer_c()
+{
+  root = NULL;
+}
+
+bx_audio_buffer_c::~bx_audio_buffer_c()
+{
+  while (root != NULL) {
+    delete_buffer();
+  }
+}
+
+audio_buffer_t* bx_audio_buffer_c::new_buffer(Bit32u size)
 {
   audio_buffer_t *newbuffer = new audio_buffer_t;
   newbuffer->data = new Bit8u[size];
@@ -43,10 +55,10 @@ audio_buffer_t* new_audio_buffer(Bit32u size)
   newbuffer->pos = 0;
   newbuffer->next = NULL;
 
-  if (audio_buffers == NULL) {
-    audio_buffers = newbuffer;
+  if (root == NULL) {
+    root = newbuffer;
   } else {
-    audio_buffer_t *temp = audio_buffers;
+    audio_buffer_t *temp = root;
 
     while (temp->next)
       temp = temp->next;
@@ -56,15 +68,15 @@ audio_buffer_t* new_audio_buffer(Bit32u size)
   return newbuffer;
 }
 
-audio_buffer_t* get_current_buffer()
+audio_buffer_t* bx_audio_buffer_c::get_buffer()
 {
-  return audio_buffers;
+  return root;
 }
 
-void delete_audio_buffer()
+void bx_audio_buffer_c::delete_buffer()
 {
-  audio_buffer_t *tmpbuffer = audio_buffers;
-  audio_buffers = tmpbuffer->next;
+  audio_buffer_t *tmpbuffer = root;
+  root = tmpbuffer->next;
   delete [] tmpbuffer->data;
   delete tmpbuffer;
 }
@@ -78,7 +90,7 @@ Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
   UNUSED(rate);
 
   while (len > 0) {
-    audio_buffer_t *curbuffer = get_current_buffer();
+    audio_buffer_t *curbuffer = audio_buffers->get_buffer();
     if (curbuffer == NULL)
       break;
     Bit32u tmplen = curbuffer->size - curbuffer->pos;
@@ -92,7 +104,7 @@ Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
       len -= tmplen;
     }
     if (curbuffer->pos >= curbuffer->size) {
-      delete_audio_buffer();
+      audio_buffers->delete_buffer();
     }
   }
   return copied;
@@ -130,6 +142,7 @@ BX_THREAD_FUNC(mixer_thread, indata)
 bx_soundlow_waveout_c::bx_soundlow_waveout_c()
 {
   put("waveout", "WAVOUT");
+  audio_buffers = new bx_audio_buffer_c();
   real_pcm_param = default_pcm_param;
   emu_pcm_param = default_pcm_param;
   cb_count = 0;
@@ -178,7 +191,7 @@ int bx_soundlow_waveout_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param
   len2 = length * cvt_mult;
   if (pcm_callback_id >= 0) {
     BX_LOCK(mixer_mutex);
-    audio_buffer_t *newbuffer = new_audio_buffer(len2);
+    audio_buffer_t *newbuffer = audio_buffers->new_buffer(len2);
     convert_pcm_data(data, length, newbuffer->data, len2, src_param);
     BX_UNLOCK(mixer_mutex);
   } else {

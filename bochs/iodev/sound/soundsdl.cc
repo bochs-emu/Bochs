@@ -128,7 +128,7 @@ int bx_soundlow_waveout_sdl_c::sendwavepacket(int length, Bit8u data[], bx_pcm_p
   len2 = length * cvt_mult;
   SDL_LockAudio();
   if (WaveOpen) {
-    audio_buffer_t *newbuffer = new_audio_buffer(len2);
+    audio_buffer_t *newbuffer = audio_buffers->new_buffer(len2);
     convert_pcm_data(data, length, newbuffer->data, len2, src_param);
   } else {
     BX_ERROR(("SDL: audio not open"));
