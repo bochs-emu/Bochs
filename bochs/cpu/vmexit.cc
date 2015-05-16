@@ -127,7 +127,10 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_Instruction(bxInstruction_c *i, Bit
       }
       else
 #endif
+      {
         qualification = (Bit64u) ((Bit32u) i->displ32s());
+        qualification &= i->asize_mask();
+      }
 
       instr_info = gen_instruction_info(i, reason, rw_form);
       VMwrite32(VMCS_32BIT_VMEXIT_INSTRUCTION_INFO, instr_info);
