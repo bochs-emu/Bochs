@@ -44,7 +44,6 @@ OBJS = \
 	cpu.o \
 	event.o \
 	icache.o \
-	resolver.o \
 	fetchdecode.o \
 	access.o \
 	access2.o \
@@ -561,13 +560,6 @@ rdrand.o: rdrand.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
  ../instrument/stubs/instrument.h cpu.h access.h cpuid.h crregs.h descriptor.h \
  instr.h ia_opcodes.h lazy_flags.h icache.h apic.h i387.h fpu/softfloat.h \
  fpu/tag_w.h fpu/status_w.h fpu/control_w.h xmm.h vmx.h svm.h stack.h
-resolver.o: resolver.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
- ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
- ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../instrument/stubs/instrument.h cpu.h access.h cpuid.h crregs.h \
- descriptor.h instr.h ia_opcodes.h lazy_flags.h icache.h apic.h i387.h \
- fpu/softfloat.h fpu/tag_w.h fpu/status_w.h fpu/control_w.h xmm.h vmx.h \
- svm.h stack.h
 ret_far.o: ret_far.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \

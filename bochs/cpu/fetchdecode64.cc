@@ -1713,7 +1713,6 @@ BX_CPU_C::fetchDecode64(const Bit8u *iptr, Bit32u fetchModeMask, bxInstruction_c
   unsigned evex_v = 0, displ8 = 0;
 #endif
 
-  i->ResolveModrm = 0;
   i->init(/*os32*/ 1,  // operand size 32 override defaults to 1
           /*as32*/ 1,  // address size 32 override defaults to 1
           /*os64*/ 0,  // operand size 64 override defaults to 0
@@ -2039,15 +2038,11 @@ fetch_b1:
 
     mod_mem = 1;
     i->setSibBase(rm & 0xf); // initialize with rm to use BxResolve64Base
-    i->setSibIndex(BX_NIL_REGISTER);
+    i->setSibIndex(4);
     // initialize displ32 with zero to include cases with no diplacement
     i->modRMForm.displ32u = 0;
 
     // note that mod==11b handled above
-    if (i->as64L())
-      i->ResolveModrm = &BX_CPU_C::BxResolve64Base;
-    else
-      i->ResolveModrm = &BX_CPU_C::BxResolve32Base;
 
     if ((rm & 0x7) != 4) { // no s-i-b byte
       if (mod == 0x00) { // mod == 00b
@@ -2077,14 +2072,8 @@ fetch_b1:
       i->setSibBase(base & 0xf);
       // this part is a little tricky - assign index value always,
       // it will be really used if the instruction is Gather. Others
-      // assume that BxResolve32Base will do the right thing.
+      // assume that resolve function will do the right thing.
       i->setSibIndex(index & 0xf);
-      if (index != 4) {
-        if (i->as64L())
-          i->ResolveModrm = &BX_CPU_C::BxResolve64BaseIndex;
-        else
-          i->ResolveModrm = &BX_CPU_C::BxResolve32BaseIndex;
-      }
       if (mod == 0x00) { // mod==00b, rm==4
         seg = sreg_mod0_base32[base & 0xf];
         if ((base & 0x7) == 5) {

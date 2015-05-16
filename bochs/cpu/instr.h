@@ -88,11 +88,9 @@ typedef void BX_INSF_TYPE;
 // <TAG-TYPE-EXECUTEPTR-START>
 #if BX_USE_CPU_SMF
 typedef BX_INSF_TYPE (BX_CPP_AttrRegparmN(1) *BxExecutePtr_tR)(bxInstruction_c *);
-typedef bx_address (BX_CPP_AttrRegparmN(1) *BxResolvePtr_tR)(bxInstruction_c *);
 typedef void (BX_CPP_AttrRegparmN(1) *BxRepIterationPtr_tR)(bxInstruction_c *);
 #else
 typedef BX_INSF_TYPE (BX_CPU_C::*BxExecutePtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-typedef bx_address (BX_CPU_C::*BxResolvePtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 typedef void (BX_CPU_C::*BxRepIterationPtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 // <TAG-TYPE-EXECUTEPTR-END>
@@ -114,8 +112,6 @@ public:
     BxExecutePtr_tR execute2;
     bxInstruction_c *next;
   } handlers;
-
-  BxResolvePtr_tR ResolveModrm;
 
   struct {
     // 15...0 opcode

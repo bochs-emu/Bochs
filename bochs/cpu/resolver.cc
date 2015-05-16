@@ -21,6 +21,8 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
+#if 0
+
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
@@ -66,4 +68,6 @@ BX_CPU_C::BxResolve64BaseIndex(bxInstruction_c *i)
 {
   return BX_READ_64BIT_REG(i->sibBase()) + (BX_READ_64BIT_REG(i->sibIndex()) << i->sibScale()) + i->displ32s();
 }
+#endif
+
 #endif

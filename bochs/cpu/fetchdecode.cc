@@ -1295,7 +1295,6 @@ BX_CPU_C::fetchDecode32(const Bit8u *iptr, Bit32u fetchModeMask, bxInstruction_c
 
   os_32 = is_32 = fetchModeMask & BX_FETCH_MODE_IS32_MASK;
 
-  i->ResolveModrm = 0;
   i->init(/*os32*/ is_32,  /*as32*/ is_32,
           /*os64*/     0,  /*as64*/     0);
 
@@ -1551,13 +1550,12 @@ fetch_b1:
 
     mod_mem = 1;
     i->setSibBase(rm);      // initialize with rm to use BxResolve32Base
-    i->setSibIndex(BX_NIL_REGISTER);
+    i->setSibIndex(4);      // no Index encoding
     // initialize displ32 with zero to include cases with no diplacement
     i->modRMForm.displ32u = 0;
 
     if (i->as32L()) {
       // 32-bit addressing modes; note that mod==11b handled above
-      i->ResolveModrm = &BX_CPU_C::BxResolve32Base;
       if (rm != 4) { // no s-i-b byte
         if (mod == 0x00) { // mod == 00b
           if (rm == 5) {
@@ -1590,11 +1588,8 @@ fetch_b1:
         i->setSibBase(base);
         // this part is a little tricky - assign index value always,
         // it will be really used if the instruction is Gather. Others
-        // assume that BxResolve32Base will do the right thing.
+        // assume that resolve function will do the right thing.
         i->setSibIndex(index);
-        if (index != 4) {
-          i->ResolveModrm = &BX_CPU_C::BxResolve32BaseIndex;
-        }
         if (mod == 0x00) { // mod==00b, rm==4
           seg = sreg_mod0_base32[base];
           if (base == 5) {
@@ -1641,7 +1636,6 @@ fetch_b1:
     }
     else {
       // 16-bit addressing modes, mod==11b handled above
-      i->ResolveModrm = &BX_CPU_C::BxResolve16BaseIndex;
       i->setSibBase(Resolve16BaseReg[rm]);
       i->setSibIndex(Resolve16IndexReg[rm]);
       i->setSibScale(0);
@@ -1650,7 +1644,7 @@ fetch_b1:
         if (rm == 6) {
           i->setSibBase(BX_NIL_REGISTER);
           if (remain > 1) {
-            i->modRMForm.displ16u = FetchWORD(iptr);
+            i->modRMForm.displ32u = (Bit32s) (Bit16s) FetchWORD(iptr);
             iptr += 2;
             remain -= 2;
             goto modrm_done;
@@ -1663,7 +1657,7 @@ fetch_b1:
       if (mod == 0x40) { // mod == 01b
         if (remain != 0) {
           // 8 sign extended to 16
-          i->modRMForm.displ16u = (Bit8s) *iptr++;
+          i->modRMForm.displ32u = (Bit32s) (Bit8s) *iptr++;
 #if BX_SUPPORT_EVEX
           displ8 = 1;
 #endif
@@ -1676,7 +1670,7 @@ fetch_b1:
       }
       // (mod == 0x80)      mod == 10b
       if (remain > 1) {
-        i->modRMForm.displ16u = FetchWORD(iptr);
+        i->modRMForm.displ32u = (Bit32s) (Bit16s) FetchWORD(iptr);
         iptr += 2;
         remain -= 2;
       }

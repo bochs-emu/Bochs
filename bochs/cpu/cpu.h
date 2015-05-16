@@ -564,12 +564,6 @@ class BX_MEM_C;
 // Since this is different from when SMF=1, encapsulate it in a macro.
 #  define BX_CPU_CALL_METHOD(func, args) \
             (this->*((BxExecutePtr_tR) (func))) args
-#  define BX_CPU_RESOLVE_ADDR(func, args) \
-            (this->*((BxResolvePtr_tR) (func))) args
-#  define BX_CPU_RESOLVE_ADDR_64(func, args) \
-            (this->*((BxResolvePtr_tR) (func))) args
-#  define BX_CPU_RESOLVE_ADDR_32(func, args) \
-            (this->*((BxResolvePtr_tR) (func))) args
 #  define BX_CPU_CALL_REP_ITERATION(func, args) \
             (this->*((BxRepIterationPtr_tR) (func))) args
 #else
@@ -579,15 +573,39 @@ class BX_MEM_C;
 #  define BX_SMF           static
 #  define BX_CPU_CALL_METHOD(func, args) \
             ((BxExecutePtr_tR) (func)) args
-#  define BX_CPU_RESOLVE_ADDR(func, args) \
-            ((BxResolvePtr_tR) (func)) args
-#  define BX_CPU_RESOLVE_ADDR_64(func, args) \
-            ((BxResolvePtr_tR) (func)) args
-#  define BX_CPU_RESOLVE_ADDR_32(func, args) \
-            ((BxResolvePtr_tR) (func)) args
 #  define BX_CPU_CALL_REP_ITERATION(func, args) \
             ((BxRepIterationPtr_tR) (func)) args
 #endif
+
+//
+// BX_CPU_RESOLVE_ADDR:
+// Resolve virtual address of the instruction's memory reference without any
+// assumptions about instruction's operand size, address size or execution
+// mode
+//
+// BX_CPU_RESOLVE_ADDR_64:
+// Resolve virtual address of the instruction memory reference assuming
+// the instruction is executed in 64-bit long mode with possible 64-bit
+// or 32-bit address size.
+//
+// BX_CPU_RESOLVE_ADDR_32:
+// Resolve virtual address of the instruction memory reference assuming
+// the instruction is executed in legacy or compatibility mode with
+// possible 32-bit or 16-bit address size.
+//
+//
+#if BX_SUPPORT_X86_64
+#  define BX_CPU_RESOLVE_ADDR(func, args) \
+            (i->as64L() ? BxResolve64(args) : BxResolve32(args))
+#  define BX_CPU_RESOLVE_ADDR_64(func, args) \
+            (i->as64L() ? BxResolve64(args) : BxResolve32(args))
+#else
+#  define BX_CPU_RESOLVE_ADDR(func, args) \
+            (BxResolve32(args))
+#endif
+#  define BX_CPU_RESOLVE_ADDR_32(func, args) \
+            (BxResolve32(args))
+
 
 #if BX_SUPPORT_SMP
 // multiprocessor simulation, we need an array of cpus and memories
@@ -4444,12 +4462,9 @@ public: // for now...
 #endif
 #endif
 
-  BX_SMF bx_address BxResolve16BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF bx_address BxResolve32Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF bx_address BxResolve32BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_CPP_INLINE BX_SMF Bit32u BxResolve32(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
-  BX_SMF bx_address BxResolve64Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF bx_address BxResolve64BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_CPP_INLINE BX_SMF Bit64u BxResolve64(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 #if BX_SUPPORT_AVX
   BX_SMF bx_address BxResolveGatherD(bxInstruction_c *, unsigned) BX_CPP_AttrRegparmN(2);
@@ -5305,6 +5320,24 @@ BX_CPP_INLINE void BX_CPU_C::prepareXSAVE(void)
 #define RMAddr(i)  (BX_CPU_THIS_PTR address_xlation.rm_addr)
 
 #if defined(NEED_CPU_REG_SHORTCUTS)
+
+#if BX_SUPPORT_X86_64
+BX_CPP_INLINE Bit64u BX_CPP_AttrRegparmN(1) BX_CPU_C::BxResolve64(bxInstruction_c *i)
+{
+  Bit64u eaddr = (Bit64u) (BX_READ_64BIT_REG(i->sibBase()) + i->displ32s());
+  if (i->sibIndex() != 4)
+    eaddr += BX_READ_64BIT_REG(i->sibIndex()) << i->sibScale();
+  return eaddr;
+}
+#endif
+
+BX_CPP_INLINE Bit32u BX_CPP_AttrRegparmN(1) BX_CPU_C::BxResolve32(bxInstruction_c *i)
+{
+  Bit32u eaddr = (Bit32u) (BX_READ_32BIT_REG(i->sibBase()) + i->displ32s());
+  if (i->sibIndex() != 4)
+    eaddr += BX_READ_32BIT_REG(i->sibIndex()) << i->sibScale();
+  return eaddr & i->asize_mask();
+}
 
 #include "stack.h"
 
