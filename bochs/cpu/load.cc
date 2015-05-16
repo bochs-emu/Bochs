@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2014 Stanislav Shwartsman
+//   Copyright (c) 2008-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -28,21 +28,21 @@
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Eb(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   TMP8L = read_virtual_byte(i->seg(), eaddr);
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ew(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   TMP16 = read_virtual_word(i->seg(), eaddr);
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ed(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   TMP32 = read_virtual_dword(i->seg(), eaddr);
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 }
@@ -50,7 +50,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ed(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Eq(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
   TMP64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 }
@@ -59,7 +59,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Eq(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   Bit8u val_8 = read_virtual_byte(i->seg(), eaddr);
   BX_WRITE_XMM_REG_LO_BYTE(BX_VECTOR_TMP_REGISTER, val_8);
 
@@ -70,7 +70,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wb(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ww(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   Bit16u val_16 = read_virtual_word(i->seg(), eaddr);
   BX_WRITE_XMM_REG_LO_WORD(BX_VECTOR_TMP_REGISTER, val_16);
 
@@ -81,7 +81,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ww(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wss(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   Bit32u val_32 = read_virtual_dword(i->seg(), eaddr);
   BX_WRITE_XMM_REG_LO_DWORD(BX_VECTOR_TMP_REGISTER, val_32);
 
@@ -92,7 +92,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wss(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wsd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   Bit64u val_64 = read_virtual_qword(i->seg(), eaddr);
   BX_WRITE_XMM_REG_LO_QWORD(BX_VECTOR_TMP_REGISTER, val_64);
 
@@ -103,7 +103,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wsd(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wdq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
   if (BX_CPU_THIS_PTR mxcsr.get_MM())
     read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_TMP_REGISTER));
@@ -117,7 +117,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wdq(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADU_Wdq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_VECTOR_TMP_REGISTER));
 
   BX_CPU_CALL_METHOD(i->execute2(), (i));
@@ -128,7 +128,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADU_Wdq(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Vector(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   unsigned len = i->getVL();
 
 #if BX_SUPPORT_EVEX
@@ -149,7 +149,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Vector(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Half_Vector(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   unsigned len = i->getVL();
 
 #if BX_SUPPORT_EVEX
@@ -173,7 +173,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Half_Vector(bxInstruction_c *
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Quarter_Vector(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   unsigned len = i->getVL();
 
 #if BX_SUPPORT_EVEX
@@ -198,7 +198,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Quarter_Vector(bxInstruction_
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Oct_Vector(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   unsigned len = i->getVL();
 
 #if BX_SUPPORT_EVEX
@@ -238,7 +238,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_VectorW(bxInstruction_c 
     return;
   }
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   avx_masked_load16(i, eaddr, &BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER), opmask);
 
   BX_CPU_CALL_METHOD(i->execute2(), (i));
@@ -247,7 +247,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_VectorW(bxInstruction_c 
 // load vector of dwords, support broadcast, no fault suppression
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_VectorD(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   unsigned len = i->getVL();
 
   if (i->getEvexb()) {
@@ -276,7 +276,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_MASK_VectorD(bxInst
     return;
   }
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   unsigned len = i->getVL();
 
   if (i->getEvexb()) {
@@ -293,7 +293,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_MASK_VectorD(bxInst
 // load vector of qwords, support broadcast, no fault suppression
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_VectorQ(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   unsigned len = i->getVL();
 
   if (i->getEvexb()) {
@@ -322,7 +322,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ(bxInst
     return;
   }
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   unsigned len = i->getVL();
 
   if (i->getEvexb()) {
@@ -339,7 +339,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ(bxInst
 // load half vector of dwords, support broadcast, no fault suppression
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_Half_VectorD(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   unsigned len = i->getVL();
 
   if (i->getEvexb()) {
@@ -375,7 +375,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_MASK_Half_VectorD(b
     return;
   }
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
   if (i->getEvexb()) {
     Bit32u val_32 = read_virtual_dword(i->seg(), eaddr);

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2012 Stanislav Shwartsman
+//   Copyright (c) 2003-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -231,7 +231,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_SINGLE_REAL(bxInstruction_c *
   if (i->getIaOpcode() == BX_IA_FCOMP_SINGLE_REAL)
       pop_stack = 1;
 
-  RMAddr(i) = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
   float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
 
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
@@ -281,7 +281,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_DOUBLE_REAL(bxInstruction_c *
   if (i->getIaOpcode() == BX_IA_FCOMP_DOUBLE_REAL)
       pop_stack = 1;
 
-  RMAddr(i) = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
   float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
 
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
@@ -331,7 +331,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_WORD_INTEGER(bxInstruction_c
   if (i->getIaOpcode() == BX_IA_FICOMP_WORD_INTEGER)
       pop_stack = 1;
 
-  RMAddr(i) = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
   Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
 
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
@@ -374,7 +374,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_DWORD_INTEGER(bxInstruction_
   if (i->getIaOpcode() == BX_IA_FICOMP_DWORD_INTEGER)
       pop_stack = 1;
 
-  RMAddr(i) = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
   Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
 
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);

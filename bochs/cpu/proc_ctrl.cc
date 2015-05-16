@@ -60,7 +60,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PAUSE(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PREFETCH(bxInstruction_c *i)
 {
 #if BX_INSTRUMENTATION
-  BX_INSTR_PREFETCH_HINT(BX_CPU_ID, i->src(), i->seg(), BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i)));
+  BX_INSTR_PREFETCH_HINT(BX_CPU_ID, i->src(), i->seg(), BX_CPU_RESOLVE_ADDR(i));
 #endif
 
   BX_NEXT_INSTR(i);
@@ -262,7 +262,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 {
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[i->seg()];
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   bx_address laddr = get_laddr(i->seg(), eaddr);
 
 #if BX_SUPPORT_X86_64

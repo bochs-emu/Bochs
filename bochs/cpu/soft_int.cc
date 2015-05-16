@@ -28,7 +28,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GwMa(bxInstruction_c *i)
 {
   Bit16s op1_16 = BX_READ_16BIT_REG(i->dst());
 
-  Bit32u eaddr = (Bit32u) BX_CPU_RESOLVE_ADDR_32(i->ResolveModrm, (i));
+  Bit32u eaddr = (Bit32u) BX_CPU_RESOLVE_ADDR_32(i);
 
   Bit16s bound_min = (Bit16s) read_virtual_word_32(i->seg(), eaddr);
   Bit16s bound_max = (Bit16s) read_virtual_word_32(i->seg(), (eaddr+2) & i->asize_mask());
@@ -45,7 +45,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GdMa(bxInstruction_c *i)
 {
   Bit32s op1_32 = BX_READ_32BIT_REG(i->dst());
 
-  Bit32u eaddr = (Bit32u) BX_CPU_RESOLVE_ADDR_32(i->ResolveModrm, (i));
+  Bit32u eaddr = (Bit32u) BX_CPU_RESOLVE_ADDR_32(i);
 
   Bit32s bound_min = (Bit32s) read_virtual_dword_32(i->seg(), eaddr);
   Bit32s bound_max = (Bit32s) read_virtual_dword_32(i->seg(), (eaddr+4) & i->asize_mask());

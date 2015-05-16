@@ -33,7 +33,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EbIbR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EbGbM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
   write_virtual_byte(i->seg(), eaddr, BX_READ_8BIT_REGx(i->src(), i->extend8bitL()));
 
@@ -42,7 +42,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EbGbM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_GbEbM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
   Bit8u val8 = read_virtual_byte(i->seg(), eaddr);
   BX_WRITE_8BIT_REGx(i->dst(), i->extend8bitL(), val8);
@@ -74,7 +74,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_OdAL(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EbIbM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
   write_virtual_byte(i->seg(), eaddr, i->Ib());
 
@@ -98,7 +98,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XLAT(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EbGbM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
   Bit8u op1 = read_RMW_virtual_byte(i->seg(), eaddr);
   Bit8u op2 = BX_READ_8BIT_REGx(i->src(), i->extend8bitL());

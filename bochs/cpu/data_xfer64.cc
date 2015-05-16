@@ -35,7 +35,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RRXIq(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV64_GdEdM(bxInstruction_c *i)
 {
-  Bit64u eaddr = BX_CPU_RESOLVE_ADDR_64(i->ResolveModrm, (i));
+  Bit64u eaddr = BX_CPU_RESOLVE_ADDR_64(i);
   Bit32u val32 = read_linear_dword(i->seg(), get_laddr64(i->seg(), eaddr));
   BX_WRITE_32BIT_REGZ(i->dst(), val32);
 
@@ -44,7 +44,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV64_GdEdM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV64_EdGdM(bxInstruction_c *i)
 {
-  Bit64u eaddr = BX_CPU_RESOLVE_ADDR_64(i->ResolveModrm, (i));
+  Bit64u eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   write_linear_dword(i->seg(), get_laddr64(i->seg(), eaddr), BX_READ_32BIT_REG(i->src()));
 
@@ -53,7 +53,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV64_EdGdM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EqGqM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   write_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr), BX_READ_64BIT_REG(i->src()));
 
@@ -62,7 +62,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EqGqM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV64S_EqGqM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   stack_write_qword(eaddr, BX_READ_64BIT_REG(i->src()));
 
@@ -71,7 +71,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV64S_EqGqM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_GqEqM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
   Bit64u val64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
 
   BX_WRITE_64BIT_REG(i->dst(), val64);
@@ -81,7 +81,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_GqEqM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV64S_GqEqM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   BX_WRITE_64BIT_REG(i->dst(), stack_read_qword(eaddr));
 
@@ -97,7 +97,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_GqEqR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LEA_GqM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   BX_WRITE_64BIT_REG(i->dst(), eaddr);
 
@@ -164,7 +164,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EqIdM(bxInstruction_c *i)
 {
   Bit64u op_64 = (Bit32s) i->Id();
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   write_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr), op_64);
 
@@ -181,7 +181,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EqIdR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVZX_GqEbM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   Bit8u op2_8 = read_linear_byte(i->seg(), get_laddr64(i->seg(), eaddr));
 
@@ -203,7 +203,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVZX_GqEbR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVZX_GqEwM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   Bit16u op2_16 = read_linear_word(i->seg(), get_laddr64(i->seg(), eaddr));
 
@@ -225,7 +225,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVZX_GqEwR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSX_GqEbM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   Bit8u op2_8 = read_linear_byte(i->seg(), get_laddr64(i->seg(), eaddr));
 
@@ -247,7 +247,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSX_GqEbR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSX_GqEwM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   Bit16u op2_16 = read_linear_word(i->seg(), get_laddr64(i->seg(), eaddr));
 
@@ -269,7 +269,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSX_GqEwR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSX_GqEdM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   Bit32u op2_32 = read_linear_dword(i->seg(), get_laddr64(i->seg(), eaddr));
 
@@ -291,7 +291,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSX_GqEdR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EqGqM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   Bit64u op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
   Bit64u op2_64 = BX_READ_64BIT_REG(i->src());

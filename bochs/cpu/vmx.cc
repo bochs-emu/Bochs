@@ -2570,7 +2570,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
       exception(BX_GP_EXCEPTION, 0);
     }
 
-    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
     Bit64u pAddr = read_virtual_qword(i->seg(), eaddr); // keep 64-bit
     if (! IsValidPageAlignedPhyAddr(pAddr)) {
       BX_ERROR(("VMXON: invalid or not page aligned physical address !"));
@@ -2934,7 +2934,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRLD(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   Bit64u pAddr = read_virtual_qword(i->seg(), eaddr); // keep 64-bit
   if (! IsValidPageAlignedPhyAddr(pAddr)) {
     BX_ERROR(("VMFAIL: invalid or not page aligned physical address !"));
@@ -2981,7 +2981,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRST(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   write_virtual_qword(i->seg(), eaddr, BX_CPU_THIS_PTR vmcsptr);
   VMsucceed();
 #endif  
@@ -3153,7 +3153,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD_EdGd(bxInstruction_c *i)
      BX_WRITE_32BIT_REGZ(i->dst(), field_32);
   }
   else {
-     Bit32u eaddr = (Bit32u) BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+     Bit32u eaddr = (Bit32u) BX_CPU_RESOLVE_ADDR(i);
      write_virtual_dword_32(i->seg(), eaddr, field_32);
   }
  
@@ -3218,7 +3218,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD_EqGq(bxInstruction_c *i)
      BX_WRITE_64BIT_REG(i->dst(), field_64);
   }
   else {
-     Bit64u eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+     Bit64u eaddr = BX_CPU_RESOLVE_ADDR(i);
      write_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr), field_64);
   }
  
@@ -3264,7 +3264,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE_GdEd(bxInstruction_c *i)
      val_32 = BX_READ_32BIT_REG(i->src());
   }
   else {
-     Bit32u eaddr = (Bit32u) BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+     Bit32u eaddr = (Bit32u) BX_CPU_RESOLVE_ADDR(i);
      val_32 = read_virtual_dword_32(i->seg(), eaddr);
   }
 
@@ -3334,7 +3334,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE_GqEq(bxInstruction_c *i)
      val_64 = BX_READ_64BIT_REG(i->src());
   }
   else {
-     Bit64u eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+     Bit64u eaddr = BX_CPU_RESOLVE_ADDR(i);
      val_64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
   }
 
@@ -3391,7 +3391,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   Bit64u pAddr = read_virtual_qword(i->seg(), eaddr); // keep 64-bit
   if (! IsValidPageAlignedPhyAddr(pAddr)) {
     BX_ERROR(("VMFAIL: VMCLEAR with invalid physical address!"));
@@ -3451,7 +3451,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
   }
 
   BxPackedXmmRegister inv_eptp;
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   read_virtual_xmmword(i->seg(), eaddr, &inv_eptp);
 
   switch(type) {
@@ -3509,7 +3509,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
   }
 
   BxPackedXmmRegister invvpid_desc;
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   read_virtual_xmmword(i->seg(), eaddr, &invvpid_desc);
 
   if (invvpid_desc.xmm64u(0) > 0xffff) {
@@ -3606,7 +3606,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
   }
 
   BxPackedXmmRegister invpcid_desc;
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   read_virtual_xmmword(i->seg(), eaddr, &invpcid_desc);
 
   if (invpcid_desc.xmm64u(0) > 0xfff) {

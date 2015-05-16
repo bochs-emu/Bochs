@@ -126,7 +126,7 @@ Bit16u BX_CPU_C::unpack_FPU_TW(Bit16u tag_byte)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LDMXCSR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
   Bit32u new_mxcsr = read_virtual_dword(i->seg(), eaddr);
   if(new_mxcsr & ~MXCSR_MASK)
@@ -144,7 +144,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::STMXCSR(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   Bit32u mxcsr = BX_MXCSR_REGISTER & MXCSR_MASK;
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
   write_virtual_dword(i->seg(), eaddr, mxcsr);
 #endif
@@ -194,7 +194,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
     xmm.xmm32u(3) = x87_get_FCS();
   }
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
   write_virtual_xmmword_aligned(i->seg(), eaddr, &xmm);
 
@@ -282,7 +282,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR cr0.get_EM() || BX_CPU_THIS_PTR cr0.get_TS())
     exception(BX_NM_EXCEPTION, 0);
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
   read_virtual_xmmword_aligned(i->seg(), eaddr, &xmm);
 
@@ -402,7 +402,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVUPS_VpsWpsM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   read_virtual_xmmword(i->seg(), eaddr, &BX_XMM_REG(i->dst()));
 #endif
 
@@ -412,7 +412,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVUPS_VpsWpsM(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVUPS_WpsVpsM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   write_virtual_xmmword(i->seg(), eaddr, &BX_XMM_REG(i->src()));
 #endif
 
@@ -434,7 +434,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_VpsWpsR(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_VpsWpsM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   read_virtual_xmmword_aligned(i->seg(), eaddr, &BX_XMM_REG(i->dst()));
 #endif
 
@@ -448,7 +448,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_VpsWpsM(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_WpsVpsM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   write_virtual_xmmword_aligned(i->seg(), eaddr, &BX_XMM_REG(i->src()));
 #endif
 
@@ -472,7 +472,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSS_VssWssM(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op;
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
   /* If the source operand is a memory location, the high-order
           96 bits of the destination XMM register are cleared to 0s */
@@ -489,7 +489,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSS_VssWssM(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSS_WssVssM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   write_virtual_dword(i->seg(), eaddr, BX_READ_XMM_REG_LO_DWORD(i->src()));
 #endif
 
@@ -501,7 +501,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSS_WssVssM(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD_WsdVsdM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   write_virtual_qword(i->seg(), eaddr, BX_XMM_REG_LO_QWORD(i->src()));
 #endif
 
@@ -535,7 +535,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVHLPS_VpsWpsR(bxInstruction_c *i
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLPS_VpsMq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   /* pointer, segment address pair */
   Bit64u val64 = read_virtual_qword(i->seg(), eaddr);
 
@@ -600,7 +600,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLHPS_VpsWpsR(bxInstruction_c *i
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVHPS_VpsMq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   /* pointer, segment address pair */
   Bit64u val64 = read_virtual_qword(i->seg(), eaddr);
 
@@ -615,7 +615,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVHPS_VpsMq(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVHPS_MqVps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   write_virtual_qword(i->seg(), eaddr, BX_XMM_REG_HI_QWORD(i->src()));
 #endif
 
@@ -745,7 +745,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD_VsdWsdM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op;
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   op.xmm64u(0) = read_virtual_qword(i->seg(), eaddr);
   op.xmm64u(1) = 0; /* zero-extension to 128 bit */
 

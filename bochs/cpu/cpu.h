@@ -595,16 +595,16 @@ class BX_MEM_C;
 //
 //
 #if BX_SUPPORT_X86_64
-#  define BX_CPU_RESOLVE_ADDR(func, args) \
-            (i->as64L() ? BxResolve64(args) : BxResolve32(args))
-#  define BX_CPU_RESOLVE_ADDR_64(func, args) \
-            (i->as64L() ? BxResolve64(args) : BxResolve32(args))
+#  define BX_CPU_RESOLVE_ADDR(i) \
+            ((i)->as64L() ? BxResolve64(i) : BxResolve32(i))
+#  define BX_CPU_RESOLVE_ADDR_64(i) \
+            ((i)->as64L() ? BxResolve64(i) : BxResolve32(i))
 #else
-#  define BX_CPU_RESOLVE_ADDR(func, args) \
-            (BxResolve32(args))
+#  define BX_CPU_RESOLVE_ADDR(i) \
+            (BxResolve32(i))
 #endif
-#  define BX_CPU_RESOLVE_ADDR_32(func, args) \
-            (BxResolve32(args))
+#  define BX_CPU_RESOLVE_ADDR_32(i) \
+            (BxResolve32(i))
 
 
 #if BX_SUPPORT_SMP

@@ -872,7 +872,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
   }
   else {
     /* use RMAddr(i) to save address for VMexit */
-    RMAddr(i) = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+    RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
     /* pointer, segment address pair */
     msw = read_virtual_word(i->seg(), RMAddr(i));
   }
@@ -914,7 +914,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwR(bxInstruction_c *i)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwM(bxInstruction_c *i)
 {
   Bit16u msw = read_CR0() & 0xffff;   // handle CR0 shadow in VMX
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   write_virtual_word(i->seg(), eaddr, msw);
 
   BX_NEXT_INSTR(i);

@@ -166,7 +166,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   /* pointer, segment address pair */
   Bit64u op1_64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
@@ -415,7 +415,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
 
   BX_INSTR_FAR_BRANCH_ORIGIN();
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   Bit64u op1_64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
   Bit16u cs_raw = read_linear_word(i->seg(), get_laddr64(i->seg(), (eaddr+8) & i->asize_mask()));

@@ -272,7 +272,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EwR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL16_Ep(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
   Bit16u op1_16 = read_virtual_word(i->seg(), eaddr);
   Bit16u cs_raw = read_virtual_word(i->seg(), (eaddr+2) & i->asize_mask());
@@ -511,7 +511,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EwR(bxInstruction_c *i)
 /* Far indirect jump */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP16_Ep(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
   Bit16u op1_16 = read_virtual_word(i->seg(), eaddr);
   Bit16u cs_raw = read_virtual_word(i->seg(), (eaddr+2) & i->asize_mask());
