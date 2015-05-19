@@ -1121,7 +1121,7 @@ void bx_local_apic_c::set_tsc_deadline(Bit64u deadline)
 
   ticksInitial = deadline;
   if (deadline != 0) {
-    BX_INFO(("APIC: TSC-Deadline is set to " FMT_LL "d", deadline));
+    BX_DEBUG(("APIC: TSC-Deadline is set to " FMT_LL "d", deadline));
     Bit64u currtime = bx_pc_system.time_ticks();
     timer_active = 1;
     bx_pc_system.activate_timer_ticks(timer_handle, (deadline > currtime) ? (deadline - currtime) : 1 , 0);
