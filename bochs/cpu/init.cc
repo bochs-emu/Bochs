@@ -907,6 +907,9 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_MEMTYPE
   BX_CPU_THIS_PTR espPageMemtype = BX_MEMTYPE_UC;
 #endif
+#if BX_SUPPORT_SMP == 0
+  BX_CPU_THIS_PTR espPageFineGranularityMapping = 0;
+#endif
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR stop_reason = STOP_NO_REASON;

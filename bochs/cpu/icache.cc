@@ -87,6 +87,11 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBia
   Bit32u pageOffset = PAGE_OFFSET((Bit32u) pAddr);
   Bit32u traceMask = 0;
 
+#if BX_SUPPORT_SMP == 0
+  if (PPFOf(pAddr) == BX_CPU_THIS_PTR pAddrStackPage)
+    invalidate_stack_cache();
+#endif
+
   // Don't allow traces longer than cpu_loop can execute
   static unsigned quantum =
 #if BX_SUPPORT_SMP

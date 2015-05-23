@@ -1333,6 +1333,9 @@ public: // for now...
 #if BX_SUPPORT_MEMTYPE
   BxMemtype espPageMemtype;
 #endif
+#if BX_SUPPORT_SMP == 0
+  Bit32u espPageFineGranularityMapping;
+#endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   unsigned alignment_check_mask;
