@@ -97,6 +97,9 @@ int bx_soundlow_waveout_file_c::openwaveoutput(const char *wavedev)
       initwavfile();
     }
     set_pcm_params(&real_pcm_param);
+    if (conversion_control != 1) {
+      start_conversion_thread();
+    }
     if (mixer_control != 1) {
       pcm_callback_id = register_wave_callback(this, pcm_callback);
       start_mixer_thread();

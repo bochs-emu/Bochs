@@ -35,7 +35,7 @@ public:
 
   virtual int openwaveoutput(const char *wavedev);
   virtual int set_pcm_params(bx_pcm_param_t *param);
-  virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
+  virtual int convert_pcm_data(void);
 
   virtual void unregister_wave_callback(int callback_id);
   virtual bx_bool mixer_common(Bit8u *buffer, int len);

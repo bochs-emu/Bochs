@@ -53,6 +53,7 @@ typedef struct _audio_buffer_t
 {
   Bit32u size, pos;
   Bit8u *data;
+  bx_pcm_param_t param;
   struct _audio_buffer_t *next;
 } audio_buffer_t;
 
@@ -68,10 +69,12 @@ private:
   audio_buffer_t *root;
 };
 
-extern bx_audio_buffer_c *audio_buffers;
+extern bx_audio_buffer_c *audio_buffers[2];
 Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
 
+extern int conversion_control;
 extern int mixer_control;
+extern BX_MUTEX(conversion_mutex);
 extern BX_MUTEX(mixer_mutex);
 
 // the waveout class
@@ -84,6 +87,7 @@ public:
   virtual int openwaveoutput(const char *wavedev);
   virtual int set_pcm_params(bx_pcm_param_t *param);
   virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
+  virtual int convert_pcm_data(void);
   virtual int get_packetsize();
   virtual int output(int length, Bit8u data[]);
   virtual int closewaveoutput();
@@ -93,8 +97,9 @@ public:
 
   virtual bx_bool mixer_common(Bit8u *buffer, int len);
 protected:
-  void convert_pcm_data(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param);
+  void start_conversion_thread(void);
   void start_mixer_thread(void);
+  void convert_common(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param);
 
   bx_pcm_param_t emu_pcm_param, real_pcm_param;
   int cvt_mult;

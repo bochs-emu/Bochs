@@ -66,6 +66,7 @@ bx_soundlow_waveout_sdl_c::~bx_soundlow_waveout_sdl_c()
 int bx_soundlow_waveout_sdl_c::openwaveoutput(const char *wavedev)
 {
   set_pcm_params(&real_pcm_param);
+  start_conversion_thread();
   return BX_SOUNDLOW_OK;
 }
 
@@ -111,31 +112,33 @@ int bx_soundlow_waveout_sdl_c::set_pcm_params(bx_pcm_param_t *param)
   return BX_SOUNDLOW_OK;
 }
 
-int bx_soundlow_waveout_sdl_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param)
+int bx_soundlow_waveout_sdl_c::convert_pcm_data()
 {
-  int ret = BX_SOUNDLOW_OK;
   int len2;
 
-  if (memcmp(src_param, &emu_pcm_param, sizeof(bx_pcm_param_t)) != 0) {
-    emu_pcm_param = *src_param;
-    cvt_mult = (src_param->bits == 8) ? 2 : 1;
-    if (src_param->channels == 1) cvt_mult <<= 1;
-    if (src_param->samplerate != real_pcm_param.samplerate) {
-      real_pcm_param.samplerate = src_param->samplerate;
+  BX_LOCK(conversion_mutex);
+  audio_buffer_t *curbuffer = audio_buffers[0]->get_buffer();
+  if (memcmp(&curbuffer->param, &emu_pcm_param, sizeof(bx_pcm_param_t)) != 0) {
+    emu_pcm_param = curbuffer->param;
+    cvt_mult = (emu_pcm_param.bits == 8) ? 2 : 1;
+    if (emu_pcm_param.channels == 1) cvt_mult <<= 1;
+    if (emu_pcm_param.samplerate != real_pcm_param.samplerate) {
+      real_pcm_param.samplerate = emu_pcm_param.samplerate;
       set_pcm_params(&real_pcm_param);
     }
   }
-  len2 = length * cvt_mult;
+  BX_UNLOCK(conversion_mutex);
+  len2 = curbuffer->size * cvt_mult;
   SDL_LockAudio();
   if (WaveOpen) {
-    audio_buffer_t *newbuffer = audio_buffers->new_buffer(len2);
-    convert_pcm_data(data, length, newbuffer->data, len2, src_param);
-  } else {
-    BX_ERROR(("SDL: audio not open"));
-    ret = BX_SOUNDLOW_ERR;
+    audio_buffer_t *newbuffer = audio_buffers[1]->new_buffer(len2);
+    convert_common(curbuffer->data, curbuffer->size, newbuffer->data, len2, &curbuffer->param);
   }
   SDL_UnlockAudio();
-  return ret;
+  BX_LOCK(conversion_mutex);
+  audio_buffers[0]->delete_buffer();
+  BX_UNLOCK(conversion_mutex);
+  return BX_SOUNDLOW_OK;
 }
 
 bx_bool bx_soundlow_waveout_sdl_c::mixer_common(Bit8u *buffer, int len)

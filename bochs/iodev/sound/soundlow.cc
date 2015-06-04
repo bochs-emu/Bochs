@@ -33,7 +33,7 @@
 
 // audio buffer support
 
-bx_audio_buffer_c *audio_buffers;
+bx_audio_buffer_c *audio_buffers[2];
 
 bx_audio_buffer_c::bx_audio_buffer_c()
 {
@@ -77,7 +77,9 @@ void bx_audio_buffer_c::delete_buffer()
 {
   audio_buffer_t *tmpbuffer = root;
   root = tmpbuffer->next;
-  delete [] tmpbuffer->data;
+  if (tmpbuffer->size > 0) {
+    delete [] tmpbuffer->data;
+  }
   delete tmpbuffer;
 }
 
@@ -90,7 +92,7 @@ Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
   UNUSED(rate);
 
   while (len > 0) {
-    audio_buffer_t *curbuffer = audio_buffers->get_buffer();
+    audio_buffer_t *curbuffer = audio_buffers[1]->get_buffer();
     if (curbuffer == NULL)
       break;
     Bit32u tmplen = curbuffer->size - curbuffer->pos;
@@ -104,7 +106,7 @@ Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
       len -= tmplen;
     }
     if (curbuffer->pos >= curbuffer->size) {
-      audio_buffers->delete_buffer();
+      audio_buffers[1]->delete_buffer();
     }
   }
   return copied;
@@ -112,8 +114,27 @@ Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
 
 // mixer thread support
 
+int conversion_control = 0;
 int mixer_control = 0;
+BX_MUTEX(conversion_mutex);
 BX_MUTEX(mixer_mutex);
+
+BX_THREAD_FUNC(conversion_thread, indata)
+{
+  bx_soundlow_waveout_c *waveout = (bx_soundlow_waveout_c*)indata;
+  conversion_control = 1;
+  while (conversion_control > 0) {
+    BX_LOCK(conversion_mutex);
+    audio_buffer_t *curbuffer = audio_buffers[0]->get_buffer();
+    BX_UNLOCK(conversion_mutex);
+    if (curbuffer != NULL) {
+      waveout->convert_pcm_data();
+    }
+    BX_MSLEEP(25);
+  }
+  conversion_control = -1;
+  BX_THREAD_EXIT;
+}
 
 BX_THREAD_FUNC(mixer_thread, indata)
 {
@@ -142,7 +163,10 @@ BX_THREAD_FUNC(mixer_thread, indata)
 bx_soundlow_waveout_c::bx_soundlow_waveout_c()
 {
   put("waveout", "WAVOUT");
-  audio_buffers = new bx_audio_buffer_c();
+  if (audio_buffers[0] == NULL) {
+    audio_buffers[0] = new bx_audio_buffer_c();
+    audio_buffers[1] = new bx_audio_buffer_c();
+  }
   real_pcm_param = default_pcm_param;
   emu_pcm_param = default_pcm_param;
   cb_count = 0;
@@ -154,12 +178,24 @@ bx_soundlow_waveout_c::~bx_soundlow_waveout_c()
   if (pcm_callback_id >= 0) {
     unregister_wave_callback(pcm_callback_id);
   }
+  if (conversion_control > 0) {
+    conversion_control = 0;
+    while (conversion_control >= 0) {
+      BX_MSLEEP(1);
+    }
+    BX_FINI_MUTEX(conversion_mutex);
+  }
   if (mixer_control > 0) {
     mixer_control = 0;
     while (mixer_control >= 0) {
       BX_MSLEEP(1);
     }
     BX_FINI_MUTEX(mixer_mutex);
+  }
+  if (audio_buffers[0] != NULL) {
+    delete audio_buffers[0];
+    delete audio_buffers[1];
+    audio_buffers[0] = NULL;
   }
 }
 
@@ -179,27 +215,57 @@ int bx_soundlow_waveout_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param
 {
   int len2;
 
-  if (memcmp(src_param, &emu_pcm_param, sizeof(bx_pcm_param_t)) != 0) {
-    emu_pcm_param = *src_param;
-    cvt_mult = (src_param->bits == 8) ? 2 : 1;
-    if (src_param->channels == 1) cvt_mult <<= 1;
-    if (src_param->samplerate != real_pcm_param.samplerate) {
-      real_pcm_param.samplerate = src_param->samplerate;
-      set_pcm_params(&real_pcm_param);
-    }
-  }
-  len2 = length * cvt_mult;
   if (pcm_callback_id >= 0) {
-    BX_LOCK(mixer_mutex);
-    audio_buffer_t *newbuffer = audio_buffers->new_buffer(len2);
-    convert_pcm_data(data, length, newbuffer->data, len2, src_param);
-    BX_UNLOCK(mixer_mutex);
+    BX_LOCK(conversion_mutex);
+    audio_buffer_t *newbuffer = audio_buffers[0]->new_buffer(length);
+    memcpy(newbuffer->data, data, length);
+    newbuffer->param = *src_param;
+    BX_UNLOCK(conversion_mutex);
   } else {
+    if (memcmp(src_param, &emu_pcm_param, sizeof(bx_pcm_param_t)) != 0) {
+      emu_pcm_param = *src_param;
+      cvt_mult = (src_param->bits == 8) ? 2 : 1;
+      if (src_param->channels == 1) cvt_mult <<= 1;
+      if (src_param->samplerate != real_pcm_param.samplerate) {
+        real_pcm_param.samplerate = src_param->samplerate;
+        set_pcm_params(&real_pcm_param);
+      }
+    }
+    len2 = length * cvt_mult;
     Bit8u *tmpbuffer = new Bit8u[len2];
-    convert_pcm_data(data, length, tmpbuffer, len2, src_param);
+    convert_common(data, length, tmpbuffer, len2, src_param);
     output(len2, tmpbuffer);
     delete [] tmpbuffer;
   }
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_soundlow_waveout_c::convert_pcm_data()
+{
+  int len2;
+
+  BX_LOCK(conversion_mutex);
+  audio_buffer_t *curbuffer = audio_buffers[0]->get_buffer();
+  if (memcmp(&curbuffer->param, &emu_pcm_param, sizeof(bx_pcm_param_t)) != 0) {
+    emu_pcm_param = curbuffer->param;
+    cvt_mult = (emu_pcm_param.bits == 8) ? 2 : 1;
+    if (emu_pcm_param.channels == 1) cvt_mult <<= 1;
+    if (emu_pcm_param.samplerate != real_pcm_param.samplerate) {
+      real_pcm_param.samplerate = emu_pcm_param.samplerate;
+      set_pcm_params(&real_pcm_param);
+    }
+  }
+  BX_UNLOCK(conversion_mutex);
+  len2 = curbuffer->size * cvt_mult;
+  if (pcm_callback_id >= 0) {
+    BX_LOCK(mixer_mutex);
+    audio_buffer_t *newbuffer = audio_buffers[1]->new_buffer(len2);
+    convert_common(curbuffer->data, curbuffer->size, newbuffer->data, len2, &curbuffer->param);
+    BX_UNLOCK(mixer_mutex);
+  }
+  BX_LOCK(conversion_mutex);
+  audio_buffers[0]->delete_buffer();
+  BX_UNLOCK(conversion_mutex);
   return BX_SOUNDLOW_OK;
 }
 
@@ -281,7 +347,7 @@ bx_bool bx_soundlow_waveout_c::mixer_common(Bit8u *buffer, int len)
   return (len3 > 0);
 }
 
-void bx_soundlow_waveout_c::convert_pcm_data(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param)
+void bx_soundlow_waveout_c::convert_common(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param)
 {
   int i, j;
   Bit8u xor_val;
@@ -335,6 +401,14 @@ void bx_soundlow_waveout_c::convert_pcm_data(Bit8u *src, int srcsize, Bit8u *dst
       channel ^= 1;
     }
   }
+}
+
+void bx_soundlow_waveout_c::start_conversion_thread()
+{
+  BX_THREAD_ID(threadID);
+
+  BX_INIT_MUTEX(conversion_mutex);
+  BX_THREAD_CREATE(conversion_thread, this, threadID);
 }
 
 void bx_soundlow_waveout_c::start_mixer_thread()
