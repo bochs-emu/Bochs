@@ -51,7 +51,7 @@ BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
 
   ia_extensions_bitmask[0] = (1 << BX_ISA_386);
   if (BX_SUPPORT_FPU)
-    ia_extensions_bitmask[0] = (1 << BX_ISA_X87);
+    ia_extensions_bitmask[0] |= (1 << BX_ISA_X87);
 
 #if BX_SUPPORT_VMX
   vmx_extensions_bitmask = 0;
