@@ -581,12 +581,6 @@ void corei7_haswell_4770_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
   leaf->ebx = 0x00000000;
   leaf->ecx = 0x00000000;
   leaf->edx = 0x00000603;
-/*
-  leaf->eax = 0; // reporting true capabilities without supporting it breaks Win7 x64 installation
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-*/
 
   BX_INFO(("WARNING: Architectural Performance Monitoring is not implemented"));
 }
