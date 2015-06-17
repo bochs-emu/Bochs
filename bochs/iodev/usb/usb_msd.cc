@@ -511,12 +511,19 @@ int usb_msd_device_c::handle_control(int request, int value, int index, int leng
         case USB_DT_DEVICE_QUALIFIER:
           BX_DEBUG(("USB_REQ_GET_DESCRIPTOR: Device Qualifier"));
           // device qualifier
-          data[0] = 10;
-          data[1] = USB_DT_DEVICE_QUALIFIER;
-          memcpy(data+2, bx_msd_dev_descriptor+2, 6);
-          data[8] = 1;
-          data[9] = 0;
-          ret = 10;
+          if (get_speed() <= USB_SPEED_FULL) {
+            // a low- or full-speed only device (i.e.: a non high-speed device) must return
+            //  request error on this function
+            BX_ERROR(("USB MSD handle_control: full-speed only device returning stall on Device Qualifier."));
+            goto fail;
+          } else {
+            data[0] = 10;
+            data[1] = USB_DT_DEVICE_QUALIFIER;
+            memcpy(data+2, bx_msd_dev_descriptor+2, 6);
+            data[8] = 1;
+            data[9] = 0;
+            ret = 10;
+          }
           break;
         case USB_DT_BIN_DEV_OBJ_STORE:
           BX_DEBUG(("USB_REQ_GET_DESCRIPTOR: BOS"));
