@@ -500,7 +500,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 // [26:26] Data breakpoint extension. Indicates support for MSR 0xC0011027 and MSRs 0xC001101[B:9].
 // [27:27] Performance time-stamp counter. Indicates support for MSR 0xC0010280.
 // [28:28] PerfCtrExtL2I: L2I performance counter extensions support.
-// [31:29] reserved
+// [29:29] MONITORX/MWAITX support
+// [31:30] reserved
 
 #define BX_CPUID_EXT2_LAHF_SAHF              (1 <<  0)
 #define BX_CPUID_EXT2_CMP_LEGACY             (1 <<  1)
@@ -531,6 +532,9 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT2_DATA_BREAKPOINT_EXT    (1 << 26)
 #define BX_CPUID_EXT2_PERF_TSC               (1 << 27)
 #define BX_CPUID_EXT2_PERFCTR_EXT_L2I        (1 << 28)
+#define BX_CPUID_EXT2_MONITORX_MWAITX        (1 << 29)
+#define BX_CPUID_EXT2_RESERVED30             (1 << 30)
+#define BX_CPUID_EXT2_RESERVED31             (1 << 31)
 
 // CPUID defines - SVM features CPUID[0x8000000A].EDX
 // ----------------------------
@@ -549,6 +553,9 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 // [11:11] Reserved
 // [12:12] Pause filter threshold support
 // [13:13] Advanced Virtual Interrupt Controller
+// [14:14] Reserved
+// [15:15] Nested Virtualization Support
+// [16:16] Virtual GIF
 
 #define BX_CPUID_SVM_NESTED_PAGING           (1 <<  0)
 #define BX_CPUID_SVM_LBR_VIRTUALIZATION      (1 <<  1)
@@ -564,5 +571,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_SVM_RESERVED11              (1 << 11)
 #define BX_CPUID_SVM_PAUSE_FILTER_THRESHOLD  (1 << 12)
 #define BX_CPUID_SVM_AVIC                    (1 << 13)
+#define BX_CPUID_SVM_RESERVED14              (1 << 14)
+#define BX_CPUID_SVM_NESTED_VIRTUALIZATION   (1 << 15)
+#define BX_CPUID_SVM_VIRTUAL_GIF             (1 << 16)
 
 #endif
