@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009       Benjamin D Lunt (fys at frontiernet net)
+//  Copyright (C) 2009-2015  Benjamin D Lunt (fys [at] fysnet [dot] net)
 //                2009-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
@@ -492,7 +492,9 @@ Bit32u bx_usb_uhci_c::read(Bit32u address, unsigned io_len)
       break;
   }
 
-  BX_DEBUG(("register read from address 0x%04X:  0x%08X (%2i bits)", (unsigned) address, (Bit32u) val, io_len * 8));
+  // don't flood the log with reads from the Frame Register
+  if (offset != 0x06)
+    BX_DEBUG(("register read from address 0x%04X:  0x%08X (%2i bits)", (unsigned) address, (Bit32u) val, io_len * 8));
 
   return(val);
 }
@@ -741,7 +743,7 @@ void bx_usb_uhci_c::usb_timer(void)
   }
   if (BX_UHCI_THIS hub.usb_command.schedule) {
     BX_UHCI_THIS busy = 1;
-    bx_bool interrupt = 0, shortpacket = 0, stalled = 0;
+    bx_bool interrupt = 0, shortpacket = 0, stalled = 0, was_inactive = 0;
     struct TD td;
     struct HCSTACK stack[USB_STACK_SIZE+1];  // queue stack for this item only
     Bit32s stk = 0;
@@ -804,6 +806,7 @@ void bx_usb_uhci_c::usb_timer(void)
               Bit16u r_maxlen = (((td.dword2>>21)+1) & 0x7FF);
               BX_DEBUG((" r_actlen = 0x%04X r_maxlen = 0x%04X", r_actlen, r_maxlen));
               if (((td.dword2 & 0xFF) == USB_TOKEN_IN) && spd && stk && (r_actlen < r_maxlen) && ((td.dword1 & 0x00FF0000) == 0)) {
+                BX_DEBUG(("Short Packet Detected"));
                 shortpacket = 1;
                 td.dword1 |= (1<<29);
               }
@@ -818,13 +821,15 @@ void bx_usb_uhci_c::usb_timer(void)
               if ((stk > 0) && (stack[stk].d == HC_VERT) && !shortpacket)
                 DEV_MEM_WRITE_PHYSICAL(lastvertaddr, 4, (Bit8u*) &td.dword0);
             }
-          }
+            was_inactive = 0;
+          } else
+            was_inactive = 1;
 
           if (stk > 0) {
             // if last TD in HORZ queue pointer, then we are done.
             if (stack[stk].t && (stack[stk].d == HC_HORZ)) break;
             // if Breadth first or last item in queue, move to next queue.
-            if (!depthbreadth || stack[stk].t) {
+            if (was_inactive || !depthbreadth || stack[stk].t) {
               if (stack[stk].d == HC_HORZ) queue_num--;  // <-- really, this should never happen until we
               stk--;                                     //           support bandwidth reclamation...
             }
@@ -832,7 +837,6 @@ void bx_usb_uhci_c::usb_timer(void)
           } else {
             if (stack[stk].t) break;
           }
-
         }
       }
 
@@ -1112,7 +1116,7 @@ void bx_usb_uhci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
   if (device != NULL) {
     if (device->get_type() == type) {
       if (connected) {
-        BX_INFO(("port #%d: speed = %s", port+1, usb_speed[device->get_speed()]));
+        BX_DEBUG(("port #%d: speed = %s", port+1, usb_speed[device->get_speed()]));
         switch (device->get_speed()) {
           case USB_SPEED_LOW:
             BX_UHCI_THIS hub.usb_port[port].low_speed = 1;
