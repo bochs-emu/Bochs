@@ -60,3 +60,10 @@ TODO (know issues in CPU model):
 [!] TODO: Convert CPUDB to plugins and search for them in runtime
 
 [!] TODO: Find a way to implement HLE and RTM extensions
+
+------------------------------------------------------------------------------------
+[!] No plans for MPX, Intel Processor Trace, LWP.
+    Their emulation would greatly affect emulation performance.
+    Could be implemented through instrumentation if ***really*** needed.
+------------------------------------------------------------------------------------
+
