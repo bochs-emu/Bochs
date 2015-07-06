@@ -39,6 +39,7 @@ VMCS_Mapping::VMCS_Mapping(Bit32u revision, const char *filename): revision_id(r
 {
   clear();
   // read mapping from file
+  BX_PANIC(("Reading VMCS mapping from file not implemented yet"));
 }
 
 BX_CPP_INLINE Bit32u vmcs_encoding(Bit32u type, Bit32u field)
@@ -84,6 +85,11 @@ void VMCS_Mapping::clear()
 
 void VMCS_Mapping::clear_mapping(Bit32u encoding)
 {
+  set_mapping(encoding, 0xffffffff);
+}
+
+void VMCS_Mapping::set_mapping(Bit32u encoding, Bit32u offset)
+{
   if (is_reserved(encoding))
     return;
 
@@ -91,7 +97,7 @@ void VMCS_Mapping::clear_mapping(Bit32u encoding)
   if (field >= VMX_HIGHEST_VMCS_ENCODING)
     return;
 
-  vmcs_map[VMCS_FIELD_INDEX(encoding)][field] = 0xffffffff;
+  vmcs_map[VMCS_FIELD_INDEX(encoding)][field] = offset;
 }
 
 unsigned VMCS_Mapping::vmcs_field_offset(Bit32u encoding) const
