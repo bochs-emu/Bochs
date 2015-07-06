@@ -24,47 +24,47 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
-#define LOG_THIS BX_CPU_THIS_PTR
+
+#define LOG_THIS BX_CPU(0)->
 
 #if BX_SUPPORT_VMX
 
-static unsigned vmcs_map[16][1+VMX_HIGHEST_VMCS_ENCODING];
-
-void BX_CPU_C::init_VMCS(void)
+VMCS_Mapping::VMCS_Mapping(Bit32u revision): revision_id(revision)
 {
-  static bx_bool vmcs_map_ready = 0;
-  unsigned type, field;
+  clear();
+  init_generic_mapping();
+}
 
-  init_vmx_capabilities();
+VMCS_Mapping::VMCS_Mapping(Bit32u revision, const char *filename): revision_id(revision)
+{
+  clear();
+  // read mapping from file
+}
 
-  if (vmcs_map_ready) return;
-  vmcs_map_ready = 1;
+BX_CPP_INLINE Bit32u vmcs_encoding(Bit32u type, Bit32u field)
+{
+  Bit32u encoding = ((type & 0xc) << 11) + ((type & 0x3) << 10) + field;
+  return encoding;
+}
 
-  for (type=0; type<16; type++) {
-    for (field=0; field <= VMX_HIGHEST_VMCS_ENCODING; field++) {
-       vmcs_map[type][field] = 0xffffffff;
-    }
-  }
-
+void VMCS_Mapping::init_generic_mapping()
+{
 #if 1
   // try to build generic VMCS map
-  for (type=0; type<16; type++) {
-    for (field=0; field <= VMX_HIGHEST_VMCS_ENCODING; field++) {
-       unsigned encoding = ((type & 0xc) << 11) + ((type & 3) << 10) + field;
+  // 16 types, 48 encodings (0x30), 4 bytes each field => 3072 bytes
+  // reserve VMCS_DATA_OFFSET bytes in the beginning for special (hidden) VMCS fields
+  for (unsigned type=0; type<16; type++) {
+    for (unsigned field=0; field < VMX_HIGHEST_VMCS_ENCODING; field++) {
+       Bit32u encoding = vmcs_encoding(type, field);
        if (vmcs_map[type][field] != 0xffffffff) {
           BX_PANIC(("VMCS type %d field %d (encoding = 0x%08x) is already initialized", type, field, encoding));
        }
-       if (vmcs_field_supported(encoding)) {
-         // allocate 64 fields (4 byte each) per type
-         vmcs_map[type][field] = VMCS_DATA_OFFSET + (type*64 + field) * 4;
-         if(vmcs_map[type][field] >= VMX_VMCS_AREA_SIZE) {
-            BX_PANIC(("VMCS type %d field %d (encoding = 0x%08x) is out of VMCS boundaries", type, field, encoding));
-         }
-         BX_DEBUG(("VMCS field 0x%08x located at 0x%08x", encoding, vmcs_map[type][field]));
+       // allocate 64 fields (4 byte each) per type (even more than 48 which is required now)
+       vmcs_map[type][field] = VMCS_DATA_OFFSET + (type*64 + field) * 4;
+       if(vmcs_map[type][field] >= VMX_VMCS_AREA_SIZE) {
+          BX_PANIC(("VMCS type %d field %d (encoding = 0x%08x) is out of VMCS boundaries", type, field, encoding));
        }
-       else {
-         BX_DEBUG(("VMCS field 0x%08x is not supported", encoding));
-       }
+       BX_DEBUG(("VMCS field 0x%08x located at 0x%08x", encoding, vmcs_map[type][field]));
     }
   }
 #else
@@ -73,12 +73,37 @@ void BX_CPU_C::init_VMCS(void)
 #endif
 }
 
-#define VMCS_ENCODING_RESERVED_BITS (0xffff9000)
-
-unsigned vmcs_field_offset(Bit32u encoding)
+void VMCS_Mapping::clear()
 {
-  if (encoding & VMCS_ENCODING_RESERVED_BITS)
+  for (unsigned type=0; type<16; type++) {
+    for (unsigned field=0; field < VMX_HIGHEST_VMCS_ENCODING; field++) {
+       vmcs_map[type][field] = 0xffffffff;
+    }
+  }
+}
+
+void VMCS_Mapping::clear_mapping(Bit32u encoding)
+{
+  if (is_reserved(encoding))
+    return;
+
+  unsigned field = VMCS_FIELD(encoding);
+  if (field >= VMX_HIGHEST_VMCS_ENCODING)
+    return;
+
+  vmcs_map[VMCS_FIELD_INDEX(encoding)][field] = 0xffffffff;
+}
+
+unsigned VMCS_Mapping::vmcs_field_offset(Bit32u encoding) const
+{
+  if (is_reserved(encoding)) {
+    switch(encoding) {
+      case VMCS_REVISION_ID_FIELD_ENCODING:  return VMCS_REVISION_ID_FIELD_ADDR;
+      case VMCS_VMX_ABORT_FIELD_ENCODING:    return VMCS_VMX_ABORT_FIELD_ADDR;
+      case VMCS_LAUNCH_STATE_FIELD_ENCODING: return VMCS_LAUNCH_STATE_FIELD_ADDR;
+    }
     return 0xffffffff;
+  }
 
   unsigned field = VMCS_FIELD(encoding);
   if (field >= VMX_HIGHEST_VMCS_ENCODING)
@@ -86,6 +111,31 @@ unsigned vmcs_field_offset(Bit32u encoding)
 
   return vmcs_map[VMCS_FIELD_INDEX(encoding)][field];
 }
+
+void BX_CPU_C::init_VMCS(void)
+{
+  BX_CPU_THIS_PTR vmcs_map = BX_CPU_THIS_PTR cpuid->get_vmcs();
+
+  init_vmx_capabilities();
+
+  static bx_bool vmcs_map_ready = 0;
+  if (vmcs_map_ready) return;
+  vmcs_map_ready = 1;
+
+  // disable not supported encodings
+  for (unsigned type=0; type<16; type++) {
+    for (unsigned field=0; field <= VMX_HIGHEST_VMCS_ENCODING; field++) {
+      Bit32u encoding = vmcs_encoding(type, field);
+      if (! vmcs_field_supported(encoding)) {
+        BX_CPU_THIS_PTR vmcs_map->clear_mapping(encoding);
+        BX_DEBUG(("VMCS field 0x%08x is not supported", encoding));
+      }
+    }
+  }
+}
+
+#undef LOG_THIS
+#define LOG_THIS BX_CPU_THIS_PTR
 
 bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
 {

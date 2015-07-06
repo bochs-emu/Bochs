@@ -27,7 +27,7 @@
 #define VMX_VMCS_AREA_SIZE   4096
 
 // VMCS pointer is always 64-bit variable
-#define BX_INVALID_VMCSPTR BX_CONST64(0xFFFFFFFFFFFFFFFF)
+const Bit64u BX_INVALID_VMCSPTR = BX_CONST64(0xFFFFFFFFFFFFFFFF);
 
 // bits supported in IA32_FEATURE_CONTROL MSR
 #define BX_IA32_FEATURE_CONTROL_LOCK_BIT       0x1
@@ -450,15 +450,52 @@ enum VMFunctions {
 #define VMCS_FIELD_INDEX(encoding) \
     ((VMCS_FIELD_WIDTH(encoding) << 2) + VMCS_FIELD_TYPE(encoding))
 
+#define VMCS_ENCODING_RESERVED_BITS (0xffff9000)
+
 // =============
 //  VMCS layout
 // =============
+
+#define BX_VMX_VMCS_REVISION_ID 0x2B /* better to be unique bochs VMCS revision id */
+
+struct VMCS_Mapping {
+private:
+   Bit32u revision_id;
+
+   // assume 16 VMCS field types (encoded with 4 bits: 2 bits for VMCS_FIELD_TYPE and 2 bits for VMCS_FIELD_WIDTH)
+   unsigned vmcs_map[16][VMX_HIGHEST_VMCS_ENCODING];
+
+   void init_generic_mapping();
+
+public:
+   VMCS_Mapping(Bit32u revision_id = BX_VMX_VMCS_REVISION_ID); // default VMCS mapping
+   VMCS_Mapping(Bit32u revision_id, const char *filename);
+
+   void clear();
+   void clear_mapping(Bit32u encoding);
+
+   void set_vmcs_revision_id(Bit32u revision) { revision_id = revision; }
+   Bit32u get_vmcs_revision_id() const { return revision_id; }
+   
+   unsigned vmcs_field_offset(Bit32u encoding) const;
+
+   bx_bool is_reserved(Bit32u encoding) const {
+     return (encoding & VMCS_ENCODING_RESERVED_BITS) != 0;
+   }
+
+   bx_bool is_valid(Bit32u encoding) const {
+     return ! is_reserved(encoding) && (vmcs_field_offset(encoding) != 0xffffffff);
+   }
+};
+
+#define VMCS_LAUNCH_STATE_FIELD_ENCODING         (0xfffffffe)
+#define VMCS_VMX_ABORT_FIELD_ENCODING            (0xfffffffc)
+#define VMCS_REVISION_ID_FIELD_ENCODING          (0xfffffffa)
 
 #define VMCS_REVISION_ID_FIELD_ADDR              (0x0000)
 #define VMCS_VMX_ABORT_FIELD_ADDR                (0x0004)
 #define VMCS_LAUNCH_STATE_FIELD_ADDR             (0x0008)
 
-// invent Bochs CPU VMCS layout - allocate 64 fields of each type
 #define VMCS_DATA_OFFSET                         (0x0010)
 
 #if ((VMCS_DATA_OFFSET + 4*(64*15 + VMX_HIGHEST_VMCS_ENCODING)) > VMX_VMCS_AREA_SIZE)
@@ -819,7 +856,7 @@ typedef struct bx_VMCS
 // 56:63 reserved, must be zero
 //
 
-#define VMX_MSR_VMX_BASIC_LO (BX_CPU_THIS_PTR cpuid->get_vmcs_revision_id())
+#define VMX_MSR_VMX_BASIC_LO (BX_CPU_THIS_PTR vmcs_map->get_vmcs_revision_id())
 #define VMX_MSR_VMX_BASIC_HI \
      (VMX_VMCS_AREA_SIZE | ((!is_cpu_extension_supported(BX_ISA_LONG_MODE)) << 16) | \
      (BX_MEMTYPE_WB << 18) | (1<<22)) | ((BX_SUPPORT_VMX >= 2) ? (1<<23) : 0)

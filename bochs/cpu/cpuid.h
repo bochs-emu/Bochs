@@ -121,10 +121,17 @@ enum {
   #error "ISA extensions array limit exceeded!"
 #endif
 
+class VMCS_Mapping;
+
 class bx_cpuid_t {
 public:
   bx_cpuid_t(BX_CPU_C *_cpu);
+#if BX_SUPPORT_VMX
+  bx_cpuid_t(BX_CPU_C *_cpu, Bit32u vmcs_revision, const char *filename);
+#endif
   virtual ~bx_cpuid_t() {}
+
+  void init();
 
   // return CPU name
   virtual const char *get_name(void) const = 0;
@@ -155,10 +162,8 @@ public:
   virtual int wrmsr(Bit32u index, Bit64u  msr) { return -1; }
 #endif
 
-#define BX_VMX_VMCS_REVISION_ID 0x2B /* better to be unique bochs VMCS revision id */
-
 #if BX_SUPPORT_VMX
-  virtual Bit32u get_vmcs_revision_id(void) const { return BX_VMX_VMCS_REVISION_ID; }
+  VMCS_Mapping* get_vmcs() { return &vmcs_map; }
 #endif
 
 protected:
@@ -198,6 +203,10 @@ protected:
 
   void dump_cpuid_leaf(unsigned function, unsigned subfunction = 0) const;
   void dump_cpuid(unsigned max_std_leaf, unsigned max_ext_leaf) const;
+
+#if BX_SUPPORT_VMX
+  VMCS_Mapping vmcs_map;
+#endif
 };
 
 typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);

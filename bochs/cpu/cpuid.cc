@@ -27,8 +27,20 @@
 #include "cpuid.h"
 
 #define LOG_THIS cpu->
-
 bx_cpuid_t::bx_cpuid_t(BX_CPU_C *_cpu): cpu(_cpu)
+{
+  init();
+}
+
+#if BX_SUPPORT_VMX
+bx_cpuid_t::bx_cpuid_t(BX_CPU_C *_cpu, Bit32u vmcs_revision, const char *filename): 
+	cpu(_cpu), vmcs_map(vmcs_revision, filename)
+{
+  init();
+}
+#endif
+
+void bx_cpuid_t::init()
 {
 #if BX_SUPPORT_SMP
   nthreads = SIM->get_param_num(BXPN_CPU_NTHREADS)->get();

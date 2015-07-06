@@ -823,7 +823,6 @@ typedef struct
 } bx_regs_msr_t;
 #endif
 
-#include "cpuid.h"
 #include "crregs.h"
 #include "descriptor.h"
 #include "instr.h"
@@ -1013,6 +1012,8 @@ struct BX_SMM_State;
 struct BxOpcodeInfo_t;
 struct bx_cpu_statistics;
 
+#include "cpuid.h"
+
 class BOCHSAPI BX_CPU_C : public logfunctions {
 
 public: // for now...
@@ -1196,6 +1197,7 @@ public: // for now...
   
   VMCS_CACHE vmcs;
   VMX_CAP vmx_cap;
+  VMCS_Mapping *vmcs_map;
 #endif
 
 #if BX_SUPPORT_SVM
