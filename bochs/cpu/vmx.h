@@ -472,8 +472,9 @@ public:
    VMCS_Mapping(Bit32u revision_id, const char *filename);
 
    void clear();
-   void clear_mapping(Bit32u encoding);
-   void set_mapping(Bit32u encoding, Bit32u offset);
+
+   bx_bool clear_mapping(Bit32u encoding);
+   bx_bool set_mapping(Bit32u encoding, Bit32u offset);
 
    void set_vmcs_revision_id(Bit32u revision) { revision_id = revision; }
    Bit32u get_vmcs_revision_id() const { return revision_id; }

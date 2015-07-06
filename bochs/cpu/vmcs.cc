@@ -83,21 +83,22 @@ void VMCS_Mapping::clear()
   }
 }
 
-void VMCS_Mapping::clear_mapping(Bit32u encoding)
+bx_bool VMCS_Mapping::clear_mapping(Bit32u encoding)
 {
-  set_mapping(encoding, 0xffffffff);
+  return set_mapping(encoding, 0xffffffff);
 }
 
-void VMCS_Mapping::set_mapping(Bit32u encoding, Bit32u offset)
+bx_bool VMCS_Mapping::set_mapping(Bit32u encoding, Bit32u offset)
 {
   if (is_reserved(encoding))
-    return;
+    return BX_FALSE;
 
   unsigned field = VMCS_FIELD(encoding);
   if (field >= VMX_HIGHEST_VMCS_ENCODING)
-    return;
+    return BX_FALSE;
 
   vmcs_map[VMCS_FIELD_INDEX(encoding)][field] = offset;
+  return BX_TRUE;
 }
 
 unsigned VMCS_Mapping::vmcs_field_offset(Bit32u encoding) const
