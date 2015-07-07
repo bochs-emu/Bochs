@@ -33,6 +33,12 @@ bx_cpuid_t::bx_cpuid_t(BX_CPU_C *_cpu): cpu(_cpu)
 }
 
 #if BX_SUPPORT_VMX
+bx_cpuid_t::bx_cpuid_t(BX_CPU_C *_cpu, Bit32u vmcs_revision): 
+	cpu(_cpu), vmcs_map(vmcs_revision)
+{
+  init();
+}
+
 bx_cpuid_t::bx_cpuid_t(BX_CPU_C *_cpu, Bit32u vmcs_revision, const char *filename): 
 	cpu(_cpu), vmcs_map(vmcs_revision, filename)
 {

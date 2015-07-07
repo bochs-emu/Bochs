@@ -127,6 +127,7 @@ class bx_cpuid_t {
 public:
   bx_cpuid_t(BX_CPU_C *_cpu);
 #if BX_SUPPORT_VMX
+  bx_cpuid_t(BX_CPU_C *_cpu, Bit32u vmcs_revision);
   bx_cpuid_t(BX_CPU_C *_cpu, Bit32u vmcs_revision, const char *filename);
 #endif
   virtual ~bx_cpuid_t() {}

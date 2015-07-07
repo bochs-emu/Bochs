@@ -38,8 +38,11 @@ VMCS_Mapping::VMCS_Mapping(Bit32u revision): revision_id(revision)
 VMCS_Mapping::VMCS_Mapping(Bit32u revision, const char *filename): revision_id(revision)
 {
   clear();
+
   // read mapping from file
   BX_PANIC(("Reading VMCS mapping from file not implemented yet"));
+
+  init_generic_mapping(); // for now
 }
 
 BX_CPP_INLINE Bit32u vmcs_encoding(Bit32u type, Bit32u field)
@@ -50,7 +53,6 @@ BX_CPP_INLINE Bit32u vmcs_encoding(Bit32u type, Bit32u field)
 
 void VMCS_Mapping::init_generic_mapping()
 {
-#if 1
   // try to build generic VMCS map
   // 16 types, 48 encodings (0x30), 4 bytes each field => 3072 bytes
   // reserve VMCS_DATA_OFFSET bytes in the beginning for special (hidden) VMCS fields
@@ -68,10 +70,6 @@ void VMCS_Mapping::init_generic_mapping()
        BX_DEBUG(("VMCS field 0x%08x located at 0x%08x", encoding, vmcs_map[type][field]));
     }
   }
-#else
-  // define your own VMCS format
-#include "vmcs.h"
-#endif
 }
 
 void VMCS_Mapping::clear()
