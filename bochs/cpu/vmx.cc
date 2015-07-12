@@ -103,7 +103,7 @@ static const char *VMX_vmexit_reason_name[] =
   "INVPCID",
   "VMFUNC",
   "Reserved60",
-  "RDSEED"
+  "RDSEED",
   "PML Log Full",
   "XSAVES",
   "XRSTORS",
