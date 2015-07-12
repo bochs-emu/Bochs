@@ -1276,8 +1276,7 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
         } else {
           DEV_MEM_WRITE_PHYSICAL_DMA(TD_GET_CBP(td), ret, device_buffer);
         }
-      } else
-        ret = 0;
+      }
       break;
     default:
       TD_SET_CC(td, UnexpectedPID);
